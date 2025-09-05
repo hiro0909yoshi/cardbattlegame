@@ -1,0 +1,7 @@
+# Godot
+.import/
+*.tmp
+.mono/
+
+# Mac
+.DS_Store

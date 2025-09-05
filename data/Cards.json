@@ -1,0 +1,16 @@
+{
+  "cards": [
+	{"id": 1, "name": "火の玉", "cost": 2, "element": "火", "type": "攻撃", "damage": 5, "block": 0,"rarity": "common"},
+	{"id": 2, "name": "火の盾", "cost": 1, "element": "火", "type": "防御", "damage": 0, "block": 3,"rarity": "common"},
+	{"id": 3, "name": "燃焼", "cost": 3, "element": "火", "type": "特殊", "damage": 3, "block": 0,"rarity": "uncommon"},
+	{"id": 4, "name": "風刃", "cost": 1, "element": "風", "type": "攻撃", "damage": 3, "block": 0,"rarity": "common"},
+	{"id": 5, "name": "風の守り", "cost": 2, "element": "風", "type": "防御", "damage": 0, "block": 5,"rarity": "common"},
+	{"id": 6, "name": "疾風", "cost": 2, "element": "風", "type": "特殊", "damage": 2, "block": 2,"rarity": "common"},
+	{"id": 7, "name": "岩撃", "cost": 3, "element": "土", "type": "攻撃", "damage": 6, "block": 0,"rarity": "common"},
+	{"id": 8, "name": "土の壁", "cost": 2, "element": "土", "type": "防御", "damage": 0, "block": 6,"rarity": "common"},
+	{"id": 9, "name": "地震", "cost": 4, "element": "土", "type": "特殊", "damage": 4, "block": 0,"rarity": "common"},
+	{"id": 10, "name": "水流撃", "cost": 2, "element": "水", "type": "攻撃", "damage": 4, "block": 0,"rarity": "common"},
+	{"id": 11, "name": "水鏡の盾", "cost": 1, "element": "水", "type": "防御", "damage": 0, "block": 4,"rarity": "common"},
+	{"id": 12, "name": "浄化の雨", "cost": 3, "element": "水", "type": "特殊", "damage": 0, "block": 3,"rarity": "common"}
+  ]
+}
