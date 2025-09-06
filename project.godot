@@ -20,4 +20,4 @@ config/icon="res://icon.svg"
 window/size/viewport_width=2400
 window/size/viewport_height=1960
 window/stretch/mode="canvas_items"
-window/stretch/scale=2.19
+window/stretch/scale=1.26

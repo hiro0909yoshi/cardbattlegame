@@ -113,15 +113,19 @@ func _input(event):
 		global_position = get_global_mouse_position() - size / 2
 		return
 	
-	# クリック処理（マウスオーバー時のみ）
-	if mouse_over and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				print("カードクリック！", card_data.name)
-				is_dragging = true
-				z_index = 10
-				# 他のカードの処理を止める
-				get_viewport().set_input_as_handled()
-			else:
+	# マウスボタンを離した時の処理（どこでも反応）
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			if is_dragging:
 				is_dragging = false
 				z_index = 0
+				print("カードドロップ: ", card_data.name)
+				return
+	
+	# クリック処理（マウスオーバー時のみ）
+	if mouse_over and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			print("カードクリック！", card_data.name)
+			is_dragging = true
+			z_index = 10
+			get_viewport().set_input_as_handled()
