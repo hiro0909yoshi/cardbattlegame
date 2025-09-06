@@ -2,10 +2,24 @@ extends ColorRect
 
 var is_dragging = false
 var card_data = {}
+var mouse_over = false
 
 func _ready():
 	print("カード準備完了！")
+	# マウスイベントを接続
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 	load_card_data(3)
+
+func _on_mouse_entered():
+	mouse_over = true
+	if not is_dragging:
+		z_index = 5  # ホバー時に少し前面に
+
+func _on_mouse_exited():
+	mouse_over = false
+	if not is_dragging:
+		z_index = 0  # 元に戻す
 
 func load_card_data(card_id):
 	var file = FileAccess.open("res://data/Cards.json", FileAccess.READ)
@@ -40,38 +54,29 @@ func set_element_color():
 		"土": color = Color(0.8, 0.6, 0.3)
 
 func set_rarity_border():
-	print("=== RARITY DEBUG ===")
-	print("Card data rarity: ", card_data.get("rarity", "NOT FOUND"))
-	
 	var border = get_node_or_null("RarityBorder")
 	if border:
 		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0, 0, 0, 0)
+		style.draw_center = false
 		
-		# 中央を透明に、枠だけ表示
-		style.bg_color = Color(0, 0, 0, 0)  # 透明
-		style.draw_center = false  # 中央を描画しない
-		
-		# 枠の設定
 		style.border_width_left = 3
 		style.border_width_right = 3
 		style.border_width_top = 3
 		style.border_width_bottom = 3
 		
-		# レアリティで枠色を変更
 		match card_data.get("rarity", "common"):
 			"legendary":
-				style.border_color = Color(1.0, 0.8, 0.0, 1)  # 金
+				style.border_color = Color(1.0, 0.8, 0.0, 1)
 			"rare":
-				style.border_color = Color(0.1, 0.1, 0.1, 1)  # 黒
+				style.border_color = Color(0.1, 0.1, 0.1, 1)
 			"uncommon":
-				style.border_color = Color(0.5, 0.5, 0.5, 1)  # グレー
+				style.border_color = Color(0.5, 0.5, 0.5, 1)
 			_:
-				style.border_color = Color(1.0, 1.0, 1.0, 1)  # 白
+				style.border_color = Color(1.0, 1.0, 1.0, 1)
 		
 		border.add_theme_stylebox_override("panel", style)
-		print("Border style applied: ", card_data.get("rarity", "common"))
-		
-		
+
 func update_label():
 	var name_label = get_node_or_null("NameLabel")
 	if name_label:
@@ -103,19 +108,20 @@ func update_label():
 		desc_label.add_theme_color_override("font_color", Color.BLACK)
 
 func _input(event):
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			var mouse_pos = get_global_mouse_position()
-			var card_rect = Rect2(global_position, size)
-			
-			if card_rect.has_point(mouse_pos):
-				print("カードクリック！")
-				is_dragging = event.pressed
-				# ドラッグ中は最前面に
-				if event.pressed:
-					z_index = 10
-				else:
-					z_index = 0
-	
-	elif event is InputEventMouseMotion and is_dragging:
+	# ドラッグ中の移動処理
+	if is_dragging and event is InputEventMouseMotion:
 		global_position = get_global_mouse_position() - size / 2
+		return
+	
+	# クリック処理（マウスオーバー時のみ）
+	if mouse_over and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				print("カードクリック！", card_data.name)
+				is_dragging = true
+				z_index = 10
+				# 他のカードの処理を止める
+				get_viewport().set_input_as_handled()
+			else:
+				is_dragging = false
+				z_index = 0
