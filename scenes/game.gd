@@ -1,122 +1,179 @@
 extends Node2D
 
-var card_scene = preload("res://scenes/Card.tscn")
-var hand_cards = []
+# メインゲーム管理スクリプト（リファクタリング版）
 
-# ボードマップ用の変数を追加
-var board_tiles = []  # マスの配列
-var total_tiles = 20  # マスの総数
-var current_player_pos = 0  # プレイヤーの現在位置
+# システムの参照
+var board_system: BoardSystem
+var card_system: CardSystem
+var player_system: PlayerSystem
+var battle_system: BattleSystem
+var skill_system: SkillSystem
 
-# プレイヤー駒とUI用の変数を追加
-var player_piece = null  # プレイヤーの駒
-var dice_button = null  # サイコロボタン
-var is_moving = false  # 移動中フラグ
+# ゲーム状態
+enum GamePhase {
+	SETUP,
+	DICE_ROLL,
+	MOVING,
+	TILE_ACTION,
+	BATTLE,
+	END_TURN
+}
+
+var current_phase = GamePhase.SETUP
+var player_count = 2  # プレイヤー数
+
+# UI要素
+var dice_button: Button
+var turn_label: Label
+var magic_label: Label
+var phase_label: Label
 
 func _ready():
-	print("ゲーム開始")
-	create_hand()
-	create_board()
-	create_player()  # プレイヤー駒を追加
-	create_ui()  # UIを追加
+	print("=== カルドセプト風ゲーム開始 ===")
+	initialize_systems()
+	setup_game()
+	create_ui()
+	start_game()
 
-func create_hand():
-	for i in range(5):
-		var card = card_scene.instantiate()
-		$Hand.add_child(card)
-		
-		# カードを横に並べる
-		card.position = Vector2(50 + i * 120, 200)
-		
-		# ランダムIDで読み込み
-		var random_id = randi_range(1, 12)
-		
-		# has_methodでチェックしてから呼び出し
-		if card.has_method("load_card_data"):
-			card.load_card_data(random_id)
-		
-		hand_cards.append(card)
+# システムを初期化
+func initialize_systems():
+	# 各システムをインスタンス化
+	board_system = BoardSystem.new()
+	card_system = CardSystem.new()
+	player_system = PlayerSystem.new()
+	battle_system = BattleSystem.new()
+	skill_system = SkillSystem.new()
+	
+	# シーンツリーに追加
+	add_child(board_system)
+	add_child(card_system)
+	add_child(player_system)
+	add_child(battle_system)
+	add_child(skill_system)
+	
+	# シグナル接続
+	connect_signals()
+	
+	print("全システム初期化完了")
 
-func create_board():
-	# BoardMapノードが存在するかチェック
+# シグナルを接続
+func connect_signals():
+	# PlayerSystemのシグナル
+	player_system.dice_rolled.connect(_on_dice_rolled)
+	player_system.movement_completed.connect(_on_movement_completed)
+	player_system.magic_changed.connect(_on_magic_changed)
+	player_system.player_won.connect(_on_player_won)
+	
+	# CardSystemのシグナル
+	card_system.card_used.connect(_on_card_used)
+	card_system.hand_updated.connect(_on_hand_updated)
+	
+	# BattleSystemのシグナル
+	battle_system.battle_ended.connect(_on_battle_ended)
+
+# ゲームをセットアップ
+func setup_game():
+	# BoardMapノードがなければ作成
 	if not has_node("BoardMap"):
-		print("BoardMapノードが見つかりません")
-		return
+		var board_map_node = Node2D.new()
+		board_map_node.name = "BoardMap"
+		add_child(board_map_node)
 	
-	var center = Vector2(400, 400)  # ボードの中心
-	var radius = 150  # 円の半径
+	# ボードを作成
+	board_system.create_board($BoardMap)
 	
-	for i in range(total_tiles):
-		# 円形にマスを配置
-		var angle = (2 * PI * i) / total_tiles - PI/2
-		var pos = center + Vector2(cos(angle), sin(angle)) * radius
-		
-		# マスを表す簡単な四角形を作成
-		var tile = ColorRect.new()
-		tile.size = Vector2(30, 30)
-		tile.position = pos - tile.size / 2  # 中心に配置
-		
-		# マスの色を設定（仮）
-		if i == 0:
-			tile.color = Color(1.0, 0.9, 0.3)  # スタート地点は金色
-		elif i % 5 == 0:
-			tile.color = Color(0.3, 0.8, 0.3)  # 5マスごとに緑
-		else:
-			# 通常マスはランダムな属性色
-			var colors = [
-				Color(1.0, 0.4, 0.4),  # 火（赤）
-				Color(0.4, 0.6, 1.0),  # 水（青）
-				Color(0.4, 1.0, 0.6),  # 風（緑）
-				Color(0.8, 0.6, 0.3)   # 土（茶）
-			]
-			tile.color = colors[randi() % colors.size()]
-		
-		$BoardMap.add_child(tile)
-		board_tiles.append(tile)
+	# プレイヤーを初期化
+	player_system.initialize_players(player_count, self)
 	
-	print("ボードマップ生成完了: ", total_tiles, "マス")
-
-# プレイヤー駒を作成
-func create_player():
-	player_piece = ColorRect.new()
-	player_piece.size = Vector2(20, 20)
-	player_piece.color = Color(1, 1, 1)  # 白色の駒
-	player_piece.z_index = 10  # マスより前面に表示
+	# 各プレイヤーに初期手札を配る
+	if not has_node("Hand"):
+		var hand_node = Node2D.new()
+		hand_node.name = "Hand"
+		add_child(hand_node)
 	
-	# スタート地点に配置
-	if board_tiles.size() > 0:
-		var start_tile = board_tiles[0]
-		player_piece.position = start_tile.position + start_tile.size/2 - player_piece.size/2
+	card_system.deal_initial_hand($Hand)
 	
-	add_child(player_piece)
-	print("プレイヤー駒を配置")
+	# 初期配置
+	for i in range(player_count):
+		player_system.place_player_at_tile(i, 0, board_system)
 
 # UIを作成
 func create_ui():
+	# フェーズ表示
+	phase_label = Label.new()
+	phase_label.text = "セットアップ中..."
+	phase_label.position = Vector2(350, 50)
+	phase_label.add_theme_font_size_override("font_size", 24)
+	add_child(phase_label)
+	
+	# ターン表示
+	turn_label = Label.new()
+	turn_label.position = Vector2(50, 30)
+	turn_label.add_theme_font_size_override("font_size", 16)
+	add_child(turn_label)
+	
+	# 魔力表示
+	magic_label = Label.new()
+	magic_label.position = Vector2(50, 60)
+	magic_label.add_theme_font_size_override("font_size", 16)
+	add_child(magic_label)
+	
 	# サイコロボタン
 	dice_button = Button.new()
 	dice_button.text = "サイコロを振る"
 	dice_button.position = Vector2(350, 250)
 	dice_button.size = Vector2(120, 40)
-	dice_button.pressed.connect(_on_dice_pressed)
+	dice_button.pressed.connect(_on_dice_button_pressed)
+	dice_button.disabled = true
 	add_child(dice_button)
+	
+	update_ui()
 
-# サイコロボタンが押されたとき
-func _on_dice_pressed():
-	if is_moving:
-		return  # 移動中は無効
+# ゲーム開始
+func start_game():
+	print("ゲーム開始！")
+	current_phase = GamePhase.DICE_ROLL
+	dice_button.disabled = false
+	update_ui()
+
+# ターン開始
+func start_turn():
+	var current_player = player_system.get_current_player()
+	print("\n--- ", current_player.name, "のターン開始 ---")
+	
+	# カードを1枚引く
+	if card_system.get_hand_size() < card_system.max_hand_size:
+		card_system.draw_card()
+	
+	current_phase = GamePhase.DICE_ROLL
+	dice_button.disabled = false
+	update_ui()
+
+# サイコロボタンが押された
+func _on_dice_button_pressed():
+	if current_phase != GamePhase.DICE_ROLL:
+		return
+	
+	dice_button.disabled = true
+	current_phase = GamePhase.MOVING
 	
 	# サイコロを振る
-	var dice_value = randi_range(1, 6)
-	print("サイコロの目: ", dice_value)
+	var dice_value = player_system.roll_dice()
 	
-	# サイコロの目を表示
-	show_dice_result(dice_value)
+	# スキルシステムでダイス目を修正
+	var modified_dice = skill_system.modify_dice_roll(dice_value, player_system.current_player_index)
+	if modified_dice != dice_value:
+		print("ダイス目修正: ", dice_value, " → ", modified_dice)
+	
+	# ダイス結果表示
+	show_dice_result(modified_dice)
 	
 	# 移動開始
-	move_player(dice_value)
+	var current_player = player_system.get_current_player()
+	await get_tree().create_timer(1.0).timeout
+	player_system.move_player_steps(current_player.id, modified_dice, board_system)
 
-# サイコロの結果を表示
+# ダイス結果を表示
 func show_dice_result(value: int):
 	var dice_label = Label.new()
 	dice_label.text = "🎲 " + str(value)
@@ -128,25 +185,185 @@ func show_dice_result(value: int):
 	await get_tree().create_timer(1.0).timeout
 	dice_label.queue_free()
 
-# プレイヤーを移動
-func move_player(steps: int):
-	is_moving = true
+# ダイスロール完了
+func _on_dice_rolled(value: int):
+	print("ダイス: ", value)
+
+# 移動完了
+func _on_movement_completed(final_tile: int):
+	current_phase = GamePhase.TILE_ACTION
+	print("到着: マス", final_tile)
+	
+	# タイル情報を取得
+	var tile_info = board_system.get_tile_info(final_tile)
+	var current_player = player_system.get_current_player()
+	
+	# タイルの種類による処理
+	match tile_info.type:
+		BoardSystem.TileType.START:
+			print("スタート地点！追加ボーナス100G")
+			player_system.add_magic(current_player.id, 100)
+			end_turn()
+			
+		BoardSystem.TileType.CHECKPOINT:
+			print("チェックポイント！ボーナス100G")
+			player_system.add_magic(current_player.id, 100)
+			end_turn()
+			
+		BoardSystem.TileType.NORMAL:
+			process_normal_tile(tile_info)
+
+# 通常タイルの処理
+func process_normal_tile(tile_info: Dictionary):
+	var current_player = player_system.get_current_player()
+	
+	if tile_info.owner == -1:
+		# 空き地
+		print("空き地です")
+		show_land_acquisition_dialog()
+	elif tile_info.owner == current_player.id:
+		# 自分の土地
+		print("自分の土地です")
+		show_land_upgrade_dialog()
+	else:
+		# 他人の土地
+		print("他人の土地！")
+		process_enemy_land(tile_info)
+
+# 土地取得ダイアログ（仮実装）
+func show_land_acquisition_dialog():
+	var current_player = player_system.get_current_player()
+	
+	# まず土地を取得（無料）
+	board_system.set_tile_owner(current_player.current_tile, current_player.id)
+	print("土地を取得しました！")
+	
+	# デバッグ情報
+	print("DEBUG: プレイヤー", current_player.id + 1, "の手札枚数 = ", card_system.get_hand_size())
+	
+	# 手札がある場合のみクリーチャー召喚の選択
+	if card_system.get_hand_size() > 0:
+		print("クリーチャーを召喚しますか？")
+		
+		# 仮実装：自動で最初のカードを使用
+		await get_tree().create_timer(1.0).timeout
+		
+		# もう一度チェック
+		if card_system.get_hand_size() == 0:
+			print("手札がなくなりました")
+			end_turn()
+			return
+		
+		# カードデータを安全に取得
+		var card_data = card_system.get_card_data(0)
+		if card_data.is_empty():
+			print("ERROR: カードデータが取得できません")
+			end_turn()
+			return
+		
+		# コスト計算
+		var base_cost = card_data.get("cost", 1)
+		if base_cost == null:
+			base_cost = 1
+		var cost = skill_system.modify_card_cost(base_cost * 10, card_data, current_player.id)
+		
+		# 魔力チェック
+		if current_player.magic_power >= cost:
+			# カードを使用
+			var used_card = card_system.use_card(0)
+			if not used_card.is_empty():
+				board_system.place_creature(current_player.current_tile, used_card)
+				player_system.add_magic(current_player.id, -cost)
+				print("クリーチャー「", used_card.get("name", "不明"), "」を召喚！(-", cost, "G)")
+		else:
+			print("魔力が足りません！必要: ", cost, "G 所持: ", current_player.magic_power, "G")
+	else:
+		print("手札がないためクリーチャーは召喚できません")
+	
+	end_turn()
+
+# 土地レベルアップダイアログ（仮実装）
+func show_land_upgrade_dialog():
+	print("土地をレベルアップしますか？（未実装）")
+	end_turn()
+
+# 敵の土地での処理
+func process_enemy_land(tile_info: Dictionary):
+	var current_player = player_system.get_current_player()
+	
+	if tile_info.creature.is_empty():
+		# クリーチャーがいない場合は通行料
+		var toll = board_system.calculate_toll(tile_info.index)
+		toll = skill_system.modify_toll(toll, current_player.id, tile_info.owner)
+		
+		print("通行料: ", toll, "G")
+		player_system.pay_toll(current_player.id, tile_info.owner, toll)
+		end_turn()
+	else:
+		# クリーチャーがいる場合はバトル
+		print("バトル発生！（未実装）")
+		# TODO: バトル処理
+		end_turn()
+
+# カード使用時
+func _on_card_used(card_data: Dictionary):
+	print("カード使用: ", card_data.name)
+
+# 手札更新時
+func _on_hand_updated():
+	print("手札: ", card_system.get_hand_size(), "枚")
+
+# 魔力変更時
+func _on_magic_changed(player_id: int, new_value: int):
+	update_ui()
+
+# バトル終了時
+func _on_battle_ended(winner: String, result: Dictionary):
+	print("バトル終了: ", winner, "の勝利")
+	end_turn()
+
+# プレイヤー勝利時
+func _on_player_won(player_id: int):
+	var player = player_system.players[player_id]
+	print("\n🎉 ゲーム終了！", player.name, "の勝利！🎉")
+	current_phase = GamePhase.SETUP
 	dice_button.disabled = true
+	phase_label.text = player.name + "の勝利！"
+
+# ターン終了
+func end_turn():
+	print("ターン終了")
+	current_phase = GamePhase.END_TURN
 	
-	# 1マスずつ移動
-	for i in range(steps):
-		await get_tree().create_timer(0.3).timeout  # 0.3秒待機
-		
-		# 次のマスへ
-		current_player_pos = (current_player_pos + 1) % total_tiles
-		var target_tile = board_tiles[current_player_pos]
-		
-		# 駒を移動
-		player_piece.position = target_tile.position + target_tile.size/2 - player_piece.size/2
-		
-		print("マス ", current_player_pos, " に移動")
+	# スキル効果のクリーンアップ
+	skill_system.end_turn_cleanup()
 	
-	# 移動完了
-	is_moving = false
-	dice_button.disabled = false
-	print("移動完了！現在位置: マス", current_player_pos)
+	# 次のプレイヤーへ
+	player_system.next_player()
+	
+	# 次のターン開始
+	await get_tree().create_timer(1.0).timeout
+	start_turn()
+
+# UI更新
+func update_ui():
+	var current_player = player_system.get_current_player()
+	
+	if current_player:
+		turn_label.text = current_player.name + "のターン"
+		magic_label.text = "魔力: " + str(current_player.magic_power) + " / " + str(current_player.target_magic) + " G"
+	
+	# フェーズ表示
+	match current_phase:
+		GamePhase.SETUP:
+			phase_label.text = "準備中..."
+		GamePhase.DICE_ROLL:
+			phase_label.text = "サイコロを振ってください"
+		GamePhase.MOVING:
+			phase_label.text = "移動中..."
+		GamePhase.TILE_ACTION:
+			phase_label.text = "アクション選択"
+		GamePhase.BATTLE:
+			phase_label.text = "バトル！"
+		GamePhase.END_TURN:
+			phase_label.text = "ターン終了"
