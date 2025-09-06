@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="CardBattleGame"
-run/main_scene="uid://c3jyr7gqeohxd"
+run/main_scene="uid://jtdq4cxo60mv"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -20,4 +20,4 @@ config/icon="res://icon.svg"
 window/size/viewport_width=2400
 window/size/viewport_height=1960
 window/stretch/mode="canvas_items"
-window/stretch/scale=3.71
+window/stretch/scale=0.5

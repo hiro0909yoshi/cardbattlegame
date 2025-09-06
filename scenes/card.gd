@@ -111,6 +111,11 @@ func _input(event):
 			if card_rect.has_point(mouse_pos):
 				print("カードクリック！")
 				is_dragging = event.pressed
+				# ドラッグ中は最前面に
+				if event.pressed:
+					z_index = 10
+				else:
+					z_index = 0
 	
 	elif event is InputEventMouseMotion and is_dragging:
 		global_position = get_global_mouse_position() - size / 2

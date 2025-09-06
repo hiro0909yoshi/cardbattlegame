@@ -1,8 +1,8 @@
 ea4bc82a6ad023ab7ee23ee620429895
-::res://::1757073498
+::res://::1757176161
 icon.svg::CompressedTexture2D/CompressedTexture2D::8473286213771878842::1756938033::1756938082::1::::<><><>0<>0<>90e028d7961bcfb9e7d95aa1be8ff5d6<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-::res://data/::1757024417
-Cards.json::JSON::-1::1757024417::0::1::::<><><>0<>0<><>::
-::res://scenes/::1757024870
-card.gd::GDScript::1171301700323572585::1757024870::0::1::::<>ColorRect<><>0<>0<><>::
-Card.tscn::PackedScene::6758197646109327581::1757022598::0::1::::<><><>0<>0<><>::uid://qxnfycfohpo0::::res://scenes/card.gd
+::res://data/::1757089213
+Cards.json::JSON/JSON::-1::1757089213::0::1::::<><><>0<>0<><>::
+::res://scenes/::1757097324
+card.gd::GDScript/GDScript::1171301700323572585::1757089257::0::1::::<>ColorRect<><>0<>0<><>::
+Card.tscn::PackedScene::6758197646109327581::1757097324::0::1::::<><><>0<>0<><>::uid://qxnfycfohpo0::::res://scenes/card.gd
