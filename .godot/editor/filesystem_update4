@@ -1,9 +1,6 @@
+res://scenes/node_2d.tscn
+res://scripts/card_selection_ui.gd
+res://scenes/game.gd
 res://scenes/Card.tscn
 res://scenes/game.tscn
-res://scenes/game.gd
-res://scenes/card.gd
-res://scripts/board_system.gd
-res://scripts/player_system.gd
-res://scripts/battle_system.gd
 res://scripts/card_system.gd
-res://scripts/skill_system.gd

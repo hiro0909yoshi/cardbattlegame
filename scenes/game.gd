@@ -27,6 +27,10 @@ var dice_button: Button
 var turn_label: Label
 var magic_label: Label
 var phase_label: Label
+var summon_button: Button  # 追加
+var pass_button: Button    # 追加
+var waiting_for_choice = false  # 選択待ちフラグ
+var player_choice = ""      # プレイヤーの選択
 
 func _ready():
 	print("=== カルドセプト風ゲーム開始 ===")
@@ -127,11 +131,33 @@ func create_ui():
 	dice_button.disabled = true
 	add_child(dice_button)
 	
+	# 召喚ボタン（新規追加）
+	summon_button = Button.new()
+	summon_button.text = "召喚する"
+	summon_button.position = Vector2(300, 400)
+	summon_button.size = Vector2(100, 40)
+	summon_button.pressed.connect(_on_summon_button_pressed)
+	summon_button.visible = false
+	add_child(summon_button)
+	
+	# パスボタン（新規追加）
+	pass_button = Button.new()
+	pass_button.text = "召喚しない"
+	pass_button.position = Vector2(420, 400)
+	pass_button.size = Vector2(100, 40)
+	pass_button.pressed.connect(_on_pass_button_pressed)
+	pass_button.visible = false
+	add_child(pass_button)
+	
 	update_ui()
 
 # ゲーム開始
 func start_game():
 	print("ゲーム開始！")
+	
+	# 手札の表示を同期（エラーが出る場合はコメントアウト）
+	# card_system.sync_hand_display()
+	
 	current_phase = GamePhase.DICE_ROLL
 	dice_button.disabled = false
 	update_ui()
@@ -140,10 +166,20 @@ func start_game():
 func start_turn():
 	var current_player = player_system.get_current_player()
 	print("\n--- ", current_player.name, "のターン開始 ---")
+	print("ドロー前: データ=", card_system.hand_data.size(), " 表示=", card_system.hand_cards.size())
 	
 	# カードを1枚引く
 	if card_system.get_hand_size() < card_system.max_hand_size:
-		card_system.draw_card()
+		print("ドロー実行中...")
+		var drawn_card = card_system.draw_card()
+		if drawn_card.is_empty():
+			print("ドローに失敗しました")
+		else:
+			print("ドロー成功: ", drawn_card.get("name", "不明"))
+	else:
+		print("手札が上限です (", card_system.max_hand_size, "枚)")
+	
+	print("ドロー後: データ=", card_system.hand_data.size(), " 表示=", card_system.hand_cards.size())
 	
 	current_phase = GamePhase.DICE_ROLL
 	dice_button.disabled = false
@@ -213,6 +249,11 @@ func _on_movement_completed(final_tile: int):
 		BoardSystem.TileType.NORMAL:
 			process_normal_tile(tile_info)
 
+# 土地レベルアップダイアログ
+func show_land_upgrade_dialog():
+	print("自分の土地です（レベルアップは未実装）")
+	end_turn()
+
 # 通常タイルの処理
 func process_normal_tile(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
@@ -230,7 +271,7 @@ func process_normal_tile(tile_info: Dictionary):
 		print("他人の土地！")
 		process_enemy_land(tile_info)
 
-# 土地取得ダイアログ（仮実装）
+# 土地取得ダイアログ（選択式UI版）
 func show_land_acquisition_dialog():
 	var current_player = player_system.get_current_player()
 	
@@ -238,54 +279,95 @@ func show_land_acquisition_dialog():
 	board_system.set_tile_owner(current_player.current_tile, current_player.id)
 	print("土地を取得しました！")
 	
-	# デバッグ情報
-	print("DEBUG: プレイヤー", current_player.id + 1, "の手札枚数 = ", card_system.get_hand_size())
-	
 	# 手札がある場合のみクリーチャー召喚の選択
 	if card_system.get_hand_size() > 0:
-		print("クリーチャーを召喚しますか？")
-		
-		# 仮実装：自動で最初のカードを使用
-		await get_tree().create_timer(1.0).timeout
-		
-		# もう一度チェック
-		if card_system.get_hand_size() == 0:
-			print("手札がなくなりました")
-			end_turn()
-			return
-		
-		# カードデータを安全に取得
-		var card_data = card_system.get_card_data(0)
-		if card_data.is_empty():
-			print("ERROR: カードデータが取得できません")
-			end_turn()
-			return
-		
-		# コスト計算
-		var base_cost = card_data.get("cost", 1)
-		if base_cost == null:
-			base_cost = 1
-		var cost = skill_system.modify_card_cost(base_cost * 10, card_data, current_player.id)
-		
-		# 魔力チェック
-		if current_player.magic_power >= cost:
-			# カードを使用
-			var used_card = card_system.use_card(0)
-			if not used_card.is_empty():
-				board_system.place_creature(current_player.current_tile, used_card)
-				player_system.add_magic(current_player.id, -cost)
-				print("クリーチャー「", used_card.get("name", "不明"), "」を召喚！(-", cost, "G)")
+		# プレイヤー1の場合は選択UIを表示
+		if current_player.id == 0:
+			show_summon_choice()
+			# 選択を待つ
+			while waiting_for_choice:
+				await get_tree().process_frame
+			
+			# プレイヤーの選択に応じて処理
+			if player_choice == "summon":
+				try_summon_creature(current_player)
+			else:
+				print("召喚をスキップしました")
 		else:
-			print("魔力が足りません！必要: ", cost, "G 所持: ", current_player.magic_power, "G")
+			# CPU（プレイヤー2）は30%の確率で召喚（デバッグ用に確率を下げる）
+			if randf() > 0.7:  # 30%の確率
+				print("CPU: クリーチャーを召喚します")
+				try_summon_creature(current_player)
+			else:
+				print("CPU: 召喚をスキップ")
 	else:
 		print("手札がないためクリーチャーは召喚できません")
 	
 	end_turn()
 
-# 土地レベルアップダイアログ（仮実装）
-func show_land_upgrade_dialog():
-	print("土地をレベルアップしますか？（未実装）")
-	end_turn()
+# 召喚選択UIを表示
+func show_summon_choice():
+	print("クリーチャーを召喚しますか？")
+	var current_player = player_system.get_current_player()
+	
+	# 手札チェック（念のため）
+	if card_system.get_hand_size() == 0:
+		print("ERROR: 手札がないのに選択UIが呼ばれました")
+		waiting_for_choice = false
+		return
+	
+	# 最初のカードの情報を表示
+	var card_data = card_system.get_card_data(0)
+	if not card_data.is_empty():
+		var cost = skill_system.modify_card_cost(card_data.get("cost", 1) * 10, card_data, current_player.id)
+		phase_label.text = card_data.get("name", "不明") + " (コスト: " + str(cost) + "G)"
+		
+		# 魔力が足りない場合は自動的にパス
+		if current_player.magic_power < cost:
+			phase_label.text = "魔力不足 - 召喚不可"
+			print("魔力が足りないため召喚できません")
+			waiting_for_choice = false
+			await get_tree().create_timer(1.0).timeout
+			return
+	
+	summon_button.visible = true
+	pass_button.visible = true
+	waiting_for_choice = true
+	player_choice = ""
+
+# クリーチャー召喚を試みる
+func try_summon_creature(current_player):
+	if card_system.get_hand_size() > 0:
+		var card_data = card_system.get_card_data(0)
+		if not card_data.is_empty():
+			var cost = skill_system.modify_card_cost(card_data.get("cost", 1) * 10, card_data, current_player.id)
+			
+			if current_player.magic_power >= cost:
+				var used_card = card_system.use_card(0)
+				if not used_card.is_empty():
+					board_system.place_creature(current_player.current_tile, used_card)
+					player_system.add_magic(current_player.id, -cost)
+					print("クリーチャー「", used_card.get("name", "不明"), "」を召喚！(-", cost, "G)")
+			else:
+				print("魔力が足りません！必要: ", cost, "G")
+
+# 召喚ボタンが押された
+func _on_summon_button_pressed():
+	if waiting_for_choice:
+		player_choice = "summon"
+		waiting_for_choice = false
+		summon_button.visible = false
+		pass_button.visible = false
+		phase_label.text = "アクション選択"
+
+# パスボタンが押された
+func _on_pass_button_pressed():
+	if waiting_for_choice:
+		player_choice = "pass"
+		waiting_for_choice = false
+		summon_button.visible = false
+		pass_button.visible = false
+		phase_label.text = "アクション選択"
 
 # 敵の土地での処理
 func process_enemy_land(tile_info: Dictionary):
