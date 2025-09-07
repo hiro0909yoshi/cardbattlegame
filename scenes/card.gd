@@ -9,7 +9,7 @@ func _ready():
 	# マウスイベントを接続
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
-	load_card_data(3)
+	# load_card_data(3) ← この行を削除（外部から呼ばれるまで待つ）
 
 func _on_mouse_entered():
 	mouse_over = true
@@ -44,14 +44,27 @@ func load_card_data(card_id):
 			update_label()
 			set_element_color()
 			set_rarity_border()
+			print("カードデータ読み込み完了: ", card.name, " (ID:", card_id, ")")
 			break
 
 func set_element_color():
+	print("DEBUG: set_element_color開始 - 属性:", card_data.get("element", "なし"))
+	
 	match card_data.element:
-		"火": color = Color(1.0, 0.4, 0.4)
-		"水": color = Color(0.4, 0.6, 1.0)
-		"風": color = Color(0.4, 1.0, 0.6)
-		"土": color = Color(0.8, 0.6, 0.3)
+		"火": 
+			color = Color(1.0, 0.4, 0.4)
+			print("DEBUG: 火属性の色を設定")
+		"水": 
+			color = Color(0.4, 0.6, 1.0)
+			print("DEBUG: 水属性の色を設定")
+		"風": 
+			color = Color(0.4, 1.0, 0.6)
+			print("DEBUG: 風属性の色を設定")
+		"土": 
+			color = Color(0.8, 0.6, 0.3)
+			print("DEBUG: 土属性の色を設定")
+		_:
+			print("ERROR: 不明な属性 - ", card_data.get("element", "なし"))
 
 func set_rarity_border():
 	var border = get_node_or_null("RarityBorder")

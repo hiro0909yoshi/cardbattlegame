@@ -1,6 +1,4 @@
-res://scenes/node_2d.tscn
-res://scripts/card_selection_ui.gd
-res://scenes/game.gd
 res://scenes/Card.tscn
+res://scenes/node_2d.tscn
 res://scenes/game.tscn
 res://scripts/card_system.gd

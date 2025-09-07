@@ -109,16 +109,26 @@ func deal_initial_hand(hand_parent: Node) -> Array:
 
 # カードノードを作成
 func create_card_node(card_data: Dictionary, parent: Node, index: int) -> Node:
-	var card = card_scene.instantiate()
-	parent.add_child(card)
+	print("DEBUG: create_card_node開始 - カード:", card_data.get("name", "不明"), " ID:", card_data.get("id", "なし"))
 	
-	# カードを横に並べる
-	card.position = Vector2(50 + index * 120, 200)
+	var card = card_scene.instantiate()
+	print("DEBUG: カードインスタンス作成成功")
+	
+	parent.add_child(card)
+	print("DEBUG: 親ノードに追加成功")
+	
+	# カードをマップの下に横に並べる（Y座標を下に移動）
+	card.position = Vector2(100 + index * 120, 600)  # 600に変更（マップの下）
 	
 	# カードデータを読み込み
 	if card.has_method("load_card_data"):
+		print("DEBUG: load_card_dataメソッド発見 - ID:", card_data.id, "で呼び出し")
 		card.load_card_data(card_data.id)
+		print("DEBUG: load_card_data呼び出し完了")
+	else:
+		print("ERROR: load_card_dataメソッドが見つかりません")
 	
+	print("DEBUG: create_card_node完了")
 	return card
 
 # カードデータを読み込み（JSONから）
