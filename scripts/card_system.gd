@@ -194,7 +194,7 @@ func rearrange_hand():
 	for i in range(hand_cards.size()):
 		var card = hand_cards[i]
 		if card and is_instance_valid(card):
-			card.position = Vector2(50 + i * 120, 200)
+			card.position = Vector2(100 + i * 120, 600)  # ドキュメントと同じ数値に修正
 
 # 手札の枚数を取得
 func get_hand_size() -> int:

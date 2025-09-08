@@ -2,3 +2,6 @@ res://scenes/Card.tscn
 res://scenes/node_2d.tscn
 res://scenes/game.tscn
 res://scripts/card_system.gd
+res://scripts/ui_manager.gd
+res://scripts/game_flow_manager.gd
+res://scenes/game.gd
