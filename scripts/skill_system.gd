@@ -97,7 +97,7 @@ func modify_draw_count(base_count: int, player_id: int) -> int:
 	return modified_count
 
 # バトル能力を修正
-func modify_creature_stats(creature: Dictionary, player_id: int, is_attacker: bool) -> Dictionary:
+func modify_creature_stats(creature: Dictionary, player_id: int, _is_attacker: bool) -> Dictionary:
 	var modified = creature.duplicate()
 	
 	if player_buffs.has(player_id):
@@ -112,20 +112,13 @@ func modify_creature_stats(creature: Dictionary, player_id: int, is_attacker: bo
 	return modified
 
 # 属性相性を適用
-func apply_element_advantage(creature: Dictionary, advantage_table: Dictionary) -> Dictionary:
+func apply_element_advantage(creature: Dictionary, _advantage_table: Dictionary) -> Dictionary:
 	# 火 > 風 > 土 > 水 > 火 のような相性
-	var element_wheel = {
-		"火": "風",
-		"風": "土",
-		"土": "水",
-		"水": "火"
-	}
-	
 	# 実装は後で詳細化
 	return creature
 
 # バフを適用
-func apply_buff(player_id: int, buff_type: String, value: int, duration: int = -1):
+func apply_buff(player_id: int, buff_type: String, value: int, _duration: int = -1):
 	if not player_buffs.has(player_id):
 		return
 	

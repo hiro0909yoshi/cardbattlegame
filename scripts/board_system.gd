@@ -3,10 +3,6 @@ class_name BoardSystem
 
 # ボードマップとタイル管理システム
 
-signal tile_landed(tile_index: int, tile_data: Dictionary)
-signal tile_passed(tile_index: int)
-signal movement_completed()
-
 # ボード設定
 var board_tiles = []  # マスの配列（ColorRect）
 var tile_data = []    # マスのデータ配列
@@ -114,18 +110,18 @@ func place_creature(tile_index: int, creature_data: Dictionary):
 # タイルの見た目を更新
 func update_tile_visual(tile_index: int):
 	var tile = board_tiles[tile_index]
-	var owner = tile_owners[tile_index]
+	var tile_owner = tile_owners[tile_index]  # owner → tile_owner に変更
 	
 	# 既存の枠を削除
 	for child in tile.get_children():
 		child.queue_free()
 	
-	if owner >= 0:
+	if tile_owner >= 0:
 		# 所有者の枠を追加
 		var border = ColorRect.new()
 		border.size = tile.size + Vector2(4, 4)
 		border.position = Vector2(-2, -2)
-		border.color = get_player_color(owner)
+		border.color = get_player_color(tile_owner)
 		border.z_index = -1
 		tile.add_child(border)
 

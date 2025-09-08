@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（分割版）
+# メインゲーム管理スクリプト（プレイヤー別手札対応版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -29,6 +29,15 @@ func initialize_systems():
 	skill_system = SkillSystem.new()
 	ui_manager = UIManager.new()
 	game_flow = GameFlowManager.new()
+	
+	# 名前を設定（参照用）
+	board_system.name = "BoardSystem"
+	card_system.name = "CardSystem"
+	player_system.name = "PlayerSystem"
+	battle_system.name = "BattleSystem"
+	skill_system.name = "SkillSystem"
+	ui_manager.name = "UIManager"
+	game_flow.name = "GameFlowManager"
 	
 	# シーンツリーに追加
 	add_child(board_system)
@@ -64,7 +73,8 @@ func setup_game():
 		hand_node.name = "Hand"
 		add_child(hand_node)
 	
-	card_system.deal_initial_hand($Hand)
+	# 全プレイヤーに初期手札を配る
+	card_system.deal_initial_hands_all_players(player_count)
 	
 	# 初期配置
 	for i in range(player_count):
@@ -72,6 +82,10 @@ func setup_game():
 	
 	# UIを作成
 	ui_manager.create_ui(self)
+	
+	# デバッグ表示用にCPU手札を更新
+	if player_count > 1:
+		ui_manager.update_cpu_hand_display(1)
 
 # シグナルを接続
 func connect_signals():
@@ -92,6 +106,7 @@ func connect_signals():
 	ui_manager.dice_button_pressed.connect(_on_dice_button_pressed)
 	ui_manager.summon_button_pressed.connect(_on_summon_button_pressed)
 	ui_manager.pass_button_pressed.connect(_on_pass_button_pressed)
+	ui_manager.card_selected.connect(_on_card_selected)
 	
 	# GameFlowManagerのシグナル
 	game_flow.phase_changed.connect(_on_phase_changed)
@@ -108,6 +123,9 @@ func _on_summon_button_pressed():
 func _on_pass_button_pressed():
 	game_flow.on_pass_button_pressed()
 
+func _on_card_selected(card_index: int):
+	game_flow.on_card_selected(card_index)
+
 func _on_dice_rolled(value: int):
 	print("ダイス: ", value)
 
@@ -118,7 +136,15 @@ func _on_card_used(card_data: Dictionary):
 	print("カード使用: ", card_data.name)
 
 func _on_hand_updated():
-	print("手札: ", card_system.get_hand_size(), "枚")
+	# 現在のプレイヤーの手札数を表示
+	var current_player = player_system.get_current_player()
+	if current_player:
+		var hand_size = card_system.get_hand_size_for_player(current_player.id)
+		print(current_player.name, "の手札: ", hand_size, "枚")
+		
+		# デバッグモードの場合はCPU手札も更新
+		if current_player.id > 0 and ui_manager.debug_mode:
+			ui_manager.update_cpu_hand_display(current_player.id)
 
 func _on_magic_changed(player_id: int, new_value: int):
 	ui_manager.update_ui(player_system.get_current_player(), game_flow.current_phase)
@@ -135,6 +161,9 @@ func _on_phase_changed(new_phase: int):
 
 func _on_turn_started(player_id: int):
 	print("ターン開始: プレイヤー", player_id + 1)
+	# デバッグ表示を更新
+	if player_id > 0 and ui_manager.debug_mode:
+		ui_manager.update_cpu_hand_display(player_id)
 
 func _on_turn_ended(player_id: int):
 	print("ターン終了: プレイヤー", player_id + 1)

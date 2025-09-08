@@ -5,7 +5,7 @@ class_name BattleSystem
 
 signal battle_started(attacker: Dictionary, defender: Dictionary)
 signal battle_ended(winner: String, result: Dictionary)
-signal damage_dealt(amount: int, target: String)
+# signal damage_dealt(amount: int, target: String) - 未使用のため削除
 
 # バトル結果
 enum BattleResult {

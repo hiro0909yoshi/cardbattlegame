@@ -1,7 +1,7 @@
 extends Node
 class_name GameFlowManager
 
-# ゲームのフェーズ管理・ターン進行システム
+# ゲームのフェーズ管理・ターン進行システム - プレイヤー別手札対応版
 
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
@@ -52,20 +52,23 @@ func start_turn():
 	print("\n--- ", current_player.name, "のターン開始 ---")
 	emit_signal("turn_started", current_player.id)
 	
-	print("ドロー前: データ=", card_system.hand_data.size(), " 表示=", card_system.hand_cards.size())
+	# 現在のプレイヤーの手札情報を表示
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	print("現在の手札: ", hand_size, "枚")
 	
-	# カードを1枚引く
-	if card_system.get_hand_size() < card_system.max_hand_size:
+	# カードを1枚引く（プレイヤー別）
+	if hand_size < card_system.max_hand_size:
 		print("ドロー実行中...")
-		var drawn_card = card_system.draw_card()
+		var drawn_card = card_system.draw_card_for_player(current_player.id)
 		if drawn_card.is_empty():
 			print("ドローに失敗しました")
 		else:
-			print("ドロー成功: ", drawn_card.get("name", "不明"))
+			print(current_player.name, "が「", drawn_card.get("name", "不明"), "」をドロー")
+			# デバッグ表示を更新
+			if current_player.id > 0:  # CPUの場合
+				ui_manager.update_cpu_hand_display(current_player.id)
 	else:
 		print("手札が上限です (", card_system.max_hand_size, "枚)")
-	
-	print("ドロー後: データ=", card_system.hand_data.size(), " 表示=", card_system.hand_cards.size())
 	
 	current_phase = GamePhase.DICE_ROLL
 	ui_manager.set_dice_button_enabled(true)
@@ -151,72 +154,114 @@ func process_land_acquisition():
 	print("土地を取得しました！")
 	
 	# 手札がある場合のみクリーチャー召喚の選択
-	if card_system.get_hand_size() > 0:
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	if hand_size > 0:
 		if current_player.id == 0:
 			# プレイヤー1の場合は選択UIを表示
 			await show_summon_choice()
 		else:
-			# CPU（プレイヤー2）は30%の確率で召喚
-			if randf() > 0.7:
-				print("CPU: クリーチャーを召喚します")
-				try_summon_creature(current_player)
-			else:
-				print("CPU: 召喚をスキップ")
+			# CPUの召喚処理
+			await cpu_summon_decision(current_player)
 	else:
-		print("手札がないためクリーチャーは召喚できません")
+		print(current_player.name, "は手札がないためクリーチャーは召喚できません")
 	
 	end_turn()
 
-# 召喚選択UIを表示
+# CPU召喚判断
+func cpu_summon_decision(current_player):
+	print("CPU召喚判断中...")
+	
+	# 支払い可能なカードを探す
+	var affordable_cards = card_system.find_affordable_cards_for_player(
+		current_player.id, 
+		current_player.magic_power
+	)
+	
+	if affordable_cards.is_empty():
+		print("CPU: 魔力不足で召喚不可")
+		return
+	
+	# 30%の確率で召喚
+	if randf() > 0.7:
+		# 最も安いカードを選択
+		var card_index = card_system.get_cheapest_card_index_for_player(current_player.id)
+		if card_index >= 0:
+			var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
+			var cost = skill_system.modify_card_cost(
+				card_data.get("cost", 1) * 10, 
+				card_data, 
+				current_player.id
+			)
+			
+			print("CPU: 「", card_data.get("name", "不明"), "」を召喚します (コスト:", cost, "G)")
+			try_summon_creature_for_player(current_player, card_index)
+		else:
+			print("CPU: 召喚可能なカードがありません")
+	else:
+		print("CPU: 召喚をスキップ")
+
+# 召喚選択UIを表示（プレイヤー1用）
 func show_summon_choice():
-	print("クリーチャーを召喚しますか？")
 	var current_player = player_system.get_current_player()
 	
-	if card_system.get_hand_size() == 0:
+	var hand_size = card_system.get_hand_size_for_player(0)
+	if hand_size == 0:
 		print("ERROR: 手札がないのに選択UIが呼ばれました")
 		return
 	
-	# 最初のカードの情報を表示
-	var card_data = card_system.get_card_data(0)
-	if not card_data.is_empty():
-		var cost = skill_system.modify_card_cost(card_data.get("cost", 1) * 10, card_data, current_player.id)
-		
-		# 魔力が足りない場合は自動的にパス
-		if current_player.magic_power < cost:
-			ui_manager.show_magic_shortage()
-			print("魔力が足りないため召喚できません")
-			await get_tree().create_timer(1.0).timeout
-			return
-		
-		ui_manager.show_summon_choice(card_data, cost)
-		waiting_for_choice = true
-		player_choice = ""
-		
-		# 選択を待つ
-		while waiting_for_choice:
-			await get_tree().process_frame
-		
-		# プレイヤーの選択に応じて処理
-		if player_choice == "summon":
-			try_summon_creature(current_player)
-		else:
-			print("召喚をスキップしました")
+	print("クリーチャーを召喚しますか？")
+	
+	# カード選択UIを表示（新方式）
+	ui_manager.show_card_selection_ui(current_player)
+	waiting_for_choice = true
+	player_choice = ""
+	
+	# 選択を待つ
+	while waiting_for_choice:
+		await get_tree().process_frame
+	
+	# プレイヤーの選択に応じて処理
+	if player_choice != "pass" and player_choice != "":
+		var card_index = int(player_choice)
+		try_summon_creature_for_player(current_player, card_index)
+	else:
+		print("召喚をスキップしました")
 
-# クリーチャー召喚を試みる
+# カード選択された（UI経由）
+func on_card_selected(card_index: int):
+	if waiting_for_choice:
+		player_choice = str(card_index)
+		waiting_for_choice = false
+		ui_manager.hide_card_selection_ui()
+
+# クリーチャー召喚を試みる（プレイヤー別対応）
+func try_summon_creature_for_player(current_player, card_index: int):
+	var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
+	if not card_data.is_empty():
+		var cost = skill_system.modify_card_cost(
+			card_data.get("cost", 1) * 10, 
+			card_data, 
+			current_player.id
+		)
+		
+		if current_player.magic_power >= cost:
+			var used_card = card_system.use_card_for_player(current_player.id, card_index)
+			if not used_card.is_empty():
+				board_system.place_creature(current_player.current_tile, used_card)
+				player_system.add_magic(current_player.id, -cost)
+				print("クリーチャー「", used_card.get("name", "不明"), "」を召喚！(-", cost, "G)")
+				
+				# CPUの手札表示を更新
+				if current_player.id > 0:
+					ui_manager.update_cpu_hand_display(current_player.id)
+		else:
+			print("魔力が足りません！必要: ", cost, "G, 所持: ", current_player.magic_power, "G")
+
+# クリーチャー召喚を試みる（後方互換性）
 func try_summon_creature(current_player):
-	if card_system.get_hand_size() > 0:
-		var card_data = card_system.get_card_data(0)
-		if not card_data.is_empty():
-			var cost = skill_system.modify_card_cost(card_data.get("cost", 1) * 10, card_data, current_player.id)
-			
-			if current_player.magic_power >= cost:
-				var used_card = card_system.use_card(0)
-				if not used_card.is_empty():
-					board_system.place_creature(current_player.current_tile, used_card)
-					player_system.add_magic(current_player.id, -cost)
-					print("クリーチャー「", used_card.get("name", "不明"), "」を召喚！(-", cost, "G)")
-			else:
-				print("魔力が足りません！必要: ", cost, "G")
+	# 最初のカードで召喚を試みる（旧実装）
+	if card_system.get_hand_size_for_player(current_player.id) > 0:
+		try_summon_creature_for_player(current_player, 0)
 
 # 敵の土地での処理
 func process_enemy_land(tile_info: Dictionary):
@@ -235,7 +280,7 @@ func process_enemy_land(tile_info: Dictionary):
 		print("バトル発生！（未実装）")
 		end_turn()
 
-# 召喚ボタンが押された
+# 召喚ボタンが押された（旧UI互換）
 func on_summon_button_pressed():
 	if waiting_for_choice:
 		player_choice = "summon"
@@ -247,7 +292,7 @@ func on_pass_button_pressed():
 	if waiting_for_choice:
 		player_choice = "pass"
 		waiting_for_choice = false
-		ui_manager.hide_summon_choice()
+		ui_manager.hide_card_selection_ui()
 
 # ターン終了
 func end_turn():
