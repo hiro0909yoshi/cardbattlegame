@@ -48,8 +48,8 @@ func initialize_systems():
 	add_child(ui_manager)
 	add_child(game_flow)
 	
-	# GameFlowにシステム参照を設定
-	game_flow.setup_systems(player_system, card_system, board_system, skill_system, ui_manager)
+	# GameFlowにシステム参照を設定（battle_systemも追加）
+	game_flow.setup_systems(player_system, card_system, board_system, skill_system, ui_manager, battle_system)
 	
 	print("全システム初期化完了")
 
@@ -147,7 +147,7 @@ func _on_magic_changed(player_id: int, new_value: int):
 
 func _on_battle_ended(winner: String, result: Dictionary):
 	print("バトル終了: ", winner, "の勝利")
-	game_flow.end_turn()
+	# end_turn()を削除 - game_flow_managerで処理される
 
 func _on_player_won(player_id: int):
 	game_flow.on_player_won(player_id)

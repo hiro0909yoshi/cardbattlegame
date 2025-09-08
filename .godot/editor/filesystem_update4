@@ -6,3 +6,5 @@ res://scripts/card_system.gd
 res://scripts/card.gd
 res://scripts/game_flow_manager.gd
 res://scripts/game.gd
+res://scripts/battle_system.gd
+res://scripts/player_system.gd

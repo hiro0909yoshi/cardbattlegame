@@ -1,7 +1,7 @@
 extends Node
 class_name GameFlowManager
 
-# ゲームのフェーズ管理・ターン進行システム - 整理版
+# ゲームのフェーズ管理・ターン進行システム - バトル対応版
 
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
@@ -20,6 +20,7 @@ enum GamePhase {
 var current_phase = GamePhase.SETUP
 var waiting_for_choice = false
 var player_choice = ""
+var waiting_for_battle = false  # バトル選択待機フラグ
 
 # システム参照
 var player_system: PlayerSystem
@@ -27,17 +28,19 @@ var card_system: CardSystem
 var board_system: BoardSystem
 var skill_system: SkillSystem
 var ui_manager: UIManager
+var battle_system: BattleSystem  # 追加
 
 func _ready():
 	pass
 
-# システム参照を設定
-func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BoardSystem, s_system: SkillSystem, ui_system: UIManager):
+# システム参照を設定（battle_system追加）
+func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BoardSystem, s_system: SkillSystem, ui_system: UIManager, bt_system: BattleSystem = null):
 	player_system = p_system
 	card_system = c_system
 	board_system = b_system
 	skill_system = s_system
 	ui_manager = ui_system
+	battle_system = bt_system
 
 # ゲーム開始
 func start_game():
@@ -202,6 +205,11 @@ func on_card_selected(card_index: int):
 		player_choice = str(card_index)
 		waiting_for_choice = false
 		ui_manager.hide_card_selection_ui()
+	elif waiting_for_battle:
+		# バトル用のカード選択
+		player_choice = str(card_index)
+		waiting_for_battle = false
+		ui_manager.hide_card_selection_ui()
 
 # クリーチャー召喚を試みる
 func try_summon_creature_for_player(current_player, card_index: int):
@@ -236,13 +244,144 @@ func process_enemy_land(tile_info: Dictionary):
 		end_turn()
 	else:
 		# クリーチャーがいる場合はバトル
+		change_phase(GamePhase.BATTLE)
+		await process_battle(tile_info)
+
+# バトル処理
+func process_battle(tile_info: Dictionary):
+	var current_player = player_system.get_current_player()
+	
+	print("\n敵クリーチャーがいます！バトルするか選択してください")
+	
+	# 手札がない場合は通行料支払い
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	if hand_size == 0:
+		print("手札がないため通行料を支払います")
+		var toll = board_system.calculate_toll(tile_info.index)
+		toll = skill_system.modify_toll(toll, current_player.id, tile_info.owner)
+		player_system.pay_toll(current_player.id, tile_info.owner, toll)
 		end_turn()
+		return
+	
+	# プレイヤーかCPUかで処理を分岐
+	if current_player.id == 0:
+		# プレイヤー1: バトル選択UIを表示
+		await show_battle_choice(tile_info)
+	else:
+		# CPU: 自動でバトル判断
+		await cpu_battle_decision(current_player, tile_info)
+	
+	end_turn()
+
+# バトル選択UIを表示
+func show_battle_choice(tile_info: Dictionary):
+	var current_player = player_system.get_current_player()
+	
+	# 選択UI表示（カード選択と同じUIを流用）
+	ui_manager.phase_label.text = "バトルするクリーチャーを選択（またはパスで通行料）"
+	ui_manager.show_card_selection_ui(current_player)
+	
+	waiting_for_battle = true
+	player_choice = ""
+	
+	# 選択を待つ
+	while waiting_for_battle:
+		await get_tree().process_frame
+	
+	if player_choice != "pass" and player_choice != "":
+		# バトル実行
+		var card_index = int(player_choice)
+		execute_player_battle(current_player, card_index, tile_info)
+	else:
+		# 通行料支払い
+		var toll = board_system.calculate_toll(tile_info.index)
+		toll = skill_system.modify_toll(toll, current_player.id, tile_info.owner)
+		player_system.pay_toll(current_player.id, tile_info.owner, toll)
+
+# プレイヤーのバトル実行
+func execute_player_battle(current_player, card_index: int, tile_info: Dictionary):
+	if not battle_system:
+		print("ERROR: BattleSystemが設定されていません")
+		return
+	
+	# バトル実行
+	var result = battle_system.execute_invasion_battle(
+		current_player.id,
+		card_index,
+		tile_info,
+		card_system,
+		board_system
+	)
+	
+	if result.success:
+		# カードを使用（コスト支払い）
+		var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
+		var cost = skill_system.modify_card_cost(
+			card_data.get("cost", 1) * 10,
+			card_data,
+			current_player.id
+		)
+		
+		card_system.use_card_for_player(current_player.id, card_index)
+		player_system.add_magic(current_player.id, -cost)
+		
+		# 勝利時のボーナス
+		if result.winner == "attacker":
+			print("侵略成功！土地を獲得しました")
+
+# CPU バトル判断
+func cpu_battle_decision(current_player, tile_info: Dictionary):
+	# 防御側クリーチャーの情報
+	var defender = tile_info.creature
+	
+	# 手札から最も有利なカードを探す
+	var best_card_index = -1
+	var best_score = -999
+	
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	for i in range(hand_size):
+		var card = card_system.get_card_data_for_player(current_player.id, i)
+		if card.is_empty():
+			continue
+		
+		# バトル予測
+		var prediction = battle_system.predict_battle_outcome(card, defender, tile_info)
+		
+		# スコア計算（ST差 + 属性ボーナス）
+		var score = prediction.attacker_st - prediction.defender_hp
+		
+		# コストも考慮
+		var cost = skill_system.modify_card_cost(card.get("cost", 1) * 10, card, current_player.id)
+		if cost > current_player.magic_power:
+			continue  # 魔力不足
+		
+		if score > best_score:
+			best_score = score
+			best_card_index = i
+	
+	# 勝てそうなら70%の確率でバトル
+	if best_card_index >= 0 and best_score > -10 and randf() < 0.7:
+		print("CPU: バトルを仕掛けます！")
+		execute_player_battle(current_player, best_card_index, tile_info)
+	else:
+		# 通行料支払い
+		print("CPU: 通行料を支払います")
+		var toll = board_system.calculate_toll(tile_info.index)
+		toll = skill_system.modify_toll(toll, current_player.id, tile_info.owner)
+		player_system.pay_toll(current_player.id, tile_info.owner, toll)
+	
+	# CPU判断後にターン終了
+	end_turn()
 
 # パスボタンが押された
 func on_pass_button_pressed():
 	if waiting_for_choice:
 		player_choice = "pass"
 		waiting_for_choice = false
+		ui_manager.hide_card_selection_ui()
+	elif waiting_for_battle:
+		player_choice = "pass"
+		waiting_for_battle = false
 		ui_manager.hide_card_selection_ui()
 
 # ターン終了

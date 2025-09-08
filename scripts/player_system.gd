@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerSystem
 
-# プレイヤー管理システム
+# プレイヤー管理システム - デバッグ機能付き
 
 signal dice_rolled(value: int)
 signal movement_started()
@@ -28,8 +28,120 @@ var player_pieces = []  # 駒のノード配列
 var is_moving = false
 var move_speed = 300.0  # 移動速度
 
+# デバッグ用
+var debug_dice_mode = false
+var fixed_dice_value = 0
+
 func _ready():
 	print("PlayerSystem: 初期化")
+	print("【デバッグ】数字キー1-6でサイコロ固定、0で解除")
+
+# デバッグ入力を処理
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_1:
+				set_debug_dice(1)
+			KEY_2:
+				set_debug_dice(2)
+			KEY_3:
+				set_debug_dice(3)
+			KEY_4:
+				set_debug_dice(4)
+			KEY_5:
+				set_debug_dice(5)
+			KEY_6:
+				set_debug_dice(6)
+			KEY_0:
+				clear_debug_dice()
+			KEY_7:
+				# 特殊: 敵の土地へ直接移動（バトルテスト用）
+				move_to_enemy_land()
+			KEY_8:
+				# 特殊: 空き地へ直接移動
+				move_to_empty_land()
+			KEY_9:
+				# 魔力を1000追加（デバッグ用）
+				add_debug_magic()
+
+# デバッグ用サイコロ値を設定
+func set_debug_dice(value: int):
+	debug_dice_mode = true
+	fixed_dice_value = value
+	print("【デバッグ】サイコロ固定: ", value)
+
+# デバッグモードをクリア
+func clear_debug_dice():
+	debug_dice_mode = false
+	fixed_dice_value = 0
+	print("【デバッグ】サイコロ固定解除")
+
+# デバッグ: 敵の土地へ移動
+func move_to_enemy_land():
+	if is_moving:
+		return
+	
+	var current_player = get_current_player()
+	if not current_player:
+		return
+	
+	# BoardSystemへの参照を取得
+	var board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
+	if not board_system:
+		return
+	
+	# 敵が所有している土地を探す
+	for i in range(board_system.total_tiles):
+		var tile_info = board_system.get_tile_info(i)
+		if tile_info.owner != -1 and tile_info.owner != current_player.id:
+			# クリーチャーがいる土地を優先
+			if not tile_info.creature.is_empty():
+				print("【デバッグ】敵クリーチャーがいるマス", i, "へ移動")
+				place_player_at_tile(current_player.id, i, board_system)
+				emit_signal("movement_completed", i)
+				return
+	
+	# クリーチャーがいない敵の土地へ
+	for i in range(board_system.total_tiles):
+		var tile_info = board_system.get_tile_info(i)
+		if tile_info.owner != -1 and tile_info.owner != current_player.id:
+			print("【デバッグ】敵の土地マス", i, "へ移動")
+			place_player_at_tile(current_player.id, i, board_system)
+			emit_signal("movement_completed", i)
+			return
+	
+	print("【デバッグ】敵の土地が見つかりません")
+
+# デバッグ: 空き地へ移動
+func move_to_empty_land():
+	if is_moving:
+		return
+	
+	var current_player = get_current_player()
+	if not current_player:
+		return
+	
+	var board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
+	if not board_system:
+		return
+	
+	# 空き地を探す
+	for i in range(1, board_system.total_tiles):  # スタート地点を除く
+		var tile_info = board_system.get_tile_info(i)
+		if tile_info.owner == -1 and tile_info.type == board_system.TileType.NORMAL:
+			print("【デバッグ】空き地マス", i, "へ移動")
+			place_player_at_tile(current_player.id, i, board_system)
+			emit_signal("movement_completed", i)
+			return
+	
+	print("【デバッグ】空き地が見つかりません")
+
+# デバッグ: 魔力追加
+func add_debug_magic():
+	var current_player = get_current_player()
+	if current_player:
+		add_magic(current_player.id, 1000)
+		print("【デバッグ】魔力+1000G")
 
 # プレイヤーを初期化
 func initialize_players(player_count: int, parent_node: Node):
@@ -81,9 +193,16 @@ func next_player():
 	current_player_index = (current_player_index + 1) % players.size()
 	print("PlayerSystem: ", players[current_player_index].name, "のターン")
 
-# サイコロを振る
+# サイコロを振る（デバッグモード対応）
 func roll_dice() -> int:
-	var value = randi_range(1, 6)
+	var value: int
+	
+	if debug_dice_mode and fixed_dice_value > 0:
+		value = fixed_dice_value
+		print("【デバッグ】固定ダイス: ", value)
+	else:
+		value = randi_range(1, 6)
+	
 	emit_signal("dice_rolled", value)
 	return value
 

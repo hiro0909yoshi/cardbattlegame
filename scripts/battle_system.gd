@@ -1,11 +1,11 @@
 extends Node
 class_name BattleSystem
 
-# バトル管理システム
+# バトル管理システム - 実装版
 
 signal battle_started(attacker: Dictionary, defender: Dictionary)
 signal battle_ended(winner: String, result: Dictionary)
-# signal damage_dealt(amount: int, target: String) - 未使用のため削除
+signal battle_animation_finished()
 
 # バトル結果
 enum BattleResult {
@@ -14,118 +14,148 @@ enum BattleResult {
 	DRAW
 }
 
-func _ready():
-	print("BattleSystem: 初期化")
+# 属性相性テーブル（火→風→土→水→火）
+var element_advantages = {
+	"火": "風",
+	"風": "土", 
+	"土": "水",
+	"水": "火"
+}
 
-# バトルを実行
-func execute_battle(attacker_data: Dictionary, defender_data: Dictionary) -> Dictionary:
-	emit_signal("battle_started", attacker_data, defender_data)
+func _ready():
+	pass
+
+# 侵略バトルを実行（メインバトル処理）
+func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, tile_info: Dictionary, card_system: CardSystem, board_system: BoardSystem) -> Dictionary:
+	# 攻撃側のクリーチャーを手札から取得
+	var attacker_data = card_system.get_card_data_for_player(attacker_player_id, attacker_hand_index)
+	if attacker_data.is_empty():
+		return {"success": false, "reason": "invalid_card"}
 	
-	print("バトル開始！")
-	print("攻撃側: ", attacker_data.name, " (ST:", attacker_data.damage, " HP:", attacker_data.block, ")")
-	print("防御側: ", defender_data.name, " (ST:", defender_data.damage, " HP:", defender_data.block, ")")
+	# 防御側のクリーチャーを取得
+	var defender_data = tile_info.creature
+	if defender_data.is_empty():
+		return {"success": false, "reason": "no_defender"}
 	
-	# 簡易バトル計算（後で詳細実装）
-	var attacker_st = attacker_data.damage
-	var defender_hp = defender_data.block
+	print("\n========== バトル開始 ==========")
+	print("攻撃側: ", attacker_data.name, " [", attacker_data.element, "]")
+	print("防御側: ", defender_data.name, " [", defender_data.element, "]")
 	
-	var result = {
-		"winner": "",
-		"damage": 0,
-		"result_type": BattleResult.DRAW
+	# 地形効果と属性相性を計算
+	var battle_modifiers = calculate_all_modifiers(attacker_data, defender_data, tile_info)
+	
+	# 最終的な能力値
+	var final_attacker_st = attacker_data.damage + battle_modifiers.attacker_bonus
+	var final_defender_hp = defender_data.block + battle_modifiers.defender_bonus
+	
+	print("攻撃側ST: ", attacker_data.damage, " + ", battle_modifiers.attacker_bonus, " = ", final_attacker_st)
+	print("防御側HP: ", defender_data.block, " + ", battle_modifiers.defender_bonus, " = ", final_defender_hp)
+	
+	# バトル判定
+	var result = determine_battle_result(final_attacker_st, final_defender_hp)
+	
+	# 結果処理
+	var battle_outcome = {
+		"success": true,
+		"winner": result.winner,
+		"attacker_st": final_attacker_st,
+		"defender_hp": final_defender_hp,
+		"damage": abs(final_attacker_st - final_defender_hp),
+		"land_captured": false,
+		"creature_destroyed": false
 	}
 	
-	# シンプルな判定（ST > HPなら勝利）
-	if attacker_st > defender_hp:
-		result.winner = "attacker"
-		result.damage = attacker_st - defender_hp
-		result.result_type = BattleResult.ATTACKER_WIN
-		print("攻撃側の勝利！")
-	elif defender_hp > attacker_st:
-		result.winner = "defender"
-		result.damage = defender_hp - attacker_st
-		result.result_type = BattleResult.DEFENDER_WIN
-		print("防御側の勝利！")
+	if result.winner == "attacker":
+		print(">>> 攻撃側の勝利！")
+		battle_outcome.land_captured = true
+		battle_outcome.creature_destroyed = true
+		# 土地の所有者を変更
+		board_system.set_tile_owner(tile_info.index, attacker_player_id)
+		# 防御側クリーチャーを削除して攻撃側を配置
+		board_system.place_creature(tile_info.index, attacker_data)
+	elif result.winner == "defender":
+		print(">>> 防御側の勝利！")
+		# 攻撃側クリーチャーは消滅（手札から使用済み）
 	else:
-		result.winner = "draw"
-		result.result_type = BattleResult.DRAW
-		print("引き分け！")
+		print(">>> 引き分け！")
+		battle_outcome.creature_destroyed = true
+		# 両方消滅
+		board_system.place_creature(tile_info.index, {})
 	
-	emit_signal("battle_ended", result.winner, result)
-	return result
+	print("================================\n")
+	
+	emit_signal("battle_ended", result.winner, battle_outcome)
+	return battle_outcome
 
-# 侵略バトル（土地を奪う）
-func invasion_battle(attacker_creature: Dictionary, defender_creature: Dictionary, tile_info: Dictionary) -> Dictionary:
-	# 地形効果を計算
-	var terrain_bonus = calculate_terrain_bonus(attacker_creature, defender_creature, tile_info)
-	
-	# 修正後の能力値
-	var modified_attacker = attacker_creature.duplicate()
-	var modified_defender = defender_creature.duplicate()
-	
-	if terrain_bonus.attacker_bonus > 0:
-		modified_attacker.damage += terrain_bonus.attacker_bonus
-	if terrain_bonus.defender_bonus > 0:
-		modified_defender.block += terrain_bonus.defender_bonus
-	
-	return execute_battle(modified_attacker, modified_defender)
-
-# 地形ボーナスを計算
-func calculate_terrain_bonus(attacker: Dictionary, defender: Dictionary, tile: Dictionary) -> Dictionary:
-	var bonus = {
+# すべての修正値を計算
+func calculate_all_modifiers(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary) -> Dictionary:
+	var modifiers = {
 		"attacker_bonus": 0,
 		"defender_bonus": 0
 	}
 	
-	# 属性一致ボーナス（仮実装）
-	if attacker.element == tile.element:
-		bonus.attacker_bonus += 10
-		print("攻撃側に地形ボーナス +10")
+	# 1. 地形効果（属性一致ボーナス）
+	if attacker.element == tile_info.element:
+		modifiers.attacker_bonus += 10
+		print("  攻撃側: 地形ボーナス +10 (", tile_info.element, "属性)")
 	
-	if defender.element == tile.element:
-		bonus.defender_bonus += 10
-		print("防御側に地形ボーナス +10")
+	if defender.element == tile_info.element:
+		modifiers.defender_bonus += 10
+		print("  防御側: 地形ボーナス +10 (", tile_info.element, "属性)")
 	
-	return bonus
+	# 2. 属性相性ボーナス
+	var attacker_advantage = calculate_element_advantage(attacker.element, defender.element)
+	var defender_advantage = calculate_element_advantage(defender.element, attacker.element)
+	
+	if attacker_advantage > 0:
+		modifiers.attacker_bonus += attacker_advantage
+		print("  攻撃側: 属性相性ボーナス +", attacker_advantage, " (", attacker.element, "→", defender.element, ")")
+	
+	if defender_advantage > 0:
+		modifiers.defender_bonus += defender_advantage
+		print("  防御側: 属性相性ボーナス +", defender_advantage, " (", defender.element, "→", attacker.element, ")")
+	
+	return modifiers
 
-# アイテムカードの効果を適用
-func apply_item_effect(creature: Dictionary, item: Dictionary) -> Dictionary:
-	var modified = creature.duplicate()
+# 属性相性を計算
+func calculate_element_advantage(attacker_element: String, defender_element: String) -> int:
+	if not element_advantages.has(attacker_element):
+		return 0
 	
-	match item.type:
-		"weapon":
-			modified.damage += item.value
-			print("武器効果: ST +", item.value)
-		"armor":
-			modified.block += item.value
-			print("防具効果: HP +", item.value)
-		"spell":
-			# 特殊効果（後で実装）
-			print("呪文効果: ", item.name)
+	# 有利属性なら+20
+	if element_advantages[attacker_element] == defender_element:
+		return 20
 	
-	return modified
+	return 0
 
-# ダメージ計算
-func calculate_damage(attacker_st: int, defender_hp: int, modifiers: Dictionary = {}) -> int:
-	var damage = max(0, attacker_st - defender_hp)
+# バトル結果を判定
+func determine_battle_result(attacker_st: int, defender_hp: int) -> Dictionary:
+	var result = {
+		"winner": "",
+		"result_type": BattleResult.DRAW
+	}
 	
-	# 修正値を適用
-	if modifiers.has("critical"):
-		damage *= 2
-		print("クリティカルヒット！")
+	if attacker_st > defender_hp:
+		result.winner = "attacker"
+		result.result_type = BattleResult.ATTACKER_WIN
+	elif defender_hp > attacker_st:
+		result.winner = "defender" 
+		result.result_type = BattleResult.DEFENDER_WIN
+	else:
+		result.winner = "draw"
+		result.result_type = BattleResult.DRAW
 	
-	if modifiers.has("defense_bonus"):
-		damage = max(0, damage - modifiers.defense_bonus)
-	
-	return damage
+	return result
 
 # バトル予測（UI表示用）
 func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Dictionary) -> Dictionary:
-	var terrain = calculate_terrain_bonus(attacker, defender, tile)
+	var modifiers = calculate_all_modifiers(attacker, defender, tile)
 	
 	var prediction = {
-		"attacker_st": attacker.damage + terrain.attacker_bonus,
-		"defender_hp": defender.block + terrain.defender_bonus,
+		"attacker_st": attacker.damage + modifiers.attacker_bonus,
+		"defender_hp": defender.block + modifiers.defender_bonus,
+		"attacker_bonus": modifiers.attacker_bonus,
+		"defender_bonus": modifiers.defender_bonus,
 		"likely_winner": ""
 	}
 	
@@ -137,3 +167,34 @@ func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Di
 		prediction.likely_winner = "draw"
 	
 	return prediction
+
+# 通常バトル（手札を使わない戦闘用）
+func execute_normal_battle(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> Dictionary:
+	emit_signal("battle_started", attacker_data, defender_data)
+	
+	print("\n========== バトル開始 ==========")
+	print("攻撃側: ", attacker_data.name, " [", attacker_data.element, "]")
+	print("防御側: ", defender_data.name, " [", defender_data.element, "]")
+	
+	# 地形効果と属性相性を計算
+	var battle_modifiers = calculate_all_modifiers(attacker_data, defender_data, tile_info)
+	
+	# 最終的な能力値
+	var final_attacker_st = attacker_data.damage + battle_modifiers.attacker_bonus
+	var final_defender_hp = defender_data.block + battle_modifiers.defender_bonus
+	
+	print("最終ST: ", final_attacker_st, " vs 最終HP: ", final_defender_hp)
+	
+	# バトル判定
+	var result = determine_battle_result(final_attacker_st, final_defender_hp)
+	
+	var battle_outcome = {
+		"winner": result.winner,
+		"damage": abs(final_attacker_st - final_defender_hp),
+		"result_type": result.result_type
+	}
+	
+	print("================================\n")
+	
+	emit_signal("battle_ended", result.winner, battle_outcome)
+	return battle_outcome
