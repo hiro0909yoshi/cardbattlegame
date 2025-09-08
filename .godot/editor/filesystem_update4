@@ -4,3 +4,5 @@ res://scenes/game.tscn
 res://scripts/ui_manager.gd
 res://scripts/card_system.gd
 res://scripts/card.gd
+res://scripts/game_flow_manager.gd
+res://scripts/game.gd

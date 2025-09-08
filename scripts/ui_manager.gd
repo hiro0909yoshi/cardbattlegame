@@ -1,10 +1,9 @@
 extends Node
 class_name UIManager
 
-# UI要素の作成・管理・更新システム - デバッグ表示対応版
+# UI要素の作成・管理・更新システム - 整理版
 
 signal dice_button_pressed()
-signal summon_button_pressed()
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 
@@ -13,8 +12,6 @@ var dice_button: Button
 var turn_label: Label
 var magic_label: Label
 var phase_label: Label
-var summon_button: Button
-var pass_button: Button
 
 # ダイス表示用
 var current_dice_label: Label = null
@@ -33,7 +30,7 @@ var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
 
 func _ready():
-	print("UIManager: 初期化")
+	pass
 
 # UIを作成
 func create_ui(parent: Node):
@@ -71,34 +68,14 @@ func create_ui(parent: Node):
 	dice_button.disabled = true
 	parent.add_child(dice_button)
 	
-	# 召喚ボタン（後方互換性のため残す）
-	summon_button = Button.new()
-	summon_button.text = "召喚する"
-	summon_button.position = Vector2(300, 400)
-	summon_button.size = Vector2(100, 40)
-	summon_button.pressed.connect(_on_summon_button_pressed)
-	summon_button.visible = false
-	parent.add_child(summon_button)
-	
-	# パスボタン（後方互換性のため残す）
-	pass_button = Button.new()
-	pass_button.text = "召喚しない"
-	pass_button.position = Vector2(420, 400)
-	pass_button.size = Vector2(100, 40)
-	pass_button.pressed.connect(_on_pass_button_pressed)
-	pass_button.visible = false
-	parent.add_child(pass_button)
-	
 	# デバッグ表示パネルを作成
 	create_debug_panel(parent)
-	
-	print("UIManager: UI作成完了")
 
 # デバッグパネルを作成
 func create_debug_panel(parent: Node):
 	# 背景パネル
 	cpu_hand_panel = Panel.new()
-	cpu_hand_panel.position = Vector2(650, 200)  # 550 → 650 (右に100px移動)
+	cpu_hand_panel.position = Vector2(650, 200)
 	cpu_hand_panel.size = Vector2(200, 300)
 	cpu_hand_panel.visible = false
 	
@@ -121,13 +98,10 @@ func create_debug_panel(parent: Node):
 	cpu_hand_label.bbcode_enabled = true
 	cpu_hand_label.add_theme_font_size_override("normal_font_size", 12)
 	cpu_hand_panel.add_child(cpu_hand_label)
-	
-	print("UIManager: デバッグパネル作成完了")
 
 # カード選択UIを表示
 func show_card_selection_ui(current_player):
 	if not card_system_ref:
-		print("ERROR: CardSystemの参照がありません")
 		return
 	
 	# 既存のボタンをクリア
@@ -138,7 +112,6 @@ func show_card_selection_ui(current_player):
 	# プレイヤーの手札を取得
 	var hand_data = card_system_ref.get_all_cards_for_player(current_player.id)
 	if hand_data.is_empty():
-		print("ERROR: 手札が空です")
 		return
 	
 	card_selection_active = true
@@ -149,7 +122,7 @@ func show_card_selection_ui(current_player):
 	# カードを選択可能にする
 	card_system_ref.set_cards_selectable(true)
 	
-	# 手札のカードノードにハイライトを追加（マウス通過可能に）
+	# 手札のカードノードにハイライトを追加
 	var hand_nodes = card_system_ref.player_hands[0]["nodes"]
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
@@ -161,7 +134,7 @@ func show_card_selection_ui(current_player):
 			highlight.position = Vector2(-2, -2)
 			highlight.color = Color(1, 1, 0, 0.3)  # 半透明の黄色
 			highlight.z_index = -1
-			highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウスイベントを通過
+			highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card_node.add_child(highlight)
 			
 			# コストチェック
@@ -175,7 +148,7 @@ func show_card_selection_ui(current_player):
 	var pass_button_new = Button.new()
 	pass_button_new.text = "召喚しない"
 	var last_card_x = 100 + hand_data.size() * 120
-	pass_button_new.position = Vector2(last_card_x, 620)  # 手札と同じY座標
+	pass_button_new.position = Vector2(last_card_x, 620)
 	pass_button_new.size = Vector2(100, 80)
 	pass_button_new.pressed.connect(_on_pass_button_pressed)
 	
@@ -235,26 +208,17 @@ func toggle_debug_mode():
 	debug_mode = !debug_mode
 	cpu_hand_panel.visible = debug_mode
 	
-	if debug_mode:
-		print("デバッグモード: ON")
-		# 現在のCPU手札を表示
-		if player_system_ref:
-			var current_player = player_system_ref.get_current_player()
-			if current_player and current_player.id > 0:
-				update_cpu_hand_display(current_player.id)
-			else:
-				# プレイヤー2（CPU）の手札を表示
-				update_cpu_hand_display(1)
-	else:
-		print("デバッグモード: OFF")
+	if debug_mode and player_system_ref:
+		var current_player = player_system_ref.get_current_player()
+		if current_player and current_player.id > 0:
+			update_cpu_hand_display(current_player.id)
+		else:
+			# プレイヤー2（CPU）の手札を表示
+			update_cpu_hand_display(1)
 
 # CPU手札表示を更新
 func update_cpu_hand_display(player_id: int):
-	if not debug_mode or not cpu_hand_label:
-		return
-	
-	if not card_system_ref:
-		print("ERROR: CardSystemの参照がありません")
+	if not debug_mode or not cpu_hand_label or not card_system_ref:
 		return
 	
 	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
@@ -312,18 +276,6 @@ func show_dice_result(value: int, parent: Node):
 	current_dice_label.position = Vector2(350, 300)
 	parent.add_child(current_dice_label)
 
-# 召喚選択UIを表示（後方互換性）
-func show_summon_choice(card_data: Dictionary, cost: int):
-	phase_label.text = card_data.get("name", "不明") + " (コスト: " + str(cost) + "G)"
-	summon_button.visible = true
-	pass_button.visible = true
-
-# 召喚選択UIを非表示（後方互換性）
-func hide_summon_choice():
-	summon_button.visible = false
-	pass_button.visible = false
-	phase_label.text = "アクション選択"
-
 # 魔力不足表示
 func show_magic_shortage():
 	phase_label.text = "魔力不足 - 召喚不可"
@@ -335,9 +287,6 @@ func set_dice_button_enabled(enabled: bool):
 # ボタンイベント
 func _on_dice_button_pressed():
 	emit_signal("dice_button_pressed")
-
-func _on_summon_button_pressed():
-	emit_signal("summon_button_pressed")
 
 func _on_pass_button_pressed():
 	emit_signal("pass_button_pressed")

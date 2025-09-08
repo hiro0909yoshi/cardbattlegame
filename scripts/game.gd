@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（プレイヤー別手札対応版）
+# メインゲーム管理スクリプト（シグナル修正版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -87,7 +87,7 @@ func setup_game():
 	if player_count > 1:
 		ui_manager.update_cpu_hand_display(1)
 
-# シグナルを接続
+# シグナルを接続（修正版）
 func connect_signals():
 	# PlayerSystemのシグナル
 	player_system.dice_rolled.connect(_on_dice_rolled)
@@ -102,9 +102,8 @@ func connect_signals():
 	# BattleSystemのシグナル
 	battle_system.battle_ended.connect(_on_battle_ended)
 	
-	# UIManagerのシグナル
+	# UIManagerのシグナル（修正：summon_button_pressedを削除）
 	ui_manager.dice_button_pressed.connect(_on_dice_button_pressed)
-	ui_manager.summon_button_pressed.connect(_on_summon_button_pressed)
 	ui_manager.pass_button_pressed.connect(_on_pass_button_pressed)
 	ui_manager.card_selected.connect(_on_card_selected)
 	
@@ -116,9 +115,6 @@ func connect_signals():
 # イベントハンドラー
 func _on_dice_button_pressed():
 	game_flow.roll_dice()
-
-func _on_summon_button_pressed():
-	game_flow.on_summon_button_pressed()
 
 func _on_pass_button_pressed():
 	game_flow.on_pass_button_pressed()
