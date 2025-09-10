@@ -7,6 +7,9 @@ signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
 signal turn_ended(player_id: int)
 
+# 定数をpreload
+const GameConstants = preload("res://scripts/game_constants.gd")
+
 # ゲーム状態
 enum GamePhase {
 	SETUP,
@@ -29,7 +32,7 @@ var board_system: BoardSystem
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem
-var special_tile_system: SpecialTileSystem  # 追加
+var special_tile_system: SpecialTileSystem
 
 func _ready():
 	pass
@@ -42,7 +45,7 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Board
 	skill_system = s_system
 	ui_manager = ui_system
 	battle_system = bt_system
-	special_tile_system = st_system  # 追加
+	special_tile_system = st_system
 
 # ゲーム開始
 func start_game():
@@ -104,11 +107,11 @@ func on_movement_completed(final_tile: int):
 	# （通過型ワープで到着した場合も処理される）
 	if tile_info.type == BoardSystem.TileType.CHECKPOINT:
 		print("チェックポイント到着！100G獲得")
-		player_system.add_magic(current_player.id, 100)
+		player_system.add_magic(current_player.id, GameConstants.CHECKPOINT_BONUS)
 		end_turn()
 		return
 	elif tile_info.type == BoardSystem.TileType.START:
-		player_system.add_magic(current_player.id, 100)
+		player_system.add_magic(current_player.id, GameConstants.START_BONUS)
 		end_turn()
 		return
 	
@@ -150,11 +153,11 @@ func on_movement_completed(final_tile: int):
 	# タイルの種類による処理
 	match tile_info.type:
 		BoardSystem.TileType.START:
-			player_system.add_magic(current_player.id, 100)
+			player_system.add_magic(current_player.id, GameConstants.START_BONUS)
 			end_turn()
 			
 		BoardSystem.TileType.CHECKPOINT:
-			player_system.add_magic(current_player.id, 100)
+			player_system.add_magic(current_player.id, GameConstants.CHECKPOINT_BONUS)
 			end_turn()
 			
 		BoardSystem.TileType.NORMAL:
@@ -210,7 +213,7 @@ func process_own_land(tile_info: Dictionary):
 	
 	# レベルアップ可能かチェック
 	var current_level = tile_info.get("level", 1)
-	if current_level >= 5:
+	if current_level >= GameConstants.MAX_LEVEL:
 		print("この土地は最大レベルです")
 		end_turn()
 		return
@@ -221,7 +224,7 @@ func process_own_land(tile_info: Dictionary):
 	else:
 		# CPU：自動判断（1レベルずつ）
 		var upgrade_cost = board_system.get_upgrade_cost(tile_info.get("index", 0))
-		if current_player.magic_power >= upgrade_cost and randf() < 0.5:  # 50%の確率
+		if current_player.magic_power >= upgrade_cost and randf() < GameConstants.CPU_LEVELUP_RATE:
 			print("CPU: 土地をレベルアップします（コスト: ", upgrade_cost, "G）")
 			board_system.upgrade_tile_level(tile_info.get("index", 0))
 			player_system.add_magic(current_player.id, -upgrade_cost)
@@ -259,8 +262,8 @@ func process_enemy_land(tile_info: Dictionary):
 				# プレイヤー：侵略選択
 				await show_invasion_choice(tile_info)
 			else:
-				# CPU：自動判断（80%の確率で侵略）
-				if randf() < 0.8:
+				# CPU：自動判断
+				if randf() < GameConstants.CPU_INVASION_RATE:
 					await cpu_invasion_decision(current_player, tile_info)
 				else:
 					print("CPU: 侵略をスキップして通行料を支払います")
@@ -303,7 +306,7 @@ func cpu_invasion_decision(current_player, tile_info: Dictionary):
 	if card_index >= 0:
 		var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
 		var cost = skill_system.modify_card_cost(
-			card_data.get("cost", 1) * 10,
+			card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER,
 			card_data,
 			current_player.id
 		)
@@ -320,7 +323,7 @@ func cpu_invasion_decision(current_player, tile_info: Dictionary):
 func execute_invasion(current_player, card_index: int, tile_info: Dictionary):
 	var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
 	var cost = skill_system.modify_card_cost(
-		card_data.get("cost", 1) * 10,
+		card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER,
 		card_data,
 		current_player.id
 	)
@@ -418,7 +421,7 @@ func execute_player_battle(current_player, card_index: int, tile_info: Dictionar
 	if result.success:
 		var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
 		var cost = skill_system.modify_card_cost(
-			card_data.get("cost", 1) * 10,
+			card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER,
 			card_data,
 			current_player.id
 		)
@@ -463,11 +466,15 @@ func cpu_battle_decision(current_player, tile_info: Dictionary):
 		if card.is_empty():
 			continue
 		
-		# 予測計算（エラー回避のため引数3つに戻す）
+		# 予測計算
 		var prediction = battle_system.predict_battle_outcome(card, defender, tile_info)
 		var score = prediction.attacker_st - prediction.defender_hp
 		
-		var cost = skill_system.modify_card_cost(card.get("cost", 1) * 10, card, current_player.id)
+		var cost = skill_system.modify_card_cost(
+			card.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER, 
+			card, 
+			current_player.id
+		)
 		if cost > current_player.magic_power:
 			continue
 		
@@ -475,7 +482,7 @@ func cpu_battle_decision(current_player, tile_info: Dictionary):
 			best_score = score
 			best_card_index = i
 	
-	if best_card_index >= 0 and best_score > -10 and randf() < 0.7:
+	if best_card_index >= 0 and best_score > -10 and randf() < GameConstants.CPU_BATTLE_RATE:
 		print("CPU: バトルを仕掛けます！")
 		await execute_player_battle(current_player, best_card_index, tile_info)
 	else:
@@ -492,12 +499,12 @@ func cpu_summon_decision(current_player):
 	if affordable_cards.is_empty():
 		return
 	
-	if randf() > 0.1:
+	if randf() < GameConstants.CPU_SUMMON_RATE:
 		var card_index = card_system.get_cheapest_card_index_for_player(current_player.id)
 		if card_index >= 0:
 			var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
 			var cost = skill_system.modify_card_cost(
-				card_data.get("cost", 1) * 10, 
+				card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER, 
 				card_data, 
 				current_player.id
 			)
@@ -558,7 +565,7 @@ func try_summon_creature_for_player(current_player, card_index: int):
 	var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
 	if not card_data.is_empty():
 		var cost = skill_system.modify_card_cost(
-			card_data.get("cost", 1) * 10, 
+			card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER, 
 			card_data, 
 			current_player.id
 		)
@@ -592,7 +599,7 @@ func end_turn():
 	skill_system.end_turn_cleanup()
 	player_system.next_player()
 	
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(GameConstants.TURN_END_DELAY).timeout
 	start_turn()
 
 # プレイヤー勝利処理

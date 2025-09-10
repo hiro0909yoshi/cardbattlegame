@@ -1,5 +1,5 @@
 extends ColorRect
-# カード表示・操作・選択スクリプト - 2段階選択対応版（修正版）
+# カード表示・操作・選択スクリプト - クリーンアップ版
 
 var is_dragging = false
 var card_data = {}
@@ -14,7 +14,6 @@ var original_size: Vector2  # 元のサイズ
 signal card_clicked(index: int)
 
 func _ready():
-	print("カード準備完了！")
 	# マウスイベントを接続
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
@@ -38,7 +37,6 @@ func _on_mouse_exited():
 func load_card_data(card_id):
 	var file = FileAccess.open("res://data/Cards.json", FileAccess.READ)
 	if file == null:
-		print("JSONファイルが開けません")
 		return
 	
 	var json_text = file.get_as_text()
@@ -48,7 +46,6 @@ func load_card_data(card_id):
 	var parse_result = json.parse(json_text)
 	
 	if parse_result != OK:
-		print("JSONパースエラー")
 		return
 	
 	var data = json.data
@@ -58,7 +55,6 @@ func load_card_data(card_id):
 			update_label()
 			set_element_color()
 			set_rarity_border()
-			print("カードデータ読み込み完了: ", card.name, " (ID:", card_id, ")")
 			break
 
 func set_element_color():
@@ -140,8 +136,6 @@ func set_selectable(selectable: bool, index: int = -1):
 		# 選択モード解除時は元に戻す
 		if is_selected:
 			deselect_card()
-	
-	print("カード選択モード: ", card_data.get("name", "不明"), " - ", "選択可能" if selectable else "選択不可")
 
 # カードを選択状態にする（1段階目）
 func select_card():
@@ -150,8 +144,6 @@ func select_card():
 	
 	is_selected = true
 	original_position = position
-	
-	print("DEBUG: select_card開始 - ", card_data.get("name", "不明"))
 	
 	# カードを大きく表示
 	z_index = 100
@@ -168,11 +160,6 @@ func select_card():
 				Vector2(position.x - 20, position.y - 60), 0.3)
 			tween.parallel().tween_property(self, "scale", 
 				Vector2(1.4, 1.4), 0.3)
-	
-	# 選択エフェクトを追加
-	add_selection_effect()
-	
-	print("カード選択（プレビュー）: ", card_data.get("name", "不明"))
 
 # カードの選択を解除
 func deselect_card():
@@ -188,25 +175,10 @@ func deselect_card():
 	
 	# 色を元に戻す
 	modulate = Color(1.0, 1.0, 1.0)
-	
-	# 選択エフェクトを削除（念のため）
-	remove_selection_effect()
-	
-	print("カード選択解除: ", card_data.get("name", "不明"))
-
-# 選択エフェクトを追加（使わないが互換性のため残す）
-func add_selection_effect():
-	pass  # 何もしない
-
-# 選択エフェクトを削除（使わないが互換性のため残す）
-func remove_selection_effect():
-	pass  # 何もしない
 
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
-		print("カード決定: ", card_data.get("name", "不明"), " (インデックス: ", card_index, ")")
-		
 		# UIManagerに通知
 		var ui_manager = get_tree().get_root().get_node_or_null("Game/UIManager")
 		if ui_manager and ui_manager.has_method("_on_card_button_pressed"):
@@ -217,12 +189,8 @@ func _input(event):
 	# カード選択モード時のクリック処理
 	if is_selectable and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print("DEBUG: カードクリック検出 - ", card_data.get("name", "不明"), " 選択状態:", is_selected)
-			
 			if not is_selected:
 				# 1回目のクリック：選択（プレビュー）
-				print("DEBUG: 1回目のクリック - プレビュー表示")
-				
 				# 他のカードの選択を解除（親ノードの全子要素をチェック）
 				var parent = get_parent()
 				if parent:
@@ -233,7 +201,6 @@ func _input(event):
 				select_card()
 			else:
 				# 2回目のクリック：決定
-				print("DEBUG: 2回目のクリック - 召喚決定")
 				on_card_confirmed()
 			
 			get_viewport().set_input_as_handled()

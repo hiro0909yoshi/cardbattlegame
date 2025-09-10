@@ -1,11 +1,14 @@
 extends Node
 class_name BattleSystem
 
-# バトル管理システム - 属性連鎖HPボーナス対応版
+# バトル管理システム - GameConstants対応版
 
 signal battle_started(attacker: Dictionary, defender: Dictionary)
 signal battle_ended(winner: String, result: Dictionary)
 signal battle_animation_finished()
+
+# 定数をpreload
+const GameConstants = preload("res://scripts/game_constants.gd")
 
 # バトル結果
 enum BattleResult {
@@ -135,16 +138,16 @@ func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile
 		if board_system and board_system.has_method("get_element_chain_count"):
 			chain_count = board_system.get_element_chain_count(tile_index, player_id)
 		
-		# 連鎖数に応じたHPボーナス（最大4個で+40）
+		# 連鎖数に応じたHPボーナス（GameConstantsから取得）
 		var hp_bonus_value = 0
 		if chain_count >= 4:
-			hp_bonus_value = 40  # 4個以上は+40固定
+			hp_bonus_value = GameConstants.TERRAIN_BONUS_4
 		elif chain_count == 3:
-			hp_bonus_value = 30
+			hp_bonus_value = GameConstants.TERRAIN_BONUS_3
 		elif chain_count == 2:
-			hp_bonus_value = 20
+			hp_bonus_value = GameConstants.TERRAIN_BONUS_2
 		elif chain_count == 1:
-			hp_bonus_value = 10
+			hp_bonus_value = GameConstants.TERRAIN_BONUS_1
 		
 		bonuses.hp_bonus += hp_bonus_value
 		
@@ -173,9 +176,9 @@ func calculate_element_advantage(attacker_element: String, defender_element: Str
 	if not element_advantages.has(attacker_element):
 		return 0
 	
-	# 有利属性なら+20
+	# 有利属性ならGameConstantsから値を取得
 	if element_advantages[attacker_element] == defender_element:
-		return 20
+		return GameConstants.ELEMENT_ADVANTAGE
 	
 	return 0
 
@@ -242,8 +245,8 @@ func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Di
 	var board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
 	
 	# ボーナスを個別に計算
-	var attacker_bonuses = calculate_creature_bonuses(attacker, defender, tile, true, attacker_player_id, board_system)
-	var defender_bonuses = calculate_creature_bonuses(defender, attacker, tile, false, defender_player_id, board_system)
+	var attacker_bonuses = calculate_creature_bonuses(attacker, defender, tile, true, attacker_player_id, board_system, true)
+	var defender_bonuses = calculate_creature_bonuses(defender, attacker, tile, false, defender_player_id, board_system, true)
 	
 	var prediction = {
 		"attacker_st": attacker.get("damage", 0) + attacker_bonuses.st_bonus,

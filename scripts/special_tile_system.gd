@@ -1,11 +1,14 @@
 extends Node
 class_name SpecialTileSystem
 
-# 特殊マス管理システム - 通過型/停止型ワープ対応版
+# 特殊マス管理システム - GameConstants対応版
 
 signal special_tile_activated(tile_type: String, player_id: int, tile_index: int)
 signal warp_triggered(from_tile: int, to_tile: int)
 signal card_draw_triggered(player_id: int, count: int)
+
+# 定数をpreload
+const GameConstants = preload("res://scripts/game_constants.gd")
 
 # 特殊マスタイプ
 enum SpecialType {
@@ -29,7 +32,7 @@ var card_system: CardSystem
 var player_system: PlayerSystem
 
 func _ready():
-	print("SpecialTileSystem: 初期化")
+	pass
 
 # システム参照を設定
 func setup_systems(b_system: BoardSystem, c_system: CardSystem, p_system: PlayerSystem):
@@ -42,7 +45,7 @@ func setup_special_tiles(total_tiles: int):
 	special_tiles.clear()
 	warp_pairs.clear()
 	
-	# 通過型ワープマスを配置（マス4 ↔ マス6）
+	# 通過型ワープマスを配置（マス3 ↔ マス5）
 	setup_warp_gates(total_tiles)
 	
 	# 停止型ワープマスを配置（マス14 → マス16）
@@ -53,8 +56,6 @@ func setup_special_tiles(total_tiles: int):
 	
 	# 無属性マスを配置
 	setup_neutral_tiles(total_tiles)
-	
-	print("特殊マス配置完了: ", special_tiles.size(), "箇所")
 
 # 通過型ワープマスを設定
 func setup_warp_gates(total_tiles: int):
@@ -208,17 +209,17 @@ func get_type_name(type: SpecialType) -> String:
 		SpecialType.TRAP: return "トラップ"
 		_: return "不明"
 
-# 特殊マス色を取得
+# 特殊マス色を取得（GameConstantsから取得）
 func get_special_tile_color(type: SpecialType) -> Color:
 	match type:
 		SpecialType.WARP_GATE: 
-			return Color(1.0, 0.5, 0.0)  # オレンジ
+			return GameConstants.SPECIAL_TILE_COLORS.get("WARP_GATE", Color(1.0, 0.5, 0.0))
 		SpecialType.WARP_POINT: 
-			return Color(0.8, 0.3, 0.8)  # 紫
+			return GameConstants.SPECIAL_TILE_COLORS.get("WARP_POINT", Color(0.8, 0.3, 0.8))
 		SpecialType.CARD: 
-			return Color(0.3, 0.8, 0.8)  # シアン
+			return GameConstants.SPECIAL_TILE_COLORS.get("CARD", Color(0.3, 0.8, 0.8))
 		SpecialType.NEUTRAL: 
-			return Color(0.5, 0.5, 0.5)  # グレー
+			return GameConstants.SPECIAL_TILE_COLORS.get("NEUTRAL", Color(0.5, 0.5, 0.5))
 		_: 
 			return Color(0.7, 0.7, 0.7)
 

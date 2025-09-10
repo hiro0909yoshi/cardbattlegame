@@ -1,11 +1,14 @@
 extends Node
 class_name CardSystem
 
-# カード、手札、山札管理システム - 整理版
+# カード、手札、山札管理システム - GameConstants対応版
 
 signal card_drawn(card_data: Dictionary)
 signal card_used(card_data: Dictionary)
 signal hand_updated()
+
+# 定数をpreload
+const GameConstants = preload("res://scripts/game_constants.gd")
 
 # カード管理
 var card_scene = preload("res://scenes/Card.tscn")
@@ -14,11 +17,11 @@ var discard = []     # 捨て札
 
 # プレイヤー別手札管理
 var player_hands = {}  # player_id -> {data: [], nodes: []}
-var max_players = 4
+var max_players = GameConstants.MAX_PLAYERS
 
 # 設定
-var max_hand_size = 6  # 手札上限
-var initial_hand_size = 5  # 初期手札枚数
+var max_hand_size = GameConstants.MAX_HAND_SIZE  # 手札上限
+var initial_hand_size = GameConstants.INITIAL_HAND_SIZE  # 初期手札枚数
 
 func _ready():
 	initialize_deck()
@@ -28,7 +31,7 @@ func _ready():
 func initialize_deck():
 	# 各カードを3枚ずつ山札に追加
 	for i in range(1, 13):  # カードID 1-12
-		for j in range(3):  # 3枚ずつ
+		for j in range(GameConstants.CARDS_PER_TYPE):  # 3枚ずつ
 			deck.append(i)
 	
 	shuffle_deck()
@@ -253,7 +256,7 @@ func find_affordable_cards_for_player(player_id: int, available_magic: int) -> A
 	
 	var player_hand_data = player_hands[player_id]["data"]
 	for i in range(player_hand_data.size()):
-		if player_hand_data[i].cost * 10 <= available_magic:
+		if player_hand_data[i].cost * GameConstants.CARD_COST_MULTIPLIER <= available_magic:
 			affordable.append(i)
 	return affordable
 

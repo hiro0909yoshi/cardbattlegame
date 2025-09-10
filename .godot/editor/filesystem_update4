@@ -8,3 +8,8 @@ res://scripts/game.gd
 res://scripts/ui_manager.gd
 res://scripts/special_tile_system.gd
 res://scripts/player_system.gd
+res://scripts/game_constants..gd
+res://scripts/debug_controller.gd
+res://scripts/game_constants.gd
+res://scripts/card.gd
+res://scripts/card_system.gd

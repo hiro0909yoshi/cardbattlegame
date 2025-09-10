@@ -30,7 +30,12 @@ func initialize_systems():
 	skill_system = SkillSystem.new()
 	ui_manager = UIManager.new()
 	game_flow = GameFlowManager.new()
-	special_tile_system = SpecialTileSystem.new()  # 追加
+	special_tile_system = SpecialTileSystem.new()
+	
+	# デバッグコントローラーを作成
+	var debug_controller = DebugController.new()
+	debug_controller.name = "DebugController"
+	add_child(debug_controller)
 	
 	# 名前を設定（参照用）
 	board_system.name = "BoardSystem"
@@ -40,7 +45,7 @@ func initialize_systems():
 	skill_system.name = "SkillSystem"
 	ui_manager.name = "UIManager"
 	game_flow.name = "GameFlowManager"
-	special_tile_system.name = "SpecialTileSystem"  # 追加
+	special_tile_system.name = "SpecialTileSystem"
 	
 	# シーンツリーに追加
 	add_child(board_system)
@@ -50,7 +55,11 @@ func initialize_systems():
 	add_child(skill_system)
 	add_child(ui_manager)
 	add_child(game_flow)
-	add_child(special_tile_system)  # 追加
+	add_child(special_tile_system)
+	
+	# デバッグコントローラーにシステム参照を設定
+	debug_controller.setup_systems(player_system, board_system, card_system, ui_manager)
+	player_system.set_debug_controller(debug_controller)
 	
 	# SpecialTileSystemにシステム参照を設定
 	special_tile_system.setup_systems(board_system, card_system, player_system)
