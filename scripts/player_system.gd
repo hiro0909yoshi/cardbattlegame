@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerSystem
 
-# プレイヤー管理システム - デバッグ機能付き
+# プレイヤー管理システム - 通過型ワープ対応版
 
 signal dice_rolled(value: int)
 signal movement_started()
@@ -177,7 +177,7 @@ func create_player_piece(player: PlayerData, parent: Node) -> Node:
 	var piece = ColorRect.new()
 	piece.size = Vector2(20, 20)
 	piece.color = player.color
-	piece.z_index = 10
+	piece.z_index = 5
 	
 	parent.add_child(piece)
 	return piece
@@ -206,7 +206,7 @@ func roll_dice() -> int:
 	emit_signal("dice_rolled", value)
 	return value
 
-# プレイヤーを移動（ステップ移動）
+# プレイヤーを移動（通過型ワープ対応版）
 func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 	if is_moving:
 		return
@@ -215,8 +215,14 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 	is_moving = true
 	emit_signal("movement_started")
 	
+	# SpecialTileSystemの参照を取得
+	var special_system = get_tree().get_root().get_node_or_null("Game/SpecialTileSystem")
+	
+	# 残り移動数
+	var remaining_steps = steps
+	
 	# 1マスずつ移動をシミュレート
-	for i in range(steps):
+	while remaining_steps > 0:
 		await player.piece_node.get_tree().create_timer(0.3).timeout
 		
 		var prev_pos = player.current_tile
@@ -231,6 +237,24 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 		var target_pos = board_system.get_tile_position(player.current_tile)
 		if player.piece_node:
 			player.piece_node.position = target_pos - player.piece_node.size / 2
+		
+		# 通過型ワープチェック
+		if special_system and special_system.is_warp_gate(player.current_tile):
+			var warp_result = special_system.process_warp_gate(player.current_tile, player_id, remaining_steps)
+			if warp_result.get("warped", false):
+				# ワープ発生
+				await get_tree().create_timer(0.5).timeout
+				player.current_tile = warp_result.get("new_tile", player.current_tile)
+				
+				# ワープ先への視覚的移動
+				target_pos = board_system.get_tile_position(player.current_tile)
+				if player.piece_node:
+					player.piece_node.position = target_pos - player.piece_node.size / 2
+				
+				# 残り移動数は変わらない（通過型は移動カウントを消費しない）
+				print("通過型ワープ！残り移動数: ", remaining_steps - 1)
+		
+		remaining_steps -= 1
 	
 	is_moving = false
 	emit_signal("movement_completed", player.current_tile)

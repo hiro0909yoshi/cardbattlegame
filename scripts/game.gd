@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（シグナル修正版）
+# メインゲーム管理スクリプト（特殊マス対応版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -9,6 +9,7 @@ var battle_system: BattleSystem
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var game_flow: GameFlowManager
+var special_tile_system: SpecialTileSystem  # 追加
 
 var player_count = 2  # プレイヤー数
 
@@ -29,6 +30,7 @@ func initialize_systems():
 	skill_system = SkillSystem.new()
 	ui_manager = UIManager.new()
 	game_flow = GameFlowManager.new()
+	special_tile_system = SpecialTileSystem.new()  # 追加
 	
 	# 名前を設定（参照用）
 	board_system.name = "BoardSystem"
@@ -38,6 +40,7 @@ func initialize_systems():
 	skill_system.name = "SkillSystem"
 	ui_manager.name = "UIManager"
 	game_flow.name = "GameFlowManager"
+	special_tile_system.name = "SpecialTileSystem"  # 追加
 	
 	# シーンツリーに追加
 	add_child(board_system)
@@ -47,9 +50,13 @@ func initialize_systems():
 	add_child(skill_system)
 	add_child(ui_manager)
 	add_child(game_flow)
+	add_child(special_tile_system)  # 追加
 	
-	# GameFlowにシステム参照を設定（battle_systemも追加）
-	game_flow.setup_systems(player_system, card_system, board_system, skill_system, ui_manager, battle_system)
+	# SpecialTileSystemにシステム参照を設定
+	special_tile_system.setup_systems(board_system, card_system, player_system)
+	
+	# GameFlowにシステム参照を設定（special_tile_systemも追加）
+	game_flow.setup_systems(player_system, card_system, board_system, skill_system, ui_manager, battle_system, special_tile_system)
 	
 	print("全システム初期化完了")
 
@@ -63,6 +70,9 @@ func setup_game():
 	
 	# ボードを作成
 	board_system.create_board($BoardMap)
+	
+	# 特殊マスを配置
+	special_tile_system.setup_special_tiles(board_system.total_tiles)
 	
 	# プレイヤーを初期化
 	player_system.initialize_players(player_count, self)
@@ -102,17 +112,21 @@ func connect_signals():
 	# BattleSystemのシグナル
 	battle_system.battle_ended.connect(_on_battle_ended)
 	
-	# UIManagerのシグナル（修正：summon_button_pressedを削除）
+	# UIManagerのシグナル
 	ui_manager.dice_button_pressed.connect(_on_dice_button_pressed)
 	ui_manager.pass_button_pressed.connect(_on_pass_button_pressed)
 	ui_manager.card_selected.connect(_on_card_selected)
+	ui_manager.level_up_selected.connect(_on_level_up_selected)
 	
 	# GameFlowManagerのシグナル
 	game_flow.phase_changed.connect(_on_phase_changed)
 	game_flow.turn_started.connect(_on_turn_started)
 	game_flow.turn_ended.connect(_on_turn_ended)
-
+	
 # イベントハンドラー
+func _on_level_up_selected(target_level: int, cost: int):
+	game_flow.on_level_up_selected(target_level, cost)
+	
 func _on_dice_button_pressed():
 	game_flow.roll_dice()
 

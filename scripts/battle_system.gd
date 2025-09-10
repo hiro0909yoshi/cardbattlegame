@@ -1,7 +1,7 @@
 extends Node
 class_name BattleSystem
 
-# バトル管理システム - カルドセプト仕様準拠版
+# バトル管理システム - 属性連鎖HPボーナス対応版
 
 signal battle_started(attacker: Dictionary, defender: Dictionary)
 signal battle_ended(winner: String, result: Dictionary)
@@ -41,9 +41,12 @@ func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, 
 	print("攻撃側: ", attacker_data.get("name", "不明"), " [", attacker_data.get("element", "?"), "]")
 	print("防御側: ", defender_data.get("name", "不明"), " [", defender_data.get("element", "?"), "]")
 	
+	# 防御側の土地所有者IDを取得
+	var defender_player_id = tile_info.get("owner", -1)
+	
 	# ボーナスを個別に計算（ST用とHP用を分離）
-	var attacker_bonuses = calculate_creature_bonuses(attacker_data, defender_data, tile_info, true)
-	var defender_bonuses = calculate_creature_bonuses(defender_data, attacker_data, tile_info, false)
+	var attacker_bonuses = calculate_creature_bonuses(attacker_data, defender_data, tile_info, true, attacker_player_id, board_system)
+	var defender_bonuses = calculate_creature_bonuses(defender_data, attacker_data, tile_info, false, defender_player_id, board_system)
 	
 	# 最終的な能力値（STとHPに別々のボーナスを適用）
 	var final_attacker_st = attacker_data.get("damage", 0) + attacker_bonuses.st_bonus
@@ -115,19 +118,40 @@ func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, 
 	emit_signal("battle_ended", result.winner, battle_outcome)
 	return battle_outcome
 
-# クリーチャーのボーナスを計算（STとHPを分離）
-func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile_info: Dictionary, is_attacker: bool) -> Dictionary:
+# クリーチャーのボーナスを計算（属性連鎖HPボーナス対応）
+func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile_info: Dictionary, is_attacker: bool, player_id: int, board_system: BoardSystem, silent: bool = false) -> Dictionary:
 	var bonuses = {
 		"st_bonus": 0,
 		"hp_bonus": 0
 	}
 	
-	# 1. 地形効果（HPにのみ適用）
+	# 1. 地形効果（HPボーナス - 属性連鎖対応）
 	var tile_element = tile_info.get("element", "")
+	var tile_index = tile_info.get("index", 0)
+	
 	if creature.get("element", "") == tile_element and tile_element != "":
-		bonuses.hp_bonus += 10
-		var role = "攻撃側" if is_attacker else "防御側"
-		print("  ", role, ": 地形ボーナス HP+10 (", tile_element, "属性)")
+		# 属性連鎖数を取得（board_systemの新しい関数を使用）
+		var chain_count = 1  # デフォルト値
+		if board_system and board_system.has_method("get_element_chain_count"):
+			chain_count = board_system.get_element_chain_count(tile_index, player_id)
+		
+		# 連鎖数に応じたHPボーナス（最大4個で+40）
+		var hp_bonus_value = 0
+		if chain_count >= 4:
+			hp_bonus_value = 40  # 4個以上は+40固定
+		elif chain_count == 3:
+			hp_bonus_value = 30
+		elif chain_count == 2:
+			hp_bonus_value = 20
+		elif chain_count == 1:
+			hp_bonus_value = 10
+		
+		bonuses.hp_bonus += hp_bonus_value
+		
+		# サイレントモードでなければログ出力
+		if not silent:
+			var role = "攻撃側" if is_attacker else "防御側"
+			print("  ", role, ": 地形ボーナス HP+", hp_bonus_value, " (", tile_element, "属性×", chain_count, "個)")
 	
 	# 2. 属性相性（STにのみ適用）
 	var advantage = calculate_element_advantage(
@@ -136,9 +160,11 @@ func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile
 	)
 	if advantage > 0:
 		bonuses.st_bonus += advantage
-		var role = "攻撃側" if is_attacker else "防御側"
-		print("  ", role, ": 属性相性ボーナス ST+", advantage, " (", 
-			  creature.get("element", ""), "→", opponent.get("element", ""), ")")
+		# サイレントモードでなければログ出力
+		if not silent:
+			var role = "攻撃側" if is_attacker else "防御側"
+			print("  ", role, ": 属性相性ボーナス ST+", advantage, " (", 
+				  creature.get("element", ""), "→", opponent.get("element", ""), ")")
 	
 	return bonuses
 
@@ -208,9 +234,16 @@ func determine_battle_result_with_priority(attacker_st: int, attacker_hp: int, d
 
 # バトル予測（UI表示用）
 func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Dictionary) -> Dictionary:
+	# 仮のプレイヤーIDを使用（実際のバトル時には正しいIDが渡される）
+	var attacker_player_id = 0
+	var defender_player_id = tile.get("owner", -1)
+	
+	# BoardSystemへの参照を取得
+	var board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
+	
 	# ボーナスを個別に計算
-	var attacker_bonuses = calculate_creature_bonuses(attacker, defender, tile, true)
-	var defender_bonuses = calculate_creature_bonuses(defender, attacker, tile, false)
+	var attacker_bonuses = calculate_creature_bonuses(attacker, defender, tile, true, attacker_player_id, board_system)
+	var defender_bonuses = calculate_creature_bonuses(defender, attacker, tile, false, defender_player_id, board_system)
 	
 	var prediction = {
 		"attacker_st": attacker.get("damage", 0) + attacker_bonuses.st_bonus,

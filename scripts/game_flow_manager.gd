@@ -1,7 +1,7 @@
 extends Node
 class_name GameFlowManager
 
-# ゲームのフェーズ管理・ターン進行システム - 完全修正版
+# ゲームのフェーズ管理・ターン進行システム - 特殊マス対応版
 
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
@@ -29,18 +29,20 @@ var board_system: BoardSystem
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem
+var special_tile_system: SpecialTileSystem  # 追加
 
 func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BoardSystem, s_system: SkillSystem, ui_system: UIManager, bt_system: BattleSystem = null):
+func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BoardSystem, s_system: SkillSystem, ui_system: UIManager, bt_system: BattleSystem = null, st_system: SpecialTileSystem = null):
 	player_system = p_system
 	card_system = c_system
 	board_system = b_system
 	skill_system = s_system
 	ui_manager = ui_system
 	battle_system = bt_system
+	special_tile_system = st_system  # 追加
 
 # ゲーム開始
 func start_game():
@@ -98,6 +100,41 @@ func on_movement_completed(final_tile: int):
 	var tile_info = board_system.get_tile_info(final_tile)
 	var current_player = player_system.get_current_player()
 	
+	# 停止型ワープマスチェック
+	if special_tile_system and special_tile_system.is_special_tile(final_tile):
+		var special_type = special_tile_system.get_special_type(final_tile)
+		
+		# 停止型ワープの場合
+		if special_type == special_tile_system.SpecialType.WARP_POINT:
+			var special_result = special_tile_system.activate_special_tile(final_tile, current_player.id)
+			var new_tile = special_result.get("warp_to", final_tile)
+			
+			if new_tile != final_tile:
+				await get_tree().create_timer(1.0).timeout
+				tile_info = board_system.get_tile_info(new_tile)
+				final_tile = new_tile
+				
+				# ワープ先が特殊マスの場合、その効果も発動
+				if special_tile_system.is_special_tile(new_tile):
+					var warp_dest_type = special_tile_system.get_special_type(new_tile)
+					if warp_dest_type == special_tile_system.SpecialType.CARD:
+						special_tile_system.activate_special_tile(new_tile, current_player.id)
+						print("ワープ先でカードを引きました！")
+						end_turn()
+						return
+		
+		# カードマスの場合
+		elif special_type == special_tile_system.SpecialType.CARD:
+			special_tile_system.activate_special_tile(final_tile, current_player.id)
+			print("カードを引きました！")
+			end_turn()
+			return
+		
+		# 無属性マスの場合（土地として処理）
+		elif special_type == special_tile_system.SpecialType.NEUTRAL:
+			print("無属性マス - 属性連鎖が切れます")
+			# 通常の土地処理を続行
+	
 	# タイルの種類による処理
 	match tile_info.type:
 		BoardSystem.TileType.START:
@@ -110,6 +147,16 @@ func on_movement_completed(final_tile: int):
 			
 		BoardSystem.TileType.NORMAL:
 			process_normal_tile(tile_info)
+			
+		BoardSystem.TileType.SPECIAL:
+			# カードマス、ワープマス以外の特殊マス
+			# 無属性マスは通常土地として処理
+			if special_tile_system:
+				var special_type = special_tile_system.get_special_type(final_tile)
+				if special_type == special_tile_system.SpecialType.NEUTRAL:
+					process_normal_tile(tile_info)
+				else:
+					end_turn()
 
 # 通常タイルの処理
 func process_normal_tile(tile_info: Dictionary):
@@ -143,7 +190,7 @@ func process_land_acquisition():
 	
 	end_turn()
 
-# 自分の土地での処理
+# 自分の土地での処理（複数レベルアップ対応）
 func process_own_land(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	
@@ -156,13 +203,12 @@ func process_own_land(tile_info: Dictionary):
 		end_turn()
 		return
 	
-	var upgrade_cost = current_level * 100
-	
 	if current_player.id == 0:
 		# プレイヤー1：レベルアップ選択UI
-		await show_level_up_choice(tile_info, upgrade_cost)
+		await show_level_up_choice(tile_info)
 	else:
-		# CPU：自動判断
+		# CPU：自動判断（1レベルずつ）
+		var upgrade_cost = board_system.get_upgrade_cost(tile_info.get("index", 0))
 		if current_player.magic_power >= upgrade_cost and randf() < 0.5:  # 50%の確率
 			print("CPU: 土地をレベルアップします（コスト: ", upgrade_cost, "G）")
 			board_system.upgrade_tile_level(tile_info.get("index", 0))
@@ -172,33 +218,21 @@ func process_own_land(tile_info: Dictionary):
 	
 	end_turn()
 
-# レベルアップ選択UIを表示
-func show_level_up_choice(tile_info: Dictionary, cost: int):
+# レベルアップ選択UIを表示（複数レベル対応）
+func show_level_up_choice(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	
-	if current_player.magic_power < cost:
-		print("魔力不足でレベルアップできません（必要: ", cost, "G）")
-		return
-	
-	# 簡易的な選択（今後UI改善）
-	ui_manager.phase_label.text = "土地をレベルアップしますか？（コスト: " + str(cost) + "G）"
-	
-	# TODO: 専用UIを作成
-	print("土地レベルアップ可能（Y/Nキーで選択）")
+	# レベルアップUIを表示（複数レベル選択対応）
+	ui_manager.show_level_up_ui(tile_info, current_player.magic_power)
 	
 	waiting_for_choice = true
 	player_choice = ""
 	
-	# 入力待機（仮実装）
+	# UI選択を待つ
 	while waiting_for_choice:
 		await get_tree().process_frame
-	
-	if player_choice == "yes":
-		board_system.upgrade_tile_level(tile_info.get("index", 0))
-		player_system.add_magic(current_player.id, -cost)
-		print("土地をレベルアップしました！")
 
-# 敵の土地での処理（修正版）
+# 敵の土地での処理
 func process_enemy_land(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	
@@ -314,7 +348,15 @@ func pay_toll_and_end(tile_info: Dictionary):
 func process_battle(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	
-	print("\n敵クリーチャーがいます！バトルするか選択してください")
+	# 敵クリーチャー情報を表示
+	var enemy_creature = tile_info.get("creature", {})
+	if not enemy_creature.is_empty():
+		print("\n敵クリーチャーがいます！")
+		print("敵クリーチャー: ", enemy_creature.get("name", "不明"), 
+			  " (ST:", enemy_creature.get("damage", 0), 
+			  " HP:", enemy_creature.get("block", 0), 
+			  " ", enemy_creature.get("element", "?"), "属性)")
+		print("バトルするか選択してください")
 	
 	var hand_size = card_system.get_hand_size_for_player(current_player.id)
 	if hand_size == 0:
@@ -327,7 +369,7 @@ func process_battle(tile_info: Dictionary):
 	else:
 		await cpu_battle_decision(current_player, tile_info)
 
-# バトル選択UIを表示（修正版）
+# バトル選択UIを表示
 func show_battle_choice(tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	
@@ -342,15 +384,15 @@ func show_battle_choice(tile_info: Dictionary):
 	
 	if player_choice != "pass" and player_choice != "":
 		var card_index = int(player_choice)
-		execute_player_battle(current_player, card_index, tile_info)
-		end_turn()  # バトル実行後にターン終了
+		await execute_player_battle(current_player, card_index, tile_info)
 	else:
-		pay_toll_and_end(tile_info)  # 通行料支払い（内部でend_turn()呼び出し）
+		pay_toll_and_end(tile_info)
 
-# プレイヤーのバトル実行
+# プレイヤーのバトル実行（修正版：バトル結果に応じて通行料処理）
 func execute_player_battle(current_player, card_index: int, tile_info: Dictionary):
 	if not battle_system:
 		print("ERROR: BattleSystemが設定されていません")
+		pay_toll_and_end(tile_info)
 		return
 	
 	var result = battle_system.execute_invasion_battle(
@@ -369,15 +411,36 @@ func execute_player_battle(current_player, card_index: int, tile_info: Dictionar
 			current_player.id
 		)
 		
+		# カードを使用
 		card_system.use_card_for_player(current_player.id, card_index)
 		player_system.add_magic(current_player.id, -cost)
 		
+		# バトル結果に応じた処理
 		if result.winner == "attacker":
+			# 攻撃側勝利：土地を奪取（通行料なし）
 			print("侵略成功！土地を獲得しました")
-	# 注意: ここではend_turn()を呼ばない（呼び出し元で処理）
+			end_turn()
+		elif result.winner == "defender":
+			# 防御側勝利：通行料を支払う
+			print("バトルに敗北！通行料を支払います")
+			pay_toll_and_end(tile_info)
+		elif result.winner == "draw_capture":
+			# 相討ちで土地獲得（通行料なし）
+			print("相討ち！土地を獲得しました")
+			end_turn()
+		else:
+			# 膠着状態：通行料を支払う
+			print("決着つかず！通行料を支払います")
+			pay_toll_and_end(tile_info)
+	else:
+		# バトル実行失敗
+		print("バトル実行に失敗しました")
+		pay_toll_and_end(tile_info)
 
-# CPU バトル判断（修正版）
+# CPU バトル判断
 func cpu_battle_decision(current_player, tile_info: Dictionary):
+	print("CPU思考中...")
+	
 	var defender = tile_info.creature
 	var best_card_index = -1
 	var best_score = -999
@@ -388,6 +451,7 @@ func cpu_battle_decision(current_player, tile_info: Dictionary):
 		if card.is_empty():
 			continue
 		
+		# 予測計算（エラー回避のため引数3つに戻す）
 		var prediction = battle_system.predict_battle_outcome(card, defender, tile_info)
 		var score = prediction.attacker_st - prediction.defender_hp
 		
@@ -401,11 +465,10 @@ func cpu_battle_decision(current_player, tile_info: Dictionary):
 	
 	if best_card_index >= 0 and best_score > -10 and randf() < 0.7:
 		print("CPU: バトルを仕掛けます！")
-		execute_player_battle(current_player, best_card_index, tile_info)
-		end_turn()  # CPUのバトル実行後に必ずターン終了
+		await execute_player_battle(current_player, best_card_index, tile_info)
 	else:
 		print("CPU: 通行料を支払います")
-		pay_toll_and_end(tile_info)  # 通行料支払い（内部でend_turn()呼び出し）
+		pay_toll_and_end(tile_info)
 
 # CPU召喚判断
 func cpu_summon_decision(current_player):
@@ -459,6 +522,25 @@ func on_card_selected(card_index: int):
 		waiting_for_battle = false
 		ui_manager.hide_card_selection_ui()
 
+# レベルアップ選択の処理（複数レベル対応）
+func on_level_up_selected(target_level: int, cost: int):
+	if waiting_for_choice:
+		if target_level > 0:
+			var current_player = player_system.get_current_player()
+			var tile_index = current_player.current_tile
+			var current_level = board_system.tile_levels[tile_index]
+			
+			# 複数レベル分アップグレード
+			for i in range(current_level, target_level):
+				board_system.upgrade_tile_level(tile_index)
+			
+			player_system.add_magic(current_player.id, -cost)
+			print("土地をレベル", target_level, "にアップグレードしました！（コスト: ", cost, "G）")
+		else:
+			print("レベルアップをキャンセル")
+		
+		waiting_for_choice = false
+
 # クリーチャー召喚を試みる
 func try_summon_creature_for_player(current_player, card_index: int):
 	var card_data = card_system.get_card_data_for_player(current_player.id, card_index)
@@ -488,16 +570,6 @@ func on_pass_button_pressed():
 		player_choice = "pass"
 		waiting_for_battle = false
 		ui_manager.hide_card_selection_ui()
-
-# 入力処理（仮実装）
-func _input(event):
-	if waiting_for_choice and event is InputEventKey and event.pressed:
-		if event.keycode == KEY_Y:
-			player_choice = "yes"
-			waiting_for_choice = false
-		elif event.keycode == KEY_N:
-			player_choice = "no"
-			waiting_for_choice = false
 
 # ターン終了
 func end_turn():
