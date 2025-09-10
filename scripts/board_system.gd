@@ -232,14 +232,16 @@ func mark_as_special_tile(tile_index: int, special_type: int):
 		tile_data[tile_index]["is_special"] = true
 		tile_data[tile_index]["special_type"] = special_type
 		
-		# 無属性マス以外は特殊マスタイプに変更
-		if special_type != 3:  # NEUTRAL以外
-			tile_data[tile_index]["type"] = TileType.SPECIAL
-			tile_data[tile_index]["element"] = ""  # 特殊マスは属性なし
-		else:
-			# 無属性マスは通常土地として扱うが属性なし
-			tile_data[tile_index]["type"] = TileType.NORMAL
-			tile_data[tile_index]["element"] = ""
+		# チェックポイントは保持する（通過型ワープと共存）
+		if tile_data[tile_index]["type"] != TileType.CHECKPOINT and tile_data[tile_index]["type"] != TileType.START:
+			# 無属性マス以外は特殊マスタイプに変更
+			if special_type != 3:  # NEUTRAL以外
+				tile_data[tile_index]["type"] = TileType.SPECIAL
+				tile_data[tile_index]["element"] = ""  # 特殊マスは属性なし
+			else:
+				# 無属性マスは通常土地として扱うが属性なし
+				tile_data[tile_index]["type"] = TileType.NORMAL
+				tile_data[tile_index]["element"] = ""
 		
 		# 特殊マスの色を更新
 		if tile_index < board_tiles.size():

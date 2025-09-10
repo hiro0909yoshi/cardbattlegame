@@ -100,6 +100,18 @@ func on_movement_completed(final_tile: int):
 	var tile_info = board_system.get_tile_info(final_tile)
 	var current_player = player_system.get_current_player()
 	
+	# まずチェックポイントや特殊地形の処理を優先
+	# （通過型ワープで到着した場合も処理される）
+	if tile_info.type == BoardSystem.TileType.CHECKPOINT:
+		print("チェックポイント到着！100G獲得")
+		player_system.add_magic(current_player.id, 100)
+		end_turn()
+		return
+	elif tile_info.type == BoardSystem.TileType.START:
+		player_system.add_magic(current_player.id, 100)
+		end_turn()
+		return
+	
 	# 停止型ワープマスチェック
 	if special_tile_system and special_tile_system.is_special_tile(final_tile):
 		var special_type = special_tile_system.get_special_type(final_tile)

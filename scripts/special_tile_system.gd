@@ -58,12 +58,12 @@ func setup_special_tiles(total_tiles: int):
 
 # 通過型ワープマスを設定
 func setup_warp_gates(total_tiles: int):
-	# マス4とマス6の相互ワープ
-	if total_tiles > 6:
-		add_special_tile(4, SpecialType.WARP_GATE, {"pair_index": 6})
-		add_special_tile(6, SpecialType.WARP_GATE, {"pair_index": 4})
-		warp_pairs.append({"from": 4, "to": 6, "type": "gate"})
-		warp_pairs.append({"from": 6, "to": 4, "type": "gate"})
+	# マス3とマス5の相互ワープ（マス5はチェックポイント）
+	if total_tiles > 5:
+		add_special_tile(3, SpecialType.WARP_GATE, {"pair_index": 5})
+		add_special_tile(5, SpecialType.WARP_GATE, {"pair_index": 3})
+		warp_pairs.append({"from": 3, "to": 5, "type": "gate"})
+		warp_pairs.append({"from": 5, "to": 3, "type": "gate"})
 
 # 停止型ワープマスを設定
 func setup_warp_points(total_tiles: int):
