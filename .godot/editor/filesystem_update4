@@ -6,3 +6,5 @@ res://scripts/ui_components/debug_panel.gd
 res://scripts/ui_components/level_up_ui.gd
 res://scripts/special_tile_system.gd
 res://scripts/flow_handlers/tile_action_handler.gd
+res://scripts/game_flow_manager.gd
+res://scripts/battle_system.gd

@@ -1,8 +1,7 @@
 extends Node
 class_name GameFlowManager
 
-# ゲームのフェーズ管理・ターン進行システム（リファクタリング版）
-# 各ハンドラークラスを統括
+# ゲームのフェーズ管理・ターン進行システム（クリーンアップ版）
 
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
@@ -106,6 +105,7 @@ func start_game():
 func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
+	print("ターン開始: ", current_player.name)  # 最小デバッグ
 	
 	# カードを1枚引く
 	draw_card_for_turn(current_player)
@@ -139,9 +139,6 @@ func roll_dice():
 	
 	var dice_value = player_system.roll_dice()
 	var modified_dice = skill_system.modify_dice_roll(dice_value, player_system.current_player_index)
-	
-	if modified_dice != dice_value:
-		print("ダイス目修正: ", dice_value, " → ", modified_dice)
 	
 	ui_manager.show_dice_result(modified_dice, get_parent())
 	
@@ -197,8 +194,8 @@ func _on_toll_payment_required(amount: int):
 
 # === バトルイベント ===
 func _on_battle_completed(result: Dictionary):
-	if result.type != "toll":
-		end_turn()
+	# 通行料支払いも含めて全てのバトル終了後にターンエンド
+	end_turn()
 
 func _on_card_selection_required(mode: String):
 	var current_player = player_system.get_current_player()
@@ -281,7 +278,6 @@ func execute_summon(current_player, card_index: int):
 func execute_level_up(current_player, target_level: int, cost: int):
 	tile_action_handler.execute_level_up(target_level)
 	player_system.add_magic(current_player.id, -cost)
-	print("土地をレベル", target_level, "にアップグレードしました！（コスト: ", cost, "G）")
 
 # === UIコールバック ===
 func on_card_selected(card_index: int):
@@ -297,6 +293,7 @@ func on_pass_button_pressed():
 func end_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_ended", current_player.id)
+	print("ターン終了: ", current_player.name)  # 最小デバッグ
 	
 	change_phase(GamePhase.END_TURN)
 	skill_system.end_turn_cleanup()
