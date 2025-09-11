@@ -52,7 +52,6 @@ func process_tile_action(tile_index: int, player) -> void:
 			handle_normal_tile()
 
 # 特殊マスの処理
-# 特殊マスの処理
 func handle_special_tiles(tile_index: int) -> bool:
 	if not special_tile_system.is_special_tile(tile_index):
 		return false
@@ -60,7 +59,6 @@ func handle_special_tiles(tile_index: int) -> bool:
 	var special_type = special_tile_system.get_special_type(tile_index)
 	
 	match special_type:
-		# CHECKPOINTの行を削除
 		special_tile_system.SpecialType.WARP_POINT:
 			handle_warp_point(tile_index)
 			return true
@@ -97,12 +95,23 @@ func handle_warp_point(tile_index: int):
 		await get_tree().create_timer(GameConstants.WARP_DELAY).timeout
 		current_tile_info = board_system.get_tile_info(new_tile)
 		
-		# ワープ先が特殊マスの場合、その効果も発動
+		# ワープ先のタイル効果を処理
+		# チェックポイントの場合
+		if current_tile_info.type == BoardSystem.TileType.CHECKPOINT:
+			handle_checkpoint_tile()
+			return
+		
+		# カードマスの場合
 		if special_tile_system.is_special_tile(new_tile):
 			var warp_dest_type = special_tile_system.get_special_type(new_tile)
 			if warp_dest_type == special_tile_system.SpecialType.CARD:
 				handle_card_tile(new_tile)
 				return
+		
+		# 通常タイルの場合
+		if current_tile_info.type == BoardSystem.TileType.NORMAL:
+			handle_normal_tile()
+			return
 	
 	emit_signal("action_completed")
 

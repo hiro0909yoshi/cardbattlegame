@@ -4,7 +4,6 @@ class_name CPUAIHandler
 # CPU AI処理クラス
 # CPU判断ロジックを管理
 
-signal decision_made(action: String, params: Dictionary)
 signal summon_decided(card_index: int)
 signal battle_decided(card_index: int)
 signal level_up_decided(do_upgrade: bool)

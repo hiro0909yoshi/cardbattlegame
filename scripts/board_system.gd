@@ -147,7 +147,7 @@ func update_tile_visual(tile_index: int):
 		return
 		
 	var tile = board_tiles[tile_index]
-	var owner = tile_owners[tile_index]
+	var tile_owner = tile_owners[tile_index]
 	var level = tile_levels[tile_index]
 	
 	# 既存の枠を削除
@@ -156,12 +156,12 @@ func update_tile_visual(tile_index: int):
 			child.queue_free()
 	
 	# 所有者の枠を追加
-	if owner >= 0:
+	if tile_owner >= 0:
 		var border = ColorRect.new()
 		border.name = "OwnerBorder"
 		border.size = tile.size + Vector2(4, 4)
 		border.position = Vector2(-2, -2)
-		border.color = get_player_color(owner)
+		border.color = get_player_color(tile_owner)
 		border.z_index = -1
 		tile.add_child(border)
 		
@@ -180,7 +180,7 @@ func update_tile_visual(tile_index: int):
 	# レベル表示を更新
 	var level_label = tile.get_node_or_null("LevelLabel")
 	if level_label:
-		if owner >= 0 and level > 1:
+		if tile_owner >= 0 and level > 1:
 			level_label.text = "Lv" + str(level)
 		else:
 			level_label.text = ""
@@ -267,7 +267,6 @@ func calculate_toll(tile_index: int) -> int:
 	if tile_owners[tile_index] == -1:
 		return 0
 	
-	var owner = tile_owners[tile_index]
 	var level = tile_levels[tile_index]
 	
 	# 基礎通行料は定数から取得
@@ -277,7 +276,7 @@ func calculate_toll(tile_index: int) -> int:
 	var level_multiplier = level
 	
 	# 土地連鎖ボーナスを計算
-	var chain_bonus = calculate_chain_bonus(tile_index, owner)
+	var chain_bonus = calculate_chain_bonus(tile_index, tile_owners[tile_index])
 	
 	# 最終通行料 = 基礎通行料 × 土地レベル × 連鎖ボーナス
 	var total_toll = int(base_toll * level_multiplier * chain_bonus)
@@ -318,7 +317,7 @@ func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	return bonus
 
 # 属性連鎖数を取得（バトルシステム用）
-func get_element_chain_count(tile_index: int, owner: int) -> int:
+func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	# 対象タイルの属性を取得
 	var target_element = tile_data[tile_index].get("element", "")
 	if target_element == "":
@@ -330,7 +329,7 @@ func get_element_chain_count(tile_index: int, owner: int) -> int:
 	# 同じ所有者かつ同じ属性の土地を全マップから数える
 	var same_element_count = 0
 	for i in range(total_tiles):
-		if tile_owners[i] == owner:
+		if tile_owners[i] == owner_id:
 			# 無属性マスチェック
 			if special_system and special_system.is_neutral_tile(i):
 				continue  # 無属性マスは連鎖に含めない
@@ -343,10 +342,10 @@ func get_element_chain_count(tile_index: int, owner: int) -> int:
 	return min(same_element_count, 4)
 
 # 同じ所有者の土地数を取得（全体）
-func get_owner_land_count(owner: int) -> int:
+func get_owner_land_count(owner_id: int) -> int:
 	var count = 0
 	for i in range(total_tiles):
-		if tile_owners[i] == owner:
+		if tile_owners[i] == owner_id:
 			count += 1
 	return count
 

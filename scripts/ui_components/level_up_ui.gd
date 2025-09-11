@@ -125,8 +125,7 @@ func add_level_buttons(current_level: int, current_magic: int, tile_index: int, 
 	var chain_bonus = 1.0
 	
 	if board_system_ref:
-		var owner = tile_info.get("owner", -1)
-		chain_bonus = board_system_ref.calculate_chain_bonus(tile_index, owner)
+		chain_bonus = board_system_ref.calculate_chain_bonus(tile_index, tile_info.get("owner", -1))
 	
 	for target_level in range(current_level + 1, GameConstants.MAX_LEVEL + 1):
 		var button = create_level_button(

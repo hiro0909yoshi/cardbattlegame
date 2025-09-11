@@ -4,8 +4,6 @@ class_name PlayerInfoPanel
 # プレイヤー情報パネル管理クラス
 # 各プレイヤーの魔力、土地数、総資産、連鎖情報を表示
 
-signal panel_clicked(player_id: int)
-
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 

@@ -158,9 +158,8 @@ func count_owned_tiles() -> Dictionary:
 	
 	if board_system_ref:
 		for i in range(board_system_ref.total_tiles):
-			var owner = board_system_ref.tile_owners[i]
-			if counts.has(owner):
-				counts[owner] += 1
+			if counts.has(board_system_ref.tile_owners[i]):
+				counts[board_system_ref.tile_owners[i]] += 1
 	
 	return counts
 

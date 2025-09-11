@@ -1,10 +1,8 @@
 res://scenes/Card.tscn
-res://scripts/flow_handlers/tile_action_handler.gd
-res://scripts/flow_handlers/battle_handler.gd
-res://scripts/flow_handlers/cpu_ai_handler.gd
-res://scripts/flow_handlers/player_action_handler.gd
-res://scripts/game_flow_manager.gd
 res://scenes/node_2d.tscn
 res://scenes/game.tscn
-res://scripts/ui_manager.gd
-res://scripts/debug_controller.gd
+res://scripts/board_system.gd
+res://scripts/ui_components/debug_panel.gd
+res://scripts/ui_components/level_up_ui.gd
+res://scripts/special_tile_system.gd
+res://scripts/flow_handlers/tile_action_handler.gd

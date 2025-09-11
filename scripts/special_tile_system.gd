@@ -69,9 +69,9 @@ func setup_warp_gates(total_tiles: int):
 # 停止型ワープマスを設定
 func setup_warp_points(total_tiles: int):
 	# マス14からマス16への一方向ワープ
-	if total_tiles > 16:
-		add_special_tile(14, SpecialType.WARP_POINT, {"pair_index": 16})
-		warp_pairs.append({"from": 14, "to": 16, "type": "point"})
+	if total_tiles > 15:
+		add_special_tile(14, SpecialType.WARP_POINT, {"pair_index": 15})
+		warp_pairs.append({"from": 14, "to": 15, "type": "point"})
 		# マス16自体はカードマス（後で設定）
 
 # カードマスを設定
