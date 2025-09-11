@@ -70,8 +70,7 @@ func _input(event):
 				move_to_empty_land()
 			KEY_9:
 				add_debug_magic()
-			KEY_D:
-				toggle_cpu_hand_display()
+			
 			KEY_T:
 				show_all_tiles_info()
 
