@@ -293,7 +293,9 @@ func on_pass_button_pressed():
 func end_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_ended", current_player.id)
-	print("ターン終了: ", current_player.name)  # 最小デバッグ
+	print("\n:::::::::::::::::::::::::::::::::::::::::")
+	print("::::: ターン終了: ", current_player.name, " :::::")
+	print(":::::::::::::::::::::::::::::::::::::::::\n")
 	
 	change_phase(GamePhase.END_TURN)
 	skill_system.end_turn_cleanup()
