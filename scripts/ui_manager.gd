@@ -58,6 +58,8 @@ func connect_ui_signals():
 	debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
 
 # UIを作成
+
+# UIを作成
 func create_ui(parent: Node):
 	# システム参照を取得
 	if parent.has_node("CardSystem"):
@@ -67,15 +69,19 @@ func create_ui(parent: Node):
 	if parent.has_node("BoardSystem"):
 		board_system_ref = parent.get_node("BoardSystem")
 	
-	# 基本UI要素を作成
-	create_basic_ui(parent)
+	# UIレイヤー（CanvasLayer）を作成
+	var ui_layer = CanvasLayer.new()
+	ui_layer.name = "UILayer"
+	parent.add_child(ui_layer)
+	
+	# 基本UI要素を作成（UIレイヤーの子として）
+	create_basic_ui(ui_layer)
 	
 	# 各コンポーネントを初期化
-	player_info_panel.initialize(parent, player_system_ref, board_system_ref)
-	card_selection_ui.initialize(parent, card_system_ref, phase_label)
-	level_up_ui.initialize(parent, board_system_ref, phase_label)
-	debug_panel.initialize(parent, card_system_ref, board_system_ref, player_system_ref)
-
+	player_info_panel.initialize(ui_layer, player_system_ref, board_system_ref)
+	card_selection_ui.initialize(ui_layer, card_system_ref, phase_label)
+	level_up_ui.initialize(ui_layer, board_system_ref, phase_label)
+	debug_panel.initialize(ui_layer, card_system_ref, board_system_ref, player_system_ref)
 # 基本UI要素を作成
 func create_basic_ui(parent: Node):
 	# フェーズ表示

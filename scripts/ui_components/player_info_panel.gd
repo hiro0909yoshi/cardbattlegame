@@ -48,9 +48,9 @@ func create_single_panel(player_id: int) -> Panel:
 	if player_id == 0:
 		info_panel.position = Vector2(20, 50)
 	else:
-		info_panel.position = Vector2(600, 50)
+		info_panel.position = Vector2(775, 50)
 	
-	info_panel.size = Vector2(180, 120)
+	info_panel.size = Vector2(240, 120)
 	
 	# パネルスタイル設定
 	var panel_style = StyleBoxFlat.new()
@@ -73,7 +73,7 @@ func create_single_panel(player_id: int) -> Panel:
 	# 情報ラベル作成
 	var info_label = RichTextLabel.new()
 	info_label.position = Vector2(10, 10)
-	info_label.size = Vector2(160, 100)
+	info_label.size = Vector2(160, 160)
 	info_label.bbcode_enabled = true
 	info_label.add_theme_font_size_override("normal_font_size", 12)
 	info_panel.add_child(info_label)

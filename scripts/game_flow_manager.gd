@@ -107,6 +107,11 @@ func start_turn():
 	emit_signal("turn_started", current_player.id)
 	print("ターン開始: ", current_player.name)  # 最小デバッグ
 	
+	# カメラを現在のプレイヤーにフォーカス
+	var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
+	if camera_system:
+		camera_system.focus_on_current_player()
+	
 	# カードを1枚引く
 	draw_card_for_turn(current_player)
 	
@@ -118,7 +123,8 @@ func start_turn():
 func draw_card_for_turn(current_player):
 	var hand_size = card_system.get_hand_size_for_player(current_player.id)
 	
-	if hand_size < card_system.max_hand_size:
+	# GameConstantsから定数を使用
+	if hand_size < GameConstants.MAX_HAND_SIZE:
 		var drawn_card = card_system.draw_card_for_player(current_player.id)
 		if not drawn_card.is_empty() and current_player.id > 0:
 			ui_manager.update_cpu_hand_display(current_player.id)

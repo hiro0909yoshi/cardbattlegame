@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（特殊マス対応版）
+# メインゲーム管理スクリプト（Camera/UI分離版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -9,7 +9,8 @@ var battle_system: BattleSystem
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var game_flow: GameFlowManager
-var special_tile_system: SpecialTileSystem  # 追加
+var special_tile_system: SpecialTileSystem
+var camera_system = null  # CameraSystem（型指定なしで初期化）
 
 var player_count = 2  # プレイヤー数
 
@@ -18,6 +19,12 @@ func _ready():
 	initialize_systems()
 	setup_game()
 	connect_signals()
+	
+	# ゲーム開始時にカメラを初期フォーカス
+	await get_tree().create_timer(0.1).timeout
+	if camera_system:
+		camera_system.focus_on_current_player()
+	
 	game_flow.start_game()
 
 # システムを初期化
@@ -31,6 +38,15 @@ func initialize_systems():
 	ui_manager = UIManager.new()
 	game_flow = GameFlowManager.new()
 	special_tile_system = SpecialTileSystem.new()
+	
+	# CameraSystemをロードして作成
+	var CameraSystemClass = load("res://scripts/camera_system.gd")
+	if CameraSystemClass:
+		camera_system = CameraSystemClass.new()
+		camera_system.name = "CameraSystem"
+		add_child(camera_system)
+	else:
+		print("WARNING: camera_system.gdが見つかりません")
 	
 	# デバッグコントローラーを作成
 	var debug_controller = DebugController.new()
@@ -64,7 +80,7 @@ func initialize_systems():
 	# SpecialTileSystemにシステム参照を設定
 	special_tile_system.setup_systems(board_system, card_system, player_system)
 	
-	# GameFlowにシステム参照を設定（special_tile_systemも追加）
+	# GameFlowにシステム参照を設定
 	game_flow.setup_systems(player_system, card_system, board_system, skill_system, ui_manager, battle_system, special_tile_system)
 	
 	print("全システム初期化完了")
@@ -86,27 +102,39 @@ func setup_game():
 	# プレイヤーを初期化
 	player_system.initialize_players(player_count, self)
 	
-	# 各プレイヤーに初期手札を配る
-	if not has_node("Hand"):
-		var hand_node = Node2D.new()
-		hand_node.name = "Hand"
-		add_child(hand_node)
+	# カメラを初期化
+	if camera_system:
+		var created_camera = camera_system.initialize(self)
+		
+		# 初回のプレイヤーフォーカス設定
+		if created_camera and player_system:
+			var current_player = player_system.get_current_player()
+			if current_player and current_player.piece_node:
+				camera_system.focus_on_player(current_player.piece_node.position)
 	
-	# 全プレイヤーに初期手札を配る
+	# UIを作成（UILayerも作成される）
+	ui_manager.create_ui(self)
+	
+	# 手札用ノードをUILayerに移動
+	if has_node("UILayer"):
+		var ui_layer = $UILayer
+		if not ui_layer.has_node("Hand"):
+			var hand_node = Node2D.new()
+			hand_node.name = "Hand"
+			ui_layer.add_child(hand_node)
+	
+	# UILayer作成後に手札を配る（重要！）
 	card_system.deal_initial_hands_all_players(player_count)
 	
 	# 初期配置
 	for i in range(player_count):
 		player_system.place_player_at_tile(i, 0, board_system)
 	
-	# UIを作成
-	ui_manager.create_ui(self)
-	
 	# デバッグ表示用にCPU手札を更新
 	if player_count > 1:
 		ui_manager.update_cpu_hand_display(1)
 
-# シグナルを接続（修正版）
+# シグナルを接続
 func connect_signals():
 	# PlayerSystemのシグナル
 	player_system.dice_rolled.connect(_on_dice_rolled)
@@ -131,7 +159,7 @@ func connect_signals():
 	game_flow.phase_changed.connect(_on_phase_changed)
 	game_flow.turn_started.connect(_on_turn_started)
 	game_flow.turn_ended.connect(_on_turn_ended)
-	
+
 # イベントハンドラー
 func _on_level_up_selected(target_level: int, cost: int):
 	game_flow.on_level_up_selected(target_level, cost)
@@ -165,12 +193,11 @@ func _on_hand_updated():
 		if current_player.id > 0 and ui_manager.debug_mode:
 			ui_manager.update_cpu_hand_display(current_player.id)
 
-func _on_magic_changed(player_id: int, new_value: int):
+func _on_magic_changed(_player_id: int, _new_value: int):
 	ui_manager.update_ui(player_system.get_current_player(), game_flow.current_phase)
 
-func _on_battle_ended(winner: String, result: Dictionary):
+func _on_battle_ended(winner: String, _result: Dictionary):
 	print("バトル終了: ", winner, "の勝利")
-	# end_turn()を削除 - game_flow_managerで処理される
 
 func _on_player_won(player_id: int):
 	game_flow.on_player_won(player_id)

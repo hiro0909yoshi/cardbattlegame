@@ -129,6 +129,11 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 		var target_pos = board_system.get_tile_position(player.current_tile)
 		if player.piece_node:
 			player.piece_node.position = target_pos - player.piece_node.size / 2
+			
+			# カメラシステムに位置を通知（自動追従用）
+			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
+			if camera_system and camera_system.is_following_player:
+				camera_system.focus_on_player(player.piece_node.position)
 		
 		# 通過型ワープチェック
 		if special_system and special_system.is_warp_gate(player.current_tile):
@@ -142,6 +147,11 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 				target_pos = board_system.get_tile_position(player.current_tile)
 				if player.piece_node:
 					player.piece_node.position = target_pos - player.piece_node.size / 2
+					
+					# ワープ後もカメラを更新
+					var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
+					if camera_system and camera_system.is_following_player:
+						camera_system.focus_on_player(player.piece_node.position)
 				
 				# 残り移動数は変わらない（通過型は移動カウントを消費しない）
 				print("通過型ワープ！残り移動数: ", remaining_steps - 1)
@@ -159,6 +169,12 @@ func place_player_at_tile(player_id: int, tile_index: int, board_system: BoardSy
 	var target_pos = board_system.get_tile_position(tile_index)
 	if player.piece_node:
 		player.piece_node.position = target_pos - player.piece_node.size / 2
+		
+		# 配置時もカメラ更新（デバッグ移動用）
+		if player_id == current_player_index:
+			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
+			if camera_system and camera_system.is_following_player:
+				camera_system.focus_on_player(player.piece_node.position)
 
 # 魔力を増減
 func add_magic(player_id: int, amount: int):
