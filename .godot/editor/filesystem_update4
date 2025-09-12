@@ -1,7 +1,4 @@
 res://scenes/Card.tscn
 res://scenes/node_2d.tscn
 res://scenes/game.tscn
-res://scripts/player_system.gd
-res://scripts/camera_system.gd
 res://scripts/card_system.gd
-res://scripts/ui_components/player_info_panel.gd

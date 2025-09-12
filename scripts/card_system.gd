@@ -13,6 +13,8 @@ const MAX_HAND_SIZE = 6
 const INITIAL_HAND_SIZE = 5
 const CARD_COST_MULTIPLIER = 10
 const CARDS_PER_TYPE = 3
+const CARD_WIDTH = 100      # カードの幅
+const CARD_SPACING = 20     # カード間の間隔
 
 # カード管理
 var card_scene = preload("res://scenes/Card.tscn")
@@ -134,7 +136,11 @@ func _create_card_node(card_data: Dictionary, parent: Node, index: int) -> Node:
 	
 	var viewport_size = get_viewport().get_visible_rect().size
 	var card_y = viewport_size.y - 170
-	card.position = Vector2(220 + index * 125, card_y)
+	
+	# 画面中心から配置を計算
+	var total_width = INITIAL_HAND_SIZE * (CARD_WIDTH + CARD_SPACING)
+	var start_x = (viewport_size.x - total_width) / 2
+	card.position = Vector2(start_x + index * (CARD_WIDTH + CARD_SPACING), card_y)
 	
 	if card.has_method("load_card_data"):
 		card.load_card_data(card_data.id)
@@ -174,10 +180,15 @@ func _rearrange_player_hand(player_id: int):
 	var viewport_size = get_viewport().get_visible_rect().size
 	var card_y = viewport_size.y - 150
 	
+	# 現在の手札枚数に応じて中心から再配置
+	var hand_size = player_nodes.size()
+	var total_width = hand_size * (CARD_WIDTH + CARD_SPACING)
+	var start_x = (viewport_size.x - total_width) / 2
+	
 	for i in range(player_nodes.size()):
 		var card = player_nodes[i]
 		if card and is_instance_valid(card):
-			card.position = Vector2(100 + i * 120, card_y)
+			card.position = Vector2(start_x + i * (CARD_WIDTH + CARD_SPACING), card_y)
 			if card.has_method("set_selectable"):
 				card.card_index = i
 
