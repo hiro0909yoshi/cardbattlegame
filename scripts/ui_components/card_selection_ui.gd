@@ -126,9 +126,17 @@ func create_pass_button(hand_count: int):
 			pass_button.text = "パス"
 	
 	# 位置設定（手札の右側）
-	var last_card_x = 100 + hand_count * 120
-	pass_button.position = Vector2(last_card_x, 620)
-	pass_button.size = Vector2(100, 80)
+	# カードと同じ中央配置計算を使用
+	var viewport_size = get_viewport().get_visible_rect().size
+	var card_width = 100  # カード幅
+	var card_spacing = 25  # カード間隔
+	var total_width = hand_count * (card_width + card_spacing)
+	var start_x = (viewport_size.x - total_width) / 2
+
+	# 最後のカードの右側に配置
+	var last_card_x = start_x + hand_count * (card_width + card_spacing)
+	pass_button.position = Vector2(last_card_x, viewport_size.y - 170)  # カードと同じ高さ
+	pass_button.size = Vector2(100, 160)
 	pass_button.pressed.connect(_on_pass_button_pressed)
 	
 	# ボタンスタイル設定

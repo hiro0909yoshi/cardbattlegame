@@ -50,11 +50,11 @@ func create_single_panel(player_id: int) -> Panel:
 	else:
 		info_panel.position = Vector2(775, 50)
 	
-	info_panel.size = Vector2(240, 120)
+	info_panel.size = Vector2(240, 140)
 	
 	# パネルスタイル設定
 	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.9)
+	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.5)
 	panel_style.border_width_left = 2
 	panel_style.border_width_right = 2
 	panel_style.border_width_top = 2

@@ -178,7 +178,7 @@ func _rearrange_player_hand(player_id: int):
 	
 	var player_nodes = player_hands[player_id]["nodes"]
 	var viewport_size = get_viewport().get_visible_rect().size
-	var card_y = viewport_size.y - 150
+	var card_y = viewport_size.y - 170
 	
 	# 現在の手札枚数に応じて中心から再配置
 	var hand_size = player_nodes.size()
