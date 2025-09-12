@@ -16,6 +16,8 @@ var player_count = 2  # プレイヤー数
 
 func _ready():
 	print("=== カルドセプト風ゲーム開始 ===")
+	
+	
 	initialize_systems()
 	setup_game()
 	connect_signals()
