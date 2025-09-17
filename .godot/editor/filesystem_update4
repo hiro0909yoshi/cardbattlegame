@@ -3,3 +3,4 @@ res://scenes/node_2d.tscn
 res://scenes/game.tscn
 res://scripts/board_system.gd
 res://scripts/game.gd
+res://scripts/backgrounds/background.gd

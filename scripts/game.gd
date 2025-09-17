@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（背景修正版）
+# メインゲーム管理スクリプト（ポリゴン背景対応版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -104,20 +104,8 @@ func setup_game():
 		board_map_node.name = "BoardMap"
 		add_child(board_map_node)
 	
-	# マップ背景を追加（サイズ自動取得・中央配置）
-	var bg_paths = [
-		"res://assets/images/map/map_background1.jpeg",
-		"res://assets/images/map/map_background.png",
-		"res://assets/images/map/map_background1.png"
-	]
-	
-	# 最初に見つかった背景画像を使用
-	for i in range(background_paths.size()):
-		var bg_path = background_paths[i]
-		if FileAccess.file_exists(bg_path):
-			current_bg_index = i
-			load_background(bg_path)
-			break
+	# デフォルトでポリゴン背景を作成
+	create_polygon_background()
 	
 	# ボードを作成
 	board_system.create_board($BoardMap)
@@ -246,80 +234,205 @@ func load_background(bg_path: String):
 	if current_background and is_instance_valid(current_background):
 		current_background.queue_free()
 	
-	print("\n=== 背景読み込み開始 ===")
-	print("パス: ", bg_path)
-	
 	if FileAccess.file_exists(bg_path):
 		var texture = load(bg_path)
 		if texture:
-			# 元のテクスチャサイズを記録
-			var original_size = texture.get_size()
-			print("元の画像サイズ: ", original_size)
-			
-			# TextureRectを作成（テクスチャ設定前）
 			var background = TextureRect.new()
 			background.name = "MapBackground"
-			background.z_index = -10  # 最背面
+			background.z_index = -10
 			
-			# 統一サイズ: 1500×1000に強制設定
+			# 統一サイズに設定
 			var unified_size = Vector2(1500, 1000)
-			
-			# サイズを先に設定
 			background.custom_minimum_size = unified_size
 			background.size = unified_size
-			
-			# モードを設定
 			background.stretch_mode = TextureRect.STRETCH_SCALE
 			background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			
-			# テクスチャは最後に設定
 			background.texture = texture
 			
-			# ボードの中心点（board_system.gdの設定値）
-			var board_center = Vector2(400, 300)
-			
 			# 中心に配置
+			var board_center = Vector2(400, 300)
 			background.position = board_center - (unified_size / 2)
-			
-			print("stretch_mode設定値: ", background.stretch_mode)
-			print("expand_mode設定値: ", background.expand_mode)
-			print("設定したサイズ: ", background.size)
-			print("position: ", background.position)
 			
 			$BoardMap.add_child(background)
 			current_background = background
-			
-			# 1フレーム待って実際のサイズを確認
-			await get_tree().process_frame
-			print("[確認] 実際のサイズ: ", background.size)
-			
-			# サイズが違う場合は強制修正
-			if background.size != unified_size:
-				print("警告: サイズが異なるため強制修正")
-				background.set_size(unified_size)
-				print("[修正後] サイズ: ", background.size)
-			
-			print("=== 背景読み込み完了 ===\n")
-		else:
-			print("テクスチャ読み込み失敗:", bg_path)
-	else:
-		print("ファイルが存在しません: ", bg_path)
+
+# ポリゴン背景作成関数
+func create_polygon_background():
+	# 既存の背景を削除
+	if current_background and is_instance_valid(current_background):
+		current_background.queue_free()
+	
+	# 背景コンテナ
+	var bg_container = Node2D.new()
+	bg_container.name = "PolygonBackground"
+	bg_container.z_index = -10
+	$BoardMap.add_child(bg_container)
+	current_background = bg_container
+	
+	# 宇宙背景（最背面）
+	var space_bg = Polygon2D.new()
+	space_bg.name = "SpaceBackground"
+	space_bg.z_index = -3
+	
+	var space_points = PackedVector2Array([
+		Vector2(-500, -400),
+		Vector2(1300, -400),
+		Vector2(1300, 1000),
+		Vector2(-500, 1000)
+	])
+	space_bg.polygon = space_points
+	space_bg.color = Color(0.05, 0.02, 0.1)
+	
+	var space_colors = PackedColorArray([
+		Color(0.1, 0.05, 0.2),
+		Color(0.02, 0.01, 0.05),
+		Color(0.05, 0.02, 0.1),
+		Color(0.08, 0.04, 0.15)
+	])
+	space_bg.vertex_colors = space_colors
+	bg_container.add_child(space_bg)
+	
+	# 星雲効果
+	create_nebula_effect(bg_container)
+	
+	# 浮遊する島
+	var island = Polygon2D.new()
+	island.name = "FloatingIsland"
+	island.z_index = -1
+	
+	var island_points = PackedVector2Array([
+		Vector2(100, 150),
+		Vector2(250, 80),
+		Vector2(550, 80),
+		Vector2(700, 150),
+		Vector2(700, 450),
+		Vector2(550, 520),
+		Vector2(250, 520),
+		Vector2(100, 450),
+	])
+	island.polygon = island_points
+	
+	var island_colors = PackedColorArray([
+		Color(0.4, 0.35, 0.3),
+		Color(0.35, 0.3, 0.25),
+		Color(0.3, 0.25, 0.2),
+		Color(0.35, 0.3, 0.25),
+		Color(0.25, 0.2, 0.15),
+		Color(0.2, 0.15, 0.1),
+		Color(0.25, 0.2, 0.15),
+		Color(0.3, 0.25, 0.2)
+	])
+	island.vertex_colors = island_colors
+	bg_container.add_child(island)
+	
+	# 島の側面
+	var island_side = Polygon2D.new()
+	island_side.name = "IslandSide"
+	island_side.z_index = -2
+	
+	var side_points = PackedVector2Array([
+		Vector2(100, 450),
+		Vector2(250, 520),
+		Vector2(550, 520),
+		Vector2(700, 450),
+		Vector2(650, 550),
+		Vector2(400, 620),
+		Vector2(150, 550),
+	])
+	island_side.polygon = side_points
+	island_side.color = Color(0.15, 0.12, 0.1)
+	bg_container.add_child(island_side)
+	
+	# 光るエッジ効果
+	create_glow_edge(bg_container, island_points)
+	
+	# 星の追加
+	create_stars(bg_container)
+
+# 星雲効果を作成
+func create_nebula_effect(parent: Node2D):
+	var nebula = Polygon2D.new()
+	nebula.name = "Nebula"
+	nebula.z_index = -2
+	nebula.modulate = Color(1, 1, 1, 0.3)
+	
+	var nebula_points = PackedVector2Array([
+		Vector2(600, 50),
+		Vector2(750, 100),
+		Vector2(800, 250),
+		Vector2(700, 350),
+		Vector2(550, 300),
+		Vector2(500, 150)
+	])
+	nebula.polygon = nebula_points
+	
+	var nebula_colors = PackedColorArray([
+		Color(0.6, 0.3, 0.8, 0.3),
+		Color(0.8, 0.4, 0.6, 0.2),
+		Color(0.5, 0.3, 0.7, 0.1),
+		Color(0.7, 0.4, 0.8, 0.2),
+		Color(0.6, 0.3, 0.6, 0.3),
+		Color(0.8, 0.5, 0.7, 0.2)
+	])
+	nebula.vertex_colors = nebula_colors
+	parent.add_child(nebula)
+
+# 光るエッジ効果
+func create_glow_edge(parent: Node2D, island_points: PackedVector2Array):
+	var glow = Line2D.new()
+	glow.name = "GlowEdge"
+	glow.z_index = 0
+	glow.width = 3.0
+	glow.default_color = Color(0.5, 0.7, 1.0, 0.5)
+	
+	for point in island_points:
+		glow.add_point(point)
+	glow.add_point(island_points[0])
+	
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(0.3, 0.5, 0.8, 0.3))
+	gradient.set_color(1, Color(0.6, 0.8, 1.0, 0.6))
+	glow.gradient = gradient
+	parent.add_child(glow)
+
+# 星を散りばめる
+func create_stars(parent: Node2D):
+	var star_container = Node2D.new()
+	star_container.name = "Stars"
+	star_container.z_index = -2
+	
+	for i in range(30):
+		var star = Polygon2D.new()
+		var star_size = randf_range(2, 5)
+		var star_points = PackedVector2Array([
+			Vector2(-star_size, 0),
+			Vector2(0, -star_size),
+			Vector2(star_size, 0),
+			Vector2(0, star_size)
+		])
+		star.polygon = star_points
+		star.position = Vector2(
+			randf_range(-400, 1200),
+			randf_range(-300, 900)
+		)
+		var brightness = randf_range(0.5, 1.0)
+		star.color = Color(brightness, brightness, brightness * 0.9)
+		star.rotation = randf_range(0, PI/4)
+		star_container.add_child(star)
+	
+	parent.add_child(star_container)
 
 # 次の背景に切り替え
 func switch_to_next_background():
 	current_bg_index = (current_bg_index + 1) % background_paths.size()
 	
-	# 利用可能な背景を探す
 	for i in range(background_paths.size()):
 		var index = (current_bg_index + i) % background_paths.size()
 		var path = background_paths[index]
 		if FileAccess.file_exists(path):
 			current_bg_index = index
 			load_background(path)
-			print("背景切り替え: [", index + 1, "/", background_paths.size(), "] ", path)
 			return
-	
-	print("利用可能な背景画像がありません")
 
 # 特定の背景に切り替え
 func switch_to_background(index: int):
@@ -328,10 +441,6 @@ func switch_to_background(index: int):
 		if FileAccess.file_exists(path):
 			current_bg_index = index
 			load_background(path)
-		else:
-			print("背景画像が見つかりません: ", path)
-	else:
-		print("無効なインデックス: ", index)
 
 # デバッグ入力処理
 func _input(event):
@@ -339,6 +448,8 @@ func _input(event):
 		match event.keycode:
 			KEY_M:  # Mキーで次の背景に切り替え
 				switch_to_next_background()
+			KEY_P:  # Pキーでポリゴン背景に切り替え
+				create_polygon_background()
 			KEY_B:  # Bキー + 数字で特定の背景に切り替え
 				if Input.is_key_pressed(KEY_1):
 					switch_to_background(0)
