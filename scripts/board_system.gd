@@ -7,7 +7,7 @@ class_name BoardSystem
 const GameConstants = preload("res://scripts/game_constants.gd")
 
 # ボード設定
-var board_tiles = []  # マスの配列（ColorRect）
+var board_tiles = []  # マスの配列（TextureRect）
 var tile_data = []    # マスのデータ配列
 var total_tiles = GameConstants.TOTAL_TILES  # マスの総数
 
@@ -43,35 +43,87 @@ func initialize_tile_data():
 		
 		tile_data.append({
 			"type": type,
-			"element": get_random_element() if type == TileType.NORMAL else "",
+			"element": "水",  # 全て水属性に固定
 			"index": i,
 			"is_special": false,  # 特殊マスフラグ
 			"special_type": 0     # 特殊マスタイプ
 		})
 
-# ボードマップを生成（UIノードに追加）
+# ボードマップを生成（菱形配置）
 func create_board(parent_node: Node):
-	var center = Vector2(400, 400)  # ボードの中心
-	var radius = 150  # 円の半径
+	var center = Vector2(400, 300)  # マップ中心
+	var tile_spacing = 80  # タイル間隔
 	
-	for i in range(total_tiles):
-		# 円形にマスを配置
-		var angle = (2 * PI * i) / total_tiles - PI/2
-		var pos = center + Vector2(cos(angle), sin(angle)) * radius
+	print("\n=== タイル作成開始 ===")
+	print("タイル間隔: ", tile_spacing)
+	print("中心位置: ", center)
+	
+	# 菱形配置の定義（20マス）
+	var diamond_layout = [
+		#1段目
+		[Vector2(0, -0.68)],
+		#2段目
+		[Vector2(-0.4, -0.51), Vector2(0.4, -0.51)],
+		# 3段目
+		[Vector2(-0.8, -0.34), Vector2(0.8, -0.34)],
+		# 4段目
+		[Vector2(-1.2, -0.17),Vector2(1.2, -0.17)],
+		# 5段目
+		[Vector2(-1.6, 0), Vector2(1.6, 0)],
+		# 6段目
+		[Vector2(-1.2, 0.17),  Vector2(1.2, 0.17)],
+		# 7段目
+		[Vector2(-0.8, 0.34), Vector2(0.8, 0.34)],
+		#8段目
+		[Vector2(-0.4, 0.51), Vector2(0.4, 0.51)],
+		#9段目
+		[Vector2(0, 0.68)]
+	]
+	
+	# 全ての位置を一つの配列にまとめる
+	var all_positions = []
+	for row in diamond_layout:
+		for offset in row:
+			all_positions.append(center + offset * tile_spacing)
+	
+	# タイル作成
+	for i in range(min(total_tiles, all_positions.size())):
+		var pos = all_positions[i]
 		
-		# マスを表す四角形を作成
-		var tile = ColorRect.new()
-		tile.size = Vector2(30, 30)
-		tile.position = pos - tile.size / 2  # 中心に配置
+		# マスを表す画像を作成
+		var tile = TextureRect.new()
 		
-		# マスの色を設定（特殊マスは後で上書きされる）
-		if tile_data[i].type == TileType.START:
-			tile.color = GameConstants.SPECIAL_TILE_COLORS["START"]
-		elif tile_data[i].type == TileType.CHECKPOINT:
-			tile.color = GameConstants.SPECIAL_TILE_COLORS["CHECKPOINT"]
-		else:
-			# 通常マスは属性色
-			tile.color = get_element_color(tile_data[i].element)
+		# ============ タイルサイズ変更テスト ============
+		# アイソメトリック比率（2:1）でサイズ設定
+		var tile_size = Vector2(64, 32)  # 幅100、高さ50
+		tile.custom_minimum_size = tile_size  # 最小サイズを強制
+		tile.size = tile_size
+		
+		print("\nタイル ", i, " 作成:")
+		print("  設定サイズ: ", tile_size)
+		print("  位置: ", pos)
+		
+		# 位置設定（タイルの中心を基準に）
+		tile.position = pos - tile_size / 2
+		
+		# 下の方が手前に表示されるようにz_indexを設定
+		tile.z_index = int(pos.y / 10)
+		
+		# テクスチャ設定
+		tile.texture = load("res://assets/images/tiles/water_tile3.png")
+		
+		# ============ stretch_mode変更テスト ============
+		# 複数のモードを試してコメントアウトで切り替え
+		tile.stretch_mode = TextureRect.STRETCH_SCALE  # 強制的に指定サイズに拡大縮小
+		# tile.stretch_mode = TextureRect.STRETCH_KEEP  # 元のサイズを維持
+		# tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED  # アスペクト比維持（元の設定）
+		# tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED  # アスペクト比維持で全体カバー
+		
+		# 拡張モード設定（追加テスト）
+		tile.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		
+		print("  stretch_mode: ", tile.stretch_mode)
+		print("  expand_mode: ", tile.expand_mode)
 		
 		# レベル表示用ラベルを追加
 		var level_label = Label.new()
@@ -86,11 +138,20 @@ func create_board(parent_node: Node):
 		
 		parent_node.add_child(tile)
 		board_tiles.append(tile)
+		
+		# 実際のサイズを次のフレームで確認
+		if i == 0:  # 最初のタイルだけ詳細確認
+			await get_tree().process_frame
+			print("  [確認] 実際のサイズ: ", tile.size)
+			print("  [確認] スケール: ", tile.scale)
+			print("  [確認] 親ノードスケール: ", parent_node.scale)
+	
+	print("\n=== タイル作成完了 ===\n")
 
 # ランダムな属性を取得
 func get_random_element() -> String:
-	var elements = ["火", "水", "風", "土"]
-	return elements[randi() % elements.size()]
+	# 現在は全て水属性なので使用しない
+	return "水"
 
 # 属性に応じた色を取得
 func get_element_color(element: String) -> Color:
@@ -234,7 +295,7 @@ func mark_as_special_tile(tile_index: int, special_type: int):
 			# SpecialTileSystemから色を取得
 			var special_system = get_tree().get_root().get_node_or_null("Game/SpecialTileSystem")
 			if special_system:
-				tile.color = special_system.get_special_tile_color(special_type)
+				tile.modulate = special_system.get_special_tile_color(special_type)
 			
 			# 特殊マスマークを追加
 			var mark_label = Label.new()

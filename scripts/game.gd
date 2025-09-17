@@ -1,5 +1,5 @@
 extends Node2D
-# メインゲーム管理スクリプト（Camera/UI分離版）
+# メインゲーム管理スクリプト（背景修正版）
 
 # システムの参照
 var board_system: BoardSystem
@@ -14,9 +14,18 @@ var camera_system = null  # CameraSystem（型指定なしで初期化）
 
 var player_count = 2  # プレイヤー数
 
+# マップ背景管理
+var current_bg_index = 0
+var background_paths = [
+	"res://assets/images/map/map_background1.jpeg",
+	"res://assets/images/map/map_background.png",
+	"res://assets/images/map/map_background2.png",
+	"res://assets/images/map/map_background3.png"
+]
+var current_background = null  # 現在の背景ノード
+
 func _ready():
 	print("=== カルドセプト風ゲーム開始 ===")
-	
 	
 	initialize_systems()
 	setup_game()
@@ -94,6 +103,21 @@ func setup_game():
 		var board_map_node = Node2D.new()
 		board_map_node.name = "BoardMap"
 		add_child(board_map_node)
+	
+	# マップ背景を追加（サイズ自動取得・中央配置）
+	var bg_paths = [
+		"res://assets/images/map/map_background1.jpeg",
+		"res://assets/images/map/map_background.png",
+		"res://assets/images/map/map_background1.png"
+	]
+	
+	# 最初に見つかった背景画像を使用
+	for i in range(background_paths.size()):
+		var bg_path = background_paths[i]
+		if FileAccess.file_exists(bg_path):
+			current_bg_index = i
+			load_background(bg_path)
+			break
 	
 	# ボードを作成
 	board_system.create_board($BoardMap)
@@ -215,3 +239,112 @@ func _on_turn_started(player_id: int):
 
 func _on_turn_ended(player_id: int):
 	print("ターン終了: プレイヤー", player_id + 1)
+
+# 背景読み込み関数
+func load_background(bg_path: String):
+	# 既存の背景を削除
+	if current_background and is_instance_valid(current_background):
+		current_background.queue_free()
+	
+	print("\n=== 背景読み込み開始 ===")
+	print("パス: ", bg_path)
+	
+	if FileAccess.file_exists(bg_path):
+		var texture = load(bg_path)
+		if texture:
+			# 元のテクスチャサイズを記録
+			var original_size = texture.get_size()
+			print("元の画像サイズ: ", original_size)
+			
+			# TextureRectを作成（テクスチャ設定前）
+			var background = TextureRect.new()
+			background.name = "MapBackground"
+			background.z_index = -10  # 最背面
+			
+			# 統一サイズ: 1500×1000に強制設定
+			var unified_size = Vector2(1500, 1000)
+			
+			# サイズを先に設定
+			background.custom_minimum_size = unified_size
+			background.size = unified_size
+			
+			# モードを設定
+			background.stretch_mode = TextureRect.STRETCH_SCALE
+			background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			
+			# テクスチャは最後に設定
+			background.texture = texture
+			
+			# ボードの中心点（board_system.gdの設定値）
+			var board_center = Vector2(400, 300)
+			
+			# 中心に配置
+			background.position = board_center - (unified_size / 2)
+			
+			print("stretch_mode設定値: ", background.stretch_mode)
+			print("expand_mode設定値: ", background.expand_mode)
+			print("設定したサイズ: ", background.size)
+			print("position: ", background.position)
+			
+			$BoardMap.add_child(background)
+			current_background = background
+			
+			# 1フレーム待って実際のサイズを確認
+			await get_tree().process_frame
+			print("[確認] 実際のサイズ: ", background.size)
+			
+			# サイズが違う場合は強制修正
+			if background.size != unified_size:
+				print("警告: サイズが異なるため強制修正")
+				background.set_size(unified_size)
+				print("[修正後] サイズ: ", background.size)
+			
+			print("=== 背景読み込み完了 ===\n")
+		else:
+			print("テクスチャ読み込み失敗:", bg_path)
+	else:
+		print("ファイルが存在しません: ", bg_path)
+
+# 次の背景に切り替え
+func switch_to_next_background():
+	current_bg_index = (current_bg_index + 1) % background_paths.size()
+	
+	# 利用可能な背景を探す
+	for i in range(background_paths.size()):
+		var index = (current_bg_index + i) % background_paths.size()
+		var path = background_paths[index]
+		if FileAccess.file_exists(path):
+			current_bg_index = index
+			load_background(path)
+			print("背景切り替え: [", index + 1, "/", background_paths.size(), "] ", path)
+			return
+	
+	print("利用可能な背景画像がありません")
+
+# 特定の背景に切り替え
+func switch_to_background(index: int):
+	if index >= 0 and index < background_paths.size():
+		var path = background_paths[index]
+		if FileAccess.file_exists(path):
+			current_bg_index = index
+			load_background(path)
+		else:
+			print("背景画像が見つかりません: ", path)
+	else:
+		print("無効なインデックス: ", index)
+
+# デバッグ入力処理
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_M:  # Mキーで次の背景に切り替え
+				switch_to_next_background()
+			KEY_B:  # Bキー + 数字で特定の背景に切り替え
+				if Input.is_key_pressed(KEY_1):
+					switch_to_background(0)
+				elif Input.is_key_pressed(KEY_2):
+					switch_to_background(1)
+				elif Input.is_key_pressed(KEY_3):
+					switch_to_background(2)
+				elif Input.is_key_pressed(KEY_4):
+					switch_to_background(3)

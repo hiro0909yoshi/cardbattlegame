@@ -1,9 +1,5 @@
 res://scenes/Card.tscn
 res://scenes/node_2d.tscn
 res://scenes/game.tscn
-res://scripts/card_system.gd
-res://scripts/ui_components/player_info_panel.gd
-res://scripts/ui_components/card_selection_ui.gd
-res://scripts/ui_manager.gd
-res://scripts/game_flow_manager.gd
+res://scripts/board_system.gd
 res://scripts/game.gd
