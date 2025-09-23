@@ -1,19 +1,18 @@
 extends Node
 class_name UIManager
 
-# UI要素の統括管理システム（リファクタリング版）
-# 各UIコンポーネントを管理・調整
+# UI要素の統括管理システム（エラー修正版）
 
 signal dice_button_pressed()
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
 
-# UIコンポーネント
-var player_info_panel: PlayerInfoPanel
-var card_selection_ui: CardSelectionUI
-var level_up_ui: LevelUpUI
-var debug_panel: DebugPanel
+# UIコンポーネント（動的ロード用）
+var player_info_panel = null
+var card_selection_ui = null
+var level_up_ui = null
+var debug_panel = null
 
 # 基本UI要素
 var dice_button: Button
@@ -21,25 +20,35 @@ var phase_label: Label
 var current_dice_label: Label = null
 
 # システム参照
-var card_system_ref: CardSystem = null
-var player_system_ref: PlayerSystem = null
-var board_system_ref: BoardSystem = null
+var card_system_ref = null
+var player_system_ref = null
+var board_system_ref = null
 
 # デバッグモード
 var debug_mode = false
 
 func _ready():
-	# UIコンポーネントをインスタンス化
-	player_info_panel = PlayerInfoPanel.new()
-	card_selection_ui = CardSelectionUI.new()
-	level_up_ui = LevelUpUI.new()
-	debug_panel = DebugPanel.new()
+	# UIコンポーネントを動的にロードして作成
+	var PlayerInfoPanelClass = load("res://scripts/ui_components/player_info_panel.gd")
+	var CardSelectionUIClass = load("res://scripts/ui_components/card_selection_ui.gd")
+	var LevelUpUIClass = load("res://scripts/ui_components/level_up_ui.gd")
+	var DebugPanelClass = load("res://scripts/ui_components/debug_panel.gd")
 	
-	# 子ノードとして追加
-	add_child(player_info_panel)
-	add_child(card_selection_ui)
-	add_child(level_up_ui)
-	add_child(debug_panel)
+	if PlayerInfoPanelClass:
+		player_info_panel = PlayerInfoPanelClass.new()
+		add_child(player_info_panel)
+	
+	if CardSelectionUIClass:
+		card_selection_ui = CardSelectionUIClass.new()
+		add_child(card_selection_ui)
+	
+	if LevelUpUIClass:
+		level_up_ui = LevelUpUIClass.new()
+		add_child(level_up_ui)
+	
+	if DebugPanelClass:
+		debug_panel = DebugPanelClass.new()
+		add_child(debug_panel)
 	
 	# シグナル接続
 	connect_ui_signals()
@@ -47,17 +56,18 @@ func _ready():
 # UIコンポーネントのシグナルを接続
 func connect_ui_signals():
 	# カード選択UI
-	card_selection_ui.card_selected.connect(_on_card_ui_selected)
-	card_selection_ui.selection_cancelled.connect(_on_selection_cancelled)
+	if card_selection_ui:
+		card_selection_ui.card_selected.connect(_on_card_ui_selected)
+		card_selection_ui.selection_cancelled.connect(_on_selection_cancelled)
 	
 	# レベルアップUI
-	level_up_ui.level_selected.connect(_on_level_ui_selected)
-	level_up_ui.selection_cancelled.connect(_on_level_up_cancelled)
+	if level_up_ui:
+		level_up_ui.level_selected.connect(_on_level_ui_selected)
+		level_up_ui.selection_cancelled.connect(_on_level_up_cancelled)
 	
 	# デバッグパネル
-	debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
-
-# UIを作成
+	if debug_panel:
+		debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
 
 # UIを作成
 func create_ui(parent: Node):
@@ -78,65 +88,112 @@ func create_ui(parent: Node):
 	create_basic_ui(ui_layer)
 	
 	# 各コンポーネントを初期化
-	player_info_panel.initialize(ui_layer, player_system_ref, board_system_ref)
-	card_selection_ui.initialize(ui_layer, card_system_ref, phase_label)
-	level_up_ui.initialize(ui_layer, board_system_ref, phase_label)
-	debug_panel.initialize(ui_layer, card_system_ref, board_system_ref, player_system_ref)
-# 基本UI要素を作成
+	if player_info_panel and player_info_panel.has_method("initialize"):
+		player_info_panel.initialize(ui_layer, player_system_ref, board_system_ref)
+	if card_selection_ui and card_selection_ui.has_method("initialize"):
+		card_selection_ui.initialize(ui_layer, card_system_ref, phase_label)
+	if level_up_ui and level_up_ui.has_method("initialize"):
+		level_up_ui.initialize(ui_layer, board_system_ref, phase_label)
+	if debug_panel and debug_panel.has_method("initialize"):
+		debug_panel.initialize(ui_layer, card_system_ref, board_system_ref, player_system_ref)
+
+# 基本UI要素を作成（サイコロボタン位置修正）
 func create_basic_ui(parent: Node):
-	# フェーズ表示
+	# フェーズ表示（位置を調整）
 	phase_label = Label.new()
 	phase_label.text = "セットアップ中..."
-	phase_label.position = Vector2(350, 50)
+	phase_label.position = Vector2(350, 20)  # 上部中央に配置
 	phase_label.add_theme_font_size_override("font_size", 24)
 	parent.add_child(phase_label)
 	
-	# サイコロボタン
+	# サイコロボタン（見やすい位置に配置）
 	dice_button = Button.new()
 	dice_button.text = "サイコロを振る"
-	dice_button.position = Vector2(350, 250)
-	dice_button.size = Vector2(120, 40)
-	dice_button.pressed.connect(_on_dice_button_pressed)
+	dice_button.position = Vector2(350, 100)  # 画面上部、フェーズ表示の下
+	dice_button.size = Vector2(150, 50)  # ボタンサイズを大きく
 	dice_button.disabled = true
+	dice_button.pressed.connect(_on_dice_button_pressed)
+	
+	# サイコロボタンのスタイルを設定
+	var button_style = StyleBoxFlat.new()
+	button_style.bg_color = Color(0.2, 0.5, 0.8, 0.9)
+	button_style.border_width_left = 2
+	button_style.border_width_right = 2
+	button_style.border_width_top = 2
+	button_style.border_width_bottom = 2
+	button_style.border_color = Color(1, 1, 1, 1)
+	button_style.corner_radius_top_left = 5
+	button_style.corner_radius_top_right = 5
+	button_style.corner_radius_bottom_left = 5
+	button_style.corner_radius_bottom_right = 5
+	dice_button.add_theme_stylebox_override("normal", button_style)
+	
+	# ホバー時のスタイル
+	var hover_style = button_style.duplicate()
+	hover_style.bg_color = Color(0.3, 0.6, 0.9, 1.0)
+	dice_button.add_theme_stylebox_override("hover", hover_style)
+	
+	# 押下時のスタイル
+	var pressed_style = button_style.duplicate()
+	pressed_style.bg_color = Color(0.1, 0.4, 0.7, 1.0)
+	dice_button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# 無効時のスタイル
+	var disabled_style = button_style.duplicate()
+	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.7)
+	dice_button.add_theme_stylebox_override("disabled", disabled_style)
+	
+	# フォントサイズを大きく
+	dice_button.add_theme_font_size_override("font_size", 18)
+	
 	parent.add_child(dice_button)
 
 # === プレイヤー情報パネル関連 ===
 func update_player_info_panels():
-	player_info_panel.update_all_panels()
+	if player_info_panel and player_info_panel.has_method("update_all_panels"):
+		player_info_panel.update_all_panels()
 
 # === カード選択UI関連 ===
 func show_card_selection_ui(current_player):
-	card_selection_ui.show_selection(current_player, "summon")
+	if card_selection_ui and card_selection_ui.has_method("show_selection"):
+		card_selection_ui.show_selection(current_player, "summon")
 
 func hide_card_selection_ui():
-	card_selection_ui.hide_selection()
+	if card_selection_ui and card_selection_ui.has_method("hide_selection"):
+		card_selection_ui.hide_selection()
 
 # カードボタンが押された（card.gdから呼ばれる）
 func _on_card_button_pressed(card_index: int):
-	card_selection_ui.on_card_selected(card_index)
+	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
+		card_selection_ui.on_card_selected(card_index)
 
 # === レベルアップUI関連 ===
 func show_level_up_ui(tile_info: Dictionary, current_magic: int):
-	level_up_ui.show_level_up_selection(tile_info, current_magic)
+	if level_up_ui and level_up_ui.has_method("show_level_up_selection"):
+		level_up_ui.show_level_up_selection(tile_info, current_magic)
 
 func hide_level_up_ui():
-	level_up_ui.hide_selection()
+	if level_up_ui and level_up_ui.has_method("hide_selection"):
+		level_up_ui.hide_selection()
 
 # === デバッグパネル関連 ===
 func toggle_debug_mode():
-	debug_panel.toggle_visibility()
-	debug_mode = debug_panel.is_debug_visible()
+	if debug_panel and debug_panel.has_method("toggle_visibility"):
+		debug_panel.toggle_visibility()
+		if debug_panel.has_method("is_debug_visible"):
+			debug_mode = debug_panel.is_debug_visible()
 
 func update_cpu_hand_display(player_id: int):
-	debug_panel.update_cpu_hand(player_id)
+	if debug_panel and debug_panel.has_method("update_cpu_hand"):
+		debug_panel.update_cpu_hand(player_id)
 
 # === 基本UI操作 ===
 func update_ui(current_player, current_phase):
 	# プレイヤー情報パネルを更新
-	player_info_panel.update_all_panels()
+	update_player_info_panels()
 	
 	# 現在のターンプレイヤーを設定
-	if current_player:
+	if current_player and player_info_panel and player_info_panel.has_method("set_current_turn"):
 		player_info_panel.set_current_turn(current_player.id)
 	
 	# フェーズ表示を更新
@@ -144,6 +201,9 @@ func update_ui(current_player, current_phase):
 
 # フェーズ表示を更新
 func update_phase_display(phase):
+	if not phase_label:
+		return
+		
 	match phase:
 		0: # SETUP
 			phase_label.text = "準備中..."
@@ -158,22 +218,44 @@ func update_phase_display(phase):
 		5: # END_TURN
 			phase_label.text = "ターン終了"
 
-# ダイス結果を表示
+# ダイス結果を表示（位置調整）
 func show_dice_result(value: int, parent: Node):
 	# 既存のダイスラベルがあれば削除
 	if current_dice_label and is_instance_valid(current_dice_label):
 		current_dice_label.queue_free()
 	
-	# 新しいダイスラベルを作成
+	# 新しいダイスラベルを作成（サイコロボタンの近くに表示）
 	current_dice_label = Label.new()
 	current_dice_label.text = "🎲 " + str(value)
 	current_dice_label.add_theme_font_size_override("font_size", 48)
-	current_dice_label.position = Vector2(350, 300)
-	parent.add_child(current_dice_label)
+	current_dice_label.position = Vector2(530, 90)  # サイコロボタンの右横
+	current_dice_label.add_theme_color_override("font_color", Color(1, 1, 0))
+	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
+	
+	# UILayerがある場合はそこに追加
+	if parent.has_node("UILayer"):
+		parent.get_node("UILayer").add_child(current_dice_label)
+	else:
+		parent.add_child(current_dice_label)
+	
+	# 2秒後に自動的に消す
+	await get_tree().create_timer(2.0).timeout
+	if current_dice_label and is_instance_valid(current_dice_label):
+		current_dice_label.queue_free()
+		current_dice_label = null
 
 # サイコロボタンの有効/無効
 func set_dice_button_enabled(enabled: bool):
+	if not dice_button:
+		return
+		
 	dice_button.disabled = not enabled
+	
+	# 有効時は目立たせる
+	if enabled:
+		dice_button.modulate = Color(1, 1, 1, 1)
+	else:
+		dice_button.modulate = Color(0.7, 0.7, 0.7, 0.8)
 
 # === イベントハンドラ ===
 func _on_dice_button_pressed():

@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerSystem
 
-# プレイヤー管理システム - GameConstants対応版
+# プレイヤー管理システム - 菱形マス移動対応版
 
 signal dice_rolled(value: int)
 signal movement_started()
@@ -63,12 +63,22 @@ func initialize_players(player_count: int, parent_node: Node):
 	
 	print("PlayerSystem: ", player_count, "人のプレイヤーを初期化")
 
-# プレイヤー駒を作成
+# プレイヤー駒を作成（改善版）
 func create_player_piece(player: PlayerData, parent: Node) -> Node:
 	var piece = ColorRect.new()
 	piece.size = Vector2(20, 20)
 	piece.color = player.color
-	piece.z_index = 5
+	piece.z_index = 10  # タイルより前面に表示（5→10に変更）
+	
+	# プレイヤーIDラベルを追加（識別しやすくする）
+	var label = Label.new()
+	label.text = "P" + str(player.id + 1)
+	label.position = Vector2(-5, -20)
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	label.z_index = 1
+	piece.add_child(label)
 	
 	parent.add_child(piece)
 	return piece
@@ -98,8 +108,8 @@ func roll_dice() -> int:
 	emit_signal("dice_rolled", value)
 	return value
 
-# プレイヤーを移動（通過型ワープ対応版）
-func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
+# プレイヤーを移動（菱形マス対応版・方向選択準備）
+func move_player_steps(player_id: int, steps: int, board_system: BoardSystem, clockwise: bool = true):
 	if is_moving:
 		return
 	
@@ -113,27 +123,44 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 	# 残り移動数
 	var remaining_steps = steps
 	
+	# 移動方向の表示（将来の拡張用）
+	var direction_text = "時計回り" if clockwise else "反時計回り"
+	print("移動開始: ", player.name, " (", steps, "マス・", direction_text, ")")
+	
 	# 1マスずつ移動をシミュレート
 	while remaining_steps > 0:
 		await player.piece_node.get_tree().create_timer(GameConstants.MOVE_SPEED).timeout
 		
 		var prev_pos = player.current_tile
-		player.current_tile = (player.current_tile + 1) % board_system.total_tiles
 		
-		# スタート通過チェック
-		if prev_pos > player.current_tile:
+		# 移動方向に応じて次のタイルを計算（将来の拡張用）
+		if clockwise:
+			player.current_tile = (player.current_tile + 1) % board_system.total_tiles
+		else:
+			# 反時計回りの場合（将来実装）
+			player.current_tile = (player.current_tile - 1 + board_system.total_tiles) % board_system.total_tiles
+		
+		print("  マス", prev_pos, " → マス", player.current_tile)
+		
+		# スタート通過チェック（時計回りの場合）
+		if clockwise and prev_pos > player.current_tile:
 			print("スタート地点通過！")
 			add_magic(player_id, GameConstants.PASS_BONUS)
+		# 反時計回りでのスタート通過チェック（将来実装）
+		elif not clockwise and prev_pos < player.current_tile and player.current_tile == 0:
+			print("スタート地点通過！（反時計回り）")
+			add_magic(player_id, GameConstants.PASS_BONUS)
 		
-		# 駒を移動
+		# 駒を実際のタイル位置に移動
 		var target_pos = board_system.get_tile_position(player.current_tile)
 		if player.piece_node:
+			# 駒をタイルの中心に配置
 			player.piece_node.position = target_pos - player.piece_node.size / 2
 			
 			# カメラシステムに位置を通知（自動追従用）
 			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
 			if camera_system and camera_system.is_following_player:
-				camera_system.focus_on_player(player.piece_node.position)
+				camera_system.focus_on_player(target_pos)
 		
 		# 通過型ワープチェック
 		if special_system and special_system.is_warp_gate(player.current_tile):
@@ -151,30 +178,36 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem):
 					# ワープ後もカメラを更新
 					var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
 					if camera_system and camera_system.is_following_player:
-						camera_system.focus_on_player(player.piece_node.position)
+						camera_system.focus_on_player(target_pos)
 				
 				# 残り移動数は変わらない（通過型は移動カウントを消費しない）
 				print("通過型ワープ！残り移動数: ", remaining_steps - 1)
 		
 		remaining_steps -= 1
 	
+	print("移動完了: マス", player.current_tile, "に到着")
+	
 	is_moving = false
 	emit_signal("movement_completed", player.current_tile)
 
-# プレイヤーを特定のタイルに配置
+# プレイヤーを特定のタイルに配置（菱形マス対応版）
 func place_player_at_tile(player_id: int, tile_index: int, board_system: BoardSystem):
 	var player = players[player_id]
 	player.current_tile = tile_index
 	
+	# 実際のタイル位置を取得
 	var target_pos = board_system.get_tile_position(tile_index)
 	if player.piece_node:
+		# 駒をタイルの中心に配置
 		player.piece_node.position = target_pos - player.piece_node.size / 2
+		
+		print("プレイヤー", player_id + 1, "をマス", tile_index, "に配置: ", target_pos)
 		
 		# 配置時もカメラ更新（デバッグ移動用）
 		if player_id == current_player_index:
 			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
 			if camera_system and camera_system.is_following_player:
-				camera_system.focus_on_player(player.piece_node.position)
+				camera_system.focus_on_player(target_pos)
 
 # 魔力を増減
 func add_magic(player_id: int, amount: int):
