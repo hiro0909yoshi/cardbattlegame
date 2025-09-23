@@ -21,6 +21,8 @@ class PlayerData:
 	var target_magic: int = 8000  # 直接値使用（内部クラスのため）
 	var color: Color = Color.WHITE
 	var piece_node: Node = null  # 駒のノード
+	var movement_direction: String = ""  # ← この行を追加
+	var last_choice_tile: int = -1      # ← この行を追加
 
 # プレイヤー管理
 var players = []
@@ -129,39 +131,42 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem, cl
 	
 	# 1マスずつ移動をシミュレート
 	while remaining_steps > 0:
-		await player.piece_node.get_tree().create_timer(GameConstants.MOVE_SPEED).timeout
-		
 		var prev_pos = player.current_tile
 		
-		# 移動方向に応じて次のタイルを計算（将来の拡張用）
-		if clockwise:
-			player.current_tile = (player.current_tile + 1) % board_system.total_tiles
-		else:
-			# 反時計回りの場合（将来実装）
-			player.current_tile = (player.current_tile - 1 + board_system.total_tiles) % board_system.total_tiles
+		# 次のタイルを計算
+		var next_tile = board_system.get_next_tile(player.current_tile, player.movement_direction)
+		if next_tile == player.current_tile:
+			# デフォルトの移動（movement_directionが空の場合）
+			next_tile = (player.current_tile + 1) % board_system.total_tiles
+		
+		player.current_tile = next_tile
 		
 		print("  マス", prev_pos, " → マス", player.current_tile)
 		
-		# スタート通過チェック（時計回りの場合）
-		if clockwise and prev_pos > player.current_tile:
+		# スタート通過チェック
+		if prev_pos > player.current_tile:
 			print("スタート地点通過！")
 			add_magic(player_id, GameConstants.PASS_BONUS)
-		# 反時計回りでのスタート通過チェック（将来実装）
-		elif not clockwise and prev_pos < player.current_tile and player.current_tile == 0:
-			print("スタート地点通過！（反時計回り）")
-			add_magic(player_id, GameConstants.PASS_BONUS)
 		
-		# 駒を実際のタイル位置に移動
+		# 駒を滑らかに移動（Tweenを使用）
 		var target_pos = board_system.get_tile_position(player.current_tile)
 		if player.piece_node:
-			# 駒をタイルの中心に配置
-			player.piece_node.position = target_pos - player.piece_node.size / 2
+			# Tweenで滑らかな移動
+			var tween = get_tree().create_tween()
+			tween.tween_property(
+				player.piece_node, 
+				"position", 
+				target_pos - player.piece_node.size / 2,
+				GameConstants.MOVE_SPEED
+			)
 			
-			# カメラシステムに位置を通知（自動追従用）
+			# カメラも追従
 			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
 			if camera_system and camera_system.is_following_player:
 				camera_system.focus_on_player(target_pos)
-		
+			
+			# 移動アニメーションを待つ
+			await tween.finished
 		# 通過型ワープチェック
 		if special_system and special_system.is_warp_gate(player.current_tile):
 			var warp_result = special_system.process_warp_gate(player.current_tile, player_id, remaining_steps)

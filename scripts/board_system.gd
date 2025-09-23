@@ -47,7 +47,14 @@ func initialize_tile_data():
 			"element": "水",  # 全て水属性に固定
 			"index": i,
 			"is_special": false,  # 特殊マスフラグ
-			"special_type": 0     # 特殊マスタイプ
+			"special_type": 0,     # 特殊マスタイプ
+			# 新規追加：接続情報
+			"connections": {
+				"clockwise": (i + 1) % total_tiles,      # 時計回り
+				"counter": (i - 1 + total_tiles) % total_tiles,  # 反時計回り
+				"branches": []  # 将来の分岐用
+			},
+			"force_direction": false  # 方向選択を強制しない
 		})
 
 # ボードマップを生成（菱形配置）
@@ -87,10 +94,35 @@ func create_board(parent_node: Node):
 	
 	# 全ての位置を一つの配列にまとめる
 	var all_positions = []
-	for row in diamond_layout:
-		for offset in row:
-			all_positions.append(center + offset * tile_spacing)
-	
+	# 頂点から開始
+	all_positions.append(center + diamond_layout[0][0] * tile_spacing)  # タイル0: 頂点
+
+	# 右側を下る
+	all_positions.append(center + diamond_layout[1][1] * tile_spacing)  # タイル1
+	all_positions.append(center + diamond_layout[2][1] * tile_spacing)  # タイル2
+	all_positions.append(center + diamond_layout[3][1] * tile_spacing)  # タイル3
+	all_positions.append(center + diamond_layout[4][1] * tile_spacing)  # タイル4
+	all_positions.append(center + diamond_layout[5][1] * tile_spacing)  # タイル5: 右端
+
+	# 下側を左へ
+	all_positions.append(center + diamond_layout[6][1] * tile_spacing)  # タイル6
+	all_positions.append(center + diamond_layout[7][1] * tile_spacing)  # タイル7
+	all_positions.append(center + diamond_layout[8][1] * tile_spacing)  # タイル8
+	all_positions.append(center + diamond_layout[9][1] * tile_spacing)  # タイル9
+	all_positions.append(center + diamond_layout[10][0] * tile_spacing) # タイル10: 底
+
+	# 左側を上る
+	all_positions.append(center + diamond_layout[9][0] * tile_spacing)  # タイル11
+	all_positions.append(center + diamond_layout[8][0] * tile_spacing)  # タイル12
+	all_positions.append(center + diamond_layout[7][0] * tile_spacing)  # タイル13
+	all_positions.append(center + diamond_layout[6][0] * tile_spacing)  # タイル14
+	all_positions.append(center + diamond_layout[5][0] * tile_spacing)  # タイル15: 左端
+
+	# 上側を右へ（頂点に戻る）
+	all_positions.append(center + diamond_layout[4][0] * tile_spacing)  # タイル16
+	all_positions.append(center + diamond_layout[3][0] * tile_spacing)  # タイル17
+	all_positions.append(center + diamond_layout[2][0] * tile_spacing)  # タイル18
+	all_positions.append(center + diamond_layout[1][0] * tile_spacing)  # タイル19
 	# タイルと台座を作成
 	for i in range(min(total_tiles, all_positions.size())):
 		var pos = all_positions[i]
@@ -488,6 +520,46 @@ func can_upgrade(tile_index: int, player_id: int) -> bool:
 		return false
 	
 	return true
+
+# 次のタイルを取得（移動方向に応じて）
+func get_next_tile(current_tile: int, direction: String) -> int:
+	if current_tile < 0 or current_tile >= total_tiles:
+		return current_tile
+	
+	var connections = tile_data[current_tile].get("connections", {})
+	
+	if direction == "clockwise":
+		return connections.get("clockwise", (current_tile + 1) % total_tiles)
+	elif direction == "counter":
+		return connections.get("counter", (current_tile - 1 + total_tiles) % total_tiles)
+	else:
+		# 分岐先がある場合は最初の分岐先を返す
+		var branches = connections.get("branches", [])
+		if branches.size() > 0:
+			return branches[0]
+	
+	return current_tile
+
+# 利用可能な移動方向を取得
+func get_available_directions(tile_index: int) -> Array:
+	if tile_index < 0 or tile_index >= total_tiles:
+		return []
+	
+	var directions = []
+	var connections = tile_data[tile_index].get("connections", {})
+	
+	# 通常は両方向に移動可能
+	if connections.has("clockwise"):
+		directions.append("clockwise")
+	if connections.has("counter"):
+		directions.append("counter")
+	
+	# 分岐がある場合は追加
+	var branches = connections.get("branches", [])
+	for i in range(branches.size()):
+		directions.append("branch_" + str(i))
+	
+	return directions
 
 # デバッグ用：全タイル情報を表示
 func debug_print_all_tiles():
