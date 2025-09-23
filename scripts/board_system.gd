@@ -1,13 +1,14 @@
 extends Node
 class_name BoardSystem
 
-# ボードマップとタイル管理システム - GameConstants対応版
+# ボードマップとタイル管理システム - 台座追加版
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 
 # ボード設定
 var board_tiles = []  # マスの配列（TextureRect）
+var board_bases = []  # 台座の配列（TextureRect）
 var tile_data = []    # マスのデータ配列
 var total_tiles = GameConstants.TOTAL_TILES  # マスの総数
 
@@ -61,23 +62,23 @@ func create_board(parent_node: Node):
 	# 菱形配置の定義（20マス）
 	var diamond_layout = [
 		#1段目
-		[Vector2(0, -0.68)],
+		[Vector2(0, -0.65)],
 		#2段目
-		[Vector2(-0.4, -0.51), Vector2(0.4, -0.51)],
+		[Vector2(-0.4, -0.49), Vector2(0.4, -0.49)],
 		# 3段目
-		[Vector2(-0.8, -0.34), Vector2(0.8, -0.34)],
+		[Vector2(-0.8, -0.32), Vector2(0.8, -0.32)],
 		# 4段目
-		[Vector2(-1.2, -0.17),Vector2(1.2, -0.17)],
+		[Vector2(-1.2, -0.16),Vector2(1.2, -0.16)],
 		# 5段目
 		[Vector2(-1.6, 0), Vector2(1.6, 0)],
 		# 6段目
-		[Vector2(-1.2, 0.17),  Vector2(1.2, 0.17)],
+		[Vector2(-1.2, 0.16),  Vector2(1.2, 0.16)],
 		# 7段目
-		[Vector2(-0.8, 0.34), Vector2(0.8, 0.34)],
+		[Vector2(-0.8, 0.32), Vector2(0.8, 0.32)],
 		#8段目
-		[Vector2(-0.4, 0.51), Vector2(0.4, 0.51)],
+		[Vector2(-0.4, 0.49), Vector2(0.4, 0.49)],
 		#9段目
-		[Vector2(0, 0.68)]
+		[Vector2(0, 0.65)]
 	]
 	
 	# 全ての位置を一つの配列にまとめる
@@ -86,17 +87,41 @@ func create_board(parent_node: Node):
 		for offset in row:
 			all_positions.append(center + offset * tile_spacing)
 	
-	# タイル作成
+	# タイルと台座を作成
 	for i in range(min(total_tiles, all_positions.size())):
 		var pos = all_positions[i]
 		
-		# マスを表す画像を作成
-		var tile = TextureRect.new()
+		# ============ 台座を作成 ============
+		var base = TextureRect.new()
+		base.name = "Base_" + str(i)
 		
-		# ============ タイルサイズ変更テスト ============
+		# 台座サイズ（タイルと同じサイズ）
+		var base_size = Vector2(64, 32)  # タイルと同じサイズ
+		base.custom_minimum_size = base_size
+		base.size = base_size
+		
+		# 位置設定（タイルより10px下に配置）
+		base.position = pos - base_size / 2 + Vector2(0, 10)  # 10px下にオフセット
+		
+		# Y軸下方向が手前になるようにz_index設定（台座用）
+		# タイルより小さい値にして、タイルの下に表示
+		base.z_index = int(pos.y / 10) - 1
+		
+		# 台座のテクスチャ設定（base1.pngを使用）
+		base.texture = load("res://assets/images/tiles/base1.png")
+		base.stretch_mode = TextureRect.STRETCH_SCALE  # タイルと同じstretch_mode
+		base.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		
+		parent_node.add_child(base)
+		board_bases.append(base)
+		
+		# ============ タイルを作成 ============
+		var tile = TextureRect.new()
+		tile.name = "Tile_" + str(i)
+		
 		# アイソメトリック比率（2:1）でサイズ設定
-		var tile_size = Vector2(64, 32)  # 幅100、高さ50
-		tile.custom_minimum_size = tile_size  # 最小サイズを強制
+		var tile_size = Vector2(64, 32)
+		tile.custom_minimum_size = tile_size
 		tile.size = tile_size
 		
 		print("\nタイル ", i, " 作成:")
@@ -106,24 +131,21 @@ func create_board(parent_node: Node):
 		# 位置設定（タイルの中心を基準に）
 		tile.position = pos - tile_size / 2
 		
-		# 下の方が手前に表示されるようにz_indexを設定
+		# Y軸下方向が手前になるようにz_index設定（タイル用）
+		# 台座より大きい値にして、台座の上に表示
 		tile.z_index = int(pos.y / 10)
 		
 		# テクスチャ設定
-		tile.texture = load("res://assets/images/tiles/water_tile3.png")
+		tile.texture = load("res://assets/images/tiles/fire_tile3.png")
 		
-		# ============ stretch_mode変更テスト ============
-		# 複数のモードを試してコメントアウトで切り替え
+		# stretch_mode設定
 		tile.stretch_mode = TextureRect.STRETCH_SCALE  # 強制的に指定サイズに拡大縮小
-		# tile.stretch_mode = TextureRect.STRETCH_KEEP  # 元のサイズを維持
-		# tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED  # アスペクト比維持（元の設定）
-		# tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED  # アスペクト比維持で全体カバー
-		
-		# 拡張モード設定（追加テスト）
 		tile.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		
 		print("  stretch_mode: ", tile.stretch_mode)
 		print("  expand_mode: ", tile.expand_mode)
+		print("  z_index (台座): ", int(pos.y / 10) - 1)
+		print("  z_index (タイル): ", int(pos.y / 10))
 		
 		# レベル表示用ラベルを追加
 		var level_label = Label.new()
@@ -188,7 +210,38 @@ func upgrade_tile_level(tile_index: int) -> bool:
 	tile_levels[tile_index] += 1
 	update_tile_visual(tile_index)
 	
+	# 台座のビジュアルも更新（オプション）
+	update_base_visual(tile_index)
+	
 	return true
+
+# 台座のビジュアルを更新（レベルに応じて）
+func update_base_visual(tile_index: int):
+	if tile_index < 0 or tile_index >= board_bases.size():
+		return
+	
+	var base = board_bases[tile_index]
+	var level = tile_levels[tile_index]
+	var owner = tile_owners[tile_index]
+	
+	# 所有者がいる場合、台座に薄くプレイヤーカラーを適用
+	if owner >= 0 and base is TextureRect:
+		# レベルに応じて色の強さを調整
+		var intensity = 0.3 + (level - 1) * 0.1
+		intensity = min(intensity, 0.8)  # 最大0.8
+		
+		# プレイヤーカラーを取得して調整
+		var player_color = get_player_color(owner)
+		base.modulate = Color(
+			1.0 - (1.0 - player_color.r) * intensity,
+			1.0 - (1.0 - player_color.g) * intensity,
+			1.0 - (1.0 - player_color.b) * intensity,
+			1.0
+		)
+	else:
+		# 所有者なしの場合はデフォルト（白 = テクスチャの元の色）
+		if base is TextureRect:
+			base.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 # レベルアップコストを取得（原作仕様）
 func get_upgrade_cost(tile_index: int) -> int:
@@ -245,6 +298,9 @@ func update_tile_visual(tile_index: int):
 			level_label.text = "Lv" + str(level)
 		else:
 			level_label.text = ""
+	
+	# 台座も更新
+	update_base_visual(tile_index)
 
 # プレイヤーの色を取得
 func get_player_color(player_id: int) -> Color:

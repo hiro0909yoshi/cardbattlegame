@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctri0qloapmla"
-path="res://.godot/imported/fire_tile2.jpg-3cd8efdf2c36e82e4d2914626edd9070.ctex"
+uid="uid://clru04c462726"
+path="res://.godot/imported/map1.jpg-b0f2e998cfe55f58b735c420fc1c6f7e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/tiles/fire_tile2.jpg"
-dest_files=["res://.godot/imported/fire_tile2.jpg-3cd8efdf2c36e82e4d2914626edd9070.ctex"]
+source_file="res://assets/images/map/map1.jpg"
+dest_files=["res://.godot/imported/map1.jpg-b0f2e998cfe55f58b735c420fc1c6f7e.ctex"]
 
 [params]
 

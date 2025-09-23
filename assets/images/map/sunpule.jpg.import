@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dttrrl17b3yfq"
-path="res://.godot/imported/map_background3.png-ec4e175ba979de6ab5205e93c0efb8db.ctex"
+uid="uid://dqo2ogpx4w21k"
+path="res://.godot/imported/sunpule.jpg-7c949d71f62475a8d742219a0fa01084.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/map/map_background3.png"
-dest_files=["res://.godot/imported/map_background3.png-ec4e175ba979de6ab5205e93c0efb8db.ctex"]
+source_file="res://assets/images/map/sunpule.jpg"
+dest_files=["res://.godot/imported/sunpule.jpg-7c949d71f62475a8d742219a0fa01084.ctex"]
 
 [params]
 
