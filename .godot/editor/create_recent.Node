@@ -1,3 +1,4 @@
+Node3D
 Label
 Button
 CanvasLayer
@@ -6,7 +7,6 @@ CharacterBody3D
 CollisionShape3D
 DirectionalLight3D
 Camera3D
-Node3D
 MeshInstance3D
 StaticBody3D
 Area3D

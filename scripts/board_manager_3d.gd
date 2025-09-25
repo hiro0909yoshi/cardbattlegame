@@ -149,17 +149,21 @@ func setup_ui_system():
 # カメラを設定
 func setup_camera():
 	camera = get_node_or_null("Camera3D")
-	if camera and player_node:
+	if camera and player_node:  # player_nodeの存在確認
 		var offset = Vector3(0, 10, 10)
 		camera.global_position = player_node.global_position + offset
 		camera.look_at(player_node.global_position, Vector3.UP)
-
+	else:
+		print("警告: カメラまたはプレイヤーが見つかりません")
+		
 # タイルを収集
 func collect_tiles():
-	for child in get_children():
-		if child is BaseTile:
-			tile_nodes[child.tile_index] = child
-
+	var tiles_container = get_node_or_null("Tiles")
+	if tiles_container:
+		for child in tiles_container.get_children():
+			if child is BaseTile:
+				tile_nodes[child.tile_index] = child
+				
 # タイル間の接続設定
 func setup_connections():
 	for i in range(20):
@@ -169,14 +173,18 @@ func setup_connections():
 
 # プレイヤーを探す
 func find_player():
-	for child in get_children():
-		if child.name == "Player":
-			player_node = child
+	# Playersフォルダの中を探す
+	var players_container = get_node_or_null("Players")
+	if players_container:
+		player_node = players_container.get_node_or_null("Player")
+		if player_node:
+			print("プレイヤーノード発見: ", player_node.name)
+			# 初期位置設定
 			if tile_nodes.has(0):
 				var start_pos = tile_nodes[0].global_position
 				start_pos.y += 1.0
 				player_node.global_position = start_pos
-
+				
 # タイル位置を取得
 func get_tile_position(index: int) -> Vector3:
 	if tile_nodes.has(index):

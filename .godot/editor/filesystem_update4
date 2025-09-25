@@ -10,3 +10,9 @@ res://scenes/Main.tscn
 res://Player.tscn
 res://scenes/Player.tscn
 res://scripts/board_manager_3d.gd
+res://scenes/Characters/Mario.tscn
+res://scenes/Tiles/FireTile.tscn
+res://scenes/Tiles/WaterTile.tscn
+res://scenes/Tiles/WindTile.tscn
+res://scenes/Tiles/EarthTile.tscn
+res://scenes/Tiles/NeutralTile.tscn
