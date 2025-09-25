@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://cu3tx452bb3h3"]
+
+[ext_resource type="Script" uid="uid://ca3ak141rgqpx" path="res://scripts/tiles/wind_tile.gd" id="1_xmcym"]
+[ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="3_8gi0d"]
+[ext_resource type="PackedScene" uid="uid://f18ssg2vf3cp" path="res://models/air.glb" id="3_xmcym"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jjq4m"]
+size = Vector3(1, 0.0951538, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_brakb"]
+size = Vector3(1, 0.0983887, 1)
+
+[node name="WindTile" type="StaticBody3D"]
+script = ExtResource("1_xmcym")
+
+[node name="frame" parent="." instance=ExtResource("3_8gi0d")]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.0162354, 0)
+shape = SubResource("BoxShape3D_jjq4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.019043, 0)
+shape = SubResource("BoxShape3D_brakb")
+
+[node name="air2" parent="." instance=ExtResource("3_xmcym")]

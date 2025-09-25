@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://gk4oxcskph8p"]
+
+[ext_resource type="Script" uid="uid://cinbisiu1yuhb" path="res://scripts/tiles/earth_tile.gd" id="1_a66nu"]
+[ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="3_8gi0d"]
+[ext_resource type="PackedScene" uid="uid://b7jcom1ocvyy1" path="res://models/earth.glb" id="3_n2ea8"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jjq4m"]
+size = Vector3(1, 0.0951538, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_brakb"]
+size = Vector3(1, 0.0983887, 1)
+
+[node name="EarthTile" type="StaticBody3D"]
+script = ExtResource("1_a66nu")
+
+[node name="frame" parent="." instance=ExtResource("3_8gi0d")]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.0162354, 0)
+shape = SubResource("BoxShape3D_jjq4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.019043, 0)
+shape = SubResource("BoxShape3D_brakb")
+
+[node name="earth2" parent="." instance=ExtResource("3_n2ea8")]

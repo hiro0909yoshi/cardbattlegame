@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3 uid="uid://dtfil43yeci2x"]
+
+[ext_resource type="Script" uid="uid://bsdn7f1ymetw6" path="res://scripts/tiles/fire_tile.gd" id="1_qolmb"]
+[ext_resource type="PackedScene" uid="uid://bjdqwix6r30ng" path="res://models/fire.glb" id="2_ui1a0"]
+[ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="3_8gi0d"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jjq4m"]
+size = Vector3(1, 0.0951538, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_brakb"]
+size = Vector3(1, 0.0983887, 1)
+
+[node name="FireTile" type="StaticBody3D"]
+script = ExtResource("1_qolmb")
+
+[node name="fire2" parent="." instance=ExtResource("2_ui1a0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.26)
+
+[node name="frame" parent="." instance=ExtResource("3_8gi0d")]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.0162354, 0)
+shape = SubResource("BoxShape3D_jjq4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.019043, 0)
+shape = SubResource("BoxShape3D_brakb")

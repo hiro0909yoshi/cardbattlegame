@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=3 uid="uid://dnguqrsii41ya"]
+
+[ext_resource type="Script" uid="uid://0b786py1vt5i" path="res://scripts/tiles/water_tile.gd" id="1_b4uy3"]
+[ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="3_8gi0d"]
+[ext_resource type="PackedScene" uid="uid://bm4rclt2eplet" path="res://models/water.glb" id="3_b4uy3"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jjq4m"]
+size = Vector3(1, 0.0951538, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_brakb"]
+size = Vector3(1, 0.0983887, 1)
+
+[node name="WaterTile" type="StaticBody3D"]
+script = ExtResource("1_b4uy3")
+
+[node name="frame" parent="." instance=ExtResource("3_8gi0d")]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.0162354, 0)
+shape = SubResource("BoxShape3D_jjq4m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.019043, 0)
+shape = SubResource("BoxShape3D_brakb")
+
+[node name="water2" parent="." instance=ExtResource("3_b4uy3")]

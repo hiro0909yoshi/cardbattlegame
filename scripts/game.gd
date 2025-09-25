@@ -17,11 +17,11 @@ var player_count = 2  # プレイヤー数
 # マップ背景管理
 var current_bg_index = 0
 var background_paths = [
-	"res://assets/images/map/map.jpg",
+	"res://assets/images/map/map7.jpg",
 	"res://assets/images/map/map5.jpg",
 	"res://assets/images/map/map6.jpg",
-	"res://assets/images/map/map4.jpg",
-	"res://assets/images/map/sunpule.jpg"
+	"res://assets/images/map/map8.jpg",
+	"res://assets/images/map/map9.jpg"
 ]
 var current_background = null  # 現在の背景ノード
 
