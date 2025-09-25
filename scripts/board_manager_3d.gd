@@ -3,8 +3,13 @@ class_name BoardManager3D
 
 # タイル管理
 var tile_nodes = {}
-var player_node = null
-var current_tile = 0
+var player_nodes = []  # 複数プレイヤー用に変更
+var player_tiles = []  # 各プレイヤーの現在位置を追跡
+
+# プレイヤー管理
+var player_count = 2
+var current_player_index = 0
+var player_is_cpu = [false, true]  # Player1=人間, Player2=CPU
 
 # 移動制御
 var is_moving = false
@@ -31,12 +36,13 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 func _ready():
 	collect_tiles()
 	setup_connections()
-	find_player()
+	find_players()  # find_player → find_players に変更
 	setup_camera()
 	setup_ui_system()
 	
 	print("=== BoardManager初期化 ===")
 	print("タイル総数: ", tile_nodes.size())
+	print("プレイヤー数: ", player_nodes.size())
 	print("\n【操作方法】")
 	print("スペース: サイコロを振る")
 	print("6-9キー: サイコロ固定")
@@ -149,10 +155,10 @@ func setup_ui_system():
 # カメラを設定
 func setup_camera():
 	camera = get_node_or_null("Camera3D")
-	if camera and player_node:  # player_nodeの存在確認
+	if camera and player_nodes.size() > 0:  # player_nodes配列をチェック
 		var offset = Vector3(0, 10, 10)
-		camera.global_position = player_node.global_position + offset
-		camera.look_at(player_node.global_position, Vector3.UP)
+		camera.global_position = player_nodes[0].global_position + offset
+		camera.look_at(player_nodes[0].global_position, Vector3.UP)
 	else:
 		print("警告: カメラまたはプレイヤーが見つかりません")
 		
@@ -172,18 +178,21 @@ func setup_connections():
 			tile_nodes[i].connections["next"] = next_index
 
 # プレイヤーを探す
-func find_player():
-	# Playersフォルダの中を探す
+func find_players():  # 関数名変更
 	var players_container = get_node_or_null("Players")
 	if players_container:
-		player_node = players_container.get_node_or_null("Player")
-		if player_node:
-			print("プレイヤーノード発見: ", player_node.name)
-			# 初期位置設定
+		player_nodes = players_container.get_children()  # 全プレイヤー取得
+		print("プレイヤー発見: ", player_nodes.size(), "人")
+		
+		# 各プレイヤーの位置を初期化
+		player_tiles.clear()
+		for i in range(player_nodes.size()):
+			player_tiles.append(0)  # 全員タイル0からスタート
 			if tile_nodes.has(0):
 				var start_pos = tile_nodes[0].global_position
 				start_pos.y += 1.0
-				player_node.global_position = start_pos
+				start_pos.x += i * 0.5  # 少しずらす
+				player_nodes[i].global_position = start_pos
 				
 # タイル位置を取得
 func get_tile_position(index: int) -> Vector3:
@@ -192,6 +201,12 @@ func get_tile_position(index: int) -> Vector3:
 		pos.y += 1.0
 		return pos
 	return Vector3.ZERO
+
+# 現在のプレイヤーノードを取得
+func get_current_player_node():
+	if current_player_index < player_nodes.size():
+		return player_nodes[current_player_index]
+	return null
 
 # サイコロボタンが押された時
 func _on_dice_button_pressed():
@@ -204,49 +219,60 @@ func roll_dice_and_move():
 		
 	is_moving = true
 	
+	# CPUのターンか判定
+	if player_is_cpu[current_player_index]:
+		print("\nCPU (Player", current_player_index + 1, ") のターン")
+		await get_tree().create_timer(1.0).timeout
+	else:
+		print("\nプレイヤー", current_player_index + 1, "のターン")
+	
 	if ui_manager and ui_manager.dice_button:
 		ui_manager.set_dice_button_enabled(false)
 	
 	var dice_value
 	if debug_mode and fixed_dice_value > 0:
 		dice_value = fixed_dice_value
-		print("\n🎲 サイコロ: ", dice_value, " (固定)")
+		print("🎲 サイコロ: ", dice_value, " (固定)")
 	else:
 		dice_value = randi_range(1, 6)
-		print("\n🎲 サイコロ: ", dice_value)
+		print("🎲 サイコロ: ", dice_value)
 	
 	if ui_manager:
 		ui_manager.show_dice_result(dice_value, self)
 	
-	# 経路を作成
+	# 経路を作成（現在のプレイヤーの位置から）
+	var current_player_tile = player_tiles[current_player_index]
 	var path = []
-	var temp_tile = current_tile
+	var temp_tile = current_player_tile
 	for i in range(dice_value):
 		temp_tile = (temp_tile + 1) % 20
 		path.append(temp_tile)
 	
 	await move_along_path(path)
 	
-	print("移動完了: タイル", current_tile, "に到着")
+	# 移動後の位置を更新
+	player_tiles[current_player_index] = temp_tile
 	
-	if tile_nodes.has(current_tile):
-		var tile = tile_nodes[current_tile]
+	print("移動完了: タイル", player_tiles[current_player_index], "に到着")
+	
+	if tile_nodes.has(player_tiles[current_player_index]):
+		var tile = tile_nodes[player_tiles[current_player_index]]
 		print("タイル種類: ", tile.tile_type)
 		
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "タイル: " + tile.tile_type
 		
-		process_tile_landing()
-	
-	if ui_manager and ui_manager.dice_button:
-		ui_manager.set_dice_button_enabled(true)
+		await process_tile_landing()
 	
 	is_moving = false
 
 # 経路に沿って移動
 func move_along_path(path: Array):
+	var player_node = get_current_player_node()  # 現在のプレイヤーを取得
+	if not player_node:
+		return
+		
 	for tile_index in path:
-		current_tile = tile_index
 		var target_pos = get_tile_position(tile_index)
 		
 		print("  → タイル", tile_index)
@@ -268,60 +294,68 @@ func move_along_path(path: Array):
 		if camera:
 			camera.look_at(player_node.global_position, Vector3.UP)
 		
-		# スタート地点通過チェック
-		if tile_index == 0:
+		# スタート地点通過チェック（最後のタイルでチェック）
+		if tile_index == 0 and tile_index != path[0]:
 			print("スタート地点通過！ボーナス: ", GameConstants.START_BONUS, "G")
-			if player_system and player_system.players.size() > 0:
-				player_system.players[0]["magic_power"] += GameConstants.START_BONUS
+			if player_system and player_system.players.size() > current_player_index:
+				player_system.players[current_player_index]["magic_power"] += GameConstants.START_BONUS
 				if ui_manager:
 					ui_manager.update_player_info_panels()
 
 # タイル到着時の処理
 func process_tile_landing():
-	if not tile_nodes.has(current_tile):
+	var current_player_tile = player_tiles[current_player_index]
+	if not tile_nodes.has(current_player_tile):
 		return
 	
-	var tile = tile_nodes[current_tile]
-	var current_player_id = player_system.current_player_index
+	var tile = tile_nodes[current_player_tile]
 	var tile_info = tile.get_tile_info()
 	
-	# 所有者チェック
+	# CPUの場合は自動判断
+	if player_is_cpu[current_player_index]:
+		# CPUは簡単な判断（空き地なら取得）
+		if tile_info.owner == -1:
+			print("CPU: 空き地を取得します")
+			acquire_land_with_summon()
+			await get_tree().create_timer(1.0).timeout
+		else:
+			print("CPU: 行動終了")
+			await get_tree().create_timer(0.5).timeout
+		end_turn()
+		return
+	
+	# 人間プレイヤーの処理
 	if tile_info.owner == -1:
-		# 空き地
 		print("空き地です。モンスターを召喚して土地を取得できます")
-		show_summon_ui()
-	elif tile_info.owner == current_player_id:
-		# 自分の土地
+		await show_summon_ui()
+	elif tile_info.owner == current_player_index:
 		print("自分の土地です（レベル", tile_info.level, "）")
-		end_turn()  # 一旦スキップ
+		end_turn()
 	else:
-		# 敵の土地
 		print("敵の土地です！")
 		if tile_info.creature.is_empty():
 			print("守るクリーチャーがいません。侵略可能です")
 		else:
 			print("クリーチャーがいます。バトルまたは通行料")
-		end_turn()  # 一旦スキップ
+		end_turn()
 
 # 召喚UIを表示
 func show_summon_ui():
-	var current_player_id = player_system.current_player_index
-	
-	var hand_size = card_system.get_hand_size_for_player(current_player_id)
+	var hand_size = card_system.get_hand_size_for_player(current_player_index)
 	if hand_size == 0:
 		print("手札がありません！")
 		end_turn()
 		return
 	
-	var current_magic = player_system.players[current_player_id].magic_power
+	var current_magic = player_system.players[current_player_index].magic_power
 	print("現在の魔力: ", current_magic, "G")
 	
 	if ui_manager.has_method("show_card_selection_ui"):
 		print("カード選択UIを表示します")
 		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
 		
-		if current_player_id == 0:  # プレイヤー1のみ
-			ui_manager.show_card_selection_ui(player_system.players[current_player_id])
+		if current_player_index == 0:  # プレイヤー1のみ
+			ui_manager.show_card_selection_ui(player_system.players[current_player_index])
 			is_waiting_for_card_selection = true
 			await get_tree().process_frame
 			setup_card_selection()
@@ -339,9 +373,8 @@ func on_card_selected(card_index: int):
 		return
 	
 	is_waiting_for_card_selection = false
-	var current_player_id = player_system.current_player_index
 	
-	var card_data = card_system.get_card_data_for_player(current_player_id, card_index)
+	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
 	if card_data.is_empty():
 		print("カードデータが取得できません")
 		return
@@ -351,13 +384,13 @@ func on_card_selected(card_index: int):
 	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
 	print("カードコスト: ", cost, "G")
 	
-	if player_system.players[current_player_id].magic_power < cost:
-		print("魔力不足！現在: ", player_system.players[current_player_id].magic_power, "G")
+	if player_system.players[current_player_index].magic_power < cost:
+		print("魔力不足！現在: ", player_system.players[current_player_index].magic_power, "G")
 		return
 	
-	var used_card = card_system.use_card_for_player(current_player_id, card_index)
+	var used_card = card_system.use_card_for_player(current_player_index, card_index)
 	if not used_card.is_empty():
-		player_system.players[current_player_id].magic_power -= cost
+		player_system.players[current_player_index].magic_power -= cost
 		acquire_land_with_summon(used_card)
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
@@ -366,19 +399,19 @@ func on_card_selected(card_index: int):
 
 # 土地を取得
 func acquire_land_with_summon(creature_data: Dictionary = {}):
-	if not tile_nodes.has(current_tile):
+	var current_player_tile = player_tiles[current_player_index]
+	if not tile_nodes.has(current_player_tile):
 		return
 	
-	var tile = tile_nodes[current_tile]
-	var current_player_id = player_system.current_player_index
+	var tile = tile_nodes[current_player_tile]
 	
-	tile.set_tile_owner(current_player_id)
+	tile.set_tile_owner(current_player_index)
 	
 	if not creature_data.is_empty():
 		tile.place_creature(creature_data)
 	
 	if board_system:
-		board_system.tile_owners[current_tile] = current_player_id
+		board_system.tile_owners[current_player_tile] = current_player_index
 	
 	print("土地を取得しました！")
 	
@@ -395,9 +428,33 @@ func on_summon_pass():
 # ターン終了
 func end_turn():
 	print("ターン終了")
-	if ui_manager:
-		ui_manager.set_dice_button_enabled(true)
-		ui_manager.phase_label.text = "サイコロを振ってください"
+	# ターンを切り替える
+	switch_to_next_player()
+
+# 次のプレイヤーに切り替え
+func switch_to_next_player():
+	current_player_index = (current_player_index + 1) % player_count
+	print("\n=== プレイヤー", current_player_index + 1, "のターン ===")
+	
+	# 新しいプレイヤーにカメラをフォーカス
+	var next_player = get_current_player_node()
+	if next_player and camera:
+		var tween = get_tree().create_tween()
+		var cam_offset = Vector3(0, 10, 10)
+		var cam_target = next_player.global_position + cam_offset
+		tween.tween_property(camera, "global_position", cam_target, 0.8)
+		await tween.finished
+		camera.look_at(next_player.global_position, Vector3.UP)
+	
+	if ui_manager and ui_manager.dice_button:
+		if player_is_cpu[current_player_index]:
+			# CPUの場合は自動でサイコロ
+			ui_manager.set_dice_button_enabled(false)
+			await get_tree().create_timer(1.0).timeout
+			roll_dice_and_move()
+		else:
+			ui_manager.set_dice_button_enabled(true)
+			ui_manager.phase_label.text = "サイコロを振ってください"
 
 # サイコロ値を固定
 func set_fixed_dice(value: int):

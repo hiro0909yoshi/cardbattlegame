@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://dlge0sbyufmq8"]
+[gd_scene load_steps=10 format=3 uid="uid://dlge0sbyufmq8"]
 
 [ext_resource type="Script" uid="uid://cg5l4nes3uvec" path="res://scripts/board_manager_3d.gd" id="1_jlsqs"]
 [ext_resource type="PackedScene" uid="uid://dtfil43yeci2x" path="res://scenes/Tiles/FireTile.tscn" id="1_vcsgt"]
 [ext_resource type="PackedScene" uid="uid://dnguqrsii41ya" path="res://scenes/Tiles/WaterTile.tscn" id="2_c01mt"]
 [ext_resource type="PackedScene" uid="uid://cu3tx452bb3h3" path="res://scenes/Tiles/WindTile.tscn" id="3_nxtc6"]
 [ext_resource type="PackedScene" uid="uid://ckjn21bopwnxy" path="res://scenes/Tiles/NeutralTile.tscn" id="4_jlsqs"]
+[ext_resource type="PackedScene" uid="uid://bwdhauqqw44kd" path="res://scenes/Characters/Bowser.tscn" id="4_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://gk4oxcskph8p" path="res://scenes/Tiles/EarthTile.tscn" id="5_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dt6tq6krtdu5" path="res://scenes/Characters/Mario.tscn" id="6_c01mt"]
 [ext_resource type="Script" uid="uid://d05eaonrysfn6" path="res://scripts/player_movement.gd" id="7_nxtc6"]
@@ -23,6 +24,8 @@ transform = Transform3D(0.707107, 0.5, -0.5, 0, 0.707107, 0.707107, 0.707107, -0
 
 [node name="Player" parent="Players" instance=ExtResource("6_c01mt")]
 script = ExtResource("7_nxtc6")
+
+[node name="Player2" parent="Players" instance=ExtResource("4_q8u5g")]
 
 [node name="Tiles" type="Node3D" parent="."]
 
