@@ -179,11 +179,27 @@ func deselect_card():
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
-		# UIManagerに通知
-		var ui_manager = get_tree().get_root().get_node_or_null("Game/UIManager")
+		# UIManagerに通知 - 複数のパスを試す
+		var ui_manager = null
+		# 再帰的に探す
+		if not ui_manager:
+			ui_manager = find_ui_manager_recursive(get_tree().get_root())
+		
 		if ui_manager and ui_manager.has_method("_on_card_button_pressed"):
 			ui_manager._on_card_button_pressed(card_index)
+		else:
+			print("WARNING: UIManagerが見つかりません")
 
+# UIManagerを再帰的に探す
+func find_ui_manager_recursive(node: Node) -> Node:
+	if node.name == "UIManager":
+		return node
+	for child in node.get_children():
+		var result = find_ui_manager_recursive(child)
+		if result:
+			return result
+	return null
+	
 # 通常の入力処理とカード選択処理
 func _input(event):
 	# カード選択モード時のクリック処理

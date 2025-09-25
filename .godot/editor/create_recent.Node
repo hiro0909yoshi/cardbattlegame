@@ -1,3 +1,6 @@
+Label
+Button
+CanvasLayer
 Sprite3D
 CharacterBody3D
 CollisionShape3D
@@ -9,6 +12,3 @@ StaticBody3D
 Area3D
 ColorRect
 Node2D
-Panel
-ReferenceRect
-NinePatchRect
