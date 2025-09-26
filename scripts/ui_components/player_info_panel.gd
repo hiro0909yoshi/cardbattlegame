@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerInfoPanel
 
-# プレイヤー情報パネル管理クラス
+# プレイヤー情報パネル管理クラス（3D対応版）
 # 各プレイヤーの魔力、土地数、総資産、連鎖情報を表示
 
 # 定数をpreload
@@ -12,9 +12,9 @@ var panels = []           # Panel配列
 var info_labels = []      # RichTextLabel配列
 var parent_node: Node     # 親ノード参照
 
-# システム参照
-var player_system_ref: PlayerSystem = null
-var board_system_ref: BoardSystem = null
+# システム参照（型指定なし - 3D対応）
+var player_system_ref = null
+var board_system_ref = null
 
 # 設定
 var panel_count = 2       # 表示するパネル数
@@ -24,21 +24,29 @@ func _ready():
 	pass
 
 # 初期化（親ノードとシステム参照を設定）
-func initialize(parent: Node, player_system: PlayerSystem, board_system: BoardSystem, count: int = 2):
+func initialize(parent: Node, player_system, board_system, count: int = 2):
+	print("PlayerInfoPanel.initialize()呼び出し")
 	parent_node = parent
 	player_system_ref = player_system
 	board_system_ref = board_system
 	panel_count = count
+	
+	print("  parent_node: ", parent_node)
+	print("  player_system_ref: ", player_system_ref)
+	print("  board_system_ref: ", board_system_ref)
 	
 	create_panels()
 	update_all_panels()
 
 # パネルを作成
 func create_panels():
+	print("PlayerInfoPanel.create_panels()開始")
 	for i in range(panel_count):
 		var panel = create_single_panel(i)
 		parent_node.add_child(panel)
 		panels.append(panel)
+		print("  パネル", i, "作成完了")
+	print("PlayerInfoPanel.create_panels()終了")
 
 # 単一パネルを作成
 func create_single_panel(player_id: int) -> Panel:
@@ -51,6 +59,7 @@ func create_single_panel(player_id: int) -> Panel:
 		info_panel.position = Vector2(775, 50)
 	
 	info_panel.size = Vector2(240, 140)
+	info_panel.visible = true  # 明示的に表示
 	
 	# パネルスタイル設定
 	var panel_style = StyleBoxFlat.new()
@@ -73,9 +82,10 @@ func create_single_panel(player_id: int) -> Panel:
 	# 情報ラベル作成
 	var info_label = RichTextLabel.new()
 	info_label.position = Vector2(10, 10)
-	info_label.size = Vector2(160, 160)
+	info_label.size = Vector2(220, 120)
 	info_label.bbcode_enabled = true
 	info_label.add_theme_font_size_override("normal_font_size", 12)
+	info_label.visible = true  # 明示的に表示
 	info_panel.add_child(info_label)
 	info_labels.append(info_label)
 	
@@ -83,14 +93,20 @@ func create_single_panel(player_id: int) -> Panel:
 
 # 全パネルを更新
 func update_all_panels():
-	if not player_system_ref or not board_system_ref:
+	print("PlayerInfoPanel.update_all_panels()開始")
+	if not player_system_ref:
+		print("  ERROR: player_system_refがnull")
 		return
 	
 	for i in range(info_labels.size()):
 		update_single_panel(i)
+	print("PlayerInfoPanel.update_all_panels()終了")
 
 # 単一パネルを更新
 func update_single_panel(player_id: int):
+	if not player_system_ref:
+		return
+		
 	if player_id >= player_system_ref.players.size():
 		return
 	
@@ -100,9 +116,10 @@ func update_single_panel(player_id: int):
 	var player = player_system_ref.players[player_id]
 	var text = build_player_info_text(player, player_id)
 	info_labels[player_id].text = text
+	print("  パネル", player_id, "更新: ", text.substr(0, 30), "...")
 
 # プレイヤー情報テキストを構築
-func build_player_info_text(player: PlayerSystem.PlayerData, player_id: int) -> String:
+func build_player_info_text(player, player_id: int) -> String:
 	var text = "[b]" + player.name + "[/b]\n"
 	text += "━━━━━━━━━━━━\n"
 	
@@ -127,11 +144,16 @@ func build_player_info_text(player: PlayerSystem.PlayerData, player_id: int) -> 
 	
 	return text
 
-# 土地数を取得
+# 土地数を取得（3D対応版）
 func get_land_count(player_id: int) -> int:
 	if not board_system_ref:
 		return 0
-	return board_system_ref.get_owner_land_count(player_id)
+	
+	# 共通メソッドを使用
+	if board_system_ref.has_method("get_owner_land_count"):
+		return board_system_ref.get_owner_land_count(player_id)
+	
+	return 0
 
 # 総資産を計算（魔力＋土地価値）
 func calculate_total_assets(player_id: int) -> int:
@@ -140,29 +162,49 @@ func calculate_total_assets(player_id: int) -> int:
 	
 	var assets = player_system_ref.players[player_id].magic_power
 	
-	# 土地価値を加算（簡易計算：レベル×100）
-	for i in range(board_system_ref.total_tiles):
-		if board_system_ref.tile_owners[i] == player_id:
-			assets += board_system_ref.tile_levels[i] * GameConstants.LEVEL_UP_COST_RATE
+	# 3D版の場合
+	if board_system_ref.has_method("get_owner_land_count"):
+		# 簡易計算：土地数×基本価値
+		var land_count = board_system_ref.get_owner_land_count(player_id)
+		assets += land_count * GameConstants.LEVEL_UP_COST_RATE
+	# 2D版の場合
+	elif board_system_ref != null and "tile_levels" in board_system_ref and "tile_owners" in board_system_ref:
+		for i in range(board_system_ref.total_tiles):
+			if board_system_ref.tile_owners[i] == player_id:
+				assets += board_system_ref.tile_levels[i] * GameConstants.LEVEL_UP_COST_RATE
 	
 	return assets
 
-# 属性連鎖情報を取得
+# 属性連鎖情報を取得（3D対応版）
 func get_chain_info(player_id: int) -> String:
 	if not board_system_ref:
 		return "なし"
 	
 	var element_counts = {}
 	
-	# 各属性の土地数をカウント
-	for i in range(board_system_ref.total_tiles):
-		if board_system_ref.tile_owners[i] == player_id:
-			var element = board_system_ref.tile_data[i].get("element", "")
-			if element != "":
-				if element_counts.has(element):
-					element_counts[element] += 1
-				else:
-					element_counts[element] = 1
+	# 統一的な方法でタイル情報を取得
+	if board_system_ref.has_method("get_tile_data_array"):
+		# 新しい互換メソッドを使用
+		var tile_data = board_system_ref.get_tile_data_array()
+		for tile_info in tile_data:
+			if tile_info["owner"] == player_id:
+				var element = tile_info["element"]
+				if element != "" and element in ["火", "水", "風", "土"]:
+					if element_counts.has(element):
+						element_counts[element] += 1
+					else:
+						element_counts[element] = 1
+	elif "tile_nodes" in board_system_ref:
+		# 3D版の直接アクセス（フォールバック）
+		for i in board_system_ref.tile_nodes:
+			var tile = board_system_ref.tile_nodes[i]
+			if tile.owner_id == player_id:
+				var element = tile.tile_type
+				if element != "" and element in ["火", "水", "風", "土"]:
+					if element_counts.has(element):
+						element_counts[element] += 1
+					else:
+						element_counts[element] = 1
 	
 	# 文字列に変換
 	var chain_text = ""

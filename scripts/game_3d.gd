@@ -1,5 +1,4 @@
 extends Node
-class_name Game3D
 
 # 3Dゲームメイン管理スクリプト
 
@@ -18,8 +17,6 @@ var player_count = 2
 var player_is_cpu = [false, true]  # Player1=人間, Player2=CPU
 
 func _ready():
-	print("\n=== 3Dカルドセプト風ゲーム開始 ===")
-	
 	initialize_systems()
 	setup_game()
 	connect_signals()
@@ -31,8 +28,6 @@ func _ready():
 
 # システム初期化
 func initialize_systems():
-	print("システム初期化中...")
-	
 	# BoardSystem3Dを作成
 	board_system_3d = BoardSystem3D.new()
 	board_system_3d.name = "BoardSystem3D"
@@ -72,13 +67,9 @@ func initialize_systems():
 	debug_controller = DebugController.new()
 	debug_controller.name = "DebugController"
 	add_child(debug_controller)
-	
-	print("全システム作成完了")
 
 # ゲームセットアップ
 func setup_game():
-	print("ゲームセットアップ中...")
-	
 	# 3Dシーンのノードを収集
 	var tiles_container = get_node_or_null("Tiles")
 	var players_container = get_node_or_null("Players")
@@ -86,18 +77,12 @@ func setup_game():
 	
 	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)
-	else:
-		print("ERROR: Tilesノードが見つかりません")
 	
 	if players_container:
 		board_system_3d.collect_players(players_container)
-	else:
-		print("ERROR: Playersノードが見つかりません")
 		
 	if camera:
 		board_system_3d.camera = camera
-	else:
-		print("WARNING: Camera3Dが見つかりません")
 	
 	# プレイヤーを初期化
 	player_system.initialize_players(player_count, self)
@@ -107,41 +92,33 @@ func setup_game():
 	board_system_3d.player_is_cpu = player_is_cpu
 	board_system_3d.current_player_index = 0
 	
-	# UI作成（UILayerも作成される）
+	# UIManagerにシステム参照を手動設定（UI作成前に設定！）
+	ui_manager.board_system_ref = board_system_3d  # 参照は設定するが、初期化時には使わない
+	ui_manager.player_system_ref = player_system
+	ui_manager.card_system_ref = card_system
+	
+	# UI作成（システム参照設定後）
 	ui_manager.create_ui(self)
 	
-	# システム参照を設定
+	# システム参照を設定（修正: battle_systemを正しく渡す）
 	board_system_3d.setup_systems(player_system, card_system, battle_system, skill_system)
-	board_system_3d.ui_manager = ui_manager  # UIManagerを直接設定
-	board_system_3d.card_system = card_system  # CardSystemも直接設定
+	board_system_3d.ui_manager = ui_manager
+	board_system_3d.card_system = card_system
 	
 	# DebugControllerにシステム参照を設定
 	debug_controller.setup_systems(player_system, null, card_system, ui_manager)
 	player_system.set_debug_controller(debug_controller)
 	
-	# 初期手札を配る（UILayer作成後）
+	# 初期手札を配る
 	await get_tree().create_timer(0.1).timeout
 	card_system.deal_initial_hands_all_players(player_count)
 	
-	print("初期手札を配りました")
-	for i in range(player_count):
-		print("プレイヤー", i + 1, "の手札: ", card_system.get_hand_size_for_player(i), "枚")
-	
-	# UIを初期更新（重要：プレイヤー情報パネルの表示）
+	# UIを初期更新
 	await get_tree().create_timer(0.1).timeout
 	ui_manager.update_player_info_panels()
-	
-	# プレイヤー情報パネルの強制更新
-	if ui_manager.player_info_panel and ui_manager.player_info_panel.has_method("update_all_panels"):
-		ui_manager.player_info_panel.update_all_panels()
-		print("プレイヤー情報パネルを更新しました")
-	else:
-		print("WARNING: player_info_panelが見つかりません")
 
 # シグナル接続
 func connect_signals():
-	print("シグナル接続中...")
-	
 	# PlayerSystemのシグナル
 	player_system.dice_rolled.connect(_on_dice_rolled)
 	player_system.movement_completed.connect(_on_movement_completed)
@@ -163,36 +140,20 @@ func connect_signals():
 	card_system.card_drawn.connect(_on_card_drawn)
 	card_system.card_used.connect(_on_card_used)
 	card_system.hand_updated.connect(_on_hand_updated)
-	
-	print("シグナル接続完了")
 
 # ゲーム開始
 func start_game():
-	print("\n=== ゲーム開始 ===")
-	
-	# 最初のターン開始
 	start_turn()
 
 # ターン開始
 func start_turn():
 	var current_player = player_system.get_current_player()
-	print("\n=== プレイヤー", current_player.id + 1, "のターン ===")
 	
-	# ターン開始時のカードドロー（重要！）
+	# ターン開始時のカードドロー
 	if card_system.get_hand_size_for_player(current_player.id) < 6:
-		print("ターン開始時のドロー処理...")
 		var drawn = card_system.draw_card_for_player(current_player.id)
-		if not drawn.is_empty():
-			print("カードをドロー: ", drawn.get("name", "不明"))
-			ui_manager.update_player_info_panels()
-			
-			# プレイヤー1の場合、手札表示を更新
-			if current_player.id == 0:
-				await get_tree().create_timer(0.1).timeout
-		else:
-			print("ドロー失敗（デッキ切れ？）")
-	else:
-		print("手札が上限のためドローをスキップ")
+		if not drawn.is_empty() and current_player.id == 0:
+			await get_tree().create_timer(0.1).timeout
 	
 	# CPUかプレイヤーか判定
 	if board_system_3d.player_is_cpu[current_player.id]:
@@ -213,7 +174,6 @@ func _on_dice_button_pressed():
 		board_system_3d.start_dice_roll()
 
 func _on_dice_rolled(value: int):
-	print("🎲 サイコロ: ", value)
 	ui_manager.show_dice_result(value, self)
 	
 	# 3D移動開始
@@ -224,20 +184,14 @@ func _on_movement_started():
 	ui_manager.set_dice_button_enabled(false)
 	ui_manager.phase_label.text = "移動中..."
 
-func _on_movement_completed(final_tile: int):
-	# PlayerSystemの移動完了
-	print("PlayerSystem: マス", final_tile, "に到着")
+func _on_movement_completed(_final_tile: int):
+	pass
 
 func _on_board_movement_completed(final_tile: int):
-	# BoardSystem3Dの移動完了
-	print("BoardSystem3D: マス", final_tile, "に到着")
 	board_system_3d.process_tile_landing(final_tile)
 
 func _on_tile_action_completed():
-	print("タイルアクション完了")
-	# ターン終了処理を呼ぶ
 	board_system_3d.end_current_turn()
-	# 次のターン開始
 	await get_tree().create_timer(0.5).timeout
 	start_turn()
 
@@ -248,27 +202,22 @@ func _on_pass_pressed():
 	board_system_3d.on_action_pass()
 
 func _on_level_up_selected(target_level: int, cost: int):
-	print("レベルアップ選択: Lv", target_level, " (", cost, "G)")
 	# TODO: レベルアップ処理実装
+	pass
 
-func _on_card_drawn(card_data: Dictionary):
-	print("カード引いた: ", card_data.get("name", "不明"))
+func _on_card_drawn(_card_data: Dictionary):
+	pass
 
-func _on_card_used(card_data: Dictionary):
-	print("カード使用: ", card_data.get("name", "不明"))
+func _on_card_used(_card_data: Dictionary):
 	ui_manager.update_player_info_panels()
 
 func _on_hand_updated():
-	var current_player = player_system.get_current_player()
-	if current_player:
-		print("手札更新 - P", current_player.id + 1, ": ", card_system.get_hand_size_for_player(current_player.id), "枚")
+	pass
 
-func _on_magic_changed(player_id: int, new_value: int):
-	print("魔力変化 - P", player_id + 1, ": ", new_value, "G")
+func _on_magic_changed(_player_id: int, _new_value: int):
 	ui_manager.update_player_info_panels()
 
 func _on_player_won(player_id: int):
-	print("\n🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 	ui_manager.set_dice_button_enabled(false)
 	ui_manager.phase_label.text = "プレイヤー" + str(player_id + 1) + "の勝利！"
 

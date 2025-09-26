@@ -11,3 +11,11 @@ res://Player.tscn
 res://scenes/Characters/Mario.tscn
 res://scenes/Characters/Bowser.tscn
 res://scripts/board_manager_3d.gd
+res://scripts/game_3d.gd
+res://scripts/board_system_3d.gd
+res://scripts/game_flow_manager.gd
+res://scripts/card_system.gd
+res://scripts/player_system.gd
+res://scripts/game.gd
+res://scripts/ui_manager.gd
+res://scripts/ui_components/player_info_panel.gd

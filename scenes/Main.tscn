@@ -1,6 +1,6 @@
 [gd_scene load_steps=10 format=3 uid="uid://dlge0sbyufmq8"]
 
-[ext_resource type="Script" uid="uid://cg5l4nes3uvec" path="res://scripts/board_manager_3d.gd" id="1_jlsqs"]
+[ext_resource type="Script" uid="uid://d0ed7a1e8gsei" path="res://scripts/game_3d.gd" id="1_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dtfil43yeci2x" path="res://scenes/Tiles/FireTile.tscn" id="1_vcsgt"]
 [ext_resource type="PackedScene" uid="uid://dnguqrsii41ya" path="res://scenes/Tiles/WaterTile.tscn" id="2_c01mt"]
 [ext_resource type="PackedScene" uid="uid://cu3tx452bb3h3" path="res://scenes/Tiles/WindTile.tscn" id="3_nxtc6"]
@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://d05eaonrysfn6" path="res://scripts/player_movement.gd" id="7_nxtc6"]
 
 [node name="Main" type="Node3D"]
-script = ExtResource("1_jlsqs")
+script = ExtResource("1_q8u5g")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 10, 10)

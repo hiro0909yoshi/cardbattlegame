@@ -1,7 +1,7 @@
 extends Node
 class_name UIManager
 
-# UI要素の統括管理システム（エラー修正版）
+# UI要素の統括管理システム（3D対応版）
 
 signal dice_button_pressed()
 signal pass_button_pressed()
@@ -19,10 +19,10 @@ var dice_button: Button
 var phase_label: Label
 var current_dice_label: Label = null
 
-# システム参照
+# システム参照（型指定なし - 3D対応のため）
 var card_system_ref = null
 var player_system_ref = null
-var board_system_ref = null
+var board_system_ref = null  # BoardSystem3Dも格納可能
 
 # デバッグモード
 var debug_mode = false
@@ -71,12 +71,12 @@ func connect_ui_signals():
 
 # UIを作成
 func create_ui(parent: Node):
-	# システム参照を取得
-	if parent.has_node("CardSystem"):
+	# システム参照を取得（既に設定されている場合はスキップ）
+	if not card_system_ref and parent.has_node("CardSystem"):
 		card_system_ref = parent.get_node("CardSystem")
-	if parent.has_node("PlayerSystem"):
+	if not player_system_ref and parent.has_node("PlayerSystem"):
 		player_system_ref = parent.get_node("PlayerSystem")
-	if parent.has_node("BoardSystem"):
+	if not board_system_ref and parent.has_node("BoardSystem"):
 		board_system_ref = parent.get_node("BoardSystem")
 	
 	# UIレイヤー（CanvasLayer）を作成
@@ -87,15 +87,29 @@ func create_ui(parent: Node):
 	# 基本UI要素を作成（UIレイヤーの子として）
 	create_basic_ui(ui_layer)
 	
-	# 各コンポーネントを初期化
+	# 各コンポーネントを初期化（3D版対応）
 	if player_info_panel and player_info_panel.has_method("initialize"):
-		player_info_panel.initialize(ui_layer, player_system_ref, board_system_ref)
+		print("PlayerInfoPanel初期化開始")
+		# 3D版の場合、board_systemは渡さずに初期化
+		player_info_panel.initialize(ui_layer, player_system_ref, null)
+		# 3D版のboard_systemを手動で設定（プロパティとして直接設定）
+		player_info_panel.set("board_system_ref", board_system_ref)
+		print("PlayerInfoPanel初期化完了")
+		# 初期化後にパネルの状態を確認
+		if player_info_panel.has_method("update_all_panels"):
+			print("update_all_panels呼び出し")
+			player_info_panel.update_all_panels()
+			
 	if card_selection_ui and card_selection_ui.has_method("initialize"):
 		card_selection_ui.initialize(ui_layer, card_system_ref, phase_label)
+		
 	if level_up_ui and level_up_ui.has_method("initialize"):
-		level_up_ui.initialize(ui_layer, board_system_ref, phase_label)
+		level_up_ui.initialize(ui_layer, null, phase_label)  # board_systemはnullで初期化
+		level_up_ui.set("board_system_ref", board_system_ref)  # set()で設定
+		
 	if debug_panel and debug_panel.has_method("initialize"):
-		debug_panel.initialize(ui_layer, card_system_ref, board_system_ref, player_system_ref)
+		debug_panel.initialize(ui_layer, card_system_ref, null, player_system_ref)  # board_systemはnullで初期化
+		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定
 
 # 基本UI要素を作成（サイコロボタン位置修正）
 func create_basic_ui(parent: Node):
@@ -278,10 +292,6 @@ func _on_level_up_cancelled():
 
 func _on_debug_mode_changed(enabled: bool):
 	debug_mode = enabled
-	if debug_mode:
-		print("デバッグモード: ON")
-	else:
-		print("デバッグモード: OFF")
 
 # デバッグ入力を処理
 func _input(event):
