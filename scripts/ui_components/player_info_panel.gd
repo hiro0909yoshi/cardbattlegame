@@ -24,29 +24,22 @@ func _ready():
 	pass
 
 # 初期化（親ノードとシステム参照を設定）
-func initialize(parent: Node, player_system, board_system, count: int = 2):
-	print("PlayerInfoPanel.initialize()呼び出し")
+func initialize(parent: Node, player_system: PlayerSystem, board_system, count: int = 2):
 	parent_node = parent
 	player_system_ref = player_system
 	board_system_ref = board_system
 	panel_count = count
-	
-	print("  parent_node: ", parent_node)
-	print("  player_system_ref: ", player_system_ref)
-	print("  board_system_ref: ", board_system_ref)
 	
 	create_panels()
 	update_all_panels()
 
 # パネルを作成
 func create_panels():
-	print("PlayerInfoPanel.create_panels()開始")
 	for i in range(panel_count):
 		var panel = create_single_panel(i)
 		parent_node.add_child(panel)
 		panels.append(panel)
-		print("  パネル", i, "作成完了")
-	print("PlayerInfoPanel.create_panels()終了")
+		
 
 # 単一パネルを作成
 func create_single_panel(player_id: int) -> Panel:
@@ -93,14 +86,11 @@ func create_single_panel(player_id: int) -> Panel:
 
 # 全パネルを更新
 func update_all_panels():
-	print("PlayerInfoPanel.update_all_panels()開始")
-	if not player_system_ref:
-		print("  ERROR: player_system_refがnull")
+	if not player_system_ref or not board_system_ref:
 		return
 	
 	for i in range(info_labels.size()):
 		update_single_panel(i)
-	print("PlayerInfoPanel.update_all_panels()終了")
 
 # 単一パネルを更新
 func update_single_panel(player_id: int):
@@ -116,7 +106,6 @@ func update_single_panel(player_id: int):
 	var player = player_system_ref.players[player_id]
 	var text = build_player_info_text(player, player_id)
 	info_labels[player_id].text = text
-	print("  パネル", player_id, "更新: ", text.substr(0, 30), "...")
 
 # プレイヤー情報テキストを構築
 func build_player_info_text(player, player_id: int) -> String:

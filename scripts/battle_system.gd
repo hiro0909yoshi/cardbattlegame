@@ -29,7 +29,7 @@ func _ready():
 	pass
 
 # 侵略バトルを実行（メインバトル処理）
-func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, tile_info: Dictionary, card_system: CardSystem, board_system: BoardSystem) -> Dictionary:
+func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, tile_info: Dictionary, card_system: CardSystem, board_system) -> Dictionary:
 	# 攻撃側のクリーチャーを手札から取得
 	var attacker_data = card_system.get_card_data_for_player(attacker_player_id, attacker_hand_index)
 	if attacker_data.is_empty():
@@ -122,7 +122,7 @@ func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, 
 	return battle_outcome
 
 # クリーチャーのボーナスを計算（属性連鎖HPボーナス対応）
-func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile_info: Dictionary, is_attacker: bool, player_id: int, board_system: BoardSystem, silent: bool = false) -> Dictionary:
+func calculate_creature_bonuses(creature: Dictionary, opponent: Dictionary, tile_info: Dictionary, is_attacker: bool, player_id: int, board_system, silent: bool = false) -> Dictionary:
 	var bonuses = {
 		"st_bonus": 0,
 		"hp_bonus": 0

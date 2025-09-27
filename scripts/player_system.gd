@@ -36,7 +36,7 @@ var is_moving = false
 var debug_controller: DebugController = null
 
 func _ready():
-	print("PlayerSystem: 初期化")
+	pass
 
 # デバッグコントローラーを設定
 func set_debug_controller(controller: DebugController):
@@ -47,7 +47,6 @@ func initialize_players(player_count: int, parent_node: Node):
 	players.clear()
 	player_pieces.clear()
 	
-	# 3Dゲームかどうかを判定
 	var is_3d_game = parent_node.has_node("Tiles") and parent_node.has_node("Players")
 	
 	for i in range(player_count):
@@ -59,23 +58,15 @@ func initialize_players(player_count: int, parent_node: Node):
 		player.target_magic = GameConstants.TARGET_MAGIC
 		player.color = GameConstants.PLAYER_COLORS[i % GameConstants.PLAYER_COLORS.size()]
 		
-		# 3Dゲームの場合は駒作成をスキップ
 		if not is_3d_game:
-			# 2Dゲーム用の駒を作成
 			var piece = create_player_piece(player, parent_node)
 			player.piece_node = piece
 			player_pieces.append(piece)
 		else:
-			# 3Dゲームでは既存の駒を後で参照
 			player.piece_node = null
 			player_pieces.append(null)
 		
 		players.append(player)
-	
-	print("PlayerSystem: ", player_count, "人のプレイヤーを初期化")
-	if is_3d_game:
-		print("  3Dゲームモード - 2D駒の作成をスキップ")
-
 # プレイヤー駒を作成（2Dゲーム用）
 func create_player_piece(player: PlayerData, parent: Node) -> Node:
 	var piece = ColorRect.new()
@@ -122,7 +113,7 @@ func roll_dice() -> int:
 	return value
 
 # プレイヤーを移動（2Dゲーム用）
-func move_player_steps(player_id: int, steps: int, board_system: BoardSystem, clockwise: bool = true):
+func move_player_steps(player_id: int, steps: int, board_system, clockwise: bool = true):
 	if is_moving:
 		return
 	
@@ -209,7 +200,7 @@ func move_player_steps(player_id: int, steps: int, board_system: BoardSystem, cl
 	emit_signal("movement_completed", player.current_tile)
 
 # プレイヤーを特定のタイルに配置（2D用）
-func place_player_at_tile(player_id: int, tile_index: int, board_system: BoardSystem):
+func place_player_at_tile(player_id: int, tile_index: int, board_system):
 	var player = players[player_id]
 	player.current_tile = tile_index
 	

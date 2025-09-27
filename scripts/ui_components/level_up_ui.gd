@@ -21,13 +21,13 @@ var is_active = false
 var current_tile_info = {}
 
 # システム参照
-var board_system_ref: BoardSystem = null
+var board_system_ref = null
 
 func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, board_system: BoardSystem, phase_label: Label):
+func initialize(parent: Node, board_system, phase_label: Label):
 	parent_node = parent
 	board_system_ref = board_system
 	phase_label_ref = phase_label

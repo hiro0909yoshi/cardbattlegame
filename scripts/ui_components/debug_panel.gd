@@ -20,14 +20,14 @@ var current_display_mode = "cpu_hand"  # "cpu_hand", "board_info", "stats"
 
 # システム参照
 var card_system_ref: CardSystem = null
-var board_system_ref: BoardSystem = null
+var board_system_ref= null
 var player_system_ref: PlayerSystem = null
 
 func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, card_system: CardSystem, board_system: BoardSystem, player_system: PlayerSystem):
+func initialize(parent: Node, card_system: CardSystem, board_system, player_system: PlayerSystem):
 	parent_node = parent
 	card_system_ref = card_system
 	board_system_ref = board_system

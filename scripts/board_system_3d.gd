@@ -323,13 +323,19 @@ func process_normal_tile(tile: BaseTile, tile_info: Dictionary):
 	
 	# 人間プレイヤーの処理
 	if tile_info["owner"] == -1:
+		# 空き地
+		set_tile_owner(tile_info["index"], current_player_index)
 		show_summon_ui()
 	elif tile_info["owner"] == current_player_index:
-		# TODO: レベルアップ選択
+		# 自分の土地
 		emit_signal("tile_action_completed")
 	else:
-		process_enemy_tile(tile_info)
-
+		# 敵の土地（インライン処理）
+		if tile_info.get("creature", {}).is_empty():
+			show_battle_ui("invasion")
+		else:
+			show_battle_ui("battle")
+		
 # CPU行動処理
 func process_cpu_action(tile: BaseTile, tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
@@ -354,14 +360,6 @@ func process_cpu_action(tile: BaseTile, tile_info: Dictionary):
 			cpu_ai_handler.decide_battle(current_player, tile_info)
 	else:
 		emit_signal("tile_action_completed")
-
-# 敵地処理
-func process_enemy_tile(tile_info: Dictionary):
-	if tile_info.get("creature", {}).is_empty():
-		show_battle_ui("invasion")
-	else:
-		show_battle_ui("battle")
-
 # === UI表示 ===
 
 # 召喚UI表示
@@ -539,7 +537,7 @@ func switch_to_next_player():
 	current_player_index = (current_player_index + 1) % player_count
 	player_system.current_player_index = current_player_index
 	
-	# 次のプレイヤーの駒にカメラをフォーカス
+	# カメラフォーカスのみ（ドロー処理は削除）
 	if camera and current_player_index < player_nodes.size():
 		var next_player_node = player_nodes[current_player_index]
 		if next_player_node:

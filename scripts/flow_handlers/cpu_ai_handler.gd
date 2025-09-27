@@ -13,7 +13,7 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 
 # システム参照
 var card_system: CardSystem
-var board_system: BoardSystem
+var board_system
 var player_system: PlayerSystem
 var battle_system: BattleSystem
 var skill_system: SkillSystem
@@ -22,7 +22,7 @@ func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(c_system: CardSystem, b_system: BoardSystem, p_system: PlayerSystem, bt_system: BattleSystem, s_system: SkillSystem):
+func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_system: BattleSystem, s_system: SkillSystem):
 	card_system = c_system
 	board_system = b_system
 	player_system = p_system

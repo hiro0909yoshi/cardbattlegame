@@ -27,7 +27,7 @@ var special_tiles = {}  # tile_index -> SpecialTileData
 var warp_pairs = []      # ワープマスのペア [{from: int, to: int, type: String}]
 
 # システム参照
-var board_system: BoardSystem
+var board_system
 var card_system: CardSystem
 var player_system: PlayerSystem
 
@@ -35,7 +35,7 @@ func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(b_system: BoardSystem, c_system: CardSystem, p_system: PlayerSystem):
+func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem):
 	board_system = b_system
 	card_system = c_system
 	player_system = p_system

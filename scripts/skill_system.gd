@@ -12,7 +12,6 @@ var active_skills = {}
 var player_buffs = {}  # プレイヤーごとのバフ/デバフ
 
 func _ready():
-	print("SkillSystem: 初期化")
 	initialize_player_buffs()
 
 # プレイヤーバフを初期化

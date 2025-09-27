@@ -16,24 +16,20 @@ var fixed_dice_value = 0
 
 # システム参照
 var player_system: PlayerSystem
-var board_system: BoardSystem
+var board_system
 var card_system: CardSystem
 var ui_manager: UIManager
 
 func _ready():
-	if enabled:
-		print("=== デバッグモード有効 ===")
+	if enabled and OS.is_debug_build():
 		print("【デバッグコマンド】")
 		print("  数字キー1-6: サイコロ固定")
 		print("  0キー: サイコロ固定解除")
-		print("  7キー: 敵の土地へ移動")
-		print("  8キー: 空き地へ移動")
 		print("  9キー: 魔力+1000G")
 		print("  Dキー: CPU手札表示切替")
-		print("  Tキー: 全タイル情報表示")
 
 # システム参照を設定
-func setup_systems(p_system: PlayerSystem, b_system: BoardSystem, c_system: CardSystem, ui_system: UIManager):
+func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_system: UIManager):
 	player_system = p_system
 	board_system = b_system
 	card_system = c_system

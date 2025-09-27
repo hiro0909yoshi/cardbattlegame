@@ -79,7 +79,6 @@ func _load_card_data(card_id: int) -> Dictionary:
 	return {}
 
 func _get_hand_parent() -> Node:
-	# 複数の可能性をチェック
 	var possible_paths = [
 		"/root/Main/UILayer/Hand",
 		"/root/Game3D/UILayer/Hand",
@@ -90,37 +89,26 @@ func _get_hand_parent() -> Node:
 	for path in possible_paths:
 		var node = get_node_or_null(path)
 		if node:
-			print("Hand親ノード発見: ", path)
 			return node
 	
-	# 見つからない場合はUILayerを探す
 	var ui_layer = get_tree().get_root().find_child("UILayer", true, false)
 	if ui_layer:
 		var hand_node = ui_layer.get_node_or_null("Hand")
 		if hand_node:
 			return hand_node
-		# Handノードがなければ作成
-		print("Handノードを作成します")
 		hand_node = Node2D.new()
 		hand_node.name = "Hand"
 		ui_layer.add_child(hand_node)
 		return hand_node
 	
-	print("WARNING: Hand親ノードが見つかりません")
 	return null
 
 # メインのドロー関数（完全修正版）
 func draw_card_for_player(player_id: int) -> Dictionary:
-	print("\n=== draw_card_for_player: Player", player_id + 1, " ===")
-	print("  ドロー前 - データ: ", player_hands[player_id]["data"].size(), "枚")
-	print("  ドロー前 - 表示: ", player_hands[player_id]["nodes"].size(), "枚")
-	print("  デッキ残り: ", deck.size(), "枚")
-	
 	var card_data = draw_card_data()
 	if not card_data.is_empty():
 		# データ追加
 		player_hands[player_id]["data"].append(card_data)
-		print("  ✓ カードデータ追加: ", card_data.get("name", "不明"))
 		
 		# プレイヤー1のみ表示ノード作成
 		if player_id == 0:
@@ -131,21 +119,9 @@ func draw_card_for_player(player_id: int) -> Dictionary:
 				if card_node:
 					player_hands[player_id]["nodes"].append(card_node)
 					_rearrange_player_hand(player_id)
-					print("  ✓ 表示ノード作成完了")
-				else:
-					print("  × 表示ノード作成失敗")
-			else:
-				print("  × Hand親ノードが見つかりません")
-		else:
-			print("  - CPUのため表示ノード作成をスキップ")
-		
-		print("  ドロー後 - データ: ", player_hands[player_id]["data"].size(), "枚")
-		print("  ドロー後 - 表示: ", player_hands[player_id]["nodes"].size(), "枚")
 		
 		emit_signal("card_drawn", card_data)
 		emit_signal("hand_updated")
-	else:
-		print("  × カードドロー失敗（デッキ切れ）")
 	
 	return card_data
 
@@ -162,12 +138,9 @@ func draw_cards_for_player(player_id: int, count: int) -> Array:
 	return drawn_cards
 
 func deal_initial_hands_all_players(player_count: int):
-	print("\n=== 初期手札配布開始 ===")
 	for player_id in range(player_count):
 		player_hands[player_id]["data"].clear()
 		player_hands[player_id]["nodes"].clear()
-		
-		print("プレイヤー", player_id + 1, "に配布中...")
 		
 		for i in range(INITIAL_HAND_SIZE):
 			var card_data = draw_card_data()
@@ -180,11 +153,7 @@ func deal_initial_hands_all_players(player_count: int):
 						var card_node = _create_card_node(card_data, hand_parent, i)
 						if card_node:
 							player_hands[player_id]["nodes"].append(card_node)
-		
-		print("  完了: データ", player_hands[player_id]["data"].size(), 
-			  "枚, 表示", player_hands[player_id]["nodes"].size(), "枚")
 	
-	print("=== 初期手札配布完了 ===\n")
 	emit_signal("hand_updated")
 
 func _create_card_node(card_data: Dictionary, parent: Node, index: int) -> Node:
