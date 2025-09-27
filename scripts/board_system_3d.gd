@@ -2,20 +2,19 @@ extends Node
 class_name BoardSystem3D
 
 # 3Dボード管理システム - スリム化版
-# タイル管理とゲームフロー制御に特化
+# サブシステムへの処理委譲に特化
 
 signal tile_action_completed()
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 
-# 3Dタイル管理
-var tile_nodes = {}        # tile_index -> BaseTile
-var player_nodes = []      # 3D駒のノード配列
-
 # サブシステム
 var movement_controller: MovementController3D
 var tile_info_display: TileInfoDisplay
+var tile_data_manager: TileDataManager
+var tile_action_processor: TileActionProcessor
+var cpu_turn_processor: CPUTurnProcessor
 
 # ゲーム設定
 var player_count = 2
@@ -25,7 +24,9 @@ var current_player_index = 0
 # 状態管理
 var is_waiting_for_action = false
 
-# カメラ参照
+# 3Dノード参照
+var tile_nodes = {}        # tile_index -> BaseTile
+var player_nodes = []      # 3D駒のノード配列
 var camera = null
 
 # システム参照
@@ -40,23 +41,36 @@ var cpu_ai_handler: CPUAIHandler
 # === 初期化 ===
 
 func _ready():
-	# サブシステムを作成
 	create_subsystems()
 
 func create_subsystems():
-	# タイル情報表示システム
+	# 既存のサブシステム
 	tile_info_display = TileInfoDisplay.new()
 	tile_info_display.name = "TileInfoDisplay"
 	add_child(tile_info_display)
 	
-	# 移動制御システム
 	movement_controller = MovementController3D.new()
 	movement_controller.name = "MovementController3D"
 	add_child(movement_controller)
 	
+	# 新規サブシステム
+	tile_data_manager = TileDataManager.new()
+	tile_data_manager.name = "TileDataManager"
+	add_child(tile_data_manager)
+	
+	tile_action_processor = TileActionProcessor.new()
+	tile_action_processor.name = "TileActionProcessor"
+	add_child(tile_action_processor)
+	
+	cpu_turn_processor = CPUTurnProcessor.new()
+	cpu_turn_processor.name = "CPUTurnProcessor"
+	add_child(cpu_turn_processor)
+	
 	# シグナル接続
 	movement_controller.movement_started.connect(_on_movement_started)
 	movement_controller.movement_completed.connect(_on_movement_completed)
+	tile_action_processor.action_completed.connect(_on_action_completed)
+	cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
 
 func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BattleSystem, 
 				   s_system: SkillSystem, st_system: SpecialTileSystem = null):
@@ -66,6 +80,9 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	skill_system = s_system
 	special_tile_system = st_system
 	
+	# CPUAIHandlerを先に設定（他のシステムが依存するため）
+	setup_cpu_ai_handler()
+	
 	# BattleSystemに参照を設定
 	if battle_system.has_method("setup_systems"):
 		battle_system.setup_systems(self, card_system, player_system)
@@ -74,8 +91,21 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	if movement_controller:
 		movement_controller.setup_systems(player_system, special_tile_system)
 	
-	# CPUAIHandlerを設定
-	setup_cpu_ai_handler()
+	# TileDataManagerに参照を設定
+	tile_data_manager.set_display_system(tile_info_display)
+	
+	# ui_managerが設定されてからサブシステムを初期化
+	await get_tree().process_frame
+	
+	# TileActionProcessorに参照を設定（ui_manager必須）
+	if ui_manager:
+		tile_action_processor.setup(self, player_system, card_system, 
+									battle_system, special_tile_system, ui_manager)
+		tile_action_processor.set_cpu_processor(cpu_turn_processor)
+		
+		# CPUTurnProcessorに参照を設定
+		cpu_turn_processor.setup(self, cpu_ai_handler, player_system, 
+								card_system, ui_manager)
 
 func setup_cpu_ai_handler():
 	cpu_ai_handler = get_node_or_null("CPUAIHandler")
@@ -87,26 +117,25 @@ func setup_cpu_ai_handler():
 	if cpu_ai_handler.has_method("setup_systems"):
 		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, skill_system)
 
-# 3Dタイル収集
+# === 3Dノード収集 ===
+
 func collect_tiles(tiles_container: Node):
 	for child in tiles_container.get_children():
 		if child is BaseTile:
 			tile_nodes[child.tile_index] = child
 	
 	# サブシステムに渡す
+	tile_data_manager.set_tile_nodes(tile_nodes)
+	movement_controller.tile_nodes = tile_nodes
+	
 	if tile_info_display:
 		tile_info_display.setup_labels(tile_nodes, self)
 	
-	if movement_controller:
-		movement_controller.tile_nodes = tile_nodes
-	
-	update_all_tile_displays()
+	tile_data_manager.update_all_displays()
 
-# 3Dプレイヤー駒収集
 func collect_players(players_container: Node):
 	player_nodes = players_container.get_children()
 	
-	# MovementControllerに渡す（cameraも含めて）
 	if movement_controller:
 		movement_controller.initialize(tile_nodes, player_nodes, camera)
 		
@@ -114,139 +143,46 @@ func collect_players(players_container: Node):
 		for i in range(player_nodes.size()):
 			movement_controller.place_player_at_tile(i, 0)
 
-# === タイル情報管理 ===
+# === タイルデータ管理（TileDataManagerに委譲） ===
 
 func get_tile_info(tile_index: int) -> Dictionary:
-	if not tile_nodes.has(tile_index):
-		return {}
-	
-	var tile = tile_nodes[tile_index]
-	return {
-		"index": tile_index,
-		"type": get_tile_type(tile.tile_type),
-		"element": tile.tile_type if tile.tile_type in ["火", "水", "風", "土"] else "",
-		"owner": tile.owner_id,
-		"level": tile.level,
-		"creature": tile.creature_data,
-		"is_special": is_special_tile_type(tile.tile_type)
-	}
+	return tile_data_manager.get_tile_info(tile_index)
 
 func get_tile_type(tile_type_str: String) -> int:
-	match tile_type_str:
-		"start": return 1
-		"checkpoint": return 2
-		"warp", "card", "neutral": return 3
-		_: return 0
+	return tile_data_manager.get_tile_type(tile_type_str)
 
 func is_special_tile_type(tile_type: String) -> bool:
-	return tile_type in ["warp", "card", "checkpoint", "neutral", "start"]
+	return tile_data_manager.is_special_tile_type(tile_type)
 
 func set_tile_owner(tile_index: int, owner_id: int):
-	if tile_nodes.has(tile_index):
-		tile_nodes[tile_index].set_tile_owner(owner_id)
-		if tile_info_display:
-			tile_info_display.update_display(tile_index, get_tile_info(tile_index))
+	tile_data_manager.set_tile_owner(tile_index, owner_id)
 
 func place_creature(tile_index: int, creature_data: Dictionary):
-	if tile_nodes.has(tile_index):
-		tile_nodes[tile_index].place_creature(creature_data)
-		if tile_info_display:
-			tile_info_display.update_display(tile_index, get_tile_info(tile_index))
+	tile_data_manager.place_creature(tile_index, creature_data)
 
 func upgrade_tile_level(tile_index: int) -> bool:
-	if tile_nodes.has(tile_index):
-		var success = tile_nodes[tile_index].level_up()
-		if success and tile_info_display:
-			tile_info_display.update_display(tile_index, get_tile_info(tile_index))
-		return success
-	return false
+	return tile_data_manager.upgrade_tile_level(tile_index)
 
 func get_upgrade_cost(tile_index: int) -> int:
-	if tile_nodes.has(tile_index):
-		var current_level = tile_nodes[tile_index].level
-		var next_level = current_level + 1
-		if next_level <= GameConstants.MAX_LEVEL:
-			var current_value = GameConstants.LEVEL_VALUES.get(current_level, 0)
-			var next_value = GameConstants.LEVEL_VALUES.get(next_level, 0)
-			return next_value - current_value
-	return 0
+	return tile_data_manager.get_upgrade_cost(tile_index)
 
 func calculate_toll(tile_index: int) -> int:
-	if not tile_nodes.has(tile_index):
-		return 0
-	
-	var tile = tile_nodes[tile_index]
-	if tile.owner_id == -1:
-		return 0
-	
-	var base_toll = GameConstants.BASE_TOLL
-	var level_multiplier = tile.level
-	var chain_bonus = calculate_chain_bonus(tile_index, tile.owner_id)
-	
-	return int(base_toll * level_multiplier * chain_bonus)
+	return tile_data_manager.calculate_toll(tile_index)
 
 func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
-	if not tile_nodes.has(tile_index):
-		return 1.0
-	
-	var target_element = tile_nodes[tile_index].tile_type
-	if target_element == "" or not target_element in ["火", "水", "風", "土"]:
-		return 1.0
-	
-	var same_element_count = get_element_chain_count(tile_index, owner_id)
-	
-	if same_element_count >= 4:
-		return GameConstants.CHAIN_BONUS_4
-	elif same_element_count == 3:
-		return GameConstants.CHAIN_BONUS_3
-	elif same_element_count == 2:
-		return GameConstants.CHAIN_BONUS_2
-	
-	return 1.0
+	return tile_data_manager.calculate_chain_bonus(tile_index, owner_id)
 
 func get_element_chain_count(tile_index: int, owner_id: int) -> int:
-	if not tile_nodes.has(tile_index):
-		return 0
-	
-	var target_element = tile_nodes[tile_index].tile_type
-	var chain_count = 0
-	
-	for i in tile_nodes:
-		var tile = tile_nodes[i]
-		if tile.owner_id == owner_id and tile.tile_type == target_element:
-			chain_count += 1
-	
-	return min(chain_count, 4)
+	return tile_data_manager.get_element_chain_count(tile_index, owner_id)
 
 func get_owner_land_count(owner_id: int) -> int:
-	var count = 0
-	for i in tile_nodes:
-		if tile_nodes[i].owner_id == owner_id:
-			count += 1
-	return count
+	return tile_data_manager.get_owner_land_count(owner_id)
 
 func update_all_tile_displays():
-	if not tile_info_display:
-		return
-	
-	for index in tile_nodes:
-		var tile_info = get_tile_info(index)
-		tile_info_display.update_display(index, tile_info)
+	tile_data_manager.update_all_displays()
 
-# 2D互換用（PlayerInfoPanelから呼ばれる）
 func get_tile_data_array() -> Array:
-	var data = []
-	for i in range(20):
-		if tile_nodes.has(i):
-			data.append({
-				"element": tile_nodes[i].tile_type,
-				"type": get_tile_type(tile_nodes[i].tile_type),
-				"owner": tile_nodes[i].owner_id,
-				"level": tile_nodes[i].level
-			})
-		else:
-			data.append({"element": "", "type": 0, "owner": -1, "level": 1})
-	return data
+	return tile_data_manager.get_tile_data_array()
 
 # === 移動処理（MovementController3Dに委譲） ===
 
@@ -261,277 +197,25 @@ func _on_movement_started(player_id: int):
 func _on_movement_completed(player_id: int, final_tile: int):
 	process_tile_landing(final_tile)
 
-# === タイル到着処理 ===
+# === タイルアクション処理（TileActionProcessorに委譲） ===
 
 func process_tile_landing(tile_index: int):
-	if not tile_nodes.has(tile_index):
-		emit_signal("tile_action_completed")
-		return
-	
-	# 処理中フラグを立てる
 	is_waiting_for_action = true
-	
-	var tile = tile_nodes[tile_index]
-	var tile_info = get_tile_info(tile_index)
-	
-	# 特殊マス処理（neutralは通常タイルとして処理）
-	if is_special_tile_type(tile.tile_type) and tile.tile_type != "neutral" and special_tile_system:
-		special_tile_system.special_action_completed.connect(_on_special_action_completed, CONNECT_ONE_SHOT)
-		special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
-		return
-	
-	# 通常タイル処理（neutralマスも含む）
-	process_normal_tile(tile, tile_info)
-
-func _on_special_action_completed():
-	# 重複防止
-	if not is_waiting_for_action:
-		return
-	is_waiting_for_action = false
-	emit_signal("tile_action_completed")
-
-func process_normal_tile(tile: BaseTile, tile_info: Dictionary):
-	if player_is_cpu[current_player_index]:
-		process_cpu_action(tile, tile_info)
-		return
-	
-	# 人間プレイヤーの処理
-	if tile_info["owner"] == -1:
-		show_summon_ui()
-	elif tile_info["owner"] == current_player_index:
-		if tile.level < GameConstants.MAX_LEVEL:
-			show_level_up_ui(tile_info)
-		else:
-			# レベルMAXの自分の土地
-			is_waiting_for_action = false  # フラグをリセット
-			emit_signal("tile_action_completed")
-	else:
-		if tile_info.get("creature", {}).is_empty():
-			show_battle_ui("invasion")
-		else:
-			show_battle_ui("battle")
-
-# === CPU処理 ===
-
-func process_cpu_action(tile: BaseTile, tile_info: Dictionary):
-	var current_player = player_system.get_current_player()
-	
-	await get_tree().create_timer(0.5).timeout
-	
-	_cleanup_cpu_connections()
-	
-	if tile_info["owner"] == -1:
-		if card_system.get_hand_size_for_player(current_player.id) > 0:
-			cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided, CONNECT_ONE_SHOT)
-			cpu_ai_handler.decide_summon(current_player)
-		else:
-			is_waiting_for_action = false  # フラグをリセット
-			emit_signal("tile_action_completed")
-	elif tile_info["owner"] == current_player.id:
-		if tile.level < GameConstants.MAX_LEVEL:
-			cpu_ai_handler.level_up_decided.connect(_on_cpu_level_up_decided, CONNECT_ONE_SHOT)
-			cpu_ai_handler.decide_level_up(current_player, tile_info)
-		else:
-			is_waiting_for_action = false  # フラグをリセット
-			emit_signal("tile_action_completed")
-	elif tile_info["owner"] != current_player.id:
-		if tile_info.get("creature", {}).is_empty():
-			cpu_ai_handler.battle_decided.connect(_on_cpu_invasion_decided, CONNECT_ONE_SHOT)
-			cpu_ai_handler.decide_invasion(current_player, tile_info)
-		else:
-			cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
-			cpu_ai_handler.decide_battle(current_player, tile_info)
-	else:
-		is_waiting_for_action = false  # フラグをリセット
-		emit_signal("tile_action_completed")
-
-func _cleanup_cpu_connections():
-	if not cpu_ai_handler:
-		return
-	
-	var callables = [
-		Callable(self, "_on_cpu_summon_decided"),
-		Callable(self, "_on_cpu_battle_decided"),
-		Callable(self, "_on_cpu_invasion_decided"),
-		Callable(self, "_on_cpu_level_up_decided")
-	]
-	
-	if cpu_ai_handler.summon_decided.is_connected(callables[0]):
-		cpu_ai_handler.summon_decided.disconnect(callables[0])
-	if cpu_ai_handler.battle_decided.is_connected(callables[1]):
-		cpu_ai_handler.battle_decided.disconnect(callables[1])
-	if cpu_ai_handler.battle_decided.is_connected(callables[2]):
-		cpu_ai_handler.battle_decided.disconnect(callables[2])
-	if cpu_ai_handler.level_up_decided.is_connected(callables[3]):
-		cpu_ai_handler.level_up_decided.disconnect(callables[3])
-
-# === UI表示 ===
-
-func show_summon_ui():
-	is_waiting_for_action = true
-	if ui_manager:
-		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
-		card_system.set_cards_selectable(true)
-
-func show_level_up_ui(tile_info: Dictionary):
-	is_waiting_for_action = true
-	if ui_manager:
-		var current_magic = player_system.get_magic(current_player_index)
-		ui_manager.show_level_up_ui(tile_info, current_magic)
-
-func show_battle_ui(mode: String):
-	is_waiting_for_action = true
-	if ui_manager:
-		if mode == "invasion":
-			ui_manager.phase_label.text = "侵略するクリーチャーを選択"
-		else:
-			ui_manager.phase_label.text = "バトルするクリーチャーを選択"
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
-		card_system.set_cards_selectable(true)
-
-# === アクション処理 ===
+	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu)
 
 func on_card_selected(card_index: int):
-	if not is_waiting_for_action:
-		return
-	
-	is_waiting_for_action = false  # フラグをfalseにする
-	var current_tile = movement_controller.get_player_tile(current_player_index)
-	var tile_info = get_tile_info(current_tile)
-	
-	if tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
-		# 召喚処理（execute_summon内でtile_action_completedが発行される）
-		execute_summon(card_index)
-	else:
-		# バトル処理（_on_invasion_completedでtile_action_completedが発行される）
-		var callable = Callable(self, "_on_invasion_completed")
-		if not battle_system.invasion_completed.is_connected(callable):
-			battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
-		
-		battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
-
-func _on_invasion_completed(success: bool, tile_index: int):
-	print("バトル結果受信: success=", success, " tile=", tile_index)
-	
-	if ui_manager:
-		ui_manager.hide_card_selection_ui()
-		ui_manager.update_player_info_panels()
-	
-	# tile_action_completedを発行
-	emit_signal("tile_action_completed")
-
-func execute_summon(card_index: int):
-	if card_index < 0:
-		emit_signal("tile_action_completed")
-		return
-	
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
-	if card_data.is_empty():
-		emit_signal("tile_action_completed")
-		return
-	
-	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
-	var current_player = player_system.get_current_player()
-	
-	if current_player.magic_power >= cost:
-		card_system.use_card_for_player(current_player_index, card_index)
-		player_system.add_magic(current_player_index, -cost)
-		
-		var current_tile = movement_controller.get_player_tile(current_player_index)
-		set_tile_owner(current_tile, current_player_index)
-		place_creature(current_tile, card_data)
-		
-		print("召喚成功！土地を取得しました")
-		
-		if ui_manager:
-			ui_manager.hide_card_selection_ui()
-			ui_manager.update_player_info_panels()
-	else:
-		print("魔力不足で召喚できません")
-	
-	emit_signal("tile_action_completed")
+	tile_action_processor.on_card_selected(card_index)
 
 func on_action_pass():
-	if not is_waiting_for_action:
-		return
-	
-	is_waiting_for_action = false
-	var current_tile = movement_controller.get_player_tile(current_player_index)
-	var tile_info = get_tile_info(current_tile)
-	
-	if tile_info["owner"] != -1 and tile_info["owner"] != current_player_index:
-		var toll = calculate_toll(tile_info["index"])
-		player_system.pay_toll(current_player_index, tile_info["owner"], toll)
-		print("通行料 ", toll, "G を支払いました")
-	
-	emit_signal("tile_action_completed")
+	tile_action_processor.on_action_pass()
 
 func on_level_up_selected(target_level: int, cost: int):
+	tile_action_processor.on_level_up_selected(target_level, cost)
+
+func _on_action_completed():
+	# 既に処理済みの場合はスキップ
 	if not is_waiting_for_action:
 		return
-	
+		
 	is_waiting_for_action = false
-	
-	if target_level == 0 or cost == 0:
-		# キャンセル
-		emit_signal("tile_action_completed")
-		return
-	
-	var current_tile = movement_controller.get_player_tile(current_player_index)
-	var current_player = player_system.get_current_player()
-	
-	if current_player.magic_power >= cost:
-		# レベルアップ実行
-		var tile = tile_nodes[current_tile]
-		tile.set_level(target_level)
-		player_system.add_magic(current_player_index, -cost)
-		
-		# 表示更新
-		if tile_info_display:
-			tile_info_display.update_display(current_tile, get_tile_info(current_tile))
-		
-		if ui_manager:
-			ui_manager.update_player_info_panels()
-			ui_manager.hide_level_up_ui()
-		
-		print("土地をレベル", target_level, "にアップグレード！（コスト: ", cost, "G）")
-	
-	emit_signal("tile_action_completed")
-
-# === CPUコールバック ===
-
-func _on_cpu_summon_decided(card_index: int):
-	if card_index >= 0:
-		execute_summon(card_index)
-	else:
-		is_waiting_for_action = false  # フラグをリセット
-		emit_signal("tile_action_completed")
-
-func _on_cpu_invasion_decided(card_index: int):
-	var current_tile = movement_controller.get_player_tile(current_player_index)
-	var tile_info = get_tile_info(current_tile)
-	
-	if not battle_system.invasion_completed.is_connected(_on_invasion_completed):
-		battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
-	
-	battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
-
-func _on_cpu_battle_decided(card_index: int):
-	_on_cpu_invasion_decided(card_index)
-
-func _on_cpu_level_up_decided(do_upgrade: bool):
-	if do_upgrade:
-		var current_tile = movement_controller.get_player_tile(current_player_index)
-		var cost = get_upgrade_cost(current_tile)
-		if player_system.get_current_player().magic_power >= cost:
-			upgrade_tile_level(current_tile)
-			player_system.add_magic(current_player_index, -cost)
-			
-			if tile_info_display:
-				update_all_tile_displays()
-			if ui_manager:
-				ui_manager.update_player_info_panels()
-	
-	is_waiting_for_action = false  # フラグをリセット
 	emit_signal("tile_action_completed")

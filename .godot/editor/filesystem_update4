@@ -22,3 +22,6 @@ res://scripts/battle_system.gd
 res://scripts/special_tile_system.gd
 res://scripts/movement_controller.gd
 res://scripts/card_system.gd
+res://scripts/flow_handlers/cpu_turn_processor.gd
+res://scripts/tile_action_processor.gd
+res://scripts/tile_data_manager.gd
