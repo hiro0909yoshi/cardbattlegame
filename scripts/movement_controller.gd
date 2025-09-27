@@ -74,8 +74,6 @@ func move_player(player_id: int, steps: int) -> void:
 	current_moving_player = player_id
 	emit_signal("movement_started", player_id)
 	
-	print("移動開始: プレイヤー", player_id + 1, " (", steps, "マス)")
-	
 	# 移動経路を作成
 	var path = calculate_path(player_id, steps)
 	
@@ -89,7 +87,6 @@ func move_player(player_id: int, steps: int) -> void:
 	is_moving = false
 	current_moving_player = -1
 	
-	print("移動完了: マス", final_tile, "に到着")
 	emit_signal("movement_completed", player_id, final_tile)
 
 # 移動経路を計算
@@ -272,11 +269,3 @@ func is_player_moving() -> bool:
 # 移動中のプレイヤーIDを取得
 func get_moving_player() -> int:
 	return current_moving_player
-
-# デバッグ：現在の状態を出力
-func debug_print_status():
-	print("\n=== MovementController3D Status ===")
-	print("移動中: ", is_moving)
-	print("移動中プレイヤー: ", current_moving_player)
-	for i in range(player_tiles.size()):
-		print("プレイヤー", i + 1, ": マス", player_tiles[i])

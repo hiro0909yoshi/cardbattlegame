@@ -88,11 +88,6 @@ func setup_game():
 	var players_container = get_node_or_null("Players")
 	var camera = get_node_or_null("Camera3D")
 	
-	print("\n=== 3Dノード確認 ===")
-	print("Tiles: ", tiles_container != null)
-	print("Players: ", players_container != null)
-	print("Camera3D: ", camera != null)
-	
 	if camera:
 		print("カメラ位置: ", camera.global_position)
 		board_system_3d.camera = camera
@@ -155,8 +150,7 @@ func setup_game():
 # シグナル接続
 func connect_signals():
 	# BoardSystem3Dのシグナル接続（tile_action_completedのみ）
-	if board_system_3d:
-		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
+	
 	
 	# GameFlowManagerのシグナル
 	game_flow_manager.dice_rolled.connect(_on_dice_rolled)
@@ -187,9 +181,6 @@ func _on_turn_ended(_player_id: int):
 
 func _on_phase_changed(_new_phase):
 	pass  # 必要に応じて処理追加
-
-func _on_tile_action_completed_3d():
-	game_flow_manager.end_turn()
 
 # デバッグ入力
 func _input(event):

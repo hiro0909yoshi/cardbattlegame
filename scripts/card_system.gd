@@ -307,7 +307,7 @@ func get_cheapest_card_index_for_player(player_id: int) -> int:
 	return min_index
 
 func set_cards_selectable(selectable: bool):
-	print("カード選択モード: ", "ON" if selectable else "OFF")
+
 	var hand_nodes = player_hands[0]["nodes"]
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]

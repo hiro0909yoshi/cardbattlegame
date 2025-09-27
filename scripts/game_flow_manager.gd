@@ -144,7 +144,6 @@ func _on_tile_action_completed_3d():
 		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
 		return
 	
-	print("タイルアクション完了 -> ターン終了処理へ")
 	end_turn()
 
 # === CPU処理（3D対応） ===
@@ -275,7 +274,6 @@ func move_camera_to_next_player():
 		return
 	
 	var current_index = board_system_3d.current_player_index
-	print("カメラをプレイヤー", current_index + 1, "に移動")
 	
 	if board_system_3d.movement_controller:
 		# MovementController3Dを使用してカメラフォーカス

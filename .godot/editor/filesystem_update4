@@ -21,3 +21,4 @@ res://scripts/signal_registry.gd
 res://scripts/battle_system.gd
 res://scripts/special_tile_system.gd
 res://scripts/movement_controller.gd
+res://scripts/card_system.gd

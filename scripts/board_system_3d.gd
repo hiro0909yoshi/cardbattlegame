@@ -106,18 +106,9 @@ func collect_tiles(tiles_container: Node):
 func collect_players(players_container: Node):
 	player_nodes = players_container.get_children()
 	
-	print("プレイヤーノード収集: ", player_nodes.size(), "個")
-	
 	# MovementControllerに渡す（cameraも含めて）
 	if movement_controller:
 		movement_controller.initialize(tile_nodes, player_nodes, camera)
-		
-		# カメラが設定されているか確認
-		if camera:
-			print("カメラ設定完了: ", camera)
-			movement_controller.camera = camera
-		else:
-			print("Warning: カメラが設定されていません")
 		
 		# 初期配置
 		for i in range(player_nodes.size()):
