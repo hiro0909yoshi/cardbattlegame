@@ -11,7 +11,15 @@ const MAX_PLAYERS = 4             # 最大プレイヤー数
 # === ボード関連 ===
 const TOTAL_TILES = 20            # マスの総数
 const MAX_LEVEL = 5               # 土地の最大レベル
-const LEVEL_UP_COST_RATE = 100   # レベルアップコスト（レベル×この値）
+
+# 各レベルの累積価値（レベルアップコスト計算用）
+const LEVEL_VALUES = {
+	1: 0,
+	2: 80,
+	3: 340,   # 80 + 260
+	4: 960,   # 340 + 620
+	5: 2160   # 960 + 1200
+}
 
 # === カード関連 ===
 const MAX_HAND_SIZE = 6           # 手札上限

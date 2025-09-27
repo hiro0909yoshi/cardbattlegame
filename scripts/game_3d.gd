@@ -30,6 +30,11 @@ func _ready():
 
 # システム初期化
 func initialize_systems():
+	# SignalRegistryを最初に作成（重要）
+	var signal_registry = SignalRegistry.new()
+	signal_registry.name = "SignalRegistry"
+	add_child(signal_registry)
+	
 	# BoardSystem3Dを作成
 	board_system_3d = BoardSystem3D.new()
 	board_system_3d.name = "BoardSystem3D"
@@ -124,6 +129,15 @@ func setup_game():
 	
 	await get_tree().create_timer(0.1).timeout
 	ui_manager.update_player_info_panels()
+	
+	# 操作説明を表示
+	print("\n=== 操作方法 ===")
+	print("【V】キー: 通行料/HP/ST表示切替")
+	print("【S】キー: シグナル接続状態を表示")
+	print("【D】キー: デバッグモード切替")
+	print("【数字1-6】: サイコロ固定（デバッグ）")
+	print("【0】キー: サイコロ固定解除")
+	print("================\n")
 
 # シグナル接続
 func connect_signals():
@@ -163,6 +177,24 @@ func _input(event):
 		match event.keycode:
 			KEY_SPACE:
 				game_flow_manager.roll_dice()
+			KEY_V:
+				# Vキーで表示切替
+				if board_system_3d and board_system_3d.tile_info_display:
+					board_system_3d.tile_info_display.switch_mode()
+					board_system_3d.update_all_tile_displays()
+					var mode_name = board_system_3d.tile_info_display.get_current_mode_name()
+					print("表示切替: ", mode_name)
+					# UIに表示（オプション）
+					if ui_manager and ui_manager.phase_label:
+						var original_text = ui_manager.phase_label.text
+						ui_manager.phase_label.text = "表示: " + mode_name
+						await get_tree().create_timer(1.0).timeout
+						ui_manager.phase_label.text = original_text
+			KEY_S:
+				# Sキーでシグナル接続状態を表示（デバッグ）
+				SignalRegistry.debug_print_connections()
+				var stats = SignalRegistry.get_stats()
+				print("総接続数: ", stats.get("total_connections", 0))
 			KEY_6:
 				debug_controller.set_debug_dice(6)
 			KEY_1:
@@ -171,6 +203,10 @@ func _input(event):
 				debug_controller.set_debug_dice(2)
 			KEY_3:
 				debug_controller.set_debug_dice(3)
+			KEY_4:
+				debug_controller.set_debug_dice(4)
+			KEY_5:
+				debug_controller.set_debug_dice(5)
 			KEY_0:
 				debug_controller.clear_debug_dice()
 			KEY_D:

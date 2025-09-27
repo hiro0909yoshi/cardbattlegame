@@ -86,7 +86,6 @@ func start_game():
 	start_turn()
 
 # ターン開始
-# ターン開始（修正版）
 func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
@@ -104,9 +103,9 @@ func start_turn():
 	if is_3d_mode and current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
 		ui_manager.set_dice_button_enabled(false)
 		ui_manager.phase_label.text = "CPUのターン..."
-		current_phase = GamePhase.DICE_ROLL  # ← これを追加
+		current_phase = GamePhase.DICE_ROLL
 		await get_tree().create_timer(1.0).timeout
-		roll_dice()  # CPUも roll_dice() を呼ぶ
+		roll_dice()
 	else:
 		current_phase = GamePhase.DICE_ROLL
 		ui_manager.set_dice_button_enabled(true)
@@ -183,6 +182,15 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 			if player_system.get_current_player().magic_power >= cost:
 				board_system_3d.upgrade_tile_level(current_tile)
 				player_system.add_magic(board_system_3d.current_player_index, -cost)
+				
+				# 表示更新
+				if board_system_3d.tile_info_display:
+					board_system_3d.update_all_tile_displays()
+				if ui_manager:
+					ui_manager.update_player_info_panels()
+					
+				print("CPU: 土地をレベルアップ！")
+				
 		board_system_3d.emit_signal("tile_action_completed")
 	else:
 		# 2D版の処理
@@ -201,8 +209,9 @@ func on_pass_button_pressed():
 	# 2D版の処理は省略
 
 func on_level_up_selected(target_level: int, cost: int):
-	# TODO: レベルアップ処理
-	pass
+	if is_3d_mode and board_system_3d:
+		board_system_3d.on_level_up_selected(target_level, cost)
+	# 2D版の処理は省略
 
 # フェーズ変更
 func change_phase(new_phase: GamePhase):
@@ -232,7 +241,7 @@ func end_turn():
 	await get_tree().create_timer(GameConstants.TURN_END_DELAY).timeout
 	start_turn()
 
-# カメラ移動関数を追加
+# カメラ移動関数
 func move_camera_to_next_player():
 	if not board_system_3d or not board_system_3d.camera:
 		return

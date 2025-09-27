@@ -141,7 +141,7 @@ func add_level_buttons(current_level: int, current_magic: int, tile_index: int, 
 
 # 個別のレベルボタンを作成
 func create_level_button(current_level: int, target_level: int, current_magic: int, chain_bonus: float, y_position: int) -> Button:
-	# 累計コストを計算
+	# 累計コストを計算（新方式）
 	var total_cost = calculate_total_cost(current_level, target_level)
 	
 	# 通行料の予想額を計算
@@ -168,16 +168,17 @@ func create_level_button(current_level: int, target_level: int, current_magic: i
 	
 	return button
 
-# 累計コストを計算
+# 累計コストを計算（新方式：差額計算）
 func calculate_total_cost(current_level: int, target_level: int) -> int:
-	var total_cost = 0
-	for lv in range(current_level + 1, target_level + 1):
-		total_cost += lv * GameConstants.LEVEL_UP_COST_RATE
-	return total_cost
+	var current_value = GameConstants.LEVEL_VALUES.get(current_level, 0)
+	var target_value = GameConstants.LEVEL_VALUES.get(target_level, 0)
+	return target_value - current_value
 
 # 予想通行料を計算
 func calculate_expected_toll(level: int, chain_bonus: float) -> int:
-	return int(GameConstants.BASE_TOLL * level * chain_bonus)
+	# レベルに応じた基本通行料
+	var base_toll = GameConstants.BASE_TOLL
+	return int(base_toll * level * chain_bonus)
 
 # ボタンテキストを構築
 func build_button_text(target_level: int, cost: int, toll: int, chain_bonus: float) -> String:
