@@ -346,20 +346,26 @@ func process_cpu_action(tile: BaseTile, tile_info: Dictionary):
 		set_tile_owner(tile_info["index"], current_player.id)
 		
 		if card_system.get_hand_size_for_player(current_player.id) > 0:
-			cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided, CONNECT_ONE_SHOT)
+			# CONNECT_ONE_SHOT を使用して一度だけ接続
+			if not cpu_ai_handler.summon_decided.is_connected(_on_cpu_summon_decided):
+				cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided, CONNECT_ONE_SHOT)
 			cpu_ai_handler.decide_summon(current_player)
 		else:
 			emit_signal("tile_action_completed")
 			
 	elif tile_info["owner"] != current_player.id:
 		if tile_info.get("creature", {}).is_empty():
-			cpu_ai_handler.battle_decided.connect(_on_cpu_invasion_decided, CONNECT_ONE_SHOT)
+			# 同様に修正
+			if not cpu_ai_handler.battle_decided.is_connected(_on_cpu_invasion_decided):
+				cpu_ai_handler.battle_decided.connect(_on_cpu_invasion_decided, CONNECT_ONE_SHOT)
 			cpu_ai_handler.decide_invasion(current_player, tile_info)
 		else:
-			cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
+			if not cpu_ai_handler.battle_decided.is_connected(_on_cpu_battle_decided):
+				cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
 			cpu_ai_handler.decide_battle(current_player, tile_info)
 	else:
 		emit_signal("tile_action_completed")
+		
 # === UI表示 ===
 
 # 召喚UI表示
@@ -477,9 +483,10 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
-	
-	await get_tree().create_timer(1.0).timeout
+		
 	emit_signal("tile_action_completed")
+	await get_tree().create_timer(1.0).timeout
+	
 
 # 通行料支払い
 func pay_toll(tile_info: Dictionary):
@@ -527,24 +534,3 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 			player_system.add_magic(current_player_index, -cost)
 	
 	emit_signal("tile_action_completed")
-
-# ターン終了処理
-func end_current_turn():
-	switch_to_next_player()
-
-# 次のプレイヤーに切り替え
-func switch_to_next_player():
-	current_player_index = (current_player_index + 1) % player_count
-	player_system.current_player_index = current_player_index
-	
-	# カメラフォーカスのみ（ドロー処理は削除）
-	if camera and current_player_index < player_nodes.size():
-		var next_player_node = player_nodes[current_player_index]
-		if next_player_node:
-			var tween = get_tree().create_tween()
-			var cam_offset = Vector3(0, 10, 10)
-			var cam_target = next_player_node.global_position + cam_offset
-			tween.tween_property(camera, "global_position", cam_target, 0.8)
-			await tween.finished
-			if camera:
-				camera.look_at(next_player_node.global_position, Vector3.UP)

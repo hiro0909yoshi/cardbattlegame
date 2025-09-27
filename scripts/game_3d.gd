@@ -1,6 +1,7 @@
 extends Node
 
-# 3Dゲームメイン管理スクリプト（最適化版）
+# 3Dゲームメイン管理スクリプト（スリム化版）
+# システム初期化とシグナル接続のみを担当
 
 # システム参照
 var board_system_3d: BoardSystem3D
@@ -11,6 +12,7 @@ var skill_system: SkillSystem
 var ui_manager: UIManager
 var special_tile_system: SpecialTileSystem
 var debug_controller: DebugController
+var game_flow_manager: GameFlowManager
 
 # 設定
 var player_count = 2
@@ -23,8 +25,8 @@ func _ready():
 	
 	await get_tree().create_timer(0.5).timeout
 	
-	start_game()
-
+	# GameFlowManagerにゲーム開始を委任
+	game_flow_manager.start_game()
 
 # システム初期化
 func initialize_systems():
@@ -67,44 +69,56 @@ func initialize_systems():
 	debug_controller = DebugController.new()
 	debug_controller.name = "DebugController"
 	add_child(debug_controller)
+	
+	# GameFlowManagerを作成
+	game_flow_manager = GameFlowManager.new()
+	game_flow_manager.name = "GameFlowManager"
+	add_child(game_flow_manager)
 
 # ゲームセットアップ
 func setup_game():
+	# 3Dノード収集
 	var tiles_container = get_node_or_null("Tiles")
 	var players_container = get_node_or_null("Players")
 	var camera = get_node_or_null("Camera3D")
 	
-	if not tiles_container:
-		print("ERROR: Tilesノードが見つかりません")
-	else:
+	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)
 	
-	if not players_container:
-		print("ERROR: Playersノードが見つかりません")
-	else:
+	if players_container:
 		board_system_3d.collect_players(players_container)
 		
 	if camera:
 		board_system_3d.camera = camera
 	
+	# プレイヤー初期化
 	player_system.initialize_players(player_count, self)
 	
+	# BoardSystem3D設定
 	board_system_3d.player_count = player_count
 	board_system_3d.player_is_cpu = player_is_cpu
 	board_system_3d.current_player_index = 0
 	
+	# UIManager設定
 	ui_manager.board_system_ref = board_system_3d
 	ui_manager.player_system_ref = player_system
 	ui_manager.card_system_ref = card_system
-	
 	ui_manager.create_ui(self)
 	
+	# システム連携設定
 	board_system_3d.setup_systems(player_system, card_system, battle_system, skill_system)
 	board_system_3d.ui_manager = ui_manager
 	
+	# GameFlowManager設定（3D対応）
+	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
+									skill_system, ui_manager, battle_system, special_tile_system)
+	game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
+	
+	# Debug設定
 	debug_controller.setup_systems(player_system, board_system_3d, card_system, ui_manager)
 	player_system.set_debug_controller(debug_controller)
 	
+	# 初期手札配布
 	await get_tree().create_timer(0.1).timeout
 	card_system.deal_initial_hands_all_players(player_count)
 	
@@ -113,102 +127,42 @@ func setup_game():
 
 # シグナル接続
 func connect_signals():
-	# PlayerSystemのシグナル
-	player_system.dice_rolled.connect(_on_dice_rolled)
-	player_system.magic_changed.connect(_on_magic_changed)
-	player_system.player_won.connect(_on_player_won)
+	# GameFlowManagerのシグナル
+	game_flow_manager.dice_rolled.connect(_on_dice_rolled)
+	game_flow_manager.turn_started.connect(_on_turn_started)
+	game_flow_manager.turn_ended.connect(_on_turn_ended)
+	game_flow_manager.phase_changed.connect(_on_phase_changed)
 	
-	# BoardSystem3Dのシグナル
-	board_system_3d.tile_action_completed.connect(_on_tile_action_completed)
-	board_system_3d.movement_started.connect(_on_movement_started)
-	board_system_3d.movement_completed.connect(_on_board_movement_completed)
+	# PlayerSystemのシグナル
+	player_system.magic_changed.connect(ui_manager.update_player_info_panels)
+	player_system.player_won.connect(game_flow_manager.on_player_won)
 	
 	# UIManagerのシグナル
-	ui_manager.dice_button_pressed.connect(_on_dice_button_pressed)
-	ui_manager.card_selected.connect(_on_card_selected)
-	ui_manager.pass_button_pressed.connect(_on_pass_pressed)
-	ui_manager.level_up_selected.connect(_on_level_up_selected)
+	ui_manager.dice_button_pressed.connect(game_flow_manager.roll_dice)
+	ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
+	ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
+	ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
 
-# ゲーム開始
-func start_game():
-	print("\n=== ゲーム開始 ===")
-	start_turn()
-
-# ターン開始（カードドロー処理を一本化）
-func start_turn():
-	var current_player = player_system.get_current_player()
-	print("\n=== プレイヤー", current_player.id + 1, "のターン ===")
-	
-	if card_system.get_hand_size_for_player(current_player.id) < 6:
-		var drawn = card_system.draw_card_for_player(current_player.id)
-		if not drawn.is_empty() and current_player.id == 0:
-			await get_tree().create_timer(0.1).timeout
-	
-	ui_manager.update_player_info_panels()
-	
-	if board_system_3d.player_is_cpu[current_player.id]:
-		ui_manager.set_dice_button_enabled(false)
-		ui_manager.phase_label.text = "CPUのターン..."
-		await get_tree().create_timer(1.0).timeout
-		board_system_3d.start_dice_roll()
-	else:
-		ui_manager.set_dice_button_enabled(true)
-		ui_manager.phase_label.text = "サイコロを振ってください"
-
-# === イベントハンドラ ===
-
-func _on_dice_button_pressed():
-	if not board_system_3d.is_moving:
-		board_system_3d.start_dice_roll()
+# === イベントハンドラ（最小限） ===
 
 func _on_dice_rolled(value: int):
-	print("🎲 サイコロ: ", value)
 	ui_manager.show_dice_result(value, self)
-	
-	# 3D移動開始
-	var current_player = player_system.get_current_player()
-	board_system_3d.move_player_3d(current_player.id, value)
 
-func _on_movement_started():
-	ui_manager.set_dice_button_enabled(false)
-	ui_manager.phase_label.text = "移動中..."
+func _on_turn_started(player_id: int):
+	print("\n=== プレイヤー", player_id + 1, "のターン ===")
 
-func _on_board_movement_completed(final_tile: int):
-	print("マス", final_tile, "に到着")
-	board_system_3d.process_tile_landing(final_tile)
+func _on_turn_ended(player_id: int):
+	pass  # 必要に応じて処理追加
 
-func _on_tile_action_completed():
-	# ターン終了処理
-	board_system_3d.switch_to_next_player()
-	await get_tree().create_timer(0.5).timeout
-	start_turn()
-
-func _on_card_selected(card_index: int):
-	board_system_3d.on_card_selected(card_index)
-
-func _on_pass_pressed():
-	board_system_3d.on_action_pass()
-
-func _on_level_up_selected(target_level: int, cost: int):
-	# TODO: レベルアップ処理実装
-	pass
-
-func _on_magic_changed(player_id: int, new_value: int):
-	print("魔力変化 - P", player_id + 1, ": ", new_value, "G")
-	# 魔力変化時のみUI更新
-	ui_manager.update_player_info_panels()
-
-func _on_player_won(player_id: int):
-	print("\n🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
-	ui_manager.set_dice_button_enabled(false)
-	ui_manager.phase_label.text = "プレイヤー" + str(player_id + 1) + "の勝利！"
+func _on_phase_changed(new_phase):
+	pass  # 必要に応じて処理追加
 
 # デバッグ入力
 func _input(event):
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_SPACE:
-				_on_dice_button_pressed()
+				game_flow_manager.roll_dice()
 			KEY_6:
 				debug_controller.set_debug_dice(6)
 			KEY_1:

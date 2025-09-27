@@ -230,8 +230,6 @@ func add_magic(player_id: int, amount: int):
 	print(player.name, ": 魔力 ", player.magic_power, "G (", 
 		"+" if amount >= 0 else "", amount, ")")
 	
-	emit_signal("magic_changed", player_id, player.magic_power)
-	
 	# 勝利判定
 	if player.magic_power >= player.target_magic:
 		emit_signal("player_won", player_id)
