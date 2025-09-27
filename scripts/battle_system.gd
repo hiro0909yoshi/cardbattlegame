@@ -1,11 +1,12 @@
 extends Node
 class_name BattleSystem
 
-# バトル管理システム - GameConstants対応版
+# バトル管理システム - 2D/3D統合版
 
 signal battle_started(attacker: Dictionary, defender: Dictionary)
 signal battle_ended(winner: String, result: Dictionary)
 signal battle_animation_finished()
+signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -25,13 +26,141 @@ var element_advantages = {
 	"水": "火"
 }
 
+# システム参照（3D対応）
+var board_system_ref = null  # BoardSystem2D or BoardSystem3D
+var card_system_ref: CardSystem = null
+var player_system_ref: PlayerSystem = null
+
 func _ready():
 	pass
 
+# システム参照を設定（3D対応）
+func setup_systems(board_system, card_system: CardSystem, player_system: PlayerSystem):
+	board_system_ref = board_system
+	card_system_ref = card_system
+	player_system_ref = player_system
+
+# === 3D版統合処理 ===
+
+# バトル実行（3D版メイン処理）
+func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary) -> void:
+	if not validate_systems():
+		print("Error: システム参照が設定されていません")
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
+		return
+	
+	# カードインデックスが-1の場合は通行料支払い
+	if card_index < 0:
+		pay_toll_3d(attacker_index, tile_info)
+		return
+	
+	var card_data = card_system_ref.get_card_data_for_player(attacker_index, card_index)
+	if card_data.is_empty():
+		pay_toll_3d(attacker_index, tile_info)
+		return
+	
+	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var current_player = player_system_ref.get_current_player()
+	
+	if current_player.magic_power < cost:
+		pay_toll_3d(attacker_index, tile_info)
+		return
+	
+	# カード使用
+	card_system_ref.use_card_for_player(attacker_index, card_index)
+	player_system_ref.add_magic(attacker_index, -cost)
+	
+	# 防御クリーチャーがいない場合（侵略）
+	if tile_info.get("creature", {}).is_empty():
+		execute_invasion_3d(attacker_index, card_data, tile_info)
+		return
+	
+	# バトル判定（簡易版）
+	var attacker_st = card_data.get("damage", 0)
+	var defender_hp = tile_info.get("creature", {}).get("block", 0)
+	
+	print("========== バトル開始 ==========")
+	print("攻撃側: ", card_data.get("name", "不明"), " [", card_data.get("element", "?"), "]")
+	print("防御側: ", tile_info.get("creature", {}).get("name", "不明"), " [", tile_info.get("creature", {}).get("element", "?"), "]")
+	print("攻撃側ST: ", attacker_st, " vs 防御側HP: ", defender_hp)
+	
+	if attacker_st >= defender_hp:
+		print(">>> 攻撃側の勝利！土地を獲得！")
+		# 土地を奪取
+		board_system_ref.set_tile_owner(tile_info["index"], attacker_index)
+		board_system_ref.place_creature(tile_info["index"], card_data)
+		
+		# 表示更新
+		if board_system_ref.has_method("update_all_tile_displays"):
+			board_system_ref.update_all_tile_displays()
+	else:
+		print(">>> 防御側の勝利！土地を守った！")
+	
+	print("================================")
+	
+	# バトル終了シグナルを発行
+	emit_signal("invasion_completed", attacker_st >= defender_hp, tile_info["index"])
+
+# 侵略処理（防御クリーチャーなし）
+func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: Dictionary):
+	print("侵略成功！土地を奪取")
+	
+	# 土地を奪取
+	board_system_ref.set_tile_owner(tile_info["index"], attacker_index)
+	board_system_ref.place_creature(tile_info["index"], card_data)
+	
+	# UI更新
+	if board_system_ref.has_method("update_all_tile_displays"):
+		board_system_ref.update_all_tile_displays()
+	
+	emit_signal("invasion_completed", true, tile_info["index"])
+
+# クリーチャーとのバトル処理
+func execute_battle_with_creature_3d(attacker_index: int, attacker_data: Dictionary, tile_info: Dictionary):
+	var defender_data = tile_info["creature"]
+	
+	print("\n========== バトル開始 ==========")
+	print("攻撃側: ", attacker_data.get("name", "不明"), " [", attacker_data.get("element", "?"), "]")
+	print("防御側: ", defender_data.get("name", "不明"), " [", defender_data.get("element", "?"), "]")
+	
+	# バトル結果を既存のシステムで計算
+	var result = execute_invasion_battle(attacker_index, -1, tile_info, card_system_ref, board_system_ref)
+	
+	# 結果に基づいて処理（既にexecute_invasion_battleで処理済みなので、ここでは通知のみ）
+	var success = result.get("land_captured", false)
+	emit_signal("invasion_completed", success, tile_info["index"])
+
+# 通行料支払い（3D版）
+func pay_toll_3d(payer_index: int, tile_info: Dictionary):
+	var toll = board_system_ref.calculate_toll(tile_info["index"])
+	var receiver_id = tile_info["owner"]
+	
+	if receiver_id >= 0 and receiver_id < player_system_ref.players.size():
+		player_system_ref.pay_toll(payer_index, receiver_id, toll)
+		print("通行料 ", toll, "G を支払いました")
+	
+	emit_signal("invasion_completed", false, tile_info["index"])
+
+# システム検証
+func validate_systems() -> bool:
+	return board_system_ref != null and card_system_ref != null and player_system_ref != null
+
+# === 既存の2D版処理（保持） ===
+
 # 侵略バトルを実行（メインバトル処理）
 func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, tile_info: Dictionary, card_system: CardSystem, board_system) -> Dictionary:
-	# 攻撃側のクリーチャーを手札から取得
-	var attacker_data = card_system.get_card_data_for_player(attacker_player_id, attacker_hand_index)
+	# 攻撃側のクリーチャーを取得
+	var attacker_data: Dictionary
+	if attacker_hand_index >= 0:
+		# 手札から取得（2D版）
+		attacker_data = card_system.get_card_data_for_player(attacker_player_id, attacker_hand_index)
+	else:
+		# 既に使用済みのカード（3D版での呼び出し）
+		# tile_infoから最後に使用されたカード情報を取得する必要があるが、
+		# 3D版では既にカードは使用済みなので、別の方法で渡す必要がある
+		# ここでは簡易的に空を返す（3D版は別ルートで処理）
+		return {"success": false, "reason": "invalid_card"}
+	
 	if attacker_data.is_empty():
 		return {"success": false, "reason": "invalid_card"}
 	
@@ -242,7 +371,11 @@ func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Di
 	var defender_player_id = tile.get("owner", -1)
 	
 	# BoardSystemへの参照を取得
-	var board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
+	var board_system = board_system_ref
+	if not board_system:
+		board_system = get_tree().get_root().get_node_or_null("Game/BoardSystem")
+		if not board_system:
+			board_system = get_tree().get_root().get_node_or_null("Game3D/BoardSystem3D")
 	
 	# ボーナスを個別に計算
 	var attacker_bonuses = calculate_creature_bonuses(attacker, defender, tile, true, attacker_player_id, board_system, true)
@@ -269,3 +402,7 @@ func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Di
 		prediction.likely_winner = "draw"
 	
 	return prediction
+
+# 簡易バトル判定（3D版用）
+func quick_battle_check(attacker_st: int, defender_hp: int) -> bool:
+	return attacker_st >= defender_hp

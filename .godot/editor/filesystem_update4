@@ -18,3 +18,6 @@ res://scripts/ui_components/player_info_panel.gd
 res://scripts/game_flow_manager.gd
 res://scripts/game_3d.gd
 res://scripts/signal_registry.gd
+res://scripts/battle_system.gd
+res://scripts/special_tile_system.gd
+res://scripts/movement_controller.gd

@@ -1,10 +1,10 @@
 extends Node
 
-# 3Dゲームメイン管理スクリプト（スリム化版）
+# 3Dゲームメイン管理スクリプト（エラー修正版）
 # システム初期化とシグナル接続のみを担当
 
 # システム参照
-var board_system_3d: BoardSystem3D
+var board_system_3d  # BoardSystem3Dクラスの型指定を削除
 var player_system: PlayerSystem
 var card_system: CardSystem
 var battle_system: BattleSystem
@@ -35,8 +35,9 @@ func initialize_systems():
 	signal_registry.name = "SignalRegistry"
 	add_child(signal_registry)
 	
-	# BoardSystem3Dを作成
-	board_system_3d = BoardSystem3D.new()
+	# BoardSystem3Dを作成（動的ロード）
+	var BoardSystem3DClass = load("res://scripts/board_system_3d.gd")
+	board_system_3d = BoardSystem3DClass.new()
 	board_system_3d.name = "BoardSystem3D"
 	add_child(board_system_3d)
 	
@@ -87,14 +88,22 @@ func setup_game():
 	var players_container = get_node_or_null("Players")
 	var camera = get_node_or_null("Camera3D")
 	
+	print("\n=== 3Dノード確認 ===")
+	print("Tiles: ", tiles_container != null)
+	print("Players: ", players_container != null)
+	print("Camera3D: ", camera != null)
+	
+	if camera:
+		print("カメラ位置: ", camera.global_position)
+		board_system_3d.camera = camera
+	else:
+		print("ERROR: Camera3Dが見つかりません！")
+	
 	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)
 	
 	if players_container:
 		board_system_3d.collect_players(players_container)
-		
-	if camera:
-		board_system_3d.camera = camera
 	
 	# プレイヤー初期化
 	player_system.initialize_players(player_count, self)
@@ -111,8 +120,12 @@ func setup_game():
 	ui_manager.create_ui(self)
 	
 	# システム連携設定
-	board_system_3d.setup_systems(player_system, card_system, battle_system, skill_system)
+	board_system_3d.setup_systems(player_system, card_system, battle_system, 
+								  skill_system, special_tile_system)
 	board_system_3d.ui_manager = ui_manager
+	
+	# SpecialTileSystemの設定
+	special_tile_system.setup_systems(board_system_3d, card_system, player_system, ui_manager)
 	
 	# GameFlowManager設定（3D対応）
 	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
@@ -141,6 +154,10 @@ func setup_game():
 
 # シグナル接続
 func connect_signals():
+	# BoardSystem3Dのシグナル接続（tile_action_completedのみ）
+	if board_system_3d:
+		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
+	
 	# GameFlowManagerのシグナル
 	game_flow_manager.dice_rolled.connect(_on_dice_rolled)
 	game_flow_manager.turn_started.connect(_on_turn_started)
@@ -157,7 +174,7 @@ func connect_signals():
 	ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 	ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
 
-# === イベントハンドラ（最小限） ===
+# === イベントハンドラ ===
 
 func _on_dice_rolled(value: int):
 	ui_manager.show_dice_result(value, self)
@@ -165,11 +182,14 @@ func _on_dice_rolled(value: int):
 func _on_turn_started(player_id: int):
 	print("\n=== プレイヤー", player_id + 1, "のターン ===")
 
-func _on_turn_ended(player_id: int):
+func _on_turn_ended(_player_id: int):
 	pass  # 必要に応じて処理追加
 
-func _on_phase_changed(new_phase):
+func _on_phase_changed(_new_phase):
 	pass  # 必要に応じて処理追加
+
+func _on_tile_action_completed_3d():
+	game_flow_manager.end_turn()
 
 # デバッグ入力
 func _input(event):

@@ -1,11 +1,13 @@
 extends Node
 class_name SpecialTileSystem
 
-# 特殊マス管理システム - GameConstants対応版
+# 特殊マス管理システム - 2D/3D統合版
 
 signal special_tile_activated(tile_type: String, player_id: int, tile_index: int)
 signal warp_triggered(from_tile: int, to_tile: int)
 signal card_draw_triggered(player_id: int, count: int)
+signal checkpoint_passed(player_id: int, bonus: int)
+signal special_action_completed()
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -17,6 +19,8 @@ enum SpecialType {
 	WARP_POINT,   # 停止型ワープ  
 	NEUTRAL,      # 無属性マス（土地）
 	CARD,         # カードマス
+	START,        # スタートマス
+	CHECKPOINT,   # チェックポイント
 	FORT,         # 砦（将来実装）
 	SHRINE,       # 神殿（将来実装）
 	TRAP          # トラップ（将来実装）
@@ -30,15 +34,107 @@ var warp_pairs = []      # ワープマスのペア [{from: int, to: int, type: 
 var board_system
 var card_system: CardSystem
 var player_system: PlayerSystem
+var ui_manager: UIManager = null
 
 func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem):
+func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem, ui_system: UIManager = null):
 	board_system = b_system
 	card_system = c_system
 	player_system = p_system
+	ui_manager = ui_system
+
+# === 3D版統合処理 ===
+
+# 3Dタイル処理（BoardSystem3Dから呼び出される）
+func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int) -> void:
+	print("特殊タイル処理: ", tile_type, " (マス", tile_index, ")")
+	
+	match tile_type:
+		"start":
+			handle_start_tile_3d(player_id)
+		"checkpoint":
+			handle_checkpoint_tile_3d(player_id)
+		"card":
+			handle_card_tile_3d(player_id)
+		"warp":
+			handle_warp_tile_3d(tile_index, player_id)
+		"neutral":
+			# 無属性マスは通常タイルとして処理しない（土地取得不可）
+			print("無属性マス - 連鎖は切れます")
+			emit_signal("special_action_completed")
+		_:
+			print("未実装の特殊タイル: ", tile_type)
+			emit_signal("special_action_completed")
+
+# スタートマス処理（3D版）
+func handle_start_tile_3d(player_id: int):
+	# スタート地点では何もしない（通過時にボーナス処理済み）
+	print("スタート地点")
+	emit_signal("special_tile_activated", "start", player_id, 0)
+	emit_signal("special_action_completed")
+
+# チェックポイント処理（3D版）
+func handle_checkpoint_tile_3d(player_id: int):
+	var bonus = GameConstants.CHECKPOINT_BONUS
+	player_system.add_magic(player_id, bonus)
+	print("チェックポイント！魔力+", bonus, "G")
+	
+	# UI更新
+	if ui_manager and ui_manager.has_method("update_player_info_panels"):
+		ui_manager.update_player_info_panels()
+	
+	emit_signal("checkpoint_passed", player_id, bonus)
+	emit_signal("special_tile_activated", "checkpoint", player_id, 5)  # マス5がチェックポイント
+	emit_signal("special_action_completed")
+
+# カードマス処理（3D版）
+func handle_card_tile_3d(player_id: int):
+	var draw_count = 1
+	
+	if card_system:
+		var drawn_cards = card_system.draw_cards_for_player(player_id, draw_count)
+		if drawn_cards.size() > 0:
+			print("カードマス！", drawn_cards.size(), "枚ドロー")
+			emit_signal("card_draw_triggered", player_id, drawn_cards.size())
+		else:
+			print("カードマス！（手札上限のためドロー失敗）")
+	
+	emit_signal("special_tile_activated", "card", player_id, -1)
+	emit_signal("special_action_completed")
+
+# ワープマス処理（3D版）
+func handle_warp_tile_3d(from_tile: int, player_id: int):
+	# ワープ先を決定（簡易実装）
+	var to_tile = get_warp_destination(from_tile)
+	
+	if to_tile != from_tile:
+		print("ワープ発動！マス", from_tile, " → マス", to_tile)
+		emit_signal("warp_triggered", from_tile, to_tile)
+		
+		# プレイヤーを移動（3D版は移動アニメーションが必要）
+		if board_system and board_system.has_method("warp_player_3d"):
+			await board_system.warp_player_3d(player_id, to_tile)
+	
+	emit_signal("special_tile_activated", "warp", player_id, from_tile)
+	emit_signal("special_action_completed")
+
+# ワープ先を取得
+func get_warp_destination(from_tile: int) -> int:
+	# 簡易実装：特定のワープペア
+	match from_tile:
+		3: return 5    # マス3→マス5
+		5: return 3    # マス5→マス3
+		14: return 16  # マス14→マス16
+		_: return from_tile
+
+# タイルが特殊マスかチェック（3D版用）
+func is_special_tile_3d(tile_type: String) -> bool:
+	return tile_type in ["start", "checkpoint", "warp", "card", "neutral"]
+
+# === 既存の2D版処理（保持） ===
 
 # 特殊マスを配置（ボード生成時に呼ぶ）
 func setup_special_tiles(total_tiles: int):
@@ -98,7 +194,7 @@ func add_special_tile(tile_index: int, type: SpecialType, data: Dictionary = {})
 	}
 	
 	# ボードシステムに特殊マスフラグを設定
-	if board_system:
+	if board_system and board_system.has_method("mark_as_special_tile"):
 		board_system.mark_as_special_tile(tile_index, type)
 
 # 特殊マスかチェック
@@ -175,7 +271,7 @@ func activate_warp_point(tile_index: int, player_id: int) -> int:
 		emit_signal("warp_triggered", tile_index, target_tile)
 		
 		# プレイヤーを移動
-		if player_system:
+		if player_system and player_system.has_method("place_player_at_tile"):
 			player_system.place_player_at_tile(player_id, target_tile, board_system)
 		
 		return target_tile
@@ -204,6 +300,8 @@ func get_type_name(type: SpecialType) -> String:
 		SpecialType.WARP_POINT: return "ワープポイント"
 		SpecialType.CARD: return "カード"
 		SpecialType.NEUTRAL: return "無属性"
+		SpecialType.START: return "スタート"
+		SpecialType.CHECKPOINT: return "チェックポイント"
 		SpecialType.FORT: return "砦"
 		SpecialType.SHRINE: return "神殿"
 		SpecialType.TRAP: return "トラップ"
@@ -220,6 +318,10 @@ func get_special_tile_color(type: SpecialType) -> Color:
 			return GameConstants.SPECIAL_TILE_COLORS.get("CARD", Color(0.3, 0.8, 0.8))
 		SpecialType.NEUTRAL: 
 			return GameConstants.SPECIAL_TILE_COLORS.get("NEUTRAL", Color(0.5, 0.5, 0.5))
+		SpecialType.START:
+			return GameConstants.SPECIAL_TILE_COLORS.get("START", Color(1.0, 0.9, 0.3))
+		SpecialType.CHECKPOINT:
+			return GameConstants.SPECIAL_TILE_COLORS.get("CHECKPOINT", Color(0.3, 0.8, 0.3))
 		_: 
 			return Color(0.7, 0.7, 0.7)
 
