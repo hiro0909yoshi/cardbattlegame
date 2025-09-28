@@ -16,7 +16,7 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 # 移動設定
 const MOVE_DURATION = 0.5  # 1マスの移動時間
 const MOVE_HEIGHT = 1.0    # 駒の高さオフセット
-const CAMERA_OFFSET = Vector3(0, 10, 10)  # カメラオフセット
+const CAMERA_OFFSET = Vector3(19, 19, 19)  # カメラオフセット
 
 # 参照
 var tile_nodes = {}        # tile_index -> BaseTile

@@ -15,10 +15,10 @@ var debug_dice_mode = false
 var fixed_dice_value = 0
 
 # システム参照
-var player_system: PlayerSystem
+var player_system
 var board_system
-var card_system: CardSystem
-var ui_manager: UIManager
+var card_system
+var ui_manager
 
 func _ready():
 	if enabled and OS.is_debug_build():

@@ -89,10 +89,16 @@ func setup_game():
 	var camera = get_node_or_null("Camera3D")
 	
 	if camera:
+		# カメラ初期位置だけ設定
+		camera.position = Vector3(19, 19, 19)  # 位置のみ設定
+		
+		# 最初のプレイヤー（Player1）を自動で見る
+		if players_container and players_container.get_child_count() > 0:
+			var first_player = players_container.get_child(0)
+			camera.look_at(first_player.global_position, Vector3.UP)
+		
 		print("カメラ位置: ", camera.global_position)
 		board_system_3d.camera = camera
-	else:
-		print("ERROR: Camera3Dが見つかりません！")
 	
 	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)
