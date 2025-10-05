@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "description": "カルドセプト風カードゲーム 共通定義ファイル",
+  
+  "icon_mappings": {
+	"elements": {
+	  "🔥": "火",
+	  "💧": "水",
+	  "🌱": "地",
+	  "💨": "風",
+	  "⬜": "無"
+	},
+	"restrictions": {
+	  "item_use": {
+		"🛡️❌": "防具",
+		"📜❌": "巻物",
+		"⚔️❌": "武器",
+		"💍❌": "アクセサリ"
+	  },
+	  "cannot_summon": {
+		"💧🚫": "水",
+		"🔥🚫": "火",
+		"🌱🚫": "地",
+		"💨🚫": "風"
+	  }
+	}
+  },
+  
+  "rarities": {
+	"N": "Normal",
+	"S": "Strange",
+	"R": "Rare",
+	"E": "Extra"
+  },
+  
+  "card_types": {
+	"creature": {
+	  "id_range": [1, 999],
+	  "required_fields": ["name", "rarity", "type", "element", "cost", "ap", "hp"],
+	  "optional_fields": ["restrictions", "ability", "ability_detail"]
+	},
+	"item": {
+	  "id_range": [1000, 1999],
+	  "required_fields": ["name", "rarity", "type", "item_type", "cost", "effect"],
+	  "optional_fields": []
+	},
+	"spell": {
+	  "id_range": [2000, 2999],
+	  "required_fields": ["name", "rarity", "type", "spell_type", "cost", "effect"],
+	  "optional_fields": []
+	}
+  },
+  
+  "item_types": ["武器", "防具", "アクセサリ", "巻物"],
+  
+  "spell_types": {
+	"単体対象": "1つの対象に直接効果",
+	"複数対象": "複数または全体に効果",
+	"単体特殊能力付与": "1つの対象に能力や状態を付与",
+	"複数特殊能力付与": "複数の対象に能力や状態を付与",
+	"世界呪": "全体永続効果"
+  },
+  
+  "keywords": {
+	"combat": [
+	  "先制", "強打", "貫通", "再生", "不死", "2回攻撃", "雪辱", "即死"
+	],
+	"defensive": [
+	  "無効化", "援護", "反射", "防御型"
+	],
+	"special": [
+	  "復帰", "変身", "死者復活", "道連れ", "ドロー", "追加ダメージ",
+	  "復活", "合成", "感応", "密命"
+	],
+	"movement": [
+	  "飛行", "瞬間移動"
+	]
+  },
+  
+  "effect_types": {
+	"stats": ["modify_stats", "set_stats", "swap_stats"],
+	"keywords": ["add_keyword", "remove_keyword"],
+	"combat": ["damage", "heal", "destroy"],
+	"special": ["card_synthesis", "forced_move", "mark_distribution", "down_status", "command_unlock"],
+	"land": ["change_element", "level_up", "capture_land"],
+	"movement": ["movement_lock", "reverse_direction", "forced_stop", "dice_manipulation"],
+	"restriction": ["remove_restrictions", "strategy_limit", "toll_multiply"],
+	"world": ["world_spell"]
+  },
+  
+  "condition_types": {
+	"position": ["on_element_land", "adjacent_to"],
+	"possession": ["has_item_type", "has_keyword", "total_land_count", "land_level_check", "element_land_count", "consecutive_lands"],
+	"state": ["hp_below", "hp_above", "mhp_below", "mhp_above", "is_attacking", "is_defending", "has_mark"],
+	"timing": ["on_summon", "on_destroy", "on_battle_win", "turn_start", "turn_duration"],
+	"level_rank": ["land_level_limit", "player_rank"]
+  },
+  
+  "formula_variables": {
+	"land": [
+	  "fire_lands", "water_lands", "earth_lands", "wind_lands", "total_lands",
+	  "current_land_level", "fire_creatures", "water_creatures", "earth_creatures", "wind_creatures"
+	],
+	"card": ["hand_count", "fire_in_hand", "creatures_in_play"],
+	"combat": ["damage_dealt", "damage_taken"]
+  }
+}

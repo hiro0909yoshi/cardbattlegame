@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://t60xjgj5wk7c"]
+
+[ext_resource type="PackedScene" uid="uid://bg3aqmn8r50i0" path="res://assets/building_parts/床3.glb" id="1_v6wux"]
+
+[node name="床3" instance=ExtResource("1_v6wux")]

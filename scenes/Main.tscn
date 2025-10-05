@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dlge0sbyufmq8"]
+[gd_scene load_steps=11 format=3 uid="uid://dlge0sbyufmq8"]
 
 [ext_resource type="Script" uid="uid://d0ed7a1e8gsei" path="res://scripts/game_3d.gd" id="1_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dtfil43yeci2x" path="res://scenes/Tiles/FireTile.tscn" id="1_vcsgt"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://gk4oxcskph8p" path="res://scenes/Tiles/EarthTile.tscn" id="5_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dt6tq6krtdu5" path="res://scenes/Characters/Mario.tscn" id="6_c01mt"]
 [ext_resource type="Script" uid="uid://d05eaonrysfn6" path="res://scripts/player_movement.gd" id="7_nxtc6"]
+[ext_resource type="MeshLibrary" uid="uid://cyqxg60f1rq73" path="res://assets/building_parts/床3.tres" id="10_lhr70"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_q8u5g")
@@ -106,3 +107,13 @@ tile_index = 4
 [node name="EarthTile4" parent="Tiles" instance=ExtResource("5_q8u5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 tile_index = 19
+
+[node name="Background" type="Node3D" parent="."]
+
+[node name="GridMap" type="GridMap" parent="Background"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, -4, 0)
+mesh_library = ExtResource("10_lhr70")
+cell_scale = 2.0
+data = {
+"cells": PackedInt32Array(0, 3, 0, 0, 1, 0, 0, 65535, 0, 0, 65533, 0, 65534, 3, 0, 65534, 1, 0, 65534, 65535, 0, 65534, 65533, 0, 2, 3, 0, 2, 1, 0, 2, 65535, 0, 2, 65533, 0, 4, 3, 0, 4, 1, 0, 4, 65535, 0, 4, 5, 0, 2, 5, 0, 0, 5, 0, 65534, 5, 0, 6, 5, 0, 6, 3, 0, 6, 1, 0, 6, 65535, 0, 6, 65533, 0, 4, 65533, 0)
+}
