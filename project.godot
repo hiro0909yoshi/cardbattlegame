@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="CardBattleGame"
-run/main_scene="uid://jtdq4cxo60mv"
+run/main_scene="uid://dwp056svuqcek"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameData="*res://scripts/game_data.gd"
 
 [display]
 

@@ -1,0 +1,43 @@
+[gd_scene load_steps=2 format=3 uid="uid://1gsfxbgricdw"]
+
+[ext_resource type="Script" uid="uid://22mnb0t8rwge" path="res://scripts/album.gd" id="1_hetyq"]
+
+[node name="Album" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_hetyq")
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 10.0
+offset_right = 513.0
+offset_bottom = 33.0
+text = "アルバム"
+
+[node name="DeckEditButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 100.0
+offset_right = 600.0
+offset_bottom = 200.0
+text = "デッキ編集"
+
+[node name="CardListButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 300.0
+offset_right = 600.0
+offset_bottom = 400.0
+text = "所持カード一覧
+"
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 450.0
+offset_right = 550.0
+offset_bottom = 500.0
+text = "戻る"

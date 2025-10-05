@@ -1,6 +1,11 @@
-Node3D
+GridContainer
+VBoxContainer
+ScrollContainer
+Panel
 Label
 Button
+Control
+Node3D
 CanvasLayer
 Sprite3D
 CharacterBody3D
@@ -8,7 +13,3 @@ CollisionShape3D
 DirectionalLight3D
 Camera3D
 MeshInstance3D
-StaticBody3D
-Area3D
-ColorRect
-Node2D

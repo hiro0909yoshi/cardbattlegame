@@ -1,0 +1,123 @@
+[gd_scene load_steps=2 format=3 uid="uid://dct6jawyxc4al"]
+
+[ext_resource type="Script" uid="uid://bhb8kup3f8oju" path="res://scripts/deck_editor.gd" id="1_rmu18"]
+
+[node name="DeckEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rmu18")
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 10.0
+offset_right = 530.0
+offset_bottom = 33.0
+text = "デッキ編集"
+
+[node name="DeckButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 120.0
+offset_bottom = 120.0
+text = "本
+"
+
+[node name="NeutralButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 50.0
+offset_right = 200.0
+offset_bottom = 120.0
+text = "無"
+
+[node name="FireButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 50.0
+offset_right = 280.0
+offset_bottom = 120.0
+text = "火"
+
+[node name="WaterButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 290.0
+offset_top = 50.0
+offset_right = 360.0
+offset_bottom = 120.0
+text = "水"
+
+[node name="EarthButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 370.0
+offset_top = 50.0
+offset_right = 440.0
+offset_bottom = 120.0
+text = "地"
+
+[node name="WindButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 450.0
+offset_top = 50.0
+offset_right = 520.0
+offset_bottom = 120.0
+text = "風"
+
+[node name="ItemButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 530.0
+offset_top = 50.0
+offset_right = 600.0
+offset_bottom = 120.0
+text = "具"
+
+[node name="SpellButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 610.0
+offset_top = 50.0
+offset_right = 680.0
+offset_bottom = 120.0
+text = "魔"
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 690.0
+offset_top = 50.0
+offset_right = 760.0
+offset_bottom = 120.0
+text = "戻る"
+
+[node name="SaveButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 764.0
+offset_top = 600.0
+offset_right = 834.0
+offset_bottom = 670.0
+text = "保存"
+
+[node name="CardCountLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 750.0
+offset_top = 520.0
+offset_right = 900.0
+offset_bottom = 570.0
+theme_override_font_sizes/font_size = 18
+text = "現在: 00 / 50枚"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DeckScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_left = 52.0
+offset_top = 140.0
+offset_right = 752.0
+offset_bottom = 740.0
+
+[node name="GridContainer" type="GridContainer" parent="DeckScrollContainer"]
+layout_mode = 2
+columns = 4
