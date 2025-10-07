@@ -19,10 +19,10 @@ func _ready():
 			"cards": {}
 		})
 	
-	# テスト用：いくつかカードを追加
-	player_data.collection[1] = 4
-	player_data.collection[2] = 3
-	player_data.collection[5] = 2
+	# テスト用：CardLoaderから全カードを取得
+	await get_tree().process_frame  # CardLoaderの初期化を待つ
+	for card in CardLoader.all_cards:
+		player_data.collection[card.id] = 4
 
 func get_current_deck() -> Dictionary:
 	return player_data.decks[selected_deck_index]

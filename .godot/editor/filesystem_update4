@@ -19,4 +19,5 @@ res://scenes/deck_editor.tscn
 res://scenes/Album.tscn
 res://scenes/DeckSelect.tscn
 res://scenes/DeckEditor.tscn
+res://scripts/card_loader.gd
 res://scripts/deck_editor.gd
