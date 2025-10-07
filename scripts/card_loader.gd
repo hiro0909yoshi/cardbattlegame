@@ -46,12 +46,27 @@ func load_json_file(path: String) -> Array:
 	
 	var data = json.data
 	if data.has("cards"):
-		return data.cards
+		var cards = data.cards
+		# ⚠️ ここで全カードのIDと数値データをint型に変換
+		for card in cards:
+			if card.has("id"):
+				card.id = int(card.id)
+			# costのmpもintに変換
+			if card.has("cost") and card.cost.has("mp"):
+				card.cost.mp = int(card.cost.mp)
+			# apとhpもintに変換
+			if card.has("ap"):
+				card.ap = int(card.ap)
+			if card.has("hp"):
+				card.hp = int(card.hp)
+		return cards
 	return []
 
 func get_card_by_id(card_id: int) -> Dictionary:
 	for card in all_cards:
-		if card.id == card_id:
+		# IDを整数に変換して比較（念のため）
+		var check_id = int(card.id) if typeof(card.id) != TYPE_INT else card.id
+		if check_id == card_id:
 			return card
 	return {}
 
