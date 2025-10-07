@@ -61,13 +61,8 @@ var player_data = {
 }
 
 func _ready():
-	load_from_file()
 	
-	# テスト用：全カードを3枚に強制変更
-	for key in player_data.collection.keys():
-		player_data.collection[key] = 5
-	save_to_file()
-	print("✅ 全カードを3枚に変更しました")
+	load_from_file() 
 
 # ==========================================
 # セーブ/ロード

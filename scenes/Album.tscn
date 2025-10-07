@@ -4,40 +4,113 @@
 
 [node name="Album" type="Control"]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_hetyq")
 
-[node name="TitleLabel" type="Label" parent="."]
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="LeftPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel"]
 layout_mode = 0
-offset_left = 450.0
-offset_top = 10.0
-offset_right = 513.0
-offset_bottom = 33.0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 29
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
 text = "アルバム"
 
-[node name="DeckEditButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 400.0
-offset_top = 100.0
-offset_right = 600.0
-offset_bottom = 200.0
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="DeckEditButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 2
 text = "デッキ編集"
 
-[node name="CardListButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 400.0
-offset_top = 300.0
-offset_right = 600.0
-offset_bottom = 400.0
+[node name="CardListButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 2
 text = "所持カード一覧
 "
 
-[node name="BackButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 450.0
-offset_top = 450.0
-offset_right = 550.0
-offset_bottom = 500.0
+[node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 2
 text = "戻る"
+
+[node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 6.0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 100
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="book1" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"
+
+[node name="book2" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"
+
+[node name="book3" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"
+
+[node name="book4" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"
+
+[node name="book5" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"
+
+[node name="book6" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 200)
+layout_mode = 2
+text = "ブック１"

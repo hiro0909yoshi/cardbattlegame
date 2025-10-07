@@ -11,113 +11,126 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_rmu18")
 
-[node name="TitleLabel" type="Label" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 0
-offset_left = 450.0
-offset_top = 10.0
-offset_right = 530.0
-offset_bottom = 33.0
-text = "デッキ編集"
+offset_right = 40.0
+offset_bottom = 40.0
 
-[node name="DeckButton" type="Button" parent="."]
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="LeftPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 9.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="Control" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 75)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control"]
 layout_mode = 0
-offset_left = 50.0
-offset_top = 50.0
-offset_right = 120.0
-offset_bottom = 120.0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="DeckButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "本
 "
 
-[node name="NeutralButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 130.0
-offset_top = 50.0
-offset_right = 200.0
-offset_bottom = 120.0
+[node name="NeutralButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "無"
 
-[node name="FireButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 210.0
-offset_top = 50.0
-offset_right = 280.0
-offset_bottom = 120.0
+[node name="FireButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "火"
 
-[node name="WaterButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 290.0
-offset_top = 50.0
-offset_right = 360.0
-offset_bottom = 120.0
+[node name="WaterButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "水"
 
-[node name="EarthButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 370.0
-offset_top = 50.0
-offset_right = 440.0
-offset_bottom = 120.0
+[node name="EarthButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "地"
 
-[node name="WindButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 450.0
-offset_top = 50.0
-offset_right = 520.0
-offset_bottom = 120.0
+[node name="WindButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "風"
 
-[node name="ItemButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 530.0
-offset_top = 50.0
-offset_right = 600.0
-offset_bottom = 120.0
+[node name="ItemButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "具"
 
-[node name="SpellButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 610.0
-offset_top = 50.0
-offset_right = 680.0
-offset_bottom = 120.0
+[node name="SpellButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "魔"
 
-[node name="BackButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 690.0
-offset_top = 50.0
-offset_right = 760.0
-offset_bottom = 120.0
+[node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(100, 70)
+layout_mode = 2
 text = "戻る"
 
-[node name="SaveButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 764.0
-offset_top = 600.0
-offset_right = 834.0
-offset_bottom = 670.0
-text = "保存"
+[node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="CardCountLabel" type="Label" parent="."]
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/DeckScrollContainer"]
+layout_mode = 2
+columns = 5
+
+[node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/RightPanel"]
 layout_mode = 0
-offset_left = 750.0
-offset_top = 520.0
-offset_right = 900.0
-offset_bottom = 570.0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 25
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 700
+
+[node name="CardCountLabel" type="Label" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "現在: 00 / 50枚"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DeckScrollContainer" type="ScrollContainer" parent="."]
-layout_mode = 0
-offset_left = 52.0
-offset_top = 140.0
-offset_right = 752.0
-offset_bottom = 740.0
-
-[node name="GridContainer" type="GridContainer" parent="DeckScrollContainer"]
+[node name="SaveButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(125, 50)
 layout_mode = 2
-columns = 4
+text = "保存"

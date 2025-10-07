@@ -1,4 +1,9 @@
 res://scenes/MainMenu.tscn
-res://scripts/game_data.gd
+res://assets/building_parts/床3.tres
+res://scenes/Main.tscn
+res://scenes/game.tscn
+res://scenes/DeckSelect.tscn
+res://scenes/DeckEditor.tscn
+res://scenes/Album.tscn
+res://scenes/Card.tscn
 res://scripts/deck_editor.gd
-res://scripts/card_loader.gd

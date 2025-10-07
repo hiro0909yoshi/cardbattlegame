@@ -22,7 +22,6 @@ GameData="*res://scripts/game_data.gd"
 
 [display]
 
-window/size/viewport_width=2400
-window/size/viewport_height=1960
-window/stretch/mode="canvas_items"
-window/stretch/scale=2.32
+window/size/viewport_width=1852
+window/size/viewport_height=856
+window/stretch/mode="viewport"
