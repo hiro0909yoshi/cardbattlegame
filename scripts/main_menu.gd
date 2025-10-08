@@ -18,8 +18,11 @@ func _on_quest_pressed():
 	# get_tree().change_scene_to_file("res://scenes/QuestSelect.tscn")
 
 func _on_solo_battle_pressed():
-	print("一人対戦選択")
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+	print("一人対戦選択 → ブック選択へ")
+	# バトル用フラグを設定（メタデータを使用）
+	GameData.set_meta("is_selecting_for_battle", true)
+	# Album.tscnに遷移（バトルモードで起動）
+	get_tree().change_scene_to_file("res://scenes/Album.tscn")
 
 func _on_net_battle_pressed():
 	print("NET対戦選択")
@@ -27,6 +30,7 @@ func _on_net_battle_pressed():
 
 func _on_album_pressed():
 	print("アルバム選択")
+	# 通常モードでAlbum.tscnを開く（フラグなし）
 	get_tree().change_scene_to_file("res://scenes/Album.tscn")
 
 func _on_settings_pressed():

@@ -20,13 +20,21 @@ var board_system
 var card_system
 var ui_manager
 
+# カードID入力ダイアログ
+var card_input_dialog: ConfirmationDialog = null
+var card_id_input: LineEdit = null
+
 func _ready():
 	if enabled and OS.is_debug_build():
 		print("【デバッグコマンド】")
 		print("  数字キー1-6: サイコロ固定")
 		print("  0キー: サイコロ固定解除")
 		print("  9キー: 魔力+1000G")
+		print("  Hキー: カードID指定で手札追加（全カード対応）")
 		print("  Dキー: CPU手札表示切替")
+	
+	# カード追加ダイアログを作成
+	create_card_input_dialog()
 
 # システム参照を設定
 func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_system: UIManager):
@@ -34,6 +42,27 @@ func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_sy
 	board_system = b_system
 	card_system = c_system
 	ui_manager = ui_system
+
+# カードID入力ダイアログを作成
+func create_card_input_dialog():
+	card_input_dialog = ConfirmationDialog.new()
+	card_input_dialog.title = "デバッグ: カード追加"
+	card_input_dialog.dialog_text = "追加するカードIDを入力してください"
+	card_input_dialog.size = Vector2(400, 150)
+	
+	# LineEditを作成
+	card_id_input = LineEdit.new()
+	card_id_input.placeholder_text = "カードID"
+	card_id_input.custom_minimum_size = Vector2(200, 30)
+	
+	# ダイアログにLineEditを追加
+	card_input_dialog.add_child(card_id_input)
+	
+	# OKボタン押下時の処理
+	card_input_dialog.confirmed.connect(_on_card_id_confirmed)
+	
+	# シーンツリーに追加（親がいない場合は後で追加）
+	add_child(card_input_dialog)
 
 # デバッグ入力を処理
 func _input(event):
@@ -66,9 +95,83 @@ func _input(event):
 				move_to_empty_land()
 			KEY_9:
 				add_debug_magic()
-			
+			KEY_H:
+				show_card_input_dialog()
 			KEY_T:
 				show_all_tiles_info()
+
+# カードID入力ダイアログを表示
+func show_card_input_dialog():
+	if not card_input_dialog:
+		print("【エラー】ダイアログが初期化されていません")
+		return
+	
+	# 入力欄をクリア
+	card_id_input.text = ""
+	
+	# ダイアログを中央に表示
+	card_input_dialog.popup_centered()
+	
+	# 入力欄にフォーカス
+	card_id_input.grab_focus()
+
+# カードID確定時の処理
+func _on_card_id_confirmed():
+	var input_text = card_id_input.text.strip_edges()
+	
+	# 入力が空の場合
+	if input_text.is_empty():
+		print("【デバッグ】カードIDが入力されていません")
+		return
+	
+	# 数値に変換
+	if not input_text.is_valid_int():
+		print("【デバッグ】無効な入力: ", input_text)
+		return
+	
+	var card_id = input_text.to_int()
+	
+	# CardLoaderで存在確認
+	if CardLoader:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data.is_empty():
+			print("【デバッグ】カードID ", card_id, " は存在しません")
+			return
+	else:
+		print("【エラー】CardLoaderが見つかりません")
+		return
+	
+	# 手札に追加
+	add_card_to_hand(card_id)
+
+# カードを手札に追加
+func add_card_to_hand(card_id: int):
+	if not card_system or not player_system:
+		print("【エラー】システム参照が設定されていません")
+		return
+	
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("【エラー】現在のプレイヤーが見つかりません")
+		return
+	
+	# カードデータを読み込んで手札に追加
+	var card_data = card_system._load_card_data(card_id)
+	if card_data.is_empty():
+		print("【デバッグ】カードID ", card_id, " が見つかりません")
+		return
+	
+	# 手札配列に直接追加
+	if card_system.player_hands.has(current_player.id):
+		card_system.player_hands[current_player.id]["data"].append(card_data)
+		print("【デバッグ】カードID ", card_id, " を手札に追加しました")
+		
+		# 手札UIを更新
+		card_system.update_hand_ui_for_player(current_player.id)
+		
+		emit_signal("debug_action", "add_card", card_id)
+	else:
+		print("【エラー】プレイヤー", current_player.id, "の手札が見つかりません")
 
 # サイコロ固定
 func set_debug_dice(value: int):
@@ -86,11 +189,11 @@ func clear_debug_dice():
 
 # 固定ダイス値を取得
 func get_fixed_dice() -> int:
-	if debug_dice_mode and fixed_dice_value > 0:
+	if debug_dice_mode:
 		return fixed_dice_value
 	return 0
 
-# デバッグ: 敵の土地へ移動
+# 敵の土地に移動
 func move_to_enemy_land():
 	if not player_system or not board_system:
 		return
@@ -99,23 +202,10 @@ func move_to_enemy_land():
 	if not current_player:
 		return
 	
-	# 敵が所有している土地を探す
 	for i in range(board_system.total_tiles):
-		var tile_info = board_system.get_tile_info(i)
-		if tile_info.owner != -1 and tile_info.owner != current_player.id:
-			# クリーチャーがいる土地を優先
-			if not tile_info.creature.is_empty():
-				print("【デバッグ】敵クリーチャーがいるマス", i, "へ移動")
-				player_system.place_player_at_tile(current_player.id, i, board_system)
-				player_system.emit_signal("movement_completed", i)
-				emit_signal("debug_action", "teleport", i)
-				return
-	
-	# クリーチャーがいない敵の土地へ
-	for i in range(board_system.total_tiles):
-		var tile_info = board_system.get_tile_info(i)
-		if tile_info.owner != -1 and tile_info.owner != current_player.id:
-			print("【デバッグ】敵の土地マス", i, "へ移動")
+		var owner = board_system.tile_owners[i]
+		if owner >= 0 and owner != current_player.id:
+			print("【デバッグ】敵の土地（マス", i, "）へテレポート")
 			player_system.place_player_at_tile(current_player.id, i, board_system)
 			player_system.emit_signal("movement_completed", i)
 			emit_signal("debug_action", "teleport", i)
@@ -123,7 +213,7 @@ func move_to_enemy_land():
 	
 	print("【デバッグ】敵の土地が見つかりません")
 
-# デバッグ: 空き地へ移動
+# 空き地に移動
 func move_to_empty_land():
 	if not player_system or not board_system:
 		return
@@ -132,11 +222,9 @@ func move_to_empty_land():
 	if not current_player:
 		return
 	
-	# 空き地を探す
-	for i in range(1, board_system.total_tiles):  # スタート地点を除く
-		var tile_info = board_system.get_tile_info(i)
-		if tile_info.owner == -1 and tile_info.type == board_system.TileType.NORMAL:
-			print("【デバッグ】空き地マス", i, "へ移動")
+	for i in range(board_system.total_tiles):
+		if board_system.tile_owners[i] == -1:
+			print("【デバッグ】空き地（マス", i, "）へテレポート")
 			player_system.place_player_at_tile(current_player.id, i, board_system)
 			player_system.emit_signal("movement_completed", i)
 			emit_signal("debug_action", "teleport", i)

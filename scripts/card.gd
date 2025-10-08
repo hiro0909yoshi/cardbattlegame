@@ -1,16 +1,15 @@
 extends ColorRect
-# カード表示・操作・選択スクリプト - クリーンアップ版
+# カード表示・操作・選択スクリプト - サイズ対応版
 
 var is_dragging = false
 var card_data = {}
 var mouse_over = false
-var card_index = -1  # 手札内のインデックス
-var is_selectable = false  # 選択可能かどうか
-var is_selected = false  # 選択中かどうか
-var original_position: Vector2  # 元の位置
-var original_size: Vector2  # 元のサイズ
+var card_index = -1
+var is_selectable = false
+var is_selected = false
+var original_position: Vector2
+var original_size: Vector2
 
-# カード選択シグナル
 signal card_clicked(index: int)
 
 func _ready():
@@ -23,18 +22,70 @@ func _ready():
 	
 	# マウスフィルターを設定（重要！）
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# サイズ変更時に子要素を調整
+	resized.connect(_on_resized)
+	_adjust_children_size()
+
+# サイズ変更時の処理
+func _on_resized():
+	_adjust_children_size()
+
+# 子要素のサイズを親に合わせて調整（既存ノードのみ）
+func _adjust_children_size():
+	var card_width = size.x
+	var card_height = size.y
+	
+	# NameLabel（上部）- 既存ノードがあれば調整
+	var name_label = get_node_or_null("NameLabel")
+	if name_label:
+		name_label.position = Vector2(10, 10)
+		name_label.size = Vector2(card_width - 70, 40)
+		name_label.add_theme_font_size_override("font_size", int(card_width / 12))
+	
+	# CostLabel（右上）- 既存ノードがあれば調整
+	var cost_label = get_node_or_null("CostLabel")
+	if cost_label:
+		cost_label.position = Vector2(card_width - 60, 10)
+		cost_label.size = Vector2(50, 50)
+		cost_label.add_theme_font_size_override("font_size", int(card_width / 10))
+	
+	# StatsLabel（中央）- 既存ノードがあれば調整
+	var stats_label = get_node_or_null("StatsLabel")
+	if stats_label:
+		stats_label.position = Vector2(10, card_height / 2 - 20)
+		stats_label.size = Vector2(card_width - 20, 40)
+		stats_label.add_theme_font_size_override("font_size", int(card_width / 14))
+	
+	# DescriptionLabel（下部）- 既存ノードがあれば調整
+	var desc_label = get_node_or_null("DescriptionLabel")
+	if desc_label:
+		desc_label.position = Vector2(10, card_height - 100)
+		desc_label.size = Vector2(card_width - 20, 80)
+		desc_label.add_theme_font_size_override("font_size", int(card_width / 18))
 
 func _on_mouse_entered():
 	mouse_over = true
 	if not is_dragging and not is_selectable:
-		z_index = 5  # ホバー時に少し前面に
+		z_index = 5
 
 func _on_mouse_exited():
 	mouse_over = false
 	if not is_dragging and not is_selectable:
-		z_index = 0  # 元に戻す
+		z_index = 0
 
 func load_card_data(card_id):
+	# CardLoaderを使用
+	if CardLoader:
+		card_data = CardLoader.get_card_by_id(card_id)
+		if not card_data.is_empty():
+			update_label()
+			set_element_color()
+			set_rarity_border()
+			_adjust_children_size()
+		return
+	
+	# フォールバック：Cards.json（古い実装）
 	var file = FileAccess.open("res://data/Cards.json", FileAccess.READ)
 	if file == null:
 		return
@@ -55,10 +106,12 @@ func load_card_data(card_id):
 			update_label()
 			set_element_color()
 			set_rarity_border()
+			_adjust_children_size()
 			break
 
 func set_element_color():
-	match card_data.element:
+	var element = card_data.get("element", "")
+	match element:
 		"火": 
 			color = Color(1.0, 0.4, 0.4)
 		"水": 
@@ -95,30 +148,41 @@ func set_rarity_border():
 func update_label():
 	var name_label = get_node_or_null("NameLabel")
 	if name_label:
-		name_label.text = card_data.name
+		name_label.text = card_data.get("name", "???")
 		name_label.add_theme_color_override("font_color", Color.BLACK)
 	
 	var cost_label = get_node_or_null("CostLabel")
 	if cost_label:
-		cost_label.text = str(card_data.cost)
+		var cost = card_data.get("cost", 1)
+		# costが辞書の場合は変換
+		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
+			cost = cost.mp
+		cost_label.text = str(cost)
 		cost_label.add_theme_color_override("font_color", Color.WHITE)
 		cost_label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	
 	var stats_label = get_node_or_null("StatsLabel")
 	if stats_label:
-		stats_label.text = "攻:" + str(card_data.damage) + " 防:" + str(card_data.block)
+		var damage = card_data.get("ap", card_data.get("damage", 0))
+		var block = card_data.get("hp", card_data.get("block", 0))
+		stats_label.text = "攻:" + str(damage) + " 防:" + str(block)
 		stats_label.add_theme_color_override("font_color", Color.BLACK)
 	
 	var desc_label = get_node_or_null("DescriptionLabel")
 	if desc_label:
-		if card_data.type == "攻撃":
-			desc_label.text = "敵に" + str(card_data.damage) + "ダメージを与える"
-		elif card_data.type == "防御":
-			desc_label.text = str(card_data.block) + "の防御を得る"
-		elif card_data.type == "特殊":
-			desc_label.text = card_data.element + "属性の特殊効果"
+		var card_type = card_data.get("type", "")
+		var damage = card_data.get("ap", card_data.get("damage", 0))
+		var block = card_data.get("hp", card_data.get("block", 0))
+		var element = card_data.get("element", "")
+		
+		if card_type == "攻撃":
+			desc_label.text = "敵に" + str(damage) + "ダメージを与える"
+		elif card_type == "防御":
+			desc_label.text = str(block) + "の防御を得る"
+		elif card_type == "特殊":
+			desc_label.text = element + "属性の特殊効果"
 		else:
-			desc_label.text = card_data.element + "属性"
+			desc_label.text = element + "属性"
 		
 		desc_label.add_theme_color_override("font_color", Color.BLACK)
 

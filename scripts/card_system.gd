@@ -13,7 +13,8 @@ const MAX_HAND_SIZE = 6
 const INITIAL_HAND_SIZE = 5
 const CARD_COST_MULTIPLIER = 10
 const CARDS_PER_TYPE = 3
-const CARD_WIDTH = 100      # カードの幅
+const CARD_WIDTH = 240      # カードの幅
+const CARD_HEIGHT = 350     # カードの高さ
 const CARD_SPACING = 20     # カード間の間隔
 
 # カード管理
@@ -27,9 +28,25 @@ func _ready():
 	_initialize_player_hands()
 
 func _initialize_deck():
-	for i in range(1, 13):
-		for j in range(CARDS_PER_TYPE):
-			deck.append(i)
+	# GameDataから選択中のブックを取得
+	var deck_data = GameData.get_current_deck()["cards"]
+	
+	# 空チェック
+	if deck_data.is_empty():
+		print("WARNING: デッキが空です。デフォルトデッキで開始")
+		# 旧処理で仮デッキ作成
+		for i in range(1, 13):
+			for j in range(CARDS_PER_TYPE):
+				deck.append(i)
+	else:
+		# 辞書 {card_id: count} を配列に変換
+		# 例: {1: 3, 5: 2} → [1,1,1,5,5]
+		for card_id in deck_data.keys():
+			var count = deck_data[card_id]
+			for i in range(count):
+				deck.append(card_id)
+		print("✅ ブック", GameData.selected_deck_index + 1, "のデッキを読み込み")
+	
 	deck.shuffle()
 	print("デッキ初期化: ", deck.size(), "枚")
 
@@ -55,28 +72,27 @@ func draw_card_data() -> Dictionary:
 	return _load_card_data(card_id)
 
 func _load_card_data(card_id: int) -> Dictionary:
-	var file = FileAccess.open("res://data/Cards.json", FileAccess.READ)
-	if file == null:
-		print("ERROR: Cards.jsonが開けません")
+	# CardLoaderを使用してカードデータを取得
+	if CardLoader:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data.is_empty():
+			print("WARNING: カードID ", card_id, " が見つかりません")
+			return {}
+		
+		# costを正規化（辞書形式 {"mp": 2} を整数に変換）
+		if card_data.has("cost"):
+			if typeof(card_data.cost) == TYPE_DICTIONARY:
+				if card_data.cost.has("mp"):
+					card_data.cost = card_data.cost.mp
+				else:
+					card_data.cost = 1  # デフォルト値
+		else:
+			card_data.cost = 1  # costがない場合
+		
+		return card_data
+	else:
+		print("ERROR: CardLoaderが見つかりません")
 		return {}
-	
-	var json_text = file.get_as_text()
-	file.close()
-	
-	var json = JSON.new()
-	var parse_result = json.parse(json_text)
-	
-	if parse_result != OK:
-		print("ERROR: JSONパースエラー")
-		return {}
-	
-	var data = json.data
-	for card in data.cards:
-		if card.id == card_id:
-			return card
-	
-	print("WARNING: カードID ", card_id, " が見つかりません")
-	return {}
 
 func _get_hand_parent() -> Node:
 	var possible_paths = [
@@ -169,11 +185,16 @@ func _create_card_node(card_data: Dictionary, parent: Node, index: int) -> Node:
 	if not card:
 		print("ERROR: カードのインスタンス化に失敗")
 		return null
+	
+	# カードサイズを明示的に設定
+	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
+	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 		
 	parent.add_child(card)
 	
+	# カード位置を設定
 	var viewport_size = get_viewport().get_visible_rect().size
-	var card_y = viewport_size.y - 170
+	var card_y = viewport_size.y - CARD_HEIGHT - 20  # 下から20px空ける
 	
 	# 画面中心から配置を計算
 	var total_width = INITIAL_HAND_SIZE * (CARD_WIDTH + CARD_SPACING)
@@ -226,7 +247,7 @@ func _rearrange_player_hand(player_id: int):
 	
 	var player_nodes = player_hands[player_id]["nodes"]
 	var viewport_size = get_viewport().get_visible_rect().size
-	var card_y = viewport_size.y - 170
+	var card_y = viewport_size.y - CARD_HEIGHT - 20  # 下から20px空ける
 	
 	# 現在の手札枚数に応じて中心から再配置
 	var hand_size = player_nodes.size()
@@ -236,9 +257,38 @@ func _rearrange_player_hand(player_id: int):
 	for i in range(player_nodes.size()):
 		var card = player_nodes[i]
 		if card and is_instance_valid(card):
+			card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)  # サイズを再設定
 			card.position = Vector2(start_x + i * (CARD_WIDTH + CARD_SPACING), card_y)
 			if card.has_method("set_selectable"):
 				card.card_index = i
+
+# 手札UIを更新（デバッグ用）
+func update_hand_ui_for_player(player_id: int):
+	if player_id != 0:
+		return  # プレイヤー1以外はUI更新不要
+	
+	var hand_data = player_hands[player_id]["data"]
+	var hand_nodes = player_hands[player_id]["nodes"]
+	
+	# ノード数がデータより少ない場合、不足分を作成
+	if hand_nodes.size() < hand_data.size():
+		var hand_parent = _get_hand_parent()
+		if not hand_parent:
+			print("ERROR: 手札の親ノードが見つかりません")
+			return
+		
+		# 不足分のカードノードを作成
+		for i in range(hand_nodes.size(), hand_data.size()):
+			var card_data = hand_data[i]
+			var card_node = _create_card_node(card_data, hand_parent, i)
+			if card_node:
+				hand_nodes.append(card_node)
+	
+	# 手札を再配置
+	_rearrange_player_hand(player_id)
+	
+	emit_signal("hand_updated")
+	print("手札UI更新完了: ", hand_data.size(), "枚")
 
 func get_hand_size_for_player(player_id: int) -> int:
 	if not player_hands.has(player_id):
@@ -307,7 +357,6 @@ func get_cheapest_card_index_for_player(player_id: int) -> int:
 	return min_index
 
 func set_cards_selectable(selectable: bool):
-
 	var hand_nodes = player_hands[0]["nodes"]
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]

@@ -88,7 +88,7 @@ columns = 2
 [node name="book1" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
 custom_minimum_size = Vector2(500, 200)
 layout_mode = 2
-text = "ブック１"
+text = "初ブック"
 
 [node name="book2" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
 custom_minimum_size = Vector2(500, 200)

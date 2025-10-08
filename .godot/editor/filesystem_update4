@@ -1,9 +1,10 @@
-res://scenes/MainMenu.tscn
+res://scenes/Card.tscn
 res://assets/building_parts/床3.tres
+res://scenes/MainMenu.tscn
 res://scenes/Main.tscn
 res://scenes/game.tscn
-res://scenes/DeckSelect.tscn
 res://scenes/DeckEditor.tscn
 res://scenes/Album.tscn
-res://scenes/Card.tscn
-res://scripts/deck_editor.gd
+res://scripts/ui_components/card_selection_ui.gd
+res://scripts/card_system.gd
+res://scripts/card.gd
