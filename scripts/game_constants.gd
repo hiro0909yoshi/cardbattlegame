@@ -24,7 +24,7 @@ const LEVEL_VALUES = {
 # === カード関連 ===
 const MAX_HAND_SIZE = 6           # 手札上限
 const INITIAL_HAND_SIZE = 5       # 初期手札枚数
-const CARD_COST_MULTIPLIER = 10  # カードコスト倍率（コスト×10G）
+const CARD_COST_MULTIPLIER = 1  # カードコスト倍率（コスト×10G）
 const CARDS_PER_TYPE = 3          # 各カードの枚数
 
 # === 報酬関連 ===

@@ -75,14 +75,47 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		execute_invasion_3d(attacker_index, card_data, tile_info)
 		return
 	
-	# バトル判定（簡易版）
-	var attacker_st = card_data.get("damage", 0)
-	var defender_hp = tile_info.get("creature", {}).get("block", 0)
+	# スキルシステムを使った戦闘処理
+	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
+	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
+	
+	# プレイヤーの土地所有状況を取得
+	var player_lands = {"火": 0, "水": 0, "地": 0, "風": 0}
+	if board_system_ref and board_system_ref.has_method("get_player_lands_by_element"):
+		player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
+	else:
+		# デバッグ用：全属性を持っていることにする
+		print("【デバッグ】土地データ取得不可、テスト用に全属性保有とする")
+		player_lands = {"火": 1, "水": 1, "地": 1, "風": 1}
+	
+	print("  プレイヤー土地: ", player_lands)
+	
+	# 戦闘コンテキストの構築
+	var defender_creature = tile_info.get("creature", {})
+	var battle_context = ConditionChecker.build_battle_context(
+		card_data, 
+		defender_creature,
+		tile_info,
+		{"player_lands": player_lands}
+	)
+	
+	# 強打などの効果を適用
+	var modified_attacker = effect_combat.apply_power_strike(card_data, battle_context)
+	
+	# 強打が適用されたか確認
+	if modified_attacker.get("power_strike_applied", false):
+		print("【強打発動！】AP: ", card_data.get("ap", 0), " → ", modified_attacker.get("ap", 0))
+	
+	# 修正後のステータスを使用
+	var attacker_st = modified_attacker.get("ap", 0)
+	var defender_hp = defender_creature.get("hp", 0)
 	
 	print("========== バトル開始 ==========")
 	print("攻撃側: ", card_data.get("name", "不明"), " [", card_data.get("element", "?"), "]")
+	print("  基本AP: ", card_data.get("ap", 0), " HP: ", card_data.get("hp", 0))
+	print("  ability_parsed: ", card_data.get("ability_parsed", {}))
 	print("防御側: ", tile_info.get("creature", {}).get("name", "不明"), " [", tile_info.get("creature", {}).get("element", "?"), "]")
-	print("攻撃側ST: ", attacker_st, " vs 防御側HP: ", defender_hp)
+	print("攻撃側AP: ", attacker_st, " vs 防御側HP: ", defender_hp)
 	
 	if attacker_st >= defender_hp:
 		print(">>> 攻撃側の勝利！土地を獲得！")
@@ -181,15 +214,15 @@ func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, 
 	var defender_bonuses = calculate_creature_bonuses(defender_data, attacker_data, tile_info, false, defender_player_id, board_system)
 	
 	# 最終的な能力値（STとHPに別々のボーナスを適用）
-	var final_attacker_st = attacker_data.get("damage", 0) + attacker_bonuses.st_bonus
-	var final_attacker_hp = attacker_data.get("block", 0) + attacker_bonuses.hp_bonus
-	var final_defender_st = defender_data.get("damage", 0) + defender_bonuses.st_bonus
-	var final_defender_hp = defender_data.get("block", 0) + defender_bonuses.hp_bonus
+	var final_attacker_st = attacker_data.get("ap", 0) + attacker_bonuses.st_bonus  # damage -> ap
+	var final_attacker_hp = attacker_data.get("hp", 0) + attacker_bonuses.hp_bonus  # block -> hp
+	var final_defender_st = defender_data.get("ap", 0) + defender_bonuses.st_bonus  # damage -> ap
+	var final_defender_hp = defender_data.get("hp", 0) + defender_bonuses.hp_bonus  # block -> hp
 	
-	print("攻撃側: ST=", attacker_data.get("damage", 0), "+", attacker_bonuses.st_bonus, "=", final_attacker_st, 
-		  " HP=", attacker_data.get("block", 0), "+", attacker_bonuses.hp_bonus, "=", final_attacker_hp)
-	print("防御側: ST=", defender_data.get("damage", 0), "+", defender_bonuses.st_bonus, "=", final_defender_st,
-		  " HP=", defender_data.get("block", 0), "+", defender_bonuses.hp_bonus, "=", final_defender_hp)
+	print("攻撃側: AP=", attacker_data.get("ap", 0), "+", attacker_bonuses.st_bonus, "=", final_attacker_st, 
+		  " HP=", attacker_data.get("hp", 0), "+", attacker_bonuses.hp_bonus, "=", final_attacker_hp)
+	print("防御側: AP=", defender_data.get("ap", 0), "+", defender_bonuses.st_bonus, "=", final_defender_st,
+		  " HP=", defender_data.get("hp", 0), "+", defender_bonuses.hp_bonus, "=", final_defender_hp)
 	
 	# 先制攻撃を考慮したバトル判定
 	var result = determine_battle_result_with_priority(
@@ -205,7 +238,7 @@ func execute_invasion_battle(attacker_player_id: int, attacker_hand_index: int, 
 		"winner": result.winner,
 		"attacker_st": final_attacker_st,
 		"defender_hp": final_defender_hp,
-		"damage": abs(final_attacker_st - final_defender_hp),
+		"damage": abs(final_attacker_st - final_defender_hp),  # TODO: これも後でap/hpベースに変更
 		"land_captured": false,
 		"creature_destroyed": false,
 		"battle_type": result.get("battle_type", "normal")
@@ -322,7 +355,7 @@ func determine_battle_result_with_priority(attacker_st: int, attacker_hp: int, d
 	}
 	
 	# 1. 攻撃側の先制攻撃
-	print("  [先制攻撃] 攻撃側ST(", attacker_st, ") vs 防御側HP(", defender_hp, ")")
+	print("  [先制攻撃] 攻撃側AP(", attacker_st, ") vs 防御側HP(", defender_hp, ")")
 	if attacker_st >= defender_hp:
 		# 防御側が倒れる
 		print("  → 防御側クリーチャー撃破！")
@@ -382,10 +415,10 @@ func predict_battle_outcome(attacker: Dictionary, defender: Dictionary, tile: Di
 	var defender_bonuses = calculate_creature_bonuses(defender, attacker, tile, false, defender_player_id, board_system, true)
 	
 	var prediction = {
-		"attacker_st": attacker.get("damage", 0) + attacker_bonuses.st_bonus,
-		"attacker_hp": attacker.get("block", 0) + attacker_bonuses.hp_bonus,
-		"defender_st": defender.get("damage", 0) + defender_bonuses.st_bonus,
-		"defender_hp": defender.get("block", 0) + defender_bonuses.hp_bonus,
+		"attacker_st": attacker.get("ap", 0) + attacker_bonuses.st_bonus,  # damage -> ap
+		"attacker_hp": attacker.get("hp", 0) + attacker_bonuses.hp_bonus,  # block -> hp
+		"defender_st": defender.get("ap", 0) + defender_bonuses.st_bonus,  # damage -> ap
+		"defender_hp": defender.get("hp", 0) + defender_bonuses.hp_bonus,  # block -> hp
 		"attacker_st_bonus": attacker_bonuses.st_bonus,
 		"attacker_hp_bonus": attacker_bonuses.hp_bonus,
 		"defender_st_bonus": defender_bonuses.st_bonus,

@@ -7,7 +7,7 @@ extends Node
 var board_system_3d  # BoardSystem3Dクラスの型指定を削除
 var player_system: PlayerSystem
 var card_system: CardSystem
-var battle_system: BattleSystem
+var battle_system  # BattleSystemクラスの型指定を削除（エラー回避）
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var special_tile_system: SpecialTileSystem

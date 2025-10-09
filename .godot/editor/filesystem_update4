@@ -1,10 +1,11 @@
-res://scenes/Card.tscn
+res://scenes/game.tscn
 res://assets/building_parts/床3.tres
+res://data/fire.json
 res://scenes/MainMenu.tscn
 res://scenes/Main.tscn
-res://scenes/game.tscn
 res://scenes/DeckEditor.tscn
 res://scenes/Album.tscn
-res://scripts/ui_components/card_selection_ui.gd
+res://scenes/Card.tscn
 res://scripts/card_system.gd
-res://scripts/card.gd
+res://scripts/game_constants.gd
+res://scripts/skills/effect_combat.gd

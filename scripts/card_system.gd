@@ -11,7 +11,7 @@ signal hand_updated()
 const MAX_PLAYERS = 4
 const MAX_HAND_SIZE = 6
 const INITIAL_HAND_SIZE = 5
-const CARD_COST_MULTIPLIER = 10
+const CARD_COST_MULTIPLIER = 1
 const CARDS_PER_TYPE = 3
 const CARD_WIDTH = 240      # カードの幅
 const CARD_HEIGHT = 350     # カードの高さ
