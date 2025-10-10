@@ -32,17 +32,17 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 	var keywords = ability_parsed.get("keywords", [])
 	if "強打" in keywords:
 		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-		var conditions = keyword_conditions.get("強打", {})
-		return _evaluate_single_condition(conditions, battle_context)
+		var keyword_cond_data = keyword_conditions.get("強打", {})
+		return _evaluate_single_condition(keyword_cond_data, battle_context)
 	
 	return false
 
 # 強打条件の評価
 func _evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) -> bool:
-	var conditions = effect.get("conditions", [])
+	var effect_conditions = effect.get("conditions", [])
 	
 	# 全条件がtrueである必要がある（AND条件）
-	for condition in conditions:
+	for condition in effect_conditions:
 		if not _evaluate_single_condition(condition, context):
 			return false
 	
@@ -162,8 +162,8 @@ func check_instant_death(creature_data: Dictionary, battle_context: Dictionary) 
 	
 	for effect in effects:
 		if effect.get("effect_type") == "instant_death":
-			var conditions = effect.get("conditions", [])
-			if check_all_conditions(conditions, battle_context):
+			var effect_conditions = effect.get("conditions", [])
+			if check_all_conditions(effect_conditions, battle_context):
 				return {
 					"can_instant_death": true,
 					"probability": effect.get("probability", 60)
@@ -184,8 +184,8 @@ func check_nullify(creature_data: Dictionary, attack_context: Dictionary) -> boo
 			match nullify_type:
 				"normal_attack":
 					if attack_type == "normal":
-						var conditions = effect.get("conditions", [])
-						if check_all_conditions(conditions, attack_context):
+						var effect_conditions = effect.get("conditions", [])
+						if check_all_conditions(effect_conditions, attack_context):
 							return true
 				"scroll":
 					if attack_type == "scroll":

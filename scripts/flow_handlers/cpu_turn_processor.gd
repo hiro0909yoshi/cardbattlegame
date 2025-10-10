@@ -145,7 +145,7 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 	_complete_action()
 
 # 侵略完了後の処理
-func _on_invasion_completed(success: bool, tile_index: int):
+func _on_invasion_completed(_success: bool, _tile_index: int):
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
@@ -215,11 +215,11 @@ func _complete_action():
 # === 拡張用インターフェース ===
 
 # 難易度設定（将来実装用）
-func set_difficulty(level: String):
+func set_difficulty(_level: String):
 	pass
 	# TODO: 難易度に応じた処理変更
 
 # CPU性格設定（将来実装用）
-func set_personality(type: String):
+func set_personality(_type: String):
 	pass
 	# TODO: 性格に応じた戦略変更

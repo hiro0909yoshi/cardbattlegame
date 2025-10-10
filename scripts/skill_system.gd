@@ -3,7 +3,8 @@ class_name SkillSystem
 
 # スキル効果管理システム
 
-signal skill_activated(skill_name: String, target: String)
+# TODO: 将来実装予定
+# signal skill_activated(skill_name: String, target: String)
 signal buff_applied(target: String, buff_type: String, value: int)
 signal debuff_applied(target: String, debuff_type: String, value: int)
 

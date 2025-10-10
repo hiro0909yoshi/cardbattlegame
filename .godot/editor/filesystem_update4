@@ -20,3 +20,17 @@ res://scripts/card_system.gd
 res://scripts/ui_manager.gd
 res://scripts/tile_action_processor.gd
 res://scripts/ui_components/card_selection_ui.gd
+res://scripts/card.gd
+res://scripts/debug_controller.gd
+res://scripts/movement_controller.gd
+res://scripts/skill_system.gd
+res://scripts/skills/skill_log_system.gd
+res://scripts/board_system_3d.gd
+res://scripts/tile_info_display.gd
+res://scripts/flow_handlers/cpu_turn_processor.gd
+res://scripts/skills/effect_combat.gd
+res://scripts/skills/skill_effect_base.gd
+res://scripts/tiles/base_tiles.gd
+res://scripts/tiles/neutral_tile.gd
+res://scripts/skills/condition_checker.gd
+res://scripts/game_data.gd

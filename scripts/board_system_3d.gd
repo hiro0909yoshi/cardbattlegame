@@ -190,11 +190,11 @@ func move_player_3d(player_id: int, steps: int):
 	if movement_controller:
 		movement_controller.move_player(player_id, steps)
 
-func _on_movement_started(player_id: int):
+func _on_movement_started(_player_id: int):
 	if ui_manager:
 		ui_manager.phase_label.text = "移動中..."
 
-func _on_movement_completed(player_id: int, final_tile: int):
+func _on_movement_completed(_player_id: int, final_tile: int):
 	process_tile_landing(final_tile)
 
 # === タイルアクション処理（TileActionProcessorに委譲） ===

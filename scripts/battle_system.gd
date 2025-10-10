@@ -3,9 +3,12 @@ class_name BattleSystem
 
 # バトル管理システム - 3D専用版
 
-signal battle_started(attacker: Dictionary, defender: Dictionary)
-signal battle_ended(winner: String, result: Dictionary)
-signal battle_animation_finished()
+# TODO: 将来実装予定
+# signal battle_started(attacker: Dictionary, defender: Dictionary)
+# TODO: 将来実装予定
+# signal battle_ended(winner: String, result: Dictionary)
+# TODO: 将来実装予定
+# signal battle_animation_finished()
 signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
@@ -75,7 +78,6 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	
 	# スキルシステムを使った戦闘処理
 	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
-	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
 	
 	# プレイヤーの土地所有状況を取得
 	var player_lands = {"火": 0, "水": 0, "地": 0, "風": 0}

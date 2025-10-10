@@ -125,7 +125,7 @@ func calculate_display_toll(tile_info: Dictionary, tile_index: int) -> int:
 
 # 表示モードを切り替え
 func switch_mode():
-	current_mode = (current_mode + 1) % DisplayMode.size()
+	current_mode = DisplayMode.values()[(current_mode + 1) % 3]
 	
 	var mode_names = ["通行料", "HP", "ST"]
 	print("表示モード切替: ", mode_names[current_mode])

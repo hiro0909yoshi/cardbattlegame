@@ -6,7 +6,7 @@ func _ready():
 	super._ready()
 
 # 無属性タイルは連鎖しない
-func get_chain_count(board_system) -> int:
+func get_chain_count(_board_system) -> int:
 	return 0  # 常に0を返す
 
 # 通行料計算（連鎖ボーナスなし）

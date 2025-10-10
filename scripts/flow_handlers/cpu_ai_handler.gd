@@ -51,7 +51,7 @@ func decide_summon(current_player) -> void:
 	emit_signal("summon_decided", -1)
 
 # CPU侵略判断（守備なしの敵地）
-func decide_invasion(current_player, tile_info: Dictionary) -> void:
+func decide_invasion(current_player, _tile_info: Dictionary) -> void:
 	print("CPU侵略判断中...")
 	
 	# 確率で侵略を決定
@@ -176,7 +176,7 @@ func evaluate_all_cards_for_battle(current_player, defender: Dictionary, tile_in
 
 # バトル結果を評価
 # バトル結果を評価（予測ロジックを内包）
-func evaluate_battle_outcome(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary) -> int:
+func evaluate_battle_outcome(attacker: Dictionary, defender: Dictionary, _tile_info: Dictionary) -> int:
 	# 基本的な戦力差を計算
 	var attacker_st = attacker.get("ap", 0)
 	var attacker_hp = attacker.get("hp", 0)
@@ -187,15 +187,10 @@ func evaluate_battle_outcome(attacker: Dictionary, defender: Dictionary, tile_in
 	var score = attacker_st - defender_hp
 	
 	# 勝利可能性の判定
-	var likely_winner = ""
 	if attacker_st >= defender_hp:
-		likely_winner = "attacker"
 		score += 50  # 勝利可能性ボーナス
 	elif defender_st >= attacker_hp:
-		likely_winner = "defender"
 		score -= 50  # 負ける可能性ペナルティ
-	else:
-		likely_winner = "draw"
 	
 	return score
 

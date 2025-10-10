@@ -103,7 +103,6 @@ func calculate_path(player_id: int, steps: int) -> Array:
 
 # 経路に沿って移動
 func move_along_path(player_id: int, path: Array) -> void:
-	var player_node = player_nodes[player_id]
 	var previous_tile = player_tiles[player_id]
 	
 	for tile_index in path:

@@ -404,6 +404,6 @@ func _calculate_win_rate() -> float:
 
 func _format_play_time() -> String:
 	var seconds = player_data.stats.play_time_seconds
-	var hours = seconds / 3600
-	var minutes = (seconds % 3600) / 60
+	var hours = int(seconds / 3600.0)
+	var minutes = int((seconds % 3600) / 60.0)
 	return str(hours) + "時間" + str(minutes) + "分"

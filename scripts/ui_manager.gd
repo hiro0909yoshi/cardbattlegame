@@ -334,11 +334,11 @@ func connect_card_system_signals():
 		card_system_ref.hand_updated.connect(_on_hand_updated)
 
 # カードが引かれた時の処理
-func _on_card_drawn(card_data: Dictionary):
+func _on_card_drawn(_card_data: Dictionary):
 	pass
 
 # カードが使用された時の処理
-func _on_card_used(card_data: Dictionary):
+func _on_card_used(_card_data: Dictionary):
 	pass
 
 # 手札が更新された時の処理
@@ -375,7 +375,7 @@ func update_hand_display(player_id: int):
 	rearrange_hand(player_id)
 
 # カードノードを生成
-func create_card_node(card_data: Dictionary, index: int) -> Node:
+func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	if not is_instance_valid(hand_container):
 		print("ERROR: 手札コンテナが無効です")
 		return null
@@ -418,33 +418,15 @@ func rearrange_hand(player_id: int):
 	var viewport_size = get_viewport().get_visible_rect().size
 	var hand_size = card_nodes.size()
 	
-	# 画面幅の80%を最大幅とする
-	var max_width = viewport_size.x * 0.8
-	
-	# 通常サイズでの全体幅を計算
-	var normal_total_width = hand_size * CARD_WIDTH + (hand_size - 1) * CARD_SPACING
-	
-	# スケール率を計算（最大幅を超える場合は縮小）
-	var scale = 1.0
-	if normal_total_width > max_width:
-		scale = max_width / normal_total_width
-	
-	# 縮小後のサイズを計算
-	var scaled_card_width = CARD_WIDTH * scale
-	var scaled_card_height = CARD_HEIGHT * scale
-	var scaled_spacing = CARD_SPACING * scale
-	
-	# 実際の全体幅を計算
-	var total_width = hand_size * scaled_card_width + (hand_size - 1) * scaled_spacing
-	var start_x = (viewport_size.x - total_width) / 2
-	var card_y = viewport_size.y - scaled_card_height - 20
+	# CardUIHelperを使用してレイアウト計算
+	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_size)
 	
 	# カードを配置
 	for i in range(card_nodes.size()):
 		var card = card_nodes[i]
 		if card and is_instance_valid(card):
-			card.size = Vector2(scaled_card_width, scaled_card_height)
-			card.position = Vector2(start_x + i * (scaled_card_width + scaled_spacing), card_y)
+			card.size = Vector2(layout.card_width, layout.card_height)
+			card.position = Vector2(layout.start_x + i * (layout.card_width + layout.spacing), layout.card_y)
 			if card.has_method("set_selectable"):
 				card.card_index = i
 

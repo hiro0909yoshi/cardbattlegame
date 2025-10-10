@@ -115,7 +115,7 @@ func update_visual():
 		mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, (level - 1) * 0.1)
 
 # 属性連鎖数を取得（子クラスでオーバーライド可能）
-func get_chain_count(board_system) -> int:
+func get_chain_count(_board_system) -> int:
 	if tile_type == "neutral":
 		return 0  # 無属性は連鎖しない
 	

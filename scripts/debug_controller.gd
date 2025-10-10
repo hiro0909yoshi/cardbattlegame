@@ -203,8 +203,8 @@ func move_to_enemy_land():
 		return
 	
 	for i in range(board_system.total_tiles):
-		var owner = board_system.tile_owners[i]
-		if owner >= 0 and owner != current_player.id:
+		var tile_owner = board_system.tile_owners[i]
+		if tile_owner >= 0 and tile_owner != current_player.id:
 			print("【デバッグ】敵の土地（マス", i, "）へテレポート")
 			player_system.place_player_at_tile(current_player.id, i, board_system)
 			player_system.emit_signal("movement_completed", i)

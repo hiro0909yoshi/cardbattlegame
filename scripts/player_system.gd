@@ -4,9 +4,8 @@ class_name PlayerSystem
 # プレイヤー管理システム - 3D専用版
 
 signal dice_rolled(value: int)
-signal movement_started()
-signal movement_completed(final_tile: int)
-signal magic_changed(player_id: int, new_value: int)
+# TODO: 将来実装予定
+# signal magic_changed(player_id: int, new_value: int)
 signal player_won(player_id: int)
 
 # 定数をpreload

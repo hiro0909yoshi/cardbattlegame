@@ -190,10 +190,10 @@ func _check_single_condition(condition: Dictionary, context: Dictionary) -> bool
 		"is_defending":
 			return not context.get("is_attacker", true)
 		"element_land_count":
-			var element = condition.get("element", "")
+			var cond_element = condition.get("element", "")
 			var count = condition.get("count", 0)
 			var player_lands = context.get("player_lands", {})
-			return player_lands.get(element, 0) >= count
+			return player_lands.get(cond_element, 0) >= count
 		_:
 			# 未実装の条件はtrueとして扱う（後で実装）
 			push_warning("未実装の条件タイプ: " + cond_type)
@@ -237,7 +237,7 @@ func _evaluate_formula(formula_str: String, context: Dictionary) -> int:
 	return int(result)
 
 # 効果を適用（派生クラスで実装）
-func apply_effect(target_node, context: Dictionary) -> void:
+func apply_effect(_target_node, _context: Dictionary) -> void:
 	push_error("apply_effect()は派生クラスで実装してください")
 	pass
 

@@ -5,7 +5,8 @@ class_name SpecialTileSystem
 # 注意: ワープ機能は将来的にマス自体（BaseTile派生）が持つ予定
 
 signal special_tile_activated(tile_type: String, player_id: int, tile_index: int)
-signal warp_triggered(from_tile: int, to_tile: int)
+# TODO: 将来実装予定
+# signal warp_triggered(from_tile: int, to_tile: int)
 signal card_draw_triggered(player_id: int, count: int)
 signal checkpoint_passed(player_id: int, bonus: int)
 signal special_action_completed()
@@ -85,12 +86,12 @@ func handle_card_tile(player_id: int):
 
 # ワープゲートかチェック（MovementController3Dから使用）
 # 注意: 3D版ではマス自体がワープ機能を持つため、常にfalseを返す
-func is_warp_gate(tile_index: int) -> bool:
+func is_warp_gate(_tile_index: int) -> bool:
 	return false
 
 # ワープペアを取得（MovementController3Dから使用）
 # 注意: 3D版ではマス自体がワープ機能を持つため、常に-1を返す
-func get_warp_pair(tile_index: int) -> int:
+func get_warp_pair(_tile_index: int) -> int:
 	return -1
 
 # タイルが特殊マスかチェック

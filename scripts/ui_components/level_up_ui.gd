@@ -108,8 +108,8 @@ func add_chain_bonus_label(tile_index: int, tile_info: Dictionary):
 	if not board_system_ref:
 		return
 	
-	var owner = tile_info.get("owner", -1)
-	var chain_bonus = board_system_ref.calculate_chain_bonus(tile_index, owner)
+	var tile_owner = tile_info.get("owner", -1)
+	var chain_bonus = board_system_ref.calculate_chain_bonus(tile_index, tile_owner)
 	
 	if chain_bonus > 1.0:
 		var label = Label.new()

@@ -108,7 +108,7 @@ func apply_reflection(damage: int, defender: Dictionary, attack_type: String = "
 	# 通常攻撃の反射
 	if "反射" in defender_abilities and attack_type == "normal":
 		result.reflected = true
-		result.reflected_damage = damage / 2  # 半分を反射
+		result.reflected_damage = int(damage / 2.0)  # 半分を反射
 		print("反射発動！ %d ダメージを反射" % result.reflected_damage)
 	
 	# 巻物の反射
@@ -120,7 +120,7 @@ func apply_reflection(damage: int, defender: Dictionary, attack_type: String = "
 	return result
 
 # 再生効果の適用
-func apply_regeneration(creature: Dictionary, turn_context: Dictionary) -> int:
+func apply_regeneration(creature: Dictionary, _turn_context: Dictionary) -> int:
 	var heal_amount = 0
 	var abilities = _get_keywords(creature)
 	
@@ -147,7 +147,7 @@ func apply_regeneration(creature: Dictionary, turn_context: Dictionary) -> int:
 	return int(heal_amount)
 
 # 即死効果の判定と適用
-func apply_instant_death(attacker: Dictionary, defender: Dictionary, battle_context: Dictionary) -> bool:
+func apply_instant_death(attacker: Dictionary, _defender: Dictionary, battle_context: Dictionary) -> bool:
 	var condition_checker = ConditionChecker.new()
 	var instant_death_result = condition_checker.check_instant_death(attacker, battle_context)
 	
@@ -180,10 +180,10 @@ func apply_support(creature: Dictionary, support_creatures: Array) -> Dictionary
 				if effect.get("effect_type") == "support":
 					var allowed_elements = effect.get("elements", [])
 					if allowed_elements.is_empty() or support_element in allowed_elements:
-						modified_stats.ap += support_ap / 2  # 援護は半分の効果
-						modified_stats.hp += support_hp / 2
+						modified_stats.ap += int(support_ap / 2.0)  # 援護は半分の効果
+						modified_stats.hp += int(support_hp / 2.0)
 						print("援護発動！ %s から AP+%d, HP+%d" % [
-							supporter.get("name", ""), support_ap/2, support_hp/2
+							supporter.get("name", ""), int(support_ap/2.0), int(support_hp/2.0)
 						])
 	
 	return modified_stats
@@ -219,18 +219,18 @@ func apply_defender_bonus(creature: Dictionary, battle_context: Dictionary) -> D
 func _get_condition_text(creature_stats: Dictionary) -> String:
 	var ability_parsed = creature_stats.get("ability_parsed", {})
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var conditions = keyword_conditions.get("強打", {})
+	var keyword_cond_data = keyword_conditions.get("強打", {})
 	
-	var cond_type = conditions.get("condition_type", "")
+	var cond_type = keyword_cond_data.get("condition_type", "")
 	match cond_type:
 		"mhp_below":
-			return "MHP%d以下" % conditions.get("value", 0)
+			return "MHP%d以下" % keyword_cond_data.get("value", 0)
 		"mhp_above":
-			return "MHP%d以上" % conditions.get("value", 0)
+			return "MHP%d以上" % keyword_cond_data.get("value", 0)
 		"enemy_element":
-			return "%s属性の敵" % conditions.get("element", "")
+			return "%s属性の敵" % keyword_cond_data.get("element", "")
 		"on_element_land":
-			var elements = conditions.get("elements", [])
+			var elements = keyword_cond_data.get("elements", [])
 			return "%s土地" % "/".join(elements)
 		"has_all_elements":
 			return "火水地風全て"

@@ -140,36 +140,14 @@ func create_pass_button(hand_count: int):
 			pass_button.text = "パス"
 	
 	# 位置設定（手札の右側）
-	# UIManagerの定数を使用
+	# CardUIHelperを使用してレイアウト計算
 	var viewport_size = get_viewport().get_visible_rect().size
-	var card_width = 290  # UIManager.CARD_WIDTH
-	var card_spacing = 30  # UIManager.CARD_SPACING
-	var card_height = 390  # UIManager.CARD_HEIGHT
+	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_count)
 	
-	# 画面幅の80%を最大幅とする
-	var max_width = viewport_size.x * 0.8
-	
-	# 通常サイズでの全体幅を計算
-	var normal_total_width = hand_count * card_width + (hand_count - 1) * card_spacing
-	
-	# スケール率を計算（最大幅を超える場合は縮小）
-	var scale = 1.0
-	if normal_total_width > max_width:
-		scale = max_width / normal_total_width
-	
-	# 縮小後のサイズを計算
-	var scaled_card_width = card_width * scale
-	var scaled_card_height = card_height * scale
-	var scaled_spacing = card_spacing * scale
-	
-	# 実際の全体幅を計算
-	var total_width = hand_count * scaled_card_width + (hand_count - 1) * scaled_spacing
-	var start_x = (viewport_size.x - total_width) / 2
-
 	# 最後のカードの右側に配置（間隔を空けて）
-	var last_card_x = start_x + hand_count * scaled_card_width + (hand_count - 1) * scaled_spacing + scaled_spacing
-	pass_button.position = Vector2(last_card_x, viewport_size.y - scaled_card_height - 20)
-	pass_button.size = Vector2(scaled_card_width, scaled_card_height)
+	var last_card_x = layout.start_x + hand_count * layout.card_width + (hand_count - 1) * layout.spacing + layout.spacing
+	pass_button.position = Vector2(last_card_x, layout.card_y)
+	pass_button.size = Vector2(layout.card_width, layout.card_height)
 	pass_button.pressed.connect(_on_pass_button_pressed)
 	
 	# ボタンスタイル設定

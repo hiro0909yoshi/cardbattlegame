@@ -10,7 +10,8 @@ var is_selected = false
 var original_position: Vector2
 var original_size: Vector2
 
-signal card_clicked(index: int)
+# TODO: 将来実装予定
+# signal card_clicked(index: int)
 
 func _ready():
 	# マウスイベントを接続

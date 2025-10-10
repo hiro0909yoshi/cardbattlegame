@@ -20,7 +20,7 @@ var ui_manager: UIManager
 var cpu_turn_processor: CPUTurnProcessor
 
 # 状態管理
-var is_processing = false
+var is_action_processing = false
 
 func _ready():
 	pass
@@ -45,7 +45,7 @@ func set_cpu_processor(cpu_processor: CPUTurnProcessor):
 
 # タイル到着時のメイン処理
 func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array):
-	if is_processing:
+	if is_action_processing:
 		print("Warning: Already processing tile action")
 		return
 	
@@ -53,7 +53,7 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 		emit_signal("action_completed")
 		return
 	
-	is_processing = true
+	is_action_processing = true
 	
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
@@ -129,7 +129,7 @@ func show_battle_ui(mode: String):
 
 # カード選択時の処理
 func on_card_selected(card_index: int):
-	if not is_processing:
+	if not is_action_processing:
 		print("Warning: Not processing any action")
 		return
 	
@@ -187,7 +187,7 @@ func execute_summon(card_index: int):
 
 # パス処理（通行料支払い）
 func on_action_pass():
-	if not is_processing:
+	if not is_action_processing:
 		return
 	
 	var current_player_index = board_system.current_player_index
@@ -203,7 +203,7 @@ func on_action_pass():
 
 # レベルアップ選択時の処理
 func on_level_up_selected(target_level: int, cost: int):
-	if not is_processing:
+	if not is_action_processing:
 		return
 	
 	if target_level == 0 or cost == 0:
@@ -262,5 +262,5 @@ func _is_special_tile(tile_type: String) -> bool:
 
 # アクション完了
 func _complete_action():
-	is_processing = false
+	is_action_processing = false
 	emit_signal("action_completed")
