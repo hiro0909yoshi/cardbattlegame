@@ -1,200 +1,47 @@
 # 🐛 カルドセプト風カードバトルゲーム - 課題管理
 
 ## 目次
-1. [既知のバグ](#既知のバグ)
-2. [バランス調整項目](#バランス調整項目)
-3. [パフォーマンス問題](#パフォーマンス問題)
-4. [UI/UX改善](#uiux改善)
-5. [技術的負債](#技術的負債)
-6. [要望・提案](#要望提案)
+1. [解決済みの課題](#解決済みの課題)
+2. [既知のバグ](#既知のバグ)
+3. [バランス調整項目](#バランス調整項目)
+4. [パフォーマンス問題](#パフォーマンス問題)
+5. [UI/UX改善](#uiux改善)
+6. [技術的負債](#技術的負債)
+7. [要望・提案](#要望提案)
+
+---
+
+## 解決済みの課題
+
+### ✅ 解決済み（2025/01/11）
+
+#### ~~BUG-000: ターン終了処理の重複実行~~
+**解決日**: 2025/01/11  
+**解決方法**: シグナル経路の完全一本化 + 2D版コード削除
+
+**元の問題**: ターンが飛ばされる、`end_turn()`の重複実行  
+**影響範囲**: GameFlowManager, BoardSystem3D
+
+#### ~~ISSUE-001: 手札調整システムの未実装~~
+**解決日**: 2025/01/11  
+**実装内容**: 
+- `discard_card()` 統一関数の実装
+- ターン終了時の手札調整処理（人間: 手動選択、CPU: 自動）
+- 捨て札理由の分類（use/discard/forced/destroy）
+- 手札表示の動的スケール（画面80%対応）
+
+#### ~~TECH-001: 古い2Dコードの削除~~
+**解決日**: 2025/01/11  
+**削除内容**:
+- game.tscn（2D版シーン）
+- board_system.gd（2D版ボードシステム）
+- 2D関連の分岐コード
 
 ---
 
 ## 既知のバグ
 
 ### 🔴 Critical（ゲーム進行に影響）
-
-#### BUG-000: ターン終了処理の重複実行
-**報告日**: 2025/01/10  
-**優先度**: 最高  
-**最終更新**: 2025/01/10  
-**優先度**: 最高  
-**影響範囲**: GameFlowManager, BoardSystem3D, TileActionProcessor
-
-**症状**:
-- ターンが飛ばされる（プレイヤー1→プレイヤー3など）
-- `end_turn()`が複数回呼ばれる
-- フェーズ管理の不整合
-- 頻繁に発生し、ゲーム進行を妨げる
-
-**ターン終了処理の責任所在**:
-```
-【完全な呼び出しチェーン】
-
-1. TileActionProcessor (tile_action_processor.gd)
-   └─ _complete_action() 
-	  └─ emit_signal("action_completed")
-		 │
-		 ↓
-2. BoardSystem3D (board_system_3d.gd)
-   └─ _on_action_completed()  [Line 219]
-	  ├─ if is_waiting_for_action: (重複チェック)
-	  └─ emit_signal("tile_action_completed")
-		 │
-		 ↓
-3. GameFlowManager (game_flow_manager.gd)
-   └─ _on_tile_action_completed_3d()  [Line 134]
-	  ├─ if current_phase == END_TURN/SETUP: return (重複チェック)
-	  └─ end_turn()  [Line 140]
-		 └─ emit_signal("turn_ended", player_id)
-```
-
-**tile_action_completedが発火される全箇所**:
-
-**A. BoardSystem3D経由（正常系）**:
-```gdscript
-# board_system_3d.gd
-Line 221: _on_action_completed()
-  ← tile_action_processor.action_completed
-  ← cpu_turn_processor.cpu_action_completed
-```
-
-**B. GameFlowManager内での直接発火（問題系）**:
-```gdscript
-# game_flow_manager.gd
-Line 151: _on_cpu_summon_decided()
-  └─ board_system_3d.emit_signal("tile_action_completed")
-
-Line 188: _on_cpu_level_up_decided()
-  └─ board_system_3d.emit_signal("tile_action_completed")
-
-Line 210-219: on_level_up_selected()
-  └─ board_system_3d.emit_signal("tile_action_completed")
-```
-
-**C. 他のシグナル経由**:
-```gdscript
-# battle_system → board_system_3d._on_invasion_completed()
-# special_tile_system → tile_action_processor._on_special_action_completed()
-```
-
-**根本原因**:
-1. **シグナル経路の二重化**
-   - 正常: TileActionProcessor → BoardSystem3D → GameFlowManager
-   - 異常: GameFlowManagerが直接BoardSystem3Dのシグナルを発火
-   
-2. **非同期処理の競合**
-   - バトル完了とアクション完了が同時発火
-   - `await`中にフェーズが変わりチェックが無効化
-
-3. **2D版と3D版の混在**
-   - CPU関連の古いコード（Line 151, 188, 210-219）が残存
-   - これらは削除予定だが放置されている
-
-**重複防止機構（現状）**:
-```gdscript
-# game_flow_manager.gd Line 134-138
-func _on_tile_action_completed_3d():
-	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
-		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
-		return
-	end_turn()
-
-# game_flow_manager.gd Line 230-233
-func end_turn():
-	if current_phase == GamePhase.END_TURN:
-		print("Warning: Already ending turn")
-		return
-	# ...処理...
-
-# board_system_3d.gd Line 219-223
-func _on_action_completed():
-	if not is_waiting_for_action:
-		return
-	is_waiting_for_action = false
-	emit_signal("tile_action_completed")
-```
-
-**問題点**:
-1. フェーズチェックだけでは非同期処理に対応できない
-2. 複数箇所から同じシグナルを発火している
-3. `is_waiting_for_action`と`current_phase`の二重管理で混乱
-
-**修正案（推奨）**:
-
-**Option 1: シグナル経路の完全一本化** ⭐推奨
-```gdscript
-# game_flow_manager.gd
-# ❌ 削除: 直接のemit_signal呼び出しを全削除
-func _on_cpu_summon_decided(card_index: int):
-	# board_system_3d.emit_signal("tile_action_completed")  # 削除
-
-# ✅ 修正: board_system_3dに処理を委譲
-func _on_cpu_summon_decided(card_index: int):
-	if board_system_3d:
-		board_system_3d.tile_action_processor.execute_summon(card_index)
-	# action_completed → tile_action_completed が自動発火
-```
-
-**Option 2: フラグによる排他制御強化**
-```gdscript
-# game_flow_manager.gd
-var is_ending_turn = false
-var turn_end_lock = false
-
-func end_turn():
-	if turn_end_lock:
-		print("Warning: Turn end locked")
-		return
-		
-	turn_end_lock = true
-	is_ending_turn = true
-	
-	# ... 処理 ...
-	
-	await get_tree().create_timer(GameConstants.TURN_END_DELAY).timeout
-	
-	is_ending_turn = false
-	turn_end_lock = false
-```
-
-**Option 3: CallableのONE_SHOT接続** 
-```gdscript
-# 全てのtile_action_completedシグナル接続をONE_SHOTに
-board_system_3d.tile_action_completed.connect(
-	_on_tile_action_completed_3d, 
-	CONNECT_ONE_SHOT  # 1回だけ実行
-)
-```
-
-**即時対応が必要な修正**:
-```gdscript
-# game_flow_manager.gd Line 151を削除
-# func _on_cpu_summon_decided(card_index: int):
-#     else:
-#         board_system_3d.emit_signal("tile_action_completed")  # ← 削除
-
-# game_flow_manager.gd Line 188を削除  
-# func _on_cpu_level_up_decided(do_upgrade: bool):
-#     board_system_3d.emit_signal("tile_action_completed")  # ← 削除
-
-# game_flow_manager.gd Line 210, 219を削除
-# func on_level_up_selected(target_level: int, cost: int):
-#     board_system_3d.emit_signal("tile_action_completed")  # ← 全て削除
-```
-
-**関連するTECH負債**:
-- TECH-001: 古い2Dコードの削除（これらのCPU処理コードを含む）
-- TECH-002: game_flow_manager.gdのリファクタリング
-
-**検証方法**:
-1. デバッグモードで`end_turn()`呼び出しをカウント
-2. 10ターン実行して全て1回ずつか確認
-3. CPU vs CPUで100ターン自動実行テスト
-
-**ステータス**: ⚠️ 最優先対応（即時修正必要）
-
----
 
 #### BUG-001: カードドロー時の表示ズレ
 **報告日**: 2025/01/09  
@@ -550,25 +397,6 @@ func _on_mouse_entered():
 
 ## 技術的負債
 
-### TECH-001: 古い2Dコードの削除
-**優先度**: 高  
-**影響範囲**: プロジェクト全体
-
-**問題**:
-- game.tscn（2D版）が残存
-- board_system.gd（2D版）使用されていない
-- 2D/3D分岐コードが混在
-- コードベースの可読性低下
-
-**削除対象**:
-```
-scenes/game.tscn
-scripts/board_system.gd (存在する場合)
-2D関連の条件分岐コード
-```
-
----
-
 ### TECH-002: game_flow_manager.gdが大きすぎる
 **優先度**: 高  
 **行数**: 約500行
@@ -790,4 +618,4 @@ func replay():
 
 ---
 
-**最終更新**: 2025年1月10日
+**最終更新**: 2025年1月11日

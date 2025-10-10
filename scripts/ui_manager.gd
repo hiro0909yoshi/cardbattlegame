@@ -86,8 +86,7 @@ func create_ui(parent: Node):
 		card_system_ref = parent.get_node("CardSystem")
 	if not player_system_ref and parent.has_node("PlayerSystem"):
 		player_system_ref = parent.get_node("PlayerSystem")
-	if not board_system_ref and parent.has_node("BoardSystem"):
-		board_system_ref = parent.get_node("BoardSystem")
+	# board_system_ref は BoardSystem3D から設定される
 	
 	# UIレイヤー（CanvasLayer）を作成
 	var ui_layer = CanvasLayer.new()

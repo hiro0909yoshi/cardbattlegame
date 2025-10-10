@@ -137,7 +137,7 @@ func format_card_info(index: int, card: Dictionary) -> String:
 # ボード情報を表示
 func display_board_info():
 	if not board_system_ref:
-		debug_label.text = "[color=red]BoardSystem not found[/color]"
+		debug_label.text = "[color=red]BoardSystem3D not found[/color]"
 		return
 	
 	var text = "[b]━━━ ボード情報 ━━━[/b]\n\n"
