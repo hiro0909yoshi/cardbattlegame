@@ -40,6 +40,94 @@
 #### ~~WARN-001～005: Godot警告の整理~~
 **解決日**: 2025/01/11  
 **対応内容**:
+- **シャドウイング**: `is_processing`、`element`、`conditions`変数名を変更
+- **未使用のシグナル**: `player_system.gd`から削除
+- **未使用のパラメータ**: `_`プレフィックスを追加
+- **未使用のローカル変数**: `player_node`を削除
+- **型の問題**: Enum型への明示的キャスト追加
+- **Integer division**: float除算 + int()キャストに修正
+
+#### ~~FEAT-001: 隣接土地判定システムの実装~~
+**解決日**: 2025/01/11  
+**実装内容**:
+- **TileNeighborSystem**クラスの作成（`scripts/tile_neighbor_system.gd`）
+  - 座標ベースで物理的に隣接するタイルを判定（XZ平面距離4.5以内）
+  - 初回起動時に隣接関係をキャッシュ（パフォーマンス最適化）
+  - `get_spatial_neighbors(tile_index)` - 隣接タイルリストを取得
+  - `has_adjacent_ally_land(tile_index, player_id)` - 隣接自領地判定
+- **BoardSystem3Dへの統合**
+  - `tile_neighbor_system`インスタンスの作成と初期化
+  - タイル配置後に自動でキャッシュ構築
+- **ConditionCheckerの拡張**
+  - `"adjacent_ally_land"`条件の動的判定を実装
+  - TileNeighborSystemを使用した実時間判定
+  - フォールバック機構（従来の静的値にも対応）
+- **BattleSystemのコンテキスト拡張**
+  - `battle_tile_index`、`player_id`、`board_system`をコンテキストに追加
+  - スキル条件評価時に必要な情報を提供
+
+**動作確認**:
+- ローンビースト（ID:49）の「隣接自領地なら強打」が正常動作
+- タイル6で攻撃時、隣接タイル5が自領地の場合にAP20→30に上昇
+
+**技術詳細**:
+```gdscript
+# 隣接判定の仕組み
+const TILE_SIZE = 4.0
+const NEIGHBOR_THRESHOLD = 4.5
+
+# XZ平面での距離計算
+var distance_xz = sqrt(dx * dx + dz * dz)
+if distance_xz < NEIGHBOR_THRESHOLD:
+	neighbors.append(other_index)
+```
+
+#### ~~FEAT-002: 土地ボーナスシステムの実装~~
+**解決日**: 2025/01/11  
+**実装内容**:
+- **召喚時の土地ボーナス適用**（`BaseTile._apply_land_bonus()`）
+  - クリーチャー属性と土地属性が一致 → HP + (レベル × 10)
+  - `land_bonus_hp`フィールドに格納（基本HPとは別管理）
+- **バトル時の土地ボーナス適用**（`BattleSystem._apply_attacker_land_bonus()`）
+  - 攻撃側カードにも土地ボーナスを適用
+  - 防御側は配置済みクリーチャーの`land_bonus_hp`を使用
+- **BoardSystem3Dへの統合**
+  - `get_player_lands_by_element(player_id)` メソッド追加
+  - プレイヤーの属性別土地数を取得可能に
+
+**動作確認**:
+- レベル3の火土地 + 火クリーチャー → +30HP
+- バトル時の攻撃側・防御側両方で土地ボーナスが正しく計算される
+
+#### ~~BUG-007: 属性名の英語/日本語混在~~
+**解決日**: 2025/01/11  
+**解決方法**: すべて英語に統一
+
+**元の問題**: 
+- タイル定義: `tile_type = "fire"` (英語)
+- チェック処理: `in ["火", "水", "風", "地"]` (日本語)
+- 結果: すべての土地が「その他」に分類され、連鎖計算が機能しない
+
+**影響範囲**:
+- `tile_data_manager.gd`: `get_owner_element_counts()`
+- `battle_system.gd`: プレイヤー土地情報取得
+- `base_tiles.gd`: 召喚時の土地ボーナス判定
+- `battle_system.gd`: バトル時の土地ボーナス判定
+
+**修正内容**:
+```gdscript
+# 修正前
+if tile.tile_type in ["火", "水", "風", "地"]:
+
+# 修正後
+if tile.tile_type in ["fire", "water", "wind", "earth"]:
+```
+
+**教訓**: 
+- 属性名は英語で統一（"fire", "water", "wind", "earth", "neutral"）
+- 今後新しい属性チェックを追加する際は英語を使用すること
+
+**対応内容**:
 - **ownerシャドウイング**: `owner` → `tile_owner`に変更（2箇所）
 - **未使用シグナル**: 13個のシグナルをコメントアウト + TODOコメント追加
 - **未使用パラメータ**: アンダースコア接頭辞を追加（主要3箇所）
@@ -479,6 +567,48 @@ if level >= 3:
 
 ---
 
+### TECH-006: 属性名の統一規則
+**優先度**: 高  
+**追加日**: 2025/01/11
+
+**ルール**:
+すべての属性チェックは**英語**を使用する
+
+**属性名リスト**:
+```gdscript
+# 正しい属性名（必ず英語）
+"fire"     # 火
+"water"    # 水
+"wind"     # 風
+"earth"    # 地
+"neutral"  # 無属性
+```
+
+**チェック例**:
+```gdscript
+# ✅ 正しい
+if element in ["fire", "water", "wind", "earth"]:
+
+# ❌ 間違い（日本語を使わない）
+if element in ["火", "水", "風", "地"]:
+```
+
+**適用箇所**:
+- 属性連鎖の計算
+- 土地ボーナスの判定
+- スキル条件の評価
+- UI表示は日本語でOK（翻訳処理を挟む）
+
+**理由**:
+- タイル定義が英語（`tile_type = "fire"`等）
+- カードデータも英語（`"element": "fire"`）
+- 内部処理は英語で統一し、表示のみ日本語に変換する設計
+
+**注意事項**:
+新しい属性チェックを追加する際は、必ずこのルールに従うこと
+
+---
+
 ## 要望・提案
 
 ### FEATURE-001: マップ分岐システム
@@ -623,6 +753,10 @@ func replay():
 | 2025/01/10 | 初版作成 |
 | 2025/01/10 | BUG-001〜006追加 |
 | 2025/01/10 | バランス調整項目追加 |
+| 2025/01/11 | FEAT-001: 隣接土地判定システム実装完了 |
+| 2025/01/11 | FEAT-002: 土地ボーナスシステム実装完了 |
+| 2025/01/11 | BUG-007: 属性名の英語/日本語混在問題を解決 |
+| 2025/01/11 | TECH-006: 属性名統一規則を追加 |
 
 ---
 

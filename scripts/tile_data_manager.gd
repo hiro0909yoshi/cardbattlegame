@@ -179,20 +179,20 @@ func get_owner_land_count(owner_id: int) -> int:
 # 所有者の属性別土地数を取得
 func get_owner_element_counts(owner_id: int) -> Dictionary:
 	var counts = {
-		"火": 0,
-		"水": 0,
-		"風": 0,
-		"土": 0,
-		"その他": 0
+		"fire": 0,
+		"water": 0,
+		"wind": 0,
+		"earth": 0,
+		"other": 0
 	}
 	
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
-			if tile.tile_type in ["火", "水", "風", "土"]:
+			if tile.tile_type in ["fire", "water", "wind", "earth"]:
 				counts[tile.tile_type] += 1
 			else:
-				counts["その他"] += 1
+				counts["other"] += 1
 	
 	return counts
 

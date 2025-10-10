@@ -63,7 +63,11 @@ func can_place_creature() -> bool:
 
 # クリーチャーを配置
 func place_creature(data: Dictionary):
-	creature_data = data
+	creature_data = data.duplicate()  # 元データを変更しないようにコピー
+	
+	# 土地ボーナスを計算して追加
+	_apply_land_bonus()
+	
 	update_visual()
 
 # クリーチャーを削除
@@ -133,3 +137,21 @@ func calculate_toll() -> int:
 	var chain_bonus = 1.0  # 子クラスで連鎖ボーナス実装
 	
 	return int(base_toll * level_multiplier * chain_bonus)
+
+# 土地ボーナスを適用（属性一致でHP増加）
+func _apply_land_bonus():
+	if creature_data.is_empty():
+		return
+	
+	var creature_element = creature_data.get("element", "")
+	var tile_element = tile_type
+	
+	# 属性が一致する場合
+	if creature_element == tile_element and creature_element in ["fire", "water", "wind", "earth"]:
+		var bonus_hp = level * 10
+		creature_data["land_bonus_hp"] = bonus_hp
+		
+		print("【土地ボーナス】", creature_data.get("name", "?"), " on ", tile_element)
+		print("  レベル", level, " × 10 = +", bonus_hp, "HP")
+	else:
+		creature_data["land_bonus_hp"] = 0

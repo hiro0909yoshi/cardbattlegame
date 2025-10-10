@@ -80,15 +80,22 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
 	
 	# プレイヤーの土地所有状況を取得
-	var player_lands = {"火": 0, "水": 0, "地": 0, "風": 0}
+	var player_lands = {"fire": 0, "water": 0, "wind": 0, "earth": 0}
 	if board_system_ref and board_system_ref.has_method("get_player_lands_by_element"):
 		player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
+		print("【土地情報取得成功】プレイヤー", attacker_index, "の土地:")
+		print("  fire:", player_lands.get("fire", 0), "個")
+		print("  water:", player_lands.get("water", 0), "個")
+		print("  wind:", player_lands.get("wind", 0), "個")
+		print("  earth:", player_lands.get("earth", 0), "個")
+		print("  other:", player_lands.get("other", 0), "個")
+		print("  合計:", player_lands.get("fire", 0) + player_lands.get("water", 0) + player_lands.get("wind", 0) + player_lands.get("earth", 0))
 	else:
 		# デバッグ用：全属性を持っていることにする
-		print("【デバッグ】土地データ取得不可、テスト用に全属性保有とする")
-		player_lands = {"火": 1, "水": 1, "地": 1, "風": 1}
-	
-	print("  プレイヤー土地: ", player_lands)
+		print("【エラー】土地データ取得不可 - board_system_ref=", board_system_ref != null)
+		if board_system_ref:
+			print("  has_method=", board_system_ref.has_method("get_player_lands_by_element"))
+		player_lands = {"fire": 1, "water": 1, "wind": 1, "earth": 1}
 	
 	# 戦闘コンテキストの構築
 	var defender_creature = tile_info.get("creature", {})
@@ -96,11 +103,20 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		card_data, 
 		defender_creature,
 		tile_info,
-		{"player_lands": player_lands}
+		{
+			"player_lands": player_lands,
+			"battle_tile_index": tile_info.get("index", -1),
+			"player_id": attacker_index,
+			"board_system": board_system_ref
+		}
 	)
 	
+	# 攻撃側カードに土地ボーナスを適用
+	var attacker_card = card_data.duplicate()
+	_apply_attacker_land_bonus(attacker_card, tile_info)
+	
 	# 強打などの効果を適用
-	var modified_attacker = effect_combat.apply_power_strike(card_data, battle_context)
+	var modified_attacker = effect_combat.apply_power_strike(attacker_card, battle_context)
 	
 	# 強打が適用されたか確認
 	if modified_attacker.get("power_strike_applied", false):
@@ -108,7 +124,14 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	
 	# 修正後のステータスを使用
 	var attacker_st = modified_attacker.get("ap", 0)
-	var defender_hp = defender_creature.get("hp", 0)
+	
+	# 防御側HPに土地ボーナスを加算
+	var defender_base_hp = defender_creature.get("hp", 0)
+	var defender_land_bonus = defender_creature.get("land_bonus_hp", 0)
+	var defender_hp = defender_base_hp + defender_land_bonus
+	
+	if defender_land_bonus > 0:
+		print("【防御側土地ボーナス】基本HP:", defender_base_hp, " + ボーナス:", defender_land_bonus, " = 合計:", defender_hp)
 	
 	print("========== バトル開始 ==========")
 	print("攻撃側: ", card_data.get("name", "不明"), " [", card_data.get("element", "?"), "]")
@@ -162,3 +185,19 @@ func pay_toll_3d(payer_index: int, tile_info: Dictionary):
 # システム検証
 func validate_systems() -> bool:
 	return board_system_ref != null and card_system_ref != null and player_system_ref != null
+
+# 攻撃側カードに土地ボーナスを適用
+func _apply_attacker_land_bonus(card_data: Dictionary, tile_info: Dictionary):
+	var card_element = card_data.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+	
+	# 属性が一致する場合
+	if card_element == tile_element and card_element in ["fire", "water", "wind", "earth"]:
+		var bonus_hp = tile_level * 10
+		card_data["land_bonus_hp"] = bonus_hp
+		
+		print("【攻撃側土地ボーナス】", card_data.get("name", "?"), " on ", tile_element)
+		print("  レベル", tile_level, " × 10 = +", bonus_hp, "HP")
+	else:
+		card_data["land_bonus_hp"] = 0

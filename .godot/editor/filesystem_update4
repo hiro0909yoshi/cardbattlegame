@@ -34,3 +34,5 @@ res://scripts/tiles/base_tiles.gd
 res://scripts/tiles/neutral_tile.gd
 res://scripts/skills/condition_checker.gd
 res://scripts/game_data.gd
+res://scripts/tile_neighbor_system.gd
+res://design.md

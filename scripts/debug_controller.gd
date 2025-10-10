@@ -167,7 +167,12 @@ func add_card_to_hand(card_id: int):
 		print("【デバッグ】カードID ", card_id, " を手札に追加しました")
 		
 		# 手札UIを更新
-		card_system.update_hand_ui_for_player(current_player.id)
+		# 手札UIを更新
+		if ui_manager:
+			if ui_manager.has_method("update_player_info_panels"):
+				ui_manager.update_player_info_panels()
+			if ui_manager.has_method("update_hand_display"):
+				ui_manager.update_hand_display(current_player.id)
 		
 		emit_signal("debug_action", "add_card", card_id)
 	else:

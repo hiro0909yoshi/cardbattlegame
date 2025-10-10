@@ -13,6 +13,7 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 var movement_controller: MovementController3D
 var tile_info_display: TileInfoDisplay
 var tile_data_manager: TileDataManager
+var tile_neighbor_system: TileNeighborSystem
 var tile_action_processor: TileActionProcessor
 var cpu_turn_processor: CPUTurnProcessor
 
@@ -57,6 +58,10 @@ func create_subsystems():
 	tile_data_manager = TileDataManager.new()
 	tile_data_manager.name = "TileDataManager"
 	add_child(tile_data_manager)
+	
+	tile_neighbor_system = TileNeighborSystem.new()
+	tile_neighbor_system.name = "TileNeighborSystem"
+	add_child(tile_neighbor_system)
 	
 	tile_action_processor = TileActionProcessor.new()
 	tile_action_processor.name = "TileActionProcessor"
@@ -131,6 +136,10 @@ func collect_tiles(tiles_container: Node):
 	if tile_info_display:
 		tile_info_display.setup_labels(tile_nodes, self)
 	
+	# 隣接システムの初期化
+	if tile_neighbor_system:
+		tile_neighbor_system.setup(tile_nodes)
+	
 	tile_data_manager.update_all_displays()
 
 func collect_players(players_container: Node):
@@ -177,6 +186,9 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 
 func get_owner_land_count(owner_id: int) -> int:
 	return tile_data_manager.get_owner_land_count(owner_id)
+
+func get_player_lands_by_element(player_id: int) -> Dictionary:
+	return tile_data_manager.get_owner_element_counts(player_id)
 
 func update_all_tile_displays():
 	tile_data_manager.update_all_displays()

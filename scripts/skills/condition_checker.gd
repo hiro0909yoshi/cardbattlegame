@@ -110,6 +110,29 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 		
 		# 土地条件
 		"adjacent_ally_land":
+			# TileNeighborSystemを使用した動的判定
+			var battle_tile = context.get("battle_tile_index", -1)
+			var player_id = context.get("player_id", -1)
+			var board_system = context.get("board_system", null)
+			
+			print("【条件チェック】adjacent_ally_land:")
+			print("  battle_tile=", battle_tile, " player_id=", player_id)
+			print("  board_system=", board_system != null)
+			
+			if battle_tile == -1 or player_id == -1 or not board_system:
+				# フォールバック: 従来の静的な値
+				print("  → フォールバック: ", context.get("adjacent_is_ally_land", false))
+				return context.get("adjacent_is_ally_land", false)
+			
+			# TileNeighborSystemで動的チェック
+			if board_system.tile_neighbor_system:
+				var result = board_system.tile_neighbor_system.has_adjacent_ally_land(
+					battle_tile, player_id, board_system
+				)
+				print("  → TileNeighborSystem判定: ", result)
+				return result
+			
+			print("  → TileNeighborSystemなし")
 			return context.get("adjacent_is_ally_land", false)
 		
 		# レベル額条件
@@ -239,6 +262,11 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"battle_land_element": battle_field.get("element", ""),
 		"adjacent_is_ally_land": battle_field.get("adjacent_ally", false),
 		"player_lands": game_state.get("player_lands", {}),
+		
+		# 隣接判定用の追加情報
+		"battle_tile_index": game_state.get("battle_tile_index", -1),
+		"player_id": game_state.get("player_id", -1),
+		"board_system": game_state.get("board_system", null),
 		
 		# 能力情報
 		"enemy_abilities": defender_data.get("abilities", []),
