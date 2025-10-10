@@ -9,3 +9,14 @@ res://scenes/Card.tscn
 res://turn_end_flow.md
 res://TURN_END_QUICK_FIX.md
 res://issues.md
+res://scripts/battle_system.gd
+res://scripts/flow_handlers/cpu_ai_handler.gd
+res://scripts/special_tile_system.gd
+res://scripts/player_system.gd
+res://scripts/game_3d.gd
+res://scripts/tile_data_manager.gd
+res://scripts/ui_components/player_info_panel.gd
+res://scripts/card_system.gd
+res://scripts/ui_manager.gd
+res://scripts/tile_action_processor.gd
+res://scripts/ui_components/card_selection_ui.gd

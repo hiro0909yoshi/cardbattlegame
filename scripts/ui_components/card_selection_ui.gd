@@ -22,15 +22,17 @@ var selection_mode = ""        # "summon" or "battle"
 
 # システム参照
 var card_system_ref: CardSystem = null
+var ui_manager_ref = null  # UIManager参照を追加
 
 func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, card_system: CardSystem, phase_label: Label):
+func initialize(parent: Node, card_system: CardSystem, phase_label: Label, ui_manager = null):
 	parent_node = parent
 	card_system_ref = card_system
 	phase_label_ref = phase_label
+	ui_manager_ref = ui_manager
 
 # カード選択UIを表示
 func show_selection(current_player, mode: String = "summon"):
@@ -70,23 +72,31 @@ func update_phase_label(current_player, mode: String):
 			phase_label_ref.text = "バトルするクリーチャーを選択（またはパスで通行料）"
 		"invasion":
 			phase_label_ref.text = "無防備な土地！侵略するクリーチャーを選択（またはパスで通行料）"
+		"discard":
+			var hand_size = card_system_ref.get_hand_size_for_player(current_player.id)
+			var cards_to_discard = hand_size - 6
+			phase_label_ref.text = "手札を6枚まで減らしてください（" + str(cards_to_discard) + "枚捨てる）"
 		_:
 			phase_label_ref.text = "カードを選択してください"
 
 # カード選択を有効化
 func enable_card_selection(hand_data: Array, available_magic: int):
-	if not card_system_ref:
+	if not ui_manager_ref:
 		return
 	
-	# カードを選択可能にする
-	card_system_ref.set_cards_selectable(true)
-	
-	# 手札のカードノードにハイライトを追加
-	var hand_nodes = card_system_ref.player_hands[0]["nodes"]
+	# UIManagerから手札ノードを取得
+	var hand_nodes = ui_manager_ref.player_card_nodes.get(0, [])
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):
-			add_card_highlight(card_node, hand_data[i], available_magic)
+			# カードを選択可能にする
+			if card_node.has_method("set_selectable"):
+				card_node.set_selectable(true, i)
+			# 捨て札モードでは全て選択可能、それ以外はコストチェック
+			if selection_mode == "discard":
+				add_card_highlight(card_node, hand_data[i], 999999)  # 全て選択可能
+			else:
+				add_card_highlight(card_node, hand_data[i], available_magic)
 
 # カードにハイライトを追加
 func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic: int):
@@ -112,6 +122,10 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 
 # パスボタンを作成
 func create_pass_button(hand_count: int):
+	# 捨て札モードではパスボタンを作らない
+	if selection_mode == "discard":
+		return
+	
 	pass_button = Button.new()
 	
 	# ボタンテキスト設定
@@ -126,18 +140,36 @@ func create_pass_button(hand_count: int):
 			pass_button.text = "パス"
 	
 	# 位置設定（手札の右側）
-	# カードと同じ中央配置計算を使用
+	# UIManagerの定数を使用
 	var viewport_size = get_viewport().get_visible_rect().size
-	var card_width = 240  # カード幅（card_system.gdと同じ）
-	var card_spacing = 20  # カード間隔（card_system.gdと同じ）
-	var card_height = 350  # カード高さ
-	var total_width = hand_count * (card_width + card_spacing)
+	var card_width = 290  # UIManager.CARD_WIDTH
+	var card_spacing = 30  # UIManager.CARD_SPACING
+	var card_height = 390  # UIManager.CARD_HEIGHT
+	
+	# 画面幅の80%を最大幅とする
+	var max_width = viewport_size.x * 0.8
+	
+	# 通常サイズでの全体幅を計算
+	var normal_total_width = hand_count * card_width + (hand_count - 1) * card_spacing
+	
+	# スケール率を計算（最大幅を超える場合は縮小）
+	var scale = 1.0
+	if normal_total_width > max_width:
+		scale = max_width / normal_total_width
+	
+	# 縮小後のサイズを計算
+	var scaled_card_width = card_width * scale
+	var scaled_card_height = card_height * scale
+	var scaled_spacing = card_spacing * scale
+	
+	# 実際の全体幅を計算
+	var total_width = hand_count * scaled_card_width + (hand_count - 1) * scaled_spacing
 	var start_x = (viewport_size.x - total_width) / 2
 
-	# 最後のカードの右側に配置
-	var last_card_x = start_x + hand_count * (card_width + card_spacing)
-	pass_button.position = Vector2(last_card_x, viewport_size.y - card_height - 20)  # カードと同じ高さ
-	pass_button.size = Vector2(240, 350)  # カードと同じサイズ
+	# 最後のカードの右側に配置（間隔を空けて）
+	var last_card_x = start_x + hand_count * scaled_card_width + (hand_count - 1) * scaled_spacing + scaled_spacing
+	pass_button.position = Vector2(last_card_x, viewport_size.y - scaled_card_height - 20)
+	pass_button.size = Vector2(scaled_card_width, scaled_card_height)
 	pass_button.pressed.connect(_on_pass_button_pressed)
 	
 	# ボタンスタイル設定
@@ -175,15 +207,16 @@ func hide_selection():
 
 # カード選択を無効化
 func disable_card_selection():
-	if not card_system_ref:
+	if not ui_manager_ref:
 		return
 	
-	card_system_ref.set_cards_selectable(false)
-	
-	# ハイライトを削除
-	var hand_nodes = card_system_ref.player_hands[0]["nodes"]
+	# UIManagerから手札ノードを取得
+	var hand_nodes = ui_manager_ref.player_card_nodes.get(0, [])
 	for card_node in hand_nodes:
 		if card_node and is_instance_valid(card_node):
+			# カードを選択不可にする
+			if card_node.has_method("set_selectable"):
+				card_node.set_selectable(false)
 			remove_card_highlight(card_node)
 
 # カードのハイライトを削除

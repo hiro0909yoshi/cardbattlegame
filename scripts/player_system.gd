@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerSystem
 
-# プレイヤー管理システム - 3D/2D両対応版
+# プレイヤー管理システム - 3D専用版
 
 signal dice_rolled(value: int)
 signal movement_started()
@@ -17,17 +17,17 @@ class PlayerData:
 	var id: int = 0
 	var name: String = ""
 	var current_tile: int = 0
-	var magic_power: int = 3000  # 直接値使用（内部クラスのため）
-	var target_magic: int = 8000  # 直接値使用（内部クラスのため）
+	var magic_power: int = 3000
+	var target_magic: int = 8000
 	var color: Color = Color.WHITE
-	var piece_node: Node = null  # 駒のノード
+	var piece_node: Node = null  # 3D駒ノード（MovementController3Dが管理）
 	var movement_direction: String = ""
 	var last_choice_tile: int = -1
 
 # プレイヤー管理
 var players = []
 var current_player_index = 0
-var player_pieces = []  # 駒のノード配列
+var player_pieces = []  # 3D駒ノード配列
 
 # 移動関連
 var is_moving = false
@@ -42,12 +42,10 @@ func _ready():
 func set_debug_controller(controller: DebugController):
 	debug_controller = controller
 
-# プレイヤーを初期化（3D/2D両対応版）
-func initialize_players(player_count: int, parent_node: Node):
+# プレイヤーを初期化
+func initialize_players(player_count: int):
 	players.clear()
 	player_pieces.clear()
-	
-	var is_3d_game = parent_node.has_node("Tiles") and parent_node.has_node("Players")
 	
 	for i in range(player_count):
 		var player = PlayerData.new()
@@ -57,35 +55,10 @@ func initialize_players(player_count: int, parent_node: Node):
 		player.magic_power = GameConstants.INITIAL_MAGIC
 		player.target_magic = GameConstants.TARGET_MAGIC
 		player.color = GameConstants.PLAYER_COLORS[i % GameConstants.PLAYER_COLORS.size()]
-		
-		if not is_3d_game:
-			var piece = create_player_piece(player, parent_node)
-			player.piece_node = piece
-			player_pieces.append(piece)
-		else:
-			player.piece_node = null
-			player_pieces.append(null)
+		player.piece_node = null  # 3D駒は後で設定
 		
 		players.append(player)
-# プレイヤー駒を作成（2Dゲーム用）
-func create_player_piece(player: PlayerData, parent: Node) -> Node:
-	var piece = ColorRect.new()
-	piece.size = Vector2(20, 20)
-	piece.color = player.color
-	piece.z_index = 10
-	
-	# プレイヤーIDラベルを追加
-	var label = Label.new()
-	label.text = "P" + str(player.id + 1)
-	label.position = Vector2(-5, -20)
-	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", Color.WHITE)
-	label.add_theme_color_override("font_shadow_color", Color.BLACK)
-	label.z_index = 1
-	piece.add_child(label)
-	
-	parent.add_child(piece)
-	return piece
+		player_pieces.append(null)
 
 # 現在のプレイヤーを取得
 func get_current_player() -> PlayerData:
@@ -111,112 +84,6 @@ func roll_dice() -> int:
 	
 	emit_signal("dice_rolled", value)
 	return value
-
-# プレイヤーを移動（2Dゲーム用）
-func move_player_steps(player_id: int, steps: int, board_system, clockwise: bool = true):
-	if is_moving:
-		return
-	
-	var player = players[player_id]
-	is_moving = true
-	emit_signal("movement_started")
-	
-	# SpecialTileSystemの参照を取得
-	var special_system = get_tree().get_root().get_node_or_null("Game/SpecialTileSystem")
-	
-	# 残り移動数
-	var remaining_steps = steps
-	
-	# 移動方向の表示
-	var direction_text = "時計回り" if clockwise else "反時計回り"
-	print("移動開始: ", player.name, " (", steps, "マス・", direction_text, ")")
-	
-	# 1マスずつ移動をシミュレート
-	while remaining_steps > 0:
-		var prev_pos = player.current_tile
-		
-		# 次のタイルを計算
-		var next_tile = board_system.get_next_tile(player.current_tile, player.movement_direction)
-		if next_tile == player.current_tile:
-			# デフォルトの移動
-			next_tile = (player.current_tile + 1) % board_system.total_tiles
-		
-		player.current_tile = next_tile
-		
-		print("  マス", prev_pos, " → マス", player.current_tile)
-		
-		# スタート通過チェック
-		if prev_pos > player.current_tile:
-			print("スタート地点通過！")
-			add_magic(player_id, GameConstants.PASS_BONUS)
-		
-		# 駒を滑らかに移動（2D用）
-		var target_pos = board_system.get_tile_position(player.current_tile)
-		if player.piece_node:
-			# Tweenで滑らかな移動
-			var tween = get_tree().create_tween()
-			tween.tween_property(
-				player.piece_node, 
-				"position", 
-				target_pos - player.piece_node.size / 2,
-				GameConstants.MOVE_SPEED
-			)
-			
-			# カメラも追従
-			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
-			if camera_system and camera_system.has_method("focus_on_player"):
-				camera_system.focus_on_player(target_pos)
-			
-			# 移動アニメーションを待つ
-			await tween.finished
-		
-		# 通過型ワープチェック
-		if special_system and special_system.has_method("is_warp_gate"):
-			if special_system.is_warp_gate(player.current_tile):
-				var warp_result = special_system.process_warp_gate(player.current_tile, player_id, remaining_steps)
-				if warp_result.get("warped", false):
-					# ワープ発生
-					await get_tree().create_timer(GameConstants.WARP_DELAY).timeout
-					player.current_tile = warp_result.get("new_tile", player.current_tile)
-					
-					# ワープ先への視覚的移動
-					target_pos = board_system.get_tile_position(player.current_tile)
-					if player.piece_node:
-						player.piece_node.position = target_pos - player.piece_node.size / 2
-						
-						# ワープ後もカメラを更新
-						var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
-						if camera_system and camera_system.has_method("focus_on_player"):
-							camera_system.focus_on_player(target_pos)
-					
-					# 残り移動数は変わらない
-					print("通過型ワープ！残り移動数: ", remaining_steps - 1)
-		
-		remaining_steps -= 1
-	
-	print("移動完了: マス", player.current_tile, "に到着")
-	
-	is_moving = false
-	emit_signal("movement_completed", player.current_tile)
-
-# プレイヤーを特定のタイルに配置（2D用）
-func place_player_at_tile(player_id: int, tile_index: int, board_system):
-	var player = players[player_id]
-	player.current_tile = tile_index
-	
-	# 実際のタイル位置を取得
-	var target_pos = board_system.get_tile_position(tile_index)
-	if player.piece_node:
-		# 駒をタイルの中心に配置
-		player.piece_node.position = target_pos - player.piece_node.size / 2
-		
-		print("プレイヤー", player_id + 1, "をマス", tile_index, "に配置: ", target_pos)
-		
-		# 配置時もカメラ更新
-		if player_id == current_player_index:
-			var camera_system = get_tree().get_root().get_node_or_null("Game/CameraSystem")
-			if camera_system and camera_system.has_method("focus_on_player"):
-				camera_system.focus_on_player(target_pos)
 
 # 魔力を増減
 func add_magic(player_id: int, amount: int):
@@ -279,7 +146,7 @@ func get_all_players_info() -> Array:
 		})
 	return info
 
-# 3Dゲーム用：プレイヤー駒ノードを設定
+# プレイヤー駒ノードを設定（MovementController3Dから呼ばれる）
 func set_player_piece_node(player_id: int, node: Node):
 	if player_id >= 0 and player_id < players.size():
 		players[player_id].piece_node = node

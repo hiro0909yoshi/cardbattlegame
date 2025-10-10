@@ -175,20 +175,27 @@ func evaluate_all_cards_for_battle(current_player, defender: Dictionary, tile_in
 	return best_result
 
 # バトル結果を評価
+# バトル結果を評価（予測ロジックを内包）
 func evaluate_battle_outcome(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary) -> int:
-	if not battle_system:
-		return -999
+	# 基本的な戦力差を計算
+	var attacker_st = attacker.get("ap", 0)
+	var attacker_hp = attacker.get("hp", 0)
+	var defender_st = defender.get("ap", 0)
+	var defender_hp = defender.get("hp", 0)
 	
-	var prediction = battle_system.predict_battle_outcome(attacker, defender, tile_info)
+	# 簡易評価：攻撃力 - 防御HP
+	var score = attacker_st - defender_hp
 	
-	# シンプルな評価：攻撃力 - 防御HP
-	var score = prediction.attacker_st - prediction.defender_hp
-	
-	# 勝利可能性で追加スコア
-	if prediction.likely_winner == "attacker":
-		score += 50
-	elif prediction.likely_winner == "defender":
-		score -= 50
+	# 勝利可能性の判定
+	var likely_winner = ""
+	if attacker_st >= defender_hp:
+		likely_winner = "attacker"
+		score += 50  # 勝利可能性ボーナス
+	elif defender_st >= attacker_hp:
+		likely_winner = "defender"
+		score -= 50  # 負ける可能性ペナルティ
+	else:
+		likely_winner = "draw"
 	
 	return score
 

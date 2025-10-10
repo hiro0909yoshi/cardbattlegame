@@ -151,7 +151,7 @@ func calculate_total_assets(player_id: int) -> int:
 	
 	var assets = player_system_ref.players[player_id].magic_power
 	
-	# 3D版の場合
+	# 3D版
 	if board_system_ref != null and "tile_nodes" in board_system_ref:
 		for i in board_system_ref.tile_nodes:
 			var tile = board_system_ref.tile_nodes[i]
@@ -159,26 +159,20 @@ func calculate_total_assets(player_id: int) -> int:
 				# 土地の価値を加算（LEVEL_VALUESから取得）
 				var level_value = GameConstants.LEVEL_VALUES.get(tile.level, 0)
 				assets += level_value
-	# 2D版の場合（フォールバック）
-	elif board_system_ref != null and "tile_levels" in board_system_ref and "tile_owners" in board_system_ref:
-		for i in range(board_system_ref.total_tiles):
-			if board_system_ref.tile_owners[i] == player_id:
-				var level = board_system_ref.tile_levels[i]
-				var level_value = GameConstants.LEVEL_VALUES.get(level, 0)
-				assets += level_value
+	
 	
 	return assets
 
-# 属性連鎖情報を取得（3D対応版）
+# 属性連鎖情報を取得
 func get_chain_info(player_id: int) -> String:
 	if not board_system_ref:
 		return "なし"
 	
 	var element_counts = {}
 	
-	# 統一的な方法でタイル情報を取得
+	# タイル情報を取得
 	if board_system_ref.has_method("get_tile_data_array"):
-		# 新しい互換メソッドを使用
+		# get_tile_data_array()を使用（推奨）
 		var tile_data = board_system_ref.get_tile_data_array()
 		for tile_info in tile_data:
 			if tile_info["owner"] == player_id:
@@ -189,7 +183,7 @@ func get_chain_info(player_id: int) -> String:
 					else:
 						element_counts[element] = 1
 	elif "tile_nodes" in board_system_ref:
-		# 3D版の直接アクセス（フォールバック）
+		# tile_nodesへの直接アクセス（フォールバック）
 		for i in board_system_ref.tile_nodes:
 			var tile = board_system_ref.tile_nodes[i]
 			if tile.owner_id == player_id:

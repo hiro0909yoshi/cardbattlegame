@@ -107,7 +107,8 @@ func setup_game():
 		board_system_3d.collect_players(players_container)
 	
 	# プレイヤー初期化
-	player_system.initialize_players(player_count, self)
+	player_system.initialize_players(player_count)
+
 	
 	# BoardSystem3D設定
 	board_system_3d.player_count = player_count
@@ -119,6 +120,12 @@ func setup_game():
 	ui_manager.player_system_ref = player_system
 	ui_manager.card_system_ref = card_system
 	ui_manager.create_ui(self)
+	
+	# 手札UIを初期化（UILayerが作成された後）
+	var ui_layer = get_node_or_null("UILayer")
+	if ui_layer:
+		ui_manager.initialize_hand_container(ui_layer)
+		ui_manager.connect_card_system_signals()
 	
 	# システム連携設定
 	board_system_3d.setup_systems(player_system, card_system, battle_system, 
@@ -165,7 +172,6 @@ func connect_signals():
 	game_flow_manager.phase_changed.connect(_on_phase_changed)
 	
 	# PlayerSystemのシグナル
-	player_system.magic_changed.connect(ui_manager.update_player_info_panels)
 	player_system.player_won.connect(game_flow_manager.on_player_won)
 	
 	# UIManagerのシグナル

@@ -27,6 +27,16 @@ var board_system_ref = null  # BoardSystem3Dも格納可能
 # デバッグモード
 var debug_mode = false
 
+# 手札UI管理
+var hand_container: Control = null
+var card_scene = preload("res://scenes/Card.tscn")
+var player_card_nodes = {}  # player_id -> [card_nodes]
+
+# カード表示定数
+const CARD_WIDTH = 290
+const CARD_HEIGHT = 390
+const CARD_SPACING = 30
+
 func _ready():
 	# UIコンポーネントを動的にロードして作成
 	var PlayerInfoPanelClass = load("res://scripts/ui_components/player_info_panel.gd")
@@ -101,7 +111,7 @@ func create_ui(parent: Node):
 			player_info_panel.update_all_panels()
 			
 	if card_selection_ui and card_selection_ui.has_method("initialize"):
-		card_selection_ui.initialize(ui_layer, card_system_ref, phase_label)
+		card_selection_ui.initialize(ui_layer, card_system_ref, phase_label, self)
 		
 	if level_up_ui and level_up_ui.has_method("initialize"):
 		level_up_ui.initialize(ui_layer, null, phase_label)  # board_systemはnullで初期化
@@ -171,6 +181,11 @@ func update_player_info_panels():
 func show_card_selection_ui(current_player):
 	if card_selection_ui and card_selection_ui.has_method("show_selection"):
 		card_selection_ui.show_selection(current_player, "summon")
+
+# モード指定でカード選択UIを表示
+func show_card_selection_ui_mode(current_player, mode: String):
+	if card_selection_ui and card_selection_ui.has_method("show_selection"):
+		card_selection_ui.show_selection(current_player, mode)
 
 func hide_card_selection_ui():
 	if card_selection_ui and card_selection_ui.has_method("hide_selection"):
@@ -292,6 +307,147 @@ func _on_level_up_cancelled():
 
 func _on_debug_mode_changed(enabled: bool):
 	debug_mode = enabled
+
+# === 手札UI管理 ===
+
+# 手札コンテナを初期化
+func initialize_hand_container(ui_layer: Node):
+	hand_container = Control.new()
+	hand_container.name = "Hand"
+	hand_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui_layer.add_child(hand_container)
+	
+	for i in range(4):
+		player_card_nodes[i] = []
+	
+	print("手札コンテナ初期化完了")
+
+# CardSystemのシグナルに接続
+func connect_card_system_signals():
+	if not card_system_ref:
+		return
+	
+	if card_system_ref.has_signal("card_drawn"):
+		card_system_ref.card_drawn.connect(_on_card_drawn)
+	if card_system_ref.has_signal("card_used"):
+		card_system_ref.card_used.connect(_on_card_used)
+	if card_system_ref.has_signal("hand_updated"):
+		card_system_ref.hand_updated.connect(_on_hand_updated)
+
+# カードが引かれた時の処理
+func _on_card_drawn(card_data: Dictionary):
+	pass
+
+# カードが使用された時の処理
+func _on_card_used(card_data: Dictionary):
+	pass
+
+# 手札が更新された時の処理
+func _on_hand_updated():
+	update_hand_display(0)
+
+# 手札表示を更新
+func update_hand_display(player_id: int):
+	if player_id != 0:
+		return
+	
+	if not card_system_ref or not hand_container:
+		return
+	
+	print("[UIManager] 手札表示を更新中...")
+	
+	# 既存のカードノードを全て削除
+	for card_node in player_card_nodes[player_id]:
+		if is_instance_valid(card_node):
+			card_node.queue_free()
+	player_card_nodes[player_id].clear()
+	
+	# カードデータを取得
+	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
+	
+	# カードノードを生成
+	for i in range(hand_data.size()):
+		var card_data = hand_data[i]
+		var card_node = create_card_node(card_data, i)
+		if card_node:
+			player_card_nodes[player_id].append(card_node)
+	
+	# 全カードを中央配置
+	rearrange_hand(player_id)
+
+# カードノードを生成
+func create_card_node(card_data: Dictionary, index: int) -> Node:
+	if not is_instance_valid(hand_container):
+		print("ERROR: 手札コンテナが無効です")
+		return null
+	
+	if not card_scene:
+		print("ERROR: card_sceneがロードされていません")
+		return null
+		
+	var card = card_scene.instantiate()
+	if not card:
+		print("ERROR: カードのインスタンス化に失敗")
+		return null
+	
+	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
+	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
+		
+	hand_container.add_child(card)
+	
+	# 位置は後でrearrange_hand()で設定するので仮配置
+	var viewport_size = get_viewport().get_visible_rect().size
+	var card_y = viewport_size.y - CARD_HEIGHT - 20
+	card.position = Vector2(0, card_y)
+	
+	if card.has_method("load_card_data"):
+		card.load_card_data(card_data.id)
+	else:
+		print("WARNING: カードにload_card_dataメソッドがありません")
+	
+	return card
+
+# 手札を再配置（動的スケール対応）
+func rearrange_hand(player_id: int):
+	if player_id != 0:
+		return
+	
+	var card_nodes = player_card_nodes[player_id]
+	if card_nodes.is_empty():
+		return
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var hand_size = card_nodes.size()
+	
+	# 画面幅の80%を最大幅とする
+	var max_width = viewport_size.x * 0.8
+	
+	# 通常サイズでの全体幅を計算
+	var normal_total_width = hand_size * CARD_WIDTH + (hand_size - 1) * CARD_SPACING
+	
+	# スケール率を計算（最大幅を超える場合は縮小）
+	var scale = 1.0
+	if normal_total_width > max_width:
+		scale = max_width / normal_total_width
+	
+	# 縮小後のサイズを計算
+	var scaled_card_width = CARD_WIDTH * scale
+	var scaled_card_height = CARD_HEIGHT * scale
+	var scaled_spacing = CARD_SPACING * scale
+	
+	# 実際の全体幅を計算
+	var total_width = hand_size * scaled_card_width + (hand_size - 1) * scaled_spacing
+	var start_x = (viewport_size.x - total_width) / 2
+	var card_y = viewport_size.y - scaled_card_height - 20
+	
+	# カードを配置
+	for i in range(card_nodes.size()):
+		var card = card_nodes[i]
+		if card and is_instance_valid(card):
+			card.size = Vector2(scaled_card_width, scaled_card_height)
+			card.position = Vector2(start_x + i * (scaled_card_width + scaled_spacing), card_y)
+			if card.has_method("set_selectable"):
+				card.card_index = i
 
 # デバッグ入力を処理
 func _input(event):

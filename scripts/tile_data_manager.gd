@@ -224,30 +224,20 @@ func _update_display(tile_index: int):
 	if tile_info_display:
 		tile_info_display.update_display(tile_index, get_tile_info(tile_index))
 
-# === 2D互換用（将来削除予定） ===
-
-# タイルデータ配列を取得（PlayerInfoPanel用）
+# タイルデータ配列を取得（UIコンポーネント用）
 func get_tile_data_array() -> Array:
 	var data = []
 	
-	# 20タイル固定（2D版互換のため）
-	for i in range(20):
-		if tile_nodes.has(i):
-			var tile = tile_nodes[i]
-			data.append({
-				"element": tile.tile_type,
-				"type": get_tile_type(tile.tile_type),
-				"owner": tile.owner_id,
-				"level": tile.level
-			})
-		else:
-			# デフォルト値
-			data.append({
-				"element": "",
-				"type": 0,
-				"owner": -1,
-				"level": 1
-			})
+	# 全タイルのデータを配列化
+	for tile_index in tile_nodes:
+		var tile = tile_nodes[tile_index]
+		data.append({
+			"element": tile.tile_type,
+			"type": get_tile_type(tile.tile_type),
+			"owner": tile.owner_id,
+			"level": tile.level,
+			"index": tile_index  # 追加: タイルインデックス
+		})
 	
 	return data
 

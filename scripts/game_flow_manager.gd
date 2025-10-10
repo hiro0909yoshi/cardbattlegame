@@ -88,11 +88,10 @@ func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
 	
-	# カードドロー処理
-	if card_system.get_hand_size_for_player(current_player.id) < GameConstants.MAX_HAND_SIZE:
-		var drawn = card_system.draw_card_for_player(current_player.id)
-		if not drawn.is_empty() and current_player.id == 0:
-			await get_tree().create_timer(0.1).timeout
+	# カードドロー処理（常に1枚引く）
+	var drawn = card_system.draw_card_for_player(current_player.id)
+	if not drawn.is_empty() and current_player.id == 0:
+		await get_tree().create_timer(0.1).timeout
 	
 	# UI更新
 	ui_manager.update_player_info_panels()
@@ -265,6 +264,9 @@ func end_turn():
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)
 	
+	# 手札調整が必要かチェック
+	await check_and_discard_excess_cards()
+	
 	emit_signal("turn_ended", current_player.id)
 	
 	change_phase(GamePhase.END_TURN)
@@ -315,3 +317,39 @@ func on_player_won(player_id: int):
 func update_ui():
 	var current_player = player_system.get_current_player()
 	ui_manager.update_ui(current_player, current_phase)
+
+# 手札調整処理（ターン終了時）
+func check_and_discard_excess_cards():
+	var current_player = player_system.get_current_player()
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	
+	if hand_size <= GameConstants.MAX_HAND_SIZE:
+		return  # 調整不要
+	
+	var cards_to_discard = hand_size - GameConstants.MAX_HAND_SIZE
+	print("手札調整が必要: ", hand_size, "枚 → 6枚（", cards_to_discard, "枚捨てる）")
+	
+	# CPUの場合は自動で捨てる
+	if current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
+		card_system.discard_excess_cards_auto(current_player.id, GameConstants.MAX_HAND_SIZE)
+		return
+	
+	# 人間プレイヤーの場合は手動で選択
+	for i in range(cards_to_discard):
+		await prompt_discard_card()
+
+# カード捨て札をプロンプト
+func prompt_discard_card():
+	var current_player = player_system.get_current_player()
+	
+	# カード選択UIを表示（discardモード）
+	ui_manager.show_card_selection_ui_mode(current_player, "discard")
+	
+	# カード選択を待つ
+	var card_index = await ui_manager.card_selected
+	
+	# カードを捨てる（理由: discard）
+	card_system.discard_card(current_player.id, card_index, "discard")
+	
+	# UIを閉じる
+	ui_manager.hide_card_selection_ui()

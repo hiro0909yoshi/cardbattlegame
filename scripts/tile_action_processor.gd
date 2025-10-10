@@ -108,7 +108,6 @@ func show_summon_ui():
 	if ui_manager:
 		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
-		card_system.set_cards_selectable(true)
 
 # レベルアップUI表示
 func show_level_up_ui(tile_info: Dictionary):
@@ -125,7 +124,6 @@ func show_battle_ui(mode: String):
 		else:
 			ui_manager.phase_label.text = "バトルするクリーチャーを選択"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
-		card_system.set_cards_selectable(true)
 
 # === アクション処理 ===
 
