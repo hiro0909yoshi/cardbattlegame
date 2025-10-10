@@ -1,7 +1,8 @@
 extends Node
 class_name GameFlowManager
 
-# ゲームのフェーズ管理・ターン進行システム（3D対応版・修正版）
+# ゲームのフェーズ管理・ターン進行システム（3D専用版）
+# 修正日: 2025/01/10 - BUG-000対応: シグナル経路を完全一本化
 
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
@@ -23,25 +24,26 @@ enum GamePhase {
 
 var current_phase = GamePhase.SETUP
 
-# 3D用追加変数
-var is_3d_mode = false
+# 3D用変数
 var board_system_3d = null
 var player_is_cpu = []
 
-# ハンドラークラス（3D版では一部のみ使用）
+# ハンドラークラス
 var cpu_ai_handler: CPUAIHandler
 
 # システム参照
 var player_system: PlayerSystem
 var card_system: CardSystem
-var board_system  # 2D/3D両対応
 var skill_system: SkillSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
 
+# ターン終了制御用フラグ（BUG-000対策）
+var is_ending_turn = false
+
 func _ready():
-	# CPUAIHandlerは3Dでも使用
+	# CPUAIHandler初期化
 	cpu_ai_handler = CPUAIHandler.new()
 	add_child(cpu_ai_handler)
 	
@@ -50,13 +52,12 @@ func _ready():
 	cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided)
 	cpu_ai_handler.level_up_decided.connect(_on_cpu_level_up_decided)
 
-# 3Dモード設定（修正版）
+# 3Dモード設定
 func setup_3d_mode(board_3d, cpu_settings: Array):
-	is_3d_mode = true
 	board_system_3d = board_3d
 	player_is_cpu = cpu_settings
 	
-	# 3Dボードのシグナル接続（tile_action_completedのみ）
+	# 3Dボードのシグナル接続
 	if board_system_3d:
 		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
 
@@ -65,19 +66,18 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 					bt_system = null, st_system = null):
 	player_system = p_system
 	card_system = c_system
-	board_system = b_system
 	skill_system = s_system
 	ui_manager = ui_system
 	battle_system = bt_system
 	special_tile_system = st_system
 	
-	# CPU AIハンドラー設定（3D対応）
+	# CPU AIハンドラー設定
 	if cpu_ai_handler:
 		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
 
 # ゲーム開始
 func start_game():
-	print("\n=== ゲーム開始 ===")
+	print("=== ゲーム開始 ===")
 	current_phase = GamePhase.DICE_ROLL
 	ui_manager.set_dice_button_enabled(true)
 	update_ui()
@@ -97,8 +97,8 @@ func start_turn():
 	# UI更新
 	ui_manager.update_player_info_panels()
 	
-	# 3Dモードの場合
-	if is_3d_mode and current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
+	# CPUターンの場合
+	if current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
 		ui_manager.set_dice_button_enabled(false)
 		ui_manager.phase_label.text = "CPUのターン..."
 		current_phase = GamePhase.DICE_ROLL
@@ -127,56 +127,81 @@ func roll_dice():
 	
 	var current_player = player_system.get_current_player()
 	
-	# 3Dモードの移動
-	if is_3d_mode and board_system_3d:
-		# フェーズを移動中に設定
+	# 3D移動
+	if board_system_3d:
 		ui_manager.phase_label.text = "移動中..."
 		board_system_3d.move_player_3d(current_player.id, modified_dice)
-	else:
-		# 2D版の処理（削除予定）
-		player_system.move_player_steps(current_player.id, modified_dice, board_system)
 
 # === 3Dモード用イベント ===
 
 func _on_tile_action_completed_3d():
-	# 重複呼び出しを防ぐ（END_TURNまたはSETUPの場合はスキップ）
+	# 重複呼び出しを防ぐ（BUG-000対策: フェーズチェック + フラグチェック）
 	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
 		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
 		return
 	
+	if is_ending_turn:
+		print("Warning: tile_action_completed ignored (already ending turn)")
+		return
+	
 	end_turn()
 
-# === CPU処理（3D対応） ===
+# === CPU処理 ===
+# 修正: 全てのCPU処理でboard_system_3dに処理を委譲し、直接emit_signalしない
 
 func _on_cpu_summon_decided(card_index: int):
-	if is_3d_mode and board_system_3d:
+	if not board_system_3d:
+		return
+	
+	# 修正: TileActionProcessorに処理を委譲（シグナルは自動発火）
+	if board_system_3d.tile_action_processor:
+		board_system_3d.tile_action_processor.execute_summon(card_index)
+	else:
+		# フォールバック: 旧方式（tile_action_processorがない場合）
 		if card_index >= 0:
 			board_system_3d.execute_summon(card_index)
 		else:
-			board_system_3d.emit_signal("tile_action_completed")
-	else:
-		# 2D版の処理（削除予定）
-		end_turn()
+			# パス処理
+			board_system_3d.on_action_pass()
 
 func _on_cpu_battle_decided(card_index: int):
-	if is_3d_mode and board_system_3d:
-		var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-		var tile_info = board_system_3d.get_tile_info(current_tile)
-		
-		if card_index >= 0:
-			# バトル処理をBattleSystemに委譲
-			if not battle_system.invasion_completed.is_connected(board_system_3d._on_invasion_completed):
-				battle_system.invasion_completed.connect(board_system_3d._on_invasion_completed, CONNECT_ONE_SHOT)
-			battle_system.execute_3d_battle(board_system_3d.current_player_index, card_index, tile_info)
-		else:
-			# 通行料支払い
-			board_system_3d.on_action_pass()
+	if not board_system_3d:
+		return
+	
+	var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
+	var tile_info = board_system_3d.get_tile_info(current_tile)
+	
+	if card_index >= 0:
+		# バトル処理をBattleSystemに委譲
+		if not battle_system.invasion_completed.is_connected(board_system_3d._on_invasion_completed):
+			battle_system.invasion_completed.connect(board_system_3d._on_invasion_completed, CONNECT_ONE_SHOT)
+		battle_system.execute_3d_battle(board_system_3d.current_player_index, card_index, tile_info)
 	else:
-		# 2D版の処理（削除予定）
-		end_turn()
+		# 修正: 通行料支払い処理を委譲（シグナルは自動発火）
+		board_system_3d.on_action_pass()
 
 func _on_cpu_level_up_decided(do_upgrade: bool):
-	if is_3d_mode and board_system_3d:
+	if not board_system_3d:
+		return
+	
+	# 修正: TileActionProcessorに処理を委譲
+	if board_system_3d.tile_action_processor:
+		if do_upgrade:
+			var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
+			var cost = board_system_3d.get_upgrade_cost(current_tile)
+			# レベルアップ処理を委譲（target_levelは計算が必要なので、直接アップグレード）
+			if player_system.get_current_player().magic_power >= cost:
+				var tile = board_system_3d.tile_nodes[current_tile]
+				var target_level = tile.level + 1
+				board_system_3d.tile_action_processor.on_level_up_selected(target_level, cost)
+			else:
+				# 魔力不足の場合はキャンセル
+				board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
+		else:
+			# アップグレードしない場合
+			board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
+	else:
+		# フォールバック: 旧方式
 		if do_upgrade:
 			var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
 			var cost = board_system_3d.get_upgrade_cost(current_tile)
@@ -184,47 +209,38 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 				board_system_3d.upgrade_tile_level(current_tile)
 				player_system.add_magic(board_system_3d.current_player_index, -cost)
 				
-				# 表示更新
 				if board_system_3d.tile_info_display:
 					board_system_3d.update_all_tile_displays()
 				if ui_manager:
 					ui_manager.update_player_info_panels()
-					
-				print("CPU: 土地をレベルアップ！")
 				
-		board_system_3d.emit_signal("tile_action_completed")
-	else:
-		# 2D版の処理（削除予定）
-		end_turn()
+				print("CPU: 土地をレベルアップ！")
+		
+		# フォールバック用の完了通知
+		if board_system_3d.tile_action_processor:
+			board_system_3d.tile_action_processor._complete_action()
 
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
-	if is_3d_mode and board_system_3d:
+	if board_system_3d:
 		board_system_3d.on_card_selected(card_index)
 
 func on_pass_button_pressed():
-	if is_3d_mode and board_system_3d:
+	if board_system_3d:
 		board_system_3d.on_action_pass()
 
 func on_level_up_selected(target_level: int, cost: int):
-	if is_3d_mode and board_system_3d:
-		# BoardSystem3Dに処理を委譲
-		if board_system_3d.has_method("on_level_up_selected"):
-			board_system_3d.on_level_up_selected(target_level, cost)
-		else:
-			# メソッドがない場合の処理
-			if target_level == 0 or cost == 0:
-				board_system_3d.emit_signal("tile_action_completed")
-			else:
-				# レベルアップ処理
-				var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-				if player_system.get_current_player().magic_power >= cost:
-					board_system_3d.upgrade_tile_level(current_tile)
-					player_system.add_magic(board_system_3d.current_player_index, -cost)
-					board_system_3d.update_all_tile_displays()
-					ui_manager.update_player_info_panels()
-				board_system_3d.emit_signal("tile_action_completed")
+	if not board_system_3d:
+		return
+	
+	# 修正: 常にBoardSystem3Dに処理を委譲（直接emit_signalしない）
+	if board_system_3d.has_method("on_level_up_selected"):
+		board_system_3d.on_level_up_selected(target_level, cost)
+	else:
+		# tile_action_processorに直接委譲
+		if board_system_3d.tile_action_processor:
+			board_system_3d.tile_action_processor.on_level_up_selected(target_level, cost)
 
 # フェーズ変更
 func change_phase(new_phase: GamePhase):
@@ -234,11 +250,18 @@ func change_phase(new_phase: GamePhase):
 
 # ターン終了
 func end_turn():
-	# 重複処理を防ぐ
-	if current_phase == GamePhase.END_TURN:
-		print("Warning: Already ending turn")
+	# 修正: 二重実行防止を強化（BUG-000対策）
+	if is_ending_turn:
+		print("Warning: Already ending turn (flag check)")
 		return
-		
+	
+	if current_phase == GamePhase.END_TURN:
+		print("Warning: Already ending turn (phase check)")
+		return
+	
+	# フラグを立てる
+	is_ending_turn = true
+	
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)
 	
@@ -247,9 +270,9 @@ func end_turn():
 	change_phase(GamePhase.END_TURN)
 	skill_system.end_turn_cleanup()
 	
-	# プレイヤー切り替え処理
-	if is_3d_mode and board_system_3d:
-		# 3Dモードでプレイヤー切り替え
+	# プレイヤー切り替え処理（3D専用）
+	if board_system_3d:
+		# 次のプレイヤーへ
 		board_system_3d.current_player_index = (board_system_3d.current_player_index + 1) % board_system_3d.player_count
 		player_system.current_player_index = board_system_3d.current_player_index
 		
@@ -257,14 +280,13 @@ func end_turn():
 		
 		# カメラを次のプレイヤーに移動
 		await move_camera_to_next_player()
-	else:
-		player_system.next_player()
 	
 	# 次のターン開始前に少し待機
 	await get_tree().create_timer(GameConstants.TURN_END_DELAY).timeout
 	
 	# フェーズをリセットしてから次のターン開始
 	current_phase = GamePhase.SETUP
+	is_ending_turn = false  # フラグをリセット
 	start_turn()
 
 # カメラ移動関数
@@ -287,7 +309,7 @@ func on_player_won(player_id: int):
 	change_phase(GamePhase.SETUP)
 	ui_manager.set_dice_button_enabled(false)
 	ui_manager.phase_label.text = player.name + "の勝利！"
-	print("\n🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
+	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 
 # UI更新
 func update_ui():

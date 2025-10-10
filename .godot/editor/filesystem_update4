@@ -1,11 +1,11 @@
 res://scenes/game.tscn
 res://assets/building_parts/床3.tres
-res://data/fire.json
+res://scripts/game_flow_manager.gd
 res://scenes/MainMenu.tscn
 res://scenes/Main.tscn
 res://scenes/DeckEditor.tscn
 res://scenes/Album.tscn
 res://scenes/Card.tscn
-res://scripts/card_system.gd
-res://scripts/game_constants.gd
-res://scripts/skills/effect_combat.gd
+res://turn_end_flow.md
+res://TURN_END_QUICK_FIX.md
+res://issues.md

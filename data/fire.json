@@ -56,7 +56,25 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "強打・世界消去",
-	  "ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]"
+	  "ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]",
+	  "ability_parsed": {
+		"keywords": ["強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "has_mark",
+			"mark": "○実装まだ"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "has_mark", "mark": "○"}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 5,
@@ -324,7 +342,25 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "先制・強打・土地変性",
-	  "ability_detail": "先制；強打[水]；土地変性[火]"
+	  "ability_detail": "先制；強打[水]；土地変性[火]",
+	  "ability_parsed": {
+		"keywords": ["先制", "強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_is_element",
+			"elements": "水"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "enemy_is_element", "elements": "水"}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 20,
@@ -437,7 +473,24 @@
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "強打",
-	  "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強打"
+	  "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強打",
+	  "ability_parsed": {
+		"keywords": ["強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_no_item"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "enemy_no_item"}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 27,
@@ -639,7 +692,29 @@
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "先制・貫通・強打",
-	  "ability_detail": "先制；貫通[水]；強打[水]"
+	  "ability_detail": "先制；貫通[水]；強打[水]",
+	  "ability_parsed": {
+		"keywords": ["先制", "貫通", "強打"],
+		"keyword_conditions": {
+		  "貫通": {
+			"condition_type": "enemy_is_element",
+			"elements": "水"
+		  },
+		  "強打": {
+			"condition_type": "enemy_is_element",
+			"elements": "水"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "enemy_is_element", "elements": "水"}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 39,
@@ -675,6 +750,7 @@
 	  "ability": "復活",
 	  "ability_detail": "復活"
 	},
+	
 	{
 	  "id": 41,
 	  "name": "フレイムデューク",
@@ -688,7 +764,24 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・強打",
-	  "ability_detail": "先制；武器使用時、強打；アイテム復帰[ブック]"
+	  "ability_detail": "先制；武器使用時、強打；アイテム復帰[ブック]",
+	  "ability_parsed": {
+		"keywords": ["先制", "強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "with_weapon"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "with_weapon"}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 42,
@@ -791,7 +884,25 @@
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "感応・強打",
-	  "ability_detail": "感応[地・ST+20、HP+10]；強打[火地]"
+	  "ability_detail": "感応[地・ST+20、HP+10]；強打[火地]",
+	  "ability_parsed": {
+		"keywords": ["強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_is_element",
+			"elements": ["火", "地"]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "enemy_is_element", "elements": ["火", "地"]}
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 47,
@@ -833,7 +944,24 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "HP+基本ST",
-	  "ability_detail": "HP+基本ST；隣が自領地なら強打"
+	  "ability_detail": "HP+基本ST；隣が自領地なら強打",
+	  "ability_parsed": {
+		"keywords": ["強打"],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "adjacent_ally_land"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {"condition_type": "adjacent_ally_land"}
+			]
+		  }
+		]
+	  }
 	}
   ]
 }

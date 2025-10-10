@@ -125,7 +125,7 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "enemy_no_item"}
+			  {"condition_type": "enemy_no_item実装まだ"}
 			]
 		  }
 		]
@@ -189,7 +189,7 @@
 		"keywords": ["先制", "強打"],
 		"keyword_conditions": {
 		  "強打": {
-			"condition_type": "with_weapon"
+			"condition_type": "with_weapon実装まだ"
 		  }
 		},
 		"effects": [
