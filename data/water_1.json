@@ -1,0 +1,516 @@
+{
+  "cards": [
+    {
+      "id": 100,
+      "name": "G・イール",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "無効化",
+      "ability_detail": "無効化[地風]"
+    },
+    {
+      "id": 101,
+      "name": "G・ノーチラス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 80
+      },
+      "restrictions": {
+        "item_use": [
+          "火"
+        ],
+        "cannot_summon": [
+          "地",
+          "防具"
+        ]
+      },
+      "ap": 10,
+      "hp": 70,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 102,
+      "name": "アイスウォール",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 25
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "地",
+          "防具"
+        ]
+      },
+      "ap": 0,
+      "hp": 40,
+      "ability": "防御型",
+      "ability_detail": "防御型；HP+20"
+    },
+    {
+      "id": 103,
+      "name": "アクアデューク",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60,
+        "lands_required": [
+          "water",
+          "water"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "援護・無効化",
+      "ability_detail": "援護[水]；防具使用時、無効化[通常攻撃]；HP効果無効"
+    },
+    {
+      "id": 104,
+      "name": "アクアホーン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70
+      },
+      "restrictions": {
+        "item_use": [
+          "火",
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 30,
+      "ability": "無効化・秘術",
+      "ability_detail": "無効化[水地]；秘術[G30・ミストウィングに変身]"
+    },
+    {
+      "id": 105,
+      "name": "アクアリング",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 40
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "無効化",
+      "ability_detail": "無効化[MHP30以下]"
+    },
+    {
+      "id": 106,
+      "name": "アブサス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 40,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "地",
+          "火"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "無効化",
+      "ability_detail": "戦闘地がレベル3以上の場合、無効化[通常攻撃]"
+    },
+    {
+      "id": 107,
+      "name": "アマゾン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "アイテム不使用時・魔力奪取",
+      "ability_detail": "アイテム不使用時、魔力奪取[周回数×G30]"
+    },
+    {
+      "id": 108,
+      "name": "アルプ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 40
+      },
+      "restrictions": {
+        "item_use": [
+          "火"
+        ]
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "秘術",
+      "ability_detail": "秘術[G50・対象敵クリーチャーをダウン]"
+    },
+    {
+      "id": 109,
+      "name": "アンダイン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 55
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "HP+水自領地数×20",
+      "ability_detail": "HP=水自領地数×20；無効化[水]"
+    },
+    {
+      "id": 110,
+      "name": "アンフィビアン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "戦闘地が水風の場合",
+      "ability_detail": "戦闘地が水風の場合、ST+20；HP効果無効"
+    },
+    {
+      "id": 111,
+      "name": "イエティ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "即死・無効化",
+      "ability_detail": "即死[火・60%]；無効化[火]"
+    },
+    {
+      "id": 112,
+      "name": "イド",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 50,
+        "lands_required": [
+          "water"
+        ],
+        "cards_sacrifice": 1
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "合成・無効化",
+      "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]"
+    },
+    {
+      "id": 113,
+      "name": "エキノダーム",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "再生・不屈",
+      "ability_detail": "再生；不屈"
+    },
+    {
+      "id": 114,
+      "name": "オトヒメ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "応援・戦闘後破壊",
+      "ability_detail": "応援[防御側・HP+10]；戦闘後、敵に○戦闘後破壊"
+    },
+    {
+      "id": 115,
+      "name": "オドントティラヌス",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "感応",
+      "ability_detail": "感応[風・ST+20、HP+10]",
+      "ability_parsed": {
+        "keywords": [
+          "感応"
+        ],
+        "keyword_conditions": {
+          "感応": {
+            "element": "wind",
+            "stat_bonus": {
+              "ap": 20,
+              "hp": 10
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 116,
+      "name": "カイザーペンギン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 90
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "アイテム破壊",
+      "ability_detail": "アイテム破壊[道具か巻物か援護クリーチャー]"
+    },
+    {
+      "id": 117,
+      "name": "カワヒメ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 70
+      },
+      "restrictions": {
+        "item_use": [
+          "火"
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "不屈・秘術",
+      "ability_detail": "不屈；秘術[G30・対象クリーチャーのST-10]"
+    },
+    {
+      "id": 118,
+      "name": "キロネックス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 50
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "防御側なら即死",
+      "ability_detail": "防御側なら即死[全・80%]；自破壊時、G100を失う"
+    },
+    {
+      "id": 119,
+      "name": "キングトータス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 100
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "後手",
+      "ability_detail": "後手"
+    },
+    {
+      "id": 120,
+      "name": "グルイースラッグ",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60
+      },
+      "restrictions": {
+        "item_use": [
+          "火",
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "移動侵略を受けない",
+      "ability_detail": "移動侵略を受けない"
+    },
+    {
+      "id": 121,
+      "name": "ケルピー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 80,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "火",
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "足どめ",
+      "ability_detail": "足どめ[水]"
+    },
+    {
+      "id": 122,
+      "name": "ゴーストシップ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 75
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "感応・無効化",
+      "ability_detail": "感応[風・HP+30]；無効化[ST40以下]",
+      "ability_parsed": {
+        "keywords": [
+          "感応",
+          "無効化"
+        ],
+        "keyword_conditions": {
+          "感応": {
+            "element": "wind",
+            "stat_bonus": {
+              "ap": 0,
+              "hp": 30
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 123,
+      "name": "シーボンズ",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 40
+      },
+      "restrictions": {
+        "item_use": [
+          "火"
+        ],
+        "cannot_summon": [
+          "地",
+          "防具",
+          "武器"
+        ]
+      },
+      "ap": 10,
+      "hp": 40,
+      "ability": "防御型・戦闘中能力無効",
+      "ability_detail": "防御型；戦闘中能力無効"
+    },
+    {
+      "id": 124,
+      "name": "スキュラ",
+      "rarity": "R",
+      "type": "creature",
+      "element": "water",
+      "cost": {
+        "mp": 60,
+        "lands_required": [
+          "water"
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "敵の攻撃成功時能力を無効化",
+      "ability_detail": "敵の攻撃成功時能力を無効化；戦闘後、敵に○通行料無効"
+    }
+  ]
+}

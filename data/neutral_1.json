@@ -1,0 +1,451 @@
+{
+  "cards": [
+    {
+      "id": 400,
+      "name": "アーキミミック",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 40
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "無効化・地形変化コスト変化",
+      "ability_detail": "無効化[巻物]；地形変化コスト変化[G50]"
+    },
+    {
+      "id": 401,
+      "name": "アーキビショップ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 50
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "秘術・アイテム破壊無効・不屈",
+      "ability_detail": "秘術[G30・対象領地の♡を消す]；アイテム破壊・盗み無効；不屈"
+    },
+    {
+      "id": 402,
+      "name": "アーマードラゴン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 100
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "先制・秘術",
+      "ability_detail": "先制；秘術[G80・対象⬜のHP-30]",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 403,
+      "name": "アイアンモンガー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 10
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "秘術",
+      "ability_detail": "秘術[G50・アイテムカードを1枚引く]"
+    },
+    {
+      "id": 404,
+      "name": "アンドロギア",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 250,
+        "cards_sacrifice": 1
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "先制・無効化・援護・合体",
+      "ability_detail": "先制；無効化[巻物]；援護[⬜]；合体[ビーストギア]",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 405,
+      "name": "オーガロード",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 70
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "オーガ配置時能力値上昇・巻物強打",
+      "ability_detail": "💧🔥オーガ配置時ST+20、💧🌱オーガ配置時HP+20；巻物強打"
+    },
+    {
+      "id": 406,
+      "name": "ギアリオン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 300,
+        "cards_sacrifice": 1
+      },
+      "ap": 80,
+      "hp": 80,
+      "ability": "先制・防魔・無効化",
+      "ability_detail": "先制；防魔；無効化[巻物]",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 407,
+      "name": "グランギア",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 60
+      },
+      "restrictions": {
+        "item_use": [
+          "巻物"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "援護・合体・無効化",
+      "ability_detail": "援護；合体[スカイギア]；無効化[巻物]"
+    },
+    {
+      "id": 408,
+      "name": "クリーピングコイン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 20
+      },
+      "ap": 10,
+      "hp": 30,
+      "ability": "魔力獲得・破壊時魔力道産",
+      "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、道産[G100]"
+    },
+    {
+      "id": 409,
+      "name": "グレートフォシル",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 30,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "item_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "ap": 0,
+      "hp": 30,
+      "ability": "防御型・通行料変化・死者復活",
+      "ability_detail": "防御型；通行料変化[G0]；死者復活[ティラノサウルス]"
+    },
+    {
+      "id": 410,
+      "name": "クロックアウル",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 10
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "秘術",
+      "ability_detail": "秘術[G40・次R、対象セプターは選んだ方向に進める]"
+    },
+    {
+      "id": 411,
+      "name": "ゴールドトーテム",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 0
+      },
+      "restrictions": {
+        "item_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "ap": 0,
+      "hp": 30,
+      "ability": "防御型・秘術",
+      "ability_detail": "防御型；秘術[G0・使用者にG200を与え、自壊]"
+    },
+    {
+      "id": 412,
+      "name": "ゴブリン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 0
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 413,
+      "name": "サムライ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 50
+      },
+      "ap": 50,
+      "hp": 30,
+      "ability": "即死",
+      "ability_detail": "即死[ST40以上・70%]"
+    },
+    {
+      "id": 414,
+      "name": "シーフ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 30
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "アイテム盗み",
+      "ability_detail": "アイテム盗み"
+    },
+    {
+      "id": 415,
+      "name": "シェイプシフター",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 30
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "秘術",
+      "ability_detail": "秘術[G70・対象と同じクリーチャーに変身]"
+    },
+    {
+      "id": 416,
+      "name": "シャドウガイスト",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 60
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "先制・STドレイン・不屈",
+      "ability_detail": "先制；STドレイン；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 417,
+      "name": "スカイギア",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 40
+      },
+      "restrictions": {
+        "item_use": [
+          "巻物"
+        ]
+      },
+      "ap": 40,
+      "hp": 20,
+      "ability": "援護・合体・先制",
+      "ability_detail": "援護；合体[グランギア]；先制",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 418,
+      "name": "スケルトン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 30
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "再生",
+      "ability_detail": "再生"
+    },
+    {
+      "id": 419,
+      "name": "スタチュー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 10
+      },
+      "restrictions": {
+        "item_use": [
+          "防具",
+          "巻物",
+          "巻物"
+        ]
+      },
+      "ap": 0,
+      "hp": 50,
+      "ability": "防御型・周回回復不可",
+      "ability_detail": "防御型；周回回復不可"
+    },
+    {
+      "id": 420,
+      "name": "スチームギア",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 60
+      },
+      "restrictions": {
+        "item_use": [
+          "巻物"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "通行料変化",
+      "ability_detail": "通行料変化[1/2]"
+    },
+    {
+      "id": 421,
+      "name": "ストーンジゾウ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 50
+      },
+      "restrictions": {
+        "item_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "ap": 10,
+      "hp": 30,
+      "ability": "防御型・防魔・秘術",
+      "ability_detail": "防御型；防魔；秘術[G100・対象領地を⬜に変え、自壊]"
+    },
+    {
+      "id": 422,
+      "name": "セイント",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 50
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "無効化・即死",
+      "ability_detail": "無効化[⬜]；即死[⬜・100%]"
+    },
+    {
+      "id": 423,
+      "name": "ティラノサウルス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 75
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "水",
+          "地"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 424,
+      "name": "デコイ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "mp": 50,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "item_use": [
+          "防具",
+          "巻物",
+          "巻物"
+        ]
+      },
+      "ap": 0,
+      "hp": 10,
+      "ability": "反射",
+      "ability_detail": "反射[通常攻撃]"
+    }
+  ]
+}

@@ -22,3 +22,7 @@ res://scripts/board_system_3d.gd
 res://scripts/ui_manager.gd
 res://scripts/ui_components/card_selection_ui.gd
 res://scripts/card.gd
+res://design.md
+res://issues.md
+res://scripts/battle_participant.gd
+res://scripts/card_loader.gd

@@ -7,6 +7,8 @@
 4. [ゲームフロー](#ゲームフロー)
 5. [UI/UX設計](#uiux設計)
 6. [技術仕様](#技術仕様)
+7. [デバッグ機能](#デバッグ機能)
+8. [システム初期化](#システム初期化)
 
 ---
 
@@ -298,14 +300,26 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 ```
 
 #### スキルシステム統合
+
+**詳細は [skills_design.md](skills_design.md) を参照**
+
 ```gdscript
 # スキル適用フロー
 1. ability_parsed を解析
 2. ConditionChecker で条件判定
-   └─ 🆕 adjacent_ally_land 条件サポート
 3. EffectCombat で効果適用
 4. 修正後の AP/HP でバトル実行
 ```
+
+**実装済み主要スキル**:
+- 感応: 特定属性の土地所有でAP/HP上昇
+- 貫通: 防御側の土地ボーナス無効化
+- 強打: 条件下でAP増幅
+- 先制: 先攻権獲得
+
+**スキル適用順序**: 感応 → 強打 → その他
+
+詳細な仕様、実装例、データ構造については `skills_design.md` を参照してください。
 
 ### 4. プレイヤーシステム (PlayerSystem)
 
@@ -330,91 +344,26 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 
 ### 5. スキルシステム (SkillSystem)
 
+**詳細は [skills_design.md](skills_design.md) を参照**
+
 #### アーキテクチャ
 ```
 SkillSystem (マネージャー)
   ├── ConditionChecker (条件判定)
-  │   ├── build_battle_context()
-  │   └── 🆕 adjacent_ally_land条件
   └── EffectCombat (効果適用)
-	  └── apply_power_strike()
 ```
 
-#### スキル定義構造
-```json
-{
-  "ability_parsed": {
-	"effects": [
-	  {
-		"effect_type": "modify_stats",
-		"target": "self",
-		"stat": "AP",
-		"operation": "multiply",
-		"formula": "fire_lands * 10",
-		"conditions": [
-		  {
-			"condition_type": "on_element_land",
-			"element": "火"
-		  }
-		]
-	  }
-	]
-  }
-}
-```
+#### 実装済みスキル一覧
+- **感応**: 特定属性の土地所有でAP/HP上昇（9体実装）
+- **貫通**: 防御側の土地ボーナス無効化
+- **強打**: 条件下でAP増幅
+- **先制**: 先攻権獲得
+- **防魔**: スペル無効化（部分実装）
 
-#### 実装済みエフェクト
-- **modify_stats**: ステータス変更
-- **add_keyword**: キーワード能力付与
-- **damage**: ダメージ
-- **heal**: 回復
+#### スキル適用順序
+1. 感応スキル → 2. 強打スキル → 3. その他スキル
 
-#### 実装済み条件
-- **on_element_land**: 特定属性の土地
-- **has_item_type**: アイテム装備
-- **land_level_check**: 土地レベル
-- **element_land_count**: 属性土地数
-- **🆕 adjacent_ally_land**: 隣接自領地判定
-
-#### 🆕 adjacent_ally_land条件
-
-**定義**: バトル発生タイルの隣接タイルに、攻撃プレイヤーの領地が存在するか判定。
-
-**使用例（ローンビースト）**:
-```json
-{
-  "id": 49,
-  "name": "ローンビースト",
-  "ability_parsed": {
-	"effects": [{
-	  "effect_type": "power_strike",
-	  "multiplier": 1.5,
-	  "conditions": [
-		{"condition_type": "adjacent_ally_land"}
-	  ]
-	}]
-  }
-}
-```
-
-**評価フロー**:
-```
-1. BattleSystem
-   ├─ battle_tile_index
-   ├─ player_id
-   └─ board_system参照
-
-2. ConditionChecker
-   └─ adjacent_ally_land条件を検出
-
-3. TileNeighborSystem
-   ├─ get_spatial_neighbors(battle_tile)
-   ├─ 各隣接タイルのownerをチェック
-   └─ 自領地があれば true
-
-4. 強打発動
-   └─ AP × 1.5
-```
+スキルの詳細仕様、条件システム、BattleParticipantとHP管理、将来実装予定のスキルについては `skills_design.md` を参照してください。
 
 ---
 
@@ -918,4 +867,207 @@ func register_tile_event(tile_index: int, event: Callable):
 
 ---
 
-**最終更新**: 2025年1月11日（v1.3）
+## デバッグ機能
+
+### debug_manual_control_all フラグ
+
+#### 概要
+全プレイヤー（CPUを含む）を手動操作可能にするデバッグ用フラグ
+
+#### 仕様
+```gdscript
+@export var debug_manual_control_all: bool = false
+```
+
+**動作**:
+- `true`: 全プレイヤーを手動操作（CPUも含む）
+- `false`: `player_is_cpu`配列に従って動作
+
+**用途**:
+- デバッグ・テスト時に全プレイヤーを操作したい場合
+- スキル動作の検証
+- バランス調整のための実戦テスト
+
+#### データフロー
+```
+GameFlowManager.debug_manual_control_all (エクスポート変数)
+  ↓ setup_3d_mode()で転送
+BoardSystem3D.debug_manual_control_all
+  ↓ process_tile_landing()で渡す
+TileActionProcessor.process_tile_landing(debug_manual_control_all)
+  ↓ CPU判定
+is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
+```
+
+#### 影響範囲
+| システム | 動作 |
+|---------|------|
+| TileActionProcessor | CPU判定に使用 |
+| CardSelectionUI | カード選択可否の判定 |
+| UIManager | 手札表示制御（現在は全員表示） |
+
+---
+
+## システム初期化
+
+### 初期化順序の重要性
+
+**game_3d.gdの_ready()処理順序**（重要度：高）
+
+正しい順序で初期化しないと、参照が未設定のままになり不具合が発生します。
+
+#### 正しい初期化順序
+
+```gdscript
+func _ready():
+	# 1. システム作成（省略）
+	
+	# 2. UIManager設定
+	ui_manager.board_system_ref = board_system_3d
+	ui_manager.player_system_ref = player_system
+	ui_manager.card_system_ref = card_system
+	ui_manager.create_ui(self)  # ← CardSelectionUI等を初期化
+	
+	# 3. 手札UI初期化
+	var ui_layer = get_node_or_null("UILayer")
+	if ui_layer:
+		ui_manager.initialize_hand_container(ui_layer)
+		ui_manager.connect_card_system_signals()
+	
+	# 4. デバッグフラグ設定（重要！setup_systemsより前）
+	game_flow_manager.debug_manual_control_all = debug_manual_control_all
+	
+	# 5. GameFlowManager設定
+	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
+									skill_system, ui_manager, battle_system, special_tile_system)
+	game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
+	
+	# 6. CardSelectionUIへの参照再設定（重要！）
+	if ui_manager.card_selection_ui:
+		ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
+```
+
+#### なぜ参照再設定が必要か
+
+**問題のタイミング図**:
+```
+時刻  イベント
+T1    ui_manager.create_ui()
+	  └─ card_selection_ui.initialize()
+		 └─ card_selection_ui.game_flow_manager_ref = game_flow_manager_ref
+			(この時点でui_manager.game_flow_manager_refはnull)
+
+T2    game_flow_manager.setup_systems(ui_manager)
+	  └─ ui_manager.game_flow_manager_ref = self
+		 (ここで初めてui_managerに参照が設定される)
+
+T3    card_selection_ui使用時
+	  └─ game_flow_manager_ref.debug_manual_control_all
+		 (nullのままなのでエラー)
+```
+
+**解決方法**:
+- setup_systems()の後に明示的に再設定
+- または、debug_manual_control_allを先に設定してからsetup_systems()を呼ぶ
+
+---
+
+## 手札表示システム
+
+### 設計方針
+
+#### 基本仕様
+- **常に現在のターンプレイヤーの手札のみを表示**
+- ターン切り替え時に全プレイヤーの手札UIを削除してから再生成
+- 将来的にPVP対応時も同じロジックで動作可能
+
+#### 手札更新フロー
+
+```gdscript
+// CardSystem
+emit_signal("hand_updated")  // プレイヤー指定なし
+  ↓
+// UIManager
+func _on_hand_updated():
+	var current_player = player_system_ref.get_current_player()
+	update_hand_display(current_player.id)  // 現在プレイヤーのIDで更新
+  ↓
+func update_hand_display(player_id: int):
+	// 1. 全プレイヤーの手札を削除（重要！）
+	for pid in player_card_nodes.keys():
+		for card_node in player_card_nodes[pid]:
+			card_node.queue_free()
+		player_card_nodes[pid].clear()
+	
+	// 2. 現在プレイヤーの手札を生成
+	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
+	for card_data in hand_data:
+		var card_node = create_card_node(card_data)
+		player_card_nodes[player_id].append(card_node)
+	
+	// 3. 手札を配置
+	rearrange_hand(player_id)
+```
+
+#### カード操作の仕様
+
+| 状態 | is_selectable | mouse_filter | ドラッグ | 選択 |
+|------|---------------|--------------|---------|------|
+| 通常表示 | false | STOP | 無効 | 無効 |
+| 選択モード | true | STOP | 無効 | 有効 |
+
+**実装**:
+```gdscript
+// ui_manager.gd - create_card_node()
+card.is_selectable = false  // 初期状態は選択不可
+
+// card_selection_ui.gd - enable_card_selection()
+card_node.set_selectable(true, i)  // 選択モード時に有効化
+```
+
+**ドラッグ機能**:
+- 現在は完全に無効化（コメントアウト）
+- 将来的に必要なら再実装
+
+### CardSelectionUIの仕様
+
+#### player_id対応
+
+```gdscript
+// 修正前（常にplayer 0固定）
+var hand_nodes = ui_manager_ref.player_card_nodes.get(0, [])
+
+// 修正後（current_player.idを使用）
+func enable_card_selection(hand_data: Array, available_magic: int, player_id: int = 0):
+	var hand_nodes = ui_manager_ref.player_card_nodes.get(player_id, [])
+```
+
+#### デバッグモード対応
+
+```gdscript
+// show_selection()
+var allow_manual = (current_player.id == 0) or 
+				   (game_flow_manager_ref and game_flow_manager_ref.debug_manual_control_all)
+
+if allow_manual:
+	enable_card_selection(hand_data, current_player.magic_power, current_player.id)
+	create_pass_button(hand_data.size())
+```
+
+---
+
+| 日付 | バージョン | 変更内容 |
+|------|-----------|---------|
+| 2025/01/10 | 1.0 | 初版作成 |
+| 2025/01/10 | 1.1 | 3D専用設計に修正、分岐路計画追加 |
+| 2025/01/11 | 1.2 | 統一捨て札システム追加、2D版削除完了、ターン終了処理解決 |
+| 2025/01/11 | 1.3 | 🆕 土地ボーナスシステム追加、隣接土地判定システム追加 |
+| 2025/01/12 | 1.4 | 🆕 デバッグ機能追加、システム初期化順序明記、手札表示システム仕様追加 |
+| 2025/01/12 | 1.5 | 🆕 貫通スキル実装、土地ボーナス計算の仕様明記 |
+| 2025/01/12 | 1.6 | 🆕 感応スキル追加、BattleParticipantクラス説明追加、スキル適用順序明記 |
+| 2025/01/12 | 1.7 | 📄 スキル関連を skills_design.md に分離、design.md を簡略化 |
+
+---
+
+**最終更新**: 2025年1月12日（v1.7）  
+**関連ドキュメント**: [skills_design.md](skills_design.md) - スキルシステム詳細仕様

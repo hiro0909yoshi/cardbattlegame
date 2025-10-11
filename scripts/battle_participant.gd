@@ -8,6 +8,7 @@ var creature_data: Dictionary
 
 # HP管理（消費順序付き）
 var base_hp: int              # クリーチャーの基本HP（最後に消費）
+var resonance_bonus_hp: int = 0  # 感応ボーナス（土地ボーナスの後に消費）
 var land_bonus_hp: int        # 土地ボーナス（先に消費、戦闘ごとに復活）
 var item_bonus_hp: int = 0    # アイテムボーナス（未実装）
 var spell_bonus_hp: int = 0   # スペルボーナス（未実装）
@@ -50,19 +51,27 @@ func _check_first_strike() -> bool:
 
 # 現在HPを更新
 func update_current_hp():
-	current_hp = base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+	current_hp = base_hp + resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:
 	var remaining_damage = damage
 	var damage_breakdown = {
+		"resonance_bonus_consumed": 0,
 		"land_bonus_consumed": 0,
 		"item_bonus_consumed": 0,
 		"spell_bonus_consumed": 0,
 		"base_hp_consumed": 0
 	}
 	
-	# 1. 土地ボーナスから消費
+	# 1. 感応ボーナスから消費
+	if resonance_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(resonance_bonus_hp, remaining_damage)
+		resonance_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["resonance_bonus_consumed"] = consumed
+	
+	# 2. 土地ボーナスから消費
 	if land_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(land_bonus_hp, remaining_damage)
 		land_bonus_hp -= consumed

@@ -10,11 +10,16 @@ func _ready():
 func load_all_cards():
 	print("ファイル読み込み開始")
 	var files = [
-		"res://data/neutral.json",
-		"res://data/fire.json",
-		"res://data/water.json",
-		"res://data/earth.json",
-		"res://data/wind.json",
+		"res://data/neutral_1.json",
+		"res://data/neutral_2.json",
+		"res://data/fire_1.json",
+		"res://data/fire_2.json",
+		"res://data/water_1.json",
+		"res://data/water_2.json",
+		"res://data/earth_1.json",
+		"res://data/earth_2.json",
+		"res://data/wind_1.json",
+		"res://data/wind_2.json",
 		"res://data/item.json",
 		"res://data/spell_1.json",
 		"res://data/spell_2.json"

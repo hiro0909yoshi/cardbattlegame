@@ -13,6 +13,133 @@
 
 ## 解決済みの課題
 
+### ✅ 解決済み（2025/01/12）
+
+#### ~~BUG-008: デバッグモード時のCPU手動操作不可~~
+**解決日**: 2025/01/12  
+**解決方法**: システム初期化順序の修正 + 参照設定の追加
+
+**元の問題**: 
+- `debug_manual_control_all = true`でもCPUターンが自動処理されていた
+- CPUプレイヤーの手札が選択できない
+- カード選択UIが表示されない
+
+**根本原因**:
+1. **初期化順序の問題**: `ui_manager.create_ui()`が`game_flow_manager.setup_systems()`より先に実行
+2. **参照の未設定**: CardSelectionUIに`game_flow_manager_ref`が設定されていなかった
+3. **プレイヤーID固定**: CardSelectionUIが常にplayer 0の手札ノードを参照
+
+**影響範囲**: 
+- game_3d.gd（初期化順序）
+- BoardSystem3D（フラグ転送）
+- TileActionProcessor（CPU判定）
+- UIManager（手札表示）
+- CardSelectionUI（カード選択）
+
+**修正内容**:
+```gdscript
+// game_3d.gd - 初期化順序を修正
+game_flow_manager.debug_manual_control_all = debug_manual_control_all  // 先に設定
+game_flow_manager.setup_systems(...)
+game_flow_manager.setup_3d_mode(...)
+
+// setup_systems後に参照を再設定
+if ui_manager.card_selection_ui:
+	ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
+
+// card_selection_ui.gd - player_idパラメータを追加
+func enable_card_selection(hand_data: Array, available_magic: int, player_id: int = 0):
+	var hand_nodes = ui_manager_ref.player_card_nodes.get(player_id, [])
+```
+
+#### ~~BUG-009: 手札表示がプレイヤー1固定~~
+**解決日**: 2025/01/12  
+**解決方法**: 現在のターンプレイヤーIDで手札を更新
+
+**元の問題**: 
+- CPUターンでもプレイヤー1の手札しか表示されない
+- ターン切り替え時に手札が切り替わらない
+
+**原因**:
+- `_on_hand_updated()`が`update_hand_display(0)`固定で呼んでいた
+- `rearrange_hand()`に`player_id != 0`チェックがあり、CPUの手札が配置されなかった
+
+**修正内容**:
+```gdscript
+// ui_manager.gd
+func _on_hand_updated():
+	if player_system_ref:
+		var current_player = player_system_ref.get_current_player()
+		if current_player:
+			update_hand_display(current_player.id)  // 現在プレイヤーのIDで更新
+
+func rearrange_hand(player_id: int):
+	// player_id != 0 チェックを削除
+	var card_nodes = player_card_nodes[player_id]
+	// ...
+```
+
+#### ~~BUG-010: 手札が切り替わらず重なる~~
+**解決日**: 2025/01/12  
+**解決方法**: ターン切り替え時に全プレイヤーの手札を削除
+
+**元の問題**: 
+- ターン切り替え時に前のプレイヤーの手札が残り、新しい手札と重なって表示される
+
+**原因**:
+- `update_hand_display()`で現在プレイヤーの手札のみ削除していた
+- 他のプレイヤーの手札ノードが残っていた
+
+**修正内容**:
+```gdscript
+// ui_manager.gd update_hand_display()
+// 全プレイヤーの既存カードノードを削除
+for pid in player_card_nodes.keys():
+	for card_node in player_card_nodes[pid]:
+		if is_instance_valid(card_node):
+			card_node.queue_free()
+	player_card_nodes[pid].clear()
+```
+
+#### ~~BUG-011: カードのドラッグ&ドロップが有効~~
+**解決日**: 2025/01/12  
+**解決方法**: ドラッグ処理をコメントアウト
+
+**元の問題**: 
+- 手札表示用のカードがドラッグできてしまう
+- 意図しない操作が可能
+
+**原因**:
+- `card.gd`のドラッグ処理が有効だった
+- `is_selectable = false`の時もドラッグが動作
+
+**修正内容**:
+```gdscript
+// card.gd - ドラッグ機能を無効化
+// ドラッグ機能は無効化（将来的に必要なら再実装）
+// if not is_selectable and mouse_over and event is InputEventMouseButton:
+//     if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+//         is_dragging = true
+```
+
+#### ~~FEAT-003: 先制スキルの動作確認~~
+**解決日**: 2025/01/12  
+**確認内容**: デバッグモードで先制スキルの動作を検証
+
+**確認結果**: 
+- 先制スキル持ちクリーチャーが正しく先攻を取ることを確認
+- バトルシステムでの先制判定が正常に動作
+- カードUI上での先制アイコン表示も正常
+
+**テスト方法**:
+- デバッグモード（`debug_manual_control_all = true`）を有効化
+- 両プレイヤーを手動操作し、先制スキル持ちカードでバトル
+- 先攻順序と戦闘結果を確認
+
+**動作確認済みスキル**:
+- "first_strike"（先制攻撃）
+- 両者が先制を持つ場合の攻撃力判定
+
 ### ✅ 解決済み（2025/01/11）
 
 #### ~~BUG-000: ターン終了処理の重複実行~~
@@ -757,7 +884,9 @@ func replay():
 | 2025/01/11 | FEAT-002: 土地ボーナスシステム実装完了 |
 | 2025/01/11 | BUG-007: 属性名の英語/日本語混在問題を解決 |
 | 2025/01/11 | TECH-006: 属性名統一規則を追加 |
+| 2025/01/12 | BUG-008〜011: デバッグモード・手札表示・ドラッグ問題を解決 |
+| 2025/01/12 | FEAT-003: 先制スキルの動作確認完了 |
 
 ---
 
-**最終更新**: 2025年1月11日
+**最終更新**: 2025年1月12日

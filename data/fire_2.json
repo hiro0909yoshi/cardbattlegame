@@ -1,0 +1,637 @@
+{
+  "cards": [
+    {
+      "id": 26,
+      "name": "ネビロス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "ap": 50,
+      "hp": 40,
+      "ability": "強打",
+      "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強打",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "enemy_no_item"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_no_item"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "name": "バーアル",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 40,
+        "lands_required": [
+          "fire"
+        ],
+        "cards_sacrifice": 1
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "先制",
+      "ability_detail": "先制；代償[ランダムな手札1枚]",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 28,
+      "name": "バードメイデン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 65
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "地"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "不屈・秘術",
+      "ability_detail": "不屈；秘術[G50・対象自領地に○遠隔移動]"
+    },
+    {
+      "id": 29,
+      "name": "バーナックル",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "風"
+        ],
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 60,
+      "ability": "防御型・秘術",
+      "ability_detail": "防御型；秘術[G50・対象敵領地に○通行料1/2]"
+    },
+    {
+      "id": 30,
+      "name": "バーンタイタン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 90
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "風"
+        ],
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "自領地HP-30",
+      "ability_detail": "自領地が5つ以上の場合、ST&HP-30"
+    },
+    {
+      "id": 31,
+      "name": "ハイプクイーン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 40,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "秘術",
+      "ability_detail": "秘術[G20・手札にハイプワーカーを加える]"
+    },
+    {
+      "id": 32,
+      "name": "ハイプワーカー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 30
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "ST&HP変動",
+      "ability_detail": "ST&HP+ハイプワーカー配置数×10"
+    },
+    {
+      "id": 33,
+      "name": "バイロクルス",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 30,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "地"
+        ]
+      },
+      "ap": 10,
+      "hp": 40,
+      "ability": "合成・無効化",
+      "ability_detail": "合成[タスペル・ヘルバイロンに変身]；無効化[巻物]"
+    },
+    {
+      "id": 34,
+      "name": "バイロマンサー",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "巻物攻撃",
+      "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、ST=20、MHP-30"
+    },
+    {
+      "id": 35,
+      "name": "バルキリー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "援護・先制・敵破壊時ST+10",
+      "ability_detail": "援護[風火]；先制；敵破壊時、ST+10",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 36,
+      "name": "ピュトン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 75,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "武器"
+        ]
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "貫通・侵略時魔力獲得",
+      "ability_detail": "貫通[ST40以上]；侵略時、魔力獲得[G100]",
+      "ability_parsed": {
+        "keywords": [
+          "貫通"
+        ],
+        "keyword_conditions": {
+          "貫通": {
+            "condition_type": "attacker_st_check",
+            "operator": ">=",
+            "value": 40
+          }
+        }
+      }
+    },
+    {
+      "id": 37,
+      "name": "ファイアードレイク",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 80
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "ST+火配置数×5",
+      "ability_detail": "ST+火配置数×5"
+    },
+    {
+      "id": 38,
+      "name": "ファイアービーク",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 95,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "武器",
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 40,
+      "ability": "先制・貫通・強打",
+      "ability_detail": "先制；貫通[水]；強打[水]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "貫通",
+          "強打"
+        ],
+        "keyword_conditions": {
+          "貫通": {
+            "condition_type": "enemy_is_element",
+            "elements": "water"
+          },
+          "強打": {
+            "condition_type": "enemy_is_element",
+            "elements": "water"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": "water"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 39,
+      "name": "フェイ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "風"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "秘術・巻物強打",
+      "ability_detail": "秘術[G50・対象クリーチャーのST+20]；巻物強打"
+    },
+    {
+      "id": 40,
+      "name": "フェニックス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 40
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "復活",
+      "ability_detail": "復活"
+    },
+    {
+      "id": 41,
+      "name": "フレイムデューク",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 60,
+        "lands_required": [
+          "fire",
+          "fire"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "先制・強打",
+      "ability_detail": "先制；武器使用時、強打；アイテム復帰[ブック]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "with_weapon"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "with_weapon"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 42,
+      "name": "フロギストン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 35
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "強打",
+      "ability_detail": "強打[MHP40以下]",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "mhp_below",
+            "value": 40
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "mhp_below",
+                "value": 40
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 43,
+      "name": "ヘルバイロン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 80,
+        "lands_required": [
+          "fire",
+          "fire"
+        ],
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "風"
+        ],
+        "item_use": [
+          "武器"
+        ]
+      },
+      "ap": 70,
+      "hp": 60,
+      "ability": "応援・秘術",
+      "ability_detail": "応援[火地・ST+10]；秘術[G30・クリーチャー破壊数×G30を得る]"
+    },
+    {
+      "id": 44,
+      "name": "ボルカニックドラゴン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 80,
+        "lands_required": [
+          "fire",
+          "fire"
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "風"
+        ],
+        "item_use": [
+          "武器"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "先制・巻物攻撃",
+      "ability_detail": "先制；巻物攻撃[ST=基本ST]",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 45,
+      "name": "ミノタウロス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 60
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 46,
+      "name": "ムシュフシュ",
+      "rarity": "R",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70,
+        "lands_required": [
+          "fire"
+        ]
+      },
+      "restrictions": {
+        "item_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "感応・強打",
+      "ability_detail": "感応[地・ST+20、HP+10]；強打[火地]",
+      "ability_parsed": {
+        "keywords": [
+          "感応",
+          "強打"
+        ],
+        "keyword_conditions": {
+          "感応": {
+            "element": "earth",
+            "stat_bonus": {
+              "ap": 20,
+              "hp": 10
+            }
+          },
+          "強打": {
+            "condition_type": "enemy_is_element",
+            "elements": [
+              "fire",
+              "earth"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "fire",
+                  "earth"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 47,
+      "name": "ラーバキン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 70
+      },
+      "ap": 60,
+      "hp": 30,
+      "ability": "ST=現R数、HP+現R数",
+      "ability_detail": "ST=現R数、HP+現R数"
+    },
+    {
+      "id": 48,
+      "name": "レッドオーガ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 80
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 49,
+      "name": "ローンビースト",
+      "rarity": "S",
+      "type": "creature",
+      "element": "fire",
+      "cost": {
+        "mp": 80
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "HP+基本ST",
+      "ability_detail": "HP+基本ST；隣が自領地なら強打",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "adjacent_ally_land"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "adjacent_ally_land"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

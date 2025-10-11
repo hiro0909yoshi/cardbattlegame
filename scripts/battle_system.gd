@@ -95,6 +95,16 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	# 2. バトル前スキル適用
 	_apply_pre_battle_skills(participants, tile_info, attacker_index)
 	
+	# スキル適用後の最終ステータス表示
+	print("
+【スキル適用後の最終ステータス】")
+	print("侵略側: ", attacker.creature_data.get("name", "?"))
+	print("  HP:", attacker.current_hp, " (基本:", attacker.base_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, ")")
+	print("  AP:", attacker.current_ap)
+	print("防御側: ", defender.creature_data.get("name", "?"))
+	print("  HP:", defender.current_hp, " (基本:", defender.base_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, ")")
+	print("  AP:", defender.current_ap)
+	
 	# 3. 攻撃順決定
 	var attack_order = _determine_attack_order(attacker, defender)
 	var order_str = "侵略側 → 防御側" if attack_order[0].is_attacker else "防御側 → 侵略側"
@@ -165,6 +175,12 @@ func _prepare_participants(attacker_index: int, card_data: Dictionary, tile_info
 【防御側クリーチャーデータ】", defender_creature)
 	var defender_base_hp = defender_creature.get("hp", 0)
 	var defender_land_bonus = _calculate_land_bonus(defender_creature, tile_info)  # 防御側のみボーナス
+	
+	# 貫通スキルチェック：攻撃側が貫通を持つ場合、防御側の土地ボーナスを無効化
+	if _check_penetration_skill(card_data, defender_creature, tile_info):
+		print("【貫通発動】防御側の土地ボーナス ", defender_land_bonus, " を無効化")
+		defender_land_bonus = 0
+	
 	var defender_ap = defender_creature.get("ap", 0)
 	var defender_owner = tile_info.get("owner", -1)
 	
@@ -198,6 +214,66 @@ func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> 
 	
 	print("  → 属性不一致、ボーナスなし")
 	return 0
+
+# 貫通スキルの判定
+func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> bool:
+	# 攻撃側のability_parsedから貫通スキルを取得
+	var ability_parsed = attacker_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 貫通スキルがない場合
+	if not "貫通" in keywords:
+		return false
+	
+	# 貫通スキルの条件をチェック
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var penetrate_condition = keyword_conditions.get("貫通", {})
+	
+	# 条件がない場合は無条件発動
+	if penetrate_condition.is_empty():
+		print("【貫通】無条件発動")
+		return true
+	
+	# 条件チェック
+	var condition_type = penetrate_condition.get("condition_type", "")
+	
+	match condition_type:
+		"enemy_is_element":
+			# 敵が特定属性の場合
+			var required_elements = penetrate_condition.get("elements", "")
+			var defender_element = defender_data.get("element", "")
+			if defender_element == required_elements:
+				print("【貫通】条件満たす: 敵が", required_elements, "属性")
+				return true
+			else:
+				print("【貫通】条件不成立: 敵が", defender_element, "属性（要求:", required_elements, "）")
+				return false
+		
+		"attacker_st_check":
+			# 攻撃側のSTが一定以上の場合
+			var operator = penetrate_condition.get("operator", ">=")
+			var value = penetrate_condition.get("value", 0)
+			var attacker_st = attacker_data.get("ap", 0)  # APがSTに相当
+			
+			var meets_condition = false
+			match operator:
+				">=": meets_condition = attacker_st >= value
+				">": meets_condition = attacker_st > value
+				"==": meets_condition = attacker_st == value
+			
+			if meets_condition:
+				print("【貫通】条件満たす: ST ", attacker_st, " ", operator, " ", value)
+				return true
+			else:
+				print("【貫通】条件不成立: ST ", attacker_st, " ", operator, " ", value)
+				return false
+		
+		_:
+			# 未知の条件タイプ
+			print("【貫通】未知の条件タイプ:", condition_type)
+			return false
+	
+	return false
 
 # 攻撃順を決定（先制判定）
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:
@@ -248,12 +324,64 @@ func _apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, a
 # スキル適用
 func _apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
-	var modified = effect_combat.apply_power_strike(participant.creature_data, context)
 	
+	# 感応スキルを適用
+	_apply_resonance_skill(participant, context)
+	
+	# 強打スキルを適用（現在のAPを基準に計算）
+	var modified_creature_data = participant.creature_data.duplicate()
+	modified_creature_data["ap"] = participant.current_ap  # 感応適用後のAPを設定
+	var modified = effect_combat.apply_power_strike(modified_creature_data, context)
 	participant.current_ap = modified.get("ap", participant.current_ap)
 	
 	if modified.get("power_strike_applied", false):
 		print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+
+# 感応スキルを適用
+func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 感応スキルがない場合
+	if not "感応" in keywords:
+		return
+	
+	# 感応条件を取得
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var resonance_condition = keyword_conditions.get("感応", {})
+	
+	if resonance_condition.is_empty():
+		return
+	
+	# 必要な属性を取得
+	var required_element = resonance_condition.get("element", "")
+	
+	# プレイヤーの土地情報を取得
+	var player_lands = context.get("player_lands", {})
+	var owned_count = player_lands.get(required_element, 0)
+	
+	# 感応発動判定：指定属性の土地を1つでも所有していれば発動
+	if owned_count > 0:
+		var stat_bonus = resonance_condition.get("stat_bonus", {})
+		var ap_bonus = stat_bonus.get("ap", 0)
+		var hp_bonus = stat_bonus.get("hp", 0)
+		
+		if ap_bonus > 0 or hp_bonus > 0:
+			print("【感応発動】", participant.creature_data.get("name", "?"))
+			print("  必要属性:", required_element, " 所持数:", owned_count)
+			
+			# APボーナス適用
+			if ap_bonus > 0:
+				var old_ap = participant.current_ap
+				participant.current_ap += ap_bonus
+				print("  AP: ", old_ap, " → ", participant.current_ap, " (+", ap_bonus, ")")
+			
+			# HPボーナス適用（resonance_bonus_hpに追加）
+			if hp_bonus > 0:
+				var old_hp = participant.current_hp
+				participant.resonance_bonus_hp += hp_bonus
+				participant.update_current_hp()
+				print("  HP: ", old_hp, " → ", participant.current_hp, " (+", hp_bonus, ")")
 
 # 攻撃シーケンス実行
 func _execute_attack_sequence(attack_order: Array) -> void:
@@ -266,14 +394,24 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 			continue
 		
 		# 攻撃実行
+		var attacker_name = attacker_p.creature_data.get("name", "?")
+		var defender_name = defender_p.creature_data.get("name", "?")
 		print("
 【第", i + 1, "攻撃】", "侵略側" if attacker_p.is_attacker else "防御側", "の攻撃")
-		print("  ", attacker_p.creature_data.get("name", "?"), " AP:", attacker_p.current_ap, " → ", defender_p.creature_data.get("name", "?"))
+		print("  ", attacker_name, " AP:", attacker_p.current_ap, " → ", defender_name)
+		
+		# 防御側の貫通スキルは効果なし
+		if not attacker_p.is_attacker:
+			var defender_keywords = attacker_p.creature_data.get("ability_parsed", {}).get("keywords", [])
+			if "貫通" in defender_keywords:
+				print("  【貫通】防御側のため効果なし")
 		
 		# ダメージ適用
 		var damage_breakdown = defender_p.take_damage(attacker_p.current_ap)
 		
 		print("  ダメージ処理:")
+		if damage_breakdown["resonance_bonus_consumed"] > 0:
+			print("    - 感応ボーナス: ", damage_breakdown["resonance_bonus_consumed"], " 消費")
 		if damage_breakdown["land_bonus_consumed"] > 0:
 			print("    - 土地ボーナス: ", damage_breakdown["land_bonus_consumed"], " 消費")
 		if damage_breakdown["base_hp_consumed"] > 0:
