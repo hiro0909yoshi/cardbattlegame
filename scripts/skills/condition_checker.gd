@@ -81,6 +81,9 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 		"enemy_is_element":
 			var enemy_element = context.get("enemy_element", "")
 			var target_elements = condition.get("elements", [])
+			# 文字列単体の場合は配列に変換
+			if typeof(target_elements) == TYPE_STRING:
+				target_elements = [target_elements]
 			return enemy_element in target_elements
 		
 		# 敵との属性関係
@@ -149,6 +152,32 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 		"st_below":
 			var enemy_st = context.get("enemy_st", 100)
 			return enemy_st <= cond_value
+		
+		# 敵のST判定（強打用）
+		"enemy_st_check":
+			var enemy_st = context.get("enemy_st", 0)
+			var operator = condition.get("operator", "<=")
+			var value = condition.get("value", 0)
+			match operator:
+				"<=": return enemy_st <= value
+				">=": return enemy_st >= value
+				"<": return enemy_st < value
+				">": return enemy_st > value
+				"==": return enemy_st == value
+				_: return false
+		
+		# 敵の最大HP判定（強打用）
+		"enemy_max_hp_check":
+			var enemy_mhp = context.get("enemy_mhp", 0)
+			var operator = condition.get("operator", "<=")
+			var value = condition.get("value", 0)
+			match operator:
+				"<=": return enemy_mhp <= value
+				">=": return enemy_mhp >= value
+				"<": return enemy_mhp < value
+				">": return enemy_mhp > value
+				"==": return enemy_mhp == value
+				_: return false
 		
 		# 防御型判定
 		"is_defender_type":

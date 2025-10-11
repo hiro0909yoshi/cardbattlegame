@@ -5,10 +5,13 @@
 	  "name": "アームドパラディン",
 	  "rarity": "E",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 200,
-		"lands_required": ["火", "火"]
+		"lands_required": [
+		  "fire",
+		  "fire"
+		]
 	  },
 	  "ap": 0,
 	  "hp": 50,
@@ -20,7 +23,7 @@
 	  "name": "アモン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
@@ -34,10 +37,12 @@
 	  "name": "アングリーモブ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -49,7 +54,7 @@
 	  "name": "ウリエル",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 90
 	  },
@@ -58,7 +63,9 @@
 	  "ability": "強打・世界消去",
 	  "ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "has_mark",
@@ -70,7 +77,10 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "has_mark", "mark": "○"}
+			  {
+				"condition_type": "has_mark",
+				"mark": "○"
+			  }
 			]
 		  }
 		]
@@ -81,16 +91,24 @@
 	  "name": "オールドウィロウ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["火", "火"]
+		"lands_required": [
+		  "fire",
+		  "fire"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
 	  "restrictions": {
-		"cannot_summon": ["水", "風"],
-		"item_use": ["防具"]
+		"cannot_summon": [
+		  "水",
+		  "風"
+		],
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ability": "防御型",
 	  "ability_detail": "防御型；足どめ[火]"
@@ -100,12 +118,14 @@
 	  "name": "ガスクラウド",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 45
 	  },
 	  "restrictions": {
-		"item_use": ["武器"]
+		"item_use": [
+		  "武器"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -117,13 +137,17 @@
 	  "name": "キメラ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -135,12 +159,14 @@
 	  "name": "キングバラン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 100
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 50,
@@ -152,23 +178,33 @@
 	  "name": "グラディエーター",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 75
 	  },
 	  "restrictions": {
-		"item_use": ["武器", "防具"]
+		"item_use": [
+		  "武器",
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "強打",
 	  "ability_detail": "強打[火水地風]",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "enemy_is_element",
-			"elements": ["火", "水", "地", "風"] 
+			"elements": [
+			  "fire",
+			  "water",
+			  "earth",
+			  "wind"
+			]
 		  }
 		},
 		"effects": [
@@ -178,7 +214,12 @@
 			"conditions": [
 			  {
 				"condition_type": "enemy_is_element",
-				"elements": ["火", "水", "地", "風"]
+				"elements": [
+				  "fire",
+				  "water",
+				  "earth",
+				  "wind"
+				]
 			  }
 			]
 		  }
@@ -190,12 +231,15 @@
 	  "name": "クリーピングフレイム",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 55
 	  },
 	  "restrictions": {
-		"item_use": ["武器", "防具"]
+		"item_use": [
+		  "武器",
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -207,12 +251,14 @@
 	  "name": "ケットシー",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"]
+		"cannot_summon": [
+		  "風"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -224,12 +270,14 @@
 	  "name": "コンジャラー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 45
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -241,13 +289,17 @@
 	  "name": "サルファバルーン",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 20,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 40,
@@ -259,7 +311,7 @@
 	  "name": "シールドメイデン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80
 	  },
@@ -273,13 +325,17 @@
 	  "name": "ジェネラルカン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 65,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["武器"]
+		"item_use": [
+		  "武器"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -291,10 +347,12 @@
 	  "name": "シグルド",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -306,7 +364,7 @@
 	  "name": "シャラザード",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 50
 	  },
@@ -320,7 +378,7 @@
 	  "name": "ショッカー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
@@ -334,21 +392,27 @@
 	  "name": "ティアマト",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 110,
-		"lands_required": ["火", "火"]
+		"lands_required": [
+		  "fire",
+		  "fire"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "先制・強打・土地変性",
 	  "ability_detail": "先制；強打[水]；土地変性[火]",
 	  "ability_parsed": {
-		"keywords": ["先制", "強打"],
+		"keywords": [
+		  "先制",
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "enemy_is_element",
-			"elements": "水"
+			"elements": "water"
 		  }
 		},
 		"effects": [
@@ -356,7 +420,10 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "enemy_is_element", "elements": "水"}
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": "water"
+			  }
 			]
 		  }
 		]
@@ -367,13 +434,15 @@
 	  "name": "デスサイズ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 15,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 70,
 	  "hp": 10,
@@ -385,14 +454,21 @@
 	  "name": "デスリーチ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 20,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"item_use": ["武器", "防具"]
+		"cannot_summon": [
+		  "風"
+		],
+		"item_use": [
+		  "武器",
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -404,7 +480,7 @@
 	  "name": "デッドウォーロード",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 60,
 		"cards_sacrifice": 1
@@ -419,12 +495,14 @@
 	  "name": "ドゥームデボラー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -436,7 +514,7 @@
 	  "name": "ドモビー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 20
 	  },
@@ -450,7 +528,7 @@
 	  "name": "ナイトエラント",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 60,
 		"cards_sacrifice": 1
@@ -465,17 +543,21 @@
 	  "name": "ネビロス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "強打",
 	  "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強打",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "enemy_no_item"
@@ -486,7 +568,9 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "enemy_no_item"}
+			  {
+				"condition_type": "enemy_no_item"
+			  }
 			]
 		  }
 		]
@@ -497,10 +581,12 @@
 	  "name": "バーアル",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["火"],
+		"lands_required": [
+		  "fire"
+		],
 		"cards_sacrifice": 1
 	  },
 	  "ap": 50,
@@ -513,12 +599,14 @@
 	  "name": "バードメイデン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 65
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -530,13 +618,17 @@
 	  "name": "バーナックル",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"item_use": ["防具"]
+		"cannot_summon": [
+		  "風"
+		],
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 60,
@@ -548,13 +640,17 @@
 	  "name": "バーンタイタン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 90
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"item_use": ["防具"]
+		"cannot_summon": [
+		  "風"
+		],
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 60,
@@ -566,13 +662,17 @@
 	  "name": "ハイプクイーン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -584,12 +684,14 @@
 	  "name": "ハイプワーカー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 30
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -601,14 +703,15 @@
 	  "name": "バイロクルス",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 30,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 40,
@@ -620,7 +723,7 @@
 	  "name": "バイロマンサー",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
@@ -634,10 +737,12 @@
 	  "name": "バルキリー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -649,13 +754,17 @@
 	  "name": "ピュトン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 75,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["武器"]
+		"item_use": [
+		  "武器"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -667,7 +776,7 @@
 	  "name": "ファイアードレイク",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80
 	  },
@@ -681,28 +790,37 @@
 	  "name": "ファイアービーク",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 95,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["武器", "防具"]
+		"item_use": [
+		  "武器",
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "先制・貫通・強打",
 	  "ability_detail": "先制；貫通[水]；強打[水]",
 	  "ability_parsed": {
-		"keywords": ["先制", "貫通", "強打"],
+		"keywords": [
+		  "先制",
+		  "貫通",
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "貫通": {
 			"condition_type": "enemy_is_element",
-			"elements": "水"
+			"elements": "water"
 		  },
 		  "強打": {
 			"condition_type": "enemy_is_element",
-			"elements": "水"
+			"elements": "water"
 		  }
 		},
 		"effects": [
@@ -710,7 +828,10 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "enemy_is_element", "elements": "水"}
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": "water"
+			  }
 			]
 		  }
 		]
@@ -721,12 +842,14 @@
 	  "name": "フェイ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"]
+		"cannot_summon": [
+		  "風"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -738,35 +861,42 @@
 	  "name": "フェニックス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 40
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "復活",
 	  "ability_detail": "復活"
 	},
-	
 	{
 	  "id": 41,
 	  "name": "フレイムデューク",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["火", "火"]
+		"lands_required": [
+		  "fire",
+		  "fire"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・強打",
 	  "ability_detail": "先制；武器使用時、強打；アイテム復帰[ブック]",
 	  "ability_parsed": {
-		"keywords": ["先制", "強打"],
+		"keywords": [
+		  "先制",
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "with_weapon"
@@ -777,7 +907,9 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "with_weapon"}
+			  {
+				"condition_type": "with_weapon"
+			  }
 			]
 		  }
 		]
@@ -788,7 +920,7 @@
 	  "name": "フロギストン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 35
 	  },
@@ -797,7 +929,9 @@
 	  "ability": "強打",
 	  "ability_detail": "強打[MHP40以下]",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "mhp_below",
@@ -809,7 +943,10 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "mhp_below", "value": 40}
+			  {
+				"condition_type": "mhp_below",
+				"value": 40
+			  }
 			]
 		  }
 		]
@@ -820,15 +957,22 @@
 	  "name": "ヘルバイロン",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["火", "火"],
+		"lands_required": [
+		  "fire",
+		  "fire"
+		],
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"item_use": ["武器"]
+		"cannot_summon": [
+		  "風"
+		],
+		"item_use": [
+		  "武器"
+		]
 	  },
 	  "ap": 70,
 	  "hp": 60,
@@ -840,14 +984,21 @@
 	  "name": "ボルカニックドラゴン",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["火", "火"]
+		"lands_required": [
+		  "fire",
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["風"],
-		"item_use": ["武器"]
+		"cannot_summon": [
+		  "風"
+		],
+		"item_use": [
+		  "武器"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -859,7 +1010,7 @@
 	  "name": "ミノタウロス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 60
 	  },
@@ -873,24 +1024,33 @@
 	  "name": "ムシュフシュ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["火"]
+		"lands_required": [
+		  "fire"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "感応・強打",
 	  "ability_detail": "感応[地・ST+20、HP+10]；強打[火地]",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "enemy_is_element",
-			"elements": ["火", "地"]
+			"elements": [
+			  "fire",
+			  "earth"
+			]
 		  }
 		},
 		"effects": [
@@ -898,7 +1058,13 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "enemy_is_element", "elements": ["火", "地"]}
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": [
+				  "fire",
+				  "earth"
+				]
+			  }
 			]
 		  }
 		]
@@ -909,7 +1075,7 @@
 	  "name": "ラーバキン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 70
 	  },
@@ -923,7 +1089,7 @@
 	  "name": "レッドオーガ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80
 	  },
@@ -937,7 +1103,7 @@
 	  "name": "ローンビースト",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "火",
+	  "element": "fire",
 	  "cost": {
 		"mp": 80
 	  },
@@ -946,7 +1112,9 @@
 	  "ability": "HP+基本ST",
 	  "ability_detail": "HP+基本ST；隣が自領地なら強打",
 	  "ability_parsed": {
-		"keywords": ["強打"],
+		"keywords": [
+		  "強打"
+		],
 		"keyword_conditions": {
 		  "強打": {
 			"condition_type": "adjacent_ally_land"
@@ -957,7 +1125,9 @@
 			"effect_type": "power_strike",
 			"multiplier": 1.5,
 			"conditions": [
-			  {"condition_type": "adjacent_ally_land"}
+			  {
+				"condition_type": "adjacent_ally_land"
+			  }
 			]
 		  }
 		]

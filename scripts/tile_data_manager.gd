@@ -35,7 +35,7 @@ func get_tile_info(tile_index: int) -> Dictionary:
 	return {
 		"index": tile_index,
 		"type": get_tile_type(tile.tile_type),
-		"element": tile.tile_type if tile.tile_type in ["火", "水", "風", "土"] else "",
+		"element": tile.tile_type if tile.tile_type in ["fire", "water", "wind", "earth"] else "",
 		"owner": tile.owner_id,
 		"level": tile.level,
 		"creature": tile.creature_data,

@@ -246,3 +246,22 @@ func discard_excess_cards_auto(player_id: int, max_cards: int = 6) -> int:
 			discard_card(player_id, last_index, "discard")
 	
 	return cards_to_discard
+
+# カードを手札に戻す（バトル失敗時の処理）
+func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
+	if not player_hands.has(player_id):
+		push_error("return_card_to_hand: 不正なplayer_id " + str(player_id))
+		return false
+	
+	# 捨て札から該当カードを削除
+	var card_id = card_data.get("id", -1)
+	if card_id in discard:
+		discard.erase(card_id)
+	
+	# 手札に追加
+	player_hands[player_id]["data"].append(card_data)
+	
+	print("【カード復帰】", card_data.get("name", "不明"), " が手札に戻りました")
+	emit_signal("hand_updated")
+	
+	return true

@@ -5,13 +5,17 @@
 	  "name": "G・イール",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -23,13 +27,18 @@
 	  "name": "G・ノーチラス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 80
 	  },
 	  "restrictions": {
-		"item_use": ["火"],
-		"cannot_summon": ["地", "防具"]
+		"item_use": [
+		  "火"
+		],
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 70,
@@ -41,12 +50,15 @@
 	  "name": "アイスウォール",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 25
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地", "防具"]
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 0,
 	  "hp": 40,
@@ -58,10 +70,13 @@
 	  "name": "アクアデューク",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["水", "水"]
+		"lands_required": [
+		  "water",
+		  "water"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -73,12 +88,15 @@
 	  "name": "アクアホーン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 30,
@@ -90,7 +108,7 @@
 	  "name": "アクアリング",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40
 	  },
@@ -104,13 +122,18 @@
 	  "name": "アブサス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地", "火"]
+		"cannot_summon": [
+		  "地",
+		  "火"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -122,7 +145,7 @@
 	  "name": "アマゾン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
@@ -136,12 +159,14 @@
 	  "name": "アルプ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40
 	  },
 	  "restrictions": {
-		"item_use": ["火"]
+		"item_use": [
+		  "火"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -153,12 +178,14 @@
 	  "name": "アンダイン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 55
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -170,7 +197,7 @@
 	  "name": "アンフィビアン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60
 	  },
@@ -184,13 +211,17 @@
 	  "name": "イエティ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -202,10 +233,12 @@
 	  "name": "イド",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["水"],
+		"lands_required": [
+		  "water"
+		],
 		"cards_sacrifice": 1
 	  },
 	  "ap": 40,
@@ -218,12 +251,14 @@
 	  "name": "エキノダーム",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -235,10 +270,12 @@
 	  "name": "オトヒメ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -250,13 +287,17 @@
 	  "name": "オドントティラヌス",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -268,12 +309,14 @@
 	  "name": "カイザーペンギン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 90
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -285,12 +328,14 @@
 	  "name": "カワヒメ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"item_use": ["火"]
+		"item_use": [
+		  "火"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -302,12 +347,14 @@
 	  "name": "キロネックス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -319,12 +366,14 @@
 	  "name": "キングトータス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 100
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 60,
@@ -336,12 +385,15 @@
 	  "name": "グルイースラッグ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -353,13 +405,18 @@
 	  "name": "ケルピー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -371,12 +428,14 @@
 	  "name": "ゴーストシップ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 75
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 30,
@@ -388,13 +447,19 @@
 	  "name": "シーボンズ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40
 	  },
 	  "restrictions": {
-		"item_use": ["火"],
-		"cannot_summon": ["地", "防具", "武器"]
+		"item_use": [
+		  "火"
+		],
+		"cannot_summon": [
+		  "地",
+		  "防具",
+		  "武器"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 40,
@@ -406,10 +471,12 @@
 	  "name": "スキュラ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -421,12 +488,15 @@
 	  "name": "スラッジタイタン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 90
 	  },
 	  "restrictions": {
-		"item_use": ["火", "武器"]
+		"item_use": [
+		  "火",
+		  "武器"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 60,
@@ -438,13 +508,18 @@
 	  "name": "スワンプスボーン",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 20
 	  },
 	  "restrictions": {
-		"item_use": ["火"],
-		"cannot_summon": ["地", "防具"]
+		"item_use": [
+		  "火"
+		],
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -456,13 +531,18 @@
 	  "name": "ゼラチンウォール",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 30
 	  },
 	  "restrictions": {
-		"item_use": ["火"],
-		"cannot_summon": ["地", "防具"]
+		"item_use": [
+		  "火"
+		],
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 50,
@@ -474,13 +554,19 @@
 	  "name": "ディープシードラゴン",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["水", "水"]
+		"lands_required": [
+		  "water",
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -492,13 +578,17 @@
 	  "name": "テンタクルズ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -510,7 +600,7 @@
 	  "name": "トリトン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
@@ -524,13 +614,17 @@
 	  "name": "ネッシー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 45,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -542,13 +636,17 @@
 	  "name": "ハイド",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 20,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["火"]
+		"item_use": [
+		  "火"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -560,10 +658,13 @@
 	  "name": "バハムート",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 110,
-		"lands_required": ["水", "水"]
+		"lands_required": [
+		  "water",
+		  "water"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 60,
@@ -575,10 +676,12 @@
 	  "name": "ビジランテ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -590,13 +693,18 @@
 	  "name": "ヒッポカンパス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -608,7 +716,7 @@
 	  "name": "フェイト",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60
 	  },
@@ -622,12 +730,14 @@
 	  "name": "ブラッドプリン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -639,7 +749,7 @@
 	  "name": "ブルーオーガ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 80
 	  },
@@ -653,13 +763,17 @@
 	  "name": "ヘルグラマイト",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -671,12 +785,15 @@
 	  "name": "マイコロン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 35
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地", "防具"]
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 30,
@@ -688,12 +805,15 @@
 	  "name": "マカラ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 65
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地", "防具"]
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -705,12 +825,15 @@
 	  "name": "ミストウィング",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -722,12 +845,16 @@
 	  "name": "メガロドン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 40
 	  },
 	  "restrictions": {
-		"item_use": ["火", "風", "防具"]
+		"item_use": [
+		  "火",
+		  "風",
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -739,14 +866,20 @@
 	  "name": "ラハブ",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["水", "水"],
+		"lands_required": [
+		  "water",
+		  "water"
+		],
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"item_use": ["火", "防具"]
+		"item_use": [
+		  "火",
+		  "防具"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 60,
@@ -758,7 +891,7 @@
 	  "name": "リザードマン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 70
 	  },
@@ -772,7 +905,7 @@
 	  "name": "リリス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 60
 	  },
@@ -786,13 +919,18 @@
 	  "name": "ルーンアデプト",
 	  "rarity": "R",
 	  "type": "creature",
-	  "element": "水",
+	  "element": "water",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["水"]
+		"lands_required": [
+		  "water"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地", "防具"]
+		"cannot_summon": [
+		  "地",
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,

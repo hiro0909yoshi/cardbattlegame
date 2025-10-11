@@ -77,10 +77,10 @@ func has_adjacent_ally_land(tile_index: int, player_id: int, board_system) -> bo
 	
 	for neighbor_index in neighbors:
 		var tile_info = board_system.get_tile_info(neighbor_index)
-		var owner = tile_info.get("owner", -1)
-		print("    隣接タイル", neighbor_index, " owner=", owner, " (player=", player_id, ")")
+		var tile_owner = tile_info.get("owner", -1)
+		print("    隣接タイル", neighbor_index, " owner=", tile_owner, " (player=", player_id, ")")
 		
-		if owner == player_id:
+		if tile_owner == player_id:
 			print("    → 自領地発見！")
 			return true
 	

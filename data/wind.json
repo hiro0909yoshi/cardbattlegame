@@ -5,10 +5,13 @@
 	  "name": "アームドプリンセス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 200,
-		"lands_required": ["風", "風"]
+		"lands_required": [
+		  "wind",
+		  "wind"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -20,7 +23,7 @@
 	  "name": "イエローオーガ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80
 	  },
@@ -34,12 +37,14 @@
 	  "name": "ウィッチ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 55
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -51,10 +56,13 @@
 	  "name": "エアロダッチェス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["風", "風"]
+		"lands_required": [
+		  "wind",
+		  "wind"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -66,10 +74,12 @@
 	  "name": "エルフアーチャー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -81,13 +91,18 @@
 	  "name": "エンチャントレス",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30
 	  },
 	  "restrictions": {
-		"cannot_summon": ["火"],
-		"item_use": ["防具", "防具"]
+		"cannot_summon": [
+		  "火"
+		],
+		"item_use": [
+		  "防具",
+		  "防具"
+		]
 	  },
 	  "ap": 10,
 	  "hp": 20,
@@ -99,12 +114,14 @@
 	  "name": "カラドリウス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -116,13 +133,18 @@
 	  "name": "ガルーダ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["風", "風"]
+		"lands_required": [
+		  "wind",
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 0,
 	  "hp": 40,
@@ -134,7 +156,7 @@
 	  "name": "キリン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80
 	  },
@@ -148,7 +170,7 @@
 	  "name": "クー・シー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70
 	  },
@@ -162,7 +184,7 @@
 	  "name": "クラウドギズモ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30
 	  },
@@ -176,13 +198,17 @@
 	  "name": "グリフォン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"],
-		"item_use": ["巻物"]
+		"cannot_summon": [
+		  "地"
+		],
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -194,12 +220,14 @@
 	  "name": "グレートニンバス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 100
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 60,
@@ -211,7 +239,7 @@
 	  "name": "ケンタウロス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80
 	  },
@@ -225,7 +253,7 @@
 	  "name": "コーンフォーク",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70
 	  },
@@ -239,13 +267,17 @@
 	  "name": "サーペントフライ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"cannot_summon": ["火"],
-		"item_use": ["巻物"]
+		"cannot_summon": [
+		  "火"
+		],
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 30,
@@ -257,7 +289,7 @@
 	  "name": "サムハイン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50,
 		"cards_sacrifice": 1
@@ -272,13 +304,17 @@
 	  "name": "サンダースポーン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -290,12 +326,14 @@
 	  "name": "シルフ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"]
+		"cannot_summon": [
+		  "地"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -307,13 +345,15 @@
 	  "name": "スカラベンドラ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -325,7 +365,7 @@
 	  "name": "スペクター",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30
 	  },
@@ -339,12 +379,14 @@
 	  "name": "スレイプニール",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -356,7 +398,7 @@
 	  "name": "ソウルコレクター",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30,
 		"cards_sacrifice": 1
@@ -371,10 +413,12 @@
 	  "name": "ソードプリンセス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 30,
@@ -386,10 +430,12 @@
 	  "name": "ダンピール",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -401,10 +447,12 @@
 	  "name": "テトラーム",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -416,10 +464,12 @@
 	  "name": "デバステイター",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 40,
@@ -431,12 +481,14 @@
 	  "name": "デュータイタン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 75
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 60,
@@ -448,27 +500,63 @@
 	  "name": "テュポーン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 110,
-		"lands_required": ["風", "風"]
+		"lands_required": [
+		  "wind",
+		  "wind"
+		]
 	  },
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "先制・強打・土地変性",
-	  "ability_detail": "先制；強打[💧🌱]；土地変性[💨]"
+	  "ability_detail": "先制；強打[💧🌱]；土地変性[💨]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
+		  "強打"
+		],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_is_element",
+			"elements": [
+			  "water",
+			  "earth"
+			]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": [
+				  "water",
+				  "earth"
+				]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 176,
 	  "name": "トルネード",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 55
 	  },
 	  "restrictions": {
-		"item_use": ["防具", "巻物"]
+		"item_use": [
+		  "防具",
+		  "巻物"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 50,
@@ -480,7 +568,7 @@
 	  "name": "トレジャーレイダー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 90
 	  },
@@ -494,13 +582,17 @@
 	  "name": "ナイキー",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["防具"]
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -512,24 +604,51 @@
 	  "name": "ナイト",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 90
 	  },
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "強打",
-	  "ability_detail": "強打[MHP50以上]"
+	  "ability_detail": "強打[MHP50以上]",
+	  "ability_parsed": {
+		"keywords": [
+		  "強打"
+		],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_max_hp_check",
+			"operator": ">=",
+			"value": 50
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {
+				"condition_type": "enemy_max_hp_check",
+				"operator": ">=",
+				"value": 50
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 180,
 	  "name": "ナイトメア",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 40,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -541,12 +660,14 @@
 	  "name": "バウダーイーター",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 10
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 1,
 	  "hp": 1,
@@ -558,10 +679,12 @@
 	  "name": "パトロナス",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 20,
@@ -573,12 +696,14 @@
 	  "name": "ブリーズスピリット",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"cannot_summon": ["火"]
+		"cannot_summon": [
+		  "火"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -590,12 +715,14 @@
 	  "name": "ブリッツレイブン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 30,
 	  "hp": 20,
@@ -607,12 +734,14 @@
 	  "name": "ブルガサリ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 90
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -624,12 +753,14 @@
 	  "name": "ホーリーラマ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -641,7 +772,7 @@
 	  "name": "マーシャルモンク",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70,
 		"cards_sacrifice": 1
@@ -656,13 +787,17 @@
 	  "name": "マッドハーレクイン",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 50
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"],
-		"item_use": ["巻物"]
+		"cannot_summon": [
+		  "地"
+		],
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -674,28 +809,58 @@
 	  "name": "ヨーウィ",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 70
 	  },
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "強打・通行料変化",
-	  "ability_detail": "強打[🔥]；通行料変化[1/2~2.5倍]"
+	  "ability_detail": "強打[🔥]；通行料変化[1/2~2.5倍]",
+	  "ability_parsed": {
+		"keywords": [
+		  "強打"
+		],
+		"keyword_conditions": {
+		  "強打": {
+			"condition_type": "enemy_is_element",
+			"elements": "fire"
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "power_strike",
+			"multiplier": 1.5,
+			"conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": "fire"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 190,
 	  "name": "ライトニングドラゴン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["風", "風"]
+		"lands_required": [
+		  "wind",
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"],
-		"item_use": ["防具"]
+		"cannot_summon": [
+		  "地"
+		],
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 50,
 	  "hp": 50,
@@ -707,13 +872,17 @@
 	  "name": "ルフ",
 	  "rarity": "S",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"item_use": ["巻物"]
+		"item_use": [
+		  "巻物"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -725,10 +894,12 @@
 	  "name": "レムレース",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 30,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -740,14 +911,20 @@
 	  "name": "ロードオブペイン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 80,
-		"lands_required": ["風", "風"],
+		"lands_required": [
+		  "wind",
+		  "wind"
+		],
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"cannot_summon": ["火", "地"]
+		"cannot_summon": [
+		  "火",
+		  "地"
+		]
 	  },
 	  "ap": 70,
 	  "hp": 60,
@@ -759,14 +936,20 @@
 	  "name": "ワイバーン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "風",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60,
-		"lands_required": ["風"]
+		"lands_required": [
+		  "wind"
+		]
 	  },
 	  "restrictions": {
-		"cannot_summon": ["地"],
-		"item_use": ["防具"]
+		"cannot_summon": [
+		  "地"
+		],
+		"item_use": [
+		  "防具"
+		]
 	  },
 	  "ap": 40,
 	  "hp": 40,
