@@ -23,6 +23,7 @@ var selection_mode = ""        # "summon" or "battle"
 # システム参照
 var card_system_ref: CardSystem = null
 var ui_manager_ref = null  # UIManager参照を追加
+var game_flow_manager_ref = null  # GameFlowManager参照
 
 func _ready():
 	pass
@@ -55,9 +56,10 @@ func show_selection(current_player, mode: String = "summon"):
 	# フェーズラベルを更新
 	update_phase_label(current_player, mode)
 	
-	# プレイヤー1の場合のみカードを選択可能にする
-	if current_player.id == 0:
-		enable_card_selection(hand_data, current_player.magic_power)
+	# デバッグモード（全員手動）またはプレイヤー1の場合、カード選択可能
+	var allow_manual = (current_player.id == 0) or (game_flow_manager_ref and game_flow_manager_ref.debug_manual_control_all)
+	if allow_manual:
+		enable_card_selection(hand_data, current_player.magic_power, current_player.id)
 		create_pass_button(hand_data.size())
 
 # フェーズラベルを更新
@@ -80,12 +82,12 @@ func update_phase_label(current_player, mode: String):
 			phase_label_ref.text = "カードを選択してください"
 
 # カード選択を有効化
-func enable_card_selection(hand_data: Array, available_magic: int):
+func enable_card_selection(hand_data: Array, available_magic: int, player_id: int = 0):
 	if not ui_manager_ref:
 		return
 	
-	# UIManagerから手札ノードを取得
-	var hand_nodes = ui_manager_ref.player_card_nodes.get(0, [])
+	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
+	var hand_nodes = ui_manager_ref.player_card_nodes.get(player_id, [])
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):

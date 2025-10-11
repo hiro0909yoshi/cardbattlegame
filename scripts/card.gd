@@ -304,9 +304,9 @@ func _input(event):
 				z_index = 0
 				return
 	
-	# ドラッグ開始処理
-	if not is_selectable and mouse_over and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			is_dragging = true
-			z_index = 10
-			get_viewport().set_input_as_handled()
+	# ドラッグ機能は無効化（将来的に必要なら再実装）
+	# if not is_selectable and mouse_over and event is InputEventMouseButton:
+	#     if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	#         is_dragging = true
+	#         z_index = 10
+	#         get_viewport().set_input_as_handled()

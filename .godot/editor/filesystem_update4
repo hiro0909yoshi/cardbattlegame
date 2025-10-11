@@ -14,3 +14,11 @@ res://scripts/card_system.gd
 res://scripts/tiles/base_tiles.gd
 res://scripts/tile_data_manager.gd
 res://scripts/tile_neighbor_system.gd
+res://data/neutral.json
+res://scripts/game_flow_manager.gd
+res://scripts/game_3d.gd
+res://scripts/tile_action_processor.gd
+res://scripts/board_system_3d.gd
+res://scripts/ui_manager.gd
+res://scripts/ui_components/card_selection_ui.gd
+res://scripts/card.gd

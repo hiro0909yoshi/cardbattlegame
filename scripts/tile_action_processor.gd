@@ -44,7 +44,7 @@ func set_cpu_processor(cpu_processor: CPUTurnProcessor):
 # === タイル到着処理 ===
 
 # タイル到着時のメイン処理
-func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array):
+func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array, debug_manual_control_all: bool = false):
 	if is_action_processing:
 		print("Warning: Already processing tile action")
 		return
@@ -67,8 +67,9 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 			_complete_action()
 		return
 	
-	# CPUかプレイヤーかで分岐
-	if player_is_cpu[current_player_index]:
+	# CPUかプレイヤーかで分岐（デバッグモードでは全て手動）
+	var is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
+	if is_cpu_turn:
 		_process_cpu_tile(tile, tile_info, current_player_index)
 	else:
 		_process_player_tile(tile, tile_info, current_player_index)

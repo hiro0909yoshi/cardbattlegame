@@ -23,6 +23,7 @@ var current_dice_label: Label = null
 var card_system_ref = null
 var player_system_ref = null
 var board_system_ref = null  # BoardSystem3Dも格納可能
+var game_flow_manager_ref = null  # GameFlowManagerの参照
 
 # デバッグモード
 var debug_mode = false
@@ -111,6 +112,8 @@ func create_ui(parent: Node):
 			
 	if card_selection_ui and card_selection_ui.has_method("initialize"):
 		card_selection_ui.initialize(ui_layer, card_system_ref, phase_label, self)
+		# GameFlowManager参照を設定
+		card_selection_ui.game_flow_manager_ref = game_flow_manager_ref
 		
 	if level_up_ui and level_up_ui.has_method("initialize"):
 		level_up_ui.initialize(ui_layer, null, phase_label)  # board_systemはnullで初期化
@@ -343,23 +346,26 @@ func _on_card_used(_card_data: Dictionary):
 
 # 手札が更新された時の処理
 func _on_hand_updated():
-	update_hand_display(0)
+	# 現在のターンプレイヤーの手札を表示
+	if player_system_ref:
+		var current_player = player_system_ref.get_current_player()
+		if current_player:
+			update_hand_display(current_player.id)
 
 # 手札表示を更新
 func update_hand_display(player_id: int):
-	if player_id != 0:
-		return
 	
 	if not card_system_ref or not hand_container:
 		return
 	
 	print("[UIManager] 手札表示を更新中...")
 	
-	# 既存のカードノードを全て削除
-	for card_node in player_card_nodes[player_id]:
-		if is_instance_valid(card_node):
-			card_node.queue_free()
-	player_card_nodes[player_id].clear()
+	# 全プレイヤーの既存カードノードを削除（ターン切り替え時に前のプレイヤーの手札を消す）
+	for pid in player_card_nodes.keys():
+		for card_node in player_card_nodes[pid]:
+			if is_instance_valid(card_node):
+				card_node.queue_free()
+		player_card_nodes[pid].clear()
 	
 	# カードデータを取得
 	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
@@ -404,13 +410,13 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	else:
 		print("WARNING: カードにload_card_dataメソッドがありません")
 	
+	# 手札表示用カードは初期状態で選択不可（CardSelectionUIが必要に応じて有効化する）
+	card.is_selectable = false
+	
 	return card
 
 # 手札を再配置（動的スケール対応）
 func rearrange_hand(player_id: int):
-	if player_id != 0:
-		return
-	
 	var card_nodes = player_card_nodes[player_id]
 	if card_nodes.is_empty():
 		return

@@ -571,7 +571,13 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・巻物攻撃",
-	  "ability_detail": "先制；巻物攻撃[ST=基本ST]"
+	  "ability_detail": "先制；巻物攻撃[ST=基本ST]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制"
+		],
+		"effects": []
+	  }
 	},
 	{
 	  "id": 79,
@@ -669,7 +675,13 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "先制・土地変性・再生",
-	  "ability_detail": "先制；土地変性[水]；再生"
+	  "ability_detail": "先制；土地変性[水]；再生",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制"
+		],
+		"effects": []
+	  }
 	},
 	{
 	  "id": 84,
@@ -898,7 +910,13 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "先制",
-	  "ability_detail": "先制"
+	  "ability_detail": "先制",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制"
+		],
+		"effects": []
+	  }
 	},
 	{
 	  "id": 96,

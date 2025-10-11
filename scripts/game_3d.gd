@@ -18,6 +18,9 @@ var game_flow_manager: GameFlowManager
 var player_count = 2
 var player_is_cpu = [false, true]  # Player1=人間, Player2=CPU
 
+# 🔧 デバッグ設定: trueにするとCPUも手動操作できる
+var debug_manual_control_all = true  # デバッグモード有効化
+
 func _ready():
 	initialize_systems()
 	setup_game()
@@ -138,7 +141,12 @@ func setup_game():
 	# GameFlowManager設定（3D対応）
 	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
 									skill_system, ui_manager, battle_system, special_tile_system)
+	game_flow_manager.debug_manual_control_all = debug_manual_control_all
 	game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
+	
+	# CardSelectionUIにGameFlowManager参照を設定（setup_systems後に再設定）
+	if ui_manager.card_selection_ui:
+		ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
 	
 	# Debug設定
 	debug_controller.setup_systems(player_system, board_system_3d, card_system, ui_manager)

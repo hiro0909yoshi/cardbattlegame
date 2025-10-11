@@ -28,6 +28,9 @@ var current_phase = GamePhase.SETUP
 var board_system_3d = null
 var player_is_cpu = []
 
+# デバッグ用: 全プレイヤーを手動操作にする（trueで有効）
+@export var debug_manual_control_all: bool = false
+
 # ハンドラークラス
 var cpu_ai_handler: CPUAIHandler
 
@@ -60,6 +63,8 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 	# 3Dボードのシグナル接続
 	if board_system_3d:
 		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
+		# デバッグフラグを転送
+		board_system_3d.debug_manual_control_all = debug_manual_control_all
 
 # システム参照を設定
 func setup_systems(p_system, c_system, b_system, s_system, ui_system, 
@@ -70,6 +75,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	ui_manager = ui_system
 	battle_system = bt_system
 	special_tile_system = st_system
+	
+	# UIManagerに自身の参照を渡す
+	if ui_manager:
+		ui_manager.game_flow_manager_ref = self
 	
 	# CPU AIハンドラー設定
 	if cpu_ai_handler:
@@ -96,8 +105,10 @@ func start_turn():
 	# UI更新
 	ui_manager.update_player_info_panels()
 	
-	# CPUターンの場合
-	if current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
+	# CPUターンの場合（デバッグモードでは無効化可能）
+	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
+	print("【デバッグ】プレイヤー", current_player.id + 1, " is_cpu:", player_is_cpu[current_player.id] if current_player.id < player_is_cpu.size() else "N/A", " debug_manual:", debug_manual_control_all, " → CPU自動:", is_cpu_turn)
+	if is_cpu_turn:
 		ui_manager.set_dice_button_enabled(false)
 		ui_manager.phase_label.text = "CPUのターン..."
 		current_phase = GamePhase.DICE_ROLL
@@ -329,8 +340,9 @@ func check_and_discard_excess_cards():
 	var cards_to_discard = hand_size - GameConstants.MAX_HAND_SIZE
 	print("手札調整が必要: ", hand_size, "枚 → 6枚（", cards_to_discard, "枚捨てる）")
 	
-	# CPUの場合は自動で捨てる
-	if current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id]:
+	# CPUの場合は自動で捨てる（デバッグモードでは無効化）
+	var is_cpu = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
+	if is_cpu:
 		card_system.discard_excess_cards_auto(current_player.id, GameConstants.MAX_HAND_SIZE)
 		return
 	

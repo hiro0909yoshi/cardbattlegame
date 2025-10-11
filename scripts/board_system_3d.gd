@@ -21,6 +21,7 @@ var cpu_turn_processor: CPUTurnProcessor
 var player_count = 2
 var player_is_cpu = [false, true]
 var current_player_index = 0
+var debug_manual_control_all: bool = false  # GameFlowManagerから設定される
 
 # 状態管理
 var is_waiting_for_action = false
@@ -213,7 +214,7 @@ func _on_movement_completed(_player_id: int, final_tile: int):
 
 func process_tile_landing(tile_index: int):
 	is_waiting_for_action = true
-	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu)
+	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu, debug_manual_control_all)
 
 func on_card_selected(card_index: int):
 	tile_action_processor.on_card_selected(card_index)
