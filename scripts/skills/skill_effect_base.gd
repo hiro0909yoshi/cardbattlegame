@@ -112,9 +112,7 @@ enum Keywords {
 	POWER_STRIKE,        # 強打
 	PENETRATE,           # 貫通
 	REGENERATE,          # 再生
-	UNDYING,             # 不死
 	DOUBLE_ATTACK,       # 2回攻撃
-	VENGEANCE,           # 雪辱
 	
 	# 防御能力
 	NULLIFY,             # 無効化

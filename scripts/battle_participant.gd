@@ -19,6 +19,7 @@ var current_ap: int           # 現在のAP（スキル適用後）
 
 # スキル・状態
 var has_first_strike: bool    # 先制攻撃を持つか
+var attack_count: int = 1     # 攻撃回数（2回攻撃なら2）
 var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
 

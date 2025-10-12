@@ -336,6 +336,18 @@ func _apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	if modified.get("power_strike_applied", false):
 		print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+	
+	# 2回攻撃スキルを判定
+	_check_double_attack(participant)
+
+# 2回攻撃スキル判定
+func _check_double_attack(participant: BattleParticipant) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if "2回攻撃" in keywords:
+		participant.attack_count = 2
+		print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
 
 # 感応スキルを適用
 func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary) -> void:
@@ -393,35 +405,48 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 		if not attacker_p.is_alive():
 			continue
 		
-		# 攻撃実行
-		var attacker_name = attacker_p.creature_data.get("name", "?")
-		var defender_name = defender_p.creature_data.get("name", "?")
-		print("
+		# 攻撃回数分ループ
+		for attack_num in range(attacker_p.attack_count):
+			# 既に倒されていたら攻撃しない
+			if not defender_p.is_alive():
+				break
+			
+			# 攻撃実行
+			var attacker_name = attacker_p.creature_data.get("name", "?")
+			var defender_name = defender_p.creature_data.get("name", "?")
+			
+			# 攻撃ヘッダー
+			if attacker_p.attack_count > 1:
+				print("
+【第", i + 1, "攻撃 - ", attack_num + 1, "回目】", "侵略側" if attacker_p.is_attacker else "防御側", "の攻撃")
+			else:
+				print("
 【第", i + 1, "攻撃】", "侵略側" if attacker_p.is_attacker else "防御側", "の攻撃")
-		print("  ", attacker_name, " AP:", attacker_p.current_ap, " → ", defender_name)
-		
-		# 防御側の貫通スキルは効果なし
-		if not attacker_p.is_attacker:
-			var defender_keywords = attacker_p.creature_data.get("ability_parsed", {}).get("keywords", [])
-			if "貫通" in defender_keywords:
-				print("  【貫通】防御側のため効果なし")
-		
-		# ダメージ適用
-		var damage_breakdown = defender_p.take_damage(attacker_p.current_ap)
-		
-		print("  ダメージ処理:")
-		if damage_breakdown["resonance_bonus_consumed"] > 0:
-			print("    - 感応ボーナス: ", damage_breakdown["resonance_bonus_consumed"], " 消費")
-		if damage_breakdown["land_bonus_consumed"] > 0:
-			print("    - 土地ボーナス: ", damage_breakdown["land_bonus_consumed"], " 消費")
-		if damage_breakdown["base_hp_consumed"] > 0:
-			print("    - 基本HP: ", damage_breakdown["base_hp_consumed"], " 消費")
-		print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
-		
-		# 倒されたらバトル終了
-		if not defender_p.is_alive():
-			print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
-			break
+			
+			print("  ", attacker_name, " AP:", attacker_p.current_ap, " → ", defender_name)
+			
+			# 防御側の貫通スキルは効果なし
+			if not attacker_p.is_attacker:
+				var defender_keywords = attacker_p.creature_data.get("ability_parsed", {}).get("keywords", [])
+				if "貫通" in defender_keywords:
+					print("  【貫通】防御側のため効果なし")
+			
+			# ダメージ適用
+			var damage_breakdown = defender_p.take_damage(attacker_p.current_ap)
+			
+			print("  ダメージ処理:")
+			if damage_breakdown["resonance_bonus_consumed"] > 0:
+				print("    - 感応ボーナス: ", damage_breakdown["resonance_bonus_consumed"], " 消費")
+			if damage_breakdown["land_bonus_consumed"] > 0:
+				print("    - 土地ボーナス: ", damage_breakdown["land_bonus_consumed"], " 消費")
+			if damage_breakdown["base_hp_consumed"] > 0:
+				print("    - 基本HP: ", damage_breakdown["base_hp_consumed"], " 消費")
+			print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
+			
+			# 倒されたらバトル終了
+			if not defender_p.is_alive():
+				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
+				break
 
 # バトル結果を判定
 func _resolve_battle_result(attacker: BattleParticipant, defender: BattleParticipant) -> BattleResult:
@@ -442,6 +467,10 @@ func _apply_post_battle_effects(
 	defender: BattleParticipant
 ) -> void:
 	var tile_index = tile_info["index"]
+	
+	# 再生スキル処理
+	_apply_regeneration(attacker)
+	_apply_regeneration(defender)
 	
 	match result:
 		BattleResult.ATTACKER_WIN:
@@ -480,6 +509,27 @@ func _apply_post_battle_effects(
 	# 表示更新
 	if board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
+
+# 再生スキル処理
+func _apply_regeneration(participant: BattleParticipant) -> void:
+	# 生き残っていない場合は発動しない
+	if not participant.is_alive():
+		return
+	
+	# 再生キーワードチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if "再生" in keywords:
+		# 基本HPの最大値を取得（初期値）
+		var max_base_hp = participant.creature_data.get("hp", 0)
+		
+		# 現在の基本HPが最大値未満なら回復
+		if participant.base_hp < max_base_hp:
+			var healed = max_base_hp - participant.base_hp
+			participant.base_hp = max_base_hp
+			participant.update_current_hp()
+			print("【再生発動】", participant.creature_data.get("name", "?"), " HP回復: +", healed, " → ", participant.current_hp)
 
 # 防御側クリーチャーのHPを更新
 func _update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:
