@@ -86,11 +86,13 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	
 	print("侵略側: ", attacker.creature_data.get("name", "?"), " [", attacker.creature_data.get("element", "?"), "]")
 	print("  基本HP:", attacker.base_hp, " + 土地ボーナス:", attacker.land_bonus_hp, " = MHP:", attacker.current_hp)
-	print("  AP:", attacker.current_ap, " 先制:", "あり" if attacker.has_first_strike else "なし")
+	var attacker_speed = "アイテム先制" if attacker.has_item_first_strike else ("後手" if attacker.has_last_strike else ("先制" if attacker.has_first_strike else "通常"))
+	print("  AP:", attacker.current_ap, " 攻撃:", attacker_speed)
 	
 	print("防御側: ", defender.creature_data.get("name", "?"), " [", defender.creature_data.get("element", "?"), "]")
 	print("  基本HP:", defender.base_hp, " + 土地ボーナス:", defender.land_bonus_hp, " = MHP:", defender.current_hp)
-	print("  AP:", defender.current_ap, " 先制:", "あり" if defender.has_first_strike else "なし")
+	var defender_speed = "アイテム先制" if defender.has_item_first_strike else ("後手" if defender.has_last_strike else ("先制" if defender.has_first_strike else "通常"))
+	print("  AP:", defender.current_ap, " 攻撃:", defender_speed)
 	
 	# 2. バトル前スキル適用
 	_apply_pre_battle_skills(participants, tile_info, attacker_index)
@@ -275,29 +277,46 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 	
 	return false
 
-# 攻撃順を決定（先制判定）
+# 攻撃順を決定（先制・後手判定）
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:
-	# 後手スキルチェック
-	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
-	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
-	var attacker_has_last_strike = "後手" in attacker_keywords
-	var defender_has_last_strike = "後手" in defender_keywords
+	# 優先順位: アイテム先制 > 後手 > 通常先制 > デフォルト
 	
-	# 後手持ちは相手が先攻
-	if attacker_has_last_strike and not defender_has_last_strike:
-		return [defender, attacker]  # 侵略側が後手 → 防御側が先攻
-	elif defender_has_last_strike and not attacker_has_last_strike:
-		return [attacker, defender]  # 防御側が後手 → 侵略側が先攻
-	elif attacker_has_last_strike and defender_has_last_strike:
-		return [attacker, defender]  # 両者後手 → 侵略側優先
+	# 1. アイテムで先制付与されている場合（最優先）
+	if attacker.has_item_first_strike and not defender.has_item_first_strike:
+		print("【攻撃順】侵略側（アイテム先制） → 防御側")
+		return [attacker, defender]
+	elif defender.has_item_first_strike and not attacker.has_item_first_strike:
+		print("【攻撃順】防御側（アイテム先制） → 侵略側")
+		return [defender, attacker]
+	elif attacker.has_item_first_strike and defender.has_item_first_strike:
+		print("【攻撃順】両者アイテム先制 → 侵略側優先")
+		return [attacker, defender]
 	
-	# 通常の先制判定
-	if attacker.has_first_strike and defender.has_first_strike:
-		return [attacker, defender]  # 両者先制 → 侵略側優先
-	elif defender.has_first_strike:
-		return [defender, attacker]  # 防御側のみ先制
-	else:
-		return [attacker, defender]  # デフォルト（侵略側先攻）
+	# 2. 後手判定（先制より優先）
+	if attacker.has_last_strike and not defender.has_last_strike:
+		print("【攻撃順】防御側 → 侵略側（後手）")
+		return [defender, attacker]
+	elif defender.has_last_strike and not attacker.has_last_strike:
+		print("【攻撃順】侵略側 → 防御側（後手）")
+		return [attacker, defender]
+	elif attacker.has_last_strike and defender.has_last_strike:
+		print("【攻撃順】両者後手 → 侵略側優先")
+		return [attacker, defender]
+	
+	# 3. 通常の先制判定
+	if attacker.has_first_strike and not defender.has_first_strike:
+		print("【攻撃順】侵略側（先制） → 防御側")
+		return [attacker, defender]
+	elif defender.has_first_strike and not attacker.has_first_strike:
+		print("【攻撃順】防御側（先制） → 侵略側")
+		return [defender, attacker]
+	elif attacker.has_first_strike and defender.has_first_strike:
+		print("【攻撃順】両者先制 → 侵略側優先")
+		return [attacker, defender]
+	
+	# 4. デフォルト（侵略側先攻）
+	print("【攻撃順】侵略側 → 防御側")
+	return [attacker, defender]
 
 # バトル前スキル適用
 func _apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, attacker_index: int) -> void:

@@ -423,7 +423,10 @@
 	  "ap": 50,
 	  "hp": 60,
 	  "ability": "後手",
-	  "ability_detail": "後手"
+	  "ability_detail": "後手",
+	  "ability_parsed": {
+		"keywords": ["後手"]
+	  }
 	},
 	{
 	  "id": 120,

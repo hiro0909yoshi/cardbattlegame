@@ -19,6 +19,8 @@ var current_ap: int           # 現在のAP（スキル適用後）
 
 # スキル・状態
 var has_first_strike: bool    # 先制攻撃を持つか
+var has_last_strike: bool     # 後手（相手が先攻）
+var has_item_first_strike: bool = false  # アイテムによる先制付与
 var attack_count: int = 1     # 攻撃回数（2回攻撃なら2）
 var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
@@ -40,8 +42,9 @@ func _init(
 	is_attacker = p_is_attacker
 	player_id = p_player_id
 	
-	# 先制判定
+	# 先制・後手判定
 	has_first_strike = _check_first_strike()
+	has_last_strike = _check_last_strike()
 	
 	# 現在HPを計算
 	update_current_hp()
@@ -49,12 +52,18 @@ func _init(
 # 先制攻撃を持つかチェック
 func _check_first_strike() -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	
-	# 後手スキルを持つ場合、先制を無効化（後手 = 相手が先攻）
-	if "後手" in keywords:
-		return false
-	
 	return "先制" in keywords
+
+# 後手を持つかチェック
+func _check_last_strike() -> bool:
+	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
+	return "後手" in keywords
+
+# アイテムで先制を付与（後手を上書き）
+func apply_item_first_strike():
+	has_item_first_strike = true
+	has_last_strike = false  # 後手を無効化
+	print("【アイテム先制】", creature_data.get("name", "?"), " アイテムにより先制付与（後手無効化）")
 
 # 現在HPを更新
 func update_current_hp():
