@@ -22,6 +22,7 @@ var has_first_strike: bool    # 先制攻撃を持つか
 var attack_count: int = 1     # 攻撃回数（2回攻撃なら2）
 var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
+var instant_death_flag: bool = false  # 即死されたフラグ
 
 # 初期化
 func _init(
@@ -48,6 +49,11 @@ func _init(
 # 先制攻撃を持つかチェック
 func _check_first_strike() -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
+	
+	# 後手スキルを持つ場合、先制を無効化（後手 = 相手が先攻）
+	if "後手" in keywords:
+		return false
+	
 	return "先制" in keywords
 
 # 現在HPを更新

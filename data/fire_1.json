@@ -380,7 +380,22 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "即死・無効化",
-	  "ability_detail": "即死[ST50以上・60%]；無効化[MHP50以上]"
+	  "ability_detail": "即死[ST50以上・60%]；無効化[MHP50以上]",
+	  "ability_parsed": {
+		"keywords": ["即死", "無効化"],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "defender_st_check",
+			"operator": ">=",
+			"value": 50,
+			"probability": 60
+		  },
+		  "無効化": {
+			"nullify_type": "mhp_above",
+			"value": 50
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 17,

@@ -277,6 +277,21 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 # 攻撃順を決定（先制判定）
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:
+	# 後手スキルチェック
+	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
+	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
+	var attacker_has_last_strike = "後手" in attacker_keywords
+	var defender_has_last_strike = "後手" in defender_keywords
+	
+	# 後手持ちは相手が先攻
+	if attacker_has_last_strike and not defender_has_last_strike:
+		return [defender, attacker]  # 侵略側が後手 → 防御側が先攻
+	elif defender_has_last_strike and not attacker_has_last_strike:
+		return [attacker, defender]  # 防御側が後手 → 侵略側が先攻
+	elif attacker_has_last_strike and defender_has_last_strike:
+		return [attacker, defender]  # 両者後手 → 侵略側優先
+	
+	# 通常の先制判定
 	if attacker.has_first_strike and defender.has_first_strike:
 		return [attacker, defender]  # 両者先制 → 侵略側優先
 	elif defender.has_first_strike:
@@ -443,10 +458,113 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 				print("    - 基本HP: ", damage_breakdown["base_hp_consumed"], " 消費")
 			print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
 			
+			# 即死判定（攻撃が通った後）
+			if defender_p.is_alive():
+				_check_instant_death(attacker_p, defender_p)
+			
 			# 倒されたらバトル終了
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 				break
+
+# 即死判定を行う
+func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+	# 即死スキルを持つかチェック
+	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "即死" in keywords:
+		# print("【即死判定】", attacker.creature_data.get("name", "?"), " は即死スキルを持たない")
+		return false
+	
+	print("【即死判定開始】", attacker.creature_data.get("name", "?"), " → ", defender.creature_data.get("name", "?"))
+	
+	# 即死条件を取得
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var instant_death_condition = keyword_conditions.get("即死", {})
+	
+	if instant_death_condition.is_empty():
+		return false
+	
+	# 条件チェック
+	if not _check_instant_death_condition(instant_death_condition, attacker, defender):
+		return false
+	
+	# 確率判定
+	var probability = instant_death_condition.get("probability", 0)
+	var random_value = randf() * 100.0
+	
+	if random_value <= probability:
+		print("【即死発動】", attacker.creature_data.get("name", "?"), " → ", defender.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
+		defender.instant_death_flag = true
+		defender.base_hp = 0
+		defender.update_current_hp()
+		return true
+	else:
+		print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+		return false
+
+# 即死条件をチェック
+func _check_instant_death_condition(condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+	var condition_type = condition.get("condition_type", "")
+	
+	match condition_type:
+		"none":
+			# 無条件
+			return true
+		
+		"enemy_is_element":
+			# 敵が特定属性
+			var required_elements = condition.get("elements", "")
+			var defender_element = defender.creature_data.get("element", "")
+			
+			# 「全」属性は全てに有効
+			if required_elements == "全":
+				return true
+			
+			if defender_element == required_elements:
+				print("【即死条件】敵が", required_elements, "属性 → 条件満たす")
+				return true
+			else:
+				print("【即死条件】敵が", defender_element, "属性（要求:", required_elements, "）→ 条件不成立")
+				return false
+		
+		"defender_st_check":
+			# 防御側のSTが一定以上（基本STで判定）
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 0)
+			var defender_base_st = defender.creature_data.get("ap", 0)  # 基本STで判定
+			
+			var meets_condition = false
+			match operator:
+				">=": meets_condition = defender_base_st >= value
+				">": meets_condition = defender_base_st > value
+				"==": meets_condition = defender_base_st == value
+			
+			if meets_condition:
+				print("【即死条件】防御側ST ", defender_base_st, " ", operator, " ", value, " → 条件満たす")
+				return true
+			else:
+				print("【即死条件】防御側ST ", defender_base_st, " ", operator, " ", value, " → 条件不成立")
+				return false
+		
+		"defender_role":
+			# 使用者が防御側の場合のみ発動（キロネックス用）
+			if not attacker.is_attacker:
+				print("【即死条件】使用者が防御側 → 条件満たす")
+				return true
+			else:
+				print("【即死条件】使用者が侵略側 → 条件不成立")
+				return false
+		
+		"後手":
+			# 後手条件（先制の逆）
+			# この条件は先制判定で既に処理されているため、ここでは常にtrueを返す
+			return true
+		
+		_:
+			print("【即死条件】未知の条件タイプ:", condition_type)
+			return false
 
 # バトル結果を判定
 func _resolve_battle_result(attacker: BattleParticipant, defender: BattleParticipant) -> BattleResult:

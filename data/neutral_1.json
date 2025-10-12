@@ -408,7 +408,21 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "無効化・即死",
-	  "ability_detail": "無効化[無]；即死[無・100%]"
+	  "ability_detail": "無効化[無]；即死[無・100%]",
+	  "ability_parsed": {
+		"keywords": ["無効化", "即死"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"element": "neutral"
+		  },
+		  "即死": {
+			"condition_type": "enemy_is_element",
+			"elements": "neutral",
+			"probability": 100
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 425,

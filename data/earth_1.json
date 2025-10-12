@@ -30,7 +30,16 @@
 	  "ap": 50,
 	  "hp": 10,
 	  "ability": "後手・即死・抹消",
-	  "ability_detail": "後手；即死[70%]；抹消[倒手の同種カード全て・80%]"
+	  "ability_detail": "後手；即死[70%]；抹消[倒手の同種カード全て・80%]",
+	  "ability_parsed": {
+		"keywords": ["後手", "即死"],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "none",
+			"probability": 70
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 202,

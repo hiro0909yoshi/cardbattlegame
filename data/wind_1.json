@@ -532,7 +532,21 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "無効化・即死",
-	  "ability_detail": "無効化[地]；即死[地・60%]"
+	  "ability_detail": "無効化[地]；即死[地・60%]",
+	  "ability_parsed": {
+		"keywords": ["無効化", "即死"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"element": "earth"
+		  },
+		  "即死": {
+			"condition_type": "enemy_is_element",
+			"elements": "earth",
+			"probability": 60
+		  }
+		}
+	  }
 	}
   ]
 }

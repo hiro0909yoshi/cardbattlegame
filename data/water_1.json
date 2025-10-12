@@ -228,7 +228,21 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "即死・無効化",
-	  "ability_detail": "即死[火・60%]；無効化[火]"
+	  "ability_detail": "即死[火・60%]；無効化[火]",
+	  "ability_parsed": {
+		"keywords": ["即死", "無効化"],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "enemy_is_element",
+			"elements": "fire",
+			"probability": 60
+		  },
+		  "無効化": {
+			"nullify_type": "element",
+			"element": "fire"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 112,
@@ -380,7 +394,17 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "防御側なら即死",
-	  "ability_detail": "防御側なら即死[全・80%]；自破壊時、G100を失う"
+	  "ability_detail": "防御側なら即死[全・80%]；自破壊時、G100を失う",
+	  "ability_parsed": {
+		"keywords": ["即死"],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "defender_role",
+			"elements": "全",
+			"probability": 80
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 119,
