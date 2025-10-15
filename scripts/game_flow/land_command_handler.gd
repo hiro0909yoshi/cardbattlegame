@@ -291,11 +291,23 @@ func close_land_command():
 	print("[LandCommandHandler] 領地コマンドを閉じました")
 	
 	# カメラを現在のプレイヤーに戻す
-	# TODO: 後で実装（現在はエラーの原因になるため一旦コメントアウト）
-	# if board_system and player_system:
-	# 	var current_player = player_system.get_current_player()
-	# 	if current_player:
-	# 		focus_camera_on_tile(current_player["position"])
+	# MovementControllerからプレイヤーの実際の位置を取得
+	if board_system and player_system and board_system.movement_controller:
+		var player_id = player_system.current_player_index
+		var player_tile_index = board_system.movement_controller.get_player_tile(player_id)
+		
+		print("[LandCommandHandler] プレイヤー", player_id, "の実際の位置: タイル", player_tile_index)
+		
+		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
+			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
+			
+			# MovementControllerと同じカメラオフセットを使用
+			const CAMERA_OFFSET = Vector3(19, 19, 19)
+			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + CAMERA_OFFSET
+			
+			board_system.camera.position = new_camera_pos
+			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
+			print("[LandCommandHandler] カメラをプレイヤー位置（タイル", player_tile_index, "）に戻しました")
 	
 	# UIを非表示
 	if ui_manager and ui_manager.has_method("hide_land_command_ui"):
