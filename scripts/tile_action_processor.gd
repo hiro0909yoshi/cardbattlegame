@@ -175,6 +175,13 @@ func execute_summon(card_index: int):
 		board_system.set_tile_owner(current_tile, current_player_index)
 		board_system.place_creature(current_tile, card_data)
 		
+		# Phase 1-A: 召喚後にダウン状態を設定
+		if board_system.tile_nodes.has(current_tile):
+			var tile = board_system.tile_nodes[current_tile]
+			if tile and tile.has_method("set_down_state"):
+				tile.set_down_state(true)
+				print("[TileActionProcessor] 召喚後ダウン状態設定: タイル", current_tile)
+		
 		print("召喚成功！土地を取得しました")
 		
 		# UI更新

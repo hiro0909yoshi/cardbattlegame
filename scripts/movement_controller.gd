@@ -218,6 +218,10 @@ func handle_start_pass(player_id: int):
 	print("スタート地点通過！")
 	if player_system:
 		player_system.add_magic(player_id, GameConstants.PASS_BONUS)
+	
+	# Phase 1-A: プレイヤーの全土地のダウン状態をクリア
+	clear_all_down_states_for_player(player_id)
+	
 	emit_signal("start_passed", player_id)
 
 # 特定タイルへ直接配置（初期配置用）
@@ -234,6 +238,14 @@ func place_player_at_tile(player_id: int, tile_index: int) -> void:
 	
 	player_node.global_position = target_pos
 	player_tiles[player_id] = tile_index
+
+# Phase 1-A: プレイヤーの全土地のダウン状態をクリア
+func clear_all_down_states_for_player(player_id: int):
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.has_method("is_down") and tile.is_down():
+			tile.clear_down_state()
+			print("[MovementController] ダウン状態クリア: タイル", tile_index, "（プレイヤー", player_id + 1, "）")
 
 # カメラをプレイヤーにフォーカス
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:

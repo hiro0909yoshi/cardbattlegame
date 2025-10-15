@@ -144,6 +144,9 @@ func setup_game():
 	game_flow_manager.debug_manual_control_all = debug_manual_control_all
 	game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
 	
+	# Phase 1-A: 新システム初期化
+	game_flow_manager.initialize_phase1a_systems()
+	
 	# CardSelectionUIにGameFlowManager参照を設定（setup_systems後に再設定）
 	if ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
@@ -187,6 +190,9 @@ func connect_signals():
 	ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
 	ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 	ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
+	
+	# Phase 1-A: 領地コマンドボタン
+	ui_manager.land_command_button_pressed.connect(game_flow_manager.open_land_command)
 
 # === イベントハンドラ ===
 

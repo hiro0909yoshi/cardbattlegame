@@ -7,6 +7,7 @@ signal dice_button_pressed()
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
+signal land_command_button_pressed()  # Phase 1-A: 領地コマンドボタン
 
 # UIコンポーネント（動的ロード用）
 var player_info_panel = null
@@ -173,6 +174,9 @@ func create_basic_ui(parent: Node):
 	dice_button.add_theme_font_size_override("font_size", 18)
 	
 	parent.add_child(dice_button)
+	
+	# Phase 1-A: 領地コマンドボタンを作成
+	create_land_command_button(parent)
 
 # === プレイヤー情報パネル関連 ===
 func update_player_info_panels():
@@ -310,6 +314,10 @@ func _on_level_up_cancelled():
 func _on_debug_mode_changed(enabled: bool):
 	debug_mode = enabled
 
+func _on_land_command_button_pressed():
+	print("[UIManager] 領地コマンドボタンがクリックされました！")
+	emit_signal("land_command_button_pressed")
+
 # === 手札UI管理 ===
 
 # 手札コンテナを初期化
@@ -317,6 +325,7 @@ func initialize_hand_container(ui_layer: Node):
 	hand_container = Control.new()
 	hand_container.name = "Hand"
 	hand_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hand_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウス入力を透過させる
 	ui_layer.add_child(hand_container)
 	
 	for i in range(4):
@@ -441,3 +450,101 @@ func _input(event):
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_D:
 			toggle_debug_mode()
+
+# ============================================
+# Phase 1-A: 領地コマンドUI
+# ============================================
+
+var land_command_button: Button = null
+
+# 領地コマンドボタンを作成（create_basic_ui内から呼ばれる想定）
+func create_land_command_button(parent: Node):
+	print("[UIManager] create_land_command_button()開始")
+	print("[UIManager] parent is null? ", parent == null)
+	
+	land_command_button = Button.new()
+	land_command_button.text = "📍領地コマンド"
+	
+	# Phase 1-A Day 4時点: 画面左上に配置（フェーズ表示の下）
+	# サイコロボタンの左側に配置
+	land_command_button.position = Vector2(20, 180)  # 画面上部の見える位置
+	land_command_button.size = Vector2(200, 60)  # サイズを大きく
+	
+	land_command_button.disabled = false
+	land_command_button.visible = false  # 初期は非表示
+	land_command_button.z_index = 100  # 最前面に表示（重要！）
+	land_command_button.mouse_filter = Control.MOUSE_FILTER_STOP  # マウス入力を受け付ける
+	land_command_button.pressed.connect(_on_land_command_button_pressed)  # Phase 1-A: シグナル接続
+	
+	# スタイル設定
+	var button_style = StyleBoxFlat.new()
+	button_style.bg_color = Color(0.2, 0.7, 0.3, 0.9)  # 緑系
+	button_style.border_width_left = 2
+	button_style.border_width_right = 2
+	button_style.border_width_top = 2
+	button_style.border_width_bottom = 2
+	button_style.border_color = Color(1, 1, 1, 1)
+	button_style.corner_radius_top_left = 5
+	button_style.corner_radius_top_right = 5
+	button_style.corner_radius_bottom_left = 5
+	button_style.corner_radius_bottom_right = 5
+	land_command_button.add_theme_stylebox_override("normal", button_style)
+	
+	# ホバー時
+	var hover_style = button_style.duplicate()
+	hover_style.bg_color = Color(0.3, 0.8, 0.4, 1.0)
+	land_command_button.add_theme_stylebox_override("hover", hover_style)
+	
+	# 押下時
+	var pressed_style = button_style.duplicate()
+	pressed_style.bg_color = Color(0.1, 0.6, 0.2, 1.0)
+	land_command_button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# フォントサイズ
+	land_command_button.add_theme_font_size_override("font_size", 20)  # 大きめに
+	
+	parent.add_child(land_command_button)
+	
+	print("[UIManager] 領地コマンドボタン作成完了")
+	print("[UIManager] ボタンが正常に作成されました: ", land_command_button != null)
+	print("[UIManager] ボタンの親: ", land_command_button.get_parent().name if land_command_button.get_parent() else "なし")
+
+# 領地コマンドボタンの表示/非表示
+func show_land_command_button():
+	print("[UIManager] show_land_command_button()が呼ばれました")
+	print("[UIManager] land_command_button is null? ", land_command_button == null)
+	
+	if land_command_button:
+		land_command_button.visible = true
+		land_command_button.disabled = false
+		print("[UIManager] 領地コマンドボタン表示")
+		print("[UIManager] ボタン位置: ", land_command_button.position, " サイズ: ", land_command_button.size, " z_index: ", land_command_button.z_index)
+	else:
+		print("[UIManager] エラー: land_command_buttonがnullです！")
+
+func hide_land_command_button():
+	if land_command_button:
+		land_command_button.visible = false
+		print("[UIManager] 領地コマンドボタン非表示")
+
+# 土地選択モードを表示
+func show_land_selection_mode(owned_lands: Array):
+	print("[UIManager] 土地選択モード表示: ", owned_lands)
+	# Phase 1-A: 簡易実装（デバッグメッセージのみ）
+	# 将来的にはハイライト表示などを実装
+	if phase_label:
+		phase_label.text = "土地を選択してください（数字キー1-0）"
+
+# アクション選択UIを表示
+func show_action_selection_ui(tile_index: int):
+	print("[UIManager] アクション選択UI表示: tile ", tile_index)
+	# Phase 1-A: 簡易実装
+	if phase_label:
+		phase_label.text = "アクションを選択（L:レベルアップ M:移動 S:交換 C:キャンセル）"
+
+# 領地コマンドUIを非表示
+func hide_land_command_ui():
+	print("[UIManager] 領地コマンドUI非表示")
+	# Phase 1-A: 簡易実装
+	if phase_label:
+		phase_label.text = "召喚フェーズ"

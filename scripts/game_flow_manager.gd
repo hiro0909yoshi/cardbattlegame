@@ -97,6 +97,13 @@ func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
 	
+	# Phase 1-A: 領地コマンドボタンを表示（人間プレイヤーのターンのみ）
+	var is_cpu = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
+	if not is_cpu and ui_manager:
+		ui_manager.show_land_command_button()
+	elif ui_manager:
+		ui_manager.hide_land_command_button()
+	
 	# カードドロー処理（常に1枚引く）
 	var drawn = card_system.draw_card_for_player(current_player.id)
 	if not drawn.is_empty() and current_player.id == 0:
@@ -365,3 +372,54 @@ func prompt_discard_card():
 	
 	# UIを閉じる
 	ui_manager.hide_card_selection_ui()
+
+# ============================================
+# Phase 1-A: 新システム統合
+# ============================================
+
+# Phase 1-A用ハンドラー
+var phase_manager: PhaseManager = null
+var land_command_handler: LandCommandHandler = null
+var spell_phase_handler: SpellPhaseHandler = null
+
+# Phase 1-A: ハンドラーを初期化
+func initialize_phase1a_systems():
+	# PhaseManagerを作成
+	phase_manager = PhaseManager.new()
+	add_child(phase_manager)
+	phase_manager.phase_changed.connect(_on_phase_manager_phase_changed)
+	
+	# LandCommandHandlerを作成
+	land_command_handler = LandCommandHandler.new()
+	add_child(land_command_handler)
+	land_command_handler.initialize(ui_manager, board_system_3d, self)
+	
+	# SpellPhaseHandlerを作成
+	spell_phase_handler = SpellPhaseHandler.new()
+	add_child(spell_phase_handler)
+	spell_phase_handler.initialize(ui_manager, self)
+	
+	print("[GameFlowManager] Phase 1-A システム初期化完了")
+
+# Phase 1-A: PhaseManagerのフェーズ変更を受信
+func _on_phase_manager_phase_changed(new_phase, old_phase):
+	print("[GameFlowManager] PhaseManager フェーズ変更: ", 
+		PhaseManager.GamePhase.keys()[old_phase], " → ", 
+		PhaseManager.GamePhase.keys()[new_phase])
+
+# Phase 1-A: 領地コマンドを開く
+func open_land_command():
+	if not land_command_handler:
+		print("[GameFlowManager] LandCommandHandlerが初期化されていません")
+		return
+	
+	var current_player = player_system.get_current_player()
+	if current_player:
+		land_command_handler.open_land_command(current_player.id)
+
+# Phase 1-A: デバッグ情報表示
+func debug_print_phase1a_status():
+	if phase_manager:
+		print("[Phase 1-A] 現在フェーズ: ", phase_manager.get_current_phase_name())
+	if land_command_handler:
+		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())

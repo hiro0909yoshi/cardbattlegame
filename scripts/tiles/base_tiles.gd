@@ -19,6 +19,7 @@ var connections: Dictionary = {
 var creature_data: Dictionary = {}  # 配置されているクリーチャー情報
 var base_color: Color = Color.WHITE  # タイルの基本色
 var is_occupied: bool = false  # プレイヤーが乗っているか
+var down_state: bool = false  # ダウン状態（Phase 1-A追加）
 
 # シグナル
 signal player_landed(player_body)  # プレイヤーが止まった
@@ -138,3 +139,27 @@ func calculate_toll() -> int:
 	return int(base_toll * level_multiplier * chain_bonus)
 
 # 土地ボーナスはバトル時に動的計算（このメソッドは削除）
+
+# ============================================
+# Phase 1-A: ダウン状態システム
+# ============================================
+
+## ダウン状態を設定
+func set_down_state(is_down: bool):
+	down_state = is_down
+	update_visual()
+	print("[BaseTile] タイル", tile_index, "のダウン状態: ", down_state)
+
+## ダウン状態を解除
+func clear_down_state():
+	set_down_state(false)
+
+## ダウン状態かチェック
+func is_down() -> bool:
+	return down_state
+
+## 領地コマンド使用可能か
+func can_use_land_command() -> bool:
+	# 所有地でクリーチャーがいる場合のみ使用可能
+	# ダウン状態でも使用可能（不屈スキル対応）
+	return owner_id != -1 and not creature_data.is_empty()

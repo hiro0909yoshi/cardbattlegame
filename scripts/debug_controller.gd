@@ -293,3 +293,15 @@ func fill_hand():
 # デバッグモードかチェック
 func is_debug_mode() -> bool:
 	return enabled and OS.is_debug_build()
+
+# ============================================
+# Phase 1-A: 領地コマンド用デバッグキー
+# ============================================
+
+# 領地コマンドハンドラー参照
+var land_command_handler = null
+
+# 領地コマンドハンドラーを設定
+func set_land_command_handler(handler):
+	land_command_handler = handler
+	print("[DebugController] LandCommandHandler参照を設定")
