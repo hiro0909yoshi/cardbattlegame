@@ -11,3 +11,7 @@ res://scripts/board_system_3d.gd
 res://scripts/tile_action_processor.gd
 res://docs/progress/phase1a_spec.md
 res://scripts/flow_handlers/cpu_ai_handler.gd
+res://scripts/tile_info_display.gd
+res://scripts/tile_neighbor_system.gd
+res://scripts/game_3d.gd
+res://scripts/ui_components/phase_display.gd

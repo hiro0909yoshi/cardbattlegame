@@ -100,8 +100,7 @@ func setup_game():
 			var first_player = players_container.get_child(0)
 			camera.look_at(first_player.global_position, Vector3.UP)
 		
-		print("カメラ位置: ", camera.global_position)
-		board_system_3d.camera = camera
+			board_system_3d.camera = camera
 	
 	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)

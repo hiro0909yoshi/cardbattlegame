@@ -408,8 +408,6 @@ func create_action_menu_panel(parent: Node):
 	cancel_btn.pressed.connect(_on_action_cancel_pressed)
 	action_menu_panel.add_child(cancel_btn)
 	action_menu_buttons["cancel"] = cancel_btn
-	
-	print("[LandCommandUI] アクションメニューパネル作成完了")
 
 ## レベル選択パネル作成
 func create_level_selection_panel(parent: Node):
@@ -482,8 +480,6 @@ func create_level_selection_panel(parent: Node):
 	var cancel_btn = _create_menu_button("↩️ [C] 戻る", Vector2(10, button_y), Color(0.5, 0.5, 0.5))
 	cancel_btn.pressed.connect(_on_level_cancel_pressed)
 	level_selection_panel.add_child(cancel_btn)
-	
-	print("[LandCommandUI] レベル選択パネル作成完了")
 
 ## メニューボタン作成ヘルパー
 func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:

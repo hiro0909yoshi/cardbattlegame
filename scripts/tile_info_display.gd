@@ -49,8 +49,7 @@ func setup_labels(tile_nodes: Dictionary, board_system):
 		
 		tile.add_child(label)
 		tile_labels[index] = label
-	
-	print("TileInfoDisplay: ", tile_labels.size(), "個のラベルを作成")
+
 
 # 単一タイルの表示を更新
 func update_display(tile_index: int, tile_info: Dictionary):

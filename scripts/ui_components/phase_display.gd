@@ -22,7 +22,6 @@ func initialize(ui_parent: Node):
 	ui_layer = ui_parent
 	create_phase_label()
 	create_dice_button()
-	print("[PhaseDisplay] 初期化完了")
 
 ## フェーズラベルを作成
 func create_phase_label():

@@ -28,8 +28,7 @@ func _build_spatial_neighbors_cache():
 	
 	for tile_index in tile_nodes.keys():
 		spatial_neighbors_cache[tile_index] = _calculate_spatial_neighbors(tile_index)
-	
-	print("TileNeighborSystem: 隣接情報キャッシュ完了（", spatial_neighbors_cache.size(), "タイル）")
+
 
 # 物理的隣接を計算（XZ平面での距離）
 func _calculate_spatial_neighbors(tile_index: int) -> Array:
@@ -73,18 +72,13 @@ func get_sequential_neighbors(tile_index: int) -> Array:
 func has_adjacent_ally_land(tile_index: int, player_id: int, board_system) -> bool:
 	var neighbors = get_spatial_neighbors(tile_index)
 	
-	print("  【TileNeighborSystem】タイル", tile_index, "の隣接: ", neighbors)
-	
 	for neighbor_index in neighbors:
 		var tile_info = board_system.get_tile_info(neighbor_index)
 		var tile_owner = tile_info.get("owner", -1)
-		print("    隣接タイル", neighbor_index, " owner=", tile_owner, " (player=", player_id, ")")
 		
 		if tile_owner == player_id:
-			print("    → 自領地発見！")
 			return true
 	
-	print("    → 隣接自領地なし")
 	return false
 
 # デバッグ: 隣接情報を出力

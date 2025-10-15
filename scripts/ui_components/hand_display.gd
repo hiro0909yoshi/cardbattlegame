@@ -40,8 +40,6 @@ func initialize(ui_parent: Node, card_sys, player_sys):
 	# プレイヤーごとのカードノード配列を初期化
 	for i in range(4):
 		player_card_nodes[i] = []
-	
-	print("[HandDisplay] 手札コンテナ初期化完了")
 
 ## CardSystemのシグナルに接続
 func connect_card_system_signals():
