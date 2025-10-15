@@ -28,6 +28,11 @@ var move_source_tile: int = -1  # 移動元タイル
 var move_destinations: Array = []  # 移動可能な隣接タイル
 var current_destination_index: int = 0  # 現在選択中の移動先インデックス
 
+# Phase 1-D: 交換モード
+var _swap_mode: bool = false  # 交換モード中フラグ
+var _swap_old_creature: Dictionary = {}  # 交換前のクリーチャーデータ
+var _swap_tile_index: int = -1  # 交換対象の土地インデックス
+
 ## 参照
 var ui_manager = null
 var board_system = null
@@ -206,7 +211,7 @@ func execute_level_up() -> bool:
 			ui_manager.phase_label.text = "既に最大レベルです"
 		return false
 	
-	# Phase 1-A: レベル選択UIを表示
+	#　 Phase 1-A: レベル選択UIを表示
 	if ui_manager and ui_manager.has_method("show_level_selection"):
 		var p_system = game_flow_manager.player_system if game_flow_manager else null
 		var current_player = p_system.get_current_player() if p_system else null
@@ -274,8 +279,83 @@ func update_move_destination_ui():
 
 ## クリーチャー交換実行
 func execute_swap_creature() -> bool:
+	if selected_tile_index < 0:
+		print("[LandCommandHandler] エラー: 土地が選択されていません")
+		return false
+	
+	# 選択した土地を取得
+	if not board_system or not board_system.tile_nodes.has(selected_tile_index):
+		print("[LandCommandHandler] エラー: 土地ノードが見つかりません")
+		return false
+	
+	var tile = board_system.tile_nodes[selected_tile_index]
+	var tile_info = board_system.get_tile_info(selected_tile_index)
+	
+	# クリーチャーがいるかチェック
+	if tile_info.get("creature", {}).is_empty():
+		print("[LandCommandHandler] エラー: クリーチャーがいません")
+		return false
+	
+	# 現在のプレイヤーIDを取得
+	var current_player_index = board_system.current_player_index
+	
+	# 召喚条件チェック（手札にクリーチャーカードがあるか）
+	if not _check_swap_conditions(current_player_index):
+		return false
+	
+	# 元のクリーチャーデータを保存
+	var old_creature_data = tile_info["creature"].duplicate()
+	
+	print("[LandCommandHandler] クリーチャー交換開始")
+	print("  対象土地: タイル", selected_tile_index)
+	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"))
+	
+	# TileActionProcessorに交換モードを設定
+	if board_system.tile_action_processor:
+		# is_action_processingをtrueに設定（通常のアクション処理と同じ）
+		board_system.tile_action_processor.is_action_processing = true
+		
+		# 交換情報を保存
+		_swap_mode = true
+		_swap_old_creature = old_creature_data
+		_swap_tile_index = selected_tile_index
+	
+	# カード選択UIを表示
+	if ui_manager:
+		ui_manager.phase_label.text = "交換する新しいクリーチャーを選択"
+		ui_manager.show_card_selection_ui(player_system.get_current_player())
+	
 	action_selected.emit("swap_creature")
-	close_land_command()
+	return true
+
+## 交換条件チェック
+func _check_swap_conditions(player_id: int) -> bool:
+	if not board_system or not board_system.card_system:
+		print("[LandCommandHandler] エラー: システム参照が不正です")
+		return false
+	
+	var card_system = board_system.card_system
+	
+	# 手札データを取得
+	if not card_system.player_hands.has(player_id):
+		print("[LandCommandHandler] エラー: プレイヤーIDが不正です")
+		return false
+	
+	var player_hand = card_system.player_hands[player_id]["data"]
+	
+	# 手札にクリーチャーカードが1枚以上あるかチェック
+	var has_creature_card = false
+	for card in player_hand:
+		if card.get("type", "") == "creature":
+			has_creature_card = true
+			break
+	
+	if not has_creature_card:
+		print("[LandCommandHandler] エラー: 手札にクリーチャーカードがありません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "手札にクリーチャーカードがありません"
+		return false
+	
 	return true
 
 ## 領地コマンドを閉じる
@@ -421,6 +501,29 @@ func cancel():
 ## Phase 1-A: レベル選択シグナルハンドラ
 func _on_level_up_selected(target_level: int, cost: int):
 	execute_level_up_with_level(target_level, cost)
+
+## カード選択時の処理（交換モード用）
+func on_card_selected_for_swap(card_index: int):
+	if not _swap_mode:
+		return  # 交換モードでない場合は何もしない
+	
+	print("[LandCommandHandler] 交換用カード選択: index=", card_index)
+	
+	# TileActionProcessorの交換処理を呼び出す
+	if board_system and board_system.tile_action_processor:
+		board_system.tile_action_processor.execute_swap(
+			_swap_tile_index,
+			card_index,
+			_swap_old_creature
+		)
+	
+	# 交換モードをリセット
+	_swap_mode = false
+	_swap_old_creature = {}
+	_swap_tile_index = -1
+	
+	# 領地コマンドを閉じる
+	close_land_command()
 
 ## 隣接タイルを取得
 func get_adjacent_tiles(tile_index: int) -> Array:
@@ -640,11 +743,8 @@ func confirm_move(dest_tile_index: int):
 		close_land_command()
 		
 		# アクション完了を通知
-		# TileActionProcessorを経由してシグナルを発行
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor._complete_action()
-		# これによりTileActionProcessor → BoardSystem3D → GameFlowManager
-		# とシグナルが伝播し、end_turn()が呼ばれる（集約ルール遵守）
+			board_system.tile_action_processor.complete_action()
 		
 	elif dest_owner == current_player_index:
 		# 自分の土地の場合: エラー（通常はありえない）
@@ -694,11 +794,8 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 				print("[LandCommandHandler] 移動先をダウン状態に設定")
 	
 	# アクション完了を通知
-	# TileActionProcessorを経由してシグナルを発行
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor._complete_action()
-	# これによりTileActionProcessor → BoardSystem3D → GameFlowManager
-	# とシグナルが伝播し、end_turn()が呼ばれる（集約ルール遵守）
+		board_system.tile_action_processor.complete_action()
 
 ## 簡易移動バトル（カードシステム使用不可時）
 func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, attacker_player: int):
@@ -721,8 +818,5 @@ func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, att
 		print("[LandCommandHandler] 簡易バトル: 防御側勝利")
 	
 	# アクション完了を通知
-	# TileActionProcessorを経由してシグナルを発行
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor._complete_action()
-	# これによりTileActionProcessor → BoardSystem3D → GameFlowManager
-	# とシグナルが伝播し、end_turn()が呼ばれる（集約ルール遵守）
+		board_system.tile_action_processor.complete_action()

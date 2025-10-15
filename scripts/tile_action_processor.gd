@@ -268,7 +268,71 @@ func _on_cpu_action_completed():
 func _is_special_tile(tile_type: String) -> bool:
 	return tile_type in ["warp", "card", "checkpoint", "neutral", "start"]
 
-# アクション完了
+# 外部からアクション完了を通知するための公開メソッド
+func complete_action():
+	_complete_action()
+
+# Phase 1-D: クリーチャー交換処理
+func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionary):
+	if not is_action_processing:
+		print("Warning: Not processing any action")
+		return
+	
+	if card_index < 0:
+		print("[TileActionProcessor] 交換キャンセル")
+		_complete_action()
+		return
+	
+	var current_player_index = board_system.current_player_index
+	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	
+	if card_data.is_empty():
+		print("[TileActionProcessor] カードデータが取得できません")
+		_complete_action()
+		return
+	
+	# コストチェック
+	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var current_player = player_system.get_current_player()
+	
+	if current_player.magic_power < cost:
+		print("[TileActionProcessor] 魔力不足で交換できません")
+		_complete_action()
+		return
+	
+	print("[TileActionProcessor] クリーチャー交換開始")
+	print("  対象土地: タイル", tile_index)
+	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"))
+	print("  新しいクリーチャー: ", card_data.get("name", "不明"))
+	
+	# 1. 元のクリーチャーを手札に戻す
+	card_system.return_card_to_hand(current_player_index, old_creature_data)
+	
+	# 2. 選択したカードを使用（手札から削除）
+	card_system.use_card_for_player(current_player_index, card_index)
+	
+	# 3. 魔力消費
+	player_system.add_magic(current_player_index, -cost)
+	
+	# 4. 新しいクリーチャーを配置（土地レベル・属性は維持される）
+	board_system.place_creature(tile_index, card_data)
+	
+	# 5. ダウン状態を設定
+	if board_system.tile_nodes.has(tile_index):
+		var tile = board_system.tile_nodes[tile_index]
+		if tile and tile.has_method("set_down_state"):
+			tile.set_down_state(true)
+			print("[TileActionProcessor] 交換後ダウン状態設定: タイル", tile_index)
+	
+	# UI更新
+	if ui_manager:
+		ui_manager.hide_card_selection_ui()
+		ui_manager.update_player_info_panels()
+	
+	print("[TileActionProcessor] クリーチャー交換完了")
+	_complete_action()
+
+# アクション完了（内部用）
 func _complete_action():
 	is_action_processing = false
 	emit_signal("action_completed")

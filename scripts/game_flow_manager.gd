@@ -237,7 +237,10 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
-	if board_system_3d:
+	# Phase 1-D: 交換モードチェック
+	if land_command_handler and land_command_handler._swap_mode:
+		land_command_handler.on_card_selected_for_swap(card_index)
+	elif board_system_3d:
 		board_system_3d.on_card_selected(card_index)
 
 func on_pass_button_pressed():

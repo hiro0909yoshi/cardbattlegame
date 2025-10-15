@@ -858,24 +858,40 @@ if board_system and board_system.tile_action_processor:
     # 5. tile_action_completed シグナル発行
 ```
 
-#### 恒久対応（TODO: TECH-002）
+#### ✅ 恒久対応完了（2025/10/16 - TECH-002）
 
-**提案案**:
-1. **案1**: TileActionProcessorに統一
-   - BoardSystem3Dは`is_waiting_for_action`を削除
-   - 全てTileActionProcessorの`is_action_processing`で管理
-   
-2. **案2**: 新規TurnManagerクラス
-   - ターン管理専用クラスを作成
-   - 状態管理を一元化
-   
-3. **案3**: BoardSystem3Dに統一
-   - TileActionProcessorは`is_action_processing`を削除
-   - BoardSystem3Dの`is_waiting_for_action`のみで管理
+**採用案**: 案1（TileActionProcessorに統一）
 
-**推奨**: 案1（TileActionProcessorに統一）
-- 理由: TileActionProcessorがアクション処理の責任を持つべき
-- BoardSystem3Dは単なる通知役に徹する
+**実装内容**:
+1. **BoardSystem3D.is_waiting_for_action を削除**
+   - フラグ管理をTileActionProcessorに完全統一
+   - `_on_action_completed()`はシグナル転送のみに簡素化
+
+2. **TileActionProcessor.complete_action() 公開メソッド追加**
+   - 外部から安全にアクション完了を通知可能に
+   - `_complete_action()`は内部用メソッドとして保持
+
+3. **LandCommandHandlerの暫定コードを整理**
+   - 3箇所の`_complete_action()`呼び出しを`complete_action()`に変更
+   - 長いコメントを簡潔に整理
+
+**修正後のアーキテクチャ**:
+```
+【修正前】二重管理（不整合のリスク）
+BoardSystem3D.is_waiting_for_action ←── ①
+TileActionProcessor.is_action_processing ←── ②
+
+【修正後】単一責任
+TileActionProcessor.is_action_processing ←── 唯一の真実の源
+  ↑
+  BoardSystem3D（シグナル転送のみ）
+  LandCommandHandler（complete_action()経由）
+```
+
+**メリット**:
+- 状態管理の責任が明確化
+- バグの温床となる二重管理を解消
+- 保守性・拡張性の向上
 
 ---
 

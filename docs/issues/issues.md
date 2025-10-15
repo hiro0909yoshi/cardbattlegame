@@ -17,20 +17,18 @@
 
 ## 🔴 Critical（即時対応）
 
-### BUG-004: アクション処理フラグの二重管理
+### ✅ BUG-004: アクション処理フラグの二重管理（解決済み）
 - **報告**: 2025/10/16
-- **影響**: BoardSystem3D, TileActionProcessor
+- **解決**: 2025/10/16
+- **影響**: BoardSystem3D, TileActionProcessor, LandCommandHandler
 - **症状**: 領地コマンド実行後、次のプレイヤーがカードを選択しても召喚できない
-- **原因**: アクション処理中を示すフラグが2箇所で管理されている
-  - `BoardSystem3D.is_waiting_for_action`
-  - `TileActionProcessor.is_action_processing`
-- **問題点**: 
-  - 片方だけリセットされるとフラグの整合性が取れなくなる
-  - 領地コマンドなど外部からアクション完了を通知する際に両方を意識する必要がある
-  - バグの温床になっている
-- **暫定対応**: `TileActionProcessor._complete_action()`を経由して両方のフラグをリセット
-- **恒久対応**: フラグを1箇所に統一する（TECH-002として設計改善に登録）
-- **ステータス**: 🚧 暫定対応済み、恒久対応待ち
+- **原因**: アクション処理中を示すフラグが2箇所で管理されていた
+- **解決方法**: 
+  - `BoardSystem3D.is_waiting_for_action` を削除
+  - `TileActionProcessor.is_action_processing` に統一
+  - `TileActionProcessor.complete_action()` 公開メソッド追加
+  - `LandCommandHandler` の3箇所を修正
+- **ステータス**: ✅ 解決済み（TECH-002完了）
 
 ---
 

@@ -23,8 +23,7 @@ var player_is_cpu = [false, true]
 var current_player_index = 0
 var debug_manual_control_all: bool = false  # GameFlowManagerから設定される
 
-# 状態管理
-var is_waiting_for_action = false
+# 状態管理は TileActionProcessor に統一
 
 # 3Dノード参照
 var tile_nodes = {}        # tile_index -> BaseTile
@@ -220,7 +219,6 @@ func _on_movement_completed(_player_id: int, final_tile: int):
 # === タイルアクション処理（TileActionProcessorに委譲） ===
 
 func process_tile_landing(tile_index: int):
-	is_waiting_for_action = true
 	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu, debug_manual_control_all)
 
 func on_card_selected(card_index: int):
@@ -233,9 +231,5 @@ func on_level_up_selected(target_level: int, cost: int):
 	tile_action_processor.on_level_up_selected(target_level, cost)
 
 func _on_action_completed():
-	# 既に処理済みの場合はスキップ
-	if not is_waiting_for_action:
-		return
-		
-	is_waiting_for_action = false
+	# TileActionProcessorから通知を受けたらシグナルを転送
 	emit_signal("tile_action_completed")

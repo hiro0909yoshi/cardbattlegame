@@ -1,6 +1,6 @@
 # Phase 1-A 進捗管理
 
-**最終更新**: 2025年10月16日（UIManager分割完了）
+**最終更新**: 2025年10月16日（Phase 1-A 完全完了）
 
 ---
 
@@ -14,13 +14,118 @@
 | 3-4 | 領地コマンドUI基盤 | ✅ 完了 | 2025-01 |
 | 5   | 既存システム統合 | ✅ 完了 | 2025-10-16 |
 
-**進捗率**: Day 5完了 (100%) - クリーチャー移動機能完全実装・動作確認済み、交換は未実装
+**進捗率**: Phase 1-A 完全完了 (100%) - 全機能実装済み
 
 ---
 
 ## ✅ 完了タスク
 
-### 2025年10月16日（夕方）: UIManager分割完了 ✅
+### 2025年10月16日（深夜）: Phase 1-D クリーチャー交換機能完了 ✅
+
+#### 概要
+Phase 1-Aの最後のピースであるクリーチャー交換機能を実装完了。
+
+#### 実装内容
+- [x] `LandCommandHandler.execute_swap_creature()` 実装
+- [x] `TileActionProcessor.execute_swap()` 実装
+- [x] 交換条件チェック（手札にクリーチャーカードがあるか）
+- [x] 元のクリーチャーを手札に戻す処理
+- [x] 新しいクリーチャー召喚処理
+  - コスト支払い
+  - 土地ボーナス適用
+  - 土地レベル継承
+  - ダウン状態設定
+- [x] `GameFlowManager`での交換モード分岐処理
+- [x] カード選択UIとの統合
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `execute_swap_creature()` - 交換開始処理
+  - `_check_swap_conditions()` - 条件チェック
+  - `on_card_selected_for_swap()` - カード選択コールバック
+  - 交換モード用変数追加
+- `scripts/tile_action_processor.gd`
+  - `execute_swap()` - 交換実行処理
+- `scripts/game_flow_manager.gd`
+  - `on_card_selected()` - 交換モード分岐追加
+
+**実装されたフロー**:
+```
+領地コマンド → 交換を選択
+  ↓
+交換対象の土地を選択（ダウン状態除外済み）
+  ↓
+召喚条件チェック（手札にクリーチャーカードがあるか）
+  ↓
+交換する新しいカードを手札から選択
+  ↓
+元のクリーチャーを手札に戻す
+  ↓
+新しいクリーチャーを召喚（コスト支払い）
+  - 土地ボーナス適用
+  - 土地レベル継承
+  - ダウン状態設定
+  ↓
+ターン終了
+```
+
+**成果**:
+- Phase 1-Aの全機能が完成
+- 領地コマンドシステムが完全に動作
+- レベルアップ・移動・交換の3つのコマンドが利用可能
+
+---
+
+### 2025年10月16日（夜）: TECH-002 アクション処理フラグ統一完了 ✅
+
+#### 概要
+BUG-004の恒久対応として、二重管理されていたアクション処理フラグを一箇所に統一。
+
+#### 修正内容
+- [x] `BoardSystem3D.is_waiting_for_action` 削除
+- [x] `TileActionProcessor.is_action_processing` に統一
+- [x] `TileActionProcessor.complete_action()` 公開メソッド追加
+- [x] `LandCommandHandler` の暫定対応コード整理（3箇所）
+- [x] 設計ドキュメント更新
+- [x] issues.md, tasks.md 更新
+
+**修正ファイル**:
+- `scripts/board_system_3d.gd` - フラグ削除、シグナル転送のみに簡素化
+- `scripts/tile_action_processor.gd` - 公開メソッド追加
+- `scripts/game_flow/land_command_handler.gd` - 3箇所修正
+- `docs/design/design.md` - アーキテクチャ更新
+- `docs/issues/issues.md` - BUG-004を解決済みに
+- `docs/issues/tasks.md` - TECH-002を完了に
+
+**成果**:
+- 状態管理の責任を明確化
+- バグの温床となる二重管理を根本解決
+- 保守性・拡張性が大幅に向上
+
+---
+
+### 2025年10月16日（夕方）: UIManager分割プロジェクト完了 ✅
+
+**詳細**: [UIManager リファクタリング完了記録](./phase1a_ui_refactoring.md)
+
+#### 概要
+UIManagerの肥大化を解消し、7つの独立したUIコンポーネントに分割完了。
+- UIManager: 483行 → 398行（85行削減）
+- 新規コンポーネント: LandCommandUI、HandDisplay、PhaseDisplay
+
+#### 主な成果
+- [x] LandCommandUI作成（535行）
+- [x] HandDisplay作成（157行）- 手札表示管理
+- [x] PhaseDisplay作成（150行）- フェーズ・サイコロUI管理
+- [x] カメラ制御改善（領地コマンド終了時）
+- [x] UI残存問題修正（移動後の「召喚しない」ボタン）
+- [x] 警告修正4件（未使用パラメータ、変数シャドウイング）
+- [x] ドキュメント作成
+- [x] 動作確認完了
+
+---
+
+### 2025年10月16日（午前）: LandCommandUI分割 ✅
 
 #### LandCommandUIクラス作成
 - [x] 領地コマンド関連のUI処理を独立クラスに分離

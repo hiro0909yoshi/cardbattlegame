@@ -7,3 +7,5 @@ res://scripts/ui_components/hand_display.gd
 res://scripts/ui_components/card_selection_ui.gd
 res://scripts/game_flow/land_command_handler.gd
 res://scripts/game_flow_manager.gd
+res://scripts/board_system_3d.gd
+res://scripts/tile_action_processor.gd
