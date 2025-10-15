@@ -126,18 +126,29 @@ func create_ui(parent: Node):
 
 # 基本UI要素を作成（サイコロボタン位置修正）
 func create_basic_ui(parent: Node):
-	# フェーズ表示（位置を調整）
+	# フェーズ表示（画面中央上部、サイコロボタンの上）
 	phase_label = Label.new()
 	phase_label.text = "セットアップ中..."
-	phase_label.position = Vector2(350, 20)  # 上部中央に配置
+	
+	var viewport_size_phase = get_viewport().get_visible_rect().size
+	var player_panel_bottom_phase = 20 + 240 + 20  # パネルY + パネル高さ(240) + マージン
+	
+	# サイコロボタンの少し上に配置
+	phase_label.position = Vector2(viewport_size_phase.x / 2 - 150, player_panel_bottom_phase)
 	phase_label.add_theme_font_size_override("font_size", 24)
 	parent.add_child(phase_label)
 	
-	# サイコロボタン（見やすい位置に配置）
+	# サイコロボタン（プレイヤー情報パネルの下、画面中央）
 	dice_button = Button.new()
 	dice_button.text = "サイコロを振る"
-	dice_button.position = Vector2(350, 100)  # 画面上部、フェーズ表示の下
-	dice_button.size = Vector2(150, 50)  # ボタンサイズを大きく
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var button_width = 200
+	var button_height = 60
+	var player_panel_bottom = 20 + 240 + 70  # パネルY + パネル高さ(240) + マージン(70)
+	
+	dice_button.position = Vector2((viewport_size.x - button_width) / 2, player_panel_bottom)
+	dice_button.size = Vector2(button_width, button_height)
 	dice_button.disabled = true
 	dice_button.pressed.connect(_on_dice_button_pressed)
 	
@@ -472,10 +483,18 @@ func create_land_command_button(parent: Node):
 	land_command_button = Button.new()
 	land_command_button.text = "📍領地コマンド"
 	
-	# Phase 1-A Day 4時点: 画面左上に配置（フェーズ表示の下）
-	# サイコロボタンの左側に配置
-	land_command_button.position = Vector2(20, 180)  # 画面上部の見える位置
-	land_command_button.size = Vector2(200, 60)  # サイズを大きく
+	# CardUIHelperを使用してレイアウト計算（カードUIと連動）
+	var viewport_size = get_viewport().get_visible_rect().size
+	var layout = CardUIHelper.calculate_card_layout(viewport_size, 5)  # 5枚想定
+	
+	# 左側10%エリアにボタンを配置
+	var button_width = viewport_size.x * 0.08  # 左側エリアの80%
+	var button_height = 70
+	var button_x = viewport_size.x * 0.01  # 左から1%
+	var button_y = layout.card_y  # カードと同じ高さ
+	
+	land_command_button.position = Vector2(button_x, button_y)
+	land_command_button.size = Vector2(button_width, button_height)
 	
 	land_command_button.disabled = false
 	land_command_button.visible = false  # 初期は非表示
@@ -507,8 +526,9 @@ func create_land_command_button(parent: Node):
 	pressed_style.bg_color = Color(0.1, 0.6, 0.2, 1.0)
 	land_command_button.add_theme_stylebox_override("pressed", pressed_style)
 	
-	# フォントサイズ
-	land_command_button.add_theme_font_size_override("font_size", 20)  # 大きめに
+	# フォントサイズ（ボタン高さに応じて調整）
+	var font_size = int(button_height * 0.25)  # ボタン高さの25%
+	land_command_button.add_theme_font_size_override("font_size", font_size)
 	
 	parent.add_child(land_command_button)
 	
@@ -524,9 +544,17 @@ func create_cancel_land_command_button(parent: Node):
 	cancel_land_command_button = Button.new()
 	cancel_land_command_button.text = "✕ 閉じる"
 	
-	# 領地コマンドボタンの右隣に配置
-	cancel_land_command_button.position = Vector2(240, 180)  # 領地コマンドボタンの右
-	cancel_land_command_button.size = Vector2(150, 60)
+	# 領地コマンドボタンの下に配置（同じレイアウト計算を使用）
+	var viewport_size_cancel = get_viewport().get_visible_rect().size
+	var layout_cancel = CardUIHelper.calculate_card_layout(viewport_size_cancel, 5)
+	
+	var button_width_cancel = viewport_size_cancel.x * 0.08
+	var button_height_cancel = 70
+	var button_x_cancel = viewport_size_cancel.x * 0.01
+	var button_y_cancel = layout_cancel.card_y + button_height_cancel + 10  # 領地ボタンの下、10pxマージン
+	
+	cancel_land_command_button.position = Vector2(button_x_cancel, button_y_cancel)
+	cancel_land_command_button.size = Vector2(button_width_cancel, button_height_cancel)
 	
 	cancel_land_command_button.disabled = false
 	cancel_land_command_button.visible = false  # 初期は非表示
@@ -558,8 +586,9 @@ func create_cancel_land_command_button(parent: Node):
 	pressed_style.bg_color = Color(0.7, 0.1, 0.1, 1.0)
 	cancel_land_command_button.add_theme_stylebox_override("pressed", pressed_style)
 	
-	# フォントサイズ
-	cancel_land_command_button.add_theme_font_size_override("font_size", 18)
+	# フォントサイズ（ボタン高さに応じて調整）
+	var font_size_cancel = int(button_height_cancel * 0.25)
+	cancel_land_command_button.add_theme_font_size_override("font_size", font_size_cancel)
 	
 	parent.add_child(cancel_land_command_button)
 	

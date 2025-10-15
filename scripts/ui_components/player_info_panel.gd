@@ -45,13 +45,19 @@ func create_panels():
 func create_single_panel(player_id: int) -> Panel:
 	var info_panel = Panel.new()
 	
-	# 位置設定（プレイヤー1は左、プレイヤー2は右）
-	if player_id == 0:
-		info_panel.position = Vector2(20, 50)
-	else:
-		info_panel.position = Vector2(775, 50)
+	# 画面サイズに応じた配置（横4分割）
+	var viewport_size = get_viewport().get_visible_rect().size
+	var area_width = viewport_size.x / 4
+	var margin = 50
+	var panel_width = area_width - margin
+	var panel_height = 240
 	
-	info_panel.size = Vector2(240, 140)
+	# プレイヤーIDに応じた位置（0-3で左から順番）
+	var panel_x = (area_width * player_id) + (margin / 2)
+	var panel_y = 20  # 上部に配置
+	
+	info_panel.position = Vector2(panel_x, panel_y)
+	info_panel.size = Vector2(panel_width, panel_height)
 	info_panel.visible = true  # 明示的に表示
 	
 	# パネルスタイル設定
@@ -72,12 +78,22 @@ func create_single_panel(player_id: int) -> Panel:
 	
 	info_panel.add_theme_stylebox_override("panel", panel_style)
 	
-	# 情報ラベル作成
+	# 情報ラベル作成（パネルサイズに応じて調整）
 	var info_label = RichTextLabel.new()
 	info_label.position = Vector2(10, 10)
-	info_label.size = Vector2(220, 120)
+	info_label.size = Vector2(panel_width - 20, panel_height - 20)
 	info_label.bbcode_enabled = true
-	info_label.add_theme_font_size_override("normal_font_size", 12)
+	
+	# スクロールとクリップの設定
+	info_label.scroll_active = false  # スクロール無効
+	info_label.fit_content = false    # 内容に合わせて拡大しない
+	info_label.clip_contents = true   # はみ出た部分をクリップ
+	
+	# フォントサイズ（少し小さめに調整）
+	var font_size = int(panel_width / 25)  # パネル幅の4%程度
+	if font_size < 11:
+		font_size = 11  # 最小フォントサイズ
+	info_label.add_theme_font_size_override("normal_font_size", font_size)
 	info_label.visible = true  # 明示的に表示
 	info_panel.add_child(info_label)
 	info_labels.append(info_label)
@@ -107,29 +123,36 @@ func update_single_panel(player_id: int):
 	var text = build_player_info_text(player, player_id)
 	info_labels[player_id].text = text
 
-# プレイヤー情報テキストを構築
+# プレイヤー情報テキストを構築（簡素化版）
 func build_player_info_text(player, player_id: int) -> String:
-	var text = "[b]" + player.name + "[/b]\n"
-	text += "━━━━━━━━━━━━\n"
-	
-	# 魔力
-	text += "魔力: " + str(player.magic_power) + "/" + str(player.target_magic) + "G\n"
-	
-	# 土地数
-	var land_count = get_land_count(player_id)
-	text += "土地数: " + str(land_count) + "個\n"
-	
-	# 総資産
-	var total_assets = calculate_total_assets(player_id)
-	text += "総資産: " + str(total_assets) + "G\n"
-	
-	# 属性連鎖
-	var chain_info = get_chain_info(player_id)
-	text += "連鎖: " + chain_info
+	var text = ""
 	
 	# 現在のターンならハイライト
 	if player_id == current_turn_player:
-		text = "[color=yellow]● 現在のターン[/color]\n" + text
+		text += "[color=yellow]● [/color]"
+	
+	text += "[b]" + player.name + "[/b]
+"
+	
+	
+	# 魔力
+	text += "魔力: " + str(player.magic_power) + "G
+"
+	
+	# 土地数
+	var land_count = get_land_count(player_id)
+	text += "土地: " + str(land_count) + "個
+"
+	
+	# 総資産
+	var total_assets = calculate_total_assets(player_id)
+	text += "総資産: " + str(total_assets) + "G
+"
+	
+	# 属性連鎖
+	var chain_info = get_chain_info(player_id)
+	if chain_info != "なし":
+		text += "連鎖: " + chain_info
 	
 	return text
 
