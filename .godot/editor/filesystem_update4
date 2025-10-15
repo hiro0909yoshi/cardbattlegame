@@ -9,3 +9,5 @@ res://scripts/game_flow/land_command_handler.gd
 res://scripts/game_flow_manager.gd
 res://scripts/board_system_3d.gd
 res://scripts/tile_action_processor.gd
+res://docs/progress/phase1a_spec.md
+res://scripts/flow_handlers/cpu_ai_handler.gd

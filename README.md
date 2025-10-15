@@ -72,9 +72,12 @@ cardbattlegame/
 
 ## 🎯 現在の開発状況
 
-- ✅ Phase 1-A Day 1-4: 基盤整備完了
-- 🔄 Phase 1-A Day 5: システム統合作業中
-- 📋 次回: Phase 1-B レベルアップ改善
+- ✅ **Phase 1-A 完全完了**: 領地コマンドシステム実装済み
+  - ✅ レベルアップ機能
+  - ✅ クリーチャー移動機能
+  - ✅ クリーチャー交換機能
+- ✅ **TECH-002 完了**: アクション処理フラグ統一
+- 📋 **次回**: Phase 1-B以降の機能実装
 
 詳細は [`docs/progress/phase1a_progress.md`](docs/progress/phase1a_progress.md) を確認してください。
 
@@ -113,4 +116,4 @@ cardbattlegame/
 
 ---
 
-**最終更新**: 2025年10月15日
+**最終更新**: 2025年10月16日

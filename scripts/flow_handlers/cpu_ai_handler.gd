@@ -11,6 +11,12 @@ signal level_up_decided(do_upgrade: bool)
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 
+# 無限ループ防止用定数
+const MAX_DECISION_ATTEMPTS = 3
+
+# 試行回数カウンター
+var decision_attempts = 0
+
 # システム参照
 var card_system: CardSystem
 var board_system
@@ -31,11 +37,20 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 
 # CPU召喚判断
 func decide_summon(current_player) -> void:
-	print("CPU召喚判断中...")
+	decision_attempts += 1
+	print("CPU召喚判断中...（試行回数: ", decision_attempts, "）")
+	
+	# 最大試行回数チェック
+	if decision_attempts > MAX_DECISION_ATTEMPTS:
+		print("CPU: 最大試行回数に達しました（召喚）")
+		decision_attempts = 0
+		emit_signal("summon_decided", -1)
+		return
 	
 	var affordable_cards = find_affordable_cards(current_player)
 	if affordable_cards.is_empty():
 		print("CPU: 召喚可能なカードがありません")
+		decision_attempts = 0
 		emit_signal("summon_decided", -1)
 		return
 	
@@ -44,30 +59,50 @@ func decide_summon(current_player) -> void:
 		var card_index = select_best_summon_card(current_player, affordable_cards)
 		if card_index >= 0:
 			print("CPU: クリーチャーを召喚します")
+			decision_attempts = 0
 			emit_signal("summon_decided", card_index)
 			return
 	
 	print("CPU: 召喚をスキップ")
+	decision_attempts = 0
 	emit_signal("summon_decided", -1)
 
 # CPU侵略判断（守備なしの敵地）
 func decide_invasion(current_player, _tile_info: Dictionary) -> void:
-	print("CPU侵略判断中...")
+	decision_attempts += 1
+	print("CPU侵略判断中...（試行回数: ", decision_attempts, "）")
+	
+	# 最大試行回数チェック
+	if decision_attempts > MAX_DECISION_ATTEMPTS:
+		print("CPU: 最大試行回数に達しました（侵略）")
+		decision_attempts = 0
+		emit_signal("battle_decided", -1)
+		return
 	
 	# 確率で侵略を決定
 	if randf() < GameConstants.CPU_INVASION_RATE:
 		var card_index = select_cheapest_card(current_player)
 		if card_index >= 0 and can_afford_card(current_player, card_index):
 			print("CPU: 無防備な土地を侵略します！")
+			decision_attempts = 0
 			emit_signal("battle_decided", card_index)
 			return
 	
 	print("CPU: 侵略をスキップして通行料を支払います")
+	decision_attempts = 0
 	emit_signal("battle_decided", -1)
 
 # CPUバトル判断
 func decide_battle(current_player, tile_info: Dictionary) -> void:
-	print("CPU思考中...")
+	decision_attempts += 1
+	print("CPU思考中...（試行回数: ", decision_attempts, "）")
+	
+	# 最大試行回数チェック
+	if decision_attempts > MAX_DECISION_ATTEMPTS:
+		print("CPU: 最大試行回数に達しました（バトル）")
+		decision_attempts = 0
+		emit_signal("battle_decided", -1)
+		return
 	
 	var defender = tile_info.creature
 	var best_result = evaluate_all_cards_for_battle(current_player, defender, tile_info)
@@ -75,23 +110,35 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	# 確率とスコアで判断
 	if best_result.index >= 0 and best_result.score > -10 and randf() < GameConstants.CPU_BATTLE_RATE:
 		print("CPU: バトルを仕掛けます！")
+		decision_attempts = 0
 		emit_signal("battle_decided", best_result.index)
 	else:
 		print("CPU: 通行料を支払います")
+		decision_attempts = 0
 		emit_signal("battle_decided", -1)
 
 # CPUレベルアップ判断
 func decide_level_up(current_player, tile_info: Dictionary) -> void:
-	print("CPUレベルアップ判断中...")
+	decision_attempts += 1
+	print("CPUレベルアップ判断中...（試行回数: ", decision_attempts, "）")
+	
+	# 最大試行回数チェック
+	if decision_attempts > MAX_DECISION_ATTEMPTS:
+		print("CPU: 最大試行回数に達しました（レベルアップ）")
+		decision_attempts = 0
+		emit_signal("level_up_decided", false)
+		return
 	
 	var upgrade_cost = board_system.get_upgrade_cost(tile_info.get("index", 0))
 	
 	# 魔力とレベルアップ確率で判断
 	if current_player.magic_power >= upgrade_cost and randf() < GameConstants.CPU_LEVELUP_RATE:
 		print("CPU: 土地をレベルアップします（コスト: ", upgrade_cost, "G）")
+		decision_attempts = 0
 		emit_signal("level_up_decided", true)
 	else:
 		print("CPU: レベルアップをスキップ")
+		decision_attempts = 0
 		emit_signal("level_up_decided", false)
 
 # 召喚用の最適カードを選択
