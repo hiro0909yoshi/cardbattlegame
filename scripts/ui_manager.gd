@@ -231,7 +231,7 @@ func update_phase_display(phase):
 		phase_display.update_phase_display(phase)
 
 # ダイス結果を表示（PhaseDisplayに委譲）
-func show_dice_result(value: int, parent: Node):
+func show_dice_result(value: int, _parent: Node = null):
 	if phase_display:
 		phase_display.show_dice_result(value)
 
@@ -337,12 +337,12 @@ func hide_cancel_button():
 		land_command_ui.hide_cancel_button()
 
 # 土地選択モードを表示
-func show_land_selection_mode(owned_lands: Array):
-	print("[UIManager] 土地選択モード表示: ", owned_lands)
+func show_land_selection_mode(_owned_lands: Array):
+	print("[UIManager] 土地選択モード表示: ", _owned_lands)
 	if phase_label:
 		var land_list = ""
-		for i in range(owned_lands.size()):
-			land_list += str(i + 1) + ":" + str(owned_lands[i]) + " "
+		for i in range(_owned_lands.size()):
+			land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
 		phase_label.text = "土地を選択（数字キー） " + land_list
 	
 	# キャンセルボタンを表示

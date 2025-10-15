@@ -151,8 +151,8 @@ func execute_level_up_with_level(target_level: int, cost: int) -> bool:
 		return false
 	
 	var tile = board_system.tile_nodes[selected_tile_index]
-	var player_system = game_flow_manager.player_system if game_flow_manager else null
-	var current_player = player_system.get_current_player() if player_system else null
+	var p_system = game_flow_manager.player_system if game_flow_manager else null
+	var current_player = p_system.get_current_player() if p_system else null
 	
 	if not current_player:
 		return false
@@ -208,8 +208,8 @@ func execute_level_up() -> bool:
 	
 	# Phase 1-A: レベル選択UIを表示
 	if ui_manager and ui_manager.has_method("show_level_selection"):
-		var player_system = game_flow_manager.player_system if game_flow_manager else null
-		var current_player = player_system.get_current_player() if player_system else null
+		var p_system = game_flow_manager.player_system if game_flow_manager else null
+		var current_player = p_system.get_current_player() if p_system else null
 		var player_magic = current_player.magic_power if current_player else 0
 		
 		ui_manager.show_level_selection(selected_tile_index, tile.level, player_magic)
@@ -704,7 +704,7 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, attacker_player: int):
 	var dest_tile = board_system.tile_nodes[dest_index]
 	var defender_data = dest_tile.creature_data
-	var defender_player = dest_tile.owner_id
+	# defender_player は使用していないので削除
 	
 	# 非常にシンプルなAP比較バトル
 	var attacker_ap = attacker_data.get("ap", 0)
