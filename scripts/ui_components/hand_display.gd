@@ -58,8 +58,6 @@ func update_hand_display(player_id: int):
 	if not card_system_ref or not hand_container:
 		return
 	
-	print("[HandDisplay] 手札表示を更新中... player_id: ", player_id)
-	
 	# 全プレイヤーの既存カードノードを削除（ターン切り替え時に前のプレイヤーの手札を消す）
 	for pid in player_card_nodes.keys():
 		for card_node in player_card_nodes[pid]:

@@ -60,8 +60,6 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
 		ui_manager.level_up_selected.connect(_on_level_up_selected)
-	
-	print("[LandCommandHandler] 参照を設定しました")
 
 ## 領地コマンドを開く
 func open_land_command(player_id: int):
@@ -509,13 +507,9 @@ func on_card_selected_for_swap(card_index: int):
 	
 	print("[LandCommandHandler] 交換用カード選択: index=", card_index)
 	
-	# TileActionProcessorの交換処理を呼び出す
-	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.execute_swap(
-			_swap_tile_index,
-			card_index,
-			_swap_old_creature
-		)
+	# 交換処理用に変数を保存
+	var tile_index = _swap_tile_index
+	var old_creature = _swap_old_creature.duplicate()
 	
 	# 交換モードをリセット
 	_swap_mode = false
@@ -524,6 +518,15 @@ func on_card_selected_for_swap(card_index: int):
 	
 	# 領地コマンドを閉じる
 	close_land_command()
+	
+	# TileActionProcessorの交換処理を呼び出す（最後に実行）
+	# これによりaction_completedシグナルが正しく処理される
+	if board_system and board_system.tile_action_processor:
+		board_system.tile_action_processor.execute_swap(
+			tile_index,
+			card_index,
+			old_creature
+		)
 
 ## 隣接タイルを取得
 func get_adjacent_tiles(tile_index: int) -> Array:

@@ -16,13 +16,12 @@ var ui_manager = null
 var game_flow_manager = null
 
 func _ready():
-	print("[SpellPhaseHandler] 初期化完了")
+	pass
 
 ## 初期化
 func initialize(ui_mgr, flow_mgr):
 	ui_manager = ui_mgr
 	game_flow_manager = flow_mgr
-	print("[SpellPhaseHandler] 参照を設定しました")
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):

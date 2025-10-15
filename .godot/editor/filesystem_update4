@@ -15,3 +15,5 @@ res://scripts/tile_info_display.gd
 res://scripts/tile_neighbor_system.gd
 res://scripts/game_3d.gd
 res://scripts/ui_components/phase_display.gd
+res://scripts/game_flow/phase_manager.gd
+res://scripts/game_flow/spell_phase_handler.gd

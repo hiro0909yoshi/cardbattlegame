@@ -131,15 +131,12 @@ func create_ui(parent: Node):
 	
 	# 各コンポーネントを初期化（3D版対応）
 	if player_info_panel and player_info_panel.has_method("initialize"):
-		print("PlayerInfoPanel初期化開始")
 		# 3D版の場合、board_systemは渡さずに初期化
 		player_info_panel.initialize(ui_layer, player_system_ref, null)
 		# 3D版のboard_systemを手動で設定（プロパティとして直接設定）
 		player_info_panel.set("board_system_ref", board_system_ref)
-		print("PlayerInfoPanel初期化完了")
 		# 初期化後にパネルの状態を確認
 		if player_info_panel.has_method("update_all_panels"):
-			print("update_all_panels呼び出し")
 			player_info_panel.update_all_panels()
 			
 	if card_selection_ui and card_selection_ui.has_method("initialize"):

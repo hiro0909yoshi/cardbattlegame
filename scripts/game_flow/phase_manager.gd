@@ -41,7 +41,7 @@ signal phase_changed(new_phase: GamePhase, old_phase: GamePhase)
 signal phase_transition_failed(attempted_phase: GamePhase, reason: String)
 
 func _ready():
-	print("[PhaseManager] 初期化完了")
+	pass
 
 ## フェーズ変更（バリデーション付き）
 func change_phase(new_phase: GamePhase) -> bool:

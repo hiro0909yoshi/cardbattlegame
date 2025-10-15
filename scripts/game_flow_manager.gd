@@ -402,8 +402,6 @@ func initialize_phase1a_systems():
 	spell_phase_handler = SpellPhaseHandler.new()
 	add_child(spell_phase_handler)
 	spell_phase_handler.initialize(ui_manager, self)
-	
-	print("[GameFlowManager] Phase 1-A システム初期化完了")
 
 # Phase 1-A: PhaseManagerのフェーズ変更を受信
 func _on_phase_manager_phase_changed(new_phase, old_phase):
