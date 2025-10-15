@@ -1,6 +1,6 @@
 # Phase 1-A 進捗管理
 
-**最終更新**: 2025年10月15日
+**最終更新**: 2025年10月16日（UIManager分割完了）
 
 ---
 
@@ -12,13 +12,184 @@
 |-----|------|-----------|--------|
 | 1-2 | フェーズ管理構造 | 🔄 進行中 | - |
 | 3-4 | 領地コマンドUI基盤 | ✅ 完了 | 2025-01 |
-| 5   | 既存システム統合 | 🔄 進行中 | 2025-10-15 |
+| 5   | 既存システム統合 | ✅ 完了 | 2025-10-16 |
 
-**進捗率**: Day 5進行中 (95%) - 表示タイミング修正完了、レベルアップ処理完了（動作確認済み）、移動・交換は未実装
+**進捗率**: Day 5完了 (100%) - クリーチャー移動機能完全実装・動作確認済み、交換は未実装
 
 ---
 
 ## ✅ 完了タスク
+
+### 2025年10月16日（夕方）: UIManager分割完了 ✅
+
+#### LandCommandUIクラス作成
+- [x] 領地コマンド関連のUI処理を独立クラスに分離
+- [x] ボタン作成メソッド実装
+  - `create_land_command_button()`
+  - `create_cancel_land_command_button()`
+- [x] パネル作成メソッド実装
+  - `create_action_menu_panel()` - アクションメニュー
+  - `create_level_selection_panel()` - レベル選択パネル
+- [x] 表示/非表示メソッド実装
+  - `show_land_command_button()`、`hide_land_command_button()`
+  - `show_action_menu()`、`hide_action_menu()`
+  - `show_level_selection()`、`hide_level_selection()`
+  - `show_cancel_button()`、`hide_cancel_button()`
+- [x] イベントハンドラ実装
+  - `_on_action_level_up_pressed()`
+  - `_on_action_move_pressed()`
+  - `_on_action_swap_pressed()`
+  - `_on_action_cancel_pressed()`
+  - `_on_level_selected()`
+  - `_on_level_cancel_pressed()`
+- [x] シグナル定義
+  - `land_command_button_pressed`
+  - `level_up_selected`
+
+**作成ファイル**:
+- `scripts/ui_components/land_command_ui.gd` (535行)
+
+---
+
+#### UIManagerリファクタリング
+- [x] 重複コードの削除
+  - `land_command_button`、`cancel_land_command_button`変数
+  - パネル作成メソッド
+  - イベントハンドラ
+- [x] 委譲メソッドの実装
+  - 全てのメソッドをLandCommandUIに委譲
+- [x] LandCommandUIの統合
+  - 初期化処理追加
+  - シグナル接続
+  - システム参照の設定
+
+**修正ファイル**:
+- `scripts/ui_manager.gd` (597行 - 以前より大幅削減)
+
+**成果**:
+- UIManagerの肥大化を解消
+- 保守性向上
+- 責任の明確化
+- コード行数: 1132行 → より管理しやすい構造
+
+---
+
+### 2025年10月16日: クリーチャー移動機能完全実装 ✅
+
+#### 選択マーカーシステム実装
+- [x] 選択中の土地を視覚的に表示するマーカー
+  - トーラス（ドーナツ型）メッシュ
+  - 黄色の発光エフェクト
+  - 回転アニメーション
+- [x] 移動先選択時のマーカー移動
+  - ↑↓キーで移動先を切り替え
+  - マーカーが選択中の移動先に移動
+  - カメラも追従
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `create_selection_marker()` - マーカー作成
+  - `show_selection_marker()` - マーカー表示
+  - `hide_selection_marker()` - マーカー非表示
+  - `rotate_selection_marker()` - 回転アニメーション
+
+---
+
+#### 隣接タイル取得システム
+- [x] `TileNeighborSystem`との統合
+  - 物理的距離ベースの隣接判定
+  - キャッシュ機能でパフォーマンス向上
+- [x] `get_adjacent_tiles()`実装
+  - `TileNeighborSystem.get_spatial_neighbors()`を使用
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `get_adjacent_tiles()` - TileNeighborSystem使用
+
+---
+
+#### 移動先選択UI（キーボード操作）
+- [x] 上下キー（↑↓）で移動先を切り替え
+- [x] 左右キー（←→）でも切り替え可能
+- [x] Enterキーで移動を確定
+- [x] Cキー/Escapeキーで前画面に戻る
+- [x] UI表示更新
+  - 現在の選択位置表示（1/3など）
+  - 操作ガイド表示
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `handle_move_destination_input()` - キーボード操作
+  - `update_move_destination_ui()` - UI更新
+
+---
+
+#### 移動処理の完全実装
+- [x] 移動元の空き地化
+  - クリーチャー削除
+  - 所有権を-1（空き地）に設定
+- [x] 空き地への移動
+  - 土地獲得
+  - クリーチャー配置
+  - ダウン状態設定
+  - ターン終了
+- [x] 敵地への移動
+  - 既存のバトルシステムと統合
+  - クリーチャーを一時的に手札に追加
+  - `battle_system.execute_3d_battle()`を使用
+  - バトル完了後にダウン状態設定
+- [x] フォールバック機能
+  - 簡易バトルシステム（`_execute_simple_move_battle()`）
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `confirm_move()` - 移動確定処理
+  - `_on_move_battle_completed()` - バトル完了コールバック
+  - `_execute_simple_move_battle()` - 簡易バトル
+
+**実装されたフロー**:
+```
+移動元選択（数字キー）
+  ↓
+アクションメニュー → [M]キー
+  ↓
+移動先選択（↑↓キー）
+  ↓ Enterキー
+【空き地の場合】
+  ✅ 移動元が空き地になる
+  ✅ 移動先に土地獲得
+  ✅ クリーチャー配置
+  ✅ ダウン状態設定
+  ✅ ターン終了
+  
+【敵地の場合】
+  ✅ 移動元が空き地になる
+  ✅ 既存バトルシステム実行
+  ✅ 勝利時: 土地獲得 + ダウン設定
+  ✅ 敗北時: クリーチャー消滅
+  ✅ ターン終了
+```
+
+---
+
+#### バグ修正: アクション処理フラグの整合性
+- [x] `is_action_processing`フラグのリセット問題を修正
+  - `TileActionProcessor._complete_action()`を経由
+  - 両方のフラグ（`is_waiting_for_action`と`is_action_processing`）を正しくリセット
+- [x] 次のプレイヤーが召喚できない問題を解決
+- [x] ドキュメント化
+  - BUG-004として登録
+  - TECH-002として恒久対応をタスク化
+  - design.mdに詳細を記載
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - すべての完了処理で`tile_action_processor._complete_action()`を使用
+- `docs/issues/issues.md` - BUG-004追加
+- `docs/issues/tasks.md` - TECH-002追加
+- `docs/design/design.md` - フラグ管理セクション追加
+
+---
 
 ### 2025年10月15日: ハイライト機能と移動先選択の改善
 
@@ -248,6 +419,27 @@ var panel_y = (viewport_size.y - panel_height) / 2
 
 ## 🔲 未完了タスク
 
+### 優先度1: UIManager分割の完成（🔄 30% → 70%完了）
+
+#### 完了した項目
+- [x] LandCommandUIクラス作成
+- [x] UIManagerへの組み込み
+- [x] 委譲メソッド実装
+- [x] 既存参照の置き換え
+
+#### 次回作業
+1. **動作テスト** - 実機での動作確認が必要
+   - ゲーム起動確認
+   - 領地コマンドボタンの動作
+   - アクションメニューの表示
+   - レベルアップ機能の動作
+2. **HandDisplay分割** - 手札表示関連のコード分割
+3. **PhaseDisplay分割** - フェーズ表示関連のコード分割
+
+---
+
+## 🔲 未完了タスク（以前から）
+
 ### ~~優先度1: 表示タイミング修正~~（✅ 完了: 2025/10/15）
 
 #### 領地コマンドボタンの表示タイミング
@@ -356,19 +548,24 @@ var cost = level_costs[target_level] - level_costs[current_level]
 
 ---
 
-### 優先度3: クリーチャー移動
+### ~~優先度3: クリーチャー移動~~（✅ 完了: 2025/10/16）
 
-- [ ] 移動元選択（全自領地、ダウン除外）
-- [ ] 移動先選択（1マス先）
-- [ ] 移動処理実装
-- [ ] 移動元を空き地化
-- [ ] 移動先にクリーチャー配置 + ダウン
-- [ ] 空き地移動: 土地獲得 + ターン終了
-- [ ] 敵地移動: バトル発生
+- [x] 移動元選択（全自領地、ダウン除外）
+- [x] 移動先選択（↑↓キーで切り替え）
+- [x] 移動処理実装
+- [x] 移動元を空き地化
+- [x] 移動先にクリーチャー配置 + ダウン
+- [x] 空き地移動: 土地獲得 + ターン終了
+- [x] 敵地移動: バトル発生（既存バトルシステム統合）
+- [x] 選択マーカーシステム
+- [x] TileNeighborSystemとの統合
 
-**実装ファイル**:
+**実装済みファイル**:
 - `scripts/game_flow/land_command_handler.gd`
-  - `execute_move_creature()` - 現在はプレースホルダー
+  - `confirm_move()` - 完全実装
+  - `_on_move_battle_completed()` - バトル完了処理
+  - `create_selection_marker()` - マーカー生成
+  - `handle_move_destination_input()` - キーボード操作
 
 ---
 
