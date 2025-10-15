@@ -12,6 +12,7 @@ signal land_command_button_pressed()  # Phase 1-A: 領地コマンドボタン
 # UIコンポーネント（分割されたサブシステム）
 var land_command_ui: LandCommandUI = null
 var hand_display: HandDisplay = null
+var phase_display: PhaseDisplay = null
 
 # UIコンポーネント（動的ロード用）
 var player_info_panel = null
@@ -20,9 +21,11 @@ var level_up_ui = null
 var debug_panel = null
 
 # 基本UI要素
-var dice_button: Button
-var phase_label: Label
-var current_dice_label: Label = null
+# フェーズ表示とサイコロUI（PhaseDisplayに移行済み）
+var dice_button: Button:
+	get: return phase_display.dice_button if phase_display else null
+var phase_label: Label:
+	get: return phase_display.phase_label if phase_display else null
 
 # Phase 1-A: 領地コマンドUI（LandCommandUIに委譲）
 # 以下の変数は削除予定（LandCommandUIに移行済み）
@@ -47,6 +50,7 @@ func _ready():
 	var DebugPanelClass = load("res://scripts/ui_components/debug_panel.gd")
 	var LandCommandUIClass = load("res://scripts/ui_components/land_command_ui.gd")
 	var HandDisplayClass = load("res://scripts/ui_components/hand_display.gd")
+	var PhaseDisplayClass = load("res://scripts/ui_components/phase_display.gd")
 	
 	if PlayerInfoPanelClass:
 		player_info_panel = PlayerInfoPanelClass.new()
@@ -79,6 +83,12 @@ func _ready():
 		hand_display.name = "HandDisplay"
 		add_child(hand_display)
 	
+	# PhaseDisplay初期化
+	if PhaseDisplayClass:
+		phase_display = PhaseDisplayClass.new()
+		phase_display.name = "PhaseDisplay"
+		add_child(phase_display)
+	
 	# シグナル接続
 	connect_ui_signals()
 
@@ -97,6 +107,10 @@ func connect_ui_signals():
 	# デバッグパネル
 	if debug_panel:
 		debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
+	
+	# PhaseDisplay
+	if phase_display:
+		phase_display.dice_button_pressed.connect(_on_dice_button_pressed)
 
 # UIを作成
 func create_ui(parent: Node):
@@ -141,67 +155,11 @@ func create_ui(parent: Node):
 		debug_panel.initialize(ui_layer, card_system_ref, null, player_system_ref)  # board_systemはnullで初期化
 		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定
 
-# 基本UI要素を作成（サイコロボタン位置修正）
+# 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
-	# フェーズ表示（画面中央上部、サイコロボタンの上）
-	phase_label = Label.new()
-	phase_label.text = "セットアップ中..."
-	
-	var viewport_size_phase = get_viewport().get_visible_rect().size
-	var player_panel_bottom_phase = 20 + 240 + 20  # パネルY + パネル高さ(240) + マージン
-	
-	# サイコロボタンの少し上に配置
-	phase_label.position = Vector2(viewport_size_phase.x / 2 - 150, player_panel_bottom_phase)
-	phase_label.add_theme_font_size_override("font_size", 24)
-	parent.add_child(phase_label)
-	
-	# サイコロボタン（プレイヤー情報パネルの下、画面中央）
-	dice_button = Button.new()
-	dice_button.text = "サイコロを振る"
-	
-	var viewport_size = get_viewport().get_visible_rect().size
-	var button_width = 200
-	var button_height = 60
-	var player_panel_bottom = 20 + 240 + 70  # パネルY + パネル高さ(240) + マージン(70)
-	
-	dice_button.position = Vector2((viewport_size.x - button_width) / 2, player_panel_bottom)
-	dice_button.size = Vector2(button_width, button_height)
-	dice_button.disabled = true
-	dice_button.pressed.connect(_on_dice_button_pressed)
-	
-	# サイコロボタンのスタイルを設定
-	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.2, 0.5, 0.8, 0.9)
-	button_style.border_width_left = 2
-	button_style.border_width_right = 2
-	button_style.border_width_top = 2
-	button_style.border_width_bottom = 2
-	button_style.border_color = Color(1, 1, 1, 1)
-	button_style.corner_radius_top_left = 5
-	button_style.corner_radius_top_right = 5
-	button_style.corner_radius_bottom_left = 5
-	button_style.corner_radius_bottom_right = 5
-	dice_button.add_theme_stylebox_override("normal", button_style)
-	
-	# ホバー時のスタイル
-	var hover_style = button_style.duplicate()
-	hover_style.bg_color = Color(0.3, 0.6, 0.9, 1.0)
-	dice_button.add_theme_stylebox_override("hover", hover_style)
-	
-	# 押下時のスタイル
-	var pressed_style = button_style.duplicate()
-	pressed_style.bg_color = Color(0.1, 0.4, 0.7, 1.0)
-	dice_button.add_theme_stylebox_override("pressed", pressed_style)
-	
-	# 無効時のスタイル
-	var disabled_style = button_style.duplicate()
-	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.7)
-	dice_button.add_theme_stylebox_override("disabled", disabled_style)
-	
-	# フォントサイズを大きく
-	dice_button.add_theme_font_size_override("font_size", 18)
-	
-	parent.add_child(dice_button)
+	# PhaseDisplayを初期化
+	if phase_display:
+		phase_display.initialize(parent)
 	
 	# Phase 1-A: 領地コマンドUI初期化（LandCommandUIに委譲）
 	if land_command_ui:
@@ -267,63 +225,20 @@ func update_ui(current_player, current_phase):
 	# フェーズ表示を更新
 	update_phase_display(current_phase)
 
-# フェーズ表示を更新
+# フェーズ表示を更新（PhaseDisplayに委譲）
 func update_phase_display(phase):
-	if not phase_label:
-		return
-		
-	match phase:
-		0: # SETUP
-			phase_label.text = "準備中..."
-		1: # DICE_ROLL
-			phase_label.text = "サイコロを振ってください"
-		2: # MOVING
-			phase_label.text = "移動中..."
-		3: # TILE_ACTION
-			phase_label.text = "アクション選択"
-		4: # BATTLE
-			phase_label.text = "バトル！"
-		5: # END_TURN
-			phase_label.text = "ターン終了"
+	if phase_display:
+		phase_display.update_phase_display(phase)
 
-# ダイス結果を表示（位置調整）
+# ダイス結果を表示（PhaseDisplayに委譲）
 func show_dice_result(value: int, parent: Node):
-	# 既存のダイスラベルがあれば削除
-	if current_dice_label and is_instance_valid(current_dice_label):
-		current_dice_label.queue_free()
-	
-	# 新しいダイスラベルを作成（サイコロボタンの近くに表示）
-	current_dice_label = Label.new()
-	current_dice_label.text = "🎲 " + str(value)
-	current_dice_label.add_theme_font_size_override("font_size", 48)
-	current_dice_label.position = Vector2(530, 90)  # サイコロボタンの右横
-	current_dice_label.add_theme_color_override("font_color", Color(1, 1, 0))
-	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
-	
-	# UILayerがある場合はそこに追加
-	if parent.has_node("UILayer"):
-		parent.get_node("UILayer").add_child(current_dice_label)
-	else:
-		parent.add_child(current_dice_label)
-	
-	# 2秒後に自動的に消す
-	await get_tree().create_timer(2.0).timeout
-	if current_dice_label and is_instance_valid(current_dice_label):
-		current_dice_label.queue_free()
-		current_dice_label = null
+	if phase_display:
+		phase_display.show_dice_result(value)
 
-# サイコロボタンの有効/無効
+# サイコロボタンの有効/無効（PhaseDisplayに委譲）
 func set_dice_button_enabled(enabled: bool):
-	if not dice_button:
-		return
-		
-	dice_button.disabled = not enabled
-	
-	# 有効時は目立たせる
-	if enabled:
-		dice_button.modulate = Color(1, 1, 1, 1)
-	else:
-		dice_button.modulate = Color(0.7, 0.7, 0.7, 0.8)
+	if phase_display:
+		phase_display.set_dice_button_enabled(enabled)
 
 # === イベントハンドラ ===
 func _on_dice_button_pressed():
@@ -446,8 +361,9 @@ func hide_land_command_ui():
 	hide_action_menu()
 	hide_level_selection()
 	
-	if phase_label:
-		phase_label.text = "召喚フェーズ"
+	# CardSelectionUIも非表示にする
+	if card_selection_ui and card_selection_ui.has_method("hide_selection"):
+		card_selection_ui.hide_selection()
 	
 	# キャンセルボタンを非表示
 	hide_cancel_button()
