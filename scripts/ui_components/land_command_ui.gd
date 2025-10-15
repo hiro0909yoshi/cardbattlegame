@@ -281,7 +281,6 @@ func _on_action_move_pressed():
 	Input.parse_input_event(event)
 
 func _on_action_swap_pressed():
-	print("[LandCommandUI] 交換ボタン押下")
 	var event = InputEventKey.new()
 	event.keycode = KEY_S
 	event.pressed = true

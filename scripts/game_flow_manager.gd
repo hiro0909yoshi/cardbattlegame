@@ -111,7 +111,6 @@ func start_turn():
 	
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
-	print("【デバッグ】プレイヤー", current_player.id + 1, " is_cpu:", player_is_cpu[current_player.id] if current_player.id < player_is_cpu.size() else "N/A", " debug_manual:", debug_manual_control_all, " → CPU自動:", is_cpu_turn)
 	if is_cpu_turn:
 		ui_manager.set_dice_button_enabled(false)
 		ui_manager.phase_label.text = "CPUのターン..."

@@ -412,8 +412,6 @@ func create_selection_marker():
 	material.emission = Color(1.0, 1.0, 0.0)
 	material.emission_energy_multiplier = 2.0
 	selection_marker.material_override = material
-	
-	print("[LandCommandHandler] 選択マーカーを作成")
 
 ## 選択マーカーを表示
 func show_selection_marker(tile_index: int):
