@@ -32,6 +32,7 @@ func _ready():
 		print("  9キー: 魔力+1000G")
 		print("  Hキー: カードID指定で手札追加（全カード対応）")
 		print("  Dキー: CPU手札表示切替")
+		print("  Uキー: 現在プレイヤーの全土地のダウン状態を解除")
 	
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
@@ -99,6 +100,8 @@ func _input(event):
 				show_card_input_dialog()
 			KEY_T:
 				show_all_tiles_info()
+			KEY_U:
+				clear_current_player_down_states()
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():
@@ -305,3 +308,37 @@ var land_command_handler = null
 func set_land_command_handler(handler):
 	land_command_handler = handler
 	print("[DebugController] LandCommandHandler参照を設定")
+
+# Uキー: 現在プレイヤーの全土地のダウン状態を解除
+func clear_current_player_down_states():
+	if not player_system or not board_system:
+		print("【デバッグ】システム参照がありません")
+		return
+	
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("【デバッグ】現在のプレイヤーが見つかりません")
+		return
+	
+	var player_id = current_player.id
+	var cleared_count = 0
+	
+	# BoardSystem3Dのtile_nodesから所有地を取得
+	if not board_system.tile_nodes:
+		print("【デバッグ】タイルノードがありません")
+		return
+	
+	for tile_index in board_system.tile_nodes.keys():
+		var tile = board_system.tile_nodes[tile_index]
+		if tile.owner_id == player_id:
+			if tile.has_method("is_down") and tile.is_down():
+				tile.clear_down_state()
+				cleared_count += 1
+				print("【デバッグ】ダウン解除: タイル", tile_index)
+	
+	if cleared_count > 0:
+		print("【デバッグ】プレイヤー", player_id + 1, "の", cleared_count, "個の土地のダウン状態を解除しました")
+	else:
+		print("【デバッグ】ダウン状態の土地はありません")
+	
+	emit_signal("debug_action", "clear_down_states", player_id)

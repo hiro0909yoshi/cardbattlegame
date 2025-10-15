@@ -36,16 +36,28 @@ func initialize(ui_mgr, board_sys, flow_mgr):
 
 ## 領地コマンドを開く
 func open_land_command(player_id: int):
-	# Phase 1-A Day 4時点: 最小実装（プレースホルダー）
-	print("[LandCommandHandler] 領地コマンドボタンが押されました（プレイヤー", player_id + 1, "）")
-	print("[LandCommandHandler] ※Phase 1-A Day 4時点では機能未実装")
+	if current_state != State.CLOSED:
+		print("[LandCommandHandler] 既に開いています")
+		return
 	
-	# プレイヤーの所有地を取得してログ出力のみ
+	# プレイヤーの所有地を取得
 	player_owned_lands = get_player_owned_lands(player_id)
-	print("[LandCommandHandler] 所有地数: ", player_owned_lands.size())
 	
-	if not player_owned_lands.is_empty():
-		print("[LandCommandHandler] 所有地: ", player_owned_lands)
+	if player_owned_lands.is_empty():
+		print("[LandCommandHandler] 所有地がありません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "所有地がありません"
+		return
+	
+	# 土地選択モードに移行
+	current_state = State.SELECTING_LAND
+	land_command_opened.emit()
+	
+	print("[LandCommandHandler] 領地コマンドを開きました（所有地数: ", player_owned_lands.size(), "）")
+	
+	# UIに表示要請
+	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
+		ui_manager.show_land_selection_mode(player_owned_lands)
 
 ## 土地選択
 func select_land(tile_index: int) -> bool:
@@ -57,6 +69,13 @@ func select_land(tile_index: int) -> bool:
 	if tile_index not in player_owned_lands:
 		print("[LandCommandHandler] 所有していない土地です: ", tile_index)
 		return false
+	
+	# ダウン状態チェック（二重チェック）
+	if board_system and board_system.tile_nodes.has(tile_index):
+		var tile = board_system.tile_nodes[tile_index]
+		if tile.has_method("is_down") and tile.is_down():
+			print("[LandCommandHandler] この土地はダウン状態です: ", tile_index)
+			return false
 	
 	selected_tile_index = tile_index
 	current_state = State.SELECTING_ACTION
@@ -152,7 +171,7 @@ func cancel():
 		# 土地選択中なら閉じる
 		close_land_command()
 
-## プレイヤーの所有地を取得
+## プレイヤーの所有地を取得（ダウン状態を除外）
 func get_player_owned_lands(player_id: int) -> Array:
 	if not board_system:
 		return []
@@ -166,6 +185,10 @@ func get_player_owned_lands(player_id: int) -> Array:
 	for tile_index in board_system.tile_nodes.keys():
 		var tile = board_system.tile_nodes[tile_index]
 		if tile.owner_id == player_id:
+			# ダウン状態の土地は除外
+			if tile.has_method("is_down") and tile.is_down():
+				print("[LandCommandHandler] タイル", tile_index, "はダウン状態なので除外")
+				continue
 			owned_lands.append(tile.tile_index)
 	
 	return owned_lands
@@ -181,3 +204,51 @@ func is_selecting_land() -> bool:
 ## アクション選択中か
 func is_selecting_action() -> bool:
 	return current_state == State.SELECTING_ACTION
+
+# ============================================
+# Phase 1-A: キーボード入力処理
+# ============================================
+
+## キーボード入力処理
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		# 土地選択モード時
+		if current_state == State.SELECTING_LAND:
+			handle_land_selection_input(event)
+		# アクション選択モード時
+		elif current_state == State.SELECTING_ACTION:
+			handle_action_selection_input(event)
+
+## 土地選択時のキー入力処理
+func handle_land_selection_input(event):
+	# 数字キー1-0で土地を選択
+	var key_to_index = {
+		KEY_1: 0, KEY_2: 1, KEY_3: 2, KEY_4: 3, KEY_5: 4,
+		KEY_6: 5, KEY_7: 6, KEY_8: 7, KEY_9: 8, KEY_0: 9
+	}
+	
+	if event.keycode in key_to_index:
+		var index = key_to_index[event.keycode]
+		if index < player_owned_lands.size():
+			var tile_index = player_owned_lands[index]
+			select_land(tile_index)
+		else:
+			print("[LandCommandHandler] 無効な番号: ", index + 1)
+	
+	# Escキーでキャンセル
+	elif event.keycode == KEY_ESCAPE:
+		cancel()
+
+## アクション選択時のキー入力処理
+func handle_action_selection_input(event):
+	match event.keycode:
+		KEY_L:
+			execute_action("level_up")
+		KEY_M:
+			execute_action("move_creature")
+		KEY_S:
+			execute_action("swap_creature")
+		KEY_C:
+			cancel()
+		KEY_ESCAPE:
+			cancel()

@@ -318,6 +318,12 @@ func _on_land_command_button_pressed():
 	print("[UIManager] 領地コマンドボタンがクリックされました！")
 	emit_signal("land_command_button_pressed")
 
+func _on_cancel_land_command_button_pressed():
+	print("[UIManager] キャンセルボタンがクリックされました！")
+	# GameFlowManagerのland_command_handlerに通知
+	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
+		game_flow_manager_ref.land_command_handler.cancel()
+
 # === 手札UI管理 ===
 
 # 手札コンテナを初期化
@@ -456,6 +462,7 @@ func _input(event):
 # ============================================
 
 var land_command_button: Button = null
+var cancel_land_command_button: Button = null  # Phase 1-A: キャンセルボタン
 
 # 領地コマンドボタンを作成（create_basic_ui内から呼ばれる想定）
 func create_land_command_button(parent: Node):
@@ -508,6 +515,55 @@ func create_land_command_button(parent: Node):
 	print("[UIManager] 領地コマンドボタン作成完了")
 	print("[UIManager] ボタンが正常に作成されました: ", land_command_button != null)
 	print("[UIManager] ボタンの親: ", land_command_button.get_parent().name if land_command_button.get_parent() else "なし")
+	
+	# キャンセルボタンも作成
+	create_cancel_land_command_button(parent)
+
+# キャンセルボタンを作成
+func create_cancel_land_command_button(parent: Node):
+	cancel_land_command_button = Button.new()
+	cancel_land_command_button.text = "✕ 閉じる"
+	
+	# 領地コマンドボタンの右隣に配置
+	cancel_land_command_button.position = Vector2(240, 180)  # 領地コマンドボタンの右
+	cancel_land_command_button.size = Vector2(150, 60)
+	
+	cancel_land_command_button.disabled = false
+	cancel_land_command_button.visible = false  # 初期は非表示
+	cancel_land_command_button.z_index = 100  # 最前面に表示
+	cancel_land_command_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	cancel_land_command_button.pressed.connect(_on_cancel_land_command_button_pressed)
+	
+	# スタイル設定（赤系）
+	var button_style = StyleBoxFlat.new()
+	button_style.bg_color = Color(0.8, 0.2, 0.2, 0.9)
+	button_style.border_width_left = 2
+	button_style.border_width_right = 2
+	button_style.border_width_top = 2
+	button_style.border_width_bottom = 2
+	button_style.border_color = Color(1, 1, 1, 1)
+	button_style.corner_radius_top_left = 5
+	button_style.corner_radius_top_right = 5
+	button_style.corner_radius_bottom_left = 5
+	button_style.corner_radius_bottom_right = 5
+	cancel_land_command_button.add_theme_stylebox_override("normal", button_style)
+	
+	# ホバー時
+	var hover_style = button_style.duplicate()
+	hover_style.bg_color = Color(0.9, 0.3, 0.3, 1.0)
+	cancel_land_command_button.add_theme_stylebox_override("hover", hover_style)
+	
+	# 押下時
+	var pressed_style = button_style.duplicate()
+	pressed_style.bg_color = Color(0.7, 0.1, 0.1, 1.0)
+	cancel_land_command_button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# フォントサイズ
+	cancel_land_command_button.add_theme_font_size_override("font_size", 18)
+	
+	parent.add_child(cancel_land_command_button)
+	
+	print("[UIManager] キャンセルボタン作成完了")
 
 # 領地コマンドボタンの表示/非表示
 func show_land_command_button():
@@ -526,21 +582,38 @@ func hide_land_command_button():
 	if land_command_button:
 		land_command_button.visible = false
 		print("[UIManager] 領地コマンドボタン非表示")
+	# キャンセルボタンも非表示
+	if cancel_land_command_button:
+		cancel_land_command_button.visible = false
+
+# キャンセルボタンの表示/非表示
+func show_cancel_button():
+	if cancel_land_command_button:
+		cancel_land_command_button.visible = true
+		print("[UIManager] キャンセルボタン表示")
+
+func hide_cancel_button():
+	if cancel_land_command_button:
+		cancel_land_command_button.visible = false
+		print("[UIManager] キャンセルボタン非表示")
 
 # 土地選択モードを表示
 func show_land_selection_mode(owned_lands: Array):
 	print("[UIManager] 土地選択モード表示: ", owned_lands)
-	# Phase 1-A: 簡易実装（デバッグメッセージのみ）
-	# 将来的にはハイライト表示などを実装
 	if phase_label:
-		phase_label.text = "土地を選択してください（数字キー1-0）"
+		var land_list = ""
+		for i in range(owned_lands.size()):
+			land_list += str(i + 1) + ":" + str(owned_lands[i]) + " "
+		phase_label.text = "土地を選択（数字キー） " + land_list
+	
+	# キャンセルボタンを表示
+	show_cancel_button()
 
 # アクション選択UIを表示
 func show_action_selection_ui(tile_index: int):
 	print("[UIManager] アクション選択UI表示: tile ", tile_index)
-	# Phase 1-A: 簡易実装
 	if phase_label:
-		phase_label.text = "アクションを選択（L:レベルアップ M:移動 S:交換 C:キャンセル）"
+		phase_label.text = "L:レベルアップ M:移動 S:交換 C:戻る"
 
 # 領地コマンドUIを非表示
 func hide_land_command_ui():
@@ -548,3 +621,6 @@ func hide_land_command_ui():
 	# Phase 1-A: 簡易実装
 	if phase_label:
 		phase_label.text = "召喚フェーズ"
+	
+	# キャンセルボタンを非表示
+	hide_cancel_button()
