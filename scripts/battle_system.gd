@@ -218,7 +218,7 @@ func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> 
 	return 0
 
 # 貫通スキルの判定
-func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> bool:
+func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, _tile_info: Dictionary) -> bool:
 	# 攻撃側のability_parsedから貫通スキルを取得
 	var ability_parsed = attacker_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
@@ -274,8 +274,6 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 			# 未知の条件タイプ
 			print("【貫通】未知の条件タイプ:", condition_type)
 			return false
-	
-	return false
 
 # 攻撃順を決定（先制・後手判定）
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:

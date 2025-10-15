@@ -53,7 +53,7 @@ func create_single_panel(player_id: int) -> Panel:
 	var panel_height = 240
 	
 	# プレイヤーIDに応じた位置（0-3で左から順番）
-	var panel_x = (area_width * player_id) + (margin / 2)
+	var panel_x = (area_width * player_id) + int(margin / 2.0)
 	var panel_y = 20  # 上部に配置
 	
 	info_panel.position = Vector2(panel_x, panel_y)

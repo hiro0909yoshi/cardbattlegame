@@ -10,3 +10,4 @@ res://scripts/game_3d.gd
 res://scripts/movement_controller.gd
 res://scripts/tile_action_processor.gd
 res://scripts/ui_components/player_info_panel.gd
+res://scripts/battle_system.gd

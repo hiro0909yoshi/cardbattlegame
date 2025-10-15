@@ -145,8 +145,8 @@ func calculate_toll() -> int:
 # ============================================
 
 ## ダウン状態を設定
-func set_down_state(is_down: bool):
-	down_state = is_down
+func set_down_state(should_be_down: bool):
+	down_state = should_be_down
 	update_visual()
 	print("[BaseTile] タイル", tile_index, "のダウン状態: ", down_state)
 
