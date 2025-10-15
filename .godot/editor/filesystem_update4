@@ -17,3 +17,4 @@ res://scripts/game_3d.gd
 res://scripts/ui_components/phase_display.gd
 res://scripts/game_flow/phase_manager.gd
 res://scripts/game_flow/spell_phase_handler.gd
+res://scripts/tiles/base_tiles.gd

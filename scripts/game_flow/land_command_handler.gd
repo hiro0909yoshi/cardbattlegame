@@ -374,8 +374,6 @@ func close_land_command():
 		var player_id = player_system.current_player_index
 		var player_tile_index = board_system.movement_controller.get_player_tile(player_id)
 		
-		print("[LandCommandHandler] プレイヤー", player_id, "の実際の位置: タイル", player_tile_index)
-		
 		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
 			
@@ -385,7 +383,6 @@ func close_land_command():
 			
 			board_system.camera.position = new_camera_pos
 			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
-			print("[LandCommandHandler] カメラをプレイヤー位置（タイル", player_tile_index, "）に戻しました")
 	
 	# UIを非表示
 	if ui_manager and ui_manager.has_method("hide_land_command_ui"):
@@ -445,14 +442,11 @@ func show_selection_marker(tile_index: int):
 	# 回転アニメーションを追加
 	if not selection_marker.has_meta("rotating"):
 		selection_marker.set_meta("rotating", true)
-	
-	print("[LandCommandHandler] 選択マーカーを表示: タイル", tile_index)
 
 ## 選択マーカーを非表示
 func hide_selection_marker():
 	if selection_marker and selection_marker.get_parent():
 		selection_marker.get_parent().remove_child(selection_marker)
-		print("[LandCommandHandler] 選択マーカーを非表示")
 
 ## 選択マーカーを回転（process内で呼ぶ）
 func rotate_selection_marker(delta: float):
@@ -604,8 +598,6 @@ func focus_camera_on_tile(tile_index: int):
 	# 選択した土地をハイライト
 	if tile.has_method("set_highlight"):
 		tile.set_highlight(true)
-	
-	print("[LandCommandHandler] カメラを土地 ", tile_index, " にフォーカス")
 
 # ============================================
 # Phase 1-A: キーボード入力処理

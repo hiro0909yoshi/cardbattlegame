@@ -260,7 +260,6 @@ func _on_debug_mode_changed(enabled: bool):
 	debug_mode = enabled
 
 func _on_land_command_button_pressed():
-	print("[UIManager] 領地コマンドボタンがクリックされました！")
 	emit_signal("land_command_button_pressed")
 
 func _on_cancel_land_command_button_pressed():
@@ -335,7 +334,6 @@ func hide_cancel_button():
 
 # 土地選択モードを表示
 func show_land_selection_mode(_owned_lands: Array):
-	print("[UIManager] 土地選択モード表示: ", _owned_lands)
 	if phase_label:
 		var land_list = ""
 		for i in range(_owned_lands.size()):
@@ -353,7 +351,6 @@ func show_action_selection_ui(tile_index: int):
 
 # 領地コマンドUIを非表示
 func hide_land_command_ui():
-	print("[UIManager] 領地コマンドUI非表示")
 	# Phase 1-A: 新UIパネルを非表示
 	hide_action_menu()
 	hide_level_selection()

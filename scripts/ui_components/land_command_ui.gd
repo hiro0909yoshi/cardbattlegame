@@ -200,14 +200,12 @@ func show_action_menu(tile_index: int):
 	if tile_label:
 		tile_label.text = "土地: #%d" % tile_index
 	
-	print("[LandCommandUI] アクションメニュー表示: tile ", tile_index)
 
 ## アクションメニュー非表示
 func hide_action_menu():
 	if action_menu_panel:
 		action_menu_panel.visible = false
 		selected_tile_for_action = -1
-	print("[LandCommandUI] アクションメニュー非表示")
 
 ## レベル選択表示
 func show_level_selection(tile_index: int, current_level: int, player_magic: int):
@@ -249,7 +247,6 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 					level_selection_buttons[level].text = "Lv.%d → %dG (不足)" % [level, cost]
 	
 	level_selection_panel.visible = true
-	print("[LandCommandUI] レベル選択表示: tile ", tile_index, " 現在Lv.", current_level)
 
 func _calculate_level_up_cost(from_level: int, to_level: int) -> int:
 	var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
@@ -272,7 +269,6 @@ func _on_cancel_land_command_button_pressed():
 		ui_manager_ref._on_cancel_land_command_button_pressed()
 
 func _on_action_level_up_pressed():
-	print("[LandCommandUI] レベルアップボタン押下")
 	# LandCommandHandlerに通知（キーボード入力をエミュレート）
 	var event = InputEventKey.new()
 	event.keycode = KEY_L

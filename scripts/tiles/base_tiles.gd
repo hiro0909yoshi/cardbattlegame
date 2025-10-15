@@ -148,7 +148,6 @@ func calculate_toll() -> int:
 func set_down_state(should_be_down: bool):
 	down_state = should_be_down
 	update_visual()
-	print("[BaseTile] タイル", tile_index, "のダウン状態: ", down_state)
 
 ## ダウン状態を解除
 func clear_down_state():
