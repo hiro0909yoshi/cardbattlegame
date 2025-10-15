@@ -227,12 +227,8 @@ func execute_move_creature() -> bool:
 	# 移動先選択モードに移行
 	current_state = State.SELECTING_MOVE_DEST
 	
-	print("[LandCommandHandler] 移動先選択モードに移行")
-	
 	# 移動可能な隣接マスを取得
 	move_destinations = get_adjacent_tiles(selected_tile_index)
-	
-	print("[LandCommandHandler] 移動可能なマス: ", move_destinations)
 	
 	# 移動先が存在しない場合
 	if move_destinations.is_empty():
@@ -528,18 +524,12 @@ func get_adjacent_tiles(tile_index: int) -> Array:
 		print("[LandCommandHandler] ERROR: board_systemが存在しません")
 		return []
 	
-	print("[LandCommandHandler] 隣接タイル取得開始: tile_index=", tile_index)
-	
 	# TileNeighborSystemを使用
 	if not board_system.tile_neighbor_system:
 		print("[LandCommandHandler] ERROR: tile_neighbor_systemが存在しません")
 		return []
 	
-	print("[LandCommandHandler] tile_neighbor_system存在確認OK")
 	var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
-	print("[LandCommandHandler] タイル", tile_index, "の隣接タイル: ", neighbors)
-	print("[LandCommandHandler] 隣接タイル数: ", neighbors.size())
-	
 	return neighbors
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
@@ -696,7 +686,6 @@ func handle_move_destination_input(event):
 
 ## 移動を確定
 func confirm_move(dest_tile_index: int):
-	print("[LandCommandHandler] 移動を確定: ", move_source_tile, " → ", dest_tile_index)
 	
 	if not board_system or not board_system.tile_nodes.has(move_source_tile) or not board_system.tile_nodes.has(dest_tile_index):
 		print("[LandCommandHandler] エラー: タイルが見つかりません")
@@ -715,12 +704,9 @@ func confirm_move(dest_tile_index: int):
 	
 	var current_player_index = source_tile.owner_id
 	
-	print("[LandCommandHandler] クリーチャー移動開始: ", creature_data.get("name", "Unknown"))
-	
 	# 1. 移動元のクリーチャーを削除し、空き地にする
 	source_tile.remove_creature()
 	board_system.set_tile_owner(move_source_tile, -1)  # 空き地化
-	print("[LandCommandHandler] 移動元を空き地化")
 	
 	# 2. 移動先の状況を確認
 	var dest_owner = dest_tile.owner_id

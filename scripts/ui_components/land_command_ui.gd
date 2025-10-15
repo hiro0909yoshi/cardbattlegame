@@ -256,7 +256,6 @@ func _calculate_level_up_cost(from_level: int, to_level: int) -> int:
 func hide_level_selection():
 	if level_selection_panel:
 		level_selection_panel.visible = false
-	print("[LandCommandUI] レベル選択非表示")
 
 ## シグナルハンドラ
 func _on_land_command_button_pressed():
@@ -276,7 +275,6 @@ func _on_action_level_up_pressed():
 	Input.parse_input_event(event)
 
 func _on_action_move_pressed():
-	print("[LandCommandUI] 移動ボタン押下")
 	var event = InputEventKey.new()
 	event.keycode = KEY_M
 	event.pressed = true
