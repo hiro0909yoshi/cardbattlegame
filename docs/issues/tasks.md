@@ -311,6 +311,20 @@
 - [ ] 重複コードの削除
 - [ ] 命名規則の統一
 
+#### TECH-002: アクション処理フラグの統一
+- **関連**: BUG-004
+- **現状**: 
+  - `BoardSystem3D.is_waiting_for_action`
+  - `TileActionProcessor.is_action_processing`
+  - 2箇所でフラグ管理、整合性が取れなくなる問題
+- **目標**: フラグを1箇所に統一
+- **提案案**:
+  - **案1**: TileActionProcessorに統一、BoardSystem3Dは参照のみ
+  - **案2**: 新規TurnManagerクラスを作成し、そこで一元管理
+  - **案3**: BoardSystem3Dに統一、TileActionProcessorは通知のみ
+- **優先度**: 🔴 High（バグの温床）
+- **ステータス**: 📋 設計待ち
+
 #### テスト
 - [ ] ユニットテスト導入
 - [ ] バトルシステムのテストケース

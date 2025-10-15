@@ -1,3 +1,7 @@
 res://scenes/MainMenu.tscn
 res://scripts/ui_manager.gd
 res://scripts/game_flow/land_command_handler.gd
+res://docs/progress/phase1a_progress.md
+res://scripts/game_flow_manager.gd
+res://scripts/tiles/base_tiles.gd
+res://scenes/Tiles/NeutralTile.tscn

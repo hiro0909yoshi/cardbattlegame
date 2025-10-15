@@ -481,7 +481,12 @@ card_definitions.jsonから直接カードデータを読み込む実装に変�
 │  └─ カードマス         │
 │      └─ カード入手      │
 │  ↓                      │
-│ 土地レベルアップ        │
+│ 🆕 召喚フェーズ         │
+│  ├─ カード召喚          │
+│  └─ 領地コマンド        │
+│      ├─ レベルアップ    │
+│      ├─ クリーチャー移動 │
+│      └─ クリーチャー交換 │
 │  ↓                      │
 │ カードドロー（1枚）      │
 │  ↓                      │
@@ -489,6 +494,68 @@ card_definitions.jsonから直接カードデータを読み込む実装に変�
 │  ├─ Yes → ゲーム終了   │
 │  └─ No → 次プレイヤー─┘
 ```
+
+### 🆕 レベルアップフロー（Phase 1-A）
+```
+移動完了
+  ↓
+領地コマンドボタン表示（人間プレイヤーのみ）
+  ↓
+土地選択（数字キー1-0）
+  ├─ ダウン状態の土地は選択不可
+  └─ 所有している土地のみ選択可能
+  ↓
+アクションメニュー表示（右側中央パネル）
+  ├─ [L] レベルアップ
+  ├─ [M] 移動（未実装）
+  ├─ [S] 交換（未実装）
+  └─ [C] 戻る（土地選択に戻る）
+  ↓
+レベルアップ選択（Lキー）
+  ↓
+レベル選択画面表示
+  ├─ 現在レベル表示
+  ├─ Lv2-5選択ボタン
+  │   ├─ 累計コスト表示
+  │   │   Lv1→2: 80G
+  │   │   Lv1→3: 240G
+  │   │   Lv1→4: 620G
+  │   │   Lv1→5: 1200G
+  │   └─ 魔力不足のボタンは無効化
+  └─ [C] 戻る（アクションメニューに戻る）
+  ↓
+レベル選択（Lv2-5いずれか）
+  ↓
+レベルアップ実行
+  ├─ 魔力消費（累計コスト）
+  ├─ 土地レベル更新
+  ├─ ダウン状態設定
+  └─ UI更新
+  ↓
+ターン終了
+```
+
+**レベルコスト（累計方式）**:
+```gdscript
+const LEVEL_COSTS = {
+    0: 0,
+    1: 0,
+    2: 80,      // Lv1→2: 80G
+    3: 240,     // Lv1→3: 240G (80 + 160)
+    4: 620,     // Lv1→4: 620G (80 + 160 + 380)
+    5: 1200     // Lv1→5: 1200G (80 + 160 + 380 + 580)
+}
+
+// コスト計算
+var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
+```
+
+**実装クラス**:
+- `LandCommandHandler`: 領地コマンドのロジック
+- `UIManager`: アクションメニュー・レベル選択パネルのUI
+- `GameFlowManager`: ターン終了処理
+
+---
 
 ### バトルフロー詳細
 ```
@@ -738,6 +805,79 @@ cardbattlegame/
 3. **画像形式**:
    - 透過: PNG必須
    - JPEG: 透過不可
+
+### ⚠️ 重要: アクション処理フラグの管理
+
+**問題**: アクション処理中を示すフラグが2箇所に存在
+
+#### 現状の二重管理
+
+1. **BoardSystem3D.is_waiting_for_action**
+   - 場所: `scripts/board_system_3d.gd` Line 27
+   - 役割: タイルアクションの処理中フラグ
+   - 設定: `process_tile_landing()` で `true`
+   - 解除: `_on_action_completed()` で `false`
+
+2. **TileActionProcessor.is_action_processing**
+   - 場所: `scripts/tile_action_processor.gd` Line 23
+   - 役割: アクション処理中フラグ（重複）
+   - 設定: `process_tile_landing()` で `true`
+   - 解除: `_complete_action()` で `false`
+
+#### 問題点
+
+```
+【バグの発生例】
+LandCommandHandler → board_system._on_action_completed()
+  ↓
+is_waiting_for_action = false  ← リセット成功
+  ↓
+tile_action_completed シグナル発行
+  ↓
+しかし...
+  ↓
+is_action_processing = true のまま！ ← リセット失敗
+  ↓
+次のプレイヤー: カード選択
+  ↓
+"Already processing tile action" エラー ← バグ発生
+```
+
+#### 暫定対応（現在の実装）
+
+```gdscript
+# land_command_handler.gd
+# 両方のフラグをリセットするため、TileActionProcessor経由で通知
+if board_system and board_system.tile_action_processor:
+    board_system.tile_action_processor._complete_action()
+    # これにより:
+    # 1. is_action_processing = false
+    # 2. action_completed シグナル発行
+    # 3. BoardSystem3D._on_action_completed()
+    # 4. is_waiting_for_action = false
+    # 5. tile_action_completed シグナル発行
+```
+
+#### 恒久対応（TODO: TECH-002）
+
+**提案案**:
+1. **案1**: TileActionProcessorに統一
+   - BoardSystem3Dは`is_waiting_for_action`を削除
+   - 全てTileActionProcessorの`is_action_processing`で管理
+   
+2. **案2**: 新規TurnManagerクラス
+   - ターン管理専用クラスを作成
+   - 状態管理を一元化
+   
+3. **案3**: BoardSystem3Dに統一
+   - TileActionProcessorは`is_action_processing`を削除
+   - BoardSystem3Dの`is_waiting_for_action`のみで管理
+
+**推奨**: 案1（TileActionProcessorに統一）
+- 理由: TileActionProcessorがアクション処理の責任を持つべき
+- BoardSystem3Dは単なる通知役に徹する
+
+---
 
 ### ⚠️ 重要: ターン終了処理の管理
 

@@ -20,6 +20,67 @@
 
 ## ✅ 完了タスク
 
+### 2025年10月15日: ハイライト機能と移動先選択の改善
+
+#### 土地ハイライトシステム実装
+- [x] `BaseTile`にハイライト機能追加
+  - `is_highlighted`変数追加
+  - `set_highlight(enabled: bool)`メソッド実装
+- [x] ハイライト時の視覚効果
+  - 白色に60%近づけて明るく表示
+  - 黄色の発光エフェクト追加（emission）
+  - emission_energy_multiplier=2.0で強調
+- [x] `LandCommandHandler.select_land()`でハイライト自動設定
+- [x] `LandCommandHandler.clear_highlight()`で解除
+
+**修正ファイル**:
+- `scripts/tiles/base_tiles.gd`
+  - `is_highlighted`変数追加
+  - `update_visual()`にハイライト処理追加
+  - `set_highlight()`メソッド追加
+- `scripts/game_flow/land_command_handler.gd`
+  - `select_land()`にハイライト設定処理追加
+
+**実装内容**:
+```gdscript
+// ハイライト時の処理
+if is_highlighted:
+	mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, 0.6)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 1.0, 0.5) * 0.8
+	mat.emission_energy_multiplier = 2.0
+```
+
+---
+
+#### 移動先選択の前画面戻り機能
+- [x] `State.SELECTING_MOVE_DEST`状態追加
+- [x] `execute_move_creature()`を移動先選択モードに変更
+- [x] `handle_move_destination_input()`メソッド追加
+- [x] `cancel()`メソッドを3段階対応に更新
+  - 移動先選択 → アクション選択
+  - アクション選択 → 土地選択
+  - 土地選択 → 閉じる
+
+**修正ファイル**:
+- `scripts/game_flow/land_command_handler.gd`
+  - `State`列挙型に`SELECTING_MOVE_DEST`追加
+  - `execute_move_creature()`実装
+  - `cancel()`を3段階戻りに対応
+  - `_input()`に移動先選択処理追加
+  - `handle_move_destination_input()`追加
+
+**実装されたフロー**:
+```
+土地選択（数字キー）
+  ↓
+アクションメニュー（L/M/S/C）
+  ↓ [M]キー
+移動先選択（1-9,0/C）← ✅ [C]で前画面に戻る
+```
+
+---
+
 ### 2025年10月15日: Phase 1-A Day 5 開始
 
 #### UIパネル配置修正
