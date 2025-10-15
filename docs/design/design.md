@@ -555,6 +555,40 @@ UI更新
 └────────────────────────────────────────────┘
 ```
 
+### UI配置の基本方針
+
+#### 全画面対応
+**すべてのUI要素は、画面解像度に依存しない相対的な配置を使用する。**
+
+- ✅ **推奨**: `viewport_size`を使用した相対配置
+  ```gdscript
+  var viewport_size = get_viewport().get_visible_rect().size
+  var panel_x = viewport_size.x - panel_width - 20  # 右端から20px
+  var panel_y = (viewport_size.y - panel_height) / 2  # 画面中央
+  ```
+
+- ❌ **非推奨**: 絶対座標指定
+  ```gdscript
+  panel.position = Vector2(1200, 100)  # 画面サイズが変わると破綻
+  ```
+
+#### 配置ガイドライン
+1. **水平方向**
+   - 左寄せ: `margin`
+   - 中央揃え: `(viewport_size.x - width) / 2`
+   - 右寄せ: `viewport_size.x - width - margin`
+
+2. **垂直方向**
+   - 上寄せ: `margin`
+   - 中央揃え: `(viewport_size.y - height) / 2`
+   - 下寄せ: `viewport_size.y - height - margin`
+
+3. **マージン**
+   - 画面端からの余白: 10-20px推奨
+   - UI要素間の余白: 5-10px推奨
+
+---
+
 ### UIコンポーネント
 
 #### 1. PlayerInfoPanel
@@ -587,6 +621,32 @@ UI更新
   - プレイヤー情報表示
   - デバッグコマンド
   - CPU手札表示
+
+#### 5. ActionMenuPanel（Phase 1-A）
+- **位置**: 画面右側中央（全画面対応）
+  ```gdscript
+  var panel_x = viewport_size.x - panel_width - 20
+  var panel_y = (viewport_size.y - panel_height) / 2
+  ```
+- **サイズ**: 200x320px
+- **表示内容**:
+  - 選択中の土地番号
+  - [L] レベルアップ
+  - [M] 移動
+  - [S] 交換
+  - [C] 戻る
+- **表示タイミング**: 土地選択後
+
+#### 6. LevelSelectionPanel（Phase 1-A）
+- **位置**: ActionMenuPanelと同じ（右側中央）
+- **サイズ**: 250x400px
+- **表示内容**:
+  - 現在レベル表示
+  - Lv2-5選択ボタン
+  - 各レベルのコスト表示（累計方式）
+  - 魔力による有効/無効判定
+  - [C] 前の画面に戻る
+- **表示タイミング**: レベルアップ選択後
 
 ### カード表示仕様
 ```

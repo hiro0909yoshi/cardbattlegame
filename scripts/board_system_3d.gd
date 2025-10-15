@@ -208,6 +208,13 @@ func _on_movement_started(_player_id: int):
 		ui_manager.phase_label.text = "移動中..."
 
 func _on_movement_completed(_player_id: int, final_tile: int):
+	# 移動完了後、領地コマンドボタンを表示（人間プレイヤーのみ）
+	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not debug_manual_control_all
+	if not is_cpu and ui_manager:
+		ui_manager.show_land_command_button()
+	elif ui_manager:
+		ui_manager.hide_land_command_button()
+	
 	process_tile_landing(final_tile)
 
 # === タイルアクション処理（TileActionProcessorに委譲） ===

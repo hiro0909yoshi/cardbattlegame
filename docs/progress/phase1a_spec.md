@@ -20,19 +20,19 @@
 ### ターン全体の流れ
 ```
 【ターン開始】
-    ↓
+	↓
 ┌─────────────────────┐
 │ 1. スペルフェーズ    │ スペルor秘術を1回 or パス（戻れない）
 └──────┬──────────────┘
-       ↓
+	   ↓
 ┌─────────────────────┐
 │ 2. ダイスフェーズ    │ サイコロを振る（戻れない）
 └──────┬──────────────┘
-       ↓
+	   ↓
 ┌─────────────────────┐
 │ 3. 移動フェーズ      │ 自動移動
 └──────┬──────────────┘
-       ↓
+	   ↓
 ┌─────────────────────┐
 │ 4. 到着地点の行動    │ 以下のいずれか1つのみ
 │  A. 召喚/バトル      │
@@ -40,7 +40,7 @@
 │  C. クリーチャー移動 │
 │  D. クリーチャー交換 │
 └──────┬──────────────┘
-       ↓
+	   ↓
 【ターン終了】
 ```
 
@@ -56,14 +56,14 @@
 
 ```gdscript
 enum GamePhase {
-    SETUP,           # ゲーム準備
-    SPELL_PHASE,     # スペル使用（新規）
-    DICE_ROLL,       # ダイス
-    MOVING,          # 移動中
-    LAND_ACTION,     # 到着地点での行動（召喚/領地コマンド）
-    BATTLE_PREP,     # バトル準備（アイテム/巻物選択）
-    BATTLE,          # バトル実行
-    END_TURN         # ターン終了
+	SETUP,           # ゲーム準備
+	SPELL_PHASE,     # スペル使用（新規）
+	DICE_ROLL,       # ダイス
+	MOVING,          # 移動中
+	LAND_ACTION,     # 到着地点での行動（召喚/領地コマンド）
+	BATTLE_PREP,     # バトル準備（アイテム/巻物選択）
+	BATTLE,          # バトル実行
+	END_TURN         # ターン終了
 }
 ```
 
@@ -107,9 +107,9 @@ var has_unyielding: bool = false  # 不屈スキル（将来対応）
 
 # チェック関数
 func can_use_land_command() -> bool:
-    if has_unyielding:
-        return true
-    return not down_state
+	if has_unyielding:
+		return true
+	return not down_state
 ```
 
 ### UI表示
@@ -268,15 +268,15 @@ func can_use_land_command() -> bool:
 ### 新しいバトルフロー
 ```
 【敵の土地に到着】
-    ↓
+	↓
 【クリーチャー選択（召喚）】
-    ↓
+	↓
 【アイテム/巻物選択】← ★新規追加
-    ↓
+	↓
 【バトル画面表示】
-    ↓
+	↓
 【バトル実行】← 既存システム（変更なし）
-    ↓
+	↓
 【結果処理】
 ```
 
@@ -325,43 +325,43 @@ func can_use_land_command() -> bool:
 ```gdscript
 # 新規追加: アイテム適用込みのバトル実行ラッパー
 func execute_3d_battle_with_preparation(
-    attacker_index: int, 
-    card_index: int, 
-    tile_info: Dictionary,
-    attacker_item: Dictionary = {},  # ← 追加
-    defender_item: Dictionary = {}   # ← 追加
+	attacker_index: int, 
+	card_index: int, 
+	tile_info: Dictionary,
+	attacker_item: Dictionary = {},  # ← 追加
+	defender_item: Dictionary = {}   # ← 追加
 ) -> void:
-    
-    # 1. 既存の準備処理（変更なし）
-    var participants = _prepare_participants(...)
-    var attacker = participants["attacker"]
-    var defender = participants["defender"]
-    
-    # 2. アイテム効果適用（新規追加）
-    if not attacker_item.is_empty():
-        _apply_item_to_participant(attacker, attacker_item)
-    
-    if not defender_item.is_empty():
-        _apply_item_to_participant(defender, defender_item)
-    
-    # 3. 既存のバトル処理を実行（変更なし）
-    _apply_pre_battle_skills(...)
-    var attack_order = _determine_attack_order(...)
-    _execute_attack_sequence(...)
-    var result = _resolve_battle_result(...)
-    _apply_post_battle_effects(...)
+	
+	# 1. 既存の準備処理（変更なし）
+	var participants = _prepare_participants(...)
+	var attacker = participants["attacker"]
+	var defender = participants["defender"]
+	
+	# 2. アイテム効果適用（新規追加）
+	if not attacker_item.is_empty():
+		_apply_item_to_participant(attacker, attacker_item)
+	
+	if not defender_item.is_empty():
+		_apply_item_to_participant(defender, defender_item)
+	
+	# 3. 既存のバトル処理を実行（変更なし）
+	_apply_pre_battle_skills(...)
+	var attack_order = _determine_attack_order(...)
+	_execute_attack_sequence(...)
+	var result = _resolve_battle_result(...)
+	_apply_post_battle_effects(...)
 
 # 新規追加: アイテム効果適用
 func _apply_item_to_participant(participant: BattleParticipant, item: Dictionary):
-    if item.get("grants_first_strike", false):
-        participant.apply_item_first_strike()
-    
-    if item.has("hp_bonus"):
-        participant.item_bonus_hp = item["hp_bonus"]
-        participant.update_current_hp()
-    
-    if item.has("ap_bonus"):
-        participant.current_ap += item["ap_bonus"]
+	if item.get("grants_first_strike", false):
+		participant.apply_item_first_strike()
+	
+	if item.has("hp_bonus"):
+		participant.item_bonus_hp = item["hp_bonus"]
+		participant.update_current_hp()
+	
+	if item.has("ap_bonus"):
+		participant.current_ap += item["ap_bonus"]
 ```
 
 ---
@@ -404,17 +404,17 @@ func _apply_item_to_participant(participant: BattleParticipant, item: Dictionary
 ```gdscript
 # 各レベルの絶対コスト
 const LEVEL_COSTS = {
-    0: 0,
-    1: 0,
-    2: 80,
-    3: 240,
-    4: 620,
-    5: 1200
+	0: 0,
+	1: 0,
+	2: 80,
+	3: 240,
+	4: 620,
+	5: 1200
 }
 
 # レベルアップコスト計算
 func calculate_level_up_cost(current_level: int, target_level: int) -> int:
-    return LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
+	return LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ```
 
 ### UI設計
@@ -559,21 +559,21 @@ func calculate_level_up_cost(current_level: int, target_level: int) -> int:
 ```gdscript
 # アイテムデータ
 {
-    "id": 1001,
-    "name": "先制の巻物",
-    "type": "scroll",
-    "effect": "grant_first_strike",
-    "target": "self",
-    "cost": 200
+	"id": 1001,
+	"name": "先制の巻物",
+	"type": "scroll",
+	"effect": "grant_first_strike",
+	"target": "self",
+	"cost": 200
 }
 
 # プレイヤーの所持品
 player_inventory = {
-    0: [  # プレイヤー0
-        {"id": 1001, "quantity": 2},
-        {"id": 1002, "quantity": 1}
-    ],
-    1: [...]
+	0: [  # プレイヤー0
+		{"id": 1001, "quantity": 2},
+		{"id": 1002, "quantity": 1}
+	],
+	1: [...]
 }
 ```
 
@@ -723,9 +723,9 @@ player_inventory = {
 player_team_id = [0, 0, 1, 1]  # P0,P1=Team0, P2,P3=Team1
 
 func get_allied_lands(player_id: int) -> Array:
-    var team_id = player_team_id[player_id]
-    # チームメイトの土地も含める
-    # クリーチャー交換・レベルアップ可能
+	var team_id = player_team_id[player_id]
+	# チームメイトの土地も含める
+	# クリーチャー交換・レベルアップ可能
 ```
 
 ### タイムリミット（PVP用）

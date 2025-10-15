@@ -97,11 +97,8 @@ func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
 	
-	# Phase 1-A: 領地コマンドボタンを表示（人間プレイヤーのターンのみ）
-	var is_cpu = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
-	if not is_cpu and ui_manager:
-		ui_manager.show_land_command_button()
-	elif ui_manager:
+	# Phase 1-A: ターン開始時は領地コマンドボタンを隠す
+	if ui_manager:
 		ui_manager.hide_land_command_button()
 	
 	# カードドロー処理（常に1枚引く）
@@ -267,6 +264,10 @@ func change_phase(new_phase: GamePhase):
 
 # ターン終了
 func end_turn():
+	# Phase 1-A: 領地コマンドボタンを隠す
+	if ui_manager:
+		ui_manager.hide_land_command_button()
+	
 	# 修正: 二重実行防止を強化（BUG-000対策）
 	if is_ending_turn:
 		print("Warning: Already ending turn (flag check)")

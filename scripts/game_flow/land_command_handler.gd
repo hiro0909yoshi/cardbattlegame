@@ -25,13 +25,18 @@ var board_system = null
 var game_flow_manager = null
 
 func _ready():
-	print("[LandCommandHandler] 初期化完了")
+	pass
 
 ## 初期化
 func initialize(ui_mgr, board_sys, flow_mgr):
 	ui_manager = ui_mgr
 	board_system = board_sys
 	game_flow_manager = flow_mgr
+	
+	# Phase 1-A: UIManagerのシグナルを接続
+	if ui_manager and ui_manager.has_signal("level_up_selected"):
+		ui_manager.level_up_selected.connect(_on_level_up_selected)
+	
 	print("[LandCommandHandler] 参照を設定しました")
 
 ## 領地コマンドを開く
@@ -83,9 +88,9 @@ func select_land(tile_index: int) -> bool:
 	
 	print("[LandCommandHandler] 土地を選択: ", tile_index)
 	
-	# アクション選択UIを表示
-	if ui_manager and ui_manager.has_method("show_action_selection_ui"):
-		ui_manager.show_action_selection_ui(tile_index)
+	# アクション選択UIを表示（Phase 1-A: 新UIパネル）
+	if ui_manager and ui_manager.has_method("show_action_menu"):
+		ui_manager.show_action_menu(tile_index)
 	
 	return true
 
@@ -112,23 +117,78 @@ func execute_action(action_type: String) -> bool:
 			print("[LandCommandHandler] 不明なアクション: ", action_type)
 			return false
 
+## レベルアップ実行（レベル選択後）
+func execute_level_up_with_level(target_level: int, cost: int) -> bool:
+	if not board_system or selected_tile_index == -1:
+		return false
+	
+	if not board_system.tile_nodes.has(selected_tile_index):
+		return false
+	
+	var tile = board_system.tile_nodes[selected_tile_index]
+	var player_system = game_flow_manager.player_system if game_flow_manager else null
+	var current_player = player_system.get_current_player() if player_system else null
+	
+	if not current_player:
+		return false
+	
+	# 魔力チェック
+	if current_player.magic_power < cost:
+		print("[LandCommandHandler] 魔力不足: 必要%d / 所持%d" % [cost, current_player.magic_power])
+		return false
+	
+	# 魔力消費
+	player_system.add_magic(current_player.id, -cost)
+	
+	# レベルアップ実行
+	tile.level = target_level
+	
+	# ダウン状態設定
+	if tile.has_method("set_down_state"):
+		tile.set_down_state(true)
+	
+	# UI更新
+	if ui_manager:
+		ui_manager.update_player_info_panels()
+	
+	print("[LandCommandHandler] レベルアップ完了: tile ", selected_tile_index, " -> Lv.", target_level)
+	
+	# 領地コマンドを閉じる
+	close_land_command()
+	
+	# ターン終了
+	if game_flow_manager and game_flow_manager.has_method("end_turn"):
+		game_flow_manager.end_turn()
+	
+	return true
+
 ## レベルアップ実行
 func execute_level_up() -> bool:
 	if not board_system:
 		return false
 	
-	var tile = board_system.get_tile(selected_tile_index)
-	if not tile:
+	# Phase 1-A修正: board_system.get_tile()ではなくtile_nodesを使用
+	if not board_system.tile_nodes.has(selected_tile_index):
+		print("[LandCommandHandler] タイルが見つかりません: ", selected_tile_index)
 		return false
 	
-	# レベルアップ処理
+	var tile = board_system.tile_nodes[selected_tile_index]
+	
+	# 最大レベルチェック
 	if tile.level >= 5:
 		print("[LandCommandHandler] 既に最大レベルです")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "既に最大レベルです"
 		return false
 	
-	# コスト計算と支払い処理は game_flow_manager で行う
-	action_selected.emit("level_up")
-	close_land_command()
+	# Phase 1-A: レベル選択UIを表示
+	if ui_manager and ui_manager.has_method("show_level_selection"):
+		var player_system = game_flow_manager.player_system if game_flow_manager else null
+		var current_player = player_system.get_current_player() if player_system else null
+		var player_magic = current_player.magic_power if current_player else 0
+		
+		ui_manager.show_level_selection(selected_tile_index, tile.level, player_magic)
+	
 	return true
 
 ## クリーチャー移動実行
@@ -170,6 +230,10 @@ func cancel():
 	elif current_state == State.SELECTING_LAND:
 		# 土地選択中なら閉じる
 		close_land_command()
+
+## Phase 1-A: レベル選択シグナルハンドラ
+func _on_level_up_selected(target_level: int, cost: int):
+	execute_level_up_with_level(target_level, cost)
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
 func get_player_owned_lands(player_id: int) -> Array:

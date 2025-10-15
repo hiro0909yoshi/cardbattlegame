@@ -13,6 +13,198 @@
 
 ## 解決済みの課題
 
+### ✅ 解決済み（2025/10/15）
+
+#### ~~FEAT-004: レベルアップ機能の完全実装~~
+**解決日**: 2025/10/15  
+**解決方法**: UIパネル作成とLandCommandHandler修正
+
+**元の問題**: 
+- レベルアップUIが未実装
+- `board_system.get_tile()`エラー
+- レベル選択機能がない
+- レベルアップ後の処理が不完全
+
+**実装内容**:
+1. **アクションメニューパネル**（右側配置）
+   - レベルアップ、移動、交換、戻るボタン
+   - 土地番号表示
+   - マウスクリック/キーボード両対応
+
+2. **レベル選択パネル**
+   - 現在レベル表示
+   - Lv2-5選択ボタン
+   - 累計コスト表示（Lv1→Lv3なら240G）
+   - 魔力による有効/無効判定
+   - 前の画面に戻る機能
+
+3. **LandCommandHandler修正**
+   - `board_system.get_tile()` → `board_system.tile_nodes[]`
+   - `execute_level_up_with_level()` 新規実装
+   - レベルアップ後のダウン状態設定
+   - ターン終了処理統合
+
+4. **UIManagerとの連携**
+   - `level_up_selected`シグナル接続
+   - 表示/非表示制御
+
+**修正ファイル**:
+- `scripts/ui_manager.gd` (~150行追加)
+- `scripts/game_flow/land_command_handler.gd` (~50行修正・追加)
+
+**実装されたフロー**:
+```
+土地選択（数字キー）
+  ↓
+アクションメニュー（右側パネル）
+  ↓
+レベル選択（Lv2-5、コスト表示）
+  ↓
+レベルアップ実行
+  ↓
+ターン終了
+```
+
+**効果**:
+- 完全なレベルアップフローが実装された
+- UIが直感的で分かりやすくなった
+- エラーが解消された
+
+---
+
+#### ~~TECH-007: ドキュメント構造の整理~~
+**解決日**: 2025/10/15  
+**解決方法**: docs/ディレクトリの構造化と運用ルールの明確化
+
+**目的**: 
+- プロジェクト情報の一元管理
+- チャット開始時の必須確認事項を明確化
+- ドキュメント更新の運用ルール確立
+
+**実施内容**:
+1. **ディレクトリ構造の作成**
+   - `docs/design/` - 設計ドキュメント（読み取り専用）
+   - `docs/progress/` - 進捗管理（適時更新）
+   - `docs/issues/` - 課題管理（適時更新）
+
+2. **ファイルの移動**
+   - `design.md` → `docs/design/`
+   - `skills_design.md` → `docs/design/`
+   - `turn_end_flow.md` → `docs/design/`
+   - `issues.md` → `docs/issues/`
+   - `tasks.md` → `docs/issues/`
+   - `TURN_END_QUICK_FIX.md` → `docs/issues/`
+   - `phase1a_progress.md` → `docs/progress/`
+   - `phase1a_spec.md` → `docs/progress/`
+
+3. **新規ドキュメント作成**
+   - プロジェクトルート: `README.md`
+   - `docs/README.md` - ドキュメント全体のインデックス
+
+4. **運用ルールの明確化**
+   - 🚫 `design/` - ユーザーの明示的指示なしに変更禁止
+   - ✅ `issues/` - バグ発見・修正時に適時更新
+   - ✅ `progress/` - タスク完了時に適時更新
+
+5. **メモリ記録**
+   - `project_structure_and_docs` メモリに構造と運用ルールを記録
+   - チャット開始時の必須確認事項を記載
+
+**実装ファイル**:
+- `README.md` - プロジェクト概要
+- `docs/README.md` - ドキュメントインデックス
+- Memory: `project_structure_and_docs`
+
+**効果**:
+- 情報が一元管理され、確認しやすくなった
+- ドキュメント更新のルールが明確になった
+- チャット引き継ぎがスムーズになる
+
+---
+
+#### ~~WARN-006: is_downのシャドウイング~~
+**解決日**: 2025/10/15  
+**解決方法**: パラメータ名を変更
+
+**元の問題**: 
+- `base_tiles.gd:148`で関数パラメータ`is_down`が関数名`is_down()`と重複
+- Godotの警告「"is_down" is shadowing」
+
+**修正内容**:
+```gdscript
+// 修正前
+func set_down_state(is_down: bool):
+    down_state = is_down
+
+// 修正後
+func set_down_state(should_be_down: bool):
+    down_state = should_be_down
+```
+
+#### ~~WARN-007: 未使用パラメータtile_info~~
+**解決日**: 2025/10/15  
+**解決方法**: アンダースコアプレフィックス追加
+
+**元の問題**: 
+- `battle_system.gd:221`の`_check_penetration_skill()`で`tile_info`パラメータが未使用
+- Godotの警告「The parameter "tile_info" is never used」
+
+**修正内容**:
+```gdscript
+// 修正前
+func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> bool:
+
+// 修正後
+func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, _tile_info: Dictionary) -> bool:
+```
+
+#### ~~WARN-008: 到達不能コード~~
+**解決日**: 2025/10/15  
+**解決方法**: 不要なreturn文を削除
+
+**元の問題**: 
+- `battle_system.gd:278`でmatch文の後に到達不能な`return false`
+- Godotの警告「Unreachable code after return」
+
+**修正内容**:
+```gdscript
+// 修正前
+match condition_type:
+    "enemy_is_element": ...
+    _:
+        return false
+    
+    return false  # 到達不能
+
+// 修正後
+match condition_type:
+    "enemy_is_element": ...
+    _:
+        return false
+// 不要なreturnを削除
+```
+
+#### ~~WARN-009: 整数除算警告~~
+**解決日**: 2025/10/15  
+**解決方法**: 明示的な型変換
+
+**元の問題**: 
+- `player_info_panel.gd:56`で整数除算による小数切り捨て
+- Godotの警告「Integer division, decimal part will be discarded」
+
+**修正内容**:
+```gdscript
+// 修正前
+var panel_x = (area_width * player_id) + (margin / 2)
+
+// 修正後
+var panel_x = (area_width * player_id) + int(margin / 2.0)
+```
+
+**結果**: Godotの警告がすべて解消され、コード品質が向上
+
+---
+
 ### ✅ 解決済み（2025/01/12）
 
 #### ~~BUG-008: デバッグモード時のCPU手動操作不可~~
@@ -886,7 +1078,8 @@ func replay():
 | 2025/01/11 | TECH-006: 属性名統一規則を追加 |
 | 2025/01/12 | BUG-008〜011: デバッグモード・手札表示・ドラッグ問題を解決 |
 | 2025/01/12 | FEAT-003: 先制スキルの動作確認完了 |
+| 2025/10/15 | WARN-006〜009: Godot警告4件を解決（シャドウイング・未使用パラメータ・到達不能コード・整数除算） |
 
 ---
 
-**最終更新**: 2025年1月12日
+**最終更新**: 2025年10月15日

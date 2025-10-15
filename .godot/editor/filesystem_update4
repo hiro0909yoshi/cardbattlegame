@@ -1,13 +1,3 @@
 res://scenes/MainMenu.tscn
 res://scripts/ui_manager.gd
-res://scripts/tiles/base_tiles.gd
 res://scripts/game_flow/land_command_handler.gd
-res://scripts/game_flow/phase_manager.gd
-res://scripts/game_flow/spell_phase_handler.gd
-res://scripts/debug_controller.gd
-res://scripts/game_flow_manager.gd
-res://scripts/game_3d.gd
-res://scripts/movement_controller.gd
-res://scripts/tile_action_processor.gd
-res://scripts/ui_components/player_info_panel.gd
-res://scripts/battle_system.gd

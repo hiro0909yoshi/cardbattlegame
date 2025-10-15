@@ -20,6 +20,14 @@ var dice_button: Button
 var phase_label: Label
 var current_dice_label: Label = null
 
+# Phase 1-A: 領地コマンドUI
+var action_menu_panel: Panel = null
+var level_selection_panel: Panel = null
+var action_menu_buttons = {}  # "level_up", "move", "swap", "cancel"
+var level_selection_buttons = {}  # レベル選択ボタン
+var current_level_label: Label = null
+var selected_tile_for_action: int = -1
+
 # システム参照（型指定なし - 3D対応のため）
 var card_system_ref = null
 var player_system_ref = null
@@ -188,6 +196,10 @@ func create_basic_ui(parent: Node):
 	
 	# Phase 1-A: 領地コマンドボタンを作成
 	create_land_command_button(parent)
+	
+	# Phase 1-A: アクションメニューとレベル選択パネルを作成
+	create_action_menu_panel(parent)
+	create_level_selection_panel(parent)
 
 # === プレイヤー情報パネル関連 ===
 func update_player_info_panels():
@@ -611,6 +623,231 @@ func hide_land_command_button():
 	if land_command_button:
 		land_command_button.visible = false
 		print("[UIManager] 領地コマンドボタン非表示")
+
+# Phase 1-A: アクションメニューパネルを作成
+func create_action_menu_panel(parent: Node):
+	action_menu_panel = Panel.new()
+	action_menu_panel.name = "ActionMenuPanel"
+	
+	# 右側に配置（プレイヤー情報パネルとカードUIの間）
+	var viewport_size = get_viewport().get_visible_rect().size
+	var panel_width = 200
+	var panel_height = 320
+	
+	# 右端から少し内側、画面中央の高さ
+	var panel_x = viewport_size.x - panel_width - 20  # 右端から20pxマージン
+	var panel_y = (viewport_size.y - panel_height) / 2  # 画面中央
+	
+	action_menu_panel.position = Vector2(panel_x, panel_y)
+	action_menu_panel.size = Vector2(panel_width, panel_height)
+	action_menu_panel.z_index = 100
+	action_menu_panel.visible = false
+	
+	# パネルスタイル
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.85)
+	panel_style.border_width_left = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.5, 0.5, 0.5, 1)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	panel_style.corner_radius_bottom_right = 8
+	action_menu_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	parent.add_child(action_menu_panel)
+	
+	# タイトルラベル
+	var title_label = Label.new()
+	title_label.text = "アクション選択"
+	title_label.position = Vector2(10, 10)
+	title_label.add_theme_font_size_override("font_size", 20)
+	title_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	action_menu_panel.add_child(title_label)
+	
+	# 選択中の土地番号表示
+	var tile_label = Label.new()
+	tile_label.name = "TileLabel"
+	tile_label.text = "土地: -"
+	tile_label.position = Vector2(10, 40)
+	tile_label.add_theme_font_size_override("font_size", 16)
+	tile_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+	action_menu_panel.add_child(tile_label)
+	
+	# ボタンを作成
+	var button_y = 80
+	var button_spacing = 10
+	var button_height = 50
+	
+	# レベルアップボタン
+	var level_up_btn = _create_menu_button("📈 [L] レベルアップ", Vector2(10, button_y), Color(0.2, 0.6, 0.8))
+	level_up_btn.pressed.connect(_on_action_level_up_pressed)
+	action_menu_panel.add_child(level_up_btn)
+	action_menu_buttons["level_up"] = level_up_btn
+	button_y += button_height + button_spacing
+	
+	# 移動ボタン
+	var move_btn = _create_menu_button("🚶 [M] 移動", Vector2(10, button_y), Color(0.6, 0.4, 0.8))
+	move_btn.pressed.connect(_on_action_move_pressed)
+	action_menu_panel.add_child(move_btn)
+	action_menu_buttons["move"] = move_btn
+	button_y += button_height + button_spacing
+	
+	# 交換ボタン
+	var swap_btn = _create_menu_button("🔄 [S] 交換", Vector2(10, button_y), Color(0.8, 0.6, 0.2))
+	swap_btn.pressed.connect(_on_action_swap_pressed)
+	action_menu_panel.add_child(swap_btn)
+	action_menu_buttons["swap"] = swap_btn
+	button_y += button_height + button_spacing
+	
+	# 戻るボタン
+	var cancel_btn = _create_menu_button("↩️ [C] 戻る", Vector2(10, button_y), Color(0.5, 0.5, 0.5))
+	cancel_btn.pressed.connect(_on_action_cancel_pressed)
+	action_menu_panel.add_child(cancel_btn)
+	action_menu_buttons["cancel"] = cancel_btn
+	
+	print("[UIManager] アクションメニューパネル作成完了")
+
+# メニューボタンを作成するヘルパー関数
+func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
+	var btn = Button.new()
+	btn.text = text
+	btn.position = pos
+	btn.size = Vector2(180, 50)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1, 1, 1, 0.8)
+	style.corner_radius_top_left = 5
+	style.corner_radius_top_right = 5
+	style.corner_radius_bottom_left = 5
+	style.corner_radius_bottom_right = 5
+	btn.add_theme_stylebox_override("normal", style)
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = color.lightened(0.2)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = color.darkened(0.2)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	
+	btn.add_theme_font_size_override("font_size", 16)
+	
+	return btn
+
+# Phase 1-A: レベル選択パネルを作成
+func create_level_selection_panel(parent: Node):
+	level_selection_panel = Panel.new()
+	level_selection_panel.name = "LevelSelectionPanel"
+	
+	# アクションメニューと同じ位置（右側中央）
+	var viewport_size = get_viewport().get_visible_rect().size
+	var panel_width = 250
+	var panel_height = 400
+	
+	var panel_x = viewport_size.x - panel_width - 20  # 右端から20pxマージン
+	var panel_y = (viewport_size.y - panel_height) / 2  # 画面中央
+	
+	level_selection_panel.position = Vector2(panel_x, panel_y)
+	level_selection_panel.size = Vector2(panel_width, panel_height)
+	level_selection_panel.z_index = 101  # アクションメニューより前面
+	level_selection_panel.visible = false
+	
+	# パネルスタイル
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.05, 0.15, 0.9)
+	panel_style.border_width_left = 3
+	panel_style.border_width_right = 3
+	panel_style.border_width_top = 3
+	panel_style.border_width_bottom = 3
+	panel_style.border_color = Color(0.2, 0.6, 0.8, 1)
+	panel_style.corner_radius_top_left = 8
+	panel_style.corner_radius_top_right = 8
+	panel_style.corner_radius_bottom_left = 8
+	panel_style.corner_radius_bottom_right = 8
+	level_selection_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	parent.add_child(level_selection_panel)
+	
+	# タイトル
+	var title = Label.new()
+	title.text = "レベルアップ"
+	title.position = Vector2(10, 10)
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color(1, 1, 1))
+	level_selection_panel.add_child(title)
+	
+	# 現在レベル表示
+	current_level_label = Label.new()
+	current_level_label.name = "CurrentLevelLabel"
+	current_level_label.text = "現在: Lv.1"
+	current_level_label.position = Vector2(10, 45)
+	current_level_label.add_theme_font_size_override("font_size", 18)
+	current_level_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	level_selection_panel.add_child(current_level_label)
+	
+	# レベル選択ボタン（2-5）
+	var button_y = 85
+	var button_spacing = 10
+	
+	var level_costs = {2: 80, 3: 240, 4: 620, 5: 1200}
+	
+	for level in [2, 3, 4, 5]:
+		var btn = _create_level_button(level, level_costs[level], Vector2(10, button_y))
+		btn.pressed.connect(_on_level_selected.bind(level))
+		level_selection_panel.add_child(btn)
+		level_selection_buttons[level] = btn
+		button_y += 65 + button_spacing
+	
+	# 戻るボタン
+	var cancel_btn = _create_menu_button("↩️ [C] 戻る", Vector2(10, button_y), Color(0.5, 0.5, 0.5))
+	cancel_btn.pressed.connect(_on_level_cancel_pressed)
+	level_selection_panel.add_child(cancel_btn)
+	
+	print("[UIManager] レベル選択パネル作成完了")
+
+# レベルボタンを作成するヘルパー関数
+func _create_level_button(level: int, cost: int, pos: Vector2) -> Button:
+	var btn = Button.new()
+	btn.text = "Lv.%d → %dG" % [level, cost]
+	btn.position = pos
+	btn.size = Vector2(230, 60)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.5, 0.7)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1, 1, 1, 0.8)
+	style.corner_radius_top_left = 5
+	style.corner_radius_top_right = 5
+	style.corner_radius_bottom_left = 5
+	style.corner_radius_bottom_right = 5
+	btn.add_theme_stylebox_override("normal", style)
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = Color(0.3, 0.6, 0.8)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = Color(0.1, 0.4, 0.6)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	
+	var disabled_style = style.duplicate()
+	disabled_style.bg_color = Color(0.3, 0.3, 0.3)
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+	
+	btn.add_theme_font_size_override("font_size", 18)
+	
+	return btn
 	# キャンセルボタンも非表示
 	if cancel_land_command_button:
 		cancel_land_command_button.visible = false
@@ -641,15 +878,138 @@ func show_land_selection_mode(owned_lands: Array):
 # アクション選択UIを表示
 func show_action_selection_ui(tile_index: int):
 	print("[UIManager] アクション選択UI表示: tile ", tile_index)
-	if phase_label:
-		phase_label.text = "L:レベルアップ M:移動 S:交換 C:戻る"
+	# Phase 1-A: 新しいUIパネルを使用
+	show_action_menu(tile_index)
 
 # 領地コマンドUIを非表示
 func hide_land_command_ui():
 	print("[UIManager] 領地コマンドUI非表示")
-	# Phase 1-A: 簡易実装
+	# Phase 1-A: 新UIパネルを非表示
+	hide_action_menu()
+	hide_level_selection()
+	
 	if phase_label:
 		phase_label.text = "召喚フェーズ"
 	
 	# キャンセルボタンを非表示
 	hide_cancel_button()
+
+# ==== Phase 1-A: アクションメニュー表示/非表示 ====
+
+func show_action_menu(tile_index: int):
+	if not action_menu_panel:
+		return
+	
+	selected_tile_for_action = tile_index
+	action_menu_panel.visible = true
+	
+	# 土地番号を表示
+	var tile_label = action_menu_panel.get_node_or_null("TileLabel")
+	if tile_label:
+		tile_label.text = "土地: #%d" % tile_index
+	
+	print("[UIManager] アクションメニュー表示: tile ", tile_index)
+
+func hide_action_menu():
+	if action_menu_panel:
+		action_menu_panel.visible = false
+		selected_tile_for_action = -1
+	print("[UIManager] アクションメニュー非表示")
+
+# ==== Phase 1-A: レベル選択パネル表示/非表示 ====
+
+func show_level_selection(tile_index: int, current_level: int, player_magic: int):
+	if not level_selection_panel:
+		return
+	
+	# 重要: tile_indexを保持（hide_action_menuでリセットされるため、再設定）
+	selected_tile_for_action = tile_index
+	
+	# アクションメニューを隠す（表示だけ隠す）
+	if action_menu_panel:
+		action_menu_panel.visible = false
+	
+	# 現在レベルを表示
+	if current_level_label:
+		current_level_label.text = "現在: Lv.%d" % current_level
+	
+	# レベルコスト計算
+	var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
+	
+	# 各レベルボタンの有効/無効を設定
+	for level in [2, 3, 4, 5]:
+		if level <= current_level:
+			# 現在以下のレベルは無効
+			if level_selection_buttons.has(level):
+				level_selection_buttons[level].disabled = true
+		else:
+			# レベルアップコストを計算
+			var cost = level_costs[level] - level_costs[current_level]
+			if player_magic >= cost:
+				# 魔力が足りる
+				if level_selection_buttons.has(level):
+					level_selection_buttons[level].disabled = false
+					level_selection_buttons[level].text = "Lv.%d → %dG" % [level, cost]
+			else:
+				# 魔力不足
+				if level_selection_buttons.has(level):
+					level_selection_buttons[level].disabled = true
+					level_selection_buttons[level].text = "Lv.%d → %dG (不足)" % [level, cost]
+	
+	level_selection_panel.visible = true
+	print("[UIManager] レベル選択表示: tile ", tile_index, " 現在Lv.", current_level)
+
+func hide_level_selection():
+	if level_selection_panel:
+		level_selection_panel.visible = false
+	print("[UIManager] レベル選択非表示")
+
+# ==== Phase 1-A: イベントハンドラ ====
+
+func _on_action_level_up_pressed():
+	print("[UIManager] レベルアップボタン押下")
+	# LandCommandHandlerに通知（キーボード入力をエミュレート）
+	var event = InputEventKey.new()
+	event.keycode = KEY_L
+	event.pressed = true
+	Input.parse_input_event(event)
+
+func _on_action_move_pressed():
+	print("[UIManager] 移動ボタン押下")
+	var event = InputEventKey.new()
+	event.keycode = KEY_M
+	event.pressed = true
+	Input.parse_input_event(event)
+
+func _on_action_swap_pressed():
+	print("[UIManager] 交換ボタン押下")
+	var event = InputEventKey.new()
+	event.keycode = KEY_S
+	event.pressed = true
+	Input.parse_input_event(event)
+
+func _on_action_cancel_pressed():
+	print("[UIManager] アクションキャンセルボタン押下")
+	hide_action_menu()
+	var event = InputEventKey.new()
+	event.keycode = KEY_C
+	event.pressed = true
+	Input.parse_input_event(event)
+
+func _on_level_selected(level: int):
+	# GameFlowManagerまたはLandCommandHandlerに通知
+	# レベルとコストを計算して通知
+	if board_system_ref and board_system_ref.tile_nodes.has(selected_tile_for_action):
+		var tile = board_system_ref.tile_nodes[selected_tile_for_action]
+		var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
+		var cost = level_costs[level] - level_costs[tile.level]
+		
+		emit_signal("level_up_selected", level, cost)
+		hide_level_selection()
+
+func _on_level_cancel_pressed():
+	print("[UIManager] レベル選択キャンセル")
+	hide_level_selection()
+	# アクションメニューに戻る
+	if selected_tile_for_action >= 0:
+		show_action_menu(selected_tile_for_action)
