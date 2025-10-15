@@ -11,6 +11,7 @@ signal land_command_button_pressed()  # Phase 1-A: 領地コマンドボタン
 
 # UIコンポーネント（分割されたサブシステム）
 var land_command_ui: LandCommandUI = null
+var hand_display: HandDisplay = null
 
 # UIコンポーネント（動的ロード用）
 var player_info_panel = null
@@ -35,15 +36,8 @@ var game_flow_manager_ref = null  # GameFlowManagerの参照
 # デバッグモード
 var debug_mode = false
 
-# 手札UI管理
-var hand_container: Control = null
-var card_scene = preload("res://scenes/Card.tscn")
-var player_card_nodes = {}  # player_id -> [card_nodes]
-
-# カード表示定数
-const CARD_WIDTH = 290
-const CARD_HEIGHT = 390
-const CARD_SPACING = 30
+# 手札UI管理（HandDisplayに移行済み）
+# 以下の変数は削除予定
 
 func _ready():
 	# UIコンポーネントを動的にロードして作成
@@ -52,6 +46,7 @@ func _ready():
 	var LevelUpUIClass = load("res://scripts/ui_components/level_up_ui.gd")
 	var DebugPanelClass = load("res://scripts/ui_components/debug_panel.gd")
 	var LandCommandUIClass = load("res://scripts/ui_components/land_command_ui.gd")
+	var HandDisplayClass = load("res://scripts/ui_components/hand_display.gd")
 	
 	if PlayerInfoPanelClass:
 		player_info_panel = PlayerInfoPanelClass.new()
@@ -77,6 +72,12 @@ func _ready():
 		# シグナル接続
 		land_command_ui.land_command_button_pressed.connect(_on_land_command_button_pressed)
 		land_command_ui.level_up_selected.connect(_on_level_ui_selected)
+	
+	# HandDisplay初期化
+	if HandDisplayClass:
+		hand_display = HandDisplayClass.new()
+		hand_display.name = "HandDisplay"
+		add_child(hand_display)
 	
 	# シグナル接続
 	connect_ui_signals()
@@ -204,7 +205,7 @@ func create_basic_ui(parent: Node):
 	
 	# Phase 1-A: 領地コマンドUI初期化（LandCommandUIに委譲）
 	if land_command_ui:
-		land_command_ui.initialize(parent, player_system_ref, board_system_ref)
+		land_command_ui.initialize(parent, player_system_ref, board_system_ref, self)
 		land_command_ui.create_land_command_button(parent)
 		land_command_ui.create_cancel_land_command_button(parent)
 		land_command_ui.create_action_menu_panel(parent)
@@ -358,130 +359,26 @@ func _on_cancel_land_command_button_pressed():
 
 # === 手札UI管理 ===
 
-# 手札コンテナを初期化
+# 手札コンテナを初期化（HandDisplayに委譲）
 func initialize_hand_container(ui_layer: Node):
-	hand_container = Control.new()
-	hand_container.name = "Hand"
-	hand_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hand_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウス入力を透過させる
-	ui_layer.add_child(hand_container)
-	
-	for i in range(4):
-		player_card_nodes[i] = []
-	
-	print("手札コンテナ初期化完了")
+	if hand_display:
+		hand_display.initialize(ui_layer, card_system_ref, player_system_ref)
 
-# CardSystemのシグナルに接続
+# CardSystemのシグナルに接続（HandDisplayに委譲）
 func connect_card_system_signals():
-	if not card_system_ref:
-		return
-	
-	if card_system_ref.has_signal("card_drawn"):
-		card_system_ref.card_drawn.connect(_on_card_drawn)
-	if card_system_ref.has_signal("card_used"):
-		card_system_ref.card_used.connect(_on_card_used)
-	if card_system_ref.has_signal("hand_updated"):
-		card_system_ref.hand_updated.connect(_on_hand_updated)
+	if hand_display:
+		hand_display.connect_card_system_signals()
 
-# カードが引かれた時の処理
-func _on_card_drawn(_card_data: Dictionary):
-	pass
+# カード関連のシグナルハンドラ（HandDisplayに移行済み）
 
-# カードが使用された時の処理
-func _on_card_used(_card_data: Dictionary):
-	pass
-
-# 手札が更新された時の処理
-func _on_hand_updated():
-	# 現在のターンプレイヤーの手札を表示
-	if player_system_ref:
-		var current_player = player_system_ref.get_current_player()
-		if current_player:
-			update_hand_display(current_player.id)
-
-# 手札表示を更新
+# 手札表示を更新（HandDisplayに委譲）
 func update_hand_display(player_id: int):
-	
-	if not card_system_ref or not hand_container:
-		return
-	
-	print("[UIManager] 手札表示を更新中...")
-	
-	# 全プレイヤーの既存カードノードを削除（ターン切り替え時に前のプレイヤーの手札を消す）
-	for pid in player_card_nodes.keys():
-		for card_node in player_card_nodes[pid]:
-			if is_instance_valid(card_node):
-				card_node.queue_free()
-		player_card_nodes[pid].clear()
-	
-	# カードデータを取得
-	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
-	
-	# カードノードを生成
-	for i in range(hand_data.size()):
-		var card_data = hand_data[i]
-		var card_node = create_card_node(card_data, i)
-		if card_node:
-			player_card_nodes[player_id].append(card_node)
-	
-	# 全カードを中央配置
-	rearrange_hand(player_id)
+	if hand_display:
+		hand_display.update_hand_display(player_id)
 
-# カードノードを生成
-func create_card_node(card_data: Dictionary, _index: int) -> Node:
-	if not is_instance_valid(hand_container):
-		print("ERROR: 手札コンテナが無効です")
-		return null
-	
-	if not card_scene:
-		print("ERROR: card_sceneがロードされていません")
-		return null
-		
-	var card = card_scene.instantiate()
-	if not card:
-		print("ERROR: カードのインスタンス化に失敗")
-		return null
-	
-	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
-	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
-		
-	hand_container.add_child(card)
-	
-	# 位置は後でrearrange_hand()で設定するので仮配置
-	var viewport_size = get_viewport().get_visible_rect().size
-	var card_y = viewport_size.y - CARD_HEIGHT - 20
-	card.position = Vector2(0, card_y)
-	
-	if card.has_method("load_card_data"):
-		card.load_card_data(card_data.id)
-	else:
-		print("WARNING: カードにload_card_dataメソッドがありません")
-	
-	# 手札表示用カードは初期状態で選択不可（CardSelectionUIが必要に応じて有効化する）
-	card.is_selectable = false
-	
-	return card
+# create_card_node は HandDisplayに移行済みのため削除
 
-# 手札を再配置（動的スケール対応）
-func rearrange_hand(player_id: int):
-	var card_nodes = player_card_nodes[player_id]
-	if card_nodes.is_empty():
-		return
-	
-	var viewport_size = get_viewport().get_visible_rect().size
-	var hand_size = card_nodes.size()
-	
-	# CardUIHelperを使用してレイアウト計算
-	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_size)
-	
-	# カードを配置
-	for i in range(card_nodes.size()):
-		var card = card_nodes[i]
-		if card and is_instance_valid(card):
-			card.size = Vector2(layout.card_width, layout.card_height)
-			card.position = Vector2(layout.start_x + i * (layout.card_width + layout.spacing), layout.card_y)
-			if card.has_method("set_selectable"):
-				card.card_index = i
+# rearrange_hand は HandDisplayに移行済みのため削除
 
 # デバッグ入力を処理
 func _input(event):
@@ -578,3 +475,9 @@ func hide_level_selection():
 # ==== Phase 1-A: イベントハンドラ ====
 
 # イベントハンドラはLandCommandUIに移行済み
+
+# === 手札UI関連（HandDisplayへのアクセサ） ===
+func get_player_card_nodes(player_id: int) -> Array:
+	if hand_display:
+		return hand_display.get_player_card_nodes(player_id)
+	return []

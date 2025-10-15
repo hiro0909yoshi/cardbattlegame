@@ -3,3 +3,7 @@ res://scenes/Tiles/NeutralTile.tscn
 res://scripts/ui_manager.gd
 res://docs/progress/phase1a_progress.md
 res://scripts/ui_components/land_command_ui.gd
+res://scripts/ui_components/hand_display.gd
+res://scripts/ui_components/card_selection_ui.gd
+res://scripts/game_flow/land_command_handler.gd
+res://scripts/game_flow_manager.gd

@@ -32,6 +32,7 @@ var current_destination_index: int = 0  # 現在選択中の移動先インデ�
 var ui_manager = null
 var board_system = null
 var game_flow_manager = null
+var player_system = null
 
 func _ready():
 	pass
@@ -41,10 +42,15 @@ func _process(delta):
 	rotate_selection_marker(delta)
 
 ## 初期化
-func initialize(ui_mgr, board_sys, flow_mgr):
+func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	ui_manager = ui_mgr
 	board_system = board_sys
 	game_flow_manager = flow_mgr
+	player_system = player_sys
+	
+	# player_systemが渡されない場合はboard_systemから取得
+	if not player_system and board_system:
+		player_system = board_system.player_system
 	
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
@@ -284,6 +290,13 @@ func close_land_command():
 	
 	print("[LandCommandHandler] 領地コマンドを閉じました")
 	
+	# カメラを現在のプレイヤーに戻す
+	# TODO: 後で実装（現在はエラーの原因になるため一旦コメントアウト）
+	# if board_system and player_system:
+	# 	var current_player = player_system.get_current_player()
+	# 	if current_player:
+	# 		focus_camera_on_tile(current_player["position"])
+	
 	# UIを非表示
 	if ui_manager and ui_manager.has_method("hide_land_command_ui"):
 		ui_manager.hide_land_command_ui()
@@ -400,17 +413,22 @@ func _on_level_up_selected(target_level: int, cost: int):
 ## 隣接タイルを取得
 func get_adjacent_tiles(tile_index: int) -> Array:
 	if not board_system:
-		print("[LandCommandHandler] board_systemが存在しません")
+		print("[LandCommandHandler] ERROR: board_systemが存在しません")
 		return []
 	
+	print("[LandCommandHandler] 隣接タイル取得開始: tile_index=", tile_index)
+	
 	# TileNeighborSystemを使用
-	if board_system.tile_neighbor_system:
-		var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
-		print("[LandCommandHandler] タイル", tile_index, "の隣接タイル (TileNeighborSystem): ", neighbors)
-		return neighbors
-	else:
-		print("[LandCommandHandler] tile_neighbor_systemが存在しません")
+	if not board_system.tile_neighbor_system:
+		print("[LandCommandHandler] ERROR: tile_neighbor_systemが存在しません")
 		return []
+	
+	print("[LandCommandHandler] tile_neighbor_system存在確認OK")
+	var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
+	print("[LandCommandHandler] タイル", tile_index, "の隣接タイル: ", neighbors)
+	print("[LandCommandHandler] 隣接タイル数: ", neighbors.size())
+	
+	return neighbors
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
 func get_player_owned_lands(player_id: int) -> Array:

@@ -393,7 +393,7 @@ func initialize_phase1a_systems():
 	# LandCommandHandlerを作成
 	land_command_handler = LandCommandHandler.new()
 	add_child(land_command_handler)
-	land_command_handler.initialize(ui_manager, board_system_3d, self)
+	land_command_handler.initialize(ui_manager, board_system_3d, self, player_system)
 	
 	# SpellPhaseHandlerを作成
 	spell_phase_handler = SpellPhaseHandler.new()

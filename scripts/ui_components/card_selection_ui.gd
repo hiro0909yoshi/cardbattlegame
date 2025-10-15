@@ -87,7 +87,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 		return
 	
 	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
-	var hand_nodes = ui_manager_ref.player_card_nodes.get(player_id, [])
+	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):
@@ -190,14 +190,15 @@ func disable_card_selection():
 	if not ui_manager_ref:
 		return
 	
-	# UIManagerから手札ノードを取得
-	var hand_nodes = ui_manager_ref.player_card_nodes.get(0, [])
-	for card_node in hand_nodes:
-		if card_node and is_instance_valid(card_node):
-			# カードを選択不可にする
-			if card_node.has_method("set_selectable"):
-				card_node.set_selectable(false)
-			remove_card_highlight(card_node)
+	# 全プレイヤーの手札ノードを取得して無効化
+	for player_id in range(4):
+		var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
+		for card_node in hand_nodes:
+			if card_node and is_instance_valid(card_node):
+				# カードを選択不可にする
+				if card_node.has_method("set_selectable"):
+					card_node.set_selectable(false)
+				remove_card_highlight(card_node)
 
 # カードのハイライトを削除
 func remove_card_highlight(card_node: Node):

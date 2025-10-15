@@ -20,6 +20,7 @@ var selected_tile_for_action: int = -1
 # システム参照
 var player_system_ref = null
 var board_system_ref = null
+var ui_manager_ref = null  # UIManagerへの参照
 
 # 親UIレイヤー
 var ui_layer: Node = null
@@ -28,10 +29,11 @@ func _ready():
 	pass
 
 ## 初期化
-func initialize(ui_parent: Node, player_sys, board_sys):
+func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null):
 	ui_layer = ui_parent
 	player_system_ref = player_sys
 	board_system_ref = board_sys
+	ui_manager_ref = ui_manager
 
 ## 領地コマンドボタン作成
 func create_land_command_button(parent: Node):
@@ -98,14 +100,24 @@ func create_cancel_land_command_button(parent: Node):
 		return
 	
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var button_width = 150
-	var button_height = 50
+	
+	# 領地コマンドボタンと同じ配置計算
+	var button_width = 300
+	var button_height = 70
+	var player_panel_bottom = 150
+	var button_x = 20
+	
+	# 領地コマンドボタンのY座標
+	var land_command_y = viewport_size.y - player_panel_bottom - button_height - 20
+	
+	# キャンセルボタンは領地コマンドボタンの下（より画面下端に近い位置）
+	var button_y = land_command_y + button_height + 10  # 領地コマンドの下、10pxマージン
 	
 	cancel_button = Button.new()
 	cancel_button.name = "CancelLandCommandButton"
-	cancel_button.text = "キャンセル (C)"
+	cancel_button.text = "✕ 閉じる"
 	cancel_button.custom_minimum_size = Vector2(button_width, button_height)
-	cancel_button.position = Vector2(viewport_size.x - button_width - 20, 20)
+	cancel_button.position = Vector2(button_x, button_y)
 	cancel_button.z_index = 100
 	
 	# スタイル設定
@@ -123,10 +135,15 @@ func create_cancel_land_command_button(parent: Node):
 	cancel_button.add_theme_stylebox_override("normal", button_style)
 	
 	var hover_style = button_style.duplicate()
-	hover_style.bg_color = Color(0.8, 0.3, 0.3, 1.0)
+	hover_style.bg_color = Color(0.9, 0.3, 0.3, 1.0)
 	cancel_button.add_theme_stylebox_override("hover", hover_style)
 	
-	var font_size = 18
+	var pressed_style = button_style.duplicate()
+	pressed_style.bg_color = Color(0.7, 0.1, 0.1, 1.0)
+	cancel_button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	# フォントサイズ（ボタン高さに応じて調整）
+	var font_size = int(button_height * 0.25)
 	cancel_button.add_theme_font_size_override("font_size", font_size)
 	
 	cancel_button.pressed.connect(_on_cancel_land_command_button_pressed)
@@ -249,8 +266,10 @@ func _on_land_command_button_pressed():
 	land_command_button_pressed.emit()
 
 func _on_cancel_land_command_button_pressed():
-	# 親のUIManagerに委譲
-	pass
+	print("[LandCommandUI] キャンセルボタン押下")
+	# UIManagerのキャンセル処理を呼び出す
+	if ui_manager_ref and ui_manager_ref.has_method("_on_cancel_land_command_button_pressed"):
+		ui_manager_ref._on_cancel_land_command_button_pressed()
 
 func _on_action_level_up_pressed():
 	print("[LandCommandUI] レベルアップボタン押下")
