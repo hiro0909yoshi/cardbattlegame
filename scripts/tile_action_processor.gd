@@ -25,7 +25,11 @@ var is_action_processing = false
 
 # バトル情報の一時保存
 var pending_battle_card_index: int = -1
+var pending_battle_card_data: Dictionary = {}  # カードデータを保存
 var pending_battle_tile_info: Dictionary = {}
+var pending_attacker_item: Dictionary = {}
+var pending_defender_item: Dictionary = {}
+var is_waiting_for_defender_item: bool = false
 
 func _ready():
 	pass
@@ -154,7 +158,27 @@ func on_card_selected(card_index: int):
 	else:
 		# バトル処理 - アイテムフェーズを挟む
 		pending_battle_card_index = card_index
+		pending_battle_card_data = card_system.get_card_data_for_player(current_player_index, card_index)
 		pending_battle_tile_info = tile_info
+		
+		# バトルカードを先に消費（アイテムフェーズ中に手札に表示されないようにする）
+		var cost_data = pending_battle_card_data.get("cost", 1)
+		var cost = 0
+		if typeof(cost_data) == TYPE_DICTIONARY:
+			cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		else:
+			cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+		
+		var current_player = player_system.get_current_player()
+		if current_player.magic_power < cost:
+			print("[TileActionProcessor] 魔力不足でバトルできません")
+			_complete_action()
+			return
+		
+		# カードを使用して魔力消費
+		card_system.use_card_for_player(current_player_index, card_index)
+		player_system.add_magic(current_player_index, -cost)
+		print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
 		
 		# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
 		if game_flow_manager and game_flow_manager.item_phase_handler:
@@ -170,29 +194,80 @@ func on_card_selected(card_index: int):
 
 ## アイテムフェーズ完了後のコールバック
 func _on_item_phase_completed():
-	print("[TileActionProcessor] アイテムフェーズ完了、バトル開始")
-	_execute_pending_battle()
+	print("[TileActionProcessor] _on_item_phase_completed() 呼ばれました")
+	if not is_waiting_for_defender_item:
+		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
+		print("[TileActionProcessor] 攻撃側アイテムフェーズ完了")
+		
+		# 攻撃側のアイテムを保存
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			pending_attacker_item = game_flow_manager.item_phase_handler.get_selected_item()
+		
+		# 防御側のアイテムフェーズを開始
+		var defender_owner = pending_battle_tile_info.get("owner", -1)
+		if defender_owner >= 0:
+			is_waiting_for_defender_item = true
+			
+			# 防御側のアイテムフェーズ開始
+			if game_flow_manager and game_flow_manager.item_phase_handler:
+				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
+				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+					print("[TileActionProcessor] 防御側アイテムフェーズのシグナルを再接続")
+					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+				else:
+					print("[TileActionProcessor] シグナルは既に接続されています")
+				
+				print("[TileActionProcessor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
+				game_flow_manager.item_phase_handler.start_item_phase(defender_owner)
+			else:
+				# ItemPhaseHandlerがない場合は直接バトル
+				_execute_pending_battle()
+		else:
+			# 防御側がいない場合（ありえないが念のため）
+			_execute_pending_battle()
+	else:
+		# 防御側のアイテムフェーズ完了 → バトル開始
+		print("[TileActionProcessor] 防御側アイテムフェーズ完了、バトル開始")
+		
+		# 防御側のアイテムを保存
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			pending_defender_item = game_flow_manager.item_phase_handler.get_selected_item()
+		
+		is_waiting_for_defender_item = false
+		_execute_pending_battle()
 
 ## 保留中のバトルを実行
 func _execute_pending_battle():
-	if pending_battle_card_index < 0:
+	print("[TileActionProcessor] _execute_pending_battle() 開始")
+	
+	if pending_battle_card_index < 0 or pending_battle_card_data.is_empty():
 		print("[TileActionProcessor] エラー: バトル情報が保存されていません")
 		_complete_action()
 		return
 	
+	print("[TileActionProcessor] バトルカードID: ", pending_battle_card_data.get("id", -1))
+	
 	var current_player_index = board_system.current_player_index
+	
+	# バトルカードは既に on_card_selected() で消費済み
+	print("[TileActionProcessor] バトルカードは既に消費済み")
 	
 	# バトル完了シグナルに接続
 	var callable = Callable(self, "_on_battle_completed")
 	if not battle_system.invasion_completed.is_connected(callable):
 		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
-	# バトル実行
-	battle_system.execute_3d_battle(current_player_index, pending_battle_card_index, pending_battle_tile_info)
+	# バトル実行（カードデータとアイテム情報を渡す）
+	# card_indexには-1を渡して、BattleSystem内でカード使用処理をスキップさせる
+	battle_system.execute_3d_battle_with_data(current_player_index, pending_battle_card_data, pending_battle_tile_info, pending_attacker_item, pending_defender_item)
 	
 	# バトル情報をクリア
 	pending_battle_card_index = -1
+	pending_battle_card_data = {}
 	pending_battle_tile_info = {}
+	pending_attacker_item = {}
+	pending_defender_item = {}
+	is_waiting_for_defender_item = false
 
 # 召喚実行
 func execute_summon(card_index: int):

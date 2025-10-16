@@ -691,7 +691,23 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "ST+20；💧🌱使用時、強打"
+	  "effect": "ST+20；💧🌱使用時、強打",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "buff_ap",
+			"value": 20
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"condition": {
+			  "condition_type": "user_element",
+			  "elements": ["fire"]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1063,
@@ -801,7 +817,15 @@
 	  "cost": {
 		"mp": 10
 	  },
-	  "effect": "ST+30"
+	  "effect": "ST+30",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "buff_ap",
+			"value": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1073,

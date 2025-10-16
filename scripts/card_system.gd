@@ -113,8 +113,8 @@ func deal_initial_hands_all_players(player_count: int):
 			if not card_data.is_empty():
 				player_hands[player_id]["data"].append(card_data)
 		
-		# デバッグ用：テストスペルカードを追加（プレイヤー1のみ）
-		if player_id == 0 and OS.is_debug_build():
+		# デバッグ用：テストアイテムカードを追加（プレイヤー1と2）
+		if (player_id == 0 or player_id == 1) and OS.is_debug_build():
 			_add_test_item_cards(player_id)
 	
 	emit_signal("hand_updated")
@@ -135,7 +135,7 @@ func _add_test_item_cards(player_id: int):
 		"ability_parsed": {
 			"effects": [
 				{
-					"effect_type": "buff_st",
+					"effect_type": "buff_ap",
 					"value": 30
 				}
 			]
@@ -156,18 +156,16 @@ func _add_test_item_cards(player_id: int):
 		"ability_parsed": {
 			"effects": [
 				{
-					"effect_type": "buff_st",
+					"effect_type": "buff_ap",
 					"value": 20
 				},
 				{
-					"effect_type": "add_skill",
-					"skill": "power_strike",
-					"conditions": [
-						{
-							"type": "creature_element",
-							"elements": ["fire", "earth"]
-						}
-					]
+					"effect_type": "grant_skill",
+					"skill": "強打",
+					"condition": {
+						"condition_type": "user_element",
+						"elements": ["fire"]
+					}
 				}
 			]
 		}

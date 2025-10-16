@@ -14,3 +14,4 @@ res://scripts/flow_handlers/cpu_turn_processor.gd
 res://scripts/ui_components/card_selection_ui.gd
 res://scripts/ui_components/target_selection_ui.gd
 res://scripts/game_3d.gd
+res://scripts/game_flow/item_phase_handler.gd

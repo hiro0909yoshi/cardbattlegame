@@ -44,7 +44,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	player_system_ref = player_system
 
 # バトル実行（3D版メイン処理）
-func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary) -> void:
+func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
@@ -85,7 +85,67 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	print("========== バトル開始 ==========")
 	
 	# 1. 両者の準備
-	var participants = _prepare_participants(attacker_index, card_data, tile_info)
+	var participants = _prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item)
+	var attacker = participants["attacker"]
+	var defender = participants["defender"]
+	
+	print("侵略側: ", attacker.creature_data.get("name", "?"), " [", attacker.creature_data.get("element", "?"), "]")
+	print("  基本HP:", attacker.base_hp, " + 土地ボーナス:", attacker.land_bonus_hp, " = MHP:", attacker.current_hp)
+	var attacker_speed = "アイテム先制" if attacker.has_item_first_strike else ("後手" if attacker.has_last_strike else ("先制" if attacker.has_first_strike else "通常"))
+	print("  AP:", attacker.current_ap, " 攻撃:", attacker_speed)
+	
+	print("防御側: ", defender.creature_data.get("name", "?"), " [", defender.creature_data.get("element", "?"), "]")
+	print("  基本HP:", defender.base_hp, " + 土地ボーナス:", defender.land_bonus_hp, " = MHP:", defender.current_hp)
+	var defender_speed = "アイテム先制" if defender.has_item_first_strike else ("後手" if defender.has_last_strike else ("先制" if defender.has_first_strike else "通常"))
+	print("  AP:", defender.current_ap, " 攻撃:", defender_speed)
+	
+	# 2. バトル前スキル適用
+	_apply_pre_battle_skills(participants, tile_info, attacker_index)
+	
+	# スキル適用後の最終ステータス表示
+	print("
+【スキル適用後の最終ステータス】")
+	print("侵略側: ", attacker.creature_data.get("name", "?"))
+	print("  HP:", attacker.current_hp, " (基本:", attacker.base_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, ")")
+	print("  AP:", attacker.current_ap)
+	print("防御側: ", defender.creature_data.get("name", "?"))
+	print("  HP:", defender.current_hp, " (基本:", defender.base_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, ")")
+	print("  AP:", defender.current_ap)
+	
+	# 3. 攻撃順決定
+	var attack_order = _determine_attack_order(attacker, defender)
+	var order_str = "侵略側 → 防御側" if attack_order[0].is_attacker else "防御側 → 侵略側"
+	print("
+【攻撃順】", order_str)
+	
+	# 4. 攻撃シーケンス実行
+	_execute_attack_sequence(attack_order)
+	
+	# 5. 結果判定
+	var result = _resolve_battle_result(attacker, defender)
+	
+	# 6. 結果に応じた処理
+	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender)
+	
+	print("================================")
+
+# バトル実行（カードデータ直接指定版）- カード使用処理は呼び出し側で行う
+func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
+	if not validate_systems():
+		print("Error: システム参照が設定されていません")
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
+		return
+	
+	# 防御クリーチャーがいない場合（侵略）
+	if tile_info.get("creature", {}).is_empty():
+		execute_invasion_3d(attacker_index, card_data, tile_info)
+		return
+	
+	# === 新しいバトルフロー ===
+	print("========== バトル開始 ==========")
+	
+	# 1. 両者の準備
+	var participants = _prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item)
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
@@ -161,7 +221,7 @@ func validate_systems() -> bool:
 # === 新しいバトルシステム ===
 
 # 両者のBattleParticipantを準備
-func _prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary) -> Dictionary:
+func _prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> Dictionary:
 	# 侵略側の準備（土地ボーナスなし）
 	var attacker_base_hp = card_data.get("hp", 0)
 	var attacker_land_bonus = 0  # 侵略側は土地ボーナスなし
@@ -200,10 +260,112 @@ func _prepare_participants(attacker_index: int, card_data: Dictionary, tile_info
 		defender_owner
 	)
 	
+	# アイテム効果を適用
+	if not attacker_item.is_empty():
+		_apply_item_effects(attacker, attacker_item)
+	if not defender_item.is_empty():
+		_apply_item_effects(defender, defender_item)
+	
 	return {
 		"attacker": attacker,
 		"defender": defender
 	}
+
+# アイテム効果を適用
+func _apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
+	print("[アイテム効果適用] ", item_data.get("name", "???"))
+	
+	# ability_parsedから効果を取得
+	var ability_parsed = item_data.get("ability_parsed", {})
+	if ability_parsed.is_empty():
+		print("  警告: ability_parsedが定義されていません")
+		return
+	
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		var value = effect.get("value", 0)
+		
+		match effect_type:
+			"buff_ap":
+				participant.current_ap += value
+				print("  AP+", value, " → ", participant.current_ap)
+			
+			"buff_hp":
+				participant.item_bonus_hp += value
+				participant.update_current_hp()
+				print("  HP+", value, " → ", participant.current_hp)
+			
+			"debuff_ap":
+				participant.current_ap -= value
+				print("  AP-", value, " → ", participant.current_ap)
+			
+			"debuff_hp":
+				participant.item_bonus_hp -= value
+				participant.update_current_hp()
+				print("  HP-", value, " → ", participant.current_hp)
+			
+			"grant_skill":
+				# スキル付与（例：強打、先制など）
+				var skill_name = effect.get("skill", "")
+				
+				# 条件チェック
+				var condition = effect.get("condition", {})
+				if not condition.is_empty():
+					if not _check_skill_grant_condition(participant, condition):
+						print("  スキル付与条件不一致: ", skill_name, " → スキップ")
+						continue
+				
+				_grant_skill_to_participant(participant, skill_name, effect)
+				print("  スキル付与: ", skill_name)
+			
+			_:
+				print("  未実装の効果タイプ: ", effect_type)
+
+# スキル付与条件をチェック
+func _check_skill_grant_condition(participant: BattleParticipant, condition: Dictionary) -> bool:
+	var condition_type = condition.get("condition_type", "")
+	
+	match condition_type:
+		"user_element":
+			# 使用者（クリーチャー）の属性が指定された属性のいずれかに一致するか
+			var required_elements = condition.get("elements", [])
+			var user_element = participant.creature_data.get("element", "")
+			return user_element in required_elements
+		
+		_:
+			print("  未実装の条件タイプ: ", condition_type)
+			return false
+
+# パーティシパントにスキルを付与
+func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, skill_data: Dictionary) -> void:
+	match skill_name:
+		"先制":
+			participant.has_first_strike = true
+		
+		"後手":
+			participant.has_last_strike = true
+		
+		"強打":
+			# 強打スキルを付与（条件付きの場合は条件も保存）
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			
+			var ability_parsed = participant.creature_data["ability_parsed"]
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			
+			if not "強打" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("強打")
+			
+			# 条件がある場合は保存
+			if skill_data.has("condition"):
+				if not ability_parsed.has("keyword_conditions"):
+					ability_parsed["keyword_conditions"] = {}
+				ability_parsed["keyword_conditions"]["強打"] = skill_data.get("condition", {})
+		
+		_:
+			print("  未実装のスキル: ", skill_name)
 
 # 土地ボーナスを計算
 func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> int:

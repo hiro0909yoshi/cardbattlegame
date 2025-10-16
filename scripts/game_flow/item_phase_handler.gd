@@ -40,10 +40,12 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 
 ## アイテムフェーズ開始
 func start_item_phase(player_id: int):
+	print("[ItemPhaseHandler] start_item_phase() 呼ばれました: player_id=", player_id, " current_state=", current_state)
 	if current_state != State.INACTIVE:
-		print("[ItemPhaseHandler] 既にアクティブです")
+		print("[ItemPhaseHandler] 既にアクティブです（current_state=", current_state, "）")
 		return
 	
+	print("[ItemPhaseHandler] ステートを WAITING_FOR_SELECTION に変更")
 	current_state = State.WAITING_FOR_SELECTION
 	current_player_id = player_id
 	item_used_this_battle = false
@@ -60,7 +62,7 @@ func start_item_phase(player_id: int):
 		return
 	
 	# 人間プレイヤーの場合はUI表示
-	_show_item_selection_ui()
+	await _show_item_selection_ui()
 
 ## アイテム選択UIを表示
 func _show_item_selection_ui():
@@ -69,14 +71,20 @@ func _show_item_selection_ui():
 		complete_item_phase()
 		return
 	
-	var current_player = player_system.get_current_player()
+	# current_player_idを使用（防御側のアイテムフェーズでは防御側のプレイヤー情報が必要）
+	if current_player_id < 0 or current_player_id >= player_system.players.size():
+		print("[ItemPhaseHandler] 不正なプレイヤーID: ", current_player_id)
+		complete_item_phase()
+		return
+	
+	var current_player = player_system.players[current_player_id]
 	if not current_player:
 		print("[ItemPhaseHandler] プレイヤー情報が取得できません")
 		complete_item_phase()
 		return
 	
 	# 手札を取得
-	var hand_data = card_system.get_all_cards_for_player(current_player.id)
+	var hand_data = card_system.get_all_cards_for_player(current_player_id)
 	
 	# アイテムカードのみフィルター
 	var item_cards = []
@@ -89,12 +97,15 @@ func _show_item_selection_ui():
 		complete_item_phase()
 		return
 	
-	# アイテムカードのフィルター設定
+	# アイテムカードのフィルター設定（手札表示を更新する前に設定）
 	if ui_manager:
 		ui_manager.card_selection_filter = "item"
-		# 手札表示を更新してアイテムカード以外をグレーアウト
-		if ui_manager.hand_display:
-			ui_manager.hand_display.update_hand_display(current_player.id)
+	
+	# 手札表示を更新（防御側のアイテムフェーズでは防御側の手札を表示）
+	if ui_manager and ui_manager.hand_display:
+		ui_manager.hand_display.update_hand_display(current_player_id)
+		# フレーム待機して手札が描画されるまで待つ
+		await ui_manager.get_tree().process_frame
 	
 	# CardSelectionUIを使用してアイテム選択
 	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.has_method("show_selection"):
@@ -158,9 +169,12 @@ func pass_item():
 
 ## アイテムフェーズ完了
 func complete_item_phase():
+	print("[ItemPhaseHandler] complete_item_phase() 呼ばれました。current_state=", current_state)
 	if current_state == State.INACTIVE:
+		print("[ItemPhaseHandler] 既にINACTIVEなのでスキップ")
 		return
 	
+	print("[ItemPhaseHandler] ステートを INACTIVE に変更")
 	current_state = State.INACTIVE
 	
 	# フィルターをクリア
@@ -172,6 +186,7 @@ func complete_item_phase():
 			if current_player:
 				ui_manager.hand_display.update_hand_display(current_player.id)
 	
+	print("[ItemPhaseHandler] item_phase_completedシグナルを発火")
 	item_phase_completed.emit()
 	
 	print("[ItemPhaseHandler] アイテムフェーズ完了")
