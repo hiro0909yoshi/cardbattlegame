@@ -40,12 +40,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 
 ## アイテムフェーズ開始
 func start_item_phase(player_id: int):
-	print("[ItemPhaseHandler] start_item_phase() 呼ばれました: player_id=", player_id, " current_state=", current_state)
 	if current_state != State.INACTIVE:
-		print("[ItemPhaseHandler] 既にアクティブです（current_state=", current_state, "）")
+		print("[ItemPhaseHandler] 既にアクティブです")
 		return
 	
-	print("[ItemPhaseHandler] ステートを WAITING_FOR_SELECTION に変更")
 	current_state = State.WAITING_FOR_SELECTION
 	current_player_id = player_id
 	item_used_this_battle = false
@@ -169,12 +167,9 @@ func pass_item():
 
 ## アイテムフェーズ完了
 func complete_item_phase():
-	print("[ItemPhaseHandler] complete_item_phase() 呼ばれました。current_state=", current_state)
 	if current_state == State.INACTIVE:
-		print("[ItemPhaseHandler] 既にINACTIVEなのでスキップ")
 		return
 	
-	print("[ItemPhaseHandler] ステートを INACTIVE に変更")
 	current_state = State.INACTIVE
 	
 	# フィルターをクリア
@@ -186,7 +181,6 @@ func complete_item_phase():
 			if current_player:
 				ui_manager.hand_display.update_hand_display(current_player.id)
 	
-	print("[ItemPhaseHandler] item_phase_completedシグナルを発火")
 	item_phase_completed.emit()
 	
 	print("[ItemPhaseHandler] アイテムフェーズ完了")

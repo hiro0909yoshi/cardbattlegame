@@ -194,7 +194,6 @@ func on_card_selected(card_index: int):
 
 ## アイテムフェーズ完了後のコールバック
 func _on_item_phase_completed():
-	print("[TileActionProcessor] _on_item_phase_completed() 呼ばれました")
 	if not is_waiting_for_defender_item:
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
 		print("[TileActionProcessor] 攻撃側アイテムフェーズ完了")
@@ -212,10 +211,7 @@ func _on_item_phase_completed():
 			if game_flow_manager and game_flow_manager.item_phase_handler:
 				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
 				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-					print("[TileActionProcessor] 防御側アイテムフェーズのシグナルを再接続")
 					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-				else:
-					print("[TileActionProcessor] シグナルは既に接続されています")
 				
 				print("[TileActionProcessor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
 				game_flow_manager.item_phase_handler.start_item_phase(defender_owner)
@@ -238,19 +234,14 @@ func _on_item_phase_completed():
 
 ## 保留中のバトルを実行
 func _execute_pending_battle():
-	print("[TileActionProcessor] _execute_pending_battle() 開始")
-	
 	if pending_battle_card_index < 0 or pending_battle_card_data.is_empty():
 		print("[TileActionProcessor] エラー: バトル情報が保存されていません")
 		_complete_action()
 		return
 	
-	print("[TileActionProcessor] バトルカードID: ", pending_battle_card_data.get("id", -1))
-	
 	var current_player_index = board_system.current_player_index
 	
 	# バトルカードは既に on_card_selected() で消費済み
-	print("[TileActionProcessor] バトルカードは既に消費済み")
 	
 	# バトル完了シグナルに接続
 	var callable = Callable(self, "_on_battle_completed")

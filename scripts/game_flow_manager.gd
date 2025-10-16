@@ -247,15 +247,11 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
-	print("[GameFlowManager] on_card_selected() 呼ばれました: card_index=", card_index)
-	
 	# アイテムフェーズ中は、ItemPhaseHandlerのcurrent_player_idを使用
 	var target_player_id = player_system.get_current_player().id
 	if item_phase_handler and item_phase_handler.is_item_phase_active():
 		target_player_id = item_phase_handler.current_player_id
-		print("[GameFlowManager] アイテムフェーズ中 - target_player_id=", target_player_id)
 	
-	print("[GameFlowManager] target_player_id=", target_player_id)
 	var hand = card_system.get_all_cards_for_player(target_player_id)
 	
 	if card_index >= hand.size():
@@ -277,10 +273,8 @@ func on_card_selected(card_index: int):
 	
 	# アイテムフェーズ中かチェック
 	if item_phase_handler and item_phase_handler.is_item_phase_active():
-		print("[GameFlowManager] アイテムフェーズ中: card_type=", card_type, " card_name=", card.get("name", "???"))
 		# アイテムカードのみ使用可能
 		if card_type == "item":
-			print("[GameFlowManager] アイテムカード使用: ", card.get("name", "???"))
 			item_phase_handler.use_item(card)
 			return
 		else:

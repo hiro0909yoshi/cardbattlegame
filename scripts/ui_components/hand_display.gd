@@ -106,10 +106,7 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	var is_spell_card = card_type == "spell"
 	var is_item_card = card_type == "item"
 	
-	# デバッグ: カード生成時のフィルター情報
-	if filter_mode == "item" or filter_mode == "spell":
-		print("[HandDisplay] カード生成: name=", card_data.get("name", "?"), " type=", card_type, " filter=", filter_mode)
-	
+
 	# フィルターモードに応じてグレーアウト
 	if filter_mode == "spell":
 		# スペルフェーズ中: スペルカード以外をグレーアウト
