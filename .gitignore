@@ -6,3 +6,7 @@
 
 # Mac
 .DS_Store
+
+# Test files
+data/*test*.json
+*_test.json
