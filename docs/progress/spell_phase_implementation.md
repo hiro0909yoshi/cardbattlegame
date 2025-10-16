@@ -56,9 +56,9 @@
 var cost_data = card_data.get("cost", 1)
 var cost = 0
 if typeof(cost_data) == TYPE_DICTIONARY:
-    cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
 else:
-    cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+	cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 ```
 
 ### 2. 型指定エラーの回避
@@ -66,7 +66,7 @@ else:
 # CPUTurnProcessorクラスの動的ロード
 var CPUTurnProcessorClass = load("res://scripts/flow_handlers/cpu_turn_processor.gd")
 if CPUTurnProcessorClass:
-    cpu_turn_processor = CPUTurnProcessorClass.new()
+	cpu_turn_processor = CPUTurnProcessorClass.new()
 ```
 
 ### 3. カード種別チェックの追加
@@ -76,30 +76,30 @@ var card_type = card.get("type", "")
 
 # スペルフェーズ中かチェック
 if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-    if card_type == "spell":
-        spell_phase_handler.use_spell(card)
-        return
-    else:
-        print("スペルフェーズ中はスペルカードのみ使用可能")
-        return
+	if card_type == "spell":
+		spell_phase_handler.use_spell(card)
+		return
+	else:
+		print("スペルフェーズ中はスペルカードのみ使用可能")
+		return
 
 # スペルフェーズ以外でスペルカードが選択された場合
 if card_type == "spell":
-    print("スペルカードはスペルフェーズでのみ使用できます")
-    return
+	print("スペルカードはスペルフェーズでのみ使用できます")
+	return
 ```
 
 ### 4. グレーアウト制御の改善
 ```gdscript
 # HandDisplay: フィルターモードに応じてグレーアウト
 if filter_mode == "spell":
-    # スペルフェーズ中: スペルカード以外をグレーアウト
-    if not is_spell_card:
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	# スペルフェーズ中: スペルカード以外をグレーアウト
+	if not is_spell_card:
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 elif filter_mode == "":
-    # 通常フェーズ: スペルカードをグレーアウト
-    if is_spell_card:
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	# 通常フェーズ: スペルカードをグレーアウト
+	if is_spell_card:
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 ```
 
 ### 5. CardSelectionUIの選択制御
@@ -108,11 +108,11 @@ elif filter_mode == "":
 var spell_phase_only = ui_manager_ref.card_selection_filter == "spell"
 
 if spell_phase_only:
-    # スペルフェーズ中: スペルカードのみ選択可能
-    is_selectable = card_type == "spell"
+	# スペルフェーズ中: スペルカードのみ選択可能
+	is_selectable = card_type == "spell"
 else:
-    # 召喚フェーズ等: スペルカード以外が選択可能
-    is_selectable = card_type != "spell"
+	# 召喚フェーズ等: スペルカード以外が選択可能
+	is_selectable = card_type != "spell"
 ```
 
 ---
@@ -132,13 +132,13 @@ else:
 **修正**: 辞書形式に変換して渡す
 ```gdscript
 targets.append({
-    "type": "player",
-    "player_id": player.id,
-    "player": {
-        "name": player.name,
-        "magic_power": player.magic_power,
-        "id": player.id
-    }
+	"type": "player",
+	"player_id": player.id,
+	"player": {
+		"name": player.name,
+		"magic_power": player.magic_power,
+		"id": player.id
+	}
 })
 ```
 
@@ -253,12 +253,12 @@ var card_type = card.get("type", "")
 `spell_phase_handler.gd`の`_apply_single_effect()`に新しいケースを追加:
 ```gdscript
 match effect_type:
-    "damage":
-        # 既存
-    "drain_magic":
-        # 既存
-    "heal":  # 新規
-        # HP回復処理を実装
+	"damage":
+		# 既存
+	"drain_magic":
+		# 既存
+	"heal":  # 新規
+		# HP回復処理を実装
 ```
 
 ---

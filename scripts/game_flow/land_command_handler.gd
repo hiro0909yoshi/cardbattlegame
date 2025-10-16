@@ -19,6 +19,7 @@ enum State {
 var current_state: State = State.CLOSED
 var selected_tile_index: int = -1
 var player_owned_lands: Array = []
+var current_land_selection_index: int = 0  # 現在選択中の土地インデックス
 
 # Phase 1-A: 選択マーカー
 var selection_marker: MeshInstance3D = null
@@ -78,18 +79,24 @@ func open_land_command(player_id: int):
 	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
+	current_land_selection_index = 0  # 最初の土地を選択
 	land_command_opened.emit()
 	
 	print("[LandCommandHandler] 領地コマンドを開きました（所有地数: ", player_owned_lands.size(), "）")
+	
+	# 最初の土地を自動プレビュー
+	if player_owned_lands.size() > 0:
+		var first_tile = player_owned_lands[0]
+		preview_land(first_tile)
+		update_land_selection_ui()
 	
 	# UIに表示要請
 	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 		ui_manager.show_land_selection_mode(player_owned_lands)
 
-## 土地選択
-func select_land(tile_index: int) -> bool:
+## 土地をプレビュー（ハイライトのみ、状態は変更しない）
+func preview_land(tile_index: int) -> bool:
 	if current_state != State.SELECTING_LAND:
-		print("[LandCommandHandler] 土地選択モードではありません")
 		return false
 	
 	# 所有地かチェック
@@ -97,7 +104,7 @@ func select_land(tile_index: int) -> bool:
 		print("[LandCommandHandler] 所有していない土地です: ", tile_index)
 		return false
 	
-	# ダウン状態チェック（二重チェック）
+	# ダウン状態チェック
 	if board_system and board_system.tile_nodes.has(tile_index):
 		var tile = board_system.tile_nodes[tile_index]
 		if tile.has_method("is_down") and tile.is_down():
@@ -105,22 +112,38 @@ func select_land(tile_index: int) -> bool:
 			return false
 	
 	selected_tile_index = tile_index
-	current_state = State.SELECTING_ACTION
-	land_selected.emit(tile_index)
 	
-	print("[LandCommandHandler] 土地を選択: ", tile_index)
-	
-	# Phase 1-A: 選択マーカーを表示
+	# 選択マーカーを表示
 	show_selection_marker(tile_index)
 	
-	# Phase 1-A: 選択した土地にカメラをフォーカス
+	# 選択した土地にカメラをフォーカス
 	focus_camera_on_tile(tile_index)
 	
-	# アクション選択UIを表示（Phase 1-A: 新UIパネル）
+	return true
+
+## 土地選択を確定してアクションメニューを表示
+func confirm_land_selection() -> bool:
+	if current_state != State.SELECTING_LAND:
+		return false
+	
+	if selected_tile_index == -1:
+		print("[LandCommandHandler] 土地が選択されていません")
+		return false
+	
+	current_state = State.SELECTING_ACTION
+	land_selected.emit(selected_tile_index)
+	
+	print("[LandCommandHandler] 土地を確定: ", selected_tile_index)
+	
+	# アクション選択UIを表示
 	if ui_manager and ui_manager.has_method("show_action_menu"):
-		ui_manager.show_action_menu(tile_index)
+		ui_manager.show_action_menu(selected_tile_index)
 	
 	return true
+
+## 土地選択（旧メソッド - 互換性のため残す）
+func select_land(tile_index: int) -> bool:
+	return preview_land(tile_index)
 
 ## アクション実行
 func execute_action(action_type: String) -> bool:
@@ -268,6 +291,24 @@ func update_move_destination_ui():
 	text += "タイル" + str(current_tile) + "
 "
 	text += "[Enter: 確定] [C: 戻る]"
+	
+	ui_manager.phase_label.text = text
+
+## 土地選択UIを更新
+func update_land_selection_ui():
+	if not ui_manager or not ui_manager.phase_label:
+		return
+	
+	if player_owned_lands.is_empty():
+		ui_manager.phase_label.text = "所有している土地がありません"
+		return
+	
+	var text = "土地を選択: [↑↓で切替]
+"
+	text += "土地 " + str(current_land_selection_index + 1) + "/" + str(player_owned_lands.size()) + ": "
+	text += "タイル" + str(selected_tile_index) + "
+"
+	text += "[Enter: 次へ] [C: 閉じる]"
 	
 	ui_manager.phase_label.text = text
 
@@ -606,7 +647,25 @@ func _input(event):
 
 ## 土地選択時のキー入力処理
 func handle_land_selection_input(event):
-	# 数字キー1-0で土地を選択
+	# ↑↓キーで土地を切り替え（プレビューのみ）
+	if event.keycode == KEY_UP or event.keycode == KEY_LEFT:
+		if current_land_selection_index > 0:
+			current_land_selection_index -= 1
+			var tile_index = player_owned_lands[current_land_selection_index]
+			preview_land(tile_index)
+			update_land_selection_ui()
+	elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
+		if current_land_selection_index < player_owned_lands.size() - 1:
+			current_land_selection_index += 1
+			var tile_index = player_owned_lands[current_land_selection_index]
+			preview_land(tile_index)
+			update_land_selection_ui()
+	
+	# Enterキーで確定（アクションメニュー表示）
+	elif event.keycode == KEY_ENTER:
+		confirm_land_selection()
+	
+	# 数字キー1-0で選択して即確定
 	var key_to_index = {
 		KEY_1: 0, KEY_2: 1, KEY_3: 2, KEY_4: 3, KEY_5: 4,
 		KEY_6: 5, KEY_7: 6, KEY_8: 7, KEY_9: 8, KEY_0: 9
@@ -615,13 +674,17 @@ func handle_land_selection_input(event):
 	if event.keycode in key_to_index:
 		var index = key_to_index[event.keycode]
 		if index < player_owned_lands.size():
+			current_land_selection_index = index
 			var tile_index = player_owned_lands[index]
-			select_land(tile_index)
+			preview_land(tile_index)
+			update_land_selection_ui()
+			# 数字キーの場合は即座に確定
+			confirm_land_selection()
 		else:
 			print("[LandCommandHandler] 無効な番号: ", index + 1)
 	
-	# Escキーでキャンセル
-	elif event.keycode == KEY_ESCAPE:
+	# Cキー・Escキーでキャンセル
+	elif event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
 		cancel()
 
 ## アクション選択時のキー入力処理

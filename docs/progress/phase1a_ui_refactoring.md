@@ -206,14 +206,14 @@ board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
 **解決策**:
 ```gdscript
 func hide_land_command_ui():
-    hide_action_menu()
-    hide_level_selection()
-    
-    // CardSelectionUIも確実に非表示 ← 追加
-    if card_selection_ui:
-        card_selection_ui.hide_selection()
-    
-    hide_cancel_button()
+	hide_action_menu()
+	hide_level_selection()
+	
+	// CardSelectionUIも確実に非表示 ← 追加
+	if card_selection_ui:
+		card_selection_ui.hide_selection()
+	
+	hide_cancel_button()
 ```
 
 **修正ファイル**: `scripts/ui_manager.gd`
@@ -309,8 +309,8 @@ LandCommandUI
 ```gdscript
 // 直接呼び出し
 func update_hand_display(player_id: int):
-    if hand_display:
-        hand_display.update_hand_display(player_id)
+	if hand_display:
+		hand_display.update_hand_display(player_id)
 ```
 
 #### 他クラス → UIManager → コンポーネント（アクセサ経由）
@@ -323,10 +323,10 @@ var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
 ```gdscript
 // PhaseDisplayのUI要素に透過的にアクセス
 var dice_button: Button:
-    get: return phase_display.dice_button if phase_display else null
+	get: return phase_display.dice_button if phase_display else null
 
 var phase_label: Label:
-    get: return phase_display.phase_label if phase_display else null
+	get: return phase_display.phase_label if phase_display else null
 ```
 
 ---

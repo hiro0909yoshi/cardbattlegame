@@ -16,3 +16,6 @@ res://scripts/ui_components/target_selection_ui.gd
 res://scripts/game_3d.gd
 res://scripts/game_flow/item_phase_handler.gd
 res://docs/progress/phase1a_progress.md
+res://docs/progress/phase1a_ui_refactoring.md
+res://docs/progress/spell_phase_implementation.md
+res://scripts/game_flow/land_command_handler.gd
