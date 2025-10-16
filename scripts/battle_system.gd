@@ -347,7 +347,7 @@ func _grant_skill_to_participant(participant: BattleParticipant, skill_name: Str
 			participant.has_last_strike = true
 		
 		"強打":
-			# 強打スキルを付与（条件付きの場合は条件も保存）
+			# 強打スキルを付与
 			if not participant.creature_data.has("ability_parsed"):
 				participant.creature_data["ability_parsed"] = {}
 			
@@ -358,11 +358,18 @@ func _grant_skill_to_participant(participant: BattleParticipant, skill_name: Str
 			if not "強打" in ability_parsed["keywords"]:
 				ability_parsed["keywords"].append("強打")
 			
-			# 条件がある場合は保存
-			if skill_data.has("condition"):
-				if not ability_parsed.has("keyword_conditions"):
-					ability_parsed["keyword_conditions"] = {}
-				ability_parsed["keyword_conditions"]["強打"] = skill_data.get("condition", {})
+			# effectsにも強打効果を追加（条件なしで常に発動）
+			if not ability_parsed.has("effects"):
+				ability_parsed["effects"] = []
+			
+			# 強打効果を構築（条件なし）
+			var power_strike_effect = {
+				"effect_type": "power_strike",
+				"multiplier": 1.5,
+				"conditions": []  # アイテムで付与された強打は無条件で発動
+			}
+			
+			ability_parsed["effects"].append(power_strike_effect)
 		
 		_:
 			print("  未実装のスキル: ", skill_name)

@@ -104,7 +104,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			# 選択可能状態を判定
 			var is_selectable = true
 			
-			if filter_mode == "spell":
+			# 捨て札モードではすべて選択可能
+			if selection_mode == "discard":
+				is_selectable = true
+			elif filter_mode == "spell":
 				# スペルフェーズ中: スペルカードのみ選択可能
 				is_selectable = card_type == "spell"
 			elif filter_mode == "item":
