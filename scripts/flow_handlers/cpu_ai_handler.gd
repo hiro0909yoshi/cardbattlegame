@@ -192,7 +192,12 @@ func can_afford_card(current_player, card_index: int) -> bool:
 
 # カードコストを計算
 func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
-	var base_cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card_data.get("cost", 1)
+	var base_cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		base_cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
 	if skill_system:
 		return skill_system.modify_card_cost(base_cost, card_data, player_id)

@@ -22,7 +22,8 @@ func load_all_cards():
 		"res://data/wind_2.json",
 		"res://data/item.json",
 		"res://data/spell_1.json",
-		"res://data/spell_2.json"
+		"res://data/spell_2.json",
+		"res://data/item_test.json"  # テスト用アイテム追加
 	]
 	
 	for file_path in files:

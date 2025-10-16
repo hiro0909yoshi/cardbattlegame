@@ -15,7 +15,7 @@ var tile_info_display: TileInfoDisplay
 var tile_data_manager: TileDataManager
 var tile_neighbor_system: TileNeighborSystem
 var tile_action_processor: TileActionProcessor
-var cpu_turn_processor: CPUTurnProcessor
+var cpu_turn_processor  # CPUTurnProcessor（型指定を一時的に削除）
 
 # ゲーム設定
 var player_count = 2
@@ -38,6 +38,7 @@ var skill_system: SkillSystem
 var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
 var cpu_ai_handler: CPUAIHandler
+var game_flow_manager = null  # GameFlowManagerへの参照
 
 # === 初期化 ===
 
@@ -67,9 +68,14 @@ func create_subsystems():
 	tile_action_processor.name = "TileActionProcessor"
 	add_child(tile_action_processor)
 	
-	cpu_turn_processor = CPUTurnProcessor.new()
-	cpu_turn_processor.name = "CPUTurnProcessor"
-	add_child(cpu_turn_processor)
+	# CPUTurnProcessorを動的にロード
+	var CPUTurnProcessorClass = load("res://scripts/flow_handlers/cpu_turn_processor.gd")
+	if CPUTurnProcessorClass:
+		cpu_turn_processor = CPUTurnProcessorClass.new()
+		cpu_turn_processor.name = "CPUTurnProcessor"
+		add_child(cpu_turn_processor)
+	else:
+		print("ERROR: CPUTurnProcessorクラスが読み込めません")
 	
 	# シグナル接続
 	movement_controller.movement_started.connect(_on_movement_started)
@@ -78,12 +84,13 @@ func create_subsystems():
 	cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
 
 func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BattleSystem, 
-				   s_system: SkillSystem, st_system: SpecialTileSystem = null):
+				   s_system: SkillSystem, st_system: SpecialTileSystem = null, gf_manager = null):
 	player_system = p_system
 	card_system = c_system
 	battle_system = b_system
 	skill_system = s_system
 	special_tile_system = st_system
+	game_flow_manager = gf_manager
 	
 	# CPUAIHandlerを先に設定（他のシステムが依存するため）
 	setup_cpu_ai_handler()
@@ -105,7 +112,7 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	# TileActionProcessorに参照を設定（ui_manager必須）
 	if ui_manager:
 		tile_action_processor.setup(self, player_system, card_system, 
-									battle_system, special_tile_system, ui_manager)
+									battle_system, special_tile_system, ui_manager, game_flow_manager)
 		tile_action_processor.set_cpu_processor(cpu_turn_processor)
 		
 		# CPUTurnProcessorに参照を設定
@@ -168,6 +175,20 @@ func set_tile_owner(tile_index: int, owner_id: int):
 
 func place_creature(tile_index: int, creature_data: Dictionary):
 	tile_data_manager.place_creature(tile_index, creature_data)
+
+func remove_creature(tile_index: int):
+	"""クリーチャーを除去する"""
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	tile.creature = {}
+	
+	# ビジュアル更新があれば
+	if tile.has_method("update_visual"):
+		tile.update_visual()
+	
+	print("[BoardSystem3D] クリーチャー除去: タイル%d" % tile_index)
 
 func upgrade_tile_level(tile_index: int) -> bool:
 	return tile_data_manager.upgrade_tile_level(tile_index)

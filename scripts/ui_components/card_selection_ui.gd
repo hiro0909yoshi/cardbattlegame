@@ -78,6 +78,10 @@ func update_phase_label(current_player, mode: String):
 			var hand_size = card_system_ref.get_hand_size_for_player(current_player.id)
 			var cards_to_discard = hand_size - 6
 			phase_label_ref.text = "手札を6枚まで減らしてください（" + str(cards_to_discard) + "枚捨てる）"
+		"spell":
+			phase_label_ref.text = "スペルを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+		"item":
+			phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
 		_:
 			phase_label_ref.text = "カードを選択してください"
 
@@ -86,22 +90,44 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 	if not ui_manager_ref:
 		return
 	
+	# UIManagerのフィルター設定を確認
+	var filter_mode = ui_manager_ref.card_selection_filter
+	
 	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
 	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):
-			# カードを選択可能にする
-			if card_node.has_method("set_selectable"):
+			var card_data = hand_data[i]
+			var card_type = card_data.get("type", "")
+			
+			# 選択可能状態を判定
+			var is_selectable = true
+			
+			if filter_mode == "spell":
+				# スペルフェーズ中: スペルカードのみ選択可能
+				is_selectable = card_type == "spell"
+			elif filter_mode == "item":
+				# アイテムフェーズ中: アイテムカードのみ選択可能
+				is_selectable = card_type == "item"
+			else:
+				# 召喚フェーズ等: クリーチャーカードのみ選択可能
+				is_selectable = card_type == "creature"
+			
+			# カードを選択可能/不可にする
+			if card_node.has_method("set_selectable") and is_selectable:
 				card_node.set_selectable(true, i)
+			elif card_node.has_method("set_selectable"):
+				card_node.set_selectable(false, -1)
+			
 			# 捨て札モードでは全て選択可能、それ以外はコストチェック
 			if selection_mode == "discard":
-				add_card_highlight(card_node, hand_data[i], 999999)  # 全て選択可能
+				add_card_highlight(card_node, card_data, 999999, is_selectable)  # 全て選択可能
 			else:
-				add_card_highlight(card_node, hand_data[i], available_magic)
+				add_card_highlight(card_node, card_data, available_magic, is_selectable)
 
 # カードにハイライトを追加
-func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic: int):
+func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic: int, is_selectable: bool = true):
 	# ハイライト枠を追加
 	var highlight = ColorRect.new()
 	highlight.name = "SelectionHighlight"
@@ -110,8 +136,20 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 	highlight.z_index = -1
 	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
+	# 選択不可の場合（スペルフェーズでスペルカード以外など）
+	if not is_selectable:
+		# グレーアウト状態を維持（既にグレーアウトされているはず）
+		highlight.color = Color(0.3, 0.3, 0.3, 0.3)
+		card_node.add_child(highlight)
+		return
+	
 	# コストチェック
-	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	if cost > available_magic:
 		# 魔力不足の場合
 		card_node.modulate = Color(0.5, 0.5, 0.5)
@@ -138,6 +176,10 @@ func create_pass_button(hand_count: int):
 			pass_button.text = "バトルしない"
 		"invasion":
 			pass_button.text = "侵略しない"
+		"spell":
+			pass_button.text = "スペルを使わない"
+		"item":
+			pass_button.text = "アイテムを使わない"
 		_:
 			pass_button.text = "パス"
 	

@@ -17,26 +17,32 @@ var card_system: CardSystem
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
-var cpu_turn_processor: CPUTurnProcessor
+var game_flow_manager = null  # GameFlowManagerへの参照
+var cpu_turn_processor  # CPUTurnProcessor型を一時的に削除
 
 # 状態管理
 var is_action_processing = false
+
+# バトル情報の一時保存
+var pending_battle_card_index: int = -1
+var pending_battle_tile_info: Dictionary = {}
 
 func _ready():
 	pass
 
 # 初期化
 func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem,
-		   bt_system: BattleSystem, st_system: SpecialTileSystem, ui: UIManager):
+		   bt_system: BattleSystem, st_system: SpecialTileSystem, ui: UIManager, gf_manager = null):
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
 	battle_system = bt_system
 	special_tile_system = st_system
 	ui_manager = ui
+	game_flow_manager = gf_manager
 
 # CPUプロセッサーを設定
-func set_cpu_processor(cpu_processor: CPUTurnProcessor):
+func set_cpu_processor(cpu_processor):  # CPUTurnProcessor型を一時的に削除
 	cpu_turn_processor = cpu_processor
 	if cpu_turn_processor:
 		cpu_turn_processor.cpu_action_completed.connect(_on_cpu_action_completed)
@@ -107,6 +113,8 @@ func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int)
 # 召喚UI表示
 func show_summon_ui():
 	if ui_manager:
+		# スペルカードは召喚フェーズでは使えないので、フィルターは空（スペル以外が選択可能）
+		ui_manager.card_selection_filter = ""
 		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
@@ -120,6 +128,8 @@ func show_level_up_ui(tile_info: Dictionary):
 # バトルUI表示
 func show_battle_ui(mode: String):
 	if ui_manager:
+		# スペルカードは召喚フェーズでは使えないので、フィルターは空（スペル以外が選択可能）
+		ui_manager.card_selection_filter = ""
 		if mode == "invasion":
 			ui_manager.phase_label.text = "侵略するクリーチャーを選択"
 		else:
@@ -142,12 +152,47 @@ func on_card_selected(card_index: int):
 		# 召喚処理
 		execute_summon(card_index)
 	else:
-		# バトル処理
-		var callable = Callable(self, "_on_battle_completed")
-		if not battle_system.invasion_completed.is_connected(callable):
-			battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+		# バトル処理 - アイテムフェーズを挟む
+		pending_battle_card_index = card_index
+		pending_battle_tile_info = tile_info
 		
-		battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
+		# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			# アイテムフェーズ完了シグナルに接続
+			if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+				game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+			
+			# アイテムフェーズ開始
+			game_flow_manager.item_phase_handler.start_item_phase(current_player_index)
+		else:
+			# ItemPhaseHandlerがない場合は直接バトル
+			_execute_pending_battle()
+
+## アイテムフェーズ完了後のコールバック
+func _on_item_phase_completed():
+	print("[TileActionProcessor] アイテムフェーズ完了、バトル開始")
+	_execute_pending_battle()
+
+## 保留中のバトルを実行
+func _execute_pending_battle():
+	if pending_battle_card_index < 0:
+		print("[TileActionProcessor] エラー: バトル情報が保存されていません")
+		_complete_action()
+		return
+	
+	var current_player_index = board_system.current_player_index
+	
+	# バトル完了シグナルに接続
+	var callable = Callable(self, "_on_battle_completed")
+	if not battle_system.invasion_completed.is_connected(callable):
+		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+	
+	# バトル実行
+	battle_system.execute_3d_battle(current_player_index, pending_battle_card_index, pending_battle_tile_info)
+	
+	# バトル情報をクリア
+	pending_battle_card_index = -1
+	pending_battle_tile_info = {}
 
 # 召喚実行
 func execute_summon(card_index: int):
@@ -162,7 +207,13 @@ func execute_summon(card_index: int):
 		_complete_action()
 		return
 	
-	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+	
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power >= cost:
@@ -292,7 +343,13 @@ func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionar
 		return
 	
 	# コストチェック
-	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+	
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power < cost:

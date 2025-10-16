@@ -60,7 +60,12 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		pay_toll_3d(attacker_index, tile_info)
 		return
 	
-	var cost = card_data.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	var current_player = player_system_ref.get_current_player()
 	
 	if current_player.magic_power < cost:

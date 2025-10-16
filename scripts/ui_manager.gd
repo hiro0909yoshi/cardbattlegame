@@ -39,6 +39,9 @@ var game_flow_manager_ref = null  # GameFlowManagerの参照
 # デバッグモード
 var debug_mode = false
 
+# スペルフェーズ用のフィルター設定
+var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能
+
 # 手札UI管理（HandDisplayに移行済み）
 # 以下の変数は削除予定
 
@@ -331,6 +334,19 @@ func show_cancel_button():
 func hide_cancel_button():
 	if land_command_ui:
 		land_command_ui.hide_cancel_button()
+
+# スペルカードフィルターを設定（スペルフェーズ用）
+func set_card_selection_filter(filter_type: String):
+	card_selection_filter = filter_type
+	# 既に表示されている手札を更新
+	if hand_display:
+		var current_player = player_system_ref.get_current_player() if player_system_ref else null
+		if current_player:
+			hand_display.update_hand_display(current_player.id)
+
+# フィルターをクリア
+func clear_card_selection_filter():
+	card_selection_filter = ""
 
 # 土地選択モードを表示
 func show_land_selection_mode(_owned_lands: Array):

@@ -350,6 +350,230 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 
 **詳細は [skills_design.md](skills_design.md) を参照**
 
+### 6. スペルシステム (SpellPhaseHandler)
+
+#### 責務
+- スペルフェーズの管理
+- スペルカードの使用判定
+- 対象選択UIの制御
+- スペル効果の実行
+- 1ターン1回制限の管理
+
+#### アーキテクチャ
+```
+SpellPhaseHandler
+  ├── TargetSelectionUI (対象選択UI)
+  └── SpellEffectSystem (効果適用)
+```
+
+#### スペルフェーズの流れ
+```
+ターン開始
+  ↓
+スペルフェーズ開始
+  ├─ スペルカード以外をグレーアウト
+  ├─ 「スペルを選択してください」表示
+  └─ 人間プレイヤー: カード選択UI表示
+     CPU: 簡易AI判定（30%確率）
+  ↓
+スペル使用 or ダイスボタンでスキップ
+  ↓
+【スペル使用の場合】
+  ├─ コスト支払い
+  ├─ 対象選択が必要?
+  │   ├─ Yes → 対象選択UI表示
+  │   │   ├─ クリーチャー: 敵クリーチャー一覧
+  │   │   └─ プレイヤー: 敵プレイヤー一覧
+  │   └─ No → 即座に効果発動
+  ↓
+  効果実行
+  ├─ damage: クリーチャーにダメージ
+  ├─ drain_magic: 魔力吸収
+  ├─ heal: HP回復（未実装）
+  └─ その他効果...
+  ↓
+  カードを捨て札に
+  ↓
+スペルフェーズ完了
+  ├─ グレーアウト解除
+  └─ 次フェーズへ
+```
+
+#### 主要メソッド
+```gdscript
+# フェーズ管理
+func start_spell_phase(player_id: int)
+func complete_spell_phase()
+func pass_spell()
+
+# スペル使用
+func use_spell(spell_card: Dictionary)
+func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary)
+
+# 対象選択
+func _show_target_selection_ui(target_type: String, target_info: Dictionary)
+func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array
+func on_target_selected(target_data: Dictionary)
+
+# 効果適用
+func _apply_single_effect(effect: Dictionary, target_data: Dictionary)
+```
+
+#### 実装済みスペル効果
+
+**1. damage - クリーチャーへのダメージ**
+```gdscript
+{
+    "effect_type": "damage",
+    "value": 20  # ダメージ量
+}
+```
+- クリーチャーの基本HPと土地ボーナスHPを削る
+- HP≤0でクリーチャー撃破、土地を空き地化
+- 例: マジックボルト（コスト50MP、ダメージ20）
+
+**2. drain_magic - 魔力吸収**
+```gdscript
+{
+    "effect_type": "drain_magic",
+    "value": 30,
+    "value_type": "percentage"  # or "fixed"
+}
+```
+- 対象プレイヤーから魔力を奪う
+- percentage: 相手の魔力の%を吸収
+- fixed: 固定値を吸収
+- 例: ドレインマジック（コスト80MP、30%吸収）
+
+#### スペルカードのデータ構造
+```json
+{
+    "id": 201,
+    "name": "マジックボルト",
+    "type": "spell",
+    "cost": {"mp": 50},
+    "ability": "対象の敵クリーチャーに20ダメージ",
+    "ability_parsed": {
+        "target": {
+            "type": "creature",
+            "required": true
+        },
+        "effects": [
+            {
+                "effect_type": "damage",
+                "value": 20
+            }
+        ]
+    }
+}
+```
+
+#### スペルとスキルの違い
+
+| 特徴 | スキル | スペル |
+|------|--------|--------|
+| 実装場所 | `SkillSystem` | `SpellPhaseHandler` |
+| 発動タイミング | バトル中 | スペルフェーズ |
+| 対象 | バトル参加者のみ | 任意の対象 |
+| 効果範囲 | バトル結果に影響 | 広範囲（ダメージ、魔力操作等） |
+| データ管理 | `ability_parsed` | `ability_parsed` |
+
+#### 対象選択UIの仕様
+
+**TargetSelectionUI**:
+- 画面中央にパネル表示
+- ↑↓キーで対象を切り替え
+- Enterで決定、Escでキャンセル
+- 選択中の対象にカメラ自動フォーカス
+
+**対象タイプ**:
+1. `"creature"`: 敵クリーチャー
+2. `"player"`: 敵プレイヤー
+3. `"land"`: 土地（未実装）
+
+#### 使用制限
+- **1ターン1回**: `spell_used_this_turn`フラグで管理
+- **コスト制限**: MPが不足している場合は使用不可
+- **フェーズ制限**: スペルフェーズでのみ使用可能
+  - 召喚フェーズではスペルカードは選択不可
+  - スペルカード以外はスペルフェーズで選択不可
+
+#### カードフィルタリングシステム
+```gdscript
+# UIManager.card_selection_filter
+"spell"  # スペルフェーズ: スペルカードのみ選択可能
+""       # 召喚フェーズ: クリーチャーカードのみ選択可能
+
+# HandDisplay: グレーアウト適用
+if filter_mode == "spell":
+    # スペルカード以外をグレーアウト
+    if not is_spell_card:
+        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+elif filter_mode == "":
+    # スペルカードをグレーアウト
+    if is_spell_card:
+        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+```
+
+#### 新しいスペル効果の追加方法
+
+`_apply_single_effect()`メソッドに新しいケースを追加:
+```gdscript
+match effect_type:
+    "damage":
+        # 既存のダメージ処理
+    
+    "drain_magic":
+        # 既存の魔力吸収処理
+    
+    "heal":  # 新しい効果
+        # HP回復処理
+        if target_data.get("type", "") == "creature":
+            var creature = # ... 対象取得
+            creature["hp"] += value
+            print("回復: +%d HP" % value)
+    
+    "buff_st":  # STバフ
+        # ST上昇処理
+        
+    # ... その他の効果
+```
+
+#### 注意事項
+
+1. **スキルとスペルは完全に分離**
+   - スキル: バトル中の特殊能力（`SkillSystem`）
+   - スペル: ターン中の魔法（`SpellPhaseHandler`）
+   - データ構造は似ているが、処理系統は別
+
+2. **効果の実装場所**
+   - スキル効果: `scripts/skills/effect_combat.gd`
+   - スペル効果: `scripts/game_flow/spell_phase_handler.gd`の`_apply_single_effect()`
+
+3. **カード種別の判定**
+   - `card.get("type", "")` で判定
+   - `"creature"`: クリーチャーカード
+   - `"spell"`: スペルカード
+   - `"item"`: アイテムカード（未実装）
+
+4. **グレーアウトとis_selectableは別管理**
+   - グレーアウト: 視覚的な表現（`modulate`）
+   - `is_selectable`: 実際の選択可否
+   - CardSelectionUIが適切に制御
+
+#### 実装ファイル
+
+**主要ファイル**:
+- `scripts/game_flow/spell_phase_handler.gd` - スペルフェーズ管理
+- `scripts/ui_components/target_selection_ui.gd` - 対象選択UI
+- `data/spell_test.json` - テスト用スペルデータ
+
+**関連ファイル**:
+- `scripts/game_flow_manager.gd` - フェーズ統合
+- `scripts/ui_manager.gd` - カードフィルター
+- `scripts/ui_components/hand_display.gd` - グレーアウト制御
+- `scripts/ui_components/card_selection_ui.gd` - カード選択制御
+
 #### アーキテクチャ
 ```
 SkillSystem (マネージャー)
@@ -463,6 +687,11 @@ card_definitions.jsonから直接カードデータを読み込む実装に変�
 初期手札配布（5枚）
   ↓
 ┌─ ターン開始 ←─────────┐
+│  ↓                      │
+│ 🆕 スペルフェーズ       │
+│  ├─ スペルカード使用可能 │
+│  ├─ 対象選択UI         │
+│  └─ ダイスでスキップ    │
 │  ↓                      │
 │ サイコロ振る（1-6）     │
 │  ↓                      │
@@ -1286,8 +1515,9 @@ if allow_manual:
 | 2025/01/12 | 1.5 | 🆕 貫通スキル実装、土地ボーナス計算の仕様明記 |
 | 2025/01/12 | 1.6 | 🆕 感応スキル追加、BattleParticipantクラス説明追加、スキル適用順序明記 |
 | 2025/01/12 | 1.7 | 📄 スキル関連を skills_design.md に分離、design.md を簡略化 |
+| 2025/10/17 | 1.8 | 🆕 スペルフェーズシステム追加、スペルとスキルの分離明記 |
 
 ---
 
-**最終更新**: 2025年1月12日（v1.7）  
+**最終更新**: 2025年10月17日（v1.8）  
 **関連ドキュメント**: [skills_design.md](skills_design.md) - スキルシステム詳細仕様

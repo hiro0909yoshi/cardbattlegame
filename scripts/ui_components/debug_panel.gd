@@ -126,7 +126,12 @@ func build_cpu_hand_text(player_id: int, hand_data: Array) -> String:
 
 # カード情報をフォーマット
 func format_card_info(index: int, card: Dictionary) -> String:
-	var cost = card.get("cost", 1) * GameConstants.CARD_COST_MULTIPLIER
+	var cost_data = card.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	var text = str(index + 1) + ". " + card.get("name", "不明")
 	text += " [color=yellow](コスト:" + str(cost) + "G)[/color]\n"
 	text += "   ST:" + str(card.get("damage", 0))

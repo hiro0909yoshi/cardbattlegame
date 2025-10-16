@@ -95,6 +95,30 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	
 	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
+	
+	# カードフィルター適用
+	var ui_manager = get_parent() if get_parent() else null
+	var filter_mode = ""
+	if ui_manager and "card_selection_filter" in ui_manager:
+		filter_mode = ui_manager.card_selection_filter
+	
+	var card_type = card_data.get("type", "")
+	var is_spell_card = card_type == "spell"
+	var is_item_card = card_type == "item"
+	
+	# フィルターモードに応じてグレーアウト
+	if filter_mode == "spell":
+		# スペルフェーズ中: スペルカード以外をグレーアウト
+		if not is_spell_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	elif filter_mode == "item":
+		# アイテムフェーズ中: アイテムカード以外をグレーアウト
+		if not is_item_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	elif filter_mode == "":
+		# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
+		if is_spell_card or is_item_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 		
 	hand_container.add_child(card)
 	

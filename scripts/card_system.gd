@@ -112,8 +112,70 @@ func deal_initial_hands_all_players(player_count: int):
 			var card_data = draw_card_data()
 			if not card_data.is_empty():
 				player_hands[player_id]["data"].append(card_data)
+		
+		# デバッグ用：テストスペルカードを追加（プレイヤー1のみ）
+		if player_id == 0 and OS.is_debug_build():
+			_add_test_item_cards(player_id)
 	
 	emit_signal("hand_updated")
+
+# デバッグ用：テストアイテムカードを追加
+func _add_test_item_cards(player_id: int):
+	# ロングソードを追加
+	var long_sword = {
+		"id": 1072,
+		"name": "ロングソード",
+		"rarity": "N",
+		"type": "item",
+		"item_type": "武器",
+		"cost": {
+			"mp": 10
+		},
+		"effect": "ST+30",
+		"ability_parsed": {
+			"effects": [
+				{
+					"effect_type": "buff_st",
+					"value": 30
+				}
+			]
+		}
+	}
+	
+	# マグマハンマーを追加
+	var magma_hammer = {
+		"id": 1062,
+		"name": "マグマハンマー",
+		"rarity": "N",
+		"type": "item",
+		"item_type": "武器",
+		"cost": {
+			"mp": 20
+		},
+		"effect": "ST+20；💧🌱使用時、強打",
+		"ability_parsed": {
+			"effects": [
+				{
+					"effect_type": "buff_st",
+					"value": 20
+				},
+				{
+					"effect_type": "add_skill",
+					"skill": "power_strike",
+					"conditions": [
+						{
+							"type": "creature_element",
+							"elements": ["fire", "earth"]
+						}
+					]
+				}
+			]
+		}
+	}
+	
+	player_hands[player_id]["data"].append(long_sword)
+	player_hands[player_id]["data"].append(magma_hammer)
+	print("[CardSystem] デバッグ: テストアイテムカードを追加")
 
 func use_card_for_player(player_id: int, card_index: int) -> Dictionary:
 	# discard_card()を使用（理由: "use"）

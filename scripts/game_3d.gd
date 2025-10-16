@@ -129,17 +129,17 @@ func setup_game():
 		ui_manager.initialize_hand_container(ui_layer)
 		ui_manager.connect_card_system_signals()
 	
+	# GameFlowManager設定（3D対応）- 先に設定
+	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
+									skill_system, ui_manager, battle_system, special_tile_system)
+	
 	# システム連携設定
 	board_system_3d.setup_systems(player_system, card_system, battle_system, 
-								  skill_system, special_tile_system)
+								  skill_system, special_tile_system, game_flow_manager)
 	board_system_3d.ui_manager = ui_manager
 	
 	# SpecialTileSystemの設定
 	special_tile_system.setup_systems(board_system_3d, card_system, player_system, ui_manager)
-	
-	# GameFlowManager設定（3D対応）
-	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
-									skill_system, ui_manager, battle_system, special_tile_system)
 	game_flow_manager.debug_manual_control_all = debug_manual_control_all
 	game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
 	

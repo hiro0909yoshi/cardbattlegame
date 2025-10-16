@@ -109,6 +109,12 @@ func start_turn():
 	# UI更新
 	ui_manager.update_player_info_panels()
 	
+	# スペルフェーズを開始
+	if spell_phase_handler:
+		spell_phase_handler.start_spell_phase(current_player.id)
+		# スペルフェーズ完了を待つ
+		await spell_phase_handler.spell_phase_completed
+	
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
 	if is_cpu_turn:
@@ -125,6 +131,11 @@ func start_turn():
 
 # サイコロを振る
 func roll_dice():
+	# スペルフェーズ中の場合は、スペルを使わずにダイスロールに進む
+	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
+		spell_phase_handler.pass_spell()
+		# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
+	
 	if current_phase != GamePhase.DICE_ROLL:
 		return
 	
@@ -236,6 +247,46 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
+	var current_player = player_system.get_current_player()
+	var hand = card_system.get_all_cards_for_player(current_player.id)
+	
+	if card_index >= hand.size():
+		print("[GameFlowManager] 無効なカードインデックス")
+		return
+	
+	var card = hand[card_index]
+	var card_type = card.get("type", "")
+	
+	# スペルフェーズ中かチェック
+	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
+		# スペルカードのみ使用可能
+		if card_type == "spell":
+			spell_phase_handler.use_spell(card)
+			return
+		else:
+			print("[GameFlowManager] スペルフェーズ中はスペルカードのみ使用可能")
+			return
+	
+	# アイテムフェーズ中かチェック
+	if item_phase_handler and item_phase_handler.is_item_phase_active():
+		# アイテムカードのみ使用可能
+		if card_type == "item":
+			item_phase_handler.use_item(card)
+			return
+		else:
+			print("[GameFlowManager] アイテムフェーズ中はアイテムカードのみ使用可能")
+			return
+	
+	# スペルフェーズ以外でスペルカードが選択された場合
+	if card_type == "spell":
+		print("[GameFlowManager] スペルカードはスペルフェーズでのみ使用できます")
+		return
+	
+	# アイテムフェーズ以外でアイテムカードが選択された場合
+	if card_type == "item":
+		print("[GameFlowManager] アイテムカードはアイテムフェーズでのみ使用できます")
+		return
+	
 	# Phase 1-D: 交換モードチェック
 	if land_command_handler and land_command_handler._swap_mode:
 		land_command_handler.on_card_selected_for_swap(card_index)
@@ -243,6 +294,11 @@ func on_card_selected(card_index: int):
 		board_system_3d.on_card_selected(card_index)
 
 func on_pass_button_pressed():
+	# アイテムフェーズ中の場合
+	if item_phase_handler and item_phase_handler.is_item_phase_active():
+		item_phase_handler.pass_item()
+		return
+	
 	if board_system_3d:
 		board_system_3d.on_action_pass()
 
@@ -384,6 +440,7 @@ func prompt_discard_card():
 var phase_manager: PhaseManager = null
 var land_command_handler: LandCommandHandler = null
 var spell_phase_handler: SpellPhaseHandler = null
+var item_phase_handler = null  # ItemPhaseHandler
 
 # Phase 1-A: ハンドラーを初期化
 func initialize_phase1a_systems():
@@ -400,7 +457,14 @@ func initialize_phase1a_systems():
 	# SpellPhaseHandlerを作成
 	spell_phase_handler = SpellPhaseHandler.new()
 	add_child(spell_phase_handler)
-	spell_phase_handler.initialize(ui_manager, self)
+	spell_phase_handler.initialize(ui_manager, self, card_system, player_system, board_system_3d)
+	
+	# ItemPhaseHandlerを作成
+	var ItemPhaseHandlerClass = load("res://scripts/game_flow/item_phase_handler.gd")
+	if ItemPhaseHandlerClass:
+		item_phase_handler = ItemPhaseHandlerClass.new()
+		add_child(item_phase_handler)
+		item_phase_handler.initialize(ui_manager, self, card_system, player_system, battle_system)
 
 # Phase 1-A: PhaseManagerのフェーズ変更を受信
 func _on_phase_manager_phase_changed(new_phase, old_phase):
