@@ -30,9 +30,9 @@ SkillSystem (マネージャー)
   │   └── 各種条件評価メソッド
   │
   └── EffectCombat (効果適用)
-      ├── apply_power_strike()
-      ├── apply_first_strike()
-      └── その他効果メソッド
+	  ├── apply_power_strike()
+	  ├── apply_first_strike()
+	  └── その他効果メソッド
 ```
 
 ### スキル定義構造
@@ -40,25 +40,25 @@ SkillSystem (マネージャー)
 ```json
 {
   "ability_parsed": {
-    "keywords": ["感応", "先制"],
-    "keyword_conditions": {
-      "感応": {
-        "element": "fire",
-        "stat_bonus": {
-          "ap": 30,
-          "hp": 0
-        }
-      }
-    },
-    "effects": [
-      {
-        "effect_type": "power_strike",
-        "multiplier": 1.5,
-        "conditions": [
-          {"condition_type": "adjacent_ally_land"}
-        ]
-      }
-    ]
+	"keywords": ["感応", "先制"],
+	"keyword_conditions": {
+	  "感応": {
+		"element": "fire",
+		"stat_bonus": {
+		  "ap": 30,
+		  "hp": 0
+		}
+	  }
+	},
+	"effects": [
+	  {
+		"effect_type": "power_strike",
+		"multiplier": 1.5,
+		"conditions": [
+		  {"condition_type": "adjacent_ally_land"}
+		]
+	  }
+	]
   }
 }
 ```
@@ -127,11 +127,11 @@ SkillSystem (マネージャー)
 ```json
 {
   "感応": {
-    "element": "fire",
-    "stat_bonus": {
-      "ap": 20,
-      "hp": 20
-    }
+	"element": "fire",
+	"stat_bonus": {
+	  "ap": 20,
+	  "hp": 20
+	}
   }
 }
 ```
@@ -140,11 +140,11 @@ SkillSystem (マネージャー)
 ```json
 {
   "感応": {
-    "element": "water",
-    "stat_bonus": {
-      "ap": 10,
-      "hp": 20
-    }
+	"element": "water",
+	"stat_bonus": {
+	  "ap": 10,
+	  "hp": 20
+	}
   }
 }
 ```
@@ -199,30 +199,30 @@ AP: 75
 
 ```gdscript
 func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary) -> void:
-    var ability_parsed = participant.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if not "感応" in keywords:
-        return
-    
-    var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-    var resonance_condition = keyword_conditions.get("感応", {})
-    
-    var required_element = resonance_condition.get("element", "")
-    var player_lands = context.get("player_lands", {})
-    var owned_count = player_lands.get(required_element, 0)
-    
-    if owned_count > 0:
-        var stat_bonus = resonance_condition.get("stat_bonus", {})
-        var ap_bonus = stat_bonus.get("ap", 0)
-        var hp_bonus = stat_bonus.get("hp", 0)
-        
-        if ap_bonus > 0:
-            participant.current_ap += ap_bonus
-        
-        if hp_bonus > 0:
-            participant.resonance_bonus_hp += hp_bonus
-            participant.update_current_hp()
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "感応" in keywords:
+		return
+	
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var resonance_condition = keyword_conditions.get("感応", {})
+	
+	var required_element = resonance_condition.get("element", "")
+	var player_lands = context.get("player_lands", {})
+	var owned_count = player_lands.get(required_element, 0)
+	
+	if owned_count > 0:
+		var stat_bonus = resonance_condition.get("stat_bonus", {})
+		var ap_bonus = stat_bonus.get("ap", 0)
+		var hp_bonus = stat_bonus.get("hp", 0)
+		
+		if ap_bonus > 0:
+			participant.current_ap += ap_bonus
+		
+		if hp_bonus > 0:
+			participant.resonance_bonus_hp += hp_bonus
+			participant.update_current_hp()
 ```
 
 ---
@@ -253,7 +253,7 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 ```json
 {
   "ability_parsed": {
-    "keywords": ["貫通"]
+	"keywords": ["貫通"]
   }
 }
 ```
@@ -267,13 +267,13 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 ```json
 {
   "ability_parsed": {
-    "keywords": ["貫通"],
-    "keyword_conditions": {
-      "貫通": {
-        "condition_type": "enemy_is_element",
-        "elements": "water"
-      }
-    }
+	"keywords": ["貫通"],
+	"keyword_conditions": {
+	  "貫通": {
+		"condition_type": "enemy_is_element",
+		"elements": "water"
+	  }
+	}
   }
 }
 ```
@@ -286,14 +286,14 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 ```json
 {
   "ability_parsed": {
-    "keywords": ["貫通"],
-    "keyword_conditions": {
-      "貫通": {
-        "condition_type": "attacker_st_check",
-        "operator": ">=",
-        "value": 40
-      }
-    }
+	"keywords": ["貫通"],
+	"keyword_conditions": {
+	  "貫通": {
+		"condition_type": "attacker_st_check",
+		"operator": ">=",
+		"value": 40
+	  }
+	}
   }
 }
 ```
@@ -310,38 +310,38 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 
 ```gdscript
 func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> bool:
-    var ability_parsed = attacker_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if not "貫通" in keywords:
-        return false
-    
-    var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-    var penetrate_condition = keyword_conditions.get("貫通", {})
-    
-    # 無条件の場合
-    if penetrate_condition.is_empty():
-        return true
-    
-    # 条件付きの場合
-    var condition_type = penetrate_condition.get("condition_type", "")
-    
-    match condition_type:
-        "enemy_is_element":
-            var required = penetrate_condition.get("elements", "")
-            return defender_data.get("element", "") == required
-        
-        "attacker_st_check":
-            var operator = penetrate_condition.get("operator", ">=")
-            var value = penetrate_condition.get("value", 0)
-            var attacker_st = attacker_data.get("ap", 0)
-            
-            match operator:
-                ">=": return attacker_st >= value
-                ">": return attacker_st > value
-                "==": return attacker_st == value
-    
-    return false
+	var ability_parsed = attacker_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "貫通" in keywords:
+		return false
+	
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var penetrate_condition = keyword_conditions.get("貫通", {})
+	
+	# 無条件の場合
+	if penetrate_condition.is_empty():
+		return true
+	
+	# 条件付きの場合
+	var condition_type = penetrate_condition.get("condition_type", "")
+	
+	match condition_type:
+		"enemy_is_element":
+			var required = penetrate_condition.get("elements", "")
+			return defender_data.get("element", "") == required
+		
+		"attacker_st_check":
+			var operator = penetrate_condition.get("operator", ">=")
+			var value = penetrate_condition.get("value", 0)
+			var attacker_st = attacker_data.get("ap", 0)
+			
+			match operator:
+				">=": return attacker_st >= value
+				">": return attacker_st > value
+				"==": return attacker_st == value
+	
+	return false
 ```
 
 #### 将来実装
@@ -366,11 +366,11 @@ APに乗数をかけて増幅（例: ×1.5、×2.0）
 ```json
 {
   "effects": [{
-    "effect_type": "power_strike",
-    "multiplier": 1.5,
-    "conditions": [
-      {"condition_type": "adjacent_ally_land"}
-    ]
+	"effect_type": "power_strike",
+	"multiplier": 1.5,
+	"conditions": [
+	  {"condition_type": "adjacent_ally_land"}
+	]
   }]
 }
 ```
@@ -385,14 +385,14 @@ APに乗数をかけて増幅（例: ×1.5、×2.0）
 ```json
 {
   "effects": [{
-    "effect_type": "power_strike",
-    "multiplier": 2.0,
-    "conditions": [
-      {
-        "condition_type": "on_element_land",
-        "element": "fire"
-      }
-    ]
+	"effect_type": "power_strike",
+	"multiplier": 2.0,
+	"conditions": [
+	  {
+		"condition_type": "on_element_land",
+		"element": "fire"
+	  }
+	]
   }]
 }
 ```
@@ -404,15 +404,15 @@ APに乗数をかけて増幅（例: ×1.5、×2.0）
 ```json
 {
   "effects": [{
-    "effect_type": "power_strike",
-    "multiplier": 1.5,
-    "conditions": [
-      {
-        "condition_type": "land_level_check",
-        "operator": ">=",
-        "value": 3
-      }
-    ]
+	"effect_type": "power_strike",
+	"multiplier": 1.5,
+	"conditions": [
+	  {
+		"condition_type": "land_level_check",
+		"operator": ">=",
+		"value": 3
+	  }
+	]
   }]
 }
 ```
@@ -445,8 +445,8 @@ base_ap *= 1.5  # → 75
   "effect_type": "grant_skill",
   "skill": "強打",
   "condition": {
-    "condition_type": "user_element",
-    "elements": ["fire"]
+	"condition_type": "user_element",
+	"elements": ["fire"]
   }
 }
 ```
@@ -463,17 +463,17 @@ base_ap *= 1.5  # → 75
   "cost": {"mp": 20},
   "effect": "ST+20；💧🌱使用時、強打",
   "ability_parsed": {
-    "effects": [
-      {"effect_type": "buff_ap", "value": 20},
-      {
-        "effect_type": "grant_skill",
-        "skill": "強打",
-        "condition": {
-          "condition_type": "user_element",
-          "elements": ["fire"]
-        }
-      }
-    ]
+	"effects": [
+	  {"effect_type": "buff_ap", "value": 20},
+	  {
+		"effect_type": "grant_skill",
+		"skill": "強打",
+		"condition": {
+		  "condition_type": "user_element",
+		  "elements": ["fire"]
+		}
+	  }
+	]
   }
 }
 ```
@@ -489,11 +489,11 @@ base_ap *= 1.5  # → 75
 3. スキル付与
    ├─ keywords配列に「強打」追加
    └─ effects配列に強打効果追加
-       {
-         "effect_type": "power_strike",
-         "multiplier": 1.5,
-         "conditions": []  // 無条件で発動
-       }
+	   {
+		 "effect_type": "power_strike",
+		 "multiplier": 1.5,
+		 "conditions": []  // 無条件で発動
+	   }
    ↓
 4. バトル時に強打発動
    AP × 1.5
@@ -523,19 +523,19 @@ base_ap *= 1.5  # → 75
 
 ```gdscript
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:
-    if attacker.has_first_strike and defender.has_first_strike:
-        return [attacker, defender]  # 両者先制 → 侵略側優先
-    elif defender.has_first_strike:
-        return [defender, attacker]  # 防御側のみ先制
-    else:
-        return [attacker, defender]  # デフォルト（侵略側先攻）
+	if attacker.has_first_strike and defender.has_first_strike:
+		return [attacker, defender]  # 両者先制 → 侵略側優先
+	elif defender.has_first_strike:
+		return [defender, attacker]  # 防御側のみ先制
+	else:
+		return [attacker, defender]  # デフォルト（侵略側先攻）
 ```
 
 #### 実装例
 ```json
 {
   "ability_parsed": {
-    "keywords": ["先制"]
+	"keywords": ["先制"]
   }
 }
 ```
@@ -592,7 +592,7 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 ```json
 {
   "ability_parsed": {
-    "keywords": ["再生"]
+	"keywords": ["再生"]
   }
 }
 ```
@@ -601,24 +601,24 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 
 ```gdscript
 func _apply_regeneration(participant: BattleParticipant) -> void:
-    # 1. 生存チェック（HP > 0）
-    if not participant.is_alive():
-        return
-    
-    # 2. 再生キーワードチェック
-    var ability_parsed = participant.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if "再生" in keywords:
-        # 3. base_hpを元の最大HPまで回復
-        var max_base_hp = participant.creature_data.get("hp", 0)
-        
-        if participant.base_hp < max_base_hp:
-            var healed = max_base_hp - participant.base_hp
-            participant.base_hp = max_base_hp
-            participant.update_current_hp()
-            print("【再生発動】", participant.creature_data.get("name", "?"), 
-                  " HP回復: +", healed, " → ", participant.current_hp)
+	# 1. 生存チェック（HP > 0）
+	if not participant.is_alive():
+		return
+	
+	# 2. 再生キーワードチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if "再生" in keywords:
+		# 3. base_hpを元の最大HPまで回復
+		var max_base_hp = participant.creature_data.get("hp", 0)
+		
+		if participant.base_hp < max_base_hp:
+			var healed = max_base_hp - participant.base_hp
+			participant.base_hp = max_base_hp
+			participant.update_current_hp()
+			print("【再生発動】", participant.creature_data.get("name", "?"), 
+				  " HP回復: +", healed, " → ", participant.current_hp)
 ```
 
 #### 使用例
@@ -687,7 +687,7 @@ func _apply_regeneration(participant: BattleParticipant) -> void:
 ```json
 {
   "ability_parsed": {
-    "keywords": ["2回攻撃"]
+	"keywords": ["2回攻撃"]
   }
 }
 ```
@@ -702,32 +702,32 @@ var attack_count: int = 1  # デフォルト1回、2回攻撃なら2
 **スキル判定**:
 ```gdscript
 func _check_double_attack(participant: BattleParticipant) -> void:
-    var ability_parsed = participant.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if "2回攻撃" in keywords:
-        participant.attack_count = 2
-        print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if "2回攻撃" in keywords:
+		participant.attack_count = 2
+		print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
 ```
 
 **攻撃シーケンス**:
 ```gdscript
 func _execute_attack_sequence(attack_order: Array) -> void:
-    for i in range(attack_order.size()):
-        var attacker_p = attack_order[i]
-        var defender_p = attack_order[(i + 1) % 2]
-        
-        if not attacker_p.is_alive():
-            continue
-        
-        # 攻撃回数分ループ
-        for attack_num in range(attacker_p.attack_count):
-            # 既に倒されていたら攻撃しない
-            if not defender_p.is_alive():
-                break
-            
-            # ダメージ処理
-            defender_p.take_damage(attacker_p.current_ap)
+	for i in range(attack_order.size()):
+		var attacker_p = attack_order[i]
+		var defender_p = attack_order[(i + 1) % 2]
+		
+		if not attacker_p.is_alive():
+			continue
+		
+		# 攻撃回数分ループ
+		for attack_num in range(attacker_p.attack_count):
+			# 既に倒されていたら攻撃しない
+			if not defender_p.is_alive():
+				break
+			
+			# ダメージ処理
+			defender_p.take_damage(attacker_p.current_ap)
 ```
 
 #### 使用例
@@ -740,13 +740,13 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 【第1攻撃 - 1回目】侵略側の攻撃
   テトラーム AP:20 → フェニックス
   ダメージ処理:
-    - 基本HP: 20 消費
+	- 基本HP: 20 消費
   → 残HP: 10 (基本HP:10)
 
 【第1攻撃 - 2回目】侵略側の攻撃
   テトラーム AP:20 → フェニックス
   ダメージ処理:
-    - 基本HP: 10 消費
+	- 基本HP: 10 消費
   → 残HP: 0 (基本HP:0)
   → フェニックス 撃破！
 
@@ -811,13 +811,13 @@ AP: 75
 ```json
 {
   "ability_parsed": {
-    "keywords": ["即死"],
-    "keyword_conditions": {
-      "即死": {
-        "condition_type": "none",
-        "probability": 70
-      }
-    }
+	"keywords": ["即死"],
+	"keyword_conditions": {
+	  "即死": {
+		"condition_type": "none",
+		"probability": 70
+	  }
+	}
   }
 }
 ```
@@ -830,14 +830,14 @@ AP: 75
 ```json
 {
   "ability_parsed": {
-    "keywords": ["即死"],
-    "keyword_conditions": {
-      "即死": {
-        "condition_type": "enemy_is_element",
-        "elements": "fire",
-        "probability": 60
-      }
-    }
+	"keywords": ["即死"],
+	"keyword_conditions": {
+	  "即死": {
+		"condition_type": "enemy_is_element",
+		"elements": "fire",
+		"probability": 60
+	  }
+	}
   }
 }
 ```
@@ -856,15 +856,15 @@ AP: 75
 ```json
 {
   "ability_parsed": {
-    "keywords": ["即死"],
-    "keyword_conditions": {
-      "即死": {
-        "condition_type": "defender_st_check",
-        "operator": ">=",
-        "value": 50,
-        "probability": 60
-      }
-    }
+	"keywords": ["即死"],
+	"keyword_conditions": {
+	  "即死": {
+		"condition_type": "defender_st_check",
+		"operator": ">=",
+		"value": 50,
+		"probability": 60
+	  }
+	}
   }
 }
 ```
@@ -879,14 +879,14 @@ AP: 75
 ```json
 {
   "ability_parsed": {
-    "keywords": ["即死"],
-    "keyword_conditions": {
-      "即死": {
-        "condition_type": "defender_role",
-        "elements": "全",
-        "probability": 80
-      }
-    }
+	"keywords": ["即死"],
+	"keyword_conditions": {
+	  "即死": {
+		"condition_type": "defender_role",
+		"elements": "全",
+		"probability": 80
+	  }
+	}
   }
 }
 ```
@@ -927,36 +927,36 @@ AP: 75
 
 ```gdscript
 func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:
-    # 即死スキルを持つかチェック
-    var ability_parsed = attacker.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if not "即死" in keywords:
-        return false
-    
-    # 即死条件を取得
-    var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-    var instant_death_condition = keyword_conditions.get("即死", {})
-    
-    # 条件チェック
-    if not _check_instant_death_condition(instant_death_condition, attacker, defender):
-        return false
-    
-    # 確率判定
-    var probability = instant_death_condition.get("probability", 0)
-    var random_value = randf() * 100.0
-    
-    if random_value <= probability:
-        print("【即死発動】", attacker.creature_data.get("name", "?"), 
-              " → ", defender.creature_data.get("name", "?"), 
-              " (", probability, "% 判定成功)")
-        defender.instant_death_flag = true
-        defender.base_hp = 0
-        defender.update_current_hp()
-        return true
-    else:
-        print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")
-        return false
+	# 即死スキルを持つかチェック
+	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "即死" in keywords:
+		return false
+	
+	# 即死条件を取得
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var instant_death_condition = keyword_conditions.get("即死", {})
+	
+	# 条件チェック
+	if not _check_instant_death_condition(instant_death_condition, attacker, defender):
+		return false
+	
+	# 確率判定
+	var probability = instant_death_condition.get("probability", 0)
+	var random_value = randf() * 100.0
+	
+	if random_value <= probability:
+		print("【即死発動】", attacker.creature_data.get("name", "?"), 
+			  " → ", defender.creature_data.get("name", "?"), 
+			  " (", probability, "% 判定成功)")
+		defender.instant_death_flag = true
+		defender.base_hp = 0
+		defender.update_current_hp()
+		return true
+	else:
+		print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+		return false
 ```
 
 #### 使用例
@@ -969,8 +969,8 @@ func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipa
 【第1攻撃】侵略側の攻撃
   イエティ AP:40 → ファイアードレイク
   ダメージ処理:
-    - 土地ボーナス: 10 消費
-    - 基本HP: 30 消費
+	- 土地ボーナス: 10 消費
+	- 基本HP: 30 消費
   → 残HP: 10 (基本HP:10)
 
 【即死判定開始】イエティ → ファイアードレイク
@@ -1009,31 +1009,31 @@ func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipa
 ```gdscript
 # BattleParticipant._check_first_strike()
 func _check_first_strike() -> bool:
-    var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-    
-    # 後手スキルを持つ場合、先制を無効化
-    if "後手" in keywords:
-        return false
-    
-    return "先制" in keywords
+	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
+	
+	# 後手スキルを持つ場合、先制を無効化
+	if "後手" in keywords:
+		return false
+	
+	return "先制" in keywords
 
 # BattleSystem._determine_attack_order()
 func _determine_attack_order(attacker: BattleParticipant, defender: BattleParticipant) -> Array:
-    var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
-    var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
-    var attacker_has_last_strike = "後手" in attacker_keywords
-    var defender_has_last_strike = "後手" in defender_keywords
-    
-    # 後手持ちは相手が先攻
-    if attacker_has_last_strike and not defender_has_last_strike:
-        return [defender, attacker]  # 侵略側が後手 → 防御側が先攻
-    elif defender_has_last_strike and not attacker_has_last_strike:
-        return [attacker, defender]  # 防御側が後手 → 侵略側が先攻
-    elif attacker_has_last_strike and defender_has_last_strike:
-        return [attacker, defender]  # 両者後手 → 侵略側優先
-    
-    # 通常の先制判定
-    # ...
+	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
+	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
+	var attacker_has_last_strike = "後手" in attacker_keywords
+	var defender_has_last_strike = "後手" in defender_keywords
+	
+	# 後手持ちは相手が先攻
+	if attacker_has_last_strike and not defender_has_last_strike:
+		return [defender, attacker]  # 侵略側が後手 → 防御側が先攻
+	elif defender_has_last_strike and not attacker_has_last_strike:
+		return [attacker, defender]  # 防御側が後手 → 侵略側が先攻
+	elif attacker_has_last_strike and defender_has_last_strike:
+		return [attacker, defender]  # 両者後手 → 侵略側優先
+	
+	# 通常の先制判定
+	# ...
 ```
 
 #### 実装クリーチャー（1体）
@@ -1047,13 +1047,13 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 ```json
 {
   "ability_parsed": {
-    "keywords": ["後手", "即死"],
-    "keyword_conditions": {
-      "即死": {
-        "condition_type": "none",
-        "probability": 70
-      }
-    }
+	"keywords": ["後手", "即死"],
+	"keyword_conditions": {
+	  "即死": {
+		"condition_type": "none",
+		"probability": 70
+	  }
+	}
   }
 }
 ```
@@ -1070,7 +1070,7 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 【第1攻撃】防御側の攻撃
   キングバラン AP:60 → アネイマブル
   ダメージ処理:
-    - 基本HP: 10 消費
+	- 基本HP: 10 消費
   → 残HP: 0
   → アネイマブル 撃破！
 
@@ -1087,13 +1087,13 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 【第1攻撃】防御側の攻撃
   ゴブリン AP:20 → アネイマブル
   ダメージ処理:
-    - 基本HP: 10 消費
+	- 基本HP: 10 消費
   → 残HP: 0（致死ダメージだが、まだ攻撃可能）
 
 【第2攻撃】侵略側の攻撃
   アネイマブル AP:50 → ゴブリン
   ダメージ処理:
-    - 基本HP: 30 消費
+	- 基本HP: 30 消費
   → 残HP: 0
   
 【即死判定開始】アネイマブル → ゴブリン
@@ -1123,8 +1123,8 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 #### 将来実装
 ```gdscript
 func can_spell_affect(target_creature: Dictionary, spell: Dictionary) -> bool:
-    var keywords = target_creature.get("ability_parsed", {}).get("keywords", [])
-    return not "防魔" in keywords
+	var keywords = target_creature.get("ability_parsed", {}).get("keywords", [])
+	return not "防魔" in keywords
 ```
 
 ---
@@ -1144,13 +1144,13 @@ AP = 基本AP + (土地数 × 係数)
 ```json
 {
   "ability_parsed": {
-    "effects": [{
-      "effect_type": "modify_stats",
-      "target": "self",
-      "stat": "AP",
-      "operation": "multiply",
-      "formula": "fire_lands * 10"
-    }]
+	"effects": [{
+	  "effect_type": "modify_stats",
+	  "target": "self",
+	  "stat": "AP",
+	  "operation": "multiply",
+	  "formula": "fire_lands * 10"
+	}]
   }
 }
 ```
@@ -1185,10 +1185,10 @@ AP = 0 + (3 × 10) = 30
    ├─ 攻撃順決定（先制・後手判定）
    ├─ 各攻撃ごとにダメージ適用
    └─ **攻撃後に即死判定** (_check_instant_death)
-      ├─ 即死スキル保持チェック
-      ├─ 条件判定（属性、ST、立場など）
-      ├─ 確率判定
-      └─ 成功時: instant_death_flag = true, HP = 0
+	  ├─ 即死スキル保持チェック
+	  ├─ 条件判定（属性、ST、立場など）
+	  ├─ 確率判定
+	  └─ 成功時: instant_death_flag = true, HP = 0
    
 5. バトル結果判定 (_resolve_battle_result)
    ├─ HPチェック
@@ -1222,18 +1222,18 @@ AP: 75 (×1.5)
 
 ```gdscript
 func _apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
-    var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
-    
-    # 1. 感応スキル適用
-    _apply_resonance_skill(participant, context)
-    
-    # 2. 強打スキル適用（感応適用後のAPを基準）
-    var modified_creature_data = participant.creature_data.duplicate()
-    modified_creature_data["ap"] = participant.current_ap  # 感応後のAP
-    var modified = effect_combat.apply_power_strike(modified_creature_data, context)
-    participant.current_ap = modified.get("ap", participant.current_ap)
-    
-    # 3. その他スキル（将来実装）
+	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
+	
+	# 1. 感応スキル適用
+	_apply_resonance_skill(participant, context)
+	
+	# 2. 強打スキル適用（感応適用後のAPを基準）
+	var modified_creature_data = participant.creature_data.duplicate()
+	modified_creature_data["ap"] = participant.current_ap  # 感応後のAP
+	var modified = effect_combat.apply_power_strike(modified_creature_data, context)
+	participant.current_ap = modified.get("ap", participant.current_ap)
+	
+	# 3. その他スキル（将来実装）
 ```
 
 ---
@@ -1278,41 +1278,41 @@ func _apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 
 ```gdscript
 func take_damage(damage: int) -> Dictionary:
-    var remaining_damage = damage
-    var damage_breakdown = {
-        "resonance_bonus_consumed": 0,
-        "land_bonus_consumed": 0,
-        "item_bonus_consumed": 0,
-        "spell_bonus_consumed": 0,
-        "base_hp_consumed": 0
-    }
-    
-    # 1. 感応ボーナスから消費
-    if resonance_bonus_hp > 0 and remaining_damage > 0:
-        var consumed = min(resonance_bonus_hp, remaining_damage)
-        resonance_bonus_hp -= consumed
-        remaining_damage -= consumed
-        damage_breakdown["resonance_bonus_consumed"] = consumed
-    
-    # 2. 土地ボーナスから消費
-    if land_bonus_hp > 0 and remaining_damage > 0:
-        var consumed = min(land_bonus_hp, remaining_damage)
-        land_bonus_hp -= consumed
-        remaining_damage -= consumed
-        damage_breakdown["land_bonus_consumed"] = consumed
-    
-    # 3. アイテムボーナス（将来実装）
-    # 4. スペルボーナス（将来実装）
-    
-    # 5. 基本HPから消費
-    if remaining_damage > 0:
-        base_hp -= remaining_damage
-        damage_breakdown["base_hp_consumed"] = remaining_damage
-    
-    # 現在HPを更新
-    update_current_hp()
-    
-    return damage_breakdown
+	var remaining_damage = damage
+	var damage_breakdown = {
+		"resonance_bonus_consumed": 0,
+		"land_bonus_consumed": 0,
+		"item_bonus_consumed": 0,
+		"spell_bonus_consumed": 0,
+		"base_hp_consumed": 0
+	}
+	
+	# 1. 感応ボーナスから消費
+	if resonance_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(resonance_bonus_hp, remaining_damage)
+		resonance_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["resonance_bonus_consumed"] = consumed
+	
+	# 2. 土地ボーナスから消費
+	if land_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(land_bonus_hp, remaining_damage)
+		land_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["land_bonus_consumed"] = consumed
+	
+	# 3. アイテムボーナス（将来実装）
+	# 4. スペルボーナス（将来実装）
+	
+	# 5. 基本HPから消費
+	if remaining_damage > 0:
+		base_hp -= remaining_damage
+		damage_breakdown["base_hp_consumed"] = remaining_damage
+	
+	# 現在HPを更新
+	update_current_hp()
+	
+	return damage_breakdown
 ```
 
 ### バトルフロー内での使用
@@ -1320,12 +1320,12 @@ func take_damage(damage: int) -> Dictionary:
 ```gdscript
 # 1. 参加者作成
 var attacker = BattleParticipant.new(
-    card_data,      # クリーチャーデータ
-    base_hp,        # 基本HP
-    land_bonus,     # 土地ボーナスHP
-    ap,             # 攻撃力
-    true,           # is_attacker
-    player_id       # プレイヤーID
+	card_data,      # クリーチャーデータ
+	base_hp,        # 基本HP
+	land_bonus,     # 土地ボーナスHP
+	ap,             # 攻撃力
+	true,           # is_attacker
+	player_id       # プレイヤーID
 )
 
 # 2. スキル適用
@@ -1348,24 +1348,24 @@ print("  → 残HP: ", attacker.current_hp)
 ```gdscript
 # 合計HPを再計算
 func update_current_hp():
-    current_hp = base_hp + resonance_bonus_hp + land_bonus_hp + 
-                 item_bonus_hp + spell_bonus_hp
+	current_hp = base_hp + resonance_bonus_hp + land_bonus_hp + 
+				 item_bonus_hp + spell_bonus_hp
 
 # ダメージ処理（消費順序に従う）
 func take_damage(damage: int) -> Dictionary
 
 # 生存判定
 func is_alive() -> bool:
-    return current_hp > 0
+	return current_hp > 0
 
 # デバッグ用ステータス表示
 func get_status_string() -> String:
-    return "%s (HP:%d/%d, AP:%d)" % [
-        creature_data.get("name", "不明"),
-        current_hp,
-        base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp,
-        current_ap
-    ]
+	return "%s (HP:%d/%d, AP:%d)" % [
+		creature_data.get("name", "不明"),
+		current_hp,
+		base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp,
+		current_ap
+	]
 ```
 
 ---
@@ -1415,20 +1415,20 @@ func get_status_string() -> String:
 ```gdscript
 # ConditionChecker
 func evaluate_condition(condition: Dictionary, context: Dictionary) -> bool:
-    var condition_type = condition.get("condition_type", "")
-    
-    match condition_type:
-        "adjacent_ally_land":
-            var board_system = context.get("board_system")
-            var player_id = context.get("player_id", -1)
-            var battle_tile = context.get("battle_tile_index", -1)
-            
-            if not board_system or player_id < 0 or battle_tile < 0:
-                return false
-            
-            return board_system.tile_neighbor_system.has_adjacent_ally_land(
-                battle_tile, player_id, board_system
-            )
+	var condition_type = condition.get("condition_type", "")
+	
+	match condition_type:
+		"adjacent_ally_land":
+			var board_system = context.get("board_system")
+			var player_id = context.get("player_id", -1)
+			var battle_tile = context.get("battle_tile_index", -1)
+			
+			if not board_system or player_id < 0 or battle_tile < 0:
+				return false
+			
+			return board_system.tile_neighbor_system.has_adjacent_ally_land(
+				battle_tile, player_id, board_system
+			)
 ```
 
 #### 使用例（ローンビースト）
@@ -1438,13 +1438,13 @@ func evaluate_condition(condition: Dictionary, context: Dictionary) -> bool:
   "id": 49,
   "name": "ローンビースト",
   "ability_parsed": {
-    "effects": [{
-      "effect_type": "power_strike",
-      "multiplier": 1.5,
-      "conditions": [
-        {"condition_type": "adjacent_ally_land"}
-      ]
-    }]
+	"effects": [{
+	  "effect_type": "power_strike",
+	  "multiplier": 1.5,
+	  "conditions": [
+		{"condition_type": "adjacent_ally_land"}
+	  ]
+	}]
   }
 }
 ```
@@ -1523,8 +1523,8 @@ func evaluate_condition(condition: Dictionary, context: Dictionary) -> bool:
   "effect_type": "grant_skill",
   "skill": "強打",
   "condition": {
-    "condition_type": "user_element",
-    "elements": ["fire"]
+	"condition_type": "user_element",
+	"elements": ["fire"]
   }
 }
 ```
@@ -1603,8 +1603,8 @@ _apply_skills(defender)
 ```gdscript
 // HandDisplay.create_card_node()
 if filter_mode == "item":
-    if not is_item_card:
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	if not is_item_card:
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 ```
 
 #### GameFlowManager プレイヤーID参照
@@ -1612,13 +1612,13 @@ if filter_mode == "item":
 **アイテムフェーズ中の特別処理**:
 ```gdscript
 func on_card_selected(card_index: int):
-    var target_player_id = player_system.get_current_player().id
-    
-    // アイテムフェーズ中は ItemPhaseHandler.current_player_id を使用
-    if item_phase_handler and item_phase_handler.is_item_phase_active():
-        target_player_id = item_phase_handler.current_player_id
-    
-    var hand = card_system.get_all_cards_for_player(target_player_id)
+	var target_player_id = player_system.get_current_player().id
+	
+	// アイテムフェーズ中は ItemPhaseHandler.current_player_id を使用
+	if item_phase_handler and item_phase_handler.is_item_phase_active():
+		target_player_id = item_phase_handler.current_player_id
+	
+	var hand = card_system.get_all_cards_for_player(target_player_id)
 ```
 
 **理由**:
@@ -1633,9 +1633,9 @@ func on_card_selected(card_index: int):
   "cost": {"mp": 10},
   "effect": "ST+30",
   "ability_parsed": {
-    "effects": [
-      {"effect_type": "buff_ap", "value": 30}
-    ]
+	"effects": [
+	  {"effect_type": "buff_ap", "value": 30}
+	]
   }
 }
 ```
@@ -1646,17 +1646,17 @@ func on_card_selected(card_index: int):
   "cost": {"mp": 20},
   "effect": "ST+20；💧🌱使用時、強打",
   "ability_parsed": {
-    "effects": [
-      {"effect_type": "buff_ap", "value": 20},
-      {
-        "effect_type": "grant_skill",
-        "skill": "強打",
-        "condition": {
-          "condition_type": "user_element",
-          "elements": ["fire"]
-        }
-      }
-    ]
+	"effects": [
+	  {"effect_type": "buff_ap", "value": 20},
+	  {
+		"effect_type": "grant_skill",
+		"skill": "強打",
+		"condition": {
+		  "condition_type": "user_element",
+		  "elements": ["fire"]
+		}
+	  }
+	]
   }
 }
 ```
@@ -1674,12 +1674,12 @@ func on_card_selected(card_index: int):
 ```json
 {
   "ability_parsed": {
-    "keywords": ["連撃"],
-    "keyword_conditions": {
-      "連撃": {
-        "attack_count": 2
-      }
-    }
+	"keywords": ["連撃"],
+	"keyword_conditions": {
+	  "連撃": {
+		"attack_count": 2
+	  }
+	}
   }
 }
 ```
@@ -1687,14 +1687,14 @@ func on_card_selected(card_index: int):
 #### 実装イメージ
 ```gdscript
 func _execute_attack_sequence(attack_order: Array) -> void:
-    for attacker in attack_order:
-        var attack_count = get_attack_count(attacker)  # 連撃判定
-        
-        for i in range(attack_count):
-            if not attacker.is_alive() or not defender.is_alive():
-                break
-            
-            defender.take_damage(attacker.current_ap)
+	for attacker in attack_order:
+		var attack_count = get_attack_count(attacker)  # 連撃判定
+		
+		for i in range(attack_count):
+			if not attacker.is_alive() or not defender.is_alive():
+				break
+			
+			defender.take_damage(attacker.current_ap)
 ```
 
 ### 2. 巻物攻撃スキル
@@ -1706,7 +1706,7 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 ```json
 {
   "ability_parsed": {
-    "keywords": ["巻物攻撃"]
+	"keywords": ["巻物攻撃"]
   }
 }
 ```
@@ -1724,10 +1724,10 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 ```json
 {
   "ability_parsed": {
-    "effects": [{
-      "effect_type": "counter_attack",
-      "damage_ratio": 0.5
-    }]
+	"effects": [{
+	  "effect_type": "counter_attack",
+	  "damage_ratio": 0.5
+	}]
   }
 }
 ```
@@ -1741,11 +1741,11 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 ```json
 {
   "ability_parsed": {
-    "effects": [{
-      "effect_type": "heal",
-      "timing": "turn_start",
-      "amount": 10
-    }]
+	"effects": [{
+	  "effect_type": "heal",
+	  "timing": "turn_start",
+	  "amount": 10
+	}]
   }
 }
 ```
@@ -1759,7 +1759,7 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 ```json
 {
   "ability_parsed": {
-    "keywords": ["スペル反射"]
+	"keywords": ["スペル反射"]
   }
 }
 ```

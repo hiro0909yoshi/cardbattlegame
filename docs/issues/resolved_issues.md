@@ -152,11 +152,11 @@
 ```gdscript
 // 修正前
 func set_down_state(is_down: bool):
-    down_state = is_down
+	down_state = is_down
 
 // 修正後
 func set_down_state(should_be_down: bool):
-    down_state = should_be_down
+	down_state = should_be_down
 ```
 
 #### ~~WARN-007: 未使用パラメータtile_info~~
@@ -188,17 +188,17 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 ```gdscript
 // 修正前
 match condition_type:
-    "enemy_is_element": ...
-    _:
-        return false
-    
-    return false  # 到達不能
+	"enemy_is_element": ...
+	_:
+		return false
+	
+	return false  # 到達不能
 
 // 修正後
 match condition_type:
-    "enemy_is_element": ...
-    _:
-        return false
+	"enemy_is_element": ...
+	_:
+		return false
 // 不要なreturnを削除
 ```
 

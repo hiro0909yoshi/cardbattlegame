@@ -285,8 +285,8 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
    │     └─ HP + (レベル × 10)
    ├─ 防御側の土地ボーナス適用
    └─ アイテム効果適用 (NEW)
-      ├─ AP/HP強化
-      └─ スキル付与
+	  ├─ AP/HP強化
+	  └─ スキル付与
 
 5. 攻撃側の先制攻撃
    ├─ AP ≥ 防御側HP? → 攻撃側勝利
@@ -392,7 +392,7 @@ SpellPhaseHandler
   ├─ スペルカード以外をグレーアウト
   ├─ 「スペルを選択してください」表示
   └─ 人間プレイヤー: カード選択UI表示
-     CPU: 簡易AI判定（30%確率）
+	 CPU: 簡易AI判定（30%確率）
   ↓
 スペル使用 or ダイスボタンでスキップ
   ↓
@@ -442,8 +442,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary)
 **1. damage - クリーチャーへのダメージ**
 ```gdscript
 {
-    "effect_type": "damage",
-    "value": 20  # ダメージ量
+	"effect_type": "damage",
+	"value": 20  # ダメージ量
 }
 ```
 - クリーチャーの基本HPと土地ボーナスHPを削る
@@ -453,9 +453,9 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary)
 **2. drain_magic - 魔力吸収**
 ```gdscript
 {
-    "effect_type": "drain_magic",
-    "value": 30,
-    "value_type": "percentage"  # or "fixed"
+	"effect_type": "drain_magic",
+	"value": 30,
+	"value_type": "percentage"  # or "fixed"
 }
 ```
 - 対象プレイヤーから魔力を奪う
@@ -466,23 +466,23 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary)
 #### スペルカードのデータ構造
 ```json
 {
-    "id": 201,
-    "name": "マジックボルト",
-    "type": "spell",
-    "cost": {"mp": 50},
-    "ability": "対象の敵クリーチャーに20ダメージ",
-    "ability_parsed": {
-        "target": {
-            "type": "creature",
-            "required": true
-        },
-        "effects": [
-            {
-                "effect_type": "damage",
-                "value": 20
-            }
-        ]
-    }
+	"id": 201,
+	"name": "マジックボルト",
+	"type": "spell",
+	"cost": {"mp": 50},
+	"ability": "対象の敵クリーチャーに20ダメージ",
+	"ability_parsed": {
+		"target": {
+			"type": "creature",
+			"required": true
+		},
+		"effects": [
+			{
+				"effect_type": "damage",
+				"value": 20
+			}
+		]
+	}
 }
 ```
 
@@ -524,13 +524,13 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary)
 
 # HandDisplay: グレーアウト適用
 if filter_mode == "spell":
-    # スペルカード以外をグレーアウト
-    if not is_spell_card:
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	# スペルカード以外をグレーアウト
+	if not is_spell_card:
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 elif filter_mode == "":
-    # スペルカードをグレーアウト
-    if is_spell_card:
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	# スペルカードをグレーアウト
+	if is_spell_card:
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 ```
 
 #### 新しいスペル効果の追加方法
@@ -538,23 +538,23 @@ elif filter_mode == "":
 `_apply_single_effect()`メソッドに新しいケースを追加:
 ```gdscript
 match effect_type:
-    "damage":
-        # 既存のダメージ処理
-    
-    "drain_magic":
-        # 既存の魔力吸収処理
-    
-    "heal":  # 新しい効果
-        # HP回復処理
-        if target_data.get("type", "") == "creature":
-            var creature = # ... 対象取得
-            creature["hp"] += value
-            print("回復: +%d HP" % value)
-    
-    "buff_st":  # STバフ
-        # ST上昇処理
-        
-    # ... その他の効果
+	"damage":
+		# 既存のダメージ処理
+	
+	"drain_magic":
+		# 既存の魔力吸収処理
+	
+	"heal":  # 新しい効果
+		# HP回復処理
+		if target_data.get("type", "") == "creature":
+			var creature = # ... 対象取得
+			creature["hp"] += value
+			print("回復: +%d HP" % value)
+	
+	"buff_st":  # STバフ
+		# ST上昇処理
+		
+	# ... その他の効果
 ```
 
 #### 注意事項
@@ -785,12 +785,12 @@ card_definitions.jsonから直接カードデータを読み込む実装に変�
 **レベルコスト（累計方式）**:
 ```gdscript
 const LEVEL_COSTS = {
-    0: 0,
-    1: 0,
-    2: 80,      // Lv1→2: 80G
-    3: 240,     // Lv1→3: 240G (80 + 160)
-    4: 620,     // Lv1→4: 620G (80 + 160 + 380)
-    5: 1200     // Lv1→5: 1200G (80 + 160 + 380 + 580)
+	0: 0,
+	1: 0,
+	2: 80,      // Lv1→2: 80G
+	3: 240,     // Lv1→3: 240G (80 + 160)
+	4: 620,     // Lv1→4: 620G (80 + 160 + 380)
+	5: 1200     // Lv1→5: 1200G (80 + 160 + 380 + 580)
 }
 
 // コスト計算
@@ -801,6 +801,143 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 - `LandCommandHandler`: 領地コマンドのロジック
 - `UIManager`: アクションメニュー・レベル選択パネルのUI
 - `GameFlowManager`: ターン終了処理
+
+---
+
+### 🆕 ダウン状態システム（Phase 1-A）
+
+#### 概要
+土地でアクション（召喚、レベルアップ、移動、交換）を実行すると、その土地は「ダウン状態」になり、次のターンまで再度選択できなくなる。
+
+#### ダウン状態の設定タイミング
+- 召喚実行後
+- レベルアップ実行後
+- クリーチャー移動実行後（移動先の土地）
+- クリーチャー交換実行後
+
+#### ダウン状態の解除タイミング
+- プレイヤーがスタートマスを通過したとき
+- 全プレイヤーの全土地のダウン状態が一括解除される
+
+#### 制約
+- **ダウン状態の土地は領地コマンドで選択できない**
+  - `get_player_owned_lands()`でダウン状態の土地を除外
+  - UI上で選択肢として表示されない
+- ダウン状態でもクリーチャーは通常通り機能する
+  - バトルの防御側として機能
+  - 通行料は発生する
+
+#### 実装
+```gdscript
+# ダウン状態の設定
+tile.set_down(true)
+
+# ダウン状態の確認
+if tile.is_down():
+	# 選択不可
+
+# ダウン状態の解除（スタート通過時）
+movement_controller.clear_all_down_states_for_player(player_id)
+```
+
+#### デバッグコマンド
+- **Uキー**: 現在プレイヤーの全土地のダウン状態を即座に解除
+- テスト用の機能（本番では無効化予定）
+
+---
+
+### 🆕 領地コマンドの制約（Phase 1-A）
+
+#### 基本制約
+1. **1ターンに1回のみ実行可能**
+   - レベルアップ、移動、交換のいずれか1つのみ
+   - 実行後は自動的にターン終了
+   
+2. **召喚と領地コマンドは排他的**
+   - 召喚を実行した場合、領地コマンドは実行できない
+   - 領地コマンドを実行した場合、召喚は実行できない
+   - どちらか一方のみ選択可能
+
+3. **ダウン状態の土地は選択不可**
+   - アクション実行済みの土地は次のターンまで使用不可
+   - 選択肢として表示されない
+
+#### 土地選択の操作方法
+- **矢印キー（↑↓←→）**: 土地を切り替え（プレビュー）
+- **Enterキー**: 選択を確定してアクションメニューへ
+- **数字キー（1-0）**: 該当する土地を即座に確定
+- **C/Escapeキー**: キャンセル
+
+#### アクション選択
+- **Lキー**: レベルアップ
+- **Mキー**: クリーチャー移動
+- **Sキー**: クリーチャー交換
+- **C/Escapeキー**: 前画面に戻る
+
+---
+
+### 🆕 クリーチャー移動フロー（Phase 1-A）
+
+```
+領地コマンド → 移動を選択
+  ↓
+移動元の土地を選択（ダウン状態除外）
+  ↓
+隣接する移動先を表示
+  ├─ 空き地
+  ├─ 自分の土地（移動不可）
+  └─ 敵の土地
+  ↓
+移動先を選択（↑↓キーで切り替え）
+  ↓
+【空き地への移動】
+  - 移動元が空き地になる
+  - 移動先に土地獲得
+  - クリーチャー配置
+  - ダウン状態設定
+  - ターン終了
+  
+【敵地への移動】
+  - 移動元が空き地になる
+  - バトル実行
+  - 勝利: 土地獲得 + ダウン設定
+  - 敗北: クリーチャー消滅
+  - ターン終了
+```
+
+**実装クラス**:
+- `LandCommandHandler.execute_move_creature()`
+- `LandCommandHandler.confirm_move()`
+
+---
+
+### 🆕 クリーチャー交換フロー（Phase 1-A）
+
+```
+領地コマンド → 交換を選択
+  ↓
+交換対象の土地を選択（ダウン状態除外）
+  ↓
+手札にクリーチャーカードがあるか確認
+  ├─ なし → エラーメッセージ
+  └─ あり → 次へ
+  ↓
+新しいクリーチャーカードを選択
+  ↓
+元のクリーチャーを手札に戻す
+  ↓
+新しいクリーチャーを召喚
+  - コスト支払い（mp × 10G）
+  - 土地ボーナス適用
+  - 土地レベル継承
+  - ダウン状態設定
+  ↓
+ターン終了
+```
+
+**実装クラス**:
+- `LandCommandHandler.execute_swap_creature()`
+- `TileActionProcessor.execute_swap()`
 
 ---
 
@@ -840,9 +977,9 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
   │   ├─ buff_hp: HP増加（item_bonus_hp）
   │   └─ grant_skill: スキル付与（強打、先制など）
   └─ 防御側のアイテム効果適用
-      ├─ buff_ap: AP増加
-      ├─ buff_hp: HP増加（item_bonus_hp）
-      └─ grant_skill: スキル付与
+	  ├─ buff_ap: AP増加
+	  ├─ buff_hp: HP増加（item_bonus_hp）
+	  └─ grant_skill: スキル付与
   ↓
 🆕 攻撃側カードに土地ボーナス適用
   ├─ カード属性 = タイル属性?
@@ -1128,13 +1265,13 @@ is_action_processing = true のまま！ ← リセット失敗
 # land_command_handler.gd
 # 両方のフラグをリセットするため、TileActionProcessor経由で通知
 if board_system and board_system.tile_action_processor:
-    board_system.tile_action_processor._complete_action()
-    # これにより:
-    # 1. is_action_processing = false
-    # 2. action_completed シグナル発行
-    # 3. BoardSystem3D._on_action_completed()
-    # 4. is_waiting_for_action = false
-    # 5. tile_action_completed シグナル発行
+	board_system.tile_action_processor._complete_action()
+	# これにより:
+	# 1. is_action_processing = false
+	# 2. action_completed シグナル発行
+	# 3. BoardSystem3D._on_action_completed()
+	# 4. is_waiting_for_action = false
+	# 5. tile_action_completed シグナル発行
 ```
 
 #### ✅ 恒久対応完了（2025/10/16 - TECH-002）
