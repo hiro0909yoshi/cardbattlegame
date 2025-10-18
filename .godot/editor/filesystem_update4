@@ -1,5 +1,4 @@
-res://scripts/battle_test/battle_test_ui.gd
 res://scenes/MainMenu.tscn
 res://scenes/Tiles/NeutralTile.tscn
 res://scenes/battle_test_tool.tscn
-res://scripts/battle_test/battle_test_result.gd
+res://scripts/battle_test/battle_test_ui.gd

@@ -67,26 +67,99 @@ rounded = true
 [node name="HSeparator5" type="HSeparator" parent="MainContainer"]
 layout_mode = 2
 
+[node name="Label5" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "攻撃側クリーチャー"
+
 [node name="AttackerContainer" type="HBoxContainer" parent="MainContainer"]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="MainContainer/AttackerContainer"]
 layout_mode = 2
-text = "攻撃側クリーチャーID"
+text = "ID"
 
 [node name="AttackerCreatureInput" type="LineEdit" parent="MainContainer/AttackerContainer"]
+custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 
-[node name="AttackerItemContainer" type="HBoxContainer" parent="MainContainer"]
+[node name="AttackerCreatureAddButton" type="Button" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+text = "追加"
+
+[node name="Label5" type="Label" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+text = "プリセット"
+
+[node name="CreaturePresetOption" type="OptionButton" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+item_count = 7
+popup/item_0/text = "火"
+popup/item_0/id = 0
+popup/item_1/text = "水"
+popup/item_1/id = 1
+popup/item_2/text = "風"
+popup/item_2/id = 2
+popup/item_3/text = "地"
+popup/item_3/id = 3
+popup/item_4/text = "先制攻撃"
+popup/item_4/id = 4
+popup/item_5/text = "強打持ち"
+popup/item_5/id = 5
+popup/item_6/text = "無効化持ち"
+popup/item_6/id = 6
+
+[node name="AttackerCreaturePresetAddButton" type="Button" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+text = "一括追加"
+
+[node name="AttackerCreatureList" type="ItemList" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MainContainer/AttackerItemContainer"]
+[node name="AttackerCreatureButtonContainer" type="HBoxContainer" parent="MainContainer"]
 layout_mode = 2
-text = "攻撃側アイテムID"
 
-[node name="AttackerItemInput" type="LineEdit" parent="MainContainer/AttackerItemContainer"]
+[node name="AttackerCreatureDeleteButton" type="Button" parent="MainContainer/AttackerCreatureButtonContainer"]
 layout_mode = 2
-placeholder_text = "なし"
+text = "選択削除"
+
+[node name="AttackerCreatureClearButton" type="Button" parent="MainContainer/AttackerCreatureButtonContainer"]
+layout_mode = 2
+text = "全削除"
+
+[node name="AttackerItemInputContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/AttackerItemInputContainer"]
+layout_mode = 2
+text = "アイテムID"
+
+[node name="AttackerItemIdInput" type="LineEdit" parent="MainContainer/AttackerItemInputContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+
+[node name="AttackerItemAddButton" type="Button" parent="MainContainer/AttackerItemInputContainer"]
+layout_mode = 2
+text = "追加"
+
+[node name="AttackerItemAddNoneButton" type="Button" parent="MainContainer/AttackerItemInputContainer"]
+layout_mode = 2
+text = "なし追加"
+
+[node name="AttackerItemList" type="ItemList" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="AttackerItemButtonContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="AttackerItemDeleteButton" type="Button" parent="MainContainer/AttackerItemButtonContainer"]
+layout_mode = 2
+text = "選択削除"
+
+[node name="AttackerItemClearButton" type="Button" parent="MainContainer/AttackerItemButtonContainer"]
+layout_mode = 2
+text = "全削除"
 
 [node name="HSeparator2" type="HSeparator" parent="MainContainer"]
 layout_mode = 2
@@ -137,28 +210,142 @@ rounded = true
 [node name="HSeparator6" type="HSeparator" parent="MainContainer"]
 layout_mode = 2
 
+[node name="Label6" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "防御側クリーチャー"
+
 [node name="DefenderContainer" type="HBoxContainer" parent="MainContainer"]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="MainContainer/DefenderContainer"]
 layout_mode = 2
-text = "防御側クリーチャーID"
+text = "ID"
 
 [node name="DefenderCreatureInput" type="LineEdit" parent="MainContainer/DefenderContainer"]
+custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 
-[node name="DefenderItemContainer" type="HBoxContainer" parent="MainContainer"]
+[node name="DefenderCreatureAddButton" type="Button" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+text = "追加"
+
+[node name="Label5" type="Label" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+text = "プリセット"
+
+[node name="CreaturePresetOption" type="OptionButton" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+item_count = 7
+popup/item_0/text = "火"
+popup/item_0/id = 0
+popup/item_1/text = "水"
+popup/item_1/id = 1
+popup/item_2/text = "風"
+popup/item_2/id = 2
+popup/item_3/text = "地"
+popup/item_3/id = 3
+popup/item_4/text = "先制攻撃"
+popup/item_4/id = 4
+popup/item_5/text = "強打持ち"
+popup/item_5/id = 5
+popup/item_6/text = "無効化持ち"
+popup/item_6/id = 6
+
+[node name="DefenderCreaturePresetAddButton" type="Button" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+text = "一括追加"
+
+[node name="DefenderCreatureList" type="ItemList" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MainContainer/DefenderItemContainer"]
+[node name="DefenderCreatureButtonContainer" type="HBoxContainer" parent="MainContainer"]
 layout_mode = 2
-text = "防御側アイテムID"
 
-[node name="DefenderItemInput" type="LineEdit" parent="MainContainer/DefenderItemContainer"]
+[node name="DefenderCreatureDeleteButton" type="Button" parent="MainContainer/DefenderCreatureButtonContainer"]
 layout_mode = 2
-placeholder_text = "なし"
+text = "選択削除"
+
+[node name="DefenderCreatureClearButton" type="Button" parent="MainContainer/DefenderCreatureButtonContainer"]
+layout_mode = 2
+text = "全削除"
+
+[node name="DefenderItemInputContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/DefenderItemInputContainer"]
+layout_mode = 2
+text = "アイテムID"
+
+[node name="DefenderItemIdInput" type="LineEdit" parent="MainContainer/DefenderItemInputContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+
+[node name="DefenderItemAddButton" type="Button" parent="MainContainer/DefenderItemInputContainer"]
+layout_mode = 2
+text = "追加"
+
+[node name="DefenderItemAddNoneButton" type="Button" parent="MainContainer/DefenderItemInputContainer"]
+layout_mode = 2
+text = "なし追加"
+
+[node name="DefenderItemList" type="ItemList" parent="MainContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="DefenderItemButtonContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="DefenderItemDeleteButton" type="Button" parent="MainContainer/DefenderItemButtonContainer"]
+layout_mode = 2
+text = "選択削除"
+
+[node name="DefenderItemClearButton" type="Button" parent="MainContainer/DefenderItemButtonContainer"]
+layout_mode = 2
+text = "全削除"
 
 [node name="HSeparator3" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label4" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "バトル条件"
+
+[node name="BattleLandContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="MainContainer/BattleLandContainer"]
+layout_mode = 2
+text = "バトル発生土地"
+
+[node name="BattleLandOption" type="OptionButton" parent="MainContainer/BattleLandContainer"]
+layout_mode = 2
+item_count = 4
+popup/item_0/text = "\"火\""
+popup/item_0/id = 0
+popup/item_1/text = "\"水\""
+popup/item_1/id = 1
+popup/item_2/text = "\"風\""
+popup/item_2/id = 2
+popup/item_3/text = "\"地\""
+popup/item_3/id = 3
+
+[node name="AdjacentContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label6" type="Label" parent="MainContainer/AdjacentContainer"]
+layout_mode = 2
+text = "隣接条件"
+
+[node name="AttackerAdjacentCheck" type="CheckBox" parent="MainContainer/AdjacentContainer"]
+layout_mode = 2
+text = "攻撃側"
+
+[node name="DefenderAdjacentCheck" type="CheckBox" parent="MainContainer/AdjacentContainer"]
+layout_mode = 2
+text = "防御側"
+
+[node name="HSeparator4" type="HSeparator" parent="MainContainer"]
 layout_mode = 2
 
 [node name="SwapContainer" type="HBoxContainer" parent="MainContainer"]
@@ -168,7 +355,7 @@ layout_mode = 2
 layout_mode = 2
 text = "攻撃⇔防御 入れ替え"
 
-[node name="HSeparator4" type="HSeparator" parent="MainContainer"]
+[node name="HSeparator9" type="HSeparator" parent="MainContainer"]
 layout_mode = 2
 
 [node name="ExecuteButton" type="Button" parent="MainContainer"]

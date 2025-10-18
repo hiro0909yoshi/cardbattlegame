@@ -6,111 +6,333 @@ var config: BattleTestConfig = BattleTestConfig.new()
 var results: Array = []  # BattleTestResult配列
 var statistics: BattleTestStatistics = null
 
-## UI要素
-@onready var attacker_creature_input: LineEdit = $MainContainer/AttackerContainer/AttackerCreatureInput
-@onready var attacker_item_input: LineEdit = $MainContainer/AttackerItemContainer/AttackerItemInput
-@onready var defender_creature_input: LineEdit = $MainContainer/DefenderContainer/DefenderCreatureInput
-@onready var defender_item_input: LineEdit = $MainContainer/DefenderItemContainer/DefenderItemInput
+## 攻撃側クリーチャー
+@onready var attacker_creature_id_input: LineEdit = $MainContainer/AttackerContainer/AttackerCreatureInput
+@onready var attacker_creature_add_button: Button = $MainContainer/AttackerContainer/AttackerCreatureAddButton
+@onready var attacker_creature_preset_option: OptionButton = $MainContainer/AttackerContainer/CreaturePresetOption
+@onready var attacker_creature_preset_add_button: Button = $MainContainer/AttackerContainer/AttackerCreaturePresetAddButton
+@onready var attacker_creature_list: ItemList = $MainContainer/AttackerCreatureList
+@onready var attacker_creature_delete_button: Button = $MainContainer/AttackerCreatureButtonContainer/AttackerCreatureDeleteButton
+@onready var attacker_creature_clear_button: Button = $MainContainer/AttackerCreatureButtonContainer/AttackerCreatureClearButton
 
-# 土地設定（攻撃側）
+## 攻撃側アイテム
+@onready var attacker_item_id_input: LineEdit = $MainContainer/AttackerItemInputContainer/AttackerItemIdInput
+@onready var attacker_item_add_button: Button = $MainContainer/AttackerItemInputContainer/AttackerItemAddButton
+@onready var attacker_item_add_none_button: Button = $MainContainer/AttackerItemInputContainer/AttackerItemAddNoneButton
+@onready var attacker_item_list: ItemList = $MainContainer/AttackerItemList
+@onready var attacker_item_delete_button: Button = $MainContainer/AttackerItemButtonContainer/AttackerItemDeleteButton
+@onready var attacker_item_clear_button: Button = $MainContainer/AttackerItemButtonContainer/AttackerItemClearButton
+
+## 防御側クリーチャー
+@onready var defender_creature_id_input: LineEdit = $MainContainer/DefenderContainer/DefenderCreatureInput
+@onready var defender_creature_add_button: Button = $MainContainer/DefenderContainer/DefenderCreatureAddButton
+@onready var defender_creature_preset_option: OptionButton = $MainContainer/DefenderContainer/CreaturePresetOption
+@onready var defender_creature_preset_add_button: Button = $MainContainer/DefenderContainer/DefenderCreaturePresetAddButton
+@onready var defender_creature_list: ItemList = $MainContainer/DefenderCreatureList
+@onready var defender_creature_delete_button: Button = $MainContainer/DefenderCreatureButtonContainer/DefenderCreatureDeleteButton
+@onready var defender_creature_clear_button: Button = $MainContainer/DefenderCreatureButtonContainer/DefenderCreatureClearButton
+
+## 防御側アイテム
+@onready var defender_item_id_input: LineEdit = $MainContainer/DefenderItemInputContainer/DefenderItemIdInput
+@onready var defender_item_add_button: Button = $MainContainer/DefenderItemInputContainer/DefenderItemAddButton
+@onready var defender_item_add_none_button: Button = $MainContainer/DefenderItemInputContainer/DefenderItemAddNoneButton
+@onready var defender_item_list: ItemList = $MainContainer/DefenderItemList
+@onready var defender_item_delete_button: Button = $MainContainer/DefenderItemButtonContainer/DefenderItemDeleteButton
+@onready var defender_item_clear_button: Button = $MainContainer/DefenderItemButtonContainer/DefenderItemClearButton
+
+## 土地設定（攻撃側）
 @onready var attacker_fire_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerFireSpin
 @onready var attacker_water_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerWaterSpin
 @onready var attacker_wind_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerWindSpin
 @onready var attacker_earth_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerEarthSpin
 
-# 土地設定（防御側）
+## 土地設定（防御側）
 @onready var defender_fire_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderFireSpin
 @onready var defender_water_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderWaterSpin
 @onready var defender_wind_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderWindSpin
 @onready var defender_earth_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderEarthSpin
 
+## バトル条件
+@onready var battle_land_option: OptionButton = $MainContainer/BattleLandContainer/BattleLandOption
+@onready var attacker_adjacent_check: CheckBox = $MainContainer/AdjacentContainer/AttackerAdjacentCheck
+@onready var defender_adjacent_check: CheckBox = $MainContainer/AdjacentContainer/DefenderAdjacentCheck
+
+## 実行
 @onready var swap_button: Button = $MainContainer/SwapContainer/SwapButton
 @onready var execute_button: Button = $MainContainer/ExecuteButton
 @onready var result_label: Label = $MainContainer/ResultLabel
 
 func _ready():
 	print("[BattleTestUI] 初期化")
-	# @onready変数が初期化されるまで待つ
 	await get_tree().process_frame
 	_setup_ui()
 
 ## UI初期化
 func _setup_ui():
-	# シグナル接続
-	attacker_creature_input.text_changed.connect(_on_attacker_creature_input_changed)
-	attacker_item_input.text_changed.connect(_on_attacker_item_input_changed)
-	defender_creature_input.text_changed.connect(_on_defender_creature_input_changed)
-	defender_item_input.text_changed.connect(_on_defender_item_input_changed)
+	# ノード存在チェック
+	if not attacker_creature_add_button:
+		push_error("attacker_creature_add_button が見つかりません")
+		return
 	
-	# 土地設定（SpinBoxが存在するか確認）
+	# 攻撃側クリーチャー
+	attacker_creature_add_button.pressed.connect(_on_attacker_creature_add_pressed)
+	attacker_creature_preset_add_button.pressed.connect(_on_attacker_creature_preset_add_pressed)
+	attacker_creature_delete_button.pressed.connect(_on_attacker_creature_delete_pressed)
+	attacker_creature_clear_button.pressed.connect(_on_attacker_creature_clear_pressed)
+	
+	# 攻撃側アイテム
+	attacker_item_add_button.pressed.connect(_on_attacker_item_add_pressed)
+	attacker_item_add_none_button.pressed.connect(_on_attacker_item_add_none_pressed)
+	attacker_item_delete_button.pressed.connect(_on_attacker_item_delete_pressed)
+	attacker_item_clear_button.pressed.connect(_on_attacker_item_clear_pressed)
+	
+	# 防御側クリーチャー
+	defender_creature_add_button.pressed.connect(_on_defender_creature_add_pressed)
+	defender_creature_preset_add_button.pressed.connect(_on_defender_creature_preset_add_pressed)
+	defender_creature_delete_button.pressed.connect(_on_defender_creature_delete_pressed)
+	defender_creature_clear_button.pressed.connect(_on_defender_creature_clear_pressed)
+	
+	# 防御側アイテム
+	defender_item_add_button.pressed.connect(_on_defender_item_add_pressed)
+	defender_item_add_none_button.pressed.connect(_on_defender_item_add_none_pressed)
+	defender_item_delete_button.pressed.connect(_on_defender_item_delete_pressed)
+	defender_item_clear_button.pressed.connect(_on_defender_item_clear_pressed)
+	
+	# 土地設定
 	if attacker_fire_spin:
 		attacker_fire_spin.value_changed.connect(_on_attacker_land_changed)
 		attacker_water_spin.value_changed.connect(_on_attacker_land_changed)
 		attacker_wind_spin.value_changed.connect(_on_attacker_land_changed)
 		attacker_earth_spin.value_changed.connect(_on_attacker_land_changed)
-	else:
-		push_warning("攻撃側土地SpinBoxが見つかりません")
 	
 	if defender_fire_spin:
 		defender_fire_spin.value_changed.connect(_on_defender_land_changed)
 		defender_water_spin.value_changed.connect(_on_defender_land_changed)
 		defender_wind_spin.value_changed.connect(_on_defender_land_changed)
 		defender_earth_spin.value_changed.connect(_on_defender_land_changed)
-	else:
-		push_warning("防御側土地SpinBoxが見つかりません")
 	
+	# バトル条件
+	if battle_land_option:
+		battle_land_option.item_selected.connect(_on_battle_land_selected)
+	if attacker_adjacent_check:
+		attacker_adjacent_check.toggled.connect(_on_attacker_adjacent_toggled)
+	if defender_adjacent_check:
+		defender_adjacent_check.toggled.connect(_on_defender_adjacent_toggled)
+	
+	# 実行
 	swap_button.pressed.connect(_on_swap_button_pressed)
 	execute_button.pressed.connect(_on_execute_button_pressed)
 
-## 実行ボタン押下
-func _on_execute_button_pressed():
-	print("[BattleTestUI] テスト実行開始")
-	
-	# 設定をバリデーション
-	if not config.validate():
-		push_error("設定が不正です")
+## ============================================
+## 攻撃側クリーチャー
+## ============================================
+
+func _on_attacker_creature_add_pressed():
+	var id_text = attacker_creature_id_input.text
+	var id = id_text.to_int()
+	if id <= 0:
+		print("[BattleTestUI] 無効なクリーチャーID: ", id_text)
 		return
 	
-	# TODO: Phase 4でバトル実行を実装
-	print("[BattleTestUI] バトル実行準備完了")
-	print("  攻撃側クリーチャー: ", config.attacker_creatures)
-	print("  防御側クリーチャー: ", config.defender_creatures)
+	# カード名取得
+	var card = CardLoader.get_card_by_id(id)
+	if not card:
+		print("[BattleTestUI] クリーチャーが見つかりません: ID ", id)
+		return
+	
+	# リストに追加
+	var display_text = "%s (ID:%d)" % [card.name, id]
+	attacker_creature_list.add_item(display_text)
+	attacker_creature_list.set_item_metadata(attacker_creature_list.item_count - 1, id)
+	
+	# configに追加
+	config.attacker_creatures.append(id)
+	
+	print("[BattleTestUI] 攻撃側クリーチャー追加: ", card.name, " (ID:", id, ")")
+	attacker_creature_id_input.text = ""
 
-## クリーチャーID入力
-func _on_attacker_creature_input_changed(text: String):
-	var id = text.to_int()
-	if id > 0:
-		config.attacker_creatures = [id]
-		print("[BattleTestUI] 攻撃側クリーチャーID: ", id)
+func _on_attacker_creature_preset_add_pressed():
+	var index = attacker_creature_preset_option.selected
+	var preset_names = BattleTestPresets.get_all_creature_preset_names()
+	if index < 0 or index >= preset_names.size():
+		return
+	
+	var preset_name = preset_names[index]
+	var creature_ids = BattleTestPresets.get_creature_preset(preset_name)
+	
+	for id in creature_ids:
+		var card = CardLoader.get_card_by_id(id)
+		if card:
+			var display_text = "%s (ID:%d)" % [card.name, id]
+			attacker_creature_list.add_item(display_text)
+			attacker_creature_list.set_item_metadata(attacker_creature_list.item_count - 1, id)
+			config.attacker_creatures.append(id)
+	
+	print("[BattleTestUI] プリセット一括追加: ", preset_name, " (", creature_ids.size(), "体)")
 
-func _on_defender_creature_input_changed(text: String):
-	var id = text.to_int()
-	if id > 0:
-		config.defender_creatures = [id]
-		print("[BattleTestUI] 防御側クリーチャーID: ", id)
+func _on_attacker_creature_delete_pressed():
+	var selected = attacker_creature_list.get_selected_items()
+	if selected.is_empty():
+		return
+	
+	var index = selected[0]
+	var id = attacker_creature_list.get_item_metadata(index)
+	attacker_creature_list.remove_item(index)
+	config.attacker_creatures.erase(id)
+	print("[BattleTestUI] 攻撃側クリーチャー削除: ID ", id)
 
-## アイテムID入力
-func _on_attacker_item_input_changed(text: String):
-	if text.is_empty() or text == "なし":
-		config.attacker_items = [-1]  # なし
-		print("[BattleTestUI] 攻撃側アイテム: なし")
-	else:
-		var id = text.to_int()
-		if id > 0:
-			config.attacker_items = [id]
-			print("[BattleTestUI] 攻撃側アイテムID: ", id)
+func _on_attacker_creature_clear_pressed():
+	attacker_creature_list.clear()
+	config.attacker_creatures.clear()
+	print("[BattleTestUI] 攻撃側クリーチャー全削除")
 
-func _on_defender_item_input_changed(text: String):
-	if text.is_empty() or text == "なし":
-		config.defender_items = [-1]  # なし
-		print("[BattleTestUI] 防御側アイテム: なし")
-	else:
-		var id = text.to_int()
-		if id > 0:
-			config.defender_items = [id]
-			print("[BattleTestUI] 防御側アイテムID: ", id)
+## ============================================
+## 攻撃側アイテム
+## ============================================
 
-## 土地設定変更
+func _on_attacker_item_add_pressed():
+	var id_text = attacker_item_id_input.text
+	var id = id_text.to_int()
+	if id <= 0:
+		print("[BattleTestUI] 無効なアイテムID: ", id_text)
+		return
+	
+	# TODO: アイテム名取得（CardLoaderにアイテム機能が実装されたら）
+	var display_text = "アイテム (ID:%d)" % id
+	attacker_item_list.add_item(display_text)
+	attacker_item_list.set_item_metadata(attacker_item_list.item_count - 1, id)
+	
+	config.attacker_items.append(id)
+	print("[BattleTestUI] 攻撃側アイテム追加: ID ", id)
+	attacker_item_id_input.text = ""
+
+func _on_attacker_item_add_none_pressed():
+	var display_text = "なし (ID:-1)"
+	attacker_item_list.add_item(display_text)
+	attacker_item_list.set_item_metadata(attacker_item_list.item_count - 1, -1)
+	config.attacker_items.append(-1)
+	print("[BattleTestUI] 攻撃側アイテム追加: なし")
+
+func _on_attacker_item_delete_pressed():
+	var selected = attacker_item_list.get_selected_items()
+	if selected.is_empty():
+		return
+	
+	var index = selected[0]
+	var id = attacker_item_list.get_item_metadata(index)
+	attacker_item_list.remove_item(index)
+	config.attacker_items.erase(id)
+	print("[BattleTestUI] 攻撃側アイテム削除: ID ", id)
+
+func _on_attacker_item_clear_pressed():
+	attacker_item_list.clear()
+	config.attacker_items.clear()
+	print("[BattleTestUI] 攻撃側アイテム全削除")
+
+## ============================================
+## 防御側クリーチャー
+## ============================================
+
+func _on_defender_creature_add_pressed():
+	var id_text = defender_creature_id_input.text
+	var id = id_text.to_int()
+	if id <= 0:
+		print("[BattleTestUI] 無効なクリーチャーID: ", id_text)
+		return
+	
+	var card = CardLoader.get_card_by_id(id)
+	if not card:
+		print("[BattleTestUI] クリーチャーが見つかりません: ID ", id)
+		return
+	
+	var display_text = "%s (ID:%d)" % [card.name, id]
+	defender_creature_list.add_item(display_text)
+	defender_creature_list.set_item_metadata(defender_creature_list.item_count - 1, id)
+	config.defender_creatures.append(id)
+	
+	print("[BattleTestUI] 防御側クリーチャー追加: ", card.name, " (ID:", id, ")")
+	defender_creature_id_input.text = ""
+
+func _on_defender_creature_preset_add_pressed():
+	var index = defender_creature_preset_option.selected
+	var preset_names = BattleTestPresets.get_all_creature_preset_names()
+	if index < 0 or index >= preset_names.size():
+		return
+	
+	var preset_name = preset_names[index]
+	var creature_ids = BattleTestPresets.get_creature_preset(preset_name)
+	
+	for id in creature_ids:
+		var card = CardLoader.get_card_by_id(id)
+		if card:
+			var display_text = "%s (ID:%d)" % [card.name, id]
+			defender_creature_list.add_item(display_text)
+			defender_creature_list.set_item_metadata(defender_creature_list.item_count - 1, id)
+			config.defender_creatures.append(id)
+	
+	print("[BattleTestUI] プリセット一括追加: ", preset_name, " (", creature_ids.size(), "体)")
+
+func _on_defender_creature_delete_pressed():
+	var selected = defender_creature_list.get_selected_items()
+	if selected.is_empty():
+		return
+	
+	var index = selected[0]
+	var id = defender_creature_list.get_item_metadata(index)
+	defender_creature_list.remove_item(index)
+	config.defender_creatures.erase(id)
+	print("[BattleTestUI] 防御側クリーチャー削除: ID ", id)
+
+func _on_defender_creature_clear_pressed():
+	defender_creature_list.clear()
+	config.defender_creatures.clear()
+	print("[BattleTestUI] 防御側クリーチャー全削除")
+
+## ============================================
+## 防御側アイテム
+## ============================================
+
+func _on_defender_item_add_pressed():
+	var id_text = defender_item_id_input.text
+	var id = id_text.to_int()
+	if id <= 0:
+		print("[BattleTestUI] 無効なアイテムID: ", id_text)
+		return
+	
+	var display_text = "アイテム (ID:%d)" % id
+	defender_item_list.add_item(display_text)
+	defender_item_list.set_item_metadata(defender_item_list.item_count - 1, id)
+	config.defender_items.append(id)
+	print("[BattleTestUI] 防御側アイテム追加: ID ", id)
+	defender_item_id_input.text = ""
+
+func _on_defender_item_add_none_pressed():
+	var display_text = "なし (ID:-1)"
+	defender_item_list.add_item(display_text)
+	defender_item_list.set_item_metadata(defender_item_list.item_count - 1, -1)
+	config.defender_items.append(-1)
+	print("[BattleTestUI] 防御側アイテム追加: なし")
+
+func _on_defender_item_delete_pressed():
+	var selected = defender_item_list.get_selected_items()
+	if selected.is_empty():
+		return
+	
+	var index = selected[0]
+	var id = defender_item_list.get_item_metadata(index)
+	defender_item_list.remove_item(index)
+	config.defender_items.erase(id)
+	print("[BattleTestUI] 防御側アイテム削除: ID ", id)
+
+func _on_defender_item_clear_pressed():
+	defender_item_list.clear()
+	config.defender_items.clear()
+	print("[BattleTestUI] 防御側アイテム全削除")
+
+## ============================================
+## 土地設定
+## ============================================
+
 func _on_attacker_land_changed(_value):
 	config.attacker_owned_lands["fire"] = int(attacker_fire_spin.value)
 	config.attacker_owned_lands["water"] = int(attacker_water_spin.value)
@@ -125,21 +347,83 @@ func _on_defender_land_changed(_value):
 	config.defender_owned_lands["earth"] = int(defender_earth_spin.value)
 	print("[BattleTestUI] 防御側土地: ", config.defender_owned_lands)
 
-## 攻撃⇔防御入れ替え
+## ============================================
+## バトル条件
+## ============================================
+
+func _on_battle_land_selected(index: int):
+	var elements = ["fire", "water", "wind", "earth"]
+	var element = elements[index]
+	config.attacker_battle_land = element
+	config.defender_battle_land = element
+	print("[BattleTestUI] バトル発生土地: ", element)
+
+func _on_attacker_adjacent_toggled(toggled_on: bool):
+	config.attacker_has_adjacent = toggled_on
+	print("[BattleTestUI] 攻撃側隣接条件: ", toggled_on)
+
+func _on_defender_adjacent_toggled(toggled_on: bool):
+	config.defender_has_adjacent = toggled_on
+	print("[BattleTestUI] 防御側隣接条件: ", toggled_on)
+
+## ============================================
+## 入れ替え・実行
+## ============================================
+
 func _on_swap_button_pressed():
 	# 設定を入れ替え
 	config.swap_attacker_defender()
 	
-	# UIに反映（クリーチャー・アイテム）
-	var temp_creature = attacker_creature_input.text
-	attacker_creature_input.text = defender_creature_input.text
-	defender_creature_input.text = temp_creature
+	# UIのリストも入れ替え
+	_swap_lists()
+	_swap_land_settings()
+	print("[BattleTestUI] 攻撃⇔防御を入れ替えました")
+
+func _swap_lists():
+	# クリーチャーリストを入れ替え
+	var temp_creature_items = []
+	for i in range(attacker_creature_list.item_count):
+		temp_creature_items.append({
+			"text": attacker_creature_list.get_item_text(i),
+			"metadata": attacker_creature_list.get_item_metadata(i)
+		})
 	
-	var temp_item = attacker_item_input.text
-	attacker_item_input.text = defender_item_input.text
-	defender_item_input.text = temp_item
+	attacker_creature_list.clear()
+	for i in range(defender_creature_list.item_count):
+		var text = defender_creature_list.get_item_text(i)
+		var metadata = defender_creature_list.get_item_metadata(i)
+		attacker_creature_list.add_item(text)
+		attacker_creature_list.set_item_metadata(i, metadata)
 	
-	# UIに反映（土地）
+	defender_creature_list.clear()
+	for item in temp_creature_items:
+		var idx = defender_creature_list.item_count
+		defender_creature_list.add_item(item.text)
+		defender_creature_list.set_item_metadata(idx, item.metadata)
+	
+	# アイテムリストを入れ替え
+	var temp_item_items = []
+	for i in range(attacker_item_list.item_count):
+		temp_item_items.append({
+			"text": attacker_item_list.get_item_text(i),
+			"metadata": attacker_item_list.get_item_metadata(i)
+		})
+	
+	attacker_item_list.clear()
+	for i in range(defender_item_list.item_count):
+		var text = defender_item_list.get_item_text(i)
+		var metadata = defender_item_list.get_item_metadata(i)
+		attacker_item_list.add_item(text)
+		attacker_item_list.set_item_metadata(i, metadata)
+	
+	defender_item_list.clear()
+	for item in temp_item_items:
+		var idx = defender_item_list.item_count
+		defender_item_list.add_item(item.text)
+		defender_item_list.set_item_metadata(idx, item.metadata)
+
+func _swap_land_settings():
+	# 土地設定を入れ替え
 	var temp_fire = attacker_fire_spin.value
 	attacker_fire_spin.value = defender_fire_spin.value
 	defender_fire_spin.value = temp_fire
@@ -156,4 +440,24 @@ func _on_swap_button_pressed():
 	attacker_earth_spin.value = defender_earth_spin.value
 	defender_earth_spin.value = temp_earth
 	
-	print("[BattleTestUI] 攻撃⇔防御を入れ替えました")
+	# 隣接条件を入れ替え
+	var temp_adjacent = attacker_adjacent_check.button_pressed
+	attacker_adjacent_check.button_pressed = defender_adjacent_check.button_pressed
+	defender_adjacent_check.button_pressed = temp_adjacent
+
+func _on_execute_button_pressed():
+	print("[BattleTestUI] テスト実行開始")
+	
+	if not config.validate():
+		push_error("設定が不正です")
+		result_label.text = "エラー: クリーチャーが未登録です"
+		return
+	
+	# TODO: Phase 4でバトル実行を実装
+	print("[BattleTestUI] バトル実行準備完了")
+	print("  攻撃側クリーチャー: ", config.attacker_creatures)
+	print("  攻撃側アイテム: ", config.attacker_items)
+	print("  防御側クリーチャー: ", config.defender_creatures)
+	print("  防御側アイテム: ", config.defender_items)
+	
+	result_label.text = "準備完了 - Phase 4で実装予定"
