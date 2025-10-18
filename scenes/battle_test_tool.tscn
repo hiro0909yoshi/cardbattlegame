@@ -1,0 +1,180 @@
+[gd_scene load_steps=2 format=3 uid="uid://b1pa5du66aaoj"]
+
+[ext_resource type="Script" uid="uid://dtcuvqmwqhbuf" path="res://scripts/battle_test/battle_test_ui.gd" id="1_s7274"]
+
+[node name="BattleTestTool" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_s7274")
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "バトルテストツール"
+
+[node name="HSeparator" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "土地設定（攻撃側）"
+
+[node name="AttackerLandContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+text = "火"
+
+[node name="AttackerFireSpin" type="SpinBox" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label2" type="Label" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+text = "水"
+
+[node name="AttackerWaterSpin" type="SpinBox" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label3" type="Label" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+text = "風"
+
+[node name="AttackerWindSpin" type="SpinBox" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label4" type="Label" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+text = "地"
+
+[node name="AttackerEarthSpin" type="SpinBox" parent="MainContainer/AttackerLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="HSeparator5" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="AttackerContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+text = "攻撃側クリーチャーID"
+
+[node name="AttackerCreatureInput" type="LineEdit" parent="MainContainer/AttackerContainer"]
+layout_mode = 2
+
+[node name="AttackerItemContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/AttackerItemContainer"]
+layout_mode = 2
+text = "攻撃側アイテムID"
+
+[node name="AttackerItemInput" type="LineEdit" parent="MainContainer/AttackerItemContainer"]
+layout_mode = 2
+placeholder_text = "なし"
+
+[node name="HSeparator2" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "土地設定（防御側）"
+
+[node name="DefenderLandContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+text = "火"
+
+[node name="DefenderFireSpin" type="SpinBox" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label2" type="Label" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+text = "水"
+
+[node name="DefenderWaterSpin" type="SpinBox" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label3" type="Label" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+text = "風"
+
+[node name="DefenderWindSpin" type="SpinBox" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="Label4" type="Label" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+text = "地"
+
+[node name="DefenderEarthSpin" type="SpinBox" parent="MainContainer/DefenderLandContainer"]
+layout_mode = 2
+max_value = 10.0
+rounded = true
+
+[node name="HSeparator6" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="DefenderContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+text = "防御側クリーチャーID"
+
+[node name="DefenderCreatureInput" type="LineEdit" parent="MainContainer/DefenderContainer"]
+layout_mode = 2
+
+[node name="DefenderItemContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainContainer/DefenderItemContainer"]
+layout_mode = 2
+text = "防御側アイテムID"
+
+[node name="DefenderItemInput" type="LineEdit" parent="MainContainer/DefenderItemContainer"]
+layout_mode = 2
+placeholder_text = "なし"
+
+[node name="HSeparator3" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="SwapContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="SwapButton" type="Button" parent="MainContainer/SwapContainer"]
+layout_mode = 2
+text = "攻撃⇔防御 入れ替え"
+
+[node name="HSeparator4" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="ExecuteButton" type="Button" parent="MainContainer"]
+layout_mode = 2
+text = "テスト実行"
+
+[node name="ResultLabel" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "結果がここに表示されます"

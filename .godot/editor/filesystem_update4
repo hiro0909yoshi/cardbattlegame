@@ -1,11 +1,5 @@
+res://scripts/battle_test/battle_test_ui.gd
 res://scenes/MainMenu.tscn
 res://scenes/Tiles/NeutralTile.tscn
-res://docs/progress/battle_test_tool_progress.md
-res://scripts/battle_test/battle_test_config.gd
+res://scenes/battle_test_tool.tscn
 res://scripts/battle_test/battle_test_result.gd
-res://scripts/battle_test/battle_test_ui.gd
-res://scripts/battle_test/test_presets.gd
-res://docs/design/battle_test_tool_design.md
-res://docs/design/design.md
-res://docs/issues/resolved_issues.md
-res://docs/design/skills_design.md

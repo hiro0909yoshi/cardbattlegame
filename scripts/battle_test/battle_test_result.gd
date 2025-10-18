@@ -76,7 +76,7 @@ func to_dict() -> Dictionary:
 	}
 
 ## デバッグ用文字列
-func to_string() -> String:
+func get_summary() -> String:
 	return "[%d] %s vs %s → 勝者: %s" % [
 		battle_id,
 		attacker_name,
