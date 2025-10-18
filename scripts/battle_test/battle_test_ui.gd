@@ -453,11 +453,48 @@ func _on_execute_button_pressed():
 		result_label.text = "エラー: クリーチャーが未登録です"
 		return
 	
-	# TODO: Phase 4でバトル実行を実装
-	print("[BattleTestUI] バトル実行準備完了")
-	print("  攻撃側クリーチャー: ", config.attacker_creatures)
-	print("  攻撃側アイテム: ", config.attacker_items)
-	print("  防御側クリーチャー: ", config.defender_creatures)
-	print("  防御側アイテム: ", config.defender_items)
+	# ボタンを無効化
+	execute_button.disabled = true
+	result_label.text = "実行中..."
 	
-	result_label.text = "準備完了 - Phase 4で実装予定"
+	# 次フレームでバトル実行（UIをブロックしないため）
+	await get_tree().process_frame
+	
+	# バトル実行
+	results = BattleTestExecutor.execute_all_battles(config)
+	
+	# 統計計算
+	statistics = BattleTestStatistics.calculate(results)
+	
+	# 結果表示
+	_display_results()
+	
+	# ボタンを有効化
+	execute_button.disabled = false
+	
+	print("[BattleTestUI] テスト実行完了")
+
+## 結果表示
+func _display_results():
+	if results.is_empty():
+		result_label.text = "結果なし"
+		return
+	
+	var text = "=== バトルテスト結果 ===
+"
+	text += "総バトル数: %d
+" % statistics.total_battles
+	text += "実行時間: %.2f秒
+" % (statistics.total_duration_ms / 1000.0)
+	text += "
+"
+	text += "攻撃側勝利: %d (%.1f%%)
+" % [statistics.attacker_wins, statistics.attacker_wins * 100.0 / statistics.total_battles]
+	text += "防御側勝利: %d (%.1f%%)
+" % [statistics.defender_wins, statistics.defender_wins * 100.0 / statistics.total_battles]
+	text += "
+"
+	text += "詳細結果は %d 件のバトルデータに記録されています" % results.size()
+	
+	result_label.text = text
+	print("[BattleTestUI] 結果表示完了")
