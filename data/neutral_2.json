@@ -147,6 +147,15 @@
 	  "hp": 30,
 	  "ability": "無効化・防魔",
 	  "ability_detail": "無効化[巻物]；防魔"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 435,
@@ -192,7 +201,8 @@
 	  "ability_detail": "強打[水地]；無効化[火風]",
 	  "ability_parsed": {
 		"keywords": [
-		  "強打"
+		  "強打",
+		  "無効化"
 		],
 		"keyword_conditions": {
 		  "強打": {
@@ -201,6 +211,10 @@
 			  "water",
 			  "earth"
 			]
+		  },
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": ["fire", "wind"]
 		  }
 		},
 		"effects": [
@@ -381,6 +395,16 @@
 	  "hp": 30,
 	  "ability": "防御型・無効化",
 	  "ability_detail": "防御型；無効化[火水風地]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": ["fire", "water", "wind", "earth"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 448,

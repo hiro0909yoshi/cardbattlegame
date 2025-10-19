@@ -266,6 +266,16 @@
 	  "hp": 50,
 	  "ability": "無効化",
 	  "ability_detail": "無効化[先制の能力を持つクリーチャー]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "has_ability",
+			"ability": "先制"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 214,

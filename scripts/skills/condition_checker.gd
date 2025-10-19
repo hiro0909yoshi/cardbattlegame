@@ -144,6 +144,19 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			var item_rarity = equipped_item.get("rarity", "N")
 			return item_rarity == "レベル額"
 		
+		# 土地レベル条件
+		"land_level_check":
+			var current_land_level = context.get("current_land_level", 1)
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 1)
+			match operator:
+				">=": return current_land_level >= value
+				">": return current_land_level > value
+				"<=": return current_land_level <= value
+				"<": return current_land_level < value
+				"==": return current_land_level == value
+				_: return false
+		
 		# ST条件（即死判定用）
 		"st_above":
 			var enemy_st = context.get("enemy_st", 0)
@@ -296,6 +309,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		
 		# 土地情報
 		"battle_land_element": battle_field.get("element", ""),
+		"current_land_level": battle_field.get("level", 1),
 		"adjacent_is_ally_land": battle_field.get("adjacent_ally", false),
 		"player_lands": game_state.get("player_lands", {}),
 		

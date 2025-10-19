@@ -13,6 +13,15 @@
 	  "hp": 30,
 	  "ability": "無効化・地形変化コスト変化",
 	  "ability_detail": "無効化[巻物]；地形変化コスト変化[G50]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 403,
@@ -83,8 +92,14 @@
 	  "ability_detail": "先制；無効化[巻物]；援護[⬜]；合体[ビーストギア]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "無効化"
 		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		},
 		"effects": []
 	  }
 	},
@@ -127,8 +142,14 @@
 	  "ability_detail": "先制；防魔；無効化[巻物]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "無効化"
 		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		},
 		"effects": []
 	  }
 	},
@@ -150,6 +171,15 @@
 	  "hp": 40,
 	  "ability": "援護・合体・無効化",
 	  "ability_detail": "援護；合体[スカイギア]；無効化[巻物]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 410,

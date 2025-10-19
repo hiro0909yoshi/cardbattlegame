@@ -17,6 +17,15 @@
 	  "hp": 50,
 	  "ability": "ST変動",
 	  "ability_detail": "ST=火地,配置数×10；無効化[巻物]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 2,
@@ -142,6 +151,16 @@
 	  "hp": 30,
 	  "ability": "無効化",
 	  "ability_detail": "無効化[1/2]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "all_attacks",
+			"reduction_rate": 0.5
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 7,

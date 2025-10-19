@@ -13,3 +13,7 @@ res://scripts/game_flow/spell_phase_handler.gd
 res://docs/design/battle_test_tool_design.md
 res://docs/progress/battle_test_tool_progress.md
 res://scripts/battle_participant.gd
+res://data/neutral_1.json
+res://data/neutral_2.json
+res://data/water_1.json
+res://data/wind_1.json

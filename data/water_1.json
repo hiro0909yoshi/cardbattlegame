@@ -21,6 +21,16 @@
 	  "hp": 50,
 	  "ability": "無効化",
 	  "ability_detail": "無効化[地風]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": ["earth", "wind"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 101,
@@ -82,6 +92,21 @@
 	  "hp": 50,
 	  "ability": "援護・無効化",
 	  "ability_detail": "援護[水]；防具使用時、無効化[通常攻撃]；HP効果無効"
+,
+  "ability_parsed": {
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "normal_attack",
+		"conditions": [
+		  {
+			"condition_type": "item_equipped",
+			"item_type": "armor"
+		  }
+		]
+	  }
+	}
+  }
 	},
 	{
 	  "id": 104,
@@ -104,6 +129,16 @@
 	  "hp": 30,
 	  "ability": "無効化・秘術",
 	  "ability_detail": "無効化[水地]；秘術[G30・ミストウィングに変身]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": ["water", "earth"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 105,
@@ -118,6 +153,16 @@
 	  "hp": 30,
 	  "ability": "無効化",
 	  "ability_detail": "無効化[MHP30以下]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "mhp_below",
+			"value": 30
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 106,
@@ -141,6 +186,22 @@
 	  "hp": 40,
 	  "ability": "無効化",
 	  "ability_detail": "戦闘地がレベル3以上の場合、無効化[通常攻撃]"
+,
+  "ability_parsed": {
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "normal_attack",
+		"conditions": [
+		  {
+			"condition_type": "land_level_check",
+			"operator": ">=",
+			"value": 3
+		  }
+		]
+	  }
+	}
+  }
 	},
 	{
 	  "id": 107,
@@ -261,6 +322,15 @@
 	  "hp": 30,
 	  "ability": "合成・無効化",
 	  "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 113,
@@ -503,6 +573,10 @@
 			  "ap": 0,
 			  "hp": 30
 			}
+		  },
+		  "無効化": {
+			"nullify_type": "st_below",
+			"value": 40
 		  }
 		}
 	  }

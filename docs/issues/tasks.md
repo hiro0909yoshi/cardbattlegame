@@ -93,11 +93,23 @@
   - [x] neutral.json（中立）
 - [x] デッキデータ保存/読込
 
-#### スキルシステム（部分実装）
+#### スキルシステム
 - [x] ConditionChecker（条件判定）
 - [x] EffectCombat（効果適用）
 - [x] バトルコンテキスト構築
 - [x] 強打スキル実装
+- [x] 無効化スキル実装
+  - [x] 属性無効化（element）
+  - [x] MHP以上/以下無効化（mhp_above/mhp_below）
+  - [x] ST以上/以下無効化（st_above/st_below）
+  - [x] 全攻撃無効化（all_attacks）
+  - [x] 能力持ち無効化（has_ability）
+  - [x] 巻物攻撃無効化（scroll_attack）
+  - [x] 通常攻撃無効化（normal_attack）
+  - [ ] 条件付き無効化（item_equipped, land_level_check）**← 未実装**
+- [x] 巻物攻撃システム実装
+  - [x] is_using_scroll フラグ管理
+  - [x] 巻物攻撃判定ロジック
 - [x] プレイヤー土地情報取得
 
 ---
@@ -186,18 +198,36 @@
 #### 1. スキルシステムの拡張
 **優先度**: 高  
 **担当**: 開発者  
-**進捗**: 30%
+**進捗**: 50%
 
 - [x] 強打（power_strike）実装
 - [ ] 感応（elemental_resonance）実装
-- [ ] 無効化（nullify）実装
+- [x] 無効化（nullify）実装 ✅ **完了: 2025/10/20**
+  - [x] 基本無効化タイプ実装
+    - [x] 属性無効化（element）
+    - [x] MHP以上/以下無効化（mhp_above/mhp_below）
+    - [x] ST以上/以下無効化（st_above/st_below）
+    - [x] 全攻撃無効化（all_attacks）
+    - [x] 能力持ち無効化（has_ability）
+    - [x] 巻物攻撃無効化（scroll_attack）
+    - [x] 通常攻撃無効化（normal_attack）
+  - [x] 条件付き無効化 ✅ **完了: 2025/10/20**
+    - [ ] `item_equipped` 条件 (例: ID 103 アクアデューク - 防具使用時) ← 未実装
+    - [x] `land_level_check` 条件 (例: ID 106 アブサス - 戦闘地レベル3以上)
+  - [x] 無効化持ちクリーチャーデータ整備（26体）
+- [x] 巻物攻撃システム実装 ✅ **完了: 2025/10/20**
+  - [x] is_using_scroll フラグ管理
+  - [x] 巻物攻撃判定ロジック
+  - [x] 無効化システムとの統合
 - [ ] 先制攻撃キーワード
 - [ ] その他キーワード能力
 
 **次のステップ**:
-1. ability_parsedの自動生成ツール作成
-2. 既存カードデータへのability_parsed追加
-3. スキルテストケース作成
+1. **優先**: `item_equipped` 条件タイプの実装（`land_level_check`は完了）
+2. 感応（elemental_resonance）実装
+3. ability_parsedの自動生成ツール作成
+4. 既存カードデータへのability_parsed追加
+5. スキルテストケース作成
 
 #### 2. グラフィック改善
 **優先度**: 中  
@@ -474,6 +504,21 @@
 - 手動/自動捨て札の実装
 - 手札表示の動的スケール（画面80%対応）
 - 2D版コード完全削除
+
+### Milestone 6: 無効化・巻物攻撃システム実装 ✅
+**完了日**: 2025年10月20日
+
+- 無効化スキル完全実装
+  - 属性無効化（element）
+  - MHP/ST条件無効化（mhp_above/below, st_above/below）
+  - 全攻撃無効化（all_attacks）
+  - 能力持ち無効化（has_ability）
+  - 巻物/通常攻撃無効化（scroll_attack/normal_attack）
+- 巻物攻撃システム実装
+  - is_using_scrollフラグ管理
+  - 無効化システムとの統合
+- 無効化持ちクリーチャーデータ整備（26体）
+- JSONデータ修正（アンドロギア、ギアリオン、ミゴール、グレムリン）
 
 ---
 

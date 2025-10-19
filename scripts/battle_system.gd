@@ -119,7 +119,7 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 【攻撃順】", order_str)
 	
 	# 4. 攻撃シーケンス実行
-	_execute_attack_sequence(attack_order)
+	_execute_attack_sequence(attack_order, tile_info)
 	
 	# 5. 結果判定
 	var result = _resolve_battle_result(attacker, defender)
@@ -179,7 +179,7 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 【攻撃順】", order_str)
 	
 	# 4. 攻撃シーケンス実行
-	_execute_attack_sequence(attack_order)
+	_execute_attack_sequence(attack_order, tile_info)
 	
 	# 5. 結果判定
 	var result = _resolve_battle_result(attacker, defender)
@@ -676,7 +676,7 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 				print("  HP: ", old_hp, " → ", participant.current_hp, " (+", hp_bonus, ")")
 
 # 攻撃シーケンス実行
-func _execute_attack_sequence(attack_order: Array) -> void:
+func _execute_attack_sequence(attack_order: Array, tile_info: Dictionary) -> void:
 	for i in range(attack_order.size()):
 		var attacker_p = attack_order[i]
 		var defender_p = attack_order[(i + 1) % 2]
@@ -711,6 +711,49 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 				if "貫通" in defender_keywords:
 					print("  【貫通】防御側のため効果なし")
 			
+			# 無効化判定のためのコンテキスト構築
+			var nullify_context = {
+				"current_land_level": tile_info.get("level", 1)
+			}
+			var nullify_result = _check_nullify(attacker_p, defender_p, nullify_context)
+			
+			if nullify_result["is_nullified"]:
+				var reduction_rate = nullify_result["reduction_rate"]
+				
+				if reduction_rate == 0.0:
+					# 完全無効化
+					print("  【無効化】", defender_p.creature_data.get("name", "?"), " が攻撃を完全無効化")
+					continue  # ダメージ処理と即死判定をスキップ
+				else:
+					# 軽減
+					var original_damage = attacker_p.current_ap
+					var reduced_damage = int(original_damage * reduction_rate)
+					print("  【軽減】", defender_p.creature_data.get("name", "?"), 
+						  " がダメージを軽減 ", original_damage, " → ", reduced_damage)
+					
+					# 軽減ダメージ適用
+					var damage_breakdown_reduced = defender_p.take_damage(reduced_damage)
+					
+					print("  ダメージ処理:")
+					if damage_breakdown_reduced["resonance_bonus_consumed"] > 0:
+						print("    - 感応ボーナス: ", damage_breakdown_reduced["resonance_bonus_consumed"], " 消費")
+					if damage_breakdown_reduced["land_bonus_consumed"] > 0:
+						print("    - 土地ボーナス: ", damage_breakdown_reduced["land_bonus_consumed"], " 消費")
+					if damage_breakdown_reduced["base_hp_consumed"] > 0:
+						print("    - 基本HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
+					print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
+					
+					# 軽減の場合は即死判定を行う
+					if defender_p.is_alive():
+						_check_instant_death(attacker_p, defender_p)
+					
+					# 倒されたらバトル終了
+					if not defender_p.is_alive():
+						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
+						break
+					
+					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
+			
 			# ダメージ適用
 			var damage_breakdown = defender_p.take_damage(attacker_p.current_ap)
 			
@@ -731,6 +774,124 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 				break
+
+# 無効化判定を行う
+func _check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
+	"""
+	無効化判定を行う
+	
+	Returns:
+		{
+			"is_nullified": bool,  # 無効化されたか
+			"reduction_rate": float  # 軽減率（0.0=完全無効化、0.5=50%軽減、1.0=無効化なし）
+		}
+	"""
+	var ability_parsed = defender.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "無効化" in keywords:
+		return {"is_nullified": false, "reduction_rate": 1.0}
+	
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var nullify_condition = keyword_conditions.get("無効化", {})
+	
+	if nullify_condition.is_empty():
+		return {"is_nullified": false, "reduction_rate": 1.0}
+	
+	# 条件付き無効化の場合、先に条件をチェック
+	var conditions = nullify_condition.get("conditions", [])
+	if conditions.size() > 0:
+		print("  【無効化条件チェック】条件数: ", conditions.size())
+		var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
+		for condition in conditions:
+			var condition_type = condition.get("condition_type", "")
+			print("    条件タイプ: ", condition_type)
+			if condition_type == "land_level_check":
+				print("    土地レベル: ", context.get("current_land_level", 1), 
+				      " ", condition.get("operator", ">="), " ", condition.get("value", 1))
+			if not condition_checker._evaluate_single_condition(condition, context):
+				print("    → 条件不成立、無効化発動せず")
+				return {"is_nullified": false, "reduction_rate": 1.0}
+		print("    → 全条件成立")
+	
+	# 無効化タイプ別の判定
+	var nullify_type = nullify_condition.get("nullify_type", "")
+	var is_nullified = false
+	
+	match nullify_type:
+		"element":
+			is_nullified = _check_nullify_element(nullify_condition, attacker)
+		"mhp_above":
+			is_nullified = _check_nullify_mhp_above(nullify_condition, attacker)
+		"mhp_below":
+			is_nullified = _check_nullify_mhp_below(nullify_condition, attacker)
+		"st_below":
+			is_nullified = _check_nullify_st_below(nullify_condition, attacker)
+		"st_above":
+			is_nullified = _check_nullify_st_above(nullify_condition, attacker)
+		"all_attacks":
+			is_nullified = true  # 無条件で適用
+		"has_ability":
+			is_nullified = _check_nullify_has_ability(nullify_condition, attacker)
+		"scroll_attack":
+			is_nullified = attacker.is_using_scroll
+		"normal_attack":
+			is_nullified = not attacker.is_using_scroll
+		_:
+			print("【無効化】未知のタイプ: ", nullify_type)
+			return {"is_nullified": false, "reduction_rate": 1.0}
+	
+	if is_nullified:
+		var reduction_rate = nullify_condition.get("reduction_rate", 0.0)
+		return {"is_nullified": true, "reduction_rate": reduction_rate}
+	
+	return {"is_nullified": false, "reduction_rate": 1.0}
+
+# 属性無効化判定
+func _check_nullify_element(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var attacker_element = attacker.creature_data.get("element", "")
+	
+	# 単一属性
+	if condition.has("element"):
+		var target_element = condition.get("element")
+		return attacker_element == target_element
+	
+	# 複数属性
+	if condition.has("elements"):
+		var elements = condition.get("elements", [])
+		return attacker_element in elements
+	
+	return false
+
+# MHP以上無効化判定
+func _check_nullify_mhp_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var threshold = condition.get("value", 0)
+	var attacker_max_hp = attacker.creature_data.get("hp", 0)
+	return attacker_max_hp >= threshold
+
+# MHP以下無効化判定
+func _check_nullify_mhp_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var threshold = condition.get("value", 0)
+	var attacker_max_hp = attacker.creature_data.get("hp", 0)
+	return attacker_max_hp <= threshold
+
+# ST以下無効化判定
+func _check_nullify_st_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var threshold = condition.get("value", 0)
+	var attacker_base_st = attacker.creature_data.get("ap", 0)
+	return attacker_base_st <= threshold
+
+# ST以上無効化判定
+func _check_nullify_st_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var threshold = condition.get("value", 0)
+	var attacker_base_st = attacker.creature_data.get("ap", 0)
+	return attacker_base_st >= threshold
+
+# 能力持ち無効化判定
+func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var ability = condition.get("ability", "")
+	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
+	return ability in attacker_keywords
 
 # 即死判定を行う
 func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:

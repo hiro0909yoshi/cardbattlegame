@@ -267,7 +267,17 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[巻]；秘術[G60・ケルピーに変身]"
+	  "ability_detail": "無効化[無]；秘術[G60・ケルピーに変身]"
+,
+  "ability_parsed": {
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "element",
+		"element": "neutral"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 136,
@@ -404,6 +414,16 @@
 	  "hp": 40,
 	  "ability": "無効化・秘術",
 	  "ability_detail": "無効化[火風]；秘術[G30・アクアホーンに変身]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"elements": ["fire", "wind"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 143,
@@ -455,6 +475,16 @@
 	  "hp": 60,
 	  "ability": "無効化・応援",
 	  "ability_detail": "無効化[ST50以上]；応援[水風・HP+10]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "st_above",
+			"value": 50
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 145,

@@ -316,7 +316,7 @@
 	  "name": "グレムリン",
 	  "rarity": "N",
 	  "type": "creature",
-	  "element": "earth",
+	  "element": "wind",
 	  "cost": {
 		"mp": 60
 	  },
@@ -447,6 +447,16 @@
 	  "hp": 20,
 	  "ability": "無効化・秘術",
 	  "ability_detail": "無効化[MHP40以上]；秘術[G60・ガルーダに変身]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "mhp_above",
+			"value": 40
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 320,

@@ -190,6 +190,15 @@
 	  "hp": 40,
 	  "ability": "合成・無効化",
 	  "ability_detail": "合成[タスペル・ヘルバイロンに変身]；無効化[巻物]"
+	,
+	  "ability_parsed": {
+		"keywords": ["無効化"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "scroll_attack"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 34,
