@@ -95,7 +95,7 @@ static func _execute_single_battle(
 	# 防御側の土地ボーナス計算（仮のタイル情報）
 	var def_land_bonus = 0
 	var tile_element = config.defender_battle_land
-	if att_card_data.element == tile_element:
+	if def_card_data.element == tile_element:
 		# 土地レベルは1と仮定
 		def_land_bonus = 10
 	
@@ -172,6 +172,7 @@ static func _execute_single_battle(
 	test_result.attacker_final_ap = attacker.current_ap
 	test_result.attacker_final_hp = attacker.base_hp
 	test_result.attacker_granted_skills = attacker_granted_skills
+	test_result.attacker_skills_triggered = _get_triggered_skills(attacker)
 	
 	# 防御側情報
 	test_result.defender_id = def_creature_id
@@ -185,6 +186,7 @@ static func _execute_single_battle(
 	test_result.defender_final_ap = defender.current_ap
 	test_result.defender_final_hp = defender.base_hp
 	test_result.defender_granted_skills = defender_granted_skills
+	test_result.defender_skills_triggered = _get_triggered_skills(defender)
 	
 	# バトル結果
 	var winner_str = ""
@@ -258,3 +260,49 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 			granted_skills.append("強打")
 	
 	return granted_skills
+
+## 発動したスキルを取得
+static func _get_triggered_skills(participant: BattleParticipant) -> Array:
+	var skills = []
+	
+	# クリーチャーの基本スキルをチェック
+	if participant.creature_data.has("ability_parsed"):
+		var ability = participant.creature_data.ability_parsed
+		var keywords = ability.get("keywords", [])
+		
+		# 先制攻撃
+		if participant.has_first_strike or participant.has_item_first_strike:
+			if "先制攻撃" not in skills:
+				skills.append("先制攻撃")
+		
+		# 後手
+		if participant.has_last_strike:
+			if "後手" not in skills:
+				skills.append("後手")
+		
+		# 強打
+		if "強打" in keywords:
+			skills.append("強打")
+		
+		# 魔法攻撃
+		if "魔法攻撃" in keywords:
+			skills.append("魔法攻撃")
+		
+		# 貫通
+		if "貫通" in keywords:
+			skills.append("貫通")
+		
+		# 再生
+		if "再生" in keywords:
+			skills.append("再生")
+		
+		# 飛行
+		if "飛行" in keywords:
+			skills.append("飛行")
+		
+		# その他のキーワード
+		for keyword in keywords:
+			if keyword not in skills and keyword not in ["先制攻撃", "後手", "強打", "魔法攻撃", "貫通", "再生", "飛行"]:
+				skills.append(keyword)
+	
+	return skills

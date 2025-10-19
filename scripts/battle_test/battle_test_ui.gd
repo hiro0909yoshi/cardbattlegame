@@ -66,6 +66,10 @@ var statistics: BattleTestStatistics = null
 @onready var statistics_label: RichTextLabel = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/StatisticsTab/StatisticsLabel
 @onready var detail_table: ItemList = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/DetailTable
 
+## 詳細ウィンドウ
+@onready var detail_window: Window = $DetailWindow
+@onready var detail_window_label: RichTextLabel = $DetailWindow/DetailLabel
+
 func _ready():
 	print("[BattleTestUI] 初期化")
 	await get_tree().process_frame
@@ -118,6 +122,8 @@ func _setup_ui():
 	# バトル条件
 	if battle_land_option:
 		battle_land_option.item_selected.connect(_on_battle_land_selected)
+		# 初期状態は未選択（-1）にして、無属性で戦闘
+		battle_land_option.selected = -1
 	if attacker_adjacent_check:
 		attacker_adjacent_check.toggled.connect(_on_attacker_adjacent_toggled)
 	if defender_adjacent_check:
@@ -126,6 +132,10 @@ func _setup_ui():
 	# 実行
 	swap_button.pressed.connect(_on_swap_button_pressed)
 	execute_button.pressed.connect(_on_execute_button_pressed)
+	
+	# 詳細テーブル（ダブルクリックで詳細表示）
+	if detail_table:
+		detail_table.item_activated.connect(_on_detail_table_item_activated)
 
 ## ============================================
 ## 攻撃側クリーチャー
@@ -356,11 +366,18 @@ func _on_defender_land_changed(_value):
 ## ============================================
 
 func _on_battle_land_selected(index: int):
+	# UIには火水風土の4つのみ（0:火, 1:水, 2:風, 3:土）
 	var elements = ["fire", "water", "wind", "earth"]
-	var element = elements[index]
-	config.attacker_battle_land = element
-	config.defender_battle_land = element
-	print("[BattleTestUI] バトル発生土地: ", element)
+	if index >= 0 and index < elements.size():
+		var element = elements[index]
+		config.attacker_battle_land = element
+		config.defender_battle_land = element
+		print("[BattleTestUI] バトル発生土地: ", element)
+	else:
+		# 不正なインデックスの場合は無属性
+		config.attacker_battle_land = "neutral"
+		config.defender_battle_land = "neutral"
+		print("[BattleTestUI] バトル発生土地: neutral (デフォルト)")
 
 func _on_attacker_adjacent_toggled(toggled_on: bool):
 	config.attacker_has_adjacent = toggled_on
@@ -572,14 +589,16 @@ func _display_detail_table():
 		if not (result is BattleTestResult):
 			continue
 		
-		# 1行にまとめて表示
-		var line = "[%d] %s vs %s → %s (残HP: %d vs %d)" % [
+		# 1行にまとめて表示（最終HP/AP表示）
+		var line = "[%d] %s vs %s → %s | HP: %d vs %d | AP: %d vs %d" % [
 			result.battle_id,
 			result.attacker_name,
 			result.defender_name,
 			"攻撃側勝利" if result.winner == "attacker" else "防御側勝利",
 			result.attacker_final_hp,
-			result.defender_final_hp
+			result.defender_final_hp,
+			result.attacker_final_ap,
+			result.defender_final_ap
 		]
 		
 		# 付与スキルがあれば追加
@@ -596,3 +615,121 @@ func _clear_result_display():
 		statistics_label.text = ""
 	if detail_table:
 		detail_table.clear()
+
+## ============================================
+## 詳細ウィンドウ
+## ============================================
+
+## テーブル行がダブルクリックされた時
+func _on_detail_table_item_activated(index: int):
+	if index < 0 or index >= results.size():
+		return
+	
+	var result = results[index]
+	if result is BattleTestResult:
+		_show_detail_window(result)
+
+## 詳細ウィンドウを表示
+func _show_detail_window(result: BattleTestResult):
+	if not detail_window or not detail_window_label:
+		push_error("DetailWindowが見つかりません")
+		return
+	
+	# ウィンドウ内容を生成
+	var text = "[b]🔍 バトル詳細 #%d[/b]
+
+" % result.battle_id
+	
+	# 基本情報
+	text += "[color=cyan]■ 基本情報[/color]
+"
+	text += "  攻撃側: %s (ID:%d)
+" % [result.attacker_name, result.attacker_id]
+	text += "  防御側: %s (ID:%d)
+" % [result.defender_name, result.defender_id]
+	text += "  勝者: [b]%s[/b]
+
+" % ("攻撃側" if result.winner == "attacker" else "防御側")
+	
+	# アイテム・スペル
+	text += "[color=yellow]■ 装備・使用[/color]
+"
+	text += "  攻撃側アイテム: %s
+" % ("なし" if result.attacker_item_id == -1 else "ID:%d" % result.attacker_item_id)
+	text += "  防御側アイテム: %s
+
+" % ("なし" if result.defender_item_id == -1 else "ID:%d" % result.defender_item_id)
+	
+	# 付与スキル
+	if not result.attacker_granted_skills.is_empty() or not result.defender_granted_skills.is_empty():
+		text += "[color=lime]■ 付与されたスキル[/color]
+"
+		if not result.attacker_granted_skills.is_empty():
+			text += "  攻撃側: %s
+" % ", ".join(result.attacker_granted_skills)
+		if not result.defender_granted_skills.is_empty():
+			text += "  防御側: %s
+" % ", ".join(result.defender_granted_skills)
+		text += "
+"
+	
+	# 発動したスキル
+	if not result.attacker_skills_triggered.is_empty() or not result.defender_skills_triggered.is_empty():
+		text += "[color=yellow]■ 発動したスキル[/color]
+"
+		if not result.attacker_skills_triggered.is_empty():
+			text += "  攻撃側: %s
+" % ", ".join(result.attacker_skills_triggered)
+		if not result.defender_skills_triggered.is_empty():
+			text += "  防御側: %s
+" % ", ".join(result.defender_skills_triggered)
+		text += "
+"
+	
+	# 最終ステータス
+	text += "[color=orange]■ 最終ステータス[/color]
+"
+	text += "  攻撃側 HP: %d (基礎: %d)
+" % [result.attacker_final_hp, result.attacker_base_hp]
+	text += "  防御側 HP: %d (基礎: %d)
+" % [result.defender_final_hp, result.defender_base_hp]
+	text += "  攻撃側 攻撃力: %d (基礎: %d)
+" % [result.attacker_final_ap, result.attacker_base_ap]
+	text += "  防御側 攻撃力: %d (基礎: %d)
+
+" % [result.defender_final_ap, result.defender_base_ap]
+	
+	# バトル条件
+	text += "[color=magenta]■ バトル条件[/color]
+"
+	text += "  バトル発生土地: %s
+" % result.battle_land
+	text += "  攻撃側隣接: %s
+" % ("あり" if result.attacker_has_adjacent else "なし")
+	text += "  防御側隣接: %s
+" % ("あり" if result.defender_has_adjacent else "なし")
+	
+	# 土地保有状況
+	text += "
+[color=cyan]■ 土地保有状況[/color]
+"
+	text += "  攻撃側: "
+	for element in ["fire", "water", "wind", "earth"]:
+		var count = result.attacker_owned_lands.get(element, 0)
+		if count > 0:
+			text += "%s:%d " % [element, count]
+	text += "
+  防御側: "
+	for element in ["fire", "water", "wind", "earth"]:
+		var count = result.defender_owned_lands.get(element, 0)
+		if count > 0:
+			text += "%s:%d " % [element, count]
+	
+	# ラベルに設定
+	detail_window_label.text = text
+	
+	# ウィンドウを表示
+	detail_window.visible = true
+	detail_window.popup_centered()
+	
+	print("[BattleTestUI] 詳細ウィンドウを表示: Battle #", result.battle_id)

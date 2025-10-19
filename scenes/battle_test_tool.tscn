@@ -411,3 +411,18 @@ fit_content = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="DetailWindow" type="Window" parent="."]
+title = "バトル詳細"
+position = Vector2i(0, 36)
+size = Vector2i(500, 600)
+visible = false
+transient = true
+
+[node name="DetailLabel" type="RichTextLabel" parent="DetailWindow"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true

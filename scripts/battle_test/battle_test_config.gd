@@ -12,7 +12,7 @@ var attacker_owned_lands: Dictionary = {     # 保有土地数
 	"earth": 0,
 	"wind": 0
 }
-var attacker_battle_land: String = "fire"    # バトル発生土地の属性
+var attacker_battle_land: String = "neutral"    # バトル発生土地の属性
 var attacker_has_adjacent: bool = false      # 隣接味方領地あり
 
 ## 防御側設定
@@ -25,7 +25,7 @@ var defender_owned_lands: Dictionary = {
 	"earth": 0,
 	"wind": 0
 }
-var defender_battle_land: String = "fire"
+var defender_battle_land: String = "neutral"
 var defender_has_adjacent: bool = false
 
 ## バリデーション

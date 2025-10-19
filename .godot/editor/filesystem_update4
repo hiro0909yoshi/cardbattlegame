@@ -4,3 +4,5 @@ res://scenes/Tiles/NeutralTile.tscn
 res://scripts/battle_test/battle_test_executor.gd
 res://scripts/battle_test/battle_test_statistics.gd
 res://scripts/battle_test/battle_test_ui.gd
+res://scripts/battle_test/battle_test_config.gd
+res://scripts/skills/condition_checker.gd

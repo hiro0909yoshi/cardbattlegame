@@ -183,6 +183,13 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 		"is_defender_type":
 			var enemy_abilities = context.get("enemy_abilities", [])
 			return "防御型" in enemy_abilities
+		
+		# マーク判定（未実装）
+		"has_mark":
+			var mark = condition.get("mark", "")
+			# TODO: マークシステムの実装後に対応
+			# 現時点では常にfalseを返す
+			return false
 			
 		_:
 			push_warning("未実装の条件タイプ: " + cond_type)
