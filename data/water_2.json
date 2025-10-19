@@ -98,8 +98,14 @@
 	  "ability_detail": "先制；巻物攻撃[ST=基本ST]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "巻物攻撃"
 		],
+		"keyword_conditions": {
+		  "巻物攻撃": {
+			"scroll_type": "base_st"
+		  }
+		},
 		"effects": []
 	  }
 	},
@@ -142,7 +148,15 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "アイテム使用時巻物強打",
-	  "ability_detail": "アイテム使用の戦闘後、カード獲得；巻物強打"
+	  "ability_detail": "アイテム使用の戦闘後、カード獲得；巻物強打",
+	  "ability_parsed": {
+		"keywords": ["巻物強打"],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 131,
@@ -497,7 +511,15 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札の○カードの効果を使用]"
+	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札の○カードの効果を使用]",
+	  "ability_parsed": {
+		"keywords": ["巻物強打", "防魔"],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
+	  }
 	}
   ]
 }

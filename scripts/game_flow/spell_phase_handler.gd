@@ -250,7 +250,7 @@ func _on_target_ui_cancelled(target_ui):
 	cancel_spell()
 
 ## 有効な対象を取得（仮実装）
-func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
+func _get_valid_targets(target_type: String, _target_info: Dictionary) -> Array:
 	var targets = []
 	
 	match target_type:
@@ -261,13 +261,13 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 					var tile_info = board_system.get_tile_info(tile_index)
 					var creature = tile_info.get("creature", {})
 					if not creature.is_empty():
-						var owner = tile_info.get("owner", -1)
-						if owner != current_player_id and owner >= 0:
+						var tile_owner = tile_info.get("owner", -1)
+						if tile_owner != current_player_id and tile_owner >= 0:
 							targets.append({
 								"type": "creature",
 								"tile_index": tile_index,
 								"creature": creature,
-								"owner": owner
+								"owner": tile_owner
 							})
 		
 		"player":

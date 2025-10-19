@@ -323,7 +323,7 @@ func execute_swap_creature() -> bool:
 		print("[LandCommandHandler] エラー: 土地ノードが見つかりません")
 		return false
 	
-	var tile = board_system.tile_nodes[selected_tile_index]
+	# var tile = board_system.tile_nodes[selected_tile_index]  # 将来使用予定
 	var tile_info = board_system.get_tile_info(selected_tile_index)
 	
 	# クリーチャーがいるかチェック

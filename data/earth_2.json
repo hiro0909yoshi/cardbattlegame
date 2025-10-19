@@ -12,7 +12,15 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "援護・アイテム破壊無効・巻物強打",
-	  "ability_detail": "援護；アイテム破壊・盗み無効；巻物強打"
+	  "ability_detail": "援護；アイテム破壊・盗み無効；巻物強打",
+	  "ability_parsed": {
+		"keywords": ["援護", "巻物強打"],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 227,
@@ -376,6 +384,9 @@
 			  "ap": 30,
 			  "hp": 0
 			}
+		  },
+		  "巻物強打": {
+			"scroll_type": "base_st"
 		  }
 		}
 	  }

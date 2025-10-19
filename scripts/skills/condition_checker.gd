@@ -186,8 +186,8 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 		
 		# マーク判定（未実装）
 		"has_mark":
-			var mark = condition.get("mark", "")
 			# TODO: マークシステムの実装後に対応
+			# var mark = condition.get("mark", "")  # 将来使用予定
 			# 現時点では常にfalseを返す
 			return false
 			

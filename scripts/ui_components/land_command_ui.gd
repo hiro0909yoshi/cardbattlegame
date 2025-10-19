@@ -172,8 +172,9 @@ func hide_cancel_button():
 		cancel_button.visible = false
 
 ## 土地選択モード表示
-func show_land_selection_mode(owned_lands: Array):
+func show_land_selection_mode(_owned_lands: Array):
 	# 実装は既存のUIManager参照
+	# TODO: owned_landsを使った表示実装
 	pass
 
 ## アクション選択UI表示

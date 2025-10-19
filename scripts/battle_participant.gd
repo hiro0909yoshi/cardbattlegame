@@ -25,6 +25,7 @@ var attack_count: int = 1     # 攻撃回数（2回攻撃なら2）
 var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
 var instant_death_flag: bool = false  # 即死されたフラグ
+var is_using_scroll: bool = false  # 巻物攻撃フラグ（貫通とは別）
 
 # 初期化
 func _init(

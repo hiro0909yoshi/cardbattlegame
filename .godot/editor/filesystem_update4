@@ -6,3 +6,10 @@ res://scripts/battle_test/battle_test_statistics.gd
 res://scripts/battle_test/battle_test_ui.gd
 res://scripts/battle_test/battle_test_config.gd
 res://scripts/skills/condition_checker.gd
+res://scripts/battle_system.gd
+res://scripts/ui_components/land_command_ui.gd
+res://scripts/game_flow/land_command_handler.gd
+res://scripts/game_flow/spell_phase_handler.gd
+res://docs/design/battle_test_tool_design.md
+res://docs/progress/battle_test_tool_progress.md
+res://scripts/battle_participant.gd

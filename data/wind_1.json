@@ -55,7 +55,15 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；秘術[G30・対象から手札のスペルの数×G40を奪う]"
+	  "ability_detail": "巻物強打；秘術[G30・対象から手札のスペルの数×G40を奪う]",
+	  "ability_parsed": {
+		"keywords": ["巻物強打"],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 303,
@@ -76,8 +84,14 @@
 	  "ability_detail": "先制；巻物強打；秘術[G50・対象敵クリーチャーのMHP-10]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "巻物強打"
 		],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		},
 		"effects": []
 	  }
 	},
@@ -125,7 +139,15 @@
 	  "ap": 10,
 	  "hp": 20,
 	  "ability": "巻物強打・マーク付与",
-	  "ability_detail": "巻物強打；これに♡付与時、同じ♡を使用者の全領地につけ、ダウンする"
+	  "ability_detail": "巻物強打；これに♡付与時、同じ♡を使用者の全領地につけ、ダウンする",
+	  "ability_parsed": {
+		"keywords": ["巻物強打"],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 306,

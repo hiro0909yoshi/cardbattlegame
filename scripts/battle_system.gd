@@ -338,7 +338,7 @@ func _check_skill_grant_condition(participant: BattleParticipant, condition: Dic
 			return false
 
 # パーティシパントにスキルを付与
-func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, skill_data: Dictionary) -> void:
+func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, _skill_data: Dictionary) -> void:
 	match skill_name:
 		"先制":
 			participant.has_first_strike = true
@@ -526,22 +526,31 @@ func _apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, a
 		}
 	)
 	_apply_skills(defender, defender_context)
+	
+	# 巻物攻撃による土地ボーナスHP無効化
+	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
+		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
+		defender.land_bonus_hp = 0
+		defender.update_current_hp()
 
 # スキル適用
 func _apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
 	
-	# 感応スキルを適用
-	_apply_resonance_skill(participant, context)
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	var has_scroll_power_strike = "巻物強打" in keywords
 	
-	# 強打スキルを適用（現在のAPを基準に計算）
-	var modified_creature_data = participant.creature_data.duplicate()
-	modified_creature_data["ap"] = participant.current_ap  # 感応適用後のAPを設定
-	var modified = effect_combat.apply_power_strike(modified_creature_data, context)
-	participant.current_ap = modified.get("ap", participant.current_ap)
+	# 1. 巻物攻撃判定（最優先）
+	_check_scroll_attack(participant, context)
 	
-	if modified.get("power_strike_applied", false):
-		print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+	# 2. 感応スキルを適用
+	# 巻物強打の場合は感応を適用、通常の巻物攻撃の場合はスキップ
+	if not participant.is_using_scroll or has_scroll_power_strike:
+		_apply_resonance_skill(participant, context)
+	
+	# 3. 強打スキルを適用（巻物強打を含む）
+	_apply_power_strike_skills(participant, context, effect_combat)
 	
 	# 2回攻撃スキルを判定
 	_check_double_attack(participant)
@@ -554,6 +563,71 @@ func _check_double_attack(participant: BattleParticipant) -> void:
 	if "2回攻撃" in keywords:
 		participant.attack_count = 2
 		print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
+
+# 巻物攻撃判定
+func _check_scroll_attack(participant: BattleParticipant, _context: Dictionary) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 巻物攻撃 or 巻物強打を持つか
+	if not ("巻物攻撃" in keywords or "巻物強打" in keywords):
+		return
+	
+	# 巻物攻撃フラグを立てる
+	participant.is_using_scroll = true
+	
+	# AP設定を取得
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var scroll_config = {}
+	
+	# 巻物攻撃の設定を優先
+	if "巻物攻撃" in keywords:
+		scroll_config = keyword_conditions.get("巻物攻撃", {})
+	elif "巻物強打" in keywords:
+		scroll_config = keyword_conditions.get("巻物強打", {})
+	
+	# scroll_typeに基づいてAPを設定
+	var scroll_type = scroll_config.get("scroll_type", "base_st")
+	var base_ap = participant.creature_data.get("ap", 0)
+	
+	match scroll_type:
+		"fixed_st":
+			# 固定値
+			var value = scroll_config.get("value", base_ap)
+			participant.current_ap = value
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP固定:", value)
+		"base_st":
+			# 基本STのまま
+			participant.current_ap = base_ap
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本ST:", base_ap)
+		_:
+			# デフォルトは基本ST
+			participant.current_ap = base_ap
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本ST:", base_ap)
+
+# 強打スキル適用（巻物強打を含む）
+func _apply_power_strike_skills(participant: BattleParticipant, context: Dictionary, effect_combat) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 巻物強打判定（最優先）
+	if "巻物強打" in keywords and participant.is_using_scroll:
+		# 巻物強打は無条件でAP×1.5
+		var original_ap = participant.current_ap
+		participant.current_ap = int(participant.current_ap * 1.5)
+		print("【巻物強打】", participant.creature_data.get("name", "?"), 
+			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5)")
+		return
+	
+	# 通常の強打判定
+	if "強打" in keywords:
+		var modified_creature_data = participant.creature_data.duplicate()
+		modified_creature_data["ap"] = participant.current_ap  # 現在のAPを設定
+		var modified = effect_combat.apply_power_strike(modified_creature_data, context)
+		participant.current_ap = modified.get("ap", participant.current_ap)
+		
+		if modified.get("power_strike_applied", false):
+			print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 
 # 感応スキルを適用
 func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary) -> void:

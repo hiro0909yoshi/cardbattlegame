@@ -63,9 +63,14 @@
 	  "ability_detail": "先制；巻物強打",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "巻物強打"
 		],
-		"effects": []
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_st"
+		  }
+		}
 	  }
 	},
 	{

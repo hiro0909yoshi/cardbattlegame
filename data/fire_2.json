@@ -203,7 +203,16 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "巻物攻撃",
-	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、ST=20、MHP-30"
+	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、ST=20、MHP-30",
+	  "ability_parsed": {
+		"keywords": ["巻物攻撃"],
+		"keyword_conditions": {
+		  "巻物攻撃": {
+			"scroll_type": "fixed_st",
+			"value": 30
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 35,
@@ -497,8 +506,14 @@
 	  "ability_detail": "先制；巻物攻撃[ST=基本ST]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "巻物攻撃"
 		],
+		"keyword_conditions": {
+		  "巻物攻撃": {
+			"scroll_type": "base_st"
+		  }
+		},
 		"effects": []
 	  }
 	},
