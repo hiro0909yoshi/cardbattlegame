@@ -7,60 +7,64 @@ var results: Array = []  # BattleTestResult配列
 var statistics: BattleTestStatistics = null
 
 ## 攻撃側クリーチャー
-@onready var attacker_creature_id_input: LineEdit = $MainContainer/AttackerContainer/AttackerCreatureInput
-@onready var attacker_creature_add_button: Button = $MainContainer/AttackerContainer/AttackerCreatureAddButton
-@onready var attacker_creature_preset_option: OptionButton = $MainContainer/AttackerContainer/CreaturePresetOption
-@onready var attacker_creature_preset_add_button: Button = $MainContainer/AttackerContainer/AttackerCreaturePresetAddButton
-@onready var attacker_creature_list: ItemList = $MainContainer/AttackerCreatureList
-@onready var attacker_creature_delete_button: Button = $MainContainer/AttackerCreatureButtonContainer/AttackerCreatureDeleteButton
-@onready var attacker_creature_clear_button: Button = $MainContainer/AttackerCreatureButtonContainer/AttackerCreatureClearButton
+@onready var attacker_creature_id_input: LineEdit = $MainSplitContainer/MainContainer/AttackerContainer/AttackerCreatureInput
+@onready var attacker_creature_add_button: Button = $MainSplitContainer/MainContainer/AttackerContainer/AttackerCreatureAddButton
+@onready var attacker_creature_preset_option: OptionButton = $MainSplitContainer/MainContainer/AttackerContainer/CreaturePresetOption
+@onready var attacker_creature_preset_add_button: Button = $MainSplitContainer/MainContainer/AttackerContainer/AttackerCreaturePresetAddButton
+@onready var attacker_creature_list: ItemList = $MainSplitContainer/MainContainer/AttackerCreatureList
+@onready var attacker_creature_delete_button: Button = $MainSplitContainer/MainContainer/AttackerCreatureButtonContainer/AttackerCreatureDeleteButton
+@onready var attacker_creature_clear_button: Button = $MainSplitContainer/MainContainer/AttackerCreatureButtonContainer/AttackerCreatureClearButton
 
 ## 攻撃側アイテム
-@onready var attacker_item_id_input: LineEdit = $MainContainer/AttackerItemInputContainer/AttackerItemIdInput
-@onready var attacker_item_add_button: Button = $MainContainer/AttackerItemInputContainer/AttackerItemAddButton
-@onready var attacker_item_add_none_button: Button = $MainContainer/AttackerItemInputContainer/AttackerItemAddNoneButton
-@onready var attacker_item_list: ItemList = $MainContainer/AttackerItemList
-@onready var attacker_item_delete_button: Button = $MainContainer/AttackerItemButtonContainer/AttackerItemDeleteButton
-@onready var attacker_item_clear_button: Button = $MainContainer/AttackerItemButtonContainer/AttackerItemClearButton
+@onready var attacker_item_id_input: LineEdit = $MainSplitContainer/MainContainer/AttackerItemInputContainer/AttackerItemIdInput
+@onready var attacker_item_add_button: Button = $MainSplitContainer/MainContainer/AttackerItemInputContainer/AttackerItemAddButton
+@onready var attacker_item_add_none_button: Button = $MainSplitContainer/MainContainer/AttackerItemInputContainer/AttackerItemAddNoneButton
+@onready var attacker_item_list: ItemList = $MainSplitContainer/MainContainer/AttackerItemList
+@onready var attacker_item_delete_button: Button = $MainSplitContainer/MainContainer/AttackerItemButtonContainer/AttackerItemDeleteButton
+@onready var attacker_item_clear_button: Button = $MainSplitContainer/MainContainer/AttackerItemButtonContainer/AttackerItemClearButton
 
 ## 防御側クリーチャー
-@onready var defender_creature_id_input: LineEdit = $MainContainer/DefenderContainer/DefenderCreatureInput
-@onready var defender_creature_add_button: Button = $MainContainer/DefenderContainer/DefenderCreatureAddButton
-@onready var defender_creature_preset_option: OptionButton = $MainContainer/DefenderContainer/CreaturePresetOption
-@onready var defender_creature_preset_add_button: Button = $MainContainer/DefenderContainer/DefenderCreaturePresetAddButton
-@onready var defender_creature_list: ItemList = $MainContainer/DefenderCreatureList
-@onready var defender_creature_delete_button: Button = $MainContainer/DefenderCreatureButtonContainer/DefenderCreatureDeleteButton
-@onready var defender_creature_clear_button: Button = $MainContainer/DefenderCreatureButtonContainer/DefenderCreatureClearButton
+@onready var defender_creature_id_input: LineEdit = $MainSplitContainer/MainContainer/DefenderContainer/DefenderCreatureInput
+@onready var defender_creature_add_button: Button = $MainSplitContainer/MainContainer/DefenderContainer/DefenderCreatureAddButton
+@onready var defender_creature_preset_option: OptionButton = $MainSplitContainer/MainContainer/DefenderContainer/CreaturePresetOption
+@onready var defender_creature_preset_add_button: Button = $MainSplitContainer/MainContainer/DefenderContainer/DefenderCreaturePresetAddButton
+@onready var defender_creature_list: ItemList = $MainSplitContainer/MainContainer/DefenderCreatureList
+@onready var defender_creature_delete_button: Button = $MainSplitContainer/MainContainer/DefenderCreatureButtonContainer/DefenderCreatureDeleteButton
+@onready var defender_creature_clear_button: Button = $MainSplitContainer/MainContainer/DefenderCreatureButtonContainer/DefenderCreatureClearButton
 
 ## 防御側アイテム
-@onready var defender_item_id_input: LineEdit = $MainContainer/DefenderItemInputContainer/DefenderItemIdInput
-@onready var defender_item_add_button: Button = $MainContainer/DefenderItemInputContainer/DefenderItemAddButton
-@onready var defender_item_add_none_button: Button = $MainContainer/DefenderItemInputContainer/DefenderItemAddNoneButton
-@onready var defender_item_list: ItemList = $MainContainer/DefenderItemList
-@onready var defender_item_delete_button: Button = $MainContainer/DefenderItemButtonContainer/DefenderItemDeleteButton
-@onready var defender_item_clear_button: Button = $MainContainer/DefenderItemButtonContainer/DefenderItemClearButton
+@onready var defender_item_id_input: LineEdit = $MainSplitContainer/MainContainer/DefenderItemInputContainer/DefenderItemIdInput
+@onready var defender_item_add_button: Button = $MainSplitContainer/MainContainer/DefenderItemInputContainer/DefenderItemAddButton
+@onready var defender_item_add_none_button: Button = $MainSplitContainer/MainContainer/DefenderItemInputContainer/DefenderItemAddNoneButton
+@onready var defender_item_list: ItemList = $MainSplitContainer/MainContainer/DefenderItemList
+@onready var defender_item_delete_button: Button = $MainSplitContainer/MainContainer/DefenderItemButtonContainer/DefenderItemDeleteButton
+@onready var defender_item_clear_button: Button = $MainSplitContainer/MainContainer/DefenderItemButtonContainer/DefenderItemClearButton
 
 ## 土地設定（攻撃側）
-@onready var attacker_fire_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerFireSpin
-@onready var attacker_water_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerWaterSpin
-@onready var attacker_wind_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerWindSpin
-@onready var attacker_earth_spin: SpinBox = $MainContainer/AttackerLandContainer/AttackerEarthSpin
+@onready var attacker_fire_spin: SpinBox = $MainSplitContainer/MainContainer/AttackerLandContainer/AttackerFireSpin
+@onready var attacker_water_spin: SpinBox = $MainSplitContainer/MainContainer/AttackerLandContainer/AttackerWaterSpin
+@onready var attacker_wind_spin: SpinBox = $MainSplitContainer/MainContainer/AttackerLandContainer/AttackerWindSpin
+@onready var attacker_earth_spin: SpinBox = $MainSplitContainer/MainContainer/AttackerLandContainer/AttackerEarthSpin
 
 ## 土地設定（防御側）
-@onready var defender_fire_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderFireSpin
-@onready var defender_water_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderWaterSpin
-@onready var defender_wind_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderWindSpin
-@onready var defender_earth_spin: SpinBox = $MainContainer/DefenderLandContainer/DefenderEarthSpin
+@onready var defender_fire_spin: SpinBox = $MainSplitContainer/MainContainer/DefenderLandContainer/DefenderFireSpin
+@onready var defender_water_spin: SpinBox = $MainSplitContainer/MainContainer/DefenderLandContainer/DefenderWaterSpin
+@onready var defender_wind_spin: SpinBox = $MainSplitContainer/MainContainer/DefenderLandContainer/DefenderWindSpin
+@onready var defender_earth_spin: SpinBox = $MainSplitContainer/MainContainer/DefenderLandContainer/DefenderEarthSpin
 
 ## バトル条件
-@onready var battle_land_option: OptionButton = $MainContainer/BattleLandContainer/BattleLandOption
-@onready var attacker_adjacent_check: CheckBox = $MainContainer/AdjacentContainer/AttackerAdjacentCheck
-@onready var defender_adjacent_check: CheckBox = $MainContainer/AdjacentContainer/DefenderAdjacentCheck
+@onready var battle_land_option: OptionButton = $MainSplitContainer/MainContainer/BattleLandContainer/BattleLandOption
+@onready var attacker_adjacent_check: CheckBox = $MainSplitContainer/MainContainer/AdjacentContainer/AttackerAdjacentCheck
+@onready var defender_adjacent_check: CheckBox = $MainSplitContainer/MainContainer/AdjacentContainer/DefenderAdjacentCheck
 
 ## 実行
-@onready var swap_button: Button = $MainContainer/SwapContainer/SwapButton
-@onready var execute_button: Button = $MainContainer/ExecuteButton
-@onready var result_label: Label = $MainContainer/ResultLabel
+@onready var swap_button: Button = $MainSplitContainer/MainContainer/SwapContainer/SwapButton
+@onready var execute_button: Button = $MainSplitContainer/MainContainer/ExecuteButton
+@onready var result_label: Label = $MainSplitContainer/MainContainer/ResultLabel
+
+## 結果表示
+@onready var statistics_label: RichTextLabel = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/StatisticsTab/StatisticsLabel
+@onready var detail_table: ItemList = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/DetailTable
 
 func _ready():
 	print("[BattleTestUI] 初期化")
@@ -496,5 +500,99 @@ func _display_results():
 "
 	text += "詳細結果は %d 件のバトルデータに記録されています" % results.size()
 	
-	result_label.text = text
+	# 統計サマリー表示
+	_display_statistics()
+	
+	# 詳細テーブル表示
+	_display_detail_table()
+	
+	# 簡易メッセージ（左側）
+	result_label.text = "テスト完了！右側のタブで結果を確認してください。"
+	
 	print("[BattleTestUI] 結果表示完了")
+
+## 統計サマリー表示
+func _display_statistics():
+	if not statistics:
+		return
+	
+	var text = "[b]📊 統計サマリー[/b]
+
+"
+	text += "総バトル数: [b]%d[/b]
+" % statistics.total_battles
+	text += "実行時間: [b]%.2f秒[/b]
+
+" % (statistics.total_duration_ms / 1000.0)
+	
+	# 勝率
+	text += "[color=cyan]■ 勝率[/color]
+"
+	if statistics.total_battles > 0:
+		var att_rate = statistics.attacker_wins * 100.0 / statistics.total_battles
+		var def_rate = statistics.defender_wins * 100.0 / statistics.total_battles
+		text += "  攻撃側勝利: %d (%.1f%%)
+" % [statistics.attacker_wins, att_rate]
+		text += "  防御側勝利: %d (%.1f%%)
+
+" % [statistics.defender_wins, def_rate]
+	
+	# クリーチャー別勝率（Top 5）
+	text += "[color=yellow]■ クリーチャー別勝率 (Top 5)[/color]
+"
+	var sorted_creatures = []
+	for creature_name in statistics.creature_stats:
+		var data = statistics.creature_stats[creature_name]
+		sorted_creatures.append({"name": creature_name, "rate": data.get("win_rate", 0.0), "wins": data.wins, "total": data.total})
+	
+	sorted_creatures.sort_custom(func(a, b): return a.rate > b.rate)
+	
+	for i in range(min(5, sorted_creatures.size())):
+		var creature = sorted_creatures[i]
+		text += "  %d. %s: %.1f%% (%d/%d)
+" % [i+1, creature.name, creature.rate, creature.wins, creature.total]
+	
+	# スキル付与統計
+	if not statistics.skill_grant_stats.is_empty():
+		text += "
+[color=lime]■ スキル付与統計[/color]
+"
+		for skill_name in statistics.skill_grant_stats:
+			var data = statistics.skill_grant_stats[skill_name]
+			text += "  %s: %d回付与 (アイテム:%d, スペル:%d)
+" % [skill_name, data.granted, data.from_item, data.from_spell]
+	
+	statistics_label.text = text
+
+## 詳細テーブル表示
+func _display_detail_table():
+	detail_table.clear()
+	
+	for result in results:
+		if not (result is BattleTestResult):
+			continue
+		
+		# 1行にまとめて表示
+		var line = "[%d] %s vs %s → %s (残HP: %d vs %d)" % [
+			result.battle_id,
+			result.attacker_name,
+			result.defender_name,
+			"攻撃側勝利" if result.winner == "attacker" else "防御側勝利",
+			result.attacker_final_hp,
+			result.defender_final_hp
+		]
+		
+		# 付与スキルがあれば追加
+		if not result.attacker_granted_skills.is_empty():
+			line += " [攻:" + ",".join(result.attacker_granted_skills) + "]"
+		if not result.defender_granted_skills.is_empty():
+			line += " [防:" + ",".join(result.defender_granted_skills) + "]"
+		
+		detail_table.add_item(line)
+
+## 結果表示クリア
+func _clear_result_display():
+	if statistics_label:
+		statistics_label.text = ""
+	if detail_table:
+		detail_table.clear()

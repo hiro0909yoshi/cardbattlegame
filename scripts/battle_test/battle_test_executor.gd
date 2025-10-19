@@ -108,7 +108,18 @@ static func _execute_single_battle(
 		1  # player_id
 	)
 	
-	# TODO: アイテム効果適用
+	# アイテム効果適用
+	var attacker_granted_skills = []
+	var defender_granted_skills = []
+	
+	# BattleSystemを作成（アイテム効果適用に必要）
+	var battle_system_for_items = BattleSystem.new()
+	
+	if att_item_id > 0:
+		attacker_granted_skills = _apply_item_effects_and_record(battle_system_for_items, attacker, att_item_id)
+	
+	if def_item_id > 0:
+		defender_granted_skills = _apply_item_effects_and_record(battle_system_for_items, defender, def_item_id)
 	
 	# BattleSystemを使用してバトル実行
 	var battle_system = BattleSystem.new()
@@ -160,6 +171,7 @@ static func _execute_single_battle(
 	test_result.attacker_base_hp = attacker.creature_data.get("hp", 0)
 	test_result.attacker_final_ap = attacker.current_ap
 	test_result.attacker_final_hp = attacker.base_hp
+	test_result.attacker_granted_skills = attacker_granted_skills
 	
 	# 防御側情報
 	test_result.defender_id = def_creature_id
@@ -172,6 +184,7 @@ static func _execute_single_battle(
 	test_result.defender_base_hp = defender.creature_data.get("hp", 0)
 	test_result.defender_final_ap = defender.current_ap
 	test_result.defender_final_hp = defender.base_hp
+	test_result.defender_granted_skills = defender_granted_skills
 	
 	# バトル結果
 	var winner_str = ""
@@ -208,3 +221,40 @@ static func _get_spell_name(spell_id: int) -> String:
 		return "なし"
 	# TODO: スペルデータから名前取得
 	return "スペル(ID:%d)" % spell_id
+
+## アイテム効果適用とスキル付与記録
+static func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int) -> Array:
+	var granted_skills = []
+	
+	# アイテムデータ取得
+	var item_data = CardLoader.get_card_by_id(item_id)
+	if not item_data:
+		push_error("アイテムID %d が見つかりません" % item_id)
+		return granted_skills
+	
+	# 付与前のスキル状態を記録
+	var had_first_strike_before = participant.has_item_first_strike
+	var had_last_strike_before = participant.has_last_strike
+	var had_power_strike_before = false
+	if participant.creature_data.has("ability_parsed"):
+		var keywords = participant.creature_data.ability_parsed.get("keywords", [])
+		had_power_strike_before = "強打" in keywords
+	
+	# BattleSystemのアイテム効果適用を使用
+	battle_system._apply_item_effects(participant, item_data)
+	
+	# 付与後のスキル状態をチェック
+	if participant.has_item_first_strike and not had_first_strike_before:
+		granted_skills.append("先制攻撃")
+	
+	if participant.has_last_strike and not had_last_strike_before:
+		granted_skills.append("後手")
+	
+	# 強打の判定
+	if participant.creature_data.has("ability_parsed"):
+		var keywords = participant.creature_data.ability_parsed.get("keywords", [])
+		var has_power_strike_now = "強打" in keywords
+		if has_power_strike_now and not had_power_strike_before:
+			granted_skills.append("強打")
+	
+	return granted_skills
