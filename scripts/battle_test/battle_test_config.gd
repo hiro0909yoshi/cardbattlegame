@@ -13,6 +13,7 @@ var attacker_owned_lands: Dictionary = {     # 保有土地数
 	"wind": 0
 }
 var attacker_battle_land: String = "neutral"    # バトル発生土地の属性
+var attacker_battle_land_level: int = 1      # バトル発生土地のレベル (1-5)
 var attacker_has_adjacent: bool = false      # 隣接味方領地あり
 
 ## 防御側設定
@@ -26,6 +27,7 @@ var defender_owned_lands: Dictionary = {
 	"wind": 0
 }
 var defender_battle_land: String = "neutral"
+var defender_battle_land_level: int = 1      # バトル発生土地のレベル (1-5)
 var defender_has_adjacent: bool = false
 
 ## バリデーション
@@ -64,6 +66,11 @@ func swap_attacker_defender():
 	var temp_battle_land = attacker_battle_land
 	attacker_battle_land = defender_battle_land
 	defender_battle_land = temp_battle_land
+	
+	# バトル土地レベル入れ替え
+	var temp_land_level = attacker_battle_land_level
+	attacker_battle_land_level = defender_battle_land_level
+	defender_battle_land_level = temp_land_level
 	
 	# 隣接条件入れ替え
 	var temp_adjacent = attacker_has_adjacent

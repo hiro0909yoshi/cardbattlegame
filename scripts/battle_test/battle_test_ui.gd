@@ -54,6 +54,7 @@ var statistics: BattleTestStatistics = null
 
 ## バトル条件
 @onready var battle_land_option: OptionButton = $MainSplitContainer/MainContainer/BattleLandContainer/BattleLandOption
+@onready var battle_land_level_spin: SpinBox = $MainSplitContainer/MainContainer/BattleLandContainer/BattleLandLevelSpin
 @onready var attacker_adjacent_check: CheckBox = $MainSplitContainer/MainContainer/AdjacentContainer/AttackerAdjacentCheck
 @onready var defender_adjacent_check: CheckBox = $MainSplitContainer/MainContainer/AdjacentContainer/DefenderAdjacentCheck
 
@@ -124,6 +125,8 @@ func _setup_ui():
 		battle_land_option.item_selected.connect(_on_battle_land_selected)
 		# 初期状態は未選択（-1）にして、無属性で戦闘
 		battle_land_option.selected = -1
+	if battle_land_level_spin:
+		battle_land_level_spin.value_changed.connect(_on_battle_land_level_changed)
 	if attacker_adjacent_check:
 		attacker_adjacent_check.toggled.connect(_on_attacker_adjacent_toggled)
 	if defender_adjacent_check:
@@ -386,6 +389,12 @@ func _on_attacker_adjacent_toggled(toggled_on: bool):
 func _on_defender_adjacent_toggled(toggled_on: bool):
 	config.defender_has_adjacent = toggled_on
 	print("[BattleTestUI] 防御側隣接条件: ", toggled_on)
+
+func _on_battle_land_level_changed(value: float):
+	var level = int(value)
+	config.attacker_battle_land_level = level
+	config.defender_battle_land_level = level
+	print("[BattleTestUI] バトル土地レベル: ", level)
 
 ## ============================================
 ## 入れ替え・実行

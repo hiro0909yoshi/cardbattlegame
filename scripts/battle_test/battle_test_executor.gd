@@ -137,7 +137,7 @@ static func _execute_single_battle(
 	# ダミータイル情報作成
 	var tile_info = {
 		"element": config.defender_battle_land,
-		"level": 1,
+		"level": config.defender_battle_land_level,  # 設定から取得
 		"index": 0,
 		"owner": 1,
 		"creature": def_card_data
@@ -151,7 +151,7 @@ static func _execute_single_battle(
 	battle_system._apply_pre_battle_skills(participants, tile_info, 0)
 	
 	# 攻撃シーケンス実行
-	battle_system._execute_attack_sequence(attack_order)
+	battle_system._execute_attack_sequence(attack_order, tile_info)
 	
 	# 結果判定
 	var battle_result = battle_system._resolve_battle_result(attacker, defender)

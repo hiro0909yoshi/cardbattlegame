@@ -808,7 +808,7 @@ func _check_nullify(attacker: BattleParticipant, defender: BattleParticipant, co
 			print("    条件タイプ: ", condition_type)
 			if condition_type == "land_level_check":
 				print("    土地レベル: ", context.get("current_land_level", 1), 
-				      " ", condition.get("operator", ">="), " ", condition.get("value", 1))
+					  " ", condition.get("operator", ">="), " ", condition.get("value", 1))
 			if not condition_checker._evaluate_single_condition(condition, context):
 				print("    → 条件不成立、無効化発動せず")
 				return {"is_nullified": false, "reduction_rate": 1.0}

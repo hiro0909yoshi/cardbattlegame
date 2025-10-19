@@ -336,6 +336,12 @@ popup/item_2/id = 2
 popup/item_3/text = "\"地\""
 popup/item_3/id = 3
 
+[node name="BattleLandLevelSpin" type="SpinBox" parent="MainSplitContainer/MainContainer/BattleLandContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 5.0
+value = 1.0
+
 [node name="AdjacentContainer" type="HBoxContainer" parent="MainSplitContainer/MainContainer"]
 layout_mode = 2
 
