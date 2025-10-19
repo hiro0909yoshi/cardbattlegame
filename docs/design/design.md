@@ -338,6 +338,7 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 - 再生: バトル後にHP全回復
 - 2回攻撃: 1回のバトルで2回攻撃
 - 即死: 攻撃後に確率で即死判定
+- **不屈**: アクション後もダウン状態にならない（何度でも領地コマンド実行可能）
 
 **スキル適用順序**: 感応 → 強打 → 2回攻撃判定 → 攻撃実行 → **即死判定** → バトル結果 → 再生
 
@@ -815,6 +816,10 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 - クリーチャー移動実行後（移動先の土地）
 - クリーチャー交換実行後
 
+**例外: 不屈スキル**
+- 不屈スキルを持つクリーチャーがいる土地は、アクション後もダウン状態にならない
+- 何度でも領地コマンドを実行可能
+
 #### ダウン状態の解除タイミング
 - プレイヤーがスタートマスを通過したとき
 - 全プレイヤーの全土地のダウン状態が一括解除される
@@ -840,6 +845,31 @@ if tile.is_down():
 movement_controller.clear_all_down_states_for_player(player_id)
 ```
 
+#### 不屈スキルの実装
+```gdscript
+# SkillSystem.gd
+static func has_unyielding(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	var ability_detail = creature_data.get("ability_detail", "")
+	return "不屈" in ability_detail
+
+# ダウン状態設定時の不屈チェック（各アクション処理）
+if tile.has_method("set_down_state"):
+	var creature = tile.creature_data if tile.has("creature_data") else {}
+	if not SkillSystem.has_unyielding(creature):
+		tile.set_down_state(true)
+	else:
+		print("不屈によりダウンしません")
+```
+
+**不屈持ちクリーチャー一覧** (16体):
+- 火: シールドメイデン(14), ショッカー(18), バードメイデン(28)
+- 水: エキノダーム(113), カワヒメ(117), マカラ(141)
+- 地: キャプテンコック(207), ヒーラー(234), ピクシー(235), ワーベア(249)
+- 風: グレートニンバス(312), トレジャーレイダー(331), マーシャルモンク(341), マッドハーレクイン(342)
+- 無: アーキビショップ(403), シャドウガイスト(418)
+
 #### デバッグコマンド
 - **Uキー**: 現在プレイヤーの全土地のダウン状態を即座に解除
 - テスト用の機能（本番では無効化予定）
@@ -861,6 +891,7 @@ movement_controller.clear_all_down_states_for_player(player_id)
 3. **ダウン状態の土地は選択不可**
    - アクション実行済みの土地は次のターンまで使用不可
    - 選択肢として表示されない
+   - **例外**: 不屈スキル持ちのクリーチャーがいる土地はダウンしないため、何度でも使用可能
 
 #### 土地選択の操作方法
 - **矢印キー（↑↓←→）**: 土地を切り替え（プレビュー）

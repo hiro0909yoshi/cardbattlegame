@@ -163,3 +163,11 @@ func clear_all_effects():
 	active_skills.clear()
 	initialize_player_buffs()
 	print("SkillSystem: 全効果をクリア")
+
+## 不屈スキルを持っているかチェック
+static func has_unyielding(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	
+	var ability_detail = creature_data.get("ability_detail", "")
+	return "不屈" in ability_detail

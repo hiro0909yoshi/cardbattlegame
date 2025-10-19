@@ -194,9 +194,14 @@ func execute_level_up_with_level(target_level: int, cost: int) -> bool:
 	# レベルアップ実行
 	tile.level = target_level
 	
-	# ダウン状態設定
+	# ダウン状態設定（不屈チェック）
 	if tile.has_method("set_down_state"):
-		tile.set_down_state(true)
+		# BaseTileのcreature_dataプロパティを直接参照
+		var creature = tile.creature_data
+		if not SkillSystem.has_unyielding(creature):
+			tile.set_down_state(true)
+		else:
+			print("[LandCommandHandler] 不屈によりレベルアップ後もダウンしません")
 	
 	# UI更新
 	if ui_manager:
@@ -778,8 +783,11 @@ func confirm_move(dest_tile_index: int):
 		board_system.set_tile_owner(dest_tile_index, current_player_index)
 		board_system.place_creature(dest_tile_index, creature_data)
 		
-		# 移動先をダウン状態に
-		dest_tile.set_down_state(true)
+		# 移動先をダウン状態に（不屈チェック）
+		if not SkillSystem.has_unyielding(creature_data):
+			dest_tile.set_down_state(true)
+		else:
+			print("[LandCommandHandler] 不屈により移動後もダウンしません")
 		
 		# 領地コマンドを閉じる
 		close_land_command()
@@ -832,8 +840,13 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 		if board_system and board_system.tile_nodes.has(tile_index):
 			var tile = board_system.tile_nodes[tile_index]
 			if tile and tile.has_method("set_down_state"):
-				tile.set_down_state(true)
-				print("[LandCommandHandler] 移動先をダウン状態に設定")
+				# 移動したクリーチャーが不屈持ちかチェック
+				var creature = tile.creature_data
+				if not SkillSystem.has_unyielding(creature):
+					tile.set_down_state(true)
+					print("[LandCommandHandler] 移動先をダウン状態に設定")
+				else:
+					print("[LandCommandHandler] 不屈により移動後もダウンしません")
 	
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:
@@ -855,7 +868,11 @@ func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, att
 		print("[LandCommandHandler] 簡易バトル: 攻撃側勝利")
 		board_system.set_tile_owner(dest_index, attacker_player)
 		board_system.place_creature(dest_index, attacker_data)
-		dest_tile.set_down_state(true)
+		# 不屈チェック
+		if not SkillSystem.has_unyielding(attacker_data):
+			dest_tile.set_down_state(true)
+		else:
+			print("[LandCommandHandler] 不屈により移動後もダウンしません")
 	else:
 		print("[LandCommandHandler] 簡易バトル: 防御側勝利")
 	

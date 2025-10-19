@@ -292,12 +292,16 @@ func execute_summon(card_index: int):
 		board_system.set_tile_owner(current_tile, current_player_index)
 		board_system.place_creature(current_tile, card_data)
 		
-		# Phase 1-A: 召喚後にダウン状態を設定
+		# Phase 1-A: 召喚後にダウン状態を設定（不屈チェック）
 		if board_system.tile_nodes.has(current_tile):
 			var tile = board_system.tile_nodes[current_tile]
 			if tile and tile.has_method("set_down_state"):
-				tile.set_down_state(true)
-				print("[TileActionProcessor] 召喚後ダウン状態設定: タイル", current_tile)
+				# 不屈持ちでなければダウン状態にする
+				if not SkillSystem.has_unyielding(card_data):
+					tile.set_down_state(true)
+					print("[TileActionProcessor] 召喚後ダウン状態設定: タイル", current_tile)
+				else:
+					print("[TileActionProcessor] 不屈により召喚後もダウンしません: タイル", current_tile)
 		
 		print("召喚成功！土地を取得しました")
 		
@@ -440,12 +444,16 @@ func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionar
 	# 4. 新しいクリーチャーを配置（土地レベル・属性は維持される）
 	board_system.place_creature(tile_index, card_data)
 	
-	# 5. ダウン状態を設定
+	# 5. ダウン状態を設定（不屈チェック）
 	if board_system.tile_nodes.has(tile_index):
 		var tile = board_system.tile_nodes[tile_index]
 		if tile and tile.has_method("set_down_state"):
-			tile.set_down_state(true)
-			print("[TileActionProcessor] 交換後ダウン状態設定: タイル", tile_index)
+			# 不屈持ちでなければダウン状態にする
+			if not SkillSystem.has_unyielding(card_data):
+				tile.set_down_state(true)
+				print("[TileActionProcessor] 交換後ダウン状態設定: タイル", tile_index)
+			else:
+				print("[TileActionProcessor] 不屈により交換後もダウンしません: タイル", tile_index)
 	
 	# UI更新
 	if ui_manager:

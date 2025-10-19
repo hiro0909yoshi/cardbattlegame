@@ -7,3 +7,8 @@ res://scripts/battle_test/battle_test_config.gd
 res://scripts/battle_test/battle_test_ui.gd
 res://data/item.json
 res://scripts/skills/condition_checker.gd
+res://scripts/skill_system.gd
+res://scripts/tile_action_processor.gd
+res://scripts/game_flow/land_command_handler.gd
+res://docs/design/design.md
+res://docs/design/skills_design.md
