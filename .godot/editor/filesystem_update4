@@ -6,3 +6,4 @@ res://scripts/battle_test/battle_test_executor.gd
 res://scripts/battle_test/battle_test_config.gd
 res://scripts/battle_test/battle_test_ui.gd
 res://data/item.json
+res://scripts/skills/condition_checker.gd

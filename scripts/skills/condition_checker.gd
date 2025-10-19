@@ -103,6 +103,13 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			var equipped_item = context.get("equipped_item", {})
 			return equipped_item.get("item_type", "") == item_type
 		
+		"item_equipped":
+			var required_type = condition.get("item_type", "")
+			var equipped_item = context.get("equipped_item", {})
+			if equipped_item.is_empty():
+				return false
+			return equipped_item.get("item_type", "") == required_type
+		
 		"enemy_no_item":
 			var enemy_item = context.get("enemy_item", null)
 			return enemy_item == null
