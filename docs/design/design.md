@@ -345,6 +345,139 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 
 詳細な仕様、実装例、データ構造については `skills_design.md` を参照してください。
 
+### 3.5. 効果システム (EffectSystem) ✨NEW
+
+#### 責務
+- クリーチャーのステータス変更効果の管理
+- スペル・アイテム・スキルによる効果の統一管理
+- 一時効果と永続効果の分離管理
+- 効果の適用・削除・打ち消し
+
+#### 効果の種類
+
+**1. バトル中のみの効果**
+- アイテム効果（AP+30、HP+40など）
+- バトル終了時に自動削除
+
+**2. 一時効果（移動で消える）**
+- スペル「ブレッシング」（HP+10）
+- 領地コマンドでクリーチャー移動時に削除
+
+**3. 永続効果（移動で消えない）**
+- マスグロース（全クリーチャーMHP+5）
+- ドミナントグロース（特定属性MHP+10）
+- 交換時やゲーム終了まで維持
+
+**4. 土地数比例効果**
+- アームドパラディン「火と土の土地数×10」
+- バトル時に動的計算
+
+#### データ構造
+
+```gdscript
+creature_data = {
+    "base_up_hp": 0,           # 永続的な基礎HP上昇
+    "base_up_ap": 0,           # 永続的な基礎AP上昇
+    "permanent_effects": [],   # 永続効果配列
+    "temporary_effects": [],   # 一時効果配列
+    "map_lap_count": 0         # 周回カウント
+}
+
+# 効果オブジェクト
+effect = {
+    "type": "stat_bonus",
+    "stat": "hp",              # または "ap"
+    "value": 10,
+    "source": "spell",
+    "source_name": "ブレッシング",
+    "removable": true,         # 打ち消し可能か
+    "lost_on_move": true       # 移動で消えるか
+}
+```
+
+#### 主要メソッド
+
+```gdscript
+# スペル効果
+func add_spell_effect_to_creature(tile_index: int, effect: Dictionary)
+func apply_mass_growth(player_id: int, bonus_hp: int = 5)
+func apply_dominant_growth(player_id: int, element: String, bonus_hp: int = 10)
+
+# 効果削除
+func clear_temporary_effects_on_move(tile_index: int)
+func remove_effects_from_creature(tile_index: int, removable_only: bool = true)
+```
+
+#### ability_parsedの拡張
+
+**土地数比例効果の例**:
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "ap",
+      "elements": ["fire", "earth"],
+      "multiplier": 10
+    }
+  ]
+}
+```
+
+**アイテム効果の例**:
+```json
+{
+  "effects": [
+    {
+      "effect_type": "debuff_ap",
+      "value": 10
+    },
+    {
+      "effect_type": "buff_hp",
+      "value": 40
+    }
+  ]
+}
+```
+
+#### 実装例
+
+**アームドパラディン**（火・土土地数×10）
+```json
+{
+  "id": 1,
+  "ap": 0,
+  "hp": 50,
+  "ability_parsed": {
+    "effects": [
+      {
+        "effect_type": "land_count_multiplier",
+        "stat": "ap",
+        "elements": ["fire", "earth"],
+        "multiplier": 10
+      }
+    ]
+  }
+}
+```
+
+**アーメット**（ST-10、HP+40）
+```json
+{
+  "id": 1001,
+  "ability_parsed": {
+    "effects": [
+      {"effect_type": "debuff_ap", "value": 10},
+      {"effect_type": "buff_hp", "value": 40}
+    ]
+  }
+}
+```
+
+詳細は `docs/design/effect_system.md` を参照。
+
+---
+
 ### 4. プレイヤーシステム (PlayerSystem)
 
 #### 責務

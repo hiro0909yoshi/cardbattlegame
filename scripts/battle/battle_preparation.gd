@@ -56,6 +56,10 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender_owner
 	)
 	
+	# 効果配列を適用
+	apply_effect_arrays(attacker, card_data)
+	apply_effect_arrays(defender, defender_creature)
+	
 	# アイテム効果を適用
 	if not attacker_item.is_empty():
 		apply_item_effects(attacker, attacker_item)
@@ -66,6 +70,51 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		"attacker": attacker,
 		"defender": defender
 	}
+
+## 効果配列（permanent_effects, temporary_effects）を適用
+func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictionary) -> void:
+	# base_up_hp/apを適用（合成・マスグロース等）
+	participant.base_up_hp = creature_data.get("base_up_hp", 0)
+	participant.base_up_ap = creature_data.get("base_up_ap", 0)
+	
+	# 効果配列を保持（打ち消し効果判定用）
+	participant.permanent_effects = creature_data.get("permanent_effects", [])
+	participant.temporary_effects = creature_data.get("temporary_effects", [])
+	
+	# permanent_effectsから効果を計算
+	for effect in participant.permanent_effects:
+		if effect.get("type") == "stat_bonus":
+			var stat = effect.get("stat", "")
+			var value = effect.get("value", 0)
+			if stat == "hp":
+				participant.temporary_bonus_hp += value
+			elif stat == "ap":
+				participant.temporary_bonus_ap += value
+	
+	# temporary_effectsから効果を計算
+	for effect in participant.temporary_effects:
+		if effect.get("type") == "stat_bonus":
+			var stat = effect.get("stat", "")
+			var value = effect.get("value", 0)
+			if stat == "hp":
+				participant.temporary_bonus_hp += value
+			elif stat == "ap":
+				participant.temporary_bonus_ap += value
+	
+	# base_up_apをcurrent_apに反映
+	participant.current_ap += participant.base_up_ap + participant.temporary_bonus_ap
+	
+	# HPを更新
+	participant.update_current_hp()
+	
+	if participant.base_up_hp > 0 or participant.base_up_ap > 0:
+		print("[効果] ", creature_data.get("name", "?"), 
+			  " base_up_hp:", participant.base_up_hp, 
+			  " base_up_ap:", participant.base_up_ap)
+	if participant.temporary_bonus_hp > 0 or participant.temporary_bonus_ap > 0:
+		print("[効果] ", creature_data.get("name", "?"), 
+			  " temporary_bonus_hp:", participant.temporary_bonus_hp, 
+			  " temporary_bonus_ap:", participant.temporary_bonus_ap)
 
 ## アイテム効果を適用
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:

@@ -54,15 +54,15 @@ participant.item_bonus_ap = 30  # バトル後に消える
 
 ```gdscript
 creature_data["temporary_effects"] = [
-    {
-        "id": "blessing_002",
-        "type": "stat_bonus",
-        "stat": "hp",
-        "value": 10,
-        "source": "spell_blessing",
-        "removable": true,
-        "lost_on_move": true
-    }
+	{
+		"id": "blessing_002",
+		"type": "stat_bonus",
+		"stat": "hp",
+		"value": 10,
+		"source": "spell_blessing",
+		"removable": true,
+		"lost_on_move": true
+	}
 ]
 ```
 
@@ -80,7 +80,7 @@ creature_data["temporary_effects"] = [
 ```gdscript
 # バトル時に動的計算
 if player_lands["fire"] >= 3:
-    participant.current_ap += 30
+	participant.current_ap += 30
 ```
 
 #### 3-2. 条件を満たした時点で効果付与
@@ -120,13 +120,13 @@ creature_data["lap_bonus_ap"] = 20  # 10 × 2周
 
 # または permanent_effects に追加
 creature_data["permanent_effects"].append({
-    "id": "lap_bonus_003",
-    "type": "stat_bonus",
-    "stat": "ap",
-    "value": 10,
-    "source": "map_lap",
-    "removable": false,
-    "lost_on_move": false
+	"id": "lap_bonus_003",
+	"type": "stat_bonus",
+	"stat": "ap",
+	"value": 10,
+	"source": "map_lap",
+	"removable": false,
+	"lost_on_move": false
 })
 ```
 
@@ -142,8 +142,8 @@ creature_data["permanent_effects"].append({
 ```gdscript
 # バトル時に動的計算
 if has_adjacent_ally_land:
-    participant.current_ap += 20
-    participant.temporary_bonus_hp += 20
+	participant.current_ap += 20
+	participant.temporary_bonus_hp += 20
 ```
 
 ---
@@ -164,13 +164,13 @@ creature_data["ap"] += 20
 
 # Option B
 creature_data["permanent_effects"].append({
-    "id": "synthesis_earth_004",
-    "type": "stat_bonus",
-    "stat": "hp",
-    "value": 10,
-    "source": "synthesis",
-    "removable": false,  # 打ち消し効果で消えない
-    "lost_on_move": false
+	"id": "synthesis_earth_004",
+	"type": "stat_bonus",
+	"stat": "hp",
+	"value": 10,
+	"source": "synthesis",
+	"removable": false,  # 打ち消し効果で消えない
+	"lost_on_move": false
 })
 ```
 
@@ -196,16 +196,16 @@ creature_data["permanent_effects"].append({
 ```gdscript
 # 全自クリーチャーにループ適用
 for tile in board_system.get_player_tiles(player_id):
-    if tile.creature_data:
-        tile.creature_data["permanent_effects"].append({
-            "id": "mass_growth_" + str(effect_counter),
-            "type": "stat_bonus",
-            "stat": "hp",
-            "value": 5,
-            "source": "spell_mass_growth",
-            "removable": true,
-            "lost_on_move": false
-        })
+	if tile.creature_data:
+		tile.creature_data["permanent_effects"].append({
+			"id": "mass_growth_" + str(effect_counter),
+			"type": "stat_bonus",
+			"stat": "hp",
+			"value": 5,
+			"source": "spell_mass_growth",
+			"removable": true,
+			"lost_on_move": false
+		})
 ```
 
 ---
@@ -276,53 +276,53 @@ tile_data["element_changed_by"] = "spell_element_change"
 
 ```gdscript
 {
-    "id": 1,
-    "name": "アモン",
-    "hp": 30,           # 元の基礎HP
-    "ap": 20,           # 元の基礎AP
-    "element": "fire",
-    "ability_parsed": {...},  # スキル定義（既存）
-    
-    # 永続的な効果（移動で消えない、交換で消える）
-    "permanent_effects": [
-        {
-            "id": "mass_growth_001",
-            "type": "stat_bonus",
-            "stat": "hp",
-            "value": 5,
-            "source": "spell",
-            "source_name": "マスグロース",
-            "removable": true,        # 打ち消し効果で消せるか
-            "lost_on_move": false     # 移動で消えるか
-        },
-        {
-            "id": "synthesis_fire_002",
-            "type": "stat_bonus",
-            "stat": "ap",
-            "value": 20,
-            "source": "synthesis",
-            "source_name": "合成[火]",
-            "removable": false,       # 打ち消しできない
-            "lost_on_move": false
-        }
-    ],
-    
-    # 一時的な効果（移動で消える）
-    "temporary_effects": [
-        {
-            "id": "blessing_003",
-            "type": "stat_bonus",
-            "stat": "hp",
-            "value": 10,
-            "source": "spell",
-            "source_name": "ブレッシング",
-            "removable": true,
-            "lost_on_move": true      # 移動で消える
-        }
-    ],
-    
-    # マップ周回カウント（キメラ等）
-    "map_lap_count": 0
+	"id": 1,
+	"name": "アモン",
+	"hp": 30,           # 元の基礎HP
+	"ap": 20,           # 元の基礎AP
+	"element": "fire",
+	"ability_parsed": {...},  # スキル定義（既存）
+	
+	# 永続的な効果（移動で消えない、交換で消える）
+	"permanent_effects": [
+		{
+			"id": "mass_growth_001",
+			"type": "stat_bonus",
+			"stat": "hp",
+			"value": 5,
+			"source": "spell",
+			"source_name": "マスグロース",
+			"removable": true,        # 打ち消し効果で消せるか
+			"lost_on_move": false     # 移動で消えるか
+		},
+		{
+			"id": "synthesis_fire_002",
+			"type": "stat_bonus",
+			"stat": "ap",
+			"value": 20,
+			"source": "synthesis",
+			"source_name": "合成[火]",
+			"removable": false,       # 打ち消しできない
+			"lost_on_move": false
+		}
+	],
+	
+	# 一時的な効果（移動で消える）
+	"temporary_effects": [
+		{
+			"id": "blessing_003",
+			"type": "stat_bonus",
+			"stat": "hp",
+			"value": 10,
+			"source": "spell",
+			"source_name": "ブレッシング",
+			"removable": true,
+			"lost_on_move": true      # 移動で消える
+		}
+	],
+	
+	# マップ周回カウント（キメラ等）
+	"map_lap_count": 0
 }
 ```
 
@@ -332,14 +332,14 @@ tile_data["element_changed_by"] = "spell_element_change"
 
 ```gdscript
 {
-    "id": "unique_id_string",         # 一意のID
-    "type": "stat_bonus",              # 効果タイプ
-    "stat": "hp",                      # 対象ステータス（hp/ap）
-    "value": 10,                       # 効果値
-    "source": "spell",                 # 発生源（spell/item/skill/synthesis）
-    "source_name": "マスグロース",      # 効果名（UI表示用）
-    "removable": true,                 # 打ち消し効果で消せるか
-    "lost_on_move": false              # 移動で消えるか
+	"id": "unique_id_string",         # 一意のID
+	"type": "stat_bonus",              # 効果タイプ
+	"stat": "hp",                      # 対象ステータス（hp/ap）
+	"value": 10,                       # 効果値
+	"source": "spell",                 # 発生源（spell/item/skill/synthesis）
+	"source_name": "マスグロース",      # 効果名（UI表示用）
+	"removable": true,                 # 打ち消し効果で消せるか
+	"lost_on_move": false              # 移動で消えるか
 }
 ```
 
@@ -356,23 +356,23 @@ tile_data["element_changed_by"] = "spell_element_change"
 
 ```gdscript
 class BattleParticipant:
-    # 基礎値
-    var base_hp: int              # 元のHP（カードデータの値）
-    var base_up_hp: int = 0       # 永続的な基礎HP上昇（マスグロース、合成等）
-    var base_ap: int              # 元のAP
-    var base_up_ap: int = 0       # 永続的な基礎AP上昇
-    
-    # バトル中の一時ボーナス
-    var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（移動で消える）
-    var temporary_bonus_ap: int = 0   # 一時的なAPボーナス
-    var resonance_bonus_hp: int = 0   # 感応ボーナス
-    var land_bonus_hp: int = 0        # 土地ボーナス
-    var item_bonus_hp: int = 0        # アイテムボーナス（バトルのみ）
-    var item_bonus_ap: int = 0        # アイテムボーナス（バトルのみ）
-    
-    # 計算後の値
-    var current_hp: int
-    var current_ap: int
+	# 基礎値
+	var base_hp: int              # 元のHP（カードデータの値）
+	var base_up_hp: int = 0       # 永続的な基礎HP上昇（マスグロース、合成等）
+	var base_ap: int              # 元のAP
+	var base_up_ap: int = 0       # 永続的な基礎AP上昇
+	
+	# バトル中の一時ボーナス
+	var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（移動で消える）
+	var temporary_bonus_ap: int = 0   # 一時的なAPボーナス
+	var resonance_bonus_hp: int = 0   # 感応ボーナス
+	var land_bonus_hp: int = 0        # 土地ボーナス
+	var item_bonus_hp: int = 0        # アイテムボーナス（バトルのみ）
+	var item_bonus_ap: int = 0        # アイテムボーナス（バトルのみ）
+	
+	# 計算後の値
+	var current_hp: int
+	var current_ap: int
 ```
 
 ### HP/APの計算式
@@ -380,19 +380,19 @@ class BattleParticipant:
 ```gdscript
 # HP計算
 current_hp = base_hp + 
-             base_up_hp + 
-             temporary_bonus_hp + 
-             land_bonus_hp + 
-             resonance_bonus_hp + 
-             item_bonus_hp
+			 base_up_hp + 
+			 temporary_bonus_hp + 
+			 land_bonus_hp + 
+			 resonance_bonus_hp + 
+			 item_bonus_hp
 
 # AP計算
 current_ap = base_ap + 
-             base_up_ap + 
-             temporary_bonus_ap + 
-             item_bonus_ap + 
-             (感応AP) + 
-             (条件効果AP)
+			 base_up_ap + 
+			 temporary_bonus_ap + 
+			 item_bonus_ap + 
+			 (感応AP) + 
+			 (条件効果AP)
 # その後、強打で乗算
 ```
 
@@ -420,17 +420,17 @@ current_ap = base_ap +
 
 2. permanent_effectsから base_up_hp, base_up_ap を計算
    for effect in permanent_effects:
-       if effect["stat"] == "hp":
-           base_up_hp += effect["value"]
-       elif effect["stat"] == "ap":
-           base_up_ap += effect["value"]
+	   if effect["stat"] == "hp":
+		   base_up_hp += effect["value"]
+	   elif effect["stat"] == "ap":
+		   base_up_ap += effect["value"]
 
 3. temporary_effectsから temporary_bonus_hp, temporary_bonus_ap を計算
    for effect in temporary_effects:
-       if effect["stat"] == "hp":
-           temporary_bonus_hp += effect["value"]
-       elif effect["stat"] == "ap":
-           temporary_bonus_ap += effect["value"]
+	   if effect["stat"] == "hp":
+		   temporary_bonus_hp += effect["value"]
+	   elif effect["stat"] == "ap":
+		   temporary_bonus_ap += effect["value"]
 
 4. 土地ボーナスを加算（HPのみ）
    land_bonus_hp = tile.level * 10
@@ -441,14 +441,14 @@ current_ap = base_ap +
 
 6. 感応効果を加算
    if 条件を満たす:
-       current_ap += 30
-       resonance_bonus_hp += 30
+	   current_ap += 30
+	   resonance_bonus_hp += 30
 
 7. その他の条件効果を加算
    if 土地保有数条件:
-       current_ap += 計算値
+	   current_ap += 計算値
    if 隣接条件:
-       current_ap += 20
+	   current_ap += 20
 
 8. 強打を適用（最後）
    current_ap = current_ap * 強打倍率

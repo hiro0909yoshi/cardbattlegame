@@ -99,6 +99,7 @@ SkillSystem (マネージャー)
 | 先制 | パッシブ | 先攻権獲得 | ✅ 完全実装 |
 | 後手 | パッシブ | 相手が先攻 | ✅ 完全実装 |
 | 再生 | パッシブ | バトル後にHP全回復 | ✅ 完全実装 |
+| 土地数比例 | パッシブ | 土地数×倍率でAP/HP上昇 | ✅ 完全実装 |
 | 不屈 | パッシブ | アクション後もダウンしない | ✅ 完全実装 |
 | 2回攻撃 | パッシブ | 1回のバトルで2回攻撃 | ✅ 完全実装 |
 | 即死 | アクティブ | 確率で相手を即死 | ✅ 完全実装 |
@@ -1280,12 +1281,106 @@ AP = 0 + (3 × 10) = 30
 
 ---
 
+### 7. 土地数比例効果 ✨NEW
+
+#### 概要
+指定された属性の土地配置数に応じて、AP/HPが上昇するパッシブスキル。
+
+#### 発動条件
+- バトル発生時に自動判定
+- 所有している指定属性の土地数を合計
+- 土地数 × 倍率 = ボーナス値
+
+#### 効果パターン
+
+**パターン1: 単一属性**
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "ap",
+      "elements": ["fire"],
+      "multiplier": 20
+    }
+  ]
+}
+```
+- 火土地3つ所有 → AP+60
+
+**パターン2: 複数属性の合計**
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "ap",
+      "elements": ["fire", "earth"],
+      "multiplier": 10
+    }
+  ]
+}
+```
+- 火土地2つ + 土土地3つ = 5つ所有 → AP+50
+
+**パターン3: HP上昇版**
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "hp",
+      "elements": ["water"],
+      "multiplier": 15
+    }
+  ]
+}
+```
+- 水土地4つ所有 → HP+60
+
+#### 実装クラス
+`scripts/battle/battle_skill_processor.gd`の`apply_land_count_effects()`
+
+#### 実装例
+
+**アームドパラディン** (ID: 1)
+```json
+{
+  "ap": 0,
+  "hp": 50,
+  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+  "ability_parsed": {
+    "keywords": ["無効化"],
+    "effects": [
+      {
+        "effect_type": "land_count_multiplier",
+        "stat": "ap",
+        "elements": ["fire", "earth"],
+        "multiplier": 10,
+        "description": "火と土の土地配置数×10をSTに加算"
+      }
+    ]
+  }
+}
+```
+
+#### 実行ログ例
+```
+【土地数比例】アームドパラディン
+  対象属性: ["fire", "earth"] 合計土地数: 5
+  AP: 0 → 50 (+50)
+```
+
+---
+
 ## スキル適用順序
 
 バトル前のスキル適用は以下の順序で実行される:
 
 ```
-1. 感応スキル (_apply_resonance_skill)
+1. 巻物攻撃判定 (check_scroll_attack)
+2. 感応スキル (apply_resonance_skill)
+3. 土地数比例効果 (apply_land_count_effects) ✨NEW
    ├─ プレイヤーの土地所有状況を確認
    ├─ 条件を満たせばAPとHPを上昇
    └─ resonance_bonus_hpフィールドに加算

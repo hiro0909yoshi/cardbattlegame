@@ -20,7 +20,19 @@
 	  "cost": {
 		"mp": 45
 	  },
-	  "effect": "ST-10；HP+40"
+	  "effect": "ST-10；HP+40",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "debuff_ap",
+			"value": 10
+		  },
+		  {
+			"effect_type": "buff_hp",
+			"value": 40
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1002,

@@ -24,7 +24,16 @@
 		  "無効化": {
 			"nullify_type": "scroll_attack"
 		  }
-		}
+		},
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "ap",
+			"elements": ["fire", "earth"],
+			"multiplier": 10,
+			"description": "火と土の土地配置数×10をSTに加算"
+		  }
+		]
 	  }
 	},
 	{

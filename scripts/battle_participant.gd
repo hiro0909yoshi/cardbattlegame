@@ -8,14 +8,22 @@ var creature_data: Dictionary
 
 # HP管理（消費順序付き）
 var base_hp: int              # クリーチャーの基本HP（最後に消費）
+var base_up_hp: int = 0       # 永続的な基礎HP上昇（合成・マスグロース等）
 var resonance_bonus_hp: int = 0  # 感応ボーナス（土地ボーナスの後に消費）
 var land_bonus_hp: int        # 土地ボーナス（先に消費、戦闘ごとに復活）
-var item_bonus_hp: int = 0    # アイテムボーナス（未実装）
-var spell_bonus_hp: int = 0   # スペルボーナス（未実装）
+var temporary_bonus_hp: int = 0  # 一時的なHPボーナス（効果配列からの合計）
+var item_bonus_hp: int = 0    # アイテムボーナス
+var spell_bonus_hp: int = 0   # スペルボーナス
 var current_hp: int           # 現在のHP
 
 # 攻撃力
 var current_ap: int           # 現在のAP（スキル適用後）
+var base_up_ap: int = 0       # 永続的な基礎AP上昇（合成・マスグロース等）
+var temporary_bonus_ap: int = 0  # 一時的なAPボーナス（効果配列からの合計）
+
+# 効果配列の参照（打ち消し効果判定用）
+var permanent_effects: Array = []  # 永続効果（移動で消えない）
+var temporary_effects: Array = []  # 一時効果（移動で消える）
 
 # スキル・状態
 var has_first_strike: bool    # 先制攻撃を持つか
@@ -68,7 +76,8 @@ func apply_item_first_strike():
 
 # 現在HPを更新
 func update_current_hp():
-	current_hp = base_hp + resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+	current_hp = base_hp + base_up_hp + temporary_bonus_hp + \
+	             resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:
@@ -76,8 +85,10 @@ func take_damage(damage: int) -> Dictionary:
 	var damage_breakdown = {
 		"resonance_bonus_consumed": 0,
 		"land_bonus_consumed": 0,
+		"temporary_bonus_consumed": 0,
 		"item_bonus_consumed": 0,
 		"spell_bonus_consumed": 0,
+		"base_up_hp_consumed": 0,
 		"base_hp_consumed": 0
 	}
 	
@@ -95,21 +106,35 @@ func take_damage(damage: int) -> Dictionary:
 		remaining_damage -= consumed
 		damage_breakdown["land_bonus_consumed"] = consumed
 	
-	# 2. アイテムボーナスから消費（未実装）
+	# 3. 一時的なボーナスから消費
+	if temporary_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(temporary_bonus_hp, remaining_damage)
+		temporary_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["temporary_bonus_consumed"] = consumed
+	
+	# 4. アイテムボーナスから消費
 	if item_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(item_bonus_hp, remaining_damage)
 		item_bonus_hp -= consumed
 		remaining_damage -= consumed
 		damage_breakdown["item_bonus_consumed"] = consumed
 	
-	# 3. スペルボーナスから消費（未実装）
+	# 5. スペルボーナスから消費
 	if spell_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(spell_bonus_hp, remaining_damage)
 		spell_bonus_hp -= consumed
 		remaining_damage -= consumed
 		damage_breakdown["spell_bonus_consumed"] = consumed
 	
-	# 4. 基本HPから消費
+	# 6. 永続的な基礎HP上昇から消費
+	if base_up_hp > 0 and remaining_damage > 0:
+		var consumed = min(base_up_hp, remaining_damage)
+		base_up_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["base_up_hp_consumed"] = consumed
+	
+	# 7. 基本HPから消費
 	if remaining_damage > 0:
 		base_hp -= remaining_damage
 		damage_breakdown["base_hp_consumed"] = remaining_damage

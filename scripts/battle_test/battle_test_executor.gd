@@ -82,6 +82,9 @@ static func _execute_single_battle(
 		push_error("カードデータ取得失敗")
 		return null
 	
+	# BattleSystemを先に作成
+	var battle_system = BattleSystem.new()
+	
 	# BattleParticipant作成
 	var attacker = BattleParticipant.new(
 		att_card_data,
@@ -91,6 +94,9 @@ static func _execute_single_battle(
 		true,  # is_attacker
 		0  # player_id
 	)
+	
+	# 効果配列を適用（Phase 2追加）
+	battle_system.battle_preparation.apply_effect_arrays(attacker, att_card_data)
 	
 	# 防御側の土地ボーナス計算（仮のタイル情報）
 	var def_land_bonus = 0
@@ -108,21 +114,18 @@ static func _execute_single_battle(
 		1  # player_id
 	)
 	
+	# 効果配列を適用（Phase 2追加）
+	battle_system.battle_preparation.apply_effect_arrays(defender, def_card_data)
+	
 	# アイテム効果適用
 	var attacker_granted_skills = []
 	var defender_granted_skills = []
 	
-	# BattleSystemを作成（アイテム効果適用に必要）
-	var battle_system_for_items = BattleSystem.new()
-	
 	if att_item_id > 0:
-		attacker_granted_skills = _apply_item_effects_and_record(battle_system_for_items, attacker, att_item_id)
+		attacker_granted_skills = _apply_item_effects_and_record(battle_system, attacker, att_item_id)
 	
 	if def_item_id > 0:
-		defender_granted_skills = _apply_item_effects_and_record(battle_system_for_items, defender, def_item_id)
-	
-	# BattleSystemを使用してバトル実行
-	var battle_system = BattleSystem.new()
+		defender_granted_skills = _apply_item_effects_and_record(battle_system, defender, def_item_id)
 	
 	# モックシステムをセットアップ
 	var mock_board = MockBoardSystem.new()
@@ -144,17 +147,17 @@ static func _execute_single_battle(
 	}
 	
 	# 攻撃順を決定
-	var attack_order = battle_system._determine_attack_order(attacker, defender)
+	var attack_order = battle_system.battle_execution.determine_attack_order(attacker, defender)
 	
 	# スキル適用
 	var participants = {"attacker": attacker, "defender": defender}
-	battle_system._apply_pre_battle_skills(participants, tile_info, 0)
+	battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
 	
 	# 攻撃シーケンス実行
-	battle_system._execute_attack_sequence(attack_order, tile_info)
+	battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects)
 	
 	# 結果判定
-	var battle_result = battle_system._resolve_battle_result(attacker, defender)
+	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
 	
 	# 結果を記録
 	var test_result = BattleTestResult.new()
@@ -173,6 +176,7 @@ static func _execute_single_battle(
 	test_result.attacker_final_hp = attacker.base_hp
 	test_result.attacker_granted_skills = attacker_granted_skills
 	test_result.attacker_skills_triggered = _get_triggered_skills(attacker)
+	test_result.attacker_effect_info = _get_effect_info(attacker)
 	
 	# 防御側情報
 	test_result.defender_id = def_creature_id
@@ -187,6 +191,7 @@ static func _execute_single_battle(
 	test_result.defender_final_hp = defender.base_hp
 	test_result.defender_granted_skills = defender_granted_skills
 	test_result.defender_skills_triggered = _get_triggered_skills(defender)
+	test_result.defender_effect_info = _get_effect_info(defender)
 	
 	# バトル結果
 	var winner_str = ""
@@ -243,7 +248,7 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 		had_power_strike_before = "強打" in keywords
 	
 	# BattleSystemのアイテム効果適用を使用
-	battle_system._apply_item_effects(participant, item_data)
+	battle_system.battle_preparation.apply_item_effects(participant, item_data)
 	
 	# 付与後のスキル状態をチェック
 	if participant.has_item_first_strike and not had_first_strike_before:
@@ -306,3 +311,32 @@ static func _get_triggered_skills(participant: BattleParticipant) -> Array:
 				skills.append(keyword)
 	
 	return skills
+
+## 効果情報を取得（Phase 2追加）
+static func _get_effect_info(participant: BattleParticipant) -> Dictionary:
+	var info = {
+		"base_up_hp": participant.base_up_hp,
+		"base_up_ap": participant.base_up_ap,
+		"temporary_bonus_hp": participant.temporary_bonus_hp,
+		"temporary_bonus_ap": participant.temporary_bonus_ap,
+		"permanent_effects": [],
+		"temporary_effects": []
+	}
+	
+	# permanent_effectsから効果名と値を抽出
+	for effect in participant.permanent_effects:
+		info["permanent_effects"].append({
+			"source_name": effect.get("source_name", "不明"),
+			"stat": effect.get("stat", ""),
+			"value": effect.get("value", 0)
+		})
+	
+	# temporary_effectsから効果名と値を抽出
+	for effect in participant.temporary_effects:
+		info["temporary_effects"].append({
+			"source_name": effect.get("source_name", "不明"),
+			"stat": effect.get("stat", ""),
+			"value": effect.get("value", 0)
+		})
+	
+	return info

@@ -18,6 +18,7 @@ docs/
 ├── design/                # 設計ドキュメント
 │   ├── design.md          # ゲーム全体の設計
 │   ├── skills_design.md   # スキルシステムの詳細設計
+│   ├── effect_system.md   # 効果システムの実装仕様 ✨NEW
 │   └── turn_end_flow.md   # ターン終了フローの問題点と設計
 ├── progress/              # 進捗管理
 │   ├── phase1a_progress.md        # Phase 1-A進捗状況
@@ -48,6 +49,12 @@ docs/
 - スキルシステムの詳細仕様
 - 各スキルの効果・発動条件
 - スキル実装のガイドライン
+
+#### [effect_system.md](design/effect_system.md) ✨NEW
+- 効果システムの実装仕様
+- スペル・アイテム・クリーチャー効果の統一管理
+- 一時効果と永続効果の分離設計
+- 土地数比例効果の実装例
 
 #### [turn_end_flow.md](design/turn_end_flow.md)
 - ターン終了処理の問題点分析
@@ -205,6 +212,10 @@ cat docs/README.md
 - ✅ コードリファクタリング: 2つの大規模ファイル分割完了
   - TileActionProcessor: 1,284行 → 5ファイル
   - LandCommandHandler: 881行 → 4ファイル
+- ✅ 効果システム実装: Phase 1-2完了、Phase 3部分完了 ✨NEW
+  - スペル効果（マスグロース、ドミナントグロース）
+  - アイテム効果（AP/HPバフ・デバフ）
+  - 土地数比例効果（アームドパラディン実装）
 - 🔄 Phase 1-A Day 5: 統合作業中
 - 📋 次回: Phase 1-B（レベルアップ改善）
 

@@ -66,6 +66,18 @@ func can_place_creature() -> bool:
 func place_creature(data: Dictionary):
 	creature_data = data.duplicate()  # 元データを変更しないようにコピー
 	
+	# 効果システム用フィールドの初期化
+	if not creature_data.has("base_up_hp"):
+		creature_data["base_up_hp"] = 0
+	if not creature_data.has("base_up_ap"):
+		creature_data["base_up_ap"] = 0
+	if not creature_data.has("permanent_effects"):
+		creature_data["permanent_effects"] = []
+	if not creature_data.has("temporary_effects"):
+		creature_data["temporary_effects"] = []
+	if not creature_data.has("map_lap_count"):
+		creature_data["map_lap_count"] = 0
+	
 	# 土地ボーナスはバトル時に動的計算するため、ここでは保存しない
 	
 	update_visual()

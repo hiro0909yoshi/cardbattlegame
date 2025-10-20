@@ -68,10 +68,13 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	if not participant.is_using_scroll or has_scroll_power_strike:
 		apply_resonance_skill(participant, context)
 	
-	# 3. 強打スキルを適用（巻物強打を含む）
+	# 3. 土地数比例効果を適用（Phase 3追加）
+	apply_land_count_effects(participant, context)
+	
+	# 4. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context, effect_combat)
 	
-	# 2回攻撃スキルを判定
+	# 5. 2回攻撃スキルを判定
 	check_double_attack(participant)
 
 ## 2回攻撃スキル判定
@@ -193,3 +196,42 @@ func apply_resonance_skill(participant: BattleParticipant, context: Dictionary) 
 				participant.resonance_bonus_hp += hp_bonus
 				participant.update_current_hp()
 				print("  HP: ", old_hp, " → ", participant.current_hp, " (+", hp_bonus, ")")
+
+## 土地数比例効果を適用（Phase 3追加）
+func apply_land_count_effects(participant: BattleParticipant, context: Dictionary) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	# プレイヤーの土地情報を取得
+	var player_lands = context.get("player_lands", {})
+	
+	for effect in effects:
+		if effect.get("effect_type") == "land_count_multiplier":
+			# 対象属性の土地数を合計
+			var target_elements = effect.get("elements", [])
+			var total_count = 0
+			
+			for element in target_elements:
+				total_count += player_lands.get(element, 0)
+			
+			# multiplierを適用
+			var multiplier = effect.get("multiplier", 1)
+			var bonus = total_count * multiplier
+			
+			# statに応じてボーナスを適用
+			var stat = effect.get("stat", "ap")
+			
+			if stat == "ap":
+				var old_ap = participant.current_ap
+				participant.current_ap += bonus
+				print("【土地数比例】", participant.creature_data.get("name", "?"))
+				print("  対象属性:", target_elements, " 合計土地数:", total_count)
+				print("  AP: ", old_ap, " → ", participant.current_ap, " (+", bonus, ")")
+			
+			elif stat == "hp":
+				var old_hp = participant.current_hp
+				participant.temporary_bonus_hp += bonus
+				participant.update_current_hp()
+				print("【土地数比例】", participant.creature_data.get("name", "?"))
+				print("  対象属性:", target_elements, " 合計土地数:", total_count)
+				print("  HP: ", old_hp, " → ", participant.current_hp, " (+", bonus, ")")

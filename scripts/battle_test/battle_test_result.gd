@@ -18,6 +18,7 @@ var attacker_final_ap: int                   # 最終AP（スキル適用後）
 var attacker_final_hp: int                   # 残HP
 var attacker_skills_triggered: Array = []  # 発動したスキル (String配列)
 var attacker_granted_skills: Array = []    # アイテム・スペルで付与されたスキル (String配列)
+var attacker_effect_info: Dictionary = {}  # 効果情報（base_up_hp/ap, 効果配列）
 
 ## 防御側情報
 var defender_id: int
@@ -32,6 +33,7 @@ var defender_final_ap: int
 var defender_final_hp: int
 var defender_skills_triggered: Array = []  # (String配列)
 var defender_granted_skills: Array = []  # (String配列)
+var defender_effect_info: Dictionary = {}  # 効果情報（base_up_hp/ap, 効果配列）
 
 ## バトル結果
 var winner: String  # "attacker" or "defender"

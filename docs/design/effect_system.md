@@ -1,10 +1,10 @@
 # 効果システム実装仕様書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 2.0  
+**バージョン**: 3.0  
 **作成日**: 2025年10月21日  
 **更新日**: 2025年10月21日  
-**ステータス**: 実装準備完了
+**ステータス**: Phase 1-2完了、Phase 3部分完了
 
 ---
 
@@ -470,10 +470,379 @@ func on_creature_move(tile_index: int):
 
 ---
 
+## 実装完了状況
+
+### ✅ Phase 1: 基盤構築（完了）
+
+1. **creature_dataの拡張** - `base_tiles.gd`
+   - `base_up_hp/ap`フィールド ✅
+   - `permanent_effects`配列 ✅
+   - `temporary_effects`配列 ✅
+   - `map_lap_count`フィールド ✅
+
+2. **BattleParticipantの改修** - `battle_participant.gd`
+   - 新フィールドの追加 ✅
+   - HP/AP計算式の更新 ✅
+   - ダメージ消費順序の調整 ✅
+
+3. **バトル準備時の効果計算** - `battle_preparation.gd`
+   - `apply_effect_arrays()`メソッド ✅
+   - 効果配列からのボーナス計算 ✅
+
+### ✅ Phase 2: 基本効果の実装（完了）
+
+4. **効果管理メソッド** - `battle_system.gd`
+   - `add_spell_effect_to_creature()` ✅
+   - `apply_mass_growth()` ✅
+   - `apply_dominant_growth()` ✅
+   - `clear_temporary_effects_on_move()` ✅
+   - `remove_effects_from_creature()` ✅
+
+5. **バトルテストツールの対応** - `battle_test_executor.gd`
+   - `_get_effect_info()`メソッド ✅
+   - 効果情報の記録 ✅
+
+### ✅ Phase 3: 条件付き効果（部分完了）
+
+6. **土地数比例効果** - `battle_skill_processor.gd`
+   - `apply_land_count_effects()` ✅
+   - 複数属性の土地数合計に対応 ✅
+   - HP/AP両方に対応 ✅
+
+**実装例**: アームドパラディン
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "ap",
+      "elements": ["fire", "earth"],
+      "multiplier": 10
+    }
+  ]
+}
+```
+
+### 🚧 Phase 3: 未完了
+
+- 隣接条件効果（実装準備中）
+- マップ周回効果（実装準備中）
+
+### 🚧 Phase 4: 高度な効果（未実装）
+
+- 合成効果
+- 世界呪
+- より複雑な条件判定
+
+---
+
+## 実装されたカード例
+
+### クリーチャー
+
+**アームドパラディン** (`data/fire_1.json`)
+```json
+{
+  "id": 1,
+  "name": "アームドパラディン",
+  "ap": 0,
+  "hp": 50,
+  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+  "ability_parsed": {
+    "keywords": ["無効化"],
+    "keyword_conditions": {
+      "無効化": {
+        "nullify_type": "scroll_attack"
+      }
+    },
+    "effects": [
+      {
+        "effect_type": "land_count_multiplier",
+        "stat": "ap",
+        "elements": ["fire", "earth"],
+        "multiplier": 10,
+        "description": "火と土の土地配置数×10をSTに加算"
+      }
+    ]
+  }
+}
+```
+
+**動作例**:
+- 火土地2つ + 土土地3つ = 5つ所有
+- ST = 0 + (5 × 10) = **50**
+
+### アイテム
+
+**アーメット** (`data/item.json`)
+```json
+{
+  "id": 1001,
+  "name": "アーメット",
+  "effect": "ST-10；HP+40",
+  "ability_parsed": {
+    "effects": [
+      {
+        "effect_type": "debuff_ap",
+        "value": 10
+      },
+      {
+        "effect_type": "buff_hp",
+        "value": 40
+      }
+    ]
+  }
+}
+```
+
+**動作例**:
+- アモン（ST=30, HP=30）が装備
+- ST: 30 - 10 = **20**
+- HP: 30 + 40 = **70**
+
+---
+
+## 使用方法
+
+### スペル効果の追加
+
+```gdscript
+# ブレッシング（HP+10、移動で消える）
+battle_system.add_spell_effect_to_creature(tile_index, {
+    "type": "stat_bonus",
+    "stat": "hp",
+    "value": 10,
+    "source": "spell",
+    "source_name": "ブレッシング",
+    "removable": true,
+    "lost_on_move": true
+})
+```
+
+### マスグロース
+
+```gdscript
+# プレイヤー0の全クリーチャーのMHP+5
+var affected = battle_system.apply_mass_growth(0, 5)
+print("影響を受けたクリーチャー: ", affected, "体")
+```
+
+### ドミナントグロース
+
+```gdscript
+# プレイヤー1の火属性クリーチャーのみMHP+10
+var affected = battle_system.apply_dominant_growth(1, "fire", 10)
+```
+
+### 移動時の効果削除
+
+```gdscript
+# クリーチャー移動時に一時効果をクリア
+battle_system.clear_temporary_effects_on_move(tile_index)
+```
+
+### 打ち消し効果
+
+```gdscript
+# removable=trueの効果をすべて削除
+var removed = battle_system.remove_effects_from_creature(tile_index, true)
+```
+
+---
+
 ## 変更履歴
 
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
+| 2025/10/21 | 1.0 | 初版作成 - effect_system_design.mdから作成 |
+| 2025/10/21 | 2.0 | 実装仕様確定 - 質疑応答を反映、実装準備完了 |
+| 2025/10/21 | 3.0 | Phase 1-2完了、Phase 3部分完了を記録 ||## 実装完了状況
+
+### ✅ Phase 1: 基盤構築（完了）
+
+1. **creature_dataの拡張** - `base_tiles.gd`
+   - `base_up_hp/ap`フィールド ✅
+   - `permanent_effects`配列 ✅
+   - `temporary_effects`配列 ✅
+   - `map_lap_count`フィールド ✅
+
+2. **BattleParticipantの改修** - `battle_participant.gd`
+   - 新フィールドの追加 ✅
+   - HP/AP計算式の更新 ✅
+   - ダメージ消費順序の調整 ✅
+
+3. **バトル準備時の効果計算** - `battle_preparation.gd`
+   - `apply_effect_arrays()`メソッド ✅
+   - 効果配列からのボーナス計算 ✅
+
+### ✅ Phase 2: 基本効果の実装（完了）
+
+4. **効果管理メソッド** - `battle_system.gd`
+   - `add_spell_effect_to_creature()` ✅
+   - `apply_mass_growth()` ✅
+   - `apply_dominant_growth()` ✅
+   - `clear_temporary_effects_on_move()` ✅
+   - `remove_effects_from_creature()` ✅
+
+5. **バトルテストツールの対応** - `battle_test_executor.gd`
+   - `_get_effect_info()`メソッド ✅
+   - 効果情報の記録 ✅
+
+### ✅ Phase 3: 条件付き効果（部分完了）
+
+6. **土地数比例効果** - `battle_skill_processor.gd`
+   - `apply_land_count_effects()` ✅
+   - 複数属性の土地数合計に対応 ✅
+   - HP/AP両方に対応 ✅
+
+**実装例**: アームドパラディン
+```json
+{
+  "effects": [
+    {
+      "effect_type": "land_count_multiplier",
+      "stat": "ap",
+      "elements": ["fire", "earth"],
+      "multiplier": 10
+    }
+  ]
+}
+```
+
+### 🚧 Phase 3: 未完了
+
+- 隣接条件効果（実装準備中）
+- マップ周回効果（実装準備中）
+
+### 🚧 Phase 4: 高度な効果（未実装）
+
+- 合成効果
+- 世界呪
+- より複雑な条件判定
+
+---
+
+## 実装されたカード例
+
+### クリーチャー
+
+**アームドパラディン** (`data/fire_1.json`)
+```json
+{
+  "id": 1,
+  "name": "アームドパラディン",
+  "ap": 0,
+  "hp": 50,
+  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+  "ability_parsed": {
+    "keywords": ["無効化"],
+    "keyword_conditions": {
+      "無効化": {
+        "nullify_type": "scroll_attack"
+      }
+    },
+    "effects": [
+      {
+        "effect_type": "land_count_multiplier",
+        "stat": "ap",
+        "elements": ["fire", "earth"],
+        "multiplier": 10,
+        "description": "火と土の土地配置数×10をSTに加算"
+      }
+    ]
+  }
+}
+```
+
+**動作例**:
+- 火土地2つ + 土土地3つ = 5つ所有
+- ST = 0 + (5 × 10) = **50**
+
+### アイテム
+
+**アーメット** (`data/item.json`)
+```json
+{
+  "id": 1001,
+  "name": "アーメット",
+  "effect": "ST-10；HP+40",
+  "ability_parsed": {
+    "effects": [
+      {
+        "effect_type": "debuff_ap",
+        "value": 10
+      },
+      {
+        "effect_type": "buff_hp",
+        "value": 40
+      }
+    ]
+  }
+}
+```
+
+**動作例**:
+- アモン（ST=30, HP=30）が装備
+- ST: 30 - 10 = **20**
+- HP: 30 + 40 = **70**
+
+---
+
+## 使用方法
+
+### スペル効果の追加
+
+```gdscript
+# ブレッシング（HP+10、移動で消える）
+battle_system.add_spell_effect_to_creature(tile_index, {
+    "type": "stat_bonus",
+    "stat": "hp",
+    "value": 10,
+    "source": "spell",
+    "source_name": "ブレッシング",
+    "removable": true,
+    "lost_on_move": true
+})
+```
+
+### マスグロース
+
+```gdscript
+# プレイヤー0の全クリーチャーのMHP+5
+var affected = battle_system.apply_mass_growth(0, 5)
+print("影響を受けたクリーチャー: ", affected, "体")
+```
+
+### ドミナントグロース
+
+```gdscript
+# プレイヤー1の火属性クリーチャーのみMHP+10
+var affected = battle_system.apply_dominant_growth(1, "fire", 10)
+```
+
+### 移動時の効果削除
+
+```gdscript
+# クリーチャー移動時に一時効果をクリア
+battle_system.clear_temporary_effects_on_move(tile_index)
+```
+
+### 打ち消し効果
+
+```gdscript
+# removable=trueの効果をすべて削除
+var removed = battle_system.remove_effects_from_creature(tile_index, true)
+```
+
+---
+
+## 変更履歴
+
+| 日付 | バージョン | 変更内容 |
+|------|-----------|---------|
+| 2025/10/21 | 1.0 | 初版作成 - effect_system_design.mdから作成 |
+| 2025/10/21 | 2.0 | 実装仕様確定 - 質疑応答を反映、実装準備完了 |
+| 2025/10/21 | 3.0 | Phase 1-2完了、Phase 3部分完了を記録 ||---------|
 | 2025/10/21 | 1.0 | 初版作成 - effect_system_design.mdから作成 |
 | 2025/10/21 | 2.0 | 実装仕様確定 - 質疑応答を反映、実装準備完了 |
 
