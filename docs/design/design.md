@@ -338,7 +338,8 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 - 再生: バトル後にHP全回復
 - 2回攻撃: 1回のバトルで2回攻撃
 - 即死: 攻撃後に確率で即死判定
-- **不屈**: アクション後もダウン状態にならない（何度でも領地コマンド実行可能）
+- 無効化: 攻撃を無効化する（１００％無効化なら即死も無効化）
+- 不屈: アクション後もダウン状態にならない（何度でも領地コマンド実行可能）
 
 **スキル適用順序**: 感応 → 強打 → 2回攻撃判定 → 攻撃実行 → **即死判定** → バトル結果 → 再生
 
@@ -1215,7 +1216,16 @@ cardbattlegame/
 │   ├── game_flow_manager.gd
 │   ├── skill_system.gd
 │   ├── ui_components/
-│   ├── flow_handlers/
+│   ├── game_flow/
+│   │   ├── land_command_handler.gd      # 領地コマンド統合管理
+│   │   ├── land_selection_manager.gd    # 土地選択ロジック
+│   │   ├── land_action_executor.gd      # アクション実行ロジック
+│   │   ├── land_input_handler.gd        # 入力処理
+│   │   ├── tile_action_processor.gd     # タイルアクション処理
+│   │   ├── tile_summon_handler.gd       # 召喚処理
+│   │   ├── tile_leveling_handler.gd     # レベルアップ処理
+│   │   ├── spell_phase_handler.gd       # スペルフェーズ管理
+│   │   └── item_phase_handler.gd        # アイテムフェーズ管理
 │   ├── tiles/
 │   └── skills/
 │

@@ -41,6 +41,15 @@ cardbattlegame/
 │       └── TURN_END_QUICK_FIX.md # 緊急対応記録
 ├── scripts/               # GDScriptファイル
 │   ├── game_flow/         # ゲームフロー管理
+│   │   ├── land_command_handler.gd       # 領地コマンド統合（352行）
+│   │   ├── land_selection_helper.gd      # 土地選択処理（177行）
+│   │   ├── land_action_helper.gd         # アクション実行（333行）
+│   │   ├── land_input_helper.gd          # 入力処理（126行）
+│   │   ├── tile_action_processor.gd      # タイルアクション統合管理（404行）
+│   │   ├── summon_action_executor.gd     # 召喚アクション（287行）
+│   │   ├── level_action_executor.gd      # レベルアップアクション（153行）
+│   │   ├── exchange_action_executor.gd   # 交換アクション（217行）
+│   │   └── tile_input_handler.gd         # タイル入力処理（223行）
 │   ├── skills/            # スキルシステム
 │   ├── tiles/             # タイル関連
 │   └── ui_components/     # UIコンポーネント
@@ -49,6 +58,53 @@ cardbattlegame/
 ├── data/                  # ゲームデータ（JSON）
 └── models/                # 3Dモデル
 ```
+
+---
+
+## 🔧 コードアーキテクチャ
+
+### 大規模ファイルの分割パターン
+
+#### 成功例1: TileActionProcessor（2025年10月15日）
+
+元：1,284行 → 分割後合計：1,284行（増加0%）
+
+- **tile_action_processor.gd**: 統合管理（404行）
+- **summon_action_executor.gd**: 召喚処理（287行）
+- **level_action_executor.gd**: レベルアップ処理（153行）
+- **exchange_action_executor.gd**: 交換処理（217行）
+- **tile_input_handler.gd**: 入力処理（223行）
+
+#### 成功例2: LandCommandHandler（2025年10月21日）
+
+元：881行 → 分割後合計：988行（**増加12%のみ！**）
+
+- **land_command_handler.gd**: 統合管理（352行）
+- **land_selection_helper.gd**: 土地選択処理（177行）
+- **land_action_helper.gd**: アクション実行（333行）
+- **land_input_helper.gd**: 入力処理（126行）
+
+**成功の要因：**
+1. **Static関数パターン**: ヘルパークラスをstatic関数の集まりとして実装
+2. **インスタンス不要**: `new()`や`add_child()`不要
+3. **シグナル接続不要**: コールバック地獄を回避
+4. **状態の一元管理**: 全ての状態は`handler`経由でアクセス
+5. **余計なコードゼロ**: 後方互換性メソッドや不要なシグナルなし
+
+**増加した107行の内訳：**
+- クラス定義: 3行
+- ラッパー関数: 約100行（`func xxx(): return Helper.xxx(self)`形式）
+- コメント: 4行
+
+**バックアップ：**
+- `tile_action_processor_old.gd`（元ファイル保存済み）
+- `land_command_handler_old.gd.disabled`（元ファイル保存済み）
+
+**分割の原則：**
+1. **責任の分離**: 選択・実行・入力を明確に分離
+2. **Static関数**: インスタンス生成不要、シグナル接続不要
+3. **最小限の増加**: 機能そのまま、必要最小限のコードのみ追加
+4. **後方互換性**: 外部インターフェースは完全に維持
 
 ---
 
@@ -139,14 +195,17 @@ cardbattlegame/
 
 ---
 
-## 🎯 現在の開発状況（2025年10月15日時点）
+## 🎯 現在の開発状況（2025年10月21日時点）
 
 - ✅ Phase 1-A Day 1-4: 基盤整備完了
   - PhaseManager作成
   - ダウン状態システム実装
   - 領地コマンドUI基盤実装
-- ✅ コード品質改善: Godot警告4件解決
+- ✅ コード品質改善: Godot警告解決
 - ✅ ドキュメント整理: docs/構造化、issues.md簡潔化
+- ✅ **コードリファクタリング**:
+  - TileActionProcessor分割完了（1,284行 → 5ファイル、増加0%）
+  - LandCommandHandler分割完了（881行 → 4ファイル、増加12%）
 - 🔄 Phase 1-A Day 5: システム統合作業中
 - 📋 次回: Phase 1-B レベルアップ改善
 
@@ -172,4 +231,4 @@ cardbattlegame/
 ---
 
 **作成日**: 2025年10月15日  
-**最終更新**: 2025年10月15日（issues.md簡潔化対応）
+**最終更新**: 2025年10月21日（LandCommandHandler分割成功）
