@@ -214,13 +214,20 @@ func _on_attacker_item_add_pressed():
 		print("[BattleTestUI] 無効なアイテムID: ", id_text)
 		return
 	
-	# TODO: アイテム名取得（CardLoaderにアイテム機能が実装されたら）
-	var display_text = "アイテム (ID:%d)" % id
+	# アイテム名取得
+	var item = CardLoader.get_item_by_id(id)
+	var display_text = ""
+	if item.is_empty():
+		display_text = "アイテム (ID:%d) ※見つかりません" % id
+		print("[BattleTestUI] アイテムが見つかりません: ID ", id)
+	else:
+		display_text = "%s (ID:%d)" % [item.name, id]
+	
 	attacker_item_list.add_item(display_text)
 	attacker_item_list.set_item_metadata(attacker_item_list.item_count - 1, id)
 	
 	config.attacker_items.append(id)
-	print("[BattleTestUI] 攻撃側アイテム追加: ID ", id)
+	print("[BattleTestUI] 攻撃側アイテム追加: %s (ID:%d)" % [display_text, id])
 	attacker_item_id_input.text = ""
 
 func _on_attacker_item_add_none_pressed():
@@ -316,11 +323,19 @@ func _on_defender_item_add_pressed():
 		print("[BattleTestUI] 無効なアイテムID: ", id_text)
 		return
 	
-	var display_text = "アイテム (ID:%d)" % id
+	# アイテム名取得
+	var item = CardLoader.get_item_by_id(id)
+	var display_text = ""
+	if item.is_empty():
+		display_text = "アイテム (ID:%d) ※見つかりません" % id
+		print("[BattleTestUI] アイテムが見つかりません: ID ", id)
+	else:
+		display_text = "%s (ID:%d)" % [item.name, id]
+	
 	defender_item_list.add_item(display_text)
 	defender_item_list.set_item_metadata(defender_item_list.item_count - 1, id)
 	config.defender_items.append(id)
-	print("[BattleTestUI] 防御側アイテム追加: ID ", id)
+	print("[BattleTestUI] 防御側アイテム追加: %s (ID:%d)" % [display_text, id])
 	defender_item_id_input.text = ""
 
 func _on_defender_item_add_none_pressed():

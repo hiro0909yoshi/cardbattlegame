@@ -1297,12 +1297,12 @@ AP = 0 + (3 × 10) = 30
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "ap",
-      "elements": ["fire"],
-      "multiplier": 20
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "ap",
+	  "elements": ["fire"],
+	  "multiplier": 20
+	}
   ]
 }
 ```
@@ -1312,12 +1312,12 @@ AP = 0 + (3 × 10) = 30
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "ap",
-      "elements": ["fire", "earth"],
-      "multiplier": 10
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "ap",
+	  "elements": ["fire", "earth"],
+	  "multiplier": 10
+	}
   ]
 }
 ```
@@ -1327,12 +1327,12 @@ AP = 0 + (3 × 10) = 30
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "hp",
-      "elements": ["water"],
-      "multiplier": 15
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "hp",
+	  "elements": ["water"],
+	  "multiplier": 15
+	}
   ]
 }
 ```
@@ -1350,16 +1350,16 @@ AP = 0 + (3 × 10) = 30
   "hp": 50,
   "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
   "ability_parsed": {
-    "keywords": ["無効化"],
-    "effects": [
-      {
-        "effect_type": "land_count_multiplier",
-        "stat": "ap",
-        "elements": ["fire", "earth"],
-        "multiplier": 10,
-        "description": "火と土の土地配置数×10をSTに加算"
-      }
-    ]
+	"keywords": ["無効化"],
+	"effects": [
+	  {
+		"effect_type": "land_count_multiplier",
+		"stat": "ap",
+		"elements": ["fire", "earth"],
+		"multiplier": 10,
+		"description": "火と土の土地配置数×10をSTに加算"
+	  }
+	]
   }
 }
 ```

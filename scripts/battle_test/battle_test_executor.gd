@@ -83,7 +83,12 @@ static func _execute_single_battle(
 		return null
 	
 	# BattleSystemを先に作成
+	# BattleSystemを作成して初期化
 	var battle_system = BattleSystem.new()
+	battle_system.name = "BattleSystem_Test"
+	
+	# _ready()を手動で呼び出してサブシステムを初期化
+	battle_system._ready()
 	
 	# BattleParticipant作成
 	var attacker = BattleParticipant.new(
@@ -219,15 +224,19 @@ static func _execute_single_battle(
 static func _get_item_name(item_id: int) -> String:
 	if item_id <= 0:
 		return "なし"
-	# TODO: アイテムデータから名前取得
-	return "アイテム(ID:%d)" % item_id
+	var item = CardLoader.get_item_by_id(item_id)
+	if item.is_empty():
+		return "アイテム(ID:%d)※不明" % item_id
+	return item.name
 
 ## スペル名取得
 static func _get_spell_name(spell_id: int) -> String:
 	if spell_id <= 0:
 		return "なし"
-	# TODO: スペルデータから名前取得
-	return "スペル(ID:%d)" % spell_id
+	var spell = CardLoader.get_spell_by_id(spell_id)
+	if spell.is_empty():
+		return "スペル(ID:%d)※不明" % spell_id
+	return spell.name
 
 ## アイテム効果適用とスキル付与記録
 static func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int) -> Array:

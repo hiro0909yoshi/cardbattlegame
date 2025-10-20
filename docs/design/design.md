@@ -376,22 +376,22 @@ func find_affordable_cards_for_player(player_id: int, magic: int) -> Array
 
 ```gdscript
 creature_data = {
-    "base_up_hp": 0,           # 永続的な基礎HP上昇
-    "base_up_ap": 0,           # 永続的な基礎AP上昇
-    "permanent_effects": [],   # 永続効果配列
-    "temporary_effects": [],   # 一時効果配列
-    "map_lap_count": 0         # 周回カウント
+	"base_up_hp": 0,           # 永続的な基礎HP上昇
+	"base_up_ap": 0,           # 永続的な基礎AP上昇
+	"permanent_effects": [],   # 永続効果配列
+	"temporary_effects": [],   # 一時効果配列
+	"map_lap_count": 0         # 周回カウント
 }
 
 # 効果オブジェクト
 effect = {
-    "type": "stat_bonus",
-    "stat": "hp",              # または "ap"
-    "value": 10,
-    "source": "spell",
-    "source_name": "ブレッシング",
-    "removable": true,         # 打ち消し可能か
-    "lost_on_move": true       # 移動で消えるか
+	"type": "stat_bonus",
+	"stat": "hp",              # または "ap"
+	"value": 10,
+	"source": "spell",
+	"source_name": "ブレッシング",
+	"removable": true,         # 打ち消し可能か
+	"lost_on_move": true       # 移動で消えるか
 }
 ```
 
@@ -414,12 +414,12 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true)
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "ap",
-      "elements": ["fire", "earth"],
-      "multiplier": 10
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "ap",
+	  "elements": ["fire", "earth"],
+	  "multiplier": 10
+	}
   ]
 }
 ```
@@ -428,14 +428,14 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true)
 ```json
 {
   "effects": [
-    {
-      "effect_type": "debuff_ap",
-      "value": 10
-    },
-    {
-      "effect_type": "buff_hp",
-      "value": 40
-    }
+	{
+	  "effect_type": "debuff_ap",
+	  "value": 10
+	},
+	{
+	  "effect_type": "buff_hp",
+	  "value": 40
+	}
   ]
 }
 ```
@@ -449,14 +449,14 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true)
   "ap": 0,
   "hp": 50,
   "ability_parsed": {
-    "effects": [
-      {
-        "effect_type": "land_count_multiplier",
-        "stat": "ap",
-        "elements": ["fire", "earth"],
-        "multiplier": 10
-      }
-    ]
+	"effects": [
+	  {
+		"effect_type": "land_count_multiplier",
+		"stat": "ap",
+		"elements": ["fire", "earth"],
+		"multiplier": 10
+	  }
+	]
   }
 }
 ```
@@ -466,10 +466,10 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true)
 {
   "id": 1001,
   "ability_parsed": {
-    "effects": [
-      {"effect_type": "debuff_ap", "value": 10},
-      {"effect_type": "buff_hp", "value": 40}
-    ]
+	"effects": [
+	  {"effect_type": "debuff_ap", "value": 10},
+	  {"effect_type": "buff_hp", "value": 40}
+	]
   }
 }
 ```
