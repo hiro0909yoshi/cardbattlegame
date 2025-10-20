@@ -105,8 +105,8 @@ SkillSystem (マネージャー)
 | 防魔 | パッシブ | スペル無効化 | 🔶 部分実装 |
 | ST変動 | パッシブ | 土地数でAP変動 | ✅ 完全実装 |
 | HP変動 | パッシブ | 土地数でHP変動 | 🔶 部分実装 |
-| 連撃 | パッシブ | 複数回攻撃 | ❌ 未実装 |
-| 巻物攻撃 | パッシブ | 土地ボーナス無視 | ❌ 未実装 |
+| 無効化 | パッシブ | 特定攻撃/属性の無効化 | ✅ 完全実装 |
+| 巻物攻撃 | パッシブ | 巻物使用時の特殊攻撃 | ✅ 完全実装 |
 
 ---
 
@@ -1783,59 +1783,48 @@ func on_card_selected(card_index: int):
 
 ---
 
+### 10. 無効化スキル
+
+#### 概要
+特定の攻撃タイプや属性からのダメージを完全に無効化するパッシブスキル。
+
+#### 実装状況
+✅ **完全実装**（2025年10月）
+
+#### 詳細仕様
+無効化スキルの詳細は別ドキュメントを参照：
+- **仕様書**: `docs/implementation/nullification_system.md`
+- **設計書**: BattleSystemの無効化チェック機構
+
+#### 主な無効化タイプ
+- 属性無効化（火、水、地、風、無属性）
+- 通常攻撃無効化
+- 巻物攻撃無効化
+- 条件付き無効化（ST値、MHP値、装備アイテム、土地レベル）
+
+---
+
+### 11. 巻物攻撃スキル
+
+#### 概要
+巻物アイテムを使用した場合に発動する特殊攻撃スキル。
+
+#### 実装状況
+✅ **完全実装**（2025年10月）
+
+#### 主な効果
+- 巻物攻撃：土地ボーナスHP無視
+- 巻物強打：巻物攻撃 + 1.5倍ダメージ + 感応ボーナス適用
+
+#### 詳細仕様
+巻物攻撃の詳細は無効化スキル仕様書を参照：
+- **仕様書**: `docs/implementation/nullification_system.md`
+
+---
+
 ## 将来実装予定のスキル
 
-### 1. 連撃スキル
-
-#### 概要
-1ターンに複数回攻撃できるスキル。
-
-#### 設計案
-```json
-{
-  "ability_parsed": {
-	"keywords": ["連撃"],
-	"keyword_conditions": {
-	  "連撃": {
-		"attack_count": 2
-	  }
-	}
-  }
-}
-```
-
-#### 実装イメージ
-```gdscript
-func _execute_attack_sequence(attack_order: Array) -> void:
-	for attacker in attack_order:
-		var attack_count = get_attack_count(attacker)  # 連撃判定
-		
-		for i in range(attack_count):
-			if not attacker.is_alive() or not defender.is_alive():
-				break
-			
-			defender.take_damage(attacker.current_ap)
-```
-
-### 2. 巻物攻撃スキル
-
-#### 概要
-貫通と同様に土地ボーナスを無視する攻撃。
-
-#### 設計案
-```json
-{
-  "ability_parsed": {
-	"keywords": ["巻物攻撃"]
-  }
-}
-```
-
-#### 実装方針
-- 貫通スキルと同じ処理を使用
-- `_check_penetration_skill()`に「巻物攻撃」も追加
-
-### 3. 反撃スキル
+### 1. 反撃スキル
 
 #### 概要
 攻撃を受けた時、即座に反撃ダメージを与える。
@@ -1852,7 +1841,7 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 }
 ```
 
-### 4. 回復スキル
+### 2. 回復スキル
 
 #### 概要
 ターン開始時やバトル後にHPを回復。
@@ -1870,7 +1859,7 @@ func _execute_attack_sequence(attack_order: Array) -> void:
 }
 ```
 
-### 5. スペル反射スキル
+### 3. スペル反射スキル
 
 #### 概要
 防魔の上位版。スペルを無効化し、発動者に跳ね返す。

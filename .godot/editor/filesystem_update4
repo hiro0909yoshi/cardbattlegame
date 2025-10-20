@@ -2,3 +2,4 @@ res://scenes/MainMenu.tscn
 res://scenes/Tiles/NeutralTile.tscn
 res://scenes/battle_test_tool.tscn
 res://scripts/game_flow/land_command_handler.gd
+res://docs/design/skills_design.md
