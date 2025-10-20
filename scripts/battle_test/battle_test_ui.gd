@@ -6,6 +6,10 @@ var config: BattleTestConfig = BattleTestConfig.new()
 var results: Array = []  # BattleTestResult配列
 var statistics: BattleTestStatistics = null
 
+## 最後にフォーカスされた入力フィールドを記憶
+var last_focused_side: String = "attacker"  # "attacker" or "defender"
+var last_focused_type: String = "creature"  # "creature" or "item"
+
 ## 攻撃側クリーチャー
 @onready var attacker_creature_id_input: LineEdit = $MainSplitContainer/MainContainer/AttackerContainer/AttackerCreatureInput
 @onready var attacker_creature_add_button: Button = $MainSplitContainer/MainContainer/AttackerContainer/AttackerCreatureAddButton
@@ -78,6 +82,57 @@ func _ready():
 
 ## UI初期化
 func _setup_ui():
+	# カード一覧ボタンを動的に追加
+	_add_card_list_button()
+	
+	# 入力フィールドのフォーカスイベントを設定
+	_setup_focus_tracking()
+
+## フォーカストラッキングを設定
+func _setup_focus_tracking():
+	# 攻撃側クリーチャー
+	attacker_creature_id_input.focus_entered.connect(func():
+		last_focused_side = "attacker"
+		last_focused_type = "creature"
+	)
+	
+	# 攻撃側アイテム
+	attacker_item_id_input.focus_entered.connect(func():
+		last_focused_side = "attacker"
+		last_focused_type = "item"
+	)
+	
+	# 防御側クリーチャー
+	defender_creature_id_input.focus_entered.connect(func():
+		last_focused_side = "defender"
+		last_focused_type = "creature"
+	)
+	
+	# 防御側アイテム
+	defender_item_id_input.focus_entered.connect(func():
+		last_focused_side = "defender"
+		last_focused_type = "item"
+	)
+
+## カード一覧ボタンを追加
+func _add_card_list_button():
+	var main_container = $MainSplitContainer/MainContainer
+	if not main_container:
+		print("[BattleTestUI] MainContainer が見つかりません")
+		return
+	
+	var button = Button.new()
+	button.name = "CardListButton"
+	button.text = "📋 全カード一覧"
+	button.custom_minimum_size = Vector2(0, 40)
+	button.pressed.connect(show_card_list_window)
+	
+	# Label（タイトル）とHSeparatorの間に追加
+	main_container.add_child(button)
+	main_container.move_child(button, 1)  # タイトルの直後
+	
+	print("[BattleTestUI] カード一覧ボタンを追加しました")
+	
 	# ノード存在チェック
 	if not attacker_creature_add_button:
 		push_error("attacker_creature_add_button が見つかりません")
@@ -209,6 +264,10 @@ func _on_attacker_creature_clear_pressed():
 
 func _on_attacker_item_add_pressed():
 	var id_text = attacker_item_id_input.text
+	if id_text.is_empty():
+		print("[BattleTestUI] アイテムIDが空です")
+		return
+	
 	var id = id_text.to_int()
 	if id <= 0:
 		print("[BattleTestUI] 無効なアイテムID: ", id_text)
@@ -220,6 +279,11 @@ func _on_attacker_item_add_pressed():
 	if item.is_empty():
 		display_text = "アイテム (ID:%d) ※見つかりません" % id
 		print("[BattleTestUI] アイテムが見つかりません: ID ", id)
+		return  # 見つからない場合は追加しない
+	
+	if not item.has("name"):
+		display_text = "アイテム (ID:%d) ※名前なし" % id
+		print("[BattleTestUI] アイテムに名前がありません: ID ", id)
 	else:
 		display_text = "%s (ID:%d)" % [item.name, id]
 	
@@ -318,6 +382,10 @@ func _on_defender_creature_clear_pressed():
 
 func _on_defender_item_add_pressed():
 	var id_text = defender_item_id_input.text
+	if id_text.is_empty():
+		print("[BattleTestUI] アイテムIDが空です")
+		return
+	
 	var id = id_text.to_int()
 	if id <= 0:
 		print("[BattleTestUI] 無効なアイテムID: ", id_text)
@@ -329,6 +397,11 @@ func _on_defender_item_add_pressed():
 	if item.is_empty():
 		display_text = "アイテム (ID:%d) ※見つかりません" % id
 		print("[BattleTestUI] アイテムが見つかりません: ID ", id)
+		return  # 見つからない場合は追加しない
+	
+	if not item.has("name"):
+		display_text = "アイテム (ID:%d) ※名前なし" % id
+		print("[BattleTestUI] アイテムに名前がありません: ID ", id)
 	else:
 		display_text = "%s (ID:%d)" % [item.name, id]
 	
@@ -757,3 +830,206 @@ func _show_detail_window(result: BattleTestResult):
 	detail_window.popup_centered()
 	
 	print("[BattleTestUI] 詳細ウィンドウを表示: Battle #", result.battle_id)
+
+## ============================================
+## カード一覧機能
+## ============================================
+
+## カード一覧ウィンドウを表示
+func show_card_list_window():
+	var card_list_window = Window.new()
+	card_list_window.title = "全カード一覧"
+	card_list_window.size = Vector2i(1000, 700)
+	card_list_window.min_size = Vector2i(800, 500)
+	card_list_window.popup_window = true
+	
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 10
+	vbox.offset_right = -10
+	vbox.offset_top = 10
+	vbox.offset_bottom = -10
+	card_list_window.add_child(vbox)
+	
+	# フィルターコンテナ
+	var filter_hbox = HBoxContainer.new()
+	vbox.add_child(filter_hbox)
+	
+	var type_label = Label.new()
+	type_label.text = "タイプ: "
+	filter_hbox.add_child(type_label)
+	
+	var type_option = OptionButton.new()
+	type_option.add_item("全て", 0)
+	type_option.add_item("クリーチャー", 1)
+	type_option.add_item("アイテム", 2)
+	type_option.add_item("スペル", 3)
+	filter_hbox.add_child(type_option)
+	
+	var element_label = Label.new()
+	element_label.text = "  属性: "
+	filter_hbox.add_child(element_label)
+	
+	var element_option = OptionButton.new()
+	element_option.add_item("全て", 0)
+	element_option.add_item("火", 1)
+	element_option.add_item("水", 2)
+	element_option.add_item("風", 3)
+	element_option.add_item("土", 4)
+	element_option.add_item("無", 5)
+	filter_hbox.add_child(element_option)
+	
+	# テーブル
+	var table = Tree.new()
+	table.columns = 6
+	table.set_column_title(0, "ID")
+	table.set_column_title(1, "名前")
+	table.set_column_title(2, "タイプ")
+	table.set_column_title(3, "AP")
+	table.set_column_title(4, "HP")
+	table.set_column_title(5, "スキル")
+	
+	# カラム幅を設定
+	table.set_column_expand(0, false)  # ID
+	table.set_column_custom_minimum_width(0, 50)
+	table.set_column_expand(1, false)  # 名前
+	table.set_column_custom_minimum_width(1, 150)
+	table.set_column_expand(2, false)  # タイプ
+	table.set_column_custom_minimum_width(2, 60)
+	table.set_column_expand(3, false)  # AP
+	table.set_column_custom_minimum_width(3, 50)
+	table.set_column_expand(4, false)  # HP
+	table.set_column_custom_minimum_width(4, 50)
+	table.set_column_expand(5, true)   # スキル（残り全部）
+	table.set_column_custom_minimum_width(5, 300)
+	
+	table.column_titles_visible = true
+	table.hide_root = true
+	table.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(table)
+	
+	# データ読み込み
+	var root = table.create_item()
+	_populate_card_table(table, root, -1, "")
+	
+	# フィルター変更時の処理
+	type_option.item_selected.connect(func(index):
+		table.clear()
+		var new_root = table.create_item()
+		var filter_type = -1
+		match index:
+			1: filter_type = 0  # クリーチャー
+			2: filter_type = 1  # アイテム
+			3: filter_type = 2  # スペル
+		_populate_card_table(table, new_root, filter_type, "")
+	)
+	
+	element_option.item_selected.connect(func(index):
+		table.clear()
+		var new_root = table.create_item()
+		var filter_element = ""
+		match index:
+			1: filter_element = "fire"
+			2: filter_element = "water"
+			3: filter_element = "wind"
+			4: filter_element = "earth"
+			5: filter_element = "neutral"
+		_populate_card_table(table, new_root, -1, filter_element)
+	)
+	
+	# ダブルクリックでIDを自動入力
+	table.item_activated.connect(func():
+		var selected = table.get_selected()
+		if selected:
+			var card_id = selected.get_metadata(0)
+			_auto_fill_card_id(card_id)
+			card_list_window.queue_free()
+	)
+	
+	add_child(card_list_window)
+	card_list_window.popup_centered()
+
+## カードテーブルにデータを追加
+func _populate_card_table(table: Tree, root: TreeItem, filter_type: int, filter_element: String):
+	var all_cards = CardLoader.all_cards
+	
+	for card in all_cards:
+		var card_type = card.get("type", "")
+		var card_element = card.get("element", "")
+		
+		# フィルター適用
+		if filter_type >= 0:
+			if filter_type == 0 and card_type != "creature":
+				continue
+			elif filter_type == 1 and card_type != "item":
+				continue
+			elif filter_type == 2 and card_type != "spell":
+				continue
+		
+		if filter_element != "" and card_element != filter_element:
+			continue
+		
+		# 行を追加
+		var item = table.create_item(root)
+		item.set_text(0, str(card.get("id", 0)))
+		item.set_text(1, card.get("name", "不明"))
+		
+		# タイプ
+		var type_text = ""
+		match card_type:
+			"creature": type_text = "🎴"
+			"item": type_text = "⚔️"
+			"spell": type_text = "📜"
+			_: type_text = "?"
+		item.set_text(2, type_text)
+		
+		# AP/HP（クリーチャーのみ）
+		if card_type == "creature":
+			item.set_text(3, str(card.get("ap", 0)))
+			item.set_text(4, str(card.get("hp", 0)))
+		else:
+			item.set_text(3, "-")
+			item.set_text(4, "-")
+		
+		# スキル概要
+		var ability = card.get("ability_detail", "")
+		if ability.length() > 30:
+			ability = ability.substr(0, 27) + "..."
+		item.set_text(5, ability)
+		
+		# メタデータにIDを保存
+		item.set_metadata(0, card.get("id", 0))
+
+## ダブルクリックされたカードIDを自動入力
+func _auto_fill_card_id(card_id: int):
+	var card = CardLoader.get_card_by_id(card_id)
+	if not card:
+		return
+	
+	var card_type = card.get("type", "")
+	
+	match card_type:
+		"creature":
+			# 最後にフォーカスされた側に追加
+			if last_focused_side == "attacker":
+				attacker_creature_id_input.text = str(card_id)
+				_on_attacker_creature_add_pressed()
+			else:
+				defender_creature_id_input.text = str(card_id)
+				_on_defender_creature_add_pressed()
+		
+		"item":
+			# 最後にフォーカスされた側に追加
+			if last_focused_side == "attacker":
+				attacker_item_id_input.text = str(card_id)
+				_on_attacker_item_add_pressed()
+			else:
+				defender_item_id_input.text = str(card_id)
+				_on_defender_item_add_pressed()
+		
+		"spell":
+			# スペルの場合（将来実装時）
+			print("[BattleTestUI] スペルID: ", card_id, " - 自動入力未実装")
+	
+	print("[BattleTestUI] カードID ", card_id, " を", last_focused_side, "に自動入力しました")

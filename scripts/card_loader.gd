@@ -89,3 +89,21 @@ func get_cards_by_type(card_type: String) -> Array:
 		if card.type == card_type:
 			result.append(card)
 	return result
+
+## アイテムをIDで取得
+func get_item_by_id(item_id: int) -> Dictionary:
+	for card in all_cards:
+		if card.get("type") == "item":
+			var check_id = int(card.id) if typeof(card.id) != TYPE_INT else card.id
+			if check_id == item_id:
+				return card
+	return {}
+
+## スペルをIDで取得
+func get_spell_by_id(spell_id: int) -> Dictionary:
+	for card in all_cards:
+		if card.get("type") == "spell":
+			var check_id = int(card.id) if typeof(card.id) != TYPE_INT else card.id
+			if check_id == spell_id:
+				return card
+	return {}
