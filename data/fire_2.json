@@ -486,7 +486,27 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[火地・ST+10]；秘術[G30・クリーチャー破壊数×G30を得る]"
+	  "ability_detail": "応援[火地・ST+10]；秘術[G30・クリーチャー破壊数×G30を得る]",
+	  "ability_parsed": {
+		"keywords": ["応援", "秘術"],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "element",
+				  "elements": ["fire", "earth"]
+				}
+			  ]
+			},
+			"bonus": {
+			  "ap": 10
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 44,

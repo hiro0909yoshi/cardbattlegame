@@ -6,11 +6,30 @@ extends RefCounted
 class MockBoardSystem extends RefCounted:
 	var mock_lands: Dictionary = {}
 	
+	# スキルインデックス（実際のBoardSystemと同じ構造）
+	var skill_index: Dictionary = {
+		"support": {},
+		"world_spell": {}
+	}
+	
 	func get_player_lands_by_element(player_id: int) -> Dictionary:
 		return mock_lands.get(player_id, {})
 	
 	func set_mock_lands(player_id: int, lands: Dictionary):
 		mock_lands[player_id] = lands
+	
+	# インデックスから応援持ちを取得
+	func get_support_creatures() -> Dictionary:
+		return skill_index["support"]
+	
+	# テスト用：応援持ちクリーチャーを手動登録
+	func add_support_creature(tile_index: int, creature_data: Dictionary, player_id: int, support_data: Dictionary):
+		skill_index["support"][tile_index] = {
+			"creature_data": creature_data,
+			"player_id": player_id,
+			"support_data": support_data
+		}
+		print("[MockBoardSystem] 応援登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
 
 class MockCardSystem extends CardSystem:
 	func _init():

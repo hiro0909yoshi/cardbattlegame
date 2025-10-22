@@ -394,7 +394,27 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "応援・不屈",
-	  "ability_detail": "応援[自クリーチャー・ST&HP+隣接自領地数×20]；不屈"
+	  "ability_detail": "応援[自クリーチャー・ST&HP+隣接自領地数×20]；不屈",
+	  "ability_parsed": {
+		"keywords": ["応援", "不屈"],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "owner_match"
+				}
+			  ]
+			},
+			"bonus": {
+			  "ap_per_adjacent_land": 20,
+			  "hp_per_adjacent_land": 20
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 343,
@@ -543,7 +563,27 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・ST+10]；秘術[G60・ST30以下をST+20、ST50以上をST-20]"
+	  "ability_detail": "応援[風水・ST+10]；秘術[G60・ST30以下をST+20、ST50以上をST-20]",
+	  "ability_parsed": {
+		"keywords": ["応援", "秘術"],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "element",
+				  "elements": ["wind", "water"]
+				}
+			  ]
+			},
+			"bonus": {
+			  "ap": 10
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 348,

@@ -183,7 +183,27 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "応援",
-	  "ability_detail": "応援[無・HP+20]"
+	  "ability_detail": "応援[無・HP+20]",
+	  "ability_parsed": {
+		"keywords": ["応援"],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "element",
+				  "elements": ["neutral"]
+				}
+			  ]
+			},
+			"bonus": {
+			  "hp": 20
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 437,
@@ -341,6 +361,7 @@
 	{
 	  "id": 445,
 	  "name": "レッドキャップ",
+	  "race": "ゴブリン",
 	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
@@ -351,7 +372,27 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "ST&HP計算・応援",
-	  "ability_detail": "ST&HP=ゴブリン配置数×20；応援[ゴブリン・ST+20]"
+	  "ability_detail": "ST&HP=ゴブリン配置数×20；応援[ゴブリン・ST+20]",
+	  "ability_parsed": {
+		"keywords": ["応援"],
+		"effects": [
+		  {
+			"effect_type": "support",
+			"target": {
+			  "scope": "all_creatures",
+			  "conditions": [
+				{
+				  "condition_type": "race",
+				  "race": "ゴブリン"
+				}
+			  ]
+			},
+			"bonus": {
+			  "ap": 20
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 446,

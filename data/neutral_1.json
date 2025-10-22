@@ -258,6 +258,7 @@
 	{
 	  "id": 414,
 	  "name": "ゴブリン",
+	  "race": "ゴブリン",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",

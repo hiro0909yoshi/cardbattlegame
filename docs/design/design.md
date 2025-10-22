@@ -795,6 +795,7 @@ SkillSystem (マネージャー)
   "ap": 20,
   "hp": 40,               # 基本HP
   "land_bonus_hp": 30,    # 🆕 土地ボーナス（レベル3×10）
+  "race": "ゴブリン",      # 🆕 種族（任意）
   "ability_parsed": {...}
 }
 ```
@@ -804,6 +805,90 @@ SkillSystem (マネージャー)
 var total_hp = creature.hp + creature.get("land_bonus_hp", 0)
 # 基本HP(40) + 土地ボーナス(30) = 70
 ```
+
+### 🆕 種族システム（Phase 1: ゴブリン先行実装）
+
+#### 概要
+クリーチャーに種族を設定し、種族ベースでスキル判定や検索を行えるシステム。
+応援スキルの実装に合わせて先行実装。
+
+#### データ構造
+```json
+{
+  "id": 414,
+  "name": "ゴブリン",
+  "element": "neutral",
+  "race": "ゴブリン",
+  "ap": 20,
+  "hp": 20
+}
+```
+
+#### 実装済み種族
+
+**ゴブリン種族（2体）**:
+- ID: 414 - ゴブリン（無属性）
+- ID: 445 - レッドキャップ（無属性、応援スキル持ち）
+
+#### 使用例
+
+**応援スキルでの種族条件**:
+```json
+{
+  "effect_type": "support",
+  "target": {
+    "scope": "all_creatures",
+    "conditions": [
+      {
+        "condition_type": "race",
+        "race": "ゴブリン"
+      }
+    ]
+  },
+  "bonus": {
+    "ap": 20
+  }
+}
+```
+
+レッドキャップ（ID: 445）は、盤面上のゴブリン種族全てにAP+20を付与する。
+
+#### 種族判定コード
+```gdscript
+# BattleSkillProcessor.check_support_target()
+elif condition_type == "race":
+  var required_race = condition.get("race", "")
+  var creature_race = participant.creature_data.get("race", "")
+  
+  if creature_race != required_race:
+    return false
+```
+
+#### 将来の拡張
+
+**実装予定の種族**:
+- ドラゴン種族
+- アンデッド種族
+- デーモン種族
+- エルフ種族
+- ドワーフ種族
+
+**種族サーチ機能**:
+```gdscript
+# 将来実装予定
+func search_creatures_by_race(race: String) -> Array
+```
+
+**種族シナジースキル**:
+- 同種族ボーナス
+- 種族専用装備
+- 種族変更スペル
+
+#### 設計思想
+- **段階的実装**: まずゴブリンで種族システムを確立
+- **後方互換性**: `race`フィールドは任意（未設定でも動作）
+- **拡張性**: 将来的に多様な種族を追加可能
+- **スキル統合**: 既存の条件チェックシステムに統合済み
 
 ### デッキデータ (GameData)
 

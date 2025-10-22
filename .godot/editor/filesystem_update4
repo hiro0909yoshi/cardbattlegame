@@ -1,8 +1,14 @@
 res://scenes/MainMenu.tscn
 res://scenes/Tiles/NeutralTile.tscn
 res://scenes/battle_test_tool.tscn
+res://scripts/board_system_3d.gd
+res://scripts/battle/battle_skill_processor.gd
 res://scripts/battle_test/battle_test_executor.gd
-res://scripts/battle_test/battle_test_ui.gd
-res://docs/design/design.md
-res://docs/design/skills_design.md
+res://data/neutral_2.json
 res://scripts/card_loader.gd
+res://data/earth_2.json
+res://data/fire_1.json
+res://data/water_1.json
+res://data/wind_2.json
+res://data/neutral_1.json
+res://docs/design/skills_design.md

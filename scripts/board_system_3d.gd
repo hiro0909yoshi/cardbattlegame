@@ -9,6 +9,12 @@ signal tile_action_completed()
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 
+# スキルインデックス（盤面効果スキルの高速検索用）
+var skill_index: Dictionary = {
+	"support": {},    # {tile_index: {creature_data, player_id, support_data}}
+	"world_spell": {} # {tile_index: {creature_data, player_id, world_spell_data}}
+}
+
 # サブシステム
 var movement_controller: MovementController3D
 var tile_info_display: TileInfoDisplay
@@ -173,16 +179,28 @@ func is_special_tile_type(tile_type: String) -> bool:
 func set_tile_owner(tile_index: int, owner_id: int):
 	tile_data_manager.set_tile_owner(tile_index, owner_id)
 
-func place_creature(tile_index: int, creature_data: Dictionary):
+func place_creature(tile_index: int, creature_data: Dictionary, player_id: int = -1):
+	"""クリーチャーを配置し、スキルインデックスを更新"""
 	tile_data_manager.place_creature(tile_index, creature_data)
+	
+	# player_idが指定されていない場合、タイルの所有者から取得
+	if player_id == -1:
+		var tile_info = get_tile_info(tile_index)
+		player_id = tile_info.get("owner", -1)
+	
+	# スキルインデックスを更新
+	_update_skill_index_on_place(tile_index, creature_data, player_id)
 
 func remove_creature(tile_index: int):
-	"""クリーチャーを除去する"""
+	"""クリーチャーを除去し、スキルインデックスを更新"""
 	if not tile_nodes.has(tile_index):
 		return
 	
+	# スキルインデックスから削除
+	_update_skill_index_on_remove(tile_index)
+	
 	var tile = tile_nodes[tile_index]
-	tile.creature = {}
+	tile.creature_data = {}
 	
 	# ビジュアル更新があれば
 	if tile.has_method("update_visual"):
@@ -254,3 +272,48 @@ func on_level_up_selected(target_level: int, cost: int):
 func _on_action_completed():
 	# TileActionProcessorから通知を受けたらシグナルを転送
 	emit_signal("tile_action_completed")
+
+# === スキルインデックス管理 ===
+
+## スキルインデックス更新（配置時）
+func _update_skill_index_on_place(tile_index: int, creature_data: Dictionary, player_id: int) -> void:
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 応援スキルチェック
+	if "応援" in keywords:
+		skill_index["support"][tile_index] = {
+			"creature_data": creature_data,
+			"player_id": player_id,
+			"tile_index": tile_index,
+			"support_data": {}  # 将来実装
+		}
+		print("[スキルインデックス] 応援登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
+	
+	# 世界呪チェック（将来実装）
+	# if has_world_spell(ability_parsed): ...
+
+## スキルインデックス更新（除去時）
+func _update_skill_index_on_remove(tile_index: int) -> void:
+	var had_skills = []
+	
+	if tile_index in skill_index["support"]:
+		had_skills.append("応援")
+		skill_index["support"].erase(tile_index)
+	
+	if tile_index in skill_index["world_spell"]:
+		had_skills.append("世界呪")
+		skill_index["world_spell"].erase(tile_index)
+	
+	if had_skills.size() > 0:
+		print("[スキルインデックス] スキル削除: タイル", tile_index, " - ", had_skills)
+
+## インデックスから応援持ちクリーチャーを取得
+func get_support_creatures() -> Dictionary:
+	return skill_index["support"]
+
+## デバッグ用：インデックス状態を表示
+func debug_print_skill_index() -> void:
+	print("[スキルインデックス状態]")
+	print("  応援: ", skill_index["support"].keys())
+	print("  世界呪: ", skill_index["world_spell"].keys())
