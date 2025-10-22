@@ -116,6 +116,11 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 		# アイテムフェーズ中: アイテムカード以外をグレーアウト
 		if not is_item_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	elif filter_mode == "battle":
+		# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+		var creature_type = card_data.get("creature_type", "normal")
+		if creature_type == "defensive":
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 	elif filter_mode == "":
 		# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
 		if is_spell_card or is_item_card:

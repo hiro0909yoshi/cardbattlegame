@@ -70,6 +70,7 @@
 		  "防具"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 40,
 	  "ability": "防御型",
@@ -622,6 +623,7 @@
 		  "earth"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "防御型・戦闘中能力無効",

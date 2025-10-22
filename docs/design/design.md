@@ -837,16 +837,16 @@ var total_hp = creature.hp + creature.get("land_bonus_hp", 0)
 {
   "effect_type": "support",
   "target": {
-    "scope": "all_creatures",
-    "conditions": [
-      {
-        "condition_type": "race",
-        "race": "ゴブリン"
-      }
-    ]
+	"scope": "all_creatures",
+	"conditions": [
+	  {
+		"condition_type": "race",
+		"race": "ゴブリン"
+	  }
+	]
   },
   "bonus": {
-    "ap": 20
+	"ap": 20
   }
 }
 ```
@@ -861,7 +861,7 @@ elif condition_type == "race":
   var creature_race = participant.creature_data.get("race", "")
   
   if creature_race != required_race:
-    return false
+	return false
 ```
 
 #### 将来の拡張

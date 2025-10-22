@@ -353,6 +353,7 @@
 		  "防具"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "防御型・周回回復不可・秘術",
@@ -432,6 +433,7 @@
 		  "武器"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・無効化",

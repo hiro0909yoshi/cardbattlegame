@@ -132,8 +132,8 @@ func show_level_up_ui(tile_info: Dictionary):
 # バトルUI表示
 func show_battle_ui(mode: String):
 	if ui_manager:
-		# スペルカードは召喚フェーズでは使えないので、フィルターは空（スペル以外が選択可能）
-		ui_manager.card_selection_filter = ""
+		# 防御型クリーチャーはバトルで使用不可
+		ui_manager.card_selection_filter = "battle"
 		if mode == "invasion":
 			ui_manager.phase_label.text = "侵略するクリーチャーを選択"
 		else:
@@ -272,6 +272,20 @@ func execute_summon(card_index: int):
 	if card_data.is_empty():
 		_complete_action()
 		return
+	
+	# 防御型チェック: 空き地以外には召喚できない
+	var creature_type = card_data.get("creature_type", "normal")
+	if creature_type == "defensive":
+		var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+		var tile_info = board_system.get_tile_info(current_tile)
+		
+		# 空き地（owner = -1）でなければ召喚不可
+		if tile_info["owner"] != -1:
+			print("[TileActionProcessor] 防御型クリーチャーは空き地にのみ召喚できます")
+			if ui_manager:
+				ui_manager.phase_label.text = "防御型は空き地にのみ召喚可能です"
+			_complete_action()
+			return
 	
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0

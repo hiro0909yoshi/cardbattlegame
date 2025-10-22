@@ -12,3 +12,10 @@ res://data/water_1.json
 res://data/wind_2.json
 res://data/neutral_1.json
 res://docs/design/skills_design.md
+res://data/earth_1.json
+res://docs/design/design.md
+res://scripts/tile_action_processor.gd
+res://scripts/ui_components/hand_display.gd
+res://scripts/ui_components/land_command_ui.gd
+res://data/fire_2.json
+res://scripts/ui_components/card_selection_ui.gd

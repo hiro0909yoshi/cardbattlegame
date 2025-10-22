@@ -113,6 +113,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカードのみ選択可能
 				is_selectable = card_type == "item"
+			elif filter_mode == "battle":
+				# バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
+				var creature_type = card_data.get("creature_type", "normal")
+				is_selectable = card_type == "creature" and creature_type != "defensive"
 			else:
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
 				is_selectable = card_type == "creature"
@@ -122,6 +126,36 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				card_node.set_selectable(true, i)
 			elif card_node.has_method("set_selectable"):
 				card_node.set_selectable(false, -1)
+			
+			# グレーアウト処理を適用
+			if filter_mode == "battle":
+				# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+				var creature_type = card_data.get("creature_type", "normal")
+				if creature_type == "defensive":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "spell":
+				# スペルフェーズ中: スペルカード以外をグレーアウト
+				if card_type != "spell":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "item":
+				# アイテムフェーズ中: アイテムカード以外をグレーアウト
+				if card_type != "item":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "":
+				# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
+				if card_type == "spell" or card_type == "item":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			else:
+				# デフォルト: グレーアウトなし
+				card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			
 			# 捨て札モードでは全て選択可能、それ以外はコストチェック
 			if selection_mode == "discard":

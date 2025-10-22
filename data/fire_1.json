@@ -132,6 +132,7 @@
 		  "fire"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 40,
 	  "restrictions": {
@@ -286,6 +287,7 @@
 		  "防具"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "防御型・秘術",

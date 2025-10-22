@@ -201,6 +201,20 @@ func show_action_menu(tile_index: int):
 	if tile_label:
 		tile_label.text = "土地: #%d" % tile_index
 	
+	# 防御型チェック: 移動ボタンを無効化
+	if board_system_ref and board_system_ref.tile_nodes.has(tile_index):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		var creature = tile.creature_data if tile else {}
+		var creature_type = creature.get("creature_type", "normal")
+		
+		if action_menu_buttons.has("move"):
+			if creature_type == "defensive":
+				action_menu_buttons["move"].disabled = true
+				action_menu_buttons["move"].text = "🚶 [M] 移動 (防御型)"
+			else:
+				action_menu_buttons["move"].disabled = false
+				action_menu_buttons["move"].text = "🚶 [M] 移動"
+	
 
 ## アクションメニュー非表示
 func hide_action_menu():

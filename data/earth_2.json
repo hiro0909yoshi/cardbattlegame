@@ -346,6 +346,7 @@
 		  "武器"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・道連れ",
@@ -450,6 +451,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・移動侵略無効",
@@ -478,6 +480,7 @@
 	  "cost": {
 		"mp": 40
 	  },
+	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "防御型・戦闘後効果",

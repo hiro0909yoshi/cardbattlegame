@@ -18,7 +18,8 @@ docs/
 ├── design/                # 設計ドキュメント
 │   ├── design.md          # ゲーム全体の設計
 │   ├── skills_design.md   # スキルシステムの詳細設計
-│   ├── effect_system.md   # 効果システムの実装仕様 ✨NEW
+│   ├── effect_system.md   # 効果システムの実装仕様
+│   ├── defensive_creature_design.md  # 防御型クリーチャー設計 ✨NEW
 │   └── turn_end_flow.md   # ターン終了フローの問題点と設計
 ├── progress/              # 進捗管理
 │   ├── phase1a_progress.md        # Phase 1-A進捗状況
@@ -50,11 +51,17 @@ docs/
 - 各スキルの効果・発動条件
 - スキル実装のガイドライン
 
-#### [effect_system.md](design/effect_system.md) ✨NEW
+#### [effect_system.md](design/effect_system.md)
 - 効果システムの実装仕様
 - スペル・アイテム・クリーチャー効果の統一管理
 - 一時効果と永続効果の分離設計
 - 土地数比例効果の実装例
+
+#### [defensive_creature_design.md](design/defensive_creature_design.md) ✨NEW
+- 防御型クリーチャーの詳細設計
+- 全21体の実装一覧
+- 召喚・移動・侵略制限の仕様
+- バトル挙動とテスト方法
 
 #### [turn_end_flow.md](design/turn_end_flow.md)
 - ターン終了処理の問題点分析
@@ -212,10 +219,15 @@ cat docs/README.md
 - ✅ コードリファクタリング: 2つの大規模ファイル分割完了
   - TileActionProcessor: 1,284行 → 5ファイル
   - LandCommandHandler: 881行 → 4ファイル
-- ✅ 効果システム実装: Phase 1-2完了、Phase 3部分完了 ✨NEW
+- ✅ 効果システム実装: Phase 1-2完了、Phase 3部分完了
   - スペル効果（マスグロース、ドミナントグロース）
   - アイテム効果（AP/HPバフ・デバフ）
   - 土地数比例効果（アームドパラディン実装）
+- ✅ 防御型クリーチャー実装: 完了（全21体） ✨NEW
+  - データ設定: `creature_type: "defensive"`
+  - 召喚制限: 空き地にのみ配置可能
+  - 移動制限: 移動コマンド使用不可
+  - 侵略制限: バトルカードとして使用不可
 - 🔄 Phase 1-A Day 5: 統合作業中
 - 📋 次回: Phase 1-B（レベルアップ改善）
 
@@ -223,5 +235,5 @@ cat docs/README.md
 
 ---
 
-**最終更新**: 2025年10月21日  
+**最終更新**: 2025年10月23日  
 **管理者**: プロジェクトチーム

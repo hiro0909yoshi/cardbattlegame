@@ -211,6 +211,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・通行料変化・死者復活",
@@ -250,6 +251,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・秘術",
@@ -392,6 +394,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 50,
 	  "ability": "防御型・周回回復不可",
@@ -431,6 +434,7 @@
 		  "武器"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "防御型・防魔・秘術",

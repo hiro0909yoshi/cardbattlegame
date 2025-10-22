@@ -121,6 +121,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・先制",

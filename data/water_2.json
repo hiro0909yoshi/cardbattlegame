@@ -43,6 +43,7 @@
 		  "fire"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
@@ -66,6 +67,7 @@
 		  "fire"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 10,
 	  "hp": 50,
 	  "ability": "防御型・魔力獲得",
@@ -388,6 +390,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "防御型・秘術",

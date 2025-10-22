@@ -98,6 +98,7 @@
 		  "巻物"
 		]
 	  },
+	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 60,
 	  "ability": "防御型・秘術",
