@@ -68,16 +68,16 @@
 # 防御型チェック: 空き地以外には召喚できない
 var creature_type = card_data.get("creature_type", "normal")
 if creature_type == "defensive":
-    var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
-    var tile_info = board_system.get_tile_info(current_tile)
-    
-    # 空き地（owner = -1）でなければ召喚不可
-    if tile_info["owner"] != -1:
-        print("[TileActionProcessor] 防御型クリーチャーは空き地にのみ召喚できます")
-        if ui_manager:
-            ui_manager.phase_label.text = "防御型は空き地にのみ召喚可能です"
-        _complete_action()
-        return
+	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var tile_info = board_system.get_tile_info(current_tile)
+	
+	# 空き地（owner = -1）でなければ召喚不可
+	if tile_info["owner"] != -1:
+		print("[TileActionProcessor] 防御型クリーチャーは空き地にのみ召喚できます")
+		if ui_manager:
+			ui_manager.phase_label.text = "防御型は空き地にのみ召喚可能です"
+		_complete_action()
+		return
 ```
 
 **制約内容**:
@@ -93,17 +93,17 @@ if creature_type == "defensive":
 ```gdscript
 # 防御型チェック: 移動ボタンを無効化
 if board_system_ref and board_system_ref.tile_nodes.has(tile_index):
-    var tile = board_system_ref.tile_nodes[tile_index]
-    var creature = tile.creature_data if tile.has("creature_data") else {}
-    var creature_type = creature.get("creature_type", "normal")
-    
-    if action_menu_buttons.has("move"):
-        if creature_type == "defensive":
-            action_menu_buttons["move"].disabled = true
-            action_menu_buttons["move"].text = "🚶 [M] 移動 (防御型)"
-        else:
-            action_menu_buttons["move"].disabled = false
-            action_menu_buttons["move"].text = "🚶 [M] 移動"
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var creature = tile.creature_data if tile.has("creature_data") else {}
+	var creature_type = creature.get("creature_type", "normal")
+	
+	if action_menu_buttons.has("move"):
+		if creature_type == "defensive":
+			action_menu_buttons["move"].disabled = true
+			action_menu_buttons["move"].text = "🚶 [M] 移動 (防御型)"
+		else:
+			action_menu_buttons["move"].disabled = false
+			action_menu_buttons["move"].text = "🚶 [M] 移動"
 ```
 
 **UI表示**:
@@ -120,10 +120,10 @@ if board_system_ref and board_system_ref.tile_nodes.has(tile_index):
 ```gdscript
 # バトルUI表示
 func show_battle_ui(mode: String):
-    if ui_manager:
-        # 防御型クリーチャーはバトルで使用不可
-        ui_manager.card_selection_filter = "battle"
-        # ...
+	if ui_manager:
+		# 防御型クリーチャーはバトルで使用不可
+		ui_manager.card_selection_filter = "battle"
+		# ...
 ```
 
 #### 3-2. カード表示のグレーアウト
@@ -133,10 +133,10 @@ func show_battle_ui(mode: String):
 
 ```gdscript
 elif filter_mode == "battle":
-    # バトルフェーズ中: 防御型クリーチャーをグレーアウト
-    var creature_type = card_data.get("creature_type", "normal")
-    if creature_type == "defensive":
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+	var creature_type = card_data.get("creature_type", "normal")
+	if creature_type == "defensive":
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 ```
 
 #### 3-3. カード選択制限とグレーアウト
@@ -147,20 +147,20 @@ elif filter_mode == "battle":
 **選択制限**:
 ```gdscript
 elif filter_mode == "battle":
-    # バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
-    var creature_type = card_data.get("creature_type", "normal")
-    is_selectable = card_type == "creature" and creature_type != "defensive"
+	# バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
+	var creature_type = card_data.get("creature_type", "normal")
+	is_selectable = card_type == "creature" and creature_type != "defensive"
 ```
 
 **グレーアウト**:
 ```gdscript
 if filter_mode == "battle":
-    # バトルフェーズ中: 防御型クリーチャーをグレーアウト
-    var creature_type = card_data.get("creature_type", "normal")
-    if creature_type == "defensive":
-        card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-    else:
-        card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+	var creature_type = card_data.get("creature_type", "normal")
+	if creature_type == "defensive":
+		card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	else:
+		card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 ```
 
 **UI表示**:

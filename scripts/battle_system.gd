@@ -157,7 +157,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	print("\n【攻撃順】", order_str)
 	
 	# 4. 攻撃シーケンス実行
-	battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects)
+	battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
 	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)

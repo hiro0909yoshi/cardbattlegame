@@ -62,8 +62,17 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# アイテム効果を適用
 	if not attacker_item.is_empty():
+		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
+		if not attacker.creature_data.has("items"):
+			attacker.creature_data["items"] = []
+		attacker.creature_data["items"].append(attacker_item)
 		apply_item_effects(attacker, attacker_item)
+	
 	if not defender_item.is_empty():
+		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
+		if not defender.creature_data.has("items"):
+			defender.creature_data["items"] = []
+		defender.creature_data["items"].append(defender_item)
 		apply_item_effects(defender, defender_item)
 	
 	return {
@@ -120,13 +129,28 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
 	print("[アイテム効果適用] ", item_data.get("name", "???"))
 	
-	# ability_parsedから効果を取得
-	var ability_parsed = item_data.get("ability_parsed", {})
-	if ability_parsed.is_empty():
-		print("  警告: ability_parsedが定義されていません")
+	# effect_parsedから効果を取得（アイテムはeffect_parsedを使用）
+	var effect_parsed = item_data.get("effect_parsed", {})
+	if effect_parsed.is_empty():
+		print("  警告: effect_parsedが定義されていません")
 		return
 	
-	var effects = ability_parsed.get("effects", [])
+	# stat_bonusを先に適用（ST+20、HP+20など）
+	var stat_bonus = effect_parsed.get("stat_bonus", {})
+	if not stat_bonus.is_empty():
+		var st = stat_bonus.get("st", 0)
+		var hp = stat_bonus.get("hp", 0)
+		
+		if st > 0:
+			participant.current_ap += st
+			print("  ST+", st, " → ", participant.current_ap)
+		
+		if hp > 0:
+			participant.item_bonus_hp += hp
+			participant.update_current_hp()
+			print("  HP+", hp, " → ", participant.current_hp)
+	
+	var effects = effect_parsed.get("effects", [])
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		var value = effect.get("value", 0)
@@ -163,6 +187,10 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 				
 				grant_skill_to_participant(participant, skill_name, effect)
 				print("  スキル付与: ", skill_name)
+			
+			"reflect_damage", "nullify_reflect":
+				# 反射系のスキルはバトル中にBattleSkillProcessorで処理されるため、ここではスキップ
+				pass
 			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)

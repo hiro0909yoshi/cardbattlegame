@@ -296,7 +296,19 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "反射[1/2]"
+	  "effect": "反射[1/2]",
+	  "effect_parsed": {
+		"keywords": ["反射[1/2]"],
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 0.5,
+			"self_damage_ratio": 0.5,
+			"attack_types": ["normal"],
+			"triggers": ["on_damaged"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1026,
@@ -765,7 +777,24 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "敵アイテム未使用時、反射[全]"
+	  "effect": "敵アイテム未使用時、反射[全]",
+	  "effect_parsed": {
+		"keywords": ["反射[全]"],
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 1.0,
+			"self_damage_ratio": 0.0,
+			"attack_types": ["normal", "scroll"],
+			"triggers": ["on_damaged"],
+			"conditions": [
+			  {
+				"condition_type": "enemy_no_item"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1067,
@@ -787,7 +816,19 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "ST+20；敵の攻撃無効化・反射無効"
+	  "effect": "ST+20；敵の攻撃無効化・反射無効",
+	  "effect_parsed": {
+		"keywords": ["反射無効"],
+		"stat_bonus": {
+		  "st": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "nullify_reflect",
+			"triggers": ["before_attack"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1069,
@@ -798,7 +839,22 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "HP+20；反射[巻物]"
+	  "effect": "HP+20；反射[巻物]",
+	  "effect_parsed": {
+		"keywords": ["反射[巻物]"],
+		"stat_bonus": {
+		  "hp": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 1.0,
+			"self_damage_ratio": 0.0,
+			"attack_types": ["scroll"],
+			"triggers": ["on_damaged"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1070,

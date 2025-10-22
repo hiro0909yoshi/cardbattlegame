@@ -15,6 +15,8 @@
 ```
 docs/
 ├── README.md              # このファイル（ドキュメント全体のインデックス）
+├── quick_start/           # クイックスタートガイド ✨NEW
+│   └── new_chat_guide.md  # チャット開始時の手順書
 ├── design/                # 設計ドキュメント
 │   ├── design.md          # ゲーム全体の設計
 │   ├── skills_design.md   # スキルシステムの詳細設計
@@ -22,9 +24,12 @@ docs/
 │   ├── defensive_creature_design.md  # 防御型クリーチャー設計 ✨NEW
 │   └── turn_end_flow.md   # ターン終了フローの問題点と設計
 ├── progress/              # 進捗管理
+│   ├── daily_log.md               # 日次作業ログ ✨NEW
 │   ├── phase1a_progress.md        # Phase 1-A進捗状況
 │   ├── phase1a_spec.md            # Phase 1-A仕様書
 │   └── refactoring_progress.md    # リファクタリング進捗
+├── implementation/        # 実装パターン集 ✨NEW
+│   └── implementation_patterns.md # 実装テンプレート
 ├── refactoring/           # リファクタリング記録
 │   ├── battle_system_refactoring.md
 │   └── land_command_handler_refactoring.md
@@ -38,6 +43,19 @@ docs/
 ---
 
 ## 📖 各ドキュメントの概要
+
+### 🚀 quick_start/ - クイックスタートガイド ✨NEW
+
+#### [new_chat_guide.md](quick_start/new_chat_guide.md)
+- **最重要**: チャット開始時に必ず確認
+- チャット継続の定型手順
+- よく使う情報の場所一覧
+- 作業タイプ別のクイックスタート
+- トラブルシューティング
+
+**使い方**: 新しいチャットを開始したら、まずこのガイドを確認してください。
+
+---
 
 ### 🎨 design/ - 設計ドキュメント
 
@@ -72,6 +90,16 @@ docs/
 
 ### 📊 progress/ - 進捗管理
 
+#### [daily_log.md](progress/daily_log.md) ✨NEW
+- **日次の作業記録**（簡潔版）
+- 完了した作業の一覧
+- 次のステップの明記
+- チャット間の継続性を保つための重要ファイル
+
+**使い方**: 
+- 作業終了時に記録
+- 次回チャット開始時に確認
+
 #### [phase1a_progress.md](progress/phase1a_progress.md)
 - Phase 1-A（基盤整備）の進捗状況
 - 完了したタスク
@@ -86,6 +114,22 @@ docs/
 - コードリファクタリングの進捗
 - 分割されたファイルの一覧
 - 使用した手法とベストプラクティス
+
+---
+
+### 🛠️ implementation/ - 実装パターン集 ✨NEW
+
+#### [implementation_patterns.md](implementation/implementation_patterns.md)
+- よく使う実装パターンのテンプレート集
+- クリーチャー実装パターン
+- スキル実装パターン
+- JSONデータ追加パターン
+- バグ修正パターン
+
+**使い方**: 
+- 新しい機能を実装する前に該当パターンを確認
+- テンプレートをコピーして使用
+- 効率的な実装をサポート
 
 ---
 
@@ -127,18 +171,16 @@ docs/
 
 ## 🔄 ワークフロー
 
-### 新しいチャットを開始するとき
-1. ✅ `docs/README.md`（このファイル）を確認
-2. ✅ `docs/progress/`で現在の進捗を把握
-3. ✅ `docs/issues/`で既知の問題を確認
-4. ✅ `docs/design/`で設計仕様を参照
+### 新しいチャットを開始するとき ⭐️ 最重要
+1. ✅ **`docs/quick_start/new_chat_guide.md`を確認** ← これが最重要！
+2. ✅ `docs/progress/daily_log.md`で前回の作業と次のステップを確認
+3. ✅ 前回のチャットを引き継ぐメッセージを送信
+4. ✅ 必要に応じて`docs/design/`で設計仕様を参照
 
-### プロジェクトを有効化したとき
-```bash
-# 必ず実行：ドキュメント確認
-ls -la docs/
-cat docs/README.md
-```
+### チャット終了時
+1. ✅ `docs/progress/daily_log.md`に作業内容を記録
+2. ✅ 次のステップを明記
+3. ✅ 課題があれば`docs/issues/issues.md`に追加
 
 ### 新しいissueを追加するとき
 1. `docs/issues/issues.md`に追記
@@ -223,11 +265,15 @@ cat docs/README.md
   - スペル効果（マスグロース、ドミナントグロース）
   - アイテム効果（AP/HPバフ・デバフ）
   - 土地数比例効果（アームドパラディン実装）
-- ✅ 防御型クリーチャー実装: 完了（全21体） ✨NEW
+- ✅ 防御型クリーチャー実装: 完了（全21体）
   - データ設定: `creature_type: "defensive"`
   - 召喚制限: 空き地にのみ配置可能
   - 移動制限: 移動コマンド使用不可
   - 侵略制限: バトルカードとして使用不可
+- ✅ チャット継続性改善: 完了 ✨NEW
+  - クイックスタートガイド作成
+  - 日次作業ログシステム導入
+  - 実装パターン集作成
 - 🔄 Phase 1-A Day 5: 統合作業中
 - 📋 次回: Phase 1-B（レベルアップ改善）
 

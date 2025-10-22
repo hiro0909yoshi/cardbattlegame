@@ -255,11 +255,11 @@ reduction_rate = 指定なし  # ダメージ = 元のダメージ × 0.0（完�
 {
   "nullify_type": "normal_attack",
   "conditions": [
-    {
-      "condition_type": "land_level_check",
-      "operator": ">=",
-      "value": 3
-    }
+	{
+	  "condition_type": "land_level_check",
+	  "operator": ">=",
+	  "value": 3
+	}
   ]
 }
 ```
@@ -311,31 +311,31 @@ reduction_rate = 指定なし  # ダメージ = 元のダメージ × 0.0（完�
 {
   "keywords": ["無効化"],
   "keyword_conditions": {
-    "無効化": {
-      "nullify_type": "element|mhp_above|mhp_below|st_below|all_attacks|has_ability|scroll_attack|normal_attack",
-      
-      // 属性無効化の場合
-      "element": "fire",  // 単一属性
-      "elements": ["wind", "earth"],  // 複数属性（elementがない場合）
-      
-      // MHP/ST条件の場合
-      "value": 50,
-      
-      // 能力持ち無効化の場合
-      "ability": "先制",
-      
-      // 軽減率（指定なし = 0.0 = 完全無効化）
-      "reduction_rate": 0.5,
-      
-      // 条件付き無効化の場合
-      "conditions": [
-        {
-          "condition_type": "land_level_check",
-          "operator": ">=",
-          "value": 3
-        }
-      ]
-    }
+	"無効化": {
+	  "nullify_type": "element|mhp_above|mhp_below|st_below|all_attacks|has_ability|scroll_attack|normal_attack",
+	  
+	  // 属性無効化の場合
+	  "element": "fire",  // 単一属性
+	  "elements": ["wind", "earth"],  // 複数属性（elementがない場合）
+	  
+	  // MHP/ST条件の場合
+	  "value": 50,
+	  
+	  // 能力持ち無効化の場合
+	  "ability": "先制",
+	  
+	  // 軽減率（指定なし = 0.0 = 完全無効化）
+	  "reduction_rate": 0.5,
+	  
+	  // 条件付き無効化の場合
+	  "conditions": [
+		{
+		  "condition_type": "land_level_check",
+		  "operator": ">=",
+		  "value": 3
+		}
+	  ]
+	}
   }
 }
 ```

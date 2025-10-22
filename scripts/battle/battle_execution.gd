@@ -60,7 +60,7 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 		return ATTACKER_SURVIVED
 
 ## 攻撃シーケンス実行
-func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects) -> void:
+func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, skill_processor) -> void:
 	for i in range(attack_order.size()):
 		var attacker_p = attack_order[i]
 		var defender_p = attack_order[(i + 1) % 2]
@@ -113,8 +113,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					print("  【軽減】", defender_p.creature_data.get("name", "?"), 
 						  " がダメージを軽減 ", original_damage, " → ", reduced_damage)
 					
+					# 反射スキルチェック（軽減後のダメージで）
+					var attack_type_reduced = "scroll" if attacker_p.is_using_scroll else "normal"
+					var reflect_result_reduced = skill_processor.check_reflect_damage(attacker_p, defender_p, reduced_damage, attack_type_reduced)
+					
+					# 反射がある場合、ダメージをさらに調整
+					var actual_damage_reduced = reflect_result_reduced["self_damage"] if reflect_result_reduced["has_reflect"] else reduced_damage
+					
 					# 軽減ダメージ適用
-					var damage_breakdown_reduced = defender_p.take_damage(reduced_damage)
+					var damage_breakdown_reduced = defender_p.take_damage(actual_damage_reduced)
 					
 					print("  ダメージ処理:")
 					if damage_breakdown_reduced["resonance_bonus_consumed"] > 0:
@@ -125,6 +132,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						print("    - 基本HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
 					print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
 					
+					# 反射ダメージを攻撃側に適用
+					if reflect_result_reduced["has_reflect"] and reflect_result_reduced["reflect_damage"] > 0:
+						print("
+  【反射ダメージ適用】")
+						var reflect_damage_breakdown_reduced = attacker_p.take_damage(reflect_result_reduced["reflect_damage"])
+						print("    - 攻撃側が受けた反射ダメージ: ", reflect_result_reduced["reflect_damage"])
+						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (基本HP:", attacker_p.base_hp, ")")
+					
 					# 軽減の場合は即死判定を行う
 					if defender_p.is_alive():
 						special_effects.check_instant_death(attacker_p, defender_p)
@@ -134,10 +149,24 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 						break
 					
+					# 攻撃側が反射で倒された場合もバトル終了
+					if not attacker_p.is_alive():
+						print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
+						break
+					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
 			
+			# 反射スキルチェック
+			var attack_type = "scroll" if attacker_p.is_using_scroll else "normal"
+			print("  【反射チェック開始】攻撃タイプ:", attack_type, " 元ダメージ:", attacker_p.current_ap)
+			var reflect_result = skill_processor.check_reflect_damage(attacker_p, defender_p, attacker_p.current_ap, attack_type)
+			print("  【反射チェック結果】has_reflect:", reflect_result["has_reflect"], " reflect_damage:", reflect_result["reflect_damage"], " self_damage:", reflect_result["self_damage"])
+			
+			# 反射がある場合、ダメージを調整
+			var actual_damage = reflect_result["self_damage"] if reflect_result["has_reflect"] else attacker_p.current_ap
+			
 			# ダメージ適用
-			var damage_breakdown = defender_p.take_damage(attacker_p.current_ap)
+			var damage_breakdown = defender_p.take_damage(actual_damage)
 			
 			print("  ダメージ処理:")
 			if damage_breakdown["resonance_bonus_consumed"] > 0:
@@ -148,6 +177,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				print("    - 基本HP: ", damage_breakdown["base_hp_consumed"], " 消費")
 			print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
 			
+			# 反射ダメージを攻撃側に適用
+			if reflect_result["has_reflect"] and reflect_result["reflect_damage"] > 0:
+				print("
+  【反射ダメージ適用】")
+				var reflect_damage_breakdown = attacker_p.take_damage(reflect_result["reflect_damage"])
+				print("    - 攻撃側が受けた反射ダメージ: ", reflect_result["reflect_damage"])
+				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (基本HP:", attacker_p.base_hp, ")")
+			
 			# 即死判定（攻撃が通った後）
 			if defender_p.is_alive():
 				special_effects.check_instant_death(attacker_p, defender_p)
@@ -155,4 +192,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			# 倒されたらバトル終了
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
+				break
+			
+			# 攻撃側が反射で倒された場合もバトル終了
+			if not attacker_p.is_alive():
+				print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
 				break

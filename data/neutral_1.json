@@ -508,7 +508,19 @@
 	  "ap": 0,
 	  "hp": 10,
 	  "ability": "反射",
-	  "ability_detail": "反射[通常攻撃]"
+	  "ability_detail": "反射[通常攻撃]",
+	  "ability_parsed": {
+		"keywords": ["反射"],
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 1.0,
+			"self_damage_ratio": 0.0,
+			"attack_types": ["normal"],
+			"triggers": ["on_damaged"]
+		  }
+		]
+	  }
 	}
   ]
 }

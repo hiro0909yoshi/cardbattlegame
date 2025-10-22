@@ -638,7 +638,24 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "合成・反射",
-	  "ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]"
+	  "ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
+	  "ability_parsed": {
+		"keywords": ["合成", "反射[1/2]"],
+		"effects": [
+		  {
+			"effect_type": "synthesis",
+			"target_element": "earth",
+			"target_name": "アームドパラディン"
+		  },
+		  {
+			"effect_type": "reflect_damage",
+		"reflect_ratio": 0.5,
+		"self_damage_ratio": 0.5,
+		"attack_types": ["normal"],
+		"triggers": ["on_damaged"]
+		  }
+		]
+	  }
 	}
   ]
 }

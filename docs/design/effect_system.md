@@ -61,16 +61,16 @@
 
 ```gdscript
 creature_data["temporary_effects"] = [
-    {
-        "id": "blessing_002",
-        "type": "stat_bonus",
-        "stat": "hp",
-        "value": 10,
-        "source": "spell",
-        "source_name": "ブレッシング",
-        "removable": true,
-        "lost_on_move": true
-    }
+	{
+		"id": "blessing_002",
+		"type": "stat_bonus",
+		"stat": "hp",
+		"value": 10,
+		"source": "spell",
+		"source_name": "ブレッシング",
+		"removable": true,
+		"lost_on_move": true
+	}
 ]
 ```
 
@@ -109,13 +109,13 @@ creature_data["temporary_effects"] = [
 ```gdscript
 creature_data["map_lap_count"] = 2  # 周回数カウント
 creature_data["permanent_effects"].append({
-    "id": "lap_bonus_003",
-    "type": "stat_bonus",
-    "stat": "ap",
-    "value": 10,
-    "source": "map_lap",
-    "removable": false,
-    "lost_on_move": false
+	"id": "lap_bonus_003",
+	"type": "stat_bonus",
+	"stat": "ap",
+	"value": 10,
+	"source": "map_lap",
+	"removable": false,
+	"lost_on_move": false
 })
 ```
 
@@ -148,8 +148,8 @@ creature_data["base_up_ap"] = 20  # 合成によるAP上昇
 ```gdscript
 # マスグロース効果はbase_up_hpで管理
 for tile in board_system.get_player_tiles(player_id):
-    if tile.creature_data:
-        tile.creature_data["base_up_hp"] = tile.creature_data.get("base_up_hp", 0) + 5
+	if tile.creature_data:
+		tile.creature_data["base_up_hp"] = tile.creature_data.get("base_up_hp", 0) + 5
 ```
 
 #### 6-2. その他の永続スペル効果
@@ -166,47 +166,47 @@ for tile in board_system.get_player_tiles(player_id):
 
 ```gdscript
 {
-    "id": 1,
-    "name": "アモン",
-    "hp": 30,           # 元の基礎HP
-    "ap": 20,           # 元の基礎AP
-    "element": "fire",
-    "ability_parsed": {...},  # スキル定義（既存）
-    
-    # 合成・マスグロース用（打ち消し不可）
-    "base_up_hp": 0,    # 永続的な基礎HP上昇
-    "base_up_ap": 0,    # 永続的な基礎AP上昇
-    
-    # 永続的な効果（移動で消えない、交換で消える）
-    "permanent_effects": [
-        {
-            "id": "effect_001",
-            "type": "stat_bonus",
-            "stat": "hp",
-            "value": 20,
-            "source": "spell",
-            "source_name": "強化呪文",
-            "removable": true,        # 打ち消し効果で消せるか
-            "lost_on_move": false     # 移動で消えるか
-        }
-    ],
-    
-    # 一時的な効果（移動で消える）
-    "temporary_effects": [
-        {
-            "id": "blessing_003",
-            "type": "stat_bonus",
-            "stat": "hp",
-            "value": 10,
-            "source": "spell",
-            "source_name": "ブレッシング",
-            "removable": true,
-            "lost_on_move": true
-        }
-    ],
-    
-    # マップ周回カウント（キメラ等）
-    "map_lap_count": 0
+	"id": 1,
+	"name": "アモン",
+	"hp": 30,           # 元の基礎HP
+	"ap": 20,           # 元の基礎AP
+	"element": "fire",
+	"ability_parsed": {...},  # スキル定義（既存）
+	
+	# 合成・マスグロース用（打ち消し不可）
+	"base_up_hp": 0,    # 永続的な基礎HP上昇
+	"base_up_ap": 0,    # 永続的な基礎AP上昇
+	
+	# 永続的な効果（移動で消えない、交換で消える）
+	"permanent_effects": [
+		{
+			"id": "effect_001",
+			"type": "stat_bonus",
+			"stat": "hp",
+			"value": 20,
+			"source": "spell",
+			"source_name": "強化呪文",
+			"removable": true,        # 打ち消し効果で消せるか
+			"lost_on_move": false     # 移動で消えるか
+		}
+	],
+	
+	# 一時的な効果（移動で消える）
+	"temporary_effects": [
+		{
+			"id": "blessing_003",
+			"type": "stat_bonus",
+			"stat": "hp",
+			"value": 10,
+			"source": "spell",
+			"source_name": "ブレッシング",
+			"removable": true,
+			"lost_on_move": true
+		}
+	],
+	
+	# マップ周回カウント（キメラ等）
+	"map_lap_count": 0
 }
 ```
 
@@ -214,14 +214,14 @@ for tile in board_system.get_player_tiles(player_id):
 
 ```gdscript
 {
-    "id": "unique_id_string",         # 一意のID
-    "type": "stat_bonus",              # 効果タイプ
-    "stat": "hp",                      # 対象ステータス（hp/ap）
-    "value": 10,                       # 効果値
-    "source": "spell",                 # 発生源（spell/item/skill/synthesis）
-    "source_name": "ブレッシング",      # 効果名（UI表示用、重複判定用）
-    "removable": true,                 # 打ち消し効果で消せるか
-    "lost_on_move": false              # 移動で消えるか
+	"id": "unique_id_string",         # 一意のID
+	"type": "stat_bonus",              # 効果タイプ
+	"stat": "hp",                      # 対象ステータス（hp/ap）
+	"value": 10,                       # 効果値
+	"source": "spell",                 # 発生源（spell/item/skill/synthesis）
+	"source_name": "ブレッシング",      # 効果名（UI表示用、重複判定用）
+	"removable": true,                 # 打ち消し効果で消せるか
+	"lost_on_move": false              # 移動で消えるか
 }
 ```
 
@@ -233,30 +233,30 @@ for tile in board_system.get_player_tiles(player_id):
 
 ```gdscript
 class BattleParticipant:
-    # 基礎値（既存）
-    var base_hp: int              # 元のHP（カードデータの値）
-    var base_ap: int              # 元のAP
-    
-    # 永続的な基礎上昇（新規追加）
-    var base_up_hp: int = 0       # 合成・マスグロース等（打ち消し不可）
-    var base_up_ap: int = 0       
-    
-    # バトル中の一時ボーナス（一部既存、一部新規）
-    var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（新規）
-    var temporary_bonus_ap: int = 0   # 一時的なAPボーナス（新規）
-    var resonance_bonus_hp: int = 0   # 感応ボーナス（既存）
-    var land_bonus_hp: int = 0        # 土地ボーナス（既存）
-    var item_bonus_hp: int = 0        # アイテムボーナス（既存）
-    var item_bonus_ap: int = 0        # アイテムボーナス（既存）
-    var spell_bonus_hp: int = 0       # スペルボーナス（既存）
-    
-    # 効果配列の参照（新規追加）
-    var permanent_effects: Array = []  # バトル中も保持
-    var temporary_effects: Array = []  # バトル中も保持
-    
-    # 計算後の値
-    var current_hp: int
-    var current_ap: int
+	# 基礎値（既存）
+	var base_hp: int              # 元のHP（カードデータの値）
+	var base_ap: int              # 元のAP
+	
+	# 永続的な基礎上昇（新規追加）
+	var base_up_hp: int = 0       # 合成・マスグロース等（打ち消し不可）
+	var base_up_ap: int = 0       
+	
+	# バトル中の一時ボーナス（一部既存、一部新規）
+	var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（新規）
+	var temporary_bonus_ap: int = 0   # 一時的なAPボーナス（新規）
+	var resonance_bonus_hp: int = 0   # 感応ボーナス（既存）
+	var land_bonus_hp: int = 0        # 土地ボーナス（既存）
+	var item_bonus_hp: int = 0        # アイテムボーナス（既存）
+	var item_bonus_ap: int = 0        # アイテムボーナス（既存）
+	var spell_bonus_hp: int = 0       # スペルボーナス（既存）
+	
+	# 効果配列の参照（新規追加）
+	var permanent_effects: Array = []  # バトル中も保持
+	var temporary_effects: Array = []  # バトル中も保持
+	
+	# 計算後の値
+	var current_hp: int
+	var current_ap: int
 ```
 
 ### HP/APの計算式
@@ -264,20 +264,20 @@ class BattleParticipant:
 ```gdscript
 # HP計算
 current_hp = base_hp + 
-             base_up_hp +           # 合成・マスグロース
-             temporary_bonus_hp +   # 一時効果の合計
-             land_bonus_hp + 
-             resonance_bonus_hp + 
-             item_bonus_hp +
-             spell_bonus_hp
+			 base_up_hp +           # 合成・マスグロース
+			 temporary_bonus_hp +   # 一時効果の合計
+			 land_bonus_hp + 
+			 resonance_bonus_hp + 
+			 item_bonus_hp +
+			 spell_bonus_hp
 
 # AP計算
 current_ap = base_ap + 
-             base_up_ap +           # 合成・マスグロース
-             temporary_bonus_ap +   # 一時効果の合計
-             item_bonus_ap + 
-             (感応AP) + 
-             (条件効果AP)
+			 base_up_ap +           # 合成・マスグロース
+			 temporary_bonus_ap +   # 一時効果の合計
+			 item_bonus_ap + 
+			 (感応AP) + 
+			 (条件効果AP)
 # その後、強打で乗算
 ```
 
@@ -302,49 +302,49 @@ current_ap = base_ap +
 ```gdscript
 # バトル準備時の処理
 func prepare_battle_participant(creature_data, tile_data):
-    # 1. 基礎値を設定
-    participant.base_hp = creature_data["hp"]
-    participant.base_ap = creature_data["ap"]
-    
-    # 2. base_up_hp/apを適用（合成・マスグロース）
-    participant.base_up_hp = creature_data.get("base_up_hp", 0)
-    participant.base_up_ap = creature_data.get("base_up_ap", 0)
-    
-    # 3. 効果配列を保持（打ち消し効果判定用）
-    participant.permanent_effects = creature_data.get("permanent_effects", [])
-    participant.temporary_effects = creature_data.get("temporary_effects", [])
-    
-    # 4. permanent_effectsから効果を計算
-    for effect in participant.permanent_effects:
-        if effect["stat"] == "hp":
-            participant.temporary_bonus_hp += effect["value"]
-        elif effect["stat"] == "ap":
-            participant.temporary_bonus_ap += effect["value"]
-    
-    # 5. temporary_effectsから効果を計算
-    for effect in participant.temporary_effects:
-        if effect["stat"] == "hp":
-            participant.temporary_bonus_hp += effect["value"]
-        elif effect["stat"] == "ap":
-            participant.temporary_bonus_ap += effect["value"]
-    
-    # 6. 土地ボーナス（既存処理）
-    participant.land_bonus_hp = tile.level * 10
-    
-    # 7. アイテム効果（バトル準備フェーズで選択）
-    if selected_item:
-        participant.item_bonus_ap = selected_item.ap_bonus
-        participant.item_bonus_hp = selected_item.hp_bonus
-    
-    # 8. 感応効果（既存処理）
-    apply_resonance_skill(participant, context)
-    
-    # 9. その他の条件効果
-    # （土地保有数、隣接条件など）
-    
-    # 10. 強打を適用（最後）
-    if has_power_strike:
-        participant.current_ap *= 1.5
+	# 1. 基礎値を設定
+	participant.base_hp = creature_data["hp"]
+	participant.base_ap = creature_data["ap"]
+	
+	# 2. base_up_hp/apを適用（合成・マスグロース）
+	participant.base_up_hp = creature_data.get("base_up_hp", 0)
+	participant.base_up_ap = creature_data.get("base_up_ap", 0)
+	
+	# 3. 効果配列を保持（打ち消し効果判定用）
+	participant.permanent_effects = creature_data.get("permanent_effects", [])
+	participant.temporary_effects = creature_data.get("temporary_effects", [])
+	
+	# 4. permanent_effectsから効果を計算
+	for effect in participant.permanent_effects:
+		if effect["stat"] == "hp":
+			participant.temporary_bonus_hp += effect["value"]
+		elif effect["stat"] == "ap":
+			participant.temporary_bonus_ap += effect["value"]
+	
+	# 5. temporary_effectsから効果を計算
+	for effect in participant.temporary_effects:
+		if effect["stat"] == "hp":
+			participant.temporary_bonus_hp += effect["value"]
+		elif effect["stat"] == "ap":
+			participant.temporary_bonus_ap += effect["value"]
+	
+	# 6. 土地ボーナス（既存処理）
+	participant.land_bonus_hp = tile.level * 10
+	
+	# 7. アイテム効果（バトル準備フェーズで選択）
+	if selected_item:
+		participant.item_bonus_ap = selected_item.ap_bonus
+		participant.item_bonus_hp = selected_item.hp_bonus
+	
+	# 8. 感応効果（既存処理）
+	apply_resonance_skill(participant, context)
+	
+	# 9. その他の条件効果
+	# （土地保有数、隣接条件など）
+	
+	# 10. 強打を適用（最後）
+	if has_power_strike:
+		participant.current_ap *= 1.5
 ```
 
 ---
@@ -372,18 +372,18 @@ func prepare_battle_participant(creature_data, tile_data):
 ```gdscript
 # スペル効果の追加（上書き処理あり）
 func add_spell_effect(creature_data: Dictionary, effect: Dictionary):
-    var effects_array = "temporary_effects" if effect.get("lost_on_move", true) else "permanent_effects"
-    
-    # 同名効果を削除（上書き）
-    var new_effects = []
-    for existing_effect in creature_data.get(effects_array, []):
-        if existing_effect.get("source_name") != effect.get("source_name"):
-            new_effects.append(existing_effect)
-    
-    # 新しい効果を追加
-    effect["id"] = generate_unique_id()
-    new_effects.append(effect)
-    creature_data[effects_array] = new_effects
+	var effects_array = "temporary_effects" if effect.get("lost_on_move", true) else "permanent_effects"
+	
+	# 同名効果を削除（上書き）
+	var new_effects = []
+	for existing_effect in creature_data.get(effects_array, []):
+		if existing_effect.get("source_name") != effect.get("source_name"):
+			new_effects.append(existing_effect)
+	
+	# 新しい効果を追加
+	effect["id"] = generate_unique_id()
+	new_effects.append(effect)
+	creature_data[effects_array] = new_effects
 ```
 
 ### クリーチャー移動時の処理
@@ -391,11 +391,11 @@ func add_spell_effect(creature_data: Dictionary, effect: Dictionary):
 ```gdscript
 # 領地コマンドでのクリーチャー移動時
 func on_creature_move(tile_index: int):
-    var creature_data = tile.creature_data
-    if creature_data:
-        # temporary_effectsをクリア（移動で消える効果）
-        creature_data["temporary_effects"] = []
-        # permanent_effectsは維持
+	var creature_data = tile.creature_data
+	if creature_data:
+		# temporary_effectsをクリア（移動で消える効果）
+		creature_data["temporary_effects"] = []
+		# permanent_effectsは維持
 ```
 
 ---
@@ -513,12 +513,12 @@ func on_creature_move(tile_index: int):
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "ap",
-      "elements": ["fire", "earth"],
-      "multiplier": 10
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "ap",
+	  "elements": ["fire", "earth"],
+	  "multiplier": 10
+	}
   ]
 }
 ```
@@ -549,21 +549,21 @@ func on_creature_move(tile_index: int):
   "hp": 50,
   "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
   "ability_parsed": {
-    "keywords": ["無効化"],
-    "keyword_conditions": {
-      "無効化": {
-        "nullify_type": "scroll_attack"
-      }
-    },
-    "effects": [
-      {
-        "effect_type": "land_count_multiplier",
-        "stat": "ap",
-        "elements": ["fire", "earth"],
-        "multiplier": 10,
-        "description": "火と土の土地配置数×10をSTに加算"
-      }
-    ]
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "scroll_attack"
+	  }
+	},
+	"effects": [
+	  {
+		"effect_type": "land_count_multiplier",
+		"stat": "ap",
+		"elements": ["fire", "earth"],
+		"multiplier": 10,
+		"description": "火と土の土地配置数×10をSTに加算"
+	  }
+	]
   }
 }
 ```
@@ -581,16 +581,16 @@ func on_creature_move(tile_index: int):
   "name": "アーメット",
   "effect": "ST-10；HP+40",
   "ability_parsed": {
-    "effects": [
-      {
-        "effect_type": "debuff_ap",
-        "value": 10
-      },
-      {
-        "effect_type": "buff_hp",
-        "value": 40
-      }
-    ]
+	"effects": [
+	  {
+		"effect_type": "debuff_ap",
+		"value": 10
+	  },
+	  {
+		"effect_type": "buff_hp",
+		"value": 40
+	  }
+	]
   }
 }
 ```
@@ -609,13 +609,13 @@ func on_creature_move(tile_index: int):
 ```gdscript
 # ブレッシング（HP+10、移動で消える）
 battle_system.add_spell_effect_to_creature(tile_index, {
-    "type": "stat_bonus",
-    "stat": "hp",
-    "value": 10,
-    "source": "spell",
-    "source_name": "ブレッシング",
-    "removable": true,
-    "lost_on_move": true
+	"type": "stat_bonus",
+	"stat": "hp",
+	"value": 10,
+	"source": "spell",
+	"source_name": "ブレッシング",
+	"removable": true,
+	"lost_on_move": true
 })
 ```
 
@@ -699,12 +699,12 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
 ```json
 {
   "effects": [
-    {
-      "effect_type": "land_count_multiplier",
-      "stat": "ap",
-      "elements": ["fire", "earth"],
-      "multiplier": 10
-    }
+	{
+	  "effect_type": "land_count_multiplier",
+	  "stat": "ap",
+	  "elements": ["fire", "earth"],
+	  "multiplier": 10
+	}
   ]
 }
 ```
@@ -735,21 +735,21 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
   "hp": 50,
   "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
   "ability_parsed": {
-    "keywords": ["無効化"],
-    "keyword_conditions": {
-      "無効化": {
-        "nullify_type": "scroll_attack"
-      }
-    },
-    "effects": [
-      {
-        "effect_type": "land_count_multiplier",
-        "stat": "ap",
-        "elements": ["fire", "earth"],
-        "multiplier": 10,
-        "description": "火と土の土地配置数×10をSTに加算"
-      }
-    ]
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "scroll_attack"
+	  }
+	},
+	"effects": [
+	  {
+		"effect_type": "land_count_multiplier",
+		"stat": "ap",
+		"elements": ["fire", "earth"],
+		"multiplier": 10,
+		"description": "火と土の土地配置数×10をSTに加算"
+	  }
+	]
   }
 }
 ```
@@ -767,16 +767,16 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
   "name": "アーメット",
   "effect": "ST-10；HP+40",
   "ability_parsed": {
-    "effects": [
-      {
-        "effect_type": "debuff_ap",
-        "value": 10
-      },
-      {
-        "effect_type": "buff_hp",
-        "value": 40
-      }
-    ]
+	"effects": [
+	  {
+		"effect_type": "debuff_ap",
+		"value": 10
+	  },
+	  {
+		"effect_type": "buff_hp",
+		"value": 40
+	  }
+	]
   }
 }
 ```
@@ -795,13 +795,13 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
 ```gdscript
 # ブレッシング（HP+10、移動で消える）
 battle_system.add_spell_effect_to_creature(tile_index, {
-    "type": "stat_bonus",
-    "stat": "hp",
-    "value": 10,
-    "source": "spell",
-    "source_name": "ブレッシング",
-    "removable": true,
-    "lost_on_move": true
+	"type": "stat_bonus",
+	"stat": "hp",
+	"value": 10,
+	"source": "spell",
+	"source_name": "ブレッシング",
+	"removable": true,
+	"lost_on_move": true
 })
 ```
 
