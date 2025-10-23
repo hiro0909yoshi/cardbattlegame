@@ -34,10 +34,10 @@ docs/
 │   ├── battle_system_refactoring.md
 │   └── land_command_handler_refactoring.md
 └── issues/                # 課題・タスク管理
-    ├── issues.md          # 現在の課題（未対応・対応中のみ）
-    ├── resolved_issues.md # 解決済み課題のアーカイブ
-    ├── tasks.md           # タスク管理
-    └── TURN_END_QUICK_FIX.md  # ターン終了処理のクイックフィックス
+	├── issues.md          # 現在の課題（未対応・対応中のみ）
+	├── resolved_issues.md # 解決済み課題のアーカイブ
+	├── tasks.md           # タスク管理
+	└── TURN_END_QUICK_FIX.md  # ターン終了処理のクイックフィックス
 ```
 
 ---

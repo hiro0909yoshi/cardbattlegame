@@ -16,11 +16,11 @@
 
 - ✅ **「反射」スキル実装完了＆テスト成功**
   - **実装内容**:
-    - クリーチャー2体: デコイ（反射100%）、ナイトエラント（反射50%）
-    - アイテム4個: スパイクシールド（反射50%）、ミラーホブロン（条件付き反射100%）、ムラサメ（反射無効）、メイガスミラー（巻物反射100%）
-    - 反射率: 50%/100%対応
-    - 攻撃タイプ: 通常攻撃/巻物攻撃/全攻撃対応
-    - 条件付き反射: ミラーホブロン（敵アイテム未使用時のみ発動）
+	- クリーチャー2体: デコイ（反射100%）、ナイトエラント（反射50%）
+	- アイテム4個: スパイクシールド（反射50%）、ミラーホブロン（条件付き反射100%）、ムラサメ（反射無効）、メイガスミラー（巻物反射100%）
+	- 反射率: 50%/100%対応
+	- 攻撃タイプ: 通常攻撃/巻物攻撃/全攻撃対応
+	- 条件付き反射: ミラーホブロン（敵アイテム未使用時のみ発動）
   - **詳細**: `docs/design/skills_design.md`（7. 反射スキル）
 
 - ✅ **アイテムスキルシステム実装（初実装）**
@@ -28,15 +28,15 @@
   - `BattlePreparation`: アイテムデータを`creature_data["items"]`配列に追加
   - `BattleSkillProcessor`: アイテムの`effect_parsed`から戦闘スキルを読み取り
   - `effect_parsed`の二段階処理:
-    1. `stat_bonus`: バトル準備時（ST+20、HP+20）
-    2. `effects`: バトル中（reflect_damage、nullify_reflect）
+	1. `stat_bonus`: バトル準備時（ST+20、HP+20）
+	2. `effects`: バトル中（reflect_damage、nullify_reflect）
 
 - ✅ **実装時のバグ修正**
   - GDScript型システム: `_get_reflect_effect()`の戻り値型宣言を削除（nullを返せるように）
   - データ追加: `neutral_1.json`のデコイ、`fire_1.json`のナイトエラント、`item.json`の4アイテム
   - テストツール重要修正:
-    - `CardLoader.get_card_by_id()`がDictionary参照を返すため、`items`配列が蓄積していた問題を`duplicate(true)`で解決
-    - `execute_attack_sequence()`の引数不足を修正（skill_processor追加）
+	- `CardLoader.get_card_by_id()`がDictionary参照を返すため、`items`配列が蓄積していた問題を`duplicate(true)`で解決
+	- `execute_attack_sequence()`の引数不足を修正（skill_processor追加）
 
 - ✅ **ドキュメント更新**
   - `docs/design/skills_design.md`: 反射スキル仕様＋実装完了メモ追加
@@ -51,23 +51,23 @@
 
 - ✅ **援護スキル実装完了**
   - **実装内容**:
-    - 援護スキル保持者が手札のクリーチャーをアイテムのように使用可能
-    - 援護対象属性に応じてUIのグレーアウトを解除（`item_or_assist`フィルター）
-    - 援護クリーチャーのAP/HPのみ加算、スキルは継承しない
-    - 援護クリーチャーは使用後に消費される
+	- 援護スキル保持者が手札のクリーチャーをアイテムのように使用可能
+	- 援護対象属性に応じてUIのグレーアウトを解除（`item_or_assist`フィルター）
+	- 援護クリーチャーのAP/HPのみ加算、スキルは継承しない
+	- 援護クリーチャーは使用後に消費される
   - **変更ファイル**: 4ファイル
-    - `scripts/ui_components/hand_display.gd`: `item_or_assist`フィルター追加
-    - `scripts/ui_components/card_selection_ui.gd`: 援護対象の選択可能化
-    - `scripts/battle/battle_preparation.gd`: 援護効果の適用
-    - `scripts/game_flow/item_phase_handler.gd`: 既に実装済み
+	- `scripts/ui_components/hand_display.gd`: `item_or_assist`フィルター追加
+	- `scripts/ui_components/card_selection_ui.gd`: 援護対象の選択可能化
+	- `scripts/battle/battle_preparation.gd`: 援護効果の適用
+	- `scripts/game_flow/item_phase_handler.gd`: 既に実装済み
   - **対応クリーチャー**: 18体実装（JSONに定義済み）
-    - 全属性対応: 5体（ウッドフォーク、オドラデク、セージ、グランギア、スカイギア）
-    - 特定属性: 13体（シャラザード、バルキリーなど）
+	- 全属性対応: 5体（ウッドフォーク、オドラデク、セージ、グランギア、スカイギア）
+	- 特定属性: 13体（シャラザード、バルキリーなど）
   - **バグ修正**: 
-    - JSONパースエラー修正（neutral_1.json、fire_1.json）
-    - 変数重複宣言エラー修正（item_phase_handler.gd）
-    - battle_creature_dataのクリア処理追加
-    - TileActionProcessorでクリーチャーデータ渡し忘れ修正
+	- JSONパースエラー修正（neutral_1.json、fire_1.json）
+	- 変数重複宣言エラー修正（item_phase_handler.gd）
+	- battle_creature_dataのクリア処理追加
+	- TileActionProcessorでクリーチャーデータ渡し忘れ修正
   - **コスト計算修正**: 全カード使用コストを等倍に変更（10倍から修正）
 
 ### 今日の予定（残りタスク）

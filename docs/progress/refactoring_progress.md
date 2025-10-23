@@ -94,7 +94,7 @@
    class_name MyHelper
    
    static func do_something(handler, param):
-       handler.state = param
+	   handler.state = param
    ```
 
 2. **状態は一元管理**
@@ -105,7 +105,7 @@
    ```gdscript
    # メインファイルにラッパーを用意
    func do_something(param):
-       return MyHelper.do_something(self, param)
+	   return MyHelper.do_something(self, param)
    ```
 
 4. **段階的な分割**

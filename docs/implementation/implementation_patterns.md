@@ -34,8 +34,8 @@
   "type": "creature",
   "element": "fire|water|earth|wind|neutral",
   "cost": {
-    "mp": [コスト],
-    "lands_required": ["[属性]"]
+	"mp": [コスト],
+	"lands_required": ["[属性]"]
   },
   "ap": [攻撃力],
   "hp": [体力],
@@ -53,8 +53,8 @@
   "type": "creature",
   "element": "fire",
   "cost": {
-    "mp": 100,
-    "lands_required": ["fire"]
+	"mp": 100,
+	"lands_required": ["fire"]
   },
   "ap": 40,
   "hp": 40,
@@ -80,24 +80,24 @@
   "type": "creature",
   "element": "fire|water|earth|wind|neutral",
   "cost": {
-    "mp": [コスト],
-    "lands_required": ["[属性]"]
+	"mp": [コスト],
+	"lands_required": ["[属性]"]
   },
   "ap": [攻撃力],
   "hp": [体力],
   "ability": "感応",
   "ability_detail": "感応[[属性]・ST+[値]、HP+[値]]",
   "ability_parsed": {
-    "keywords": ["感応"],
-    "keyword_conditions": {
-      "感応": {
-        "element": "[属性]",
-        "stat_bonus": {
-          "ap": [APボーナス],
-          "hp": [HPボーナス]
-        }
-      }
-    }
+	"keywords": ["感応"],
+	"keyword_conditions": {
+	  "感応": {
+		"element": "[属性]",
+		"stat_bonus": {
+		  "ap": [APボーナス],
+		  "hp": [HPボーナス]
+		}
+	  }
+	}
   }
 }
 ```
@@ -111,24 +111,24 @@
   "type": "creature",
   "element": "fire",
   "cost": {
-    "mp": 80,
-    "lands_required": ["fire"]
+	"mp": 80,
+	"lands_required": ["fire"]
   },
   "ap": 30,
   "hp": 30,
   "ability": "感応",
   "ability_detail": "感応[地・ST&HP+20]",
   "ability_parsed": {
-    "keywords": ["感応"],
-    "keyword_conditions": {
-      "感応": {
-        "element": "earth",
-        "stat_bonus": {
-          "ap": 20,
-          "hp": 20
-        }
-      }
-    }
+	"keywords": ["感応"],
+	"keyword_conditions": {
+	  "感応": {
+		"element": "earth",
+		"stat_bonus": {
+		  "ap": 20,
+		  "hp": 20
+		}
+	  }
+	}
   }
 }
 ```
@@ -150,8 +150,8 @@
   "type": "creature",
   "element": "fire|water|earth|wind|neutral",
   "cost": {
-    "mp": [コスト],
-    "lands_required": ["[属性]"]
+	"mp": [コスト],
+	"lands_required": ["[属性]"]
   },
   "creature_type": "defensive",
   "ap": [攻撃力],
@@ -170,8 +170,8 @@
   "type": "creature",
   "element": "water",
   "cost": {
-    "mp": 50,
-    "lands_required": ["water"]
+	"mp": 50,
+	"lands_required": ["water"]
   },
   "creature_type": "defensive",
   "ap": 0,
@@ -199,22 +199,22 @@
   "type": "creature",
   "element": "fire|water|earth|wind|neutral",
   "cost": {
-    "mp": [コスト],
-    "lands_required": ["[属性]"]
+	"mp": [コスト],
+	"lands_required": ["[属性]"]
   },
   "ap": [攻撃力],
   "hp": [体力],
   "ability": "先制・強打",
   "ability_detail": "先制；強打",
   "ability_parsed": {
-    "keywords": ["先制", "強打"],
-    "effects": [
-      {
-        "effect_type": "power_strike",
-        "multiplier": 1.5,
-        "conditions": []
-      }
-    ]
+	"keywords": ["先制", "強打"],
+	"effects": [
+	  {
+		"effect_type": "power_strike",
+		"multiplier": 1.5,
+		"conditions": []
+	  }
+	]
   }
 }
 ```
@@ -235,12 +235,12 @@
   "ability": "[スキル名]",
   "ability_detail": "[詳細説明]",
   "ability_parsed": {
-    "keywords": ["[スキル名]"],
-    "keyword_conditions": {
-      "[スキル名]": {
-        // スキル固有のパラメータ
-      }
-    }
+	"keywords": ["[スキル名]"],
+	"keyword_conditions": {
+	  "[スキル名]": {
+		// スキル固有のパラメータ
+	  }
+	}
   }
 }
 ```
@@ -252,29 +252,29 @@
 ```gdscript
 # スキル適用関数に追加
 func apply_[スキル名]_skill(participant: BattleParticipant, context: Dictionary) -> void:
-    var ability_parsed = participant.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    if not "[スキル名]" in keywords:
-        return
-    
-    var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-    var skill_condition = keyword_conditions.get("[スキル名]", {})
-    
-    # スキル固有の処理
-    # ...
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if not "[スキル名]" in keywords:
+		return
+	
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var skill_condition = keyword_conditions.get("[スキル名]", {})
+	
+	# スキル固有の処理
+	# ...
 ```
 
 #### 3. apply_pre_battle_skills()から呼び出し
 ```gdscript
 func apply_pre_battle_skills(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> void:
-    # 既存のスキル適用
-    apply_resonance_skill(attacker, context)
-    apply_resonance_skill(defender, context)
-    
-    # 新しいスキルを追加
-    apply_[スキル名]_skill(attacker, context)
-    apply_[スキル名]_skill(defender, context)
+	# 既存のスキル適用
+	apply_resonance_skill(attacker, context)
+	apply_resonance_skill(defender, context)
+	
+	# 新しいスキルを追加
+	apply_[スキル名]_skill(attacker, context)
+	apply_[スキル名]_skill(defender, context)
 ```
 
 ---
@@ -289,19 +289,19 @@ func apply_pre_battle_skills(attacker: BattleParticipant, defender: BattlePartic
 ```json
 {
   "ability_parsed": {
-    "keywords": ["[スキル名]"],
-    "effects": [
-      {
-        "effect_type": "[effect_type]",
-        "multiplier": 1.5,
-        "conditions": [
-          {
-            "condition_type": "[条件タイプ]",
-            "value": [閾値]
-          }
-        ]
-      }
-    ]
+	"keywords": ["[スキル名]"],
+	"effects": [
+	  {
+		"effect_type": "[effect_type]",
+		"multiplier": 1.5,
+		"conditions": [
+		  {
+			"condition_type": "[条件タイプ]",
+			"value": [閾値]
+		  }
+		]
+	  }
+	]
   }
 }
 ```
@@ -312,21 +312,21 @@ func apply_pre_battle_skills(attacker: BattleParticipant, defender: BattlePartic
 
 ```gdscript
 func _check_[条件タイプ]_condition(condition: Dictionary, context: Dictionary) -> bool:
-    var value = condition.get("value", 0)
-    # 条件判定ロジック
-    return [判定結果]
+	var value = condition.get("value", 0)
+	# 条件判定ロジック
+	return [判定結果]
 ```
 
 #### 3. evaluate_conditions()に追加
 ```gdscript
 func evaluate_conditions(conditions: Array, context: Dictionary) -> bool:
-    for condition in conditions:
-        var condition_type = condition.get("condition_type", "")
-        
-        match condition_type:
-            "[条件タイプ]":
-                if not _check_[条件タイプ]_condition(condition, context):
-                    return false
+	for condition in conditions:
+		var condition_type = condition.get("condition_type", "")
+		
+		match condition_type:
+			"[条件タイプ]":
+				if not _check_[条件タイプ]_condition(condition, context):
+					return false
 ```
 
 ---
@@ -343,25 +343,25 @@ func evaluate_conditions(conditions: Array, context: Dictionary) -> bool:
   "ability": "応援",
   "ability_detail": "応援[[条件]・[効果]]",
   "ability_parsed": {
-    "keywords": ["応援"],
-    "effects": [
-      {
-        "effect_type": "support",
-        "target": {
-          "scope": "all_creatures",
-          "conditions": [
-            {
-              "condition_type": "[条件タイプ]",
-              "[パラメータ]": "[値]"
-            }
-          ]
-        },
-        "bonus": {
-          "ap": [APボーナス],
-          "hp": [HPボーナス]
-        }
-      }
-    ]
+	"keywords": ["応援"],
+	"effects": [
+	  {
+		"effect_type": "support",
+		"target": {
+		  "scope": "all_creatures",
+		  "conditions": [
+			{
+			  "condition_type": "[条件タイプ]",
+			  "[パラメータ]": "[値]"
+			}
+		  ]
+		},
+		"bonus": {
+		  "ap": [APボーナス],
+		  "hp": [HPボーナス]
+		}
+	  }
+	]
   }
 }
 ```
@@ -373,24 +373,24 @@ func evaluate_conditions(conditions: Array, context: Dictionary) -> bool:
 ```gdscript
 # _check_support_condition()に条件タイプを追加
 func _check_support_condition(
-    participant: BattleParticipant,
-    condition: Dictionary,
-    context: Dictionary
+	participant: BattleParticipant,
+	condition: Dictionary,
+	context: Dictionary
 ) -> bool:
-    var condition_type = condition.get("condition_type", "")
-    
-    match condition_type:
-        "[条件タイプ]":
-            # 条件判定ロジック
-            return [判定結果]
+	var condition_type = condition.get("condition_type", "")
+	
+	match condition_type:
+		"[条件タイプ]":
+			# 条件判定ロジック
+			return [判定結果]
 ```
 
 **例**: 名前部分一致の条件
 ```gdscript
 "name_contains":
-    var name_pattern = condition.get("name_pattern", "")
-    var creature_name = participant.creature_data.get("name", "")
-    return creature_name.contains(name_pattern)
+	var name_pattern = condition.get("name_pattern", "")
+	var creature_name = participant.creature_data.get("name", "")
+	return creature_name.contains(name_pattern)
 ```
 
 ---
@@ -413,7 +413,7 @@ func _check_support_condition(
    python3 << 'EOF'
    import json
    with open('data/fire_1.json', 'r', encoding='utf-8') as f:
-       data = json.load(f)
+	   data = json.load(f)
    cards = data.get("cards", [])
    max_id = max(c.get("id", 0) for c in cards)
    print(f"最大ID: {max_id}")
@@ -428,7 +428,7 @@ func _check_support_condition(
    python3 << 'EOF'
    import json
    with open('data/fire_1.json', 'r', encoding='utf-8') as f:
-       data = json.load(f)
+	   data = json.load(f)
    print("✅ JSONは正常です")
    EOF
    ```
@@ -498,10 +498,10 @@ serena:replace_regex(
 2. serena:replace_regexで一括置換
    ```gdscript
    serena:replace_regex(
-     regex: 'get_tile_data',
-     repl: 'get_tile_info',
-     relative_path: 'scripts/...',
-     allow_multiple_occurrences: true
+	 regex: 'get_tile_data',
+	 repl: 'get_tile_info',
+	 relative_path: 'scripts/...',
+	 allow_multiple_occurrences: true
    )
    ```
 
@@ -521,10 +521,10 @@ serena:replace_regex(
    
    # 修正後
    if object and is_instance_valid(object):
-       var result = object.method()
+	   var result = object.method()
    else:
-       print("[ERROR] object is null")
-       return
+	   print("[ERROR] object is null")
+	   return
    ```
 
 ---
@@ -543,10 +543,10 @@ serena:replace_regex(
    
    # 修正後
    if index >= 0 and index < array.size():
-       var item = array[index]
+	   var item = array[index]
    else:
-       print("[ERROR] Index out of bounds: ", index, " (size: ", array.size(), ")")
-       return
+	   print("[ERROR] Index out of bounds: ", index, " (size: ", array.size(), ")")
+	   return
    ```
 
 ---
@@ -659,24 +659,24 @@ serena:replace_regex(
   "type": "item",
   "item_type": "防具",
   "cost": {
-    "mp": 40
+	"mp": 40
   },
   "effect": "反射[1/2]",
   "effect_parsed": {
-    "keywords": ["反射[1/2]"],
-    "stat_bonus": {
-      "st": 0,
-      "hp": 0
-    },
-    "effects": [
-      {
-        "effect_type": "reflect_damage",
-        "reflect_ratio": 0.5,
-        "self_damage_ratio": 0.5,
-        "attack_types": ["normal"],
-        "triggers": ["on_damaged"]
-      }
-    ]
+	"keywords": ["反射[1/2]"],
+	"stat_bonus": {
+	  "st": 0,
+	  "hp": 0
+	},
+	"effects": [
+	  {
+		"effect_type": "reflect_damage",
+		"reflect_ratio": 0.5,
+		"self_damage_ratio": 0.5,
+		"attack_types": ["normal"],
+		"triggers": ["on_damaged"]
+	  }
+	]
   }
 }
 ```
@@ -688,33 +688,33 @@ serena:replace_regex(
 ```gdscript
 # アイテム効果を適用
 if not attacker_item.is_empty():
-    # アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
-    if not attacker.creature_data.has("items"):
-        attacker.creature_data["items"] = []
-    attacker.creature_data["items"].append(attacker_item)
-    apply_item_effects(attacker, attacker_item)
+	# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
+	if not attacker.creature_data.has("items"):
+		attacker.creature_data["items"] = []
+	attacker.creature_data["items"].append(attacker_item)
+	apply_item_effects(attacker, attacker_item)
 ```
 
 #### 3. BattleSkillProcessorでアイテムのeffect_parsedを読み取る
 
 ```gdscript
 func _get_reflect_effect(defender_p: BattleParticipant, attack_type: String):
-    # クリーチャー自身のスキルをチェック
-    var ability_parsed = defender_p.creature_data.get("ability_parsed", {})
-    # ... クリーチャースキルをチェック ...
-    
-    # アイテムをチェック
-    var items = defender_p.creature_data.get("items", [])
-    for item in items:
-        var effect_parsed = item.get("effect_parsed", {})  # ← effect_parsed!
-        var item_effects = effect_parsed.get("effects", [])
-        for effect in item_effects:
-            if effect.get("effect_type") == "reflect_damage":
-                var attack_types = effect.get("attack_types", [])
-                if attack_type in attack_types:
-                    return effect
-    
-    return null
+	# クリーチャー自身のスキルをチェック
+	var ability_parsed = defender_p.creature_data.get("ability_parsed", {})
+	# ... クリーチャースキルをチェック ...
+	
+	# アイテムをチェック
+	var items = defender_p.creature_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})  # ← effect_parsed!
+		var item_effects = effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "reflect_damage":
+				var attack_types = effect.get("attack_types", [])
+				if attack_type in attack_types:
+					return effect
+	
+	return null
 ```
 
 #### 4. apply_item_effectsでstat_bonusとeffectsを処理
@@ -723,34 +723,34 @@ func _get_reflect_effect(defender_p: BattleParticipant, attack_type: String):
 
 ```gdscript
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
-    var effect_parsed = item_data.get("effect_parsed", {})
-    
-    # stat_bonusを先に適用（ST+20、HP+20など）
-    var stat_bonus = effect_parsed.get("stat_bonus", {})
-    if not stat_bonus.is_empty():
-        var st = stat_bonus.get("st", 0)
-        var hp = stat_bonus.get("hp", 0)
-        
-        if st > 0:
-            participant.current_ap += st
-        if hp > 0:
-            participant.item_bonus_hp += hp
-            participant.update_current_hp()
-    
-    # effectsを処理
-    var effects = effect_parsed.get("effects", [])
-    for effect in effects:
-        var effect_type = effect.get("effect_type", "")
-        
-        match effect_type:
-            "reflect_damage", "nullify_reflect":
-                # バトル中スキルはBattleExecutionで処理するためスキップ
-                pass
-            
-            "buff_ap":
-                participant.current_ap += effect.get("value", 0)
-            
-            # ... 他のeffect_type ...
+	var effect_parsed = item_data.get("effect_parsed", {})
+	
+	# stat_bonusを先に適用（ST+20、HP+20など）
+	var stat_bonus = effect_parsed.get("stat_bonus", {})
+	if not stat_bonus.is_empty():
+		var st = stat_bonus.get("st", 0)
+		var hp = stat_bonus.get("hp", 0)
+		
+		if st > 0:
+			participant.current_ap += st
+		if hp > 0:
+			participant.item_bonus_hp += hp
+			participant.update_current_hp()
+	
+	# effectsを処理
+	var effects = effect_parsed.get("effects", [])
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		
+		match effect_type:
+			"reflect_damage", "nullify_reflect":
+				# バトル中スキルはBattleExecutionで処理するためスキップ
+				pass
+			
+			"buff_ap":
+				participant.current_ap += effect.get("value", 0)
+			
+			# ... 他のeffect_type ...
 ```
 
 **重要ポイント**:
