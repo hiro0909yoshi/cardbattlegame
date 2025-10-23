@@ -93,9 +93,9 @@ static func _execute_single_battle(
 	
 	var start_time = Time.get_ticks_msec()
 	
-	# カードデータ取得
-	var att_card_data = CardLoader.get_card_by_id(att_creature_id)
-	var def_card_data = CardLoader.get_card_by_id(def_creature_id)
+	# カードデータ取得（duplicate()で複製してitemsのリセット問題を回避）
+	var att_card_data = CardLoader.get_card_by_id(att_creature_id).duplicate(true)
+	var def_card_data = CardLoader.get_card_by_id(def_creature_id).duplicate(true)
 	
 	if not att_card_data or not def_card_data:
 		push_error("カードデータ取得失敗")
@@ -178,7 +178,7 @@ static func _execute_single_battle(
 	battle_system.battle_skill_processor.apply_pre_battle_skills(participants, tile_info, 0)
 	
 	# 攻撃シーケンス実行
-	battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects)
+	battle_system.battle_execution.execute_attack_sequence(attack_order, tile_info, battle_system.battle_special_effects, battle_system.battle_skill_processor)
 	
 	# 結果判定
 	var battle_result = battle_system.battle_execution.resolve_battle_result(attacker, defender)
@@ -274,6 +274,11 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 	if participant.creature_data.has("ability_parsed"):
 		var keywords = participant.creature_data.ability_parsed.get("keywords", [])
 		had_power_strike_before = "強打" in keywords
+	
+	# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
+	if not participant.creature_data.has("items"):
+		participant.creature_data["items"] = []
+	participant.creature_data["items"].append(item_data)
 	
 	# BattleSystemのアイテム効果適用を使用
 	battle_system.battle_preparation.apply_item_effects(participant, item_data)

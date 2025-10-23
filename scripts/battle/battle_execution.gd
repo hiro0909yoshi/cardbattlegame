@@ -158,9 +158,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 反射スキルチェック
 			var attack_type = "scroll" if attacker_p.is_using_scroll else "normal"
-			print("  【反射チェック開始】攻撃タイプ:", attack_type, " 元ダメージ:", attacker_p.current_ap)
 			var reflect_result = skill_processor.check_reflect_damage(attacker_p, defender_p, attacker_p.current_ap, attack_type)
-			print("  【反射チェック結果】has_reflect:", reflect_result["has_reflect"], " reflect_damage:", reflect_result["reflect_damage"], " self_damage:", reflect_result["self_damage"])
 			
 			# 反射がある場合、ダメージを調整
 			var actual_damage = reflect_result["self_damage"] if reflect_result["has_reflect"] else attacker_p.current_ap
