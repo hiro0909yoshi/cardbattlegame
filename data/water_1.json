@@ -95,8 +95,11 @@
 	  "ability_detail": "援護[水]；防具使用時、無効化[通常攻撃]；HP効果無効"
 ,
   "ability_parsed": {
-	"keywords": ["無効化"],
+	"keywords": ["援護", "無効化"],
 	"keyword_conditions": {
+	  "援護": {
+		"target_elements": ["water"]
+	  },
 	  "無効化": {
 		"nullify_type": "normal_attack",
 		"conditions": [
@@ -447,7 +450,17 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "アイテム破壊",
-	  "ability_detail": "アイテム破壊[道具か巻物か援護クリーチャー]"
+	  "ability_detail": "アイテム破壊[道具か巻物か援護クリーチャー]",
+	  "ability_parsed": {
+		"keywords": ["アイテム破壊"],
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": ["道具", "巻物", "援護クリーチャー"],
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 117,

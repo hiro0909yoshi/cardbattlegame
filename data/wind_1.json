@@ -18,9 +18,12 @@
 	  "ability": "援護・先制・防魔",
 	  "ability_detail": "援護[水風]；先制；防魔",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
+		"keywords": ["援護", "先制"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["water", "wind"]
+		  }
+		},
 		"effects": []
 	  }
 	},
@@ -328,7 +331,17 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "アイテム破壊",
-	  "ability_detail": "アイテム破壊[道具]"
+	  "ability_detail": "アイテム破壊[道具]",
+	  "ability_parsed": {
+		"keywords": ["アイテム破壊"],
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": ["道具"],
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 314,

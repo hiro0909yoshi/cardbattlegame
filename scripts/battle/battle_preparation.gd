@@ -125,10 +125,29 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 			  " temporary_bonus_hp:", participant.temporary_bonus_hp, 
 			  " temporary_bonus_ap:", participant.temporary_bonus_ap)
 
-## アイテム効果を適用
+## アイテムまたは援護クリーチャーの効果を適用
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
-	print("[アイテム効果適用] ", item_data.get("name", "???"))
+	var item_type = item_data.get("type", "")
+	print("[アイテム効果適用] ", item_data.get("name", "???"), " (type: ", item_type, ")")
 	
+	# 援護クリーチャーの場合はAP/HPのみ加算
+	if item_type == "creature":
+		var creature_ap = item_data.get("ap", 0)
+		var creature_hp = item_data.get("hp", 0)
+		
+		if creature_ap > 0:
+			participant.current_ap += creature_ap
+			print("  [援護] AP+", creature_ap, " → ", participant.current_ap)
+		
+		if creature_hp > 0:
+			participant.item_bonus_hp += creature_hp
+			participant.update_current_hp()
+			print("  [援護] HP+", creature_hp, " → ", participant.current_hp)
+		
+		# 援護クリーチャーのスキルは継承されないのでここで終了
+		return
+	
+	# 以下はアイテムカードの処理
 	# effect_parsedから効果を取得（アイテムはeffect_parsedを使用）
 	var effect_parsed = item_data.get("effect_parsed", {})
 	if effect_parsed.is_empty():

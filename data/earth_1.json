@@ -58,7 +58,15 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "援護",
-	  "ability_detail": "援護"
+	  "ability_detail": "援護",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["all"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 203,
@@ -72,7 +80,15 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "援護・HP効果無効",
-	  "ability_detail": "援護；HP効果無効"
+	  "ability_detail": "援護；HP効果無効",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["all"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 204,
@@ -198,25 +214,6 @@
 	},
 	{
 	  "id": 210,
-	  "name": "グレムリン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"mp": 60
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "water"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "アイテム破壊",
-	  "ability_detail": "アイテム破壊[道具]"
-	},
-	{
-	  "id": 211,
 	  "name": "グリーンオーガ",
 	  "rarity": "N",
 	  "type": "creature",
@@ -230,7 +227,7 @@
 	  "ability_detail": ""
 	},
 	{
-	  "id": 212,
+	  "id": 211,
 	  "name": "グリマルキン",
 	  "rarity": "N",
 	  "type": "creature",
@@ -244,10 +241,18 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "援護・防魔",
-	  "ability_detail": "援護[火地]；防魔"
+	  "ability_detail": "援護[火地]；防魔",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["fire", "earth"]
+		  }
+		}
+	  }
 	},
 	{
-	  "id": 213,
+	  "id": 212,
 	  "name": "グレートタスカー",
 	  "rarity": "N",
 	  "type": "creature",
@@ -279,7 +284,7 @@
 	  }
 	},
 	{
-	  "id": 214,
+	  "id": 213,
 	  "name": "グロウホーン",
 	  "rarity": "N",
 	  "type": "creature",
@@ -315,7 +320,7 @@
 	  }
 	},
 	{
-	  "id": 215,
+	  "id": 214,
 	  "name": "コアトリクエ",
 	  "rarity": "S",
 	  "type": "creature",
@@ -332,7 +337,7 @@
 	  "ability_detail": "ブックが相手より多い場合、ST&HP+20；秘術[G50・対象ブックの上1枚を破壊]"
 	},
 	{
-	  "id": 216,
+	  "id": 215,
 	  "name": "コカトリス",
 	  "rarity": "S",
 	  "type": "creature",
@@ -354,7 +359,7 @@
 	  "ability_detail": "強制変化[ストーンウォール]"
 	},
 	{
-	  "id": 217,
+	  "id": 216,
 	  "name": "サクヤ",
 	  "rarity": "N",
 	  "type": "creature",
@@ -376,7 +381,7 @@
 	  "ability_detail": "秘術[G120・対象自領地を地に変える]"
 	},
 	{
-	  "id": 218,
+	  "id": 217,
 	  "name": "ジャッカロープ",
 	  "rarity": "S",
 	  "type": "creature",
@@ -387,10 +392,18 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "援護・変身",
-	  "ability_detail": "援護[火地]；スペル破壊時、グレートタスカーに変身"
+	  "ability_detail": "援護[火地]；スペル破壊時、グレートタスカーに変身",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["fire", "earth"]
+		  }
+		}
+	  }
 	},
 	{
-	  "id": 219,
+	  "id": 218,
 	  "name": "ジャングラバー",
 	  "rarity": "S",
 	  "type": "creature",
@@ -409,7 +422,7 @@
 	  "ability_detail": "防魔；秘術[G30・対象敵クリーチャーに♡\"移動不可\"]"
 	},
 	{
-	  "id": 220,
+	  "id": 219,
 	  "name": "シルバンダッチェス",
 	  "rarity": "N",
 	  "type": "creature",
@@ -426,13 +439,23 @@
 	  "ability": "援護・アイテム破壊・再生",
 	  "ability_detail": "援護[地]；アイテム破壊[道具か巻物か援護クリーチャー]；再生",
 	  "ability_parsed": {
-		"keywords": [
-		  "再生"
+		"keywords": ["援護", "アイテム破壊", "再生"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["earth"]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": ["道具", "巻物", "援護クリーチャー"],
+			"triggers": ["before_battle"]
+		  }
 		]
 	  }
 	},
 	{
-	  "id": 221,
+	  "id": 220,
 	  "name": "スクリーマー",
 	  "rarity": "S",
 	  "type": "creature",
@@ -455,7 +478,7 @@
 	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに♡\"地形効果無効\"]"
 	},
 	{
-	  "id": 222,
+	  "id": 221,
 	  "name": "スクリリン",
 	  "rarity": "N",
 	  "type": "creature",
@@ -474,7 +497,7 @@
 	  "ability_detail": "援護"
 	},
 	{
-	  "id": 223,
+	  "id": 222,
 	  "name": "ストーンウォール",
 	  "rarity": "N",
 	  "type": "creature",
@@ -497,7 +520,7 @@
 	  "ability_detail": "防御型"
 	},
 	{
-	  "id": 224,
+	  "id": 223,
 	  "name": "スピットコブラ",
 	  "rarity": "N",
 	  "type": "creature",
@@ -516,7 +539,7 @@
 	  "ability_detail": "秘術[G30・対象敵領地に♡\"襲撃\"]"
 	},
 	{
-	  "id": 225,
+	  "id": 224,
 	  "name": "スプラウトリング",
 	  "rarity": "N",
 	  "type": "creature",

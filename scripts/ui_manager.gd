@@ -40,7 +40,8 @@ var game_flow_manager_ref = null  # GameFlowManagerの参照
 var debug_mode = false
 
 # スペルフェーズ用のフィルター設定
-var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能
+var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能、"item"の時はアイテムのみ、"item_or_assist"の時はアイテム+援護対象クリーチャー
+var assist_target_elements: Array = []  # 援護対象の属性リスト
 
 # 手札UI管理（HandDisplayに移行済み）
 # 以下の変数は削除予定

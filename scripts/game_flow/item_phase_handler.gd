@@ -19,6 +19,7 @@ var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_item_card: Dictionary = {}
 var item_used_this_battle: bool = false  # 1バトル1回制限
+var battle_creature_data: Dictionary = {}  # バトル参加クリーチャーのデータ（援護判定用）
 
 ## 参照
 var ui_manager = null
@@ -39,65 +40,101 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	battle_system = b_system if b_system else (flow_mgr.battle_system if flow_mgr else null)
 
 ## アイテムフェーズ開始
-func start_item_phase(player_id: int):
+func start_item_phase(player_id: int, creature_data: Dictionary = {}):
 	if current_state != State.INACTIVE:
-		print("[ItemPhaseHandler] 既にアクティブです")
 		return
 	
 	current_state = State.WAITING_FOR_SELECTION
 	current_player_id = player_id
 	item_used_this_battle = false
 	selected_item_card = {}
+	battle_creature_data = creature_data
 	
 	item_phase_started.emit()
 	
-	print("[ItemPhaseHandler] アイテムフェーズ開始: プレイヤー ", player_id + 1)
+
 	
 	# CPUの場合は簡易AI（現在は実装しない）
 	if is_cpu_player(player_id):
-		print("[ItemPhaseHandler] CPU: アイテムをパス")
+
 		pass_item()
 		return
 	
 	# 人間プレイヤーの場合はUI表示
 	await _show_item_selection_ui()
 
+## 援護スキルを持っているかチェック
+func has_assist_skill() -> bool:
+	if battle_creature_data.is_empty():
+		return false
+	
+	var ability_parsed = battle_creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	return "援護" in keywords
+
+## 援護対象の属性を取得
+func get_assist_target_elements() -> Array:
+	if not has_assist_skill():
+		return []
+	
+	var ability_parsed = battle_creature_data.get("ability_parsed", {})
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var assist_condition = keyword_conditions.get("援護", {})
+	return assist_condition.get("target_elements", [])
+
 ## アイテム選択UIを表示
 func _show_item_selection_ui():
 	if not ui_manager or not card_system or not player_system:
-		print("[ItemPhaseHandler] 必要なシステムが初期化されていません")
 		complete_item_phase()
 		return
 	
 	# current_player_idを使用（防御側のアイテムフェーズでは防御側のプレイヤー情報が必要）
 	if current_player_id < 0 or current_player_id >= player_system.players.size():
-		print("[ItemPhaseHandler] 不正なプレイヤーID: ", current_player_id)
 		complete_item_phase()
 		return
 	
 	var current_player = player_system.players[current_player_id]
 	if not current_player:
-		print("[ItemPhaseHandler] プレイヤー情報が取得できません")
 		complete_item_phase()
 		return
 	
 	# 手札を取得
 	var hand_data = card_system.get_all_cards_for_player(current_player_id)
 	
-	# アイテムカードのみフィルター
-	var item_cards = []
-	for card in hand_data:
-		if card.get("type", "") == "item":
-			item_cards.append(card)
+	# アイテムカードと援護対象クリーチャーカードを収集
+	var selectable_cards = []
+	var has_assist = has_assist_skill()
+	var assist_elements = get_assist_target_elements()
 	
-	if item_cards.is_empty():
-		print("[ItemPhaseHandler] 手札にアイテムカードがありません")
+	for card in hand_data:
+		var card_type = card.get("type", "")
+		
+		# アイテムカードは常に選択可能
+		if card_type == "item":
+			selectable_cards.append(card)
+		# 援護スキルがある場合、対象クリーチャーも選択可能
+		elif card_type == "creature" and has_assist:
+			var card_element = card.get("element", "")
+			# 全属性対象の場合
+			if "all" in assist_elements:
+				selectable_cards.append(card)
+			# 特定属性のみ対象
+			elif card_element in assist_elements:
+				selectable_cards.append(card)
+	
+	if selectable_cards.is_empty():
 		complete_item_phase()
 		return
 	
-	# アイテムカードのフィルター設定（手札表示を更新する前に設定）
+	# フィルター設定（アイテム + 援護対象クリーチャー）
 	if ui_manager:
-		ui_manager.card_selection_filter = "item"
+		if has_assist:
+			# 援護スキルがある場合は特別なフィルターモード
+			ui_manager.card_selection_filter = "item_or_assist"
+			# 援護対象属性を保存（UI側で使用）
+			ui_manager.assist_target_elements = assist_elements
+		else:
+			ui_manager.card_selection_filter = "item"
 	
 	# 手札表示を更新（防御側のアイテムフェーズでは防御側の手札を表示）
 	if ui_manager and ui_manager.hand_display:
@@ -109,36 +146,48 @@ func _show_item_selection_ui():
 	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "item")
 
-## アイテムを使用
+## アイテムまたは援護クリーチャーを使用
 func use_item(item_card: Dictionary):
 	if current_state != State.WAITING_FOR_SELECTION:
-		print("[ItemPhaseHandler] アイテム使用できる状態ではありません")
 		return
 	
 	if item_used_this_battle:
-		print("[ItemPhaseHandler] このバトル既にアイテムを使用しています")
 		return
 	
+	# カードタイプを判定
+	var card_type = item_card.get("type", "")
+	
+	# 援護クリーチャーの場合の追加チェック
+	if card_type == "creature":
+		if not has_assist_skill():
+			return
+		
+		var card_element = item_card.get("element", "")
+		var assist_elements = get_assist_target_elements()
+		
+		# 属性チェック
+		if not ("all" in assist_elements or card_element in assist_elements):
+			return
+	
 	# コストチェック
-	if not _can_afford_item(item_card):
-		print("[ItemPhaseHandler] 魔力が不足しています")
+	if not _can_afford_card(item_card):
 		return
 	
 	selected_item_card = item_card
 	item_used_this_battle = true
 	current_state = State.ITEM_APPLIED
 	
-	# コストを支払う
+	# コストを支払う（アイテムカードのコストはmp値そのまま = 等倍）
 	var cost_data = item_card.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("mp", 0)  # アイテムはmp値をそのまま使用（等倍）
 	else:
 		cost = cost_data
 	
 	if player_system:
-		player_system.add_magic(current_player_id, -cost * 10)  # mp * 10G
-		print("[ItemPhaseHandler] 魔力消費: %dG" % (cost * 10))
+		player_system.add_magic(current_player_id, -cost)
+	
 	
 	# アイテムをカード使用（捨て札に）
 	if card_system:
@@ -148,10 +197,10 @@ func use_item(item_card: Dictionary):
 				card_system.discard_card(current_player_id, i, "use")
 				break
 	
-	# アイテム使用シグナル
+	# カード使用シグナル
 	item_used.emit(item_card)
 	
-	print("[ItemPhaseHandler] アイテム使用: %s" % item_card.get("name", "???"))
+
 	
 	# フェーズ完了
 	complete_item_phase()
@@ -161,7 +210,7 @@ func pass_item():
 	if current_state != State.WAITING_FOR_SELECTION:
 		return
 	
-	print("[ItemPhaseHandler] アイテムをパス")
+
 	item_passed.emit()
 	complete_item_phase()
 
@@ -172,9 +221,13 @@ func complete_item_phase():
 	
 	current_state = State.INACTIVE
 	
+	# バトルクリーチャーデータをクリア（次のバトルに引き継がないため）
+	battle_creature_data = {}
+	
 	# フィルターをクリア
 	if ui_manager:
 		ui_manager.card_selection_filter = ""
+		ui_manager.assist_target_elements = []  # 援護対象属性もクリア
 		# 手札表示を更新してグレーアウトを解除
 		if ui_manager.hand_display and player_system:
 			var current_player = player_system.get_current_player()
@@ -183,10 +236,10 @@ func complete_item_phase():
 	
 	item_phase_completed.emit()
 	
-	print("[ItemPhaseHandler] アイテムフェーズ完了")
 
-## アイテムが使用可能か（コスト的に）
-func _can_afford_item(item_card: Dictionary) -> bool:
+
+## カードが使用可能か（コスト的に）
+func _can_afford_card(card_data: Dictionary) -> bool:
 	if not player_system:
 		return false
 	
@@ -194,14 +247,14 @@ func _can_afford_item(item_card: Dictionary) -> bool:
 	if not current_player:
 		return false
 	
-	var cost_data = item_card.get("cost", {})
+	var cost_data = card_data.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("mp", 0)  # アイテムはmp値をそのまま使用（等倍）
 	else:
 		cost = cost_data
 	
-	return current_player.magic_power >= cost * 10
+	return current_player.magic_power >= cost
 
 ## 選択されたアイテムを取得
 func get_selected_item() -> Dictionary:

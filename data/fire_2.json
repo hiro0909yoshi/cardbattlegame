@@ -239,11 +239,14 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "援護・先制・敵破壊時ST+10",
-	  "ability_detail": "援護[風火]；先制；敵破壊時、ST+10",
+	  "ability_detail": "援護[無火地]；先制；敵破壊時、ST+10",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
+		"keywords": ["援護", "先制"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["neutral", "fire", "earth"]
+		  }
+		},
 		"effects": []
 	  }
 	},

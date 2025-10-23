@@ -105,6 +105,7 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	var card_type = card_data.get("type", "")
 	var is_spell_card = card_type == "spell"
 	var is_item_card = card_type == "item"
+	var is_creature_card = card_type == "creature"
 	
 
 	# フィルターモードに応じてグレーアウト
@@ -115,6 +116,26 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	elif filter_mode == "item":
 		# アイテムフェーズ中: アイテムカード以外をグレーアウト
 		if not is_item_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	elif filter_mode == "item_or_assist":
+		# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト
+		var should_gray_out = true
+		
+		# アイテムカードは常に選択可能
+		if is_item_card:
+			should_gray_out = false
+		# クリーチャーカードの場合、援護対象かチェック
+		elif is_creature_card:
+			var assist_elements = []
+			if ui_manager and "assist_target_elements" in ui_manager:
+				assist_elements = ui_manager.assist_target_elements
+			
+			var card_element = card_data.get("element", "")
+			# 全属性対象、または属性が一致する場合
+			if "all" in assist_elements or card_element in assist_elements:
+				should_gray_out = false
+		
+		if should_gray_out:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 	elif filter_mode == "battle":
 		# バトルフェーズ中: 防御型クリーチャーをグレーアウト

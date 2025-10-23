@@ -273,12 +273,23 @@ func on_card_selected(card_index: int):
 	
 	# アイテムフェーズ中かチェック
 	if item_phase_handler and item_phase_handler.is_item_phase_active():
-		# アイテムカードのみ使用可能
+		# アイテムカードまたは援護対象クリーチャーが使用可能
 		if card_type == "item":
 			item_phase_handler.use_item(card)
 			return
+		elif card_type == "creature":
+			# 援護スキルがある場合のみクリーチャーを使用可能
+			if item_phase_handler.has_assist_skill():
+				var assist_elements = item_phase_handler.get_assist_target_elements()
+				var card_element = card.get("element", "")
+				# 対象属性かチェック
+				if "all" in assist_elements or card_element in assist_elements:
+					item_phase_handler.use_item(card)
+					return
+			print("[GameFlowManager] このクリーチャーは援護対象ではありません")
+			return
 		else:
-			print("[GameFlowManager] アイテムフェーズ中はアイテムカードのみ使用可能")
+			print("[GameFlowManager] アイテムフェーズ中はアイテムまたは援護対象クリーチャーのみ使用可能")
 			return
 	
 	# スペルフェーズ以外でスペルカードが選択された場合

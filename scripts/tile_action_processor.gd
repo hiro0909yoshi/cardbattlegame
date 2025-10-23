@@ -165,9 +165,9 @@ func on_card_selected(card_index: int):
 		var cost_data = pending_battle_card_data.get("cost", 1)
 		var cost = 0
 		if typeof(cost_data) == TYPE_DICTIONARY:
-			cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+			cost = cost_data.get("mp", 0)  # 等倍
 		else:
-			cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+			cost = cost_data  # 等倍
 		
 		var current_player = player_system.get_current_player()
 		if current_player.magic_power < cost:
@@ -186,8 +186,8 @@ func on_card_selected(card_index: int):
 			if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
 				game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 			
-			# アイテムフェーズ開始
-			game_flow_manager.item_phase_handler.start_item_phase(current_player_index)
+			# アイテムフェーズ開始（バトル参加クリーチャーのデータを渡す）
+			game_flow_manager.item_phase_handler.start_item_phase(current_player_index, pending_battle_card_data)
 		else:
 			# ItemPhaseHandlerがない場合は直接バトル
 			_execute_pending_battle()
@@ -214,7 +214,9 @@ func _on_item_phase_completed():
 					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 				
 				print("[TileActionProcessor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
-				game_flow_manager.item_phase_handler.start_item_phase(defender_owner)
+				# 防御側クリーチャーのデータを取得して渡す
+				var defender_creature = pending_battle_tile_info.get("creature", {})
+				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
 				_execute_pending_battle()
@@ -290,9 +292,9 @@ func execute_summon(card_index: int):
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data.get("mp", 0)  # 等倍
 	else:
-		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data  # 等倍
 	
 	var current_player = player_system.get_current_player()
 	
@@ -430,9 +432,9 @@ func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionar
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data.get("mp", 0)  # 等倍
 	else:
-		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data  # 等倍
 	
 	var current_player = player_system.get_current_player()
 	

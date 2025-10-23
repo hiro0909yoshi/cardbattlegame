@@ -24,7 +24,12 @@
 		"keywords": [
 		  "貫通",
 		  "援護"
-		]
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["all"]
+		  }
+		}
 	  }
 	},
 	{

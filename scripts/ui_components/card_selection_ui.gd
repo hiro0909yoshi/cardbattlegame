@@ -81,7 +81,11 @@ func update_phase_label(current_player, mode: String):
 		"spell":
 			phase_label_ref.text = "スペルを選択してください (魔力: " + str(current_player.magic_power) + "G)"
 		"item":
-			phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+			# 援護スキルの有無でメッセージを変更
+			if ui_manager_ref and ui_manager_ref.card_selection_filter == "item_or_assist":
+				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (魔力: " + str(current_player.magic_power) + "G)"
+			else:
+				phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
 		_:
 			phase_label_ref.text = "カードを選択してください"
 
@@ -113,6 +117,20 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカードのみ選択可能
 				is_selectable = card_type == "item"
+			elif filter_mode == "item_or_assist":
+				# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャーが選択可能
+				if card_type == "item":
+					is_selectable = true
+				elif card_type == "creature":
+					var assist_elements = []
+					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
+						assist_elements = ui_manager_ref.assist_target_elements
+					
+					var card_element = card_data.get("element", "")
+					# 全属性対象、または属性が一致する場合
+					is_selectable = ("all" in assist_elements) or (card_element in assist_elements)
+				else:
+					is_selectable = false
 			elif filter_mode == "battle":
 				# バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
 				var creature_type = card_data.get("creature_type", "normal")
@@ -144,6 +162,25 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカード以外をグレーアウト
 				if card_type != "item":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "item_or_assist":
+				# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト
+				var should_gray_out = true
+				
+				if card_type == "item":
+					should_gray_out = false
+				elif card_type == "creature":
+					var assist_elements = []
+					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
+						assist_elements = ui_manager_ref.assist_target_elements
+					
+					var card_element = card_data.get("element", "")
+					if ("all" in assist_elements) or (card_element in assist_elements):
+						should_gray_out = false
+				
+				if should_gray_out:
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -180,13 +217,13 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 		card_node.add_child(highlight)
 		return
 	
-	# コストチェック
+	# コストチェック（全て等倍）
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data.get("mp", 0)
 	else:
-		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data
 	if cost > available_magic:
 		# 魔力不足の場合
 		card_node.modulate = Color(0.5, 0.5, 0.5)

@@ -447,7 +447,15 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "援護・秘術",
-	  "ability_detail": "援護[火]；秘術[G30・全セブターの○を消す]"
+	  "ability_detail": "援護[火地]；秘術[G30・全セブターの○を消す]",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["fire", "earth"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 18,

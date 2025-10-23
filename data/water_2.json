@@ -312,7 +312,15 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "援護・MHP+援護クリーチャーのHP",
-	  "ability_detail": "援護[水地風]；戦闘前、MHP+援護クリーチャーのHP"
+	  "ability_detail": "援護[水地風]；戦闘前、MHP+援護クリーチャーのHP",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["water", "earth", "wind"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 138,

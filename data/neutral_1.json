@@ -91,11 +91,11 @@
 	  "ability": "先制・無効化・援護・合体",
 	  "ability_detail": "先制；無効化[巻物]；援護[⬜]；合体[ビーストギア]",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "無効化"
-		],
+		"keywords": ["援護", "先制", "無効化"],
 		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["neutral"]
+		  },
 		  "無効化": {
 			"nullify_type": "scroll_attack"
 		  }
@@ -173,8 +173,11 @@
 	  "ability_detail": "援護；合体[スカイギア]；無効化[巻物]"
 	,
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": ["援護", "無効化"],
 		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["all"]
+		  },
 		  "無効化": {
 			"nullify_type": "scroll_attack"
 		  }
@@ -298,7 +301,21 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "アイテム盗み",
-	  "ability_detail": "アイテム盗み"
+	  "ability_detail": "アイテム盗み",
+	  "ability_parsed": {
+		"keywords": ["アイテム盗み"],
+		"effects": [
+		  {
+			"effect_type": "steal_item",
+			"triggers": ["before_battle"],
+			"conditions": [
+			  {
+				"condition_type": "self_no_item"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 417,
@@ -353,9 +370,12 @@
 	  "ability": "援護・合体・先制",
 	  "ability_detail": "援護；合体[グランギア]；先制",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
+		"keywords": ["援護", "先制"],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["all"]
+		  }
+		},
 		"effects": []
 	  }
 	},
