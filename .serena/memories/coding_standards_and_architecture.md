@@ -119,16 +119,47 @@ GameFlowManager (_on_tile_action_completed_3d)
 - ❌ Inconsistent flag management → infinite loops
 - ✅ Always go through the signal chain above
 
-## UI Positioning (Full-Screen Support)
-```gdscript
-// ❌ BAD: Hardcoded coordinates
-panel.position = Vector2(1200, 100)
+## UI Positioning - ABSOLUTE RULE
 
-// ✅ GOOD: Viewport-relative
+**CRITICAL: ALL UI elements must use viewport-relative positioning**
+
+### The Golden Rule
+```gdscript
+// ❌ NEVER DO THIS: Hardcoded coordinates
+panel.position = Vector2(1200, 100)  // Breaks on different screen sizes
+
+// ✅ ALWAYS DO THIS: Viewport-relative
 var viewport_size = get_viewport().get_visible_rect().size
-var panel_x = viewport_size.x - panel_width - 20    // Right edge
-var panel_y = (viewport_size.y - panel_height) / 2  // Center
+var panel_x = viewport_size.x - panel_width - 20    // 20px from right edge
+var panel_y = (viewport_size.y - panel_height) / 2  // Vertically centered
+panel.position = Vector2(panel_x, panel_y)
 ```
+
+### Positioning Formulas
+
+**Horizontal (X-axis)**:
+- Left align: `margin`
+- Center: `(viewport_size.x - width) / 2`
+- Right align: `viewport_size.x - width - margin`
+
+**Vertical (Y-axis)**:
+- Top align: `margin`
+- Center: `(viewport_size.y - height) / 2`
+- Bottom align: `viewport_size.y - height - margin`
+
+### Standard Margins
+- Screen edge: 10-20px
+- Between UI elements: 5-10px
+
+### Example: Bottom-right panel
+```gdscript
+var viewport_size = get_viewport().get_visible_rect().size
+var panel_x = viewport_size.x - 300 - 20  // 300px wide, 20px margin
+var panel_y = viewport_size.y - 200 - 20  // 200px tall, 20px margin
+panel.position = Vector2(panel_x, panel_y)
+```
+
+**WHY THIS MATTERS**: Game runs on multiple resolutions. Hardcoded positions break instantly.
 
 ## System Initialization Order
 **Critical: Must follow this exact order in game_3d.gd**
@@ -238,6 +269,6 @@ Chain  Toll    HP Bonus
 - [ ] Use signal-driven communication
 - [ ] Add node validity checks
 - [ ] Prevent phase duplication
-- [ ] Use viewport-relative positioning
+- [ ] **Use viewport-relative positioning (NEVER hardcode coordinates)**
 
 Last updated: 2025-10-25

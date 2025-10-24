@@ -4,7 +4,6 @@
 
 このドキュメントには以下の詳細仕様が含まれています：
 - 新システム詳細仕様（種族、効果システム）
-- UI配置ガイドライン
 - 開発・テストツール
 
 > **注**: 基本的なシステムアーキテクチャ、コーディング規約、バトルフローなどは`.serena/memories/`のメモリファイルを参照してください。  
@@ -57,41 +56,6 @@
 - **データ管理**: `base_up_hp/ap`, `permanent_effects`, `temporary_effects`
 - **計算順序**: 基礎値 → 永続 → 一時 → 土地 → アイテム → 感応 → 強打
 
----
-
-## UI配置ガイドライン
-
-### 全画面対応の原則
-**すべてのUI要素は、画面解像度に依存しない相対的な配置を使用する。**
-
-#### 推奨パターン
-```gdscript
-// ✅ GOOD: viewport_sizeを使用した相対配置
-var viewport_size = get_viewport().get_visible_rect().size
-var panel_x = viewport_size.x - panel_width - 20  # 右端から20px
-var panel_y = (viewport_size.y - panel_height) / 2  # 画面中央
-```
-
-#### 非推奨パターン
-```gdscript
-// ❌ BAD: 絶対座標指定
-panel.position = Vector2(1200, 100)  # 画面サイズが変わると破綻
-```
-
-### 配置ルール
-1. **水平方向**
-   - 左寄せ: `margin`
-   - 中央揃え: `(viewport_size.x - width) / 2`
-   - 右寄せ: `viewport_size.x - width - margin`
-
-2. **垂直方向**
-   - 上寄せ: `margin`
-   - 中央揃え: `(viewport_size.y - height) / 2`
-   - 下寄せ: `viewport_size.y - height - margin`
-
-3. **マージン**
-   - 画面端からの余白: 10-20px推奨
-   - UI要素間の余白: 5-10px推奨
 ---
 
 ## 開発・テストツール

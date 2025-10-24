@@ -77,9 +77,11 @@ docs/
 
 | ドキュメント | 内容 |
 |-------------|------|
-| **[design.md](design/design.md)** | 種族システム・効果システム・UI配置ガイドライン・重要な注意点・開発ツール |
+| **[design.md](design/design.md)** | 種族システム・効果システム・開発ツール |
 | **[land_system.md](design/land_system.md)** | 隣接判定・土地ボーナス・ダウン状態・領地コマンド・将来計画 |
 | **[skills_design.md](design/skills_design.md)** | スキルシステム全体設計・実装済み16種類・適用順序・将来予定 |
+| **[item_system.md](design/item_system.md)** | アイテムシステム・アイテムフェーズ・効果タイプ・UI統合 |
+| **[battle_system.md](design/battle_system.md)** | BattleParticipant・HP管理・ダメージ消費順序 |
 
 #### 効果システム
 
