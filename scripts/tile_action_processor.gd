@@ -428,6 +428,21 @@ func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionar
 		_complete_action()
 		return
 	
+	# 🔄 最新のタイルデータを再取得（死者復活などで変身している可能性があるため）
+	var tile_info = board_system.get_tile_info(tile_index)
+	var actual_creature_data = tile_info.get("creature", {})
+	
+	# デバッグ: タイルデータの内容を確認
+	print("[デバッグ] タイルデータ再取得:")
+	print("  tile_info.has_creature: ", tile_info.get("has_creature", false))
+	print("  creature.name: ", actual_creature_data.get("name", "なし"))
+	print("  creature.id: ", actual_creature_data.get("id", "なし"))
+	
+	if actual_creature_data.is_empty():
+		print("[TileActionProcessor] エラー: タイルにクリーチャーがいません")
+		_complete_action()
+		return
+	
 	# コストチェック
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
@@ -445,11 +460,11 @@ func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionar
 	
 	print("[TileActionProcessor] クリーチャー交換開始")
 	print("  対象土地: タイル", tile_index)
-	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"))
+	print("  元のクリーチャー: ", actual_creature_data.get("name", "不明"))
 	print("  新しいクリーチャー: ", card_data.get("name", "不明"))
 	
-	# 1. 元のクリーチャーを手札に戻す
-	card_system.return_card_to_hand(current_player_index, old_creature_data)
+	# 1. 元のクリーチャーを手札に戻す（最新のデータを使用）
+	card_system.return_card_to_hand(current_player_index, actual_creature_data)
 	
 	# 2. 選択したカードを使用（手札から削除）
 	card_system.use_card_for_player(current_player_index, card_index)

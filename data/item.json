@@ -539,7 +539,18 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "死者復活[スケルトン]"
+	  "effect": "死者復活[スケルトン]",
+	  "effect_parsed": {
+		"keywords": ["死者復活"],
+		"effects": [
+		  {
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "forced",
+			"creature_id": 420
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1047,

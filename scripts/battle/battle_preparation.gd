@@ -6,6 +6,7 @@ class_name BattlePreparation
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TransformProcessor = preload("res://scripts/battle/battle_transform_processor.gd")
 
 # システム参照
 var board_system_ref = null
@@ -75,9 +76,20 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender.creature_data["items"].append(defender_item)
 		apply_item_effects(defender, defender_item)
 	
+	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
+	var transform_result = {}
+	if card_system_ref:
+		transform_result = TransformProcessor.process_transform_effects(
+			attacker, 
+			defender, 
+			CardLoader, 
+			"on_battle_start"
+		)
+	
 	return {
 		"attacker": attacker,
-		"defender": defender
+		"defender": defender,
+		"transform_result": transform_result
 	}
 
 ## 効果配列（permanent_effects, temporary_effects）を適用

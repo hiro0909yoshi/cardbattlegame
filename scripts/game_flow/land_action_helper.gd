@@ -155,12 +155,12 @@ static func execute_swap_creature(handler) -> bool:
 	if not check_swap_conditions(handler, current_player_index):
 		return false
 	
-	# 元のクリーチャーデータを保存
+	# 🔄 元のクリーチャーデータ保存（ダミー、実際はexecute_swapで再取得する）
 	var old_creature_data = tile_info["creature"].duplicate()
 	
 	print("[LandActionHelper] クリーチャー交換開始")
 	print("  対象土地: タイル", handler.selected_tile_index)
-	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"))
+	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"), " (※最終的には最新データで処理)")
 	
 	# TileActionProcessorに交換モードを設定
 	if handler.board_system.tile_action_processor:

@@ -191,6 +191,34 @@ func place_creature(tile_index: int, creature_data: Dictionary, player_id: int =
 	# スキルインデックスを更新
 	_update_skill_index_on_place(tile_index, creature_data, player_id)
 
+func update_tile_creature(tile_index: int, new_creature_data: Dictionary):
+	"""タイルのクリーチャーデータを更新（変身用）"""
+	if not tile_nodes.has(tile_index):
+		print("[警告] タイルが存在しません: ", tile_index)
+		return
+	
+	var tile_info = get_tile_info(tile_index)
+	if not tile_info.get("has_creature", false):
+		print("[警告] クリーチャーが配置されていません: ", tile_index)
+		return
+	
+	# 既存のクリーチャーを削除（スキルインデックスから）
+	_update_skill_index_on_remove(tile_index)
+	
+	# 新しいクリーチャーデータで更新
+	tile_data_manager.place_creature(tile_index, new_creature_data)
+	
+	# スキルインデックスを更新
+	var player_id = tile_info.get("owner", -1)
+	_update_skill_index_on_place(tile_index, new_creature_data, player_id)
+	
+	# ビジュアル更新
+	var tile = tile_nodes[tile_index]
+	if tile.has_method("update_visual"):
+		tile.update_visual()
+	
+	print("[BoardSystem3D] クリーチャー更新: タイル%d → %s" % [tile_index, new_creature_data.get("name", "?")])
+
 func remove_creature(tile_index: int):
 	"""クリーチャーを除去し、スキルインデックスを更新"""
 	if not tile_nodes.has(tile_index):

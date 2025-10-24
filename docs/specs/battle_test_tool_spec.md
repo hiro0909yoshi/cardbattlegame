@@ -373,17 +373,17 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 
 ```json
 {
-    "id": 3010,
-    "name": "スピードブーツ",
-    "type": "item",
-    "ability_parsed": {
-        "effects": [
-            {
-                "effect_type": "grant_skill",
-                "skill_name": "先制攻撃"
-            }
-        ]
-    }
+	"id": 3010,
+	"name": "スピードブーツ",
+	"type": "item",
+	"ability_parsed": {
+		"effects": [
+			{
+				"effect_type": "grant_skill",
+				"skill_name": "先制攻撃"
+			}
+		]
+	}
 }
 ```
 
@@ -393,25 +393,25 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 
 ```json
 {
-    "id": 3002,
-    "name": "マグマハンマー",
-    "type": "item",
-    "ability_parsed": {
-        "effects": [
-            {
-                "effect_type": "stat_bonus",
-                "target_stat": "st",
-                "value": 20
-            },
-            {
-                "effect_type": "grant_skill",
-                "skill_name": "強打",
-                "conditions": {
-                    "user_element": "fire"
-                }
-            }
-        ]
-    }
+	"id": 3002,
+	"name": "マグマハンマー",
+	"type": "item",
+	"ability_parsed": {
+		"effects": [
+			{
+				"effect_type": "stat_bonus",
+				"target_stat": "st",
+				"value": 20
+			},
+			{
+				"effect_type": "grant_skill",
+				"skill_name": "強打",
+				"conditions": {
+					"user_element": "fire"
+				}
+			}
+		]
+	}
 }
 ```
 
@@ -423,17 +423,17 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 
 ```json
 {
-    "id": 2050,
-    "name": "加速の魔法",
-    "type": "spell",
-    "ability_parsed": {
-        "effects": [
-            {
-                "effect_type": "grant_skill",
-                "skill_name": "先制攻撃"
-            }
-        ]
-    }
+	"id": 2050,
+	"name": "加速の魔法",
+	"type": "spell",
+	"ability_parsed": {
+		"effects": [
+			{
+				"effect_type": "grant_skill",
+				"skill_name": "先制攻撃"
+			}
+		]
+	}
 }
 ```
 
@@ -454,8 +454,8 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 攻撃側: アモン (火属性)
   アイテム: マグマハンマー
   付与スキル: 
-    ✓ 強打 (マグマハンマーにより付与)
-      └─ 条件: 火属性クリーチャー → ✓満たす
+	✓ 強打 (マグマハンマーにより付与)
+	  └─ 条件: 火属性クリーチャー → ✓満たす
 ```
 
 #### 統計サマリー
@@ -476,7 +476,7 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 攻撃側: ウォーターエレメンタル (水属性)
   アイテム: マグマハンマー
   付与スキル: 
-    ✗ 強打 (条件不一致: 火属性必須 → 水属性)
+	✗ 強打 (条件不一致: 火属性必須 → 水属性)
 ```
 
 このケースでは、ST+20は適用されるが、強打は付与されない。

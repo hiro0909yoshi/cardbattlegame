@@ -39,6 +39,7 @@ func get_tile_info(tile_index: int) -> Dictionary:
 		"owner": tile.owner_id,
 		"level": tile.level,
 		"creature": tile.creature_data,
+		"has_creature": not tile.creature_data.is_empty(),
 		"is_special": is_special_tile_type(tile.tile_type)
 	}
 

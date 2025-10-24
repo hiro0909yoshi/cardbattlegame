@@ -8,6 +8,7 @@ signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TransformProcessor = preload("res://scripts/battle/battle_transform_processor.gd")
 
 # バトル結果
 enum BattleResult {
@@ -61,6 +62,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system)
+	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
 	battle_skill_processor.setup_systems(board_system)
 	battle_special_effects.setup_systems(board_system)
 
@@ -128,6 +130,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var participants = battle_preparation.prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item)
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
+	var battle_result = participants.get("transform_result", {})
 	
 	print("侵略側: ", attacker.creature_data.get("name", "?"), " [", attacker.creature_data.get("element", "?"), "]")
 	print("  基本HP:", attacker.base_hp, " + 土地ボーナス:", attacker.land_bonus_hp, " = MHP:", attacker.current_hp)
@@ -156,14 +159,30 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var order_str = "侵略側 → 防御側" if attack_order[0].is_attacker else "防御側 → 侵略側"
 	print("\n【攻撃順】", order_str)
 	
-	# 4. 攻撃シーケンス実行
-	battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
+	# 4. 攻撃シーケンス実行（戦闘結果情報を取得）
+	var attack_result = battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
+	# 戦闘結果を統合（空でない値のみマージ）
+	for key in attack_result.keys():
+		var value = attack_result[key]
+		# 復活フラグはtrueの場合のみ上書き
+		if key in ["attacker_revived", "defender_revived"]:
+			if value == true:
+				battle_result[key] = value
+		# 変身情報は値が空でない場合のみ上書き
+		elif key in ["attacker_transformed", "defender_transformed"]:
+			if value == true:
+				battle_result[key] = value
+		elif key in ["attacker_original", "defender_original"]:
+			if not value.is_empty():
+				battle_result[key] = value
+		else:
+			battle_result[key] = value
 	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)
 	
-	# 6. 結果に応じた処理
-	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender)
+	# 6. 結果に応じた処理（死者復活情報も渡す）
+	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result)
 	
 	print("================================")
 
@@ -203,7 +222,8 @@ func _apply_post_battle_effects(
 	card_data: Dictionary,
 	tile_info: Dictionary,
 	attacker: BattleParticipant,
-	defender: BattleParticipant
+	defender: BattleParticipant,
+	battle_result: Dictionary = {}
 ) -> void:
 	var tile_index = tile_info["index"]
 	
@@ -213,11 +233,20 @@ func _apply_post_battle_effects(
 	
 	match result:
 		BattleResult.ATTACKER_WIN:
-			print("\n【結果】侵略成功！土地を獲得")
+			print("
+【結果】侵略成功！土地を獲得")
+			
+			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
+			if battle_result.get("attacker_original", {}).has("name"):
+				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				print("[変身復帰] 攻撃側が元に戻りました")
+			
 			# 土地を奪取
 			board_system_ref.set_tile_owner(tile_index, attacker_index)
 			# クリーチャー配置（HPは現在値）
-			var placement_data = card_data.duplicate()
+			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
+			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
+			var placement_data = attacker.creature_data.duplicate(true)
 			placement_data["hp"] = attacker.base_hp  # ダメージを受けた状態で配置
 			board_system_ref.place_creature(tile_index, placement_data)
 			
@@ -233,14 +262,64 @@ func _apply_post_battle_effects(
 			emit_signal("invasion_completed", false, tile_index)
 		
 		BattleResult.ATTACKER_SURVIVED:
-			print("\n【結果】両者生存 → 侵略失敗、カード手札に戻る")
+			print("
+【結果】両者生存 → 侵略失敗、カード手札に戻る")
+			
+			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
+			if battle_result.get("attacker_original", {}).has("name"):
+				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				print("[変身復帰] 攻撃側が元に戻りました")
+			
 			# カードを手札に戻す
-			card_system_ref.return_card_to_hand(attacker_index, card_data)
+			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
+			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
+			var return_card_data = attacker.creature_data.duplicate(true)
+			# HPは現在値（ダメージを受けた状態）を保持
+			return_card_data["hp"] = attacker.base_hp
+			card_system_ref.return_card_to_hand(attacker_index, return_card_data)
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			battle_special_effects.update_defender_hp(tile_info, defender)
 			
 			emit_signal("invasion_completed", false, tile_index)
+	
+	# 🔄 防御側の変身を元に戻す（バルダンダース専用）
+	# 戦闘後に復帰が必要な変身の場合のみ
+	if not battle_result.is_empty():
+		if battle_result.get("defender_original", {}).has("name"):
+			TransformProcessor.revert_transform(defender, battle_result["defender_original"])
+			print("[変身復帰] 防御側が元に戻りました")
+	
+	# 🔄 永続変身のタイル更新（コカトリス用）
+	# 防御側が変身した場合、タイルのcreature_dataを更新
+	if battle_result.get("defender_transformed", false):
+		print("[デバッグ] 防御側変身検出: ", defender.creature_data.get("name", "?"))
+		print("[デバッグ] defender_original: ", battle_result.get("defender_original", {}))
+		if not battle_result.get("defender_original", {}).has("name"):
+			# 永続変身の場合（元データなし = 戻さない）
+			# tile_indexは既に関数の上部で定義済み
+			var updated_creature = defender.creature_data.duplicate(true)
+			updated_creature["hp"] = defender.base_hp  # 現在のHPを保持
+			board_system_ref.update_tile_creature(tile_index, updated_creature)
+			print("[永続変身] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+	
+	# 🔄 死者復活のタイル更新
+	# 死者復活は常に永続なので、タイルのcreature_dataを更新する
+	if battle_result.get("defender_revived", false):
+		# 防御側が復活した場合、タイルのクリーチャーを更新
+		var updated_creature = defender.creature_data.duplicate(true)
+		updated_creature["hp"] = defender.base_hp  # 復活後のHPを保持
+		board_system_ref.update_tile_creature(tile_index, updated_creature)
+		print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+	
+	if battle_result.get("attacker_revived", false):
+		# 攻撃側が復活した場合も、タイルのクリーチャーを更新
+		# 攻撃側が復活する場合は侵略成功の場合のみ
+		if result == BattleResult.ATTACKER_WIN:
+			var updated_creature = attacker.creature_data.duplicate(true)
+			updated_creature["hp"] = attacker.base_hp  # 復活後のHPを保持
+			board_system_ref.update_tile_creature(tile_index, updated_creature)
+			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
 	
 	# 表示更新
 	if board_system_ref.has_method("update_all_tile_displays"):

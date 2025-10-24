@@ -85,14 +85,14 @@
   "ability": "アイテム破壊",
   "ability_detail": "アイテム破壊[道具]",
   "ability_parsed": {
-    "keywords": ["アイテム破壊"],
-    "effects": [
-      {
-        "effect_type": "destroy_item",
-        "target_types": ["道具"],
-        "triggers": ["before_battle"]
-      }
-    ]
+	"keywords": ["アイテム破壊"],
+	"effects": [
+	  {
+		"effect_type": "destroy_item",
+		"target_types": ["道具"],
+		"triggers": ["before_battle"]
+	  }
+	]
   }
 }
 ```
@@ -106,14 +106,14 @@
   "ability": "アイテム破壊",
   "ability_detail": "アイテム破壊[道具か巻物か援護クリーチャー]",
   "ability_parsed": {
-    "keywords": ["アイテム破壊"],
-    "effects": [
-      {
-        "effect_type": "destroy_item",
-        "target_types": ["道具", "巻物", "援護クリーチャー"],
-        "triggers": ["before_battle"]
-      }
-    ]
+	"keywords": ["アイテム破壊"],
+	"effects": [
+	  {
+		"effect_type": "destroy_item",
+		"target_types": ["道具", "巻物", "援護クリーチャー"],
+		"triggers": ["before_battle"]
+	  }
+	]
   }
 }
 ```
@@ -158,18 +158,18 @@
   "ability": "アイテム盗み",
   "ability_detail": "アイテム盗み",
   "ability_parsed": {
-    "keywords": ["アイテム盗み"],
-    "effects": [
-      {
-        "effect_type": "steal_item",
-        "triggers": ["before_battle"],
-        "conditions": [
-          {
-            "condition_type": "self_no_item"
-          }
-        ]
-      }
-    ]
+	"keywords": ["アイテム盗み"],
+	"effects": [
+	  {
+		"effect_type": "steal_item",
+		"triggers": ["before_battle"],
+		"conditions": [
+		  {
+			"condition_type": "self_no_item"
+		  }
+		]
+	  }
+	]
   }
 }
 ```
@@ -196,18 +196,18 @@
   "ability": "アイテム破壊・盗み無効",
   "ability_detail": "援護；アイテム破壊・盗み無効；巻物強打",
   "ability_parsed": {
-    "keywords": ["援護", "巻物強打"],
-    "effects": [
-      {
-        "effect_type": "nullify_item_manipulation",
-        "triggers": ["before_battle"]
-      }
-    ],
-    "keyword_conditions": {
-      "巻物強打": {
-        "scroll_type": "base_st"
-      }
-    }
+	"keywords": ["援護", "巻物強打"],
+	"effects": [
+	  {
+		"effect_type": "nullify_item_manipulation",
+		"triggers": ["before_battle"]
+	  }
+	],
+	"keyword_conditions": {
+	  "巻物強打": {
+		"scroll_type": "base_st"
+	  }
+	}
   }
 }
 ```
@@ -249,68 +249,68 @@
 ```gdscript
 # 戦闘開始前処理
 func _handle_pre_battle_skills(attacker: BattleParticipant, defender: BattleParticipant) -> void:
-    # 行動順を決定（先制スキルなどを考慮）
-    var first_mover = _determine_first_mover(attacker, defender)
-    var second_mover = attacker if first_mover == defender else defender
-    
-    # 先に動く側の処理
-    _process_item_manipulation(first_mover, second_mover)
-    
-    # 後に動く側の処理
-    _process_item_manipulation(second_mover, first_mover)
+	# 行動順を決定（先制スキルなどを考慮）
+	var first_mover = _determine_first_mover(attacker, defender)
+	var second_mover = attacker if first_mover == defender else defender
+	
+	# 先に動く側の処理
+	_process_item_manipulation(first_mover, second_mover)
+	
+	# 後に動く側の処理
+	_process_item_manipulation(second_mover, first_mover)
 
 func _process_item_manipulation(actor: BattleParticipant, target: BattleParticipant) -> void:
-    var ability_parsed = actor.creature_data.get("ability_parsed", {})
-    var keywords = ability_parsed.get("keywords", [])
-    
-    # 相手が無効化を持つかチェック
-    if _has_item_manipulation_nullify(target):
-        print("【アイテム破壊・盗み無効】", target.creature_data.get("name"))
-        return
-    
-    # アイテム破壊
-    if "アイテム破壊" in keywords:
-        _handle_item_destruction(actor, target)
-    
-    # アイテム盗み
-    if "アイテム盗み" in keywords:
-        _handle_item_theft(actor, target)
+	var ability_parsed = actor.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 相手が無効化を持つかチェック
+	if _has_item_manipulation_nullify(target):
+		print("【アイテム破壊・盗み無効】", target.creature_data.get("name"))
+		return
+	
+	# アイテム破壊
+	if "アイテム破壊" in keywords:
+		_handle_item_destruction(actor, target)
+	
+	# アイテム盗み
+	if "アイテム盗み" in keywords:
+		_handle_item_theft(actor, target)
 
 func _handle_item_destruction(actor: BattleParticipant, target: BattleParticipant) -> void:
-    var effects = actor.creature_data.get("ability_parsed", {}).get("effects", [])
-    
-    for effect in effects:
-        if effect.get("effect_type") == "destroy_item":
-            var target_types = effect.get("target_types", [])
-            var target_item = target.get_equipped_item()
-            
-            if target_item and target_item.get("type") in target_types:
-                print("【アイテム破壊】", actor.creature_data.get("name"), 
-                      " → ", target_item.get("name"), " を破壊")
-                target.remove_item()
+	var effects = actor.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "destroy_item":
+			var target_types = effect.get("target_types", [])
+			var target_item = target.get_equipped_item()
+			
+			if target_item and target_item.get("type") in target_types:
+				print("【アイテム破壊】", actor.creature_data.get("name"), 
+					  " → ", target_item.get("name"), " を破壊")
+				target.remove_item()
 
 func _handle_item_theft(actor: BattleParticipant, target: BattleParticipant) -> void:
-    # 自分がアイテムを持っている場合はスキップ
-    if actor.has_item():
-        return
-    
-    var target_item = target.get_equipped_item()
-    if target_item:
-        print("【アイテム盗み】", actor.creature_data.get("name"), 
-              " → ", target_item.get("name"), " を奪った")
-        
-        # アイテムを移動
-        target.remove_item()
-        actor.equip_item(target_item)
+	# 自分がアイテムを持っている場合はスキップ
+	if actor.has_item():
+		return
+	
+	var target_item = target.get_equipped_item()
+	if target_item:
+		print("【アイテム盗み】", actor.creature_data.get("name"), 
+			  " → ", target_item.get("name"), " を奪った")
+		
+		# アイテムを移動
+		target.remove_item()
+		actor.equip_item(target_item)
 
 func _has_item_manipulation_nullify(participant: BattleParticipant) -> bool:
-    var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-    
-    for effect in effects:
-        if effect.get("effect_type") == "nullify_item_manipulation":
-            return true
-    
-    return false
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "nullify_item_manipulation":
+			return true
+	
+	return false
 ```
 
 ---

@@ -17,16 +17,16 @@
 ```gdscript
 # 土地レベル条件
 "land_level_check":
-    var current_land_level = context.get("current_land_level", 1)
-    var operator = condition.get("operator", ">=")
-    var value = condition.get("value", 1)
-    match operator:
-        ">=": return current_land_level >= value
-        ">": return current_land_level > value
-        "<=": return current_land_level <= value
-        "<": return current_land_level < value
-        "==": return current_land_level == value
-        _: return false
+	var current_land_level = context.get("current_land_level", 1)
+	var operator = condition.get("operator", ">=")
+	var value = condition.get("value", 1)
+	match operator:
+		">=": return current_land_level >= value
+		">": return current_land_level > value
+		"<=": return current_land_level <= value
+		"<": return current_land_level < value
+		"==": return current_land_level == value
+		_: return false
 ```
 
 **サポートする演算子**:
@@ -62,7 +62,7 @@
    ```gdscript
    # 無効化判定のためのコンテキスト構築
    var nullify_context = {
-       "current_land_level": tile_info.get("level", 1)
+	   "current_land_level": tile_info.get("level", 1)
    }
    var nullify_result = _check_nullify(attacker_p, defender_p, nullify_context)
    ```
@@ -99,17 +99,17 @@
   "ability": "無効化",
   "ability_detail": "戦闘地がレベル3以上の場合、無効化[通常攻撃]",
   "ability_parsed": {
-    "keywords": ["無効化"],
-    "keyword_conditions": {
-      "無効化": {
-        "nullify_type": "normal_attack",
-        "conditions": [{
-          "condition_type": "land_level_check",
-          "operator": ">=",
-          "value": 3
-        }]
-      }
-    }
+	"keywords": ["無効化"],
+	"keyword_conditions": {
+	  "無効化": {
+		"nullify_type": "normal_attack",
+		"conditions": [{
+		  "condition_type": "land_level_check",
+		  "operator": ">=",
+		  "value": 3
+		}]
+	  }
+	}
   }
 }
 ```
@@ -134,13 +134,13 @@
 ```json
 {
   "possession": [
-    "has_item_type", "has_keyword", "total_land_count",
-    "land_level_check",  // ← 今回実装
-    "element_land_count", "consecutive_lands"
+	"has_item_type", "has_keyword", "total_land_count",
+	"land_level_check",  // ← 今回実装
+	"element_land_count", "consecutive_lands"
   ],
   "context_vars": [
-    "current_land_level",  // ← 今回実装
-    "fire_creatures", ...
+	"current_land_level",  // ← 今回実装
+	"fire_creatures", ...
   ]
 }
 ```
@@ -155,9 +155,9 @@
   "effect_type": "power_strike",
   "multiplier": 1.5,
   "conditions": [{
-    "condition_type": "land_level_check",
-    "operator": ">=",
-    "value": 3
+	"condition_type": "land_level_check",
+	"operator": ">=",
+	"value": 3
   }]
 }
 ```

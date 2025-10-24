@@ -28,7 +28,7 @@ godot project.godot
 python3 << 'EOF'
 import json
 with open('data/fire_1.json', 'r', encoding='utf-8') as f:
-    data = json.load(f)
+	data = json.load(f)
 print("✅ JSON is valid")
 EOF
 ```
@@ -55,19 +55,19 @@ GameFlowManager (Central state machine)
 ├── PlayerSystem (player state and resources)
 ├── SkillSystem (skill effect management)
 └── UIManager (UI coordination)
-    ├── CardSelectionUI
-    ├── HandDisplay
-    ├── PhaseDisplay
-    └── 7+ other UI components
+	├── CardSelectionUI
+	├── HandDisplay
+	├── PhaseDisplay
+	└── 7+ other UI components
 ```
 
 ### Game Flow
 
 ```
 Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
-    → (Empty Tile: Summon) OR (Enemy Tile: Battle)
-    → Land Commands (Level Up / Move Creature / Swap)
-    → Draw Card → Turn End → Next Player
+	→ (Empty Tile: Summon) OR (Enemy Tile: Battle)
+	→ Land Commands (Level Up / Move Creature / Swap)
+	→ Draw Card → Turn End → Next Player
 ```
 
 ### Key Architectural Patterns

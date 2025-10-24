@@ -89,6 +89,10 @@ func get_cards_by_type(card_type: String) -> Array:
 			result.append(card)
 	return result
 
+## 全クリーチャーカードを取得（バルダンダースのランダム変身用）
+func get_all_creatures() -> Array:
+	return get_cards_by_type("creature")
+
 ## アイテムをIDで取得
 func get_item_by_id(item_id: int) -> Dictionary:
 	for card in all_cards:

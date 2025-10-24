@@ -356,7 +356,18 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "死者復活[サーペントフライ]",
-	  "ability_detail": "死者復活[サーペントフライ]"
+	  "ability_detail": "死者復活[サーペントフライ]",
+	  "ability_parsed": {
+		"keywords": ["死者復活"],
+		"effects": [
+		  {
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "forced",
+			"creature_id": 316
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 140,

@@ -338,7 +338,7 @@
 	},
 	{
 	  "id": 215,
-	  "name": "コカトリス",
+	  	  "name": "コカトリス",
 	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",
@@ -356,7 +356,20 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "強制変化",
-	  "ability_detail": "強制変化[ストーンウォール]"
+	  "ability_detail": "強制変化[ストーンウォール]",
+	  "ability_parsed": {
+		"keywords": ["強制変化"],
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_attack_success",
+			"target": "opponent",
+			"transform_type": "forced",
+			"creature_id": 222,
+			"revert_after_battle": false
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 216,

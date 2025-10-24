@@ -1,186 +1,243 @@
-# 🚨 開発時の必須確認事項
+# Coding Standards & Critical Constraints
 
-## 最重要：design.md を必ず読むこと
+## Must-Read Before Coding
+Check `docs/README.md` for complete documentation index.
 
-**ファイル**: `docs/design/design.md`
-
-このファイルには以下の重要情報が含まれています：
-
-### 1. コーディング規約・技術的制約
-
-#### 予約語回避パターン
+## Reserved Words to Avoid
 ```gdscript
-# ❌ NG: owner（Nodeの予約語）
-var tile_owner: int
+// ❌ BAD: Godot reserved words
+var owner: int           // Use: tile_owner_id
+func is_processing()     // Use: is_battle_active()
 
-# ✅ OK: 別の名前を使用
+// ✅ GOOD
 var tile_owner_id: int
-
-# ❌ NG: is_processing()（Nodeのメソッド）
-func is_processing() -> bool
-
-# ✅ OK: 別の名前を使用
 func is_battle_active() -> bool
 ```
 
-#### TextureRect制約
+## TextureRect Constraint
 ```gdscript
-# ❌ NG: color プロパティは使用不可
+// ❌ BAD: color property doesn't work
 texture_rect.color = Color.RED
 
-# ✅ OK: modulate を使用
+// ✅ GOOD: Use modulate instead
 texture_rect.modulate = Color.RED
 ```
 
-### 2. システムアーキテクチャ
+## Core Architecture
 
-#### 主要システム
-- **GameFlowManager**: ゲーム進行・フェーズ管理
-- **BoardSystem3D**: マップ・タイル管理
-- **CardSystem**: デッキ・手札管理
-- **BattleSystem**: 戦闘判定・ボーナス計算
-- **PlayerSystem**: プレイヤー情報・ターン管理
-- **SkillSystem**: スキル効果・条件判定
-- **UIManager**: UI統括管理（7コンポーネントに分割）
+### Main Systems
+- GameFlowManager: Turn/phase control
+- BoardSystem3D: 3D map, tile ownership
+- CardSystem: Deck/hand management
+- BattleSystem: Combat resolution
+- PlayerSystem: Player state, magic points
+- SkillSystem: Condition checks, effect application
+- UIManager: 7 UI components
 
-#### シグナル駆動通信
-各システムはシグナルで疎結合に通信：
+### Signal-Driven Communication
+Systems communicate via signals (decoupled):
 ```gdscript
 signal tile_action_completed()
 signal battle_ended(winner, result)
 signal phase_changed(new_phase)
 ```
 
-### 3. データ構造
+## Critical Patterns
 
-#### ability_parsed の標準形式
-```json
-{
-  "keywords": ["感応", "先制", "強打"],
-  "keyword_conditions": {
-    "感応": {
-      "element": "fire",
-      "stat_bonus": {
-        "ap": 20,
-        "hp": 20
-      }
-    }
-  },
-  "effects": [
-    {
-      "effect_type": "power_strike",
-      "multiplier": 1.5,
-      "conditions": [
-        {
-          "condition_type": "adjacent_ally_land"
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### カードデータ構造
-```json
-{
-  "id": 1,
-  "name": "クリーチャー名",
-  "rarity": "N|R|S|E",
-  "type": "creature|spell|item",
-  "element": "fire|water|earth|wind|neutral",
-  "cost": {
-    "mp": 50,
-    "lands_required": ["fire"]
-  },
-  "ap": 30,
-  "hp": 40,
-  "ability": "感応・先制",
-  "ability_detail": "感応[地・ST&HP+20]；先制",
-  "ability_parsed": { /* 上記の形式 */ }
-}
-```
-
-### 4. 開発上の重要な注意点
-
-#### フェーズ管理の厳格化
+### Phase Management
 ```gdscript
-# 重複処理を防ぐ
+// Prevent duplicate execution
 if current_phase == GamePhase.END_TURN:
     return
 ```
 
-#### シグナル接続の注意
+### Signal Connection
 ```gdscript
-# CONNECT_ONE_SHOTで多重接続防止
+// Prevent multiple connections
 signal.connect(callback, CONNECT_ONE_SHOT)
 ```
 
-#### ノード有効性チェック
+### Node Validity
 ```gdscript
+// Always check before access
 if card_node and is_instance_valid(card_node):
     card_node.queue_free()
 ```
 
-#### await使用時の注意
+### Await Usage
 ```gdscript
-# ターン遷移前に必ず待機
+// Always wait before phase transitions
 await get_tree().create_timer(1.0).timeout
 ```
 
-#### 変数シャドウイングの回避
+### Variable Shadowing
 ```gdscript
-# ❌ NG: クラスメンバと同名のローカル変数
+// ❌ BAD: Same name as class member
 var player_system = ...
 
-# ✅ OK: 異なる名前を使用
+// ✅ GOOD: Different name
 var p_system = ...
 ```
 
-### 5. バトルシステムの仕様
+### Action Processing Flag Management
+**Problem**: Duplicate flag management across systems
+- BoardSystem3D.is_waiting_for_action
+- TileActionProcessor.is_action_processing
 
-#### 先制攻撃システム
+**Solution (TECH-002 completed)**:
+- Unified in TileActionProcessor
+- BoardSystem3D only forwards signals
+- LandCommandHandler notifies via complete_action()
+
+**Critical**: Never add additional action flags outside TileActionProcessor
+
+### Turn End Flow Management
+**Responsible Class**: GameFlowManager (scripts/game_flow_manager.gd)
+
+**Correct Call Chain**:
 ```
-1. 攻撃側の先制攻撃
-   AP >= 防御側HP? → 攻撃側勝利（終了）
-   
-2. 防御側生存なら反撃
-   ST >= 攻撃側HP? → 防御側勝利
-   
-3. 両者生存 → 攻撃側勝利（土地獲得）
+TileActionProcessor (_complete_action)
+  └─ emit_signal("action_completed")
+     │
+     ↓
+BoardSystem3D (_on_action_completed)
+  └─ emit_signal("tile_action_completed")
+     │
+     ↓
+GameFlowManager (_on_tile_action_completed_3d)
+  └─ end_turn()
+     └─ emit_signal("turn_ended")
 ```
 
-#### ボーナス計算
+**3-Layer Duplicate Prevention**:
+1. BoardSystem3D: Check is_waiting_for_action flag
+2. GameFlowManager: Phase check (ignore if END_TURN/SETUP)
+3. end_turn(): Re-entry prevention check
+
+**Critical Mistakes to Avoid**:
+- ❌ Calling end_turn() directly from multiple places
+- ❌ Inconsistent flag management → infinite loops
+- ✅ Always go through the signal chain above
+
+## UI Positioning (Full-Screen Support)
 ```gdscript
-return {
-  "st_bonus": 属性相性ボーナス(+20),
-  "hp_bonus": 地形ボーナス(+10~40) + 連鎖ボーナス
+// ❌ BAD: Hardcoded coordinates
+panel.position = Vector2(1200, 100)
+
+// ✅ GOOD: Viewport-relative
+var viewport_size = get_viewport().get_visible_rect().size
+var panel_x = viewport_size.x - panel_width - 20    // Right edge
+var panel_y = (viewport_size.y - panel_height) / 2  // Center
+```
+
+## System Initialization Order
+**Critical: Must follow this exact order in game_3d.gd**
+
+```gdscript
+func _ready():
+    // 1. Create systems
+    
+    // 2. Setup UIManager references
+    ui_manager.board_system_ref = board_system_3d
+    ui_manager.create_ui(self)
+    
+    // 3. Initialize hand container
+    ui_manager.initialize_hand_container(ui_layer)
+    
+    // 4. Set debug flags BEFORE setup_systems (critical!)
+    game_flow_manager.debug_manual_control_all = debug_manual_control_all
+    
+    // 5. Setup GameFlowManager
+    game_flow_manager.setup_systems(...)
+    game_flow_manager.setup_3d_mode(...)
+    
+    // 6. Re-set references to child components (critical!)
+    // GameFlowManager ref doesn't exist at create_ui() time
+    if ui_manager.card_selection_ui:
+        ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
+```
+
+**Why step 6 is needed**:
+- create_ui() happens before GameFlowManager has references
+- setup_systems() sets UIManager references
+- Child components need explicit re-assignment afterward
+
+## Data Structures
+
+### ability_parsed Format
+```json
+{
+  "effects": [{
+    "effect_type": "power_strike|instant_death",
+    "target": "self|enemy",
+    "conditions": [{
+      "condition_type": "adjacent_ally_land|mhp_below",
+      "value": 40
+    }],
+    "stat": "AP|HP",
+    "operation": "add|multiply",
+    "value": 20
+  }],
+  "keywords": ["強打", "先制"]
 }
 ```
 
-### 6. 属性連鎖システム
-
+### Card Data
+```json
+{
+  "id": 1,
+  "type": "creature|spell|item",
+  "element": "fire|water|earth|wind|neutral",
+  "cost": {"mp": 50, "lands_required": ["fire"]},
+  "ap": 30,
+  "hp": 40,
+  "ability_parsed": {...}
+}
 ```
-連鎖数    通行料倍率    HPボーナス
-  1個        1.0倍        +10
-  2個        1.5倍        +20
-  3個        2.5倍        +30
-  4個以上    4.0倍        +40 (上限)
+
+## Battle System
+
+### First Strike Flow
+```
+1. Attacker first strike: AP >= Defender HP? → Win
+2. Defender counter: ST >= Attacker HP? → Win
+3. Both survive → Attacker wins (land capture)
 ```
 
----
+### Bonus Calculation
+```gdscript
+{
+  "st_bonus": +20 (element affinity - deprecated),
+  "hp_bonus": +10~40 (terrain) + chain bonus
+}
+```
 
-## チェックリスト
+### Land Bonus
+```
+Formula: HP + (land_level × 10)
+Applied when: creature.element == tile.element
+Stored in: land_bonus_hp (separate field)
+```
 
-新機能実装前に必ず確認：
+## Element Chain
+```
+Chain  Toll    HP Bonus
+1      1.0x    +10
+2      1.5x    +20
+3      2.5x    +30
+4+     4.0x    +40 (max)
+```
 
-- [ ] `docs/design/design.md` を読んだ
-- [ ] 予約語を使っていないか確認
-- [ ] データ構造が正しいか確認（特に `ability_parsed`）
-- [ ] システム間の連携方法を理解した
-- [ ] シグナル駆動通信を使っている
-- [ ] ノード有効性チェックを入れた
-- [ ] フェーズ管理の重複防止を入れた
+## Pre-Implementation Checklist
+- [ ] Check `docs/README.md` for documentation index
+- [ ] Review relevant design documents in `docs/design/`
+- [ ] Check for reserved words
+- [ ] Verify data structures (especially ability_parsed)
+- [ ] Understand turn end flow (never call end_turn directly)
+- [ ] Verify system initialization order
+- [ ] Use signal-driven communication
+- [ ] Add node validity checks
+- [ ] Prevent phase duplication
+- [ ] Use viewport-relative positioning
 
----
-
-**最終更新**: 2025年10月23日
+Last updated: 2025-10-25

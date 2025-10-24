@@ -14,6 +14,10 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
+	# 【Phase 0】変身スキル適用（戦闘開始時）
+	apply_battle_start_transform(attacker)
+	apply_battle_start_transform(defender)
+	
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
 	
@@ -263,7 +267,6 @@ func apply_support_skills_to_all(participants: Dictionary, battle_tile_index: in
 	for supporter_data in support_creatures:
 		var supporter_creature = supporter_data["creature_data"]
 		var supporter_player_id = supporter_data["player_id"]
-		var supporter_tile_index = supporter_data.get("tile_index", -1)
 		var ability_parsed = supporter_creature.get("ability_parsed", {})
 		var effects = ability_parsed.get("effects", [])
 		
@@ -640,7 +643,7 @@ func _execute_destroy_item(actor: BattleParticipant, target: BattleParticipant, 
 	_remove_item_effects(target, target_item)
 
 ## アイテム盗みを実行
-func _execute_steal_item(actor: BattleParticipant, target: BattleParticipant, effect: Dictionary) -> void:
+func _execute_steal_item(actor: BattleParticipant, target: BattleParticipant, _effect: Dictionary) -> void:
 	var target_items = target.creature_data.get("items", [])
 	if target_items.is_empty():
 		return
@@ -697,3 +700,95 @@ func _apply_stolen_item_effects(participant: BattleParticipant, item: Dictionary
 		participant.item_bonus_hp += hp
 		participant.update_current_hp()
 		print("    + HP+", hp, " → ", participant.current_hp)
+
+# ========================================
+# 変身スキル処理
+# ========================================
+
+## 戦闘開始時の変身スキル適用
+func apply_battle_start_transform(participant: BattleParticipant) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "transform" and effect.get("trigger") == "on_battle_start":
+			_execute_transform(participant, effect)
+
+## 変身実行
+func _execute_transform(participant: BattleParticipant, effect: Dictionary) -> void:
+	var transform_type = effect.get("transform_type", "")
+	
+	# 変身前のデータを保存（戦闘後復帰用）
+	var revert_after_battle = effect.get("revert_after_battle", false)
+	if revert_after_battle and not participant.creature_data.has("original_creature_data"):
+		participant.creature_data["original_creature_data"] = participant.creature_data.duplicate(true)
+		print("【変身】元データ保存: ", participant.creature_data.get("name", "?"))
+	
+	match transform_type:
+		"random":
+			_transform_to_random(participant)
+		"forced":
+			# コカトリスなどの強制変身は攻撃成功時に処理
+			pass
+		_:
+			print("【警告】未実装の変身タイプ: ", transform_type)
+
+## ランダム変身
+func _transform_to_random(participant: BattleParticipant) -> void:
+	print("【変身】ランダム変身開始: ", participant.creature_data.get("name", "?"))
+	
+	# 全クリーチャーリストを取得
+	var all_creatures = _get_all_creatures()
+	if all_creatures.is_empty():
+		print("【エラー】変身先クリーチャーが見つかりません")
+		return
+	
+	# ランダムに選択
+	randomize()
+	var random_creature = all_creatures[randi() % all_creatures.size()]
+	
+	# 変身実行
+	_replace_creature_data(participant, random_creature)
+	print("【変身完了】", participant.creature_data.get("name", "?"), " に変身")
+
+## クリーチャーデータを置き換え
+func _replace_creature_data(participant: BattleParticipant, new_creature_data: Dictionary) -> void:
+	# 元のデータを保存（original_creature_dataがあれば保持）
+	var original_data = participant.creature_data.get("original_creature_data", null)
+	
+	# 新しいクリーチャーデータで置き換え
+	participant.creature_data = new_creature_data.duplicate(true)
+	
+	# 元データを復元（戦闘後復帰用）
+	if original_data != null:
+		participant.creature_data["original_creature_data"] = original_data
+	
+	# 効果をリセット
+	participant.creature_data["permanent_effects"] = []
+	participant.creature_data["temporary_effects"] = []
+	
+	# ステータスを再計算
+	participant.base_hp = new_creature_data.get("hp", 0)
+	participant.base_ap = new_creature_data.get("ap", 0)
+	participant.current_ap = participant.base_ap
+	participant.current_hp = participant.base_hp
+
+## 全クリーチャーリストを取得
+func _get_all_creatures() -> Array:
+	var creatures = []
+	
+	# CardLoaderから全クリーチャーを取得
+	var card_loader = load("res://scripts/card_loader.gd").new()
+	
+	# 全クリーチャーを取得（CardLoaderのget_all_creatures()を使用）
+	creatures = card_loader.get_all_creatures()
+	
+	return creatures
+
+## 戦闘終了後の変身復帰
+func revert_transform_after_battle(participant: BattleParticipant) -> void:
+	if participant.creature_data.has("original_creature_data"):
+		var original_data = participant.creature_data["original_creature_data"]
+		print("【変身復帰】", participant.creature_data.get("name", "?"), " → ", original_data.get("name", "?"))
+		participant.creature_data = original_data
+		participant.creature_data.erase("original_creature_data")

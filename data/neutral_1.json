@@ -218,7 +218,25 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・通行料変化・死者復活",
-	  "ability_detail": "防御型；通行料変化[G0]；死者復活[ティラノサウルス]"
+	  "ability_detail": "防御型；通行料変化[G0]；死者復活[ティラノサウルス]",
+	  "ability_parsed": {
+		"keywords": ["防御型", "通行料変化", "死者復活"],
+		"effects": [
+		  {
+			"effect_type": "defensive"
+		  },
+		  {
+			"effect_type": "toll_change",
+			"value": 0
+		  },
+		  {
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "forced",
+			"creature_id": 425
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 412,

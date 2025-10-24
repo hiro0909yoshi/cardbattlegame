@@ -106,9 +106,9 @@
 	  "ability": "秘術",
 	  "ability_detail": "秘術[G40・対象自クリーチャーに♡\"地形効果\"]"
 	},
-	{
+		{
 	  "id": 432,
-	  "name": "ハルゲンダース",
+	  "name": "バルダンダース",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
@@ -118,7 +118,19 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "変身",
-	  "ability_detail": "変身[ランダム]"
+	  "ability_detail": "変身[ランダム]",
+	  "ability_parsed": {
+		"keywords": ["変身"],
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_battle_start",
+			"target": "self",
+			"transform_type": "random",
+			"revert_after_battle": true
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 433,
@@ -285,7 +297,30 @@
 	  "ap": 20,
 	  "hp": 10,
 	  "ability": "アイテムクリーチャー・死者復活",
-	  "ability_detail": "アイテムクリーチャー；敵武器不使用時、死者復活[リビングアムル]"
+	  "ability_detail": "アイテムクリーチャー；敵武器不使用時、死者復活[リビングアムル]",
+	  "ability_parsed": {
+		"keywords": ["アイテムクリーチャー", "死者復活"],
+		"effects": [
+		  {
+			"effect_type": "item_creature",
+			"trigger": "on_use_as_item",
+			"stat_bonus": {
+			  "ap": 20,
+			  "hp": 10
+			}
+		  },
+		  {
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "conditional",
+			"creature_id": 438,
+			"condition": {
+			  "type": "enemy_item_not_used",
+			  "item_category": "武器"
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 440,

@@ -145,9 +145,9 @@
   - [x] 新しいクリーチャー選択（カード選択UI）
   - [x] 召喚コスト支払い
   - [x] 新しいクリーチャー配置
-    - 土地ボーナス適用
-    - 土地レベル継承
-    - ダウン状態設定
+	- 土地ボーナス適用
+	- 土地レベル継承
+	- ダウン状態設定
   - [x] ターン終了処理
 - [x] バグ修正
   - [x] アクション処理フラグの整合性問題（BUG-004 / TECH-002）
@@ -204,16 +204,16 @@
 - [ ] 感応（elemental_resonance）実装
 - [x] 無効化（nullify）実装 ✅ **完了: 2025/10/20**
   - [x] 基本無効化タイプ実装
-    - [x] 属性無効化（element）
-    - [x] MHP以上/以下無効化（mhp_above/mhp_below）
-    - [x] ST以上/以下無効化（st_above/st_below）
-    - [x] 全攻撃無効化（all_attacks）
-    - [x] 能力持ち無効化（has_ability）
-    - [x] 巻物攻撃無効化（scroll_attack）
-    - [x] 通常攻撃無効化（normal_attack）
+	- [x] 属性無効化（element）
+	- [x] MHP以上/以下無効化（mhp_above/mhp_below）
+	- [x] ST以上/以下無効化（st_above/st_below）
+	- [x] 全攻撃無効化（all_attacks）
+	- [x] 能力持ち無効化（has_ability）
+	- [x] 巻物攻撃無効化（scroll_attack）
+	- [x] 通常攻撃無効化（normal_attack）
   - [x] 条件付き無効化 ✅ **完了: 2025/10/20**
-    - [ ] `item_equipped` 条件 (例: ID 103 アクアデューク - 防具使用時) ← 未実装
-    - [x] `land_level_check` 条件 (例: ID 106 アブサス - 戦闘地レベル3以上)
+	- [ ] `item_equipped` 条件 (例: ID 103 アクアデューク - 防具使用時) ← 未実装
+	- [x] `land_level_check` 条件 (例: ID 106 アブサス - 戦闘地レベル3以上)
   - [x] 無効化持ちクリーチャーデータ整備（26体）
 - [x] 巻物攻撃システム実装 ✅ **完了: 2025/10/20**
   - [x] is_using_scroll フラグ管理
