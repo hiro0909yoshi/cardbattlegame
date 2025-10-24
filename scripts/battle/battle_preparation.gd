@@ -348,6 +348,25 @@ func check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionar
 				print("【貫通】条件不成立: ST ", attacker_st, " ", operator, " ", value)
 				return false
 		
+		"defender_st_check":
+			# 防御側のSTが一定以上の場合
+			var operator_d = penetrate_condition.get("operator", ">=")
+			var value_d = penetrate_condition.get("value", 0)
+			var defender_st = defender_data.get("ap", 0)  # APがSTに相当
+			
+			var meets_condition_d = false
+			match operator_d:
+				">=": meets_condition_d = defender_st >= value_d
+				">": meets_condition_d = defender_st > value_d
+				"==": meets_condition_d = defender_st == value_d
+			
+			if meets_condition_d:
+				print("【貫通】条件満たす: 敵ST ", defender_st, " ", operator_d, " ", value_d)
+				return true
+			else:
+				print("【貫通】条件不成立: 敵ST ", defender_st, " ", operator_d, " ", value_d)
+				return false
+		
 		_:
 			# 未知の条件タイプ
 			print("【貫通】未知の条件タイプ:", condition_type)

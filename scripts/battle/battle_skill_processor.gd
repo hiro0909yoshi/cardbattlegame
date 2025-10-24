@@ -106,6 +106,16 @@ func check_scroll_attack(participant: BattleParticipant, _context: Dictionary) -
 	if not ("巻物攻撃" in keywords or "巻物強打" in keywords):
 		return
 	
+	# バフチェック: base_up_ap以外のバフが入っていたら発動しない
+	var base_ap = participant.creature_data.get("ap", 0)
+	var expected_ap = base_ap + participant.base_up_ap
+	
+	if participant.current_ap != expected_ap:
+		# base_up_ap以外のバフが入っている → 巻物攻撃不可
+		print("【巻物攻撃不可】", participant.creature_data.get("name", "?"), 
+			  " バフ検出（AP:", participant.current_ap, "≠", expected_ap, "）通常攻撃に変更")
+		return
+	
 	# 巻物攻撃フラグを立てる
 	participant.is_using_scroll = true
 	
@@ -121,7 +131,6 @@ func check_scroll_attack(participant: BattleParticipant, _context: Dictionary) -
 	
 	# scroll_typeに基づいてAPを設定
 	var scroll_type = scroll_config.get("scroll_type", "base_st")
-	var base_ap = participant.creature_data.get("ap", 0)
 	
 	match scroll_type:
 		"fixed_st":

@@ -238,13 +238,25 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 	if "再生" in keywords:
 		# 基本HPの最大値を取得（初期値）
 		var max_base_hp = participant.creature_data.get("hp", 0)
+		# 永続HP上昇の最大値を取得
+		var max_base_up_hp = participant.creature_data.get("base_up_hp", 0)
 		
-		# 現在の基本HPが最大値未満なら回復
+		var healed = 0
+		
+		# base_hpを回復
 		if participant.base_hp < max_base_hp:
-			var healed = max_base_hp - participant.base_hp
+			healed += max_base_hp - participant.base_hp
 			participant.base_hp = max_base_hp
+		
+		# base_up_hpを回復
+		if participant.base_up_hp < max_base_up_hp:
+			healed += max_base_up_hp - participant.base_up_hp
+			participant.base_up_hp = max_base_up_hp
+		
+		if healed > 0:
 			participant.update_current_hp()
-			print("【再生発動】", participant.creature_data.get("name", "?"), " HP回復: +", healed, " → ", participant.current_hp)
+			print("【再生発動】", participant.creature_data.get("name", "?"), 
+			      " HP回復: +", healed, " → ", participant.current_hp)
 
 ## 防御側クリーチャーのHPを更新
 func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:

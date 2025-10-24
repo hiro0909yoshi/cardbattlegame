@@ -683,7 +683,8 @@ card_system_ref.return_card_to_hand(attacker_index, card_data)
 
 // 修正後
 var return_card_data = attacker.creature_data.duplicate(true)
-return_card_data["hp"] = attacker.base_hp
+// HPは元の最大値にリセット（手札に戻る時はダメージを回復）
+// duplicate(true)で元のHPが既にコピーされているので上書きしない
 card_system_ref.return_card_to_hand(attacker_index, return_card_data)
 ```
 

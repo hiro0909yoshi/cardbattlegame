@@ -1,33 +1,33 @@
 # 防御型クリーチャー設計書
 
-**プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 1.1  
-**最終更新**: 2025年10月25日
+**Project**: Culdcept-style Card Battle Game  
+**Version**: 1.1  
+**Last Updated**: October 25, 2025
 
 ---
 
-## 概要
+## Overview
 
-防御型クリーチャーは、高い基礎能力を持つ代わりに行動制限があるクリーチャータイプです。
+Defensive creatures have higher base stats but come with action restrictions.
 
-## 特徴
+## Features
 
-### メリット
-- 基礎HPが高い
-- 防御時は通常通り反撃できる
-- レベルアップ可能
-- 交換コマンド使用可能
+### Benefits
+- High base HP
+- Can counterattack normally when defending
+- Can be leveled up
+- Can use exchange command
 
-### デメリット（制約）
-1. **侵略行動ができない** - バトルカードとして使用不可
-2. **移動ができない** - 領地コマンドの移動が使用不可
-3. **空き地にしか召喚できない** - 自分の土地や敵の土地には配置不可
+### Restrictions
+1. **Cannot invade** - Cannot be used as battle cards
+2. **Cannot move** - Movement command disabled in land menu
+3. **Can only be summoned on empty lands** - Cannot be placed on owned or enemy lands
 
 ---
 
-## データ構造
+## Data Structure
 
-### JSON定義
+### JSON Definition
 
 ```json
 {
@@ -41,183 +41,171 @@
 }
 ```
 
-### フィールド説明
+### Field Description
 
-| フィールド | 型 | 説明 |
-|-----------|-----|------|
-| `creature_type` | String | `"defensive"` で防御型を指定 |
-| | | `"normal"` (デフォルト) で通常クリーチャー |
+| Field | Type | Description |
+|-------|------|-------------|
+| `creature_type` | String | `"defensive"` for defensive type |
+| | | `"normal"` (default) for regular creatures |
 
 ---
 
-## 実装概要
+## Implementation Summary
 
-### 1. 召喚制限
+### 1. Summon Restriction
 
-**実装ファイル**: `scripts/tile_action_processor.gd` → `execute_summon()`
+**Implementation File**: `scripts/tile_action_processor.gd` → `execute_summon()`
 
-**制約内容**:
-- `tile_info["owner"] == -1` (完全な空き地) のみ召喚可能
-- 自分の土地や敵の土地には召喚不可
-- 違反時はメッセージ表示: 「防御型は空き地にのみ召喚可能です」
+**Constraint**:
+- Can only summon on `tile_info["owner"] == -1` (empty land)
+- Cannot summon on own or enemy lands
+- Error message on violation: "防御型は空き地にのみ召喚可能です"
 
-**実装ポイント**:
+**Implementation Point**:
 ```gdscript
 var creature_type = card_data.get("creature_type", "normal")
 if creature_type == "defensive":
-    if tile_info["owner"] != -1:
-        # 召喚不可
+	if tile_info["owner"] != -1:
+		# Cannot summon
 ```
 
-### 2. 移動制限
+### 2. Movement Restriction
 
-**実装ファイル**: `scripts/ui_components/land_command_ui.gd` → `show_action_menu()`
+**Implementation File**: `scripts/ui_components/land_command_ui.gd` → `show_action_menu()`
 
-**UI表示**:
-- 移動ボタンがグレーアウト（disabled）
-- ボタンテキスト: "🚶 [M] 移動 (防御型)"
+**UI Display**:
+- Move button is grayed out (disabled)
+- Button text: "🚶 [M] 移動 (防御型)"
 
-**実装ポイント**:
+**Implementation Point**:
 ```gdscript
 var creature_type = creature.get("creature_type", "normal")
 if creature_type == "defensive":
-    action_menu_buttons["move"].disabled = true
+	action_menu_buttons["move"].disabled = true
 ```
 
-### 3. 侵略制限（バトル使用不可）
+### 3. Invasion Restriction (Cannot Use in Battle)
 
-**実装ファイル**: 
+**Implementation Files**: 
 - `scripts/ui_components/hand_display.gd` → `create_card_node()`
 - `scripts/ui_components/card_selection_ui.gd` → `enable_card_selection()`
 
-**UI表示**:
-- バトル時、防御型カードがグレーアウト表示
-- カード選択不可（`is_selectable = false`）
+**UI Display**:
+- Defensive cards are grayed out during battle
+- Cards are not selectable (`is_selectable = false`)
 
-**実装ポイント**:
+**Implementation Points**:
 ```gdscript
 # hand_display.gd
 if filter_mode == "battle":
-    var creature_type = card_data.get("creature_type", "normal")
-    if creature_type == "defensive":
-        card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+	var creature_type = card_data.get("creature_type", "normal")
+	if creature_type == "defensive":
+		card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 
 # card_selection_ui.gd
 if filter_mode == "battle":
-    var creature_type = card_data.get("creature_type", "normal")
-    is_selectable = card_type == "creature" and creature_type != "defensive"
+	var creature_type = card_data.get("creature_type", "normal")
+	is_selectable = card_type == "creature" and creature_type != "defensive"
 ```
 
 ---
 
-## 防御型クリーチャー一覧
+## Defensive Creatures List
 
-**実装済み（全21体）**
+**Implemented (21 total)**
 
-| ID | 名前 | 属性 |
-|----|------|------|
-| 5 | オールドウィロウ | 🔥 火 |
-| 10 | クリーピングフレイム | 🔥 火 |
-| 29 | バーナックル | 🔥 火 |
-| 102 | アイスウォール | 💧 水 |
-| 123 | シーボンズ | 💧 水 |
-| 126 | スワンプスボーン | 💧 水 |
-| 127 | ゼラチンウォール | 💧 水 |
-| 141 | マカラ | 💧 水 |
-| 205 | カクタスウォール | 🌍 地 |
-| 221 | スクリーマー | 🌍 地 |
-| 223 | ストーンウォール | 🌍 地 |
-| 240 | マミー | 🌍 地 |
-| 244 | ランドアーチン | 🌍 地 |
-| 246 | レーシィ | 🌍 地 |
-| 330 | トルネード | 💨 風 |
-| 411 | グレートフォシル | ⬜ 無 |
-| 413 | ゴールドトーテム | ⬜ 無 |
-| 421 | スタチュー | ⬜ 無 |
-| 423 | ストーンジゾウ | ⬜ 無 |
-| 444 | レジェンドファロス | ⬜ 無 |
-| 447 | ワンダーウォール | ⬜ 無 |
+| ID | Name | Element |
+|----|------|---------|
+| 5 | オールドウィロウ | 🔥 Fire |
+| 10 | クリーピングフレイム | 🔥 Fire |
+| 29 | バーナックル | 🔥 Fire |
+| 102 | アイスウォール | 💧 Water |
+| 123 | シーボンズ | 💧 Water |
+| 126 | スワンプスボーン | 💧 Water |
+| 127 | ゼラチンウォール | 💧 Water |
+| 141 | マカラ | 💧 Water |
+| 205 | カクタスウォール | 🌍 Earth |
+| 221 | スクリーマー | 🌍 Earth |
+| 223 | ストーンウォール | 🌍 Earth |
+| 240 | マミー | 🌍 Earth |
+| 244 | ランドアーチン | 🌍 Earth |
+| 246 | レーシィ | 🌍 Earth |
+| 330 | トルネード | 💨 Wind |
+| 411 | グレートフォシル | ⬜ Neutral |
+| 413 | ゴールドトーテム | ⬜ Neutral |
+| 421 | スタチュー | ⬜ Neutral |
+| 423 | ストーンジゾウ | ⬜ Neutral |
+| 444 | レジェンドファロス | ⬜ Neutral |
+| 447 | ワンダーウォール | ⬜ Neutral |
 
 ---
 
-## バトルフロー
+## Battle Flow
 
-### 防御時の挙動
+### Behavior When Defending
 
-防御型クリーチャーは防御時、通常のクリーチャーと同様に反撃します：
+Defensive creatures counterattack normally when defending, just like regular creatures:
 
 ```
-1. 敵クリーチャーが防御型の土地に侵略
+1. Enemy creature invades defensive creature's land
    ↓
-2. スキル適用（土地ボーナス、感応など）
+2. Skill application (land bonus, resonance, etc.)
    ↓
-3. 攻撃順決定（先制判定）
+3. Attack order determination (first strike check)
    ↓
-4. 戦闘実行
-   - 侵略側の攻撃
-   - 防御型クリーチャーの反撃（生存していれば）
+4. Battle execution
+   - Invader's attack
+   - Defensive creature's counterattack (if alive)
    ↓
-5. 勝敗判定
+5. Result determination
 ```
 
-**重要**: 防御型は「侵略できない」だけで、「攻撃できない」わけではありません。
+**Important**: Defensive creatures "cannot invade" but they CAN attack when defending.
+
+## Design Philosophy
+
+### Why use `creature_type`?
+
+1. **Separation from Skills**
+   - Skills = Battle abilities
+   - Type = Game flow properties
+
+2. **Clear Determination Points**
+   - Skill check: `ability_parsed.keywords`
+   - Type check: `creature_type`
+
+3. **Extensibility**
+   - Easy to add new creature types
+   - Minimal impact on existing code
 
 ---
 
-## 交換コマンド
+## Related Files
 
-### 使用可能なパターン
+### Implementation Files
 
-1. **防御型 → 通常クリーチャー**: ✅ 可能
-2. **通常クリーチャー → 防御型**: ✅ 可能
-3. **防御型 → 防御型**: ✅ 可能
+| File | Role |
+|------|------|
+| `scripts/tile_action_processor.gd` | Summon restriction |
+| `scripts/ui_components/land_command_ui.gd` | Movement restriction UI |
+| `scripts/ui_components/hand_display.gd` | Invasion restriction UI (grayout) |
+| `scripts/ui_components/card_selection_ui.gd` | Invasion restriction (not selectable) |
 
----
-
-## 設計思想
-
-### なぜ `creature_type` を使うのか？
-
-1. **スキルとの分離**
-   - スキル = バトル時の能力
-   - タイプ = ゲームフロー全体の性質
-
-2. **判定箇所の明確化**
-   - スキル判定: `ability_parsed.keywords`
-   - タイプ判定: `creature_type`
-
-3. **拡張性**
-   - 新しいクリーチャータイプの追加が容易
-   - 既存コードへの影響が少ない
-
----
-
-## 関連ファイル
-
-### 実装ファイル
-
-| ファイル | 役割 |
-|---------|------|
-| `scripts/tile_action_processor.gd` | 召喚制限 |
-| `scripts/ui_components/land_command_ui.gd` | 移動制限UI |
-| `scripts/ui_components/hand_display.gd` | 侵略制限UI（グレーアウト） |
-| `scripts/ui_components/card_selection_ui.gd` | 侵略制限（選択不可） |
-
-### データファイル
+### Data Files
 
 - `data/water_1.json` - アイスウォール (ID:102)
 - `data/earth_1.json` - カクタスウォール (ID:205)
-- その他各属性のJSONファイル
+- Other element JSON files
 
 ---
 
-## 変更履歴
+## Change History
 
-| 日付 | バージョン | 変更内容 |
-|------|-----------|---------|
-| 2025-10-23 | 1.0 | 全21体の防御型クリーチャーに`creature_type: "defensive"`を実装完了 |
-| 2025-10-25 | 1.1 | ドキュメント簡略化：テスト方法削除、将来拡張案削除、クリーチャー一覧簡略化 |
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-10-23 | 1.0 | Implemented `creature_type: "defensive"` for all 21 defensive creatures |
+| 2025-10-25 | 1.1 | Simplified documentation: Removed test methods, future plans, simplified creature list |
 
 ---
 
-**最終更新**: 2025年10月25日（v1.1）
+**Last Updated**: October 25, 2025 (v1.1)

@@ -95,6 +95,7 @@
 	  "name": "ガーゴイル",
 	  "rarity": "N",
 	  "type": "creature",
+	  "creature_type": "defensive",
 	  "element": "earth",
 	  "cost": {
 		"mp": 70,
@@ -105,7 +106,10 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "先制・防御型",
-	  "ability_detail": "先制；防御時、ST=50"
+	  "ability_detail": "先制；防御時、ST=50",
+	  "ability_parsed": {
+		"keywords": ["先制"]
+	  }
 	},
 	{
 	  "id": 205,
