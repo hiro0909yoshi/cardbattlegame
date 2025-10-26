@@ -182,6 +182,23 @@ if tile.has_method("set_down_state"):
 
 ## 領地コマンド詳細
 
+### UIフラグ管理
+
+**重要なフラグ**: `card_selection_ui.is_active`
+- `true`: カード選択可能（召喚フェーズ）
+- `false`: カード選択不可（領地コマンド中・その他のフェーズ）
+
+**実装**:
+```gdscript
+// 領地コマンドを開く時
+ui_manager.card_selection_ui.is_active = false  // カード選択を無効化
+
+// 領地コマンドを閉じる時
+_reinitialize_card_selection.call_deferred()   // 次フレームで再初期化
+ui_manager.hide_card_selection_ui()             // 一度非表示
+ui_manager.show_card_selection_ui(player)       // 再表示（is_active=trueになる）
+```
+
 ### 基本制約
 1. **1ターンに1回のみ実行可能**
    - レベルアップ、移動、交換のいずれか1つのみ

@@ -79,6 +79,11 @@ func open_land_command(player_id: int):
 			ui_manager.phase_label.text = "所有地がありません"
 		return
 	
+	# カード選択UIを無効化
+	if ui_manager and ui_manager.card_selection_ui:
+		ui_manager.card_selection_ui.is_active = false
+		print("[LandCommandHandler] カード選択UIを無効化しました")
+	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
 	current_land_selection_index = 0  # 最初の土地を選択
@@ -167,6 +172,9 @@ func close_land_command():
 	current_state = State.CLOSED
 	selected_tile_index = -1
 	player_owned_lands.clear()
+	
+
+	
 	land_command_closed.emit()
 	
 	print("[LandCommandHandler] 領地コマンドを閉じました")

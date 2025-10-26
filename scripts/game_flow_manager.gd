@@ -479,6 +479,10 @@ func initialize_phase1a_systems():
 	add_child(land_command_handler)
 	land_command_handler.initialize(ui_manager, board_system_3d, self, player_system)
 	
+	# land_command_closedシグナルを接続
+	if land_command_handler.has_signal("land_command_closed"):
+		land_command_handler.land_command_closed.connect(_on_land_command_closed)
+	
 	# SpellPhaseHandlerを作成
 	spell_phase_handler = SpellPhaseHandler.new()
 	add_child(spell_phase_handler)
@@ -496,6 +500,27 @@ func _on_phase_manager_phase_changed(new_phase, old_phase):
 	print("[GameFlowManager] PhaseManager フェーズ変更: ", 
 		PhaseManager.GamePhase.keys()[old_phase], " → ", 
 		PhaseManager.GamePhase.keys()[new_phase])
+
+# Phase 1-A: 領地コマンドが閉じられたときの処理
+func _on_land_command_closed():
+	print("[GameFlowManager] 領地コマンドが閉じられました - 召喚フェーズに戻ります")
+	
+	# カード選択UIの再初期化を次のフレームで実行（awaitを避ける）
+	_reinitialize_card_selection.call_deferred()
+
+# カード選択UIを再初期化（遅延実行用）
+func _reinitialize_card_selection():
+	if ui_manager:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
+			ui_manager.hide_card_selection_ui()
+			ui_manager.show_card_selection_ui(current_player)
+			
+			# 領地コマンドボタンも再表示
+			ui_manager.show_land_command_button()
+			
+			print("[GameFlowManager] 召喚フェーズに戻りました - カード選択が可能です")
 
 # Phase 1-A: 領地コマンドを開く
 func open_land_command():
