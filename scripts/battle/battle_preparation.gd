@@ -34,6 +34,23 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		attacker_index
 	)
 	
+	# base_up_hpを設定（手札から出す場合はないはずだが、移動侵略の場合はある）
+	attacker.base_up_hp = card_data.get("base_up_hp", 0)
+	attacker.base_up_ap = card_data.get("base_up_ap", 0)
+	
+	# 現在HPから復元（手札から出す場合は満タン、移動侵略の場合はダメージ後の値）
+	var attacker_max_hp = attacker_base_hp + attacker.base_up_hp
+	var attacker_current_hp = card_data.get("current_hp", attacker_max_hp)
+	
+	# base_hpに現在HPから永続ボーナスを引いた値を設定
+	attacker.base_hp = attacker_current_hp - attacker.base_up_hp
+	
+	# current_hpを再計算
+	attacker.update_current_hp()
+	
+	print("【攻撃側HP復元】base_hp:", attacker.base_hp, " + base_up_hp:", attacker.base_up_hp, 
+		  " = current_hp:", attacker.current_hp, " / MHP:", attacker_max_hp)
+	
 	# 防御側の準備（土地ボーナスあり）
 	var defender_creature = tile_info.get("creature", {})
 	print("\n【防御側クリーチャーデータ】", defender_creature)
@@ -56,6 +73,23 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		false,  # is_attacker
 		defender_owner
 	)
+	
+	# base_up_hpを設定
+	defender.base_up_hp = defender_creature.get("base_up_hp", 0)
+	
+	# 現在HPから復元（ない場合は満タン）
+	var defender_max_hp = defender_base_hp + defender.base_up_hp
+	var defender_current_hp = defender_creature.get("current_hp", defender_max_hp)
+	
+	# base_hpに現在HPから永続ボーナスを引いた値を設定
+	# （BattleParticipant.base_hpは「基本HPの現在値」を意味する）
+	defender.base_hp = defender_current_hp - defender.base_up_hp
+	
+	# current_hpを再計算
+	defender.update_current_hp()
+	
+	print("【防御側HP復元】base_hp:", defender.base_hp, " + base_up_hp:", defender.base_up_hp, 
+		  " = current_hp:", defender.current_hp, " / MHP:", defender_max_hp)
 	
 	# 効果配列を適用
 	apply_effect_arrays(attacker, card_data)

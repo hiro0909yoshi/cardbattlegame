@@ -34,7 +34,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"player_lands": player_lands,
 			"battle_tile_index": tile_info.get("index", -1),
 			"player_id": attacker_index,
-			"board_system": board_system_ref
+			"board_system": board_system_ref,
+			"game_flow_manager": board_system_ref.game_flow_manager if board_system_ref else null
 		}
 	)
 	apply_skills(attacker, attacker_context)
@@ -49,7 +50,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"player_lands": defender_lands,
 			"battle_tile_index": tile_info.get("index", -1),
 			"player_id": defender.player_id,
-			"board_system": board_system_ref
+			"board_system": board_system_ref,
+			"game_flow_manager": board_system_ref.game_flow_manager if board_system_ref else null
 		}
 	)
 	apply_skills(defender, defender_context)
@@ -70,6 +72,9 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	var has_scroll_power_strike = "巻物強打" in keywords
+	
+	# 0. ターン数ボーナスを適用（最優先、他のスキルより前）
+	apply_turn_number_bonus(participant, context)
 	
 	# 1. 巻物攻撃判定（最優先）
 	check_scroll_attack(participant, context)
@@ -801,3 +806,57 @@ func revert_transform_after_battle(participant: BattleParticipant) -> void:
 		print("【変身復帰】", participant.creature_data.get("name", "?"), " → ", original_data.get("name", "?"))
 		participant.creature_data = original_data
 		participant.creature_data.erase("original_creature_data")
+
+## ターン数ボーナスを適用（ラーバキン用）
+func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "turn_number_bonus":
+			# GameFlowManagerから現在のターン数を取得
+			var game_flow_manager = context.get("game_flow_manager")
+			if not game_flow_manager:
+				print("【ターン数ボーナス】GameFlowManagerが見つかりません")
+				print("  context keys: ", context.keys())
+				print("  board_system_ref: ", board_system_ref)
+				if board_system_ref:
+					print("  board_system_ref.game_flow_manager: ", board_system_ref.game_flow_manager)
+				return
+			
+			var current_turn = game_flow_manager.current_turn_number
+			var ap_mode = effect.get("ap_mode", "add")
+			var hp_mode = effect.get("hp_mode", "add")
+			
+			# AP処理
+			var old_ap = participant.current_ap
+			if ap_mode == "subtract":
+				# STから現ターン数を引く
+				participant.current_ap = max(0, participant.current_ap - current_turn)
+				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+					  " ST減算: ", old_ap, " → ", participant.current_ap, " (-", current_turn, ")")
+			elif ap_mode == "add":
+				participant.current_ap += current_turn
+				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+					  " ST+", current_turn, " (ターン", current_turn, ")")
+			elif ap_mode == "override":
+				# STを現ターン数で上書き
+				participant.current_ap = current_turn
+				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+					  " ST上書き: ", old_ap, " → ", current_turn, " (ターン", current_turn, ")")
+			
+			# HP処理
+			if hp_mode == "add":
+				# temporary_bonus_hpに現ターン数を加算
+				participant.temporary_bonus_hp += current_turn
+				participant.update_current_hp()  # HPを再計算
+				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+					  " HP+", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
+			elif hp_mode == "subtract":
+				# temporary_bonus_hpから現ターン数を引く
+				participant.temporary_bonus_hp -= current_turn
+				participant.update_current_hp()  # HPを再計算
+				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+					  " HP-", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
+			
+			return

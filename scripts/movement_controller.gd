@@ -289,7 +289,13 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 		var tile = tile_nodes[tile_index]
 		if tile.owner_id == player_id and tile.creature_data:
 			var creature = tile.creature_data
-			var max_hp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
+			
+			# MHP計算
+			var base_hp = creature.get("hp", 0)  # 元のHP（不変）
+			var base_up_hp = creature.get("base_up_hp", 0)  # 永続ボーナス
+			var max_hp = base_hp + base_up_hp
+			
+			# 現在HP取得（ない場合は満タン）
 			var current_hp = creature.get("current_hp", max_hp)
 			
 			# HP回復（MHPを超えない）

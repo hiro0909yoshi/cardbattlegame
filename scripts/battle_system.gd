@@ -219,7 +219,7 @@ func validate_systems() -> bool:
 func _apply_post_battle_effects(
 	result: BattleResult,
 	attacker_index: int,
-	card_data: Dictionary,
+	_card_data: Dictionary,
 	tile_info: Dictionary,
 	attacker: BattleParticipant,
 	defender: BattleParticipant,
@@ -248,8 +248,19 @@ func _apply_post_battle_effects(
 			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
 			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
 			var placement_data = attacker.creature_data.duplicate(true)
-			placement_data["hp"] = attacker.base_hp  # ダメージを受けた状態で配置
+			
+			# 元のHPは触らない（不変）
+			# placement_data["hp"] = そのまま
+			
+			# 現在HPを保存
+			placement_data["current_hp"] = attacker.base_hp + attacker.base_up_hp
+			
 			board_system_ref.place_creature(tile_index, placement_data)
+			
+			# デバッグログ
+			var max_hp = placement_data.get("hp", 0) + placement_data.get("base_up_hp", 0)
+			print("[HP保存] ", placement_data.get("name", ""), 
+				  " 現在HP:", placement_data["current_hp"], " / MHP:", max_hp)
 			
 			emit_signal("invasion_completed", true, tile_index)
 		
@@ -279,7 +290,12 @@ func _apply_post_battle_effects(
 				
 				# クリーチャーデータを更新（戦闘後の残りHPを反映）
 				var return_data = attacker.creature_data.duplicate(true)
-				return_data["hp"] = attacker.base_hp  # 戦闘後の残りHP
+				
+				# 元のHPは触らない
+				# return_data["hp"] = そのまま
+				
+				# 現在HPを保存
+				return_data["current_hp"] = attacker.base_hp + attacker.base_up_hp
 				
 				from_tile.creature_data = return_data
 				from_tile.owner_id = attacker_index

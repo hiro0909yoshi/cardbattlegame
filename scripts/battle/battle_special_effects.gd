@@ -262,7 +262,17 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:
 	var tile_index = tile_info["index"]
 	var creature_data = tile_info.get("creature", {}).duplicate()
-	creature_data["hp"] = defender.base_hp  # ダメージを受けた基本HP
+	
+	# 元のHPは触らない（不変）
+	# creature_data["hp"] = そのまま
+	
+	# 現在HPを保存（base_hp + base_up_hpの現在値）
+	creature_data["current_hp"] = defender.base_hp + defender.base_up_hp
 	
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
+	
+	# デバッグログ
+	var max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+	print("[HP保存] ", creature_data.get("name", ""), 
+		  " 現在HP:", creature_data["current_hp"], " / MHP:", max_hp)

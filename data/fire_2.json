@@ -635,7 +635,16 @@
 	  "ap": 60,
 	  "hp": 30,
 	  "ability": "ST=現R数、HP+現R数",
-	  "ability_detail": "ST=現R数、HP+現R数"
+	  "ability_detail": "ST=現R数、HP+現R数",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "turn_number_bonus",
+			"ap_mode": "subtract",
+			"hp_mode": "add"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 48,

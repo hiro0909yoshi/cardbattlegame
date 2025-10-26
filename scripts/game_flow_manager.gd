@@ -636,11 +636,29 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 			# MHP + 新しいボーナスがしきい値を超えるかチェック
 			if operator == ">=" and (max_hp + value) >= threshold:
 				var reset_to = check.get("reset_to", 0)
-				creature_data["base_up_hp"] = reset_to - creature_data.get("hp", 0)
-				print("[Lap Bonus] ", creature_data.get("name", ""), " MHPリセット → ", 
-					  creature_data.get("hp", 0) + creature_data["base_up_hp"])
+				var base_hp = creature_data.get("hp", 0)
+				creature_data["base_up_hp"] = reset_to - base_hp
+				
+				# 現在HPもリセット値に
+				creature_data["current_hp"] = reset_to
+				
+				print("[Lap Bonus] ", creature_data.get("name", ""), 
+					  " MHPリセット → ", reset_to, " HP:", reset_to)
 				return
 		
 		creature_data["base_up_hp"] += value
-		print("[Lap Bonus] ", creature_data.get("name", ""), " MHP+", value, 
-			  " (周回", creature_data["map_lap_count"], "回目)")
+		
+		# 現在HPも回復（増えたMHP分だけ）
+		var base_hp = creature_data.get("hp", 0)
+		var base_up_hp = creature_data["base_up_hp"]
+		var max_hp = base_hp + base_up_hp
+		var current_hp = creature_data.get("current_hp", max_hp)
+		
+		# HP回復（MHPを超えない）
+		var new_hp = min(current_hp + value, max_hp)
+		creature_data["current_hp"] = new_hp
+		
+		print("[Lap Bonus] ", creature_data.get("name", ""), 
+			  " MHP+", value, " HP+", value,
+			  " (周回", creature_data["map_lap_count"], "回目)",
+			  " HP:", current_hp, "→", new_hp, " / MHP:", max_hp)

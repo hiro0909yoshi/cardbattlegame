@@ -28,8 +28,8 @@ enum CheckpointType { N, S }
 signal checkpoint_passed(player_id: int, checkpoint_type: String)
 
 func on_player_passed(player_id: int):
-    var type_str = "N" if checkpoint_type == CheckpointType.N else "S"
-    emit_signal("checkpoint_passed", player_id, type_str)
+	var type_str = "N" if checkpoint_type == CheckpointType.N else "S"
+	emit_signal("checkpoint_passed", player_id, type_str)
 ```
 
 ### 2. 周回状態管理
@@ -43,14 +43,14 @@ func on_player_passed(player_id: int):
 var player_lap_state = {}  # {player_id: {N: bool, S: bool}}
 
 func _initialize_lap_state(player_count: int):
-    for i in range(player_count):
-        player_lap_state[i] = {"N": false, "S": false}
+	for i in range(player_count):
+		player_lap_state[i] = {"N": false, "S": false}
 
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
-    player_lap_state[player_id][checkpoint_type] = true
-    
-    if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
-        _complete_lap(player_id)
+	player_lap_state[player_id][checkpoint_type] = true
+	
+	if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
+		_complete_lap(player_id)
 ```
 
 ### 3. 周回ボーナス適用
@@ -64,32 +64,32 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 #### ボーナス適用処理
 ```gdscript
 func _complete_lap(player_id: int):
-    # フラグをリセット
-    player_lap_state[player_id]["N"] = false
-    player_lap_state[player_id]["S"] = false
-    
-    # 全クリーチャーにボーナス適用
-    var tiles = board_system_3d.get_player_tiles(player_id)
-    for tile in tiles:
-        if tile.creature_data:
-            _apply_lap_bonus_to_creature(tile.creature_data)
+	# フラグをリセット
+	player_lap_state[player_id]["N"] = false
+	player_lap_state[player_id]["S"] = false
+	
+	# 全クリーチャーにボーナス適用
+	var tiles = board_system_3d.get_player_tiles(player_id)
+	for tile in tiles:
+		if tile.creature_data:
+			_apply_lap_bonus_to_creature(tile.creature_data)
 
 func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
-    var stat = effect.get("stat", "ap")
-    var value = effect.get("value", 10)
-    
-    # 周回カウント
-    if not creature_data.has("map_lap_count"):
-        creature_data["map_lap_count"] = 0
-    creature_data["map_lap_count"] += 1
-    
-    # base_up_hp/ap に加算
-    if stat == "ap":
-        creature_data["base_up_ap"] += value
-    elif stat == "max_hp":
-        # リセット条件チェック（モスタイタン用）
-        # ...
-        creature_data["base_up_hp"] += value
+	var stat = effect.get("stat", "ap")
+	var value = effect.get("value", 10)
+	
+	# 周回カウント
+	if not creature_data.has("map_lap_count"):
+		creature_data["map_lap_count"] = 0
+	creature_data["map_lap_count"] += 1
+	
+	# base_up_hp/ap に加算
+	if stat == "ap":
+		creature_data["base_up_ap"] += value
+	elif stat == "max_hp":
+		# リセット条件チェック（モスタイタン用）
+		# ...
+		creature_data["base_up_hp"] += value
 ```
 
 ---
@@ -102,17 +102,17 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 ```json
 {
   "ability_parsed": {
-    "keywords": ["先制"],
-    "effects": [
-      {
-        "effect_type": "first_strike"
-      },
-      {
-        "effect_type": "per_lap_permanent_bonus",
-        "stat": "ap",
-        "value": 10
-      }
-    ]
+	"keywords": ["先制"],
+	"effects": [
+	  {
+		"effect_type": "first_strike"
+	  },
+	  {
+		"effect_type": "per_lap_permanent_bonus",
+		"stat": "ap",
+		"value": 10
+	  }
+	]
   }
 }
 ```
@@ -121,20 +121,20 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 ```json
 {
   "ability_parsed": {
-    "effects": [
-      {
-        "effect_type": "per_lap_permanent_bonus",
-        "stat": "max_hp",
-        "value": 10,
-        "reset_condition": {
-          "max_hp_check": {
-            "operator": ">=",
-            "value": 80,
-            "reset_to": 30
-          }
-        }
-      }
-    ]
+	"effects": [
+	  {
+		"effect_type": "per_lap_permanent_bonus",
+		"stat": "max_hp",
+		"value": 10,
+		"reset_condition": {
+		  "max_hp_check": {
+			"operator": ">=",
+			"value": 80,
+			"reset_to": 30
+		  }
+		}
+	  }
+	]
   }
 }
 ```

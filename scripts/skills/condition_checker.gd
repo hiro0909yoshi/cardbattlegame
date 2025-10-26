@@ -324,6 +324,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"battle_tile_index": game_state.get("battle_tile_index", -1),
 		"player_id": game_state.get("player_id", -1),
 		"board_system": game_state.get("board_system", null),
+		"game_flow_manager": game_state.get("game_flow_manager", null),
 		
 		# 能力情報
 		"enemy_abilities": defender_data.get("abilities", []),

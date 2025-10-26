@@ -16,12 +16,12 @@
 ### タイル配置
 ```
 タイル番号は時計回りに0〜19
-      
-      15  14  13  12  11  10
-    16                      9
+	  
+	  15  14  13  12  11  10
+	16                      9
   17                          8
-    18                      7
-      19  0   1   2   3   4   5   6
+	18                      7
+	  19  0   1   2   3   4   5   6
 ```
 
 ---
@@ -202,7 +202,7 @@ MHP 50, 現在HP 45 → 50に回復（上限）
    │   └─ check_and_handle_checkpoint() → N/Sシグナル
    │
    └─ ワープ通過
-       └─ check_and_handle_warp() → ワープ実行
+	   └─ check_and_handle_warp() → ワープ実行
    ↓
 4. 最終位置に到達
    ↓
@@ -215,9 +215,9 @@ MHP 50, 現在HP 45 → 50に回復（上限）
 ```gdscript
 {
   player_id: {
-    "game_started": bool,  # ゲーム開始フラグ
-    "N": bool,             # Nシグナル受信フラグ
-    "S": bool              # Sシグナル受信フラグ
+	"game_started": bool,  # ゲーム開始フラグ
+	"N": bool,             # Nシグナル受信フラグ
+	"S": bool              # Sシグナル受信フラグ
   }
 }
 ```
@@ -227,16 +227,16 @@ MHP 50, 現在HP 45 → 50に回復（上限）
 ```
 CheckpointTile
   └─ checkpoint_passed(player_id, "N"|"S")
-       ↓
+	   ↓
   GameFlowManager._on_checkpoint_passed()
-       ↓
+	   ↓
   両方のフラグが立つ？
-       ├─ YES → _complete_lap()
-       │          ├─ フラグリセット
-       │          ├─ 永続バフ適用
-       │          └─ lap_completed シグナル
-       │
-       └─ NO → 待機
+	   ├─ YES → _complete_lap()
+	   │          ├─ フラグリセット
+	   │          ├─ 永続バフ適用
+	   │          └─ lap_completed シグナル
+	   │
+	   └─ NO → 待機
 ```
 
 ---

@@ -122,7 +122,9 @@ docs/
 | **[turn_end_flow.md](design/turn_end_flow.md)** | ターン終了処理フロー・問題点・重複防止機構 |
 | **[defensive_creature_design.md](design/defensive_creature_design.md)** | 防御型クリーチャー21体・召喚/移動/侵略制限 |
 | **[lap_system.md](design/lap_system.md)** | 周回システム・チェックポイント・ボーナス適用 ✅ |
+| **[turn_number_system.md](design/turn_number_system.md)** | ラウンド数カウンター・ラーバキン ✅ |
 | **[conditional_stat_buff_system.md](design/conditional_stat_buff_system.md)** | 条件付きバフ38体・永続/一時バフ・実装状況 |
+| **[hp_structure.md](design/hp_structure.md)** | HP管理構造・MHP計算・current_hp仕様 ⭐️ |
 
 ---
 
