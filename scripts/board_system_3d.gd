@@ -263,6 +263,15 @@ func update_all_tile_displays():
 func get_tile_data_array() -> Array:
 	return tile_data_manager.get_tile_data_array()
 
+# プレイヤーが所有している全タイルを取得
+func get_player_tiles(player_id: int) -> Array:
+	var player_tiles = []
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id == player_id:
+			player_tiles.append(tile)
+	return player_tiles
+
 # === 移動処理（MovementController3Dに委譲） ===
 
 func move_player_3d(player_id: int, steps: int):

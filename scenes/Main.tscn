@@ -111,8 +111,6 @@ tile_index = 5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 20)
 tile_index = 15
 
-[node name="CheckpointTile3" parent="Tiles" instance=ExtResource("10_bjd11")]
-
 [node name="Background" type="Node3D" parent="."]
 
 [node name="GridMap" type="GridMap" parent="Background"]

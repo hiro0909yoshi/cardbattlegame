@@ -209,10 +209,12 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 	var player_node = player_nodes[player_id]
 	
 	# ワープエフェクト（簡易版：縮小して消える→移動→拡大して現れる）
+	# 注意: Vector3.ZEROだとTransform3D.invert()でエラーが出るため極小値を使用
+	const WARP_MIN_SCALE = Vector3(0.001, 0.001, 0.001)
 	var tween = get_tree().create_tween()
 	
-	# 縮小して消える
-	tween.tween_property(player_node, "scale", Vector3.ZERO, 0.2)
+	# 縮小して消える（ほぼゼロまで）
+	tween.tween_property(player_node, "scale", WARP_MIN_SCALE, 0.2)
 	
 	# 瞬間移動
 	await tween.finished

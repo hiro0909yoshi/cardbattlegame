@@ -405,7 +405,23 @@
 	  "ap": 50,
 	  "hp": 30,
 	  "ability": "MHP変動",
-	  "ability_detail": "周回ごとにMHP+10；MHP80以上ならMHP=30"
+	  "ability_detail": "周回ごとにMHP+10；MHP80以上ならMHP=30",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "per_lap_permanent_bonus",
+			"stat": "max_hp",
+			"value": 10,
+			"reset_condition": {
+			  "max_hp_check": {
+				"operator": ">=",
+				"value": 80,
+				"reset_to": 30
+			  }
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 241,

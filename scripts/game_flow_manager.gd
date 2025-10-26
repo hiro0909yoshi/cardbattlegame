@@ -523,7 +523,6 @@ func _initialize_lap_state(player_count: int):
 	player_lap_state.clear()
 	for i in range(player_count):
 		player_lap_state[i] = {
-			"game_started": false,  # ゲーム開始フラグ
 			"N": false,
 			"S": false
 		}
@@ -552,15 +551,11 @@ func _connect_checkpoint_signals():
 # チェックポイント通過イベント
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	if not player_lap_state.has(player_id):
+		print("[GameFlowManager] ERROR: player_lap_state にプレイヤー", player_id, "が存在しません")
 		return
 	
-	print("[GameFlowManager] チェックポイント通過: プレイヤー", player_id + 1, " タイプ:", checkpoint_type)
-	
-	# ゲーム開始時のN通過は無視
-	if checkpoint_type == "N" and not player_lap_state[player_id]["game_started"]:
-		player_lap_state[player_id]["game_started"] = true
-		print("[GameFlowManager] ゲーム開始フラグ設定")
-		return
+	print("[GameFlowManager] チェックポイント通過: プレイヤー", player_id + 1, " タイプ:", checkpoint_type, 
+		  " (現在: N=", player_lap_state[player_id]["N"], " S=", player_lap_state[player_id]["S"], ")")
 	
 	# チェックポイントフラグを立てる
 	player_lap_state[player_id][checkpoint_type] = true
@@ -588,16 +583,21 @@ func _complete_lap(player_id: int):
 func _apply_lap_bonus_to_all_creatures(player_id: int):
 	var tiles = board_system_3d.get_player_tiles(player_id)
 	
+	print("[GameFlowManager] 周回ボーナス適用開始: プレイヤー", player_id + 1, " 対象タイル数:", tiles.size())
+	
 	for tile in tiles:
 		if tile.creature_data:
+			print("[GameFlowManager] ボーナス対象: ", tile.creature_data.get("name", ""), " (タイル", tile.tile_index, ")")
 			_apply_lap_bonus_to_creature(tile.creature_data)
 
 # クリーチャーに周回ボーナスを適用
 func _apply_lap_bonus_to_creature(creature_data: Dictionary):
 	if not creature_data.has("ability_parsed"):
+		print("[GameFlowManager] ability_parsed なし: ", creature_data.get("name", ""))
 		return
 	
 	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
+	print("[GameFlowManager] エフェクト確認: ", creature_data.get("name", ""), " エフェクト数:", effects.size())
 	
 	for effect in effects:
 		if effect.get("effect_type") == "per_lap_permanent_bonus":
