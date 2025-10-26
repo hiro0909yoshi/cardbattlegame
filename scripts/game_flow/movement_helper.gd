@@ -34,7 +34,11 @@ static func get_move_destinations(
 				if not tile in all_destinations:
 					all_destinations.append(tile)
 			
-			print("[MovementHelper] 空地移動+通常移動: 空地=%d個, 隣接=%d個, 合計=%d個" % [vacant_destinations.size(), adjacent_destinations.size(), all_destinations.size()])
+			# フィルタリング適用
+			var current_player_id = board_system.current_player_index
+			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
+			
+			print("[MovementHelper] 空地移動+通常移動（フィルタ後）: %d個" % all_destinations.size())
 			return all_destinations
 		"enemy_move":
 			# 敵地移動スキル持ちでも通常の隣接移動もできる
@@ -53,12 +57,20 @@ static func get_move_destinations(
 				if not tile in all_destinations:
 					all_destinations.append(tile)
 			
-			print("[MovementHelper] 敵地移動+通常移動: 敵地=%d個, 隣接=%d個, 合計=%d個" % [enemy_destinations.size(), adjacent_destinations.size(), all_destinations.size()])
+			# フィルタリング適用
+			var current_player_id = board_system.current_player_index
+			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
+			
+			print("[MovementHelper] 敵地移動+通常移動（フィルタ後）: %d個" % all_destinations.size())
 			return all_destinations
 		"adjacent":
 			# TileNeighborSystemを使用
 			if board_system.tile_neighbor_system:
-				return board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				var adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				# フィルタリング適用
+				var current_player_id = board_system.current_player_index
+				adjacent_tiles = _filter_invalid_destinations(board_system, adjacent_tiles, current_player_id)
+				return adjacent_tiles
 			return []
 		"random_vacant":  # 戦闘後のアージェントキー用
 			return _get_all_vacant_tiles(board_system)
@@ -116,6 +128,10 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 		if not tile:
 			continue
 		
+		# 特殊マスチェック（checkpoint, warpは空地移動不可）
+		if tile.tile_type in ["checkpoint", "warp"]:
+			continue
+		
 		# 空き地チェック（所有者がいない）
 		if tile.owner_id != -1:
 			continue
@@ -144,7 +160,7 @@ static func _get_enemy_tiles_by_condition(
 	board_system: Node,
 	condition: Dictionary,
 	from_tile_index: int,
-	creature_data: Dictionary = {}
+	_creature_data: Dictionary = {}
 ) -> Array:
 	var enemy_tiles = []
 	
@@ -167,6 +183,10 @@ static func _get_enemy_tiles_by_condition(
 	for i in all_tiles:
 		var tile = board_system.tile_nodes[i]
 		if not tile:
+			continue
+		
+		# 特殊マスチェック（checkpoint, warpは敵地移動不可）
+		if tile.tile_type in ["checkpoint", "warp"]:
 			continue
 		
 		# 敵地チェック（他プレイヤーの土地）
@@ -194,6 +214,30 @@ static func _get_all_vacant_tiles(board_system: Node) -> Array:
 	# "全"属性として処理
 	return _get_vacant_tiles_by_elements(board_system, ["全"])
 
+## 移動不可能なタイルをフィルタリング
+static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int) -> Array:
+	var valid_tiles = []
+	
+	for tile_index in tile_indices:
+		if not board_system.tile_nodes.has(tile_index):
+			continue
+		
+		var tile = board_system.tile_nodes[tile_index]
+		
+		# 特殊マスチェック（checkpoint, warpは移動不可）
+		if tile.tile_type in ["checkpoint", "warp"]:
+			print("[MovementHelper] タイル%d は特殊マス(%s)のため移動不可" % [tile_index, tile.tile_type])
+			continue
+		
+		# 自分のクリーチャーがいる土地はNG
+		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
+			print("[MovementHelper] タイル%d は自分のクリーチャーがいるため移動不可" % tile_index)
+			continue
+		
+		valid_tiles.append(tile_index)
+	
+	return valid_tiles
+
 ## クリーチャーの移動を実行する共通処理
 ## 発動タイミングに関わらず同じ処理
 static func execute_creature_move(
@@ -210,9 +254,9 @@ static func execute_creature_move(
 	var from_tile_node = board_system.tile_nodes[from_tile]
 	var to_tile_node = board_system.tile_nodes[to_tile]
 	
-	# creature_dataが空の場合は移動元から取得
+	# creature_dataが空の場合は移動元から取得（duplicate()でコピー）
 	if creature_data.is_empty():
-		creature_data = from_tile_node.creature_data
+		creature_data = from_tile_node.creature_data.duplicate()
 	
 	print("[MovementHelper] 移動実行: %d -> %d" % [from_tile, to_tile])
 	

@@ -544,7 +544,6 @@ func _connect_checkpoint_signals():
 			if tile.has_signal("checkpoint_passed"):
 				if not tile.checkpoint_passed.is_connected(_on_checkpoint_passed):
 					tile.checkpoint_passed.connect(_on_checkpoint_passed)
-					print("[GameFlowManager] チェックポイント接続: タイル", tile_index, " タイプ:", tile.get("checkpoint_type"))
 			elif tile.get("tile_type") == "checkpoint":
 				print("[GameFlowManager] 警告: タイル", tile_index, "はcheckpointだがシグナルがない")
 
@@ -554,8 +553,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 		print("[GameFlowManager] ERROR: player_lap_state にプレイヤー", player_id, "が存在しません")
 		return
 	
-	print("[GameFlowManager] チェックポイント通過: プレイヤー", player_id + 1, " タイプ:", checkpoint_type, 
-		  " (現在: N=", player_lap_state[player_id]["N"], " S=", player_lap_state[player_id]["S"], ")")
+
 	
 	# チェックポイントフラグを立てる
 	player_lap_state[player_id][checkpoint_type] = true
@@ -566,7 +564,6 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 
 # 周回完了処理
 func _complete_lap(player_id: int):
-	print("[GameFlowManager] ★周回完了★ プレイヤー", player_id + 1)
 	
 	# フラグをリセット（game_startedは維持）
 	player_lap_state[player_id]["N"] = false
@@ -583,21 +580,16 @@ func _complete_lap(player_id: int):
 func _apply_lap_bonus_to_all_creatures(player_id: int):
 	var tiles = board_system_3d.get_player_tiles(player_id)
 	
-	print("[GameFlowManager] 周回ボーナス適用開始: プレイヤー", player_id + 1, " 対象タイル数:", tiles.size())
-	
 	for tile in tiles:
 		if tile.creature_data:
-			print("[GameFlowManager] ボーナス対象: ", tile.creature_data.get("name", ""), " (タイル", tile.tile_index, ")")
 			_apply_lap_bonus_to_creature(tile.creature_data)
 
 # クリーチャーに周回ボーナスを適用
 func _apply_lap_bonus_to_creature(creature_data: Dictionary):
 	if not creature_data.has("ability_parsed"):
-		print("[GameFlowManager] ability_parsed なし: ", creature_data.get("name", ""))
 		return
 	
 	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
-	print("[GameFlowManager] エフェクト確認: ", creature_data.get("name", ""), " エフェクト数:", effects.size())
 	
 	for effect in effects:
 		if effect.get("effect_type") == "per_lap_permanent_bonus":
@@ -628,16 +620,16 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 		# リセット条件チェック（モスタイタン用）
 		var reset_condition = effect.get("reset_condition")
 		if reset_condition:
-			var max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+			var reset_max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
 			var check = reset_condition.get("max_hp_check", {})
 			var operator = check.get("operator", ">=")
 			var threshold = check.get("value", 80)
 			
 			# MHP + 新しいボーナスがしきい値を超えるかチェック
-			if operator == ">=" and (max_hp + value) >= threshold:
+			if operator == ">=" and (reset_max_hp + value) >= threshold:
 				var reset_to = check.get("reset_to", 0)
-				var base_hp = creature_data.get("hp", 0)
-				creature_data["base_up_hp"] = reset_to - base_hp
+				var reset_base_hp = creature_data.get("hp", 0)
+				creature_data["base_up_hp"] = reset_to - reset_base_hp
 				
 				# 現在HPもリセット値に
 				creature_data["current_hp"] = reset_to

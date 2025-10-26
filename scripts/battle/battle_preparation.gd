@@ -48,9 +48,6 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# current_hpを再計算
 	attacker.update_current_hp()
 	
-	print("【攻撃側HP復元】base_hp:", attacker.base_hp, " + base_up_hp:", attacker.base_up_hp, 
-		  " = current_hp:", attacker.current_hp, " / MHP:", attacker_max_hp)
-	
 	# 防御側の準備（土地ボーナスあり）
 	var defender_creature = tile_info.get("creature", {})
 	print("\n【防御側クリーチャーデータ】", defender_creature)
@@ -87,9 +84,6 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# current_hpを再計算
 	defender.update_current_hp()
-	
-	print("【防御側HP復元】base_hp:", defender.base_hp, " + base_up_hp:", defender.base_up_hp, 
-		  " = current_hp:", defender.current_hp, " / MHP:", defender_max_hp)
 	
 	# 効果配列を適用
 	apply_effect_arrays(attacker, card_data)

@@ -258,13 +258,20 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		print("[LandActionHelper] 空き地への移動 - 土地獲得")
 		
-		# MovementHelper.execute_creature_move()を使用（duplicate()しない）
-		# 移動元タイルの所有権は後で設定
-		var from_owner = source_tile.owner_id
-		MovementHelper.execute_creature_move(handler.board_system, handler.move_source_tile, dest_tile_index)
+		# 移動先にクリーチャーを直接配置（すでにcreature_dataをduplicateしている）
+		dest_tile.creature_data = creature_data
+		dest_tile.owner_id = current_player_index
+		
+		# ダウン状態設定（不屈チェック）
+		if dest_tile.has_method("set_down_state"):
+			if not SkillSystem.has_unyielding(creature_data):
+				dest_tile.set_down_state(true)
+		
+		if dest_tile.has_method("update_display"):
+			dest_tile.update_display()
 		
 		# 移動先の所有権を設定
-		handler.board_system.set_tile_owner(dest_tile_index, from_owner)
+		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)
 		
 		# 領地コマンドを閉じる
 		handler.close_land_command()

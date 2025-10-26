@@ -301,9 +301,6 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 			# HP回復（MHPを超えない）
 			var new_hp = min(current_hp + heal_amount, max_hp)
 			creature["current_hp"] = new_hp
-			
-			print("[MovementController] HP回復: タイル", tile_index, " ", creature.get("name", ""), 
-				  " (", current_hp, " → ", new_hp, " / ", max_hp, ")")
 
 # Phase 1-A: プレイヤーの全土地のダウン状態をクリア
 func clear_all_down_states_for_player(player_id: int):
@@ -311,7 +308,6 @@ func clear_all_down_states_for_player(player_id: int):
 		var tile = tile_nodes[tile_index]
 		if tile.owner_id == player_id and tile.has_method("is_down") and tile.is_down():
 			tile.clear_down_state()
-			print("[MovementController] ダウン状態クリア: タイル", tile_index, "（プレイヤー", player_id + 1, "）")
 
 # カメラをプレイヤーにフォーカス
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:

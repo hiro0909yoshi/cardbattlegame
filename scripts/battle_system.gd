@@ -257,11 +257,6 @@ func _apply_post_battle_effects(
 			
 			board_system_ref.place_creature(tile_index, placement_data)
 			
-			# デバッグログ
-			var max_hp = placement_data.get("hp", 0) + placement_data.get("base_up_hp", 0)
-			print("[HP保存] ", placement_data.get("name", ""), 
-				  " 現在HP:", placement_data["current_hp"], " / MHP:", max_hp)
-			
 			emit_signal("invasion_completed", true, tile_index)
 		
 		BattleResult.DEFENDER_WIN:

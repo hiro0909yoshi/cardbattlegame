@@ -50,6 +50,20 @@
 - **実装ファイル**: `GameFlowManager`, `BattleSkillProcessor`, `ConditionChecker`
 - **対象クリーチャー**: ラーバキン(47)
 - **詳細仕様**: [turn_number_system.md](./turn_number_system.md) 参照
+- **ステータス**: ✅ 完了
+
+### ✅ HP管理構造 (2025-10-27)
+- **実装ファイル**: `BattleSystem`, `BattlePreparation`, `BattleSpecialEffects`, `MovementController`, `GameFlowManager`
+- **追加フィールド**: `creature_data["current_hp"]`（現在HP保存）
+- **詳細仕様**: [hp_structure.md](./hp_structure.md) 参照
+- **機能**:
+  - バトル後の現在HP保存
+  - 次バトルでの正しいHP復元
+  - スタート通過でHP+10回復
+  - 周回ボーナスでのHP回復
+  - MHP計算（`hp` + `base_up_hp`）
+- **ステータス**: ✅ 完了
+- **詳細仕様**: [turn_number_system.md](./turn_number_system.md) 参照
 - **重要**: ターン制ではなく**ラウンド制**（全プレイヤーが1回ずつ行動で+1）
 
 ---

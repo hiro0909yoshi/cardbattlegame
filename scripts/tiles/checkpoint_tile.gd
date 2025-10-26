@@ -16,5 +16,4 @@ func _ready():
 # チェックポイント通過を通知
 func on_player_passed(player_id: int):
 	var type_str = "N" if checkpoint_type == CheckpointType.N else "S"
-	print("[CheckpointTile] プレイヤー", player_id + 1, "がチェックポイント(", type_str, ")を通過")
 	emit_signal("checkpoint_passed", player_id, type_str)

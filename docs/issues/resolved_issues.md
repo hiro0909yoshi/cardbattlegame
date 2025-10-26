@@ -13,6 +13,72 @@
 
 ## 解決済みの課題
 
+### ✅ 解決済み（2025/10/27）
+
+#### ~~BUG-012: 領地コマンド移動時にクリーチャーが消える~~
+**解決日**: 2025/10/27  
+**解決方法**: 参照渡しの問題を修正 + 直接配置処理に変更
+
+**元の問題**: 
+- 領地コマンドで配置済みクリーチャーを移動させると、移動先でクリーチャーが消える
+- 特に特殊移動スキル（空地移動・敵地移動）実装後に発生
+
+**根本原因**:
+1. **`MovementHelper.execute_creature_move()` の参照問題**
+   - `from_tile_node.creature_data` を参照で取得
+   - その直後に `from_tile_node.creature_data = {}` でクリア
+   - 結果、参照も空になっていた
+
+2. **`land_action_helper.confirm_move()` の処理順序問題**
+   - `MovementHelper` に `creature_data` を渡していなかった
+   - 所有権を -1 にした後に取得しようとしていた
+
+**影響範囲**: 
+- `scripts/game_flow/movement_helper.gd`
+- `scripts/game_flow/land_action_helper.gd`
+
+**修正内容**:
+
+**修正1**: `movement_helper.gd` - duplicate()でコピーを作成
+```gdscript
+// Before
+if creature_data.is_empty():
+	creature_data = from_tile_node.creature_data  // 参照取得
+
+// After  
+if creature_data.is_empty():
+	creature_data = from_tile_node.creature_data.duplicate()  // コピー取得
+```
+
+**修正2**: `land_action_helper.gd` - 直接配置処理に変更
+```gdscript
+// Before
+var from_owner = source_tile.owner_id  // -1になっている
+MovementHelper.execute_creature_move(...)
+
+// After
+dest_tile.creature_data = creature_data
+dest_tile.owner_id = current_player_index
+// ダウン状態設定・表示更新
+```
+
+**特殊移動スキルへの影響**:
+- ✅ **空地移動**: 修正により正常動作
+- ✅ **敵地移動**: 影響なし（別の処理経路を使用）
+- ✅ **通常移動**: より安全に動作
+
+**テスト結果**:
+- ✅ 空地移動でクリーチャーが正しく移動先に配置される
+- ✅ 通常の領地コマンド移動が正常動作
+- ✅ バフが移動後も保持される
+- ✅ ダウン状態が正しく設定される
+
+**教訓**:
+- GDScriptの辞書は**参照渡し**なので、`duplicate()`でコピーを作成する必要がある
+- 処理順序が重要：必要な情報を先に取得してからクリア処理を行う
+
+---
+
 ### ✅ 解決済み（2025/10/15）
 
 #### ~~FEAT-004: レベルアップ機能の完全実装~~

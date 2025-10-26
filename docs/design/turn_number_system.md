@@ -26,19 +26,19 @@
 var current_turn_number = 0  # ラウンド数カウンター
 
 func start_game():
-    current_turn_number = 1  # ラウンド1から開始
-    # ...
+	current_turn_number = 1  # ラウンド1から開始
+	# ...
 
 func end_turn():
-    # ...
-    # プレイヤー切り替え
-    var old_player_index = board_system_3d.current_player_index
-    board_system_3d.current_player_index = (board_system_3d.current_player_index + 1) % board_system_3d.player_count
-    
-    # 全プレイヤーが1回ずつ行動したらラウンド数を増やす
-    if board_system_3d.current_player_index == 0:
-        current_turn_number += 1
-        print("=== ラウンド", current_turn_number, "開始 ===")
+	# ...
+	# プレイヤー切り替え
+	var old_player_index = board_system_3d.current_player_index
+	board_system_3d.current_player_index = (board_system_3d.current_player_index + 1) % board_system_3d.player_count
+	
+	# 全プレイヤーが1回ずつ行動したらラウンド数を増やす
+	if board_system_3d.current_player_index == 0:
+		current_turn_number += 1
+		print("=== ラウンド", current_turn_number, "開始 ===")
 ```
 
 ### 2. ラウンド制の仕様
@@ -68,13 +68,13 @@ func end_turn():
 ```json
 {
   "ability_parsed": {
-    "effects": [
-      {
-        "effect_type": "turn_number_bonus",
-        "ap_mode": "subtract",
-        "hp_mode": "add"
-      }
-    ]
+	"effects": [
+	  {
+		"effect_type": "turn_number_bonus",
+		"ap_mode": "subtract",
+		"hp_mode": "add"
+	  }
+	]
   }
 }
 ```
@@ -101,32 +101,32 @@ func end_turn():
 #### apply_turn_number_bonus
 ```gdscript
 func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary) -> void:
-    var ability_parsed = participant.creature_data.get("ability_parsed", {})
-    var effects = ability_parsed.get("effects", [])
-    
-    for effect in effects:
-        if effect.get("effect_type") == "turn_number_bonus":
-            var game_flow_manager = context.get("game_flow_manager")
-            if not game_flow_manager:
-                return
-            
-            var current_turn = game_flow_manager.current_turn_number
-            var ap_mode = effect.get("ap_mode", "add")
-            var hp_mode = effect.get("hp_mode", "add")
-            
-            # AP処理
-            if ap_mode == "subtract":
-                participant.current_ap = max(0, participant.current_ap - current_turn)
-            elif ap_mode == "add":
-                participant.current_ap += current_turn
-            elif ap_mode == "override":
-                participant.current_ap = current_turn
-            
-            # HP処理
-            if hp_mode == "add":
-                participant.current_hp += current_turn
-            elif hp_mode == "subtract":
-                participant.current_hp = max(1, participant.current_hp - current_turn)
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "turn_number_bonus":
+			var game_flow_manager = context.get("game_flow_manager")
+			if not game_flow_manager:
+				return
+			
+			var current_turn = game_flow_manager.current_turn_number
+			var ap_mode = effect.get("ap_mode", "add")
+			var hp_mode = effect.get("hp_mode", "add")
+			
+			# AP処理
+			if ap_mode == "subtract":
+				participant.current_ap = max(0, participant.current_ap - current_turn)
+			elif ap_mode == "add":
+				participant.current_ap += current_turn
+			elif ap_mode == "override":
+				participant.current_ap = current_turn
+			
+			# HP処理
+			if hp_mode == "add":
+				participant.current_hp += current_turn
+			elif hp_mode == "subtract":
+				participant.current_hp = max(1, participant.current_hp - current_turn)
 ```
 
 #### 適用タイミング
@@ -140,11 +140,11 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 
 ```gdscript
 static func build_battle_context(...):
-    return {
-        # ...
-        "game_flow_manager": game_state.get("game_flow_manager", null),
-        # ...
-    }
+	return {
+		# ...
+		"game_flow_manager": game_state.get("game_flow_manager", null),
+		# ...
+	}
 ```
 
 ---

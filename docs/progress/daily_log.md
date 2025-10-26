@@ -12,6 +12,54 @@
 
 ---
 
+## 2025年10月27日
+
+### 完了した作業
+
+- ✅ **BUG-012: 領地コマンド移動時にクリーチャーが消える不具合を修正**
+  - 原因: GDScriptの参照渡しによる問題 + 処理順序の問題
+  - 修正1: `MovementHelper.execute_creature_move()` で `duplicate()` 使用
+  - 修正2: `land_action_helper.confirm_move()` で直接配置処理に変更
+  - 影響: 空地移動・通常移動が正常動作、敵地移動は影響なし
+  - 詳細: `docs/issues/resolved_issues.md` (BUG-012)
+  - **残りトークン: 103,011 / 190,000**
+
+- ✅ **周回システム実装完了**
+  - CheckpointTile（N/S）実装
+  - 周回検出システム実装
+  - キメラ（ST+10）、モスタイタン（MHP+10、リセット機能）実装
+  - 詳細: `docs/design/lap_system.md`
+
+- ✅ **ラウンド数カウンター実装完了**
+  - GameFlowManagerに`current_turn_number`追加
+  - ラーバキン（ST=現R数、HP+現R数）実装
+  - 詳細: `docs/design/turn_number_system.md`
+
+- ✅ **HP管理構造実装完了**
+  - `creature_data["current_hp"]`フィールド追加
+  - バトル後の現在HP保存
+  - 次バトルでの正しいHP復元
+  - スタート通過でHP+10回復
+  - 周回ボーナスでのHP回復
+  - MHP計算（`hp` + `base_up_hp`）
+  - 詳細: `docs/design/hp_structure.md`
+  - **残りトークン: 61,132 / 190,000**
+
+### 次のステップ
+
+- 📋 **必須機能の実装（Phase 3-A 準備）**
+  1. **手札数取得実装**（10分）
+	 - BattleSkillProcessor に `apply_hand_count_effects()` 追加
+	 - 対象: リリス（手札数×10 HP上昇）
+  2. **破壊数カウンター実装**（30分）
+	 - GameFlowManager に `creatures_destroyed_this_game` 追加
+	 - 対象: ソウルコレクター、バルキリーなど
+
+- 📋 **Phase 3-A: シンプルな条件バフ実装**（2-3日）
+  - 常時補正（2体）: アイスウォール、トルネード
+
+---
+
 ## 2025年10月26日
 
 ### 完了した作業

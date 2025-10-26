@@ -410,7 +410,7 @@ func complete_action():
 	_complete_action()
 
 # Phase 1-D: クリーチャー交換処理
-func execute_swap(tile_index: int, card_index: int, old_creature_data: Dictionary):
+func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictionary):
 	if not is_action_processing:
 		print("Warning: Not processing any action")
 		return
