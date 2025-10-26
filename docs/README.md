@@ -90,7 +90,7 @@ docs/
 | **[effect_system_design.md](design/effect_system_design.md)** | 設計思想・13パターン・データ構造・適用順序・未決定事項 |
 | **[effect_system.md](design/effect_system.md)** | 実装仕様・Phase進捗・実装カード例・コード使用例 |
 
-#### 個別スキル仕様書（16種類）
+#### 個別スキル仕様書（17種類）
 
 **場所**: `design/skills/`
 
@@ -112,6 +112,7 @@ docs/
 | 14 | アイテム破壊・盗み | [item_destruction_theft_skill.md](design/skills/item_destruction_theft_skill.md) |
 | 15 | 変身 | [transform_skill.md](design/skills/transform_skill.md) |
 | 16 | 死者復活 | [revive_skill.md](design/skills/revive_skill.md) |
+| 17 | 空地移動・敵地移動 | [vacant_move_skill.md](design/skills/vacant_move_skill.md) |
 
 #### その他システム
 

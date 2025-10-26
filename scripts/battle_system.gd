@@ -104,11 +104,11 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		execute_invasion_3d(attacker_index, card_data, tile_info)
 		return
 	
-	# バトル実行
-	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item)
+	# バトル実行（通常侵略なので from_tile_index = -1）
+	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, -1)
 
 # バトル実行（カードデータ直接指定版）- カード使用処理は呼び出し側で行う
-func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
+func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, from_tile_index: int = -1) -> void:
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
@@ -120,10 +120,10 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 		return
 	
 	# バトル実行
-	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item)
+	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, from_tile_index)
 
 # バトルコア処理（共通化）
-func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary) -> void:
+func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1) -> void:
 	print("========== バトル開始 ==========")
 	
 	# 1. 両者の準備
@@ -182,7 +182,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var result = battle_execution.resolve_battle_result(attacker, defender)
 	
 	# 6. 結果に応じた処理（死者復活情報も渡す）
-	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result)
+	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
 	
 	print("================================")
 
@@ -223,7 +223,8 @@ func _apply_post_battle_effects(
 	tile_info: Dictionary,
 	attacker: BattleParticipant,
 	defender: BattleParticipant,
-	battle_result: Dictionary = {}
+	battle_result: Dictionary = {},
+	from_tile_index: int = -1
 ) -> void:
 	var tile_index = tile_info["index"]
 	
@@ -263,21 +264,45 @@ func _apply_post_battle_effects(
 		
 		BattleResult.ATTACKER_SURVIVED:
 			print("
-【結果】両者生存 → 侵略失敗、カード手札に戻る")
+【結果】両者生存 → 侵略失敗")
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
 				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
-			# カードを手札に戻す
-			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
-			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
-			var return_card_data = attacker.creature_data.duplicate(true)
-			# HPは元の最大値にリセット（手札に戻る時はダメージを回復）
-			# creature_data["hp"]は元の最大HP値を保持している
-			# （注：base_hpは現在の残りHPなので使わない）
-			card_system_ref.return_card_to_hand(attacker_index, return_card_data)
+			# 移動侵略の場合は移動元タイルに戻す、通常侵略は手札に戻す
+			if from_tile_index >= 0:
+				# 移動侵略：移動元タイルに戻す
+				print("[移動侵略敗北] クリーチャーを移動元タイル%dに戻します" % from_tile_index)
+				var from_tile = board_system_ref.tile_nodes[from_tile_index]
+				
+				# クリーチャーデータを更新（戦闘後の残りHPを反映）
+				var return_data = attacker.creature_data.duplicate(true)
+				return_data["hp"] = attacker.base_hp  # 戦闘後の残りHP
+				
+				from_tile.creature_data = return_data
+				from_tile.owner_id = attacker_index
+				
+				# ダウン状態にする（不屈チェック）
+				if from_tile.has_method("set_down_state"):
+					if not SkillSystem.has_unyielding(return_data):
+						from_tile.set_down_state(true)
+					else:
+						print("[移動侵略敗北] 不屈により戻った後もダウンしません")
+				
+				if from_tile.has_method("update_display"):
+					from_tile.update_display()
+			else:
+				# 通常侵略：カードを手札に戻す
+				print("[通常侵略敗北] カードを手札に戻します")
+				# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
+				# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
+				var return_card_data = attacker.creature_data.duplicate(true)
+				# HPは元の最大値にリセット（手札に戻る時はダメージを回復）
+				# creature_data["hp"]は元の最大HP値を保持している
+				# （注：base_hpは現在の残りHPなので使わない）
+				card_system_ref.return_card_to_hand(attacker_index, return_card_data)
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			battle_special_effects.update_defender_hp(tile_info, defender)

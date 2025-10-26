@@ -88,14 +88,31 @@ static func execute_move_creature(handler) -> bool:
 	# 移動先選択モードに移行
 	handler.current_state = handler.State.SELECTING_MOVE_DEST
 	
-	# 移動可能な隣接マスを取得
-	handler.move_destinations = get_adjacent_tiles(handler, handler.selected_tile_index)
+	# 移動可能なマスを取得（空地移動対応）
+	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	var creature_data = tile.creature_data
+	
+	# MovementHelperを使用して移動先を取得
+	handler.move_destinations = MovementHelper.get_move_destinations(
+		handler.board_system,
+		creature_data,
+		handler.selected_tile_index
+	)
 	
 	# 移動先が存在しない場合
 	if handler.move_destinations.is_empty():
-		print("[LandActionHelper] 移動可能なマスがありません")
+		var move_type = MovementHelper._detect_move_type(creature_data)
+		var error_msg = ""
+		if move_type == "vacant_move":
+			error_msg = "移動可能な空き地がありません"
+		elif move_type == "enemy_move":
+			error_msg = "移動可能な敵地がありません"
+		else:
+			error_msg = "移動可能なマスがありません"
+		
+		print("[LandActionHelper] ", error_msg)
 		if handler.ui_manager and handler.ui_manager.phase_label:
-			handler.ui_manager.phase_label.text = "移動可能なマスがありません"
+			handler.ui_manager.phase_label.text = error_msg
 		# アクション選択に戻る
 		handler.current_state = handler.State.SELECTING_ACTION
 		return false
@@ -240,14 +257,14 @@ static func confirm_move(handler, dest_tile_index: int):
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		print("[LandActionHelper] 空き地への移動 - 土地獲得")
-		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)
-		handler.board_system.place_creature(dest_tile_index, creature_data)
 		
-		# 移動先をダウン状態に（不屈チェック）
-		if not SkillSystem.has_unyielding(creature_data):
-			dest_tile.set_down_state(true)
-		else:
-			print("[LandActionHelper] 不屈により移動後もダウンしません")
+		# MovementHelper.execute_creature_move()を使用（duplicate()しない）
+		# 移動元タイルの所有権は後で設定
+		var from_owner = source_tile.owner_id
+		MovementHelper.execute_creature_move(handler.board_system, handler.move_source_tile, dest_tile_index)
+		
+		# 移動先の所有権を設定
+		handler.board_system.set_tile_owner(dest_tile_index, from_owner)
 		
 		# 領地コマンドを閉じる
 		handler.close_land_command()
@@ -267,29 +284,20 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 敵の土地の場合: バトル発生
 		print("[LandActionHelper] 敵地への移動 - バトル発生")
 		
-		# 1. クリーチャーを手札に追加
-		if handler.board_system.card_system:
-			# 手札に直接追加
-			handler.board_system.card_system.player_hands[current_player_index]["data"].append(creature_data)
-			var card_index = handler.board_system.card_system.player_hands[current_player_index]["data"].size() - 1
-			
-			print("[LandActionHelper] クリーチャーを手札に追加: index=", card_index)
-			
-			# 2. 領地コマンドを閉じる
-			handler.close_land_command()
-			
-			# 3. バトル完了シグナルに接続
-			var callable = Callable(handler, "_on_move_battle_completed")
-			if handler.board_system.battle_system and not handler.board_system.battle_system.invasion_completed.is_connected(callable):
-				handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
-			
-			# 4. 既存のバトルシステムを使用
-			var tile_info = handler.board_system.get_tile_info(dest_tile_index)
-			handler.board_system.battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
-		else:
-			print("[LandActionHelper] エラー: card_systemが存在しません、簡易バトルを実行")
-			handler.close_land_command()
-			execute_simple_move_battle(handler, dest_tile_index, creature_data, current_player_index)
+		# 移動元情報を保存（敗北時に戻すため）
+		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
+		
+		# 領地コマンドを閉じる
+		handler.close_land_command()
+		
+		# バトル完了シグナルに接続
+		var callable = Callable(handler, "_on_move_battle_completed")
+		if handler.board_system.battle_system and not handler.board_system.battle_system.invasion_completed.is_connected(callable):
+			handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+		
+		# execute_3d_battle_with_dataを使用（移動元タイルを渡す）
+		var tile_info = handler.board_system.get_tile_info(dest_tile_index)
+		handler.board_system.battle_system.execute_3d_battle_with_data(current_player_index, creature_data, tile_info, {}, {}, handler.move_source_tile)
 
 ## 簡易移動バトル（カードシステム使用不可時）
 static func execute_simple_move_battle(handler, dest_index: int, attacker_data: Dictionary, attacker_player: int):

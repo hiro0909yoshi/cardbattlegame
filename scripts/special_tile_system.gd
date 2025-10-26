@@ -86,13 +86,18 @@ func handle_card_tile(player_id: int):
 
 # ワープゲートかチェック（MovementController3Dから使用）
 # 注意: 3D版ではマス自体がワープ機能を持つため、常にfalseを返す
-func is_warp_gate(_tile_index: int) -> bool:
-	return false
+# ワープペア定義（通過後の移動先）
+var warp_pairs = {
+	5: 6,    # タイル5を通過 → タイル6へワープ
+	15: 16   # タイル15を通過 → タイル16へワープ
+}
 
-# ワープペアを取得（MovementController3Dから使用）
-# 注意: 3D版ではマス自体がワープ機能を持つため、常に-1を返す
-func get_warp_pair(_tile_index: int) -> int:
-	return -1
+func is_warp_gate(tile_index: int) -> bool:
+	return warp_pairs.has(tile_index)
+
+# ワープペアを取得（MovementControllerから使用）
+func get_warp_pair(tile_index: int) -> int:
+	return warp_pairs.get(tile_index, -1)
 
 # タイルが特殊マスかチェック
 func is_special_tile_3d(tile_type: String) -> bool:

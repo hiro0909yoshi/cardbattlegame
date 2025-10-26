@@ -333,17 +333,19 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 	print("[LandCommandHandler] 移動バトル完了: ", "勝利" if success else "敗北")
 	
 	if success:
-		# 勝利時: 移動先の土地をダウン状態に
-		if board_system and board_system.tile_nodes.has(tile_index):
-			var tile = board_system.tile_nodes[tile_index]
-			if tile and tile.has_method("set_down_state"):
-				# 移動したクリーチャーが不屈持ちかチェック
-				var creature = tile.creature_data
-				if not SkillSystem.has_unyielding(creature):
-					tile.set_down_state(true)
-					print("[LandCommandHandler] 移動先をダウン状態に設定")
-				else:
-					print("[LandCommandHandler] 不屈により移動後もダウンしません")
+		# 勝利時: battle_systemが既に土地獲得とクリーチャー配置を完了している
+		# ここでは何もしない
+		print("[LandCommandHandler] 勝利: 土地獲得完了 (tile %d)" % tile_index)
+		
+		# 移動元情報をクリア
+		move_source_tile = -1
+	else:
+		# 敗北時: battle_systemが既に移動元に戻している
+		# ここでは何もしない
+		print("[LandCommandHandler] 敗北: クリーチャーは元のタイル%dに戻りました" % move_source_tile)
+		
+		# 移動元情報をクリア
+		move_source_tile = -1
 	
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:

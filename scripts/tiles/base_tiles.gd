@@ -6,6 +6,7 @@ class_name BaseTile
 @export var owner_id: int = -1  # -1=未所有, 0=プレイヤー1, 1=プレイヤー2
 @export var level: int = 1  # 土地レベル（1-5）
 @export var tile_index: int = 0  # ボード上の位置番号
+@export var warp_destination: int = -1  # ワープ先タイル番号（-1=ワープなし）
 
 # 接続情報（追加）
 var connections: Dictionary = {
@@ -60,6 +61,10 @@ func get_tile_info() -> Dictionary:
 
 # クリーチャー配置可能かチェック
 func can_place_creature() -> bool:
+	# 特殊マスには配置不可
+	if tile_type in ["checkpoint", "warp", "neutral", "start", "card"]:
+		return false
+	
 	return owner_id != -1 and creature_data.is_empty()
 
 # クリーチャーを配置
@@ -106,6 +111,10 @@ func level_up() -> bool:
 
 # ビジュアル更新
 func update_visual():
+	# 特殊マスは色を変更しない（シーンで設定した色を保持）
+	if tile_type in ["checkpoint", "warp", "neutral", "start", "card"]:
+		return
+	
 	# MeshInstance3Dの色を更新
 	if has_node("MeshInstance3D"):
 		var mesh = $MeshInstance3D

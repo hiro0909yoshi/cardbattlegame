@@ -256,7 +256,7 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 		if healed > 0:
 			participant.update_current_hp()
 			print("【再生発動】", participant.creature_data.get("name", "?"), 
-			      " HP回復: +", healed, " → ", participant.current_hp)
+				  " HP回復: +", healed, " → ", participant.current_hp)
 
 ## 防御側クリーチャーのHPを更新
 func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:

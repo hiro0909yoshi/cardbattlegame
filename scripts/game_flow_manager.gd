@@ -45,6 +45,10 @@ var special_tile_system: SpecialTileSystem
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
+# 周回管理システム
+var player_lap_state = {}  # プレイヤーごとの周回状態
+signal lap_completed(player_id: int)
+
 func _ready():
 	# CPUAIHandler初期化
 	cpu_ai_handler = CPUAIHandler.new()
@@ -65,6 +69,12 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
 		# デバッグフラグを転送
 		board_system_3d.debug_manual_control_all = debug_manual_control_all
+		
+		# CheckpointTileのシグナルを接続
+		_connect_checkpoint_signals()
+	
+	# 周回状態を初期化
+	_initialize_lap_state(cpu_settings.size())
 
 # システム参照を設定
 func setup_systems(p_system, c_system, b_system, s_system, ui_system, 
@@ -503,3 +513,134 @@ func debug_print_phase1a_status():
 		print("[Phase 1-A] 現在フェーズ: ", phase_manager.get_current_phase_name())
 	if land_command_handler:
 		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())
+
+# ============================================
+# 周回管理システム
+# ============================================
+
+# 周回状態を初期化
+func _initialize_lap_state(player_count: int):
+	player_lap_state.clear()
+	for i in range(player_count):
+		player_lap_state[i] = {
+			"game_started": false,  # ゲーム開始フラグ
+			"N": false,
+			"S": false
+		}
+	print("[GameFlowManager] 周回状態を初期化: ", player_count, "プレイヤー")
+
+# CheckpointTileのシグナルを接続
+func _connect_checkpoint_signals():
+	if not board_system_3d or not board_system_3d.tile_nodes:
+		print("[GameFlowManager] board_system_3d.tile_nodesが未初期化")
+		return
+	
+	# 少し待ってからシグナル接続（CheckpointTileの_ready()を待つ）
+	await get_tree().process_frame
+	await get_tree().process_frame
+	
+	for tile_index in board_system_3d.tile_nodes.keys():
+		var tile = board_system_3d.tile_nodes[tile_index]
+		if tile and is_instance_valid(tile):
+			if tile.has_signal("checkpoint_passed"):
+				if not tile.checkpoint_passed.is_connected(_on_checkpoint_passed):
+					tile.checkpoint_passed.connect(_on_checkpoint_passed)
+					print("[GameFlowManager] チェックポイント接続: タイル", tile_index, " タイプ:", tile.get("checkpoint_type"))
+			elif tile.get("tile_type") == "checkpoint":
+				print("[GameFlowManager] 警告: タイル", tile_index, "はcheckpointだがシグナルがない")
+
+# チェックポイント通過イベント
+func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
+	if not player_lap_state.has(player_id):
+		return
+	
+	print("[GameFlowManager] チェックポイント通過: プレイヤー", player_id + 1, " タイプ:", checkpoint_type)
+	
+	# ゲーム開始時のN通過は無視
+	if checkpoint_type == "N" and not player_lap_state[player_id]["game_started"]:
+		player_lap_state[player_id]["game_started"] = true
+		print("[GameFlowManager] ゲーム開始フラグ設定")
+		return
+	
+	# チェックポイントフラグを立てる
+	player_lap_state[player_id][checkpoint_type] = true
+	
+	# N + S 両方揃ったか確認
+	if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
+		_complete_lap(player_id)
+
+# 周回完了処理
+func _complete_lap(player_id: int):
+	print("[GameFlowManager] ★周回完了★ プレイヤー", player_id + 1)
+	
+	# フラグをリセット（game_startedは維持）
+	player_lap_state[player_id]["N"] = false
+	player_lap_state[player_id]["S"] = false
+	
+	# 全クリーチャーに周回ボーナスを適用
+	if board_system_3d:
+		_apply_lap_bonus_to_all_creatures(player_id)
+	
+	# シグナル発行
+	emit_signal("lap_completed", player_id)
+
+# 全クリーチャーに周回ボーナスを適用
+func _apply_lap_bonus_to_all_creatures(player_id: int):
+	var tiles = board_system_3d.get_player_tiles(player_id)
+	
+	for tile in tiles:
+		if tile.creature_data:
+			_apply_lap_bonus_to_creature(tile.creature_data)
+
+# クリーチャーに周回ボーナスを適用
+func _apply_lap_bonus_to_creature(creature_data: Dictionary):
+	if not creature_data.has("ability_parsed"):
+		return
+	
+	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "per_lap_permanent_bonus":
+			_apply_per_lap_bonus(creature_data, effect)
+
+# 周回ごと永続ボーナスを適用
+func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
+	var stat = effect.get("stat", "ap")
+	var value = effect.get("value", 10)
+	
+	# 周回カウントを増加
+	if not creature_data.has("map_lap_count"):
+		creature_data["map_lap_count"] = 0
+	creature_data["map_lap_count"] += 1
+	
+	# base_up_hp/ap に加算
+	if stat == "ap":
+		if not creature_data.has("base_up_ap"):
+			creature_data["base_up_ap"] = 0
+		creature_data["base_up_ap"] += value
+		print("[Lap Bonus] ", creature_data.get("name", ""), " ST+", value, 
+			  " (周回", creature_data["map_lap_count"], "回目)")
+	
+	elif stat == "max_hp":
+		if not creature_data.has("base_up_hp"):
+			creature_data["base_up_hp"] = 0
+		
+		# リセット条件チェック（モスタイタン用）
+		var reset_condition = effect.get("reset_condition")
+		if reset_condition:
+			var max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+			var check = reset_condition.get("max_hp_check", {})
+			var operator = check.get("operator", ">=")
+			var threshold = check.get("value", 80)
+			
+			# MHP + 新しいボーナスがしきい値を超えるかチェック
+			if operator == ">=" and (max_hp + value) >= threshold:
+				var reset_to = check.get("reset_to", 0)
+				creature_data["base_up_hp"] = reset_to - creature_data.get("hp", 0)
+				print("[Lap Bonus] ", creature_data.get("name", ""), " MHPリセット → ", 
+					  creature_data.get("hp", 0) + creature_data["base_up_hp"])
+				return
+		
+		creature_data["base_up_hp"] += value
+		print("[Lap Bonus] ", creature_data.get("name", ""), " MHP+", value, 
+			  " (周回", creature_data["map_lap_count"], "回目)")

@@ -104,28 +104,55 @@ func calculate_path(player_id: int, steps: int) -> Array:
 # 経路に沿って移動
 func move_along_path(player_id: int, path: Array) -> void:
 	var previous_tile = player_tiles[player_id]
+	var i = 0
 	
-	for tile_index in path:
+	while i < path.size():
+		var tile_index = path[i]
+		
 		if not tile_nodes.has(tile_index):
 			print("Warning: タイル", tile_index, "が見つかりません")
+			i += 1
 			continue
 		
 		# スタート通過チェック
 		if tile_index == 0 and previous_tile > tile_index:
 			handle_start_pass(player_id)
 		
+		# チェックポイント通過チェック
+		check_and_handle_checkpoint(player_id, tile_index, previous_tile)
+		
 		# タイルへ移動
 		await move_to_tile(player_id, tile_index)
 		
-		# 通過型ワープチェック
+		# 位置を更新
+		player_tiles[player_id] = tile_index
+		
+		# 通過型ワープチェック（ビジュアルエフェクトのみ）
 		var warp_result = await check_and_handle_warp(player_id, tile_index)
 		if warp_result.warped:
-			# ワープ後の位置を更新
-			tile_index = warp_result.new_tile
-			player_tiles[player_id] = tile_index
+			# ワープ発生：経路を修正する
+			var warped_tile = warp_result.new_tile
+			player_tiles[player_id] = warped_tile
+			
+			# 経路の残りを再計算（ワープ先から続ける）
+			var new_path = [warped_tile]  # ワープ先
+			var current = warped_tile
+			for j in range(i + 1, path.size()):
+				current = (current + 1) % 20
+				new_path.append(current)
+			
+			# 経路を置き換え
+			for j in range(new_path.size()):
+				if i + j + 1 < path.size():
+					path[i + j + 1] = new_path[j]
+				else:
+					path.append(new_path[j])
+			
+			tile_index = warped_tile
 		
 		emit_signal("movement_step_completed", player_id, tile_index)
 		previous_tile = tile_index
+		i += 1
 
 # 単一タイルへの移動
 func move_to_tile(player_id: int, tile_index: int) -> void:
@@ -149,10 +176,6 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
 	await tween.finished
-	
-	# カメラをプレイヤーに向ける（現在のプレイヤーのみ）
-	if camera and player_system and player_id == player_system.current_player_index:
-		camera.look_at(player_node.global_position, Vector3.UP)
 
 # === ワープ処理 ===
 
@@ -185,11 +208,11 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 	
 	var player_node = player_nodes[player_id]
 	
-	# ワープエフェクト（簡易版：一旦消えて現れる）
+	# ワープエフェクト（簡易版：縮小して消える→移動→拡大して現れる）
 	var tween = get_tree().create_tween()
 	
-	# フェードアウト
-	tween.tween_property(player_node, "modulate:a", 0.0, 0.2)
+	# 縮小して消える
+	tween.tween_property(player_node, "scale", Vector3.ZERO, 0.2)
 	
 	# 瞬間移動
 	await tween.finished
@@ -199,14 +222,13 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 		player_node.global_position = target_pos
 		
 		# カメラも瞬間移動
-		if camera:
+		if camera and player_system and player_id == player_system.current_player_index:
 			var cam_target = target_pos + CAMERA_OFFSET
 			camera.global_position = cam_target
-			camera.look_at(target_pos, Vector3.UP)
 	
-	# フェードイン
+	# 拡大して現れる
 	var tween2 = get_tree().create_tween()
-	tween2.tween_property(player_node, "modulate:a", 1.0, 0.2)
+	tween2.tween_property(player_node, "scale", Vector3.ONE, 0.2)
 	await tween2.finished
 	
 	emit_signal("warp_executed", player_id, from_tile, to_tile)
@@ -222,7 +244,27 @@ func handle_start_pass(player_id: int):
 	# Phase 1-A: プレイヤーの全土地のダウン状態をクリア
 	clear_all_down_states_for_player(player_id)
 	
+	# 全クリーチャーのHP回復+10
+	heal_all_creatures_for_player(player_id, 10)
+	
 	emit_signal("start_passed", player_id)
+
+# チェックポイント通過処理
+func check_and_handle_checkpoint(player_id: int, tile_index: int, previous_tile: int):
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	
+	# CheckpointTileかチェック
+	if tile.has_signal("checkpoint_passed"):
+		# タイル0は2回目以降のみ通過扱い（previous_tile > tile_indexで判定）
+		if tile_index == 0 and previous_tile <= tile_index:
+			return
+		
+		# CheckpointTileのon_player_passedを呼ぶ
+		if tile.has_method("on_player_passed"):
+			tile.on_player_passed(player_id)
 
 # 特定タイルへ直接配置（初期配置用）
 func place_player_at_tile(player_id: int, tile_index: int) -> void:
@@ -238,6 +280,22 @@ func place_player_at_tile(player_id: int, tile_index: int) -> void:
 	
 	player_node.global_position = target_pos
 	player_tiles[player_id] = tile_index
+
+# 全クリーチャーのHP回復
+func heal_all_creatures_for_player(player_id: int, heal_amount: int):
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.creature_data:
+			var creature = tile.creature_data
+			var max_hp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
+			var current_hp = creature.get("current_hp", max_hp)
+			
+			# HP回復（MHPを超えない）
+			var new_hp = min(current_hp + heal_amount, max_hp)
+			creature["current_hp"] = new_hp
+			
+			print("[MovementController] HP回復: タイル", tile_index, " ", creature.get("name", ""), 
+				  " (", current_hp, " → ", new_hp, " / ", max_hp, ")")
 
 # Phase 1-A: プレイヤーの全土地のダウン状態をクリア
 func clear_all_down_states_for_player(player_id: int):
@@ -265,11 +323,9 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 	if smooth:
 		var tween = get_tree().create_tween()
 		tween.tween_property(camera, "global_position", target_pos, 0.8)
-		tween.tween_callback(func(): camera.look_at(player_node.global_position, Vector3.UP))
 		await tween.finished
 	else:
 		camera.global_position = target_pos
-		camera.look_at(player_node.global_position, Vector3.UP)
 
 # === ユーティリティ ===
 

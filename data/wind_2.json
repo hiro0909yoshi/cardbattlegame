@@ -289,7 +289,15 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "空地移動",
-	  "ability_detail": "空地移動[風水]"
+	  "ability_detail": "空地移動[風水]",
+	  "ability_parsed": {
+		"keywords": ["空地移動"],
+		"keyword_conditions": {
+		  "空地移動": {
+			"target_elements": ["wind", "water"]
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 338,
@@ -611,9 +619,12 @@
 	  "ability": "先制・空地移動",
 	  "ability_detail": "先制；空地移動[風]",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
+		"keywords": ["先制", "空地移動"],
+		"keyword_conditions": {
+		  "空地移動": {
+			"target_elements": ["wind"]
+		  }
+		},
 		"effects": []
 	  }
 	}

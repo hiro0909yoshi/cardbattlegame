@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dlge0sbyufmq8"]
+[gd_scene load_steps=13 format=3 uid="uid://dlge0sbyufmq8"]
 
 [ext_resource type="Script" uid="uid://d0ed7a1e8gsei" path="res://scripts/game_3d.gd" id="1_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dtfil43yeci2x" path="res://scenes/Tiles/FireTile.tscn" id="1_vcsgt"]
@@ -9,7 +9,9 @@
 [ext_resource type="PackedScene" uid="uid://gk4oxcskph8p" path="res://scenes/Tiles/EarthTile.tscn" id="5_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dt6tq6krtdu5" path="res://scenes/Characters/Mario.tscn" id="6_c01mt"]
 [ext_resource type="Script" uid="uid://d05eaonrysfn6" path="res://scripts/player_movement.gd" id="7_nxtc6"]
+[ext_resource type="PackedScene" uid="uid://b3oralqwpi4wh" path="res://scenes/Tiles/CheckpointTile.tscn" id="10_bjd11"]
 [ext_resource type="MeshLibrary" uid="uid://cyqxg60f1rq73" path="res://assets/building_parts/床3.tres" id="10_lhr70"]
+[ext_resource type="PackedScene" uid="uid://b60wykj5m8nql" path="res://scenes/Tiles/WarpTile.tscn" id="11_qmy6f"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_q8u5g")
@@ -30,9 +32,7 @@ script = ExtResource("7_nxtc6")
 
 [node name="Tiles" type="Node3D" parent="."]
 
-[node name="FireTile" parent="Tiles" instance=ExtResource("1_vcsgt")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0.0345936)
-tile_index = 5
+[node name="CheckpointTile" parent="Tiles" instance=ExtResource("10_bjd11")]
 
 [node name="WaterTile" parent="Tiles" instance=ExtResource("2_c01mt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 16)
@@ -46,15 +46,9 @@ tile_index = 13
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 tile_index = 1
 
-[node name="EarthTile" parent="Tiles" instance=ExtResource("5_q8u5g")]
-
 [node name="FireTile2" parent="Tiles" instance=ExtResource("1_vcsgt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 12)
 tile_index = 8
-
-[node name="WaterTile2" parent="Tiles" instance=ExtResource("2_c01mt")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 20)
-tile_index = 10
 
 [node name="WindTile2" parent="Tiles" instance=ExtResource("3_nxtc6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 20)
@@ -75,10 +69,6 @@ tile_index = 7
 [node name="WaterTile3" parent="Tiles" instance=ExtResource("2_c01mt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 20)
 tile_index = 11
-
-[node name="WindTile3" parent="Tiles" instance=ExtResource("3_nxtc6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 20)
-tile_index = 15
 
 [node name="NeutralTile3" parent="Tiles" instance=ExtResource("4_jlsqs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 0)
@@ -107,6 +97,21 @@ tile_index = 4
 [node name="EarthTile4" parent="Tiles" instance=ExtResource("5_q8u5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 tile_index = 19
+
+[node name="CheckpointTile2" parent="Tiles" instance=ExtResource("10_bjd11")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 20)
+checkpoint_type = 1
+tile_index = 10
+
+[node name="WarpTile" parent="Tiles" instance=ExtResource("11_qmy6f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 0)
+tile_index = 5
+
+[node name="WarpTile2" parent="Tiles" instance=ExtResource("11_qmy6f")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 20)
+tile_index = 15
+
+[node name="CheckpointTile3" parent="Tiles" instance=ExtResource("10_bjd11")]
 
 [node name="Background" type="Node3D" parent="."]
 

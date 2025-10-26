@@ -93,14 +93,16 @@ func setup_game():
 	
 	if camera:
 		# カメラ初期位置だけ設定
-		camera.position = Vector3(19, 19, 19)  # 位置のみ設定
+		camera.position = Vector3(19, 19, 19)
 		
 		# 最初のプレイヤー（Player1）を自動で見る
 		if players_container and players_container.get_child_count() > 0:
 			var first_player = players_container.get_child(0)
-			camera.look_at(first_player.global_position, Vector3.UP)
+			# look_atは距離チェック後に実行
+			if camera.global_position.distance_to(first_player.global_position) > 0.1:
+				camera.look_at(first_player.global_position, Vector3.UP)
 		
-			board_system_3d.camera = camera
+		board_system_3d.camera = camera
 	
 	if tiles_container:
 		board_system_3d.collect_tiles(tiles_container)

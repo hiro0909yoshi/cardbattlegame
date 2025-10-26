@@ -117,10 +117,13 @@
 	  "ability": "援護・空地移動",
 	  "ability_detail": "援護[無火地]；空地移動[地]",
 	  "ability_parsed": {
-		"keywords": ["援護"],
+		"keywords": ["援護", "空地移動"],
 		"keyword_conditions": {
 		  "援護": {
 			"target_elements": ["neutral", "fire", "earth"]
+		  },
+		  "空地移動": {
+			"target_elements": ["earth"]
 		  }
 		}
 	  }
