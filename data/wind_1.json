@@ -557,7 +557,73 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "ST計算",
-	  "ability_detail": "ST+クリーチャー破壊数×5"
+	  "ability_detail": "ST+クリーチャー破壊数×5",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  },
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  },
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  },
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  },
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  },
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "ST+破壊数×5"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 324,

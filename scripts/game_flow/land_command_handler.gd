@@ -36,6 +36,13 @@ var _swap_mode: bool = false  # 交換モード中フラグ
 var _swap_old_creature: Dictionary = {}  # 交換前のクリーチャーデータ
 var _swap_tile_index: int = -1  # 交換対象の土地インデックス
 
+# Phase 1-E: 移動バトル用の一時保存
+var pending_move_battle_creature_data: Dictionary = {}
+var pending_move_battle_tile_info: Dictionary = {}
+var pending_move_attacker_item: Dictionary = {}
+var pending_move_defender_item: Dictionary = {}
+var is_waiting_for_move_defender_item: bool = false
+
 ## 参照
 var ui_manager = null
 var board_system = null
@@ -335,6 +342,80 @@ func handle_move_destination_input(event):
 ## 移動を確定
 func confirm_move(dest_tile_index: int):
 	LandActionHelper.confirm_move(self, dest_tile_index)
+
+## アイテムフェーズ完了後のコールバック（移動侵略用）
+func _on_move_item_phase_completed():
+	if not is_waiting_for_move_defender_item:
+		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
+		print("[LandCommandHandler] 攻撃側アイテムフェーズ完了（移動侵略）")
+		
+		# 攻撃側のアイテムを保存
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			pending_move_attacker_item = game_flow_manager.item_phase_handler.get_selected_item()
+		
+		# 防御側のアイテムフェーズを開始
+		var defender_owner = pending_move_battle_tile_info.get("owner", -1)
+		if defender_owner >= 0:
+			is_waiting_for_move_defender_item = true
+			
+			# 防御側のアイテムフェーズ開始
+			if game_flow_manager and game_flow_manager.item_phase_handler:
+				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
+				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
+					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+				
+				print("[LandCommandHandler] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
+				# 防御側クリーチャーのデータを取得して渡す
+				var defender_creature = pending_move_battle_tile_info.get("creature", {})
+				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
+			else:
+				# ItemPhaseHandlerがない場合は直接バトル
+				_execute_move_battle()
+		else:
+			# 防御側がいない場合（ありえないが念のため）
+			_execute_move_battle()
+	else:
+		# 防御側のアイテムフェーズ完了 → バトル開始
+		print("[LandCommandHandler] 防御側アイテムフェーズ完了、バトル開始（移動侵略）")
+		
+		# 防御側のアイテムを保存
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			pending_move_defender_item = game_flow_manager.item_phase_handler.get_selected_item()
+		
+		is_waiting_for_move_defender_item = false
+		_execute_move_battle()
+
+## 保留中の移動バトルを実行
+func _execute_move_battle():
+	if pending_move_battle_creature_data.is_empty():
+		print("[LandCommandHandler] エラー: 移動バトル情報が保存されていません")
+		if board_system and board_system.tile_action_processor:
+			board_system.tile_action_processor.complete_action()
+		return
+	
+	var current_player_index = board_system.current_player_index
+	
+	# バトル完了シグナルに接続
+	var callable = Callable(self, "_on_move_battle_completed")
+	if not board_system.battle_system.invasion_completed.is_connected(callable):
+		board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+	
+	# バトル実行（移動元タイル情報も渡す）
+	board_system.battle_system.execute_3d_battle_with_data(
+		current_player_index,
+		pending_move_battle_creature_data,
+		pending_move_battle_tile_info,
+		pending_move_attacker_item,
+		pending_move_defender_item,
+		move_source_tile
+	)
+	
+	# バトル情報をクリア
+	pending_move_battle_creature_data = {}
+	pending_move_battle_tile_info = {}
+	pending_move_attacker_item = {}
+	pending_move_defender_item = {}
+	is_waiting_for_move_defender_item = false
 
 ## 移動バトル完了時のコールバック
 func _on_move_battle_completed(success: bool, tile_index: int):

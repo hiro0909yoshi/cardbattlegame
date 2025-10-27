@@ -247,7 +247,13 @@
 			"target_elements": ["neutral", "fire", "earth"]
 		  }
 		},
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "on_enemy_destroy_permanent",
+			"stat_changes": {"ap": 10},
+			"description": "敵破壊時、ST+10（永続）"
+		  }
+		]
 	  }
 	},
 	{

@@ -153,8 +153,8 @@ func create_ui(parent: Node):
 		level_up_ui.set("board_system_ref", board_system_ref)  # set()で設定
 		
 	if debug_panel and debug_panel.has_method("initialize"):
-		debug_panel.initialize(ui_layer, card_system_ref, null, player_system_ref)  # board_systemはnullで初期化
-		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定
+		debug_panel.initialize(ui_layer, card_system_ref, null, player_system_ref, game_flow_manager_ref)  # board_systemはnullで初期化
+		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定で設定
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):

@@ -29,6 +29,7 @@ var element_advantages = {
 var board_system_ref = null  # BoardSystem3D
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
+var game_flow_manager_ref = null  # GameFlowManager
 
 # サブシステム
 var battle_preparation: BattlePreparation
@@ -63,7 +64,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system)
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
-	battle_skill_processor.setup_systems(board_system)
+	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref)
 	battle_special_effects.setup_systems(board_system)
 
 # バトル実行（3D版メイン処理）
@@ -237,40 +238,61 @@ func _apply_post_battle_effects(
 			print("
 【結果】侵略成功！土地を獲得")
 			
+			# 破壊カウンター更新
+			if game_flow_manager_ref:
+				game_flow_manager_ref.on_creature_destroyed()
+			
+			# 攻撃側の永続バフ適用（バルキリー・ダスクドウェラー）
+			_apply_on_destroy_permanent_buffs(attacker)
+			
+			# 防御側が破壊されたので、防御側の永続バフも適用（相互破壊の可能性）
+			if defender.current_hp <= 0:
+				_apply_on_destroy_permanent_buffs(defender)
+			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
 				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
-			# 土地を奪取
+			# 土地を奪取してクリーチャーを配置
 			board_system_ref.set_tile_owner(tile_index, attacker_index)
-			# クリーチャー配置（HPは現在値）
+			
 			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
 			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
-			var placement_data = attacker.creature_data.duplicate(true)
-			
-			# 元のHPは触らない（不変）
-			# placement_data["hp"] = そのまま
-			
-			# 現在HPを保存
-			placement_data["current_hp"] = attacker.base_hp + attacker.base_up_hp
-			
-			board_system_ref.place_creature(tile_index, placement_data)
+			var place_creature_data = attacker.creature_data.duplicate(true)
+			# 戦闘後の残りHPを保存
+			place_creature_data["current_hp"] = attacker.current_hp
+			board_system_ref.place_creature(tile_index, place_creature_data)
 			
 			emit_signal("invasion_completed", true, tile_index)
 		
 		BattleResult.DEFENDER_WIN:
-			print("\n【結果】防御成功！侵略側カード破壊")
-			# カードは既に捨て札に行っているので何もしない
+			print("
+【結果】防御成功！侵略側を撃破")
+			
+			# 破壊カウンター更新
+			if game_flow_manager_ref:
+				game_flow_manager_ref.on_creature_destroyed()
+			
+			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
+			_apply_on_destroy_permanent_buffs(defender)
+			
+			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
+			if battle_result.get("attacker_original", {}).has("name"):
+				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				print("[変身復帰] 攻撃側が元に戻りました")
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			battle_special_effects.update_defender_hp(tile_info, defender)
+			
+			# 侵略失敗：攻撃側カードは破壊される（手札に戻らない）
+			print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
 			
 			emit_signal("invasion_completed", false, tile_index)
 		
 		BattleResult.ATTACKER_SURVIVED:
 			print("
-【結果】両者生存 → 侵略失敗")
+【結果】侵略失敗！攻撃側が生き残り")
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
@@ -280,17 +302,14 @@ func _apply_post_battle_effects(
 			# 移動侵略の場合は移動元タイルに戻す、通常侵略は手札に戻す
 			if from_tile_index >= 0:
 				# 移動侵略：移動元タイルに戻す
-				print("[移動侵略敗北] クリーチャーを移動元タイル%dに戻します" % from_tile_index)
+				print("[移動侵略敗北] クリーチャーを移動元タイル%d に戻します" % from_tile_index)
 				var from_tile = board_system_ref.tile_nodes[from_tile_index]
 				
 				# クリーチャーデータを更新（戦闘後の残りHPを反映）
 				var return_data = attacker.creature_data.duplicate(true)
 				
-				# 元のHPは触らない
-				# return_data["hp"] = そのまま
-				
 				# 現在HPを保存
-				return_data["current_hp"] = attacker.base_hp + attacker.base_up_hp
+				return_data["current_hp"] = attacker.current_hp
 				
 				from_tile.creature_data = return_data
 				from_tile.owner_id = attacker_index
@@ -522,3 +541,32 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true) 
 		print("[打ち消し完了] ", creature_data.get("name"), " から ", removed_count, "個の効果を削除")
 	
 	return removed_count
+
+# ========================================
+# 永続バフ処理（破壊時）
+# ========================================
+
+# 敵破壊時の永続バフ適用（バルキリー・ダスクドウェラー）
+func _apply_on_destroy_permanent_buffs(participant: BattleParticipant):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "on_enemy_destroy_permanent":
+			var stat_changes = effect.get("stat_changes", {})
+			
+			for stat in stat_changes:
+				var value = stat_changes[stat]
+				if stat == "ap":
+					if not participant.creature_data.has("base_up_ap"):
+						participant.creature_data["base_up_ap"] = 0
+					participant.creature_data["base_up_ap"] += value
+					print("[永続バフ] ", participant.creature_data.get("name", ""), " ST+", value)
+				
+				elif stat == "max_hp":
+					if not participant.creature_data.has("base_up_hp"):
+						participant.creature_data["base_up_hp"] = 0
+					participant.creature_data["base_up_hp"] += value
+					print("[永続バフ] ", participant.creature_data.get("name", ""), " MHP+", value)

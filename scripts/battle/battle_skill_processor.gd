@@ -5,9 +5,11 @@ class_name BattleSkillProcessor
 # 感応、強打、2回攻撃、巻物攻撃などのスキル適用を担当
 
 var board_system_ref = null
+var game_flow_manager_ref = null
 
-func setup_systems(board_system):
+func setup_systems(board_system, game_flow_manager = null):
 	board_system_ref = board_system
+	game_flow_manager_ref = game_flow_manager
 
 ## バトル前スキル適用
 func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, attacker_index: int) -> void:
@@ -86,6 +88,9 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	# 3. 土地数比例効果を適用（Phase 3追加）
 	apply_land_count_effects(participant, context)
+	
+	# 3.5. 破壊数効果を適用（ソウルコレクター用）
+	apply_destroy_count_effects(participant)
 	
 	# 4. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context, effect_combat)
@@ -860,3 +865,37 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 					  " HP-", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
 			
 			return
+
+# ========================================
+# 破壊数カウント効果
+# ========================================
+
+# 破壊数カウント効果を適用（ソウルコレクター用）
+func apply_destroy_count_effects(participant: BattleParticipant):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "destroy_count_multiplier":
+			var stat = effect.get("stat", "ap")
+			var multiplier = effect.get("multiplier", 5)
+			
+			# GameFlowManagerから破壊数取得
+			var destroy_count = 0
+			if game_flow_manager_ref:
+				destroy_count = game_flow_manager_ref.get_destroy_count()
+			
+			var bonus_value = destroy_count * multiplier
+			
+			if stat == "ap":
+				participant.temporary_bonus_ap += bonus_value
+				participant.current_ap += bonus_value
+				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
+					  " ST+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
+			elif stat == "hp":
+				participant.temporary_bonus_hp += bonus_value
+				participant.update_current_hp()
+				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
+					  " HP+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")

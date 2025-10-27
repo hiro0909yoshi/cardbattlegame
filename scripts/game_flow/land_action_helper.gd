@@ -297,14 +297,24 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 領地コマンドを閉じる
 		handler.close_land_command()
 		
-		# バトル完了シグナルに接続
-		var callable = Callable(handler, "_on_move_battle_completed")
-		if handler.board_system.battle_system and not handler.board_system.battle_system.invasion_completed.is_connected(callable):
-			handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+		# バトル情報を保存
+		handler.pending_move_battle_creature_data = creature_data
+		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
+		handler.pending_move_attacker_item = {}
+		handler.pending_move_defender_item = {}
+		handler.is_waiting_for_move_defender_item = false
 		
-		# execute_3d_battle_with_dataを使用（移動元タイルを渡す）
-		var tile_info = handler.board_system.get_tile_info(dest_tile_index)
-		handler.board_system.battle_system.execute_3d_battle_with_data(current_player_index, creature_data, tile_info, {}, {}, handler.move_source_tile)
+		# アイテムフェーズを開始（攻撃側）
+		if handler.game_flow_manager and handler.game_flow_manager.item_phase_handler:
+			# アイテムフェーズ完了シグナルに接続
+			if not handler.game_flow_manager.item_phase_handler.item_phase_completed.is_connected(handler._on_move_item_phase_completed):
+				handler.game_flow_manager.item_phase_handler.item_phase_completed.connect(handler._on_move_item_phase_completed, CONNECT_ONE_SHOT)
+			
+			# 攻撃側のアイテムフェーズ開始
+			handler.game_flow_manager.item_phase_handler.start_item_phase(current_player_index, creature_data)
+		else:
+			# ItemPhaseHandlerがない場合は直接バトル
+			_execute_move_battle(handler)
 
 ## 簡易移動バトル（カードシステム使用不可時）
 static func execute_simple_move_battle(handler, dest_index: int, attacker_data: Dictionary, attacker_player: int):
@@ -346,3 +356,35 @@ static func get_adjacent_tiles(handler, tile_index: int) -> Array:
 	
 	var neighbors = handler.board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
 	return neighbors
+
+## 移動バトルを実行（アイテムフェーズ完了後）
+static func _execute_move_battle(handler):
+	if handler.pending_move_battle_creature_data.is_empty():
+		print("[LandActionHelper] エラー: バトル情報が保存されていません")
+		if handler.board_system and handler.board_system.tile_action_processor:
+			handler.board_system.tile_action_processor.complete_action()
+		return
+	
+	var current_player_index = handler.board_system.current_player_index
+	
+	# バトル完了シグナルに接続
+	var callable = Callable(handler, "_on_move_battle_completed")
+	if handler.board_system.battle_system and not handler.board_system.battle_system.invasion_completed.is_connected(callable):
+		handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+	
+	# バトル実行（移動元タイルを渡す）
+	handler.board_system.battle_system.execute_3d_battle_with_data(
+		current_player_index,
+		handler.pending_move_battle_creature_data,
+		handler.pending_move_battle_tile_info,
+		handler.pending_move_attacker_item,
+		handler.pending_move_defender_item,
+		handler.move_source_tile
+	)
+	
+	# バトル情報をクリア
+	handler.pending_move_battle_creature_data = {}
+	handler.pending_move_battle_tile_info = {}
+	handler.pending_move_attacker_item = {}
+	handler.pending_move_defender_item = {}
+	handler.is_waiting_for_move_defender_item = false

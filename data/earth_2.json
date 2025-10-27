@@ -70,7 +70,13 @@
 		"keywords": [
 		  "先制"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "on_enemy_destroy_permanent",
+			"stat_changes": {"ap": 10, "max_hp": 10},
+			"description": "敵破壊時、ST+10・MHP+10（永続）"
+		  }
+		]
 	  }
 	},
 	{

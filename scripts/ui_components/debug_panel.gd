@@ -22,16 +22,18 @@ var current_display_mode = "cpu_hand"  # "cpu_hand", "board_info", "stats"
 var card_system_ref: CardSystem = null
 var board_system_ref= null
 var player_system_ref: PlayerSystem = null
+var game_flow_manager_ref = null
 
 func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, card_system: CardSystem, board_system, player_system: PlayerSystem):
+func initialize(parent: Node, card_system: CardSystem, board_system, player_system: PlayerSystem, game_flow_manager = null):
 	parent_node = parent
 	card_system_ref = card_system
 	board_system_ref = board_system
 	player_system_ref = player_system
+	game_flow_manager_ref = game_flow_manager
 	
 	create_debug_panel()
 
@@ -209,6 +211,11 @@ func display_game_stats():
 		return
 	
 	var text = "[b]━━━ ゲーム統計 ━━━[/b]\n\n"
+	
+	# 破壊カウンター表示
+	if game_flow_manager_ref:
+		var destroy_count = game_flow_manager_ref.get_destroy_count()
+		text += "[color=yellow]累計破壊数: " + str(destroy_count) + "[/color]\n\n"
 	
 	for i in range(player_system_ref.players.size()):
 		var player = player_system_ref.players[i]

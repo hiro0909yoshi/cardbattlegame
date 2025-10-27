@@ -49,6 +49,11 @@ var is_ending_turn = false
 var player_lap_state = {}  # プレイヤーごとの周回状態
 signal lap_completed(player_id: int)
 
+# ゲーム統計データ（破壊カウンター）
+var game_stats = {
+	"total_creatures_destroyed": 0  # 1ゲーム内の累計破壊数
+}
+
 func _ready():
 	# CPUAIHandler初期化
 	cpu_ai_handler = CPUAIHandler.new()
@@ -90,6 +95,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	if ui_manager:
 		ui_manager.game_flow_manager_ref = self
 	
+	# BattleSystemに自身の参照を渡す
+	if battle_system:
+		battle_system.game_flow_manager_ref = self
+	
 	# CPU AIハンドラー設定
 	if cpu_ai_handler:
 		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
@@ -97,6 +106,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 # ゲーム開始
 func start_game():
 	print("=== ゲーム開始 ===")
+	
+	# ゲーム統計の初期化
+	game_stats["total_creatures_destroyed"] = 0
+	
 	current_phase = GamePhase.DICE_ROLL
 	ui_manager.set_dice_button_enabled(true)
 	update_ui()
@@ -679,3 +692,21 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 			  " MHP+", value, " HP+", value,
 			  " (周回", creature_data["map_lap_count"], "回目)",
 			  " HP:", current_hp, "→", new_hp, " / MHP:", max_hp)
+
+# ========================================
+# 破壊カウンター管理
+# ========================================
+
+# クリーチャー破壊時に呼ばれる
+func on_creature_destroyed():
+	game_stats["total_creatures_destroyed"] += 1
+	print("[破壊カウント] 累計: ", game_stats["total_creatures_destroyed"])
+
+# 破壊カウント取得
+func get_destroy_count() -> int:
+	return game_stats["total_creatures_destroyed"]
+
+# 破壊カウントリセット（スペル用）
+func reset_destroy_count():
+	game_stats["total_creatures_destroyed"] = 0
+	print("[破壊カウント] リセットしました")

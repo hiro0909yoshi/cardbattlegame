@@ -77,7 +77,7 @@ func apply_item_first_strike():
 # 現在HPを更新
 func update_current_hp():
 	current_hp = base_hp + base_up_hp + temporary_bonus_hp + \
-	             resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+				 resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:

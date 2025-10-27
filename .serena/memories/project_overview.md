@@ -119,6 +119,8 @@ Chain  Toll Multiplier  HP Bonus
 - Nullify: Cancel attacks
 - Reflect: Damage reflection
 - Support/Assist: Bonus to other creatures
+- Vacant Move: Move to empty tiles without battle
+- Enemy Land Move: Can move to enemy lands
 
 ## Debug Commands
 - D: Toggle CPU hand visibility
