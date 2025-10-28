@@ -45,9 +45,9 @@
 class_name LandSelectionHelper
 
 static func preview_land(handler, tile_index: int) -> bool:
-    # handlerを介して状態にアクセス
-    handler.selected_tile_index = tile_index
-    return true
+	# handlerを介して状態にアクセス
+	handler.selected_tile_index = tile_index
+	return true
 ```
 
 **メリット**:
@@ -71,7 +71,7 @@ var player_owned_lands: Array = []
 
 # ヘルパーから状態にアクセス
 static func preview_land(handler, tile_index: int) -> bool:
-    handler.selected_tile_index = tile_index  # handlerの状態を更新
+	handler.selected_tile_index = tile_index  # handlerの状態を更新
 ```
 
 ### 4. 外部インターフェースの完全維持
@@ -84,7 +84,7 @@ land_command_handler.execute_action("level_up")
 
 # 内部実装（ヘルパーに委譲）
 func preview_land(tile_index: int) -> bool:
-    return LandSelectionHelper.preview_land(self, tile_index)
+	return LandSelectionHelper.preview_land(self, tile_index)
 ```
 
 ## 前回の失敗との比較
@@ -129,10 +129,10 @@ func preview_land(tile_index: int) -> bool:
 2. **ラッパー関数**: 約100行
    ```gdscript
    func preview_land(tile_index: int) -> bool:
-       return LandSelectionHelper.preview_land(self, tile_index)
+	   return LandSelectionHelper.preview_land(self, tile_index)
    
    func execute_level_up() -> bool:
-       return LandActionHelper.execute_level_up(self)
+	   return LandActionHelper.execute_level_up(self)
    
    # ... 約30個のラッパー
    ```

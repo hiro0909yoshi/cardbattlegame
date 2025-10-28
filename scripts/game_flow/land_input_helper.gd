@@ -13,6 +13,9 @@ static func process_input(handler, event):
 		# 移動先選択モード時
 		elif handler.current_state == handler.State.SELECTING_MOVE_DEST:
 			handle_move_destination_input(handler, event)
+		# 地形選択モード時
+		elif handler.current_state == handler.State.SELECTING_TERRAIN:
+			handle_terrain_selection_input(handler, event)
 
 ## 土地選択時のキー入力処理
 static func handle_land_selection_input(handler, event):
@@ -60,6 +63,8 @@ static func handle_action_selection_input(handler, event):
 			handler.execute_action("move_creature")
 		KEY_S:
 			handler.execute_action("swap_creature")
+		KEY_T:
+			handler.execute_action("terrain_change")
 		KEY_C:
 			handler.cancel()
 		KEY_ESCAPE:
@@ -124,3 +129,36 @@ static func get_number_from_key(keycode: int) -> int:
 		KEY_6: 5, KEY_7: 6, KEY_8: 7, KEY_9: 8, KEY_0: 9
 	}
 	return key_to_index.get(keycode, -1)
+
+## 地形選択時のキー入力処理
+static func handle_terrain_selection_input(handler, event):
+	# Cキーまたはエスケープでキャンセル
+	if event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
+		handler.cancel()
+		return
+	
+	# ↓キーまたは→キー: 次の属性
+	if event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
+		handler.current_terrain_index = (handler.current_terrain_index + 1) % handler.terrain_options.size()
+		LandActionHelper.update_terrain_selection_ui(handler)
+		print("[LandInputHelper] 属性切替: ", handler.terrain_options[handler.current_terrain_index])
+	
+	# ↑キーまたは←キー: 前の属性
+	elif event.keycode == KEY_UP or event.keycode == KEY_LEFT:
+		handler.current_terrain_index = (handler.current_terrain_index - 1 + handler.terrain_options.size()) % handler.terrain_options.size()
+		LandActionHelper.update_terrain_selection_ui(handler)
+		print("[LandInputHelper] 属性切替: ", handler.terrain_options[handler.current_terrain_index])
+	
+	# 数字キー1-4: 直接選択
+	elif event.keycode in [KEY_1, KEY_2, KEY_3, KEY_4]:
+		var index = get_number_from_key(event.keycode)
+		if index < handler.terrain_options.size():
+			handler.current_terrain_index = index
+			LandActionHelper.update_terrain_selection_ui(handler)
+			print("[LandInputHelper] 属性選択: ", handler.terrain_options[handler.current_terrain_index])
+	
+	# Enterキー: 決定
+	elif event.keycode == KEY_ENTER:
+		var selected_element = handler.terrain_options[handler.current_terrain_index]
+		print("[LandInputHelper] 地形変化決定: ", selected_element)
+		LandActionHelper.execute_terrain_change_with_element(handler, selected_element)

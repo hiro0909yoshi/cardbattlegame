@@ -15,7 +15,8 @@ enum State {
 	CLOSED,              # 領地コマンド非表示
 	SELECTING_LAND,      # 土地選択中
 	SELECTING_ACTION,    # アクション選択中
-	SELECTING_MOVE_DEST  # 移動先選択中
+	SELECTING_MOVE_DEST, # 移動先選択中
+	SELECTING_TERRAIN    # 地形選択中
 }
 
 var current_state: State = State.CLOSED
@@ -35,6 +36,11 @@ var current_destination_index: int = 0  # 現在選択中の移動先インデ�
 var _swap_mode: bool = false  # 交換モード中フラグ
 var _swap_old_creature: Dictionary = {}  # 交換前のクリーチャーデータ
 var _swap_tile_index: int = -1  # 交換対象の土地インデックス
+
+# 地形選択モード
+var terrain_change_tile_index: int = -1  # 地形変化対象のタイル
+var terrain_options: Array = ["fire", "water", "earth", "wind"]  # 選択可能な属性
+var current_terrain_index: int = 0  # 現在選択中の属性インデックス
 
 # Phase 1-E: 移動バトル用の一時保存
 var pending_move_battle_creature_data: Dictionary = {}
@@ -139,6 +145,8 @@ func execute_action(action_type: String) -> bool:
 			return LandActionHelper.execute_move_creature(self)
 		"swap_creature":
 			return LandActionHelper.execute_swap_creature(self)
+		"terrain_change":
+			return execute_terrain_change()
 		_:
 			print("[LandCommandHandler] 不明なアクション: ", action_type)
 			return false
@@ -228,7 +236,18 @@ func rotate_selection_marker(delta: float):
 
 ## キャンセル処理
 func cancel():
-	if current_state == State.SELECTING_MOVE_DEST:
+	if current_state == State.SELECTING_TERRAIN:
+		# 地形選択中ならアクション選択に戻る
+		current_state = State.SELECTING_ACTION
+		terrain_change_tile_index = -1
+		current_terrain_index = 0
+		print("[LandCommandHandler] アクション選択に戻りました")
+		
+		# UIを更新（アクションメニューを再表示）
+		if ui_manager and ui_manager.has_method("show_action_menu"):
+			ui_manager.show_action_menu(selected_tile_index)
+	
+	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
 		print("[LandCommandHandler] アクション選択に戻りました")
@@ -443,3 +462,7 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 ## 簡易移動バトル（カードシステム使用不可時）
 func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, attacker_player: int):
 	LandActionHelper.execute_simple_move_battle(self, dest_index, attacker_data, attacker_player)
+
+## 地形変化実行
+func execute_terrain_change() -> bool:
+	return LandActionHelper.execute_terrain_change(self)

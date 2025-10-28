@@ -3,7 +3,9 @@
 ## Must-Read Before Coding
 Check `docs/README.md` for complete documentation index.
 
-## Reserved Words to Avoid
+## Reserved Words & Forbidden Methods
+
+### Reserved Words to Avoid
 ```gdscript
 // ❌ BAD: Godot reserved words
 var owner: int           // Use: tile_owner_id
@@ -14,7 +16,23 @@ var tile_owner_id: int
 func is_battle_active() -> bool
 ```
 
-## TextureRect Constraint
+### Forbidden Methods on Nodes
+```gdscript
+// ❌ BAD: has() doesn't exist on Node objects
+if tile.has("property"):  // Error: Nonexistent function 'has'
+
+// ✅ GOOD: Direct property access
+if tile.property:         // Works for @export vars
+var value = tile.property
+
+// ✅ GOOD: Use get() only for Dictionary
+if dict.has("key"):       // OK for Dictionary
+var value = dict.get("key", default)
+```
+
+**CRITICAL**: `has()` is a Dictionary method, NOT a Node method. Never use `node.has("property")`.
+
+### TextureRect Constraint
 ```gdscript
 // ❌ BAD: color property doesn't work
 texture_rect.color = Color.RED
@@ -246,7 +264,7 @@ func _ready():
 ### Land Bonus
 ```
 Formula: HP + (land_level × 10)
-Applied when: creature.element == tile.element
+Applied when: creature.element == tile.tile_type
 Stored in: land_bonus_hp (separate field)
 ```
 
@@ -263,6 +281,7 @@ Chain  Toll    HP Bonus
 - [ ] Check `docs/README.md` for documentation index
 - [ ] Review relevant design documents in `docs/design/`
 - [ ] Check for reserved words
+- [ ] Never use node.has() - use direct property access
 - [ ] Verify data structures (especially ability_parsed)
 - [ ] Understand turn end flow (never call end_turn directly)
 - [ ] Verify system initialization order
@@ -271,4 +290,4 @@ Chain  Toll    HP Bonus
 - [ ] Prevent phase duplication
 - [ ] **Use viewport-relative positioning (NEVER hardcode coordinates)**
 
-Last updated: 2025-10-25
+Last updated: 2025-10-29

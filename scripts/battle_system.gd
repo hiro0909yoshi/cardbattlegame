@@ -589,6 +589,38 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 	if not participant or not participant.creature_data:
 		return
 	
+	# バイロマンサー専用処理（敵から攻撃を受けた場合のみ発動）
+	var creature_id = participant.creature_data.get("id", -1)
+	if creature_id == 34:  # バイロマンサー
+		# 敵から攻撃を受けた、かつ生き残っている、かつまだ発動していない
+		if participant.was_attacked_by_enemy and participant.is_alive():
+			if not participant.creature_data.get("bairomancer_triggered", false):
+				# ST=20（完全上書き）、MHP-30
+				var old_ap = participant.creature_data.get("ap", 0)
+				var old_base_up_ap = participant.creature_data.get("base_up_ap", 0)
+				
+				participant.creature_data["ap"] = 20  # 基礎APを20に上書き
+				participant.creature_data["base_up_ap"] = 0  # base_up_apをリセット
+				
+				if not participant.creature_data.has("base_up_hp"):
+					participant.creature_data["base_up_hp"] = 0
+				participant.creature_data["base_up_hp"] -= 30
+				
+				# 発動フラグを設定
+				participant.creature_data["bairomancer_triggered"] = true
+				
+				print("[バイロマンサー発動] 敵の攻撃を受けて変化！")
+				print("  ST: ", old_ap + old_base_up_ap, " → 20")
+				print("  MHP-30 (合計MHP:", participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"], ")")
+	
+	# ブルガサリ専用処理（敵がアイテムを使用した戦闘後、MHP+10）
+	if creature_id == 339:  # ブルガサリ
+		if participant.enemy_used_item and participant.is_alive():
+			if not participant.creature_data.has("base_up_hp"):
+				participant.creature_data["base_up_hp"] = 0
+			participant.creature_data["base_up_hp"] += 10
+			print("[ブルガサリ発動] 敵のアイテム使用後 MHP+10 (合計MHP:", participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"], ")")
+	
 	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
 	
 	for effect in effects:
@@ -601,7 +633,7 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 					if not participant.creature_data.has("base_up_ap"):
 						participant.creature_data["base_up_ap"] = 0
 					# 下限チェック: ST（base_ap + base_up_ap）が0未満にならないようにする
-					var current_total_ap = participant.creature_data.get("ap", 0) + participant.creature_data["base_up_ap"]
+					var _current_total_ap = participant.creature_data.get("ap", 0) + participant.creature_data["base_up_ap"]
 					var new_base_up_ap = participant.creature_data["base_up_ap"] + value
 					var new_total_ap = participant.creature_data.get("ap", 0) + new_base_up_ap
 					
@@ -617,7 +649,7 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 					if not participant.creature_data.has("base_up_hp"):
 						participant.creature_data["base_up_hp"] = 0
 					# 下限チェック: MHP（hp + base_up_hp）が0未満にならないようにする
-					var current_total_hp = participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"]
+					var _current_total_hp = participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"]
 					var new_base_up_hp = participant.creature_data["base_up_hp"] + value
 					var new_total_hp = participant.creature_data.get("hp", 0) + new_base_up_hp
 					

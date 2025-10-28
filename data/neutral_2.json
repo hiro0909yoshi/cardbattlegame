@@ -283,7 +283,18 @@
 	  "ap": 0,
 	  "hp": 40,
 	  "ability": "アイテムクリーチャー・戦闘中ST上昇",
-	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、ST+50"
+	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、ST+50",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "as_creature_bonus",
+			"stat_changes": {
+			  "ap": 50
+			},
+			"description": "クリーチャーとして戦闘時ST+50"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 439,

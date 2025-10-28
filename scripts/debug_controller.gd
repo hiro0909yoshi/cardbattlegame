@@ -264,7 +264,9 @@ func show_all_tiles_info():
 	if not board_system:
 		return
 	
-	board_system.debug_print_all_tiles()
+	# TODO: debug_print_all_tilesメソッドが存在しないためコメントアウト
+	# board_system.debug_print_all_tiles()
+	print("[DebugController] 全タイル情報表示（未実装）")
 	emit_signal("debug_action", "show_tiles", null)
 
 # 特定のタイルへ直接移動

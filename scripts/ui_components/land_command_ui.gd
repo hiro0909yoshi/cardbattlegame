@@ -309,6 +309,14 @@ func _on_action_cancel_pressed():
 	event.pressed = true
 	Input.parse_input_event(event)
 
+func _on_action_terrain_change_pressed():
+	print("[LandCommandUI] 地形変化ボタン押下")
+	hide_action_menu()
+	var event = InputEventKey.new()
+	event.keycode = KEY_T
+	event.pressed = true
+	Input.parse_input_event(event)
+
 func _on_level_selected(level: int):
 	var current_player = player_system_ref.get_current_player() if player_system_ref else null
 	if not current_player:
@@ -409,6 +417,13 @@ func create_action_menu_panel(parent: Node):
 	swap_btn.pressed.connect(_on_action_swap_pressed)
 	action_menu_panel.add_child(swap_btn)
 	action_menu_buttons["swap"] = swap_btn
+	button_y += button_height + button_spacing
+	
+	# 地形変化ボタン
+	var terrain_btn = _create_menu_button("🌍 [T] 地形変化", Vector2(10, button_y), Color(0.4, 0.8, 0.4))
+	terrain_btn.pressed.connect(_on_action_terrain_change_pressed)
+	action_menu_panel.add_child(terrain_btn)
+	action_menu_buttons["terrain"] = terrain_btn
 	button_y += button_height + button_spacing
 	
 	# 戻るボタン

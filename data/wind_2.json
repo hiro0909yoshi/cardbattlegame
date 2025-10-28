@@ -354,7 +354,27 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "アイテム使用時・MHP変動",
-	  "ability_detail": "アイテム使用時、ST+20；敵アイテム使用の戦闘後、MHP+10"
+	  "ability_detail": "アイテム使用時、ST+20；敵アイテム使用の戦闘後、MHP+10",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "on_item_use_bonus",
+			"trigger": "self_item_use",
+			"stat_changes": {
+			  "ap": 20
+			},
+			"description": "自分がアイテム使用時ST+20（一時）"
+		  },
+		  {
+			"effect_type": "on_item_use_bonus",
+			"trigger": "enemy_item_use",
+			"stat_changes": {
+			  "max_hp": 10
+			},
+			"description": "敵がアイテム使用の戦闘後MHP+10（永続）"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 340,

@@ -34,6 +34,8 @@ var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
 var instant_death_flag: bool = false  # 即死されたフラグ
 var is_using_scroll: bool = false  # 巻物攻撃フラグ（貫通とは別）
+var was_attacked_by_enemy: bool = false  # 敵から攻撃を受けたフラグ（バイロマンサー用）
+var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ（ブルガサリ用）
 
 # 初期化
 func _init(
@@ -81,6 +83,9 @@ func update_current_hp():
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:
+	# 敵から攻撃を受けたフラグを設定（バイロマンサー用）
+	was_attacked_by_enemy = true
+	
 	var remaining_damage = damage
 	var damage_breakdown = {
 		"resonance_bonus_consumed": 0,

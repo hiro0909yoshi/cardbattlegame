@@ -5,9 +5,21 @@ class_name BoardSystem3D
 # サブシステムへの処理委譲に特化
 
 signal tile_action_completed()
+signal terrain_changed(tile_index: int, old_element: String, new_element: String)
+@warning_ignore("unused_signal")
+signal level_up_completed(tile_index: int, new_level: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+
+# タイルシーン
+const TILE_SCENES = {
+	"fire": preload("res://scenes/Tiles/FireTile.tscn"),
+	"water": preload("res://scenes/Tiles/WaterTile.tscn"),
+	"earth": preload("res://scenes/Tiles/EarthTile.tscn"),
+	"wind": preload("res://scenes/Tiles/WindTile.tscn"),
+	"neutral": preload("res://scenes/Tiles/NeutralTile.tscn")
+}
 
 # スキルインデックス（盤面効果スキルの高速検索用）
 var skill_index: Dictionary = {
@@ -271,6 +283,160 @@ func get_player_tiles(player_id: int) -> Array:
 		if tile.owner_id == player_id:
 			player_tiles.append(tile)
 	return player_tiles
+
+# === 地形変化システム ===
+
+## タイルインスタンスを生成
+func create_tile_instance(element: String, tile_index: int) -> BaseTile:
+	if not TILE_SCENES.has(element):
+		push_error("[BoardSystem3D] 不明な属性: " + element)
+		return null
+	
+	var tile_scene = TILE_SCENES[element]
+	var new_tile = tile_scene.instantiate()
+	new_tile.tile_index = tile_index
+	return new_tile
+
+## 地形変化を実行（タイル交換）
+func change_tile_terrain(tile_index: int, new_element: String) -> bool:
+	if not tile_nodes.has(tile_index):
+		print("[BoardSystem3D] エラー: タイルが存在しません: ", tile_index)
+		return false
+	
+	var old_tile = tile_nodes[tile_index]
+	var old_element = old_tile.tile_type  # tile_typeプロパティを使用
+	
+	# 同じ属性への変更は無視
+	if old_element == new_element:
+		print("[BoardSystem3D] 既に同じ属性です: ", new_element)
+		return false
+	
+	# データ保存
+	var old_position = old_tile.global_position
+	var old_rotation = old_tile.rotation
+	var old_level = old_tile.level
+	var old_owner = old_tile.owner_id
+	var old_creature = old_tile.creature_data.duplicate() if not old_tile.creature_data.is_empty() else {}
+	var old_down_state = old_tile.is_down  # BaseTileには必ずis_downプロパティがある
+	
+	# 新しいタイル生成
+	var new_tile = create_tile_instance(new_element, tile_index)
+	if not new_tile:
+		push_error("[BoardSystem3D] タイル生成失敗")
+		return false
+	
+	# 先に新しいタイルをツリーに追加
+	add_child(new_tile)
+	
+	# 古いタイルをスキルインデックスから除去
+	_update_skill_index_on_remove(tile_index)
+	
+	# tile_nodesを新しいタイルに置き換え
+	tile_nodes[tile_index] = new_tile
+	
+	# 古いタイルを削除（最後に実行）
+	old_tile.queue_free()
+	
+	# データ引き継ぎ（ツリーに追加した後）
+	new_tile.global_position = old_position
+	new_tile.rotation = old_rotation
+	new_tile.level = old_level
+	new_tile.owner_id = old_owner
+	new_tile.creature_data = old_creature
+	
+	if old_down_state and new_tile.has_method("set_down_state"):
+		new_tile.set_down_state(true)
+	
+	# TileDataManagerに通知
+	if tile_data_manager:
+		tile_data_manager.set_tile_nodes(tile_nodes)
+	
+	# クリーチャーがいる場合、3Dモデルを再生成
+	if not old_creature.is_empty():
+		# スキルインデックス更新
+		_update_skill_index_on_place(tile_index, old_creature, old_owner)
+		# クリーチャー3Dモデルを再配置
+		if tile_data_manager:
+			tile_data_manager.place_creature(tile_index, old_creature)
+	
+	# TileInfoDisplayに新しいタイルのラベルを追加
+	if tile_info_display:
+		# 古いラベルを削除
+		if tile_info_display.tile_labels.has(tile_index):
+			var old_label = tile_info_display.tile_labels[tile_index]
+			if is_instance_valid(old_label):
+				old_label.queue_free()
+			tile_info_display.tile_labels.erase(tile_index)
+		
+		# 新しいラベルを作成
+		var label = Label3D.new()
+		label.name = "InfoLabel"
+		label.text = ""
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.no_depth_test = true
+		label.fixed_size = false
+		label.pixel_size = 0.005
+		label.position = Vector3(0, 0.5, 1.5)
+		label.modulate = Color.WHITE
+		label.font_size = 70
+		label.outline_size = 8
+		label.outline_modulate = Color.BLACK
+		
+		new_tile.add_child(label)
+		tile_info_display.tile_labels[tile_index] = label
+	
+	# 全体表示更新
+	if tile_data_manager:
+		tile_data_manager.update_all_displays()
+	
+	print("[地形変化] タイル%d: %s → %s (Lv%d)" % [tile_index, old_element, new_element, old_level])
+	
+	# イベント発火（永続バフ更新用）
+	terrain_changed.emit(tile_index, old_element, new_element)
+	
+	# クリーチャーがいる場合、永続バフを更新
+	if not old_creature.is_empty():
+		_apply_terrain_change_buff(old_creature)
+	
+	return true
+
+## 地形変化時の永続バフ更新
+func _apply_terrain_change_buff(creature_data: Dictionary):
+	var creature_id = creature_data.get("id", -1)
+	
+	# アースズピリット（ID: 200）: MHP+10
+	if creature_id == 200:
+		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + 10
+		print("[アースズピリット] 地形変化 MHP+10 (合計: +%d)" % creature_data["base_up_hp"])
+	
+	# デュータイタン（ID: 328）: MHP-10
+	if creature_id == 328:
+		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) - 10
+		print("[デュータイタン] 地形変化 MHP-10 (合計: %d)" % creature_data["base_up_hp"])
+
+## 地形変化可能かチェック
+func can_change_terrain(tile_index: int) -> bool:
+	if not tile_nodes.has(tile_index):
+		return false
+	
+	# 特殊タイル（チェックポイント、ワープ）は変更不可
+	# チェックポイント: 0, 10
+	# ワープ: 5, 15
+	if tile_index in [0, 5, 10, 15]:
+		return false
+	
+	return true
+
+## 地形変化コストを計算
+func calculate_terrain_change_cost(tile_index: int) -> int:
+	if not tile_nodes.has(tile_index):
+		return -1
+	
+	var tile = tile_nodes[tile_index]
+	var level = tile.level  # BaseTileには必ずlevelプロパティがある
+	
+	# コスト = 300 + (レベル × 100)
+	return 300 + (level * 100)
 
 # === 移動処理（MovementController3Dに委譲） ===
 

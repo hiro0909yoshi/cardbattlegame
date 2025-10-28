@@ -8,7 +8,7 @@ extends RefCounted
 const CARD_WIDTH = 290
 const CARD_HEIGHT = 390
 const CARD_SPACING = 30
-const MAX_SCREEN_WIDTH_RATIO = 0.8
+const MAX_SCREEN_WIDTH_RATIO = 0.77
 
 ## カードレイアウトを計算
 ## @param viewport_size: ビューポートのサイズ

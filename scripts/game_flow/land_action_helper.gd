@@ -27,6 +27,14 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	# レベルアップ実行
 	tile.level = target_level
 	
+	# レベルアップイベント発火（永続バフ更新用）
+	if handler.board_system:
+		handler.board_system.level_up_completed.emit(handler.selected_tile_index, target_level)
+		
+		# 永続バフ更新（アースズピリット/デュータイタン）
+		if not tile.creature_data.is_empty():
+			_apply_level_up_buff(tile.creature_data)
+	
 	# ダウン状態設定（不屈チェック）
 	if tile.has_method("set_down_state"):
 		# BaseTileのcreature_dataプロパティを直接参照
@@ -45,9 +53,9 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	# 領地コマンドを閉じる
 	handler.close_land_command()
 	
-	# ターン終了
-	if handler.game_flow_manager and handler.game_flow_manager.has_method("end_turn"):
-		handler.game_flow_manager.end_turn()
+	# アクション完了を通知（正しいターン終了フロー）
+	if handler.board_system and handler.board_system.tile_action_processor:
+		handler.board_system.tile_action_processor.complete_action()
 	
 	return true
 
@@ -388,3 +396,157 @@ static func _execute_move_battle(handler):
 	handler.pending_move_attacker_item = {}
 	handler.pending_move_defender_item = {}
 	handler.is_waiting_for_move_defender_item = false
+
+
+## レベルアップ時の永続バフ更新
+static func _apply_level_up_buff(creature_data: Dictionary):
+	var creature_id = creature_data.get("id", -1)
+	
+	# アースズピリット（ID: 200）: MHP+10
+	if creature_id == 200:
+		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + 10
+		print("[アースズピリット] レベルアップ MHP+10 (合計: +%d)" % creature_data["base_up_hp"])
+	
+	# デュータイタン（ID: 328）: MHP-10
+	if creature_id == 328:
+		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) - 10
+		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
+
+## 地形変化実行（属性選択後）
+static func execute_terrain_change_with_element(handler, new_element: String) -> bool:
+	if not handler.board_system or handler.selected_tile_index == -1:
+		return false
+	
+	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
+		return false
+	
+	var tile_index = handler.selected_tile_index
+	
+	# 地形変化可能かチェック
+	if not handler.board_system.can_change_terrain(tile_index):
+		print("[LandActionHelper] この土地は地形変化できません")
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "この土地は地形変化できません"
+		return false
+	
+	# コスト計算
+	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
+	if cost < 0:
+		print("[LandActionHelper] コスト計算エラー")
+		return false
+	
+	# 魔力チェック
+	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+	var current_player = p_system.get_current_player() if p_system else null
+	
+	if not current_player:
+		return false
+	
+	if current_player.magic_power < cost:
+		print("[LandActionHelper] 魔力不足: 必要%d / 所持%d" % [cost, current_player.magic_power])
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "魔力が足りません (必要: %dG)" % cost
+		return false
+	
+	# 魔力消費
+	handler.player_system.add_magic(current_player.id, -cost)
+	
+	# 地形変化実行
+	var success = handler.board_system.change_tile_terrain(tile_index, new_element)
+	if not success:
+		print("[LandActionHelper] 地形変化失敗")
+		# 魔力を返却
+		handler.player_system.add_magic(current_player.id, cost)
+		return false
+	
+	# タイルを取得（新しいタイルインスタンス）
+	var tile = handler.board_system.tile_nodes[tile_index]
+	
+	# ダウン状態設定（不屈チェック）
+	if tile.has_method("set_down_state"):
+		var creature = tile.creature_data
+		if not creature.is_empty() and not SkillSystem.has_unyielding(creature):
+			tile.set_down_state(true)
+		elif not creature.is_empty():
+			print("[LandActionHelper] 不屈により地形変化後もダウンしません")
+	
+	# UI更新
+	if handler.ui_manager:
+		handler.ui_manager.update_player_info_panels()
+	
+	print("[LandActionHelper] 地形変化完了: tile %d -> %s (コスト: %dG)" % [tile_index, new_element, cost])
+	
+	# 領地コマンドを閉じる
+	handler.close_land_command()
+	
+	# アクション完了を通知（レベルアップと同様）
+	if handler.board_system and handler.board_system.tile_action_processor:
+		handler.board_system.tile_action_processor.complete_action()
+	
+	return true
+
+## 地形変化実行（UI表示）
+static func execute_terrain_change(handler) -> bool:
+	if not handler.board_system:
+		return false
+	
+	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
+		print("[LandActionHelper] タイルが見つかりません: ", handler.selected_tile_index)
+		return false
+	
+	var tile_index = handler.selected_tile_index
+	
+	# 地形変化可能かチェック
+	if not handler.board_system.can_change_terrain(tile_index):
+		print("[LandActionHelper] この土地は地形変化できません（特殊タイル）")
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "この土地は地形変化できません"
+		return false
+	
+	# 地形選択モードに移行
+	handler.terrain_change_tile_index = tile_index
+	handler.current_state = handler.State.SELECTING_TERRAIN
+	handler.current_terrain_index = 0
+	
+	# 地形選択UIを表示
+	update_terrain_selection_ui(handler)
+	
+	return true
+
+## 地形選択UIを更新
+static func update_terrain_selection_ui(handler):
+	if not handler.ui_manager or not handler.ui_manager.phase_label:
+		return
+	
+	var tile = handler.board_system.tile_nodes[handler.terrain_change_tile_index]
+	var cost = handler.board_system.calculate_terrain_change_cost(handler.terrain_change_tile_index)
+	var current_element = handler.terrain_options[handler.current_terrain_index]
+	
+	# 属性名を日本語に変換
+	var element_names = {
+		"fire": "火",
+		"water": "水",
+		"earth": "土",
+		"wind": "風"
+	}
+	
+	var text = "地形変化: 属性を選択 [↑↓で切替]
+"
+	text += "現在: %s属性 → 変更後: %s属性
+" % [element_names.get(tile.tile_type, "無"), element_names[current_element]]
+	text += "コスト: %dG
+" % cost
+	text += "
+"
+	
+	# 選択肢を表示
+	for i in range(handler.terrain_options.size()):
+		var element = handler.terrain_options[i]
+		var name = element_names[element]
+		var marker = "→ " if i == handler.current_terrain_index else "  "
+		text += "%s[%d] %s属性
+" % [marker, i + 1, name]
+	
+	text += "
+[Enter] 決定  [C] キャンセル"
+	handler.ui_manager.phase_label.text = text
