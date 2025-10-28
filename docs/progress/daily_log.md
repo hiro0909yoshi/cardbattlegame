@@ -16,17 +16,39 @@
 
 ### 完了した作業
 
+- ✅ **Phase 3-C: 既存条件活用バフ実装完了**（2体）
+  - ローンビースト（ID: 49）: HP+基礎ST、隣接で強打
+  - ジェネラルカン（ID: 15）: ST+MHP50以上配置数×5
+  - BattleSkillProcessorに`apply_phase_3c_effects()`追加
+  - 既存の`adjacent_ally_land`条件と`mhp_above`条件を活用
+  - JSONデータに`ability_parsed`追加
+  - **実装内容:**
+	- `base_st_to_hp`: 基礎ST（ap + base_up_ap）をHPに加算
+	- `conditional_land_count`: MHP条件を満たすクリーチャー数をカウント
+  - 詳細: `docs/design/conditional_stat_buff_system.md`
+
 - ✅ **空地移動・敵地移動スキル実装完了**
   - vacant_move（空地移動）: 戦闘せず空地に移動
   - enemy_land_move（敵地移動）: 敵地にも移動可能
   - 詳細: `docs/design/skills/vacant_move_skill.md`
 
-- ✅ **破壊数カウンター実装完了**（全機能）
+- ✅ **破壊数カウンター実装完了**（3体の破壊数効果）
   - GameFlowManager: `on_creature_destroyed()`, `get_destroy_count()`, `reset_destroy_count()`
   - BattleSystem: バトル結果で破壊カウンター更新 + 永続バフ適用
   - BattleSkillProcessor: `apply_destroy_count_effects()` 実装
-  - JSONデータ: バルキリー（ST+10）、ダスクドウェラー（ST+10・MHP+10）、ソウルコレクター（ST+破壊数×5）
+  - **対象クリーチャー:**
+	- バルキリー（ID: 35）: 敵破壊時ST+10（永続）
+	- ダスクドウェラー（ID: 227）: 敵破壊時ST+10・MHP+10（永続）
+	- ソウルコレクター（ID: 323）: ST=破壊数×5（一時）
   - デバッグパネルに破壊数表示追加
+
+- ✅ **周回・ラウンド数システム実装完了**（2体）
+  - GameFlowManager: ラウンド数カウンター、周回完了シグナル
+  - BattleSkillProcessor: `apply_turn_number_bonus()` 実装
+  - **対象クリーチャー:**
+	- キメラ（ID: 7）: 周回ごとにST+10（永続）
+	- ラーバキン（ID: 47）: ST=ラウンド数（一時）
+  - 詳細: `docs/design/lap_system.md`, `docs/design/turn_number_system.md`
 
 - ✅ **移動侵略時のアイテムフェーズ対応**
   - 領地コマンドからの移動侵略でもアイテム選択が可能に
@@ -34,10 +56,12 @@
   - 攻撃側・防御側の両方でアイテムフェーズを実行
   - 援護選択も将来的に対応可能な構造
 
-- ✅ **手札数効果実装完了**（リリス）
+- ✅ **手札数効果実装完了**（1体）
   - BattleSkillProcessorに`apply_hand_count_effects()`追加
   - CardSystemから手札数を取得してST上昇
-  - リリスのJSONデータに`ability_parsed`追加（ST=手札数×10）
+  - **対象クリーチャー:**
+	- リリス（ID: 146）: ST=手札数×10（一時）
+  - JSONデータに`ability_parsed`追加
 
 - ✅ **Phase 3-A: 常時補正実装完了**（2体）
   - アイスウォール（ID: 102）: HP+20
@@ -59,13 +83,68 @@
   - カクタスウォール（ID: 205）: 敵が水風の場合、HP+50
   - BattleSkillProcessorに`apply_battle_condition_effects()`追加
   - `battle_land_element_bonus`と`enemy_element_bonus`効果追加
-  - **残りトークン: 63,946 / 190,000**
 
-### 次のステップ
+### Phase 3-A 完了サマリー
+- ✅ 常時補正: 2体（アイスウォール、トルネード）
+- ✅ 配置数比例: 5体（ファイアードレイク、ブランチアーミー、マッドマン、ガルーダ、アンダイン）
+- ✅ 戦闘地条件: 2体（アンフィビアン、カクタスウォール）
+- **合計: 9体実装完了**
 
-- 📋 **Phase 3-A: シンプルな条件バフ実装**（2-3日）
-  - 常時補正（2体）: アイスウォール、トルネード
-  - 配置数比例の残り（5体）: ファイアードレイク、ガルーダなど
+- ✅ **Phase 3-B: 中程度の条件効果実装完了**（6体）
+  1. ガーゴイル (ID: 204): 防御時、ST=50
+  2. ネッシー (ID: 131): 水で戦闘中、HP+領地レベル×10
+  3. バーンタイタン (ID: 30): 自領地が5つ以上の場合、ST&HP-30
+  4. ハイプワーカー (ID: 32): ST&HP+ハイプワーカー配置数×10
+  5. リビングクローブ (ID: 440): ST&HP=他属性の配置数×5（neutral除く）
+  6. タイガーヴェタ (ID: 226): 隣接領地が自領地の場合、ST&HP+20（1つでも可）
+  
+  **実装内容:**
+  - BattleSkillProcessorに`apply_phase_3b_effects()`追加（6種類の効果タイプ）
+  - BoardSystemに以下のメソッド追加:
+	- `get_player_owned_land_count()` - TileDataManagerの既存メソッドを利用
+	- `count_creatures_by_name()` - 特定クリーチャーカウント
+	- `count_creatures_by_element()` - 属性別カウント
+  - ConditionCheckerの修正:
+	- `build_battle_context()`で`is_attacker`をgame_stateから取得
+	- `tile_level`エイリアス追加、`is_placed_on_tile`対応
+	- `adjacent_ally_land`条件で`tile_neighbor_system`の安全なアクセス対応
+  - 既存システムの再利用:
+	- ネッシー: `on_element_land`条件を使用
+	- タイガーヴェタ: `adjacent_ally_land`条件を使用
+	- バーンタイタン: TileDataManagerの`get_owner_land_count()`を使用
+  - JSONデータに`ability_parsed`追加（6体）
+  - テスト環境（MockBoardSystem）に必要なメソッド追加
+  - 警告修正: シャドウイング、未使用変数などを解消
+  
+  **実装不可:**
+  - **コアトリクエ (ID: 214)**: デッキが相手より多い場合、ST&HP+20
+	- ※現在のCardSystemは全プレイヤー共通デッキのため実装不可
+
+### Phase 3 完了サマリー（条件付きバフクリーチャー）
+- ✅ **Phase 3-A**: 11体（常時補正2体、配置数比例7体、戦闘地条件2体）
+- ✅ **Phase 3-B**: 6体（防御時1体、戦闘地レベル1体、領地数閾値1体、クリーチャーカウント2体、隣接条件1体）
+- ✅ **Phase 3-C**: 2体（既存条件活用）
+- ✅ **その他実装済み**: 6体
+  - 破壊数効果: 3体（バルキリー、ダスクドウェラー、ソウルコレクター）
+  - 周回・ラウンド: 2体（キメラ、ラーバキン）
+  - 手札数: 1体（リリス）
+- **合計: 26体実装完了**
+- **残り: 12体**（コアトリクエ1体は実装不可）
+
+### 次のステップ - Phase 3-D: 永続バフ・イベント駆動システム
+
+残りの条件付きバフクリーチャー実装を進める（残り12体）
+
+**優先度:**
+1. **バイロマンサー、ロックタイタン、リーンタイタン**（バトル後変動、永続バフ）
+2. **アースズピリット、デュータイタン**（領地イベント、永続バフ）
+3. **ドゥームデボラー**（ダイス条件、永続バフ）
+4. **ブラッドプリン**（援護連携、永続バフ）
+5. **ギガンテリウム**（マーク領地、マークシステム必要）
+6. **リビングアーマー、ブルガサリ**（アイテム関連）
+7. **スペクター、オーガロード**（特殊・複雑）
+
+**残りトークン: 82,000 / 190,000**
 
 ---
 

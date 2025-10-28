@@ -125,7 +125,21 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "自領地HP-30",
-	  "ability_detail": "自領地が5つ以上の場合、ST&HP-30"
+	  "ability_detail": "自領地が5つ以上の場合、ST&HP-30",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "owned_land_threshold",
+			"threshold": 5,
+			"operation": "gte",
+			"stat_changes": {
+			  "ap": -30,
+			  "hp": -30
+			},
+			"description": "自領地が5つ以上の場合、ST&HP-30"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 31,
@@ -166,7 +180,22 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "ST&HP変動",
-	  "ability_detail": "ST&HP+ハイプワーカー配置数×10"
+	  "ability_detail": "ST&HP+ハイプワーカー配置数×10",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "specific_creature_count",
+			"target_name": "ハイプワーカー",
+			"multiplier": 10,
+			"include_self": true,
+			"stat_changes": {
+			  "ap": true,
+			  "hp": true
+			},
+			"description": "ST&HP+ハイプワーカー配置数×10"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 33,
@@ -185,15 +214,15 @@
 		"item_use": [
 		  "武器"
 		]
-		
 	  },
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "合成・無効化",
-	  "ability_detail": "合成[タスペル・ヘルバイロンに変身]；無効化[巻物]"
-	,
+	  "ability_detail": "合成[タスペル・ヘルバイロンに変身]；無効化[巻物]",
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": [
+		  "無効化"
+		],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "scroll_attack"
@@ -215,7 +244,9 @@
 	  "ability": "巻物攻撃",
 	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、ST=20、MHP-30",
 	  "ability_parsed": {
-		"keywords": ["巻物攻撃"],
+		"keywords": [
+		  "巻物攻撃"
+		],
 		"keyword_conditions": {
 		  "巻物攻撃": {
 			"scroll_type": "fixed_st",
@@ -241,16 +272,25 @@
 	  "ability": "援護・先制・敵破壊時ST+10",
 	  "ability_detail": "援護[無火地]；先制；敵破壊時、ST+10",
 	  "ability_parsed": {
-		"keywords": ["援護", "先制"],
+		"keywords": [
+		  "援護",
+		  "先制"
+		],
 		"keyword_conditions": {
 		  "援護": {
-			"target_elements": ["neutral", "fire", "earth"]
+			"target_elements": [
+			  "neutral",
+			  "fire",
+			  "earth"
+			]
 		  }
 		},
 		"effects": [
 		  {
 			"effect_type": "on_enemy_destroy_permanent",
-			"stat_changes": {"ap": 10},
+			"stat_changes": {
+			  "ap": 10
+			},
 			"description": "敵破壊時、ST+10（永続）"
 		  }
 		]
@@ -309,7 +349,9 @@
 		  {
 			"effect_type": "land_count_multiplier",
 			"stat": "ap",
-			"elements": ["fire"],
+			"elements": [
+			  "fire"
+			],
 			"multiplier": 5,
 			"operation": "add",
 			"description": "ST+火配置数×5"
@@ -348,11 +390,17 @@
 		"keyword_conditions": {
 		  "貫通": {
 			"condition_type": "enemy_is_element",
-			"elements": ["water", "wind"]
+			"elements": [
+			  "water",
+			  "wind"
+			]
 		  },
 		  "強打": {
 			"condition_type": "enemy_is_element",
-			"elements": ["water", "wind"]
+			"elements": [
+			  "water",
+			  "wind"
+			]
 		  }
 		},
 		"effects": [
@@ -362,7 +410,10 @@
 			"conditions": [
 			  {
 				"condition_type": "enemy_is_element",
-				"elements": ["water", "wind"]
+				"elements": [
+				  "water",
+				  "wind"
+				]
 			  }
 			]
 		  }
@@ -511,7 +562,10 @@
 	  "ability": "応援・秘術",
 	  "ability_detail": "応援[火地・ST+10]；秘術[G30・クリーチャー破壊数×G30を得る]",
 	  "ability_parsed": {
-		"keywords": ["応援", "秘術"],
+		"keywords": [
+		  "応援",
+		  "秘術"
+		],
 		"effects": [
 		  {
 			"effect_type": "support",
@@ -520,7 +574,10 @@
 			  "conditions": [
 				{
 				  "condition_type": "element",
-				  "elements": ["fire", "earth"]
+				  "elements": [
+					"fire",
+					"earth"
+				  ]
 				}
 			  ]
 			},
@@ -710,6 +767,10 @@
 				"condition_type": "adjacent_ally_land"
 			  }
 			]
+		  },
+		  {
+			"effect_type": "base_st_to_hp",
+			"description": "HP+基礎ST"
 		  }
 		]
 	  }

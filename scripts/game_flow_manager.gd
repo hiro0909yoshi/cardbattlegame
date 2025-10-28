@@ -11,7 +11,7 @@ signal dice_rolled(value: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const LandCommandHandler = preload("res://scripts/game_flow/land_command_handler.gd")
+const LandCommandHandlerClass = preload("res://scripts/game_flow/land_command_handler.gd")
 
 # ゲーム状態
 enum GamePhase {
@@ -489,7 +489,7 @@ func initialize_phase1a_systems():
 	phase_manager.phase_changed.connect(_on_phase_manager_phase_changed)
 	
 	# LandCommandHandlerを作成
-	land_command_handler = LandCommandHandler.new()
+	land_command_handler = LandCommandHandlerClass.new()
 	add_child(land_command_handler)
 	land_command_handler.initialize(ui_manager, board_system_3d, self, player_system)
 	

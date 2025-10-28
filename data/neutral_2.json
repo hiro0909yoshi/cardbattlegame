@@ -334,7 +334,22 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "アイテムクリーチャー・ST&HP計算",
-	  "ability_detail": "アイテムクリーチャー；ST&HP=他属性の配置数×5"
+	  "ability_detail": "アイテムクリーチャー；ST&HP=他属性の配置数×5",
+	  "ability_parsed": {
+		"keywords": ["アイテムクリーチャー"],
+		"effects": [
+		  {
+			"effect_type": "other_element_count",
+			"multiplier": 5,
+			"exclude_neutral": true,
+			"stat_changes": {
+			  "ap": true,
+			  "hp": true
+			},
+			"description": "ST&HP=他属性の配置数×5"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 441,
@@ -455,7 +470,18 @@
 	  "ap": 70,
 	  "hp": 70,
 	  "ability": "戦闘後能力値減少",
-	  "ability_detail": "戦闘後、ST&MHP-10"
+	  "ability_detail": "戦闘後、ST&MHP-10",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "after_battle_permanent_change",
+			"stat_changes": {
+			  "ap": -10
+			},
+			"description": "バトル終了時ST-10（永続）"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 447,

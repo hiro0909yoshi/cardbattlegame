@@ -135,7 +135,7 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				return context.get("adjacent_is_ally_land", false)
 			
 			# TileNeighborSystemで動的チェック
-			if board_system.tile_neighbor_system:
+			if "tile_neighbor_system" in board_system and board_system.tile_neighbor_system:
 				var result = board_system.tile_neighbor_system.has_adjacent_ally_land(
 					battle_tile, player_id, board_system
 				)
@@ -317,6 +317,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		# 土地情報
 		"battle_land_element": battle_field.get("element", ""),
 		"current_land_level": battle_field.get("level", 1),
+		"tile_level": battle_field.get("level", 1),  # エイリアス（Phase 3-B用）
 		"adjacent_is_ally_land": battle_field.get("adjacent_ally", false),
 		"player_lands": game_state.get("player_lands", {}),
 		
@@ -330,6 +331,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"enemy_abilities": defender_data.get("abilities", []),
 		
 		# 攻撃タイプ
-		"is_attacker": true,
+		"is_attacker": game_state.get("is_attacker", true),
+		"is_placed_on_tile": game_state.get("is_placed_on_tile", false),  # Phase 3-B用
 		"attack_type": "normal"  # or "scroll", "ability"
 	}

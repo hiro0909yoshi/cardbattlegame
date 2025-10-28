@@ -180,7 +180,20 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "水で戦闘中HP+領地レベル×10",
-	  "ability_detail": "水で戦闘中、HP+領地レベル×10"
+	  "ability_detail": "水で戦闘中、HP+領地レベル×10",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "battle_land_level_bonus",
+			"condition": {
+			  "battle_land_element": "water"
+			},
+			"stat": "hp",
+			"multiplier": 10,
+			"description": "水で戦闘中、HP+領地レベル×10"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 132,

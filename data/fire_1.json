@@ -416,7 +416,18 @@
 		"keywords": [
 		  "先制"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "conditional_land_count",
+			"stat": "ap",
+			"multiplier": 5,
+			"creature_condition": {
+			  "condition_type": "mhp_above",
+			  "value": 50
+			},
+			"description": "ST+MHP50以上配置数×5"
+		  }
+		]
 	  }
 	},
 	{

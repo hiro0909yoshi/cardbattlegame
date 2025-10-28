@@ -354,3 +354,38 @@ func debug_print_skill_index() -> void:
 	print("[スキルインデックス状態]")
 	print("  応援: ", skill_index["support"].keys())
 	print("  世界呪: ", skill_index["world_spell"].keys())
+
+## Phase 3-B用: 自領地数をカウント（バーンタイタン用）
+func get_player_owned_land_count(player_id: int) -> int:
+	if not tile_data_manager:
+		return 0
+	# TileDataManagerの既存メソッドを使用
+	return tile_data_manager.get_owner_land_count(player_id)
+
+## Phase 3-B用: 特定の名前のクリーチャーをカウント
+func count_creatures_by_name(player_id: int, creature_name: String) -> int:
+	if not tile_data_manager:
+		return 0
+	
+	var count = 0
+	for tile_index in tile_data_manager.tile_nodes:
+		var tile = tile_data_manager.tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.creature_data != null and not tile.creature_data.is_empty():
+			var tile_creature_name = tile.creature_data.get("name", "")
+			if tile_creature_name == creature_name:
+				count += 1
+	return count
+
+## Phase 3-B用: 特定の属性のクリーチャーをカウント
+func count_creatures_by_element(player_id: int, element: String) -> int:
+	if not tile_data_manager:
+		return 0
+	
+	var count = 0
+	for tile_index in tile_data_manager.tile_nodes:
+		var tile = tile_data_manager.tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.creature_data != null and not tile.creature_data.is_empty():
+			var creature_element = tile.creature_data.get("element", "")
+			if creature_element == element:
+				count += 1
+	return count

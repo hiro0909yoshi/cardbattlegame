@@ -39,7 +39,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"battle_tile_index": tile_info.get("index", -1),
 			"player_id": attacker_index,
 			"board_system": board_system_ref,
-			"game_flow_manager": game_flow_manager_ref
+			"game_flow_manager": game_flow_manager_ref,
+			"is_placed_on_tile": false  # 侵略側は配置されていない
 		}
 	)
 	apply_skills(attacker, attacker_context)
@@ -55,7 +56,9 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"battle_tile_index": tile_info.get("index", -1),
 			"player_id": defender.player_id,
 			"board_system": board_system_ref,
-			"game_flow_manager": game_flow_manager_ref
+			"game_flow_manager": game_flow_manager_ref,
+			"is_attacker": false,  # 防御側
+			"is_placed_on_tile": true  # 防御側は配置されている
 		}
 	)
 	apply_skills(defender, defender_context)
@@ -103,6 +106,12 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	# 3.8. 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
 	apply_battle_condition_effects(participant, context)
+	
+	# 3.9. Phase 3-B 効果（ガーゴイル、ネッシー、バーンタイタン等）
+	apply_phase_3b_effects(participant, context)
+	
+	# 3.10. Phase 3-C 効果（ローンビースト、ジェネラルカン）
+	apply_phase_3c_effects(participant, context)
 	
 	# 4. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context, effect_combat)
@@ -1003,7 +1012,7 @@ func apply_constant_stat_bonus(participant: BattleParticipant):
 					  " HP", ("+" if value >= 0 else ""), value)
 
 ## 手札数効果を適用（リリス用）
-func apply_hand_count_effects(participant: BattleParticipant, player_id: int, card_system_ref):
+func apply_hand_count_effects(participant: BattleParticipant, player_id: int, card_system):
 	if not participant or not participant.creature_data:
 		return
 	
@@ -1016,8 +1025,8 @@ func apply_hand_count_effects(participant: BattleParticipant, player_id: int, ca
 			
 			# CardSystemから手札数取得
 			var hand_count = 0
-			if card_system_ref:
-				hand_count = card_system_ref.get_hand_size_for_player(player_id)
+			if card_system:
+				hand_count = card_system.get_hand_size_for_player(player_id)
 			
 			var bonus_value = hand_count * multiplier
 			
@@ -1031,3 +1040,245 @@ func apply_hand_count_effects(participant: BattleParticipant, player_id: int, ca
 				participant.update_current_hp()
 				print("【手札数効果】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
+
+## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
+func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		
+		# 1. 基礎STをHPに加算（ローンビースト）
+		if effect_type == "base_st_to_hp":
+			var base_st = participant.creature_data.get("ap", 0)
+			var base_up_st = participant.creature_data.get("base_up_ap", 0)
+			var total_base_st = base_st + base_up_st
+			
+			participant.temporary_bonus_hp += total_base_st
+			participant.update_current_hp()
+			print("【基礎ST→HP】", participant.creature_data.get("name", "?"), 
+				  " HP+", total_base_st, " (基礎ST: ", base_st, "+", base_up_st, ")")
+		
+		# 2. 条件付き配置数カウント（ジェネラルカン）
+		elif effect_type == "conditional_land_count":
+			var creature_condition = effect.get("creature_condition", {})
+			var stat = effect.get("stat", "ap")
+			var multiplier = effect.get("multiplier", 5)
+			
+			# プレイヤーの全タイルを取得
+			var player_id = context.get("player_id", 0)
+			if not board_system_ref:
+				continue
+			
+			var player_tiles = board_system_ref.get_player_tiles(player_id)
+			var qualified_count = 0
+			
+			# 各タイルのクリーチャーが条件を満たすかチェック
+			for tile in player_tiles:
+				if not tile.creature_data:
+					continue
+				
+				# MHP計算
+				var creature_hp = tile.creature_data.get("hp", 0)
+				var creature_base_up_hp = tile.creature_data.get("base_up_hp", 0)
+				var creature_mhp = creature_hp + creature_base_up_hp
+				
+				# 条件チェック
+				var condition_type = creature_condition.get("condition_type", "")
+				if condition_type == "mhp_above":
+					var threshold = creature_condition.get("value", 50)
+					if creature_mhp >= threshold:
+						qualified_count += 1
+			
+			var bonus = qualified_count * multiplier
+			
+			if stat == "ap":
+				participant.temporary_bonus_ap += bonus
+				participant.current_ap += bonus
+				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
+					  " ST+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
+			elif stat == "hp":
+				participant.temporary_bonus_hp += bonus
+				participant.update_current_hp()
+				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
+					  " HP+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
+
+## Phase 3-B効果を適用（中程度の条件効果）
+func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		
+		# 1. 防御時固定ST（ガーゴイル） - 既存の条件チェック不要（is_attackerで直接判定）
+		if effect_type == "defender_fixed_ap":
+			var is_attacker = context.get("is_attacker", true)
+			if not is_attacker:  # 防御側のみ
+				var fixed_ap = effect.get("value", 50)
+				participant.current_ap = fixed_ap
+				print("【防御時固定ST】", participant.creature_data.get("name", "?"), 
+					  " ST=", fixed_ap)
+		
+		# 2. 戦闘地レベル効果（ネッシー） - 既存のon_element_land条件を使用
+		elif effect_type == "battle_land_level_bonus":
+			var condition_data = effect.get("condition", {})
+			var required_element = condition_data.get("battle_land_element", "water")
+			
+			# 既存のConditionCheckerを使用して属性チェック
+			var checker = ConditionChecker.new()
+			var element_condition = {
+				"condition_type": "on_element_land",
+				"element": required_element
+			}
+			var is_on_element = checker._evaluate_single_condition(element_condition, context)
+			
+			if is_on_element:
+				var tile_level = context.get("tile_level", 1)
+				var multiplier = effect.get("multiplier", 10)
+				var bonus = tile_level * multiplier
+				
+				var stat = effect.get("stat", "hp")
+				if stat == "hp":
+					participant.temporary_bonus_hp += bonus
+					participant.update_current_hp()
+					print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
+						  " HP+", bonus, " (レベル:", tile_level, " × ", multiplier, ")")
+		
+		# 3. 自領地数閾値効果（バーンタイタン）
+		elif effect_type == "owned_land_threshold":
+			var threshold = effect.get("threshold", 5)
+			var operation = effect.get("operation", "gte")  # gte, lt, etc
+			
+			# BoardSystemから自領地数を取得
+			var player_id = context.get("player_id", 0)
+			var owned_land_count = 0
+			if board_system_ref:
+				owned_land_count = board_system_ref.get_player_owned_land_count(player_id)
+			
+			var condition_met = false
+			if operation == "gte":
+				condition_met = owned_land_count >= threshold
+			
+			if condition_met:
+				var stat_changes = effect.get("stat_changes", {})
+				var ap_change = stat_changes.get("ap", 0)
+				var hp_change = stat_changes.get("hp", 0)
+				
+				if ap_change != 0:
+					participant.temporary_bonus_ap += ap_change
+					participant.current_ap += ap_change
+					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
+						  " ST", ("+" if ap_change >= 0 else ""), ap_change, 
+						  " (自領地:", owned_land_count, ")")
+				
+				if hp_change != 0:
+					participant.temporary_bonus_hp += hp_change
+					participant.update_current_hp()
+					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
+						  " HP", ("+" if hp_change >= 0 else ""), hp_change, 
+						  " (自領地:", owned_land_count, ")")
+		
+		# 4. 特定クリーチャーカウント（ハイプワーカー）
+		elif effect_type == "specific_creature_count":
+			var target_name = effect.get("target_name", "")
+			var multiplier = effect.get("multiplier", 10)
+			var include_self = effect.get("include_self", true)
+			
+			# BoardSystemから特定クリーチャーをカウント
+			var player_id = context.get("player_id", 0)
+			var creature_count = 0
+			if board_system_ref:
+				creature_count = board_system_ref.count_creatures_by_name(player_id, target_name)
+			
+			# 侵略側（配置されていない）の場合、自分を除外
+			var is_placed = context.get("is_placed_on_tile", false)
+			if include_self and is_placed:
+				# 自分も含める（既にカウント済み）
+				pass
+			elif not is_placed and creature_count > 0:
+				# 侵略側は自分を除外
+				creature_count -= 1
+			
+			var bonus = creature_count * multiplier
+			
+			var stat_changes = effect.get("stat_changes", {})
+			var affects_ap = stat_changes.get("ap", true)
+			var affects_hp = stat_changes.get("hp", true)
+			
+			if affects_ap:
+				participant.temporary_bonus_ap += bonus
+				participant.current_ap += bonus
+			
+			if affects_hp:
+				participant.temporary_bonus_hp += bonus
+				participant.update_current_hp()
+			
+			print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
+				  " ST&HP+", bonus, " (", target_name, ":", creature_count, " × ", multiplier, ")")
+		
+		# 5. 他属性カウント（リビングクローブ）
+		elif effect_type == "other_element_count":
+			var multiplier = effect.get("multiplier", 5)
+			var exclude_neutral = effect.get("exclude_neutral", true)
+			
+			# 自分の属性を取得
+			var my_element = participant.creature_data.get("element", "neutral")
+			
+			# BoardSystemから各属性のクリーチャー数を取得
+			var player_id = context.get("player_id", 0)
+			var other_count = 0
+			if board_system_ref:
+				var all_elements = ["fire", "water", "earth", "wind"]
+				if not exclude_neutral:
+					all_elements.append("neutral")
+				
+				for element in all_elements:
+					if element != my_element:
+						other_count += board_system_ref.count_creatures_by_element(player_id, element)
+			
+			var bonus = other_count * multiplier
+			
+			var stat_changes = effect.get("stat_changes", {})
+			var affects_ap = stat_changes.get("ap", true)
+			var affects_hp = stat_changes.get("hp", true)
+			
+			if affects_ap:
+				participant.temporary_bonus_ap += bonus
+				participant.current_ap += bonus
+			
+			if affects_hp:
+				participant.temporary_bonus_hp += bonus
+				participant.update_current_hp()
+			
+			print("【他属性カウント】", participant.creature_data.get("name", "?"), 
+				  " ST&HP+", bonus, " (他属性:", other_count, " × ", multiplier, ")")
+		
+		# 6. 隣接自領地条件（タイガーヴェタ） - 既存の条件チェック機能を使用
+		elif effect_type == "adjacent_owned_land":
+			# 既存のConditionCheckerを使用
+			var checker = ConditionChecker.new()
+			var condition = {"condition_type": "adjacent_ally_land"}
+			var has_adjacent_ally = checker._evaluate_single_condition(condition, context)
+			
+			if has_adjacent_ally:
+				var stat_changes = effect.get("stat_changes", {})
+				var ap_change = stat_changes.get("ap", 0)
+				var hp_change = stat_changes.get("hp", 0)
+				
+				if ap_change != 0:
+					participant.temporary_bonus_ap += ap_change
+					participant.current_ap += ap_change
+					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
+						  " ST+", ap_change)
+				
+				if hp_change != 0:
+					participant.temporary_bonus_hp += hp_change
+					participant.update_current_hp()
+					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
+						  " HP+", hp_change)

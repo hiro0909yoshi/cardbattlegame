@@ -30,6 +30,18 @@ class MockBoardSystem extends RefCounted:
 			"support_data": support_data
 		}
 		print("[MockBoardSystem] 応援登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
+	
+	# Phase 3-B用: 自領地数をカウント（テスト用モック）
+	func get_player_owned_land_count(_player_id: int) -> int:
+		return 0  # テスト環境では常に0
+	
+	# Phase 3-B用: 特定の名前のクリーチャーをカウント（テスト用モック）
+	func count_creatures_by_name(_player_id: int, _creature_name: String) -> int:
+		return 0  # テスト環境では常に0
+	
+	# Phase 3-B用: 特定の属性のクリーチャーをカウント（テスト用モック）
+	func count_creatures_by_element(_player_id: int, _element: String) -> int:
+		return 0  # テスト環境では常に0
 
 class MockCardSystem extends CardSystem:
 	func _init():

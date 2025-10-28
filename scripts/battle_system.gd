@@ -249,6 +249,10 @@ func _apply_post_battle_effects(
 			if defender.current_hp <= 0:
 				_apply_on_destroy_permanent_buffs(defender)
 			
+			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			_apply_after_battle_permanent_changes(attacker)
+			_apply_after_battle_permanent_changes(defender)
+			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
 				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
@@ -277,6 +281,10 @@ func _apply_post_battle_effects(
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
 			_apply_on_destroy_permanent_buffs(defender)
 			
+			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			_apply_after_battle_permanent_changes(attacker)
+			_apply_after_battle_permanent_changes(defender)
+			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
 				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
@@ -293,6 +301,10 @@ func _apply_post_battle_effects(
 		BattleResult.ATTACKER_SURVIVED:
 			print("
 【結果】侵略失敗！攻撃側が生き残り")
+			
+			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			_apply_after_battle_permanent_changes(attacker)
+			_apply_after_battle_permanent_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
@@ -570,3 +582,49 @@ func _apply_on_destroy_permanent_buffs(participant: BattleParticipant):
 						participant.creature_data["base_up_hp"] = 0
 					participant.creature_data["base_up_hp"] += value
 					print("[永続バフ] ", participant.creature_data.get("name", ""), " MHP+", value)
+
+# バトル後の永続的な変化を適用（勝敗問わず）
+# ロックタイタン (ID: 446)、リーンタイタン (ID: 439) など
+func _apply_after_battle_permanent_changes(participant: BattleParticipant):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "after_battle_permanent_change":
+			var stat_changes = effect.get("stat_changes", {})
+			
+			for stat in stat_changes:
+				var value = stat_changes[stat]
+				if stat == "ap":
+					if not participant.creature_data.has("base_up_ap"):
+						participant.creature_data["base_up_ap"] = 0
+					# 下限チェック: ST（base_ap + base_up_ap）が0未満にならないようにする
+					var current_total_ap = participant.creature_data.get("ap", 0) + participant.creature_data["base_up_ap"]
+					var new_base_up_ap = participant.creature_data["base_up_ap"] + value
+					var new_total_ap = participant.creature_data.get("ap", 0) + new_base_up_ap
+					
+					if new_total_ap < 0:
+						# 合計STが0になるように調整
+						new_base_up_ap = -participant.creature_data.get("ap", 0)
+						print("[永続変化] ", participant.creature_data.get("name", ""), " ST", value, " → 下限0に制限")
+					
+					participant.creature_data["base_up_ap"] = new_base_up_ap
+					print("[永続変化] ", participant.creature_data.get("name", ""), " ST", value if value >= 0 else "", value, " (合計ST:", participant.creature_data.get("ap", 0) + new_base_up_ap, ")")
+				
+				elif stat == "max_hp":
+					if not participant.creature_data.has("base_up_hp"):
+						participant.creature_data["base_up_hp"] = 0
+					# 下限チェック: MHP（hp + base_up_hp）が0未満にならないようにする
+					var current_total_hp = participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"]
+					var new_base_up_hp = participant.creature_data["base_up_hp"] + value
+					var new_total_hp = participant.creature_data.get("hp", 0) + new_base_up_hp
+					
+					if new_total_hp < 0:
+						# 合計MHPが0になるように調整
+						new_base_up_hp = -participant.creature_data.get("hp", 0)
+						print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value, " → 下限0に制限")
+					
+					participant.creature_data["base_up_hp"] = new_base_up_hp
+					print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value if value >= 0 else "", value, " (合計MHP:", participant.creature_data.get("hp", 0) + new_base_up_hp, ")")
