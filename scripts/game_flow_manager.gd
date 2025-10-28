@@ -11,6 +11,7 @@ signal dice_rolled(value: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const LandCommandHandler = preload("res://scripts/game_flow/land_command_handler.gd")
 
 # ゲーム状態
 enum GamePhase {

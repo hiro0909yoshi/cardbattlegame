@@ -64,7 +64,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system)
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
-	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref)
+	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
 	battle_special_effects.setup_systems(board_system)
 
 # バトル実行（3D版メイン処理）

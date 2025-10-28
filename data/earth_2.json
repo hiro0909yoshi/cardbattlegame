@@ -295,7 +295,20 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "ST計算・秘術",
-	  "ability_detail": "ST+🌱配置数×5；秘術[G50・マッドマンに変身]"
+	  "ability_detail": "ST+🌱配置数×5；秘術[G50・マッドマンに変身]",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "ap",
+			"elements": ["earth"],
+			"multiplier": 5,
+			"operation": "add",
+			"description": "ST+地配置数×5"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 237,
@@ -369,7 +382,20 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "HP計算",
-	  "ability_detail": "HP+地配置数×5"
+	  "ability_detail": "HP+地配置数×5",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "hp",
+			"elements": ["earth"],
+			"multiplier": 5,
+			"operation": "add",
+			"description": "HP+地配置数×5"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 239,

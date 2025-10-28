@@ -133,6 +133,17 @@
 	  "ability_parsed": {
 		"keywords": [
 		  "再生"
+		],
+		"effects": [
+		  {
+			"effect_type": "enemy_element_bonus",
+			"stat": "hp",
+			"value": 50,
+			"condition": {
+			  "enemy_elements": ["water", "wind"]
+			},
+			"description": "敵が水風の場合、HP+50"
+		  }
 		]
 	  }
 	},

@@ -556,7 +556,18 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "ST=自手札数×10",
-	  "ability_detail": "先制；ST=自手札数×10"
+	  "ability_detail": "ST=自手札数×10",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "hand_count_multiplier",
+			"stat": "ap",
+			"multiplier": 10,
+			"description": "ST=自手札数×10"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 147,

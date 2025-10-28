@@ -21,32 +21,51 @@
   - enemy_land_move（敵地移動）: 敵地にも移動可能
   - 詳細: `docs/design/skills/vacant_move_skill.md`
 
-- ✅ **破壊数カウンター実装完了**
-  - GameFlowManagerにキャッシュ追加: `game_stats["total_creatures_destroyed"]`
-  - 破壊時処理: `on_creature_destroyed()`, `get_destroy_count()`, `reset_destroy_count()`
-  - デバッグパネルに累計破壊数表示を追加
-  - BattleSystemにGameFlowManagerへの参照を追加
-  - 詳細: 永続バフ（バルキリー、ダスクドウェラー）、一時バフ（ソウルコレクター）に対応
-  - **残りトークン: 87,746 / 190,000**
+- ✅ **破壊数カウンター実装完了**（全機能）
+  - GameFlowManager: `on_creature_destroyed()`, `get_destroy_count()`, `reset_destroy_count()`
+  - BattleSystem: バトル結果で破壊カウンター更新 + 永続バフ適用
+  - BattleSkillProcessor: `apply_destroy_count_effects()` 実装
+  - JSONデータ: バルキリー（ST+10）、ダスクドウェラー（ST+10・MHP+10）、ソウルコレクター（ST+破壊数×5）
+  - デバッグパネルに破壊数表示追加
+
+- ✅ **移動侵略時のアイテムフェーズ対応**
+  - 領地コマンドからの移動侵略でもアイテム選択が可能に
+  - LandCommandHandlerに`_on_move_item_phase_completed()`追加
+  - 攻撃側・防御側の両方でアイテムフェーズを実行
+  - 援護選択も将来的に対応可能な構造
+
+- ✅ **手札数効果実装完了**（リリス）
+  - BattleSkillProcessorに`apply_hand_count_effects()`追加
+  - CardSystemから手札数を取得してST上昇
+  - リリスのJSONデータに`ability_parsed`追加（ST=手札数×10）
+
+- ✅ **Phase 3-A: 常時補正実装完了**（2体）
+  - アイスウォール（ID: 102）: HP+20
+  - トルネード（ID: 330）: ST+20、HP-10
+  - BattleSkillProcessorに`apply_constant_stat_bonus()`追加
+  - JSONデータに`constant_stat_bonus`効果追加
+
+- ✅ **Phase 3-A: 配置数比例実装完了**（5体）
+  - ファイアードレイク（ID: 37）: ST+火配置数×5
+  - ブランチアーミー（ID: 236）: ST+地配置数×5
+  - マッドマン（ID: 238）: HP+地配置数×5
+  - ガルーダ（ID: 307）: ST&HP=風配置数×10（operation: set対応）
+  - アンダイン（ID: 109）: HP=水配置数×20（operation: set対応）
+  - `land_count_multiplier`に`operation: "set"`対応追加
+  - JSONデータに`ability_parsed`追加
+
+- ✅ **Phase 3-A: 戦闘地条件実装完了**（2体）
+  - アンフィビアン（ID: 110）: 戦闘地が水風の場合、ST+20
+  - カクタスウォール（ID: 205）: 敵が水風の場合、HP+50
+  - BattleSkillProcessorに`apply_battle_condition_effects()`追加
+  - `battle_land_element_bonus`と`enemy_element_bonus`効果追加
+  - **残りトークン: 63,946 / 190,000**
 
 ### 次のステップ
 
-- 📋 **破壊カウンターの統合**（次回）
-  1. **BattleSystemで破壊時処理を実装**（20分）
-	 - `_on_battle_ended()` で `game_flow_manager_ref.on_creature_destroyed()` 呼び出し
-	 - `_apply_on_destroy_permanent_buffs()` 実装（バルキリー、ダスクドウェラー用）
-  2. **BattleSkillProcessorで破壊数効果を実装**（15分）
-	 - `apply_destroy_count_effects()` 追加（ソウルコレクター用）
-	 - BattlePreparationから呼び出し
-  3. **JSONデータ追加**（10分）
-	 - バルキリー、ダスクドウェラー、ソウルコレクターの `ability_parsed` 追加
-
-- 📋 **手札数取得実装**（10分）
-  - BattleSkillProcessor に `apply_hand_count_effects()` 追加
-  - 対象: リリス（手札数×10 HP上昇）
-
 - 📋 **Phase 3-A: シンプルな条件バフ実装**（2-3日）
   - 常時補正（2体）: アイスウォール、トルネード
+  - 配置数比例の残り（5体）: ファイアードレイク、ガルーダなど
 
 ---
 

@@ -130,7 +130,20 @@
 		"keywords": [
 		  "先制"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "constant_stat_bonus",
+			"stat": "ap",
+			"value": 20,
+			"description": "ST+20"
+		  },
+		  {
+			"effect_type": "constant_stat_bonus",
+			"stat": "hp",
+			"value": -10,
+			"description": "HP-10"
+		  }
+		]
 	  }
 	},
 	{

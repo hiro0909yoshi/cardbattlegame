@@ -302,7 +302,20 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "ST+火配置数×5",
-	  "ability_detail": "ST+火配置数×5"
+	  "ability_detail": "ST+火配置数×5",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "ap",
+			"elements": ["fire"],
+			"multiplier": 5,
+			"operation": "add",
+			"description": "ST+火配置数×5"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 38,

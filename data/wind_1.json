@@ -198,7 +198,20 @@
 	  "ap": 0,
 	  "hp": 40,
 	  "ability": "ST&HP計算",
-	  "ability_detail": "ST&HP=💨配置数×10"
+	  "ability_detail": "ST&HP=💨配置数×10",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "both",
+			"elements": ["wind"],
+			"multiplier": 10,
+			"operation": "set",
+			"description": "ST&HP=風配置数×10"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 308,

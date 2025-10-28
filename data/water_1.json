@@ -74,7 +74,18 @@
 	  "ap": 0,
 	  "hp": 40,
 	  "ability": "防御型",
-	  "ability_detail": "防御型；HP+20"
+	  "ability_detail": "防御型；HP+20",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "constant_stat_bonus",
+			"stat": "hp",
+			"value": 20,
+			"description": "HP+20"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 103,
@@ -257,7 +268,20 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "HP+水自領地数×20",
-	  "ability_detail": "HP=水自領地数×20；無効化[水]"
+	  "ability_detail": "HP=水自領地数×20；無効化[水]",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "hp",
+			"elements": ["water"],
+			"multiplier": 20,
+			"operation": "set",
+			"description": "HP=水自領地数×20"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 110,
@@ -271,7 +295,21 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "戦闘地が水風の場合",
-	  "ability_detail": "戦闘地が水風の場合、ST+20；HP効果無効"
+	  "ability_detail": "戦闘地が水風の場合、ST+20；HP効果無効",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "battle_land_element_bonus",
+			"stat": "ap",
+			"value": 20,
+			"condition": {
+			  "battle_land_elements": ["water", "wind"]
+			},
+			"description": "戦闘地が水風の場合、ST+20"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 111,
