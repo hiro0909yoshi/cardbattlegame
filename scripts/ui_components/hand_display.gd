@@ -176,17 +176,6 @@ func rearrange_hand(player_id: int):
 	# CardUIHelperを使用してレイアウト計算
 	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_size)
 	
-	# デバッグ出力
-	print("[HandDisplay] ========================================")
-	print("[HandDisplay] カード枚数: %d" % hand_size)
-	print("[HandDisplay] ビューポート幅: %.1f" % viewport_size.x)
-	print("[HandDisplay] 最大幅(80%%): %.1f" % (viewport_size.x * 0.8))
-	print("[HandDisplay] 通常サイズ全体幅: %.1f" % (hand_size * 290 + (hand_size - 1) * 30))
-	print("[HandDisplay] スケール: %.3f" % layout.scale)
-	print("[HandDisplay] 縮小後カード幅: %.1f" % layout.card_width)
-	print("[HandDisplay] 縮小後間隔: %.1f" % layout.spacing)
-	print("[HandDisplay] 実際の全体幅: %.1f" % layout.total_width)
-	print("[HandDisplay] 開始X座標: %.1f" % layout.start_x)
 	
 	# 各カードを配置
 	for i in range(card_nodes.size()):
@@ -200,8 +189,7 @@ func rearrange_hand(player_id: int):
 			card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 			card.scale = Vector2(layout.scale, layout.scale)  # スケールで縮小
 			
-			if i < 3 or i >= hand_size - 1:  # 最初の3枚と最後の1枚の位置を出力
-				print("[HandDisplay] カード%d: X=%.1f, スケール=%.3f" % [i, x_pos, layout.scale])
+
 
 ## シグナルハンドラ
 func _on_card_drawn(_card_data: Dictionary):

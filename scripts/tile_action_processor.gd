@@ -68,14 +68,11 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
 	
-	# 特殊マス処理
+	# 特殊マス処理（処理後も召喚フェーズに進む）
 	if _is_special_tile(tile.tile_type) and tile.tile_type != "neutral":
 		if special_tile_system:
-			special_tile_system.special_action_completed.connect(_on_special_action_completed, CONNECT_ONE_SHOT)
+			# 特殊タイル処理を実行
 			special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
-		else:
-			_complete_action()
-		return
 	
 	# CPUかプレイヤーかで分岐（デバッグモードでは全て手動）
 	var is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
@@ -86,9 +83,16 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 
 # プレイヤーのタイル処理
 func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
+	# 特殊タイルかチェック
+	var is_special = _is_special_tile(tile.tile_type) and tile.tile_type != "neutral"
+	
 	if tile_info["owner"] == -1:
 		# 空き地
-		show_summon_ui()
+		if is_special:
+			# 特殊タイルでは召喚UI表示するがグレーアウト
+			show_summon_ui_disabled()
+		else:
+			show_summon_ui()
 	elif tile_info["owner"] == player_index:
 		# 自分の土地
 		if tile.level < GameConstants.MAX_LEVEL:
@@ -122,6 +126,14 @@ func show_summon_ui():
 		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
+# 召喚UI表示（グレーアウト）
+func show_summon_ui_disabled():
+	if ui_manager:
+		ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
+		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
+		ui_manager.card_selection_filter = "disabled"
+		ui_manager.show_card_selection_ui(player_system.get_current_player())
+
 # レベルアップUI表示
 func show_level_up_ui(tile_info: Dictionary):
 	if ui_manager:
@@ -151,6 +163,18 @@ func on_card_selected(card_index: int):
 	var current_player_index = board_system.current_player_index
 	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
+	
+	# 特殊タイル上ではカード選択を無視（UIは維持）
+	var tile = board_system.tile_nodes.get(current_tile)
+	if tile and _is_special_tile(tile.tile_type) and tile.tile_type != "neutral":
+		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
+		if ui_manager:
+			# メッセージのみ更新し、UIは維持（パスボタンも残る）
+			ui_manager.phase_label.text = "❌ 特殊タイル上では召喚できません"
+			# 少し待ってから元のメッセージに戻す
+			await board_system.get_tree().create_timer(1.5).timeout
+			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたは領地コマンドを使用）"
+		return
 	
 	if tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
 		# 召喚処理
@@ -381,9 +405,6 @@ func on_level_up_selected(target_level: int, cost: int):
 # === コールバック ===
 
 # 特殊アクション完了時
-func _on_special_action_completed():
-	_complete_action()
-
 # バトル完了時
 func _on_battle_completed(success: bool, tile_index: int):
 	print("バトル結果受信: success=", success, " tile=", tile_index)

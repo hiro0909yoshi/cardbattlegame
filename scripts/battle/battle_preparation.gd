@@ -220,6 +220,29 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 			participant.update_current_hp()
 			print("  [援護] HP+", creature_hp, " → ", participant.current_hp)
 		
+		# 【ブラッドプリン専用処理】援護クリーチャーのMHPを永続吸収
+		if participant.creature_data.get("id") == 137:
+			# 援護クリーチャーのMHPを取得（hp + base_up_hp）
+			var assist_base_hp = item_data.get("hp", 0)
+			var assist_base_up_hp = item_data.get("base_up_hp", 0)
+			var assist_mhp = assist_base_hp + assist_base_up_hp
+			
+			# ブラッドプリンの現在MHPを取得
+			var blood_purin_base_hp = participant.creature_data.get("hp", 0)
+			var blood_purin_base_up_hp = participant.creature_data.get("base_up_hp", 0)
+			var current_mhp = blood_purin_base_hp + blood_purin_base_up_hp
+			
+			# MHP上限100チェック
+			var max_increase = 100 - current_mhp
+			var actual_increase = min(assist_mhp, max_increase)
+			
+			if actual_increase > 0:
+				# 永続的にMHPを上昇（creature_dataのみ更新、戦闘中は適用しない）
+				participant.creature_data["base_up_hp"] = blood_purin_base_up_hp + actual_increase
+				
+				print("【ブラッドプリン効果】援護クリーチャー", item_data.get("name", "?"), "のMHP", assist_mhp, "を吸収")
+				print("  MHP: ", current_mhp, " → ", current_mhp + actual_increase, " (+", actual_increase, ")")
+		
 		# 援護クリーチャーのスキルは継承されないのでここで終了
 		return
 	

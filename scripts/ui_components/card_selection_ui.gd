@@ -108,8 +108,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			# 選択可能状態を判定
 			var is_selectable = true
 			
+			# disabledモード: すべて選択不可
+			if filter_mode == "disabled":
+				is_selectable = false
 			# 捨て札モードではすべて選択可能
-			if selection_mode == "discard":
+			elif selection_mode == "discard":
 				is_selectable = true
 			elif filter_mode == "spell":
 				# スペルフェーズ中: スペルカードのみ選択可能
@@ -146,7 +149,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				card_node.set_selectable(false, -1)
 			
 			# グレーアウト処理を適用
-			if filter_mode == "battle":
+			if filter_mode == "disabled":
+				# disabledモード: すべてグレーアウト
+				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			elif filter_mode == "battle":
 				# バトルフェーズ中: 防御型クリーチャーをグレーアウト
 				var creature_type = card_data.get("creature_type", "normal")
 				if creature_type == "defensive":
