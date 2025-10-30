@@ -128,7 +128,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 無効化判定のためのコンテキスト構築
 			var nullify_context = {
-				"current_land_level": tile_info.get("level", 1)
+				"tile_level": tile_info.get("level", 1)
 			}
 			var nullify_result = special_effects.check_nullify(attacker_p, defender_p, nullify_context)
 			

@@ -41,7 +41,7 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 			var condition_type = condition.get("condition_type", "")
 			print("    条件タイプ: ", condition_type)
 			if condition_type == "land_level_check":
-				print("    土地レベル: ", context.get("current_land_level", 1), 
+				print("    土地レベル: ", context.get("tile_level", 1), 
 					  " ", condition.get("operator", ">="), " ", condition.get("value", 1))
 			if not condition_checker._evaluate_single_condition(condition, context):
 				print("    → 条件不成立、無効化発動せず")
@@ -100,25 +100,31 @@ func _check_nullify_element(condition: Dictionary, attacker: BattleParticipant) 
 ## MHP以上無効化判定
 func _check_nullify_mhp_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	var attacker_max_hp = attacker.creature_data.get("hp", 0)
-	return attacker_max_hp >= threshold
+	# BattleParticipantのget_max_hp()を使用
+	return attacker.get_max_hp() >= threshold
 
 ## MHP以下無効化判定
 func _check_nullify_mhp_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	var attacker_max_hp = attacker.creature_data.get("hp", 0)
-	return attacker_max_hp <= threshold
+	# BattleParticipantのget_max_hp()を使用
+	return attacker.get_max_hp() <= threshold
 
 ## ST以下無効化判定
 func _check_nullify_st_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	var attacker_base_st = attacker.creature_data.get("ap", 0)
+	# 基礎ST = base_ap + base_up_ap
+	var base_ap = attacker.creature_data.get("ap", 0)
+	var base_up_ap = attacker.creature_data.get("base_up_ap", 0)
+	var attacker_base_st = base_ap + base_up_ap
 	return attacker_base_st <= threshold
 
 ## ST以上無効化判定
 func _check_nullify_st_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	var attacker_base_st = attacker.creature_data.get("ap", 0)
+	# 基礎ST = base_ap + base_up_ap
+	var base_ap = attacker.creature_data.get("ap", 0)
+	var base_up_ap = attacker.creature_data.get("base_up_ap", 0)
+	var attacker_base_st = base_ap + base_up_ap
 	return attacker_base_st >= threshold
 
 ## 能力持ち無効化判定

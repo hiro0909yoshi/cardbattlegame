@@ -39,7 +39,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	attacker.base_up_ap = card_data.get("base_up_ap", 0)
 	
 	# 現在HPから復元（手札から出す場合は満タン、移動侵略の場合はダメージ後の値）
-	var attacker_max_hp = attacker_base_hp + attacker.base_up_hp
+	var attacker_max_hp = attacker.get_max_hp()
 	var attacker_current_hp = card_data.get("current_hp", attacker_max_hp)
 	
 	# base_hpに現在HPから永続ボーナスを引いた値を設定
@@ -75,7 +75,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	defender.base_up_hp = defender_creature.get("base_up_hp", 0)
 	
 	# 現在HPから復元（ない場合は満タン）
-	var defender_max_hp = defender_base_hp + defender.base_up_hp
+	var defender_max_hp = defender.get_max_hp()
 	var defender_current_hp = defender_creature.get("current_hp", defender_max_hp)
 	
 	# base_hpに現在HPから永続ボーナスを引いた値を設定
@@ -239,9 +239,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 			var assist_mhp = assist_base_hp + assist_base_up_hp
 			
 			# ブラッドプリンの現在MHPを取得
-			var blood_purin_base_hp = participant.creature_data.get("hp", 0)
-			var blood_purin_base_up_hp = participant.creature_data.get("base_up_hp", 0)
-			var current_mhp = blood_purin_base_hp + blood_purin_base_up_hp
+			var current_mhp = participant.get_max_hp()
 			
 			# MHP上限100チェック
 			var max_increase = 100 - current_mhp
@@ -249,6 +247,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 			
 			if actual_increase > 0:
 				# 永続的にMHPを上昇（creature_dataのみ更新、戦闘中は適用しない）
+				var blood_purin_base_up_hp = participant.creature_data.get("base_up_hp", 0)
 				participant.creature_data["base_up_hp"] = blood_purin_base_up_hp + actual_increase
 				
 				print("【ブラッドプリン効果】援護クリーチャー", item_data.get("name", "?"), "のMHP", assist_mhp, "を吸収")

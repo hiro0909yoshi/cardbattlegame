@@ -289,8 +289,9 @@ func apply_land_count_effects(participant: BattleParticipant, context: Dictionar
 				var old_hp = participant.current_hp
 				if operation == "set":
 					# setの場合は一度リセットしてから設定
-					participant.current_hp = participant.base_hp + participant.base_up_hp
-					participant.temporary_bonus_hp = bonus - (participant.base_hp + participant.base_up_hp)
+					var base_mhp = participant.get_max_hp()
+					participant.current_hp = base_mhp
+					participant.temporary_bonus_hp = bonus - base_mhp
 				else:
 					participant.temporary_bonus_hp += bonus
 				participant.update_current_hp()
@@ -1081,15 +1082,12 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 				if not tile.creature_data:
 					continue
 				
-				# MHP計算
-				var creature_hp = tile.creature_data.get("hp", 0)
-				var creature_base_up_hp = tile.creature_data.get("base_up_hp", 0)
-				var creature_mhp = creature_hp + creature_base_up_hp
-				
 				# 条件チェック
 				var condition_type = creature_condition.get("condition_type", "")
 				if condition_type == "mhp_above":
 					var threshold = creature_condition.get("value", 50)
+					# BattleParticipantのget_max_hp()を使用してMHP取得
+					var creature_mhp = tile.creature_data.get("hp", 0) + tile.creature_data.get("base_up_hp", 0)
 					if creature_mhp >= threshold:
 						qualified_count += 1
 			
@@ -1313,9 +1311,8 @@ func apply_random_stat_effects(participant: BattleParticipant) -> void:
 			if stat == "hp" or stat == "both":
 				var random_hp = randi() % (max_value - min_value + 1) + min_value
 				# temporary_bonus_hpを使ってHPを設定
-				var base_hp = participant.creature_data.get("hp", 0)
-				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
-				participant.temporary_bonus_hp = random_hp - (base_hp + base_up_hp)
+				var base_mhp = participant.get_max_hp()
+				participant.temporary_bonus_hp = random_hp - base_mhp
 				participant.update_current_hp()
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
 					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")

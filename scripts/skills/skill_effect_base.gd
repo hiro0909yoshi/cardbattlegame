@@ -210,7 +210,7 @@ func _evaluate_formula(formula_str: String, context: Dictionary) -> int:
 	# 変数名を定義
 	var variable_names = [
 		"fire_lands", "water_lands", "earth_lands", "wind_lands",
-		"total_lands", "current_land_level", 
+		"total_lands", "tile_level", 
 		"hand_count", "creatures_in_play",
 		"damage_dealt", "damage_taken"
 	]
