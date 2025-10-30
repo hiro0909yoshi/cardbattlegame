@@ -125,6 +125,7 @@ docs/
 | **[turn_number_system.md](design/turn_number_system.md)** | ラウンド数カウンター・ラーバキン ✅ |
 | **[conditional_stat_buff_system.md](design/conditional_stat_buff_system.md)** | 条件付きバフ38体・永続/一時バフ・実装状況 |
 | **[hp_structure.md](design/hp_structure.md)** | HP管理構造・MHP計算・current_hp仕様 ⭐️ |
+| **[condition_patterns_catalog.md](design/condition_patterns_catalog.md)** | 条件分岐パターン完全カタログ・全50種類・使用頻度分析 ⭐️ |
 
 ---
 
