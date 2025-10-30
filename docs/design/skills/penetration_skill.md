@@ -1,8 +1,8 @@
 # 貫通スキル
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 1.5  
-**最終更新**: 2025年10月24日
+**バージョン**: 1.6  
+**最終更新**: 2025年10月31日
 
 ---
 
@@ -151,6 +151,49 @@
 
 ## 実装コード例
 
+### スキルモジュール
+
+**場所**: `scripts/battle/skills/skill_penetration.gd`
+
+```gdscript
+class_name SkillPenetration
+
+## 貫通スキルのチェック
+static func check_and_notify(attacker) -> bool:
+	# 防御側の貫通スキルは効果なし
+	if not attacker.is_attacker:
+		var keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
+		if "貫通" in keywords:
+			print("  【貫通】防御側のため効果なし")
+			return false
+	
+	return true
+
+## 貫通スキルを持っているかチェック
+static func has_penetration(creature_data: Dictionary) -> bool:
+	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
+	return "貫通" in keywords
+
+## 侵略側が貫通を持っているかチェック
+static func is_active(attacker) -> bool:
+	if not attacker.is_attacker:
+		return false
+	
+	return has_penetration(attacker.creature_data)
+
+## 貫通スキルを適用（土地ボーナスHPを無効化）
+static func apply_penetration(attacker, defender) -> void:
+	if not is_active(attacker):
+		return
+	
+	if defender.land_bonus_hp > 0:
+		print("  【貫通】防御側の土地ボーナスHP ", defender.land_bonus_hp, " を無効化")
+		defender.land_bonus_hp = 0
+		defender.update_current_hp()
+```
+
+### 旧実装（参考）
+
 ```gdscript
 func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, tile_info: Dictionary) -> bool:
 	var ability_parsed = attacker_data.get("ability_parsed", {})
@@ -296,4 +339,40 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
+| 1.6 | 2025/10/31 | スキルモジュール化：`skill_penetration.gd`として分離、実装コード更新 |
 | 1.5 | 2025/10/24 | 個別ドキュメントとして分離 |
+
+---
+
+## 実装詳細（v1.6）
+
+### モジュール構成
+
+**スキルファイル**: `scripts/battle/skills/skill_penetration.gd`
+
+**使用箇所**:
+1. `BattleExecution.execute_attack_sequence()` - 防御側チェック
+2. `BattleSkillProcessor.apply_pre_battle_skills()` - 土地ボーナス無効化
+
+### 実装された機能
+
+| 関数 | 用途 |
+|------|------|
+| `check_and_notify()` | 防御側の貫通チェック（メッセージのみ） |
+| `has_penetration()` | 貫通スキル保持チェック |
+| `is_active()` | 侵略側かつ貫通保持チェック |
+| `apply_penetration()` | 土地ボーナスHP無効化 |
+
+### 処理タイミング
+
+**バトル前処理**（`apply_pre_battle_skills()`）:
+```gdscript
+# 貫通スキルによる土地ボーナスHP無効化
+PenetrationSkill.apply_penetration(attacker, defender)
+```
+
+**攻撃ループ内**（`execute_attack_sequence()`）:
+```gdscript
+# 貫通スキルチェック（防御側の貫通は無効）
+PenetrationSkill.check_and_notify(attacker_p)
+```

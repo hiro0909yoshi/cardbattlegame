@@ -98,13 +98,3 @@ static func apply(participant: BattleParticipant, _context: Dictionary) -> bool:
 static func has_skill(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
 	return "巻物攻撃" in keywords or "巻物強打" in keywords
-
-## 巻物強打を持つかチェック
-##
-## クリーチャーが巻物強打スキルを持っているか判定する
-##
-## @param creature_data: クリーチャーデータ
-## @return bool: 巻物強打スキルを持つ場合はtrue
-static func has_scroll_power_strike(creature_data: Dictionary) -> bool:
-	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "巻物強打" in keywords

@@ -11,6 +11,9 @@ const ScrollAttackSkill = preload("res://scripts/battle/skills/skill_scroll_atta
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const ItemManipulationSkill = preload("res://scripts/battle/skills/skill_item_manipulation.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
+const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
+const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
+const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 
 var board_system_ref = null
 var game_flow_manager_ref = null
@@ -71,6 +74,9 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	)
 	apply_skills(defender, defender_context)
 	
+	# 貫通スキルによる土地ボーナスHP無効化
+	PenetrationSkill.apply_penetration(attacker, defender)
+	
 	# 巻物攻撃による土地ボーナスHP無効化
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
@@ -84,7 +90,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
 	
-	var has_scroll_power_strike = ScrollAttackSkill.has_scroll_power_strike(participant.creature_data)
+	var has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
 	
 	# 0. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)
@@ -127,36 +133,12 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 
 ## 2回攻撃スキル判定
 func check_double_attack(participant: BattleParticipant) -> void:
-	var ability_parsed = participant.creature_data.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
-	
-	if "2回攻撃" in keywords:
-		participant.attack_count = 2
-		print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
+	DoubleAttackSkill.apply(participant)
 
 ## 強打スキル適用（巻物強打を含む）
 func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary, effect_combat) -> void:
-	var ability_parsed = participant.creature_data.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
-	
-	# 巻物強打判定（最優先）
-	if "巻物強打" in keywords and participant.is_using_scroll:
-		# 巻物強打は無条件でAP×1.5
-		var original_ap = participant.current_ap
-		participant.current_ap = int(participant.current_ap * 1.5)
-		print("【巻物強打】", participant.creature_data.get("name", "?"), 
-			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5)")
-		return
-	
-	# 通常の強打判定
-	if "強打" in keywords:
-		var modified_creature_data = participant.creature_data.duplicate()
-		modified_creature_data["ap"] = participant.current_ap  # 現在のAPを設定
-		var modified = effect_combat.apply_power_strike(modified_creature_data, context)
-		participant.current_ap = modified.get("ap", participant.current_ap)
-		
-		if modified.get("power_strike_applied", false):
-			print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+	PowerStrikeSkill.apply(participant, context, effect_combat)
+	print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 
 
 ## 土地数比例効果を適用（Phase 3追加）

@@ -54,13 +54,13 @@ SkillSystem (マネージャー)
 | 感応 | パッシブ | 特定属性の土地所有でAP/HP上昇 | ✅ 完全実装 |
 | 応援 | パッシブ | 盤面のクリーチャーにバフ付与 | ✅ 完全実装（分離済み） |
 | 貫通 | パッシブ | 防御側の土地ボーナス無効化 | ✅ 完全実装 |
-| 強打 | パッシブ | 条件下でAP増幅 | ✅ 完全実装 |
+| 強打 | パッシブ | 条件下でAP増幅 | ✅ 完全実装（分離済み） |
 | 先制 | パッシブ | 先攻権獲得 | ✅ 完全実装 |
 | 後手 | パッシブ | 相手が先攻 | ✅ 完全実装 |
 | 再生 | パッシブ | バトル後にHP全回復 | ✅ 完全実装 |
 | 土地数比例 | パッシブ | 土地数×倍率でAP/HP上昇 | ✅ 完全実装 |
 | 不屈 | パッシブ | アクション後もダウンしない | ✅ 完全実装 |
-| 2回攻撃 | パッシブ | 1回のバトルで2回攻撃 | ✅ 完全実装 |
+| 2回攻撃 | パッシブ | 1回のバトルで2回攻撃 | ✅ 完全実装（分離済み） |
 | 即死 | アクティブ | 確率で相手を即死 | ✅ 完全実装 |
 | 防魔 | パッシブ | スペル無効化 | 🔶 部分実装 |
 | ST変動 | パッシブ | 土地数でAP変動 | ✅ 完全実装 |
@@ -159,6 +159,10 @@ AP: 75 (×1.5)
 | **巻物攻撃** | [skill_scroll_attack.gd](../../scripts/battle/skills/skill_scroll_attack.gd) | ✅ 完全分離 |
 | **反射** | [skill_reflect.gd](../../scripts/battle/skills/skill_reflect.gd) | ✅ 完全分離 |
 | **アイテム操作** | [skill_item_manipulation.gd](../../scripts/battle/skills/skill_item_manipulation.gd) | ✅ 完全分離 |
+| **変身** | [battle_transform_processor.gd](../../scripts/battle/battle_transform_processor.gd) | ✅ 完全分離 |
+| **強打** | [skill_power_strike.gd](../../scripts/battle/skills/skill_power_strike.gd) | ✅ 完全分離 |
+| **2回攻撃** | [skill_double_attack.gd](../../scripts/battle/skills/skill_double_attack.gd) | ✅ 完全分離 |
+| **貫通** | 統合実装（battle_preparation.gd） | ✅ 完全実装 |
 
 ### 📝 各スキルの概要
 

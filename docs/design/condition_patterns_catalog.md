@@ -1168,6 +1168,75 @@ class ItemChecker:
 
 ---
 
+### 強打スキル（skill_power_strike.gd）- 分離済み ✅
+
+**使用している条件パターン**:
+
+#### 2-4. 隣接土地が自領地かチェック (adjacent_ally_land)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **行数**: 約78-86行目
+- **使用例**: 隣接自領地で強打×1.5（多数のクリーチャー）
+
+#### 1-3. 戦闘地の属性確認 (on_element_land)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **使用例**: 火の土地で強打×2.0
+
+#### 2-3. 戦闘地のレベル取得 (land_level_check)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **使用例**: レベル3以上で強打×1.5
+
+#### 3-1. MHP（最大HP）閾値以下 (mhp_below)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **使用例**: MHP40以下で強打（フロギストン ID: 42）
+
+#### 3-2. MHP（最大HP）閾値以上 (mhp_above)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **使用例**: MHP50以上で強打（ウォーリアー系）
+
+#### 4-2. アイテムタイプチェック (has_item_type)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
+- **使用例**: 武器装備時に強打×1.5
+
+#### 5-1. 巻物攻撃使用中 (is_using_scroll)
+- **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
+- **関数**: `apply()`, `apply_scroll_power_strike()`
+- **行数**: 約49-52行目、60-67行目
+- **使用例**: 巻物使用時に無条件で強打×1.5（巻物強打）
+
+**分離日**: 2025-10-31
+
+**注記**: 
+- 通常の強打は`EffectCombat.apply_power_strike()`で条件判定を実行
+- 巻物強打は条件なしで無条件にAP×1.5
+- 感応スキルの**後**に適用されるため、相乗効果あり
+
+---
+
+### 2回攻撃スキル（skill_double_attack.gd）- 分離済み ✅
+
+**使用している条件パターン**:
+
+#### 8-2. キーワード存在チェック
+- **ファイル**: `scripts/battle/skills/skill_double_attack.gd`
+- **関数**: `apply()`, `has_skill()`
+- **行数**: 約32-35行目
+- **使用例**: "2回攻撃"キーワードを保持している場合、攻撃回数を2回に設定
+
+**分離日**: 2025-10-31
+
+**注記**: 
+- 非常にシンプルなスキル（約40行）
+- キーワードチェックのみ
+- 条件なしで無条件に発動
+
+---
+
 **作成者**: Claude  
-**バージョン**: 1.2（感応スキル分離対応）  
+**バージョン**: 1.4（2回攻撃スキル分離対応）  
 **最終更新**: 2025-10-31

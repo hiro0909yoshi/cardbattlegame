@@ -9,6 +9,7 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 
 # スキルモジュール
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
+const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 
 # システム参照
 var card_system_ref = null
@@ -130,11 +131,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			print("  ", attacker_name, " AP:", attacker_p.current_ap, " → ", defender_name)
 			
-			# 防御側の貫通スキルは効果なし
-			if not attacker_p.is_attacker:
-				var defender_keywords = attacker_p.creature_data.get("ability_parsed", {}).get("keywords", [])
-				if "貫通" in defender_keywords:
-					print("  【貫通】防御側のため効果なし")
+			# 貫通スキルチェック（防御側の貫通は無効）
+			PenetrationSkill.check_and_notify(attacker_p)
 			
 			# 無効化判定のためのコンテキスト構築
 			var nullify_context = {
