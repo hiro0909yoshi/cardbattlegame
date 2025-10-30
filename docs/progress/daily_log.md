@@ -16,34 +16,45 @@
 
 ### 完了した作業
 
-- ✅ **オーガロード（ID: 407）実装完了**（種族配置条件バフ）
-  - 炎/風オーガがいる場合: ST+20
-  - 水/地オーガがいる場合: HP+20
-  - バフ有効時は巻物攻撃不可（モルモと同様の仕組み）
-  - 種族"オーガ"を各オーガに追加（レッドオーガ48、ブルーオーガ138、グリーンオーガ210、イエローオーガ301）
-  - 実装場所: `scripts/battle/battle_preparation.gd` の `_apply_ogre_lord_bonus()`
-  - BoardSystem3DのTileDataManagerを経由したタイル情報取得
-  - 防衛時のプレイヤーインデックス取得修正
-  - **動作確認完了**: 侵略時・防衛時両方で正常動作
+- ✅ **MHPとダメージ計算の完全仕様ドキュメント作成**
+  - ファイル: `docs/design/mhp_damage_calculation.md`
+  - 全7種類のHPボーナスを定義（base_hp, base_up_hp, resonance_bonus_hp等）
+  - ダメージ消費順序の完全定義
+  - 各ボーナスの設定箇所・タイミング・用途を詳細記載
+  
+- ✅ **HPCalculator削除完了**
+  - `scripts/utils/hp_calculator.gd` を削除
+  - 理由: 不完全な計算式（戦闘ボーナスを含まない）
+  - BattleParticipantに統合する方が正しい設計
 
-### 実装完了サマリー（条件付きバフクリーチャー）
+- ✅ **BattleParticipantにMHPヘルパーメソッド追加**
+  - `get_max_hp()` - 真のMHP取得（base_hp + base_up_hp）
+  - `is_damaged()` - ダメージ判定
+  - `get_hp_ratio()` - 残りHP割合
+  - `check_mhp_condition()` - MHP条件チェック
+  - `is_mhp_below_or_equal()` - MHP以下判定
+  - `is_mhp_above_or_equal()` - MHP以上判定
+  - `is_mhp_in_range()` - MHP範囲判定
+  - `get_hp_debug_string()` - デバッグ文字列
 
-- ✅ **Phase 3-A**: 11体（常時補正、配置数比例、戦闘地条件）
-- ✅ **Phase 3-B**: 6体（防御時、領地数、クリーチャーカウント、隣接条件）
-- ✅ **Phase 3-C**: 2体（既存条件活用）
-- ✅ **破壊数系**: 3体（バルキリー、ダスクドウェラー、ソウルコレクター）
-- ✅ **周回・ラウンド系**: 3体（キメラ、ラーバキン、モスタイタン）
-- ✅ **手札系**: 1体（リリス）
-- ✅ **バトル後変化**: 2体（ロックタイタン、バイロマンサー）
-- ✅ **アイテム関連**: 2体（リビングアーマー、ブルガサリ）
-- ✅ **土地イベント**: 2体（アースズピリット、デュータイタン）
-- ✅ **援護連携**: 1体（ブラッドプリン）
-- ✅ **ダイス条件**: 1体（ドゥームデボラー）
-- ✅ **ランダムステータス**: 1体（スペクター）
-- ✅ **種族配置条件**: 1体（オーガロード）
-- **合計: 36体実装完了・動作確認済み**
+### 設計の明確化
 
-### 次のステップ - 条件付きバフクリーチャー完了
+**MHP（最大HP）の定義**:
+```gdscript
+MHP = base_hp + base_up_hp  // 真の最大HP（永続）
+```
+
+**戦闘中のHP**:
+```gdscript
+current_hp = base_hp + base_up_hp + temporary_bonus_hp + 
+			 resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+```
+
+**使い分け**:
+- 戦闘中: `participant.get_max_hp()` を使用
+- JSON操作時: `hp + base_up_hp` を直接計算
+
+### 次のステップ - MHP計算の統一化完了
 
 **全38体のうち36体実装完了！残り2体は実装不可:**
 
@@ -61,277 +72,6 @@
 
 ---
 
-## 2025年10月29日
-
-### 完了した作業
-
-- ✅ **ブラッドプリン（ID: 137）実装完了**（援護連携システム）
-  - アイテムフェーズで援護クリーチャー使用時、MHPを永続吸収
-  - 戦闘中: 通常の援護効果（`item_bonus_hp`）のみ適用
-  - 戦闘後: `base_up_hp`に永続保存 → MHP上昇
-  - MHP上限: 100まで
-  - 援護対象: 水・地・風属性
-  - 実装場所: `scripts/battle/battle_preparation.gd` の `apply_item_effects()`
-  - JSONデータ: `data/water_2.json` に援護スキル追加
-  - 詳細: `docs/design/conditional_stat_buff_system.md` v1.9
-  - **動作確認完了**: 攻撃側・防御側両方で正常動作
-
-- ✅ **HP構造の理解と実装の正確化**
-  - `creature_data["hp"]`: 元のHP（不変）
-  - `creature_data["base_up_hp"]`: 永続ボーナス
-  - `creature_data["current_hp"]`: 現在の残りHP
-  - `BattleParticipant.base_hp`: 基本HPの現在値（ダメージ後）
-  - `BattleParticipant.base_up_hp`: 永続ボーナス
-  - ブラッドプリンは`creature_data["base_up_hp"]`のみ更新、戦闘中は適用しない
-  - 参考: `docs/design/hp_structure.md`
-
-### 実装完了サマリー（条件付きバフクリーチャー）
-
-- ✅ **Phase 3-A**: 11体（常時補正、配置数比例、戦闘地条件）
-- ✅ **Phase 3-B**: 6体（防御時、領地数、クリーチャーカウント、隣接条件）
-- ✅ **Phase 3-C**: 2体（既存条件活用）
-- ✅ **破壊数系**: 3体（バルキリー、ダスクドウェラー、ソウルコレクター）
-- ✅ **周回・ラウンド系**: 3体（キメラ、ラーバキン、モスタイタン）
-- ✅ **手札系**: 1体（リリス）
-- ✅ **バトル後変化**: 2体（ロックタイタン、バイロマンサー）
-- ✅ **アイテム関連**: 2体（リビングアーマー、ブルガサリ）
-- ✅ **土地イベント**: 2体（アースズピリット、デュータイタン）
-- ✅ **援護連携**: 1体（ブラッドプリン）
-- **合計: 33体実装完了・動作確認済み**
-
-
-
----
-
-## 2025年10月28日
-
-### 完了した作業
-
-- ✅ **Phase 3-C: 既存条件活用バフ実装完了**（2体）
-  - ローンビースト（ID: 49）: HP+基礎ST、隣接で強打
-  - ジェネラルカン（ID: 15）: ST+MHP50以上配置数×5
-  - BattleSkillProcessorに`apply_phase_3c_effects()`追加
-  - 既存の`adjacent_ally_land`条件と`mhp_above`条件を活用
-  - JSONデータに`ability_parsed`追加
-  - **実装内容:**
-	- `base_st_to_hp`: 基礎ST（ap + base_up_ap）をHPに加算
-	- `conditional_land_count`: MHP条件を満たすクリーチャー数をカウント
-  - 詳細: `docs/design/conditional_stat_buff_system.md`
-
-- ✅ **空地移動・敵地移動スキル実装完了**
-  - vacant_move（空地移動）: 戦闘せず空地に移動
-  - enemy_land_move（敵地移動）: 敵地にも移動可能
-  - 詳細: `docs/design/skills/vacant_move_skill.md`
-
-- ✅ **破壊数カウンター実装完了**（3体の破壊数効果）
-  - GameFlowManager: `on_creature_destroyed()`, `get_destroy_count()`, `reset_destroy_count()`
-  - BattleSystem: バトル結果で破壊カウンター更新 + 永続バフ適用
-  - BattleSkillProcessor: `apply_destroy_count_effects()` 実装
-  - **対象クリーチャー:**
-	- バルキリー（ID: 35）: 敵破壊時ST+10（永続）
-	- ダスクドウェラー（ID: 227）: 敵破壊時ST+10・MHP+10（永続）
-	- ソウルコレクター（ID: 323）: ST=破壊数×5（一時）
-  - デバッグパネルに破壊数表示追加
-
-- ✅ **周回・ラウンド数システム実装完了**（2体）
-  - GameFlowManager: ラウンド数カウンター、周回完了シグナル
-  - BattleSkillProcessor: `apply_turn_number_bonus()` 実装
-  - **対象クリーチャー:**
-	- キメラ（ID: 7）: 周回ごとにST+10（永続）
-	- ラーバキン（ID: 47）: ST=ラウンド数（一時）
-  - 詳細: `docs/design/lap_system.md`, `docs/design/turn_number_system.md`
-
-- ✅ **移動侵略時のアイテムフェーズ対応**
-  - 領地コマンドからの移動侵略でもアイテム選択が可能に
-  - LandCommandHandlerに`_on_move_item_phase_completed()`追加
-  - 攻撃側・防御側の両方でアイテムフェーズを実行
-  - 援護選択も将来的に対応可能な構造
-
-- ✅ **手札数効果実装完了**（1体）
-  - BattleSkillProcessorに`apply_hand_count_effects()`追加
-  - CardSystemから手札数を取得してST上昇
-  - **対象クリーチャー:**
-	- リリス（ID: 146）: ST=手札数×10（一時）
-  - JSONデータに`ability_parsed`追加
-
-- ✅ **Phase 3-A: 常時補正実装完了**（2体）
-  - アイスウォール（ID: 102）: HP+20
-  - トルネード（ID: 330）: ST+20、HP-10
-  - BattleSkillProcessorに`apply_constant_stat_bonus()`追加
-  - JSONデータに`constant_stat_bonus`効果追加
-
-- ✅ **Phase 3-A: 配置数比例実装完了**（5体）
-  - ファイアードレイク（ID: 37）: ST+火配置数×5
-  - ブランチアーミー（ID: 236）: ST+地配置数×5
-  - マッドマン（ID: 238）: HP+地配置数×5
-  - ガルーダ（ID: 307）: ST&HP=風配置数×10（operation: set対応）
-  - アンダイン（ID: 109）: HP=水配置数×20（operation: set対応）
-  - `land_count_multiplier`に`operation: "set"`対応追加
-  - JSONデータに`ability_parsed`追加
-
-- ✅ **Phase 3-A: 戦闘地条件実装完了**（2体）
-  - アンフィビアン（ID: 110）: 戦闘地が水風の場合、ST+20
-  - カクタスウォール（ID: 205）: 敵が水風の場合、HP+50
-  - BattleSkillProcessorに`apply_battle_condition_effects()`追加
-  - `battle_land_element_bonus`と`enemy_element_bonus`効果追加
-
-### Phase 3-A 完了サマリー
-- ✅ 常時補正: 2体（アイスウォール、トルネード）
-- ✅ 配置数比例: 5体（ファイアードレイク、ブランチアーミー、マッドマン、ガルーダ、アンダイン）
-- ✅ 戦闘地条件: 2体（アンフィビアン、カクタスウォール）
-- **合計: 9体実装完了**
-
-- ✅ **Phase 3-B: 中程度の条件効果実装完了**（6体）
-  1. ガーゴイル (ID: 204): 防御時、ST=50
-  2. ネッシー (ID: 131): 水で戦闘中、HP+領地レベル×10
-  3. バーンタイタン (ID: 30): 自領地が5つ以上の場合、ST&HP-30
-  4. ハイプワーカー (ID: 32): ST&HP+ハイプワーカー配置数×10
-  5. リビングクローブ (ID: 440): ST&HP=他属性の配置数×5（neutral除く）
-  6. タイガーヴェタ (ID: 226): 隣接領地が自領地の場合、ST&HP+20（1つでも可）
-  
-  **実装内容:**
-  - BattleSkillProcessorに`apply_phase_3b_effects()`追加（6種類の効果タイプ）
-  - BoardSystemに以下のメソッド追加:
-	- `get_player_owned_land_count()` - TileDataManagerの既存メソッドを利用
-	- `count_creatures_by_name()` - 特定クリーチャーカウント
-	- `count_creatures_by_element()` - 属性別カウント
-  - ConditionCheckerの修正:
-	- `build_battle_context()`で`is_attacker`をgame_stateから取得
-	- `tile_level`エイリアス追加、`is_placed_on_tile`対応
-	- `adjacent_ally_land`条件で`tile_neighbor_system`の安全なアクセス対応
-  - 既存システムの再利用:
-	- ネッシー: `on_element_land`条件を使用
-	- タイガーヴェタ: `adjacent_ally_land`条件を使用
-	- バーンタイタン: TileDataManagerの`get_owner_land_count()`を使用
-  - JSONデータに`ability_parsed`追加（6体）
-  - テスト環境（MockBoardSystem）に必要なメソッド追加
-  - 警告修正: シャドウイング、未使用変数などを解消
-  
-  **実装不可:**
-  - **コアトリクエ (ID: 214)**: デッキが相手より多い場合、ST&HP+20
-	- ※現在のCardSystemは全プレイヤー共通デッキのため実装不可
-
-### Phase 3 完了サマリー（条件付きバフクリーチャー）
-- ✅ **Phase 3-A**: 11体（常時補正2体、配置数比例7体、戦闘地条件2体）
-- ✅ **Phase 3-B**: 6体（防御時1体、戦闘地レベル1体、領地数閾値1体、クリーチャーカウント2体、隣接条件1体）
-- ✅ **Phase 3-C**: 2体（既存条件活用）
-- ✅ **その他実装済み**: 6体
-  - 破壊数効果: 3体（バルキリー、ダスクドウェラー、ソウルコレクター）
-  - 周回・ラウンド: 2体（キメラ、ラーバキン）
-  - 手札数: 1体（リリス）
-- **合計: 26体実装完了**
-- **残り: 12体**（コアトリクエ1体は実装不可）
-
-### 次のステップ - Phase 3-D: 永続バフ・イベント駆動システム
-
-残りの条件付きバフクリーチャー実装を進める（残り12体）
-
-**優先度:**
-1. **バイロマンサー、ロックタイタン、リーンタイタン**（バトル後変動、永続バフ）
-2. **アースズピリット、デュータイタン**（領地イベント、永続バフ）
-3. **ドゥームデボラー**（ダイス条件、永続バフ）
-4. **ブラッドプリン**（援護連携、永続バフ）
-5. **ギガンテリウム**（マーク領地、マークシステム必要）
-6. **リビングアーマー、ブルガサリ**（アイテム関連）
-7. **スペクター、オーガロード**（特殊・複雑）
-
-**残りトークン: 82,000 / 190,000**
-
----
-
-## 2025年10月27日
-
-### 完了した作業
-
-- ✅ **BUG-012: 領地コマンド移動時にクリーチャーが消える不具合を修正**
-  - 原因: GDScriptの参照渡しによる問題 + 処理順序の問題
-  - 修正1: `MovementHelper.execute_creature_move()` で `duplicate()` 使用
-  - 修正2: `land_action_helper.confirm_move()` で直接配置処理に変更
-  - 影響: 空地移動・通常移動が正常動作、敵地移動は影響なし
-  - 詳細: `docs/issues/resolved_issues.md` (BUG-012)
-  - **残りトークン: 103,011 / 190,000**
-
-- ✅ **周回システム実装完了**
-  - CheckpointTile（N/S）実装
-  - 周回検出システム実装
-  - キメラ（ST+10）、モスタイタン（MHP+10、リセット機能）実装
-  - 詳細: `docs/design/lap_system.md`
-
-- ✅ **ラウンド数カウンター実装完了**
-  - GameFlowManagerに`current_turn_number`追加
-  - ラーバキン（ST=現R数、HP+現R数）実装
-  - 詳細: `docs/design/turn_number_system.md`
-
-- ✅ **HP管理構造実装完了**
-  - `creature_data["current_hp"]`フィールド追加
-  - バトル後の現在HP保存
-  - 次バトルでの正しいHP復元
-  - スタート通過でHP+10回復
-  - 周回ボーナスでのHP回復
-  - MHP計算（`hp` + `base_up_hp`）
-  - 詳細: `docs/design/hp_structure.md`
-  - **残りトークン: 61,132 / 190,000**
-
-### 次のステップ
-
-- 📋 **必須機能の実装（Phase 3-A 準備）**
-  1. **手札数取得実装**（10分）
-	 - BattleSkillProcessor に `apply_hand_count_effects()` 追加
-	 - 対象: リリス（手札数×10 HP上昇）
-  2. **破壊数カウンター実装**（30分）
-	 - GameFlowManager に `creatures_destroyed_this_game` 追加
-	 - 対象: ソウルコレクター、バルキリーなど
-
-- 📋 **Phase 3-A: シンプルな条件バフ実装**（2-3日）
-  - 常時補正（2体）: アイスウォール、トルネード
-
----
-
-## 2025年10月26日
-
-### 完了した作業
-
-- ✅ **条件付きバフスキルの仕様書作成完了**
-  - 対象: 38体のクリーチャー（2体実装済み、36体未実装）
-  - 永続バフ（9体）と一時バフ（29体）の分類完了
-  - 10カテゴリ × 20種類以上の effect_type 定義
-  - 個別クリーチャーの詳細仕様と実装方法を記載
-  - 詳細: `docs/design/conditional_stat_buff_system.md`
-  - **残りトークン: 74,659 / 190,000**
-
-- ✅ **未実装機能の洗い出し完了**
-  - ターン数カウンター: GameFlowManager に実装予定
-  - 周回完了シグナル: GameFlowManager に実装予定
-  - 土地レベルアップ/地形変化イベント: BoardSystem3D に実装予定
-  - 破壊数カウンター: GameFlowManager に実装（1ゲーム内、スペルでリセット可能）
-  - 手札数取得: 既存のCardSystemで実装可能
-  - 詳細: `docs/design/required_features_for_buffs.md`
-
-- ✅ **データ管理の設計確定**
-  - GameData: 永続化データ（プロフィール、統計）
-  - GameFlowManager: 1ゲーム内データ（ターン数、周回数、破壊数）
-  - 詳細: `docs/design/destroy_counter_correction.md`
-
-### 次のステップ
-
-- 📋 **必須機能の実装（Phase 3-A 準備）**
-  1. **ターン数カウンター実装**（5分、最優先）
-	 - GameFlowManager に `current_turn` 追加
-  2. **周回数・破壊数カウンター実装**（30分）
-	 - GameFlowManager に `player_laps`, `creatures_destroyed_this_game` 追加
-  3. **手札数取得実装**（10分）
-	 - BattleSkillProcessor に `apply_hand_count_effects()` 追加
-
-- 📋 **Phase 3-A: シンプルな条件バフ実装**（2-3日）
-  - 常時補正（2体）: アイスウォール、トルネード
-  - 配置数比例の残り（5体）: ファイアードレイク、ガルーダなど
-  - 戦闘地条件（2体）: アンフィビアン、カクタスウォール
-
-### 課題・メモ
-
-- アイテムのランダムジャンプ（アージェントキー）は保留
-
----
 
 ## テンプレート（コピー用）
 

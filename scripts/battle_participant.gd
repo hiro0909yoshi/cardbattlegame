@@ -159,6 +159,63 @@ func take_damage(damage: int) -> Dictionary:
 func is_alive() -> bool:
 	return current_hp > 0
 
+# 真のMHP（最大HP）を取得
+# MHP = base_hp + base_up_hp（戦闘ボーナスは含まない）
+func get_max_hp() -> int:
+	return base_hp + base_up_hp
+
+# ダメージを負っているかチェック
+# 現在HPが真のMHPより低い場合にtrue
+func is_damaged() -> bool:
+	return current_hp < get_max_hp()
+
+# 残りHP割合を取得（0.0 ~ 1.0）
+func get_hp_ratio() -> float:
+	var max_hp = get_max_hp()
+	if max_hp == 0:
+		return 0.0
+	return float(current_hp) / float(max_hp)
+
+# MHP条件チェック（無効化スキル等で使用）
+# @param operator: 比較演算子（"<", "<=", ">", ">=", "=="）
+# @param threshold: 閾値
+func check_mhp_condition(operator: String, threshold: int) -> bool:
+	var mhp = get_max_hp()
+	
+	match operator:
+		"<":
+			return mhp < threshold
+		"<=":
+			return mhp <= threshold
+		">":
+			return mhp > threshold
+		">=":
+			return mhp >= threshold
+		"==":
+			return mhp == threshold
+		_:
+			push_error("BattleParticipant.check_mhp_condition: 未知の演算子 '%s'" % operator)
+			return false
+
+# MHP以下かチェック（簡易版）
+func is_mhp_below_or_equal(threshold: int) -> bool:
+	return check_mhp_condition("<=", threshold)
+
+# MHP以上かチェック（簡易版）
+func is_mhp_above_or_equal(threshold: int) -> bool:
+	return check_mhp_condition(">=", threshold)
+
+# MHPが特定範囲内かチェック
+func is_mhp_in_range(min_threshold: int, max_threshold: int) -> bool:
+	var mhp = get_max_hp()
+	return mhp >= min_threshold and mhp <= max_threshold
+
+# デバッグ用：MHP情報を文字列で取得
+# "現在HP/MHP (base_hp+base_up_hp)" 形式
+func get_hp_debug_string() -> String:
+	var mhp = get_max_hp()
+	return "%d/%d (%d+%d)" % [current_hp, mhp, base_hp, base_up_hp]
+
 # デバッグ用の情報出力
 func get_status_string() -> String:
 	return "%s (HP:%d/%d, AP:%d)" % [

@@ -57,7 +57,7 @@ var target_mhp = context.get("creature_mhp", 100)
 
 # パターンD: battle_participant.gd (update_current_hp)
 current_hp = base_hp + base_up_hp + temporary_bonus_hp + \
-             resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+			 resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
 ```
 
 #### 使用箇所
@@ -260,9 +260,9 @@ static func calculate_base_mhp(creature_data: Dictionary) -> int:
 ## 完全MHP計算（BattleParticipantから全ボーナスを含めて計算）
 static func calculate_full_mhp(participant: BattleParticipant) -> int:
 	return participant.base_hp + participant.base_up_hp + \
-	       participant.temporary_bonus_hp + participant.resonance_bonus_hp + \
-	       participant.land_bonus_hp + participant.item_bonus_hp + \
-	       participant.spell_bonus_hp
+		   participant.temporary_bonus_hp + participant.resonance_bonus_hp + \
+		   participant.land_bonus_hp + participant.item_bonus_hp + \
+		   participant.spell_bonus_hp
 
 ## 基礎ST計算（ap + base_up_ap）
 static func calculate_base_st(creature_data: Dictionary) -> int:
