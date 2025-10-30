@@ -104,15 +104,15 @@
 	  },
 	  "ap": 30,
 	  "hp": 50,
-	  "ability": "先制・防御時ST=50",
-	  "ability_detail": "先制；防御時、ST=50",
+	  "ability": "先制・防御時AP=50",
+	  "ability_detail": "先制；防御時、AP=50",
 	  "ability_parsed": {
 		"keywords": ["先制"],
 		"effects": [
 		  {
 			"effect_type": "defender_fixed_ap",
 			"value": 50,
-			"description": "防御時、ST=50"
+			"description": "防御時、AP=50"
 		  }
 		]
 	  }
@@ -236,6 +236,7 @@
 	{
 	  "id": 210,
 	  "name": "グリーンオーガ",
+	  "race": "オーガ",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",

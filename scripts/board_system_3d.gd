@@ -440,9 +440,9 @@ func calculate_terrain_change_cost(tile_index: int) -> int:
 
 # === 移動処理（MovementController3Dに委譲） ===
 
-func move_player_3d(player_id: int, steps: int):
+func move_player_3d(player_id: int, steps: int, dice_value: int = 0):
 	if movement_controller:
-		movement_controller.move_player(player_id, steps)
+		movement_controller.move_player(player_id, steps, dice_value)
 
 func _on_movement_started(_player_id: int):
 	if ui_manager:

@@ -178,7 +178,7 @@ func roll_dice():
 	# 3D移動
 	if board_system_3d:
 		ui_manager.phase_label.text = "移動中..."
-		board_system_3d.move_player_3d(current_player.id, modified_dice)
+		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
 
 # === 3Dモード用イベント ===
 
@@ -458,6 +458,9 @@ func check_and_discard_excess_cards():
 # カード捨て札をプロンプト
 func prompt_discard_card():
 	var current_player = player_system.get_current_player()
+	
+	# フィルターをリセット（グレーアウト解除）
+	ui_manager.card_selection_filter = ""
 	
 	# カード選択UIを表示（discardモード）
 	ui_manager.show_card_selection_ui_mode(current_player, "discard")

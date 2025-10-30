@@ -660,3 +660,23 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 					
 					participant.creature_data["base_up_hp"] = new_base_up_hp
 					print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value if value >= 0 else "", value, " (合計MHP:", participant.creature_data.get("hp", 0) + new_base_up_hp, ")")
+	
+	# スペクター専用処理（戦闘後にランダムステータスをリセット）
+	if creature_id == 321:  # スペクター
+		# random_statエフェクトを持つ場合、base_hp/base_apを元の値に戻す
+		var has_random_stat = false
+		for effect in effects:
+			if effect.get("effect_type") == "random_stat":
+				has_random_stat = true
+				break
+		
+		if has_random_stat and participant.is_alive():
+			# 元のカードデータからbase_hp/base_apを取得
+			var original_hp = CardLoader.get_card_by_id(321).get("hp", 20)
+			var original_ap = CardLoader.get_card_by_id(321).get("ap", 20)
+			
+			# creature_dataのhp/apを元の値に戻す
+			participant.creature_data["hp"] = original_hp
+			participant.creature_data["ap"] = original_ap
+			
+			print("[ランダムステータスリセット] スペクターの能力値を初期値に戻しました (ST:", original_ap, ", HP:", original_hp, ")")

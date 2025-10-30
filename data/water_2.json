@@ -338,6 +338,7 @@
 	{
 	  "id": 138,
 	  "name": "ブルーオーガ",
+	  "race": "オーガ",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",

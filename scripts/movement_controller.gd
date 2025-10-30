@@ -65,7 +65,7 @@ func set_player_tile(player_id: int, tile_index: int):
 # === メイン移動処理 ===
 
 # プレイヤーを移動（外部から呼ばれるメイン関数）
-func move_player(player_id: int, steps: int) -> void:
+func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
 		print("移動不可: is_moving=", is_moving, ", player_id=", player_id)
 		return
@@ -73,6 +73,10 @@ func move_player(player_id: int, steps: int) -> void:
 	is_moving = true
 	current_moving_player = player_id
 	emit_signal("movement_started", player_id)
+	
+	# ダイス条件バフをチェックして適用（移動前）
+	if dice_value > 0:
+		apply_dice_condition_buffs(player_id, dice_value)
 	
 	# 移動経路を作成
 	var path = calculate_path(player_id, steps)
@@ -340,3 +344,79 @@ func is_player_moving() -> bool:
 # 移動中のプレイヤーIDを取得
 func get_moving_player() -> int:
 	return current_moving_player
+
+# === ダイス条件バフ処理 ===
+
+# ダイス条件に基づく永続バフを適用
+func apply_dice_condition_buffs(player_id: int, dice_value: int):
+	if not tile_nodes:
+		return
+	
+	# プレイヤーの配置クリーチャーをチェック
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile and tile.owner_id == player_id and tile.creature_data:
+			_check_and_apply_dice_buff(tile.creature_data, dice_value)
+
+# 個別クリーチャーのダイス条件バフをチェック・適用
+func _check_and_apply_dice_buff(creature_data: Dictionary, dice_value: int):
+	if not creature_data.has("ability_parsed"):
+		return
+	
+	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "dice_condition_bonus":
+			_apply_dice_condition_effect(creature_data, effect, dice_value)
+
+# ダイス条件効果を適用
+func _apply_dice_condition_effect(creature_data: Dictionary, effect: Dictionary, dice_value: int):
+	var dice_check = effect.get("dice_check", {})
+	var operator = dice_check.get("operator", "<=")
+	var threshold = dice_check.get("value", 3)
+	
+	# 条件チェック
+	var condition_met = false
+	match operator:
+		"<=":
+			condition_met = dice_value <= threshold
+		">=":
+			condition_met = dice_value >= threshold
+		"==":
+			condition_met = dice_value == threshold
+		"<":
+			condition_met = dice_value < threshold
+		">":
+			condition_met = dice_value > threshold
+	
+	if not condition_met:
+		return
+	
+	# 永続バフを適用
+	var stat_changes = effect.get("stat_changes", {})
+	
+	if stat_changes.has("ap"):
+		if not creature_data.has("base_up_ap"):
+			creature_data["base_up_ap"] = 0
+		creature_data["base_up_ap"] += stat_changes["ap"]
+		print("[Dice Buff] ", creature_data.get("name", ""), " ST+", stat_changes["ap"], 
+			  " (ダイス: ", dice_value, ")")
+	
+	if stat_changes.has("max_hp"):
+		if not creature_data.has("base_up_hp"):
+			creature_data["base_up_hp"] = 0
+		creature_data["base_up_hp"] += stat_changes["max_hp"]
+		
+		# 現在HPも増加（MHPが増えた分だけ）
+		var base_hp = creature_data.get("hp", 0)
+		var base_up_hp = creature_data["base_up_hp"]
+		var max_hp = base_hp + base_up_hp
+		var current_hp = creature_data.get("current_hp", max_hp)
+		
+		# HP回復（増えたMHP分）
+		var new_hp = min(current_hp + stat_changes["max_hp"], max_hp)
+		creature_data["current_hp"] = new_hp
+		
+		print("[Dice Buff] ", creature_data.get("name", ""), " MHP+", stat_changes["max_hp"],
+			  " HP: ", current_hp, " → ", new_hp, " / ", max_hp,
+			  " (ダイス: ", dice_value, ")")

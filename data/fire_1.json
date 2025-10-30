@@ -661,7 +661,18 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[G0・MHP×G2を得て、ST&MHP-10]"
+	  "ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[G0・MHP×G2を得て、ST&MHP-10]",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "dice_condition_bonus",
+			"dice_check": {"operator": "<=", "value": 3},
+			"stat_changes": {"ap": 10, "max_hp": 10},
+			"description": "ダイス3以下でST&MHP+10（永続）"
+		  }
+		],
+		"keywords": ["秘術"]
+	  }
 	},
 	{
 	  "id": 24,

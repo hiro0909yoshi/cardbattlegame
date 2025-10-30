@@ -725,6 +725,7 @@
 	{
 	  "id": 48,
 	  "name": "レッドオーガ",
+	  "race": "オーガ",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "fire",

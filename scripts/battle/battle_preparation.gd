@@ -134,11 +134,22 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 			# 敵がアイテムを使用したフラグを設定（永続バフは後で）
 			defender.enemy_used_item = true
 	
+	# オーガロード（ID: 407）: オーガ配置時能力値上昇
+	if attacker_id == 407:
+		_apply_ogre_lord_bonus(attacker, attacker_index)
+	
+	if defender_id == 407:
+		_apply_ogre_lord_bonus(defender, defender_owner)
+	
 	# アイテムクリーチャー効果適用後、current_apを再計算
-	if attacker_id == 438 or attacker_id == 339:
+	if attacker_id == 438 or attacker_id == 339 or attacker_id == 407:
 		attacker.current_ap = attacker.creature_data.get("ap", 0) + attacker.base_up_ap + attacker.temporary_bonus_ap
-	if defender_id == 438 or defender_id == 339:
+	if defender_id == 438 or defender_id == 339 or defender_id == 407:
 		defender.current_ap = defender.creature_data.get("ap", 0) + defender.base_up_ap + defender.temporary_bonus_ap
+	
+	# ランダムステータス効果を適用（スペクター用）
+	_apply_random_stat_effects(attacker)
+	_apply_random_stat_effects(defender)
 	
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
@@ -458,3 +469,121 @@ func check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionar
 			# 未知の条件タイプ
 			print("【貫通】未知の条件タイプ:", condition_type)
 			return false
+
+## オーガロード（ID: 407）: オーガ配置時能力値上昇
+func _apply_ogre_lord_bonus(participant: BattleParticipant, player_index: int) -> void:
+	if not board_system_ref:
+		return
+	
+	# 全タイルをチェックして、配置されているオーガの数と属性をカウント
+	var fire_wind_ogre_count = 0  # 火風オーガの数
+	var water_earth_ogre_count = 0  # 水地オーガの数
+	
+	# tile_data_managerからタイルノードを取得
+	var tile_data_manager = board_system_ref.tile_data_manager
+	if not tile_data_manager:
+		return
+	
+	for tile_index in tile_data_manager.tile_nodes:
+		var tile = tile_data_manager.tile_nodes[tile_index]
+		
+		# このタイルにクリーチャーが配置されているか?
+		if tile.creature_data.is_empty():
+			continue
+		
+		var creature_data = tile.creature_data
+		
+		# このクリーチャーの所有者がオーガロードと同じプレイヤーか?
+		var creature_owner = tile.owner_id
+		if creature_owner != player_index:
+			continue
+		
+		# このクリーチャーがオーガか？
+		var race = creature_data.get("race", "")
+		if race != "オーガ":
+			continue
+		
+		# オーガロード自身は除外
+		if creature_data.get("id", -1) == 407:
+			continue
+		
+		# オーガの属性を取得
+		var element = creature_data.get("element", "")
+		
+		if element == "fire" or element == "wind":
+			fire_wind_ogre_count += 1
+		elif element == "water" or element == "earth":
+			water_earth_ogre_count += 1
+	
+	# バフを適用
+	var bonus_applied = false
+	
+	if fire_wind_ogre_count > 0:
+		participant.temporary_bonus_ap += 20
+		bonus_applied = true
+		print("[オーガロード] 火風オーガ配置(", fire_wind_ogre_count, "体) ST+20")
+	
+	if water_earth_ogre_count > 0:
+		participant.temporary_bonus_hp += 20
+		participant.update_current_hp()
+		bonus_applied = true
+		print("[オーガロード] 水地オーガ配置(", water_earth_ogre_count, "体) HP+20")
+	
+	# バフが適用された場合はフラグを設定
+	if bonus_applied:
+		participant.has_ogre_bonus = true
+
+## ランダムステータス効果を適用（スペクター用）
+func _apply_random_stat_effects(participant: BattleParticipant) -> void:
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "random_stat":
+			var stat = effect.get("stat", "both")
+			var min_value = int(effect.get("min", 10))
+			var max_value = int(effect.get("max", 70))
+			
+			randomize()
+			
+			# STをランダムに設定
+			if stat == "ap" or stat == "both":
+				var random_ap = randi() % (max_value - min_value + 1) + min_value
+				var base_ap = participant.creature_data.get("ap", 0)
+				var base_up_ap = participant.creature_data.get("base_up_ap", 0)
+				participant.temporary_bonus_ap = random_ap - (base_ap + base_up_ap)
+				participant.update_current_ap()
+				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
+					  " ST=", participant.current_ap, " (", min_value, "~", max_value, ")")
+			
+			# HPをランダムに設定
+			if stat == "hp" or stat == "both":
+				var random_hp = randi() % (max_value - min_value + 1) + min_value
+				var base_hp_value = participant.creature_data.get("hp", 0)
+				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
+				participant.temporary_bonus_hp = random_hp - (base_hp_value + base_up_hp)
+				participant.update_current_hp()
+				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
+					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
+			
+			return
+
+func _apply_dice_condition_bonus(participant: BattleParticipant) -> void:
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "dice_condition_bonus":
+			continue  # ここでは何もしない（MovementControllerで処理）
+
+# バトル準備の完了を通知
+func battle_preparation_completed():
+	pass  # 必要に応じて処理を追加
+
+# バトル終了後の処理
+func process_battle_end(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	pass  # 必要に応じて処理を追加

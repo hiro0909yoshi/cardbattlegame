@@ -36,6 +36,7 @@ var instant_death_flag: bool = false  # 即死されたフラグ
 var is_using_scroll: bool = false  # 巻物攻撃フラグ（貫通とは別）
 var was_attacked_by_enemy: bool = false  # 敵から攻撃を受けたフラグ（バイロマンサー用）
 var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ（ブルガサリ用）
+var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフラグ（オーガロード用）
 
 # 初期化
 func _init(
@@ -80,6 +81,11 @@ func apply_item_first_strike():
 func update_current_hp():
 	current_hp = base_hp + base_up_hp + temporary_bonus_hp + \
 				 resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+
+# 現在APを更新
+func update_current_ap():
+	var base_ap = creature_data.get("ap", 0)
+	current_ap = base_ap + base_up_ap + temporary_bonus_ap
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:

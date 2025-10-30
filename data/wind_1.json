@@ -30,6 +30,7 @@
 	{
 	  "id": 301,
 	  "name": "イエローオーガ",
+	  "race": "オーガ",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "wind",
@@ -536,7 +537,18 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "ランダム能力値",
-	  "ability_detail": "ST&HP=10~70"
+	  "ability_detail": "ST&HP=10~70",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "random_stat",
+			"stat": "both",
+			"min": 10,
+			"max": 70,
+			"description": "バトル準備時にST&HPをランダムに10~70に設定"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 322,
