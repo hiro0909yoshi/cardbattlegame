@@ -4,8 +4,11 @@ class_name BattleExecution
 # バトル実行フェーズ処理
 # 攻撃順決定、攻撃シーケンス、結果判定を担当
 
-# 変身処理をpreload
-const TransformProcessor = preload("res://scripts/battle/battle_transform_processor.gd")
+# 変身・死者復活スキルをpreload
+const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
+
+# スキルモジュール
+const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 
 # システム参照
 var card_system_ref = null
@@ -83,7 +86,7 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 ##     "attacker_original": Dictionary,
 ##     "defender_original": Dictionary
 ##   }
-func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, skill_processor) -> Dictionary:
+func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, _skill_processor) -> Dictionary:
 	# 戦闘結果情報を記録
 	var battle_result = {
 		"attacker_revived": false,
@@ -94,7 +97,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		"defender_original": {}
 	}
 	
+	# 戦闘終了フラグ（復活時に使用）
+	var battle_ended = false
+	
 	for i in range(attack_order.size()):
+		# 戦闘終了フラグチェック（復活時に設定）
+		if battle_ended:
+			break
+		
 		var attacker_p = attack_order[i]
 		var defender_p = attack_order[(i + 1) % 2]
 		
@@ -148,7 +158,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					
 					# 反射スキルチェック（軽減後のダメージで）
 					var attack_type_reduced = "scroll" if attacker_p.is_using_scroll else "normal"
-					var reflect_result_reduced = skill_processor.check_reflect_damage(attacker_p, defender_p, reduced_damage, attack_type_reduced)
+					var reflect_result_reduced = ReflectSkill.check_damage(attacker_p, defender_p, reduced_damage, attack_type_reduced)
 					
 					# 反射がある場合、ダメージをさらに調整
 					var actual_damage_reduced = reflect_result_reduced["self_damage"] if reflect_result_reduced["has_reflect"] else reduced_damage
@@ -183,7 +193,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						
 						# 🔄 死者復活チェック
 						if card_system_ref:
-							var revive_result = TransformProcessor.check_and_apply_revive(
+							var revive_result = TransformSkill.check_and_apply_revive(
 								defender_p,
 								attacker_p,
 								CardLoader
@@ -191,12 +201,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							
 							if revive_result["revived"]:
 								print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-								# 復活したので戦闘続行
-								# 復活情報を記録（元の攻撃側/防御側を判定）
+								# 復活情報を記録
 								if defender_p.is_attacker:
 									battle_result["attacker_revived"] = true
 								else:
 									battle_result["defender_revived"] = true
+								# 復活したが攻撃はせずに戦闘終了
+								print("  → 復活したため、攻撃せずに戦闘終了")
+								battle_ended = true
+								break
 							else:
 								# 復活しなかったので撃破確定
 								break
@@ -209,7 +222,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						
 						# 🔄 死者復活チェック
 						if card_system_ref:
-							var revive_result = TransformProcessor.check_and_apply_revive(
+							var revive_result = TransformSkill.check_and_apply_revive(
 								attacker_p,
 								defender_p,
 								CardLoader
@@ -217,12 +230,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							
 							if revive_result["revived"]:
 								print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-								# 復活したので戦闘続行
-								# 復活情報を記録（元の攻撃側/防御側を判定）
+								# 復活情報を記録
 								if attacker_p.is_attacker:
 									battle_result["attacker_revived"] = true
 								else:
 									battle_result["defender_revived"] = true
+								# 復活したが攻撃はせずに戦闘終了
+								print("  → 復活したため、攻撃せずに戦闘終了")
+								battle_ended = true
+								break
 							else:
 								# 復活しなかったので撃破確定
 								break
@@ -233,7 +249,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 反射スキルチェック
 			var attack_type = "scroll" if attacker_p.is_using_scroll else "normal"
-			var reflect_result = skill_processor.check_reflect_damage(attacker_p, defender_p, attacker_p.current_ap, attack_type)
+			var reflect_result = ReflectSkill.check_damage(attacker_p, defender_p, attacker_p.current_ap, attack_type)
 			
 			# 反射がある場合、ダメージを調整
 			var actual_damage = reflect_result["self_damage"] if reflect_result["has_reflect"] else attacker_p.current_ap
@@ -265,7 +281,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			# 🔄 攻撃成功時の変身処理（コカトリス用）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
 			if defender_p.is_alive() and card_system_ref and attacker_p.current_ap > 0:
-				var transform_result = TransformProcessor.process_transform_effects(
+				var transform_result = TransformSkill.process_transform_effects(
 					attacker_p,
 					defender_p,
 					CardLoader,
@@ -289,7 +305,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				
 				# 🔄 死者復活チェック
 				if card_system_ref:
-					var revive_result = TransformProcessor.check_and_apply_revive(
+					var revive_result = TransformSkill.check_and_apply_revive(
 						defender_p,
 						attacker_p,
 						CardLoader
@@ -297,12 +313,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					
 					if revive_result["revived"]:
 						print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-						# 復活したので戦闘続行
-						# 復活情報を記録（元の攻撃側/防御側を判定）
+						# 復活情報を記録
 						if defender_p.is_attacker:
 							battle_result["attacker_revived"] = true
 						else:
 							battle_result["defender_revived"] = true
+						# 復活したが攻撃はせずに戦闘終了
+						print("  → 復活したため、攻撃せずに戦闘終了")
+						battle_ended = true
+						break
 					else:
 						# 復活しなかったので撃破確定
 						break
@@ -315,7 +334,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				
 				# 🔄 死者復活チェック
 				if card_system_ref:
-					var revive_result = TransformProcessor.check_and_apply_revive(
+					var revive_result = TransformSkill.check_and_apply_revive(
 						attacker_p,
 						defender_p,
 						CardLoader
@@ -323,12 +342,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					
 					if revive_result["revived"]:
 						print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-						# 復活したので戦闘続行
-						# 復活情報を記録（元の攻撃側/防御側を判定）
+						# 復活情報を記録
 						if attacker_p.is_attacker:
 							battle_result["attacker_revived"] = true
 						else:
 							battle_result["defender_revived"] = true
+						# 復活したが攻撃はせずに戦闘終了
+						print("  → 復活したため、攻撃せずに戦闘終了")
+						battle_ended = true
+						break
 					else:
 						# 復活しなかったので撃破確定
 						break

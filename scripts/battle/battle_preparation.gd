@@ -6,7 +6,7 @@ class_name BattlePreparation
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TransformProcessor = preload("res://scripts/battle/battle_transform_processor.gd")
+const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 
 # システム参照
 var board_system_ref = null
@@ -154,7 +154,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
 	if card_system_ref:
-		transform_result = TransformProcessor.process_transform_effects(
+		transform_result = TransformSkill.process_transform_effects(
 			attacker, 
 			defender, 
 			CardLoader, 
@@ -584,5 +584,5 @@ func battle_preparation_completed():
 	pass  # 必要に応じて処理を追加
 
 # バトル終了後の処理
-func process_battle_end(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+func process_battle_end(_attacker: BattleParticipant, _defender: BattleParticipant) -> void:
 	pass  # 必要に応じて処理を追加

@@ -8,7 +8,7 @@ signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TransformProcessor = preload("res://scripts/battle/battle_transform_processor.gd")
+const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 
 # バトル結果
 enum BattleResult {
@@ -255,7 +255,7 @@ func _apply_post_battle_effects(
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
-				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
 			# 土地を奪取してクリーチャーを配置
@@ -287,7 +287,7 @@ func _apply_post_battle_effects(
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
-				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
@@ -308,7 +308,7 @@ func _apply_post_battle_effects(
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
-				TransformProcessor.revert_transform(attacker, battle_result["attacker_original"])
+				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
 			# 移動侵略の場合は移動元タイルに戻す、通常侵略は手札に戻す
@@ -355,7 +355,7 @@ func _apply_post_battle_effects(
 	# 戦闘後に復帰が必要な変身の場合のみ
 	if not battle_result.is_empty():
 		if battle_result.get("defender_original", {}).has("name"):
-			TransformProcessor.revert_transform(defender, battle_result["defender_original"])
+			TransformSkill.revert_transform(defender, battle_result["defender_original"])
 			print("[変身復帰] 防御側が元に戻りました")
 	
 	# 🔄 永続変身のタイル更新（コカトリス用）

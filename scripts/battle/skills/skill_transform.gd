@@ -1,26 +1,38 @@
-class_name BattleTransformProcessor
+class_name SkillTransform
 
-# 変身処理を担当するクラス
-# 戦闘開始時、攻撃成功時などのタイミングで変身を実行
+## 変身・死者復活スキル処理モジュール
+##
+## クリーチャーの変身（ランダム変身、強制変身）と死者復活の処理を行う
+##
+## 使用方法:
+## ```gdscript
+## # 攻撃成功時の変身
+## var result = SkillTransform.process_transform_effects(attacker, defender, card_loader, "on_attack_success")
+## 
+## # 死者復活チェック
+## var revive_result = SkillTransform.check_and_apply_revive(participant, opponent, card_loader)
+## 
+## # 戦闘後の変身復帰
+## SkillTransform.revert_transform(participant, original_data)
+## ```
 
+# ========================================
+# 変身スキル処理
+# ========================================
+
+## 変身効果を処理
+##
+## @param attacker: 攻撃側参加者
+## @param defender: 防御側参加者
+## @param card_loader: CardLoaderのインスタンス（クリーチャーデータ取得用）
+## @param trigger: 発動タイミング（"on_battle_start", "on_attack_success"など）
+## @return Dictionary {
+##   "attacker_transformed": bool,
+##   "defender_transformed": bool,
+##   "attacker_original": Dictionary (元のcreature_data、戻す必要がある場合のみ),
+##   "defender_original": Dictionary
+## }
 static func process_transform_effects(attacker: BattleParticipant, defender: BattleParticipant, card_loader, trigger: String) -> Dictionary:
-	"""
-	変身効果を処理
-	
-	Args:
-		attacker: 攻撃側参加者
-		defender: 防御側参加者
-		card_loader: CardLoaderのインスタンス（クリーチャーデータ取得用）
-		trigger: 発動タイミング（"on_battle_start", "on_attack_success"など）
-	
-	Returns:
-		{
-			"attacker_transformed": bool,
-			"defender_transformed": bool,
-			"attacker_original": Dictionary (元のcreature_data、戻す必要がある場合のみ),
-			"defender_original": Dictionary
-		}
-	"""
 	var result = {
 		"attacker_transformed": false,
 		"defender_transformed": false,
@@ -52,14 +64,11 @@ static func process_transform_effects(attacker: BattleParticipant, defender: Bat
 	
 	return result
 
+## 変身を元に戻す（ハルゲンダース専用）
+##
+## @param participant: 参加者
+## @param original_data: 元のcreature_data
 static func revert_transform(participant: BattleParticipant, original_data: Dictionary) -> void:
-	"""
-	変身を元に戻す（ハルゲンダース専用）
-	
-	Args:
-		participant: 参加者
-		original_data: 元のcreature_data
-	"""
 	if original_data.is_empty():
 		return
 	
@@ -68,13 +77,12 @@ static func revert_transform(participant: BattleParticipant, original_data: Dict
 	# creature_dataを完全に元に戻す
 	participant.creature_data = original_data.duplicate(true)
 
+## 変身効果があるかチェック
+##
+## @param participant: BattleParticipant
+## @param trigger: 発動タイミング
+## @return 変身効果のDictionary、なければnull
 static func _check_transform(participant: BattleParticipant, trigger: String):
-	"""
-	変身効果があるかチェック
-	
-	Returns:
-		変身効果のDictionary、なければnull
-	"""
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
@@ -84,10 +92,8 @@ static func _check_transform(participant: BattleParticipant, trigger: String):
 	
 	return null
 
+## 変身を適用
 static func _apply_transform(participant: BattleParticipant, transform_effect: Dictionary, card_loader, result: Dictionary, is_attacker: bool) -> void:
-	"""
-	変身を適用
-	"""
 	var transform_type = transform_effect.get("transform_type", "")
 	var revert_after_battle = transform_effect.get("revert_after_battle", false)
 	
@@ -118,10 +124,8 @@ static func _apply_transform(participant: BattleParticipant, transform_effect: D
 		if new_creature:
 			_transform_creature(participant, new_creature, is_attacker, result, original_data)
 
+## 実際にクリーチャーを変身させる
 static func _transform_creature(participant: BattleParticipant, new_creature: Dictionary, is_attacker: bool, result: Dictionary, original_data: Dictionary) -> void:
-	"""
-	実際にクリーチャーを変身させる
-	"""
 	var old_name = participant.creature_data.get("name", "?")
 	var new_name = new_creature.get("name", "?")
 	
@@ -164,16 +168,11 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 		if not original_data.is_empty():
 			result["defender_original"] = original_data
 
+## ランダムなクリーチャーIDを取得
+##
+## @param card_loader: CardLoaderのインスタンス
+## @return ランダムに選ばれたクリーチャーのID
 static func _get_random_creature_id(card_loader) -> int:
-	"""
-	ランダムなクリーチャーIDを取得
-	
-	Args:
-		card_loader: CardLoaderのインスタンス
-	
-	Returns:
-		ランダムに選ばれたクリーチャーのID
-	"""
 	# 全クリーチャーを取得
 	var all_creatures = card_loader.get_all_creatures()
 	
@@ -191,22 +190,17 @@ static func _get_random_creature_id(card_loader) -> int:
 # 死者復活スキル処理
 # ========================================
 
+## 死者復活スキルをチェックして適用
+##
+## @param participant: 撃破されたクリーチャー
+## @param opponent: 攻撃したクリーチャー（条件チェック用）
+## @param card_loader: CardLoaderのインスタンス
+## @return Dictionary {
+##   "revived": bool,
+##   "new_creature_id": int,
+##   "new_creature_name": String
+## }
 static func check_and_apply_revive(participant: BattleParticipant, opponent: BattleParticipant, card_loader) -> Dictionary:
-	"""
-	死者復活スキルをチェックして適用
-	
-	Args:
-		participant: 撃破されたクリーチャー
-		opponent: 攻撃したクリーチャー（条件チェック用）
-		card_loader: CardLoaderのインスタンス
-	
-	Returns:
-		{
-			"revived": bool,
-			"new_creature_id": int,
-			"new_creature_name": String
-		}
-	"""
 	var result = {
 		"revived": false,
 		"new_creature_id": -1,
@@ -240,13 +234,11 @@ static func check_and_apply_revive(participant: BattleParticipant, opponent: Bat
 	
 	return result
 
+## 死者復活効果があるかチェック
+##
+## @param participant: BattleParticipant
+## @return 死者復活効果のDictionary、なければnull
 static func _check_revive(participant: BattleParticipant):
-	"""
-	死者復活効果があるかチェック
-	
-	Returns:
-		死者復活効果のDictionary、なければnull
-	"""
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
@@ -256,17 +248,12 @@ static func _check_revive(participant: BattleParticipant):
 	
 	return null
 
+## 復活条件をチェック
+##
+## @param revive_effect: 死者復活効果の定義
+## @param opponent: 攻撃側のクリーチャー
+## @return 条件を満たすならtrue
 static func _check_revive_condition(revive_effect: Dictionary, opponent: BattleParticipant) -> bool:
-	"""
-	復活条件をチェック
-	
-	Args:
-		revive_effect: 死者復活効果の定義
-		opponent: 攻撃側のクリーチャー
-	
-	Returns:
-		条件を満たすならtrue
-	"""
 	var revive_type = revive_effect.get("revive_type", "forced")
 	
 	# 強制復活は無条件で発動
@@ -292,17 +279,12 @@ static func _check_revive_condition(revive_effect: Dictionary, opponent: BattleP
 	
 	return false
 
+## 相手が特定カテゴリのアイテムを使用しているかチェック
+##
+## @param opponent: 相手のクリーチャー
+## @param category: アイテムカテゴリ（"武器"、"防具"など）
+## @return 使用していればtrue
 static func _opponent_used_item_category(opponent: BattleParticipant, category: String) -> bool:
-	"""
-	相手が特定カテゴリのアイテムを使用しているかチェック
-	
-	Args:
-		opponent: 相手のクリーチャー
-		category: アイテムカテゴリ（"武器"、"防具"など）
-	
-	Returns:
-		使用していればtrue
-	"""
 	var items = opponent.creature_data.get("items", [])
 	for item in items:
 		var item_category = item.get("item_type", "")
@@ -310,15 +292,12 @@ static func _opponent_used_item_category(opponent: BattleParticipant, category: 
 			return true
 	return false
 
+## 死者復活を適用（変身処理を流用）
+##
+## @param participant: 復活するクリーチャー
+## @param new_creature: 復活先のクリーチャーデータ
+## @param result: 結果を格納するDictionary
 static func _apply_revive(participant: BattleParticipant, new_creature: Dictionary, result: Dictionary) -> void:
-	"""
-	死者復活を適用（変身処理を流用）
-	
-	Args:
-		participant: 復活するクリーチャー
-		new_creature: 復活先のクリーチャーデータ
-		result: 結果を格納するDictionary
-	"""
 	var old_name = participant.creature_data.get("name", "?")
 	var new_name = new_creature.get("name", "?")
 	

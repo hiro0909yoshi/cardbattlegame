@@ -41,6 +41,87 @@ texture_rect.color = Color.RED
 texture_rect.modulate = Color.RED
 ```
 
+## MHP/ST Calculation Standards (2025-10-30)
+
+### MHP (Maximum HP) Calculation
+**CRITICAL**: Always use `BattleParticipant.get_max_hp()` when available
+
+```gdscript
+// ❌ BAD: Direct calculation (risk of missing base_up_hp)
+var mhp = creature_data.get("hp", 0)
+
+// ❌ BAD: Incomplete calculation
+var mhp = attacker.creature_data.get("hp", 0)  // Missing base_up_hp!
+
+// ✅ GOOD: Use BattleParticipant method
+var mhp = participant.get_max_hp()  // Returns: base_hp + base_up_hp
+
+// ✅ GOOD: JSON data only (no BattleParticipant available)
+var mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+```
+
+**Formula**: `MHP = base_hp + base_up_hp` (永続的な基礎HP、戦闘ボーナスは含まない)
+
+### ST (Strength/Attack Power) Calculation
+```gdscript
+// ✅ GOOD: Base ST calculation
+var base_st = creature_data.get("ap", 0) + creature_data.get("base_up_ap", 0)
+```
+
+### Context Key Names - UNIFIED STANDARD
+**土地レベル**: Always use `"tile_level"` (NOT `"current_land_level"`)
+
+```gdscript
+// ❌ BAD: Old key name (deprecated 2025-10-30)
+var level = context.get("current_land_level", 1)
+
+// ✅ GOOD: Unified key name
+var level = context.get("tile_level", 1)
+```
+
+**Modified files (2025-10-30)**:
+- `scripts/battle/battle_execution.gd`
+- `scripts/skills/skill_effect_base.gd`
+
+### BattleParticipant Helper Methods
+Available in `scripts/battle_participant.gd`:
+
+```gdscript
+// MHP取得
+participant.get_max_hp() -> int  // base_hp + base_up_hp
+
+// ダメージ判定
+participant.is_damaged() -> bool  // current_hp < MHP
+
+// HP割合
+participant.get_hp_ratio() -> float  // 0.0 ~ 1.0
+
+// MHP条件チェック（汎用）
+participant.check_mhp_condition(operator: String, threshold: int) -> bool
+// operator: "<", "<=", ">", ">=", "=="
+
+// MHP条件チェック（簡易版）
+participant.is_mhp_below_or_equal(threshold: int) -> bool
+participant.is_mhp_above_or_equal(threshold: int) -> bool
+participant.is_mhp_in_range(min: int, max: int) -> bool
+
+// デバッグ用
+participant.get_hp_debug_string() -> String  // "50/60 (40+20)"
+```
+
+**Usage Example**:
+```gdscript
+// 無効化判定（battle_special_effects.gd）
+func _check_nullify_mhp_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
+    var threshold = condition.get("value", 0)
+    return attacker.get_max_hp() >= threshold  // ✅ Unified method
+
+// ジェネラルカンのMHP50以上カウント（battle_skill_processor.gd）
+var creature_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+if creature_mhp >= 50:  // ✅ Correct calculation
+    qualified_count += 1
+```
+
 ## Core Architecture
 
 ### Main Systems
@@ -282,6 +363,8 @@ Chain  Toll    HP Bonus
 - [ ] Review relevant design documents in `docs/design/`
 - [ ] Check for reserved words
 - [ ] Never use node.has() - use direct property access
+- [ ] **Use BattleParticipant.get_max_hp() for MHP calculations**
+- [ ] **Use unified key name "tile_level" (not "current_land_level")**
 - [ ] Verify data structures (especially ability_parsed)
 - [ ] Understand turn end flow (never call end_turn directly)
 - [ ] Verify system initialization order
@@ -290,4 +373,4 @@ Chain  Toll    HP Bonus
 - [ ] Prevent phase duplication
 - [ ] **Use viewport-relative positioning (NEVER hardcode coordinates)**
 
-Last updated: 2025-10-29
+Last updated: 2025-10-30
