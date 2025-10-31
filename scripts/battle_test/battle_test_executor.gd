@@ -153,17 +153,7 @@ static func _execute_single_battle(
 	# 効果配列を適用（Phase 2追加）
 	battle_system.battle_preparation.apply_effect_arrays(defender, def_card_data)
 	
-	# アイテム効果適用
-	var attacker_granted_skills = []
-	var defender_granted_skills = []
-	
-	if att_item_id > 0:
-		attacker_granted_skills = _apply_item_effects_and_record(battle_system, attacker, att_item_id)
-	
-	if def_item_id > 0:
-		defender_granted_skills = _apply_item_effects_and_record(battle_system, defender, def_item_id)
-	
-	# モックシステムをセットアップ
+	# モックシステムを先にセットアップ（アイテム効果で使用するため）
 	var mock_board = MockBoardSystem.new()
 	mock_board.set_mock_lands(0, config.attacker_owned_lands)
 	mock_board.set_mock_lands(1, config.defender_owned_lands)
@@ -172,6 +162,16 @@ static func _execute_single_battle(
 	var mock_player = MockPlayerSystem.new()
 	
 	battle_system.setup_systems(mock_board, mock_card, mock_player)
+	
+	# アイテム効果適用（モックシステムセットアップ後）
+	var attacker_granted_skills = []
+	var defender_granted_skills = []
+	
+	if att_item_id > 0:
+		attacker_granted_skills = _apply_item_effects_and_record(battle_system, attacker, att_item_id, defender)
+	
+	if def_item_id > 0:
+		defender_granted_skills = _apply_item_effects_and_record(battle_system, defender, def_item_id, attacker)
 	
 	# ダミータイル情報作成
 	var tile_info = {
@@ -270,7 +270,7 @@ static func _get_spell_name(spell_id: int) -> String:
 	return spell.name
 
 ## アイテム効果適用とスキル付与記録
-static func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int) -> Array:
+static func _apply_item_effects_and_record(battle_system: BattleSystem, participant: BattleParticipant, item_id: int, enemy_participant: BattleParticipant) -> Array:
 	var granted_skills = []
 	
 	# アイテムデータ取得
@@ -293,7 +293,7 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 	participant.creature_data["items"].append(item_data)
 	
 	# BattleSystemのアイテム効果適用を使用
-	battle_system.battle_preparation.apply_item_effects(participant, item_data)
+	battle_system.battle_preparation.apply_item_effects(participant, item_data, enemy_participant)
 	
 	# 付与後のスキル状態をチェック
 	if participant.has_item_first_strike and not had_first_strike_before:

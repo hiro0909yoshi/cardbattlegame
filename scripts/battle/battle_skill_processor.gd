@@ -14,6 +14,7 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
+const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 
 var board_system_ref = null
 var game_flow_manager_ref = null
@@ -51,7 +52,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"player_id": attacker_index,
 			"board_system": board_system_ref,
 			"game_flow_manager": game_flow_manager_ref,
-			"is_placed_on_tile": false  # 侵略側は配置されていない
+			"is_placed_on_tile": false,  # 侵略側は配置されていない
+			"enemy_mhp_override": defender.get_max_hp()  # 計算済みMHPを渡す
 		}
 	)
 	apply_skills(attacker, attacker_context)
@@ -69,7 +71,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"board_system": board_system_ref,
 			"game_flow_manager": game_flow_manager_ref,
 			"is_attacker": false,  # 防御側
-			"is_placed_on_tile": true  # 防御側は配置されている
+			"is_placed_on_tile": true,  # 防御側は配置されている
+			"enemy_mhp_override": attacker.get_max_hp()  # 計算済みMHPを渡す
 		}
 	)
 	apply_skills(defender, defender_context)
@@ -125,10 +128,13 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 3.10. Phase 3-C 効果（ローンビースト、ジェネラルカン）
 	apply_phase_3c_effects(participant, context)
 	
-	# 4. 強打スキルを適用（巻物強打を含む）
+	# 4. 先制・後手スキルを適用
+	FirstStrikeSkill.apply(participant)
+	
+	# 5. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context, effect_combat)
 	
-	# 5. 2回攻撃スキルを判定
+	# 6. 2回攻撃スキルを判定
 	check_double_attack(participant)
 
 ## 2回攻撃スキル判定

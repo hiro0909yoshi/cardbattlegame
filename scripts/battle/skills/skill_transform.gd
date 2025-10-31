@@ -239,12 +239,22 @@ static func check_and_apply_revive(participant: BattleParticipant, opponent: Bat
 ## @param participant: BattleParticipant
 ## @return 死者復活効果のDictionary、なければnull
 static func _check_revive(participant: BattleParticipant):
+	# クリーチャー自身の能力をチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
 	for effect in effects:
 		if effect.get("effect_type") == "revive" and effect.get("trigger") == "on_death":
 			return effect
+	
+	# アイテムからの復活効果をチェック
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "revive" and effect.get("trigger") == "on_death":
+				return effect
 	
 	return null
 

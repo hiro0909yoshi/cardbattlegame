@@ -33,3 +33,10 @@ static func apply(participant) -> void:
 	if "2回攻撃" in keywords:
 		participant.attack_count = 2
 		print("【2回攻撃】", participant.creature_data.get("name", "?"), " 攻撃回数: 2回")
+
+## スキル付与（アイテム使用時）
+##
+## @param participant バトル参加者
+static func grant_skill(participant) -> void:
+	participant.attack_count = 2
+	print("【2回攻撃付与】", participant.creature_data.get("name", "?"), " アイテムによる2回攻撃")

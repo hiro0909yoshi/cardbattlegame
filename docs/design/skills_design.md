@@ -162,6 +162,12 @@ AP: 75 (×1.5)
 | **変身** | [battle_transform_processor.gd](../../scripts/battle/battle_transform_processor.gd) | ✅ 完全分離 |
 | **強打** | [skill_power_strike.gd](../../scripts/battle/skills/skill_power_strike.gd) | ✅ 完全分離 |
 | **2回攻撃** | [skill_double_attack.gd](../../scripts/battle/skills/skill_double_attack.gd) | ✅ 完全分離 |
+| **先制・後手** | [skill_first_strike.gd](../../scripts/battle/skills/skill_first_strike.gd) | ✅ 完全分離 |
+| **再生** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
+| **即死** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
+| **無効化** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
+| **特殊移動** | [movement_helper.gd](../../scripts/game_flow/movement_helper.gd) | ✅ 完全分離 |
+| **不屈** | [skill_system.gd](../../scripts/skill_system.gd) | ✅ 完全実装 |
 | **貫通** | 統合実装（battle_preparation.gd） | ✅ 完全実装 |
 
 ### 📝 各スキルの概要
@@ -222,6 +228,95 @@ AP: 75 (×1.5)
   - タイプ判定（武器/防具/アクセサリ/道具）
   - 条件付き盗み（自分がアイテム未使用時）
   - ステータスへの影響を自動計算
+
+#### 先制・後手 (First Strike / Last Strike)
+- **ファイル**: `scripts/battle/skills/skill_first_strike.gd`
+- **タイプ**: パッシブ（攻撃順序制御）
+- **効果**: 攻撃順序を制御する
+- **実装パターン**:
+  - 先制（has_first_strike）: 先攻権を獲得
+  - 後手（has_last_strike）: 相手に先攻を譲る
+- **特徴**:
+  - キーワードベースの判定
+  - アイテムによる付与にも対応
+  - 優先順位: アイテム先制 > 後手 > 通常先制 > デフォルト
+  - 攻撃順決定は`battle_execution.gd`の`determine_attack_order()`で処理
+
+#### 再生 (Regeneration)
+- **ファイル**: `scripts/battle/battle_special_effects.gd`
+- **タイプ**: パッシブ（バトル後処理）
+- **効果**: バトル後にHP全回復
+- **実装クリーチャー**: 11体
+- **特徴**:
+  - 生存者のみ発動（HP > 0）
+  - base_hpとbase_up_hpを最大値まで回復
+  - バトル後処理で自動的に適用
+
+#### 即死 (Instant Death)
+- **ファイル**: `scripts/battle/battle_special_effects.gd`
+- **タイプ**: リアクティブ（攻撃後判定）
+- **効果**: 確率で相手を即死させる
+- **実装クリーチャー**: 6体
+- **実装パターン**:
+  - 無条件発動
+  - 敵属性指定（特定属性に対してのみ）
+  - ST条件（防御側のSTが一定以上）
+  - 立場条件（防御側のみ発動）
+- **特徴**:
+  - 攻撃後に判定
+  - 確率設定可能（probability）
+  - instant_death_flagで管理
+
+#### 無効化 (Nullify)
+- **ファイル**: `scripts/battle/battle_special_effects.gd`
+- **タイプ**: パッシブ（ダメージ軽減）
+- **効果**: 特定攻撃や属性からのダメージを軽減・無効化
+- **実装パターン**:
+  - 属性無効化（element）
+  - MHP条件（mhp_above/mhp_below）
+  - ST条件（st_above/st_below）
+  - 全攻撃無効化（all_attacks）
+  - 能力持ち無効化（has_ability）
+  - 巻物攻撃無効化（scroll_attack）
+  - 通常攻撃無効化（normal_attack）
+- **特徴**:
+  - 軽減率設定可能（reduction_rate: 0.0=完全無効、0.5=50%軽減）
+  - 条件付き発動対応（土地レベルなど）
+  - ダメージ計算前に判定
+
+#### 特殊移動 (Special Movement)
+- **ファイル**: `scripts/game_flow/movement_helper.gd`
+- **タイプ**: 領地コマンド（移動範囲拡張）
+- **効果**: 通常の隣接移動に加えて特殊な移動が可能
+- **実装パターン**:
+  - **空地移動**（vacant_move）: 特定属性の空き地に直接移動
+	- 対象属性指定可能
+	- "全"属性で全空き地に移動可能
+	- 実装クリーチャー: 3体
+  - **敵地移動**（enemy_move）: 条件に合う敵地に移動して戦闘
+	- 属性条件指定可能（different_element）
+	- 実装クリーチャー: 1体（サンダースポーン）
+  - **ランダム空地移動**（random_vacant）: 全空き地からランダム移動
+	- アイテム効果で使用（アージェントキー）
+- **特徴**:
+  - 通常の隣接移動も可能（併用）
+  - 特殊マス（checkpoint、warp）は移動不可
+  - 自分のクリーチャーがいる土地は移動不可
+  - `MovementHelper.get_move_destinations()`で移動先を取得
+  - `MovementHelper.execute_creature_move()`で移動実行
+  - 不屈スキルとの連携対応
+
+#### 不屈 (Unyielding)
+- **ファイル**: `scripts/skill_system.gd`
+- **タイプ**: パッシブ（ダウン無効化）
+- **効果**: アクション後もダウンしない
+- **特徴**:
+  - キーワードベースの判定（`has_unyielding()`）
+  - ability_detail内の"不屈"文字列で判定
+  - 移動・攻撃などのアクション後にダウン判定をスキップ
+  - バトルフローとは独立した処理
+  - タイル配置時の`set_down_state()`で参照される
+  - 連続行動が可能になる重要なスキル
 
 ---
 
@@ -293,7 +388,11 @@ AP: 75 (×1.5)
 | 2025/10/24 | 1.8 | 🆕 変身スキル追加（2体実装：バルダンダース、コカトリス）|
 | 2025/10/24 | 1.9 | 🆕 死者復活スキル追加（4体+1アイテム実装済み）、バグ修正（リビングアムルのcreature_id、アイテムカテゴリチェック）|
 | 2025/10/26 | 2.0 | 🆕 空地移動・敵地移動スキル追加（空地移動3体、敵地移動1体実装完了）、戦闘敗北時の移動元復帰処理実装 |
+| 2025/10/31 | 2.3 | 🔄 先制・後手スキルを分離 - `scripts/battle/skills/skill_first_strike.gd` に移動完了 |
+| 2025/10/31 | 2.4 | 📝 再生・即死・無効化スキルの分離状況を追記 - `scripts/battle/battle_special_effects.gd` に実装済み |
+| 2025/10/31 | 2.5 | 📝 特殊移動スキルの分離状況を追記 - `scripts/game_flow/movement_helper.gd` に実装済み（空地移動・敵地移動） |
+| 2025/10/31 | 2.6 | 📝 不屈スキルの実装状況を追記 - `scripts/skill_system.gd` に実装済み |
 
 ---
 
-**最終更新**: 2025年10月26日（v2.0）
+**最終更新**: 2025年10月31日（v2.6）

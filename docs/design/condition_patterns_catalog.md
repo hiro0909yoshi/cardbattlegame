@@ -1,6 +1,7 @@
 # 🔍 条件分岐パターン完全カタログ
 
 **作成日**: 2025-10-30  
+**最終更新**: 2025-10-31  
 **対象範囲**: 全スキル・条件システム  
 **調査ファイル**: battle_skill_processor.gd, condition_checker.gd, battle_preparation.gd 他
 
@@ -449,15 +450,27 @@ if target_mhp >= 50:
 ---
 
 ### 3-3. 敵のMHPチェック
+
 ```gdscript
 var enemy_mhp = context.get("enemy_mhp", 0)
 if enemy_mhp >= 50:
 ```
-**使用箇所**: 3箇所
-- condition_checker.gd: `enemy_max_hp_check`
 
-**対象クリーチャー**:
-- 強打条件として使用
+**使用箇所**: condition_checker.gd: `enemy_max_hp_check`
+
+**対象クリーチャー**: 強打条件として使用
+
+**重要**: 
+- JSON条件では`operator`と`value`を使用
+  ```json
+  {
+	"condition_type": "enemy_max_hp_check",
+	"operator": ">=",
+	"value": 40
+  }
+  ```
+- `battle_skill_processor.gd`で`enemy_mhp_override`を設定し、`defender.get_max_hp()`を渡す
+- `get_max_hp()`は`base_hp + base_up_hp`を返す（戦闘ボーナス除く）
 
 ---
 

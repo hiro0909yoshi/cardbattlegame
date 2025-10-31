@@ -21,17 +21,11 @@
 		"mp": 45
 	  },
 	  "effect": "ST-10；HP+40",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "debuff_ap",
-			"value": 10
-		  },
-		  {
-			"effect_type": "buff_hp",
-			"value": 40
-		  }
-		]
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": -10,
+		  "hp": 40
+		}
 	  }
 	},
 	{
@@ -54,7 +48,17 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "ST+30；先制"
+	  "effect": "ST+30；先制",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_first_strike"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1004,
@@ -109,7 +113,13 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+30；HP+30"
+	  "effect": "ST+30；HP+30",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30,
+		  "hp": 30
+		}
+	  }
 	},
 	{
 	  "id": 1009,
@@ -120,7 +130,12 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+50"
+	  "effect": "ST+50",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 50
+		}
+	  }
 	},
 	{
 	  "id": 1010,
@@ -175,7 +190,16 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "ST+敵と同属性の配置数×10"
+	  "effect": "ST+敵と同属性の配置数×10",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "same_element_as_enemy_count",
+			"multiplier": 10,
+			"stat": "ap"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1015,
@@ -219,7 +243,12 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "HP+40"
+	  "effect": "HP+40",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 40
+		}
+	  }
 	},
 	{
 	  "id": 1019,
@@ -241,7 +270,13 @@
 	  "cost": {
 		"mp": 55
 	  },
-	  "effect": "ST+60；HP-30"
+	  "effect": "ST+60；HP-30",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 60,
+		  "hp": -30
+		}
+	  }
 	},
 	{
 	  "id": 1021,
@@ -252,7 +287,25 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "水風使用時、無効化[通常攻撃]"
+	  "effect": "水風使用時、無効化[通常攻撃]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "normal_attack"
+			},
+			"condition": {
+			  "condition_type": "user_element",
+			  "elements": [
+				"water",
+				"wind"
+			  ]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1022,
@@ -263,7 +316,24 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "ST+20；水風使用時、強打"
+	  "effect": "ST+20；水風使用時、強打",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "user_element",
+				"elements": ["water", "wind"]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1023,
@@ -274,38 +344,24 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "ST+水風配置数×5；強打[火地]"
-	},
-	{
-	  "id": 1024,
-	  "name": "スパークボール",
-	  "rarity": "N",
-	  "type": "item",
-	  "item_type": "巻物",
-	  "cost": {
-		"mp": 60
-	  },
-	  "effect": "巻物攻撃[ST40]"
-	},
-	{
-	  "id": 1025,
-	  "name": "スパイクシールド",
-	  "rarity": "S",
-	  "type": "item",
-	  "item_type": "防具",
-	  "cost": {
-		"mp": 40
-	  },
-	  "effect": "反射[1/2]",
+	  "effect": "ST+水風配置数×5；強打[火地]",
 	  "effect_parsed": {
-		"keywords": ["反射[1/2]"],
 		"effects": [
 		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 0.5,
-			"self_damage_ratio": 0.5,
-			"attack_types": ["normal"],
-			"triggers": ["on_damaged"]
+			"effect_type": "element_count_bonus",
+			"elements": ["water", "wind"],
+			"multiplier": 5,
+			"stat": "ap"
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": ["fire", "earth"]
+			  }
+			]
 		  }
 		]
 	  }
@@ -319,7 +375,22 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "ST=0；無効化[通常攻撃]"
+	  "effect": "ST=0；無効化[通常攻撃]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 0,
+		  "force_st": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "normal_attack"
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1027,
@@ -330,7 +401,16 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "ST&HP+10~70"
+	  "effect": "ST&HP+10~70",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "random_stat_bonus",
+			"st_range": {"min": 10, "max": 70},
+			"hp_range": {"min": 10, "max": 70}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1028,
@@ -341,7 +421,18 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "ST&HP+10；先制"
+	  "effect": "ST&HP+10；先制",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 10,
+		  "hp": 10
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_first_strike"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1029,
@@ -374,7 +465,27 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "即死[水地・60%]；無効化[水地]"
+	  "effect": "即死[水地・60%]；無効化[水地]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "即死",
+			"skill_params": {
+			  "probability": 60,
+			  "target_elements": ["water", "earth"]
+			}
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "element",
+			  "elements": ["water", "earth"]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1032,
@@ -385,7 +496,18 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "ST-30；HP+60；後手"
+	  "effect": "ST-30；HP+60；後手",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": -30,
+		  "hp": 60
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_last_strike"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1033,
@@ -396,7 +518,12 @@
 	  "cost": {
 		"mp": 10
 	  },
-	  "effect": "HP+30"
+	  "effect": "HP+30",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 30
+		}
+	  }
 	},
 	{
 	  "id": 1034,
@@ -462,7 +589,27 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "即死[火風・60%]；無効化[火風]"
+	  "effect": "即死[火風・60%]；無効化[火風]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "即死",
+			"skill_params": {
+			  "probability": 60,
+			  "target_elements": ["fire", "wind"]
+			}
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "element",
+			  "elements": ["fire", "wind"]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1040,
@@ -473,7 +620,13 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+40；HP+20"
+	  "effect": "ST+40；HP+20",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 40,
+		  "hp": 20
+		}
+	  }
 	},
 	{
 	  "id": 1041,
@@ -495,7 +648,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+20；貫通"
+	  "effect": "ST+20；貫通",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "貫通"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1043,
@@ -506,7 +670,14 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "2回攻撃"
+	  "effect": "2回攻撃",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_double_attack"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1044,
@@ -605,7 +776,22 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "ST+30；即死[防御型]"
+	  "effect": "ST+30；即死[防御型]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "即死",
+			"skill_params": {
+			  "probability": 100,
+			  "target_type": "defensive"
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1052,
@@ -616,7 +802,19 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "無効化[ST30以下]"
+	  "effect": "無効化[ST30以下]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "st_below",
+			  "value": 30
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1053,
@@ -627,7 +825,12 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "ST+40"
+	  "effect": "ST+40",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 40
+		}
+	  }
 	},
 	{
 	  "id": 1054,
@@ -649,7 +852,16 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "HP+自手札数×10"
+	  "effect": "HP+自手札数×10",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "hand_count_multiplier",
+			"stat": "hp",
+			"multiplier": 10
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1056,
@@ -671,7 +883,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "敵と属性が違う場合、ST&HP+40"
+	  "effect": "敵と属性が違う場合、ST&HP+40",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "element_mismatch_bonus",
+			"stat_bonus": {
+			  "st": 40,
+			  "hp": 40
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1058,
@@ -682,7 +905,12 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+50"
+	  "effect": "HP+50",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 50
+		}
+	  }
 	},
 	{
 	  "id": 1059,
@@ -704,7 +932,25 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "ST+30；強打[MHP40以上]"
+	  "effect": "ST+30；強打[MHP40以上]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "enemy_max_hp_check",
+				"operator": ">=",
+				"value": 40
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1061,
@@ -726,7 +972,25 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "火地使用時、無効化[通常攻撃]"
+	  "effect": "火地使用時、無効化[通常攻撃]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "normal_attack"
+			},
+			"condition": {
+			  "condition_type": "user_element",
+			  "elements": [
+				"fire",
+				"earth"
+			  ]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1063,
@@ -738,12 +1002,11 @@
 		"mp": 20
 	  },
 	  "effect": "ST+20；火地使用時、強打",
-	  "ability_parsed": {
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20
+		},
 		"effects": [
-		  {
-			"effect_type": "buff_ap",
-			"value": 20
-		  },
 		  {
 			"effect_type": "grant_skill",
 			"skill": "強打",
@@ -766,7 +1029,27 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "ST+火地配置数×5；強打[水風]"
+	  "effect": "ST+火地配置数×5；強打[水風]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "element_count_bonus",
+			"elements": ["fire", "earth"],
+			"multiplier": 5,
+			"stat": "ap"
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": ["water", "wind"]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1065,
@@ -777,7 +1060,21 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "HP+30；無効化[巻物]"
+	  "effect": "HP+30；無効化[巻物]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "scroll_attack"
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1066,
@@ -876,7 +1173,12 @@
 	  "cost": {
 		"mp": 0
 	  },
-	  "effect": "ST+20"
+	  "effect": "ST+20",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20
+		}
+	  }
 	},
 	{
 	  "id": 1071,
@@ -910,13 +1212,10 @@
 		"mp": 10
 	  },
 	  "effect": "ST+30",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "buff_ap",
-			"value": 30
-		  }
-		]
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30
+		}
 	  }
 	},
 	{

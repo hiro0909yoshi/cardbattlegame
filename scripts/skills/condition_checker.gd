@@ -41,6 +41,10 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 func _evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) -> bool:
 	var effect_conditions = effect.get("conditions", [])
 	
+	# 条件が空の場合は無条件発動
+	if effect_conditions.is_empty():
+		return true
+	
 	# 全条件がtrueである必要がある（AND条件）
 	for condition in effect_conditions:
 		if not _evaluate_single_condition(condition, context):
@@ -76,6 +80,12 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				   player_lands.get("水", 0) > 0 and \
 				   player_lands.get("地", 0) > 0 and \
 				   player_lands.get("風", 0) > 0
+		
+		# 使用者（自分）の属性チェック
+		"user_element":
+			var my_element = context.get("creature_element", "")
+			var allowed_elements = condition.get("elements", [])
+			return my_element in allowed_elements
 		
 		# 敵が特定の属性を持っているか（グラディエーター等の条件）
 		"enemy_is_element":
@@ -308,7 +318,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"creature_element": attacker_data.get("element", ""),
 		"enemy_element": defender_data.get("element", ""),
 		"enemy_st": defender_data.get("st", 0),
-		"enemy_mhp": defender_data.get("mhp", 0),
+		"enemy_mhp": game_state.get("enemy_mhp_override", defender_data.get("mhp", 0)),
 		
 		# アイテム情報
 		"equipped_item": attacker_data.get("equipped_item", {}),

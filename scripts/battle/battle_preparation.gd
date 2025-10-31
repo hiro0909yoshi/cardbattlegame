@@ -7,6 +7,8 @@ class_name BattlePreparation
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
+const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
+const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 
 # システム参照
 var board_system_ref = null
@@ -95,14 +97,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		if not attacker.creature_data.has("items"):
 			attacker.creature_data["items"] = []
 		attacker.creature_data["items"].append(attacker_item)
-		apply_item_effects(attacker, attacker_item)
+		apply_item_effects(attacker, attacker_item, defender)
 	
 	if not defender_item.is_empty():
 		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
 		if not defender.creature_data.has("items"):
 			defender.creature_data["items"] = []
 		defender.creature_data["items"].append(defender_item)
-		apply_item_effects(defender, defender_item)
+		apply_item_effects(defender, defender_item, attacker)
 	
 	# アイテムクリーチャー・バフ処理
 	# リビングアーマー（ID: 438）: クリーチャーとして戦闘時ST+50
@@ -213,9 +215,16 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 			  " temporary_bonus_ap:", participant.temporary_bonus_ap)
 
 ## アイテムまたは援護クリーチャーの効果を適用
-func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
+func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant) -> void:
 	var item_type = item_data.get("type", "")
 	print("[アイテム効果適用] ", item_data.get("name", "???"), " (type: ", item_type, ")")
+	
+	# contextを構築（既存システムと同じ形式）
+	var context = {
+		"player_id": participant.player_id,
+		"creature_element": participant.creature_data.get("element", ""),
+		"enemy_element": enemy_participant.creature_data.get("element", "") if enemy_participant else ""
+	}
 	
 	# 援護クリーチャーの場合はAP/HPのみ加算
 	if item_type == "creature":
@@ -268,8 +277,13 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 	if not stat_bonus.is_empty():
 		var st = stat_bonus.get("st", 0)
 		var hp = stat_bonus.get("hp", 0)
+		var force_st = stat_bonus.get("force_st", false)
 		
-		if st > 0:
+		# force_st: STを絶対値で設定（例: スフィアシールドのST=0）
+		if force_st:
+			participant.current_ap = st
+			print("  ST=", st, "（絶対値設定）")
+		elif st > 0:
 			participant.current_ap += st
 			print("  ST+", st, " → ", participant.current_ap)
 		
@@ -302,53 +316,226 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 				participant.update_current_hp()
 				print("  HP-", value, " → ", participant.current_hp)
 			
+			"element_count_bonus":
+				# 属性別配置数ボーナス（既存システム活用）
+				var elements = effect.get("elements", [])
+				var multiplier = effect.get("multiplier", 1)
+				var stat = effect.get("stat", "ap")
+				var player_id = context.get("player_id", 0)
+				
+				var total_count = 0
+				for element in elements:
+					if board_system_ref:
+						total_count += board_system_ref.count_creatures_by_element(player_id, element)
+				
+				var bonus = total_count * multiplier
+				
+				if stat == "ap":
+					participant.current_ap += bonus
+					print("  [属性配置数]", elements, ":", total_count, " × ", multiplier, " = AP+", bonus)
+				elif stat == "hp":
+					participant.item_bonus_hp += bonus
+					participant.update_current_hp()
+					print("  [属性配置数]", elements, ":", total_count, " × ", multiplier, " = HP+", bonus)
+			
+			"same_element_as_enemy_count":
+				# 敵と同属性の配置数ボーナス（既存システム活用）
+				var multiplier = effect.get("multiplier", 1)
+				var stat = effect.get("stat", "ap")
+				var player_id = context.get("player_id", 0)
+				var enemy_element = context.get("enemy_element", "")
+				
+				var count = 0
+				if enemy_element != "" and board_system_ref:
+					count = board_system_ref.count_creatures_by_element(player_id, enemy_element)
+				
+				var bonus = count * multiplier
+				
+				if stat == "ap":
+					participant.current_ap += bonus
+					print("  [敵同属性配置数] 敵=", enemy_element, ":", count, " × ", multiplier, " = AP+", bonus)
+				elif stat == "hp":
+					participant.item_bonus_hp += bonus
+					participant.update_current_hp()
+					print("  [敵同属性配置数] 敵=", enemy_element, ":", count, " × ", multiplier, " = HP+", bonus)
+			
+			"hand_count_multiplier":
+				# 手札数ボーナス（フォースアンクレット、リリスなど）
+				var multiplier_hc = effect.get("multiplier", 1)
+				var stat_hc = effect.get("stat", "ap")
+				var player_id = context.get("player_id", 0)
+				
+				# CardSystemから手札数を取得
+				var hand_count = 0
+				if card_system_ref:
+					hand_count = card_system_ref.get_hand_size_for_player(player_id)
+				
+				var bonus_hc = hand_count * multiplier_hc
+				
+				if stat_hc == "ap":
+					participant.current_ap += bonus_hc
+					print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier_hc, " = ST+", bonus_hc)
+				elif stat_hc == "hp":
+					participant.item_bonus_hp += bonus_hc
+					participant.update_current_hp()
+					print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier_hc, " = HP+", bonus_hc)
+			
 			"grant_skill":
 				# スキル付与（例：強打、先制など）
 				var skill_name = effect.get("skill", "")
 				
-				# 条件チェック
-				var condition = effect.get("condition", {})
-				if not condition.is_empty():
-					if not check_skill_grant_condition(participant, condition):
-						print("  スキル付与条件不一致: ", skill_name, " → スキップ")
-						continue
+				# 条件チェック（skill_conditionsが配列の場合に対応）
+				var skill_conditions = effect.get("skill_conditions", [])
+				var condition = effect.get("condition", {})  # 後方互換性のため残す
 				
-				grant_skill_to_participant(participant, skill_name, effect)
-				print("  スキル付与: ", skill_name)
+				# skill_conditions（配列）がある場合はそちらを優先
+				var conditions_to_check = []
+				if not skill_conditions.is_empty():
+					conditions_to_check = skill_conditions
+				elif not condition.is_empty():
+					conditions_to_check = [condition]
+				
+				# 全ての条件をチェック（AND条件）
+				var all_conditions_met = true
+				for cond in conditions_to_check:
+					if not check_skill_grant_condition(participant, cond, context):
+						all_conditions_met = false
+						break
+				
+				if all_conditions_met:
+					grant_skill_to_participant(participant, skill_name, effect)
+					print("  スキル付与: ", skill_name)
+			
+			"grant_first_strike":
+				# アイテム先制付与
+				SkillFirstStrike.grant_skill(participant, "先制")
+			
+			"grant_last_strike":
+				# アイテム後手付与
+				SkillFirstStrike.grant_skill(participant, "後手")
+			
+			"grant_double_attack":
+				# アイテム2回攻撃付与
+				DoubleAttackSkill.grant_skill(participant)
 			
 			"reflect_damage", "nullify_reflect":
 				# 反射系のスキルはバトル中にBattleSkillProcessorで処理されるため、ここではスキップ
 				pass
 			
+			"revive":
+				# 死者復活スキルを付与
+				# effect_parsedの詳細情報はparticipant.creature_dataのitemsに保存されているので
+				# ここではキーワードのみ追加
+				if not participant.creature_data.has("ability_parsed"):
+					participant.creature_data["ability_parsed"] = {}
+				if not participant.creature_data["ability_parsed"].has("keywords"):
+					participant.creature_data["ability_parsed"]["keywords"] = []
+				
+				if not "死者復活" in participant.creature_data["ability_parsed"]["keywords"]:
+					participant.creature_data["ability_parsed"]["keywords"].append("死者復活")
+					print("  スキル付与: 死者復活")
+			
+			"random_stat_bonus":
+				# ランダムステータスボーナス（スペクターローブ等）
+				var st_range = effect.get("st_range", {})
+				var hp_range = effect.get("hp_range", {})
+				
+				var st_bonus = 0
+				var hp_bonus = 0
+				
+				# STのランダムボーナス
+				if not st_range.is_empty():
+					var st_min = st_range.get("min", 0)
+					var st_max = st_range.get("max", 0)
+					st_bonus = randi() % int(st_max - st_min + 1) + st_min
+					participant.current_ap += st_bonus
+				
+				# HPのランダムボーナス
+				if not hp_range.is_empty():
+					var hp_min = hp_range.get("min", 0)
+					var hp_max = hp_range.get("max", 0)
+					hp_bonus = randi() % int(hp_max - hp_min + 1) + hp_min
+					participant.item_bonus_hp += hp_bonus
+					participant.update_current_hp()
+				
+				print("  [ランダムボーナス] ST+", st_bonus, ", HP+", hp_bonus)
+			
+			"element_mismatch_bonus":
+				# 属性不一致ボーナス（プリズムワンド）
+				var user_element = participant.creature_data.get("element", "")
+				var enemy_element = context.get("enemy_element", "")
+				
+				# 属性が異なる場合のみボーナス適用
+				if user_element != enemy_element:
+					var stat_bonus_data = effect.get("stat_bonus", {})
+					var st = stat_bonus_data.get("st", 0)
+					var hp = stat_bonus_data.get("hp", 0)
+					
+					if st > 0:
+						participant.current_ap += st
+					
+					if hp > 0:
+						participant.item_bonus_hp += hp
+						participant.update_current_hp()
+					
+					print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → ST+", st, ", HP+", hp)
+				else:
+					print("  [属性不一致] ", user_element, " = ", enemy_element, " → ボーナスなし")
+			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)
 
-## スキル付与条件をチェック
-func check_skill_grant_condition(participant: BattleParticipant, condition: Dictionary) -> bool:
-	var condition_type = condition.get("condition_type", "")
-	
-	match condition_type:
-		"user_element":
-			# 使用者（クリーチャー）の属性が指定された属性のいずれかに一致するか
-			var required_elements = condition.get("elements", [])
-			var user_element = participant.creature_data.get("element", "")
-			return user_element in required_elements
-		
-		_:
-			print("  未実装の条件タイプ: ", condition_type)
-			return false
+## スキル付与条件をチェック（既存ConditionCheckerを使用）
+func check_skill_grant_condition(participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
+	# 既存のConditionCheckerを使用
+	var checker = ConditionChecker.new()
+	return checker._evaluate_single_condition(condition, context)
 
 ## パーティシパントにスキルを付与
 func grant_skill_to_participant(participant: BattleParticipant, skill_name: String, _skill_data: Dictionary) -> void:
 	match skill_name:
 		"先制":
-			participant.has_first_strike = true
+			FirstStrikeSkill.grant_skill(participant, "先制")
 		
 		"後手":
-			participant.has_last_strike = true
+			FirstStrikeSkill.grant_skill(participant, "後手")
+		
+		"2回攻撃":
+			DoubleAttackSkill.grant_skill(participant)
 		
 		"強打":
-			# 強打スキルを付与
+			# 強打スキルを付与（SkillPowerStrikeモジュールを使用）
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			
+			var ability_parsed = participant.creature_data["ability_parsed"]
+			
+			# キーワードに追加
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			
+			if not "強打" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("強打")
+			
+			# effectsにも強打効果を追加
+			if not ability_parsed.has("effects"):
+				ability_parsed["effects"] = []
+			
+			# skill_conditionsから発動条件を取得（なければ無条件）
+			var skill_conditions = _skill_data.get("skill_conditions", [])
+			
+			# 強打効果を構築
+			var power_strike_effect = {
+				"effect_type": "power_strike",
+				"multiplier": 1.5,
+				"conditions": skill_conditions  # スキルの発動条件を設定
+			}
+			
+			ability_parsed["effects"].append(power_strike_effect)
+			print("  強打スキル付与（条件数: ", skill_conditions.size(), "）")
+		
+		"無効化":
+			# 無効化スキルを付与
 			if not participant.creature_data.has("ability_parsed"):
 				participant.creature_data["ability_parsed"] = {}
 			
@@ -356,21 +543,85 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 			if not ability_parsed.has("keywords"):
 				ability_parsed["keywords"] = []
 			
-			if not "強打" in ability_parsed["keywords"]:
-				ability_parsed["keywords"].append("強打")
+			if not "無効化" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("無効化")
 			
-			# effectsにも強打効果を追加（条件なしで常に発動）
-			if not ability_parsed.has("effects"):
-				ability_parsed["effects"] = []
+			# keyword_conditionsに無効化条件を追加
+			if not ability_parsed.has("keyword_conditions"):
+				ability_parsed["keyword_conditions"] = {}
 			
-			# 強打効果を構築（条件なし）
-			var power_strike_effect = {
-				"effect_type": "power_strike",
-				"multiplier": 1.5,
-				"conditions": []  # アイテムで付与された強打は無条件で発動
+			# skill_dataから無効化パラメータを取得
+			var skill_params = _skill_data.get("skill_params", {})
+			var nullify_type = skill_params.get("nullify_type", "normal_attack")
+			var reduction_rate = skill_params.get("reduction_rate", 0.0)
+			
+			var nullify_data = {
+				"nullify_type": nullify_type,
+				"reduction_rate": reduction_rate,
+				"conditions": []  # アイテムで付与された無効化は無条件で発動
 			}
 			
-			ability_parsed["effects"].append(power_strike_effect)
+			# タイプに応じて追加パラメータを設定
+			if nullify_type in ["st_below", "st_above", "mhp_below", "mhp_above"]:
+				nullify_data["value"] = skill_params.get("value", 0)
+			elif nullify_type == "element":
+				nullify_data["elements"] = skill_params.get("elements", [])
+			
+			ability_parsed["keyword_conditions"]["無効化"] = nullify_data
+			
+			print("  無効化スキル付与: ", nullify_type)
+		
+		"貫通":
+			# 貫通スキルを付与
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			
+			var ability_parsed = participant.creature_data["ability_parsed"]
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			
+			if not "貫通" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("貫通")
+			
+			print("  貫通スキル付与")
+		
+		"即死":
+			# 即死スキルを付与
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			
+			var ability_parsed = participant.creature_data["ability_parsed"]
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			
+			if not "即死" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("即死")
+			
+			# keyword_conditionsに即死条件を追加
+			if not ability_parsed.has("keyword_conditions"):
+				ability_parsed["keyword_conditions"] = {}
+			
+			# skill_dataから即死パラメータを取得
+			var skill_params = _skill_data.get("skill_params", {})
+			var probability = skill_params.get("probability", 100)
+			var target_elements = skill_params.get("target_elements", [])
+			var target_type = skill_params.get("target_type", "")
+			
+			var instant_death_data = {
+				"probability": probability
+			}
+			
+			# 条件を追加
+			if not target_elements.is_empty():
+				instant_death_data["condition_type"] = "enemy_element"
+				instant_death_data["elements"] = target_elements
+			elif not target_type.is_empty():
+				instant_death_data["condition_type"] = "enemy_type"
+				instant_death_data["type"] = target_type
+			
+			ability_parsed["keyword_conditions"]["即死"] = instant_death_data
+			
+			print("  即死スキル付与: 確率=", probability, "% 条件=", instant_death_data.get("condition_type", "無条件"))
 		
 		_:
 			print("  未実装のスキル: ", skill_name)

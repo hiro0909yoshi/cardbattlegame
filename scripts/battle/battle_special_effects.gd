@@ -178,20 +178,47 @@ func _check_instant_death_condition(condition: Dictionary, attacker: BattleParti
 			# 無条件
 			return true
 		
-		"enemy_is_element":
-			# 敵が特定属性
-			var required_elements = condition.get("elements", "")
+		"enemy_is_element", "enemy_element":
+			# 敵が特定属性（複数対応）
 			var defender_element = defender.creature_data.get("element", "")
 			
-			# 「全」属性は全てに有効
-			if required_elements == "全":
-				return true
+			# 単一属性の場合（後方互換性）
+			if condition.has("element"):
+				var required_element = condition.get("element", "")
+				if required_element == "全":
+					return true
+				if defender_element == required_element:
+					print("【即死条件】敵が", required_element, "属性 → 条件満たす")
+					return true
+				else:
+					print("【即死条件】敵が", defender_element, "属性（要求:", required_element, "）→ 条件不成立")
+					return false
 			
-			if defender_element == required_elements:
-				print("【即死条件】敵が", required_elements, "属性 → 条件満たす")
+			# 複数属性の場合
+			var required_elements = condition.get("elements", [])
+			if typeof(required_elements) == TYPE_STRING:
+				# 文字列の場合は配列に変換（後方互換性）
+				if required_elements == "全":
+					return true
+				required_elements = [required_elements]
+			
+			if defender_element in required_elements:
+				print("【即死条件】敵が", defender_element, "属性（要求:", required_elements, "）→ 条件満たす")
 				return true
 			else:
 				print("【即死条件】敵が", defender_element, "属性（要求:", required_elements, "）→ 条件不成立")
+				return false
+		
+		"enemy_type":
+			# 敵が特定タイプ
+			var required_type = condition.get("type", "")
+			var defender_type = defender.creature_data.get("creature_type", "")
+			
+			if defender_type == required_type:
+				print("【即死条件】敵が", required_type, "型 → 条件満たす")
+				return true
+			else:
+				print("【即死条件】敵が", defender_type, "型（要求:", required_type, "）→ 条件不成立")
 				return false
 		
 		"defender_st_check":

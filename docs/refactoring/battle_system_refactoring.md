@@ -24,17 +24,17 @@ scripts/
 │   └── コア機能のみ（システム統合、メインフロー制御）
 │
 └── battle/
-    ├── battle_preparation.gd (280行)
-    │   └── バトル準備（Participant作成、アイテム効果、土地ボーナス、貫通判定）
-    │
-    ├── battle_skill_processor.gd (200行)
-    │   └── スキル処理（感応、強打、2回攻撃、巻物攻撃）
-    │
-    ├── battle_execution.gd (180行)
-    │   └── 戦闘実行（攻撃順決定、攻撃シーケンス、結果判定）
-    │
-    └── battle_special_effects.gd (340行)
-        └── 特殊効果（即死、無効化、再生）
+	├── battle_preparation.gd (280行)
+	│   └── バトル準備（Participant作成、アイテム効果、土地ボーナス、貫通判定）
+	│
+	├── battle_skill_processor.gd (200行)
+	│   └── スキル処理（感応、強打、2回攻撃、巻物攻撃）
+	│
+	├── battle_execution.gd (180行)
+	│   └── 戦闘実行（攻撃順決定、攻撃シーケンス、結果判定）
+	│
+	└── battle_special_effects.gd (340行)
+		└── 特殊効果（即死、無効化、再生）
 ```
 
 ---
@@ -179,8 +179,8 @@ func update_defender_hp()
    ├─> 6. BattleExecution.resolve_battle_result()
    │
    └─> 7. BattleSystem._apply_post_battle_effects()
-       ├─ BattleSpecialEffects.apply_regeneration()
-       └─ 土地奪取 or カード破壊 or 手札復帰
+	   ├─ BattleSpecialEffects.apply_regeneration()
+	   └─ 土地奪取 or カード破壊 or 手札復帰
 ```
 
 ---
