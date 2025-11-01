@@ -361,14 +361,6 @@ func change_phase(new_phase: GamePhase):
 
 # ターン終了
 func end_turn():
-	# Phase 1-A: 領地コマンドを閉じる、カード選択UIとボタンを隠す
-	if land_command_handler and land_command_handler.current_state != land_command_handler.State.CLOSED:
-		land_command_handler.close_land_command()
-	
-	if ui_manager:
-		ui_manager.hide_land_command_button()
-		ui_manager.hide_card_selection_ui()
-	
 	# 修正: 二重実行防止を強化（BUG-000対策）
 	if is_ending_turn:
 		print("Warning: Already ending turn (flag check)")
@@ -378,8 +370,16 @@ func end_turn():
 		print("Warning: Already ending turn (phase check)")
 		return
 	
-	# フラグを立てる
+	# ★重要: フラグを最優先で立てる
 	is_ending_turn = true
+	
+	# Phase 1-A: 領地コマンドを閉じる、カード選択UIとボタンを隠す
+	if land_command_handler and land_command_handler.current_state != land_command_handler.State.CLOSED:
+		land_command_handler.close_land_command()
+	
+	if ui_manager:
+		ui_manager.hide_land_command_button()
+		ui_manager.hide_card_selection_ui()
 	
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)

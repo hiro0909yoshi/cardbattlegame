@@ -306,11 +306,8 @@ func on_card_selected_for_swap(card_index: int):
 	_swap_old_creature = {}
 	_swap_tile_index = -1
 	
-	# 領地コマンドを閉じる
-	close_land_command()
-	
-	# TileActionProcessorの交換処理を呼び出す（最後に実行）
-	# これによりaction_completedシグナルが正しく処理される
+	# TileActionProcessorの交換処理を呼び出す
+	# 注: 領地コマンドはend_turn()で閉じられる
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.execute_swap(
 			tile_index,

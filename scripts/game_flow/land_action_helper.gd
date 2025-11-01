@@ -50,10 +50,8 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	print("[LandActionHelper] レベルアップ完了: tile ", handler.selected_tile_index, " -> Lv.", target_level)
 	
-	# 領地コマンドを閉じる
-	handler.close_land_command()
-	
 	# アクション完了を通知（正しいターン終了フロー）
+	# 注: 領地コマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
@@ -281,10 +279,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 移動先の所有権を設定
 		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)
 		
-		# 領地コマンドを閉じる
-		handler.close_land_command()
-		
 		# アクション完了を通知
+		# 注: 領地コマンドはend_turn()で閉じられる
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.tile_action_processor.complete_action()
 		
@@ -302,10 +298,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 移動元情報を保存（敗北時に戻すため）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
 		
-		# 領地コマンドを閉じる
-		handler.close_land_command()
-		
 		# バトル情報を保存
+		# 注: 領地コマンドはバトル開始前に閉じる必要があるため、ここでは閉じない
 		handler.pending_move_battle_creature_data = creature_data
 		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
 		handler.pending_move_attacker_item = {}
@@ -480,10 +474,8 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	print("[LandActionHelper] 地形変化完了: tile %d -> %s (コスト: %dG)" % [tile_index, new_element, cost])
 	
-	# 領地コマンドを閉じる
-	handler.close_land_command()
-	
 	# アクション完了を通知（レベルアップと同様）
+	# 注: 領地コマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
