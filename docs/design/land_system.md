@@ -183,7 +183,7 @@ if tile.has_method("set_down_state"):
 
 ## 領地コマンド詳細
 
-### UIフラグ管理
+### UIフラグ管理とターン終了フロー
 
 **重要なフラグ**: `card_selection_ui.is_active`
 - `true`: カード選択可能（召喚フェーズ）
@@ -194,11 +194,25 @@ if tile.has_method("set_down_state"):
 // 領地コマンドを開く時
 ui_manager.card_selection_ui.is_active = false  // カード選択を無効化
 
-// 領地コマンドを閉じる時
-_reinitialize_card_selection.call_deferred()   // 次フレームで再初期化
-ui_manager.hide_card_selection_ui()             // 一度非表示
-ui_manager.show_card_selection_ui(player)       // 再表示（is_active=trueになる）
+// 領地コマンドを閉じる時（end_turn()で統一的に処理）
+// 1. is_ending_turnフラグを立てる（最優先）
+is_ending_turn = true
+
+// 2. 領地コマンドを閉じる
+land_command_handler.close_land_command()
+
+// 3. UIを非表示にする
+ui_manager.hide_land_command_button()
+ui_manager.hide_card_selection_ui()
+
+// 4. _on_land_command_closed()がis_ending_turnをチェックして再初期化をスキップ
 ```
+
+**重要な設計原則**:
+- すべてのアクション（レベルアップ、移動、交換、地形変化）は`complete_action()`を呼ぶだけ
+- `complete_action()` → `tile_action_completed`シグナル → `end_turn()`
+- `end_turn()`で領地コマンドとUIを統一的に閉じる
+- 各アクション内で個別に`close_land_command()`を呼ばない
 
 ### 基本制約
 1. **1ターンに1回のみ実行可能**
