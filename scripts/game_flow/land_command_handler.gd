@@ -211,8 +211,12 @@ func close_land_command():
 			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
 	
 	# UIを非表示
-	if ui_manager and ui_manager.has_method("hide_land_command_ui"):
-		ui_manager.hide_land_command_ui()
+	if ui_manager:
+		if ui_manager.has_method("hide_land_command_ui"):
+			ui_manager.hide_land_command_ui()
+		# カード選択UIも非表示にする
+		if ui_manager.has_method("hide_card_selection_ui"):
+			ui_manager.hide_card_selection_ui()
 
 # ============================================
 # Phase 1-A: 選択マーカーシステム

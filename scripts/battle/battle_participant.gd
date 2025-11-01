@@ -37,6 +37,7 @@ var is_using_scroll: bool = false  # 巻物攻撃フラグ（貫通とは別）
 var was_attacked_by_enemy: bool = false  # 敵から攻撃を受けたフラグ（バイロマンサー用）
 var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ（ブルガサリ用）
 var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフラグ（オーガロード用）
+var has_squid_mantle: bool = false  # スクイドマントル効果（敵の特殊攻撃無効化）
 
 # 初期化
 func _init(

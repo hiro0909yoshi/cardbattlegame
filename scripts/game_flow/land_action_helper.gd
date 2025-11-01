@@ -422,6 +422,10 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	var tile_index = handler.selected_tile_index
 	
+	# TileActionProcessorに処理中フラグを設定
+	if handler.board_system and handler.board_system.tile_action_processor:
+		handler.board_system.tile_action_processor.is_action_processing = true
+	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
 		print("[LandActionHelper] この土地は地形変化できません")

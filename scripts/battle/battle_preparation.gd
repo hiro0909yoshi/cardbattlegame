@@ -547,6 +547,18 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 					participant.creature_data["ability_parsed"]["effects"].append(effect)
 					print("  アイテム破壊・盗み無効を付与")
 			
+			"nullify_attacker_special_attacks":
+				# スクイドマントル：敵の特殊攻撃無効化
+				participant.has_squid_mantle = true
+				print("  スクイドマントル効果付与（敵の特殊攻撃無効化）")
+			
+			"change_element":
+				# ニュートラルクローク：属性変更
+				var target_element = effect.get("target_element", "neutral")
+				var old_element = participant.creature_data.get("element", "")
+				participant.creature_data["element"] = target_element
+				print("  属性変更: ", old_element, " → ", target_element)
+			
 			"destroy_item":
 				# アイテム破壊（リアクトアーマー）
 				# ability_parsedにeffectを追加するだけでSkillItemManipulationが認識する
@@ -566,6 +578,24 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 					participant.creature_data["ability_parsed"]["effects"].append(effect)
 					var target_types = effect.get("target_types", [])
 					print("  アイテム破壊を付与: ", target_types)
+			
+			"transform":
+				# 変身効果をability_parsedに追加
+				if not participant.creature_data.has("ability_parsed"):
+					participant.creature_data["ability_parsed"] = {}
+				if not participant.creature_data["ability_parsed"].has("effects"):
+					participant.creature_data["ability_parsed"]["effects"] = []
+				
+				# 既に登録されていなければ追加
+				var already_has_transform = false
+				for existing_effect in participant.creature_data["ability_parsed"]["effects"]:
+					if existing_effect.get("effect_type") == "transform" and existing_effect.get("trigger") == effect.get("trigger"):
+						already_has_transform = true
+						break
+				
+				if not already_has_transform:
+					participant.creature_data["ability_parsed"]["effects"].append(effect)
+					print("  変身効果を付与: ", effect.get("transform_type", ""))
 			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)

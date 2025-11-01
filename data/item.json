@@ -278,7 +278,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+40；敵の攻撃成功時能力無効"
+	  "effect": "HP+40；敵の攻撃成功時能力無効",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 40
+		},
+		"effects": [
+		  {
+			"effect_type": "nullify_attacker_special_attacks",
+			"triggers": ["when_defending"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1018,
@@ -637,7 +648,7 @@
 	  },
 	  "effect": "巻物攻撃[ST=水風自領地数×10]；巻物強打[火地]"
 	},
-	{
+		{
 	  "id": 1036,
 	  "name": "ツインスパイク",
 	  "rarity": "S",
@@ -646,7 +657,21 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "ST+20；強制変化[使用クリーチャー]"
+	  "effect": "ST+20；強制変化[使用クリーチャー]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_attack_success",
+			"transform_type": "forced_copy_attacker",
+			"target": "opponent",
+			"revert_after_battle": false
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1037,
@@ -789,7 +814,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+40；属性変化[⬜]"
+	  "effect": "HP+40；属性変化[⬜]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 40
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"target_element": "neutral"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1046,

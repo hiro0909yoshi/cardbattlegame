@@ -168,6 +168,11 @@ func _check_nullify_attacker_st_above(condition: Dictionary, attacker: BattlePar
 
 ## 即死判定を行う
 func check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は即死無効化
+	if defender.has_squid_mantle:
+		print("【スクイドマントル】", attacker.creature_data.get("name", "?"), "の即死を無効化")
+		return false
+	
 	# 即死スキルを持つかチェック
 	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])

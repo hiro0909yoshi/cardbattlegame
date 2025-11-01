@@ -53,7 +53,9 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"board_system": board_system_ref,
 			"game_flow_manager": game_flow_manager_ref,
 			"is_placed_on_tile": false,  # 侵略側は配置されていない
-			"enemy_mhp_override": defender.get_max_hp()  # 計算済みMHPを渡す
+			"enemy_mhp_override": defender.get_max_hp(),  # 計算済みMHPを渡す
+			"opponent": defender,  # スクイドマントルチェック用
+			"is_attacker": true  # 攻撃側フラグ
 		}
 	)
 	apply_skills(attacker, attacker_context)
@@ -72,13 +74,19 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"game_flow_manager": game_flow_manager_ref,
 			"is_attacker": false,  # 防御側
 			"is_placed_on_tile": true,  # 防御側は配置されている
-			"enemy_mhp_override": attacker.get_max_hp()  # 計算済みMHPを渡す
+			"enemy_mhp_override": attacker.get_max_hp(),  # 計算済みMHPを渡す
+			"opponent": attacker,  # スクイドマントルチェック用
+			"is_defender": true  # 防御側フラグ
 		}
 	)
 	apply_skills(defender, defender_context)
 	
 	# 貫通スキルによる土地ボーナスHP無効化
-	PenetrationSkill.apply_penetration(attacker, defender)
+	# スクイドマントルチェック
+	if not defender.has_squid_mantle:
+		PenetrationSkill.apply_penetration(attacker, defender)
+	else:
+		print("【スクイドマントル】貫通を無効化")
 	
 	# 巻物攻撃による土地ボーナスHP無効化
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
@@ -135,14 +143,26 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	apply_power_strike_skills(participant, context, effect_combat)
 	
 	# 6. 2回攻撃スキルを判定
-	check_double_attack(participant)
+	check_double_attack(participant, context)
 
 ## 2回攻撃スキル判定
-func check_double_attack(participant: BattleParticipant) -> void:
+func check_double_attack(participant: BattleParticipant, context: Dictionary) -> void:
+	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は2回攻撃無効化
+	var opponent = context.get("opponent")
+	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
+		print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の2回攻撃を無効化")
+		return
+	
 	DoubleAttackSkill.apply(participant)
 
 ## 強打スキル適用（巻物強打を含む）
 func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary, effect_combat) -> void:
+	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強打無効化
+	var opponent = context.get("opponent")
+	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
+		print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強打を無効化")
+		return
+	
 	PowerStrikeSkill.apply(participant, context, effect_combat)
 	print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 

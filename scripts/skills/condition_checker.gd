@@ -348,5 +348,9 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		# 攻撃タイプ
 		"is_attacker": game_state.get("is_attacker", true),
 		"is_placed_on_tile": game_state.get("is_placed_on_tile", false),  # Phase 3-B用
-		"attack_type": "normal"  # or "scroll", "ability"
+		"attack_type": "normal",  # or "scroll", "ability"
+		
+		# スクイドマントルチェック用
+		"opponent": game_state.get("opponent", null),
+		"is_defender": game_state.get("is_defender", false)
 	}
