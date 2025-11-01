@@ -10,6 +10,7 @@ signal invasion_completed(success: bool, tile_index: int)
 const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const MovementHelper = preload("res://scripts/game_flow/movement_helper.gd")
+const SkillItemReturn = preload("res://scripts/battle/skills/skill_item_return.gd")
 
 # バトル結果
 enum BattleResult {
@@ -67,6 +68,9 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
 	battle_special_effects.setup_systems(board_system)
+	
+	# アイテム復帰スキルの初期化
+	SkillItemReturn.setup_systems(card_system)
 
 # バトル実行（3D版メイン処理）
 func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
@@ -389,6 +393,10 @@ func _apply_post_battle_effects(
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
 			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
 	
+	# 📦 アイテム復帰処理
+	_apply_item_return(attacker, attacker_index)
+	_apply_item_return(defender, defender.player_id)
+	
 	# 表示更新
 	if board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
@@ -680,3 +688,20 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 			participant.creature_data["ap"] = original_ap
 			
 			print("[ランダムステータスリセット] スペクターの能力値を初期値に戻しました (ST:", original_ap, ", HP:", original_hp, ")")
+
+# アイテム復帰処理
+func _apply_item_return(participant: BattleParticipant, player_id: int):
+	if not participant or not participant.creature_data:
+		return
+	
+	# 使用したアイテムを取得
+	var used_items = participant.creature_data.get("items", [])
+	if used_items.is_empty():
+		return
+	
+	# アイテム復帰スキルをチェックして適用
+	var return_result = SkillItemReturn.check_and_apply_item_return(participant, used_items, player_id)
+	
+	if return_result.get("returned", false):
+		var count = return_result.get("count", 0)
+		print("【アイテム復帰完了】", count, "個のアイテムが復帰しました")

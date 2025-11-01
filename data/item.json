@@ -105,7 +105,19 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "HP+40；復帰[ブック]"
+	  "effect": "HP+40；復帰[ブック]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 40
+		},
+		"effects": [
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_deck"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1006,
@@ -225,7 +237,18 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "STドレイン；先制"
+	  "effect": "STドレイン；先制",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "st_drain",
+			"target": "enemy"
+		  },
+		  {
+			"effect_type": "grant_first_strike"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1014,
@@ -555,7 +578,20 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "巻物攻撃[ST30]；復帰[手札]"
+	  "effect": "巻物攻撃[ST30]；復帰[手札]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"value": 30
+		  },
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_hand"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1031,
@@ -967,7 +1003,20 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+20；HP+10；復帰[手札]"
+	  "effect": "ST+20；HP+10；復帰[手札]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20,
+		  "hp": 10
+		},
+		"effects": [
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_hand"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1055,

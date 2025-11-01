@@ -431,6 +431,21 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 					grant_skill_to_participant(participant, skill_name, effect)
 					print("  スキル付与: ", skill_name)
 			
+			"st_drain":
+				# STドレイン（サキュバスリング）
+				# 敵のSTを全て吸収して自分のSTに加算、敵のSTは0になる
+				var target = effect.get("target", "enemy")
+				if target == "enemy" and enemy_participant:
+					var drained_st = enemy_participant.current_ap
+					if drained_st > 0:
+						# 敵のSTを吸収
+						participant.current_ap += drained_st
+						# 敵のSTを0に
+						enemy_participant.current_ap = 0
+						enemy_participant.creature_data["ap"] = 0
+						print("  [STドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_participant.creature_data.get("name", "?"), " のST", drained_st, "を吸収")
+						print("    → 自ST:", participant.current_ap, " / 敵ST:", enemy_participant.current_ap)
+			
 			"grant_first_strike":
 				# アイテム先制付与
 				SkillFirstStrike.grant_skill(participant, "先制")

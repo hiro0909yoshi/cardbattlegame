@@ -12,7 +12,7 @@
 - **BattleSystem**: First-strike combat, bonuses, skill application
 - **PlayerSystem**: 4 players, magic points, land tracking
 - **SkillSystem**: Condition checking, effect application
-- **ItemSystem**: Battle preparation, effect application (52/75 items complete)
+- **ItemSystem**: Battle preparation, effect application (55/75 items complete)
 - **UIManager**: 8 components (PlayerInfo, CardSelection, LevelUp, Debug, LandCommand, Hand, Phase, BattleItemSelection)
 
 ## Key Architecture Patterns
@@ -73,11 +73,26 @@ Next Phase
 - NO action should call `close_land_command()` directly
 - This prevents "召喚しない" button from remaining visible after actions
 
-### Item System (52/75 Complete - 69%)
+### Item System (55/75 Complete - 73%)
 - **Battle Prep Phase**: Pre-battle item selection (up to 2 items)
-- **Effect Types**: buff_ap, buff_hp, grant_skill, revive, transform, nullify_enemy_skills
+- **Effect Types**: buff_ap, buff_hp, grant_skill, revive, transform, nullify_enemy_skills, **item_return**
 - **Transformation**: Preserves base_up_hp and items, resets HP to max
-- **Categories**: Weapons (100%), Armor (85%), Scrolls (41%)
+- **Categories**: Weapons (100%), Armor (88%), Scrolls (42%)
+- **Recent Additions** (Nov 2): 3 items with item_return effect
+
+### Item Return Skill (Nov 2025)
+- **Implementation**: `scripts/battle/skills/skill_item_return.gd`
+- **Trigger**: After item use in battle
+- **Types**: 
+  - return_to_deck: Returns to top of deck
+  - return_to_hand: Returns to hand immediately (can exceed hand limit)
+- **Priority Rule**: Item's own return effect > Creature's all-items return
+- **Implemented**: 3 items + 1 creature
+  - エターナルメイル (1005): HP+40, return to deck
+  - ソウルレイ (1030): Scroll attack ST30, return to hand
+  - ブーメラン (1054): ST+20/HP+10, return to hand
+  - ケンタウロス (314): First strike, all items return to deck (補完的)
+- **Integration**: Called in `_apply_post_battle_effects()` after battle resolution
 
 ## Battle Flow
 ```
@@ -90,6 +105,7 @@ Next Phase
 7. First strike: Attacker AP vs Defender HP
 8. Counter: Defender ST vs Attacker HP (if alive)
 9. Result determination
+10. Item return processing (new - Nov 2025)
 ```
 
 ## Land Bonus System
@@ -128,15 +144,17 @@ Chain  Toll Multiplier  HP Bonus
 ```json
 {
   "effects": [{
-    "effect_type": "power_strike|instant_death|...",
-    "target": "self|enemy|all_enemies",
+    "effect_type": "power_strike|instant_death|item_return|...",
+    "target": "self|enemy|all_enemies|all_items",
     "conditions": [{
       "condition_type": "adjacent_ally_land|mhp_below|...",
       "value": 40
     }],
     "stat": "AP|HP",
     "operation": "add|multiply",
-    "value": 20
+    "value": 20,
+    "trigger": "after_item_use",
+    "return_type": "return_to_deck|return_to_hand"
   }],
   "keywords": ["強打", "先制"]
 }
@@ -156,6 +174,7 @@ Chain  Toll Multiplier  HP Bonus
 - Support/Assist: Bonus to other creatures
 - Vacant Move: Move to empty tiles without battle
 - Enemy Land Move: Can move to enemy lands
+- **Item Return** (NEW): Return used items to deck/hand
 
 ## Debug Commands
 - D: Toggle CPU hand visibility
@@ -168,7 +187,7 @@ Chain  Toll Multiplier  HP Bonus
 
 ## Dev Priorities
 ### High (2 weeks)
-- Complete remaining 23 items (31%)
+- Complete remaining 20 items (27%)
 - Balance tuning
 - CPU infinite loop fix
 
@@ -194,7 +213,10 @@ scripts/
 ├── tile_action_processor.gd (520L+)
 ├── battle/
 │   ├── battle_preparation.gd (item phase)
-│   └── skills/skill_transform.gd
+│   └── skills/
+│       ├── skill_transform.gd
+│       ├── skill_item_return.gd (NEW - Nov 2025)
+│       └── ...
 ├── skills/ (condition_checker, effect_combat)
 ├── ui_components/ (8 components)
 └── tiles/
@@ -203,16 +225,23 @@ scripts/
 ## Important Notes
 - Check `docs/README.md` for complete documentation index
 - Refer to `docs/design/skills_design.md` for skill details
+- Refer to `docs/design/skills/item_return_skill.md` for item return details
 - Refer to `docs/design/land_system.md` for land command details
 - Check `docs/issues/issues.md` for current bugs
 - UI positioning: Use viewport_size for responsiveness
 
 ## Recent Major Fixes (Nov 2025)
+- **Item Return Skill (Nov 2)**: Implemented item return to deck/hand system
+  - 3 items + 1 creature with return effects
+  - Priority: Item's own effect > Creature's all-items effect
+  - Prevents duplicate returns with smart conflict resolution
+  - Integrated into post-battle flow
+  - **Progress Update**: 52/75 → 55/75 items (69% → 73%)
 - **Turn End Centralization (Nov 2)**: Unified all land command actions to use `end_turn()`
   - Fixed: "召喚しない" button remaining visible after land actions
   - Key: `is_ending_turn` flag set BEFORE `close_land_command()` call
   - All actions now only call `complete_action()`, never `close_land_command()`
 - **UI Flag Management**: `is_ending_turn` prevents premature card selection reinitialization
-- **Item System**: 52/75 items implemented with transformation support
+- **Item System**: 55/75 items implemented with transformation and item_return support
 
 Last updated: 2025-11-02

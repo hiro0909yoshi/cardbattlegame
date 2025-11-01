@@ -374,7 +374,14 @@
 		"keywords": [
 		  "先制"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_deck",
+			"target": "all_items"
+		  }
+		]
 	  }
 	},
 	{

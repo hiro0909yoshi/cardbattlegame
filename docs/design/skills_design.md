@@ -11,6 +11,18 @@
 1. [スキルシステム概要](#スキルシステム概要)
 2. [実装済みスキル一覧](#実装済みスキル一覧)
 3. [個別スキル仕様書へのリンク](#スキル詳細仕様) ⭐NEW
+   - [応援](#応援-support)
+   - [共鳴/感応](#共鳴感応-resonanceaffinity)
+   - [巻物攻撃](#巻物攻撃-scroll-attack)
+   - [反射](#反射-reflect)
+   - [アイテム操作](#アイテム操作-item-manipulation)
+   - [アイテム復帰](#アイテム復帰-item-return) 🆕
+   - [先制・後手](#先制後手-first-strike--last-strike)
+   - [再生](#再生-regeneration)
+   - [即死](#即死-instant-death)
+   - [無効化](#無効化-nullify)
+   - [特殊移動](#特殊移動-special-movement)
+   - [不屈](#不屈-unyielding)
 4. [スキル適用順序](#スキル適用順序)
 5. [BattleParticipantとHP管理](#battleparticipantとhp管理)
 6. [スキル条件システム](#スキル条件システム)
@@ -72,6 +84,7 @@ SkillSystem (マネージャー)
 | 援護 | アイテムフェーズ | 手札クリーチャーをAP/HP加算に使用 | ✅ 完全実装 |
 | 変身 | アクティブ | 自身または相手を別のクリーチャーに変身 | ✅ 完全実装 |
 | 死者復活 | リアクティブ | 撃破時に別のクリーチャーとして復活 | ✅ 完全実装 |
+| アイテム復帰 | パッシブ | 使用したアイテムをブック/手札に戻す | ✅ 完全実装 |
 | アイテム破壊 | バトル前 | 相手のアイテムを破壊 | ✅ 完全実装 |
 | アイテム盗み | バトル前 | 相手のアイテムを奪う | ✅ 完全実装 |
 | 空地移動 | 領地コマンド | 特定属性の空き地に移動可能 | ✅ 完全実装 |
@@ -167,164 +180,10 @@ AP: 75 (×1.5)
 | **即死** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **無効化** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **特殊移動** | [movement_helper.gd](../../scripts/game_flow/movement_helper.gd) | ✅ 完全分離 |
+| **アイテム復帰** | [skill_item_return.gd](../../scripts/battle/skills/skill_item_return.gd) | ✅ 完全分離 |
 | **不屈** | [skill_system.gd](../../scripts/skill_system.gd) | ✅ 完全実装 |
 | **貫通** | 統合実装（battle_preparation.gd） | ✅ 完全実装 |
 
-### 📝 各スキルの概要
-
-#### 応援 (Support)
-- **ファイル**: `scripts/battle/skills/skill_support.gd`
-- **タイプ**: パッシブ（戦闘前）
-- **効果**: 盤面上のクリーチャーにバフを付与
-- **実装数**: 9体
-- **特徴**: 
-  - 属性・種族・距離による条件判定
-  - 動的ボーナス（隣接自領地数に比例）
-  - 複数応援持ちの累積効果対応
-
-#### 共鳴/感応 (Resonance/Affinity)
-- **ファイル**: `scripts/battle/skills/skill_resonance.gd`
-- **タイプ**: パッシブ（戦闘前）
-- **効果**: 特定属性の土地所有でAP/HP上昇
-- **特徴**:
-  - 土地属性判定
-  - AP/HP個別上昇値設定
-  - 条件付き感応対応（土地数、レベル制約）
-
-#### 巻物攻撃 (Scroll Attack)
-- **ファイル**: `scripts/battle/skills/skill_scroll_attack.gd`
-- **タイプ**: パッシブ（戦闘前、最優先）
-- **効果**: 巻物使用時の特殊攻撃処理
-- **特徴**:
-  - 巻物強打判定（`has_scroll_power_strike()`）
-  - 基本STからAP計算（土地ボーナスなし）
-  - 最優先適用（Phase 1より前）
-
-#### 反射 (Reflect)
-- **ファイル**: `scripts/battle/skills/skill_reflect.gd`
-- **タイプ**: リアクティブ（戦闘中）
-- **効果**: 受けたダメージを攻撃者に返す
-- **実装パターン**: 
-  - 反射100%
-  - 反射50%
-  - 反射[巻物]（巻物攻撃のみ反射）
-  - 反射[全]（全攻撃を反射）
-  - 反射無効（相手の反射を無効化）
-- **特徴**:
-  - 攻撃タイプ判定（通常攻撃/巻物攻撃）
-  - 反射無効スキルとの相互作用
-  - 条件付き反射（敵アイテム未使用時など）
-
-#### アイテム操作 (Item Manipulation)
-- **ファイル**: `scripts/battle/skills/skill_item_manipulation.gd`
-- **タイプ**: バトル前（先制順序で処理）
-- **効果**: 相手のアイテムを破壊または盗む
-- **実装パターン**:
-  - アイテム破壊（特定タイプのアイテムを破壊）
-  - アイテム盗み（アイテム未装備時のみ盗める）
-  - アイテム操作無効（破壊・盗みを無効化）
-- **特徴**:
-  - 先制判定後の順序で処理
-  - タイプ判定（武器/防具/アクセサリ/道具）
-  - 条件付き盗み（自分がアイテム未使用時）
-  - ステータスへの影響を自動計算
-
-#### 先制・後手 (First Strike / Last Strike)
-- **ファイル**: `scripts/battle/skills/skill_first_strike.gd`
-- **タイプ**: パッシブ（攻撃順序制御）
-- **効果**: 攻撃順序を制御する
-- **実装パターン**:
-  - 先制（has_first_strike）: 先攻権を獲得
-  - 後手（has_last_strike）: 相手に先攻を譲る
-- **特徴**:
-  - キーワードベースの判定
-  - アイテムによる付与にも対応
-  - 優先順位: アイテム先制 > 後手 > 通常先制 > デフォルト
-  - 攻撃順決定は`battle_execution.gd`の`determine_attack_order()`で処理
-
-#### 再生 (Regeneration)
-- **ファイル**: `scripts/battle/battle_special_effects.gd`
-- **タイプ**: パッシブ（バトル後処理）
-- **効果**: バトル後にHP全回復
-- **実装クリーチャー**: 11体
-- **特徴**:
-  - 生存者のみ発動（HP > 0）
-  - base_hpとbase_up_hpを最大値まで回復
-  - バトル後処理で自動的に適用
-
-#### 即死 (Instant Death)
-- **ファイル**: `scripts/battle/battle_special_effects.gd`
-- **タイプ**: リアクティブ（攻撃後判定）
-- **効果**: 確率で相手を即死させる
-- **実装クリーチャー**: 6体
-- **実装パターン**:
-  - 無条件発動
-  - 敵属性指定（特定属性に対してのみ）
-  - ST条件（防御側のSTが一定以上）
-  - 立場条件（防御側のみ発動）
-- **特徴**:
-  - 攻撃後に判定
-  - 確率設定可能（probability）
-  - instant_death_flagで管理
-
-#### 無効化 (Nullify)
-- **ファイル**: `scripts/battle/battle_special_effects.gd`
-- **タイプ**: パッシブ（ダメージ軽減）
-- **効果**: 特定攻撃や属性からのダメージを軽減・無効化
-- **実装パターン**:
-  - 属性無効化（element）
-  - MHP条件（mhp_above/mhp_below）
-  - ST条件（st_above/st_below）
-  - 全攻撃無効化（all_attacks）
-  - 能力持ち無効化（has_ability）
-  - 巻物攻撃無効化（scroll_attack）
-  - 通常攻撃無効化（normal_attack）
-- **特徴**:
-  - 軽減率設定可能（reduction_rate: 0.0=完全無効、0.5=50%軽減）
-  - 条件付き発動対応（土地レベルなど）
-  - ダメージ計算前に判定
-
-#### 特殊移動 (Special Movement)
-- **ファイル**: `scripts/game_flow/movement_helper.gd`
-- **タイプ**: 領地コマンド（移動範囲拡張）
-- **効果**: 通常の隣接移動に加えて特殊な移動が可能
-- **実装パターン**:
-  - **空地移動**（vacant_move）: 特定属性の空き地に直接移動
-	- 対象属性指定可能
-	- "全"属性で全空き地に移動可能
-	- 実装クリーチャー: 3体
-  - **敵地移動**（enemy_move）: 条件に合う敵地に移動して戦闘
-	- 属性条件指定可能（different_element）
-	- 実装クリーチャー: 1体（サンダースポーン）
-  - **ランダム空地移動**（random_vacant）: 全空き地からランダム移動
-	- アイテム効果で使用（アージェントキー）
-- **特徴**:
-  - 通常の隣接移動も可能（併用）
-  - 特殊マス（checkpoint、warp）は移動不可
-  - 自分のクリーチャーがいる土地は移動不可
-  - `MovementHelper.get_move_destinations()`で移動先を取得
-  - `MovementHelper.execute_creature_move()`で移動実行
-  - 不屈スキルとの連携対応
-
-#### 不屈 (Unyielding)
-- **ファイル**: `scripts/skill_system.gd`
-- **タイプ**: パッシブ（ダウン無効化）
-- **効果**: アクション後もダウンしない
-- **特徴**:
-  - キーワードベースの判定（`has_unyielding()`）
-  - ability_detail内の"不屈"文字列で判定
-  - 移動・攻撃などのアクション後にダウン判定をスキップ
-  - バトルフローとは独立した処理
-  - タイル配置時の`set_down_state()`で参照される
-  - 連続行動が可能になる重要なスキル
-
----
-
-## BattleParticipantとHP管理
-
-詳細は **[battle_system.md](battle_system.md)** を参照してください。
-
----
 
 ## スキル条件システム
 
@@ -395,4 +254,8 @@ AP: 75 (×1.5)
 
 ---
 
-**最終更新**: 2025年10月31日（v2.6）
+| 2025/11/02 | 2.7 | 🆕 アイテム復帰スキル追加（3アイテム + 1クリーチャー実装完了） |
+
+---
+
+**最終更新**: 2025年11月2日（v2.7）
