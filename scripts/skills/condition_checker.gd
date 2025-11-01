@@ -220,6 +220,12 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			# var mark = condition.get("mark", "")  # 将来使用予定
 			# 現時点では常にfalseを返す
 			return false
+		
+		# レア度判定（ブラックソード等）
+		"user_rarity":
+			var creature_rarity = context.get("creature_rarity", "")
+			var target_rarities = condition.get("rarities", [])
+			return creature_rarity in target_rarities
 			
 		_:
 			push_warning("未実装の条件タイプ: " + cond_type)

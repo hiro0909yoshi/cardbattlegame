@@ -9,7 +9,17 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "ST+10；先制；攻撃で敵非破壊時、使用クリーチャーはランダムな空地に飛ぶ"
+	  "effect": "ST+10；先制",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 10
+		},
+		"effects": [
+		  {
+		"effect_type": "grant_first_strike"
+	  }
+		]
+	  }
 	},
 	{
 	  "id": 1001,
@@ -37,7 +47,22 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "HP+30；追加ダメージ[自分が受けたダメージ]"
+	  "effect": "HP+30；追加ダメージ[自分が受けたダメージ]",
+	  "effect_parsed": {
+		"keywords": ["反射[全・自傷]"],
+		"stat_bonus": {
+		  "hp": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 1.0,
+			"self_damage_ratio": 1.0,
+			"attack_types": ["normal", "scroll"],
+			"triggers": ["on_damaged"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1003,
@@ -91,7 +116,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+40；アイテム破壊・盗み無効"
+	  "effect": "HP+40；アイテム破壊・盗み無効",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 40
+		},
+		"effects": [
+		  {
+			"effect_type": "nullify_item_manipulation",
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1007,
@@ -146,7 +182,17 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "アイテム破壊[レア度額以外]"
+	  "effect": "アイテム破壊[レア度額以外]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": ["武器", "防具", "アクセサリ", "巻物"],
+			"rarity_exclude": ["N"],
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1011,
@@ -259,7 +305,17 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "HP+水風自領地数×20"
+	  "effect": "HP+水風自領地数×20",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "owned_land_count_bonus",
+			"elements": ["water", "wind"],
+			"multiplier": 20,
+			"stat": "hp"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1020,
@@ -362,6 +418,40 @@
 				"elements": ["fire", "earth"]
 			  }
 			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 1024,
+	  "name": "スパークボール",
+	  "rarity": "N",
+	  "type": "item",
+	  "item_type": "巻物",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "巻物攻撃[ST40]"
+	},
+	{
+	  "id": 1025,
+	  "name": "スパイクシールド",
+	  "rarity": "S",
+	  "type": "item",
+	  "item_type": "防具",
+	  "cost": {
+		"mp": 40
+	  },
+	  "effect": "反射[1/2]",
+	  "effect_parsed": {
+		"keywords": ["反射[1/2]"],
+		"effects": [
+		  {
+			"effect_type": "reflect_damage",
+			"reflect_ratio": 0.5,
+			"self_damage_ratio": 0.5,
+			"attack_types": ["normal"],
+			"triggers": ["on_damaged"]
 		  }
 		]
 	  }
@@ -872,7 +962,24 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "ST+40；レア度額が使用時、強打"
+	  "effect": "ST+40；レア度額が使用時、強打",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 40
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "user_rarity",
+				"rarities": ["N"]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1057,
@@ -921,7 +1028,23 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "ST=0；HP=80"
+	  "effect": "ST=0；HP=80",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "fixed_stat",
+			"stat": "st",
+			"value": 0,
+			"operation": "set"
+		  },
+		  {
+			"effect_type": "fixed_stat",
+			"stat": "hp",
+			"value": 80,
+			"operation": "set"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1060,
@@ -961,7 +1084,17 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "HP+火地自領地数×20"
+	  "effect": "HP+火地自領地数×20",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "owned_land_count_bonus",
+			"elements": ["fire", "earth"],
+			"multiplier": 20,
+			"stat": "hp"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1062,
@@ -1189,7 +1322,26 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "無効化[巻物]；無効化[自分よりSTの大きなクリーチャー]"
+	  "effect": "無効化[巻物]；無効化[自分よりSTの大きなクリーチャー]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "scroll_attack"
+			}
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "attacker_st_above",
+			  "use_base_st": true
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1072,
@@ -1200,7 +1352,19 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+30；アイテム破壊[武器]"
+	  "effect": "HP+30；アイテム破壊[武器]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "hp": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": ["武器"],
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1073,
@@ -1227,7 +1391,19 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "無効化[通常攻撃の80%]"
+	  "effect": "無効化[通常攻撃の80%]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "grant_skill",
+			"skill": "無効化",
+			"skill_params": {
+			  "nullify_type": "normal_attack",
+			  "reduction_rate": 0.2
+			}
+		  }
+		]
+	  }
 	}
   ]
 }

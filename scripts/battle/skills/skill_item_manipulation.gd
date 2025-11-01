@@ -112,9 +112,18 @@ static func _execute_destroy_item(actor, target, effect: Dictionary) -> void:
 	if not type_matches:
 		return
 	
+	# アイテム名を取得（先に宣言）
 	var actor_name = actor.creature_data.get("name", "?")
 	var target_name = target.creature_data.get("name", "?")
 	var item_name = target_item.get("name", "???")
+	
+	# レア度チェック（グレムリンアイ等）
+	var rarity_exclude = effect.get("rarity_exclude", [])
+	if not rarity_exclude.is_empty():
+		var item_rarity = target_item.get("rarity", "N")
+		if item_rarity in rarity_exclude:
+			print("  【レア度除外】", item_name, " (レア度: ", item_rarity, ") は破壊対象外")
+			return
 	
 	print("【アイテム破壊】", actor_name, " が ", target_name, " の ", item_name, " を破壊")
 	

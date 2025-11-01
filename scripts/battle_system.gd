@@ -9,6 +9,7 @@ signal invasion_completed(success: bool, tile_index: int)
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
+const MovementHelper = preload("res://scripts/game_flow/movement_helper.gd")
 
 # バトル結果
 enum BattleResult {
@@ -271,8 +272,7 @@ func _apply_post_battle_effects(
 			emit_signal("invasion_completed", true, tile_index)
 		
 		BattleResult.DEFENDER_WIN:
-			print("
-【結果】防御成功！侵略側を撃破")
+			print("【結果】防御成功！侵略側を撃破")
 			
 			# 破壊カウンター更新
 			if game_flow_manager_ref:

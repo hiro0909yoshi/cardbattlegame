@@ -27,58 +27,74 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 		return {"is_nullified": false, "reduction_rate": 1.0}
 	
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var nullify_condition = keyword_conditions.get("無効化", {})
+	var nullify_conditions = keyword_conditions.get("無効化", [])
 	
-	if nullify_condition.is_empty():
+	# 無効化条件が配列でない場合（旧形式）は配列に変換
+	if not nullify_conditions is Array:
+		nullify_conditions = [nullify_conditions] if not nullify_conditions.is_empty() else []
+	
+	if nullify_conditions.is_empty():
 		return {"is_nullified": false, "reduction_rate": 1.0}
 	
-	# 条件付き無効化の場合、先に条件をチェック
-	var conditions = nullify_condition.get("conditions", [])
-	if conditions.size() > 0:
-		print("  【無効化条件チェック】条件数: ", conditions.size())
-		var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
-		for condition in conditions:
-			var condition_type = condition.get("condition_type", "")
-			print("    条件タイプ: ", condition_type)
-			if condition_type == "land_level_check":
-				print("    土地レベル: ", context.get("tile_level", 1), 
-					  " ", condition.get("operator", ">="), " ", condition.get("value", 1))
-			if not condition_checker._evaluate_single_condition(condition, context):
-				print("    → 条件不成立、無効化発動せず")
-				return {"is_nullified": false, "reduction_rate": 1.0}
-		print("    → 全条件成立")
+	# 複数の無効化条件をチェック（いずれか1つでも該当すれば無効化）
+	for nullify_condition in nullify_conditions:
+		# 条件付き無効化の場合、先に条件をチェック
+		var conditions = nullify_condition.get("conditions", [])
+		if conditions.size() > 0:
+			print("  【無効化条件チェック】条件数: ", conditions.size())
+			var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
+			var all_conditions_met = true
+			for condition in conditions:
+				var condition_type = condition.get("condition_type", "")
+				print("    条件タイプ: ", condition_type)
+				if condition_type == "land_level_check":
+					print("    土地レベル: ", context.get("tile_level", 1), 
+						  " ", condition.get("operator", ">="), " ", condition.get("value", 1))
+				if not condition_checker._evaluate_single_condition(condition, context):
+					all_conditions_met = false
+					break
+			
+			if not all_conditions_met:
+				print("    → 条件不成立、この無効化はスキップ")
+				continue  # 次の無効化条件へ
+			print("    → 全条件成立")
+		
+		# 無効化タイプ別の判定
+		var nullify_type = nullify_condition.get("nullify_type", "")
+		var is_nullified = false
+		
+		match nullify_type:
+			"element":
+				is_nullified = _check_nullify_element(nullify_condition, attacker)
+			"mhp_above":
+				is_nullified = _check_nullify_mhp_above(nullify_condition, attacker)
+			"mhp_below":
+				is_nullified = _check_nullify_mhp_below(nullify_condition, attacker)
+			"st_below":
+				is_nullified = _check_nullify_st_below(nullify_condition, attacker)
+			"st_above":
+				is_nullified = _check_nullify_st_above(nullify_condition, attacker)
+			"attacker_st_above":
+				is_nullified = _check_nullify_attacker_st_above(nullify_condition, attacker, defender)
+			"all_attacks":
+				is_nullified = true  # 無条件で適用
+			"has_ability":
+				is_nullified = _check_nullify_has_ability(nullify_condition, attacker)
+			"scroll_attack":
+				is_nullified = attacker.is_using_scroll
+			"normal_attack":
+				is_nullified = not attacker.is_using_scroll
+			_:
+				print("【無効化】未知のタイプ: ", nullify_type)
+				continue  # 次の無効化条件へ
+		
+		# いずれか1つでも無効化条件を満たせば無効化成立
+		if is_nullified:
+			var reduction_rate = nullify_condition.get("reduction_rate", 0.0)
+			print("  【無効化成立】タイプ: ", nullify_type)
+			return {"is_nullified": true, "reduction_rate": reduction_rate}
 	
-	# 無効化タイプ別の判定
-	var nullify_type = nullify_condition.get("nullify_type", "")
-	var is_nullified = false
-	
-	match nullify_type:
-		"element":
-			is_nullified = _check_nullify_element(nullify_condition, attacker)
-		"mhp_above":
-			is_nullified = _check_nullify_mhp_above(nullify_condition, attacker)
-		"mhp_below":
-			is_nullified = _check_nullify_mhp_below(nullify_condition, attacker)
-		"st_below":
-			is_nullified = _check_nullify_st_below(nullify_condition, attacker)
-		"st_above":
-			is_nullified = _check_nullify_st_above(nullify_condition, attacker)
-		"all_attacks":
-			is_nullified = true  # 無条件で適用
-		"has_ability":
-			is_nullified = _check_nullify_has_ability(nullify_condition, attacker)
-		"scroll_attack":
-			is_nullified = attacker.is_using_scroll
-		"normal_attack":
-			is_nullified = not attacker.is_using_scroll
-		_:
-			print("【無効化】未知のタイプ: ", nullify_type)
-			return {"is_nullified": false, "reduction_rate": 1.0}
-	
-	if is_nullified:
-		var reduction_rate = nullify_condition.get("reduction_rate", 0.0)
-		return {"is_nullified": true, "reduction_rate": reduction_rate}
-	
+	# どの無効化条件も満たさなかった
 	return {"is_nullified": false, "reduction_rate": 1.0}
 
 ## 属性無効化判定
@@ -132,6 +148,23 @@ func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipa
 	var ability = condition.get("ability", "")
 	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
 	return ability in attacker_keywords
+
+## 攻撃者STが装備者より大きい場合の無効化判定（ラグドール用）
+func _check_nullify_attacker_st_above(condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+	# 攻撃者の基礎ST
+	var attacker_base_ap = attacker.creature_data.get("ap", 0)
+	var attacker_base_up_ap = attacker.creature_data.get("base_up_ap", 0)
+	var attacker_base_st = attacker_base_ap + attacker_base_up_ap
+	
+	# 防御側（装備者）の基礎ST
+	var defender_base_ap = defender.creature_data.get("ap", 0)
+	var defender_base_up_ap = defender.creature_data.get("base_up_ap", 0)
+	var defender_base_st = defender_base_ap + defender_base_up_ap
+	
+	print("  [ラグドール判定] 攻撃者ST:", attacker_base_st, " vs 装備者ST:", defender_base_st)
+	
+	# 攻撃者のSTが装備者より大きい場合に無効化
+	return attacker_base_st > defender_base_st
 
 ## 即死判定を行う
 func check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:

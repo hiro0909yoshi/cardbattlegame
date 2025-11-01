@@ -223,6 +223,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 	var context = {
 		"player_id": participant.player_id,
 		"creature_element": participant.creature_data.get("element", ""),
+		"creature_rarity": participant.creature_data.get("rarity", ""),
 		"enemy_element": enemy_participant.creature_data.get("element", "") if enemy_participant else ""
 	}
 	
@@ -380,6 +381,30 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 					participant.update_current_hp()
 					print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier_hc, " = HP+", bonus_hc)
 			
+			"owned_land_count_bonus":
+				# 自領地数ボーナス（マグマアーマー、ストームアーマー）
+				var elements_olc = effect.get("elements", [])
+				var multiplier_olc = effect.get("multiplier", 1)
+				var stat_olc = effect.get("stat", "hp")
+				var player_id_olc = context.get("player_id", 0)
+				
+				# BoardSystemから自領地数を取得
+				var total_land_count = 0
+				if board_system_ref:
+					var player_lands = board_system_ref.get_player_lands_by_element(player_id_olc)
+					for element in elements_olc:
+						total_land_count += player_lands.get(element, 0)
+				
+				var bonus_olc = total_land_count * multiplier_olc
+				
+				if stat_olc == "ap":
+					participant.current_ap += bonus_olc
+					print("  [自領地数ボーナス] ", elements_olc, ":", total_land_count, "枚 × ", multiplier_olc, " = ST+", bonus_olc)
+				elif stat_olc == "hp":
+					participant.item_bonus_hp += bonus_olc
+					participant.update_current_hp()
+					print("  [自領地数ボーナス] ", elements_olc, ":", total_land_count, "枚 × ", multiplier_olc, " = HP+", bonus_olc)
+			
 			"grant_skill":
 				# スキル付与（例：強打、先制など）
 				var skill_name = effect.get("skill", "")
@@ -482,6 +507,66 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 				else:
 					print("  [属性不一致] ", user_element, " = ", enemy_element, " → ボーナスなし")
 			
+			"fixed_stat":
+				# 固定値設定（ペトリフストーン: ST=0, HP=80）
+				var stat = effect.get("stat", "")
+				var fixed_value = int(effect.get("value", 0))
+				var operation = effect.get("operation", "set")
+				
+				if operation == "set":
+					if stat == "st":
+						# 基本APを固定値に設定
+						participant.creature_data["ap"] = fixed_value
+						participant.current_ap = fixed_value
+						print("  [固定値] ST=", fixed_value)
+					elif stat == "hp":
+						# 基本MHPを固定値に設定（土地ボーナス等はその後加算される）
+						participant.creature_data["mhp"] = fixed_value
+						participant.creature_data["hp"] = fixed_value
+						participant.base_hp = fixed_value
+						participant.base_up_hp = 0  # 合成等の永続ボーナスも無効化
+						participant.update_current_hp()
+						print("  [固定値] HP=", fixed_value)
+			
+			"nullify_item_manipulation":
+				# アイテム破壊・盗み無効（エンジェルケープ）
+				# ability_parsedにeffectを追加するだけでSkillItemManipulationが認識する
+				if not participant.creature_data.has("ability_parsed"):
+					participant.creature_data["ability_parsed"] = {}
+				if not participant.creature_data["ability_parsed"].has("effects"):
+					participant.creature_data["ability_parsed"]["effects"] = []
+				
+				# 既に登録されていなければ追加
+				var already_has = false
+				for existing_effect in participant.creature_data["ability_parsed"]["effects"]:
+					if existing_effect.get("effect_type") == "nullify_item_manipulation":
+						already_has = true
+						break
+				
+				if not already_has:
+					participant.creature_data["ability_parsed"]["effects"].append(effect)
+					print("  アイテム破壊・盗み無効を付与")
+			
+			"destroy_item":
+				# アイテム破壊（リアクトアーマー）
+				# ability_parsedにeffectを追加するだけでSkillItemManipulationが認識する
+				if not participant.creature_data.has("ability_parsed"):
+					participant.creature_data["ability_parsed"] = {}
+				if not participant.creature_data["ability_parsed"].has("effects"):
+					participant.creature_data["ability_parsed"]["effects"] = []
+				
+				# 既に登録されていなければ追加
+				var already_has_destroy = false
+				for existing_effect in participant.creature_data["ability_parsed"]["effects"]:
+					if existing_effect.get("effect_type") == "destroy_item":
+						already_has_destroy = true
+						break
+				
+				if not already_has_destroy:
+					participant.creature_data["ability_parsed"]["effects"].append(effect)
+					var target_types = effect.get("target_types", [])
+					print("  アイテム破壊を付与: ", target_types)
+			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)
 
@@ -546,9 +631,13 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 			if not "無効化" in ability_parsed["keywords"]:
 				ability_parsed["keywords"].append("無効化")
 			
-			# keyword_conditionsに無効化条件を追加
+			# keyword_conditionsに無効化条件を追加（配列形式）
 			if not ability_parsed.has("keyword_conditions"):
 				ability_parsed["keyword_conditions"] = {}
+			
+			# 無効化条件を配列で管理（複数条件対応）
+			if not ability_parsed["keyword_conditions"].has("無効化"):
+				ability_parsed["keyword_conditions"]["無効化"] = []
 			
 			# skill_dataから無効化パラメータを取得
 			var skill_params = _skill_data.get("skill_params", {})
@@ -567,7 +656,8 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 			elif nullify_type == "element":
 				nullify_data["elements"] = skill_params.get("elements", [])
 			
-			ability_parsed["keyword_conditions"]["無効化"] = nullify_data
+			# 配列に追加（上書きしない）
+			ability_parsed["keyword_conditions"]["無効化"].append(nullify_data)
 			
 			print("  無効化スキル付与: ", nullify_type)
 		
