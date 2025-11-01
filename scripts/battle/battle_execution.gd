@@ -189,6 +189,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if not defender_p.is_alive():
 						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 						
+						# 💀 道連れチェック
+						if special_effects.check_death_revenge(defender_p, attacker_p):
+							print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
+						
 						# 🔄 死者復活チェック
 						if card_system_ref:
 							var revive_result = TransformSkill.check_and_apply_revive(
@@ -300,6 +304,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			# 防御側撃破チェック
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
+				
+				# 💀 道連れチェック
+				if special_effects.check_death_revenge(defender_p, attacker_p):
+					print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
 				# 🔄 死者復活チェック
 				if card_system_ref:

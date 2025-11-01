@@ -82,6 +82,20 @@ static func apply(participant: BattleParticipant, _context: Dictionary) -> bool:
 			# 基本STのまま
 			participant.current_ap = base_ap
 			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本ST:", base_ap)
+		"land_count":
+			# 土地数比例
+			var elements = scroll_config.get("elements", [])
+			var multiplier = scroll_config.get("multiplier", 1)
+			var player_lands = _context.get("player_lands", {})
+			
+			var total_count = 0
+			for element in elements:
+				total_count += player_lands.get(element, 0)
+			
+			var calculated_ap = total_count * multiplier
+			participant.current_ap = calculated_ap
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), 
+				  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
 		_:
 			# デフォルトは基本ST
 			participant.current_ap = base_ap

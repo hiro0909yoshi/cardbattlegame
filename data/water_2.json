@@ -76,6 +76,7 @@
 	{
 	  "id": 128,
 	  "name": "ディープシードラゴン",
+	  "race": "ドラゴン",
 	  "rarity": "R",
 	  "type": "creature",
 	  "element": "water",

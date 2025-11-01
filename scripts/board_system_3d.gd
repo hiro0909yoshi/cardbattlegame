@@ -555,3 +555,17 @@ func count_creatures_by_element(player_id: int, element: String) -> int:
 			if creature_element == element:
 				count += 1
 	return count
+
+## 全プレイヤーを対象に特定のクリーチャー名をカウント（敵味方問わず）
+func count_all_creatures_by_name(creature_name: String) -> int:
+	if not tile_data_manager:
+		return 0
+	
+	var count = 0
+	for tile_index in tile_data_manager.tile_nodes:
+		var tile = tile_data_manager.tile_nodes[tile_index]
+		if tile.creature_data != null and not tile.creature_data.is_empty():
+			var tile_creature_name = tile.creature_data.get("name", "")
+			if tile_creature_name == creature_name:
+				count += 1
+	return count

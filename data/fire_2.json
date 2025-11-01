@@ -591,6 +591,7 @@
 	{
 	  "id": 44,
 	  "name": "ボルカニックドラゴン",
+	  "race": "ドラゴン",
 	  "rarity": "R",
 	  "type": "creature",
 	  "element": "fire",

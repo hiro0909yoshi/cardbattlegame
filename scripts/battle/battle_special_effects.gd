@@ -342,3 +342,53 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
+
+## 道連れ効果のチェック（撃破時）
+func check_death_revenge(defeated: BattleParticipant, attacker: BattleParticipant) -> bool:
+	"""
+	撃破された側の道連れ効果をチェックして発動
+	
+	Args:
+		defeated: 撃破されたクリーチャー
+		attacker: 撃破したクリーチャー
+	
+	Returns:
+		bool: 道連れが発動したかどうか
+	"""
+	# 撃破されたクリーチャーが道連れ効果を持つかチェック
+	var items = defeated.creature_data.get("items", [])
+	
+	print("【道連れチェック開始】", defeated.creature_data.get("name", "?"), " アイテム数:", items.size())
+	
+	for item in items:
+		print("  アイテム:", item.get("name", "?"))
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			var trigger = effect.get("trigger", "")
+			
+			# on_death トリガーの即死効果を探す
+			if effect_type == "instant_death" and trigger == "on_death":
+				var target = effect.get("target", "")
+				
+				# 対象が攻撃者の場合のみ処理
+				if target == "attacker":
+					var probability = effect.get("probability", 100)
+					var random_value = randf() * 100.0
+					
+					if random_value <= probability:
+						print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
+							  attacker.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
+						
+						# 攻撃者を即死させる
+						attacker.instant_death_flag = true
+						attacker.base_hp = 0
+						attacker.update_current_hp()
+						return true
+					else:
+						print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+						return false
+	
+	return false

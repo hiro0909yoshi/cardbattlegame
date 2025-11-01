@@ -150,7 +150,15 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "巻物攻撃[ST=基本ST]"
+	  "effect": "巻物攻撃[ST=基本ST]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "base_st"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1008,
@@ -279,7 +287,27 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "巻物攻撃[ST40]；敵と同じクリーチャー配置時、巻物強打"
+	  "effect": "巻物攻撃[ST40]；敵と同じクリーチャー配置時、巻物強打",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "fixed_st",
+			"value": 40
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "巻物強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "same_creature_count_check",
+				"operator": ">=",
+				"value": 2
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1016,
@@ -465,7 +493,16 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "巻物攻撃[ST40]"
+	  "effect": "巻物攻撃[ST40]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "fixed_st",
+			"value": 40
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1025,
@@ -583,6 +620,7 @@
 		"effects": [
 		  {
 			"effect_type": "scroll_attack",
+			"scroll_type": "fixed_st",
 			"value": 30
 		  },
 		  {
@@ -682,7 +720,27 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "巻物攻撃[ST=水風自領地数×10]；巻物強打[火地]"
+	  "effect": "巻物攻撃[ST=水風自領地数×10]；巻物強打[火地]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "land_count",
+			"elements": ["water", "wind"],
+			"multiplier": 10
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "巻物強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": ["fire", "earth"]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 		{
 	  "id": 1036,
@@ -718,7 +776,29 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "巻物攻撃[ST30]；無以外使用時、巻物強打；アイテム破壊・盗み無効"
+	  "effect": "巻物攻撃[ST30]；無以外使用時、巻物強打；アイテム破壊・盗み無効",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "fixed_st",
+			"value": 30
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "巻物強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "user_element",
+				"elements": ["fire", "water", "earth", "wind"]
+			  }
+			]
+		  },
+		  {
+			"effect_type": "nullify_item_manipulation"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1038,
@@ -788,7 +868,19 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "変身[いずれかのドラゴン]"
+	  "effect": "変身[いずれかのドラゴン]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_battle_start",
+			"transform_type": "random_by_race",
+			"race": "ドラゴン",
+			"target": "self",
+			"revert_after_battle": true
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1042,
@@ -894,7 +986,24 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "巻物攻撃[ST50]；変身[スケルトン]"
+	  "effect": "巻物攻撃[ST50]；変身[スケルトン]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "fixed_st",
+			"value": 50
+		  },
+		  {
+			"effect_type": "transform",
+			"trigger": "on_battle_start",
+			"transform_type": "forced",
+			"creature_id": 420,
+			"target": "self",
+			"revert_after_battle": true
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1048,
@@ -905,7 +1014,21 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "ST&HP+20；道連れ"
+	  "effect": "ST&HP+20；道連れ",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 20,
+		  "hp": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "instant_death",
+			"trigger": "on_death",
+			"probability": 100,
+			"target": "attacker"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1049,
@@ -916,7 +1039,27 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "巻物攻撃[ST=火地自領地数×10]；巻物強打[水風]"
+	  "effect": "巻物攻撃[ST=火地自領地数×10]；巻物強打[水風]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "scroll_attack",
+			"scroll_type": "land_count",
+			"elements": ["fire", "earth"],
+			"multiplier": 10
+		  },
+		  {
+			"effect_type": "grant_skill",
+			"skill": "巻物強打",
+			"skill_conditions": [
+			  {
+				"condition_type": "enemy_is_element",
+				"elements": ["water", "wind"]
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1050,

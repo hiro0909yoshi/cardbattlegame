@@ -123,6 +123,18 @@ static func _apply_transform(participant: BattleParticipant, transform_effect: D
 			if opponent:
 				new_creature_id = opponent.creature_data.get("id", -1)
 				print("[ツインスパイク] ", participant.creature_data.get("name", "?"), " → ", opponent.creature_data.get("name", "?"), " (ID:", new_creature_id, ")")
+		
+		"random_by_race":
+			# 特定の種族からランダムに選択（ドラゴンオーブ用）
+			var race = transform_effect.get("race", "")
+			new_creature_id = _get_random_creature_by_race(card_loader, race)
+			print("[種族ランダム変身] ", participant.creature_data.get("name", "?"), " → 種族:", race, " ID:", new_creature_id)
+		
+		"random_by_name_pattern":
+			# 名前パターンからランダムに選択（ドラゴンオーブ用）
+			var name_pattern = transform_effect.get("name_pattern", "")
+			new_creature_id = _get_random_creature_by_name_pattern(card_loader, name_pattern)
+			print("[名前パターン変身] ", participant.creature_data.get("name", "?"), " → パターン:", name_pattern, " ID:", new_creature_id)
 
 	
 	# 新しいクリーチャーデータを取得
@@ -352,3 +364,72 @@ static func _apply_revive(participant: BattleParticipant, new_creature: Dictiona
 	result["revived"] = true
 	result["new_creature_id"] = new_creature.get("id", -1)
 	result["new_creature_name"] = new_name
+
+## 種族でフィルタしてランダムなクリーチャーIDを取得
+##
+## @param card_loader: CardLoaderのインスタンス
+## @param race: 種族名（例: "オーガ", "ゴブリン"）
+## @return ランダムに選ばれたクリーチャーのID
+static func _get_random_creature_by_race(card_loader, race: String) -> int:
+	if card_loader == null:
+		print("[警告] card_loaderがnullです")
+		return -1
+	
+	var all_creatures = card_loader.get_all_creatures()
+	
+	if all_creatures.is_empty():
+		print("[警告] クリーチャーリストが空です")
+		return -1
+	
+	# 指定種族のクリーチャーをフィルタ
+	var filtered_creatures = []
+	for creature in all_creatures:
+		if creature.get("race", "") == race:
+			filtered_creatures.append(creature)
+	
+	if filtered_creatures.is_empty():
+		print("[警告] 種族「", race, "」のクリーチャーが見つかりません")
+		return -1
+	
+	# ランダムに1体選択
+	var random_index = randi() % filtered_creatures.size()
+	var selected_creature = filtered_creatures[random_index]
+	
+	print("  → 種族「", race, "」から", filtered_creatures.size(), "体中、", selected_creature.get("name", "?"), "を選択")
+	
+	return selected_creature.get("id", -1)
+
+## 名前パターンでフィルタしてランダムなクリーチャーIDを取得
+##
+## @param card_loader: CardLoaderのインスタンス
+## @param name_pattern: 名前に含むべき文字列（例: "ドラゴン"）
+## @return ランダムに選ばれたクリーチャーのID
+static func _get_random_creature_by_name_pattern(card_loader, name_pattern: String) -> int:
+	if card_loader == null:
+		print("[警告] card_loaderがnullです")
+		return -1
+	
+	var all_creatures = card_loader.get_all_creatures()
+	
+	if all_creatures.is_empty():
+		print("[警告] クリーチャーリストが空です")
+		return -1
+	
+	# 名前にパターンを含むクリーチャーをフィルタ
+	var filtered_creatures = []
+	for creature in all_creatures:
+		var name = creature.get("name", "")
+		if name_pattern in name:
+			filtered_creatures.append(creature)
+	
+	if filtered_creatures.is_empty():
+		print("[警告] 名前に「", name_pattern, "」を含むクリーチャーが見つかりません")
+		return -1
+	
+	# ランダムに1体選択
+	var random_index = randi() % filtered_creatures.size()
+	var selected_creature = filtered_creatures[random_index]
+	
+	print("  → 名前に「", name_pattern, "」を含む", filtered_creatures.size(), "体中、", selected_creature.get("name", "?"), "を選択")
+	
+	return selected_creature.get("id", -1)

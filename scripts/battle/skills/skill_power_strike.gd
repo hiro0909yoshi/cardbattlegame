@@ -44,7 +44,7 @@ static func apply(participant, context: Dictionary, effect_combat) -> void:
 	
 	# 巻物強打判定（最優先）
 	if "巻物強打" in keywords and participant.is_using_scroll:
-		apply_scroll_power_strike(participant)
+		apply_scroll_power_strike(participant, context)
 		return
 	
 	# 通常の強打判定
@@ -56,11 +56,49 @@ static func apply(participant, context: Dictionary, effect_combat) -> void:
 ## 無条件でAP×1.5
 ##
 ## @param participant バトル参加者
-static func apply_scroll_power_strike(participant) -> void:
+static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> bool:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	# 巻物強打効果を検索
+	print("【巻物強打チェック】effects数: ", effects.size())
+	for effect in effects:
+		print("  effect_type: ", effect.get("effect_type", ""))
+		if effect.get("effect_type") == "scroll_power_strike":
+			print("【巻物強打効果発見】")
+			# 条件チェック
+			var conditions = effect.get("conditions", [])
+			print("  条件数: ", conditions.size())
+			var all_conditions_met = true
+			
+			if conditions.size() > 0:
+				var checker = load("res://scripts/skills/condition_checker.gd").new()
+				for condition in conditions:
+					print("  条件評価: ", condition.get("condition_type", ""))
+					var result = checker._evaluate_single_condition(condition, context)
+					print("    結果: ", result)
+					if not result:
+						all_conditions_met = false
+						break
+			
+			# 条件を満たした場合のみAP上昇
+			if all_conditions_met:
+				var original_ap = participant.current_ap
+				var multiplier = effect.get("multiplier", 1.5)
+				participant.current_ap = int(participant.current_ap * multiplier)
+				print("【巻物強打発動】", participant.creature_data.get("name", "?"), 
+					  " AP: ", original_ap, " → ", participant.current_ap, " (×", multiplier, ")")
+				return true
+			else:
+				print("【巻物強打不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の巻物攻撃")
+				return false
+	
+	# 巻物強打効果が見つからない場合（無条件の巻物強打）
 	var original_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * 1.5)
-	print("【巻物強打】", participant.creature_data.get("name", "?"), 
-		  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5)")
+	print("【巻物強打発動】", participant.creature_data.get("name", "?"), 
+		  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
+	return true
 
 ## 通常の強打を適用
 ##

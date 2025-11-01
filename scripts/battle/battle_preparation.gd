@@ -156,10 +156,19 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
 	if card_system_ref:
+		# CardLoaderのグローバル参照を取得
+		# @GlobalScope.CardLoader は Autoload として自動的に利用可能
+		var card_loader_instance = CardLoader if typeof(CardLoader) != TYPE_NIL else null
+		
+		if card_loader_instance != null and card_loader_instance.has_method("get_all_creatures"):
+			print("【変身】CardLoader取得成功、全カード数: ", card_loader_instance.all_cards.size())
+		else:
+			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
+		
 		transform_result = TransformSkill.process_transform_effects(
 			attacker, 
 			defender, 
-			CardLoader, 
+			card_loader_instance, 
 			"on_battle_start"
 		)
 	
@@ -420,16 +429,23 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 				elif not condition.is_empty():
 					conditions_to_check = [condition]
 				
+				# 巻物強打の場合は条件をスキップ（バトル時に評価）
+				var skip_condition_check = (skill_name == "巻物強打")
+				
 				# 全ての条件をチェック（AND条件）
 				var all_conditions_met = true
-				for cond in conditions_to_check:
-					if not check_skill_grant_condition(participant, cond, context):
-						all_conditions_met = false
-						break
+				if not skip_condition_check:
+					for cond in conditions_to_check:
+						if not check_skill_grant_condition(participant, cond, context):
+							all_conditions_met = false
+							break
 				
 				if all_conditions_met:
 					grant_skill_to_participant(participant, skill_name, effect)
-					print("  スキル付与: ", skill_name)
+					if skip_condition_check:
+						print("  スキル付与: ", skill_name, " (条件はバトル時に評価)")
+					else:
+						print("  スキル付与: ", skill_name)
 			
 			"st_drain":
 				# STドレイン（サキュバスリング）
@@ -612,6 +628,40 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 					participant.creature_data["ability_parsed"]["effects"].append(effect)
 					print("  変身効果を付与: ", effect.get("transform_type", ""))
 			
+			"instant_death":
+				# 道連れなどの即死効果は戦闘中に処理されるため、ここでは何もしない
+				pass
+			
+			"scroll_attack":
+				# 巻物攻撃設定をability_parsedに追加
+				if not participant.creature_data.has("ability_parsed"):
+					participant.creature_data["ability_parsed"] = {}
+				if not participant.creature_data["ability_parsed"].has("keywords"):
+					participant.creature_data["ability_parsed"]["keywords"] = []
+				if not participant.creature_data["ability_parsed"].has("keyword_conditions"):
+					participant.creature_data["ability_parsed"]["keyword_conditions"] = {}
+				
+				# 巻物攻撃キーワードを追加
+				if not "巻物攻撃" in participant.creature_data["ability_parsed"]["keywords"]:
+					participant.creature_data["ability_parsed"]["keywords"].append("巻物攻撃")
+				
+				# 巻物攻撃の設定を追加
+				var scroll_type = effect.get("scroll_type", "base_st")
+				var scroll_config = {"scroll_type": scroll_type}
+				
+				match scroll_type:
+					"fixed_st":
+						scroll_config["value"] = effect.get("value", 0)
+						print("  巻物攻撃を付与: ST固定", scroll_config["value"])
+					"base_st":
+						print("  巻物攻撃を付与: ST=基本ST")
+					"land_count":
+						scroll_config["elements"] = effect.get("elements", [])
+						scroll_config["multiplier"] = effect.get("multiplier", 1)
+						print("  巻物攻撃を付与: ST=土地数×", scroll_config["multiplier"], " (", scroll_config["elements"], ")")
+				
+				participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
+			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)
 
@@ -632,6 +682,37 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 		
 		"2回攻撃":
 			DoubleAttackSkill.grant_skill(participant)
+		
+		"巻物強打":
+			# 巻物強打スキルを付与
+			if not participant.creature_data.has("ability_parsed"):
+				participant.creature_data["ability_parsed"] = {}
+			
+			var ability_parsed = participant.creature_data["ability_parsed"]
+			
+			# キーワードに追加
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			
+			if not "巻物強打" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("巻物強打")
+			
+			# effectsにも巻物強打効果を追加
+			if not ability_parsed.has("effects"):
+				ability_parsed["effects"] = []
+			
+			# skill_conditionsから発動条件を取得（なければ無条件）
+			var skill_conditions = _skill_data.get("skill_conditions", [])
+			
+			# 巻物強打効果を構築
+			var scroll_power_strike_effect = {
+				"effect_type": "scroll_power_strike",
+				"multiplier": 1.5,
+				"conditions": skill_conditions  # スキルの発動条件を設定
+			}
+			
+			ability_parsed["effects"].append(scroll_power_strike_effect)
+			print("  巻物強打スキル付与（条件数: ", skill_conditions.size(), "）")
 		
 		"強打":
 			# 強打スキルを付与（SkillPowerStrikeモジュールを使用）

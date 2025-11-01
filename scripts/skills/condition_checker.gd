@@ -226,6 +226,37 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			var creature_rarity = context.get("creature_rarity", "")
 			var target_rarities = condition.get("rarities", [])
 			return creature_rarity in target_rarities
+		
+		# 同名クリーチャー数判定（シャドウブレイズ等）
+		"same_creature_count_check":
+			var enemy_name = context.get("enemy_name", "")
+			var board_system = context.get("board_system", null)
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 2)
+			
+			print("【same_creature_count_check】")
+			print("  enemy_name: ", enemy_name)
+			print("  board_system: ", board_system != null)
+			print("  operator: ", operator, ", value: ", value)
+			
+			if enemy_name == "" or not board_system:
+				print("  → 条件不足でfalse")
+				return false
+			
+			var count = board_system.count_all_creatures_by_name(enemy_name)
+			print("  盤面のカウント: ", count)
+			
+			var result = false
+			match operator:
+				"<=": result = count <= value
+				">=": result = count >= value
+				"<": result = count < value
+				">": result = count > value
+				"==": result = count == value
+				_: result = false
+			
+			print("  判定: ", count, " ", operator, " ", value, " = ", result)
+			return result
 			
 		_:
 			push_warning("未実装の条件タイプ: " + cond_type)
@@ -323,6 +354,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"creature_mhp": attacker_data.get("mhp", 0),
 		"creature_element": attacker_data.get("element", ""),
 		"enemy_element": defender_data.get("element", ""),
+		"enemy_name": game_state.get("enemy_name", defender_data.get("name", "")),
 		"enemy_st": defender_data.get("st", 0),
 		"enemy_mhp": game_state.get("enemy_mhp_override", defender_data.get("mhp", 0)),
 		

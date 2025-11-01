@@ -94,6 +94,7 @@
 	{
 	  "id": 228,
 	  "name": "ドラゴンゾンビ",
+	  "race": "ドラゴン",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",
@@ -166,6 +167,7 @@
 	{
 	  "id": 231,
 	  "name": "ハードロックドラゴン",
+	  "race": "ドラゴン",
 	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",

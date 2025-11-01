@@ -54,6 +54,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"game_flow_manager": game_flow_manager_ref,
 			"is_placed_on_tile": false,  # 侵略側は配置されていない
 			"enemy_mhp_override": defender.get_max_hp(),  # 計算済みMHPを渡す
+			"enemy_name": defender.creature_data.get("name", ""),  # 敵の名前
 			"opponent": defender,  # スクイドマントルチェック用
 			"is_attacker": true  # 攻撃側フラグ
 		}
@@ -75,6 +76,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			"is_attacker": false,  # 防御側
 			"is_placed_on_tile": true,  # 防御側は配置されている
 			"enemy_mhp_override": attacker.get_max_hp(),  # 計算済みMHPを渡す
+			"enemy_name": attacker.creature_data.get("name", ""),  # 敵の名前
 			"opponent": attacker,  # スクイドマントルチェック用
 			"is_defender": true  # 防御側フラグ
 		}
