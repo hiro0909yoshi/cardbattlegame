@@ -67,10 +67,11 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 	const ATTACKER_WIN = 0
 	const DEFENDER_WIN = 1
 	const ATTACKER_SURVIVED = 2
+	const BOTH_DEFEATED = 3
 	
-	# 両方死亡 → 防御側勝利（土地は守られる）
+	# 両方死亡 → 相打ち（土地は無所有になる）
 	if not attacker.is_alive() and not defender.is_alive():
-		return DEFENDER_WIN
+		return BOTH_DEFEATED
 	elif not defender.is_alive():
 		return ATTACKER_WIN
 	elif not attacker.is_alive():

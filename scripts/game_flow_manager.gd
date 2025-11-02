@@ -43,6 +43,9 @@ var ui_manager: UIManager
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
 
+# スペル効果システム
+var spell_draw: SpellDraw
+
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
@@ -92,6 +95,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	battle_system = bt_system
 	special_tile_system = st_system
 	
+	# SpellDrawの初期化
+	spell_draw = SpellDraw.new()
+	spell_draw.setup(card_system)
+	
 	# UIManagerに自身の参照を渡す
 	if ui_manager:
 		ui_manager.game_flow_manager_ref = self
@@ -126,7 +133,7 @@ func start_turn():
 		ui_manager.hide_land_command_button()
 	
 	# カードドロー処理（常に1枚引く）
-	var drawn = card_system.draw_card_for_player(current_player.id)
+	var drawn = spell_draw.draw_one(current_player.id)
 	if not drawn.is_empty() and current_player.id == 0:
 		await get_tree().create_timer(0.1).timeout
 	

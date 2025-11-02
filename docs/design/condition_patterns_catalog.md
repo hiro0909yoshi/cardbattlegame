@@ -103,8 +103,8 @@
 | ステータス条件 | 6種類 | 中 |
 | アイテム条件 | 7種類 | 中 |
 | バトル状況条件 | 9種類 | 高 |
-| 数値カウント条件 | 8種類 | 高 |
-| **合計** | **51種類** | - |
+| 数値カウント条件 | 9種類 | 高 |
+| **合計** | **52種類** | - |
 
 ---
 
@@ -872,6 +872,34 @@ var support_creatures = support_dict.values()
 
 ---
 
+### 6-9. 連鎖数取得（属性別土地所有数）
+```gdscript
+var battle_tile_index = context.get("battle_tile_index", -1)
+var player_id = context.get("player_id", 0)
+var tile_data_manager = board_system_ref.tile_data_manager
+var chain_count = tile_data_manager.get_element_chain_count(battle_tile_index, player_id)
+```
+**使用箇所**: 1箇所
+- battle_preparation.gd: `apply_item_effects()` (chain_count_st_bonus)
+
+**対象アイテム**:
+- チェーンソー (1034): ST+戦闘地の連鎖数×20
+
+**仕組み**:
+- 戦闘が行われているタイルの属性を取得
+- そのプレイヤーが所有する「同じ属性の土地」の総数をカウント
+- 最大4個まで（通行料計算と同じロジック）
+
+**例**:
+- 戦闘地が火属性
+- プレイヤーが火属性の土地を3個所有
+- → 連鎖数 = 3
+- → チェーンソーのボーナス = 3 × 20 = ST+60
+
+**注**: 防御側が使用する場合、防御側の所有する土地でカウント
+
+---
+
 ## 7️⃣ 応援スキル専用条件パターン
 
 ### 7-1. 対象範囲チェック
@@ -998,6 +1026,7 @@ match effect_type:
 24. `nullify_reflect` - 反射無効
 25. `nullify_item_manipulation` - アイテム操作無効
 26. `dice_condition_bonus` - ダイス条件ボーナス
+27. `chain_count_st_bonus` - 連鎖数STボーナス
 
 ---
 
@@ -1270,5 +1299,5 @@ class ItemChecker:
 ---
 
 **作成者**: Claude  
-**バージョン**: 1.5（巻物アイテム・同名クリーチャー数条件追加）  
-**最終更新**: 2025-11-02
+**バージョン**: 1.6（連鎖数STボーナス追加）  
+**最終更新**: 2025-11-03

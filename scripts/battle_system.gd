@@ -16,7 +16,8 @@ const SkillItemReturn = preload("res://scripts/battle/skills/skill_item_return.g
 enum BattleResult {
 	ATTACKER_WIN,           # 侵略成功（土地獲得）
 	DEFENDER_WIN,           # 防御成功（侵略側カード破壊）
-	ATTACKER_SURVIVED       # 侵略失敗（侵略側カード手札に戻る）
+	ATTACKER_SURVIVED,      # 侵略失敗（侵略側カード手札に戻る）
+	BOTH_DEFEATED           # 相打ち（土地は無所有になる）
 }
 
 # 属性相性テーブル（火→風→土→水→火）
@@ -132,8 +133,11 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1) -> void:
 	print("========== バトル開始 ==========")
 	
+	# バトルタイルのインデックスを取得
+	var battle_tile_index = tile_info.get("index", -1)
+	
 	# 1. 両者の準備
-	var participants = battle_preparation.prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item)
+	var participants = battle_preparation.prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item, battle_tile_index)
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	var battle_result = participants.get("transform_result", {})
@@ -358,6 +362,35 @@ func _apply_post_battle_effects(
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			battle_special_effects.update_defender_hp(tile_info, defender)
+			
+			emit_signal("invasion_completed", false, tile_index)
+		
+		BattleResult.BOTH_DEFEATED:
+			print("【結果】相打ち！土地は無所有になります")
+			
+			# 破壊カウンター更新（両方破壊）
+			if game_flow_manager_ref:
+				game_flow_manager_ref.on_creature_destroyed()
+				game_flow_manager_ref.on_creature_destroyed()
+			
+			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			_apply_after_battle_permanent_changes(attacker)
+			_apply_after_battle_permanent_changes(defender)
+			
+			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
+			if battle_result.get("attacker_original", {}).has("name"):
+				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
+				print("[変身復帰] 攻撃側が元に戻りました")
+			if battle_result.get("defender_original", {}).has("name"):
+				TransformSkill.revert_transform(defender, battle_result["defender_original"])
+				print("[変身復帰] 防御側が元に戻りました")
+			
+			# 土地を無所有にする（クリーチャーを削除）
+			board_system_ref.set_tile_owner(tile_index, -1)  # 無所有
+			board_system_ref.remove_creature(tile_index)
+			
+			# 攻撃側カードは破壊される（手札に戻らない）
+			print("[相打ち] 両方のクリーチャーが破壊されました")
 			
 			emit_signal("invasion_completed", false, tile_index)
 	

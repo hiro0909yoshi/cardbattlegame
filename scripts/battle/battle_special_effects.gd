@@ -2,7 +2,7 @@ extends Node
 class_name BattleSpecialEffects
 
 # バトル特殊効果処理
-# 即死、無効化、再生などの特殊スキル処理を担当
+# 即死、無効化、再生、死亡時能力などの特殊スキル処理を担当
 
 var board_system_ref = null
 

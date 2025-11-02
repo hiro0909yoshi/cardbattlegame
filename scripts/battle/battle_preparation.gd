@@ -21,7 +21,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	player_system_ref = player_system
 
 ## 両者のBattleParticipantを準備
-func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> Dictionary:
+func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, battle_tile_index: int = -1) -> Dictionary:
 	# 侵略側の準備（土地ボーナスなし）
 	var attacker_base_hp = card_data.get("hp", 0)
 	var attacker_land_bonus = 0  # 侵略側は土地ボーナスなし
@@ -97,14 +97,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		if not attacker.creature_data.has("items"):
 			attacker.creature_data["items"] = []
 		attacker.creature_data["items"].append(attacker_item)
-		apply_item_effects(attacker, attacker_item, defender)
+		apply_item_effects(attacker, attacker_item, defender, battle_tile_index)
 	
 	if not defender_item.is_empty():
 		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
 		if not defender.creature_data.has("items"):
 			defender.creature_data["items"] = []
 		defender.creature_data["items"].append(defender_item)
-		apply_item_effects(defender, defender_item, attacker)
+		apply_item_effects(defender, defender_item, attacker, battle_tile_index)
 	
 	# アイテムクリーチャー・バフ処理
 	# リビングアーマー（ID: 438）: クリーチャーとして戦闘時ST+50
@@ -227,7 +227,7 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 			  " temporary_bonus_ap:", participant.temporary_bonus_ap)
 
 ## アイテムまたは援護クリーチャーの効果を適用
-func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant) -> void:
+func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant, battle_tile_index: int = -1) -> void:
 	var item_type = item_data.get("type", "")
 	print("[アイテム効果適用] ", item_data.get("name", "???"), " (type: ", item_type, ")")
 	
@@ -236,7 +236,8 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		"player_id": participant.player_id,
 		"creature_element": participant.creature_data.get("element", ""),
 		"creature_rarity": participant.creature_data.get("rarity", ""),
-		"enemy_element": enemy_participant.creature_data.get("element", "") if enemy_participant else ""
+		"enemy_element": enemy_participant.creature_data.get("element", "") if enemy_participant else "",
+		"battle_tile_index": battle_tile_index
 	}
 	
 	# 援護クリーチャーの場合はAP/HPのみ加算
@@ -672,6 +673,23 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 			"revenge_mhp_damage":
 				# 雪辱効果は攻撃成功時に処理されるため、ここでは何もしない
 				pass
+			
+			"chain_count_st_bonus":
+				# 連鎖数に応じたSTボーナス（チェーンソー）
+				var multiplier = effect.get("multiplier", 20)
+				var tile_index = context.get("battle_tile_index", -1)
+				var player_id = context.get("player_id", 0)
+				
+				# 連鎖数を取得
+				var chain_count = 0
+				if tile_index >= 0 and board_system_ref:
+					var tile_data_manager = board_system_ref.tile_data_manager
+					if tile_data_manager:
+						chain_count = tile_data_manager.get_element_chain_count(tile_index, player_id)
+				
+				var bonus = chain_count * multiplier
+				participant.current_ap += bonus
+				print("  [連鎖数STボーナス] 連鎖:", chain_count, " × ", multiplier, " = ST+", bonus)
 			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)

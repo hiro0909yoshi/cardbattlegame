@@ -721,7 +721,15 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+戦闘地の連鎖数×20"
+	  "effect": "ST+戦闘地の連鎖数×20",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "chain_count_st_bonus",
+			"multiplier": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1035,

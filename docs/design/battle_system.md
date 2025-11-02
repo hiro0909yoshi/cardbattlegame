@@ -320,35 +320,108 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 
 ## バトル結果判定
 
-### 勝敗決定ロジック
+### 結果の種類
 
-```
-1. 先制攻撃: 攻撃側AP >= 防御側HP?
-   → YES: 攻撃側勝利
-   → NO: 次へ
+バトル結果は以下の4種類に分類される：
 
-2. 反撃: 防御側ST >= 攻撃側HP?
-   → YES: 防御側勝利
-   → NO: 両者生存 → 攻撃側勝利（土地奪取）
-```
+| 結果 | enum値 | 説明 |
+|------|--------|------|
+| **侵略成功** | `ATTACKER_WIN` | 防御側のみ死亡 → 攻撃側が土地を獲得 |
+| **防御成功** | `DEFENDER_WIN` | 攻撃側のみ死亡 → 攻撃側カードは破壊 |
+| **侵略失敗** | `ATTACKER_SURVIVED` | 両方生存 → 攻撃側カードは手札に戻る |
+| **相打ち** | `BOTH_DEFEATED` | 両方死亡 → 土地は無所有になる |
 
-### 実装
+### 判定ロジック
 
 ```gdscript
-func _resolve_battle_result(attacker: BattleParticipant, defender: BattleParticipant) -> String:
-	if not attacker.is_alive():
-		return "defender_win"
+func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticipant) -> int:
+	# 1. 両方死亡 → 相打ち（土地は無所有）
+	if not attacker.is_alive() and not defender.is_alive():
+		return BOTH_DEFEATED
+	
+	# 2. 防御側のみ死亡 → 攻撃側勝利
 	elif not defender.is_alive():
-		return "attacker_win"
+		return ATTACKER_WIN
+	
+	# 3. 攻撃側のみ死亡 → 防御側勝利
+	elif not attacker.is_alive():
+		return DEFENDER_WIN
+	
+	# 4. 両方生存 → 攻撃側生還
 	else:
-		# 両者生存 → 攻撃側勝利
-		return "attacker_win"
+		return ATTACKER_SURVIVED
 ```
+
+### 死亡時効果（道連れ・雪辱）
+
+**重要**: バトル結果判定の前に、死亡時効果が発動する。
+
+#### 発動タイミング
+
+```
+攻撃実行
+  ↓
+ダメージ処理
+  ↓
+即死判定
+  ↓
+【撃破判定】← ここで死亡時効果をチェック
+  ├─ 道連れ（instant_death）
+  └─ 雪辱（revenge_mhp_damage）
+  ↓
+死者復活チェック
+  ↓
+バトル結果判定 ← ここで最終的な生存状況を判定
+```
+
+#### 死亡時効果の種類
+
+| 効果 | effect_type | 説明 |
+|------|-------------|------|
+| **道連れ** | `instant_death` | 使用者が死亡時、相手を即死させる（確率判定あり） |
+| **雪辱** | `revenge_mhp_damage` | 使用者が死亡時、相手のMHPに直接ダメージ |
+
+詳細は **[skills/on_death_effects.md](skills/on_death_effects.md)** を参照。
+
+#### 相打ちの発生パターン
+
+1. **道連れによる相打ち**
+   - A攻撃 → B死亡 → 道連れ発動 → A死亡 → 相打ち
+
+2. **雪辱による相打ち**
+   - A攻撃 → B死亡 → 雪辱発動 → AのMHP-40 → A即死 → 相打ち
+
+3. **反射による相打ち**
+   - A攻撃 → B死亡 → 反射ダメージ → A死亡 → 相打ち
 
 ### バトル後処理
 
-1. **再生スキル適用**（生存者のみ）
-2. **土地奪取** or **カード破壊** or **手札復帰**
+各結果に応じた処理：
+
+#### ATTACKER_WIN（侵略成功）
+1. 破壊カウンター更新
+2. 攻撃側の永続バフ適用
+3. 土地所有権を攻撃側に変更
+4. 攻撃側クリーチャーを配置（残りHP反映）
+5. 土地レベルアップ効果（シルバープロウ）
+
+#### DEFENDER_WIN（防御成功）
+1. 破壊カウンター更新
+2. 防御側の永続バフ適用
+3. 防御側クリーチャーのHP更新
+4. 土地レベルアップ効果（シルバープロウ）
+5. 攻撃側カードは破壊（手札に戻らない）
+
+#### ATTACKER_SURVIVED（侵略失敗）
+1. 攻撃側カードを手札に戻す（HP全回復）
+2. 防御側クリーチャーのHP更新
+
+#### BOTH_DEFEATED（相打ち）
+1. 破壊カウンター更新×2
+2. 両方の永続バフ適用
+3. 土地を無所有にする（owner = -1）
+4. クリーチャーを削除
+5. 両方のカードは破壊（手札に戻らない）
 3. **クリーチャーHP更新**
 
 ---
