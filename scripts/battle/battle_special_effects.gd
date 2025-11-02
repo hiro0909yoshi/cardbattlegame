@@ -5,9 +5,11 @@ class_name BattleSpecialEffects
 # 即死、無効化、再生、死亡時能力などの特殊スキル処理を担当
 
 var board_system_ref = null
+var spell_draw_ref: SpellDraw = null
 
-func setup_systems(board_system):
+func setup_systems(board_system, spell_draw = null):
 	board_system_ref = board_system
+	spell_draw_ref = spell_draw
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -414,6 +416,19 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 							result["death_revenge_activated"] = true
 						else:
 							print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+				
+				"draw_cards_on_death":  # トゥームストーン（手札補充）
+					if spell_draw_ref:
+						var target_hand_size = effect.get("target_hand_size", 6)
+						var player_id = defeated.player_id
+						print("【トゥームストーン発動】", defeated.creature_data.get("name", "?"), 
+							  " → プレイヤー", player_id + 1, "が手札", target_hand_size, "枚まで補充")
+						var drawn_cards = spell_draw_ref.draw_until(player_id, target_hand_size)
+						if not result.has("draw_cards_activated"):
+							result["draw_cards_activated"] = false
+						result["draw_cards_activated"] = drawn_cards.size() > 0
+					else:
+						push_error("SpellDrawの参照が設定されていません")
 				
 				"revenge_mhp_damage":  # 雪辱
 					# 相手が生存している場合のみ発動

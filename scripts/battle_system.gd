@@ -68,7 +68,12 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	battle_preparation.setup_systems(board_system, card_system, player_system)
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
-	battle_special_effects.setup_systems(board_system)
+	
+	# SpellDrawの参照を取得してBattleSpecialEffectsに渡す
+	var spell_draw = null
+	if game_flow_manager_ref and game_flow_manager_ref.spell_draw:
+		spell_draw = game_flow_manager_ref.spell_draw
+	battle_special_effects.setup_systems(board_system, spell_draw)
 	
 	# アイテム復帰スキルの初期化
 	SkillItemReturn.setup_systems(card_system)

@@ -829,7 +829,20 @@
 	  "cost": {
 		"mp": 0
 	  },
-	  "effect": "自破壊時、手札6枚までカードを引く；アイテム破壊・盗み無効"
+	  "effect": "自破壊時、手札6枚までカードを引く；アイテム破壊・盗み無効",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "draw_cards_on_death",
+			"trigger": "on_death",
+			"target_hand_size": 6
+		  },
+		  {
+			"effect_type": "nullify_item_manipulation",
+			"triggers": ["before_battle"]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1039,
