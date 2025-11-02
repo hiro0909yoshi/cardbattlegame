@@ -6,10 +6,12 @@ class_name BattleSpecialEffects
 
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
+var spell_magic_ref: SpellMagic = null
 
-func setup_systems(board_system, spell_draw = null):
+func setup_systems(board_system, spell_draw = null, spell_magic = null):
 	board_system_ref = board_system
 	spell_draw_ref = spell_draw
+	spell_magic_ref = spell_magic
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -430,6 +432,27 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 					else:
 						push_error("SpellDrawの参照が設定されていません")
 				
+				"legacy_magic":  # ゴールドグース（遺産）
+					if spell_magic_ref:
+						var multiplier = effect.get("multiplier", 7)
+						var player_id = defeated.player_id
+						
+						# 死亡後はget_max_hp()がマイナスになる可能性があるため、
+						# 元のカードデータからMHPを計算
+						var base_hp = defeated.creature_data.get("hp", 0)
+						var base_up_hp = defeated.creature_data.get("base_up_hp", 0)
+						var mhp = base_hp + base_up_hp
+						
+						var amount = mhp * multiplier
+						print("【遺産発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), 
+							  " → プレイヤー", player_id + 1, "が", amount, "G獲得（MHP", mhp, "×", multiplier, "）")
+						spell_magic_ref.add_magic(player_id, amount)
+						if not result.has("legacy_magic_activated"):
+							result["legacy_magic_activated"] = false
+						result["legacy_magic_activated"] = true
+					else:
+						push_error("SpellMagicの参照が設定されていません")
+				
 				"revenge_mhp_damage":  # 雪辱
 					# 相手が生存している場合のみ発動
 					if opponent.is_alive():
@@ -454,3 +477,65 @@ func check_death_revenge(defeated: BattleParticipant, attacker: BattleParticipan
 	"""
 	var result = check_on_death_effects(defeated, attacker)
 	return result["death_revenge_activated"]
+
+## バトル後の魔力獲得効果をチェック
+func check_post_battle_magic_effects(winner: BattleParticipant, loser: BattleParticipant, 
+									  damage_taken_by_winner: int) -> Dictionary:
+	"""
+	バトル後の魔力獲得効果をチェックして発動
+	
+	Args:
+		winner: 勝利したクリーチャー
+		loser: 敗北したクリーチャー
+		damage_taken_by_winner: 勝者が受けたダメージ
+	
+	Returns:
+		Dictionary: {
+			"magic_gained": int  # 獲得した魔力の合計
+		}
+	"""
+	var result = {
+		"magic_gained": 0
+	}
+	
+	if not spell_magic_ref:
+		return result
+	
+	var items = winner.creature_data.get("items", [])
+	
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			var trigger = effect.get("trigger", "")
+			
+			# after_battleトリガーの効果のみ処理
+			if trigger != "after_battle":
+				continue
+			
+			match effect_type:
+				"magic_on_enemy_survive":  # ゴールドハンマー
+					# 条件: 攻撃側が勝利 & 敵が生存
+					var condition = effect.get("condition", "")
+					if condition == "attacker_win_enemy_alive":
+						if winner.stance == "attacker" and loser.is_alive():
+							var amount = effect.get("amount", 200)
+							print("【ゴールドハンマー発動】", winner.creature_data.get("name", "?"), 
+								  " → プレイヤー", winner.player_id + 1, "が", amount, "G獲得")
+							spell_magic_ref.add_magic(winner.player_id, amount)
+							result["magic_gained"] += amount
+				
+				"magic_from_damage":  # ゼラチンアーマー
+					# 受けたダメージ × 倍率
+					if damage_taken_by_winner > 0:
+						var multiplier = effect.get("multiplier", 5)
+						var amount = damage_taken_by_winner * multiplier
+						print("【ゼラチンアーマー発動】", winner.creature_data.get("name", "?"), 
+							  " → プレイヤー", winner.player_id + 1, "が", amount, "G獲得（ダメージ", 
+							  damage_taken_by_winner, "×", multiplier, "）")
+						spell_magic_ref.add_magic(winner.player_id, amount)
+						result["magic_gained"] += amount
+	
+	return result

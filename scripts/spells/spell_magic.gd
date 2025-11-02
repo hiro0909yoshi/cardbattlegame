@@ -1,0 +1,114 @@
+extends Node
+class_name SpellMagic
+
+## 魔力操作の汎用化モジュール
+## バトル外・バトル中のマップ効果として使用する
+
+var player_system_ref: PlayerSystem = null
+
+func setup(player_system: PlayerSystem):
+	player_system_ref = player_system
+	print("SpellMagic: セットアップ完了")
+
+## 魔力増加
+func add_magic(player_id: int, amount: int) -> void:
+	"""
+	魔力を増やす
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	  amount: 増加量
+	"""
+	if not player_system_ref:
+		push_error("SpellMagic: PlayerSystemが設定されていません")
+		return
+	
+	if amount <= 0:
+		print("[魔力増加] プレイヤー", player_id + 1, "は0以下の増加量のため何もしません")
+		return
+	
+	if player_id < 0 or player_id >= player_system_ref.players.size():
+		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		return
+	
+	var player = player_system_ref.players[player_id]
+	if not player:
+		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		return
+	
+	player.magic_power += amount
+	print("[魔力増加] プレイヤー", player_id + 1, " +", amount, "G → 合計:", player.magic_power, "G")
+
+## 魔力減少
+func reduce_magic(player_id: int, amount: int) -> void:
+	"""
+	魔力を減らす
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	  amount: 減少量
+	"""
+	if not player_system_ref:
+		push_error("SpellMagic: PlayerSystemが設定されていません")
+		return
+	
+	if amount <= 0:
+		print("[魔力減少] プレイヤー", player_id + 1, "は0以下の減少量のため何もしません")
+		return
+	
+	if player_id < 0 or player_id >= player_system_ref.players.size():
+		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		return
+	
+	var player = player_system_ref.players[player_id]
+	if not player:
+		push_error("SpellMagic: 無効なプレイヤーID: ", player_id)
+		return
+	
+	# 0未満にならないようにする
+	var actual_reduction = min(amount, player.magic_power)
+	player.magic_power -= actual_reduction
+	print("[魔力減少] プレイヤー", player_id + 1, " -", actual_reduction, "G → 合計:", player.magic_power, "G")
+
+## 魔力奪取
+func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
+	"""
+	魔力を奪う（相手から自分へ）
+	
+	引数:
+	  from_player_id: 奪われるプレイヤーID
+	  to_player_id: 奪うプレイヤーID
+	  amount: 奪取量
+	
+	戻り値:
+	  実際に奪った量（相手の魔力が足りない場合は少なくなる）
+	"""
+	if not player_system_ref:
+		push_error("SpellMagic: PlayerSystemが設定されていません")
+		return 0
+	
+	if amount <= 0:
+		print("[魔力奪取] 0以下の奪取量のため何もしません")
+		return 0
+	
+	if from_player_id < 0 or from_player_id >= player_system_ref.players.size():
+		push_error("SpellMagic: 無効なプレイヤーID: ", from_player_id)
+		return 0
+	
+	if to_player_id < 0 or to_player_id >= player_system_ref.players.size():
+		push_error("SpellMagic: 無効なプレイヤーID: ", to_player_id)
+		return 0
+	
+	var from_player = player_system_ref.players[from_player_id]
+	var to_player = player_system_ref.players[to_player_id]
+	
+	# 実際に奪える量を計算
+	var actual_amount = min(amount, from_player.magic_power)
+	
+	from_player.magic_power -= actual_amount
+	to_player.magic_power += actual_amount
+	
+	print("[魔力奪取] プレイヤー", from_player_id + 1, " -", actual_amount, "G → プレイヤー", 
+		  to_player_id + 1, " +", actual_amount, "G")
+	
+	return actual_amount

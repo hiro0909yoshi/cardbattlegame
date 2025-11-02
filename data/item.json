@@ -223,7 +223,16 @@
 	  "cost": {
 		"mp": 0
 	  },
-	  "effect": "遺産[MHP×G7]"
+	  "effect": "遺産[MHP×G7]",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "legacy_magic",
+			"trigger": "on_death",
+			"multiplier": 7
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1012,
@@ -234,7 +243,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+40；攻撃で敵非破壊時、魔力獲得[G200]"
+	  "effect": "ST+40；攻撃で敵非破壊時、魔力獲得[G200]",
+	  "effect_parsed": {
+		"stat_bonus": {"st": 40},
+		"effects": [
+		  {
+			"effect_type": "magic_on_enemy_survive",
+			"trigger": "after_battle",
+			"amount": 200,
+			"condition": "attacker_win_enemy_alive"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1013,
@@ -616,7 +636,17 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+40；魔力獲得[受けたダメージ×G5]"
+	  "effect": "HP+40；魔力獲得[受けたダメージ×G5]",
+	  "effect_parsed": {
+		"stat_bonus": {"hp": 40},
+		"effects": [
+		  {
+			"effect_type": "magic_from_damage",
+			"trigger": "after_battle",
+			"multiplier": 5
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1030,

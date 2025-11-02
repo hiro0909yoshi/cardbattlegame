@@ -40,6 +40,10 @@ var battle_execution: BattleExecution
 var battle_skill_processor: BattleSkillProcessor
 var battle_special_effects: BattleSpecialEffects
 
+# SpellDraw/SpellMagic参照
+var spell_draw = null
+var spell_magic = null
+
 func _ready():
 	# サブシステムを初期化
 	battle_preparation = BattlePreparation.new()
@@ -64,16 +68,18 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	card_system_ref = card_system
 	player_system_ref = player_system
 	
+	# SpellDraw/SpellMagicの参照を先に取得
+	if game_flow_manager_ref:
+		if game_flow_manager_ref.spell_draw:
+			spell_draw = game_flow_manager_ref.spell_draw
+		if game_flow_manager_ref.spell_magic:
+			spell_magic = game_flow_manager_ref.spell_magic
+	
 	# サブシステムにも参照を設定
-	battle_preparation.setup_systems(board_system, card_system, player_system)
+	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
-	
-	# SpellDrawの参照を取得してBattleSpecialEffectsに渡す
-	var spell_draw = null
-	if game_flow_manager_ref and game_flow_manager_ref.spell_draw:
-		spell_draw = game_flow_manager_ref.spell_draw
-	battle_special_effects.setup_systems(board_system, spell_draw)
+	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic)
 	
 	# アイテム復帰スキルの初期化
 	SkillItemReturn.setup_systems(card_system)
@@ -246,6 +252,9 @@ func _apply_post_battle_effects(
 	# 再生スキル処理
 	battle_special_effects.apply_regeneration(attacker)
 	battle_special_effects.apply_regeneration(defender)
+	
+	# 💰 魔力獲得処理（ゴールドハンマー: 敵生存時に魔力獲得）
+	_apply_magic_on_enemy_survive(result, attacker, defender)
 	
 	match result:
 		BattleResult.ATTACKER_WIN:
@@ -732,6 +741,69 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 			participant.creature_data["ap"] = original_ap
 			
 			print("[ランダムステータスリセット] スペクターの能力値を初期値に戻しました (ST:", original_ap, ", HP:", original_hp, ")")
+
+## 💰 バトル結果確定後の魔力獲得処理（ゴールドハンマー用）
+func _apply_magic_on_enemy_survive(result: BattleResult, attacker: BattleParticipant, defender: BattleParticipant):
+	"""
+	バトル結果が確定した直後に魔力獲得効果をチェック
+	
+	Args:
+		result: バトル結果
+		attacker: 攻撃側
+		defender: 防御側
+	"""
+	if not spell_magic:
+		return
+	
+	# 攻撃側のアイテムをチェック（ゴールドハンマー）
+	if result == BattleResult.ATTACKER_SURVIVED:  # 攻撃側勝利 & 敵生存
+		_check_and_apply_magic_on_enemy_survive(attacker, defender)
+	
+	# 防御側のアイテムもチェック（攻撃側生存時）
+	if result == BattleResult.ATTACKER_SURVIVED or result == BattleResult.DEFENDER_WIN:
+		_check_and_apply_magic_on_enemy_survive(defender, attacker)
+
+## ゴールドハンマー用のヘルパー関数
+func _check_and_apply_magic_on_enemy_survive(winner: BattleParticipant, loser: BattleParticipant):
+	"""
+	勝利側のアイテムをチェックして、敵生存時の魔力獲得効果を適用
+	"""
+	if not winner or not loser:
+		return
+	
+	# 勝者が生存していない場合は何もしない
+	if not winner.is_alive():
+		return
+	
+	# 敗者が生存していない場合は何もしない（敵非破壊が条件）
+	if not loser.is_alive():
+		return
+	
+	var items = winner.creature_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			
+			# magic_on_enemy_survive効果をチェック
+			if effect_type == "magic_on_enemy_survive":
+				var condition = effect.get("condition", "")
+				
+				# 条件チェック: attacker_win_enemy_alive
+				if condition == "attacker_win_enemy_alive":
+					# 勝者が攻撃側である必要がある
+					if not winner.is_attacker:
+						continue
+				
+				var amount = effect.get("amount", 200)
+				var player_id = winner.player_id
+				
+				print("【魔力獲得(敵非破壊)】", winner.creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", player_id + 1, "が", amount, "G獲得")
+				
+				spell_magic.add_magic(player_id, amount)
 
 # アイテム復帰処理
 func _apply_item_return(participant: BattleParticipant, player_id: int):

@@ -14,11 +14,13 @@ const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_atta
 var board_system_ref = null
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
+var spell_magic_ref = null  # SpellMagicの参照（魔力獲得系アイテム用）
 
-func setup_systems(board_system, card_system: CardSystem, player_system: PlayerSystem):
+func setup_systems(board_system, card_system: CardSystem, player_system: PlayerSystem, spell_magic = null):
 	board_system_ref = board_system
 	card_system_ref = card_system
 	player_system_ref = player_system
+	spell_magic_ref = spell_magic
 
 ## 両者のBattleParticipantを準備
 func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, battle_tile_index: int = -1) -> Dictionary:
@@ -35,6 +37,9 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		true,  # is_attacker
 		attacker_index
 	)
+	
+	# SpellMagic参照を設定
+	attacker.spell_magic_ref = spell_magic_ref
 	
 	# base_up_hpを設定（手札から出す場合はないはずだが、移動侵略の場合はある）
 	attacker.base_up_hp = card_data.get("base_up_hp", 0)
@@ -72,6 +77,9 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		false,  # is_attacker
 		defender_owner
 	)
+	
+	# SpellMagic参照を設定
+	defender.spell_magic_ref = spell_magic_ref
 	
 	# base_up_hpを設定
 	defender.base_up_hp = defender_creature.get("base_up_hp", 0)
@@ -672,6 +680,18 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 			
 			"revenge_mhp_damage":
 				# 雪辱効果は攻撃成功時に処理されるため、ここでは何もしない
+				pass
+			
+			"legacy_magic":
+				# 遺産効果は死亡時に処理されるため、ここでは何もしない
+				pass
+			
+			"magic_from_damage":
+				# 魔力獲得（ダメージ）効果はダメージ受け取り時に処理されるため、ここでは何もしない
+				pass
+			
+			"magic_on_enemy_survive":
+				# 魔力獲得（敵非破壊）効果はバトル結果確定後に処理されるため、ここでは何もしない
 				pass
 			
 			"chain_count_st_bonus":

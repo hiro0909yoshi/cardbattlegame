@@ -45,6 +45,7 @@ var special_tile_system: SpecialTileSystem
 
 # スペル効果システム
 var spell_draw: SpellDraw
+var spell_magic: SpellMagic
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -98,6 +99,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	# SpellDrawの初期化
 	spell_draw = SpellDraw.new()
 	spell_draw.setup(card_system)
+	
+	# SpellMagicの初期化
+	spell_magic = SpellMagic.new()
+	spell_magic.setup(player_system)
 	
 	# UIManagerに自身の参照を渡す
 	if ui_manager:

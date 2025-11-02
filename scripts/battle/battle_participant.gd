@@ -39,6 +39,9 @@ var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ�
 var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフラグ（オーガロード用）
 var has_squid_mantle: bool = false  # スクイドマントル効果（敵の特殊攻撃無効化）
 
+# システム参照
+var spell_magic_ref = null  # SpellMagicの参照（魔力獲得系アイテム用）
+
 # 初期化
 func _init(
 	p_creature_data: Dictionary,
@@ -154,6 +157,9 @@ func take_damage(damage: int) -> Dictionary:
 	# 現在HPを更新
 	update_current_hp()
 	
+	# 💰 魔力獲得処理（ゼラチンアーマー: 受けたダメージから魔力獲得）
+	_trigger_magic_from_damage(damage)
+	
 	return damage_breakdown
 
 # 生存しているか
@@ -256,3 +262,42 @@ func take_mhp_damage(damage: int) -> void:
 		update_current_hp()
 	else:
 		print("  → 現在HP:", current_hp, " / MHP:", current_mhp)
+
+## 💰 ダメージを受けた時の魔力獲得処理（ゼラチンアーマー用）
+func _trigger_magic_from_damage(damage: int) -> void:
+	"""
+	ダメージを受けた直後に魔力獲得効果をチェック
+	
+	Args:
+		damage: 受けたダメージ量
+	"""
+	if not spell_magic_ref:
+		print("  [DEBUG] spell_magic_refがnull")
+		return
+	
+	if damage <= 0:
+		print("  [DEBUG] ダメージが0以下: ", damage)
+		return
+	
+	print("  [DEBUG] 魔力獲得チェック開始 damage=", damage, " items=", creature_data.get("items", []).size())
+	
+	var items = creature_data.get("items", [])
+	for item in items:
+		print("    [DEBUG] アイテム: ", item.get("name", "?"))
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		print("    [DEBUG] effects数: ", effects.size())
+		
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			print("      [DEBUG] effect_type: ", effect_type)
+			
+			# magic_from_damage効果をチェック
+			if effect_type == "magic_from_damage":
+				var multiplier = effect.get("multiplier", 5)
+				var amount = damage * multiplier
+				
+				print("【魔力獲得(ダメージ)】", creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", player_id + 1, "が", amount, "G獲得（ダメージ", damage, "×", multiplier, "）")
+				
+				spell_magic_ref.add_magic(player_id, amount)
