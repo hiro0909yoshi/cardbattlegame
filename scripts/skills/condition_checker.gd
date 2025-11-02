@@ -234,29 +234,18 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			var operator = condition.get("operator", ">=")
 			var value = condition.get("value", 2)
 			
-			print("【same_creature_count_check】")
-			print("  enemy_name: ", enemy_name)
-			print("  board_system: ", board_system != null)
-			print("  operator: ", operator, ", value: ", value)
-			
 			if enemy_name == "" or not board_system:
-				print("  → 条件不足でfalse")
 				return false
 			
 			var count = board_system.count_all_creatures_by_name(enemy_name)
-			print("  盤面のカウント: ", count)
 			
-			var result = false
 			match operator:
-				"<=": result = count <= value
-				">=": result = count >= value
-				"<": result = count < value
-				">": result = count > value
-				"==": result = count == value
-				_: result = false
-			
-			print("  判定: ", count, " ", operator, " ", value, " = ", result)
-			return result
+				"<=": return count <= value
+				">=": return count >= value
+				"<": return count < value
+				">": return count > value
+				"==": return count == value
+				_: return false
 			
 		_:
 			push_warning("未実装の条件タイプ: " + cond_type)

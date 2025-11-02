@@ -68,7 +68,10 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 	const DEFENDER_WIN = 1
 	const ATTACKER_SURVIVED = 2
 	
-	if not defender.is_alive():
+	# 両方死亡 → 防御側勝利（土地は守られる）
+	if not attacker.is_alive() and not defender.is_alive():
+		return DEFENDER_WIN
+	elif not defender.is_alive():
 		return ATTACKER_WIN
 	elif not attacker.is_alive():
 		return DEFENDER_WIN
@@ -189,8 +192,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if not defender_p.is_alive():
 						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 						
-						# 💀 道連れチェック
-						if special_effects.check_death_revenge(defender_p, attacker_p):
+						# 💀 死亡時効果チェック（道連れ、雪辱など）
+						var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p)
+						if death_effects["death_revenge_activated"]:
 							print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
 						# 🔄 死者復活チェック
@@ -221,6 +225,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# 攻撃側が反射で倒された場合（即死後）
 					if not attacker_p.is_alive():
 						print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
+						
+						# 💀 死亡時効果チェック（道連れ、雪辱など）
+						var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p)
+						if death_effects_attacker["death_revenge_activated"]:
+							print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
 						# 🔄 死者復活チェック
 						if card_system_ref:
@@ -305,8 +314,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 				
-				# 💀 道連れチェック
-				if special_effects.check_death_revenge(defender_p, attacker_p):
+				# 💀 死亡時効果チェック（道連れ、雪辱など）
+				var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p)
+				if death_effects["death_revenge_activated"]:
 					print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
 				# 🔄 死者復活チェック
@@ -337,6 +347,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			# 攻撃側が反射で倒された場合
 			if not attacker_p.is_alive():
 				print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
+				
+				# 💀 死亡時効果チェック（道連れ、雪辱など）
+				var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p)
+				if death_effects_attacker["death_revenge_activated"]:
+					print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
 				# 🔄 死者復活チェック
 				if card_system_ref:

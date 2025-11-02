@@ -61,23 +61,16 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 	var effects = ability_parsed.get("effects", [])
 	
 	# 巻物強打効果を検索
-	print("【巻物強打チェック】effects数: ", effects.size())
 	for effect in effects:
-		print("  effect_type: ", effect.get("effect_type", ""))
 		if effect.get("effect_type") == "scroll_power_strike":
-			print("【巻物強打効果発見】")
 			# 条件チェック
 			var conditions = effect.get("conditions", [])
-			print("  条件数: ", conditions.size())
 			var all_conditions_met = true
 			
 			if conditions.size() > 0:
 				var checker = load("res://scripts/skills/condition_checker.gd").new()
 				for condition in conditions:
-					print("  条件評価: ", condition.get("condition_type", ""))
-					var result = checker._evaluate_single_condition(condition, context)
-					print("    結果: ", result)
-					if not result:
+					if not checker._evaluate_single_condition(condition, context):
 						all_conditions_met = false
 						break
 			

@@ -273,6 +273,9 @@ func _apply_post_battle_effects(
 			place_creature_data["current_hp"] = attacker.current_hp
 			board_system_ref.place_creature(tile_index, place_creature_data)
 			
+			# 🆙 土地レベルアップ効果（シルバープロウ）
+			_apply_level_up_effect(attacker, tile_index)
+			
 			emit_signal("invasion_completed", true, tile_index)
 		
 		BattleResult.DEFENDER_WIN:
@@ -296,6 +299,9 @@ func _apply_post_battle_effects(
 			
 			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			battle_special_effects.update_defender_hp(tile_info, defender)
+			
+			# 🆙 土地レベルアップ効果（シルバープロウ - 防御成功時）
+			_apply_level_up_effect(defender, tile_index)
 			
 			# 侵略失敗：攻撃側カードは破壊される（手札に戻らない）
 			print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
@@ -705,3 +711,34 @@ func _apply_item_return(participant: BattleParticipant, player_id: int):
 	if return_result.get("returned", false):
 		var count = return_result.get("count", 0)
 		print("【アイテム復帰完了】", count, "個のアイテムが復帰しました")
+
+# 土地レベルアップ効果（シルバープロウ）
+func _apply_level_up_effect(participant: BattleParticipant, tile_index: int):
+	if not participant or not participant.creature_data:
+		return
+	
+	# アイテムから土地レベルアップ効果を探す
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			if effect.get("effect_type") == "level_up_on_win" and effect.get("trigger") == "on_battle_win":
+				# 現在の土地レベルを取得
+				var tile_info = board_system_ref.get_tile_info(tile_index)
+				var current_level = tile_info.get("level", 1)
+				
+				# レベル5が上限
+				if current_level >= 5:
+					print("【土地レベルアップ】", item.get("name", "?"), " - すでにレベル5のため効果なし")
+					return
+				
+				# レベルを1上げる
+				var new_level = current_level + 1
+				var tile = board_system_ref.tile_nodes[tile_index]
+				if tile and tile.has_method("set_level"):
+					tile.set_level(new_level)
+					print("【土地レベルアップ】", item.get("name", "?"), " - レベル", current_level, " → ", new_level)
+				
+				return  # 最初の1つだけ適用

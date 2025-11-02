@@ -318,7 +318,19 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "土地レベルアップ；ST+10；HP+20"
+	  "effect": "土地レベルアップ；ST+10；HP+20",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 10,
+		  "hp": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "level_up_on_win",
+			"trigger": "on_battle_win"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1017,
@@ -931,7 +943,20 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "ST+30；HP+20；雪辱[敵のMHP-40]"
+	  "effect": "ST+30；HP+20；雪辱[敵のMHP-40]",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "st": 30,
+		  "hp": 20
+		},
+		"effects": [
+		  {
+			"effect_type": "revenge_mhp_damage",
+			"trigger": "on_death",
+			"damage": 40
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1045,

@@ -225,3 +225,34 @@ func get_status_string() -> String:
 		base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp,
 		current_ap
 	]
+
+# MHP範囲に直接ダメージ（雪辱効果用）
+# ボーナスを無視してMHP（base_hp + base_up_hp）を直接削る
+# MHPが0以下になった場合は即死扱い
+func take_mhp_damage(damage: int) -> void:
+	print("【MHPダメージ】", creature_data.get("name", "?"), " MHPに-", damage)
+	
+	# base_up_hpから優先的に消費
+	if base_up_hp > 0:
+		var consumed = min(base_up_hp, damage)
+		base_up_hp -= consumed
+		damage -= consumed
+		print("  base_up_hp: -", consumed, " (残り:", base_up_hp, ")")
+	
+	# 残りをbase_hpから消費
+	if damage > 0:
+		base_hp -= damage
+		print("  base_hp: -", damage, " (残り:", base_hp, ")")
+	
+	# 現在HPを再計算
+	update_current_hp()
+	
+	# MHPが0以下になった場合は即死フラグを立てる
+	var current_mhp = base_hp + base_up_hp
+	if current_mhp <= 0:
+		print("  → MHP=", current_mhp, " 即死発動")
+		base_hp = 0
+		base_up_hp = 0
+		update_current_hp()
+	else:
+		print("  → 現在HP:", current_hp, " / MHP:", current_mhp)

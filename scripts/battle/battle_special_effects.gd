@@ -343,10 +343,92 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
 
-## 道連れ効果のチェック（撃破時）
+## 死亡時効果のチェック（道連れ、雪辱など）
+func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant) -> Dictionary:
+	"""
+	撃破された側の死亡時効果をチェックして発動
+	
+	Args:
+		defeated: 撃破されたクリーチャー（死亡した側）
+		opponent: 相手クリーチャー（生き残った側）
+	
+	Returns:
+		Dictionary: {
+			"death_revenge_activated": bool,  # 道連れが発動したか
+			"revenge_mhp_activated": bool     # 雪辱が発動したか
+		}
+	"""
+	var result = {
+		"death_revenge_activated": false,
+		"revenge_mhp_activated": false
+	}
+	
+	# 撃破されたクリーチャーのアイテムをチェック
+	var items = defeated.creature_data.get("items", [])
+	
+	# on_death効果があるかチェック（早期リターン用）
+	var has_on_death_effect = false
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		for effect in effects:
+			if effect.get("trigger", "") == "on_death":
+				has_on_death_effect = true
+				break
+		if has_on_death_effect:
+			break
+	
+	# on_death効果がない場合は早期リターン
+	if not has_on_death_effect:
+		return result
+	
+	print("【死亡時効果チェック】", defeated.creature_data.get("name", "?"))
+	
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			var trigger = effect.get("trigger", "")
+			
+			# on_death トリガーの効果のみ処理
+			if trigger != "on_death":
+				continue
+			
+			match effect_type:
+				"instant_death":  # 道連れ
+					var target = effect.get("target", "")
+					if target == "attacker":
+						var probability = effect.get("probability", 100)
+						var random_value = randf() * 100.0
+						
+						if random_value <= probability:
+							print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
+								  opponent.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
+							
+							# 相手を即死させる
+							opponent.instant_death_flag = true
+							opponent.base_hp = 0
+							opponent.update_current_hp()
+							result["death_revenge_activated"] = true
+						else:
+							print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+				
+				"revenge_mhp_damage":  # 雪辱
+					# 相手が生存している場合のみ発動
+					if opponent.is_alive():
+						var damage = effect.get("damage", 40)
+						print("【雪辱発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), " → ", opponent.creature_data.get("name", "?"))
+						opponent.take_mhp_damage(damage)
+						result["revenge_mhp_activated"] = true
+	
+	return result
+
+## 道連れ効果のチェック（後方互換性のため残す）
 func check_death_revenge(defeated: BattleParticipant, attacker: BattleParticipant) -> bool:
 	"""
-	撃破された側の道連れ効果をチェックして発動
+	撃破された側の道連れ効果をチェックして発動（後方互換性用）
 	
 	Args:
 		defeated: 撃破されたクリーチャー
@@ -355,40 +437,5 @@ func check_death_revenge(defeated: BattleParticipant, attacker: BattleParticipan
 	Returns:
 		bool: 道連れが発動したかどうか
 	"""
-	# 撃破されたクリーチャーが道連れ効果を持つかチェック
-	var items = defeated.creature_data.get("items", [])
-	
-	print("【道連れチェック開始】", defeated.creature_data.get("name", "?"), " アイテム数:", items.size())
-	
-	for item in items:
-		print("  アイテム:", item.get("name", "?"))
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			var effect_type = effect.get("effect_type", "")
-			var trigger = effect.get("trigger", "")
-			
-			# on_death トリガーの即死効果を探す
-			if effect_type == "instant_death" and trigger == "on_death":
-				var target = effect.get("target", "")
-				
-				# 対象が攻撃者の場合のみ処理
-				if target == "attacker":
-					var probability = effect.get("probability", 100)
-					var random_value = randf() * 100.0
-					
-					if random_value <= probability:
-						print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
-							  attacker.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
-						
-						# 攻撃者を即死させる
-						attacker.instant_death_flag = true
-						attacker.base_hp = 0
-						attacker.update_current_hp()
-						return true
-					else:
-						print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
-						return false
-	
-	return false
+	var result = check_on_death_effects(defeated, attacker)
+	return result["death_revenge_activated"]

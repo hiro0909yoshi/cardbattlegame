@@ -155,22 +155,25 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
-	if card_system_ref:
+	
+	# 変身効果があるかチェック
+	var has_transform_effect = _has_transform_effect(attacker, "on_battle_start") or _has_transform_effect(defender, "on_battle_start")
+	
+	if has_transform_effect and card_system_ref:
 		# CardLoaderのグローバル参照を取得
 		# @GlobalScope.CardLoader は Autoload として自動的に利用可能
 		var card_loader_instance = CardLoader if typeof(CardLoader) != TYPE_NIL else null
 		
 		if card_loader_instance != null and card_loader_instance.has_method("get_all_creatures"):
 			print("【変身】CardLoader取得成功、全カード数: ", card_loader_instance.all_cards.size())
+			transform_result = TransformSkill.process_transform_effects(
+				attacker, 
+				defender, 
+				card_loader_instance, 
+				"on_battle_start"
+			)
 		else:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
-		
-		transform_result = TransformSkill.process_transform_effects(
-			attacker, 
-			defender, 
-			card_loader_instance, 
-			"on_battle_start"
-		)
 	
 	return {
 		"attacker": attacker,
@@ -662,6 +665,14 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 				
 				participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
 			
+			"level_up_on_win":
+				# 土地レベルアップ効果は戦闘終了後に処理されるため、ここでは何もしない
+				pass
+			
+			"revenge_mhp_damage":
+				# 雪辱効果は攻撃成功時に処理されるため、ここでは何もしない
+				pass
+			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)
 
@@ -1053,3 +1064,17 @@ func battle_preparation_completed():
 # バトル終了後の処理
 func process_battle_end(_attacker: BattleParticipant, _defender: BattleParticipant) -> void:
 	pass  # 必要に応じて処理を追加
+
+## 変身効果を持っているかチェック
+func _has_transform_effect(participant: BattleParticipant, trigger: String) -> bool:
+	if not participant or not participant.creature_data:
+		return false
+	
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "transform" and effect.get("trigger") == trigger:
+			return true
+	
+	return false
