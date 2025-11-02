@@ -272,25 +272,18 @@ func _trigger_magic_from_damage(damage: int) -> void:
 		damage: 受けたダメージ量
 	"""
 	if not spell_magic_ref:
-		print("  [DEBUG] spell_magic_refがnull")
 		return
 	
 	if damage <= 0:
-		print("  [DEBUG] ダメージが0以下: ", damage)
 		return
-	
-	print("  [DEBUG] 魔力獲得チェック開始 damage=", damage, " items=", creature_data.get("items", []).size())
 	
 	var items = creature_data.get("items", [])
 	for item in items:
-		print("    [DEBUG] アイテム: ", item.get("name", "?"))
 		var effect_parsed = item.get("effect_parsed", {})
 		var effects = effect_parsed.get("effects", [])
-		print("    [DEBUG] effects数: ", effects.size())
 		
 		for effect in effects:
 			var effect_type = effect.get("effect_type", "")
-			print("      [DEBUG] effect_type: ", effect_type)
 			
 			# magic_from_damage効果をチェック
 			if effect_type == "magic_from_damage":

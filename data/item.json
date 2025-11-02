@@ -94,7 +94,15 @@
 	  "cost": {
 		"mp": 110
 	  },
-	  "effect": "戦闘中能力無効"
+	  "effect": "戦闘中能力無効",
+	  "effect_parsed": {
+		"effects": [
+		  {
+			"effect_type": "nullify_all_enemy_abilities",
+			"trigger": "battle_preparation"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1005,

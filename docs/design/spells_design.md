@@ -89,7 +89,7 @@ docs/design/
 ├── design_spell.md           # スペル効果システム設計書（本ファイル）
 └── spells/                   # 個別スペル効果のドキュメント
 	├── カードドロー.md        # ドロー処理の詳細 ✅
-	├── 魔力操作.md           # 魔力増減の詳細（未実装）
+	├── 魔力増減.md           # 魔力増減の詳細 ✅
 	├── ダイス操作.md         # ダイス操作の詳細（未実装）
 	├── 手札操作.md           # 手札操作の詳細（未実装）
 	└── 領地変更.md           # 領地変更の詳細（未実装）
@@ -115,20 +115,45 @@ docs/design/
    - 様々な場面で同じ効果を再利用可能
 
 
-## 今後の拡張
+## 実装済みスペル効果
 
-### 2. SpellMagic（魔力操作）
+### 1. SpellDraw（カードドロー）✅
 
-**予定メソッド**:
+**実装ファイル**: `scripts/spells/spell_draw.gd`
+
+**メソッド**:
 ```gdscript
-func add_magic(player_id: int, amount: int)      # 魔力増加
-func reduce_magic(player_id: int, amount: int)   # 魔力減少
-func steal_magic(from_id: int, to_id: int, amount: int)  # 魔力奪取
+func draw_one(player_id: int) -> Dictionary          # ターン開始時の1枚ドロー
+func draw_cards(player_id: int, count: int) -> Array # 固定枚数ドロー
+func draw_until(player_id: int, target: int) -> Array # 指定枚数まで補充
+func exchange_all_hand(player_id: int) -> Array      # 手札全交換
 ```
 
-**使用例**:
-- 聖杯効果: 踏んだら魔力+100
-- 魔力吸収スペル: 相手から魔力を奪う
+**詳細**: [カードドロー.md](./spells/カードドロー.md)
+
+---
+
+### 2. SpellMagic（魔力増減）✅
+
+**実装ファイル**: `scripts/spells/spell_magic.gd`
+
+**メソッド**:
+```gdscript
+func add_magic(player_id: int, amount: int)                        # 魔力増加
+func reduce_magic(player_id: int, amount: int)                     # 魔力減少
+func steal_magic(from_id: int, to_id: int, amount: int) -> int    # 魔力奪取
+```
+
+**実装アイテム**:
+- ゼラチンアーマー（ID: 1029）: ダメージ受け取り時に魔力獲得
+- ゴールドハンマー（ID: 1012）: 敵非破壊時に魔力獲得
+- ゴールドグース（ID: 1011）: 死亡時に魔力獲得
+
+**詳細**: [魔力増減.md](./spells/魔力増減.md)
+
+---
+
+## 今後の拡張
 
 ### 3. SpellDice（ダイス操作）
 
@@ -182,7 +207,6 @@ func destroy_creature(tile_index: int)                     # クリーチャー�
 
 ### 今後実装予定
 
-- 魔力増減アイテム
 - ダイス操作スペル
 - 手札破壊スペル
 - 領地変更スペル

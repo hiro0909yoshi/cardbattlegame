@@ -183,6 +183,12 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		else:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
 	
+	# 🚫 ウォーロックディスク: 敵の全能力を無効化
+	print("[DEBUG] ウォーロックディスクチェック開始")
+	_apply_nullify_enemy_abilities(attacker, defender)
+	_apply_nullify_enemy_abilities(defender, attacker)
+	print("[DEBUG] ウォーロックディスクチェック完了")
+	
 	return {
 		"attacker": attacker,
 		"defender": defender,
@@ -711,6 +717,11 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 				participant.current_ap += bonus
 				print("  [連鎖数STボーナス] 連鎖:", chain_count, " × ", multiplier, " = ST+", bonus)
 			
+			"nullify_all_enemy_abilities":
+				# ウォーロックディスク: 敵の全能力を無効化
+				# この効果は装備者がattackerかdefenderかで対象が変わる
+				pass  # 後でprepare_participants()で処理
+			
 			_:
 				print("  未実装の効果タイプ: ", effect_type)
 
@@ -1098,6 +1109,99 @@ func _apply_dice_condition_bonus(participant: BattleParticipant) -> void:
 # バトル準備の完了を通知
 func battle_preparation_completed():
 	pass  # 必要に応じて処理を追加
+
+## ウォーロックディスク: 敵の全能力を無効化
+func _apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
+	"""
+	ウォーロックディスク効果: 装備者の敵のすべてのスキル・能力を無効化
+	
+	Args:
+		self_participant: 装備者（攻撃側 or 防御側）
+		enemy_participant: 敵（無効化対象）
+	"""
+	print("[DEBUG] _apply_nullify_enemy_abilities 呼び出し: ", self_participant.creature_data.get("name", "?"))
+	
+	# 装備者がウォーロックディスクを持っているかチェック
+	var has_warlock_disk = false
+	var items = self_participant.creature_data.get("items", [])
+	print("[DEBUG] アイテム数: ", items.size())
+	
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			if effect.get("effect_type") == "nullify_all_enemy_abilities":
+				has_warlock_disk = true
+				break
+		
+		if has_warlock_disk:
+			break
+	
+	if not has_warlock_disk:
+		return
+	
+	print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
+		  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
+	
+	# 敵のクリーチャー固有スキルを無効化
+	if enemy_participant.creature_data.has("ability_parsed"):
+		var ability_parsed = enemy_participant.creature_data.get("ability_parsed", {})
+		
+		# keywordsを空にする
+		if ability_parsed.has("keywords"):
+			var keywords = ability_parsed.get("keywords", [])
+			if keywords.size() > 0:
+				print("  無効化されたスキル: ", keywords)
+				ability_parsed["keywords"] = []
+		
+		# effectsを空にする（特殊効果）
+		if ability_parsed.has("effects"):
+			var effects = ability_parsed.get("effects", [])
+			if effects.size() > 0:
+				var effect_types = []
+				for eff in effects:
+					effect_types.append(eff.get("effect_type", "?"))
+				print("  無効化されたクリーチャー効果: ", effect_types)
+				ability_parsed["effects"] = []
+	
+	# 敵のアイテムで付与されたスキルを無効化
+	var enemy_items = enemy_participant.creature_data.get("items", [])
+	for enemy_item in enemy_items:
+		if enemy_item.has("effect_parsed"):
+			var effect_parsed = enemy_item.get("effect_parsed", {})
+			
+			# keywordsを空にする
+			if effect_parsed.has("keywords"):
+				var keywords = effect_parsed.get("keywords", [])
+				if keywords.size() > 0:
+					print("  無効化されたアイテムキーワード: ", keywords)
+					effect_parsed["keywords"] = []
+			
+			# effectsを空にする（反射、無効化などの特殊効果）
+			if effect_parsed.has("effects"):
+				var effects = effect_parsed.get("effects", [])
+				if effects.size() > 0:
+					var effect_types = []
+					for eff in effects:
+						effect_types.append(eff.get("effect_type", "?"))
+					print("  無効化されたアイテム効果: ", effect_types)
+					effect_parsed["effects"] = []
+			
+			# grant_skillsを削除
+			if effect_parsed.has("grant_skills"):
+				var grant_skills = effect_parsed.get("grant_skills", [])
+				if grant_skills.size() > 0:
+					print("  無効化されたアイテムスキル: ", grant_skills)
+					effect_parsed.erase("grant_skills")
+	
+	# 敵のスキルフラグを全て無効化
+	enemy_participant.has_first_strike = false
+	enemy_participant.has_last_strike = false
+	enemy_participant.has_item_first_strike = false
+	enemy_participant.attack_count = 1  # 通常攻撃に戻す（2回攻撃無効化）
+	
+	print("  → 敵は基礎ステータスのみで戦闘")
 
 # バトル終了後の処理
 func process_battle_end(_attacker: BattleParticipant, _defender: BattleParticipant) -> void:
