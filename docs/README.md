@@ -23,8 +23,11 @@ docs/
 ├── design/                # 設計ドキュメント
 │   ├── design.md          # 詳細仕様（種族、効果システム、UI配置）
 │   ├── land_system.md     # 土地システム統合仕様
-│   ├── skills_design.md   # スキルシステム全体設計
-│   ├── skills/            # 個別スキル仕様書（16ファイル）
+│   ├── skills_design.md   # スキルシステム全体設計（21種類）
+│   ├── skills/            # 個別スキル仕様書（21ファイル）🆕
+│   ├── spells_design.md   # スペル効果システム全体設計（132個）🆕
+│   ├── spells/            # 個別スペル効果仕様書（2ファイル）🆕
+│   ├── item_system.md     # アイテムシステム（57個）🆕
 │   ├── effect_system.md   # 効果システム実装仕様
 │   ├── effect_system_design.md  # 効果システム詳細設計
 │   ├── battle_test_tool_design.md  # バトルテストツール
@@ -79,8 +82,9 @@ docs/
 |-------------|------|
 | **[design.md](design/design.md)** | 種族システム・効果システム・開発ツール |
 | **[land_system.md](design/land_system.md)** | 隣接判定・土地ボーナス・ダウン状態・領地コマンド・将来計画 |
-| **[skills_design.md](design/skills_design.md)** | スキルシステム全体設計・実装済み16種類・適用順序・将来予定 |
-| **[item_system.md](design/item_system.md)** | アイテムシステム・アイテムフェーズ・効果タイプ・UI統合 |
+| **[skills_design.md](design/skills_design.md)** | スキルシステム全体設計・実装済み17種類・適用順序・将来予定 |
+| **[spells_design.md](design/spells_design.md)** | スペル効果システム全体設計・全132個のタスク管理・カテゴリー分類 🆕 |
+| **[item_system.md](design/item_system.md)** | アイテムシステム・全57個のタスク管理・効果タイプ・UI統合 🆕 |
 | **[battle_system.md](design/battle_system.md)** | BattleParticipant・HP管理・ダメージ消費順序 |
 
 #### 効果システム
@@ -113,6 +117,19 @@ docs/
 | 15 | 変身 | [transform_skill.md](design/skills/transform_skill.md) |
 | 16 | 死者復活 | [revive_skill.md](design/skills/revive_skill.md) |
 | 17 | 空地移動・敵地移動 | [vacant_move_skill.md](design/skills/vacant_move_skill.md) |
+| 18 | アイテム復帰 | [item_return_skill.md](design/skills/item_return_skill.md) 🆕 |
+| 19 | 死亡時効果 | [on_death_effects.md](design/skills/on_death_effects.md) 🆕 |
+| 20 | 遺産 | [遺産.md](design/skills/遺産.md) 🆕 |
+| 21 | 魔力獲得・奪取 | [魔力獲得奪取.md](design/skills/魔力獲得奪取.md) 🆕 |
+
+#### スペル効果仕様書（2種類）🆕
+
+**場所**: `design/spells/`
+
+| No | スペル効果 | ファイル |
+|----|-----------|---------|
+| 1 | カードドロー | [カードドロー.md](design/spells/カードドロー.md) |
+| 2 | 魔力増減 | [魔力増減.md](design/spells/魔力増減.md) |
 
 #### その他システム
 
@@ -232,7 +249,9 @@ docs/
 ## 🎯 現在の開発状況
 
 ### 実装完了
-- ✅ スキルシステム: **17種類実装完了**（空地移動・敵地移動追加）
+- ✅ スキルシステム: **21種類実装完了**（援護、アイテム復帰、死亡時効果、遺産、魔力獲得・奪取追加）
+- ✅ スペルシステム: **2種類実装完了**（カードドロー、魔力増減）🆕
+- ✅ アイテムシステム: **57個のタスク管理開始**（全アイテム一覧作成）🆕
 - ✅ 効果システム: Phase 1-3実装完了
 - ✅ 防御型クリーチャー: 全21体実装完了
 - ✅ バトルテストツール: 基本機能完成
@@ -242,6 +261,7 @@ docs/
 - ✅ HP管理構造: 実装完了
 
 ### 次のステップ
+- 📋 **スペルシステムの本格実装**（全132個のスペル分類とカテゴリー別実装）🆕
 - 📋 手札数取得実装（リリス対応）
 - 📋 破壊数カウンター実装（ソウルコレクター対応）
 - 📋 条件付きバフクリーチャー38体の実装

@@ -500,6 +500,12 @@
 				"condition_type": "with_weapon"
 			  }
 			]
+		  },
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_deck",
+			"target": "all_items"
 		  }
 		]
 	  }

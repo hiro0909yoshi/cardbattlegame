@@ -9,6 +9,9 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
+const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
+const SkillSpecialCreature = preload("res://scripts/battle/skills/skill_special_creature.gd")
+const SkillAssist = preload("res://scripts/battle/skills/skill_assist.gd")
 
 # システム参照
 var board_system_ref = null
@@ -62,7 +65,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	var defender_land_bonus = calculate_land_bonus(defender_creature, tile_info)  # 防御側のみボーナス
 	
 	# 貫通スキルチェック：攻撃側が貫通を持つ場合、防御側の土地ボーナスを無効化
-	if check_penetration_skill(card_data, defender_creature, tile_info):
+	if PenetrationSkill.check_penetration_condition(card_data, defender_creature):
 		print("【貫通発動】防御側の土地ボーナス ", defender_land_bonus, " を無効化")
 		defender_land_bonus = 0
 	
@@ -146,10 +149,10 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# オーガロード（ID: 407）: オーガ配置時能力値上昇
 	if attacker_id == 407:
-		_apply_ogre_lord_bonus(attacker, attacker_index)
+		SkillSpecialCreature.apply_ogre_lord_bonus(attacker, attacker_index, board_system_ref)
 	
 	if defender_id == 407:
-		_apply_ogre_lord_bonus(defender, defender_owner)
+		SkillSpecialCreature.apply_ogre_lord_bonus(defender, defender_owner, board_system_ref)
 	
 	# アイテムクリーチャー効果適用後、current_apを再計算
 	if attacker_id == 438 or attacker_id == 339 or attacker_id == 407:
@@ -158,8 +161,8 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender.current_ap = defender.creature_data.get("ap", 0) + defender.base_up_ap + defender.temporary_bonus_ap
 	
 	# ランダムステータス効果を適用（スペクター用）
-	_apply_random_stat_effects(attacker)
-	_apply_random_stat_effects(defender)
+	SkillSpecialCreature.apply_random_stat_effects(attacker)
+	SkillSpecialCreature.apply_random_stat_effects(defender)
 	
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
@@ -184,8 +187,8 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
 	
 	# 🚫 ウォーロックディスク: 敵の全能力を無効化
-	_apply_nullify_enemy_abilities(attacker, defender)
-	_apply_nullify_enemy_abilities(defender, attacker)
+	SkillSpecialCreature.apply_nullify_enemy_abilities(attacker, defender)
+	SkillSpecialCreature.apply_nullify_enemy_abilities(defender, attacker)
 	
 	return {
 		"attacker": attacker,
@@ -252,42 +255,9 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		"battle_tile_index": battle_tile_index
 	}
 	
-	# 援護クリーチャーの場合はAP/HPのみ加算
+	# 援護クリーチャーの場合はSkillAssistで処理
 	if item_type == "creature":
-		var creature_ap = item_data.get("ap", 0)
-		var creature_hp = item_data.get("hp", 0)
-		
-		if creature_ap > 0:
-			participant.current_ap += creature_ap
-			print("  [援護] AP+", creature_ap, " → ", participant.current_ap)
-		
-		if creature_hp > 0:
-			participant.item_bonus_hp += creature_hp
-			participant.update_current_hp()
-			print("  [援護] HP+", creature_hp, " → ", participant.current_hp)
-		
-		# 【ブラッドプリン専用処理】援護クリーチャーのMHPを永続吸収
-		if participant.creature_data.get("id") == 137:
-			# 援護クリーチャーのMHPを取得（hp + base_up_hp）
-			var assist_base_hp = item_data.get("hp", 0)
-			var assist_base_up_hp = item_data.get("base_up_hp", 0)
-			var assist_mhp = assist_base_hp + assist_base_up_hp
-			
-			# ブラッドプリンの現在MHPを取得
-			var current_mhp = participant.get_max_hp()
-			
-			# MHP上限100チェック
-			var max_increase = 100 - current_mhp
-			var actual_increase = min(assist_mhp, max_increase)
-			
-			if actual_increase > 0:
-				# 永続的にMHPを上昇（creature_dataのみ更新、戦闘中は適用しない）
-				var blood_purin_base_up_hp = participant.creature_data.get("base_up_hp", 0)
-				participant.creature_data["base_up_hp"] = blood_purin_base_up_hp + actual_increase
-				
-				print("【ブラッドプリン効果】援護クリーチャー", item_data.get("name", "?"), "のMHP", assist_mhp, "を吸収")
-				print("  MHP: ", current_mhp, " → ", current_mhp + actual_increase, " (+", actual_increase, ")")
-		
+		SkillAssist.apply_assist_effect(participant, item_data)
 		# 援護クリーチャーのスキルは継承されないのでここで終了
 		return
 	
@@ -917,286 +887,9 @@ func calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> i
 	print("  → 属性不一致、ボーナスなし")
 	return 0
 
-## 貫通スキルの判定
-func check_penetration_skill(attacker_data: Dictionary, defender_data: Dictionary, _tile_info: Dictionary) -> bool:
-	# 攻撃側のability_parsedから貫通スキルを取得
-	var ability_parsed = attacker_data.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
-	
-	# 貫通スキルがない場合
-	if not "貫通" in keywords:
-		return false
-	
-	# 貫通スキルの条件をチェック
-	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var penetrate_condition = keyword_conditions.get("貫通", {})
-	
-	# 条件がない場合は無条件発動
-	if penetrate_condition.is_empty():
-		print("【貫通】無条件発動")
-		return true
-	
-	# 条件チェック
-	var condition_type = penetrate_condition.get("condition_type", "")
-	
-	match condition_type:
-		"enemy_is_element":
-			# 敵が特定属性の場合
-			var required_elements = penetrate_condition.get("elements", "")
-			var defender_element = defender_data.get("element", "")
-			if defender_element == required_elements:
-				print("【貫通】条件満たす: 敵が", required_elements, "属性")
-				return true
-			else:
-				print("【貫通】条件不成立: 敵が", defender_element, "属性（要求:", required_elements, "）")
-				return false
-		
-		"attacker_st_check":
-			# 攻撃側のSTが一定以上の場合
-			var operator = penetrate_condition.get("operator", ">=")
-			var value = penetrate_condition.get("value", 0)
-			var attacker_st = attacker_data.get("ap", 0)  # APがSTに相当
-			
-			var meets_condition = false
-			match operator:
-				">=": meets_condition = attacker_st >= value
-				">": meets_condition = attacker_st > value
-				"==": meets_condition = attacker_st == value
-			
-			if meets_condition:
-				print("【貫通】条件満たす: ST ", attacker_st, " ", operator, " ", value)
-				return true
-			else:
-				print("【貫通】条件不成立: ST ", attacker_st, " ", operator, " ", value)
-				return false
-		
-		"defender_st_check":
-			# 防御側のSTが一定以上の場合
-			var operator_d = penetrate_condition.get("operator", ">=")
-			var value_d = penetrate_condition.get("value", 0)
-			var defender_st = defender_data.get("ap", 0)  # APがSTに相当
-			
-			var meets_condition_d = false
-			match operator_d:
-				">=": meets_condition_d = defender_st >= value_d
-				">": meets_condition_d = defender_st > value_d
-				"==": meets_condition_d = defender_st == value_d
-			
-			if meets_condition_d:
-				print("【貫通】条件満たす: 敵ST ", defender_st, " ", operator_d, " ", value_d)
-				return true
-			else:
-				print("【貫通】条件不成立: 敵ST ", defender_st, " ", operator_d, " ", value_d)
-				return false
-		
-		_:
-			# 未知の条件タイプ
-			print("【貫通】未知の条件タイプ:", condition_type)
-			return false
-
-## オーガロード（ID: 407）: オーガ配置時能力値上昇
-func _apply_ogre_lord_bonus(participant: BattleParticipant, player_index: int) -> void:
-	if not board_system_ref:
-		return
-	
-	# 全タイルをチェックして、配置されているオーガの数と属性をカウント
-	var fire_wind_ogre_count = 0  # 火風オーガの数
-	var water_earth_ogre_count = 0  # 水地オーガの数
-	
-	# tile_data_managerからタイルノードを取得
-	var tile_data_manager = board_system_ref.tile_data_manager
-	if not tile_data_manager:
-		return
-	
-	for tile_index in tile_data_manager.tile_nodes:
-		var tile = tile_data_manager.tile_nodes[tile_index]
-		
-		# このタイルにクリーチャーが配置されているか?
-		if tile.creature_data.is_empty():
-			continue
-		
-		var creature_data = tile.creature_data
-		
-		# このクリーチャーの所有者がオーガロードと同じプレイヤーか?
-		var creature_owner = tile.owner_id
-		if creature_owner != player_index:
-			continue
-		
-		# このクリーチャーがオーガか？
-		var race = creature_data.get("race", "")
-		if race != "オーガ":
-			continue
-		
-		# オーガロード自身は除外
-		if creature_data.get("id", -1) == 407:
-			continue
-		
-		# オーガの属性を取得
-		var element = creature_data.get("element", "")
-		
-		if element == "fire" or element == "wind":
-			fire_wind_ogre_count += 1
-		elif element == "water" or element == "earth":
-			water_earth_ogre_count += 1
-	
-	# バフを適用
-	var bonus_applied = false
-	
-	if fire_wind_ogre_count > 0:
-		participant.temporary_bonus_ap += 20
-		bonus_applied = true
-		print("[オーガロード] 火風オーガ配置(", fire_wind_ogre_count, "体) ST+20")
-	
-	if water_earth_ogre_count > 0:
-		participant.temporary_bonus_hp += 20
-		participant.update_current_hp()
-		bonus_applied = true
-		print("[オーガロード] 水地オーガ配置(", water_earth_ogre_count, "体) HP+20")
-	
-	# バフが適用された場合はフラグを設定
-	if bonus_applied:
-		participant.has_ogre_bonus = true
-
-## ランダムステータス効果を適用（スペクター用）
-func _apply_random_stat_effects(participant: BattleParticipant) -> void:
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "random_stat":
-			var stat = effect.get("stat", "both")
-			var min_value = int(effect.get("min", 10))
-			var max_value = int(effect.get("max", 70))
-			
-			randomize()
-			
-			# STをランダムに設定
-			if stat == "ap" or stat == "both":
-				var random_ap = randi() % (max_value - min_value + 1) + min_value
-				var base_ap = participant.creature_data.get("ap", 0)
-				var base_up_ap = participant.creature_data.get("base_up_ap", 0)
-				participant.temporary_bonus_ap = random_ap - (base_ap + base_up_ap)
-				participant.update_current_ap()
-				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
-					  " ST=", participant.current_ap, " (", min_value, "~", max_value, ")")
-			
-			# HPをランダムに設定
-			if stat == "hp" or stat == "both":
-				var random_hp = randi() % (max_value - min_value + 1) + min_value
-				var base_hp_value = participant.creature_data.get("hp", 0)
-				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
-				participant.temporary_bonus_hp = random_hp - (base_hp_value + base_up_hp)
-				participant.update_current_hp()
-				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
-					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
-			
-			return
-
-func _apply_dice_condition_bonus(participant: BattleParticipant) -> void:
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "dice_condition_bonus":
-			continue  # ここでは何もしない（MovementControllerで処理）
-
 # バトル準備の完了を通知
 func battle_preparation_completed():
 	pass  # 必要に応じて処理を追加
-
-## ウォーロックディスク: 敵の全能力を無効化
-func _apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
-	"""
-	ウォーロックディスク効果: 装備者の敵のすべてのスキル・能力を無効化
-	
-	Args:
-		self_participant: 装備者（攻撃側 or 防御側）
-		enemy_participant: 敵（無効化対象）
-	"""
-	# 装備者がウォーロックディスクを持っているかチェック
-	var has_warlock_disk = false
-	var items = self_participant.creature_data.get("items", [])
-	
-	for item in items:
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			if effect.get("effect_type") == "nullify_all_enemy_abilities":
-				has_warlock_disk = true
-				break
-		
-		if has_warlock_disk:
-			break
-	
-	if not has_warlock_disk:
-		return
-	
-	print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
-		  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
-	
-	# 敵のクリーチャー固有スキルを無効化
-	if enemy_participant.creature_data.has("ability_parsed"):
-		var ability_parsed = enemy_participant.creature_data.get("ability_parsed", {})
-		
-		# keywordsを空にする
-		if ability_parsed.has("keywords"):
-			var keywords = ability_parsed.get("keywords", [])
-			if keywords.size() > 0:
-				print("  無効化されたスキル: ", keywords)
-				ability_parsed["keywords"] = []
-		
-		# effectsを空にする（特殊効果）
-		if ability_parsed.has("effects"):
-			var effects = ability_parsed.get("effects", [])
-			if effects.size() > 0:
-				var effect_types = []
-				for eff in effects:
-					effect_types.append(eff.get("effect_type", "?"))
-				print("  無効化されたクリーチャー効果: ", effect_types)
-				ability_parsed["effects"] = []
-	
-	# 敵のアイテムで付与されたスキルを無効化
-	var enemy_items = enemy_participant.creature_data.get("items", [])
-	for enemy_item in enemy_items:
-		if enemy_item.has("effect_parsed"):
-			var effect_parsed = enemy_item.get("effect_parsed", {})
-			
-			# keywordsを空にする
-			if effect_parsed.has("keywords"):
-				var keywords = effect_parsed.get("keywords", [])
-				if keywords.size() > 0:
-					print("  無効化されたアイテムキーワード: ", keywords)
-					effect_parsed["keywords"] = []
-			
-			# effectsを空にする（反射、無効化などの特殊効果）
-			if effect_parsed.has("effects"):
-				var effects = effect_parsed.get("effects", [])
-				if effects.size() > 0:
-					var effect_types = []
-					for eff in effects:
-						effect_types.append(eff.get("effect_type", "?"))
-					print("  無効化されたアイテム効果: ", effect_types)
-					effect_parsed["effects"] = []
-			
-			# grant_skillsを削除
-			if effect_parsed.has("grant_skills"):
-				var grant_skills = effect_parsed.get("grant_skills", [])
-				if grant_skills.size() > 0:
-					print("  無効化されたアイテムスキル: ", grant_skills)
-					effect_parsed.erase("grant_skills")
-	
-	# 敵のスキルフラグを全て無効化
-	enemy_participant.has_first_strike = false
-	enemy_participant.has_last_strike = false
-	enemy_participant.has_item_first_strike = false
-	enemy_participant.attack_count = 1  # 通常攻撃に戻す（2回攻撃無効化）
-	
-	print("  → 敵は基礎ステータスのみで戦闘")
 
 # バトル終了後の処理
 func process_battle_end(_attacker: BattleParticipant, _defender: BattleParticipant) -> void:
