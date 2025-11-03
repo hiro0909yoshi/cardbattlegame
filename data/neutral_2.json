@@ -144,7 +144,16 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "援護・魔力奪取",
-	  "ability_detail": "援護；魔力奪取[敵に与えたダメージ×G2]"
+	  "ability_detail": "援護；魔力奪取[敵に与えたダメージ×G2]",
+	  "ability_parsed": {
+		"keywords": ["援護"],
+		"effects": [
+		  {
+			"effect_type": "magic_steal_on_damage",
+			"multiplier": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 434,

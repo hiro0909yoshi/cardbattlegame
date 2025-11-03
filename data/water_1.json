@@ -230,7 +230,16 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "アイテム不使用時・魔力奪取",
-	  "ability_detail": "アイテム不使用時、魔力奪取[周回数×G30]"
+	  "ability_detail": "アイテム不使用時、魔力奪取[周回数×G30]",
+	  "ability_parsed": {
+		"keywords": ["魔力奪取"],
+		"effects": [
+		  {
+			"effect_type": "magic_steal_no_item",
+			"multiplier": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 108,

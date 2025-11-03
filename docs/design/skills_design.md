@@ -23,6 +23,8 @@
    - [無効化](#無効化-nullify)
    - [特殊移動](#特殊移動-special-movement)
    - [不屈](#不屈-unyielding)
+   - [遺産](./skills/遺産.md) 🆕
+   - [魔力獲得・奪取](./skills/魔力獲得奪取.md) 🆕
 4. [スキル適用順序](#スキル適用順序)
 5. [BattleParticipantとHP管理](#battleparticipantとhp管理)
 6. [スキル条件システム](#スキル条件システム)
@@ -186,6 +188,8 @@ AP: 75 (×1.5)
 | **不屈** | [skill_system.gd](../../scripts/skill_system.gd) | ✅ 完全実装 |
 | **貫通** | 統合実装（battle_preparation.gd） | ✅ 完全実装 |
 | **死亡時効果（道連れ・雪辱）** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
+| **遺産** | [skill_legacy.gd](../../scripts/battle/skills/skill_legacy.gd) | ✅ 完全分離 |
+| **魔力獲得・奪取** | [skill_magic_gain.gd](../../scripts/battle/skills/skill_magic_gain.gd) / [skill_magic_steal.gd](../../scripts/battle/skills/skill_magic_steal.gd) | ✅ 完全分離 |
 
 
 ## スキル条件システム

@@ -158,7 +158,16 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "侵略時魔力獲得・不屈",
-	  "ability_detail": "侵略時、魔力獲得[G100]；不屈"
+	  "ability_detail": "侵略時、魔力獲得[G100]；不屈",
+	  "ability_parsed": {
+		"keywords": ["不屈"],
+		"effects": [
+		  {
+			"effect_type": "magic_gain_on_invasion",
+			"amount": 100
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 332,

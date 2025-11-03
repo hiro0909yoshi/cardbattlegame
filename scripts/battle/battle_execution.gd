@@ -92,6 +92,13 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 ##     "defender_original": Dictionary
 ##   }
 func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, _skill_processor) -> Dictionary:
+	# spell_magic_refを取得
+	var spell_magic_ref = special_effects.spell_magic_ref
+	
+	# 参加者の参照を保持
+	var attacker_p = attack_order[0]
+	var defender_p = attack_order[1]
+	
 	# 戦闘結果情報を記録
 	var battle_result = {
 		"attacker_revived": false,
@@ -110,8 +117,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		if battle_ended:
 			break
 		
-		var attacker_p = attack_order[i]
-		var defender_p = attack_order[(i + 1) % 2]
+	
+		# 現在の攻撃者と防御者を更新
+		attacker_p = attack_order[i]
+		defender_p = attack_order[(i + 1) % 2]
 		
 		# HPが0以下なら攻撃できない
 		if not attacker_p.is_alive():
@@ -168,6 +177,23 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# 軽減ダメージ適用
 					var damage_breakdown_reduced = defender_p.take_damage(actual_damage_reduced)
 					
+				
+					# 💰 ダメージ時の魔力獲得・奪取スキル
+					var actual_damage_dealt_reduced = (
+						damage_breakdown_reduced.get("resonance_bonus_consumed", 0) +
+						damage_breakdown_reduced.get("land_bonus_consumed", 0) +
+						damage_breakdown_reduced.get("temporary_bonus_consumed", 0) +
+						damage_breakdown_reduced.get("item_bonus_consumed", 0) +
+						damage_breakdown_reduced.get("spell_bonus_consumed", 0) +
+						damage_breakdown_reduced.get("base_up_hp_consumed", 0) +
+						damage_breakdown_reduced.get("base_hp_consumed", 0)
+					)
+					if spell_magic_ref:
+						# 魔力奪取（攻撃側）: 与えたダメージベース
+						apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
+						# 魔力獲得（防御側）: 受けたダメージベース
+						SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt_reduced, spell_magic_ref)
+
 					print("  ダメージ処理:")
 					if damage_breakdown_reduced["resonance_bonus_consumed"] > 0:
 						print("    - 感応ボーナス: ", damage_breakdown_reduced["resonance_bonus_consumed"], " 消費")
@@ -268,6 +294,23 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# ダメージ適用
 			var damage_breakdown = defender_p.take_damage(actual_damage)
+			
+			# 💰 ダメージ時の魔力獲得・奪取スキル
+			var actual_damage_dealt = (
+				damage_breakdown.get("resonance_bonus_consumed", 0) +
+				damage_breakdown.get("land_bonus_consumed", 0) +
+				damage_breakdown.get("temporary_bonus_consumed", 0) +
+				damage_breakdown.get("item_bonus_consumed", 0) +
+				damage_breakdown.get("spell_bonus_consumed", 0) +
+				damage_breakdown.get("base_up_hp_consumed", 0) +
+				damage_breakdown.get("base_hp_consumed", 0)
+			)
+			if spell_magic_ref:
+				# 魔力奪取（攻撃側）: 与えたダメージベース
+				apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
+				# 魔力獲得（防御側）: 受けたダメージベース
+				SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt, spell_magic_ref)
+
 			
 			print("  ダメージ処理:")
 			if damage_breakdown["resonance_bonus_consumed"] > 0:
@@ -380,4 +423,26 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					break
 	
 	# 戦闘結果情報を返す
+	# 💰 アイテム不使用時の魔力奪取スキル（アマゾン）
+	if spell_magic_ref:
+		var winner = attacker_p if attacker_p.is_alive() else defender_p
+		var loser = defender_p if attacker_p.is_alive() else attacker_p
+		var winner_has_item = winner.creature_data.get("items", []).size() > 0
+		var turn_count = 1  # TODO: 実際の周回数を取得する必要がある
+		SkillMagicSteal.apply_no_item_steal(winner, winner_has_item, turn_count, spell_magic_ref, loser)
+	
 	return battle_result
+
+## 💰 魔力奪取スキルを適用（ダメージベース）
+func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: BattleParticipant, damage: int, spell_magic) -> void:
+	"""
+	与えたダメージに応じて魔力を奪う
+	- バンディット: 敵に与えたダメージ×G2
+	"""
+	if not spell_magic:
+		return
+	
+	if damage <= 0:
+		return
+	
+	SkillMagicSteal.apply_damage_based_steal(attacker, defender, damage, spell_magic)

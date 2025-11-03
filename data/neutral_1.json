@@ -213,7 +213,21 @@
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "魔力獲得・破壊時魔力道産",
-	  "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、道産[G100]"
+	  "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、道産[G100]",
+	  "ability_parsed": {
+		"keywords": ["魔力獲得", "道産"],
+		"effects": [
+		  {
+			"effect_type": "magic_gain_on_battle_start",
+			"amount": 100
+		  },
+		  {
+			"effect_type": "legacy_magic",
+			"trigger": "on_death",
+			"amount": 100
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 411,

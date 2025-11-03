@@ -15,6 +15,8 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
+const SkillMagicGain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
+const SkillMagicSteal = preload("res://scripts/battle/skills/skill_magic_steal.gd")
 
 var board_system_ref = null
 var game_flow_manager_ref = null
@@ -98,6 +100,9 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	# アイテム破壊・盗み処理
 	apply_item_manipulation(attacker, defender)
+	
+	# 💰 魔力獲得スキル適用（バトル開始時）
+	apply_magic_gain_on_battle_start(attacker, defender)
 
 ## スキル適用
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
@@ -704,3 +709,18 @@ func apply_random_stat_effects(participant: BattleParticipant) -> void:
 					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
 			
 			return
+
+## 💰 バトル開始時の魔力獲得スキルを適用
+func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	"""
+	バトル開始時に発動する魔力獲得スキルをまとめて適用
+	- 侵略時魔力獲得（攻撃側のみ）
+	- 無条件魔力獲得（両側）
+	"""
+	# spell_magic_refを直接使う（BattleParticipantから取得）
+	var spell_magic = attacker.spell_magic_ref
+	if not spell_magic:
+		return
+	
+	# 魔力獲得スキルを適用
+	SkillMagicGain.apply_on_battle_start(attacker, defender, spell_magic)

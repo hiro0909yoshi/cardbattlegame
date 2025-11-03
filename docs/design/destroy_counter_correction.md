@@ -27,32 +27,32 @@ var player_laps: Dictionary = {}             # 各プレイヤーの周回数 {p
 var creatures_destroyed_this_game: int = 0   # このゲームでの破壊数
 
 func start_game():
-    current_turn = 0
-    player_laps = {0: 0, 1: 0, 2: 0, 3: 0}
-    creatures_destroyed_this_game = 0
-    # ... 既存処理
+	current_turn = 0
+	player_laps = {0: 0, 1: 0, 2: 0, 3: 0}
+	creatures_destroyed_this_game = 0
+	# ... 既存処理
 
 func start_turn():
-    current_turn += 1
-    # ... 既存処理
+	current_turn += 1
+	# ... 既存処理
 
 func on_creature_destroyed():
-    """クリーチャー破壊時にカウント増加"""
-    creatures_destroyed_this_game += 1
-    print("このゲームの破壊数: ", creatures_destroyed_this_game)
+	"""クリーチャー破壊時にカウント増加"""
+	creatures_destroyed_this_game += 1
+	print("このゲームの破壊数: ", creatures_destroyed_this_game)
 
 func reset_destroy_count():
-    """スペルで破壊数をリセット"""
-    creatures_destroyed_this_game = 0
-    print("破壊数リセット")
+	"""スペルで破壊数をリセット"""
+	creatures_destroyed_this_game = 0
+	print("破壊数リセット")
 
 func get_destroy_count() -> int:
-    return creatures_destroyed_this_game
+	return creatures_destroyed_this_game
 
 func on_lap_completed(player_id: int):
-    """周回完了時"""
-    player_laps[player_id] = player_laps.get(player_id, 0) + 1
-    # クリーチャーへのバフ適用処理...
+	"""周回完了時"""
+	player_laps[player_id] = player_laps.get(player_id, 0) + 1
+	# クリーチャーへのバフ適用処理...
 ```
 
 ## 使用方法
@@ -61,17 +61,17 @@ func on_lap_completed(player_id: int):
 ```gdscript
 # scripts/battle/battle_system.gd
 func on_battle_complete(result: Dictionary):
-    if result.winner == "attacker":
-        game_flow_manager.on_creature_destroyed()  # カウント増加
-        # 永続バフ適用処理...
+	if result.winner == "attacker":
+		game_flow_manager.on_creature_destroyed()  # カウント増加
+		# 永続バフ適用処理...
 ```
 
 ### BattleSkillProcessor で取得
 ```gdscript
 # scripts/battle/battle_skill_processor.gd
 func apply_destroy_count_effects(participant: BattleParticipant):
-    var destroy_count = game_flow_manager.get_destroy_count()
-    participant.temporary_bonus_ap += destroy_count * 5
+	var destroy_count = game_flow_manager.get_destroy_count()
+	participant.temporary_bonus_ap += destroy_count * 5
 ```
 
 ### スペルでリセット

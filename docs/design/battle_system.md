@@ -82,10 +82,10 @@
    ├─ 攻撃順決定（先制・後手判定）
    ├─ 各攻撃ごとにダメージ適用
    └─ **攻撃後に即死判定** (_check_instant_death)
-      ├─ 即死スキル保持チェック
-      ├─ 条件判定（属性、ST、立場など）
-      ├─ 確率判定
-      └─ 成功時: instant_death_flag = true, HP = 0
+	  ├─ 即死スキル保持チェック
+	  ├─ 条件判定（属性、ST、立場など）
+	  ├─ 確率判定
+	  └─ 成功時: instant_death_flag = true, HP = 0
    
 8. バトル結果判定 (_resolve_battle_result)
    ├─ HPチェック

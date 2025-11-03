@@ -327,7 +327,13 @@
 			"operator": ">=",
 			"value": 40
 		  }
-		}
+		},
+		"effects": [
+		  {
+			"effect_type": "magic_gain_on_invasion",
+			"amount": 100
+		  }
+		]
 	  }
 	},
 	{

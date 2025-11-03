@@ -161,7 +161,24 @@ static func _execute_single_battle(
 	var mock_card = MockCardSystem.new()
 	var mock_player = MockPlayerSystem.new()
 	
+	# SpellMagicとSpellDrawのモックを作成
+	var spell_magic = SpellMagic.new()
+	spell_magic.setup(mock_player)
+	
+	var spell_draw = SpellDraw.new()
+	spell_draw.setup(mock_card)
+	
 	battle_system.setup_systems(mock_board, mock_card, mock_player)
+	
+	# BattleSystemにSpellMagic/SpellDrawを手動で設定
+	battle_system.spell_magic = spell_magic
+	battle_system.spell_draw = spell_draw
+	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic)
+	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
+	
+	# BattleParticipantにspell_magic_refを設定
+	attacker.spell_magic_ref = spell_magic
+	defender.spell_magic_ref = spell_magic
 	
 	# アイテム効果適用（モックシステムセットアップ後）
 	var attacker_granted_skills = []

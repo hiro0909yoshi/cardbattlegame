@@ -4,6 +4,9 @@ class_name BattleSpecialEffects
 # バトル特殊効果処理
 # 即死、無効化、再生、死亡時能力などの特殊スキル処理を担当
 
+# スキルモジュール
+const SkillLegacy = preload("res://scripts/battle/skills/skill_legacy.gd")
+
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
 var spell_magic_ref: SpellMagic = null
@@ -372,6 +375,8 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	
 	# on_death効果があるかチェック（早期リターン用）
 	var has_on_death_effect = false
+	
+	# アイテムのon_death効果チェック
 	for item in items:
 		var effect_parsed = item.get("effect_parsed", {})
 		var effects = effect_parsed.get("effects", [])
@@ -381,6 +386,15 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 				break
 		if has_on_death_effect:
 			break
+	
+	# クリーチャースキルの遺産効果チェック
+	if not has_on_death_effect:
+		var ability_parsed = defeated.creature_data.get("ability_parsed", {})
+		var skill_effects = ability_parsed.get("effects", [])
+		for effect in skill_effects:
+			if effect.get("trigger", "") == "on_death":
+				has_on_death_effect = true
+				break
 	
 	# on_death効果がない場合は早期リターン
 	if not has_on_death_effect:
@@ -460,6 +474,9 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						print("【雪辱発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), " → ", opponent.creature_data.get("name", "?"))
 						opponent.take_mhp_damage(damage)
 						result["revenge_mhp_activated"] = true
+	
+	# 💰 クリーチャースキル: 遺産・道産（フェイト、コーンフォーク、クリーピングコインなど）
+	SkillLegacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref)
 	
 	return result
 

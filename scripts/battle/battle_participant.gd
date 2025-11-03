@@ -3,6 +3,10 @@ class_name BattleParticipant
 # バトル参加者の情報を管理するクラス
 # 侵略側・防御側の両方に使用
 
+# スキルモジュール
+const SkillMagicGain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
+const SkillMagicSteal = preload("res://scripts/battle/skills/skill_magic_steal.gd")
+
 # クリーチャーデータ
 var creature_data: Dictionary
 
@@ -294,3 +298,25 @@ func _trigger_magic_from_damage(damage: int) -> void:
 					  " → プレイヤー", player_id + 1, "が", amount, "G獲得（ダメージ", damage, "×", multiplier, "）")
 				
 				spell_magic_ref.add_magic(player_id, amount)
+	
+	# 💰 クリーチャースキル: ダメージ時魔力獲得（ゼラチンウォールなど）
+	SkillMagicGain.apply_damage_magic_gain(self, damage, spell_magic_ref)
+
+## 💰 魔力奪取効果をチェック（攻撃側が呼ぶ）
+func trigger_magic_steal_on_damage(defender, damage: int, spell_magic) -> void:
+	"""
+	敵にダメージを与えた時に魔力奪取効果をチェック
+	
+	Args:
+		defender: ダメージを受けた敵
+		damage: 与えたダメージ量
+		spell_magic: SpellMagicインスタンス
+	"""
+	if not spell_magic:
+		return
+	
+	if damage <= 0:
+		return
+	
+	# クリーチャースキル: ダメージベース魔力奪取（バンディットなど）
+	SkillMagicSteal.apply_damage_based_steal(self, defender, damage, spell_magic)
