@@ -36,15 +36,10 @@ static func has_magic_legacy(creature_data: Dictionary) -> bool:
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
 static func apply_card_legacy(defeated, spell_draw) -> void:
-	print("[DEBUG] apply_card_legacy 呼び出し")
-	print("[DEBUG] spell_draw: ", spell_draw != null)
-	
 	if not spell_draw:
-		print("[DEBUG] spell_drawがnull")
 		return
 	
 	var has_legacy = has_card_legacy(defeated.creature_data)
-	print("[DEBUG] has_card_legacy: ", has_legacy)
 	
 	if has_legacy:
 		var card_count = _extract_card_count(defeated.creature_data.get("ability_detail", ""), 1)
@@ -80,10 +75,6 @@ static func apply_magic_legacy(defeated, spell_magic) -> void:
 ## @param spell_draw SpellDrawインスタンス
 ## @param spell_magic SpellMagicインスタンス
 static func apply_on_death(defeated, spell_draw, spell_magic) -> void:
-	print("[DEBUG] SkillLegacy.apply_on_death 呼び出し")
-	print("[DEBUG] defeated: ", defeated.creature_data.get("name", "?"))
-	print("[DEBUG] ability_detail: ", defeated.creature_data.get("ability_detail", ""))
-	
 	# 遺産[カード]
 	apply_card_legacy(defeated, spell_draw)
 	

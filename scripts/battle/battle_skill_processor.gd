@@ -15,8 +15,7 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
-const SkillMagicGain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
-const SkillMagicSteal = preload("res://scripts/battle/skills/skill_magic_steal.gd")
+var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
 var board_system_ref = null
 var game_flow_manager_ref = null
@@ -723,4 +722,4 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 		return
 	
 	# 魔力獲得スキルを適用
-	SkillMagicGain.apply_on_battle_start(attacker, defender, spell_magic)
+	_skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)

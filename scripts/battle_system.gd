@@ -9,8 +9,7 @@ signal invasion_completed(success: bool, tile_index: int)
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
-const MovementHelper = preload("res://scripts/game_flow/movement_helper.gd")
-const SkillItemReturn = preload("res://scripts/battle/skills/skill_item_return.gd")
+var _skill_item_return = preload("res://scripts/battle/skills/skill_item_return.gd")
 
 # バトル結果
 enum BattleResult {
@@ -82,7 +81,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic)
 	
 	# アイテム復帰スキルの初期化
-	SkillItemReturn.setup_systems(card_system)
+	_skill_item_return.setup_systems(card_system)
 
 # バトル実行（3D版メイン処理）
 func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
@@ -816,7 +815,7 @@ func _apply_item_return(participant: BattleParticipant, player_id: int):
 		return
 	
 	# アイテム復帰スキルをチェックして適用
-	var return_result = SkillItemReturn.check_and_apply_item_return(participant, used_items, player_id)
+	var return_result = _skill_item_return.check_and_apply_item_return(participant, used_items, player_id)
 	
 	if return_result.get("returned", false):
 		var count = return_result.get("count", 0)

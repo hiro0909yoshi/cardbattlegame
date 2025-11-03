@@ -184,10 +184,8 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
 	
 	# 🚫 ウォーロックディスク: 敵の全能力を無効化
-	print("[DEBUG] ウォーロックディスクチェック開始")
 	_apply_nullify_enemy_abilities(attacker, defender)
 	_apply_nullify_enemy_abilities(defender, attacker)
-	print("[DEBUG] ウォーロックディスクチェック完了")
 	
 	return {
 		"attacker": attacker,
@@ -726,7 +724,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 				print("  未実装の効果タイプ: ", effect_type)
 
 ## スキル付与条件をチェック（既存ConditionCheckerを使用）
-func check_skill_grant_condition(participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
+func check_skill_grant_condition(_participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
 	# 既存のConditionCheckerを使用
 	var checker = ConditionChecker.new()
 	return checker._evaluate_single_condition(condition, context)
@@ -1119,12 +1117,9 @@ func _apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_p
 		self_participant: 装備者（攻撃側 or 防御側）
 		enemy_participant: 敵（無効化対象）
 	"""
-	print("[DEBUG] _apply_nullify_enemy_abilities 呼び出し: ", self_participant.creature_data.get("name", "?"))
-	
 	# 装備者がウォーロックディスクを持っているかチェック
 	var has_warlock_disk = false
 	var items = self_participant.creature_data.get("items", [])
-	print("[DEBUG] アイテム数: ", items.size())
 	
 	for item in items:
 		var effect_parsed = item.get("effect_parsed", {})

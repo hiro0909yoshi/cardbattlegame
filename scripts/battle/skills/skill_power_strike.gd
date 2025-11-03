@@ -76,11 +76,11 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 			
 			# 条件を満たした場合のみAP上昇
 			if all_conditions_met:
-				var original_ap = participant.current_ap
+				var before_ap = participant.current_ap
 				var multiplier = effect.get("multiplier", 1.5)
 				participant.current_ap = int(participant.current_ap * multiplier)
 				print("【巻物強打発動】", participant.creature_data.get("name", "?"), 
-					  " AP: ", original_ap, " → ", participant.current_ap, " (×", multiplier, ")")
+					  " AP: ", before_ap, " → ", participant.current_ap, " (×", multiplier, ")")
 				return true
 			else:
 				print("【巻物強打不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の巻物攻撃")

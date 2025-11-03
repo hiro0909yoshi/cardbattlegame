@@ -5,7 +5,7 @@ class_name BattleSpecialEffects
 # 即死、無効化、再生、死亡時能力などの特殊スキル処理を担当
 
 # スキルモジュール
-const SkillLegacy = preload("res://scripts/battle/skills/skill_legacy.gd")
+var _skill_legacy = preload("res://scripts/battle/skills/skill_legacy.gd")
 
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
@@ -157,7 +157,7 @@ func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipa
 	return ability in attacker_keywords
 
 ## 攻撃者STが装備者より大きい場合の無効化判定（ラグドール用）
-func _check_nullify_attacker_st_above(condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+func _check_nullify_attacker_st_above(_condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
 	# 攻撃者の基礎ST
 	var attacker_base_ap = attacker.creature_data.get("ap", 0)
 	var attacker_base_up_ap = attacker.creature_data.get("base_up_ap", 0)
@@ -476,7 +476,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						result["revenge_mhp_activated"] = true
 	
 	# 💰 クリーチャースキル: 遺産・道産（フェイト、コーンフォーク、クリーピングコインなど）
-	SkillLegacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref)
+	_skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref)
 	
 	return result
 
