@@ -37,36 +37,51 @@ func _on_resized():
 
 # 子要素のサイズを親に合わせて調整（既存ノードのみ）
 func _adjust_children_size():
-	var card_width = size.x
-	var card_height = size.y
+	# Card.tscnの元サイズ（120x160）を基準とした比率
+	var original_width = 120.0
+	var original_height = 160.0
+	var scale_x = size.x / original_width
+	var scale_y = size.y / original_height
 	
-	# NameLabel（上部）- 既存ノードがあれば調整
+	# 各要素をCard.tscnで設定した位置から比率で拡大
 	var name_label = get_node_or_null("NameLabel")
 	if name_label:
-		name_label.position = Vector2(10, 10)
-		name_label.size = Vector2(card_width - 70, 40)
-		name_label.add_theme_font_size_override("font_size", int(card_width / 12))
+		name_label.position = Vector2(4, 3) * Vector2(scale_x, scale_y)
+		name_label.size = Vector2(112, 8) * Vector2(scale_x, scale_y)
+		name_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
 	
-	# CostLabel（右上）- 既存ノードがあれば調整
 	var cost_label = get_node_or_null("CostLabel")
 	if cost_label:
-		cost_label.position = Vector2(card_width - 60, 10)
-		cost_label.size = Vector2(50, 50)
-		cost_label.add_theme_font_size_override("font_size", int(card_width / 10))
+		cost_label.position = Vector2(111, 2) * Vector2(scale_x, scale_y)
+		cost_label.size = Vector2(8, 11) * Vector2(scale_x, scale_y)
+		cost_label.add_theme_font_size_override("font_size", max(int(7 * scale_x), 7))
 	
-	# StatsLabel（中央）- 既存ノードがあれば調整
+	var card_image = get_node_or_null("CardImage")
+	if card_image:
+		card_image.position = Vector2(10, 12) * Vector2(scale_x, scale_y)
+		card_image.size = Vector2(100, 77) * Vector2(scale_x, scale_y)
+	
+	var desc_bg = get_node_or_null("DescBG")
+	if desc_bg:
+		desc_bg.position = Vector2(12, 98) * Vector2(scale_x, scale_y)
+		desc_bg.size = Vector2(94, 53) * Vector2(scale_x, scale_y)
+	
 	var stats_label = get_node_or_null("StatsLabel")
 	if stats_label:
-		stats_label.position = Vector2(10, card_height / 2 - 20)
-		stats_label.size = Vector2(card_width - 20, 40)
-		stats_label.add_theme_font_size_override("font_size", int(card_width / 14))
+		stats_label.position = Vector2(51, 100) * Vector2(scale_x, scale_y)
+		stats_label.size = Vector2(54, 8) * Vector2(scale_x, scale_y)
+		stats_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
 	
-	# DescriptionLabel（下部）- 既存ノードがあれば調整
 	var desc_label = get_node_or_null("DescriptionLabel")
 	if desc_label:
-		desc_label.position = Vector2(10, card_height - 100)
-		desc_label.size = Vector2(card_width - 20, 80)
-		desc_label.add_theme_font_size_override("font_size", int(card_width / 18))
+		desc_label.position = Vector2(13, 113) * Vector2(scale_x, scale_y)
+		desc_label.size = Vector2(92, 38) * Vector2(scale_x, scale_y)
+		desc_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
+	
+	var rarity_border = get_node_or_null("RarityBorder")
+	if rarity_border:
+		rarity_border.position = Vector2.ZERO
+		rarity_border.size = Vector2(120, 160) * Vector2(scale_x, scale_y)
 
 func _on_mouse_entered():
 	mouse_over = true
@@ -79,21 +94,14 @@ func _on_mouse_exited():
 		z_index = 0
 
 func load_card_data(card_id):
-	print("[Card.gd] load_card_data呼び出し: ID=", card_id)
-	
 	# CardLoaderを使用
 	if CardLoader:
 		card_data = CardLoader.get_card_by_id(card_id)
-		print("[Card.gd] CardLoaderから取得: ", card_data.get("name", "???"))
-		
 		if not card_data.is_empty():
 			update_label()
 			set_element_color()
 			set_rarity_border()
 			_adjust_children_size()
-			print("[Card.gd] 表示更新完了")
-		else:
-			print("[Card.gd] エラー: card_dataが空")
 		return
 	
 	# フォールバック：Cards.json（古い実装）
