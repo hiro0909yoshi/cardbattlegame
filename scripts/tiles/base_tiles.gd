@@ -22,6 +22,10 @@ var base_color: Color = Color.WHITE  # タイルの基本色
 var is_occupied: bool = false  # プレイヤーが乗っているか
 var down_state: bool = false  # ダウン状態（Phase 1-A追加）
 
+# クリーチャーカード3D表示
+var creature_card_3d: Node3D = null  # 3Dカード表示ノード
+const CREATURE_CARD_3D_SCRIPT = preload("res://scripts/creatures/creature_card_3d_quad.gd")
+
 # シグナル
 signal player_landed(player_body)  # プレイヤーが止まった
 signal player_passed(player_body)  # プレイヤーが通過した
@@ -85,11 +89,40 @@ func place_creature(data: Dictionary):
 	
 	# 土地ボーナスはバトル時に動的計算するため、ここでは保存しない
 	
+	# 3Dカード表示を作成
+	_create_creature_card_3d()
+	
 	update_visual()
+
+# 3Dクリーチャーカードを作成
+func _create_creature_card_3d():
+	# 既存のカードがあれば削除
+	if creature_card_3d:
+		creature_card_3d.queue_free()
+		creature_card_3d = null
+	
+	# データが空なら作成しない
+	if creature_data.is_empty():
+		return
+	
+	# 新しい3Dカードを作成
+	creature_card_3d = Node3D.new()
+	creature_card_3d.set_script(CREATURE_CARD_3D_SCRIPT)
+	add_child(creature_card_3d)
+	
+	# クリーチャーデータを設定
+	if creature_card_3d.has_method("set_creature_data"):
+		creature_card_3d.set_creature_data(creature_data)
 
 # クリーチャーを削除
 func remove_creature():
 	creature_data = {}
+	
+	# 3Dカード表示を削除
+	if creature_card_3d:
+		creature_card_3d.queue_free()
+		creature_card_3d = null
+	
 	update_visual()
 
 # 所有者を設定

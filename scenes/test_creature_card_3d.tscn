@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://buir2piptyqj7"]
+
+[ext_resource type="Script" uid="uid://fmc7kcce8ngq" path="res://scripts/test_creature_card_3d.gd" id="1_test"]
+[ext_resource type="PackedScene" uid="uid://dtfil43yeci2x" path="res://scenes/Tiles/FireTile.tscn" id="2_fire_tile"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.4, 0.6, 0.8, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.5
+
+[node name="TestCreatureCard3D" type="Node3D"]
+script = ExtResource("1_test")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 0, 5, 8)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="TestTile" parent="." instance=ExtResource("2_fire_tile")]

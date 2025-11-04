@@ -14,6 +14,9 @@ var original_size: Vector2
 # signal card_clicked(index: int)
 
 func _ready():
+	# デフォルトのカード背景色を設定（シーンのデザイン用）
+	color = Color(0.6, 0.6, 0.6, 1)  # グレー
+	
 	# マウスイベントを接続
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
@@ -76,14 +79,21 @@ func _on_mouse_exited():
 		z_index = 0
 
 func load_card_data(card_id):
+	print("[Card.gd] load_card_data呼び出し: ID=", card_id)
+	
 	# CardLoaderを使用
 	if CardLoader:
 		card_data = CardLoader.get_card_by_id(card_id)
+		print("[Card.gd] CardLoaderから取得: ", card_data.get("name", "???"))
+		
 		if not card_data.is_empty():
 			update_label()
 			set_element_color()
 			set_rarity_border()
 			_adjust_children_size()
+			print("[Card.gd] 表示更新完了")
+		else:
+			print("[Card.gd] エラー: card_dataが空")
 		return
 	
 	# フォールバック：Cards.json（古い実装）
@@ -111,16 +121,9 @@ func load_card_data(card_id):
 			break
 
 func set_element_color():
-	var element = card_data.get("element", "")
-	match element:
-		"火": 
-			color = Color(1.0, 0.4, 0.4)
-		"水": 
-			color = Color(0.4, 0.6, 1.0)
-		"風": 
-			color = Color(0.4, 1.0, 0.6)
-		"土": 
-			color = Color(0.8, 0.6, 0.3)
+	# シーンのデザインを保持するため、色の上書きを無効化
+	# 属性色はRarityBorderで表現
+	pass
 
 func set_rarity_border():
 	var border = get_node_or_null("RarityBorder")
