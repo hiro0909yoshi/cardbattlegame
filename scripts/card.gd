@@ -99,8 +99,8 @@ func load_card_data(card_id):
 		card_data = CardLoader.get_card_by_id(card_id)
 		if not card_data.is_empty():
 			update_label()
-			set_element_color()
-			set_rarity_border()
+			set_element_color()    # 背景を属性色に
+			set_rarity_border()    # 枠をレアリティ色に
 			_adjust_children_size()
 		return
 	
@@ -129,9 +129,21 @@ func load_card_data(card_id):
 			break
 
 func set_element_color():
-	# シーンのデザインを保持するため、色の上書きを無効化
-	# 属性色はRarityBorderで表現
-	pass
+	# 属性色をカード背景（グレー部分）に設定
+	var element = card_data.get("element", "")
+	
+	# 属性に応じて背景色を設定
+	match element:
+		"fire":
+			color = Color(0.8, 0.3, 0.2)  # 赤系
+		"water":
+			color = Color(0.3, 0.5, 0.8)  # 青系
+		"wind":
+			color = Color(0.3, 0.7, 0.4)  # 緑系
+		"earth":
+			color = Color(0.7, 0.5, 0.3)  # 茶色系
+		_:
+			color = Color(0.6, 0.6, 0.6)  # グレー（無属性）
 
 func set_rarity_border():
 	var border = get_node_or_null("RarityBorder")
