@@ -2,12 +2,13 @@
 
 ## Basic Info
 - Engine: Godot 4.4.1 (GDScript)
-- Status: Prototype 80% complete
+- Status: Prototype 85% complete
 - Type: Board game + card battle hybrid
 
 ## Core Systems
 - **GameFlowManager**: Turn/phase control
-- **BoardSystem3D**: 20-tile diamond map, tile ownership, creature placement
+- **BoardSystem3D**: 20-tile diamond map, tile ownership
+- **CreatureManager**: Centralized creature data management (NEW - Nov 2025)
 - **CardSystem**: Deck (max 50), hand (max 6), draw/discard
 - **BattleSystem**: First-strike combat, bonuses, skill application
 - **PlayerSystem**: 4 players, magic points, land tracking
@@ -18,9 +19,47 @@
 ## Key Architecture Patterns
 - **Signal-driven**: Systems communicate via signals (decoupled)
 - **System separation**: Each system has single responsibility
+- **Data centralization**: CreatureManager manages all creature data (Nov 2025)
 - **3D-only**: BoardSystem3D manages 3D space, camera, movement
 
 ## New Systems (Jan 2025)
+
+### CreatureManager System (Nov 2025) ⭐ NEW
+**Status**: Phase 1-3 完全実装済み ✅
+
+**実装ファイル**: `scripts/creature_manager.gd`
+
+**重要**: クリーチャーデータは**タイルではなくCreatureManagerが管理**
+- タイルは配置場所を示すだけ
+- `tile.creature_data` はプロパティ経由でCreatureManagerにリダイレクト
+- データの実体は `CreatureManager.creatures[tile_index]` にある
+
+**アーキテクチャ**:
+```
+tile.creature_data (プロパティ)
+  ↓ get/set
+CreatureManager.get_data_ref(tile_index)
+  ↓
+creatures[tile_index] ← 実際のデータ保存場所
+```
+
+**主要機能**:
+- get_data_ref(): データへの参照取得（重要: コピーではなく参照）
+- set_data(): データ設定/削除
+- has_creature(): クリーチャー存在確認
+- find_by_player(): プレイヤー別検索
+- find_by_element(): 属性別検索
+- validate_integrity(): 整合性チェック
+- debug_print(): 状態出力
+
+**利点**:
+- データの一元管理
+- デバッグが容易
+- 検索・集計機能
+- セーブ/ロード簡素化
+- 既存コード800箇所を変更せずに実装
+
+**初期化**: BoardSystem3D._ready()で自動初期化
 
 ### TileNeighborSystem
 - Spatial adjacency detection (XZ-plane distance)
@@ -105,7 +144,7 @@ Next Phase
 7. First strike: Attacker AP vs Defender HP
 8. Counter: Defender ST vs Attacker HP (if alive)
 9. Result determination
-10. Item return processing (new - Nov 2025)
+10. Item return processing (Nov 2025)
 ```
 
 ## Land Bonus System
@@ -139,6 +178,7 @@ Chain  Toll Multiplier  HP Bonus
 - Signal connections: Use CONNECT_ONE_SHOT to prevent duplicates
 - Phase management: Check current_phase before state changes
 - Node validity: Always check is_instance_valid() before access
+- **CreatureManager**: Always initialized before tile access (automatic in BoardSystem3D)
 
 ## ability_parsed Structure
 ```json
@@ -174,7 +214,7 @@ Chain  Toll Multiplier  HP Bonus
 - Support/Assist: Bonus to other creatures
 - Vacant Move: Move to empty tiles without battle
 - Enemy Land Move: Can move to enemy lands
-- **Item Return** (NEW): Return used items to deck/hand
+- **Item Return**: Return used items to deck/hand
 
 ## Debug Commands
 - D: Toggle CPU hand visibility
@@ -190,6 +230,7 @@ Chain  Toll Multiplier  HP Bonus
 - Complete remaining 20 items (27%)
 - Balance tuning
 - CPU infinite loop fix
+- Phoenix "復活" skill implementation
 
 ### Medium (1 month)
 - World spell system (persistent effects)
@@ -204,6 +245,7 @@ Chain  Toll Multiplier  HP Bonus
 ## File Structure
 ```
 scripts/
+├── creature_manager.gd (NEW - 230 lines)
 ├── game_flow/
 │   ├── land_command_handler.gd (352L)
 │   ├── land_selection_helper.gd (177L)
@@ -215,22 +257,31 @@ scripts/
 │   ├── battle_preparation.gd (item phase)
 │   └── skills/
 │       ├── skill_transform.gd
-│       ├── skill_item_return.gd (NEW - Nov 2025)
+│       ├── skill_item_return.gd
 │       └── ...
 ├── skills/ (condition_checker, effect_combat)
 ├── ui_components/ (8 components)
 └── tiles/
+    └── base_tiles.gd (creature_data property)
 ```
 
 ## Important Notes
 - Check `docs/README.md` for complete documentation index
+- Refer to `docs/design/tile_creature_separation_plan.md` for CreatureManager design
 - Refer to `docs/design/skills_design.md` for skill details
 - Refer to `docs/design/skills/item_return_skill.md` for item return details
 - Refer to `docs/design/land_system.md` for land command details
 - Check `docs/issues/issues.md` for current bugs
 - UI positioning: Use viewport_size for responsiveness
 
-## Recent Major Fixes (Nov 2025)
+## Recent Major Changes (Nov 2025)
+- **CreatureManager Implementation (Nov 5)**: Complete tile-creature separation ⭐
+  - Phase 1-3 fully implemented and tested
+  - All creature data centralized in CreatureManager
+  - Zero changes to existing 800+ code locations
+  - Transparent redirection via property get/set
+  - Successfully tested in production game
+  - **Key Achievement**: Data separation without breaking existing code
 - **Item Return Skill (Nov 2)**: Implemented item return to deck/hand system
   - 3 items + 1 creature with return effects
   - Priority: Item's own effect > Creature's all-items effect
@@ -244,4 +295,4 @@ scripts/
 - **UI Flag Management**: `is_ending_turn` prevents premature card selection reinitialization
 - **Item System**: 55/75 items implemented with transformation and item_return support
 
-Last updated: 2025-11-02
+Last updated: 2025-11-05

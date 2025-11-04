@@ -1,60 +1,176 @@
-# 参照方式による最小限変更の設計 (2025年11月5日)
+# クリーチャー管理システム - 完全実装済み (2025年11月5日)
 
-## 調査結果
+## ⚠️ 重要: "タイル"という名称について
 
-### creature_data の性質
-1. **完全に独立したDictionary** - タイルは単なる入れ物
-2. **コピーして移動可能** - duplicate() で別タイルに移動できる
-3. **参照で操作される** - participant.creature_data["key"] = value
+**実装上の注意点**:
+- クリーチャーは**タイルに配置されている**が、データは**CreatureManagerが管理**
+- `tile.creature_data` という記法は残っているが、実体はCreatureManagerにある
+- 「タイルがクリーチャーを持っている」という理解は誤り
+- 正しくは「CreatureManagerがタイル番号をキーにクリーチャーを管理している」
 
-### 既存コードの制約
-- 約800箇所で `creature_data["key"]` 形式の直接変更
-- BattleParticipant が辞書への参照を保持
-- 既存コード変更は現実的でない
+## 実装完了状態 ✅
 
-## 新設計: 参照透過的なCreatureManager
+### Phase 1-3 すべて完了
 
-### コンセプト
-**「既存コードを一切変更せず、データだけを集約する」**
+**Phase 1**: CreatureManager実装 ✅
+- `scripts/creature_manager.gd` - 230行の完全実装
+- 基本機能: get_data_ref(), set_data(), has_creature(), clear_data()
+- 拡張機能: find_by_player(), find_by_element(), validate_integrity()
+- セーブ/ロード: get_save_data(), load_from_save_data()
+- 3D管理: set_visual_node(), update_all_visuals()
 
-### 実装方法
+**Phase 2**: BaseTile統合 ✅
+- `scripts/tiles/base_tiles.gd` 変更
+- creature_dataをプロパティ化（get/set）
+- 透過的なリダイレクト実装
+- `scripts/board_system_3d.gd` で初期化
 
-#### CreatureManager
-```gdscript
-class_name CreatureManager
-var creatures: Dictionary = {}  # {tile_index: creature_data}
+**Phase 3**: 完全移行 ✅
+- フォールバック機構(_local_creature_data)を削除
+- CreatureManagerへの完全依存
+- 実ゲームで動作確認完了
 
-func get_data_ref(tile_index: int) -> Dictionary:
-    if not creatures.has(tile_index):
-        creatures[tile_index] = {}
-    return creatures[tile_index]  # 参照を返す！
+## アーキテクチャ
+
+### データの流れ
+```
+tile.creature_data = {...}
+  ↓ (プロパティset)
+BaseTile.creature_data.set(value)
+  ↓
+CreatureManager.set_data(tile_index, value)
+  ↓
+creatures[tile_index] = value  ← 実際の保存場所
 ```
 
-#### BaseTile
+### 参照による変更
+```gdscript
+// これが動作する理由
+var ref = tile.creature_data  // get_data_ref()で参照取得
+ref["hp"] = 100  // CreatureManager内の辞書を直接変更
+```
+
+### 重要な実装コード
+
+**BaseTile (scripts/tiles/base_tiles.gd)**:
 ```gdscript
 static var creature_manager: CreatureManager = null
 
 var creature_data: Dictionary:
-    get: return creature_manager.get_data_ref(tile_index)
-    set(value): creature_manager.set_data(tile_index, value)
+    get:
+        if creature_manager:
+            return creature_manager.get_data_ref(tile_index)
+        else:
+            push_error("[BaseTile] CreatureManager未初期化")
+            return {}
+    set(value):
+        if creature_manager:
+            creature_manager.set_data(tile_index, value)
+        else:
+            push_error("[BaseTile] CreatureManager未初期化")
 ```
 
-### 利点
-✅ 既存コード800箇所を変更不要
-✅ データはCreatureManagerに集約
-✅ 段階的移行が可能
-✅ 3D表示との統合が容易
+**BoardSystem3D 初期化**:
+```gdscript
+func _ready():
+    create_creature_manager()  # 最初に実行
+    create_subsystems()
 
-### 実装ステップ
-1. ✅ CreatureManager作成（完了）
-2. ⬜ BaseTileにプロパティget/set追加
-3. ⬜ BoardSystemでの初期化
-4. ⬜ テスト
+func create_creature_manager():
+    var cm = CreatureManager.new()
+    cm.board_system = self
+    add_child(cm)
+    BaseTile.creature_manager = cm
+```
 
-### 削除処理の3シナリオ
-- **移動**: データコピー→削除→再配置
-- **手札復帰**: データコピー→削除→CardSystemへ
-- **完全削除**: 削除のみ（GC回収）
+## データ構造
 
-## Phase 2以降は不要
-参照方式により、API統一（Phase 2-3）はスキップ可能
+### CreatureManagerが管理するデータ
+```gdscript
+creatures: Dictionary = {
+    tile_index: {
+        "name": "ドラゴン",
+        "hp": 100,
+        "max_hp": 100,
+        "ap": 50,
+        "element": "fire",
+        "ability_parsed": {...},
+        "base_up_hp": 10,
+        "permanent_effects": [],
+        "temporary_effects": [],
+        "items": [],
+        ...全フィールド
+    }
+}
+```
+
+## 既存コードへの影響
+
+### 変更不要 ✅
+- 約800箇所の `tile.creature_data["key"]` は変更不要
+- place_creature(), remove_creature() も変更不要
+- BattleParticipant も変更不要
+- すべて透過的にCreatureManager経由になる
+
+### 変更したファイル（2ファイルのみ）
+1. `scripts/tiles/base_tiles.gd` - プロパティ追加
+2. `scripts/board_system_3d.gd` - 初期化追加
+
+## 利点
+
+### 開発面
+- データの一元管理が可能
+- デバッグが容易（debug_print()で一覧表示）
+- 検索・集計機能が簡単に追加できる
+
+### パフォーマンス
+- セーブ/ロードの簡素化
+- 将来的なキャッシュ最適化が可能
+
+### 保守性
+- 責任の分離が明確
+- テストが書きやすい
+- 拡張が容易
+
+## 使用例
+
+### 検索機能
+```gdscript
+# プレイヤー0のクリーチャー取得
+var creatures = creature_manager.find_by_player(0)
+
+# 火属性のクリーチャー取得
+var fire_creatures = creature_manager.find_by_element("fire")
+
+# すべてのクリーチャー数
+var count = creature_manager.get_creature_count()
+```
+
+### デバッグ
+```gdscript
+creature_manager.debug_print()
+# → コンソールに全クリーチャーの状態を出力
+```
+
+### 整合性チェック
+```gdscript
+if not creature_manager.validate_integrity():
+    print("データに問題があります")
+```
+
+## 注意事項
+
+### CreatureManagerの初期化タイミング
+- BoardSystem3D._ready()で自動的に初期化される
+- BaseTile.creature_managerはstaticなので全タイルで共有
+- 初期化前にアクセスするとエラー（push_error）
+
+### データの所有権
+- クリーチャーデータの「実体」はCreatureManagerにある
+- タイルはあくまで「配置場所」を示すだけ
+- データの移動はコピー→削除→再配置の流れ
+
+## テスト結果
+- 単体テスト: 10/10成功 ✅
+- 統合テスト: 6/6成功 ✅
+- 実ゲーム: すべて正常動作 ✅

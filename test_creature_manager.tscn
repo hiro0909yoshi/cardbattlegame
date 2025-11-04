@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://darjbeqgv0ujo"]
+[gd_scene load_steps=2 format=3 uid="uid://vxlb6he7a1o3"]
 
 [ext_resource type="Script" uid="uid://bqcx8w0lx6qiw" path="res://scripts/test_creature_manager.gd" id="1"]
 
