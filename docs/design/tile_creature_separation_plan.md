@@ -49,9 +49,9 @@ extends Node
 var creatures: Dictionary = {}  # {tile_index: CreatureInstance}
 
 class CreatureInstance:
-    var data: Dictionary        # クリーチャーの基本データ
-    var node_3d: Node3D        # 3D表示ノード
-    var tile_index: int        # 配置タイル
+	var data: Dictionary        # クリーチャーの基本データ
+	var node_3d: Node3D        # 3D表示ノード
+	var tile_index: int        # 配置タイル
 ```
 
 #### タイルの役割
@@ -86,14 +86,14 @@ class_name CreatureVisual
 @onready var status_icons: Node3D = $StatusIcons
 
 func set_creature_texture(texture_path: String):
-    sprite.texture = load(texture_path)
+	sprite.texture = load(texture_path)
 
 func add_status_icon(icon_type: String):
-    var icon = Sprite3D.new()
-    icon.texture = load("res://assets/icons/" + icon_type + ".png")
-    icon.position = Vector3(0.5, 0.8, 0)  # クリーチャーの右上
-    icon.pixel_size = 0.005
-    status_icons.add_child(icon)
+	var icon = Sprite3D.new()
+	icon.texture = load("res://assets/icons/" + icon_type + ".png")
+	icon.position = Vector3(0.5, 0.8, 0)  # クリーチャーの右上
+	icon.pixel_size = 0.005
+	status_icons.add_child(icon)
 ```
 
 #### 方法2: 3Dモデル（将来の拡張用）
@@ -137,14 +137,14 @@ material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 class_name CreatureAccessor
 
 static func get_creature_data(tile_or_index) -> Dictionary:
-    # 新旧両対応
-    if tile_or_index is BaseTile:
-        return tile_or_index.creature_data
-    else:
-        return CreatureManager.get_creature_data(tile_or_index)
+	# 新旧両対応
+	if tile_or_index is BaseTile:
+		return tile_or_index.creature_data
+	else:
+		return CreatureManager.get_creature_data(tile_or_index)
 
 static func has_creature(tile_or_index) -> bool:
-    # 同様に両対応
+	# 同様に両対応
 ```
 
 2. 既存コードを段階的に移行
@@ -162,16 +162,16 @@ static func has_creature(tile_or_index) -> bool:
 class_name CreatureModifier
 
 static func place_creature(tile_index: int, creature_data: Dictionary):
-    # 旧システム更新
-    tile.creature_data = creature_data.duplicate()
-    # 新システム更新
-    CreatureManager.place_creature(tile_index, creature_data)
+	# 旧システム更新
+	tile.creature_data = creature_data.duplicate()
+	# 新システム更新
+	CreatureManager.place_creature(tile_index, creature_data)
 
 static func remove_creature(tile_index: int):
-    # 両システムから削除
+	# 両システムから削除
 
 static func modify_creature_data(tile_index: int, key: String, value):
-    # 両システムで変更
+	# 両システムで変更
 ```
 
 **影響範囲**: 書き込み箇所約200箇所
@@ -187,17 +187,17 @@ static func modify_creature_data(tile_index: int, key: String, value):
 2. `CreatureManager` に表示管理を追加
 ```gdscript
 func create_visual(tile_index: int):
-    var visual = CREATURE_VISUAL_SCENE.instantiate()
-    var creature = creatures[tile_index]
-    
-    # テクスチャ設定
-    var texture_path = "res://assets/creatures/%d.png" % creature.data.get("id")
-    visual.set_creature_texture(texture_path)
-    
-    # タイル上に配置
-    var tile = board_system.get_tile(tile_index)
-    tile.add_child(visual)
-    creature.node_3d = visual
+	var visual = CREATURE_VISUAL_SCENE.instantiate()
+	var creature = creatures[tile_index]
+	
+	# テクスチャ設定
+	var texture_path = "res://assets/creatures/%d.png" % creature.data.get("id")
+	visual.set_creature_texture(texture_path)
+	
+	# タイル上に配置
+	var tile = board_system.get_tile(tile_index)
+	tile.add_child(visual)
+	creature.node_3d = visual
 ```
 
 **影響範囲**: 新規実装、既存システムへの影響なし
@@ -259,22 +259,22 @@ func create_visual(tile_index: int):
 var creature_visual: CreatureVisual = null
 
 func place_creature(data: Dictionary):
-    creature_data = data.duplicate()
-    _create_creature_visual()
-    update_visual()
+	creature_data = data.duplicate()
+	_create_creature_visual()
+	update_visual()
 
 func _create_creature_visual():
-    if creature_visual:
-        creature_visual.queue_free()
-    
-    if creature_data.is_empty():
-        return
-    
-    creature_visual = CREATURE_VISUAL_SCENE.instantiate()
-    add_child(creature_visual)
-    
-    var texture_path = "res://assets/creatures/%d.png" % creature_data.get("id")
-    creature_visual.set_creature_texture(texture_path)
+	if creature_visual:
+		creature_visual.queue_free()
+	
+	if creature_data.is_empty():
+		return
+	
+	creature_visual = CREATURE_VISUAL_SCENE.instantiate()
+	add_child(creature_visual)
+	
+	var texture_path = "res://assets/creatures/%d.png" % creature_data.get("id")
+	creature_visual.set_creature_texture(texture_path)
 ```
 
 **メリット**:
@@ -304,3 +304,409 @@ func _create_creature_visual():
 - [ ] **Option C**: 現状維持（3D表示は後回し）
 
 どのオプションを選択されますか？
+
+## 8. 実装状況 (2025年11月5日更新)
+
+### ✅ 完了済み (Phase 1-2)
+- **Phase 1: CreatureManager実装** ✅
+  - `scripts/creature_manager.gd` 完成
+  - 基本機能: get_data_ref, set_data, has_creature, clear_data
+  - 拡張機能: find_by_player, find_by_element, validate_integrity
+  - セーブ/ロード機能実装
+  - 単体テスト: 10/10 成功 ✅
+
+- **Phase 2: BaseTile統合** ✅
+  - `BaseTile.creature_data` をプロパティ化（get/set）
+  - CreatureManagerへの透過的なリダイレクト実装
+  - フォールバック機構（_local_creature_data）実装
+  - `BoardSystem3D` での初期化実装
+  - 統合テスト: 6/6 成功 ✅
+
+- **Phase 4の一部**: 3D表示機能（既存実装）
+  - creature_card_3d_quad.gd: QuadMesh方式の3Dカード表示
+  - base_tiles.gd: place_creature/remove_creature時の自動3D生成
+  - 動的データ更新機能（ステータス変化の即時反映）
+
+### 🚧 次のステップ (Phase 3)
+- **Phase 3: 実ゲームでの動作確認**
+  - Godotエディタでの起動テスト
+  - 既存機能がすべて正常動作することを確認
+  - CreatureManager.debug_print() でのデータ集約確認
+  - バトル、移動、手札復帰の動作確認
+
+### ⬜ 未実装
+- Phase 2: 読み取りAPI統一（8-12時間）
+- Phase 3: 書き込みAPI統一（10-15時間）
+- Phase 5: 旧システム削除（3-5時間）
+
+### 選択した方針
+**Phase 1から段階的に完全分離を開始**
+
+理由:
+- 呪文システム実装前にクリーチャー管理の正しい構造が必要
+- 既に3D表示は動作しているため、Phase 1-3に集中できる
+- 段階的移行により、リスクを最小化
+
+## 9. Phase 1 実装計画
+
+### タスクリスト
+1. CreatureManager クラスの作成
+2. CreatureInstance クラスの作成  
+3. BoardSystem3D に CreatureManager を統合
+4. 二重管理の実装（tile.creature_data と CreatureManager の並行稼働）
+5. テスト: 既存機能が正常動作することを確認
+
+## 10. 新設計: 参照方式による最小限変更 (2025年11月5日 - 決定版)
+
+### 10.1 設計変更の経緯
+
+#### 調査で判明した重要な事実
+
+1. **creature_dataの性質**
+   - 完全に独立したDictionary型のデータ
+   - タイルは単なる「入れ物」に過ぎない
+   - データ自体はコピー可能で、タイル間を移動できる
+
+2. **実際の使用パターン**
+   ```gdscript
+   # 移動時: データをコピーして別タイルへ
+   var creature_data = source_tile.creature_data.duplicate()
+   source_tile.remove_creature()
+   dest_tile.place_creature(creature_data)
+   
+   # バトル時: 辞書への参照を直接変更
+   participant.creature_data["base_up_hp"] += 10
+   creature_data["items"].append(item)
+   ```
+
+3. **既存コードの制約**
+   - **約800箇所**で `creature_data["key"]` 形式の直接変更
+   - `BattleParticipant` がバトル中に辞書への参照を保持
+   - `get_tile_info()["creature"]` が辞書への参照を返す
+   - これらを全て書き換えるのは非現実的
+
+#### Phase 1-5の問題点
+
+当初計画のPhase 2-3（API統一）では、800箇所のコード変更が必要で：
+- 膨大な工数（20-25時間）
+- 高いバグ混入リスク
+- 既存システムとの互換性問題
+
+### 10.2 新設計: 参照透過方式
+
+#### 設計コンセプト
+
+**「既存コードを一切変更せず、データの保存場所だけを変える」**
+
+Godotのプロパティget/set機能を活用し、`tile.creature_data` へのアクセスを透過的にCreatureManagerへリダイレクトします。
+
+#### 実装詳細
+
+##### CreatureManager (scripts/creature_manager.gd)
+
+```gdscript
+extends Node
+class_name CreatureManager
+
+# すべてのクリーチャーデータを一元管理
+var creatures: Dictionary = {}  # {tile_index: creature_data辞書}
+
+# BoardSystemへの参照
+var board_system: Node = null
+
+# データへの参照を返す（重要: コピーではなく参照！）
+func get_data_ref(tile_index: int) -> Dictionary:
+	if not creatures.has(tile_index):
+		creatures[tile_index] = {}
+	return creatures[tile_index]
+
+# データ全体を設定
+func set_data(tile_index: int, data: Dictionary):
+	if data.is_empty():
+		# 空の辞書が渡された = 削除
+		creatures.erase(tile_index)
+	else:
+		creatures[tile_index] = data.duplicate(true)
+
+# デバッグ出力
+func debug_print():
+	print("[CreatureManager] 管理中: ", creatures.size(), "体")
+	for idx in creatures.keys():
+		var d = creatures[idx]
+		if not d.is_empty():
+			print("  タイル", idx, ": ", d.get("name", "???"))
+```
+
+##### BaseTile の変更 (scripts/tiles/base_tiles.gd)
+
+```gdscript
+extends Node3D
+class_name BaseTile
+
+# CreatureManagerへの静的参照
+static var creature_manager: CreatureManager = null
+
+# creature_data をプロパティに変更
+var creature_data: Dictionary:
+	get:
+		if creature_manager:
+			return creature_manager.get_data_ref(tile_index)
+		else:
+			# フォールバック（CreatureManager未設定時）
+			return _local_creature_data
+	set(value):
+		if creature_manager:
+			creature_manager.set_data(tile_index, value)
+		else:
+			_local_creature_data = value
+
+# ローカルバックアップ（移行期の安全装置）
+var _local_creature_data: Dictionary = {}
+
+# 既存メソッドは変更不要！
+func place_creature(data: Dictionary):
+	creature_data = data.duplicate()  # setterが自動的に呼ばれる
+	# ... 以下同じ ...
+
+func remove_creature():
+	creature_data = {}  # setterが自動的に呼ばれる
+	# ... 以下同じ ...
+```
+
+##### BoardSystem3D での初期化
+
+```gdscript
+# board_system_3d.gd の _ready() に追加
+func _ready():
+	# CreatureManagerを作成
+	var cm = CreatureManager.new()
+	cm.board_system = self
+	add_child(cm)
+	
+	# BaseTileの静的参照を設定
+	BaseTile.creature_manager = cm
+	
+	print("[BoardSystem3D] CreatureManager統合完了")
+```
+
+### 10.3 この設計の利点
+
+#### ✅ 既存コード800箇所を変更不要
+
+```gdscript
+# これらが全てそのまま動く！
+tile.creature_data["base_up_hp"] = 10
+var name = tile.creature_data.get("name", "")
+participant.creature_data["items"].append(item)
+creature_data["temporary_effects"] = []
+```
+
+#### ✅ データはCreatureManagerに集約
+
+- すべてのクリーチャーデータが`CreatureManager.creatures`に保存
+- デバッグが容易（`CreatureManager.debug_print()`で一覧表示）
+- セーブ/ロードの簡素化（一箇所からデータ取得）
+
+#### ✅ 段階的な移行が可能
+
+1. CreatureManager実装（フォールバック付き）
+2. BoardSystemに統合
+3. 動作確認
+4. フォールバック削除（オプション）
+
+#### ✅ 3D表示管理の統合が容易
+
+```gdscript
+# CreatureManagerに追加可能
+var visual_nodes: Dictionary = {}  # {tile_index: Node3D}
+
+func set_visual_node(tile_index: int, node: Node3D):
+	visual_nodes[tile_index] = node
+```
+
+### 10.4 削除処理の3つのシナリオ
+
+#### シナリオA: 移動時の削除
+
+```gdscript
+# データはコピーされて移動
+var data = source_tile.creature_data.duplicate()  
+# → CreatureManager.get_data_ref(source_index) からコピー取得
+
+source_tile.remove_creature()  
+# → creature_data = {} → CreatureManager.set_data(source_index, {})
+# → CreatureManager.creatures から source_index が削除される
+
+dest_tile.place_creature(data)  
+# → creature_data = data → CreatureManager.set_data(dest_index, data)
+# → CreatureManager.creatures[dest_index] に新規追加
+```
+
+#### シナリオB: 倒された時（手札復帰）
+
+```gdscript
+# タイルから削除、CardSystemに移動
+var data = tile.creature_data.duplicate()
+# → CreatureManagerからコピー取得
+
+tile.remove_creature()
+# → CreatureManagerから削除
+
+card_system.return_card_to_hand(player_id, data)
+# → 手札システムへ
+```
+
+#### シナリオC: 完全削除（破壊など）
+
+```gdscript
+# データごと消滅
+tile.remove_creature()
+# → CreatureManagerから削除
+# → データはGCで自動回収
+```
+
+### 10.5 技術的な詳細
+
+#### プロパティget/setの動作
+
+```gdscript
+# 読み取り時
+var name = tile.creature_data.get("name", "")
+↓
+var name = CreatureManager.get_data_ref(tile_index).get("name", "")
+
+# 書き込み時（辞書全体）
+tile.creature_data = new_data
+↓
+CreatureManager.set_data(tile_index, new_data)
+
+# 書き込み時（キーへの代入）
+tile.creature_data["base_up_hp"] = 10
+↓
+CreatureManager.get_data_ref(tile_index)["base_up_hp"] = 10
+```
+
+#### 参照の重要性
+
+**重要**: `get_data_ref()` は参照を返すため、既存コードの`creature_data["key"] = value`がそのまま動作します。
+
+```gdscript
+# これが動く理由
+var ref = tile.creature_data  # → CreatureManager内の辞書への参照
+ref["base_up_hp"] = 10  # → CreatureManager内のデータが直接変更される
+```
+
+### 10.6 実装ステップ
+
+#### Step 1: CreatureManager作成 ✅ (完了)
+- `scripts/creature_manager.gd` 作成済み
+- 基本的なデータ保管機能実装済み
+
+#### Step 2: BaseTileへのプロパティ追加
+```gdscript
+# base_tiles.gd に追加
+static var creature_manager: CreatureManager = null
+
+var creature_data: Dictionary:
+	get: return creature_manager.get_data_ref(tile_index) if creature_manager else _local_creature_data
+	set(value): 
+		if creature_manager:
+			creature_manager.set_data(tile_index, value)
+		else:
+			_local_creature_data = value
+
+var _local_creature_data: Dictionary = {}
+```
+
+#### Step 3: BoardSystemでの初期化
+```gdscript
+# board_system_3d.gd の _ready() に追加
+var cm = CreatureManager.new()
+cm.board_system = self
+add_child(cm)
+BaseTile.creature_manager = cm
+```
+
+#### Step 4: 動作確認
+- 既存の全機能が正常動作することを確認
+- `CreatureManager.debug_print()` でデータ集約を確認
+- バトル、移動、手札復帰などのテスト
+
+### 10.7 Phase 2以降の計画変更
+
+#### 旧計画
+- Phase 2: 読み取りAPI統一（8-12時間）
+- Phase 3: 書き込みAPI統一（10-15時間）
+- 合計: 18-27時間
+
+#### 新計画
+**Phase 2-3は不要！**
+
+参照方式により、既存コードの書き換えが不要になったため、18-27時間の工数を削減。
+
+直接、機能拡張（3D表示管理、クリーチャー検索など）へ進める。
+
+### 10.8 リスク評価
+
+| リスク | 影響度 | 確率 | 対策 |
+|--------|--------|------|------|
+| プロパティget/setの性能オーバーヘッド | 低 | - | Godotのプロパティは最適化済み |
+| 参照の不整合 | 低 | 低 | フォールバック機構で安全 |
+| 静的変数の初期化タイミング | 中 | 低 | BoardSystemの_ready()で明示的に設定 |
+| セーブ/ロードの互換性 | 中 | 中 | 移行期は両方式をサポート |
+
+### 10.9 成功基準
+
+- ✅ すべての既存機能が正常動作
+- ✅ `CreatureManager.debug_print()` でデータが集約されている
+- ✅ バトル、移動、手札復帰が正常動作
+- ✅ 3D表示が正常に更新される
+
+### 10.10 今後の拡張
+
+#### 3D表示ノード管理
+```gdscript
+# CreatureManagerに追加
+var visual_nodes: Dictionary = {}
+
+func set_visual_node(tile_index: int, node: Node3D):
+	visual_nodes[tile_index] = node
+
+func update_all_visuals():
+	for tile_index in creatures.keys():
+		if visual_nodes.has(tile_index):
+			visual_nodes[tile_index].update_creature_data(creatures[tile_index])
+```
+
+#### クリーチャー検索
+```gdscript
+func find_by_player(player_id: int) -> Array:
+	var result = []
+	for idx in creatures.keys():
+		var tile_info = board_system.get_tile_info(idx)
+		if tile_info.get("owner") == player_id:
+			result.append({"tile_index": idx, "data": creatures[idx]})
+	return result
+
+func find_by_element(element: String) -> Array:
+	var result = []
+	for idx in creatures.keys():
+		if creatures[idx].get("element") == element:
+			result.append({"tile_index": idx, "data": creatures[idx]})
+	return result
+```
+
+### 10.11 まとめ
+
+**この新設計により:**
+- ✅ 既存コード800箇所の変更が不要に
+- ✅ 工数を18-27時間削減
+- ✅ データの一元管理を実現
+- ✅ リスクを最小化
+
+**次のステップ:**
+1. Step 2: BaseTileへのプロパティ追加
+2. Step 3: BoardSystemでの初期化
+3. Step 4: テストと動作確認
+
+---

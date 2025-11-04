@@ -1,6 +1,9 @@
 extends Node3D
 class_name BaseTile
 
+# CreatureManagerへの静的参照（全タイル共通）
+static var creature_manager: CreatureManager = null
+
 # エクスポート変数（Inspectorで設定可能）
 @export var tile_type: String = ""  # "fire", "water", "wind", "earth", "neutral"
 @export var owner_id: int = -1  # -1=未所有, 0=プレイヤー1, 1=プレイヤー2
@@ -17,7 +20,24 @@ var connections: Dictionary = {
 }
 
 # 内部変数
-var creature_data: Dictionary = {}  # 配置されているクリーチャー情報
+# creature_data は下でプロパティとして再定義（CreatureManager経由）
+# ローカルバックアップ（フォールバック用）
+var _local_creature_data: Dictionary = {}
+
+# creature_data プロパティ（CreatureManager経由、フォールバック付き）
+var creature_data: Dictionary:
+	get:
+		if creature_manager:
+			return creature_manager.get_data_ref(tile_index)
+		else:
+			# フォールバック: CreatureManager未設定時
+			return _local_creature_data
+	set(value):
+		if creature_manager:
+			creature_manager.set_data(tile_index, value)
+		else:
+			# フォールバック: CreatureManager未設定時
+			_local_creature_data = value
 var base_color: Color = Color.WHITE  # タイルの基本色
 var is_occupied: bool = false  # プレイヤーが乗っているか
 var down_state: bool = false  # ダウン状態（Phase 1-A追加）

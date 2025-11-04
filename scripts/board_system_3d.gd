@@ -61,7 +61,21 @@ var game_flow_manager = null  # GameFlowManagerへの参照
 # === 初期化 ===
 
 func _ready():
+	# CreatureManagerを最初に作成
+	create_creature_manager()
 	create_subsystems()
+
+func create_creature_manager():
+	"""CreatureManagerを作成してBaseTileに設定"""
+	var cm = CreatureManager.new()
+	cm.name = "CreatureManager"
+	cm.board_system = self
+	add_child(cm)
+	
+	# BaseTileの静的参照を設定
+	BaseTile.creature_manager = cm
+	
+	print("[BoardSystem3D] CreatureManager統合完了")
 
 func create_subsystems():
 	# 既存のサブシステム
