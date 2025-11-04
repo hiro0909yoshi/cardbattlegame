@@ -12,6 +12,11 @@ size = Vector3(1, 0.0983887, 1)
 
 [node name="NeutralTile" type="StaticBody3D"]
 script = ExtResource("1_il3xu")
+tile_type = null
+owner_id = null
+level = null
+tile_index = null
+warp_destination = null
 
 [node name="frame" parent="." instance=ExtResource("3_8gi0d")]
 

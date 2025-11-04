@@ -128,6 +128,91 @@ func load_card_data(card_id):
 			_adjust_children_size()
 			break
 
+# クリーチャーの動的データを読み込む（バトル中の変更を反映）
+func load_dynamic_creature_data(data: Dictionary):
+	if data.is_empty():
+		return
+	
+	# 渡されたデータをそのまま使用（バトル中の変更が含まれる）
+	card_data = data.duplicate()
+	
+	# 表示を更新
+	update_dynamic_stats()
+	set_element_color()
+	set_rarity_border()
+	_adjust_children_size()
+
+# 動的ステータスを更新（MHP/ST増加を反映）
+func update_dynamic_stats():
+	var name_label = get_node_or_null("NameLabel")
+	if name_label:
+		name_label.text = card_data.get("name", "???")
+		name_label.add_theme_color_override("font_color", Color.BLACK)
+	
+	var cost_label = get_node_or_null("CostLabel")
+	if cost_label:
+		var cost = card_data.get("cost", 1)
+		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
+			cost = cost.mp
+		cost_label.text = str(cost)
+		cost_label.add_theme_color_override("font_color", Color.WHITE)
+		cost_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	
+	var stats_label = get_node_or_null("StatsLabel")
+	if stats_label:
+		# 基礎値 + 増加分
+		var base_ap = card_data.get("ap", 0)
+		var base_up_ap = card_data.get("base_up_ap", 0)
+		var total_ap = base_ap + base_up_ap
+		
+		var base_hp = card_data.get("hp", 0)
+		var base_up_hp = card_data.get("base_up_hp", 0)
+		var total_hp = base_hp + base_up_hp
+		
+		# 変化がある場合は色を変える
+		var ap_text = str(total_ap)
+		var hp_text = str(total_hp)
+		
+		if base_up_ap > 0:
+			ap_text = "[color=green]" + ap_text + "[/color]"
+		elif base_up_ap < 0:
+			ap_text = "[color=red]" + ap_text + "[/color]"
+		
+		if base_up_hp > 0:
+			hp_text = "[color=green]" + hp_text + "[/color]"
+		elif base_up_hp < 0:
+			hp_text = "[color=red]" + hp_text + "[/color]"
+		
+		stats_label.text = "攻:" + ap_text + " 防:" + hp_text
+		stats_label.add_theme_color_override("font_color", Color.BLACK)
+		stats_label.bbcode_enabled = true
+	
+	var desc_label = get_node_or_null("DescriptionLabel")
+	if desc_label:
+		var element = card_data.get("element", "")
+		var ability_text = card_data.get("ability", "")
+		
+		# アイテム情報を追加
+		var items = card_data.get("items", [])
+		if items.size() > 0:
+			var item_names = []
+			for item in items:
+				item_names.append(item.get("name", "???"))
+			ability_text += "\n[装備: " + ", ".join(item_names) + "]"
+		
+		# 永続効果を表示
+		var permanent_effects = card_data.get("permanent_effects", [])
+		if permanent_effects.size() > 0:
+			ability_text += "\n[永続効果: " + str(permanent_effects.size()) + "個]"
+		
+		# 一時効果を表示
+		var temporary_effects = card_data.get("temporary_effects", [])
+		if temporary_effects.size() > 0:
+			ability_text += "\n[一時効果: " + str(temporary_effects.size()) + "個]"
+		
+		desc_label.text = ability_text if not ability_text.is_empty() else element + "属性"
+		desc_label.add_theme_color_override("font_color", Color.BLACK)
+
 func set_element_color():
 	# 属性色をカード背景（グレー部分）に設定
 	var element = card_data.get("element", "")

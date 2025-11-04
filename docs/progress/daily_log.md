@@ -12,48 +12,84 @@
 
 ---
 
-## 2025年11月4日（セッション1）
+## 2025年11月4日（セッション2）
 
 ### 完了した作業
 
-- ✅ **タイルとクリーチャー分離の詳細設計完了**
-  - `docs/design/tile_creature_separation_plan.md`: 影響範囲調査（800+箇所）と段階的移行プラン
-  - 5つのフェーズに分けた実装計画（推定29-45時間）
-  - 最小限アプローチと完全分離アプローチの比較
+- ✅ **3D表示の動的データ更新機能を実装**
+  - `card.gd`: `load_dynamic_creature_data()` と `update_dynamic_stats()` 既に実装済み
+  - `creature_card_3d_quad.gd`: `update_creature_data()` メソッド追加
+  - `base_tiles.gd`: `update_creature_data()` メソッド既に実装済み
+  - `board_system_3d.gd`: `update_tile_creature()` に3D更新呼び出し追加
+  - `battle_system.gd`: 以下の箇所に3D更新呼び出し追加
+	- `add_effect_to_creature()`: 効果追加時
+	- `clear_temporary_effects_on_move()`: 移動時の一時効果削除
+	- `remove_effects_from_creature()`: 効果削除時
+	- `_apply_after_battle_permanent_changes()`: バトル後の永続変化
+	- マスグロース、ドミナントグロースは既に実装済み
 
-- ✅ **クリーチャーカード3D表示システムの基礎実装**
-  - `scripts/creatures/creature_card_3d.gd`: SubViewport + Sprite3Dで既存カードを3D表示
-  - `scripts/tiles/base_tiles.gd`: place_creature/remove_creature時に3Dカード自動生成
-  - `scripts/test_creature_card_3d.gd`: テストシーン用スクリプト
+- ✅ **領地コマンド移動時のデバッグ出力追加**
+  - `base_tiles.gd`: `place_creature()`, `remove_creature()`, `_create_creature_card_3d()` にログ追加
+  - `land_action_helper.gd`: クリーチャー移動処理の各ステップにログ追加
 
 ### 実装の詳細
 
-**CreatureCard3D の仕組み**:
-- SubViewport内に既存の2D Card.tscnをインスタンス化
-- ViewportTextureをSprite3Dに適用して3D空間に表示
-- Billboard設定でカメラに常に向く
-- タイルの0.8m上に浮かせて配置
+**動的データ更新の仕組み**:
+```
+バトルシステムで creature_data 変更
+  ↓
+tile.update_creature_data(new_data) 呼び出し
+  ↓
+creature_card_3d.update_creature_data(data) 呼び出し
+  ↓
+card_instance.load_dynamic_creature_data(data) 呼び出し
+  ↓
+card_instance.update_dynamic_stats() でUI更新
+  ↓
+viewport のテクスチャが更新される
+  ↓
+3D表示に反映
+```
 
-**次のステップ**:
-1. テストシーンの作成（.tscnファイル）
-2. 動作確認とビジュアル調整
-3. ステータスアイコン表示システムの追加
-4. その後、段階的な分離作業に着手
+**動的に表示される情報**:
+- ✅ MHP/ST増加（緑/赤で表示）
+- ✅ 装備アイテム一覧
+- ✅ 永続効果の数
+- ✅ 一時効果の数
+
+- ✅ **BaseTileの継承関係を修正**
+  - `extends Node3D` → `extends StaticBody3D` に変更
+  - シーンのルートノード（StaticBody3D）と一致させた
+  - これにより "Could not resolve class BaseTile" エラーを解消
 
 ### 現在の作業
 
-- 🚧 **クリーチャーカード3D表示のテスト準備**
-  - テストシーン（.tscn）の作成が必要
-  - 実際の表示確認と調整
-  - 全132個を10カテゴリーに正確に分類
-  - 各カテゴリーに優先度を設定
+- 🚧 **領地コマンド移動時のクリーチャー消失問題を調査中**
+  - デバッグ出力を追加済み
+  - 次回実行時に詳細ログから原因特定予定
 
 ### 次のステップ
 
-- 📋 **実装フェーズの決定**
-  - 優先度の高いカテゴリーから実装計画を立てる
-  - 世界呪系・土地操作系・💬付与系から開始予定
+**即座に実施**:
+1. ⬜ **ゲームで領地コマンドを実行してログ確認**
+   - クリーチャーが消える原因を特定
+   - 必要に応じて修正
 
-**残りトークン: 84,436 / 190,000**
+2. ⬜ **動的データ更新のテスト**
+   - マスグロースでMHP増加が3D表示に反映されるか
+   - バトル後のST/MHP変化が反映されるか
+   - アイテム装備が表示されるか
+
+**その後**:
+3. ⬜ ステータスアイコン表示システム（HP表示、状態異常など）
+4. ⬜ 呪文システムの実装
+5. ⬜ タイル・クリーチャー完全分離（長期）
+
+### 参考ドキュメント
+
+- `docs/implementation/creature_3d_display_implementation.md`: 完全な実装レポート
+- `docs/design/tile_creature_separation_plan.md`: 分離設計書
+
+**⚠️ 残りトークン数: 125,802 / 190,000**
 
 ---

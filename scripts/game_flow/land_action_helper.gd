@@ -246,6 +246,7 @@ static func confirm_move(handler, dest_tile_index: int):
 	
 	# 移動元のクリーチャー情報を取得
 	var creature_data = source_tile.creature_data.duplicate()
+	print("[LandActionHelper] creature_data from source: ", creature_data.get("name", "NO_NAME"), " id=", creature_data.get("id", -1))
 	if creature_data.is_empty():
 		print("[LandActionHelper] エラー: 移動元にクリーチャーがいません")
 		handler.close_land_command()
@@ -254,6 +255,7 @@ static func confirm_move(handler, dest_tile_index: int):
 	var current_player_index = source_tile.owner_id
 	
 	# 1. 移動元のクリーチャーを削除し、空き地にする
+	print("[LandActionHelper] Removing creature from source tile: ", handler.move_source_tile)
 	source_tile.remove_creature()
 	handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
 	
@@ -263,18 +265,16 @@ static func confirm_move(handler, dest_tile_index: int):
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		print("[LandActionHelper] 空き地への移動 - 土地獲得")
+		print("[LandActionHelper] Placing creature on dest tile: ", dest_tile_index)
+		print("[LandActionHelper] creature_data to place: ", creature_data.get("name", "NO_NAME"), " id=", creature_data.get("id", -1))
 		
-		# 移動先にクリーチャーを直接配置（すでにcreature_dataをduplicateしている）
-		dest_tile.creature_data = creature_data
-		dest_tile.owner_id = current_player_index
+		# place_creature()を使って3Dカードも含めて正しく配置
+		dest_tile.place_creature(creature_data)
 		
 		# ダウン状態設定（不屈チェック）
 		if dest_tile.has_method("set_down_state"):
 			if not SkillSystem.has_unyielding(creature_data):
 				dest_tile.set_down_state(true)
-		
-		if dest_tile.has_method("update_display"):
-			dest_tile.update_display()
 		
 		# 移動先の所有権を設定
 		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)

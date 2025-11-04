@@ -258,10 +258,30 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	if card_id in discard:
 		discard.erase(card_id)
 	
-	# 手札に追加
-	player_hands[player_id]["data"].append(card_data)
+	# 🔧 クリーンなカードデータを作成（バトル中の変更をリセット）
+	var clean_card_data = _get_clean_card_data(card_id)
+	if clean_card_data.is_empty():
+		# 元データが見つからない場合は渡されたデータをそのまま使う
+		clean_card_data = card_data.duplicate()
+		# 少なくともバトル用フィールドは削除
+		clean_card_data.erase("base_up_hp")
+		clean_card_data.erase("base_up_ap")
+		clean_card_data.erase("permanent_effects")
+		clean_card_data.erase("temporary_effects")
+		clean_card_data.erase("map_lap_count")
+		clean_card_data.erase("items")
+		clean_card_data.erase("current_hp")
 	
-	print("【カード復帰】", card_data.get("name", "不明"), " が手札に戻りました")
+	# 手札に追加
+	player_hands[player_id]["data"].append(clean_card_data)
+	
+	print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました（クリーン状態）")
 	emit_signal("hand_updated")
 	
 	return true
+
+## カードIDから元のクリーンなデータを取得
+func _get_clean_card_data(card_id: int) -> Dictionary:
+	if CardLoader and CardLoader.has_method("get_card_by_id"):
+		return CardLoader.get_card_by_id(card_id)
+	return {}

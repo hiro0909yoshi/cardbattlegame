@@ -495,6 +495,11 @@ func add_spell_effect_to_creature(tile_index: int, effect: Dictionary) -> bool:
 	print("[効果追加] ", effect.get("source_name"), " → ", creature_data.get("name"), " (", effects_key, ")")
 	print("  ", effect.get("stat"), " +", effect.get("value"))
 	
+	# 3D表示を更新
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if tile and tile.has_method("update_creature_data"):
+		tile.update_creature_data(creature_data)
+	
 	return true
 
 ## マスグロース効果を適用（全自クリーチャーのMHP+5）
@@ -516,6 +521,11 @@ func apply_mass_growth(player_id: int, bonus_hp: int = 5) -> int:
 			var creature_data = tile_info["creature"]
 			creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + bonus_hp
 			affected_count += 1
+			
+			# 3D表示を更新
+			var tile = board_system_ref.tile_nodes[tile_index]
+			if tile and tile.has_method("update_creature_data"):
+				tile.update_creature_data(creature_data)
 			
 			print("[マスグロース] ", creature_data.get("name"), " MHP +", bonus_hp, " (合計:", creature_data["base_up_hp"], ")")
 	
@@ -546,6 +556,11 @@ func apply_dominant_growth(player_id: int, element: String, bonus_hp: int = 10) 
 				creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + bonus_hp
 				affected_count += 1
 				
+				# 3D表示を更新
+				var tile = board_system_ref.tile_nodes[tile_index]
+				if tile and tile.has_method("update_creature_data"):
+					tile.update_creature_data(creature_data)
+				
 				print("[ドミナントグロース] ", creature_data.get("name"), " MHP +", bonus_hp, " (合計:", creature_data["base_up_hp"], ")")
 	
 	print("[ドミナントグロース完了] ", element, "属性 ", affected_count, "体に適用")
@@ -570,6 +585,11 @@ func clear_temporary_effects_on_move(tile_index: int) -> bool:
 	
 	if cleared_count > 0:
 		print("[移動] ", creature_data.get("name"), " の一時効果 ", cleared_count, "個をクリア")
+	
+	# 3D表示を更新
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if tile and tile.has_method("update_creature_data"):
+		tile.update_creature_data(creature_data)
 	
 	return true
 
@@ -611,6 +631,11 @@ func remove_effects_from_creature(tile_index: int, removable_only: bool = true) 
 	
 	if removed_count > 0:
 		print("[打ち消し完了] ", creature_data.get("name"), " から ", removed_count, "個の効果を削除")
+	
+	# 3D表示を更新
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if tile and tile.has_method("update_creature_data"):
+		tile.update_creature_data(creature_data)
 	
 	return removed_count
 

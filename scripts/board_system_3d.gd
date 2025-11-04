@@ -229,6 +229,10 @@ func update_tile_creature(tile_index: int, new_creature_data: Dictionary):
 	if tile.has_method("update_visual"):
 		tile.update_visual()
 	
+	# 3Dカード表示を更新
+	if tile.has_method("update_creature_data"):
+		tile.update_creature_data(new_creature_data)
+	
 	print("[BoardSystem3D] クリーチャー更新: タイル%d → %s" % [tile_index, new_creature_data.get("name", "?")])
 
 func remove_creature(tile_index: int):

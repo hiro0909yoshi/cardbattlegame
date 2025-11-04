@@ -73,6 +73,7 @@ func can_place_creature() -> bool:
 
 # クリーチャーを配置
 func place_creature(data: Dictionary):
+	print("[BaseTile] place_creature called with data: ", data.get("name", "NO_NAME"), " id=", data.get("id", -1))
 	creature_data = data.duplicate()  # 元データを変更しないようにコピー
 	
 	# 効果システム用フィールドの初期化
@@ -98,12 +99,16 @@ func place_creature(data: Dictionary):
 func _create_creature_card_3d():
 	# 既存のカードがあれば削除
 	if creature_card_3d:
+		print("[BaseTile] Removing existing 3D card")
 		creature_card_3d.queue_free()
 		creature_card_3d = null
 	
 	# データが空なら作成しない
 	if creature_data.is_empty():
+		print("[BaseTile] creature_data is empty, not creating 3D card")
 		return
+	
+	print("[BaseTile] Creating 3D card for: ", creature_data.get("name", "NO_NAME"))
 	
 	# 新しい3Dカードを作成
 	creature_card_3d = Node3D.new()
@@ -116,6 +121,7 @@ func _create_creature_card_3d():
 
 # クリーチャーを削除
 func remove_creature():
+	print("[BaseTile] remove_creature called")
 	creature_data = {}
 	
 	# 3Dカード表示を削除
@@ -124,6 +130,18 @@ func remove_creature():
 		creature_card_3d = null
 	
 	update_visual()
+
+# クリーチャーデータを更新（バトル中の変更を反映）
+func update_creature_data(new_data: Dictionary):
+	if new_data.is_empty():
+		return
+	
+	# データを更新
+	creature_data = new_data.duplicate()
+	
+	# 3Dカード表示を更新
+	if creature_card_3d and creature_card_3d.has_method("update_creature_data"):
+		creature_card_3d.update_creature_data(creature_data)
 
 # 所有者を設定
 func set_tile_owner(new_owner_id: int):

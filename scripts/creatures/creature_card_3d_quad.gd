@@ -95,6 +95,25 @@ func set_creature_data(data: Dictionary):
 			if material:
 				material.albedo_texture = viewport.get_texture()
 
+# クリーチャーデータを更新（バトル中の変更を反映）
+func update_creature_data(data: Dictionary):
+	if not card_instance:
+		return
+	
+	if data.is_empty():
+		return
+	
+	# 動的データを反映
+	if card_instance.has_method("load_dynamic_creature_data"):
+		card_instance.load_dynamic_creature_data(data)
+		
+		# テクスチャ更新
+		await get_tree().process_frame
+		if mesh_instance and viewport:
+			var material = mesh_instance.material_override as StandardMaterial3D
+			if material:
+				material.albedo_texture = viewport.get_texture()
+
 func set_height(height: float):
 	if mesh_instance:
 		mesh_instance.position.y = height
