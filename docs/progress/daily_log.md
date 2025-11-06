@@ -64,6 +64,6 @@
 - `docs/design/tile_creature_separation_plan.md`: 分離設計書（更新済み）
 - `docs/implementation/creature_3d_display_implementation.md`: 3D表示実装レポート
 
-**⚠️ 残りトークン数: 103,426 / 190,000**
+**⚠️ 残りトークン数: 90,192 / 190,000**
 
 ---

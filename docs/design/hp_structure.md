@@ -43,7 +43,7 @@
 | フィールド | 用途 | 適用例 | バトル後 |
 |-----------|------|--------|---------|
 | **`base_hp`** | 元のHP（実際は現在の残りHP） | `creature_data["current_hp"]`から取得 | - |
-| **`base_up_hp`** | 永続的な基礎HP上昇 | マスグロース+5、周回ボーナス+10 | タイルに保存 |
+| **`base_up_hp`** | 永続的な基礎HP上昇 | マスグロース+5、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_hp`** | 一時的なHPボーナス | ブレッシング+10、ターン数ボーナス | 消失 |
 | **`resonance_bonus_hp`** | 感応ボーナス | 感応+30 | 消失 |
 | **`land_bonus_hp`** | 土地ボーナス | レベル3の土地+30 | 消失 |
@@ -52,11 +52,17 @@
 | **`current_hp`** | 計算後の現在HP | 全ボーナス合計 | - |
 | | | | |
 | **`base_ap`** | 元のAP | `creature_data["ap"]`から取得 | - |
-| **`base_up_ap`** | 永続的な基礎AP上昇 | 合成+20、周回ボーナス+10 | タイルに保存 |
+| **`base_up_ap`** | 永続的な基礎AP上昇 | 合成+20、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_ap`** | 一時的なAPボーナス | 効果配列から計算 | 消失 |
 | **`current_ap`** | 計算後の現在AP | 全ボーナス + 感応 + 条件効果 | - |
 
-### HP計算式（バトル時）
+#### 実装上の注意 (2025年11月5日更新)
+
+> **重要**: `base_up_hp`と`base_up_ap`は**CreatureManagerが管理**しています。
+> `tile.creature_data`というアクセス方法は残っていますが、実際のデータは`CreatureManager.creatures[tile_index]`に保存されています。
+> 詳細は `docs/design/tile_creature_separation_plan.md` を参照してください。
+
+## HP計算式（バトル時）
 
 ```gdscript
 current_hp = base_hp +           # 現在の残りHP
