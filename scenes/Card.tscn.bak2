@@ -1,6 +1,6 @@
-[gd_scene load_steps=26 format=3 uid="uid://bwx5tmer76s7v"]
+[gd_scene load_steps=26 format=3 uid="uid://bb0gjbbqsj4k5"]
 
-[ext_resource type="Script" uid="uid://bw5351gab84up" path="res://scripts/card.gd" id="1"]
+[ext_resource type="Script" uid="uid://ccowsb6buk6f4" path="res://scripts/card_frame.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dk8t11n2s1gsw" path="res://assets/shaders/camouflage_pattern.gdshader" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
@@ -233,7 +233,7 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="Card" type="Control"]
+[node name="CardFrame2" type="Control"]
 custom_minimum_size = Vector2(220, 293)
 layout_mode = 3
 anchors_preset = 0

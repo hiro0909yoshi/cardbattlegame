@@ -1,5 +1,6 @@
-extends ColorRect
-# カード表示・操作・選択スクリプト - サイズ対応版
+extends Control
+# カード表示・操作・選択スクリプト - CardFrame.tscn対応版
+# 更新日: 2025-11-07
 
 var is_dragging = false
 var card_data = {}
@@ -10,19 +11,19 @@ var is_selected = false
 var original_position: Vector2
 var original_size: Vector2
 
-# TODO: 将来実装予定
-# signal card_clicked(index: int)
+# CardFrame.tscnのサイズ定義
+const CARDFRAME_WIDTH = 220.0   # CardFrame.tscnの設計サイズ
+const CARDFRAME_HEIGHT = 293.0
+const GAME_CARD_WIDTH = 290.0   # ゲーム内表示サイズ
+const GAME_CARD_HEIGHT = 390.0
 
 func _ready():
-	# デフォルトのカード背景色を設定（シーンのデザイン用）
-	color = Color(0.6, 0.6, 0.6, 1)  # グレー
+	# 元のサイズを記録
+	original_size = size
 	
 	# マウスイベントを接続
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
-	
-	# 元のサイズを記録
-	original_size = size
 	
 	# マウスフィルターを設定（重要！）
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -35,53 +36,12 @@ func _ready():
 func _on_resized():
 	_adjust_children_size()
 
-# 子要素のサイズを親に合わせて調整（既存ノードのみ）
+# 子要素のサイズを親に合わせて調整（CardFrame.tscn対応）
+# 注：スケールはhand_display.gdで設定されるため、ここでは何もしない
 func _adjust_children_size():
-	# Card.tscnの元サイズ（120x160）を基準とした比率
-	var original_width = 120.0
-	var original_height = 160.0
-	var scale_x = size.x / original_width
-	var scale_y = size.y / original_height
-	
-	# 各要素をCard.tscnで設定した位置から比率で拡大
-	var name_label = get_node_or_null("NameLabel")
-	if name_label:
-		name_label.position = Vector2(4, 3) * Vector2(scale_x, scale_y)
-		name_label.size = Vector2(112, 8) * Vector2(scale_x, scale_y)
-		name_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
-	
-	var cost_label = get_node_or_null("CostLabel")
-	if cost_label:
-		cost_label.position = Vector2(111, 2) * Vector2(scale_x, scale_y)
-		cost_label.size = Vector2(8, 11) * Vector2(scale_x, scale_y)
-		cost_label.add_theme_font_size_override("font_size", max(int(7 * scale_x), 7))
-	
-	var card_image = get_node_or_null("CardImage")
-	if card_image:
-		card_image.position = Vector2(2, 1) * Vector2(scale_x, scale_y)
-		card_image.size = Vector2(116, 110) * Vector2(scale_x, scale_y)
-	
-	var desc_bg = get_node_or_null("DescBG")
-	if desc_bg:
-		desc_bg.position = Vector2(12, 115) * Vector2(scale_x, scale_y)
-		desc_bg.size = Vector2(94, 43) * Vector2(scale_x, scale_y)
-	
-	var stats_label = get_node_or_null("StatsLabel")
-	if stats_label:
-		stats_label.position = Vector2(51, 117) * Vector2(scale_x, scale_y)
-		stats_label.size = Vector2(54, 8) * Vector2(scale_x, scale_y)
-		stats_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
-	
-	var desc_label = get_node_or_null("DescriptionLabel")
-	if desc_label:
-		desc_label.position = Vector2(13, 130) * Vector2(scale_x, scale_y)
-		desc_label.size = Vector2(92, 28) * Vector2(scale_x, scale_y)
-		desc_label.add_theme_font_size_override("font_size", max(int(5 * scale_x), 5))
-	
-	var rarity_border = get_node_or_null("RarityBorder")
-	if rarity_border:
-		rarity_border.position = Vector2.ZERO
-		rarity_border.size = Vector2(120, 160) * Vector2(scale_x, scale_y)
+	# フォントサイズはシーンファイルのデフォルト値を使用
+	# 必要に応じて将来的に調整可能
+	pass
 
 func _on_mouse_entered():
 	mouse_over = true
@@ -99,35 +59,12 @@ func load_card_data(card_id):
 		card_data = CardLoader.get_card_by_id(card_id)
 		if not card_data.is_empty():
 			update_label()
-			set_element_color()    # 背景を属性色に
-			set_rarity_border()    # 枠をレアリティ色に
-			load_creature_image(card_id)  # 画像を読み込む
-			_adjust_children_size()
-		return
-	
-	# フォールバック：Cards.json（古い実装）
-	var file = FileAccess.open("res://data/Cards.json", FileAccess.READ)
-	if file == null:
-		return
-	
-	var json_text = file.get_as_text()
-	file.close()
-	
-	var json = JSON.new()
-	var parse_result = json.parse(json_text)
-	
-	if parse_result != OK:
-		return
-	
-	var data = json.data
-	for card in data.cards:
-		if card.id == card_id:
-			card_data = card
-			update_label()
 			set_element_color()
-			set_rarity_border()
+			load_creature_image(card_id)
 			_adjust_children_size()
-			break
+		return
+	
+	print("[Card] ERROR: CardLoaderが見つかりません")
 
 # クリーチャーの動的データを読み込む（バトル中の変更を反映）
 func load_dynamic_creature_data(data: Dictionary):
@@ -140,58 +77,125 @@ func load_dynamic_creature_data(data: Dictionary):
 	# 表示を更新
 	update_dynamic_stats()
 	set_element_color()
-	set_rarity_border()
 	_adjust_children_size()
 
-# 動的ステータスを更新（MHP/ST増加を反映）
-func update_dynamic_stats():
-	var name_label = get_node_or_null("NameLabel")
-	if name_label:
-		name_label.text = card_data.get("name", "???")
-		name_label.add_theme_color_override("font_color", Color.WHITE)
-	
-	var cost_label = get_node_or_null("CostLabel")
+# 基本ラベル更新（静的データ）
+func update_label():
+	# コスト
+	var cost_label = get_node_or_null("CostBadge/CostCircle/CostLabel")
 	if cost_label:
 		var cost = card_data.get("cost", 1)
 		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
 			cost = cost.mp
 		cost_label.text = str(cost)
 		cost_label.add_theme_color_override("font_color", Color.WHITE)
-		cost_label.add_theme_color_override("font_shadow_color", Color.BLACK)
 	
-	var stats_label = get_node_or_null("StatsLabel")
-	if stats_label:
-		# 基礎値 + 増加分
+	# 名前
+	var name_label = get_node_or_null("NameBanner/NameLabel")
+	if name_label:
+		name_label.text = card_data.get("name", "???")
+		name_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 攻撃力（AP）
+	var left_stat_label = get_node_or_null("LeftStatBadge/LeftStatCircle/LeftStatLabel")
+	if left_stat_label:
+		var ap = card_data.get("ap", 0)
+		left_stat_label.text = str(ap)
+		left_stat_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 最大HP
+	var right_stat_label = get_node_or_null("RightStatBadge/RightStatCircle/RightStatLabel")
+	if right_stat_label:
+		var hp = card_data.get("hp", 0)
+		right_stat_label.text = str(hp)
+		right_stat_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 現在HP（初期状態では最大HPと同じ）
+	var current_hp_label = get_node_or_null("CurrentHPBadge/CurrentHPCircle/CurrentHPLabel")
+	if current_hp_label:
+		var hp = card_data.get("hp", 0)
+		current_hp_label.text = str(hp)
+		current_hp_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 説明文
+	var desc_label = get_node_or_null("DescriptionBox/DescriptionLabel")
+	if desc_label:
+		var ability_text = card_data.get("ability", "")
+		var element = card_data.get("element", "")
+		
+		if ability_text.is_empty():
+			ability_text = element + "属性"
+		
+		desc_label.text = ability_text
+		desc_label.add_theme_color_override("font_color", Color(0.25, 0.2, 0.15))
+
+# 動的ステータスを更新（MHP/ST増加を反映）
+func update_dynamic_stats():
+	# コスト
+	var cost_label = get_node_or_null("CostBadge/CostCircle/CostLabel")
+	if cost_label:
+		var cost = card_data.get("cost", 1)
+		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
+			cost = cost.mp
+		cost_label.text = str(cost)
+		cost_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 名前
+	var name_label = get_node_or_null("NameBanner/NameLabel")
+	if name_label:
+		name_label.text = card_data.get("name", "???")
+		name_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 攻撃力（AP）- 基礎値 + 増加分
+	var left_stat_label = get_node_or_null("LeftStatBadge/LeftStatCircle/LeftStatLabel")
+	if left_stat_label:
 		var base_ap = card_data.get("ap", 0)
 		var base_up_ap = card_data.get("base_up_ap", 0)
 		var total_ap = base_ap + base_up_ap
+		left_stat_label.text = str(total_ap)
 		
+		# 変化がある場合は色を変える
+		if base_up_ap > 0:
+			left_stat_label.add_theme_color_override("font_color", Color.GREEN)
+		elif base_up_ap < 0:
+			left_stat_label.add_theme_color_override("font_color", Color.RED)
+		else:
+			left_stat_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 最大HP - 基礎値 + 増加分
+	var right_stat_label = get_node_or_null("RightStatBadge/RightStatCircle/RightStatLabel")
+	if right_stat_label:
 		var base_hp = card_data.get("hp", 0)
 		var base_up_hp = card_data.get("base_up_hp", 0)
 		var total_hp = base_hp + base_up_hp
+		right_stat_label.text = str(total_hp)
 		
 		# 変化がある場合は色を変える
-		var ap_text = str(total_ap)
-		var hp_text = str(total_hp)
-		
-		if base_up_ap > 0:
-			ap_text = "[color=green]" + ap_text + "[/color]"
-		elif base_up_ap < 0:
-			ap_text = "[color=red]" + ap_text + "[/color]"
-		
 		if base_up_hp > 0:
-			hp_text = "[color=green]" + hp_text + "[/color]"
+			right_stat_label.add_theme_color_override("font_color", Color.GREEN)
 		elif base_up_hp < 0:
-			hp_text = "[color=red]" + hp_text + "[/color]"
-		
-		stats_label.text = "攻:" + ap_text + " 防:" + hp_text
-		stats_label.add_theme_color_override("font_color", Color.BLACK)
-		stats_label.bbcode_enabled = true
+			right_stat_label.add_theme_color_override("font_color", Color.RED)
+		else:
+			right_stat_label.add_theme_color_override("font_color", Color.WHITE)
 	
-	var desc_label = get_node_or_null("DescriptionLabel")
+	# 現在HP（バトル中の動的データ）
+	var current_hp_label = get_node_or_null("CurrentHPBadge/CurrentHPCircle/CurrentHPLabel")
+	if current_hp_label:
+		var current_hp = card_data.get("current_hp", card_data.get("hp", 0))
+		current_hp_label.text = str(current_hp)
+		
+		# HPが減っている場合は色を変える
+		var max_hp = card_data.get("hp", 0) + card_data.get("base_up_hp", 0)
+		if current_hp < max_hp:
+			current_hp_label.add_theme_color_override("font_color", Color.YELLOW)
+		else:
+			current_hp_label.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 説明文
+	var desc_label = get_node_or_null("DescriptionBox/DescriptionLabel")
 	if desc_label:
-		var element = card_data.get("element", "")
 		var ability_text = card_data.get("ability", "")
+		var element = card_data.get("element", "")
 		
 		# アイテム情報を追加
 		var items = card_data.get("items", [])
@@ -204,37 +208,45 @@ func update_dynamic_stats():
 		# 永続効果を表示
 		var permanent_effects = card_data.get("permanent_effects", [])
 		if permanent_effects.size() > 0:
-			ability_text += "\n[永続効果: " + str(permanent_effects.size()) + "個]"
+			ability_text += "\n[永続: " + str(permanent_effects.size()) + "個]"
 		
 		# 一時効果を表示
 		var temporary_effects = card_data.get("temporary_effects", [])
 		if temporary_effects.size() > 0:
-			ability_text += "\n[一時効果: " + str(temporary_effects.size()) + "個]"
+			ability_text += "\n[一時: " + str(temporary_effects.size()) + "個]"
 		
-		desc_label.text = ability_text if not ability_text.is_empty() else element + "属性"
-		desc_label.add_theme_color_override("font_color", Color.BLACK)
+		if ability_text.is_empty():
+			ability_text = element + "属性"
+		
+		desc_label.text = ability_text
+		desc_label.add_theme_color_override("font_color", Color(0.25, 0.2, 0.15))
 
+# 属性色を設定（OuterFrameの背景色を変更）
 func set_element_color():
-	# 属性色をカード背景（グレー部分）に設定
-	var element = card_data.get("element", "")
+	var outer_frame = get_node_or_null("OuterFrame")
+	if not outer_frame:
+		return
 	
-	# 属性に応じて背景色を設定
-	match element:
-		"fire":
-			color = Color(0.8, 0.3, 0.2)  # 赤系
-		"water":
-			color = Color(0.3, 0.5, 0.8)  # 青系
-		"wind":
-			color = Color(0.3, 0.7, 0.4)  # 緑系
-		"earth":
-			color = Color(0.7, 0.5, 0.3)  # 茶色系
-		_:
-			color = Color(0.6, 0.6, 0.6)  # グレー（無属性）
+	var element = card_data.get("element", "")
+	var style = outer_frame.get_theme_stylebox("panel")
+	
+	if style and style is StyleBoxFlat:
+		match element:
+			"fire":
+				style.bg_color = Color(0.8, 0.1, 0.1)  # 赤
+			"water":
+				style.bg_color = Color(0.1, 0.3, 0.8)  # 青
+			"wind":
+				style.bg_color = Color(0.1, 0.7, 0.3)  # 緑
+			"earth":
+				style.bg_color = Color(0.6, 0.4, 0.1)  # 茶色
+			_:
+				style.bg_color = Color(0.4, 0.4, 0.4)  # グレー（無属性）
 
 # クリーチャー画像を読み込む
 func load_creature_image(card_id: int):
-	var card_image = get_node_or_null("CardImage")
-	if not card_image:
+	var card_art = get_node_or_null("CardArtContainer/CardArt")
+	if not card_art:
 		return
 	
 	# 画像パスを構築（IDベース）
@@ -244,11 +256,10 @@ func load_creature_image(card_id: int):
 	if FileAccess.file_exists(image_path):
 		var texture = load(image_path)
 		if texture:
-			card_image.texture = texture
-			# 画像を枠内に収めるための設定（シーンファイルで既に設定済み）
+			card_art.texture = texture
 	else:
 		# 画像がない場合はデフォルト表示（属性に応じた色）
-		var placeholder = Image.create(100, 98, false, Image.FORMAT_RGBA8)
+		var placeholder = Image.create(199, 185, false, Image.FORMAT_RGBA8)
 		
 		# 属性に応じた色で塗りつぶし
 		var element = card_data.get("element", "")
@@ -265,72 +276,7 @@ func load_creature_image(card_id: int):
 				fill_color = Color(0.8, 0.6, 0.4)
 		
 		placeholder.fill(fill_color)
-		card_image.texture = ImageTexture.create_from_image(placeholder)
-
-func set_rarity_border():
-	var border = get_node_or_null("RarityBorder")
-	if border:
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0, 0, 0, 0)
-		style.draw_center = false
-		
-		style.border_width_left = 3
-		style.border_width_right = 3
-		style.border_width_top = 3
-		style.border_width_bottom = 3
-		
-		match card_data.get("rarity", "common"):
-			"legendary":
-				style.border_color = Color(1.0, 0.8, 0.0, 1)
-			"rare":
-				style.border_color = Color(0.1, 0.1, 0.1, 1)
-			"uncommon":
-				style.border_color = Color(0.5, 0.5, 0.5, 1)
-			_:
-				style.border_color = Color(1.0, 1.0, 1.0, 1)
-		
-		border.add_theme_stylebox_override("panel", style)
-
-func update_label():
-	var name_label = get_node_or_null("NameLabel")
-	if name_label:
-		name_label.text = card_data.get("name", "???")
-		name_label.add_theme_color_override("font_color", Color.WHITE)
-	
-	var cost_label = get_node_or_null("CostLabel")
-	if cost_label:
-		var cost = card_data.get("cost", 1)
-		# costが辞書の場合は変換
-		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
-			cost = cost.mp
-		cost_label.text = str(cost)
-		cost_label.add_theme_color_override("font_color", Color.WHITE)
-		cost_label.add_theme_color_override("font_shadow_color", Color.BLACK)
-	
-	var stats_label = get_node_or_null("StatsLabel")
-	if stats_label:
-		var damage = card_data.get("ap", card_data.get("damage", 0))
-		var block = card_data.get("hp", card_data.get("block", 0))
-		stats_label.text = "攻:" + str(damage) + " 防:" + str(block)
-		stats_label.add_theme_color_override("font_color", Color.BLACK)
-	
-	var desc_label = get_node_or_null("DescriptionLabel")
-	if desc_label:
-		var card_type = card_data.get("type", "")
-		var damage = card_data.get("ap", card_data.get("damage", 0))
-		var block = card_data.get("hp", card_data.get("block", 0))
-		var element = card_data.get("element", "")
-		
-		if card_type == "攻撃":
-			desc_label.text = "敵に" + str(damage) + "ダメージを与える"
-		elif card_type == "防御":
-			desc_label.text = str(block) + "の防御を得る"
-		elif card_type == "特殊":
-			desc_label.text = element + "属性の特殊効果"
-		else:
-			desc_label.text = element + "属性"
-		
-		desc_label.add_theme_color_override("font_color", Color.BLACK)
+		card_art.texture = ImageTexture.create_from_image(placeholder)
 
 # カードを選択可能にする
 func set_selectable(selectable: bool, index: int = -1):
@@ -448,10 +394,3 @@ func _input(event):
 				is_dragging = false
 				z_index = 0
 				return
-	
-	# ドラッグ機能は無効化（将来的に必要なら再実装）
-	# if not is_selectable and mouse_over and event is InputEventMouseButton:
-	#     if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-	#         is_dragging = true
-	#         z_index = 10
-	#         get_viewport().set_input_as_handled()

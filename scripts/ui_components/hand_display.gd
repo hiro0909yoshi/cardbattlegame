@@ -13,9 +13,9 @@ var hand_container: Control = null
 var card_scene = preload("res://scenes/Card.tscn")
 var player_card_nodes = {}  # player_id -> [card_nodes]
 
-# カード表示定数
-const CARD_WIDTH = 290
-const CARD_HEIGHT = 390
+# カード表示定数（CardFrame.tscnの実際のサイズ）
+const CARD_WIDTH = 220
+const CARD_HEIGHT = 293
 const CARD_SPACING = 30
 
 # システム参照
