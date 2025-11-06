@@ -8,8 +8,15 @@ class_name CreatureCard3DQuad
 const CARD_3D_WIDTH = 2.4         # 3D空間でのカード幅（メートル）
 const CARD_3D_HEIGHT = 3.6        # 3D空間でのカード高さ（メートル）
 const CARD_3D_Y_POSITION = 3.0    # タイルからの高さ（メートル）
+
+# Card.tscnの実サイズ（CardFrame.tscn）
+const CARDFRAME_WIDTH = 220
+const CARDFRAME_HEIGHT = 293
+
+# 3D表示用のViewportサイズ（CardFrameと同じ）
+const VIEWPORT_WIDTH = CARDFRAME_WIDTH   # 220
+const VIEWPORT_HEIGHT = CARDFRAME_HEIGHT  # 293
 # ============================================
-# ※2Dカードサイズ（600x800）はCard.tscnで設定
 
 var viewport: SubViewport = null
 var card_instance = null
@@ -22,9 +29,9 @@ func _ready():
 
 func _setup_card():
 	
-	# SubViewport作成（Card.tscnのサイズに合わせる）
+	# SubViewport作成（CardFrameと同じサイズ）
 	viewport = SubViewport.new()
-	viewport.size = Vector2i(600, 800)  # Card.tscnと同じサイズ
+	viewport.size = Vector2i(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)  # 220x293
 	viewport.transparent_bg = false
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.disable_3d = true
@@ -34,10 +41,10 @@ func _setup_card():
 	card_instance = CARD_SCENE.instantiate()
 	viewport.add_child(card_instance)
 	
-	# サイズを強制的に変更（Card.tscnは小さいまま）
+	# サイズを設定（CardFrame 220x293と同じ）
 	card_instance.position = Vector2.ZERO
-	card_instance.size = Vector2(600, 800)
-	card_instance.custom_minimum_size = Vector2(600, 800)
+	card_instance.size = Vector2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
+	card_instance.custom_minimum_size = Vector2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT)
 	
 	# 子要素のレイアウトを新しいサイズに合わせる
 	if card_instance.has_method("_adjust_children_size"):
