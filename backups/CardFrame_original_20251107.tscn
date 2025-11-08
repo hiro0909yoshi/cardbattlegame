@@ -1,6 +1,6 @@
-[gd_scene load_steps=26 format=3 uid="uid://i1okuos5xlgd"]
+[gd_scene load_steps=26 format=3 uid="uid://bwx5tmer76s7v"]
 
-[ext_resource type="Script" uid="uid://ccowsb6buk6f4" path="res://scripts/card_frame.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/card_frame.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dk8t11n2s1gsw" path="res://assets/shaders/camouflage_pattern.gdshader" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]

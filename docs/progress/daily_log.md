@@ -12,58 +12,64 @@
 
 ---
 
-## 2025年11月5日（セッション2-3）
+## 2025年11月7日
 
 ### 完了した作業
 
-- ✅ **Phase 1: CreatureManager実装完了**
-  - `scripts/creature_manager.gd` 完成（基本機能 + 拡張機能 + セーブ/ロード）
-  - 単体テスト作成と検証（10/10成功）
-  - デバッグモード、整合性チェック機能実装
+- ✅ **CardFrame.tscn → Card.tscn 移行完了** 🎉
+  - 新しい美しいカードデザインをゲーム全体に適用
+  - 4つの宝石バッジ構成（コスト、攻撃力、現在HP、最大HP）
+  - 迷彩パターンシェーダー適用
 
-- ✅ **Phase 2: BaseTile統合完了**
-  - `BaseTile.creature_data` をプロパティ化（get/set）
-  - CreatureManagerへの透過的なリダイレクト実装
-  - `BoardSystem3D.create_creature_manager()` 実装
-  - 統合テスト作成と検証（6/6成功）
+### 技術的な詳細
 
-- ✅ **Phase 3: 完全移行完了** 🎉
-  - フォールバック機構（_local_creature_data）を削除
-  - CreatureManagerへの完全依存に移行
-  - 実ゲームでの動作確認完了
-	- クリーチャー召喚/削除: ✅
-	- バトルシステム: ✅
-	- 領地コマンド（移動、交換）: ✅
-	- 空地移動スキル: ✅
-  - すべての機能が正常動作
+#### 修正したファイル
+1. **scenes/Card.tscn**
+   - CardFrame.tscnをCard.tscnにリネーム
+   - ルートノードのoffsetを220×293に修正
+   - スクリプト参照をcard.gdに変更
 
-### 技術的成果
+2. **scripts/card.gd**
+   - 新しいノード構造に完全対応
+   - 4つの宝石バッジへのデータ設定
+   - 動的ステータス表示（base_up_ap/hp）
 
-✨ **既存コード800箇所を変更せずに、データの完全分離を実現**
-- プロパティget/setによる透過的なリダイレクト
-- `tile.creature_data["key"] = value` がそのまま動作
-- データはCreatureManagerに完全集約
-- タイルとクリーチャーの完全分離達成
+3. **scripts/ui_components/card_ui_helper.gd**
+   - CARDFRAME_WIDTH/HEIGHT = 220×293
+   - BASE_SCALE = 1.318（290÷220）
+   - `final_scale = scale * BASE_SCALE`
+
+4. **scripts/ui_components/hand_display.gd**
+   - CARD_WIDTH/HEIGHT を 220×293に変更
+
+5. **scripts/creatures/creature_card_3d_quad.gd**
+   - VIEWPORT_WIDTH/HEIGHT = 220×293
+   - 3D表示の高解像度化を実装
+
+#### サイズの流れ
+- **Card.tscn**: 220×293（設計サイズ）
+- **手札表示**: 220×293 × 1.318 = **290×390**
+- **3D表示**: 220×293（SubViewport）
+
+### 動作確認
+- ✅ 手札: 290×390で美しく表示
+- ✅ タイル上: 3Dカードが正常表示
+- ✅ 4つの宝石バッジが正確に配置
+- ✅ 画像とテキストが鮮明
+- ✅ 属性色の変更が正常動作
 
 ### 次のステップ
 
-**タイル・クリーチャー分離は完了！**
-
-今後の開発:
+CardFrameの移行が完全に完了したので、通常の開発に戻れます：
 - 呪文システムの実装
 - フェニックスの「復活」スキル実装
 - その他の未実装スキル
 
-**その後のフェーズ**:
-- Phase 2: 読み取りAPI統一（8-12時間）
-- Phase 3: 書き込みAPI統一（10-15時間）
-- Phase 5: 旧システム削除（3-5時間）
-
 ### 参考ドキュメント
 
-- `docs/design/tile_creature_separation_plan.md`: 分離設計書（更新済み）
-- `docs/implementation/creature_3d_display_implementation.md`: 3D表示実装レポート
+- `docs/design/card_frame_migration.md`: 移行計画書（完了済み）
+- `.serena/memories/card_frame_design_v1.md`: CardFrameデザイン仕様
 
-**⚠️ 残りトークン数: 90,192 / 190,000**
+**⚠️ 残りトークン数: 96,464 / 190,000**
 
 ---
