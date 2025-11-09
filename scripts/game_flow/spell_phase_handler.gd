@@ -367,12 +367,14 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 			print("[SpellPhaseHandler] 土地ターゲット取得開始: ", target_type)
 			if board_system:
 				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
-				print("[SpellPhaseHandler] owner_filter = ", owner_filter, ", current_player_id = ", current_player_id)
-				
+				var max_level = target_info.get("max_level", -1)  # レベル制限（-1は制限なし）
+				print("[SpellPhaseHandler] owner_filter = ", owner_filter, ", max_level = ", max_level, ", current_player_id = ", current_player_id)
+
 				for tile_index in board_system.tile_nodes.keys():
 					var tile_info = board_system.get_tile_info(tile_index)
 					var tile_owner = tile_info.get("owner", -1)
-					
+					var tile_level = tile_info.get("level", 1)
+
 					# 所有者フィルター
 					var matches_owner = false
 					if owner_filter == "own":
@@ -381,13 +383,18 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 						matches_owner = (tile_owner >= 0 and tile_owner != current_player_id)
 					else:  # "any"
 						matches_owner = (tile_owner >= 0)
-					
-					if matches_owner:
+
+					# レベル制限チェック
+					var matches_level = true
+					if max_level >= 0:
+						matches_level = (tile_level <= max_level)
+
+					if matches_owner and matches_level:
 						var land_target = {
 							"type": "land",
 							"tile_index": tile_index,
 							"element": tile_info.get("type", ""),
-							"level": tile_info.get("level", 1),
+							"level": tile_level,
 							"owner": tile_owner
 						}
 						print("[SpellPhaseHandler] 土地追加: ", land_target)
@@ -598,22 +605,33 @@ func _apply_land_effect_change_element(effect: Dictionary, target_data: Dictiona
 	print("[SpellPhaseHandler] _apply_land_effect_change_element 開始")
 	print("[SpellPhaseHandler] target_data = ", target_data)
 	print("[SpellPhaseHandler] effect = ", effect)
-	
+
 	if not game_flow_manager or not game_flow_manager.spell_land:
 		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
 		return
-	
+
 	var tile_index = target_data.get("tile_index", -1)
 	var new_element = effect.get("element", "")
-	
+
 	print("[SpellPhaseHandler] tile_index = ", tile_index, ", new_element = ", new_element)
-	
+
 	if tile_index >= 0 and not new_element.is_empty():
-		var success = game_flow_manager.spell_land.change_element(tile_index, new_element)
+		# effect_parsedからtarget_infoを取得して条件チェック
+		var parsed = selected_spell_card.get("effect_parsed", {})
+		var target_info = parsed.get("target_info", {})
+
+		var success = false
+		if not target_info.is_empty():
+			# 条件付き属性変更を使用
+			success = game_flow_manager.spell_land.change_element_with_condition(tile_index, target_info, new_element)
+		else:
+			# 条件がない場合は通常の属性変更
+			success = game_flow_manager.spell_land.change_element(tile_index, new_element)
+
 		if success:
 			print("[SpellPhaseHandler] 属性変更: タイル%d → %s" % [tile_index, new_element])
 		else:
-			print("[SpellPhaseHandler] 属性変更失敗: タイル%d" % tile_index)
+			print("[SpellPhaseHandler] 属性変更失敗: タイル%d (条件不一致の可能性)" % tile_index)
 
 ## 土地効果: レベル変更
 func _apply_land_effect_change_level(effect: Dictionary, target_data: Dictionary):
