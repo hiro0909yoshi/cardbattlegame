@@ -356,14 +356,21 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 						matches_owner = (tile_owner >= 0)
 					
 					if matches_owner:
-						var land_target = {
-							"type": "land",
-							"tile_index": tile_index,
-							"element": tile_info.get("type", ""),
-							"level": tile_info.get("level", 1),
-							"owner": tile_owner
-						}
-						targets.append(land_target)
+						var tile_level = tile_info.get("level", 1)
+						
+						# レベル制限チェック
+						var max_level = target_info.get("max_level", 999)
+						var min_level = target_info.get("min_level", 1)
+						
+						if tile_level >= min_level and tile_level <= max_level:
+							var land_target = {
+								"type": "land",
+								"tile_index": tile_index,
+								"element": tile_info.get("type", ""),
+								"level": tile_level,
+								"owner": tile_owner
+							}
+							targets.append(land_target)
 	
 	return targets
 
@@ -467,8 +474,14 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 効果発動完了
 	spell_used.emit(spell_card)
 	
-	# スペルフェーズ完了
-	await get_tree().create_timer(1.0).timeout
+	# 少し待機してからカメラを戻す
+	await get_tree().create_timer(0.5).timeout
+	
+	# カメラを使用者（現在のプレイヤー）に戻す
+	_return_camera_to_player()
+	
+	# さらに待機してからスペルフェーズ完了
+	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
 
 ## 単一の効果を適用
@@ -591,6 +604,25 @@ func _apply_land_effect_destroy_creature(_effect: Dictionary, target_data: Dicti
 	
 	if tile_index >= 0:
 		game_flow_manager.spell_land.destroy_creature(tile_index)
+
+## カメラを使用者に戻す
+func _return_camera_to_player():
+	if not player_system or not board_system:
+		return
+	
+	# MovementControllerからプレイヤーの実際の位置を取得
+	if board_system.movement_controller:
+		var player_tile_index = board_system.movement_controller.get_player_tile(current_player_id)
+		
+		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
+			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
+			
+			# MovementControllerと同じカメラオフセットを使用
+			const CAMERA_OFFSET = Vector3(19, 19, 19)
+			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + CAMERA_OFFSET
+			
+			board_system.camera.position = new_camera_pos
+			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
 
 ## スペルをパス
 func pass_spell():
