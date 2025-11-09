@@ -10,8 +10,8 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
-const SkillSpecialCreature = preload("res://scripts/battle/skills/skill_special_creature.gd")
-const SkillAssist = preload("res://scripts/battle/skills/skill_assist.gd")
+const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_special_creature.gd")
+const SkillAssistScript = preload("res://scripts/battle/skills/skill_assist.gd")
 
 # システム参照
 var board_system_ref = null
@@ -149,10 +149,10 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# オーガロード（ID: 407）: オーガ配置時能力値上昇
 	if attacker_id == 407:
-		SkillSpecialCreature.apply_ogre_lord_bonus(attacker, attacker_index, board_system_ref)
+		SkillSpecialCreatureScript.apply_ogre_lord_bonus(attacker, attacker_index, board_system_ref)
 	
 	if defender_id == 407:
-		SkillSpecialCreature.apply_ogre_lord_bonus(defender, defender_owner, board_system_ref)
+		SkillSpecialCreatureScript.apply_ogre_lord_bonus(defender, defender_owner, board_system_ref)
 	
 	# アイテムクリーチャー効果適用後、current_apを再計算
 	if attacker_id == 438 or attacker_id == 339 or attacker_id == 407:
@@ -161,8 +161,8 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender.current_ap = defender.creature_data.get("ap", 0) + defender.base_up_ap + defender.temporary_bonus_ap
 	
 	# ランダムステータス効果を適用（スペクター用）
-	SkillSpecialCreature.apply_random_stat_effects(attacker)
-	SkillSpecialCreature.apply_random_stat_effects(defender)
+	SkillSpecialCreatureScript.apply_random_stat_effects(attacker)
+	SkillSpecialCreatureScript.apply_random_stat_effects(defender)
 	
 	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
 	var transform_result = {}
@@ -187,8 +187,8 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
 	
 	# 🚫 ウォーロックディスク: 敵の全能力を無効化
-	SkillSpecialCreature.apply_nullify_enemy_abilities(attacker, defender)
-	SkillSpecialCreature.apply_nullify_enemy_abilities(defender, attacker)
+	SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
+	SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
 	
 	return {
 		"attacker": attacker,
@@ -257,7 +257,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 	
 	# 援護クリーチャーの場合はSkillAssistで処理
 	if item_type == "creature":
-		SkillAssist.apply_assist_effect(participant, item_data)
+		SkillAssistScript.apply_assist_effect(participant, item_data)
 		# 援護クリーチャーのスキルは継承されないのでここで終了
 		return
 	

@@ -25,8 +25,3 @@ shadow_enabled = true
 environment = SubResource("Environment_1")
 
 [node name="TestTile" parent="." instance=ExtResource("2_fire_tile")]
-tile_type = null
-owner_id = null
-level = null
-tile_index = null
-warp_destination = null

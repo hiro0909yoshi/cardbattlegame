@@ -253,44 +253,44 @@ func set_element_color():
 	
 	# シェーダーマテリアルの色を変更
 	# 重要：マテリアルを複製して個別に設定（共有を避ける）
-	var material = outer_frame.material as ShaderMaterial
-	if material and material.shader:
+	var shader_mat = outer_frame.material as ShaderMaterial
+	if shader_mat and shader_mat.shader:
 		# マテリアルを複製（このカード専用にする）
 		if not outer_frame.material.resource_local_to_scene:
-			material = material.duplicate()
-			outer_frame.material = material
+			shader_mat = shader_mat.duplicate()
+			outer_frame.material = shader_mat
 		if is_gray:
 			# グレー系の迷彩パターン（アイテム・スペル・無属性）
-			material.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
-			material.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
-			material.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
+			shader_mat.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
+			shader_mat.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
+			shader_mat.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
 		else:
 			match element:
 				"fire":
 					# 赤系の迷彩パターン
-					material.set_shader_parameter("color_dark", Color(0.6, 0.05, 0.05, 1))
-					material.set_shader_parameter("color_mid", Color(0.8, 0.1, 0.1, 1))
-					material.set_shader_parameter("color_light", Color(0.95, 0.2, 0.2, 1))
+					shader_mat.set_shader_parameter("color_dark", Color(0.6, 0.05, 0.05, 1))
+					shader_mat.set_shader_parameter("color_mid", Color(0.8, 0.1, 0.1, 1))
+					shader_mat.set_shader_parameter("color_light", Color(0.95, 0.2, 0.2, 1))
 				"water":
 					# 青系の迷彩パターン
-					material.set_shader_parameter("color_dark", Color(0.05, 0.2, 0.6, 1))
-					material.set_shader_parameter("color_mid", Color(0.1, 0.4, 0.8, 1))
-					material.set_shader_parameter("color_light", Color(0.2, 0.6, 0.95, 1))
+					shader_mat.set_shader_parameter("color_dark", Color(0.05, 0.2, 0.6, 1))
+					shader_mat.set_shader_parameter("color_mid", Color(0.1, 0.4, 0.8, 1))
+					shader_mat.set_shader_parameter("color_light", Color(0.2, 0.6, 0.95, 1))
 				"wind":
 					# 緑系の迷彩パターン
-					material.set_shader_parameter("color_dark", Color(0.05, 0.5, 0.1, 1))
-					material.set_shader_parameter("color_mid", Color(0.1, 0.7, 0.2, 1))
-					material.set_shader_parameter("color_light", Color(0.2, 0.9, 0.3, 1))
+					shader_mat.set_shader_parameter("color_dark", Color(0.05, 0.5, 0.1, 1))
+					shader_mat.set_shader_parameter("color_mid", Color(0.1, 0.7, 0.2, 1))
+					shader_mat.set_shader_parameter("color_light", Color(0.2, 0.9, 0.3, 1))
 				"earth":
 					# 茶色系の迷彩パターン
-					material.set_shader_parameter("color_dark", Color(0.5, 0.3, 0.05, 1))
-					material.set_shader_parameter("color_mid", Color(0.7, 0.45, 0.1, 1))
-					material.set_shader_parameter("color_light", Color(0.9, 0.6, 0.2, 1))
+					shader_mat.set_shader_parameter("color_dark", Color(0.5, 0.3, 0.05, 1))
+					shader_mat.set_shader_parameter("color_mid", Color(0.7, 0.45, 0.1, 1))
+					shader_mat.set_shader_parameter("color_light", Color(0.9, 0.6, 0.2, 1))
 				_:
 					# フォールバック：グレー
-					material.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
-					material.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
-					material.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
+					shader_mat.set_shader_parameter("color_dark", Color(0.3, 0.3, 0.3, 1))
+					shader_mat.set_shader_parameter("color_mid", Color(0.5, 0.5, 0.5, 1))
+					shader_mat.set_shader_parameter("color_light", Color(0.7, 0.7, 0.7, 1))
 
 # クリーチャー画像を読み込む
 func load_creature_image(card_id: int):

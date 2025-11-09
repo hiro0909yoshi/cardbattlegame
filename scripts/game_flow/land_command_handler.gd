@@ -80,14 +80,12 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 ## 領地コマンドを開く
 func open_land_command(player_id: int):
 	if current_state != State.CLOSED:
-		print("[LandCommandHandler] 既に開いています")
 		return
 	
 	# プレイヤーの所有地を取得
 	player_owned_lands = LandSelectionHelper.get_player_owned_lands(board_system, player_id)
 	
 	if player_owned_lands.is_empty():
-		print("[LandCommandHandler] 所有地がありません")
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "所有地がありません"
 		return
@@ -95,14 +93,12 @@ func open_land_command(player_id: int):
 	# カード選択UIを無効化
 	if ui_manager and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.is_active = false
-		print("[LandCommandHandler] カード選択UIを無効化しました")
 	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
 	current_land_selection_index = 0  # 最初の土地を選択
 	land_command_opened.emit()
 	
-	print("[LandCommandHandler] 領地コマンドを開きました（所有地数: ", player_owned_lands.size(), "）")
 	
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
@@ -129,14 +125,11 @@ func select_land(tile_index: int) -> bool:
 ## アクション実行
 func execute_action(action_type: String) -> bool:
 	if current_state != State.SELECTING_ACTION:
-		print("[LandCommandHandler] アクション選択モードではありません")
 		return false
 	
 	if selected_tile_index == -1:
-		print("[LandCommandHandler] 土地が選択されていません")
 		return false
 	
-	print("[LandCommandHandler] アクション実行: ", action_type, " on tile ", selected_tile_index)
 	
 	match action_type:
 		"level_up":
@@ -148,7 +141,6 @@ func execute_action(action_type: String) -> bool:
 		"terrain_change":
 			return execute_terrain_change()
 		_:
-			print("[LandCommandHandler] 不明なアクション: ", action_type)
 			return false
 
 ## レベルアップ実行（レベル選択後）
@@ -192,7 +184,6 @@ func close_land_command():
 	
 	land_command_closed.emit()
 	
-	print("[LandCommandHandler] 領地コマンドを閉じました")
 	
 	# カメラを現在のプレイヤーに戻す
 	# MovementControllerからプレイヤーの実際の位置を取得
@@ -245,7 +236,6 @@ func cancel():
 		current_state = State.SELECTING_ACTION
 		terrain_change_tile_index = -1
 		current_terrain_index = 0
-		print("[LandCommandHandler] アクション選択に戻りました")
 		
 		# UIを更新（アクションメニューを再表示）
 		if ui_manager and ui_manager.has_method("show_action_menu"):
@@ -254,7 +244,6 @@ func cancel():
 	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
-		print("[LandCommandHandler] アクション選択に戻りました")
 		
 		# マーカーを移動元（選択中の土地）に戻す
 		if move_source_tile >= 0:
@@ -277,7 +266,6 @@ func cancel():
 		
 		current_state = State.SELECTING_LAND
 		selected_tile_index = -1
-		print("[LandCommandHandler] 土地選択に戻りました")
 		
 		if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 			ui_manager.show_land_selection_mode(player_owned_lands)
@@ -295,7 +283,6 @@ func on_card_selected_for_swap(card_index: int):
 	if not _swap_mode:
 		return  # 交換モードでない場合は何もしない
 	
-	print("[LandCommandHandler] 交換用カード選択: index=", card_index)
 	
 	# 交換処理用に変数を保存
 	var tile_index = _swap_tile_index
@@ -367,7 +354,6 @@ func confirm_move(dest_tile_index: int):
 func _on_move_item_phase_completed():
 	if not is_waiting_for_move_defender_item:
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
-		print("[LandCommandHandler] 攻撃側アイテムフェーズ完了（移動侵略）")
 		
 		# 攻撃側のアイテムを保存
 		if game_flow_manager and game_flow_manager.item_phase_handler:
@@ -384,7 +370,6 @@ func _on_move_item_phase_completed():
 				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
 					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
 				
-				print("[LandCommandHandler] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
 				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
@@ -396,7 +381,6 @@ func _on_move_item_phase_completed():
 			_execute_move_battle()
 	else:
 		# 防御側のアイテムフェーズ完了 → バトル開始
-		print("[LandCommandHandler] 防御側アイテムフェーズ完了、バトル開始（移動侵略）")
 		
 		# 防御側のアイテムを保存
 		if game_flow_manager and game_flow_manager.item_phase_handler:
@@ -408,7 +392,6 @@ func _on_move_item_phase_completed():
 ## 保留中の移動バトルを実行
 func _execute_move_battle():
 	if pending_move_battle_creature_data.is_empty():
-		print("[LandCommandHandler] エラー: 移動バトル情報が保存されていません")
 		if board_system and board_system.tile_action_processor:
 			board_system.tile_action_processor.complete_action()
 		return
@@ -438,20 +421,17 @@ func _execute_move_battle():
 	is_waiting_for_move_defender_item = false
 
 ## 移動バトル完了時のコールバック
-func _on_move_battle_completed(success: bool, tile_index: int):
-	print("[LandCommandHandler] 移動バトル完了: ", "勝利" if success else "敗北")
+func _on_move_battle_completed(success: bool, _tile_index: int):
 	
 	if success:
 		# 勝利時: battle_systemが既に土地獲得とクリーチャー配置を完了している
 		# ここでは何もしない
-		print("[LandCommandHandler] 勝利: 土地獲得完了 (tile %d)" % tile_index)
 		
 		# 移動元情報をクリア
 		move_source_tile = -1
 	else:
 		# 敗北時: battle_systemが既に移動元に戻している
 		# ここでは何もしない
-		print("[LandCommandHandler] 敗北: クリーチャーは元のタイル%dに戻りました" % move_source_tile)
 		
 		# 移動元情報をクリア
 		move_source_tile = -1

@@ -57,7 +57,6 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
 	if current_state != State.INACTIVE:
-		print("[SpellPhaseHandler] 既にアクティブです")
 		return
 	
 	current_state = State.WAITING_FOR_INPUT
@@ -66,8 +65,6 @@ func start_spell_phase(player_id: int):
 	selected_spell_card = {}
 	
 	spell_phase_started.emit()
-	
-	print("[SpellPhaseHandler] スペルフェーズ開始: プレイヤー ", player_id + 1)
 	
 	# UIを更新（スペルカードのみ選択可能にする）
 	if ui_manager:
@@ -119,13 +116,11 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 			spell_cards.append(card)
 	
 	if spell_cards.is_empty():
-		print("[SpellPhaseHandler] 手札にスペルカードがありません")
 		return
 	
 	# 現在のプレイヤー情報を取得
 	var current_player = player_system.get_current_player() if player_system else null
 	if not current_player:
-		print("[SpellPhaseHandler] プレイヤー情報が取得できません")
 		return
 	
 	# CardSelectionUIを使用してスペル選択
@@ -143,12 +138,10 @@ func _handle_cpu_spell_turn():
 			# ランダムに1つ選択
 			var spell = spells[randi() % spells.size()]
 			if _can_afford_spell(spell):
-				print("[SpellPhaseHandler] CPU: スペル「%s」を使用" % spell.name)
 				use_spell(spell)
 				return
 	
 	# スペルを使わない
-	print("[SpellPhaseHandler] CPU: スペルをパス")
 	pass_spell()
 
 ## 利用可能なスペルカードを取得
@@ -183,28 +176,17 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		cost = cost_data.get("mp", 0)
 	
-	print("[SpellPhaseHandler] コストチェック: 必要=%d, 所持=%d" % [cost, current_player.magic_power])
 	return current_player.magic_power >= cost
 
 ## スペルを使用
 func use_spell(spell_card: Dictionary):
-	# デバッグ出力
-	print("[SpellPhaseHandler] use_spell呼び出し:")
-	print("  カード名: ", spell_card.get("name", "不明"))
-	print("  カードID: ", spell_card.get("id", -1))
-	print("  cost: ", spell_card.get("cost", null))
-	print("  全キー: ", spell_card.keys())
-	
 	if current_state != State.WAITING_FOR_INPUT:
-		print("[SpellPhaseHandler] スペル使用できる状態ではありません")
 		return
 	
 	if spell_used_this_turn:
-		print("[SpellPhaseHandler] このターン既にスペルを使用しています")
 		return
 	
 	if not _can_afford_spell(spell_card):
-		print("[SpellPhaseHandler] 魔力が不足しています")
 		return
 	
 	selected_spell_card = spell_card
@@ -221,7 +203,6 @@ func use_spell(spell_card: Dictionary):
 	
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
-		print("[SpellPhaseHandler] 魔力消費: %d" % cost)
 	
 	# 対象選択が必要かチェック
 	var parsed = spell_card.get("effect_parsed", {})
@@ -231,7 +212,6 @@ func use_spell(spell_card: Dictionary):
 	if not target_type.is_empty():
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
-		print("[SpellPhaseHandler] 対象選択が必要: %s" % target_type)
 		target_selection_required.emit(spell_card, target_type)
 		
 		# 対象選択UIを表示
@@ -242,13 +222,10 @@ func use_spell(spell_card: Dictionary):
 
 ## 対象選択UIを表示（領地コマンドと同じ方式）
 func _show_target_selection_ui(target_type: String, target_info: Dictionary):
-	print("[SpellPhaseHandler] 対象選択開始: %s" % target_type)
-	
 	# 有効な対象を取得
 	var targets = _get_valid_targets(target_type, target_info)
 	
 	if targets.is_empty():
-		print("[SpellPhaseHandler] 有効な対象がありません")
 		cancel_spell()
 		return
 	
@@ -259,8 +236,6 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary):
 	
 	# 最初の対象を表示
 	_update_target_selection()
-	
-	print("[SpellPhaseHandler] ターゲット選択: %d個の候補" % targets.size())
 
 ## 選択を更新
 func _update_target_selection():
@@ -294,7 +269,7 @@ func _update_selection_ui():
 			var tile_idx = target.get("tile_index", -1)
 			var element = target.get("element", "neutral")
 			var level = target.get("level", 1)
-			var owner = target.get("owner", -1)
+			var owner_id = target.get("owner", -1)
 			
 			# 属性名を日本語に変換
 			var element_name = element
@@ -305,11 +280,11 @@ func _update_selection_ui():
 				"wind": element_name = "風"
 				"neutral": element_name = "無"
 			
-			var owner_text = ""
-			if owner >= 0:
-				owner_text = " (P%d)" % (owner + 1)
+			var owner_id_text = ""
+			if owner_id >= 0:
+				owner_id_text = " (P%d)" % (owner_id + 1)
 			
-			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_text]
+			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_id_text]
 		
 		"creature":
 			var tile_idx = target.get("tile_index", -1)
@@ -364,10 +339,8 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 		
 		"land", "own_land", "enemy_land":
 			# 土地を対象とする
-			print("[SpellPhaseHandler] 土地ターゲット取得開始: ", target_type)
 			if board_system:
 				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
-				print("[SpellPhaseHandler] owner_filter = ", owner_filter, ", current_player_id = ", current_player_id)
 				
 				for tile_index in board_system.tile_nodes.keys():
 					var tile_info = board_system.get_tile_info(tile_index)
@@ -390,10 +363,8 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 							"level": tile_info.get("level", 1),
 							"owner": tile_owner
 						}
-						print("[SpellPhaseHandler] 土地追加: ", land_target)
 						targets.append(land_target)
 	
-	print("[SpellPhaseHandler] _get_valid_targets 完了: ", targets.size(), "個")
 	return targets
 
 ## 入力処理
@@ -443,7 +414,6 @@ func _confirm_target_selection():
 		return
 	
 	var selected_target = available_targets[current_target_index]
-	print("[SpellPhaseHandler] 対象選択確定: ", selected_target)
 	
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
@@ -452,8 +422,6 @@ func _confirm_target_selection():
 
 ## 対象選択をキャンセル
 func _cancel_target_selection():
-	print("[SpellPhaseHandler] 対象選択キャンセル")
-	
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
 	
@@ -472,7 +440,6 @@ func cancel_spell():
 	
 	if player_system and cost > 0:
 		player_system.add_magic(current_player_id, cost)
-		print("[SpellPhaseHandler] スペルキャンセル、魔力返却: %d" % cost)
 	
 	selected_spell_card = {}
 	spell_used_this_turn = false
@@ -481,8 +448,6 @@ func cancel_spell():
 ## スペル効果を実行
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	current_state = State.EXECUTING_EFFECT
-	
-	print("[SpellPhaseHandler] スペル効果実行: %s" % spell_card.get("name", ""))
 	
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
@@ -511,8 +476,6 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
 	var value = effect.get("value", 0)
 	
-	print("[SpellPhaseHandler] 効果適用: %s (値: %d)" % [effect_type, value])
-	
 	match effect_type:
 		"damage":
 			# クリーチャーにダメージ
@@ -525,7 +488,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 						if not creature.is_empty():
 							var current_hp = creature.get("hp", 0)
 							var land_bonus_hp = creature.get("land_bonus_hp", 0)
-							var total_hp = current_hp + land_bonus_hp
+							var _total_hp = current_hp + land_bonus_hp
 							
 							# ダメージを基本HPから優先的に減らす
 							var damage_to_base = min(value, current_hp)
@@ -536,11 +499,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 							if remaining_damage > 0:
 								creature["land_bonus_hp"] = max(0, land_bonus_hp - remaining_damage)
 							
-							print("[SpellPhaseHandler] ダメージ適用: 合計HP %d → %d" % [total_hp, creature["hp"] + creature.get("land_bonus_hp", 0)])
-							
 							# クリーチャーが倒れた場合
 							if creature["hp"] <= 0 and creature.get("land_bonus_hp", 0) <= 0:
-								print("[SpellPhaseHandler] クリーチャー撃破！土地を空き地に")
 								# タイルを空き地にする
 								tile.creature_data = {}
 								tile.owner_id = -1
@@ -568,13 +528,6 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					# 魔力を移動
 					player_system.add_magic(target_player_id, -drain_amount)
 					player_system.add_magic(current_player_id, drain_amount)
-					
-					print("[SpellPhaseHandler] 魔力吸収: %dG (対象P%d: %d → %d)" % [
-						drain_amount,
-						target_player_id + 1,
-						current_magic,
-						current_magic - drain_amount
-					])
 		
 		"change_element":
 			# 土地属性変更
@@ -594,11 +547,6 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 
 ## 土地効果: 属性変更
 func _apply_land_effect_change_element(effect: Dictionary, target_data: Dictionary):
-	# デバッグ出力
-	print("[SpellPhaseHandler] _apply_land_effect_change_element 開始")
-	print("[SpellPhaseHandler] target_data = ", target_data)
-	print("[SpellPhaseHandler] effect = ", effect)
-	
 	if not game_flow_manager or not game_flow_manager.spell_land:
 		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
 		return
@@ -606,14 +554,8 @@ func _apply_land_effect_change_element(effect: Dictionary, target_data: Dictiona
 	var tile_index = target_data.get("tile_index", -1)
 	var new_element = effect.get("element", "")
 	
-	print("[SpellPhaseHandler] tile_index = ", tile_index, ", new_element = ", new_element)
-	
 	if tile_index >= 0 and not new_element.is_empty():
-		var success = game_flow_manager.spell_land.change_element(tile_index, new_element)
-		if success:
-			print("[SpellPhaseHandler] 属性変更: タイル%d → %s" % [tile_index, new_element])
-		else:
-			print("[SpellPhaseHandler] 属性変更失敗: タイル%d" % tile_index)
+		game_flow_manager.spell_land.change_element(tile_index, new_element)
 
 ## 土地効果: レベル変更
 func _apply_land_effect_change_level(effect: Dictionary, target_data: Dictionary):
@@ -625,11 +567,7 @@ func _apply_land_effect_change_level(effect: Dictionary, target_data: Dictionary
 	var level_change = effect.get("value", 0)
 	
 	if tile_index >= 0:
-		var success = game_flow_manager.spell_land.change_level(tile_index, level_change)
-		if success:
-			print("[SpellPhaseHandler] レベル変更: タイル%d %+d" % [tile_index, level_change])
-		else:
-			print("[SpellPhaseHandler] レベル変更失敗: タイル%d" % tile_index)
+		game_flow_manager.spell_land.change_level(tile_index, level_change)
 
 ## 土地効果: 土地放棄
 func _apply_land_effect_abandon(effect: Dictionary, target_data: Dictionary):
@@ -641,14 +579,10 @@ func _apply_land_effect_abandon(effect: Dictionary, target_data: Dictionary):
 	var return_rate = effect.get("return_rate", 0.7)
 	
 	if tile_index >= 0:
-		var gold_returned = game_flow_manager.spell_land.abandon_land(tile_index, return_rate)
-		if gold_returned >= 0:
-			print("[SpellPhaseHandler] 土地放棄: タイル%d、G%d獲得" % [tile_index, gold_returned])
-		else:
-			print("[SpellPhaseHandler] 土地放棄失敗: タイル%d" % tile_index)
+		game_flow_manager.spell_land.abandon_land(tile_index, return_rate)
 
 ## 土地効果: クリーチャー破壊
-func _apply_land_effect_destroy_creature(effect: Dictionary, target_data: Dictionary):
+func _apply_land_effect_destroy_creature(_effect: Dictionary, target_data: Dictionary):
 	if not game_flow_manager or not game_flow_manager.spell_land:
 		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
 		return
@@ -656,11 +590,7 @@ func _apply_land_effect_destroy_creature(effect: Dictionary, target_data: Dictio
 	var tile_index = target_data.get("tile_index", -1)
 	
 	if tile_index >= 0:
-		var success = game_flow_manager.spell_land.destroy_creature(tile_index)
-		if success:
-			print("[SpellPhaseHandler] クリーチャー破壊: タイル%d" % tile_index)
-		else:
-			print("[SpellPhaseHandler] クリーチャー破壊失敗: タイル%d" % tile_index)
+		game_flow_manager.spell_land.destroy_creature(tile_index)
 
 ## スペルをパス
 func pass_spell():
@@ -685,8 +615,6 @@ func complete_spell_phase():
 				ui_manager.hand_display.update_hand_display(current_player.id)
 	
 	spell_phase_completed.emit()
-	
-	print("[SpellPhaseHandler] スペルフェーズ完了")
 	
 	# 次のフェーズ（ダイスフェーズ）への遷移は GameFlowManager が行う
 

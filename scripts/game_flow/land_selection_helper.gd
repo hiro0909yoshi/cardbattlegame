@@ -11,14 +11,12 @@ static func preview_land(handler, tile_index: int) -> bool:
 	
 	# 所有地かチェック
 	if tile_index not in handler.player_owned_lands:
-		print("[LandSelectionHelper] 所有していない土地です: ", tile_index)
-		return false
+			return false
 	
 	# ダウン状態チェック
 	if handler.board_system and handler.board_system.tile_nodes.has(tile_index):
 		var tile = handler.board_system.tile_nodes[tile_index]
 		if tile.has_method("is_down") and tile.is_down():
-			print("[LandSelectionHelper] この土地はダウン状態です: ", tile_index)
 			return false
 	
 	handler.selected_tile_index = tile_index
@@ -39,13 +37,10 @@ static func confirm_land_selection(handler) -> bool:
 		return false
 	
 	if handler.selected_tile_index == -1:
-		print("[LandSelectionHelper] 土地が選択されていません")
 		return false
 	
 	handler.current_state = handler.State.SELECTING_ACTION
 	handler.land_selected.emit(handler.selected_tile_index)
-	
-	print("[LandSelectionHelper] 土地を確定: ", handler.selected_tile_index)
 	
 	# アクション選択UIを表示
 	if handler.ui_manager and handler.ui_manager.has_method("show_action_menu"):
@@ -75,7 +70,6 @@ static func get_player_owned_lands(board_system, player_id: int) -> Array:
 		if tile.owner_id == player_id:
 			# ダウン状態の土地は除外
 			if tile.has_method("is_down") and tile.is_down():
-				print("[LandSelectionHelper] タイル", tile_index, "はダウン状態なので除外")
 				continue
 			owned_lands.append(tile.tile_index)
 	

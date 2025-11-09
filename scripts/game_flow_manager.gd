@@ -321,7 +321,6 @@ func on_card_selected(card_index: int):
 	var hand = card_system.get_all_cards_for_player(target_player_id)
 	
 	if card_index >= hand.size():
-		print("[GameFlowManager] 無効なカードインデックス")
 		return
 	
 	var card = hand[card_index]
@@ -334,7 +333,6 @@ func on_card_selected(card_index: int):
 			spell_phase_handler.use_spell(card)
 			return
 		else:
-			print("[GameFlowManager] スペルフェーズ中はスペルカードのみ使用可能")
 			return
 	
 	# アイテムフェーズ中かチェック
@@ -352,20 +350,16 @@ func on_card_selected(card_index: int):
 				if "all" in assist_elements or card_element in assist_elements:
 					item_phase_handler.use_item(card)
 					return
-			print("[GameFlowManager] このクリーチャーは援護対象ではありません")
 			return
 		else:
-			print("[GameFlowManager] アイテムフェーズ中はアイテムまたは援護対象クリーチャーのみ使用可能")
 			return
 	
 	# スペルフェーズ以外でスペルカードが選択された場合
 	if card_type == "spell":
-		print("[GameFlowManager] スペルカードはスペルフェーズでのみ使用できます")
 		return
 	
 	# アイテムフェーズ以外でアイテムカードが選択された場合
 	if card_type == "item":
-		print("[GameFlowManager] アイテムカードはアイテムフェーズでのみ使用できます")
 		return
 	
 	# Phase 1-D: 交換モードチェック
@@ -559,21 +553,16 @@ func initialize_phase1a_systems():
 		item_phase_handler.initialize(ui_manager, self, card_system, player_system, battle_system)
 
 # Phase 1-A: PhaseManagerのフェーズ変更を受信
-func _on_phase_manager_phase_changed(new_phase, old_phase):
-	print("[GameFlowManager] PhaseManager フェーズ変更: ", 
-		PhaseManager.GamePhase.keys()[old_phase], " → ", 
-		PhaseManager.GamePhase.keys()[new_phase])
+func _on_phase_manager_phase_changed(_new_phase, _old_phase):
+	pass
 
 # Phase 1-A: 領地コマンドが閉じられたときの処理
 func _on_land_command_closed():
-	print("[GameFlowManager] 領地コマンドが閉じられました")
 	
 	# ターンエンド中またはターンエンドフェーズの場合は、カード選択UIを再初期化しない
 	if is_ending_turn or current_phase == GamePhase.END_TURN:
-		print("[GameFlowManager] ターンエンド中のため、カード選択UIを再初期化しません")
 		return
 	
-	print("[GameFlowManager] 召喚フェーズに戻ります")
 	# カード選択UIの再初期化を次のフレームで実行（awaitを避ける）
 	_reinitialize_card_selection.call_deferred()
 
@@ -589,12 +578,10 @@ func _reinitialize_card_selection():
 			# 領地コマンドボタンも再表示
 			ui_manager.show_land_command_button()
 			
-			print("[GameFlowManager] 召喚フェーズに戻りました - カード選択が可能です")
 
 # Phase 1-A: 領地コマンドを開く
 func open_land_command():
 	if not land_command_handler:
-		print("[GameFlowManager] LandCommandHandlerが初期化されていません")
 		return
 	
 	var current_player = player_system.get_current_player()
@@ -620,12 +607,10 @@ func _initialize_lap_state(player_count: int):
 			"N": false,
 			"S": false
 		}
-	print("[GameFlowManager] 周回状態を初期化: ", player_count, "プレイヤー")
 
 # CheckpointTileのシグナルを接続
 func _connect_checkpoint_signals():
 	if not board_system_3d or not board_system_3d.tile_nodes:
-		print("[GameFlowManager] board_system_3d.tile_nodesが未初期化")
 		return
 	
 	# 少し待ってからシグナル接続（CheckpointTileの_ready()を待つ）
@@ -639,15 +624,12 @@ func _connect_checkpoint_signals():
 				if not tile.checkpoint_passed.is_connected(_on_checkpoint_passed):
 					tile.checkpoint_passed.connect(_on_checkpoint_passed)
 			elif tile.get("tile_type") == "checkpoint":
-				print("[GameFlowManager] 警告: タイル", tile_index, "はcheckpointだがシグナルがない")
+				pass  # チェックポイントタイルだがシグナルがない
 
 # チェックポイント通過イベント
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	if not player_lap_state.has(player_id):
-		print("[GameFlowManager] ERROR: player_lap_state にプレイヤー", player_id, "が存在しません")
 		return
-	
-
 	
 	# チェックポイントフラグを立てる
 	player_lap_state[player_id][checkpoint_type] = true

@@ -15,7 +15,6 @@ static func get_move_destinations(
 	if move_type.is_empty():
 		move_type = _detect_move_type(creature_data)
 	
-	print("[MovementHelper] 移動タイプ: %s (from_tile: %d)" % [move_type, from_tile_index])
 	
 	match move_type:
 		"vacant_move":
@@ -38,7 +37,6 @@ static func get_move_destinations(
 			var current_player_id = board_system.current_player_index
 			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
 			
-			print("[MovementHelper] 空地移動+通常移動（フィルタ後）: %d個" % all_destinations.size())
 			return all_destinations
 		"enemy_move":
 			# 敵地移動スキル持ちでも通常の隣接移動もできる
@@ -61,7 +59,6 @@ static func get_move_destinations(
 			var current_player_id = board_system.current_player_index
 			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
 			
-			print("[MovementHelper] 敵地移動+通常移動（フィルタ後）: %d個" % all_destinations.size())
 			return all_destinations
 		"adjacent":
 			# TileNeighborSystemを使用
@@ -80,16 +77,13 @@ static func get_move_destinations(
 ## クリーチャーの移動タイプを判定
 static func _detect_move_type(creature_data: Dictionary) -> String:
 	if not creature_data:
-		print("[MovementHelper] _detect_move_type: creature_data is empty")
 		return "adjacent"
 	
-	print("[MovementHelper] _detect_move_type: creature_name=%s, id=%s" % [creature_data.get("name", "?"), creature_data.get("id", "?")])
 	
 	var parsed = creature_data.get("ability_parsed", {})
 	var keywords = parsed.get("keywords", [])
 	var conditions = parsed.get("keyword_conditions", {})
 	
-	print("[MovementHelper] _detect_move_type: keywords=%s, conditions=%s" % [keywords, conditions.keys()])
 	
 	# 空地移動チェック
 	if "空地移動" in keywords and conditions.has("空地移動"):
@@ -109,7 +103,6 @@ static func _get_vacant_move_elements(creature_data: Dictionary) -> Array:
 	var vacant_move = conditions.get("空地移動", {})
 	var elements = vacant_move.get("target_elements", [])
 	
-	print("[MovementHelper] 空地移動対象属性: %s" % [elements])
 	return elements
 
 ## 指定属性の空き地を取得
@@ -145,7 +138,6 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 		if "全" in elements or tile_element in elements:
 			vacant_tiles.append(i)
 	
-	print("[MovementHelper] 移動可能な空き地: %d個" % [vacant_tiles.size()])
 	return vacant_tiles
 
 ## 敵地移動の条件を取得
@@ -174,8 +166,6 @@ static func _get_enemy_tiles_by_condition(
 	# 移動元タイルの属性を取得
 	var from_tile_element = from_tile.tile_type
 	
-	print("[MovementHelper] 敵地移動: from_tile=%d, tile_element=%s, player=%d" % [from_tile_index, from_tile_element, current_player_id])
-	print("[MovementHelper] 条件: %s" % [condition])
 	
 	# 全タイルをループ
 	var all_tiles = board_system.tile_nodes.keys()
@@ -193,20 +183,15 @@ static func _get_enemy_tiles_by_condition(
 		if tile.owner_id == -1 or tile.owner_id == current_player_id:
 			continue
 		
-		print("[MovementHelper] 候補タイル %d: owner=%d, element=%s" % [i, tile.owner_id, tile.tile_type])
 		
 		# 条件チェック（属性が異なる）- サンダースポーン用
 		if condition.has("different_element") and condition.get("different_element"):
 			var tile_element = tile.tile_type
-			print("[MovementHelper]   -> different_element check: from_tile=%s, enemy_tile=%s" % [from_tile_element, tile_element])
 			if tile_element == from_tile_element:
-				print("[MovementHelper]   -> SKIP: 同じ属性")
 				continue
 		
-		print("[MovementHelper]   -> OK: 移動可能")
 		enemy_tiles.append(i)
 	
-	print("[MovementHelper] 移動可能な敵地: %d個" % [enemy_tiles.size()])
 	return enemy_tiles
 
 ## すべての空き地を取得（アージェントキー用）
@@ -226,12 +211,10 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		
 		# 特殊マスチェック（checkpoint, warpは移動不可）
 		if tile.tile_type in ["checkpoint", "warp"]:
-			print("[MovementHelper] タイル%d は特殊マス(%s)のため移動不可" % [tile_index, tile.tile_type])
 			continue
 		
 		# 自分のクリーチャーがいる土地はNG
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
-			print("[MovementHelper] タイル%d は自分のクリーチャーがいるため移動不可" % tile_index)
 			continue
 		
 		valid_tiles.append(tile_index)
@@ -248,7 +231,6 @@ static func execute_creature_move(
 ) -> void:
 	
 	if not board_system:
-		print("[MovementHelper] エラー: board_systemが無効")
 		return
 	
 	var from_tile_node = board_system.tile_nodes[from_tile]
@@ -258,7 +240,6 @@ static func execute_creature_move(
 	if creature_data.is_empty():
 		creature_data = from_tile_node.creature_data.duplicate()
 	
-	print("[MovementHelper] 移動実行: %d -> %d" % [from_tile, to_tile])
 	
 	# 移動元をクリア
 	from_tile_node.creature_data = {}
@@ -286,4 +267,3 @@ static func execute_creature_move(
 	if board_system.has_signal("creature_moved"):
 		board_system.creature_moved.emit(from_tile, to_tile)
 	
-	print("[MovementHelper] 移動完了")

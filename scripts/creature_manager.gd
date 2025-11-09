@@ -113,10 +113,10 @@ func debug_print():
 			var data = creatures[tile_index]
 			if not data.is_empty():
 				var has_visual = visual_nodes.has(tile_index) and visual_nodes[tile_index] != null
-				var owner = "???"
+				var owner_id = "???"
 				if board_system:
 					var tile_info = board_system.get_tile_info(tile_index)
-					owner = "P" + str(tile_info.get("owner", "?"))
+					owner_id = "P" + str(tile_info.get("owner", "?"))
 				
 				print("  [%d] %s (HP:%d/%d, 属性:%s, 所有:%s, 3D:%s)" % [
 					tile_index,
@@ -124,7 +124,7 @@ func debug_print():
 					data.get("hp", 0),
 					data.get("max_hp", 0),
 					data.get("element", "?"),
-					owner,
+					owner_id,
 					"○" if has_visual else "×"
 				])
 	print("=============================\n")

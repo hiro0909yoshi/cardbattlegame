@@ -18,7 +18,6 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	# 魔力チェック
 	if current_player.magic_power < cost:
-		print("[LandActionHelper] 魔力不足: 必要%d / 所持%d" % [cost, current_player.magic_power])
 		return false
 	
 	# 魔力消費
@@ -42,13 +41,12 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 		if not SkillSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		else:
-			print("[LandActionHelper] 不屈によりレベルアップ後もダウンしません")
+			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
 	if handler.ui_manager:
 		handler.ui_manager.update_player_info_panels()
 	
-	print("[LandActionHelper] レベルアップ完了: tile ", handler.selected_tile_index, " -> Lv.", target_level)
 	
 	# アクション完了を通知（正しいターン終了フロー）
 	# 注: 領地コマンドはend_turn()で閉じられる
@@ -64,14 +62,12 @@ static func execute_level_up(handler) -> bool:
 	
 	# Phase 1-A修正: board_system.get_tile()ではなくtile_nodesを使用
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
-		print("[LandActionHelper] タイルが見つかりません: ", handler.selected_tile_index)
 		return false
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
 	# 最大レベルチェック
 	if tile.level >= 5:
-		print("[LandActionHelper] 既に最大レベルです")
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "既に最大レベルです"
 		return false
@@ -116,7 +112,6 @@ static func execute_move_creature(handler) -> bool:
 		else:
 			error_msg = "移動可能なマスがありません"
 		
-		print("[LandActionHelper] ", error_msg)
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = error_msg
 		# アクション選択に戻る
@@ -156,19 +151,16 @@ static func update_move_destination_ui(handler):
 ## クリーチャー交換実行
 static func execute_swap_creature(handler) -> bool:
 	if handler.selected_tile_index < 0:
-		print("[LandActionHelper] エラー: 土地が選択されていません")
 		return false
 	
 	# 選択した土地を取得
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.selected_tile_index):
-		print("[LandActionHelper] エラー: 土地ノードが見つかりません")
 		return false
 	
 	var tile_info = handler.board_system.get_tile_info(handler.selected_tile_index)
 	
 	# クリーチャーがいるかチェック
 	if tile_info.get("creature", {}).is_empty():
-		print("[LandActionHelper] エラー: クリーチャーがいません")
 		return false
 	
 	# 現在のプレイヤーIDを取得
@@ -181,7 +173,6 @@ static func execute_swap_creature(handler) -> bool:
 	# 🔄 元のクリーチャーデータ保存（ダミー、実際はexecute_swapで再取得する）
 	var old_creature_data = tile_info["creature"].duplicate()
 	
-	print("[LandActionHelper] クリーチャー交換開始")
 	print("  対象土地: タイル", handler.selected_tile_index)
 	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"), " (※最終的には最新データで処理)")
 	
@@ -206,14 +197,12 @@ static func execute_swap_creature(handler) -> bool:
 ## 交換条件チェック
 static func check_swap_conditions(handler, player_id: int) -> bool:
 	if not handler.board_system or not handler.board_system.card_system:
-		print("[LandActionHelper] エラー: システム参照が不正です")
 		return false
 	
 	var card_system = handler.board_system.card_system
 	
 	# 手札データを取得
 	if not card_system.player_hands.has(player_id):
-		print("[LandActionHelper] エラー: プレイヤーIDが不正です")
 		return false
 	
 	var player_hand = card_system.player_hands[player_id]["data"]
@@ -226,7 +215,6 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 			break
 	
 	if not has_creature_card:
-		print("[LandActionHelper] エラー: 手札にクリーチャーカードがありません")
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "手札にクリーチャーカードがありません"
 		return false
@@ -237,7 +225,6 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 static func confirm_move(handler, dest_tile_index: int):
 	
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.move_source_tile) or not handler.board_system.tile_nodes.has(dest_tile_index):
-		print("[LandActionHelper] エラー: タイルが見つかりません")
 		handler.close_land_command()
 		return
 	
@@ -246,16 +233,13 @@ static func confirm_move(handler, dest_tile_index: int):
 	
 	# 移動元のクリーチャー情報を取得
 	var creature_data = source_tile.creature_data.duplicate()
-	print("[LandActionHelper] creature_data from source: ", creature_data.get("name", "NO_NAME"), " id=", creature_data.get("id", -1))
 	if creature_data.is_empty():
-		print("[LandActionHelper] エラー: 移動元にクリーチャーがいません")
 		handler.close_land_command()
 		return
 	
 	var current_player_index = source_tile.owner_id
 	
 	# 1. 移動元のクリーチャーを削除し、空き地にする
-	print("[LandActionHelper] Removing creature from source tile: ", handler.move_source_tile)
 	source_tile.remove_creature()
 	handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
 	
@@ -264,9 +248,6 @@ static func confirm_move(handler, dest_tile_index: int):
 	
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
-		print("[LandActionHelper] 空き地への移動 - 土地獲得")
-		print("[LandActionHelper] Placing creature on dest tile: ", dest_tile_index)
-		print("[LandActionHelper] creature_data to place: ", creature_data.get("name", "NO_NAME"), " id=", creature_data.get("id", -1))
 		
 		# place_creature()を使って3Dカードも含めて正しく配置
 		dest_tile.place_creature(creature_data)
@@ -286,14 +267,12 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 	elif dest_owner == current_player_index:
 		# 自分の土地の場合: エラー（通常はありえない）
-		print("[LandActionHelper] エラー: 自分の土地には移動できません")
 		# クリーチャーを元に戻す
 		source_tile.place_creature(creature_data)
 		handler.close_land_command()
 		
 	else:
 		# 敵の土地の場合: バトル発生
-		print("[LandActionHelper] 敵地への移動 - バトル発生")
 		
 		# 移動元情報を保存（敗北時に戻すため）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
@@ -330,16 +309,15 @@ static func execute_simple_move_battle(handler, dest_index: int, attacker_data: 
 	var success = attacker_ap >= defender_hp
 	
 	if success:
-		print("[LandActionHelper] 簡易バトル: 攻撃側勝利")
 		handler.board_system.set_tile_owner(dest_index, attacker_player)
 		handler.board_system.place_creature(dest_index, attacker_data)
 		# 不屈チェック
 		if not SkillSystem.has_unyielding(attacker_data):
 			dest_tile.set_down_state(true)
 		else:
-			print("[LandActionHelper] 不屈により移動後もダウンしません")
+			pass  # 不屈スキル保持のためダウンしない
 	else:
-		print("[LandActionHelper] 簡易バトル: 防御側勝利")
+		pass  # 簡易バトルで敗北
 	
 	# アクション完了を通知
 	if handler.board_system and handler.board_system.tile_action_processor:
@@ -348,12 +326,10 @@ static func execute_simple_move_battle(handler, dest_index: int, attacker_data: 
 ## 隣接タイルを取得
 static func get_adjacent_tiles(handler, tile_index: int) -> Array:
 	if not handler.board_system:
-		print("[LandActionHelper] ERROR: board_systemが存在しません")
 		return []
 	
 	# TileNeighborSystemを使用
 	if not handler.board_system.tile_neighbor_system:
-		print("[LandActionHelper] ERROR: tile_neighbor_systemが存在しません")
 		return []
 	
 	var neighbors = handler.board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
@@ -362,7 +338,6 @@ static func get_adjacent_tiles(handler, tile_index: int) -> Array:
 ## 移動バトルを実行（アイテムフェーズ完了後）
 static func _execute_move_battle(handler):
 	if handler.pending_move_battle_creature_data.is_empty():
-		print("[LandActionHelper] エラー: バトル情報が保存されていません")
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.tile_action_processor.complete_action()
 		return
@@ -422,7 +397,6 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
-		print("[LandActionHelper] この土地は地形変化できません")
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "この土地は地形変化できません"
 		return false
@@ -430,7 +404,6 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# コスト計算
 	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
 	if cost < 0:
-		print("[LandActionHelper] コスト計算エラー")
 		return false
 	
 	# 魔力チェック
@@ -441,7 +414,6 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		return false
 	
 	if current_player.magic_power < cost:
-		print("[LandActionHelper] 魔力不足: 必要%d / 所持%d" % [cost, current_player.magic_power])
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "魔力が足りません (必要: %dG)" % cost
 		return false
@@ -452,7 +424,6 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# 地形変化実行
 	var success = handler.board_system.change_tile_terrain(tile_index, new_element)
 	if not success:
-		print("[LandActionHelper] 地形変化失敗")
 		# 魔力を返却
 		handler.player_system.add_magic(current_player.id, cost)
 		return false
@@ -466,13 +437,12 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		if not creature.is_empty() and not SkillSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		elif not creature.is_empty():
-			print("[LandActionHelper] 不屈により地形変化後もダウンしません")
+			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
 	if handler.ui_manager:
 		handler.ui_manager.update_player_info_panels()
 	
-	print("[LandActionHelper] 地形変化完了: tile %d -> %s (コスト: %dG)" % [tile_index, new_element, cost])
 	
 	# アクション完了を通知（レベルアップと同様）
 	# 注: 領地コマンドはend_turn()で閉じられる
@@ -487,14 +457,12 @@ static func execute_terrain_change(handler) -> bool:
 		return false
 	
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
-		print("[LandActionHelper] タイルが見つかりません: ", handler.selected_tile_index)
 		return false
 	
 	var tile_index = handler.selected_tile_index
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
-		print("[LandActionHelper] この土地は地形変化できません（特殊タイル）")
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "この土地は地形変化できません"
 		return false

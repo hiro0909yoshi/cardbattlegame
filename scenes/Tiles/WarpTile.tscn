@@ -17,11 +17,6 @@ size = Vector3(3.6, 0.5, 3.6)
 
 [node name="WarpTile" type="StaticBody3D"]
 script = ExtResource("1_warp")
-tile_type = null
-owner_id = null
-level = null
-tile_index = null
-warp_destination = null
 
 [node name="frame" parent="." instance=ExtResource("2_frame")]
 
