@@ -1,7 +1,10 @@
-# LandSelectionHelper - 土地選択関連の処理を提供
+# LandSelectionHelper - 土地コマンド特有の処理を提供
+# 汎用的な選択処理は TargetSelectionHelper を使用してください
 class_name LandSelectionHelper
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
+## 
+## 領地コマンド専用：所有地チェックとダウン状態チェックを行う
 static func preview_land(handler, tile_index: int) -> bool:
 	if handler.current_state != handler.State.SELECTING_LAND:
 		return false
@@ -20,15 +23,17 @@ static func preview_land(handler, tile_index: int) -> bool:
 	
 	handler.selected_tile_index = tile_index
 	
-	# 選択マーカーを表示
-	show_selection_marker(handler, tile_index)
-	
-	# 選択した土地にカメラをフォーカス
-	focus_camera_on_tile(handler, tile_index)
+	# 汎用ヘルパーを使用して視覚的に選択
+	TargetSelectionHelper.clear_all_highlights(handler)
+	TargetSelectionHelper.show_selection_marker(handler, tile_index)
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+	TargetSelectionHelper.highlight_tile(handler, tile_index)
 	
 	return true
 
 ## 土地選択を確定してアクションメニューを表示
+## 
+## 領地コマンド専用：状態遷移とUIメニュー表示を行う
 static func confirm_land_selection(handler) -> bool:
 	if handler.current_state != handler.State.SELECTING_LAND:
 		return false
@@ -53,6 +58,8 @@ static func select_land(handler, tile_index: int) -> bool:
 	return preview_land(handler, tile_index)
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
+## 
+## 領地コマンド専用：ダウン状態の土地を自動的に除外する
 static func get_player_owned_lands(board_system, player_id: int) -> Array:
 	if not board_system:
 		return []
@@ -75,6 +82,8 @@ static func get_player_owned_lands(board_system, player_id: int) -> Array:
 	return owned_lands
 
 ## 土地選択UIを更新
+## 
+## 領地コマンド専用：領地コマンド固有のUI表示
 static func update_land_selection_ui(handler):
 	if not handler.ui_manager or not handler.ui_manager.phase_label:
 		return
@@ -91,87 +100,26 @@ static func update_land_selection_ui(handler):
 	handler.ui_manager.phase_label.text = text
 
 # ============================================
-# 選択マーカーシステム
+# 互換性のための転送メソッド
+# 汎用処理は TargetSelectionHelper に委譲
 # ============================================
 
 ## 選択マーカーを作成
 static func create_selection_marker(handler):
-	if handler.selection_marker:
-		return  # 既に存在する場合は何もしない
-	
-	# シンプルなリング形状のマーカーを作成
-	handler.selection_marker = MeshInstance3D.new()
-	
-	# トーラス（ドーナツ型）メッシュを作成
-	var torus = TorusMesh.new()
-	torus.inner_radius = 0.8
-	torus.outer_radius = 1.0
-	torus.rings = 32
-	torus.ring_segments = 16
-	
-	handler.selection_marker.mesh = torus
-	
-	# マテリアル設定（黄色で発光）
-	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1.0, 1.0, 0.0, 1.0)  # 黄色
-	material.emission_enabled = true
-	material.emission = Color(1.0, 1.0, 0.0)
-	material.emission_energy_multiplier = 2.0
-	handler.selection_marker.material_override = material
+	TargetSelectionHelper.create_selection_marker(handler)
 
 ## 選択マーカーを表示
 static func show_selection_marker(handler, tile_index: int):
-	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
-		return
-	
-	var tile = handler.board_system.tile_nodes[tile_index]
-	
-	# マーカーが未作成なら作成
-	if not handler.selection_marker:
-		create_selection_marker(handler)
-	
-	# マーカーを土地の子として追加
-	if handler.selection_marker.get_parent():
-		handler.selection_marker.get_parent().remove_child(handler.selection_marker)
-	
-	tile.add_child(handler.selection_marker)
-	
-	# 位置を土地の少し上に設定
-	handler.selection_marker.position = Vector3(0, 0.5, 0)
-	
-	# 回転アニメーションを追加
-	if not handler.selection_marker.has_meta("rotating"):
-		handler.selection_marker.set_meta("rotating", true)
+	TargetSelectionHelper.show_selection_marker(handler, tile_index)
 
 ## 選択マーカーを非表示
 static func hide_selection_marker(handler):
-	if handler.selection_marker and handler.selection_marker.get_parent():
-		handler.selection_marker.get_parent().remove_child(handler.selection_marker)
+	TargetSelectionHelper.hide_selection_marker(handler)
 
 ## 選択マーカーを回転（process内で呼ぶ）
 static func rotate_selection_marker(handler, delta: float):
-	if handler.selection_marker and handler.selection_marker.has_meta("rotating"):
-		handler.selection_marker.rotate_y(delta * 2.0)  # 1秒で約114度回転
+	TargetSelectionHelper.rotate_selection_marker(handler, delta)
 
 ## 選択した土地にカメラをフォーカス
 static func focus_camera_on_tile(handler, tile_index: int):
-	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
-		return
-	
-	var tile = handler.board_system.tile_nodes[tile_index]
-	var camera = handler.board_system.camera
-	
-	if not camera:
-		return
-	
-	# カメラを土地の上方に移動（通常と同じくらいの距離）
-	var tile_pos = tile.global_position
-	var camera_offset = Vector3(12, 15, 12)  # 通常カメラと同じくらいの距離
-	camera.position = tile_pos + camera_offset
-	
-	# カメラを土地に向ける
-	camera.look_at(tile_pos, Vector3.UP)
-	
-	# 選択した土地をハイライト
-	if tile.has_method("set_highlight"):
-		tile.set_highlight(true)
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)

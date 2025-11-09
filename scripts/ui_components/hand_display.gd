@@ -108,17 +108,21 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	var is_creature_card = card_type == "creature"
 	
 
-	# フィルターモードに応じてグレーアウト
+	# フィルターモードに応じてグレーアウトと選択不可設定
+	var is_selectable_card = true  # デフォルトは選択可能
+	
 	if filter_mode == "spell":
-		# スペルフェーズ中: スペルカード以外をグレーアウト
+		# スペルフェーズ中: スペルカード以外をグレーアウト＆選択不可
 		if not is_spell_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "item":
-		# アイテムフェーズ中: アイテムカード以外をグレーアウト
+		# アイテムフェーズ中: アイテムカード以外をグレーアウト＆選択不可
 		if not is_item_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "item_or_assist":
-		# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト
+		# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト＆選択不可
 		var should_gray_out = true
 		
 		# アイテムカードは常に選択可能
@@ -137,15 +141,18 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 		
 		if should_gray_out:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "battle":
-		# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+		# バトルフェーズ中: 防御型クリーチャーをグレーアウト＆選択不可
 		var creature_type = card_data.get("creature_type", "normal")
 		if creature_type == "defensive":
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "":
-		# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
+		# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト＆選択不可
 		if is_spell_card or is_item_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 		
 	hand_container.add_child(card)
 	
@@ -159,8 +166,8 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	else:
 		print("[HandDisplay] WARNING: カードにload_card_dataメソッドがありません")
 	
-	# 手札表示用カードは初期状態で選択不可（CardSelectionUIが必要に応じて有効化する）
-	card.is_selectable = false
+	# フィルターモードに応じて選択可能/不可を設定
+	card.is_selectable = is_selectable_card
 	
 	return card
 

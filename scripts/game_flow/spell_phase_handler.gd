@@ -22,15 +22,25 @@ var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
 
+## ターゲット選択（領地コマンドと同じ構造）
+var available_targets: Array = []
+var current_target_index: int = 0
+var selection_marker: MeshInstance3D = null
+
 ## 参照
 var ui_manager = null
 var game_flow_manager = null
 var card_system = null
 var player_system = null
 var board_system = null
+var creature_manager = null
 
 func _ready():
 	pass
+
+func _process(delta):
+	# 選択マーカーを回転
+	TargetSelectionHelper.rotate_selection_marker(self, delta)
 
 ## 初期化
 func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
@@ -39,6 +49,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
 	board_system = b_system if b_system else (flow_mgr.board_system_3d if flow_mgr else null)
+	
+	# CreatureManagerを取得
+	if board_system:
+		creature_manager = board_system.get_node_or_null("CreatureManager")
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -160,11 +174,27 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 	if not current_player:
 		return false
 	
-	var cost = spell_card.get("cost", {}).get("mp", 0)
+	# costがnullの場合は空のDictionaryとして扱う
+	var cost_data = spell_card.get("cost", {})
+	if cost_data == null:
+		cost_data = {}
+	
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	
+	print("[SpellPhaseHandler] コストチェック: 必要=%d, 所持=%d" % [cost, current_player.magic_power])
 	return current_player.magic_power >= cost
 
 ## スペルを使用
 func use_spell(spell_card: Dictionary):
+	# デバッグ出力
+	print("[SpellPhaseHandler] use_spell呼び出し:")
+	print("  カード名: ", spell_card.get("name", "不明"))
+	print("  カードID: ", spell_card.get("id", -1))
+	print("  cost: ", spell_card.get("cost", null))
+	print("  全キー: ", spell_card.keys())
+	
 	if current_state != State.WAITING_FOR_INPUT:
 		print("[SpellPhaseHandler] スペル使用できる状態ではありません")
 		return
@@ -181,31 +211,38 @@ func use_spell(spell_card: Dictionary):
 	spell_used_this_turn = true
 	
 	# コストを支払う
-	var cost = spell_card.get("cost", {}).get("mp", 0)
+	var cost_data = spell_card.get("cost", {})
+	if cost_data == null:
+		cost_data = {}
+	
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
 		print("[SpellPhaseHandler] 魔力消費: %d" % cost)
 	
 	# 対象選択が必要かチェック
-	var parsed = spell_card.get("ability_parsed", {})
-	var target_info = parsed.get("target", {})
+	var parsed = spell_card.get("effect_parsed", {})
+	var target_type = parsed.get("target_type", "")
+	var target_info = parsed.get("target_info", {})
 	
-	if target_info.get("required", false):
+	if not target_type.is_empty():
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
-		var target_type = target_info.get("type", "")
 		print("[SpellPhaseHandler] 対象選択が必要: %s" % target_type)
 		target_selection_required.emit(spell_card, target_type)
 		
-		# 対象選択UIを表示（次のステップで実装）
+		# 対象選択UIを表示
 		_show_target_selection_ui(target_type, target_info)
 	else:
 		# 即座に効果発動
 		execute_spell_effect(spell_card, {})
 
-## 対象選択UIを表示
+## 対象選択UIを表示（領地コマンドと同じ方式）
 func _show_target_selection_ui(target_type: String, target_info: Dictionary):
-	print("[SpellPhaseHandler] 対象選択UI表示: %s" % target_type)
+	print("[SpellPhaseHandler] 対象選択開始: %s" % target_type)
 	
 	# 有効な対象を取得
 	var targets = _get_valid_targets(target_type, target_info)
@@ -215,42 +252,82 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary):
 		cancel_spell()
 		return
 	
-	# TargetSelectionUIを作成
-	var TargetSelectionUIClass = load("res://scripts/ui_components/target_selection_ui.gd")
-	if not TargetSelectionUIClass:
-		print("[SpellPhaseHandler] TargetSelectionUIが読み込めません")
-		# フォールバック：最初の対象を自動選択
-		on_target_selected(targets[0])
+	# 領地コマンドと同じ方式で選択開始
+	available_targets = targets
+	current_target_index = 0
+	current_state = State.SELECTING_TARGET
+	
+	# 最初の対象を表示
+	_update_target_selection()
+	
+	print("[SpellPhaseHandler] ターゲット選択: %d個の候補" % targets.size())
+
+## 選択を更新
+func _update_target_selection():
+	if available_targets.is_empty():
 		return
 	
-	var target_ui = TargetSelectionUIClass.new()
-	target_ui.initialize(board_system, player_system)
+	var target = available_targets[current_target_index]
 	
-	# UIを画面に追加
-	if ui_manager:
-		ui_manager.add_child(target_ui)
-	else:
-		get_tree().root.add_child(target_ui)
+	# 汎用ヘルパーを使用して視覚的に選択
+	TargetSelectionHelper.select_target_visually(self, target)
 	
-	# シグナル接続
-	target_ui.target_selected.connect(_on_target_ui_selected.bind(target_ui), CONNECT_ONE_SHOT)
-	target_ui.selection_cancelled.connect(_on_target_ui_cancelled.bind(target_ui), CONNECT_ONE_SHOT)
-	
-	# 選択開始
-	target_ui.show_target_selection(target_type, targets)
+	# UI更新
+	_update_selection_ui()
 
-## 対象選択UIから選択された
-func _on_target_ui_selected(target_data: Dictionary, target_ui):
-	target_ui.queue_free()
-	on_target_selected(target_data)
+## 選択UIを更新（領地コマンドと同じ形式）
+func _update_selection_ui():
+	if not ui_manager or not ui_manager.phase_label:
+		return
+	
+	if available_targets.is_empty():
+		return
+	
+	var target = available_targets[current_target_index]
+	var text = "対象を選択: [↑↓で切替]
+"
+	text += "対象 %d/%d: " % [current_target_index + 1, available_targets.size()]
+	
+	# ターゲット情報表示
+	match target.get("type", ""):
+		"land":
+			var tile_idx = target.get("tile_index", -1)
+			var element = target.get("element", "neutral")
+			var level = target.get("level", 1)
+			var owner = target.get("owner", -1)
+			
+			# 属性名を日本語に変換
+			var element_name = element
+			match element:
+				"fire": element_name = "火"
+				"water": element_name = "水"
+				"earth": element_name = "地"
+				"wind": element_name = "風"
+				"neutral": element_name = "無"
+			
+			var owner_text = ""
+			if owner >= 0:
+				owner_text = " (P%d)" % (owner + 1)
+			
+			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_text]
+		
+		"creature":
+			var tile_idx = target.get("tile_index", -1)
+			var creature_name = target.get("creature", {}).get("name", "???")
+			text += "タイル%d %s" % [tile_idx, creature_name]
+		
+		"player":
+			var player_id = target.get("player_id", -1)
+			text += "プレイヤー%d" % (player_id + 1)
+	
+	text += "
+[Enter: 次へ] [C: 閉じる]"
+	ui_manager.phase_label.text = text
 
-## 対象選択UIがキャンセルされた
-func _on_target_ui_cancelled(target_ui):
-	target_ui.queue_free()
-	cancel_spell()
+
 
 ## 有効な対象を取得（仮実装）
-func _get_valid_targets(target_type: String, _target_info: Dictionary) -> Array:
+func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 	var targets = []
 	
 	match target_type:
@@ -284,21 +361,115 @@ func _get_valid_targets(target_type: String, _target_info: Dictionary) -> Array:
 								"id": player.id
 							}
 						})
+		
+		"land", "own_land", "enemy_land":
+			# 土地を対象とする
+			print("[SpellPhaseHandler] 土地ターゲット取得開始: ", target_type)
+			if board_system:
+				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
+				print("[SpellPhaseHandler] owner_filter = ", owner_filter, ", current_player_id = ", current_player_id)
+				
+				for tile_index in board_system.tile_nodes.keys():
+					var tile_info = board_system.get_tile_info(tile_index)
+					var tile_owner = tile_info.get("owner", -1)
+					
+					# 所有者フィルター
+					var matches_owner = false
+					if owner_filter == "own":
+						matches_owner = (tile_owner == current_player_id)
+					elif owner_filter == "enemy":
+						matches_owner = (tile_owner >= 0 and tile_owner != current_player_id)
+					else:  # "any"
+						matches_owner = (tile_owner >= 0)
+					
+					if matches_owner:
+						var land_target = {
+							"type": "land",
+							"tile_index": tile_index,
+							"element": tile_info.get("type", ""),
+							"level": tile_info.get("level", 1),
+							"owner": tile_owner
+						}
+						print("[SpellPhaseHandler] 土地追加: ", land_target)
+						targets.append(land_target)
 	
+	print("[SpellPhaseHandler] _get_valid_targets 完了: ", targets.size(), "個")
 	return targets
 
-## 対象が選択された
-func on_target_selected(target_data: Dictionary):
+## 入力処理
+func _input(event):
 	if current_state != State.SELECTING_TARGET:
 		return
 	
-	print("[SpellPhaseHandler] 対象選択完了: ", target_data)
-	execute_spell_effect(selected_spell_card, target_data)
+	if event is InputEventKey and event.pressed:
+		
+		# ↑キーまたは←キー: 前の対象
+		if event.keycode == KEY_UP or event.keycode == KEY_LEFT:
+			if current_target_index > 0:
+				current_target_index -= 1
+				_update_target_selection()
+			get_viewport().set_input_as_handled()
+		
+		# ↓キーまたは→キー: 次の対象
+		elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
+			if current_target_index < available_targets.size() - 1:
+				current_target_index += 1
+				_update_target_selection()
+			get_viewport().set_input_as_handled()
+		
+		# Enterキー: 確定
+		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			_confirm_target_selection()
+			get_viewport().set_input_as_handled()
+		
+		# 数字キー1-9, 0: 直接選択して即確定
+		elif TargetSelectionHelper.is_number_key(event.keycode):
+			var index = TargetSelectionHelper.get_number_from_key(event.keycode)
+			if index < available_targets.size():
+				current_target_index = index
+				_update_target_selection()
+				# 数字キーの場合は即座に確定
+				_confirm_target_selection()
+			get_viewport().set_input_as_handled()
+		
+		# Cキーまたはエスケープ: キャンセル
+		elif event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
+			_cancel_target_selection()
+			get_viewport().set_input_as_handled()
+
+## 対象選択を確定
+func _confirm_target_selection():
+	if available_targets.is_empty():
+		return
+	
+	var selected_target = available_targets[current_target_index]
+	print("[SpellPhaseHandler] 対象選択確定: ", selected_target)
+	
+	# 選択をクリア
+	TargetSelectionHelper.clear_selection(self)
+	
+	execute_spell_effect(selected_spell_card, selected_target)
+
+## 対象選択をキャンセル
+func _cancel_target_selection():
+	print("[SpellPhaseHandler] 対象選択キャンセル")
+	
+	# 選択をクリア
+	TargetSelectionHelper.clear_selection(self)
+	
+	cancel_spell()
 
 ## スペルをキャンセル
 func cancel_spell():
 	# コストを返却
-	var cost = selected_spell_card.get("cost", {}).get("mp", 0)
+	var cost_data = selected_spell_card.get("cost", {})
+	if cost_data == null:
+		cost_data = {}
+	
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	
 	if player_system and cost > 0:
 		player_system.add_magic(current_player_id, cost)
 		print("[SpellPhaseHandler] スペルキャンセル、魔力返却: %d" % cost)
@@ -313,7 +484,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	
 	print("[SpellPhaseHandler] スペル効果実行: %s" % spell_card.get("name", ""))
 	
-	var parsed = spell_card.get("ability_parsed", {})
+	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
 	
 	for effect in effects:
@@ -404,6 +575,92 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 						current_magic,
 						current_magic - drain_amount
 					])
+		
+		"change_element":
+			# 土地属性変更
+			_apply_land_effect_change_element(effect, target_data)
+		
+		"change_level":
+			# 土地レベル変更
+			_apply_land_effect_change_level(effect, target_data)
+		
+		"abandon_land":
+			# 土地放棄
+			_apply_land_effect_abandon(effect, target_data)
+		
+		"destroy_creature":
+			# クリーチャー破壊
+			_apply_land_effect_destroy_creature(effect, target_data)
+
+## 土地効果: 属性変更
+func _apply_land_effect_change_element(effect: Dictionary, target_data: Dictionary):
+	# デバッグ出力
+	print("[SpellPhaseHandler] _apply_land_effect_change_element 開始")
+	print("[SpellPhaseHandler] target_data = ", target_data)
+	print("[SpellPhaseHandler] effect = ", effect)
+	
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	var new_element = effect.get("element", "")
+	
+	print("[SpellPhaseHandler] tile_index = ", tile_index, ", new_element = ", new_element)
+	
+	if tile_index >= 0 and not new_element.is_empty():
+		var success = game_flow_manager.spell_land.change_element(tile_index, new_element)
+		if success:
+			print("[SpellPhaseHandler] 属性変更: タイル%d → %s" % [tile_index, new_element])
+		else:
+			print("[SpellPhaseHandler] 属性変更失敗: タイル%d" % tile_index)
+
+## 土地効果: レベル変更
+func _apply_land_effect_change_level(effect: Dictionary, target_data: Dictionary):
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	var level_change = effect.get("value", 0)
+	
+	if tile_index >= 0:
+		var success = game_flow_manager.spell_land.change_level(tile_index, level_change)
+		if success:
+			print("[SpellPhaseHandler] レベル変更: タイル%d %+d" % [tile_index, level_change])
+		else:
+			print("[SpellPhaseHandler] レベル変更失敗: タイル%d" % tile_index)
+
+## 土地効果: 土地放棄
+func _apply_land_effect_abandon(effect: Dictionary, target_data: Dictionary):
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	var return_rate = effect.get("return_rate", 0.7)
+	
+	if tile_index >= 0:
+		var gold_returned = game_flow_manager.spell_land.abandon_land(tile_index, return_rate)
+		if gold_returned >= 0:
+			print("[SpellPhaseHandler] 土地放棄: タイル%d、G%d獲得" % [tile_index, gold_returned])
+		else:
+			print("[SpellPhaseHandler] 土地放棄失敗: タイル%d" % tile_index)
+
+## 土地効果: クリーチャー破壊
+func _apply_land_effect_destroy_creature(effect: Dictionary, target_data: Dictionary):
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	
+	if tile_index >= 0:
+		var success = game_flow_manager.spell_land.destroy_creature(tile_index)
+		if success:
+			print("[SpellPhaseHandler] クリーチャー破壊: タイル%d" % tile_index)
+		else:
+			print("[SpellPhaseHandler] クリーチャー破壊失敗: タイル%d" % tile_index)
 
 ## スペルをパス
 func pass_spell():

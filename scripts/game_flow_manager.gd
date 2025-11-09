@@ -46,6 +46,7 @@ var special_tile_system: SpecialTileSystem
 # スペル効果システム
 var spell_draw: SpellDraw
 var spell_magic: SpellMagic
+var spell_land: SpellLand
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -96,13 +97,8 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	battle_system = bt_system
 	special_tile_system = st_system
 	
-	# SpellDrawの初期化
-	spell_draw = SpellDraw.new()
-	spell_draw.setup(card_system)
-	
-	# SpellMagicの初期化
-	spell_magic = SpellMagic.new()
-	spell_magic.setup(player_system)
+	# スペル効果システムの初期化
+	_setup_spell_systems(b_system)
 	
 	# UIManagerに自身の参照を渡す
 	if ui_manager:
@@ -115,6 +111,40 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	# CPU AIハンドラー設定
 	if cpu_ai_handler:
 		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
+
+## スペル効果システムの初期化
+func _setup_spell_systems(board_system):
+	# 必要な参照の確認
+	if not card_system:
+		push_error("GameFlowManager: CardSystemが初期化されていません")
+		return
+	
+	if not player_system:
+		push_error("GameFlowManager: PlayerSystemが初期化されていません")
+		return
+	
+	# SpellDrawの初期化
+	spell_draw = SpellDraw.new()
+	spell_draw.setup(card_system)
+	print("[SpellDraw] 初期化完了")
+	
+	# SpellMagicの初期化
+	spell_magic = SpellMagic.new()
+	spell_magic.setup(player_system)
+	print("[SpellMagic] 初期化完了")
+	
+	# SpellLandの初期化
+	if board_system:
+		# CreatureManagerはBoardSystem3D内の子ノードとして存在
+		var creature_manager = board_system.get_node_or_null("CreatureManager")
+		if creature_manager:
+			spell_land = SpellLand.new()
+			spell_land.setup(board_system, creature_manager, player_system)
+			print("[SpellLand] 初期化完了")
+		else:
+			push_error("GameFlowManager: CreatureManagerが見つかりません")
+	else:
+		push_warning("GameFlowManager: BoardSystemが未設定のため、SpellLandは初期化されません")
 
 # ゲーム開始
 func start_game():

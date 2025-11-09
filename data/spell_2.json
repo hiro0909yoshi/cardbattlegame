@@ -108,7 +108,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象自領地を火に変える"
+	  "effect": "対象自領地を火に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "fire"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2075,
@@ -594,7 +606,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象自領地を手放し、その価値の70%を得る"
+	  "effect": "対象自領地を手放し、その価値の70%を得る",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "abandon_land",
+			"return_rate": 0.7
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2119,

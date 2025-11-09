@@ -4,11 +4,6 @@ extends RefCounted
 ## SpellLand - 土地操作スペル効果
 ##
 ## 土地の属性変更、レベル操作、クリーチャー破壊などを担当
-## 
-## 使用例:
-##   spell_land.change_element(5, "fire")  # タイル5を火属性に変更
-##   spell_land.change_level(10, -1)       # タイル10のレベルを1下げる
-##   spell_land.destroy_creature(3)        # タイル3のクリーチャーを破壊
 
 # システム参照
 var board_system_ref: BoardSystem3D
@@ -29,11 +24,15 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 		push_error("SpellLand: PlayerSystemが設定されていません")
 
 ## 土地の属性を変更
-## 
-## @param tile_index: タイルのインデックス（0-19）
-## @param new_element: 新しい属性（"fire", "water", "earth", "air"）
-## @return 成功した場合true
 func change_element(tile_index: int, new_element: String) -> bool:
+	# デバッグ出力
+	print("[SpellLand.change_element] 開始 - tile_index=%d, new_element=%s" % [tile_index, new_element])
+	print("[SpellLand.change_element] board_system_ref = ", board_system_ref)
+	
+	if not board_system_ref:
+		push_error("SpellLand.change_element: BoardSystem3Dが未設定")
+		return false
+	
 	if not _validate_tile_index(tile_index):
 		return false
 	
@@ -41,74 +40,65 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		push_error("SpellLand: 無効な属性 '%s'" % new_element)
 		return false
 	
-	var tile = board_system_ref.tiles[tile_index]
-	var old_element = tile.element
+	# 現在の属性を取得
+	var tile_info = board_system_ref.get_tile_info(tile_index)
+	var old_element = tile_info.get("type", "unknown")
 	
-	# 属性変更
-	tile.element = new_element
+	# BoardSystem3Dのchange_tile_terrainメソッドを使用
+	var success = board_system_ref.change_tile_terrain(tile_index, new_element)
 	
-	# ビジュアル更新
-	board_system_ref._update_tile_visual(tile_index)
+	if success:
+		print("[土地属性変更] タイル%d: %s → %s" % [tile_index, old_element, new_element])
+	else:
+		print("[土地属性変更失敗] タイル%d" % tile_index)
 	
-	print("[土地属性変更] タイル%d: %s → %s" % [tile_index, old_element, new_element])
-	return true
+	return success
 
 ## 土地のレベルを変更（増減）
-## 
-## @param tile_index: タイルのインデックス
-## @param delta: レベル変化量（+1, -1等）
-## @return 成功した場合true
 func change_level(tile_index: int, delta: int) -> bool:
 	if not _validate_tile_index(tile_index):
 		return false
 	
-	var tile = board_system_ref.tiles[tile_index]
-	var old_level = tile.land_level
-	var new_level = clamp(old_level + delta, 1, 5)  # レベルは1-5の範囲
-	
-	if new_level == old_level:
-		print("[土地レベル変更] タイル%d: レベル変更なし（上限/下限）" % tile_index)
+	# BoardSystem3DのtilesはNodeの配列なので、tile_nodesを使う
+	if not board_system_ref.tile_nodes.has(tile_index):
+		push_error("SpellLand: タイル%dが見つかりません" % tile_index)
 		return false
 	
-	# レベル変更
-	tile.land_level = new_level
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var old_level = tile.level
+	var new_level = clamp(old_level + delta, 1, 5)
 	
-	# ビジュアル更新
-	board_system_ref._update_tile_visual(tile_index)
+	if new_level == old_level:
+		return false
+	
+	tile.level = new_level
+	
+	# 表示を更新
+	if board_system_ref.tile_data_manager:
+		board_system_ref.tile_data_manager.update_all_displays()
 	
 	print("[土地レベル変更] タイル%d: Lv%d → Lv%d" % [tile_index, old_level, new_level])
 	return true
 
 ## 土地のレベルを固定値に設定
-## 
-## @param tile_index: タイルのインデックス
-## @param level: 設定するレベル（1-5）
-## @return 成功した場合true
 func set_level(tile_index: int, level: int) -> bool:
 	if not _validate_tile_index(tile_index):
 		return false
 	
 	level = clamp(level, 1, 5)
-	
-	var tile = board_system_ref.tiles[tile_index]
+	var tile = board_system_ref.tile_nodes[tile_index]
 	var old_level = tile.land_level
 	
 	if level == old_level:
 		return false
 	
-	# レベル設定
 	tile.land_level = level
-	
-	# ビジュアル更新
 	board_system_ref._update_tile_visual(tile_index)
 	
 	print("[土地レベル設定] タイル%d: Lv%d → Lv%d" % [tile_index, old_level, level])
 	return true
 
 ## クリーチャーを破壊
-## 
-## @param tile_index: タイルのインデックス
-## @return 成功した場合true
 func destroy_creature(tile_index: int) -> bool:
 	if not _validate_tile_index(tile_index):
 		return false
@@ -120,100 +110,67 @@ func destroy_creature(tile_index: int) -> bool:
 	var creature_data = creature_manager_ref.get_data_ref(tile_index)
 	var creature_name = creature_data.get("name", "不明")
 	
-	# クリーチャーを削除
 	creature_manager_ref.set_data(tile_index, {})
-	
-	# ビジュアル更新
 	board_system_ref.remove_creature(tile_index)
 	
 	print("[クリーチャー破壊] タイル%d: %sを破壊" % [tile_index, creature_name])
 	return true
 
 ## 土地を放棄（所有権を失う）
-## 
-## @param tile_index: タイルのインデックス
-## @param player_id: 放棄するプレイヤーID
-## @return 放棄した土地の価値（魔力換算）
-func abandon_land(tile_index: int, player_id: int) -> int:
+func abandon_land(tile_index: int, return_rate: float = 0.7) -> int:
 	if not _validate_tile_index(tile_index):
 		return 0
 	
-	var tile = board_system_ref.tiles[tile_index]
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var player_id = tile.tile_owner
 	
-	# 所有者確認
-	if tile.tile_owner != player_id:
-		push_error("SpellLand: プレイヤー%dはタイル%dを所有していません" % [player_id, tile_index])
+	if player_id < 0:
+		push_error("SpellLand: タイル%dは誰も所有していません" % tile_index)
 		return 0
 	
-	# 土地の価値を計算（レベル × 基本価格）
-	var base_value = 100  # 基本価格
-	var land_value = tile.land_level * base_value
+	var base_value = 100
+	var land_value = int(tile.land_level * base_value * return_rate)
 	
-	# クリーチャーも破壊
 	if creature_manager_ref.has_creature(tile_index):
 		destroy_creature(tile_index)
 	
-	# 所有権を失う
 	tile.tile_owner = -1
-	
-	# ビジュアル更新
 	board_system_ref._update_tile_visual(tile_index)
 	
-	# プレイヤーの土地数を更新
 	var player = player_system_ref.players[player_id]
 	var element = tile.element
 	if player.lands_owned.has(element):
 		player.lands_owned[element] = max(0, player.lands_owned[element] - 1)
 	
-	print("[土地放棄] タイル%d: プレイヤー%d Lv%d %s 価値=%d" % [
-		tile_index, player_id, tile.land_level, element, land_value
-	])
+	player_system_ref.add_magic(player_id, land_value)
 	
+	print("[土地放棄] タイル%d: P%d Lv%d %s G%d獲得" % [tile_index, player_id, tile.land_level, element, land_value])
 	return land_value
 
 ## 条件付き属性変更
-## 
-## @param tile_index: タイルのインデックス
-## @param condition: 条件（Dictionary）
-## @param new_element: 新しい属性
-## @return 成功した場合true
 func change_element_with_condition(tile_index: int, condition: Dictionary, new_element: String) -> bool:
 	if not _validate_tile_index(tile_index):
 		return false
 	
-	var tile = board_system_ref.tiles[tile_index]
+	var tile = board_system_ref.tile_nodes[tile_index]
 	
-	# 条件チェック：レベル制限
 	if condition.has("max_level"):
 		if tile.land_level > condition["max_level"]:
-			print("[条件付き属性変更] タイル%d: レベル条件不一致（Lv%d > Lv%d）" % [
-				tile_index, tile.land_level, condition["max_level"]
-			])
 			return false
 	
-	# 条件チェック：属性制限
 	if condition.has("required_elements"):
-		var required = condition["required_elements"]
-		if tile.element not in required:
-			print("[条件付き属性変更] タイル%d: 属性条件不一致（%s not in %s）" % [
-				tile_index, tile.element, required
-			])
+		if tile.element not in condition["required_elements"]:
 			return false
 	
-	# 条件を満たした場合、属性変更
 	return change_element(tile_index, new_element)
 
 ## プレイヤーの最多属性を取得
-## 
-## @param player_id: プレイヤーID
-## @return 最も多く所有している属性
 func get_player_dominant_element(player_id: int) -> String:
 	if player_id < 0 or player_id >= player_system_ref.players.size():
-		return "earth"  # デフォルト
+		return "earth"
 	
 	var player = player_system_ref.players[player_id]
 	var lands_owned = player.lands_owned
-	
 	var max_count = 0
 	var dominant_element = "earth"
 	
@@ -226,49 +183,73 @@ func get_player_dominant_element(player_id: int) -> String:
 	return dominant_element
 
 ## 条件付きレベル変更（複数タイル）
-## 
-## @param player_id: プレイヤーID
-## @param condition: 条件（Dictionary）
-## @param delta: レベル変化量
-## @return 変更されたタイル数
 func change_level_multiple_with_condition(player_id: int, condition: Dictionary, delta: int) -> int:
 	if player_id < 0 or player_id >= player_system_ref.players.size():
 		return 0
 	
 	var changed_count = 0
 	
-	# 条件に合うタイルを検索
 	for tile_index in range(20):
-		var tile = board_system_ref.tiles[tile_index]
+		var tile = board_system_ref.tile_nodes[tile_index]
 		
-		# 所有者チェック
 		if tile.tile_owner != player_id:
 			continue
 		
-		# レベル条件チェック
 		if condition.has("required_level"):
 			if tile.land_level != condition["required_level"]:
 				continue
 		
-		# 属性条件チェック
 		if condition.has("required_elements"):
 			if tile.element not in condition["required_elements"]:
 				continue
 		
-		# 条件を満たした場合、レベル変更
 		if change_level(tile_index, delta):
 			changed_count += 1
 	
 	return changed_count
 
-## タイルインデックスの検証
+## 最高レベル領地を検索
+func find_highest_level_land(player_id: int) -> int:
+	if player_id < 0 or player_id >= player_system_ref.players.size():
+		return -1
+	
+	var highest_level = 0
+	var highest_tile = -1
+	
+	for tile_index in range(20):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		if tile.tile_owner == player_id:
+			if tile.land_level > highest_level:
+				highest_level = tile.land_level
+				highest_tile = tile_index
+	
+	return highest_tile
+
+## 最低レベル領地を検索
+func find_lowest_level_land(player_id: int) -> int:
+	if player_id < 0 or player_id >= player_system_ref.players.size():
+		return -1
+	
+	var lowest_level = 999
+	var lowest_tile = -1
+	
+	for tile_index in range(20):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		if tile.tile_owner == player_id:
+			if tile.land_level < lowest_level:
+				lowest_level = tile.land_level
+				lowest_tile = tile_index
+	
+	return lowest_tile
+
+## 検証：タイルインデックス
 func _validate_tile_index(tile_index: int) -> bool:
 	if tile_index < 0 or tile_index >= 20:
 		push_error("SpellLand: 無効なタイルインデックス %d" % tile_index)
 		return false
 	return true
 
-## 属性の検証
+## 検証：属性
 func _validate_element(element: String) -> bool:
-	var valid_elements = ["fire", "water", "earth", "air"]
+	var valid_elements = ["fire", "water", "earth", "wind", "neutral"]
 	return element in valid_elements

@@ -9,7 +9,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象自領地を地に変える"
+	  "effect": "対象自領地を地に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "earth"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2002,
@@ -32,7 +44,19 @@
 		"mp": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]"
+	  "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_level",
+			"value": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2004,
@@ -109,7 +133,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象自領地を水に変える"
+	  "effect": "対象自領地を水に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "water"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2011,
@@ -120,7 +156,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象自領地を風に変える"
+	  "effect": "対象自領地を風に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "wind"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2012,
@@ -242,7 +290,20 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "レベル4以下の対象領地を無に変える"
+	  "effect": "レベル4以下の対象領地を無に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "max_level": 4
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "neutral"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2023,
