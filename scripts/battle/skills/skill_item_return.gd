@@ -68,7 +68,8 @@ static func check_and_apply_item_return(participant: BattleParticipant, used_ite
 			var success = false
 			match return_type:
 				"return_to_deck":
-					success = _return_to_deck(item_data)
+					# player_idを渡す
+					success = _return_to_deck(player_id, item_data)
 					if success:
 						print("【アイテム復帰→ブック】", item_data.get("name", "?"))
 				
@@ -142,8 +143,9 @@ static func _get_return_effects(participant: BattleParticipant, used_items: Arra
 	
 	return return_effects
 
-## アイテムをデッキの一番上に戻す
-static func _return_to_deck(item_data: Dictionary) -> bool:
+## アイテムをデッキのランダムな位置に戻す
+## @param player_id: int - プレイヤーID（新システム用）
+static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 	if not card_system_ref:
 		push_error("SkillItemReturn: CardSystemの参照が設定されていません")
 		return false
@@ -153,12 +155,19 @@ static func _return_to_deck(item_data: Dictionary) -> bool:
 		push_error("SkillItemReturn: 無効なカードID")
 		return false
 	
-	# 捨て札から削除
-	if card_id in card_system_ref.discard:
-		card_system_ref.discard.erase(card_id)
+	# 新システム: プレイヤーの捨て札から削除
+	if card_id in card_system_ref.player_discards[player_id]:
+		card_system_ref.player_discards[player_id].erase(card_id)
 	
-	# デッキの一番上に追加
-	card_system_ref.deck.push_front(card_id)
+	# 新システム: プレイヤーのデッキのランダムな位置に挿入
+	var deck_size = card_system_ref.player_decks[player_id].size()
+	if deck_size == 0:
+		# デッキが空の場合は単純に追加
+		card_system_ref.player_decks[player_id].append(card_id)
+	else:
+		# ランダムな位置を決定（0〜deck_size の範囲）
+		var random_position = randi() % (deck_size + 1)
+		card_system_ref.player_decks[player_id].insert(random_position, card_id)
 	
 	return true
 

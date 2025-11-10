@@ -244,13 +244,13 @@ func draw_one(player_id: int) -> Dictionary:
 
 #### 3.3 SkillItemReturn の修正
 
-**変更前**:
+**変更前**（旧システム - 共有デッキ方式）:
 ```gdscript
 static func _return_to_deck(item_data: Dictionary) -> bool:
 	var card_id = item_data.get("id", -1)
 	if card_id in card_system_ref.discard:
 		card_system_ref.discard.erase(card_id)
-	card_system_ref.deck.push_front(card_id)
+	card_system_ref.deck.push_front(card_id)  # ⚠️ 共有デッキの先頭に追加
 	return true
 ```
 
@@ -263,8 +263,13 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 	if card_id in card_system_ref.player_discards[player_id]:
 		card_system_ref.player_discards[player_id].erase(card_id)
 	
-	# プレイヤーのデッキの一番上に追加
-	card_system_ref.player_decks[player_id].push_front(card_id)
+	# プレイヤーのデッキのランダムな位置に挿入
+	var deck_size = card_system_ref.player_decks[player_id].size()
+	if deck_size == 0:
+		card_system_ref.player_decks[player_id].append(card_id)
+	else:
+		var random_position = randi() % (deck_size + 1)
+		card_system_ref.player_decks[player_id].insert(random_position, card_id)
 	return true
 ```
 
@@ -422,15 +427,16 @@ func draw_card_data() -> Dictionary:
 **テスト方法**:
 1. プレイヤー0で「エターナルメイル」(ID: 1005) または「ケンタウロス」(ID: 314) を使用
 2. 戦闘でアイテムを使用
-3. **確認**: プレイヤー0のデッキの一番上にアイテムが戻っている
-4. **確認**: 次のドローでそのアイテムを引ける
+3. **確認**: プレイヤー0のデッキの**ランダムな位置**にアイテムが戻っている
+4. **確認**: 数ターン後にそのアイテムを再度引ける（次のドローでは引けない）
 5. **確認**: プレイヤー1のデッキには影響がない
 
 **期待結果**:
 ```
 【アイテム復帰→ブック】エターナルメイル
-→ player_decks[0] の先頭に追加される
+→ player_decks[0] のランダムな位置に挿入される
 → player_decks[1] には影響なし
+→ 次のドローでは引けない（数ターン後にランダムなタイミングで再ドロー）
 ```
 
 #### T0-2: アイテム復帰（手札）
@@ -457,7 +463,7 @@ func draw_card_data() -> Dictionary:
 **期待結果**:
 ```
 【アイテム復帰→ブック】（プレイヤー1）
-→ player_decks[1] の先頭に追加される
+→ player_decks[1] のランダムな位置に挿入される
 → player_decks[0] には影響なし
 ```
 
@@ -682,5 +688,6 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 2.0 | 2025/11/10 | 初版作成：マルチデッキ化設計 |
+| 2.1 | 2025/11/10 | アイテム復帰をランダムな位置への挿入に変更（バランス調整） |
 
 ---
