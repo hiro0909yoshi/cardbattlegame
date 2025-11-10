@@ -225,7 +225,7 @@ return_typeに応じて処理
   ├─ return_to_deck → _return_to_deck(player_id, item_data)
   │   └─ 使用者のデッキのランダムな位置に挿入
   └─ return_to_hand → _return_to_hand(player_id, item_data)
-      └─ 使用者の手札に即座に追加
+	  └─ 使用者の手札に即座に追加
   ↓
 復帰完了（ログ出力）
 ```
