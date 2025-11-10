@@ -241,7 +241,20 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；レベル2領地を5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]"
+	  "effect": "密命；レベル2領地を5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
+	  "is_secret": true,
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "mission_level_up_multiple",
+			"required_level": 2,
+			"required_count": 5,
+			"value": 1,
+			"on_failure": "return_to_deck"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2086,
@@ -362,7 +375,18 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；属性違いの領地を4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]"
+	  "effect": "密命；属性違いの領地を4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
+	  "is_secret": true,
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "mission_align_mismatched_lands",
+			"required_count": 4,
+			"on_failure": "return_to_deck"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2097,

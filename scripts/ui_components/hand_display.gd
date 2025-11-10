@@ -71,7 +71,7 @@ func update_hand_display(player_id: int):
 	# カードノードを生成
 	for i in range(hand_data.size()):
 		var card_data = hand_data[i]
-		var card_node = create_card_node(card_data, i)
+		var card_node = create_card_node(card_data, i, player_id)
 		if card_node:
 			player_card_nodes[player_id].append(card_node)
 	
@@ -79,7 +79,7 @@ func update_hand_display(player_id: int):
 	rearrange_hand(player_id)
 
 ## カードノードを生成
-func create_card_node(card_data: Dictionary, _index: int) -> Node:
+func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Node:
 	if not is_instance_valid(hand_container):
 		print("[HandDisplay] ERROR: 手札コンテナが無効です")
 		return null
@@ -161,10 +161,19 @@ func create_card_node(card_data: Dictionary, _index: int) -> Node:
 	var card_y = viewport_size.y - CARD_HEIGHT - 20
 	card.position = Vector2(0, card_y)
 	
+	# まず従来の方法でカードを表示
 	if card.has_method("load_card_data"):
-		card.load_card_data(card_data.id)
-	else:
-		print("[HandDisplay] WARNING: カードにload_card_dataメソッドがありません")
+		card.load_card_data(card_data.get("id", 0))
+	
+	# 密命カード対応: card_dataを上書きして密命情報を含める
+	card.card_data = card_data
+	card.owner_player_id = player_id
+	# 重要: 常にプレイヤー0（人間）が見ている
+	card.viewing_player_id = 0
+	
+	# 密命カードの表示判定
+	if card.has_method("_update_secret_display"):
+		card._update_secret_display()
 	
 	# フィルターモードに応じて選択可能/不可を設定
 	card.is_selectable = is_selectable_card

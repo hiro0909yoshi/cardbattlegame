@@ -389,10 +389,24 @@
 	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
+	  "is_secret": true,
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；対象レベル4領地のレベルを1下げる"
+	  "effect": "密命；対象レベル4領地のレベルを1下げる",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "required_level": 4
+		},
+		"effects": [
+		  {
+			"effect_type": "change_level",
+			"value": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2030,
@@ -404,7 +418,19 @@
 		"mp": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]"
+	  "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "find_and_change_highest_level",
+			"value": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2031,

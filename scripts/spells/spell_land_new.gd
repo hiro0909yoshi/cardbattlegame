@@ -9,12 +9,14 @@ extends RefCounted
 var board_system_ref: BoardSystem3D
 var creature_manager_ref: CreatureManager
 var player_system_ref: PlayerSystem
+var card_system_ref: CardSystem
 
 ## 初期化
-func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, player_system: PlayerSystem) -> void:
+func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, player_system: PlayerSystem, card_system: CardSystem = null) -> void:
 	board_system_ref = board_system
 	creature_manager_ref = creature_manager
 	player_system_ref = player_system
+	card_system_ref = card_system
 	
 	if not board_system_ref:
 		push_error("SpellLand: BoardSystem3Dが設定されていません")
@@ -25,9 +27,6 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 
 ## 土地の属性を変更
 func change_element(tile_index: int, new_element: String) -> bool:
-	# デバッグ出力
-	print("[SpellLand.change_element] 開始 - tile_index=%d, new_element=%s" % [tile_index, new_element])
-	print("[SpellLand.change_element] board_system_ref = ", board_system_ref)
 	
 	if not board_system_ref:
 		push_error("SpellLand.change_element: BoardSystem3Dが未設定")
@@ -47,10 +46,6 @@ func change_element(tile_index: int, new_element: String) -> bool:
 	# BoardSystem3Dのchange_tile_terrainメソッドを使用
 	var success = board_system_ref.change_tile_terrain(tile_index, new_element)
 	
-	if success:
-		print("[土地属性変更] タイル%d: %s → %s" % [tile_index, old_element, new_element])
-	else:
-		print("[土地属性変更失敗] タイル%d" % tile_index)
 	
 	return success
 
@@ -277,6 +272,108 @@ func find_lowest_level_land(player_id: int) -> int:
 				lowest_tile = tile_index
 	
 	return lowest_tile
+
+## クリーチャーと土地の属性が違う土地を検索（ホームグラウンド用）
+func find_mismatched_element_lands(player_id: int) -> Array:
+	if player_id < 0 or player_id >= player_system_ref.players.size():
+		print("[属性不一致検索] 無効なプレイヤーID: %d" % player_id)
+		return []
+	
+	var mismatched_tiles = []
+	var total_owned_tiles = 0
+	var tiles_with_creatures = 0
+	
+	
+	for tile_index in range(20):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		
+		# 自分の土地でクリーチャーがいる場合のみ
+		if tile.owner_id != player_id:
+			continue
+		
+		total_owned_tiles += 1
+		
+		if not creature_manager_ref.has_creature(tile_index):
+			continue
+		
+		tiles_with_creatures += 1
+		
+		# クリーチャーの属性を取得
+		var creature_data = creature_manager_ref.get_data_ref(tile_index)
+		var creature_element = creature_data.get("element", "neutral")
+		var land_element = tile.tile_type
+		
+		# 属性が違う場合（無属性も含む）
+		if creature_element != land_element:
+			mismatched_tiles.append(tile_index)
+	
+	
+	return mismatched_tiles
+
+## クリーチャーの属性に土地を合わせる（複数）
+func align_lands_to_creature_elements(tile_indices: Array) -> int:
+	var changed_count = 0
+	
+	for tile_index in tile_indices:
+		if not _validate_tile_index(tile_index):
+			continue
+		
+		if not creature_manager_ref.has_creature(tile_index):
+			continue
+		
+		# クリーチャーの属性を取得
+		var creature_data = creature_manager_ref.get_data_ref(tile_index)
+		var creature_element = creature_data.get("element", "neutral")
+		
+		# 土地をクリーチャーの属性に変更
+		if change_element(tile_index, creature_element):
+			changed_count += 1
+	
+	return changed_count
+
+## スペルカードをデッキに戻す（密命失敗時の復帰[ブック]）
+func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
+	if not card_system_ref:
+		push_error("SpellLand: CardSystemの参照が設定されていません")
+		return false
+	
+	var card_id = spell_card.get("id", -1)
+	if card_id < 0:
+		return false
+	
+	print("[密命失敗] スペルカードID %d をデッキに戻します" % card_id)
+	
+	# 手札から削除（既に使用済みとしてマークされている可能性がある）
+	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
+	for i in range(hand_data.size()):
+		if hand_data[i].get("id", -1) == card_id:
+			# player_hands[player_id]["data"]から直接削除
+			if card_system_ref.player_hands.has(player_id):
+				card_system_ref.player_hands[player_id]["data"].remove_at(i)
+				print("[密命失敗] 手札からカードID %d を削除" % card_id)
+			break
+	
+	# 捨て札から削除（既に捨て札に入っている場合）
+	if card_system_ref.player_discards and card_system_ref.player_discards.has(player_id):
+		if card_id in card_system_ref.player_discards[player_id]:
+			card_system_ref.player_discards[player_id].erase(card_id)
+	
+	# デッキのランダムな位置に戻す（item_returnスキルと同じ方式）
+	if not card_system_ref.player_decks.has(player_id):
+		push_error("SpellLand: プレイヤー%dのデッキが存在しません" % player_id)
+		return false
+	
+	var deck = card_system_ref.player_decks[player_id]
+	if deck.size() == 0:
+		# デッキが空の場合は単純に追加
+		deck.append(card_id)
+		print("[密命失敗] デッキ（空）に追加")
+	else:
+		# ランダムな位置に挿入
+		var insert_pos = randi() % (deck.size() + 1)
+		deck.insert(insert_pos, card_id)
+		print("[密命失敗] デッキの位置%dに挿入（全%d枚）" % [insert_pos, deck.size()])
+	return true
 
 ## 検証：タイルインデックス
 func _validate_tile_index(tile_index: int) -> bool:

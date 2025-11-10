@@ -53,8 +53,11 @@ func create_card_input_dialog():
 	
 	# LineEditを作成
 	card_id_input = LineEdit.new()
-	card_id_input.placeholder_text = "カードID"
+	card_id_input.placeholder_text = "カードID（例: 2001）"
 	card_id_input.custom_minimum_size = Vector2(200, 30)
+	
+	# Enterキーで確定できるように設定
+	card_id_input.text_submitted.connect(_on_card_id_text_submitted)
 	
 	# ダイアログにLineEditを追加
 	card_input_dialog.add_child(card_id_input)
@@ -102,6 +105,8 @@ func _input(event):
 				show_all_tiles_info()
 			KEY_U:
 				clear_current_player_down_states()
+			KEY_L:
+				set_current_tile_level_4()
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():
@@ -118,7 +123,14 @@ func show_card_input_dialog():
 	# 入力欄にフォーカス
 	card_id_input.grab_focus()
 
-# カードID確定時の処理
+# Enterキー押下時の処理（LineEditから呼ばれる）
+func _on_card_id_text_submitted(_new_text: String):
+	# ダイアログを閉じてから処理
+	card_input_dialog.hide()
+	# OKボタンと同じ処理を実行
+	_on_card_id_confirmed()
+
+# カードID確定時の処理（OKボタンまたはEnterキー）
 func _on_card_id_confirmed():
 	var input_text = card_id_input.text.strip_edges()
 	
@@ -127,12 +139,23 @@ func _on_card_id_confirmed():
 		print("【デバッグ】カードIDが入力されていません")
 		return
 	
-	# 数値に変換
-	if not input_text.is_valid_int():
-		print("【デバッグ】無効な入力: ", input_text)
-		return
+	# 大文字を小文字に変換（"A" -> "a"）
+	input_text = input_text.to_lower()
 	
-	var card_id = input_text.to_int()
+	# 数値に変換（16進数対応: "0x7d1" や "7d1" など）
+	var card_id = 0
+	if input_text.begins_with("0x"):
+		# 16進数形式（例: 0x7d1 = 2001）
+		card_id = input_text.hex_to_int()
+	elif input_text.is_valid_int():
+		# 10進数形式（例: 2001）
+		card_id = input_text.to_int()
+	else:
+		# 数値でない場合、16進数として試す（例: 7d1 = 2001）
+		card_id = input_text.hex_to_int()
+		if card_id == 0 and input_text != "0":
+			print("【デバッグ】無効な入力: ", input_text)
+			return
 	
 	# CardLoaderで存在確認
 	if CardLoader:
@@ -167,15 +190,53 @@ func add_card_to_hand(card_id: int):
 	# 手札配列に直接追加
 	if card_system.player_hands.has(current_player.id):
 		card_system.player_hands[current_player.id]["data"].append(card_data)
-		print("【デバッグ】カードID ", card_id, " を手札に追加しました")
+		print("【デバッグ】カードID ", card_id, " (", card_data.get("name", "不明"), ") を手札に追加しました")
 		
-		# 手札UIを更新
-		# 手札UIを更新
+		# 🔧 重要: 現在のフェーズに応じてカード選択UIを再初期化
 		if ui_manager:
+			# プレイヤー情報パネルを更新
 			if ui_manager.has_method("update_player_info_panels"):
 				ui_manager.update_player_info_panels()
-			if ui_manager.has_method("update_hand_display"):
-				ui_manager.update_hand_display(current_player.id)
+			
+			# 現在のフィルター状態を確認
+			var current_filter = ui_manager.card_selection_filter
+			print("【デバッグ】現在のフィルター: ", current_filter)
+			
+			# スペルフェーズかどうかは、フィルターが"spell"かで判定
+			var is_spell_phase = (current_filter == "spell")
+			print("【デバッグ】is_spell_phase = ", is_spell_phase)
+			
+			if is_spell_phase:
+				# スペルフェーズの場合: フィルターを"spell"に設定（念のため再設定）
+				print("【デバッグ】スペルフェーズ中 - スペルフィルターを適用")
+				ui_manager.card_selection_filter = "spell"
+				print("【デバッグ】フィルター設定後: ", ui_manager.card_selection_filter)
+			else:
+				# 通常フェーズの場合: フィルターをクリア
+				print("【デバッグ】通常フェーズ - フィルタークリア")
+				if ui_manager.has_method("clear_card_selection_filter"):
+					ui_manager.clear_card_selection_filter()
+			
+			# 手札表示を更新
+			if ui_manager.hand_display:
+				ui_manager.hand_display.update_hand_display(current_player.id)
+			
+			# カード選択UIを完全に再初期化
+			if ui_manager.has_method("hide_card_selection_ui"):
+				ui_manager.hide_card_selection_ui()
+			
+			# 次のフレームで再表示（確実に初期化）
+			await get_tree().process_frame
+			
+			# スペルフェーズならmode="spell"、それ以外はmode="summon"
+			if is_spell_phase and ui_manager.has_method("show_card_selection_ui_mode"):
+				print("【デバッグ】show_card_selection_ui_mode(spell)呼び出し")
+				print("【デバッグ】呼び出し直前のフィルター: ", ui_manager.card_selection_filter)
+				ui_manager.show_card_selection_ui_mode(current_player, "spell")
+				print("【デバッグ】呼び出し直後のフィルター: ", ui_manager.card_selection_filter)
+			elif ui_manager.has_method("show_card_selection_ui"):
+				print("【デバッグ】show_card_selection_ui(summon)呼び出し")
+				ui_manager.show_card_selection_ui(current_player)
 		
 		emit_signal("debug_action", "add_card", card_id)
 	else:
@@ -344,3 +405,32 @@ func clear_current_player_down_states():
 		print("【デバッグ】ダウン状態の土地はありません")
 	
 	emit_signal("debug_action", "clear_down_states", player_id)
+
+# 現在のプレイヤーが立っているタイルをレベル4にする（Lキー）
+func set_current_tile_level_4():
+	if not player_system or not board_system:
+		print("【デバッグ】システム参照がありません")
+		return
+	
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("【デバッグ】現在のプレイヤーが見つかりません")
+		return
+	
+	var tile_index = current_player.current_tile
+	if tile_index < 0 or tile_index >= 20:
+		print("【デバッグ】無効なタイルインデックス:", tile_index)
+		return
+	
+	if not board_system.tile_nodes.has(tile_index):
+		print("【デバッグ】タイルが見つかりません:", tile_index)
+		return
+	
+	var tile = board_system.tile_nodes[tile_index]
+	
+	# タイルのレベルを4に設定
+	tile.level = 4
+	tile.update_visual()
+	
+	print("【デバッグ】タイル%d をレベル4に設定しました" % tile_index)
+	emit_signal("debug_action", "set_level_4", tile_index)

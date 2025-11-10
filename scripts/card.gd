@@ -11,6 +11,11 @@ var is_selected = false
 var original_position: Vector2
 var original_size: Vector2
 
+# 密命カード用の変数
+var owner_player_id: int = -1      # このカードの所有者
+var viewing_player_id: int = -1    # 現在表示を見ているプレイヤー
+var is_showing_secret_back: bool = false  # 裏面（真っ黒）表示中か
+
 # CardFrame.tscnのサイズ定義
 const CARDFRAME_WIDTH = 220.0   # CardFrame.tscnの設計サイズ
 const CARDFRAME_HEIGHT = 293.0
@@ -443,3 +448,89 @@ func _input(event):
 				is_dragging = false
 				z_index = 0
 				return
+
+# ========================================
+# 密命カードシステム
+# ========================================
+
+# カードデータを設定（所有者情報も含む）
+func set_card_data_with_owner(data: Dictionary, owner: int):
+	card_data = data
+	owner_player_id = owner
+	_update_secret_display()
+
+# 表示を見ているプレイヤーを設定
+func set_viewing_player(viewer_id: int):
+	viewing_player_id = viewer_id
+	_update_secret_display()
+
+# 表示を更新（密命判定）
+func _update_secret_display():
+	var is_secret = card_data.get("is_secret", false)
+	
+	# デバッグ: 密命カードを無効化
+	var debug_disable = _get_debug_disable_secret_cards()
+	if debug_disable and is_secret:
+		# デバッグモード: 密命カードでも通常表示
+		_show_card_front()
+		return
+	
+	# 密命カードで、所有者以外が見ている場合
+	if is_secret and viewing_player_id != owner_player_id and viewing_player_id != -1:
+		_show_secret_back()
+	else:
+		_show_card_front()
+
+# デバッグフラグを取得（SpellPhaseHandlerから）
+func _get_debug_disable_secret_cards() -> bool:
+	# GameFlowManager → SpellPhaseHandlerの順に辿る
+	var root = get_tree().root
+	if not root:
+		return false
+	
+	# Mainシーンを探す
+	for child in root.get_children():
+		if child.name == "Main" or child.has_method("get_game_flow_manager"):
+			var game_flow = null
+			if child.has_method("get_game_flow_manager"):
+				game_flow = child.get_game_flow_manager()
+			elif child.has_node("GameFlowManager"):
+				game_flow = child.get_node("GameFlowManager")
+			
+			if game_flow and "spell_phase_handler" in game_flow:
+				var spell_handler = game_flow.spell_phase_handler
+				if spell_handler and "debug_disable_secret_cards" in spell_handler:
+					return spell_handler.debug_disable_secret_cards
+	
+	return false
+
+# 裏面表示に切り替え（真っ黒にする）
+func _show_secret_back():
+	if is_showing_secret_back:
+		return
+	
+	is_showing_secret_back = true
+	
+	# カード全体を覆う黒いColorRectを作成
+	var black_overlay = ColorRect.new()
+	black_overlay.name = "SecretBlackOverlay"
+	black_overlay.color = Color(0, 0, 0, 1)
+	black_overlay.size = size
+	black_overlay.position = Vector2.ZERO
+	black_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウスイベントを透過
+	
+	# 最前面に配置
+	add_child(black_overlay)
+	move_child(black_overlay, get_child_count() - 1)
+
+# 通常表示に切り替え
+func _show_card_front():
+	if not is_showing_secret_back:
+		return
+	
+	is_showing_secret_back = false
+	
+	# 黒いオーバーレイを削除
+	var overlay = get_node_or_null("SecretBlackOverlay")
+	if overlay:
+		overlay.queue_free()

@@ -139,7 +139,7 @@ func _setup_spell_systems(board_system):
 		var creature_manager = board_system.get_node_or_null("CreatureManager")
 		if creature_manager:
 			spell_land = SpellLand.new()
-			spell_land.setup(board_system, creature_manager, player_system)
+			spell_land.setup(board_system, creature_manager, player_system, card_system)
 			print("[SpellLand] 初期化完了")
 		else:
 			push_error("GameFlowManager: CreatureManagerが見つかりません")
@@ -544,6 +544,9 @@ func initialize_phase1a_systems():
 	spell_phase_handler = SpellPhaseHandler.new()
 	add_child(spell_phase_handler)
 	spell_phase_handler.initialize(ui_manager, self, card_system, player_system, board_system_3d)
+	
+	# デバッグ: 密命カードを一時的に無効化（テスト用）
+	spell_phase_handler.debug_disable_secret_cards = true
 	
 	# ItemPhaseHandlerを作成
 	var ItemPhaseHandlerClass = load("res://scripts/game_flow/item_phase_handler.gd")

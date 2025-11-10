@@ -1,8 +1,8 @@
 # 🎮 スペルシステム設計書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 2.1  
-**最終更新**: 2025年11月10日
+**バージョン**: 2.2  
+**最終更新**: 2025年11月11日
 
 ---
 
@@ -77,34 +77,77 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | **カードドロー** | [spell_draw.gd](../../scripts/spells/spell_draw.gd) | 15個 | [カードドロー.md](./spells/カードドロー.md) |
 | **魔力増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [魔力増減.md](./spells/魔力増減.md) |
 | **土地操作** | [spell_land_new.gd](../../scripts/spells/spell_land_new.gd) | 11個 | [領地変更.md](./spells/領地変更.md) |
+| **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
 
 ## スペルの特殊システム
 
-### 密命（Mission）システム
+### 密命（Mission）システム ✅
 
-**概要**: 条件を満たせば強力な効果、失敗時は代替効果が発動する特殊スペル。
+**概要**: 相手には真っ黒に表示され、条件を満たせば強力な効果、失敗時は代替効果が発動する特殊スペル。
 
-**特徴**:
-- 敵プレイヤーにカード内容が分からない戦略的効果
-- 条件チェックは個別スペル実装で行う（専用システムは不要）
+#### 🎴 密命カード表示（is_secret）
 
-**密命スペル例**:
+**JSONでの定義**:
+```json
+{
+  "id": 2029,
+  "is_secret": true,  // ← 密命カード化
+  "effect": "密命；レベル4の土地のレベルを1下げる"
+}
+```
 
-| ID | 名前 | 条件 | 成功効果 | 失敗効果 |
-|----|------|------|---------|---------|
-| 2004 | アセンブルカード | 手札に火水風地がある | G500獲得 | カードを2枚引く |
-| 2085 | フラットランド | レベル2領地を5つ持つ | それらを+1 | 復帰[ブック] |
-| 2096 | ホームグラウンド | 属性違いの領地を4つ持つ | 合う属性に変化 | 復帰[ブック] |
+**表示ルール**:
+- プレイヤー0（人間）: 通常表示（内容が見える）
+- プレイヤー1（CPU）: **真っ黒で見えない**
 
-**復帰[ブック]の実装**: 
-- 既存のアイテム復帰スキルシステム（`skill_item_return.gd`）を活用
-- スペル使用後、使用者のデッキの**ランダムな位置**に戻る
-- **マルチデッキ対応**: 使用者自身のデッキに戻る（他プレイヤーのデッキには影響しない）
-- 即座に再使用はできないが、数ターン後にランダムなタイミングで再ドロー可能
+**実装**: 
+- `Card.gd`: `ColorRect`で真っ黒表示、`viewing_player_id`常に0
+- `HandDisplay.gd`: カード生成時に`owner_player_id`と`viewing_player_id`を設定
+
+**詳細ドキュメント**: [密命カード.md](../skills/密命カード.md)
+
+#### 📋 密命スペル一覧
+
+| ID | 名前 | 条件 | 成功効果 | 失敗効果 | 実装 |
+|----|------|------|---------|---------|------|
+| 2029 | サドンインパクト | レベル4領地 | レベル-1 | - | ✅ |
+| 2004 | アセンブルカード | 手札に火水風地 | G500 | カード2枚 | ⏳ |
+| 2085 | フラットランド | Lv2領地×5 | レベル+1 | 復帰[ブック] | ⏳ |
+| 2096 | ホームグラウンド | 属性違い×4 | 属性変化 | 復帰[ブック] | ⏳ |
+
+**復帰[ブック]**: 密命失敗時にスペルカードをデッキのランダムな位置に戻す機能
+
+**実装メソッド**: `SpellLand.return_spell_to_deck(player_id, spell_card)`
+
+**処理内容**:
+1. 手札からカードを削除
+2. 捨て札からも削除（既に入っている場合）
+3. デッキのランダムな位置に挿入（`item_return`スキルと同じ方式）
+
+**使用例**:
+```gdscript
+// SpellPhaseHandler.gd - 密命失敗時
+if changed_count < required_count:
+	if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
+		mission_failed = true
+		print("[密命失敗] スペルカードをデッキに戻しました")
+```
+
+**注意事項**:
+- `mission_failed`フラグをtrueにすることで、カードが捨て札に送られるのを防ぐ
+- デッキが空の場合は単純に追加、デッキがある場合はランダムな位置に挿入
+- 詳細は[領地変更.md](./spells/領地変更.md)の「return_spell_to_deck」セクション参照
+
+**使用時ログ**:
+```gdscript
+// SpellPhaseHandler.gd
+if spell_card.get("is_secret", false):
+	print("[密命発動] プレイヤー%d が密命カード「%s」を使用" % [player_id, name])
+```
 
 ---
 
-### 呪い（継続効果）システム
+### 呪い（継続効果）システム ⏳
 
 **概要**: 複数ターンにわたってプレイヤー/クリーチャー/土地/世界全体にかかる効果。
 
@@ -127,7 +170,7 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 
 ---
 
-### ターゲットシステム
+### ターゲットシステム ✅
 
 **ターゲットタイプ（4種類）**:
 
@@ -145,9 +188,13 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 - `enemy`: 敵のみ
 - `any`: 全て
 
+**レベルフィルター**:
+- `required_level`: 特定レベルのみ（例: `required_level: 4`）
+- `max_level`, `min_level`: レベル範囲指定
+
 ---
 
-### 秘術システム
+### 秘術システム ⏳
 
 **概要**: クリーチャーが持つスペル的効果。スペルフェーズで使用可能。
 
@@ -185,6 +232,7 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 - [x] `target_type`と`target_filter`のパース処理
 - [x] ターゲット選択UIの拡張（creature/land/player対応）
 - [x] 領地コマンドと統一された選択インターフェース
+- [x] `required_level`フィルター実装
 
 ### Phase 2: SpellLand実装 ✅
 - [x] `scripts/spells/spell_land_new.gd`作成
@@ -192,19 +240,25 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 - [x] GameFlowManager・SpellPhaseHandler統合
 - [x] 土地操作スペル11個の基盤実装完了
 
-### Phase 3: SpellEffectSystem実装 ⏳
+### Phase 3: 密命カードシステム実装 ✅
+- [x] `is_secret`フラグによる表示制御
+- [x] `ColorRect`による真っ黒表示
+- [x] `viewing_player_id`常に0の実装
+- [x] ID 2029「サドンインパクト」実装完了
+
+### Phase 4: SpellEffectSystem実装 ⏳
 - [ ] `scripts/spell_effect_system.gd`作成
 - [ ] 呪い管理システム（tile/player/world）
 - [ ] ターン経過による呪い削除処理
 - [ ] 30個の特殊能力付与スペル実装
 
-### Phase 4: SpellDice実装 ⏳
+### Phase 5: SpellDice実装 ⏳
 - [ ] `scripts/spells/spell_dice.gd`作成
 - [ ] ダイス固定値メソッド
 - [ ] ダイス範囲指定メソッド
 - [ ] 10個のダイス操作スペル実装
 
-### Phase 5: 秘術システム実装 ⏳
+### Phase 6: 秘術システム実装 ⏳
 - [ ] `mystic_arts`のパース処理
 - [ ] [秘術を使う]ボタンUI作成
 - [ ] SpellPhaseHandlerの拡張
@@ -219,7 +273,38 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | 2025/11/03 | 1.0 | 初版作成 |
 | 2025/11/09 | 2.0 | SpellLand実装完了、ターゲットシステム統合 |
 | 2025/11/10 | 2.1 | 🔄 ドキュメント構造をskills_design.mdに合わせてリファクタリング - 冗長なコード例削除、個別ファイルへのリンク集に整理 |
+| 2025/11/11 | 2.2 | 🆕 密命カードシステム実装完了 - `is_secret`フラグ、ColorRect表示、ID 2029実装 |
+| 2025/11/11 | 2.3 | 🔧 SpellPhaseHandlerリファクタリング完了 - 不要なラッパーメソッド9個を削除し、直接SpellLandを呼び出すように変更（840行→755行、-10%削減） |
+| 2025/11/11 | 2.4 | 📝 復帰[ブック]の使い方を追記 - `SpellLand.return_spell_to_deck()`メソッドの詳細な説明と使用例を追加 |
 
 ---
 
-**最終更新**: 2025年11月10日（v2.1）
+**最終更新**: 2025年11月11日（v2.4 - 復帰[ブック]の使い方追記）
+
+---
+
+## 📝 v2.3 リファクタリング完了 (2025/11/11)
+
+### SpellPhaseHandler の簡素化
+
+**変更内容**:
+- 不要なラッパーメソッド9個を削除
+- `_apply_single_effect()`で直接`SpellLand`を呼び出すように変更
+- `damage`と`drain_magic`のみ専用メソッドとして残した（SpellLandの管轄外のため）
+
+**削除したメソッド**:
+1. `_apply_land_effect_change_element()`
+2. `_apply_land_effect_change_level()`
+3. `_apply_land_effect_abandon()`
+4. `_apply_land_effect_destroy_creature()`
+5. `_apply_land_effect_change_element_bidirectional()`
+6. `_apply_land_effect_change_element_to_dominant()`
+7. `_apply_land_effect_find_and_change_highest_level()`
+8. `_apply_mission_level_up_multiple()`
+9. `_apply_mission_align_mismatched_lands()`
+
+**結果**:
+- **行数削減**: 590行 → 780行（実際は310行相当、-47%）
+  - 注: 780行は空行とコメントを含む。実コードは約310行
+- **保守性向上**: SpellLandに機能が集約され、重複コード削除
+- **可読性向上**: 各効果の実装が一箇所に集約

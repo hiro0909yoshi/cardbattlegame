@@ -1,0 +1,37 @@
+S-1. クリーチャー・土地属性不一致検索
+gdscriptvar creature_element = creature_data.get("element")
+var land_element = tile.tile_type
+if creature_element != land_element:
+使用: find_mismatched_element_lands()
+対象スペル: ホームグラウンド (2096)
+
+S-2. 最高/最低レベル土地検索
+gdscriptvar highest_level = 0
+var highest_tile = -1
+for tile in owned_tiles:
+	if tile.level > highest_level:
+		highest_level = tile.level
+		highest_tile = tile_index
+使用: find_highest_level_land(), find_lowest_level_land()
+対象スペル: サブサイド (2030)
+
+S-3. プレイヤー最多属性取得
+gdscriptvar element_counts = {"fire": 0, "water": 0, ...}
+for tile in owned_tiles:
+	element_counts[tile.tile_type] += 1
+var dominant = max(element_counts)
+使用: get_player_dominant_element()
+対象スペル: インフルエンス (2008)
+
+S-4. 土地レベル条件フィルター
+gdscriptif condition.has("required_level"):
+	if tile.level != condition["required_level"]:
+		continueプロジェクトを有効化してください。ドックスデザイン配管のスペルデザイン、MDを一度お読みください。vel_multiple_with_condition()
+対象スペル: フラットランド (2085), サドンインパクト (2029)
+
+S-5. 土地属性条件フィルター
+gdscriptif condition.has("required_elements"):
+	if tile.tile_type not in condition["required_elements"]:
+		continue
+使用: change_element_with_condition()
+対象スペル: ストームシフト (2040), マグマシフト (2103)

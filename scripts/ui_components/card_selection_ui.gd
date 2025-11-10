@@ -103,6 +103,13 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):
 			var card_data = hand_data[i]
+			
+			# 密命カード対応: カードの所有者と閲覧者を設定
+			if card_node.has_method("set_card_data_with_owner"):
+				card_node.set_card_data_with_owner(card_data, player_id)
+			if card_node.has_method("set_viewing_player"):
+				# 常にプレイヤー0（人間）が見ている
+				card_node.set_viewing_player(0)
 			var card_type = card_data.get("type", "")
 			
 			# 選択可能状態を判定
