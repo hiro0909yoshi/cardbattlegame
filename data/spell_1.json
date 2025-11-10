@@ -111,7 +111,18 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象領地を、その所有者が最も多く持つ属性に変える"
+	  "effect": "対象領地を、その所有者が最も多く持つ属性に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element_to_dominant"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2009,
@@ -504,7 +515,22 @@
 	  "cost": {
 		"mp": 120
 	  },
-	  "effect": "レベル3以下の対象水領地を風に、または風領地を水に変える"
+	  "effect": "レベル3以下の対象水領地を風に、または風領地を水に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "max_level": 3,
+		  "required_elements": ["water", "wind"]
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element_bidirectional",
+			"element_a": "water",
+			"element_b": "wind"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2041,

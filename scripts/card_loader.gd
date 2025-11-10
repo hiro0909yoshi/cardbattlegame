@@ -34,6 +34,36 @@ func load_all_cards():
 	
 	print("カード読み込み完了: ", all_cards.size(), "枚")
 	
+	# 🔍 属性別カード数をデバッグ出力
+	var element_counts = {
+		"fire": 0,
+		"water": 0,
+		"earth": 0,
+		"wind": 0,
+		"neutral": 0,
+		"item": 0,
+		"spell": 0
+	}
+	
+	for card in all_cards:
+		if card.has("type") and card.type == "item":
+			element_counts["item"] += 1
+		elif card.has("type") and card.type == "spell":
+			element_counts["spell"] += 1
+		elif card.has("element"):
+			var elem = card.element
+			if element_counts.has(elem):
+				element_counts[elem] += 1
+	
+	print("📊 属性別カード数:")
+	print("  🔥 火: ", element_counts["fire"])
+	print("  💧 水: ", element_counts["water"])
+	print("  🪨 地: ", element_counts["earth"])
+	print("  🌪️ 風: ", element_counts["wind"])
+	print("  ⚪ 無: ", element_counts["neutral"])
+	print("  📦 アイテム: ", element_counts["item"])
+	print("  📜 スペル: ", element_counts["spell"])
+	
 func load_json_file(path: String) -> Array:
 	var file = FileAccess.open(path, FileAccess.READ)
 	if file == null:

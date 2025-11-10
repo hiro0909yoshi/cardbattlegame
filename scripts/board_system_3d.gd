@@ -258,11 +258,15 @@ func remove_creature(tile_index: int):
 	_update_skill_index_on_remove(tile_index)
 	
 	var tile = tile_nodes[tile_index]
-	tile.creature_data = {}
 	
-	# ビジュアル更新があれば
-	if tile.has_method("update_visual"):
-		tile.update_visual()
+	# BaseTileのremove_creature()を呼び出して3Dカードも削除
+	if tile.has_method("remove_creature"):
+		tile.remove_creature()
+	else:
+		# フォールバック: データだけクリア
+		tile.creature_data = {}
+		if tile.has_method("update_visual"):
+			tile.update_visual()
 	
 	print("[BoardSystem3D] クリーチャー除去: タイル%d" % tile_index)
 

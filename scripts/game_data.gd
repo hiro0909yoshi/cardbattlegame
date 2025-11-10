@@ -135,19 +135,45 @@ func _initialize_new_save():
 func _initialize_test_data():
 	await get_tree().process_frame
 	
-	print("\n=== テストデータ初期化 ===")
+	print("
+=== テストデータ初期化 ===")
 	print("CardLoaderは存在する？: ", CardLoader != null)
 	
 	if CardLoader:
 		print("CardLoader.all_cardsのサイズ: ", CardLoader.all_cards.size())
 		
 		if CardLoader.all_cards.size() > 0:
-			# 全カードを4枚ずつ所持
-			for card in CardLoader.all_cards:
-				player_data.collection[card.id] = 4
-				player_data.unlocks.cards.append(card.id)
+			# 🎯 開発用：全カードを4枚ずつ所持
+			var test_card_count = 0
+			var element_counts = {"fire": 0, "water": 0, "earth": 0, "wind": 0, "neutral": 0}
+			var type_counts = {"item": 0, "spell": 0, "creature": 0}
 			
-			print("✅ テストデータ: ", CardLoader.all_cards.size(), "種類のカードを追加")
+			for card in CardLoader.all_cards:
+				player_data.collection[card.id] = 4  # 各4枚ずつ
+				if not player_data.unlocks.cards.has(card.id):
+					player_data.unlocks.cards.append(card.id)
+				test_card_count += 1
+				
+				# 統計用カウント
+				if card.type == "creature" and card.has("element"):
+					var elem = card.element
+					if element_counts.has(elem):
+						element_counts[elem] += 1
+					type_counts["creature"] += 1
+				elif card.type == "item":
+					type_counts["item"] += 1
+				elif card.type == "spell":
+					type_counts["spell"] += 1
+			
+			print("✅ テストデータ: ", test_card_count, "種類のカードを追加")
+			print("  🔥 火: ", element_counts["fire"])
+			print("  💧 水: ", element_counts["water"])
+			print("  🪨 地: ", element_counts["earth"])
+			print("  🌪️ 風: ", element_counts["wind"])
+			print("  ⚪ 無: ", element_counts["neutral"])
+			print("  🎭 クリーチャー合計: ", type_counts["creature"])
+			print("  📦 アイテム: ", type_counts["item"])
+			print("  📜 スペル: ", type_counts["spell"])
 			print("collection登録完了: ", player_data.collection.size(), "種類")
 			
 			# 🔧 修正: ここでセーブ！
@@ -156,7 +182,8 @@ func _initialize_test_data():
 			print("❌ CardLoader.all_cardsが空です")
 	else:
 		print("❌ CardLoaderが見つかりません")
-	print("=========================\n")
+	print("=========================
+")
 
 func _convert_collection_keys():
 	"""JSONから読み込んだ文字列キーを整数に、値も整数に変換"""

@@ -357,20 +357,30 @@ func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
 					
 					if matches_owner:
 						var tile_level = tile_info.get("level", 1)
+						var tile_element = tile_info.get("element", "")
 						
 						# レベル制限チェック
 						var max_level = target_info.get("max_level", 999)
 						var min_level = target_info.get("min_level", 1)
 						
-						if tile_level >= min_level and tile_level <= max_level:
-							var land_target = {
-								"type": "land",
-								"tile_index": tile_index,
-								"element": tile_info.get("type", ""),
-								"level": tile_level,
-								"owner": tile_owner
-							}
-							targets.append(land_target)
+						if tile_level < min_level or tile_level > max_level:
+							continue
+						
+						# 属性制限チェック
+						var required_elements = target_info.get("required_elements", [])
+						if not required_elements.is_empty():
+							if tile_element not in required_elements:
+								continue
+						
+						# 条件を満たす土地を追加
+						var land_target = {
+							"type": "land",
+							"tile_index": tile_index,
+							"element": tile_element,
+							"level": tile_level,
+							"owner": tile_owner
+						}
+						targets.append(land_target)
 	
 	return targets
 
@@ -557,6 +567,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"destroy_creature":
 			# クリーチャー破壊
 			_apply_land_effect_destroy_creature(effect, target_data)
+		
+		"change_element_bidirectional":
+			# 相互属性変更
+			_apply_land_effect_change_element_bidirectional(effect, target_data)
+		
+		"change_element_to_dominant":
+			# 最多属性への変更（インフルエンス）
+			_apply_land_effect_change_element_to_dominant(effect, target_data)
 
 ## 土地効果: 属性変更
 func _apply_land_effect_change_element(effect: Dictionary, target_data: Dictionary):
@@ -604,6 +622,48 @@ func _apply_land_effect_destroy_creature(_effect: Dictionary, target_data: Dicti
 	
 	if tile_index >= 0:
 		game_flow_manager.spell_land.destroy_creature(tile_index)
+
+## 土地効果: 最多属性への変更（インフルエンス用）
+func _apply_land_effect_change_element_to_dominant(_effect: Dictionary, target_data: Dictionary):
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	if tile_index < 0:
+		return
+	
+	# タイルの所有者を取得
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return
+	
+	var tile = board_system.tile_nodes[tile_index]
+	var owner_id = tile.owner_id
+	
+	if owner_id < 0:
+		print("[インフルエンス] タイル%dは所有者がいません" % tile_index)
+		return
+	
+	# 所有者の最多属性を取得
+	var dominant_element = game_flow_manager.spell_land.get_player_dominant_element(owner_id)
+	
+	# 属性を変更
+	game_flow_manager.spell_land.change_element(tile_index, dominant_element)
+	
+	print("[インフルエンス] タイル%d: プレイヤー%dの最多属性'%s'に変更" % [tile_index, owner_id, dominant_element])
+
+## 土地効果: 相互属性変更（ストームシフト、マグマシフト用）
+func _apply_land_effect_change_element_bidirectional(effect: Dictionary, target_data: Dictionary):
+	if not game_flow_manager or not game_flow_manager.spell_land:
+		push_error("[SpellPhaseHandler] SpellLandが初期化されていません")
+		return
+	
+	var tile_index = target_data.get("tile_index", -1)
+	var element_a = effect.get("element_a", "")
+	var element_b = effect.get("element_b", "")
+	
+	if tile_index >= 0 and not element_a.is_empty() and not element_b.is_empty():
+		game_flow_manager.spell_land.change_element_bidirectional(tile_index, element_a, element_b)
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():

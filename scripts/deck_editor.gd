@@ -14,6 +14,9 @@ var count_buttons = []  # 枚数選択ボタンの配列
 @onready var card_count_label = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardCountLabel
 @onready var save_button = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/SaveButton
 
+# リセットボタン（コードで生成）
+var reset_button: Button = null
+
 func _ready():
 	# フィルターボタン接続（8個）
 	var buttons = button_container.get_children()
@@ -33,6 +36,12 @@ func _ready():
 	
 	# 右側ボタン接続
 	save_button.pressed.connect(_on_save_pressed)
+	
+	# リセットボタンを動的に作成
+	create_reset_button()
+	
+	# 🔧 デバッグ: データリセットボタン（テスト用）
+	create_debug_reset_button()
 	
 	# もし戻るボタンが別の場所にあれば
 	if has_node("BackButton"):
@@ -112,6 +121,15 @@ func display_cards(filter: String):
 	
 	var cards_to_show = []
 	
+	# 属性フィルターのマッピング（日本語 → 英語）
+	var element_map = {
+		"無": "neutral",
+		"火": "fire",
+		"水": "water",
+		"地": "earth",
+		"風": "wind"
+	}
+	
 	# フィルターに応じてカードを取得
 	if filter == "deck":
 		# デッキに入っているカードだけ
@@ -122,23 +140,30 @@ func display_cards(filter: String):
 	elif filter == "spell":
 		# スペルカード
 		for card in CardLoader.all_cards:
-			if card.type == "spell" and GameData.player_data.collection.has(card.id):
+			if card.type == "spell" and GameData.get_card_count(card.id) > 0:
 				cards_to_show.append(card)
 	elif filter == "item":
 		# アイテムカード
 		for card in CardLoader.all_cards:
-			if card.type == "item" and GameData.player_data.collection.has(card.id):
+			if card.type == "item" and GameData.get_card_count(card.id) > 0:
 				cards_to_show.append(card)
 	elif filter == "all":
 		# 全ての所持カード
 		for card in CardLoader.all_cards:
-			if GameData.player_data.collection.has(card.id):
+			if GameData.get_card_count(card.id) > 0:
 				cards_to_show.append(card)
 	else:
 		# 属性フィルター（火・水・地・風・無）
+		var target_element = element_map.get(filter, filter)  # マッピング適用
+		
 		for card in CardLoader.all_cards:
-			if card.has("element") and card.element == filter and GameData.player_data.collection.has(card.id):
-				cards_to_show.append(card)
+			# この属性のカードか？
+			if card.has("element") and card.element == target_element:
+				# プレイヤーが所持しているか？（1枚以上）
+				if GameData.get_card_count(card.id) > 0:
+					cards_to_show.append(card)
+	
+
 	
 	# カードボタンを生成
 	for card in cards_to_show:
@@ -261,8 +286,8 @@ func update_card_count():
 	
 	card_count_label.text = "現在: " + str(total) + "/50"
 	
-	# 50枚の時だけ保存ボタン有効化
-	save_button.disabled = (total != 50)
+	# 保存ボタンは常に有効（何枚でも保存可能）
+	save_button.disabled = false
 
 func _on_save_pressed():
 	GameData.save_deck(GameData.selected_deck_index, current_deck)
@@ -270,3 +295,103 @@ func _on_save_pressed():
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Album.tscn")
+
+## 🔧 デバッグ用：全データをリセット（開発用）
+func create_debug_reset_button():
+	var debug_button = Button.new()
+	debug_button.text = "🔧 全データリセット"
+	debug_button.custom_minimum_size = Vector2(200, 60)
+	debug_button.add_theme_font_size_override("font_size", 16)
+	debug_button.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # オレンジ色
+	
+	right_vbox.add_child(debug_button)
+	debug_button.pressed.connect(_on_debug_reset_pressed)
+
+func _on_debug_reset_pressed():
+	var confirm = ConfirmationDialog.new()
+	confirm.dialog_text = "⚠️ 警告 ⚠️
+
+全てのセーブデータをリセットして、
+全カードを再登録しますか？
+
+この操作は取り消せません！"
+	confirm.title = "全データリセット"
+	confirm.ok_button_text = "リセットする"
+	confirm.cancel_button_text = "キャンセル"
+	confirm.size = Vector2(500, 250)
+	
+	confirm.confirmed.connect(_on_debug_reset_confirmed)
+	add_child(confirm)
+	confirm.popup_centered()
+
+func _on_debug_reset_confirmed():
+	print("🔧 [デバッグ] 全データリセット実行")
+	GameData.reset_save()
+	print("✅ リセット完了 - ゲームを再起動してください")
+	
+	# 確認ダイアログ
+	var info = AcceptDialog.new()
+	info.dialog_text = "✅ セーブデータをリセットしました。
+
+ゲームを再起動してください。"
+	info.title = "完了"
+	add_child(info)
+	info.popup_centered()
+
+## リセットボタンを作成（保存ボタンの下に配置）
+func create_reset_button():
+	reset_button = Button.new()
+	reset_button.text = "リセット"
+	reset_button.custom_minimum_size = Vector2(200, 60)
+	reset_button.add_theme_font_size_override("font_size", 20)
+	
+	# 警告色（赤っぽく）
+	reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	
+	# 保存ボタンと同じ親に追加
+	right_vbox.add_child(reset_button)
+	
+	# ボタン押下時の処理を接続
+	reset_button.pressed.connect(_on_reset_pressed)
+
+## リセットボタン押下時の処理
+func _on_reset_pressed():
+	# 確認ダイアログを表示
+	var confirm_dialog = ConfirmationDialog.new()
+	
+	# 現在編集中のブック名を取得
+	var current_deck_name = GameData.player_data.decks[GameData.selected_deck_index]["name"]
+	
+	confirm_dialog.dialog_text = "「" + current_deck_name + "」を空デッキ（0枚）にリセットしますか？\n\n現在の内容は失われます。\n他のブックは影響を受けません。"
+	confirm_dialog.title = "ブックリセット確認"
+	confirm_dialog.ok_button_text = "リセットする"
+	confirm_dialog.cancel_button_text = "キャンセル"
+	
+	# ダイアログサイズ調整
+	confirm_dialog.size = Vector2(500, 200)
+	
+	# OKボタン押下時の処理
+	confirm_dialog.confirmed.connect(_on_reset_confirmed)
+	
+	# ダイアログを追加して表示
+	add_child(confirm_dialog)
+	confirm_dialog.popup_centered()
+
+## リセット確認後の実際の処理
+func _on_reset_confirmed():
+	print("【ブックリセット】ブック", GameData.selected_deck_index, "をリセットします")
+	
+	# 空デッキ（0枚）
+	var empty_deck = {}
+	
+	# 現在のデッキを上書き
+	current_deck = empty_deck.duplicate()
+	
+	# GameDataにも保存
+	GameData.save_deck(GameData.selected_deck_index, current_deck)
+	
+	print("【ブックリセット】完了 - 空デッキ（0枚）")
+	
+	# 表示を更新
+	update_card_count()
+	display_cards(current_filter)

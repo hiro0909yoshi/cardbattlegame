@@ -54,6 +54,30 @@ func change_element(tile_index: int, new_element: String) -> bool:
 	
 	return success
 
+## 相互属性変更（ストームシフト、マグマシフト用）
+func change_element_bidirectional(tile_index: int, element_a: String, element_b: String) -> bool:
+	if not _validate_tile_index(tile_index):
+		return false
+	
+	if not _validate_element(element_a) or not _validate_element(element_b):
+		push_error("SpellLand: 無効な属性 '%s' または '%s'" % [element_a, element_b])
+		return false
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var current_element = tile.tile_type
+	
+	# 相互変換の判定
+	if current_element == element_a:
+		# element_a → element_b
+		return change_element(tile_index, element_b)
+	elif current_element == element_b:
+		# element_b → element_a
+		return change_element(tile_index, element_a)
+	else:
+		# どちらの属性でもない場合は変換しない
+		print("[相互属性変更] タイル%d: 現在の属性%sは対象外" % [tile_index, current_element])
+		return false
+
 ## 土地のレベルを変更（増減）
 func change_level(tile_index: int, delta: int) -> bool:
 	if not _validate_tile_index(tile_index):
@@ -87,13 +111,13 @@ func set_level(tile_index: int, level: int) -> bool:
 	
 	level = clamp(level, 1, 5)
 	var tile = board_system_ref.tile_nodes[tile_index]
-	var old_level = tile.land_level
+	var old_level = tile.level
 	
 	if level == old_level:
 		return false
 	
-	tile.land_level = level
-	board_system_ref._update_tile_visual(tile_index)
+	tile.level = level
+	tile.update_visual()
 	
 	print("[土地レベル設定] タイル%d: Lv%d → Lv%d" % [tile_index, old_level, level])
 	return true
@@ -122,29 +146,26 @@ func abandon_land(tile_index: int, return_rate: float = 0.7) -> int:
 		return 0
 	
 	var tile = board_system_ref.tile_nodes[tile_index]
-	var player_id = tile.tile_owner
+	var player_id = tile.owner_id
 	
 	if player_id < 0:
 		push_error("SpellLand: タイル%dは誰も所有していません" % tile_index)
 		return 0
 	
 	var base_value = 100
-	var land_value = int(tile.land_level * base_value * return_rate)
+	var land_value = int(tile.level * base_value * return_rate)
 	
 	if creature_manager_ref.has_creature(tile_index):
 		destroy_creature(tile_index)
 	
-	tile.tile_owner = -1
-	board_system_ref._update_tile_visual(tile_index)
+	var element = tile.tile_type
+	tile.owner_id = -1
+	tile.update_visual()
 	
-	var player = player_system_ref.players[player_id]
-	var element = tile.element
-	if player.lands_owned.has(element):
-		player.lands_owned[element] = max(0, player.lands_owned[element] - 1)
-	
+	# 魔力を付与
 	player_system_ref.add_magic(player_id, land_value)
 	
-	print("[土地放棄] タイル%d: P%d Lv%d %s G%d獲得" % [tile_index, player_id, tile.land_level, element, land_value])
+	print("[土地放棄] タイル%d: P%d Lv%d %s G%d獲得" % [tile_index, player_id, tile.level, element, land_value])
 	return land_value
 
 ## 条件付き属性変更
@@ -155,11 +176,11 @@ func change_element_with_condition(tile_index: int, condition: Dictionary, new_e
 	var tile = board_system_ref.tile_nodes[tile_index]
 	
 	if condition.has("max_level"):
-		if tile.land_level > condition["max_level"]:
+		if tile.level > condition["max_level"]:
 			return false
 	
 	if condition.has("required_elements"):
-		if tile.element not in condition["required_elements"]:
+		if tile.tile_type not in condition["required_elements"]:
 			return false
 	
 	return change_element(tile_index, new_element)
@@ -169,15 +190,30 @@ func get_player_dominant_element(player_id: int) -> String:
 	if player_id < 0 or player_id >= player_system_ref.players.size():
 		return "earth"
 	
-	var player = player_system_ref.players[player_id]
-	var lands_owned = player.lands_owned
+	# 実際にタイルをカウントして最多属性を取得
+	var element_counts = {
+		"fire": 0,
+		"water": 0,
+		"earth": 0,
+		"wind": 0,
+		"neutral": 0
+	}
+	
+	# プレイヤーが所有する全タイルをカウント
+	for tile_index in board_system_ref.tile_nodes.keys():
+		var tile = board_system_ref.tile_nodes[tile_index]
+		if tile.owner_id == player_id:
+			var element = tile.tile_type
+			if element_counts.has(element):
+				element_counts[element] += 1
+	
+	# 最多の属性を見つける
 	var max_count = 0
 	var dominant_element = "earth"
 	
-	for element in lands_owned.keys():
-		var count = lands_owned[element]
-		if count > max_count:
-			max_count = count
+	for element in element_counts.keys():
+		if element_counts[element] > max_count:
+			max_count = element_counts[element]
 			dominant_element = element
 	
 	return dominant_element
@@ -192,15 +228,15 @@ func change_level_multiple_with_condition(player_id: int, condition: Dictionary,
 	for tile_index in range(20):
 		var tile = board_system_ref.tile_nodes[tile_index]
 		
-		if tile.tile_owner != player_id:
+		if tile.owner_id != player_id:
 			continue
 		
 		if condition.has("required_level"):
-			if tile.land_level != condition["required_level"]:
+			if tile.level != condition["required_level"]:
 				continue
 		
 		if condition.has("required_elements"):
-			if tile.element not in condition["required_elements"]:
+			if tile.tile_type not in condition["required_elements"]:
 				continue
 		
 		if change_level(tile_index, delta):
@@ -218,9 +254,9 @@ func find_highest_level_land(player_id: int) -> int:
 	
 	for tile_index in range(20):
 		var tile = board_system_ref.tile_nodes[tile_index]
-		if tile.tile_owner == player_id:
-			if tile.land_level > highest_level:
-				highest_level = tile.land_level
+		if tile.owner_id == player_id:
+			if tile.level > highest_level:
+				highest_level = tile.level
 				highest_tile = tile_index
 	
 	return highest_tile
@@ -235,9 +271,9 @@ func find_lowest_level_land(player_id: int) -> int:
 	
 	for tile_index in range(20):
 		var tile = board_system_ref.tile_nodes[tile_index]
-		if tile.tile_owner == player_id:
-			if tile.land_level < lowest_level:
-				lowest_level = tile.land_level
+		if tile.owner_id == player_id:
+			if tile.level < lowest_level:
+				lowest_level = tile.level
 				lowest_tile = tile_index
 	
 	return lowest_tile
