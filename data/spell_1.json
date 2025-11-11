@@ -389,7 +389,7 @@
 	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
-	  "is_secret": true,
+	  "keywords": ["密命"],
 	  "cost": {
 		"mp": 100
 	  },

@@ -231,8 +231,8 @@ func use_spell(spell_card: Dictionary):
 
 ## 対象選択UIを表示（領地コマンドと同じ方式）
 func _show_target_selection_ui(target_type: String, target_info: Dictionary):
-	# 有効な対象を取得
-	var targets = _get_valid_targets(target_type, target_info)
+	# 有効な対象を取得（ヘルパー使用）
+	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
 	
 	if targets.is_empty():
 		cancel_spell()
@@ -268,135 +268,13 @@ func _update_selection_ui():
 		return
 	
 	var target = available_targets[current_target_index]
-	var text = "対象を選択: [↑↓で切替]
-"
-	text += "対象 %d/%d: " % [current_target_index + 1, available_targets.size()]
 	
-	# ターゲット情報表示
-	match target.get("type", ""):
-		"land":
-			var tile_idx = target.get("tile_index", -1)
-			var element = target.get("element", "neutral")
-			var level = target.get("level", 1)
-			var owner_id = target.get("owner", -1)
-			
-			# 属性名を日本語に変換
-			var element_name = element
-			match element:
-				"fire": element_name = "火"
-				"water": element_name = "水"
-				"earth": element_name = "地"
-				"wind": element_name = "風"
-				"neutral": element_name = "無"
-			
-			var owner_id_text = ""
-			if owner_id >= 0:
-				owner_id_text = " (P%d)" % (owner_id + 1)
-			
-			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_id_text]
-		
-		"creature":
-			var tile_idx = target.get("tile_index", -1)
-			var creature_name = target.get("creature", {}).get("name", "???")
-			text += "タイル%d %s" % [tile_idx, creature_name]
-		
-		"player":
-			var player_id = target.get("player_id", -1)
-			text += "プレイヤー%d" % (player_id + 1)
-	
-	text += "
-[Enter: 次へ] [C: 閉じる]"
+	# ヘルパーを使用してテキスト生成
+	var text = TargetSelectionHelper.format_target_info(target, current_target_index + 1, available_targets.size())
 	ui_manager.phase_label.text = text
 
 
 
-## 有効な対象を取得（仮実装）
-func _get_valid_targets(target_type: String, target_info: Dictionary) -> Array:
-	var targets = []
-	
-	match target_type:
-		"creature":
-			# 敵クリーチャーを探す
-			if board_system:
-				for tile_index in board_system.tile_nodes.keys():
-					var tile_info = board_system.get_tile_info(tile_index)
-					var creature = tile_info.get("creature", {})
-					if not creature.is_empty():
-						var tile_owner = tile_info.get("owner", -1)
-						if tile_owner != current_player_id and tile_owner >= 0:
-							targets.append({
-								"type": "creature",
-								"tile_index": tile_index,
-								"creature": creature,
-								"owner": tile_owner
-							})
-		
-		"player":
-			# 敵プレイヤーを探す
-			if player_system:
-				for player in player_system.players:
-					if player.id != current_player_id:
-						targets.append({
-							"type": "player",
-							"player_id": player.id,
-							"player": {
-								"name": player.name,
-								"magic_power": player.magic_power,
-								"id": player.id
-							}
-						})
-		
-		"land", "own_land", "enemy_land":
-			# 土地を対象とする
-			if board_system:
-				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
-				
-				for tile_index in board_system.tile_nodes.keys():
-					var tile_info = board_system.get_tile_info(tile_index)
-					var tile_owner = tile_info.get("owner", -1)
-					
-					# 所有者フィルター
-					var matches_owner = false
-					if owner_filter == "own":
-						matches_owner = (tile_owner == current_player_id)
-					elif owner_filter == "enemy":
-						matches_owner = (tile_owner >= 0 and tile_owner != current_player_id)
-					else:  # "any"
-						matches_owner = (tile_owner >= 0)
-					
-					if matches_owner:
-						var tile_level = tile_info.get("level", 1)
-						var tile_element = tile_info.get("element", "")
-						
-						# レベル制限チェック
-						var max_level = target_info.get("max_level", 999)
-						var min_level = target_info.get("min_level", 1)
-						var required_level = target_info.get("required_level", -1)
-						
-						# required_levelが指定されている場合は、そのレベルのみ対象
-						if required_level > 0:
-							if tile_level != required_level:
-								continue
-						elif tile_level < min_level or tile_level > max_level:
-							continue
-						
-						# 属性制限チェック
-						var required_elements = target_info.get("required_elements", [])
-						if not required_elements.is_empty():
-							if tile_element not in required_elements:
-								continue
-						
-						# 条件を満たす土地を追加
-						var land_target = {
-							"type": "land",
-							"tile_index": tile_index,
-							"element": tile_element,
-							"level": tile_level,
-							"owner": tile_owner
-						}
-						targets.append(land_target)
-	
-	return targets
 
 ## 入力処理
 func _input(event):
@@ -407,15 +285,13 @@ func _input(event):
 		
 		# ↑キーまたは←キー: 前の対象
 		if event.keycode == KEY_UP or event.keycode == KEY_LEFT:
-			if current_target_index > 0:
-				current_target_index -= 1
+			if TargetSelectionHelper.move_target_previous(self):
 				_update_target_selection()
 			get_viewport().set_input_as_handled()
 		
 		# ↓キーまたは→キー: 次の対象
 		elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
-			if current_target_index < available_targets.size() - 1:
-				current_target_index += 1
+			if TargetSelectionHelper.move_target_next(self):
 				_update_target_selection()
 			get_viewport().set_input_as_handled()
 		
@@ -427,8 +303,7 @@ func _input(event):
 		# 数字キー1-9, 0: 直接選択して即確定
 		elif TargetSelectionHelper.is_number_key(event.keycode):
 			var index = TargetSelectionHelper.get_number_from_key(event.keycode)
-			if index < available_targets.size():
-				current_target_index = index
+			if TargetSelectionHelper.select_target_by_index(self, index):
 				_update_target_selection()
 				# 数字キーの場合は即座に確定
 				_confirm_target_selection()

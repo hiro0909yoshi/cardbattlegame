@@ -466,43 +466,7 @@ func set_viewing_player(viewer_id: int):
 
 # 表示を更新（密命判定）
 func _update_secret_display():
-	var is_secret = card_data.get("is_secret", false)
-	
-	# デバッグ: 密命カードを無効化
-	var debug_disable = _get_debug_disable_secret_cards()
-	if debug_disable and is_secret:
-		# デバッグモード: 密命カードでも通常表示
-		_show_card_front()
-		return
-	
-	# 密命カードで、所有者以外が見ている場合
-	if is_secret and viewing_player_id != owner_player_id and viewing_player_id != -1:
-		_show_secret_back()
-	else:
-		_show_card_front()
-
-# デバッグフラグを取得（SpellPhaseHandlerから）
-func _get_debug_disable_secret_cards() -> bool:
-	# GameFlowManager → SpellPhaseHandlerの順に辿る
-	var root = get_tree().root
-	if not root:
-		return false
-	
-	# Mainシーンを探す
-	for child in root.get_children():
-		if child.name == "Main" or child.has_method("get_game_flow_manager"):
-			var game_flow = null
-			if child.has_method("get_game_flow_manager"):
-				game_flow = child.get_game_flow_manager()
-			elif child.has_node("GameFlowManager"):
-				game_flow = child.get_node("GameFlowManager")
-			
-			if game_flow and "spell_phase_handler" in game_flow:
-				var spell_handler = game_flow.spell_phase_handler
-				if spell_handler and "debug_disable_secret_cards" in spell_handler:
-					return spell_handler.debug_disable_secret_cards
-	
-	return false
+	SkillSecret.apply_secret_display(self, card_data, viewing_player_id, owner_player_id)
 
 # 裏面表示に切り替え（真っ黒にする）
 func _show_secret_back():

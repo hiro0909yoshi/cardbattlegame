@@ -219,3 +219,182 @@ static func get_number_from_key(keycode: int) -> int:
 		KEY_6: 5, KEY_7: 6, KEY_8: 7, KEY_9: 8, KEY_0: 9
 	}
 	return key_to_index.get(keycode, -1)
+
+# ============================================
+# ターゲット検索システム
+# ============================================
+
+## 有効なターゲットを取得
+## 
+## handler: board_system, player_system, current_player_id を持つオブジェクト
+## target_type: "land", "creature", "player" など
+## target_info: フィルター条件（owner_filter, max_level, required_elements など）
+## 戻り値: ターゲット情報の配列
+static func get_valid_targets(handler, target_type: String, target_info: Dictionary) -> Array:
+	var targets = []
+	
+	match target_type:
+		"creature":
+			# 敵クリーチャーを探す
+			if handler.board_system:
+				for tile_index in handler.board_system.tile_nodes.keys():
+					var tile_info = handler.board_system.get_tile_info(tile_index)
+					var creature = tile_info.get("creature", {})
+					if not creature.is_empty():
+						var tile_owner = tile_info.get("owner", -1)
+						if tile_owner != handler.current_player_id and tile_owner >= 0:
+							targets.append({
+								"type": "creature",
+								"tile_index": tile_index,
+								"creature": creature,
+								"owner": tile_owner
+							})
+		
+		"player":
+			# 敵プレイヤーを探す
+			if handler.player_system:
+				for player in handler.player_system.players:
+					if player.id != handler.current_player_id:
+						targets.append({
+							"type": "player",
+							"player_id": player.id,
+							"player": {
+								"name": player.name,
+								"magic_power": player.magic_power,
+								"id": player.id
+							}
+						})
+		
+		"land", "own_land", "enemy_land":
+			# 土地を対象とする
+			if handler.board_system:
+				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
+				
+				for tile_index in handler.board_system.tile_nodes.keys():
+					var tile_info = handler.board_system.get_tile_info(tile_index)
+					var tile_owner = tile_info.get("owner", -1)
+					
+					# 所有者フィルター
+					var matches_owner = false
+					if owner_filter == "own":
+						matches_owner = (tile_owner == handler.current_player_id)
+					elif owner_filter == "enemy":
+						matches_owner = (tile_owner >= 0 and tile_owner != handler.current_player_id)
+					else:  # "any"
+						matches_owner = (tile_owner >= 0)
+					
+					if matches_owner:
+						var tile_level = tile_info.get("level", 1)
+						var tile_element = tile_info.get("element", "")
+						
+						# レベル制限チェック
+						var max_level = target_info.get("max_level", 999)
+						var min_level = target_info.get("min_level", 1)
+						var required_level = target_info.get("required_level", -1)
+						
+						# required_levelが指定されている場合は、そのレベルのみ対象
+						if required_level > 0:
+							if tile_level != required_level:
+								continue
+						elif tile_level < min_level or tile_level > max_level:
+							continue
+						
+						# 属性制限チェック
+						var required_elements = target_info.get("required_elements", [])
+						if not required_elements.is_empty():
+							if tile_element not in required_elements:
+								continue
+						
+						# 条件を満たす土地を追加
+						var land_target = {
+							"type": "land",
+							"tile_index": tile_index,
+							"element": tile_element,
+							"level": tile_level,
+							"owner": tile_owner
+						}
+						targets.append(land_target)
+	
+	return targets
+
+## ターゲットインデックスを次へ移動
+## 
+## handler: available_targets, current_target_index を持つオブジェクト
+## 戻り値: インデックスが変更されたか
+static func move_target_next(handler) -> bool:
+	if handler.current_target_index < handler.available_targets.size() - 1:
+		handler.current_target_index += 1
+		return true
+	return false
+
+## ターゲットインデックスを前へ移動
+## 
+## handler: available_targets, current_target_index を持つオブジェクト
+## 戻り値: インデックスが変更されたか
+static func move_target_previous(handler) -> bool:
+	if handler.current_target_index > 0:
+		handler.current_target_index -= 1
+		return true
+	return false
+
+## ターゲットを数字で直接選択
+## 
+## handler: available_targets, current_target_index を持つオブジェクト
+## index: 選択するインデックス
+## 戻り値: 選択が成功したか
+static func select_target_by_index(handler, index: int) -> bool:
+	if index < handler.available_targets.size():
+		handler.current_target_index = index
+		return true
+	return false
+
+# ============================================
+# UI表示ヘルパー
+# ============================================
+
+## ターゲット情報を日本語テキストに変換
+## 
+## target_data: ターゲット情報
+## current_index: 現在のインデックス（1始まり）
+## total_count: 総ターゲット数
+## 戻り値: 表示用テキスト
+static func format_target_info(target_data: Dictionary, current_index: int, total_count: int) -> String:
+	var text = "対象を選択: [↑↓で切替]
+"
+	text += "対象 %d/%d: " % [current_index, total_count]
+	
+	# ターゲット情報表示
+	match target_data.get("type", ""):
+		"land":
+			var tile_idx = target_data.get("tile_index", -1)
+			var element = target_data.get("element", "neutral")
+			var level = target_data.get("level", 1)
+			var owner_id = target_data.get("owner", -1)
+			
+			# 属性名を日本語に変換
+			var element_name = element
+			match element:
+				"fire": element_name = "火"
+				"water": element_name = "水"
+				"earth": element_name = "地"
+				"wind": element_name = "風"
+				"neutral": element_name = "無"
+			
+			var owner_id_text = ""
+			if owner_id >= 0:
+				owner_id_text = " (P%d)" % (owner_id + 1)
+			
+			text += "タイル%d %s Lv%d%s" % [tile_idx, element_name, level, owner_id_text]
+		
+		"creature":
+			var tile_idx = target_data.get("tile_index", -1)
+			var creature_name = target_data.get("creature", {}).get("name", "???")
+			text += "タイル%d %s" % [tile_idx, creature_name]
+		
+		"player":
+			var player_id = target_data.get("player_id", -1)
+			text += "プレイヤー%d" % (player_id + 1)
+	
+	text += "
+[Enter: 次へ] [C: 閉じる]"
+	return text
