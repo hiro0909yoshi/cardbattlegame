@@ -485,18 +485,48 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 密命失敗フラグをリセット
 	mission_failed = false
 	
-	# 密命カード使用時のログ出力
-	var is_secret = spell_card.get("is_secret", false)
+	# 密命判定（SkillSecretクラスを使用）
+	var mission_context = SkillSecret.build_mission_context(
+		current_player_id,
+		board_system,
+		creature_manager,
+		card_system,
+		target_data
+	)
 	
-	print("[execute_spell_effect] is_secret=%s, mission_failed=%s, debug_disable=%s" % [is_secret, mission_failed, debug_disable_secret_cards])
+	var mission_result = SkillSecret.check_mission(spell_card, mission_context)
+	var is_mission = mission_result.get("is_mission", false)
+	var mission_success = mission_result.get("success", true)
 	
 	# デバッグモード: 密命カードを通常カードとして扱う
-	if debug_disable_secret_cards and is_secret:
-		is_secret = false
+	if debug_disable_secret_cards and is_mission:
 		print("[デバッグ] 密命カードを通常カードとして実行します")
+		is_mission = false
+		mission_success = true
 	
-	if is_secret:
-		print("[密命発動] プレイヤー%d が密命カード「%s」を使用" % [current_player_id, spell_card.get("name", "???")])
+	# 密命ログ出力
+	if is_mission:
+		if mission_success:
+			SkillSecret.log_mission_success(current_player_id, spell_card)
+		else:
+			SkillSecret.log_mission_failure(current_player_id, spell_card)
+			mission_failed = true
+			
+			# 失敗効果の実行（復帰[ブック]等）
+			var failure_effect = mission_result.get("failure_effect", "return_to_deck")
+			if failure_effect == "return_to_deck":
+				if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, spell_card):
+					print("[密命失敗] スペルカードをデッキに戻しました")
+			
+			# 効果を実行せずに終了
+			spell_used.emit(spell_card)
+			await get_tree().create_timer(0.5).timeout
+			_return_camera_to_player()
+			await get_tree().create_timer(0.5).timeout
+			complete_spell_phase()
+			return
+	
+	# 通常スペルまたは密命成功時は効果を実行
 	
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])

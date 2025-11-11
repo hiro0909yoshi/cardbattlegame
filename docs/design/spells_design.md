@@ -1,7 +1,7 @@
 # 🎮 スペルシステム設計書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 2.2  
+**バージョン**: 2.7  
 **最終更新**: 2025年11月11日
 
 ---
@@ -85,14 +85,49 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 
 **概要**: 相手には真っ黒に表示され、条件を満たせば強力な効果、失敗時は代替効果が発動する特殊スペル。
 
+**実装クラス**: `scripts/skills/skill_secret.gd` (SkillSecret)
+
+**アーキテクチャ**:
+```
+SkillSecret (scripts/skills/)
+  ├─ check_mission() - 密命判定
+  ├─ build_mission_context() - コンテキスト構築
+  └─ log_mission_success/failure() - ログ出力
+
+ConditionChecker (scripts/skills/)
+  └─ check_secret_mission() - 実際の条件評価
+	  ├─ has_all_element_cards
+	  ├─ level_land_count
+	  └─ mismatched_element_lands
+
+Card.gd (scripts/)
+  └─ 表示制御のみ（真っ黒表示）
+```
+
 #### 🎴 密命カード表示（is_secret）
 
-**JSONでの定義**:
+**JSONでの定義**（キーワード能力方式）:
 ```json
 {
   "id": 2029,
-  "is_secret": true,  // ← 密命カード化
-  "effect": "密命；レベル4の土地のレベルを1下げる"
+  "is_secret": true,
+  "effect_parsed": {
+	"keywords": ["密命"],
+	"keyword_conditions": {
+	  "密命": {
+		"success_conditions": [
+		  {
+			"condition_type": "level_land_count",
+			"level": 4,
+			"count": 1
+		  }
+		],
+		"failure_effect": "none"
+	  }
+	},
+	"target_type": "land",
+	"effects": [...]
+  }
 }
 ```
 
@@ -100,11 +135,28 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 - プレイヤー0（人間）: 通常表示（内容が見える）
 - プレイヤー1（CPU）: **真っ黒で見えない**
 
-**実装**: 
-- `Card.gd`: `ColorRect`で真っ黒表示、`viewing_player_id`常に0
-- `HandDisplay.gd`: カード生成時に`owner_player_id`と`viewing_player_id`を設定
+**実装**:
+- `SkillSecret`: 密命判定・条件チェック・失敗処理
+- `ConditionChecker`: 条件タイプの評価ロジック
+- `Card.gd`: 表示制御（`ColorRect`で真っ黒表示）
+- `SpellPhaseHandler`: 密命フロー統合
 
 **詳細ドキュメント**: [密命カード.md](../skills/密命カード.md)
+
+#### 📋 密命用条件タイプ
+
+密命スペル専用の条件タイプ（`ConditionChecker`に実装済み）:
+
+| condition_type | 説明 | パラメータ | 使用スペル | ドキュメント |
+|---------------|------|-----------|-----------|-------------|
+| `level_land_count` | 特定レベルの土地数判定 | `level`, `count` | フラットランド、サドンインパクト | S-4 |
+| `mismatched_element_lands` | 属性不一致土地数判定 | `count` | ホームグラウンド | S-5 |
+| `has_all_element_cards` | 全属性カード所持判定 | なし | アセンブルカード | 新規追加が必要 |
+
+**新しい条件タイプを追加する場合**:
+1. `ConditionChecker._evaluate_single_condition()`に実装
+2. `docs/design/spell_condition_patterns_catalog.txt`にS-X番号で追加
+3. この表を更新
 
 #### 📋 密命スペル一覧
 
@@ -266,6 +318,132 @@ if spell_card.get("is_secret", false):
 
 ---
 
+## 🔧 開発者向け：拡張時の更新ルール
+
+スペルシステムに新しい機能を追加する際は、以下のチェックリストに従って関連箇所を必ず更新してください。
+
+### 新しい effect_type を追加する場合
+
+#### ✅ 必須更新箇所（優先度：高）
+
+1. **`scripts/game_flow/spell_phase_handler.gd`**
+   - `_apply_single_effect()` の `match effect_type:` に新しいケースを追加
+   - 対応する処理を実装（または適切なSpellXxxクラスのメソッドを呼び出し）
+
+2. **`docs/design/spells_design.md`** ← このドキュメント
+   - 「実装済みスペル効果一覧」セクションに追加
+   - 対応するスペルカードのリストを更新
+
+3. **`scripts/spells/spell_effect_base.gd`**
+   - `EffectType` enum に新しい効果タイプを追加（参考・補完用）
+
+#### 📝 該当する場合のみ更新
+
+- **土地操作系** → `scripts/spells/spell_land_new.gd` に新メソッド追加 + `docs/design/spells/領地変更.md` 更新
+- **ドロー系** → `scripts/spells/spell_draw.gd` に新メソッド追加 + `docs/design/spells/カードドロー.md` 更新
+- **魔力系** → `scripts/spells/spell_magic.gd` に新メソッド追加 + `docs/design/spells/魔力増減.md` 更新
+- **新カテゴリ** → 新しい `SpellXxx.gd` クラスを作成 + 専用ドキュメント作成
+
+---
+
+### 新しい target_type を追加する場合
+
+#### ✅ 必須更新箇所（優先度：高）
+
+1. **`scripts/game_flow/spell_phase_handler.gd`**
+   - `_get_valid_targets()` に新しいターゲットタイプの取得ロジックを追加
+   - 必要に応じて `_show_target_selection_ui()` を拡張
+
+2. **`docs/design/spells_design.md`** ← このドキュメント
+   - 「ターゲットシステム」セクションのターゲットタイプ表を更新
+
+3. **`scripts/spells/spell_effect_base.gd`**
+   - `TargetType` enum に新しいターゲットタイプを追加（参考・補完用）
+
+#### 📝 UI関連の更新が必要な場合
+
+- **選択UI** → `scripts/ui_components/target_selection_helper.gd` の拡張が必要な場合あり
+- **フィルタリング** → 新しい `owner_filter` や `tile_filter` を追加する場合、条件判定ロジックも更新
+
+---
+
+### 新しい条件タイプ（condition_type）を追加する場合
+
+#### ✅ 必須更新箇所（優先度：高）
+
+1. **`scripts/skills/condition_checker.gd`**
+   - `_evaluate_single_condition()` の `match cond_type:` に新しいケースを追加
+   - 条件判定ロジックを実装
+   - **注**: このクラスはバトルスキルとスペルの**両方**で共用されます
+
+2. **`docs/design/spell_condition_patterns_catalog.txt`** ← スペル用条件パターンカタログ
+   - 新しい条件パターンを追加（S-X形式で番号付け）
+   - 使用例とコードスニペットを記載
+   - **フォーマット**:
+	 ```
+	 S-X. 条件名
+	 gdscript
+	 条件判定コード例
+	 使用: 使用メソッド名
+	 対象スペル: スペル名 (ID)
+	 ```
+
+3. **`docs/design/spells_design.md`** ← このドキュメント
+   - 該当する特殊システム（密命、呪い等）のセクションに条件を追記
+   - 利用可能な条件タイプ表を更新
+
+4. **`scripts/skills/skill_effect_base.gd`**
+   - `ConditionType` enum に新しい条件タイプを追加（参考・補完用）
+   - **注**: スペル専用条件でもここに追加（バトルとスペルで共通のenum定義）
+
+#### 📝 バトルスキルでも使用する条件の場合
+
+- **`docs/design/condition_patterns_catalog.md`** にもパターンを追記（B-X形式）
+- バトル・スペル両方で使える汎用的な条件として文書化
+
+#### 🔍 条件パターンカタログ更新例
+
+**spell_condition_patterns_catalog.txt**:
+```
+S-6. 手札枚数条件チェック
+gdscript
+var hand_count = context.get("hand_cards", []).size()
+if hand_count >= required_count:
+使用: check_hand_count_condition()
+対象スペル: シンクタンク (2XXX)
+```
+
+---
+
+### 新しいスペルカードを追加する場合
+
+#### ✅ 必須更新箇所
+
+1. **`data/spell_X.json`**
+   - カードデータを追加
+   - `effect_parsed` を正しく定義（既存の effect_type を使用）
+
+2. **該当する詳細ドキュメント**
+   - 土地操作 → `docs/design/spells/領地変更.md` の「対応スペル一覧」
+   - ドロー → `docs/design/spells/カードドロー.md` の対応表
+   - 魔力 → `docs/design/spells/魔力増減.md` の対応表
+
+3. **密命カードの場合**
+   - `docs/design/skills/密命カード.md` の「密命スペル一覧」に追加
+
+---
+
+### チェックリスト例：「change_element_area（範囲属性変更）」を追加する場合
+
+- [ ] `spell_phase_handler.gd` - `_apply_single_effect()` に `"change_element_area":` 追加
+- [ ] `spell_land_new.gd` - `change_element_area(center_tile, radius, element)` メソッド実装
+- [ ] `spells_design.md` - 実装済みスペル効果一覧に追加
+- [ ] `領地変更.md` - メソッド詳細とJSON例を追記
+- [ ] `spell_effect_base.gd` - `EffectType.CHANGE_ELEMENT_AREA` を追加
+- [ ] `spell_X.json` - 実際のスペルカード（例：エリアルシフト）を定義
+
+---
+
 ## 変更履歴
 
 | 日付 | バージョン | 変更内容 |
@@ -276,10 +454,12 @@ if spell_card.get("is_secret", false):
 | 2025/11/11 | 2.2 | 🆕 密命カードシステム実装完了 - `is_secret`フラグ、ColorRect表示、ID 2029実装 |
 | 2025/11/11 | 2.3 | 🔧 SpellPhaseHandlerリファクタリング完了 - 不要なラッパーメソッド9個を削除し、直接SpellLandを呼び出すように変更（840行→755行、-10%削減） |
 | 2025/11/11 | 2.4 | 📝 復帰[ブック]の使い方を追記 - `SpellLand.return_spell_to_deck()`メソッドの詳細な説明と使用例を追加 |
+| 2025/11/11 | 2.5 | 🔧 開発者向け拡張ルール追加 - effect_type/target_type/condition_type追加時の必須更新箇所を明記、保守性向上 |
+| 2025/11/11 | 2.6 | ✨ 密命キーワード能力化完了 - SkillSecretクラス作成、ConditionCheckerに密命条件追加、キーワード方式のJSON対応 |
 
 ---
 
-**最終更新**: 2025年11月11日（v2.4 - 復帰[ブック]の使い方追記）
+**最終更新**: 2025年11月11日（v2.6 - 密命キーワード能力化完了）
 
 ---
 

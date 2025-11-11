@@ -331,7 +331,7 @@ func align_lands_to_creature_elements(tile_indices: Array) -> int:
 	
 	return changed_count
 
-## スペルカードをデッキに戻す（密命失敗時の復帰[ブック]）
+## スペルカードをデッキに戻す（失敗時の復帰[ブック]）
 func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	if not card_system_ref:
 		push_error("SpellLand: CardSystemの参照が設定されていません")

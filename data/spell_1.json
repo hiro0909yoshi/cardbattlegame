@@ -395,6 +395,19 @@
 	  },
 	  "effect": "密命；対象レベル4領地のレベルを1下げる",
 	  "effect_parsed": {
+		"keywords": ["密命"],
+		"keyword_conditions": {
+		  "密命": {
+			"success_conditions": [
+			  {
+				"condition_type": "level_land_count",
+				"level": 4,
+				"count": 1
+			  }
+			],
+			"failure_effect": "none"
+		  }
+		},
 		"target_type": "land",
 		"target_info": {
 		  "owner_filter": "any",

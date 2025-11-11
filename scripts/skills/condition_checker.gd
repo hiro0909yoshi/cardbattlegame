@@ -15,7 +15,7 @@ enum PowerStrikeCondition {
 	WITHOUT_ENEMY_ITEM,  # 敵アイテム不使用時
 	ADJACENT_ALLY_LAND,  # 隣が自領地
 	WITH_WEAPON,         # 武器使用時
-	LEVEL_CAP            # レベル額使用時
+	LEVEL_CAP            # レベル使用時
 }
 
 # 戦闘コンテキストから強打条件をチェック
@@ -246,6 +246,64 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				">": return count > value
 				"==": return count == value
 				_: return false
+		
+		# === 密命用条件タイプ ===
+		
+		# 手札に全属性カードを持っているか（アセンブルカード用）
+		"has_all_element_cards":
+			var hand_cards = context.get("hand_cards", [])
+			var required_elements = ["fire", "water", "earth", "wind"]
+			var found_elements = []
+			
+			for card in hand_cards:
+				var element = card.get("element", "")
+				if element in required_elements and not element in found_elements:
+					found_elements.append(element)
+			
+			return found_elements.size() >= 4
+		
+		# 特定レベルの土地を指定数以上持っているか（フラットランド用）
+		"level_land_count":
+			var player_id = context.get("player_id", -1)
+			var board_system = context.get("board_system", null)
+			var required_level = condition.get("level", 2)
+			var required_count = condition.get("count", 5)
+			
+			if player_id == -1 or not board_system:
+				return false
+			
+			var count = 0
+			for i in range(20):
+				var tile = board_system.get_tile_data(i)
+				if tile and tile.tile_owner == player_id and tile.level == required_level:
+					count += 1
+			
+			return count >= required_count
+		
+		# 属性不一致の土地を指定数以上持っているか（ホームグラウンド用）
+		"mismatched_element_lands":
+			var player_id = context.get("player_id", -1)
+			var board_system = context.get("board_system", null)
+			var creature_manager = context.get("creature_manager", null)
+			var required_count = condition.get("count", 4)
+			
+			if player_id == -1 or not board_system or not creature_manager:
+				return false
+			
+			var mismatched_count = 0
+			for i in range(20):
+				var tile = board_system.get_tile_data(i)
+				if tile and tile.tile_owner == player_id:
+					if creature_manager.has_creature(i):
+						var creature_data = creature_manager.get_data(i)
+						var creature_element = creature_data.get("element", "")
+						var land_element = tile.tile_type
+						
+						# 属性が異なる、または無属性の場合も不一致とする
+						if creature_element != land_element or creature_element == "neutral":
+							mismatched_count += 1
+			
+			return mismatched_count >= required_count
 			
 		_:
 			push_warning("未実装の条件タイプ: " + cond_type)
@@ -269,6 +327,35 @@ func check_all_conditions(conditions: Array, context: Dictionary) -> bool:
 			return false
 	
 	return true
+
+# 密命条件のチェック（スペル用）
+func check_secret_mission(spell_card: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell_card.get("effect_parsed", {})
+	var keywords = effect_parsed.get("keywords", [])
+	
+	# 密命キーワードが存在しない場合は無条件成功
+	if not "密命" in keywords:
+		return {"success": true, "is_mission": false}
+	
+	# 密命の条件を取得
+	var keyword_conditions = effect_parsed.get("keyword_conditions", {})
+	var mission_data = keyword_conditions.get("密命", {})
+	
+	# 成功条件をチェック
+	var success_conditions = mission_data.get("success_conditions", [])
+	
+	# 条件が空の場合は無条件成功
+	if success_conditions.is_empty():
+		return {"success": true, "is_mission": true}
+	
+	# 全条件を満たすかチェック
+	var all_met = check_all_conditions(success_conditions, context)
+	
+	return {
+		"success": all_met,
+		"is_mission": true,
+		"failure_effect": mission_data.get("failure_effect", "return_to_deck")
+	}
 
 # 即死条件のチェック
 func check_instant_death(creature_data: Dictionary, battle_context: Dictionary) -> Dictionary:
