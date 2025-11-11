@@ -2,7 +2,7 @@
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **バージョン**: 2.7  
-**最終更新**: 2025年11月11日
+**最終更新**: 2025年11月12日
 
 ---
 
@@ -81,50 +81,31 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 
 ## スペルの特殊システム
 
-### 密命（Mission）システム ✅
+### 密命（Secret）システム ✅
 
-**概要**: 相手には真っ黒に表示され、条件を満たせば強力な効果、失敗時は代替効果が発動する特殊スペル。
+**概要**: 相手プレイヤーから見たときにカード内容が見えない（真っ黒表示）スペル。効果自体は通常スペルと同じ。
 
-**実装クラス**: `scripts/skills/skill_secret.gd` (SkillSecret)
+**実装場所**: `scripts/card.gd`（表示制御のみ）
+
+**重要**: 密命は単なる表示制御であり、効果の成功/失敗とは無関係。
 
 **アーキテクチャ**:
 ```
-SkillSecret (scripts/skills/)
-  ├─ check_mission() - 密命判定
-  ├─ build_mission_context() - コンテキスト構築
-  └─ log_mission_success/failure() - ログ出力
-
-ConditionChecker (scripts/skills/)
-  └─ check_secret_mission() - 実際の条件評価
-	  ├─ has_all_element_cards
-	  ├─ level_land_count
-	  └─ mismatched_element_lands
-
 Card.gd (scripts/)
-  └─ 表示制御のみ（真っ黒表示）
+  └─ _update_secret_display() - 表示制御
+	  ├─ is_secret フラグで判定
+	  ├─ viewing_player_id と owner_player_id を比較
+	  └─ 敵プレイヤーには真っ黒表示
 ```
 
 #### 🎴 密命カード表示（is_secret）
 
-**JSONでの定義**（キーワード能力方式）:
+**JSONでの定義**:
 ```json
 {
   "id": 2029,
   "is_secret": true,
   "effect_parsed": {
-	"keywords": ["密命"],
-	"keyword_conditions": {
-	  "密命": {
-		"success_conditions": [
-		  {
-			"condition_type": "level_land_count",
-			"level": 4,
-			"count": 1
-		  }
-		],
-		"failure_effect": "none"
-	  }
-	},
 	"target_type": "land",
 	"effects": [...]
   }
@@ -132,69 +113,35 @@ Card.gd (scripts/)
 ```
 
 **表示ルール**:
-- プレイヤー0（人間）: 通常表示（内容が見える）
-- プレイヤー1（CPU）: **真っ黒で見えない**
+- 所有プレイヤー: 通常表示（内容が見える）
+- 敵プレイヤー: **真っ黒で見えない**
 
 **実装**:
-- `SkillSecret`: 密命判定・条件チェック・失敗処理
-- `ConditionChecker`: 条件タイプの評価ロジック
-- `Card.gd`: 表示制御（`ColorRect`で真っ黒表示）
-- `SpellPhaseHandler`: 密命フロー統合
+- `Card.gd`: `_update_secret_display()`で表示制御
+- `ColorRect`で真っ黒表示を実現
+- `viewing_player_id`と`owner_player_id`を比較して判定
 
-**詳細ドキュメント**: [密命カード.md](../skills/密命カード.md)
+#### 🔄 復帰[ブック]効果
 
-#### 📋 密命用条件タイプ
+一部のスペルは条件を満たさない場合、カードがデッキに戻る「復帰[ブック]」効果を持つ。**これは密命とは無関係**。
 
-密命スペル専用の条件タイプ（`ConditionChecker`に実装済み）:
+**対象スペル**:
+| ID | 名前 | 条件 | 効果 | 条件不成立時 |
+|----|------|------|------|-------------|
+| 2085 | フラットランド | Lv2領地が5つ以上 | 全てレベル+1 | 復帰[ブック] |
+| 2096 | ホームグラウンド | 属性不一致の土地が4つ以上 | 4つを属性変更 | 復帰[ブック] |
 
-| condition_type | 説明 | パラメータ | 使用スペル | ドキュメント |
-|---------------|------|-----------|-----------|-------------|
-| `level_land_count` | 特定レベルの土地数判定 | `level`, `count` | フラットランド、サドンインパクト | S-4 |
-| `mismatched_element_lands` | 属性不一致土地数判定 | `count` | ホームグラウンド | S-5 |
-| `has_all_element_cards` | 全属性カード所持判定 | なし | アセンブルカード | 新規追加が必要 |
+**実装**: `SpellLand.return_spell_to_deck(player_id, spell_card)`
+- 手札から削除 → デッキのランダムな位置に挿入
+- `item_return`スキルと同じ方式
 
-**新しい条件タイプを追加する場合**:
-1. `ConditionChecker._evaluate_single_condition()`に実装
-2. `docs/design/spell_condition_patterns_catalog.txt`にS-X番号で追加
-3. この表を更新
-
-#### 📋 密命スペル一覧
-
-| ID | 名前 | 条件 | 成功効果 | 失敗効果 | 実装 |
-|----|------|------|---------|---------|------|
-| 2029 | サドンインパクト | レベル4領地 | レベル-1 | - | ✅ |
-| 2004 | アセンブルカード | 手札に火水風地 | G500 | カード2枚 | ⏳ |
-| 2085 | フラットランド | Lv2領地×5 | レベル+1 | 復帰[ブック] | ⏳ |
-| 2096 | ホームグラウンド | 属性違い×4 | 属性変化 | 復帰[ブック] | ⏳ |
-
-**復帰[ブック]**: 密命失敗時にスペルカードをデッキのランダムな位置に戻す機能
-
-**実装メソッド**: `SpellLand.return_spell_to_deck(player_id, spell_card)`
-
-**処理内容**:
-1. 手札からカードを削除
-2. 捨て札からも削除（既に入っている場合）
-3. デッキのランダムな位置に挿入（`item_return`スキルと同じ方式）
-
-**使用例**:
-```gdscript
-// SpellPhaseHandler.gd - 密命失敗時
-if changed_count < required_count:
-	if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
-		mission_failed = true
-		print("[密命失敗] スペルカードをデッキに戻しました")
-```
-
-**注意事項**:
-- `mission_failed`フラグをtrueにすることで、カードが捨て札に送られるのを防ぐ
-- デッキが空の場合は単純に追加、デッキがある場合はランダムな位置に挿入
-- 詳細は[領地変更.md](./spells/領地変更.md)の「return_spell_to_deck」セクション参照
-
-**使用時ログ**:
-```gdscript
-// SpellPhaseHandler.gd
-if spell_card.get("is_secret", false):
-	print("[密命発動] プレイヤー%d が密命カード「%s」を使用" % [player_id, name])
+**JSON定義**:
+```json
+{
+  "effect_type": "conditional_level_change",
+  "return_to_deck_on_fail": true,
+  "required_count": 5
+}
 ```
 
 ---
@@ -455,11 +402,11 @@ if hand_count >= required_count:
 | 2025/11/11 | 2.3 | 🔧 SpellPhaseHandlerリファクタリング完了 - 不要なラッパーメソッド9個を削除し、直接SpellLandを呼び出すように変更（840行→755行、-10%削減） |
 | 2025/11/11 | 2.4 | 📝 復帰[ブック]の使い方を追記 - `SpellLand.return_spell_to_deck()`メソッドの詳細な説明と使用例を追加 |
 | 2025/11/11 | 2.5 | 🔧 開発者向け拡張ルール追加 - effect_type/target_type/condition_type追加時の必須更新箇所を明記、保守性向上 |
-| 2025/11/11 | 2.6 | ✨ 密命キーワード能力化完了 - SkillSecretクラス作成、ConditionCheckerに密命条件追加、キーワード方式のJSON対応 |
+| 2025/11/12 | 2.7 | 🔧 密命システム修正完了 - 密命を表示制御のみに修正、復帰[ブック]を通常スペル効果として分離、SkillSecretクラス削除 |
 
 ---
 
-**最終更新**: 2025年11月11日（v2.6 - 密命キーワード能力化完了）
+**最終更新**: 2025年11月12日（v2.7 - 密命システム修正完了）
 
 ---
 

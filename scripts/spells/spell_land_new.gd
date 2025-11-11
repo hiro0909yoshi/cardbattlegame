@@ -39,10 +39,6 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		push_error("SpellLand: 無効な属性 '%s'" % new_element)
 		return false
 	
-	# 現在の属性を取得
-	var tile_info = board_system_ref.get_tile_info(tile_index)
-	var old_element = tile_info.get("type", "unknown")
-	
 	# BoardSystem3Dのchange_tile_terrainメソッドを使用
 	var success = board_system_ref.change_tile_terrain(tile_index, new_element)
 	
@@ -280,9 +276,6 @@ func find_mismatched_element_lands(player_id: int) -> Array:
 		return []
 	
 	var mismatched_tiles = []
-	var total_owned_tiles = 0
-	var tiles_with_creatures = 0
-	
 	
 	for tile_index in range(20):
 		var tile = board_system_ref.tile_nodes[tile_index]
@@ -291,12 +284,8 @@ func find_mismatched_element_lands(player_id: int) -> Array:
 		if tile.owner_id != player_id:
 			continue
 		
-		total_owned_tiles += 1
-		
 		if not creature_manager_ref.has_creature(tile_index):
 			continue
-		
-		tiles_with_creatures += 1
 		
 		# クリーチャーの属性を取得
 		var creature_data = creature_manager_ref.get_data_ref(tile_index)
@@ -331,7 +320,7 @@ func align_lands_to_creature_elements(tile_indices: Array) -> int:
 	
 	return changed_count
 
-## スペルカードをデッキに戻す（失敗時の復帰[ブック]）
+## スペルカードをデッキに戻す（復帰[ブック]）
 func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	if not card_system_ref:
 		push_error("SpellLand: CardSystemの参照が設定されていません")
@@ -341,7 +330,7 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	if card_id < 0:
 		return false
 	
-	print("[密命失敗] スペルカードID %d をデッキに戻します" % card_id)
+	print("[復帰[ブック]] スペルカードID %d をデッキに戻します" % card_id)
 	
 	# 手札から削除（既に使用済みとしてマークされている可能性がある）
 	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
@@ -350,7 +339,7 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 			# player_hands[player_id]["data"]から直接削除
 			if card_system_ref.player_hands.has(player_id):
 				card_system_ref.player_hands[player_id]["data"].remove_at(i)
-				print("[密命失敗] 手札からカードID %d を削除" % card_id)
+				print("[復帰[ブック]] 手札からカードID %d を削除" % card_id)
 			break
 	
 	# 捨て札から削除（既に捨て札に入っている場合）
@@ -367,12 +356,12 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 	if deck.size() == 0:
 		# デッキが空の場合は単純に追加
 		deck.append(card_id)
-		print("[密命失敗] デッキ（空）に追加")
+		print("[復帰[ブック]] デッキ（空）に追加")
 	else:
 		# ランダムな位置に挿入
 		var insert_pos = randi() % (deck.size() + 1)
 		deck.insert(insert_pos, card_id)
-		print("[密命失敗] デッキの位置%dに挿入（全%d枚）" % [insert_pos, deck.size()])
+		print("[復帰[ブック]] デッキの位置%dに挿入（全%d枚）" % [insert_pos, deck.size()])
 	return true
 
 ## 検証：タイルインデックス
@@ -386,3 +375,173 @@ func _validate_tile_index(tile_index: int) -> bool:
 func _validate_element(element: String) -> bool:
 	var valid_elements = ["fire", "water", "earth", "wind", "neutral"]
 	return element in valid_elements
+
+## ========================================
+## SpellPhaseHandler統合用：統一効果適用メソッド
+## ========================================
+
+## 土地効果を適用（SpellPhaseHandlerから呼ばれる）
+func apply_land_effect(effect: Dictionary, target_data: Dictionary, player_id: int) -> bool:
+	var effect_type = effect.get("effect_type", "")
+	
+	# 条件付きスペルの場合、player_idをtarget_dataに追加
+	var land_target_data = target_data.duplicate()
+	if effect_type in ["conditional_level_change", "align_mismatched_lands"]:
+		land_target_data["player_id"] = player_id
+	
+	match effect_type:
+		"change_element":
+			return _apply_effect_change_element(effect, land_target_data)
+		
+		"change_level":
+			return _apply_effect_change_level(effect, land_target_data)
+		
+		"abandon_land":
+			return _apply_effect_abandon_land(effect, land_target_data)
+		
+		"destroy_creature":
+			return _apply_effect_destroy_creature(effect, land_target_data)
+		
+		"change_element_bidirectional":
+			return _apply_effect_change_element_bidirectional(effect, land_target_data)
+		
+		"change_element_to_dominant":
+			return _apply_effect_change_element_to_dominant(effect, land_target_data)
+		
+		"find_and_change_highest_level":
+			return _apply_effect_find_and_change_highest_level(effect, land_target_data)
+		
+		"conditional_level_change":
+			return _apply_effect_conditional_level_change(effect, land_target_data)
+		
+		"align_mismatched_lands":
+			return _apply_effect_align_mismatched_lands(effect, land_target_data)
+		
+		_:
+			push_error("SpellLand.apply_land_effect: 未対応のeffect_type '%s'" % effect_type)
+			return false
+
+## ========================================
+## 内部：effect_type別の適用メソッド
+## （既存メソッドを呼び出すラッパー）
+## ========================================
+
+func _apply_effect_change_element(effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	var new_element = effect.get("element", "")
+	
+	if tile_index >= 0 and not new_element.is_empty():
+		return change_element(tile_index, new_element)
+	return false
+
+func _apply_effect_change_level(effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	var level_change = effect.get("value", 0)
+	
+	if tile_index >= 0:
+		return change_level(tile_index, level_change)
+	return false
+
+func _apply_effect_abandon_land(effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	var return_rate = effect.get("return_rate", 0.7)
+	
+	if tile_index >= 0:
+		abandon_land(tile_index, return_rate)
+		return true
+	return false
+
+func _apply_effect_destroy_creature(_effect: Dictionary, _target_data: Dictionary) -> bool:
+	var tile_index = _target_data.get("tile_index", -1)
+	
+	if tile_index >= 0:
+		return destroy_creature(tile_index)
+	return false
+
+func _apply_effect_change_element_bidirectional(effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	var element_a = effect.get("element_a", "")
+	var element_b = effect.get("element_b", "")
+	
+	if tile_index >= 0 and not element_a.is_empty() and not element_b.is_empty():
+		return change_element_bidirectional(tile_index, element_a, element_b)
+	return false
+
+func _apply_effect_change_element_to_dominant(_effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	
+	if tile_index >= 0 and board_system_ref and board_system_ref.tile_nodes.has(tile_index):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		var owner_id = tile.owner_id
+		
+		if owner_id >= 0:
+			var dominant_element = get_player_dominant_element(owner_id)
+			var success = change_element(tile_index, dominant_element)
+			if success:
+				print("[インフルエンス] タイル%d: プレイヤー%dの最多属性'%s'に変更" % [tile_index, owner_id, dominant_element])
+			return success
+	return false
+
+func _apply_effect_find_and_change_highest_level(effect: Dictionary, target_data: Dictionary) -> bool:
+	var target_player_id = target_data.get("player_id", -1)
+	
+	if target_player_id >= 0:
+		var highest_tile = find_highest_level_land(target_player_id)
+		if highest_tile >= 0:
+			var level_change = effect.get("value", -1)
+			var success = change_level(highest_tile, level_change)
+			if success:
+				print("[サブサイド] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [target_player_id, highest_tile])
+			return success
+	return false
+
+func _apply_effect_conditional_level_change(effect: Dictionary, _target_data: Dictionary) -> bool:
+	var required_level = effect.get("required_level", 2)
+	var required_count = effect.get("required_count", 5)
+	var level_change = effect.get("value", 1)
+	var player_id = _target_data.get("player_id", -1)
+	
+	if player_id < 0:
+		push_error("SpellLand: conditional_level_changeにplayer_idが必要です")
+		return false
+	
+	var condition = {"required_level": required_level}
+	var matching_tiles = []
+	
+	# 条件を満たす土地を数える
+	for tile_index in range(20):
+		var tile = board_system_ref.tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.level == required_level:
+			matching_tiles.append(tile_index)
+	
+	# 条件判定（復帰[ブック]判定）
+	if matching_tiles.size() < required_count:
+		print("[条件不成立] レベル%dの土地が%d個（必要: %d個以上）" % [required_level, matching_tiles.size(), required_count])
+		return false  # 失敗 = デッキに戻る
+	
+	# 条件を満たす場合、全ての該当土地をレベルアップ
+	var changed_count = change_level_multiple_with_condition(player_id, condition, level_change)
+	print("[条件成立] %d個の土地をレベル%d→%d" % [changed_count, required_level, required_level + level_change])
+	return true
+
+func _apply_effect_align_mismatched_lands(effect: Dictionary, _target_data: Dictionary) -> bool:
+	var required_count = effect.get("required_count", 4)
+	var player_id = _target_data.get("player_id", -1)
+	
+	if player_id < 0:
+		push_error("SpellLand: align_mismatched_landsにplayer_idが必要です")
+		return false
+	
+	var mismatched_tiles = find_mismatched_element_lands(player_id)
+	
+	# 条件判定（復帰[ブック]判定）
+	if mismatched_tiles.size() < required_count:
+		print("[条件不成立] 属性不一致の土地が%d個（必要: %d個以上）" % [mismatched_tiles.size(), required_count])
+		return false  # 失敗 = デッキに戻る
+	
+	# 条件を満たす場合、指定数の土地を属性変更
+	var tiles_to_change = mismatched_tiles.slice(0, required_count - 1)
+	var changed_count = align_lands_to_creature_elements(tiles_to_change)
+	
+	print("[条件成立] %d個の土地をクリーチャーの属性に変更" % changed_count)
+	return true

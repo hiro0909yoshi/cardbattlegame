@@ -454,9 +454,9 @@ func _input(event):
 # ========================================
 
 # カードデータを設定（所有者情報も含む）
-func set_card_data_with_owner(data: Dictionary, owner: int):
+func set_card_data_with_owner(data: Dictionary, owner_id: int):
 	card_data = data
-	owner_player_id = owner
+	owner_player_id = owner_id
 	_update_secret_display()
 
 # 表示を見ているプレイヤーを設定

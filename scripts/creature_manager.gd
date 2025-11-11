@@ -66,8 +66,8 @@ func clear_data(tile_index: int):
 func _remove_creature_internal(tile_index: int):
 	if creatures.has(tile_index):
 		if debug_mode:
-			var name = creatures[tile_index].get("name", "???")
-			print("[CreatureManager] データ削除: tile=", tile_index, " name=", name)
+			var creature_name = creatures[tile_index].get("name", "???")
+			print("[CreatureManager] データ削除: tile=", tile_index, " name=", creature_name)
 		creatures.erase(tile_index)
 	
 	if visual_nodes.has(tile_index):

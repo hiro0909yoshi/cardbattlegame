@@ -21,7 +21,7 @@ var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
-var mission_failed: bool = false  # 密命失敗フラグ
+var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立でデッキに戻る）
 
 ## デバッグ設定
 ## 密命カードのテストを一時的に無効化
@@ -482,51 +482,10 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	
 	print("[execute_spell_effect] カード名='%s', ID=%d" % [spell_card.get("name", "???"), spell_card.get("id", -1)])
 	
-	# 密命失敗フラグをリセット
-	mission_failed = false
+	# 復帰[ブック]フラグをリセット
+	spell_failed = false
 	
-	# 密命判定（SkillSecretクラスを使用）
-	var mission_context = SkillSecret.build_mission_context(
-		current_player_id,
-		board_system,
-		creature_manager,
-		card_system,
-		target_data
-	)
-	
-	var mission_result = SkillSecret.check_mission(spell_card, mission_context)
-	var is_mission = mission_result.get("is_mission", false)
-	var mission_success = mission_result.get("success", true)
-	
-	# デバッグモード: 密命カードを通常カードとして扱う
-	if debug_disable_secret_cards and is_mission:
-		print("[デバッグ] 密命カードを通常カードとして実行します")
-		is_mission = false
-		mission_success = true
-	
-	# 密命ログ出力
-	if is_mission:
-		if mission_success:
-			SkillSecret.log_mission_success(current_player_id, spell_card)
-		else:
-			SkillSecret.log_mission_failure(current_player_id, spell_card)
-			mission_failed = true
-			
-			# 失敗効果の実行（復帰[ブック]等）
-			var failure_effect = mission_result.get("failure_effect", "return_to_deck")
-			if failure_effect == "return_to_deck":
-				if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, spell_card):
-					print("[密命失敗] スペルカードをデッキに戻しました")
-			
-			# 効果を実行せずに終了
-			spell_used.emit(spell_card)
-			await get_tree().create_timer(0.5).timeout
-			_return_camera_to_player()
-			await get_tree().create_timer(0.5).timeout
-			complete_spell_phase()
-			return
-	
-	# 通常スペルまたは密命成功時は効果を実行
+	# スペル効果を実行
 	
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
@@ -536,16 +495,16 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	for effect in effects:
 		_apply_single_effect(effect, target_data)
 	
-	# カードを捨て札に（密命失敗時はスキップ）
-	if card_system and not mission_failed:
+	# カードを捨て札に（復帰[ブック]時はスキップ）
+	if card_system and not spell_failed:
 		# 手札からカードのインデックスを探す
 		var hand = card_system.get_all_cards_for_player(current_player_id)
 		for i in range(hand.size()):
 			if hand[i].get("id", -1) == spell_card.get("id", -2):
 				card_system.discard_card(current_player_id, i, "use")
 				break
-	elif mission_failed:
-		print("[密命失敗] カードは捨て札に送られず、デッキに戻されました")
+	elif spell_failed:
+		print("[復帰[ブック]] カードは捨て札に送られず、デッキに戻されました")
 	
 	# 効果発動完了
 	spell_used.emit(spell_card)
@@ -563,7 +522,6 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 ## 単一の効果を適用
 func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
-	var value = effect.get("value", 0)
 	
 	print("[_apply_single_effect] effect_type='%s'" % effect_type)
 	
@@ -576,96 +534,18 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 魔力を奪う
 			_apply_drain_magic_effect(effect, target_data)
 		
-		"change_element":
-			# 土地属性変更（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			var new_element = effect.get("element", "")
-			if tile_index >= 0 and not new_element.is_empty():
-				if game_flow_manager and game_flow_manager.spell_land:
-					game_flow_manager.spell_land.change_element(tile_index, new_element)
-		
-		"change_level":
-			# 土地レベル変更（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			var level_change = effect.get("value", 0)
-			if tile_index >= 0:
-				if game_flow_manager and game_flow_manager.spell_land:
-					game_flow_manager.spell_land.change_level(tile_index, level_change)
-		
-		"abandon_land":
-			# 土地放棄（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			var return_rate = effect.get("return_rate", 0.7)
-			if tile_index >= 0:
-				if game_flow_manager and game_flow_manager.spell_land:
-					game_flow_manager.spell_land.abandon_land(tile_index, return_rate)
-		
-		"destroy_creature":
-			# クリーチャー破壊（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			if tile_index >= 0:
-				if game_flow_manager and game_flow_manager.spell_land:
-					game_flow_manager.spell_land.destroy_creature(tile_index)
-		
-		"change_element_bidirectional":
-			# 相互属性変更（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			var element_a = effect.get("element_a", "")
-			var element_b = effect.get("element_b", "")
-			if tile_index >= 0 and not element_a.is_empty() and not element_b.is_empty():
-				if game_flow_manager and game_flow_manager.spell_land:
-					game_flow_manager.spell_land.change_element_bidirectional(tile_index, element_a, element_b)
-		
-		"change_element_to_dominant":
-			# 最多属性への変更（インフルエンス）（直接SpellLandを呼ぶ）
-			var tile_index = target_data.get("tile_index", -1)
-			if tile_index >= 0 and board_system and board_system.tile_nodes.has(tile_index):
-				var tile = board_system.tile_nodes[tile_index]
-				var owner_id = tile.owner_id
-				if owner_id >= 0 and game_flow_manager and game_flow_manager.spell_land:
-					var dominant_element = game_flow_manager.spell_land.get_player_dominant_element(owner_id)
-					game_flow_manager.spell_land.change_element(tile_index, dominant_element)
-					print("[インフルエンス] タイル%d: プレイヤー%dの最多属性'%s'に変更" % [tile_index, owner_id, dominant_element])
-		
-		"find_and_change_highest_level":
-			# 最高レベル領地のレベル変更（サブサイド）（直接SpellLandを呼ぶ）
-			var target_player_id = target_data.get("player_id", -1)
-			if target_player_id >= 0 and game_flow_manager and game_flow_manager.spell_land:
-				var highest_tile = game_flow_manager.spell_land.find_highest_level_land(target_player_id)
-				if highest_tile >= 0:
-					var level_change = effect.get("value", -1)
-					game_flow_manager.spell_land.change_level(highest_tile, level_change)
-					print("[サブサイド] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [target_player_id, highest_tile])
-		
-		"mission_level_up_multiple":
-			# 密命：複数レベルアップ（フラットランド）（直接SpellLandを呼ぶ）
-			var required_level = effect.get("required_level", 2)
-			var required_count = effect.get("required_count", 5)
-			var level_change = effect.get("value", 1)
+		"change_element", "change_level", "abandon_land", "destroy_creature", \
+		"change_element_bidirectional", "change_element_to_dominant", \
+		"find_and_change_highest_level", "conditional_level_change", \
+		"align_mismatched_lands":
+			# 土地操作系効果はSpellLandに委譲
 			if game_flow_manager and game_flow_manager.spell_land:
-				print("[フラットランド] 必要レベル=%d, 必要数=%d, レベル変化=%d" % [required_level, required_count, level_change])
-				var condition = {"required_level": required_level}
-				var changed_count = game_flow_manager.spell_land.change_level_multiple_with_condition(
-					current_player_id, condition, level_change
-				)
-				if changed_count >= required_count:
-					print("[フラットランド成功] %d個の土地をレベルアップ" % changed_count)
-				else:
-					print("[フラットランド失敗] %d個しか条件を満たさなかった（必要: %d）" % [changed_count, required_count])
+				var success = game_flow_manager.spell_land.apply_land_effect(effect, target_data, current_player_id)
+				
+				# 復帰[ブック]判定（条件不成立の場合）
+				if not success and effect.get("return_to_deck_on_fail", false):
 					if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
-						mission_failed = true
-		
-		"mission_align_mismatched_lands":
-			# 密命：属性不一致土地の整合（ホームグラウンド）（直接SpellLandを呼ぶ）
-			var required_count = effect.get("required_count", 4)
-			if game_flow_manager and game_flow_manager.spell_land:
-				var mismatched_tiles = game_flow_manager.spell_land.find_mismatched_element_lands(current_player_id)
-				if mismatched_tiles.size() >= required_count:
-					var tiles_to_change = mismatched_tiles.slice(0, required_count)
-					game_flow_manager.spell_land.align_lands_to_creature_elements(tiles_to_change)
-				else:
-					if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
-						mission_failed = true
+						spell_failed = true
 
 ## クリーチャーダメージ効果
 func _apply_damage_effect(effect: Dictionary, target_data: Dictionary):
