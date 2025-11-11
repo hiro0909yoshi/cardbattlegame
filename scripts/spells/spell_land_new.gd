@@ -216,7 +216,7 @@ func change_level_multiple_with_condition(player_id: int, condition: Dictionary,
 	
 	var changed_count = 0
 	
-	for tile_index in range(20):
+	for tile_index in board_system_ref.tile_nodes.keys():
 		var tile = board_system_ref.tile_nodes[tile_index]
 		
 		if tile.owner_id != player_id:
@@ -243,7 +243,7 @@ func find_highest_level_land(player_id: int) -> int:
 	var highest_level = 0
 	var highest_tile = -1
 	
-	for tile_index in range(20):
+	for tile_index in board_system_ref.tile_nodes.keys():
 		var tile = board_system_ref.tile_nodes[tile_index]
 		if tile.owner_id == player_id:
 			if tile.level > highest_level:
@@ -260,7 +260,7 @@ func find_lowest_level_land(player_id: int) -> int:
 	var lowest_level = 999
 	var lowest_tile = -1
 	
-	for tile_index in range(20):
+	for tile_index in board_system_ref.tile_nodes.keys():
 		var tile = board_system_ref.tile_nodes[tile_index]
 		if tile.owner_id == player_id:
 			if tile.level < lowest_level:
@@ -277,7 +277,7 @@ func find_mismatched_element_lands(player_id: int) -> Array:
 	
 	var mismatched_tiles = []
 	
-	for tile_index in range(20):
+	for tile_index in board_system_ref.tile_nodes.keys():
 		var tile = board_system_ref.tile_nodes[tile_index]
 		
 		# 自分の土地でクリーチャーがいる場合のみ
@@ -509,7 +509,7 @@ func _apply_effect_conditional_level_change(effect: Dictionary, _target_data: Di
 	var matching_tiles = []
 	
 	# 条件を満たす土地を数える
-	for tile_index in range(20):
+	for tile_index in board_system_ref.tile_nodes.keys():
 		var tile = board_system_ref.tile_nodes[tile_index]
 		if tile.owner_id == player_id and tile.level == required_level:
 			matching_tiles.append(tile_index)

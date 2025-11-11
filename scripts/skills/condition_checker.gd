@@ -273,7 +273,7 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				return false
 			
 			var count = 0
-			for i in range(20):
+			for i in board_system.tile_nodes.keys():
 				var tile = board_system.get_tile_data(i)
 				if tile and tile.tile_owner == player_id and tile.level == required_level:
 					count += 1
@@ -291,7 +291,7 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				return false
 			
 			var mismatched_count = 0
-			for i in range(20):
+			for i in board_system.tile_nodes.keys():
 				var tile = board_system.get_tile_data(i)
 				if tile and tile.tile_owner == player_id:
 					if creature_manager.has_creature(i):
