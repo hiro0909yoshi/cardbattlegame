@@ -691,7 +691,20 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象セプターに呪い\"蓄魔歩行\"(ダイスを2回～4にし、G50を得る)"
+	  "effect": "対象セプターに呪い\"蓄魔歩行\"(ダイスを2回,2～4にし、G50を得る)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_range_magic",
+			"min": 2,
+			"max": 4,
+			"magic": 50,
+			"duration": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2052,

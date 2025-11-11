@@ -251,10 +251,23 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 							})
 		
 		"player":
-			# 敵プレイヤーを探す
+			# プレイヤーを対象とする
 			if handler.player_system:
+				var target_filter = target_info.get("target_filter", "any")  # "own", "enemy", "any"
+				
 				for player in handler.player_system.players:
-					if player.id != handler.current_player_id:
+					var is_current = (player.id == handler.current_player_id)
+					
+					# フィルター判定
+					var matches = false
+					if target_filter == "own":
+						matches = is_current
+					elif target_filter == "enemy":
+						matches = not is_current
+					elif target_filter == "any":
+						matches = true
+					
+					if matches:
 						targets.append({
 							"type": "player",
 							"player_id": player.id,

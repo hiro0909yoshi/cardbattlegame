@@ -409,6 +409,26 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 魔力を奪う
 			_apply_drain_magic_effect(effect, target_data)
 		
+		"dice_fixed":
+			# ダイス固定（ホーリーワード6など）
+			if game_flow_manager and game_flow_manager.spell_dice:
+				game_flow_manager.spell_dice.apply_dice_fixed_effect(effect, target_data, current_player_id)
+		
+		"dice_range":
+			# ダイス範囲指定（ヘイスト）
+			if game_flow_manager and game_flow_manager.spell_dice:
+				game_flow_manager.spell_dice.apply_dice_range_effect(effect, target_data, current_player_id)
+		
+		"dice_multi":
+			# 複数ダイスロール（フライ）
+			if game_flow_manager and game_flow_manager.spell_dice:
+				game_flow_manager.spell_dice.apply_dice_multi_effect(effect, target_data, current_player_id)
+		
+		"dice_range_magic":
+			# 範囲指定 + 魔力獲得（チャージステップ）
+			if game_flow_manager and game_flow_manager.spell_dice:
+				game_flow_manager.spell_dice.apply_dice_range_magic_effect(effect, target_data, current_player_id)
+		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \
@@ -484,12 +504,6 @@ func _apply_drain_magic_effect(effect: Dictionary, target_data: Dictionary):
 	# 魔力を移動
 	player_system.add_magic(target_player_id, -drain_amount)
 	player_system.add_magic(current_player_id, drain_amount)
-
-
-
-
-
-
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():

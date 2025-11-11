@@ -186,7 +186,17 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "使用者の次のダイスを3つにする"
+	  "effect": "使用者の次のダイスを3つにする",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "dice_multi",
+			"count": 3,
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2081,
@@ -320,7 +330,19 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)"
+	  "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_range",
+			"min": 6,
+			"max": 8,
+			"duration": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2092,
@@ -408,7 +430,18 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)"
+	  "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 1,
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2099,
@@ -419,7 +452,18 @@
 	  "cost": {
 		"mp": 10
 	  },
-	  "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)"
+	  "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 3,
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2100,
@@ -430,7 +474,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)"
+	  "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 6,
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2101,
@@ -441,7 +496,18 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)"
+	  "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 8,
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2102,

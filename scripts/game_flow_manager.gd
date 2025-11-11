@@ -47,6 +47,8 @@ var special_tile_system: SpecialTileSystem
 var spell_draw: SpellDraw
 var spell_magic: SpellMagic
 var spell_land: SpellLand
+var spell_curse: SpellCurse
+var spell_dice: SpellDice
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -141,6 +143,16 @@ func _setup_spell_systems(board_system):
 			spell_land = SpellLand.new()
 			spell_land.setup(board_system, creature_manager, player_system, card_system)
 			print("[SpellLand] 初期化完了")
+			
+			# SpellCurseの初期化
+			spell_curse = SpellCurse.new()
+			spell_curse.setup(board_system, creature_manager, player_system, self)
+			print("[SpellCurse] 初期化完了")
+			
+			# SpellDiceの初期化
+			spell_dice = SpellDice.new()
+			spell_dice.setup(player_system, spell_curse)
+			print("[SpellDice] 初期化完了")
 		else:
 			push_error("GameFlowManager: CreatureManagerが見つかりません")
 	else:
@@ -208,12 +220,50 @@ func roll_dice():
 	ui_manager.set_dice_button_enabled(false)
 	change_phase(GamePhase.MOVING)
 	
-	var dice_value = player_system.roll_dice()
-	var modified_dice = skill_system.modify_dice_roll(dice_value, player_system.current_player_index)
+	# 複数ダイスロールの判定
+	var total_dice = 0
+	var roll_count = 1
 	
-	emit_signal("dice_rolled", modified_dice)
+	if spell_dice and spell_dice.needs_multi_roll(player_system.current_player_index):
+		roll_count = spell_dice.get_multi_roll_count(player_system.current_player_index)
+		print("[複数ダイス] ", roll_count, "回振ります")
 	
-	await get_tree().create_timer(1.0).timeout
+	# ダイスを指定回数振る
+	for i in range(roll_count):
+		var dice_value = player_system.roll_dice()
+		
+		# 呪いによるダイス変更を適用（dice_multi以外）
+		if spell_dice:
+			dice_value = spell_dice.get_modified_dice_value(player_system.current_player_index, dice_value)
+		
+		var modified = skill_system.modify_dice_roll(dice_value, player_system.current_player_index)
+		total_dice += modified
+		
+		# 各ダイスの結果を表示
+		if roll_count > 1:
+			print("[ダイス", i + 1, "/", roll_count, "] ", modified)
+			emit_signal("dice_rolled", modified)
+			await get_tree().create_timer(0.8).timeout
+		else:
+			# 通常の1回のみのダイス
+			emit_signal("dice_rolled", modified)
+	
+	var modified_dice = total_dice
+	
+	# ダイスロール後の魔力付与（チャージステップなど）
+	if spell_dice:
+		spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
+		if spell_dice.should_grant_magic(player_system.current_player_index):
+			await get_tree().create_timer(1.0).timeout
+	
+	# 複数ダイスの場合は合計を表示
+	if roll_count > 1:
+		print("[ダイス合計] ", modified_dice)
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "合計: " + str(modified_dice) + "マス移動"
+		await get_tree().create_timer(1.0).timeout
+	else:
+		await get_tree().create_timer(1.0).timeout
 	
 	var current_player = player_system.get_current_player()
 	
@@ -427,6 +477,10 @@ func end_turn():
 	
 	change_phase(GamePhase.END_TURN)
 	skill_system.end_turn_cleanup()
+	
+	# 現在のプレイヤーの呪いのduration更新
+	if spell_curse:
+		spell_curse.update_player_curse(player_system.current_player_index)
 	
 	# プレイヤー切り替え処理（3D専用）
 	if board_system_3d:

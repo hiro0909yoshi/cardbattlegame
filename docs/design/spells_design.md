@@ -34,18 +34,26 @@ GameFlowManager
   ├─ spell_draw: SpellDraw          # カードドロー ✅
   ├─ spell_magic: SpellMagic        # 魔力増減 ✅
   ├─ spell_land: SpellLand          # 土地操作 ✅
-  ├─ spell_dice: SpellDice          # ダイス操作（未実装）
+  ├─ spell_dice: SpellDice          # ダイス操作 ✅
+  ├─ spell_curse: SpellCurse        # 呪い管理 ⏳
   └─ spell_hand: SpellHand          # 手札操作（未実装）
 ```
 
 ### 初期化の依存関係
 
 | スペルシステム | 必要な参照 | 実装状況 |
-|---------------|-----------|---------|
+|## 実装済みスペル効果一覧
+
+### 🔶 実装中
+
+| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
+|-------|-----------------|------------|----------------|
+| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |---|-----------|---------|
 | SpellDraw | CardSystem | ✅ |
 | SpellMagic | PlayerSystem | ✅ |
 | SpellLand | BoardSystem3D, CreatureManager, PlayerSystem | ✅ |
-| SpellDice | PlayerSystem | ⏳ |
+| SpellDice | PlayerSystem, SpellCurse | ✅ |
+| SpellCurse | BoardSystem3D, CreatureManager, PlayerSystem, GameFlowManager | ⏳ |
 | SpellHand | CardSystem, PlayerSystem | ⏳ |
 
 **初期化順序**:
@@ -58,12 +66,17 @@ GameFlowManager
 scripts/spells/              # スペル効果モジュール
   ├── spell_draw.gd         # ドロー処理 ✅
   ├── spell_magic.gd        # 魔力増減 ✅
-  └── spell_land_new.gd     # 土地操作 ✅
+  ├── spell_land_new.gd     # 土地操作 ✅
+  ├── spell_dice.gd         # ダイス操作 ✅
+  └── spell_curse.gd        # 呪い管理 ⏳
 
 docs/design/spells/          # 個別スペル効果のドキュメント
   ├── カードドロー.md       # ドロー処理の詳細 ✅
   ├── 魔力増減.md          # 魔力増減の詳細 ✅
-  └── 領地変更.md          # 土地操作の詳細 ✅
+  ├── 領地変更.md          # 土地操作の詳細 ✅
+  ├── ダイス操作.md        # ダイス操作の詳細 ✅
+  ├── ステータス増減.md    # ステータス増減の詳細 ⏳
+  └── 呪い効果.md          # 呪いシステム全体の詳細 ⏳
 ```
 
 ---
@@ -77,7 +90,16 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | **カードドロー** | [spell_draw.gd](../../scripts/spells/spell_draw.gd) | 15個 | [カードドロー.md](./spells/カードドロー.md) |
 | **魔力増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [魔力増減.md](./spells/魔力増減.md) |
 | **土地操作** | [spell_land_new.gd](../../scripts/spells/spell_land_new.gd) | 11個 | [領地変更.md](./spells/領地変更.md) |
+| **ダイス操作** | [spell_dice.gd](../../scripts/spells/spell_dice.gd) | 7個 | [ダイス操作.md](./spells/ダイス操作.md) |
 | **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
+
+### 🔶 実装中
+
+| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
+|-------|-----------------|------------|----------------|
+| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) ||## 実装済みスペル効果一覧
+　
+ーーー
 
 ## スペルの特殊システム
 
@@ -127,7 +149,23 @@ Card.gd (scripts/)
 
 **対象スペル**:
 | ID | 名前 | 条件 | 効果 | 条件不成立時 |
-|----|------|------|------|-------------|
+|----|------|------|------|## 実装済みスペル効果一覧
+
+### 🔹 完全実装済み
+
+| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
+|-------|-----------------|------------|----------------|
+| **カードドロー** | [spell_draw.gd](../../scripts/spells/spell_draw.gd) | 15個 | [カードドロー.md](./spells/カードドロー.md) |
+| **魔力増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [魔力増減.md](./spells/魔力増減.md) |
+| **土地操作** | [spell_land_new.gd](../../scripts/spells/spell_land_new.gd) | 11個 | [領地変更.md](./spells/領地変更.md) |
+| **ダイス操作** | [spell_dice.gd](../../scripts/spells/spell_dice.gd) | 7個 | [ダイス操作.md](./spells/ダイス操作.md) |
+| **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
+
+### 🔶 実装中
+
+| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
+|-------|-----------------|------------|----------------|
+| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |-|
 | 2085 | フラットランド | Lv2領地が5つ以上 | 全てレベル+1 | 復帰[ブック] |
 | 2096 | ホームグラウンド | 属性不一致の土地が4つ以上 | 4つを属性変更 | 復帰[ブック] |
 
@@ -155,7 +193,6 @@ Card.gd (scripts/)
 | 対象 | 消滅条件 | 例 |
 |------|---------|-----|
 | クリーチャー | 移動・交換・撃破・ターン経過・上書き | 不屈(5R)、戦闘行動不可 |
-| 土地 | 所有者変更・ターン経過・上書き | 魔力結界、通行料1.5倍 |
 | プレイヤー | ターン経過・上書き | 防魔(5R)、通行料無効 |
 | 世界呪 | 上書き・消滅スペル | コスト上昇(6R) |
 
@@ -246,16 +283,16 @@ Card.gd (scripts/)
 - [x] ID 2029「サドンインパクト」実装完了
 
 ### Phase 4: SpellEffectSystem実装 ⏳
-- [ ] `scripts/spell_effect_system.gd`作成
-- [ ] 呪い管理システム（tile/player/world）
-- [ ] ターン経過による呪い削除処理
+- [x] `scripts/spell_curse.gd`作成
+- [x] 呪い管理システム（tile/player/world）
+- [x] ターン経過による呪い削除処理
 - [ ] 30個の特殊能力付与スペル実装
 
 ### Phase 5: SpellDice実装 ⏳
-- [ ] `scripts/spells/spell_dice.gd`作成
-- [ ] ダイス固定値メソッド
-- [ ] ダイス範囲指定メソッド
-- [ ] 10個のダイス操作スペル実装
+- [x] `scripts/spells/spell_dice.gd`作成
+- [x] ダイス固定値メソッド
+- [x] ダイス範囲指定メソッド
+- [x] 10個のダイス操作スペル実装
 
 ### Phase 6: 秘術システム実装 ⏳
 - [ ] `mystic_arts`のパース処理

@@ -22,6 +22,7 @@ class PlayerData:
 	var piece_node: Node = null  # 3D駒ノード（MovementController3Dが管理）
 	var movement_direction: String = ""
 	var last_choice_tile: int = -1
+	var curse: Dictionary = {}  # 呪い効果（SpellCurseで管理）
 
 # プレイヤー管理
 var players = []
