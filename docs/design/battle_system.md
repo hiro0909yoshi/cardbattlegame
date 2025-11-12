@@ -2,7 +2,7 @@
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **バージョン**: 1.0  
-**最終更新**: 2025年10月25日
+**最終更新**: 2025年11月13日（v1.1 - 準備フェーズ詳細化、HP階層構造更新）
 
 ---
 
@@ -20,85 +20,58 @@
 
 ## バトルフロー全体
 
-### 概要フロー
+### 準備フェーズ (`prepare_participants()`)
 
 ```
-1. カード選択＆コスト支払い
-   ↓
-2. 攻撃側アイテムフェーズ（任意）
-   ↓
-3. 防御側アイテムフェーズ（任意）
-   ↓
-4. アイテム効果適用
-   ↓
-5. 攻撃側土地ボーナス（属性一致時）
-   ↓
-6. スキル条件チェック（adjacent_ally_land等）
-   ↓
-7. 先制攻撃: 攻撃側AP vs 防御側HP
-   ↓
-8. 反撃: 防御側ST vs 攻撃側HP（生存時）
-   ↓
-9. 結果判定
+1. BattleParticipant作成
+   ├─ 攻撃側・防御側の基本ステータス設定
+   └─ 先制・後手フラグをスキルから読み込み
+   
+2. 効果配列適用 (apply_effect_arrays)
+   ├─ permanent_effects を HP/AP に反映
+   └─ temporary_effects を HP/AP に反映（呪いなど）
+   
+3. 呪い変換 (_apply_creature_curses)
+   ├─ 呪い（stat_boost/stat_reduce）を temporary_effects に追加
+   └─ temporary_bonus_hp/ap を加算
+   
+4. アイテム効果適用 (apply_item_effects)
+   ├─ 複数の効果タイプに対応（ST加算、スキル付与等）
+   └─ 援護クリーチャー処理を含む
+   
+5. 特殊クリーチャー処理
+   ├─ リビングアーマー (ID: 438) → ST+50
+   ├─ ブルガサリ (ID: 339) → アイテム使用時 ST+20
+   └─ オーガロード (ID: 407) → 隣接自領地ボーナス
+   
+6. 変身スキル処理 (on_battle_start)
+   └─ 戦闘開始時変身を実行
 ```
 
-### 詳細フロー（スキル適用含む）
+### 実行フェーズ (`_execute_battle_core()`)
 
 ```
-0. 変身スキル適用 (apply_battle_start_transform) 【Phase 0】
-   ├─ 戦闘開始時に発動する変身スキルをチェック
-   ├─ 攻撃側・防御側の両方に適用
-   └─ 詳細: skills/transform_skill.md 参照
+1. pre_battle_skills 適用 (battle_skill_processor)
+   ├─ 応援スキル（盤面の支援クリーチャー）
+   ├─ 感応スキル（属性ボーナス）
+   └─ その他のバトル前スキル
    
-1. 応援スキル適用 (apply_support_skills_to_all) 【Phase 1】
-   ├─ 盤面の応援持ちクリーチャーを取得
-   ├─ 条件を満たすバトル参加者にバフ付与
-   └─ 動的ボーナス（隣接自領地数）を計算
+2. 攻撃順決定
+   ├─ アイテム先制 > 先制スキル > 防御側後手 > デフォルト
+   └─ 順序は [先攻者, 後攻者] で返却
    
-2. 巻物攻撃判定 (check_scroll_attack)
-   ├─ 巻物攻撃 or 巻物強打スキルをチェック
-   ├─ 巻物強打の場合は感応を適用
-   └─ 通常巻物攻撃の場合は感応をスキップ
-
-3. 感応スキル (apply_resonance_skill)
-   ├─ 特定属性土地所有でAP/HP上昇
-   └─ 巻物強打の場合は適用、通常巻物攻撃の場合はスキップ
-
-4. 土地数比例効果 (apply_land_count_effects)
-   ├─ プレイヤーの土地所有状況を確認
-   ├─ 条件を満たせばAPとHPを上昇
-   └─ resonance_bonus_hpフィールドに加算
+3. 攻撃シーケンス実行
+   ├─ 先攻者が攻撃 → ダメージ処理 → 即死判定
+   └─ 後攻者が攻撃（生存時）→ ダメージ処理 → 即死判定
    
-5. 強打スキル (apply_power_strike)
-   ├─ 感応適用後のAPを基準に計算
-   ├─ 条件を満たせばAPを増幅
-   └─ 例: 基本20 → 感応+30=50 → 強打×1.5=75
+4. 結果判定 (resolve_battle_result)
+   └─ HP状態から ATTACKER_WIN / DEFENDER_WIN / BOTH_DEFEATED / ATTACKER_SURVIVED を決定
    
-6. 2回攻撃判定 (_check_double_attack)
-   ├─ 2回攻撃スキル保持チェック
-   └─ attack_count = 2 に設定
-   
-7. 攻撃シーケンス (_execute_attack_sequence)
-   ├─ 攻撃順決定（先制・後手判定）
-   ├─ 各攻撃ごとにダメージ適用
-   └─ **攻撃後に即死判定** (_check_instant_death)
-	  ├─ 即死スキル保持チェック
-	  ├─ 条件判定（属性、ST、立場など）
-	  ├─ 確率判定
-	  └─ 成功時: instant_death_flag = true, HP = 0
-   
-8. バトル結果判定 (_resolve_battle_result)
-   ├─ HPチェック
-   └─ 勝敗決定
-   
-9. バトル後処理 (_apply_post_battle_effects)
-   ├─ 再生スキル適用（生存者のみ）
-   │  └─ HP > 0 の場合のみ発動
-   ├─ 土地奪取 or カード破壊 or 手札復帰
-   └─ クリーチャーHP更新
+5. バトル後処理 (_apply_post_battle_effects)
+   ├─ 再生スキル（生存者のみ）
+   ├─ 永続バフ適用
+   └─ 土地処理（獲得・消滅・無所有化）
 ```
-
-**注**: 不屈スキルはバトル処理とは独立して動作し、アクション後のダウン判定時に適用される。バトルフロー内では関与しない。
 
 ---
 
@@ -110,26 +83,28 @@
 
 **実装場所**: `scripts/battle_participant.gd`
 
-### HPの階層構造
+### HPフィールド一覧
 
-```gdscript
-{
-  base_hp: int              # クリーチャーの基本HP（最後に消費）
-  resonance_bonus_hp: int   # 感応ボーナス（優先消費）
-  land_bonus_hp: int        # 土地ボーナス（2番目に消費）
-  item_bonus_hp: int        # アイテムボーナス（将来実装）
-  spell_bonus_hp: int       # スペルボーナス（将来実装）
-  current_hp: int           # 表示HP（全ての合計）
-}
-```
+| フィールド | 説明 |
+|-----------|------|
+| `base_hp` | クリーチャーの基本HP |
+| `base_up_hp` | 永続的な基礎HP上昇（合成・マスグロース等） |
+| `temporary_bonus_hp` | 一時効果による加算HP（効果配列から計算） |
+| `resonance_bonus_hp` | 感応スキルのボーナスHP |
+| `land_bonus_hp` | 土地ボーナスHP（属性一致時） |
+| `item_bonus_hp` | アイテム効果のボーナスHP |
+| `spell_bonus_hp` | スペル効果のボーナスHP |
+| `current_hp` | 合計HP（上記すべての合計） |
 
 ### ダメージ消費順序
 
-1. **感応ボーナス** (`resonance_bonus_hp`) - 最優先で消費
-2. **土地ボーナス** (`land_bonus_hp`) - 戦闘ごとに復活
-3. **アイテムボーナス** (`item_bonus_hp`) - 将来実装
-4. **スペルボーナス** (`spell_bonus_hp`) - 将来実装
-5. **基本HP** (`base_hp`) - 最後に消費
+1. **感応ボーナス** (最優先で消費)
+2. **土地ボーナス** (戦闘ごとに復活)
+3. **一時効果** (temporary_bonus_hp)
+4. **アイテムボーナス**
+5. **スペルボーナス**
+6. **永続基礎HP** (base_up_hp)
+7. **基本HP** (base_hp - 最後に消費) (`base_hp`) - 最後に消費
 
 ### 設計思想
 
@@ -138,99 +113,31 @@
 - **土地ボーナス**: 戦闘ごとに復活するため、次に消費
 - **基本HP**: 減ると配置クリーチャーの永続的なダメージとなる
 
-### ダメージ処理の実装
+### ダメージ処理
 
-```gdscript
-func take_damage(damage: int) -> Dictionary:
-	var remaining_damage = damage
-	var damage_breakdown = {
-		"resonance_bonus_consumed": 0,
-		"land_bonus_consumed": 0,
-		"item_bonus_consumed": 0,
-		"spell_bonus_consumed": 0,
-		"base_hp_consumed": 0
-	}
-	
-	# 1. 感応ボーナスから消費
-	if resonance_bonus_hp > 0 and remaining_damage > 0:
-		var consumed = min(resonance_bonus_hp, remaining_damage)
-		resonance_bonus_hp -= consumed
-		remaining_damage -= consumed
-		damage_breakdown["resonance_bonus_consumed"] = consumed
-	
-	# 2. 土地ボーナスから消費
-	if land_bonus_hp > 0 and remaining_damage > 0:
-		var consumed = min(land_bonus_hp, remaining_damage)
-		land_bonus_hp -= consumed
-		remaining_damage -= consumed
-		damage_breakdown["land_bonus_consumed"] = consumed
-	
-	# 3. アイテムボーナス（将来実装）
-	# 4. スペルボーナス（将来実装）
-	
-	# 5. 基本HPから消費
-	if remaining_damage > 0:
-		base_hp -= remaining_damage
-		damage_breakdown["base_hp_consumed"] = remaining_damage
-	
-	# 現在HPを更新
-	update_current_hp()
-	
-	return damage_breakdown
-```
+`take_damage()` は消費順序に従い、残ったダメージを次のHPフィールドに適用します。
+
+**戻り値**: `damage_breakdown` 辞書
+- 各フィールドがいくら消費されたかを記録
+- デバッグ出力用に使用
+
+**副作用**:
+- `was_attacked_by_enemy` フラグを設定（バイロマンサー用）
+- `_trigger_magic_from_damage()` を呼ぶ（ゼラチンアーマー用）
 
 ### 主要メソッド
 
-```gdscript
-# 合計HPを再計算
-func update_current_hp():
-	current_hp = base_hp + resonance_bonus_hp + land_bonus_hp + 
-				 item_bonus_hp + spell_bonus_hp
+| メソッド | 説明 |
+|---------|------|
+| `update_current_hp()` | 全フィールドから current_hp を再計算 |
+| `get_max_hp()` | 真のMHP（base_hp + base_up_hp） |
+| `is_alive()` | current_hp > 0 かチェック |
+| `take_damage(damage)` | ダメージ処理（消費順序に従う） |
+| `take_mhp_damage(damage)` | MHPに直接ダメージ（雪辱効果用） |
+| `is_damaged()` | current_hp < get_max_hp() かチェック |
+| `apply_item_first_strike()` | アイテムで先制付与（後手を無効化） |
 
-# ダメージ処理（消費順序に従う）
-func take_damage(damage: int) -> Dictionary
 
-# 生存判定
-func is_alive() -> bool:
-	return current_hp > 0
-
-# デバッグ用ステータス表示
-func get_status_string() -> String:
-	return "%s (HP:%d/%d, AP:%d)" % [
-		creature_data.get("name", "不明"),
-		current_hp,
-		base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp,
-		current_ap
-	]
-```
-
-### 使用例
-
-```gdscript
-# 1. 参加者作成
-var attacker = BattleParticipant.new(
-	card_data,      # クリーチャーデータ
-	base_hp,        # 基本HP
-	land_bonus,     # 土地ボーナスHP
-	ap,             # 攻撃力
-	true,           # is_attacker
-	player_id       # プレイヤーID
-)
-
-# 2. スキル適用
-attacker.resonance_bonus_hp += 30  # 感応ボーナス追加
-attacker.update_current_hp()       # 合計HP再計算
-
-# 3. ダメージ処理
-var breakdown = attacker.take_damage(50)
-# → 感応(30) → 土地(20) → 基本HP(0) の順で消費
-
-# 4. 結果表示
-print("  - 感応ボーナス: ", breakdown["resonance_bonus_consumed"], " 消費")
-print("  - 土地ボーナス: ", breakdown["land_bonus_consumed"], " 消費")
-print("  - 基本HP: ", breakdown["base_hp_consumed"], " 消費")
-print("  → 残HP: ", attacker.current_hp)
-```
 
 ---
 
@@ -448,4 +355,4 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 
 ---
 
-**最終更新**: 2025年10月25日（v1.0）
+**最終更新**: 2025年11月13日（v1.1 - 準備フェーズ詳細化、HP階層構造更新）
