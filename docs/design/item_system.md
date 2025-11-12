@@ -136,7 +136,10 @@
 }
 ```
 
-**効果**: `participant.current_ap += value`
+**効果**: `participant.item_bonus_ap += value`
+
+**AP計算順序**:
+バトル中のAP計算式に含まれる（HPと同様に階層管理）
 
 **例**: ロングソード (ID: 1072) - AP+30
 

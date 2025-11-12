@@ -24,6 +24,7 @@ var current_hp: int           # 現在のHP
 var current_ap: int           # 現在のAP（スキル適用後）
 var base_up_ap: int = 0       # 永続的な基礎AP上昇（合成・マスグロース等）
 var temporary_bonus_ap: int = 0  # 一時的なAPボーナス（効果配列からの合計）
+var item_bonus_ap: int = 0    # アイテムボーナスAP
 
 # 効果配列の参照（打ち消し効果判定用）
 var permanent_effects: Array = []  # 永続効果（移動で消えない）
@@ -93,7 +94,7 @@ func update_current_hp():
 # 現在APを更新
 func update_current_ap():
 	var base_ap = creature_data.get("ap", 0)
-	current_ap = base_ap + base_up_ap + temporary_bonus_ap
+	current_ap = base_ap + base_up_ap + temporary_bonus_ap + item_bonus_ap
 
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:

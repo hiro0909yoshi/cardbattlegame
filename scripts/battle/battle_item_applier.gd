@@ -43,7 +43,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		print("  警告: effect_parsedが定義されていません")
 		return
 	
-	# stat_bonusを先に適用（ST+20、HP+20など）
+	# stat_bonusを先に適用（AP+20、HP+20など）
 	var stat_bonus = effect_parsed.get("stat_bonus", {})
 	if not stat_bonus.is_empty():
 		_apply_stat_bonus(participant, stat_bonus)
@@ -59,18 +59,28 @@ func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -
 	var hp = stat_bonus.get("hp", 0)
 	var force_st = stat_bonus.get("force_st", false)
 	
-	# force_st: STを絶対値で設定（例: スフィアシールドのST=0）
+	# force_st: APを絶対値で設定（例: スフィアシールドのAP=0）
 	if force_st:
 		participant.current_ap = st
-		print("  ST=", st, "（絶対値設定）")
+		print("  AP=", st, "（絶対値設定）")
 	elif st > 0:
-		participant.current_ap += st
-		print("  ST+", st, " → ", participant.current_ap)
+		participant.item_bonus_ap += st
+		print("  AP+", st, " → ", participant.item_bonus_ap)
+	elif st < 0:
+		participant.item_bonus_ap += st
+		print("  AP", st, " → ", participant.item_bonus_ap)
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp
 		participant.update_current_hp()
 		print("  HP+", hp, " → ", participant.current_hp)
+	elif hp < 0:
+		participant.item_bonus_hp += hp
+		participant.update_current_hp()
+		print("  HP", hp, " → ", participant.current_hp)
+	
+	# AP計算を更新（item_bonus_apを反映）
+	participant.update_current_ap()
 
 ## 各効果タイプを適用
 func _apply_item_effect(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
@@ -233,7 +243,7 @@ func _apply_hand_count_bonus(participant: BattleParticipant, effect: Dictionary,
 	
 	if stat == "ap":
 		participant.current_ap += bonus
-		print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier, " = ST+", bonus)
+		print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
 		participant.update_current_hp()
@@ -256,13 +266,13 @@ func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dicti
 	
 	if stat == "ap":
 		participant.current_ap += bonus
-		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = ST+", bonus)
+		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
 		participant.update_current_hp()
 		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
 
-## STドレイン
+## APドレイン
 func _apply_st_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary) -> void:
 	var target = effect.get("target", "enemy")
 	if target == "enemy" and enemy_participant:
@@ -271,8 +281,8 @@ func _apply_st_drain(participant: BattleParticipant, enemy_participant: BattlePa
 			participant.current_ap += drained_st
 			enemy_participant.current_ap = 0
 			enemy_participant.creature_data["ap"] = 0
-			print("  [STドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_participant.creature_data.get("name", "?"), " のST", drained_st, "を吸収")
-			print("    → 自ST:", participant.current_ap, " / 敵ST:", enemy_participant.current_ap)
+			print("  [APドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_participant.creature_data.get("name", "?"), " のAP", drained_st, "を吸収")
+			print("    → 自AP:", participant.current_ap, " / 敵AP:", enemy_participant.current_ap)
 
 ## 死者復活スキル付与
 func _apply_revive_skill(participant: BattleParticipant) -> void:
@@ -306,7 +316,7 @@ func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary
 		participant.item_bonus_hp += hp_bonus
 		participant.update_current_hp()
 	
-	print("  [ランダムボーナス] ST+", st_bonus, ", HP+", hp_bonus)
+	print("  [ランダムボーナス] AP+", st_bonus, ", HP+", hp_bonus)
 
 ## 属性不一致ボーナス
 func _apply_element_mismatch_bonus(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
@@ -324,7 +334,7 @@ func _apply_element_mismatch_bonus(participant: BattleParticipant, effect: Dicti
 			participant.item_bonus_hp += hp
 			participant.update_current_hp()
 		
-		print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → ST+", st, ", HP+", hp)
+		print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → AP+", st, ", HP+", hp)
 	else:
 		print("  [属性不一致] ", user_element, " = ", enemy_element, " → ボーナスなし")
 
@@ -338,7 +348,7 @@ func _apply_fixed_stat(participant: BattleParticipant, effect: Dictionary) -> vo
 		if stat == "st":
 			participant.creature_data["ap"] = fixed_value
 			participant.current_ap = fixed_value
-			print("  [固定値] ST=", fixed_value)
+			print("  [固定値] AP=", fixed_value)
 		elif stat == "hp":
 			participant.creature_data["mhp"] = fixed_value
 			participant.creature_data["hp"] = fixed_value
@@ -424,13 +434,13 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	match scroll_type:
 		"fixed_st":
 			scroll_config["value"] = effect.get("value", 0)
-			print("  巻物攻撃を付与: ST固定", scroll_config["value"])
+			print("  巻物攻撃を付与: AP固定", scroll_config["value"])
 		"base_st":
-			print("  巻物攻撃を付与: ST=基本ST")
+			print("  巻物攻撃を付与: AP=基本AP")
 		"land_count":
 			scroll_config["elements"] = effect.get("elements", [])
 			scroll_config["multiplier"] = effect.get("multiplier", 1)
-			print("  巻物攻撃を付与: ST=土地数×", scroll_config["multiplier"], " (", scroll_config["elements"], ")")
+			print("  巻物攻撃を付与: AP=土地数×", scroll_config["multiplier"], " (", scroll_config["elements"], ")")
 	
 	participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
 
@@ -448,7 +458,7 @@ func _apply_chain_count_bonus(participant: BattleParticipant, effect: Dictionary
 	
 	var bonus = chain_count * multiplier
 	participant.current_ap += bonus
-	print("  [連鎖数STボーナス] 連鎖:", chain_count, " × ", multiplier, " = ST+", bonus)
+	print("  [連鎖数APボーナス] 連鎖:", chain_count, " × ", multiplier, " = AP+", bonus)
 
 ## スキル付与処理
 func _apply_grant_skill(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
