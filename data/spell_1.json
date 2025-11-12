@@ -738,6 +738,37 @@
 	  "cost": {
 		"mp": 30
 	  },
+	  "effect": "対象領地に呪い\"能力値-20\"(戦闘中、ST&HP-20)；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "stat_reduce",
+			"name": "能力値-20",
+			"value": -20,
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 2055,
+	  "name": "ディスエレメント",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20,
+		"cards_sacrifice": 1
+	  },
 	  "effect": "対象領地に呪い\"能力値-20\"(戦闘中、ST&HP-20)；カードを1枚引く"
 	},
 	{

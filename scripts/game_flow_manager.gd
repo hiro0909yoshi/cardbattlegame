@@ -49,6 +49,7 @@ var spell_magic: SpellMagic
 var spell_land: SpellLand
 var spell_curse: SpellCurse
 var spell_dice: SpellDice
+var spell_curse_stat: SpellCurseStat
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -82,6 +83,10 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
 		# デバッグフラグを転送
 		board_system_3d.debug_manual_control_all = debug_manual_control_all
+		
+		# MovementControllerにgame_flow_managerを設定
+		if board_system_3d.movement_controller:
+			board_system_3d.movement_controller.game_flow_manager = self
 		
 		# CheckpointTileのシグナルを接続
 		_connect_checkpoint_signals()
@@ -153,6 +158,12 @@ func _setup_spell_systems(board_system):
 			spell_dice = SpellDice.new()
 			spell_dice.setup(player_system, spell_curse)
 			print("[SpellDice] 初期化完了")
+			
+			# SpellCurseStatの初期化
+			spell_curse_stat = SpellCurseStat.new()
+			spell_curse_stat.setup(spell_curse, creature_manager)
+			add_child(spell_curse_stat)
+			print("[SpellCurseStat] 初期化完了")
 		else:
 			push_error("GameFlowManager: CreatureManagerが見つかりません")
 	else:

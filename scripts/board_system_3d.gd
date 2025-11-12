@@ -133,6 +133,7 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	
 	# MovementControllerに参照を設定
 	if movement_controller:
+		# game_flow_managerは後で設定される
 		movement_controller.setup_systems(player_system, special_tile_system)
 	
 	# TileDataManagerに参照を設定

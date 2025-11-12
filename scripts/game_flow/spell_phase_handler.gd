@@ -429,6 +429,20 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if game_flow_manager and game_flow_manager.spell_dice:
 				game_flow_manager.spell_dice.apply_dice_range_magic_effect(effect, target_data, current_player_id)
 		
+		"stat_boost":
+			# 能力値上昇呪い（バイタリティ等）
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse_stat:
+					game_flow_manager.spell_curse_stat.apply_stat_boost(tile_index, effect)
+		
+		"stat_reduce":
+			# 能力値減少呪い（ディジーズ等）
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse_stat:
+					game_flow_manager.spell_curse_stat.apply_stat_reduce(tile_index, effect)
+		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \

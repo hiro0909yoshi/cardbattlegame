@@ -31,6 +31,7 @@ var current_moving_player = -1
 # システム参照
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
+var game_flow_manager = null  # GameFlowManager参照（呪い削除用）
 
 func _ready():
 	pass
@@ -47,9 +48,10 @@ func initialize(tiles: Dictionary, players: Array, cam: Camera3D = null):
 		player_tiles.append(0)
 
 # システム参照を設定
-func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null):
+func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null, gf_manager = null):
 	player_system = p_system
 	special_tile_system = st_system
+	game_flow_manager = gf_manager
 
 # プレイヤーの現在位置を取得
 func get_player_tile(player_id: int) -> int:
@@ -109,6 +111,7 @@ func calculate_path(player_id: int, steps: int) -> Array:
 func move_along_path(player_id: int, path: Array) -> void:
 	var previous_tile = player_tiles[player_id]
 	var i = 0
+	
 	
 	while i < path.size():
 		var tile_index = path[i]

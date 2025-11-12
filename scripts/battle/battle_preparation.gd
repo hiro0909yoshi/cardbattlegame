@@ -102,6 +102,12 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	apply_effect_arrays(attacker, card_data)
 	apply_effect_arrays(defender, defender_creature)
 	
+	# 呪いをtemporary_effectsに変換して適用
+	# battle_tile_indexは防御側のクリーチャーがいるタイル
+	# attacker（侵略側）の呪いは card_data に含まれているはず
+	# 手札から出すクリーチャーなので、移動侵略でない限り呪いはない
+	_apply_creature_curses(defender, battle_tile_index)
+	
 	# アイテム効果を適用
 	if not attacker_item.is_empty():
 		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
@@ -908,3 +914,74 @@ func _has_transform_effect(participant: BattleParticipant, trigger: String) -> b
 			return true
 	
 	return false
+
+## 呪いをtemporary_effectsに変換して適用
+func _apply_creature_curses(participant: BattleParticipant, tile_index: int) -> void:
+	# クリーチャーデータから呪いを取得
+	var creature_data = participant.creature_data
+	
+	if not creature_data or creature_data.is_empty() or not creature_data.has("curse"):
+		return
+	
+	var curse = creature_data["curse"]
+	var curse_type = curse.get("curse_type", "")
+	var params = curse.get("params", {})
+	var curse_name = curse.get("name", "")
+	
+	# 呪いタイプに応じてtemporary_effectsに追加
+	match curse_type:
+		"stat_boost":
+			var value = params.get("value", 20)
+			participant.temporary_effects.append({
+				"type": "stat_bonus",
+				"stat": "hp",
+				"value": value,
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			participant.temporary_effects.append({
+				"type": "stat_bonus",
+				"stat": "ap",
+				"value": value,
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			print("[呪い変換] stat_boost: HP+", value, ", AP+", value)
+			
+			# 効果を計算に反映
+			participant.temporary_bonus_hp += value
+			participant.temporary_bonus_ap += value
+		
+		"stat_reduce":
+			var value = params.get("value", -20)
+			participant.temporary_effects.append({
+				"type": "stat_bonus",
+				"stat": "hp",
+				"value": value,
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			participant.temporary_effects.append({
+				"type": "stat_bonus",
+				"stat": "ap",
+				"value": value,
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			print("[呪い変換] stat_reduce: HP", value, ", AP", value)
+			
+			# 効果を計算に反映
+			participant.temporary_bonus_hp += value
+			participant.temporary_bonus_ap += value
+	
+	# current_hpとcurrent_apを更新
+	participant.current_ap += participant.temporary_bonus_ap
+	participant.update_current_hp()
