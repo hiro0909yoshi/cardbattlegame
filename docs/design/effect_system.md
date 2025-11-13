@@ -568,7 +568,7 @@ func on_creature_move(tile_index: int):
   "name": "アームドパラディン",
   "ap": 0,
   "hp": 50,
-  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+  "ability_detail": "AP =|AP=火地,配置数×10；無効化[巻物]",
   "ability_parsed": {
 	"keywords": ["無効化"],
 	"keyword_conditions": {
@@ -591,7 +591,7 @@ func on_creature_move(tile_index: int):
 
 **動作例**:
 - 火土地2つ + 土土地3つ = 5つ所有
-- ST = 0 + (5 × 10) = **50**
+- AP =|AP 0 + (5 × 10) = **50**
 
 ### アイテム
 
@@ -600,7 +600,7 @@ func on_creature_move(tile_index: int):
 {
   "id": 1001,
   "name": "アーメット",
-  "effect": "ST-10；HP+40",
+  "effect": "AP =|AP-10；HP+40",
   "ability_parsed": {
 	"effects": [
 	  {
@@ -617,8 +617,8 @@ func on_creature_move(tile_index: int):
 ```
 
 **動作例**:
-- アモン（ST=30, HP=30）が装備
-- ST: 30 - 10 = **20**
+- アモン（AP =|AP=30, HP=30）が装備
+- AP =|AP: 30 - 10 = **20**
 - HP: 30 + 40 = **70**
 
 ---
@@ -754,7 +754,7 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
   "name": "アームドパラディン",
   "ap": 0,
   "hp": 50,
-  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+  "ability_detail": "AP =|AP=火地,配置数×10；無効化[巻物]",
   "ability_parsed": {
 	"keywords": ["無効化"],
 	"keyword_conditions": {
@@ -777,7 +777,7 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
 
 **動作例**:
 - 火土地2つ + 土土地3つ = 5つ所有
-- ST = 0 + (5 × 10) = **50**
+- AP =|AP 0 + (5 × 10) = **50**
 
 ### アイテム
 
@@ -786,7 +786,7 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
 {
   "id": 1001,
   "name": "アーメット",
-  "effect": "ST-10；HP+40",
+  "effect": "AP =|AP-10；HP+40",
   "ability_parsed": {
 	"effects": [
 	  {
@@ -803,8 +803,8 @@ var removed = battle_system.remove_effects_from_creature(tile_index, true)
 ```
 
 **動作例**:
-- アモン（ST=30, HP=30）が装備
-- ST: 30 - 10 = **20**
+- アモン（AP =|AP=30, HP=30）が装備
+- AP =|AP: 30 - 10 = **20**
 - HP: 30 + 40 = **70**
 
 ---

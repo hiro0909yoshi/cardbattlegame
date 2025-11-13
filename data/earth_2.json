@@ -48,7 +48,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "隣接領地条件",
-	  "ability_detail": "隣接領地が自領地の場合、ST&HP+20",
+	  "ability_detail": "隣接領地が自領地の場合、AP&HP+20",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -57,7 +57,7 @@
 			  "ap": 20,
 			  "hp": 20
 			},
-			"description": "隣接領地が自領地の場合、ST&HP+20"
+			"description": "隣接領地が自領地の場合、AP&HP+20"
 		  }
 		]
 	  }
@@ -77,7 +77,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "先制・敵破壊時",
-	  "ability_detail": "先制；敵破壊時、ST&MHP+10",
+	  "ability_detail": "先制；敵破壊時、AP&MHP+10",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -86,7 +86,7 @@
 		  {
 			"effect_type": "on_enemy_destroy_permanent",
 			"stat_changes": {"ap": 10, "max_hp": 10},
-			"description": "敵破壊時、AP+|AP-|AP=10・MHP+10（永続）"
+			"description": "敵破壊時、AP+10・MHP+10（永続）"
 		  }
 		]
 	  }
@@ -308,8 +308,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "ST計算・秘術",
-	  "ability_detail": "AP+|AP-|AP=🌱配置数×5；秘術[G50・マッドマンに変身]",
+	  "ability": "AP計算・秘術",
+	  "ability_detail": "AP+🌱配置数×5；秘術[G50・マッドマンに変身]",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -319,7 +319,7 @@
 			"elements": ["earth"],
 			"multiplier": 5,
 			"operation": "add",
-			"description": "AP+|AP-|AP=地配置数×5"
+			"description": "AP+地配置数×5"
 		  }
 		]
 	  }
@@ -486,7 +486,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "援護・感応・巻物強打",
-	  "ability_detail": "援護[無火地]；感応[火・AP+|AP-|AP=30]；巻物強打",
+	  "ability_detail": "援護[無火地]；感応[火・AP+30]；巻物強打",
 	  "ability_parsed": {
 		"keywords": [
 		  "援護",
@@ -640,7 +640,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "合成・不屈",
-	  "ability_detail": "合成[地・AP+|AP-|AP=30、MHP+10]；不屈"
+	  "ability_detail": "合成[地・AP+30、MHP+10]；不屈"
 	}
   ]
 }

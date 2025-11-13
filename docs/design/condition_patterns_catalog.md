@@ -38,8 +38,8 @@
 3-1. MHP（最大HP）閾値以下
 3-2. MHP（最大HP）閾値以上
 3-3. 敵のMHPチェック
-3-4. 敵のSTチェック
-3-5. 基礎STの取得と使用
+3-4. 敵のAPチェック
+3-5. 基礎APの取得と使用
 3-6. 現在HP取得
 
 ### 4. アイテム条件
@@ -401,7 +401,7 @@ if not is_attacker:
 - battle_skill_processor.gd: 応援対象判定
 
 **対象クリーチャー**:
-- ガーゴイル (204): 防御時ST=50
+- ガーゴイル (204): 防御時AP=50
 - 応援スキル持ち（侵略側/防御側限定）
 
 ---
@@ -880,7 +880,7 @@ var tile_data_manager = board_system_ref.tile_data_manager
 var chain_count = tile_data_manager.get_element_chain_count(battle_tile_index, player_id)
 ```
 **使用箇所**: 1箇所
-- battle_preparation.gd: `apply_item_effects()` (chain_count_st_bonus)
+- battle_item_applier.gd: `apply_item_effects()` (chain_count_ap_bonus)
 
 **対象アイテム**:
 - チェーンソー (1034): AP+戦闘地の連鎖数×20
@@ -1007,13 +1007,13 @@ match effect_type:
 5. `destroy_count_multiplier` - 破壊数比例
 6. `turn_number_bonus` - ターン数ボーナス
 7. `hand_count_multiplier` - 手札数比例
-8. `defender_fixed_ap` - 防御時固定ST
+8. `defender_fixed_ap` - 防御時固定AP
 9. `battle_land_level_bonus` - 戦闘地レベルボーナス
 10. `owned_land_threshold` - 自領地数閾値
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
 13. `adjacent_owned_land` - 隣接自領地条件
-14. `base_st_to_hp` - 基礎ST→HP変換
+14. `base_st_to_hp` - 基礎AP→HP変換
 15. `conditional_land_count` - 条件付き配置数
 16. `random_stat` - ランダムステータス
 17. `tribe_placement_bonus` - 種族配置ボーナス
@@ -1026,7 +1026,7 @@ match effect_type:
 24. `nullify_reflect` - 反射無効
 25. `nullify_item_manipulation` - アイテム操作無効
 26. `dice_condition_bonus` - ダイス条件ボーナス
-27. `chain_count_st_bonus` - 連鎖数STボーナス
+27. `chain_count_ap_bonus` - 連鎖数APボーナス
 
 ---
 

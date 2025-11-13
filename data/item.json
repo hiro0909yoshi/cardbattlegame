@@ -580,7 +580,7 @@
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 0,
-		  "force_st": true
+		  "force_ap": true
 		},
 		"effects": [
 		  {
@@ -763,7 +763,7 @@
 	  "effect_parsed": {
 		"effects": [
 		  {
-			"effect_type": "chain_count_st_bonus",
+			"effect_type": "chain_count_ap_bonus",
 			"multiplier": 20
 		  }
 		]
@@ -1198,7 +1198,7 @@
 			"effect_type": "grant_skill",
 			"skill": "無効化",
 			"skill_params": {
-			  "nullify_type": "st_below",
+			  "nullify_type": "ap_below",
 			  "value": 30
 			}
 		  }
@@ -1648,8 +1648,8 @@
 			"effect_type": "grant_skill",
 			"skill": "無効化",
 			"skill_params": {
-			  "nullify_type": "attacker_st_above",
-			  "use_base_st": true
+			  "nullify_type": "attacker_ap_above",
+			  "use_base_ap": true
 			}
 		  }
 		]

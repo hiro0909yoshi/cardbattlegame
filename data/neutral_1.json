@@ -117,7 +117,7 @@
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "オーガ配置時能力値上昇・巻物強打",
-	  "ability_detail": "火風オーガ配置時AP+|AP-|AP=20、水地オーガ配置時HP+20；巻物強打",
+	  "ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；巻物強打",
 	  "ability_parsed": {
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {

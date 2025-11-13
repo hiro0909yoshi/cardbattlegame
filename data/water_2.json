@@ -107,7 +107,7 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・巻物攻撃",
-	  "ability_detail": "先制；巻物攻撃[AP+|AP-|AP=基本ST]",
+	  "ability_detail": "先制；巻物攻撃[AP=基本AP]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -589,8 +589,8 @@
 	  },
 	  "ap": 0,
 	  "hp": 30,
-	  "ability": "AP+|AP-|AP=自手札数×10",
-	  "ability_detail": "AP+|AP-|AP=自手札数×10",
+	  "ability": "AP+自手札数×10",
+	  "ability_detail": "AP+自手札数×10",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -598,7 +598,7 @@
 			"effect_type": "hand_count_multiplier",
 			"stat": "ap",
 			"multiplier": 10,
-			"description": "AP+|AP-|AP=自手札数×10"
+			"description": "AP+自手札数×10"
 		  }
 		]
 	  }

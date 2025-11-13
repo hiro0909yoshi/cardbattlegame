@@ -325,7 +325,7 @@
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "感応",
-	  "ability_detail": "感応[火・ST&HP+20]",
+	  "ability_detail": "感応[火・AP&HP+20]",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応"
@@ -356,7 +356,7 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "秘術",
-	  "ability_detail": "ブックが相手より多い場合、ST&HP+20；秘術[G50・対象ブックの上1枚を破壊]"
+	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]"
 	},
 	{
 	  "id": 215,

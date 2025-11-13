@@ -217,15 +217,15 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 			var required = penetrate_condition.get("elements", "")
 			return defender_data.get("element", "") == required
 		
-		"attacker_st_check":
+		"attacker_ap_check":
 			var operator = penetrate_condition.get("operator", ">=")
 			var value = penetrate_condition.get("value", 0)
-			var attacker_st = attacker_data.get("ap", 0)
+			var attacker_ap = attacker_data.get("ap", 0)
 			
 			match operator:
-				">=": return attacker_st >= value
-				">": return attacker_st > value
-				"==": return attacker_st == value
+				">=": return attacker_ap >= value
+				">": return attacker_ap > value
+				"==": return attacker_ap == value
 	
 	return false
 ```

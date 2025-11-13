@@ -416,7 +416,7 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 ```
 
 **動作**: 
-- ST+20は無条件
+- AP+20は無条件
 - **強打は火属性のクリーチャーのみ**に付与
 
 ### スペルによるスキル付与（将来実装）
@@ -479,7 +479,7 @@ battle_id,attacker_name,attacker_item,attacker_spell,defender_name,defender_item
 	✗ 強打 (条件不一致: 火属性必須 → 水属性)
 ```
 
-このケースでは、ST+20は適用されるが、強打は付与されない。
+このケースでは、AP+20は適用されるが、強打は付与されない。
 
 ---
 

@@ -15,8 +15,8 @@
 			},
 			"ap": 0,
 			"hp": 50,
-			"ability": "ST変動",
-			"ability_detail": "AP+|AP-|AP=火地,配置数×10；無効化[巻物]",
+			"ability": "AP変動",
+			"ability_detail": "AP+火地配置数×10；無効化[巻物]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化"
@@ -52,7 +52,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "感応・防魔",
-			"ability_detail": "感応[地]・ST&HP+20；防魔",
+			"ability_detail": "感応[地]・AP&HP+20；防魔",
 			"ability_parsed": {
 				"keywords": [
 					"感応",
@@ -84,7 +84,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "Aボタン連打",
-			"ability_detail": "Aボタン連打でST上昇"
+			"ability_detail": "Aボタン連打でAP上昇"
 		},
 		{
 			"id": 4,
@@ -197,7 +197,7 @@
 			"ap": 30,
 			"hp": 50,
 			"ability": "先制",
-			"ability_detail": "先制；周回ごとにAP+|AP-|AP=10",
+			"ability_detail": "先制；周回ごとにAP+10",
 			"ability_parsed": {
 				"keywords": [
 					"先制"
@@ -324,7 +324,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "無効化・防魔",
-			"ability_detail": "無効化[ST40以上]；防魔"
+			"ability_detail": "無効化[AP40以上]；防魔"
 		},
 		{
 			"id": 12,
@@ -410,8 +410,8 @@
 			},
 			"ap": 30,
 			"hp": 40,
-			"ability": "先制・ST変動",
-			"ability_detail": "先制；AP+|AP-|AP=MHP50以上配置数×5",
+			"ability": "先制・AP変動",
+			"ability_detail": "先制；AP+MHP50以上配置数×5",
 			"ability_parsed": {
 				"keywords": [
 					"先制"
@@ -619,7 +619,7 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "合成",
-			"ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+|AP-|AP=10]",
+			"ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+10]",
 			"ability_parsed": {
 				"keywords": [
 					"合成",

@@ -135,20 +135,20 @@ func _check_nullify_mhp_below(condition: Dictionary, attacker: BattleParticipant
 ## AP以下無効化判定
 func _check_nullify_ap_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	# 基礎ST = base_ap + base_up_ap
+	# 基礎AP = base_ap + base_up_ap
 	var base_ap = attacker.creature_data.get("ap", 0)
 	var base_up_ap = attacker.creature_data.get("base_up_ap", 0)
-	var attacker_base_st = base_ap + base_up_ap
-	return attacker_base_st <= threshold
+	var attacker_base_ap = base_ap + base_up_ap
+	return attacker_base_ap <= threshold
 
 ## AP以上無効化判定
 func _check_nullify_ap_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
-	# 基礎ST = base_ap + base_up_ap
+	# 基礎AP = base_ap + base_up_ap
 	var base_ap = attacker.creature_data.get("ap", 0)
 	var base_up_ap = attacker.creature_data.get("base_up_ap", 0)
-	var attacker_base_st = base_ap + base_up_ap
-	return attacker_base_st >= threshold
+	var attacker_base_ap = base_ap + base_up_ap
+	return attacker_base_ap >= threshold
 
 ## 能力持ち無効化判定
 func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipant) -> bool:
@@ -158,20 +158,20 @@ func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipa
 
 ## 攻撃者APが装備者より大きい場合の無効化判定（ラグドール用）
 func _check_nullify_attacker_ap_above(_condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
-	# 攻撃者の基礎ST
+	# 攻撃者の基礎AP
 	var attacker_base_ap = attacker.creature_data.get("ap", 0)
 	var attacker_base_up_ap = attacker.creature_data.get("base_up_ap", 0)
-	var attacker_base_st = attacker_base_ap + attacker_base_up_ap
+	var attacker_total_ap = attacker_base_ap + attacker_base_up_ap
 	
-	# 防御側（装備者）の基礎ST
+	# 防御側（装備者）の基礎AP
 	var defender_base_ap = defender.creature_data.get("ap", 0)
 	var defender_base_up_ap = defender.creature_data.get("base_up_ap", 0)
-	var defender_base_st = defender_base_ap + defender_base_up_ap
+	var defender_total_ap = defender_base_ap + defender_base_up_ap
 	
-	print("  [ラグドール判定] 攻撃者ST:", attacker_base_st, " vs 装備者ST:", defender_base_st)
+	print("  [ラグドール判定] 攻撃者AP:", attacker_total_ap, " vs 装備者AP:", defender_total_ap)
 	
-	# 攻撃者のSTが装備者より大きい場合に無効化
-	return attacker_base_st > defender_base_st
+	# 攻撃者のAPが装備者より大きい場合に無効化
+	return attacker_total_ap > defender_total_ap
 
 ## 即死判定を行う
 func check_instant_death(attacker: BattleParticipant, defender: BattleParticipant) -> bool:

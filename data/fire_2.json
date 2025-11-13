@@ -125,7 +125,7 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "自領地HP-30",
-	  "ability_detail": "自領地が5つ以上の場合、ST&HP-30",
+	  "ability_detail": "自領地が5つ以上の場合、AP&HP-30",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -136,7 +136,7 @@
 			  "ap": -30,
 			  "hp": -30
 			},
-			"description": "自領地が5つ以上の場合、ST&HP-30"
+			"description": "自領地が5つ以上の場合、AP&HP-30"
 		  }
 		]
 	  }
@@ -179,8 +179,8 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "ST&HP変動",
-	  "ability_detail": "ST&HP+ハイプワーカー配置数×10",
+	  "ability": "AP&HP変動",
+	  "ability_detail": "AP&HP+ハイプワーカー配置数×10",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -192,7 +192,7 @@
 			  "ap": true,
 			  "hp": true
 			},
-			"description": "ST&HP+ハイプワーカー配置数×10"
+			"description": "AP&HP+ハイプワーカー配置数×10"
 		  }
 		]
 	  }
@@ -242,14 +242,14 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "巻物攻撃",
-	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
+	  "ability_detail": "巻物攻撃[AP30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
 	  "ability_parsed": {
 		"keywords": [
 		  "巻物攻撃"
 		],
 		"keyword_conditions": {
 		  "巻物攻撃": {
-			"scroll_type": "fixed_st",
+			"scroll_type": "fixed_ap",
 			"value": 30
 		  }
 		}
@@ -269,8 +269,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "援護・先制・敵破壊時AP+|AP-|AP=10",
-	  "ability_detail": "援護[無火地]；先制；敵破壊時、AP+|AP-|AP=10",
+	  "ability": "援護・先制・敵破壊時AP+10",
+	  "ability_detail": "援護[無火地]；先制；敵破壊時、AP+10",
 	  "ability_parsed": {
 		"keywords": [
 		  "援護",
@@ -291,7 +291,7 @@
 			"stat_changes": {
 			  "ap": 10
 			},
-			"description": "敵破壊時、AP+|AP-|AP=10（永続）"
+			"description": "敵破壊時、AP+10（永続）"
 		  }
 		]
 	  }
@@ -347,8 +347,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "AP+|AP-|AP=火配置数×5",
-	  "ability_detail": "AP+|AP-|AP=火配置数×5",
+	  "ability": "AP+火配置数×5",
+	  "ability_detail": "AP+火配置数×5",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -443,7 +443,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術・巻物強打",
-	  "ability_detail": "秘術[G50・対象クリーチャーのAP+|AP-|AP=20]；巻物強打"
+	  "ability_detail": "秘術[G50・対象クリーチャーのAP+20]；巻物強打"
 	},
 	{
 	  "id": 40,
@@ -572,7 +572,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[火地・AP+|AP-|AP=10]；秘術[G30・クリーチャー破壊数×G30を得る]",
+	  "ability_detail": "応援[火地・AP+10]；秘術[G30・クリーチャー破壊数×G30を得る]",
 	  "ability_parsed": {
 		"keywords": [
 		  "応援",
@@ -625,7 +625,7 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・巻物攻撃",
-	  "ability_detail": "先制；巻物攻撃[AP+|AP-|AP=基本ST]",
+	  "ability_detail": "先制；巻物攻撃[AP=基本AP]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -673,7 +673,7 @@
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "感応・強打",
-	  "ability_detail": "感応[地・AP+|AP-|AP=20、HP+10]；強打[火地]",
+	  "ability_detail": "感応[地・AP+20、HP+10]；強打[火地]",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応",
@@ -723,8 +723,8 @@
 	  },
 	  "ap": 60,
 	  "hp": 30,
-	  "ability": "AP+|AP-|AP=現R数、HP+現R数",
-	  "ability_detail": "AP+|AP-|AP=現R数、HP+現R数",
+	  "ability": "AP+現R数、HP+現R数",
+	  "ability_detail": "AP+現R数、HP+現R数",
 	  "ability_parsed": {
 		"effects": [
 		  {

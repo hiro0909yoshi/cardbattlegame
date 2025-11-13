@@ -125,7 +125,7 @@
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・先制",
-	  "ability_detail": "防御型；先制；AP+|AP-|AP=20、HP-10",
+	  "ability_detail": "防御型；先制；AP+20、HP-10",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -135,7 +135,7 @@
 			"effect_type": "constant_stat_bonus",
 			"stat": "ap",
 			"value": 20,
-			"description": "AP+|AP-|AP=20"
+			"description": "AP+20"
 		  },
 		  {
 			"effect_type": "constant_stat_bonus",
@@ -363,7 +363,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "アイテム使用時・MHP変動",
-	  "ability_detail": "アイテム使用時、AP+|AP-|AP=20；敵アイテム使用の戦闘後、MHP+10",
+	  "ability_detail": "アイテム使用時、AP+20；敵アイテム使用の戦闘後、MHP+10",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -417,7 +417,7 @@
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "合成・先制・不屈",
-	  "ability_detail": "合成[アイテム・AP+|AP-|AP=40、MHP-10]；先制；不屈",
+	  "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；不屈",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -557,7 +557,7 @@
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "感応",
-	  "ability_detail": "感応[水・AP+|AP-|AP=30]",
+	  "ability_detail": "感応[水・AP+30]",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応"
@@ -615,7 +615,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・AP+|AP-|AP=10]；秘術[G60・AP30以下をAP+|AP-|AP=20、AP50以上をAP+|AP-|AP=20]",
+	  "ability_detail": "応援[風水・AP+10]；秘術[G60・AP30以下をAP+20、AP50以上をAP+20]",
 	  "ability_parsed": {
 		"keywords": ["応援", "秘術"],
 		"effects": [

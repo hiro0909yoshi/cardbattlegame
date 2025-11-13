@@ -141,9 +141,9 @@
 {
   "id": 1048,
   "name": "バーニングハート",
-  "effect": "ST&HP+20；道連れ",
+  "effect": "AP+|AP&|AP=HP+20；道連れ",
   "effect_parsed": {
-	"stat_bonus": {"st": 20, "hp": 20},
+	"stat_bonus": {"ap": 20, "hp": 20},
 	"effects": [
 	  {
 		"effect_type": "instant_death",
@@ -218,9 +218,9 @@
 {
   "id": 1044,
   "name": "ナパームアロー",
-  "effect": "ST+30；HP+20；雪辱[敵のMHP-40]",
+  "effect": "AP+|AP&|AP=30；HP+20；雪辱[敵のMHP-40]",
   "effect_parsed": {
-	"stat_bonus": {"st": 30, "hp": 20},
+	"stat_bonus": {"ap": 30, "hp": 20},
 	"effects": [
 	  {
 		"effect_type": "revenge_mhp_damage",
@@ -235,7 +235,7 @@
 **使用例**:
 ```
 敵：MHP=50、土地ボーナス+30 → 現在HP=80
-攻撃：ST30 → 土地ボーナス削られる → HP=50
+攻撃：AP30 → 土地ボーナス削られる → HP=50
 反撃：死亡
 雪辱発動 → MHP 50 - 40 = 10 → 敵HP=10（生存）
 
@@ -250,12 +250,12 @@
 ### instant_death（道連れ）
 
 #### アイテム
-- **バーニングハート（ID: 1048）**: ST&HP+20；道連れ[100%]
+- **バーニングハート（ID: 1048）**: AP+|AP&|AP=HP+20；道連れ[100%]
 
 ### revenge_mhp_damage（雪辱）
 
 #### アイテム
-- **ナパームアロー（ID: 1044）**: ST+30；HP+20；雪辱[MHP-40]
+- **ナパームアロー（ID: 1044）**: AP+|AP&|AP=30；HP+20；雪辱[MHP-40]
 
 ---
 

@@ -99,13 +99,13 @@
 5. `destroy_count_multiplier` - 破壊数比例
 6. `turn_number_bonus` - ターン数ボーナス
 7. `hand_count_multiplier` - 手札数比例
-8. `defender_fixed_ap` - 防御時固定ST
+8. `defender_fixed_ap` - 防御時固定AP
 9. `battle_land_level_bonus` - 戦闘地レベルボーナス
 10. `owned_land_threshold` - 自領地数閾値
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
 13. `adjacent_owned_land` - 隣接自領地条件
-14. `base_ap_to_hp` - 基礎ST→HP変換
+14. `base_ap_to_hp` - 基礎AP|基本AP→HP変換
 15. `conditional_land_count` - 条件付き配置数
 
 ### 5.2 特殊効果系（11種類）

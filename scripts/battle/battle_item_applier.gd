@@ -5,6 +5,7 @@ class_name BattleItemApplier
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const SkillAssistScript = preload("res://scripts/battle/skills/skill_assist.gd")
+const BattleSkillGranter = preload("res://scripts/battle/battle_skill_granter.gd")
 
 # システム参照
 var board_system_ref = null
@@ -57,12 +58,13 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -> void:
 	var ap = stat_bonus.get("ap", 0)
 	var hp = stat_bonus.get("hp", 0)
-	var force_st = stat_bonus.get("force_st", false)
+	var force_ap = stat_bonus.get("force_ap", false)
 	
-	# force_st: APを絶対値で設定（例: スフィアシールドのAP=0）
-	if force_st:
+	# force_ap: APを絶対値で設定（例: スフィアシールドのAP=0）
+	if force_ap:
 		participant.current_ap = ap
 		print("  AP=", ap, "（絶対値設定）")
+		# force_apの場合はupdate_current_ap()を呼ばない（絶対値を保持する）
 	elif ap > 0:
 		participant.item_bonus_ap += ap
 		print("  AP+", ap, " → ", participant.item_bonus_ap)
@@ -79,8 +81,9 @@ func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -
 		participant.update_current_hp()
 		print("  HP", hp, " → ", participant.current_hp)
 	
-	# AP計算を更新（item_bonus_apを反映）
-	participant.update_current_ap()
+	# AP計算を更新（force_apでない場合のみ）
+	if not force_ap:
+		participant.update_current_ap()
 
 ## 各効果タイプを適用
 func _apply_item_effect(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
@@ -176,7 +179,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 			# バトル後や戦闘中に処理
 			pass
 		
-		"chain_count_st_bonus":
+		"chain_count_ap_bonus":
 			_apply_chain_count_bonus(participant, effect, context)
 		
 		"nullify_all_enemy_abilities":
@@ -487,27 +490,16 @@ func _apply_chain_count_bonus(participant: BattleParticipant, effect: Dictionary
 func _apply_grant_skill(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
 	var skill_name = effect.get("skill", "")
 	
-	# 条件チェック
-	var skill_conditions = effect.get("skill_conditions", [])
+	# 付与条件をチェック（付与条件がある場合のみ）
 	var condition = effect.get("condition", {})
 	
-	var conditions_to_check = []
-	if not skill_conditions.is_empty():
-		conditions_to_check = skill_conditions
-	elif not condition.is_empty():
-		conditions_to_check = [condition]
+	if not condition.is_empty():
+		if not _check_skill_grant_condition(participant, condition, context):
+			print("  [スキル付与] ", skill_name, " - 付与条件を満たさないため付与しません")
+			return
 	
-	var skip_condition_check = (skill_name == "巻物強打")
-	
-	var all_conditions_met = true
-	if not skip_condition_check:
-		for cond in conditions_to_check:
-			if not _check_skill_grant_condition(participant, cond, context):
-				all_conditions_met = false
-				break
-	
-	if all_conditions_met:
-		_grant_skill_to_participant(participant, skill_name, effect)
+	# 付与条件が満たされた場合、スキルを付与
+	_grant_skill_to_participant(participant, skill_name, effect)
 
 ## スキル付与条件をチェック
 func _check_skill_grant_condition(_participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
@@ -515,7 +507,7 @@ func _check_skill_grant_condition(_participant: BattleParticipant, condition: Di
 	return checker._evaluate_single_condition(condition, context)
 
 ## パーティシパントにスキルを付与
-func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, _skill_data: Dictionary) -> void:
+func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, effect_data: Dictionary) -> void:
 	match skill_name:
 		"先制":
 			FirstStrikeSkill.grant_skill(participant, "先制")
@@ -527,4 +519,6 @@ func _grant_skill_to_participant(participant: BattleParticipant, skill_name: Str
 			DoubleAttackSkill.grant_skill(participant)
 		
 		_:
-			pass
+			# その他のスキルは BattleSkillGranter で処理
+			var granter = BattleSkillGranter.new()
+			granter.grant_skill_to_participant(participant, skill_name, effect_data)

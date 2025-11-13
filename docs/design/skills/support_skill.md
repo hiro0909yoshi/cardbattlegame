@@ -49,26 +49,26 @@
 
 | ID | 名前 | 属性 | 応援条件 | ボーナス |
 |----|------|------|---------|---------|
-| 401 | Boges | 火 | 火属性クリーチャー | ST+10 |
-| 404 | Grimalkin | 火 | 風属性クリーチャー | ST+10 |
-| 421 | Salamander | 火 | 攻撃側 | ST+10 |
+| 401 | Boges | 火 | 火属性クリーチャー | AP+|AP-|AP&|AP 10 |
+| 404 | Grimalkin | 火 | 風属性クリーチャー | AP+|AP-|AP&|AP 10 |
+| 421 | Salamander | 火 | 攻撃側 | AP+|AP-|AP&|AP 10 |
 | 424 | Naiad | 水 | 防御側 | HP+10 |
-| 431 | Phantom Warrior | 地 | 地属性クリーチャー | ST+10 |
-| 441 | Banshee | 水 | 水属性クリーチャー | ST+10 |
-| 444 | Mad Harlequin | 風 | 自領地（動的） | ST +N×10 |
-| 445 | Red Cap | 火 | ゴブリン種族 | ST+10、HP+10 |
+| 431 | Phantom Warrior | 地 | 地属性クリーチャー | AP+|AP-|AP&|AP 10 |
+| 441 | Banshee | 水 | 水属性クリーチャー | AP+|AP-|AP&|AP 10 |
+| 444 | Mad Harlequin | 風 | 自領地（動的） | AP+|AP-|AP&|AP +N×10 |
+| 445 | Red Cap | 火 | ゴブリン種族 | AP+|AP-|AP&|AP 10、HP+10 |
 | (追加予定) | - | - | - | - |
 
 ### 特殊なクリーチャー
 
 #### Mad Harlequin (ID: 444)
 - **動的ボーナス**: バトルタイルの隣接自領地数に応じてボーナスが変化
-- **計算式**: `ST +N×10`（N = 隣接自領地数）
-- **最大ボーナス**: ST+60（隣接6マス全て自領地の場合）
+- **計算式**: `AP+|AP-|AP&|AP +N×10`（N = 隣接自領地数）
+- **最大ボーナス**: AP+|AP-|AP&|AP 60（隣接6マス全て自領地の場合）
 
 #### Red Cap (ID: 445)
 - **種族条件**: ゴブリン種族のクリーチャーのみ対象
-- **両方上昇**: ST+10 **および** HP+10
+- **両方上昇**: AP+|AP-|AP&|AP 10 **および** HP+10
 
 ---
 
@@ -192,7 +192,7 @@ participant.current_ap += dynamic_ap
 - 54番: プレイヤー2
 
 → プレイヤー1の自領地数 = 3
-→ Mad HarlequinのボーナスMad Harlequinのボーナス = 3 × 10 = ST+30
+→ Mad HarlequinのボーナスMad Harlequinのボーナス = 3 × 10 = AP+|AP-|AP&|AP 30
 ```
 
 ---
@@ -258,12 +258,12 @@ func apply_support_bonus(
 
 ```
 盤面:
-- タイル10: Boges（応援[火]、ST+10）
+- タイル10: Boges（応援[火]、AP+|AP-|AP&|AP 10）
 - タイル45: バトル発生（Phoenix vs Salamander）
 
 結果:
 1. Phoenixは火属性 → Bogesの応援対象
-2. Phoenix: ST 30 → 40 に上昇
+2. Phoenix: AP+|AP-|AP&|AP 30 → 40 に上昇
 3. バトル実行
 ```
 
@@ -271,14 +271,14 @@ func apply_support_bonus(
 
 ```
 盤面:
-- タイル10: Boges（応援[火]、ST+10）
-- タイル20: Salamander（応援[攻撃側]、ST+10）  
+- タイル10: Boges（応援[火]、AP+|AP-|AP&|AP 10）
+- タイル20: Salamander（応援[攻撃側]、AP+|AP-|AP&|AP 10）  
 - タイル45: バトル発生（Phoenix（火・攻撃側） vs Odontotyrannus）
 
 結果:
-1. PhoenixはBogesの条件（火属性）を満たす → ST+10
-2. Phoenixは Salamanderの条件（攻撃側）を満たす → ST+10
-3. Phoenix: ST 30 → 50 に上昇
+1. PhoenixはBogesの条件（火属性）を満たす → AP+|AP-|AP&|AP 10
+2. Phoenixは Salamanderの条件（攻撃側）を満たす → AP+|AP-|AP&|AP 10
+3. Phoenix: AP+|AP-|AP&|AP 30 → 50 に上昇
 4. バトル実行
 ```
 
@@ -286,14 +286,14 @@ func apply_support_bonus(
 
 ```
 盤面:
-- タイル30: Mad Harlequin（応援[自領地]、ST +N×10）
+- タイル30: Mad Harlequin（応援[自領地]、AP+|AP-|AP&|AP +N×10）
 - タイル45: バトル発生
 - タイル45の隣接: プレイヤー1の土地が4つ
 
 結果:
 1. バトルタイル45の隣接自領地数 = 4
 2. 動的ボーナス = 4 × 10 = 40
-3. バトル参加クリーチャー: ST +40
+3. バトル参加クリーチャー: AP+|AP-|AP&|AP +40
 4. バトル実行
 ```
 

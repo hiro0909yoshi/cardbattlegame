@@ -304,7 +304,7 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "戦闘地が水風の場合",
-	  "ability_detail": "戦闘地が水風の場合、AP+|AP-|AP=20；HP効果無効",
+	  "ability_detail": "戦闘地が水風の場合、AP+20；HP効果無効",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -315,7 +315,7 @@
 			"condition": {
 			  "battle_land_elements": ["water", "wind"]
 			},
-			"description": "戦闘地が水風の場合、AP+|AP-|AP=20"
+			"description": "戦闘地が水風の場合、AP+20"
 		  }
 		]
 	  }
@@ -464,7 +464,7 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "感応",
-	  "ability_detail": "感応[風・AP+|AP-|AP=20、HP+10]",
+	  "ability_detail": "感応[風・AP+20、HP+10]",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応"
@@ -526,7 +526,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[G30・対象クリーチャーのAP+|AP-|AP=10]"
+	  "ability_detail": "不屈；秘術[G30・対象クリーチャーのAP+10]"
 	},
 	{
 	  "id": 118,
