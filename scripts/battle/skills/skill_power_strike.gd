@@ -6,7 +6,7 @@
 ## - 巻物強打: 巻物使用時に無条件でAP×1.5
 ##
 ## 【発動条件】
-## - 通常の強打: effect_combat.apply_power_strike()で条件判定
+## - 通常の強打: ConditionChecker.check_power_strike()で条件判定
 ## - 巻物強打: 巻物使用 + 巻物強打キーワード保持
 ##
 ## 【効果】
@@ -37,8 +37,8 @@ static func has_power_strike(creature_data: Dictionary) -> bool:
 ##
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
-## @param effect_combat エフェクトコンバットシステム
-static func apply(participant, context: Dictionary, effect_combat) -> void:
+## @param effect_combat エフェクトコンバットシステム（非推奨・互換性用）
+static func apply(participant, context: Dictionary, effect_combat = null) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
@@ -101,10 +101,20 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 ## @param context バトルコンテキスト
 ## @param effect_combat エフェクトコンバットシステム
 static func apply_normal_power_strike(participant, context: Dictionary, effect_combat) -> void:
-	var modified_creature_data = participant.creature_data.duplicate()
-	modified_creature_data["ap"] = participant.current_ap  # 現在のAPを設定
-	var modified = effect_combat.apply_power_strike(modified_creature_data, context)
-	participant.current_ap = modified.get("ap", participant.current_ap)
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
 	
-	if modified.get("power_strike_applied", false):
-		print("【強打発動】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+	# 強打条件を満たしているか確認
+	if condition_checker.check_power_strike(participant.creature_data, context):
+		var base_ap = participant.current_ap
+		var multiplier = 1.5  # デフォルトは1.5倍
+		
+		# ability_parsedから倍率を取得（将来的な拡張用）
+		var effects = ability_parsed.get("effects", [])
+		for effect in effects:
+			if effect.get("effect_type") == "power_strike":
+				multiplier = effect.get("multiplier", 1.5)
+				break
+		
+		participant.current_ap = int(base_ap * multiplier)
+		print("【強打発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")

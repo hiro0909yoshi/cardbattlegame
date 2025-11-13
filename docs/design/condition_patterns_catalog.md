@@ -149,7 +149,7 @@ if battle_land_element == "fire":
 - battle_skill_processor.gd: `apply_battle_condition_effects`
 
 **対象クリーチャー**:
-- アンフィビアン (110): 戦闘地が水/風の場合 ST+20
+- アンフィビアン (110): 戦闘地が水/風の場合 AP+20
 - ネッシー (131): 戦闘地が水の場合 HP+(レベル×10)
 
 ---
@@ -211,7 +211,7 @@ var fire_count = player_lands.get("fire", 0)
 - battle_skill_processor.gd: `apply_resonance_skill()`
 
 **対象クリーチャー**:
-- ファイアードレイク (37): ST+火配置数×5
+- ファイアードレイク (37): AP+火配置数×5
 - その他土地数比例系（約7体）
 
 ---
@@ -228,12 +228,12 @@ for element in target_elements:
 
 **対象クリーチャー**:
 - **複数属性合計:**
-  - アームドパラディン (1): ST+（火+地）配置数×10
+  - アームドパラディン (1): AP+（火+地）配置数×10
 - **単属性:**
-  - ファイアードレイク (37): ST+火配置数×5
-  - ブランチアーミー (236): ST+地配置数×5
+  - ファイアードレイク (37): AP+火配置数×5
+  - ブランチアーミー (236): AP+地配置数×5
   - マッドマン (238): HP+地配置数×5
-  - ガルーダ (307): ST&HP=風配置数×10
+  - ガルーダ (307): AP&HP=風配置数×10
   - アンダイン (109): HP=水配置数×20
 
 **注**: コードは複数属性合計に対応しており、`elements` 配列に複数指定可能
@@ -251,7 +251,7 @@ var owned_land_count = board_system_ref.get_player_owned_land_count(player_id)
 - board_system_3d.gd: `get_player_owned_land_count()`
 
 **対象クリーチャー**:
-- バーンタイタン (30): 自領地5個以上で ST&HP-30
+- バーンタイタン (30): 自領地5個以上で AP&HP-30
 
 ---
 
@@ -295,7 +295,7 @@ var result = board_system.tile_neighbor_system.has_adjacent_ally_land(
 - battle_skill_processor.gd: 応援スキルのボーナス計算
 
 **対象クリーチャー**:
-- タイガーヴェタ (226): 隣接自領地で ST&HP+20
+- タイガーヴェタ (226): 隣接自領地で AP&HP+20
 - 応援スキル持ち: 隣接自領地数でボーナス変動
 
 ---
@@ -328,7 +328,7 @@ var creature_count = board_system.count_creatures_by_name(player_id, target_name
 - board_system_3d.gd: `count_creatures_by_name()`
 
 **対象クリーチャー**:
-- ハイプワーカー (32): ST&HP+ハイプワーカー配置数×10
+- ハイプワーカー (32): AP&HP+ハイプワーカー配置数×10
 
 ---
 
@@ -341,7 +341,7 @@ var count = board_system.count_creatures_by_element(player_id, element)
 - board_system_3d.gd: `count_creatures_by_element()`
 
 **対象クリーチャー**:
-- リビングクローブ (440): ST&HP=他属性の配置数×5
+- リビングクローブ (440): AP&HP=他属性の配置数×5
 
 ---
 
@@ -372,7 +372,7 @@ for tile in player_tiles:
 - battle_skill_processor.gd: `apply_phase_3c_effects()` (ジェネラルカン)
 
 **対象クリーチャー**:
-- ジェネラルカン (15): ST+MHP50以上配置数×5
+- ジェネラルカン (15): AP+MHP50以上配置数×5
 
 ---
 
@@ -493,13 +493,13 @@ if enemy_mhp >= 50:
 
 ---
 
-### 3-4. 敵のSTチェック
+### 3-4. 敵のAPチェック
 ```gdscript
-var enemy_st = context.get("enemy_st", 0)
-if enemy_st <= 30:
+var enemy_ap = context.get("enemy_ap", 0)
+if enemy_ap <= 30:
 ```
 **使用箇所**: 4箇所
-- condition_checker.gd: `enemy_st_check`, `st_below`, `st_above`
+- condition_checker.gd: `enemy_ap_check`, `ap_below`, `ap_above`
 
 **対象クリーチャー**:
 - 強打条件として使用
@@ -507,18 +507,18 @@ if enemy_st <= 30:
 
 ---
 
-### 3-5. 基礎STの取得と使用
+### 3-5. 基礎APの取得と使用
 ```gdscript
-var base_st = participant.creature_data.get("ap", 0)
-var base_up_st = participant.creature_data.get("base_up_ap", 0)
-var total_base_st = base_st + base_up_st
+var base_ap = participant.creature_data.get("ap", 0)
+var base_up_ap = participant.creature_data.get("base_up_ap", 0)
+var total_base_ap = base_ap + base_up_ap
 ```
 **使用箇所**: 5箇所
 - battle_skill_processor.gd: `apply_phase_3c_effects()` (ローンビースト)
 - battle_skill_processor.gd: 巻物攻撃
 
 **対象クリーチャー**:
-- ローンビースト (49): HP+基礎ST
+- ローンビースト (49): HP+基礎AP
 - 巻物攻撃持ち全般
 
 ---
@@ -612,7 +612,7 @@ if self_items.is_empty():
 ```gdscript
 var effect_parsed = item.get("effect_parsed", {})
 var stat_bonus = effect_parsed.get("stat_bonus", {})
-var st = stat_bonus.get("st", 0)
+var ap = stat_bonus.get("ap", 0)
 var hp = stat_bonus.get("hp", 0)
 ```
 **使用箇所**: 5箇所
@@ -759,7 +759,7 @@ if attacker.enemy_used_item:
 - battle_system.gd: 永続バフ適用
 
 **対象クリーチャー**:
-- ブルガサリ (339): 敵アイテム使用で永続ST+10
+- ブルガサリ (339): 敵アイテム使用で永続AP+10
 
 ---
 
@@ -774,9 +774,9 @@ var destroy_count = game_flow_manager.get_destroy_count()
 - game_flow_manager.gd: 破壊数管理
 
 **対象クリーチャー**:
-- ソウルコレクター (323): ST=破壊数×5
-- バルキリー (35): 破壊ごとにST+10（永続）
-- ダスクドウェラー (227): 破壊ごとにST&MHP+10（永続）
+- ソウルコレクター (323): AP=破壊数×5
+- バルキリー (35): 破壊ごとにAP+10（永続）
+- ダスクドウェラー (227): 破壊ごとにAP&MHP+10（永続）
 
 ---
 
@@ -789,7 +789,7 @@ var current_turn = game_flow_manager.current_turn_number
 - game_flow_manager.gd: ターン管理
 
 **対象クリーチャー**:
-- ラーバキン (47): ST=現R数、HP+現R数
+- ラーバキン (47): AP=現R数、HP+現R数
 
 ---
 
@@ -801,7 +801,7 @@ var lap_count = game_flow_manager.get_player_lap_count(player_id)
 - game_flow_manager.gd: 周回管理
 
 **対象クリーチャー**:
-- キメラ (7): 周回ごとにST+10（永続）
+- キメラ (7): 周回ごとにAP+10（永続）
 - モスタイタン (41): 周回ごとにMHP+10（永続、リセット可能）
 
 ---
@@ -842,7 +842,7 @@ if dice_value <= 3:
 - battle_preparation.gd: ドゥームデボラー専用（未完全実装）
 
 **対象クリーチャー**:
-- ドゥームデボラー (23): ダイス3以下でST&MHP+10
+- ドゥームデボラー (23): ダイス3以下でAP&MHP+10
 
 ---
 
@@ -855,7 +855,7 @@ var random_value = randi() % (max_value - min_value + 1) + min_value
 - battle_skill_processor.gd: スペクター、ランダム変身
 
 **対象クリーチャー**:
-- スペクター (321): ST&HP=ランダム10~70
+- スペクター (321): AP&HP=ランダム10~70
 - メタモルフォス: ランダム変身
 
 ---
@@ -883,7 +883,7 @@ var chain_count = tile_data_manager.get_element_chain_count(battle_tile_index, p
 - battle_preparation.gd: `apply_item_effects()` (chain_count_st_bonus)
 
 **対象アイテム**:
-- チェーンソー (1034): ST+戦闘地の連鎖数×20
+- チェーンソー (1034): AP+戦闘地の連鎖数×20
 
 **仕組み**:
 - 戦闘が行われているタイルの属性を取得
@@ -894,7 +894,7 @@ var chain_count = tile_data_manager.get_element_chain_count(battle_tile_index, p
 - 戦闘地が火属性
 - プレイヤーが火属性の土地を3個所有
 - → 連鎖数 = 3
-- → チェーンソーのボーナス = 3 × 20 = ST+60
+- → チェーンソーのボーナス = 3 × 20 = AP+60
 
 **注**: 防御側が使用する場合、防御側の所有する土地でカウント
 
@@ -1173,13 +1173,13 @@ class ItemChecker:
 - **ファイル**: `scripts/battle/skills/skill_support.gd`
 - **関数**: `_check_support_target()`
 - **行数**: 約95-100行目
-- **使用例**: 火属性クリーチャーにST+10（Boges）
+- **使用例**: 火属性クリーチャーにAP+10（Boges）
 
 #### 2-11. 侵略側か防御側か（battle_role）
 - **ファイル**: `scripts/battle/skills/skill_support.gd`
 - **関数**: `_check_support_target()`
 - **行数**: 約103-112行目
-- **使用例**: 攻撃側にST+10（Salamander）、防御側にHP+10（Naiad）
+- **使用例**: 攻撃側にAP+10（Salamander）、防御側にHP+10（Naiad）
 
 #### 7-2. 名前部分一致条件（name_contains）
 - **ファイル**: `scripts/battle/skills/skill_support.gd`
@@ -1191,7 +1191,7 @@ class ItemChecker:
 - **ファイル**: `scripts/battle/skills/skill_support.gd`
 - **関数**: `_check_support_target()`
 - **行数**: 約123-128行目
-- **使用例**: ゴブリン種族にST+10、HP+10（Red Cap）
+- **使用例**: ゴブリン種族にAP+10、HP+10（Red Cap）
 
 #### 7-4. 所有者一致条件（owner_match）
 - **ファイル**: `scripts/battle/skills/skill_support.gd`

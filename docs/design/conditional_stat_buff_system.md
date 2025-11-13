@@ -105,7 +105,7 @@
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
 13. `adjacent_owned_land` - 隣接自領地条件
-14. `base_st_to_hp` - 基礎ST→HP変換
+14. `base_ap_to_hp` - 基礎ST→HP変換
 15. `conditional_land_count` - 条件付き配置数
 
 ### 5.2 特殊効果系（11種類）

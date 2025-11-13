@@ -163,12 +163,12 @@ static func _remove_item_effects(participant, item: Dictionary) -> void:
 	var effect_parsed = item.get("effect_parsed", {})
 	var stat_bonus = effect_parsed.get("stat_bonus", {})
 	
-	var st = stat_bonus.get("st", 0)
+	var ap = stat_bonus.get("ap", 0)
 	var hp = stat_bonus.get("hp", 0)
 	
-	if st > 0:
-		participant.current_ap -= st
-		print("    - ST-", st, " → ", participant.current_ap)
+	if ap > 0:
+		participant.current_ap -= ap
+		print("    - AP-", ap, " → ", participant.current_ap)
 	
 	if hp > 0:
 		participant.item_bonus_hp -= hp
@@ -180,12 +180,12 @@ static func _apply_stolen_item_effects(participant, item: Dictionary) -> void:
 	var effect_parsed = item.get("effect_parsed", {})
 	var stat_bonus = effect_parsed.get("stat_bonus", {})
 	
-	var st = stat_bonus.get("st", 0)
+	var ap = stat_bonus.get("ap", 0)
 	var hp = stat_bonus.get("hp", 0)
 	
-	if st > 0:
-		participant.current_ap += st
-		print("    + ST+", st, " → ", participant.current_ap)
+	if ap > 0:
+		participant.current_ap += ap
+		print("    + AP+", ap, " → ", participant.current_ap)
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp

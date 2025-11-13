@@ -725,14 +725,14 @@ func _get_reflect_effect(defender_p: BattleParticipant, attack_type: String):
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -> void:
 	var effect_parsed = item_data.get("effect_parsed", {})
 	
-	# stat_bonusを先に適用（ST+20、HP+20など）
+	# stat_bonusを先に適用（AP+20、HP+20など）
 	var stat_bonus = effect_parsed.get("stat_bonus", {})
 	if not stat_bonus.is_empty():
-		var st = stat_bonus.get("st", 0)
+		var ap = stat_bonus.get("ap", 0)
 		var hp = stat_bonus.get("hp", 0)
 		
-		if st > 0:
-			participant.current_ap += st
+		if ap > 0:
+			participant.current_ap += ap
 		if hp > 0:
 			participant.item_bonus_hp += hp
 			participant.update_current_hp()

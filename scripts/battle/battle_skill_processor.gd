@@ -105,7 +105,6 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 
 ## スキル適用
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
-	var effect_combat = load("res://scripts/skills/effect_combat.gd").new()
 	
 	var has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
 	
@@ -141,7 +140,7 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	FirstStrikeSkill.apply(participant)
 	
 	# 5. 強打スキルを適用（巻物強打を含む）
-	apply_power_strike_skills(participant, context, effect_combat)
+	apply_power_strike_skills(participant, context)
 	
 	# 6. 巻物攻撃判定
 	ScrollAttackSkill.apply(participant, context)
@@ -192,14 +191,14 @@ func check_double_attack(participant: BattleParticipant, context: Dictionary) ->
 	DoubleAttackSkill.apply(participant)
 
 ## 強打スキル適用（巻物強打を含む）
-func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary, effect_combat) -> void:
+func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強打無効化
 	var opponent = context.get("opponent")
 	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
 		print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強打を無効化")
 		return
 	
-	PowerStrikeSkill.apply(participant, context, effect_combat)
+	PowerStrikeSkill.apply(participant, context)
 	print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 
 
@@ -472,16 +471,16 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		
-		# 1. 基礎STをHPに加算（ローンビースト）
-		if effect_type == "base_st_to_hp":
-			var base_st = participant.creature_data.get("ap", 0)
-			var base_up_st = participant.creature_data.get("base_up_ap", 0)
-			var total_base_st = base_st + base_up_st
+		# 1. 基礎APをHPに加算（ローンビースト）
+		if effect_type == "base_ap_to_hp":
+			var base_ap = participant.creature_data.get("ap", 0)
+			var base_up_ap = participant.creature_data.get("base_up_ap", 0)
+			var total_base_ap = base_ap + base_up_ap
 			
-			participant.temporary_bonus_hp += total_base_st
+			participant.temporary_bonus_hp += total_base_ap
 			participant.update_current_hp()
-			print("【基礎ST→HP】", participant.creature_data.get("name", "?"), 
-				  " HP+", total_base_st, " (基礎ST: ", base_st, "+", base_up_st, ")")
+			print("【基礎AP→HP】", participant.creature_data.get("name", "?"), 
+				  " HP+", total_base_ap, " (基礎AP: ", base_ap, "+", base_up_ap, ")")
 		
 		# 2. 条件付き配置数カウント（ジェネラルカン）
 		elif effect_type == "conditional_land_count":

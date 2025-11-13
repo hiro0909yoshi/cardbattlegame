@@ -761,8 +761,8 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "HP+基本ST",
-	  "ability_detail": "HP+基本ST；隣が自領地なら強打",
+	  "ability": "HP+基本AP",
+	  "ability_detail": "HP+基本AP；隣が自領地なら強打",
 	  "ability_parsed": {
 		"keywords": [
 		  "強打"
@@ -783,8 +783,8 @@
 			]
 		  },
 		  {
-			"effect_type": "base_st_to_hp",
-			"description": "HP+基礎ST"
+			"effect_type": "base_ap_to_hp",
+			"description": "HP+基礎AP"
 		  }
 		]
 	  }

@@ -325,16 +325,16 @@ func _apply_element_mismatch_bonus(participant: BattleParticipant, effect: Dicti
 	
 	if user_element != enemy_element:
 		var stat_bonus_data = effect.get("stat_bonus", {})
-		var st = stat_bonus_data.get("st", 0)
+		var ap = stat_bonus_data.get("ap", 0)
 		var hp = stat_bonus_data.get("hp", 0)
 		
-		if st > 0:
-			participant.current_ap += st
+		if ap > 0:
+			participant.current_ap += ap
 		if hp > 0:
 			participant.item_bonus_hp += hp
 			participant.update_current_hp()
 		
-		print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → AP+", st, ", HP+", hp)
+		print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → AP+", ap, ", HP+", hp)
 	else:
 		print("  [属性不一致] ", user_element, " = ", enemy_element, " → ボーナスなし")
 
