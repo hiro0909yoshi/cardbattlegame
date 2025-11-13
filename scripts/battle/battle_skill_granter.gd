@@ -121,7 +121,7 @@ func _grant_nullify(participant: BattleParticipant, skill_data: Dictionary) -> v
 		"conditions": []
 	}
 	
-	if nullify_type in ["st_below", "st_above", "mhp_below", "mhp_above"]:
+	if nullify_type in ["ap_below", "ap_above", "mhp_below", "mhp_above"]:
 		nullify_data["value"] = skill_params.get("value", 0)
 	elif nullify_type == "element":
 		nullify_data["elements"] = skill_params.get("elements", [])

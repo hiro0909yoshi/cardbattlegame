@@ -336,7 +336,18 @@
 	  "ap": 50,
 	  "hp": 30,
 	  "ability": "即死",
-	  "ability_detail": "即死[ST40以上・70%]"
+	  "ability_detail": "即死[AP40以上・70%]",
+	  "ability_parsed": {
+		"keywords": ["即死"],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "defender_ap_check",
+			"operator": ">=",
+			"value": 40,
+			"probability": 70
+		  }
+		}
+	  }
 	},
 	{
 	  "id": 416,

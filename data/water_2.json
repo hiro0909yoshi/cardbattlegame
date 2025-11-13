@@ -530,12 +530,12 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "無効化・応援",
-	  "ability_detail": "無効化[ST50以上]；応援[水風・HP+10]",
+	  "ability_detail": "無効化[AP50以上]；応援[水風・HP+10]",
 	  "ability_parsed": {
 		"keywords": ["無効化", "応援"],
 		"keyword_conditions": {
 		  "無効化": {
-			"nullify_type": "st_above",
+			"nullify_type": "ap_above",
 			"value": 50
 		  }
 		},

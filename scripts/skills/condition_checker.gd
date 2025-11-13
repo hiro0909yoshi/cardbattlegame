@@ -174,26 +174,26 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 				"==": return tile_level == value
 				_: return false
 		
-		# ST条件（即死判定用）
-		"st_above":
-			var enemy_st = context.get("enemy_st", 0)
-			return enemy_st >= cond_value
+		# AP条件（即死判定用）
+		"ap_above":
+			var enemy_ap = context.get("enemy_ap", 0)
+			return enemy_ap >= cond_value
 		
-		"st_below":
-			var enemy_st = context.get("enemy_st", 100)
-			return enemy_st <= cond_value
+		"ap_below":
+			var enemy_ap = context.get("enemy_ap", 100)
+			return enemy_ap <= cond_value
 		
-		# 敵のST判定（強打用）
-		"enemy_st_check":
-			var enemy_st = context.get("enemy_st", 0)
+		# 敵のAP判定（強打用）
+		"enemy_ap_check":
+			var enemy_ap = context.get("enemy_ap", 0)
 			var operator = condition.get("operator", "<=")
 			var value = condition.get("value", 0)
 			match operator:
-				"<=": return enemy_st <= value
-				">=": return enemy_st >= value
-				"<": return enemy_st < value
-				">": return enemy_st > value
-				"==": return enemy_st == value
+				"<=": return enemy_ap <= value
+				">=": return enemy_ap >= value
+				"<": return enemy_ap < value
+				">": return enemy_ap > value
+				"==": return enemy_ap == value
 				_: return false
 		
 		# 敵の最大HP判定（強打用）
@@ -392,10 +392,10 @@ func check_nullify(creature_data: Dictionary, attack_context: Dictionary) -> boo
 				"scroll":
 					if attack_type == "scroll":
 						return true
-				"st_below":
+				"ap_below":
 					var threshold = effect.get("value", 30)
-					var attacker_st = attack_context.get("attacker_st", 0)
-					if attacker_st <= threshold:
+					var attacker_ap = attack_context.get("attacker_ap", 0)
+					if attacker_ap <= threshold:
 						return true
 				"element":
 					var nullify_elements = effect.get("elements", [])

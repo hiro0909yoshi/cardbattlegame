@@ -13,8 +13,8 @@
 ##
 ## 【条件タイプ】
 ## - enemy_is_element: 敵が特定属性の場合
-## - attacker_st_check: 攻撃側STが条件を満たす場合
-## - defender_st_check: 防御側STが条件を満たす場合
+## - attacker_ap_check: 攻撃側APが条件を満たす場合
+## - defender_ap_check: 防御側APが条件を満たす場合
 ##
 ## 【効果】
 ## - 防御側の土地ボーナスHPを0として扱う
@@ -24,7 +24,7 @@
 ## - Gargoyle (ID: 303) - 無条件貫通
 ## - Evil Blast (ID: 325) - 無条件貫通
 ## - ファイアービーク (ID: 38) - 貫通[水風]
-## - ピュトン (ID: 36) - 貫通[敵ST≧40]
+## - ピュトン (ID: 36) - 貫通[敵AP≧40]
 ##
 ## @version 2.0
 ## @date 2025-11-03
@@ -70,8 +70,8 @@ static func is_active(attacker) -> bool:
 ## 攻撃側が貫通を持ち、条件を満たす場合にtrueを返す
 ## 条件付き貫通に対応：
 ## - enemy_is_element: 敵が特定属性の場合
-## - attacker_st_check: 攻撃側STが条件を満たす場合
-## - defender_st_check: 防御側STが条件を満たす場合
+## - attacker_ap_check: 攻撃側APが条件を満たす場合
+## - defender_ap_check: 防御側APが条件を満たす場合
 ##
 ## @param attacker_data 攻撃側のクリーチャーデータ
 ## @param defender_data 防御側のクリーチャーデータ
@@ -120,42 +120,42 @@ static func check_penetration_condition(attacker_data: Dictionary, defender_data
 					print("【貫通】条件不成立: 敵が", defender_element, "属性（要求:", required_elements, "）")
 					return false
 		
-		"attacker_st_check":
+		"attacker_ap_check":
 			# 攻撃側のSTが一定以上の場合
 			var operator = penetrate_condition.get("operator", ">=")
 			var value = penetrate_condition.get("value", 0)
-			var attacker_st = attacker_data.get("ap", 0)
+			var attacker_ap = attacker_data.get("ap", 0)
 			
 			var meets_condition = false
 			match operator:
-				">=": meets_condition = attacker_st >= value
-				">": meets_condition = attacker_st > value
-				"==": meets_condition = attacker_st == value
+				">=": meets_condition = attacker_ap >= value
+				">": meets_condition = attacker_ap > value
+				"==": meets_condition = attacker_ap == value
 			
 			if meets_condition:
-				print("【貫通】条件満たす: ST ", attacker_st, " ", operator, " ", value)
+				print("【貫通】条件満たす: ST ", attacker_ap, " ", operator, " ", value)
 				return true
 			else:
-				print("【貫通】条件不成立: ST ", attacker_st, " ", operator, " ", value)
+				print("【貫通】条件不成立: ST ", attacker_ap, " ", operator, " ", value)
 				return false
 		
-		"defender_st_check":
-			# 防御側のSTが一定以上の場合
+		"defender_ap_check":
+			# 防御側のAPが一定以上の場合
 			var operator_d = penetrate_condition.get("operator", ">=")
 			var value_d = penetrate_condition.get("value", 0)
-			var defender_st = defender_data.get("ap", 0)
+			var defender_ap = defender_data.get("ap", 0)
 			
 			var meets_condition_d = false
 			match operator_d:
-				">=": meets_condition_d = defender_st >= value_d
-				">": meets_condition_d = defender_st > value_d
-				"==": meets_condition_d = defender_st == value_d
+				">=": meets_condition_d = defender_ap >= value_d
+				">": meets_condition_d = defender_ap > value_d
+				"==": meets_condition_d = defender_ap == value_d
 			
 			if meets_condition_d:
-				print("【貫通】条件満たす: 敵ST ", defender_st, " ", operator_d, " ", value_d)
+				print("【貫通】条件満たす: 敵AP ", defender_ap, " ", operator_d, " ", value_d)
 				return true
 			else:
-				print("【貫通】条件不成立: 敵ST ", defender_st, " ", operator_d, " ", value_d)
+				print("【貫通】条件不成立: 敵AP ", defender_ap, " ", operator_d, " ", value_d)
 				return false
 		
 		_:

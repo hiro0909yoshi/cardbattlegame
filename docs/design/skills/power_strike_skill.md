@@ -172,7 +172,7 @@ base_ap *= 1.5  # → 75
   "name": "マグマハンマー",
   "type": "item",
   "cost": {"mp": 20},
-  "effect": "ST+20；💧🌱使用時、強打",
+  "effect": "AP+20；💧🌱使用時、強打",
   "ability_parsed": {
 	"effects": [
 	  {"effect_type": "buff_ap", "value": 20},
@@ -277,7 +277,7 @@ func apply_power_strike(creature_data: Dictionary, context: Dictionary) -> Dicti
 
 ```
 攻撃側: フェイ（火属性、AP:20）
-アイテム: マグマハンマー（ST+20、火属性使用時強打）
+アイテム: マグマハンマー（AP+20、火属性使用時強打）
 
 1. アイテムフェーズ
    - フェイは火属性 → 条件満たす

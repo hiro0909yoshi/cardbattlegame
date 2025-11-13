@@ -242,7 +242,7 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "巻物攻撃",
-	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、AP+|AP-|AP=20、MHP-30",
+	  "ability_detail": "巻物攻撃[ST30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
 	  "ability_parsed": {
 		"keywords": [
 		  "巻物攻撃"
@@ -316,14 +316,14 @@
 	  "ap": 40,
 	  "hp": 50,
 	  "ability": "貫通・侵略時魔力獲得",
-	  "ability_detail": "貫通[敵ST40以上]；侵略時、魔力獲得[G100]",
+	  "ability_detail": "貫通[敵AP40以上]；侵略時、魔力獲得[G100]",
 	  "ability_parsed": {
 		"keywords": [
 		  "貫通"
 		],
 		"keyword_conditions": {
 		  "貫通": {
-			"condition_type": "defender_st_check",
+			"condition_type": "defender_ap_check",
 			"operator": ">=",
 			"value": 40
 		  }

@@ -641,7 +641,7 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "感応・無効化",
-	  "ability_detail": "感応[風・HP+30]；無効化[ST40以下]",
+	  "ability_detail": "感応[風・HP+30]；無効化[AP40以下]",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応",
@@ -656,7 +656,7 @@
 			}
 		  },
 		  "無効化": {
-			"nullify_type": "st_below",
+			"nullify_type": "ap_below",
 			"value": 40
 		  }
 		}

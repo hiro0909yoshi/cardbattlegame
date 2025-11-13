@@ -1,731 +1,739 @@
 {
-  "cards": [
-	{
-	  "id": 1,
-	  "name": "アームドパラディン",
-	  "rarity": "E",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 200,
-		"lands_required": [
-		  "fire",
-		  "fire"
-		]
-	  },
-	  "ap": 0,
-	  "hp": 50,
-	  "ability": "ST変動",
-	  "ability_detail": "AP+|AP-|AP=火地,配置数×10；無効化[巻物]",
-	  "ability_parsed": {
-		"keywords": [
-		  "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "land_count_multiplier",
-			"stat": "ap",
-			"elements": [
-			  "fire",
-			  "earth"
-			],
-			"multiplier": 10,
-			"description": "火と土の土地配置数×10をSTに加算"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 2,
-	  "name": "アモン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 70
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "感応・防魔",
-	  "ability_detail": "感応[地]・ST&HP+20；防魔",
-	  "ability_parsed": {
-		"keywords": [
-		  "感応",
-		  "防魔"
-		],
-		"keyword_conditions": {
-		  "感応": {
-			"element": "earth",
-			"stat_bonus": {
-			  "ap": 20,
-			  "hp": 20
-			}
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 3,
-	  "name": "アングリーモブ",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 50,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "Aボタン連打",
-	  "ability_detail": "Aボタン連打でST上昇"
-	},
-	{
-	  "id": 4,
-	  "name": "ウリエル",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 90
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強打・世界消去",
-	  "ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "has_mark",
-			"mark": "○実装まだ"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "has_mark",
-				"mark": "○"
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 5,
-	  "name": "オールドウィロウ",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 70,
-		"lands_required": [
-		  "fire",
-		  "fire"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 20,
-	  "hp": 40,
-	  "restrictions": {
-		"item_use": [
-		  "武器,アクセサリ,巻物"
-		]
-	  },
-	  "ability": "防御型",
-	  "ability_detail": "防御型；足どめ[火]"
-	},
-	{
-	  "id": 6,
-	  "name": "ガスクラウド",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 45
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "無効化",
-	  "ability_detail": "無効化[1/2]",
-	  "ability_parsed": {
-		"keywords": [
-		  "無効化"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "all_attacks",
-			"reduction_rate": 0.5
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 7,
-	  "name": "キメラ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 80,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 50,
-	  "ability": "先制",
-	  "ability_detail": "先制；周回ごとにAP+|AP-|AP=10",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "first_strike"
-		  },
-		  {
-			"effect_type": "per_lap_permanent_bonus",
-			"stat": "ap",
-			"value": 10
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 8,
-	  "name": "キングバラン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 100
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 50,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 9,
-	  "name": "グラディエーター",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 75
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物",
-		  "防具"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強打",
-	  "ability_detail": "強打[火水地風]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "fire",
-			  "water",
-			  "earth",
-			  "wind"
-			]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "fire",
-				  "water",
-				  "earth",
-				  "wind"
+	"cards": [
+		{
+			"id": 1,
+			"name": "アームドパラディン",
+			"rarity": "E",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 200,
+				"lands_required": [
+					"fire",
+					"fire"
 				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 10,
-	  "name": "クリーピングフレイム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 55
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物",
-		  "防具"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 30,
-	  "hp": 50,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G30・1マス移動]"
-	},
-	{
-	  "id": 11,
-	  "name": "ケットシー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 50
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "water"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "無効化・防魔",
-	  "ability_detail": "無効化[ST40以上]；防魔"
-	},
-	{
-	  "id": 12,
-	  "name": "コンジャラー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 45
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "武器"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "巻物強打",
-	  "ability_detail": "巻物強打；秘術[G80・好きな空地にバーテルを召喚し自壊]",
-	  "ability_parsed": {
-		"keywords": [
-		  "巻物強打"
-		],
-		"keyword_conditions": {
-		  "巻物強打": {
-			"scroll_type": "base_ap"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 13,
-	  "name": "サルファバルーン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 20,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 10,
-	  "hp": 40,
-	  "ability": "自破壊時HP-40",
-	  "ability_detail": "自破壊時、敵のHP-40"
-	},
-	{
-	  "id": 14,
-	  "name": "シールドメイデン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 80
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "不屈",
-	  "ability_detail": "不屈"
-	},
-	{
-	  "id": 15,
-	  "name": "ジェネラルカン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 65,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "アクセサリ"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "先制・ST変動",
-	  "ability_detail": "先制；AP+|AP-|AP=MHP50以上配置数×5",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "conditional_land_count",
-			"stat": "ap",
-			"multiplier": 5,
-			"creature_condition": {
-			  "condition_type": "mhp_above",
-			  "value": 50
 			},
-			"description": "AP+|AP-|AP=MHP50以上配置数×5"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 16,
-	  "name": "シグルド",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 80,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "即死・無効化",
-	  "ability_detail": "即死[ST50以上・60%]；無効化[MHP50以上]",
-	  "ability_parsed": {
-		"keywords": [
-		  "即死",
-		  "無効化"
-		],
-		"keyword_conditions": {
-		  "即死": {
-			"condition_type": "defender_st_check",
-			"operator": ">=",
-			"value": 50,
-			"probability": 60
-		  },
-		  "無効化": {
-			"nullify_type": "mhp_above",
-			"value": 50
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 17,
-	  "name": "シャラザード",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 50
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "援護・秘術",
-	  "ability_detail": "援護[火地]；秘術[G30・全セブターの○を消す]",
-	  "ability_parsed": {
-		"keywords": [
-		  "援護"
-		],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": [
-			  "fire",
-			  "earth"
-			]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 18,
-	  "name": "ショッカー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 70
-	  },
-	  "ap": 10,
-	  "hp": 40,
-	  "ability": "先制・敵ダウン",
-	  "ability_detail": "先制；攻撃成功時、敵をダウン；不屈",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": []
-	  }
-	},
-	{
-	  "id": 19,
-	  "name": "ティアマト",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 110,
-		"lands_required": [
-		  "fire",
-		  "fire"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "先制・強打・土地変性",
-	  "ability_detail": "先制；強打[水]；土地変性[火]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "water",
-			  "wind"
-			]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
-				  "wind"
+			"ap": 0,
+			"hp": 50,
+			"ability": "ST変動",
+			"ability_detail": "AP+|AP-|AP=火地,配置数×10；無効化[巻物]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "scroll_attack"
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "land_count_multiplier",
+						"stat": "ap",
+						"elements": [
+							"fire",
+							"earth"
+						],
+						"multiplier": 10,
+						"description": "火と土の土地配置数×10をSTに加算"
+					}
 				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 20,
-	  "name": "デスサイズ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 15,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "武器"
-		]
-	  },
-	  "ap": 70,
-	  "hp": 10,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・マミーに変身]"
-	},
-	{
-	  "id": 21,
-	  "name": "デスリーチ",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 20,
-		"lands_required": [
-		  "fire"
-		]
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		],
-		"item_use": [
-		  "巻物",
-		  "防具"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]"
-	},
-	{
-	  "id": 22,
-	  "name": "デッドウォーロード",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 60,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "合成",
-	  "ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+|AP-|AP=10]",
-	  "ability_parsed": {
-		"keywords": [
-		  "合成",
-		  "応援"
-		],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "battle_role",
-				  "role": "attacker"
+			}
+		},
+		{
+			"id": 2,
+			"name": "アモン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 70
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "感応・防魔",
+			"ability_detail": "感応[地]・ST&HP+20；防魔",
+			"ability_parsed": {
+				"keywords": [
+					"感応",
+					"防魔"
+				],
+				"keyword_conditions": {
+					"感応": {
+						"element": "earth",
+						"stat_bonus": {
+							"ap": 20,
+							"hp": 20
+						}
+					}
 				}
-			  ]
-			},
-			"bonus": {
-			  "ap": 10
 			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 23,
-	  "name": "ドゥームデボラー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 50
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[G0・MHP×G2を得て、ST&MHP-10]",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "dice_condition_bonus",
-			"dice_check": {"operator": "<=", "value": 3},
-			"stat_changes": {"ap": 10, "max_hp": 10},
-			"description": "ダイス3以下でST&MHP+10（永続）"
-		  }
-		],
-		"keywords": ["秘術"]
-	  }
-	},
-	{
-	  "id": 24,
-	  "name": "ドモビー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 20
-	  },
-	  "ap": 10,
-	  "hp": 20,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[G80・対象自領地に○防魔]"
-	},
-	{
-	  "id": 25,
-	  "name": "ナイトエラント",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "fire",
-	  "cost": {
-		"mp": 60,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 30,
-	  "ability": "合成・反射",
-	  "ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
-	  "ability_parsed": {
-		"keywords": [
-		  "合成",
-		  "反射[1/2]"
-		],
-		"effects": [
-		  {
-			"effect_type": "synthesis",
-			"target_element": "earth",
-			"target_name": "アームドパラディン"
-		  },
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 0.5,
-			"self_damage_ratio": 0.5,
-			"attack_types": [
-			  "normal"
-			],
-			"triggers": [
-			  "on_damaged"
-			]
-		  }
-		]
-	  }
-	}
-  ]
+		},
+		{
+			"id": 3,
+			"name": "アングリーモブ",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 50,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "Aボタン連打",
+			"ability_detail": "Aボタン連打でST上昇"
+		},
+		{
+			"id": 4,
+			"name": "ウリエル",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 90
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "強打・世界消去",
+			"ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]",
+			"ability_parsed": {
+				"keywords": [
+					"強打"
+				],
+				"keyword_conditions": {
+					"強打": {
+						"condition_type": "has_mark",
+						"mark": "○実装まだ"
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "has_mark",
+								"mark": "○"
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 5,
+			"name": "オールドウィロウ",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 70,
+				"lands_required": [
+					"fire",
+					"fire"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 20,
+			"hp": 40,
+			"restrictions": {
+				"item_use": [
+					"武器,アクセサリ,巻物"
+				]
+			},
+			"ability": "防御型",
+			"ability_detail": "防御型；足どめ[火]"
+		},
+		{
+			"id": 6,
+			"name": "ガスクラウド",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 45
+			},
+			"restrictions": {
+				"item_use": [
+					"防具"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "無効化",
+			"ability_detail": "無効化[1/2]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "all_attacks",
+						"reduction_rate": 0.5
+					}
+				}
+			}
+		},
+		{
+			"id": 7,
+			"name": "キメラ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 80,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物"
+				]
+			},
+			"ap": 30,
+			"hp": 50,
+			"ability": "先制",
+			"ability_detail": "先制；周回ごとにAP+|AP-|AP=10",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": [
+					{
+						"effect_type": "first_strike"
+					},
+					{
+						"effect_type": "per_lap_permanent_bonus",
+						"stat": "ap",
+						"value": 10
+					}
+				]
+			}
+		},
+		{
+			"id": 8,
+			"name": "キングバラン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 100
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物"
+				]
+			},
+			"ap": 60,
+			"hp": 50,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 9,
+			"name": "グラディエーター",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 75
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物",
+					"防具"
+				]
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "強打",
+			"ability_detail": "強打[火水地風]",
+			"ability_parsed": {
+				"keywords": [
+					"強打"
+				],
+				"keyword_conditions": {
+					"強打": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"fire",
+							"water",
+							"earth",
+							"wind"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_is_element",
+								"elements": [
+									"fire",
+									"water",
+									"earth",
+									"wind"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 10,
+			"name": "クリーピングフレイム",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 55
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物",
+					"防具"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 30,
+			"hp": 50,
+			"ability": "防御型・秘術",
+			"ability_detail": "防御型；秘術[G30・1マス移動]"
+		},
+		{
+			"id": 11,
+			"name": "ケットシー",
+			"rarity": "N",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 50
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"water"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "無効化・防魔",
+			"ability_detail": "無効化[ST40以上]；防魔"
+		},
+		{
+			"id": 12,
+			"name": "コンジャラー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 45
+			},
+			"restrictions": {
+				"item_use": [
+					"武器"
+				]
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "巻物強打",
+			"ability_detail": "巻物強打；秘術[G80・好きな空地にバーテルを召喚し自壊]",
+			"ability_parsed": {
+				"keywords": [
+					"巻物強打"
+				],
+				"keyword_conditions": {
+					"巻物強打": {
+						"scroll_type": "base_ap"
+					}
+				}
+			}
+		},
+		{
+			"id": 13,
+			"name": "サルファバルーン",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 20,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物"
+				]
+			},
+			"ap": 10,
+			"hp": 40,
+			"ability": "自破壊時HP-40",
+			"ability_detail": "自破壊時、敵のHP-40"
+		},
+		{
+			"id": 14,
+			"name": "シールドメイデン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 80
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "不屈",
+			"ability_detail": "不屈"
+		},
+		{
+			"id": 15,
+			"name": "ジェネラルカン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 65,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"item_use": [
+					"アクセサリ"
+				]
+			},
+			"ap": 30,
+			"hp": 40,
+			"ability": "先制・ST変動",
+			"ability_detail": "先制；AP+|AP-|AP=MHP50以上配置数×5",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": [
+					{
+						"effect_type": "conditional_land_count",
+						"stat": "ap",
+						"multiplier": 5,
+						"creature_condition": {
+							"condition_type": "mhp_above",
+							"value": 50
+						},
+						"description": "AP+|AP-|AP=MHP50以上配置数×5"
+					}
+				]
+			}
+		},
+		{
+			"id": 16,
+			"name": "シグルド",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 80,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "即死・無効化",
+			"ability_detail": "即死[AP50以上・60%]；無効化[MHP50以上]",
+			"ability_parsed": {
+				"keywords": [
+					"即死",
+					"無効化"
+				],
+				"keyword_conditions": {
+					"即死": {
+						"condition_type": "defender_ap_check",
+						"operator": ">=",
+						"value": 50,
+						"probability": 60
+					},
+					"無効化": {
+						"nullify_type": "mhp_above",
+						"value": 50
+					}
+				}
+			}
+		},
+		{
+			"id": 17,
+			"name": "シャラザード",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 50
+			},
+			"ap": 20,
+			"hp": 30,
+			"ability": "援護・秘術",
+			"ability_detail": "援護[火地]；秘術[G30・全セブターの○を消す]",
+			"ability_parsed": {
+				"keywords": [
+					"援護"
+				],
+				"keyword_conditions": {
+					"援護": {
+						"target_elements": [
+							"fire",
+							"earth"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 18,
+			"name": "ショッカー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 70
+			},
+			"ap": 10,
+			"hp": 40,
+			"ability": "先制・敵ダウン",
+			"ability_detail": "先制；攻撃成功時、敵をダウン；不屈",
+			"ability_parsed": {
+				"keywords": [
+					"先制"
+				],
+				"effects": []
+			}
+		},
+		{
+			"id": 19,
+			"name": "ティアマト",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 110,
+				"lands_required": [
+					"fire",
+					"fire"
+				]
+			},
+			"ap": 60,
+			"hp": 60,
+			"ability": "先制・強打・土地変性",
+			"ability_detail": "先制；強打[水]；土地変性[火]",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"強打"
+				],
+				"keyword_conditions": {
+					"強打": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"water",
+							"wind"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_is_element",
+								"elements": [
+									"water",
+									"wind"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 20,
+			"name": "デスサイズ",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 15,
+				"cards_sacrifice": 1
+			},
+			"restrictions": {
+				"item_use": [
+					"武器"
+				]
+			},
+			"ap": 70,
+			"hp": 10,
+			"ability": "秘術",
+			"ability_detail": "秘術[G50・マミーに変身]"
+		},
+		{
+			"id": 21,
+			"name": "デスリーチ",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 20,
+				"lands_required": [
+					"fire"
+				]
+			},
+			"restrictions": {
+				"cannot_summon": [
+					"wind"
+				],
+				"item_use": [
+					"巻物",
+					"防具"
+				]
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "秘術",
+			"ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]"
+		},
+		{
+			"id": 22,
+			"name": "デッドウォーロード",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 60,
+				"cards_sacrifice": 1
+			},
+			"ap": 40,
+			"hp": 40,
+			"ability": "合成",
+			"ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+|AP-|AP=10]",
+			"ability_parsed": {
+				"keywords": [
+					"合成",
+					"応援"
+				],
+				"effects": [
+					{
+						"effect_type": "support",
+						"target": {
+							"scope": "all_creatures",
+							"conditions": [
+								{
+									"condition_type": "battle_role",
+									"role": "attacker"
+								}
+							]
+						},
+						"bonus": {
+							"ap": 10
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 23,
+			"name": "ドゥームデボラー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 50
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物"
+				]
+			},
+			"ap": 30,
+			"hp": 30,
+			"ability": "秘術",
+			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[G0・MHP×G2を得て、ST&MHP-10]",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "dice_condition_bonus",
+						"dice_check": {
+							"operator": "<=",
+							"value": 3
+						},
+						"stat_changes": {
+							"ap": 10,
+							"max_hp": 10
+						},
+						"description": "ダイス3以下でST&MHP+10（永続）"
+					}
+				],
+				"keywords": [
+					"秘術"
+				]
+			}
+		},
+		{
+			"id": 24,
+			"name": "ドモビー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 20
+			},
+			"ap": 10,
+			"hp": 20,
+			"ability": "秘術",
+			"ability_detail": "秘術[G80・対象自領地に○防魔]"
+		},
+		{
+			"id": 25,
+			"name": "ナイトエラント",
+			"rarity": "R",
+			"type": "creature",
+			"element": "fire",
+			"cost": {
+				"mp": 60,
+				"cards_sacrifice": 1
+			},
+			"ap": 40,
+			"hp": 30,
+			"ability": "合成・反射",
+			"ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
+			"ability_parsed": {
+				"keywords": [
+					"合成",
+					"反射[1/2]"
+				],
+				"effects": [
+					{
+						"effect_type": "synthesis",
+						"target_element": "earth",
+						"target_name": "アームドパラディン"
+					},
+					{
+						"effect_type": "reflect_damage",
+						"reflect_ratio": 0.5,
+						"self_damage_ratio": 0.5,
+						"attack_types": [
+							"normal"
+						],
+						"triggers": [
+							"on_damaged"
+						]
+					}
+				]
+			}
+		}
+	]
 }

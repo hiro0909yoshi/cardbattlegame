@@ -104,7 +104,7 @@
 	"keywords": ["貫通"],
 	"keyword_conditions": {
 	  "貫通": {
-		"condition_type": "defender_st_check",
+		"condition_type": "defender_ap_check",
 		"operator": ">=",
 		"value": 40
 	  }
@@ -119,7 +119,7 @@
 - `==`: 等しい
 
 **実装例**:
-- **ピュトン** (ID: 36) - 敵ST40以上で貫通
+- **ピュトン** (ID: 36) - 敵AP40以上で貫通
 
 ---
 
@@ -244,11 +244,11 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 ### 条件付き貫通
 
-#### 攻撃力条件（ST40以上）
+#### 攻撃力条件（AP40以上）
 
 | ID | 名前 | 属性 | AP | HP | 条件 |
 |----|------|------|----|----|------|
-| 36 | ピュトン | 火 | 40 | 50 | 敵ST≥40で貫通 |
+| 36 | ピュトン | 火 | 40 | 50 | 敵AP≥40で貫通 |
 
 #### 敵属性条件
 
@@ -260,7 +260,7 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 - **合計**: 4体（ファイアービークは2つの条件を持つ）
 - **属性別**: 火2、風1、無1
-- **条件タイプ**: 無条件3体、ST条件1体、敵属性条件1体
+- **条件タイプ**: 無条件3体、AP条件1体、敵属性条件1体
 
 ---
 
@@ -300,17 +300,17 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 ### シナリオ3: 攻撃力条件（ピュトン）
 
 ```
-攻撃側: ピュトン（基本AP:40、貫通[敵ST≥40]）
+攻撃側: ピュトン（基本AP:40、貫通[敵AP≥40]）
 防御側A: バハムート（AP:50）
 防御側B: グレムリン（AP:30）
 
 対バハムート:
-- 敵ST = 50
-- 敵ST≥40なので貫通発動！
+- 敵AP = 50
+- 敵AP≥40なので貫通発動！
 
 対グレムリン:
-- 敵ST = 30
-- 敵ST<40なので貫通不発
+- 敵AP = 30
+- 敵AP<40なので貫通不発
 ```
 
 ---

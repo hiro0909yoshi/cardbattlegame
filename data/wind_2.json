@@ -615,7 +615,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・AP+|AP-|AP=10]；秘術[G60・ST30以下をAP+|AP-|AP=20、ST50以上をAP+|AP-|AP=20]",
+	  "ability_detail": "応援[風水・AP+|AP-|AP=10]；秘術[G60・AP30以下をAP+|AP-|AP=20、AP50以上をAP+|AP-|AP=20]",
 	  "ability_parsed": {
 		"keywords": ["応援", "秘術"],
 		"effects": [

@@ -77,12 +77,12 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 				is_nullified = _check_nullify_mhp_above(nullify_condition, attacker)
 			"mhp_below":
 				is_nullified = _check_nullify_mhp_below(nullify_condition, attacker)
-			"st_below":
-				is_nullified = _check_nullify_st_below(nullify_condition, attacker)
-			"st_above":
-				is_nullified = _check_nullify_st_above(nullify_condition, attacker)
-			"attacker_st_above":
-				is_nullified = _check_nullify_attacker_st_above(nullify_condition, attacker, defender)
+			"ap_below":
+				is_nullified = _check_nullify_ap_below(nullify_condition, attacker)
+			"ap_above":
+				is_nullified = _check_nullify_ap_above(nullify_condition, attacker)
+			"attacker_ap_above":
+				is_nullified = _check_nullify_attacker_ap_above(nullify_condition, attacker, defender)
 			"all_attacks":
 				is_nullified = true  # 無条件で適用
 			"has_ability":
@@ -132,8 +132,8 @@ func _check_nullify_mhp_below(condition: Dictionary, attacker: BattleParticipant
 	# BattleParticipantのget_max_hp()を使用
 	return attacker.get_max_hp() <= threshold
 
-## ST以下無効化判定
-func _check_nullify_st_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
+## AP以下無効化判定
+func _check_nullify_ap_below(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
 	# 基礎ST = base_ap + base_up_ap
 	var base_ap = attacker.creature_data.get("ap", 0)
@@ -141,8 +141,8 @@ func _check_nullify_st_below(condition: Dictionary, attacker: BattleParticipant)
 	var attacker_base_st = base_ap + base_up_ap
 	return attacker_base_st <= threshold
 
-## ST以上無効化判定
-func _check_nullify_st_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
+## AP以上無効化判定
+func _check_nullify_ap_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
 	var threshold = condition.get("value", 0)
 	# 基礎ST = base_ap + base_up_ap
 	var base_ap = attacker.creature_data.get("ap", 0)
@@ -156,8 +156,8 @@ func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipa
 	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
 	return ability in attacker_keywords
 
-## 攻撃者STが装備者より大きい場合の無効化判定（ラグドール用）
-func _check_nullify_attacker_st_above(_condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+## 攻撃者APが装備者より大きい場合の無効化判定（ラグドール用）
+func _check_nullify_attacker_ap_above(_condition: Dictionary, attacker: BattleParticipant, defender: BattleParticipant) -> bool:
 	# 攻撃者の基礎ST
 	var attacker_base_ap = attacker.creature_data.get("ap", 0)
 	var attacker_base_up_ap = attacker.creature_data.get("base_up_ap", 0)
@@ -266,23 +266,23 @@ func _check_instant_death_condition(condition: Dictionary, attacker: BattleParti
 				print("【即死条件】敵が", defender_type, "型（要求:", required_type, "）→ 条件不成立")
 				return false
 		
-		"defender_st_check":
-			# 防御側のSTが一定以上（基本STで判定）
+		"defender_ap_check":
+			# 防御側のAPが一定以上（基本APで判定）
 			var operator = condition.get("operator", ">=")
 			var value = condition.get("value", 0)
-			var defender_base_st = defender.creature_data.get("ap", 0)  # 基本STで判定
+			var defender_base_ap = defender.creature_data.get("ap", 0)  # 基本APで判定
 			
 			var meets_condition = false
 			match operator:
-				">=": meets_condition = defender_base_st >= value
-				">": meets_condition = defender_base_st > value
-				"==": meets_condition = defender_base_st == value
+				">=": meets_condition = defender_base_ap >= value
+				">": meets_condition = defender_base_ap > value
+				"==": meets_condition = defender_base_ap == value
 			
 			if meets_condition:
-				print("【即死条件】防御側ST ", defender_base_st, " ", operator, " ", value, " → 条件満たす")
+				print("【即死条件】防御側AP ", defender_base_ap, " ", operator, " ", value, " → 条件満たす")
 				return true
 			else:
-				print("【即死条件】防御側ST ", defender_base_st, " ", operator, " ", value, " → 条件不成立")
+				print("【即死条件】防御側AP ", defender_base_ap, " ", operator, " ", value, " → 条件不成立")
 				return false
 		
 		"defender_role":

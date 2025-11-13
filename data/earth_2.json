@@ -267,14 +267,14 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "強打・無効化",
-	  "ability_detail": "強打[ST30以下]；敵の攻撃成功時能力を無効化",
+	  "ability_detail": "強打[AP30以下]；敵の攻撃成功時能力を無効化",
 	  "ability_parsed": {
 		"keywords": [
 		  "強打"
 		],
 		"keyword_conditions": {
 		  "強打": {
-			"condition_type": "enemy_st_check",
+			"condition_type": "enemy_ap_check",
 			"operator": "<=",
 			"value": 30
 		  }
@@ -285,7 +285,7 @@
 			"multiplier": 1.5,
 			"conditions": [
 			  {
-				"condition_type": "enemy_st_check",
+				"condition_type": "enemy_ap_check",
 				"operator": "<=",
 				"value": 30
 			  }

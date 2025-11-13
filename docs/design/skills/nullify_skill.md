@@ -146,7 +146,7 @@ reduction_rate = 指定なし  # ダメージ = 元のダメージ × 0.0（完�
 
 ---
 
-### 3. ST条件（st_below）
+### 3. AP条件（ap_below）
 
 **説明**: 攻撃側の基本STを条件に無効化
 
@@ -157,7 +157,7 @@ reduction_rate = 指定なし  # ダメージ = 元のダメージ × 0.0（完�
 **データ構造**:
 ```json
 {
-  "nullify_type": "st_below",
+  \"nullify_type\": \"ap_below\",
   "value": 40  // ST40以下を無効化
 }
 ```
