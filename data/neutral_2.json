@@ -73,7 +73,7 @@
 		],
 		"keyword_conditions": {
 		  "巻物強打": {
-			"scroll_type": "base_st"
+			"scroll_type": "base_ap"
 		  }
 		}
 	  }
@@ -292,7 +292,7 @@
 	  "ap": 0,
 	  "hp": 40,
 	  "ability": "アイテムクリーチャー・戦闘中ST上昇",
-	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、ST+50",
+	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+|AP-|AP=50",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -300,7 +300,7 @@
 			"stat_changes": {
 			  "ap": 50
 			},
-			"description": "クリーチャーとして戦闘時ST+50"
+			"description": "クリーチャーとして戦闘時AP+|AP-|AP=50"
 		  }
 		]
 	  }
@@ -448,7 +448,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "ST&HP計算・応援",
-	  "ability_detail": "ST&HP=ゴブリン配置数×20；応援[ゴブリン・ST+20]",
+	  "ability_detail": "ST&HP=ゴブリン配置数×20；応援[ゴブリン・AP+|AP-|AP=20]",
 	  "ability_parsed": {
 		"keywords": ["応援"],
 		"effects": [
@@ -498,7 +498,7 @@
 			"stat_changes": {
 			  "ap": -10
 			},
-			"description": "バトル終了時ST-10（永続）"
+			"description": "バトル終了時AP+|AP-|AP=10（永続）"
 		  }
 		]
 	  }

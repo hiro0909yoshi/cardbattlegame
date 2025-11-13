@@ -64,7 +64,7 @@
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {
 		  "巻物強打": {
-			"scroll_type": "base_st"
+			"scroll_type": "base_ap"
 		  }
 		}
 	  }
@@ -93,7 +93,7 @@
 		],
 		"keyword_conditions": {
 		  "巻物強打": {
-			"scroll_type": "base_st"
+			"scroll_type": "base_ap"
 		  }
 		},
 		"effects": []
@@ -148,7 +148,7 @@
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {
 		  "巻物強打": {
-			"scroll_type": "base_st"
+			"scroll_type": "base_ap"
 		  }
 		}
 	  }
@@ -256,7 +256,7 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "感応・防魔",
-	  "ability_detail": "感応[水・ST+10、HP+20]；防魔",
+	  "ability_detail": "感応[水・AP+|AP-|AP=10、HP+20]；防魔",
 	  "ability_parsed": {
 		"keywords": [
 		  "感応",
@@ -449,7 +449,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "合成・戦闘後効果",
-	  "ability_detail": "合成[♡スペル・ST+20]；戦闘後、敵のMHP-これの基本ST"
+	  "ability_detail": "合成[♡スペル・AP+|AP-|AP=20]；戦闘後、敵のMHP-これの基本ST"
 	},
 	{
 	  "id": 318,
@@ -471,7 +471,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "ST計算・敵地移動",
-	  "ability_detail": "ST+水自領地数×10；敵領地移動[属性の違う敵領地]",
+	  "ability_detail": "AP+|AP-|AP=水自領地数×10；敵領地移動[属性の違う敵領地]",
 	  "ability_parsed": {
 		"keywords": ["敵領地移動"],
 		"keyword_conditions": {
@@ -599,7 +599,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "ST計算",
-	  "ability_detail": "ST+クリーチャー破壊数×5",
+	  "ability_detail": "AP+|AP-|AP=クリーチャー破壊数×5",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -607,7 +607,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  },
@@ -618,7 +618,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  },
@@ -629,7 +629,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  },
@@ -640,7 +640,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  },
@@ -651,7 +651,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  },
@@ -662,7 +662,7 @@
 			"effect_type": "destroy_count_multiplier",
 			"stat": "ap",
 			"multiplier": 5,
-			"description": "ST+破壊数×5"
+			"description": "AP+|AP-|AP=破壊数×5"
 		  }
 		]
 	  }

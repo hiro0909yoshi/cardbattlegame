@@ -13,8 +13,8 @@
 ## - base_up_ap以外のバフが適用されていない
 ##
 ## 【効果】
-## - AP固定値設定（scroll_type: "fixed_st"）
-## - AP基本ST使用（scroll_type: "base_st"）
+## - AP固定値設定（scroll_type: "fixed_ap"）
+## - AP基本AP使用（scroll_type: "base_ap"）
 ## - 防御側の土地ボーナスHP無効化
 ##
 ## 【実装済みクリーチャー例】
@@ -70,18 +70,18 @@ static func apply(participant: BattleParticipant, _context: Dictionary) -> bool:
 		scroll_config = keyword_conditions.get("巻物強打", {})
 	
 	# scroll_typeに基づいてAPを設定
-	var scroll_type = scroll_config.get("scroll_type", "base_st")
+	var scroll_type = scroll_config.get("scroll_type", "base_ap")
 	
 	match scroll_type:
-		"fixed_st":
+		"fixed_ap":
 			# 固定値
 			var value = scroll_config.get("value", base_ap)
 			participant.current_ap = value
 			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP固定:", value)
-		"base_st":
-			# 基本STのまま
+		"base_ap":
+			# 基本APのまま
 			participant.current_ap = base_ap
-			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本ST:", base_ap)
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本AP:", base_ap)
 		"land_count":
 			# 土地数比例
 			var elements = scroll_config.get("elements", [])
@@ -99,7 +99,7 @@ static func apply(participant: BattleParticipant, _context: Dictionary) -> bool:
 		_:
 			# デフォルトは基本ST
 			participant.current_ap = base_ap
-			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本ST:", base_ap)
+			print("【巻物攻撃】", participant.creature_data.get("name", "?"), " AP=基本AP:", base_ap)
 	
 	return true
 

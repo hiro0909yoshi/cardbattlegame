@@ -112,13 +112,8 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 0. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)
 	
-	# 1. 巻物攻撃判定（最優先）
-	ScrollAttackSkill.apply(participant, context)
-	
-	# 2. 感応スキルを適用
-	# 巻物強打の場合は感応を適用、通常の巻物攻撃の場合はスキップ
-	if not participant.is_using_scroll or has_scroll_power_strike:
-		ResonanceSkill.apply(participant, context)
+	# 1. 感応スキルを適用
+	ResonanceSkill.apply(participant, context)
 	
 	# 3. 土地数比例効果を適用（Phase 3追加）
 	apply_land_count_effects(participant, context)
@@ -148,8 +143,43 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 5. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context, effect_combat)
 	
-	# 6. 2回攻撃スキルを判定
+	# 6. 巻物攻撃判定
+	ScrollAttackSkill.apply(participant, context)
+	
+	# 7. 2回攻撃スキルを判定
 	check_double_attack(participant, context)
+	
+	# 8. アイテム巻物が使用中の場合、AP を最終固定
+	if participant.is_using_scroll:
+		var ability_parsed = participant.creature_data.get("ability_parsed", {})
+		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+		var scroll_config = keyword_conditions.get("巻物攻撃", {})
+		var scroll_type = scroll_config.get("scroll_type", "base_ap")
+		var board_system = board_system_ref
+		
+		match scroll_type:
+			"fixed_ap":
+				var value = scroll_config.get("value", 0)
+				participant.current_ap = value
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+					  " AP:", value)
+			"base_ap":
+				var base_ap = participant.creature_data.get("ap", 0)
+				participant.current_ap = base_ap
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+					  " AP=基本AP:", base_ap)
+			"land_count":
+				var elements = scroll_config.get("elements", [])
+				var multiplier = scroll_config.get("multiplier", 1)
+				var total_count = 0
+				if board_system:
+					var scroll_player_id = context.get("player_id", 0)
+					for element in elements:
+						total_count += board_system.count_creatures_by_element(scroll_player_id, element)
+				var calculated_ap = total_count * multiplier
+				participant.current_ap = calculated_ap
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+					  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
 
 ## 2回攻撃スキル判定
 func check_double_attack(participant: BattleParticipant, context: Dictionary) -> void:

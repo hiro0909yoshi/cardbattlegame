@@ -55,20 +55,20 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 
 ## stat_bonusを適用
 func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -> void:
-	var st = stat_bonus.get("st", 0)
+	var ap = stat_bonus.get("ap", 0)
 	var hp = stat_bonus.get("hp", 0)
 	var force_st = stat_bonus.get("force_st", false)
 	
 	# force_st: APを絶対値で設定（例: スフィアシールドのAP=0）
 	if force_st:
-		participant.current_ap = st
-		print("  AP=", st, "（絶対値設定）")
-	elif st > 0:
-		participant.item_bonus_ap += st
-		print("  AP+", st, " → ", participant.item_bonus_ap)
-	elif st < 0:
-		participant.item_bonus_ap += st
-		print("  AP", st, " → ", participant.item_bonus_ap)
+		participant.current_ap = ap
+		print("  AP=", ap, "（絶対値設定）")
+	elif ap > 0:
+		participant.item_bonus_ap += ap
+		print("  AP+", ap, " → ", participant.item_bonus_ap)
+	elif ap < 0:
+		participant.item_bonus_ap += ap
+		print("  AP", ap, " → ", participant.item_bonus_ap)
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp
@@ -297,17 +297,17 @@ func _apply_revive_skill(participant: BattleParticipant) -> void:
 
 ## ランダムステータスボーナス
 func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary) -> void:
-	var st_range = effect.get("st_range", {})
+	var ap_range = effect.get("ap_range", {})
 	var hp_range = effect.get("hp_range", {})
 	
-	var st_bonus = 0
+	var ap_bonus = 0
 	var hp_bonus = 0
 	
-	if not st_range.is_empty():
-		var st_min = st_range.get("min", 0)
-		var st_max = st_range.get("max", 0)
-		st_bonus = randi() % int(st_max - st_min + 1) + st_min
-		participant.current_ap += st_bonus
+	if not ap_range.is_empty():
+		var ap_min = ap_range.get("min", 0)
+		var ap_max = ap_range.get("max", 0)
+		ap_bonus = randi() % int(ap_max - ap_min + 1) + ap_min
+		participant.current_ap += ap_bonus
 	
 	if not hp_range.is_empty():
 		var hp_min = hp_range.get("min", 0)
@@ -316,7 +316,7 @@ func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary
 		participant.item_bonus_hp += hp_bonus
 		participant.update_current_hp()
 	
-	print("  [ランダムボーナス] AP+", st_bonus, ", HP+", hp_bonus)
+	print("  [ランダムボーナス] AP+", ap_bonus, ", HP+", hp_bonus)
 
 ## 属性不一致ボーナス
 func _apply_element_mismatch_bonus(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
@@ -345,7 +345,7 @@ func _apply_fixed_stat(participant: BattleParticipant, effect: Dictionary) -> vo
 	var operation = effect.get("operation", "set")
 	
 	if operation == "set":
-		if stat == "st":
+		if stat == "ap":
 			participant.creature_data["ap"] = fixed_value
 			participant.current_ap = fixed_value
 			print("  [固定値] AP=", fixed_value)
@@ -428,20 +428,43 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	if not "巻物攻撃" in participant.creature_data["ability_parsed"]["keywords"]:
 		participant.creature_data["ability_parsed"]["keywords"].append("巻物攻撃")
 	
-	var scroll_type = effect.get("scroll_type", "base_st")
+	var scroll_type = effect.get("scroll_type", "base_ap")
 	var scroll_config = {"scroll_type": scroll_type}
 	
+	# アイテム巻物：AP を動的に計算して直接設定
+	var base_ap = participant.creature_data.get("ap", 0)
+	
 	match scroll_type:
-		"fixed_st":
-			scroll_config["value"] = effect.get("value", 0)
-			print("  巻物攻撃を付与: AP固定", scroll_config["value"])
-		"base_st":
-			print("  巻物攻撃を付与: AP=基本AP")
+		"fixed_ap":
+			var value = effect.get("value", 0)
+			scroll_config["value"] = value
+			participant.current_ap = value
+			print("  【アイテム巻物】", participant.creature_data.get("name", "?"), " AP強制固定: ", value)
+		"base_ap":
+			participant.current_ap = base_ap
+			print("  【アイテム巻物】", participant.creature_data.get("name", "?"), " AP=基本AP: ", base_ap)
 		"land_count":
 			scroll_config["elements"] = effect.get("elements", [])
 			scroll_config["multiplier"] = effect.get("multiplier", 1)
-			print("  巻物攻撃を付与: AP=土地数×", scroll_config["multiplier"], " (", scroll_config["elements"], ")")
+			# 土地数を計算してAPを設定
+			var elements = scroll_config["elements"]
+			var multiplier = scroll_config["multiplier"]
+			var total_count = 0
+			if board_system_ref:
+				for element in elements:
+					total_count += board_system_ref.count_creatures_by_element(0, element)
+			var calculated_ap = total_count * multiplier
+			participant.current_ap = calculated_ap
+			print("  【アイテム巻物】", participant.creature_data.get("name", "?"), 
+				  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
+		_:
+			participant.current_ap = base_ap
+			print("  【アイテム巻物】", participant.creature_data.get("name", "?"), " AP=基本AP（デフォルト）: ", base_ap)
 	
+	# アイテム巻物フラグを立てる（他のスキルをスキップするため）
+	participant.is_using_scroll = true
+	
+	# keyword_conditions に設定を保存
 	participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
 
 ## 連鎖数STボーナス

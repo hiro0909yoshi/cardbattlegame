@@ -409,7 +409,7 @@ func check_nullify(creature_data: Dictionary, attack_context: Dictionary) -> boo
 func check_affinity(creature_data: Dictionary, game_context: Dictionary) -> Dictionary:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
-	var bonuses = {"st": 0, "hp": 0}
+	var bonuses = {"ap": 0, "hp": 0}
 	
 	for effect in effects:
 		if effect.get("effect_type") == "affinity":
@@ -417,7 +417,7 @@ func check_affinity(creature_data: Dictionary, game_context: Dictionary) -> Dict
 			var player_lands = game_context.get("player_lands", {})
 			
 			if player_lands.get(element, 0) > 0:
-				bonuses.st += effect.get("st_bonus", 0)
+				bonuses.ap += effect.get("ap_bonus", 0)
 				bonuses.hp += effect.get("hp_bonus", 0)
 	
 	return bonuses
@@ -431,7 +431,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"creature_element": attacker_data.get("element", ""),
 		"enemy_element": defender_data.get("element", ""),
 		"enemy_name": game_state.get("enemy_name", defender_data.get("name", "")),
-		"enemy_st": defender_data.get("st", 0),
+		"enemy_ap": defender_data.get("ap", 0),
 		"enemy_mhp": game_state.get("enemy_mhp_override", defender_data.get("mhp", 0)),
 		
 		# アイテム情報

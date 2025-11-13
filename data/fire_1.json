@@ -16,7 +16,7 @@
 	  "ap": 0,
 	  "hp": 50,
 	  "ability": "ST変動",
-	  "ability_detail": "ST=火地,配置数×10；無効化[巻物]",
+	  "ability_detail": "AP+|AP-|AP=火地,配置数×10；無効化[巻物]",
 	  "ability_parsed": {
 		"keywords": [
 		  "無効化"
@@ -197,7 +197,7 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "先制",
-	  "ability_detail": "先制；周回ごとにST+10",
+	  "ability_detail": "先制；周回ごとにAP+|AP-|AP=10",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -350,7 +350,7 @@
 		],
 		"keyword_conditions": {
 		  "巻物強打": {
-			"scroll_type": "base_st"
+			"scroll_type": "base_ap"
 		  }
 		}
 	  }
@@ -411,7 +411,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "先制・ST変動",
-	  "ability_detail": "先制；ST+MHP50以上配置数×5",
+	  "ability_detail": "先制；AP+|AP-|AP=MHP50以上配置数×5",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -425,7 +425,7 @@
 			  "condition_type": "mhp_above",
 			  "value": 50
 			},
-			"description": "ST+MHP50以上配置数×5"
+			"description": "AP+|AP-|AP=MHP50以上配置数×5"
 		  }
 		]
 	  }
@@ -619,7 +619,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "合成",
-	  "ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・ST+10]",
+	  "ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+|AP-|AP=10]",
 	  "ability_parsed": {
 		"keywords": [
 		  "合成",
