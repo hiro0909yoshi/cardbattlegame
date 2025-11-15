@@ -198,8 +198,8 @@
 	  },
 	  "ap": 0,
 	  "hp": 40,
-	  "ability": "ST&HP計算",
-	  "ability_detail": "ST&HP=💨配置数×10",
+	  "ability": "AP&HP計算",
+	  "ability_detail": "AP&HP=風配置数×10",
 	  "ability_parsed": {
 		"keywords": [],
 		"effects": [
@@ -209,7 +209,7 @@
 			"elements": ["wind"],
 			"multiplier": 10,
 			"operation": "set",
-			"description": "ST&HP=風配置数×10"
+			"description": "AP&HP=風配置数×10"
 		  }
 		]
 	  }
@@ -226,7 +226,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "先制・感応",
-	  "ability_detail": "先制；感応[水・ST&HP+20]",
+	  "ability_detail": "先制；感応[水・AP&HP+20]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -449,7 +449,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "合成・戦闘後効果",
-	  "ability_detail": "合成[♡スペル・AP+20]；戦闘後、敵のMHP-これの基本ST"
+	  "ability_detail": "合成[呪いスペル・AP+20]；戦闘後、敵のMHP-これの基本AP"
 	},
 	{
 	  "id": 318,
@@ -470,7 +470,7 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "ST計算・敵地移動",
+	  "ability": "AP計算・敵地移動",
 	  "ability_detail": "AP+水自領地数×10；敵領地移動[属性の違う敵領地]",
 	  "ability_parsed": {
 		"keywords": ["敵領地移動"],
@@ -484,11 +484,9 @@
 		"effects": [
 		  {
 			"effect_type": "land_count_multiplier",
-			"target": "self",
-			"stat": "ST",
-			"operation": "add",
-			"value": 10,
-			"land_element": "water"
+			"stat": "ap",
+			"elements": ["water"],
+			"multiplier": 10
 		  }
 		]
 	  }
@@ -540,7 +538,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "合成・攻撃成功時",
-	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に♡\"衰弱\""
+	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\""
 	},
 	{
 	  "id": 321,
@@ -554,7 +552,7 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "ランダム能力値",
-	  "ability_detail": "ST&HP=10~70",
+	  "ability_detail": "AP&HP=10~70",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -562,7 +560,7 @@
 			"stat": "both",
 			"min": 10,
 			"max": 70,
-			"description": "バトル準備時にST&HPをランダムに10~70に設定"
+			"description": "バトル準備時にAP&HPをランダムに10~70に設定"
 		  }
 		]
 	  }
@@ -598,7 +596,7 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "ST計算",
+	  "ability": "AP計算",
 	  "ability_detail": "AP+クリーチャー破壊数×5",
 	  "ability_parsed": {
 		"keywords": [],

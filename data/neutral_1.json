@@ -55,7 +55,7 @@
 	  "ap": 50,
 	  "hp": 60,
 	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[G80・対象⬜のHP-30]",
+	  "ability_detail": "先制；秘術[G80・対象無のHP-30]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
@@ -90,7 +90,7 @@
 	  "ap": 60,
 	  "hp": 60,
 	  "ability": "先制・無効化・援護・合体",
-	  "ability_detail": "先制；無効化[巻物]；援護[⬜]；合体[ビーストギア]",
+	  "ability_detail": "先制；無効化[巻物]；援護[無]；合体[ビーストギア]",
 	  "ability_parsed": {
 		"keywords": ["援護", "先制", "無効化"],
 		"keyword_conditions": {
@@ -402,8 +402,8 @@
 	  },
 	  "ap": 40,
 	  "hp": 30,
-	  "ability": "先制・STドレイン・不屈",
-	  "ability_detail": "先制；STドレイン；不屈",
+	  "ability": "先制・APドレイン・不屈",
+	  "ability_detail": "先制；APドレイン；不屈",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"

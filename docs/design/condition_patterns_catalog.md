@@ -1013,7 +1013,7 @@ match effect_type:
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
 13. `adjacent_owned_land` - 隣接自領地条件
-14. `base_st_to_hp` - 基礎AP→HP変換
+14. `base_ap_to_hp` - 基礎AP→HP変換
 15. `conditional_land_count` - 条件付き配置数
 16. `random_stat` - ランダムステータス
 17. `tribe_placement_bonus` - 種族配置ボーナス

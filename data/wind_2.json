@@ -445,7 +445,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "応援・不屈",
-	  "ability_detail": "応援[自クリーチャー・ST&HP+隣接自領地数×20]；不屈",
+	  "ability_detail": "応援[自クリーチャー・AP&HP+隣接自領地数×20]；不屈",
 	  "ability_parsed": {
 		"keywords": ["応援", "不屈"],
 		"effects": [

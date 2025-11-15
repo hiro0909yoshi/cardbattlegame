@@ -200,7 +200,7 @@
 	],
 	"keyword_conditions": {
 	  "巻物強打": {
-		"scroll_type": "base_st"
+		"scroll_type": "base_ap"
 	  }
 	}
   }

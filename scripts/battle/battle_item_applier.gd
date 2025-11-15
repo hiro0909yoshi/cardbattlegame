@@ -124,8 +124,8 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 		"grant_skill":
 			_apply_grant_skill(participant, effect, context)
 		
-		"st_drain":
-			_apply_st_drain(participant, enemy_participant, effect)
+		"ap_drain":
+			_apply_ap_drain(participant, enemy_participant, effect)
 		
 		"grant_first_strike":
 			FirstStrikeSkill.grant_skill(participant, "先制")
@@ -276,7 +276,7 @@ func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dicti
 		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
 
 ## APドレイン
-func _apply_st_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary) -> void:
+func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary) -> void:
 	var target = effect.get("target", "enemy")
 	if target == "enemy" and enemy_participant:
 		var drained_st = enemy_participant.current_ap
@@ -470,7 +470,7 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	# keyword_conditions に設定を保存
 	participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
 
-## 連鎖数STボーナス
+## 連鎖数APボーナス
 func _apply_chain_count_bonus(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
 	var multiplier = effect.get("multiplier", 20)
 	var tile_index = context.get("battle_tile_index", -1)

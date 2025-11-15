@@ -209,7 +209,7 @@ AP: 75 (×1.5)
 | `element_land_count` | 属性土地数 | 火土地3個以上で強打 |
 | `adjacent_ally_land` | 隣接自領地判定 | 隣接に自土地あり |
 | `enemy_is_element` | 敵属性判定 | 敵が水属性で貫通 |
-| `attacker_st_check` | 攻撃力判定 | ST40以上で貫通 |
+| `attacker_ap_check` | 攻撃力判定 | AP40以上で貫通 |
 
 ### adjacent_ally_land条件（詳細）
 

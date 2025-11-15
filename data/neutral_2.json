@@ -291,7 +291,7 @@
 	  },
 	  "ap": 0,
 	  "hp": 40,
-	  "ability": "アイテムクリーチャー・戦闘中ST上昇",
+	  "ability": "アイテムクリーチャー・戦闘中AP上昇",
 	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+50",
 	  "ability_parsed": {
 		"effects": [
@@ -353,8 +353,8 @@
 	  },
 	  "ap": 0,
 	  "hp": 30,
-	  "ability": "アイテムクリーチャー・ST&HP計算",
-	  "ability_detail": "アイテムクリーチャー；ST&HP=他属性の配置数×5",
+	  "ability": "アイテムクリーチャー・AP&HP計算",
+	  "ability_detail": "アイテムクリーチャー；AP&HP=他属性の配置数×5",
 	  "ability_parsed": {
 		"keywords": ["アイテムクリーチャー"],
 		"effects": [
@@ -366,7 +366,7 @@
 			  "ap": true,
 			  "hp": true
 			},
-			"description": "ST&HP=他属性の配置数×5"
+			"description": "AP&HP=他属性の配置数×5"
 		  }
 		]
 	  }
@@ -411,7 +411,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "戦闘後能力交換",
-	  "ability_detail": "戦闘後、敵のSTとMHPを交換"
+	  "ability_detail": "戦闘後、敵のAPとMHPを交換"
 	},
 	{
 	  "id": 444,
@@ -447,8 +447,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "ST&HP計算・応援",
-	  "ability_detail": "ST&HP=ゴブリン配置数×20；応援[ゴブリン・AP+20]",
+	  "ability": "AP&HP計算・応援",
+	  "ability_detail": "AP&HP=ゴブリン配置数×20；応援[ゴブリン・AP+20]",
 	  "ability_parsed": {
 		"keywords": ["応援"],
 		"effects": [
@@ -490,7 +490,7 @@
 	  "ap": 70,
 	  "hp": 70,
 	  "ability": "戦闘後能力値減少",
-	  "ability_detail": "戦闘後、ST&MHP-10",
+	  "ability_detail": "戦闘後、AP&MHP-10",
 	  "ability_parsed": {
 		"effects": [
 		  {

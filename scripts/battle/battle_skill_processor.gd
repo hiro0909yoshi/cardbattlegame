@@ -31,6 +31,15 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
+	# 🚫 【最優先】ウォーロックディスクチェック: どちらかが装備している場合、全スキル処理をスキップ
+	var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
+	if _has_warlock_disk(attacker) or _has_warlock_disk(defender):
+		print("【ウォーロックディスク発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
+		# 敵の能力を無効化
+		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
+		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+		return  # ここで処理を終了し、バトルへ
+	
 	# 【Phase 0】変身スキル適用（戦闘開始時）
 	var card_loader = load("res://scripts/card_loader.gd").new()
 	TransformSkill.process_transform_effects(attacker, defender, card_loader, "on_battle_start")
@@ -219,7 +228,7 @@ func apply_land_count_effects(participant: BattleParticipant, context: Dictionar
 			for element in target_elements:
 				total_count += player_lands.get(element, 0)
 			
-			# multiplierを適用
+						# multiplierを適用
 			var multiplier = effect.get("multiplier", 1)
 			var bonus = total_count * multiplier
 			
@@ -752,3 +761,22 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 	
 	# 魔力獲得スキルを適用
 	_skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
+
+## ウォーロックディスクチェック
+##
+## パーティシパントがウォーロックディスクを装備しているかチェック
+##
+## @param participant チェック対象のパーティシパント
+## @return ウォーロックディスクを装備していればtrue
+func _has_warlock_disk(participant: BattleParticipant) -> bool:
+	var items = participant.creature_data.get("items", [])
+	
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			if effect.get("effect_type") == "nullify_all_enemy_abilities":
+				return true
+	
+	return false

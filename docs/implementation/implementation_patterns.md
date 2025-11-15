@@ -86,7 +86,7 @@
   "ap": [攻撃力],
   "hp": [体力],
   "ability": "感応",
-  "ability_detail": "感応[[属性]・ST+[値]、HP+[値]]",
+  "ability_detail": "感応[[属性]・AP+[値]、HP+[値]]",
   "ability_parsed": {
 	"keywords": ["感応"],
 	"keyword_conditions": {
@@ -102,7 +102,7 @@
 }
 ```
 
-**例**: 火地の感応（ST&HP+20）
+**例**: 火地の感応（AP&HP+20）
 ```json
 {
   "id": 15,
@@ -117,7 +117,7 @@
   "ap": 30,
   "hp": 30,
   "ability": "感応",
-  "ability_detail": "感応[地・ST&HP+20]",
+  "ability_detail": "感応[地・AP&HP+20]",
   "ability_parsed": {
 	"keywords": ["感応"],
 	"keyword_conditions": {

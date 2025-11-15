@@ -190,9 +190,7 @@ static func _execute_single_battle(
 	if def_item_id > 0:
 		defender_granted_skills = _apply_item_effects_and_record(battle_system, defender, def_item_id, attacker)
 	
-	# 🚫 ウォーロックディスク: 敵の全能力を無効化
-	battle_system.battle_preparation._apply_nullify_enemy_abilities(attacker, defender)
-	battle_system.battle_preparation._apply_nullify_enemy_abilities(defender, attacker)
+	# 🚫 ウォーロックディスク: apply_pre_battle_skills()の最初で処理
 	
 	# ダミータイル情報作成
 	var tile_info = {

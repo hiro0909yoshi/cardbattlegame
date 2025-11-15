@@ -197,9 +197,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		else:
 			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
 	
-	# 🚫 ウォーロックディスク: 敵の全能力を無効化
-	SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
-	SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+	# 🚫 ウォーロックディスク: apply_pre_battle_skills()の最初で処理するため、ここでは削除
 	
 	return {
 		"attacker": attacker,

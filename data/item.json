@@ -277,7 +277,7 @@
 	  "effect_parsed": {
 		"effects": [
 		  {
-			"effect_type": "st_drain",
+			"effect_type": "ap_drain",
 			"target": "enemy"
 		  },
 		  {

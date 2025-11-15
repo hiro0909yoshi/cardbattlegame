@@ -341,7 +341,7 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 
 ### 6. 周回ボーナス（特殊）
 
-#### キメラ（ST+10のみ）
+#### キメラ（AP+10のみ）
 ```gdscript
 # game_flow_manager.gd
 func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
