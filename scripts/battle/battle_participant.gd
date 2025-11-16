@@ -147,14 +147,7 @@ func take_damage(damage: int) -> Dictionary:
 		remaining_damage -= consumed
 		damage_breakdown["spell_bonus_consumed"] = consumed
 	
-	# 6. 永続的な基礎HP上昇から消費
-	if base_up_hp > 0 and remaining_damage > 0:
-		var consumed = min(base_up_hp, remaining_damage)
-		base_up_hp -= consumed
-		remaining_damage -= consumed
-		damage_breakdown["base_up_hp_consumed"] = consumed
-	
-	# 7. 基本HPから消費
+	# 6. 基本HPから消費（base_up_hp は削られない）
 	if remaining_damage > 0:
 		base_hp -= remaining_damage
 		damage_breakdown["base_hp_consumed"] = remaining_damage
@@ -243,14 +236,7 @@ func get_status_string() -> String:
 func take_mhp_damage(damage: int) -> void:
 	print("【MHPダメージ】", creature_data.get("name", "?"), " MHPに-", damage)
 	
-	# base_up_hpから優先的に消費
-	if base_up_hp > 0:
-		var consumed = min(base_up_hp, damage)
-		base_up_hp -= consumed
-		damage -= consumed
-		print("  base_up_hp: -", consumed, " (残り:", base_up_hp, ")")
-	
-	# 残りをbase_hpから消費
+	# base_hpから消費（base_up_hp は永続ボーナスのため削らない）
 	if damage > 0:
 		base_hp -= damage
 		print("  base_hp: -", damage, " (残り:", base_hp, ")")

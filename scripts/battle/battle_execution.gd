@@ -180,14 +180,13 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				
 					# 💰 ダメージ時の魔力獲得・奪取スキル
 					var actual_damage_dealt_reduced = (
-						damage_breakdown_reduced.get("resonance_bonus_consumed", 0) +
-						damage_breakdown_reduced.get("land_bonus_consumed", 0) +
-						damage_breakdown_reduced.get("temporary_bonus_consumed", 0) +
-						damage_breakdown_reduced.get("item_bonus_consumed", 0) +
-						damage_breakdown_reduced.get("spell_bonus_consumed", 0) +
-						damage_breakdown_reduced.get("base_up_hp_consumed", 0) +
-						damage_breakdown_reduced.get("base_hp_consumed", 0)
-					)
+					damage_breakdown_reduced.get("resonance_bonus_consumed", 0) +
+					damage_breakdown_reduced.get("land_bonus_consumed", 0) +
+					damage_breakdown_reduced.get("temporary_bonus_consumed", 0) +
+					damage_breakdown_reduced.get("item_bonus_consumed", 0) +
+					damage_breakdown_reduced.get("spell_bonus_consumed", 0) +
+					damage_breakdown_reduced.get("base_hp_consumed", 0)
+				)
 					if spell_magic_ref:
 						# 魔力奪取（攻撃側）: 与えたダメージベース
 						apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
@@ -297,14 +296,13 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 💰 ダメージ時の魔力獲得・奪取スキル
 			var actual_damage_dealt = (
-				damage_breakdown.get("resonance_bonus_consumed", 0) +
-				damage_breakdown.get("land_bonus_consumed", 0) +
-				damage_breakdown.get("temporary_bonus_consumed", 0) +
-				damage_breakdown.get("item_bonus_consumed", 0) +
-				damage_breakdown.get("spell_bonus_consumed", 0) +
-				damage_breakdown.get("base_up_hp_consumed", 0) +
-				damage_breakdown.get("base_hp_consumed", 0)
-			)
+			damage_breakdown.get("resonance_bonus_consumed", 0) +
+			damage_breakdown.get("land_bonus_consumed", 0) +
+			damage_breakdown.get("temporary_bonus_consumed", 0) +
+			damage_breakdown.get("item_bonus_consumed", 0) +
+			damage_breakdown.get("spell_bonus_consumed", 0) +
+			damage_breakdown.get("base_hp_consumed", 0)
+		)
 			if spell_magic_ref:
 				# 魔力奪取（攻撃側）: 与えたダメージベース
 				apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)

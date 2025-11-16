@@ -52,9 +52,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# base_up_hpを設定（手札から出す場合はないはずだが、移動侵略の場合はある）
 	attacker.base_up_hp = card_data.get("base_up_hp", 0)
 	attacker.base_up_ap = card_data.get("base_up_ap", 0)
+	print("[battle_preparation] 攻撃側の初期永続バフ:")
+	print("  base_up_hp: ", attacker.base_up_hp)
+	print("  base_up_ap: ", attacker.base_up_ap)
 	
 	# 現在HPから復元（手札から出す場合は満タン、移動侵略の場合はダメージ後の値）
-	var attacker_max_hp = attacker.get_max_hp()
+	# 注意：この時点ではbase_hpが設定されていないので、get_max_hp()は使えない
+	var attacker_base_only_hp = card_data.get("hp", 0)  # 基本HPのみ
+	var attacker_max_hp = attacker_base_only_hp + attacker.base_up_hp  # 手動で計算
 	var attacker_current_hp = card_data.get("current_hp", attacker_max_hp)
 	
 	# base_hpに現在HPから永続ボーナスを引いた値を設定
@@ -89,11 +94,17 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# SpellMagic参照を設定
 	defender.spell_magic_ref = spell_magic_ref
 	
-	# base_up_hpを設定
+	# base_up_hpとbase_up_apを設定
 	defender.base_up_hp = defender_creature.get("base_up_hp", 0)
+	defender.base_up_ap = defender_creature.get("base_up_ap", 0)
+	print("[battle_preparation] 防御側の初期永続バフ:")
+	print("  base_up_hp: ", defender.base_up_hp)
+	print("  base_up_ap: ", defender.base_up_ap)
 	
 	# 現在HPから復元（ない場合は満タン）
-	var defender_max_hp = defender.get_max_hp()
+	# 注意：この時点ではbase_hpが0なので、get_max_hp()は使えない
+	var defender_base_only_hp = defender_creature.get("hp", 0)  # 基本HPのみ
+	var defender_max_hp = defender_base_only_hp + defender.base_up_hp  # 手動で計算
 	var defender_current_hp = defender_creature.get("current_hp", defender_max_hp)
 	
 	# base_hpに現在HPから永続ボーナスを引いた値を設定
@@ -207,9 +218,9 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 
 ## 効果配列（permanent_effects, temporary_effects）を適用
 func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictionary) -> void:
-	# base_up_hp/apを適用（合成・マスグロース等）
-	participant.base_up_hp = creature_data.get("base_up_hp", 0)
-	participant.base_up_ap = creature_data.get("base_up_ap", 0)
+	# base_up_hp/apの設定は削除（既にprepare_participantsで設定済み）
+	# 防御側：94-99行目で設定
+	# 攻撃側：51-56行目で設定
 	
 	# 効果配列を保持（打ち消し効果判定用）
 	participant.permanent_effects = creature_data.get("permanent_effects", [])

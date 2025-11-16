@@ -42,7 +42,7 @@
 
 | フィールド | 用途 | 適用例 | バトル後 |
 |-----------|------|--------|---------|
-| **`base_hp`** | 元のHP（実際は現在の残りHP） | `creature_data["current_hp"]`から取得 | - |
+| **`base_hp`** | MHP計算用の基本HP値 | `creature_data["current_hp"] - base_up_hp`で計算 | - |
 | **`base_up_hp`** | 永続的な基礎HP上昇 | マスグロース+5、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_hp`** | 一時的なHPボーナス | ブレッシング+10、ターン数ボーナス | 消失 |
 | **`resonance_bonus_hp`** | 感応ボーナス | 感応+30 | 消失 |
@@ -65,18 +65,29 @@
 ## HP計算式（バトル時）
 
 ```gdscript
-current_hp = base_hp +           # 現在の残りHP
-			 base_up_hp +        # 永続ボーナス（マスグロース等）
+current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで削られる）
+			 base_up_hp +         # 永続ボーナス（マスグロース等、ダメージで削られない）
 			 temporary_bonus_hp + # 一時ボーナス（ブレッシング等）
 			 resonance_bonus_hp + # 感応ボーナス
-			 land_bonus_hp +     # 土地ボーナス
-			 item_bonus_hp +     # アイテムボーナス
-			 spell_bonus_hp      # スペルボーナス
+			 land_bonus_hp +      # 土地ボーナス
+			 item_bonus_hp +      # アイテムボーナス
+			 spell_bonus_hp       # スペルボーナス
 ```
+
+**重要な概念**:
+- `base_hp` は **MHP計算に含まれ、ダメージで削られる** 要素
+- `base_up_hp` は **MHP計算に含まれるが、ダメージでは削られない** 要素
+- ダメージ時は以下の順序で消費される：
+  1. 各種一時的ボーナス（resonance_bonus_hp → land_bonus_hp → temporary_bonus_hp → item_bonus_hp → spell_bonus_hp）
+  2. その後 `base_hp` から消費
+  3. `update_current_hp()` を呼び出して、`current_hp` を現在の全ボーナスを含めて再計算
+- `current_hp` は計算値（`base_hp + base_up_hp + ボーナス群`）のため、直接削られずに各要素から消費してから再計算される
 
 ### ダメージ消費順序
 
 ダメージを受けた時、以下の順序でHPが消費される：
+
+**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これはMHP計算に使用される値です。一方 `base_hp` は削られます。
 
 ```
 1. resonance_bonus_hp（感応ボーナス）
@@ -84,9 +95,18 @@ current_hp = base_hp +           # 現在の残りHP
 3. temporary_bonus_hp（一時ボーナス）
 4. item_bonus_hp（アイテムボーナス）
 5. spell_bonus_hp（スペルボーナス）
-6. base_up_hp（永続的な基礎HP上昇）
-7. base_hp（元のHP、最後）
+6. base_hp（元のHPの現在値、最後に消費）
 ```
+
+※ `current_hp` は計算値（`base_hp + base_up_hp + ボーナス群`）のため、直接削られません。
+
+#### base_up_hp が消費されない理由（base_hp は消費される）
+
+- `base_hp` は **MHP（最大HP）の可変部分**で、ダメージで削られる
+- `base_up_hp` はマスグロース、周回ボーナス、合成などで得た **永続的なMHP増加**で、ダメージでは削られない
+- これらは戦闘終了後も保持される
+- ダメージは最初にボーナスから消費され、残ったダメージが `base_hp` から消費される
+- `current_hp` は計算値で、直接削られず各要素から消費した後で再計算される
 
 ---
 

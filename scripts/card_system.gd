@@ -159,6 +159,9 @@ func _load_card_data(card_id: int) -> Dictionary:
 			print("WARNING: カードID ", card_id, " が見つかりません")
 			return {}
 		
+		# マスターデータの参照汚染を防ぐため、独立したコピーを作成
+		card_data = card_data.duplicate(true)
+		
 		# costを正規化
 		if card_data.has("cost"):
 			if typeof(card_data.cost) == TYPE_DICTIONARY:

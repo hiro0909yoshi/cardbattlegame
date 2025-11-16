@@ -286,6 +286,12 @@ func _apply_post_battle_effects(
 			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
 			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
 			var place_creature_data = attacker.creature_data.duplicate(true)
+			# BattleParticipantのプロパティから永続バフを反映
+			print("[侵略成功] タイル配置時の永続バフ反映:")
+			print("  base_up_hp: ", attacker.base_up_hp)
+			print("  base_up_ap: ", attacker.base_up_ap)
+			place_creature_data["base_up_hp"] = attacker.base_up_hp
+			place_creature_data["base_up_ap"] = attacker.base_up_ap
 			# 戦闘後の残りHPを保存
 			place_creature_data["current_hp"] = attacker.current_hp
 			board_system_ref.place_creature(tile_index, place_creature_data)
@@ -314,8 +320,10 @@ func _apply_post_battle_effects(
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
-			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
-			battle_special_effects.update_defender_hp(tile_info, defender)
+						# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
+			# 重要：tile_infoを新しく取得（バトル中の永続バフ反映のため）
+			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
+			battle_special_effects.update_defender_hp(updated_tile_info, defender)
 			
 			# 🆙 土地レベルアップ効果（シルバープロウ - 防御成功時）
 			_apply_level_up_effect(defender, tile_index)
@@ -347,6 +355,10 @@ func _apply_post_battle_effects(
 				# クリーチャーデータを更新（戦闘後の残りHPを反映）
 				var return_data = attacker.creature_data.duplicate(true)
 				
+				# BattleParticipantのプロパティから永続バフを反映
+				return_data["base_up_hp"] = attacker.base_up_hp
+				return_data["base_up_ap"] = attacker.base_up_ap
+				
 				# 現在HPを保存
 				return_data["current_hp"] = attacker.current_hp
 				
@@ -373,8 +385,10 @@ func _apply_post_battle_effects(
 				# （注：base_hpは現在の残りHPなので使わない）
 				card_system_ref.return_card_to_hand(attacker_index, return_card_data)
 			
-			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
-			battle_special_effects.update_defender_hp(tile_info, defender)
+						# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
+			# 重要：tile_infoを新しく取得（バトル中の永続バフ反映のため）
+			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
+			battle_special_effects.update_defender_hp(updated_tile_info, defender)
 			
 			emit_signal("invasion_completed", false, tile_index)
 		
@@ -648,25 +662,33 @@ func _apply_on_destroy_permanent_buffs(participant: BattleParticipant):
 	if not participant or not participant.creature_data:
 		return
 	
+	print("[DEBUG_永続バフ] 関数開始: ", participant.creature_data.get("name", "?"), 
+		  " ID:", participant.creature_data.get("id", "?"),
+		  " 現在のbase_up_hp:", participant.base_up_hp,
+		  " 現在のbase_up_ap:", participant.base_up_ap)
+	
 	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	print("[DEBUG_永続バフ] 破壊時効果数: ", effects.size())
 	
 	for effect in effects:
 		if effect.get("effect_type") == "on_enemy_destroy_permanent":
+			print("[DEBUG_永続バフ] on_enemy_destroy_permanent 効果を検出")
 			var stat_changes = effect.get("stat_changes", {})
 			
 			for stat in stat_changes:
 				var value = stat_changes[stat]
 				if stat == "ap":
-					if not participant.creature_data.has("base_up_ap"):
-						participant.creature_data["base_up_ap"] = 0
-					participant.creature_data["base_up_ap"] += value
+					# BattleParticipantのプロパティに保存（参照汚染を防ぐ）
+					participant.base_up_ap += value
 					print("[永続バフ] ", participant.creature_data.get("name", ""), " ST+", value)
 				
 				elif stat == "max_hp":
-					if not participant.creature_data.has("base_up_hp"):
-						participant.creature_data["base_up_hp"] = 0
-					participant.creature_data["base_up_hp"] += value
+					# BattleParticipantのプロパティに保存（参照汚染を防ぐ）
+					var old_base_up_hp = participant.base_up_hp
+					participant.base_up_hp += value
+					participant.current_hp += value  # MHPが増えたら現在HPも増やす
 					print("[永続バフ] ", participant.creature_data.get("name", ""), " MHP+", value)
+					print("  base_up_hp: ", old_base_up_hp, " → ", participant.base_up_hp)
 
 # バトル後の永続的な変化を適用（勝敗問わず）
 # ロックタイタン (ID: 446)、リーンタイタン (ID: 439) など
@@ -685,26 +707,24 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 				var old_base_up_ap = participant.creature_data.get("base_up_ap", 0)
 				
 				participant.creature_data["ap"] = 20  # 基礎APを20に上書き
-				participant.creature_data["base_up_ap"] = 0  # base_up_apをリセット
+				participant.base_up_ap = 0  # BattleParticipantのプロパティをリセット
 				
-				if not participant.creature_data.has("base_up_hp"):
-					participant.creature_data["base_up_hp"] = 0
-				participant.creature_data["base_up_hp"] -= 30
+				# BattleParticipantのプロパティから30減少
+				participant.base_up_hp -= 30
 				
 				# 発動フラグを設定
 				participant.creature_data["bairomancer_triggered"] = true
 				
 				print("[バイロマンサー発動] 敵の攻撃を受けて変化！")
 				print("  ST: ", old_ap + old_base_up_ap, " → 20")
-				print("  MHP-30 (合計MHP:", participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"], ")")
+				print("  MHP-30 (合計MHP:", participant.creature_data.get("hp", 0) + participant.base_up_hp, ")")
 	
 	# ブルガサリ専用処理（敵がアイテムを使用した戦闘後、MHP+10）
 	if creature_id == 339:  # ブルガサリ
 		if participant.enemy_used_item and participant.is_alive():
-			if not participant.creature_data.has("base_up_hp"):
-				participant.creature_data["base_up_hp"] = 0
-			participant.creature_data["base_up_hp"] += 10
-			print("[ブルガサリ発動] 敵のアイテム使用後 MHP+10 (合計MHP:", participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"], ")")
+			# BattleParticipantのプロパティに保存
+			participant.base_up_hp += 10
+			print("[ブルガサリ発動] 敵のアイテム使用後 MHP+10 (合計MHP:", participant.creature_data.get("hp", 0) + participant.base_up_hp, ")")
 	
 	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
 	
@@ -731,11 +751,9 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 					print("[永続変化] ", participant.creature_data.get("name", ""), " ST", value if value >= 0 else "", value, " (合計ST:", participant.creature_data.get("ap", 0) + new_base_up_ap, ")")
 				
 				elif stat == "max_hp":
-					if not participant.creature_data.has("base_up_hp"):
-						participant.creature_data["base_up_hp"] = 0
 					# 下限チェック: MHP（hp + base_up_hp）が0未満にならないようにする
-					var _current_total_hp = participant.creature_data.get("hp", 0) + participant.creature_data["base_up_hp"]
-					var new_base_up_hp = participant.creature_data["base_up_hp"] + value
+					var _current_total_hp = participant.creature_data.get("hp", 0) + participant.base_up_hp
+					var new_base_up_hp = participant.base_up_hp + value
 					var new_total_hp = participant.creature_data.get("hp", 0) + new_base_up_hp
 					
 					if new_total_hp < 0:
@@ -743,7 +761,9 @@ func _apply_after_battle_permanent_changes(participant: BattleParticipant):
 						new_base_up_hp = -participant.creature_data.get("hp", 0)
 						print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value, " → 下限0に制限")
 					
+					# creature_dataとBattleParticipantの両方に保存（AP処理と統一）
 					participant.creature_data["base_up_hp"] = new_base_up_hp
+					participant.base_up_hp = new_base_up_hp
 					print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value if value >= 0 else "", value, " (合計MHP:", participant.creature_data.get("hp", 0) + new_base_up_hp, ")")
 	
 	# スペクター専用処理（戦闘後にランダムステータスをリセット）

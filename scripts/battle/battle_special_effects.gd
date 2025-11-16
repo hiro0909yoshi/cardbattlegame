@@ -344,6 +344,13 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	# 元のHPは触らない（不変）
 	# creature_data["hp"] = そのまま
 	
+	# BattleParticipantのプロパティから永続バフを反映
+	print("[update_defender_hp] 防御側の永続バフを反映:")
+	print("  元のbase_up_hp: ", tile_info.get("creature", {}).get("base_up_hp", 0), " → ", defender.base_up_hp)
+	print("  元のbase_up_ap: ", tile_info.get("creature", {}).get("base_up_ap", 0), " → ", defender.base_up_ap)
+	creature_data["base_up_hp"] = defender.base_up_hp
+	creature_data["base_up_ap"] = defender.base_up_ap
+	
 	# 現在HPを保存（base_hp + base_up_hpの現在値）
 	creature_data["current_hp"] = defender.base_hp + defender.base_up_hp
 	

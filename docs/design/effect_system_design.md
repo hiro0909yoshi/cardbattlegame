@@ -398,14 +398,20 @@ current_ap = base_ap +
 
 ### ダメージ消費順序
 
+**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これは永続的なMHPボーナスで、ダメージでは削られません。
+
 ```
 1. resonance_bonus_hp（感応ボーナス）
 2. land_bonus_hp（土地ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
 4. item_bonus_hp（アイテムボーナス）
-5. base_up_hp（永続的な基礎HP上昇）
-6. base_hp（元のHP）
+5. spell_bonus_hp（スペルボーナス）
+6. current_hp（残りHP） ← base_hp の現在値
 ```
+
+#### base_up_hp が消費されない理由
+
+`base_up_hp` はマスグロース、周回ボーナス、合成などで得た永続的なMHP増加であり、戦闘終了後も保持されます。ダメージでは削られず、MHP計算にのみ使用されます。
 
 ---
 

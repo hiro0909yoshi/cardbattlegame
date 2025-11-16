@@ -375,3 +375,64 @@ func on_card_selected(card_index: int):
 - バトル参加者管理: `scripts/battle/battle_participant.gd`
 
 ---
+
+## 🔧 特殊アイテム処理
+
+### 1059（ペトリフストーン）- HP固定値設定
+
+**効果**: AP=0、HP=80 に固定設定
+
+#### 実装の特殊性
+
+HP固定値設定アイテムでは、以下の特殊な処理が必要です：
+
+**問題状況**:
+- クリーチャーが `base_up_hp = 20` を持っている場合
+- HP=80 に固定設定されると、最終的なMHPは 80 + 20 = 100 になってしまう
+
+**解決方法 - 保存・変更・復元の3ステップ**:
+
+```gdscript
+# _apply_fixed_stat 関数内 (battle_item_applier.gd)
+
+elif stat == "hp":
+	# 1. 保存：元のbase_up_hpを保存
+	var saved_base_up_hp = participant.base_up_hp
+	
+	# 2. 変更：base_up_hpを一時的に0に設定
+	participant.base_up_hp = 0
+	
+	# HP固定値を適用
+	participant.creature_data["mhp"] = fixed_value
+	participant.creature_data["hp"] = fixed_value
+	participant.base_hp = fixed_value
+	participant.update_current_hp()
+	
+	# 3. 復元：元のbase_up_hpを戻す
+	participant.base_up_hp = saved_base_up_hp
+	participant.update_current_hp()
+	
+	print("  [固定値] HP=", fixed_value, " (base_up_hp復元: +", saved_base_up_hp, ")")
+```
+
+#### 処理フロー詳細
+
+| ステップ | base_hp | base_up_hp | current_hp | 説明 |
+|---------|---------|-----------|-----------|------|
+| **初期** | 50 | 20 | 70 | 元の状態（MHP=70） |
+| **1. 保存** | 50 | 20 | 70 | saved_base_up_hp = 20 |
+| **2. 変更** | 80 | 0 | 80 | HP固定値を適用 |
+| **3. 復元** | 80 | 20 | 100 | base_up_hp を復元 |
+
+**重要なポイント**:
+- バトル中は base_hp=80、base_up_hp=20 で保持
+- 最終的な MHP = 80 + 20 = 100
+- バトル終了後も base_up_hp は保持される（永続バフ）
+- ただし base_hp は戦闘で削られる可能性がある
+
+#### 関連ドキュメント
+
+- [HP管理構造](hp_structure.md) - base_hp と base_up_hp の定義
+- [効果システム設計](effect_system_design.md) - 固定値設定の実装詳細
+
+---

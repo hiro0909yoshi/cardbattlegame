@@ -202,13 +202,13 @@
 3. temporary_bonus_hp（一時ボーナス）
 4. item_bonus_hp（アイテム）
 5. spell_bonus_hp（スペル）
-6. base_up_hp（永続ボーナス）
-7. base_hp（元のHP）← MHP範囲
+6. current_hp（残りHP） ← base_hp の現在値
 ```
 
 **雪辱の特徴**:
 - 1〜5のボーナスを無視
-- 6〜7のMHP範囲に直接ダメージ
+- MHP範囲（base_hp）に直接ダメージ
+- **base_up_hp は削られない**（永続的なMHPボーナスのため）
 - 高レベル土地やバフで守られた敵を倒す手段
 
 #### 実装例
@@ -357,15 +357,12 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 func take_mhp_damage(damage: int) -> void:
 	"""
 	ボーナスを無視してMHP（base_hp + base_up_hp）を直接削る
+	ただし base_up_hp は永続ボーナスなため削られない
 	MHPが0以下になった場合は即死扱い
-	"""
-	# base_up_hpから優先的に消費
-	if base_up_hp > 0:
-		var consumed = min(base_up_hp, damage)
-		base_up_hp -= consumed
-		damage -= consumed
 	
-	# 残りをbase_hpから消費
+	重要: base_up_hp は永続的なMHP増加であり、削られません
+	"""
+	# base_hp から消費（base_up_hp は削られない）
 	if damage > 0:
 		base_hp -= damage
 	
@@ -376,7 +373,6 @@ func take_mhp_damage(damage: int) -> void:
 	var current_mhp = base_hp + base_up_hp
 	if current_mhp <= 0:
 		base_hp = 0
-		base_up_hp = 0
 		update_current_hp()
 ```
 
