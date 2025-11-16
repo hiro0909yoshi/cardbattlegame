@@ -357,10 +357,10 @@ tile_data["element_changed_by"] = "spell_element_change"
 ```gdscript
 class BattleParticipant:
 	# 基礎値
-	var base_hp: int              # 元のHP（カードデータの値）
-	var base_up_hp: int = 0       # 永続的な基礎HP上昇（マスグロース、合成等）
+	var base_hp: int              # 元のHPの現在値（ダメージで削られる）
+	var base_up_hp: int = 0       # 永続的な基礎HP上昇（マスグロース、合成等、バトル後も creature_data に保存）
 	var base_ap: int              # 元のAP
-	var base_up_ap: int = 0       # 永続的な基礎AP上昇
+	var base_up_ap: int = 0       # 永続的な基礎AP上昇（バトル後も creature_data に保存）
 	
 	# バトル中の一時ボーナス
 	var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（移動で消える）
@@ -384,7 +384,8 @@ current_hp = base_hp +
 			 temporary_bonus_hp + 
 			 land_bonus_hp + 
 			 resonance_bonus_hp + 
-			 item_bonus_hp
+			 item_bonus_hp +
+			 spell_bonus_hp
 
 # AP計算
 current_ap = base_ap + 
@@ -406,12 +407,14 @@ current_ap = base_ap +
 3. temporary_bonus_hp（一時ボーナス）
 4. item_bonus_hp（アイテムボーナス）
 5. spell_bonus_hp（スペルボーナス）
-6. current_hp（残りHP） ← base_hp の現在値
+6. base_hp（元のHPの現在値、最後に消費）
 ```
+
+※ `current_hp` は計算値（`base_hp + base_up_hp + ボーナス群`）のため、直接削られません。
 
 #### base_up_hp が消費されない理由
 
-`base_up_hp` はマスグロース、周回ボーナス、合成などで得た永続的なMHP増加であり、戦闘終了後も保持されます。ダメージでは削られず、MHP計算にのみ使用されます。
+`base_up_hp` はマスグロース、周回ボーナス、合成などで得た永続的なMHP増加であり、戦闘終了後も creature_data に保存されます。ダメージでは削られず、MHP計算にのみ使用されます。一方 `base_hp` はダメージで削られます。
 
 ---
 

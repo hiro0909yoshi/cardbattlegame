@@ -202,13 +202,14 @@
 3. temporary_bonus_hp（一時ボーナス）
 4. item_bonus_hp（アイテム）
 5. spell_bonus_hp（スペル）
-6. current_hp（残りHP） ← base_hp の現在値
+6. base_hp（元のHPの現在値、最後に消費）
 ```
 
 **雪辱の特徴**:
 - 1〜5のボーナスを無視
-- MHP範囲（base_hp）に直接ダメージ
+- MHP範囲（base_hp + base_up_hp）に直接ダメージ
 - **base_up_hp は削られない**（永続的なMHPボーナスのため）
+- base_hp のみ消費される
 - 高レベル土地やバフで守られた敵を倒す手段
 
 #### 実装例

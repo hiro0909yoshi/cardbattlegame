@@ -108,7 +108,6 @@ func take_damage(damage: int) -> Dictionary:
 		"temporary_bonus_consumed": 0,
 		"item_bonus_consumed": 0,
 		"spell_bonus_consumed": 0,
-		"base_up_hp_consumed": 0,
 		"base_hp_consumed": 0
 	}
 	
