@@ -102,6 +102,11 @@ func place_creature(data: Dictionary):
 	if not creature_data.has("map_lap_count"):
 		creature_data["map_lap_count"] = 0
 	
+	# current_hp の初期化（新方式：状態値）
+	if not creature_data.has("current_hp"):
+		var max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+		creature_data["current_hp"] = max_hp
+	
 	# 土地ボーナスはバトル時に動的計算するため、ここでは保存しない
 	
 	# 3Dカード表示を作成

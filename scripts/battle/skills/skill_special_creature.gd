@@ -77,7 +77,7 @@ static func apply_ogre_lord_bonus(participant: BattleParticipant, player_index: 
 	
 	if water_earth_ogre_count > 0:
 		participant.temporary_bonus_hp += 20
-		participant.update_current_hp()
+		participant.current_hp += 20
 		bonus_applied = true
 		print("[オーガロード] 水地オーガ配置(", water_earth_ogre_count, "体) HP+20")
 	
@@ -121,7 +121,7 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 				var base_hp_value = participant.creature_data.get("hp", 0)
 				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
 				participant.temporary_bonus_hp = random_hp - (base_hp_value + base_up_hp)
-				participant.update_current_hp()
+				# update_current_hp() は呼ばない（current_hp が状態値になったため）
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
 					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
 			

@@ -373,12 +373,12 @@ static func _apply_level_up_buff(creature_data: Dictionary):
 	
 	# アースズピリット（ID: 200）: MHP+10
 	if creature_id == 200:
-		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + 10
+		EffectManager.apply_max_hp_effect(creature_data, 10)
 		print("[アースズピリット] レベルアップ MHP+10 (合計: +%d)" % creature_data["base_up_hp"])
 	
 	# デュータイタン（ID: 328）: MHP-10
 	if creature_id == 328:
-		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) - 10
+		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
 ## 地形変化実行（属性選択後）

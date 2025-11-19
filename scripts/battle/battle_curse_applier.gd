@@ -42,6 +42,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			
 			# 効果を計算に反映
 			participant.temporary_bonus_hp += value
+			participant.current_hp += value
 			participant.temporary_bonus_ap += value
 		
 		"stat_reduce":
@@ -68,8 +69,9 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			
 			# 効果を計算に反映
 			participant.temporary_bonus_hp += value
+			participant.current_hp += value
 			participant.temporary_bonus_ap += value
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap
-	participant.update_current_hp()
+	# update_current_hp() は呼ばない（current_hp が状態値になったため）

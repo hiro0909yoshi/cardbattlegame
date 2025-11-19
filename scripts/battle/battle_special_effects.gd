@@ -208,7 +208,7 @@ func check_instant_death(attacker: BattleParticipant, defender: BattleParticipan
 		print("【即死発動】", attacker.creature_data.get("name", "?"), " → ", defender.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
 		defender.instant_death_flag = true
 		defender.base_hp = 0
-		defender.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		return true
 	else:
 		print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")
@@ -332,7 +332,7 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 			participant.base_up_hp = max_base_up_hp
 		
 		if healed > 0:
-			participant.update_current_hp()
+			# update_current_hp() は呼ばない（current_hp が状態値になったため）
 			print("【再生発動】", participant.creature_data.get("name", "?"), 
 				  " HP回復: +", healed, " → ", participant.current_hp)
 
@@ -351,8 +351,8 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	creature_data["base_up_hp"] = defender.base_up_hp
 	creature_data["base_up_ap"] = defender.base_up_ap
 	
-	# 現在HPを保存（base_hp + base_up_hpの現在値）
-	creature_data["current_hp"] = defender.base_hp + defender.base_up_hp
+	# 現在HPを保存（新方式：状態値）
+	creature_data["current_hp"] = defender.current_hp
 	
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
@@ -435,7 +435,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 							# 相手を即死させる
 							opponent.instant_death_flag = true
 							opponent.base_hp = 0
-							opponent.update_current_hp()
+						# update_current_hp() は呼ばない（current_hp が状態値になったため）
 							result["death_revenge_activated"] = true
 						else:
 							print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")

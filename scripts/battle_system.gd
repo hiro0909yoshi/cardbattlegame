@@ -168,10 +168,10 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	# スキル適用後の最終ステータス表示
 	print("\n【スキル適用後の最終ステータス】")
 	print("侵略側: ", attacker.creature_data.get("name", "?"))
-	print("  HP:", attacker.current_hp, " (基本:", attacker.base_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, ")")
+	print("  HP:", attacker.current_hp, " (基本:", attacker.base_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, " アイテム:", attacker.item_bonus_hp, " スペル:", attacker.spell_bonus_hp, ")")
 	print("  AP:", attacker.current_ap)
 	print("防御側: ", defender.creature_data.get("name", "?"))
-	print("  HP:", defender.current_hp, " (基本:", defender.base_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, ")")
+	print("  HP:", defender.current_hp, " (基本:", defender.base_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, " アイテム:", defender.item_bonus_hp, " スペル:", defender.spell_bonus_hp, ")")
 	print("  AP:", defender.current_ap)
 	
 	# 3. 攻撃順決定
@@ -533,7 +533,7 @@ func apply_mass_growth(player_id: int, bonus_hp: int = 5) -> int:
 		# プレイヤーの土地でクリーチャーがいる場合
 		if tile_info.get("owner") == player_id and not tile_info.get("creature", {}).is_empty():
 			var creature_data = tile_info["creature"]
-			creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + bonus_hp
+			EffectManager.apply_max_hp_effect(creature_data, bonus_hp)
 			affected_count += 1
 			
 			# 3D表示を更新
@@ -567,7 +567,7 @@ func apply_dominant_growth(player_id: int, element: String, bonus_hp: int = 10) 
 			
 			# 属性が一致する場合のみ適用
 			if creature_data.get("element") == element:
-				creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + bonus_hp
+				EffectManager.apply_max_hp_effect(creature_data, bonus_hp)
 				affected_count += 1
 				
 				# 3D表示を更新

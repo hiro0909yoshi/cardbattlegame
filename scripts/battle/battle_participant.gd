@@ -67,8 +67,7 @@ func _init(
 	has_first_strike = _check_first_strike()
 	has_last_strike = _check_last_strike()
 	
-	# 現在HPを計算
-	update_current_hp()
+	# current_hp は battle_preparation.gd で直接設定されるため、ここでは初期化しない
 
 # 先制攻撃を持つかチェック
 func _check_first_strike() -> bool:
@@ -86,10 +85,7 @@ func apply_item_first_strike():
 	has_last_strike = false  # 後手を無効化
 	print("【アイテム先制】", creature_data.get("name", "?"), " アイテムにより先制付与（後手無効化）")
 
-# 現在HPを更新
-func update_current_hp():
-	current_hp = base_hp + base_up_hp + temporary_bonus_hp + \
-				 resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp
+# update_current_hp() は削除済み（current_hp が状態値になったため）
 
 # 現在APを更新
 func update_current_ap():
@@ -108,7 +104,8 @@ func take_damage(damage: int) -> Dictionary:
 		"temporary_bonus_consumed": 0,
 		"item_bonus_consumed": 0,
 		"spell_bonus_consumed": 0,
-		"base_hp_consumed": 0
+		"base_hp_consumed": 0,
+		"current_hp_consumed": 0
 	}
 	
 	# 1. 感応ボーナスから消費
@@ -146,13 +143,13 @@ func take_damage(damage: int) -> Dictionary:
 		remaining_damage -= consumed
 		damage_breakdown["spell_bonus_consumed"] = consumed
 	
-	# 6. 基本HPから消費（base_up_hp は削られない）
+	# 6. current_hp から直接消費（base_up_hp は永続ボーナスのため削られない）
 	if remaining_damage > 0:
-		base_hp -= remaining_damage
-		damage_breakdown["base_hp_consumed"] = remaining_damage
+		current_hp -= remaining_damage
+		damage_breakdown["current_hp_consumed"] = remaining_damage
 	
-	# 現在HPを更新
-	update_current_hp()
+	# update_current_hp() は呼ばない
+	# current_hp が状態値になったため、計算値ではなくなる
 	
 	# 💰 魔力獲得処理（ゼラチンアーマー: 受けたダメージから魔力獲得）
 	_trigger_magic_from_damage(damage)
@@ -235,23 +232,22 @@ func get_status_string() -> String:
 func take_mhp_damage(damage: int) -> void:
 	print("【MHPダメージ】", creature_data.get("name", "?"), " MHPに-", damage)
 	
-	# base_hpから消費（base_up_hp は永続ボーナスのため削らない）
-	if damage > 0:
-		base_hp -= damage
-		print("  base_hp: -", damage, " (残り:", base_hp, ")")
-	
-	# 現在HPを再計算
-	update_current_hp()
-	
-	# MHPが0以下になった場合は即死フラグを立てる
+	# MHPを計算
 	var current_mhp = base_hp + base_up_hp
-	if current_mhp <= 0:
-		print("  → MHP=", current_mhp, " 即死発動")
-		base_hp = 0
-		base_up_hp = 0
-		update_current_hp()
+	var new_mhp = current_mhp - damage
+	
+	# 削られたダメージ分を current_hp から消費
+	if damage > 0:
+		current_hp -= damage
+		print("  current_hp: -", damage, " (残り:", current_hp, ")")
+	
+	# MHPが0以下になった場合は即死
+	if new_mhp <= 0:
+		print("  → MHP=", new_mhp, " 即死発動")
+		current_hp = 0
+		print("  → 現在HP:", current_hp, " / MHP: 0")
 	else:
-		print("  → 現在HP:", current_hp, " / MHP:", current_mhp)
+		print("  → 現在HP:", current_hp, " / MHP:", new_mhp)
 
 ## 💰 ダメージを受けた時の魔力獲得処理（ゼラチンアーマー用）
 func _trigger_magic_from_damage(damage: int) -> void:

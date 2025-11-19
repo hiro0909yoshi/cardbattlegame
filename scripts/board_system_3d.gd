@@ -429,12 +429,12 @@ func _apply_terrain_change_buff(creature_data: Dictionary):
 	
 	# アースズピリット（ID: 200）: MHP+10
 	if creature_id == 200:
-		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + 10
+		EffectManager.apply_max_hp_effect(creature_data, 10)
 		print("[アースズピリット] 地形変化 MHP+10 (合計: +%d)" % creature_data["base_up_hp"])
 	
 	# デュータイタン（ID: 328）: MHP-10
 	if creature_id == 328:
-		creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) - 10
+		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] 地形変化 MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
 ## 地形変化可能かチェック

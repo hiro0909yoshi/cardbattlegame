@@ -74,11 +74,11 @@ func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp
-		participant.update_current_hp()
+		participant.current_hp += hp
 		print("  HP+", hp, " → ", participant.current_hp)
 	elif hp < 0:
 		participant.item_bonus_hp += hp
-		participant.update_current_hp()
+		participant.current_hp += hp
 		print("  HP", hp, " → ", participant.current_hp)
 	
 	# AP計算を更新（force_apでない場合のみ）
@@ -97,7 +97,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 		
 		"buff_hp":
 			participant.item_bonus_hp += value
-			participant.update_current_hp()
+			participant.current_hp += value
 			print("  HP+", value, " → ", participant.current_hp)
 		
 		"debuff_ap":
@@ -106,7 +106,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 		
 		"debuff_hp":
 			participant.item_bonus_hp -= value
-			participant.update_current_hp()
+			participant.current_hp -= value
 			print("  HP-", value, " → ", participant.current_hp)
 		
 		"element_count_bonus":
@@ -208,7 +208,7 @@ func _apply_element_count_bonus(participant: BattleParticipant, effect: Dictiona
 		print("  [属性配置数]", elements, ":", total_count, " × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [属性配置数]", elements, ":", total_count, " × ", multiplier, " = HP+", bonus)
 
 ## 敵と同属性の配置数ボーナス
@@ -229,7 +229,7 @@ func _apply_same_element_bonus(participant: BattleParticipant, effect: Dictionar
 		print("  [敵同属性配置数] 敵=", enemy_element, ":", count, " × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [敵同属性配置数] 敵=", enemy_element, ":", count, " × ", multiplier, " = HP+", bonus)
 
 ## 手札数ボーナス
@@ -249,7 +249,7 @@ func _apply_hand_count_bonus(participant: BattleParticipant, effect: Dictionary,
 		print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier, " = HP+", bonus)
 
 ## 自領地数ボーナス
@@ -272,7 +272,7 @@ func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dicti
 		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
 
 ## APドレイン
@@ -317,7 +317,7 @@ func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary
 		var hp_max = hp_range.get("max", 0)
 		hp_bonus = randi() % int(hp_max - hp_min + 1) + hp_min
 		participant.item_bonus_hp += hp_bonus
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 	
 	print("  [ランダムボーナス] AP+", ap_bonus, ", HP+", hp_bonus)
 
@@ -335,7 +335,7 @@ func _apply_element_mismatch_bonus(participant: BattleParticipant, effect: Dicti
 			participant.current_ap += ap
 		if hp > 0:
 			participant.item_bonus_hp += hp
-			participant.update_current_hp()
+			# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		
 		print("  [属性不一致] ", user_element, " ≠ ", enemy_element, " → AP+", ap, ", HP+", hp)
 	else:
@@ -363,11 +363,11 @@ func _apply_fixed_stat(participant: BattleParticipant, effect: Dictionary) -> vo
 			participant.creature_data["mhp"] = fixed_value
 			participant.creature_data["hp"] = fixed_value
 			participant.base_hp = fixed_value
-			participant.update_current_hp()
+			# update_current_hp() は呼ばない（current_hp が状態値になったため）
 			
 			# 復元：元のbase_up_hpを戻す
 			participant.base_up_hp = saved_base_up_hp
-			participant.update_current_hp()
+			# update_current_hp() は呼ばない（current_hp が状態値になったため）
 			
 			print("  [固定値] HP=", fixed_value, " (base_up_hp復元: +", saved_base_up_hp, ")")
 

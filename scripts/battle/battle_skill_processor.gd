@@ -104,7 +104,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
 		defender.land_bonus_hp = 0
-		defender.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 	
 	# アイテム破壊・盗み処理
 	apply_item_manipulation(attacker, defender)
@@ -257,7 +257,7 @@ func apply_land_count_effects(participant: BattleParticipant, context: Dictionar
 					participant.temporary_bonus_hp = bonus - base_mhp
 				else:
 					participant.temporary_bonus_hp += bonus
-				participant.update_current_hp()
+					participant.current_hp += bonus
 				print("【土地数比例】", participant.creature_data.get("name", "?"))
 				print("  対象属性:", target_elements, " 合計土地数:", total_count)
 				print("  HP: ", old_hp, " → ", participant.current_hp, " (", operation, " ", bonus, ")")
@@ -315,13 +315,13 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 			if hp_mode == "add":
 				# temporary_bonus_hpに現ターン数を加算
 				participant.temporary_bonus_hp += current_turn
-				participant.update_current_hp()  # HPを再計算
+				participant.current_hp += current_turn
 				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " HP+", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
 			elif hp_mode == "subtract":
 				# temporary_bonus_hpから現ターン数を引く
 				participant.temporary_bonus_hp -= current_turn
-				participant.update_current_hp()  # HPを再計算
+				participant.current_hp -= current_turn
 				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " HP-", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
 			
@@ -357,118 +357,9 @@ func apply_destroy_count_effects(participant: BattleParticipant):
 					  " ST+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus_value
-				participant.update_current_hp()
+				participant.current_hp += bonus_value
 				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
-
-## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
-func apply_battle_condition_effects(participant: BattleParticipant, context: Dictionary):
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		var effect_type = effect.get("effect_type", "")
-		
-		# 戦闘地の属性条件
-		if effect_type == "battle_land_element_bonus":
-			var condition = effect.get("condition", {})
-			var allowed_elements = condition.get("battle_land_elements", [])
-			
-			# 戦闘地の属性を取得
-			var battle_land_element = context.get("battle_land_element", "")
-			
-			if battle_land_element in allowed_elements:
-				var stat = effect.get("stat", "ap")
-				var value = effect.get("value", 0)
-				
-				if stat == "ap":
-					participant.temporary_bonus_ap += value
-					participant.current_ap += value
-					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
-						  " 戦闘地:", battle_land_element, " → ST+", value)
-				elif stat == "hp":
-					participant.temporary_bonus_hp += value
-					participant.update_current_hp()
-					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
-						  " 戦闘地:", battle_land_element, " → HP+", value)
-		
-		# 敵の属性条件
-		elif effect_type == "enemy_element_bonus":
-			var condition = effect.get("condition", {})
-			var allowed_elements = condition.get("enemy_elements", [])
-			
-			# 敵の属性を取得
-			var enemy_element = context.get("enemy_element", "")
-			
-			if enemy_element in allowed_elements:
-				var stat = effect.get("stat", "ap")
-				var value = effect.get("value", 0)
-				
-				if stat == "ap":
-					participant.temporary_bonus_ap += value
-					participant.current_ap += value
-					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
-						  " 敵:", enemy_element, " → ST+", value)
-				elif stat == "hp":
-					participant.temporary_bonus_hp += value
-					participant.update_current_hp()
-					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
-						  " 敵:", enemy_element, " → HP+", value)
-
-## 常時補正効果を適用（アイスウォール、トルネード用）
-func apply_constant_stat_bonus(participant: BattleParticipant):
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "constant_stat_bonus":
-			var stat = effect.get("stat", "ap")
-			var value = effect.get("value", 0)
-			
-			if stat == "ap":
-				participant.temporary_bonus_ap += value
-				participant.current_ap += value
-				print("【常時補正】", participant.creature_data.get("name", "?"), 
-					  " ST", ("+" if value >= 0 else ""), value)
-			elif stat == "hp":
-				participant.temporary_bonus_hp += value
-				participant.update_current_hp()
-				print("【常時補正】", participant.creature_data.get("name", "?"), 
-					  " HP", ("+" if value >= 0 else ""), value)
-
-## 手札数効果を適用（リリス用）
-func apply_hand_count_effects(participant: BattleParticipant, player_id: int, card_system):
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "hand_count_multiplier":
-			var stat = effect.get("stat", "hp")
-			var multiplier = effect.get("multiplier", 10)
-			
-			# CardSystemから手札数取得
-			var hand_count = 0
-			if card_system:
-				hand_count = card_system.get_hand_size_for_player(player_id)
-			
-			var bonus_value = hand_count * multiplier
-			
-			if stat == "ap":
-				participant.temporary_bonus_ap += bonus_value
-				participant.current_ap += bonus_value
-				print("【手札数効果】", participant.creature_data.get("name", "?"), 
-					  " ST+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
-			elif stat == "hp":
-				participant.temporary_bonus_hp += bonus_value
-				participant.update_current_hp()
-				print("【手札数効果】", participant.creature_data.get("name", "?"), 
-					  " HP+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
 
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
 func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary):
@@ -487,7 +378,7 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 			var total_base_ap = base_ap + base_up_ap
 			
 			participant.temporary_bonus_hp += total_base_ap
-			participant.update_current_hp()
+			participant.current_hp += total_base_ap
 			print("【基礎AP→HP】", participant.creature_data.get("name", "?"), 
 				  " HP+", total_base_ap, " (基礎AP: ", base_ap, "+", base_up_ap, ")")
 		
@@ -528,7 +419,7 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 					  " ST+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus
-				participant.update_current_hp()
+				participant.current_hp += bonus
 				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
 
@@ -572,7 +463,7 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				var stat = effect.get("stat", "hp")
 				if stat == "hp":
 					participant.temporary_bonus_hp += bonus
-					participant.update_current_hp()
+					participant.current_hp += bonus
 					print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
 						  " HP+", bonus, " (レベル:", tile_level, " × ", multiplier, ")")
 		
@@ -605,7 +496,7 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					participant.update_current_hp()
+					participant.current_hp += hp_change
 					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
 						  " HP", ("+" if hp_change >= 0 else ""), hp_change, 
 						  " (自領地:", owned_land_count, ")")
@@ -643,7 +534,7 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			
 			if affects_hp:
 				participant.temporary_bonus_hp += bonus
-				participant.update_current_hp()
+				participant.current_hp += bonus
 			
 			print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (", target_name, ":", creature_count, " × ", multiplier, ")")
@@ -680,7 +571,7 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			
 			if affects_hp:
 				participant.temporary_bonus_hp += bonus
-				participant.update_current_hp()
+				participant.current_hp += bonus
 			
 			print("【他属性カウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (他属性:", other_count, " × ", multiplier, ")")
@@ -705,7 +596,7 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					participant.update_current_hp()
+					participant.current_hp += hp_change
 					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
 						  " HP+", hp_change)
 
@@ -741,7 +632,7 @@ func apply_random_stat_effects(participant: BattleParticipant) -> void:
 				# temporary_bonus_hpを使ってHPを設定
 				var base_mhp = participant.get_max_hp()
 				participant.temporary_bonus_hp = random_hp - base_mhp
-				participant.update_current_hp()
+				# update_current_hp() は呼ばない（current_hp が状態値になったため）
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
 					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
 			
@@ -761,6 +652,115 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 	
 	# 魔力獲得スキルを適用
 	_skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
+
+## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
+func apply_battle_condition_effects(participant: BattleParticipant, context: Dictionary):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		
+		# 戦闘地の属性条件
+		if effect_type == "battle_land_element_bonus":
+			var condition = effect.get("condition", {})
+			var allowed_elements = condition.get("battle_land_elements", [])
+			
+			# 戦闘地の属性を取得
+			var battle_land_element = context.get("battle_land_element", "")
+			
+			if battle_land_element in allowed_elements:
+				var stat = effect.get("stat", "ap")
+				var value = effect.get("value", 0)
+				
+				if stat == "ap":
+					participant.temporary_bonus_ap += value
+					participant.current_ap += value
+					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
+						  " 戦闘地:", battle_land_element, " → ST+", value)
+				elif stat == "hp":
+					participant.temporary_bonus_hp += value
+					# update_current_hp() は呼ばない（current_hp が状態値になったため）
+					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
+						  " 戦闘地:", battle_land_element, " → HP+", value)
+		
+		# 敵の属性条件
+		elif effect_type == "enemy_element_bonus":
+			var condition = effect.get("condition", {})
+			var allowed_elements = condition.get("enemy_elements", [])
+			
+			# 敵の属性を取得
+			var enemy_element = context.get("enemy_element", "")
+			
+			if enemy_element in allowed_elements:
+				var stat = effect.get("stat", "ap")
+				var value = effect.get("value", 0)
+				
+				if stat == "ap":
+					participant.temporary_bonus_ap += value
+					participant.current_ap += value
+					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
+						  " 敵:", enemy_element, " → ST+", value)
+				elif stat == "hp":
+					participant.temporary_bonus_hp += value
+					# update_current_hp() は呼ばない（current_hp が状態値になったため）
+					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
+						  " 敵:", enemy_element, " → HP+", value)
+
+## 常時補正効果を適用（アイスウォール、トルネード用）
+func apply_constant_stat_bonus(participant: BattleParticipant):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "constant_stat_bonus":
+			var stat = effect.get("stat", "ap")
+			var value = effect.get("value", 0)
+			
+			if stat == "ap":
+				participant.temporary_bonus_ap += value
+				participant.current_ap += value
+				print("【常時補正】", participant.creature_data.get("name", "?"), 
+					  " ST", ("+" if value >= 0 else ""), value)
+			elif stat == "hp":
+				participant.temporary_bonus_hp += value
+				# update_current_hp() は呼ばない（current_hp が状態値になったため）
+				print("【常時補正】", participant.creature_data.get("name", "?"), 
+					  " HP", ("+" if value >= 0 else ""), value)
+
+## 手札数効果を適用（リリス用）
+func apply_hand_count_effects(participant: BattleParticipant, player_id: int, card_system):
+	if not participant or not participant.creature_data:
+		return
+	
+	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "hand_count_multiplier":
+			var stat = effect.get("stat", "hp")
+			var multiplier = effect.get("multiplier", 10)
+			
+			# CardSystemから手札数取得
+			var hand_count = 0
+			if card_system:
+				hand_count = card_system.get_hand_size_for_player(player_id)
+			
+			var bonus_value = hand_count * multiplier
+			
+			if stat == "ap":
+				participant.temporary_bonus_ap += bonus_value
+				participant.current_ap += bonus_value
+				print("【手札数効果】", participant.creature_data.get("name", "?"), 
+					  " ST+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
+			elif stat == "hp":
+				participant.temporary_bonus_hp += bonus_value
+				# update_current_hp() は呼ばない（current_hp が状態値になったため）
+				print("【手札数効果】", participant.creature_data.get("name", "?"), 
+					  " HP+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
 
 ## ウォーロックディスクチェック
 ##

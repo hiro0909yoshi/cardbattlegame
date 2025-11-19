@@ -199,8 +199,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if damage_breakdown_reduced["land_bonus_consumed"] > 0:
 						print("    - 土地ボーナス: ", damage_breakdown_reduced["land_bonus_consumed"], " 消費")
 					if damage_breakdown_reduced["base_hp_consumed"] > 0:
-						print("    - 基本HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
-					print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
+						print("    - 現在HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
+					print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
 					
 					# 反射ダメージを攻撃側に適用
 					if reflect_result_reduced["has_reflect"] and reflect_result_reduced["reflect_damage"] > 0:
@@ -208,7 +208,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
   【反射ダメージ適用】")
 						attacker_p.take_damage(reflect_result_reduced["reflect_damage"])
 						print("    - 攻撃側が受けた反射ダメージ: ", reflect_result_reduced["reflect_damage"])
-						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (基本HP:", attacker_p.base_hp, ")")
+						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
 					
 					# 軽減の場合は即死判定を行う
 					if defender_p.is_alive():
@@ -301,7 +301,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			damage_breakdown.get("temporary_bonus_consumed", 0) +
 			damage_breakdown.get("item_bonus_consumed", 0) +
 			damage_breakdown.get("spell_bonus_consumed", 0) +
-			damage_breakdown.get("base_hp_consumed", 0)
+			damage_breakdown.get("current_hp_consumed", 0)
 		)
 			if spell_magic_ref:
 				# 魔力奪取（攻撃側）: 与えたダメージベース
@@ -315,9 +315,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				print("    - 感応ボーナス: ", damage_breakdown["resonance_bonus_consumed"], " 消費")
 			if damage_breakdown["land_bonus_consumed"] > 0:
 				print("    - 土地ボーナス: ", damage_breakdown["land_bonus_consumed"], " 消費")
-			if damage_breakdown["base_hp_consumed"] > 0:
-				print("    - 基本HP: ", damage_breakdown["base_hp_consumed"], " 消費")
-			print("  → 残HP: ", defender_p.current_hp, " (基本HP:", defender_p.base_hp, ")")
+			if damage_breakdown["current_hp_consumed"] > 0:
+				print("    - 現在HP: ", damage_breakdown["current_hp_consumed"], " 消費")
+			print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
 			
 			# 反射ダメージを攻撃側に適用
 			if reflect_result["has_reflect"] and reflect_result["reflect_damage"] > 0:
@@ -325,7 +325,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
   【反射ダメージ適用】")
 				attacker_p.take_damage(reflect_result["reflect_damage"])
 				print("    - 攻撃側が受けた反射ダメージ: ", reflect_result["reflect_damage"])
-				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (基本HP:", attacker_p.base_hp, ")")
+				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
 			
 			# 即死判定（攻撃が通った後）
 			if defender_p.is_alive():

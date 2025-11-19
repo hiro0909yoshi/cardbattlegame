@@ -9,6 +9,9 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_special_creature.gd")
+const BattleCurseApplier = preload("res://scripts/battle/battle_curse_applier.gd")
+const BattleItemApplier = preload("res://scripts/battle/battle_item_applier.gd")
+const BattleSkillGranter = preload("res://scripts/battle/battle_skill_granter.gd")
 
 # サブシステム（分割後）
 var curse_applier = BattleCurseApplier.new()
@@ -57,16 +60,12 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	print("  base_up_ap: ", attacker.base_up_ap)
 	
 	# 現在HPから復元（手札から出す場合は満タン、移動侵略の場合はダメージ後の値）
-	# 注意：この時点ではbase_hpが設定されていないので、get_max_hp()は使えない
-	var attacker_base_only_hp = card_data.get("hp", 0)  # 基本HPのみ
-	var attacker_max_hp = attacker_base_only_hp + attacker.base_up_hp  # 手動で計算
+	var attacker_max_hp = card_data.get("hp", 0) + attacker.base_up_hp
 	var attacker_current_hp = card_data.get("current_hp", attacker_max_hp)
 	
-	# base_hpに現在HPから永続ボーナスを引いた値を設定
-	attacker.base_hp = attacker_current_hp - attacker.base_up_hp
-	
-	# current_hpを再計算
-	attacker.update_current_hp()
+	# current_hp を直接設定
+	attacker.current_hp = attacker_current_hp
+	# base_hp と base_up_hp はコンストラクタで既に設定済み
 	
 	# 防御側の準備（土地ボーナスあり）
 	var defender_creature = tile_info.get("creature", {})
@@ -102,17 +101,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	print("  base_up_ap: ", defender.base_up_ap)
 	
 	# 現在HPから復元（ない場合は満タン）
-	# 注意：この時点ではbase_hpが0なので、get_max_hp()は使えない
+	# 現在HPから復元（ない場合は満タン）
 	var defender_base_only_hp = defender_creature.get("hp", 0)  # 基本HPのみ
-	var defender_max_hp = defender_base_only_hp + defender.base_up_hp  # 手動で計算
+	var defender_max_hp = defender_base_only_hp + defender.base_up_hp  # MHP計算
 	var defender_current_hp = defender_creature.get("current_hp", defender_max_hp)
 	
-	# base_hpに現在HPから永続ボーナスを引いた値を設定
-	# （BattleParticipant.base_hpは「基本HPの現在値」を意味する）
-	defender.base_hp = defender_current_hp - defender.base_up_hp
-	
-	# current_hpを再計算
-	defender.update_current_hp()
+	# current_hp を直接設定（新方式）
+	defender.current_hp = defender_current_hp
+	# base_hp と base_up_hp はコンストラクタで既に設定済み
 	
 	# 効果配列を適用
 	apply_effect_arrays(attacker, card_data)
@@ -249,8 +245,10 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 	# base_up_apをcurrent_apに反映
 	participant.current_ap += participant.base_up_ap + participant.temporary_bonus_ap
 	
-	# HPを更新
-	participant.update_current_hp()
+	# HPを更新（新方式：ボーナス合計を current_hp に直接反映）
+	# base_hp + base_up_hp は MHP計算用の定数
+	# ボーナスは各フィールドに既に記録されているため、current_hp は自動的に正しい値になる
+	# update_current_hp() は呼ばない（current_hp が状態値になったため）
 	
 	if participant.base_up_hp > 0 or participant.base_up_ap > 0:
 		print("[効果] ", creature_data.get("name", "?"), 

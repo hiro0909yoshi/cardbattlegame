@@ -24,14 +24,14 @@
 ```gdscript
 # 修正前：update_current_hp() の呼び出しがある
 func _init(...):
-    # ...初期化
-    update_current_hp()  # ← この行を削除
+	# ...初期化
+	update_current_hp()  # ← この行を削除
 
 # 修正後：update_current_hp() を呼ばない
 func _init(...):
-    # ...初期化
-    # update_current_hp() は呼ばない
-    # current_hp はコンストラクタ後に battle_preparation.gd で設定される
+	# ...初期化
+	# update_current_hp() は呼ばない
+	# current_hp はコンストラクタ後に battle_preparation.gd で設定される
 ```
 
 #### 実装チェック
@@ -449,7 +449,7 @@ grep -rn "update_current_hp" scripts/battle/
 ```gdscript
 # take_damage() の最後に以下が左かあることを確認
 if remaining_damage > 0:
-    current_hp -= remaining_damage  # ← これがあるか
+	current_hp -= remaining_damage  # ← これがあるか
 ```
 
 ---
@@ -481,12 +481,12 @@ creature_data["current_hp"] = defender.current_hp  # ← シンプルに
 ```gdscript
 # BattleParticipant コンストラクタで base_hp が正しく設定されているか
 var battle_participant = BattleParticipant.new(
-    creature_data,
-    base_hp,  # ← creature_data["hp"] が渡されているか
-    land_bonus,
-    ap,
-    is_attacker,
-    player_id
+	creature_data,
+	base_hp,  # ← creature_data["hp"] が渡されているか
+	land_bonus,
+	ap,
+	is_attacker,
+	player_id
 )
 ```
 

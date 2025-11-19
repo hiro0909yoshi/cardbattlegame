@@ -170,7 +170,7 @@ static func _apply_support_bonus(participant: BattleParticipant, bonus: Dictiona
 	if hp_bonus > 0:
 		var old_hp = participant.current_hp
 		participant.temporary_bonus_hp += hp_bonus
-		participant.update_current_hp()
+		participant.current_hp += hp_bonus
 		print("  HP: ", old_hp, " → ", participant.current_hp, " (+", hp_bonus, ")")
 	
 	# APボーナス適用

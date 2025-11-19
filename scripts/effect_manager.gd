@@ -92,6 +92,37 @@ static func apply_synthesis_effect(creature_data: Dictionary, hp_bonus: int = 0,
 		  " HP+", hp_bonus, " AP+", ap_bonus, 
 		  " (打ち消し不可)")
 
+## base_up_hp を増やし、current_hp も同時に更新（マップ上のクリーチャー用）
+static func apply_max_hp_effect(creature_data: Dictionary, hp_increase: int) -> void:
+	if creature_data.is_empty():
+		return
+	
+	# 1. 古いMHPを保存
+	var old_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+	
+	# 2. base_up_hp を増加
+	creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + hp_increase
+	
+	# 3. 新しいMHPを計算
+	var new_mhp = creature_data.get("hp", 0) + creature_data["base_up_hp"]
+	
+	# 4. current_hp も更新（新方式：状態値）
+	if creature_data.has("current_hp"):
+		var hp_diff = new_mhp - old_mhp
+		creature_data["current_hp"] = creature_data.get("current_hp", 0) + hp_diff
+		# MHP上限を超えないようにクランプ
+		creature_data["current_hp"] = min(creature_data["current_hp"], new_mhp)
+		# HP下限の確認（0未満にならないように）
+		creature_data["current_hp"] = max(creature_data["current_hp"], 0)
+		
+		print("【MHP変更】", creature_data.get("name", "?"), " MHP: ", old_mhp, " → ", new_mhp, 
+			  " (current_hp: ", creature_data.get("current_hp", 0), ")")
+	else:
+		# current_hp がない場合は追加
+		creature_data["current_hp"] = new_mhp
+		print("【MHP変更】", creature_data.get("name", "?"), " MHP: ", old_mhp, " → ", new_mhp,
+			  " (current_hp初期化: ", new_mhp, ")")
+
 ## デバッグ: クリーチャーの全効果を表示
 static func print_all_effects(creature_data: Dictionary) -> void:
 	if creature_data.is_empty():

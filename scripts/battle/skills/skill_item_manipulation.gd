@@ -172,7 +172,7 @@ static func _remove_item_effects(participant, item: Dictionary) -> void:
 	
 	if hp > 0:
 		participant.item_bonus_hp -= hp
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("    - HP-", hp, " → ", participant.current_hp)
 
 ## 盗んだアイテムの効果を適用
@@ -189,5 +189,5 @@ static func _apply_stolen_item_effects(participant, item: Dictionary) -> void:
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp
-		participant.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("    + HP+", hp, " → ", participant.current_hp)

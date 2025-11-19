@@ -180,4 +180,4 @@ static func apply_penetration(attacker, defender) -> void:
 	if defender.land_bonus_hp > 0:
 		print("  【貫通】防御側の土地ボーナスHP ", defender.land_bonus_hp, " を無効化")
 		defender.land_bonus_hp = 0
-		defender.update_current_hp()
+		# update_current_hp() は呼ばない（current_hp が状態値になったため）
