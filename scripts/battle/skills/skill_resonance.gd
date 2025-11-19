@@ -78,7 +78,7 @@ static func apply(participant: BattleParticipant, context: Dictionary) -> bool:
 			if hp_bonus > 0:
 				var old_hp = participant.current_hp
 				participant.resonance_bonus_hp += hp_bonus
-				# update_current_hp() は呼ばない（current_hp が状態値になったため）
+				participant.current_hp += hp_bonus
 				print("  HP: ", old_hp, " → ", participant.current_hp, " (+", hp_bonus, ")")
 			
 			return true

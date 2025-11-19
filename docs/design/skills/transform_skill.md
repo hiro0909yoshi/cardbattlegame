@@ -395,7 +395,8 @@ static func _transform_creature(
 	participant.item_bonus_hp = current_item_bonus_hp
 	
 	# HPを再計算（土地ボーナスとアイテムボーナスを含む）
-	participant.update_current_hp()
+	# 変身後のMHP = base_hp + base_up_hp + land_bonus_hp + item_bonus_hp + その他ボーナス
+	participant.current_hp = participant.base_hp + participant.base_up_hp + participant.land_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp + participant.temporary_bonus_hp + participant.resonance_bonus_hp
 	
 	# 結果を記録
 	if is_attacker:

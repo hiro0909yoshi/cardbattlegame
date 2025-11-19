@@ -49,7 +49,7 @@
 | **`land_bonus_hp`** | 土地ボーナス | レベル3の土地+30 | 消失 |
 | **`item_bonus_hp`** | アイテムボーナス | ホーリーワード+20 | 消失 |
 | **`spell_bonus_hp`** | スペルボーナス | （予約） | 消失 |
-| **`current_hp`** | 計算後の現在HP | 全ボーナス合計 | - |
+| **`current_hp`** | 状態値の現在HP | ダメージで直接削られる | creature_dataに保存 |
 | | | | |
 | **`base_ap`** | 元のAP | `creature_data["ap"]`から取得 | - |
 | **`base_up_ap`** | 永続的な基礎AP上昇 | 合成+20、周回ボーナス+10 | creature_dataに保存 |
@@ -80,8 +80,8 @@ current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで
 - ダメージ時は以下の順序で消費される：
   1. 各種一時的ボーナス（resonance_bonus_hp → land_bonus_hp → temporary_bonus_hp → item_bonus_hp → spell_bonus_hp）
   2. その後 `base_hp` から消費
-  3. `update_current_hp()` を呼び出して、`current_hp` を現在の全ボーナスを含めて再計算
-- `current_hp` は計算値（`base_hp + base_up_hp + ボーナス群`）のため、直接削られずに各要素から消費してから再計算される
+  3. 各ボーナス要素から消費した後、`current_hp` を状態値として直接操作
+- `current_hp` は状態値（`base_hp + base_up_hp + ボーナス群`）のため、ボーナス要素から消費した後で直接削られる
 
 ### ダメージ消費順序
 
@@ -98,7 +98,7 @@ current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで
 6. base_hp（元のHPの現在値、最後に消費）
 ```
 
-※ `current_hp` は計算値（`base_hp + base_up_hp + ボーナス群`）のため、直接削られません。
+※ `current_hp` は状態値のため、ボーナス要素から消費した後に直接削られます。
 
 #### base_up_hp が消費されない理由（base_hp は消費される）
 
@@ -200,16 +200,17 @@ func prepare_participants(...):
 	# （BattleParticipant.base_hpは「基本HPの現在値」を意味する）
 	defender.base_hp = current_hp - base_up_hp
 	
-	# current_hpを再計算
-	defender.update_current_hp()
+	# current_hpを設定（状態値として）
+	defender.current_hp = current_hp
 ```
 
 **重要な概念**：
 - `creature_data["hp"]` = 元のHP（不変、カードの値）
 - `creature_data["current_hp"]` = 現在の残りHP（base_hp + base_up_hpの現在値）
-- `BattleParticipant.base_hp` = 基本HPの現在値（ダメージ後）
-- `BattleParticipant.base_up_hp` = 永続ボーナスの現在値（ダメージ後）
-- `BattleParticipant.current_hp` = 表示HP（全ボーナス込み）
+- `BattleParticipant.base_hp` = 基本HPの現在値（ダメージで削られる）
+- `BattleParticipant.base_up_hp` = 永続ボーナスの値（ダメージで削られない）
+- `BattleParticipant.current_hp` = 状態値のHP（各要素から消費した後に直接削られる）
+  - 計算式: `base_hp + base_up_hp + temporary_bonus_hp + resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp`
 
 ---
 
@@ -498,4 +499,4 @@ var max_hp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
 
 ---
 
-**最終更新**: 2025年10月27日
+**最終更新**: 2025年11月20日（HPリファクタリング完了、`update_current_hp()` 削除対応）

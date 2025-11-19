@@ -1,118 +1,246 @@
 # Project Structure & Documentation Guide
 
-## Critical Rule: docs/ Management
-
-**ALWAYS check these on chat start:**
-```bash
-cat docs/README.md           # Complete doc index
-cat docs/progress/daily_log.md  # Recent work
-cat docs/issues/issues.md    # Active issues only
-```
-
 ## Directory Structure
+
 ```
 cardbattlegame/
 ├── docs/
-│   ├── README.md        # Complete doc index (START HERE)
-│   ├── quick_start/     # Chat start guide
-│   ├── design/          # ⚠️ READ-ONLY (user must approve changes)
-│   ├── progress/        # ✅ UPDATE freely
-│   ├── issues/          # ✅ UPDATE actively
-│   │   ├── issues.md           # Current issues only
-│   │   └── resolved_issues.md  # Archive
-│   └── implementation/  # Implementation patterns
+│   ├── design/
+│   │   ├── hp_structure.md                    # ⭐ HP MASTER (single source of truth)
+│   │   ├── skills/
+│   │   │   ├── assist_skill.md
+│   │   │   ├── resonance_skill.md
+│   │   │   ├── transform_skill.md
+│   │   │   ├── regeneration_skill.md
+│   │   │   └── ... (16 skill types)
+│   │   ├── spells/
+│   │   │   ├── 領地変更.md
+│   │   │   ├── ステータス増減.md
+│   │   │   ├── 魔力増減.md
+│   │   │   ├── ダイス操作.md
+│   │   │   └── 呪い効果.md
+│   │   ├── battle_system.md
+│   │   ├── map_system.md
+│   │   ├── land_system.md
+│   │   ├── condition_patterns_catalog.md      # 条件分岐 master
+│   │   ├── effect_system_design.md            # エフェクトシステム
+│   │   └── ... (other design docs)
+│   ├── progress/
+│   ├── issues/
+│   └── implementation/
+│
 ├── scripts/
-│   ├── game_flow/       # Flow handlers (land_command, tile_action, spell_phase)
-│   ├── skills/          # Skill system
-│   ├── tiles/           # Tile classes
-│   └── ui_components/   # 7 UI components
-├── data/                # JSON card definitions
-└── assets/              # Images, models
+│   ├── battle/
+│   │   ├── battle_participant.gd              # HP/AP state during battle
+│   │   ├── battle_preparation.gd              # Battle setup
+│   │   ├── battle_execution.gd                # Attack sequence
+│   │   ├── battle_system.gd                   # Main battle flow
+│   │   ├── battle_special_effects.gd          # Regeneration, post-battle
+│   │   ├── battle_item_applier.gd
+│   │   ├── battle_skill_processor.gd
+│   │   ├── battle_curse_applier.gd
+│   │   └── skills/
+│   │       ├── skill_assist.gd                # 援護
+│   │       ├── skill_resonance.gd             # 感応
+│   │       ├── skill_transform.gd             # 変身・復活
+│   │       ├── skill_support.gd               # 応援
+│   │       ├── skill_special_creature.gd      # 特殊クリーチャー
+│   │       ├── skill_legacy.gd                # 遺産
+│   │       └── ... (16 skill types total)
+│   │
+│   ├── spells/
+│   │   ├── spell_land_new.gd                  # 地形操作スペル
+│   │   ├── spell_status_change.gd             # ステータス増減
+│   │   ├── spell_magic_change.gd              # 魔力増減
+│   │   ├── spell_dice_manipulation.gd         # ダイス操作
+│   │   └── ... (spell types)
+│   │
+│   ├── game_flow/
+│   │   ├── land_command_handler.gd
+│   │   ├── land_action_helper.gd              # Land actions (level up, etc)
+│   │   ├── spell_phase_handler.gd
+│   │   ├── battle_system.gd                   # LAP system, battle flow
+│   │   └── movement_controller.gd
+│   │
+│   ├── tiles/
+│   │   ├── base_tiles.gd
+│   │   ├── land_level_system.gd
+│   │   └── ... (tile types)
+│   │
+│   ├── effects/
+│   │   ├── effect_manager.gd                  # Apply effects (permanent, temporary)
+│   │   └── ... (effect types)
+│   │
+│   └── ui_components/
+│       └── ... (7 UI components)
+│
+├── data/
+│   └── cards.json / creatures.json
+│
+└── assets/
 ```
 
-## Code Refactoring Patterns
+---
 
-### Success Case: Large File Splitting
-**TileActionProcessor** (1284L → 5 files, +0% overhead)
-**LandCommandHandler** (881L → 4 files, +12% overhead)
+## Core Design Documents (Reference)
 
-**Key principles:**
-1. Static helper functions (no instances needed)
-2. No new signal connections
-3. Single source of truth for state
-4. Minimal wrapper methods
-5. Zero backward-compat bloat
+### 🔥 HP System (MASTER)
+**File:** `docs/design/hp_structure.md`
+**Status:** ✅ Complete & Current
+- State value architecture
+- creature_data vs BattleParticipant
+- Damage consumption order
+- MHP calculation
+- Key: base_up_hp is NEVER consumed
 
-## Documentation Update Rules
+### 🎯 Skills (16 Types)
+**Folder:** `docs/design/skills/`
+**Main Files:**
+- assist_skill.md - 援護（手札使用）
+- resonance_skill.md - 感応（土地属性条件）
+- transform_skill.md - 変身・復活
+- regeneration_skill.md - 再生（バトル後HP回復）
+- support_skill.md - 応援（盤面ボーナス）
+- 他13種類
 
-### design/ - READ ONLY
-- Never modify without explicit user approval
-- Used as reference during implementation
-- Contains core architecture & specs
-- Full index available in `docs/README.md`
+### ✨ Spells
+**Folder:** `docs/design/spells/`
+**Main Types:**
+- 領地変更.md - Land manipulation
+- ステータス増減.md - Status changes
+- 魔力増減.md - Magic change
+- ダイス操作.md - Dice manipulation
+- 呪い効果.md - Curse effects
 
-### issues/ - UPDATE ACTIVELY
-**When to update:**
-- Bug found: Add BUG-XXX to issues.md (concise)
-- Bug fixed: Move to resolved_issues.md (detailed)
-- Task done: Check off in tasks.md
-- New finding: Add note to issues.md
+### ⚔️ Battle System
+**File:** `docs/design/battle_system.md`
+**Key Topics:**
+- Battle flow (preparation → execution → post-battle)
+- Participant structure
+- Damage calculation
+- LAP system (mass growth, dominant growth)
 
-**Format:**
-- Priority: Critical/High/Medium/Low
-- Status: 🚧Investigating / ⚠️Need fix / ✅Resolved
-- Keep issues.md simple (1-2 lines per issue)
-- Put details in resolved_issues.md
+### 🗺️ Map System
+**File:** `docs/design/map_system.md`
+**Key Topics:**
+- Tile structure
+- Land bonuses
+- Creature placement
+- Movement system
 
-### progress/ - UPDATE ON COMPLETION
-- Check off completed tasks in daily_log.md
-- Note implementation details
-- Link to issues if problems found
-- Remove old logs (keep recent only)
+### 🏔️ Land System
+**File:** `docs/design/land_system.md`
+**Key Topics:**
+- Land levels (1-4)
+- Land bonuses (HP/AP)
+- Land elements
+- Land commands (level up, etc)
 
-## Workflow
+### 🔀 Condition Patterns (分岐条件)
+**File:** `docs/design/condition_patterns_catalog.md`
+**Coverage:**
+- Element-based conditions
+- Level-based conditions
+- Owner-based conditions
+- Time-based conditions (turn, lap)
+- Count-based conditions (land count, destroy count)
 
-### Start of Chat
-1. Activate project
-2. Read `docs/quick_start/new_chat_guide.md` for quick reference
-3. Check `docs/progress/daily_log.md` for recent work
-4. Check `docs/issues/issues.md` for blockers
-5. Use `docs/README.md` to find relevant design docs
+### 💥 Effect System
+**File:** `docs/design/effect_system_design.md`
+**Key Topics:**
+- Permanent effects (不屈、呪い etc)
+- Temporary effects
+- Effect application timing
+- Effect removal/cancellation
 
-### During Implementation
-- Bug found → Add to issues.md immediately
-- New insight → Add note to issues.md
+### 🧙 Curse System
+**File:** `docs/design/spells/呪い効果.md`
+**Key Topics:**
+- Curse types
+- Curse stat modifications
+- Curse application conditions
 
-### After Implementation
-- Update progress/daily_log.md
-- Move resolved issues to resolved_issues.md
-- DO NOT modify design/ (unless told to)
+---
 
-## Important Documents
+## Main Script Files (Quick Reference)
 
-| File | Purpose | Update Rights |
-|------|---------|--------------|
-| docs/README.md | Complete doc index | Read only |
-| docs/quick_start/new_chat_guide.md | Chat start guide | Read only |
-| docs/progress/daily_log.md | Recent work | Update actively |
-| docs/issues/issues.md | Active issues | Update actively |
-| docs/issues/resolved_issues.md | Archive | Add on resolve |
-| docs/design/* | Detailed specs | Read only |
+### Battle Core
+- `battle_participant.gd` - HP/AP state (during battle)
+- `battle_preparation.gd` - Setup phase
+- `battle_execution.gd` - Attack sequence
+- `battle_system.gd` - Main flow + LAP system
+- `battle_special_effects.gd` - Regeneration, post-battle
 
-## Current Development Status (Oct 2025)
-- ✅ Skills: 16 types implemented
-- ✅ Effect System: Phase 1-3 complete
-- ✅ Defense Creatures: 21 implemented
-- ✅ Battle Test Tool: Complete
-- ✅ Documentation: Restructured with complete index
-- 📋 Next: Additional skills implementation
+### Skills
+- `skills/` folder - 16 skill implementations
+- Key fix: skill_assist.gd, skill_resonance.gd, skill_special_creature.gd, skill_transform.gd
+- All have current_hp synchronization
 
-## Key Reminders
-1. Start with `docs/README.md` for complete index
-2. Check `docs/quick_start/new_chat_guide.md` on every chat start
-3. Read design/ for specs (don't modify)
-4. Add bugs to issues.md immediately (concise)
-5. Update progress/daily_log.md after tasks
-6. Never change design/ without user approval
+### Spells & Effects
+- `spells/spell_land_new.gd` - Land manipulation
+- `spells/spell_*.gd` - Other spell types
+- `effects/effect_manager.gd` - Effect application
 
-Last updated: 2025-10-25
+### Game Flow
+- `game_flow/battle_system.gd` - LAP bonuses, battle integration
+- `game_flow/land_action_helper.gd` - Land commands
+- `game_flow/spell_phase_handler.gd` - Spell execution
+
+---
+
+## Current Development Status (Nov 2025)
+
+### ✅ Completed
+- Skills: 16 types fully implemented
+- HP Refactoring: COMPLETE (2025-11-20)
+- Spell System: Land manipulation, status changes, curse effects
+- Battle System: Full flow with LAP system
+- Documentation: Comprehensive design docs
+
+### 🔑 Key Implementation Notes
+
+**HP (CRITICAL):**
+- current_hp is STATE VALUE (not calculated)
+- base_up_hp is NEVER consumed by damage
+- Always sync: bonus_hp += value → current_hp += value
+
+**Skills:**
+- All 16 skills implemented with proper HP sync
+- Last 4 fixed: assist, resonance, special_creature, transform
+
+**Spells:**
+- Land manipulation, status changes, dice ops, curse effects
+- Applied via spell_phase_handler
+
+**Conditions:**
+- Check condition_patterns_catalog.md for all condition types
+- Element, level, owner, turn, count based
+
+---
+
+## Workflow Reminders
+
+1. **Start of Chat:**
+   - Check docs/README.md for complete index
+   - Check progress/daily_log.md for recent work
+   - Check issues/issues.md for blockers
+
+2. **For Any System:**
+   - Refer to corresponding design doc in docs/design/
+   - HP → hp_structure.md (single source of truth)
+   - Skills → docs/design/skills/
+   - Spells → docs/design/spells/
+   - Battle → battle_system.md
+   - Map → map_system.md
+   - Land → land_system.md
+   - Conditions → condition_patterns_catalog.md
+   - Effects → effect_system_design.md
+
+3. **After Implementation:**
+   - Update progress/daily_log.md
+   - Move resolved issues to resolved_issues.md
+   - Never modify design/ without approval
+
+---
+
+Last updated: 2025-11-20 (Complete structure & documentation guide)

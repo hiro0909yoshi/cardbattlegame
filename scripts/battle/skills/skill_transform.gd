@@ -178,7 +178,8 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	participant.item_bonus_hp = current_item_bonus_hp
 	
 	# HPを再計算（土地ボーナスとアイテムボーナスを含む）
-	# update_current_hp() は呼ばない（current_hp が状態値になったため）
+	# 変身後のMHP = base_hp + base_up_hp + land_bonus_hp + item_bonus_hp + その他ボーナス
+	participant.current_hp = participant.base_hp + participant.base_up_hp + participant.land_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp + participant.temporary_bonus_hp + participant.resonance_bonus_hp
 	
 	print("  変身後AP/HP: ", participant.current_ap, "/", participant.current_hp)
 	
@@ -356,7 +357,7 @@ static func _apply_revive(participant: BattleParticipant, new_creature: Dictiona
 	participant.item_bonus_hp = current_item_bonus_hp
 	
 	# HPを全回復（最大HPで復活）
-	# update_current_hp() は呼ばない（current_hp が状態値になったため）
+	participant.current_hp = participant.base_hp + participant.base_up_hp + participant.land_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp + participant.temporary_bonus_hp + participant.resonance_bonus_hp
 	
 	print("  復活後AP/HP: ", participant.current_ap, "/", participant.current_hp)
 	

@@ -75,15 +75,15 @@ APとHPが個別に上昇する
 
 | クリーチャー名 | 属性 | 必要土地 | 効果 |
 |--------------|------|---------|------|
-| アモン | 火 | [地] | AP+|AP&HP+20 |
-| ムシュフシュ | 火 | [地] | AP+|AP&HP20、HP+10 |
-| オドントティラヌス | 水 | [風] | AP+|AP&HP20、HP+10 |
+| アモン | 火 | [地] | AP+20 |
+| ムシュフシュ | 火 | [地] | AP+20 |
+| オドントティラヌス | 水 | [風] | AP+20 |
 | ゴーストシップ | 水 | [風] | HP+30 |
-| キリン | 風 | [水] | AP+|AP&HP+20 |
-| クー・シー | 風 | [水] | AP+|AP&HP10、HP+20 |
-| クフ | 風 | [水] | AP+|AP&HP30 |
-| グロウホーン | 地 | [火] | AP+|AP&HP+20 |
-| モルモ | 地 | [火] | AP+|AP&HP30 |
+| キリン | 風 | [水] | AP+20 |
+| クー・シー | 風 | [水] | AP+10 |
+| クフ | 風 | [水] | AP+30 |
+| グロウホーン | 地 | [火] | AP+20 |
+| モルモ | 地 | [火] | AP+30 |
 
 ---
 
@@ -175,7 +175,7 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 		
 		if hp_bonus > 0:
 			participant.resonance_bonus_hp += hp_bonus
-			participant.update_current_hp()
+			participant.current_hp += hp_bonus  # current_hp も同期
 ```
 
 ---
