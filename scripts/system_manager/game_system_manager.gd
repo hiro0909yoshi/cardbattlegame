@@ -178,12 +178,8 @@ func phase_3_setup_basic_config() -> void:
 	
 	# BoardSystem3D基本設定
 	if board_system_3d and camera_3d:
-		# === 診断ログ ===
-		print("[GameSystemManager] Phase 3 カメラ設定前: ", camera_3d.position)
-		
 		# カメラ初期位置設定
 		camera_3d.position = GameConstants.CAMERA_OFFSET
-		print("[GameSystemManager] Phase 3 カメラ設定直後: ", camera_3d.position)
 		
 		# カメラ参照を最初に設定（重要：collect_players()内で使用される）
 		board_system_3d.camera = camera_3d
@@ -191,15 +187,12 @@ func phase_3_setup_basic_config() -> void:
 		board_system_3d.player_is_cpu = player_is_cpu
 		board_system_3d.current_player_index = 0
 		
-		print("[GameSystemManager] Phase 3 board_system_3d.camera に設定: ", board_system_3d.camera.position)
-		
 		# 3D ノード収集
 		if tiles_container:
 			board_system_3d.collect_tiles(tiles_container)
 		if players_container:
 			# collect_players() はカメラ参照を必要とする
 			board_system_3d.collect_players(players_container)
-			print("[GameSystemManager] Phase 3 collect_players() 後: ", camera_3d.position)
 			
 			# === カメラをプレイヤーに向かせる ===
 			if board_system_3d.player_nodes and board_system_3d.player_nodes.size() > 0:
@@ -208,15 +201,8 @@ func phase_3_setup_basic_config() -> void:
 				player_look_target.y += 1.0  # 頭方向に向かせる
 				
 				camera_3d.look_at(player_look_target, Vector3.UP)
-				print("[GameSystemManager] Phase 3 カメラをプレイヤーに向かせました: ", player_look_target)
 	
 	print("[GameSystemManager] Phase 3: システム基本設定完了")
-	
-	# === 診断ログ：カメラ状態確認 ===
-	if camera_3d:
-		print("[GameSystemManager] [診断] Phase 3 後のカメラ位置: ", camera_3d.position)
-		print("[GameSystemManager] [診断] camera_3d が存在: true")
-		print("[GameSystemManager] [診断] board_system_3d.camera が設定されているか: ", board_system_3d.camera != null)
 
 # Phase 4: システム間連携設定
 func phase_4_setup_system_interconnections() -> void:
@@ -372,13 +358,7 @@ func phase_6_prepare_game_start() -> void:
 	
 	print("[GameSystemManager] Phase 6: ゲーム開始準備完了")
 	
-	# === 診断ログ：カメラ状態確認 ===
-	if camera_3d:
-		print("[GameSystemManager] [診断] Phase 6 後のカメラ位置: ", camera_3d.position)
-		if board_system_3d and board_system_3d.movement_controller:
-			print("[GameSystemManager] [診断] movement_controller.camera が設定されているか: ", board_system_3d.movement_controller.camera != null)
-			if board_system_3d.movement_controller.camera:
-				print("[GameSystemManager] [診断] movement_controller.camera の位置: ", board_system_3d.movement_controller.camera.position)
+
 
 # === ヘルパーメソッド ===
 

@@ -68,7 +68,6 @@ func set_player_tile(player_id: int, tile_index: int):
 # プレイヤーを移動（外部から呼ばれるメイン関数）
 func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
-		print("移動不可: is_moving=", is_moving, ", player_id=", player_id)
 		return
 	
 	is_moving = true
@@ -179,7 +178,6 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	# カメラを追従（現在のプレイヤーのみ）
 	if camera and player_system and player_id == player_system.current_player_index:
 		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-		print("[MovementController] [カメラ追従] player_id: ", player_id, " current_player: ", player_system.current_player_index, " カメラ移動: ", cam_target)
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
 	# Tweenの完了を待つ
@@ -216,7 +214,6 @@ func warp_player_3d(player_id: int, to_tile: int) -> void:
 
 # ワープアニメーション実行
 func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
-	print("ワープ！マス", from_tile, " → マス", to_tile)
 	
 	var player_node = player_nodes[player_id]
 	
@@ -251,7 +248,6 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 
 # スタート地点通過処理
 func handle_start_pass(player_id: int):
-	print("スタート地点通過！")
 	if player_system:
 		player_system.add_magic(player_id, GameConstants.PASS_BONUS)
 	
@@ -324,17 +320,13 @@ func clear_all_down_states_for_player(player_id: int):
 # カメラをプレイヤーにフォーカス
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 	if not camera or player_id >= player_nodes.size():
-		print("Warning: カメラなし or 無効なplayer_id:", player_id)
 		return
 	
 	var player_node = player_nodes[player_id]
 	if not player_node:
-		print("Warning: プレイヤーノードが見つかりません:", player_id)
 		return
 		
 	var target_pos = player_node.global_position + GameConstants.CAMERA_OFFSET
-	
-	print("カメラ移動: プレイヤー", player_id + 1, "の位置へ (", player_node.global_position, ")")
 	
 	if smooth:
 		var tween = get_tree().create_tween()
