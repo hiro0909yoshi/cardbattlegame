@@ -8,7 +8,7 @@ var board_system_3d  # BoardSystem3Dクラスの型指定を削除
 var player_system: PlayerSystem
 var card_system: CardSystem
 var battle_system  # BattleSystemクラスの型指定を削除（エラー回避）
-var skill_system: SkillSystem
+var player_buff_system: PlayerBuffSystem
 var ui_manager: UIManager
 var special_tile_system: SpecialTileSystem
 var debug_controller: DebugController
@@ -59,10 +59,10 @@ func initialize_systems():
 	battle_system.name = "BattleSystem"
 	add_child(battle_system)
 	
-	# SkillSystemを作成
-	skill_system = SkillSystem.new()
-	skill_system.name = "SkillSystem"
-	add_child(skill_system)
+	# PlayerBuffSystemを作成
+	player_buff_system = PlayerBuffSystem.new()
+	player_buff_system.name = "PlayerBuffSystem"
+	add_child(player_buff_system)
 	
 	# SpecialTileSystemを作成
 	special_tile_system = SpecialTileSystem.new()
@@ -133,11 +133,11 @@ func setup_game():
 	
 	# GameFlowManager設定（3D対応）- 先に設定
 	game_flow_manager.setup_systems(player_system, card_system, board_system_3d, 
-									skill_system, ui_manager, battle_system, special_tile_system)
+									player_buff_system, ui_manager, battle_system, special_tile_system)
 	
 	# システム連携設定
 	board_system_3d.setup_systems(player_system, card_system, battle_system, 
-								  skill_system, special_tile_system, game_flow_manager)
+								  player_buff_system, special_tile_system, game_flow_manager)
 	board_system_3d.ui_manager = ui_manager
 	
 	# SpecialTileSystemの設定

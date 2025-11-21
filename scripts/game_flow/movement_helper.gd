@@ -252,7 +252,7 @@ static func execute_creature_move(
 	
 	# ダウン状態設定（不屈チェック）
 	if to_tile_node.has_method("set_down_state"):
-		if not SkillSystem.has_unyielding(creature_data):
+		if not PlayerBuffSystem.has_unyielding(creature_data):
 			to_tile_node.set_down_state(true)
 	
 	if to_tile_node.has_method("update_display"):

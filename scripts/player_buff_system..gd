@@ -1,5 +1,5 @@
 extends Node
-class_name SkillSystem
+class_name PlayerBuffSystem
 
 # スキル効果管理システム
 

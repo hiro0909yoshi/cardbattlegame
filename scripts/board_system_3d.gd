@@ -52,7 +52,7 @@ var camera = null
 var player_system: PlayerSystem
 var card_system: CardSystem
 var battle_system: BattleSystem
-var skill_system: SkillSystem
+var player_buff_system: PlayerBuffSystem
 var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
 var cpu_ai_handler: CPUAIHandler
@@ -116,11 +116,11 @@ func create_subsystems():
 	cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
 
 func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BattleSystem, 
-				   s_system: SkillSystem, st_system: SpecialTileSystem = null, gf_manager = null):
+				   s_system: PlayerBuffSystem, st_system: SpecialTileSystem = null, gf_manager = null):
 	player_system = p_system
 	card_system = c_system
 	battle_system = b_system
-	skill_system = s_system
+	player_buff_system = s_system
 	special_tile_system = st_system
 	game_flow_manager = gf_manager
 	
@@ -160,7 +160,7 @@ func setup_cpu_ai_handler():
 		add_child(cpu_ai_handler)
 	
 	if cpu_ai_handler.has_method("setup_systems"):
-		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, skill_system)
+		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, player_buff_system)
 
 # === 3Dノード収集 ===
 

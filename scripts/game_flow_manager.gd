@@ -38,7 +38,7 @@ var cpu_ai_handler: CPUAIHandler
 # システム参照
 var player_system: PlayerSystem
 var card_system: CardSystem
-var skill_system: SkillSystem
+var player_buff_system: PlayerBuffSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
@@ -99,7 +99,7 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 					bt_system = null, st_system = null):
 	player_system = p_system
 	card_system = c_system
-	skill_system = s_system
+	player_buff_system = s_system
 	ui_manager = ui_system
 	battle_system = bt_system
 	special_tile_system = st_system
@@ -247,7 +247,7 @@ func roll_dice():
 		if spell_dice:
 			dice_value = spell_dice.get_modified_dice_value(player_system.current_player_index, dice_value)
 		
-		var modified = skill_system.modify_dice_roll(dice_value, player_system.current_player_index)
+		var modified = player_buff_system.modify_dice_roll(dice_value, player_system.current_player_index)
 		total_dice += modified
 		
 		# 各ダイスの結果を表示
@@ -487,7 +487,7 @@ func end_turn():
 	emit_signal("turn_ended", current_player.id)
 	
 	change_phase(GamePhase.END_TURN)
-	skill_system.end_turn_cleanup()
+	player_buff_system.end_turn_cleanup()
 	
 	# 現在のプレイヤーの呪いのduration更新
 	if spell_curse:

@@ -370,7 +370,7 @@ func _apply_post_battle_effects(
 				
 				# ダウン状態にする（不屈チェック）
 				if from_tile.has_method("set_down_state"):
-					if not SkillSystem.has_unyielding(return_data):
+					if not PlayerBuffSystem.has_unyielding(return_data):
 						from_tile.set_down_state(true)
 					else:
 						print("[移動侵略敗北] 不屈により戻った後もダウンしません")

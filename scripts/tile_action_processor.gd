@@ -337,7 +337,7 @@ func execute_summon(card_index: int):
 			var tile = board_system.tile_nodes[current_tile]
 			if tile and tile.has_method("set_down_state"):
 				# 不屈持ちでなければダウン状態にする
-				if not SkillSystem.has_unyielding(card_data):
+				if not PlayerBuffSystem.has_unyielding(card_data):
 					tile.set_down_state(true)
 				else:
 					print("[TileActionProcessor] 不屈により召喚後もダウンしません: タイル", current_tile)
@@ -500,7 +500,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 		var tile = board_system.tile_nodes[tile_index]
 		if tile and tile.has_method("set_down_state"):
 			# 不屈持ちでなければダウン状態にする
-			if not SkillSystem.has_unyielding(card_data):
+			if not PlayerBuffSystem.has_unyielding(card_data):
 				tile.set_down_state(true)
 			else:
 				print("[TileActionProcessor] 不屈により交換後もダウンしません: タイル", tile_index)

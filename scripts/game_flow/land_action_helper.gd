@@ -38,7 +38,7 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	if tile.has_method("set_down_state"):
 		# BaseTileのcreature_dataプロパティを直接参照
 		var creature = tile.creature_data
-		if not SkillSystem.has_unyielding(creature):
+		if not PlayerBuffSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		else:
 			pass  # 不屈スキル保持のためダウンしない
@@ -254,7 +254,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# ダウン状態設定（不屈チェック）
 		if dest_tile.has_method("set_down_state"):
-			if not SkillSystem.has_unyielding(creature_data):
+			if not PlayerBuffSystem.has_unyielding(creature_data):
 				dest_tile.set_down_state(true)
 		
 		# 移動先の所有権を設定
@@ -312,7 +312,7 @@ static func execute_simple_move_battle(handler, dest_index: int, attacker_data: 
 		handler.board_system.set_tile_owner(dest_index, attacker_player)
 		handler.board_system.place_creature(dest_index, attacker_data)
 		# 不屈チェック
-		if not SkillSystem.has_unyielding(attacker_data):
+		if not PlayerBuffSystem.has_unyielding(attacker_data):
 			dest_tile.set_down_state(true)
 		else:
 			pass  # 不屈スキル保持のためダウンしない
@@ -434,7 +434,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# ダウン状態設定（不屈チェック）
 	if tile.has_method("set_down_state"):
 		var creature = tile.creature_data
-		if not creature.is_empty() and not SkillSystem.has_unyielding(creature):
+		if not creature.is_empty() and not PlayerBuffSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		elif not creature.is_empty():
 			pass  # 不屈スキル保持のためダウンしない

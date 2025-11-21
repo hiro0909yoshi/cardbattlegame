@@ -22,18 +22,18 @@ var card_system: CardSystem
 var board_system
 var player_system: PlayerSystem
 var battle_system: BattleSystem
-var skill_system: SkillSystem
+var player_buff_system: PlayerBuffSystem
 
 func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_system: BattleSystem, s_system: SkillSystem):
+func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_system: BattleSystem, s_system: PlayerBuffSystem):
 	card_system = c_system
 	board_system = b_system
 	player_system = p_system
 	battle_system = bt_system
-	skill_system = s_system
+	player_buff_system = s_system
 
 # CPU召喚判断
 func decide_summon(current_player) -> void:
@@ -199,8 +199,8 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
-	if skill_system:
-		return skill_system.modify_card_cost(base_cost, card_data, player_id)
+	if player_buff_system:
+		return player_buff_system.modify_card_cost(base_cost, card_data, player_id)
 	
 	return base_cost
 
