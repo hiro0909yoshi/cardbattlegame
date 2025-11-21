@@ -28,10 +28,10 @@ func apply_dice_fixed_effect(effect: Dictionary, target_data: Dictionary, curren
 	
 	var value = effect.get("value", 6)
 	var duration = effect.get("duration", 1)
-	var name = effect.get("name", "ダイス固定")
+	var _name = effect.get("name", "ダイス固定")
 	
 	spell_curse.curse_player(target_player_id, "dice_fixed", duration, {
-		"name": name,
+		"name": _name,
 		"value": value
 	})
 
@@ -44,10 +44,10 @@ func apply_dice_range_effect(effect: Dictionary, target_data: Dictionary, curren
 	var min_val = effect.get("min", 1)
 	var max_val = effect.get("max", 6)
 	var duration = effect.get("duration", 1)
-	var name = effect.get("name", "ダイス範囲指定")
+	var _name = effect.get("name", "ダイス範囲指定")
 	
 	spell_curse.curse_player(target_player_id, "dice_range", duration, {
-		"name": name,
+		"name": _name,
 		"min": min_val,
 		"max": max_val
 	})
@@ -60,10 +60,10 @@ func apply_dice_multi_effect(effect: Dictionary, target_data: Dictionary, curren
 	
 	var count = effect.get("count", 2)
 	var duration = effect.get("duration", 1)
-	var name = effect.get("name", "複数ダイス")
+	var _name = effect.get("name", "複数ダイス")
 	
 	spell_curse.curse_player(target_player_id, "dice_multi", duration, {
-		"name": name,
+		"name": _name,
 		"count": count
 	})
 
@@ -77,10 +77,10 @@ func apply_dice_range_magic_effect(effect: Dictionary, target_data: Dictionary, 
 	var max_val = effect.get("max", 6)
 	var magic = effect.get("magic", 0)
 	var duration = effect.get("duration", 1)
-	var name = effect.get("name", "蓄魔歩行")
+	var _name = effect.get("name", "蓄魔歩行")
 	
 	spell_curse.curse_player(target_player_id, "dice_range_magic", duration, {
-		"name": name,
+		"name": _name,
 		"min": min_val,
 		"max": max_val,
 		"magic": magic

@@ -99,8 +99,8 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 ##
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
-## @param effect_combat エフェクトコンバットシステム
-static func apply_normal_power_strike(participant, context: Dictionary, effect_combat) -> void:
+## @param _effect_combat エフェクトコンバットシステム
+static func apply_normal_power_strike(participant, context: Dictionary, _effect_combat) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
 	

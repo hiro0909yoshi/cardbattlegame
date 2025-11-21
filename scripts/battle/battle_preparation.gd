@@ -9,14 +9,14 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_special_creature.gd")
-const BattleCurseApplier = preload("res://scripts/battle/battle_curse_applier.gd")
-const BattleItemApplier = preload("res://scripts/battle/battle_item_applier.gd")
-const BattleSkillGranter = preload("res://scripts/battle/battle_skill_granter.gd")
+const BattleCurseApplierScript = preload("res://scripts/battle/battle_curse_applier.gd")
+const BattleItemApplierScript = preload("res://scripts/battle/battle_item_applier.gd")
+const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
 
 # サブシステム（分割後）
-var curse_applier = BattleCurseApplier.new()
-var item_applier = BattleItemApplier.new()
-var skill_granter = BattleSkillGranter.new()
+var curse_applier = BattleCurseApplierScript.new()
+var item_applier = BattleItemApplierScript.new()
+var skill_granter = BattleSkillGranterScript.new()
 
 # システム参照
 var board_system_ref = null

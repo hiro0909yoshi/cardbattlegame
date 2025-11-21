@@ -115,7 +115,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 ## スキル適用
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
-	var has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
+	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
 	
 	# 0. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)

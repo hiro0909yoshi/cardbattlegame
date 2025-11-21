@@ -316,7 +316,7 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 	if "再生" in keywords:
 		# バトル終了後に current_hp を MHP まで回復
 		var current_mhp = participant.get_max_hp()
-		var old_hp = participant.current_hp
+		var _old_hp = participant.current_hp
 		var healed = 0
 		
 		if participant.current_hp < current_mhp:

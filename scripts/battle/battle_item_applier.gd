@@ -5,7 +5,7 @@ class_name BattleItemApplier
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const SkillAssistScript = preload("res://scripts/battle/skills/skill_assist.gd")
-const BattleSkillGranter = preload("res://scripts/battle/battle_skill_granter.gd")
+const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
 
 # システム参照
 var board_system_ref = null
@@ -51,7 +51,7 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 	
 	var effects = effect_parsed.get("effects", [])
 	for effect in effects:
-		var effect_type = effect.get("effect_type", "")
+		var _effect_type = effect.get("effect_type", "")
 		_apply_item_effect(participant, enemy_participant, effect, context)
 
 ## stat_bonusを適用
