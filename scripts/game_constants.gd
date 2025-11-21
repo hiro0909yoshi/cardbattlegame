@@ -51,6 +51,9 @@ const CPU_INVASION_RATE = 0.8    # CPU侵略確率
 const CPU_BATTLE_RATE = 0.7      # CPUバトル確率
 const CPU_LEVELUP_RATE = 0.5     # CPUレベルアップ確率
 
+# === カメラ関連 ===
+const CAMERA_OFFSET = Vector3(19, 19, 19)  # カメラオフセット位置
+
 # === アニメーション ===
 const MOVE_SPEED = 0.3            # 移動アニメーション速度（秒）
 const WARP_DELAY = 0.5            # ワープ演出待機時間（秒）

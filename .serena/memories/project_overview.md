@@ -174,7 +174,7 @@ Chain  Toll Multiplier  HP Bonus
 - Avoid reserved words: `owner` → `tile_owner`
 - TextureRect: Use `modulate` not `color`
 - Cost normalization: Handle dict format `{mp: 50}`
-- Camera offset: Use MovementController's CAMERA_OFFSET
+- Camera offset: Use GameConstants.CAMERA_OFFSET
 - Signal connections: Use CONNECT_ONE_SHOT to prevent duplicates
 - Phase management: Check current_phase before state changes
 - Node validity: Always check is_instance_valid() before access
@@ -245,6 +245,8 @@ Chain  Toll Multiplier  HP Bonus
 ## File Structure
 ```
 scripts/
+├── system_manager/
+│   └── game_system_manager.gd (6-phase initialization, 560 lines)
 ├── creature_manager.gd (NEW - 230 lines)
 ├── game_flow/
 │   ├── land_command_handler.gd (352L)

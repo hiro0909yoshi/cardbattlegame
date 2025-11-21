@@ -16,7 +16,6 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 # 移動設定
 const MOVE_DURATION = 0.5  # 1マスの移動時間
 const MOVE_HEIGHT = 1.0    # 駒の高さオフセット
-const CAMERA_OFFSET = Vector3(19, 19, 19)  # カメラオフセット
 
 # 参照
 var tile_nodes = {}        # tile_index -> BaseTile
@@ -179,10 +178,16 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	
 	# カメラを追従（現在のプレイヤーのみ）
 	if camera and player_system and player_id == player_system.current_player_index:
-		var cam_target = target_pos + CAMERA_OFFSET
+		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
+		print("[MovementController] [カメラ追従] player_id: ", player_id, " current_player: ", player_system.current_player_index, " カメラ移動: ", cam_target)
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
+	# Tweenの完了を待つ
 	await tween.finished
+	
+	# カメラをプレイヤーに向ける（移動完了後に実行）
+	if camera and player_system and player_id == player_system.current_player_index:
+		camera.look_at(target_pos + Vector3(0, 1.0, 0), Vector3.UP)
 
 # === ワープ処理 ===
 
@@ -232,7 +237,7 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 		
 		# カメラも瞬間移動
 		if camera and player_system and player_id == player_system.current_player_index:
-			var cam_target = target_pos + CAMERA_OFFSET
+			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 			camera.global_position = cam_target
 	
 	# 拡大して現れる
@@ -327,7 +332,7 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 		print("Warning: プレイヤーノードが見つかりません:", player_id)
 		return
 		
-	var target_pos = player_node.global_position + CAMERA_OFFSET
+	var target_pos = player_node.global_position + GameConstants.CAMERA_OFFSET
 	
 	print("カメラ移動: プレイヤー", player_id + 1, "の位置へ (", player_node.global_position, ")")
 	
