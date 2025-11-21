@@ -489,6 +489,9 @@ func _apply_damage_effect(effect: Dictionary, target_data: Dictionary):
 	
 	# クリーチャーが倒れた場合
 	if creature["hp"] <= 0 and creature.get("land_bonus_hp", 0) <= 0:
+		# 【SSoT同期】スペルで倒されたクリーチャーをタイルからクリア
+		# この代入は自動的にCreatureManager.set_data(tile_index, {})を呼び出し
+		# CreatureManager.creatures[tile_index]から削除される
 		tile.creature_data = {}
 		tile.owner_id = -1
 		tile.level = 1

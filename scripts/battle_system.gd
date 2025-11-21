@@ -362,6 +362,9 @@ func _apply_post_battle_effects(
 				# 現在HPを保存
 				return_data["current_hp"] = attacker.current_hp
 				
+				# 【SSoT同期】バトル後のクリーチャー状態をマップに反映
+				# この代入は自動的にCreatureManager.set_data(from_tile.tile_index, return_data)を呼び出し
+				# CreatureManager.creatures[tile_index]が最新の状態で更新される
 				from_tile.creature_data = return_data
 				from_tile.owner_id = attacker_index
 				

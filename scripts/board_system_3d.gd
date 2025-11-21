@@ -265,6 +265,9 @@ func remove_creature(tile_index: int):
 		tile.remove_creature()
 	else:
 		# フォールバック: データだけクリア
+		# 【SSoT同期】tile.creature_data はCreatureManager経由で設定される
+		# この代入は自動的にCreatureManager.set_data(tile_index, {})を呼び出し
+		# CreatureManager.creatures[tile_index]から削除される
 		tile.creature_data = {}
 		if tile.has_method("update_visual"):
 			tile.update_visual()
@@ -365,6 +368,9 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	new_tile.rotation = old_rotation
 	new_tile.level = old_level
 	new_tile.owner_id = old_owner
+	# 【SSoT同期】古いタイルのクリーチャーを新しいタイルに引き継ぎ
+	# この代入は自動的にCreatureManager.set_data(tile_index, old_creature)を呼び出し
+	# 同じtile_indexのCreatureManager.creatures[tile_index]が更新される
 	new_tile.creature_data = old_creature
 	
 	if old_down_state and new_tile.has_method("set_down_state"):

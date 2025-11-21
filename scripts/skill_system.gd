@@ -18,28 +18,29 @@ func _ready():
 # プレイヤーバフを初期化
 func initialize_player_buffs():
 	for i in range(4):  # 最大4人プレイヤー
-		player_buffs[i] = {
-			"card_cost_reduction": 0,
-			"dice_bonus": 0,
-			"toll_multiplier": 1.0,
-			"draw_bonus": 0,
-			"magic_income_bonus": 0,
-			"battle_st_bonus": 0,
-			"battle_hp_bonus": 0
-		}
+		player_buffs[i] = []  # 空の配列で初期化（動的バフ管理用）
 
 # スキルを登録
 func register_skill(skill_name: String, effect: Dictionary):
 	active_skills[skill_name] = effect
 	print("SkillSystem: スキル登録 - ", skill_name)
 
+# バフ配列から特定タイプの合計値を計算
+func _calculate_buff_total(player_id: int, buff_type: String) -> float:
+	var total = 0.0
+	if player_buffs.has(player_id):
+		for buff in player_buffs[player_id]:
+			if buff["type"] == buff_type:
+				total += buff["value"]
+	return total
+
 # カードコストを修正
 func modify_card_cost(base_cost: int, card_data: Dictionary, player_id: int) -> int:
 	var modified_cost = base_cost
 	
-	# プレイヤーのコスト削減バフを適用
-	if player_buffs.has(player_id):
-		modified_cost -= player_buffs[player_id].card_cost_reduction
+	# バフ配列から card_cost_reduction の合計を計算
+	var total_reduction = _calculate_buff_total(player_id, "card_cost")
+	modified_cost -= int(total_reduction)
 	
 	# カード属性による修正（例：特定属性のコスト削減）
 	if active_skills.has("element_affinity"):
@@ -53,9 +54,9 @@ func modify_card_cost(base_cost: int, card_data: Dictionary, player_id: int) -> 
 func modify_dice_roll(base_roll: int, player_id: int) -> int:
 	var modified_roll = base_roll
 	
-	# プレイヤーのダイスボーナスを適用
-	if player_buffs.has(player_id):
-		modified_roll += player_buffs[player_id].dice_bonus
+	# バフ配列から dice_bonus の合計を計算
+	var dice_bonus = _calculate_buff_total(player_id, "dice")
+	modified_roll += int(dice_bonus)
 	
 	# 特殊スキル（例：ダイス目固定）
 	if active_skills.has("dice_control"):
@@ -69,9 +70,10 @@ func modify_dice_roll(base_roll: int, player_id: int) -> int:
 func modify_toll(base_toll: int, attacker_id: int, defender_id: int) -> int:
 	var modified_toll = float(base_toll)
 	
-	# 防御側のボーナス
-	if player_buffs.has(defender_id):
-		modified_toll *= player_buffs[defender_id].toll_multiplier
+	# バフ配列から toll_multiplier の合計を計算
+	var toll_multiplier = _calculate_buff_total(defender_id, "toll")
+	if toll_multiplier > 0:
+		modified_toll *= (1.0 + toll_multiplier * 0.1)
 	
 	# 攻撃側のペナルティ軽減
 	if active_skills.has("toll_protection"):
@@ -85,8 +87,9 @@ func modify_toll(base_toll: int, attacker_id: int, defender_id: int) -> int:
 func modify_draw_count(base_count: int, player_id: int) -> int:
 	var modified_count = base_count
 	
-	if player_buffs.has(player_id):
-		modified_count += player_buffs[player_id].draw_bonus
+	# バフ配列から draw_bonus の合計を計算
+	var draw_bonus = _calculate_buff_total(player_id, "draw")
+	modified_count += int(draw_bonus)
 	
 	# スペルカード効果
 	if active_skills.has("extra_draw"):
@@ -100,9 +103,11 @@ func modify_draw_count(base_count: int, player_id: int) -> int:
 func modify_creature_stats(creature: Dictionary, player_id: int, _is_attacker: bool) -> Dictionary:
 	var modified = creature.duplicate()
 	
-	if player_buffs.has(player_id):
-		modified.damage += player_buffs[player_id].battle_st_bonus
-		modified.block += player_buffs[player_id].battle_hp_bonus
+	# バフ配列から battle_st_bonus と battle_hp_bonus の合計を計算
+	var st_bonus = _calculate_buff_total(player_id, "battle_st")
+	var hp_bonus = _calculate_buff_total(player_id, "battle_hp")
+	modified.damage += int(st_bonus)
+	modified.block += int(hp_bonus)
 	
 	# 属性相性
 	if active_skills.has("element_advantage"):
@@ -118,25 +123,17 @@ func apply_element_advantage(creature: Dictionary, _advantage_table: Dictionary)
 	return creature
 
 # バフを適用
-func apply_buff(player_id: int, buff_type: String, value: int, _duration: int = -1):
+func apply_buff(player_id: int, buff_type: String, value: int, duration: int = -1):
 	if not player_buffs.has(player_id):
 		return
 	
-	match buff_type:
-		"card_cost":
-			player_buffs[player_id].card_cost_reduction += value
-		"dice":
-			player_buffs[player_id].dice_bonus += value
-		"toll":
-			player_buffs[player_id].toll_multiplier *= (1.0 + value * 0.1)
-		"draw":
-			player_buffs[player_id].draw_bonus += value
-		"magic":
-			player_buffs[player_id].magic_income_bonus += value
-		"battle_st":
-			player_buffs[player_id].battle_st_bonus += value
-		"battle_hp":
-			player_buffs[player_id].battle_hp_bonus += value
+	# バフオブジェクトを配列に追加（動的管理）
+	var buff = {
+		"type": buff_type,
+		"value": value,
+		"duration": duration
+	}
+	player_buffs[player_id].append(buff)
 	
 	emit_signal("buff_applied", str(player_id), buff_type, value)
 	print("バフ適用: プレイヤー", player_id + 1, " - ", buff_type, " +", value)
