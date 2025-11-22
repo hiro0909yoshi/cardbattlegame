@@ -157,6 +157,32 @@
 
 ---
 
+### 🚧 Phase 2: 通行料システム実装（進行中: 2025/11/23）
+
+#### タスク内容
+- [x] **支払い処理の一本化**
+  - [x] 仕様決定: end_turn()に敵地判定を一本化
+  - [x] シグナル不要（end_turn()は必ず呼ばれる）
+  - [x] ドキュメント更新完了
+- [ ] **実装**
+  - [ ] `game_flow_manager.gd` に `check_and_pay_toll_on_enemy_land()` 新規作成
+    - 敵地判定ロジック
+    - 支払い処理（tile_data_manager.calculate_toll() + player_system.pay_toll()）
+  - [ ] `game_flow_manager.end_turn()` の最初に呼び出し追加
+  - [ ] `tile_action_processor.on_action_pass()` から支払い処理削除
+  - [ ] `battle_system.gd` の `pay_toll_3d()` 関数削除（4箇所の呼び出しも削除）
+- [ ] **テスト・検証**
+  - [ ] パスボタン押下後の支払い確認
+  - [ ] 敗北後（DEFENDER_WIN/ATTACKER_SURVIVED）の支払い確認
+  - [ ] 勝利時（ATTACKER_WIN）の支払いなし確認
+  - [ ] 相打ち時（BOTH_DEFEATED）の支払いなし確認
+  - [ ] 敵地に留まらない場合の支払いなし確認
+
+**目標完了日**: 2025年11月30日  
+**難易度**: 低～中（ロジック単純、デバッグ簡単）
+
+---
+
 ### 🚧 現在作業中
 
 #### 0. バトルテストツール実装 ★追加

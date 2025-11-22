@@ -220,53 +220,67 @@
 
 ## 実装仕様
 
-### 通行料計算タイミング
+### 通行料支払いの統一タイミング
 
-1. **ターン終了時（スタート通過時）**
-   - 移動が完了してから通行料を計算
-   - 呪いの影響を確認
-   - 金銭の移動を実行
-
-### 計算フロー
+**統一原則**: `end_turn()` 実行時に敵地判定・支払い
 
 ```
-1. 移動完了
-   ↓
-2. 移動先の領地オーナー確認
-   ↓
-3. 自領地？ → Yes: 通行料なし
-   ↓ No
-4. 基本料金計算（MP値）
-   ↓
-5. 土地レベル係数適用
-   ↓
-6. 呪い確認
-   ├─ 支払い側の呪い
-   │  ├─ toll_disable → 通行料 = 0G
-   │  └─ peace → 通行料 = 0G
-   ├─ 受取側の呪い
-   │  ├─ toll_fixed → 通行料 = 固定値
-   │  ├─ toll_multiplier → 通行料 × 倍率
-   │  └─ toll_share → 割合配分
-   └─ 修正後の通行料確定
-   ↓
-7. 金銭移動
-   ├─ 支払いプレイヤー: -通行料
-   ├─ 領地オーナー: +通行料（またはその一部）
-   └─ 呪いプレイヤー: +配分額（該当時のみ）
-   ↓
-8. ログ出力
+ターン内のすべてのアクション完了
+  ↓
+end_turn() 呼び出し
+  ↓
+check_and_pay_toll_on_enemy_land() 実行 ← ★ここで判定
+  ├─ 敵地にいるか確認
+  ├─ 敵地ならば支払い計算
+  └─ 支払い処理実行
+  ↓
+その他のターン終了処理
+```
+
+**パスアクション時**:
+- `on_action_pass()` は支払い処理なし
+- `tile_action_completed` シグナル → `end_turn()` へ
+
+**戦闘敗北時**:
+- `_on_battle_completed()` から `end_turn()` へ
+- どのシーンでも同じ敵地判定フロー
+
+### 計算フロー（end_turn()内）
+
+```
+1. 敵地判定
+   ├─ 現在のプレイヤー位置を取得
+   ├─ 位置の所有者を確認
+   └─ 敵地か？ → No: 支払いなし（終了）
+
+2. Yes: 敵地にいる場合
+   ├─ 領地のタイル情報取得
+   ├─ 基本料金計算（通行料 = 100 × レベル × 連鎖ボーナス）
+   │  ├─ tile_data_manager.calculate_toll() を使用
+   └─ 呪い確認（将来実装）
+
+3. 支払い実行
+   ├─ player_system.pay_toll()
+   └─ ログ出力
+
+4. ターン終了処理続行
 ```
 
 ### 実装ファイル
 
 **主要ファイル:**
-- `scripts/game_flow/movement_controller.gd` - 通行料計算・支払い
-- `scripts/spells/spell_curse_toll.gd` - 通行料呪いの実装
+- `scripts/game_flow_manager.gd` - **敵地判定・支払い実装**
+  - `end_turn()` 内に `check_and_pay_toll_on_enemy_land()` 追加
+  - ターン終了前に必ず敵地チェック
+  
+**削除するファイル:**
+- `scripts/battle_system.gd` - `pay_toll_3d()` を削除
+- `scripts/tile_action_processor.gd` - `on_action_pass()` から支払いロジック削除
 
-**関連ファイル:**
-- `scripts/game_flow/land_action_helper.gd` - 土地情報取得
-- `scripts/ui_components/` - UI表示
+**参照するファイル:**
+- `scripts/tile_data_manager.gd` - `calculate_toll()` で通行料計算
+- `scripts/player_system.gd` - `pay_toll()` で金銭移動
+- `scripts/game_constants.gd` - 定数定義
 
 ---
 
@@ -363,6 +377,34 @@
 プレイヤーF: 金銭変化なし
 プレイヤーG: 金銭変化なし
 ```
+
+---
+
+---
+
+## 変更履歴（2025/11/23）
+
+### v2.2 アップデート：end_turn()への完全集約
+
+**最終実装方針**:
+1. **end_turn()に敵地判定を一本化**
+   - 新規関数 `check_and_pay_toll_on_enemy_land()` をend_turn()内に追加
+   - ターン終了時に**必ず**敵地判定を実行
+2. **on_action_pass()から支払い削除**
+   - パスボタンは支払い処理なし
+   - シグナル発火で end_turn() へ
+3. **battle_system.gd から pay_toll_3d() 削除**
+   - バトルシステムから支払いロジック完全削除
+4. **シグナル不要**
+   - tile_action_completed で十分
+   - end_turn()は必ず呼ばれるため接続忘れなし
+
+**改善効果**:
+- ✅ コードの重複排除（完全版）
+- ✅ 判定ロジックが1箇所に統一
+- ✅ バトル/パス/敗北で同じ処理
+- ✅ シグナル管理不要で単純化
+- ✅ 見落とし防止（end_turn()は必ず呼ばれる）
 
 ---
 
