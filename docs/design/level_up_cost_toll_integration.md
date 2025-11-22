@@ -25,8 +25,8 @@
 **目標**：
 ```
 レベルアップコスト(Lv X) = 通行料計算(連鎖ボーナス=1.5)
-                          = 100 × 属性係数 × レベル係数[X] × 1.5 × マップ係数
-                          → 10の位で切り捨て
+						  = 100 × 属性係数 × レベル係数[X] × 1.5 × マップ係数
+						  → 10の位で切り捨て
 ```
 
 **現在の問題**：
@@ -186,38 +186,38 @@ func _calculate_level_up_cost(tile_index: int, from_level: int, to_level: int, m
 
 ```
 1️⃣  land_command_ui.gd（3箇所）
-    ├─ show_level_selection() - line 183
-    │  var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
-    ├─ create_level_selection_panel() - line 238
-    │  var level_costs = {2: 80, 3: 240, 4: 620, 5: 1200}
-    └─ _calculate_level_up_cost() - line 315
-       var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
+	├─ show_level_selection() - line 183
+	│  var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
+	├─ create_level_selection_panel() - line 238
+	│  var level_costs = {2: 80, 3: 240, 4: 620, 5: 1200}
+	└─ _calculate_level_up_cost() - line 315
+	   var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
 
 2️⃣  GameConstants.gd
-    └─ LEVEL_VALUES: 累積値 {1:0, 2:80, 3:340, 4:960, 5:2160}
+	└─ LEVEL_VALUES: 累積値 {1:0, 2:80, 3:340, 4:960, 5:2160}
 ```
 
 ### 修正後の集約
 
 ```
 1️⃣  TileDataManager.gd（新規）
-    └─ calculate_level_up_cost(tile_index, target_level, map_id)
-       → 通行料計算式を使用して動的に計算
+	└─ calculate_level_up_cost(tile_index, target_level, map_id)
+	   → 通行料計算式を使用して動的に計算
 
 2️⃣  land_command_ui.gd（修正）
-    ├─ show_level_selection()
-    │  → board_system_ref.tile_data_manager.calculate_level_up_cost() を呼び出す
-    ├─ create_level_selection_panel()
-    │  → 同上
-    └─ _calculate_level_up_cost()
-       → 同上
+	├─ show_level_selection()
+	│  → board_system_ref.tile_data_manager.calculate_level_up_cost() を呼び出す
+	├─ create_level_selection_panel()
+	│  → 同上
+	└─ _calculate_level_up_cost()
+	   → 同上
 
 3️⃣  GameConstants.gd
-    ├─ TOLL_BASE_AMOUNT: 100
-    ├─ TOLL_ELEMENT_MULTIPLIER: {...}
-    ├─ TOLL_LEVEL_MULTIPLIER: {...}
-    ├─ TOLL_MAP_MULTIPLIER: {...}
-    └─ floor_toll(): 10の位で切り捨て関数
+	├─ TOLL_BASE_AMOUNT: 100
+	├─ TOLL_ELEMENT_MULTIPLIER: {...}
+	├─ TOLL_LEVEL_MULTIPLIER: {...}
+	├─ TOLL_MAP_MULTIPLIER: {...}
+	└─ floor_toll(): 10の位で切り捨て関数
 ```
 
 ---

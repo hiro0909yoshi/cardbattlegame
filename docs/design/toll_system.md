@@ -268,9 +268,9 @@ end_turn() 実行フロー:
    │  └─ 呪い確認（将来実装）
    │
    └─ 支払い実行
-       ├─ player_system.pay_toll(payer, receiver, amount)
-       ├─ 魔力不足時は持っている分だけ支払い
-       └─ ログ出力
+	   ├─ player_system.pay_toll(payer, receiver, amount)
+	   ├─ 魔力不足時は持っている分だけ支払い
+	   └─ ログ出力
    
 5. 呪い処理（duration更新）
 6. プレイヤー切り替え

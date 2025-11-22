@@ -90,14 +90,14 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 	
-	# カードインデックスが-1の場合は通行料支払い
+	# カードインデックスが-1の場合は支払い処理なし（end_turn()で一本化）
 	if card_index < 0:
-		pay_toll_3d(attacker_index, tile_info)
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 	
 	var card_data = card_system_ref.get_card_data_for_player(attacker_index, card_index)
 	if card_data.is_empty():
-		pay_toll_3d(attacker_index, tile_info)
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 	
 	var cost_data = card_data.get("cost", 1)
@@ -109,7 +109,7 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	var current_player = player_system_ref.get_current_player()
 	
 	if current_player.magic_power < cost:
-		pay_toll_3d(attacker_index, tile_info)
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
 	
 	# カード使用
@@ -219,17 +219,6 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 		board_system_ref.update_all_tile_displays()
 	
 	emit_signal("invasion_completed", true, tile_info["index"])
-
-# 通行料支払い
-func pay_toll_3d(payer_index: int, tile_info: Dictionary):
-	var toll = board_system_ref.calculate_toll(tile_info["index"])
-	var receiver_id = tile_info["owner"]
-	
-	if receiver_id >= 0 and receiver_id < player_system_ref.players.size():
-		player_system_ref.pay_toll(payer_index, receiver_id, toll)
-		print("通行料 ", toll, "G を支払いました")
-	
-	emit_signal("invasion_completed", false, tile_info["index"])
 
 # システム検証
 func validate_systems() -> bool:

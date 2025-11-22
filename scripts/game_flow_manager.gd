@@ -484,6 +484,9 @@ func end_turn():
 	# 手札調整が必要かチェック
 	await check_and_discard_excess_cards()
 	
+	# 敵地判定・通行料支払い実行
+	await check_and_pay_toll_on_enemy_land()
+	
 	emit_signal("turn_ended", current_player.id)
 	
 	change_phase(GamePhase.END_TURN)
@@ -578,6 +581,35 @@ func prompt_discard_card():
 	
 	# UIを閉じる
 	ui_manager.hide_card_selection_ui()
+
+# === 敵地判定・通行料支払い ===
+
+# 敵地判定・通行料支払い処理（end_turn()内で実行）
+func check_and_pay_toll_on_enemy_land():
+	# 現在のプレイヤーとタイル情報を取得
+	var current_player_index = player_system.current_player_index
+	if not board_system_3d or not board_system_3d.movement_controller:
+		return
+	
+	var current_tile_index = board_system_3d.movement_controller.get_player_tile(current_player_index)
+	if current_tile_index < 0:
+		return
+	
+	var tile_info = board_system_3d.get_tile_info(current_tile_index)
+	
+	# 敵地判定：タイルの所有者が現在のプレイヤーではない場合
+	if tile_info.get("owner", -1) == -1 or tile_info.get("owner", -1) == current_player_index:
+		# 自分の土地または無所有タイル → 支払いなし
+		return
+	
+	# 敵地にいる場合：通行料を計算・支払い
+	var receiver_id = tile_info.get("owner", -1)
+	var toll = board_system_3d.calculate_toll(current_tile_index)
+	
+	# 通行料支払い実行
+	if receiver_id >= 0 and receiver_id < player_system.players.size():
+		player_system.pay_toll(current_player_index, receiver_id, toll)
+		print("[敵地支払い] 通行料 ", toll, "G を支払いました (受取: プレイヤー", receiver_id + 1, ")")
 
 # ============================================
 # Phase 1-A: 新システム統合

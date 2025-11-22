@@ -353,20 +353,13 @@ func execute_summon(card_index: int):
 	
 	_complete_action()
 
-# パス処理（通行料支払い）
+# パス処理（通行料支払いはend_turn()で一本化）
 func on_action_pass():
 	if not is_action_processing:
 		return
 	
-	var current_player_index = board_system.current_player_index
-	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
-	var tile_info = board_system.get_tile_info(current_tile)
-	
-	if tile_info["owner"] != -1 and tile_info["owner"] != current_player_index:
-		var toll = board_system.calculate_toll(tile_info["index"])
-		player_system.pay_toll(current_player_index, tile_info["owner"], toll)
-		print("通行料 ", toll, "G を支払いました")
-	
+	# パス時は支払い処理なし（end_turn()内で敵地判定・支払いを実行）
+	print("[パス処理] タイルアクション完了")
 	_complete_action()
 
 # レベルアップ選択時の処理

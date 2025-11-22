@@ -38,6 +38,32 @@ const CHAIN_BONUS_2 = 1.5        # 2個連鎖倍率
 const CHAIN_BONUS_3 = 2.5        # 3個連鎖倍率
 const CHAIN_BONUS_4 = 4.0        # 4個以上連鎖倍率（上限）
 
+# === 通行料係数（動的計算用） ===
+const TOLL_ELEMENT_MULTIPLIER = {
+	"fire": 1.0,
+	"water": 1.0,
+	"wind": 1.0,
+	"earth": 1.0,
+	"none": 0.8
+}
+
+const TOLL_LEVEL_MULTIPLIER = {
+	1: 1.0,
+	2: 1.2,
+	3: 1.5,
+	4: 2.0,
+	5: 2.5
+}
+
+const TOLL_MAP_MULTIPLIER = {
+	# マップごとの係数（デフォルト1.0）
+	"map_1": 1.0
+}
+
+# ユーティリティ: 10の位で切り捨て（通行料用）
+static func floor_toll(amount: float) -> int:
+	return int(floor(amount / 10.0) * 10.0)
+
 # === バトル関連 ===
 const ELEMENT_ADVANTAGE = 20      # 属性相性ボーナス
 const TERRAIN_BONUS_1 = 10       # 地形ボーナス（1個）
