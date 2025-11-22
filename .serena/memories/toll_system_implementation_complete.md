@@ -50,8 +50,28 @@
 - [ ] マップ係数（TOLL_MAP_MULTIPLIER）の値を確認（現在は map_1=1.0 のみ）
 - [ ] board_system_3d.calculate_toll() が使用されているか確認（board_system_3d.gd L283）
 
+## 実装完了（2025/11/23）
+
+### 6. tile_data_manager.gd - calculate_toll() 新設計実装
+- 要素係数×レベル係数×連鎖ボーナス×マップ係数に統一
+- 10の位で切り捨て実装
+
+### 7. board_system_3d.gd - calculate_toll() シグネチャ統一
+- map_id パラメータを追加
+
+### 8. land_command_ui.gd - レベルアップコスト動的計算
+- show_level_selection() でTileDataManager.calculate_level_up_cost()を呼び出し
+- _calculate_level_up_cost() で動的計算実装
+- ハードコード値を全て削除
+- create_level_selection_panel() で初期コストを0で作成（後で動的に更新）
+
 ## 次のステップ
 
-1. land_command_ui.gd でレベルアップコスト計算を動的に変更
-2. マップごとの係数を設定
-3. テスト実行
+1. マップ係数（TOLL_MAP_MULTIPLIER）を設定（デフォルト map_1=1.0 のみ）
+2. テスト実行
+
+## 確認事項
+
+- [ ] land_command_ui.gd で board_system_ref.tile_data_manager が使用可能か確認
+- [ ] show_level_selection() でレベルアップコストが正しく計算されるか
+- [ ] UIにコストが正しく反映されるか

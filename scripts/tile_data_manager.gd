@@ -111,8 +111,8 @@ func get_upgrade_cost(tile_index: int) -> int:
 	
 	return 0
 
-# 通行料を計算
-func calculate_toll(tile_index: int) -> int:
+# 通行料を計算（新設計：要素係数・レベル係数・連鎖ボーナス・マップ係数を使用）
+func calculate_toll(tile_index: int, map_id: String = "") -> int:
 	if not tile_nodes.has(tile_index):
 		return 0
 	
@@ -120,11 +120,27 @@ func calculate_toll(tile_index: int) -> int:
 	if tile.owner_id == -1:
 		return 0
 	
-	var base_toll = GameConstants.BASE_TOLL
-	var level_multiplier = tile.level
+	var base = GameConstants.BASE_TOLL
+	
+	# 要素係数を取得（英語に対応）
+	var element_mult = GameConstants.TOLL_ELEMENT_MULTIPLIER.get(tile.tile_type, 1.0)
+	
+	# レベル係数を取得
+	var level_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(tile.level, 1.0)
+	
+	# 実際の連鎖ボーナスを計算
 	var chain_bonus = calculate_chain_bonus(tile_index, tile.owner_id)
 	
-	return int(base_toll * level_multiplier * chain_bonus)
+	# マップ係数を取得
+	var map_mult = 1.0
+	if map_id != "" and GameConstants.TOLL_MAP_MULTIPLIER.has(map_id):
+		map_mult = GameConstants.TOLL_MAP_MULTIPLIER[map_id]
+	
+	# 計算実行
+	var raw_toll = base * element_mult * level_mult * chain_bonus * map_mult
+	
+	# 10の位で切り捨て
+	return GameConstants.floor_toll(raw_toll)
 
 # レベルアップコストを計算（動的計算版）
 func calculate_level_up_cost(tile_index: int, target_level: int, map_id: String = "") -> int:

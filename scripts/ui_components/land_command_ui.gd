@@ -238,9 +238,6 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 	if current_level_label:
 		current_level_label.text = "現在: Lv.%d" % current_level
 	
-	# レベルコスト計算
-	var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
-	
 	# 各レベルボタンの有効/無効を設定
 	for level in [2, 3, 4, 5]:
 		if level <= current_level:
@@ -248,8 +245,8 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 			if level_selection_buttons.has(level):
 				level_selection_buttons[level].disabled = true
 		else:
-			# レベルアップコストを計算
-			var cost = level_costs[level] - level_costs[current_level]
+			# レベルアップコストを動的に計算
+			var cost = _calculate_level_up_cost(current_level, level)
 			if player_magic >= cost:
 				# 魔力が足りる
 				if level_selection_buttons.has(level):
@@ -264,8 +261,13 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 	level_selection_panel.visible = true
 
 func _calculate_level_up_cost(from_level: int, to_level: int) -> int:
-	var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
-	return level_costs.get(to_level, 0) - level_costs.get(from_level, 0)
+	# TileDataManagerから動的に計算
+	if board_system_ref and board_system_ref.tile_data_manager and selected_tile_for_action >= 0:
+		var cost = board_system_ref.tile_data_manager.calculate_level_up_cost(selected_tile_for_action, to_level)
+		return cost
+	
+	# フォールバック：TileDataManagerが使えない場合は0を返す
+	return 0
 
 ## レベル選択非表示
 func hide_level_selection():
@@ -490,10 +492,9 @@ func create_level_selection_panel(parent: Node):
 	var button_y = 85
 	var button_spacing = 10
 	
-	var level_costs = {2: 80, 3: 240, 4: 620, 5: 1200}
-	
+	# 初期表示用のコスト（後でshow_level_selectionで動的に更新される）
 	for level in [2, 3, 4, 5]:
-		var btn = _create_level_button(level, level_costs[level], Vector2(10, button_y))
+		var btn = _create_level_button(level, 0, Vector2(10, button_y))  # コストは0（後で更新）
 		btn.pressed.connect(_on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
