@@ -49,8 +49,8 @@ const TOLL_ELEMENT_MULTIPLIER = {
 }
 
 const TOLL_LEVEL_MULTIPLIER = {
-	1: 1.0,
-	2: 0.5,
+	1: 0.3,
+	2: 0.6,
 	3: 2.0,
 	4: 4.0,
 	5: 8.0
