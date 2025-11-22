@@ -189,7 +189,9 @@ func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	var same_element_count = get_element_chain_count(tile_index, owner_id)
 	
 	# 連鎖数に応じたボーナス
-	if same_element_count >= 4:
+	if same_element_count >= 5:
+		return GameConstants.CHAIN_BONUS_5
+	elif same_element_count == 4:
 		return GameConstants.CHAIN_BONUS_4
 	elif same_element_count == 3:
 		return GameConstants.CHAIN_BONUS_3
@@ -212,7 +214,7 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 		if tile.owner_id == owner_id and tile.tile_type == target_element:
 			chain_count += 1
 	
-	return min(chain_count, 4)  # 最大4個まで
+	return min(chain_count, 5)  # 最大5個まで
 
 # === 統計情報 ===
 

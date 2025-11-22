@@ -36,7 +36,8 @@ const PASS_BONUS = 200            # スタート通過ボーナス
 const BASE_TOLL = 100            # 基礎通行料
 const CHAIN_BONUS_2 = 1.5        # 2個連鎖倍率
 const CHAIN_BONUS_3 = 2.5        # 3個連鎖倍率
-const CHAIN_BONUS_4 = 4.0        # 4個以上連鎖倍率（上限）
+const CHAIN_BONUS_4 = 4.0        # 4個連鎖倍率
+const CHAIN_BONUS_5 = 5.0        # 5個以上連鎖倍率（上限）
 
 # === 通行料係数（動的計算用） ===
 const TOLL_ELEMENT_MULTIPLIER = {
@@ -49,10 +50,10 @@ const TOLL_ELEMENT_MULTIPLIER = {
 
 const TOLL_LEVEL_MULTIPLIER = {
 	1: 1.0,
-	2: 1.2,
-	3: 1.5,
-	4: 2.0,
-	5: 2.5
+	2: 0.5,
+	3: 2.0,
+	4: 4.0,
+	5: 8.0
 }
 
 const TOLL_MAP_MULTIPLIER = {
