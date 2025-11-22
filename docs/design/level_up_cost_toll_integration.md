@@ -421,8 +421,10 @@ func _calculate_level_up_cost(tile_index: int, from_level: int, to_level: int) -
 - ❌ TileDataManager.calculate_level_up_cost()：変更なし
 - ✅ 参照情報更新：通行料支払い処理が別設計に変更されたことを記載
 
-**参照**: [toll_system_spec.md](toll_system_spec.md) v2.2 参照
+**参照**: 
+- [toll_system_spec.md](toll_system_spec.md) v2.2
+- [toll_system.md](toll_system.md) v2.2
 
 ---
 
-**最終更新**: 2025年11月23日
+**最終更新**: 2025年11月23日（修正: 支払い処理タイミング）

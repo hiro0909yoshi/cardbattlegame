@@ -132,7 +132,28 @@ end_turn() 内で敵地判定
 **実装位置**:
 - `scripts/game_flow_manager.gd` - `end_turn()` (Line 460～)
   - 新規関数 `check_and_pay_toll_on_enemy_land()` を追加
-  - ターン終了処理の最初で実行
+  - **手札調整の後に実行**（手札が確定した状態で支払い）
+
+**実装順序**:
+```gdscript
+func end_turn():
+	# 1. 初期チェック
+	if is_ending_turn or current_phase == GamePhase.END_TURN:
+		return
+	is_ending_turn = true
+	
+	# 2. UI/ランド処理
+	# ... 既存処理 ...
+	
+	# 3. 手札調整
+	await check_and_discard_excess_cards()
+	
+	# 4. ★敵地判定・支払い（ここで実行）
+	await check_and_pay_toll_on_enemy_land()
+	
+	# 5. ターン終了処理・次ターン
+	# ... 既存処理 ...
+```
 
 ### 支払いが発生しないシーン
 
