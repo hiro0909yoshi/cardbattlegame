@@ -693,7 +693,7 @@ func test_mystic_art_then_spell_blocked():
 ### 秘術専用効果
 
 ```gdscript
-# SpellMysticArts._apply_single_effect() での処理
+# SpellMysticArts._apply_single_effect() での処理２
 
 "destroy_deck_top":
 	# 敵のデッキ上1枚を破壊
