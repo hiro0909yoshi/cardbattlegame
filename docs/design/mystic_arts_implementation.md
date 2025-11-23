@@ -60,12 +60,36 @@ SpellMysticArts (新規)
   ├─ get_mystic_arts()
   ├─ can_cast_mystic_art()
   ├─ _has_valid_target()           # spell_phase_handler._get_valid_targets()を流用
-  └─ apply_mystic_art_effect()
+  ├─ apply_mystic_art_effect()
+  └─ _set_caster_down_state()      # 秘術発動後にキャスターをダウン状態に（新規）
 ```
 
 ---
 
 ## Phase 1: 基盤構築
+
+### 初期化タイミング（GameSystemManager）
+
+`SpellMysticArts`の初期化は**GameSystemManager.phase_4_setup_system_interconnections()**内で行われます。
+
+**Phase 4-2: GameFlowManager 子システム初期化内**:
+```gdscript
+# SpellMysticArts の初期化（新規追加）
+if game_flow_manager and game_flow_manager.spell_phase_handler:
+	game_flow_manager.spell_phase_handler.spell_mystic_arts = SpellMysticArts.new(
+		board_system_3d,
+		player_system,
+		card_system,
+		game_flow_manager.spell_phase_handler
+	)
+	game_flow_manager.spell_phase_handler.spell_mystic_arts.name = "SpellMysticArts"
+	game_flow_manager.spell_phase_handler.add_child(game_flow_manager.spell_phase_handler.spell_mystic_arts)
+	print("[SpellMysticArts] 初期化完了（GameSystemManager.Phase 4-2）")
+```
+
+この方式により、全必要なシステム参照が既に設定されている状態で`SpellMysticArts`が初期化されます。
+
+---
 
 ### Step 1-1: SpellMysticArts クラス作成
 
@@ -123,6 +147,13 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	# スペル未使用確認
 	if context.spell_used_this_turn:
 		return false
+	
+	# クリーチャーが行動可能か確認（ダウン状態チェック）
+	var caster_tile_index = context.get("tile_index", -1)
+	if caster_tile_index != -1:
+		var caster_tile = board_system_ref.get_tile(caster_tile_index)
+		if caster_tile and caster_tile.is_down():
+			return false  # ダウン状態のクリーチャーは秘術使用不可
 	
 	# ターゲット有無確認
 	if not _has_valid_target(mystic_art, context):
@@ -220,6 +251,39 @@ func _apply_curse_attack(effect: Dictionary,
 	
 	return true
 
+# ============ ダウン状態管理 ============
+
+func _set_caster_down_state(caster_tile_index: int, board_system_ref: Reference) -> void:
+	"""秘術発動後、キャスター（クリーチャー）をダウン状態に設定"""
+	
+	if caster_tile_index == -1:
+		return
+	
+	var caster_tile = board_system_ref.get_tile(caster_tile_index)
+	if not caster_tile:
+		return
+	
+	var creature_data = caster_tile.creature_data
+	if not creature_data:
+		return
+	
+	# 不屈スキルで例外処理（ランドシステム仕様に準拠）
+	# 不屈を持つクリーチャーはダウン状態にならない
+	if _has_unyielding(creature_data):
+		print("不屈により、『%s』はダウン状態になりません" % creature_data.get("name", ""))
+		return
+	
+	# ダウン状態を設定
+	caster_tile.set_down(true)
+	print("『%s』はダウン状態になりました" % creature_data.get("name", ""))
+
+func _has_unyielding(creature_data: Dictionary) -> bool:
+	"""不屈スキルを持つか確認（ランドシステム仕様に準拠）"""
+	if creature_data.is_empty():
+		return false
+	var ability_detail = creature_data.get("ability_detail", "")
+	return "不屈" in ability_detail
+
 # ============ ユーティリティ ============
 
 func get_mystic_art_info(mystic_art: Dictionary) -> Dictionary:
@@ -299,7 +363,8 @@ func test_can_cast_mystic_art():
 	var mystic_art = {...}  # テスト用秘術
 	var context = {
 		"player_magic": 50,
-		"spell_used_this_turn": false
+		"spell_used_this_turn": false,
+		"tile_index": 5
 	}
 	
 	var can_cast = spell_mystic_arts.can_cast_mystic_art(mystic_art, context)
@@ -311,11 +376,66 @@ func test_has_valid_target():
 	
 	var has_target = spell_mystic_arts._has_valid_target(mystic_art, context)
 	assert_true(has_target, "敵クリーチャーが存在する場合ターゲット有効")
+
+func test_cannot_cast_down_creature():
+	# ダウン状態のクリーチャーは秘術不可
+	var mystic_art = {...}
+	var context = {
+		"player_magic": 50,
+		"spell_used_this_turn": false,
+		"tile_index": 3  # ダウン状態のタイル
+	}
+	
+	# タイル3をダウン状態に設定
+	board_system.get_tile(3).set_down(true)
+	
+	var can_cast = spell_mystic_arts.can_cast_mystic_art(mystic_art, context)
+	assert_false(can_cast, "ダウン状態のクリーチャーは秘術発動不可")
+
+func test_unyielding_not_down():
+	# 不屈スキル持ちはダウン状態にならない
+	var creature_with_unyielding = {
+		"name": "シールドメイデン",
+		"ability_detail": "不屈"
+	}
+	
+	var tile = board_system.get_tile(5)
+	tile.creature_data = creature_with_unyielding
+	
+	spell_mystic_arts._set_caster_down_state(5, board_system)
+	
+	assert_false(tile.is_down(), "不屈スキル持ちはダウン状態にならない")
 ```
 
 ---
 
 ## Phase 2: スペルフェーズ統合
+
+### ターゲットクリーチャー情報の表示
+
+ターゲットがクリーチャーの場合、選択中にターゲット側のクリーチャー情報を表示します。
+
+**表示項目**（ターゲット側UI）:
+- **Current HP**: 現在のHP
+- **Max HP**: 最大HP
+- **AP**: 攻撃力
+
+これにより、秘術の効果（ダメージ、能力値変更など）の影響を事前に確認できます。
+
+実装例：
+```gdscript
+# ターゲットクリーチャーの情報取得
+if target_type == "creature" and selected_target:
+    var target_creature = selected_target.creature_data
+    var display_info = {
+        "current_hp": target_creature.get("current_hp", 0),
+        "max_hp": target_creature.get("hp", 0) + target_creature.get("land_bonus_hp", 0),
+        "ap": target_creature.get("ap", 0)
+    }
+    # UI側で display_info を表示
+```
+
+---
 
 ### Step 2-1: spell_phase_handler.gd の拡張
 
@@ -390,6 +510,10 @@ func _handle_mystic_arts_phase() -> void:
 		player_system_ref.consume_magic(current_player_id, cost)
 		spell_used_this_turn = true
 		
+		# 8. キャスター（秘術を発動したクリーチャー）をダウン状態に設定
+		# ランドシステムの仕様に準拠：アクション実行後のダウン状態化
+		spell_mystic_arts._set_caster_down_state(selected_creature["tile_index"], board_system_ref)
+		
 		ui_manager.show_message("『%s』を発動した！" % selected_mystic_art.get("name", ""))
 	else:
 		ui_manager.show_message("秘術の発動に失敗しました")
@@ -433,6 +557,13 @@ func _get_mystic_art_error(mystic_art: Dictionary, context: Dictionary) -> Strin
 	
 	if context.get("spell_used_this_turn", false):
 		return "このターンはスペルを使用済みです"
+	
+	# クリーチャーがダウン状態か確認
+	var caster_tile_index = context.get("tile_index", -1)
+	if caster_tile_index != -1:
+		var caster_tile = board_system_ref.get_tile(caster_tile_index)
+		if caster_tile and caster_tile.is_down():
+			return "このクリーチャーはダウン状態です"
 	
 	return "秘術の発動に失敗しました"
 
@@ -663,6 +794,14 @@ for mystic_art in mystic_arts:
 var available = spell_mystic_arts.get_available_creatures(current_player_id)
 ```
 
+### Issue 4: ダウン状態と不屈スキルの連携 ✅ **実装済み**
+
+**問題**: 秘術発動後のダウン状態設定で、不屈スキルを考慮する必要がある
+
+**対策**: `_set_caster_down_state()`内で`_has_unyielding()`を呼び出し
+- 不屈スキル持ちのクリーチャーはダウン状態にならない
+- ランドシステムの領地コマンド仕様と統一
+
 ---
 
 ## 実装チェックリスト
@@ -673,6 +812,8 @@ var available = spell_mystic_arts.get_available_creatures(current_player_id)
 - [ ] メソッド実装：`get_mystic_arts_for_creature()`
 - [ ] メソッド実装：`can_cast_mystic_art()`
 - [ ] メソッド実装：`_has_valid_target()`
+- [ ] メソッド実装：`_set_caster_down_state()` ⭐ ダウン状態設定
+- [ ] メソッド実装：`_has_unyielding()` ⭐ 不屈スキル判定
 - [ ] creature_data に `mystic_arts` フィールド追加
 - [ ] テスト用JSON定義
 - [ ] ユニットテスト作成・実行
@@ -706,7 +847,8 @@ var available = spell_mystic_arts.get_available_creatures(current_player_id)
 |------|-----------|---------|
 | 2025/11/24 | 1.0 | 初版作成 - 実装準備完了 |
 | 2025/11/24 | 1.1 | 🔧 ターゲット取得統一 - `spell_phase_handler._get_valid_targets()`を共用し重複回避、セルフターゲット処理を統一、Issue 2を解決済みに |
+| 2025/11/24 | 1.2 | ⭐ ダウン状態システム統合 - `_set_caster_down_state()`と`_has_unyielding()`メソッド追加、ランドシステム仕様に準拠、クリーチャー行動可能性チェック実装、Issue 4追加 |
 
 ---
 
-**最終更新**: 2025年11月24日（v1.1 - ターゲット取得統一）
+**最終更新**: 2025年11月24日（v1.2 - ダウン状態システム統合）
