@@ -103,10 +103,22 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 			_complete_action()
 	else:
 		# 敵の土地
-		if tile_info.get("creature", {}).is_empty():
-			show_battle_ui("invasion")
+		# peace呪いチェック
+		var spell_curse_toll = null
+		if board_system.has_meta("spell_curse_toll"):
+			spell_curse_toll = board_system.get_meta("spell_curse_toll")
+		
+		var current_tile_index = board_system.movement_controller.get_player_tile(player_index)
+		
+		# peace呪いがあれば戦闘UI表示するがグレーアウト
+		if spell_curse_toll and spell_curse_toll.has_peace_curse(current_tile_index):
+			show_battle_ui_disabled()
 		else:
-			show_battle_ui("battle")
+			# 通常の戦闘UI
+			if tile_info.get("creature", {}).is_empty():
+				show_battle_ui("invasion")
+			else:
+				show_battle_ui("battle")
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
@@ -150,6 +162,14 @@ func show_battle_ui(mode: String):
 			ui_manager.phase_label.text = "侵略するクリーチャーを選択"
 		else:
 			ui_manager.phase_label.text = "バトルするクリーチャーを選択"
+		ui_manager.show_card_selection_ui(player_system.get_current_player())
+
+# バトルUI表示（グレーアウト）peace呪い用
+func show_battle_ui_disabled():
+	if ui_manager:
+		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたは領地コマンドを使用）"
+		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
+		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 # === アクション処理 ===

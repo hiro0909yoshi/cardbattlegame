@@ -313,6 +313,11 @@ func phase_4_setup_system_interconnections() -> void:
 			game_flow_manager.spell_curse_toll.name = "SpellCurseToll"
 			game_flow_manager.add_child(game_flow_manager.spell_curse_toll)
 			print("[SpellCurseToll] 初期化完了（SkillTollChange と CreatureManager 参照設定済み）")
+			
+			# ★重要: board_system_3d にメタデータとして設定（MovementHelper から参照可能にする）
+			if board_system_3d:
+				board_system_3d.set_meta("spell_curse_toll", game_flow_manager.spell_curse_toll)
+				print("[SpellCurseToll] BoardSystem3D のメタデータとして設定完了")
 		
 		# CPUAIHandler の初期化（setup_systems で行われる）
 		# GameFlowManager._ready() で既に初期化済みなため、ここでは参照設定のみ

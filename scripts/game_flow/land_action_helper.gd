@@ -272,7 +272,22 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.close_land_command()
 		
 	else:
-		# 敵の土地の場合: バトル発生
+		# 敵の土地の場合: peace呪いチェック
+		var spell_curse_toll = null
+		if handler.board_system.has_meta("spell_curse_toll"):
+			spell_curse_toll = handler.board_system.get_meta("spell_curse_toll")
+		
+		# peace呪いがあれば移動・戦闘不可
+		if spell_curse_toll and spell_curse_toll.has_peace_curse(dest_tile_index):
+			# peace呪いで移動・戦闘不可
+			if handler.ui_manager and handler.ui_manager.phase_label:
+				handler.ui_manager.phase_label.text = "peace呪い: このタイルへは侵略できません"
+			# 移動元にクリーチャーを戻す
+			source_tile.place_creature(creature_data)
+			handler.close_land_command()
+			return
+		
+		# バトル発生
 		
 		# 移動元情報を保存（敗北時に戻すため）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み

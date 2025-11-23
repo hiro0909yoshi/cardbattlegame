@@ -424,16 +424,6 @@ func on_card_selected(card_index: int):
 	if card_type == "item":
 		return
 	
-	# peace 呪いをチェック（戦闘不可）
-	if card_type == "creature" and spell_curse_toll:
-		# 現在位置のタイルを取得
-		var current_tile_index = board_system_3d.movement_controller.get_player_tile(player_system.current_player_index) if board_system_3d and board_system_3d.movement_controller else -1
-		if current_tile_index >= 0 and spell_curse_toll.is_invasion_disabled(current_tile_index):
-			print("[peace呪い] 戦闘不可: この領地では戦闘できません")
-			if ui_manager and ui_manager.phase_label:
-				ui_manager.phase_label.text = "peace の呪いにより戦闘できません"
-			return
-	
 	# Phase 1-D: 交換モードチェック
 	if land_command_handler and land_command_handler._swap_mode:
 		land_command_handler.on_card_selected_for_swap(card_index)

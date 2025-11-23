@@ -203,6 +203,11 @@ static func _get_all_vacant_tiles(board_system: Node) -> Array:
 static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int) -> Array:
 	var valid_tiles = []
 	
+	# SpellCurseToll参照を取得（peace呪いチェック用）
+	var spell_curse_toll = null
+	if board_system.has_meta("spell_curse_toll"):
+		spell_curse_toll = board_system.get_meta("spell_curse_toll")
+	
 	for tile_index in tile_indices:
 		if not board_system.tile_nodes.has(tile_index):
 			continue
@@ -216,6 +221,11 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		# 自分のクリーチャーがいる土地はNG
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
 			continue
+		
+		# peace呪いチェック（敵領地への移動除外）
+		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id:
+			if spell_curse_toll.has_peace_curse(tile_index):
+				continue  # peace呪いがある敵領地は移動不可
 		
 		valid_tiles.append(tile_index)
 	
