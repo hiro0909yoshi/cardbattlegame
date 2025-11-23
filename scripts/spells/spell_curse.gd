@@ -67,7 +67,7 @@ func remove_curse_from_creature(tile_index: int):
 # ========================================
 
 # プレイヤーに呪いを付与
-func curse_player(player_id: int, curse_type: String, duration: int = -1, params: Dictionary = {}):
+func curse_player(player_id: int, curse_type: String, duration: int = -1, params: Dictionary = {}, caster_id: int = -1):
 	if player_id < 0 or player_id >= player_system.players.size():
 		print("[SpellCurse] エラー: 不正なプレイヤーID ", player_id)
 		return
@@ -84,7 +84,8 @@ func curse_player(player_id: int, curse_type: String, duration: int = -1, params
 		"curse_type": curse_type,
 		"name": params.get("name", ""),
 		"duration": duration,
-		"params": params
+		"params": params,
+		"caster_id": caster_id  # 呪いを付与したプレイヤーID（toll_shareの副収入判定用）
 	}
 	
 	print("[呪い付与] ", params.get("name", curse_type), " → プレイヤー", player_id, 

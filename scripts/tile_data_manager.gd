@@ -140,10 +140,23 @@ func calculate_toll(tile_index: int, map_id: String = "") -> int:
 	var raw_toll = base * element_mult * level_mult * chain_bonus * map_mult
 	
 	# 10の位で切り捨て
-	return GameConstants.floor_toll(raw_toll)
+	var final_toll = GameConstants.floor_toll(raw_toll)
+	
+	# ========================================
+	# 領地呪い判定（toll_multiplier, peace）
+	# ========================================
+	
+	# クリーチャーの呪いをチェック
+	# GameSystemManager経由で spell_curse_toll にアクセス
+	if get_tree() and get_tree().root:
+		var game_system_manager = get_tree().root.get_node_or_null("GameSystemManager")
+		if game_system_manager and game_system_manager.board_system_3d and game_system_manager.board_system_3d.spell_curse_toll:
+			final_toll = game_system_manager.board_system_3d.spell_curse_toll.get_land_toll_modifier(tile_index, final_toll)
+	
+	return final_toll
 
 # レベルアップコストを計算（動的計算版）
-func calculate_level_up_cost(tile_index: int, target_level: int, map_id: String = "") -> int:
+func calculate_level_up_cost(tile_index: int, target_level: int, _from_level: String = "") -> int:
 	if not tile_nodes.has(tile_index):
 		return 0
 	
@@ -162,10 +175,8 @@ func calculate_level_up_cost(tile_index: int, target_level: int, map_id: String 
 	# 連鎖ボーナスは固定値1.5（連鎖2個相当）
 	var chain_bonus = 1.5
 	
-	# マップ係数を取得
+	# マップ係数を取得（現在は常に1.0）
 	var map_mult = 1.0
-	if map_id != "" and GameConstants.TOLL_MAP_MULTIPLIER.has(map_id):
-		map_mult = GameConstants.TOLL_MAP_MULTIPLIER[map_id]
 	
 	# 計算実行
 	var raw_cost = base * element_mult * level_mult * chain_bonus * map_mult

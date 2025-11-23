@@ -48,6 +48,7 @@ var spell_draw: SpellDraw
 var spell_magic: SpellMagic
 var spell_land: SpellLand
 var spell_curse: SpellCurse
+var spell_curse_toll: SpellCurseToll
 var spell_dice: SpellDice
 var spell_curse_stat: SpellCurseStat
 
@@ -423,6 +424,16 @@ func on_card_selected(card_index: int):
 	if card_type == "item":
 		return
 	
+	# peace 呪いをチェック（戦闘不可）
+	if card_type == "creature" and spell_curse_toll:
+		# 現在位置のタイルを取得
+		var current_tile_index = board_system_3d.movement_controller.get_player_tile(player_system.current_player_index) if board_system_3d and board_system_3d.movement_controller else -1
+		if current_tile_index >= 0 and spell_curse_toll.is_invasion_disabled(current_tile_index):
+			print("[peace呪い] 戦闘不可: この領地では戦闘できません")
+			if ui_manager and ui_manager.phase_label:
+				ui_manager.phase_label.text = "peace の呪いにより戦闘できません"
+			return
+	
 	# Phase 1-D: 交換モードチェック
 	if land_command_handler and land_command_handler._swap_mode:
 		land_command_handler.on_card_selected_for_swap(card_index)
@@ -605,11 +616,25 @@ func check_and_pay_toll_on_enemy_land():
 	# 敵地にいる場合：通行料を計算・支払い
 	var receiver_id = tile_info.get("owner", -1)
 	var toll = board_system_3d.calculate_toll(current_tile_index)
+	var toll_info = {"main_toll": toll, "bonus_toll": 0, "bonus_receiver_id": -1}
 	
-	# 通行料支払い実行
+	# 通行料呪いがある場合、呪いシステムに全ての計算を委譲
+	if spell_curse_toll:
+		toll_info = spell_curse_toll.calculate_final_toll(current_tile_index, current_player_index, receiver_id, toll)
+	
+	var main_toll = toll_info.get("main_toll", 0)
+	var bonus_toll = toll_info.get("bonus_toll", 0)
+	var bonus_receiver_id = toll_info.get("bonus_receiver_id", -1)
+	
+	# 主通行料の支払い実行
 	if receiver_id >= 0 and receiver_id < player_system.players.size():
-		player_system.pay_toll(current_player_index, receiver_id, toll)
-		print("[敵地支払い] 通行料 ", toll, "G を支払いました (受取: プレイヤー", receiver_id + 1, ")")
+		player_system.pay_toll(current_player_index, receiver_id, main_toll)
+		print("[敵地支払い] 通行料 ", main_toll, "G を支払いました (受取: プレイヤー", receiver_id + 1, ")")
+	
+	# 副収入の支払い実行
+	if bonus_toll > 0 and bonus_receiver_id >= 0 and bonus_receiver_id < player_system.players.size():
+		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
+		print("[副収入] 通行料 ", bonus_toll, "G を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
 
 # ============================================
 # Phase 1-A: 新システム統合

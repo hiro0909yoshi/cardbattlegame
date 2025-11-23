@@ -208,14 +208,15 @@ Card.gd (scripts/)
 
 ### ターゲットシステム ✅
 
-**ターゲットタイプ（4種類）**:
+**ターゲットタイプ（5種類）**:
 
-| タイプ | 説明 | 選択対象 |
-|-------|------|---------|
-| `creature` | クリーチャー | 自分/敵のクリーチャー |
-| `land` | 土地 | 自分/敵/空地の土地 |
-| `player` | プレイヤー | 自分/敵のプレイヤー |
-| `world` | 世界呪 | ターゲット選択なし（全体効果） |
+| タイプ | 説明 | 選択対象 | UI |
+|-------|------|---------|-----|
+| `creature` | クリーチャー | 自分/敵のクリーチャー | 上下キー選択 |
+| `land` | 土地 | 自分/敵/空地の土地 | 上下キー選択 |
+| `player` | プレイヤー | 自分/敵のプレイヤー | 上下キー選択 |
+| `world` | 世界呪 | ターゲット選択なし（全体効果） | なし |
+| セルフ（`target_filter: "self"`） | 使用者自身 | ターゲット選択なし（自動的に使用者） | なし |
 
 **選択UI**: 領地コマンドと同じ**上下キー選択方式**を採用（`TargetSelectionHelper`使用）
 
@@ -223,10 +224,31 @@ Card.gd (scripts/)
 - `own`: 自分のみ
 - `enemy`: 敵のみ
 - `any`: 全て
+- `self`: 使用者自身（ターゲット選択UI なし、自動的に効果発動）
 
 **レベルフィルター**:
 - `required_level`: 特定レベルのみ（例: `required_level: 4`）
 - `max_level`, `min_level`: レベル範囲指定
+
+**セルフターゲット実装例**（ドリームトレイン）:
+```json
+{
+  "effect_parsed": {
+    "target_type": "player",
+    "target_filter": "self",
+    "effects": [
+      {
+        "effect_type": "toll_share",
+        "name": "通行料促進",
+        "ratio": 0.5,
+        "duration": 5
+      }
+    ]
+  }
+}
+```
+
+**実装**: `SpellPhaseHandler`で`target_filter == "self"`をチェック → UI表示なし → `target_data = {"type": "player", "player_id": current_player_id}`で自動設定 → 即座に効果発動
 
 ---
 

@@ -216,9 +216,15 @@ func use_spell(spell_card: Dictionary):
 	# 対象選択が必要かチェック
 	var parsed = spell_card.get("effect_parsed", {})
 	var target_type = parsed.get("target_type", "")
+	var target_filter = parsed.get("target_filter", "")
 	var target_info = parsed.get("target_info", {})
 	
-	if not target_type.is_empty() and target_type != "none":
+	# target_filter が "self" の場合は、即座に効果発動（対象選択UIなし）
+	if target_filter == "self":
+		# 対象選択なし。効果実行時に current_player_id を使用
+		var target_data = {"type": "player", "player_id": current_player_id}
+		execute_spell_effect(spell_card, target_data)
+	elif not target_type.is_empty() and target_type != "none":
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
 		target_selection_required.emit(spell_card, target_type)
@@ -442,6 +448,47 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_stat_reduce(tile_index, effect)
+		
+		"toll_share":
+			# 通行料促進（ドリームトレイン）
+			if target_data.get("type") == "player":
+				var target_player_id = target_data.get("player_id", current_player_id)
+				var duration = effect.get("duration", 5)
+				if game_flow_manager and game_flow_manager.spell_curse_toll:
+					# caster_id は現在のプレイヤー（スペルを使用した人）
+					game_flow_manager.spell_curse_toll.apply_toll_share(target_player_id, duration, current_player_id)
+		
+		"toll_disable":
+			# 通行料無効（ブラックアウト）
+			if target_data.get("type") == "player":
+				var target_player_id = target_data.get("player_id", -1)
+				var duration = effect.get("duration", 2)
+				if game_flow_manager and game_flow_manager.spell_curse_toll:
+					game_flow_manager.spell_curse_toll.apply_toll_disable(target_player_id, duration)
+		
+		"toll_fixed":
+			# 通行料固定（ユニフォーミティ）
+			if target_data.get("type") == "player":
+				var target_player_id = target_data.get("player_id", -1)
+				var value = effect.get("value", 200)
+				var duration = effect.get("duration", 3)
+				if game_flow_manager and game_flow_manager.spell_curse_toll:
+					game_flow_manager.spell_curse_toll.apply_toll_fixed(target_player_id, value, duration)
+		
+		"toll_multiplier":
+			# 通行料倍率（グリード）
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				var multiplier = effect.get("multiplier", 1.5)
+				if game_flow_manager and game_flow_manager.spell_curse_toll:
+					game_flow_manager.spell_curse_toll.apply_toll_multiplier(tile_index, multiplier)
+		
+		"peace":
+			# 平和（ピース）
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse_toll:
+					game_flow_manager.spell_curse_toll.apply_peace(tile_index)
 		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \

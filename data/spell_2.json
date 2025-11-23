@@ -116,7 +116,20 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料はG0)"
+	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料はG0)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"effects": [
+		  {
+			"effect_type": "peace",
+			"name": "平和",
+			"invasion_disable": true,
+			"toll_zero": true,
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2073,
@@ -270,7 +283,18 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象敵セプターに呪い\"通行料無効\"(2R間、通行料を取れない)"
+	  "effect": "対象敵セプターに呪い\"通行料無効\"(2R間、通行料を取れない)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "toll_disable",
+			"name": "通行料無効",
+			"duration": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2085,
@@ -708,7 +732,19 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料はG200になる)"
+	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料はG200になる)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "toll_fixed",
+			"name": "通行料200",
+			"value": 200,
+			"duration": 3
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2116,

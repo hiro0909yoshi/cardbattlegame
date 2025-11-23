@@ -29,4 +29,4 @@ window/stretch/scale=1.4
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+enabled=PackedStringArray()

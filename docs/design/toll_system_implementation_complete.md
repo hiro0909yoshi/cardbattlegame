@@ -36,6 +36,11 @@ end_turn()内の処理順:
 4. ★敵地判定・支払い実行 ← ここで統一
    - check_and_pay_toll_on_enemy_land()
    - 敵地なら支払い、自領地・スタートなら支払いなし
+   ★通行料呪いを判定・計算
+     - SpellCurseToll.calculate_final_toll()で呪い判定
+     - セプター呪い（toll_disable, toll_fixed, toll_share）
+     - 領地呪い（toll_multiplier, peace）を適用
+     - 主通行料 + 副収入を支払い
 5. ターン終了処理・次ターン
 ```
 
@@ -52,6 +57,32 @@ end_turn()内の処理順:
 - board_system_ref.tile_data_manager.calculate_level_up_cost()で動的計算
 - show_level_selection()・_calculate_level_up_cost()実装
 
+### 7. spell_curse_toll.gd - 通行料呪いシステム
+**通行料計算に呪いを適用**
+- `apply_toll_share()`: 敵の通行料50%獲得（ドリームトレイン）
+- `apply_toll_disable()`: 支払わない（ブラックアウト）
+- `apply_toll_fixed()`: 支払い固定値（ユニフォーミティ）
+- `apply_toll_multiplier()`: クリーチャーの通行料倍率（グリード）
+- `apply_peace()`: 敵移動除外＋戦闘不可＋通行料0（ピース）
+
+**統合的な計算メソッド**
+```
+calculate_final_toll(tile_index, payer_id, receiver_id, base_toll)
+  ↓
+1. 領地呪いチェック（peace, toll_multiplier）
+   ├─ peace → 通行料=0
+   └─ toll_multiplier → 倍率適用
+2. セプター呪いチェック（支払い側）
+   ├─ toll_disable → 支払い=0
+   └─ その他
+3. セプター呪いチェック（受取側）
+   ├─ toll_fixed → 固定値
+   ├─ toll_share → 副収入計算
+   └─ その他
+  ↓
+戻り値: {main_toll, bonus_toll, bonus_receiver_id}
+```
+
 ---
 
 ## 計算式
@@ -59,13 +90,13 @@ end_turn()内の処理順:
 ### 通行料
 ```
 通行料 = 100 × 要素係数 × レベル係数 × 連鎖ボーナス × マップ係数
-      → floor_toll()で10の位切り捨て
+	  → floor_toll()で10の位切り捨て
 ```
 
 ### レベルアップコスト
 ```
 コスト = 100 × 要素係数 × レベル係数 × 1.5（固定連鎖2個） × マップ係数
-      → floor_toll()で10の位切り捨て
+	  → floor_toll()で10の位切り捨て
 ```
 
 ---
@@ -79,6 +110,20 @@ end_turn()内の処理順:
 | 敵地生き残り（ATTACKER_SURVIVED） | ✅ | 敵地に留まる |
 | 戦闘勝利（ATTACKER_WIN） | ❌ | 土地奪取→自領地に |
 | 相打ち（BOTH_DEFEATED） | ❌ | 土地無所有に |
+
+---
+
+## 補足：通行料呪いとの統合
+
+通行料呪い（`docs/design/spells/通行料呪い.md`）は本システムの **上位レイヤー** として機能：
+
+| 処理段階 | 役割 |
+|---------|------|
+| **基本計算** | tile_data_manager.calculate_toll() → base_toll |
+| **呪い適用** ← **新規** | spell_curse_toll.calculate_final_toll() → 最終通行料 + 副収入 |
+| **支払い実行** | player_system.pay_toll() |
+
+**詳細は `docs/design/spells/通行料呪い.md` を参照**
 
 ---
 

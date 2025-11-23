@@ -336,7 +336,23 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象領地に呪い\"通行料1.5倍\"；カードを1枚引く"
+	  "effect": "対象領地に呪い\"通行料1.5倍\"；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"effects": [
+		  {
+			"effect_type": "toll_multiplier",
+			"name": "通行料1.5倍",
+			"multiplier": 1.5,
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2025,
@@ -851,7 +867,19 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "使用者に呪い\"通行料促進\"(5R間、他のセプターが得た通行料の50%を得る)"
+	  "effect": "使用者に呪い\"通行料促進\"(5R間、他のセプターが得た通行料の50%を得る)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "self",
+		"effects": [
+		  {
+			"effect_type": "toll_share",
+			"name": "通行料促進",
+			"ratio": 0.5,
+			"duration": 5
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2062,
