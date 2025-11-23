@@ -162,7 +162,16 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "通行料変化・秘術",
-	  "ability_detail": "通行料変化[1.5倍]；秘術[G0・周回数×G30を得る]"
+	  "ability_detail": "通行料変化[1.5倍]；秘術[G0・周回数×G30を得る]",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "toll_change",
+			"multiplier": 1.5,
+			"description": "通行料変化[1.5倍]"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 231,

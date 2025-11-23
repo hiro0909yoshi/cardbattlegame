@@ -234,16 +234,16 @@ Card.gd (scripts/)
 ```json
 {
   "effect_parsed": {
-    "target_type": "player",
-    "target_filter": "self",
-    "effects": [
-      {
-        "effect_type": "toll_share",
-        "name": "通行料促進",
-        "ratio": 0.5,
-        "duration": 5
-      }
-    ]
+	"target_type": "player",
+	"target_filter": "self",
+	"effects": [
+	  {
+		"effect_type": "toll_share",
+		"name": "通行料促進",
+		"ratio": 0.5,
+		"duration": 5
+	  }
+	]
   }
 }
 ```

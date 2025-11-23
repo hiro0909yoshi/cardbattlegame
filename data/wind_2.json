@@ -500,6 +500,13 @@
 				"elements": "fire"
 			  }
 			]
+		  },
+		  {
+			"effect_type": "toll_change",
+			"multiplier_type": "variable",
+			"min_multiplier": 0.5,
+			"max_multiplier": 2.5,
+			"description": "通行料変化[1/2~2.5倍]"
 		  }
 		]
 	  }

@@ -294,11 +294,25 @@ func phase_4_setup_system_interconnections() -> void:
 		
 		# SpellCurseToll の初期化
 		if game_flow_manager.spell_curse:
+			# SkillTollChange の作成
+			var skill_toll_change = preload("res://scripts/skills/skill_toll_change.gd").new()
+			
+			# CreatureManager の取得（BoardSystem3D 配下から動的に取得）
+			var creature_manager = null
+			if board_system_3d:
+				# board_system_3d の子ノードから CreatureManager を検索
+				creature_manager = board_system_3d.get_node_or_null("CreatureManager")
+			
+			# SpellCurseToll の初期化
 			game_flow_manager.spell_curse_toll = SpellCurseTollClass.new()
-			game_flow_manager.spell_curse_toll.setup(game_flow_manager.spell_curse)
+			game_flow_manager.spell_curse_toll.setup(
+				game_flow_manager.spell_curse,
+				skill_toll_change,
+				creature_manager
+			)
 			game_flow_manager.spell_curse_toll.name = "SpellCurseToll"
 			game_flow_manager.add_child(game_flow_manager.spell_curse_toll)
-			print("[SpellCurseToll] 初期化完了")
+			print("[SpellCurseToll] 初期化完了（SkillTollChange と CreatureManager 参照設定済み）")
 		
 		# CPUAIHandler の初期化（setup_systems で行われる）
 		# GameFlowManager._ready() で既に初期化済みなため、ここでは参照設定のみ

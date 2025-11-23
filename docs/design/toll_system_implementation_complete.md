@@ -37,10 +37,10 @@ end_turn()内の処理順:
    - check_and_pay_toll_on_enemy_land()
    - 敵地なら支払い、自領地・スタートなら支払いなし
    ★通行料呪いを判定・計算
-     - SpellCurseToll.calculate_final_toll()で呪い判定
-     - セプター呪い（toll_disable, toll_fixed, toll_share）
-     - 領地呪い（toll_multiplier, peace）を適用
-     - 主通行料 + 副収入を支払い
+	 - SpellCurseToll.calculate_final_toll()で呪い判定
+	 - セプター呪い（toll_disable, toll_fixed, toll_share）
+	 - 領地呪い（toll_multiplier, peace）を適用
+	 - 主通行料 + 副収入を支払い
 5. ターン終了処理・次ターン
 ```
 

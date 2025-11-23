@@ -258,7 +258,8 @@
 		  },
 		  {
 			"effect_type": "toll_change",
-			"value": 0
+			"value": 0,
+			"description": "通行料変化[G0]"
 		  },
 		  {
 			"effect_type": "revive",
@@ -497,7 +498,16 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "通行料変化",
-	  "ability_detail": "通行料変化[1/2]"
+	  "ability_detail": "通行料変化[1/2]",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "toll_change",
+			"multiplier": 0.5,
+			"description": "通行料変化[1/2]"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 423,

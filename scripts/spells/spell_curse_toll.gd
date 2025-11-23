@@ -8,10 +8,14 @@ class_name SpellCurseToll
 
 # 参照
 var spell_curse: SpellCurse
+var skill_toll_change: SkillTollChange = null
+var creature_manager = null
 
 # 初期化
-func setup(curse_system: SpellCurse):
+func setup(curse_system: SpellCurse, toll_skill: SkillTollChange = null, creature_mgr = null):
 	spell_curse = curse_system
+	skill_toll_change = toll_skill
+	creature_manager = creature_mgr
 	print("[SpellCurseToll] 初期化完了")
 
 # ========================================
@@ -139,6 +143,25 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 			"bonus_toll": bonus_toll,
 			"bonus_receiver_id": bonus_receiver_id
 		}
+	
+	# ========================================
+	# クリーチャースキル判定（toll_change）
+	# ========================================
+	if skill_toll_change and creature_manager:
+		var creature = creature_manager.get_data_ref(tile_index)
+		if creature and not creature.is_empty():
+			var ability_parsed = creature.get("ability_parsed", {})
+			var toll_effect = skill_toll_change.get_toll_change_effect(ability_parsed)
+			
+			if not toll_effect.is_empty():
+				var creature_name = creature.get("name", "Unknown")
+				var final_toll_with_skill = skill_toll_change.calculate_final_toll(final_toll, toll_effect)
+				print("[通行料スキル] ", creature_name, " により通行料 ", final_toll, "G → ", final_toll_with_skill, "G")
+				return {
+					"main_toll": final_toll_with_skill,
+					"bonus_toll": 0,
+					"bonus_receiver_id": -1
+				}
 	
 	return {
 		"main_toll": final_toll,
