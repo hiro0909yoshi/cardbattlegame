@@ -51,12 +51,13 @@
 			},
 			"ap": 30,
 			"hp": 30,
-			"ability": "感応・防魔",
-			"ability_detail": "感応[地]・AP&HP+20；防魔",
+			"ability": "感応・防魔・秘術",
+			"ability_detail": "感応[地]・AP&HP+20；防魔；秘術[G50・対象敵に30ダメージ]",
 			"ability_parsed": {
 				"keywords": [
 					"感応",
-					"防魔"
+					"防魔",
+					"秘術"
 				],
 				"keyword_conditions": {
 					"感応": {
@@ -66,7 +67,23 @@
 							"hp": 20
 						}
 					}
-				}
+				},
+				"mystic_arts": [
+					{
+						"id": "amon_mystic_001",
+						"name": "業火の矢",
+						"description": "敵クリーチャーに30ダメージを与える秘術",
+						"cost": 50,
+						"target_type": "creature",
+						"target_filter": "enemy",
+						"effects": [
+							{
+								"effect_type": "damage",
+								"value": 30
+							}
+						]
+					}
+				]
 			}
 		},
 		{

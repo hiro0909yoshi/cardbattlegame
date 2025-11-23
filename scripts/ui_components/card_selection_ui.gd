@@ -60,7 +60,10 @@ func show_selection(current_player, mode: String = "summon"):
 	var allow_manual = (current_player.id == 0) or (game_flow_manager_ref and game_flow_manager_ref.debug_manual_control_all)
 	if allow_manual:
 		enable_card_selection(hand_data, current_player.magic_power, current_player.id)
-		create_pass_button(hand_data.size())
+		
+		# スペルフェーズではパスボタンを作らない（SpellPhaseUIManager で管理）
+		if mode != "spell":
+			create_pass_button(hand_data.size())
 
 # フェーズラベルを更新
 func update_phase_label(current_player, mode: String):
@@ -364,3 +367,4 @@ func is_selection_active() -> bool:
 # 現在の選択モードを取得
 func get_selection_mode() -> String:
 	return selection_mode
+

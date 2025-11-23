@@ -426,13 +426,13 @@ func test_unyielding_not_down():
 ```gdscript
 # ターゲットクリーチャーの情報取得
 if target_type == "creature" and selected_target:
-    var target_creature = selected_target.creature_data
-    var display_info = {
-        "current_hp": target_creature.get("current_hp", 0),
-        "max_hp": target_creature.get("hp", 0) + target_creature.get("land_bonus_hp", 0),
-        "ap": target_creature.get("ap", 0)
-    }
-    # UI側で display_info を表示
+	var target_creature = selected_target.creature_data
+	var display_info = {
+		"current_hp": target_creature.get("current_hp", 0),
+		"max_hp": target_creature.get("hp", 0) + target_creature.get("land_bonus_hp", 0),
+		"ap": target_creature.get("ap", 0)
+	}
+	# UI側で display_info を表示
 ```
 
 ---

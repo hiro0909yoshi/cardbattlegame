@@ -43,6 +43,8 @@ var card_system = null
 var player_system = null
 var board_system = null
 var creature_manager = null
+var spell_mystic_arts = null  # 秘術システム
+var spell_phase_ui_manager = null  # UIボタン管理
 
 func _ready():
 	pass
@@ -62,6 +64,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# CreatureManagerを取得
 	if board_system:
 		creature_manager = board_system.get_node_or_null("CreatureManager")
+	
+	# SpellPhaseUIManager を初期化
+	_initialize_spell_phase_ui()
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -78,6 +83,7 @@ func start_spell_phase(player_id: int):
 	# UIを更新（スペルカードのみ選択可能にする）
 	if ui_manager:
 		_update_spell_phase_ui()
+		_show_spell_phase_buttons()
 	
 	# CPUの場合は簡易AI
 	if is_cpu_player(player_id):
@@ -610,6 +616,9 @@ func complete_spell_phase():
 			if current_player:
 				ui_manager.hand_display.update_hand_display(current_player.id)
 	
+	# スペルフェーズボタンを非表示
+	_hide_spell_phase_buttons()
+	
 	spell_phase_completed.emit()
 	
 	# 次のフェーズ（ダイスフェーズ）への遷移は GameFlowManager が行う
@@ -630,3 +639,80 @@ func is_cpu_player(player_id: int) -> bool:
 ## アクティブか
 func is_spell_phase_active() -> bool:
 	return current_state != State.INACTIVE
+
+# ============ 秘術システム対応（新規追加）============
+
+## 秘術が利用可能か確認
+func has_available_mystic_arts(player_id: int) -> bool:
+	if not has_spell_mystic_arts():
+		return false
+	
+	var available = spell_mystic_arts.get_available_creatures(player_id)
+	return available.size() > 0
+
+## SpellMysticArtsクラスが存在するか
+func has_spell_mystic_arts() -> bool:
+	return spell_mystic_arts != null and spell_mystic_arts is SpellMysticArts
+
+## 有効なターゲットを取得（スペルと秘術で共用）
+func _get_valid_targets(target_type: String, target_filter: String) -> Array:
+	var targets: Array = []
+	
+	var target_info = {
+		"target_filter": target_filter
+	}
+	
+	match target_type:
+		"creature":
+			target_info["owner_filter"] = "enemy"
+			targets = TargetSelectionHelper.get_valid_targets(self, "creature", target_info)
+		"land":
+			target_info["owner_filter"] = target_filter
+			targets = TargetSelectionHelper.get_valid_targets(self, "land", target_info)
+		"player":
+			target_info["target_filter"] = target_filter
+			targets = TargetSelectionHelper.get_valid_targets(self, "player", target_info)
+		"world":
+			# 世界呪は常に有効（ターゲット選択なし）
+			targets = [{"type": "world"}]
+	
+	return targets
+
+# ============ UIボタン管理 ============
+
+## SpellPhaseUIManager を初期化
+func _initialize_spell_phase_ui():
+	if not spell_phase_ui_manager:
+		spell_phase_ui_manager = SpellPhaseUIManager.new()
+		add_child(spell_phase_ui_manager)
+		
+		# UIレイヤーへの参照を設定
+		if ui_manager and ui_manager.card_selection_ui and ui_manager.card_selection_ui.parent_node:
+			# CardUIHelper と spell_phase_handler への参照を渡す
+			spell_phase_ui_manager.card_ui_helper = load("res://scripts/ui_components/card_ui_helper.gd")
+			spell_phase_ui_manager.spell_phase_handler_ref = self
+			var ui_parent = ui_manager.card_selection_ui.parent_node
+			spell_phase_ui_manager.create_mystic_button(ui_parent)
+			spell_phase_ui_manager.create_spell_skip_button(ui_parent)
+
+## スペルフェーズ開始時にボタンを表示
+func _show_spell_phase_buttons():
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.show_mystic_button()
+		spell_phase_ui_manager.show_spell_skip_button()
+
+## スペルフェーズ終了時にボタンを非表示
+func _hide_spell_phase_buttons():
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.hide_mystic_button()
+		spell_phase_ui_manager.hide_spell_skip_button()
+
+## スペル使用時に秘術ボタンを隠す
+func _on_spell_used():
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.on_spell_used()
+
+## 秘術使用時にスペルボタンを隠す
+func _on_mystic_art_used():
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.on_mystic_art_used()

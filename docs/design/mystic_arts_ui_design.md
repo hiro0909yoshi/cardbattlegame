@@ -46,7 +46,7 @@ var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_count)
 
 # 最後のカードの右側に配置
 var last_card_x = layout.start_x + hand_count * layout.card_width 
-                + (hand_count - 1) * layout.spacing + layout.spacing
+				+ (hand_count - 1) * layout.spacing + layout.spacing
 pass_button.position = Vector2(last_card_x, layout.card_y)
 ```
 
@@ -162,7 +162,7 @@ func _update_button_positions():
 	# スペルをしないボタン：手札右側
 	if spell_skip_button:
 		var last_card_x = layout.start_x + hand_count * layout.card_width \
-		                 + (hand_count - 1) * layout.spacing + layout.spacing
+						 + (hand_count - 1) * layout.spacing + layout.spacing
 		spell_skip_button.position = Vector2(last_card_x, layout.card_y)
 
 # === スタイル適用 ===
