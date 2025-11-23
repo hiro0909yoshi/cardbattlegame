@@ -189,7 +189,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "先制・攻撃成功時",
-	  "ability_detail": "先制；攻撃成功時、敵に♡\"戦闘行動不可\"",
+	  "ability_detail": "先制；攻撃成功時、敵に呪い\"戦闘行動不可\"",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"
