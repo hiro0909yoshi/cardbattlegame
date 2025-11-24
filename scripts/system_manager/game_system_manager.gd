@@ -280,23 +280,6 @@ func phase_4_setup_system_interconnections() -> void:
 			game_flow_manager.land_command_handler.player_system = player_system
 			game_flow_manager.land_command_handler.ui_manager = ui_manager
 		
-		# SpellPhaseHandler の初期化
-		if game_flow_manager and game_flow_manager.spell_phase_handler:
-			game_flow_manager.spell_phase_handler.board_system_3d = board_system_3d
-			game_flow_manager.spell_phase_handler.game_flow_manager = game_flow_manager
-			game_flow_manager.spell_phase_handler.ui_manager = ui_manager
-			
-			# SpellMysticArts の初期化（新規追加）
-			game_flow_manager.spell_phase_handler.spell_mystic_arts = SpellMysticArts.new(
-				board_system_3d,
-				player_system,
-				card_system,
-				game_flow_manager.spell_phase_handler
-			)
-			game_flow_manager.spell_phase_handler.spell_mystic_arts.name = "SpellMysticArts"
-			game_flow_manager.spell_phase_handler.add_child(game_flow_manager.spell_phase_handler.spell_mystic_arts)
-			print("[SpellMysticArts] 初期化完了（GameSystemManager.Phase 4-2）")
-		
 		# ItemPhaseHandler の初期化
 		if game_flow_manager.item_phase_handler:
 			game_flow_manager.item_phase_handler.board_system_3d = board_system_3d

@@ -65,6 +65,16 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if board_system:
 		creature_manager = board_system.get_node_or_null("CreatureManager")
 	
+	# SpellMysticArts を初期化
+	if not spell_mystic_arts and board_system and player_system and card_system:
+		spell_mystic_arts = SpellMysticArts.new(
+			board_system,
+			player_system,
+			card_system,
+			self
+		)
+		print("[SpellPhaseHandler.initialize()] SpellMysticArts 初期化完了")
+	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
 
@@ -141,6 +151,201 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 	# CardSelectionUIを使用してスペル選択
 	if ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "spell")
+
+## 秘術フェーズ開始
+func start_mystic_arts_phase():
+	"""秘術選択フェーズを開始"""
+	if not spell_mystic_arts:
+		print("[spell_phase_handler] SpellMysticArts が初期化されていません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "秘術システムが初期化されていません"
+		return
+	
+	if not player_system:
+		print("[spell_phase_handler] player_system が設定されていません")
+		return
+	
+	# 現在のプレイヤーを取得
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("[spell_phase_handler] 現在のプレイヤーを取得できません")
+		return
+	
+	print("[spell_phase_handler] 秘術フェーズ開始 - プレイヤー %d" % current_player.id)
+	
+	# 秘術を持つクリーチャーを取得
+	var available_creatures = spell_mystic_arts.get_available_creatures(current_player.id)
+	
+	if available_creatures.is_empty():
+		print("[spell_phase_handler] 秘術を持つクリーチャーがありません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "秘術を持つクリーチャーがありません"
+		return
+	
+	print("[spell_phase_handler] 秘術を持つクリーチャー数: %d" % available_creatures.size())
+	
+	# クリーチャー選択UIを表示
+	await _select_mystic_arts_creature(available_creatures, current_player.id)
+
+## クリーチャー選択
+func _select_mystic_arts_creature(available_creatures: Array, player_id: int):
+	"""秘術を持つクリーチャーを選択"""
+	if not ui_manager:
+		print("[spell_phase_handler] ui_manager が設定されていません")
+		return
+	
+	# SpellAndMysticUI を取得または作成
+	var spell_and_mystic_ui = ui_manager.get_node_or_null("SpellAndMysticUI")
+	if not spell_and_mystic_ui:
+		# 動的にロード
+		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
+		if not SpellAndMysticUIClass:
+			print("[spell_phase_handler] SpellAndMysticUI をロードできません")
+			return
+		
+		# 新規作成
+		spell_and_mystic_ui = SpellAndMysticUIClass.new()
+		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		ui_manager.add_child(spell_and_mystic_ui)
+		print("[spell_phase_handler] SpellAndMysticUI を新規作成")
+	
+	# クリーチャー選択UIを表示
+	spell_and_mystic_ui.show_creature_selection(available_creatures)
+	
+	# クリーチャー選択を待機
+	var selected_index = await spell_and_mystic_ui.creature_selected
+	
+	if selected_index < 0 or selected_index >= available_creatures.size():
+		print("[spell_phase_handler] クリーチャー選択がキャンセルされました")
+		spell_and_mystic_ui.hide_all()
+		return
+	
+	var selected_creature = available_creatures[selected_index]
+	print("[spell_phase_handler] クリーチャー選択: %s" % selected_creature.creature_data.get("name", "Unknown"))
+	
+	# 秘術選択に進む
+	await _select_mystic_art(selected_creature, spell_and_mystic_ui)
+
+## 秘術選択
+func _select_mystic_art(selected_creature: Dictionary, spell_and_mystic_ui: Control):
+	"""クリーチャーの秘術を選択"""
+	var mystic_arts = selected_creature.get("mystic_arts", [])
+	
+	if mystic_arts.is_empty():
+		print("[spell_phase_handler] 秘術がありません")
+		spell_and_mystic_ui.hide_all()
+		return
+	
+	# 秘術選択UIを表示
+	spell_and_mystic_ui.show_mystic_art_selection(mystic_arts)
+	
+	# 秘術選択を待機
+	var selected_index = await spell_and_mystic_ui.mystic_art_selected
+	
+	if selected_index < 0 or selected_index >= mystic_arts.size():
+		print("[spell_phase_handler] 秘術選択がキャンセルされました")
+		spell_and_mystic_ui.hide_all()
+		return
+	
+	var selected_mystic_art = mystic_arts[selected_index]
+	print("[spell_phase_handler] 秘術選択: %s" % selected_mystic_art.get("name", "Unknown"))
+	
+	# UIを非表示
+	spell_and_mystic_ui.hide_all()
+	
+	# ターゲット選択に進む
+	var current_player = player_system.get_current_player()
+	await _select_mystic_arts_target(selected_creature, selected_mystic_art, current_player.id)
+
+## ターゲット選択
+func _select_mystic_arts_target(selected_creature: Dictionary, selected_mystic_art: Dictionary, player_id: int):
+	"""秘術のターゲットを選択"""
+	var target_type = selected_mystic_art.get("target_type", "")
+	var target_filter = selected_mystic_art.get("target_filter", "any")
+	
+	print("[spell_phase_handler] ターゲット選択開始 - タイプ: %s, フィルター: %s" % [target_type, target_filter])
+	
+	# セルフターゲット時はUI表示なし
+	if target_filter == "self":
+		var target_data = {
+			"type": target_type,
+			"tile_index": selected_creature.get("tile_index", -1)
+		}
+		print("[spell_phase_handler] セルフターゲット自動選択")
+		await _execute_mystic_art(selected_creature, selected_mystic_art, target_data, player_id)
+		return
+	
+	# 通常ターゲット選択
+	var target_info = {
+		"filter": target_filter
+	}
+	
+	var available_targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
+	
+	if available_targets.is_empty():
+		print("[spell_phase_handler] 有効なターゲットがありません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "有効なターゲットがありません"
+		return
+	
+	print("[spell_phase_handler] 利用可能なターゲット数: %d" % available_targets.size())
+	
+	# ターゲット選択（最初のターゲットを自動選択）
+	if available_targets.is_empty():
+		print("[spell_phase_handler] ターゲット選択がキャンセルされました")
+		TargetSelectionHelper.clear_selection(self)
+		return
+	
+	# TODO: ターゲット選択UI（既存のスペルターゲット選択を流用する予定）
+	# 暫定：最初のターゲットを自動選択
+	var selected_target = available_targets[0]
+	print("[spell_phase_handler] ターゲット選択完了（自動選択: %s）" % str(selected_target))
+	
+	# 秘術を実行
+	await _execute_mystic_art(selected_creature, selected_mystic_art, selected_target, player_id)
+
+## 秘術実行
+func _execute_mystic_art(selected_creature: Dictionary, selected_mystic_art: Dictionary, target_data: Dictionary, player_id: int):
+	"""秘術効果を実行"""
+	print("[spell_phase_handler] 秘術実行開始")
+	
+	# 発動判定
+	var context = {
+		"player_id": player_id,
+		"player_magic": player_system.get_magic(player_id),
+		"spell_used_this_turn": spell_used_this_turn,
+		"tile_index": selected_creature.get("tile_index", -1)
+	}
+	
+	if not spell_mystic_arts.can_cast_mystic_art(selected_mystic_art, context):
+		print("[spell_phase_handler] 秘術発動条件を満たしていません")
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "秘術発動条件を満たしていません"
+		return
+	
+	# 秘術効果を適用
+	var success = spell_mystic_arts.apply_mystic_art_effect(selected_mystic_art, target_data, context)
+	
+	if success:
+		# 魔力消費
+		var cost = selected_mystic_art.get("cost", 0)
+		player_system.consume_magic(player_id, cost)
+		spell_used_this_turn = true
+		
+		# キャスターをダウン状態に設定
+		spell_mystic_arts._set_caster_down_state(selected_creature.get("tile_index", -1))
+		
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "『%s』を発動しました！" % selected_mystic_art.get("name", "Unknown")
+		
+		print("[spell_phase_handler] 秘術発動成功")
+	else:
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "秘術の発動に失敗しました"
+		print("[spell_phase_handler] 秘術発動失敗")
+	
+	# ターゲット選択をクリア
+	TargetSelectionHelper.clear_selection(self)
 
 ## CPUのスペル使用判定（簡易版）
 func _handle_cpu_spell_turn():

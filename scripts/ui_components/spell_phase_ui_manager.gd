@@ -41,6 +41,9 @@ func create_mystic_button(parent: Node) -> Button:
 	# スタイル設定
 	_apply_mystic_button_style(mystic_button)
 	
+	# ボタンのシグナル接続
+	mystic_button.pressed.connect(_on_mystic_button_pressed)
+	
 	# Z-index
 	mystic_button.z_index = 100
 	
@@ -248,6 +251,11 @@ func enable_all():
 
 
 # === シグナルハンドラー ===
+
+func _on_mystic_button_pressed():
+	"""秘術ボタンが押された"""
+	if spell_phase_handler_ref:
+		spell_phase_handler_ref.start_mystic_arts_phase()
 
 func _on_spell_skip_button_pressed():
 	"""スペルを使わないボタンが押された"""
