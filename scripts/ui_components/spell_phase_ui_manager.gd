@@ -26,15 +26,6 @@ func create_mystic_button(parent: Node) -> Button:
 	mystic_button.name = "MysticButton"
 	mystic_button.text = "秘術を使う"
 	
-	# CardUIHelper でレイアウト計算（サイズ決定用）
-	var viewport_size = get_viewport().get_visible_rect().size
-	var layout = card_ui_helper.calculate_card_layout(viewport_size, 6) if card_ui_helper else null
-	
-	if layout:
-		mystic_button.custom_minimum_size = Vector2(layout.card_width, layout.card_height)
-	else:
-		mystic_button.custom_minimum_size = Vector2(BUTTON_WIDTH, BUTTON_HEIGHT)
-	
 	# 位置計算（CardUIHelper を使用）
 	_update_button_positions()
 	
@@ -50,6 +41,17 @@ func create_mystic_button(parent: Node) -> Button:
 	parent.add_child(mystic_button)
 	mystic_button.visible = false  # 初期状態は非表示
 	
+	# add_child() 後に position/size を再度設定（親の layout システムが上書きを防ぐため）
+	_update_button_positions()
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	print("[SpellPhaseUIManager] 秘術ボタン作成: size=", mystic_button.size, " position=", mystic_button.position)
+	
+	# デバッグ: layout情報を出力
+	var layout_mystic = card_ui_helper.calculate_card_layout(viewport_size, 6) if card_ui_helper else null
+	if layout_mystic:
+		print("  layout: start_x=", layout_mystic.start_x, " card_width=", layout_mystic.card_width, " spacing=", layout_mystic.spacing)
+	
 	return mystic_button
 
 
@@ -62,15 +64,6 @@ func create_spell_skip_button(parent: Node) -> Button:
 	spell_skip_button.name = "SpellSkipButton"
 	spell_skip_button.text = "スペルを使わない"
 	
-	# CardUIHelper でレイアウト計算（サイズ決定用）
-	var viewport_size = get_viewport().get_visible_rect().size
-	var layout = card_ui_helper.calculate_card_layout(viewport_size, 6) if card_ui_helper else null
-	
-	if layout:
-		spell_skip_button.custom_minimum_size = Vector2(layout.card_width, layout.card_height)
-	else:
-		spell_skip_button.custom_minimum_size = Vector2(BUTTON_WIDTH, BUTTON_HEIGHT)
-	
 	_update_button_positions()
 	_apply_spell_skip_button_style(spell_skip_button)
 	
@@ -81,13 +74,24 @@ func create_spell_skip_button(parent: Node) -> Button:
 	parent.add_child(spell_skip_button)
 	spell_skip_button.visible = false
 	
+	# add_child() 後に position/size を再度設定（親の layout システムが上書きを防ぐため）
+	_update_button_positions()
+	
+	var viewport_size2 = get_viewport().get_visible_rect().size
+	print("[SpellPhaseUIManager] スペルボタン作成: size=", spell_skip_button.size, " position=", spell_skip_button.position)
+	
+	# デバッグ: layout情報を出力
+	var layout = card_ui_helper.calculate_card_layout(viewport_size2, 6) if card_ui_helper else null
+	if layout:
+		print("  layout: start_x=", layout.start_x, " card_width=", layout.card_width, " spacing=", layout.spacing)
+	
 	return spell_skip_button
 
 
 # === 位置更新 ===
 
 func _update_button_positions():
-	"""画面解像度変更時にボタン位置を再計算"""
+	"""画面解像度変更時にボタン位置とサイズを再計算"""
 	var viewport_size = get_viewport().get_visible_rect().size
 	var hand_count = 6  # 最大手札数（調整可能）
 	
@@ -100,20 +104,25 @@ func _update_button_positions():
 		
 		# 秘術ボタン：手札左側
 		if mystic_button:
-			var mystic_x = layout.start_x - BUTTON_WIDTH - BUTTON_MARGIN
+			# card_selection_ui.gd と同じ方法で position を直接設定
+			var mystic_x = layout.start_x - layout.card_width - BUTTON_MARGIN
 			mystic_button.position = Vector2(mystic_x, layout.card_y)
+			mystic_button.size = Vector2(layout.card_width, layout.card_height)
 		
 		# スペルをしないボタン：手札右側
 		if spell_skip_button:
-			var last_card_x = layout.start_x + hand_count * layout.card_width \
-							 + (hand_count - 1) * layout.spacing + layout.spacing
+			# card_selection_ui.gd と同じ計算式
+			var last_card_x = layout.start_x + hand_count * layout.card_width + (hand_count - 1) * layout.spacing + layout.spacing
 			spell_skip_button.position = Vector2(last_card_x, layout.card_y)
+			spell_skip_button.size = Vector2(layout.card_width, layout.card_height)
 	else:
 		# フォールバック：固定位置
 		if mystic_button:
 			mystic_button.position = Vector2(20, 170)
+			mystic_button.size = Vector2(BUTTON_WIDTH, BUTTON_HEIGHT)
 		if spell_skip_button:
 			spell_skip_button.position = Vector2(viewport_size.x - BUTTON_WIDTH - 20, 170)
+			spell_skip_button.size = Vector2(BUTTON_WIDTH, BUTTON_HEIGHT)
 
 
 # === スタイル適用 ===

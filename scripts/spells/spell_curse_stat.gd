@@ -20,10 +20,10 @@ func setup(curse: SpellCurse, creature_mgr: CreatureManager):
 func apply_stat_boost(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", 20)
 	var duration = effect.get("duration", -1)
-	var _name = effect.get("name", "能力値+20")
+	var curse_name = effect.get("name", "能力値+20")
 	
 	spell_curse.curse_creature(tile_index, "stat_boost", duration, {
-		"name": name,
+		"name": curse_name,
 		"value": value
 	})
 
@@ -31,10 +31,10 @@ func apply_stat_boost(tile_index: int, effect: Dictionary):
 func apply_stat_reduce(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", -20)
 	var duration = effect.get("duration", -1)
-	var _name = effect.get("name", "能力値-20")
+	var curse_name = effect.get("name", "能力値-20")
 	
 	spell_curse.curse_creature(tile_index, "stat_reduce", duration, {
-		"name": name,
+		"name": curse_name,
 		"value": value
 	})
 

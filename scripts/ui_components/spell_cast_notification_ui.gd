@@ -153,10 +153,10 @@ static func get_target_display_name(target_data: Dictionary, board_system = null
 		
 		"player":
 			var player_id = target_data.get("player_id", -1)
-			if player_id >= 0 and player_system:
-				var player = player_system.get_player(player_id)
+			if player_id >= 0 and player_system and player_id < player_system.players.size():
+				var player = player_system.players[player_id]
 				if player:
-					return player.get("name", "プレイヤー%d" % player_id)
+					return player.name
 			return "プレイヤー"
 		
 		"all", "all_lands", "all_creatures":

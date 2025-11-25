@@ -52,13 +52,13 @@ func create_dialog_ui(parent: Node):
 	dialog_panel.custom_minimum_size = Vector2(800, 800)
 	dialog_panel.visible = false
 	
-	# パネルの位置を中央に
+	# パネルの位置（上寄りに配置）
 	dialog_panel.anchor_left = 0.5
 	dialog_panel.anchor_top = 0.5
 	dialog_panel.anchor_right = 0.5
 	dialog_panel.anchor_bottom = 0.5
 	dialog_panel.offset_left = -400
-	dialog_panel.offset_top = -400
+	dialog_panel.offset_top = -580  # さらに上に移動
 	
 	# パネルスタイル
 	var panel_style = StyleBoxFlat.new()
@@ -77,18 +77,18 @@ func create_dialog_ui(parent: Node):
 	
 	# タイトルラベル
 	title_label = Label.new()
-	title_label.add_theme_font_size_override("font_size", 16)
+	title_label.add_theme_font_size_override("font_size", 24)
 	title_label.text = ""
 	vbox.add_child(title_label)
 	
 	# ステータス表示ラベル
 	status_label = RichTextLabel.new()
-	status_label.custom_minimum_size = Vector2(380, 320)
+	status_label.custom_minimum_size = Vector2(750, 700)
 	status_label.bbcode_enabled = true
 	status_label.scroll_active = true
 	status_label.fit_content = false
 	status_label.clip_contents = true
-	status_label.add_theme_font_size_override("normal_font_size", 11)
+	status_label.add_theme_font_size_override("normal_font_size", 16)
 	vbox.add_child(status_label)
 	
 	# 閉じるボタン
@@ -138,6 +138,14 @@ func build_status_text(player_id: int) -> String:
 	
 	# 基本情報
 	text += "[b][color=yellow]基本情報[/color][/b]\n"
+	text += player.name
+	
+	# プレイヤー呪いがあればアイコン表示
+	if player.curse and not player.curse.is_empty():
+		var curse_name = player.curse.get("name", "呪い")
+		text += " [" + curse_name + "]"
+	
+	text += "\n"
 	text += "魔力: " + str(player.magic_power) + "G\n"
 	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G\n\n"
 	
@@ -161,13 +169,28 @@ func build_status_text(player_id: int) -> String:
 			for creature in creatures:
 				# クリーチャーデータ構造に応じて対応
 				if creature is Dictionary:
-					text += creature.get("name", "不明") + "\n"
-					# フィールド名: "current_hp" と "hp" (max HP)
+					# HP: current_hp が現在値、max_hp = hp + base_up_hp
 					var current_hp = creature.get("current_hp", 0)
-					var max_hp = creature.get("hp", 0)
-					var current_ap = creature.get("ap", 0)
-					text += "  HP: " + str(current_hp) + " / " + str(max_hp) + "\n"
-					text += "  AP: " + str(current_ap) + "\n"
+					var base_hp = creature.get("hp", 0)
+					var base_up_hp = creature.get("base_up_hp", 0)
+					var max_hp = base_hp + base_up_hp
+					
+					# AP: max_ap = ap + base_up_ap（current_ap はない）
+					var base_ap = creature.get("ap", 0)
+					var base_up_ap = creature.get("base_up_ap", 0)
+					var max_ap = base_ap + base_up_ap
+					
+					# 1行表示: 名前 HP: XX / XX AP: XX
+					var creature_name = creature.get("name", "不明")
+					var display_name = creature_name
+					
+					# クリーチャー呪いがあればアイコン表示
+					if creature.has("curse") and not creature.get("curse", {}).is_empty():
+						var curse = creature.get("curse", {})
+						var curse_name = str(curse.get("name", "呪い"))
+						display_name += " [" + curse_name + "]"
+					
+					text += display_name + "  HP: " + str(current_hp) + " / " + str(max_hp) + "  AP: " + str(max_ap) + "\n"
 				elif creature.has_method("get_name"):
 					text += creature.get_name() + "\n"
 					if creature.has_method("get_current_hp") and creature.has_method("get_max_hp"):

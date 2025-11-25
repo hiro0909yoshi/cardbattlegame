@@ -142,6 +142,11 @@ func build_player_info_text(player, player_id: int) -> String:
 	text += "魔力: " + str(player.magic_power) + "G\n"
 	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G"
 	
+	# プレイヤー呪いがあれば別行で表示
+	if player.curse and not player.curse.is_empty():
+		var curse_name = player.curse.get("name", "呪い")
+		text += "\n[color=red]呪: " + curse_name + "[/color]"
+	
 	return text
 
 # 土地数を取得（3D対応版）
@@ -266,11 +271,9 @@ func get_lands_by_element(player_id: int) -> Dictionary:
 			if tile.owner_id == player_id:
 				var english_element = tile.tile_type
 				var jp_element = ELEMENT_MAP.get(english_element, "無")
-				print("[PlayerInfoPanel] 土地: tile ", i, " type=", english_element, " -> ", jp_element)
 				if jp_element in element_counts:
 					element_counts[jp_element] += 1
 	
-	print("[PlayerInfoPanel] 土地カウント結果: ", element_counts)
 	return element_counts
 
 # 保有クリーチャー情報を取得（ステータスダイアログ用）

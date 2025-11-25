@@ -37,14 +37,15 @@ func curse_creature(tile_index: int, curse_type: String, duration: int = -1, par
 		print("[呪い上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
 	
 	# 新しい呪いを付与（上書き）
+	var curse_name = str(params.get("name", ""))  # StringName対応: 文字列に変換
 	creature["curse"] = {
 		"curse_type": curse_type,
-		"name": params.get("name", ""),
+		"name": curse_name,
 		"duration": duration,
 		"params": params
 	}
 	
-	print("[呪い付与] ", params.get("name", curse_type), " → ", creature.get("name", "不明"), 
+	print("[呪い付与] ", curse_name, " → ", creature.get("name", "不明"), 
 		  " (duration=", duration, ")")
 
 # クリーチャーの呪いを取得
