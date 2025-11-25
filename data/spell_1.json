@@ -821,7 +821,25 @@
 		"mp": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "MHP30以下の全クリーチャーに呪い\"戦闘行動不可\""
+	  "effect": "MHP30以下の全クリーチャーに呪い\"戦闘行動不可\"",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "condition": {
+			"condition_type": "mhp_check",
+			"operator": "<=",
+			"value": 30
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "battle_disable",
+			"name": "戦闘行動不可",
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2058,

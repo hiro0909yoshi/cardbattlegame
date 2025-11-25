@@ -442,6 +442,9 @@ func use_spell(spell_card: Dictionary):
 		# 対象選択なし。効果実行時に current_player_id を使用
 		var target_data = {"type": "player", "player_id": current_player_id}
 		execute_spell_effect(spell_card, target_data)
+	elif target_type == "all_creatures":
+		# 全クリーチャー対象（条件付き）
+		_execute_spell_on_all_creatures(spell_card, target_info)
 	elif not target_type.is_empty() and target_type != "none":
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
@@ -661,6 +664,24 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
+		"skill_nullify":
+			# 戦闘能力不可呪い
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse:
+					var duration = effect.get("duration", -1)
+					var params = {"name": effect.get("name", "戦闘能力不可")}
+					game_flow_manager.spell_curse.curse_creature(tile_index, "skill_nullify", duration, params)
+		
+		"battle_disable":
+			# 戦闘行動不可呪い
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse:
+					var duration = effect.get("duration", -1)
+					var params = {"name": effect.get("name", "戦闘行動不可")}
+					game_flow_manager.spell_curse.curse_creature(tile_index, "battle_disable", duration, params)
+		
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
 			# 通行料呪い系（統合処理）
 			if game_flow_manager and game_flow_manager.spell_curse_toll:
@@ -732,6 +753,90 @@ func _apply_damage_effect(effect: Dictionary, target_data: Dictionary):
 		tile.owner_id = -1
 		tile.level = 1
 		tile.update_visual()
+
+## 全クリーチャー対象スペルを実行（ディラニーなど）
+func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
+	current_state = State.EXECUTING_EFFECT
+	
+	# 発動通知を表示
+	var caster_name = "プレイヤー%d" % (current_player_id + 1)
+	if player_system and current_player_id >= 0 and current_player_id < player_system.players.size():
+		caster_name = player_system.players[current_player_id].name
+	
+	# 対象は「全体」
+	var target_data_for_notification = {"type": "all"}
+	_show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
+	
+	# 条件を取得
+	var condition = target_info.get("condition", {})
+	var condition_type = condition.get("condition_type", "")
+	var operator = condition.get("operator", "")
+	var check_value = condition.get("value", 0)
+	
+	# スペル効果を取得
+	var parsed = spell_card.get("effect_parsed", {})
+	var effects = parsed.get("effects", [])
+	
+	# 該当するクリーチャーを収集
+	var affected_count = 0
+	
+	if board_system:
+		for tile_index in board_system.tile_nodes.keys():
+			var tile = board_system.tile_nodes[tile_index]
+			if not tile or tile.creature_data.is_empty():
+				continue
+			
+			var creature = tile.creature_data
+			
+			# 条件チェック
+			var matches_condition = true
+			if condition_type == "mhp_check":
+				var mhp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
+				match operator:
+					"<=":
+						matches_condition = (mhp <= check_value)
+					"<":
+						matches_condition = (mhp < check_value)
+					">=":
+						matches_condition = (mhp >= check_value)
+					">":
+						matches_condition = (mhp > check_value)
+					"==":
+						matches_condition = (mhp == check_value)
+			
+			if not matches_condition:
+				continue
+			
+			# 効果を適用
+			var creature_target_data = {
+				"type": "land",
+				"tile_index": tile_index
+			}
+			
+			for effect in effects:
+				_apply_single_effect(effect, creature_target_data)
+			
+			affected_count += 1
+			print("[spell_phase_handler] 全体効果適用: タイル%d %s" % [tile_index, creature.get("name", "?")])
+	
+	print("[spell_phase_handler] 全体スペル完了: %d体に効果適用" % affected_count)
+	
+	# カードを捨て札に
+	if card_system:
+		var hand = card_system.get_all_cards_for_player(current_player_id)
+		for i in range(hand.size()):
+			if hand[i].get("id", -1) == spell_card.get("id", -2):
+				card_system.discard_card(current_player_id, i, "use")
+				break
+	
+	# 効果発動完了
+	spell_used.emit(spell_card)
+	
+	# 少し待機してからスペルフェーズ完了
+	await get_tree().create_timer(0.5).timeout
+	_return_camera_to_player()
+	await get_tree().create_timer(0.5).timeout
+	complete_spell_phase()
 
 ## 魔力奪取効果
 ## カメラを使用者に戻す

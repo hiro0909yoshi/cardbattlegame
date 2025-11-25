@@ -126,6 +126,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		if not attacker_p.is_alive():
 			continue
 		
+		# 戦闘行動不可呪いチェック
+		if SpellCurseBattle.has_battle_disable(attacker_p.creature_data):
+			print("【戦闘行動不可】", attacker_p.creature_data.get("name", "?"), " は攻撃できない")
+			continue
+		
 		# 攻撃回数分ループ
 		for attack_num in range(attacker_p.attack_count):
 			# 既に倒されていたら攻撃しない
@@ -282,6 +287,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						else:
 							break
 					
+					# 🔒 攻撃成功時の呪い付与処理（軽減パス用）
+					if defender_p.is_alive() and attacker_p.current_ap > 0:
+						_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
 			
 			# 反射スキルチェック
@@ -351,6 +360,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if transform_result.has("defender_original"):
 						battle_result["defender_original"] = transform_result["defender_original"]
 					print("  【変身発動】防御側が変身しました")
+			
+			# 🔒 攻撃成功時の呪い付与処理（ナイキー、バインドウィップ用）
+			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
+			if defender_p.is_alive() and attacker_p.current_ap > 0:
+				_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
 			
 			# 防御側撃破チェック
 			if not defender_p.is_alive():
@@ -444,3 +458,7 @@ func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: Battl
 		return
 	
 	SkillMagicSteal.apply_damage_based_steal(attacker, defender, damage, spell_magic)
+
+## 🔒 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
+func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)

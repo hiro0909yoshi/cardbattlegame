@@ -1154,7 +1154,19 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "AP+30；攻撃成功時、敵に呪い\"戦闘行動不可\""
+	  "effect": "AP+30；攻撃成功時、敵に呪い\"戦闘行動不可\"",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "ap": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "on_attack_success_curse",
+			"curse_type": "battle_disable",
+			"name": "戦闘行動不可"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1051,

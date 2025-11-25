@@ -50,6 +50,12 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}):
 	selected_item_card = {}
 	battle_creature_data = creature_data
 	
+	# 戦闘行動不可呪いチェック（防御側のみ呪いを持つ可能性がある）
+	if SpellCurseBattle.has_battle_disable(creature_data):
+		print("【戦闘行動不可】", creature_data.get("name", "?"), " はアイテム・援護使用不可 → 強制パス")
+		pass_item()
+		return
+	
 	item_phase_started.emit()
 	
 

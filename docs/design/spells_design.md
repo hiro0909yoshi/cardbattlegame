@@ -250,6 +250,36 @@ Card.gd (scripts/)
 
 **実装**: `SpellPhaseHandler`で`target_filter == "self"`をチェック → UI表示なし → `target_data = {"type": "player", "player_id": current_player_id}`で自動設定 → 即座に効果発動
 
+**全体ターゲット実装例**（ディラニー）:
+```json
+{
+  "effect_parsed": {
+	"target_type": "all_creatures",
+	"target_info": {
+	  "condition": {
+		"condition_type": "mhp_check",
+		"operator": "<=",
+		"value": 30
+	  }
+	},
+	"effects": [
+	  {
+		"effect_type": "battle_disable",
+		"name": "戦闘行動不可",
+		"duration": -1
+	  }
+	]
+  }
+}
+```
+
+**実装**: `SpellPhaseHandler._execute_spell_on_all_creatures()` で処理 → UI表示なし → 全タイルを走査 → 条件に合致するクリーチャーに効果適用
+
+**condition_type一覧**:
+| condition_type | 説明 | パラメータ |
+|----------------|------|-----------|
+| `mhp_check` | 最大HP判定 | `operator`, `value` |
+
 ---
 
 ### 秘術システム ⏳

@@ -72,7 +72,21 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象領地に呪い\"戦闘行動不可\""
+	  "effect": "対象領地に呪い\"戦闘行動不可\"",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "battle_disable",
+			"name": "戦闘行動不可",
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2069,
@@ -429,7 +443,25 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象領地に呪い\"戦闘能力不可\"；カードを1枚引く"
+	  "effect": "対象領地に呪い\"戦闘能力不可\"；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "skill_nullify",
+			"name": "戦闘能力不可",
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2095,

@@ -194,7 +194,13 @@
 		"keywords": [
 		  "先制"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "on_attack_success_curse",
+			"curse_type": "battle_disable",
+			"name": "戦闘行動不可"
+		  }
+		]
 	  }
 	},
 	{

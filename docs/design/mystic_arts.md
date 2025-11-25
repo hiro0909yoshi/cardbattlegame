@@ -129,6 +129,18 @@
 4. spell_phase_handler._apply_single_effect() で各効果を適用
 ```
 
+### target_type 一覧
+
+| target_type | 説明 | 選択UI |
+|-------------|------|--------|
+| `land` | クリーチャーがいる土地 | 上下キー選択 |
+| `player` | プレイヤー | 上下キー選択 or `self` |
+| `all_creatures` | 全クリーチャー（条件付き） | なし（自動適用） |
+
+**owner_filter**（土地系）: `own`, `enemy`, `any`  
+**target_filter**（土地系）: `creature`（クリーチャー必須）  
+**target_filter**（プレイヤー系）: `self`（自分自身のみ）
+
 ---
 
 ## 実行フロー

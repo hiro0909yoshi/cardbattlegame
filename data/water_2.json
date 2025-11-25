@@ -225,7 +225,18 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・対象敵領地に呪い戦闘行動不可]"
+	  "ability_detail": "秘術[G50・対象敵領地に呪い戦闘行動不可]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "戦闘行動不可",
+			"cost": 50,
+			"spell_id": 2068
+		  }
+		],
+		"effects": []
+	  }
 	},
 	{
 	  "id": 133,

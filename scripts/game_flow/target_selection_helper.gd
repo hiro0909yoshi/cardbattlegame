@@ -318,6 +318,13 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 							if tile_element not in required_elements:
 								continue
 						
+						# クリーチャー存在チェック（target_filter: "creature"）
+						var target_filter = target_info.get("target_filter", "")
+						if target_filter == "creature":
+							var creature = tile_info.get("creature", {})
+							if creature.is_empty():
+								continue
+						
 						# 条件を満たす土地を追加
 						var land_target = {
 							"type": "land",

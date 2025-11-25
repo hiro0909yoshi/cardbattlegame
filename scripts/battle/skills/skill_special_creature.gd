@@ -137,7 +137,7 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 ## @param self_participant 装備者（攻撃側 or 防御側）
 ## @param enemy_participant 敵（無効化対象）
 static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
-	# 装備者がウォーロックディスクを持っているかチェック
+	# 1. 装備者がウォーロックディスクを持っているかチェック
 	var has_warlock_disk = false
 	var items = self_participant.creature_data.get("items", [])
 	
@@ -153,11 +153,21 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 		if has_warlock_disk:
 			break
 	
-	if not has_warlock_disk:
+	# 2. 敵に skill_nullify 呪いがついているかチェック
+	var enemy_curse = enemy_participant.creature_data.get("curse", {})
+	var enemy_has_skill_nullify = enemy_curse.get("curse_type") == "skill_nullify"
+	
+	# どちらも該当しなければ何もしない
+	if not has_warlock_disk and not enemy_has_skill_nullify:
 		return
 	
-	print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
+	# ログ出力（発動元を区別）
+	if has_warlock_disk:
+		print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
 		  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
+	elif enemy_has_skill_nullify:
+		var curse_name = enemy_curse.get("name", "戦闘能力不可")
+		print("【呪い発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	
 	# 敵のクリーチャー固有スキルを無効化
 	if enemy_participant.creature_data.has("ability_parsed"):

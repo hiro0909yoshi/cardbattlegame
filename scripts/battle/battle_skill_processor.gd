@@ -31,10 +31,13 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
-	# 🚫 【最優先】ウォーロックディスクチェック: どちらかが装備している場合、全スキル処理をスキップ
+	# 🚫 【最優先】能力無効化チェック: ウォーロックディスク or skill_nullify呪いがある場合
 	var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
-	if _has_warlock_disk(attacker) or _has_warlock_disk(defender):
-		print("【ウォーロックディスク発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
+	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) or \
+					  _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender)
+	
+	if has_nullify:
+		print("【能力無効化発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
 		# 敵の能力を無効化
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
@@ -780,3 +783,7 @@ func _has_warlock_disk(participant: BattleParticipant) -> bool:
 				return true
 	
 	return false
+
+## skill_nullify 呪いを持っているかチェック
+func _has_skill_nullify_curse(participant: BattleParticipant) -> bool:
+	return SpellCurseBattle.has_skill_nullify(participant.creature_data)
