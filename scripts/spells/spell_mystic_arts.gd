@@ -58,15 +58,11 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	var cost = mystic_art.get("cost", 0)
 	var player_magic = context.get("player_magic", 0)
 	
-	print("[SpellMysticArts] can_cast: cost=%d, player_magic=%d" % [cost, player_magic])
-	
 	if player_magic < cost:
-		print("[SpellMysticArts] 失敗: 魔力不足")
 		return false
 	
 	# スペル未使用確認
 	if context.get("spell_used_this_turn", false):
-		print("[SpellMysticArts] 失敗: スペル使用済み")
 		return false
 	
 	# クリーチャーが行動可能か確認（ダウン状態チェック）
@@ -74,12 +70,10 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	if caster_tile_index != -1:
 		var caster_tile = board_system_ref.tile_nodes.get(caster_tile_index)
 		if caster_tile and caster_tile.is_down():
-			print("[SpellMysticArts] 失敗: ダウン状態")
 			return false  # ダウン状態のクリーチャーは秘術使用不可
 	
 	# ターゲット有無確認
 	if not _has_valid_target(mystic_art, context):
-		print("[SpellMysticArts] 失敗: 有効なターゲットなし")
 		return false
 	
 	return true
@@ -111,9 +105,6 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 		return false
 	
 	var valid_targets = spell_phase_handler_ref._get_valid_targets(target_type, target_filter)
-	
-	print("[SpellMysticArts] _has_valid_target: type=%s, filter=%s, count=%d" % [target_type, target_filter, valid_targets.size()])
-	
 	return valid_targets.size() > 0
 
 
@@ -149,7 +140,7 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 		push_error("[SpellMysticArts] spell_id=%d のスペルが見つかりません" % spell_id)
 		return false
 	
-	print("[SpellMysticArts] スペル参照: %s (ID=%d)" % [spell_data.get("name", "Unknown"), spell_id])
+	
 	
 	var effect_parsed = spell_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
@@ -175,8 +166,6 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 		return false
 	
 	var effect_type = effect.get("effect_type", "")
-	
-	print("[SpellMysticArts] effect_type='%s'" % effect_type)
 	
 	# 秘術固有の処理（秘術専用effect_typeのみここで処理）
 	match effect_type:
@@ -223,12 +212,12 @@ func _apply_damage(effect: Dictionary, target_data: Dictionary, _context: Dictio
 	var value = effect.get("value", 0)
 	
 	if target_tile_index == -1 or value <= 0:
-		print("[SpellMysticArts] ダメージ適用失敗: tile_index=%d, value=%d" % [target_tile_index, value])
+		
 		return false
 	
 	var tile = board_system_ref.tile_nodes.get(target_tile_index)
 	if not tile or not tile.creature_data or tile.creature_data.is_empty():
-		print("[SpellMysticArts] ダメージ適用失敗: タイル/クリーチャーが無効")
+		
 		return false
 	
 	var creature = tile.creature_data
@@ -271,12 +260,6 @@ func _apply_curse_attack(effect: Dictionary, target_data: Dictionary, _context: 
 	# 呪い効果の追加（effect_system実装時に対応）
 	# TODO: 呪いシステム実装後に実装
 	
-	print("[SpellMysticArts] 呪いの一撃: %s に %s（%d ターン）" % [
-		tile.creature_data.get("name", "Unknown"),
-		curse_type,
-		duration
-	])
-	
 	return true
 
 
@@ -303,7 +286,7 @@ func _apply_steal_magic(effect: Dictionary, target_data: Dictionary, context: Di
 	# 使用者に付与
 	player_system_ref.add_magic(caster_player_id, stolen)
 	
-	print("[SpellMysticArts] 魔力窃取: %dMP 奪取" % stolen)
+	
 	
 	return true
 
@@ -334,7 +317,7 @@ func _apply_mass_buff(effect: Dictionary, _target_data: Dictionary, context: Dic
 			
 			affected_count += 1
 	
-	print("[SpellMysticArts] 一括バフ: %d体に AP+%d HP+%d" % [affected_count, ap_bonus, hp_bonus])
+	
 	
 	return affected_count > 0
 
@@ -357,13 +340,11 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 	# 不屈スキルで例外処理（ランドシステム仕様に準拠）
 	# 不屈を持つクリーチャーはダウン状態にならない
 	if _has_unyielding(creature_data):
-		print("[秘術] 不屈により、『%s』はダウン状態になりません" % creature_data.get("name", "Unknown"))
-		return
+				return
 	
 	# ダウン状態を設定
 	if caster_tile.has_method("set_down"):
 		caster_tile.set_down(true)
-		print("[秘術] 『%s』はダウン状態になりました" % creature_data.get("name", "Unknown"))
 	else:
 		push_warning("[SpellMysticArts] タイルに set_down() メソッドがありません")
 

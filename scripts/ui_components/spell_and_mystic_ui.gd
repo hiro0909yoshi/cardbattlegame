@@ -107,11 +107,6 @@ func show_creature_selection(creatures: Array):
 	creature_list.visible = true
 	mystic_art_list.visible = false
 	cancel_button.visible = true
-	
-	# デバッグ情報
-	print("[SpellAndMysticUI] クリーチャー選択UI表示 - %d 個" % creatures.size())
-	print("[SpellAndMysticUI] creature_list.position=%s, size=%s" % [creature_list.position, creature_list.size])
-	print("[SpellAndMysticUI] creature_list.mouse_filter=%d" % creature_list.mouse_filter)
 
 func show_mystic_art_selection(mystic_arts: Array):
 	"""秘術選択を表示"""
@@ -127,8 +122,6 @@ func show_mystic_art_selection(mystic_arts: Array):
 	creature_list.visible = false
 	mystic_art_list.visible = true
 	cancel_button.visible = true
-	
-	print("[SpellAndMysticUI] 秘術選択UI表示 - %d 個" % mystic_arts.size())
 
 func hide_all():
 	"""全UI非表示"""
@@ -140,15 +133,12 @@ func _on_creature_selected(index: int):
 	"""クリーチャーが選択された（item_selectedシグナル）"""
 	selected_creature_index = index
 	creature_selected.emit(index)
-	print("[SpellAndMysticUI] クリーチャー選択: インデックス %d" % index)
 
 func _on_mystic_art_selected(index: int):
 	"""秘術が選択された（item_selectedシグナル）"""
 	mystic_art_selected.emit(index)
-	print("[SpellAndMysticUI] 秘術選択: インデックス %d" % index)
 
 func _on_cancel_button_pressed():
 	"""キャンセルボタンが押された"""
 	hide_all()
 	selection_cancelled.emit()
-	print("[SpellAndMysticUI] キャンセル")
