@@ -643,8 +643,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			_apply_damage_effect(effect, target_data)
 		
 		"drain_magic":
-			# 魔力を奪う
-			_apply_drain_magic_effect(effect, target_data)
+			# 魔力を奪う（SpellMagicに委譲）
+			if target_data.get("type", "") == "player" and game_flow_manager and game_flow_manager.spell_magic:
+				var target_player_id = target_data.get("player_id", -1)
+				if target_player_id >= 0:
+					game_flow_manager.spell_magic.drain_magic_from_effect(effect, target_player_id, current_player_id)
 		
 		"dice_fixed", "dice_range", "dice_multi", "dice_range_magic":
 			# ダイス系効果（統合処理）
@@ -731,30 +734,6 @@ func _apply_damage_effect(effect: Dictionary, target_data: Dictionary):
 		tile.update_visual()
 
 ## 魔力奪取効果
-func _apply_drain_magic_effect(effect: Dictionary, target_data: Dictionary):
-	if target_data.get("type", "") != "player" or not player_system:
-		return
-	
-	var target_player_id = target_data.get("player_id", -1)
-	if target_player_id < 0:
-		return
-	
-	var value = effect.get("value", 0)
-	var current_magic = player_system.get_magic(target_player_id)
-	var value_type = effect.get("value_type", "fixed")
-	
-	var drain_amount = 0
-	if value_type == "percentage":
-		drain_amount = int(current_magic * value / 100.0)
-	else:
-		drain_amount = value
-	
-	drain_amount = min(drain_amount, current_magic)  # 所持魔力以上は奪えない
-	
-	# 魔力を移動
-	player_system.add_magic(target_player_id, -drain_amount)
-	player_system.add_magic(current_player_id, drain_amount)
-
 ## カメラを使用者に戻す
 func _return_camera_to_player():
 	if not player_system or not board_system:

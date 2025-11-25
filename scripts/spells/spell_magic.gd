@@ -112,3 +112,50 @@ func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 		  to_player_id + 1, " +", actual_amount, "G")
 	
 	return actual_amount
+
+
+## 魔力奪取（effect辞書から）
+func drain_magic_from_effect(effect: Dictionary, from_player_id: int, to_player_id: int) -> int:
+	"""
+	effect辞書に基づいて魔力を奪う
+	
+	引数:
+	  effect: 効果辞書 {value, value_type: "fixed"|"percentage"}
+	  from_player_id: 奪われるプレイヤーID
+	  to_player_id: 奪うプレイヤーID
+	
+	戻り値:
+	  実際に奪った量
+	"""
+	if not player_system_ref:
+		push_error("SpellMagic: PlayerSystemが設定されていません")
+		return 0
+	
+	var value = effect.get("value", 0)
+	var value_type = effect.get("value_type", "fixed")
+	
+	if value <= 0:
+		return 0
+	
+	var current_magic = player_system_ref.get_magic(from_player_id)
+	
+	var drain_amount = 0
+	if value_type == "percentage":
+		drain_amount = int(current_magic * value / 100.0)
+	else:
+		drain_amount = value
+	
+	# 実際に奪える量（所持魔力以上は奪えない）
+	drain_amount = min(drain_amount, current_magic)
+	
+	if drain_amount <= 0:
+		return 0
+	
+	# 魔力を移動
+	player_system_ref.add_magic(from_player_id, -drain_amount)
+	player_system_ref.add_magic(to_player_id, drain_amount)
+	
+	print("[魔力奪取] プレイヤー", from_player_id + 1, " -", drain_amount, "G → プレイヤー", 
+		  to_player_id + 1, " +", drain_amount, "G (", value_type, ")")
+	
+	return drain_amount
