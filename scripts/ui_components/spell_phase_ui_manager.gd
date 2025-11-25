@@ -44,14 +44,6 @@ func create_mystic_button(parent: Node) -> Button:
 	# add_child() 後に position/size を再度設定（親の layout システムが上書きを防ぐため）
 	_update_button_positions()
 	
-	var viewport_size = get_viewport().get_visible_rect().size
-	print("[SpellPhaseUIManager] 秘術ボタン作成: size=", mystic_button.size, " position=", mystic_button.position)
-	
-	# デバッグ: layout情報を出力
-	var layout_mystic = card_ui_helper.calculate_card_layout(viewport_size, 6) if card_ui_helper else null
-	if layout_mystic:
-		print("  layout: start_x=", layout_mystic.start_x, " card_width=", layout_mystic.card_width, " spacing=", layout_mystic.spacing)
-	
 	return mystic_button
 
 
@@ -76,14 +68,6 @@ func create_spell_skip_button(parent: Node) -> Button:
 	
 	# add_child() 後に position/size を再度設定（親の layout システムが上書きを防ぐため）
 	_update_button_positions()
-	
-	var viewport_size2 = get_viewport().get_visible_rect().size
-	print("[SpellPhaseUIManager] スペルボタン作成: size=", spell_skip_button.size, " position=", spell_skip_button.position)
-	
-	# デバッグ: layout情報を出力
-	var layout = card_ui_helper.calculate_card_layout(viewport_size2, 6) if card_ui_helper else null
-	if layout:
-		print("  layout: start_x=", layout.start_x, " card_width=", layout.card_width, " spacing=", layout.spacing)
 	
 	return spell_skip_button
 
