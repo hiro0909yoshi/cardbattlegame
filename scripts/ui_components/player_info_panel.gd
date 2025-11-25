@@ -2,7 +2,10 @@ extends Node
 class_name PlayerInfoPanel
 
 # プレイヤー情報パネル管理クラス（3D対応版）
-# 各プレイヤーの魔力、土地数、総資産、連鎖情報を表示
+# 各プレイヤーの魔力、総魔力情報を簡潔に表示
+
+# シグナル
+signal player_panel_clicked(player_id: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -19,6 +22,13 @@ var board_system_ref = null
 # 設定
 var panel_count = 2       # 表示するパネル数
 var current_turn_player = -1  # 現在のターンプレイヤー
+
+# パネルサイズ（固定値）
+var panel_width = 160
+var panel_height = 105
+var panel_spacing = 10
+var start_x = 20
+var start_y = 20
 
 func _ready():
 	pass
@@ -45,58 +55,55 @@ func create_panels():
 func create_single_panel(player_id: int) -> Panel:
 	var info_panel = Panel.new()
 	
-	# 画面サイズに応じた配置（横4分割）
-	var viewport_size = get_viewport().get_visible_rect().size
-	var area_width = viewport_size.x / 4
-	var margin = 50
-	var panel_width = area_width - margin
-	var panel_height = 240
-	
-	# プレイヤーIDに応じた位置（0-3で左から順番）
-	var panel_x = (area_width * player_id) + int(margin / 2.0)
-	var panel_y = 20  # 上部に配置
+	# 縦積み配置（左上から順に）
+	var panel_x = start_x
+	var panel_y = start_y + (panel_height + panel_spacing) * player_id
 	
 	info_panel.position = Vector2(panel_x, panel_y)
 	info_panel.size = Vector2(panel_width, panel_height)
-	info_panel.visible = true  # 明示的に表示
+	info_panel.visible = true
 	
 	# パネルスタイル設定
 	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.5)
+	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.7)
 	panel_style.border_width_left = 2
 	panel_style.border_width_right = 2
 	panel_style.border_width_top = 2
 	panel_style.border_width_bottom = 2
 	
-	# プレイヤーカラーで枠線
+	# プレイヤーカラーで枠線（GameConstants.PLAYER_COLORS を使用）
 	if player_id < GameConstants.PLAYER_COLORS.size():
-		# 黄色系の色調整（プレイヤー1用）
-		if player_id == 0:
-			panel_style.border_color = Color(1, 1, 0, 0.8)
-		else:
-			panel_style.border_color = Color(0, 0.5, 1, 0.8)
+		panel_style.border_color = GameConstants.PLAYER_COLORS[player_id]
+	else:
+		panel_style.border_color = Color(0.5, 0.5, 0.5, 0.8)
 	
 	info_panel.add_theme_stylebox_override("panel", panel_style)
 	
-	# 情報ラベル作成（パネルサイズに応じて調整）
+	# パネルのマウスフィルター設定（クリック検出を有効にする）
+	info_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# 情報ラベル作成
 	var info_label = RichTextLabel.new()
-	info_label.position = Vector2(10, 10)
-	info_label.size = Vector2(panel_width - 20, panel_height - 20)
+	info_label.position = Vector2(8, 8)
+	info_label.size = Vector2(panel_width - 16, panel_height - 16)
 	info_label.bbcode_enabled = true
 	
-	# スクロールとクリップの設定
-	info_label.scroll_active = false  # スクロール無効
-	info_label.fit_content = false    # 内容に合わせて拡大しない
-	info_label.clip_contents = true   # はみ出た部分をクリップ
+	# マウスイベントを親に渡す（パネルクリックを優先）
+	info_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# フォントサイズ（少し小さめに調整）
-	var font_size = int(panel_width / 25)  # パネル幅の4%程度
-	if font_size < 11:
-		font_size = 11  # 最小フォントサイズ
-	info_label.add_theme_font_size_override("normal_font_size", font_size)
-	info_label.visible = true  # 明示的に表示
+	# スクロールとクリップの設定
+	info_label.scroll_active = false
+	info_label.fit_content = false
+	info_label.clip_contents = true
+	
+	# フォントサイズを固定値に（魔力・総魔力表示用に大きめに）
+	info_label.add_theme_font_size_override("normal_font_size", 20)
+	info_label.visible = true
 	info_panel.add_child(info_label)
 	info_labels.append(info_label)
+	
+	# クリック検出を接続
+	info_panel.gui_input.connect(_on_panel_clicked.bind(player_id))
 	
 	return info_panel
 
@@ -123,7 +130,7 @@ func update_single_panel(player_id: int):
 	var text = build_player_info_text(player, player_id)
 	info_labels[player_id].text = text
 
-# プレイヤー情報テキストを構築（簡素化版）
+# プレイヤー情報テキストを構築（簡潔版）
 func build_player_info_text(player, player_id: int) -> String:
 	var text = ""
 	
@@ -131,28 +138,9 @@ func build_player_info_text(player, player_id: int) -> String:
 	if player_id == current_turn_player:
 		text += "[color=yellow]● [/color]"
 	
-	text += "[b]" + player.name + "[/b]
-"
-	
-	
-	# 魔力
-	text += "魔力: " + str(player.magic_power) + "G
-"
-	
-	# 土地数
-	var land_count = get_land_count(player_id)
-	text += "土地: " + str(land_count) + "個
-"
-	
-	# 総資産
-	var total_assets = calculate_total_assets(player_id)
-	text += "総資産: " + str(total_assets) + "G
-"
-	
-	# 属性連鎖
-	var chain_info = get_chain_info(player_id)
-	if chain_info != "なし":
-		text += "連鎖: " + chain_info
+	text += "[b]" + player.name + "[/b]\n"
+	text += "魔力: " + str(player.magic_power) + "G\n"
+	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G"
 	
 	return text
 
@@ -229,6 +217,11 @@ func get_chain_info(player_id: int) -> String:
 	
 	return chain_text
 
+# パネルがクリックされたときのハンドラ
+func _on_panel_clicked(event: InputEvent, player_id: int):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		emit_signal("player_panel_clicked", player_id)
+
 # 現在のターンプレイヤーを設定
 func set_current_turn(player_id: int):
 	current_turn_player = player_id
@@ -248,6 +241,53 @@ func set_visible(visible: bool):
 func set_panel_position(player_id: int, position: Vector2):
 	if player_id >= 0 and player_id < panels.size():
 		panels[player_id].position = position
+
+# 属性を英語から日本語にマッピング
+var ELEMENT_MAP = {
+	"fire": "火",
+	"water": "水",
+	"wind": "風",
+	"earth": "土",
+	"neutral": "無",
+	"checkpoint": "無"
+}
+
+# 土地情報を属性ごとに取得（ステータスダイアログ用）
+func get_lands_by_element(player_id: int) -> Dictionary:
+	var element_counts = {"火": 0, "水": 0, "風": 0, "土": 0, "無": 0}
+	
+	if not board_system_ref:
+		return element_counts
+	
+	# tile_nodes を優先的に使用（クリーチャー情報も必要なため）
+	if "tile_nodes" in board_system_ref:
+		for i in board_system_ref.tile_nodes:
+			var tile = board_system_ref.tile_nodes[i]
+			if tile.owner_id == player_id:
+				var english_element = tile.tile_type
+				var jp_element = ELEMENT_MAP.get(english_element, "無")
+				print("[PlayerInfoPanel] 土地: tile ", i, " type=", english_element, " -> ", jp_element)
+				if jp_element in element_counts:
+					element_counts[jp_element] += 1
+	
+	print("[PlayerInfoPanel] 土地カウント結果: ", element_counts)
+	return element_counts
+
+# 保有クリーチャー情報を取得（ステータスダイアログ用）
+func get_creatures_on_lands(player_id: int) -> Array:
+	var creatures = []
+	
+	if not board_system_ref:
+		return creatures
+	
+	# tile_nodes から直接クリーチャーを取得（get_tile_data_array には creature がないため）
+	if "tile_nodes" in board_system_ref:
+		for i in board_system_ref.tile_nodes:
+			var tile = board_system_ref.tile_nodes[i]
+			if tile.owner_id == player_id:
+				if tile.creature_data and not tile.creature_data.is_empty():
+					creatures.append(tile.creature_data)
+	return creatures
 
 # クリーンアップ
 func cleanup():

@@ -16,6 +16,7 @@ var phase_display: PhaseDisplay = null
 
 # UIコンポーネント（動的ロード用）
 var player_info_panel = null
+var player_status_dialog = null
 var card_selection_ui = null
 var level_up_ui = null
 var debug_panel = null
@@ -93,6 +94,13 @@ func _ready():
 		phase_display.name = "PhaseDisplay"
 		add_child(phase_display)
 	
+	# PlayerStatusDialog初期化
+	var PlayerStatusDialogClass = load("res://scripts/ui_components/player_status_dialog.gd")
+	if PlayerStatusDialogClass:
+		player_status_dialog = PlayerStatusDialogClass.new()
+		player_status_dialog.name = "PlayerStatusDialog"
+		add_child(player_status_dialog)
+	
 	# シグナル接続
 	connect_ui_signals()
 
@@ -115,6 +123,10 @@ func connect_ui_signals():
 	# PhaseDisplay
 	if phase_display:
 		phase_display.dice_button_pressed.connect(_on_dice_button_pressed)
+	
+	# PlayerInfoPanel
+	if player_info_panel:
+		player_info_panel.player_panel_clicked.connect(_on_player_panel_clicked)
 
 # UIを作成
 func create_ui(parent: Node):
@@ -155,6 +167,9 @@ func create_ui(parent: Node):
 	if debug_panel and debug_panel.has_method("initialize"):
 		debug_panel.initialize(ui_layer, card_system_ref, null, player_system_ref, game_flow_manager_ref)  # board_systemはnullで初期化
 		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定で設定
+	
+	if player_status_dialog and player_status_dialog.has_method("initialize"):
+		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -408,3 +423,10 @@ func get_player_card_nodes(player_id: int) -> Array:
 	if hand_display:
 		return hand_display.get_player_card_nodes(player_id)
 	return []
+
+# === プレイヤーパネル関連 ===
+
+# プレイヤー情報パネルがクリックされたときのハンドラ
+func _on_player_panel_clicked(player_id: int):
+	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
+		player_status_dialog.show_for_player(player_id)
