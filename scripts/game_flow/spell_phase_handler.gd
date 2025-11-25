@@ -21,6 +21,10 @@ var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
+
+## 秘術選択状態
+var selected_mystic_art: Dictionary = {}
+var selected_mystic_creature: Dictionary = {}
 var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立でデッキに戻る）
 
 ## デバッグ設定
@@ -258,10 +262,22 @@ func _select_mystic_art(selected_creature: Dictionary, spell_and_mystic_ui: Cont
 	await _select_mystic_arts_target(selected_creature, selected_mystic_art, current_player.id)
 
 ## ターゲット選択
-func _select_mystic_arts_target(selected_creature: Dictionary, selected_mystic_art: Dictionary, player_id: int):
-	"""秘術のターゲットを選択"""
-	var target_type = selected_mystic_art.get("target_type", "")
-	var target_filter = selected_mystic_art.get("target_filter", "any")
+func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dictionary, player_id: int):
+	"""秘術のターゲットを選択（既存のターゲット選択UIを流用）"""
+	var target_type = mystic_art.get("target_type", "")
+	var target_filter = mystic_art.get("target_filter", "any")
+	var target_info = {}
+	
+	# spell_idがある場合はスペルデータからターゲット情報を取得
+	var spell_id = mystic_art.get("spell_id", -1)
+	if spell_id > 0:
+		var spell_data = CardLoader.get_card_by_id(spell_id)
+		if not spell_data.is_empty():
+			var effect_parsed = spell_data.get("effect_parsed", {})
+			target_type = effect_parsed.get("target_type", target_type)
+			target_info = effect_parsed.get("target_info", {})
+			target_filter = target_info.get("owner_filter", target_info.get("target_filter", "any"))
+			print("[spell_phase_handler] スペル参照: %s (ID=%d)" % [spell_data.get("name", "Unknown"), spell_id])
 	
 	print("[spell_phase_handler] ターゲット選択開始 - タイプ: %s, フィルター: %s" % [target_type, target_filter])
 	
@@ -272,80 +288,94 @@ func _select_mystic_arts_target(selected_creature: Dictionary, selected_mystic_a
 			"tile_index": selected_creature.get("tile_index", -1)
 		}
 		print("[spell_phase_handler] セルフターゲット自動選択")
-		await _execute_mystic_art(selected_creature, selected_mystic_art, target_data, player_id)
+		await _execute_mystic_art(selected_creature, mystic_art, target_data, player_id)
 		return
 	
-	# 通常ターゲット選択
-	var target_info = {
-		"filter": target_filter
-	}
+	# 秘術選択状態を保存（ターゲット確定時に使用）
+	selected_mystic_creature = selected_creature
+	selected_mystic_art = mystic_art
 	
-	var available_targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
+	# 通常ターゲット選択（spell_idがない場合のみtarget_infoを設定）
+	if target_info.is_empty():
+		target_info = {
+			"filter": target_filter
+		}
 	
-	if available_targets.is_empty():
+	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
+	
+	if targets.is_empty():
 		print("[spell_phase_handler] 有効なターゲットがありません")
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "有効なターゲットがありません"
+		_clear_mystic_art_selection()
 		return
 	
-	print("[spell_phase_handler] 利用可能なターゲット数: %d" % available_targets.size())
+	print("[spell_phase_handler] 利用可能なターゲット数: %d" % targets.size())
 	
-	# ターゲット選択（最初のターゲットを自動選択）
-	if available_targets.is_empty():
-		print("[spell_phase_handler] ターゲット選択がキャンセルされました")
-		TargetSelectionHelper.clear_selection(self)
-		return
+	# スペルと同じ方式でターゲット選択開始
+	available_targets = targets
+	current_target_index = 0
+	current_state = State.SELECTING_TARGET
 	
-	# TODO: ターゲット選択UI（既存のスペルターゲット選択を流用する予定）
-	# 暫定：最初のターゲットを自動選択
-	var selected_target = available_targets[0]
-	print("[spell_phase_handler] ターゲット選択完了（自動選択: %s）" % str(selected_target))
-	
-	# 秘術を実行
-	await _execute_mystic_art(selected_creature, selected_mystic_art, selected_target, player_id)
+	# 最初の対象を表示
+	_update_target_selection()
 
 ## 秘術実行
-func _execute_mystic_art(selected_creature: Dictionary, selected_mystic_art: Dictionary, target_data: Dictionary, player_id: int):
+func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary, player_id: int):
 	"""秘術効果を実行"""
 	print("[spell_phase_handler] 秘術実行開始")
+	
+	current_state = State.EXECUTING_EFFECT
 	
 	# 発動判定
 	var context = {
 		"player_id": player_id,
 		"player_magic": player_system.get_magic(player_id),
 		"spell_used_this_turn": spell_used_this_turn,
-		"tile_index": selected_creature.get("tile_index", -1)
+		"tile_index": creature.get("tile_index", -1)
 	}
 	
-	if not spell_mystic_arts.can_cast_mystic_art(selected_mystic_art, context):
+	if not spell_mystic_arts.can_cast_mystic_art(mystic_art, context):
 		print("[spell_phase_handler] 秘術発動条件を満たしていません")
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "秘術発動条件を満たしていません"
+		_clear_mystic_art_selection()
+		current_state = State.WAITING_FOR_INPUT
 		return
 	
 	# 秘術効果を適用
-	var success = spell_mystic_arts.apply_mystic_art_effect(selected_mystic_art, target_data, context)
+	var success = spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
 	
 	if success:
 		# 魔力消費
-		var cost = selected_mystic_art.get("cost", 0)
-		player_system.consume_magic(player_id, cost)
+		var cost = mystic_art.get("cost", 0)
+		player_system.add_magic(player_id, -cost)
 		spell_used_this_turn = true
 		
 		# キャスターをダウン状態に設定
-		spell_mystic_arts._set_caster_down_state(selected_creature.get("tile_index", -1))
+		spell_mystic_arts._set_caster_down_state(creature.get("tile_index", -1), board_system)
 		
 		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "『%s』を発動しました！" % selected_mystic_art.get("name", "Unknown")
+			ui_manager.phase_label.text = "『%s』を発動しました！" % mystic_art.get("name", "Unknown")
 		
 		print("[spell_phase_handler] 秘術発動成功")
+		
+		# 排他制御：秘術使用後はスペルUI非表示
+		_on_mystic_art_used()
 	else:
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "秘術の発動に失敗しました"
 		print("[spell_phase_handler] 秘術発動失敗")
 	
+	# 秘術選択状態をクリア
+	_clear_mystic_art_selection()
+	
 	# ターゲット選択をクリア
 	TargetSelectionHelper.clear_selection(self)
+	
+	# スペルフェーズ完了
+	await get_tree().create_timer(0.5).timeout
+	complete_spell_phase()
 
 ## CPUのスペル使用判定（簡易版）
 func _handle_cpu_spell_turn():
@@ -541,14 +571,28 @@ func _confirm_target_selection():
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
 	
-	execute_spell_effect(selected_spell_card, selected_target)
+	# 秘術かスペルかで分岐
+	if not selected_mystic_art.is_empty():
+		# 秘術実行
+		var player_id = player_system.get_current_player().id if player_system else current_player_id
+		_execute_mystic_art(selected_mystic_creature, selected_mystic_art, selected_target, player_id)
+	else:
+		# スペル実行
+		execute_spell_effect(selected_spell_card, selected_target)
 
 ## 対象選択をキャンセル
 func _cancel_target_selection():
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
 	
-	cancel_spell()
+	# 秘術かスペルかで分岐
+	if not selected_mystic_art.is_empty():
+		# 秘術キャンセル
+		_clear_mystic_art_selection()
+		current_state = State.WAITING_FOR_INPUT
+	else:
+		# スペルキャンセル
+		cancel_spell()
 
 ## スペルをキャンセル
 func cancel_spell():
@@ -650,6 +694,9 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 能力値上昇呪い（バイタリティ等）
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
+				var value = effect.get("value", 20)
+				var effect_name = effect.get("name", "能力値+%d" % value)
+				print("[spell_phase_handler] stat_boost: タイル%d に %s (AP&HP+%d)" % [tile_index, effect_name, value])
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_stat_boost(tile_index, effect)
 		
@@ -700,6 +747,17 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse_toll:
 					game_flow_manager.spell_curse_toll.apply_peace(tile_index)
+		
+		"draw":
+			# カードドロー
+			var count = effect.get("count", 1)
+			if card_system:
+				for i in range(count):
+					var drawn = card_system.draw_card_for_player(current_player_id)
+					if not drawn.is_empty():
+						print("[spell_phase_handler] ドロー: %s" % drawn.get("name", "Unknown"))
+					else:
+						print("[spell_phase_handler] ドロー失敗（デッキ切れ？）")
 		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
@@ -846,6 +904,11 @@ func is_spell_phase_active() -> bool:
 	return current_state != State.INACTIVE
 
 # ============ 秘術システム対応（新規追加）============
+
+## 秘術選択状態をクリア
+func _clear_mystic_art_selection():
+	selected_mystic_art = {}
+	selected_mystic_creature = {}
 
 ## 秘術が利用可能か確認
 func has_available_mystic_arts(player_id: int) -> bool:

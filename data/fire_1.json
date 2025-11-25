@@ -71,17 +71,10 @@
 				"mystic_arts": [
 					{
 						"id": "amon_mystic_001",
-						"name": "業火の矢",
-						"description": "敵クリーチャーに30ダメージを与える秘術",
-						"cost": 50,
-						"target_type": "creature",
-						"target_filter": "enemy",
-						"effects": [
-							{
-								"effect_type": "damage",
-								"value": 30
-							}
-						]
+						"name": "バイタリティ",
+						"description": "対象領地に呪い\"能力値+20\"；カードを1枚引く",
+						"spell_id": 2066,
+						"cost": 50
 					}
 				]
 			}

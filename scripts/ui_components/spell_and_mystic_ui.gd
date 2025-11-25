@@ -16,6 +16,10 @@ var available_creatures: Array = []
 var selected_creature_index: int = -1
 
 func _ready():
+	# 親Controlの設定（マウス入力を子に通す）
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	
 	_create_ui_elements()
 	_setup_signals()
 
@@ -26,20 +30,29 @@ func _create_ui_elements():
 	creature_list = ItemList.new()
 	creature_list.name = "CreatureList"
 	creature_list.custom_minimum_size = Vector2(300, 250)
-	creature_list.item_clicked.connect(_on_creature_selected)
+	creature_list.select_mode = ItemList.SELECT_SINGLE
+	creature_list.allow_reselect = true
+	creature_list.z_index = 100
+	creature_list.mouse_filter = Control.MOUSE_FILTER_STOP
+	creature_list.item_selected.connect(_on_creature_selected)
 	add_child(creature_list)
 	
 	# 秘術リスト
 	mystic_art_list = ItemList.new()
 	mystic_art_list.name = "MysticArtList"
 	mystic_art_list.custom_minimum_size = Vector2(300, 250)
-	mystic_art_list.item_clicked.connect(_on_mystic_art_selected)
+	mystic_art_list.select_mode = ItemList.SELECT_SINGLE
+	mystic_art_list.allow_reselect = true
+	mystic_art_list.z_index = 100
+	mystic_art_list.mouse_filter = Control.MOUSE_FILTER_STOP
+	mystic_art_list.item_selected.connect(_on_mystic_art_selected)
 	add_child(mystic_art_list)
 	mystic_art_list.visible = false
 	
 	# キャンセルボタン
 	cancel_button = Button.new()
 	cancel_button.text = "キャンセル"
+	cancel_button.z_index = 100
 	cancel_button.pressed.connect(_on_cancel_button_pressed)
 	add_child(cancel_button)
 	
@@ -88,11 +101,17 @@ func show_creature_selection(creatures: Array):
 		var name_text = creature_data.get("name", "Unknown")
 		creature_list.add_item(name_text)
 	
+	# 位置を再計算
+	_update_positions()
+	
 	creature_list.visible = true
 	mystic_art_list.visible = false
 	cancel_button.visible = true
 	
+	# デバッグ情報
 	print("[SpellAndMysticUI] クリーチャー選択UI表示 - %d 個" % creatures.size())
+	print("[SpellAndMysticUI] creature_list.position=%s, size=%s" % [creature_list.position, creature_list.size])
+	print("[SpellAndMysticUI] creature_list.mouse_filter=%d" % creature_list.mouse_filter)
 
 func show_mystic_art_selection(mystic_arts: Array):
 	"""秘術選択を表示"""
@@ -118,13 +137,13 @@ func hide_all():
 	cancel_button.visible = false
 
 func _on_creature_selected(index: int):
-	"""クリーチャーが選択された"""
+	"""クリーチャーが選択された（item_selectedシグナル）"""
 	selected_creature_index = index
 	creature_selected.emit(index)
 	print("[SpellAndMysticUI] クリーチャー選択: インデックス %d" % index)
 
 func _on_mystic_art_selected(index: int):
-	"""秘術が選択された"""
+	"""秘術が選択された（item_selectedシグナル）"""
 	mystic_art_selected.emit(index)
 	print("[SpellAndMysticUI] 秘術選択: インデックス %d" % index)
 
