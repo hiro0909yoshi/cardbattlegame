@@ -317,10 +317,10 @@ Card.gd (scripts/)
 - [x] 10個のダイス操作スペル実装
 
 ### Phase 6: 秘術システム実装 ⏳
-- [ ] `mystic_arts`のパース処理
-- [ ] [秘術を使う]ボタンUI作成
-- [ ] SpellPhaseHandlerの拡張
-- [ ] 秘術実行フロー実装
+- [x] `mystic_arts`のパース処理
+- [x] [秘術を使う]ボタンUI作成
+- [x] SpellPhaseHandlerの拡張
+- [x] 秘術実行フロー実装
 
 ---
 

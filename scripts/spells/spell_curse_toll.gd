@@ -53,6 +53,13 @@ func apply_toll_multiplier(tile_index: int, multiplier: float = 1.5):
 		"multiplier": multiplier
 	})
 
+## toll_half_curse: 通行料半減（秘術専用）
+func apply_toll_half_curse(tile_index: int, duration: int = 3):
+	spell_curse.curse_creature(tile_index, "toll_multiplier", duration, {
+		"name": "通行料半減",
+		"multiplier": 0.5
+	})
+
 ## peace: 敵移動除外＋戦闘不可＋通行料0
 func apply_peace(tile_index: int):
 	spell_curse.curse_creature(tile_index, "peace", -1, {
@@ -60,6 +67,39 @@ func apply_peace(tile_index: int):
 		"invasion_disable": true,
 		"toll_zero": true
 	})
+
+# ========================================
+# 汎用呪い適用（秘術用）
+# ========================================
+
+## スペル効果から通行料呪いを適用
+func apply_curse_from_effect(effect: Dictionary, tile_index: int, player_id: int = -1, caster_id: int = -1):
+	var effect_type = effect.get("effect_type", "")
+	var duration = effect.get("duration", -1)
+	
+	match effect_type:
+		"curse_toll_half":
+			apply_toll_half_curse(tile_index, duration)
+		
+		"toll_multiplier", "curse_toll_multiplier":
+			var multiplier = effect.get("multiplier", 1.5)
+			apply_toll_multiplier(tile_index, multiplier)
+		
+		"toll_disable", "curse_toll_disable":
+			apply_toll_disable(player_id, duration)
+		
+		"toll_fixed", "curse_toll_fixed":
+			var value = effect.get("value", 200)
+			apply_toll_fixed(player_id, value, duration)
+		
+		"toll_share", "curse_toll_share":
+			apply_toll_share(player_id, duration, caster_id)
+		
+		"peace", "curse_peace":
+			apply_peace(tile_index)
+		
+		_:
+			print("[SpellCurseToll] 未対応の効果タイプ: ", effect_type)
 
 # ========================================
 # 通行料計算（統合版）

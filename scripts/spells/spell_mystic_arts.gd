@@ -82,7 +82,7 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 ## 有効なターゲットが存在するか確認
 func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 	var target_type = mystic_art.get("target_type", "")
-	var target_filter = mystic_art.get("target_filter", "any")
+	var target_info = {}
 	
 	# spell_idがある場合はスペルデータからターゲット情報を取得
 	var spell_id = mystic_art.get("spell_id", -1)
@@ -91,20 +91,25 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 		if not spell_data.is_empty():
 			var effect_parsed = spell_data.get("effect_parsed", {})
 			target_type = effect_parsed.get("target_type", target_type)
-			var target_info = effect_parsed.get("target_info", {})
-			target_filter = target_info.get("owner_filter", target_info.get("target_filter", "any"))
+			
+			# target_info構造がある場合はそれを使用
+			if effect_parsed.has("target_info"):
+				target_info = effect_parsed.get("target_info", {})
+			else:
+				# なければeffect_parsed直下から構築
+				var target_filter = effect_parsed.get("target_filter", "any")
+				target_info["target_filter"] = target_filter
 	
 	# セルフターゲットは常に有効
-	if target_filter == "self":
+	if target_info.get("target_filter") == "self":
 		return true
 	
-	# spell_phase_handler._get_valid_targets() を呼び出して確認
-	# スペルと秘術で同じターゲット取得ロジックを共用（重複回避）
-	if not spell_phase_handler_ref or not spell_phase_handler_ref.has_method("_get_valid_targets"):
+	# TargetSelectionHelperを直接呼び出してターゲット取得
+	if not spell_phase_handler_ref:
 		push_error("[SpellMysticArts] spell_phase_handler_ref が無効です")
 		return false
 	
-	var valid_targets = spell_phase_handler_ref._get_valid_targets(target_type, target_filter)
+	var valid_targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, target_type, target_info)
 	return valid_targets.size() > 0
 
 

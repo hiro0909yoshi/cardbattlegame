@@ -99,6 +99,30 @@ func _get_target_player_id(target_data: Dictionary, current_player_id: int) -> i
 	return current_player_id
 
 # ========================================
+# 汎用効果適用（統合版）
+# ========================================
+
+## スペル効果から呪いを適用（統合メソッド）
+func apply_effect_from_parsed(effect: Dictionary, target_data: Dictionary, current_player_id: int):
+	var effect_type = effect.get("effect_type", "")
+	
+	match effect_type:
+		"dice_fixed":
+			apply_dice_fixed_effect(effect, target_data, current_player_id)
+		
+		"dice_range":
+			apply_dice_range_effect(effect, target_data, current_player_id)
+		
+		"dice_multi":
+			apply_dice_multi_effect(effect, target_data, current_player_id)
+		
+		"dice_range_magic":
+			apply_dice_range_magic_effect(effect, target_data, current_player_id)
+		
+		_:
+			print("[SpellDice] 未対応の効果タイプ: ", effect_type)
+
+# ========================================
 # ダイス固定スペル
 # ========================================
 

@@ -102,7 +102,19 @@
 	  "ap": 30,
 	  "hp": 60,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G50・対象敵領地に○通行料1/2]"
+	  "ability_detail": "防御型；秘術[G50・対象敵領地に○通行料1/2]",
+	  "ability_parsed": {
+		"keywords": ["防御型", "秘術"],
+		"mystic_arts": [
+		  {
+			"id": "barnacle_mystic_001",
+			"name": "通行料半減",
+			"description": "対象敵領地に通行料半減の呪いをかける（3ターン）",
+			"spell_id": 9001,
+			"cost": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 30,

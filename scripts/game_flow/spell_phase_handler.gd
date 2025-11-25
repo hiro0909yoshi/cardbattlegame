@@ -632,83 +632,24 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 魔力を奪う
 			_apply_drain_magic_effect(effect, target_data)
 		
-		"dice_fixed":
-			# ダイス固定（ホーリーワード6など）
+		"dice_fixed", "dice_range", "dice_multi", "dice_range_magic":
+			# ダイス系効果（統合処理）
 			if game_flow_manager and game_flow_manager.spell_dice:
-				game_flow_manager.spell_dice.apply_dice_fixed_effect(effect, target_data, current_player_id)
+				game_flow_manager.spell_dice.apply_effect_from_parsed(effect, target_data, current_player_id)
 		
-		"dice_range":
-			# ダイス範囲指定（ヘイスト）
-			if game_flow_manager and game_flow_manager.spell_dice:
-				game_flow_manager.spell_dice.apply_dice_range_effect(effect, target_data, current_player_id)
-		
-		"dice_multi":
-			# 複数ダイスロール（フライ）
-			if game_flow_manager and game_flow_manager.spell_dice:
-				game_flow_manager.spell_dice.apply_dice_multi_effect(effect, target_data, current_player_id)
-		
-		"dice_range_magic":
-			# 範囲指定 + 魔力獲得（チャージステップ）
-			if game_flow_manager and game_flow_manager.spell_dice:
-				game_flow_manager.spell_dice.apply_dice_range_magic_effect(effect, target_data, current_player_id)
-		
-		"stat_boost":
-			# 能力値上昇呪い（バイタリティ等）
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				var value = effect.get("value", 20)
-				var effect_name = effect.get("name", "能力値+%d" % value)
-				print("[spell_phase_handler] stat_boost: タイル%d に %s (AP&HP+%d)" % [tile_index, effect_name, value])
-				if game_flow_manager and game_flow_manager.spell_curse_stat:
-					game_flow_manager.spell_curse_stat.apply_stat_boost(tile_index, effect)
-		
-		"stat_reduce":
-			# 能力値減少呪い（ディジーズ等）
+		"stat_boost", "stat_reduce":
+			# ステータス呪い系（統合処理）
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
-					game_flow_manager.spell_curse_stat.apply_stat_reduce(tile_index, effect)
+					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"toll_share":
-			# 通行料促進（ドリームトレイン）
-			if target_data.get("type") == "player":
-				var target_player_id = target_data.get("player_id", current_player_id)
-				var duration = effect.get("duration", 5)
-				if game_flow_manager and game_flow_manager.spell_curse_toll:
-					# caster_id は現在のプレイヤー（スペルを使用した人）
-					game_flow_manager.spell_curse_toll.apply_toll_share(target_player_id, duration, current_player_id)
-		
-		"toll_disable":
-			# 通行料無効（ブラックアウト）
-			if target_data.get("type") == "player":
-				var target_player_id = target_data.get("player_id", -1)
-				var duration = effect.get("duration", 2)
-				if game_flow_manager and game_flow_manager.spell_curse_toll:
-					game_flow_manager.spell_curse_toll.apply_toll_disable(target_player_id, duration)
-		
-		"toll_fixed":
-			# 通行料固定（ユニフォーミティ）
-			if target_data.get("type") == "player":
-				var target_player_id = target_data.get("player_id", -1)
-				var value = effect.get("value", 200)
-				var duration = effect.get("duration", 3)
-				if game_flow_manager and game_flow_manager.spell_curse_toll:
-					game_flow_manager.spell_curse_toll.apply_toll_fixed(target_player_id, value, duration)
-		
-		"toll_multiplier":
-			# 通行料倍率（グリード）
-			if target_data.get("type") == "land":
+		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
+			# 通行料呪い系（統合処理）
+			if game_flow_manager and game_flow_manager.spell_curse_toll:
 				var tile_index = target_data.get("tile_index", -1)
-				var multiplier = effect.get("multiplier", 1.5)
-				if game_flow_manager and game_flow_manager.spell_curse_toll:
-					game_flow_manager.spell_curse_toll.apply_toll_multiplier(tile_index, multiplier)
-		
-		"peace":
-			# 平和（ピース）
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				if game_flow_manager and game_flow_manager.spell_curse_toll:
-					game_flow_manager.spell_curse_toll.apply_peace(tile_index)
+				var target_player_id = target_data.get("player_id", -1)
+				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
 		"draw":
 			# カードドロー

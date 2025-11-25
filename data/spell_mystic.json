@@ -1,0 +1,26 @@
+{
+  "cards": [
+    {
+      "id": 9001,
+      "name": "通行料半減の呪い",
+      "rarity": "N",
+      "type": "spell",
+      "cost": {
+        "mp": 0
+      },
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "enemy",
+          "target_filter": "creature"
+        },
+        "effects": [
+          {
+            "effect_type": "curse_toll_half",
+            "duration": 3
+          }
+        ]
+      }
+    }
+  ]
+}

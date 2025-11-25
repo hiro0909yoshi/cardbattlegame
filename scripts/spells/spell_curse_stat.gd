@@ -39,6 +39,24 @@ func apply_stat_reduce(tile_index: int, effect: Dictionary):
 	})
 
 # ========================================
+# 汎用効果適用（統合版）
+# ========================================
+
+## スペル効果から呪いを適用（統合メソッド）
+func apply_curse_from_effect(effect: Dictionary, tile_index: int):
+	var effect_type = effect.get("effect_type", "")
+	
+	match effect_type:
+		"stat_boost":
+			apply_stat_boost(tile_index, effect)
+		
+		"stat_reduce":
+			apply_stat_reduce(tile_index, effect)
+		
+		_:
+			print("[SpellCurseStat] 未対応の効果タイプ: ", effect_type)
+
+# ========================================
 # バトル時（BattlePreparationから呼ばれる）
 # ========================================
 
