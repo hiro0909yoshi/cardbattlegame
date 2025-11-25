@@ -49,6 +49,7 @@ var board_system = null
 var creature_manager = null
 var spell_mystic_arts = null  # 秘術システム
 var spell_phase_ui_manager = null  # UIボタン管理
+var spell_cast_notification_ui = null  # 発動通知UI
 
 func _ready():
 	pass
@@ -79,6 +80,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		)
 		# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
+	
+	# 発動通知UIを初期化
+	_initialize_spell_cast_notification_ui()
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -314,6 +318,10 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 		_clear_mystic_art_selection()
 		current_state = State.WAITING_FOR_INPUT
 		return
+	
+	# 発動通知を表示（秘術発動クリーチャー名を使用）
+	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
+	_show_spell_cast_notification(caster_name, target_data, mystic_art, true)
 	
 	# 秘術効果を適用
 	var success = spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
@@ -587,6 +595,12 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	
 	# 復帰[ブック]フラグをリセット
 	spell_failed = false
+	
+	# 発動通知を表示
+	var caster_name = "プレイヤー%d" % (current_player_id + 1)
+	if player_system and current_player_id >= 0 and current_player_id < player_system.players.size():
+		caster_name = player_system.players[current_player_id].name
+	_show_spell_cast_notification(caster_name, target_data, spell_card, false)
 	
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
@@ -887,3 +901,37 @@ func _on_spell_used():
 func _on_mystic_art_used():
 	if spell_phase_ui_manager:
 		spell_phase_ui_manager.on_mystic_art_used()
+
+# ============ 発動通知UI ============
+
+## 発動通知UIを初期化
+func _initialize_spell_cast_notification_ui():
+	if spell_cast_notification_ui:
+		return
+	
+	spell_cast_notification_ui = SpellCastNotificationUI.new()
+	spell_cast_notification_ui.name = "SpellCastNotificationUI"
+	
+	# UIマネージャーの直下に追加（最前面に表示されるように）
+	if ui_manager:
+		ui_manager.add_child(spell_cast_notification_ui)
+	else:
+		add_child(spell_cast_notification_ui)
+
+## スペル/秘術発動通知を表示
+func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
+	if not spell_cast_notification_ui:
+		return
+	
+	# 効果名を取得
+	var effect_name: String
+	if is_mystic:
+		effect_name = SpellCastNotificationUI.get_mystic_art_display_name(spell_or_mystic)
+	else:
+		effect_name = SpellCastNotificationUI.get_effect_display_name(spell_or_mystic)
+	
+	# 対象名を取得
+	var target_name = SpellCastNotificationUI.get_target_display_name(target_data, board_system, player_system)
+	
+	# 通知を表示
+	spell_cast_notification_ui.show_notification(caster_name, target_name, effect_name)
