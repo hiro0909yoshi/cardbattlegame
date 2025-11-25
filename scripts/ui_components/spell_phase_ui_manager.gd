@@ -90,10 +90,9 @@ func create_spell_skip_button(parent: Node) -> Button:
 
 # === 位置更新 ===
 
-func _update_button_positions():
+func _update_button_positions(hand_count: int = 6):
 	"""画面解像度変更時にボタン位置とサイズを再計算"""
 	var viewport_size = get_viewport().get_visible_rect().size
-	var hand_count = 6  # 最大手札数（調整可能）
 	
 	# CardUIHelper でレイアウト計算
 	if not card_ui_helper:
@@ -199,8 +198,9 @@ func _apply_spell_skip_button_style(button: Button):
 
 # === 表示制御 ===
 
-func show_mystic_button():
+func show_mystic_button(hand_count: int = 6):
 	"""秘術ボタン表示"""
+	_update_button_positions(hand_count)
 	if mystic_button:
 		mystic_button.visible = true
 		mystic_button.disabled = false
@@ -212,8 +212,9 @@ func hide_mystic_button():
 		mystic_button.visible = false
 
 
-func show_spell_skip_button():
+func show_spell_skip_button(hand_count: int = 6):
 	"""スペルをしないボタン表示"""
+	_update_button_positions(hand_count)
 	if spell_skip_button:
 		spell_skip_button.visible = true
 		spell_skip_button.disabled = false

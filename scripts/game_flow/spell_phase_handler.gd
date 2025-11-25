@@ -862,8 +862,16 @@ func _initialize_spell_phase_ui():
 ## スペルフェーズ開始時にボタンを表示
 func _show_spell_phase_buttons():
 	if spell_phase_ui_manager:
-		spell_phase_ui_manager.show_mystic_button()
-		spell_phase_ui_manager.show_spell_skip_button()
+		# 現在の手札枚数を取得
+		var hand_count = 6  # デフォルト値
+		if card_system and player_system:
+			var current_player = player_system.get_current_player()
+			if current_player:
+				var hand_data = card_system.get_all_cards_for_player(current_player.id)
+				hand_count = hand_data.size()
+		
+		spell_phase_ui_manager.show_mystic_button(hand_count)
+		spell_phase_ui_manager.show_spell_skip_button(hand_count)
 
 ## スペルフェーズ終了時にボタンを非表示
 func _hide_spell_phase_buttons():
