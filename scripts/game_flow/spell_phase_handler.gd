@@ -437,8 +437,8 @@ func use_spell(spell_card: Dictionary):
 	var target_filter = parsed.get("target_filter", "")
 	var target_info = parsed.get("target_info", {})
 	
-	# target_filter が "self" の場合は、即座に効果発動（対象選択UIなし）
-	if target_filter == "self":
+	# target_filter または target_type が "self" の場合は、即座に効果発動（対象選択UIなし）
+	if target_filter == "self" or target_type == "self":
 		# 対象選択なし。効果実行時に current_player_id を使用
 		var target_data = {"type": "player", "player_id": current_player_id}
 		execute_spell_effect(spell_card, target_data)
@@ -689,16 +689,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", -1)
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
-		"draw":
-			# カードドロー
+		"draw", "draw_cards":
+			# カードドロー（SpellDrawに委譲）
 			var count = effect.get("count", 1)
-			if card_system:
-				for i in range(count):
-					var drawn = card_system.draw_card_for_player(current_player_id)
-					if not drawn.is_empty():
-						print("[spell_phase_handler] ドロー: %s" % drawn.get("name", "Unknown"))
-					else:
-						print("[spell_phase_handler] ドロー失敗（デッキ切れ？）")
+			if game_flow_manager and game_flow_manager.spell_draw:
+				var drawn_cards = game_flow_manager.spell_draw.draw_cards(current_player_id, count)
+				print("[spell_phase_handler] ドロー: %d枚" % drawn_cards.size())
 		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \

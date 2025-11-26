@@ -472,7 +472,16 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "カードを2枚引く"
+	  "effect": "カードを2枚引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_cards",
+			"count": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2096,

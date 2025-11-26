@@ -170,9 +170,9 @@ GameSystemManager (統括)
 │   └── BoardSystem3D.collect_players()
 │       └── MovementController3D.initialize()
 └── Phase 4: システム間連携
-    ├── GameFlowManager.setup_systems(...)
-    ├── BoardSystem3D.setup_systems(...)
-    └── その他システム.setup_systems(...)
+	├── GameFlowManager.setup_systems(...)
+	├── BoardSystem3D.setup_systems(...)
+	└── その他システム.setup_systems(...)
 ```
 
 ### 参照流れ
