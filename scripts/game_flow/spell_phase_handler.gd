@@ -696,6 +696,64 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var drawn_cards = game_flow_manager.spell_draw.draw_cards(current_player_id, count)
 				print("[spell_phase_handler] ドロー: %d枚" % drawn_cards.size())
 		
+		"gain_magic":
+			# 固定額の魔力を得る
+			var amount = effect.get("amount", 0)
+			if game_flow_manager and game_flow_manager.spell_magic and amount > 0:
+				game_flow_manager.spell_magic.add_magic(current_player_id, amount)
+				print("[spell_phase_handler] 魔力獲得: %dG" % amount)
+		
+		"gain_magic_by_rank":
+			# 順位×multiplierの魔力を得る（ギフト用）
+			var multiplier = effect.get("multiplier", 50)
+			var rank = _get_player_ranking(current_player_id)
+			var amount = rank * multiplier
+			if game_flow_manager and game_flow_manager.spell_magic:
+				game_flow_manager.spell_magic.add_magic(current_player_id, amount)
+				print("[spell_phase_handler] 順位魔力: %d位 × %dG = %dG" % [rank, multiplier, amount])
+		
+		"draw_by_rank":
+			# 順位と同じ枚数ドロー（ギフト用）
+			var rank = _get_player_ranking(current_player_id)
+			if game_flow_manager and game_flow_manager.spell_draw:
+				var drawn_cards = game_flow_manager.spell_draw.draw_cards(current_player_id, rank)
+				print("[spell_phase_handler] 順位ドロー: %d位 → %d枚" % [rank, drawn_cards.size()])
+		
+		"discard_and_draw_plus":
+			# 手札全捨て+枚数+1枚ドロー（リンカネーション用）
+			# -1（使用カード）と+1（ボーナス）が相殺 → 元の手札枚数分引く
+			if card_system and game_flow_manager and game_flow_manager.spell_draw:
+				var hand_size = card_system.get_hand_size_for_player(current_player_id)
+				# 手札を全て捨てる
+				for i in range(hand_size):
+					card_system.discard_card(current_player_id, 0, "reincarnation")
+				# 元の手札枚数分引く
+				var drawn_cards = game_flow_manager.spell_draw.draw_cards(current_player_id, hand_size)
+				print("[spell_phase_handler] リンカネーション: 手札入替 → %d枚ドロー" % drawn_cards.size())
+		
+		"check_hand_elements":
+			# 密命：手札に指定属性があるかチェック（アセンブルカード用）
+			var required_elements = effect.get("required_elements", ["fire", "water", "wind", "earth"])
+			var success_effect = effect.get("success_effect", {})
+			var fail_effect = effect.get("fail_effect", {})
+			
+			# 手札のクリーチャーから属性を収集
+			var hand_elements = _get_hand_creature_elements(current_player_id)
+			
+			# 全ての必要属性があるかチェック
+			var has_all = true
+			for elem in required_elements:
+				if elem not in hand_elements:
+					has_all = false
+					break
+			
+			if has_all:
+				print("[密命成功] 手札に4属性あり: %s" % str(hand_elements))
+				_apply_single_effect(success_effect, target_data)
+			else:
+				print("[密命失敗] 手札の属性: %s（必要: %s）" % [str(hand_elements), str(required_elements)])
+				_apply_single_effect(fail_effect, target_data)
+		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \
@@ -895,6 +953,28 @@ func is_cpu_player(player_id: int) -> bool:
 		return false  # デバッグモードでは全員手動
 	
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
+
+## プレイヤーの順位を取得（UIパネルから）
+func _get_player_ranking(player_id: int) -> int:
+	if ui_manager and ui_manager.player_info_panel:
+		return ui_manager.player_info_panel.get_player_ranking(player_id)
+	# フォールバック: 常に1位を返す
+	return 1
+
+## 手札のクリーチャーカードから属性を収集
+func _get_hand_creature_elements(player_id: int) -> Array:
+	var elements = []
+	if not card_system:
+		return elements
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	for card in hand:
+		if card.get("type", "") == "creature":
+			var elem = card.get("element", "")
+			if elem != "" and elem not in elements:
+				elements.append(elem)
+	
+	return elements
 
 ## アクティブか
 func is_spell_phase_active() -> bool:

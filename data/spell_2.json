@@ -929,7 +929,15 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "手札を全て捨て、その枚数+1枚のカードを引く"
+	  "effect": "手札を全て捨て、その枚数+1枚のカードを引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "discard_and_draw_plus"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2128,

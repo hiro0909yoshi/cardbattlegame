@@ -64,10 +64,28 @@
 	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
+	  "is_secret": true,
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "密命；手札に火水風地があるとG500；未達成の場合、カードを2枚引く"
+	  "effect": "密命；手札に火水風地があるとG500；未達成の場合、カードを2枚引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "check_hand_elements",
+			"required_elements": ["fire", "water", "wind", "earth"],
+			"success_effect": {
+			  "effect_type": "gain_magic",
+			  "amount": 500
+			},
+			"fail_effect": {
+			  "effect_type": "draw_cards",
+			  "count": 2
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2005,
@@ -279,7 +297,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "順位×G50を得る；自順位と同じ枚数のカードを引く"
+	  "effect": "順位×G50を得る；自順位と同じ枚数のカードを引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_by_rank"
+		  },
+		  {
+			"effect_type": "gain_magic_by_rank",
+			"multiplier": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2021,
