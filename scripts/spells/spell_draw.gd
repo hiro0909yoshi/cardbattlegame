@@ -128,3 +128,96 @@ func exchange_all_hand(player_id: int) -> Array:
 	print("[手札交換] プレイヤー", player_id + 1, "が", drawn.size(), "枚の新しい手札を引きました")
 	
 	return drawn
+
+## 手札全捨て+元枚数ドロー（リンカネーション用）
+func discard_and_draw_plus(player_id: int) -> Array:
+	"""
+	手札を全て捨て、その枚数分のカードを引く
+	
+	注: -1（使用カード）と+1（ボーナス）が相殺するため、元の手札枚数分引く
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	
+	戻り値: Array（引いたカードデータの配列）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return []
+	
+	var hand_size = card_system_ref.get_hand_size_for_player(player_id)
+	
+	# 手札を全て捨てる
+	for i in range(hand_size):
+		card_system_ref.discard_card(player_id, 0, "reincarnation")
+	
+	# 元の手札枚数分引く
+	var drawn = card_system_ref.draw_cards_for_player(player_id, hand_size)
+	print("[リンカネーション] プレイヤー", player_id + 1, ": 手札入替 → ", drawn.size(), "枚ドロー")
+	
+	return drawn
+
+## 順位に応じたドロー（ギフト用）
+func draw_by_rank(player_id: int, rank: int) -> Array:
+	"""
+	順位と同じ枚数のカードを引く
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	  rank: プレイヤーの順位（1位=1, 2位=2...）
+	
+	戻り値: Array（引いたカードデータの配列）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return []
+	
+	if rank <= 0:
+		return []
+	
+	var drawn = card_system_ref.draw_cards_for_player(player_id, rank)
+	print("[順位ドロー] プレイヤー", player_id + 1, ": ", rank, "位 → ", drawn.size(), "枚ドロー")
+	
+	return drawn
+
+## 手札のクリーチャー属性を取得
+func get_hand_creature_elements(player_id: int) -> Array:
+	"""
+	手札のクリーチャーカードから属性を収集
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	
+	戻り値: Array（属性文字列の配列、重複なし）
+	"""
+	var elements = []
+	if not card_system_ref:
+		return elements
+	
+	var hand = card_system_ref.get_all_cards_for_player(player_id)
+	for card in hand:
+		if card.get("type", "") == "creature":
+			var elem = card.get("element", "")
+			if elem != "" and elem not in elements:
+				elements.append(elem)
+	
+	return elements
+
+## 手札に指定属性が全てあるかチェック
+func has_all_elements(player_id: int, required_elements: Array) -> bool:
+	"""
+	手札のクリーチャーに指定された全属性が揃っているかチェック
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	  required_elements: 必要な属性の配列（例: ["fire", "water", "wind", "earth"]）
+	
+	戻り値: bool
+	"""
+	var hand_elements = get_hand_creature_elements(player_id)
+	
+	for elem in required_elements:
+		if elem not in hand_elements:
+			return false
+	
+	return true
