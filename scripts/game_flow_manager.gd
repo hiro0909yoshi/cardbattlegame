@@ -133,7 +133,7 @@ func _setup_spell_systems(board_system):
 	
 	# SpellDrawの初期化
 	spell_draw = SpellDraw.new()
-	spell_draw.setup(card_system)
+	spell_draw.setup(card_system, player_system)
 	print("[SpellDraw] 初期化完了")
 	
 	# SpellMagicの初期化
@@ -375,6 +375,16 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
+	# カード選択ハンドラーが選択中の場合
+	if spell_phase_handler and spell_phase_handler.card_selection_handler:
+		var handler = spell_phase_handler.card_selection_handler
+		if handler.is_selecting_enemy_card():
+			handler.on_enemy_card_selected(card_index)
+			return
+		if handler.is_selecting_deck_card():
+			handler.on_deck_card_selected(card_index)
+			return
+	
 	# アイテムフェーズ中は、ItemPhaseHandlerのcurrent_player_idを使用
 	var target_player_id = player_system.get_current_player().id
 	if item_phase_handler and item_phase_handler.is_item_phase_active():

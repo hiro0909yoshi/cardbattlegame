@@ -14,13 +14,16 @@ enum State {
 	INACTIVE,
 	WAITING_FOR_INPUT,  # スペル選択またはダイス待ち
 	SELECTING_TARGET,    # 対象選択中
-	EXECUTING_EFFECT    # 効果実行中
+	EXECUTING_EFFECT     # 効果実行中
 }
 
 var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
+
+## カード選択ハンドラー（敵手札選択、デッキカード選択）
+var card_selection_handler: CardSelectionHandler = null
 
 ## 秘術選択状態
 var selected_mystic_art: Dictionary = {}
@@ -83,6 +86,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	
 	# 発動通知UIを初期化
 	_initialize_spell_cast_notification_ui()
+	
+	# カード選択ハンドラーを初期化
+	_initialize_card_selection_handler()
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -626,6 +632,10 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 効果発動完了
 	spell_used.emit(spell_card)
 	
+	# カード選択中の場合は、選択完了後に complete_spell_phase を呼ぶ
+	if card_selection_handler and card_selection_handler.is_selecting():
+		return
+	
 	# 少し待機してからカメラを戻す
 	await get_tree().create_timer(0.5).timeout
 	
@@ -681,7 +691,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
 		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements", \
-		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards":
+		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
+		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection":
 			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
 				var context = {
@@ -961,6 +972,35 @@ func _initialize_spell_cast_notification_ui():
 		ui_manager.add_child(spell_cast_notification_ui)
 	else:
 		add_child(spell_cast_notification_ui)
+
+## カード選択ハンドラーを初期化
+func _initialize_card_selection_handler():
+	if card_selection_handler:
+		return
+	
+	card_selection_handler = CardSelectionHandler.new()
+	card_selection_handler.name = "CardSelectionHandler"
+	add_child(card_selection_handler)
+	
+	# 参照を設定
+	card_selection_handler.setup(
+		ui_manager,
+		player_system,
+		card_system,
+		game_flow_manager.spell_draw if game_flow_manager else null,
+		spell_phase_ui_manager
+	)
+	
+	# SpellDrawにもcard_selection_handlerを設定
+	if game_flow_manager and game_flow_manager.spell_draw:
+		game_flow_manager.spell_draw.set_card_selection_handler(card_selection_handler)
+	
+	# 選択完了シグナルを接続
+	card_selection_handler.selection_completed.connect(_on_card_selection_completed)
+
+## カード選択完了時のコールバック
+func _on_card_selection_completed():
+	complete_spell_phase()
 
 ## スペル/秘術発動通知を表示
 func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):

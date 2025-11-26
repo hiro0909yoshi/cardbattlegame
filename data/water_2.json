@@ -635,7 +635,7 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札の○カードの効果を使用]",
+	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札のスペルカードの効果を使用]",
 	  "ability_parsed": {
 		"keywords": ["巻物強打", "防魔"],
 		"keyword_conditions": {

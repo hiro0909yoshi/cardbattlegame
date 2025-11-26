@@ -432,7 +432,18 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象敵ブックの上6枚を見て1枚を選び、破壊する；カードを1枚引く"
+	  "effect": "対象敵ブックの上6枚を見て1枚を選び、破壊する；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "destroy_from_deck_selection",
+			"look_count": 6,
+			"draw_after": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2094,

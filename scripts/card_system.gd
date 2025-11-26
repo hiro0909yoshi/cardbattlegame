@@ -150,7 +150,9 @@ func draw_card_data_v2(player_id: int) -> Dictionary:
 		player_decks[player_id].shuffle()
 	
 	var card_id = player_decks[player_id].pop_front()
-	return _load_card_data(card_id)
+	var card_data = _load_card_data(card_id)
+	print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, card_data.get("name", "?"), card_id])
+	return card_data
 
 func _load_card_data(card_id: int) -> Dictionary:
 	if CardLoader:

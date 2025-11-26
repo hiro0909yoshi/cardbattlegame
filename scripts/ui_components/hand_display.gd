@@ -148,6 +148,19 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 		if creature_type == "defensive":
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
+	elif filter_mode == "destroy_item_spell":
+		# シャッター用: アイテム/スペルのみ選択可、クリーチャーはグレーアウト
+		if is_creature_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
+	elif filter_mode == "destroy_any":
+		# スクイーズ用: 全カード選択可
+		is_selectable_card = true
+	elif filter_mode == "destroy_spell":
+		# セフト用: スペルのみ選択可
+		if not is_spell_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "":
 		# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト＆選択不可
 		if is_spell_card or is_item_card:
@@ -214,7 +227,14 @@ func _on_card_drawn(_card_data: Dictionary):
 func _on_card_used(_card_data: Dictionary):
 	card_used.emit(_card_data)
 
+## 敵手札選択中フラグ
+var is_enemy_card_selection_active: bool = false
+
 func _on_hand_updated():
+	# 敵手札選択中は自動更新をスキップ
+	if is_enemy_card_selection_active:
+		return
+	
 	# 現在のターンプレイヤーの手札を表示
 	if player_system_ref:
 		var current_player = player_system_ref.get_current_player()

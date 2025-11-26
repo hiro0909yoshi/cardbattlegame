@@ -543,7 +543,17 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象敵手札のアイテムかスペルを1枚選んで破壊"
+	  "effect": "対象敵手札のアイテムかスペルを1枚選んで破壊",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "destroy_selected_card",
+			"filter_mode": "destroy_item_spell"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2035,
@@ -587,7 +597,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象の手札1枚を破壊する；対象セプターはG150を得る"
+	  "effect": "対象の手札1枚を破壊する；対象セプターはG150を得る",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "destroy_selected_card",
+			"filter_mode": "destroy_any",
+			"magic_bonus": 150
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2039,
@@ -691,7 +712,17 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象敵手札のスペルを1枚奪う"
+	  "effect": "対象敵手札のスペルを1枚奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "steal_selected_card",
+			"filter_mode": "destroy_spell"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2047,

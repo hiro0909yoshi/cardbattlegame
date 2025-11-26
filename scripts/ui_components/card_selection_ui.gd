@@ -97,6 +97,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 	if not ui_manager_ref:
 		return
 	
+	# 選択UIを有効化
+	is_active = true
+	
 	# UIManagerのフィルター設定を確認
 	var filter_mode = ui_manager_ref.card_selection_filter
 	
@@ -148,6 +151,15 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
 				var creature_type = card_data.get("creature_type", "normal")
 				is_selectable = card_type == "creature" and creature_type != "defensive"
+			elif filter_mode == "destroy_item_spell":
+				# シャッター用: アイテム/スペルのみ選択可能
+				is_selectable = card_type == "item" or card_type == "spell"
+			elif filter_mode == "destroy_any":
+				# スクイーズ用: 全カード選択可能
+				is_selectable = true
+			elif filter_mode == "destroy_spell":
+				# セフト用: スペルのみ選択可能
+				is_selectable = card_type == "spell"
 			else:
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
 				is_selectable = card_type == "creature"
@@ -197,6 +209,21 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						should_gray_out = false
 				
 				if should_gray_out:
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "destroy_item_spell":
+				# シャッター用: クリーチャーをグレーアウト
+				if card_type == "creature":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "destroy_any":
+				# スクイーズ用: グレーアウトなし
+				card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "destroy_spell":
+				# セフト用: スペル以外をグレーアウト
+				if card_type != "spell":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)

@@ -1,14 +1,21 @@
 extends Node
 class_name SpellDraw
 
-## ドロー処理の汎用化モジュール
+## ドロー・手札操作の汎用化モジュール
 ## バトル外のマップ効果として使用する
 
 var card_system_ref: CardSystem = null
+var player_system_ref = null
+var card_selection_handler: CardSelectionHandler = null
 
-func setup(card_system: CardSystem):
+func setup(card_system: CardSystem, player_system = null):
 	card_system_ref = card_system
+	player_system_ref = player_system
 	print("SpellDraw: セットアップ完了")
+
+## カード選択ハンドラーを設定
+func set_card_selection_handler(handler: CardSelectionHandler):
+	card_selection_handler = handler
 
 ## 統合エントリポイント - effect辞書から適切な処理を実行
 ## 戻り値: Dictionary（結果情報、next_effectがある場合は再帰適用が必要）
@@ -57,6 +64,45 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			# 対象プレイヤーの重複カード破壊（エロージョン用）
 			var target_player_id = context.get("target_player_id", player_id)
 			result = destroy_duplicate_cards(target_player_id)
+		
+		"destroy_selected_card":
+			# 敵手札からカードを選んで破壊（シャッター、スクイーズ用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0 and card_selection_handler:
+				var filter_mode = effect.get("filter_mode", "destroy_any")
+				var magic_bonus = effect.get("magic_bonus", 0)
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_enemy_card_selection(target_player_id, filter_mode, func(card_index: int):
+					if card_index >= 0 and magic_bonus > 0:
+						if player_system_ref and target_player_id < player_system_ref.players.size():
+							player_system_ref.players[target_player_id].magic_power += magic_bonus
+							print("[スクイーズ] プレイヤー%d: G%d を獲得" % [target_player_id + 1, magic_bonus])
+				)
+				result["async"] = true
+		
+		"steal_selected_card":
+			# 敵手札からカードを選んで奪取（セフト用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0 and card_selection_handler:
+				var filter_mode = effect.get("filter_mode", "destroy_spell")
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_enemy_card_selection(target_player_id, filter_mode, func(_card_index: int):
+					pass
+				, true)
+				result["async"] = true
+		
+		"destroy_from_deck_selection":
+			# デッキ上部からカードを選んで破壊（ポイズンマインド用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0 and card_selection_handler:
+				var look_count = effect.get("look_count", 6)
+				var draw_after = effect.get("draw_after", 0)
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_deck_card_selection(target_player_id, look_count, func(_card_index: int):
+					if draw_after > 0:
+						draw_cards(player_id, draw_after)
+				)
+				result["async"] = true
 		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
@@ -441,4 +487,200 @@ func destroy_duplicate_cards(target_player_id: int) -> Dictionary:
 	return {
 		"total_destroyed": destroyed_count,
 		"duplicates": duplicate_names
+	}
+
+## 指定インデックスのカードを破壊
+func destroy_card_at_index(target_player_id: int, card_index: int) -> Dictionary:
+	"""
+	対象プレイヤーの手札から指定インデックスのカードを破壊する
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	  card_index: 破壊するカードのインデックス
+	
+	戻り値: Dictionary
+	  - destroyed: bool（破壊成功したか）
+	  - card_name: String（破壊したカード名）
+	  - card_data: Dictionary（破壊したカードのデータ）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"destroyed": false, "card_name": "", "card_data": {}}
+	
+	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
+	
+	if card_index < 0 or card_index >= hand.size():
+		print("[手札破壊] 無効なインデックス: %d（手札枚数: %d）" % [card_index, hand.size()])
+		return {"destroyed": false, "card_name": "", "card_data": {}}
+	
+	var destroyed_card = hand[card_index]
+	var card_name = destroyed_card.get("name", "?")
+	
+	# カードを破壊
+	card_system_ref.discard_card(target_player_id, card_index, "destroy")
+	print("[手札破壊] プレイヤー%d: %s を破壊" % [target_player_id + 1, card_name])
+	
+	return {
+		"destroyed": true,
+		"card_name": card_name,
+		"card_data": destroyed_card
+	}
+
+## 対象プレイヤーの手札に条件に合うカードがあるかチェック
+func has_cards_matching_filter(target_player_id: int, filter_mode: String) -> bool:
+	"""
+	対象プレイヤーの手札にフィルター条件に合うカードがあるかチェック
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	  filter_mode: フィルターモード（"destroy_item_spell", "destroy_any", "destroy_spell"）
+	
+	戻り値: bool
+	"""
+	if not card_system_ref:
+		return false
+	
+	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
+	
+	if hand.is_empty():
+		return false
+	
+	for card in hand:
+		var card_type = card.get("type", "")
+		match filter_mode:
+			"destroy_item_spell":
+				if card_type == "item" or card_type == "spell":
+					return true
+			"destroy_any":
+				return true
+			"destroy_spell":
+				if card_type == "spell":
+					return true
+	
+	return false
+
+## 指定インデックスのカードを奪取
+func steal_card_at_index(from_player_id: int, to_player_id: int, card_index: int) -> Dictionary:
+	"""
+	対象プレイヤーの手札から指定インデックスのカードを奪う
+	
+	引数:
+	  from_player_id: 奪われるプレイヤーID
+	  to_player_id: 奪うプレイヤーID
+	  card_index: 奪うカードのインデックス
+	
+	戻り値: Dictionary
+	  - stolen: bool（奪取成功したか）
+	  - card_name: String（奪ったカード名）
+	  - card_data: Dictionary（奪ったカードのデータ）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"stolen": false, "card_name": "", "card_data": {}}
+	
+	var hand = card_system_ref.get_all_cards_for_player(from_player_id)
+	
+	if card_index < 0 or card_index >= hand.size():
+		print("[カード奪取] 無効なインデックス: %d（手札枚数: %d）" % [card_index, hand.size()])
+		return {"stolen": false, "card_name": "", "card_data": {}}
+	
+	var stolen_card = hand[card_index].duplicate(true)
+	var card_name = stolen_card.get("name", "?")
+	
+	# from_player の手札から削除（捨て札ではなく直接削除）
+	card_system_ref.player_hands[from_player_id]["data"].remove_at(card_index)
+	
+	# to_player の手札に追加
+	card_system_ref.player_hands[to_player_id]["data"].append(stolen_card)
+	
+	print("[カード奪取] プレイヤー%d → プレイヤー%d: %s を奪取" % [from_player_id + 1, to_player_id + 1, card_name])
+	
+	# 手札更新シグナル
+	card_system_ref.emit_signal("hand_updated")
+	
+	return {
+		"stolen": true,
+		"card_name": card_name,
+		"card_data": stolen_card
+	}
+
+## デッキ上部のカードを取得（破壊はしない）
+func get_top_cards_from_deck(player_id: int, count: int) -> Array:
+	"""
+	対象プレイヤーのデッキ上部から指定枚数のカードを取得
+	
+	引数:
+	  player_id: 対象プレイヤーID
+	  count: 取得枚数
+	
+	戻り値: Array[Dictionary]（カードデータの配列）
+	"""
+	if not card_system_ref:
+		return []
+	
+	var deck = card_system_ref.player_decks.get(player_id, [])
+	if deck.is_empty():
+		return []
+	
+	var actual_count = min(count, deck.size())
+	var result = []
+	
+	print("[デッキ確認] プレイヤー%d のデッキ上部%d枚:" % [player_id + 1, actual_count])
+	for i in range(actual_count):
+		# デッキはカードIDの配列なので、CardLoaderからデータを取得
+		var card_id = deck[i]
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data and not card_data.is_empty():
+			var data_copy = card_data.duplicate(true)
+			result.append(data_copy)
+			print("  [%d] %s (ID: %d)" % [i, card_data.get("name", "?"), card_id])
+	
+	return result
+
+## デッキ上部の指定インデックスのカードを破壊
+func destroy_deck_card_at_index(player_id: int, card_index: int) -> Dictionary:
+	"""
+	対象プレイヤーのデッキ上部から指定インデックスのカードを破壊
+	
+	引数:
+	  player_id: 対象プレイヤーID
+	  card_index: 破壊するカードのインデックス（デッキ上部からの位置）
+	
+	戻り値: Dictionary
+	  - destroyed: bool（破壊成功したか）
+	  - card_name: String（破壊したカード名）
+	  - card_data: Dictionary（破壊したカードのデータ）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"destroyed": false, "card_name": "", "card_data": {}}
+	
+	var deck = card_system_ref.player_decks.get(player_id, [])
+	
+	if card_index < 0 or card_index >= deck.size():
+		print("[デッキ破壊] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, deck.size()])
+		return {"destroyed": false, "card_name": "", "card_data": {}}
+	
+	# デッキはカードIDの配列なので、CardLoaderからデータを取得
+	var card_id = deck[card_index]
+	var destroyed_card = CardLoader.get_card_by_id(card_id)
+	var card_name = destroyed_card.get("name", "?") if destroyed_card else "?"
+	
+	# デッキから削除
+	card_system_ref.player_decks[player_id].remove_at(card_index)
+	print("[デッキ破壊] プレイヤー%d: インデックス%d の %s をデッキから破壊" % [player_id + 1, card_index, card_name])
+	
+	# 破壊後のデッキ上部を表示
+	var remaining_deck = card_system_ref.player_decks[player_id]
+	var show_count = min(3, remaining_deck.size())
+	print("[デッキ破壊後] 次にドローされる%d枚:" % show_count)
+	for i in range(show_count):
+		var next_card_id = remaining_deck[i]
+		var next_card = CardLoader.get_card_by_id(next_card_id)
+		print("  [%d] %s" % [i, next_card.get("name", "?") if next_card else "?"])
+	
+	return {
+		"destroyed": true,
+		"card_name": card_name,
+		"card_data": destroyed_card if destroyed_card else {}
 	}
