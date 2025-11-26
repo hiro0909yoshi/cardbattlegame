@@ -10,6 +10,30 @@ func setup(player_system: PlayerSystem):
 	player_system_ref = player_system
 	print("SpellMagic: セットアップ完了")
 
+## 統合エントリポイント - effect辞書から適切な処理を実行
+func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) -> void:
+	var effect_type = effect.get("effect_type", "")
+	
+	match effect_type:
+		"gain_magic":
+			var amount = effect.get("amount", 0)
+			add_magic(player_id, amount)
+		
+		"gain_magic_by_rank":
+			var rank = context.get("rank", 1)
+			var multiplier = effect.get("multiplier", 50)
+			var amount = rank * multiplier
+			add_magic(player_id, amount)
+			print("[魔力効果] 順位魔力: %d位 × %dG = %dG" % [rank, multiplier, amount])
+		
+		"drain_magic":
+			var from_id = context.get("from_player_id", -1)
+			if from_id >= 0:
+				drain_magic_from_effect(effect, from_id, player_id)
+		
+		_:
+			print("[SpellMagic] 未対応の効果タイプ: ", effect_type)
+
 ## 魔力増加
 func add_magic(player_id: int, amount: int) -> void:
 	"""

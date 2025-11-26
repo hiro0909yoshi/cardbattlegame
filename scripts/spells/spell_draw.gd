@@ -10,6 +10,45 @@ func setup(card_system: CardSystem):
 	card_system_ref = card_system
 	print("SpellDraw: セットアップ完了")
 
+## 統合エントリポイント - effect辞書から適切な処理を実行
+## 戻り値: Dictionary（結果情報、next_effectがある場合は再帰適用が必要）
+func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) -> Dictionary:
+	var effect_type = effect.get("effect_type", "")
+	var result = {}
+	
+	match effect_type:
+		"draw", "draw_cards":
+			var count = effect.get("count", 1)
+			result["drawn"] = draw_cards(player_id, count)
+		
+		"draw_by_rank":
+			var rank = context.get("rank", 1)
+			result["drawn"] = draw_by_rank(player_id, rank)
+		
+		"discard_and_draw_plus":
+			result["drawn"] = discard_and_draw_plus(player_id)
+		
+		"check_hand_elements":
+			# 密命：手札属性チェック（条件分岐）
+			var required_elements = effect.get("required_elements", ["fire", "water", "wind", "earth"])
+			var success_effect = effect.get("success_effect", {})
+			var fail_effect = effect.get("fail_effect", {})
+			
+			var hand_elements = get_hand_creature_elements(player_id)
+			var has_all = has_all_elements(player_id, required_elements)
+			
+			if has_all:
+				print("[密命成功] 手札に4属性あり: %s" % str(hand_elements))
+				result["next_effect"] = success_effect
+			else:
+				print("[密命失敗] 手札の属性: %s（必要: %s）" % [str(hand_elements), str(required_elements)])
+				result["next_effect"] = fail_effect
+		
+		_:
+			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
+	
+	return result
+
 ## 1枚ドロー（ターン開始用）
 func draw_one(player_id: int) -> Dictionary:
 	"""

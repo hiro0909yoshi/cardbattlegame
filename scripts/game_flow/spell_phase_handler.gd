@@ -645,12 +645,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# クリーチャーにダメージ
 			_apply_damage_effect(effect, target_data)
 		
-		"drain_magic":
-			# 魔力を奪う（SpellMagicに委譲）
-			if target_data.get("type", "") == "player" and game_flow_manager and game_flow_manager.spell_magic:
-				var target_player_id = target_data.get("player_id", -1)
-				if target_player_id >= 0:
-					game_flow_manager.spell_magic.drain_magic_from_effect(effect, target_player_id, current_player_id)
+		"drain_magic", "gain_magic", "gain_magic_by_rank":
+			# 魔力操作系 - SpellMagicに委譲
+			if game_flow_manager and game_flow_manager.spell_magic:
+				var context = {
+					"rank": _get_player_ranking(current_player_id),
+					"from_player_id": target_data.get("player_id", -1)
+				}
+				game_flow_manager.spell_magic.apply_effect(effect, current_player_id, context)
 		
 		"dice_fixed", "dice_range", "dice_multi", "dice_range_magic":
 			# ダイス系効果（統合処理）
@@ -689,56 +691,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", -1)
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
-		"draw", "draw_cards":
-			# カードドロー（SpellDrawに委譲）
-			var count = effect.get("count", 1)
+		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements":
+			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
-				var drawn_cards = game_flow_manager.spell_draw.draw_cards(current_player_id, count)
-				print("[spell_phase_handler] ドロー: %d枚" % drawn_cards.size())
-		
-		"gain_magic":
-			# 固定額の魔力を得る
-			var amount = effect.get("amount", 0)
-			if game_flow_manager and game_flow_manager.spell_magic and amount > 0:
-				game_flow_manager.spell_magic.add_magic(current_player_id, amount)
-				print("[spell_phase_handler] 魔力獲得: %dG" % amount)
-		
-		"gain_magic_by_rank":
-			# 順位×multiplierの魔力を得る（ギフト用）
-			var multiplier = effect.get("multiplier", 50)
-			var rank = _get_player_ranking(current_player_id)
-			var amount = rank * multiplier
-			if game_flow_manager and game_flow_manager.spell_magic:
-				game_flow_manager.spell_magic.add_magic(current_player_id, amount)
-				print("[spell_phase_handler] 順位魔力: %d位 × %dG = %dG" % [rank, multiplier, amount])
-		
-		"draw_by_rank":
-			# 順位と同じ枚数ドロー（ギフト用）- SpellDrawに委譲
-			var rank = _get_player_ranking(current_player_id)
-			if game_flow_manager and game_flow_manager.spell_draw:
-				game_flow_manager.spell_draw.draw_by_rank(current_player_id, rank)
-		
-		"discard_and_draw_plus":
-			# 手札全捨て+元枚数ドロー（リンカネーション用）- SpellDrawに委譲
-			if game_flow_manager and game_flow_manager.spell_draw:
-				game_flow_manager.spell_draw.discard_and_draw_plus(current_player_id)
-		
-		"check_hand_elements":
-			# 密命：手札に指定属性があるかチェック（アセンブルカード用）- SpellDrawに委譲
-			var required_elements = effect.get("required_elements", ["fire", "water", "wind", "earth"])
-			var success_effect = effect.get("success_effect", {})
-			var fail_effect = effect.get("fail_effect", {})
-			
-			if game_flow_manager and game_flow_manager.spell_draw:
-				var has_all = game_flow_manager.spell_draw.has_all_elements(current_player_id, required_elements)
-				var hand_elements = game_flow_manager.spell_draw.get_hand_creature_elements(current_player_id)
-				
-				if has_all:
-					print("[密命成功] 手札に4属性あり: %s" % str(hand_elements))
-					_apply_single_effect(success_effect, target_data)
-				else:
-					print("[密命失敗] 手札の属性: %s（必要: %s）" % [str(hand_elements), str(required_elements)])
-					_apply_single_effect(fail_effect, target_data)
+				var context = {"rank": _get_player_ranking(current_player_id)}
+				var result = game_flow_manager.spell_draw.apply_effect(effect, current_player_id, context)
+				# 条件分岐効果の場合は次の効果を再帰適用
+				if result.has("next_effect") and not result["next_effect"].is_empty():
+					_apply_single_effect(result["next_effect"], target_data)
 		
 		"change_element", "change_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
