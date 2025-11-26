@@ -21,6 +21,27 @@ func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 	print("[SpellCurse] 初期化完了")
 
 # ========================================
+# 統合エントリポイント
+# ========================================
+
+## effect辞書から適切な呪いを適用
+func apply_effect(effect: Dictionary, tile_index: int) -> void:
+	var effect_type = effect.get("effect_type", "")
+	var duration = effect.get("duration", -1)
+	
+	match effect_type:
+		"skill_nullify":
+			var params = {"name": effect.get("name", "戦闘能力不可")}
+			curse_creature(tile_index, "skill_nullify", duration, params)
+		
+		"battle_disable":
+			var params = {"name": effect.get("name", "戦闘行動不可")}
+			curse_creature(tile_index, "battle_disable", duration, params)
+		
+		_:
+			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
+
+# ========================================
 # クリーチャー呪い
 # ========================================
 

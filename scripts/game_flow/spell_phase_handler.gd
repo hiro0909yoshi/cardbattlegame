@@ -666,23 +666,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify":
-			# 戦闘能力不可呪い
+		"skill_nullify", "battle_disable":
+			# 戦闘制限呪い系 - SpellCurseに委譲
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
-					var duration = effect.get("duration", -1)
-					var params = {"name": effect.get("name", "戦闘能力不可")}
-					game_flow_manager.spell_curse.curse_creature(tile_index, "skill_nullify", duration, params)
-		
-		"battle_disable":
-			# 戦闘行動不可呪い
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				if game_flow_manager and game_flow_manager.spell_curse:
-					var duration = effect.get("duration", -1)
-					var params = {"name": effect.get("name", "戦闘行動不可")}
-					game_flow_manager.spell_curse.curse_creature(tile_index, "battle_disable", duration, params)
+					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
 			# 通行料呪い系（統合処理）
@@ -763,63 +752,15 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	if player_system and current_player_id >= 0 and current_player_id < player_system.players.size():
 		caster_name = player_system.players[current_player_id].name
 	
-	# 対象は「全体」
 	var target_data_for_notification = {"type": "all"}
 	_show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
 	
-	# 条件を取得
-	var condition = target_info.get("condition", {})
-	var condition_type = condition.get("condition_type", "")
-	var operator = condition.get("operator", "")
-	var check_value = condition.get("value", 0)
-	
-	# スペル効果を取得
+	# スペル効果を取得して SpellCurseBattle に委譲
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
 	
-	# 該当するクリーチャーを収集
-	var affected_count = 0
-	
-	if board_system:
-		for tile_index in board_system.tile_nodes.keys():
-			var tile = board_system.tile_nodes[tile_index]
-			if not tile or tile.creature_data.is_empty():
-				continue
-			
-			var creature = tile.creature_data
-			
-			# 条件チェック
-			var matches_condition = true
-			if condition_type == "mhp_check":
-				var mhp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
-				match operator:
-					"<=":
-						matches_condition = (mhp <= check_value)
-					"<":
-						matches_condition = (mhp < check_value)
-					">=":
-						matches_condition = (mhp >= check_value)
-					">":
-						matches_condition = (mhp > check_value)
-					"==":
-						matches_condition = (mhp == check_value)
-			
-			if not matches_condition:
-				continue
-			
-			# 効果を適用
-			var creature_target_data = {
-				"type": "land",
-				"tile_index": tile_index
-			}
-			
-			for effect in effects:
-				_apply_single_effect(effect, creature_target_data)
-			
-			affected_count += 1
-			print("[spell_phase_handler] 全体効果適用: タイル%d %s" % [tile_index, creature.get("name", "?")])
-	
-	print("[spell_phase_handler] 全体スペル完了: %d体に効果適用" % affected_count)
+	for effect in effects:
+		SpellCurseBattle.apply_to_all_creatures(board_system, effect, target_info)
 	
 	# カードを捨て札に
 	if card_system:

@@ -224,6 +224,52 @@ static func get_number_from_key(keycode: int) -> int:
 # ターゲット検索システム
 # ============================================
 
+## 条件付きで全クリーチャーを取得（handlerなしで使用可能）
+## 
+## board_system: BoardSystem3Dの参照
+## condition: 条件辞書（condition_type, operator, value等）
+## 戻り値: [{tile_index: int, creature: Dictionary}, ...]
+static func get_all_creatures(board_system, condition: Dictionary = {}) -> Array:
+	var results = []
+	
+	if not board_system:
+		return results
+	
+	var condition_type = condition.get("condition_type", "")
+	var operator = condition.get("operator", "")
+	var check_value = condition.get("value", 0)
+	
+	for tile_index in board_system.tile_nodes.keys():
+		var tile = board_system.tile_nodes[tile_index]
+		if not tile or tile.creature_data.is_empty():
+			continue
+		
+		var creature = tile.creature_data
+		
+		# 条件チェック
+		var matches = true
+		if condition_type == "mhp_check":
+			var mhp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
+			match operator:
+				"<=":
+					matches = (mhp <= check_value)
+				"<":
+					matches = (mhp < check_value)
+				">=":
+					matches = (mhp >= check_value)
+				">":
+					matches = (mhp > check_value)
+				"==":
+					matches = (mhp == check_value)
+		
+		if matches:
+			results.append({
+				"tile_index": tile_index,
+				"creature": creature
+			})
+	
+	return results
+
 ## 有効なターゲットを取得
 ## 
 ## handler: board_system, player_system, current_player_id を持つオブジェクト

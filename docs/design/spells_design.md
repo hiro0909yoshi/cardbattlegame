@@ -208,13 +208,14 @@ Card.gd (scripts/)
 
 ### ターゲットシステム ✅
 
-**ターゲットタイプ（5種類）**:
+**ターゲットタイプ（6種類）**:
 
 | タイプ | 説明 | 選択対象 | UI |
 |-------|------|---------|-----|
 | `creature` | クリーチャー | 自分/敵のクリーチャー | 上下キー選択 |
 | `land` | 土地 | 自分/敵/空地の土地 | 上下キー選択 |
 | `player` | プレイヤー | 自分/敵のプレイヤー | 上下キー選択 |
+| `all_creatures` | 全クリーチャー | 条件に合致する全て | なし（自動適用） |
 | `world` | 世界呪 | ターゲット選択なし（全体効果） | なし |
 | セルフ（`target_filter: "self"`） | 使用者自身 | ターゲット選択なし（自動的に使用者） | なし |
 
@@ -229,6 +230,21 @@ Card.gd (scripts/)
 **レベルフィルター**:
 - `required_level`: 特定レベルのみ（例: `required_level: 4`）
 - `max_level`, `min_level`: レベル範囲指定
+
+**全クリーチャーターゲット（`all_creatures`）**:
+- 条件に合致する全クリーチャーに自動適用
+- `TargetSelectionHelper.get_all_creatures(board_system, condition)` で取得
+- 各spellモジュール（SpellCurseBattle等）で効果適用
+
+```gdscript
+# 全クリーチャー取得（汎用）
+var targets = TargetSelectionHelper.get_all_creatures(board_system, {
+    "condition_type": "mhp_check",
+    "operator": "<=",
+    "value": 30
+})
+# targets = [{tile_index: int, creature: Dictionary}, ...]
+```
 
 **セルフターゲット実装例**（ドリームトレイン）:
 ```json
