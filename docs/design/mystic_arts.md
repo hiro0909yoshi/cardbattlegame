@@ -1,7 +1,7 @@
 # 秘術システム完成図書
 
-**ステータス**: ✅ 実装完了（Phase 1-3）+ 秘術専用スペル方式確定  
-**最終更新**: 2025年11月25日（9000番台方式採用）
+**ステータス**: ✅ 実装完了（Phase 1-3）+ 3方式対応（既存スペル参照/秘術専用スペル/直接effects）  
+**最終更新**: 2025年11月27日（直接effects方式追加、非同期秘術対応）
 
 ---
 
@@ -21,13 +21,21 @@
 
 ---
 
-## 実装方式：spell_id参照（正式採用）
+## 実装方式
 
-既存スペルの効果を秘術として使用する方式。秘術専用の効果は**9000番台のIDを使用**。
+秘術の効果定義には3つの方式がある。
+
+| 方式 | 用途 | 例 |
+|------|------|-----|
+| A. 既存スペル参照 | 既存スペルと同じ効果 | アモン（バイタリティ参照） |
+| B. 秘術専用スペル | 既存にない効果（9000番台） | バーナックル（通行料半減） |
+| C. 直接effects | シンプルな効果 | フェイト（カードドロー） |
+
+**推奨**: シンプルな効果はC方式、複雑な効果やターゲット設定が必要な場合はB方式を使用。
 
 ### データ構造
 
-**クリーチャーJSON（既存スペル参照の例）**:
+**方式A：クリーチャーJSON（既存スペル参照の例）**:
 ```json
 {
   "id": 2,
@@ -47,7 +55,7 @@
 }
 ```
 
-**クリーチャーJSON（秘術専用スペル参照の例）**:
+**方式B：クリーチャーJSON（秘術専用スペル参照の例）**:
 ```json
 {
   "id": 29,
@@ -96,6 +104,35 @@
   ]
 }
 ```
+
+**方式C：クリーチャーJSON（直接effects方式の例）**:
+```json
+{
+  "id": 136,
+  "name": "フェイト",
+  "ability_parsed": {
+	"keywords": ["遺産", "秘術"],
+	"mystic_arts": [
+	  {
+		"name": "カードドロー",
+		"cost": 40,
+		"target_type": "self",
+		"effects": [{"effect_type": "draw_cards", "count": 1}]
+	  }
+	]
+  }
+}
+```
+
+**直接effects方式のフィールド**:
+
+| フィールド | 説明 |
+|-----------|------|
+| `name` | 秘術名（UI表示用） |
+| `cost` | 魔力コスト |
+| `target_type` | ターゲットタイプ（`self`, `player`, `land`等） |
+| `target_info` | ターゲット条件（オプション） |
+| `effects` | 効果配列（SpellDrawやSpellPhaseHandlerで処理） |
 
 ### フィールド説明
 
@@ -168,27 +205,40 @@
 
 ```
 scripts/spells/spell_mystic_arts.gd      # 秘術実行エンジン
-scripts/game_flow/spell_phase_handler.gd # 秘術発動フロー
+scripts/spells/spell_draw.gd             # ドロー・手札操作系効果
+scripts/spells/card_selection_handler.gd # 敵手札選択UI（destroy_and_draw等）
+scripts/game_flow/spell_phase_handler.gd # 秘術発動フロー、非同期判定
 scripts/ui_components/spell_and_mystic_ui.gd  # 秘術選択UI
+scripts/ui_components/card_selection_ui.gd    # カード選択フィルター
 scripts/spells/spell_curse_toll.gd       # 通行料呪いシステム（秘術から使用）
 scripts/card_loader.gd                   # スペルデータ読み込み
 data/fire_1.json                         # アモン（既存スペル参照例）
 data/fire_2.json                         # バーナックル（秘術専用スペル参照例）
+data/water_2.json                        # フェイト（直接effects方式例）
 data/spell_2.json                        # バイタリティ（既存スペル）
 data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 ```
 
 ---
 
-## SpellMysticArts 主要メソッド
+## 主要メソッド
+
+### SpellMysticArts
 
 | メソッド | 説明 |
 |---------|------|
 | `get_available_creatures(player_id)` | 秘術発動可能なクリーチャー一覧を取得 |
 | `get_mystic_arts_for_creature(creature_data)` | クリーチャーの秘術一覧を取得 |
 | `can_cast_mystic_art(mystic_art, context)` | 発動可否判定（魔力・ダウン状態・ターゲット有無） |
-| `apply_spell_effect(mystic_art, target_data, context)` | spell_id参照で効果適用 |
-| `_set_down_state(tile_index)` | 発動後のダウン状態設定 |
+| `apply_mystic_art_effect(mystic_art, target_data, context)` | 秘術効果を適用（spell_id参照/直接effects両対応） |
+| `_set_caster_down_state(tile_index, board_system)` | 発動後のダウン状態設定 |
+
+### SpellPhaseHandler
+
+| メソッド | 説明 |
+|---------|------|
+| `_is_async_mystic_art(mystic_art)` | 非同期効果を含む秘術かどうかを判定 |
+| `_execute_mystic_art(creature, mystic_art, target_data, player_id)` | 秘術実行（非同期対応） |
 
 ---
 
@@ -235,6 +285,11 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 |-------------|------|---------|
 | `stat_boost` | 能力値増加 | ✅ バイタリティで確認 |
 | `draw` | カードドロー | ✅ バイタリティで確認 |
+| `draw_cards` | カードドロー（枚数指定） | ✅ フェイトで確認 |
+| `draw_by_type` | タイプ指定ドロー | ✅ アイアンモンガーで確認 |
+| `add_specific_card` | 特定カード生成 | ✅ ハイプクイーンで確認 |
+| `destroy_and_draw` | 敵手札破壊→自分ドロー | ✅ クラウドギズモで確認 |
+| `swap_creature` | クリーチャー交換 | ✅ レムレースで確認 |
 | `damage` | ダメージ適用 | ✅ 実装済み |
 | `curse_toll_half` | 通行料半減 | ✅ バーナックルで確認 |
 | `toll_multiplier` | 通行料倍率 | ✅ 統合処理で対応 |
@@ -350,6 +405,34 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 
 3. **動作確認**: ゲーム内で秘術が発動できることを確認
 
+### パターンC：直接effects方式（推奨）
+
+シンプルな効果で、spell_mystic.jsonへの追加が不要な場合に使用。
+
+1. **クリーチャーJSONに追加**:
+   ```json
+   "ability_parsed": {
+	 "keywords": ["秘術"],
+	 "mystic_arts": [{
+	   "name": "秘術名",
+	   "cost": コスト,
+	   "target_type": "self",
+	   "effects": [{"effect_type": "draw_cards", "count": 1}]
+	 }]
+   }
+   ```
+
+2. **動作確認**: ゲーム内で秘術が発動できることを確認
+
+**使用可能なeffect_type**（SpellDraw対応）:
+- `draw_cards`: カードドロー（count指定）
+- `draw_by_type`: タイプ指定ドロー（card_type: "item"等）
+- `add_specific_card`: 特定カード生成（card_id指定）
+- `destroy_and_draw`: 敵手札破壊→自分ドロー（target_type: "player"）
+- `swap_creature`: クリーチャー交換（target_type: "player"）
+
+**非同期効果の注意**: `destroy_and_draw`, `swap_creature`等の非同期効果は`_is_async_mystic_art()`で自動判定され、カード選択完了後にスペルフェーズが終了する。
+
 ---
 
 ## 変更履歴
@@ -358,3 +441,4 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 |------|------|
 | 2025/11/24 | 初版作成、基盤実装 |
 | 2025/11/25 | spell_id参照方式実装完了、バイタリティ動作確認、秘術専用スペル9000番台方式確定、バーナックル（通行料半減）実装完了 |
+| 2025/11/27 | 直接effects方式（パターンC）追加、フェイト・アイアンモンガー・ハイプクイーン・クラウドギズモ・レムレース実装完了、非同期秘術対応（_is_async_mystic_art）、creatureフィルター対応 |
