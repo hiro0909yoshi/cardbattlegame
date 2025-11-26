@@ -134,6 +134,10 @@ func update_single_panel(player_id: int):
 func build_player_info_text(player, player_id: int) -> String:
 	var text = ""
 	
+	# 順位を取得して表示
+	var ranking = get_player_ranking(player_id)
+	text += "[b]" + str(ranking) + "[/b] "
+	
 	# 現在のターンならハイライト
 	if player_id == current_turn_player:
 		text += "[color=yellow]● [/color]"
@@ -178,6 +182,44 @@ func calculate_total_assets(player_id: int) -> int:
 	
 	
 	return assets
+
+# 全プレイヤーの順位を計算（総魔力降順、1位=1）
+func calculate_all_rankings() -> Array:
+	if not player_system_ref:
+		return []
+	
+	# 各プレイヤーの総魔力を取得
+	var player_assets = []
+	for i in range(player_system_ref.players.size()):
+		player_assets.append({
+			"player_id": i,
+			"total": calculate_total_assets(i)
+		})
+	
+	# 総魔力降順でソート
+	player_assets.sort_custom(func(a, b): return a["total"] > b["total"])
+	
+	# 順位を割り当て（同率は同順位）
+	var rankings = []
+	rankings.resize(player_system_ref.players.size())
+	
+	var current_rank = 1
+	var prev_total = -1
+	for i in range(player_assets.size()):
+		var entry = player_assets[i]
+		if entry["total"] != prev_total:
+			current_rank = i + 1
+		rankings[entry["player_id"]] = current_rank
+		prev_total = entry["total"]
+	
+	return rankings
+
+# 特定プレイヤーの順位を取得
+func get_player_ranking(player_id: int) -> int:
+	var rankings = calculate_all_rankings()
+	if player_id >= 0 and player_id < rankings.size():
+		return rankings[player_id]
+	return 0
 
 # 属性連鎖情報を取得
 func get_chain_info(player_id: int) -> String:
