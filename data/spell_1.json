@@ -667,7 +667,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；アイテムを2枚以上持つ敵手札から1枚を奪う"
+	  "effect": "密命；アイテムを2枚以上持つ敵手札から1枚を奪う",
+	  "secret_mission": true,
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "steal_item_conditional",
+			"required_item_count": 2,
+			"filter_mode": "item"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2043,

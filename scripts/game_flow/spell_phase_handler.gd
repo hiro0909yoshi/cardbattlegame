@@ -456,6 +456,10 @@ func use_spell(spell_card: Dictionary):
 		current_state = State.SELECTING_TARGET
 		target_selection_required.emit(spell_card, target_type)
 		
+		# target_filterをtarget_infoに追加（get_valid_targetsで使用）
+		if not target_filter.is_empty():
+			target_info["target_filter"] = target_filter
+		
 		# 対象選択UIを表示
 		_show_target_selection_ui(target_type, target_info)
 	else:
@@ -614,6 +618,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
+
 	
 	for effect in effects:
 		_apply_single_effect(effect, target_data)
@@ -649,6 +654,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 ## 単一の効果を適用
 func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
+
 	
 	match effect_type:
 		"damage":
@@ -692,7 +698,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements", \
 		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
-		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection":
+		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection", \
+		"draw_from_deck_selection", "steal_item_conditional":
 			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
 				var context = {

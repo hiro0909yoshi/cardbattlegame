@@ -25,6 +25,7 @@ var enemy_card_selection_is_steal: bool = false
 var deck_card_selection_target_id: int = -1
 var deck_card_selection_cards: Array = []
 var deck_card_selection_callback: Callable
+var deck_card_selection_is_draw: bool = false  # true = ドロー、false = 破壊
 
 ## 参照
 var ui_manager = null
@@ -260,6 +261,63 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	if ui_manager and ui_manager.phase_label:
 		ui_manager.phase_label.text = "%sのデッキから破壊するカードを選択してください" % player_name
 
+## デッキカード選択を開始（ドローモード：選んだカードを手札に加える）
+func start_deck_draw_selection(player_id: int, look_count: int, callback: Callable):
+	"""
+	自分のデッキ上部からカードを選んで手札に加えるUIを開始（フォーサイト用）
+	
+	引数:
+	  player_id: プレイヤーID（自分）
+	  look_count: 見る枚数
+	  callback: 選択完了時のコールバック（card_index: int を引数に取る）
+	"""
+	deck_card_selection_target_id = player_id
+	deck_card_selection_callback = callback
+	deck_card_selection_is_draw = true  # ドローモード
+	current_state = State.SELECTING_DECK_CARD
+	
+	# スペルフェーズボタンを非表示
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.hide_mystic_button()
+		spell_phase_ui_manager.hide_spell_skip_button()
+	
+	# サイコロボタンを非表示
+	if ui_manager:
+		ui_manager.set_dice_button_enabled(false)
+	
+	# デッキ上部のカードを取得
+	if not spell_draw:
+		_cancel_deck_card_selection("システムエラー")
+		return
+	
+	deck_card_selection_cards = spell_draw.get_top_cards_from_deck(player_id, look_count)
+	
+	if deck_card_selection_cards.is_empty():
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "デッキにカードがありません"
+		await get_tree().create_timer(1.0).timeout
+		callback.call(-1)
+		_finish_deck_card_selection()
+		return
+	
+	# フィルターモードを設定（全カード選択可）
+	if ui_manager:
+		ui_manager.card_selection_filter = "destroy_any"
+	
+	# デッキカードを一時的に画面下部に表示
+	if ui_manager and ui_manager.hand_display:
+		ui_manager.hand_display.is_enemy_card_selection_active = true
+		_display_deck_cards_as_hand(deck_card_selection_cards, player_id)
+	
+	# 選択UIを有効化
+	if ui_manager and ui_manager.card_selection_ui:
+		var magic = 999999
+		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
+	
+	# ガイド表示
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = "デッキから引くカードを選択してください"
+
 ## デッキカードを一時的に画面下部に表示
 func _display_deck_cards_as_hand(cards: Array, _owner_player_id: int):
 	"""デッキカードを一時的に手札表示エリアに表示"""
@@ -300,13 +358,19 @@ func on_deck_card_selected(card_index: int):
 	if current_state != State.SELECTING_DECK_CARD:
 		return
 	
-	# カードを破壊
 	if spell_draw:
-		var result = spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
-		
-		if result.get("destroyed", false):
-			if ui_manager and ui_manager.phase_label:
-				ui_manager.phase_label.text = "『%s』を破壊しました" % result.get("card_name", "?")
+		if deck_card_selection_is_draw:
+			# ドローモード：選んだカードを手札に加える
+			var result = spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
+			if result.get("drawn", false):
+				if ui_manager and ui_manager.phase_label:
+					ui_manager.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
+		else:
+			# 破壊モード
+			var result = spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
+			if result.get("destroyed", false):
+				if ui_manager and ui_manager.phase_label:
+					ui_manager.phase_label.text = "『%s』を破壊しました" % result.get("card_name", "?")
 	
 	# コールバックを呼び出し
 	if deck_card_selection_callback:
@@ -330,6 +394,7 @@ func _cancel_deck_card_selection(message: String = ""):
 func _finish_deck_card_selection():
 	deck_card_selection_target_id = -1
 	deck_card_selection_cards.clear()
+	deck_card_selection_is_draw = false  # フラグリセット
 	
 	# 一時表示したカードノードをクリア
 	if ui_manager and ui_manager.hand_display:

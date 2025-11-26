@@ -221,7 +221,16 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "自ブックの上6枚を見て、好きな1枚を引く"
+	  "effect": "自ブックの上6枚を見て、好きな1枚を引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_from_deck_selection",
+			"look_count": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2079,

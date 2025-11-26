@@ -104,6 +104,35 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				)
 				result["async"] = true
 		
+		"draw_from_deck_selection":
+			# デッキ上部からカードを選んでドロー（フォーサイト用）
+			# 自分のデッキが対象
+			if card_selection_handler:
+				var look_count = effect.get("look_count", 6)
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_deck_draw_selection(player_id, look_count, func(_card_index: int):
+					pass  # ドロー処理はハンドラー内で完了
+				)
+				result["async"] = true
+		
+		"steal_item_conditional":
+			# アイテム条件付き奪取（スニークハンド用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id < 0 or not card_selection_handler:
+				pass
+			else:
+				var required_count = effect.get("required_item_count", 2)
+				var item_count = count_items_in_hand(target_player_id)
+				if item_count >= required_count:
+					card_selection_handler.set_current_player(player_id)
+					card_selection_handler.start_enemy_card_selection(target_player_id, "item", func(_card_index: int):
+						pass
+					, true)  # is_steal = true
+					result["async"] = true
+				else:
+					print("[スニークハンド] 条件未達: プレイヤー%d のアイテム数 %d < 必要数 %d" % [target_player_id + 1, item_count, required_count])
+					result["failed"] = true
+		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
 	
@@ -556,8 +585,33 @@ func has_cards_matching_filter(target_player_id: int, filter_mode: String) -> bo
 			"destroy_spell":
 				if card_type == "spell":
 					return true
+			"item":
+				if card_type == "item":
+					return true
 	
 	return false
+
+## 対象プレイヤーの手札のアイテム数をカウント
+func count_items_in_hand(target_player_id: int) -> int:
+	"""
+	対象プレイヤーの手札にあるアイテムカードの枚数をカウント
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	
+	戻り値: int（アイテム枚数）
+	"""
+	if not card_system_ref:
+		return 0
+	
+	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
+	var count = 0
+	
+	for card in hand:
+		if card.get("type", "") == "item":
+			count += 1
+	
+	return count
 
 ## 指定インデックスのカードを奪取
 func steal_card_at_index(from_player_id: int, to_player_id: int, card_index: int) -> Dictionary:
@@ -683,4 +737,47 @@ func destroy_deck_card_at_index(player_id: int, card_index: int) -> Dictionary:
 		"destroyed": true,
 		"card_name": card_name,
 		"card_data": destroyed_card if destroyed_card else {}
+	}
+
+## デッキ上部の指定インデックスのカードを手札に加える
+func draw_from_deck_at_index(player_id: int, card_index: int) -> Dictionary:
+	"""
+	対象プレイヤーのデッキ上部から指定インデックスのカードを手札に加える（フォーサイト用）
+	
+	引数:
+	  player_id: 対象プレイヤーID
+	  card_index: 引くカードのインデックス（デッキ上部からの位置）
+	
+	戻り値: Dictionary
+	  - drawn: bool（ドロー成功したか）
+	  - card_name: String（引いたカード名）
+	  - card_data: Dictionary（引いたカードのデータ）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"drawn": false, "card_name": "", "card_data": {}}
+	
+	var deck = card_system_ref.player_decks.get(player_id, [])
+	
+	if card_index < 0 or card_index >= deck.size():
+		print("[デッキドロー] 無効なインデックス: %d（デッキ枚数: %d）" % [card_index, deck.size()])
+		return {"drawn": false, "card_name": "", "card_data": {}}
+	
+	# デッキはカードIDの配列なので、CardLoaderからデータを取得
+	var card_id = deck[card_index]
+	var drawn_card = CardLoader.get_card_by_id(card_id)
+	var card_name = drawn_card.get("name", "?") if drawn_card else "?"
+	
+	# デッキから削除
+	card_system_ref.player_decks[player_id].remove_at(card_index)
+	
+	# 手札に加える
+	if drawn_card:
+		card_system_ref.return_card_to_hand(player_id, drawn_card.duplicate(true))
+		print("[フォーサイト] プレイヤー%d: デッキから『%s』を選んで引きました" % [player_id + 1, card_name])
+	
+	return {
+		"drawn": true,
+		"card_name": card_name,
+		"card_data": drawn_card if drawn_card else {}
 	}
