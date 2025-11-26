@@ -134,6 +134,7 @@ func _setup_spell_systems(board_system):
 	# SpellDrawの初期化
 	spell_draw = SpellDraw.new()
 	spell_draw.setup(card_system, player_system)
+	spell_draw.set_board_system(board_system)
 	print("[SpellDraw] 初期化完了")
 	
 	# SpellMagicの初期化

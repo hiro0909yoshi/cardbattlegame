@@ -42,7 +42,7 @@
 	},
 	{
 	  "id": 9003,
-	  "name": "カード獲得（アイテム使用時）",
+	  "name": "カード獲得（アイテム使用時・アイテムのみ）",
 	  "rarity": "N",
 	  "type": "skill",
 	  "cost": {
@@ -55,8 +55,44 @@
 		},
 		"effects": [
 		  {
+			"effect_type": "draw_by_type",
+			"card_type": "item"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9004,
+	  "name": "秘術・カードドロー",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "cost": {
+		"mp": 0
+	  },
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
 			"effect_type": "draw_cards",
 			"count": 1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9005,
+	  "name": "秘術・アイテムドロー",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "cost": {
+		"mp": 0
+	  },
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_by_type",
+			"card_type": "item"
 		  }
 		]
 	  }

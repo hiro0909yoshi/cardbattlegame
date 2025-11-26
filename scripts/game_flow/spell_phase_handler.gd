@@ -270,11 +270,12 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 			target_info = effect_parsed.get("target_info", {})
 			target_filter = target_info.get("owner_filter", target_info.get("target_filter", "any"))
 	
-	# セルフターゲット時はUI表示なし
-	if target_filter == "self":
+	# セルフターゲット時はUI表示なし（target_typeまたはtarget_filterが"self"）
+	if target_type == "self" or target_filter == "self":
 		var target_data = {
 			"type": target_type,
-			"tile_index": selected_creature.get("tile_index", -1)
+			"tile_index": selected_creature.get("tile_index", -1),
+			"player_id": player_id
 		}
 		await _execute_mystic_art(selected_creature, mystic_art, target_data, player_id)
 		return
@@ -305,6 +306,34 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 	# 最初の対象を表示
 	_update_target_selection()
 
+## 非同期効果を含む秘術かどうかを判定
+func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
+	# カード選択UIが必要な効果タイプ
+	const ASYNC_EFFECT_TYPES = [
+		"destroy_and_draw", "swap_creature",
+		"destroy_selected_card", "steal_selected_card",
+		"destroy_from_deck_selection", "draw_from_deck_selection"
+	]
+	
+	# spell_id参照の場合
+	var spell_id = mystic_art.get("spell_id", -1)
+	if spell_id > 0:
+		var spell_data = CardLoader.get_card_by_id(spell_id)
+		if not spell_data.is_empty():
+			var effects = spell_data.get("effect_parsed", {}).get("effects", [])
+			for effect in effects:
+				if effect.get("effect_type", "") in ASYNC_EFFECT_TYPES:
+					return true
+		return false
+	
+	# 直接effects定義の場合
+	var effects = mystic_art.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type", "") in ASYNC_EFFECT_TYPES:
+			return true
+	
+	return false
+
 ## 秘術実行
 func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary, player_id: int):
 	"""秘術効果を実行"""
@@ -328,6 +357,9 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 	# 発動通知を表示（秘術発動クリーチャー名を使用）
 	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
 	_show_spell_cast_notification(caster_name, target_data, mystic_art, true)
+	
+	# 非同期効果かどうかを事前判定
+	var is_async = _is_async_mystic_art(mystic_art)
 	
 	# 秘術効果を適用
 	var success = spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
@@ -355,6 +387,10 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 	
 	# ターゲット選択をクリア
 	TargetSelectionHelper.clear_selection(self)
+	
+	# 非同期効果の場合はここで終了（CardSelectionHandler完了後にスペルフェーズ完了）
+	if is_async:
+		return
 	
 	# スペルフェーズ完了
 	await get_tree().create_timer(0.5).timeout
@@ -619,12 +655,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
 	
-	# draw_by_type効果はUI選択が必要なので特別処理
+	# 効果を適用
 	for effect in effects:
-		if effect.get("effect_type") == "draw_by_type":
-			await _execute_draw_by_type(effect)
-			# 他の効果があれば続行
-			continue
 		_apply_single_effect(effect, target_data)
 	
 	# カードを捨て札に（復帰[ブック]時はスキップ）
@@ -700,15 +732,17 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", -1)
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
-		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements", \
+		"draw", "draw_cards", "draw_by_rank", "draw_by_type", "discard_and_draw_plus", "check_hand_elements", \
 		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
 		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection", \
-		"draw_from_deck_selection", "steal_item_conditional":
+		"draw_from_deck_selection", "steal_item_conditional", \
+		"add_specific_card", "destroy_and_draw", "swap_creature":
 			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
 				var context = {
 					"rank": _get_player_ranking(current_player_id),
-					"target_player_id": target_data.get("player_id", current_player_id)
+					"target_player_id": target_data.get("player_id", current_player_id),
+					"tile_index": target_data.get("tile_index", -1)
 				}
 				var result = game_flow_manager.spell_draw.apply_effect(effect, current_player_id, context)
 				# 条件分岐効果の場合は次の効果を再帰適用
@@ -804,50 +838,6 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	_return_camera_to_player()
 	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
-
-## タイプ選択ドロー（プロフェシー用）
-func _execute_draw_by_type(effect: Dictionary):
-	"""カードタイプを選択してそのタイプのカードを1枚引く"""
-	if not ui_manager:
-		return
-	
-	# SpellAndMysticUI を取得または作成
-	var spell_and_mystic_ui = ui_manager.get_node_or_null("SpellAndMysticUI")
-	if not spell_and_mystic_ui:
-		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
-		if not SpellAndMysticUIClass:
-			return
-		spell_and_mystic_ui = SpellAndMysticUIClass.new()
-		spell_and_mystic_ui.name = "SpellAndMysticUI"
-		ui_manager.add_child(spell_and_mystic_ui)
-	
-	# ガイド表示
-	if ui_manager.phase_label:
-		ui_manager.phase_label.text = "引くカードのタイプを選択してください"
-	
-	# タイプ選択UIを表示
-	spell_and_mystic_ui.show_type_selection()
-	
-	# タイプ選択を待機
-	var selected_type = await spell_and_mystic_ui.type_selected
-	
-	# UIを非表示
-	spell_and_mystic_ui.hide_all()
-	
-	# 選択されたタイプのカードを引く
-	if game_flow_manager and game_flow_manager.spell_draw:
-		var result = game_flow_manager.spell_draw.draw_card_by_type(current_player_id, selected_type)
-		
-		if result.get("drawn", false):
-			if ui_manager.phase_label:
-				ui_manager.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
-		else:
-			if ui_manager.phase_label:
-				ui_manager.phase_label.text = "デッキに該当タイプがありません"
-		
-		# 手札表示を更新
-		if ui_manager.hand_display:
-			ui_manager.hand_display.update_hand_display(current_player_id)
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():

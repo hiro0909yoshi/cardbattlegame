@@ -285,7 +285,25 @@
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G20・対象の手札を1枚破壊、対象はカードを1枚引く]"
+	  "ability_detail": "秘術[G20・対象の手札を1枚破壊、対象はカードを1枚引く]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "手札破壊ドロー",
+			"cost": 20,
+			"target_type": "player",
+			"target_info": {
+			  "owner_filter": "enemy"
+			},
+			"effects": [
+			  {
+				"effect_type": "destroy_and_draw"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 311,

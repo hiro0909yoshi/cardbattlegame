@@ -338,6 +338,13 @@
 			"trigger": "on_death",
 			"card_count": 1
 		  }
+		],
+		"mystic_arts": [
+		  {
+			"name": "カードドロー",
+			"spell_id": 9004,
+			"cost": 40
+		  }
 		]
 	  }
 	},

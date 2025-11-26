@@ -75,7 +75,17 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・アイテムカードを1枚引く]"
+	  "ability_detail": "秘術[G50・アイテムカードを1枚引く]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "アイテムドロー",
+			"spell_id": 9005,
+			"cost": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 406,

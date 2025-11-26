@@ -443,6 +443,12 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		var turn_count = 1  # TODO: 実際の周回数を取得する必要がある
 		SkillMagicSteal.apply_no_item_steal(winner, winner_has_item, turn_count, spell_magic_ref, loser)
 	
+	# 🃏 生き残り時効果（カード獲得スキル）
+	if attacker_p.is_alive():
+		special_effects.check_on_survive_effects(attacker_p)
+	if defender_p.is_alive():
+		special_effects.check_on_survive_effects(defender_p)
+	
 	return battle_result
 
 ## 💰 魔力奪取スキルを適用（ダメージベース）

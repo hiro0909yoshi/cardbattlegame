@@ -554,3 +554,93 @@ func check_post_battle_magic_effects(winner: BattleParticipant, loser: BattlePar
 						result["magic_gained"] += amount
 	
 	return result
+
+## 🃏 生き残り時効果チェック（カード獲得スキル用）
+func check_on_survive_effects(survivor: BattleParticipant) -> Dictionary:
+	"""
+	バトル中生き残ったクリーチャーのスキル効果を発動
+	
+	Args:
+		survivor: 生き残ったクリーチャー
+	
+	Returns:
+		{
+			"cards_drawn": int,  # 引いたカード枚数
+			"skill_activated": bool  # スキルが発動したか
+		}
+	"""
+	var result = {
+		"cards_drawn": 0,
+		"skill_activated": false
+	}
+	
+	if not survivor or not survivor.is_alive():
+		return result
+	
+	if not spell_draw_ref:
+		return result
+	
+	# クリーチャーのskill_idsをチェック
+	var ability_parsed = survivor.creature_data.get("ability_parsed", {})
+	var skill_ids = ability_parsed.get("skill_ids", [])
+	
+	if skill_ids.is_empty():
+		return result
+	
+	# アイテム使用フラグ（アイテムを装備していれば使用したとみなす）
+	var used_item = survivor.creature_data.get("items", []).size() > 0
+	
+	for skill_id in skill_ids:
+		# spell_mystic.jsonからスキルデータを取得
+		var skill_data = CardLoader.get_card_by_id(skill_id)
+		if skill_data.is_empty():
+			continue
+		
+		var effect_parsed = skill_data.get("effect_parsed", {})
+		var trigger = effect_parsed.get("trigger", "")
+		
+		# on_surviveトリガーのみ処理
+		if trigger != "on_survive":
+			continue
+		
+		# trigger_conditionチェック
+		var trigger_condition = effect_parsed.get("trigger_condition", {})
+		if trigger_condition.has("self_used_item"):
+			if trigger_condition["self_used_item"] and not used_item:
+				print("【カード獲得スキップ】", survivor.creature_data.get("name", "?"), " - アイテム未使用")
+				continue
+		
+		# 効果を発動
+		var effects = effect_parsed.get("effects", [])
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			
+			match effect_type:
+				"draw_until":
+					var target_hand_size = effect.get("target_hand_size", 5)
+					var drawn = spell_draw_ref.draw_until(survivor.player_id, target_hand_size)
+					result["cards_drawn"] += drawn.size()
+					if drawn.size() > 0:
+						result["skill_activated"] = true
+						print("【カード獲得】", survivor.creature_data.get("name", "?"), 
+							  " → プレイヤー", survivor.player_id + 1, "が", drawn.size(), "枚獲得（", target_hand_size, "枚まで）")
+				
+				"draw_cards":
+					var count = effect.get("count", 1)
+					var drawn = spell_draw_ref.draw_cards(survivor.player_id, count)
+					result["cards_drawn"] += drawn.size()
+					if drawn.size() > 0:
+						result["skill_activated"] = true
+						print("【カード獲得】", survivor.creature_data.get("name", "?"), 
+							  " → プレイヤー", survivor.player_id + 1, "が", drawn.size(), "枚獲得")
+				
+				"draw_by_type":
+					var card_type = effect.get("card_type", "item")
+					var draw_result = spell_draw_ref.draw_card_by_type(survivor.player_id, card_type)
+					if draw_result.get("drawn", false):
+						result["cards_drawn"] += 1
+						result["skill_activated"] = true
+						print("【カード獲得】", survivor.creature_data.get("name", "?"), 
+							  " → プレイヤー", survivor.player_id + 1, "が", card_type, "『", draw_result.get("card_name", "?"), "』を獲得")
+	
+	return result

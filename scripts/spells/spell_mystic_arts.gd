@@ -101,7 +101,7 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 				target_info["target_filter"] = target_filter
 	
 	# セルフターゲットは常に有効
-	if target_info.get("target_filter") == "self":
+	if target_type == "self" or target_info.get("target_filter") == "self":
 		return true
 	
 	# TargetSelectionHelperを直接呼び出してターゲット取得
@@ -185,12 +185,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 		# 共通効果（damage, drain_magic, stat_boost等）はspell_phase_handlerに委譲
 		_:
 			if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-				spell_phase_handler_ref._apply_single_effect(effect, target_data)
+				# contextからtile_indexを追加（swap_creature等で必要）
+				var extended_target_data = target_data.duplicate()
+				if context.has("tile_index"):
+					extended_target_data["tile_index"] = context.get("tile_index", -1)
+				spell_phase_handler_ref._apply_single_effect(effect, extended_target_data)
 				return true
 			else:
 				push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
 				return false
-			return false
 
 
 # ============ 秘術専用効果実装 ============

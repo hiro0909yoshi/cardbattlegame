@@ -174,7 +174,23 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G20・手札にハイプワーカーを加える]"
+	  "ability_detail": "秘術[G20・手札にハイプワーカーを加える]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "ハイプワーカー生成",
+			"cost": 20,
+			"target_type": "self",
+			"effects": [
+			  {
+				"effect_type": "add_specific_card",
+				"card_id": 32
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 32,

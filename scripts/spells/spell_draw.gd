@@ -7,11 +7,21 @@ class_name SpellDraw
 var card_system_ref: CardSystem = null
 var player_system_ref = null
 var card_selection_handler: CardSelectionHandler = null
+var ui_manager_ref = null
+var board_system_ref = null
 
 func setup(card_system: CardSystem, player_system = null):
 	card_system_ref = card_system
 	player_system_ref = player_system
 	print("SpellDraw: セットアップ完了")
+
+## BoardSystem参照を設定
+func set_board_system(board_system):
+	board_system_ref = board_system
+
+## UIマネージャーを設定
+func set_ui_manager(ui_manager):
+	ui_manager_ref = ui_manager
 
 ## カード選択ハンドラーを設定
 func set_card_selection_handler(handler: CardSelectionHandler):
@@ -31,6 +41,16 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 		"draw_by_rank":
 			var rank = context.get("rank", 1)
 			result["drawn"] = draw_by_rank(player_id, rank)
+		
+		"draw_by_type":
+			var card_type = effect.get("card_type", "")
+			if card_type != "":
+				# card_type指定あり → 同期処理（秘術等）
+				result = draw_card_by_type(player_id, card_type)
+			else:
+				# card_type指定なし → UI選択必要（プロフェシー等）
+				_start_type_selection_draw(player_id)
+				result["async"] = true
 		
 		"discard_and_draw_plus":
 			result["drawn"] = discard_and_draw_plus(player_id)
@@ -133,6 +153,35 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 					print("[スニークハンド] 条件未達: プレイヤー%d のアイテム数 %d < 必要数 %d" % [target_player_id + 1, item_count, required_count])
 					result["failed"] = true
 		
+		"add_specific_card":
+			# 特定カードを手札に生成（ハイプクイーン用）
+			var card_id = effect.get("card_id", -1)
+			result = add_specific_card_to_hand(player_id, card_id)
+		
+		"destroy_and_draw":
+			# 敵手札破壊→自分ドロー（クラウドギズモ用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0 and card_selection_handler:
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_enemy_card_selection(target_player_id, "destroy_any", func(_card_index: int):
+					# 破壊後に自分が1枚ドロー
+					draw_cards(player_id, 1)
+				)
+				result["async"] = true
+		
+		"swap_creature":
+			# クリーチャー交換（レムレース用）
+			var target_player_id = context.get("target_player_id", -1)
+			var caster_tile_index = context.get("tile_index", -1)
+			if target_player_id >= 0 and card_selection_handler and caster_tile_index >= 0:
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_enemy_card_selection(target_player_id, "creature", func(_card_index: int):
+					pass  # 奪取処理はハンドラー内で完了、土地処理は別途
+				, true)  # is_steal = true
+				# キャスタークリーチャーを土地から除去して敵手札に追加
+				_move_caster_to_enemy_hand(caster_tile_index, target_player_id)
+				result["async"] = true
+		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
 	
@@ -219,6 +268,73 @@ func draw_card_by_type(player_id: int, card_type: String) -> Dictionary:
 	# 該当タイプがデッキにない
 	print("[プロフェシー] プレイヤー%d: デッキに%sがありません" % [player_id + 1, card_type])
 	return {"drawn": false, "card_name": "", "card_data": {}}
+
+## 特定カードを手札に生成（ハイプクイーン用）
+func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
+	"""
+	CardLoaderから指定IDのカードデータを取得し、手札に追加する（無から生成）
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	  card_id: 追加するカードのID
+	
+	戻り値: Dictionary
+	  - success: bool
+	  - card_name: String
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: card_system_refが未設定")
+		return {"success": false, "card_name": ""}
+	
+	var card_data = CardLoader.get_card_by_id(card_id)
+	if card_data.is_empty():
+		push_error("SpellDraw: カードID %d が見つかりません" % card_id)
+		return {"success": false, "card_name": ""}
+	
+	# 手札に追加
+	card_system_ref.return_card_to_hand(player_id, card_data.duplicate(true))
+	var card_name = card_data.get("name", "?")
+	print("[カード生成] プレイヤー%d: 『%s』を手札に追加" % [player_id + 1, card_name])
+	
+	# UI更新
+	if ui_manager_ref and ui_manager_ref.hand_display:
+		ui_manager_ref.hand_display.update_hand_display(player_id)
+	
+	return {"success": true, "card_name": card_name}
+
+## キャスタークリーチャーを土地から敵手札へ移動（レムレース用）
+func _move_caster_to_enemy_hand(tile_index: int, target_player_id: int):
+	"""
+	土地上のクリーチャーを削除し、そのカードを敵の手札に追加する
+	
+	引数:
+	  tile_index: クリーチャーがいるタイルのインデックス
+	  target_player_id: 移動先のプレイヤーID
+	"""
+	if not board_system_ref:
+		push_error("SpellDraw: board_system_refが未設定")
+		return
+	
+	if not board_system_ref.tile_nodes.has(tile_index):
+		push_error("SpellDraw: タイル %d が見つかりません" % tile_index)
+		return
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	if not tile or tile.creature_data.is_empty():
+		push_error("SpellDraw: タイル %d にクリーチャーがいません" % tile_index)
+		return
+	
+	# クリーチャーデータを取得
+	var creature_data = tile.creature_data.duplicate(true)
+	var creature_name = creature_data.get("name", "?")
+	
+	# 土地からクリーチャーを削除
+	tile.remove_creature()
+	
+	# 敵の手札に追加
+	if card_system_ref:
+		card_system_ref.return_card_to_hand(target_player_id, creature_data)
+		print("[クリーチャー交換] 『%s』がプレイヤー%dの手札に移動" % [creature_name, target_player_id + 1])
 
 ## 上限までドロー（手札補充）
 func draw_until(player_id: int, target_hand_size: int) -> Array:
@@ -624,6 +740,9 @@ func has_cards_matching_filter(target_player_id: int, filter_mode: String) -> bo
 			"item":
 				if card_type == "item":
 					return true
+			"creature":
+				if card_type == "creature":
+					return true
 	
 	return false
 
@@ -817,3 +936,113 @@ func draw_from_deck_at_index(player_id: int, card_index: int) -> Dictionary:
 		"card_name": card_name,
 		"card_data": drawn_card if drawn_card else {}
 	}
+
+## タイプ選択UIを表示してカードを引く（プロフェシー用）
+func execute_draw_by_type_with_ui(player_id: int) -> Dictionary:
+	"""
+	カードタイプを選択してそのタイプのカードを1枚引く
+	
+	引数:
+	  player_id: プレイヤーID（0-3）
+	
+	戻り値: Dictionary
+	  - drawn: bool（ドロー成功したか）
+	  - card_name: String（引いたカード名）
+	  - selected_type: String（選択されたタイプ）
+	"""
+	if not ui_manager_ref:
+		push_error("SpellDraw: UIManagerが設定されていません")
+		return {"drawn": false, "card_name": "", "selected_type": ""}
+	
+	# SpellAndMysticUI を取得または作成
+	var spell_and_mystic_ui = ui_manager_ref.get_node_or_null("SpellAndMysticUI")
+	if not spell_and_mystic_ui:
+		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
+		if not SpellAndMysticUIClass:
+			return {"drawn": false, "card_name": "", "selected_type": ""}
+		spell_and_mystic_ui = SpellAndMysticUIClass.new()
+		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		ui_manager_ref.add_child(spell_and_mystic_ui)
+	
+	# ガイド表示
+	if ui_manager_ref.phase_label:
+		ui_manager_ref.phase_label.text = "引くカードのタイプを選択してください"
+	
+	# タイプ選択UIを表示
+	spell_and_mystic_ui.show_type_selection()
+	
+	# タイプ選択を待機
+	var selected_type = await spell_and_mystic_ui.type_selected
+	
+	# UIを非表示
+	spell_and_mystic_ui.hide_all()
+	
+	# 選択されたタイプのカードを引く
+	var result = draw_card_by_type(player_id, selected_type)
+	
+	if result.get("drawn", false):
+		if ui_manager_ref.phase_label:
+			ui_manager_ref.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
+	else:
+		if ui_manager_ref.phase_label:
+			ui_manager_ref.phase_label.text = "デッキに該当タイプがありません"
+	
+	# 手札表示を更新
+	if ui_manager_ref.hand_display:
+		ui_manager_ref.hand_display.update_hand_display(player_id)
+	
+	return {
+		"drawn": result.get("drawn", false),
+		"card_name": result.get("card_name", ""),
+		"selected_type": selected_type
+	}
+
+## タイプ選択ドロー開始（callback方式・プロフェシー用）
+func _start_type_selection_draw(player_id: int):
+	"""
+	カードタイプ選択UIを表示してドローを実行（非同期callback方式）
+	"""
+	if not ui_manager_ref:
+		push_error("SpellDraw: UIManagerが設定されていません")
+		return
+	
+	# SpellAndMysticUI を取得または作成
+	var spell_and_mystic_ui = ui_manager_ref.get_node_or_null("SpellAndMysticUI")
+	if not spell_and_mystic_ui:
+		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
+		if not SpellAndMysticUIClass:
+			return
+		spell_and_mystic_ui = SpellAndMysticUIClass.new()
+		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		ui_manager_ref.add_child(spell_and_mystic_ui)
+	
+	# ガイド表示
+	if ui_manager_ref.phase_label:
+		ui_manager_ref.phase_label.text = "引くカードのタイプを選択してください"
+	
+	# タイプ選択UIを表示
+	spell_and_mystic_ui.show_type_selection()
+	
+	# タイプ選択シグナルを接続
+	if spell_and_mystic_ui.is_connected("type_selected", _on_type_selected):
+		spell_and_mystic_ui.disconnect("type_selected", _on_type_selected)
+	spell_and_mystic_ui.type_selected.connect(_on_type_selected.bind(player_id, spell_and_mystic_ui), CONNECT_ONE_SHOT)
+
+## タイプ選択完了時のコールバック
+func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node):
+	# UIを非表示
+	spell_ui.hide_all()
+	
+	# 選択されたタイプのカードを引く
+	var result = draw_card_by_type(player_id, selected_type)
+	
+	if result.get("drawn", false):
+		if ui_manager_ref and ui_manager_ref.phase_label:
+			ui_manager_ref.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
+	else:
+		if ui_manager_ref and ui_manager_ref.phase_label:
+			ui_manager_ref.phase_label.text = "デッキに該当タイプがありません"
+	
+	# 手札表示を更新
+	if ui_manager_ref and ui_manager_ref.hand_display:
+		ui_manager_ref.hand_display.update_hand_display(player_id)

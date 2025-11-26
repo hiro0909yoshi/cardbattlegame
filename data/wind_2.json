@@ -601,7 +601,25 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]"
+	  "ability_detail": "秘術[G50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "クリーチャー交換",
+			"cost": 50,
+			"target_type": "player",
+			"target_info": {
+			  "owner_filter": "enemy"
+			},
+			"effects": [
+			  {
+				"effect_type": "swap_creature"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 347,
