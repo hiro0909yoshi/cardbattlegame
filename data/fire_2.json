@@ -25,6 +25,7 @@
 			"condition_type": "enemy_no_item"
 		  }
 		},
+		"skill_ids": [9002],
 		"effects": [
 		  {
 			"effect_type": "power_strike",

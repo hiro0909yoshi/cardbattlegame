@@ -145,7 +145,8 @@
 	  "ability_parsed": {
 		"keywords": [
 		  "再生"
-		]
+		],
+		"skill_ids": [9002]
 	  }
 	},
 	{
@@ -167,7 +168,8 @@
 		  "巻物強打": {
 			"scroll_type": "base_ap"
 		  }
-		}
+		},
+		"skill_ids": [9003]
 	  }
 	},
 	{

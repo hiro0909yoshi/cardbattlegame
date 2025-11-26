@@ -21,6 +21,45 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9002,
+	  "name": "カード獲得",
+	  "rarity": "N",
+	  "type": "skill",
+	  "cost": {
+		"mp": 0
+	  },
+	  "effect_parsed": {
+		"trigger": "on_survive",
+		"effects": [
+		  {
+			"effect_type": "draw_until",
+			"target_hand_size": 5
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9003,
+	  "name": "カード獲得（アイテム使用時）",
+	  "rarity": "N",
+	  "type": "skill",
+	  "cost": {
+		"mp": 0
+	  },
+	  "effect_parsed": {
+		"trigger": "on_survive",
+		"trigger_condition": {
+		  "self_used_item": true
+		},
+		"effects": [
+		  {
+			"effect_type": "draw_cards",
+			"count": 1
+		  }
+		]
+	  }
 	}
   ]
 }

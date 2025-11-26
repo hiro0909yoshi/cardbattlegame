@@ -4,12 +4,17 @@ extends Control
 # シグナル
 signal creature_selected(index: int)
 signal mystic_art_selected(index: int)
+signal type_selected(type_name: String)
 signal selection_cancelled
 
 # UI要素
 var creature_list: ItemList
 var mystic_art_list: ItemList
+var type_list: ItemList
 var cancel_button: Button
+
+# タイプ選択用
+var type_options: Array = []
 
 # 状態
 var available_creatures: Array = []
@@ -49,6 +54,18 @@ func _create_ui_elements():
 	add_child(mystic_art_list)
 	mystic_art_list.visible = false
 	
+	# タイプ選択リスト
+	type_list = ItemList.new()
+	type_list.name = "TypeList"
+	type_list.custom_minimum_size = Vector2(300, 150)
+	type_list.select_mode = ItemList.SELECT_SINGLE
+	type_list.allow_reselect = true
+	type_list.z_index = 100
+	type_list.mouse_filter = Control.MOUSE_FILTER_STOP
+	type_list.item_selected.connect(_on_type_selected)
+	add_child(type_list)
+	type_list.visible = false
+	
 	# キャンセルボタン
 	cancel_button = Button.new()
 	cancel_button.text = "キャンセル"
@@ -83,6 +100,14 @@ func _update_positions():
 		margin + list_height + margin
 	)
 	mystic_art_list.size = Vector2(list_width, list_height)
+	
+	# タイプ選択リスト（画面中央）
+	var type_list_height = 150
+	type_list.position = Vector2(
+		viewport_size.x - list_width - margin,
+		margin
+	)
+	type_list.size = Vector2(list_width, type_list_height)
 	
 	# キャンセルボタン（画面右下）
 	cancel_button.position = Vector2(
@@ -121,12 +146,38 @@ func show_mystic_art_selection(mystic_arts: Array):
 	
 	creature_list.visible = false
 	mystic_art_list.visible = true
+	type_list.visible = false
+	cancel_button.visible = true
+
+func show_type_selection(types: Array = ["creature", "item", "spell"]):
+	"""カードタイプ選択を表示"""
+	type_options = types
+	type_list.clear()
+	
+	# 日本語表示名
+	var type_names = {
+		"creature": "クリーチャー",
+		"item": "アイテム",
+		"spell": "スペル"
+	}
+	
+	for type_key in types:
+		var display_name = type_names.get(type_key, type_key)
+		type_list.add_item(display_name)
+	
+	# 位置を再計算
+	_update_positions()
+	
+	creature_list.visible = false
+	mystic_art_list.visible = false
+	type_list.visible = true
 	cancel_button.visible = true
 
 func hide_all():
 	"""全UI非表示"""
 	creature_list.visible = false
 	mystic_art_list.visible = false
+	type_list.visible = false
 	cancel_button.visible = false
 
 func _on_creature_selected(index: int):
@@ -137,6 +188,12 @@ func _on_creature_selected(index: int):
 func _on_mystic_art_selected(index: int):
 	"""秘術が選択された（item_selectedシグナル）"""
 	mystic_art_selected.emit(index)
+
+func _on_type_selected(index: int):
+	"""タイプが選択された（item_selectedシグナル）"""
+	if index >= 0 and index < type_options.size():
+		var selected_type = type_options[index]
+		type_selected.emit(selected_type)
 
 func _on_cancel_button_pressed():
 	"""キャンセルボタンが押された"""

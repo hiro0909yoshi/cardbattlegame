@@ -184,6 +184,42 @@ func draw_cards(player_id: int, count: int) -> Array:
 	
 	return drawn
 
+## タイプ指定ドロー（プロフェシー用）
+func draw_card_by_type(player_id: int, card_type: String) -> Dictionary:
+	"""
+	デッキから指定タイプのカードを1枚引く
+	
+	引数:
+	  player_id: プレイヤーID
+	  card_type: カードタイプ（"creature", "item", "spell"）
+	
+	戻り値: Dictionary
+	  - drawn: bool（ドロー成功したか）
+	  - card_name: String（引いたカード名）
+	  - card_data: Dictionary（引いたカードのデータ）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"drawn": false, "card_name": "", "card_data": {}}
+	
+	var deck = card_system_ref.player_decks.get(player_id, [])
+	
+	# デッキから指定タイプのカードを探す
+	for i in range(deck.size()):
+		var card_id = deck[i]
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data and card_data.get("type", "") == card_type:
+			# 見つかった！デッキから削除して手札に加える
+			card_system_ref.player_decks[player_id].remove_at(i)
+			card_system_ref.return_card_to_hand(player_id, card_data.duplicate(true))
+			var card_name = card_data.get("name", "?")
+			print("[プロフェシー] プレイヤー%d: デッキから『%s』（%s）を引きました" % [player_id + 1, card_name, card_type])
+			return {"drawn": true, "card_name": card_name, "card_data": card_data}
+	
+	# 該当タイプがデッキにない
+	print("[プロフェシー] プレイヤー%d: デッキに%sがありません" % [player_id + 1, card_type])
+	return {"drawn": false, "card_name": "", "card_data": {}}
+
 ## 上限までドロー（手札補充）
 func draw_until(player_id: int, target_hand_size: int) -> Array:
 	"""

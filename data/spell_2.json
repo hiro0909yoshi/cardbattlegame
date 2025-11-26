@@ -396,7 +396,15 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "選んだタイプのカードを1枚引く"
+	  "effect": "選んだタイプのカードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_by_type"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2091,

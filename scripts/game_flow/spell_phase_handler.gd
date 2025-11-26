@@ -618,9 +618,13 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
-
 	
+	# draw_by_type効果はUI選択が必要なので特別処理
 	for effect in effects:
+		if effect.get("effect_type") == "draw_by_type":
+			await _execute_draw_by_type(effect)
+			# 他の効果があれば続行
+			continue
 		_apply_single_effect(effect, target_data)
 	
 	# カードを捨て札に（復帰[ブック]時はスキップ）
@@ -801,7 +805,50 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
 
-## 魔力奪取効果
+## タイプ選択ドロー（プロフェシー用）
+func _execute_draw_by_type(effect: Dictionary):
+	"""カードタイプを選択してそのタイプのカードを1枚引く"""
+	if not ui_manager:
+		return
+	
+	# SpellAndMysticUI を取得または作成
+	var spell_and_mystic_ui = ui_manager.get_node_or_null("SpellAndMysticUI")
+	if not spell_and_mystic_ui:
+		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
+		if not SpellAndMysticUIClass:
+			return
+		spell_and_mystic_ui = SpellAndMysticUIClass.new()
+		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		ui_manager.add_child(spell_and_mystic_ui)
+	
+	# ガイド表示
+	if ui_manager.phase_label:
+		ui_manager.phase_label.text = "引くカードのタイプを選択してください"
+	
+	# タイプ選択UIを表示
+	spell_and_mystic_ui.show_type_selection()
+	
+	# タイプ選択を待機
+	var selected_type = await spell_and_mystic_ui.type_selected
+	
+	# UIを非表示
+	spell_and_mystic_ui.hide_all()
+	
+	# 選択されたタイプのカードを引く
+	if game_flow_manager and game_flow_manager.spell_draw:
+		var result = game_flow_manager.spell_draw.draw_card_by_type(current_player_id, selected_type)
+		
+		if result.get("drawn", false):
+			if ui_manager.phase_label:
+				ui_manager.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
+		else:
+			if ui_manager.phase_label:
+				ui_manager.phase_label.text = "デッキに該当タイプがありません"
+		
+		# 手札表示を更新
+		if ui_manager.hand_display:
+			ui_manager.hand_display.update_hand_display(current_player_id)
+
 ## カメラを使用者に戻す
 func _return_camera_to_player():
 	if not player_system or not board_system:
