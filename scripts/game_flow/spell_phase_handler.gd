@@ -680,10 +680,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", -1)
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 		
-		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements":
+		"draw", "draw_cards", "draw_by_rank", "discard_and_draw_plus", "check_hand_elements", \
+		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards":
 			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
-				var context = {"rank": _get_player_ranking(current_player_id)}
+				var context = {
+					"rank": _get_player_ranking(current_player_id),
+					"target_player_id": target_data.get("player_id", current_player_id)
+				}
 				var result = game_flow_manager.spell_draw.apply_effect(effect, current_player_id, context)
 				# 条件分岐効果の場合は次の効果を再帰適用
 				if result.has("next_effect") and not result["next_effect"].is_empty():

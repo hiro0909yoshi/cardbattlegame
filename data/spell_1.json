@@ -264,7 +264,16 @@
 		"mp": 40,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象手札を参照し、重複カードを全て破壊；合成[スペル・全手札]"
+	  "effect": "対象手札を参照し、重複カードを全て破壊；合成[スペル・全手札]",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "destroy_duplicate_cards"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2018,

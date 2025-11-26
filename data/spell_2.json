@@ -948,7 +948,15 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "全セプターの手札の呪いカードを破壊"
+	  "effect": "全セプターの手札の呪いカードを破壊",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "destroy_curse_cards"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2129,
@@ -959,7 +967,16 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "全手札の使用魔力G100以上のカードを全て破壊する"
+	  "effect": "全手札の使用魔力G100以上のカードを全て破壊する",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "destroy_expensive_cards",
+			"cost_threshold": 100
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2130,

@@ -44,6 +44,20 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				print("[密命失敗] 手札の属性: %s（必要: %s）" % [str(hand_elements), str(required_elements)])
 				result["next_effect"] = fail_effect
 		
+		"destroy_curse_cards":
+			# 全プレイヤーの呪いカード破壊（レイオブパージ用）
+			result = destroy_curse_cards()
+		
+		"destroy_expensive_cards":
+			# 全プレイヤーの高コストカード破壊（レイオブロウ用）
+			var cost_threshold = effect.get("cost_threshold", 100)
+			result = destroy_expensive_cards(cost_threshold)
+		
+		"destroy_duplicate_cards":
+			# 対象プレイヤーの重複カード破壊（エロージョン用）
+			var target_player_id = context.get("target_player_id", player_id)
+			result = destroy_duplicate_cards(target_player_id)
+		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
 	
@@ -260,3 +274,171 @@ func has_all_elements(player_id: int, required_elements: Array) -> bool:
 			return false
 	
 	return true
+
+# ========================================
+# 手札破壊系
+# ========================================
+
+## 呪いカードのspell_type一覧
+const CURSE_SPELL_TYPES = [
+	"複数特殊能力付与",
+	"世界呪い",
+	"単体特殊能力付与"
+]
+
+## 呪いカードかどうか判定
+func is_curse_card(card: Dictionary) -> bool:
+	"""
+	カードが呪いスペルかどうかを判定
+	
+	判定基準: spell_typeが呪い系（複数特殊能力付与、世界呪い、単体特殊能力付与）
+	
+	引数:
+	  card: カードデータ
+	
+	戻り値: bool
+	"""
+	if card.get("type") != "spell":
+		return false
+	return card.get("spell_type", "") in CURSE_SPELL_TYPES
+
+## 全プレイヤーの手札から呪いカードを破壊
+func destroy_curse_cards() -> Dictionary:
+	"""
+	全プレイヤーの手札から呪いカードを破壊する（レイオブパージ用）
+	
+	戻り値: Dictionary
+	  - total_destroyed: int（破壊した総枚数）
+	  - by_player: Array（プレイヤーごとの破壊枚数）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"total_destroyed": 0, "by_player": []}
+	
+	var total_destroyed = 0
+	var by_player = []
+	
+	# 全プレイヤーの手札をチェック
+	for player_id in range(4):
+		var destroyed_count = 0
+		var hand = card_system_ref.get_all_cards_for_player(player_id)
+		
+		# 逆順でチェック（削除時にインデックスがずれないように）
+		for i in range(hand.size() - 1, -1, -1):
+			var card = hand[i]
+			if is_curse_card(card):
+				card_system_ref.discard_card(player_id, i, "destroy")
+				print("[呪いカード破壊] プレイヤー%d: %s" % [player_id + 1, card.get("name", "?")])
+				destroyed_count += 1
+		
+		by_player.append(destroyed_count)
+		total_destroyed += destroyed_count
+	
+	print("[レイオブパージ] 合計 %d 枚の呪いカードを破壊" % total_destroyed)
+	
+	return {
+		"total_destroyed": total_destroyed,
+		"by_player": by_player
+	}
+
+## 全プレイヤーの手札から高コストカードを破壊
+func destroy_expensive_cards(cost_threshold: int) -> Dictionary:
+	"""
+	全プレイヤーの手札から指定コスト以上のカードを破壊する（レイオブロウ用）
+	
+	引数:
+	  cost_threshold: コスト閾値（この値以上のカードを破壊）
+	
+	戻り値: Dictionary
+	  - total_destroyed: int（破壊した総枚数）
+	  - by_player: Array（プレイヤーごとの破壊枚数）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"total_destroyed": 0, "by_player": []}
+	
+	var total_destroyed = 0
+	var by_player = []
+	
+	# 全プレイヤーの手札をチェック
+	for player_id in range(4):
+		var destroyed_count = 0
+		var hand = card_system_ref.get_all_cards_for_player(player_id)
+		
+		# 逆順でチェック（削除時にインデックスがずれないように）
+		for i in range(hand.size() - 1, -1, -1):
+			var card = hand[i]
+			# costがintの場合と辞書の場合の両方に対応
+			var cost_data = card.get("cost", 0)
+			var card_cost = 0
+			if cost_data is Dictionary:
+				card_cost = cost_data.get("mp", 0)
+			else:
+				card_cost = cost_data
+			
+			if card_cost >= cost_threshold:
+				card_system_ref.discard_card(player_id, i, "destroy")
+				print("[高コストカード破壊] プレイヤー%d: %s (G%d)" % [player_id + 1, card.get("name", "?"), card_cost])
+				destroyed_count += 1
+		
+		by_player.append(destroyed_count)
+		total_destroyed += destroyed_count
+	
+	print("[レイオブロウ] 合計 %d 枚のG%d以上カードを破壊" % [total_destroyed, cost_threshold])
+	
+	return {
+		"total_destroyed": total_destroyed,
+		"by_player": by_player
+	}
+
+## 対象プレイヤーの手札から重複カードを破壊
+func destroy_duplicate_cards(target_player_id: int) -> Dictionary:
+	"""
+	対象プレイヤーの手札から重複カード（同名カードが2枚以上）を全て破壊する（エロージョン用）
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	
+	戻り値: Dictionary
+	  - total_destroyed: int（破壊した総枚数）
+	  - duplicates: Array（破壊したカード名のリスト）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"total_destroyed": 0, "duplicates": []}
+	
+	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
+	
+	# カード名ごとの出現回数をカウント
+	var name_count = {}
+	for card in hand:
+		var card_name = card.get("name", "")
+		if card_name != "":
+			name_count[card_name] = name_count.get(card_name, 0) + 1
+	
+	# 重複しているカード名を特定
+	var duplicate_names = []
+	for card_name in name_count.keys():
+		if name_count[card_name] >= 2:
+			duplicate_names.append(card_name)
+	
+	if duplicate_names.is_empty():
+		print("[エロージョン] プレイヤー%d: 重複カードなし" % [target_player_id + 1])
+		return {"total_destroyed": 0, "duplicates": []}
+	
+	# 逆順で重複カードを破壊
+	var destroyed_count = 0
+	for i in range(hand.size() - 1, -1, -1):
+		var card = hand[i]
+		var card_name = card.get("name", "")
+		if card_name in duplicate_names:
+			card_system_ref.discard_card(target_player_id, i, "destroy")
+			print("[重複カード破壊] プレイヤー%d: %s" % [target_player_id + 1, card_name])
+			destroyed_count += 1
+	
+	print("[エロージョン] プレイヤー%d: %d 枚の重複カードを破壊（%s）" % [target_player_id + 1, destroyed_count, str(duplicate_names)])
+	
+	return {
+		"total_destroyed": destroyed_count,
+		"duplicates": duplicate_names
+	}

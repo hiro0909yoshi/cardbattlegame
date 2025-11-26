@@ -239,9 +239,9 @@ Card.gd (scripts/)
 ```gdscript
 # 全クリーチャー取得（汎用）
 var targets = TargetSelectionHelper.get_all_creatures(board_system, {
-    "condition_type": "mhp_check",
-    "operator": "<=",
-    "value": 30
+	"condition_type": "mhp_check",
+	"operator": "<=",
+	"value": 30
 })
 # targets = [{tile_index: int, creature: Dictionary}, ...]
 ```
