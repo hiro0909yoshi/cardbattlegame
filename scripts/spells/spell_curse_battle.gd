@@ -76,11 +76,17 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 	for effect in effects:
 		if effect.get("effect_type") == "on_attack_success_curse":
 			var curse_type = effect.get("curse_type", "")
-			if curse_type == "battle_disable":
-				apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
-				print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
-					  defender_data.get("name", "?"), " に戦闘行動不可を付与")
-				applied = true
+			match curse_type:
+				"battle_disable":
+					apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
+					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
+						  defender_data.get("name", "?"), " に戦闘行動不可を付与")
+					applied = true
+				"plague":
+					apply_plague(defender_data, effect.get("name", "衰弱"))
+					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
+						  defender_data.get("name", "?"), " に衰弱を付与")
+					applied = true
 	
 	# アイテムからチェック
 	var items = attacker_data.get("items", [])
@@ -89,11 +95,17 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 		for effect in item_effects:
 			if effect.get("effect_type") == "on_attack_success_curse":
 				var curse_type = effect.get("curse_type", "")
-				if curse_type == "battle_disable":
-					apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
-					print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
-						  defender_data.get("name", "?"), " に戦闘行動不可を付与")
-					applied = true
+				match curse_type:
+					"battle_disable":
+						apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
+						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
+							  defender_data.get("name", "?"), " に戦闘行動不可を付与")
+						applied = true
+					"plague":
+						apply_plague(defender_data, effect.get("name", "衰弱"))
+						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
+							  defender_data.get("name", "?"), " に衰弱を付与")
+						applied = true
 	
 	return applied
 

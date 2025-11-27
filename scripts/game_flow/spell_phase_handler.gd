@@ -774,11 +774,6 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
 	
 	match effect_type:
-		"damage":
-			# クリーチャーにダメージ - SpellDamageに委譲
-			if spell_damage and target_data.get("type", "") == "creature":
-				await spell_damage.apply_effect(self, effect, target_data)
-		
 		"drain_magic", "gain_magic", "gain_magic_by_rank":
 			# 魔力操作系 - SpellMagicに委譲
 			if game_flow_manager and game_flow_manager.spell_magic:
@@ -1119,5 +1114,3 @@ func _show_spell_cast_notification(caster_name: String, target_data: Dictionary,
 	# 通知を表示してクリック待ち
 	spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
 	await spell_cast_notification_ui.click_confirmed
-
-

@@ -571,7 +571,16 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "合成・攻撃成功時",
-	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\""
+	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\"",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "on_attack_success_curse",
+			"curse_type": "plague",
+			"name": "衰弱"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 321,
