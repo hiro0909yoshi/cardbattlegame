@@ -38,6 +38,10 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			var params = {"name": effect.get("name", "戦闘行動不可")}
 			curse_creature(tile_index, "battle_disable", duration, params)
 		
+		"ap_nullify":
+			var params = {"name": effect.get("name", "AP=0")}
+			curse_creature(tile_index, "ap_nullify", duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

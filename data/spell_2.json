@@ -201,7 +201,21 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象クリーチャーのMHP+20、AP+20"
+	  "effect": "対象クリーチャーのMHP+20、AP-20",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"effects": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": 20
+		  },
+		  {
+			"effect_type": "permanent_ap_change",
+			"value": -20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2076,
@@ -763,7 +777,19 @@
 		"mp": 30,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]"
+	  "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": 5
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2108,

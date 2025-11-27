@@ -439,7 +439,17 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象クリーチャーのMHP+10"
+	  "effect": "対象クリーチャーのMHP+10",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"effects": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": 10
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2027,
@@ -856,7 +866,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；MHP30以下5体配置時、MHP+10、G500；未達成の場合、復帰[ブック]"
+	  "effect": "密命；MHP30以下5体配置時、MHP+10、G500；未達成の場合、復帰[ブック]",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "secret_tiny_army",
+			"mhp_threshold": 30,
+			"required_count": 5,
+			"hp_bonus": 10,
+			"gold_bonus": 500
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2051,
@@ -1025,7 +1047,22 @@
 		"mp": 40,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象クリーチャーのAP=0；合成[スペル・MHP-20を追加]；カードを1枚引く"
+	  "effect": "対象クリーチャーのAP=0；合成[スペル・MHP-20を追加]；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"effects": [
+		  {
+			"effect_type": "ap_nullify",
+			"name": "AP=0",
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2059,

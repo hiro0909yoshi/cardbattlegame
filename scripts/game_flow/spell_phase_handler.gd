@@ -802,7 +802,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable":
+		"skill_nullify", "battle_disable", "ap_nullify":
 			# 戦闘制限呪い系 - SpellCurseに委譲
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
@@ -864,6 +864,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				var value = effect.get("value", 0)
 				await spell_damage.apply_heal_effect(self, tile_index, value)
+		
+		"permanent_hp_change", "permanent_ap_change":
+			# 恒久的なステータス変更（グロースボディ、ファットボディ等）
+			await _apply_permanent_stat_change(effect, target_data)
+		
+		"secret_tiny_army":
+			# 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）
+			await _apply_secret_tiny_army(effect)
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
@@ -1123,3 +1131,190 @@ func _show_spell_cast_notification(caster_name: String, target_data: Dictionary,
 	# 通知を表示してクリック待ち
 	spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
 	await spell_cast_notification_ui.click_confirmed
+
+# ============ 恒久的ステータス変更 ============
+
+## 恒久的なステータス変更を適用（グロースボディ、ファットボディ等）
+func _apply_permanent_stat_change(effect: Dictionary, target_data: Dictionary) -> void:
+	var tile_index = target_data.get("tile_index", -1)
+	if tile_index < 0 or not board_system:
+		return
+	
+	var tile_info = board_system.get_tile_info(tile_index)
+	if tile_info.is_empty() or not tile_info.has("creature"):
+		return
+	
+	var creature_data = tile_info["creature"]
+	if creature_data.is_empty():
+		return
+	
+	var effect_type = effect.get("effect_type", "")
+	var value = effect.get("value", 0)
+	var creature_name = creature_data.get("name", "クリーチャー")
+	var notification_text = ""
+	
+	match effect_type:
+		"permanent_hp_change":
+			# 旧値を保存
+			var old_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+			var old_current_hp = creature_data.get("current_hp", old_mhp)
+			
+			# MHP変更（current_hpも同時更新）
+			EffectManager.apply_max_hp_effect(creature_data, value)
+			
+			# 新値を取得
+			var new_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+			var new_current_hp = creature_data.get("current_hp", new_mhp)
+			
+			var sign = "+" if value >= 0 else ""
+			notification_text = "%s MHP%s%d\nMHP: %d → %d / HP: %d → %d" % [
+				creature_name, sign, value, old_mhp, new_mhp, old_current_hp, new_current_hp
+			]
+			print("[恒久変更] ", creature_name, " MHP ", sign, value)
+		
+		"permanent_ap_change":
+			# AP変更（下限0でクランプ）
+			if not creature_data.has("base_up_ap"):
+				creature_data["base_up_ap"] = 0
+			
+			var base_ap = creature_data.get("ap", 0)
+			var old_base_up_ap = creature_data.get("base_up_ap", 0)
+			var old_total_ap = base_ap + old_base_up_ap
+			var new_base_up_ap = old_base_up_ap + value
+			
+			# 最終APが0未満にならないよう調整
+			var new_total_ap = base_ap + new_base_up_ap
+			if new_total_ap < 0:
+				new_base_up_ap = -base_ap  # 最終APを0に
+				new_total_ap = 0
+			
+			creature_data["base_up_ap"] = new_base_up_ap
+			
+			var sign = "+" if value >= 0 else ""
+			notification_text = "%s AP%s%d\nAP: %d → %d" % [
+				creature_name, sign, value, old_total_ap, new_total_ap
+			]
+			print("[恒久変更] ", creature_name, " AP ", sign, value, " (合計AP: ", new_total_ap, ")")
+	
+	# 通知表示
+	if not notification_text.is_empty() and spell_cast_notification_ui:
+		spell_cast_notification_ui.show_notification_and_wait(notification_text)
+		await spell_cast_notification_ui.click_confirmed
+
+# ============ 密命スペル ============
+
+## 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）
+func _apply_secret_tiny_army(effect: Dictionary) -> void:
+	if not board_system or not player_system:
+		return
+	
+	var mhp_threshold = effect.get("mhp_threshold", 30)
+	var required_count = effect.get("required_count", 5)
+	var hp_bonus = effect.get("hp_bonus", 10)
+	var gold_bonus = effect.get("gold_bonus", 500)
+	
+	# MHP30以下の自クリーチャーを収集
+	var qualifying_creatures: Array[Dictionary] = []
+	
+	for tile_index in board_system.tile_nodes.keys():
+		var tile_info = board_system.get_tile_info(tile_index)
+		var tile_owner = tile_info.get("owner", -1)
+		
+		# 自分の土地のみ
+		if tile_owner != current_player_id:
+			continue
+		
+		var creature = tile_info.get("creature", {})
+		if creature.is_empty():
+			continue
+		
+		# MHPを計算
+		var base_hp = creature.get("hp", 0)
+		var base_up_hp = creature.get("base_up_hp", 0)
+		var mhp = base_hp + base_up_hp
+		
+		# MHP閾値以下か
+		if mhp <= mhp_threshold:
+			qualifying_creatures.append({
+				"tile_index": tile_index,
+				"creature_data": creature,
+				"mhp": mhp
+			})
+	
+	print("[タイニーアーミー] MHP%d以下のクリーチャー: %d体 (必要: %d体)" % [mhp_threshold, qualifying_creatures.size(), required_count])
+	
+	# 条件判定
+	if qualifying_creatures.size() < required_count:
+		# 失敗: 復帰[ブック]
+		print("[タイニーアーミー] 密命失敗 - クリーチャー不足")
+		spell_failed = true
+		
+		# 失敗通知
+		if spell_cast_notification_ui:
+			var fail_text = "密命失敗！\nMHP%d以下のクリーチャー: %d体\n（必要: %d体）" % [mhp_threshold, qualifying_creatures.size(), required_count]
+			spell_cast_notification_ui.show_notification_and_wait(fail_text)
+			await spell_cast_notification_ui.click_confirmed
+		
+		# カードをデッキに戻す
+		_return_spell_to_deck()
+		return
+	
+	# 成功: 各クリーチャーにMHP+10を適用（1体ずつ通知）
+	print("[タイニーアーミー] 密命成功！")
+	
+	for creature_info in qualifying_creatures:
+		var tile_index = creature_info["tile_index"]
+		var creature_data = creature_info["creature_data"]
+		var creature_name = creature_data.get("name", "クリーチャー")
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
+		
+		# 旧値を保存
+		var old_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+		var old_current_hp = creature_data.get("current_hp", old_mhp)
+		
+		# MHP+10を適用
+		EffectManager.apply_max_hp_effect(creature_data, hp_bonus)
+		
+		# 新値を取得
+		var new_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+		var new_current_hp = creature_data.get("current_hp", new_mhp)
+		
+		# 通知
+		if spell_cast_notification_ui:
+			var notification_text = "%s MHP+%d\nMHP: %d → %d / HP: %d → %d" % [
+				creature_name, hp_bonus, old_mhp, new_mhp, old_current_hp, new_current_hp
+			]
+			spell_cast_notification_ui.show_notification_and_wait(notification_text)
+			await spell_cast_notification_ui.click_confirmed
+	
+	# G500獲得（魔力として加算）
+	player_system.add_magic(current_player_id, gold_bonus)
+	print("[タイニーアーミー] G%d獲得" % gold_bonus)
+	
+	# G獲得通知
+	if spell_cast_notification_ui:
+		var gold_text = "G%d 獲得！" % gold_bonus
+		spell_cast_notification_ui.show_notification_and_wait(gold_text)
+		await spell_cast_notification_ui.click_confirmed
+
+## スペルカードをデッキに戻す（復帰[ブック]）
+func _return_spell_to_deck() -> void:
+	if not card_system or selected_spell_card.is_empty():
+		return
+	
+	var card_id = selected_spell_card.get("id", -1)
+	var card_name = selected_spell_card.get("name", "?")
+	
+	# 手札からカードを探して削除
+	var hand = card_system.get_all_cards_for_player(current_player_id)
+	for i in range(hand.size()):
+		if hand[i].get("id", -1) == card_id:
+			# 手札から削除
+			hand.remove_at(i)
+			# デッキに戻す（IDを追加してシャッフル）
+			card_system.player_decks[current_player_id].append(card_id)
+			card_system.player_decks[current_player_id].shuffle()
+			print("[復帰ブック] ", card_name, " をデッキに戻しました")
+			break

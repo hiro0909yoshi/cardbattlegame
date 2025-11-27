@@ -108,6 +108,10 @@ func execute_all_creatures_effects(handler: Node, effects: Array, target_info: D
 		elif etype == "full_heal":
 			await apply_heal_to_all_creatures(handler, target_info)
 			return true
+		elif etype == "permanent_hp_change":
+			var hp_value = effect.get("value", 0)
+			await apply_permanent_hp_to_all_creatures(handler, target_info, hp_value)
+			return true
 	return false
 
 
@@ -171,6 +175,58 @@ func apply_heal_to_all_creatures(handler: Node, target_info: Dictionary) -> void
 		if result["success"]:
 			var notification_text = format_heal_notification(result)
 			await _show_notification_and_wait(notification_text)
+
+
+## 全クリーチャーに恒久MHP変更を適用（マスグロース等）
+func apply_permanent_hp_to_all_creatures(handler: Node, target_info: Dictionary, hp_value: int) -> void:
+	if not board_system_ref:
+		return
+	
+	# 対象クリーチャーを取得（全クリーチャー）
+	var targets = TargetSelectionHelper.get_valid_targets(handler, "creature", target_info)
+	
+	if targets.is_empty():
+		print("[SpellDamage] 全体MHP変更: 対象なし")
+		return
+	
+	print("[SpellDamage] 全体MHP変更: %d体に MHP%s%d" % [targets.size(), "+" if hp_value >= 0 else "", hp_value])
+	
+	# 1体ずつ処理
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index < 0:
+			continue
+		
+		var tile_info = board_system_ref.get_tile_info(tile_index)
+		if tile_info.is_empty() or not tile_info.has("creature"):
+			continue
+		
+		var creature_data = tile_info["creature"]
+		if creature_data.is_empty():
+			continue
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+		
+		# 旧MHPを保存
+		var old_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+		var old_current_hp = creature_data.get("current_hp", old_mhp)
+		
+		# MHP変更（EffectManager使用）
+		EffectManager.apply_max_hp_effect(creature_data, hp_value)
+		
+		# 新MHPを取得
+		var new_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
+		var new_current_hp = creature_data.get("current_hp", new_mhp)
+		
+		# 通知テキスト生成
+		var creature_name = creature_data.get("name", "クリーチャー")
+		var sign = "+" if hp_value >= 0 else ""
+		var notification_text = "%s MHP%s%d\nMHP: %d → %d / HP: %d → %d" % [
+			creature_name, sign, hp_value, old_mhp, new_mhp, old_current_hp, new_current_hp
+		]
+		
+		await _show_notification_and_wait(notification_text)
 
 
 ## 通知表示＋クリック待ち（共通処理）

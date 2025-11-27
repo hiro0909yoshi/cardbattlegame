@@ -71,6 +71,25 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			participant.temporary_bonus_hp += value
 			participant.current_hp += value
 			participant.temporary_bonus_ap += value
+		
+		"ap_nullify":
+			# 基礎APを0に固定（バフ・アイテムは加算可能）
+			var base_ap = participant.creature_data.get("ap", 0)
+			var base_up_ap = participant.base_up_ap
+			var nullify_value = -(base_ap + base_up_ap)  # 基礎APを打ち消す値
+			
+			participant.temporary_effects.append({
+				"type": "ap_nullify",
+				"value": nullify_value,
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			print("[呪い変換] ap_nullify: 基礎AP=0 (", base_ap, "+", base_up_ap, " → 0)")
+			
+			# 効果を計算に反映（基礎APを打ち消す）
+			participant.temporary_bonus_ap += nullify_value
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap
