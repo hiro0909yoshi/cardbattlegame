@@ -509,7 +509,21 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；召喚条件のある対象敵クリーチャーのHP-30"
+	  "effect": "密命；召喚条件のある対象敵クリーチャーのHP-30",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "has_summon_condition": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		],
+		"is_secret": true
+	  }
 	},
 	{
 	  "id": 2032,
@@ -532,7 +546,19 @@
 		"mp": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象敵クリーチャーのHP-30；合成[∅スペル・効果はHP-40となる]"
+	  "effect": "対象敵クリーチャーのHP-30；合成[∅スペル・効果はHP-40となる]",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2034,
@@ -656,7 +682,20 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象、地風のHP-30"
+	  "effect": "対象、地風のHP-30",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": ["earth", "wind"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2042,

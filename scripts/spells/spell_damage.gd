@@ -69,8 +69,13 @@ func _destroy_creature(tile: Node) -> void:
 	var creature_name = tile.creature_data.get("name", "Unknown")
 	var saved_level = tile.level  # レベル保存
 	
-	# クリーチャーデータをクリア（CreatureManagerと同期）
-	tile.creature_data = {}
+	# 3Dカード表示を削除
+	if tile.has_method("remove_creature"):
+		tile.remove_creature()
+	else:
+		# フォールバック: 直接クリア
+		tile.creature_data = {}
+	
 	tile.owner_id = -1
 	tile.level = saved_level  # レベル維持（空き地として残る）
 	

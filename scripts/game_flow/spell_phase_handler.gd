@@ -696,7 +696,6 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 ## 単一の効果を適用
 func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
-	print("[SpellPhaseHandler] _apply_single_effect: type=%s, effect=%s" % [effect_type, effect])
 	
 	match effect_type:
 		"damage":
@@ -770,19 +769,13 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 
 ## クリーチャーダメージ効果（非同期：クリック待ちあり）
 func _apply_damage_effect(effect: Dictionary, target_data: Dictionary) -> void:
-	print("[SpellPhaseHandler] _apply_damage_effect called: effect=%s, target=%s" % [effect, target_data])
-	
 	if target_data.get("type", "") != "creature":
-		print("[SpellPhaseHandler] target type is not creature: %s" % target_data.get("type", ""))
 		return
 	
 	var tile_index = target_data.get("tile_index", -1)
 	var value = effect.get("value", 0)
 	
-	print("[SpellPhaseHandler] spell_damage=%s, tile_index=%d, value=%d" % [spell_damage, tile_index, value])
-	
 	if not spell_damage or tile_index < 0:
-		print("[SpellPhaseHandler] spell_damage is null or tile_index invalid")
 		return
 	
 	# カメラをターゲットにフォーカス
@@ -790,12 +783,10 @@ func _apply_damage_effect(effect: Dictionary, target_data: Dictionary) -> void:
 	
 	# SpellDamageでダメージ処理
 	var result = spell_damage.apply_damage(tile_index, value)
-	print("[SpellPhaseHandler] damage result: %s" % result)
 	
 	if result["success"]:
 		# 通知テキストを生成して表示
 		var notification_text = SpellDamage.format_damage_notification(result, value)
-		print("[SpellPhaseHandler] %s" % notification_text.replace("\n", " "))
 		
 		# クリック待ち通知を表示
 		if spell_cast_notification_ui:

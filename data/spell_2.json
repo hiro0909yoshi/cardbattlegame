@@ -374,7 +374,20 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象火水のHP-30"
+	  "effect": "対象火水のHP-30",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": ["fire", "water"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2089,

@@ -164,9 +164,15 @@ func _load_card_data(card_id: int) -> Dictionary:
 		# マスターデータの参照汚染を防ぐため、独立したコピーを作成
 		card_data = card_data.duplicate(true)
 		
-		# costを正規化
+		# costを正規化（召喚条件は別フィールドに保存）
 		if card_data.has("cost"):
 			if typeof(card_data.cost) == TYPE_DICTIONARY:
+				# 召喚条件を別フィールドに保存
+				if card_data.cost.has("lands_required"):
+					card_data["cost_lands_required"] = card_data.cost.lands_required
+				if card_data.cost.has("cards_sacrifice"):
+					card_data["cost_cards_sacrifice"] = card_data.cost.cards_sacrifice
+				# mpをcostに変換
 				if card_data.cost.has("mp"):
 					card_data.cost = card_data.cost.mp
 				else:
