@@ -252,7 +252,20 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "領地と属性の合わない全クリーチャーのHP-20"
+	  "effect": "領地と属性の合わない全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "element_mismatch": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2017,
@@ -364,7 +377,20 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "最多属性の全クリーチャーのHP-20"
+	  "effect": "最多属性の全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "most_common_element": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2024,
@@ -612,7 +638,20 @@
 	  "cost": {
 		"mp": 120
 	  },
-	  "effect": "HPが減少している全クリーチャーのHP-20"
+	  "effect": "HPが減少している全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "hp_reduced": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2038,
@@ -864,7 +903,21 @@
 		"mp": 120,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "ダウンしたMHP50以上の全クリーチャーのHP-30"
+	  "effect": "ダウンしたMHP50以上の全クリーチャーのHP-30",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "is_down": true,
+		  "mhp_check": { "operator": ">=", "value": 50 }
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2054,

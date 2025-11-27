@@ -9,7 +9,20 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "全水風のHP-20"
+	  "effect": "全水風のHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "creature_elements": ["water", "wind"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2066,
@@ -352,7 +365,20 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "全火地のHP-20"
+	  "effect": "全火地のHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "creature_elements": ["fire", "earth"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2087,

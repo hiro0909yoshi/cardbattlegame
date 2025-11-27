@@ -334,7 +334,8 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					
 					# is_down チェック
 					if target_info.get("is_down", false):
-						if not tile.get("is_down", false):
+						var is_down = tile.is_down if "is_down" in tile else false
+						if not is_down:
 							continue
 					
 					# mhp_check チェック
@@ -360,6 +361,8 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						var creature_element = creature.get("element", "")
 						if creature_element == tile_element or creature_element == "neutral":
 							continue
+					
+					# most_common_element チェックはここではスキップ（後処理で絞り込む）
 					
 					# 全条件を満たしたターゲットを追加
 					targets.append({
@@ -454,7 +457,48 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						}
 						targets.append(land_target)
 	
+	# most_common_element 後処理（クリーチャーターゲットのみ）
+	if target_info.get("most_common_element", false) and not targets.is_empty():
+		targets = _filter_by_most_common_element(targets)
+	
 	return targets
+
+
+## 最多属性でフィルタリング（クラスターバースト用）
+static func _filter_by_most_common_element(targets: Array) -> Array:
+	# 属性ごとのカウント
+	var element_counts = {}
+	for target in targets:
+		var creature = target.get("creature", {})
+		var element = creature.get("element", "neutral")
+		if not element_counts.has(element):
+			element_counts[element] = 0
+		element_counts[element] += 1
+	
+	# 最多属性を特定
+	var max_count = 0
+	var most_common = ""
+	for element in element_counts.keys():
+		if element_counts[element] > max_count:
+			max_count = element_counts[element]
+			most_common = element
+	
+	# 同数の場合は全て対象（複数属性が最多の場合）
+	var most_common_elements = []
+	for element in element_counts.keys():
+		if element_counts[element] == max_count:
+			most_common_elements.append(element)
+	
+	# 最多属性のクリーチャーのみ返す
+	var filtered = []
+	for target in targets:
+		var creature = target.get("creature", {})
+		var element = creature.get("element", "neutral")
+		if element in most_common_elements:
+			filtered.append(target)
+	
+	print("[TargetSelectionHelper] 最多属性: %s (%d体)" % [most_common_elements, filtered.size()])
+	return filtered
 
 ## ターゲットインデックスを次へ移動
 ## 

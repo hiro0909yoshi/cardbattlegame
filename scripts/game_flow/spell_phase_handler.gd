@@ -793,7 +793,7 @@ func _apply_damage_effect(effect: Dictionary, target_data: Dictionary) -> void:
 			spell_cast_notification_ui.show_notification_and_wait(notification_text)
 			await spell_cast_notification_ui.click_confirmed
 
-## 全クリーチャー対象スペルを実行（ディラニーなど）
+## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
 	current_state = State.EXECUTING_EFFECT
 	
@@ -805,12 +805,24 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	var target_data_for_notification = {"type": "all"}
 	await _show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
 	
-	# スペル効果を取得して SpellCurseBattle に委譲
+	# スペル効果を取得
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
 	
+	# 効果タイプを判定
+	var has_damage_effect = false
 	for effect in effects:
-		SpellCurseBattle.apply_to_all_creatures(board_system, effect, target_info)
+		if effect.get("effect_type", "") == "damage":
+			has_damage_effect = true
+			break
+	
+	if has_damage_effect:
+		# ダメージ効果: 対象を取得して1体ずつ処理
+		await _apply_damage_to_all_creatures(effects, target_info)
+	else:
+		# 呪い効果: SpellCurseBattle に委譲
+		for effect in effects:
+			SpellCurseBattle.apply_to_all_creatures(board_system, effect, target_info)
 	
 	# カードを捨て札に
 	if card_system:
@@ -828,6 +840,52 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	_return_camera_to_player()
 	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
+
+## 全クリーチャーにダメージを適用（1体ずつカメラフォーカス→ダメージ→クリック待ち）
+func _apply_damage_to_all_creatures(effects: Array, target_info: Dictionary) -> void:
+	if not spell_damage or not board_system:
+		return
+	
+	# ダメージ値を取得
+	var damage_value = 0
+	for effect in effects:
+		if effect.get("effect_type", "") == "damage":
+			damage_value = effect.get("value", 0)
+			break
+	
+	if damage_value <= 0:
+		return
+	
+	# 対象クリーチャーを取得（target_infoの条件でフィルタ）
+	var targets = TargetSelectionHelper.get_valid_targets(self, "creature", target_info)
+	
+	if targets.is_empty():
+		print("[SpellPhaseHandler] 全体ダメージ: 対象なし")
+		return
+	
+	print("[SpellPhaseHandler] 全体ダメージ: %d体に%dダメージ" % [targets.size(), damage_value])
+	
+	# 1体ずつ処理
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index < 0:
+			continue
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
+		
+		# SpellDamageでダメージ処理
+		var result = spell_damage.apply_damage(tile_index, damage_value)
+		
+		if result["success"]:
+			# 通知テキストを生成して表示
+			var notification_text = SpellDamage.format_damage_notification(result, damage_value)
+			
+			# クリック待ち通知を表示
+			if spell_cast_notification_ui:
+				spell_cast_notification_ui.show_notification_and_wait(notification_text)
+				await spell_cast_notification_ui.click_confirmed
+
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():
