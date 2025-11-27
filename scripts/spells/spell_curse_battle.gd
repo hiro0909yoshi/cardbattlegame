@@ -47,6 +47,17 @@ static func apply_skill_nullify(creature_data: Dictionary, name: String = "戦�
 	print("[SpellCurseBattle] 戦闘能力不可を付与: ", creature_data.get("name", "?"))
 
 
+## plague 呪いを付与（衰弱: 戦闘終了時HP -= MHP/2）
+static func apply_plague(creature_data: Dictionary, name: String = "衰弱") -> void:
+	creature_data["curse"] = {
+		"curse_type": "plague",
+		"name": name,
+		"duration": -1,
+		"params": {}
+	}
+	print("[SpellCurseBattle] 衰弱を付与: ", creature_data.get("name", "?"))
+
+
 # =============================================================================
 # 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
 # =============================================================================
@@ -112,6 +123,9 @@ static func apply_to_all_creatures(board_system, effect: Dictionary, target_info
 				affected_count += 1
 			"skill_nullify":
 				apply_skill_nullify(creature, effect.get("name", "戦闘能力不可"))
+				affected_count += 1
+			"plague_curse":
+				apply_plague(creature, effect.get("name", "衰弱"))
 				affected_count += 1
 	
 	print("[SpellCurseBattle] 全クリーチャー対象: %d体に呪いを付与" % affected_count)

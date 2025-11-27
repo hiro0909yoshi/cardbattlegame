@@ -403,7 +403,20 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "全領地に呪い\"衰弱\"(戦闘終了子時、HP-MHPの1/2)"
+	  "effect": "全領地に呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "plague_curse",
+			"name": "衰弱",
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2088,

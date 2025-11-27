@@ -435,3 +435,84 @@ static func format_heal_notification(result: Dictionary, heal_value: int = -1) -
 	
 	text += "HP: %d/%d → %d/%d" % [result["old_hp"], result["max_hp"], result["new_hp"], result["max_hp"]]
 	return text
+
+
+# ============================================
+# 衰弱（プレイグ）ダメージ処理
+# ============================================
+
+## 衰弱呪いをチェックしてダメージを適用（バトル終了後に呼び出す）
+## @param tile_index: バトルが行われた土地のインデックス
+## @return Dictionary: {triggered: bool, damage: int, destroyed: bool, creature_name: String, ...}
+func apply_plague_damage(tile_index: int) -> Dictionary:
+	var result = {
+		"triggered": false,
+		"damage": 0,
+		"destroyed": false,
+		"creature_name": "",
+		"old_hp": 0,
+		"new_hp": 0,
+		"max_hp": 0
+	}
+	
+	if not board_system_ref or tile_index < 0:
+		return result
+	
+	if not board_system_ref.tile_nodes.has(tile_index):
+		return result
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	if not tile or tile.creature_data.is_empty():
+		return result
+	
+	var creature = tile.creature_data
+	
+	# 呪いチェック
+	var curse = creature.get("curse", {})
+	if curse.get("curse_type") != "plague":
+		return result
+	
+	result["creature_name"] = creature.get("name", "Unknown")
+	result["triggered"] = true
+	
+	# MHP計算
+	var base_hp = creature.get("hp", 0)
+	var base_up_hp = creature.get("base_up_hp", 0)
+	var max_hp = base_hp + base_up_hp
+	result["max_hp"] = max_hp
+	
+	# ダメージ計算（MHP/2 切り上げ）
+	var damage = ceili(float(max_hp) / 2.0)
+	result["damage"] = damage
+	
+	# current_hp取得
+	var current_hp = creature.get("current_hp", max_hp)
+	result["old_hp"] = current_hp
+	
+	# ダメージ適用
+	var new_hp = max(0, current_hp - damage)
+	creature["current_hp"] = new_hp
+	result["new_hp"] = new_hp
+	
+	print("[SpellDamage] 衰弱ダメージ: %s に %d ダメージ (HP: %d → %d / MHP: %d)" % [
+		result["creature_name"], damage, current_hp, new_hp, max_hp
+	])
+	
+	# 撃破判定
+	if new_hp <= 0:
+		_destroy_creature(tile)
+		result["destroyed"] = true
+		print("[SpellDamage] 衰弱により %s は倒された！" % result["creature_name"])
+	
+	return result
+
+
+## 衰弱ダメージの通知テキストを生成
+static func format_plague_notification(result: Dictionary) -> String:
+	var text = "【衰弱】%sに%dダメージ！\n" % [result["creature_name"], result["damage"]]
+	text += "HP: %d/%d → %d/%d" % [result["old_hp"], result["max_hp"], result["new_hp"], result["max_hp"]]
+	
+	if result["destroyed"]:
+		text += "\n%sは倒された！" % result["creature_name"]
+	
+	return text

@@ -421,7 +421,10 @@ func _execute_move_battle():
 	is_waiting_for_move_defender_item = false
 
 ## 移動バトル完了時のコールバック
-func _on_move_battle_completed(success: bool, _tile_index: int):
+func _on_move_battle_completed(success: bool, tile_index: int):
+	
+	# 衰弱（プレイグ）ダメージ処理
+	await _apply_plague_damage_after_battle(tile_index)
 	
 	if success:
 		# 勝利時: battle_systemが既に土地獲得とクリーチャー配置を完了している
@@ -439,6 +442,26 @@ func _on_move_battle_completed(success: bool, _tile_index: int):
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.complete_action()
+
+
+## バトル終了後の衰弱ダメージ処理
+func _apply_plague_damage_after_battle(tile_index: int) -> void:
+	if not game_flow_manager or not game_flow_manager.spell_phase_handler:
+		return
+	
+	var spell_damage = game_flow_manager.spell_phase_handler.spell_damage
+	if not spell_damage:
+		return
+	
+	# 衰弱ダメージを適用
+	var result = spell_damage.apply_plague_damage(tile_index)
+	
+	if result["triggered"]:
+		# 通知を表示
+		var notification_text = SpellDamage.format_plague_notification(result)
+		if spell_damage.spell_cast_notification_ui:
+			spell_damage.spell_cast_notification_ui.show_notification_and_wait(notification_text)
+			await spell_damage.spell_cast_notification_ui.click_confirmed
 
 ## 簡易移動バトル（カードシステム使用不可時）
 func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, attacker_player: int):

@@ -668,6 +668,12 @@ func initialize_phase1a_systems():
 	add_child(spell_phase_handler)
 	spell_phase_handler.initialize(ui_manager, self, card_system, player_system, board_system_3d)
 	
+	# SpellCurseStatにシステム参照と通知UIを設定
+	if spell_curse_stat:
+		spell_curse_stat.set_systems(board_system_3d, player_system, card_system)
+		if spell_phase_handler.spell_cast_notification_ui:
+			spell_curse_stat.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+	
 	# デバッグ: 密命カードを一時的に無効化（テスト用）
 	spell_phase_handler.debug_disable_secret_cards = true
 	

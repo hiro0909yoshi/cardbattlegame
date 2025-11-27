@@ -81,6 +81,13 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			}
 			curse_creature(tile_index, "command_growth", duration, params)
 		
+		"plague_curse":
+			# 衰弱呪い（プレイグ）- 戦闘終了時にHP -= MHP/2（切り上げ）
+			var params = {
+				"name": effect.get("name", "衰弱")
+			}
+			curse_creature(tile_index, "plague", duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 
