@@ -700,7 +700,19 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象敵クリーチャーのHP-20"
+	  "effect": "対象敵クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2107,

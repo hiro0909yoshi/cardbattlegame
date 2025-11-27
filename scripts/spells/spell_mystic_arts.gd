@@ -220,36 +220,17 @@ func _apply_damage(effect: Dictionary, target_data: Dictionary, _context: Dictio
 	var value = effect.get("value", 0)
 	
 	if target_tile_index == -1 or value <= 0:
-		
 		return false
 	
-	var tile = board_system_ref.tile_nodes.get(target_tile_index)
-	if not tile or not tile.creature_data or tile.creature_data.is_empty():
-		
-		return false
+	# SpellDamageを使用（spell_phase_handler経由）
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_damage:
+		var result = spell_phase_handler_ref.spell_damage.apply_damage(target_tile_index, value)
+		return result["success"]
 	
-	var creature = tile.creature_data
-	var current_hp = creature.get("current_hp", creature.get("hp", 0))
-	var new_hp = max(0, current_hp - value)
-	creature["current_hp"] = new_hp
-	
-	print("[SpellMysticArts] ダメージ: %s に %d ダメージ (HP: %d → %d)" % [
-		creature.get("name", "Unknown"),
-		value,
-		current_hp,
-		new_hp
-	])
-	
-	# クリーチャーが倒れた場合
-	if new_hp <= 0:
-		tile.creature_data = {}
-		tile.owner_id = -1
-		tile.level = 1
-		if tile.has_method("update_visual"):
-			tile.update_visual()
-		print("[SpellMysticArts] クリーチャー撃破: %s" % creature.get("name", "Unknown"))
-	
-	return true
+	# フォールバック: spell_phase_handlerがない場合は直接処理
+	var spell_damage_instance = SpellDamage.new(board_system_ref)
+	var result = spell_damage_instance.apply_damage(target_tile_index, value)
+	return result["success"]
 
 
 ## 効果：呪いの一撃

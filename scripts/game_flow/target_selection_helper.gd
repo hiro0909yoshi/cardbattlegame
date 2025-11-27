@@ -281,20 +281,92 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 	
 	match target_type:
 		"creature":
-			# 敵クリーチャーを探す
+			# クリーチャーを探す（条件フィルタ対応）
 			if handler.board_system:
 				for tile_index in handler.board_system.tile_nodes.keys():
 					var tile_info = handler.board_system.get_tile_info(tile_index)
 					var creature = tile_info.get("creature", {})
-					if not creature.is_empty():
-						var tile_owner = tile_info.get("owner", -1)
-						if tile_owner != handler.current_player_id and tile_owner >= 0:
-							targets.append({
-								"type": "creature",
-								"tile_index": tile_index,
-								"creature": creature,
-								"owner": tile_owner
-							})
+					if creature.is_empty():
+						continue
+					
+					var tile_owner = tile_info.get("owner", -1)
+					var tile_element = tile_info.get("element", "")
+					var tile = handler.board_system.tile_nodes[tile_index]
+					
+					# owner_filter チェック
+					var owner_filter = target_info.get("owner_filter", "enemy")
+					if owner_filter == "own" and tile_owner != handler.current_player_id:
+						continue
+					if owner_filter == "enemy" and (tile_owner == handler.current_player_id or tile_owner < 0):
+						continue
+					# "any" は全てのクリーチャー（所有者がいる場合のみ）
+					if owner_filter == "any" and tile_owner < 0:
+						continue
+					
+					# creature_elements チェック（クリーチャー属性制限）
+					var creature_elements = target_info.get("creature_elements", [])
+					if not creature_elements.is_empty():
+						var creature_element = creature.get("element", "")
+						if creature_element not in creature_elements:
+							continue
+					
+					# has_curse チェック
+					if target_info.get("has_curse", false):
+						if not tile.has("curses") or tile.curses.is_empty():
+							continue
+					
+					# has_summon_condition チェック
+					if target_info.get("has_summon_condition", false):
+						var cost = creature.get("cost", {})
+						var has_condition = cost.has("lands_required") or cost.has("cards_sacrifice")
+						if not has_condition:
+							continue
+					
+					# hp_reduced チェック
+					if target_info.get("hp_reduced", false):
+						var base_hp = creature.get("hp", 0)
+						var base_up_hp = creature.get("base_up_hp", 0)
+						var max_hp = base_hp + base_up_hp
+						var current_hp = creature.get("current_hp", max_hp)
+						if current_hp >= max_hp:
+							continue
+					
+					# is_down チェック
+					if target_info.get("is_down", false):
+						if not tile.get("is_down", false):
+							continue
+					
+					# mhp_check チェック
+					var mhp_check = target_info.get("mhp_check", {})
+					if not mhp_check.is_empty():
+						var base_hp = creature.get("hp", 0)
+						var base_up_hp = creature.get("base_up_hp", 0)
+						var mhp = base_hp + base_up_hp
+						var op = mhp_check.get("operator", "")
+						var val = mhp_check.get("value", 0)
+						match op:
+							">=":
+								if mhp < val: continue
+							"<=":
+								if mhp > val: continue
+							">":
+								if mhp <= val: continue
+							"<":
+								if mhp >= val: continue
+					
+					# element_mismatch チェック（領地属性とクリーチャー属性の不一致）
+					if target_info.get("element_mismatch", false):
+						var creature_element = creature.get("element", "")
+						if creature_element == tile_element or creature_element == "neutral":
+							continue
+					
+					# 全条件を満たしたターゲットを追加
+					targets.append({
+						"type": "creature",
+						"tile_index": tile_index,
+						"creature": creature,
+						"owner": tile_owner
+					})
 		
 		"player":
 			# プレイヤーを対象とする

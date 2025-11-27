@@ -29,10 +29,10 @@ func _setup_ui():
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
 	panel.add_theme_stylebox_override("panel", style)
 	
 	# RichTextLabelを作成
@@ -54,49 +54,124 @@ func _setup_ui():
 	# 初期状態は非表示
 	visible = false
 
-## 通知を表示
-## caster_name: 発動者名（プレイヤー名/クリーチャー名）
-## target_name: 対象名（プレイヤー名/クリーチャー名/「全体」/「世界」）
-## effect_name: 効果名
-func show_notification(caster_name: String, target_name: String, effect_name: String):
+## クリック待ち用のシグナル
+signal click_confirmed
+
+## クリック待ちフラグ
+var waiting_for_click: bool = false
+
+## クリック待ちの最大時間（秒）
+var click_wait_timeout: float = 7.0
+
+## タイムアウト用タイマー
+var timeout_timer: Timer = null
+
+## 通知を表示してクリック待ち（全スペル・秘術共通）
+## message: 表示するメッセージ
+## await で待機可能
+func show_notification_and_wait(message: String) -> void:
 	# 既存のアニメーションをキャンセル
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	
-	# テキスト設定
+	# テキスト設定（中央揃え + クリック待ちの案内）
+	var text = "[center]" + message + "\n\n[color=gray][クリックで次へ][/color][/center]"
+	label.text = text
+	
+	# 表示
+	modulate.a = 1.0
+	visible = true
+	waiting_for_click = true
+	
+	# マウス入力を受け付ける
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# パネルを中央に配置（座標計算）
+	_center_panel()
+	
+	# タイムアウトタイマー開始
+	_start_timeout_timer()
+
+## パネルを画面中央に配置
+func _center_panel():
+	var panel = get_node_or_null("BackgroundPanel")
+	if not panel:
+		return
+	
+	# 1フレーム待ってサイズを確定させる
+	await get_tree().process_frame
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var panel_size = panel.size
+	panel.position = Vector2(
+		(viewport_size.x - panel_size.x) / 2,
+		(viewport_size.y - panel_size.y) / 2
+	)
+
+## スペル発動通知を表示してクリック待ち
+## 「AはBにCを使った」形式
+func show_spell_cast_and_wait(caster_name: String, target_name: String, effect_name: String) -> void:
 	var text = "%s は、%s に [color=yellow]%s[/color] を使った！" % [
 		caster_name,
 		target_name,
 		effect_name
 	]
-	label.text = text
-	
-	# パネルを中央に配置
-	var panel = get_node("BackgroundPanel")
-	if panel:
-		# パネルサイズを再計算させる
-		await get_tree().process_frame
-		
-		var viewport_size = get_viewport().get_visible_rect().size
-		var panel_size = panel.size
-		panel.position = Vector2(
-			(viewport_size.x - panel_size.x) / 2,
-			(viewport_size.y - panel_size.y) / 2
-		)
-	
-	# 表示
-	modulate.a = 1.0
-	visible = true
-	
-	# 表示 → フェードアウト
-	current_tween = get_tree().create_tween()
-	current_tween.tween_interval(display_duration)
-	current_tween.tween_property(self, "modulate:a", 0.0, fade_duration)
-	current_tween.tween_callback(_on_fade_complete)
+	await show_notification_and_wait(text)
 
-func _on_fade_complete():
+## 非推奨: 旧API互換（クリック待ちなし自動フェード）
+## 新規コードでは show_notification_and_wait を使用してください
+func show_notification(caster_name: String, target_name: String, effect_name: String):
+	# クリック待ち版を呼び出す（互換性のため残すが非推奨）
+	show_spell_cast_and_wait(caster_name, target_name, effect_name)
+
+## タイムアウトタイマーを開始
+func _start_timeout_timer():
+	# 既存タイマーを停止
+	_stop_timeout_timer()
+	
+	# 新しいタイマーを作成
+	timeout_timer = Timer.new()
+	timeout_timer.one_shot = true
+	timeout_timer.wait_time = click_wait_timeout
+	timeout_timer.timeout.connect(_on_timeout)
+	add_child(timeout_timer)
+	timeout_timer.start()
+
+## タイムアウトタイマーを停止
+func _stop_timeout_timer():
+	if timeout_timer:
+		timeout_timer.stop()
+		timeout_timer.queue_free()
+		timeout_timer = null
+
+## タイムアウト時の処理
+func _on_timeout():
+	if waiting_for_click:
+		_confirm_and_close()
+
+## クリック確認して閉じる（共通処理）
+func _confirm_and_close():
+	_stop_timeout_timer()
+	waiting_for_click = false
 	visible = false
-	modulate.a = 1.0
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	click_confirmed.emit()
+
+func _input(event):
+	if not waiting_for_click:
+		return
+	
+	# クリックまたはEnterキーで確認
+	var confirmed = false
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		confirmed = true
+	elif event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER or event.keycode == KEY_SPACE:
+			confirmed = true
+	
+	if confirmed:
+		_confirm_and_close()
+		get_viewport().set_input_as_handled()
 
 ## スペルカードから効果名を取得
 ## 優先順位:

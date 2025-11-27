@@ -53,6 +53,7 @@ var creature_manager = null
 var spell_mystic_arts = null  # 秘術システム
 var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
+var spell_damage: SpellDamage = null  # ダメージ・回復処理
 
 func _ready():
 	pass
@@ -81,7 +82,12 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 			card_system,
 			self
 		)
-		# SpellPhaseUIManager を初期化
+	
+	# SpellDamage を初期化
+	if not spell_damage and board_system:
+		spell_damage = SpellDamage.new(board_system)
+	
+	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
 	
 	# 発動通知UIを初期化
@@ -354,9 +360,9 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 		current_state = State.WAITING_FOR_INPUT
 		return
 	
-	# 発動通知を表示（秘術発動クリーチャー名を使用）
+	# 発動通知を表示（秘術発動クリーチャー名を使用、クリック待ち）
 	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
-	_show_spell_cast_notification(caster_name, target_data, mystic_art, true)
+	await _show_spell_cast_notification(caster_name, target_data, mystic_art, true)
 	
 	# 非同期効果かどうかを事前判定
 	var is_async = _is_async_mystic_art(mystic_art)
@@ -645,11 +651,11 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 復帰[ブック]フラグをリセット
 	spell_failed = false
 	
-	# 発動通知を表示
+	# 発動通知を表示（クリック待ち）
 	var caster_name = "プレイヤー%d" % (current_player_id + 1)
 	if player_system and current_player_id >= 0 and current_player_id < player_system.players.size():
 		caster_name = player_system.players[current_player_id].name
-	_show_spell_cast_notification(caster_name, target_data, spell_card, false)
+	await _show_spell_cast_notification(caster_name, target_data, spell_card, false)
 	
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
@@ -657,7 +663,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	
 	# 効果を適用
 	for effect in effects:
-		_apply_single_effect(effect, target_data)
+		await _apply_single_effect(effect, target_data)
 	
 	# カードを捨て札に（復帰[ブック]時はスキップ）
 	if card_system and not spell_failed:
@@ -690,12 +696,12 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 ## 単一の効果を適用
 func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
-
+	print("[SpellPhaseHandler] _apply_single_effect: type=%s, effect=%s" % [effect_type, effect])
 	
 	match effect_type:
 		"damage":
 			# クリーチャーにダメージ
-			_apply_damage_effect(effect, target_data)
+			await _apply_damage_effect(effect, target_data)
 		
 		"drain_magic", "gain_magic", "gain_magic_by_rank":
 			# 魔力操作系 - SpellMagicに委譲
@@ -762,46 +768,39 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 						spell_failed = true
 
-## クリーチャーダメージ効果
-func _apply_damage_effect(effect: Dictionary, target_data: Dictionary):
+## クリーチャーダメージ効果（非同期：クリック待ちあり）
+func _apply_damage_effect(effect: Dictionary, target_data: Dictionary) -> void:
+	print("[SpellPhaseHandler] _apply_damage_effect called: effect=%s, target=%s" % [effect, target_data])
+	
 	if target_data.get("type", "") != "creature":
+		print("[SpellPhaseHandler] target type is not creature: %s" % target_data.get("type", ""))
 		return
 	
 	var tile_index = target_data.get("tile_index", -1)
 	var value = effect.get("value", 0)
 	
-	if not board_system or tile_index < 0 or not board_system.tile_nodes.has(tile_index):
+	print("[SpellPhaseHandler] spell_damage=%s, tile_index=%d, value=%d" % [spell_damage, tile_index, value])
+	
+	if not spell_damage or tile_index < 0:
+		print("[SpellPhaseHandler] spell_damage is null or tile_index invalid")
 		return
 	
-	var tile = board_system.tile_nodes[tile_index]
-	if not tile or not "creature_data" in tile:
-		return
+	# カメラをターゲットにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
 	
-	var creature = tile.creature_data
-	if creature.is_empty():
-		return
+	# SpellDamageでダメージ処理
+	var result = spell_damage.apply_damage(tile_index, value)
+	print("[SpellPhaseHandler] damage result: %s" % result)
 	
-	var current_hp = creature.get("hp", 0)
-	var land_bonus_hp = creature.get("land_bonus_hp", 0)
-	
-	# ダメージを基本HPから優先的に減らす
-	var damage_to_base = min(value, current_hp)
-	creature["hp"] = current_hp - damage_to_base
-	var remaining_damage = value - damage_to_base
-	
-	# 残りダメージを土地ボーナスHPから減らす
-	if remaining_damage > 0:
-		creature["land_bonus_hp"] = max(0, land_bonus_hp - remaining_damage)
-	
-	# クリーチャーが倒れた場合
-	if creature["hp"] <= 0 and creature.get("land_bonus_hp", 0) <= 0:
-		# 【SSoT同期】スペルで倒されたクリーチャーをタイルからクリア
-		# この代入は自動的にCreatureManager.set_data(tile_index, {})を呼び出し
-		# CreatureManager.creatures[tile_index]から削除される
-		tile.creature_data = {}
-		tile.owner_id = -1
-		tile.level = 1
-		tile.update_visual()
+	if result["success"]:
+		# 通知テキストを生成して表示
+		var notification_text = SpellDamage.format_damage_notification(result, value)
+		print("[SpellPhaseHandler] %s" % notification_text.replace("\n", " "))
+		
+		# クリック待ち通知を表示
+		if spell_cast_notification_ui:
+			spell_cast_notification_ui.show_notification_and_wait(notification_text)
+			await spell_cast_notification_ui.click_confirmed
 
 ## 全クリーチャー対象スペルを実行（ディラニーなど）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
@@ -813,7 +812,7 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 		caster_name = player_system.players[current_player_id].name
 	
 	var target_data_for_notification = {"type": "all"}
-	_show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
+	await _show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
 	
 	# スペル効果を取得して SpellCurseBattle に委譲
 	var parsed = spell_card.get("effect_parsed", {})
@@ -1046,8 +1045,8 @@ func _initialize_card_selection_handler():
 func _on_card_selection_completed():
 	complete_spell_phase()
 
-## スペル/秘術発動通知を表示
-func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
+## スペル/秘術発動通知を表示（クリック待ち）
+func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false) -> void:
 	if not spell_cast_notification_ui:
 		return
 	
@@ -1061,5 +1060,6 @@ func _show_spell_cast_notification(caster_name: String, target_data: Dictionary,
 	# 対象名を取得
 	var target_name = SpellCastNotificationUI.get_target_display_name(target_data, board_system, player_system)
 	
-	# 通知を表示
-	spell_cast_notification_ui.show_notification(caster_name, target_name, effect_name)
+	# 通知を表示してクリック待ち
+	spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
+	await spell_cast_notification_ui.click_confirmed
