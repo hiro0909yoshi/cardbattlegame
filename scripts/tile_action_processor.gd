@@ -296,7 +296,7 @@ func _execute_pending_battle():
 	
 	# バトル実行（カードデータとアイテム情報を渡す）
 	# card_indexには-1を渡して、BattleSystem内でカード使用処理をスキップさせる
-	battle_system.execute_3d_battle_with_data(current_player_index, pending_battle_card_data, pending_battle_tile_info, pending_attacker_item, pending_defender_item)
+	await battle_system.execute_3d_battle_with_data(current_player_index, pending_battle_card_data, pending_battle_tile_info, pending_attacker_item, pending_defender_item)
 	
 	# バトル情報をクリア
 	pending_battle_card_index = -1

@@ -404,7 +404,7 @@ func _execute_move_battle():
 		board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
 	# バトル実行（移動元タイル情報も渡す）
-	board_system.battle_system.execute_3d_battle_with_data(
+	await board_system.battle_system.execute_3d_battle_with_data(
 		current_player_index,
 		pending_move_battle_creature_data,
 		pending_move_battle_tile_info,

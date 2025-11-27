@@ -368,7 +368,7 @@ static func _execute_move_battle(handler):
 		handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
 	# バトル実行（移動元タイルを渡す）
-	handler.board_system.battle_system.execute_3d_battle_with_data(
+	await handler.board_system.battle_system.execute_3d_battle_with_data(
 		current_player_index,
 		handler.pending_move_battle_creature_data,
 		handler.pending_move_battle_tile_info,

@@ -116,7 +116,7 @@ func _on_cpu_invasion_decided(card_index: int):
 	if not board_system.battle_system.invasion_completed.is_connected(_on_invasion_completed):
 		board_system.battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
 	
-	board_system.battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
+	await board_system.battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
 
 # CPUバトル決定後の処理
 func _on_cpu_battle_decided(card_index: int):

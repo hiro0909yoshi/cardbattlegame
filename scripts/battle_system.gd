@@ -84,7 +84,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	_skill_item_return.setup_systems(card_system)
 
 # バトル実行（3D版メイン処理）
-func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}) -> void:
+func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}):
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
@@ -122,10 +122,10 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		return
 	
 	# バトル実行（通常侵略なので from_tile_index = -1）
-	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, -1)
+	await _execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, -1)
 
 # バトル実行（カードデータ直接指定版）- カード使用処理は呼び出し側で行う
-func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, from_tile_index: int = -1) -> void:
+func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, from_tile_index: int = -1):
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
@@ -137,10 +137,10 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 		return
 	
 	# バトル実行
-	_execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, from_tile_index)
+	await _execute_battle_core(attacker_index, card_data, tile_info, attacker_item, defender_item, from_tile_index)
 
 # バトルコア処理（共通化）
-func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1) -> void:
+func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1):
 	print("========== バトル開始 ==========")
 	
 	# バトルタイルのインデックスを取得
@@ -202,7 +202,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var result = battle_execution.resolve_battle_result(attacker, defender)
 	
 	# 6. 結果に応じた処理（死者復活情報も渡す）
-	_apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
+	await _apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
 	
 	print("================================")
 
@@ -224,7 +224,7 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 func validate_systems() -> bool:
 	return board_system_ref != null and card_system_ref != null and player_system_ref != null
 
-# バトル後の処理
+# バトル後の処理（非同期：バウンティハント通知等）
 func _apply_post_battle_effects(
 	result: BattleResult,
 	attacker_index: int,
@@ -254,7 +254,7 @@ func _apply_post_battle_effects(
 				game_flow_manager_ref.on_creature_destroyed()
 			
 			# バウンティハント（賞金首）報酬チェック - 防御側が敗者
-			_check_and_apply_bounty_reward(defender, attacker)
+			await _check_and_apply_bounty_reward(defender, attacker)
 			
 			# 攻撃側の永続バフ適用（バルキリー・ダスクドウェラー）
 			_apply_on_destroy_permanent_buffs(attacker)
@@ -302,7 +302,7 @@ func _apply_post_battle_effects(
 			
 			# バウンティハント（賞金首）報酬チェック - 攻撃側が敗者
 			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
-			_check_and_apply_bounty_reward(attacker, defender)
+			await _check_and_apply_bounty_reward(attacker, defender)
 			
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
 			_apply_on_destroy_permanent_buffs(defender)
@@ -850,49 +850,17 @@ func _check_and_apply_magic_on_enemy_survive(winner: BattleParticipant, loser: B
 				
 				spell_magic.add_magic(player_id, amount)
 
-# バウンティハント（賞金首）呪いの報酬処理
+# バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲
 func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:
 	if not loser or not loser.creature_data:
 		return
 	
-	# 敗者の呪いを確認
-	var curse = loser.creature_data.get("curse", {})
-	if curse.is_empty():
-		return
-	
-	if curse.get("curse_type", "") != "bounty":
-		return
-	
-	var params = curse.get("params", {})
-	var reward = params.get("reward", 300)
-	var requires_weapon = params.get("requires_weapon", true)
-	var caster_id = params.get("caster_id", -1)
-	
-	if caster_id < 0:
-		print("[バウンティハント] 術者IDが不正: ", caster_id)
-		return
-	
-	# 武器使用チェック
-	if requires_weapon:
-		var winner_items = winner.creature_data.get("items", [])
-		var used_weapon = false
-		
-		for item in winner_items:
-			var item_type = item.get("item_type", "")
-			if item_type == "武器":
-				used_weapon = true
-				break
-		
-		if not used_weapon:
-			print("[バウンティハント] 武器未使用のため報酬なし")
-			return
-	
-	# 報酬付与
-	if spell_magic:
-		spell_magic.add_magic(caster_id, reward)
-		print("[バウンティハント] 賞金首撃破！プレイヤー%d が %dG獲得" % [caster_id + 1, reward])
-	else:
+	if not spell_magic:
 		print("[バウンティハント] spell_magicが未設定")
+		return
+	
+	# SpellMagicに委譲（通知付き）
+	await spell_magic.apply_bounty_reward_with_notification(loser.creature_data, winner.creature_data)
 
 # アイテム復帰処理
 func _apply_item_return(participant: BattleParticipant, player_id: int):

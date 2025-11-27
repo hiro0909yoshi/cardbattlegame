@@ -557,6 +557,75 @@ func balance_all_magic() -> Dictionary:
 	return {"success": true, "average": average, "changes": changes}
 
 # ========================================
+# バウンティハント（賞金首）
+# ========================================
+
+## バウンティハント報酬を適用（バトル終了時に呼び出す）
+## @param loser_creature: 敗者のクリーチャーデータ
+## @param winner_creature: 勝者のクリーチャーデータ
+## @return Dictionary: {success, reward, caster_id}
+func apply_bounty_reward(loser_creature: Dictionary, winner_creature: Dictionary) -> Dictionary:
+	var result = {"success": false, "reward": 0, "caster_id": -1}
+	
+	if loser_creature.is_empty():
+		return result
+	
+	# 敗者の呪いを確認
+	var curse = loser_creature.get("curse", {})
+	if curse.is_empty():
+		return result
+	
+	if curse.get("curse_type", "") != "bounty":
+		return result
+	
+	var params = curse.get("params", {})
+	var reward = params.get("reward", 300)
+	var requires_weapon = params.get("requires_weapon", true)
+	var caster_id = params.get("caster_id", -1)
+	
+	if caster_id < 0:
+		print("[バウンティハント] 術者IDが不正: ", caster_id)
+		return result
+	
+	result["caster_id"] = caster_id
+	result["reward"] = reward
+	
+	# 武器使用チェック
+	if requires_weapon:
+		var winner_items = winner_creature.get("items", [])
+		var used_weapon = false
+		
+		for item in winner_items:
+			var item_type = item.get("item_type", "")
+			if item_type == "武器":
+				used_weapon = true
+				break
+		
+		if not used_weapon:
+			print("[バウンティハント] 武器未使用のため報酬なし")
+			return result
+	
+	# 報酬付与
+	add_magic(caster_id, reward)
+	result["success"] = true
+	
+	var loser_name = loser_creature.get("name", "クリーチャー")
+	print("[バウンティハント] 賞金首「%s」撃破！プレイヤー%d が %dG獲得" % [loser_name, caster_id + 1, reward])
+	
+	return result
+
+## バウンティハント報酬を適用して通知表示（非同期）
+func apply_bounty_reward_with_notification(loser_creature: Dictionary, winner_creature: Dictionary) -> Dictionary:
+	var result = apply_bounty_reward(loser_creature, winner_creature)
+	
+	if result["success"]:
+		var loser_name = loser_creature.get("name", "クリーチャー")
+		var notification_text = "【バウンティハント】\n賞金首「%s」撃破！\n[color=yellow]+%dG[/color] 獲得！" % [loser_name, result["reward"]]
+		await _show_notification_and_wait(notification_text)
+	
+	return result
+
+# ========================================
 # 通知システム
 # ========================================
 
