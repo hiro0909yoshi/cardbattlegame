@@ -169,7 +169,7 @@ func create_ui(parent: Node):
 		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定で設定
 	
 	if player_status_dialog and player_status_dialog.has_method("initialize"):
-		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel)
+		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):

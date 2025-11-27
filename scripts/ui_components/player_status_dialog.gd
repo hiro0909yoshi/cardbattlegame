@@ -16,6 +16,7 @@ var background_rect: ColorRect = null
 # システム参照
 var player_system_ref = null
 var board_system_ref = null
+var game_flow_manager_ref = null
 var player_info_panel: PlayerInfoPanel = null
 
 # 状態
@@ -26,10 +27,11 @@ func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, player_system, board_system, player_info_panel_ref):
+func initialize(parent: Node, player_system, board_system, player_info_panel_ref, game_flow_manager = null):
 	player_system_ref = player_system
 	board_system_ref = board_system
 	player_info_panel = player_info_panel_ref
+	game_flow_manager_ref = game_flow_manager
 	
 	create_dialog_ui(parent)
 
@@ -136,8 +138,11 @@ func build_status_text(player_id: int) -> String:
 	
 	var player = player_system_ref.players[player_id]
 	
-	# 基本情報
-	text += "[b][color=yellow]基本情報[/color][/b]\n"
+	# 基本情報とマップ情報を横並びで表示（3列: 左、スペーサー、右）
+	text += "[table=3]"
+	
+	# 左列: 基本情報
+	text += "[cell][b][color=yellow]基本情報[/color][/b]\n"
 	text += player.name
 	
 	# プレイヤー呪いがあればアイコン表示
@@ -147,7 +152,25 @@ func build_status_text(player_id: int) -> String:
 	
 	text += "\n"
 	text += "魔力: " + str(player.magic_power) + "G\n"
-	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G\n\n"
+	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G[/cell]"
+	
+	# 中央: スペーサー
+	text += "[cell]          [/cell]"
+	
+	# 右列: マップ情報
+	text += "[cell][b][color=yellow]マップ情報[/color][/b]\n"
+	if game_flow_manager_ref:
+		var lap_count = game_flow_manager_ref.get_lap_count(player_id)
+		var current_turn = game_flow_manager_ref.get_current_turn()
+		var destroy_count = game_flow_manager_ref.get_destroy_count()
+		text += "周回数: " + str(lap_count) + "\n"
+		text += "ターン数: " + str(current_turn) + "\n"
+		text += "破壊数: " + str(destroy_count)
+	else:
+		text += "データなし"
+	text += "[/cell]"
+	
+	text += "[/table]\n\n"
 	
 	# 土地情報
 	text += "[b][color=yellow]保有土地[/color][/b]\n"

@@ -311,7 +311,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "密命；使用者より魔力の多い対象敵セプターから30%を奪う"
+	  "effect": "密命；使用者より魔力の多い対象敵セプターから30%を奪う",
+	  "is_secret": true,
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic_conditional",
+			"condition": "target_has_more_magic",
+			"percentage": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2083,
@@ -820,11 +832,20 @@
 	  "name": "マナ",
 	  "rarity": "R",
 	  "type": "spell",
-	  "spell_type": "単体対象",
+	  "spell_type": "自己強化",
 	  "cost": {
 		"mp": 0
 	  },
-	  "effect": "周回数×G50を得る"
+	  "effect": "周回数×G50を得る",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_by_lap",
+			"multiplier": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2110,
@@ -970,7 +991,17 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象敵セプターから、敵領地数×G30を奪う"
+	  "effect": "対象敵セプターから、敵領地数×G30を奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic_by_land_count",
+			"multiplier": 30
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2120,

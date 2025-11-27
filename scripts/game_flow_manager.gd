@@ -59,6 +59,9 @@ var is_ending_turn = false
 var player_lap_state = {}  # プレイヤーごとの周回状態
 signal lap_completed(player_id: int)
 
+# ターン（ラウンド）カウンター
+var current_turn_number = 1
+
 # ゲーム統計データ（破壊カウンター）
 var game_stats = {
 	"total_creatures_destroyed": 0  # 1ゲーム内の累計破壊数
@@ -139,7 +142,7 @@ func _setup_spell_systems(board_system):
 	
 	# SpellMagicの初期化
 	spell_magic = SpellMagic.new()
-	spell_magic.setup(player_system)
+	spell_magic.setup(player_system, board_system, self, null)  # spell_curseは後から設定
 	print("[SpellMagic] 初期化完了")
 	
 	# SpellLandの初期化
@@ -155,6 +158,10 @@ func _setup_spell_systems(board_system):
 			spell_curse = SpellCurse.new()
 			spell_curse.setup(board_system, creature_manager, player_system, self)
 			print("[SpellCurse] 初期化完了")
+			
+			# SpellMagicにSpellCurse参照を追加
+			if spell_magic:
+				spell_magic.spell_curse_ref = spell_curse
 			
 			# SpellDiceの初期化
 			spell_dice = SpellDice.new()
@@ -514,6 +521,11 @@ func end_turn():
 		board_system_3d.current_player_index = (board_system_3d.current_player_index + 1) % board_system_3d.player_count
 		player_system.current_player_index = board_system_3d.current_player_index
 		
+		# 全プレイヤーが1回ずつ行動したらラウンド数（ターン数）を増やす
+		if board_system_3d.current_player_index == 0:
+			current_turn_number += 1
+			print("=== ラウンド", current_turn_number, "開始 ===")
+		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		
 		# カメラを次のプレイヤーに移動
@@ -737,7 +749,8 @@ func _initialize_lap_state(player_count: int):
 	for i in range(player_count):
 		player_lap_state[i] = {
 			"N": false,
-			"S": false
+			"S": false,
+			"lap_count": 1  # 周回数カウント（1周目からスタート）
 		}
 
 # CheckpointTileのシグナルを接続
@@ -772,6 +785,9 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 
 # 周回完了処理
 func _complete_lap(player_id: int):
+	# 周回数をインクリメント
+	player_lap_state[player_id]["lap_count"] += 1
+	print("[周回完了] プレイヤー", player_id + 1, " 周回数: ", player_lap_state[player_id]["lap_count"])
 	
 	# フラグをリセット（game_startedは維持）
 	player_lap_state[player_id]["N"] = false
@@ -880,3 +896,13 @@ func get_destroy_count() -> int:
 func reset_destroy_count():
 	game_stats["total_creatures_destroyed"] = 0
 	print("[破壊カウント] リセットしました")
+
+# 周回数取得
+func get_lap_count(player_id: int) -> int:
+	if player_lap_state.has(player_id):
+		return player_lap_state[player_id].get("lap_count", 0)
+	return 0
+
+# 現在のターン数（ラウンド数）取得
+func get_current_turn() -> int:
+	return current_turn_number

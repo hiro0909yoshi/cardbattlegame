@@ -114,11 +114,21 @@
 	  "name": "インシネレート",
 	  "rarity": "N",
 	  "type": "spell",
-	  "spell_type": "単体対象",
+	  "spell_type": "自己強化",
 	  "cost": {
 		"mp": 10
 	  },
-	  "effect": "クリーチャー破壊数×G20を得て、その数は0になる"
+	  "effect": "クリーチャー破壊数×G20を得て、その数は0になる",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_from_destroyed_count",
+			"multiplier": 20,
+			"reset_count": true
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2008,
@@ -428,7 +438,17 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象手札のスペル使用魔力総計の1/2の魔力を得る；対象手札の密命カードを見る"
+	  "effect": "対象手札のスペル使用魔力総計の1/2の魔力を得る；対象手札の密命カードを見る",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_from_spell_cost",
+			"percentage": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2026,
@@ -812,7 +832,17 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "最多周回数セプター1人から、自周回数との差×G100を奪う"
+	  "effect": "最多周回数セプター1人から、自周回数との差×G100を奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic_by_lap_diff",
+			"multiplier": 100
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2045,
@@ -1167,7 +1197,18 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象敵セプターから魔力の30%を奪う"
+	  "effect": "対象敵セプターから魔力の30%を奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic",
+			"value": 30,
+			"value_type": "percentage"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2064,

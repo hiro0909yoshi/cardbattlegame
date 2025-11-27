@@ -770,12 +770,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var effect_type = effect.get("effect_type", "")
 	
 	match effect_type:
-		"drain_magic", "gain_magic", "gain_magic_by_rank":
+		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count", "drain_magic_by_lap_diff", \
+		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap", "gain_magic_from_destroyed_count", \
+		"gain_magic_from_spell_cost", "balance_all_magic":
 			# 魔力操作系 - SpellMagicに委譲
 			if game_flow_manager and game_flow_manager.spell_magic:
 				var context = {
 					"rank": _get_player_ranking(current_player_id),
-					"from_player_id": target_data.get("player_id", -1)
+					"from_player_id": target_data.get("player_id", -1),
+					"card_system": card_system
 				}
 				game_flow_manager.spell_magic.apply_effect(effect, current_player_id, context)
 		
