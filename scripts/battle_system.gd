@@ -253,6 +253,9 @@ func _apply_post_battle_effects(
 			if game_flow_manager_ref:
 				game_flow_manager_ref.on_creature_destroyed()
 			
+			# バウンティハント（賞金首）報酬チェック - 防御側が敗者
+			_check_and_apply_bounty_reward(defender, attacker)
+			
 			# 攻撃側の永続バフ適用（バルキリー・ダスクドウェラー）
 			_apply_on_destroy_permanent_buffs(attacker)
 			
@@ -296,6 +299,10 @@ func _apply_post_battle_effects(
 			# 破壊カウンター更新
 			if game_flow_manager_ref:
 				game_flow_manager_ref.on_creature_destroyed()
+			
+			# バウンティハント（賞金首）報酬チェック - 攻撃側が敗者
+			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
+			_check_and_apply_bounty_reward(attacker, defender)
 			
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
 			_apply_on_destroy_permanent_buffs(defender)
@@ -391,6 +398,8 @@ func _apply_post_battle_effects(
 			if game_flow_manager_ref:
 				game_flow_manager_ref.on_creature_destroyed()
 				game_flow_manager_ref.on_creature_destroyed()
+			
+			# バウンティハント: 相打ちの場合は報酬なし（勝者がいない）
 			
 			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
 			_apply_after_battle_permanent_changes(attacker)
@@ -840,6 +849,50 @@ func _check_and_apply_magic_on_enemy_survive(winner: BattleParticipant, loser: B
 					  " → プレイヤー", player_id + 1, "が", amount, "G獲得")
 				
 				spell_magic.add_magic(player_id, amount)
+
+# バウンティハント（賞金首）呪いの報酬処理
+func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:
+	if not loser or not loser.creature_data:
+		return
+	
+	# 敗者の呪いを確認
+	var curse = loser.creature_data.get("curse", {})
+	if curse.is_empty():
+		return
+	
+	if curse.get("curse_type", "") != "bounty":
+		return
+	
+	var params = curse.get("params", {})
+	var reward = params.get("reward", 300)
+	var requires_weapon = params.get("requires_weapon", true)
+	var caster_id = params.get("caster_id", -1)
+	
+	if caster_id < 0:
+		print("[バウンティハント] 術者IDが不正: ", caster_id)
+		return
+	
+	# 武器使用チェック
+	if requires_weapon:
+		var winner_items = winner.creature_data.get("items", [])
+		var used_weapon = false
+		
+		for item in winner_items:
+			var item_type = item.get("item_type", "")
+			if item_type == "武器":
+				used_weapon = true
+				break
+		
+		if not used_weapon:
+			print("[バウンティハント] 武器未使用のため報酬なし")
+			return
+	
+	# 報酬付与
+	if spell_magic:
+		spell_magic.add_magic(caster_id, reward)
+		print("[バウンティハント] 賞金首撃破！プレイヤー%d が %dG獲得" % [caster_id + 1, reward])
+	else:
+		print("[バウンティハント] spell_magicが未設定")
 
 # アイテム復帰処理
 func _apply_item_return(participant: BattleParticipant, player_id: int):

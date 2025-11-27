@@ -9,6 +9,7 @@ var player_system_ref: PlayerSystem = null
 var board_system_ref = null  # BoardSystem3D
 var game_flow_manager_ref = null  # GameFlowManager
 var spell_curse_ref = null  # SpellCurse（呪い連携用）
+var spell_cast_notification_ui = null  # 通知UI
 
 func setup(player_system: PlayerSystem, board_system = null, game_flow_manager = null, spell_curse = null):
 	player_system_ref = player_system
@@ -17,16 +18,24 @@ func setup(player_system: PlayerSystem, board_system = null, game_flow_manager =
 	spell_curse_ref = spell_curse
 	print("SpellMagic: セットアップ完了")
 
+## 通知UIを設定
+func set_notification_ui(notification_ui) -> void:
+	spell_cast_notification_ui = notification_ui
+
 ## 統合エントリポイント - effect辞書から適切な処理を実行
 func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
 	var result = {"success": false, "amount": 0}
+	var notification_text = ""
+	var from_id = context.get("from_player_id", -1)
 	
 	match effect_type:
 		"gain_magic":
 			var amount = effect.get("amount", 0)
 			add_magic(player_id, amount)
 			result = {"success": true, "amount": amount}
+			if amount > 0:
+				notification_text = _format_gain_notification(player_id, amount)
 		
 		"gain_magic_by_rank":
 			var rank = context.get("rank", 1)
@@ -35,14 +44,22 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			add_magic(player_id, amount)
 			print("[魔力効果] 順位魔力: %d位 × %dG = %dG" % [rank, multiplier, amount])
 			result = {"success": true, "amount": amount}
+			if amount > 0:
+				notification_text = _format_gain_notification(player_id, amount, "【順位ボーナス】%d位 × %dG" % [rank, multiplier])
 		
 		"gain_magic_by_lap":
 			# マナ: 周回数×G50獲得
 			result = gain_magic_by_lap(player_id, effect)
+			if result.get("amount", 0) > 0:
+				var lap = result.get("lap_count", 0)
+				notification_text = _format_gain_notification(player_id, result["amount"], "【マナ】%d周 × %dG" % [lap, effect.get("multiplier", 50)])
 		
 		"gain_magic_from_destroyed_count":
 			# インシネレート: 破壊数×G20
 			result = gain_magic_from_destroyed_count(player_id, effect)
+			if result.get("amount", 0) > 0:
+				var count = result.get("destroy_count", 0)
+				notification_text = _format_gain_notification(player_id, result["amount"], "【インシネレート】%d体破壊 × %dG" % [count, effect.get("multiplier", 20)])
 		
 		"gain_magic_from_spell_cost":
 			# クレアボヤンス: 敵スペル魔力合計×50%
@@ -50,37 +67,66 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			var card_system = context.get("card_system", null)
 			if target_player_id >= 0 and card_system:
 				result = gain_magic_from_spell_cost(player_id, effect, target_player_id, card_system)
+				if result.get("amount", 0) > 0:
+					var total = result.get("spell_cost_total", 0)
+					notification_text = _format_gain_notification(player_id, result["amount"], "【クレアボヤンス】敵スペルコスト%dGの%d%%" % [total, effect.get("percentage", 50)])
 		
 		"drain_magic":
-			var from_id = context.get("from_player_id", -1)
 			if from_id >= 0:
 				var amount = drain_magic_from_effect(effect, from_id, player_id)
 				result = {"success": amount > 0, "amount": amount}
+				if amount > 0:
+					notification_text = _format_drain_notification(from_id, player_id, amount, "【ドレインマジック】")
 		
 		"drain_magic_conditional":
 			# フラクション: 自分より魔力多い敵から30%奪取
-			var from_id = context.get("from_player_id", -1)
 			if from_id >= 0:
 				result = drain_magic_conditional(effect, from_id, player_id)
+				if result.get("amount", 0) > 0:
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【フラクション】%d%%奪取" % effect.get("percentage", 30))
+				elif result.get("reason") == "condition_not_met":
+					notification_text = "【フラクション】\n条件不成立: 対象の魔力が術者以下"
 		
 		"drain_magic_by_land_count":
 			# ランドドレイン: 敵領地数×G30奪取
-			var from_id = context.get("from_player_id", -1)
 			if from_id >= 0:
 				result = drain_magic_by_land_count(effect, from_id, player_id)
+				if result.get("amount", 0) > 0:
+					var lands = result.get("land_count", 0)
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%d領地 × %dG" % [lands, effect.get("multiplier", 30)])
 		
 		"drain_magic_by_lap_diff":
-			# スピードペナルティ: 最多周回数との差×G100奪取
-			var from_id = context.get("from_player_id", -1)
+			# スピードペナルティ: 周回数差×G100奪取
 			if from_id >= 0:
 				result = drain_magic_by_lap_diff(effect, from_id, player_id)
+				if result.get("amount", 0) > 0:
+					var diff = result.get("diff", 0)
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【スピードペナルティ】%d周差 × %dG" % [diff, effect.get("multiplier", 100)])
+				elif result.get("diff", 0) <= 0:
+					notification_text = "【スピードペナルティ】\n周回数差なし"
 		
 		"balance_all_magic":
 			# レディビジョン: 全プレイヤー魔力平均化
 			result = balance_all_magic()
+			if result.get("success", false):
+				notification_text = "【レディビジョン】\n全プレイヤー魔力を[color=yellow]%dG[/color]に平均化" % result.get("average", 0)
+		
+		"gain_magic_from_land_chain":
+			# ロングライン: 連続領地×G500、未達成ならドロー
+			result = gain_magic_from_land_chain(player_id, effect, context)
+			var chain = result.get("chain", 0)
+			var required = effect.get("required_chain", 4)
+			if result.get("condition_met", false):
+				notification_text = _format_gain_notification(player_id, result["amount"], "【ロングライン】連続%d領地達成！" % chain)
+			else:
+				notification_text = "【ロングライン】\n連続%d領地 (必要%d)\n条件未達成 → カードドロー" % [chain, required]
 		
 		_:
 			print("[SpellMagic] 未対応の効果タイプ: ", effect_type)
+	
+	# 通知を表示（クリック待ち）
+	if notification_text != "":
+		await _show_notification_and_wait(notification_text)
 	
 	return result
 
@@ -414,6 +460,76 @@ func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_
 # Phase 4: グローバル効果
 # ========================================
 
+## ロングライン: 連続領地4つでG500、未達成ならドロー
+func gain_magic_from_land_chain(player_id: int, effect: Dictionary, context: Dictionary) -> Dictionary:
+	if not board_system_ref:
+		print("[ロングライン] BoardSystemが設定されていません")
+		return {"success": false, "amount": 0}
+	
+	var required_chain = effect.get("required_chain", 4)
+	var amount = effect.get("amount", 500)
+	
+	# 連続領地数を計算
+	var max_chain = _calculate_max_land_chain(player_id)
+	
+	if max_chain >= required_chain:
+		# 条件達成: 魔力獲得
+		add_magic(player_id, amount)
+		print("[ロングライン] 連続領地%d達成！ %dG獲得" % [max_chain, amount])
+		return {"success": true, "amount": amount, "chain": max_chain, "condition_met": true}
+	else:
+		# 条件未達成: フォールバック効果（ドロー）を返す
+		print("[ロングライン] 連続領地%d（必要%d）未達成" % [max_chain, required_chain])
+		var fallback = effect.get("fallback_effect", {})
+		return {"success": true, "amount": 0, "chain": max_chain, "condition_met": false, "next_effect": fallback}
+
+## 連続領地の最大数を計算
+func _calculate_max_land_chain(player_id: int) -> int:
+	if not board_system_ref or not "tile_nodes" in board_system_ref:
+		return 0
+	
+	var max_chain = 0
+	var current_chain = 0
+	var total_tiles = board_system_ref.tile_nodes.size()
+	
+	# マップを1周して連続領地を数える
+	for i in range(total_tiles):
+		var tile = board_system_ref.tile_nodes[i]
+		if tile.owner_id == player_id:
+			current_chain += 1
+			if current_chain > max_chain:
+				max_chain = current_chain
+		else:
+			current_chain = 0
+	
+	# 周回マップの場合、最初と最後が繋がっているかチェック
+	if total_tiles > 0:
+		var first_tile = board_system_ref.tile_nodes[0]
+		var last_tile = board_system_ref.tile_nodes[total_tiles - 1]
+		if first_tile.owner_id == player_id and last_tile.owner_id == player_id:
+			# 最初から連続している数を数える
+			var start_chain = 0
+			for i in range(total_tiles):
+				var tile = board_system_ref.tile_nodes[i]
+				if tile.owner_id == player_id:
+					start_chain += 1
+				else:
+					break
+			# 最後から連続している数を数える
+			var end_chain = 0
+			for i in range(total_tiles - 1, -1, -1):
+				var tile = board_system_ref.tile_nodes[i]
+				if tile.owner_id == player_id:
+					end_chain += 1
+				else:
+					break
+			# 繋がっている場合、合計が最大チェーンを超えるかチェック
+			var wrap_chain = start_chain + end_chain
+			if wrap_chain > max_chain:
+				max_chain = wrap_chain
+	
+	return max_chain
+
 ## レディビジョン: 全プレイヤー魔力平均化
 func balance_all_magic() -> Dictionary:
 	if not player_system_ref:
@@ -439,3 +555,39 @@ func balance_all_magic() -> Dictionary:
 	
 	print("[レディビジョン] 全プレイヤー魔力を%dGに平均化" % average)
 	return {"success": true, "average": average, "changes": changes}
+
+# ========================================
+# 通知システム
+# ========================================
+
+## 通知表示＋クリック待ち
+func _show_notification_and_wait(text: String) -> void:
+	if spell_cast_notification_ui:
+		spell_cast_notification_ui.show_notification_and_wait(text)
+		await spell_cast_notification_ui.click_confirmed
+
+## 魔力獲得の通知テキスト生成
+func _format_gain_notification(player_id: int, amount: int, source: String = "") -> String:
+	var player_name = "プレイヤー%d" % (player_id + 1)
+	if player_system_ref and player_id >= 0 and player_id < player_system_ref.players.size():
+		player_name = player_system_ref.players[player_id].name
+	
+	var text = "[color=yellow]+%dG[/color] 獲得！" % amount
+	if source != "":
+		text = "%s\n%s" % [source, text]
+	return text
+
+## 魔力奪取の通知テキスト生成
+func _format_drain_notification(from_id: int, to_id: int, amount: int, source: String = "") -> String:
+	var from_name = "プレイヤー%d" % (from_id + 1)
+	var to_name = "プレイヤー%d" % (to_id + 1)
+	if player_system_ref:
+		if from_id >= 0 and from_id < player_system_ref.players.size():
+			from_name = player_system_ref.players[from_id].name
+		if to_id >= 0 and to_id < player_system_ref.players.size():
+			to_name = player_system_ref.players[to_id].name
+	
+	var text = "%sから[color=yellow]%dG[/color]奪取！" % [from_name, amount]
+	if source != "":
+		text = "%s\n%s" % [source, text]
+	return text

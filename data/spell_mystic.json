@@ -213,6 +213,23 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9012,
+	  "name": "魔力奪取",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic",
+			"value": 10,
+			"value_type": "percentage"
+		  }
+		]
+	  }
 	}
   ]
 }

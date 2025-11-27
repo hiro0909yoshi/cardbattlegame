@@ -66,8 +66,27 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	# 2. 呪いから付与された秘術
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type", "") == "mystic_grant":
-		var curse_arts = curse.get("params", {}).get("mystic_arts", [])
-		all_mystic_arts.append_array(curse_arts)
+		var params = curse.get("params", {})
+		
+		# spell_id参照方式（新方式）
+		var spell_id = params.get("spell_id", 0)
+		if spell_id > 0:
+			# CardLoaderからスペルデータを取得
+			var spell_data = CardLoader.get_card_by_id(spell_id)
+			if spell_data and not spell_data.is_empty():
+				var mystic_art = {
+					"name": params.get("name", spell_data.get("name", "秘術")),
+					"cost": params.get("cost", 0),
+					"spell_id": spell_id
+				}
+				all_mystic_arts.append(mystic_art)
+				print("[秘術取得] 呪いから秘術付与: ", mystic_art.get("name"), " (spell_id: ", spell_id, ")")
+			else:
+				print("[秘術取得] spell_id ", spell_id, " のカードが見つかりません")
+		else:
+			# mystic_arts配列方式（旧方式）
+			var curse_arts = params.get("mystic_arts", [])
+			all_mystic_arts.append_array(curse_arts)
 	
 	return all_mystic_arts
 

@@ -1186,7 +1186,23 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象自領地に呪い\"魔力奪取\"(秘術[G20・対象敵セプターから魔力の10%を奪う])"
+	  "effect": "対象自領地に呪い\"魔力奪取\"(秘術[G20・対象敵セプターから魔力の10%を奪う])",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "self",
+		  "has_creature": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_mystic_arts",
+			"spell_id": 9012,
+			"cost": 20,
+			"name": "魔力奪取",
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2063,

@@ -43,13 +43,25 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "ap_nullify", duration, params)
 		
 		"grant_mystic_arts":
-			# 秘術付与呪い（シュリンクシジル等）
-			var curse_name = effect.get("curse_name", "秘術付与")
+			# 秘術付与呪い（シュリンクシジル、ドレインシジル等）
+			# spell_id参照方式と旧mystic_arts配列方式の両方に対応
+			var curse_name = effect.get("name", effect.get("curse_name", "秘術付与"))
+			var spell_id = effect.get("spell_id", 0)
+			var cost = effect.get("cost", 0)
 			var mystic_arts = effect.get("mystic_arts", [])
+			
 			var params = {
-				"name": curse_name,
-				"mystic_arts": mystic_arts
+				"name": curse_name
 			}
+			
+			if spell_id > 0:
+				# spell_id参照方式（新方式）
+				params["spell_id"] = spell_id
+				params["cost"] = cost
+			else:
+				# mystic_arts配列方式（旧方式）
+				params["mystic_arts"] = mystic_arts
+			
 			curse_creature(tile_index, "mystic_grant", duration, params)
 		
 		"stat_reduce":
@@ -87,6 +99,18 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 				"name": effect.get("name", "衰弱")
 			}
 			curse_creature(tile_index, "plague", duration, params)
+		
+		"bounty_curse":
+			# 賞金首呪い（バウンティハント）- 武器で破壊時に術者がG300獲得
+			var params = {
+				"name": effect.get("name", "賞金首"),
+				"reward": effect.get("reward", 300),
+				"requires_weapon": effect.get("requires_weapon", true),
+				"prevent_move": effect.get("prevent_move", true),
+				"prevent_swap": effect.get("prevent_swap", true),
+				"caster_id": effect.get("caster_id", -1)
+			}
+			curse_creature(tile_index, "bounty", duration, params)
 		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)

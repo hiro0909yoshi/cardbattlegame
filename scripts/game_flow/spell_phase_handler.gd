@@ -772,7 +772,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	match effect_type:
 		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count", "drain_magic_by_lap_diff", \
 		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap", "gain_magic_from_destroyed_count", \
-		"gain_magic_from_spell_cost", "balance_all_magic":
+		"gain_magic_from_spell_cost", "balance_all_magic", "gain_magic_from_land_chain":
 			# 魔力操作系 - SpellMagicに委譲
 			if game_flow_manager and game_flow_manager.spell_magic:
 				var context = {
@@ -780,7 +780,10 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					"from_player_id": target_data.get("player_id", -1),
 					"card_system": card_system
 				}
-				game_flow_manager.spell_magic.apply_effect(effect, current_player_id, context)
+				var result = await game_flow_manager.spell_magic.apply_effect(effect, current_player_id, context)
+				# フォールバック効果（ロングライン未達成時のドロー等）
+				if result.has("next_effect") and not result["next_effect"].is_empty():
+					await _apply_single_effect(result["next_effect"], target_data)
 		
 		"dice_fixed", "dice_range", "dice_multi", "dice_range_magic":
 			# ダイス系効果（統合処理）
@@ -800,6 +803,16 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
+		
+		"bounty_curse":
+			# 賞金首呪い（バウンティハント）- SpellCurseに委譲
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse:
+					# caster_idを効果辞書に追加
+					var effect_with_caster = effect.duplicate()
+					effect_with_caster["caster_id"] = current_player_id
+					game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
 		
 		"grant_mystic_arts":
 			# 秘術付与呪い（シュリンクシジル等）- SpellCurseに委譲

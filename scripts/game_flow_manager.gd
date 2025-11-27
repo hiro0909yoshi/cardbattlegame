@@ -686,6 +686,10 @@ func initialize_phase1a_systems():
 		if spell_phase_handler.spell_cast_notification_ui:
 			spell_curse_stat.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
 	
+	# SpellMagicに通知UIを設定
+	if spell_magic and spell_phase_handler.spell_cast_notification_ui:
+		spell_magic.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+	
 	# デバッグ: 密命カードを一時的に無効化（テスト用）
 	spell_phase_handler.debug_disable_secret_cards = true
 	

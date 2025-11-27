@@ -110,7 +110,25 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象領地に呪い\"賞金首\"(移動・交換不可、武器で破壊した場合G300)"
+	  "effect": "対象領地に呪い\"賞金首\"(移動・交換不可、武器で破壊した場合G300)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "has_creature": true
+		},
+		"effects": [
+		  {
+			"effect_type": "bounty_curse",
+			"name": "賞金首",
+			"reward": 300,
+			"requires_weapon": true,
+			"prevent_move": true,
+			"prevent_swap": true,
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2070,
@@ -1182,18 +1200,41 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "全セプターの魔力を平均化する"
+	  "effect": "全セプターの魔力を平均化する",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "balance_all_magic"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2131,
 	  "name": "ロングライン",
 	  "rarity": "S",
 	  "type": "spell",
-	  "spell_type": "単体対象",
+	  "spell_type": "自己強化",
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "密命；自領地が4つ連続している場合、G500；未達成の場合、カードを2枚引く"
+	  "effect": "密命；自領地が4つ連続している場合、G500；未達成の場合、カードを2枚引く",
+	  "is_secret": true,
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_from_land_chain",
+			"required_chain": 4,
+			"amount": 500,
+			"fallback_effect": {
+			  "effect_type": "draw",
+			  "count": 2
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2132,
