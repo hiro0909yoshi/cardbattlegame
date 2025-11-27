@@ -35,7 +35,8 @@ func get_available_creatures(player_id: int) -> Array:
 		if tile.is_down():
 			continue
 		
-		var mystic_arts = tile.creature_data.get("ability_parsed", {}).get("mystic_arts", [])
+		# 秘術を取得（元々の秘術 + 呪いからの秘術）
+		var mystic_arts = _get_all_mystic_arts(tile.creature_data)
 		if mystic_arts.size() > 0:
 			available.append({
 				"tile_index": tile.tile_index,
@@ -46,12 +47,29 @@ func get_available_creatures(player_id: int) -> Array:
 	return available
 
 
-## クリーチャーの秘術一覧を取得
+## クリーチャーの秘術一覧を取得（元々の秘術 + 呪いからの秘術）
 func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	if creature_data.is_empty():
 		return []
 	
-	return creature_data.get("ability_parsed", {}).get("mystic_arts", [])
+	return _get_all_mystic_arts(creature_data)
+
+
+## 全秘術を取得（ability_parsed + 呪いの両方）
+func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
+	var all_mystic_arts: Array = []
+	
+	# 1. 元々の秘術（ability_parsed）
+	var original_arts = creature_data.get("ability_parsed", {}).get("mystic_arts", [])
+	all_mystic_arts.append_array(original_arts)
+	
+	# 2. 呪いから付与された秘術
+	var curse = creature_data.get("curse", {})
+	if curse.get("curse_type", "") == "mystic_grant":
+		var curse_arts = curse.get("params", {}).get("mystic_arts", [])
+		all_mystic_arts.append_array(curse_arts)
+	
+	return all_mystic_arts
 
 
 # ============ 発動判定 ============

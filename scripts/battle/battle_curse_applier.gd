@@ -47,30 +47,43 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 		
 		"stat_reduce":
 			var value = params.get("value", -20)
-			participant.temporary_effects.append({
-				"type": "stat_bonus",
-				"stat": "hp",
-				"value": value,
-				"source": "curse",
-				"source_name": curse_name,
-				"removable": true,
-				"lost_on_move": true
-			})
-			participant.temporary_effects.append({
-				"type": "stat_bonus",
-				"stat": "ap",
-				"value": value,
-				"source": "curse",
-				"source_name": curse_name,
-				"removable": true,
-				"lost_on_move": true
-			})
-			print("[呪い変換] stat_reduce: HP", value, ", AP", value)
+			var stat = params.get("stat", "both")  # "hp", "ap", "both"
 			
-			# 効果を計算に反映
-			participant.temporary_bonus_hp += value
-			participant.current_hp += value
-			participant.temporary_bonus_ap += value
+			# HP減少
+			if stat == "hp" or stat == "both":
+				participant.temporary_effects.append({
+					"type": "stat_bonus",
+					"stat": "hp",
+					"value": value,
+					"source": "curse",
+					"source_name": curse_name,
+					"removable": true,
+					"lost_on_move": true
+				})
+				participant.temporary_bonus_hp += value
+				participant.current_hp += value
+			
+			# AP減少
+			if stat == "ap" or stat == "both":
+				participant.temporary_effects.append({
+					"type": "stat_bonus",
+					"stat": "ap",
+					"value": value,
+					"source": "curse",
+					"source_name": curse_name,
+					"removable": true,
+					"lost_on_move": true
+				})
+				participant.temporary_bonus_ap += value
+			
+			# ログ出力
+			match stat:
+				"hp":
+					print("[呪い変換] stat_reduce: HP", value)
+				"ap":
+					print("[呪い変換] stat_reduce: AP", value)
+				_:
+					print("[呪い変換] stat_reduce: HP", value, ", AP", value)
 		
 		"ap_nullify":
 			# 基礎APを0に固定（バフ・アイテムは加算可能）
@@ -90,6 +103,43 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			
 			# 効果を計算に反映（基礎APを打ち消す）
 			participant.temporary_bonus_ap += nullify_value
+		
+		"random_stat":
+			# 能力値不定（リキッドフォーム）- AP&HPをランダム値に設定
+			# SkillSpecialCreatureScript.apply_random_stat_effects()と同じ処理
+			var stat = params.get("stat", "both")
+			var min_value = int(params.get("min", 10))
+			var max_value = int(params.get("max", 70))
+			
+			# STをランダムに設定
+			if stat == "ap" or stat == "both":
+				var random_ap = randi() % (max_value - min_value + 1) + min_value
+				var base_ap = participant.creature_data.get("ap", 0)
+				var base_up_ap = participant.creature_data.get("base_up_ap", 0)
+				participant.temporary_bonus_ap = random_ap - (base_ap + base_up_ap)
+				participant.current_ap = random_ap
+				print("[呪い変換] random_stat: AP=", random_ap, " (", min_value, "~", max_value, ")")
+			
+			# HPをランダムに設定
+			if stat == "hp" or stat == "both":
+				var random_hp = randi() % (max_value - min_value + 1) + min_value
+				var base_hp = participant.creature_data.get("hp", 0)
+				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
+				participant.temporary_bonus_hp = random_hp - (base_hp + base_up_hp)
+				participant.current_hp = random_hp
+				print("[呪い変換] random_stat: HP=", random_hp, " (", min_value, "~", max_value, ")")
+			
+			# temporary_effectsに記録（表示用）
+			participant.temporary_effects.append({
+				"type": "random_stat",
+				"source": "curse",
+				"source_name": curse_name,
+				"removable": true,
+				"lost_on_move": true
+			})
+			
+			# random_statは既にcurrent_ap/hpを直接設定済みなので、ここでreturn
+			return
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap

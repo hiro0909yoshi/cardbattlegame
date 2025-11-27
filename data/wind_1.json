@@ -96,6 +96,13 @@
 			"scroll_type": "base_ap"
 		  }
 		},
+		"mystic_arts": [
+		  {
+			"name": "HP減少呪い",
+			"cost": 50,
+			"spell_id": 9011
+		  }
+		],
 		"effects": []
 	  }
 	},

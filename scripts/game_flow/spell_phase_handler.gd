@@ -802,8 +802,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable", "ap_nullify":
+		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse":
 			# 戦闘制限呪い系 - SpellCurseに委譲
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse:
+					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
+		
+		"grant_mystic_arts":
+			# 秘術付与呪い（シュリンクシジル等）- SpellCurseに委譲
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:

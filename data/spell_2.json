@@ -968,7 +968,28 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象領地に呪い\"能力値不定\"(戦闘中、AP&HP=10～70)；カードを1枚引く"
+	  "effect": "対象領地に呪い\"能力値不定\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "random_stat_curse",
+			"name": "能力値不定",
+			"stat": "both",
+			"min": 10,
+			"max": 70,
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2121,

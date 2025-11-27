@@ -594,7 +594,18 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G30・対象クリーチャーのMHP+10]"
+	  "ability_detail": "秘術[G30・対象クリーチャーのMHP+10]",
+	  "ability_parsed": {
+		"keywords": [],
+		"mystic_arts": [
+		  {
+			"name": "MHP増加",
+			"cost": 30,
+			"spell_id": 9010
+		  }
+		],
+		"effects": []
+	  }
 	},
 	{
 	  "id": 245,

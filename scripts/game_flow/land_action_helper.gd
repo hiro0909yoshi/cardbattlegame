@@ -33,6 +33,9 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 		# 永続バフ更新（アースズピリット/デュータイタン）
 		if not tile.creature_data.is_empty():
 			_apply_level_up_buff(tile.creature_data)
+		
+		# コマンド成長呪いトリガー（ドミナントグロース）
+		_trigger_command_growth(handler, handler.selected_tile_index)
 	
 	# ダウン状態設定（不屈チェック）
 	if tile.has_method("set_down_state"):
@@ -396,6 +399,47 @@ static func _apply_level_up_buff(creature_data: Dictionary):
 		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
+## コマンド成長呪いをトリガー（ドミナントグロース）
+static func _trigger_command_growth(handler, tile_index: int) -> void:
+	if not handler.game_flow_manager:
+		return
+	
+	var spell_curse = handler.game_flow_manager.spell_curse
+	if not spell_curse:
+		return
+	
+	# コマンド成長呪いがあればトリガー
+	var result = spell_curse.trigger_command_growth(tile_index)
+	
+	if result.get("triggered", false):
+		# 通知を表示
+		_show_command_growth_notification(handler, result)
+
+## コマンド成長の通知を表示
+static func _show_command_growth_notification(handler, result: Dictionary) -> void:
+	# SpellCastNotificationUIを取得
+	var notification_ui = null
+	if handler.game_flow_manager and handler.game_flow_manager.spell_phase_handler:
+		notification_ui = handler.game_flow_manager.spell_phase_handler.spell_cast_notification_ui
+	
+	if not notification_ui:
+		return
+	
+	var creature_name = result.get("creature_name", "クリーチャー")
+	var hp_bonus = result.get("hp_bonus", 20)
+	var old_mhp = result.get("old_mhp", 0)
+	var new_mhp = result.get("new_mhp", 0)
+	var old_hp = result.get("old_hp", 0)
+	var new_hp = result.get("new_hp", 0)
+	
+	var notification_text = "【コマンド成長】\n%s MHP+%d\nMHP: %d → %d\nHP: %d → %d" % [
+		creature_name, hp_bonus, old_mhp, new_mhp, old_hp, new_hp
+	]
+	
+	# 通知表示（クリック待ち）
+	notification_ui.show_notification_and_wait(notification_text)
+	# Note: staticメソッドなのでawaitは使えない。通知はクリックで消える
+
 ## 地形変化実行（属性選択後）
 static func execute_terrain_change_with_element(handler, new_element: String) -> bool:
 	if not handler.board_system or handler.selected_tile_index == -1:
@@ -445,6 +489,9 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	# タイルを取得（新しいタイルインスタンス）
 	var tile = handler.board_system.tile_nodes[tile_index]
+	
+	# コマンド成長呪いトリガー（ドミナントグロース）
+	_trigger_command_growth(handler, tile_index)
 	
 	# ダウン状態設定（不屈チェック）
 	if tile.has_method("set_down_state"):

@@ -626,7 +626,29 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象の自クリーチャーに呪い\"縮小術\"(秘術[G50・対象クリーチャーのMHP-10])"
+	  "effect": "対象の自クリーチャーに呪い\"縮小術\"(秘術[G50・対象クリーチャーのMHP-10])",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "own",
+		  "has_no_curse": true,
+		  "has_no_mystic_arts": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_mystic_arts",
+			"curse_name": "縮小術",
+			"mystic_arts": [
+			  {
+				"name": "縮小",
+				"cost": 50,
+				"spell_id": 9011
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2036,
@@ -1085,7 +1107,22 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象領地に呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)"
+	  "effect": "対象領地に呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "command_growth_curse",
+			"name": "コマンド成長",
+			"hp_bonus": 20,
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2061,

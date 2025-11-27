@@ -315,6 +315,17 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if creature.get("curse", {}).is_empty():
 							continue
 					
+					# has_no_curse チェック（呪いを持っていないクリーチャーのみ）
+					if target_info.get("has_no_curse", false):
+						if not creature.get("curse", {}).is_empty():
+							continue
+					
+					# has_no_mystic_arts チェック（秘術を持っていないクリーチャーのみ）
+					if target_info.get("has_no_mystic_arts", false):
+						var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
+						if not mystic_arts.is_empty():
+							continue
+					
 					# has_summon_condition チェック
 					# cost_lands_required または cost_cards_sacrifice があれば召喚条件あり
 					if target_info.get("has_summon_condition", false):
@@ -442,10 +453,20 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						
 						# クリーチャー存在チェック（target_filter: "creature"）
 						var target_filter = target_info.get("target_filter", "")
+						var creature = tile_info.get("creature", {})
 						if target_filter == "creature":
-							var creature = tile_info.get("creature", {})
 							if creature.is_empty():
 								continue
+							
+							# クリーチャー条件チェック（has_no_curse, has_no_mystic_arts等）
+							if target_info.get("has_no_curse", false):
+								if not creature.get("curse", {}).is_empty():
+									continue
+							
+							if target_info.get("has_no_mystic_arts", false):
+								var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
+								if not mystic_arts.is_empty():
+									continue
 						
 						# 条件を満たす土地を追加
 						var land_target = {
