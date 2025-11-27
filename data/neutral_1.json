@@ -231,10 +231,10 @@
 	  },
 	  "ap": 10,
 	  "hp": 30,
-	  "ability": "魔力獲得・破壊時魔力道産",
-	  "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、道産[G100]",
+	  "ability": "魔力獲得・破壊時魔力遺産",
+	  "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、遺産[G100]",
 	  "ability_parsed": {
-		"keywords": ["魔力獲得", "道産"],
+		"keywords": ["魔力獲得", "遺産"],
 		"effects": [
 		  {
 			"effect_type": "magic_gain_on_battle_start",

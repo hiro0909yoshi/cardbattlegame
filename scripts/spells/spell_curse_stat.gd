@@ -85,11 +85,11 @@ func _apply_permanent_hp_change(handler: Node, tile_index: int, effect: Dictiona
 	var new_mhp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
 	var new_current_hp = creature_data.get("current_hp", new_mhp)
 	
-	var sign = "+" if value >= 0 else ""
+	var sign_str = "+" if value >= 0 else ""
 	var notification_text = "%s MHP%s%d\nMHP: %d → %d / HP: %d → %d" % [
-		creature_name, sign, value, old_mhp, new_mhp, old_current_hp, new_current_hp
+		creature_name, sign_str, value, old_mhp, new_mhp, old_current_hp, new_current_hp
 	]
-	print("[恒久変更] ", creature_name, " MHP ", sign, value)
+	print("[恒久変更] ", creature_name, " MHP ", sign_str, value)
 	
 	await _show_notification_and_wait(notification_text)
 
@@ -130,11 +130,11 @@ func _apply_permanent_ap_change(handler: Node, tile_index: int, effect: Dictiona
 	
 	creature_data["base_up_ap"] = new_base_up_ap
 	
-	var sign = "+" if value >= 0 else ""
+	var sign_str = "+" if value >= 0 else ""
 	var notification_text = "%s AP%s%d\nAP: %d → %d" % [
-		creature_name, sign, value, old_total_ap, new_total_ap
+		creature_name, sign_str, value, old_total_ap, new_total_ap
 	]
-	print("[恒久変更] ", creature_name, " AP ", sign, value, " (合計AP: ", new_total_ap, ")")
+	print("[恒久変更] ", creature_name, " AP ", sign_str, value, " (合計AP: ", new_total_ap, ")")
 	
 	await _show_notification_and_wait(notification_text)
 

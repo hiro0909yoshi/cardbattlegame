@@ -3,12 +3,12 @@
 ## 【主な機能】
 ## - 遺産[魔力]: 死亡時に魔力を獲得
 ## - 遺産[カード]: 死亡時にカードをドロー
-## - 道産: 死亡時に魔力を獲得（破壊時専用）
+## - 遺産: 死亡時に魔力を獲得（破壊時専用）
 ##
 ## 【該当クリーチャー】
 ## - フェイト (ID: 136): 遺産[カード1枚]
-## - コーンフォーク (ID: 315): 破壊時、道産[G200]
-## - クリーピングコイン (ID: 410): 破壊時、道産[G100]
+## - コーンフォーク (ID: 315): 破壊時、遺産[G200]
+## - クリーピングコイン (ID: 410): 破壊時、遺産[G100]
 ##
 ## @version 1.0
 ## @date 2025-11-03
@@ -23,13 +23,13 @@ static func has_card_legacy(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
 	return "遺産[カード" in ability_detail
 
-## 道産スキルを持っているかチェック
+## 遺産スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 道産スキルを持っているか
+## @return 遺産スキルを持っているか
 static func has_magic_legacy(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "道産[G" in ability_detail or "破壊時魔力道産" in ability_detail
+	return "遺産[G" in ability_detail or "破壊時魔力遺産" in ability_detail
 
 ## 遺産[カード]を適用
 ##
@@ -53,7 +53,7 @@ static func apply_card_legacy(defeated, spell_draw) -> void:
 		if drawn_cards.size() > 0:
 			print("  引いたカード: ", drawn_cards.map(func(c): return c.get("name", "?")))
 
-## 道産[魔力]を適用
+## 遺産[魔力]を適用
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
@@ -64,7 +64,7 @@ static func apply_magic_legacy(defeated, spell_magic) -> void:
 	if has_magic_legacy(defeated.creature_data):
 		var amount = _extract_magic_amount(defeated.creature_data.get("ability_detail", ""), 100)
 		
-		print("【道産発動】", defeated.creature_data.get("name", "?"), 
+		print("【遺産発動】", defeated.creature_data.get("name", "?"), 
 			  " → プレイヤー", defeated.player_id + 1, "が", amount, "G獲得")
 		
 		spell_magic.add_magic(defeated.player_id, amount)
@@ -78,7 +78,7 @@ static func apply_on_death(defeated, spell_draw, spell_magic) -> void:
 	# 遺産[カード]
 	apply_card_legacy(defeated, spell_draw)
 	
-	# 道産[魔力]
+	# 遺産[魔力]
 	apply_magic_legacy(defeated, spell_magic)
 
 ## ability_detailからカード枚数を抽出
@@ -103,9 +103,9 @@ static func _extract_card_count(ability_detail: String, default_count: int) -> i
 ## @param default_amount デフォルト値
 ## @return 魔力獲得量
 static func _extract_magic_amount(ability_detail: String, default_amount: int) -> int:
-	# "道産[G200]" のような形式から数値を抽出
+	# "遺産[G200]" のような形式から数値を抽出
 	var regex = RegEx.new()
-	regex.compile("道産\\[G(\\d+)\\]")
+	regex.compile("遺産\\[G(\\d+)\\]")
 	var result = regex.search(ability_detail)
 	
 	if result:

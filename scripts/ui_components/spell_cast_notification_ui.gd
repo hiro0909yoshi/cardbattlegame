@@ -116,7 +116,7 @@ func show_spell_cast_and_wait(caster_name: String, target_name: String, effect_n
 		target_name,
 		effect_name
 	]
-	await show_notification_and_wait(text)
+	show_notification_and_wait(text)
 
 ## 非推奨: 旧API互換（クリック待ちなし自動フェード）
 ## 新規コードでは show_notification_and_wait を使用してください

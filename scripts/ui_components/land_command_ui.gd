@@ -260,7 +260,7 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 	
 	level_selection_panel.visible = true
 
-func _calculate_level_up_cost(from_level: int, to_level: int) -> int:
+func _calculate_level_up_cost(_from_level: int, to_level: int) -> int:
 	# TileDataManagerから動的に計算
 	if board_system_ref and board_system_ref.tile_data_manager and selected_tile_for_action >= 0:
 		var cost = board_system_ref.tile_data_manager.calculate_level_up_cost(selected_tile_for_action, to_level)

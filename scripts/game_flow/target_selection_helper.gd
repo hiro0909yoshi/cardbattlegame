@@ -498,11 +498,9 @@ static func _filter_by_most_common_element(targets: Array) -> Array:
 	
 	# 最多属性を特定
 	var max_count = 0
-	var most_common = ""
 	for element in element_counts.keys():
 		if element_counts[element] > max_count:
 			max_count = element_counts[element]
-			most_common = element
 	
 	# 同数の場合は全て対象（複数属性が最多の場合）
 	var most_common_elements = []

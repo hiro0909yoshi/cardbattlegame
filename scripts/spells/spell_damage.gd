@@ -250,9 +250,9 @@ func apply_permanent_hp_to_all_creatures(handler: Node, target_info: Dictionary,
 		
 		# 通知テキスト生成
 		var creature_name = creature_data.get("name", "クリーチャー")
-		var sign = "+" if hp_value >= 0 else ""
+		var sign_str = "+" if hp_value >= 0 else ""
 		var notification_text = "%s MHP%s%d\nMHP: %d → %d / HP: %d → %d" % [
-			creature_name, sign, hp_value, old_mhp, new_mhp, old_current_hp, new_current_hp
+			creature_name, sign_str, hp_value, old_mhp, new_mhp, old_current_hp, new_current_hp
 		]
 		
 		await _show_notification_and_wait(notification_text)

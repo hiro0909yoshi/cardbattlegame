@@ -202,7 +202,7 @@ func start_mystic_arts_phase():
 	await _select_mystic_arts_creature(available_creatures, current_player.id)
 
 ## クリーチャー選択
-func _select_mystic_arts_creature(available_creatures: Array, player_id: int):
+func _select_mystic_arts_creature(available_creatures: Array, _player_id: int):
 	"""秘術を持つクリーチャーを選択"""
 	if not ui_manager:
 		return
@@ -254,14 +254,14 @@ func _select_mystic_art(selected_creature: Dictionary, spell_and_mystic_ui: Cont
 		spell_and_mystic_ui.hide_all()
 		return
 	
-	var selected_mystic_art = mystic_arts[selected_index]
+	var mystic_art_selected = mystic_arts[selected_index]
 	
 	# UIを非表示
 	spell_and_mystic_ui.hide_all()
 	
 	# ターゲット選択に進む
 	var current_player = player_system.get_current_player()
-	await _select_mystic_arts_target(selected_creature, selected_mystic_art, current_player.id)
+	await _select_mystic_arts_target(selected_creature, mystic_art_selected, current_player.id)
 
 ## ターゲット選択
 func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dictionary, player_id: int):
@@ -292,10 +292,6 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 	
 	# 全クリーチャー対象時はターゲット選択なしで実行
 	if target_type == "all_creatures":
-		var target_data = {
-			"type": "all",
-			"target_info": target_info
-		}
 		await _execute_mystic_art_all_creatures(selected_creature, mystic_art, target_info, player_id)
 		return
 	
@@ -339,8 +335,8 @@ func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
 	if spell_id > 0:
 		var spell_data = CardLoader.get_card_by_id(spell_id)
 		if not spell_data.is_empty():
-			var effects = spell_data.get("effect_parsed", {}).get("effects", [])
-			for effect in effects:
+			var spell_effects = spell_data.get("effect_parsed", {}).get("effects", [])
+			for effect in spell_effects:
 				if effect.get("effect_type", "") in ASYNC_EFFECT_TYPES:
 					return true
 		return false

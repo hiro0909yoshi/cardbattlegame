@@ -18,7 +18,7 @@ func calculate_toll_with_multiplier(base_toll: int, multiplier: float) -> int:
 
 ## 固定値型: 通行料を固定値に設定
 ## 例: 0G、200Gなど
-func calculate_toll_with_fixed_value(base_toll: int, fixed_value: int) -> int:
+func calculate_toll_with_fixed_value(_base_toll: int, fixed_value: int) -> int:
 	return max(0, fixed_value)
 
 ## 可変倍率型: ランダムな倍率を適用（ヨーウィ用）

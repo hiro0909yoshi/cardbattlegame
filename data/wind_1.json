@@ -428,10 +428,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "破壊時魔力獲得",
-	  "ability_detail": "戦闘やスペルでの破壊時、道産[G200]",
+	  "ability": "自破壊時魔力獲得",
+	  "ability_detail": "戦闘やスペルでの破壊時、遺産[G200]",
 	  "ability_parsed": {
-		"keywords": ["道産"],
+		"keywords": ["遺産"],
 		"effects": [
 		  {
 			"effect_type": "legacy_magic",

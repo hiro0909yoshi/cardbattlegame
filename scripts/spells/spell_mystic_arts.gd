@@ -131,8 +131,8 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 		# 条件付き全体効果（has_curse等）の場合は対象存在チェック
 		if not spell_phase_handler_ref:
 			return false
-		var valid_targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, "creature", target_info)
-		return valid_targets.size() > 0
+		var all_targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, "creature", target_info)
+		return all_targets.size() > 0
 	
 	# TargetSelectionHelperを直接呼び出してターゲット取得
 	if not spell_phase_handler_ref:
@@ -259,14 +259,15 @@ func _apply_damage(effect: Dictionary, target_data: Dictionary, _context: Dictio
 	
 	# フォールバック: spell_phase_handlerがない場合は直接処理
 	var spell_damage_instance = SpellDamage.new(board_system_ref)
-	var result = spell_damage_instance.apply_damage(target_tile_index, value)
-	return result["success"]
+	var fallback_result = spell_damage_instance.apply_damage(target_tile_index, value)
+	return fallback_result["success"]
 
 
 ## 効果：呪いの一撃
 func _apply_curse_attack(effect: Dictionary, target_data: Dictionary, _context: Dictionary) -> bool:
 	var target_tile_index = target_data.get("tile_index", -1)
 	var curse_type = effect.get("curse_type", "")
+	@warning_ignore("unused_variable")
 	var duration = effect.get("duration", 0)
 	
 	if target_tile_index == -1 or curse_type.is_empty():
