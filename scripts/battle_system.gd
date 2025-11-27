@@ -257,15 +257,15 @@ func _apply_post_battle_effects(
 			await _check_and_apply_bounty_reward(defender, attacker)
 			
 			# 攻撃側の永続バフ適用（バルキリー・ダスクドウェラー）
-			_apply_on_destroy_permanent_buffs(attacker)
+			SkillPermanentBuff.apply_on_destroy_buffs(attacker)
 			
 			# 防御側が破壊されたので、防御側の永続バフも適用（相互破壊の可能性）
 			if defender.current_hp <= 0:
-				_apply_on_destroy_permanent_buffs(defender)
+				SkillPermanentBuff.apply_on_destroy_buffs(defender)
 			
 			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
-			_apply_after_battle_permanent_changes(attacker)
-			_apply_after_battle_permanent_changes(defender)
+			SkillPermanentBuff.apply_after_battle_changes(attacker)
+			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
@@ -305,18 +305,18 @@ func _apply_post_battle_effects(
 			await _check_and_apply_bounty_reward(attacker, defender)
 			
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
-			_apply_on_destroy_permanent_buffs(defender)
+			SkillPermanentBuff.apply_on_destroy_buffs(defender)
 			
 			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
-			_apply_after_battle_permanent_changes(attacker)
-			_apply_after_battle_permanent_changes(defender)
+			SkillPermanentBuff.apply_after_battle_changes(attacker)
+			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
-						# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
+			# 防御側クリーチャーのHPを更新（ダメージを受けたまま）
 			# 重要：tile_infoを新しく取得（バトル中の永続バフ反映のため）
 			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
 			battle_special_effects.update_defender_hp(updated_tile_info, defender)
@@ -334,8 +334,8 @@ func _apply_post_battle_effects(
 【結果】侵略失敗！攻撃側が生き残り")
 			
 			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
-			_apply_after_battle_permanent_changes(attacker)
-			_apply_after_battle_permanent_changes(defender)
+			SkillPermanentBuff.apply_after_battle_changes(attacker)
+			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
@@ -402,8 +402,8 @@ func _apply_post_battle_effects(
 			# バウンティハント: 相打ちの場合は報酬なし（勝者がいない）
 			
 			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
-			_apply_after_battle_permanent_changes(attacker)
-			_apply_after_battle_permanent_changes(defender)
+			SkillPermanentBuff.apply_after_battle_changes(attacker)
+			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
 			if battle_result.get("attacker_original", {}).has("name"):
@@ -468,139 +468,6 @@ func _apply_post_battle_effects(
 	if board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
 
-
-# ========================================
-# 永続バフ処理（破壊時）
-# ========================================
-
-# 敵破壊時の永続バフ適用（バルキリー・ダスクドウェラー）
-func _apply_on_destroy_permanent_buffs(participant: BattleParticipant):
-	if not participant or not participant.creature_data:
-		return
-	
-	print("[DEBUG_永続バフ] 関数開始: ", participant.creature_data.get("name", "?"), 
-		  " ID:", participant.creature_data.get("id", "?"),
-		  " 現在のbase_up_hp:", participant.base_up_hp,
-		  " 現在のbase_up_ap:", participant.base_up_ap)
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	print("[DEBUG_永続バフ] 破壊時効果数: ", effects.size())
-	
-	for effect in effects:
-		if effect.get("effect_type") == "on_enemy_destroy_permanent":
-			print("[DEBUG_永続バフ] on_enemy_destroy_permanent 効果を検出")
-			var stat_changes = effect.get("stat_changes", {})
-			
-			for stat in stat_changes:
-				var value = stat_changes[stat]
-				if stat == "ap":
-					# BattleParticipantのプロパティに保存（参照汚染を防ぐ）
-					participant.base_up_ap += value
-					print("[永続バフ] ", participant.creature_data.get("name", ""), " ST+", value)
-				
-				elif stat == "max_hp":
-					# BattleParticipantのプロパティに保存（参照汚染を防ぐ）
-					var old_base_up_hp = participant.base_up_hp
-					participant.base_up_hp += value
-					participant.current_hp += value  # MHPが増えたら現在HPも増やす
-					print("[永続バフ] ", participant.creature_data.get("name", ""), " MHP+", value)
-					print("  base_up_hp: ", old_base_up_hp, " → ", participant.base_up_hp)
-
-# バトル後の永続的な変化を適用（勝敗問わず）
-# ロックタイタン (ID: 446)、リーンタイタン (ID: 439) など
-func _apply_after_battle_permanent_changes(participant: BattleParticipant):
-	if not participant or not participant.creature_data:
-		return
-	
-	# バイロマンサー専用処理（敵から攻撃を受けた場合のみ発動）
-	var creature_id = participant.creature_data.get("id", -1)
-	if creature_id == 34:  # バイロマンサー
-		# 敵から攻撃を受けた、かつ生き残っている、かつまだ発動していない
-		if participant.was_attacked_by_enemy and participant.is_alive():
-			if not participant.creature_data.get("bairomancer_triggered", false):
-				# ST=20（完全上書き）、MHP-30
-				var old_ap = participant.creature_data.get("ap", 0)
-				var old_base_up_ap = participant.creature_data.get("base_up_ap", 0)
-				
-				participant.creature_data["ap"] = 20  # 基礎APを20に上書き
-				participant.base_up_ap = 0  # BattleParticipantのプロパティをリセット
-				
-				# BattleParticipantのプロパティから30減少
-				participant.base_up_hp -= 30
-				
-				# 発動フラグを設定
-				participant.creature_data["bairomancer_triggered"] = true
-				
-				print("[バイロマンサー発動] 敵の攻撃を受けて変化！")
-				print("  ST: ", old_ap + old_base_up_ap, " → 20")
-				print("  MHP-30 (合計MHP:", participant.creature_data.get("hp", 0) + participant.base_up_hp, ")")
-	
-	# ブルガサリ専用処理（敵がアイテムを使用した戦闘後、MHP+10）
-	if creature_id == 339:  # ブルガサリ
-		if participant.enemy_used_item and participant.is_alive():
-			# BattleParticipantのプロパティに保存
-			participant.base_up_hp += 10
-			print("[ブルガサリ発動] 敵のアイテム使用後 MHP+10 (合計MHP:", participant.creature_data.get("hp", 0) + participant.base_up_hp, ")")
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "after_battle_permanent_change":
-			var stat_changes = effect.get("stat_changes", {})
-			
-			for stat in stat_changes:
-				var value = stat_changes[stat]
-				if stat == "ap":
-					if not participant.creature_data.has("base_up_ap"):
-						participant.creature_data["base_up_ap"] = 0
-					# 下限チェック: ST（base_ap + base_up_ap）が0未満にならないようにする
-					var _current_total_ap = participant.creature_data.get("ap", 0) + participant.creature_data["base_up_ap"]
-					var new_base_up_ap = participant.creature_data["base_up_ap"] + value
-					var new_total_ap = participant.creature_data.get("ap", 0) + new_base_up_ap
-					
-					if new_total_ap < 0:
-						# 合計STが0になるように調整
-						new_base_up_ap = -participant.creature_data.get("ap", 0)
-						print("[永続変化] ", participant.creature_data.get("name", ""), " ST", value, " → 下限0に制限")
-					
-					participant.creature_data["base_up_ap"] = new_base_up_ap
-					print("[永続変化] ", participant.creature_data.get("name", ""), " ST", value if value >= 0 else "", value, " (合計ST:", participant.creature_data.get("ap", 0) + new_base_up_ap, ")")
-				
-				elif stat == "max_hp":
-					# 下限チェック: MHP（hp + base_up_hp）が0未満にならないようにする
-					var _current_total_hp = participant.creature_data.get("hp", 0) + participant.base_up_hp
-					var new_base_up_hp = participant.base_up_hp + value
-					var new_total_hp = participant.creature_data.get("hp", 0) + new_base_up_hp
-					
-					if new_total_hp < 0:
-						# 合計MHPが0になるように調整
-						new_base_up_hp = -participant.creature_data.get("hp", 0)
-						print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value, " → 下限0に制限")
-					
-					# creature_dataとBattleParticipantの両方に保存（AP処理と統一）
-					participant.creature_data["base_up_hp"] = new_base_up_hp
-					participant.base_up_hp = new_base_up_hp
-					print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value if value >= 0 else "", value, " (合計MHP:", participant.creature_data.get("hp", 0) + new_base_up_hp, ")")
-	
-	# スペクター専用処理（戦闘後にランダムステータスをリセット）
-	if creature_id == 321:  # スペクター
-		# random_statエフェクトを持つ場合、base_hp/base_apを元の値に戻す
-		var has_random_stat = false
-		for effect in effects:
-			if effect.get("effect_type") == "random_stat":
-				has_random_stat = true
-				break
-		
-		if has_random_stat and participant.is_alive():
-			# 元のカードデータからbase_hp/base_apを取得
-			var original_hp = CardLoader.get_card_by_id(321).get("hp", 20)
-			var original_ap = CardLoader.get_card_by_id(321).get("ap", 20)
-			
-			# creature_dataのhp/apを元の値に戻す
-			participant.creature_data["hp"] = original_hp
-			participant.creature_data["ap"] = original_ap
-			
-			print("[ランダムステータスリセット] スペクターの能力値を初期値に戻しました (ST:", original_ap, ", HP:", original_hp, ")")
 
 ## 💰 バトル結果確定後の魔力獲得処理（ゴールドハンマー用）
 func _apply_magic_on_enemy_survive(result: BattleResult, attacker: BattleParticipant, defender: BattleParticipant):
