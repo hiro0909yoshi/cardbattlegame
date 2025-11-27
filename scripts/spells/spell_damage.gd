@@ -13,7 +13,36 @@ func set_notification_ui(ui: Node) -> void:
 	spell_cast_notification_ui = ui
 
 # ============================================
-# 高レベル効果処理（spell_phase_handlerから呼び出し）
+# 統合エントリポイント（SpellPhaseHandlerから呼び出し）
+# ============================================
+
+## ダメージ・回復スペル効果を適用（統合メソッド）
+## 戻り値: 処理したかどうか
+func apply_effect(handler: Node, effect: Dictionary, target_data: Dictionary) -> bool:
+	var effect_type = effect.get("effect_type", "")
+	var tile_index = target_data.get("tile_index", -1)
+	
+	match effect_type:
+		"damage":
+			var value = effect.get("value", 0)
+			await apply_damage_effect(handler, tile_index, value)
+			return true
+		"heal":
+			var value = effect.get("value", 0)
+			await apply_heal_effect(handler, tile_index, value)
+			return true
+		"full_heal":
+			await apply_full_heal_effect(handler, tile_index)
+			return true
+		"clear_down":
+			await apply_clear_down_effect(handler, tile_index)
+			return true
+	
+	return false
+
+
+# ============================================
+# 高レベル効果処理
 # ============================================
 
 ## 単体ダメージ効果を適用（カメラ、通知、クリック待ち含む）

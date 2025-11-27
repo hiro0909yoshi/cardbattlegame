@@ -27,11 +27,36 @@ func set_notification_ui(ui: Node) -> void:
 	spell_cast_notification_ui = ui
 
 # ========================================
-# 高レベル効果処理（SpellPhaseHandlerから呼び出し）
+# 統合エントリポイント（SpellPhaseHandlerから呼び出し）
 # ========================================
 
-## 恒久MHP変更効果を適用（カメラ、通知、クリック待ち含む）
-func apply_permanent_hp_change_effect(handler: Node, tile_index: int, effect: Dictionary) -> void:
+## ステータス増減スペル効果を適用（統合メソッド）
+## 戻り値: 処理したかどうか
+func apply_effect(handler: Node, effect: Dictionary, target_data: Dictionary, current_player_id: int, selected_spell_card: Dictionary) -> bool:
+	var effect_type = effect.get("effect_type", "")
+	var tile_index = target_data.get("tile_index", -1)
+	
+	match effect_type:
+		"permanent_hp_change":
+			await _apply_permanent_hp_change(handler, tile_index, effect)
+			return true
+		"permanent_ap_change":
+			await _apply_permanent_ap_change(handler, tile_index, effect)
+			return true
+		"secret_tiny_army":
+			await apply_secret_tiny_army(handler, effect, current_player_id, selected_spell_card)
+			return true
+	
+	return false
+
+
+# ========================================
+# 恒久的ステータス変更
+# ========================================
+
+
+## 恒久MHP変更効果を適用（内部用）
+func _apply_permanent_hp_change(handler: Node, tile_index: int, effect: Dictionary) -> void:
 	if tile_index < 0 or not board_system:
 		return
 	
@@ -69,8 +94,8 @@ func apply_permanent_hp_change_effect(handler: Node, tile_index: int, effect: Di
 	await _show_notification_and_wait(notification_text)
 
 
-## 恒久AP変更効果を適用（カメラ、通知、クリック待ち含む）
-func apply_permanent_ap_change_effect(handler: Node, tile_index: int, effect: Dictionary) -> void:
+## 恒久AP変更効果を適用（内部用）
+func _apply_permanent_ap_change(handler: Node, tile_index: int, effect: Dictionary) -> void:
 	if tile_index < 0 or not board_system:
 		return
 	

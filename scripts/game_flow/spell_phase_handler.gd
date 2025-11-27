@@ -777,9 +777,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"damage":
 			# クリーチャーにダメージ - SpellDamageに委譲
 			if spell_damage and target_data.get("type", "") == "creature":
-				var tile_index = target_data.get("tile_index", -1)
-				var value = effect.get("value", 0)
-				await spell_damage.apply_damage_effect(self, tile_index, value)
+				await spell_damage.apply_effect(self, effect, target_data)
 		
 		"drain_magic", "gain_magic", "gain_magic_by_rank":
 			# 魔力操作系 - SpellMagicに委譲
@@ -853,32 +851,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 						spell_failed = true
 		
-		"clear_down":
-			# ダウン解除 - SpellDamageに委譲
+		"damage", "heal", "full_heal", "clear_down":
+			# ダメージ・回復系 - SpellDamageに委譲
 			if spell_damage:
-				var tile_index = target_data.get("tile_index", -1)
-				await spell_damage.apply_clear_down_effect(self, tile_index)
+				await spell_damage.apply_effect(self, effect, target_data)
 		
-		"full_heal":
-			# HP全回復 - SpellDamageに委譲
-			if spell_damage:
-				var tile_index = target_data.get("tile_index", -1)
-				await spell_damage.apply_full_heal_effect(self, tile_index)
-		
-		"heal":
-			# 固定値HP回復 - SpellDamageに委譲
-			if spell_damage:
-				var tile_index = target_data.get("tile_index", -1)
-				var value = effect.get("value", 0)
-				await spell_damage.apply_heal_effect(self, tile_index, value)
-		
-		"permanent_hp_change", "permanent_ap_change":
-			# 恒久的なステータス変更（グロースボディ、ファットボディ等）
-			await _apply_permanent_stat_change(effect, target_data)
-		
-		"secret_tiny_army":
-			# 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）
-			await _apply_secret_tiny_army(effect)
+		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
+			# ステータス増減スペル - SpellCurseStatに委譲
+			if game_flow_manager and game_flow_manager.spell_curse_stat:
+				await game_flow_manager.spell_curse_stat.apply_effect(self, effect, target_data, current_player_id, selected_spell_card)
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
@@ -1139,46 +1120,4 @@ func _show_spell_cast_notification(caster_name: String, target_data: Dictionary,
 	spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
 	await spell_cast_notification_ui.click_confirmed
 
-# ============ 恒久的ステータス変更 ============
 
-## 恒久的なステータス変更を適用（グロースボディ、ファットボディ等）
-## SpellCurseStatに委譲
-func _apply_permanent_stat_change(effect: Dictionary, target_data: Dictionary) -> void:
-	var tile_index = target_data.get("tile_index", -1)
-	if tile_index < 0:
-		return
-	
-	var spell_curse_stat = _get_spell_curse_stat()
-	if not spell_curse_stat:
-		push_error("[SpellPhaseHandler] spell_curse_stat が見つかりません")
-		return
-	
-	var effect_type = effect.get("effect_type", "")
-	
-	# カメラをターゲットにフォーカス
-	TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
-	
-	match effect_type:
-		"permanent_hp_change":
-			await spell_curse_stat.apply_permanent_hp_change_effect(self, tile_index, effect)
-		"permanent_ap_change":
-			await spell_curse_stat.apply_permanent_ap_change_effect(self, tile_index, effect)
-
-
-## SpellCurseStatを取得
-func _get_spell_curse_stat() -> SpellCurseStat:
-	if game_flow_manager and game_flow_manager.spell_curse_stat:
-		return game_flow_manager.spell_curse_stat
-	return null
-
-# ============ 密命スペル ============
-
-## 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）
-## SpellCurseStatに委譲（失敗時の通知・カード復帰も含む）
-func _apply_secret_tiny_army(effect: Dictionary) -> void:
-	var spell_curse_stat = _get_spell_curse_stat()
-	if not spell_curse_stat:
-		push_error("[SpellPhaseHandler] spell_curse_stat が見つかりません")
-		return
-	
-	await spell_curse_stat.apply_secret_tiny_army(self, effect, current_player_id, selected_spell_card)
