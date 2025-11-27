@@ -875,7 +875,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "全自クリーチャーのHPを全回復"
+	  "effect": "全自クリーチャーのHPを全回復",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "full_heal"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2117,
@@ -942,7 +953,21 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象クリーチャーのダウン解除；対象クリーチャーのHPを全回復"
+	  "effect": "対象クリーチャーのダウン解除；対象クリーチャーのHPを全回復",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "clear_down"
+		  },
+		  {
+			"effect_type": "full_heal"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2122,

@@ -201,9 +201,17 @@
 	  "ability_detail": "先制；秘術[G60・対象敵火風のHP-20]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "秘術"
 		],
-		"effects": []
+		"mystic_arts": [
+		  {
+			"name": "ロックブラスト",
+			"description": "対象敵火風クリーチャーのHP-20",
+			"spell_id": 9005,
+			"cost": 60
+		  }
+		]
 	  }
 	},
 	{
@@ -238,7 +246,17 @@
 	  "ability_detail": "再生；秘術[G10・対象自クリーチャーのHPを30回復]；不屈",
 	  "ability_parsed": {
 		"keywords": [
-		  "再生"
+		  "再生",
+		  "秘術",
+		  "不屈"
+		],
+		"mystic_arts": [
+		  {
+			"name": "ヒール",
+			"description": "対象自クリーチャーのHPを30回復",
+			"spell_id": 9009,
+			"cost": 10
+		  }
 		]
 	  }
 	},

@@ -60,6 +60,118 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9004,
+	  "name": "ダメージ10（敵単体）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 10
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9005,
+	  "name": "ダメージ20（敵火風）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": ["fire", "wind"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9006,
+	  "name": "ダメージ20（敵水地）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": ["water", "earth"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9007,
+	  "name": "ダメージ30（敵無属性）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": ["neutral"]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9008,
+	  "name": "ダメージ20（呪い付き全体）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "has_curse": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9009,
+	  "name": "回復30（自クリーチャー）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "heal",
+			"value": 30
+		  }
+		]
+	  }
 	}
   ]
 }

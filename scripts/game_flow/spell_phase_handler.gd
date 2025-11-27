@@ -93,6 +93,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# 発動通知UIを初期化
 	_initialize_spell_cast_notification_ui()
 	
+	# SpellDamageに通知UIを設定
+	if spell_damage and spell_cast_notification_ui:
+		spell_damage.set_notification_ui(spell_cast_notification_ui)
+	
 	# カード選択ハンドラーを初期化
 	_initialize_card_selection_handler()
 
@@ -286,6 +290,15 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 		await _execute_mystic_art(selected_creature, mystic_art, target_data, player_id)
 		return
 	
+	# 全クリーチャー対象時はターゲット選択なしで実行
+	if target_type == "all_creatures":
+		var target_data = {
+			"type": "all",
+			"target_info": target_info
+		}
+		await _execute_mystic_art_all_creatures(selected_creature, mystic_art, target_info, player_id)
+		return
+	
 	# 秘術選択状態を保存（ターゲット確定時に使用）
 	selected_mystic_creature = selected_creature
 	selected_mystic_art = mystic_art
@@ -401,6 +414,69 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 	# スペルフェーズ完了
 	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
+
+
+## 秘術実行（全クリーチャー対象）
+func _execute_mystic_art_all_creatures(creature: Dictionary, mystic_art: Dictionary, target_info: Dictionary, player_id: int):
+	"""全クリーチャー対象の秘術を実行（ニルーバーナ等）"""
+	current_state = State.EXECUTING_EFFECT
+	
+	# 発動判定
+	var context = {
+		"player_id": player_id,
+		"player_magic": player_system.get_magic(player_id),
+		"spell_used_this_turn": spell_used_this_turn,
+		"tile_index": creature.get("tile_index", -1)
+	}
+	
+	if not spell_mystic_arts.can_cast_mystic_art(mystic_art, context):
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "秘術発動条件を満たしていません"
+		_clear_mystic_art_selection()
+		current_state = State.WAITING_FOR_INPUT
+		return
+	
+	# 発動通知を表示
+	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
+	var target_data_for_notification = {"type": "all"}
+	await _show_spell_cast_notification(caster_name, target_data_for_notification, mystic_art, true)
+	
+	# spell_idからeffectsを取得
+	var spell_id = mystic_art.get("spell_id", -1)
+	var effects = []
+	if spell_id > 0:
+		var spell_data = CardLoader.get_card_by_id(spell_id)
+		if not spell_data.is_empty():
+			var effect_parsed = spell_data.get("effect_parsed", {})
+			effects = effect_parsed.get("effects", [])
+	
+	# ダメージ/回復効果をSpellDamageに委譲
+	if spell_damage:
+		await spell_damage.execute_all_creatures_effects(self, effects, target_info)
+	
+	# 魔力消費
+	var cost = mystic_art.get("cost", 0)
+	player_system.add_magic(player_id, -cost)
+	spell_used_this_turn = true
+	
+	# キャスターをダウン状態に設定
+	spell_mystic_arts._set_caster_down_state(creature.get("tile_index", -1), board_system)
+	
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = "『%s』を発動しました！" % mystic_art.get("name", "Unknown")
+	
+	# 排他制御
+	_on_mystic_art_used()
+	
+	# 秘術選択状態をクリア
+	_clear_mystic_art_selection()
+	
+	# スペルフェーズ完了
+	await get_tree().create_timer(0.5).timeout
+	_return_camera_to_player()
+	await get_tree().create_timer(0.5).timeout
+	complete_spell_phase()
+
 
 ## CPUのスペル使用判定（簡易版）
 func _handle_cpu_spell_turn():
@@ -699,8 +775,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	
 	match effect_type:
 		"damage":
-			# クリーチャーにダメージ
-			await _apply_damage_effect(effect, target_data)
+			# クリーチャーにダメージ - SpellDamageに委譲
+			if spell_damage and target_data.get("type", "") == "creature":
+				var tile_index = target_data.get("tile_index", -1)
+				var value = effect.get("value", 0)
+				await spell_damage.apply_damage_effect(self, tile_index, value)
 		
 		"drain_magic", "gain_magic", "gain_magic_by_rank":
 			# 魔力操作系 - SpellMagicに委譲
@@ -766,32 +845,25 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if not success and effect.get("return_to_deck_on_fail", false):
 					if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 						spell_failed = true
-
-## クリーチャーダメージ効果（非同期：クリック待ちあり）
-func _apply_damage_effect(effect: Dictionary, target_data: Dictionary) -> void:
-	if target_data.get("type", "") != "creature":
-		return
-	
-	var tile_index = target_data.get("tile_index", -1)
-	var value = effect.get("value", 0)
-	
-	if not spell_damage or tile_index < 0:
-		return
-	
-	# カメラをターゲットにフォーカス
-	TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
-	
-	# SpellDamageでダメージ処理
-	var result = spell_damage.apply_damage(tile_index, value)
-	
-	if result["success"]:
-		# 通知テキストを生成して表示
-		var notification_text = SpellDamage.format_damage_notification(result, value)
 		
-		# クリック待ち通知を表示
-		if spell_cast_notification_ui:
-			spell_cast_notification_ui.show_notification_and_wait(notification_text)
-			await spell_cast_notification_ui.click_confirmed
+		"clear_down":
+			# ダウン解除 - SpellDamageに委譲
+			if spell_damage:
+				var tile_index = target_data.get("tile_index", -1)
+				await spell_damage.apply_clear_down_effect(self, tile_index)
+		
+		"full_heal":
+			# HP全回復 - SpellDamageに委譲
+			if spell_damage:
+				var tile_index = target_data.get("tile_index", -1)
+				await spell_damage.apply_full_heal_effect(self, tile_index)
+		
+		"heal":
+			# 固定値HP回復 - SpellDamageに委譲
+			if spell_damage:
+				var tile_index = target_data.get("tile_index", -1)
+				var value = effect.get("value", 0)
+				await spell_damage.apply_heal_effect(self, tile_index, value)
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
@@ -809,18 +881,13 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
 	
-	# 効果タイプを判定
-	var has_damage_effect = false
-	for effect in effects:
-		if effect.get("effect_type", "") == "damage":
-			has_damage_effect = true
-			break
+	# ダメージ/回復効果をSpellDamageに委譲
+	var handled = false
+	if spell_damage:
+		handled = await spell_damage.execute_all_creatures_effects(self, effects, target_info)
 	
-	if has_damage_effect:
-		# ダメージ効果: 対象を取得して1体ずつ処理
-		await _apply_damage_to_all_creatures(effects, target_info)
-	else:
-		# 呪い効果: SpellCurseBattle に委譲
+	# 未処理（呪い効果等）はSpellCurseBattleに委譲
+	if not handled:
 		for effect in effects:
 			SpellCurseBattle.apply_to_all_creatures(board_system, effect, target_info)
 	
@@ -840,52 +907,6 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	_return_camera_to_player()
 	await get_tree().create_timer(0.5).timeout
 	complete_spell_phase()
-
-## 全クリーチャーにダメージを適用（1体ずつカメラフォーカス→ダメージ→クリック待ち）
-func _apply_damage_to_all_creatures(effects: Array, target_info: Dictionary) -> void:
-	if not spell_damage or not board_system:
-		return
-	
-	# ダメージ値を取得
-	var damage_value = 0
-	for effect in effects:
-		if effect.get("effect_type", "") == "damage":
-			damage_value = effect.get("value", 0)
-			break
-	
-	if damage_value <= 0:
-		return
-	
-	# 対象クリーチャーを取得（target_infoの条件でフィルタ）
-	var targets = TargetSelectionHelper.get_valid_targets(self, "creature", target_info)
-	
-	if targets.is_empty():
-		print("[SpellPhaseHandler] 全体ダメージ: 対象なし")
-		return
-	
-	print("[SpellPhaseHandler] 全体ダメージ: %d体に%dダメージ" % [targets.size(), damage_value])
-	
-	# 1体ずつ処理
-	for target in targets:
-		var tile_index = target.get("tile_index", -1)
-		if tile_index < 0:
-			continue
-		
-		# カメラをターゲットにフォーカス
-		TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
-		
-		# SpellDamageでダメージ処理
-		var result = spell_damage.apply_damage(tile_index, damage_value)
-		
-		if result["success"]:
-			# 通知テキストを生成して表示
-			var notification_text = SpellDamage.format_damage_notification(result, damage_value)
-			
-			# クリック待ち通知を表示
-			if spell_cast_notification_ui:
-				spell_cast_notification_ui.show_notification_and_wait(notification_text)
-				await spell_cast_notification_ui.click_confirmed
-
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():
@@ -978,30 +999,6 @@ func has_available_mystic_arts(player_id: int) -> bool:
 func has_spell_mystic_arts() -> bool:
 	return spell_mystic_arts != null and spell_mystic_arts is SpellMysticArts
 
-## 有効なターゲットを取得（スペルと秘術で共用）
-func _get_valid_targets(target_type: String, target_filter: String) -> Array:
-	var targets: Array = []
-	
-	var target_info = {
-		"target_filter": target_filter
-	}
-	
-	match target_type:
-		"creature":
-			target_info["owner_filter"] = "enemy"
-			targets = TargetSelectionHelper.get_valid_targets(self, "creature", target_info)
-		"land":
-			target_info["owner_filter"] = target_filter
-			targets = TargetSelectionHelper.get_valid_targets(self, "land", target_info)
-		"player":
-			target_info["target_filter"] = target_filter
-			targets = TargetSelectionHelper.get_valid_targets(self, "player", target_info)
-		"world":
-			# 世界呪は常に有効（ターゲット選択なし）
-			targets = [{"type": "world"}]
-	
-	return targets
-
 # ============ UIボタン管理 ============
 
 ## SpellPhaseUIManager を初期化
@@ -1030,7 +1027,9 @@ func _show_spell_phase_buttons():
 				var hand_data = card_system.get_all_cards_for_player(current_player.id)
 				hand_count = hand_data.size()
 		
-		spell_phase_ui_manager.show_mystic_button(hand_count)
+		# 秘術ボタンは使用可能なクリーチャーがいる場合のみ表示
+		if has_available_mystic_arts(current_player_id):
+			spell_phase_ui_manager.show_mystic_button(hand_count)
 		spell_phase_ui_manager.show_spell_skip_button(hand_count)
 
 ## スペルフェーズ終了時にボタンを非表示
@@ -1039,10 +1038,22 @@ func _hide_spell_phase_buttons():
 		spell_phase_ui_manager.hide_mystic_button()
 		spell_phase_ui_manager.hide_spell_skip_button()
 
-## スペル使用時に秘術ボタンを隠す
-func _on_spell_used():
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.on_spell_used()
+## 秘術ボタンの表示状態を更新（外部から呼び出し可能）
+func update_mystic_button_visibility():
+	if not spell_phase_ui_manager or current_state == State.INACTIVE:
+		return
+	
+	var hand_count = 6
+	if card_system and player_system:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			var hand_data = card_system.get_all_cards_for_player(current_player.id)
+			hand_count = hand_data.size()
+	
+	if has_available_mystic_arts(current_player_id):
+		spell_phase_ui_manager.show_mystic_button(hand_count)
+	else:
+		spell_phase_ui_manager.hide_mystic_button()
 
 ## 秘術使用時にスペルボタンを隠す
 func _on_mystic_art_used():

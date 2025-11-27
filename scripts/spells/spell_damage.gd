@@ -3,12 +3,184 @@
 class_name SpellDamage
 
 var board_system_ref: Node = null
+var spell_cast_notification_ui: Node = null
 
 func _init(board_system: Node):
 	board_system_ref = board_system
 
+## 通知UIを設定
+func set_notification_ui(ui: Node) -> void:
+	spell_cast_notification_ui = ui
+
 # ============================================
-# ダメージ処理
+# 高レベル効果処理（spell_phase_handlerから呼び出し）
+# ============================================
+
+## 単体ダメージ効果を適用（カメラ、通知、クリック待ち含む）
+func apply_damage_effect(handler: Node, tile_index: int, value: int) -> void:
+	if tile_index < 0:
+		return
+	
+	# カメラをターゲットにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+	
+	# ダメージ処理
+	var result = apply_damage(tile_index, value)
+	
+	if result["success"]:
+		var notification_text = format_damage_notification(result, value)
+		await _show_notification_and_wait(notification_text)
+
+
+## 単体固定値回復効果を適用（カメラ、通知、クリック待ち含む）
+func apply_heal_effect(handler: Node, tile_index: int, value: int) -> void:
+	if tile_index < 0 or value <= 0:
+		return
+	
+	# カメラをターゲットにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+	
+	# 回復処理
+	var result = apply_heal(tile_index, value)
+	
+	if result["success"]:
+		var notification_text = format_heal_notification(result, value)
+		await _show_notification_and_wait(notification_text)
+
+
+## 単体HP全回復効果を適用（カメラ、通知、クリック待ち含む）
+func apply_full_heal_effect(handler: Node, tile_index: int) -> void:
+	if tile_index < 0:
+		return
+	
+	# カメラをターゲットにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+	
+	# 全回復処理
+	var result = apply_full_heal(tile_index)
+	
+	if result["success"]:
+		var notification_text = format_heal_notification(result)
+		await _show_notification_and_wait(notification_text)
+
+
+## ダウン解除効果を適用（カメラ、通知、クリック待ち含む）
+func apply_clear_down_effect(handler: Node, tile_index: int) -> void:
+	if tile_index < 0 or not board_system_ref:
+		return
+	
+	if not board_system_ref.tile_nodes.has(tile_index):
+		return
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	if not tile or tile.creature_data.is_empty():
+		return
+	
+	# ダウン状態でなければ何もしない
+	if not tile.is_down():
+		return
+	
+	# カメラをターゲットにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+	
+	# ダウン解除
+	tile.clear_down_state()
+	
+	var creature_name = tile.creature_data.get("name", "Unknown")
+	var notification_text = "%sのダウン状態を解除！" % creature_name
+	
+	print("[SpellDamage] ダウン解除: %s" % creature_name)
+	
+	await _show_notification_and_wait(notification_text)
+
+
+## 全クリーチャー対象のeffects配列を実行（ダメージ/回復を自動判定）
+## 戻り値: 処理したかどうか（呪い効果等は未処理でfalse）
+func execute_all_creatures_effects(handler: Node, effects: Array, target_info: Dictionary) -> bool:
+	# 効果タイプを判定
+	for effect in effects:
+		var etype = effect.get("effect_type", "")
+		if etype == "damage":
+			var damage_value = effect.get("value", 0)
+			if damage_value > 0:
+				await apply_damage_to_all_creatures(handler, target_info, damage_value)
+				return true
+		elif etype == "full_heal":
+			await apply_heal_to_all_creatures(handler, target_info)
+			return true
+	return false
+
+
+## 全クリーチャーにダメージを適用（1体ずつカメラフォーカス→ダメージ→クリック待ち）
+func apply_damage_to_all_creatures(handler: Node, target_info: Dictionary, damage_value: int) -> void:
+	if not board_system_ref or damage_value <= 0:
+		return
+	
+	# 対象クリーチャーを取得
+	var targets = TargetSelectionHelper.get_valid_targets(handler, "creature", target_info)
+	
+	if targets.is_empty():
+		print("[SpellDamage] 全体ダメージ: 対象なし")
+		return
+	
+	print("[SpellDamage] 全体ダメージ: %d体に%dダメージ" % [targets.size(), damage_value])
+	
+	# 1体ずつ処理
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index < 0:
+			continue
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+		
+		# ダメージ処理
+		var result = apply_damage(tile_index, damage_value)
+		
+		if result["success"]:
+			var notification_text = format_damage_notification(result, damage_value)
+			await _show_notification_and_wait(notification_text)
+
+
+## 全クリーチャーにHP全回復を適用（1体ずつカメラフォーカス→回復→クリック待ち）
+func apply_heal_to_all_creatures(handler: Node, target_info: Dictionary) -> void:
+	if not board_system_ref:
+		return
+	
+	# 対象クリーチャーを取得
+	var targets = TargetSelectionHelper.get_valid_targets(handler, "creature", target_info)
+	
+	if targets.is_empty():
+		print("[SpellDamage] 全体回復: 対象なし")
+		return
+	
+	print("[SpellDamage] 全体回復: %d体" % targets.size())
+	
+	# 1体ずつ処理
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index < 0:
+			continue
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
+		
+		# 全回復処理
+		var result = apply_full_heal(tile_index)
+		
+		if result["success"]:
+			var notification_text = format_heal_notification(result)
+			await _show_notification_and_wait(notification_text)
+
+
+## 通知表示＋クリック待ち（共通処理）
+func _show_notification_and_wait(text: String) -> void:
+	if spell_cast_notification_ui:
+		spell_cast_notification_ui.show_notification_and_wait(text)
+		await spell_cast_notification_ui.click_confirmed
+
+# ============================================
+# 低レベルダメージ処理
 # ============================================
 
 ## ダメージを適用（スペル・秘術共通）
@@ -87,7 +259,7 @@ func _destroy_creature(tile: Node) -> void:
 	])
 
 # ============================================
-# 回復処理
+# 低レベル回復処理
 # ============================================
 
 ## HP回復を適用

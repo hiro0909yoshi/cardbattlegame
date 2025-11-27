@@ -236,7 +236,7 @@ func phase_4_setup_system_interconnections() -> void:
 	# Step 4: DebugController に設定
 	if debug_controller:
 		debug_controller.setup_systems(
-			player_system, board_system_3d, card_system, ui_manager
+			player_system, board_system_3d, card_system, ui_manager, game_flow_manager
 		)
 		player_system.set_debug_controller(debug_controller)
 	

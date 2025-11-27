@@ -117,9 +117,17 @@
 	  "ability_detail": "先制；秘術[G20・対象敵クリーチャーのHP-10]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "秘術"
 		],
-		"effects": []
+		"mystic_arts": [
+		  {
+			"name": "ダメージボルト",
+			"description": "対象敵クリーチャーのHP-10",
+			"spell_id": 9004,
+			"cost": 20
+		  }
+		]
 	  }
 	},
 	{

@@ -48,9 +48,23 @@
 	  "ability_detail": "援護[無]；先制；秘術[G100・呪いのついた全クリーチャーのHP-20]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "援護",
+		  "先制",
+		  "秘術"
 		],
-		"effects": []
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": ["neutral"]
+		  }
+		},
+		"mystic_arts": [
+		  {
+			"name": "カースブラスト",
+			"description": "呪い付き全クリーチャーのHP-20",
+			"spell_id": 9008,
+			"cost": 100
+		  }
+		]
 	  }
 	},
 	{

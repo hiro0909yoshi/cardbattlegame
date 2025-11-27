@@ -310,9 +310,9 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if creature_element not in creature_elements:
 							continue
 					
-					# has_curse チェック
+					# has_curse チェック（クリーチャーの呪いはcreature_data["curse"]に保存）
 					if target_info.get("has_curse", false):
-						if not tile.has("curses") or tile.curses.is_empty():
+						if creature.get("curse", {}).is_empty():
 							continue
 					
 					# has_summon_condition チェック

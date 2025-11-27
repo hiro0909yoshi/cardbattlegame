@@ -19,6 +19,7 @@ var player_system
 var board_system
 var card_system
 var ui_manager
+var game_flow_manager
 
 # カードID入力ダイアログ
 var card_input_dialog: ConfirmationDialog = null
@@ -38,11 +39,12 @@ func _ready():
 	create_card_input_dialog()
 
 # システム参照を設定
-func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_system: UIManager):
+func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_system: UIManager, gf_manager = null):
 	player_system = p_system
 	board_system = b_system
 	card_system = c_system
 	ui_manager = ui_system
+	game_flow_manager = gf_manager
 
 # カードID入力ダイアログを作成
 func create_card_input_dialog():
@@ -401,6 +403,9 @@ func clear_current_player_down_states():
 	
 	if cleared_count > 0:
 		print("【デバッグ】プレイヤー", player_id + 1, "の", cleared_count, "個の土地のダウン状態を解除しました")
+		# 秘術ボタンの表示を更新
+		if game_flow_manager and game_flow_manager.spell_phase_handler:
+			game_flow_manager.spell_phase_handler.update_mystic_button_visibility()
 	else:
 		print("【デバッグ】ダウン状態の土地はありません")
 	

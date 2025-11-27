@@ -545,9 +545,17 @@
 	  "ability_detail": "先制；秘術[G60・対象敵水地のHP-20]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "秘術"
 		],
-		"effects": []
+		"mystic_arts": [
+		  {
+			"name": "サンダーボルト",
+			"description": "対象敵水地クリーチャーのHP-20",
+			"spell_id": 9006,
+			"cost": 60
+		  }
+		]
 	  }
 	},
 	{

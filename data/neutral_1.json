@@ -58,9 +58,17 @@
 	  "ability_detail": "先制；秘術[G80・対象無のHP-30]",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "秘術"
 		],
-		"effects": []
+		"mystic_arts": [
+		  {
+			"name": "ニュートラルブラスト",
+			"description": "対象敵無属性クリーチャーのHP-30",
+			"spell_id": 9007,
+			"cost": 80
+		  }
+		]
 	  }
 	},
 	{

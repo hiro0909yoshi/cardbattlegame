@@ -31,6 +31,10 @@ func get_available_creatures(player_id: int) -> Array:
 		if not tile or not tile.creature_data:
 			continue
 		
+		# ダウン状態のクリーチャーは秘術使用不可
+		if tile.is_down():
+			continue
+		
 		var mystic_arts = tile.creature_data.get("ability_parsed", {}).get("mystic_arts", [])
 		if mystic_arts.size() > 0:
 			available.append({
@@ -103,6 +107,14 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 	# セルフターゲットは常に有効
 	if target_type == "self" or target_info.get("target_filter") == "self":
 		return true
+	
+	# 全クリーチャー対象の場合は条件付きで有効判定
+	if target_type == "all_creatures":
+		# 条件付き全体効果（has_curse等）の場合は対象存在チェック
+		if not spell_phase_handler_ref:
+			return false
+		var valid_targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, "creature", target_info)
+		return valid_targets.size() > 0
 	
 	# TargetSelectionHelperを直接呼び出してターゲット取得
 	if not spell_phase_handler_ref:
