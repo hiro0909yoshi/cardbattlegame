@@ -624,7 +624,26 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G60・対象自クリーチャーを1~2マス移動]"
+	  "ability_detail": "秘術[G60・対象自クリーチャーを1~2マス移動]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_art": {
+		  "name": "1~2マス移動",
+		  "cost": 60,
+		  "target_type": "creature",
+		  "target_info": {
+			"owner_filter": "own",
+			"can_move": true
+		  },
+		  "effects": [
+			{
+			  "effect_type": "move_steps",
+			  "steps": 2,
+			  "exact_steps": false
+			}
+		  ]
+		}
+	  }
 	},
 	{
 	  "id": 323,

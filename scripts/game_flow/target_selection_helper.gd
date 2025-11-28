@@ -270,6 +270,23 @@ static func get_all_creatures(board_system, condition: Dictionary = {}) -> Array
 	
 	return results
 
+## 隣接する敵領地があるかチェック（アウトレイジ用）
+static func _check_has_adjacent_enemy(board_system, tile_index: int, current_player_id: int) -> bool:
+	if not board_system or not board_system.tile_neighbor_system:
+		return false
+	
+	var adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
+	for adj_tile_index in adjacent_tiles:
+		var adj_tile = board_system.tile_nodes.get(adj_tile_index)
+		if not adj_tile:
+			continue
+		# 敵領地かチェック（空地や自領地は除外）
+		if adj_tile.owner_id != -1 and adj_tile.owner_id != current_player_id:
+			return true
+	
+	return false
+
+
 ## 有効なターゲットを取得
 ## 
 ## handler: board_system, player_system, current_player_id を持つオブジェクト
@@ -345,8 +362,14 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					
 					# is_down チェック
 					if target_info.get("is_down", false):
-						var is_down = tile.is_down if "is_down" in tile else false
+						var is_down = tile.is_down() if tile.has_method("is_down") else false
 						if not is_down:
+							continue
+					
+					# has_adjacent_enemy チェック（アウトレイジ用：隣接敵領地があるか）
+					if target_info.get("has_adjacent_enemy", false):
+						var has_adjacent = _check_has_adjacent_enemy(handler.board_system, tile_index, handler.current_player_id)
+						if not has_adjacent:
 							continue
 					
 					# mhp_check チェック
@@ -371,6 +394,12 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					if target_info.get("element_mismatch", false):
 						var creature_element = creature.get("element", "")
 						if creature_element == tile_element or creature_element == "neutral":
+							continue
+					
+					# can_move チェック（移動不可呪いがないこと）- 移動系スペル/秘術用
+					if target_info.get("can_move", false):
+						var curse = creature.get("curse", {})
+						if curse.get("curse_type", "") == "move_disable":
 							continue
 					
 					# most_common_element チェックはここではスキップ（後処理で絞り込む）

@@ -230,6 +230,46 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9013,
+	  "name": "移動不可呪い",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "move_disable",
+			"name": "移動不可",
+			"description": "移動できない"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9014,
+	  "name": "遠隔移動呪い",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "remote_move",
+			"name": "遠隔移動",
+			"description": "全ての空き地に移動可能"
+		  }
+		]
+	  }
 	}
   ]
 }

@@ -252,6 +252,12 @@ static func confirm_move(handler, dest_tile_index: int):
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		
+		# 移動による呪い消滅
+		if creature_data.has("curse"):
+			var curse_name = creature_data["curse"].get("name", "不明")
+			creature_data.erase("curse")
+			print("[LandActionHelper] 呪い消滅（移動）: ", curse_name)
+		
 		# place_creature()を使って3Dカードも含めて正しく配置
 		dest_tile.place_creature(creature_data)
 		
@@ -291,6 +297,12 @@ static func confirm_move(handler, dest_tile_index: int):
 			return
 		
 		# バトル発生
+		
+		# 移動による呪い消滅（バトル前に消す）
+		if creature_data.has("curse"):
+			var curse_name = creature_data["curse"].get("name", "不明")
+			creature_data.erase("curse")
+			print("[LandActionHelper] 呪い消滅（移動侵略）: ", curse_name)
 		
 		# 移動元情報を保存（敗北時に戻すため）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み

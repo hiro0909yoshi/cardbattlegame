@@ -288,6 +288,11 @@ func _apply_post_battle_effects(
 			place_creature_data["current_hp"] = attacker.current_hp
 			board_system_ref.place_creature(tile_index, place_creature_data)
 			
+			# 移動侵略の場合、移動元のクリーチャーを削除（配置の後に行う）
+			if from_tile_index >= 0:
+				board_system_ref.remove_creature(from_tile_index)
+				print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除" % from_tile_index)
+			
 			# 🆙 土地レベルアップ効果（シルバープロウ）
 			_apply_level_up_effect(attacker, tile_index)
 			
@@ -325,7 +330,12 @@ func _apply_post_battle_effects(
 			_apply_level_up_effect(defender, tile_index)
 			
 			# 侵略失敗：攻撃側カードは破壊される（手札に戻らない）
-			print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
+			# 移動侵略の場合、移動元のクリーチャーも削除
+			if from_tile_index >= 0:
+				board_system_ref.remove_creature(from_tile_index)
+				print("[移動侵略失敗] 移動元タイル%d のクリーチャーを削除（破壊）" % from_tile_index)
+			else:
+				print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
 			
 			emit_signal("invasion_completed", false, tile_index)
 		
@@ -416,6 +426,11 @@ func _apply_post_battle_effects(
 			# 土地を無所有にする（クリーチャーを削除）
 			board_system_ref.set_tile_owner(tile_index, -1)  # 無所有
 			board_system_ref.remove_creature(tile_index)
+			
+			# 移動侵略の場合、移動元のクリーチャーも削除
+			if from_tile_index >= 0:
+				board_system_ref.remove_creature(from_tile_index)
+				print("[相打ち] 移動元タイル%d のクリーチャーも削除" % from_tile_index)
 			
 			# 攻撃側カードは破壊される（手札に戻らない）
 			print("[相打ち] 両方のクリーチャーが破壊されました")

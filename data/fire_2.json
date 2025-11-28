@@ -80,7 +80,15 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[G50・対象自領地に呪い遠隔移動]"
+	  "ability_detail": "不屈；秘術[G50・対象自領地に呪い遠隔移動]",
+	  "ability_parsed": {
+		"keywords": ["不屈", "秘術"],
+		"mystic_art": {
+		  "name": "遠隔移動付与",
+		  "cost": 50,
+		  "spell_id": 9014
+		}
+	  }
 	},
 	{
 	  "id": 29,

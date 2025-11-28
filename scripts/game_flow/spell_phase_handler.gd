@@ -42,6 +42,7 @@ var debug_disable_secret_cards: bool = false
 var available_targets: Array = []
 var current_target_index: int = 0
 var selection_marker: MeshInstance3D = null
+var is_tile_selection_mode: bool = false  # タイル選択モード（SpellCreatureMove用）
 
 ## 参照
 var ui_manager = null
@@ -54,7 +55,8 @@ var spell_mystic_arts = null  # 秘術システム
 var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
 var spell_damage: SpellDamage = null  # ダメージ・回復処理
-var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動・交換
+var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
+var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
 
 func _ready():
 	pass
@@ -91,6 +93,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreatureMove を初期化
 	if not spell_creature_move and board_system and player_system:
 		spell_creature_move = SpellCreatureMove.new(board_system, player_system, self)
+	
+	# SpellCreatureSwap を初期化
+	if not spell_creature_swap and board_system and player_system and card_system:
+		spell_creature_swap = SpellCreatureSwap.new(board_system, player_system, card_system, self)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -273,17 +279,21 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 	"""秘術のターゲットを選択（既存のターゲット選択UIを流用）"""
 	var target_type = mystic_art.get("target_type", "")
 	var target_filter = mystic_art.get("target_filter", "any")
-	var target_info = {}
+	var target_info = mystic_art.get("target_info", {})
 	
-	# spell_idがある場合はスペルデータからターゲット情報を取得
+	# target_infoからowner_filterを取得
+	if not target_info.is_empty():
+		target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
+	
+	# spell_idがある場合はスペルデータからターゲット情報を取得（上書き）
 	var spell_id = mystic_art.get("spell_id", -1)
 	if spell_id > 0:
 		var spell_data = CardLoader.get_card_by_id(spell_id)
 		if not spell_data.is_empty():
 			var effect_parsed = spell_data.get("effect_parsed", {})
 			target_type = effect_parsed.get("target_type", target_type)
-			target_info = effect_parsed.get("target_info", {})
-			target_filter = target_info.get("owner_filter", target_info.get("target_filter", "any"))
+			target_info = effect_parsed.get("target_info", target_info)
+			target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
 	
 	# ターゲット不要（none）またはセルフターゲット時はUI表示なし
 	if target_type == "none" or target_type == "self" or target_filter == "self":
@@ -328,11 +338,12 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 
 ## 非同期効果を含む秘術かどうかを判定
 func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
-	# カード選択UIが必要な効果タイプ
+	# カード選択UIやターゲット選択UIが必要な効果タイプ
 	const ASYNC_EFFECT_TYPES = [
 		"destroy_and_draw", "swap_creature",
 		"destroy_selected_card", "steal_selected_card",
-		"destroy_from_deck_selection", "draw_from_deck_selection"
+		"destroy_from_deck_selection", "draw_from_deck_selection",
+		"move_self", "move_steps", "move_to_adjacent_enemy", "destroy_and_move"
 	]
 	
 	# spell_id参照の場合
@@ -381,8 +392,8 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 	# 非同期効果かどうかを事前判定
 	var is_async = _is_async_mystic_art(mystic_art)
 	
-	# 秘術効果を適用
-	var success = spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
+	# 秘術効果を適用（非同期効果対応）
+	var success = await spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
 	
 	if success:
 		# 魔力消費
@@ -408,8 +419,14 @@ func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_da
 	# ターゲット選択をクリア
 	TargetSelectionHelper.clear_selection(self)
 	
-	# 非同期効果の場合はここで終了（CardSelectionHandler完了後にスペルフェーズ完了）
-	if is_async:
+	# 少し待機してからカメラを戻す
+	await get_tree().create_timer(0.5).timeout
+	
+	# カメラを使用者（現在のプレイヤー）に戻す
+	_return_camera_to_player()
+	
+	# カード選択系の非同期効果の場合はCardSelectionHandler完了後にスペルフェーズ完了
+	if is_async and card_selection_handler and card_selection_handler.is_selecting():
 		return
 	
 	# スペルフェーズ完了
@@ -680,6 +697,12 @@ func _confirm_target_selection():
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
 	
+	# タイル選択モードの場合（SpellCreatureMove用）
+	if is_tile_selection_mode:
+		var tile_index = selected_target.get("tile_index", -1)
+		tile_selection_completed.emit(tile_index)
+		return
+	
 	# 秘術かスペルかで分岐
 	if not selected_mystic_art.is_empty():
 		# 秘術実行
@@ -693,6 +716,11 @@ func _confirm_target_selection():
 func _cancel_target_selection():
 	# 選択をクリア
 	TargetSelectionHelper.clear_selection(self)
+	
+	# タイル選択モードの場合（SpellCreatureMove用）
+	if is_tile_selection_mode:
+		tile_selection_completed.emit(-1)  # キャンセル時は-1
+		return
 	
 	# 秘術かスペルかで分岐
 	if not selected_mystic_art.is_empty():
@@ -737,6 +765,13 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
+	
+	# 復帰[ブック]判定（常にデッキに戻す場合）
+	var return_to_deck = parsed.get("return_to_deck", false)
+	if return_to_deck:
+		if game_flow_manager and game_flow_manager.spell_land:
+			if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, spell_card):
+				spell_failed = true  # 捨て札処理をスキップするためのフラグ
 	
 	# 効果を適用
 	for effect in effects:
@@ -804,7 +839,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse":
 			# 戦闘制限呪い系 - SpellCurseに委譲
-			if target_data.get("type") == "land":
+			var target_type = target_data.get("type", "")
+			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
@@ -877,28 +913,39 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_damage:
 				await spell_damage.apply_effect(self, effect, target_data)
 		
-		"move_to_adjacent_enemy", "move_steps", "move_self", "swap_own_creatures", "destroy_and_move":
-			# クリーチャー移動・交換系 - SpellCreatureMoveに委譲
+		"move_to_adjacent_enemy", "move_steps", "move_self", "destroy_and_move":
+			# クリーチャー移動系 - SpellCreatureMoveに委譲
 			if spell_creature_move:
 				var result = await spell_creature_move.apply_effect(effect, target_data, current_player_id)
-				# 復帰[ブック]判定
-				if not result.get("success", false) and result.get("return_to_deck", false):
-					if game_flow_manager and game_flow_manager.spell_land:
-						if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
-							spell_failed = true
 				# 戦闘トリガー（敵領地への移動時）
 				if result.get("trigger_battle", false):
 					var from_tile = result.get("from_tile", -1)
 					var to_tile = result.get("to_tile", -1)
 					if from_tile >= 0 and to_tile >= 0:
 						# 戦闘システムを呼び出す（移動侵略として）
+						# execute_3d_battle_with_data(attacker_index, card_data, tile_info, attacker_item, defender_item, from_tile_index)
 						if game_flow_manager and game_flow_manager.battle_system:
+							var attacker_creature = result.get("creature_data", {})
+							var tile_info = board_system.get_tile_info(to_tile) if board_system else {}
+							# 第1引数はプレイヤーインデックス（攻撃側）
 							await game_flow_manager.battle_system.execute_3d_battle_with_data(
-								to_tile,
-								board_system.tile_nodes[to_tile].creature_data,
-								{},  # 攻撃側はすでに移動済み
+								current_player_id,
+								attacker_creature,
+								tile_info,
+								{},  # attacker_item
+								{},  # defender_item
 								from_tile
 							)
+		
+		"swap_with_hand", "swap_board_creatures":
+			# クリーチャー交換系 - SpellCreatureSwapに委譲
+			if spell_creature_swap:
+				var result = await spell_creature_swap.apply_effect(effect, target_data, current_player_id)
+				# 復帰[ブック]判定
+				if not result.get("success", false) and result.get("return_to_deck", false):
+					if game_flow_manager and game_flow_manager.spell_land:
+						if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
+							spell_failed = true
 		
 		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
 			# ステータス増減スペル - SpellCurseStatに委譲
@@ -971,6 +1018,53 @@ func _return_camera_to_player():
 func pass_spell():
 	spell_passed.emit()
 	complete_spell_phase()
+
+## タイルリストから選択（SpellCreatureMove用）
+## 移動先選択などで使用
+func select_tile_from_list(tile_indices: Array, message: String) -> int:
+	if tile_indices.is_empty():
+		return -1
+	
+	# タイル選択モードを開始（候補が1つでも選択UIを表示）
+	is_tile_selection_mode = true
+	
+	# ターゲットリストを設定
+	var targets: Array = []
+	for tile_index in tile_indices:
+		targets.append({"type": "land", "tile_index": tile_index})
+	
+	available_targets = targets
+	current_target_index = 0
+	current_state = State.SELECTING_TARGET
+	
+	# メッセージ表示
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = message
+	
+	# 最初の対象を表示
+	_update_target_selection()
+	
+	# 選択完了を待機
+	var selected_target = await _wait_for_tile_selection()
+	
+	# タイル選択モードを終了
+	is_tile_selection_mode = false
+	
+	# 選択マーカーをクリア
+	TargetSelectionHelper.clear_selection(self)
+	
+	return selected_target
+
+
+## タイル選択完了を待機
+func _wait_for_tile_selection() -> int:
+	# 選択完了シグナルを待つ
+	var result = await tile_selection_completed
+	return result
+
+## タイル選択完了シグナル
+signal tile_selection_completed(tile_index: int)
+
 
 ## スペルフェーズ完了
 func complete_spell_phase():

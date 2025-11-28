@@ -460,17 +460,7 @@
 		"mystic_art": {
 		  "name": "移動封じ",
 		  "cost": 30,
-		  "target_type": "creature",
-		  "target_info": {
-			"target_filter": "enemy"
-		  },
-		  "effects": [
-			{
-			  "effect_type": "creature_curse",
-			  "curse_type": "move_disable",
-			  "description": "対象に移動不可呪い付与"
-			}
-		  ]
+		  "spell_id": 9013
 		}
 	  }
 	},

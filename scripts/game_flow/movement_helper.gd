@@ -10,6 +10,11 @@ static func get_move_destinations(
 	move_type_override: String = ""  # スペルなどで強制的に移動タイプを指定
 ) -> Array:
 	
+	# 移動不可呪いチェック
+	if has_move_disable_curse(creature_data):
+		print("[MovementHelper] 移動不可呪いにより移動できません")
+		return []
+	
 	# 移動タイプの判定（オーバーライドがあればそれを優先）
 	var move_type = move_type_override
 	if move_type.is_empty():
@@ -77,6 +82,20 @@ static func get_move_destinations(
 			return _get_tiles_within_steps(board_system, from_tile_index, 2)
 		"adjacent_enemy":  # 隣接する敵領地のみ（アウトレイジ用）
 			return _get_adjacent_enemy_tiles(board_system, from_tile_index)
+		"remote_move":  # 遠隔移動呪い（全空き地 + 隣接タイル）
+			var all_vacant = _get_all_vacant_tiles(board_system)
+			# 隣接タイルも追加（通常移動）
+			var adjacent_destinations = []
+			if board_system.tile_neighbor_system:
+				adjacent_destinations = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+			# 重複を避けて結合
+			for tile in adjacent_destinations:
+				if not tile in all_vacant:
+					all_vacant.append(tile)
+			# フィルタリング適用
+			var current_player_id = board_system.current_player_index
+			all_vacant = _filter_invalid_destinations(board_system, all_vacant, current_player_id)
+			return all_vacant
 		_:
 			return []
 
@@ -153,16 +172,31 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 	
 	return destinations
 
+## 移動不可呪いを持っているかチェック
+static func has_move_disable_curse(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	
+	var curse = creature_data.get("curse", {})
+	if curse.is_empty():
+		return false
+	
+	var curse_type = curse.get("curse_type", "")
+	return curse_type == "move_disable"
+
+
 ## クリーチャーの移動タイプを判定
 static func _detect_move_type(creature_data: Dictionary) -> String:
 	if not creature_data:
 		return "adjacent"
 	
+	# 遠隔移動呪いチェック（全空き地に移動可能）
+	if has_remote_move_curse(creature_data):
+		return "remote_move"
 	
 	var parsed = creature_data.get("ability_parsed", {})
 	var keywords = parsed.get("keywords", [])
 	var conditions = parsed.get("keyword_conditions", {})
-	
 	
 	# 空地移動チェック
 	if "空地移動" in keywords and conditions.has("空地移動"):
@@ -174,6 +208,19 @@ static func _detect_move_type(creature_data: Dictionary) -> String:
 	
 	# デフォルトは隣接移動
 	return "adjacent"
+
+
+## 遠隔移動呪いを持っているかチェック
+static func has_remote_move_curse(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	
+	var curse = creature_data.get("curse", {})
+	if curse.is_empty():
+		return false
+	
+	var curse_type = curse.get("curse_type", "")
+	return curse_type == "remote_move"
 
 ## 空地移動で移動可能な属性を取得
 static func _get_vacant_move_elements(creature_data: Dictionary) -> Array:
@@ -334,6 +381,12 @@ static func execute_creature_move(
 	from_tile_node.creature_data = {}
 	if from_tile_node.has_method("update_display"):
 		from_tile_node.update_display()
+	
+	# 移動による呪い消滅
+	if creature_data.has("curse"):
+		var curse_name = creature_data["curse"].get("name", "不明")
+		creature_data.erase("curse")
+		print("[MovementHelper] 呪い消滅（移動）: ", curse_name)
 	
 	# 移動先に配置
 	to_tile_node.creature_data = creature_data

@@ -37,14 +37,44 @@ func get_available_creatures(player_id: int) -> Array:
 		
 		# 秘術を取得（元々の秘術 + 呪いからの秘術）
 		var mystic_arts = _get_all_mystic_arts(tile.creature_data)
-		if mystic_arts.size() > 0:
+		
+		# 使用可能な秘術のみフィルタリング
+		var usable_mystic_arts = _filter_usable_mystic_arts(mystic_arts, tile.creature_data)
+		
+		if usable_mystic_arts.size() > 0:
 			available.append({
 				"tile_index": tile.tile_index,
 				"creature_data": tile.creature_data,
-				"mystic_arts": mystic_arts
+				"mystic_arts": usable_mystic_arts
 			})
 	
 	return available
+
+
+## 使用可能な秘術のみをフィルタリング
+func _filter_usable_mystic_arts(mystic_arts: Array, creature_data: Dictionary) -> Array:
+	var usable: Array = []
+	
+	for mystic_art in mystic_arts:
+		if _can_use_mystic_art(mystic_art, creature_data):
+			usable.append(mystic_art)
+	
+	return usable
+
+
+## 秘術が使用可能かチェック
+func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary) -> bool:
+	# 移動系秘術で移動不可呪いを持っている場合は使用不可
+	var effects = mystic_art.get("effects", [])
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		if effect_type in ["move_self", "move_steps", "move_to_adjacent_enemy"]:
+			# 移動不可呪いチェック
+			var curse = creature_data.get("curse", {})
+			if curse.get("curse_type", "") == "move_disable":
+				return false
+	
+	return true
 
 
 ## クリーチャーの秘術一覧を取得（元々の秘術 + 呪いからの秘術）
@@ -182,14 +212,14 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 	if spell_id > 0:
 		# effect_overrideがあればcontextに追加
 		var effect_override = mystic_art.get("effect_override", {})
-		return _apply_spell_effect(spell_id, target_data, context, effect_override)
+		return await _apply_spell_effect(spell_id, target_data, context, effect_override)
 	
 	# spell_idがない場合は秘術独自のeffectsを使用（従来方式）
 	var effects = mystic_art.get("effects", [])
 	var success = true
 	
 	for effect in effects:
-		var applied = _apply_single_effect(effect, target_data, context)
+		var applied = await _apply_single_effect(effect, target_data, context)
 		if not applied:
 			success = false
 	
@@ -220,7 +250,7 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 				applied_effect[key] = effect_override[key]
 		
 		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-			spell_phase_handler_ref._apply_single_effect(applied_effect, target_data)
+			await spell_phase_handler_ref._apply_single_effect(applied_effect, target_data)
 		else:
 			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
 			return false
@@ -252,11 +282,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 		# 共通効果（damage, drain_magic, stat_boost等）はspell_phase_handlerに委譲
 		_:
 			if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-				# contextからtile_indexを追加（swap_creature等で必要）
+				# target_dataにtile_indexがない場合のみcontextから追加
+				# （ターゲット選択で既にtile_indexがある場合は上書きしない）
 				var extended_target_data = target_data.duplicate()
-				if context.has("tile_index"):
+				if not extended_target_data.has("tile_index") and context.has("tile_index"):
 					extended_target_data["tile_index"] = context.get("tile_index", -1)
-				spell_phase_handler_ref._apply_single_effect(effect, extended_target_data)
+				# 秘術発動者のタイルインデックスも別キーで追加（必要な場合）
+				if context.has("tile_index"):
+					extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
+				await spell_phase_handler_ref._apply_single_effect(effect, extended_target_data)
 				return true
 			else:
 				push_error("[SpellMysticArts] spell_phase_handler_refが無効です")

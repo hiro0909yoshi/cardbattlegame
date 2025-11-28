@@ -315,7 +315,22 @@
 			"ap": 30,
 			"hp": 50,
 			"ability": "防御型・秘術",
-			"ability_detail": "防御型；秘術[G30・1マス移動]"
+			"ability_detail": "防御型；秘術[G30・1マス移動]",
+			"ability_parsed": {
+				"keywords": ["防御型", "秘術"],
+				"mystic_art": {
+					"name": "1マス移動",
+					"cost": 30,
+					"target_type": "self",
+					"effects": [
+						{
+							"effect_type": "move_self",
+							"steps": 1,
+							"exclude_enemy_creatures": true
+						}
+					]
+				}
+			}
 		},
 		{
 			"id": 11,
@@ -622,11 +637,9 @@
 					"cost": 80,
 					"target_type": "creature",
 					"target_info": {
-						"target_filter": "enemy",
-						"condition": {
-							"hp_reduced": true,
-							"is_down": true
-						}
+						"owner_filter": "enemy",
+						"hp_reduced": true,
+						"is_down": true
 					},
 					"effects": [
 						{

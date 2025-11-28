@@ -32,7 +32,21 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象クリーチャーを隣接する敵領地に移動させる\"敵地移動\""
+	  "effect": "対象クリーチャーを隣接する敵領地に移動させる\"敵地移動\"",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "has_adjacent_enemy": true,
+		  "can_move": true
+		},
+		"effects": [
+		  {
+			"effect_type": "move_to_adjacent_enemy",
+			"description": "隣接する敵領地に移動"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2003,
@@ -965,7 +979,22 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象自クリーチャーを2マス移動させる；復帰[ブック]"
+	  "effect": "対象自クリーチャーを2マス移動させる；復帰[ブック]",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own",
+		  "can_move": true
+		},
+		"return_to_deck": true,
+		"effects": [
+		  {
+			"effect_type": "move_steps",
+			"steps": 2,
+			"exact_steps": true
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2053,
