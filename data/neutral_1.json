@@ -327,7 +327,31 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G0・使用者にG200を与え、自壊]"
+	  "ability_detail": "防御型；秘術[G0・使用者にG200を与え、自壊]",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "defensive",
+			"description": "防御型"
+		  }
+		],
+		"mystic_art": {
+		  "name": "黄金献身",
+		  "cost": 0,
+		  "target_type": "none",
+		  "effects": [
+			{
+			  "effect_type": "gain_magic",
+			  "amount": 200
+			},
+			{
+			  "effect_type": "self_destroy",
+			  "clear_land": true
+			}
+		  ],
+		  "description": "使用者にG200を与え、自壊"
+		}
+	  }
 	},
 	{
 	  "id": 414,

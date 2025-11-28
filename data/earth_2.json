@@ -170,7 +170,16 @@
 			"multiplier": 1.5,
 			"description": "通行料変化[1.5倍]"
 		  }
-		]
+		],
+		"mystic_art": {
+		  "cost": 0,
+		  "spell_id": 2109,
+		  "effect_override": {
+			"multiplier": 30
+		  },
+		  "name": "魔力採掘",
+		  "description": "周回数×G30を得る"
+		}
 	  }
 	},
 	{
@@ -639,7 +648,7 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・これに♡\"平和\"]"
+	  "ability_detail": "秘術[G50・これに呪い\"平和\"]"
 	},
 	{
 	  "id": 247,

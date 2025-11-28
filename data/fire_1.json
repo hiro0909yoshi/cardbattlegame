@@ -108,7 +108,7 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "強打・世界消去",
-			"ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界○を消す]",
+			"ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"強打"
@@ -487,7 +487,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "援護・秘術",
-			"ability_detail": "援護[火地]；秘術[G30・全セブターの○を消す]",
+			"ability_detail": "援護[火地]；秘術[G30・全セブターの呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"援護"
@@ -614,7 +614,28 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]"
+			"ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
+			"ability_parsed": {
+				"keywords": ["秘術"],
+				"mystic_art": {
+					"name": "破壊移動",
+					"cost": 80,
+					"target_type": "creature",
+					"target_info": {
+						"target_filter": "enemy",
+						"condition": {
+							"hp_reduced": true,
+							"is_down": true
+						}
+					},
+					"effects": [
+						{
+							"effect_type": "destroy_and_move",
+							"description": "対象を破壊し、そこに移動"
+						}
+					]
+				}
+			}
 		},
 		{
 			"id": 22,

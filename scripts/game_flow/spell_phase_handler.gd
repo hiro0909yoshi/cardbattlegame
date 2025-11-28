@@ -54,6 +54,7 @@ var spell_mystic_arts = null  # 秘術システム
 var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
 var spell_damage: SpellDamage = null  # ダメージ・回復処理
+var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動・交換
 
 func _ready():
 	pass
@@ -86,6 +87,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellDamage を初期化
 	if not spell_damage and board_system:
 		spell_damage = SpellDamage.new(board_system)
+	
+	# SpellCreatureMove を初期化
+	if not spell_creature_move and board_system and player_system:
+		spell_creature_move = SpellCreatureMove.new(board_system, player_system, self)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -280,8 +285,8 @@ func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dicti
 			target_info = effect_parsed.get("target_info", {})
 			target_filter = target_info.get("owner_filter", target_info.get("target_filter", "any"))
 	
-	# セルフターゲット時はUI表示なし（target_typeまたはtarget_filterが"self"）
-	if target_type == "self" or target_filter == "self":
+	# ターゲット不要（none）またはセルフターゲット時はUI表示なし
+	if target_type == "none" or target_type == "self" or target_filter == "self":
 		var target_data = {
 			"type": target_type,
 			"tile_index": selected_creature.get("tile_index", -1),
@@ -797,7 +802,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse":
+		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse":
 			# 戦闘制限呪い系 - SpellCurseに委譲
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
@@ -820,6 +825,15 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
+		
+		"land_curse":
+			# 土地呪い（ブラストトラップ等）- SpellCurseに委譲
+			if target_data.get("type") == "land":
+				var tile_index = target_data.get("tile_index", -1)
+				if game_flow_manager and game_flow_manager.spell_curse:
+					var effect_with_caster = effect.duplicate()
+					effect_with_caster["caster_id"] = current_player_id
+					game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
 		
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
 			# 通行料呪い系（統合処理）
@@ -862,6 +876,29 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# ダメージ・回復系 - SpellDamageに委譲
 			if spell_damage:
 				await spell_damage.apply_effect(self, effect, target_data)
+		
+		"move_to_adjacent_enemy", "move_steps", "move_self", "swap_own_creatures", "destroy_and_move":
+			# クリーチャー移動・交換系 - SpellCreatureMoveに委譲
+			if spell_creature_move:
+				var result = await spell_creature_move.apply_effect(effect, target_data, current_player_id)
+				# 復帰[ブック]判定
+				if not result.get("success", false) and result.get("return_to_deck", false):
+					if game_flow_manager and game_flow_manager.spell_land:
+						if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
+							spell_failed = true
+				# 戦闘トリガー（敵領地への移動時）
+				if result.get("trigger_battle", false):
+					var from_tile = result.get("from_tile", -1)
+					var to_tile = result.get("to_tile", -1)
+					if from_tile >= 0 and to_tile >= 0:
+						# 戦闘システムを呼び出す（移動侵略として）
+						if game_flow_manager and game_flow_manager.battle_system:
+							await game_flow_manager.battle_system.execute_3d_battle_with_data(
+								to_tile,
+								board_system.tile_nodes[to_tile].creature_data,
+								{},  # 攻撃側はすでに移動済み
+								from_tile
+							)
 		
 		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
 			# ステータス増減スペル - SpellCurseStatに委譲

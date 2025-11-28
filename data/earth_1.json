@@ -454,7 +454,25 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[G30・対象敵クリーチャーに♡\"移動不可\"]"
+	  "ability_detail": "防魔；秘術[G30・対象敵クリーチャーに呪い\"移動不可\"]",
+	  "ability_parsed": {
+		"keywords": ["防魔", "秘術"],
+		"mystic_art": {
+		  "name": "移動封じ",
+		  "cost": 30,
+		  "target_type": "creature",
+		  "target_info": {
+			"target_filter": "enemy"
+		  },
+		  "effects": [
+			{
+			  "effect_type": "creature_curse",
+			  "curse_type": "move_disable",
+			  "description": "対象に移動不可呪い付与"
+			}
+		  ]
+		}
+	  }
 	},
 	{
 	  "id": 219,
@@ -510,7 +528,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに♡\"地形効果無効\"]"
+	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]"
 	},
 	{
 	  "id": 221,
@@ -571,7 +589,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G30・対象敵領地に♡\"襲撃\"]"
+	  "ability_detail": "秘術[G30・対象敵領地に呪い\"襲撃\"]"
 	},
 	{
 	  "id": 224,

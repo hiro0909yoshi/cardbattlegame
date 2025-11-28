@@ -352,7 +352,32 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象領地に呪い\"爆発罠\"(停止セプターは魔力40%を失い、クリーチャーのHP-20)"
+	  "effect": "対象領地に呪い\"爆発罠\"(停止セプターは魔力40%を失い、クリーチャーのHP-20)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "has_creature",
+		"effects": [
+		  {
+			"effect_type": "land_curse",
+			"curse_type": "blast_trap",
+			"curse_name": "爆発罠",
+			"trigger": "on_enemy_stop",
+			"one_shot": true,
+			"curse_effects": [
+			  {
+				"effect_type": "reduce_magic_percentage",
+				"target": "stopped_player",
+				"percentage": 40
+			  },
+			  {
+				"effect_type": "damage_creature",
+				"target": "land_creature",
+				"amount": 20
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2084,

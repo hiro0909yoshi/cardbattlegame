@@ -478,6 +478,10 @@ func _on_movement_started(_player_id: int):
 		ui_manager.phase_label.text = "移動中..."
 
 func _on_movement_completed(_player_id: int, final_tile: int):
+	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
+	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
+		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
+	
 	# 移動完了後、領地コマンドボタンを表示（人間プレイヤーのみ）
 	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not debug_manual_control_all
 	if not is_cpu and ui_manager:

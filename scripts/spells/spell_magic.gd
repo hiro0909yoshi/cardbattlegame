@@ -461,7 +461,7 @@ func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_
 # ========================================
 
 ## ロングライン: 連続領地4つでG500、未達成ならドロー
-func gain_magic_from_land_chain(player_id: int, effect: Dictionary, context: Dictionary) -> Dictionary:
+func gain_magic_from_land_chain(player_id: int, effect: Dictionary, _context: Dictionary) -> Dictionary:
 	if not board_system_ref:
 		print("[ロングライン] BoardSystemが設定されていません")
 		return {"success": false, "amount": 0}
@@ -636,10 +636,11 @@ func _show_notification_and_wait(text: String) -> void:
 		await spell_cast_notification_ui.click_confirmed
 
 ## 魔力獲得の通知テキスト生成
+@warning_ignore("unused_variable")
 func _format_gain_notification(player_id: int, amount: int, source: String = "") -> String:
-	var player_name = "プレイヤー%d" % (player_id + 1)
+	var _player_name = "プレイヤー%d" % (player_id + 1)
 	if player_system_ref and player_id >= 0 and player_id < player_system_ref.players.size():
-		player_name = player_system_ref.players[player_id].name
+		_player_name = player_system_ref.players[player_id].name
 	
 	var text = "[color=yellow]+%dG[/color] 獲得！" % amount
 	if source != "":
@@ -647,16 +648,124 @@ func _format_gain_notification(player_id: int, amount: int, source: String = "")
 	return text
 
 ## 魔力奪取の通知テキスト生成
+@warning_ignore("unused_variable")
 func _format_drain_notification(from_id: int, to_id: int, amount: int, source: String = "") -> String:
 	var from_name = "プレイヤー%d" % (from_id + 1)
-	var to_name = "プレイヤー%d" % (to_id + 1)
+	var _to_name = "プレイヤー%d" % (to_id + 1)
 	if player_system_ref:
 		if from_id >= 0 and from_id < player_system_ref.players.size():
 			from_name = player_system_ref.players[from_id].name
 		if to_id >= 0 and to_id < player_system_ref.players.size():
-			to_name = player_system_ref.players[to_id].name
+			_to_name = player_system_ref.players[to_id].name
 	
 	var text = "%sから[color=yellow]%dG[/color]奪取！" % [from_name, amount]
 	if source != "":
 		text = "%s\n%s" % [source, text]
 	return text
+
+# ========================================
+# 土地呪い（ブラストトラップ等）
+# ========================================
+
+## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
+func trigger_land_curse(tile_index: int, stopped_player_id: int) -> void:
+	if not board_system_ref:
+		return
+	
+	var tile_info = board_system_ref.get_tile_info(tile_index)
+	_check_and_trigger_land_curse(tile_index, stopped_player_id, tile_info)
+
+## 土地呪いチェック＆発動
+func _check_and_trigger_land_curse(tile_index: int, stopped_player_id: int, tile_info: Dictionary) -> void:
+	var creature = tile_info.get("creature", {})
+	if creature.is_empty():
+		return
+	
+	var curse = creature.get("curse", {})
+	if curse.is_empty():
+		return
+	
+	var curse_type = curse.get("curse_type", "")
+	var params = curse.get("params", {})
+	var trigger = params.get("trigger", "")
+	
+	# on_enemy_stop トリガーのみ処理
+	if trigger != "on_enemy_stop":
+		return
+	
+	# 土地の所有者と停止プレイヤーが異なる場合のみ発動
+	var owner_id = tile_info.get("owner", -1)
+	if owner_id == stopped_player_id:
+		return  # 自分の土地には発動しない
+	
+	print("[土地呪い発動] %s (タイル%d)" % [params.get("name", curse_type), tile_index])
+	
+	# 呪い効果を実行
+	var curse_effects = params.get("curse_effects", [])
+	for effect in curse_effects:
+		_apply_land_curse_effect(effect, tile_index, stopped_player_id, creature)
+	
+	# one_shot の場合は呪いを削除
+	if params.get("one_shot", false):
+		creature.erase("curse")
+		print("[土地呪い] 1回発動のため呪いを解除")
+
+## 土地呪い効果を適用
+func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_player_id: int, creature: Dictionary) -> void:
+	var effect_type = effect.get("effect_type", "")
+	var target = effect.get("target", "")
+	
+	match effect_type:
+		"reduce_magic_percentage":
+			# 停止プレイヤーの魔力を割合減少
+			if target == "stopped_player":
+				var percentage = effect.get("percentage", 0)
+				var current_magic = player_system_ref.get_magic(stopped_player_id)
+				var reduction = int(current_magic * percentage / 100.0)
+				if reduction > 0:
+					player_system_ref.add_magic(stopped_player_id, -reduction)
+					print("[土地呪い効果] プレイヤー%d の魔力 -%dG (%d%%)" % [stopped_player_id + 1, reduction, percentage])
+		
+		"damage_creature":
+			# 土地のクリーチャーにダメージ
+			if target == "land_creature":
+				var amount = effect.get("amount", 0)
+				if amount > 0 and not creature.is_empty():
+					# current_hpを減少
+					var current_hp = creature.get("current_hp", creature.get("hp", 0))
+					var new_hp = max(0, current_hp - amount)
+					creature["current_hp"] = new_hp
+					print("[土地呪い効果] %s に %dダメージ (HP: %d → %d)" % [creature.get("name", "?"), amount, current_hp, new_hp])
+					
+					# HP0で破壊
+					if new_hp <= 0:
+						board_system_ref.remove_creature(tile_index)
+						board_system_ref.set_tile_owner(tile_index, -1)
+						print("[土地呪い効果] %s は破壊されました" % creature.get("name", "?"))
+
+# ========================================
+# 秘術用効果（ゴールドトーテム等）
+# ========================================
+
+## 自壊効果（クリーチャー破壊＋土地無所有）
+func apply_self_destroy(tile_index: int, clear_land: bool = true) -> bool:
+	if tile_index < 0 or not board_system_ref:
+		return false
+	
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if not tile:
+		return false
+	
+	var creature_name = tile.creature_data.get("name", "クリーチャー") if tile.creature_data else "クリーチャー"
+	
+	# クリーチャーを削除
+	board_system_ref.remove_creature(tile_index)
+	
+	# 土地を無所有にする
+	if clear_land:
+		board_system_ref.set_tile_owner(tile_index, -1)
+		print("[秘術効果] %s が自壊、土地は無所有になりました" % creature_name)
+	else:
+		print("[秘術効果] %s が自壊しました" % creature_name)
+	
+	return true

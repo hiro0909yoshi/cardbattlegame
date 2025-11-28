@@ -649,6 +649,14 @@ func check_and_pay_toll_on_enemy_land():
 		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
 		print("[副収入] 通行料 ", bonus_toll, "G を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
 
+# === 土地呪い（移動完了時発動） ===
+
+## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
+## 実処理はSpellMagicに委譲
+func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
+	if spell_magic:
+		spell_magic.trigger_land_curse(tile_index, stopped_player_id)
+
 # ============================================
 # Phase 1-A: 新システム統合
 # ============================================

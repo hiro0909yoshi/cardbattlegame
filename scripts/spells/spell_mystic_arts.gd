@@ -60,8 +60,16 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	var all_mystic_arts: Array = []
 	
 	# 1. 元々の秘術（ability_parsed）
-	var original_arts = creature_data.get("ability_parsed", {}).get("mystic_arts", [])
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	
+	# 複数形 mystic_arts（配列）
+	var original_arts = ability_parsed.get("mystic_arts", [])
 	all_mystic_arts.append_array(original_arts)
+	
+	# 単数形 mystic_art（辞書）- 1つだけ持つクリーチャー用
+	var single_art = ability_parsed.get("mystic_art", {})
+	if not single_art.is_empty():
+		all_mystic_arts.append(single_art)
 	
 	# 2. 呪いから付与された秘術
 	var curse = creature_data.get("curse", {})
@@ -141,8 +149,8 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 				var target_filter = effect_parsed.get("target_filter", "any")
 				target_info["target_filter"] = target_filter
 	
-	# セルフターゲットは常に有効
-	if target_type == "self" or target_info.get("target_filter") == "self":
+	# ターゲット不要（none）または セルフターゲットは常に有効
+	if target_type == "none" or target_type == "self" or target_info.get("target_filter") == "self":
 		return true
 	
 	# 全クリーチャー対象の場合は条件付きで有効判定
@@ -172,7 +180,9 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 	# spell_idがある場合は既存スペルの効果を使用
 	var spell_id = mystic_art.get("spell_id", -1)
 	if spell_id > 0:
-		return _apply_spell_effect(spell_id, target_data, context)
+		# effect_overrideがあればcontextに追加
+		var effect_override = mystic_art.get("effect_override", {})
+		return _apply_spell_effect(spell_id, target_data, context, effect_override)
 	
 	# spell_idがない場合は秘術独自のeffectsを使用（従来方式）
 	var effects = mystic_art.get("effects", [])
@@ -187,14 +197,12 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 
 
 ## スペル効果を適用（spell_id参照方式）
-func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dictionary) -> bool:
+func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dictionary, effect_override: Dictionary = {}) -> bool:
 	# CardLoaderからスペルデータを取得
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if spell_data.is_empty():
 		push_error("[SpellMysticArts] spell_id=%d のスペルが見つかりません" % spell_id)
 		return false
-	
-	
 	
 	var effect_parsed = spell_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
@@ -205,8 +213,14 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 	
 	# spell_phase_handlerに効果適用を委譲
 	for effect in effects:
+		# effect_overrideがあれば効果パラメータを上書き
+		var applied_effect = effect.duplicate()
+		if not effect_override.is_empty():
+			for key in effect_override:
+				applied_effect[key] = effect_override[key]
+		
 		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-			spell_phase_handler_ref._apply_single_effect(effect, target_data)
+			spell_phase_handler_ref._apply_single_effect(applied_effect, target_data)
 		else:
 			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
 			return false
@@ -231,6 +245,10 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 			return _apply_steal_magic(effect, target_data, context)
 		"mass_buff":
 			return _apply_mass_buff(effect, target_data, context)
+		"self_destroy":
+			return _apply_self_destroy(effect, context)
+		"gain_magic":
+			return _apply_gain_magic(effect, context)
 		# 共通効果（damage, drain_magic, stat_boost等）はspell_phase_handlerに委譲
 		_:
 			if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
@@ -382,10 +400,10 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 				return
 	
 	# ダウン状態を設定
-	if caster_tile.has_method("set_down"):
+	if caster_tile.has_method("set_down_state"):
+		caster_tile.set_down_state(true)
+	elif caster_tile.has_method("set_down"):
 		caster_tile.set_down(true)
-	else:
-		push_warning("[SpellMysticArts] タイルに set_down() メソッドがありません")
 
 
 ## 不屈スキルを持つか確認（ランドシステム仕様に準拠）
@@ -437,3 +455,60 @@ func get_target_creature_info(target_tile: Object) -> Dictionary:
 		"max_hp": max_hp,
 		"ap": creature_data.get("ap", 0)
 	}
+
+
+# ============ ゴールドトーテム用効果（SpellMagicに委譲） ============
+
+## 効果：魔力獲得（秘術発動者に）- SpellMagicに委譲
+func _apply_gain_magic(effect: Dictionary, context: Dictionary) -> bool:
+	var player_id = context.get("player_id", context.get("caster_player_id", -1))
+	var amount = effect.get("amount", 0)
+	
+	if player_id < 0 or amount <= 0:
+		return false
+	
+	# SpellMagicに委譲
+	var spell_magic = _get_spell_magic()
+	if spell_magic:
+		spell_magic.add_magic(player_id, amount)
+		print("[秘術効果] プレイヤー%d が %dG獲得" % [player_id + 1, amount])
+		return true
+	
+	# フォールバック: player_system直接呼び出し
+	if player_system_ref:
+		player_system_ref.add_magic(player_id, amount)
+		print("[秘術効果] プレイヤー%d が %dG獲得" % [player_id + 1, amount])
+		return true
+	
+	return false
+
+## 効果：自壊（クリーチャー破壊＋土地無所有）- SpellMagicに委譲
+func _apply_self_destroy(effect: Dictionary, context: Dictionary) -> bool:
+	var tile_index = context.get("tile_index", -1)
+	var clear_land = effect.get("clear_land", true)
+	
+	# SpellMagicに委譲
+	var spell_magic = _get_spell_magic()
+	if spell_magic:
+		return spell_magic.apply_self_destroy(tile_index, clear_land)
+	
+	# フォールバック: 直接処理
+	if tile_index < 0 or not board_system_ref:
+		return false
+	
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if not tile:
+		return false
+	
+	var creature_name = tile.creature_data.get("name", "クリーチャー") if tile.creature_data else "クリーチャー"
+	board_system_ref.remove_creature(tile_index)
+	if clear_land:
+		board_system_ref.set_tile_owner(tile_index, -1)
+	print("[秘術効果] %s が自壊しました" % creature_name)
+	return true
+
+## SpellMagicへの参照を取得
+func _get_spell_magic():
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		return spell_phase_handler_ref.game_flow_manager.spell_magic
+	return null

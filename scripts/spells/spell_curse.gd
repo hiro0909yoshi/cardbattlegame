@@ -112,6 +112,26 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			}
 			curse_creature(tile_index, "bounty", duration, params)
 		
+		"land_curse":
+			# 土地呪い（ブラストトラップ等）- 敵停止時に発動
+			var params = {
+				"name": effect.get("curse_name", effect.get("name", "土地呪い")),
+				"curse_type": effect.get("curse_type", ""),
+				"trigger": effect.get("trigger", "on_enemy_stop"),
+				"one_shot": effect.get("one_shot", false),
+				"curse_effects": effect.get("curse_effects", []),
+				"caster_id": effect.get("caster_id", -1)
+			}
+			curse_creature(tile_index, effect.get("curse_type", "land_trap"), duration, params)
+		
+		"creature_curse":
+			# クリーチャー呪い（汎用）- ジャングラバーの移動不可等
+			var curse_type_inner = effect.get("curse_type", "unknown")
+			var params = {
+				"name": effect.get("name", effect.get("description", "呪い"))
+			}
+			curse_creature(tile_index, curse_type_inner, duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

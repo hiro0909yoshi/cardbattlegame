@@ -71,8 +71,87 @@ static func get_move_destinations(
 			return []
 		"random_vacant":  # 戦闘後のアージェントキー用
 			return _get_all_vacant_tiles(board_system)
+		"one_tile":  # 1マス移動（クリーピングフレイム秘術、スペル用）
+			return _get_tiles_within_steps(board_system, from_tile_index, 1)
+		"two_tiles":  # 2マス移動（チャリオット、スレイプニール秘術用）
+			return _get_tiles_within_steps(board_system, from_tile_index, 2)
+		"adjacent_enemy":  # 隣接する敵領地のみ（アウトレイジ用）
+			return _get_adjacent_enemy_tiles(board_system, from_tile_index)
 		_:
 			return []
+
+
+## 指定マス数以内の移動先を取得（BFS探索）
+static func _get_tiles_within_steps(board_system: Node, from_tile_index: int, max_steps: int) -> Array:
+	var destinations: Array = []
+	
+	if not board_system or not board_system.tile_neighbor_system:
+		return destinations
+	
+	# BFSで指定マス数以内のタイルを探索
+	var visited: Dictionary = {from_tile_index: 0}
+	var queue: Array = [from_tile_index]
+	
+	while queue.size() > 0:
+		var current = queue.pop_front()
+		var current_distance = visited[current]
+		
+		if current_distance >= max_steps:
+			continue
+		
+		var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(current)
+		for neighbor in neighbors:
+			if visited.has(neighbor):
+				continue
+			
+			var tile = board_system.tile_nodes.get(neighbor)
+			if not tile:
+				continue
+			
+			# 特殊マスは通過不可
+			if tile.tile_type in ["checkpoint", "warp"]:
+				continue
+			
+			visited[neighbor] = current_distance + 1
+			queue.append(neighbor)
+	
+	# 移動元を除外して結果を返す
+	for tile_index in visited.keys():
+		if tile_index != from_tile_index:
+			destinations.append(tile_index)
+	
+	return destinations
+
+
+## 隣接する敵領地のみ取得（アウトレイジ用）
+static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) -> Array:
+	var destinations: Array = []
+	
+	if not board_system:
+		return destinations
+	
+	# 隣接タイルを取得
+	var adjacent_tiles: Array = []
+	if board_system.tile_neighbor_system:
+		adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+	
+	# 敵領地のみフィルタ
+	var current_player_id = board_system.current_player_index
+	
+	for tile_index in adjacent_tiles:
+		var tile = board_system.tile_nodes.get(tile_index)
+		if not tile:
+			continue
+		
+		# 特殊マスは除外
+		if tile.tile_type in ["checkpoint", "warp"]:
+			continue
+		
+		# 敵領地のみ（自領地や空地は除外）
+		if tile.owner_id != -1 and tile.owner_id != current_player_id:
+			destinations.append(tile_index)
+	
+	return destinations
 
 ## クリーチャーの移動タイプを判定
 static func _detect_move_type(creature_data: Dictionary) -> String:
