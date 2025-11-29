@@ -6,6 +6,7 @@ class_name SpellCreatureMove
 var board_system_ref: Object
 var player_system_ref: Object
 var spell_phase_handler_ref: Object
+var game_flow_manager_ref: Object
 
 
 # ============ 初期化 ============
@@ -14,6 +15,9 @@ func _init(board_sys: Object, player_sys: Object, spell_phase_handler: Object = 
 	board_system_ref = board_sys
 	player_system_ref = player_sys
 	spell_phase_handler_ref = spell_phase_handler
+	# game_flow_managerはspell_phase_handler経由で取得
+	if spell_phase_handler and spell_phase_handler.game_flow_manager:
+		game_flow_manager_ref = spell_phase_handler.game_flow_manager
 
 
 # ============ メイン効果適用 ============
@@ -32,22 +36,54 @@ func _has_move_disable_curse(tile_index: int) -> bool:
 func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
 	
+	var result: Dictionary
 	match effect_type:
 		"move_to_adjacent_enemy":
-			return await _apply_move_to_adjacent_enemy(target_data, caster_player_id)
+			result = await _apply_move_to_adjacent_enemy(target_data, caster_player_id)
 		"move_steps":
 			var steps = effect.get("steps", 2)
 			var exact_steps = effect.get("exact_steps", false)
-			return await _apply_move_steps(target_data, steps, exact_steps, caster_player_id)
+			result = await _apply_move_steps(target_data, steps, exact_steps, caster_player_id)
 		"move_self":
 			var steps = effect.get("steps", 1)
 			var exclude_enemy_creatures = effect.get("exclude_enemy_creatures", false)
-			return await _apply_move_self(target_data, steps, exclude_enemy_creatures)
+			result = await _apply_move_self(target_data, steps, exclude_enemy_creatures)
 		"destroy_and_move":
-			return await _apply_destroy_and_move(target_data)
+			result = await _apply_destroy_and_move(target_data)
 		_:
 			push_error("[SpellCreatureMove] 未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}
+	
+	# 戦闘トリガーがある場合は戦闘を実行
+	if result.get("trigger_battle", false):
+		await _trigger_battle(result, caster_player_id)
+	
+	return result
+
+
+## 戦闘を実行（敵領地への移動時）
+func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
+	var from_tile = result.get("from_tile", -1)
+	var to_tile = result.get("to_tile", -1)
+	
+	if from_tile < 0 or to_tile < 0:
+		return
+	
+	if not game_flow_manager_ref or not game_flow_manager_ref.battle_system:
+		push_error("[SpellCreatureMove] battle_systemが見つかりません")
+		return
+	
+	var attacker_creature = result.get("creature_data", {})
+	var tile_info = board_system_ref.get_tile_info(to_tile) if board_system_ref else {}
+	
+	await game_flow_manager_ref.battle_system.execute_3d_battle_with_data(
+		caster_player_id,
+		attacker_creature,
+		tile_info,
+		{},  # attacker_item
+		{},  # defender_item
+		from_tile
+	)
 
 
 # ============ 移動先取得 ============

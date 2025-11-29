@@ -25,9 +25,7 @@ var spell_used_this_turn: bool = false  # 1ターン1回制限
 ## カード選択ハンドラー（敵手札選択、デッキカード選択）
 var card_selection_handler: CardSelectionHandler = null
 
-## 秘術選択状態
-var selected_mystic_art: Dictionary = {}
-var selected_mystic_creature: Dictionary = {}
+## スペル失敗フラグ
 var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立でデッキに戻る）
 
 ## デバッグ設定
@@ -86,6 +84,11 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 			card_system,
 			self
 		)
+		# シグナル接続
+		spell_mystic_arts.mystic_phase_completed.connect(_on_mystic_phase_completed)
+		spell_mystic_arts.mystic_art_used.connect(_on_mystic_art_used)
+		spell_mystic_arts.target_selection_requested.connect(_on_mystic_target_selection_requested)
+		spell_mystic_arts.ui_message_requested.connect(_on_mystic_ui_message_requested)
 	
 	# SpellDamage を初期化
 	if not spell_damage and board_system:
@@ -190,7 +193,7 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 	if ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "spell")
 
-## 秘術フェーズ開始
+## 秘術フェーズ開始（SpellMysticArtsに委譲）
 func start_mystic_arts_phase():
 	"""秘術選択フェーズを開始"""
 	if not spell_mystic_arts:
@@ -201,304 +204,12 @@ func start_mystic_arts_phase():
 	if not player_system:
 		return
 	
-	# 現在のプレイヤーを取得
 	var current_player = player_system.get_current_player()
 	if not current_player:
 		return
 	
-	# 秘術を持つクリーチャーを取得
-	var available_creatures = spell_mystic_arts.get_available_creatures(current_player.id)
-	
-	if available_creatures.is_empty():
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "秘術を持つクリーチャーがありません"
-		return
-	
-	# クリーチャー選択UIを表示
-	await _select_mystic_arts_creature(available_creatures, current_player.id)
-
-## クリーチャー選択
-func _select_mystic_arts_creature(available_creatures: Array, _player_id: int):
-	"""秘術を持つクリーチャーを選択"""
-	if not ui_manager:
-		return
-	
-	# SpellAndMysticUI を取得または作成
-	var spell_and_mystic_ui = ui_manager.get_node_or_null("SpellAndMysticUI")
-	if not spell_and_mystic_ui:
-		# 動的にロード
-		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
-		if not SpellAndMysticUIClass:
-			return
-		
-		# 新規作成
-		spell_and_mystic_ui = SpellAndMysticUIClass.new()
-		spell_and_mystic_ui.name = "SpellAndMysticUI"
-		ui_manager.add_child(spell_and_mystic_ui)
-	
-	# クリーチャー選択UIを表示
-	spell_and_mystic_ui.show_creature_selection(available_creatures)
-	
-	# クリーチャー選択を待機
-	var selected_index = await spell_and_mystic_ui.creature_selected
-	
-	if selected_index < 0 or selected_index >= available_creatures.size():
-		spell_and_mystic_ui.hide_all()
-		return
-	
-	var selected_creature = available_creatures[selected_index]
-	
-	# 秘術選択に進む
-	await _select_mystic_art(selected_creature, spell_and_mystic_ui)
-
-## 秘術選択
-func _select_mystic_art(selected_creature: Dictionary, spell_and_mystic_ui: Control):
-	"""クリーチャーの秘術を選択"""
-	var mystic_arts = selected_creature.get("mystic_arts", [])
-	
-	if mystic_arts.is_empty():
-		spell_and_mystic_ui.hide_all()
-		return
-	
-	# 秘術選択UIを表示
-	spell_and_mystic_ui.show_mystic_art_selection(mystic_arts)
-	
-	# 秘術選択を待機
-	var selected_index = await spell_and_mystic_ui.mystic_art_selected
-	
-	if selected_index < 0 or selected_index >= mystic_arts.size():
-		spell_and_mystic_ui.hide_all()
-		return
-	
-	var mystic_art_selected = mystic_arts[selected_index]
-	
-	# UIを非表示
-	spell_and_mystic_ui.hide_all()
-	
-	# ターゲット選択に進む
-	var current_player = player_system.get_current_player()
-	await _select_mystic_arts_target(selected_creature, mystic_art_selected, current_player.id)
-
-## ターゲット選択
-func _select_mystic_arts_target(selected_creature: Dictionary, mystic_art: Dictionary, player_id: int):
-	"""秘術のターゲットを選択（既存のターゲット選択UIを流用）"""
-	var target_type = mystic_art.get("target_type", "")
-	var target_filter = mystic_art.get("target_filter", "any")
-	var target_info = mystic_art.get("target_info", {})
-	
-	# target_infoからowner_filterを取得
-	if not target_info.is_empty():
-		target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
-	
-	# spell_idがある場合はスペルデータからターゲット情報を取得（上書き）
-	var spell_id = mystic_art.get("spell_id", -1)
-	if spell_id > 0:
-		var spell_data = CardLoader.get_card_by_id(spell_id)
-		if not spell_data.is_empty():
-			var effect_parsed = spell_data.get("effect_parsed", {})
-			target_type = effect_parsed.get("target_type", target_type)
-			target_info = effect_parsed.get("target_info", target_info)
-			target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
-	
-	# ターゲット不要（none）またはセルフターゲット時はUI表示なし
-	if target_type == "none" or target_type == "self" or target_filter == "self":
-		var target_data = {
-			"type": target_type,
-			"tile_index": selected_creature.get("tile_index", -1),
-			"player_id": player_id
-		}
-		await _execute_mystic_art(selected_creature, mystic_art, target_data, player_id)
-		return
-	
-	# 全クリーチャー対象時はターゲット選択なしで実行
-	if target_type == "all_creatures":
-		await _execute_mystic_art_all_creatures(selected_creature, mystic_art, target_info, player_id)
-		return
-	
-	# 秘術選択状態を保存（ターゲット確定時に使用）
-	selected_mystic_creature = selected_creature
-	selected_mystic_art = mystic_art
-	
-	# 通常ターゲット選択（spell_idがない場合のみtarget_infoを設定）
-	if target_info.is_empty():
-		target_info = {
-			"filter": target_filter
-		}
-	
-	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
-	
-	if targets.is_empty():
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "有効なターゲットがありません"
-		_clear_mystic_art_selection()
-		return
-	
-	# スペルと同じ方式でターゲット選択開始
-	available_targets = targets
-	current_target_index = 0
-	current_state = State.SELECTING_TARGET
-	
-	# 最初の対象を表示
-	_update_target_selection()
-
-## 非同期効果を含む秘術かどうかを判定
-func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
-	# カード選択UIやターゲット選択UIが必要な効果タイプ
-	const ASYNC_EFFECT_TYPES = [
-		"destroy_and_draw", "swap_creature",
-		"destroy_selected_card", "steal_selected_card",
-		"destroy_from_deck_selection", "draw_from_deck_selection",
-		"move_self", "move_steps", "move_to_adjacent_enemy", "destroy_and_move"
-	]
-	
-	# spell_id参照の場合
-	var spell_id = mystic_art.get("spell_id", -1)
-	if spell_id > 0:
-		var spell_data = CardLoader.get_card_by_id(spell_id)
-		if not spell_data.is_empty():
-			var spell_effects = spell_data.get("effect_parsed", {}).get("effects", [])
-			for effect in spell_effects:
-				if effect.get("effect_type", "") in ASYNC_EFFECT_TYPES:
-					return true
-		return false
-	
-	# 直接effects定義の場合
-	var effects = mystic_art.get("effects", [])
-	for effect in effects:
-		if effect.get("effect_type", "") in ASYNC_EFFECT_TYPES:
-			return true
-	
-	return false
-
-## 秘術実行
-func _execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary, player_id: int):
-	"""秘術効果を実行"""
-	current_state = State.EXECUTING_EFFECT
-	
-	# 発動判定
-	var context = {
-		"player_id": player_id,
-		"player_magic": player_system.get_magic(player_id),
-		"spell_used_this_turn": spell_used_this_turn,
-		"tile_index": creature.get("tile_index", -1)
-	}
-	
-	if not spell_mystic_arts.can_cast_mystic_art(mystic_art, context):
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "秘術発動条件を満たしていません"
-		_clear_mystic_art_selection()
-		current_state = State.WAITING_FOR_INPUT
-		return
-	
-	# 発動通知を表示（秘術発動クリーチャー名を使用、クリック待ち）
-	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
-	await _show_spell_cast_notification(caster_name, target_data, mystic_art, true)
-	
-	# 非同期効果かどうかを事前判定
-	var is_async = _is_async_mystic_art(mystic_art)
-	
-	# 秘術効果を適用（非同期効果対応）
-	var success = await spell_mystic_arts.apply_mystic_art_effect(mystic_art, target_data, context)
-	
-	if success:
-		# 魔力消費
-		var cost = mystic_art.get("cost", 0)
-		player_system.add_magic(player_id, -cost)
-		spell_used_this_turn = true
-		
-		# キャスターをダウン状態に設定
-		spell_mystic_arts._set_caster_down_state(creature.get("tile_index", -1), board_system)
-		
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "『%s』を発動しました！" % mystic_art.get("name", "Unknown")
-		
-		# 排他制御：秘術使用後はスペルUI非表示
-		_on_mystic_art_used()
-	else:
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "秘術の発動に失敗しました"
-	
-	# 秘術選択状態をクリア
-	_clear_mystic_art_selection()
-	
-	# ターゲット選択をクリア
-	TargetSelectionHelper.clear_selection(self)
-	
-	# 少し待機してからカメラを戻す
-	await get_tree().create_timer(0.5).timeout
-	
-	# カメラを使用者（現在のプレイヤー）に戻す
-	_return_camera_to_player()
-	
-	# カード選択系の非同期効果の場合はCardSelectionHandler完了後にスペルフェーズ完了
-	if is_async and card_selection_handler and card_selection_handler.is_selecting():
-		return
-	
-	# スペルフェーズ完了
-	await get_tree().create_timer(0.5).timeout
-	complete_spell_phase()
-
-
-## 秘術実行（全クリーチャー対象）
-func _execute_mystic_art_all_creatures(creature: Dictionary, mystic_art: Dictionary, target_info: Dictionary, player_id: int):
-	"""全クリーチャー対象の秘術を実行（ニルーバーナ等）"""
-	current_state = State.EXECUTING_EFFECT
-	
-	# 発動判定
-	var context = {
-		"player_id": player_id,
-		"player_magic": player_system.get_magic(player_id),
-		"spell_used_this_turn": spell_used_this_turn,
-		"tile_index": creature.get("tile_index", -1)
-	}
-	
-	if not spell_mystic_arts.can_cast_mystic_art(mystic_art, context):
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "秘術発動条件を満たしていません"
-		_clear_mystic_art_selection()
-		current_state = State.WAITING_FOR_INPUT
-		return
-	
-	# 発動通知を表示
-	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
-	var target_data_for_notification = {"type": "all"}
-	await _show_spell_cast_notification(caster_name, target_data_for_notification, mystic_art, true)
-	
-	# spell_idからeffectsを取得
-	var spell_id = mystic_art.get("spell_id", -1)
-	var effects = []
-	if spell_id > 0:
-		var spell_data = CardLoader.get_card_by_id(spell_id)
-		if not spell_data.is_empty():
-			var effect_parsed = spell_data.get("effect_parsed", {})
-			effects = effect_parsed.get("effects", [])
-	
-	# ダメージ/回復効果をSpellDamageに委譲
-	if spell_damage:
-		await spell_damage.execute_all_creatures_effects(self, effects, target_info)
-	
-	# 魔力消費
-	var cost = mystic_art.get("cost", 0)
-	player_system.add_magic(player_id, -cost)
-	spell_used_this_turn = true
-	
-	# キャスターをダウン状態に設定
-	spell_mystic_arts._set_caster_down_state(creature.get("tile_index", -1), board_system)
-	
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = "『%s』を発動しました！" % mystic_art.get("name", "Unknown")
-	
-	# 排他制御
-	_on_mystic_art_used()
-	
-	# 秘術選択状態をクリア
-	_clear_mystic_art_selection()
-	
-	# スペルフェーズ完了
-	await get_tree().create_timer(0.5).timeout
-	_return_camera_to_player()
-	await get_tree().create_timer(0.5).timeout
-	complete_spell_phase()
+	# SpellMysticArtsに委譲
+	await spell_mystic_arts.start_mystic_phase(current_player.id)
 
 
 ## CPUのスペル使用判定（CPUTurnProcessorに委譲）
@@ -691,10 +402,9 @@ func _confirm_target_selection():
 		return
 	
 	# 秘術かスペルかで分岐
-	if not selected_mystic_art.is_empty():
-		# 秘術実行
-		var player_id = player_system.get_current_player().id if player_system else current_player_id
-		_execute_mystic_art(selected_mystic_creature, selected_mystic_art, selected_target, player_id)
+	if spell_mystic_arts and spell_mystic_arts.is_active():
+		# 秘術実行（SpellMysticArtsに委譲）
+		spell_mystic_arts.on_target_confirmed(selected_target)
 	else:
 		# スペル実行
 		execute_spell_effect(selected_spell_card, selected_target)
@@ -710,9 +420,10 @@ func _cancel_target_selection():
 		return
 	
 	# 秘術かスペルかで分岐
-	if not selected_mystic_art.is_empty():
+	if spell_mystic_arts and spell_mystic_arts.is_active():
 		# 秘術キャンセル
-		_clear_mystic_art_selection()
+		spell_mystic_arts.clear_selection()
+		spell_mystic_arts._end_mystic_phase()
 		current_state = State.WAITING_FOR_INPUT
 	else:
 		# スペルキャンセル
@@ -901,28 +612,9 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				await spell_damage.apply_effect(self, effect, target_data)
 		
 		"move_to_adjacent_enemy", "move_steps", "move_self", "destroy_and_move":
-			# クリーチャー移動系 - SpellCreatureMoveに委譲
+			# クリーチャー移動系 - SpellCreatureMoveに委譲（戦闘も内部で処理）
 			if spell_creature_move:
-				var result = await spell_creature_move.apply_effect(effect, target_data, current_player_id)
-				# 戦闘トリガー（敵領地への移動時）
-				if result.get("trigger_battle", false):
-					var from_tile = result.get("from_tile", -1)
-					var to_tile = result.get("to_tile", -1)
-					if from_tile >= 0 and to_tile >= 0:
-						# 戦闘システムを呼び出す（移動侵略として）
-						# execute_3d_battle_with_data(attacker_index, card_data, tile_info, attacker_item, defender_item, from_tile_index)
-						if game_flow_manager and game_flow_manager.battle_system:
-							var attacker_creature = result.get("creature_data", {})
-							var tile_info = board_system.get_tile_info(to_tile) if board_system else {}
-							# 第1引数はプレイヤーインデックス（攻撃側）
-							await game_flow_manager.battle_system.execute_3d_battle_with_data(
-								current_player_id,
-								attacker_creature,
-								tile_info,
-								{},  # attacker_item
-								{},  # defender_item
-								from_tile
-							)
+				await spell_creature_move.apply_effect(effect, target_data, current_player_id)
 		
 		"swap_with_hand", "swap_board_creatures":
 			# クリーチャー交換系 - SpellCreatureSwapに委譲
@@ -938,6 +630,13 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# ステータス増減スペル - SpellCurseStatに委譲
 			if game_flow_manager and game_flow_manager.spell_curse_stat:
 				await game_flow_manager.spell_curse_stat.apply_effect(self, effect, target_data, current_player_id, selected_spell_card)
+		
+		"self_destroy":
+			# 自壊効果（ゴールドトーテム等）- SpellMagicに委譲
+			var tile_index = target_data.get("tile_index", target_data.get("caster_tile_index", -1))
+			var clear_land = effect.get("clear_land", true)
+			if game_flow_manager and game_flow_manager.spell_magic:
+				game_flow_manager.spell_magic.apply_self_destroy(tile_index, clear_land)
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
@@ -1103,11 +802,6 @@ func is_spell_phase_active() -> bool:
 
 # ============ 秘術システム対応（新規追加）============
 
-## 秘術選択状態をクリア
-func _clear_mystic_art_selection():
-	selected_mystic_art = {}
-	selected_mystic_creature = {}
-
 ## 秘術が利用可能か確認
 func has_available_mystic_arts(player_id: int) -> bool:
 	if not has_spell_mystic_arts():
@@ -1180,6 +874,26 @@ func update_mystic_button_visibility():
 func _on_mystic_art_used():
 	if spell_phase_ui_manager:
 		spell_phase_ui_manager.on_mystic_art_used()
+
+
+## 秘術フェーズ完了時
+func _on_mystic_phase_completed():
+	current_state = State.WAITING_FOR_INPUT
+
+
+## 秘術ターゲット選択要求時
+func _on_mystic_target_selection_requested(targets: Array):
+	available_targets = targets
+	current_target_index = 0
+	current_state = State.SELECTING_TARGET
+	_update_target_selection()
+
+
+## 秘術UIメッセージ表示要求時
+func _on_mystic_ui_message_requested(message: String):
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = message
+
 
 # ============ 発動通知UI ============
 

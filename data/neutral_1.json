@@ -338,18 +338,7 @@
 		"mystic_art": {
 		  "name": "黄金献身",
 		  "cost": 0,
-		  "target_type": "none",
-		  "effects": [
-			{
-			  "effect_type": "gain_magic",
-			  "amount": 200
-			},
-			{
-			  "effect_type": "self_destroy",
-			  "clear_land": true
-			}
-		  ],
-		  "description": "使用者にG200を与え、自壊"
+		  "spell_id": 9015
 		}
 	  }
 	},

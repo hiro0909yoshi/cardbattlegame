@@ -270,6 +270,25 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9015,
+	  "name": "黄金献身",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "gain_magic",
+			"amount": 200
+		  },
+		  {
+			"effect_type": "self_destroy",
+			"clear_land": true
+		  }
+		]
+	  }
 	}
   ]
 }

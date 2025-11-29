@@ -184,31 +184,78 @@ func _on_mystic_target_selection_started(targets):
 
 #### 2-4. 作業チェックリスト
 
-- [ ] 不要メソッド7個を削除
-- [ ] `_apply_self_destroy()`をSpellMagicに移動
-- [ ] SpellMysticArtsのmatch文を整理
-- [ ] ゴールドトーテムの動作確認
+- [x] 不要メソッド7個を削除
+- [x] `_apply_self_destroy()`をSpellMagicに委譲（既にSpellMagicに存在）
+- [x] SpellMysticArtsのmatch文を整理
+- [ ] ゴールドトーテムの動作確認（手動テスト）
 - [ ] ドキュメント更新（魔力増減.md）
 
-### Phase 3: シグナル追加
-1. [ ] SpellMysticArtsにシグナル定義を追加
-2. [ ] SpellPhaseHandlerでシグナル接続
+#### 2-5. 事前整理の結果
 
-### Phase 4: メソッド移動（SpellPhaseHandler → SpellMysticArts）
-1. [ ] 変数を移動（selected_mystic_art, selected_mystic_creature）
-2. [ ] UI系メソッドを移動（_select_mystic_arts_creature, _select_mystic_art）
-3. [ ] ターゲット選択メソッドを移動
-4. [ ] 実行系メソッドを移動
-5. [ ] ヘルパーメソッドを移動
+**整理前**: 496行  
+**整理後**: 318行  
+**削減**: 178行（約36%削減）
 
-### Phase 5: SpellPhaseHandler側の修正
-1. [ ] 秘術関連メソッドを委譲呼び出しに変更
-2. [ ] シグナルハンドラ追加
-3. [ ] `_confirm_target_selection()`の秘術分岐を修正
+**削除したメソッド:**
+- `_apply_destroy_deck_top()` - JSONで未使用
+- `_apply_damage()` - matchから外れていた
+- `_apply_curse_attack()` - TODO状態、未使用
+- `_apply_steal_magic()` - JSONで未使用
+- `_apply_mass_buff()` - JSONで未使用
+- `get_mystic_art_info()` - 呼び出し元なし
+- `get_target_creature_info()` - 呼び出し元なし
+- `_apply_gain_magic_via_spell_magic()` - spell_id参照方式に変更
+- `_apply_self_destroy_via_spell_magic()` - spell_id参照方式に変更
+- `_get_spell_magic()` - 上記2つの削除に伴い不要
 
-### Phase 6: テストと検証
+**変更したJSON:**
+- `data/neutral_1.json` - ゴールドトーテムの秘術をspell_id参照方式に変更
+- `data/spell_mystic.json` - ID:9015「黄金献身」を追加
 
+**変更したコード:**
+- `SpellPhaseHandler._apply_single_effect()` - `self_destroy`効果の処理を追加
+- `SpellMysticArts._apply_single_effect()` - match文を削除、全てSpellPhaseHandlerに委譲
+
+### Phase 3: シグナル追加 ✅
+1. [x] SpellMysticArtsにシグナル定義を追加
+2. [x] SpellPhaseHandlerでシグナル接続
+
+### Phase 4: メソッド移動（SpellPhaseHandler → SpellMysticArts）✅
+1. [x] 変数を移動（selected_mystic_art, selected_mystic_creature）
+2. [x] UI系メソッドを移動（_select_creature, _select_mystic_art_from_creature）
+3. [x] ターゲット選択メソッドを移動（_select_target）
+4. [x] 実行系メソッドを移動（execute_mystic_art, _execute_all_creatures）
+5. [x] ヘルパーメソッドを移動（_is_async_mystic_art）
+
+### Phase 5: SpellPhaseHandler側の修正 ✅
+1. [x] 秘術関連メソッドを委譲呼び出しに変更（start_mystic_arts_phase）
+2. [x] シグナルハンドラ追加（_on_mystic_phase_completed等）
+3. [x] `_confirm_target_selection()`の秘術分岐を修正（spell_mystic_arts.is_active()）
+4. [x] 不要変数削除（selected_mystic_art, selected_mystic_creature）
+5. [x] 不要メソッド削除（_clear_mystic_art_selection, 旧秘術メソッド群）
+
+### Phase 6: テストと検証 ✅
+
+**自動テスト（Godot起動確認）:**
+- [x] 構文エラーなし
+- [x] ゴールドトーテム秘術動作確認（G200獲得 + 自壊）
+
+**手動テスト（必要に応じて）:**
 詳細は「🧪 テスト計画」セクションを参照。
+
+### 最終結果
+
+| ファイル | 変更前 | 変更後 | 変化 |
+|---------|--------|--------|------|
+| SpellMysticArts | 496行 | 672行 | +176行 |
+| SpellPhaseHandler | 1,260行 | 979行 | **-281行** |
+| **合計** | 1,756行 | 1,651行 | **-105行** |
+
+**SpellPhaseHandlerの削減内訳:**
+- 秘術関連メソッド移動: 約320行
+- 変数・ヘルパー削除: 約10行
+- シグナルハンドラ追加: +約20行
+- 差し引き削減: 約281行
 
 ---
 
