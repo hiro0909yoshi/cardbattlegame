@@ -55,6 +55,7 @@ var spell_cast_notification_ui = null  # 発動通知UI
 var spell_damage: SpellDamage = null  # ダメージ・回復処理
 var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
 var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
+var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手札戻し
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -101,6 +102,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreatureSwap を初期化
 	if not spell_creature_swap and board_system and player_system and card_system:
 		spell_creature_swap = SpellCreatureSwap.new(board_system, player_system, card_system, self)
+	
+	# SpellCreatureReturn を初期化
+	if not spell_creature_return and board_system and player_system and card_system:
+		spell_creature_return = SpellCreatureReturn.new(board_system, player_system, card_system, self)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -276,6 +281,18 @@ func use_spell(spell_card: Dictionary):
 	var target_type = parsed.get("target_type", "")
 	var target_filter = parsed.get("target_filter", "")
 	var target_info = parsed.get("target_info", {})
+	var effects = parsed.get("effects", [])
+	
+	# リリーフ（swap_board_creatures）: 使用時点で2体未満なら弾く
+	for effect in effects:
+		if effect.get("effect_type") == "swap_board_creatures":
+			var own_creature_count = _count_own_creatures(current_player_id)
+			if own_creature_count < 2:
+				if ui_manager and ui_manager.phase_label:
+					ui_manager.phase_label.text = "対象がいません"
+				await get_tree().create_timer(1.0).timeout
+				cancel_spell()
+				return
 	
 	# target_filter または target_type が "self" の場合は、即座に効果発動（対象選択UIなし）
 	if target_filter == "self" or target_type == "self":
@@ -306,6 +323,10 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary):
 	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
 	
 	if targets.is_empty():
+		# 対象がいない場合はメッセージ表示してキャンセル
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "対象がいません"
+		await get_tree().create_timer(1.0).timeout
 		cancel_spell()
 		return
 	
@@ -626,6 +647,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 						if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 							spell_failed = true
 		
+		"return_to_hand":
+			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
+			if spell_creature_return:
+				await spell_creature_return.apply_effect(effect, target_data, current_player_id)
+		
 		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
 			# ステータス増減スペル - SpellCurseStatに委譲
 			if game_flow_manager and game_flow_manager.spell_curse_stat:
@@ -789,6 +815,18 @@ func is_cpu_player(player_id: int) -> bool:
 		return false  # デバッグモードでは全員手動
 	
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
+
+## 使用者のクリーチャー数をカウント
+func _count_own_creatures(player_id: int) -> int:
+	if not board_system:
+		return 0
+	
+	var count = 0
+	for tile_index in board_system.tile_nodes.keys():
+		var tile = board_system.tile_nodes[tile_index]
+		if tile and tile.owner_id == player_id and not tile.creature_data.is_empty():
+			count += 1
+	return count
 
 ## プレイヤーの順位を取得（UIパネルから）
 func _get_player_ranking(player_id: int) -> int:

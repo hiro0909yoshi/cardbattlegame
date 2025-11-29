@@ -351,6 +351,13 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if not has_lands and not has_sacrifice:
 							continue
 					
+					# no_summon_condition チェック（召喚条件がないクリーチャーのみ）
+					if target_info.get("no_summon_condition", false):
+						var has_lands = creature.has("cost_lands_required") and creature.cost_lands_required > 0
+						var has_sacrifice = creature.has("cost_cards_sacrifice") and creature.cost_cards_sacrifice > 0
+						if has_lands or has_sacrifice:
+							continue
+					
 					# hp_reduced チェック
 					if target_info.get("hp_reduced", false):
 						var base_hp = creature.get("hp", 0)

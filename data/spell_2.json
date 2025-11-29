@@ -244,7 +244,15 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象セプターの最もMHPの低いクリーチャーを手札に戻す"
+	  "effect": "対象セプターの最もMHPの低いクリーチャーを手札に戻す",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": { "owner_filter": "any" },
+		"effects": [{
+		  "effect_type": "return_to_hand",
+		  "select_by": "lowest_mhp"
+		}]
+	  }
 	},
 	{
 	  "id": 2077,
@@ -663,7 +671,15 @@
 	  "cost": {
 		"mp": 90
 	  },
-	  "effect": "対象の、属性違いのクリーチャーを手札に戻す"
+	  "effect": "対象の、属性違いのクリーチャーを手札に戻す",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "element_mismatch": true
+		},
+		"effects": [{ "effect_type": "return_to_hand" }]
+	  }
 	},
 	{
 	  "id": 2098,
@@ -1156,7 +1172,20 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "2体の対象自クリーチャーを交換；復帰[ブック]"
+	  "effect": "2体の対象自クリーチャーを交換；復帰[ブック]",
+	  "return_to_deck": true,
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "swap_board_creatures",
+			"description": "盤面上の2体を交換"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2127,

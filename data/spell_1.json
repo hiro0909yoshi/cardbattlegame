@@ -243,7 +243,16 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "呪い付きで召喚条件の無い対象クリーチャーを手札に戻す"
+	  "effect": "呪い付きで召喚条件の無い対象クリーチャーを手札に戻す",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "has_curse": true,
+		  "no_summon_condition": true
+		},
+		"effects": [{ "effect_type": "return_to_hand" }]
+	  }
 	},
 	{
 	  "id": 2013,
@@ -254,7 +263,19 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "対象自クリーチャーを手札のクリーチャーと交換"
+	  "effect": "対象自クリーチャーを手札のクリーチャーと交換",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "swap_with_hand",
+			"description": "手札のクリーチャーと交換"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2014,

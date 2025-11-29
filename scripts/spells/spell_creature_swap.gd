@@ -121,28 +121,51 @@ func _execute_swap_with_hand(tile_index: int, player_id: int, hand_creature: Dic
 	var board_creature_name = board_creature.get("name", "クリーチャー")
 	var hand_creature_name = hand_creature.get("name", "クリーチャー")
 	
-	# 手札からクリーチャーを削除
-	if card_system_ref and card_system_ref.has_method("remove_card_from_hand"):
-		card_system_ref.remove_card_from_hand(player_id, hand_creature)
+	# 手札からクリーチャーを削除（インデックスを探して削除）
+	if card_system_ref:
+		var hand = card_system_ref.get_all_cards_for_player(player_id)
+		for i in range(hand.size()):
+			if hand[i].get("id") == hand_creature.get("id"):
+				# 捨て札ではなく手札から直接削除
+				card_system_ref.player_hands[player_id]["data"].remove_at(i)
+				print("[SpellCreatureSwap] 手札から %s を削除" % hand_creature_name)
+				break
 	
-	# 盤面のクリーチャーを手札に戻す
-	if card_system_ref and card_system_ref.has_method("add_card_to_hand"):
-		card_system_ref.add_card_to_hand(player_id, board_creature)
+	# 盤面のクリーチャーを手札に戻す（HPリセット）
+	if card_system_ref:
+		var card_id = board_creature.get("id", -1)
+		var clean_creature = card_system_ref._get_clean_card_data(card_id)
+		if clean_creature.is_empty():
+			# フォールバック: 元データが取得できない場合
+			clean_creature = board_creature.duplicate(true)
+			clean_creature.erase("current_hp")
+			clean_creature.erase("curse")
+			clean_creature.erase("is_down")
+		card_system_ref.player_hands[player_id]["data"].append(clean_creature)
+		print("[SpellCreatureSwap] %s を手札に戻す" % board_creature_name)
+	
+	# 古い3Dカード表示を削除
+	if tile.has_method("remove_creature"):
+		tile.remove_creature()
 	
 	# 手札のクリーチャーを盤面に配置
-	tile.creature_data = hand_creature.duplicate()
+	var new_creature = hand_creature.duplicate()
+	var base_hp = new_creature.get("hp", 0)
+	new_creature["current_hp"] = base_hp
 	
-	# HPをリセット（新しいクリーチャーなので）
-	var base_hp = hand_creature.get("hp", 0)
-	tile.creature_data["current_hp"] = base_hp
+	# BoardSystem3D.place_creature()で配置（3D表示も作成される）
+	if board_system_ref.has_method("place_creature"):
+		board_system_ref.place_creature(tile_index, new_creature, player_id)
+	else:
+		tile.creature_data = new_creature
 	
 	# ダウン状態にする
 	if tile.has_method("set_down_state"):
 		tile.set_down_state(true)
 	
-	# 表示更新
-	if tile.has_method("update_display"):
-		tile.update_display()
+	# hand_updatedシグナルを発行
+	if card_system_ref:
+		card_system_ref.emit_signal("hand_updated")
 	
 	print("[SpellCreatureSwap] %s ↔ %s を交換" % [board_creature_name, hand_creature_name])
 
@@ -156,16 +179,30 @@ func _execute_swap_board(tile_index_1: int, tile_index_2: int) -> void:
 		push_error("[SpellCreatureSwap] 交換対象のタイルが無効です")
 		return
 	
-	# クリーチャーデータを交換
+	# クリーチャーデータを保存
 	var creature_1 = tile_1.creature_data.duplicate() if tile_1.creature_data else {}
 	var creature_2 = tile_2.creature_data.duplicate() if tile_2.creature_data else {}
-	
-	tile_1.creature_data = creature_2
-	tile_2.creature_data = creature_1
-	
-	# owner_idも交換
 	var owner_1 = tile_1.owner_id
 	var owner_2 = tile_2.owner_id
+	
+	var name_1 = creature_1.get("name", "クリーチャー")
+	var name_2 = creature_2.get("name", "クリーチャー")
+	
+	# 古い3Dカード表示を削除
+	if tile_1.has_method("remove_creature"):
+		tile_1.remove_creature()
+	if tile_2.has_method("remove_creature"):
+		tile_2.remove_creature()
+	
+	# 交換して配置（BoardSystem3D.place_creature()で3D表示も作成）
+	if board_system_ref.has_method("place_creature"):
+		board_system_ref.place_creature(tile_index_1, creature_2, owner_2)
+		board_system_ref.place_creature(tile_index_2, creature_1, owner_1)
+	else:
+		tile_1.creature_data = creature_2
+		tile_2.creature_data = creature_1
+	
+	# owner_idも交換
 	tile_1.owner_id = owner_2
 	tile_2.owner_id = owner_1
 	
@@ -175,14 +212,6 @@ func _execute_swap_board(tile_index_1: int, tile_index_2: int) -> void:
 	if tile_2.has_method("set_down_state"):
 		tile_2.set_down_state(true)
 	
-	# 表示更新
-	if tile_1.has_method("update_display"):
-		tile_1.update_display()
-	if tile_2.has_method("update_display"):
-		tile_2.update_display()
-	
-	var name_1 = creature_1.get("name", "クリーチャー")
-	var name_2 = creature_2.get("name", "クリーチャー")
 	print("[SpellCreatureSwap] %s ↔ %s を交換" % [name_1, name_2])
 
 
@@ -195,7 +224,7 @@ func _get_hand_creatures(player_id: int) -> Array:
 	if not card_system_ref:
 		return creatures
 	
-	var hand = card_system_ref.get_hand(player_id)
+	var hand = card_system_ref.get_all_cards_for_player(player_id)
 	for card in hand:
 		if card.get("type") == "creature":
 			creatures.append(card)
@@ -227,13 +256,46 @@ func _select_tile(tile_indices: Array, message: String) -> int:
 
 ## 手札クリーチャー選択UI
 func _select_hand_creature(creatures: Array, message: String) -> int:
-	# TODO: 手札選択UIを実装
-	# 現在はフォールバックとして最初のクリーチャーを選択
-	if spell_phase_handler_ref and spell_phase_handler_ref.has_method("select_hand_card"):
-		return await spell_phase_handler_ref.select_hand_card(creatures, message)
+	# UI参照取得
+	var ui_manager = null
+	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
+		ui_manager = spell_phase_handler_ref.ui_manager
 	
-	print("[SpellCreatureSwap] 手札選択UI未実装、最初の候補を使用: %s" % message)
-	return 0 if creatures.size() > 0 else -1
+	if not ui_manager:
+		print("[SpellCreatureSwap] UIManager未設定、最初の候補を使用")
+		return 0 if creatures.size() > 0 else -1
+	
+	# フィルターをクリーチャーのみに設定（スペル/アイテムはグレーアウト）
+	ui_manager.card_selection_filter = ""
+	
+	# メッセージ表示
+	if ui_manager.has_method("set_message"):
+		ui_manager.set_message(message)
+	
+	# カード選択UIを表示
+	var current_player_id = spell_phase_handler_ref.current_player_id
+	if player_system_ref:
+		var player = player_system_ref.players[current_player_id]
+		ui_manager.show_card_selection_ui_mode(player, "summon")
+	
+	# カード選択を待つ
+	var selected_index = await ui_manager.card_selected
+	
+	# UIを閉じる
+	ui_manager.hide_card_selection_ui()
+	
+	# 選択されたカードがクリーチャーか確認
+	if selected_index >= 0:
+		var hand = card_system_ref.get_all_cards_for_player(current_player_id)
+		if selected_index < hand.size():
+			var selected_card = hand[selected_index]
+			if selected_card.get("type") == "creature":
+				# クリーチャー配列内でのインデックスを返す
+				for i in range(creatures.size()):
+					if creatures[i].get("id") == selected_card.get("id"):
+						return i
+	
+	return -1
 
 
 # ============ 発動判定 ============
