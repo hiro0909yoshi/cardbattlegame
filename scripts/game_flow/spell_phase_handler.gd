@@ -57,6 +57,7 @@ var spell_cast_notification_ui = null  # 発動通知UI
 var spell_damage: SpellDamage = null  # ダメージ・回復処理
 var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
 var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
+var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
 	pass
@@ -110,6 +111,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	
 	# カード選択ハンドラーを初期化
 	_initialize_card_selection_handler()
+	
+	# CPUTurnProcessorを取得
+	if game_flow_manager and not cpu_turn_processor:
+		cpu_turn_processor = game_flow_manager.get_node_or_null("CPUTurnProcessor")
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -496,47 +501,29 @@ func _execute_mystic_art_all_creatures(creature: Dictionary, mystic_art: Diction
 	complete_spell_phase()
 
 
-## CPUのスペル使用判定（簡易版）
+## CPUのスペル使用判定（CPUTurnProcessorに委譲）
 func _handle_cpu_spell_turn():
-	await get_tree().create_timer(1.0).timeout
-	
-	# 簡易AI: 30%の確率でスペルを使用
-	if randf() < 0.3 and card_system:
-		var spells = _get_available_spells(current_player_id)
-		if not spells.is_empty():
-			# ランダムに1つ選択
-			var spell = spells[randi() % spells.size()]
-			if _can_afford_spell(spell):
-				use_spell(spell)
-				return
-	
-	# スペルを使わない
-	pass_spell()
+	if cpu_turn_processor:
+		cpu_turn_processor.cpu_spell_completed.connect(_on_cpu_spell_completed, CONNECT_ONE_SHOT)
+		cpu_turn_processor.process_cpu_spell_turn(current_player_id)
+	else:
+		# フォールバック: CPUTurnProcessorがない場合はパス
+		pass_spell()
 
-## 利用可能なスペルカードを取得
-func _get_available_spells(player_id: int) -> Array:
-	if not card_system:
-		return []
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	var spells = []
-	
-	for card in hand:
-		if card.get("type", "") == "spell":
-			spells.append(card)
-	
-	return spells
+## CPU スペル処理完了コールバック
+func _on_cpu_spell_completed(used_spell: bool):
+	if used_spell:
+		# TODO: 将来的にはCPUが選んだスペルを実行する
+		pass_spell()
+	else:
+		pass_spell()
 
-## スペルが使用可能か（コスト的に）
+## スペルコストを支払えるか
 func _can_afford_spell(spell_card: Dictionary) -> bool:
 	if not player_system:
 		return false
 	
-	var current_player = player_system.get_current_player()
-	if not current_player:
-		return false
-	
-	# costがnullの場合は空のDictionaryとして扱う
+	var magic = player_system.get_magic(current_player_id)
 	var cost_data = spell_card.get("cost", {})
 	if cost_data == null:
 		cost_data = {}
@@ -545,7 +532,7 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		cost = cost_data.get("mp", 0)
 	
-	return current_player.magic_power >= cost
+	return magic >= cost
 
 ## スペルを使用
 func use_spell(spell_card: Dictionary):

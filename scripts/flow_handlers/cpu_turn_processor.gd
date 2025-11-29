@@ -217,6 +217,56 @@ func _complete_action():
 	# board_systemのフラグ管理は削除（board_system側で管理）
 	emit_signal("cpu_action_completed")
 
+# === スペルフェーズCPU処理 ===
+
+signal cpu_spell_completed(used_spell: bool)
+
+## CPUのスペルフェーズ処理
+func process_cpu_spell_turn(player_id: int) -> void:
+	await get_tree().create_timer(CPU_THINKING_DELAY).timeout
+	
+	# 簡易AI: 30%の確率でスペルを使用
+	if randf() < 0.3 and card_system:
+		var spells = _get_available_spells(player_id)
+		if not spells.is_empty():
+			var spell = spells[randi() % spells.size()]
+			if _can_afford_spell(spell, player_id):
+				cpu_spell_completed.emit(true)
+				return
+	
+	cpu_spell_completed.emit(false)
+
+## 利用可能なスペルカードを取得
+func _get_available_spells(player_id: int) -> Array:
+	if not card_system:
+		return []
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var spells = []
+	
+	for card in hand:
+		if card.get("type", "") == "spell":
+			spells.append(card)
+	
+	return spells
+
+## スペルが使用可能か（コスト的に）
+func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
+	if not player_system:
+		return false
+	
+	var magic = player_system.get_magic(player_id)
+	
+	var cost_data = spell_card.get("cost", {})
+	if cost_data == null:
+		cost_data = {}
+	
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	
+	return magic >= cost
+
 # === 拡張用インターフェース ===
 
 # 難易度設定（将来実装用）
