@@ -121,7 +121,18 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "全領地に呪い\"移動不可\""
+	  "effect": "全領地に呪い\"移動不可\"",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "move_disable",
+			"name": "移動不可"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2007,
@@ -867,7 +878,22 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "対象領地に呪い\"遠隔移動\"(離れた空地にも移動できる)"
+	  "effect": "対象領地に呪い\"遠隔移動\"(離れた空地にも移動できる)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "remote_move",
+			"name": "遠隔移動",
+			"description": "全ての空き地に移動可能"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2046,

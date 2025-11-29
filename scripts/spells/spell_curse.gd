@@ -24,6 +24,21 @@ func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 # 統合エントリポイント
 # ========================================
 
+## 全クリーチャーに呪いを適用（ディラニー、プレイグ、イモビライズ等）
+func apply_to_all_creatures(effect: Dictionary, target_info: Dictionary) -> int:
+	var condition = target_info.get("condition", {})
+	var targets = TargetSelectionHelper.get_all_creatures(board_system, condition)
+	
+	var affected_count = 0
+	for target in targets:
+		var tile_index = target["tile_index"]
+		apply_effect(effect, tile_index)
+		affected_count += 1
+	
+	var effect_type = effect.get("effect_type", "")
+	print("[SpellCurse] 全クリーチャー対象 (%s): %d体に呪いを付与" % [effect_type, affected_count])
+	return affected_count
+
 ## effect辞書から適切な呪いを適用
 func apply_effect(effect: Dictionary, tile_index: int) -> void:
 	var effect_type = effect.get("effect_type", "")

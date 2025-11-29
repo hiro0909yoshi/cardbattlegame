@@ -659,10 +659,11 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	if spell_damage:
 		handled = await spell_damage.execute_all_creatures_effects(self, effects, target_info)
 	
-	# 未処理（呪い効果等）はSpellCurseBattleに委譲
+	# 未処理（呪い効果等）はSpellCurseに委譲
 	if not handled:
-		for effect in effects:
-			SpellCurseBattle.apply_to_all_creatures(board_system, effect, target_info)
+		if game_flow_manager and game_flow_manager.spell_curse:
+			for effect in effects:
+				game_flow_manager.spell_curse.apply_to_all_creatures(effect, target_info)
 	
 	# カードを捨て札に
 	if card_system:

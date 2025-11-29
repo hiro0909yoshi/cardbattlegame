@@ -113,32 +113,3 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 # =============================================================================
 # 全クリーチャー対象処理（ディラニー等）
 # =============================================================================
-
-## 条件付き全クリーチャーに呪いを適用
-## board_system: BoardSystem3Dの参照
-## effect: 効果辞書（effect_type, duration等）
-## target_info: 条件辞書（condition等）
-## 戻り値: 呪いを付与したクリーチャー数
-static func apply_to_all_creatures(board_system, effect: Dictionary, target_info: Dictionary) -> int:
-	var condition = target_info.get("condition", {})
-	var targets = TargetSelectionHelper.get_all_creatures(board_system, condition)
-	
-	var effect_type = effect.get("effect_type", "")
-	var affected_count = 0
-	
-	for target in targets:
-		var creature = target["creature"]
-		
-		match effect_type:
-			"battle_disable":
-				apply_battle_disable(creature, effect.get("name", "戦闘行動不可"))
-				affected_count += 1
-			"skill_nullify":
-				apply_skill_nullify(creature, effect.get("name", "戦闘能力不可"))
-				affected_count += 1
-			"plague_curse":
-				apply_plague(creature, effect.get("name", "衰弱"))
-				affected_count += 1
-	
-	print("[SpellCurseBattle] 全クリーチャー対象: %d体に呪いを付与" % affected_count)
-	return affected_count
