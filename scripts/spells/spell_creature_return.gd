@@ -35,12 +35,12 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 # ============ 手札戻し効果実装 ============
 
 ## クリーチャーを手札に戻す
-func _apply_return_to_hand(effect: Dictionary, target_data: Dictionary, caster_player_id: int) -> Dictionary:
+func _apply_return_to_hand(effect: Dictionary, target_data: Dictionary, _caster_player_id: int) -> Dictionary:
 	var select_by = effect.get("select_by", "")
 	
 	# フィアー: プレイヤー指定 → 最低MHPクリーチャーを自動選択
 	if select_by == "lowest_mhp":
-		return await _apply_return_lowest_mhp(target_data)
+		return _apply_return_lowest_mhp(target_data)
 	
 	# エグザイル/ホーリーバニッシュ: クリーチャー直接指定
 	var tile_index = target_data.get("tile_index", -1)

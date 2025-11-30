@@ -56,6 +56,7 @@ var spell_damage: SpellDamage = null  # ダメージ・回復処理
 var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
 var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
 var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手札戻し
+var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -106,6 +107,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreatureReturn を初期化
 	if not spell_creature_return and board_system and player_system and card_system:
 		spell_creature_return = SpellCreatureReturn.new(board_system, player_system, card_system, self)
+	
+	# SpellCreaturePlace を初期化
+	if not spell_creature_place:
+		spell_creature_place = SpellCreaturePlace.new()
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -492,11 +497,16 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 			if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, spell_card):
 				spell_failed = true  # 捨て札処理をスキップするためのフラグ
 	
+	# 復帰[手札]判定（スペルカードを手札に戻す - ゴブリンズレア等）
+	var return_to_hand = parsed.get("return_to_hand", false)
+	if return_to_hand:
+		spell_failed = true  # 捨て札処理をスキップ（後で手札に戻す）
+	
 	# 効果を適用
 	for effect in effects:
 		await _apply_single_effect(effect, target_data)
 	
-	# カードを捨て札に（復帰[ブック]時はスキップ）
+	# カードを捨て札に（復帰[ブック]/復帰[手札]時はスキップ）
 	if card_system and not spell_failed:
 		# 手札からカードのインデックスを探す
 		var hand = card_system.get_all_cards_for_player(current_player_id)
@@ -504,6 +514,9 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 			if hand[i].get("id", -1) == spell_card.get("id", -2):
 				card_system.discard_card(current_player_id, i, "use")
 				break
+	elif spell_failed and return_to_hand:
+		# 復帰[手札]: カードは手札に残る（何もしない - 既に手札にある）
+		print("[復帰[手札]] %s は手札に残ります" % spell_card.get("name", "?"))
 	elif spell_failed:
 		pass  # 復帰[ブック]: カードはデッキに戻される
 	
@@ -637,6 +650,19 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_creature_move:
 				await spell_creature_move.apply_effect(effect, target_data, current_player_id)
 		
+		"place_creature":
+			# クリーチャー配置系 - SpellCreaturePlaceに委譲
+			if spell_creature_place and board_system:
+				var result = spell_creature_place.apply_place_effect(
+					effect, target_data, current_player_id, board_system, player_system
+				)
+				if not result.get("success", false):
+					print("[SpellPhaseHandler] クリーチャー配置失敗")
+		
+		"draw_and_place":
+			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）
+			_apply_draw_and_place_effect(effect)
+		
 		"swap_with_hand", "swap_board_creatures":
 			# クリーチャー交換系 - SpellCreatureSwapに委譲
 			if spell_creature_swap:
@@ -658,11 +684,66 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				await game_flow_manager.spell_curse_stat.apply_effect(self, effect, target_data, current_player_id, selected_spell_card)
 		
 		"self_destroy":
-			# 自壊効果（ゴールドトーテム等）- SpellMagicに委譲
-			var tile_index = target_data.get("tile_index", target_data.get("caster_tile_index", -1))
+			# 自壊効果（コンジャラー等）- SpellMagicに委譲
+			# 秘術の場合はcaster_tile_index（発動者）を優先
+			var tile_index = target_data.get("caster_tile_index", target_data.get("tile_index", -1))
 			var clear_land = effect.get("clear_land", true)
 			if game_flow_manager and game_flow_manager.spell_magic:
 				game_flow_manager.spell_magic.apply_self_destroy(tile_index, clear_land)
+
+
+## draw_and_place効果を適用（ワイルドセンス用）
+func _apply_draw_and_place_effect(effect: Dictionary) -> void:
+	var draw_count = effect.get("draw_count", 1)
+	var placement_mode = effect.get("placement_mode", "random")
+	var card_type_filter = effect.get("card_type_filter", "creature")
+	
+	if not card_system:
+		print("[draw_and_place] CardSystemがありません")
+		return
+	
+	# カードを引く
+	var drawn_cards = card_system.draw_cards_for_player(current_player_id, draw_count)
+	
+	if drawn_cards.is_empty():
+		print("[draw_and_place] カードを引けませんでした")
+		return
+	
+	for card in drawn_cards:
+		var card_type = card.get("type", "")
+		var card_name = card.get("name", "?")
+		var card_id = card.get("id", -1)
+		
+		print("[draw_and_place] 引いたカード: %s (type: %s)" % [card_name, card_type])
+		
+		# フィルター条件をチェック（クリーチャーのみ配置）
+		if card_type_filter == "creature" and card_type == "creature":
+			# 手札からカードを除去（引いたカードは手札の最後に追加される）
+			var hand = card_system.get_all_cards_for_player(current_player_id)
+			if hand.size() > 0:
+				# 手札の最後から同じIDのカードを探す（複数枚ある可能性があるため）
+				var card_index = -1
+				for i in range(hand.size() - 1, -1, -1):
+					if hand[i].get("id", -1) == card_id:
+						card_index = i
+						break
+				
+				if card_index >= 0:
+					card_system.use_card_for_player(current_player_id, card_index)
+					print("[draw_and_place] 手札からカードを消費: index=%d" % card_index)
+			
+			# 配置処理
+			if placement_mode == "random" and spell_creature_place and board_system:
+				var success = spell_creature_place.place_creature_random(
+					board_system, current_player_id, card_id, CardLoader, true
+				)
+				if success:
+					print("[draw_and_place] %s をランダムな空地に配置しました" % card_name)
+				else:
+					print("[draw_and_place] 配置失敗 - 空地がありません")
+		else:
+			print("[draw_and_place] %s はクリーチャーではないため手札に残ります" % card_name)
+
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):

@@ -368,16 +368,39 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "巻物強打",
-			"ability_detail": "巻物強打；秘術[G80・好きな空地にバーテルを召喚し自壊]",
+			"ability_detail": "巻物強打；秘術[G80・好きな空地にバーアルを召喚し自壊]",
 			"ability_parsed": {
 				"keywords": [
-					"巻物強打"
+					"巻物強打",
+					"秘術"
 				],
 				"keyword_conditions": {
 					"巻物強打": {
 						"scroll_type": "base_ap"
 					}
-				}
+				},
+				"mystic_arts": [
+					{
+						"name": "バーアル召喚",
+						"cost": 80,
+						"target_type": "land",
+						"target_info": {
+							"owner_filter": "any",
+							"target_filter": "empty"
+						},
+						"effects": [
+							{
+								"effect_type": "place_creature",
+								"creature_id": 27,
+								"placement_mode": "select"
+							},
+							{
+								"effect_type": "self_destroy",
+								"clear_land": true
+							}
+						]
+					}
+				]
 			}
 		},
 		{

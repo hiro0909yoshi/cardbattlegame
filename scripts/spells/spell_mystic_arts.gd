@@ -607,7 +607,11 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 				applied_effect[key] = effect_override[key]
 		
 		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-			await spell_phase_handler_ref._apply_single_effect(applied_effect, target_data)
+			# 秘術発動者のタイルインデックスを追加（self_destroy等で必要）
+			var extended_target_data = target_data.duplicate()
+			if _context.has("tile_index"):
+				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
+			await spell_phase_handler_ref._apply_single_effect(applied_effect, extended_target_data)
 		else:
 			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
 			return false

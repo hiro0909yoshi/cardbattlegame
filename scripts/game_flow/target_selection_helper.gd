@@ -451,68 +451,85 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 			# 土地を対象とする
 			if handler.board_system:
 				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
+				var target_filter = target_info.get("target_filter", "")  # "creature", "empty", ""
 				
-				for tile_index in handler.board_system.tile_nodes.keys():
+				# タイル番号順にソート
+				var tile_indices = handler.board_system.tile_nodes.keys()
+				tile_indices.sort()
+				
+				for tile_index in tile_indices:
 					var tile_info = handler.board_system.get_tile_info(tile_index)
 					var tile_owner = tile_info.get("owner", -1)
+					var creature = tile_info.get("creature", {})
 					
-					# 所有者フィルター
-					var matches_owner = false
-					if owner_filter == "own":
-						matches_owner = (tile_owner == handler.current_player_id)
-					elif owner_filter == "enemy":
-						matches_owner = (tile_owner >= 0 and tile_owner != handler.current_player_id)
-					else:  # "any"
-						matches_owner = (tile_owner >= 0)
+					# 空き地フィルター（target_filter: "empty"）- 所有者フィルターより優先
+					if target_filter == "empty":
+						# クリーチャーがいない土地のみ対象
+						if not creature.is_empty():
+							continue
+						# 特殊タイル（warp, card, checkpoint, start）は配置不可
+						var tile = handler.board_system.tile_nodes.get(tile_index)
+						if tile and tile.tile_type in ["warp", "card", "checkpoint", "start"]:
+							continue
+						# 空き地の場合は所有者フィルターをスキップ
+					else:
+						# 所有者フィルター（従来の処理）
+						var matches_owner = false
+						if owner_filter == "own":
+							matches_owner = (tile_owner == handler.current_player_id)
+						elif owner_filter == "enemy":
+							matches_owner = (tile_owner >= 0 and tile_owner != handler.current_player_id)
+						else:  # "any"
+							matches_owner = (tile_owner >= 0)
+						
+						if not matches_owner:
+							continue
 					
-					if matches_owner:
-						var tile_level = tile_info.get("level", 1)
-						var tile_element = tile_info.get("element", "")
-						
-						# レベル制限チェック
-						var max_level = target_info.get("max_level", 999)
-						var min_level = target_info.get("min_level", 1)
-						var required_level = target_info.get("required_level", -1)
-						
-						# required_levelが指定されている場合は、そのレベルのみ対象
-						if required_level > 0:
-							if tile_level != required_level:
-								continue
-						elif tile_level < min_level or tile_level > max_level:
+					var tile_level = tile_info.get("level", 1)
+					var tile_element = tile_info.get("element", "")
+					
+					# レベル制限チェック
+					var max_level = target_info.get("max_level", 999)
+					var min_level = target_info.get("min_level", 1)
+					var required_level = target_info.get("required_level", -1)
+					
+					# required_levelが指定されている場合は、そのレベルのみ対象
+					if required_level > 0:
+						if tile_level != required_level:
+							continue
+					elif tile_level < min_level or tile_level > max_level:
+						continue
+					
+					# 属性制限チェック
+					var required_elements = target_info.get("required_elements", [])
+					if not required_elements.is_empty():
+						if tile_element not in required_elements:
+							continue
+					
+					# クリーチャー存在チェック（target_filter: "creature"）
+					if target_filter == "creature":
+						if creature.is_empty():
 							continue
 						
-						# 属性制限チェック
-						var required_elements = target_info.get("required_elements", [])
-						if not required_elements.is_empty():
-							if tile_element not in required_elements:
+						# クリーチャー条件チェック（has_no_curse, has_no_mystic_arts等）
+						if target_info.get("has_no_curse", false):
+							if not creature.get("curse", {}).is_empty():
 								continue
 						
-						# クリーチャー存在チェック（target_filter: "creature"）
-						var target_filter = target_info.get("target_filter", "")
-						var creature = tile_info.get("creature", {})
-						if target_filter == "creature":
-							if creature.is_empty():
+						if target_info.get("has_no_mystic_arts", false):
+							var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
+							if not mystic_arts.is_empty():
 								continue
-							
-							# クリーチャー条件チェック（has_no_curse, has_no_mystic_arts等）
-							if target_info.get("has_no_curse", false):
-								if not creature.get("curse", {}).is_empty():
-									continue
-							
-							if target_info.get("has_no_mystic_arts", false):
-								var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
-								if not mystic_arts.is_empty():
-									continue
-						
-						# 条件を満たす土地を追加
-						var land_target = {
-							"type": "land",
-							"tile_index": tile_index,
-							"element": tile_element,
-							"level": tile_level,
-							"owner": tile_owner
-						}
-						targets.append(land_target)
+					
+					# 条件を満たす土地を追加
+					var land_target = {
+						"type": "land",
+						"tile_index": tile_index,
+						"element": tile_element,
+						"level": tile_level,
+						"owner": tile_owner
+					}
+					targets.append(land_target)
 	
 	# most_common_element 後処理（クリーチャーターゲットのみ）
 	if target_info.get("most_common_element", false) and not targets.is_empty():

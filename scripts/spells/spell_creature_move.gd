@@ -49,7 +49,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 			var exclude_enemy_creatures = effect.get("exclude_enemy_creatures", false)
 			result = await _apply_move_self(target_data, steps, exclude_enemy_creatures)
 		"destroy_and_move":
-			result = await _apply_destroy_and_move(target_data)
+			result = _apply_destroy_and_move(target_data)
 		_:
 			push_error("[SpellCreatureMove] 未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}

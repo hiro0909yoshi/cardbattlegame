@@ -1299,7 +1299,18 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "カードを1枚引く；クリーチャーだった場合、ランダムな空地に配置"
+	  "effect": "カードを1枚引く；クリーチャーだった場合、ランダムな空地に配置",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "draw_and_place",
+			"draw_count": 1,
+			"placement_mode": "random",
+			"card_type_filter": "creature"
+		  }
+		]
+	  }
 	}
   ]
 }

@@ -231,7 +231,28 @@
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G20・選んだ空地にグーバを配置]"
+	  "ability_detail": "秘術[G20・選んだ空地にグーバを配置]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "グーバ配置",
+			"cost": 20,
+			"target_type": "land",
+			"target_info": {
+			  "owner_filter": "any",
+			  "target_filter": "empty"
+			},
+			"effects": [
+			  {
+				"effect_type": "place_creature",
+				"creature_id": 208,
+				"placement_mode": "select"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 210,

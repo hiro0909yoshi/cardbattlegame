@@ -538,7 +538,18 @@
 		"mp": 10,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "空地に止まっている場合、ゴブリンを配置する；復帰[手札]"
+	  "effect": "空地に止まっている場合、ゴブリンを配置する；復帰[手札]",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "place_creature",
+			"creature_id": 414,
+			"placement_mode": "conditional"
+		  }
+		],
+		"return_to_hand": true
+	  }
 	},
 	{
 	  "id": 2029,
@@ -867,7 +878,17 @@
 		"mp": 30,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "ランダムな空地に\"スケルトン\"を配置"
+	  "effect": "ランダムな空地にスケルトンを配置",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "place_creature",
+			"creature_id": 420,
+			"placement_mode": "random"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2044,
