@@ -155,6 +155,13 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			}
 			curse_creature(tile_index, "forced_stop", duration, params)
 		
+		"indomitable":
+			# 不屈呪い（ハイパーアクティブ）- ダウン状態にならない
+			var params = {
+				"name": effect.get("name", "不屈")
+			}
+			curse_creature(tile_index, "indomitable", duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

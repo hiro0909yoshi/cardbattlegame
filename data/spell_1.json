@@ -110,7 +110,16 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "全自クリーチャーのダウンを解除"
+	  "effect": "全自クリーチャーのダウンを解除",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "down_clear",
+			"target": "own_creatures"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2006,

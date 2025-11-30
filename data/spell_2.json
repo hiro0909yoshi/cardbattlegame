@@ -63,18 +63,21 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象領地に呪い\"能力値+20\"(戦闘中、AP&HP+20)；カードを1枚引く"
-	},
-	{
-	  "id": 2067,
-	  "name": "ハイパーアクティブ",
-	  "rarity": "S",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"mp": 40
-	  },
-	  "effect": "対象領地に呪い\"不屈\"(5R間、不屈を得る)"
+	  "effect": "対象領地に呪い\"不屈\"(5R間、不屈を得る)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "indomitable",
+			"name": "不屈",
+			"duration": 5
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2068,

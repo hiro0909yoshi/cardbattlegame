@@ -195,7 +195,27 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[G60・対象自クリーチャーのダウンを解除]"
+	  "ability_detail": "不屈；秘術[G60・対象自クリーチャーのダウンを解除]",
+	  "ability_parsed": {
+		"keywords": ["不屈", "秘術"],
+		"mystic_arts": [
+		  {
+			"name": "ダウン解除",
+			"cost": 60,
+			"target_type": "land",
+			"target_info": {
+			  "owner_filter": "own",
+			  "target_filter": "creature",
+			  "is_down": true
+			},
+			"effects": [
+			  {
+				"effect_type": "clear_down"
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 208,

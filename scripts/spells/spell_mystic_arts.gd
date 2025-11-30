@@ -667,10 +667,18 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 		caster_tile.set_down(true)
 
 
-## 不屈スキルを持つか確認（ランドシステム仕様に準拠）
+## 不屈スキルまたは不屈呪いを持つか確認
 func _has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	
+	# 1. 不屈スキル判定
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "不屈" in ability_detail
+	if "不屈" in ability_detail:
+		return true
+	
+	# 2. 不屈呪い判定
+	if SpellMovement.has_indomitable_curse(creature_data):
+		return true
+	
+	return false

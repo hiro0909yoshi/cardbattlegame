@@ -108,8 +108,3 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 						applied = true
 	
 	return applied
-
-
-# =============================================================================
-# 全クリーチャー対象処理（ディラニー等）
-# =============================================================================

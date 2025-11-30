@@ -199,6 +199,64 @@ func _get_tile_element(tile) -> String:
 	return ""
 
 # =============================================================================
+# 不屈呪い (indomitable)
+# =============================================================================
+
+## 不屈呪いを付与
+func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
+	if not creature_manager:
+		return false
+	
+	var creature = creature_manager.get_data_ref(tile_index)
+	if creature.is_empty():
+		return false
+	
+	# 既存の呪いを上書き
+	creature["curse"] = {
+		"curse_type": "indomitable",
+		"name": "不屈",
+		"duration": duration,
+		"params": {}
+	}
+	
+	print("[呪い付与] 不屈 → タイル", tile_index, " (", duration, "R)")
+	return true
+
+## 不屈呪いを持っているか（静的メソッド）
+static func has_indomitable_curse(creature: Dictionary) -> bool:
+	if creature.is_empty():
+		return false
+	if not creature.has("curse"):
+		return false
+	var curse = creature["curse"]
+	return curse.get("curse_type", "") == "indomitable"
+
+# =============================================================================
+# ダウン解除 (down_clear)
+# =============================================================================
+
+## 指定プレイヤーの全クリーチャーのダウン状態を解除
+func clear_down_state_for_player(player_id: int, tile_nodes: Dictionary) -> int:
+	var cleared_count = 0
+	
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id != player_id:
+			continue
+		if not tile.creature_data:
+			continue
+		
+		# ダウン状態を解除
+		if tile.has_method("set_down_state") and tile.has_method("is_down"):
+			if tile.is_down():  # ダウン中の場合のみ
+				tile.set_down_state(false)
+				cleared_count += 1
+				print("[ダウン解除] タイル", tile_index, " - ", tile.creature_data.get("name", ""))
+	
+	print("[アラーム] ", cleared_count, "体のダウンを解除")
+	return cleared_count
+
+# =============================================================================
 # SpellPhaseHandler連携用
 # =============================================================================
 
@@ -210,5 +268,8 @@ func apply_curse_from_effect(tile_index: int, effect: Dictionary) -> bool:
 		"forced_stop":
 			var duration = effect.get("duration", 2)
 			return apply_forced_stop_curse(tile_index, duration)
+		"indomitable":
+			var duration = effect.get("duration", 5)
+			return apply_indomitable_curse(tile_index, duration)
 	
 	return false

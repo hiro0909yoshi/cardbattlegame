@@ -569,7 +569,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse", "forced_stop":
+		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse", "forced_stop", "indomitable":
 			# 戦闘制限呪い系 - SpellCurseに委譲
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
@@ -644,6 +644,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# ダメージ・回復系 - SpellDamageに委譲
 			if spell_damage:
 				await spell_damage.apply_effect(self, effect, target_data)
+		
+		"down_clear":
+			# 全自クリーチャーのダウン解除（アラーム）- SpellMovementに委譲
+			if board_system and board_system.movement_controller and board_system.movement_controller.spell_movement:
+				board_system.movement_controller.spell_movement.clear_down_state_for_player(current_player_id, board_system.tile_nodes)
 		
 		"move_to_adjacent_enemy", "move_steps", "move_self", "destroy_and_move":
 			# クリーチャー移動系 - SpellCreatureMoveに委譲（戦闘も内部で処理）

@@ -520,6 +520,13 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 							var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
 							if not mystic_arts.is_empty():
 								continue
+						
+						# is_down チェック（ダウン状態のクリーチャーのみ対象）
+						if target_info.get("is_down", false):
+							var tile = handler.board_system.tile_nodes.get(tile_index)
+							var is_down = tile.is_down() if tile and tile.has_method("is_down") else false
+							if not is_down:
+								continue
 					
 					# 条件を満たす土地を追加
 					var land_target = {
