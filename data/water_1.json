@@ -622,7 +622,13 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "足どめ",
-	  "ability_detail": "足どめ[水]"
+	  "ability_detail": "足どめ[水]",
+	  "ability_parsed": {
+		"keywords": ["足どめ"],
+		"trap_stop": {
+		  "elements": ["water"]
+		}
+	  }
 	},
 	{
 	  "id": 122,

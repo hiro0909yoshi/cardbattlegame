@@ -289,6 +289,39 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9016,
+	  "name": "ダイス6固定（自分）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 6,
+			"duration": 1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9017,
+	  "name": "ダイス5固定（対象セプター）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_fixed",
+			"value": 5,
+			"duration": 1
+		  }
+		]
+	  }
 	}
   ]
 }

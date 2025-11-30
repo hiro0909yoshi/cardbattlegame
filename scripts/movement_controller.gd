@@ -31,6 +31,7 @@ var current_moving_player = -1
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
 var game_flow_manager = null  # GameFlowManager参照（呪い削除用）
+var spell_movement: SpellMovement = null  # 足どめ判定用
 
 func _ready():
 	pass
@@ -49,6 +50,11 @@ func initialize(tiles: Dictionary, players: Array, cam: Camera3D = null):
 # システム参照を設定
 func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null, gf_manager = null):
 	player_system = p_system
+	
+	# SpellMovementを初期化
+	spell_movement = SpellMovement.new()
+	if gf_manager and gf_manager.creature_manager:
+		spell_movement.setup(gf_manager.creature_manager, null)
 	special_tile_system = st_system
 	game_flow_manager = gf_manager
 
@@ -84,9 +90,8 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	# 経路に沿って移動
 	await move_along_path(player_id, path)
 	
-	# 最終位置を更新
-	var final_tile = path[path.size() - 1] if path.size() > 0 else player_tiles[player_id]
-	player_tiles[player_id] = final_tile
+	# 最終位置を取得（move_along_path内で更新済み）
+	var final_tile = player_tiles[player_id]
 	
 	is_moving = false
 	current_moving_player = -1
@@ -154,6 +159,14 @@ func move_along_path(player_id: int, path: Array) -> void:
 					path.append(new_path[j])
 			
 			tile_index = warped_tile
+		
+		# 足どめ判定（呪い・スキル）
+		var stop_result = check_forced_stop_at_tile(tile_index, player_id)
+		if stop_result["stopped"]:
+			print("[足どめ] ", stop_result["reason"])
+			emit_signal("movement_step_completed", player_id, tile_index)
+			# 残りの移動をキャンセル
+			break
 		
 		emit_signal("movement_step_completed", player_id, tile_index)
 		previous_tile = tile_index
@@ -334,6 +347,16 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 		await tween.finished
 	else:
 		camera.global_position = target_pos
+
+# === 足どめ判定 ===
+
+## タイルでの足どめ判定（SpellMovement経由）
+func check_forced_stop_at_tile(tile_index: int, player_id: int) -> Dictionary:
+	if not spell_movement:
+		return {"stopped": false, "reason": "", "source_type": ""}
+	
+	# tile_nodesを直接渡す
+	return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, tile_nodes)
 
 # === ユーティリティ ===
 

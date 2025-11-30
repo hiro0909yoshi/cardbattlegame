@@ -147,6 +147,14 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			}
 			curse_creature(tile_index, curse_type_inner, duration, params)
 		
+		"forced_stop":
+			# 強制停止呪い（クイックサンド）- 移動中のプレイヤーを1度だけ足どめ
+			var params = {
+				"name": effect.get("name", "強制停止"),
+				"uses_remaining": effect.get("uses", 1)
+			}
+			curse_creature(tile_index, "forced_stop", duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

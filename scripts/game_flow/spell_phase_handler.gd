@@ -569,7 +569,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse":
+		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse", "forced_stop":
 			# 戦闘制限呪い系 - SpellCurseに委譲
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":

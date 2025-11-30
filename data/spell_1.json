@@ -398,7 +398,22 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象領地に呪い\"強制停止\"(2R間、1度だけ足どめ)"
+	  "effect": "対象領地に呪い\"強制停止\"(2R間、1度だけ足どめ)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "forced_stop",
+			"name": "強制停止",
+			"duration": 2,
+			"uses": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2022,

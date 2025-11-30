@@ -514,7 +514,29 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "対象自領地に呪い\"移動術\"(秘術[G50・対象セプターに呪い\"ダイス5\"])"
+	  "effect": "対象自領地に呪い\"移動術\"(秘術[G50・対象セプターに呪い\"ダイス5\"])",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "own",
+		  "has_no_curse": true,
+		  "has_no_mystic_arts": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_mystic_arts",
+			"curse_name": "移動術",
+			"mystic_arts": [
+			  {
+				"name": "ダイス5",
+				"cost": 50,
+				"spell_id": 9017
+			  }
+			]
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2090,

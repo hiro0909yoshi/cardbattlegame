@@ -155,7 +155,13 @@
 				]
 			},
 			"ability": "防御型",
-			"ability_detail": "防御型；足どめ[火]"
+			"ability_detail": "防御型；足どめ[火]",
+			"ability_parsed": {
+				"keywords": ["防御型", "足どめ"],
+				"trap_stop": {
+					"elements": ["fire"]
+				}
+			}
 		},
 		{
 			"id": 6,

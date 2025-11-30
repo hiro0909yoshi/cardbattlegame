@@ -408,7 +408,17 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・使用者に呪い\"ダイス6\"]"
+	  "ability_detail": "秘術[G50・使用者に呪い\"ダイス6\"]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "ダイス6",
+			"cost": 50,
+			"spell_id": 9016
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 341,
