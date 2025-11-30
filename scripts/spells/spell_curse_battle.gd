@@ -87,6 +87,11 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
 						  defender_data.get("name", "?"), " に衰弱を付与")
 					applied = true
+				"creature_toll_disable":
+					apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
+					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
+						  defender_data.get("name", "?"), " に通行料無効を付与")
+					applied = true
 	
 	# アイテムからチェック
 	var items = attacker_data.get("items", [])
@@ -105,6 +110,11 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 						apply_plague(defender_data, effect.get("name", "衰弱"))
 						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
 							  defender_data.get("name", "?"), " に衰弱を付与")
+						applied = true
+					"creature_toll_disable":
+						apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
+						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
+							  defender_data.get("name", "?"), " に通行料無効を付与")
 						applied = true
 	
 	return applied
@@ -209,3 +219,89 @@ static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) 
 			return true
 	
 	return false
+
+
+# =============================================================================
+# メタルフォーム（metal_form）: 無効化[通常攻撃]、防具使用不可
+# =============================================================================
+
+## metal_form 呪いを持っているかチェック
+static func has_metal_form(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type", "") == "metal_form"
+
+
+## metal_form 呪いを付与
+static func apply_metal_form(creature_data: Dictionary, name: String = "メタルフォーム") -> void:
+	creature_data["curse"] = {
+		"curse_type": "metal_form",
+		"name": name,
+		"duration": -1,
+		"params": {}
+	}
+	print("[SpellCurseBattle] メタルフォームを付与: ", creature_data.get("name", "?"))
+
+
+# =============================================================================
+# マジックバリア（magic_barrier）: 無効化[通常攻撃]、攻撃無効化時に敵にG100
+# =============================================================================
+
+## magic_barrier 呪いを持っているかチェック
+static func has_magic_barrier(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type", "") == "magic_barrier"
+
+
+## magic_barrier 呪いを付与
+static func apply_magic_barrier(creature_data: Dictionary, name: String = "マジックバリア") -> void:
+	creature_data["curse"] = {
+		"curse_type": "magic_barrier",
+		"name": name,
+		"duration": -1,
+		"params": {
+			"gold_transfer": 100
+		}
+	}
+	print("[SpellCurseBattle] マジックバリアを付与: ", creature_data.get("name", "?"))
+
+
+# =============================================================================
+# 戦闘後破壊（destroy_after_battle）: 次の戦闘で生き残った場合、戦闘後に破壊
+# =============================================================================
+
+## destroy_after_battle 呪いを持っているかチェック
+static func has_destroy_after_battle(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type", "") == "destroy_after_battle"
+
+
+## destroy_after_battle 呪いを付与
+static func apply_destroy_after_battle(creature_data: Dictionary, name: String = "戦闘後破壊") -> void:
+	creature_data["curse"] = {
+		"curse_type": "destroy_after_battle",
+		"name": name,
+		"duration": -1,
+		"params": {}
+	}
+	print("[SpellCurseBattle] 戦闘後破壊を付与: ", creature_data.get("name", "?"))
+
+
+# =============================================================================
+# 通行料無効（creature_toll_disable）: クリーチャー単体の通行料が0になる
+# =============================================================================
+
+## creature_toll_disable 呪いを持っているかチェック
+static func has_creature_toll_disable(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type", "") == "creature_toll_disable"
+
+
+## creature_toll_disable 呪いを付与
+static func apply_creature_toll_disable(creature_data: Dictionary, name: String = "通行料無効") -> void:
+	creature_data["curse"] = {
+		"curse_type": "creature_toll_disable",
+		"name": name,
+		"duration": -1,
+		"params": {}
+	}
+	print("[SpellCurseBattle] 通行料無効を付与: ", creature_data.get("name", "?"))

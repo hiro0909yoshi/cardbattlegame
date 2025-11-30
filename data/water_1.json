@@ -422,7 +422,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "応援・戦闘後破壊",
-	  "ability_detail": "応援[防御側・HP+10]；戦闘後、敵に○戦闘後破壊",
+	  "ability_detail": "応援[防御側・HP+10]；戦闘後、敵に呪い戦闘後破壊",
 	  "ability_parsed": {
 		"keywords": ["応援", "戦闘後破壊"],
 		"effects": [
@@ -710,7 +710,11 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "敵の攻撃成功時能力を無効化",
-	  "ability_detail": "敵の攻撃成功時能力を無効化；戦闘後、敵に○通行料無効"
+	  "ability_detail": "敵の攻撃成功時能力を無効化；戦闘後、敵に呪い通行料無効",
+	  "ability_parsed": {
+		"keywords": ["通行料無効付与"],
+		"effects": []
+	  }
 	}
   ]
 }

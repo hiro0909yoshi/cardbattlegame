@@ -140,6 +140,52 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			
 			# random_statは既にcurrent_ap/hpを直接設定済みなので、ここでreturn
 			return
+		
+		"metal_form", "magic_barrier":
+			# 無効化[通常攻撃]を付与（呪いによる無効化スキル）
+			# ability_parsedにkeyword_conditionsとして追加
+			var ability_parsed = participant.creature_data.get("ability_parsed", {})
+			if not ability_parsed.has("keywords"):
+				ability_parsed["keywords"] = []
+			if not ability_parsed.has("keyword_conditions"):
+				ability_parsed["keyword_conditions"] = {}
+			if not ability_parsed["keyword_conditions"].has("無効化"):
+				ability_parsed["keyword_conditions"]["無効化"] = []
+			
+			# 既にkeywordsに無効化がなければ追加
+			if not "無効化" in ability_parsed["keywords"]:
+				ability_parsed["keywords"].append("無効化")
+			
+			# normal_attack無効化条件を追加
+			ability_parsed["keyword_conditions"]["無効化"].append({
+				"nullify_type": "normal_attack",
+				"reduction_rate": 0.0
+			})
+			
+			# ability_parsedをcreature_dataに反映
+			participant.creature_data["ability_parsed"] = ability_parsed
+			
+			# temporary_effectsに記録（表示用）
+			participant.temporary_effects.append({
+				"type": "nullify_normal_attack",
+				"source": "curse",
+				"source_name": curse_name,
+				"curse_type": curse_type,
+				"removable": true,
+				"lost_on_move": true
+			})
+			print("[呪い変換] ", curse_type, ": 無効化[通常攻撃]を付与")
+			
+			# magic_barrierの場合、G100移動パラメータを記録
+			if curse_type == "magic_barrier":
+				var gold_transfer = params.get("gold_transfer", 100)
+				participant.temporary_effects.append({
+					"type": "gold_transfer_on_nullify",
+					"value": gold_transfer,
+					"source": "curse",
+					"source_name": curse_name
+				})
+				print("[呪い変換] magic_barrier: 攻撃無効化時にG", gold_transfer, "移動")
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap

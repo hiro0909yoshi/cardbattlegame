@@ -112,10 +112,15 @@ func _show_item_selection_ui():
 	var has_assist = has_assist_skill()
 	var assist_elements = get_assist_target_elements()
 	
+	# metal_form呪いがある場合、防具使用不可
+	var has_metal_form = SpellCurseBattle.has_metal_form(battle_creature_data)
+	if has_metal_form:
+		print("【メタルフォーム】", battle_creature_data.get("name", "?"), " は防具使用不可")
+	
 	for card in hand_data:
 		var card_type = card.get("type", "")
 		
-		# アイテムカードは常に選択可能
+		# アイテムカードは常に選択可能（metal_formの場合は防具がUIでグレーアウトされる）
 		if card_type == "item":
 			selectable_cards.append(card)
 		# 援護スキルがある場合、対象クリーチャーも選択可能
@@ -134,6 +139,12 @@ func _show_item_selection_ui():
 	
 	# フィルター設定（アイテム + 援護対象クリーチャー）
 	if ui_manager:
+		# metal_form呪いがある場合、防具をブロック
+		if has_metal_form:
+			ui_manager.blocked_item_types = ["防具"]
+		else:
+			ui_manager.blocked_item_types = []
+		
 		if has_assist:
 			# 援護スキルがある場合は特別なフィルターモード
 			ui_manager.card_selection_filter = "item_or_assist"
@@ -234,6 +245,7 @@ func complete_item_phase():
 	if ui_manager:
 		ui_manager.card_selection_filter = ""
 		ui_manager.assist_target_elements = []  # 援護対象属性もクリア
+		ui_manager.blocked_item_types = []  # ブロックされたアイテムタイプもクリア
 		# 手札表示を更新してグレーアウトを解除
 		if ui_manager.hand_display and player_system:
 			var current_player = player_system.get_current_player()

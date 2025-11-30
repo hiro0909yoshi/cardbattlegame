@@ -985,7 +985,19 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "対象領地に呪い\"金属化\"(無効化[通常攻撃]を得て、防具使用不可)"
+	  "effect": "対象領地に呪い\"金属化\"(無効化[通常攻撃]を得て、防具使用不可)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [{
+		  "effect_type": "metal_form",
+		  "name": "金属化",
+		  "duration": -1
+		}]
+	  }
 	},
 	{
 	  "id": 2115,

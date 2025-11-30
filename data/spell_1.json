@@ -306,7 +306,20 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "対象領地に呪い\"魔力結界\"(無効化[通常攻撃]、敵にG100を与える)"
+	  "effect": "対象領地に呪い\"魔力結界\"(無効化[通常攻撃]、敵にG100を与える)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [{
+		  "effect_type": "magic_barrier",
+		  "name": "魔力結界",
+		  "duration": -1,
+		  "gold_transfer": 100
+		}]
+	  }
 	},
 	{
 	  "id": 2016,
@@ -671,7 +684,19 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象領地に呪い\"戦闘後破壊\""
+	  "effect": "対象領地に呪い\"戦闘後破壊\"",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [{
+		  "effect_type": "destroy_after_battle",
+		  "name": "戦闘後破壊",
+		  "duration": -1
+		}]
+	  }
 	},
 	{
 	  "id": 2033,

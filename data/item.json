@@ -1570,7 +1570,19 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "AP+30；攻撃成功時、敵に♡\"通行料無効\""
+	  "effect": "AP+30；攻撃成功時、敵に♡\"通行料無効\"",
+	  "effect_parsed": {
+		"stat_bonus": {
+		  "ap": 30
+		},
+		"effects": [
+		  {
+			"effect_type": "on_attack_success_curse",
+			"curse_type": "creature_toll_disable",
+			"name": "通行料無効"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 1068,

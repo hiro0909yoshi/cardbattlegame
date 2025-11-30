@@ -164,6 +164,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				if reduction_rate == 0.0:
 					# 完全無効化
 					print("  【無効化】", defender_p.creature_data.get("name", "?"), " が攻撃を完全無効化")
+					
+					# magic_barrier呪いによるG100移動チェック
+					_apply_gold_transfer_on_nullify(attacker_p, defender_p)
+					
 					continue  # ダメージ処理と即死判定をスキップ
 				else:
 					# 軽減
@@ -449,6 +453,12 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	if defender_p.is_alive():
 		special_effects.check_on_survive_effects(defender_p)
 	
+	# 💀 戦闘後破壊呪いチェック（生き残った側に呪いがあれば破壊）
+	_check_destroy_after_battle(attacker_p, defender_p)
+	
+	# 🔮 戦闘後破壊付与スキル（オトヒメ等：両者生存時に敵へ呪い付与）
+	_check_apply_destroy_after_battle_skill(attacker_p, defender_p)
+	
 	return battle_result
 
 ## 💰 魔力奪取スキルを適用（ダメージベース）
@@ -468,3 +478,64 @@ func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: Battl
 ## 🔒 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
 func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)
+
+
+## 💰 攻撃無効化時のG移動（magic_barrier呪い用）
+func _apply_gold_transfer_on_nullify(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	# defender（無効化した側）のtemporary_effectsをチェック
+	for effect in defender.temporary_effects:
+		if effect.get("type") == "gold_transfer_on_nullify":
+			var gold_amount = effect.get("value", 100)
+			
+			# プレイヤーIDを取得
+			var attacker_player_id = attacker.player_id
+			var defender_player_id = defender.player_id
+			
+			# 防御側から攻撃側へG移動（steal_magicを使用）
+			var spell_magic = defender.spell_magic_ref
+			if spell_magic:
+				spell_magic.steal_magic(defender_player_id, attacker_player_id, gold_amount)
+				print("【マジックバリア】攻撃無効化！ G", gold_amount, " を攻撃側へ移動")
+			return
+
+
+## 💀 戦闘後破壊呪いチェック（生き残っていて呪いがあれば破壊フラグを立てる）
+func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	# 攻撃側チェック
+	if attacker.is_alive() and SpellCurseBattle.has_destroy_after_battle(attacker.creature_data):
+		print("【戦闘後破壊】", attacker.creature_data.get("name", "?"), " は呪いにより破壊される")
+		attacker.current_hp = 0
+		# 呪いを消費
+		attacker.creature_data.erase("curse")
+	
+	# 防御側チェック
+	if defender.is_alive() and SpellCurseBattle.has_destroy_after_battle(defender.creature_data):
+		print("【戦闘後破壊】", defender.creature_data.get("name", "?"), " は呪いにより破壊される")
+		defender.current_hp = 0
+		# 呪いを消費
+		defender.creature_data.erase("curse")
+
+
+## 🔮 戦闘後破壊付与スキル（オトヒメ等：自分が生存 AND 敵も生存の場合に敵へ呪い付与）
+func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+	# 両者生存時のみ
+	if not attacker.is_alive() or not defender.is_alive():
+		return
+	
+	# 攻撃側がスキルを持っているかチェック
+	var attacker_keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
+	if "戦闘後破壊" in attacker_keywords:
+		SpellCurseBattle.apply_destroy_after_battle(defender.creature_data)
+		print("【戦闘後破壊付与】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に呪いを付与")
+	if "通行料無効付与" in attacker_keywords:
+		SpellCurseBattle.apply_creature_toll_disable(defender.creature_data)
+		print("【通行料無効付与】", attacker.creature_data.get("name", "?"), " が ", defender.creature_data.get("name", "?"), " に呪いを付与")
+	
+	# 防御側がスキルを持っているかチェック
+	var defender_keywords = defender.creature_data.get("ability_parsed", {}).get("keywords", [])
+	if "戦闘後破壊" in defender_keywords:
+		SpellCurseBattle.apply_destroy_after_battle(attacker.creature_data)
+		print("【戦闘後破壊付与】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に呪いを付与")
+	if "通行料無効付与" in defender_keywords:
+		SpellCurseBattle.apply_creature_toll_disable(attacker.creature_data)
+		print("【通行料無効付与】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に呪いを付与")

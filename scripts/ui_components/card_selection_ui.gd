@@ -133,10 +133,20 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカードのみ選択可能
 				is_selectable = card_type == "item"
+				# ブロックされたアイテムタイプをチェック
+				if is_selectable and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+					var item_type = card_data.get("item_type", "")
+					if item_type in ui_manager_ref.blocked_item_types:
+						is_selectable = false
 			elif filter_mode == "item_or_assist":
 				# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャーが選択可能
 				if card_type == "item":
 					is_selectable = true
+					# ブロックされたアイテムタイプをチェック
+					if ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+						var item_type = card_data.get("item_type", "")
+						if item_type in ui_manager_ref.blocked_item_types:
+							is_selectable = false
 				elif card_type == "creature":
 					var assist_elements = []
 					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
@@ -192,7 +202,13 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカード以外をグレーアウト
-				if card_type != "item":
+				var should_gray = card_type != "item"
+				# ブロックされたアイテムタイプもグレーアウト
+				if not should_gray and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+					var item_type = card_data.get("item_type", "")
+					if item_type in ui_manager_ref.blocked_item_types:
+						should_gray = true
+				if should_gray:
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -202,6 +218,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				
 				if card_type == "item":
 					should_gray_out = false
+					# ブロックされたアイテムタイプをチェック
+					if ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+						var item_type = card_data.get("item_type", "")
+						if item_type in ui_manager_ref.blocked_item_types:
+							should_gray_out = true
 				elif card_type == "creature":
 					var assist_elements = []
 					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:

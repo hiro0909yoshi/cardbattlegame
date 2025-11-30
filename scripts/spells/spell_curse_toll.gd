@@ -68,6 +68,12 @@ func apply_peace(tile_index: int):
 		"toll_zero": true
 	})
 
+## creature_toll_disable: クリーチャー単体の通行料無効（スキュラ等）
+func apply_creature_toll_disable(tile_index: int, duration: int = -1):
+	spell_curse.curse_creature(tile_index, "creature_toll_disable", duration, {
+		"name": "通行料無効"
+	})
+
 # ========================================
 # 汎用呪い適用（秘術用）
 # ========================================
@@ -121,6 +127,15 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 	# peace: 通行料0（最優先）
 	if land_curse_type == "peace":
 		print("[通行料呪い] peace により通行料 = 0")
+		return {
+			"main_toll": 0,
+			"bonus_toll": 0,
+			"bonus_receiver_id": -1
+		}
+	
+	# creature_toll_disable: クリーチャー単体の通行料無効（スキュラ等）
+	if land_curse_type == "creature_toll_disable":
+		print("[通行料呪い] creature_toll_disable により通行料 = 0")
 		return {
 			"main_toll": 0,
 			"bonus_toll": 0,

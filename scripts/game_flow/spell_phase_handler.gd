@@ -577,12 +577,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse:
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
-		"land_effect_disable", "land_effect_grant":
-			# 地形効果関連呪い - SpellCurseBattleを直接使用
+		"land_effect_disable", "land_effect_grant", "metal_form", "magic_barrier", "destroy_after_battle":
+			# 戦闘制限呪い - SpellCurseBattleを直接使用
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
-				_apply_land_effect_curse(effect, tile_index)
+				_apply_battle_curse(effect, tile_index)
 		
 		"bounty_curse":
 			# 賞金首呪い（バウンティハント）- SpellCurseに委譲
@@ -872,8 +872,8 @@ func _wait_for_tile_selection() -> int:
 signal tile_selection_completed(tile_index: int)
 
 
-## 地形効果関連の呪いを適用
-func _apply_land_effect_curse(effect: Dictionary, tile_index: int):
+## 戦闘制限呪いを適用（地形効果無効/付与、メタルフォーム、マジックバリア）
+func _apply_battle_curse(effect: Dictionary, tile_index: int):
 	if tile_index < 0 or not board_system:
 		return
 	
@@ -902,6 +902,18 @@ func _apply_land_effect_curse(effect: Dictionary, tile_index: int):
 			var grant_elements = effect.get("grant_elements", [])
 			SpellCurseBattle.apply_land_effect_grant(creature_ref, grant_elements, curse_name)
 			print("【地形効果付与】%s に呪いを付与" % creature_ref.get("name", "?"))
+		
+		"metal_form":
+			SpellCurseBattle.apply_metal_form(creature_ref, curse_name)
+			print("【メタルフォーム】%s に呪いを付与" % creature_ref.get("name", "?"))
+		
+		"magic_barrier":
+			SpellCurseBattle.apply_magic_barrier(creature_ref, curse_name)
+			print("【マジックバリア】%s に呪いを付与" % creature_ref.get("name", "?"))
+		
+		"destroy_after_battle":
+			SpellCurseBattle.apply_destroy_after_battle(creature_ref, curse_name)
+			print("【戦闘後破壊】%s に呪いを付与" % creature_ref.get("name", "?"))
 
 
 ## スペルフェーズ完了
