@@ -559,7 +559,15 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]"
+	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]",
+	  "ability_parsed": {
+		"keywords": ["防御型"],
+		"effects": []
+	  },
+	  "mystic_arts": {
+		"cost": 40,
+		"spell_id": 9018
+	  }
 	},
 	{
 	  "id": 221,
@@ -634,7 +642,16 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "地形効果・秘術",
-	  "ability_detail": "火から地形効果を得る；秘術[G50・オールドウィロウに変身]"
+	  "ability_detail": "火から地形効果を得る；秘術[G50・オールドウィロウに変身]",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [],
+		"extra_land_elements": ["fire"]
+	  },
+	  "mystic_arts": {
+		"cost": 50,
+		"spell_id": 9020
+	  }
 	}
   ]
 }

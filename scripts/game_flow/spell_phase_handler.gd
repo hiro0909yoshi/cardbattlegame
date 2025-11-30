@@ -577,6 +577,13 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if game_flow_manager and game_flow_manager.spell_curse:
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
+		"land_effect_disable", "land_effect_grant":
+			# 地形効果関連呪い - SpellCurseBattleを直接使用
+			var target_type = target_data.get("type", "")
+			if target_type == "land" or target_type == "creature":
+				var tile_index = target_data.get("tile_index", -1)
+				_apply_land_effect_curse(effect, tile_index)
+		
 		"bounty_curse":
 			# 賞金首呪い（バウンティハント）- SpellCurseに委譲
 			if target_data.get("type") == "land":
@@ -863,6 +870,38 @@ func _wait_for_tile_selection() -> int:
 
 ## タイル選択完了シグナル
 signal tile_selection_completed(tile_index: int)
+
+
+## 地形効果関連の呪いを適用
+func _apply_land_effect_curse(effect: Dictionary, tile_index: int):
+	if tile_index < 0 or not board_system:
+		return
+	
+	# タイルノードから直接creature_dataを取得（参照）
+	if not board_system.tile_nodes.has(tile_index):
+		print("[地形効果呪い] タイル %d が見つかりません" % tile_index)
+		return
+	
+	var tile_node = board_system.tile_nodes[tile_index]
+	if tile_node == null or tile_node.creature_data.is_empty():
+		print("[地形効果呪い] タイル %d にクリーチャーがいません" % tile_index)
+		return
+	
+	# creature_dataは参照なので直接更新可能
+	var creature_ref = tile_node.creature_data
+	
+	var effect_type = effect.get("effect_type", "")
+	var curse_name = effect.get("name", "")
+	
+	match effect_type:
+		"land_effect_disable":
+			SpellCurseBattle.apply_land_effect_disable(creature_ref, curse_name)
+			print("【地形効果無効】%s に呪いを付与" % creature_ref.get("name", "?"))
+		
+		"land_effect_grant":
+			var grant_elements = effect.get("grant_elements", [])
+			SpellCurseBattle.apply_land_effect_grant(creature_ref, grant_elements, curse_name)
+			print("【地形効果付与】%s に呪いを付与" % creature_ref.get("name", "?"))
 
 
 ## スペルフェーズ完了

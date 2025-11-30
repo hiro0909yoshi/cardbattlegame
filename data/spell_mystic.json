@@ -322,6 +322,63 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9018,
+	  "name": "地形効果無効（スクリーマー秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "land_effect_disable",
+			"name": "地形効果無効",
+			"duration": -1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9019,
+	  "name": "地形効果付与（ハイドビハインド秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "land_effect_grant",
+			"name": "地形効果",
+			"duration": -1,
+			"grant_elements": []
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9020,
+	  "name": "オールドウィロウに変身（スプラウトリング秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"transform_type": "specific",
+			"creature_id": 231
+		  }
+		]
+	  }
 	}
   ]
 }

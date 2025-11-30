@@ -104,7 +104,12 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "全属性地形効果・防魔",
-	  "ability_detail": "どの属性の土地からも地形効果を得る；防魔"
+	  "ability_detail": "どの属性の土地からも地形効果を得る；防魔",
+	  "ability_parsed": {
+		"keywords": ["防魔"],
+		"effects": [],
+		"extra_land_elements": ["fire", "water", "earth", "wind"]
+	  }
 	},
 	{
 	  "id": 431,
@@ -118,7 +123,11 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G40・対象自クリーチャーに呪い\"地形効果\"]"
+	  "ability_detail": "秘術[G40・対象自クリーチャーに呪い\"地形効果\"]",
+	  "mystic_arts": {
+		"cost": 40,
+		"spell_id": 9019
+	  }
 	},
 		{
 	  "id": 432,

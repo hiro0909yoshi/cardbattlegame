@@ -162,6 +162,10 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 			var effect_parsed = spell_data.get("effect_parsed", {})
 			target_type = effect_parsed.get("target_type", target_type)
 			target_info = effect_parsed.get("target_info", target_info)
+			# target_filterはeffect_parsed直下にある場合もある（land + creature等）
+			var parsed_target_filter = effect_parsed.get("target_filter", "")
+			if not parsed_target_filter.is_empty():
+				target_info["target_filter"] = parsed_target_filter
 			target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
 	
 	# ターゲット不要（none）またはセルフターゲット時はUI表示なしで実行
@@ -446,7 +450,16 @@ func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	var all_mystic_arts: Array = []
 	
-	# 1. 元々の秘術（ability_parsed）
+	# 1. 元々の秘術（creature_data直下のmystic_arts）
+	var root_mystic_arts = creature_data.get("mystic_arts", {})
+	if root_mystic_arts is Dictionary and not root_mystic_arts.is_empty():
+		# 辞書形式（単体の秘術）
+		all_mystic_arts.append(root_mystic_arts)
+	elif root_mystic_arts is Array:
+		# 配列形式（複数の秘術）
+		all_mystic_arts.append_array(root_mystic_arts)
+	
+	# 2. ability_parsed内の秘術（従来方式）
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	
 	# 複数形 mystic_arts（配列）

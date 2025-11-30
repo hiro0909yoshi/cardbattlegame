@@ -1154,19 +1154,19 @@
 		"mp": 20,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象領地に呪い\"能力値-20\"(戦闘中、AP&HP-20)；カードを1枚引く"
-	},
-	{
-	  "id": 2055,
-	  "name": "ディスエレメント",
-	  "rarity": "N",
-	  "type": "spell",
-	  "spell_type": "単体特殊能力付与",
-	  "cost": {
-		"mp": 20,
-		"cards_sacrifice": 1
-	  },
-	  "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]"
+	  "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [{
+		  "effect_type": "land_effect_disable",
+		  "name": "地形効果無効",
+		  "duration": -1
+		}]
+	  }
 	},
 	{
 	  "id": 2056,

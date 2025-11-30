@@ -263,18 +263,20 @@ func apply_effect_arrays(participant: BattleParticipant, creature_data: Dictiona
 ## 土地ボーナスを計算
 func calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> int:
 	var creature_element = creature_data.get("element", "")
+	# tile_info では "element" キーに属性文字列が格納されている
 	var tile_element = tile_info.get("element", "")
 	var tile_level = tile_info.get("level", 1)
 	
 	print("【土地ボーナス計算】クリーチャー:", creature_data.get("name", "?"), " 属性:", creature_element)
 	print("  タイル属性:", tile_element, " レベル:", tile_level)
 	
-	if creature_element == tile_element and creature_element in ["fire", "water", "wind", "earth"]:
+	# SpellCurseBattleの統合判定を使用（通常属性一致 + 追加属性 + 呪い効果）
+	if SpellCurseBattle.can_get_land_bonus(creature_data, tile_element):
 		var bonus = tile_level * 10
-		print("  → 属性一致！ボーナス:", bonus)
+		print("  → 地形効果発動！ボーナス:", bonus)
 		return bonus
 	
-	print("  → 属性不一致、ボーナスなし")
+	print("  → 地形効果なし")
 	return 0
 
 # バトル準備の完了を通知

@@ -108,3 +108,104 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 						applied = true
 	
 	return applied
+
+
+# =============================================================================
+# 地形効果関連の呪い
+# =============================================================================
+
+## land_effect_disable 呪いを持っているかチェック（地形効果無効）
+static func has_land_effect_disable(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type") == "land_effect_disable"
+
+
+## land_effect_grant 呪いを持っているかチェック（地形効果付与）
+static func has_land_effect_grant(creature_data: Dictionary) -> bool:
+	var curse = creature_data.get("curse", {})
+	return curse.get("curse_type") == "land_effect_grant"
+
+
+## land_effect_disable 呪いを付与（地形効果無効）
+static func apply_land_effect_disable(creature_data: Dictionary, name: String = "地形効果無効") -> void:
+	creature_data["curse"] = {
+		"curse_type": "land_effect_disable",
+		"name": name,
+		"duration": -1,
+		"params": {}
+	}
+	print("[SpellCurseBattle] 地形効果無効を付与: ", creature_data.get("name", "?"))
+
+
+## land_effect_grant 呪いを付与（地形効果付与）
+## params.grant_elements: 地形効果を得られる属性リスト（空の場合は全属性）
+static func apply_land_effect_grant(creature_data: Dictionary, grant_elements: Array = [], name: String = "地形効果") -> void:
+	creature_data["curse"] = {
+		"curse_type": "land_effect_grant",
+		"name": name,
+		"duration": -1,
+		"params": {
+			"grant_elements": grant_elements
+		}
+	}
+	var elements_str = "全属性" if grant_elements.is_empty() else str(grant_elements)
+	print("[SpellCurseBattle] 地形効果付与: ", creature_data.get("name", "?"), " → ", elements_str)
+
+
+# =============================================================================
+# 地形効果拡張スキル（固有スキル）
+# =============================================================================
+
+## クリーチャーが追加で地形効果を得られる属性リストを取得
+## 224 スプラウトリング: ["fire"]
+## 316 サーペントフライ: ["water"]
+## 430 ハーフリング: ["fire", "water", "earth", "wind"]
+static func get_extra_land_elements(creature_data: Dictionary) -> Array:
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var extra_elements = ability_parsed.get("extra_land_elements", [])
+	return extra_elements
+
+
+## 地形効果を得られるかチェック（通常の属性一致 + 追加属性 + 呪い効果）
+## creature_data: クリーチャーデータ
+## tile_element: タイルの属性
+## 戻り値: 地形効果を得られるかどうか
+static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) -> bool:
+	# 地形効果無効呪いがあれば常にfalse
+	if has_land_effect_disable(creature_data):
+		print("  → 地形効果無効呪いにより無効")
+		return false
+	
+	# 無属性タイルは全クリーチャーに地形効果を与える
+	if tile_element == "neutral":
+		print("  → 無属性タイル（全クリーチャーに地形効果）")
+		return true
+	
+	var creature_element = creature_data.get("element", "")
+	
+	# 通常の属性一致チェック
+	if creature_element == tile_element and creature_element in ["fire", "water", "earth", "wind"]:
+		return true
+	
+	# 追加属性からの地形効果（固有スキル）
+	var extra_elements = get_extra_land_elements(creature_data)
+	if tile_element in extra_elements:
+		print("  → 追加属性から地形効果: ", tile_element)
+		return true
+	
+	# 地形効果付与呪いチェック
+	if has_land_effect_grant(creature_data):
+		var curse = creature_data.get("curse", {})
+		var params = curse.get("params", {})
+		var grant_elements = params.get("grant_elements", [])
+		
+		# grant_elementsが空なら全属性から地形効果を得る
+		if grant_elements.is_empty():
+			if tile_element in ["fire", "water", "earth", "wind"]:
+				print("  → 地形効果付与呪い（全属性）")
+				return true
+		elif tile_element in grant_elements:
+			print("  → 地形効果付与呪い: ", tile_element)
+			return true
+	
+	return false
