@@ -158,7 +158,7 @@
 	  "ap": 10,
 	  "hp": 20,
 	  "ability": "巻物強打・マーク付与",
-	  "ability_detail": "巻物強打；これに♡付与時、同じ♡を使用者の全領地につけ、ダウンする",
+	  "ability_detail": "巻物強打；これに呪い付与時、同じ呪いを使用者の全領地につけ、ダウンする",
 	  "ability_parsed": {
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {
@@ -185,7 +185,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[G40・対象領地に♡\"能力値+20\"]",
+	  "ability_detail": "先制；秘術[G40・対象領地に呪い\"能力値+20\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"

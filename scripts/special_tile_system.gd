@@ -61,6 +61,11 @@ func handle_checkpoint_tile(player_id: int):
 	player_system.add_magic(player_id, bonus)
 	print("チェックポイント！魔力+", bonus, "G")
 	
+	# ダウン解除
+	if board_system and board_system.movement_controller:
+		board_system.movement_controller.clear_all_down_states_for_player(player_id)
+		print("チェックポイント！ダウン解除")
+	
 	# UI更新
 	if ui_manager and ui_manager.has_method("update_player_info_panels"):
 		ui_manager.update_player_info_panels()

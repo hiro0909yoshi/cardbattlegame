@@ -23,6 +23,7 @@ class PlayerData:
 	var movement_direction: String = ""
 	var last_choice_tile: int = -1
 	var curse: Dictionary = {}  # 呪い効果（SpellCurseで管理）
+	var buffs: Dictionary = {}  # バフ効果（方向選択権等）
 
 # プレイヤー管理
 var players = []

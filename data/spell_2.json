@@ -297,7 +297,15 @@
 	  "cost": {
 		"mp": 140
 	  },
-	  "effect": "最も近いゲートに飛ぶ"
+	  "effect": "最も近いゲートに飛ぶ",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "warp_to_nearest_gate"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2080,
@@ -840,7 +848,19 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "距離1～4マスの対象の土地に飛ぶ"
+	  "effect": "距離1～4マスの対象の土地に飛ぶ",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "distance_min": 1,
+		  "distance_max": 4
+		},
+		"effects": [
+		  {
+			"effect_type": "warp_to_target"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2105,
@@ -1176,7 +1196,15 @@
 	  "cost": {
 		"mp": 100
 	  },
-	  "effect": "対象ゲートを通過したことになる"
+	  "effect": "対象ゲートを通過したことになる",
+	  "effect_parsed": {
+		"target_type": "unvisited_gate",
+		"effects": [
+		  {
+			"effect_type": "gate_pass"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2124,

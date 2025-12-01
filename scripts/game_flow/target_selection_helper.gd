@@ -159,8 +159,8 @@ static func get_tile_index_from_target(target_data: Dictionary, board_system) ->
 	var target_type = target_data.get("type", "")
 	
 	match target_type:
-		"land", "creature":
-			# 土地またはクリーチャーの場合、tile_indexを直接使用
+		"land", "creature", "gate":
+			# 土地、クリーチャー、ゲートの場合、tile_indexを直接使用
 			return target_data.get("tile_index", -1)
 		
 		"player":
@@ -462,6 +462,9 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					var tile_owner = tile_info.get("owner", -1)
 					var creature = tile_info.get("creature", {})
 					
+					# 距離制限がある場合は全土地対象（マジカルリープ等のプレイヤー移動スペル）
+					var has_distance_filter = target_info.has("distance_min") or target_info.has("distance_max")
+					
 					# 空き地フィルター（target_filter: "empty"）- 所有者フィルターより優先
 					if target_filter == "empty":
 						# クリーチャーがいない土地のみ対象
@@ -472,6 +475,9 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if tile and tile.tile_type in ["warp", "card", "checkpoint", "start"]:
 							continue
 						# 空き地の場合は所有者フィルターをスキップ
+					elif has_distance_filter:
+						# 距離制限がある場合は所有者チェックをスキップ（全土地対象）
+						pass
 					else:
 						# 所有者フィルター（従来の処理）
 						var matches_owner = false
@@ -506,6 +512,29 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if tile_element not in required_elements:
 							continue
 					
+					# 距離制限チェック（プレイヤー移動スペル用: マジカルリープ等）
+					var distance_min = target_info.get("distance_min", -1)
+					var distance_max = target_info.get("distance_max", -1)
+					if distance_min > 0 or distance_max > 0:
+						# ワープタイルは飛べない（neutral, checkpoint等は可）
+						var tile = handler.board_system.tile_nodes.get(tile_index)
+						if tile and tile.tile_type == "warp":
+							continue
+						
+						# 使用者の現在位置から距離を計算（MovementController優先）
+						var player_tile = -1
+						if handler.board_system and handler.board_system.movement_controller:
+							player_tile = handler.board_system.movement_controller.get_player_tile(handler.current_player_id)
+						elif handler.player_system and handler.current_player_id >= 0:
+							player_tile = handler.player_system.players[handler.current_player_id].current_tile
+						
+						if player_tile >= 0 and handler.game_flow_manager and handler.game_flow_manager.spell_player_move:
+							var dist = handler.game_flow_manager.spell_player_move.calculate_tile_distance(player_tile, tile_index)
+							if distance_min > 0 and dist < distance_min:
+								continue
+							if distance_max > 0 and dist > distance_max:
+								continue
+					
 					# クリーチャー存在チェック（target_filter: "creature"）
 					if target_filter == "creature":
 						if creature.is_empty():
@@ -537,6 +566,17 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						"owner": tile_owner
 					}
 					targets.append(land_target)
+		
+		"unvisited_gate":
+			# 未通過ゲートを対象とする（リミッション用）
+			if handler.game_flow_manager and handler.game_flow_manager.spell_player_move:
+				var gate_tiles = handler.game_flow_manager.spell_player_move.get_selectable_gate_tiles(handler.current_player_id)
+				for gate_info in gate_tiles:
+					targets.append({
+						"type": "gate",
+						"tile_index": gate_info.get("tile_index", -1),
+						"gate_key": gate_info.get("gate_key", "")
+					})
 	
 	# most_common_element 後処理（クリーチャーターゲットのみ）
 	if target_info.get("most_common_element", false) and not targets.is_empty():
@@ -656,6 +696,12 @@ static func format_target_info(target_data: Dictionary, current_index: int, tota
 		"player":
 			var player_id = target_data.get("player_id", -1)
 			text += "プレイヤー%d" % (player_id + 1)
+		
+		"gate":
+			var tile_idx = target_data.get("tile_index", -1)
+			var gate_key = target_data.get("gate_key", "")
+			var gate_name = "北ゲート" if gate_key == "N" else "南ゲート"
+			text += "%s (タイル%d)" % [gate_name, tile_idx]
 	
 	text += "
 [Enter: 次へ] [C: 閉じる]"

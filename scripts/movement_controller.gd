@@ -32,6 +32,13 @@ var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
 var game_flow_manager = null  # GameFlowManager参照（呪い削除用）
 var spell_movement: SpellMovement = null  # 足どめ判定用
+var spell_player_move = null  # 方向選択権判定用
+
+# 方向選択状態
+var is_direction_selection_active: bool = false
+var selected_direction: int = 1
+var available_directions: Array = []
+signal direction_selected(direction: int)
 
 func _ready():
 	pass
@@ -84,8 +91,19 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if dice_value > 0:
 		apply_dice_condition_buffs(player_id, dice_value)
 	
-	# 移動経路を作成
-	var path = calculate_path(player_id, steps)
+	# 方向選択権チェック
+	var direction = 1
+	if spell_player_move:
+		var directions = spell_player_move.get_available_directions(player_id)
+		if directions.size() > 1:
+			# 方向選択が必要
+			direction = await _show_direction_selection(directions)
+			spell_player_move.consume_direction_choice(player_id)
+		elif directions.size() == 1:
+			direction = directions[0]
+	
+	# 移動経路を作成（方向を指定）
+	var path = calculate_path(player_id, steps, direction)
 	
 	# 経路に沿って移動
 	await move_along_path(player_id, path)
@@ -98,17 +116,75 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	
 	emit_signal("movement_completed", player_id, final_tile)
 
+# 方向選択UIを表示
+func _show_direction_selection(directions: Array) -> int:
+	is_direction_selection_active = true
+	available_directions = directions
+	selected_direction = directions[0]  # 初期選択
+	
+	print("[MovementController] 方向選択: ↑↓キーで選択、Enterで確定")
+	_update_direction_selection_ui()
+	
+	# 選択完了を待つ
+	var result = await direction_selected
+	is_direction_selection_active = false
+	
+	return result
+
+# 方向選択UIを更新
+func _update_direction_selection_ui():
+	if game_flow_manager and game_flow_manager.ui_manager:
+		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
+		game_flow_manager.ui_manager.phase_label.text = "移動方向を選択: [↑↓] %s [Enter確定]" % dir_text
+
+# 入力処理（方向選択用）
+func _input(event):
+	if not is_direction_selection_active:
+		return
+	
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_UP or event.keycode == KEY_DOWN:
+			# 方向を切り替え
+			if available_directions.size() > 1:
+				var current_idx = available_directions.find(selected_direction)
+				current_idx = (current_idx + 1) % available_directions.size()
+				selected_direction = available_directions[current_idx]
+				_update_direction_selection_ui()
+			get_viewport().set_input_as_handled()
+		
+		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			# 確定
+			print("[MovementController] 方向選択確定: %s" % ("順方向" if selected_direction == 1 else "逆方向"))
+			direction_selected.emit(selected_direction)
+			get_viewport().set_input_as_handled()
+
 # 移動経路を計算
-func calculate_path(player_id: int, steps: int) -> Array:
+func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
 	var path = []
 	var current_tile = player_tiles[player_id]
 	
+	# 歩行逆転呪いをチェックして方向に反映
+	var final_direction = direction
+	if _has_movement_reverse_curse(player_id):
+		final_direction = -direction  # 逆転
+		print("[MovementController] 歩行逆転中: プレイヤー%d" % (player_id + 1))
+	
 	for i in range(steps):
 		# 次のタイルを計算（20マスの円形ボード想定）
-		current_tile = (current_tile + 1) % 20
+		current_tile = (current_tile + final_direction + 20) % 20
 		path.append(current_tile)
 	
 	return path
+
+# 歩行逆転呪いを持っているかチェック
+func _has_movement_reverse_curse(player_id: int) -> bool:
+	if not player_system:
+		return false
+	if player_id < 0 or player_id >= player_system.players.size():
+		return false
+	
+	var curse = player_system.players[player_id].curse
+	return curse.get("curse_type", "") == "movement_reverse"
 
 # 経路に沿って移動
 func move_along_path(player_id: int, path: Array) -> void:
@@ -259,17 +335,8 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 
 # === 特殊処理 ===
 
-# スタート地点通過処理
+# スタート地点通過処理（特別な効果なし、周回完了ボーナスは_complete_lapで処理）
 func handle_start_pass(player_id: int):
-	if player_system:
-		player_system.add_magic(player_id, GameConstants.PASS_BONUS)
-	
-	# Phase 1-A: プレイヤーの全土地のダウン状態をクリア
-	clear_all_down_states_for_player(player_id)
-	
-	# 全クリーチャーのHP回復+10
-	heal_all_creatures_for_player(player_id, 10)
-	
 	emit_signal("start_passed", player_id)
 
 # チェックポイント通過処理

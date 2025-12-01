@@ -295,7 +295,15 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "最も近い空地に飛ぶ"
+	  "effect": "最も近い空地に飛ぶ",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "warp_to_nearest_vacant"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2015,
@@ -386,7 +394,16 @@
 	  "cost": {
 		"mp": 60
 	  },
-	  "effect": "全セプターに呪い\"歩行逆転\""
+	  "effect": "全セプターに呪い\"歩行逆転\"",
+	  "effect_parsed": {
+		"target_type": "all_players",
+		"effects": [
+		  {
+			"effect_type": "curse_movement_reverse",
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2020,

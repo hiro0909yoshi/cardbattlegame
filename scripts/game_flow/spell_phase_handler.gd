@@ -21,6 +21,7 @@ var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
+var skip_dice_phase: bool = false  # ワープ系スペル使用時はサイコロフェーズをスキップ
 
 ## カード選択ハンドラー（敵手札選択、デッキカード選択）
 var card_selection_handler: CardSelectionHandler = null
@@ -137,6 +138,7 @@ func start_spell_phase(player_id: int):
 	current_state = State.WAITING_FOR_INPUT
 	current_player_id = player_id
 	spell_used_this_turn = false
+	skip_dice_phase = false  # リセット
 	selected_spell_card = {}
 	
 	spell_phase_started.emit()
@@ -307,6 +309,10 @@ func use_spell(spell_card: Dictionary):
 	elif target_type == "all_creatures":
 		# 全クリーチャー対象（条件付き）
 		_execute_spell_on_all_creatures(spell_card, target_info)
+	elif target_type == "all_players":
+		# 全プレイヤー対象（カオスパニック等）- 対象選択なしで即発動
+		var target_data = {"type": "all_players"}
+		execute_spell_effect(spell_card, target_data)
 	elif not target_type.is_empty() and target_type != "none":
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
@@ -702,6 +708,51 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			var clear_land = effect.get("clear_land", true)
 			if game_flow_manager and game_flow_manager.spell_magic:
 				game_flow_manager.spell_magic.apply_self_destroy(tile_index, clear_land)
+		
+		"warp_to_nearest_vacant":
+			# 最寄り空地にワープ（エスケープ）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var result = game_flow_manager.spell_player_move.warp_to_nearest_vacant(current_player_id)
+				print("[SpellPhaseHandler] %s" % result.get("message", ""))
+				if result.get("success", false):
+					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
+		
+		"warp_to_nearest_gate":
+			# 最寄りゲートにワープ（フォームポータル）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var result = game_flow_manager.spell_player_move.warp_to_nearest_gate(current_player_id)
+				print("[SpellPhaseHandler] %s" % result.get("message", ""))
+				if result.get("success", false):
+					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
+		
+		"warp_to_target":
+			# 指定タイルにワープ（マジカルリープ）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var tile_idx = target_data.get("tile_index", -1)
+				var result = game_flow_manager.spell_player_move.warp_to_target(current_player_id, tile_idx)
+				print("[SpellPhaseHandler] %s" % result.get("message", ""))
+				if result.get("success", false):
+					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
+		
+		"curse_movement_reverse":
+			# 歩行逆転呪いを全セプターに付与（カオスパニック）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var duration = effect.get("duration", 1)
+				game_flow_manager.spell_player_move.apply_movement_reverse_curse(duration)
+		
+		"gate_pass":
+			# ゲート通過効果（リミッション）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var gate_key = target_data.get("gate_key", "")
+				var result = game_flow_manager.spell_player_move.trigger_gate_pass(current_player_id, gate_key)
+				print("[SpellPhaseHandler] %s" % result.get("message", ""))
+		
+		"grant_direction_choice":
+			# 方向選択権付与（クロックアウル秘術）
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var target_player_id = target_data.get("player_id", current_player_id)
+				var duration = effect.get("duration", 1)
+				game_flow_manager.spell_player_move.grant_direction_choice(target_player_id, duration)
 
 
 ## draw_and_place効果を適用（ワイルドセンス用）

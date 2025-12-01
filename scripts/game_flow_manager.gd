@@ -51,6 +51,7 @@ var spell_curse: SpellCurse
 var spell_curse_toll: SpellCurseToll
 var spell_dice: SpellDice
 var spell_curse_stat: SpellCurseStat
+var spell_player_move: SpellPlayerMove
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -173,6 +174,14 @@ func _setup_spell_systems(board_system):
 			spell_curse_stat.setup(spell_curse, creature_manager)
 			add_child(spell_curse_stat)
 			print("[SpellCurseStat] 初期化完了")
+			
+			# SpellPlayerMoveの初期化
+			spell_player_move = SpellPlayerMove.new()
+			spell_player_move.setup(board_system, player_system, self, spell_curse)
+			# MovementControllerにも設定（方向選択権判定用）
+			if board_system.movement_controller:
+				board_system.movement_controller.spell_player_move = spell_player_move
+			print("[SpellPlayerMove] 初期化完了")
 		else:
 			push_error("GameFlowManager: CreatureManagerが見つかりません")
 	else:
@@ -212,6 +221,15 @@ func start_turn():
 		spell_phase_handler.start_spell_phase(current_player.id)
 		# スペルフェーズ完了を待つ
 		await spell_phase_handler.spell_phase_completed
+	
+	# ワープ系スペル使用時はサイコロフェーズをスキップしてタイルアクションへ
+	if spell_phase_handler and spell_phase_handler.skip_dice_phase:
+		print("[GameFlowManager] ワープ使用によりサイコロフェーズをスキップ")
+		current_phase = GamePhase.TILE_ACTION
+		# 現在のプレイヤー位置でタイルアクションを開始
+		var current_tile = board_system_3d.movement_controller.get_player_tile(current_player.id)
+		board_system_3d.process_tile_landing(current_tile)
+		return
 	
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
@@ -799,13 +817,28 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 func _complete_lap(player_id: int):
 	# 周回数をインクリメント
 	player_lap_state[player_id]["lap_count"] += 1
-	print("[周回完了] プレイヤー", player_id + 1, " 周回数: ", player_lap_state[player_id]["lap_count"])
+	print("[周回完了] プレイヤー%d 周回数: %d" % [player_id + 1, player_lap_state[player_id]["lap_count"]])
 	
 	# フラグをリセット（game_startedは維持）
 	player_lap_state[player_id]["N"] = false
 	player_lap_state[player_id]["S"] = false
 	
-	# 全クリーチャーに周回ボーナスを適用
+	# 魔力ボーナスを付与
+	if player_system:
+		player_system.add_magic(player_id, GameConstants.PASS_BONUS)
+		print("[周回完了] プレイヤー%d 魔力+%d" % [player_id + 1, GameConstants.PASS_BONUS])
+	
+	# ダウン解除
+	if board_system_3d and board_system_3d.movement_controller:
+		board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
+		print("[周回完了] プレイヤー%d ダウン解除" % [player_id + 1])
+	
+	# HP回復+10
+	if board_system_3d and board_system_3d.movement_controller:
+		board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
+		print("[周回完了] プレイヤー%d HP回復+10" % [player_id + 1])
+	
+	# 全クリーチャーに周回ボーナスを適用（クリーチャー固有の周回効果）
 	if board_system_3d:
 		_apply_lap_bonus_to_all_creatures(player_id)
 	
