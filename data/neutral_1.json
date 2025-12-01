@@ -306,7 +306,18 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G40・次R、対象セプターは選んだ方向に進める]"
+	  "ability_detail": "秘術[G40・次R、対象セプターは選んだ方向に進める]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "方向選択権付与",
+			"description": "次R、対象セプターは選んだ方向に進める",
+			"spell_id": 9021,
+			"cost": 40
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 413,

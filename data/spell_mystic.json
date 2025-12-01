@@ -379,6 +379,25 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9021,
+	  "name": "方向選択権付与（クロックアウル秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "target_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_direction_choice",
+			"duration": 1,
+			"name": "方向選択"
+		  }
+		]
+	  }
 	}
   ]
 }
