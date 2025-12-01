@@ -153,7 +153,22 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "対象セプターに呪い\"防魔\"(5R間、スペルの対象に選べない)"
+	  "effect": "対象セプターに呪い\"防魔\"(5R間、スペルの対象に選べない)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "target_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "spell_protection",
+			"name": "防魔",
+			"description": "スペルの対象にならない",
+			"duration": 5
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2072,
@@ -871,7 +886,25 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "対象領地に呪い\"防魔壁\"(防魔と防御型を持つ)"
+	  "effect": "対象領地に呪い\"防魔壁\"(防魔と防御型を持つ)",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "protection_wall",
+			"name": "防魔壁",
+			"description": "防魔と防御型を持つ",
+			"spell_protection": true,
+			"defensive_form": true,
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2106,
