@@ -21,6 +21,8 @@ class PlayerData:
 	var color: Color = Color.WHITE
 	var piece_node: Node = null  # 3D駒ノード（MovementController3Dが管理）
 	var movement_direction: String = ""
+	var current_direction: int = 1  # 現在の移動方向（1=順方向, -1=逆方向）
+	var came_from: int = -1  # 前にいたタイル（分岐判定用）
 	var last_choice_tile: int = -1
 	var curse: Dictionary = {}  # 呪い効果（SpellCurseで管理）
 	var buffs: Dictionary = {}  # バフ効果（方向選択権等）

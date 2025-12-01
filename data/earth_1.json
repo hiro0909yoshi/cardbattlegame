@@ -306,7 +306,7 @@
 	  "ability": "援護・防魔",
 	  "ability_detail": "援護[火地]；防魔",
 	  "ability_parsed": {
-		"keywords": ["援護"],
+		"keywords": ["援護", "防魔"],
 		"keyword_conditions": {
 		  "援護": {
 			"target_elements": ["fire", "earth"]

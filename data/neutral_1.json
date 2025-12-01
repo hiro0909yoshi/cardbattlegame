@@ -179,7 +179,8 @@
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-		  "無効化"
+		  "無効化",
+		  "防魔"
 		],
 		"keyword_conditions": {
 		  "無効化": {
@@ -571,7 +572,10 @@
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "防御型・防魔・秘術",
-	  "ability_detail": "防御型；防魔；秘術[G100・対象領地を無に変え、自壊]"
+	  "ability_detail": "防御型；防魔；秘術[G100・対象領地を無に変え、自壊]",
+	  "ability_parsed": {
+		"keywords": ["防御型", "防魔", "秘術"]
+	  }
 	},
 	{
 	  "id": 424,

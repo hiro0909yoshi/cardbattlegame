@@ -366,7 +366,7 @@ func return_spell_to_deck(player_id: int, spell_card: Dictionary) -> bool:
 
 ## 検証：タイルインデックス
 func _validate_tile_index(tile_index: int) -> bool:
-	if tile_index < 0 or tile_index >= 20:
+	if not board_system_ref or not board_system_ref.tile_nodes.has(tile_index):
 		push_error("SpellLand: 無効なタイルインデックス %d" % tile_index)
 		return false
 	return true

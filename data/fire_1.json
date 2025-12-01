@@ -355,7 +355,16 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "無効化・防魔",
-			"ability_detail": "無効化[AP40以上]；防魔"
+			"ability_detail": "無効化[AP40以上]；防魔",
+			"ability_parsed": {
+				"keywords": ["無効化", "防魔"],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "ap_threshold",
+						"threshold": 40
+					}
+				}
+			}
 		},
 		{
 			"id": 12,
@@ -767,7 +776,19 @@
 			"ap": 10,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G80・対象自領地に○防魔]"
+			"ability_detail": "秘術[G80・対象自領地に○防魔]",
+			"ability_parsed": {
+				"keywords": ["秘術"],
+				"mystic_arts": [
+					{
+						"id": "domovoi_mystic_001",
+						"name": "防魔付与",
+						"description": "対象自領地のクリーチャーに防魔を付与",
+						"spell_id": 9022,
+						"cost": 80
+					}
+				]
+			}
 		},
 		{
 			"id": 25,

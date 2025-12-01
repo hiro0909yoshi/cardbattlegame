@@ -398,6 +398,49 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9022,
+	  "name": "防魔付与（ドモビー秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "spell_protection",
+			"name": "防魔",
+			"description": "スペル・秘術の対象にならない",
+			"duration": -1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9023,
+	  "name": "防魔付与（パトロナス秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "target_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "spell_protection",
+			"name": "防魔",
+			"description": "スペル・秘術の対象にならない",
+			"duration": -1
+		  }
+		]
+	  }
 	}
   ]
 }

@@ -194,6 +194,11 @@ func start_game():
 	# ゲーム統計の初期化
 	game_stats["total_creatures_destroyed"] = 0
 	
+	# 全プレイヤーに方向選択権を付与（ゲームスタート時）
+	for player in player_system.players:
+		player.buffs["direction_choice_pending"] = true
+		print("[GameFlowManager] プレイヤー%d: スタート時方向選択権付与" % (player.id + 1))
+	
 	current_phase = GamePhase.DICE_ROLL
 	ui_manager.set_dice_button_enabled(true)
 	update_ui()

@@ -1,7 +1,7 @@
 # マップシステム仕様
 
-**バージョン**: 1.0  
-**最終更新**: 2025年12月1日
+**バージョン**: 1.1  
+**最終更新**: 2025年12月2日
 
 ---
 
@@ -152,211 +152,255 @@ MHP 50, 現在HP 45 → 50に回復（上限）
 | 順方向（時計回り） | +1 | タイル番号が増加する方向（0→1→2...） |
 | 逆方向（反時計回り） | -1 | タイル番号が減少する方向（...2→1→0→19） |
 
-**通常ターン**: 一定方向のみ（方向選択なし）
-
 ---
 
-### 方向選択のタイプ
+### プレイヤーが持つ移動情報
 
-方向選択には2つのタイプがある：
-
-#### タイプA: 自由選択（direction_choice_pending フラグ）
-
-**発生タイミング**:
-- ゲームスタート時（全員）
-- ワープ後（停止型ワープ、または通過型ワープ先が分岐）
-- スペルワープ後の次ターン
-
-**特徴**:
-- 全方向から選択可能（2方向 or 4方向）
-- 移動開始前に決定
-- フラグで管理
-
-**実装**:
 ```gdscript
-player.direction_choice_pending = true   # 方向選択が必要
-player.direction_choice_type = "free"    # 自由選択タイプ
+class PlayerData:
+	var current_direction: int = 1   # 現在の移動方向（+1 or -1）
+	var came_from: int = -1          # 前にいたタイル（分岐判定用）
+	var buffs: Dictionary = {}       # buffs["direction_choice_pending"] = true で方向選択権
 ```
 
 ---
 
-#### タイプB: 分岐選択（移動中リアルタイム処理）
+### タイル構造
 
-**発生タイミング**:
-- 移動中に分岐点に差し掛かった時
+#### ループタイルと分岐タイル
 
-**特徴**:
-- 来た方向（戻る方向）は選択不可
-- 残りの方向から選択
-- 移動処理中にタイルの接続情報を見て判定
+| タイプ | タイル番号 | connections | 説明 |
+|--------|-----------|-------------|------|
+| ループタイル | 1〜19 | `[]`（空） | 通常の円形ループ |
+| 分岐点 | 0 | `[1, 19, 20]` | 3方向に分岐 |
+| 中継点 | 20 | `[0, 21]` | 2方向に接続 |
+| 行き止まり | 21 | `[20]` | 1方向のみ |
 
-**実装**:
+#### ループサイズの動的計算
+
 ```gdscript
-# 移動中に記録
-var previous_direction = 1  # どこから来たか（+1 or -1）
+# connectionsが空のタイル（ループタイル）の最大インデックス + 1
+func _get_loop_size() -> int:
+	var max_normal_tile = -1
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.connections.is_empty():
+			max_normal_tile = max(max_normal_tile, tile_index)
+	if max_normal_tile >= 0:
+		return max_normal_tile + 1  # 例: 最大19 → ループサイズ20
+	else:
+		return tile_nodes.size()
+```
 
-# 分岐点に到達した時
-func get_branch_choices(tile_index: int, came_from_direction: int) -> Array:
-    var tile = tile_nodes[tile_index]
-    var all_directions = tile.connections.branches  # 例: [1, -1, 2]
-    
-    # 来た方向の逆（戻る方向）を除外
-    var back_direction = -came_from_direction
-    var choices = all_directions.filter(func(d): return d != back_direction)
-    
-    return choices  # 例: [1, 2] （-1は除外）
+**計算例**:
+- タイル1〜19: connections空 → 最大19 → ループサイズ = 20
+- タイル0, 20, 21: connectionsあり → 除外
+
+---
+
+### 方向選択権（direction_choice_pending）
+
+#### 付与タイミング
+
+| タイミング | 処理場所 |
+|-----------|---------|
+| ゲームスタート時 | `GameFlowManager.start_game()` |
+| スペルワープ後 | `SpellPlayerMove._warp_player()` |
+
+#### 実装
+
+```gdscript
+# ゲームスタート時
+func start_game():
+	for player in player_system.players:
+		player.buffs["direction_choice_pending"] = true
+
+# スペルワープ後
+func _warp_player(player_id: int, target_tile: int):
+	# ...ワープ処理...
+	player_system.players[player_id].buffs["direction_choice_pending"] = true
+```
+
+---
+
+### 分岐選択のロジック
+
+#### 基本フロー
+
+```
+現在タイルにconnectionsがある？
+├─ NO → ループ内移動: (current + direction) % loop_size
+└─ YES → came_fromを除外して選択肢を作成
+		  ├─ 選択肢 0個 → 来た方向に戻る（行き止まり）
+		  ├─ 選択肢 1個 → 自動選択
+		  └─ 選択肢 2個以上 → UI表示
+```
+
+#### 実装（_get_next_tile_with_branch）
+
+```gdscript
+func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int) -> int:
+	var tile = tile_nodes.get(current_tile)
+	
+	# connectionsがなければループ内移動
+	if not tile or tile.connections.is_empty():
+		var direction = _get_player_current_direction(player_id)
+		var loop_size = _get_loop_size()
+		return (current_tile + direction + loop_size) % loop_size
+	
+	# connectionsからcame_fromを除外
+	var choices = []
+	for conn in tile.connections:
+		if conn != came_from:
+			choices.append(conn)
+	
+	# 選択肢なし → 来た方向に戻る
+	if choices.is_empty():
+		return came_from
+	
+	# 選択肢1つ → 自動選択
+	if choices.size() == 1:
+		return choices[0]
+	
+	# 選択肢2つ以上 → UI表示
+	return await _show_branch_tile_selection(choices)
+```
+
+---
+
+### 方向の推測
+
+選んだタイルから移動方向（+1/-1）を推測する：
+
+```gdscript
+func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int) -> int:
+	var loop_size = _get_loop_size()
+	
+	# 選んだタイルがループ外なら現在の方向を維持
+	if chosen_tile >= loop_size:
+		return _get_player_current_direction(player_id)
+	
+	# ループ内なら方向を判定
+	var next_plus = (current_tile + 1) % loop_size
+	var next_minus = (current_tile - 1 + loop_size) % loop_size
+	
+	if chosen_tile == next_plus:
+		return 1   # 順方向
+	elif chosen_tile == next_minus:
+		return -1  # 逆方向
+	else:
+		return _get_player_current_direction(player_id)
 ```
 
 **例**:
+- タイル0で「タイル1」選択 → +1（順方向）
+- タイル0で「タイル19」選択 → -1（逆方向）
+- タイル0で「タイル20」選択 → 現在の方向を維持
+
+---
+
+### 移動の実例
+
+#### 例1: ループ内移動
+
 ```
-プレイヤーが順方向（+1）で分岐点に到着
-分岐点の接続: [+1, -1, +2]（3方向）
-来た方向の逆 = -1（戻る方向）
-選択肢 = [+1, +2]（2方向のみ表示）
+現在: タイル5, direction=+1, came_from=4
+→ connectionsなし → ループ計算
+→ (5 + 1) % 20 = 6
+→ タイル6へ移動
+```
+
+#### 例2: 分岐点での選択
+
+```
+現在: タイル0, came_from=19
+→ connections=[1, 19, 20]
+→ 19を除外 → 選択肢=[1, 20]
+→ UI表示 → 「タイル1」選択
+→ direction=+1 を設定
+→ タイル1へ移動
+```
+
+#### 例3: 行き止まりからの戻り
+
+```
+現在: タイル21, came_from=20
+→ connections=[20]
+→ 20を除外 → 選択肢=[]（空）
+→ came_fromに戻る → タイル20へ
+```
+
+#### 例4: 分岐タイル20の通過
+
+```
+現在: タイル20, came_from=0
+→ connections=[0, 21]
+→ 0を除外 → 選択肢=[21]
+→ 自動選択 → タイル21へ
 ```
 
 ---
 
-### 方向に影響する呪い/バフ
+### UI操作
 
-#### 歩行逆転呪い（カオスパニック）
+| 選択タイプ | キー操作 | 説明 |
+|-----------|---------|------|
+| 分岐タイル選択 | ←→ + Enter | タイル番号から選択 |
+| 方向選択（+1/-1） | ↑↓ + Enter | 順方向/逆方向を選択 |
+
+**表示例**:
+```
+進む方向を選択: [→タイル1←] タイル19 タイル20 [←→] [Enter確定]
+```
+
+---
+
+### 歩行逆転呪い（カオスパニック）
 
 **付与方法**: カオスパニック（ID: 2019）
 
 **効果**:
-- 付与されたプレイヤーは移動方向が反転する
-- 順方向を選択 → 実際は逆方向に移動
-- 逆方向を選択 → 実際は順方向に移動
+- 付与されたプレイヤーは移動方向が反転
+- direction=+1 で移動開始 → 実際は-1方向に移動
 
-**持続**: 1ターン（ターン終了時に解除）
+**持続**: 1ターン
 
 **実装**:
 ```gdscript
-player.curse = {
-    "curse_type": "movement_reverse",
-    "duration": 1,
-    "name": "歩行逆転"
-}
+# calculate_path内で方向を反転
+if _has_movement_reverse_curse(player_id):
+	final_direction = -direction
 ```
 
 ---
 
-### タイル接続システム
-
-#### 基本方針
-
-- **通常タイル**: `connections`設定不要 → 従来通り `+1/-1` で計算
-- **分岐点/行き止まり**: `connections`設定必要 → 接続情報から判定
-
-これにより、既存の全タイルに設定を追加する必要はなく、特殊なタイルのみ設定すればよい。
-
----
-
-#### タイル種別と処理
-
-| タイルの種類 | connections | 処理 |
-|-------------|-------------|------|
-| 通常タイル（1〜19等） | 設定なし | `(tile + direction) % total` で計算 |
-| 分岐点（複数接続） | `[0, 1, 20]`等 | 選択肢を表示（来た方向除外） |
-| 行き止まり（1接続） | `[0]`等 | 自動的に来た方向に戻る |
-
----
-
-#### connections設定例
-
-```gdscript
-# タイル0: 3方向に分岐（1, 19, 20に接続）
-tile_0.connections = [1, 19, 20]
-
-# タイル20: 行き止まり（0のみに接続）
-tile_20.connections = [0]
-
-# タイル1〜19: 通常タイル（設定不要）
-# connections が空または未設定 → 従来計算
-```
-
----
-
-#### 次タイル取得ロジック
-
-```gdscript
-func get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
-    var tile = tile_nodes[current_tile]
-    
-    # connectionsが設定されていれば接続情報ベース
-    if tile.has("connections") and not tile.connections.is_empty():
-        return _get_next_from_connections(tile.connections, came_from)
-    
-    # 設定されていなければ従来の計算
-    var total = tile_nodes.size()
-    return (current_tile + direction + total) % total
-
-func _get_next_from_connections(connections: Array, came_from: int) -> int:
-    # 来た方向を除外
-    var choices = connections.filter(func(n): return n != came_from)
-    
-    # 選択肢がなければ来た方向に戻る（行き止まり）
-    if choices.is_empty():
-        return came_from
-    
-    # 選択肢が1つなら自動選択
-    if choices.size() == 1:
-        return choices[0]
-    
-    # 複数なら選択UI表示（タイプB分岐選択）
-    return await show_branch_selection(choices)
-```
-
----
-
-#### 行き止まりの自動戻り
-
-行き止まりタイル（接続先が1つのみ）では、「来た方向に戻れない」ルールは適用されない。
-
-**例: タイル20（行き止まり）**:
-```
-1. タイル0で「タイル20方向」を選択
-2. タイル20に到着
-3. 次に進む → 接続先がタイル0しかない
-4. 選択UIなし、自動的にタイル0に戻る
-```
-
-**ルールまとめ**:
-- 選択肢が2つ以上 → 来た方向を除外して選択UI表示
-- 選択肢が1つ → 自動選択（UIなし）
-- 選択肢が0（行き止まり） → 来た方向に戻る
-
----
-
-### 移動フェーズの流れ（詳細）
+### 移動フェーズの流れ
 
 ```
 1. ターン開始
    ↓
-2. 方向選択チェック（タイプA: 自由選択）
-   ├─ direction_choice_pending == true？
-   │   └─ YES → 方向選択UI表示 → プレイヤー選択
-   └─ NO → 一定方向（順方向）
+2. スペルフェーズ（省略）
    ↓
 3. ダイスロール
    ↓
-4. 歩行逆転チェック
-   └─ 呪いあり？ → 方向を反転
+4. 方向選択権チェック
+   ├─ direction_choice_pending == true
+   │   ├─ 分岐点にいる → タイル選択UI
+   │   └─ 通常タイル → +1/-1選択UI
+   └─ false → 前回のdirectionを使用
    ↓
-5. 1マスずつ移動（move_along_path）
-   各マスで:
+5. 1歩ずつ移動（_move_steps_with_branch）
+   各ステップで:
    │
-   ├─ 次タイル判定
-   │   ├─ connections設定あり？
-   │   │   └─ YES → 接続情報から選択肢取得
-   │   │            ├─ 選択肢2つ以上 → 分岐選択UI（タイプB）
-   │   │            ├─ 選択肢1つ → 自動選択
-   │   │            └─ 選択肢0 → 来た方向に戻る（行き止まり）
-   │   └─ NO → 従来計算（tile + direction）
+   ├─ 次タイル判定（_get_next_tile_with_branch）
+   │   ├─ connectionsあり → 選択肢作成 → UI or 自動選択
+   │   └─ connectionsなし → ループ計算
    │
-   ├─ ワープタイル？ → ワープ処理 → フラグ設定
-   ├─ チェックポイント？ → 周回チェック
-   └─ スタート通過？ → ボーナス処理
+   ├─ 移動実行（move_to_tile）
+   ├─ came_from更新
+   ├─ ワープチェック
+   ├─ チェックポイントチェック
+   └─ 足どめチェック
    ↓
 6. 最終位置に到着
    ↓
@@ -368,44 +412,37 @@ func _get_next_from_connections(connections: Array, came_from: int) -> int:
 ## 📊 実装状況
 
 ### ✅ 実装済み
-- [x] 20マスのダイヤモンド型マップ
+
+#### 基本システム
+- [x] 20マスのダイヤモンド型マップ（ループタイル0-19）
 - [x] CheckpointTile（N/S）と周回検出
 - [x] 周回完了時の永続バフ（キメラ、モスタイタン）
 - [x] スタート通過ボーナス（魔力、ダウンクリア、HP回復）
-- [x] WarpTile（5↔15）
-- [x] 通過型ワープシステム
+- [x] WarpTile（5↔15）通過型ワープ
 - [x] 属性タイル（火/水/土/風/無）
 - [x] 土地ボーナスシステム
-- [x] 歩行逆転呪い（カオスパニック）- 呪い付与
 
-### 🔄 実装中（タイル接続システム）
+#### 分岐・方向選択システム
+- [x] タイル接続システム（connections: Array[int]）
+- [x] ループサイズの動的計算（_get_loop_size）
+- [x] 分岐タイル（タイル0: [1, 19, 20]）
+- [x] 中継タイル（タイル20: [0, 21]）
+- [x] 行き止まりタイル（タイル21: [20]）
+- [x] came_from追跡による戻り方向除外
+- [x] 方向選択権（direction_choice_pending）
+  - [x] ゲームスタート時の付与
+  - [x] スペルワープ後の付与
+- [x] 分岐タイル選択UI（←→キー）
+- [x] 方向選択UI（↑↓キー）
+- [x] 方向の推測（_infer_direction_from_choice）
+- [x] current_directionの記憶と継続
+- [x] 歩行逆転呪い（カオスパニック）
 
-#### ハードコード「20」の修正（6箇所）
-| ファイル | 行 | 内容 | 状態 |
-|----------|-----|------|------|
-| `game_constants.gd` | 12 | `TOTAL_TILES = 20` | [ ] |
-| `movement_controller.gd` | 174 | `% 20` 移動計算 | [ ] |
-| `movement_controller.gd` | 227 | `% 20` ワープ後計算 | [ ] |
-| `spell_curse.gd` | 375 | `range(20)` ループ | [ ] |
-| `debug_controller.gd` | 426 | `>= 20` チェック | [ ] |
-| `spell_land_new.gd` | 369 | `>= 20` チェック | [ ] |
-
-#### タイル接続システム
-- [ ] BaseTileに`connections`プロパティ追加
-- [ ] `get_next_tile()`を接続情報ベースに修正
-- [ ] 行き止まり自動戻り処理
-- [ ] タイル20（テスト分岐）をマップに追加
-
-#### 移動方向システム
-- [ ] タイプA: 自由選択（direction_choice_pending フラグ）
-  - [ ] ゲームスタート時の方向選択
-  - [ ] ワープ後の方向選択フラグ設定
-  - [ ] スペルワープ後の次ターンフラグ設定
-- [ ] タイプB: 分岐選択（移動中処理）
-  - [ ] 分岐点到達時の選択UI
-  - [ ] 来た方向除外ロジック
-- [ ] 方向選択UI
-- [ ] 逆方向移動の基本動作
+#### 修正済みハードコード
+- [x] movement_controller.gd: ループサイズを動的計算
+- [x] spell_curse.gd: tile_nodes.keys()でループ
+- [x] debug_controller.gd: tile_nodes.has()でチェック
+- [x] spell_land_new.gd: tile_nodes.has()でチェック
 
 ### 🚧 未実装
 - [ ] 追加のワープゲート
@@ -413,6 +450,7 @@ func _get_next_from_connections(connections: Array, came_from: int) -> int:
 - [ ] 停止型特殊マス（宿屋、店など）
 - [ ] マップ選択システム
 - [ ] ランダムマップ生成
+- [ ] 複数マップ対応
 
 ---
 
@@ -472,5 +510,5 @@ CheckpointTile
 
 ---
 
-**最終更新**: 2025年12月1日  
+**最終更新**: 2025年12月2日  
 **作成者**: Development Team

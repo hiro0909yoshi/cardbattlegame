@@ -11,13 +11,10 @@ static var creature_manager: CreatureManager = null
 @export var tile_index: int = 0  # ボード上の位置番号
 @export var warp_destination: int = -1  # ワープ先タイル番号（-1=ワープなし）
 
-# 接続情報（追加）
-var connections: Dictionary = {
-	"next": -1,      # 通常の次タイル
-	"left": -1,      # 左分岐
-	"right": -1,     # 右分岐
-	"warp": -1       # ワープ先
-}
+# 接続情報（分岐/行き止まりタイルのみ設定）
+# 形式: Array[int] - 接続先タイル番号のリスト
+# 空の場合は従来計算（tile + direction）を使用
+@export var connections: Array[int] = []
 
 # 内部変数
 # creature_data プロパティ（CreatureManager経由 - 完全依存）

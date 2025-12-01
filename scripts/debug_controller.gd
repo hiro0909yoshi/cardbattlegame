@@ -423,10 +423,6 @@ func set_current_tile_level_4():
 		return
 	
 	var tile_index = current_player.current_tile
-	if tile_index < 0 or tile_index >= 20:
-		print("【デバッグ】無効なタイルインデックス:", tile_index)
-		return
-	
 	if not board_system.tile_nodes.has(tile_index):
 		print("【デバッグ】タイルが見つかりません:", tile_index)
 		return

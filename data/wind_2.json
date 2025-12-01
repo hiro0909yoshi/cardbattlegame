@@ -298,7 +298,19 @@
 	  "ap": 30,
 	  "hp": 20,
 	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[G50・対象セプターに呪い\"防魔\"]"
+	  "ability_detail": "防魔；秘術[G50・対象セプターに呪い\"防魔\"]",
+	  "ability_parsed": {
+		"keywords": ["防魔", "秘術"],
+		"mystic_arts": [
+		  {
+			"id": "patronus_mystic_001",
+			"name": "防魔付与",
+			"description": "対象セプターに防魔を付与",
+			"spell_id": 9023,
+			"cost": 50
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 337,

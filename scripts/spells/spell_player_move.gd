@@ -210,19 +210,17 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 	}
 
 ## 方向選択権を付与（クロックアウル秘術 9021）
-func grant_direction_choice(player_id: int, duration: int = 1) -> void:
+func grant_direction_choice(player_id: int, _duration: int = 1) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	
 	var player = player_system.players[player_id]
 	
-	player.buffs["direction_choice"] = {
-		"name": "方向選択",
-		"duration": duration,
-		"source": "クロックアウル"
-	}
+	# MovementControllerがチェックするフラグを設定
+	player.buffs["direction_choice_pending"] = true
 	
-	print("[SpellPlayerMove] 方向選択権付与: プレイヤー%d (duration=%d)" % [player_id, duration])
+	var player_name = "プレイヤー%d" % (player_id + 1)
+	print("[SpellPlayerMove] 方向選択権付与: %s" % player_name)
 
 ## 選択可能なゲートを取得（リミッション用）
 ## 未通過かつ1周完了を引き起こさないゲートのみ返す
@@ -385,6 +383,12 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 	# 3Dモデルを移動（MovementController3D経由）
 	if board_system and board_system.movement_controller:
 		board_system.movement_controller.place_player_at_tile(player_id, target_tile)
+		# MovementControllerの内部状態も更新
+		board_system.movement_controller.player_tiles[player_id] = target_tile
+	
+	# 次ターンの方向選択権を付与（スペルワープ後）
+	player_system.players[player_id].buffs["direction_choice_pending"] = true
+	print("[SpellPlayerMove] プレイヤー%d: 次ターン方向選択権付与" % (player_id + 1))
 	
 	print("[SpellPlayerMove] プレイヤー%d ワープ: %d → %d" % [player_id, from_tile, target_tile])
 

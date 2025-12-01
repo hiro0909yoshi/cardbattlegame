@@ -582,6 +582,10 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 	if target_info.get("most_common_element", false) and not targets.is_empty():
 		targets = _filter_by_most_common_element(targets)
 	
+	# 防魔フィルター（ignore_protection: true でスキップ可能）
+	if not target_info.get("ignore_protection", false):
+		targets = SpellProtection.filter_protected_targets(targets, handler)
+	
 	return targets
 
 

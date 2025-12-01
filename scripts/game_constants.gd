@@ -9,7 +9,7 @@ const TARGET_MAGIC = 8000         # 勝利条件の魔力
 const MAX_PLAYERS = 4             # 最大プレイヤー数
 
 # === ボード関連 ===
-const TOTAL_TILES = 20            # マスの総数
+const TOTAL_TILES = 20            # 非推奨：tile_nodes.size()を使用すること
 const MAX_LEVEL = 5               # 土地の最大レベル
 
 # 各レベルの累積価値（レベルアップコスト計算用）

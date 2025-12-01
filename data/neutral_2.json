@@ -195,10 +195,9 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "無効化・防魔",
-	  "ability_detail": "無効化[巻物]；防魔"
-	,
+	  "ability_detail": "無効化[巻物]；防魔",
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": ["無効化", "防魔"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "scroll_attack"

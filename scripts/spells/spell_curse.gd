@@ -165,6 +165,8 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 
+
+
 # ========================================
 # クリーチャー呪い
 # ========================================
@@ -372,7 +374,7 @@ func update_all_curses():
 
 # クリーチャー呪いのduration更新
 func _update_creature_curses():
-	for tile_index in range(20):  # 0-19の全タイル
+	for tile_index in board_system.tile_nodes.keys():  # 全タイル
 		var creature = creature_manager.get_data_ref(tile_index)
 		if creature and creature.has("curse"):
 			var curse = creature["curse"]
