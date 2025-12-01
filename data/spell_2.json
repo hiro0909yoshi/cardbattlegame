@@ -142,7 +142,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "全セプターに呪い\"侵略不可\"(2R間、侵略できない)"
+	  "effect": "全セプターに呪い\"侵略不可\"(2R間、侵略できない)",
+	  "effect_parsed": {
+		"target_type": "all_players",
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "invasion_disable",
+			"name": "侵略不可",
+			"duration": 2
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2071,

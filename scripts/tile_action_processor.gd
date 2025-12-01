@@ -113,6 +113,9 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		# peace呪いがあれば戦闘UI表示するがグレーアウト
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(current_tile_index):
 			show_battle_ui_disabled()
+		# プレイヤー侵略不可呪い（バンフィズム）
+		elif spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(player_index):
+			show_battle_ui_disabled()
 		else:
 			# 通常の戦闘UI
 			if tile_info.get("creature", {}).is_empty():

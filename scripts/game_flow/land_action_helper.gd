@@ -296,6 +296,14 @@ static func confirm_move(handler, dest_tile_index: int):
 			handler.close_land_command()
 			return
 		
+		# プレイヤー侵略不可呪いチェック（バンフィズム）
+		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(handler.current_player_id):
+			if handler.ui_manager and handler.ui_manager.phase_label:
+				handler.ui_manager.phase_label.text = "侵略不可呪い: 侵略できません"
+			source_tile.place_creature(creature_data)
+			handler.close_land_command()
+			return
+		
 		# バトル発生
 		
 		# 移動による呪い消滅（バトル前に消す）

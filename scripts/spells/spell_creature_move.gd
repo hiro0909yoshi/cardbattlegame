@@ -32,6 +32,30 @@ func _has_move_disable_curse(tile_index: int) -> bool:
 	return curse.get("curse_type", "") == "move_disable"
 
 
+## SpellCurseToll参照を取得
+func _get_spell_curse_toll():
+	if board_system_ref and board_system_ref.has_meta("spell_curse_toll"):
+		return board_system_ref.get_meta("spell_curse_toll")
+	return null
+
+
+## 敵領地への侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い）
+func _can_invade_tile(tile_index: int, player_id: int) -> bool:
+	var spell_curse_toll = _get_spell_curse_toll()
+	if not spell_curse_toll:
+		return true
+	
+	# peace呪いチェック（領地側の防御）
+	if spell_curse_toll.has_peace_curse(tile_index):
+		return false
+	
+	# プレイヤー侵略不可呪いチェック（バンフィズム）
+	if spell_curse_toll.is_player_invasion_disabled(player_id):
+		return false
+	
+	return true
+
+
 ## 効果を適用（effect_typeに応じて分岐）
 func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	var effect_type = effect.get("effect_type", "")
@@ -124,6 +148,9 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 		
 		# 敵領地のみ（自領地や空地は除外）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
+			# 侵略可能かチェック（peace呪い + バンフィズム）
+			if not _can_invade_tile(tile_index, current_player_id):
+				continue
 			destinations.append(tile_index)
 	
 	return destinations
@@ -135,6 +162,8 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 	
 	if not board_system_ref or not board_system_ref.tile_neighbor_system:
 		return destinations
+	
+	var current_player_id = board_system_ref.current_player_index
 	
 	# BFSで指定マス数以内のタイルを探索
 	# チェックポイント・ワープは通過可能だが止まれない
@@ -168,6 +197,10 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 		var tile = board_system_ref.tile_nodes.get(tile_index)
 		if tile and tile.tile_type in ["checkpoint", "warp"]:
 			continue  # 止まれないマスは除外
+		# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
+		if tile.owner_id != -1 and tile.owner_id != current_player_id:
+			if not _can_invade_tile(tile_index, current_player_id):
+				continue
 		destinations.append(tile_index)
 	
 	return destinations
@@ -179,6 +212,8 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 	
 	if not board_system_ref or not board_system_ref.tile_neighbor_system:
 		return destinations
+	
+	var current_player_id = board_system_ref.current_player_index
 	
 	# BFSで探索し、距離を記録
 	var visited: Dictionary = {from_tile_index: 0}
@@ -211,6 +246,10 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 			var tile = board_system_ref.tile_nodes.get(tile_index)
 			if tile and tile.tile_type in ["checkpoint", "warp"]:
 				continue  # 止まれないマスは除外
+			# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
+			if tile.owner_id != -1 and tile.owner_id != current_player_id:
+				if not _can_invade_tile(tile_index, current_player_id):
+					continue
 			destinations.append(tile_index)
 	
 	return destinations

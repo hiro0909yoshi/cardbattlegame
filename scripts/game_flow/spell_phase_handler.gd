@@ -584,13 +584,21 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
 		"player_curse":
-			# プレイヤー呪い（パトロナスの防魔等）- SpellCurseに委譲
-			var target_player_id = target_data.get("player_id", -1)
-			if target_player_id >= 0 and game_flow_manager and game_flow_manager.spell_curse:
-				var curse_type_inner = effect.get("curse_type", "unknown")
-				var duration = effect.get("duration", -1)
-				var params = {"name": effect.get("name", effect.get("description", "呪い"))}
-				game_flow_manager.spell_curse.curse_player(target_player_id, curse_type_inner, duration, params)
+			# プレイヤー呪い（バリアー、バンフィズム等）- SpellCurseに委譲
+			var curse_type_inner = effect.get("curse_type", "unknown")
+			var duration = effect.get("duration", -1)
+			var params = {"name": effect.get("name", effect.get("description", "呪い"))}
+			
+			if target_data.get("type") == "all_players":
+				# 全プレイヤーに呪い付与（バンフィズム等）
+				if game_flow_manager and game_flow_manager.spell_curse and player_system:
+					for player in player_system.players:
+						game_flow_manager.spell_curse.curse_player(player.id, curse_type_inner, duration, params)
+			else:
+				# 単体プレイヤーに呪い付与
+				var target_player_id = target_data.get("player_id", -1)
+				if target_player_id >= 0 and game_flow_manager and game_flow_manager.spell_curse:
+					game_flow_manager.spell_curse.curse_player(target_player_id, curse_type_inner, duration, params)
 		
 		"land_effect_disable", "land_effect_grant", "metal_form", "magic_barrier", "destroy_after_battle":
 			# 戦闘制限呪い - SpellCurseBattleを直接使用

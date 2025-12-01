@@ -353,6 +353,11 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 			if spell_curse_toll.has_peace_curse(tile_index):
 				continue  # peace呪いがある敵領地は移動不可
 		
+		# プレイヤー侵略不可呪いチェック（バンフィズム：全敵領地への移動除外）
+		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id:
+			if spell_curse_toll.is_player_invasion_disabled(current_player_id):
+				continue  # 侵略不可呪いで敵領地は移動不可
+		
 		valid_tiles.append(tile_index)
 	
 	return valid_tiles

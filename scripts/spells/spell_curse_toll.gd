@@ -42,6 +42,12 @@ func apply_toll_fixed(player_id: int, value: int = 200, duration: int = 3):
 		"value": value
 	})
 
+## invasion_disable: 侵略できない（バンフィズム用）
+func apply_invasion_disable(player_id: int, duration: int = 2):
+	spell_curse.curse_player(player_id, "invasion_disable", duration, {
+		"name": "侵略不可"
+	})
+
 # ========================================
 # 領地呪い付与
 # ========================================
@@ -235,6 +241,11 @@ func is_invasion_disabled(tile_index: int) -> bool:
 	if curse.get("curse_type") == "peace":
 		return curse.get("params", {}).get("invasion_disable", false)
 	return false
+
+## プレイヤーが侵略不可呪いを持っているか（バンフィズム用）
+func is_player_invasion_disabled(player_id: int) -> bool:
+	var curse = spell_curse.get_player_curse(player_id)
+	return curse.get("curse_type") == "invasion_disable"
 
 ## peace 呪いが領地のクリーチャーにあるか確認（通行料判定用）
 func has_peace_curse_on_land(tile_index: int) -> bool:
