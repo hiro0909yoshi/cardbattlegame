@@ -10,7 +10,8 @@ signal selection_completed()
 enum State {
 	INACTIVE,
 	SELECTING_ENEMY_CARD,  # 敵手札からカード選択中
-	SELECTING_DECK_CARD    # デッキ上部からカード選択中
+	SELECTING_DECK_CARD,   # デッキ上部からカード選択中
+	SELECTING_TRANSFORM_CARD  # カード変換用選択中（メタモルフォシス）
 }
 
 var current_state: State = State.INACTIVE
@@ -20,6 +21,10 @@ var enemy_card_selection_target_id: int = -1
 var enemy_card_selection_filter_mode: String = ""
 var enemy_card_selection_callback: Callable
 var enemy_card_selection_is_steal: bool = false
+
+## カード変換用変数（メタモルフォシス）
+var transform_target_player_id: int = -1
+var transform_to_card_id: int = -1
 
 ## デッキカード選択用変数
 var deck_card_selection_target_id: int = -1
@@ -58,6 +63,10 @@ func is_selecting_enemy_card() -> bool:
 ## デッキカード選択中かどうか
 func is_selecting_deck_card() -> bool:
 	return current_state == State.SELECTING_DECK_CARD
+
+## カード変換選択中かどうか
+func is_selecting_transform_card() -> bool:
+	return current_state == State.SELECTING_TRANSFORM_CARD
 
 # ============ 敵手札選択システム ============
 
@@ -405,6 +414,132 @@ func _finish_deck_card_selection():
 					card_node.queue_free()
 			hand_display.player_card_nodes[-1].clear()
 			hand_display.player_card_nodes.erase(-1)
+	
+	# 元の手札表示に戻す
+	if ui_manager:
+		ui_manager.card_selection_filter = ""
+		if ui_manager.hand_display and player_system:
+			ui_manager.hand_display.is_enemy_card_selection_active = false
+			
+			var current_player = player_system.get_current_player()
+			if current_player:
+				ui_manager.hand_display.update_hand_display(current_player.id)
+	
+	current_state = State.INACTIVE
+	
+	# 少し待機してから完了シグナル発火
+	await get_tree().create_timer(0.5).timeout
+	selection_completed.emit()
+
+# ============ カード変換選択システム（メタモルフォシス） ============
+
+## カード変換用の敵手札選択を開始
+func start_transform_card_selection(target_player_id: int, filter_mode: String, transform_to_id: int):
+	"""
+	敵プレイヤーの手札からカードを選択し、同名カードを全て変換するUIを開始
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	  filter_mode: フィルターモード（"item_or_spell"）
+	  transform_to_id: 変換先カードID（ホーリーワード6 = 2100）
+	"""
+	transform_target_player_id = target_player_id
+	transform_to_card_id = transform_to_id
+	enemy_card_selection_filter_mode = filter_mode
+	current_state = State.SELECTING_TRANSFORM_CARD
+	
+	# スペルフェーズボタンを非表示
+	if spell_phase_ui_manager:
+		spell_phase_ui_manager.hide_mystic_button()
+		var enemy_hand_count = 0
+		if card_system:
+			enemy_hand_count = card_system.get_all_cards_for_player(target_player_id).size()
+		spell_phase_ui_manager.show_spell_skip_button(enemy_hand_count)
+	
+	# 対象の手札を確認
+	if not spell_draw:
+		_cancel_transform_card_selection("システムエラー")
+		return
+	
+	var has_valid_cards = spell_draw.has_item_or_spell_in_hand(target_player_id)
+	
+	if not has_valid_cards:
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "変換できるカードがありません"
+		await get_tree().create_timer(1.0).timeout
+		_finish_transform_card_selection()
+		return
+	
+	# フィルターモードを設定
+	if ui_manager:
+		ui_manager.card_selection_filter = filter_mode
+	
+	# 対象プレイヤーの手札を表示
+	if ui_manager and ui_manager.hand_display:
+		ui_manager.hand_display.is_enemy_card_selection_active = true
+		ui_manager.hand_display.update_hand_display(target_player_id)
+	
+	# 選択UIを有効化
+	if ui_manager and ui_manager.card_selection_ui and card_system:
+		var hand_data = card_system.get_all_cards_for_player(target_player_id)
+		var magic = 999999
+		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
+	
+	# ガイド表示
+	var player_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system and target_player_id < player_system.players.size():
+		player_name = player_system.players[target_player_id].name
+	
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = "%sの手札から変換するアイテムかスペルを選択" % player_name
+
+## カード変換用にカードが選択された
+func on_transform_card_selected(card_index: int):
+	"""
+	カード変換選択でカードが選択された時のコールバック
+	GameFlowManager.on_card_selected から呼び出される
+	"""
+	if current_state != State.SELECTING_TRANSFORM_CARD:
+		return
+	
+	if card_system and spell_draw:
+		var hand = card_system.get_all_cards_for_player(transform_target_player_id)
+		if card_index >= 0 and card_index < hand.size():
+			var selected_card = hand[card_index]
+			var selected_name = selected_card.get("name", "")
+			var selected_id = selected_card.get("id", -1)
+			
+			# 同名カードを全て変換（手札＋デッキ）
+			var result = spell_draw.transform_cards_to_specific(
+				transform_target_player_id,
+				selected_name,
+				selected_id,
+				transform_to_card_id
+			)
+			
+			if result.get("transformed_count", 0) > 0:
+				if ui_manager and ui_manager.phase_label:
+					ui_manager.phase_label.text = "『%s』%d枚を『%s』に変換" % [
+						result.get("original_name", "?"),
+						result.get("transformed_count", 0),
+						result.get("new_name", "?")
+					]
+	
+	# 選択終了
+	_finish_transform_card_selection()
+
+## カード変換選択をキャンセル
+func _cancel_transform_card_selection(message: String = ""):
+	if message != "" and ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = message
+	
+	_finish_transform_card_selection()
+
+## カード変換選択を終了
+func _finish_transform_card_selection():
+	transform_target_player_id = -1
+	transform_to_card_id = -1
+	enemy_card_selection_filter_mode = ""
 	
 	# 元の手札表示に戻す
 	if ui_manager:

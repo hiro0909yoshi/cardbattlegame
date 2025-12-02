@@ -1038,7 +1038,18 @@
 		"mp": 80,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象敵手札からアイテムかスペルを選び、同カードを全てホーリーワード6に変える"
+	  "effect": "対象敵手札からアイテムかスペルを選び、同カードを全てホーリーワード6に変える",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "transform_to_card",
+			"filter_mode": "item_or_spell",
+			"transform_to_id": 2100
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2114,
@@ -1229,7 +1240,16 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象ブックを初期化する"
+	  "effect": "対象ブックを初期化する",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "reset_deck"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2123,

@@ -415,6 +415,9 @@ func on_card_selected(card_index: int):
 		if handler.is_selecting_deck_card():
 			handler.on_deck_card_selected(card_index)
 			return
+		if handler.is_selecting_transform_card():
+			handler.on_transform_card_selected(card_index)
+			return
 	
 	# アイテムフェーズ中は、ItemPhaseHandlerのcurrent_player_idを使用
 	var target_player_id = player_system.get_current_player().id

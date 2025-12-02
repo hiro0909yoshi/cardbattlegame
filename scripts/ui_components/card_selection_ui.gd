@@ -166,6 +166,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "destroy_item_spell":
 				# シャッター用: アイテム/スペルのみ選択可能
 				is_selectable = card_type == "item" or card_type == "spell"
+			elif filter_mode == "item_or_spell":
+				# メタモルフォシス用: アイテム/スペルのみ選択可能
+				is_selectable = card_type == "item" or card_type == "spell"
 			elif filter_mode == "destroy_any":
 				# スクイーズ用: 全カード選択可能
 				is_selectable = true
@@ -243,6 +246,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "destroy_item_spell":
 				# シャッター用: クリーチャーをグレーアウト
+				if card_type == "creature":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "item_or_spell":
+				# メタモルフォシス用: クリーチャーをグレーアウト
 				if card_type == "creature":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:

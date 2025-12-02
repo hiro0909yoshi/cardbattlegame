@@ -153,6 +153,11 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 		if is_creature_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
+	elif filter_mode == "item_or_spell":
+		# メタモルフォシス用: アイテム/スペルのみ選択可、クリーチャーはグレーアウト
+		if is_creature_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "destroy_any":
 		# スクイーズ用: 全カード選択可
 		is_selectable_card = true

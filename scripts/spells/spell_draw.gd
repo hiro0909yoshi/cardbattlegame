@@ -182,6 +182,21 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				_move_caster_to_enemy_hand(caster_tile_index, target_player_id)
 				result["async"] = true
 		
+		"transform_to_card":
+			# 敵手札からカード選択→同名カード全変換（メタモルフォシス用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0 and card_selection_handler:
+				var transform_to_id = effect.get("transform_to_id", -1)
+				card_selection_handler.set_current_player(player_id)
+				card_selection_handler.start_transform_card_selection(target_player_id, "item_or_spell", transform_to_id)
+				result["async"] = true
+		
+		"reset_deck":
+			# 対象ブックを初期化（リバイバル用）
+			var target_player_id = context.get("target_player_id", -1)
+			if target_player_id >= 0:
+				result = reset_deck_to_original(target_player_id)
+		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
 	
@@ -1046,3 +1061,166 @@ func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node):
 	# 手札表示を更新
 	if ui_manager_ref and ui_manager_ref.hand_display:
 		ui_manager_ref.hand_display.update_hand_display(player_id)
+
+# ========================================
+# メタモルフォシス・リバイバル用
+# ========================================
+
+## 同名カードを全て特定カードに変換（メタモルフォシス用）
+func transform_cards_to_specific(target_player_id: int, selected_card_name: String, selected_card_id: int, transform_to_id: int) -> Dictionary:
+	"""
+	対象プレイヤーの手札とデッキから指定名のカードを全て別カードに変換する
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	  selected_card_name: 変換元カード名
+	  selected_card_id: 変換元カードID
+	  transform_to_id: 変換先カードID（ホーリーワード6 = 2100）
+	
+	戻り値: Dictionary
+	  - transformed_count: int（変換した枚数）
+	  - hand_count: int（手札で変換した枚数）
+	  - deck_count: int（デッキで変換した枚数）
+	  - original_name: String（変換元カード名）
+	  - new_name: String（変換先カード名）
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"transformed_count": 0, "hand_count": 0, "deck_count": 0, "original_name": "", "new_name": ""}
+	
+	# 変換先カードデータを取得
+	var new_card_data = CardLoader.get_card_by_id(transform_to_id)
+	if new_card_data.is_empty():
+		push_error("SpellDraw: 変換先カードID %d が見つかりません" % transform_to_id)
+		return {"transformed_count": 0, "hand_count": 0, "deck_count": 0, "original_name": selected_card_name, "new_name": ""}
+	
+	var new_card_name = new_card_data.get("name", "?")
+	var hand_count = 0
+	var deck_count = 0
+	
+	# 手札を走査して同名カードを変換
+	var hand = card_system_ref.player_hands[target_player_id]["data"]
+	for i in range(hand.size()):
+		var card = hand[i]
+		if card.get("name", "") == selected_card_name:
+			hand[i] = new_card_data.duplicate(true)
+			hand_count += 1
+			print("[メタモルフォシス] 手札: 『%s』→『%s』に変換" % [selected_card_name, new_card_name])
+	
+	# デッキを走査して同IDカードを変換
+	var deck = card_system_ref.player_decks.get(target_player_id, [])
+	for i in range(deck.size()):
+		if deck[i] == selected_card_id:
+			card_system_ref.player_decks[target_player_id][i] = transform_to_id
+			deck_count += 1
+			print("[メタモルフォシス] デッキ: 『%s』→『%s』に変換" % [selected_card_name, new_card_name])
+	
+	var total_count = hand_count + deck_count
+	print("[メタモルフォシス] プレイヤー%d: 合計 %d 枚を『%s』に変換（手札: %d, デッキ: %d）" % [target_player_id + 1, total_count, new_card_name, hand_count, deck_count])
+	
+	# 手札更新シグナル
+	card_system_ref.emit_signal("hand_updated")
+	
+	# UI更新
+	if ui_manager_ref and ui_manager_ref.hand_display:
+		ui_manager_ref.hand_display.update_hand_display(target_player_id)
+	
+	return {
+		"transformed_count": total_count,
+		"hand_count": hand_count,
+		"deck_count": deck_count,
+		"original_name": selected_card_name,
+		"new_name": new_card_name
+	}
+
+## デッキを元の構成で再構築（リバイバル用）
+func reset_deck_to_original(target_player_id: int) -> Dictionary:
+	"""
+	対象プレイヤーのデッキを元の構成で再構築する
+	手札・捨て札はそのまま、デッキのみ初期化
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	
+	戻り値: Dictionary
+	  - success: bool
+	  - new_deck_size: int（新デッキ枚数）
+	  - player_name: String
+	"""
+	if not card_system_ref:
+		push_error("SpellDraw: CardSystemが設定されていません")
+		return {"success": false, "new_deck_size": 0, "player_name": ""}
+	
+	# プレイヤー名を取得
+	var player_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system_ref and target_player_id < player_system_ref.players.size():
+		player_name = player_system_ref.players[target_player_id].name
+	
+	# 元のデッキデータを取得
+	var original_deck_data = _get_original_deck_data(target_player_id)
+	if original_deck_data.is_empty():
+		print("[リバイバル] プレイヤー%d: 元のデッキデータが取得できません" % [target_player_id + 1])
+		return {"success": false, "new_deck_size": 0, "player_name": player_name}
+	
+	# 現在のデッキをクリア
+	card_system_ref.player_decks[target_player_id].clear()
+	
+	# 元のデッキデータから再構築
+	for card_id in original_deck_data.keys():
+		var count = original_deck_data[card_id]
+		for i in range(count):
+			card_system_ref.player_decks[target_player_id].append(card_id)
+	
+	# シャッフル
+	card_system_ref.player_decks[target_player_id].shuffle()
+	
+	var new_deck_size = card_system_ref.player_decks[target_player_id].size()
+	print("[リバイバル] %s: デッキを初期化（%d枚）" % [player_name, new_deck_size])
+	
+	return {
+		"success": true,
+		"new_deck_size": new_deck_size,
+		"player_name": player_name
+	}
+
+## 元のデッキデータを取得（プレイヤーIDに応じて）
+func _get_original_deck_data(player_id: int) -> Dictionary:
+	"""
+	プレイヤーIDに応じた元のデッキデータ（カードID: 枚数）を取得
+	
+	引数:
+	  player_id: プレイヤーID
+	
+	戻り値: Dictionary {card_id: count}
+	"""
+	# プレイヤー0とプレイヤー1: GameDataから取得
+	if player_id == 0 or player_id == 1:
+		return GameData.get_current_deck().get("cards", {})
+	
+	# プレイヤー2以降: デフォルトデッキ（ID 1-12 を各3枚）
+	var default_deck = {}
+	for card_id in range(1, 13):
+		default_deck[card_id] = 3
+	return default_deck
+
+## 手札にアイテムまたはスペルがあるかチェック
+func has_item_or_spell_in_hand(target_player_id: int) -> bool:
+	"""
+	対象プレイヤーの手札にアイテムまたはスペルがあるかチェック
+	
+	引数:
+	  target_player_id: 対象プレイヤーID
+	
+	戻り値: bool
+	"""
+	if not card_system_ref:
+		return false
+	
+	var hand = card_system_ref.get_all_cards_for_player(target_player_id)
+	
+	for card in hand:
+		var card_type = card.get("type", "")
+		if card_type == "item" or card_type == "spell":
+			return true
+	
+	return false

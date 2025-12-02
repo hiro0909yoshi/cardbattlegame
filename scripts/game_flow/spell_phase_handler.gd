@@ -663,7 +663,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
 		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection", \
 		"draw_from_deck_selection", "steal_item_conditional", \
-		"add_specific_card", "destroy_and_draw", "swap_creature":
+		"add_specific_card", "destroy_and_draw", "swap_creature", \
+		"transform_to_card", "reset_deck":
 			# ドロー・手札操作系 - SpellDrawに委譲
 			if game_flow_manager and game_flow_manager.spell_draw:
 				var context = {
