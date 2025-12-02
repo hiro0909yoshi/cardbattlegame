@@ -89,6 +89,8 @@ func update_phase_label(current_player, mode: String):
 				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (魔力: " + str(current_player.magic_power) + "G)"
 			else:
 				phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+		"spell_borrow":
+			phase_label_ref.text = "使用するスペルを選択してください"
 		_:
 			phase_label_ref.text = "カードを選択してください"
 
@@ -170,6 +172,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "destroy_spell":
 				# セフト用: スペルのみ選択可能
 				is_selectable = card_type == "spell"
+			elif filter_mode == "single_target_spell":
+				# ルーンアデプト秘術用: 単体対象スペルのみ選択可能
+				is_selectable = card_type == "spell" and card_data.get("spell_type") == "単体対象"
 			elif filter_mode == "creature":
 				# レムレース秘術用: クリーチャーのみ選択可能
 				is_selectable = card_type == "creature"
@@ -248,6 +253,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif filter_mode == "destroy_spell":
 				# セフト用: スペル以外をグレーアウト
 				if card_type != "spell":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "single_target_spell":
+				# ルーンアデプト秘術用: 単体対象スペル以外をグレーアウト
+				if card_type != "spell" or card_data.get("spell_type") != "単体対象":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)

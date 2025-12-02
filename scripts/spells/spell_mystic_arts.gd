@@ -400,7 +400,7 @@ func get_available_creatures(player_id: int) -> Array:
 		var mystic_arts = _get_all_mystic_arts(tile.creature_data)
 		
 		# 使用可能な秘術のみフィルタリング
-		var usable_mystic_arts = _filter_usable_mystic_arts(mystic_arts, tile.creature_data)
+		var usable_mystic_arts = _filter_usable_mystic_arts(mystic_arts, tile.creature_data, player_id)
 		
 		if usable_mystic_arts.size() > 0:
 			available.append({
@@ -413,27 +413,33 @@ func get_available_creatures(player_id: int) -> Array:
 
 
 ## 使用可能な秘術のみをフィルタリング
-func _filter_usable_mystic_arts(mystic_arts: Array, creature_data: Dictionary) -> Array:
+func _filter_usable_mystic_arts(mystic_arts: Array, creature_data: Dictionary, player_id: int) -> Array:
 	var usable: Array = []
 	
 	for mystic_art in mystic_arts:
-		if _can_use_mystic_art(mystic_art, creature_data):
+		if _can_use_mystic_art(mystic_art, creature_data, player_id):
 			usable.append(mystic_art)
 	
 	return usable
 
 
 ## 秘術が使用可能かチェック
-func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary) -> bool:
-	# 移動系秘術で移動不可呪いを持っている場合は使用不可
+func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, player_id: int) -> bool:
 	var effects = mystic_art.get("effects", [])
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
+		
+		# 移動系秘術で移動不可呪いを持っている場合は使用不可
 		if effect_type in ["move_self", "move_steps", "move_to_adjacent_enemy"]:
-			# 移動不可呪いチェック
 			var curse = creature_data.get("curse", {})
 			if curse.get("curse_type", "") == "move_disable":
 				return false
+		
+		# use_hand_spell: 手札に単体対象スペルがないと使用不可
+		if effect_type == "use_hand_spell":
+			if spell_phase_handler_ref and spell_phase_handler_ref.spell_borrow:
+				if not spell_phase_handler_ref.spell_borrow.can_cast_use_hand_spell(player_id):
+					return false
 	
 	return true
 

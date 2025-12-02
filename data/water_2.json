@@ -647,12 +647,24 @@
 	  "ability": "巻物強打・秘術",
 	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札のスペルカードの効果を使用]",
 	  "ability_parsed": {
-		"keywords": ["巻物強打", "防魔"],
+		"keywords": ["巻物強打", "防魔", "秘術"],
 		"keyword_conditions": {
 		  "巻物強打": {
 			"scroll_type": "base_ap"
 		  }
-		}
+		},
+		"mystic_arts": [
+		  {
+			"name": "スペル借用",
+			"cost": 100,
+			"target_type": "self",
+			"effects": [
+			  {
+				"effect_type": "use_hand_spell"
+			  }
+			]
+		  }
+		]
 	  }
 	}
   ]

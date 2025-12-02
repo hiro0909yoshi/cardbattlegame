@@ -8,6 +8,7 @@ signal spell_phase_completed()
 signal spell_passed()
 signal spell_used(spell_card: Dictionary)
 signal target_selection_required(spell_card: Dictionary, target_type: String)
+signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了時
 
 ## 状態
 enum State {
@@ -42,6 +43,7 @@ var available_targets: Array = []
 var current_target_index: int = 0
 var selection_marker: MeshInstance3D = null
 var is_tile_selection_mode: bool = false  # タイル選択モード（SpellCreatureMove用）
+var is_borrow_spell_mode: bool = false  # 借用スペル実行中（SpellBorrow用）
 
 ## 参照
 var ui_manager = null
@@ -58,6 +60,7 @@ var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
 var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
 var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手札戻し
 var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
+var spell_borrow: SpellBorrow = null  # スペル借用
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -112,6 +115,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreaturePlace を初期化
 	if not spell_creature_place:
 		spell_creature_place = SpellCreaturePlace.new()
+	
+	# SpellBorrow を初期化
+	if not spell_borrow and board_system and player_system and card_system:
+		spell_borrow = SpellBorrow.new(board_system, player_system, card_system, self)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -433,6 +440,12 @@ func _confirm_target_selection():
 		tile_selection_completed.emit(tile_index)
 		return
 	
+	# 借用スペル実行中の場合（SpellBorrow用）
+	if is_borrow_spell_mode:
+		target_confirmed.emit(selected_target)
+		is_borrow_spell_mode = false
+		return
+	
 	# 秘術かスペルかで分岐
 	if spell_mystic_arts and spell_mystic_arts.is_active():
 		# 秘術実行（SpellMysticArtsに委譲）
@@ -449,6 +462,12 @@ func _cancel_target_selection():
 	# タイル選択モードの場合（SpellCreatureMove用）
 	if is_tile_selection_mode:
 		tile_selection_completed.emit(-1)  # キャンセル時は-1
+		return
+	
+	# 借用スペル実行中の場合（SpellBorrow用）
+	if is_borrow_spell_mode:
+		target_confirmed.emit({"cancelled": true})
+		is_borrow_spell_mode = false
 		return
 	
 	# 秘術かスペルかで分岐
@@ -707,6 +726,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					if game_flow_manager and game_flow_manager.spell_land:
 						if game_flow_manager.spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 							spell_failed = true
+		
+		"use_hand_spell":
+			# 手札スペル借用（ルーンアデプト秘術）- SpellBorrowに委譲
+			if spell_borrow:
+				await spell_borrow.apply_use_hand_spell(current_player_id)
 		
 		"return_to_hand":
 			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
