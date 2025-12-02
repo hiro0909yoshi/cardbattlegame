@@ -176,9 +176,18 @@ func _update_spell_phase_ui():
 	# 手札を取得
 	var hand_data = card_system.get_all_cards_for_player(current_player.id)
 	
-	# スペルカードのみ選択可能にする設定
+	# スペル不可呪いチェック
+	var context = _build_spell_context()
+	var is_spell_disabled = SpellProtection.is_player_spell_disabled(current_player, context)
+	
+	# フィルターモードを設定
 	if ui_manager:
-		ui_manager.card_selection_filter = "spell"
+		if is_spell_disabled:
+			ui_manager.card_selection_filter = "spell_disabled"
+			if ui_manager.phase_label:
+				ui_manager.phase_label.text = "スペル不可の呪いがかかっています"
+		else:
+			ui_manager.card_selection_filter = "spell"
 		# 手札表示を更新してグレーアウトを適用
 		if ui_manager.hand_display:
 			ui_manager.hand_display.update_hand_display(current_player.id)
@@ -1050,6 +1059,15 @@ func is_cpu_player(player_id: int) -> bool:
 		return false  # デバッグモードでは全員手動
 	
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
+
+## スペル関連のコンテキストを構築（世界呪い等）
+func _build_spell_context() -> Dictionary:
+	var context = {}
+	
+	if game_flow_manager and "game_stats" in game_flow_manager:
+		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
+	
+	return context
 
 ## 使用者のクリーチャー数をカウント
 func _count_own_creatures(player_id: int) -> int:

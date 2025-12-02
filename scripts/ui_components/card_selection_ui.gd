@@ -208,6 +208,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "spell_disabled":
+				# スペル不可呪い中: スペルカードをグレーアウト（秘術は使用可能）
+				if card_type == "spell":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "item":
 				# アイテムフェーズ中: アイテムカード以外をグレーアウト
 				var should_gray = card_type != "item"

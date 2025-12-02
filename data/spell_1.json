@@ -580,7 +580,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "全セプターに呪い\"スペル不可\"(次R、スペルを使用できない)"
+	  "effect": "全セプターに呪い\"スペル不可\"(次R、スペルを使用できない)",
+	  "effect_parsed": {
+		"target_type": "all_players",
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "spell_disable",
+			"name": "スペル不可",
+			"duration": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2028,

@@ -172,3 +172,49 @@ static func _get_target_name(target_data: Dictionary) -> String:
 			var player_id = target_data.get("player_id", -1)
 			return "プレイヤー%d" % (player_id + 1)
 	return "不明"
+
+
+# ============================================
+# スペル使用不可判定
+# ============================================
+
+## プレイヤーがスペル使用不可状態か判定
+## 
+## player: PlayerDataオブジェクト（curseプロパティを持つ）
+## context: 追加コンテキスト（world_curse等のチェック用）
+## 戻り値: true = スペル使用不可（秘術は使用可能）
+static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
+	if player == null:
+		return false
+	
+	# 1. プレイヤー呪い「spell_disable」チェック
+	var curse = player.curse if "curse" in player else {}
+	if curse is Dictionary and not curse.is_empty():
+		if curse.get("curse_type") == "spell_disable":
+			return true
+	
+	# 2. 世界呪い「spell_disable」チェック（全セプター対象）
+	var world_curse = context.get("world_curse", {})
+	if world_curse.get("curse_type") == "world_spell_disable":
+		return true
+	
+	return false
+
+
+## 全プレイヤーにスペル不可呪いを付与
+## 
+## player_system: PlayerSystemの参照
+## duration: 呪いの持続ターン数
+## curse_name: 呪いの表示名
+static func apply_spell_disable_to_all_players(player_system, duration: int = 1, curse_name: String = "スペル不可"):
+	if player_system == null:
+		return
+	
+	for player in player_system.players:
+		# 既存の呪いがあっても上書き
+		player.curse = {
+			"curse_type": "spell_disable",
+			"name": curse_name,
+			"duration": duration
+		}
+		print("[呪い付与] %s → %s (duration=%d)" % [curse_name, player.name, duration])

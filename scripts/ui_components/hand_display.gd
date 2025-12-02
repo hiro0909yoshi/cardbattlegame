@@ -116,6 +116,11 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 		if not is_spell_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
+	elif filter_mode == "spell_disabled":
+		# スペル不可呪い中: スペルカードをグレーアウト＆選択不可（秘術は使用可能）
+		if is_spell_card:
+			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			is_selectable_card = false
 	elif filter_mode == "item":
 		# アイテムフェーズ中: アイテムカード以外をグレーアウト＆選択不可
 		if not is_item_card:
