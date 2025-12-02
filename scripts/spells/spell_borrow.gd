@@ -187,3 +187,87 @@ func _destroy_card_at_hand_index(player_id: int, hand_index: int) -> void:
 	
 	hand.remove_at(hand_index)
 	card_system_ref.emit_signal("hand_updated")
+
+
+# ============ テンプテーション ============
+
+## 対象クリーチャーの秘術を使用（テンプテーション）
+func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int) -> Dictionary:
+	if not spell_phase_handler_ref:
+		return {"success": false, "reason": "no_handler"}
+	
+	var spell_mystic_arts = spell_phase_handler_ref.spell_mystic_arts
+	if not spell_mystic_arts:
+		return {"success": false, "reason": "no_mystic_arts_handler"}
+	
+	# ターゲットクリーチャーの秘術を取得
+	var creature_data = target_data.get("creature", {})
+	var tile_index = target_data.get("tile_index", -1)
+	
+	if creature_data.is_empty():
+		return {"success": false, "reason": "no_creature"}
+	
+	# 秘術を取得（use_hand_spell は除外）
+	var all_mystic_arts = spell_mystic_arts._get_all_mystic_arts(creature_data)
+	var mystic_arts = all_mystic_arts.filter(func(art):
+		var effects = art.get("effects", [])
+		for effect in effects:
+			if effect.get("effect_type", "") == "use_hand_spell":
+				return false
+		return true
+	)
+	
+	if mystic_arts.is_empty():
+		return {"success": false, "reason": "no_mystic_arts"}
+	
+	# 秘術が1つなら自動選択、複数なら選択UI
+	var selected_mystic_art: Dictionary
+	if mystic_arts.size() == 1:
+		selected_mystic_art = mystic_arts[0]
+	else:
+		# 秘術選択UI表示
+		selected_mystic_art = await _select_mystic_art(mystic_arts, creature_data.get("name", "クリーチャー"))
+		if selected_mystic_art.is_empty():
+			return {"cancelled": true}
+	
+	# 秘術を実行（コスト無料）
+	var selected_creature = {
+		"tile_index": tile_index,
+		"creature_data": creature_data,
+		"mystic_arts": mystic_arts
+	}
+	
+	# 秘術のターゲット情報を取得
+	var target_type = selected_mystic_art.get("target_type", "")
+	var target_info = selected_mystic_art.get("target_info", {})
+	
+	# selfまたはnoneの場合はすぐ実行
+	if target_type == "self" or target_type == "none" or target_type == "":
+		var mystic_target_data = {
+			"type": target_type,
+			"tile_index": tile_index,
+			"player_id": caster_player_id
+		}
+		await spell_mystic_arts.execute_mystic_art(selected_creature, selected_mystic_art, mystic_target_data)
+	else:
+		# ターゲット選択が必要
+		spell_phase_handler_ref.is_borrow_spell_mode = true
+		spell_phase_handler_ref._show_target_selection_ui(target_type, target_info)
+		
+		var mystic_target_data = await spell_phase_handler_ref.target_confirmed
+		
+		if mystic_target_data.is_empty() or mystic_target_data.get("cancelled", false):
+			return {"cancelled": true}
+		
+		await spell_mystic_arts.execute_mystic_art(selected_creature, selected_mystic_art, mystic_target_data)
+	
+	return {"success": true}
+
+
+## 秘術選択UI（複数ある場合）
+func _select_mystic_art(mystic_arts: Array, _creature_name: String) -> Dictionary:
+	# 簡易実装：複数秘術の場合は最初のものを選択
+	# TODO: 秘術選択UIを実装
+	if mystic_arts.size() > 0:
+		return mystic_arts[0]
+	return {}

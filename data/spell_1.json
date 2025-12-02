@@ -1289,7 +1289,20 @@
 		"mp": 70,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象クリーチャーの秘術を使用"
+	  "effect": "対象クリーチャーの秘術を使用",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "require_mystic_arts": true,
+		  "require_not_down": true
+		},
+		"effects": [
+		  {
+			"effect_type": "use_target_mystic_art"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2060,

@@ -409,6 +409,27 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if curse.get("curse_type", "") == "move_disable":
 							continue
 					
+					# require_mystic_arts チェック（秘術を持つクリーチャーのみ）- テンプテーション用
+					# use_hand_spell秘術は除外（ルーンアデプトのスペル借用）
+					if target_info.get("require_mystic_arts", false):
+						var mystic_arts = creature.get("ability_parsed", {}).get("mystic_arts", [])
+						# use_hand_spellを除外した秘術があるかチェック
+						var usable_arts = mystic_arts.filter(func(art):
+							var effects = art.get("effects", [])
+							for effect in effects:
+								if effect.get("effect_type", "") == "use_hand_spell":
+									return false
+							return true
+						)
+						if usable_arts.is_empty():
+							continue
+					
+					# require_not_down チェック（ダウンしていないクリーチャーのみ）- テンプテーション用
+					if target_info.get("require_not_down", false):
+						var is_down = tile.is_down() if tile.has_method("is_down") else false
+						if is_down:
+							continue
+					
 					# most_common_element チェックはここではスキップ（後処理で絞り込む）
 					
 					# 全条件を満たしたターゲットを追加

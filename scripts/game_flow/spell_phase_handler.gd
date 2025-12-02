@@ -732,6 +732,11 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_borrow:
 				await spell_borrow.apply_use_hand_spell(current_player_id)
 		
+		"use_target_mystic_art":
+			# 対象クリーチャーの秘術を使用（テンプテーション）- SpellBorrowに委譲
+			if spell_borrow:
+				await spell_borrow.apply_use_target_mystic_art(target_data, current_player_id)
+		
 		"return_to_hand":
 			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
 			if spell_creature_return:
