@@ -26,7 +26,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 	
 	match effect_type:
 		"return_to_hand":
-			return await _apply_return_to_hand(effect, target_data, caster_player_id)
+			return _apply_return_to_hand(effect, target_data, caster_player_id)
 		_:
 			push_error("[SpellCreatureReturn] 未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}

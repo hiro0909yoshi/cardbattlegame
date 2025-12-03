@@ -499,7 +499,16 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "復活",
-	  "ability_detail": "復活"
+	  "ability_detail": "復活",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "revive_to_hand",
+			"trigger": "on_death"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 41,

@@ -173,7 +173,7 @@ static func _execute_single_battle(
 	# BattleSystemにSpellMagic/SpellDrawを手動で設定
 	battle_system.spell_magic = spell_magic
 	battle_system.spell_draw = spell_draw
-	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic)
+	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card)
 	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
 	
 	# BattleParticipantにspell_magic_refを設定

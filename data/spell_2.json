@@ -1048,7 +1048,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"同種相殺\"(6R間、同クリーチャー2体配置なら戦闘時破壊)"
+	  "effect": "世界呪い\"同種相殺\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "same_creature_destroy",
+			"name": "同種相殺",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2112,

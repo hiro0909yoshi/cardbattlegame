@@ -138,6 +138,7 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	
 	# TileDataManagerに参照を設定
 	tile_data_manager.set_display_system(tile_info_display)
+	tile_data_manager.set_game_flow_manager(game_flow_manager)
 	
 	# ui_managerが設定されてからサブシステムを初期化
 	await get_tree().process_frame
@@ -309,6 +310,15 @@ func get_player_tiles(player_id: int) -> Array:
 		if tile.owner_id == player_id:
 			player_tiles.append(tile)
 	return player_tiles
+
+# プレイヤーが所有しているタイルのインデックスを取得
+func get_player_owned_tiles(player_id: int) -> Array:
+	var owned_tile_indices = []
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id == player_id:
+			owned_tile_indices.append(tile_index)
+	return owned_tile_indices
 
 # === 地形変化システム ===
 

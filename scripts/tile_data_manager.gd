@@ -12,6 +12,7 @@ var tile_nodes = {}  # tile_index -> BaseTile
 
 # サブシステム参照
 var tile_info_display: TileInfoDisplay = null
+var game_flow_manager = null  # 世界呪い判定用
 
 func _ready():
 	pass
@@ -23,6 +24,10 @@ func set_tile_nodes(nodes: Dictionary):
 # タイル情報表示システムを設定
 func set_display_system(display: TileInfoDisplay):
 	tile_info_display = display
+
+# GameFlowManager参照を設定（世界呪い判定用）
+func set_game_flow_manager(gfm):
+	game_flow_manager = gfm
 
 # === タイル情報取得 ===
 
@@ -219,11 +224,18 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	var target_element = tile_nodes[tile_index].tile_type
 	var chain_count = 0
 	
-	# 同じ所有者・同じ属性のタイルを数える
+	# game_statsを取得（世界呪い判定用）
+	var game_stats = {}
+	if game_flow_manager:
+		game_stats = game_flow_manager.game_stats
+	
+	# 同じ所有者・同じ連鎖グループのタイルを数える
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
-		if tile.owner_id == owner_id and tile.tile_type == target_element:
-			chain_count += 1
+		if tile.owner_id == owner_id:
+			# ジョイントワールド対応: 同属性または連鎖ペアならカウント
+			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
+				chain_count += 1
 	
 	return min(chain_count, 5)  # 最大5個まで
 
@@ -257,15 +269,16 @@ func get_owner_element_counts(owner_id: int) -> Dictionary:
 	
 	return counts
 
-# 所有者の総資産を計算
+# 所有者の総土地価値を計算（通行料ベース、連鎖ボーナス含む）
 func calculate_total_land_value(owner_id: int) -> int:
 	var total_value = 0
 	
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
-			var level_value = GameConstants.LEVEL_VALUES.get(tile.level, 0)
-			total_value += level_value
+			# 土地の価値 = 通行料（連鎖ボーナス、世界呪い効果含む）
+			var toll = calculate_toll(i)
+			total_value += toll
 	
 	return total_value
 

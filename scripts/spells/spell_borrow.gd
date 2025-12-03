@@ -226,7 +226,7 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 		selected_mystic_art = mystic_arts[0]
 	else:
 		# 秘術選択UI表示
-		selected_mystic_art = await _select_mystic_art(mystic_arts, creature_data.get("name", "クリーチャー"))
+		selected_mystic_art = _select_mystic_art(mystic_arts, creature_data.get("name", "クリーチャー"))
 		if selected_mystic_art.is_empty():
 			return {"cancelled": true}
 	

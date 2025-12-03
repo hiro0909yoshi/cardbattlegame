@@ -236,9 +236,9 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
-	var direction = _infer_direction_from_choice(current_tile, chosen, player_id)
-	_set_player_current_direction(player_id, direction)
-	print("[MovementController] 移動中分岐: タイル%d → 方向%s" % [chosen, "+" if direction > 0 else "-"])
+	var inferred_direction = _infer_direction_from_choice(current_tile, chosen, player_id)
+	_set_player_current_direction(player_id, inferred_direction)
+	print("[MovementController] 移動中分岐: タイル%d → 方向%s" % [chosen, "+" if inferred_direction > 0 else "-"])
 	
 	return chosen
 
@@ -248,10 +248,10 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	
 	# connectionsがなければ+1/-1選択
 	if not tile or not tile.connections or tile.connections.is_empty():
-		var direction = await _show_simple_direction_selection()
-		_set_player_current_direction(current_moving_player, direction)
-		var loop_size = _get_loop_size()
-		return (current_tile + direction + loop_size) % loop_size
+		var selected_dir = await _show_simple_direction_selection()
+		_set_player_current_direction(current_moving_player, selected_dir)
+		var first_loop_size = _get_loop_size()
+		return (current_tile + selected_dir + first_loop_size) % first_loop_size
 	
 	# connectionsがある場合：came_fromを除外して選択
 	var choices = []
@@ -272,9 +272,9 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
-	var direction = _infer_direction_from_choice(current_tile, chosen)
-	_set_player_current_direction(current_moving_player, direction)
-	print("[MovementController] 分岐選択: タイル%d → 方向%s" % [chosen, "+" if direction > 0 else "-"])
+	var inferred_dir = _infer_direction_from_choice(current_tile, chosen)
+	_set_player_current_direction(current_moving_player, inferred_dir)
+	print("[MovementController] 分岐選択: タイル%d → 方向%s" % [chosen, "+" if inferred_dir > 0 else "-"])
 	
 	return chosen
 
@@ -450,9 +450,10 @@ func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
 # 次のタイルを取得（connectionsベース or 従来計算）
 func _get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
 	var tile = tile_nodes.get(current_tile)
+	var loop_size = _get_loop_size()
+	
 	if not tile:
 		# タイルがなければループ計算
-		var loop_size = _get_loop_size()
 		return (current_tile + direction + loop_size) % loop_size
 	
 	# connectionsが設定されていれば接続情報ベース
@@ -460,7 +461,6 @@ func _get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
 		return _get_next_from_connections(tile.connections, came_from, direction)
 	
 	# 設定されていなければループ計算
-	var loop_size = _get_loop_size()
 	return (current_tile + direction + loop_size) % loop_size
 
 # 接続情報から次のタイルを取得（分岐選択UIあり）

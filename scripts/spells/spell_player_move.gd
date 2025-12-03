@@ -81,15 +81,15 @@ func warp_to_nearest_gate(player_id: int) -> Dictionary:
 	var current_tile_node = board_system.tile_nodes.get(current_tile)
 	if current_tile_node and current_tile_node.tile_type == "checkpoint":
 		# 現在地がゲートなので移動なし、ゲート効果のみ発動
-		var gate_key = _get_gate_key(current_tile)
-		_trigger_gate_effect(player_id, current_tile, gate_key)
+		var current_gate_key = _get_gate_key(current_tile)
+		_trigger_gate_effect(player_id, current_tile, current_gate_key)
 		
 		return {
 			"success": true,
 			"from": current_tile,
 			"to": current_tile,
-			"gate_key": gate_key,
-			"message": "現在地のゲート(%s)で効果発動" % gate_key
+			"gate_key": current_gate_key,
+			"message": "現在地のゲート(%s)で効果発動" % current_gate_key
 		}
 	
 	# ゲート判定（現在地以外を探す）
@@ -393,7 +393,7 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 	print("[SpellPlayerMove] プレイヤー%d ワープ: %d → %d" % [player_id, from_tile, target_tile])
 
 ## ゲート効果を発動（ゲートワープ時）
-func _trigger_gate_effect(player_id: int, tile_index: int, gate_key: String) -> void:
+func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) -> void:
 	# 1. ゲート通過扱い（周回フラグ更新）
 	if game_flow_manager.player_lap_state.has(player_id):
 		game_flow_manager.player_lap_state[player_id][gate_key] = true

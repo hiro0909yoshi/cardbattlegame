@@ -241,13 +241,14 @@ func calculate_total_assets(player_id: int) -> int:
 	
 	var assets = player_system_ref.players[player_id].magic_power
 	
+	# 土地価値 = 通行料（連鎖ボーナス含む）
 	if board_system_ref != null and "tile_nodes" in board_system_ref:
-		var GameConstants = preload("res://scripts/game_constants.gd")
 		for i in board_system_ref.tile_nodes:
 			var tile = board_system_ref.tile_nodes[i]
 			if tile.owner_id == player_id:
-				var level_value = GameConstants.LEVEL_VALUES.get(tile.level, 0)
-				assets += level_value
+				# 土地の価値 = 通行料（連鎖ボーナス、世界呪い効果含む）
+				var toll = board_system_ref.calculate_toll(i)
+				assets += toll
 	
 	return assets
 

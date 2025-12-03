@@ -291,12 +291,26 @@ func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattlePa
 func _apply_revive_skill(participant: BattleParticipant) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
-	if not participant.creature_data["ability_parsed"].has("keywords"):
-		participant.creature_data["ability_parsed"]["keywords"] = []
+	if not participant.creature_data["ability_parsed"].has("effects"):
+		participant.creature_data["ability_parsed"]["effects"] = []
 	
-	if not "死者復活" in participant.creature_data["ability_parsed"]["keywords"]:
-		participant.creature_data["ability_parsed"]["keywords"].append("死者復活")
-		print("  スキル付与: 死者復活")
+	# 既に復活効果があるかチェック
+	var has_revive = false
+	for effect in participant.creature_data["ability_parsed"]["effects"]:
+		if effect.get("effect_type") == "revive" and effect.get("trigger") == "on_death":
+			has_revive = true
+			break
+	
+	if not has_revive:
+		# 同じクリーチャーとして復活する効果を追加
+		var creature_id = participant.creature_data.get("id", -1)
+		participant.creature_data["ability_parsed"]["effects"].append({
+			"effect_type": "revive",
+			"trigger": "on_death",
+			"revive_type": "forced",
+			"creature_id": creature_id
+		})
+		print("  スキル付与: 死者復活（ID: ", creature_id, "として復活）")
 
 ## ランダムステータスボーナス
 func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary) -> void:

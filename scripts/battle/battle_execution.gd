@@ -4,7 +4,7 @@ class_name BattleExecution
 # バトル実行フェーズ処理
 # 攻撃順決定、攻撃シーケンス、結果判定を担当
 
-# 変身・死者復活スキルをpreload
+# 変身スキルをpreload（死者復活はbattle_special_effectsに移動済み）
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 
 # スキルモジュール
@@ -108,6 +108,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		"attacker_original": {},
 		"defender_original": {}
 	}
+	# 手札復活はcheck_on_death_effects内で即座に処理される
 	
 	# 戦闘終了フラグ（復活時に使用）
 	var battle_ended = false
@@ -227,68 +228,56 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if not defender_p.is_alive():
 						print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 						
-						# 💀 死亡時効果チェック（道連れ、雪辱など）
-						var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p)
+						# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
+						var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p, CardLoader)
 						if death_effects["death_revenge_activated"]:
 							print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
-						# 🔄 死者復活チェック
-						if card_system_ref:
-							var revive_result = TransformSkill.check_and_apply_revive(
-								defender_p,
-								attacker_p,
-								CardLoader
-							)
-							
-							if revive_result["revived"]:
-								print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-								# 復活情報を記録
-								if defender_p.is_attacker:
-									battle_result["attacker_revived"] = true
-								else:
-									battle_result["defender_revived"] = true
-								# 復活したが攻撃はせずに戦闘終了
-								print("  → 復活したため、攻撃せずに戦闘終了")
-								battle_ended = true
-								break
+						# 🔄 死者復活チェック（タイル復活）
+						if death_effects["revived"]:
+							print("  【死者復活成功】", death_effects["new_creature_name"], "として復活！")
+							# 復活情報を記録
+							if defender_p.is_attacker:
+								battle_result["attacker_revived"] = true
 							else:
-								# 復活しなかったので撃破確定
-								break
+								battle_result["defender_revived"] = true
+							# 復活したが攻撃はせずに戦闘終了
+							print("  → 復活したため、攻撃せずに戦闘終了")
+							battle_ended = true
+							break
+						# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
+						elif death_effects["revive_to_hand"]:
+							break
 						else:
+							# 復活しなかったので撃破確定
 							break
 					
 					# 攻撃側が反射で倒された場合（即死後）
 					if not attacker_p.is_alive():
 						print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
 						
-						# 💀 死亡時効果チェック（道連れ、雪辱など）
-						var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p)
+						# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
+						var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p, CardLoader)
 						if death_effects_attacker["death_revenge_activated"]:
 							print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
-						# 🔄 死者復活チェック
-						if card_system_ref:
-							var revive_result = TransformSkill.check_and_apply_revive(
-								attacker_p,
-								defender_p,
-								CardLoader
-							)
-							
-							if revive_result["revived"]:
-								print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-								# 復活情報を記録
-								if attacker_p.is_attacker:
-									battle_result["attacker_revived"] = true
-								else:
-									battle_result["defender_revived"] = true
-								# 復活したが攻撃はせずに戦闘終了
-								print("  → 復活したため、攻撃せずに戦闘終了")
-								battle_ended = true
-								break
+						# 🔄 死者復活チェック（タイル復活）
+						if death_effects_attacker["revived"]:
+							print("  【死者復活成功】", death_effects_attacker["new_creature_name"], "として復活！")
+							# 復活情報を記録
+							if attacker_p.is_attacker:
+								battle_result["attacker_revived"] = true
 							else:
-								# 復活しなかったので撃破確定
-								break
+								battle_result["defender_revived"] = true
+							# 復活したが攻撃はせずに戦闘終了
+							print("  → 復活したため、攻撃せずに戦闘終了")
+							battle_ended = true
+							break
+						# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
+						elif death_effects_attacker["revive_to_hand"]:
+							break
 						else:
+							# 復活しなかったので撃破確定
 							break
 					
 					# 🔒 攻撃成功時の呪い付与処理（軽減パス用）
@@ -374,68 +363,56 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			if not defender_p.is_alive():
 				print("  → ", defender_p.creature_data.get("name", "?"), " 撃破！")
 				
-				# 💀 死亡時効果チェック（道連れ、雪辱など）
-				var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p)
+				# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
+				var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p, CardLoader)
 				if death_effects["death_revenge_activated"]:
 					print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
-				# 🔄 死者復活チェック
-				if card_system_ref:
-					var revive_result = TransformSkill.check_and_apply_revive(
-						defender_p,
-						attacker_p,
-						CardLoader
-					)
-					
-					if revive_result["revived"]:
-						print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-						# 復活情報を記録
-						if defender_p.is_attacker:
-							battle_result["attacker_revived"] = true
-						else:
-							battle_result["defender_revived"] = true
-						# 復活したが攻撃はせずに戦闘終了
-						print("  → 復活したため、攻撃せずに戦闘終了")
-						battle_ended = true
-						break
+				# 🔄 死者復活チェック（タイル復活）
+				if death_effects["revived"]:
+					print("  【死者復活成功】", death_effects["new_creature_name"], "として復活！")
+					# 復活情報を記録
+					if defender_p.is_attacker:
+						battle_result["attacker_revived"] = true
 					else:
-						# 復活しなかったので撃破確定
-						break
+						battle_result["defender_revived"] = true
+					# 復活したが攻撃はせずに戦闘終了
+					print("  → 復活したため、攻撃せずに戦闘終了")
+					battle_ended = true
+					break
+				# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
+				elif death_effects["revive_to_hand"]:
+					break
 				else:
+					# 復活しなかったので撃破確定
 					break
 			
 			# 攻撃側が反射で倒された場合
 			if not attacker_p.is_alive():
 				print("  → ", attacker_p.creature_data.get("name", "?"), " 反射ダメージで撃破！")
 				
-				# 💀 死亡時効果チェック（道連れ、雪辱など）
-				var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p)
+				# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
+				var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p, CardLoader)
 				if death_effects_attacker["death_revenge_activated"]:
 					print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
-				# 🔄 死者復活チェック
-				if card_system_ref:
-					var revive_result = TransformSkill.check_and_apply_revive(
-						attacker_p,
-						defender_p,
-						CardLoader
-					)
-					
-					if revive_result["revived"]:
-						print("  【死者復活成功】", revive_result["new_creature_name"], "として復活！")
-						# 復活情報を記録
-						if attacker_p.is_attacker:
-							battle_result["attacker_revived"] = true
-						else:
-							battle_result["defender_revived"] = true
-						# 復活したが攻撃はせずに戦闘終了
-						print("  → 復活したため、攻撃せずに戦闘終了")
-						battle_ended = true
-						break
+				# 🔄 死者復活チェック（タイル復活）
+				if death_effects_attacker["revived"]:
+					print("  【死者復活成功】", death_effects_attacker["new_creature_name"], "として復活！")
+					# 復活情報を記録
+					if attacker_p.is_attacker:
+						battle_result["attacker_revived"] = true
 					else:
-						# 復活しなかったので撃破確定
-						break
+						battle_result["defender_revived"] = true
+					# 復活したが攻撃はせずに戦闘終了
+					print("  → 復活したため、攻撃せずに戦闘終了")
+					battle_ended = true
+					break
+				# 🔄 手札復活チェック（check_on_death_effects内で処理済み）
+				elif death_effects_attacker["revive_to_hand"]:
+					break
 				else:
+					# 復活しなかったので撃破確定
 					break
 	
 	# 戦闘結果情報を返す

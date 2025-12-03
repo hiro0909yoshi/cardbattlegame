@@ -828,7 +828,21 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "世界呪い\"他属性連鎖\"(6R間、火と地、水と風が連鎖)"
+	  "effect": "世界呪い\"他属性連鎖\"(6R間、火と地、水と風が連鎖)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "element_chain",
+			"name": "他属性連鎖",
+			"duration": 6,
+			"params": {
+			  "chain_pairs": [["fire", "earth"], ["water", "wind"]]
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2037,

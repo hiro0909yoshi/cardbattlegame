@@ -748,7 +748,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"transform":
 			# クリーチャー変身系 - SpellTransformに委譲
 			if spell_transform:
-				await spell_transform.apply_effect(effect, target_data, current_player_id)
+				spell_transform.apply_effect(effect, target_data, current_player_id)
 		
 		"discord_transform":
 			# ディスコード（最多配置クリーチャーをゴブリンに） - SpellTransformに委譲
@@ -758,7 +758,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"return_to_hand":
 			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
 			if spell_creature_return:
-				await spell_creature_return.apply_effect(effect, target_data, current_player_id)
+				spell_creature_return.apply_effect(effect, target_data, current_player_id)
 		
 		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
 			# ステータス増減スペル - SpellCurseStatに委譲

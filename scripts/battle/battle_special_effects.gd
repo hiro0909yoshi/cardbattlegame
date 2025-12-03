@@ -10,11 +10,13 @@ var _skill_legacy = preload("res://scripts/battle/skills/skill_legacy.gd")
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
 var spell_magic_ref: SpellMagic = null
+var card_system_ref = null
 
-func setup_systems(board_system, spell_draw = null, spell_magic = null):
+func setup_systems(board_system, spell_draw = null, spell_magic = null, card_system = null):
 	board_system_ref = board_system
 	spell_draw_ref = spell_draw
 	spell_magic_ref = spell_magic
+	card_system_ref = card_system
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -348,24 +350,33 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
 
-## 死亡時効果のチェック（道連れ、雪辱など）
-func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant) -> Dictionary:
+## 死亡時効果のチェック（道連れ、雪辱、死者復活など）
+func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant, card_loader = null) -> Dictionary:
 	"""
 	撃破された側の死亡時効果をチェックして発動
 	
 	Args:
 		defeated: 撃破されたクリーチャー（死亡した側）
 		opponent: 相手クリーチャー（生き残った側）
+		card_loader: CardLoaderのインスタンス（死者復活用、省略可）
 	
 	Returns:
 		Dictionary: {
 			"death_revenge_activated": bool,  # 道連れが発動したか
-			"revenge_mhp_activated": bool     # 雪辱が発動したか
+			"revenge_mhp_activated": bool,    # 雪辱が発動したか
+			"revived": bool,                  # 死者復活が発動したか（タイル復活）
+			"new_creature_name": String,      # 復活後のクリーチャー名
+			"revive_to_hand": bool,           # 手札復活が発動したか
+			"revive_to_hand_data": Dictionary # 手札復活するクリーチャーデータ
 		}
 	"""
 	var result = {
 		"death_revenge_activated": false,
-		"revenge_mhp_activated": false
+		"revenge_mhp_activated": false,
+		"revived": false,
+		"new_creature_name": "",
+		"revive_to_hand": false,
+		"revive_to_hand_data": {}
 	}
 	
 	# 撃破されたクリーチャーのアイテムをチェック
@@ -476,7 +487,223 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	# 💰 クリーチャースキル: 遺産・道産（フェイト、コーンフォーク、クリーピングコインなど）
 	_skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref)
 	
+	# 🔄 手札復活チェック（フェニックス等）
+	if _check_revive_to_hand(defeated):
+		print("【復活発動】", defeated.creature_data.get("name", "?"), " → 手札に復活")
+		result["revive_to_hand"] = true
+		result["revive_to_hand_data"] = defeated.creature_data.duplicate(true)
+		
+		# 即座に手札に戻す
+		if card_system_ref:
+			var return_data = defeated.creature_data.duplicate(true)
+			return_data["current_hp"] = return_data.get("hp", 0) + return_data.get("base_up_hp", 0)
+			card_system_ref.return_card_to_hand(defeated.player_id, return_data)
+		
+		return result  # 手札復活の場合はタイル復活はチェックしない
+	
+	# 🔄 死者復活チェック（タイル復活、最後に処理）
+	if card_loader:
+		var revive_result = _check_and_apply_revive(defeated, opponent, card_loader)
+		if revive_result["revived"]:
+			result["revived"] = true
+			result["new_creature_name"] = revive_result["new_creature_name"]
+	
 	return result
+
+## 手札復活効果があるかチェック
+func _check_revive_to_hand(participant: BattleParticipant) -> bool:
+	"""
+	手札復活効果（フェニックスの「復活」）があるかチェック
+	
+	Returns:
+		手札復活効果があればtrue
+	"""
+	# クリーチャー自身の能力をチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "revive_to_hand" and effect.get("trigger") == "on_death":
+			return true
+	
+	# アイテムからの手札復活効果をチェック
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "revive_to_hand" and effect.get("trigger") == "on_death":
+				return true
+	
+	return false
+
+## 死者復活をチェックして適用
+func _check_and_apply_revive(defeated: BattleParticipant, opponent: BattleParticipant, card_loader) -> Dictionary:
+	"""
+	死者復活効果をチェックして適用
+	
+	Args:
+		defeated: 撃破されたクリーチャー
+		opponent: 攻撃側クリーチャー（条件チェック用）
+		card_loader: CardLoaderのインスタンス
+	
+	Returns:
+		Dictionary: {
+			"revived": bool,
+			"new_creature_id": int,
+			"new_creature_name": String
+		}
+	"""
+	var result = {
+		"revived": false,
+		"new_creature_id": -1,
+		"new_creature_name": ""
+	}
+	
+	# 死者復活効果を探す
+	var revive_effect = _find_revive_effect(defeated)
+	if not revive_effect:
+		return result
+	
+	print("[死者復活チェック] ", defeated.creature_data.get("name", "?"))
+	
+	# 条件チェック（条件付き復活の場合）
+	if not _check_revive_condition(revive_effect, opponent):
+		print("[死者復活] 条件未達成のため発動しません")
+		return result
+	
+	# 復活先のクリーチャーIDを決定
+	var new_creature_id = revive_effect.get("creature_id", -1)
+	if new_creature_id <= 0:
+		print("[死者復活] 無効なクリーチャーIDです: ", new_creature_id)
+		return result
+	
+	# 復活実行
+	var new_creature = card_loader.get_card_by_id(new_creature_id)
+	if new_creature:
+		_apply_revive(defeated, new_creature, result)
+	else:
+		print("[死者復活] クリーチャーが見つかりません: ID ", new_creature_id)
+	
+	return result
+
+## 死者復活効果を探す
+func _find_revive_effect(participant: BattleParticipant):
+	"""
+	クリーチャーまたはアイテムから死者復活効果を探す
+	
+	Returns:
+		死者復活効果のDictionary、なければnull
+	"""
+	# クリーチャー自身の能力をチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "revive" and effect.get("trigger") == "on_death":
+			return effect
+	
+	# アイテムからの復活効果をチェック
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "revive" and effect.get("trigger") == "on_death":
+				return effect
+	
+	return null
+
+## 復活条件をチェック
+func _check_revive_condition(revive_effect: Dictionary, opponent: BattleParticipant) -> bool:
+	"""
+	復活条件を満たすかチェック
+	
+	Args:
+		revive_effect: 死者復活効果の定義
+		opponent: 攻撃側のクリーチャー
+	
+	Returns:
+		条件を満たすならtrue
+	"""
+	var revive_type = revive_effect.get("revive_type", "forced")
+	
+	# 強制復活は無条件で発動
+	if revive_type == "forced":
+		return true
+	
+	# 条件付き復活
+	if revive_type == "conditional":
+		var condition = revive_effect.get("condition", {})
+		var condition_type = condition.get("type", "")
+		
+		match condition_type:
+			"enemy_item_not_used":
+				# 相手がアイテムを使用していない
+				var item_category = condition.get("item_category", "")
+				var opponent_used_item = _opponent_used_item_category(opponent, item_category)
+				print("[条件チェック] 敵が", item_category, "を使用: ", opponent_used_item)
+				return not opponent_used_item
+		
+		# 未知の条件タイプ
+		print("[警告] 未知の条件タイプ: ", condition_type)
+		return false
+	
+	return false
+
+## 相手が特定カテゴリのアイテムを使用しているかチェック
+func _opponent_used_item_category(opponent: BattleParticipant, category: String) -> bool:
+	"""
+	相手が特定カテゴリのアイテムを使用しているかチェック
+	"""
+	var items = opponent.creature_data.get("items", [])
+	for item in items:
+		var item_category = item.get("item_type", "")
+		if item_category == category:
+			return true
+	return false
+
+## 死者復活を適用
+func _apply_revive(participant: BattleParticipant, new_creature: Dictionary, result: Dictionary) -> void:
+	"""
+	死者復活を実行
+	"""
+	var old_name = participant.creature_data.get("name", "?")
+	var new_name = new_creature.get("name", "?")
+	
+	print("【死者復活】", old_name, " → ", new_name)
+	
+	# 現在のアイテムと永続ボーナスを記録
+	var current_items = participant.creature_data.get("items", [])
+	var current_base_up_hp = participant.base_up_hp
+	var current_base_up_ap = participant.base_up_ap
+	
+	# creature_dataを新しいクリーチャーに置き換え
+	participant.creature_data = new_creature.duplicate(true)
+	
+	# アイテム情報を引き継ぐ
+	if not current_items.is_empty():
+		participant.creature_data["items"] = current_items
+	
+	# 永続ボーナスを引き継ぐ
+	participant.creature_data["base_up_hp"] = current_base_up_hp
+	participant.creature_data["base_up_ap"] = current_base_up_ap
+	participant.base_up_hp = current_base_up_hp
+	participant.base_up_ap = current_base_up_ap
+	
+	# 基礎ステータスを新しいクリーチャーのものに更新
+	participant.base_hp = new_creature.get("hp", 0)
+	participant.current_ap = new_creature.get("ap", 0)
+	
+	# HPを復活後のMHPに設定
+	participant.current_hp = participant.base_hp + participant.base_up_hp
+	
+	print("  復活後: AP=", participant.current_ap, " HP=", participant.current_hp)
+	
+	# 結果を記録
+	result["revived"] = true
+	result["new_creature_id"] = new_creature.get("id", -1)
+	result["new_creature_name"] = new_name
 
 ## 道連れ効果のチェック（後方互換性のため残す）
 func check_death_revenge(defeated: BattleParticipant, attacker: BattleParticipant) -> bool:

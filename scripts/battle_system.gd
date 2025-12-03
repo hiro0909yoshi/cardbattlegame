@@ -78,7 +78,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
 	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
-	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic)
+	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system)
 	
 	# アイテム復帰スキルの初期化
 	_skill_item_return.setup_systems(card_system)
@@ -142,6 +142,12 @@ func execute_3d_battle_with_data(attacker_index: int, card_data: Dictionary, til
 # バトルコア処理（共通化）
 func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary, defender_item: Dictionary, from_tile_index: int = -1):
 	print("========== バトル開始 ==========")
+	
+	var tile_index = tile_info.get("index", -1)
+	
+	# ミラーワールドチェック: 同名クリーチャーなら戦闘前に両者破壊
+	if _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
+		return  # 相殺で戦闘終了
 	
 	# バトルタイルのインデックスを取得
 	var battle_tile_index = tile_info.get("index", -1)
@@ -219,6 +225,108 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 		board_system_ref.update_all_tile_displays()
 	
 	emit_signal("invasion_completed", true, tile_info["index"])
+
+# ミラーワールド: 同名クリーチャー複数配置禁止チェック
+# 戦闘時、自フィールドに同名クリーチャーがいる側が破壊される
+func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, attacker_index: int, tile_index: int, from_tile_index: int) -> bool:
+	if not game_flow_manager_ref or not game_flow_manager_ref.spell_world_curse:
+		return false
+	
+	var spell_world_curse = game_flow_manager_ref.spell_world_curse
+	
+	# ミラーワールドが有効かチェック
+	if not spell_world_curse.is_mirror_world_active():
+		return false
+	
+	var attacker_name = card_data.get("name", "")
+	var defender_creature = tile_info.get("creature", {})
+	var defender_name = defender_creature.get("name", "")
+	var defender_owner = tile_info.get("owner", -1)
+	
+	# 攻撃側: 自分のフィールドに同名クリーチャーがいるか
+	var attacker_has_duplicate = spell_world_curse.check_has_same_name_creature(
+		board_system_ref, attacker_index, attacker_name, from_tile_index
+	)
+	
+	# 防御側: 自分のフィールドに同名クリーチャーが他にいるか（自身のタイルを除外）
+	var defender_has_duplicate = spell_world_curse.check_has_same_name_creature(
+		board_system_ref, defender_owner, defender_name, tile_index
+	)
+	
+	# どちらも条件を満たさない場合は発動しない
+	if not attacker_has_duplicate and not defender_has_duplicate:
+		return false
+	
+	print("【ミラーワールド】同名クリーチャー複数配置チェック")
+	var destroy_count = 0
+	
+	# 攻撃側が条件を満たす場合 → 攻撃側破壊
+	if attacker_has_duplicate:
+		print("  攻撃側 ", attacker_name, " を破壊（同名クリーチャーが既に配置済み）")
+		
+		# 移動侵略の場合、元のタイルのクリーチャーを破壊
+		if from_tile_index >= 0:
+			# 破壊時効果を処理
+			var attacker_hp = card_data.get("hp", 0) + card_data.get("base_up_hp", 0)
+			var attacker_ap = card_data.get("ap", 0) + card_data.get("base_up_ap", 0)
+			var attacker_participant = BattleParticipant.new(card_data, attacker_hp, 0, attacker_ap, true, attacker_index)
+			var dummy_opponent = BattleParticipant.new({}, 0, 0, 0, false, -1)
+			battle_special_effects.check_on_death_effects(attacker_participant, dummy_opponent, CardLoader)
+			
+			board_system_ref.remove_creature(from_tile_index)
+			board_system_ref.set_tile_owner(from_tile_index, -1)
+		else:
+			# 手札からの侵略の場合、破壊時効果を処理（カード自体は手札から既に消費済み）
+			var attacker_hp = card_data.get("hp", 0) + card_data.get("base_up_hp", 0)
+			var attacker_ap = card_data.get("ap", 0) + card_data.get("base_up_ap", 0)
+			var attacker_participant = BattleParticipant.new(card_data, attacker_hp, 0, attacker_ap, true, attacker_index)
+			var dummy_opponent = BattleParticipant.new({}, 0, 0, 0, false, -1)
+			battle_special_effects.check_on_death_effects(attacker_participant, dummy_opponent, CardLoader)
+		
+		destroy_count += 1
+	
+	# 防御側が条件を満たす場合 → 防御側破壊
+	if defender_has_duplicate:
+		print("  防御側 ", defender_name, " を破壊（同名クリーチャーが既に配置済み）")
+		
+		# 破壊時効果を処理
+		var defender_hp = defender_creature.get("hp", 0) + defender_creature.get("base_up_hp", 0)
+		var defender_ap = defender_creature.get("ap", 0) + defender_creature.get("base_up_ap", 0)
+		var defender_participant = BattleParticipant.new(defender_creature, defender_hp, 0, defender_ap, false, defender_owner)
+		var dummy_opponent = BattleParticipant.new({}, 0, 0, 0, true, -1)
+		battle_special_effects.check_on_death_effects(defender_participant, dummy_opponent, CardLoader)
+		
+		board_system_ref.remove_creature(tile_index)
+		board_system_ref.set_tile_owner(tile_index, -1)
+		destroy_count += 1
+	
+	# UI更新
+	if board_system_ref.has_method("update_all_tile_displays"):
+		board_system_ref.update_all_tile_displays()
+	
+	# 破壊カウント更新
+	if game_flow_manager_ref.has_method("increment_destroy_count"):
+		for i in range(destroy_count):
+			game_flow_manager_ref.increment_destroy_count()
+	
+	# バトル完了シグナル
+	# 攻撃側だけ破壊 → 侵略失敗
+	# 防御側だけ破壊 → 侵略成功（タイル取得）
+	# 両方破壊 → 侵略失敗
+	var invasion_success = defender_has_duplicate and not attacker_has_duplicate
+	if invasion_success:
+		# 攻撃側がタイルを取得
+		board_system_ref.set_tile_owner(tile_index, attacker_index)
+		if from_tile_index < 0:
+			# 手札から侵略の場合、クリーチャーを配置
+			board_system_ref.place_creature(tile_index, card_data, attacker_index)
+		else:
+			# 移動侵略の場合、移動元から移動
+			board_system_ref.place_creature(tile_index, card_data, attacker_index)
+	
+	emit_signal("invasion_completed", invasion_success, tile_index)
+	
+	return true
 
 # システム検証
 func validate_systems() -> bool:
@@ -474,6 +582,8 @@ func _apply_post_battle_effects(
 			updated_creature["hp"] = attacker.base_hp  # 復活後のHPを保持
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
 			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+	
+	# 🔄 手札復活処理はcheck_on_death_effects内で即座に実行済み
 	
 	# 📦 アイテム復帰処理
 	_apply_item_return(attacker, attacker_index)

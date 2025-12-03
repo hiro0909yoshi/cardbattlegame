@@ -82,6 +82,40 @@ func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool
 		return true
 	return false
 
+## ミラーワールド: 同名クリーチャーのバトル時相殺チェック
+## ミラーワールドが有効かどうかをチェック
+func is_mirror_world_active() -> bool:
+	var game_stats = _get_game_stats()
+	return is_same_creature_destroy_active(game_stats)
+
+## プレイヤーのフィールドに同名クリーチャーがいるかチェック
+## board_system: ボードシステムの参照
+## player_id: チェック対象のプレイヤーID
+## creature_name: チェック対象のクリーチャー名
+## exclude_tile_index: 除外するタイルインデックス（防御側自身のタイルを除外する場合）
+## 戻り値: 同名クリーチャーが存在するか
+func check_has_same_name_creature(board_system, player_id: int, creature_name: String, exclude_tile_index: int = -1) -> bool:
+	if not board_system:
+		return false
+	
+	# プレイヤーが所有するタイルを取得
+	var owned_tiles = board_system.get_player_owned_tiles(player_id)
+	
+	for tile_index in owned_tiles:
+		# 除外タイルはスキップ
+		if tile_index == exclude_tile_index:
+			continue
+		
+		var tile_info = board_system.get_tile_info(tile_index)
+		var creature = tile_info.get("creature", {})
+		if creature.is_empty():
+			continue
+		
+		if creature.get("name", "") == creature_name:
+			return true
+	
+	return false
+
 ## ウェイストワールド: コスト倍率を取得
 func get_cost_multiplier_for_card(card: Dictionary) -> float:
 	var game_stats = _get_game_stats()
@@ -94,13 +128,13 @@ func get_cost_multiplier_for_card(card: Dictionary) -> float:
 ## effect辞書から世界呪いを適用
 func apply(effect: Dictionary) -> void:
 	var curse_type = effect.get("curse_type", "")
-	var name = effect.get("name", "")
+	var curse_name = effect.get("name", "")
 	var duration = effect.get("duration", 6)
 	var params = effect.get("params", {})
-	params["name"] = name
+	params["name"] = curse_name
 	
 	spell_curse.curse_world(curse_type, duration, params)
-	print("[世界呪い] %s を発動（%dR間）" % [name, duration])
+	print("[世界呪い] %s を発動（%dR間）" % [curse_name, duration])
 	
 	# UIを更新（世界呪い表示）
 	_update_ui()
@@ -171,13 +205,29 @@ static func is_trigger_disabled(trigger_type: String, game_stats: Dictionary) ->
 	return trigger_type in disabled
 
 ## ジョイントワールド: 連鎖ペアを取得
-## 戻り値: [["fire", "earth"], ["water", "air"]] 形式
+## 戻り値: [["fire", "earth"], ["water", "wind"]] 形式
 static func get_chain_pairs(game_stats: Dictionary) -> Array:
 	var world_curse = game_stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "element_chain":
 		return []
 	var params = world_curse.get("params", {})
 	return params.get("chain_pairs", [])
+
+## ジョイントワールド: 2つの属性が同じ連鎖グループか判定
+## 通常: 同属性のみ連鎖
+## ジョイントワールド発動中: 火⇔地、水⇔風 も連鎖
+static func is_same_chain_group(elem1: String, elem2: String, game_stats: Dictionary) -> bool:
+	# 同属性なら常にtrue
+	if elem1 == elem2:
+		return true
+	
+	# ジョイントワールド発動中のペアチェック
+	var pairs = get_chain_pairs(game_stats)
+	for pair in pairs:
+		if elem1 in pair and elem2 in pair:
+			return true
+	
+	return false
 
 ## ミラーワールド: 同種相殺が有効か
 static func is_same_creature_destroy_active(game_stats: Dictionary) -> bool:
@@ -205,9 +255,9 @@ func on_round_start():
 		print("[世界呪い] %s 残り%dR" % [curse_name, duration - 1])
 		
 		if world_curse["duration"] == 0:
-			var name = world_curse.get("name", "不明")
+			var expired_name = world_curse.get("name", "不明")
 			game_flow_manager.game_stats.erase("world_curse")
-			print("[世界呪い消滅] %s" % name)
+			print("[世界呪い消滅] %s" % expired_name)
 		
 		# UIを更新
 		_update_ui()

@@ -48,7 +48,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 	
 	match effect_type:
 		"transform":
-			return await _apply_transform(effect, target_data, caster_player_id)
+			return _apply_transform(effect, target_data, caster_player_id)
 		_:
 			push_error("[SpellTransform] 未対応のeffect_type: %s" % effect_type)
 			return {"success": false, "reason": "unknown_effect_type"}
@@ -57,7 +57,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 # ============ 変身効果実装 ============
 
 ## 変身効果を適用
-func _apply_transform(effect: Dictionary, target_data: Dictionary, caster_player_id: int) -> Dictionary:
+func _apply_transform(effect: Dictionary, target_data: Dictionary, _caster_player_id: int) -> Dictionary:
 	var target = effect.get("target", "self")  # self: 秘術使用者, target: 選択対象
 	var transform_to = effect.get("transform_to", -1)  # 固定ID変身
 	var transform_type = effect.get("transform_type", "")  # 変身タイプ
@@ -96,7 +96,7 @@ func _apply_transform(effect: Dictionary, target_data: Dictionary, caster_player
 			"copy_target":
 				# 対象コピー変身（シェイプシフター）
 				var copy_tile_index = target_data.get("tile_index", -1)
-				new_creature_id = await _get_copy_target_id(copy_tile_index)
+				new_creature_id = _get_copy_target_id(copy_tile_index)
 			"same_element_defensive":
 				# 同属性の防御型クリーチャーに変身（ターンウォール）
 				var element = old_creature.get("element", "neutral")
@@ -218,7 +218,7 @@ func _get_same_element_defensive_id(element: String) -> int:
 # ============ 複数対象変身（ディスコード用） ============
 
 ## 最多配置クリーチャー種を全てゴブリンに変身
-func apply_discord_transform(caster_player_id: int) -> Dictionary:
+func apply_discord_transform(_caster_player_id: int) -> Dictionary:
 	# 全クリーチャーをカウント
 	var creature_counts = {}  # {creature_id: {count, name, tiles}}
 	
