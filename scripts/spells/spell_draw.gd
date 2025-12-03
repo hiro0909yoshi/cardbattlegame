@@ -9,6 +9,7 @@ var player_system_ref = null
 var card_selection_handler: CardSelectionHandler = null
 var ui_manager_ref = null
 var board_system_ref = null
+var spell_creature_place_ref = null
 
 func setup(card_system: CardSystem, player_system = null):
 	card_system_ref = card_system
@@ -26,6 +27,10 @@ func set_ui_manager(ui_manager):
 ## カード選択ハンドラーを設定
 func set_card_selection_handler(handler: CardSelectionHandler):
 	card_selection_handler = handler
+
+## SpellCreaturePlace参照を設定
+func set_spell_creature_place(spell_creature_place):
+	spell_creature_place_ref = spell_creature_place
 
 ## 統合エントリポイント - effect辞書から適切な処理を実行
 ## 戻り値: Dictionary（結果情報、next_effectがある場合は再帰適用が必要）
@@ -196,6 +201,10 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			var target_player_id = context.get("target_player_id", -1)
 			if target_player_id >= 0:
 				result = reset_deck_to_original(target_player_id)
+		
+		"draw_and_place":
+			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）
+			result = _apply_draw_and_place(effect, player_id)
 		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
@@ -1224,3 +1233,61 @@ func has_item_or_spell_in_hand(target_player_id: int) -> bool:
 			return true
 	
 	return false
+
+
+## draw_and_place効果を適用（ワイルドセンス用）
+func _apply_draw_and_place(effect: Dictionary, player_id: int) -> Dictionary:
+	var draw_count = effect.get("draw_count", 1)
+	var placement_mode = effect.get("placement_mode", "random")
+	var card_type_filter = effect.get("card_type_filter", "creature")
+	var result = {"success": false, "placed": []}
+	
+	if not card_system_ref:
+		print("[draw_and_place] CardSystemがありません")
+		return result
+	
+	# カードを引く
+	var drawn_cards = card_system_ref.draw_cards_for_player(player_id, draw_count)
+	
+	if drawn_cards.is_empty():
+		print("[draw_and_place] カードを引けませんでした")
+		return result
+	
+	for card in drawn_cards:
+		var card_type = card.get("type", "")
+		var card_name = card.get("name", "?")
+		var card_id = card.get("id", -1)
+		
+		print("[draw_and_place] 引いたカード: %s (type: %s)" % [card_name, card_type])
+		
+		# フィルター条件をチェック（クリーチャーのみ配置）
+		if card_type_filter == "creature" and card_type == "creature":
+			# 手札からカードを除去（引いたカードは手札の最後に追加される）
+			var hand = card_system_ref.get_all_cards_for_player(player_id)
+			if hand.size() > 0:
+				# 手札の最後から同じIDのカードを探す（複数枚ある可能性があるため）
+				var card_index = -1
+				for i in range(hand.size() - 1, -1, -1):
+					if hand[i].get("id", -1) == card_id:
+						card_index = i
+						break
+				
+				if card_index >= 0:
+					card_system_ref.use_card_for_player(player_id, card_index)
+					print("[draw_and_place] 手札からカードを消費: index=%d" % card_index)
+			
+			# 配置処理
+			if placement_mode == "random" and spell_creature_place_ref and board_system_ref:
+				var success = spell_creature_place_ref.place_creature_random(
+					board_system_ref, player_id, card_id, CardLoader, true
+				)
+				if success:
+					print("[draw_and_place] %s をランダムな空地に配置しました" % card_name)
+					result["placed"].append(card_name)
+					result["success"] = true
+				else:
+					print("[draw_and_place] 配置失敗 - 空地がありません")
+		else:
+			print("[draw_and_place] %s はクリーチャーではないため手札に残ります" % card_name)
+	
+	return result

@@ -143,16 +143,29 @@
 	  "ap": 50,
 	  "hp": 30,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[水地]；秘術[G30・ミストウィングに変身]"
-	,
+	  "ability_detail": "無効化[水地]；秘術[G30・ミストウィングに変身　]",
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": ["無効化", "秘術"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "element",
 			"elements": ["water", "earth"]
 		  }
-		}
+		},
+		"mystic_arts": [
+		  {
+			"name": "ミストウィングに変身",
+			"cost": 30,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 142
+			  }
+			]
+		  }
+		]
 	  }
 	},
 	{

@@ -202,6 +202,10 @@ func use_item(item_card: Dictionary):
 	else:
 		cost = cost_data
 	
+	# ライフフォース呪いチェック（アイテムコスト0化）
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, item_card)
+	
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
 	
@@ -271,6 +275,10 @@ func _can_afford_card(card_data: Dictionary) -> bool:
 		cost = cost_data.get("mp", 0)  # アイテムはmp値をそのまま使用（等倍）
 	else:
 		cost = cost_data
+	
+	# ライフフォース呪いチェック（アイテムコスト0化）
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, card_data)
 	
 	return current_player.magic_power >= cost
 

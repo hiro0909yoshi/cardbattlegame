@@ -162,6 +162,37 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			}
 			curse_creature(tile_index, "indomitable", duration, params)
 		
+		"land_effect_disable":
+			# 地形効果無効呪い
+			var creature = creature_manager.get_data_ref(tile_index)
+			if creature:
+				SpellCurseBattle.apply_land_effect_disable(creature, effect.get("name", "地形効果無効"))
+		
+		"land_effect_grant":
+			# 地形効果付与呪い
+			var creature = creature_manager.get_data_ref(tile_index)
+			if creature:
+				var grant_elements = effect.get("grant_elements", [])
+				SpellCurseBattle.apply_land_effect_grant(creature, grant_elements, effect.get("name", "地形効果"))
+		
+		"metal_form":
+			# メタルフォーム呪い
+			var creature = creature_manager.get_data_ref(tile_index)
+			if creature:
+				SpellCurseBattle.apply_metal_form(creature, effect.get("name", "メタルフォーム"))
+		
+		"magic_barrier":
+			# マジックバリア呪い
+			var creature = creature_manager.get_data_ref(tile_index)
+			if creature:
+				SpellCurseBattle.apply_magic_barrier(creature, effect.get("name", "マジックバリア"))
+		
+		"destroy_after_battle":
+			# 戦闘後破壊呪い
+			var creature = creature_manager.get_data_ref(tile_index)
+			if creature:
+				SpellCurseBattle.apply_destroy_after_battle(creature, effect.get("name", "戦闘後破壊"))
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

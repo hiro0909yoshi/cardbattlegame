@@ -641,7 +641,24 @@
 			"ap": 70,
 			"hp": 10,
 			"ability": "秘術",
-			"ability_detail": "秘術[G50・マミーに変身]"
+			"ability_detail": "秘術[G50・マミーに変身]",
+			"ability_parsed": {
+				"keywords": ["秘術"],
+				"mystic_arts": [
+					{
+						"name": "マミーに変身",
+						"cost": 50,
+						"target_type": "none",
+						"effects": [
+							{
+								"effect_type": "transform",
+								"target": "self",
+								"transform_to": 239
+							}
+						]
+					}
+				]
+			}
 		},
 		{
 			"id": 21,

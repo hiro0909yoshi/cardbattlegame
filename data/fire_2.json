@@ -255,7 +255,7 @@
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "合成・無効化",
-	  "ability_detail": "合成[タスペル・ヘルバイロンに変身]；無効化[巻物]",
+	  "ability_detail": "合成[スペル・ヘルバイロンに変身]；無効化[巻物]",
 	  "ability_parsed": {
 		"keywords": [
 		  "無効化"

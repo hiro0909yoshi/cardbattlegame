@@ -542,16 +542,29 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[MHP40以上]；秘術[G60・ガルーダに変身]"
-	,
+	  "ability_detail": "無効化[MHP40以上]；秘術[G60・ガルーダに変身]",
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": ["無効化", "秘術"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "mhp_above",
 			"value": 40
 		  }
-		}
+		},
+		"mystic_arts": [
+		  {
+			"name": "ガルーダに変身",
+			"cost": 60,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 307
+			  }
+			]
+		  }
+		]
 	  }
 	},
 	{
@@ -744,10 +757,22 @@
 	  "ability": "先制・HP効果無効・秘術",
 	  "ability_detail": "先制；HP効果無効；秘術[G60・アームドプリンセスに変身]",
 	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": []
+		"keywords": ["先制", "HP効果無効", "秘術"],
+		"effects": [],
+		"mystic_arts": [
+		  {
+			"name": "アームドプリンセスに変身",
+			"cost": 60,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 300
+			  }
+			]
+		  }
+		]
 	  }
 	},
 	{

@@ -169,6 +169,11 @@ func _execute_summon(card_index: int):
 		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
 	else:
 		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+	
+	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	if board_system and board_system.game_flow_manager and board_system.game_flow_manager.spell_cost_modifier:
+		cost = board_system.game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
+	
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power >= cost:

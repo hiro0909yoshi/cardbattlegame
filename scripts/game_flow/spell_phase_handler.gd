@@ -61,6 +61,7 @@ var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
 var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手札戻し
 var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
 var spell_borrow: SpellBorrow = null  # スペル借用
+var spell_transform: SpellTransform = null  # クリーチャー変身
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -116,9 +117,17 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if not spell_creature_place:
 		spell_creature_place = SpellCreaturePlace.new()
 	
+	# SpellDrawにSpellCreaturePlace参照を設定
+	if game_flow_manager and game_flow_manager.spell_draw and spell_creature_place:
+		game_flow_manager.spell_draw.set_spell_creature_place(spell_creature_place)
+	
 	# SpellBorrow を初期化
 	if not spell_borrow and board_system and player_system and card_system:
 		spell_borrow = SpellBorrow.new(board_system, player_system, card_system, self)
+	
+	# SpellTransform を初期化
+	if not spell_transform and board_system and player_system and card_system:
+		spell_transform = SpellTransform.new(board_system, player_system, card_system, self)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -299,6 +308,21 @@ func use_spell(spell_card: Dictionary):
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
 	
+	# ライフフォース呪いチェック（スペル無効化）
+	if game_flow_manager.spell_cost_modifier:
+		var nullify_result = game_flow_manager.spell_cost_modifier.check_spell_nullify(current_player_id)
+		if nullify_result.get("nullified", false):
+			# スペルは無効化 → カードを捨て札へ
+			if ui_manager and ui_manager.phase_label:
+				ui_manager.phase_label.text = nullify_result.get("message", "スペル無効化")
+			# 手札からカードを除去（捨て札へ）
+			if player_system:
+				player_system.remove_card_from_hand(current_player_id, selected_spell_card)
+			await get_tree().create_timer(1.5).timeout
+			selected_spell_card = {}
+			current_state = State.WAITING_FOR_INPUT
+			return
+	
 	# 対象選択が必要かチェック
 	var parsed = spell_card.get("effect_parsed", {})
 	var target_type = parsed.get("target_type", "")
@@ -328,6 +352,10 @@ func use_spell(spell_card: Dictionary):
 	elif target_type == "all_players":
 		# 全プレイヤー対象（カオスパニック等）- 対象選択なしで即発動
 		var target_data = {"type": "all_players"}
+		execute_spell_effect(spell_card, target_data)
+	elif target_type == "world":
+		# 世界呪い - 対象選択なしで即発動
+		var target_data = {"type": "world"}
 		execute_spell_effect(spell_card, target_data)
 	elif not target_type.is_empty() and target_type != "none":
 		# 対象選択が必要
@@ -596,70 +624,29 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if game_flow_manager and game_flow_manager.spell_dice:
 				game_flow_manager.spell_dice.apply_effect_from_parsed(effect, target_data, current_player_id)
 		
-		"stat_boost", "stat_reduce":
+		"stat_boost":
 			# ステータス呪い系（統合処理）
 			if target_data.get("type") == "land":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse_stat:
 					game_flow_manager.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
-		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", "command_growth_curse", "plague_curse", "creature_curse", "forced_stop", "indomitable":
-			# 戦闘制限呪い系 - SpellCurseに委譲
+		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", \
+		"command_growth_curse", "plague_curse", "creature_curse", "forced_stop", "indomitable", \
+		"land_effect_disable", "land_effect_grant", "metal_form", "magic_barrier", "destroy_after_battle", \
+		"bounty_curse", "grant_mystic_arts", "land_curse":
+			# クリーチャー呪い系 - SpellCurseに委譲
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
-					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
-		
-		"player_curse":
-			# プレイヤー呪い（バリアー、バンフィズム等）- SpellCurseに委譲
-			var curse_type_inner = effect.get("curse_type", "unknown")
-			var duration = effect.get("duration", -1)
-			var params = {"name": effect.get("name", effect.get("description", "呪い"))}
-			
-			if target_data.get("type") == "all_players":
-				# 全プレイヤーに呪い付与（バンフィズム等）
-				if game_flow_manager and game_flow_manager.spell_curse and player_system:
-					for player in player_system.players:
-						game_flow_manager.spell_curse.curse_player(player.id, curse_type_inner, duration, params)
-			else:
-				# 単体プレイヤーに呪い付与
-				var target_player_id = target_data.get("player_id", -1)
-				if target_player_id >= 0 and game_flow_manager and game_flow_manager.spell_curse:
-					game_flow_manager.spell_curse.curse_player(target_player_id, curse_type_inner, duration, params)
-		
-		"land_effect_disable", "land_effect_grant", "metal_form", "magic_barrier", "destroy_after_battle":
-			# 戦闘制限呪い - SpellCurseBattleを直接使用
-			var target_type = target_data.get("type", "")
-			if target_type == "land" or target_type == "creature":
-				var tile_index = target_data.get("tile_index", -1)
-				_apply_battle_curse(effect, tile_index)
-		
-		"bounty_curse":
-			# 賞金首呪い（バウンティハント）- SpellCurseに委譲
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				if game_flow_manager and game_flow_manager.spell_curse:
-					# caster_idを効果辞書に追加
-					var effect_with_caster = effect.duplicate()
-					effect_with_caster["caster_id"] = current_player_id
-					game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
-		
-		"grant_mystic_arts":
-			# 秘術付与呪い（シュリンクシジル等）- SpellCurseに委譲
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				if game_flow_manager and game_flow_manager.spell_curse:
-					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
-		
-		"land_curse":
-			# 土地呪い（ブラストトラップ等）- SpellCurseに委譲
-			if target_data.get("type") == "land":
-				var tile_index = target_data.get("tile_index", -1)
-				if game_flow_manager and game_flow_manager.spell_curse:
-					var effect_with_caster = effect.duplicate()
-					effect_with_caster["caster_id"] = current_player_id
-					game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
+					# caster_id追加が必要な効果
+					if effect_type in ["bounty_curse", "land_curse"]:
+						var effect_with_caster = effect.duplicate()
+						effect_with_caster["caster_id"] = current_player_id
+						game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
+					else:
+						game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
 			# 通行料呪い系（統合処理）
@@ -667,6 +654,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var tile_index = target_data.get("tile_index", -1)
 				var target_player_id = target_data.get("player_id", -1)
 				game_flow_manager.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
+		
+		"life_force_curse":
+			# ライフフォース呪い - SpellCostModifierに委譲
+			var target_player_id = target_data.get("player_id", current_player_id)
+			if game_flow_manager and game_flow_manager.spell_cost_modifier:
+				game_flow_manager.spell_cost_modifier.apply_life_force(target_player_id)
 		
 		"draw", "draw_cards", "draw_by_rank", "draw_by_type", "discard_and_draw_plus", "check_hand_elements", \
 		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
@@ -724,8 +717,9 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					print("[SpellPhaseHandler] クリーチャー配置失敗")
 		
 		"draw_and_place":
-			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）
-			_apply_draw_and_place_effect(effect)
+			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）- SpellDrawに委譲
+			if game_flow_manager and game_flow_manager.spell_draw:
+				game_flow_manager.spell_draw.apply_effect(effect, current_player_id, {})
 		
 		"swap_with_hand", "swap_board_creatures":
 			# クリーチャー交換系 - SpellCreatureSwapに委譲
@@ -747,6 +741,16 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_borrow:
 				await spell_borrow.apply_use_target_mystic_art(target_data, current_player_id)
 		
+		"transform":
+			# クリーチャー変身系 - SpellTransformに委譲
+			if spell_transform:
+				await spell_transform.apply_effect(effect, target_data, current_player_id)
+		
+		"discord_transform":
+			# ディスコード（最多配置クリーチャーをゴブリンに） - SpellTransformに委譲
+			if spell_transform:
+				spell_transform.apply_discord_transform(current_player_id)
+		
 		"return_to_hand":
 			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
 			if spell_creature_return:
@@ -765,27 +769,18 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if game_flow_manager and game_flow_manager.spell_magic:
 				game_flow_manager.spell_magic.apply_self_destroy(tile_index, clear_land)
 		
-		"warp_to_nearest_vacant":
-			# 最寄り空地にワープ（エスケープ）
+		"warp_to_nearest_vacant", "warp_to_nearest_gate", "warp_to_target":
+			# ワープ系 - SpellPlayerMoveに委譲
 			if game_flow_manager and game_flow_manager.spell_player_move:
-				var result = game_flow_manager.spell_player_move.warp_to_nearest_vacant(current_player_id)
-				print("[SpellPhaseHandler] %s" % result.get("message", ""))
-				if result.get("success", false):
-					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
-		
-		"warp_to_nearest_gate":
-			# 最寄りゲートにワープ（フォームポータル）
-			if game_flow_manager and game_flow_manager.spell_player_move:
-				var result = game_flow_manager.spell_player_move.warp_to_nearest_gate(current_player_id)
-				print("[SpellPhaseHandler] %s" % result.get("message", ""))
-				if result.get("success", false):
-					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
-		
-		"warp_to_target":
-			# 指定タイルにワープ（マジカルリープ）
-			if game_flow_manager and game_flow_manager.spell_player_move:
-				var tile_idx = target_data.get("tile_index", -1)
-				var result = game_flow_manager.spell_player_move.warp_to_target(current_player_id, tile_idx)
+				var result: Dictionary
+				match effect_type:
+					"warp_to_nearest_vacant":
+						result = game_flow_manager.spell_player_move.warp_to_nearest_vacant(current_player_id)
+					"warp_to_nearest_gate":
+						result = game_flow_manager.spell_player_move.warp_to_nearest_gate(current_player_id)
+					"warp_to_target":
+						var tile_idx = target_data.get("tile_index", -1)
+						result = game_flow_manager.spell_player_move.warp_to_target(current_player_id, tile_idx)
 				print("[SpellPhaseHandler] %s" % result.get("message", ""))
 				if result.get("success", false):
 					skip_dice_phase = true  # ワープ成功時はサイコロフェーズをスキップ
@@ -809,59 +804,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", current_player_id)
 				var duration = effect.get("duration", 1)
 				game_flow_manager.spell_player_move.grant_direction_choice(target_player_id, duration)
-
-
-## draw_and_place効果を適用（ワイルドセンス用）
-func _apply_draw_and_place_effect(effect: Dictionary) -> void:
-	var draw_count = effect.get("draw_count", 1)
-	var placement_mode = effect.get("placement_mode", "random")
-	var card_type_filter = effect.get("card_type_filter", "creature")
-	
-	if not card_system:
-		print("[draw_and_place] CardSystemがありません")
-		return
-	
-	# カードを引く
-	var drawn_cards = card_system.draw_cards_for_player(current_player_id, draw_count)
-	
-	if drawn_cards.is_empty():
-		print("[draw_and_place] カードを引けませんでした")
-		return
-	
-	for card in drawn_cards:
-		var card_type = card.get("type", "")
-		var card_name = card.get("name", "?")
-		var card_id = card.get("id", -1)
 		
-		print("[draw_and_place] 引いたカード: %s (type: %s)" % [card_name, card_type])
-		
-		# フィルター条件をチェック（クリーチャーのみ配置）
-		if card_type_filter == "creature" and card_type == "creature":
-			# 手札からカードを除去（引いたカードは手札の最後に追加される）
-			var hand = card_system.get_all_cards_for_player(current_player_id)
-			if hand.size() > 0:
-				# 手札の最後から同じIDのカードを探す（複数枚ある可能性があるため）
-				var card_index = -1
-				for i in range(hand.size() - 1, -1, -1):
-					if hand[i].get("id", -1) == card_id:
-						card_index = i
-						break
-				
-				if card_index >= 0:
-					card_system.use_card_for_player(current_player_id, card_index)
-					print("[draw_and_place] 手札からカードを消費: index=%d" % card_index)
-			
-			# 配置処理
-			if placement_mode == "random" and spell_creature_place and board_system:
-				var success = spell_creature_place.place_creature_random(
-					board_system, current_player_id, card_id, CardLoader, true
-				)
-				if success:
-					print("[draw_and_place] %s をランダムな空地に配置しました" % card_name)
-				else:
-					print("[draw_and_place] 配置失敗 - 空地がありません")
-		else:
-			print("[draw_and_place] %s はクリーチャーではないため手札に残ります" % card_name)
+		"world_curse":
+			# 世界呪い - SpellWorldCurseに委譲
+			if game_flow_manager and game_flow_manager.spell_world_curse:
+				game_flow_manager.spell_world_curse.apply(effect)
+
 
 
 ## 全クリーチャー対象スペルを実行（ディラニー、全体ダメージ等）
@@ -978,49 +926,6 @@ func _wait_for_tile_selection() -> int:
 ## タイル選択完了シグナル
 signal tile_selection_completed(tile_index: int)
 
-
-## 戦闘制限呪いを適用（地形効果無効/付与、メタルフォーム、マジックバリア）
-func _apply_battle_curse(effect: Dictionary, tile_index: int):
-	if tile_index < 0 or not board_system:
-		return
-	
-	# タイルノードから直接creature_dataを取得（参照）
-	if not board_system.tile_nodes.has(tile_index):
-		print("[地形効果呪い] タイル %d が見つかりません" % tile_index)
-		return
-	
-	var tile_node = board_system.tile_nodes[tile_index]
-	if tile_node == null or tile_node.creature_data.is_empty():
-		print("[地形効果呪い] タイル %d にクリーチャーがいません" % tile_index)
-		return
-	
-	# creature_dataは参照なので直接更新可能
-	var creature_ref = tile_node.creature_data
-	
-	var effect_type = effect.get("effect_type", "")
-	var curse_name = effect.get("name", "")
-	
-	match effect_type:
-		"land_effect_disable":
-			SpellCurseBattle.apply_land_effect_disable(creature_ref, curse_name)
-			print("【地形効果無効】%s に呪いを付与" % creature_ref.get("name", "?"))
-		
-		"land_effect_grant":
-			var grant_elements = effect.get("grant_elements", [])
-			SpellCurseBattle.apply_land_effect_grant(creature_ref, grant_elements, curse_name)
-			print("【地形効果付与】%s に呪いを付与" % creature_ref.get("name", "?"))
-		
-		"metal_form":
-			SpellCurseBattle.apply_metal_form(creature_ref, curse_name)
-			print("【メタルフォーム】%s に呪いを付与" % creature_ref.get("name", "?"))
-		
-		"magic_barrier":
-			SpellCurseBattle.apply_magic_barrier(creature_ref, curse_name)
-			print("【マジックバリア】%s に呪いを付与" % creature_ref.get("name", "?"))
-		
-		"destroy_after_battle":
-			SpellCurseBattle.apply_destroy_after_battle(creature_ref, curse_name)
-			print("【戦闘後破壊】%s に呪いを付与" % creature_ref.get("name", "?"))
 
 
 ## スペルフェーズ完了

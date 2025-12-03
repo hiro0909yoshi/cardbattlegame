@@ -1055,7 +1055,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"呪い防魔化\"(6R間、呪いのついた全クリーチャーは防魔)"
+	  "effect": "世界呪い\"呪い防魔化\"(6R間、呪いのついた全クリーチャーは防魔)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "cursed_protection",
+			"name": "呪い防魔化",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2049,
@@ -1066,7 +1077,20 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "対象クリーチャーを同属性の防御型クリーチャーに変える"
+	  "effect": "対象クリーチャーを同属性の防御型クリーチャーに変える",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"target": "target",
+			"transform_type": "same_element_defensive"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2050,
@@ -1231,7 +1255,15 @@
 		"mp": 80,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "最多配置クリーチャーのうち1種類を全てゴブリンに変える"
+	  "effect": "最多配置クリーチャーのうち1種類を全てゴブリンに変える",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "discord_transform"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2057,

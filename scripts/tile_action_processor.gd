@@ -216,6 +216,10 @@ func on_card_selected(card_index: int):
 		else:
 			cost = cost_data  # 等倍
 		
+		# ライフフォース呪いチェック（クリーチャーコスト0化）
+		if game_flow_manager and game_flow_manager.spell_cost_modifier:
+			cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
+		
 		var current_player = player_system.get_current_player()
 		if current_player.magic_power < cost:
 			print("[TileActionProcessor] 魔力不足でバトルできません")
@@ -342,6 +346,10 @@ func execute_summon(card_index: int):
 		cost = cost_data.get("mp", 0)  # 等倍
 	else:
 		cost = cost_data  # 等倍
+	
+	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
 	var current_player = player_system.get_current_player()
 	
@@ -509,6 +517,10 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 		cost = cost_data.get("mp", 0)  # 等倍
 	else:
 		cost = cost_data  # 等倍
+	
+	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
 	var current_player = player_system.get_current_player()
 	

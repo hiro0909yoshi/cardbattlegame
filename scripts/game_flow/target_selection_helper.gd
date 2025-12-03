@@ -300,7 +300,11 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 		"creature":
 			# クリーチャーを探す（条件フィルタ対応）
 			if handler.board_system:
-				for tile_index in handler.board_system.tile_nodes.keys():
+				# タイル番号順にソート
+				var tile_indices = handler.board_system.tile_nodes.keys()
+				tile_indices.sort()
+				
+				for tile_index in tile_indices:
 					var tile_info = handler.board_system.get_tile_info(tile_index)
 					var creature = tile_info.get("creature", {})
 					if creature.is_empty():

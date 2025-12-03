@@ -49,8 +49,10 @@ var spell_magic: SpellMagic
 var spell_land: SpellLand
 var spell_curse: SpellCurse
 var spell_curse_toll: SpellCurseToll
+var spell_cost_modifier: SpellCostModifier
 var spell_dice: SpellDice
 var spell_curse_stat: SpellCurseStat
+var spell_world_curse: SpellWorldCurse
 var spell_player_move: SpellPlayerMove
 
 # ターン終了制御用フラグ（BUG-000対策）
@@ -174,6 +176,12 @@ func _setup_spell_systems(board_system):
 			spell_curse_stat.setup(spell_curse, creature_manager)
 			add_child(spell_curse_stat)
 			print("[SpellCurseStat] 初期化完了")
+			
+			# SpellWorldCurseの初期化
+			spell_world_curse = SpellWorldCurse.new()
+			spell_world_curse.setup(spell_curse, self)
+			add_child(spell_world_curse)
+			print("[SpellWorldCurse] 初期化完了")
 			
 			# SpellPlayerMoveの初期化
 			spell_player_move = SpellPlayerMove.new()
@@ -551,6 +559,10 @@ func end_turn():
 		if board_system_3d.current_player_index == 0:
 			current_turn_number += 1
 			print("=== ラウンド", current_turn_number, "開始 ===")
+			
+			# 世界呪いのduration更新
+			if spell_world_curse:
+				spell_world_curse.on_round_start()
 		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		

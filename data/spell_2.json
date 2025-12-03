@@ -1128,7 +1128,20 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "対象セプターに呪い\"生命力\"(クリーチャーとアイテムG0、スペルは無効化され呪いは消える)"
+	  "effect": "対象セプターに呪い\"生命力\"(クリーチャーとアイテムG0、スペルは無効化され呪いは消える)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "include_self": true
+		},
+		"effects": [
+		  {
+			"effect_type": "life_force_curse",
+			"curse_type": "life_force",
+			"duration": -1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2118,

@@ -347,7 +347,7 @@
 	  "ability": "AP計算・秘術",
 	  "ability_detail": "AP+🌱配置数×5；秘術[G50・マッドマンに変身]",
 	  "ability_parsed": {
-		"keywords": [],
+		"keywords": ["秘術"],
 		"effects": [
 		  {
 			"effect_type": "land_count_multiplier",
@@ -356,6 +356,20 @@
 			"multiplier": 5,
 			"operation": "add",
 			"description": "AP+地配置数×5"
+		  }
+		],
+		"mystic_arts": [
+		  {
+			"name": "マッドマンに変身",
+			"cost": 50,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 238
+			  }
+			]
 		  }
 		]
 	  }

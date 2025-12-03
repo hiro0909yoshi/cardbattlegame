@@ -305,16 +305,29 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[無]；秘術[G60・ケルピーに変身]"
-,
-  "ability_parsed": {
-	"keywords": ["無効化"],
-	"keyword_conditions": {
-	  "無効化": {
-		"nullify_type": "element",
-		"element": "neutral"
+	  "ability_detail": "無効化[無]；秘術[G60・ケルピーに変身]",
+	  "ability_parsed": {
+		"keywords": ["無効化", "秘術"],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"element": "neutral"
 		  }
-		}
+		},
+		"mystic_arts": [
+		  {
+			"name": "ケルピーに変身",
+			"cost": 60,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 121
+			  }
+			]
+		  }
+		]
 	  }
 	},
 	{
@@ -490,16 +503,29 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[火風]；秘術[G30・アクアホーンに変身]"
-	,
+	  "ability_detail": "無効化[火風]；秘術[G30・アクアホーンに変身]",
 	  "ability_parsed": {
-		"keywords": ["無効化"],
+		"keywords": ["無効化", "秘術"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "element",
 			"elements": ["fire", "wind"]
 		  }
-		}
+		},
+		"mystic_arts": [
+		  {
+			"name": "アクアホーンに変身",
+			"cost": 30,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 104
+			  }
+			]
+		  }
+		]
 	  }
 	},
 	{

@@ -199,6 +199,12 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
+	# ライフフォース呪いチェック（クリーチャー/アイテムコスト0化）
+	if board_system and board_system.game_flow_manager and board_system.game_flow_manager.spell_cost_modifier:
+		var modified_cost = board_system.game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, card_data)
+		if modified_cost == 0:
+			return 0  # ライフフォースでコスト0化
+	
 	if player_buff_system:
 		return player_buff_system.modify_card_cost(base_cost, card_data, player_id)
 	

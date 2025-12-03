@@ -8,6 +8,7 @@ class_name GameSystemManager
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 const SpellCurseTollClass = preload("res://scripts/spells/spell_curse_toll.gd")
+const SpellCostModifierClass = preload("res://scripts/spells/spell_cost_modifier.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -312,6 +313,14 @@ func phase_4_setup_system_interconnections() -> void:
 			if board_system_3d:
 				board_system_3d.set_meta("spell_curse_toll", game_flow_manager.spell_curse_toll)
 				print("[SpellCurseToll] BoardSystem3D のメタデータとして設定完了")
+			
+			# SpellCostModifier の初期化
+			game_flow_manager.spell_cost_modifier = SpellCostModifierClass.new()
+			game_flow_manager.spell_cost_modifier.setup(
+				game_flow_manager.spell_curse,
+				player_system
+			)
+			print("[SpellCostModifier] 初期化完了")
 		
 		# CPUAIHandler の初期化（setup_systems で行われる）
 		# GameFlowManager._ready() で既に初期化済みなため、ここでは参照設定のみ
