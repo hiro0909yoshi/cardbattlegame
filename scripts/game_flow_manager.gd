@@ -155,6 +155,7 @@ func _setup_spell_systems(board_system):
 		if creature_manager:
 			spell_land = SpellLand.new()
 			spell_land.setup(board_system, creature_manager, player_system, card_system)
+			spell_land.set_game_flow_manager(self)
 			print("[SpellLand] 初期化完了")
 			
 			# SpellCurseの初期化

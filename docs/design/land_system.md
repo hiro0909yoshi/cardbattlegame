@@ -399,6 +399,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 - 変更不可: チェックポイント（0, 10）、ワープ（5, 15）
 - 無属性への変更: 不可（4属性のみ選択可能）
 - 実行後: ダウン状態＋ターン終了（不屈で回避可）
+- **ソリッドワールド発動中**: 属性変更不可（世界呪いによるブロック）
 
 ### 引き継ぎデータ
 | データ | 継承 |
@@ -430,6 +431,32 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 - `LandActionHelper.execute_terrain_change_with_element()` - 実行処理
 - `LandInputHelper.handle_terrain_selection_input()` - キー入力処理
 - `LandCommandHandler` - 状態管理（`SELECTING_TERRAIN`）
+
+### ソリッドワールド（世界呪い）対応 ⚠️
+
+**ソリッドワールド（ID: 2047）**発動中は、全領地の土地変性（属性変更・レベルダウン）が無効になる。
+
+**ブロックされる操作**:
+| 操作 | チェック箇所 | 結果 |
+|------|-------------|------|
+| 領地コマンドの地形変化 | `BoardSystem3D.change_tile_terrain()` | 失敗（false返却） |
+| スペルによる属性変更 | `SpellLand.change_element()` | 失敗（false返却） |
+| スペルによるレベルダウン | `SpellLand.change_level(delta < 0)` | 失敗（false返却） |
+
+**ブロックされない操作**:
+- レベルアップ（`SpellLand.change_level(delta > 0)`）
+- クリーチャー召喚・交換
+- 土地放棄
+
+**新規実装時の注意**:
+バトル中スキルやトリガー効果で土地を変更する場合は、必ず以下のメソッドを経由すること：
+- 属性変更 → `SpellLand.change_element()`
+- レベル変更 → `SpellLand.change_level()`
+- ランドコマンド経由 → `BoardSystem3D.change_tile_terrain()`
+
+直接`tile.tile_type`や`tile.level`を変更するとソリッドワールドがバイパスされるため禁止。
+
+**関連ドキュメント**: [世界呪い.md](spells/世界呪い.md) - ソリッドワールド詳細
 
 ### スペル/スキル連携
 スペルコストのみで地形変化可能（領地コマンドの追加コスト不要）：

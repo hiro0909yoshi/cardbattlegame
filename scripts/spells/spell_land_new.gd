@@ -10,6 +10,7 @@ var board_system_ref: BoardSystem3D
 var creature_manager_ref: CreatureManager
 var player_system_ref: PlayerSystem
 var card_system_ref: CardSystem
+var game_flow_manager_ref = null  # ソリッドワールド判定用
 
 ## 初期化
 func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, player_system: PlayerSystem, card_system: CardSystem = null) -> void:
@@ -25,11 +26,41 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 	if not player_system_ref:
 		push_error("SpellLand: PlayerSystemが設定されていません")
 
+## game_flow_manager参照を設定
+func set_game_flow_manager(gfm) -> void:
+	game_flow_manager_ref = gfm
+
+## ソリッドワールド（土地変性無効）チェック（公開メソッド）
+func is_land_change_blocked() -> bool:
+	if not game_flow_manager_ref:
+		return false
+	var game_stats = game_flow_manager_ref.game_stats
+	var world_curse = game_stats.get("world_curse", {})
+	return world_curse.get("curse_type") == "land_protect"
+
+## ソリッドワールドブロック時のポップアップ表示
+func _show_solid_world_blocked_notification(message: String) -> void:
+	if not game_flow_manager_ref:
+		return
+	
+	var notification_ui = null
+	if game_flow_manager_ref.spell_phase_handler:
+		notification_ui = game_flow_manager_ref.spell_phase_handler.spell_cast_notification_ui
+	
+	if notification_ui and notification_ui.has_method("show_notification_and_wait"):
+		notification_ui.show_notification_and_wait(message)
+
 ## 土地の属性を変更
 func change_element(tile_index: int, new_element: String) -> bool:
 	
 	if not board_system_ref:
 		push_error("SpellLand.change_element: BoardSystem3Dが未設定")
+		return false
+	
+	# ソリッドワールドチェック
+	if is_land_change_blocked():
+		print("[ソリッドワールド] 土地変性無効: 属性変更がブロックされました")
+		_show_solid_world_blocked_notification("土地変性無効: ソリッドワールド発動中")
 		return false
 	
 	if not _validate_tile_index(tile_index):
@@ -72,6 +103,12 @@ func change_element_bidirectional(tile_index: int, element_a: String, element_b:
 ## 土地のレベルを変更（増減）
 func change_level(tile_index: int, delta: int) -> bool:
 	if not _validate_tile_index(tile_index):
+		return false
+	
+	# ソリッドワールドチェック（レベルダウンのみブロック）
+	if delta < 0 and is_land_change_blocked():
+		print("[ソリッドワールド] 土地変性無効: レベルダウンがブロックされました")
+		_show_solid_world_blocked_notification("土地変性無効: ソリッドワールド発動中")
 		return false
 	
 	# BoardSystem3DのtilesはNodeの配列なので、tile_nodesを使う

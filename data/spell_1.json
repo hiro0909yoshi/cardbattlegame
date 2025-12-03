@@ -1059,7 +1059,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"土地変性無効\"(6R間、全領地は土地破壊・変性無効)"
+	  "effect": "世界呪い\"土地変性無効\"(6R間、全領地は土地破壊・変性無効)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "land_protect",
+			"name": "土地変性無効",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2048,

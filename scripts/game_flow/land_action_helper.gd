@@ -509,8 +509,8 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# 魔力消費
 	handler.player_system.add_magic(current_player.id, -cost)
 	
-	# 地形変化実行
-	var success = handler.board_system.change_tile_terrain(tile_index, new_element)
+	# 地形変化実行（SpellLand経由でソリッドワールドチェックも行う）
+	var success = handler.game_flow_manager.spell_land.change_element(tile_index, new_element)
 	if not success:
 		# 魔力を返却
 		handler.player_system.add_magic(current_player.id, cost)
@@ -551,6 +551,12 @@ static func execute_terrain_change(handler) -> bool:
 		return false
 	
 	var tile_index = handler.selected_tile_index
+	
+	# ソリッドワールド（土地変性無効）チェック（SpellLand経由）
+	if handler.game_flow_manager and handler.game_flow_manager.spell_land:
+		if handler.game_flow_manager.spell_land.is_land_change_blocked():
+			_show_world_curse_blocked_message(handler, "土地変性無効: ソリッドワールド発動中")
+			return false
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
@@ -626,3 +632,17 @@ static func _is_merciful_world_blocked(handler, attacker_id: int, defender_id: i
 	
 	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
 	return attacker_rank < defender_rank
+
+## 世界呪いブロックメッセージを表示（ダメージスペルと同じ形式）
+static func _show_world_curse_blocked_message(handler, message: String) -> void:
+	# phase_labelに表示
+	if handler.ui_manager and handler.ui_manager.phase_label:
+		handler.ui_manager.phase_label.text = message
+	
+	# ポップアップ通知を表示（クリックで閉じる形式）
+	if handler.game_flow_manager and handler.game_flow_manager.spell_phase_handler:
+		var notification_ui = handler.game_flow_manager.spell_phase_handler.spell_cast_notification_ui
+		if notification_ui and notification_ui.has_method("show_notification_and_wait"):
+			notification_ui.show_notification_and_wait(message)
+	
+	print("[世界呪い] %s" % message)
