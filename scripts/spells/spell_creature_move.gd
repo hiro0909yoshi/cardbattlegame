@@ -53,35 +53,14 @@ func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	if spell_curse_toll.is_player_invasion_disabled(player_id):
 		return false
 	
-	# マーシフルワールド（下位侵略不可）チェック
+	# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if tile and tile.owner_id >= 0 and tile.owner_id != player_id:
-		if _is_merciful_world_blocked(player_id, tile.owner_id):
-			return false
+		if game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
+			if game_flow_manager_ref.spell_world_curse.check_invasion_blocked(player_id, tile.owner_id, false):
+				return false
 	
 	return true
-
-
-## マーシフルワールド（下位侵略不可）チェック
-func _is_merciful_world_blocked(attacker_id: int, defender_id: int) -> bool:
-	if not game_flow_manager_ref or defender_id < 0:
-		return false
-	
-	var game_stats = game_flow_manager_ref.game_stats
-	var world_curse = game_stats.get("world_curse", {})
-	if world_curse.get("curse_type") != "invasion_restrict":
-		return false
-	
-	# 順位を取得
-	var panel = game_flow_manager_ref.ui_manager.player_info_panel if game_flow_manager_ref.ui_manager else null
-	if not panel:
-		return false
-	
-	var attacker_rank = panel.get_player_ranking(attacker_id)
-	var defender_rank = panel.get_player_ranking(defender_id)
-	
-	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
-	return attacker_rank < defender_rank
 
 
 ## 効果を適用（effect_typeに応じて分岐）

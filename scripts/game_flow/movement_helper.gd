@@ -358,10 +358,12 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 			if spell_curse_toll.is_player_invasion_disabled(current_player_id):
 				continue  # 侵略不可呪いで敵領地は移動不可
 		
-		# マーシフルワールド（下位侵略不可）チェック
+		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
-			if _is_merciful_world_blocked(board_system, current_player_id, tile.owner_id):
-				continue  # 下位への侵略不可
+			var gfm = board_system.game_flow_manager if "game_flow_manager" in board_system else null
+			if gfm and gfm.spell_world_curse:
+				if gfm.spell_world_curse.check_invasion_blocked(current_player_id, tile.owner_id, false):
+					continue  # 下位への侵略不可
 		
 		valid_tiles.append(tile_index)
 	
@@ -419,28 +421,4 @@ static func execute_creature_move(
 	if board_system.has_signal("creature_moved"):
 		board_system.creature_moved.emit(from_tile, to_tile)
 
-## マーシフルワールド（下位侵略不可）チェック
-static func _is_merciful_world_blocked(board_system: Node, attacker_id: int, defender_id: int) -> bool:
-	if defender_id < 0:
-		return false
-	
-	var gfm = board_system.game_flow_manager if "game_flow_manager" in board_system else null
-	if not gfm:
-		return false
-	
-	var game_stats = gfm.game_stats
-	var world_curse = game_stats.get("world_curse", {})
-	if world_curse.get("curse_type") != "invasion_restrict":
-		return false
-	
-	# 順位を取得
-	var panel = gfm.ui_manager.player_info_panel if gfm.ui_manager else null
-	if not panel:
-		return false
-	
-	var attacker_rank = panel.get_player_ranking(attacker_id)
-	var defender_rank = panel.get_player_ranking(defender_id)
-	
-	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
-	return attacker_rank < defender_rank
-	
+

@@ -83,37 +83,15 @@ func get_modified_cost(player_id: int, card: Dictionary) -> int:
 			print("[ライフフォース] %s のコスト: %d → 0" % [card.get("name", "?"), original_cost])
 			return 0
 	
-	# ウェイストワールド（世界呪い）チェック（コスト倍率）
-	var multiplier = _get_world_curse_multiplier(card)
-	if multiplier != 1.0:
-		var modified_cost = int(ceil(original_cost * multiplier))
-		print("[ウェイストワールド] %s のコスト: %d → %d (x%.1f)" % [card.get("name", "?"), original_cost, modified_cost, multiplier])
-		return modified_cost
+	# ウェイストワールド（世界呪い）チェック - SpellWorldCurseに委譲
+	if game_flow_manager and game_flow_manager.spell_world_curse:
+		var multiplier = game_flow_manager.spell_world_curse.get_cost_multiplier_for_card(card)
+		if multiplier != 1.0:
+			var modified_cost = int(ceil(original_cost * multiplier))
+			print("[ウェイストワールド] %s のコスト: %d → %d (x%.1f)" % [card.get("name", "?"), original_cost, modified_cost, multiplier])
+			return modified_cost
 	
 	return original_cost
-
-
-## ウェイストワールド: コスト倍率を取得
-func _get_world_curse_multiplier(card: Dictionary) -> float:
-	if not game_flow_manager or not "game_stats" in game_flow_manager:
-		return 1.0
-	
-	var world_curse = game_flow_manager.game_stats.get("world_curse", {})
-	if world_curse.get("curse_type", "") != "cost_increase":
-		return 1.0
-	
-	var params = world_curse.get("params", {})
-	
-	# 袋（S）= 1.5倍、冠袋（R）= 2倍
-	var rarity = card.get("rarity", "N")
-	
-	if rarity == "R":
-		return params.get("crown_bag_multiplier", 2.0)
-	elif rarity == "S" or rarity == "SS":
-		return params.get("bag_multiplier", 1.5)
-	
-	# N以下は倍率なし
-	return 1.0
 
 
 ## カードの元のコストを取得
