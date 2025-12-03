@@ -304,6 +304,15 @@ static func confirm_move(handler, dest_tile_index: int):
 			handler.close_land_command()
 			return
 		
+		# マーシフルワールド（下位侵略不可）チェック
+		var defender_id = dest_tile.owner_id if dest_tile else -1
+		if _is_merciful_world_blocked(handler, handler.current_player_id, defender_id):
+			if handler.ui_manager and handler.ui_manager.phase_label:
+				handler.ui_manager.phase_label.text = "下位侵略不可: 順位が下のセプターには侵略できません"
+			source_tile.place_creature(creature_data)
+			handler.close_land_command()
+			return
+		
 		# バトル発生
 		
 		# 移動による呪い消滅（バトル前に消す）
@@ -596,3 +605,24 @@ static func update_terrain_selection_ui(handler):
 	text += "
 [Enter] 決定  [C] キャンセル"
 	handler.ui_manager.phase_label.text = text
+
+## マーシフルワールド（下位侵略不可）チェック
+static func _is_merciful_world_blocked(handler, attacker_id: int, defender_id: int) -> bool:
+	if not handler.game_flow_manager or defender_id < 0:
+		return false
+	
+	var game_stats = handler.game_flow_manager.game_stats
+	var world_curse = game_stats.get("world_curse", {})
+	if world_curse.get("curse_type") != "invasion_restrict":
+		return false
+	
+	# 順位を取得
+	var panel = handler.game_flow_manager.ui_manager.player_info_panel if handler.game_flow_manager.ui_manager else null
+	if not panel:
+		return false
+	
+	var attacker_rank = panel.get_player_ranking(attacker_id)
+	var defender_rank = panel.get_player_ranking(defender_id)
+	
+	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
+	return attacker_rank < defender_rank

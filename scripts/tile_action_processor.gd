@@ -116,6 +116,9 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		# プレイヤー侵略不可呪い（バンフィズム）
 		elif spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(player_index):
 			show_battle_ui_disabled()
+		# マーシフルワールド（下位侵略不可）
+		elif _is_merciful_world_blocked(player_index, tile_info.get("owner", -1)):
+			show_battle_ui_disabled()
 		else:
 			# 通常の戦闘UI
 			if tile_info.get("creature", {}).is_empty():
@@ -471,6 +474,27 @@ func _on_cpu_action_completed():
 # 特殊タイルかチェック
 func _is_special_tile(tile_type: String) -> bool:
 	return tile_type in ["warp", "card", "checkpoint", "neutral", "start"]
+
+# マーシフルワールド（下位侵略不可）チェック
+func _is_merciful_world_blocked(attacker_id: int, defender_id: int) -> bool:
+	if not game_flow_manager or defender_id < 0:
+		return false
+	
+	var game_stats = game_flow_manager.game_stats
+	var world_curse = game_stats.get("world_curse", {})
+	if world_curse.get("curse_type") != "invasion_restrict":
+		return false
+	
+	# 順位を取得
+	var panel = game_flow_manager.ui_manager.player_info_panel if game_flow_manager.ui_manager else null
+	if not panel:
+		return false
+	
+	var attacker_rank = panel.get_player_ranking(attacker_id)
+	var defender_rank = panel.get_player_ranking(defender_id)
+	
+	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
+	return attacker_rank < defender_rank
 
 # 外部からアクション完了を通知するための公開メソッド
 func complete_action():

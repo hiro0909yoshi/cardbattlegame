@@ -272,15 +272,25 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 		return false
 	
 	var magic = player_system.get_magic(current_player_id)
+	var cost = _get_spell_cost(spell_card)
+	
+	return magic >= cost
+
+## スペルコストを取得（ウェイストワールド対応）
+func _get_spell_cost(spell_card: Dictionary) -> int:
 	var cost_data = spell_card.get("cost", {})
 	if cost_data == null:
 		cost_data = {}
 	
-	var cost = 0
+	var base_cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		base_cost = cost_data.get("mp", 0)
 	
-	return magic >= cost
+	# ウェイストワールド（世界呪い）でコスト倍率を適用
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		return game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, spell_card)
+	
+	return base_cost
 
 ## スペルを使用
 func use_spell(spell_card: Dictionary):
@@ -296,14 +306,8 @@ func use_spell(spell_card: Dictionary):
 	selected_spell_card = spell_card
 	spell_used_this_turn = true
 	
-	# コストを支払う
-	var cost_data = spell_card.get("cost", {})
-	if cost_data == null:
-		cost_data = {}
-	
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+	# コストを支払う（ウェイストワールド対応）
+	var cost = _get_spell_cost(spell_card)
 	
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)

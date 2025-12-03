@@ -318,7 +318,8 @@ func phase_4_setup_system_interconnections() -> void:
 			game_flow_manager.spell_cost_modifier = SpellCostModifierClass.new()
 			game_flow_manager.spell_cost_modifier.setup(
 				game_flow_manager.spell_curse,
-				player_system
+				player_system,
+				game_flow_manager
 			)
 			print("[SpellCostModifier] 初期化完了")
 		

@@ -195,7 +195,22 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"コスト上昇\"(6R、カード使用魔力は袋1.5倍、冠袋2倍)"
+	  "effect": "世界呪い\"コスト上昇\"(6R、カード使用魔力は袋1.5倍、冠袋2倍)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "cost_increase",
+			"name": "コスト上昇",
+			"duration": 6,
+			"params": {
+			  "bag_multiplier": 1.5,
+			  "crown_bag_multiplier": 2.0
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2010,

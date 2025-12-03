@@ -172,6 +172,15 @@ func build_status_text(player_id: int) -> String:
 	
 	text += "[/table]\n\n"
 	
+	# 世界呪い情報
+	if game_flow_manager_ref and "game_stats" in game_flow_manager_ref:
+		var world_curse = game_flow_manager_ref.game_stats.get("world_curse", {})
+		if not world_curse.is_empty():
+			var curse_name = world_curse.get("name", "不明")
+			var duration = world_curse.get("duration", 0)
+			text += "[b][color=purple]世界呪い[/color][/b]\n"
+			text += curse_name + " (残り" + str(duration) + "R)\n\n"
+	
 	# 土地情報
 	text += "[b][color=yellow]保有土地[/color][/b]\n"
 	if player_info_panel:

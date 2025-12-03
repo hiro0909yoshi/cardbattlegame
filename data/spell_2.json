@@ -363,7 +363,18 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"召喚条件解除\"(6R間、クリーチャー配置時、魔力以外のコストは無視される)"
+	  "effect": "世界呪い\"召喚条件解除\"(6R間、クリーチャー配置時、魔力以外のコストは無視される)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "summon_cost_free",
+			"name": "召喚条件解除",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2082,
@@ -837,7 +848,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "世界呪い\"下位侵略不可\"(6R間、順位が下のセプターの領地に侵略できない)"
+	  "effect": "世界呪い\"下位侵略不可\"(6R間、順位が下のセプターの領地に侵略できない)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "invasion_restrict",
+			"name": "下位侵略不可",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2103,
@@ -1004,7 +1026,18 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "世界呪い\"防魔\"(6R間、全セプターはスペルの対象に選べない)"
+	  "effect": "世界呪い\"防魔\"(6R間、全セプターはスペルの対象に選べない)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "world_spell_protection",
+			"name": "防魔",
+			"duration": 6
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2111,
