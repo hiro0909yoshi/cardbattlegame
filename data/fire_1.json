@@ -111,7 +111,8 @@
 			"ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
-					"強打"
+					"強打",
+					"秘術"
 				],
 				"keyword_conditions": {
 					"強打": {
@@ -129,6 +130,13 @@
 								"mark": "○"
 							}
 						]
+					}
+				],
+				"mystic_arts": [
+					{
+						"name": "世界呪い除去",
+						"cost": 50,
+						"spell_id": 9025
 					}
 				]
 			}
@@ -543,7 +551,8 @@
 			"ability_detail": "援護[火地]；秘術[G30・全セブターの呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
-					"援護"
+					"援護",
+					"秘術"
 				],
 				"keyword_conditions": {
 					"援護": {
@@ -552,7 +561,14 @@
 							"earth"
 						]
 					}
-				}
+				},
+				"mystic_arts": [
+					{
+						"name": "全プレイヤー呪い除去",
+						"cost": 30,
+						"spell_id": 9026
+					}
+				]
 			}
 		},
 		{

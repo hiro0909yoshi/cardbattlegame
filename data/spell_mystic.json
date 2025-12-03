@@ -441,6 +441,71 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9024,
+	  "name": "領地呪い除去",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "target_filter": "creature",
+		  "has_curse": true
+		},
+		"effects": [
+		  {
+			"effect_type": "remove_creature_curse"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9025,
+	  "name": "世界呪い除去",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "remove_world_curse"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9026,
+	  "name": "全プレイヤー呪い除去",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "remove_all_player_curses"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9027,
+	  "name": "平和",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "peace",
+			"name": "平和",
+			"invasion_disable": true,
+			"toll_zero": true,
+			"duration": -1
+		  }
+		]
+	  }
 	}
   ]
 }

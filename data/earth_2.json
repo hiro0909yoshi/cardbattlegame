@@ -662,7 +662,17 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・これに呪い\"平和\"]"
+	  "ability_detail": "秘術[G50・これに呪い\"平和\"]",
+	  "ability_parsed": {
+		"keywords": ["秘術"],
+		"mystic_arts": [
+		  {
+			"name": "平和",
+			"cost": 50,
+			"spell_id": 9027
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 247,

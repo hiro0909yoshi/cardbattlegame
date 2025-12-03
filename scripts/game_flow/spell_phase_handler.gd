@@ -62,6 +62,7 @@ var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手�
 var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
 var spell_borrow: SpellBorrow = null  # スペル借用
 var spell_transform: SpellTransform = null  # クリーチャー変身
+var spell_purify: SpellPurify = null  # 呪い除去
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -128,6 +129,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellTransform を初期化
 	if not spell_transform and board_system and player_system and card_system:
 		spell_transform = SpellTransform.new(board_system, player_system, card_system, self)
+	
+	# SpellPurify を初期化
+	if not spell_purify and board_system and creature_manager and player_system and game_flow_manager:
+		spell_purify = SpellPurify.new(board_system, creature_manager, player_system, game_flow_manager)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -755,6 +760,30 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_transform:
 				spell_transform.apply_discord_transform(current_player_id)
 		
+		"purify_all":
+			# 全呪い除去（ピュアリファイ） - SpellPurifyに委譲
+			if spell_purify:
+				var result = spell_purify.purify_all(current_player_id)
+				if ui_manager and ui_manager.phase_label:
+					var type_count = result.removed_types.size()
+					ui_manager.phase_label.text = "%d種類の呪いを消去 G%d獲得" % [type_count, result.gold_gained]
+		
+		"remove_creature_curse":
+			# 領地呪い除去（ギアリオン秘術） - SpellPurifyに委譲
+			if spell_purify:
+				var tile_index = target_data.get("tile_index", -1)
+				spell_purify.remove_creature_curse(tile_index)
+		
+		"remove_world_curse":
+			# 世界呪い除去（ウリエル秘術） - SpellPurifyに委譲
+			if spell_purify:
+				spell_purify.remove_world_curse()
+		
+		"remove_all_player_curses":
+			# 全プレイヤー呪い除去（シャラザード秘術） - SpellPurifyに委譲
+			if spell_purify:
+				spell_purify.remove_all_player_curses()
+		
 		"return_to_hand":
 			# クリーチャー手札戻し系 - SpellCreatureReturnに委譲
 			if spell_creature_return:
@@ -813,6 +842,29 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 世界呪い - SpellWorldCurseに委譲
 			if game_flow_manager and game_flow_manager.spell_world_curse:
 				game_flow_manager.spell_world_curse.apply(effect)
+		
+		"purify_all":
+			# 全呪い除去（ピュアリファイ）- SpellPurifyに委譲
+			if spell_purify:
+				var result = spell_purify.purify_all(current_player_id)
+				if ui_manager and ui_manager.phase_label:
+					ui_manager.phase_label.text = "%d種類の呪いを消し、G%dを得た" % [result["removed_types"].size(), result["gold_gained"]]
+		
+		"remove_creature_curse":
+			# 対象領地の呪いを除去（ギアリオン秘術）- SpellPurifyに委譲
+			if spell_purify:
+				var tile_index = target_data.get("tile_index", -1)
+				spell_purify.remove_creature_curse(tile_index)
+		
+		"remove_world_curse":
+			# 世界呪いを除去（ウリエル秘術）- SpellPurifyに委譲
+			if spell_purify:
+				spell_purify.remove_world_curse()
+		
+		"remove_all_player_curses":
+			# 全セプターの呪いを除去（シャラザード秘術）- SpellPurifyに委譲
+			if spell_purify:
+				spell_purify.remove_all_player_curses()
 
 
 

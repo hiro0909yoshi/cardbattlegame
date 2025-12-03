@@ -214,7 +214,15 @@
 	  "cost": {
 		"mp": 20
 	  },
-	  "effect": "全呪いを消し、消した呪いの種類×G50を得る"
+	  "effect": "全呪いを消し、消した呪いの種類×G50を得る",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "purify_all"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2074,

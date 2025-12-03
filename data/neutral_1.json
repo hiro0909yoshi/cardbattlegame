@@ -35,7 +35,18 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術・アイテム破壊無効・不屈",
-	  "ability_detail": "秘術[G30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈"
+	  "ability_detail": "秘術[G30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
+	  "ability_parsed": {
+		"keywords": ["秘術", "不屈"],
+		"item_immunity": ["destroy", "steal"],
+		"mystic_arts": [
+		  {
+			"name": "呪い除去",
+			"cost": 30,
+			"spell_id": 9024
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 404,
