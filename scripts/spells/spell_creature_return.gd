@@ -92,19 +92,42 @@ func _execute_return_to_hand(tile_index: int) -> Dictionary:
 	var creature_name = creature.get("name", "クリーチャー")
 	var owner_id = tile.owner_id
 	
-	# クリーンなカードデータを取得して手札に追加
+	# 🔧 合成処理による分岐で手札に追加
 	if card_system_ref and owner_id >= 0:
 		var card_id = creature.get("id", -1)
-		var clean_creature = card_system_ref._get_clean_card_data(card_id)
-		if clean_creature.is_empty():
-			# フォールバック
-			clean_creature = creature.duplicate(true)
-			clean_creature.erase("current_hp")
-			clean_creature.erase("curse")
-			clean_creature.erase("is_down")
+		var synthesis_type = creature.get("synthesis_type", "")
+		var clean_creature: Dictionary
+		
+		if synthesis_type == "transform":
+			# 変身型合成：変身後のカードをそのまま返す
+			clean_creature = card_system_ref._get_clean_card_data(card_id)
+			if clean_creature.is_empty():
+				clean_creature = creature.duplicate(true)
+				_clean_creature_fields(clean_creature)
+			print("[SpellCreatureReturn] %s を プレイヤー%d の手札に戻す（変身型合成）" % [creature_name, owner_id + 1])
+		elif synthesis_type == "stat_boost":
+			# ステータスアップ型合成：元のカードをクリーンで返す
+			var original_id = creature.get("original_card_id", card_id)
+			clean_creature = card_system_ref._get_clean_card_data(original_id)
+			if clean_creature.is_empty():
+				clean_creature = creature.duplicate(true)
+				_clean_creature_fields(clean_creature)
+				clean_creature.erase("is_synthesized")
+				clean_creature.erase("synthesis_type")
+				clean_creature.erase("original_card_id")
+				clean_creature.erase("base_ap")
+				clean_creature.erase("base_hp")
+			print("[SpellCreatureReturn] %s を プレイヤー%d の手札に戻す（ステータス合成リセット）" % [clean_creature.get("name", "?"), owner_id + 1])
+		else:
+			# 通常：クリーンなカードデータを取得
+			clean_creature = card_system_ref._get_clean_card_data(card_id)
+			if clean_creature.is_empty():
+				clean_creature = creature.duplicate(true)
+				_clean_creature_fields(clean_creature)
+			print("[SpellCreatureReturn] %s を プレイヤー%d の手札に戻す" % [creature_name, owner_id + 1])
+		
 		card_system_ref.player_hands[owner_id]["data"].append(clean_creature)
 		card_system_ref.emit_signal("hand_updated")
-		print("[SpellCreatureReturn] %s を プレイヤー%d の手札に戻す" % [creature_name, owner_id + 1])
 	
 	# レベル保存
 	var saved_level = tile.level
@@ -182,3 +205,16 @@ func is_valid_holy_banish_target(tile_index: int) -> bool:
 	
 	# 属性が異なればターゲット可能
 	return creature_element != tile_element
+
+
+## クリーチャーフィールドをクリーン化
+func _clean_creature_fields(creature: Dictionary) -> void:
+	creature.erase("current_hp")
+	creature.erase("curse")
+	creature.erase("is_down")
+	creature.erase("base_up_hp")
+	creature.erase("base_up_ap")
+	creature.erase("permanent_effects")
+	creature.erase("temporary_effects")
+	creature.erase("map_lap_count")
+	creature.erase("items")

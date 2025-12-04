@@ -7,6 +7,7 @@ var board_system_ref: Object
 var player_system_ref: Object
 var card_system_ref: Object
 var spell_phase_handler_ref: Object
+var creature_synthesis: CreatureSynthesis = null
 
 
 # ============ 初期化 ============
@@ -16,6 +17,10 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	player_system_ref = player_sys
 	card_system_ref = card_sys
 	spell_phase_handler_ref = spell_phase_handler
+	
+	# クリーチャー合成システムを初期化
+	if CardLoader:
+		creature_synthesis = CreatureSynthesis.new(CardLoader)
 
 
 # ============ メイン効果適用 ============
@@ -59,6 +64,20 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 		return {"success": false, "reason": "cancelled"}
 	
 	var hand_creature = hand_creatures[selected_hand_index]
+	
+	# カード犠牲処理（クリーチャー合成用）
+	if _requires_card_sacrifice(hand_creature):
+		var sacrifice_result = await _process_card_sacrifice(caster_player_id, hand_creature)
+		if sacrifice_result.get("cancelled", false):
+			return {"success": false, "reason": "cancelled"}
+		
+		# 合成判定・適用
+		var sacrifice_card = sacrifice_result.get("sacrifice_card", {})
+		if not sacrifice_card.is_empty() and creature_synthesis:
+			var is_synthesized = creature_synthesis.check_condition(hand_creature, sacrifice_card)
+			if is_synthesized:
+				hand_creature = creature_synthesis.apply_synthesis(hand_creature, sacrifice_card, true)
+				print("[SpellCreatureSwap] 合成成立: %s" % hand_creature.get("name", "?"))
 	
 	# 交換実行
 	_execute_swap_with_hand(tile_index, caster_player_id, hand_creature)
@@ -311,3 +330,62 @@ func can_cast_exchange(player_id: int) -> bool:
 func can_cast_relief(player_id: int) -> bool:
 	var own_creatures = _get_own_creature_tiles(player_id)
 	return own_creatures.size() >= 2
+
+
+# ============ カード犠牲処理 ============
+
+## カード犠牲が必要か判定
+func _requires_card_sacrifice(card_data: Dictionary) -> bool:
+	# 正規化されたフィールドをチェック
+	if card_data.get("cost_cards_sacrifice", 0) > 0:
+		return true
+	# 正規化されていない場合、元のcostフィールドもチェック
+	var cost = card_data.get("cost", {})
+	if typeof(cost) == TYPE_DICTIONARY:
+		return cost.get("cards_sacrifice", 0) > 0
+	return false
+
+
+## カード犠牲処理（手札選択UI表示→カード破棄）
+func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dictionary:
+	# UI参照取得
+	var ui_manager = null
+	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
+		ui_manager = spell_phase_handler_ref.ui_manager
+	
+	if not ui_manager:
+		print("[SpellCreatureSwap] UIManager未設定、カード犠牲スキップ")
+		return {"cancelled": false, "sacrifice_card": {}}
+	
+	# 手札選択UIを表示（犠牲モード）
+	ui_manager.phase_label.text = "犠牲にするカードを選択"
+	ui_manager.card_selection_filter = ""
+	var player = player_system_ref.players[player_id]
+	ui_manager.show_card_selection_ui_mode(player, "sacrifice")
+	
+	# カード選択を待つ
+	var selected_index = await ui_manager.card_selected
+	
+	# UIを閉じる
+	ui_manager.hide_card_selection_ui()
+	
+	# 選択されたカードを取得
+	if selected_index < 0:
+		return {"cancelled": true, "sacrifice_card": {}}
+	
+	var hand = card_system_ref.get_all_cards_for_player(player_id)
+	if selected_index >= hand.size():
+		return {"cancelled": true, "sacrifice_card": {}}
+	
+	var sacrifice_card = hand[selected_index]
+	
+	# 召喚するクリーチャーと同じカードは犠牲にできない
+	if sacrifice_card.get("id") == summon_creature.get("id"):
+		ui_manager.phase_label.text = "召喚するカードは犠牲にできません"
+		return {"cancelled": true, "sacrifice_card": {}}
+	
+	# カードを破棄
+	card_system_ref.discard_card(player_id, selected_index, "sacrifice")
+	print("[SpellCreatureSwap] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
+	
+	return {"cancelled": false, "sacrifice_card": sacrifice_card}

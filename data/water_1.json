@@ -385,8 +385,12 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "合成・無効化",
-	  "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]"
-	,
+	  "ability_detail": "合成[クリーチャー・供物クリーチャーに変身]；無効化[巻物]",
+	  "synthesis": {
+		"type": "creature",
+		"effect_type": "transform",
+		"transform_to": "sacrifice"
+	  },
 	  "ability_parsed": {
 		"keywords": ["無効化"],
 		"keyword_conditions": {

@@ -711,7 +711,13 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "合成・不屈",
-	  "ability_detail": "合成[地・AP+30、MHP+10]；不屈"
+	  "ability_detail": "合成[地・AP+30、MHP+10]；不屈",
+	  "synthesis": {
+		"type": "element",
+		"condition": "earth",
+		"effect_type": "stat_boost",
+		"effect": { "ap": 30, "mhp": 10 }
+	  }
 	}
   ]
 }

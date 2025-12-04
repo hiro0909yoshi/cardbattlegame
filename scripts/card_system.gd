@@ -374,27 +374,56 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	if card_id in player_discards[player_id]:
 		player_discards[player_id].erase(card_id)
 	
-	# 🔧 クリーンなカードデータを作成(バトル中の変更をリセット)
-	var clean_card_data = _get_clean_card_data(card_id)
-	if clean_card_data.is_empty():
-		# 元データが見つからない場合は渡されたデータをそのまま使う
-		clean_card_data = card_data.duplicate()
-		# 少なくともバトル用フィールドは削除
-		clean_card_data.erase("base_up_hp")
-		clean_card_data.erase("base_up_ap")
-		clean_card_data.erase("permanent_effects")
-		clean_card_data.erase("temporary_effects")
-		clean_card_data.erase("map_lap_count")
-		clean_card_data.erase("items")
-		clean_card_data.erase("current_hp")
+	# 🔧 合成処理による分岐
+	var clean_card_data: Dictionary
+	var synthesis_type = card_data.get("synthesis_type", "")
+	
+	if synthesis_type == "transform":
+		# 変身型合成：変身後のカードをそのまま返す（バトル用フィールドのみ除去）
+		clean_card_data = _get_clean_card_data(card_id)
+		if clean_card_data.is_empty():
+			clean_card_data = card_data.duplicate()
+		# バトル用フィールドを削除
+		_clean_battle_fields(clean_card_data)
+		print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました(変身型合成)")
+	elif synthesis_type == "stat_boost":
+		# ステータスアップ型合成：元のカードをクリーンで返す
+		var original_id = card_data.get("original_card_id", card_id)
+		clean_card_data = _get_clean_card_data(original_id)
+		if clean_card_data.is_empty():
+			clean_card_data = card_data.duplicate()
+			_clean_battle_fields(clean_card_data)
+			# 合成関連フィールドも削除
+			clean_card_data.erase("is_synthesized")
+			clean_card_data.erase("synthesis_type")
+			clean_card_data.erase("original_card_id")
+			clean_card_data.erase("base_ap")
+			clean_card_data.erase("base_hp")
+		print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました(ステータス合成リセット)")
+	else:
+		# 通常：クリーンなカードデータを作成
+		clean_card_data = _get_clean_card_data(card_id)
+		if clean_card_data.is_empty():
+			clean_card_data = card_data.duplicate()
+			_clean_battle_fields(clean_card_data)
+		print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました(クリーン状態)")
 	
 	# 手札に追加
 	player_hands[player_id]["data"].append(clean_card_data)
-	
-	print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました(クリーン状態)")
 	emit_signal("hand_updated")
 	
 	return true
+
+
+## バトル用フィールドを削除
+func _clean_battle_fields(card_data: Dictionary) -> void:
+	card_data.erase("base_up_hp")
+	card_data.erase("base_up_ap")
+	card_data.erase("permanent_effects")
+	card_data.erase("temporary_effects")
+	card_data.erase("map_lap_count")
+	card_data.erase("items")
+	card_data.erase("current_hp")
 
 ## カードIDから元のクリーンなデータを取得
 func _get_clean_card_data(card_id: int) -> Dictionary:

@@ -19,9 +19,16 @@ var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
 var game_flow_manager = null  # GameFlowManagerへの参照
 var cpu_turn_processor  # CPUTurnProcessor型を一時的に削除
+var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
+var creature_synthesis: CreatureSynthesis = null  # クリーチャー合成システム
+
+# デバッグフラグ
+var debug_disable_card_sacrifice: bool = false  # カード犠牲を無効化
+var debug_disable_lands_required: bool = false  # 土地条件を無効化
 
 # 状態管理
 var is_action_processing = false
+var is_sacrifice_selecting = false  # カード犠牲選択中フラグ
 
 # バトル情報の一時保存
 var pending_battle_card_index: int = -1
@@ -44,6 +51,10 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	special_tile_system = st_system
 	ui_manager = ui
 	game_flow_manager = gf_manager
+	
+	# クリーチャー合成システムを初期化
+	if CardLoader:
+		creature_synthesis = CreatureSynthesis.new(CardLoader)
 
 # CPUプロセッサーを設定
 func set_cpu_processor(cpu_processor):  # CPUTurnProcessor型を一時的に削除
@@ -186,6 +197,10 @@ func on_card_selected(card_index: int):
 		print("Warning: Not processing any action")
 		return
 	
+	# カード犠牲選択中は通常のカード選択を無視
+	if is_sacrifice_selecting:
+		return
+	
 	var current_player_index = board_system.current_player_index
 	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
@@ -206,45 +221,8 @@ func on_card_selected(card_index: int):
 		# 召喚処理
 		execute_summon(card_index)
 	else:
-		# バトル処理 - アイテムフェーズを挟む
-		pending_battle_card_index = card_index
-		pending_battle_card_data = card_system.get_card_data_for_player(current_player_index, card_index)
-		pending_battle_tile_info = tile_info
-		
-		# バトルカードを先に消費（アイテムフェーズ中に手札に表示されないようにする）
-		var cost_data = pending_battle_card_data.get("cost", 1)
-		var cost = 0
-		if typeof(cost_data) == TYPE_DICTIONARY:
-			cost = cost_data.get("mp", 0)  # 等倍
-		else:
-			cost = cost_data  # 等倍
-		
-		# ライフフォース呪いチェック（クリーチャーコスト0化）
-		if game_flow_manager and game_flow_manager.spell_cost_modifier:
-			cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
-		
-		var current_player = player_system.get_current_player()
-		if current_player.magic_power < cost:
-			print("[TileActionProcessor] 魔力不足でバトルできません")
-			_complete_action()
-			return
-		
-		# カードを使用して魔力消費
-		card_system.use_card_for_player(current_player_index, card_index)
-		player_system.add_magic(current_player_index, -cost)
-		print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
-		
-		# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			# アイテムフェーズ完了シグナルに接続
-			if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-				game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-			
-			# アイテムフェーズ開始（バトル参加クリーチャーのデータを渡す）
-			game_flow_manager.item_phase_handler.start_item_phase(current_player_index, pending_battle_card_data)
-		else:
-			# ItemPhaseHandlerがない場合は直接バトル
-			_execute_pending_battle()
+		# バトル処理
+		execute_battle(card_index, tile_info)
 
 ## アイテムフェーズ完了後のコールバック
 func _on_item_phase_completed():
@@ -343,12 +321,41 @@ func execute_summon(card_index: int):
 			_complete_action()
 			return
 	
+	# 土地条件チェック（lands_required）
+	if not debug_disable_lands_required:
+		var check_result = _check_lands_required(card_data, current_player_index)
+		if not check_result.passed:
+			print("[TileActionProcessor] 土地条件未達: %s" % check_result.message)
+			if ui_manager:
+				ui_manager.phase_label.text = check_result.message
+			_complete_action()
+			return
+	
+	# カード犠牲処理（クリーチャー合成用）
+	var sacrifice_card = {}
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice:
+		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index)
+		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
+			# キャンセル時は召喚をキャンセル
+			if ui_manager:
+				ui_manager.phase_label.text = "召喚をキャンセルしました"
+			_complete_action()
+			return
+	
+	# クリーチャー合成処理
+	var is_synthesized = false
+	if not sacrifice_card.is_empty() and creature_synthesis:
+		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
+		if is_synthesized:
+			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
+			print("[TileActionProcessor] 合成成立: %s" % card_data.get("name", "?"))
+	
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)  # 等倍
+		cost = cost_data.get("mp", 0)
 	else:
-		cost = cost_data  # 等倍
+		cost = cost_data
 	
 	# ライフフォース呪いチェック（クリーチャーコスト0化）
 	if game_flow_manager and game_flow_manager.spell_cost_modifier:
@@ -386,6 +393,213 @@ func execute_summon(card_index: int):
 		print("魔力不足で召喚できません")
 	
 	_complete_action()
+
+
+# バトル（侵略）実行
+func execute_battle(card_index: int, tile_info: Dictionary):
+	if card_index < 0:
+		_complete_action()
+		return
+	
+	var current_player_index = board_system.current_player_index
+	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	
+	if card_data.is_empty():
+		_complete_action()
+		return
+	
+	# 土地条件チェック（lands_required）
+	if not debug_disable_lands_required:
+		var check_result = _check_lands_required(card_data, current_player_index)
+		if not check_result.passed:
+			print("[TileActionProcessor] 土地条件未達（バトル）: %s" % check_result.message)
+			if ui_manager:
+				ui_manager.phase_label.text = check_result.message
+			_complete_action()
+			return
+	
+	# カード犠牲処理（クリーチャー合成用）
+	var sacrifice_card = {}
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice:
+		# カード選択UIを一度閉じる
+		if ui_manager:
+			ui_manager.hide_card_selection_ui()
+		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index)
+		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
+			# キャンセル時はバトルをキャンセル
+			if ui_manager:
+				ui_manager.phase_label.text = "バトルをキャンセルしました"
+			_complete_action()
+			return
+	
+	# クリーチャー合成処理
+	var is_synthesized = false
+	if not sacrifice_card.is_empty() and creature_synthesis:
+		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
+		if is_synthesized:
+			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
+			print("[TileActionProcessor] 合成成立（バトル）: %s" % card_data.get("name", "?"))
+	
+	# バトル情報を保存
+	pending_battle_card_index = card_index
+	pending_battle_card_data = card_data  # 合成後のデータを使用
+	pending_battle_tile_info = tile_info
+	
+	# コスト計算
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	else:
+		cost = cost_data
+	
+	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
+	
+	var current_player = player_system.get_current_player()
+	if current_player.magic_power < cost:
+		print("[TileActionProcessor] 魔力不足でバトルできません")
+		_complete_action()
+		return
+	
+	# カードを使用して魔力消費
+	card_system.use_card_for_player(current_player_index, card_index)
+	player_system.add_magic(current_player_index, -cost)
+	print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
+	
+	# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
+	if game_flow_manager and game_flow_manager.item_phase_handler:
+		# アイテムフェーズ完了シグナルに接続
+		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+		
+		# アイテムフェーズ開始（バトル参加クリーチャーのデータを渡す）
+		game_flow_manager.item_phase_handler.start_item_phase(current_player_index, pending_battle_card_data)
+	else:
+		# ItemPhaseHandlerがない場合は直接バトル
+		_execute_pending_battle()
+
+
+## カード犠牲が必要か判定
+func _requires_card_sacrifice(card_data: Dictionary) -> bool:
+	# 正規化されたフィールドをチェック
+	if card_data.get("cost_cards_sacrifice", 0) > 0:
+		return true
+	# 正規化されていない場合、元のcostフィールドもチェック
+	var cost = card_data.get("cost", {})
+	if typeof(cost) == TYPE_DICTIONARY:
+		return cost.get("cards_sacrifice", 0) > 0
+	return false
+
+
+## 土地条件チェック（属性ごとにカウント）
+## 戻り値: {passed: bool, message: String}
+func _check_lands_required(card_data: Dictionary, player_id: int) -> Dictionary:
+	var lands_required = _get_lands_required_array(card_data)
+	if lands_required.is_empty():
+		return {"passed": true, "message": ""}
+	
+	# プレイヤーの所有土地の属性をカウント
+	var owned_elements = {}  # {"fire": 2, "water": 1, ...}
+	var player_tiles = board_system.get_player_tiles(player_id)
+	for tile in player_tiles:
+		var element = tile.tile_type if tile else ""
+		if element != "" and element != "neutral":
+			owned_elements[element] = owned_elements.get(element, 0) + 1
+	
+	# 必要な属性をカウント
+	var required_elements = {}  # {"fire": 2, ...}
+	for element in lands_required:
+		required_elements[element] = required_elements.get(element, 0) + 1
+	
+	# 各属性の条件を満たしているかチェック
+	for element in required_elements.keys():
+		var required_count = required_elements[element]
+		var owned_count = owned_elements.get(element, 0)
+		if owned_count < required_count:
+			var element_name = _get_element_display_name(element)
+			return {
+				"passed": false,
+				"message": "%s属性の土地が%d個必要です（所有: %d）" % [element_name, required_count, owned_count]
+			}
+	
+	return {"passed": true, "message": ""}
+
+
+## 土地条件の配列を取得
+func _get_lands_required_array(card_data: Dictionary) -> Array:
+	# 正規化されたフィールドをチェック
+	if card_data.has("cost_lands_required"):
+		var lands = card_data.get("cost_lands_required", [])
+		if typeof(lands) == TYPE_ARRAY:
+			return lands
+		return []
+	# 正規化されていない場合、元のcostフィールドもチェック
+	var cost = card_data.get("cost", {})
+	if typeof(cost) == TYPE_DICTIONARY:
+		var lands = cost.get("lands_required", [])
+		if typeof(lands) == TYPE_ARRAY:
+			return lands
+	return []
+
+
+## 属性の表示名を取得
+func _get_element_display_name(element: String) -> String:
+	match element:
+		"fire": return "火"
+		"water": return "水"
+		"earth": return "地"
+		"wind": return "風"
+		_: return element
+
+
+## カード犠牲処理（手札選択UI表示→カード破棄）
+func _process_card_sacrifice(player_id: int, summon_card_index: int) -> Dictionary:
+	# CardSacrificeHelperを初期化
+	if not card_sacrifice_helper:
+		card_sacrifice_helper = CardSacrificeHelper.new(card_system, player_system, ui_manager)
+	
+	# 犠牲選択モードに入る
+	is_sacrifice_selecting = true
+	
+	# 手札選択UIを表示（召喚するカード以外を選択可能）
+	if ui_manager:
+		ui_manager.phase_label.text = "犠牲にするカードを選択"
+		ui_manager.card_selection_filter = ""
+		var player = player_system.players[player_id]
+		ui_manager.show_card_selection_ui_mode(player, "sacrifice")
+	
+	# カード選択を待つ
+	var selected_index = await ui_manager.card_selected
+	
+	# 犠牲選択モードを終了
+	is_sacrifice_selecting = false
+	
+	# UIを閉じる
+	ui_manager.hide_card_selection_ui()
+	
+	# 選択されたカードを取得
+	if selected_index < 0:
+		return {}
+	
+	# 召喚するカードと同じインデックスは選択不可
+	if selected_index == summon_card_index:
+		if ui_manager:
+			ui_manager.phase_label.text = "召喚するカードは犠牲にできません"
+		return {}
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	if selected_index >= hand.size():
+		return {}
+	
+	var sacrifice_card = hand[selected_index]
+	
+	# カードを破棄
+	card_system.discard_card(player_id, selected_index, "sacrifice")
+	print("[TileActionProcessor] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
+	
+	return sacrifice_card
 
 # パス処理（通行料支払いはend_turn()で一本化）
 func on_action_pass():

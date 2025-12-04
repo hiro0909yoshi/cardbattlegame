@@ -446,6 +446,11 @@
 	  "hp": 50,
 	  "ability": "合成・先制・不屈",
 	  "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；不屈",
+	  "synthesis": {
+		"type": "item",
+		"effect_type": "stat_boost",
+		"effect": { "ap": 40, "mhp": -10 }
+	  },
 	  "ability_parsed": {
 		"keywords": [
 		  "先制"

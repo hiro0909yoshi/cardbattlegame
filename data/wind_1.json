@@ -483,7 +483,12 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "合成・戦闘後効果",
-	  "ability_detail": "合成[呪いスペル・AP+20]；戦闘後、敵のMHP-これの基本AP"
+	  "ability_detail": "合成[呪いスペル・AP+20]；戦闘後、敵のMHP-これの基本AP",
+	  "synthesis": {
+		"type": "curse_spell",
+		"effect_type": "stat_boost",
+		"effect": { "ap": 20 }
+	  }
 	},
 	{
 	  "id": 318,
@@ -586,6 +591,12 @@
 	  "hp": 40,
 	  "ability": "合成・攻撃成功時",
 	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\"",
+	  "synthesis": {
+		"type": "element",
+		"condition": "water",
+		"effect_type": "transform",
+		"transform_to": "ディープシードラゴン"
+	  },
 	  "ability_parsed": {
 		"effects": [
 		  {

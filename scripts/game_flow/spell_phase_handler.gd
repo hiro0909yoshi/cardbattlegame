@@ -38,12 +38,9 @@ var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立�
 ##   spell_phase_handler.debug_disable_secret_cards = true
 var debug_disable_secret_cards: bool = false
 
-## カード犠牲システムを一時的に無効化
-## true: cards_sacrificeを無視（犠牲カード選択をスキップ）
-## false: 通常通りカード犠牲を要求
-## 使い方: GameFlowManagerのセットアップ後に設定
-##   spell_phase_handler.debug_disable_card_sacrifice = true
-var debug_disable_card_sacrifice: bool = false
+## カード犠牲・土地条件のデバッグフラグはTileActionProcessorで一元管理
+## 参照: board_system.tile_action_processor.debug_disable_card_sacrifice
+## 参照: board_system.tile_action_processor.debug_disable_lands_required
 
 ## ターゲット選択（領地コマンドと同じ構造）
 var available_targets: Array = []
@@ -351,7 +348,8 @@ func use_spell(spell_card: Dictionary):
 	
 	# カード犠牲処理（スペル合成用）
 	var is_synthesized = false
-	if spell_synthesis and spell_synthesis.requires_sacrifice(spell_card) and not debug_disable_card_sacrifice:
+	var disable_sacrifice = _is_card_sacrifice_disabled()
+	if spell_synthesis and spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
 		# 手札選択UIを表示
 		if card_sacrifice_helper:
 			var sacrifice_card = await card_sacrifice_helper.show_hand_selection(
@@ -1258,3 +1256,17 @@ func _show_spell_cast_notification(caster_name: String, target_data: Dictionary,
 	# 通知を表示してクリック待ち
 	spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
 	await spell_cast_notification_ui.click_confirmed
+
+
+## カード犠牲が無効化されているか（TileActionProcessorから取得）
+func _is_card_sacrifice_disabled() -> bool:
+	if board_system and board_system.tile_action_processor:
+		return board_system.tile_action_processor.debug_disable_card_sacrifice
+	return false
+
+
+## 土地条件が無効化されているか（TileActionProcessorから取得）
+func _is_lands_required_disabled() -> bool:
+	if board_system and board_system.tile_action_processor:
+		return board_system.tile_action_processor.debug_disable_lands_required
+	return false

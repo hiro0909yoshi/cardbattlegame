@@ -735,6 +735,12 @@
 			"hp": 40,
 			"ability": "合成",
 			"ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+10]",
+			"synthesis": {
+				"type": "element",
+				"condition": "earth",
+				"effect_type": "stat_boost",
+				"effect": { "ap": 20, "mhp": 20 }
+			},
 			"ability_parsed": {
 				"keywords": [
 					"合成",
@@ -837,6 +843,12 @@
 			"hp": 30,
 			"ability": "合成・反射",
 			"ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
+			"synthesis": {
+				"type": "element",
+				"condition": "earth",
+				"effect_type": "transform",
+				"transform_to": "アームドパラディン"
+			},
 			"ability_parsed": {
 				"keywords": [
 					"合成",

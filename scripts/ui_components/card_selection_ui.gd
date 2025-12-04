@@ -190,6 +190,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
 				is_selectable = card_type == "creature"
 			
+			# 土地条件チェック（召喚/バトルフェーズでクリーチャーの場合）
+			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):
+				if not _check_lands_required(card_data, player_id):
+					is_selectable = false
+			
 			# カードを選択可能/不可にする
 			if card_node.has_method("set_selectable") and is_selectable:
 				card_node.set_selectable(true, i)
@@ -201,9 +206,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# disabledモード: すべてグレーアウト
 				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			elif filter_mode == "battle":
-				# バトルフェーズ中: 防御型クリーチャーをグレーアウト
+				# バトルフェーズ中: 防御型クリーチャー + 土地条件未達をグレーアウト
 				var creature_type = card_data.get("creature_type", "normal")
 				if creature_type == "defensive":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				elif card_type == "creature" and not _check_lands_required(card_data, player_id):
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -290,7 +297,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "":
 				# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
+				# + 土地条件未達のクリーチャーもグレーアウト
 				if card_type == "spell" or card_type == "item":
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				elif card_type == "creature" and not _check_lands_required(card_data, player_id):
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -456,3 +466,57 @@ func is_selection_active() -> bool:
 func get_selection_mode() -> String:
 	return selection_mode
 
+
+# 土地条件チェック（true: 条件OK、false: 条件未達）
+func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
+	# デバッグフラグで無効化されている場合はOK
+	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
+		var board = game_flow_manager_ref.board_system_3d
+		if board.tile_action_processor and board.tile_action_processor.debug_disable_lands_required:
+			return true
+	
+	# 土地条件を取得（属性の配列）
+	var lands_required = _get_lands_required_array(card_data)
+	if lands_required.is_empty():
+		return true  # 条件なし
+	
+	# プレイヤーの所有土地の属性をカウント
+	var owned_elements = {}  # {"fire": 2, "water": 1, ...}
+	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
+		var board = game_flow_manager_ref.board_system_3d
+		var player_tiles = board.get_player_tiles(player_id)
+		for tile in player_tiles:
+			var element = tile.tile_type if tile else ""
+			if element != "" and element != "neutral":
+				owned_elements[element] = owned_elements.get(element, 0) + 1
+	
+	# 必要な属性をカウント
+	var required_elements = {}  # {"fire": 2, ...}
+	for element in lands_required:
+		required_elements[element] = required_elements.get(element, 0) + 1
+	
+	# 各属性の条件を満たしているかチェック
+	for element in required_elements.keys():
+		var required_count = required_elements[element]
+		var owned_count = owned_elements.get(element, 0)
+		if owned_count < required_count:
+			return false
+	
+	return true
+
+
+# 土地条件の配列を取得
+func _get_lands_required_array(card_data: Dictionary) -> Array:
+	# 正規化されたフィールドをチェック
+	if card_data.has("cost_lands_required"):
+		var lands = card_data.get("cost_lands_required", [])
+		if typeof(lands) == TYPE_ARRAY:
+			return lands
+		return []
+	# 正規化されていない場合、元のcostフィールドもチェック
+	var cost = card_data.get("cost", {})
+	if typeof(cost) == TYPE_DICTIONARY:
+		var lands = cost.get("lands_required", [])
+		if typeof(lands) == TYPE_ARRAY:
+			return lands
+	return []
