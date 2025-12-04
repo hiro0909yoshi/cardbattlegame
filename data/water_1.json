@@ -757,7 +757,18 @@
 			"ap": 10.0,
 			"hp": 40.0,
 			"ability": "防御型・戦闘中能力無効",
-			"ability_detail": "防御型；戦闘中能力無効"
+			"ability_detail": "防御型；戦闘中能力無効",
+			"ability_parsed": {
+				"keywords": [
+					"防御型"
+				],
+				"effects": [
+					{
+						"effect_type": "nullify_all_enemy_abilities",
+						"trigger": "battle_preparation"
+					}
+				]
+			}
 		},
 		{
 			"id": 124.0,

@@ -137,34 +137,48 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 ## @param self_participant 装備者（攻撃側 or 防御側）
 ## @param enemy_participant 敵（無効化対象）
 static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, enemy_participant: BattleParticipant) -> void:
-	# 1. 装備者がウォーロックディスクを持っているかチェック
-	var has_warlock_disk = false
-	var items = self_participant.creature_data.get("items", [])
+	var has_nullify_ability = false
+	var nullify_source = ""
 	
-	for item in items:
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			if effect.get("effect_type") == "nullify_all_enemy_abilities":
-				has_warlock_disk = true
-				break
-		
-		if has_warlock_disk:
+	# 1. クリーチャー自身のability_parsedをチェック（シーボンズなど）
+	var self_ability_parsed = self_participant.creature_data.get("ability_parsed", {})
+	var self_effects = self_ability_parsed.get("effects", [])
+	for effect in self_effects:
+		if effect.get("effect_type") == "nullify_all_enemy_abilities":
+			has_nullify_ability = true
+			nullify_source = "creature"
 			break
 	
-	# 2. 敵に skill_nullify 呪いがついているかチェック
+	# 2. アイテム（ウォーロックディスク）をチェック
+	if not has_nullify_ability:
+		var items = self_participant.creature_data.get("items", [])
+		for item in items:
+			var effect_parsed = item.get("effect_parsed", {})
+			var effects = effect_parsed.get("effects", [])
+			for effect in effects:
+				if effect.get("effect_type") == "nullify_all_enemy_abilities":
+					has_nullify_ability = true
+					nullify_source = "item"
+					break
+			if has_nullify_ability:
+				break
+	
+	# 3. 敵に skill_nullify 呪いがついているかチェック
 	var enemy_curse = enemy_participant.creature_data.get("curse", {})
 	var enemy_has_skill_nullify = enemy_curse.get("curse_type") == "skill_nullify"
 	
 	# どちらも該当しなければ何もしない
-	if not has_warlock_disk and not enemy_has_skill_nullify:
+	if not has_nullify_ability and not enemy_has_skill_nullify:
 		return
 	
 	# ログ出力（発動元を区別）
-	if has_warlock_disk:
-		print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
-		  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
+	if has_nullify_ability:
+		if nullify_source == "creature":
+			print("【戦闘中能力無効発動】", self_participant.creature_data.get("name", "?"), 
+			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
+		else:
+			print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
+			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	elif enemy_has_skill_nullify:
 		var curse_name = enemy_curse.get("name", "戦闘能力不可")
 		print("【呪い発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
