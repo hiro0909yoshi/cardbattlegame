@@ -981,6 +981,14 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]",
+	  "synthesis": {
+		"type": "item",
+		"target_override": {
+		  "target_info": {
+			"owner_filter": "own"
+		  }
+		}
+	  },
 	  "effect_parsed": {
 		"target_type": "all_creatures",
 		"target_info": {

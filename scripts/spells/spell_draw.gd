@@ -87,8 +87,13 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 		
 		"destroy_duplicate_cards":
 			# 対象プレイヤーの重複カード破壊（エロージョン用）
-			var target_player_id = context.get("target_player_id", player_id)
-			result = destroy_duplicate_cards(target_player_id)
+			# 合成時は全プレイヤー対象
+			var all_players = effect.get("all_players", false)
+			if all_players:
+				result = destroy_duplicate_cards_all_players()
+			else:
+				var target_player_id = context.get("target_player_id", player_id)
+				result = destroy_duplicate_cards(target_player_id)
 		
 		"destroy_selected_card":
 			# 敵手札からカードを選んで破壊（シャッター、スクイーズ用）
@@ -693,6 +698,40 @@ func destroy_duplicate_cards(target_player_id: int) -> Dictionary:
 		"total_destroyed": destroyed_count,
 		"duplicates": duplicate_names
 	}
+
+
+## 全プレイヤーの重複カードを破壊（エロージョン合成用）
+func destroy_duplicate_cards_all_players() -> Dictionary:
+	"""
+	全プレイヤーの手札から重複カードを破壊する（エロージョン合成用）
+	
+	戻り値: Dictionary
+	  - total_destroyed: int（破壊した総枚数）
+	  - by_player: Array（プレイヤーごとの結果）
+	"""
+	if not player_system_ref:
+		push_error("SpellDraw: PlayerSystemが設定されていません")
+		return {"total_destroyed": 0, "by_player": []}
+	
+	var total_destroyed = 0
+	var by_player = []
+	
+	for player_id in range(player_system_ref.players.size()):
+		var result = destroy_duplicate_cards(player_id)
+		total_destroyed += result.get("total_destroyed", 0)
+		by_player.append({
+			"player_id": player_id,
+			"destroyed": result.get("total_destroyed", 0),
+			"duplicates": result.get("duplicates", [])
+		})
+	
+	print("[エロージョン合成] 全プレイヤーから合計 %d 枚の重複カードを破壊" % total_destroyed)
+	
+	return {
+		"total_destroyed": total_destroyed,
+		"by_player": by_player
+	}
+
 
 ## 指定インデックスのカードを破壊
 func destroy_card_at_index(target_player_id: int, card_index: int) -> Dictionary:

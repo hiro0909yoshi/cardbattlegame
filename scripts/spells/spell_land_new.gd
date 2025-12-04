@@ -418,6 +418,9 @@ func apply_land_effect(effect: Dictionary, target_data: Dictionary, player_id: i
 		"change_level":
 			return _apply_effect_change_level(effect, land_target_data)
 		
+		"set_level":
+			return _apply_effect_set_level(effect, land_target_data)
+		
 		"abandon_land":
 			return _apply_effect_abandon_land(effect, land_target_data)
 		
@@ -464,6 +467,14 @@ func _apply_effect_change_level(effect: Dictionary, target_data: Dictionary) -> 
 		return change_level(tile_index, level_change)
 	return false
 
+func _apply_effect_set_level(effect: Dictionary, target_data: Dictionary) -> bool:
+	var tile_index = target_data.get("tile_index", -1)
+	var new_level = effect.get("value", 1)
+	
+	if tile_index >= 0:
+		return set_level(tile_index, new_level)
+	return false
+
 func _apply_effect_abandon_land(effect: Dictionary, target_data: Dictionary) -> bool:
 	var tile_index = target_data.get("tile_index", -1)
 	var return_rate = effect.get("return_rate", 0.7)
@@ -505,15 +516,35 @@ func _apply_effect_change_element_to_dominant(_effect: Dictionary, target_data: 
 	return false
 
 func _apply_effect_find_and_change_highest_level(effect: Dictionary, target_data: Dictionary) -> bool:
+	var all_players = effect.get("all_players", false)
+	var level_change = effect.get("value", -1)
+	
+	# 合成時: 全敵プレイヤー対象
+	if all_players:
+		var owner_filter = effect.get("owner_filter", "enemy")
+		var success_count = 0
+		
+		for player_id in range(player_system_ref.players.size()):
+			# 敵プレイヤーのみ（owner_filter: enemy の場合）
+			# ※ caster_idが必要だが、ここでは取得できないので全プレイヤー対象にする
+			var highest_tile = find_highest_level_land(player_id)
+			if highest_tile >= 0:
+				var success = change_level(highest_tile, level_change)
+				if success:
+					print("[サブサイド合成] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [player_id + 1, highest_tile])
+					success_count += 1
+		
+		return success_count > 0
+	
+	# 通常: 単一プレイヤー対象
 	var target_player_id = target_data.get("player_id", -1)
 	
 	if target_player_id >= 0:
 		var highest_tile = find_highest_level_land(target_player_id)
 		if highest_tile >= 0:
-			var level_change = effect.get("value", -1)
 			var success = change_level(highest_tile, level_change)
 			if success:
-				print("[サブサイド] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [target_player_id, highest_tile])
+				print("[サブサイド] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [target_player_id + 1, highest_tile])
 			return success
 	return false
 

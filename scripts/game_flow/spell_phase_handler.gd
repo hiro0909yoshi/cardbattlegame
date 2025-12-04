@@ -38,6 +38,13 @@ var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立�
 ##   spell_phase_handler.debug_disable_secret_cards = true
 var debug_disable_secret_cards: bool = false
 
+## カード犠牲システムを一時的に無効化
+## true: cards_sacrificeを無視（犠牲カード選択をスキップ）
+## false: 通常通りカード犠牲を要求
+## 使い方: GameFlowManagerのセットアップ後に設定
+##   spell_phase_handler.debug_disable_card_sacrifice = true
+var debug_disable_card_sacrifice: bool = false
+
 ## ターゲット選択（領地コマンドと同じ構造）
 var available_targets: Array = []
 var current_target_index: int = 0
@@ -63,6 +70,8 @@ var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
 var spell_borrow: SpellBorrow = null  # スペル借用
 var spell_transform: SpellTransform = null  # クリーチャー変身
 var spell_purify: SpellPurify = null  # 呪い除去
+var spell_synthesis: SpellSynthesis = null  # スペル合成
+var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理
 
 func _ready():
@@ -133,6 +142,14 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellPurify を初期化
 	if not spell_purify and board_system and creature_manager and player_system and game_flow_manager:
 		spell_purify = SpellPurify.new(board_system, creature_manager, player_system, game_flow_manager)
+	
+	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
+	if not card_sacrifice_helper and card_system and player_system:
+		card_sacrifice_helper = CardSacrificeHelper.new(card_system, player_system, ui_manager)
+	
+	# SpellSynthesis を初期化
+	if not spell_synthesis and card_sacrifice_helper:
+		spell_synthesis = SpellSynthesis.new(card_sacrifice_helper)
 	
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
@@ -332,8 +349,38 @@ func use_spell(spell_card: Dictionary):
 			current_state = State.WAITING_FOR_INPUT
 			return
 	
-	# 対象選択が必要かチェック
+	# カード犠牲処理（スペル合成用）
+	var is_synthesized = false
+	if spell_synthesis and spell_synthesis.requires_sacrifice(spell_card) and not debug_disable_card_sacrifice:
+		# 手札選択UIを表示
+		if card_sacrifice_helper:
+			var sacrifice_card = await card_sacrifice_helper.show_hand_selection(
+				current_player_id, "", "犠牲にするカードを選択"
+			)
+			
+			if sacrifice_card.is_empty():
+				# キャンセル時はコストを返却してスペルキャンセル
+				if player_system:
+					player_system.add_magic(current_player_id, cost)
+				selected_spell_card = {}
+				spell_used_this_turn = false
+				current_state = State.WAITING_FOR_INPUT
+				return
+			
+			# 合成条件判定
+			is_synthesized = spell_synthesis.check_condition(spell_card, sacrifice_card)
+			if is_synthesized:
+				print("[SpellPhaseHandler] 合成成立: %s" % spell_card.get("name", "?"))
+			
+			# カードを破棄
+			card_sacrifice_helper.consume_card(current_player_id, sacrifice_card)
+	
+	# 合成成立時はeffect_parsedを書き換え
 	var parsed = spell_card.get("effect_parsed", {})
+	if is_synthesized and spell_synthesis:
+		parsed = spell_synthesis.apply_overrides(spell_card, true)
+		spell_card["effect_parsed"] = parsed
+		spell_card["is_synthesized"] = true
 	var target_type = parsed.get("target_type", "")
 	var target_filter = parsed.get("target_filter", "")
 	var target_info = parsed.get("target_info", {})
@@ -688,7 +735,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if result.has("next_effect") and not result["next_effect"].is_empty():
 					_apply_single_effect(result["next_effect"], target_data)
 		
-		"change_element", "change_level", "abandon_land", "destroy_creature", \
+		"change_element", "change_level", "set_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \
 		"align_mismatched_lands":

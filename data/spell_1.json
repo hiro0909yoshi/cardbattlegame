@@ -59,6 +59,13 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]",
+	  "synthesis": {
+		"type": "same_card",
+		"effect_override": {
+		  "effect_type": "set_level",
+		  "value": 1
+		}
+	  },
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -379,6 +386,12 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象手札を参照し、重複カードを全て破壊；合成[スペル・全手札]",
+	  "synthesis": {
+		"type": "any_spell",
+		"target_override": {
+		  "target_type": "all_players"
+		}
+	  },
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_filter": "any",
@@ -680,6 +693,15 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]",
+	  "synthesis": {
+		"type": "same_card",
+		"target_override": {
+		  "target_type": "all_players",
+		  "target_info": {
+			"owner_filter": "enemy"
+		  }
+		}
+	  },
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_info": {
@@ -751,7 +773,11 @@
 		"mp": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象敵クリーチャーのHP-30；合成[∅スペル・効果はHP-40となる]",
+	  "effect": "対象敵クリーチャーのHP-30；合成[単体対象スペル・効果はHP-40となる]",
+	  "synthesis": {
+		"type": "single_target_spell",
+		"value_override": 40
+	  },
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1272,6 +1298,15 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
+	  "synthesis": {
+		"type": "creature",
+		"target_override": {
+		  "target_type": "all_creatures",
+		  "target_info": {
+			"state_filter": "downed"
+		  }
+		}
+	  },
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_filter": "creature",
@@ -1346,6 +1381,15 @@
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象クリーチャーのAP=0；合成[スペル・MHP-20を追加]；カードを1枚引く",
+	  "synthesis": {
+		"type": "any_spell",
+		"effects_add": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": -20
+		  }
+		]
+	  },
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_filter": "creature",

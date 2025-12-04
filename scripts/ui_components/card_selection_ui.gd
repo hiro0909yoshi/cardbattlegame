@@ -89,6 +89,8 @@ func update_phase_label(current_player, mode: String):
 				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (魔力: " + str(current_player.magic_power) + "G)"
 			else:
 				phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+		"sacrifice":
+			phase_label_ref.text = "犠牲にするカードを選択"
 		"spell_borrow":
 			phase_label_ref.text = "使用するスペルを選択してください"
 		_:
@@ -128,6 +130,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				is_selectable = false
 			# 捨て札モードではすべて選択可能
 			elif selection_mode == "discard":
+				is_selectable = true
+			# 犠牲モードではすべて選択可能
+			elif selection_mode == "sacrifice":
 				is_selectable = true
 			elif filter_mode == "spell":
 				# スペルフェーズ中: スペルカードのみ選択可能
