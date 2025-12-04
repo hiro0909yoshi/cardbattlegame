@@ -506,6 +506,27 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9028,
+	  "name": "衰弱呪い（スピットコブラ秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "plague",
+			"name": "衰弱",
+			"description": "戦闘終了時、HP-MHPの1/2"
+		  }
+		]
+	  }
 	}
   ]
 }

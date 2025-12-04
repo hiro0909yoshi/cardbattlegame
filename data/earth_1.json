@@ -692,7 +692,17 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "秘術",
-			"ability_detail": "秘術[G30・対象敵領地に呪い\"衰弱\"]"
+			"ability_detail": "秘術[G30・対象敵領地に呪い\"衰弱\"]",
+			"ability_parsed": {
+				"keywords": [
+					"秘術"
+				],
+				"mystic_art": {
+					"name": "衰弱呪い",
+					"cost": 30,
+					"spell_id": 9028
+				}
+			}
 		},
 		{
 			"id": 224,
