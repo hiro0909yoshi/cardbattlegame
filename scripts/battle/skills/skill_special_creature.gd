@@ -77,7 +77,6 @@ static func apply_ogre_lord_bonus(participant: BattleParticipant, player_index: 
 	
 	if water_earth_ogre_count > 0:
 		participant.temporary_bonus_hp += 20
-		participant.current_hp += 20
 		bonus_applied = true
 		print("[オーガロード] 水地オーガ配置(", water_earth_ogre_count, "体) HP+20")
 	

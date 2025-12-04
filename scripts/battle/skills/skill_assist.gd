@@ -46,8 +46,7 @@ static func apply_assist_effect(participant: BattleParticipant, assist_creature_
 	# HP加算
 	if creature_hp > 0:
 		participant.item_bonus_hp += creature_hp
-		participant.current_hp += creature_hp
-		print("  [援護] HP+", creature_hp, " → ", participant.current_hp)
+		print("  [援護] HP+", creature_hp, " → item_bonus_hp:", participant.item_bonus_hp)
 	
 	# 【ブラッドプリン専用処理】援護クリーチャーのMHPを永続吸収
 	if participant.creature_data.get("id") == 137:

@@ -260,7 +260,6 @@ func apply_land_count_effects(participant: BattleParticipant, context: Dictionar
 					participant.temporary_bonus_hp = bonus - base_mhp
 				else:
 					participant.temporary_bonus_hp += bonus
-					participant.current_hp += bonus
 				print("【土地数比例】", participant.creature_data.get("name", "?"))
 				print("  対象属性:", target_elements, " 合計土地数:", total_count)
 				print("  HP: ", old_hp, " → ", participant.current_hp, " (", operation, " ", bonus, ")")
@@ -318,15 +317,13 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 			if hp_mode == "add":
 				# temporary_bonus_hpに現ターン数を加算
 				participant.temporary_bonus_hp += current_turn
-				participant.current_hp += current_turn
 				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
-					  " HP+", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
+					  " HP+", current_turn, " (ターン", current_turn, ")")
 			elif hp_mode == "subtract":
 				# temporary_bonus_hpから現ターン数を引く
 				participant.temporary_bonus_hp -= current_turn
-				participant.current_hp -= current_turn
 				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
-					  " HP-", current_turn, " (ターン", current_turn, ") → MHP:", participant.current_hp)
+					  " HP-", current_turn, " (ターン", current_turn, ")")
 			
 			return
 
@@ -360,7 +357,6 @@ func apply_destroy_count_effects(participant: BattleParticipant):
 					  " ST+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus_value
-				participant.current_hp += bonus_value
 				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
 
@@ -381,7 +377,6 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 			var total_base_ap = base_ap + base_up_ap
 			
 			participant.temporary_bonus_hp += total_base_ap
-			participant.current_hp += total_base_ap
 			print("【基礎AP→HP】", participant.creature_data.get("name", "?"), 
 				  " HP+", total_base_ap, " (基礎AP: ", base_ap, "+", base_up_ap, ")")
 		
@@ -422,7 +417,6 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 					  " ST+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus
-				participant.current_hp += bonus
 				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
 
@@ -466,7 +460,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				var stat = effect.get("stat", "hp")
 				if stat == "hp":
 					participant.temporary_bonus_hp += bonus
-					participant.current_hp += bonus
 					print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
 						  " HP+", bonus, " (レベル:", tile_level, " × ", multiplier, ")")
 		
@@ -499,7 +492,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					participant.current_hp += hp_change
 					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
 						  " HP", ("+" if hp_change >= 0 else ""), hp_change, 
 						  " (自領地:", owned_land_count, ")")
@@ -537,7 +529,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			
 			if affects_hp:
 				participant.temporary_bonus_hp += bonus
-				participant.current_hp += bonus
 			
 			print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (", target_name, ":", creature_count, " × ", multiplier, ")")
@@ -574,7 +565,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			
 			if affects_hp:
 				participant.temporary_bonus_hp += bonus
-				participant.current_hp += bonus
 			
 			print("【他属性カウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (他属性:", other_count, " × ", multiplier, ")")
@@ -599,7 +589,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					participant.current_hp += hp_change
 					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
 						  " HP+", hp_change)
 
