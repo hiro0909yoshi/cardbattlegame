@@ -74,12 +74,10 @@ func _apply_stat_bonus(participant: BattleParticipant, stat_bonus: Dictionary) -
 	
 	if hp > 0:
 		participant.item_bonus_hp += hp
-		participant.current_hp += hp
-		print("  HP+", hp, " → ", participant.current_hp)
+		print("  HP+", hp, " → item_bonus_hp:", participant.item_bonus_hp)
 	elif hp < 0:
 		participant.item_bonus_hp += hp
-		participant.current_hp += hp
-		print("  HP", hp, " → ", participant.current_hp)
+		print("  HP", hp, " → item_bonus_hp:", participant.item_bonus_hp)
 	
 	# AP計算を更新（force_apでない場合のみ）
 	if not force_ap:
@@ -97,8 +95,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 		
 		"buff_hp":
 			participant.item_bonus_hp += value
-			participant.current_hp += value
-			print("  HP+", value, " → ", participant.current_hp)
+			print("  HP+", value, " → item_bonus_hp:", participant.item_bonus_hp)
 		
 		"debuff_ap":
 			participant.current_ap -= value
@@ -106,8 +103,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 		
 		"debuff_hp":
 			participant.item_bonus_hp -= value
-			participant.current_hp -= value
-			print("  HP-", value, " → ", participant.current_hp)
+			print("  HP-", value, " → item_bonus_hp:", participant.item_bonus_hp)
 		
 		"element_count_bonus":
 			_apply_element_count_bonus(participant, effect, context)
