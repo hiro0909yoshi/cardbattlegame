@@ -214,12 +214,13 @@ func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> b
 			var enemy_abilities = context.get("enemy_abilities", [])
 			return "防御型" in enemy_abilities
 		
-		# マーク判定（未実装）
+		# マーク判定（呪いシステムで実装）
 		"has_mark":
-			# TODO: マークシステムの実装後に対応
-			# var mark = condition.get("mark", "")  # 将来使用予定
-			# 現時点では常にfalseを返す
-			return false
+			# 敵クリーチャーが呪いを持っているかチェック
+			var enemy_creature_data = context.get("enemy_creature_data", {})
+			if enemy_creature_data.is_empty():
+				return false
+			return enemy_creature_data.has("curse")
 		
 		# レア度判定（ブラックソード等）
 		"user_rarity":
@@ -433,6 +434,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		"enemy_name": game_state.get("enemy_name", defender_data.get("name", "")),
 		"enemy_ap": defender_data.get("ap", 0),
 		"enemy_mhp": game_state.get("enemy_mhp_override", defender_data.get("mhp", 0)),
+		"enemy_creature_data": defender_data,  # 敵クリーチャーの完全なデータ（呪い判定用）
 		
 		# アイテム情報
 		"equipped_item": attacker_data.get("equipped_item", {}),

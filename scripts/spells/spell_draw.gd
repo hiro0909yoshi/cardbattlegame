@@ -211,6 +211,19 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）
 			result = _apply_draw_and_place(effect, player_id)
 		
+		"check_hand_synthesis":
+			# 手札に合成持ちカードがあるかチェック（フィロソフィー用）
+			var success_effect = effect.get("success_effect", {})
+			var fail_effect = effect.get("fail_effect", {})
+			
+			var has_synthesis = _has_synthesis_card_in_hand(player_id)
+			if has_synthesis:
+				print("[フィロソフィー] 合成持ちカードあり")
+				result["next_effect"] = success_effect
+			else:
+				print("[フィロソフィー] 合成持ちカードなし")
+				result["next_effect"] = fail_effect
+		
 		_:
 			print("[SpellDraw] 未対応の効果タイプ: ", effect_type)
 	
@@ -1330,3 +1343,41 @@ func _apply_draw_and_place(effect: Dictionary, player_id: int) -> Dictionary:
 			print("[draw_and_place] %s はクリーチャーではないため手札に残ります" % card_name)
 	
 	return result
+
+
+## 手札に合成を持つカードがあるかチェック（フィロソフィー用）
+func _has_synthesis_card_in_hand(player_id: int) -> bool:
+	"""
+	対象プレイヤーの手札に合成効果を持つカードがあるかチェック
+	
+	合成を持つカード:
+	  - クリーチャー: CreatureSynthesis.SYNTHESIS_CREATURE_IDSに含まれる
+	  - スペル: SpellSynthesis.SYNTHESIS_SPELL_IDSに含まれる
+	
+	引数:
+	  player_id: プレイヤーID
+	
+	戻り値: bool
+	"""
+	if not card_system_ref:
+		return false
+	
+	var hand = card_system_ref.get_all_cards_for_player(player_id)
+	var synthesis_creature_ids = CreatureSynthesis.get_synthesis_creature_ids()
+	var synthesis_spell_ids = SpellSynthesis.get_synthesis_spell_ids()
+	
+	for card in hand:
+		var card_id = card.get("id", -1)
+		var card_type = card.get("type", "")
+		
+		# クリーチャー合成チェック
+		if card_type == "creature" and card_id in synthesis_creature_ids:
+			print("[フィロソフィー] 合成カード発見（クリーチャー）: %s" % card.get("name", "?"))
+			return true
+		
+		# スペル合成チェック
+		if card_type == "spell" and card_id in synthesis_spell_ids:
+			print("[フィロソフィー] 合成カード発見（スペル）: %s" % card.get("name", "?"))
+			return true
+	
+	return false

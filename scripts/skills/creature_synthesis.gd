@@ -11,6 +11,7 @@ const CONDITION_ELEMENT = "element"        # 特定属性のカード
 const CONDITION_CURSE_SPELL = "curse_spell"  # 呪いスペル
 const CONDITION_ITEM = "item"              # アイテムカード
 const CONDITION_CREATURE = "creature"      # クリーチャーカード
+const CONDITION_SPELL = "spell"            # 任意のスペルカード
 
 ## 合成効果タイプ
 const EFFECT_STAT_BOOST = "stat_boost"     # ステータス上昇
@@ -18,6 +19,24 @@ const EFFECT_TRANSFORM = "transform"       # 変身
 
 ## 呪いスペルに該当するspell_type
 const CURSE_SPELL_TYPES = ["単体特殊能力付与", "複数特殊能力付与"]
+
+## 合成対象クリーチャーID一覧
+const SYNTHESIS_CREATURE_IDS = [
+	# ステータス上昇型
+	22,   # デッドウォーロード（火）
+	248,  # ワーベア（地）
+	317,  # サムハイン（風）
+	341,  # マーシャルモンク（風）
+	# 変身型
+	25,   # ナイトエラント（火）
+	33,   # バイロクルス（火）
+	112,  # イド（水）
+	320   # スカラベンドラ（風）
+]
+
+## 合成対象クリーチャーIDリストを取得
+static func get_synthesis_creature_ids() -> Array:
+	return SYNTHESIS_CREATURE_IDS
 
 # ============ 参照 ============
 
@@ -68,6 +87,10 @@ func check_condition(creature_data: Dictionary, sacrifice_card: Dictionary) -> b
 		CONDITION_CREATURE:
 			# クリーチャーカード
 			return sacrifice_card.get("type", "") == "creature"
+		
+		CONDITION_SPELL:
+			# スペルカード
+			return sacrifice_card.get("type", "") == "spell"
 	
 	return false
 

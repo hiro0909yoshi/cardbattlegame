@@ -322,7 +322,8 @@ func execute_summon(card_index: int):
 			return
 	
 	# 土地条件チェック（lands_required）
-	if not debug_disable_lands_required:
+	# ブライトワールド発動中は土地条件を無視
+	if not debug_disable_lands_required and not _is_summon_condition_ignored():
 		var check_result = _check_lands_required(card_data, current_player_index)
 		if not check_result.passed:
 			print("[TileActionProcessor] 土地条件未達: %s" % check_result.message)
@@ -332,8 +333,9 @@ func execute_summon(card_index: int):
 			return
 	
 	# カード犠牲処理（クリーチャー合成用）
+	# ブライトワールド発動中はカード犠牲を無視
 	var sacrifice_card = {}
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice:
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
 		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時は召喚をキャンセル
@@ -409,7 +411,8 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		return
 	
 	# 土地条件チェック（lands_required）
-	if not debug_disable_lands_required:
+	# ブライトワールド発動中は土地条件を無視
+	if not debug_disable_lands_required and not _is_summon_condition_ignored():
 		var check_result = _check_lands_required(card_data, current_player_index)
 		if not check_result.passed:
 			print("[TileActionProcessor] 土地条件未達（バトル）: %s" % check_result.message)
@@ -419,8 +422,9 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 			return
 	
 	# カード犠牲処理（クリーチャー合成用）
+	# ブライトワールド発動中はカード犠牲を無視
 	var sacrifice_card = {}
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice:
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
 		# カード選択UIを一度閉じる
 		if ui_manager:
 			ui_manager.hide_card_selection_ui()
@@ -552,6 +556,14 @@ func _get_element_display_name(element: String) -> String:
 		"earth": return "地"
 		"wind": return "風"
 		_: return element
+
+
+## ブライトワールド（召喚条件解除）が発動中か
+func _is_summon_condition_ignored() -> bool:
+	if not game_flow_manager:
+		return false
+	var game_stats = game_flow_manager.game_stats
+	return SpellWorldCurse.is_summon_condition_ignored(game_stats)
 
 
 ## カード犠牲処理（手札選択UI表示→カード破棄）

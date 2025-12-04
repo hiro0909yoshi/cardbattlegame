@@ -469,6 +469,12 @@ func get_selection_mode() -> String:
 
 # 土地条件チェック（true: 条件OK、false: 条件未達）
 func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
+	# ブライトワールド（召喚条件解除）が発動中ならOK
+	if game_flow_manager_ref:
+		var game_stats = game_flow_manager_ref.game_stats
+		if SpellWorldCurse.is_summon_condition_ignored(game_stats):
+			return true
+	
 	# デバッグフラグで無効化されている場合はOK
 	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
 		var board = game_flow_manager_ref.board_system_3d

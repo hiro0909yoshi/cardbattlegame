@@ -165,9 +165,14 @@
 			"ability": "防御型",
 			"ability_detail": "防御型；足どめ[火]",
 			"ability_parsed": {
-				"keywords": ["防御型", "足どめ"],
+				"keywords": [
+					"防御型",
+					"足どめ"
+				],
 				"trap_stop": {
-					"elements": ["fire"]
+					"elements": [
+						"fire"
+					]
 				}
 			}
 		},
@@ -331,7 +336,10 @@
 			"ability": "防御型・秘術",
 			"ability_detail": "防御型；秘術[G30・1マス移動]",
 			"ability_parsed": {
-				"keywords": ["防御型", "秘術"],
+				"keywords": [
+					"防御型",
+					"秘術"
+				],
 				"mystic_art": {
 					"name": "1マス移動",
 					"cost": 30,
@@ -365,7 +373,10 @@
 			"ability": "無効化・防魔",
 			"ability_detail": "無効化[AP40以上]；防魔",
 			"ability_parsed": {
-				"keywords": ["無効化", "防魔"],
+				"keywords": [
+					"無効化",
+					"防魔"
+				],
 				"keyword_conditions": {
 					"無効化": {
 						"nullify_type": "ap_threshold",
@@ -659,7 +670,9 @@
 			"ability": "秘術",
 			"ability_detail": "秘術[G50・マミーに変身]",
 			"ability_parsed": {
-				"keywords": ["秘術"],
+				"keywords": [
+					"秘術"
+				],
 				"mystic_arts": [
 					{
 						"name": "マミーに変身",
@@ -702,7 +715,9 @@
 			"ability": "秘術",
 			"ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
 			"ability_parsed": {
-				"keywords": ["秘術"],
+				"keywords": [
+					"秘術"
+				],
 				"mystic_art": {
 					"name": "破壊移動",
 					"cost": 80,
@@ -739,7 +754,10 @@
 				"type": "element",
 				"condition": "earth",
 				"effect_type": "stat_boost",
-				"effect": { "ap": 20, "mhp": 20 }
+				"effect": {
+					"ap": 20,
+					"mhp": 20
+				}
 			},
 			"ability_parsed": {
 				"keywords": [
@@ -815,9 +833,11 @@
 			"ap": 10,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G80・対象自領地に○防魔]",
+			"ability_detail": "秘術[G80・対象自領地に呪い防魔]",
 			"ability_parsed": {
-				"keywords": ["秘術"],
+				"keywords": [
+					"秘術"
+				],
 				"mystic_arts": [
 					{
 						"id": "domovoi_mystic_001",

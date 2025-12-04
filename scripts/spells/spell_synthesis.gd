@@ -11,6 +11,21 @@ const SYNTHESIS_TYPE_SINGLE_TARGET_SPELL = "single_target_spell"  # 単体対象
 const SYNTHESIS_TYPE_CREATURE = "creature"             # クリーチャー
 const SYNTHESIS_TYPE_ITEM = "item"                     # アイテム
 
+## 合成対象スペルID一覧
+const SYNTHESIS_SPELL_IDS = [
+	2003,  # アステロイド
+	2017,  # エロージョン
+	2030,  # サブサイド
+	2033,  # シャイニングガイザー
+	2055,  # ディスエレメント
+	2058,  # デビリティ
+	2107   # マスグロース
+]
+
+## 合成対象スペルIDリストを取得
+static func get_synthesis_spell_ids() -> Array:
+	return SYNTHESIS_SPELL_IDS
+
 
 # ============ 参照 ============
 

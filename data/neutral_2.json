@@ -1,592 +1,635 @@
 {
-  "cards": [
-	{
-	  "id": 427,
-	  "name": "トロージャンホース",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 30
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "防具",
-		  "武器",
-		  "巻物"
-		]
-	  },
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "貫通・援護",
-	  "ability_detail": "貫通；援護",
-	  "ability_parsed": {
-		"keywords": [
-		  "貫通",
-		  "援護"
-		],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["all"]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 428,
-	  "name": "ニルーバーナ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 70,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "援護・先制・秘術",
-	  "ability_detail": "援護[無]；先制；秘術[G100・呪いのついた全クリーチャーのHP-20]",
-	  "ability_parsed": {
-		"keywords": [
-		  "援護",
-		  "先制",
-		  "秘術"
-		],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["neutral"]
-		  }
-		},
-		"mystic_arts": [
-		  {
-			"name": "カースブラスト",
-			"description": "呪い付き全クリーチャーのHP-20",
-			"spell_id": 9008,
-			"cost": 100
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 429,
-	  "name": "ニンジャ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 70
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "先制・巻物強打",
-	  "ability_detail": "先制；巻物強打",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "巻物強打"
-		],
-		"keyword_conditions": {
-		  "巻物強打": {
-			"scroll_type": "base_ap"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 430,
-	  "name": "ハーフリング",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 50
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "全属性地形効果・防魔",
-	  "ability_detail": "どの属性の土地からも地形効果を得る；防魔",
-	  "ability_parsed": {
-		"keywords": ["防魔"],
-		"effects": [],
-		"extra_land_elements": ["fire", "water", "earth", "wind"]
-	  }
-	},
-	{
-	  "id": 431,
-	  "name": "ハイドビハインド",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 40
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[G40・対象自クリーチャーに呪い\"地形効果\"]",
-	  "mystic_arts": {
-		"cost": 40,
-		"spell_id": 9019
-	  }
-	},
+	"cards": [
 		{
-	  "id": 432,
-	  "name": "バルダンダース",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 20
-	  },
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "変身",
-	  "ability_detail": "変身[ランダム]",
-	  "ability_parsed": {
-		"keywords": ["変身"],
-		"effects": [
-		  {
-			"effect_type": "transform",
-			"trigger": "on_battle_start",
-			"target": "self",
-			"transform_type": "random",
-			"revert_after_battle": true
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 433,
-	  "name": "バンディット",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 20
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "援護・魔力奪取",
-	  "ability_detail": "援護；魔力奪取[敵に与えたダメージ×G2]",
-	  "ability_parsed": {
-		"keywords": ["援護"],
-		"effects": [
-		  {
-			"effect_type": "magic_steal_on_damage",
-			"multiplier": 2
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 434,
-	  "name": "ビーストギア",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 40
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "無効化・防魔",
-	  "ability_detail": "無効化[巻物]；防魔",
-	  "ability_parsed": {
-		"keywords": ["無効化", "防魔"],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 435,
-	  "name": "ファイター",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 30
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 436,
-	  "name": "ボージェス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 40
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "応援",
-	  "ability_detail": "応援[無・HP+20]",
-	  "ability_parsed": {
-		"keywords": ["応援"],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "element",
-				  "elements": ["neutral"]
-				}
-			  ]
+			"id": 427.0,
+			"name": "トロージャンホース",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 30.0
 			},
-			"bonus": {
-			  "hp": 20
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 437,
-	  "name": "ミゴール",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 40,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強打・無効化",
-	  "ability_detail": "強打[水地]；無効化[火風]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打",
-		  "無効化"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "water",
-			  "earth"
-			]
-		  },
-		  "無効化": {
-			"nullify_type": "element",
-			"elements": ["fire", "wind"]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
-				  "earth"
+			"restrictions": {
+				"item_use": [
+					"防具",
+					"武器",
+					"巻物"
 				]
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 438,
-	  "name": "リビングアーマー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 70
-	  },
-	  "ap": 0,
-	  "hp": 40,
-	  "ability": "アイテムクリーチャー・戦闘中AP上昇",
-	  "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+50",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "as_creature_bonus",
-			"stat_changes": {
-			  "ap": 50
 			},
-			"description": "クリーチャーとして戦闘時AP+50"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 439,
-	  "name": "リビングアムル",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 60
-	  },
-	  "ap": 20,
-	  "hp": 10,
-	  "ability": "アイテムクリーチャー・死者復活",
-	  "ability_detail": "アイテムクリーチャー；敵武器不使用時、死者復活[リビングアムル]",
-	  "ability_parsed": {
-		"keywords": ["アイテムクリーチャー", "死者復活"],
-		"effects": [
-		  {
-			"effect_type": "item_creature",
-			"trigger": "on_use_as_item",
-			"stat_bonus": {
-			  "ap": 20,
-			  "hp": 10
-			}
-		  },
-		  {
-			"effect_type": "revive",
-			"trigger": "on_death",
-			"revive_type": "conditional",
-			"creature_id": 438,
-			"condition": {
-			  "type": "enemy_item_not_used",
-			  "item_category": "武器"
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 440,
-	  "name": "リビングクローブ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 70
-	  },
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "アイテムクリーチャー・AP&HP計算",
-	  "ability_detail": "アイテムクリーチャー；AP&HP=他属性の配置数×5",
-	  "ability_parsed": {
-		"keywords": ["アイテムクリーチャー"],
-		"effects": [
-		  {
-			"effect_type": "other_element_count",
-			"multiplier": 5,
-			"exclude_neutral": true,
-			"stat_changes": {
-			  "ap": true,
-			  "hp": true
-			},
-			"description": "AP&HP=他属性の配置数×5"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 441,
-	  "name": "リビングヘルム",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 50
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "アイテムクリーチャー",
-	  "ability_detail": "アイテムクリーチャー"
-	},
-	{
-	  "id": 442,
-	  "name": "リビングボム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 60
-	  },
-	  "ap": 10,
-	  "hp": 30,
-	  "ability": "アイテムクリーチャー・道連れ",
-	  "ability_detail": "アイテムクリーチャー；道連れ[HP20以下]"
-	},
-	{
-	  "id": 443,
-	  "name": "ルナティックヘア",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 30
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "戦闘後能力交換",
-	  "ability_detail": "戦闘後、敵のAPとMHPを交換"
-	},
-	{
-	  "id": 444,
-	  "name": "レジェンドファロス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 50,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "防具"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 40,
-	  "hp": 50,
-	  "ability": "防御型・周回回復不可・秘術",
-	  "ability_detail": "防御型；周回回復不可；秘術[G80・隣接空地にスタチューを配置]",
-	  "ability_parsed": {
-		"keywords": ["防御型", "周回回復不可", "秘術"],
-		"mystic_arts": [
-		  {
-			"name": "スタチュー配置",
-			"cost": 80,
-			"target_type": "self",
-			"effects": [
-			  {
-				"effect_type": "place_creature",
-				"creature_id": 421,
-				"placement_mode": "adjacent"
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 445,
-	  "name": "レッドキャップ",
-	  "race": "ゴブリン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 30,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "AP&HP計算・応援",
-	  "ability_detail": "AP&HP=ゴブリン配置数×20；応援[ゴブリン・AP+20]",
-	  "ability_parsed": {
-		"keywords": ["応援"],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "race",
-				  "race": "ゴブリン"
+			"ap": 0.0,
+			"hp": 30.0,
+			"ability": "貫通・援護",
+			"ability_detail": "貫通；援護",
+			"ability_parsed": {
+				"keywords": [
+					"貫通",
+					"援護"
+				],
+				"keyword_conditions": {
+					"援護": {
+						"target_elements": [
+							"all"
+						]
+					}
 				}
-			  ]
-			},
-			"bonus": {
-			  "ap": 20
 			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 446,
-	  "name": "ロックタイタン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 90
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "防具",
-		  "巻物",
-		  "アクセサリ",
-		  "武器"
-		]
-	  },
-	  "ap": 70,
-	  "hp": 70,
-	  "ability": "戦闘後能力値減少",
-	  "ability_detail": "戦闘後、AP&MHP-10",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "after_battle_permanent_change",
-			"stat_changes": {
-			  "ap": -10
+		},
+		{
+			"id": 428.0,
+			"name": "ニルーバーナ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 70.0,
+				"cards_sacrifice": 1.0
 			},
-			"description": "バトル終了時AP+10（永続）"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 447,
-	  "name": "ワンダーウォール",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 10,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"item_use": [
-		  "防具",
-		  "武器"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "防御型・無効化",
-	  "ability_detail": "防御型；無効化[火水風地]"
-	,
-	  "ability_parsed": {
-		"keywords": ["無効化"],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "element",
-			"elements": ["fire", "water", "wind", "earth"]
-		  }
+			"ap": 40.0,
+			"hp": 40.0,
+			"ability": "援護・先制・秘術",
+			"ability_detail": "援護[無]；先制；秘術[G100・呪いのついた全クリーチャーのHP-20]",
+			"ability_parsed": {
+				"keywords": [
+					"援護",
+					"先制",
+					"秘術"
+				],
+				"keyword_conditions": {
+					"援護": {
+						"target_elements": [
+							"neutral"
+						]
+					}
+				},
+				"mystic_arts": [
+					{
+						"name": "カースブラスト",
+						"description": "呪い付き全クリーチャーのHP-20",
+						"spell_id": 9008.0,
+						"cost": 100.0
+					}
+				]
+			}
+		},
+		{
+			"id": 429.0,
+			"name": "ニンジャ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 70.0
+			},
+			"ap": 40.0,
+			"hp": 40.0,
+			"ability": "先制・巻物強打",
+			"ability_detail": "先制；巻物強打",
+			"ability_parsed": {
+				"keywords": [
+					"先制",
+					"巻物強打"
+				],
+				"keyword_conditions": {
+					"巻物強打": {
+						"scroll_type": "base_ap"
+					}
+				}
+			}
+		},
+		{
+			"id": 430.0,
+			"name": "ハーフリング",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 50.0
+			},
+			"ap": 30.0,
+			"hp": 30.0,
+			"ability": "全属性地形効果・防魔",
+			"ability_detail": "どの属性の土地からも地形効果を得る；防魔",
+			"ability_parsed": {
+				"keywords": [
+					"防魔"
+				],
+				"effects": [],
+				"extra_land_elements": [
+					"fire",
+					"water",
+					"earth",
+					"wind"
+				]
+			}
+		},
+		{
+			"id": 431.0,
+			"name": "ハイドビハインド",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 40.0
+			},
+			"ap": 30.0,
+			"hp": 40.0,
+			"ability": "秘術",
+			"ability_detail": "秘術[G40・対象自クリーチャーに呪い\"地形効果\"]",
+			"mystic_arts": {
+				"cost": 40.0,
+				"spell_id": 9019.0
+			}
+		},
+		{
+			"id": 432.0,
+			"name": "バルダンダース",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 20.0
+			},
+			"ap": 0.0,
+			"hp": 30.0,
+			"ability": "変身",
+			"ability_detail": "変身[ランダム]",
+			"ability_parsed": {
+				"keywords": [
+					"変身"
+				],
+				"effects": [
+					{
+						"effect_type": "transform",
+						"trigger": "on_battle_start",
+						"target": "self",
+						"transform_type": "random",
+						"revert_after_battle": true
+					}
+				]
+			}
+		},
+		{
+			"id": 433.0,
+			"name": "バンディット",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 20.0
+			},
+			"ap": 20.0,
+			"hp": 20.0,
+			"ability": "援護・魔力奪取",
+			"ability_detail": "援護；魔力奪取[敵に与えたダメージ×G2]",
+			"ability_parsed": {
+				"keywords": [
+					"援護"
+				],
+				"effects": [
+					{
+						"effect_type": "magic_steal_on_damage",
+						"multiplier": 2.0
+					}
+				]
+			}
+		},
+		{
+			"id": 434.0,
+			"name": "ビーストギア",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 40.0
+			},
+			"restrictions": {
+				"item_use": [
+					"巻物"
+				]
+			},
+			"ap": 30.0,
+			"hp": 30.0,
+			"ability": "無効化・防魔",
+			"ability_detail": "無効化[巻物]；防魔",
+			"ability_parsed": {
+				"keywords": [
+					"無効化",
+					"防魔"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "scroll_attack"
+					}
+				}
+			}
+		},
+		{
+			"id": 435.0,
+			"name": "ファイター",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 30.0
+			},
+			"ap": 40.0,
+			"hp": 40.0,
+			"ability": "",
+			"ability_detail": ""
+		},
+		{
+			"id": 436.0,
+			"name": "ボージェス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 40.0
+			},
+			"ap": 30.0,
+			"hp": 30.0,
+			"ability": "応援",
+			"ability_detail": "応援[無・HP+20]",
+			"ability_parsed": {
+				"keywords": [
+					"応援"
+				],
+				"effects": [
+					{
+						"effect_type": "support",
+						"target": {
+							"scope": "all_creatures",
+							"conditions": [
+								{
+									"condition_type": "element",
+									"elements": [
+										"neutral"
+									]
+								}
+							]
+						},
+						"bonus": {
+							"hp": 20.0
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 437.0,
+			"name": "ミゴール",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 40.0,
+				"cards_sacrifice": 1.0
+			},
+			"ap": 40.0,
+			"hp": 40.0,
+			"ability": "強打・無効化",
+			"ability_detail": "強打[水地]；無効化[火風]",
+			"ability_parsed": {
+				"keywords": [
+					"強打",
+					"無効化"
+				],
+				"keyword_conditions": {
+					"強打": {
+						"condition_type": "enemy_is_element",
+						"elements": [
+							"water",
+							"earth"
+						]
+					},
+					"無効化": {
+						"nullify_type": "element",
+						"elements": [
+							"fire",
+							"wind"
+						]
+					}
+				},
+				"effects": [
+					{
+						"effect_type": "power_strike",
+						"multiplier": 1.5,
+						"conditions": [
+							{
+								"condition_type": "enemy_is_element",
+								"elements": [
+									"water",
+									"earth"
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 438.0,
+			"name": "リビングアーマー",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 70.0
+			},
+			"ap": 0.0,
+			"hp": 40.0,
+			"ability": "アイテムクリーチャー・戦闘中AP上昇",
+			"ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+50",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "as_creature_bonus",
+						"stat_changes": {
+							"ap": 50.0
+						},
+						"description": "クリーチャーとして戦闘時AP+50"
+					}
+				]
+			}
+		},
+		{
+			"id": 439.0,
+			"name": "リビングアムル",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 60.0
+			},
+			"ap": 20.0,
+			"hp": 10.0,
+			"ability": "アイテムクリーチャー・死者復活",
+			"ability_detail": "アイテムクリーチャー；敵武器不使用時、死者復活[リビングアムル]",
+			"ability_parsed": {
+				"keywords": [
+					"アイテムクリーチャー",
+					"死者復活"
+				],
+				"effects": [
+					{
+						"effect_type": "item_creature",
+						"trigger": "on_use_as_item",
+						"stat_bonus": {
+							"ap": 20.0,
+							"hp": 10.0
+						}
+					},
+					{
+						"effect_type": "revive",
+						"trigger": "on_death",
+						"revive_type": "conditional",
+						"creature_id": 438.0,
+						"condition": {
+							"type": "enemy_item_not_used",
+							"item_category": "武器"
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 440.0,
+			"name": "リビングクローブ",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 70.0
+			},
+			"ap": 0.0,
+			"hp": 30.0,
+			"ability": "アイテムクリーチャー・AP&HP計算",
+			"ability_detail": "アイテムクリーチャー；AP&HP=他属性の配置数×5",
+			"ability_parsed": {
+				"keywords": [
+					"アイテムクリーチャー"
+				],
+				"effects": [
+					{
+						"effect_type": "other_element_count",
+						"multiplier": 5.0,
+						"exclude_neutral": true,
+						"stat_changes": {
+							"ap": true,
+							"hp": true
+						},
+						"description": "AP&HP=他属性の配置数×5"
+					}
+				]
+			}
+		},
+		{
+			"id": 441.0,
+			"name": "リビングヘルム",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 50.0
+			},
+			"ap": 20.0,
+			"hp": 30.0,
+			"ability": "アイテムクリーチャー",
+			"ability_detail": "アイテムクリーチャー"
+		},
+		{
+			"id": 442.0,
+			"name": "リビングボム",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 60.0
+			},
+			"ap": 10.0,
+			"hp": 30.0,
+			"ability": "アイテムクリーチャー・道連れ",
+			"ability_detail": "アイテムクリーチャー；道連れ[HP20以下]"
+		},
+		{
+			"id": 443.0,
+			"name": "ルナティックヘア",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 30.0
+			},
+			"ap": 20.0,
+			"hp": 30.0,
+			"ability": "戦闘後能力交換",
+			"ability_detail": "戦闘後、敵のAPとMHPを交換"
+		},
+		{
+			"id": 444.0,
+			"name": "レジェンドファロス",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 50.0,
+				"cards_sacrifice": 1.0
+			},
+			"restrictions": {
+				"item_use": [
+					"防具"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 40.0,
+			"hp": 50.0,
+			"ability": "防御型・周回回復不可・秘術",
+			"ability_detail": "防御型；周回回復不可；秘術[G80・隣接空地にスタチューを配置]",
+			"ability_parsed": {
+				"keywords": [
+					"防御型",
+					"周回回復不可",
+					"秘術"
+				],
+				"mystic_arts": [
+					{
+						"name": "スタチュー配置",
+						"cost": 80.0,
+						"target_type": "self",
+						"effects": [
+							{
+								"effect_type": "place_creature",
+								"creature_id": 421.0,
+								"placement_mode": "adjacent"
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 445.0,
+			"name": "レッドキャップ",
+			"race": "ゴブリン",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 30.0,
+				"cards_sacrifice": 1.0
+			},
+			"ap": 30.0,
+			"hp": 30.0,
+			"ability": "AP&HP計算・応援",
+			"ability_detail": "AP&HP=ゴブリン配置数×20；応援[ゴブリン・AP+20]",
+			"ability_parsed": {
+				"keywords": [
+					"応援"
+				],
+				"effects": [
+					{
+						"effect_type": "support",
+						"target": {
+							"scope": "all_creatures",
+							"conditions": [
+								{
+									"condition_type": "race",
+									"race": "ゴブリン"
+								}
+							]
+						},
+						"bonus": {
+							"ap": 20.0
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": 446.0,
+			"name": "ロックタイタン",
+			"rarity": "N",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 90.0
+			},
+			"restrictions": {
+				"item_use": [
+					"防具",
+					"巻物",
+					"アクセサリ",
+					"武器"
+				]
+			},
+			"ap": 70.0,
+			"hp": 70.0,
+			"ability": "戦闘後能力値減少",
+			"ability_detail": "戦闘後、AP&MHP-10",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "after_battle_permanent_change",
+						"stat_changes": {
+							"ap": -10.0,
+							"max_hp": -10.0
+						},
+						"description": "戦闘後、AP&MHP-10（永続）"
+					}
+				]
+			}
+		},
+		{
+			"id": 447.0,
+			"name": "ワンダーウォール",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 10.0,
+				"cards_sacrifice": 1.0
+			},
+			"restrictions": {
+				"item_use": [
+					"防具",
+					"武器"
+				]
+			},
+			"creature_type": "defensive",
+			"ap": 0.0,
+			"hp": 30.0,
+			"ability": "防御型・無効化",
+			"ability_detail": "防御型；無効化[火水風地]",
+			"ability_parsed": {
+				"keywords": [
+					"無効化"
+				],
+				"keyword_conditions": {
+					"無効化": {
+						"nullify_type": "element",
+						"elements": [
+							"fire",
+							"water",
+							"wind",
+							"earth"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": 448.0,
+			"name": "ブリードカード",
+			"rarity": "S",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 0.0
+			},
+			"ap": 20.0,
+			"hp": 30.0,
+			"ability": "",
+			"ability_detail": ""
 		}
-	  }
-	},
-	{
-	  "id": 448,
-	  "name": "ブリードカード",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"mp": 0
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "",
-	  "ability_detail": ""
-	}
-  ]
+	]
 }

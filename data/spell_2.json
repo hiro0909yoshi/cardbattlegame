@@ -300,7 +300,23 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "合成を持つカードが手札にある場合、カードを3枚引く；無い場合、カードを2枚引く"
+	  "effect": "合成を持つカードが手札にある場合、カードを3枚引く；無い場合、カードを2枚引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "check_hand_synthesis",
+			"success_effect": {
+			  "effect_type": "draw_cards",
+			  "count": 3
+			},
+			"fail_effect": {
+			  "effect_type": "draw_cards",
+			  "count": 2
+			}
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 2078,

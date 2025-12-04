@@ -715,7 +715,8 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if game_flow_manager and game_flow_manager.spell_cost_modifier:
 				game_flow_manager.spell_cost_modifier.apply_life_force(target_player_id)
 		
-		"draw", "draw_cards", "draw_by_rank", "draw_by_type", "discard_and_draw_plus", "check_hand_elements", \
+		"draw", "draw_cards", "draw_by_rank", "draw_by_type", "discard_and_draw_plus", \
+		"check_hand_elements", "check_hand_synthesis", \
 		"destroy_curse_cards", "destroy_expensive_cards", "destroy_duplicate_cards", \
 		"destroy_selected_card", "steal_selected_card", "destroy_from_deck_selection", \
 		"draw_from_deck_selection", "steal_item_conditional", \
