@@ -527,6 +527,48 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9029,
+	  "name": "ダイス1～3呪い（スワンプスボーン秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "target_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "dice_range",
+			"name": "ダイス1～3",
+			"min": 1,
+			"max": 3,
+			"duration": 1
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9030,
+	  "name": "能力値+20呪い（カラドリウス秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "stat_boost",
+			"name": "能力値+20",
+			"value": 20,
+			"duration": -1
+		  }
+		]
+	  }
 	}
   ]
 }

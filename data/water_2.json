@@ -47,7 +47,18 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G50・対象セプターに呪いダイス1～3]"
+	  "ability_detail": "防御型；秘術[G50・対象セプターに呪いダイス1～3]",
+	  "ability_parsed": {
+		"keywords": [
+		  "防御型",
+		  "秘術"
+		],
+		"mystic_art": {
+		  "name": "ダイス1～3呪い",
+		  "cost": 50,
+		  "spell_id": 9029
+		}
+	  }
 	},
 	{
 	  "id": 127,

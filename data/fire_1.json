@@ -108,7 +108,7 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "強打・世界消去",
-			"ability_detail": "強打[○付きクリーチャー]；秘術[G50・世界呪いを消す]",
+			"ability_detail": "強打[呪い付きクリーチャー]；秘術[G50・世界呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"強打",
@@ -116,8 +116,7 @@
 				],
 				"keyword_conditions": {
 					"強打": {
-						"condition_type": "has_mark",
-						"mark": "○実装まだ"
+						"condition_type": "has_mark"
 					}
 				},
 				"effects": [
@@ -126,8 +125,7 @@
 						"multiplier": 1.5,
 						"conditions": [
 							{
-								"condition_type": "has_mark",
-								"mark": "○"
+								"condition_type": "has_mark"
 							}
 						]
 					}

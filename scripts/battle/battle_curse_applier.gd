@@ -41,9 +41,11 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			print("[呪い変換] stat_boost: HP+", value, ", AP+", value)
 			
 			# 効果を計算に反映
+			print("[DEBUG呪い] 変換前: temporary_bonus_hp=", participant.temporary_bonus_hp, " current_hp=", participant.current_hp)
 			participant.temporary_bonus_hp += value
 			participant.current_hp += value
 			participant.temporary_bonus_ap += value
+			print("[DEBUG呪い] 変換後: temporary_bonus_hp=", participant.temporary_bonus_hp, " current_hp=", participant.current_hp)
 		
 		"stat_reduce":
 			var value = params.get("value", -20)

@@ -198,9 +198,14 @@
 			"ability_detail": "先制；秘術[G40・対象領地に呪い\"能力値+20\"]",
 			"ability_parsed": {
 				"keywords": [
-					"先制"
+					"先制",
+					"秘術"
 				],
-				"effects": []
+				"mystic_art": {
+					"name": "能力値+20呪い",
+					"cost": 40,
+					"spell_id": 9030
+				}
 			}
 		},
 		{
