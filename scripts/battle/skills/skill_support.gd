@@ -52,6 +52,11 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 	
 	for supporter_data in support_creatures:
 		var supporter_creature = supporter_data["creature_data"]
+		
+		# 移動中のクリーチャーは応援効果を発揮しない
+		if supporter_creature.get("is_moving", false):
+			continue
+		
 		var supporter_player_id = supporter_data["player_id"]
 		var ability_parsed = supporter_creature.get("ability_parsed", {})
 		var effects = ability_parsed.get("effects", [])

@@ -396,6 +396,8 @@ func _apply_post_battle_effects(
 			place_creature_data["base_up_ap"] = attacker.base_up_ap
 			# 戦闘後の残りHPを保存
 			place_creature_data["current_hp"] = attacker.current_hp
+			# 移動中フラグを削除（応援スキル用）
+			place_creature_data.erase("is_moving")
 			board_system_ref.place_creature(tile_index, place_creature_data)
 			
 			# 移動侵略の場合、移動元のクリーチャーを削除（配置の後に行う）
@@ -477,6 +479,8 @@ func _apply_post_battle_effects(
 				
 				# 現在HPを保存
 				return_data["current_hp"] = attacker.current_hp
+				# 移動中フラグを削除（応援スキル用）
+				return_data.erase("is_moving")
 				
 				# 所有者を設定してからクリーチャーを配置（3Dカード表示を再作成）
 				from_tile.owner_id = attacker_index

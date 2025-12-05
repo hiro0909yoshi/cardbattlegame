@@ -614,11 +614,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
+		"target_type": "all_creatures",
 		"effects": [
 		  {
 			"effect_type": "conditional_ap_change",

@@ -243,7 +243,8 @@ static func confirm_move(handler, dest_tile_index: int):
 	var current_player_index = source_tile.owner_id
 	
 	# 1. 移動元のクリーチャーを削除し、空き地にする
-	source_tile.remove_creature()
+	# board_system経由で削除（スキルインデックスも更新される）
+	handler.board_system.remove_creature(handler.move_source_tile)
 	handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
 	
 	# 2. 移動先の状況を確認
@@ -323,6 +324,9 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# 移動元情報を保存（敗北時に戻すため）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
+		
+		# 移動中フラグを設定（応援スキル計算から除外するため）
+		creature_data["is_moving"] = true
 		
 		# バトル情報を保存
 		# 注: 領地コマンドはバトル開始前に閉じる必要があるため、ここでは閉じない

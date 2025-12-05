@@ -935,10 +935,19 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 	if spell_damage:
 		handled = await spell_damage.execute_all_creatures_effects(self, effects, target_info)
 	
-	# 未処理（呪い効果等）はSpellCurseに委譲
+	# 未処理の場合、効果タイプに応じて適切なシステムに委譲
 	if not handled:
-		if game_flow_manager and game_flow_manager.spell_curse:
-			for effect in effects:
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			
+			# ステータス変更系はSpellCurseStatに委譲
+			if effect_type in ["conditional_ap_change", "permanent_hp_change", "permanent_ap_change"]:
+				if game_flow_manager and game_flow_manager.spell_curse_stat:
+					var target_data = {"type": "all_creatures"}
+					await game_flow_manager.spell_curse_stat.apply_effect(self, effect, target_data, current_player_id, spell_card)
+					handled = true
+			# 呪い効果等はSpellCurseに委譲
+			elif game_flow_manager and game_flow_manager.spell_curse:
 				game_flow_manager.spell_curse.apply_to_all_creatures(effect, target_info)
 	
 	# カードを捨て札に

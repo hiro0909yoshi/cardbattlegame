@@ -143,80 +143,85 @@ func _apply_permanent_ap_change(handler: Node, tile_index: int, effect: Dictiona
 
 
 ## 条件付きAP変更（ロードオブペイン秘術用）
-## AP30以下→AP+20、AP50以上→AP-20
-func _apply_conditional_ap_change(handler: Node, tile_index: int, effect: Dictionary) -> void:
-	if tile_index < 0 or not board_system:
+## 盤面全体のクリーチャーに対してAP30以下→AP+20、AP50以上→AP-20
+func _apply_conditional_ap_change(handler: Node, _tile_index: int, effect: Dictionary) -> void:
+	if not board_system:
 		return
 	
-	var tile_info = board_system.get_tile_info(tile_index)
-	if tile_info.is_empty() or not tile_info.has("creature"):
-		return
-	
-	var creature_data = tile_info["creature"]
-	if creature_data.is_empty():
-		return
-	
-	var creature_name = creature_data.get("name", "クリーチャー")
 	var conditions = effect.get("conditions", [])
+	var affected_count = 0
 	
-	# 現在のAPを計算
-	var base_ap = creature_data.get("ap", 0)
-	var base_up_ap = creature_data.get("base_up_ap", 0)
-	var current_ap = base_ap + base_up_ap
-	
-	# カメラをターゲットにフォーカス
-	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
-	
-	# 条件をチェックして適用
-	var applied_value = 0
-	var condition_met = false
-	
-	for cond in conditions:
-		var check = cond.get("check", "")
-		var threshold = cond.get("threshold", 0)
-		var value = cond.get("value", 0)
+	# 盤面全体のクリーチャーをチェック
+	for tile_idx in board_system.tile_nodes.keys():
+		var tile_info = board_system.get_tile_info(tile_idx)
+		if tile_info.is_empty() or not tile_info.has("creature"):
+			continue
 		
-		match check:
-			"ap_lte":  # AP以下
-				if current_ap <= threshold:
-					applied_value = value
-					condition_met = true
-					break
-			"ap_gte":  # AP以上
-				if current_ap >= threshold:
-					applied_value = value
-					condition_met = true
-					break
-	
-	if not condition_met:
-		# どの条件にも当てはまらない場合
-		var notification_text = "%s\n条件に該当しません\n(AP: %d)" % [creature_name, current_ap]
-		print("[条件付きAP] ", creature_name, " 条件不一致 (AP: ", current_ap, ")")
+		var creature_data = tile_info["creature"]
+		if creature_data.is_empty():
+			continue
+		
+		var creature_name = creature_data.get("name", "クリーチャー")
+		
+		# 現在のAPを計算
+		var base_ap = creature_data.get("ap", 0)
+		var base_up_ap = creature_data.get("base_up_ap", 0)
+		var current_ap = base_ap + base_up_ap
+		
+		# 条件をチェックして適用
+		var applied_value = 0
+		var condition_met = false
+		
+		for cond in conditions:
+			var check = cond.get("check", "")
+			var threshold = cond.get("threshold", 0)
+			var value = cond.get("value", 0)
+			
+			match check:
+				"ap_lte":  # AP以下
+					if current_ap <= threshold:
+						applied_value = value
+						condition_met = true
+						break
+				"ap_gte":  # AP以上
+					if current_ap >= threshold:
+						applied_value = value
+						condition_met = true
+						break
+		
+		if not condition_met:
+			# どの条件にも当てはまらない
+			continue
+		
+		# カメラをターゲットにフォーカス
+		TargetSelectionHelper.focus_camera_on_tile(handler, tile_idx)
+		
+		# AP変更を適用（下限0でクランプ）
+		if not creature_data.has("base_up_ap"):
+			creature_data["base_up_ap"] = 0
+		
+		var old_total_ap = current_ap
+		var new_base_up_ap = base_up_ap + applied_value
+		var new_total_ap = base_ap + new_base_up_ap
+		
+		# 最終APが0未満にならないよう調整
+		if new_total_ap < 0:
+			new_base_up_ap = -base_ap
+			new_total_ap = 0
+		
+		creature_data["base_up_ap"] = new_base_up_ap
+		
+		var sign_str = "+" if applied_value >= 0 else ""
+		var notification_text = "%s AP%s%d\nAP: %d → %d" % [
+			creature_name, sign_str, applied_value, old_total_ap, new_total_ap
+		]
+		print("[条件付きAP] ", creature_name, " AP ", sign_str, applied_value, " (合計AP: ", new_total_ap, ")")
+		
 		await _show_notification_and_wait(notification_text)
-		return
+		affected_count += 1
 	
-	# AP変更を適用（下限0でクランプ）
-	if not creature_data.has("base_up_ap"):
-		creature_data["base_up_ap"] = 0
-	
-	var old_total_ap = current_ap
-	var new_base_up_ap = base_up_ap + applied_value
-	var new_total_ap = base_ap + new_base_up_ap
-	
-	# 最終APが0未満にならないよう調整
-	if new_total_ap < 0:
-		new_base_up_ap = -base_ap
-		new_total_ap = 0
-	
-	creature_data["base_up_ap"] = new_base_up_ap
-	
-	var sign_str = "+" if applied_value >= 0 else ""
-	var notification_text = "%s AP%s%d\nAP: %d → %d" % [
-		creature_name, sign_str, applied_value, old_total_ap, new_total_ap
-	]
-	print("[条件付きAP] ", creature_name, " AP ", sign_str, applied_value, " (合計AP: ", new_total_ap, ")")
-	
-	await _show_notification_and_wait(notification_text)
+	if affected_count == 0:
+		await _show_notification_and_wait("条件に該当するクリーチャーがいません")
 
 
 ## 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）

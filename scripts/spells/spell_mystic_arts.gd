@@ -317,8 +317,18 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 			effects = effect_parsed.get("effects", [])
 	
 	# ダメージ/回復効果をSpellDamageに委譲
+	var handled = false
 	if spell_phase_handler_ref and spell_phase_handler_ref.spell_damage:
-		await spell_phase_handler_ref.spell_damage.execute_all_creatures_effects(spell_phase_handler_ref, effects, target_info)
+		handled = await spell_phase_handler_ref.spell_damage.execute_all_creatures_effects(spell_phase_handler_ref, effects, target_info)
+	
+	# 未処理の場合、ステータス変更系はSpellCurseStatに委譲
+	if not handled:
+		for effect in effects:
+			var effect_type = effect.get("effect_type", "")
+			if effect_type in ["conditional_ap_change", "permanent_hp_change", "permanent_ap_change"]:
+				if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.spell_curse_stat:
+					var target_data = {"type": "all_creatures", "caster_tile_index": creature.get("tile_index", -1)}
+					await spell_phase_handler_ref.game_flow_manager.spell_curse_stat.apply_effect(spell_phase_handler_ref, effect, target_data, player_id, mystic_art)
 	
 	# 魔力消費
 	var cost = mystic_art.get("cost", 0)
