@@ -289,7 +289,14 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G50・対象敵クリーチャーをダウン]"
+			"ability_detail": "秘術[G50・対象敵クリーチャーをダウン]",
+			"ability_parsed": {
+				"keywords": ["秘術"]
+			},
+			"mystic_arts": {
+				"cost": 50,
+				"spell_id": 9037
+			}
 		},
 		{
 			"id": 109,

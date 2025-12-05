@@ -68,13 +68,18 @@
 			"ability_detail": "巻物強打；秘術[G30・対象から手札のスペルの数×G40を奪う]",
 			"ability_parsed": {
 				"keywords": [
-					"巻物強打"
+					"巻物強打",
+					"秘術"
 				],
 				"keyword_conditions": {
 					"巻物強打": {
 						"scroll_type": "base_ap"
 					}
 				}
+			},
+			"mystic_arts": {
+				"cost": 30,
+				"spell_id": 9036
 			}
 		},
 		{

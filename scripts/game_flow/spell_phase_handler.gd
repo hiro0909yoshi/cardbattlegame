@@ -660,12 +660,14 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	match effect_type:
 		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count", "drain_magic_by_lap_diff", \
 		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap", "gain_magic_from_destroyed_count", \
-		"gain_magic_from_spell_cost", "balance_all_magic", "gain_magic_from_land_chain":
+		"gain_magic_from_spell_cost", "balance_all_magic", "gain_magic_from_land_chain", \
+		"mhp_to_magic", "drain_magic_by_spell_count":
 			# 魔力操作系 - SpellMagicに委譲
 			if game_flow_manager and game_flow_manager.spell_magic:
 				var context = {
 					"rank": _get_player_ranking(current_player_id),
 					"from_player_id": target_data.get("player_id", -1),
+					"tile_index": target_data.get("tile_index", -1),
 					"card_system": card_system
 				}
 				var result = await game_flow_manager.spell_magic.apply_effect(effect, current_player_id, context)
@@ -756,6 +758,12 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			# 全自クリーチャーのダウン解除（アラーム）- SpellMovementに委譲
 			if board_system and board_system.movement_controller and board_system.movement_controller.spell_movement:
 				board_system.movement_controller.spell_movement.clear_down_state_for_player(current_player_id, board_system.tile_nodes)
+		
+		"set_down":
+			# 対象クリーチャーをダウン状態にする（アルプ秘術）- SpellMovementに委譲
+			var tile_index = target_data.get("tile_index", -1)
+			if tile_index >= 0 and board_system and board_system.movement_controller and board_system.movement_controller.spell_movement:
+				board_system.movement_controller.spell_movement.set_down_state_for_tile(tile_index, board_system.tile_nodes)
 		
 		"move_to_adjacent_enemy", "move_steps", "move_self", "destroy_and_move":
 			# クリーチャー移動系 - SpellCreatureMoveに委譲（戦闘も内部で処理）

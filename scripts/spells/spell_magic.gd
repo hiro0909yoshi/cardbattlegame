@@ -121,6 +121,25 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			else:
 				notification_text = "【ロングライン】\n連続%d領地 (必要%d)\n条件未達成 → カードドロー" % [chain, required]
 		
+		"mhp_to_magic":
+			# ドゥームデボラー秘術: MHP×G2を得て、ST&MHP-10
+			var tile_index = context.get("tile_index", -1)
+			result = mhp_to_magic(player_id, effect, tile_index)
+			if result.get("success", false):
+				var mhp = result.get("mhp", 0)
+				notification_text = _format_gain_notification(player_id, result["amount"], "【ドゥームデボラー】MHP%d × G2\nST&MHP-10" % mhp)
+		
+		"drain_magic_by_spell_count":
+			# ウィッチ秘術: 対象の手札スペル数×G40を奪う
+			if from_id >= 0:
+				var card_system = context.get("card_system", null)
+				result = drain_magic_by_spell_count(effect, from_id, player_id, card_system)
+				if result.get("amount", 0) > 0:
+					var spell_count = result.get("spell_count", 0)
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ウィッチ】スペル%d枚 × %dG" % [spell_count, effect.get("multiplier", 40)])
+				else:
+					notification_text = "【ウィッチ】\n対象の手札にスペルがありません"
+		
 		_:
 			print("[SpellMagic] 未対応の効果タイプ: ", effect_type)
 	
@@ -769,3 +788,85 @@ func apply_self_destroy(tile_index: int, clear_land: bool = true) -> bool:
 		print("[秘術効果] %s が自壊しました" % creature_name)
 	
 	return true
+
+
+# ========================================
+# 秘術用魔力獲得効果
+# ========================================
+
+## MHP変換（ドゥームデボラー秘術）: MHP×G2を得て、ST&MHP-10
+func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictionary:
+	if tile_index < 0 or not board_system_ref or not player_system_ref:
+		return {"success": false}
+	
+	var tile_info = board_system_ref.get_tile_info(tile_index)
+	var creature = tile_info.get("creature", {})
+	if creature.is_empty():
+		return {"success": false}
+	
+	# MHPを計算
+	var base_hp = creature.get("hp", 0)
+	var base_up_hp = creature.get("base_up_hp", 0)
+	var mhp = base_hp + base_up_hp
+	
+	# 魔力獲得量を計算
+	var multiplier = effect.get("multiplier", 2)
+	var amount = mhp * multiplier
+	
+	# 魔力を獲得
+	player_system_ref.add_magic(player_id, amount)
+	print("[ドゥームデボラー秘術] MHP%d × G%d = %dG 獲得" % [mhp, multiplier, amount])
+	
+	# ステータスペナルティを適用
+	var stat_penalty = effect.get("stat_penalty", {})
+	var ap_change = stat_penalty.get("ap", 0)
+	var hp_change = stat_penalty.get("max_hp", 0)
+	
+	if not creature.has("base_up_ap"):
+		creature["base_up_ap"] = 0
+	if not creature.has("base_up_hp"):
+		creature["base_up_hp"] = 0
+	
+	creature["base_up_ap"] += ap_change
+	creature["base_up_hp"] += hp_change
+	
+	# current_hpも調整（MHP減少に合わせる）
+	var new_mhp = base_hp + creature["base_up_hp"]
+	var current_hp = creature.get("current_hp", mhp)
+	if current_hp > new_mhp:
+		creature["current_hp"] = new_mhp
+	
+	print("[ドゥームデボラー秘術] ペナルティ適用: AP%+d, MHP%+d" % [ap_change, hp_change])
+	
+	return {"success": true, "amount": amount, "mhp": mhp}
+
+
+## スペル数魔力奪取（ウィッチ秘術）: 対象の手札スペル数×G40を奪う
+func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, card_system) -> Dictionary:
+	if not player_system_ref or not card_system:
+		return {"success": false, "amount": 0}
+	
+	# 対象の手札からスペル数をカウント
+	var hand = card_system.get_all_cards_for_player(from_id)
+	var spell_count = 0
+	for card in hand:
+		if card.get("type", "") == "spell":
+			spell_count += 1
+	
+	if spell_count == 0:
+		print("[ウィッチ秘術] 対象の手札にスペルがありません")
+		return {"success": false, "amount": 0, "spell_count": 0}
+	
+	var multiplier = effect.get("multiplier", 40)
+	var amount = spell_count * multiplier
+	
+	# 奪取（from から減らして to に加える）
+	var from_magic = player_system_ref.get_magic(from_id)
+	var actual_amount = min(amount, from_magic)  # 持っている分だけ奪う
+	
+	if actual_amount > 0:
+		player_system_ref.add_magic(from_id, -actual_amount)
+		player_system_ref.add_magic(to_id, actual_amount)
+		print("[ウィッチ秘術] スペル%d枚 × G%d = %dG 奪取" % [spell_count, multiplier, actual_amount])
+	
+	return {"success": true, "amount": actual_amount, "spell_count": spell_count}

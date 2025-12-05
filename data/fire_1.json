@@ -817,6 +817,10 @@
 				"keywords": [
 					"秘術"
 				]
+			},
+			"mystic_arts": {
+				"cost": 0,
+				"spell_id": 9034
 			}
 		},
 		{

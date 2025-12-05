@@ -257,6 +257,39 @@ func clear_down_state_for_player(player_id: int, tile_nodes: Dictionary) -> int:
 	return cleared_count
 
 # =============================================================================
+# ダウン付与 (set_down)
+# =============================================================================
+
+## 指定タイルのクリーチャーをダウン状態にする（アルプ秘術等）
+func set_down_state_for_tile(tile_index: int, tile_nodes: Dictionary) -> bool:
+	if not tile_nodes.has(tile_index):
+		return false
+	
+	var tile = tile_nodes[tile_index]
+	if not tile.creature_data or tile.creature_data.is_empty():
+		return false
+	
+	var creature_name = tile.creature_data.get("name", "クリーチャー")
+	
+	# 不屈チェック（不屈を持っていたらダウンしない）
+	if has_indomitable_curse(tile.creature_data):
+		print("[ダウン付与] %s は不屈を持っているためダウンしません" % creature_name)
+		return false
+	
+	# 既にダウン中かチェック
+	if tile.has_method("is_down") and tile.is_down():
+		print("[ダウン付与] %s は既にダウン状態です" % creature_name)
+		return true  # 成功扱い
+	
+	# ダウン状態を設定
+	if tile.has_method("set_down_state"):
+		tile.set_down_state(true)
+		print("[ダウン付与] %s をダウン状態にしました" % creature_name)
+		return true
+	
+	return false
+
+# =============================================================================
 # SpellPhaseHandler連携用
 # =============================================================================
 
