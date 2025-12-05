@@ -322,9 +322,27 @@ func apply_damage(tile_index: int, value: int) -> Dictionary:
 
 
 ## クリーチャー破壊（レベル維持）
+## スペル破壊時の死亡効果（遺産、変身）もここで処理
 func _destroy_creature(tile: Node) -> void:
-	var creature_name = tile.creature_data.get("name", "Unknown")
+	var creature_data = tile.creature_data.duplicate()
+	var creature_name = creature_data.get("name", "Unknown")
+	var owner_id = tile.owner_id
+	var tile_index = tile.tile_index if "tile_index" in tile else -1
 	var saved_level = tile.level  # レベル保存
+	
+	# スペル破壊時の死亡効果をチェック
+	var death_result = _check_spell_death_effects(creature_data, owner_id, tile)
+	
+	# 変身した場合は破壊しない
+	if death_result.get("transformed", false):
+		print("[SpellDamage] %s は変身しました" % creature_name)
+		return
+	
+	# 遺産効果（魔力獲得）
+	var legacy_amount = death_result.get("legacy_amount", 0)
+	if legacy_amount > 0 and owner_id >= 0 and board_system_ref and board_system_ref.player_system:
+		board_system_ref.player_system.add_magic(owner_id, legacy_amount)
+		print("[遺産] プレイヤー%d: G%d を獲得" % [owner_id + 1, legacy_amount])
 	
 	# 3Dカード表示を削除
 	if tile.has_method("remove_creature"):
@@ -342,6 +360,64 @@ func _destroy_creature(tile: Node) -> void:
 	print("[SpellDamage] クリーチャー撃破: %s (土地レベル %d 維持)" % [
 		creature_name, saved_level
 	])
+
+## スペル破壊時の死亡効果をチェック
+## 戻り値: {transformed: bool, legacy_amount: int}
+func _check_spell_death_effects(creature_data: Dictionary, owner_id: int, tile: Node) -> Dictionary:
+	var result = {"transformed": false, "legacy_amount": 0}
+	
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		var trigger = effect.get("trigger", "")
+		var effect_type = effect.get("effect_type", "")
+		
+		# スペル破壊時の変身（ジャッカロープ等）
+		if trigger == "on_spell_death" and effect_type == "transform":
+			var transform_to_id = effect.get("transform_to", -1)
+			if transform_to_id > 0:
+				var success = _apply_spell_death_transform(tile, transform_to_id, owner_id)
+				if success:
+					result["transformed"] = true
+					return result  # 変身したら他の効果は発動しない
+		
+		# 遺産効果（コーンフォーク等）- on_deathは戦闘・スペル両方で発動
+		if trigger == "on_death" and effect_type == "legacy_magic":
+			var amount = effect.get("amount", 0)
+			result["legacy_amount"] = amount
+	
+	return result
+
+## スペル破壊時の変身処理
+func _apply_spell_death_transform(tile: Node, transform_to_id: int, owner_id: int) -> bool:
+	var new_creature_data = CardLoader.get_card_by_id(transform_to_id)
+	if new_creature_data.is_empty():
+		print("[スペル破壊変身] 変身先クリーチャーID %d が見つかりません" % transform_to_id)
+		return false
+	
+	var new_creature = new_creature_data.duplicate(true)
+	var new_name = new_creature.get("name", "?")
+	
+	# HP/APの初期化
+	new_creature["current_hp"] = new_creature.get("hp", 0)
+	if "tile_index" in tile:
+		new_creature["tile_index"] = tile.tile_index
+	
+	# タイルのクリーチャーを更新（破壊せずに置き換え）
+	tile.creature_data = new_creature
+	
+	# 3D表示を更新
+	if tile.has_method("update_creature_display"):
+		tile.update_creature_display()
+	elif tile.has_method("place_creature"):
+		# 一度消してから配置し直す
+		if tile.has_method("remove_creature"):
+			tile.remove_creature()
+		tile.place_creature(new_creature)
+	
+	print("[スペル破壊変身] %s に変身（オーナー: プレイヤー%d）" % [new_name, owner_id + 1])
+	return true
 
 # ============================================
 # 低レベル回復処理

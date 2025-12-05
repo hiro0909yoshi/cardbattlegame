@@ -756,10 +756,20 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 					creature["current_hp"] = new_hp
 					print("[土地呪い効果] %s に %dダメージ (HP: %d → %d)" % [creature.get("name", "?"), amount, current_hp, new_hp])
 					
-					# HP0で破壊
+					# HP0で破壊（SpellDamage経由で死亡効果を処理）
 					if new_hp <= 0:
-						board_system_ref.remove_creature(tile_index)
-						board_system_ref.set_tile_owner(tile_index, -1)
+						var tile = board_system_ref.tile_nodes.get(tile_index)
+						if tile and game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+							var spell_damage = game_flow_manager_ref.spell_phase_handler.spell_damage
+							if spell_damage:
+								spell_damage._destroy_creature(tile)
+							else:
+								# フォールバック
+								board_system_ref.remove_creature(tile_index)
+								board_system_ref.set_tile_owner(tile_index, -1)
+						else:
+							board_system_ref.remove_creature(tile_index)
+							board_system_ref.set_tile_owner(tile_index, -1)
 						print("[土地呪い効果] %s は破壊されました" % creature.get("name", "?"))
 
 # ========================================

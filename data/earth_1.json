@@ -517,7 +517,14 @@
 							"earth"
 						]
 					}
-				}
+				},
+				"effects": [
+					{
+						"effect_type": "transform",
+						"trigger": "on_spell_death",
+						"transform_to": 212
+					}
+				]
 			}
 		},
 		{
