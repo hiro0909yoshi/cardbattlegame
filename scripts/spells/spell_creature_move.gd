@@ -39,7 +39,7 @@ func _get_spell_curse_toll():
 	return null
 
 
-## 敵領地への侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い + マーシフルワールド）
+## 敵領地への侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い + マーシフルワールド + クリーチャー移動侵略無効）
 func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	var spell_curse_toll = _get_spell_curse_toll()
 	if not spell_curse_toll:
@@ -49,12 +49,17 @@ func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	if spell_curse_toll.has_peace_curse(tile_index):
 		return false
 	
+	# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
+	var tile = board_system_ref.tile_nodes.get(tile_index)
+	if tile and not tile.creature_data.is_empty():
+		if spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
+			return false
+	
 	# プレイヤー侵略不可呪いチェック（バンフィズム）
 	if spell_curse_toll.is_player_invasion_disabled(player_id):
 		return false
 	
 	# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
-	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if tile and tile.owner_id >= 0 and tile.owner_id != player_id:
 		if game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
 			if game_flow_manager_ref.spell_world_curse.check_invasion_blocked(player_id, tile.owner_id, false):

@@ -207,6 +207,19 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			if target_player_id >= 0:
 				result = reset_deck_to_original(target_player_id)
 		
+		"destroy_deck_top":
+			# 対象ブックの上1枚を破壊（コアトリクエ秘術用）
+			var target_player_id = context.get("target_player_id", -1)
+			var count = effect.get("count", 1)
+			if target_player_id >= 0:
+				for i in range(count):
+					var destroy_result = destroy_deck_card_at_index(target_player_id, 0)
+					if destroy_result.get("destroyed", false):
+						result["destroyed"] = true
+						result["card_name"] = destroy_result.get("card_name", "")
+					else:
+						break  # デッキが空になったら終了
+		
 		"draw_and_place":
 			# カードを引いてクリーチャーだった場合配置（ワイルドセンス用）
 			result = _apply_draw_and_place(effect, player_id)

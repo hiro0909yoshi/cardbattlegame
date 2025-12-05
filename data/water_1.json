@@ -673,7 +673,10 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "移動侵略を受けない",
-			"ability_detail": "移動侵略を受けない"
+			"ability_detail": "移動侵略を受けない",
+			"ability_parsed": {
+				"keywords": ["移動侵略無効"]
+			}
 		},
 		{
 			"id": 121,

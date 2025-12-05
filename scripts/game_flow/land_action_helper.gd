@@ -297,6 +297,16 @@ static func confirm_move(handler, dest_tile_index: int):
 			handler.close_land_command()
 			return
 		
+		# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
+		if spell_curse_toll and dest_tile and not dest_tile.creature_data.is_empty():
+			if spell_curse_toll.is_creature_invasion_immune(dest_tile.creature_data):
+				var defender_name = dest_tile.creature_data.get("name", "クリーチャー")
+				if handler.ui_manager and handler.ui_manager.phase_label:
+					handler.ui_manager.phase_label.text = "%s は移動侵略を受けません" % defender_name
+				source_tile.place_creature(creature_data)
+				handler.close_land_command()
+				return
+		
 		# プレイヤー侵略不可呪いチェック（バンフィズム）
 		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
 		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):

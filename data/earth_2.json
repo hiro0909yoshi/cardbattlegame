@@ -603,7 +603,10 @@
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・移動侵略無効",
-	  "ability_detail": "防御型；移動侵略を受けない"
+	  "ability_detail": "防御型；移動侵略を受けない",
+	  "ability_parsed": {
+		"keywords": ["移動侵略無効"]
+	  }
 	},
 	{
 	  "id": 244,

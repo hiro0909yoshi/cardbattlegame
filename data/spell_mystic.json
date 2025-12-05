@@ -708,6 +708,24 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9038,
+	  "name": "ブック破壊（コアトリクエ秘術）",
+	  "rarity": "S",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "destroy_deck_top",
+			"count": 1
+		  }
+		]
+	  }
 	}
   ]
 }

@@ -425,7 +425,14 @@
 			"ap": 30,
 			"hp": 50,
 			"ability": "秘術",
-			"ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]"
+			"ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]",
+			"ability_parsed": {
+				"keywords": ["秘術"]
+			},
+			"mystic_arts": {
+				"cost": 50,
+				"spell_id": 9038
+			}
 		},
 		{
 			"id": 215,

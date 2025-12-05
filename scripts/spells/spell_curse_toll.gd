@@ -247,6 +247,14 @@ func is_player_invasion_disabled(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	return curse.get("curse_type") == "invasion_disable"
 
+## クリーチャーが移動侵略無効を持つかチェック（グルイースラッグ、ランドアーチン等）
+func is_creature_invasion_immune(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	return "移動侵略無効" in keywords
+
 ## peace 呪いが領地のクリーチャーにあるか確認（通行料判定用）
 func has_peace_curse_on_land(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)
