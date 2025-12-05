@@ -835,7 +835,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if spell_creature_return:
 				spell_creature_return.apply_effect(effect, target_data, current_player_id)
 		
-		"permanent_hp_change", "permanent_ap_change", "secret_tiny_army":
+		"permanent_hp_change", "permanent_ap_change", "conditional_ap_change", "secret_tiny_army":
 			# ステータス増減スペル - SpellCurseStatに委譲
 			if game_flow_manager and game_flow_manager.spell_curse_stat:
 				await game_flow_manager.spell_curse_stat.apply_effect(self, effect, target_data, current_player_id, selected_spell_card)

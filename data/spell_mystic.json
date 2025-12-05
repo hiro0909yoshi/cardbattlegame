@@ -569,6 +569,74 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9031,
+	  "name": "AP+20（フェイ秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "permanent_ap_change",
+			"value": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9032,
+	  "name": "AP+10（カワヒメ秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "permanent_ap_change",
+			"value": 10
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9033,
+	  "name": "AP調整（ロードオブペイン秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_filter": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "conditional_ap_change",
+			"conditions": [
+			  {
+				"check": "ap_lte",
+				"threshold": 30,
+				"value": 20
+			  },
+			  {
+				"check": "ap_gte",
+				"threshold": 50,
+				"value": -20
+			  }
+			]
+		  }
+		]
+	  }
 	}
   ]
 }

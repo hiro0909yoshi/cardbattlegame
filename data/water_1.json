@@ -582,7 +582,14 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "不屈・秘術",
-			"ability_detail": "不屈；秘術[G30・対象クリーチャーのAP+10]"
+			"ability_detail": "不屈；秘術[G30・対象クリーチャーのAP+10]",
+			"ability_parsed": {
+				"keywords": ["不屈"]
+			},
+			"mystic_arts": {
+				"cost": 30,
+				"spell_id": 9032
+			}
 		},
 		{
 			"id": 118,

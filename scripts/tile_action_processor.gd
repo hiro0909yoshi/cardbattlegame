@@ -23,8 +23,8 @@ var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲シス�
 var creature_synthesis: CreatureSynthesis = null  # クリーチャー合成システム
 
 # デバッグフラグ
-var debug_disable_card_sacrifice: bool = false  # カード犠牲を無効化
-var debug_disable_lands_required: bool = false  # 土地条件を無効化
+var debug_disable_card_sacrifice: bool = true  # カード犠牲を無効化
+var debug_disable_lands_required: bool = true  # 土地条件を無効化
 
 # 状態管理
 var is_action_processing = false

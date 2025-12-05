@@ -681,7 +681,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・AP+10]；秘術[G60・AP30以下をAP+20、AP50以上をAP+20]",
+	  "ability_detail": "応援[風水・AP+10]；秘術[G60・AP30以下をAP+20、AP50以上をAP-20]",
 	  "ability_parsed": {
 		"keywords": ["応援", "秘術"],
 		"effects": [
@@ -701,6 +701,10 @@
 			}
 		  }
 		]
+	  },
+	  "mystic_arts": {
+		"cost": 60,
+		"spell_id": 9033
 	  }
 	},
 	{

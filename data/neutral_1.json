@@ -555,7 +555,10 @@
 	  "ap": 0,
 	  "hp": 50,
 	  "ability": "防御型・周回回復不可",
-	  "ability_detail": "防御型；周回回復不可"
+	  "ability_detail": "防御型；周回回復不可",
+	  "ability_parsed": {
+		"keywords": ["周回回復不可"]
+	  }
 	},
 	{
 	  "id": 422,

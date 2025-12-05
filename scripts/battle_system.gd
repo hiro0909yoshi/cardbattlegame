@@ -478,11 +478,9 @@ func _apply_post_battle_effects(
 				# 現在HPを保存
 				return_data["current_hp"] = attacker.current_hp
 				
-				# 【SSoT同期】バトル後のクリーチャー状態をマップに反映
-				# この代入は自動的にCreatureManager.set_data(from_tile.tile_index, return_data)を呼び出し
-				# CreatureManager.creatures[tile_index]が最新の状態で更新される
-				from_tile.creature_data = return_data
+				# 所有者を設定してからクリーチャーを配置（3Dカード表示を再作成）
 				from_tile.owner_id = attacker_index
+				from_tile.place_creature(return_data)
 				
 				# ダウン状態にする（不屈チェック）
 				if from_tile.has_method("set_down_state"):
@@ -491,8 +489,7 @@ func _apply_post_battle_effects(
 					else:
 						print("[移動侵略敗北] 不屈により戻った後もダウンしません")
 				
-				if from_tile.has_method("update_display"):
-					from_tile.update_display()
+				from_tile.update_visual()
 			else:
 				# 通常侵略：カードを手札に戻す
 				print("[通常侵略敗北] カードを手札に戻します")

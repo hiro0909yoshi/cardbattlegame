@@ -297,7 +297,8 @@ static func confirm_move(handler, dest_tile_index: int):
 			return
 		
 		# プレイヤー侵略不可呪いチェック（バンフィズム）
-		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(handler.current_player_id):
+		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
+		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):
 			if handler.ui_manager and handler.ui_manager.phase_label:
 				handler.ui_manager.phase_label.text = "侵略不可呪い: 侵略できません"
 			source_tile.place_creature(creature_data)
@@ -307,7 +308,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 		var defender_id = dest_tile.owner_id if dest_tile else -1
 		if handler.game_flow_manager and handler.game_flow_manager.spell_world_curse:
-			if handler.game_flow_manager.spell_world_curse.check_invasion_blocked(handler.current_player_id, defender_id, true):
+			if handler.game_flow_manager.spell_world_curse.check_invasion_blocked(current_player_id, defender_id, true):
 				source_tile.place_creature(creature_data)
 				handler.close_land_command()
 				return
