@@ -804,10 +804,18 @@
 			"ability": "戦闘後、敵に呪い通行料無効",
 			"ability_detail": "戦闘後、敵に呪い通行料無効",
 			"ability_parsed": {
-				"keywords": [
-					"通行料無効付与"
+				"nullify_triggers": [
+					"on_attack_success"
 				],
-				"effects": []
+				"effects": [
+					{
+						"effect_type": "apply_curse",
+						"trigger": "on_battle_end",
+						"target": "enemy",
+						"curse_type": "creature_toll_disable",
+						"name": "通行料無効"
+					}
+				]
 			}
 		}
 	]

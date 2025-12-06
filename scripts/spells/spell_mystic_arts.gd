@@ -48,6 +48,12 @@ func start_mystic_phase(player_id: int) -> void:
 	is_mystic_phase_active = true
 	current_mystic_player_id = player_id
 	
+	# ナチュラルワールドによる秘術無効化チェック
+	if _is_mystic_arts_disabled():
+		ui_message_requested.emit("ナチュラルワールド発動中：秘術は使用できません")
+		_end_mystic_phase()
+		return
+	
 	# 秘術を持つクリーチャーを取得
 	var available_creatures = get_available_creatures(player_id)
 	
@@ -711,3 +717,18 @@ func _has_unyielding(creature_data: Dictionary) -> bool:
 		return true
 	
 	return false
+
+
+## ナチュラルワールドで秘術が無効化されているか
+func _is_mystic_arts_disabled() -> bool:
+	var game_stats = _get_game_stats()
+	return SpellWorldCurse.is_trigger_disabled("mystic_arts", game_stats)
+
+
+## game_statsを取得
+func _get_game_stats() -> Dictionary:
+	if not spell_phase_handler_ref:
+		return {}
+	if not spell_phase_handler_ref.game_flow_manager:
+		return {}
+	return spell_phase_handler_ref.game_flow_manager.game_stats

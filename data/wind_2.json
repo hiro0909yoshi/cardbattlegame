@@ -196,7 +196,8 @@
 		],
 		"effects": [
 		  {
-			"effect_type": "on_attack_success_curse",
+			"effect_type": "apply_curse",
+			"trigger": "on_attack_success",
 			"curse_type": "battle_disable",
 			"name": "戦闘行動不可"
 		  }
@@ -393,8 +394,10 @@
 			"description": "自分がアイテム使用時AP+|AP-|AP=20（一時）"
 		  },
 		  {
-			"effect_type": "on_item_use_bonus",
-			"trigger": "enemy_item_use",
+			"effect_type": "permanent_stat_change",
+			"trigger": "on_battle_end",
+			"condition": "enemy_item_used",
+			"target": "self",
 			"stat_changes": {
 			  "max_hp": 10
 			},

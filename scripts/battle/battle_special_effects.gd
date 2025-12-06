@@ -379,6 +379,11 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 		"revive_to_hand_data": {}
 	}
 	
+	# ナチュラルワールドによる死亡時効果無効化チェック
+	if _is_on_death_disabled():
+		print("【死亡時効果】ナチュラルワールドにより無効化")
+		return result
+	
 	# 撃破されたクリーチャーのアイテムをチェック
 	var items = defeated.creature_data.get("items", [])
 	
@@ -871,3 +876,18 @@ func check_on_survive_effects(survivor: BattleParticipant) -> Dictionary:
 							  " → プレイヤー", survivor.player_id + 1, "が", card_type, "『", draw_result.get("card_name", "?"), "』を獲得")
 	
 	return result
+
+
+## ナチュラルワールドで死亡時効果が無効化されているか
+func _is_on_death_disabled() -> bool:
+	var game_stats = _get_game_stats()
+	return SpellWorldCurse.is_trigger_disabled("on_death", game_stats)
+
+
+## game_statsを取得
+func _get_game_stats() -> Dictionary:
+	if not board_system_ref:
+		return {}
+	if not board_system_ref.game_flow_manager:
+		return {}
+	return board_system_ref.game_flow_manager.game_stats

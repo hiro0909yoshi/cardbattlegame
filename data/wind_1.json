@@ -524,6 +524,16 @@
 				"effect": {
 					"ap": 20
 				}
+			},
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "reduce_enemy_mhp",
+						"trigger": "on_battle_end",
+						"target": "enemy",
+						"damage_source": "self_base_ap"
+					}
+				]
 			}
 		},
 		{
@@ -643,7 +653,8 @@
 			"ability_parsed": {
 				"effects": [
 					{
-						"effect_type": "on_attack_success_curse",
+						"effect_type": "apply_curse",
+						"trigger": "on_attack_success",
 						"curse_type": "plague",
 						"name": "衰弱"
 					}

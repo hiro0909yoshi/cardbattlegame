@@ -10,6 +10,7 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 # スキルモジュール
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
+const SkillBattleEndEffects = preload("res://scripts/battle/skills/skill_battle_end_effects.gd")
 
 # システム参照
 var card_system_ref = null
@@ -280,9 +281,16 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							# 復活しなかったので撃破確定
 							break
 					
-					# 🔒 攻撃成功時の呪い付与処理（軽減パス用）
+					# 🔒 攻撃成功時効果（軽減パス用）
+					# ブラックナイト等の無効化チェック
 					if defender_p.is_alive() and attacker_p.current_ap > 0:
-						_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+						if not SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
+							_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+							# ダウン付与（ショッカー等）
+							var battle_tile_index = tile_info.get("index", -1)
+							if battle_tile_index >= 0 and special_effects.board_system_ref:
+								var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
+								SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
 					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
 			
@@ -335,29 +343,41 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 🔄 攻撃成功時の変身処理（コカトリス用）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
+			# ブラックナイト等の無効化チェック
 			if defender_p.is_alive() and card_system_ref and attacker_p.current_ap > 0:
-				var transform_result = TransformSkill.process_transform_effects(
-					attacker_p,
-					defender_p,
-					CardLoader,
-					"on_attack_success"
-				)
-				
-				# 変身結果を戦闘結果にマージ
-				if transform_result.get("attacker_transformed", false):
-					battle_result["attacker_transformed"] = true
-					if transform_result.has("attacker_original"):
-						battle_result["attacker_original"] = transform_result["attacker_original"]
-				if transform_result.get("defender_transformed", false):
-					battle_result["defender_transformed"] = true
-					if transform_result.has("defender_original"):
-						battle_result["defender_original"] = transform_result["defender_original"]
-					print("  【変身発動】防御側が変身しました")
+				if not SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
+					var transform_result = TransformSkill.process_transform_effects(
+						attacker_p,
+						defender_p,
+						CardLoader,
+						"on_attack_success"
+					)
+					
+					# 変身結果を戦闘結果にマージ
+					if transform_result.get("attacker_transformed", false):
+						battle_result["attacker_transformed"] = true
+						if transform_result.has("attacker_original"):
+							battle_result["attacker_original"] = transform_result["attacker_original"]
+					if transform_result.get("defender_transformed", false):
+						battle_result["defender_transformed"] = true
+						if transform_result.has("defender_original"):
+							battle_result["defender_original"] = transform_result["defender_original"]
+						print("  【変身発動】防御側が変身しました")
 			
-			# 🔒 攻撃成功時の呪い付与処理（ナイキー、バインドウィップ用）
+			# 🔒 攻撃成功時効果（呪い付与、ダウン付与等）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
+			# ブラックナイト等の無効化チェック
 			if defender_p.is_alive() and attacker_p.current_ap > 0:
-				_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+				if SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
+					print("【能力無効化】", defender_p.creature_data.get("name", "?"), " により攻撃成功時能力が無効化")
+				else:
+					# 呪い付与（ナイキー、バインドウィップ等）
+					_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+					# ダウン付与（ショッカー等）
+					var battle_tile_index = tile_info.get("index", -1)
+					if battle_tile_index >= 0 and special_effects.board_system_ref:
+						var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
+						SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
 			
 			# 防御側撃破チェック
 			if not defender_p.is_alive():
@@ -429,6 +449,16 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		special_effects.check_on_survive_effects(attacker_p)
 	if defender_p.is_alive():
 		special_effects.check_on_survive_effects(defender_p)
+	
+	# 🔄 戦闘終了時効果（ルナティックヘア、スキュラ等）
+	var battle_end_context = _build_battle_end_context(special_effects, tile_info)
+	var battle_end_result = SkillBattleEndEffects.process_all(attacker_p, defender_p, battle_end_context)
+	
+	# 戦闘終了時効果による死亡を反映
+	if battle_end_result.get("attacker_died", false):
+		battle_result["attacker_died_by_battle_end"] = true
+	if battle_end_result.get("defender_died", false):
+		battle_result["defender_died_by_battle_end"] = true
 	
 	# 💀 戦闘後破壊呪いチェック（生き残った側に呪いがあれば破壊）
 	_check_destroy_after_battle(attacker_p, defender_p)
@@ -516,3 +546,23 @@ func _check_apply_destroy_after_battle_skill(attacker: BattleParticipant, defend
 	if "通行料無効付与" in defender_keywords:
 		SpellCurseBattle.apply_creature_toll_disable(attacker.creature_data)
 		print("【通行料無効付与】", defender.creature_data.get("name", "?"), " が ", attacker.creature_data.get("name", "?"), " に呪いを付与")
+
+
+## 🔄 戦闘終了時効果用のコンテキストを構築
+func _build_battle_end_context(special_effects, tile_info: Dictionary) -> Dictionary:
+	var context = {
+		"tile_info": tile_info,
+		"board_system": null,
+		"game_stats": {}
+	}
+	
+	# board_systemを取得
+	if special_effects and special_effects.board_system_ref:
+		context["board_system"] = special_effects.board_system_ref
+		
+		# game_flow_managerからgame_statsを取得
+		var gfm = special_effects.board_system_ref.game_flow_manager
+		if gfm and gfm.game_stats:
+			context["game_stats"] = gfm.game_stats
+	
+	return context

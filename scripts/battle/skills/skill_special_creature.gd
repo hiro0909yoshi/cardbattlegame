@@ -240,3 +240,32 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 	enemy_participant.attack_count = 1  # 通常攻撃に戻す（2回攻撃無効化）
 	
 	print("  → 敵は基礎ステータスのみで戦闘")
+
+
+# =============================================================================
+# トリガー無効化（ブラックナイト等）
+# =============================================================================
+
+## 特定トリガーの能力を無効化するかチェック
+## ブラックナイト: 敵の攻撃成功時能力を無効化
+## スクイドマントル: 敵の攻撃成功時能力を無効化（アイテム）
+##
+## @param defender_data 防御側のcreature_data（無効化能力を持つ側）
+## @param trigger チェックするトリガー（"on_attack_success"等）
+## @return 該当トリガーが無効化されるならtrue
+static func is_trigger_nullified(defender_data: Dictionary, trigger: String) -> bool:
+	# クリーチャー能力からチェック
+	var ability_parsed = defender_data.get("ability_parsed", {})
+	var nullify_triggers = ability_parsed.get("nullify_triggers", [])
+	if trigger in nullify_triggers:
+		return true
+	
+	# アイテムからチェック（スクイドマントル等）
+	var items = defender_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var item_nullify_triggers = effect_parsed.get("nullify_triggers", [])
+		if trigger in item_nullify_triggers:
+			return true
+	
+	return false

@@ -463,7 +463,16 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "戦闘後能力交換",
-			"ability_detail": "戦闘後、敵のAPとMHPを交換"
+			"ability_detail": "戦闘後、敵のAPとMHPを交換",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "swap_ap_mhp",
+						"trigger": "on_battle_end",
+						"target": "enemy"
+					}
+				]
+			}
 		},
 		{
 			"id": 444,
@@ -570,6 +579,8 @@
 				"effects": [
 					{
 						"effect_type": "after_battle_permanent_change",
+						"trigger": "on_battle_end",
+						"target": "self",
 						"stat_changes": {
 							"ap": -10,
 							"max_hp": -10

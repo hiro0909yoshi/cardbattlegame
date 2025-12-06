@@ -74,50 +74,50 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 	var effects = ability_parsed.get("effects", [])
 	
 	for effect in effects:
-		if effect.get("effect_type") == "on_attack_success_curse":
+		# trigger形式（新）とeffect_type形式（旧）両方に対応
+		var is_on_attack_success = (
+			effect.get("trigger") == "on_attack_success" and effect.get("effect_type") == "apply_curse"
+		) or effect.get("effect_type") == "on_attack_success_curse"
+		
+		if is_on_attack_success:
 			var curse_type = effect.get("curse_type", "")
-			match curse_type:
-				"battle_disable":
-					apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
-					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
-						  defender_data.get("name", "?"), " に戦闘行動不可を付与")
-					applied = true
-				"plague":
-					apply_plague(defender_data, effect.get("name", "衰弱"))
-					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
-						  defender_data.get("name", "?"), " に衰弱を付与")
-					applied = true
-				"creature_toll_disable":
-					apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
-					print("【攻撃成功時呪い】", attacker_data.get("name", "?"), " → ", 
-						  defender_data.get("name", "?"), " に通行料無効を付与")
-					applied = true
+			applied = _apply_curse_effect(curse_type, effect, attacker_data.get("name", "?"), defender_data) or applied
 	
 	# アイテムからチェック
 	var items = attacker_data.get("items", [])
 	for item in items:
 		var item_effects = item.get("effect_parsed", {}).get("effects", [])
 		for effect in item_effects:
-			if effect.get("effect_type") == "on_attack_success_curse":
+			var is_on_attack_success = (
+				effect.get("trigger") == "on_attack_success" and effect.get("effect_type") == "apply_curse"
+			) or effect.get("effect_type") == "on_attack_success_curse"
+			
+			if is_on_attack_success:
 				var curse_type = effect.get("curse_type", "")
-				match curse_type:
-					"battle_disable":
-						apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
-						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
-							  defender_data.get("name", "?"), " に戦闘行動不可を付与")
-						applied = true
-					"plague":
-						apply_plague(defender_data, effect.get("name", "衰弱"))
-						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
-							  defender_data.get("name", "?"), " に衰弱を付与")
-						applied = true
-					"creature_toll_disable":
-						apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
-						print("【攻撃成功時呪い】", item.get("name", "?"), " → ", 
-							  defender_data.get("name", "?"), " に通行料無効を付与")
-						applied = true
+				applied = _apply_curse_effect(curse_type, effect, item.get("name", "?"), defender_data) or applied
 	
 	return applied
+
+
+## 呪い効果を適用するヘルパー関数
+static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_name: String, defender_data: Dictionary) -> bool:
+	match curse_type:
+		"battle_disable":
+			apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
+			print("【攻撃成功時呪い】", source_name, " → ", 
+				  defender_data.get("name", "?"), " に戦闘行動不可を付与")
+			return true
+		"plague":
+			apply_plague(defender_data, effect.get("name", "衰弱"))
+			print("【攻撃成功時呪い】", source_name, " → ", 
+				  defender_data.get("name", "?"), " に衰弱を付与")
+			return true
+		"creature_toll_disable":
+			apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
+			print("【攻撃成功時呪い】", source_name, " → ", 
+				  defender_data.get("name", "?"), " に通行料無効を付与")
+			return true
+	return false
 
 
 # =============================================================================

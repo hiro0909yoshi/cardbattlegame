@@ -595,9 +595,15 @@
 			"ability_detail": "先制；攻撃成功時、敵をダウン；不屈",
 			"ability_parsed": {
 				"keywords": [
-					"先制"
+					"先制",
+					"不屈"
 				],
-				"effects": []
+				"effects": [
+					{
+						"effect_type": "down_enemy",
+						"trigger": "on_attack_success"
+					}
+				]
 			}
 		},
 		{

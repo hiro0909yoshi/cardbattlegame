@@ -1538,7 +1538,21 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "世界呪い\"特定能力不可\"(6R間、秘術、自破壊時、戦闘終了子時は発動しない)"
+	  "effect": "世界呪い\"特定能力不可\"(6R間、秘術、自破壊時、戦闘終了時は発動しない)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "skill_disable",
+			"name": "ナチュラルワールド",
+			"duration": 6,
+			"params": {
+			  "disabled_triggers": ["mystic_arts", "on_death", "on_battle_end"]
+			}
+		  }
+		]
+	  }
 	}
   ]
 }

@@ -374,11 +374,8 @@
 		"stat_bonus": {
 		  "hp": 40
 		},
-		"effects": [
-		  {
-			"effect_type": "nullify_attacker_special_attacks",
-			"triggers": ["when_defending"]
-		  }
+		"nullify_triggers": [
+		  "on_attack_success"
 		]
 	  }
 	},
@@ -1161,7 +1158,8 @@
 		},
 		"effects": [
 		  {
-			"effect_type": "on_attack_success_curse",
+			"effect_type": "apply_curse",
+			"trigger": "on_attack_success",
 			"curse_type": "battle_disable",
 			"name": "戦闘行動不可"
 		  }
@@ -1577,7 +1575,8 @@
 		},
 		"effects": [
 		  {
-			"effect_type": "on_attack_success_curse",
+			"effect_type": "apply_curse",
+			"trigger": "on_attack_success",
 			"curse_type": "creature_toll_disable",
 			"name": "通行料無効"
 		  }

@@ -180,7 +180,15 @@
 			"scroll_type": "base_ap"
 		  }
 		},
-		"skill_ids": [9003]
+		"skill_ids": [9003],
+		"effects": [
+		  {
+			"effect_type": "draw_cards",
+			"trigger": "on_battle_end",
+			"condition": "self_item_used",
+			"count": 1
+		  }
+		]
 	  }
 	},
 	{
@@ -470,6 +478,15 @@
 	  "ability_parsed": {
 		"keywords": [
 		  "再生"
+		],
+		"effects": [
+		  {
+			"effect_type": "spawn_creature",
+			"trigger": "on_battle_end",
+			"condition": "was_attacked",
+			"creature_id": 140,
+			"target": "random_empty_land"
+		  }
 		]
 	  }
 	},

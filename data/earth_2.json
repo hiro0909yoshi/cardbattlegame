@@ -315,6 +315,9 @@
 			"value": 30
 		  }
 		},
+		"nullify_triggers": [
+		  "on_attack_success"
+		],
 		"effects": [
 		  {
 			"effect_type": "power_strike",
@@ -646,7 +649,16 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "防御型・戦闘後効果",
-	  "ability_detail": "防御型；戦闘後、戦闘地レベルを1上げる"
+	  "ability_detail": "防御型；戦闘後、戦闘地レベルを1上げる",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "level_up_battle_land",
+			"trigger": "on_battle_end",
+			"value": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 246,
