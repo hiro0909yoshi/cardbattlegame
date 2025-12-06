@@ -482,7 +482,16 @@
 	  "ap": 20,
 	  "hp": 50,
 	  "ability": "防御型・道連れ",
-	  "ability_detail": "防御型；道連れ[周回数×G40]"
+	  "ability_detail": "防御型；道連れ[周回数×G40]",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "legacy_gold",
+			"trigger": "on_death",
+			"amount_formula": "lap_count * 40"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 240,

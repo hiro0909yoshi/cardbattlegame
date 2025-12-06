@@ -455,7 +455,17 @@
 			"ap": 10,
 			"hp": 40,
 			"ability": "自破壊時HP-40",
-			"ability_detail": "自破壊時、敵のHP-40"
+			"ability_detail": "自破壊時、敵のHP-40",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "damage_enemy",
+						"trigger": "on_death",
+						"target": "enemy",
+						"damage": 40
+					}
+				]
+			}
 		},
 		{
 			"id": 14,

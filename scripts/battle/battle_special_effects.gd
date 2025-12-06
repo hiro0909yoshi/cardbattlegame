@@ -489,8 +489,13 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						opponent.take_mhp_damage(damage)
 						result["revenge_mhp_activated"] = true
 	
-	# 💰 クリーチャースキル: 遺産・道産（フェイト、コーンフォーク、クリーピングコインなど）
-	_skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref)
+	# 🔥 クリーチャースキル: on_death効果（サルファバルーン、マミー等）
+	var creature_on_death_result = _process_creature_on_death_effects(defeated, opponent)
+	result.merge(creature_on_death_result, true)
+	
+	# 💰 クリーチャースキル: 遺産（フェイト、コーンフォーク、マミー等）
+	var game_flow_manager = _get_game_flow_manager()
+	_skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, game_flow_manager)
 	
 	# 🔄 手札復活チェック（フェニックス等）
 	if _check_revive_to_hand(defeated):
@@ -891,3 +896,90 @@ func _get_game_stats() -> Dictionary:
 	if not board_system_ref.game_flow_manager:
 		return {}
 	return board_system_ref.game_flow_manager.game_stats
+
+
+## クリーチャースキルのon_death効果を処理
+func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant) -> Dictionary:
+	var result = {}
+	
+	var ability_parsed = defeated.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		var trigger = effect.get("trigger", "")
+		if trigger != "on_death":
+			continue
+		
+		var effect_type = effect.get("effect_type", "")
+		var target = effect.get("target", "enemy")
+		
+		match effect_type:
+			"damage_enemy":
+				# サルファバルーン: 敵にHPダメージ
+				if target == "enemy" and opponent.is_alive():
+					var damage = effect.get("damage", 0)
+					print("【自破壊時効果】%s → %s に %d ダメージ" % [
+						defeated.creature_data.get("name", "?"),
+						opponent.creature_data.get("name", "?"),
+						damage
+					])
+					opponent.take_damage(damage)
+					result["damage_enemy_activated"] = true
+					
+					if not opponent.is_alive():
+						print("【自破壊時効果】%s は死亡" % opponent.creature_data.get("name", "?"))
+						result["opponent_killed"] = true
+			
+			"legacy_gold":
+				# マミー等: 遺産（ゴールド獲得）- skill_legacy.gdで処理
+				pass
+	
+	return result
+
+
+## on_death効果の金額計算
+func _calculate_on_death_amount(effect: Dictionary, defeated: BattleParticipant) -> int:
+	var formula = effect.get("amount_formula", "")
+	
+	if formula.is_empty():
+		return effect.get("amount", 0)
+	
+	# "lap_count * 40" のような形式を解析
+	if "lap_count" in formula:
+		var lap_count = _get_lap_count(defeated.player_id)
+		# 式を評価（簡易的に lap_count * N の形式のみ対応）
+		var multiplier = 40  # デフォルト
+		var regex = RegEx.new()
+		regex.compile("lap_count\\s*\\*\\s*(\\d+)")
+		var match_result = regex.search(formula)
+		if match_result:
+			multiplier = int(match_result.get_string(1))
+		return lap_count * multiplier
+	
+	return effect.get("amount", 0)
+
+
+## プレイヤーの周回数を取得
+func _get_lap_count(player_id: int) -> int:
+	var game_flow_manager = _get_game_flow_manager()
+	if not game_flow_manager:
+		return 1
+	if not game_flow_manager.player_lap_state.has(player_id):
+		return 1
+	return game_flow_manager.player_lap_state[player_id].get("lap_count", 1)
+
+
+## PlayerSystemへの参照を取得
+func _get_player_system():
+	if not board_system_ref:
+		return null
+	if not board_system_ref.game_flow_manager:
+		return null
+	return board_system_ref.game_flow_manager.player_system
+
+
+## GameFlowManagerへの参照を取得
+func _get_game_flow_manager():
+	if not board_system_ref:
+		return null
+	return board_system_ref.game_flow_manager

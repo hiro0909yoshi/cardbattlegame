@@ -3,15 +3,16 @@
 ## 【主な機能】
 ## - 遺産[魔力]: 死亡時に魔力を獲得
 ## - 遺産[カード]: 死亡時にカードをドロー
-## - 遺産: 死亡時に魔力を獲得（破壊時専用）
+## - 遺産[周回数×G]: 死亡時に周回数に応じたゴールドを獲得
 ##
 ## 【該当クリーチャー】
-## - フェイト (ID: 136): 遺産[カード1枚]
-## - コーンフォーク (ID: 315): 破壊時、遺産[G200]
-## - クリーピングコイン (ID: 410): 破壊時、遺産[G100]
+## - フェイト (ID: 136): 遺産[カード1枚]（テキスト解析）
+## - コーンフォーク (ID: 315): 破壊時、遺産[G200]（テキスト解析）
+## - クリーピングコイン (ID: 410): 破壊時、遺産[G100]（テキスト解析）
+## - マミー (ID: 239): 遺産[周回数×G40]（JSON形式）
 ##
-## @version 1.0
-## @date 2025-11-03
+## @version 1.1
+## @date 2025-12-06
 
 class_name SkillLegacy
 
@@ -74,12 +75,88 @@ static func apply_magic_legacy(defeated, spell_magic) -> void:
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
 ## @param spell_magic SpellMagicインスタンス
-static func apply_on_death(defeated, spell_draw, spell_magic) -> void:
-	# 遺産[カード]
+## @param game_flow_manager GameFlowManagerインスタンス（周回数取得用、オプション）
+static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager = null) -> void:
+	# JSON形式の遺産効果（ability_parsed.effects）
+	apply_legacy_from_json(defeated, spell_magic, game_flow_manager)
+	
+	# テキスト形式の遺産[カード]
 	apply_card_legacy(defeated, spell_draw)
 	
-	# 遺産[魔力]
+	# テキスト形式の遺産[魔力]
 	apply_magic_legacy(defeated, spell_magic)
+
+
+## JSON形式の遺産効果を適用（マミー等）
+##
+## @param defeated 撃破されたクリーチャー
+## @param spell_magic SpellMagicインスタンス
+## @param game_flow_manager GameFlowManagerインスタンス
+static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> void:
+	if not spell_magic:
+		return
+	
+	var ability_parsed = defeated.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		var trigger = effect.get("trigger", "")
+		if trigger != "on_death":
+			continue
+		
+		var effect_type = effect.get("effect_type", "")
+		
+		match effect_type:
+			"legacy_gold":
+				# 遺産[ゴールド] - マミー等
+				var amount = _calculate_legacy_amount(effect, defeated, game_flow_manager)
+				if amount > 0:
+					spell_magic.add_magic(defeated.player_id, amount)
+					print("【遺産発動】%s → プレイヤー%dが%dG獲得" % [
+						defeated.creature_data.get("name", "?"),
+						defeated.player_id + 1,
+						amount
+					])
+
+
+## 遺産金額を計算
+##
+## @param effect 効果データ
+## @param defeated 撃破されたクリーチャー
+## @param game_flow_manager GameFlowManagerインスタンス
+## @return 獲得金額
+static func _calculate_legacy_amount(effect: Dictionary, defeated, game_flow_manager) -> int:
+	var formula = effect.get("amount_formula", "")
+	
+	if formula.is_empty():
+		return effect.get("amount", 0)
+	
+	# "lap_count * 40" のような形式を解析
+	if "lap_count" in formula:
+		var lap_count = _get_lap_count(defeated.player_id, game_flow_manager)
+		# 式を評価（lap_count * N の形式）
+		var multiplier = 40  # デフォルト
+		var regex = RegEx.new()
+		regex.compile("lap_count\\s*\\*\\s*(\\d+)")
+		var match_result = regex.search(formula)
+		if match_result:
+			multiplier = int(match_result.get_string(1))
+		return lap_count * multiplier
+	
+	return effect.get("amount", 0)
+
+
+## プレイヤーの周回数を取得
+##
+## @param player_id プレイヤーID
+## @param game_flow_manager GameFlowManagerインスタンス
+## @return 周回数
+static func _get_lap_count(player_id: int, game_flow_manager) -> int:
+	if not game_flow_manager:
+		return 1
+	if not game_flow_manager.player_lap_state.has(player_id):
+		return 1
+	return game_flow_manager.player_lap_state[player_id].get("lap_count", 1)
 
 ## ability_detailからカード枚数を抽出
 ##
