@@ -983,3 +983,87 @@ func _get_game_flow_manager():
 	if not board_system_ref:
 		return null
 	return board_system_ref.game_flow_manager
+
+
+# =============================================================================
+# 抹消効果（アネイマブル）- 敵を倒した時に同名カードを全て削除
+# =============================================================================
+
+## 勝者のon_kill効果をチェック・適用
+## @param winner 勝者
+## @param loser 敗者（倒されたクリーチャー）
+## @return 抹消されたカード枚数
+func check_and_apply_annihilate(winner: BattleParticipant, loser: BattleParticipant) -> int:
+	var ability_parsed = winner.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("trigger") != "on_kill":
+			continue
+		if effect.get("effect_type") != "annihilate":
+			continue
+		
+		# 確率チェック
+		var probability = effect.get("probability", 100)
+		var roll = randi() % 100
+		if roll >= probability:
+			print("【抹消】確率判定失敗 (%d%% >= %d%%)" % [roll, probability])
+			return 0
+		
+		# 倒した敵の名前を取得
+		var target_name = loser.creature_data.get("name", "")
+		if target_name.is_empty():
+			return 0
+		
+		# 相手プレイヤーのデッキと手札から同名カードを削除
+		var deleted_count = _annihilate_cards(loser.player_id, target_name)
+		
+		print("【抹消】%s が %s を抹消！ → %d枚削除" % [
+			winner.creature_data.get("name", "?"),
+			target_name,
+			deleted_count
+		])
+		
+		return deleted_count
+	
+	return 0
+
+
+## 指定プレイヤーの手札とデッキから同名カードを全削除
+func _annihilate_cards(player_id: int, card_name: String) -> int:
+	if not card_system_ref:
+		push_error("BattleSpecialEffects._annihilate_cards: card_system_ref未設定")
+		return 0
+	
+	var deleted_count = 0
+	
+	# 手札から削除（手札はカードデータの配列）
+	var hand = card_system_ref.get_hand(player_id)
+	var indices_to_remove = []
+	for i in range(hand.size()):
+		if hand[i].get("name", "") == card_name:
+			indices_to_remove.append(i)
+	
+	# 後ろから削除（インデックスがずれないように）
+	indices_to_remove.reverse()
+	for index in indices_to_remove:
+		card_system_ref.remove_card_from_hand(player_id, index)
+		deleted_count += 1
+		print("  [抹消] 手札から『%s』を削除" % card_name)
+	
+	# デッキから削除（デッキはカードIDの配列）
+	var deck = card_system_ref.get_deck(player_id)
+	var deck_indices_to_remove = []
+	for i in range(deck.size()):
+		var card_id = deck[i]
+		var card_data = CardLoader.get_card_by_id(card_id) if CardLoader else {}
+		if card_data.get("name", "") == card_name:
+			deck_indices_to_remove.append(i)
+	
+	deck_indices_to_remove.reverse()
+	for index in deck_indices_to_remove:
+		card_system_ref.remove_card_from_deck(player_id, index)
+		deleted_count += 1
+		print("  [抹消] デッキから『%s』を削除" % card_name)
+	
+	return deleted_count

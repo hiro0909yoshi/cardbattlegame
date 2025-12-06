@@ -91,3 +91,105 @@ static func _has_indomitable(creature_data: Dictionary) -> bool:
 		return true
 	
 	return false
+
+
+# =============================================================================
+# 戦闘勝利時の土地効果（土地変性・土地破壊）
+# =============================================================================
+
+## 戦闘勝利時の土地効果をチェックし適用
+## @param winner_data 勝者のcreature_data
+## @param tile_index 対象タイルのインデックス
+## @param board_system ボードシステム参照
+## @return 適用した効果の情報 { changed_element: String, level_reduced: bool }
+static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: int, board_system) -> Dictionary:
+	var result = {
+		"changed_element": "",
+		"level_reduced": false
+	}
+	
+	if not board_system:
+		return result
+	
+	var ability_parsed = winner_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("trigger") != "on_battle_won":
+			continue
+		
+		var effect_type = effect.get("effect_type", "")
+		
+		match effect_type:
+			"change_tile_element":
+				# 土地変性
+				var new_element = effect.get("element", "")
+				if new_element.is_empty():
+					continue
+				
+				# バロンチェック（土地破壊・変性無効）
+				if _tile_has_land_protection(tile_index, board_system):
+					print("【土地変性無効】タイル%dは土地破壊・変性無効を持っています" % tile_index)
+					continue
+				
+				# spell_land経由で属性変更
+				if board_system.game_flow_manager and board_system.game_flow_manager.spell_land:
+					var success = board_system.game_flow_manager.spell_land.change_element(tile_index, new_element)
+					if success:
+						result["changed_element"] = new_element
+						print("【土地変性】%s がタイル%dを%sに変性" % [
+							winner_data.get("name", "?"), tile_index, new_element
+						])
+			
+			"reduce_tile_level":
+				# 土地破壊（レベル-1）
+				var amount = effect.get("amount", 1)
+				
+				# バロンチェック（土地破壊・変性無効）
+				if _tile_has_land_protection(tile_index, board_system):
+					print("【土地破壊無効】タイル%dは土地破壊・変性無効を持っています" % tile_index)
+					continue
+				
+				# spell_land経由でレベル変更
+				if board_system.game_flow_manager and board_system.game_flow_manager.spell_land:
+					var success = board_system.game_flow_manager.spell_land.change_level(tile_index, -amount)
+					if success:
+						result["level_reduced"] = true
+						print("【土地破壊】%s がタイル%dのレベルを-%d" % [
+							winner_data.get("name", "?"), tile_index, amount
+						])
+	
+	return result
+
+
+## タイルが土地破壊・変性無効を持っているかチェック
+## @param tile_index タイルインデックス
+## @param board_system ボードシステム参照
+## @return 無効化スキルを持っているか
+static func _tile_has_land_protection(tile_index: int, board_system) -> bool:
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return false
+	
+	var tile = board_system.tile_nodes[tile_index]
+	var creature_data = tile.creature_data if "creature_data" in tile else {}
+	
+	if creature_data.is_empty():
+		return false
+	
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	return "土地破壊・変性無効" in keywords
+
+
+## タイルのクリーチャーが土地破壊・変性無効を持っているか（外部公開用）
+## @param creature_data クリーチャーデータ
+## @return 無効化スキルを持っているか
+static func has_land_protection(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	return "土地破壊・変性無効" in keywords

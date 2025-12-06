@@ -238,7 +238,13 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "復活・土地破壊無効",
-	  "ability_detail": "復活；土地破壊・変性無効"
+	  "ability_detail": "復活；土地破壊・変性無効",
+	  "ability_parsed": {
+		"keywords": [
+		  "復活",
+		  "土地破壊・変性無効"
+		]
+	  }
 	},
 	{
 	  "id": 233,
@@ -594,7 +600,13 @@
 		  "先制",
 		  "再生"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"trigger": "on_battle_won",
+			"effect_type": "change_tile_element",
+			"element": "earth"
+		  }
+		]
 	  }
 	},
 	{

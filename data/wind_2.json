@@ -37,7 +37,16 @@
 	  "ap": 50,
 	  "hp": 40,
 	  "ability": "侵略時土地破壊",
-	  "ability_detail": "侵略時、土地破壊"
+	  "ability_detail": "侵略時、土地破壊",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"trigger": "on_battle_won",
+			"effect_type": "reduce_tile_level",
+			"amount": 1
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 328,
@@ -102,6 +111,11 @@
 				]
 			  }
 			]
+		  },
+		  {
+			"trigger": "on_battle_won",
+			"effect_type": "change_tile_element",
+			"element": "wind"
 		  }
 		]
 	  }

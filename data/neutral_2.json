@@ -537,6 +537,12 @@
 				],
 				"effects": [
 					{
+						"effect_type": "race_creature_stat_replace",
+						"target_race": "ゴブリン",
+						"multiplier": 20,
+						"include_self": true
+					},
+					{
 						"effect_type": "support",
 						"target": {
 							"scope": "all_creatures",

@@ -287,7 +287,13 @@
 		  "先制",
 		  "再生"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"trigger": "on_battle_won",
+			"effect_type": "change_tile_element",
+			"element": "water"
+		  }
+		]
 	  }
 	},
 	{

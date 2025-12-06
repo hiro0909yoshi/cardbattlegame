@@ -20,11 +20,11 @@
 ```json
 "ability_parsed": {
   "effects": [
-    {
-      "effect_type": "swap_ap_mhp",
-      "trigger": "on_battle_end",
-      "target": "enemy"
-    }
+	{
+	  "effect_type": "swap_ap_mhp",
+	  "trigger": "on_battle_end",
+	  "target": "enemy"
+	}
   ]
 }
 ```
@@ -73,9 +73,9 @@
   "id": 2064,
   "name": "ナチュラルワールド",
   "effect_parsed": {
-    "world_curse_type": "natural_world",
-    "nullify_triggers": ["on_battle_end", "on_death", "mystic_arts"],
-    "duration": 6
+	"world_curse_type": "natural_world",
+	"nullify_triggers": ["on_battle_end", "on_death", "mystic_arts"],
+	"duration": 6
   }
 }
 ```
@@ -85,7 +85,7 @@
 ```gdscript
 # SpellWorldCurse でチェック
 if spell_world_curse.is_trigger_nullified("on_battle_end"):
-    return  # 効果発動しない
+	return  # 効果発動しない
 ```
 
 ## 処理フロー

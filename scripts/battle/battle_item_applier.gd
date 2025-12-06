@@ -271,17 +271,23 @@ func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dicti
 		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
 
-## APドレイン
-func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, effect: Dictionary) -> void:
-	var target = effect.get("target", "enemy")
-	if target == "enemy" and enemy_participant:
-		var drained_st = enemy_participant.current_ap
-		if drained_st > 0:
-			participant.current_ap += drained_st
-			enemy_participant.current_ap = 0
-			enemy_participant.creature_data["ap"] = 0
-			print("  [APドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_participant.creature_data.get("name", "?"), " のAP", drained_st, "を吸収")
-			print("    → 自AP:", participant.current_ap, " / 敵AP:", enemy_participant.current_ap)
+## APドレイン（敵のAPを永続的に0にする）
+func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, _effect: Dictionary) -> void:
+	if not enemy_participant:
+		return
+	
+	var enemy_name = enemy_participant.creature_data.get("name", "?")
+	var original_ap = enemy_participant.current_ap
+	
+	# 戦闘中のAPを0に
+	enemy_participant.current_ap = 0
+	
+	# 永続的にAPを0にする（base_apを0、base_up_apも0に）
+	enemy_participant.creature_data["ap"] = 0
+	enemy_participant.creature_data["base_up_ap"] = 0
+	enemy_participant.base_up_ap = 0
+	
+	print("  [APドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_name, " のAPを永続的に0に (元AP: ", original_ap, ")")
 
 ## 死者復活スキル付与
 func _apply_revive_skill(participant: BattleParticipant) -> void:

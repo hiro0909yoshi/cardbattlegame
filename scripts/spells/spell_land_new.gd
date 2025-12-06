@@ -49,6 +49,11 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		if game_flow_manager_ref.spell_world_curse.check_land_change_blocked(true):
 			return false
 	
+	# バロン等の土地破壊・変性無効チェック
+	if _has_land_protection(tile_index):
+		print("[土地変性無効] タイル%dは土地破壊・変性無効を持っています" % tile_index)
+		return false
+	
 	if not _validate_tile_index(tile_index):
 		return false
 	
@@ -95,6 +100,11 @@ func change_level(tile_index: int, delta: int) -> bool:
 	if delta < 0 and game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
 		if game_flow_manager_ref.spell_world_curse.check_land_change_blocked(true):
 			return false
+	
+	# バロン等の土地破壊・変性無効チェック（レベルダウンのみ）
+	if delta < 0 and _has_land_protection(tile_index):
+		print("[土地破壊無効] タイル%dは土地破壊・変性無効を持っています" % tile_index)
+		return false
 	
 	# BoardSystem3DのtilesはNodeの配列なので、tile_nodesを使う
 	if not board_system_ref.tile_nodes.has(tile_index):
@@ -681,25 +691,51 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 		push_error("SpellLand._apply_effect_self_destruct: caster_tile_indexが未設定")
 		return false
 	
-	if not creature_manager_ref:
-		push_error("SpellLand._apply_effect_self_destruct: CreatureManagerが未設定")
+	if not board_system_ref or not board_system_ref.tile_nodes.has(caster_tile_index):
+		push_error("SpellLand._apply_effect_self_destruct: タイルが見つかりません")
 		return false
 	
-	var creature_data = creature_manager_ref.get_data_ref(caster_tile_index)
+	var tile = board_system_ref.tile_nodes[caster_tile_index]
+	var creature_data = tile.creature_data
 	if creature_data.is_empty():
 		print("[秘術自壊] タイル%dにクリーチャーがいません" % caster_tile_index)
 		return false
 	
 	var creature_name = creature_data.get("name", "?")
+	var saved_level = tile.level
 	
-	# クリーチャーを破壊
-	creature_manager_ref.clear_data(caster_tile_index)
+	# 3Dカード表示を削除
+	if tile.has_method("remove_creature"):
+		tile.remove_creature()
+	else:
+		tile.creature_data = {}
 	
-	# ビジュアルも削除
-	var visual = creature_manager_ref.get_visual_node(caster_tile_index)
-	if visual:
-		visual.queue_free()
-		creature_manager_ref.set_visual_node(caster_tile_index, null)
+	# 所有者をリセット（空き地に戻す）
+	tile.owner_id = -1
+	tile.level = saved_level  # レベル維持
+	
+	# ビジュアル更新
+	if tile.has_method("update_visual"):
+		tile.update_visual()
+	
+	# タイル情報ラベル（通行料等）を更新
+	if board_system_ref.tile_data_manager:
+		board_system_ref.tile_data_manager.update_all_displays()
 	
 	print("[秘術自壊] %s (タイル%d) が自壊しました" % [creature_name, caster_tile_index])
 	return true
+
+
+## タイルのクリーチャーが土地破壊・変性無効を持っているかチェック
+func _has_land_protection(tile_index: int) -> bool:
+	if not creature_manager_ref:
+		return false
+	
+	var creature_data = creature_manager_ref.get_data_ref(tile_index)
+	if creature_data.is_empty():
+		return false
+	
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	return "土地破壊・変性無効" in keywords

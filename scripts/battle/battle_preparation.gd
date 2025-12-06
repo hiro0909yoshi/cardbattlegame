@@ -136,6 +136,10 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender.creature_data["items"].append(defender_item)
 		item_applier.apply_item_effects(defender, defender_item, attacker, battle_tile_index)
 	
+	# クリーチャー能力のAPドレイン効果を適用
+	_apply_ap_drain_ability(attacker, defender)
+	_apply_ap_drain_ability(defender, attacker)
+	
 	# アイテムクリーチャー・バフ処理
 	# リビングアーマー（ID: 438）: クリーチャーとして戦闘時AP+50
 	var attacker_id = attacker.creature_data.get("id", -1)
@@ -327,3 +331,14 @@ func _apply_battle_start_conditions(attacker: BattleParticipant, defender: Battl
 	result["defender"] = SkillBattleStartConditions.apply(defender, defender_context)
 	
 	return result
+
+
+## クリーチャー能力のAPドレイン効果を適用
+func _apply_ap_drain_ability(participant: BattleParticipant, enemy: BattleParticipant) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "ap_drain":
+			# battle_item_applierのap_drain処理を呼び出す
+			item_applier._apply_ap_drain(participant, enemy, effect)

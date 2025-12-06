@@ -604,6 +604,20 @@ func count_creatures_by_element(player_id: int, element: String) -> int:
 				count += 1
 	return count
 
+## 特定の種族（race）のクリーチャーをカウント
+func count_creatures_by_race(player_id: int, race: String) -> int:
+	if not tile_data_manager:
+		return 0
+	
+	var count = 0
+	for tile_index in tile_data_manager.tile_nodes:
+		var tile = tile_data_manager.tile_nodes[tile_index]
+		if tile.owner_id == player_id and tile.creature_data != null and not tile.creature_data.is_empty():
+			var creature_race = tile.creature_data.get("race", "")
+			if creature_race == race:
+				count += 1
+	return count
+
 ## 全プレイヤーを対象に特定のクリーチャー名をカウント（敵味方問わず）
 func count_all_creatures_by_name(creature_name: String) -> int:
 	if not tile_data_manager:

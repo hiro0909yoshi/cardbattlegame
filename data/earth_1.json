@@ -41,7 +41,14 @@
 						"condition_type": "none",
 						"probability": 70
 					}
-				}
+				},
+				"effects": [
+					{
+						"trigger": "on_kill",
+						"effect_type": "annihilate",
+						"probability": 80
+					}
+				]
 			}
 		},
 		{

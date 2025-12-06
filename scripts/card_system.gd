@@ -430,3 +430,40 @@ func _get_clean_card_data(card_id: int) -> Dictionary:
 	if CardLoader and CardLoader.has_method("get_card_by_id"):
 		return CardLoader.get_card_by_id(card_id)
 	return {}
+
+
+## 手札から指定インデックスのカードを削除
+func remove_card_from_hand(player_id: int, index: int) -> bool:
+	if not player_hands.has(player_id):
+		return false
+	var hand = player_hands[player_id]["data"]
+	if index < 0 or index >= hand.size():
+		return false
+	hand.remove_at(index)
+	emit_signal("hand_updated")
+	return true
+
+
+## デッキから指定インデックスのカードを削除
+func remove_card_from_deck(player_id: int, index: int) -> bool:
+	if not player_decks.has(player_id):
+		return false
+	var deck_arr = player_decks[player_id]
+	if index < 0 or index >= deck_arr.size():
+		return false
+	deck_arr.remove_at(index)
+	return true
+
+
+## 手札の配列を取得（参照）
+func get_hand(player_id: int) -> Array:
+	if not player_hands.has(player_id):
+		return []
+	return player_hands[player_id]["data"]
+
+
+## デッキの配列を取得（参照）
+func get_deck(player_id: int) -> Array:
+	if not player_decks.has(player_id):
+		return []
+	return player_decks[player_id]

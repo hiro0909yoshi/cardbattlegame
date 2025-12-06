@@ -533,6 +533,32 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (", target_name, ":", creature_count, " × ", multiplier, ")")
 		
+		# 4.5. 種族配置数でステータス決定（レッドキャップ）
+		elif effect_type == "race_creature_stat_replace":
+			var target_race = effect.get("target_race", "")
+			var multiplier = effect.get("multiplier", 20)
+			
+			# BoardSystemから特定種族をカウント（配置済みのみ）
+			var player_id = context.get("player_id", 0)
+			var race_count = 0
+			if board_system_ref:
+				race_count = board_system_ref.count_creatures_by_race(player_id, target_race)
+			
+			# 侵略側（配置されていない）は自分を含めない
+			# count_creatures_by_raceは配置済みのみカウントするので追加処理不要
+			
+			var stat_value = int(race_count * multiplier)
+			
+			# ステータスを置き換え（基本値を上書き）
+			participant.creature_data["ap"] = stat_value
+			participant.creature_data["hp"] = stat_value
+			participant.current_ap = stat_value
+			participant.current_hp = stat_value
+			# max_hpはget_max_hp()で計算されるため、creature_data["hp"]を設定すればOK
+			
+			print("【種族配置数ステータス】", participant.creature_data.get("name", "?"),
+				  " AP&HP=", stat_value, " (", target_race, ":", race_count, " × ", multiplier, ")")
+		
 		# 5. 他属性カウント（リビングクローブ）
 		elif effect_type == "other_element_count":
 			var multiplier = effect.get("multiplier", 5)

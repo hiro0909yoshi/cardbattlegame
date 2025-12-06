@@ -489,9 +489,15 @@
 	  "ability_detail": "先制；APドレイン；不屈",
 	  "ability_parsed": {
 		"keywords": [
-		  "先制"
+		  "先制",
+		  "不屈"
 		],
-		"effects": []
+		"effects": [
+		  {
+			"effect_type": "ap_drain",
+			"target": "enemy"
+		  }
+		]
 	  }
 	},
 	{

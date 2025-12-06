@@ -408,6 +408,12 @@ func _apply_post_battle_effects(
 			# 🆙 土地レベルアップ効果（シルバープロウ）
 			_apply_level_up_effect(attacker, tile_index)
 			
+			# 🌍 戦闘勝利時の土地効果（土地変性・土地破壊）
+			SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
+			
+			# 💀 抹消効果（アネイマブル）
+			battle_special_effects.check_and_apply_annihilate(attacker, defender)
+			
 			emit_signal("invasion_completed", true, tile_index)
 		
 		BattleResult.DEFENDER_WIN:
@@ -441,7 +447,12 @@ func _apply_post_battle_effects(
 			# 🆙 土地レベルアップ効果（シルバープロウ - 防御成功時）
 			_apply_level_up_effect(defender, tile_index)
 			
-			# 侵略失敗：攻撃側カードは破壊される（手札に戻らない）
+			# 🌍 戦闘勝利時の土地効果（土地変性 - 防御成功時も発動）
+			SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
+			
+			# 💀 抹消効果（アネイマブル）
+			battle_special_effects.check_and_apply_annihilate(defender, attacker)
+			
 			# 移動侵略の場合、移動元のクリーチャーも削除
 			if from_tile_index >= 0:
 				board_system_ref.remove_creature(from_tile_index)
