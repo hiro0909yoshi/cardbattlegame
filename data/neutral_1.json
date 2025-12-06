@@ -20,7 +20,13 @@
 		  "無効化": {
 			"nullify_type": "scroll_attack"
 		  }
-		}
+		},
+		"effects": [
+		  {
+			"effect_type": "terrain_change_cost_modifier",
+			"cost": 50
+		  }
+		]
 	  }
 	},
 	{
@@ -610,6 +616,10 @@
 	  "ability_detail": "防御型；防魔；秘術[G100・対象領地を無に変え、自壊]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "防魔", "秘術"]
+	  },
+	  "mystic_arts": {
+		"cost": 100,
+		"spell_id": 9041
 	  }
 	},
 	{

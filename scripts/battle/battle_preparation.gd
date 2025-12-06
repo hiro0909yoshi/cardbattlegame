@@ -12,6 +12,7 @@ const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_sp
 const BattleCurseApplierScript = preload("res://scripts/battle/battle_curse_applier.gd")
 const BattleItemApplierScript = preload("res://scripts/battle/battle_item_applier.gd")
 const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
+const SkillBattleStartConditions = preload("res://scripts/battle/skills/skill_battle_start_conditions.gd")
 
 # サブシステム（分割後）
 var curse_applier = BattleCurseApplierScript.new()
@@ -206,10 +207,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 🚫 ウォーロックディスク: apply_pre_battle_skills()の最初で処理するため、ここでは削除
 	
+	# 🎯 戦闘開始時条件チェック（スラッジタイタン、ギガンテリウム等）
+	var battle_start_result = _apply_battle_start_conditions(attacker, defender)
+	
 	return {
 		"attacker": attacker,
 		"defender": defender,
-		"transform_result": transform_result
+		"transform_result": transform_result,
+		"battle_start_conditions": battle_start_result
 	}
 
 ## 効果配列（permanent_effects, temporary_effects）を適用
@@ -300,3 +305,25 @@ func _has_transform_effect(participant: BattleParticipant, trigger: String) -> b
 			return true
 	
 	return false
+
+
+## 戦闘開始時条件をチェック・適用
+func _apply_battle_start_conditions(attacker: BattleParticipant, defender: BattleParticipant) -> Dictionary:
+	var result = {
+		"attacker": {},
+		"defender": {}
+	}
+	
+	# 攻撃側の戦闘開始時条件
+	var attacker_context = {
+		"creature_data": attacker.creature_data
+	}
+	result["attacker"] = SkillBattleStartConditions.apply(attacker, attacker_context)
+	
+	# 防御側の戦闘開始時条件
+	var defender_context = {
+		"creature_data": defender.creature_data
+	}
+	result["defender"] = SkillBattleStartConditions.apply(defender, defender_context)
+	
+	return result

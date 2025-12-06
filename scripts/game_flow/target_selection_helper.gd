@@ -475,7 +475,13 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 		"land", "own_land", "enemy_land":
 			# 土地を対象とする
 			if handler.board_system:
-				var owner_filter = target_info.get("owner_filter", "any")  # "own", "enemy", "any"
+				# target_typeに応じてデフォルトのowner_filterを設定
+				var default_owner_filter = "any"
+				if target_type == "own_land":
+					default_owner_filter = "own"
+				elif target_type == "enemy_land":
+					default_owner_filter = "enemy"
+				var owner_filter = target_info.get("owner_filter", default_owner_filter)
 				var target_filter = target_info.get("target_filter", "")  # "creature", "empty", ""
 				
 				# タイル番号順にソート

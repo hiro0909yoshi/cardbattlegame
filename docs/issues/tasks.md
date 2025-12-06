@@ -171,16 +171,16 @@
   - [x] ドキュメント更新完了
 - [ ] **実装**
   - [ ] `game_flow_manager.gd` に `check_and_pay_toll_on_enemy_land()` 新規作成
-    - 敵地判定ロジック
-    - 支払い処理（board_system.calculate_toll() + player_system.pay_toll()）
+	- 敵地判定ロジック
+	- 支払い処理（board_system.calculate_toll() + player_system.pay_toll()）
   - [ ] `game_flow_manager.end_turn()` の **手札調整後に呼び出し追加**
-    - `await check_and_discard_excess_cards()` の後
+	- `await check_and_discard_excess_cards()` の後
   - [ ] `tile_action_processor.on_action_pass()` から支払い処理削除
-    - 敵地判定と支払いロジックを削除
-    - `_complete_action()` のみ残す
+	- 敵地判定と支払いロジックを削除
+	- `_complete_action()` のみ残す
   - [ ] `battle_system.gd` の `pay_toll_3d()` 関数削除
-    - 関数定義削除
-    - 4箇所の呼び出し削除（Line 95, 100, 112, 131付近）
+	- 関数定義削除
+	- 4箇所の呼び出し削除（Line 95, 100, 112, 131付近）
 - [ ] **テスト・検証**
   - [ ] パスボタン押下後の支払い確認
   - [ ] 敗北後（DEFENDER_WIN/ATTACKER_SURVIVED）の支払い確認
@@ -599,6 +599,17 @@
   - skill_battle_end_effects.gd新規作成
   - SpellWorldCurse.is_trigger_disabled()で無効化チェック統一
   - ロックタイタン、トリトン、マイコロン、ブルガサリもtrigger形式に対応（JSON設定済み）
+- **死亡時効果システム（2体）**
+  - サルファバルーン（ID:13）: 自破壊時、敵のHP-40
+  - マミー（ID:239）: 遺産[周回数×G40]
+  - trigger形式（on_death）を導入
+  - skill_legacy.gdにJSON形式の遺産効果を追加（周回数対応）
+  - ナチュラルワールドで無効化対応
+- **戦闘開始時条件システム（2体）**
+  - スラッジタイタン（ID:125）: HP減少中なら自壊
+  - ギガンテリウム（ID:206）: 呪い付きならHP-20
+  - skill_battle_start_conditions.gd新規作成
+  - battle_preparation.gdから呼び出し
 
 ---
 

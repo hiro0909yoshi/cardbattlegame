@@ -726,6 +726,57 @@
 		  }
 		]
 	  }
+	},
+	{
+	  "id": 9039,
+	  "name": "水への変成（マカラ秘術）",
+	  "rarity": "R",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "change_caster_tile_element",
+			"element": "water"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9040,
+	  "name": "地への変成（サクヤ秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "earth"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 9041,
+	  "name": "無への変成（ストーンジゾウ秘術）",
+	  "rarity": "N",
+	  "type": "mystic",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "neutral"
+		  },
+		  {
+			"effect_type": "self_destruct"
+		  }
+		]
+	  }
 	}
   ]
 }

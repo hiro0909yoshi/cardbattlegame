@@ -442,6 +442,12 @@ func apply_land_effect(effect: Dictionary, target_data: Dictionary, player_id: i
 		"align_mismatched_lands":
 			return _apply_effect_align_mismatched_lands(effect, land_target_data)
 		
+		"self_destruct":
+			return _apply_effect_self_destruct(effect, land_target_data)
+		
+		"change_caster_tile_element":
+			return _apply_effect_change_caster_tile_element(effect, land_target_data)
+		
 		_:
 			push_error("SpellLand.apply_land_effect: 未対応のeffect_type '%s'" % effect_type)
 			return false
@@ -597,4 +603,103 @@ func _apply_effect_align_mismatched_lands(effect: Dictionary, _target_data: Dict
 	var changed_count = align_lands_to_creature_elements(tiles_to_change)
 	
 	print("[条件成立] %d個の土地をクリーチャーの属性に変更" % changed_count)
+	return true
+
+
+## 地形変化コストを計算
+##
+## @param tile_index タイルインデックス
+## @return 地形変化コスト
+func calculate_terrain_change_cost(tile_index: int) -> int:
+	if not board_system_ref or not board_system_ref.tile_nodes.has(tile_index):
+		return -1
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var level = tile.level
+	var tile_type = tile.tile_type
+	
+	# 1. アーキミミックがいる土地 → 50G固定
+	if _has_land_cost_modifier(tile_index):
+		return 50
+	
+	# 2. 無属性タイル → 100 + ((レベル-1)×100)
+	if tile_type == "neutral" or tile_type == "":
+		return 100 + ((level - 1) * 100)
+	
+	# 3. その他 → 300 + ((レベル-1)×100)
+	return 300 + ((level - 1) * 100)
+
+
+## 地形変化コスト変化スキルを持つクリーチャーがいるかチェック
+##
+## @param tile_index タイルインデックス
+## @return アーキミミック等がいるか
+func _has_land_cost_modifier(tile_index: int) -> bool:
+	if not creature_manager_ref:
+		return false
+	
+	# タイルにいるクリーチャーを取得
+	var creature_data = creature_manager_ref.get_data_ref(tile_index)
+	if creature_data.is_empty():
+		return false
+	var creature_id = creature_data.get("id", 0)
+	
+	# アーキミミック（ID:402）チェック
+	if creature_id == 402:
+		return true
+	
+	# 将来的な拡張：ability_parsedで判定
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "terrain_change_cost_modifier":
+			return true
+	
+	return false
+
+
+## 秘術使用者のいるタイルの属性を変更（マカラ等）
+func _apply_effect_change_caster_tile_element(effect: Dictionary, target_data: Dictionary) -> bool:
+	var caster_tile_index = target_data.get("caster_tile_index", -1)
+	if caster_tile_index < 0:
+		push_error("SpellLand._apply_effect_change_caster_tile_element: caster_tile_indexが未設定")
+		return false
+	
+	var new_element = effect.get("element", "")
+	if new_element.is_empty():
+		push_error("SpellLand._apply_effect_change_caster_tile_element: elementが未設定")
+		return false
+	
+	return change_element(caster_tile_index, new_element)
+
+
+## 秘術使用後に自壊
+func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -> bool:
+	# 秘術を使用したクリーチャーのタイルを取得
+	var caster_tile_index = target_data.get("caster_tile_index", -1)
+	if caster_tile_index < 0:
+		push_error("SpellLand._apply_effect_self_destruct: caster_tile_indexが未設定")
+		return false
+	
+	if not creature_manager_ref:
+		push_error("SpellLand._apply_effect_self_destruct: CreatureManagerが未設定")
+		return false
+	
+	var creature_data = creature_manager_ref.get_data_ref(caster_tile_index)
+	if creature_data.is_empty():
+		print("[秘術自壊] タイル%dにクリーチャーがいません" % caster_tile_index)
+		return false
+	
+	var creature_name = creature_data.get("name", "?")
+	
+	# クリーチャーを破壊
+	creature_manager_ref.clear_data(caster_tile_index)
+	
+	# ビジュアルも削除
+	var visual = creature_manager_ref.get_visual_node(caster_tile_index)
+	if visual:
+		visual.queue_free()
+		creature_manager_ref.set_visual_node(caster_tile_index, null)
+	
+	print("[秘術自壊] %s (タイル%d) が自壊しました" % [creature_name, caster_tile_index])
 	return true

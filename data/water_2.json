@@ -22,6 +22,12 @@
 	  "ability_parsed": {
 		"keywords": [
 		  "再生"
+		],
+		"effects": [
+		  {
+			"effect_type": "self_destruct",
+			"condition": "hp_damaged"
+		  }
 		]
 	  }
 	},
@@ -509,7 +515,14 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；不屈；秘術[G100・配置領地を水に変える]"
+	  "ability_detail": "防御型；不屈；秘術[G100・配置領地を水に変える]",
+	  "ability_parsed": {
+		"keywords": ["防御型", "不屈", "秘術"]
+	  },
+	  "mystic_arts": {
+		"cost": 100,
+		"spell_id": 9039
+	  }
 	},
 	{
 	  "id": 142,

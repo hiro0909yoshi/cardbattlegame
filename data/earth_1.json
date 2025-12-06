@@ -189,7 +189,16 @@
 			"ap": 50,
 			"hp": 60,
 			"ability": "♡付き領地で戦闘中",
-			"ability_detail": "♡付き領地で戦闘中、HP-20"
+			"ability_detail": "♡付き領地で戦闘中、HP-20",
+			"ability_parsed": {
+				"effects": [
+					{
+						"effect_type": "hp_penalty",
+						"condition": "has_mark",
+						"amount": 20
+					}
+				]
+			}
 		},
 		{
 			"id": 207,
@@ -491,7 +500,14 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "秘術",
-			"ability_detail": "秘術[G120・対象自領地を地に変える]"
+			"ability_detail": "秘術[G120・対象自領地を地に変える]",
+			"ability_parsed": {
+				"keywords": ["秘術"]
+			},
+			"mystic_arts": {
+				"cost": 120,
+				"spell_id": 9040
+			}
 		},
 		{
 			"id": 217,

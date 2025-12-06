@@ -739,7 +739,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"change_element", "change_level", "set_level", "abandon_land", "destroy_creature", \
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \
-		"align_mismatched_lands":
+		"align_mismatched_lands", "self_destruct", "change_caster_tile_element":
 			# 土地操作系効果はSpellLandに委譲
 			if game_flow_manager and game_flow_manager.spell_land:
 				var success = game_flow_manager.spell_land.apply_land_effect(effect, target_data, current_player_id)

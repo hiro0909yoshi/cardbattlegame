@@ -473,10 +473,13 @@ func calculate_terrain_change_cost(tile_index: int) -> int:
 	if not tile_nodes.has(tile_index):
 		return -1
 	
-	var tile = tile_nodes[tile_index]
-	var level = tile.level  # BaseTileには必ずlevelプロパティがある
+	# spell_landに委譲（アーキミミック、無属性タイル対応）
+	if game_flow_manager and game_flow_manager.spell_land:
+		return game_flow_manager.spell_land.calculate_terrain_change_cost(tile_index)
 	
-	# コスト = 300 + (レベル × 100)
+	# フォールバック：従来の計算
+	var tile = tile_nodes[tile_index]
+	var level = tile.level
 	return 300 + (level * 100)
 
 # === 移動処理（MovementController3Dに委譲） ===
