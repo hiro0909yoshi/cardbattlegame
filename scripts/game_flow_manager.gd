@@ -457,8 +457,13 @@ func on_card_selected(card_index: int):
 			item_phase_handler.use_item(card)
 			return
 		elif card_type == "creature":
+			# アイテムクリーチャー判定
+			var keywords = card.get("ability_parsed", {}).get("keywords", [])
+			if "アイテムクリーチャー" in keywords:
+				item_phase_handler.use_item(card)
+				return
 			# 援護スキルがある場合のみクリーチャーを使用可能
-			if item_phase_handler.has_assist_skill():
+			elif item_phase_handler.has_assist_skill():
 				var assist_elements = item_phase_handler.get_assist_target_elements()
 				var card_element = card.get("element", "")
 				# 対象属性かチェック

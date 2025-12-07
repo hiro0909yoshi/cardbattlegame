@@ -341,6 +341,9 @@
 			"ability": "アイテムクリーチャー・戦闘中AP上昇",
 			"ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+50",
 			"ability_parsed": {
+				"keywords": [
+					"アイテムクリーチャー"
+				],
 				"effects": [
 					{
 						"effect_type": "as_creature_bonus",
@@ -383,7 +386,7 @@
 						"effect_type": "revive",
 						"trigger": "on_death",
 						"revive_type": "conditional",
-						"creature_id": 438,
+						"creature_id": 439,
 						"condition": {
 							"type": "enemy_item_not_used",
 							"item_category": "武器"
@@ -435,7 +438,13 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "アイテムクリーチャー",
-			"ability_detail": "アイテムクリーチャー"
+			"ability_detail": "アイテムクリーチャー",
+			"ability_parsed": {
+				"keywords": [
+					"アイテムクリーチャー"
+				],
+				"effects": []
+			}
 		},
 		{
 			"id": 442,
@@ -449,7 +458,21 @@
 			"ap": 10,
 			"hp": 30,
 			"ability": "アイテムクリーチャー・道連れ",
-			"ability_detail": "アイテムクリーチャー；道連れ[HP20以下]"
+			"ability_detail": "アイテムクリーチャー；道連れ[HP20以下]",
+			"ability_parsed": {
+				"keywords": [
+					"アイテムクリーチャー",
+					"道連れ"
+				],
+				"effects": [
+					{
+						"effect_type": "self_destruct_with_revenge",
+						"trigger": "on_hp_threshold",
+						"hp_threshold": 20,
+						"description": "自分のHP20以下で即死＋道連れ"
+					}
+				]
+			}
 		},
 		{
 			"id": 443,

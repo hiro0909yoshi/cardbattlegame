@@ -6,6 +6,7 @@ class_name BattleSpecialEffects
 
 # スキルモジュール
 var _skill_legacy = preload("res://scripts/battle/skills/skill_legacy.gd")
+const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
@@ -305,6 +306,13 @@ func _check_instant_death_condition(condition: Dictionary, attacker: BattleParti
 			print("【即死条件】未知の条件タイプ:", condition_type)
 			return false
 
+## HP閾値での自爆＋道連れチェック（リビングボム等）
+## ダメージを受けた後に呼び出す
+func check_hp_threshold_self_destruct(damaged: BattleParticipant, opponent: BattleParticipant) -> bool:
+	# SkillItemCreatureに委譲
+	return SkillItemCreature.check_hp_threshold_self_destruct(damaged, opponent)
+
+
 ## 再生スキル処理
 func apply_regeneration(participant: BattleParticipant) -> void:
 	# 生き残っていない場合は発動しない
@@ -432,6 +440,18 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 				"instant_death":  # 道連れ
 					var target = effect.get("target", "")
 					if target == "attacker":
+						# 条件チェック（例：敵HP20以下で道連れ発動）
+						var condition = effect.get("condition", {})
+						if not condition.is_empty():
+							var condition_type = condition.get("condition_type", "")
+							if condition_type == "enemy_hp_below":
+								var threshold = condition.get("value", 0)
+								var enemy_hp = opponent.current_hp
+								if enemy_hp > threshold:
+									print("【道連れ条件未達】敵HP:", enemy_hp, " > ", threshold)
+									continue
+								print("【道連れ条件達成】敵HP:", enemy_hp, " <= ", threshold)
+						
 						var probability = effect.get("probability", 100)
 						var random_value = randf() * 100.0
 						
@@ -914,6 +934,34 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 		var target = effect.get("target", "enemy")
 		
 		match effect_type:
+			"instant_death":  # 道連れ（アイテムクリーチャーから継承）
+				if target == "attacker" and opponent.is_alive():
+					# 条件チェック（例：敵HP20以下で道連れ発動）
+					var condition = effect.get("condition", {})
+					if not condition.is_empty():
+						var condition_type = condition.get("condition_type", "")
+						if condition_type == "enemy_hp_below":
+							var threshold = condition.get("value", 0)
+							var enemy_hp = opponent.current_hp
+							if enemy_hp > threshold:
+								print("【道連れ条件未達】敵HP:", enemy_hp, " > ", threshold)
+								continue
+							print("【道連れ条件達成】敵HP:", enemy_hp, " <= ", threshold)
+					
+					var probability = effect.get("probability", 100)
+					var random_value = randf() * 100.0
+					
+					if random_value <= probability:
+						print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
+							  opponent.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
+						
+						# 相手を即死させる
+						opponent.instant_death_flag = true
+						opponent.base_hp = 0
+						result["death_revenge_activated"] = true
+					else:
+						print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+			
 			"damage_enemy":
 				# サルファバルーン: 敵にHPダメージ
 				if target == "enemy" and opponent.is_alive():

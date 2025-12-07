@@ -29,6 +29,7 @@ var selection_marker: MeshInstance3D = null
 
 # Phase 1-A: 移動先選択
 var move_source_tile: int = -1  # 移動元タイル
+var is_boulder_eater_move: bool = false  # バウダーイーター分裂移動フラグ
 var move_destinations: Array = []  # 移動可能な隣接タイル
 var current_destination_index: int = 0  # 現在選択中の移動先インデックス
 

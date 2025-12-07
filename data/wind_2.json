@@ -296,7 +296,16 @@
 	  "ap": 1,
 	  "hp": 1,
 	  "ability": "移動時配置",
-	  "ability_detail": "移動時、元の領地と移動先の両方に配置される"
+	  "ability_detail": "移動時、元の領地と移動先の両方に配置される",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "split_on_move",
+			"trigger": "on_territory_command_move",
+			"description": "領地コマンド移動時、元の領地に自分を残す"
+		  }
+		]
+	  }
 	},
 	{
 	  "id": 336,

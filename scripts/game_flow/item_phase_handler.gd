@@ -123,15 +123,20 @@ func _show_item_selection_ui():
 		# アイテムカードは常に選択可能（metal_formの場合は防具がUIでグレーアウトされる）
 		if card_type == "item":
 			selectable_cards.append(card)
-		# 援護スキルがある場合、対象クリーチャーも選択可能
-		elif card_type == "creature" and has_assist:
-			var card_element = card.get("element", "")
-			# 全属性対象の場合
-			if "all" in assist_elements:
+		elif card_type == "creature":
+			# アイテムクリーチャー判定
+			var keywords = card.get("ability_parsed", {}).get("keywords", [])
+			if "アイテムクリーチャー" in keywords:
 				selectable_cards.append(card)
-			# 特定属性のみ対象
-			elif card_element in assist_elements:
-				selectable_cards.append(card)
+			# 援護スキルがある場合、対象クリーチャーも選択可能
+			elif has_assist:
+				var card_element = card.get("element", "")
+				# 全属性対象の場合
+				if "all" in assist_elements:
+					selectable_cards.append(card)
+				# 特定属性のみ対象
+				elif card_element in assist_elements:
+					selectable_cards.append(card)
 	
 	if selectable_cards.is_empty():
 		complete_item_phase()
@@ -174,17 +179,23 @@ func use_item(item_card: Dictionary):
 	# カードタイプを判定
 	var card_type = item_card.get("type", "")
 	
-	# 援護クリーチャーの場合の追加チェック
+	# クリーチャーの場合の追加チェック
 	if card_type == "creature":
-		if not has_assist_skill():
-			return
+		# アイテムクリーチャー判定
+		var keywords = item_card.get("ability_parsed", {}).get("keywords", [])
+		var is_item_creature = "アイテムクリーチャー" in keywords
 		
-		var card_element = item_card.get("element", "")
-		var assist_elements = get_assist_target_elements()
-		
-		# 属性チェック
-		if not ("all" in assist_elements or card_element in assist_elements):
-			return
+		if not is_item_creature:
+			# 援護クリーチャーの場合
+			if not has_assist_skill():
+				return
+			
+			var card_element = item_card.get("element", "")
+			var assist_elements = get_assist_target_elements()
+			
+			# 属性チェック
+			if not ("all" in assist_elements or card_element in assist_elements):
+				return
 	
 	# コストチェック
 	if not _can_afford_card(item_card):

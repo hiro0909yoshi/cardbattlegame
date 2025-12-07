@@ -122,27 +122,41 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "item":
-		# アイテムフェーズ中: アイテムカード以外をグレーアウト＆選択不可
-		if not is_item_card:
+		# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト＆選択不可
+		var should_gray = true
+		if is_item_card:
+			should_gray = false
+		elif is_creature_card:
+			# アイテムクリーチャー判定
+			var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+			if "アイテムクリーチャー" in keywords:
+				should_gray = false
+		if should_gray:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "item_or_assist":
-		# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト＆選択不可
+		# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャー以外をグレーアウト＆選択不可
 		var should_gray_out = true
 		
 		# アイテムカードは常に選択可能
 		if is_item_card:
 			should_gray_out = false
-		# クリーチャーカードの場合、援護対象かチェック
+		# クリーチャーカードの場合
 		elif is_creature_card:
-			var assist_elements = []
-			if ui_manager and "assist_target_elements" in ui_manager:
-				assist_elements = ui_manager.assist_target_elements
-			
-			var card_element = card_data.get("element", "")
-			# 全属性対象、または属性が一致する場合
-			if "all" in assist_elements or card_element in assist_elements:
+			# アイテムクリーチャー判定
+			var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+			if "アイテムクリーチャー" in keywords:
 				should_gray_out = false
+			else:
+				# 援護対象判定
+				var assist_elements = []
+				if ui_manager and "assist_target_elements" in ui_manager:
+					assist_elements = ui_manager.assist_target_elements
+				
+				var card_element = card_data.get("element", "")
+				# 全属性対象、または属性が一致する場合
+				if "all" in assist_elements or card_element in assist_elements:
+					should_gray_out = false
 		
 		if should_gray_out:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)

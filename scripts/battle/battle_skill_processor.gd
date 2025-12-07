@@ -15,6 +15,7 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
+const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
 var board_system_ref = null
@@ -120,7 +121,14 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
 	
-	# 0. ターン数ボーナスを適用（最優先、他のスキルより前）
+	# 0. アイテムクリーチャーのクリーチャー時効果を適用
+	if SkillItemCreature.is_item_creature(participant.creature_data):
+		SkillItemCreature.apply_as_creature(participant, board_system_ref)
+	# リビングクローブをアイテムとして使用した場合（フラグで判定）
+	elif participant.creature_data.get("has_living_clove_effect", false):
+		SkillItemCreature.apply_living_clove_stat(participant, board_system_ref)
+	
+	# 0.5. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)
 	
 	# 1. 感応スキルを適用
@@ -559,41 +567,9 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			print("【種族配置数ステータス】", participant.creature_data.get("name", "?"),
 				  " AP&HP=", stat_value, " (", target_race, ":", race_count, " × ", multiplier, ")")
 		
-		# 5. 他属性カウント（リビングクローブ）
+		# 5. 他属性カウント（リビングクローブ）- SkillItemCreatureで処理済みのためスキップ
 		elif effect_type == "other_element_count":
-			var multiplier = effect.get("multiplier", 5)
-			var exclude_neutral = effect.get("exclude_neutral", true)
-			
-			# 自分の属性を取得
-			var my_element = participant.creature_data.get("element", "neutral")
-			
-			# BoardSystemから各属性のクリーチャー数を取得
-			var player_id = context.get("player_id", 0)
-			var other_count = 0
-			if board_system_ref:
-				var all_elements = ["fire", "water", "earth", "wind"]
-				if not exclude_neutral:
-					all_elements.append("neutral")
-				
-				for element in all_elements:
-					if element != my_element:
-						other_count += board_system_ref.count_creatures_by_element(player_id, element)
-			
-			var bonus = other_count * multiplier
-			
-			var stat_changes = effect.get("stat_changes", {})
-			var affects_ap = stat_changes.get("ap", true)
-			var affects_hp = stat_changes.get("hp", true)
-			
-			if affects_ap:
-				participant.temporary_bonus_ap += bonus
-				participant.current_ap += bonus
-			
-			if affects_hp:
-				participant.temporary_bonus_hp += bonus
-			
-			print("【他属性カウント】", participant.creature_data.get("name", "?"), 
-				  " ST&HP+", bonus, " (他属性:", other_count, " × ", multiplier, ")")
+			pass  # apply_skills()の先頭でSkillItemCreature.apply_as_creature()により処理済み
 		
 		# 6. 隣接自領地条件（タイガーヴェタ） - 既存の条件チェック機能を使用
 		elif effect_type == "adjacent_owned_land":

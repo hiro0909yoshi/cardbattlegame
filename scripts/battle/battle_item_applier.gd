@@ -6,6 +6,7 @@ const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const SkillAssistScript = preload("res://scripts/battle/skills/skill_assist.gd")
 const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
+const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 
 # システム参照
 var board_system_ref = null
@@ -31,11 +32,17 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		"battle_tile_index": battle_tile_index
 	}
 	
-	# 援護クリーチャーの場合はSkillAssistで処理
+	# クリーチャーの場合
 	if item_type == "creature":
-		SkillAssistScript.apply_assist_effect(participant, item_data)
-		# 援護クリーチャーのスキルは継承されないのでここで終了
-		return
+		# アイテムクリーチャー判定
+		if SkillItemCreature.is_item_creature(item_data):
+			# アイテムクリーチャーとして処理
+			SkillItemCreature.apply_as_item(participant, item_data, board_system_ref)
+			return
+		else:
+			# 援護クリーチャーとして処理
+			SkillAssistScript.apply_assist_effect(participant, item_data)
+			return
 	
 	# 以下はアイテムカードの処理
 	# effect_parsedから効果を取得（アイテムはeffect_parsedを使用）
@@ -549,3 +556,5 @@ func _grant_skill_to_participant(participant: BattleParticipant, skill_name: Str
 			# その他のスキルは BattleSkillGranter で処理
 			var granter = BattleSkillGranter.new()
 			granter.grant_skill_to_participant(participant, skill_name, effect_data)
+
+

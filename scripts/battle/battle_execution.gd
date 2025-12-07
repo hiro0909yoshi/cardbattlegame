@@ -11,6 +11,7 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 const SkillBattleEndEffects = preload("res://scripts/battle/skills/skill_battle_end_effects.gd")
+const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 
 # システム参照
 var card_system_ref = null
@@ -62,6 +63,19 @@ func determine_attack_order(attacker: BattleParticipant, defender: BattlePartici
 	print("【攻撃順】侵略側 → 防御側")
 	return [attacker, defender]
 
+## ダメージ後の共通処理（HP閾値スキルなど）
+## Returns: 両者死亡などでバトルを終了すべき場合はtrue
+func process_damage_aftermath(damaged: BattleParticipant, opponent: BattleParticipant, _special_effects) -> bool:
+	if not damaged.is_alive():
+		return false  # 既に死亡している場合はスキップ
+	
+	# HP閾値での自爆＋道連れチェック（リビングボム等）
+	if SkillItemCreature.check_hp_threshold_self_destruct(damaged, opponent):
+		return true  # 両者死亡の可能性があるため終了
+	
+	return false
+
+
 ## バトル結果を判定
 func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticipant) -> int:
 	# BattleSystem.BattleResultのenum値を返す
@@ -96,7 +110,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	# spell_magic_refを取得
 	var spell_magic_ref = special_effects.spell_magic_ref
 	
-	# 参加者の参照を保持
+	# 参加者の参照を保持（本来の侵略側/防御側）
+	var original_attacker = attack_order[0]
+	var original_defender = attack_order[1]
+	
+	# ループ用（攻撃順で入れ替わる）
 	var attacker_p = attack_order[0]
 	var defender_p = attack_order[1]
 	
@@ -213,6 +231,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						print("    - 現在HP: ", damage_breakdown_reduced["base_hp_consumed"], " 消費")
 					print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
 					
+					# ダメージ後の共通処理（HP閾値スキルなど）
+					if process_damage_aftermath(defender_p, attacker_p, special_effects):
+						break
+					
 					# 反射ダメージを攻撃側に適用
 					if reflect_result_reduced["has_reflect"] and reflect_result_reduced["reflect_damage"] > 0:
 						print("
@@ -220,6 +242,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						attacker_p.take_damage(reflect_result_reduced["reflect_damage"])
 						print("    - 攻撃側が受けた反射ダメージ: ", reflect_result_reduced["reflect_damage"])
 						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
+						
+						# 反射ダメージ後の共通処理
+						if process_damage_aftermath(attacker_p, defender_p, special_effects):
+							break
 					
 					# 軽減の場合は即死判定を行う
 					if defender_p.is_alive():
@@ -329,6 +355,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				print("    - 現在HP: ", damage_breakdown["current_hp_consumed"], " 消費")
 			print("  → 残HP: ", defender_p.current_hp, " (現在HP:", defender_p.current_hp, ")")
 			
+			# ダメージ後の共通処理（HP閾値スキルなど）
+			if process_damage_aftermath(defender_p, attacker_p, special_effects):
+				break
+			
 			# 反射ダメージを攻撃側に適用
 			if reflect_result["has_reflect"] and reflect_result["reflect_damage"] > 0:
 				print("
@@ -336,6 +366,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				attacker_p.take_damage(reflect_result["reflect_damage"])
 				print("    - 攻撃側が受けた反射ダメージ: ", reflect_result["reflect_damage"])
 				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
+				
+				# 反射ダメージ後の共通処理
+				if process_damage_aftermath(attacker_p, defender_p, special_effects):
+					break
 			
 			# 即死判定（攻撃が通った後）
 			if defender_p.is_alive():
@@ -445,20 +479,36 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		SkillMagicSteal.apply_no_item_steal(winner, winner_has_item, turn_count, spell_magic_ref, loser)
 	
 	# 🃏 生き残り時効果（カード獲得スキル）
-	if attacker_p.is_alive():
-		special_effects.check_on_survive_effects(attacker_p)
-	if defender_p.is_alive():
-		special_effects.check_on_survive_effects(defender_p)
+	if original_attacker.is_alive():
+		special_effects.check_on_survive_effects(original_attacker)
+	if original_defender.is_alive():
+		special_effects.check_on_survive_effects(original_defender)
 	
-	# 🔄 戦闘終了時効果（ルナティックヘア、スキュラ等）
+	# 🔄 戦闘終了時効果（ルナティックヘア、スキュラ、マイコロン等）
 	var battle_end_context = _build_battle_end_context(special_effects, tile_info)
-	var battle_end_result = SkillBattleEndEffects.process_all(attacker_p, defender_p, battle_end_context)
+	battle_end_context["was_attacked"] = true  # 防御側は攻撃を受けた
+	var battle_end_result = SkillBattleEndEffects.process_all(original_attacker, original_defender, battle_end_context)
 	
 	# 戦闘終了時効果による死亡を反映
 	if battle_end_result.get("attacker_died", false):
 		battle_result["attacker_died_by_battle_end"] = true
 	if battle_end_result.get("defender_died", false):
 		battle_result["defender_died_by_battle_end"] = true
+	
+	# マイコロン等のspawn処理
+	var spawn_info = battle_end_result.get("spawn_info", {})
+	if spawn_info.get("spawned", false):
+		var spawn_tile = spawn_info.get("spawn_tile_index", -1)
+		var spawn_creature = spawn_info.get("creature_data", {})
+		if spawn_tile >= 0 and not spawn_creature.is_empty():
+			SkillCreatureSpawn.spawn_mycolon_copy(
+				special_effects.board_system_ref,
+				spawn_tile,
+				spawn_creature,
+				original_defender.player_id
+			)
+			battle_result["creature_spawned"] = true
+			battle_result["spawn_tile_index"] = spawn_tile
 	
 	# 💀 戦闘後破壊呪いチェック（生き残った側に呪いがあれば破壊）
 	_check_destroy_after_battle(attacker_p, defender_p)

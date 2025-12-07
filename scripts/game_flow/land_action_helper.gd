@@ -1,6 +1,8 @@
 # LandActionHelper - アクション実行関連の処理を提供
 class_name LandActionHelper
 
+const SkillCreatureSpawn = preload("res://scripts/battle/skills/skill_creature_spawn.gd")
+
 ## レベルアップ実行（レベル選択後）
 static func execute_level_up_with_level(handler, target_level: int, cost: int) -> bool:
 	if not handler.board_system or handler.selected_tile_index == -1:
@@ -242,10 +244,14 @@ static func confirm_move(handler, dest_tile_index: int):
 	
 	var current_player_index = source_tile.owner_id
 	
-	# 1. 移動元のクリーチャーを削除し、空き地にする
-	# board_system経由で削除（スキルインデックスも更新される）
-	handler.board_system.remove_creature(handler.move_source_tile)
-	handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
+	# バウダーイーターチェック（分裂移動）
+	var is_boulder_eater = SkillCreatureSpawn.is_boulder_eater(creature_data)
+	
+	# 1. 移動元のクリーチャーを削除し、空き地にする（バウダーイーター以外）
+	if not is_boulder_eater:
+		# board_system経由で削除（スキルインデックスも更新される）
+		handler.board_system.remove_creature(handler.move_source_tile)
+		handler.board_system.set_tile_owner(handler.move_source_tile, -1)  # 空き地化
 	
 	# 2. 移動先の状況を確認
 	var dest_owner = dest_tile.owner_id
@@ -253,14 +259,27 @@ static func confirm_move(handler, dest_tile_index: int):
 	if dest_owner == -1:
 		# 空き地の場合: 土地を獲得してクリーチャー配置
 		
-		# 移動による呪い消滅
-		if creature_data.has("curse"):
-			var curse_name = creature_data["curse"].get("name", "不明")
-			creature_data.erase("curse")
-			print("[LandActionHelper] 呪い消滅（移動）: ", curse_name)
-		
-		# place_creature()を使って3Dカードも含めて正しく配置
-		dest_tile.place_creature(creature_data)
+		if is_boulder_eater:
+			# バウダーイーター: 分裂移動
+			var split_result = SkillCreatureSpawn.process_boulder_eater_split(creature_data)
+			
+			# 移動元に元のクリーチャーを残す（呪い維持、ダウン状態も維持）
+			# 移動元は既に配置済みなので何もしない（削除していないので）
+			
+			# 移動先にコピーを配置（呪い除去済み）
+			var copy_data = split_result["copy"]
+			dest_tile.place_creature(copy_data)
+			
+			print("[LandActionHelper] バウダーイーター分裂: 移動元に残留 + 移動先にコピー配置")
+		else:
+			# 通常移動: 移動による呪い消滅
+			if creature_data.has("curse"):
+				var curse_name = creature_data["curse"].get("name", "不明")
+				creature_data.erase("curse")
+				print("[LandActionHelper] 呪い消滅（移動）: ", curse_name)
+			
+			# place_creature()を使って3Dカードも含めて正しく配置
+			dest_tile.place_creature(creature_data)
 		
 		# ダウン状態設定（不屈チェック）
 		if dest_tile.has_method("set_down_state"):
@@ -326,21 +345,31 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# バトル発生
 		
-		# 移動による呪い消滅（バトル前に消す）
-		if creature_data.has("curse"):
-			var curse_name = creature_data["curse"].get("name", "不明")
-			creature_data.erase("curse")
-			print("[LandActionHelper] 呪い消滅（移動侵略）: ", curse_name)
+		# バウダーイーターの場合: 戦闘用にコピーを生成（呪い除去）
+		var battle_creature_data = creature_data
+		if is_boulder_eater:
+			var split_result = SkillCreatureSpawn.process_boulder_eater_split(creature_data)
+			battle_creature_data = split_result["copy"]  # 呪い除去済みコピーで戦闘
+			# 元の領地にはオリジナルが残る（既に削除していないので何もしない）
+			print("[LandActionHelper] バウダーイーター分裂: 元の領地に残留、コピーで戦闘")
+		else:
+			# 通常移動: 移動による呪い消滅（バトル前に消す）
+			if creature_data.has("curse"):
+				var curse_name = creature_data["curse"].get("name", "不明")
+				creature_data.erase("curse")
+				print("[LandActionHelper] 呪い消滅（移動侵略）: ", curse_name)
+			battle_creature_data = creature_data
 		
-		# 移動元情報を保存（敗北時に戻すため）
+		# 移動元情報を保存（敗北時に戻すため - バウダーイーター以外）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
+		handler.is_boulder_eater_move = is_boulder_eater  # バウダーイーターフラグを保存
 		
 		# 移動中フラグを設定（応援スキル計算から除外するため）
-		creature_data["is_moving"] = true
+		battle_creature_data["is_moving"] = true
 		
 		# バトル情報を保存
 		# 注: 領地コマンドはバトル開始前に閉じる必要があるため、ここでは閉じない
-		handler.pending_move_battle_creature_data = creature_data
+		handler.pending_move_battle_creature_data = battle_creature_data
 		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
 		handler.pending_move_attacker_item = {}
 		handler.pending_move_defender_item = {}
@@ -411,13 +440,15 @@ static func _execute_move_battle(handler):
 		handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
 	# バトル実行（移動元タイルを渡す）
+	# バウダーイーターの場合は移動元を-1にする（敗北時に戻す必要がないため）
+	var from_tile = -1 if handler.is_boulder_eater_move else handler.move_source_tile
 	await handler.board_system.battle_system.execute_3d_battle_with_data(
 		current_player_index,
 		handler.pending_move_battle_creature_data,
 		handler.pending_move_battle_tile_info,
 		handler.pending_move_attacker_item,
 		handler.pending_move_defender_item,
-		handler.move_source_tile
+		from_tile
 	)
 	
 	# バトル情報をクリア
@@ -426,6 +457,7 @@ static func _execute_move_battle(handler):
 	handler.pending_move_attacker_item = {}
 	handler.pending_move_defender_item = {}
 	handler.is_waiting_for_move_defender_item = false
+	handler.is_boulder_eater_move = false
 
 
 ## レベルアップ時の永続バフ更新

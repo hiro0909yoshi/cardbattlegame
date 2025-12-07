@@ -138,15 +138,22 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# スペルフェーズ中: スペルカードのみ選択可能
 				is_selectable = card_type == "spell"
 			elif filter_mode == "item":
-				# アイテムフェーズ中: アイテムカードのみ選択可能
-				is_selectable = card_type == "item"
+				# アイテムフェーズ中: アイテムカード、またはアイテムクリーチャーが選択可能
+				if card_type == "item":
+					is_selectable = true
+				elif card_type == "creature":
+					# アイテムクリーチャー判定
+					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+					is_selectable = "アイテムクリーチャー" in keywords
+				else:
+					is_selectable = false
 				# ブロックされたアイテムタイプをチェック
 				if is_selectable and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
 					var item_type = card_data.get("item_type", "")
 					if item_type in ui_manager_ref.blocked_item_types:
 						is_selectable = false
 			elif filter_mode == "item_or_assist":
-				# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャーが選択可能
+				# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャーが選択可能
 				if card_type == "item":
 					is_selectable = true
 					# ブロックされたアイテムタイプをチェック
@@ -155,13 +162,19 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						if item_type in ui_manager_ref.blocked_item_types:
 							is_selectable = false
 				elif card_type == "creature":
-					var assist_elements = []
-					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
-						assist_elements = ui_manager_ref.assist_target_elements
-					
-					var card_element = card_data.get("element", "")
-					# 全属性対象、または属性が一致する場合
-					is_selectable = ("all" in assist_elements) or (card_element in assist_elements)
+					# アイテムクリーチャー判定
+					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+					if "アイテムクリーチャー" in keywords:
+						is_selectable = true
+					else:
+						# 援護対象判定
+						var assist_elements = []
+						if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
+							assist_elements = ui_manager_ref.assist_target_elements
+						
+						var card_element = card_data.get("element", "")
+						# 全属性対象、または属性が一致する場合
+						is_selectable = ("all" in assist_elements) or (card_element in assist_elements)
 				else:
 					is_selectable = false
 			elif filter_mode == "battle":
@@ -227,8 +240,15 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "item":
-				# アイテムフェーズ中: アイテムカード以外をグレーアウト
-				var should_gray = card_type != "item"
+				# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト
+				var should_gray = true
+				if card_type == "item":
+					should_gray = false
+				elif card_type == "creature":
+					# アイテムクリーチャー判定
+					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+					if "アイテムクリーチャー" in keywords:
+						should_gray = false
 				# ブロックされたアイテムタイプもグレーアウト
 				if not should_gray and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
 					var item_type = card_data.get("item_type", "")
@@ -239,7 +259,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "item_or_assist":
-				# アイテムフェーズ（援護あり）: アイテムカードと援護対象クリーチャー以外をグレーアウト
+				# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャー以外をグレーアウト
 				var should_gray_out = true
 				
 				if card_type == "item":
@@ -250,13 +270,19 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						if item_type in ui_manager_ref.blocked_item_types:
 							should_gray_out = true
 				elif card_type == "creature":
-					var assist_elements = []
-					if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
-						assist_elements = ui_manager_ref.assist_target_elements
-					
-					var card_element = card_data.get("element", "")
-					if ("all" in assist_elements) or (card_element in assist_elements):
+					# アイテムクリーチャー判定
+					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+					if "アイテムクリーチャー" in keywords:
 						should_gray_out = false
+					else:
+						# 援護対象判定
+						var assist_elements = []
+						if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
+							assist_elements = ui_manager_ref.assist_target_elements
+						
+						var card_element = card_data.get("element", "")
+						if ("all" in assist_elements) or (card_element in assist_elements):
+							should_gray_out = false
 				
 				if should_gray_out:
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)

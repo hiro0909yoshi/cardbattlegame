@@ -493,11 +493,14 @@
 		],
 		"effects": [
 		  {
-			"effect_type": "spawn_creature",
+			"effect_type": "spawn_copy_on_defend_survive",
 			"trigger": "on_battle_end",
-			"condition": "was_attacked",
-			"creature_id": 140,
-			"target": "random_empty_land"
+			"target": "random_empty_tile",
+			"inherit": {
+			  "base_up": true,
+			  "current_hp": true,
+			  "curse": false
+			}
 		  }
 		]
 	  }

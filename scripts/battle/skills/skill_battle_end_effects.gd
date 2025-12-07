@@ -8,10 +8,13 @@
 ## - スキュラ (ID: 124): 敵に呪い"通行料無効"
 ## - サムハイン (ID: 317): 敵のMHP-基本AP（未実装）
 ## - レーシィ (ID: 245): 戦闘地レベル+1（未実装）
+## - マイコロン (ID: 140): 敵攻撃で生き残った後、ランダム空地にコピー配置
 ##
-## @version 1.0
+## @version 1.1
 
 class_name SkillBattleEndEffects
+
+const SkillCreatureSpawn = preload("res://scripts/battle/skills/skill_creature_spawn.gd")
 
 
 # =============================================================================
@@ -21,12 +24,13 @@ class_name SkillBattleEndEffects
 ## 両者の戦闘終了時効果を処理
 ## @param attacker 攻撃側BattleParticipant
 ## @param defender 防御側BattleParticipant
-## @param context 戦闘コンテキスト {board_system, tile_info, spell_world_curse}
-## @return Dictionary {attacker_died: bool, defender_died: bool}
+## @param context 戦闘コンテキスト {board_system, tile_info, spell_world_curse, was_attacked}
+## @return Dictionary {attacker_died: bool, defender_died: bool, spawn_info: Dictionary}
 static func process_all(attacker, defender, context: Dictionary = {}) -> Dictionary:
 	var result = {
 		"attacker_died": false,
-		"defender_died": false
+		"defender_died": false,
+		"spawn_info": {}  # マイコロン等のspawn情報
 	}
 	
 	# ナチュラルワールド無効化チェック
@@ -46,6 +50,23 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 		var defender_result = _process_effects(defender, attacker, context)
 		if defender_result.get("target_died", false):
 			result["attacker_died"] = true
+	
+	# マイコロン: 防御側が敵攻撃で生き残った場合のspawn処理
+	var board_system = context.get("board_system")
+	var tile_info = context.get("tile_info", {})
+	var defender_tile_index = tile_info.get("index", -1)
+	var was_attacked = context.get("was_attacked", false)
+	
+	if defender and defender.is_alive() and was_attacked:
+		var spawn_result = SkillCreatureSpawn.check_mycolon_spawn(
+			defender.creature_data,
+			defender_tile_index,
+			was_attacked,
+			board_system,
+			defender.player_id
+		)
+		if spawn_result.get("spawned", false):
+			result["spawn_info"] = spawn_result
 	
 	return result
 
