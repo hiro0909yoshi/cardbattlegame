@@ -154,8 +154,8 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 		if not tile:
 			continue
 		
-		# 特殊マスは除外
-		if tile.tile_type in ["checkpoint", "warp"]:
+		# 配置不可タイルは除外（クリーチャー移動）
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
 		# 敵領地のみ（自領地や空地は除外）
@@ -207,8 +207,8 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 		if tile_index == from_tile_index:
 			continue
 		var tile = board_system_ref.tile_nodes.get(tile_index)
-		if tile and tile.tile_type in ["checkpoint", "warp"]:
-			continue  # 止まれないマスは除外
+		if tile and not TileHelper.is_placeable_tile(tile):
+			continue  # 配置不可タイルは除外（クリーチャー移動）
 		# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if not _can_invade_tile(tile_index, current_player_id):
@@ -252,12 +252,12 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 			queue.append(neighbor)
 	
 	# ちょうどexact_stepsマス先のタイルのみを返す
-	# ただし、チェックポイント・ワープには止まれない
+	# ただし、停止不可マスには止まれない
 	for tile_index in visited.keys():
 		if visited[tile_index] == exact_steps:
 			var tile = board_system_ref.tile_nodes.get(tile_index)
-			if tile and tile.tile_type in ["checkpoint", "warp"]:
-				continue  # 止まれないマスは除外
+			if tile and not TileHelper.is_placeable_tile(tile):
+				continue  # 配置不可タイルは除外（クリーチャー移動）
 			# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
 			if tile.owner_id != -1 and tile.owner_id != current_player_id:
 				if not _can_invade_tile(tile_index, current_player_id):

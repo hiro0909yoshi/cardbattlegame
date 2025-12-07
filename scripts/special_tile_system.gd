@@ -104,9 +104,9 @@ func is_warp_gate(tile_index: int) -> bool:
 func get_warp_pair(tile_index: int) -> int:
 	return warp_pairs.get(tile_index, -1)
 
-# タイルが特殊マスかチェック
+# タイルが特殊マスかチェック（TileHelperに委譲）
 func is_special_tile_3d(tile_type: String) -> bool:
-	return tile_type in ["start", "checkpoint", "warp", "card", "neutral"]
+	return TileHelper.is_special_type(tile_type)
 
 # 無属性マスかチェック（連鎖計算用）
 func is_neutral_tile(tile_type: String) -> bool:

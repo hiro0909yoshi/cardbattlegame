@@ -6,6 +6,7 @@ class_name TileDataManager
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # タイルノード管理
 var tile_nodes = {}  # tile_index -> BaseTile
@@ -40,7 +41,7 @@ func get_tile_info(tile_index: int) -> Dictionary:
 	return {
 		"index": tile_index,
 		"type": get_tile_type(tile.tile_type),
-		"element": tile.tile_type if tile.tile_type in ["fire", "water", "wind", "earth", "neutral"] else "",
+		"element": tile.tile_type if TileHelper.has_land_effect_type(tile.tile_type) else "",
 		"owner": tile.owner_id,
 		"level": tile.level,
 		"creature": tile.creature_data,
@@ -56,9 +57,9 @@ func get_tile_type(tile_type_str: String) -> int:
 		"warp", "card", "neutral": return 3
 		_: return 0
 
-# 特殊タイルかチェック
+# 特殊タイルかチェック（TileHelperに委譲）
 func is_special_tile_type(tile_type: String) -> bool:
-	return tile_type in ["warp", "card", "checkpoint", "neutral", "start"]
+	return TileHelper.is_special_type(tile_type)
 
 # タイルが存在するかチェック
 func has_tile(tile_index: int) -> bool:
@@ -217,7 +218,7 @@ func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	var target_element = tile_nodes[tile_index].tile_type
 	
 	# 属性タイルでない場合は連鎖なし
-	if target_element == "" or not target_element in ["fire", "water", "wind", "earth"]:
+	if target_element == "" or not TileHelper.is_element_type(target_element):
 		return 1.0
 	
 	var same_element_count = get_element_chain_count(tile_index, owner_id)
@@ -280,7 +281,7 @@ func get_owner_element_counts(owner_id: int) -> Dictionary:
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
-			if tile.tile_type in ["fire", "water", "wind", "earth"]:
+			if TileHelper.is_element_type(tile.tile_type):
 				counts[tile.tile_type] += 1
 			else:
 				counts["other"] += 1

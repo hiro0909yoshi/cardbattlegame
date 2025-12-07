@@ -91,119 +91,119 @@ var difficulty_level: int  # 1-10
 
 ## 行動を評価してスコアを返す
 func evaluate_action(action: Dictionary, game_state: Dictionary) -> float:
-    var score = 0.0
-    
-    # Level 1: 基本評価（全CPUが使用）
-    score += evaluate_basic_value(action)
-    
-    # Level 3+: テンポ評価（効率性）
-    if difficulty_level >= 3:
-        score += evaluate_tempo(action, game_state)
-    
-    # Level 5+: シナジー評価
-    if difficulty_level >= 5:
-        score += evaluate_synergy(action, game_state)
-    
-    # Level 7+: 先読み評価
-    if difficulty_level >= 7:
-        score += evaluate_future_turns(action, game_state)
-    
-    # デッキプロファイルによる補正
-    score *= get_archetype_multiplier(action)
-    
-    # ランダム要素（低難易度ほど大きい）
-    var random_factor = (10 - difficulty_level) * 0.05
-    score += randf_range(-random_factor, random_factor) * score
-    
-    return score
+	var score = 0.0
+	
+	# Level 1: 基本評価（全CPUが使用）
+	score += evaluate_basic_value(action)
+	
+	# Level 3+: テンポ評価（効率性）
+	if difficulty_level >= 3:
+		score += evaluate_tempo(action, game_state)
+	
+	# Level 5+: シナジー評価
+	if difficulty_level >= 5:
+		score += evaluate_synergy(action, game_state)
+	
+	# Level 7+: 先読み評価
+	if difficulty_level >= 7:
+		score += evaluate_future_turns(action, game_state)
+	
+	# デッキプロファイルによる補正
+	score *= get_archetype_multiplier(action)
+	
+	# ランダム要素（低難易度ほど大きい）
+	var random_factor = (10 - difficulty_level) * 0.05
+	score += randf_range(-random_factor, random_factor) * score
+	
+	return score
 
 ## 最良の行動を選択
 func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
-    var best_action = null
-    var best_score = -INF
-    
-    for action in actions:
-        var score = evaluate_action(action, game_state)
-        
-        # デバッグログ
-        if OS.is_debug_build():
-            print("[AI] ", action.type, ": score=", score)
-        
-        if score > best_score:
-            best_score = score
-            best_action = action
-    
-    return best_action
+	var best_action = null
+	var best_score = -INF
+	
+	for action in actions:
+		var score = evaluate_action(action, game_state)
+		
+		# デバッグログ
+		if OS.is_debug_build():
+			print("[AI] ", action.type, ": score=", score)
+		
+		if score > best_score:
+			best_score = score
+			best_action = action
+	
+	return best_action
 ```
 
 ### Level 1: 基本評価
 
 ```gdscript
 func evaluate_basic_value(action: Dictionary) -> float:
-    var score = 0.0
-    
-    match action.type:
-        "summon":
-            var creature = action.creature
-            var cost = action.cost
-            
-            # クリーチャーの基本価値
-            score += creature.ap * 1.0
-            score += creature.hp * 0.5
-            
-            # コストはマイナス要素
-            score -= cost * 0.3
-            
-        "invade":
-            var my_creature = action.my_creature
-            var enemy_creature = action.enemy_creature
-            
-            # 勝てるなら高評価
-            if my_creature.ap > enemy_creature.hp:
-                score += 50.0
-                
-                # 生き残れるならさらに高評価
-                if my_creature.hp > enemy_creature.ap:
-                    score += 30.0
-            else:
-                score -= 100.0  # 負けるなら低評価
-        
-        "level_up":
-            # 土地レベル上昇の価値
-            score += action.current_level * 10.0
-        
-        "use_spell":
-            # スペルの基本価値
-            score += 30.0  # 仮の値
-    
-    return score
+	var score = 0.0
+	
+	match action.type:
+		"summon":
+			var creature = action.creature
+			var cost = action.cost
+			
+			# クリーチャーの基本価値
+			score += creature.ap * 1.0
+			score += creature.hp * 0.5
+			
+			# コストはマイナス要素
+			score -= cost * 0.3
+			
+		"invade":
+			var my_creature = action.my_creature
+			var enemy_creature = action.enemy_creature
+			
+			# 勝てるなら高評価
+			if my_creature.ap > enemy_creature.hp:
+				score += 50.0
+				
+				# 生き残れるならさらに高評価
+				if my_creature.hp > enemy_creature.ap:
+					score += 30.0
+			else:
+				score -= 100.0  # 負けるなら低評価
+		
+		"level_up":
+			# 土地レベル上昇の価値
+			score += action.current_level * 10.0
+		
+		"use_spell":
+			# スペルの基本価値
+			score += 30.0  # 仮の値
+	
+	return score
 ```
 
 ### Level 3: テンポ評価
 
 ```gdscript
 func evaluate_tempo(action: Dictionary, game_state: Dictionary) -> float:
-    var score = 0.0
-    
-    match action.type:
-        "summon":
-            var cost = action.cost
-            var my_magic = game_state.my_magic
-            
-            # 魔力効率
-            var efficiency = action.creature.ap / max(cost, 1)
-            score += efficiency * 10.0
-            
-            # 魔力を使い切らない方が良い
-            if my_magic - cost > 30:
-                score += 10.0
-        
-        "invade":
-            # 土地を奪えるなら高評価
-            if action.tile_owner != game_state.my_id:
-                score += 40.0
-    
-    return score
+	var score = 0.0
+	
+	match action.type:
+		"summon":
+			var cost = action.cost
+			var my_magic = game_state.my_magic
+			
+			# 魔力効率
+			var efficiency = action.creature.ap / max(cost, 1)
+			score += efficiency * 10.0
+			
+			# 魔力を使い切らない方が良い
+			if my_magic - cost > 30:
+				score += 10.0
+		
+		"invade":
+			# 土地を奪えるなら高評価
+			if action.tile_owner != game_state.my_id:
+				score += 40.0
+	
+	return score
 ```
 
 ---
@@ -220,32 +220,32 @@ func evaluate_tempo(action: Dictionary, game_state: Dictionary) -> float:
   "name": "炎速攻",
   "archetype": "aggro",
   "profile": {
-    "aggression": 0.8,
-    "resource_management": 0.3,
-    "combo_seeking": 0.4
+	"aggression": 0.8,
+	"resource_management": 0.3,
+	"combo_seeking": 0.4
   },
   "synergy_rules": [
-    {
-      "name": "武器+先制",
-      "item_type": "weapon",
-      "creature_keywords": ["先制"],
-      "bonus": 30.0,
-      "reason": "先制で確実にダメージ"
-    },
-    {
-      "name": "防具+低HP",
-      "item_type": "armor",
-      "creature_condition": "hp < 30",
-      "bonus": 25.0
-    }
+	{
+	  "name": "武器+先制",
+	  "item_type": "weapon",
+	  "creature_keywords": ["先制"],
+	  "bonus": 30.0,
+	  "reason": "先制で確実にダメージ"
+	},
+	{
+	  "name": "防具+低HP",
+	  "item_type": "armor",
+	  "creature_condition": "hp < 30",
+	  "bonus": 25.0
+	}
   ],
   "special_items": [
-    {
-      "item_id": 1030,
-      "name": "ソウルレイ",
-      "bonus_multiplier": 1.3,
-      "reason": "手札に戻るので積極的に使う"
-    }
+	{
+	  "item_id": 1030,
+	  "name": "ソウルレイ",
+	  "bonus_multiplier": 1.3,
+	  "reason": "手札に戻るので積極的に使う"
+	}
   ]
 }
 ```
@@ -254,97 +254,97 @@ func evaluate_tempo(action: Dictionary, game_state: Dictionary) -> float:
 
 ```gdscript
 func evaluate_synergy(action: Dictionary, game_state: Dictionary) -> float:
-    var score = 0.0
-    
-    if action.type != "use_item":
-        return 0.0
-    
-    var item = action.item
-    var creature = action.creature
-    
-    # カテゴリルールチェック
-    for rule in deck_profile.synergy_rules:
-        if matches_synergy_rule(item, creature, rule):
-            score += rule.bonus
-            if OS.is_debug_build():
-                print("[シナジー] ", rule.name, " +", rule.bonus)
-    
-    # 特殊アイテムチェック
-    for special in deck_profile.special_items:
-        if item.id == special.item_id:
-            score *= special.bonus_multiplier
-            if OS.is_debug_build():
-                print("[特殊] ", special.name, " x", special.bonus_multiplier)
-    
-    return score
+	var score = 0.0
+	
+	if action.type != "use_item":
+		return 0.0
+	
+	var item = action.item
+	var creature = action.creature
+	
+	# カテゴリルールチェック
+	for rule in deck_profile.synergy_rules:
+		if matches_synergy_rule(item, creature, rule):
+			score += rule.bonus
+			if OS.is_debug_build():
+				print("[シナジー] ", rule.name, " +", rule.bonus)
+	
+	# 特殊アイテムチェック
+	for special in deck_profile.special_items:
+		if item.id == special.item_id:
+			score *= special.bonus_multiplier
+			if OS.is_debug_build():
+				print("[特殊] ", special.name, " x", special.bonus_multiplier)
+	
+	return score
 
 func matches_synergy_rule(item: Dictionary, creature: Dictionary, rule: Dictionary) -> bool:
-    # アイテムタイプチェック
-    if rule.has("item_type"):
-        if item.type != rule.item_type:
-            return false
-    
-    # クリーチャーキーワードチェック
-    if rule.has("creature_keywords"):
-        var keywords = creature.get("ability_parsed", {}).get("keywords", [])
-        var has_keyword = false
-        for kw in rule.creature_keywords:
-            if kw in keywords:
-                has_keyword = true
-                break
-        if not has_keyword:
-            return false
-    
-    # 条件チェック
-    if rule.has("creature_condition"):
-        if not evaluate_simple_condition(rule.creature_condition, creature):
-            return false
-    
-    return true
+	# アイテムタイプチェック
+	if rule.has("item_type"):
+		if item.type != rule.item_type:
+			return false
+	
+	# クリーチャーキーワードチェック
+	if rule.has("creature_keywords"):
+		var keywords = creature.get("ability_parsed", {}).get("keywords", [])
+		var has_keyword = false
+		for kw in rule.creature_keywords:
+			if kw in keywords:
+				has_keyword = true
+				break
+		if not has_keyword:
+			return false
+	
+	# 条件チェック
+	if rule.has("creature_condition"):
+		if not evaluate_simple_condition(rule.creature_condition, creature):
+			return false
+	
+	return true
 
 func evaluate_simple_condition(condition: String, creature: Dictionary) -> bool:
-    # 簡易的な条件評価
-    # 例: "hp < 30" → creature.hp < 30
-    if condition.contains("<"):
-        var parts = condition.split("<")
-        var stat = parts[0].strip_edges()
-        var value = int(parts[1].strip_edges())
-        return creature.get(stat, 0) < value
-    
-    return true
+	# 簡易的な条件評価
+	# 例: "hp < 30" → creature.hp < 30
+	if condition.contains("<"):
+		var parts = condition.split("<")
+		var stat = parts[0].strip_edges()
+		var value = int(parts[1].strip_edges())
+		return creature.get(stat, 0) < value
+	
+	return true
 ```
 
 ### 自然に評価されるシナジー（90%のケース）
 
 ```gdscript
 func evaluate_item_on_creature(item: Dictionary, creature: Dictionary, battle: Dictionary) -> float:
-    var score = 0.0
-    
-    # 戦闘シミュレーション
-    var my_ap = creature.ap + item.get("ap_bonus", 0)
-    var my_hp = creature.hp + item.get("hp_bonus", 0)
-    var enemy_ap = battle.enemy.ap
-    var enemy_hp = battle.enemy.hp
-    
-    # 勝てるようになる？（最重要）
-    var can_win_without = creature.ap > enemy_hp
-    var can_win_with = my_ap > enemy_hp
-    
-    if can_win_with and not can_win_without:
-        score += 100.0  # 勝てるようになるなら超重要
-    
-    # 生き残れるようになる？
-    var survives_without = creature.hp > enemy_ap
-    var survives_with = my_hp > enemy_ap
-    
-    if survives_with and not survives_without:
-        score += 80.0  # 生き残れるなら重要
-    
-    # すでに勝てる場合は無駄遣い
-    if can_win_without and survives_without:
-        score -= 30.0
-    
-    return score
+	var score = 0.0
+	
+	# 戦闘シミュレーション
+	var my_ap = creature.ap + item.get("ap_bonus", 0)
+	var my_hp = creature.hp + item.get("hp_bonus", 0)
+	var enemy_ap = battle.enemy.ap
+	var enemy_hp = battle.enemy.hp
+	
+	# 勝てるようになる？（最重要）
+	var can_win_without = creature.ap > enemy_hp
+	var can_win_with = my_ap > enemy_hp
+	
+	if can_win_with and not can_win_without:
+		score += 100.0  # 勝てるようになるなら超重要
+	
+	# 生き残れるようになる？
+	var survives_without = creature.hp > enemy_ap
+	var survives_with = my_hp > enemy_ap
+	
+	if survives_with and not survives_without:
+		score += 80.0  # 生き残れるなら重要
+	
+	# すでに勝てる場合は無駄遣い
+	if can_win_without and survives_without:
+		score -= 30.0
+	
+	return score
 ```
 
 **このシンプルな評価だけで90%のケースは正しく判断できる**
@@ -357,82 +357,82 @@ func evaluate_item_on_creature(item: Dictionary, creature: Dictionary, battle: D
 
 ```gdscript
 func should_invade_level1(my_creature: Dictionary, enemy_creature: Dictionary) -> bool:
-    # 今の戦闘だけ見る
-    return my_creature.ap > enemy_creature.hp
+	# 今の戦闘だけ見る
+	return my_creature.ap > enemy_creature.hp
 ```
 
 ### Level 2: 1ターン先読み（相手の反撃を考える）
 
 ```gdscript
 func should_invade_level2(my_creature: Dictionary, enemy_creature: Dictionary) -> bool:
-    # 勝てるか？
-    if my_creature.ap <= enemy_creature.hp:
-        return false
-    
-    # 相手の反撃で生き残れるか？
-    var my_hp_after = my_creature.hp - enemy_creature.ap
-    if my_hp_after <= 0:
-        return false  # 相打ちは避ける
-    
-    return true
+	# 勝てるか？
+	if my_creature.ap <= enemy_creature.hp:
+		return false
+	
+	# 相手の反撃で生き残れるか？
+	var my_hp_after = my_creature.hp - enemy_creature.ap
+	if my_hp_after <= 0:
+		return false  # 相打ちは避ける
+	
+	return true
 ```
 
 ### Level 3: 2ターン先読み（簡易版）
 
 ```gdscript
 func evaluate_invasion_with_lookahead(my_creature: Dictionary, tile_index: int, game_state: Dictionary) -> float:
-    var score = 0.0
-    
-    # 1. この戦闘に勝てるか？
-    var battle_result = simulate_battle(my_creature, game_state.enemy_creature)
-    if not battle_result.i_win:
-        return -100.0  # 負けるなら大幅マイナス
-    
-    # 2. 勝った後、次のターン敵が侵略してきたら？
-    if battle_result.i_survive:
-        var my_hp_after = battle_result.my_remaining_hp
-        
-        # 敵の手札から最強クリーチャーを推測
-        var estimated_enemy_best = estimate_enemy_strength(game_state)
-        
-        # そのクリーチャーで攻められたら耐えられる？
-        if my_hp_after > estimated_enemy_best.ap:
-            score += 30.0  # 耐えられるなら高評価
-        else:
-            score -= 20.0  # すぐやられるなら低評価
-    
-    return score
+	var score = 0.0
+	
+	# 1. この戦闘に勝てるか？
+	var battle_result = simulate_battle(my_creature, game_state.enemy_creature)
+	if not battle_result.i_win:
+		return -100.0  # 負けるなら大幅マイナス
+	
+	# 2. 勝った後、次のターン敵が侵略してきたら？
+	if battle_result.i_survive:
+		var my_hp_after = battle_result.my_remaining_hp
+		
+		# 敵の手札から最強クリーチャーを推測
+		var estimated_enemy_best = estimate_enemy_strength(game_state)
+		
+		# そのクリーチャーで攻められたら耐えられる？
+		if my_hp_after > estimated_enemy_best.ap:
+			score += 30.0  # 耐えられるなら高評価
+		else:
+			score -= 20.0  # すぐやられるなら低評価
+	
+	return score
 
 func estimate_enemy_strength(game_state: Dictionary) -> Dictionary:
-    # 簡易版：敵の魔力から推測
-    var enemy_magic = game_state.enemy_magic
-    
-    if enemy_magic >= 50:
-        return {"ap": 40, "hp": 40}  # 強いの出せる
-    elif enemy_magic >= 30:
-        return {"ap": 30, "hp": 30}  # 中程度
-    else:
-        return {"ap": 20, "hp": 20}  # 弱い
+	# 簡易版：敵の魔力から推測
+	var enemy_magic = game_state.enemy_magic
+	
+	if enemy_magic >= 50:
+		return {"ap": 40, "hp": 40}  # 強いの出せる
+	elif enemy_magic >= 30:
+		return {"ap": 30, "hp": 30}  # 中程度
+	else:
+		return {"ap": 20, "hp": 20}  # 弱い
 
 func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
-    var attacker_hp = attacker.hp
-    var defender_hp = defender.hp
-    
-    # 先制攻撃
-    if has_first_strike(attacker):
-        defender_hp -= attacker.ap
-        if defender_hp <= 0:
-            return {"i_win": true, "i_survive": true, "my_remaining_hp": attacker_hp}
-    
-    # 攻撃
-    defender_hp -= attacker.ap
-    attacker_hp -= defender.ap
-    
-    return {
-        "i_win": defender_hp <= 0,
-        "i_survive": attacker_hp > 0,
-        "my_remaining_hp": attacker_hp
-    }
+	var attacker_hp = attacker.hp
+	var defender_hp = defender.hp
+	
+	# 先制攻撃
+	if has_first_strike(attacker):
+		defender_hp -= attacker.ap
+		if defender_hp <= 0:
+			return {"i_win": true, "i_survive": true, "my_remaining_hp": attacker_hp}
+	
+	# 攻撃
+	defender_hp -= attacker.ap
+	attacker_hp -= defender.ap
+	
+	return {
+		"i_win": defender_hp <= 0,
+		"i_survive": attacker_hp > 0,
+		"my_remaining_hp": attacker_hp
+	}
 ```
 
 ---
@@ -446,15 +446,15 @@ func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
   "difficulty": 1,
   "name": "とても簡単",
   "profile": {
-    "aggression": 0.5,
-    "resource_management": 0.3,
-    "random_factor": 0.3
+	"aggression": 0.5,
+	"resource_management": 0.3,
+	"random_factor": 0.3
   },
   "features": {
-    "basic_evaluation": true,
-    "tempo_evaluation": false,
-    "synergy_evaluation": false,
-    "lookahead": 0
+	"basic_evaluation": true,
+	"tempo_evaluation": false,
+	"synergy_evaluation": false,
+	"lookahead": 0
   }
 }
 ```
@@ -471,18 +471,18 @@ func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
   "difficulty": 5,
   "name": "普通",
   "profile": {
-    "aggression": 0.7,
-    "resource_management": 0.5,
-    "random_factor": 0.1
+	"aggression": 0.7,
+	"resource_management": 0.5,
+	"random_factor": 0.1
   },
   "features": {
-    "basic_evaluation": true,
-    "tempo_evaluation": true,
-    "synergy_evaluation": true,
-    "lookahead": 1
+	"basic_evaluation": true,
+	"tempo_evaluation": true,
+	"synergy_evaluation": true,
+	"lookahead": 1
   },
   "synergy_rules": [
-    {"item_type": "weapon", "creature_keywords": ["先制"], "bonus": 30}
+	{"item_type": "weapon", "creature_keywords": ["先制"], "bonus": 30}
   ]
 }
 ```
@@ -500,21 +500,21 @@ func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
   "difficulty": 8,
   "name": "難しい",
   "profile": {
-    "aggression": 0.8,
-    "resource_management": 0.7,
-    "random_factor": 0.0
+	"aggression": 0.8,
+	"resource_management": 0.7,
+	"random_factor": 0.0
   },
   "features": {
-    "basic_evaluation": true,
-    "tempo_evaluation": true,
-    "synergy_evaluation": true,
-    "lookahead": 2,
-    "predict_opponent": true
+	"basic_evaluation": true,
+	"tempo_evaluation": true,
+	"synergy_evaluation": true,
+	"lookahead": 2,
+	"predict_opponent": true
   },
   "synergy_rules": [
-    {"item_type": "weapon", "creature_keywords": ["先制"], "bonus": 30},
-    {"item_type": "armor", "creature_condition": "hp < 30", "bonus": 25},
-    {"item_id": 1030, "bonus_multiplier": 1.3}
+	{"item_type": "weapon", "creature_keywords": ["先制"], "bonus": 30},
+	{"item_type": "armor", "creature_condition": "hp < 30", "bonus": 25},
+	{"item_id": 1030, "bonus_multiplier": 1.3}
   ]
 }
 ```
@@ -600,15 +600,15 @@ func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
 
 ```gdscript
 func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
-    print("\n=== AI思考開始 ===")
-    print("難易度: Level ", difficulty_level)
-    print("選択肢: ", actions.size(), "個")
-    
-    for action in actions:
-        var score = evaluate_action(action, game_state)
-        print("  - ", action.type, " (", action.get("name", ""), "): ", score)
-    
-    # ...
+	print("\n=== AI思考開始 ===")
+	print("難易度: Level ", difficulty_level)
+	print("選択肢: ", actions.size(), "個")
+	
+	for action in actions:
+		var score = evaluate_action(action, game_state)
+		print("  - ", action.type, " (", action.get("name", ""), "): ", score)
+	
+	# ...
 ```
 
 ### 調整用パラメータファイル
@@ -617,12 +617,12 @@ func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
 // data/ai_tuning.json
 {
   "weights": {
-    "creature_ap": 1.0,
-    "creature_hp": 0.5,
-    "cost_penalty": 0.3,
-    "win_bonus": 100.0,
-    "survive_bonus": 80.0,
-    "synergy_bonus": 30.0
+	"creature_ap": 1.0,
+	"creature_hp": 0.5,
+	"cost_penalty": 0.3,
+	"win_bonus": 100.0,
+	"survive_bonus": 80.0,
+	"synergy_bonus": 30.0
   }
 }
 ```

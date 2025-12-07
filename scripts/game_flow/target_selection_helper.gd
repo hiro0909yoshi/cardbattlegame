@@ -2,6 +2,8 @@
 # 土地、クリーチャー、プレイヤーなど、あらゆる対象の選択に使用可能
 class_name TargetSelectionHelper
 
+const TileHelper = preload("res://scripts/tile_helper.gd")
+
 # ============================================
 # 選択マーカーシステム
 # ============================================
@@ -501,9 +503,9 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						# クリーチャーがいない土地のみ対象
 						if not creature.is_empty():
 							continue
-						# 特殊タイル（warp, card, checkpoint, start）は配置不可
+						# 特殊タイル（配置不可）は除外
 						var tile = handler.board_system.tile_nodes.get(tile_index)
-						if tile and tile.tile_type in ["warp", "card", "checkpoint", "start"]:
+						if tile and TileHelper.is_special_tile(tile):
 							continue
 						# 空き地の場合は所有者フィルターをスキップ
 					elif has_distance_filter:

@@ -17,8 +17,8 @@ func get_empty_tiles(board_system: BoardSystem3D) -> Array:
 	
 	for tile_index in tile_indices:
 		var tile = board_system.tile_nodes[tile_index]
-		# 特殊タイル（warp, card, checkpoint, start）は配置不可
-		if tile.tile_type in ["warp", "card", "checkpoint", "start"]:
+		# 配置不可タイルは除外
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		# クリーチャーがいない土地のみ
 		if tile.creature_data.is_empty():
@@ -156,9 +156,9 @@ func place_creature_conditional(
 		print("[警告] タイルが見つかりません: ", current_tile)
 		return false
 	
-	# 特殊タイルは配置不可
-	if tile.tile_type in ["warp", "card", "checkpoint", "start"]:
-		print("[条件判定] 失敗 - タイル%dは特殊タイルです" % current_tile)
+	# 配置不可タイルチェック
+	if not TileHelper.is_placeable_tile(tile):
+		print("[条件判定] 失敗 - タイル%dは配置不可タイルです" % current_tile)
 		return false
 	
 	# 所有者がいる土地は配置不可
@@ -210,8 +210,8 @@ func place_creature_adjacent(
 		var tile = board_system.tile_nodes.get(adj_tile)
 		if not tile:
 			continue
-		# 特殊タイル（warp, card, checkpoint, start）は配置不可
-		if tile.tile_type in ["warp", "card", "checkpoint", "start"]:
+		# 配置不可タイルは除外
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		# クリーチャーがいない土地のみ
 		if tile.creature_data.is_empty():

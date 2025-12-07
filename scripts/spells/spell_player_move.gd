@@ -41,8 +41,8 @@ func warp_to_nearest_vacant(player_id: int) -> Dictionary:
 		var tile = board_system.tile_nodes.get(tile_index)
 		if not tile:
 			return false
-		# 特殊タイルは除外
-		if tile.tile_type in ["checkpoint", "warp", "card", "start"]:
+		# 特殊タイル（配置不可）は除外
+		if TileHelper.is_special_tile(tile):
 			return false
 		# クリーチャーがいる土地は除外
 		var creature_data = BaseTile.creature_manager.get_data_ref(tile_index)

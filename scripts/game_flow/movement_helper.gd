@@ -1,6 +1,8 @@
 # MovementHelper - クリーチャー移動の共通処理
 class_name MovementHelper
 
+const TileHelper = preload("res://scripts/tile_helper.gd")
+
 ## 移動可能な土地のインデックス配列を返す
 ## 発動タイミングに関わらず、移動タイプに応じた候補を返す
 static func get_move_destinations(
@@ -127,8 +129,8 @@ static func _get_tiles_within_steps(board_system: Node, from_tile_index: int, ma
 			if not tile:
 				continue
 			
-			# 特殊マスは通過不可
-			if tile.tile_type in ["checkpoint", "warp"]:
+			# 配置不可タイルは移動不可（クリーチャー移動）
+			if not TileHelper.is_placeable_tile(tile):
 				continue
 			
 			visited[neighbor] = current_distance + 1
@@ -162,8 +164,8 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 		if not tile:
 			continue
 		
-		# 特殊マスは除外
-		if tile.tile_type in ["checkpoint", "warp"]:
+		# 配置不可タイルは除外（クリーチャー移動）
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
 		# 敵領地のみ（自領地や空地は除外）
@@ -247,8 +249,8 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 		if not tile:
 			continue
 		
-		# 特殊マスチェック（checkpoint, warpは空地移動不可）
-		if tile.tile_type in ["checkpoint", "warp"]:
+		# 配置不可タイルは空地移動不可
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
 		# 空き地チェック（所有者がいない）
@@ -301,8 +303,8 @@ static func _get_enemy_tiles_by_condition(
 		if not tile:
 			continue
 		
-		# 特殊マスチェック（checkpoint, warpは敵地移動不可）
-		if tile.tile_type in ["checkpoint", "warp"]:
+		# 配置不可タイルは敵地移動不可
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
 		# 敵地チェック（他プレイヤーの土地）
@@ -340,8 +342,8 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		
 		var tile = board_system.tile_nodes[tile_index]
 		
-		# 特殊マスチェック（checkpoint, warpは移動不可）
-		if tile.tile_type in ["checkpoint", "warp"]:
+		# 配置不可タイルは移動不可（クリーチャー移動）
+		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
 		# 自分のクリーチャーがいる土地はNG

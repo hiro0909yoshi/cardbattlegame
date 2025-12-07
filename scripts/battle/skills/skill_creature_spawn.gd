@@ -171,27 +171,14 @@ static func _find_random_empty_tile(board_system) -> int:
 	if not board_system or not board_system.tile_data_manager:
 		return -1
 	
-	# 特殊タイル（チェックポイント、ワープ）は配置不可
-	const SPECIAL_TILES = [0, 5, 10, 15]
-	
 	var empty_tiles = []
 	
 	for tile_index in board_system.tile_data_manager.tile_nodes:
-		# 特殊タイルは除外
-		if tile_index in SPECIAL_TILES:
-			continue
-		
 		var tile = board_system.tile_data_manager.tile_nodes[tile_index]
 		
-		# クリーチャーがいない
-		if tile.creature_data != null and not tile.creature_data.is_empty():
-			continue
-		
-		# 所有者がいる土地も除外（空き地のみ）
-		if tile.owner_id != -1:
-			continue
-		
-		empty_tiles.append(tile_index)
+		# TileHelperで空き地判定（配置可能 + 所有者なし + クリーチャーなし）
+		if TileHelper.is_empty_land(tile):
+			empty_tiles.append(tile_index)
 	
 	if empty_tiles.is_empty():
 		print("  空地が見つかりません")

@@ -80,7 +80,7 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 	var tile_info = board_system.get_tile_info(tile_index)
 	
 	# 特殊マス処理（処理後も召喚フェーズに進む）
-	if _is_special_tile(tile.tile_type) and tile.tile_type != "neutral":
+	if _is_special_tile(tile.tile_type):
 		if special_tile_system:
 			# 特殊タイル処理を実行
 			special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
@@ -95,7 +95,7 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 # プレイヤーのタイル処理
 func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	# 特殊タイルかチェック
-	var is_special = _is_special_tile(tile.tile_type) and tile.tile_type != "neutral"
+	var is_special = _is_special_tile(tile.tile_type)
 	
 	if tile_info["owner"] == -1:
 		# 空き地
@@ -207,7 +207,7 @@ func on_card_selected(card_index: int):
 	
 	# 特殊タイル上ではカード選択を無視（UIは維持）
 	var tile = board_system.tile_nodes.get(current_tile)
-	if tile and _is_special_tile(tile.tile_type) and tile.tile_type != "neutral":
+	if tile and _is_special_tile(tile.tile_type):
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
 		if ui_manager:
 			# メッセージのみ更新し、UIは維持（パスボタンも残る）
@@ -697,9 +697,10 @@ func _on_cpu_action_completed():
 
 # === ヘルパー関数 ===
 
-# 特殊タイルかチェック
+# 特殊タイルかチェック（TileHelperに委譲）
+# 特殊タイルかチェック（TileHelperに委譲）
 func _is_special_tile(tile_type: String) -> bool:
-	return tile_type in ["warp", "card", "checkpoint", "neutral", "start"]
+	return TileHelper.is_special_type(tile_type)
 
 
 

@@ -11,6 +11,7 @@ signal level_up_completed(tile_index: int, new_level: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # タイルシーン
 const TILE_SCENES = {
@@ -460,13 +461,8 @@ func can_change_terrain(tile_index: int) -> bool:
 	if not tile_nodes.has(tile_index):
 		return false
 	
-	# 特殊タイル（チェックポイント、ワープ）は変更不可
-	# チェックポイント: 0, 10
-	# ワープ: 5, 15
-	if tile_index in [0, 5, 10, 15]:
-		return false
-	
-	return true
+	var tile = tile_nodes[tile_index]
+	return TileHelper.can_change_terrain(tile)
 
 ## 地形変化コストを計算
 func calculate_terrain_change_cost(tile_index: int) -> int:

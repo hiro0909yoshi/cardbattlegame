@@ -194,7 +194,7 @@ static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) 
 	var creature_element = creature_data.get("element", "")
 	
 	# 通常の属性一致チェック
-	if creature_element == tile_element and creature_element in ["fire", "water", "earth", "wind"]:
+	if creature_element == tile_element and TileHelper.is_element_type(creature_element):
 		return true
 	
 	# 追加属性からの地形効果（固有スキル）
@@ -211,7 +211,7 @@ static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) 
 		
 		# grant_elementsが空なら全属性から地形効果を得る
 		if grant_elements.is_empty():
-			if tile_element in ["fire", "water", "earth", "wind"]:
+			if TileHelper.is_element_type(tile_element):
 				print("  → 地形効果付与呪い（全属性）")
 				return true
 		elif tile_element in grant_elements:

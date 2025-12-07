@@ -77,8 +77,8 @@ func get_tile_info() -> Dictionary:
 
 # クリーチャー配置可能かチェック
 func can_place_creature() -> bool:
-	# 特殊マスには配置不可
-	if tile_type in ["checkpoint", "warp", "neutral", "start", "card"]:
+	# 配置可能タイルでなければ不可
+	if not TileHelper.is_placeable_type(tile_type):
 		return false
 	
 	return owner_id != -1 and creature_data.is_empty()
@@ -174,8 +174,8 @@ func level_up() -> bool:
 
 # ビジュアル更新
 func update_visual():
-	# 特殊マスは色を変更しない（シーンで設定した色を保持）
-	if tile_type in ["checkpoint", "warp", "neutral", "start", "card"]:
+	# 属性タイル以外は色を変更しない
+	if not TileHelper.is_element_type(tile_type):
 		return
 	
 	# MeshInstance3Dの色を更新
