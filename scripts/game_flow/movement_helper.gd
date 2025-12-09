@@ -396,8 +396,8 @@ static func execute_creature_move(
 		creature_data = from_tile_node.creature_data.duplicate()
 	
 	
-	# 移動元をクリア
-	from_tile_node.creature_data = {}
+	# 移動元をクリア（3Dカードも削除される）
+	from_tile_node.remove_creature()
 	if from_tile_node.has_method("update_display"):
 		from_tile_node.update_display()
 	
@@ -407,8 +407,8 @@ static func execute_creature_move(
 		creature_data.erase("curse")
 		print("[MovementHelper] 呪い消滅（移動）: ", curse_name)
 	
-	# 移動先に配置
-	to_tile_node.creature_data = creature_data
+	# 移動先に配置（3Dカードも作成される）
+	to_tile_node.place_creature(creature_data)
 	to_tile_node.owner_id = from_tile_node.owner_id
 	
 	# ダウン状態設定（不屈チェック）

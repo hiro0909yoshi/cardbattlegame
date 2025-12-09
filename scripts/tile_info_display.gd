@@ -75,7 +75,8 @@ func update_display(tile_index: int, tile_info: Dictionary):
 
 # 通行料表示
 func show_toll(label: Label3D, tile_info: Dictionary, tile_index: int):
-	if tile_info.get("owner", -1) == -1:
+	# 所有者がいない、またはクリーチャーがいない場合は非表示
+	if tile_info.get("owner", -1) == -1 or not tile_info.get("has_creature", false):
 		label.visible = false
 	else:
 		var toll = calculate_display_toll(tile_info, tile_index)
@@ -92,18 +93,19 @@ func show_hp(label: Label3D, tile_info: Dictionary):
 	if creature.is_empty():
 		label.visible = false
 	else:
-		var hp = creature.get("block", 0)
+		# current_hpがあれば使用、なければ基礎HPを表示
+		var hp = creature.get("current_hp", creature.get("hp", 0))
 		label.text = "HP:" + str(hp)
 		label.modulate = Color(0.3, 1.0, 0.3)  # 緑
 		label.visible = true
 
-# ST表示
+# ST表示（AP=攻撃力）
 func show_st(label: Label3D, tile_info: Dictionary):
 	var creature = tile_info.get("creature", {})
 	if creature.is_empty():
 		label.visible = false
 	else:
-		var st = creature.get("damage", 0)
+		var st = creature.get("ap", 0)
 		label.text = "ST:" + str(st)
 		label.modulate = Color(1.0, 0.3, 0.3)  # 赤
 		label.visible = true

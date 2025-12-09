@@ -172,11 +172,8 @@ func _execute_swap_with_hand(tile_index: int, player_id: int, hand_creature: Dic
 	var base_hp = new_creature.get("hp", 0)
 	new_creature["current_hp"] = base_hp
 	
-	# BoardSystem3D.place_creature()で配置（3D表示も作成される）
-	if board_system_ref.has_method("place_creature"):
-		board_system_ref.place_creature(tile_index, new_creature, player_id)
-	else:
-		tile.creature_data = new_creature
+	# クリーチャーを配置（3Dカードも作成される）
+	board_system_ref.place_creature(tile_index, new_creature, player_id)
 	
 	# ダウン状態にする
 	if tile.has_method("set_down_state"):
@@ -213,13 +210,9 @@ func _execute_swap_board(tile_index_1: int, tile_index_2: int) -> void:
 	if tile_2.has_method("remove_creature"):
 		tile_2.remove_creature()
 	
-	# 交換して配置（BoardSystem3D.place_creature()で3D表示も作成）
-	if board_system_ref.has_method("place_creature"):
-		board_system_ref.place_creature(tile_index_1, creature_2, owner_2)
-		board_system_ref.place_creature(tile_index_2, creature_1, owner_1)
-	else:
-		tile_1.creature_data = creature_2
-		tile_2.creature_data = creature_1
+	# 交換して配置（3Dカードも作成される）
+	board_system_ref.place_creature(tile_index_1, creature_2, owner_2)
+	board_system_ref.place_creature(tile_index_2, creature_1, owner_1)
 	
 	# owner_idも交換
 	tile_1.owner_id = owner_2

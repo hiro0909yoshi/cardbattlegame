@@ -159,16 +159,11 @@ func _execute_transform(tile: Object, old_creature: Dictionary, new_creature: Di
 	var base_hp = new_creature.get("hp", 0)
 	transformed_creature["current_hp"] = base_hp + base_up_hp
 	
-	# タイルにクリーチャーを配置
-	if board_system_ref.has_method("place_creature"):
-		# 既存の3Dモデルを削除してから新しいクリーチャーを配置
-		var tile_index = _get_tile_index(tile)
-		if tile_index >= 0:
-			board_system_ref.remove_creature(tile_index)
-			board_system_ref.place_creature(tile_index, transformed_creature, tile_owner_id)
-	else:
-		# 直接データを更新
-		tile.creature_data = transformed_creature
+	# 既存クリーチャーを削除してから新しいクリーチャーを配置
+	var tile_index = _get_tile_index(tile)
+	if tile_index >= 0:
+		board_system_ref.remove_creature(tile_index)
+		board_system_ref.place_creature(tile_index, transformed_creature, tile_owner_id)
 	
 	# ダウン状態にする（秘術使用後）
 	if tile.has_method("set_down_state"):

@@ -1,13 +1,14 @@
 extends Node3D
 class_name BaseTile
 
-# CreatureManagerへの静的参照（全タイル共通）
+# 静的参照（全タイル共通）
 static var creature_manager: CreatureManager = null
+static var tile_info_display: TileInfoDisplay = null  # 通行料ラベル更新用
 
 # エクスポート変数（Inspectorで設定可能）
 @export var tile_type: String = ""  # "fire", "water", "wind", "earth", "neutral"
-@export var owner_id: int = -1  # -1=未所有, 0=プレイヤー1, 1=プレイヤー2
-@export var level: int = 1  # 土地レベル（1-5）
+@export var _owner_id: int = -1  # 内部変数（直接アクセスしないこと）
+@export var _level: int = 1  # 内部変数（直接アクセスしないこと）
 @export var tile_index: int = 0  # ボード上の位置番号
 @export var warp_destination: int = -1  # ワープ先タイル番号（-1=ワープなし）
 
@@ -18,6 +19,7 @@ static var creature_manager: CreatureManager = null
 
 # 内部変数
 # creature_data プロパティ（CreatureManager経由 - 完全依存）
+# setterで3Dカード表示も自動同期
 var creature_data: Dictionary:
 	get:
 		if creature_manager:
@@ -30,6 +32,25 @@ var creature_data: Dictionary:
 			creature_manager.set_data(tile_index, value)
 		else:
 			push_error("[BaseTile] CreatureManager が初期化されていません！")
+		# 3Dカードの同期
+		_sync_creature_card_3d(value)
+
+# owner_id プロパティ（setterで通行料ラベルも自動同期）
+var owner_id: int:
+	get:
+		return _owner_id
+	set(value):
+		_owner_id = value
+		_sync_tile_info_display()
+
+# level プロパティ（setterで通行料ラベルも自動同期）
+var level: int:
+	get:
+		return _level
+	set(value):
+		_level = clamp(value, 1, 5)
+		_sync_tile_info_display()
+
 var base_color: Color = Color.WHITE  # タイルの基本色
 var is_occupied: bool = false  # プレイヤーが乗っているか
 var down_state: bool = false  # ダウン状態（Phase 1-A追加）
@@ -105,11 +126,31 @@ func place_creature(data: Dictionary):
 		creature_data["current_hp"] = max_hp
 	
 	# 土地ボーナスはバトル時に動的計算するため、ここでは保存しない
-	
-	# 3Dカード表示を作成
-	_create_creature_card_3d()
+	# 3Dカード表示はsetterで自動作成されるため、ここでは呼ばない
 	
 	update_visual()
+
+# クリーチャー表示の同期（setterから呼ばれる）
+# 3Dカードと通行料ラベルを両方更新
+func _sync_creature_card_3d(data: Dictionary):
+	# 3Dカードの同期
+	if data.is_empty():
+		# データが空 → 3Dカード削除
+		if creature_card_3d:
+			creature_card_3d.queue_free()
+			creature_card_3d = null
+	else:
+		# データあり
+		if creature_card_3d:
+			# 既存のカードがある → 更新のみ（再作成しない）
+			if creature_card_3d.has_method("set_creature_data"):
+				creature_card_3d.set_creature_data(data)
+		else:
+			# カードがない → 新規作成
+			_create_creature_card_3d()
+	
+	# 通行料ラベルの同期
+	_sync_tile_info_display()
 
 # 3Dクリーチャーカードを作成
 func _create_creature_card_3d():
@@ -132,15 +173,26 @@ func _create_creature_card_3d():
 	if creature_card_3d.has_method("set_creature_data"):
 		creature_card_3d.set_creature_data(creature_data)
 
+# 通行料ラベルの同期
+func _sync_tile_info_display():
+	if tile_info_display and tile_info_display.has_method("update_display"):
+		var tile_info = _get_tile_info_for_display()
+		tile_info_display.update_display(tile_index, tile_info)
+
+# 通行料ラベル用のタイル情報を生成
+func _get_tile_info_for_display() -> Dictionary:
+	return {
+		"owner": owner_id,
+		"level": level,
+		"type": tile_type,
+		"has_creature": not creature_data.is_empty(),
+		"creature": creature_data,
+		"is_special": not TileHelper.is_placeable_type(tile_type)
+	}
+
 # クリーチャーを削除
 func remove_creature():
-	creature_data = {}
-	
-	# 3Dカード表示を削除
-	if creature_card_3d:
-		creature_card_3d.queue_free()
-		creature_card_3d = null
-	
+	creature_data = {}  # setterで3Dカードも自動削除される
 	update_visual()
 
 # クリーチャーデータを更新（バトル中の変更を反映）

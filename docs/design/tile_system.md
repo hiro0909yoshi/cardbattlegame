@@ -31,6 +31,57 @@ var is_empty = creature.is_empty()    # クリーチャーがいないか
 
 ---
 
+## 自動同期システム
+
+タイルのプロパティを変更すると、関連する表示が自動的に同期される。
+
+### 同期対象
+
+| プロパティ | 3Dカード表示 | 通行料ラベル |
+|-----------|-------------|-------------|
+| `creature_data` | ✅ 自動同期 | ✅ 自動同期 |
+| `owner_id` | - | ✅ 自動同期 |
+| `level` | - | ✅ 自動同期 |
+
+### 仕組み
+
+各プロパティはsetterで監視されており、値が変更されると自動的に表示が更新される。
+
+```gdscript
+# 例: creature_dataを変更すると3Dカードと通行料ラベルが自動更新
+tile.creature_data = new_data  # → 3Dカード作成/更新 + 通行料ラベル更新
+
+# 例: owner_idを変更すると通行料ラベルが自動更新
+tile.owner_id = -1  # → 通行料ラベル非表示
+
+# 例: levelを変更すると通行料ラベルが自動更新
+tile.level = 3  # → 通行料金額が更新
+```
+
+### 静的参照
+
+BaseTileクラスは以下の静的参照を持つ（全タイルで共有）：
+
+| 参照 | 型 | 用途 |
+|------|-----|------|
+| `creature_manager` | CreatureManager | クリーチャーデータの一元管理 |
+| `tile_info_display` | TileInfoDisplay | 通行料ラベルの表示更新 |
+
+### place_creature / remove_creature
+
+配置・削除メソッドを使用しても、内部でsetterを経由するため自動同期される。
+
+```gdscript
+# どちらの方法でも自動同期される
+tile.place_creature(data)      # 推奨
+tile.creature_data = data      # 同様に動作
+
+tile.remove_creature()         # 推奨
+tile.creature_data = {}        # 同様に動作
+```
+
+---
+
 ## タイルタイプ一覧
 
 ### 配置可能タイル（6種）
@@ -87,10 +138,10 @@ const NO_STOP_TILES = ["warp"]
 
 ## 特殊タイル（配置不可）
 const SPECIAL_TILES = [
-    "checkpoint", "warp", "warp_stop",
-    "card", "card_buy", "card_give",
-    "magic", "magic_stone",
-    "switch", "base", "start"
+	"checkpoint", "warp", "warp_stop",
+	"card", "card_buy", "card_give",
+	"magic", "magic_stone",
+	"switch", "base", "start"
 ]
 
 ## 地形変化可能タイル
@@ -126,15 +177,15 @@ const TERRAIN_CHANGEABLE_TILES = ["fire", "water", "earth", "wind", "neutral", "
 ```gdscript
 # クリーチャー移動先の判定
 if TileHelper.is_placeable_tile(tile):
-    # 移動可能
+	# 移動可能
 
 # 空き地の検索
 if TileHelper.is_empty_land(tile):
-    # クリーチャー配置可能な空き地
+	# クリーチャー配置可能な空き地
 
 # 地形変化可能かチェック
 if TileHelper.can_change_terrain(tile):
-    # 地形変化を実行
+	# 地形変化を実行
 ```
 
 ---
@@ -366,11 +417,11 @@ const TERRAIN_CHANGEABLE_TILES = ["fire", "water", "earth", "wind", "neutral", "
 ```gdscript
 # 1. SPECIAL_TILESに追加（必須）
 const SPECIAL_TILES = [
-    "checkpoint", "warp", "warp_stop",
-    "card", "card_buy", "card_give",
-    "magic", "magic_stone",
-    "switch", "base", "start",
-    "shop"  # 追加
+	"checkpoint", "warp", "warp_stop",
+	"card", "card_buy", "card_give",
+	"magic", "magic_stone",
+	"switch", "base", "start",
+	"shop"  # 追加
 ]
 
 # 2. 停止不可（通過型）なら追加
@@ -406,3 +457,4 @@ const NO_STOP_TILES = ["warp", "shop"]
 | 日付 | 内容 |
 |------|------|
 | 2025/12/08 | 初版作成。TileHelperによるリファクタリング完了 |
+| 2025/12/09 | 自動同期システム追加（creature_data, owner_id, level変更時に3Dカード・通行料ラベルを自動更新） |

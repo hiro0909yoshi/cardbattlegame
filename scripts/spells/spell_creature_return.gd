@@ -132,12 +132,8 @@ func _execute_return_to_hand(tile_index: int) -> Dictionary:
 	# レベル保存
 	var saved_level = tile.level
 	
-	# 3Dカード表示を削除（SpellDamageと同じ方式）
-	if tile.has_method("remove_creature"):
-		tile.remove_creature()
-	else:
-		# フォールバック: 直接クリア
-		tile.creature_data = {}
+	# クリーチャーを削除（3Dカードも削除される）
+	tile.remove_creature()
 	
 	# 土地を空き地にする（所有権解除、レベルは維持）
 	tile.owner_id = -1

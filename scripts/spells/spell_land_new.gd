@@ -704,11 +704,8 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	var creature_name = creature_data.get("name", "?")
 	var saved_level = tile.level
 	
-	# 3Dカード表示を削除
-	if tile.has_method("remove_creature"):
-		tile.remove_creature()
-	else:
-		tile.creature_data = {}
+	# クリーチャーを削除（3Dカードも削除される）
+	tile.remove_creature()
 	
 	# 所有者をリセット（空き地に戻す）
 	tile.owner_id = -1

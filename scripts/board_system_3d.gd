@@ -84,6 +84,9 @@ func create_subsystems():
 	tile_info_display.name = "TileInfoDisplay"
 	add_child(tile_info_display)
 	
+	# BaseTileの静的参照を設定（通行料ラベル自動更新用）
+	BaseTile.tile_info_display = tile_info_display
+	
 	movement_controller = MovementController3D.new()
 	movement_controller.name = "MovementController3D"
 	add_child(movement_controller)
@@ -263,16 +266,8 @@ func remove_creature(tile_index: int):
 	var tile = tile_nodes[tile_index]
 	
 	# BaseTileのremove_creature()を呼び出して3Dカードも削除
-	if tile.has_method("remove_creature"):
-		tile.remove_creature()
-	else:
-		# フォールバック: データだけクリア
-		# 【SSoT同期】tile.creature_data はCreatureManager経由で設定される
-		# この代入は自動的にCreatureManager.set_data(tile_index, {})を呼び出し
-		# CreatureManager.creatures[tile_index]から削除される
-		tile.creature_data = {}
-		if tile.has_method("update_visual"):
-			tile.update_visual()
+	# BaseTileのremove_creature()を呼び出して3Dカードも削除
+	tile.remove_creature()
 	
 	print("[BoardSystem3D] クリーチャー除去: タイル%d" % tile_index)
 

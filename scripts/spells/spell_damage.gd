@@ -344,12 +344,8 @@ func _destroy_creature(tile: Node) -> void:
 		board_system_ref.player_system.add_magic(owner_id, legacy_amount)
 		print("[遺産] プレイヤー%d: G%d を獲得" % [owner_id + 1, legacy_amount])
 	
-	# 3Dカード表示を削除
-	if tile.has_method("remove_creature"):
-		tile.remove_creature()
-	else:
-		# フォールバック: 直接クリア
-		tile.creature_data = {}
+	# クリーチャーを削除（3Dカードも削除される）
+	tile.remove_creature()
 	
 	tile.owner_id = -1
 	tile.level = saved_level  # レベル維持（空き地として残る）
@@ -404,17 +400,8 @@ func _apply_spell_death_transform(tile: Node, transform_to_id: int, owner_id: in
 	if "tile_index" in tile:
 		new_creature["tile_index"] = tile.tile_index
 	
-	# タイルのクリーチャーを更新（破壊せずに置き換え）
-	tile.creature_data = new_creature
-	
-	# 3D表示を更新
-	if tile.has_method("update_creature_display"):
-		tile.update_creature_display()
-	elif tile.has_method("place_creature"):
-		# 一度消してから配置し直す
-		if tile.has_method("remove_creature"):
-			tile.remove_creature()
-		tile.place_creature(new_creature)
+	# クリーチャーを置き換え（3Dカードも更新される）
+	tile.place_creature(new_creature)
 	
 	print("[スペル破壊変身] %s に変身（オーナー: プレイヤー%d）" % [new_name, owner_id + 1])
 	return true
