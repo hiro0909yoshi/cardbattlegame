@@ -69,6 +69,10 @@ func _place_creature_direct(
 	
 	# 配置実行
 	board_system.place_creature(tile_index, creature_data, player_id)
+	
+	# タイルの所有者を設定（空地への配置時に必要）
+	board_system.set_tile_owner(tile_index, player_id)
+	
 	print("[配置完了] タイル%d に %s (ID:%d) を配置 (プレイヤー%d)" % 
 		  [tile_index, creature_data.get("name", "?"), creature_id, player_id])
 	
