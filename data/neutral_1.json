@@ -128,13 +128,17 @@
 	  "ability": "先制・無効化・援護・合体",
 	  "ability_detail": "先制；無効化[巻物]；援護[無]；合体[ビーストギア]",
 	  "ability_parsed": {
-		"keywords": ["援護", "先制", "無効化"],
+		"keywords": ["援護", "先制", "無効化", "合体"],
 		"keyword_conditions": {
 		  "援護": {
 			"target_elements": ["neutral"]
 		  },
 		  "無効化": {
 			"nullify_type": "scroll_attack"
+		  },
+		  "合体": {
+			"partner_id": 434,
+			"result_id": 408
 		  }
 		},
 		"effects": []
@@ -224,16 +228,19 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "援護・合体・無効化",
-	  "ability_detail": "援護；合体[スカイギア]；無効化[巻物]"
-	,
+	  "ability_detail": "援護；合体[スカイギア]；無効化[巻物]",
 	  "ability_parsed": {
-		"keywords": ["援護", "無効化"],
+		"keywords": ["援護", "無効化", "合体"],
 		"keyword_conditions": {
 		  "援護": {
 			"target_elements": ["all"]
 		  },
 		  "無効化": {
 			"nullify_type": "scroll_attack"
+		  },
+		  "合体": {
+			"partner_id": 419,
+			"result_id": 406
 		  }
 		}
 	  }
@@ -519,10 +526,14 @@
 	  "ability": "援護・合体・先制",
 	  "ability_detail": "援護；合体[グランギア]；先制",
 	  "ability_parsed": {
-		"keywords": ["援護", "先制"],
+		"keywords": ["援護", "先制", "合体"],
 		"keyword_conditions": {
 		  "援護": {
 			"target_elements": ["all"]
+		  },
+		  "合体": {
+			"partner_id": 409,
+			"result_id": 406
 		  }
 		},
 		"effects": []

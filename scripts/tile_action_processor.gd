@@ -230,6 +230,12 @@ func _on_item_phase_completed():
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
 		print("[TileActionProcessor] 攻撃側アイテムフェーズ完了")
 		
+		# 合体が発生した場合、バトルカードデータを更新
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			if game_flow_manager.item_phase_handler.was_merged():
+				pending_battle_card_data = game_flow_manager.item_phase_handler.get_merged_creature()
+				print("[TileActionProcessor] 合体発生: %s" % pending_battle_card_data.get("name", "?"))
+		
 		# 攻撃側のアイテムを保存
 		if game_flow_manager and game_flow_manager.item_phase_handler:
 			pending_attacker_item = game_flow_manager.item_phase_handler.get_selected_item()
@@ -258,6 +264,20 @@ func _on_item_phase_completed():
 	else:
 		# 防御側のアイテムフェーズ完了 → バトル開始
 		print("[TileActionProcessor] 防御側アイテムフェーズ完了、バトル開始")
+		
+		# 防御側の合体が発生した場合、tile_infoのcreatureを更新 + タイルも永続更新
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			if game_flow_manager.item_phase_handler.was_merged():
+				var merged_data = game_flow_manager.item_phase_handler.get_merged_creature()
+				pending_battle_tile_info["creature"] = merged_data
+				print("[TileActionProcessor] 防御側合体発生: %s" % merged_data.get("name", "?"))
+				
+				# タイルのクリーチャーデータも永続更新
+				var tile_index = pending_battle_tile_info.get("index", -1)
+				if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
+					var tile = board_system.tile_nodes[tile_index]
+					tile.creature_data = merged_data
+					print("[TileActionProcessor] タイル%d のクリーチャーデータを更新（永続化）" % tile_index)
 		
 		# 防御側のアイテムを保存
 		if game_flow_manager and game_flow_manager.item_phase_handler:
