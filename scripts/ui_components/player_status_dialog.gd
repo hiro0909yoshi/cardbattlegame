@@ -160,9 +160,12 @@ func build_status_text(player_id: int) -> String:
 	# 右列: マップ情報
 	text += "[cell][b][color=yellow]マップ情報[/color][/b]\n"
 	if game_flow_manager_ref:
-		var lap_count = game_flow_manager_ref.get_lap_count(player_id)
+		var lap_count = 0
+		var destroy_count = 0
+		if game_flow_manager_ref.lap_system:
+			lap_count = game_flow_manager_ref.lap_system.get_lap_count(player_id)
+			destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
 		var current_turn = game_flow_manager_ref.get_current_turn()
-		var destroy_count = game_flow_manager_ref.get_destroy_count()
 		text += "周回数: " + str(lap_count) + "\n"
 		text += "ターン数: " + str(current_turn) + "\n"
 		text += "破壊数: " + str(destroy_count)

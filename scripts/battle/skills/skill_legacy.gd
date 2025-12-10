@@ -152,11 +152,9 @@ static func _calculate_legacy_amount(effect: Dictionary, defeated, game_flow_man
 ## @param game_flow_manager GameFlowManagerインスタンス
 ## @return 周回数
 static func _get_lap_count(player_id: int, game_flow_manager) -> int:
-	if not game_flow_manager:
+	if not game_flow_manager or not game_flow_manager.lap_system:
 		return 1
-	if not game_flow_manager.player_lap_state.has(player_id):
-		return 1
-	return game_flow_manager.player_lap_state[player_id].get("lap_count", 1)
+	return game_flow_manager.lap_system.get_lap_count(player_id)
 
 ## ability_detailからカード枚数を抽出
 ##

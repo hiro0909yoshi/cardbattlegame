@@ -213,8 +213,8 @@ func display_game_stats():
 	var text = "[b]━━━ ゲーム統計 ━━━[/b]\n\n"
 	
 	# 破壊カウンター表示
-	if game_flow_manager_ref:
-		var destroy_count = game_flow_manager_ref.get_destroy_count()
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		var destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
 		text += "[color=yellow]累計破壊数: " + str(destroy_count) + "[/color]\n\n"
 	
 	for i in range(player_system_ref.players.size()):

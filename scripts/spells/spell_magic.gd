@@ -387,8 +387,8 @@ func gain_magic_by_lap(player_id: int, effect: Dictionary) -> Dictionary:
 	var multiplier = effect.get("multiplier", 50)
 	var lap_count = 0
 	
-	if game_flow_manager_ref.has_method("get_lap_count"):
-		lap_count = game_flow_manager_ref.get_lap_count(player_id)
+	if game_flow_manager_ref.lap_system:
+		lap_count = game_flow_manager_ref.lap_system.get_lap_count(player_id)
 	
 	var amount = lap_count * multiplier
 	if amount > 0:
@@ -406,8 +406,8 @@ func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dict
 	var multiplier = effect.get("multiplier", 20)
 	var destroy_count = 0
 	
-	if game_flow_manager_ref.has_method("get_destroy_count"):
-		destroy_count = game_flow_manager_ref.get_destroy_count()
+	if game_flow_manager_ref.lap_system:
+		destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
 	
 	var amount = destroy_count * multiplier
 	if amount > 0:
@@ -417,8 +417,8 @@ func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dict
 	
 	# reset_count: trueの場合、破壊数を0にリセット
 	if effect.get("reset_count", false):
-		if game_flow_manager_ref.has_method("reset_destroy_count"):
-			game_flow_manager_ref.reset_destroy_count()
+		if game_flow_manager_ref.lap_system:
+			game_flow_manager_ref.lap_system.reset_destroy_count()
 			print("[インシネレート] 破壊数をリセット")
 	
 	return {"success": true, "amount": amount, "destroy_count": destroy_count}
@@ -463,8 +463,8 @@ func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_
 	var multiplier = effect.get("multiplier", 100)
 	
 	# 対象（敵）の周回数と術者の周回数を取得
-	var target_lap = game_flow_manager_ref.get_lap_count(from_player_id)  # 対象敵の周回数
-	var caster_lap = game_flow_manager_ref.get_lap_count(to_player_id)    # 術者の周回数
+	var target_lap = game_flow_manager_ref.lap_system.get_lap_count(from_player_id)  # 対象敵の周回数
+	var caster_lap = game_flow_manager_ref.lap_system.get_lap_count(to_player_id)    # 術者の周回数
 	var diff = target_lap - caster_lap
 	
 	if diff <= 0:

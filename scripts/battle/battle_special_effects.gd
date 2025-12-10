@@ -932,11 +932,9 @@ func _calculate_on_death_amount(effect: Dictionary, defeated: BattleParticipant)
 ## プレイヤーの周回数を取得
 func _get_lap_count(player_id: int) -> int:
 	var game_flow_manager = _get_game_flow_manager()
-	if not game_flow_manager:
+	if not game_flow_manager or not game_flow_manager.lap_system:
 		return 1
-	if not game_flow_manager.player_lap_state.has(player_id):
-		return 1
-	return game_flow_manager.player_lap_state[player_id].get("lap_count", 1)
+	return game_flow_manager.lap_system.get_lap_count(player_id)
 
 
 ## PlayerSystemへの参照を取得

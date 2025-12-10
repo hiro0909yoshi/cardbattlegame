@@ -350,10 +350,10 @@ func apply_destroy_count_effects(participant: BattleParticipant):
 			var stat = effect.get("stat", "ap")
 			var multiplier = effect.get("multiplier", 5)
 			
-			# GameFlowManagerから破壊数取得
+			# LapSystemから破壊数取得
 			var destroy_count = 0
-			if game_flow_manager_ref:
-				destroy_count = game_flow_manager_ref.get_destroy_count()
+			if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+				destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
 			
 			var bonus_value = destroy_count * multiplier
 			

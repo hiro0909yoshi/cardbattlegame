@@ -58,21 +58,15 @@ var spell_player_move: SpellPlayerMove
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
-# 周回管理システム（LapSystemに委譲）
+# 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
 signal lap_completed(player_id: int)
 
 # ターン（ラウンド）カウンター
 var current_turn_number = 1
 
-# 外部互換用プロパティ（lap_systemへの参照）
-var player_lap_state: Dictionary:
-	get:
-		return lap_system.player_lap_state if lap_system else {}
-
-var game_stats: Dictionary:
-	get:
-		return lap_system.game_stats if lap_system else {"total_creatures_destroyed": 0}
+# ゲーム全体の共有ステート（世界呪い等）
+var game_stats: Dictionary = {}
 
 func _ready():
 	# CPUAIHandler初期化
@@ -771,31 +765,8 @@ func debug_print_phase1a_status():
 		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())
 
 # ============================================
-# 周回管理システム（LapSystemに委譲）
+# ターン数取得
 # ============================================
-
-# 周回完了処理（外部から呼ばれる可能性があるためラッパーを維持）
-func _complete_lap(player_id: int):
-	if lap_system:
-		lap_system.complete_lap(player_id)
-
-# ========================================
-# 破壊カウンター・周回数（LapSystemに委譲）
-# ========================================
-
-func on_creature_destroyed():
-	if lap_system:
-		lap_system.on_creature_destroyed()
-
-func get_destroy_count() -> int:
-	return lap_system.get_destroy_count() if lap_system else 0
-
-func reset_destroy_count():
-	if lap_system:
-		lap_system.reset_destroy_count()
-
-func get_lap_count(player_id: int) -> int:
-	return lap_system.get_lap_count(player_id) if lap_system else 0
 
 func get_current_turn() -> int:
 	return current_turn_number

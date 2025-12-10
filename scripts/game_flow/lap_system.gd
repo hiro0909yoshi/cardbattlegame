@@ -13,10 +13,8 @@ signal lap_completed(player_id: int)
 ## 周回状態
 var player_lap_state: Dictionary = {}  # {player_id: {N: bool, S: bool, lap_count: int}}
 
-## ゲーム統計データ
-var game_stats: Dictionary = {
-	"total_creatures_destroyed": 0
-}
+## 破壊カウンター
+var destroy_count: int = 0
 
 ## 外部参照（初期化時に設定）
 var player_system = null
@@ -30,7 +28,7 @@ func setup(p_system, b_system):
 ## 周回状態を初期化
 func initialize_lap_state(player_count: int):
 	player_lap_state.clear()
-	game_stats["total_creatures_destroyed"] = 0
+	destroy_count = 0
 	
 	for i in range(player_count):
 		player_lap_state[i] = {
@@ -180,16 +178,16 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 
 ## クリーチャー破壊時に呼ばれる
 func on_creature_destroyed():
-	game_stats["total_creatures_destroyed"] += 1
-	print("[破壊カウント] 累計: ", game_stats["total_creatures_destroyed"])
+	destroy_count += 1
+	print("[破壊カウント] 累計: ", destroy_count)
 
 ## 破壊カウント取得
 func get_destroy_count() -> int:
-	return game_stats["total_creatures_destroyed"]
+	return destroy_count
 
 ## 破壊カウントリセット（スペル用）
 func reset_destroy_count():
-	game_stats["total_creatures_destroyed"] = 0
+	destroy_count = 0
 	print("[破壊カウント] リセットしました")
 
 ## 周回数取得

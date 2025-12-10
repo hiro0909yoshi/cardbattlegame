@@ -353,7 +353,7 @@ func _apply_post_battle_effects(
 			
 			# 破壊カウンター更新
 			if game_flow_manager_ref:
-				game_flow_manager_ref.on_creature_destroyed()
+				game_flow_manager_ref.lap_system.on_creature_destroyed()
 			
 			# バウンティハント（賞金首）報酬チェック - 防御側が敗者
 			await _check_and_apply_bounty_reward(defender, attacker)
@@ -413,7 +413,7 @@ func _apply_post_battle_effects(
 			
 			# 破壊カウンター更新
 			if game_flow_manager_ref:
-				game_flow_manager_ref.on_creature_destroyed()
+				game_flow_manager_ref.lap_system.on_creature_destroyed()
 			
 			# バウンティハント（賞金首）報酬チェック - 攻撃側が敗者
 			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
@@ -520,8 +520,8 @@ func _apply_post_battle_effects(
 			
 			# 破壊カウンター更新（両方破壊）
 			if game_flow_manager_ref:
-				game_flow_manager_ref.on_creature_destroyed()
-				game_flow_manager_ref.on_creature_destroyed()
+				game_flow_manager_ref.lap_system.on_creature_destroyed()
+				game_flow_manager_ref.lap_system.on_creature_destroyed()
 			
 			# バウンティハント: 相打ちの場合は報酬なし（勝者がいない）
 			
