@@ -2,8 +2,6 @@
 extends Node
 class_name ItemPhaseHandler
 
-const SkillMerge = preload("res://scripts/battle/skills/skill_merge.gd")
-
 ## シグナル
 signal item_phase_started()
 signal item_phase_completed()

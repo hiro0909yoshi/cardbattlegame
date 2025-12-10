@@ -6,7 +6,6 @@ const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const SkillAssistScript = preload("res://scripts/battle/skills/skill_assist.gd")
 const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
-const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 
 # システム参照
 var board_system_ref = null

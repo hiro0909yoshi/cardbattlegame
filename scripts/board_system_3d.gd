@@ -11,7 +11,6 @@ signal level_up_completed(tile_index: int, new_level: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # タイルシーン
 const TILE_SCENES = {

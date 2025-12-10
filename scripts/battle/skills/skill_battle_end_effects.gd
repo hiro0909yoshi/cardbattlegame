@@ -14,7 +14,6 @@
 
 class_name SkillBattleEndEffects
 
-const SkillCreatureSpawn = preload("res://scripts/battle/skills/skill_creature_spawn.gd")
 
 
 # =============================================================================

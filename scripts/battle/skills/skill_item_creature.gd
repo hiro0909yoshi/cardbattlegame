@@ -32,7 +32,7 @@ static func is_item_creature(card_data: Dictionary) -> bool:
 # ============================================================
 
 ## アイテムとして使用時の効果を適用
-static func apply_as_item(participant, item_creature_data: Dictionary, board_system) -> void:
+static func apply_as_item(participant, item_creature_data: Dictionary, _board_system) -> void:
 	var creature_id = item_creature_data.get("id", 0)
 	var item_name = item_creature_data.get("name", "???")
 	print("[アイテムクリーチャー効果] ", item_name, " (ID:", creature_id, ")")

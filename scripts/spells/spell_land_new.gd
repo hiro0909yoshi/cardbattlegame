@@ -537,7 +537,7 @@ func _apply_effect_find_and_change_highest_level(effect: Dictionary, target_data
 	
 	# 合成時: 全敵プレイヤー対象
 	if all_players:
-		var owner_filter = effect.get("owner_filter", "enemy")
+		var _owner_filter = effect.get("owner_filter", "enemy")  # TODO: フィルタリングに使用予定
 		var success_count = 0
 		
 		for player_id in range(player_system_ref.players.size()):

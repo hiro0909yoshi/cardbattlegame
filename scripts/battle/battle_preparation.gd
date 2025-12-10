@@ -12,7 +12,6 @@ const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_sp
 const BattleCurseApplierScript = preload("res://scripts/battle/battle_curse_applier.gd")
 const BattleItemApplierScript = preload("res://scripts/battle/battle_item_applier.gd")
 const BattleSkillGranterScript = preload("res://scripts/battle/battle_skill_granter.gd")
-const SkillBattleStartConditions = preload("res://scripts/battle/skills/skill_battle_start_conditions.gd")
 
 # サブシステム（分割後）
 var curse_applier = BattleCurseApplierScript.new()

@@ -65,7 +65,7 @@ static func apply(participant, context: Dictionary) -> Dictionary:
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
 ## @return 条件を満たすか
-static func _check_condition(condition: String, participant, context: Dictionary) -> bool:
+static func _check_condition(condition: String, participant, _context: Dictionary) -> bool:
 	match condition:
 		"hp_damaged":
 			# HP減少中（現在HPがMHP未満）

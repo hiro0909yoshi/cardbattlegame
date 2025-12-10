@@ -6,7 +6,6 @@ class_name TileDataManager
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # タイルノード管理
 var tile_nodes = {}  # tile_index -> BaseTile

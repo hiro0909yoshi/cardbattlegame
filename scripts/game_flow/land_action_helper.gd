@@ -1,8 +1,6 @@
 # LandActionHelper - アクション実行関連の処理を提供
 class_name LandActionHelper
 
-const SkillCreatureSpawn = preload("res://scripts/battle/skills/skill_creature_spawn.gd")
-
 ## レベルアップ実行（レベル選択後）
 static func execute_level_up_with_level(handler, target_level: int, cost: int) -> bool:
 	if not handler.board_system or handler.selected_tile_index == -1:

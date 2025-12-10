@@ -44,8 +44,8 @@ static func has_spawn_skill(creature_data: Dictionary) -> bool:
 
 ## マイコロンの戦闘後コピー配置チェック
 ## 敵から攻撃を受けて生き残った場合に発動
-static func check_mycolon_spawn(defender_data: Dictionary, defender_tile_index: int, 
-								was_attacked: bool, board_system, player_id: int) -> Dictionary:
+static func check_mycolon_spawn(defender_data: Dictionary, _defender_tile_index: int, 
+								was_attacked: bool, board_system, _player_id: int) -> Dictionary:
 	var result = {
 		"spawned": false,
 		"spawn_tile_index": -1,

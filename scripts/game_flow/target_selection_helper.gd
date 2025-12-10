@@ -2,7 +2,6 @@
 # 土地、クリーチャー、プレイヤーなど、あらゆる対象の選択に使用可能
 class_name TargetSelectionHelper
 
-const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # ============================================
 # 選択マーカーシステム

@@ -15,7 +15,6 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
-const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
 var board_system_ref = null

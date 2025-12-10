@@ -327,7 +327,7 @@ func _destroy_creature(tile: Node) -> void:
 	var creature_data = tile.creature_data.duplicate()
 	var creature_name = creature_data.get("name", "Unknown")
 	var owner_id = tile.owner_id
-	var tile_index = tile.tile_index if "tile_index" in tile else -1
+	var _tile_index = tile.tile_index if "tile_index" in tile else -1
 	var saved_level = tile.level  # レベル保存
 	
 	# スペル破壊時の死亡効果をチェック

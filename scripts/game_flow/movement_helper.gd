@@ -1,7 +1,6 @@
 # MovementHelper - クリーチャー移動の共通処理
 class_name MovementHelper
 
-const TileHelper = preload("res://scripts/tile_helper.gd")
 
 ## 移動可能な土地のインデックス配列を返す
 ## 発動タイミングに関わらず、移動タイプに応じた候補を返す

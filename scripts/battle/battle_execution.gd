@@ -10,8 +10,6 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 # スキルモジュール
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
-const SkillBattleEndEffects = preload("res://scripts/battle/skills/skill_battle_end_effects.gd")
-const SkillItemCreature = preload("res://scripts/battle/skills/skill_item_creature.gd")
 
 # システム参照
 var card_system_ref = null
