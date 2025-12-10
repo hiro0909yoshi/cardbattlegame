@@ -47,6 +47,7 @@ var debug_manual_control_all: bool = false  # GameFlowManagerから設定され�
 var tile_nodes = {}        # tile_index -> BaseTile
 var player_nodes = []      # 3D駒のノード配列
 var camera = null
+var camera_controller: CameraController = null
 
 # システム参照
 var player_system: PlayerSystem

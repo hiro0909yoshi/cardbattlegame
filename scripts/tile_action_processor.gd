@@ -94,6 +94,11 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 
 # プレイヤーのタイル処理
 func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
+	# カメラを手動モードに
+	if board_system and board_system.camera_controller:
+		board_system.camera_controller.enable_manual_mode()
+		board_system.camera_controller.set_current_player(player_index)
+	
 	# 特殊タイルかチェック
 	var is_special = _is_special_tile(tile.tile_type)
 	
@@ -818,5 +823,10 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 
 # アクション完了（内部用）
 func _complete_action():
+	# カメラを追従モードに戻し、プレイヤー位置に復帰
+	if board_system and board_system.camera_controller:
+		board_system.camera_controller.enable_follow_mode()
+		board_system.camera_controller.return_to_player()
+	
 	is_action_processing = false
 	emit_signal("action_completed")

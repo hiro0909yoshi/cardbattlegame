@@ -192,7 +192,12 @@ func start_spell_phase(player_id: int):
 	if is_cpu_player(player_id):
 		_handle_cpu_spell_turn()
 	else:
-		# 人間プレイヤーの場合は入力待ち
+		# 人間プレイヤーの場合：カメラ手動モード有効化
+		if board_system and board_system.camera_controller:
+			board_system.camera_controller.enable_manual_mode()
+			board_system.camera_controller.set_current_player(player_id)
+		
+		# 入力待ち
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "スペルを使用するか、ダイスを振ってください"
 
@@ -701,6 +706,11 @@ func complete_spell_phase():
 	
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()
+	
+	# カメラを追従モードに戻し、プレイヤー位置に復帰
+	if board_system and board_system.camera_controller:
+		board_system.camera_controller.enable_follow_mode()
+		board_system.camera_controller.return_to_player()
 	
 	spell_phase_completed.emit()
 	

@@ -35,6 +35,7 @@ var tiles_container: Node
 var players_container: Node
 var camera_3d: Camera3D
 var ui_layer: CanvasLayer
+var camera_controller: CameraController
 
 # === 親ノード参照 ===
 var parent_node: Node
@@ -203,6 +204,14 @@ func phase_3_setup_basic_config() -> void:
 				player_look_target.y += 1.0  # 頭方向に向かせる
 				
 				camera_3d.look_at(player_look_target, Vector3.UP)
+	
+	# CameraController初期化
+	if camera_3d and board_system_3d:
+		camera_controller = CameraController.new()
+		camera_controller.name = "CameraController"
+		parent_node.add_child(camera_controller)
+		camera_controller.setup(camera_3d, board_system_3d, player_system)
+		board_system_3d.camera_controller = camera_controller
 	
 	print("[GameSystemManager] Phase 3: システム基本設定完了")
 

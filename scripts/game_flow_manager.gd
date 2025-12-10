@@ -251,7 +251,7 @@ func start_turn():
 	# ワープ系スペル使用時はサイコロフェーズをスキップしてタイルアクションへ
 	if spell_phase_handler and spell_phase_handler.skip_dice_phase:
 		print("[GameFlowManager] ワープ使用によりサイコロフェーズをスキップ")
-		current_phase = GamePhase.TILE_ACTION
+		change_phase(GamePhase.TILE_ACTION)
 		# 現在のプレイヤー位置でタイルアクションを開始
 		var current_tile = board_system_3d.movement_controller.get_player_tile(current_player.id)
 		board_system_3d.process_tile_landing(current_tile)
@@ -495,6 +495,9 @@ func change_phase(new_phase: GamePhase):
 	current_phase = new_phase
 	emit_signal("phase_changed", current_phase)
 	update_ui()
+	
+	# カメラモード切り替え
+	_update_camera_mode(new_phase)
 
 # ターン終了
 func end_turn():
@@ -730,9 +733,13 @@ func initialize_phase1a_systems():
 # Phase 1-A: 領地コマンドが閉じられたときの処理
 func _on_land_command_closed():
 	
-	# ターンエンド中またはターンエンドフェーズの場合は、カード選択UIを再初期化しない
+	# ターンエンド中またはターンエンドフェーズの場合は処理しない
 	if is_ending_turn or current_phase == GamePhase.END_TURN:
 		return
+	
+	# カメラをプレイヤーに戻す
+	if board_system_3d and board_system_3d.camera_controller:
+		board_system_3d.camera_controller.return_to_player()
 	
 	# カード選択UIの再初期化を次のフレームで実行（awaitを避ける）
 	_reinitialize_card_selection.call_deferred()
@@ -770,3 +777,40 @@ func debug_print_phase1a_status():
 
 func get_current_turn() -> int:
 	return current_turn_number
+
+# ============================================
+# カメラ制御
+# ============================================
+
+## フェーズに応じてカメラモードを更新
+func _update_camera_mode(phase: GamePhase):
+	if not board_system_3d or not board_system_3d.camera_controller:
+		return
+	
+	var camera_ctrl = board_system_3d.camera_controller
+	var is_my_turn = _is_current_player_human()
+	
+	if not is_my_turn:
+		camera_ctrl.enable_follow_mode()
+		return
+	
+	# スペルフェーズと召喚フェーズ（TILE_ACTION）で手動モード
+	match phase:
+		GamePhase.TILE_ACTION:
+			camera_ctrl.enable_manual_mode()
+		_:
+			camera_ctrl.enable_follow_mode()
+
+## 現在のプレイヤーが人間かどうか
+func _is_current_player_human() -> bool:
+	if not player_system:
+		return true
+	var current_id = player_system.current_player_index
+	if current_id < 0 or current_id >= player_is_cpu.size():
+		return true
+	return not player_is_cpu[current_id]
+
+## カメラをプレイヤーに戻す（外部から呼び出し用）
+func return_camera_to_player():
+	if board_system_3d and board_system_3d.camera_controller:
+		board_system_3d.camera_controller.return_to_player()
