@@ -58,17 +58,21 @@ var spell_player_move: SpellPlayerMove
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
-# 周回管理システム
-var player_lap_state = {}  # プレイヤーごとの周回状態
+# 周回管理システム（LapSystemに委譲）
+var lap_system: LapSystem = null
 signal lap_completed(player_id: int)
 
 # ターン（ラウンド）カウンター
 var current_turn_number = 1
 
-# ゲーム統計データ（破壊カウンター）
-var game_stats = {
-	"total_creatures_destroyed": 0  # 1ゲーム内の累計破壊数
-}
+# 外部互換用プロパティ（lap_systemへの参照）
+var player_lap_state: Dictionary:
+	get:
+		return lap_system.player_lap_state if lap_system else {}
+
+var game_stats: Dictionary:
+	get:
+		return lap_system.game_stats if lap_system else {"total_creatures_destroyed": 0}
 
 func _ready():
 	# CPUAIHandler初期化
@@ -79,6 +83,13 @@ func _ready():
 	cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided)
 	cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided)
 	cpu_ai_handler.level_up_decided.connect(_on_cpu_level_up_decided)
+	
+	# LapSystem初期化
+	lap_system = LapSystem.new()
+	lap_system.name = "LapSystem"
+	add_child(lap_system)
+	# LapSystemのシグナルを転送
+	lap_system.lap_completed.connect(func(player_id): lap_completed.emit(player_id))
 
 # 3Dモード設定
 func setup_3d_mode(board_3d, cpu_settings: Array):
@@ -95,11 +106,14 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		if board_system_3d.movement_controller:
 			board_system_3d.movement_controller.game_flow_manager = self
 		
-		# CheckpointTileのシグナルを接続
-		_connect_checkpoint_signals()
+		# LapSystemにboard_system_3dを設定し、チェックポイントシグナルを接続
+		if lap_system:
+			lap_system.board_system_3d = board_system_3d
+			lap_system.connect_checkpoint_signals()
 	
 	# 周回状態を初期化
-	_initialize_lap_state(cpu_settings.size())
+	if lap_system:
+		lap_system.initialize_lap_state(cpu_settings.size())
 
 # システム参照を設定
 func setup_systems(p_system, c_system, b_system, s_system, ui_system, 
@@ -125,6 +139,10 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	# CPU AIハンドラー設定
 	if cpu_ai_handler:
 		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
+	
+	# LapSystemにplayer_systemを設定
+	if lap_system:
+		lap_system.player_system = player_system
 
 ## スペル効果システムの初期化
 func _setup_spell_systems(board_system):
@@ -753,184 +771,31 @@ func debug_print_phase1a_status():
 		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())
 
 # ============================================
-# 周回管理システム
+# 周回管理システム（LapSystemに委譲）
 # ============================================
 
-# 周回状態を初期化
-func _initialize_lap_state(player_count: int):
-	player_lap_state.clear()
-	for i in range(player_count):
-		player_lap_state[i] = {
-			"N": false,
-			"S": false,
-			"lap_count": 1  # 周回数カウント（1周目からスタート）
-		}
-
-# CheckpointTileのシグナルを接続
-func _connect_checkpoint_signals():
-	if not board_system_3d or not board_system_3d.tile_nodes:
-		return
-	
-	# 少し待ってからシグナル接続（CheckpointTileの_ready()を待つ）
-	await get_tree().process_frame
-	await get_tree().process_frame
-	
-	for tile_index in board_system_3d.tile_nodes.keys():
-		var tile = board_system_3d.tile_nodes[tile_index]
-		if tile and is_instance_valid(tile):
-			if tile.has_signal("checkpoint_passed"):
-				if not tile.checkpoint_passed.is_connected(_on_checkpoint_passed):
-					tile.checkpoint_passed.connect(_on_checkpoint_passed)
-			elif tile.get("tile_type") == "checkpoint":
-				pass  # チェックポイントタイルだがシグナルがない
-
-# チェックポイント通過イベント
-func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
-	if not player_lap_state.has(player_id):
-		return
-	
-	# チェックポイントフラグを立てる
-	player_lap_state[player_id][checkpoint_type] = true
-	
-	# N + S 両方揃ったか確認
-	if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
-		_complete_lap(player_id)
-
-# 周回完了処理
+# 周回完了処理（外部から呼ばれる可能性があるためラッパーを維持）
 func _complete_lap(player_id: int):
-	# 周回数をインクリメント
-	player_lap_state[player_id]["lap_count"] += 1
-	print("[周回完了] プレイヤー%d 周回数: %d" % [player_id + 1, player_lap_state[player_id]["lap_count"]])
-	
-	# フラグをリセット（game_startedは維持）
-	player_lap_state[player_id]["N"] = false
-	player_lap_state[player_id]["S"] = false
-	
-	# 魔力ボーナスを付与
-	if player_system:
-		player_system.add_magic(player_id, GameConstants.PASS_BONUS)
-		print("[周回完了] プレイヤー%d 魔力+%d" % [player_id + 1, GameConstants.PASS_BONUS])
-	
-	# ダウン解除
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
-		print("[周回完了] プレイヤー%d ダウン解除" % [player_id + 1])
-	
-	# HP回復+10
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
-		print("[周回完了] プレイヤー%d HP回復+10" % [player_id + 1])
-	
-	# 全クリーチャーに周回ボーナスを適用（クリーチャー固有の周回効果）
-	if board_system_3d:
-		_apply_lap_bonus_to_all_creatures(player_id)
-	
-	# シグナル発行
-	emit_signal("lap_completed", player_id)
-
-# 全クリーチャーに周回ボーナスを適用
-func _apply_lap_bonus_to_all_creatures(player_id: int):
-	var tiles = board_system_3d.get_player_tiles(player_id)
-	
-	for tile in tiles:
-		if tile.creature_data:
-			_apply_lap_bonus_to_creature(tile.creature_data)
-
-# クリーチャーに周回ボーナスを適用
-func _apply_lap_bonus_to_creature(creature_data: Dictionary):
-	if not creature_data.has("ability_parsed"):
-		return
-	
-	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "per_lap_permanent_bonus":
-			_apply_per_lap_bonus(creature_data, effect)
-
-# 周回ごと永続ボーナスを適用
-func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
-	var stat = effect.get("stat", "ap")
-	var value = effect.get("value", 10)
-	
-	# 周回カウントを増加
-	if not creature_data.has("map_lap_count"):
-		creature_data["map_lap_count"] = 0
-	creature_data["map_lap_count"] += 1
-	
-	# base_up_hp/ap に加算
-	if stat == "ap":
-		if not creature_data.has("base_up_ap"):
-			creature_data["base_up_ap"] = 0
-		creature_data["base_up_ap"] += value
-		print("[Lap Bonus] ", creature_data.get("name", ""), " ST+", value, 
-			  " (周回", creature_data["map_lap_count"], "回目)")
-	
-	elif stat == "max_hp":
-		if not creature_data.has("base_up_hp"):
-			creature_data["base_up_hp"] = 0
-		
-		# リセット条件チェック（モスタイタン用）
-		var reset_condition = effect.get("reset_condition")
-		if reset_condition:
-			var reset_max_hp = creature_data.get("hp", 0) + creature_data.get("base_up_hp", 0)
-			var check = reset_condition.get("max_hp_check", {})
-			var operator = check.get("operator", ">=")
-			var threshold = check.get("value", 80)
-			
-			# MHP + 新しいボーナスがしきい値を超えるかチェック
-			if operator == ">=" and (reset_max_hp + value) >= threshold:
-				var reset_to = check.get("reset_to", 0)
-				var reset_base_hp = creature_data.get("hp", 0)
-				creature_data["base_up_hp"] = reset_to - reset_base_hp
-				
-				# 現在HPもリセット値に
-				creature_data["current_hp"] = reset_to
-				
-				print("[Lap Bonus] ", creature_data.get("name", ""), 
-					  " MHPリセット → ", reset_to, " HP:", reset_to)
-				return
-		
-		creature_data["base_up_hp"] += value
-		
-		# 現在HPも回復（増えたMHP分だけ）
-		var base_hp = creature_data.get("hp", 0)
-		var base_up_hp = creature_data["base_up_hp"]
-		var max_hp = base_hp + base_up_hp
-		var current_hp = creature_data.get("current_hp", max_hp)
-		
-		# HP回復（MHPを超えない）
-		var new_hp = min(current_hp + value, max_hp)
-		creature_data["current_hp"] = new_hp
-		
-		print("[Lap Bonus] ", creature_data.get("name", ""), 
-			  " MHP+", value, " HP+", value,
-			  " (周回", creature_data["map_lap_count"], "回目)",
-			  " HP:", current_hp, "→", new_hp, " / MHP:", max_hp)
+	if lap_system:
+		lap_system.complete_lap(player_id)
 
 # ========================================
-# 破壊カウンター管理
+# 破壊カウンター・周回数（LapSystemに委譲）
 # ========================================
 
-# クリーチャー破壊時に呼ばれる
 func on_creature_destroyed():
-	game_stats["total_creatures_destroyed"] += 1
-	print("[破壊カウント] 累計: ", game_stats["total_creatures_destroyed"])
+	if lap_system:
+		lap_system.on_creature_destroyed()
 
-# 破壊カウント取得
 func get_destroy_count() -> int:
-	return game_stats["total_creatures_destroyed"]
+	return lap_system.get_destroy_count() if lap_system else 0
 
-# 破壊カウントリセット（スペル用）
 func reset_destroy_count():
-	game_stats["total_creatures_destroyed"] = 0
-	print("[破壊カウント] リセットしました")
+	if lap_system:
+		lap_system.reset_destroy_count()
 
-# 周回数取得
 func get_lap_count(player_id: int) -> int:
-	if player_lap_state.has(player_id):
-		return player_lap_state[player_id].get("lap_count", 0)
-	return 0
+	return lap_system.get_lap_count(player_id) if lap_system else 0
 
-# 現在のターン数（ラウンド数）取得
 func get_current_turn() -> int:
 	return current_turn_number

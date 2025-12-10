@@ -58,10 +58,12 @@ game_flow_manager.gd
    - [x] 動作確認
    - 結果: 1284行 → 925行 (約360行削減)
 
-2. [ ] game_flow_manager.gd 分割
-   - [ ] lap_system.gd 抽出
-   - [ ] game_stats_manager.gd 抽出
+2. [x] game_flow_manager.gd 分割 (2025/12/11完了)
+   - [x] lap_system.gd 抽出 (204行) - 周回管理 + 破壊カウンター統合
+   - [-] game_stats_manager.gd → lap_system.gdに統合
    - [ ] 動作確認
+   - 結果: 936行 → 801行 (約135行削減)
+   - 方式: ラッパー方式（既存コードとの互換性維持）
 
 ---
 

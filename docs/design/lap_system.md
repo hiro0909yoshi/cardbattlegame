@@ -2,19 +2,84 @@
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **作成日**: 2025年10月27日  
+**最終更新**: 2025年12月11日（LapSystemクラス分離）  
 **ステータス**: ✅ 実装完了
 
 ---
 
 ## 📋 概要
 
-プレイヤーがマップを1周するごとに、特定のクリーチャーにボーナスを付与するシステム。
+プレイヤーがマップを1周するごとに発生するシステム。周回完了時に以下の効果が発生:
+- 魔力ボーナス付与
+- 全クリーチャーのダウン解除
+- 全クリーチャーのHP回復(+10)
+- 特定クリーチャーへの周回ボーナス
+
+---
+
+## 🏗️ アーキテクチャ
+
+### クラス構成（2025/12/11リファクタリング後）
+
+```
+GameFlowManager
+  └── LapSystem (子ノード)
+        ├── 周回状態管理 (player_lap_state)
+        ├── 破壊カウンター (game_stats)
+        └── 周回ボーナス適用
+```
+
+**設計方針**: ラッパー方式
+- 外部からは従来通り`game_flow_manager.get_lap_count()`等で呼び出し可能
+- 内部では`LapSystem`に委譲
 
 ---
 
 ## 🎯 実装内容
 
-### 1. チェックポイントシステム
+### 1. LapSystem クラス
+
+**場所**: `scripts/game_flow/lap_system.gd`
+
+```gdscript
+class_name LapSystem
+extends Node
+
+signal lap_completed(player_id: int)
+
+var player_lap_state: Dictionary = {}  # {player_id: {N: bool, S: bool, lap_count: int}}
+var game_stats: Dictionary = {"total_creatures_destroyed": 0}
+
+func initialize_lap_state(player_count: int)
+func connect_checkpoint_signals()
+func complete_lap(player_id: int)
+func get_lap_count(player_id: int) -> int
+func on_creature_destroyed()
+func get_destroy_count() -> int
+func reset_destroy_count()
+```
+
+### 2. GameFlowManager（ラッパー）
+
+**場所**: `scripts/game_flow_manager.gd`
+
+```gdscript
+# プロパティ（外部互換用）
+var player_lap_state: Dictionary:
+    get: return lap_system.player_lap_state if lap_system else {}
+
+var game_stats: Dictionary:
+    get: return lap_system.game_stats if lap_system else {}
+
+# メソッド（LapSystemに委譲）
+func get_lap_count(player_id: int) -> int
+func on_creature_destroyed()
+func get_destroy_count() -> int
+func reset_destroy_count()
+func _complete_lap(player_id: int)
+```
+
+### 3. チェックポイントシステム
 
 #### CheckpointTile
 - **場所**: `scripts/tiles/checkpoint_tile.gd`
@@ -22,129 +87,86 @@
 - **配置**: マップに2箇所（タイル0とタイル10）
 
 ```gdscript
-enum CheckpointType { N, S }
-@export var checkpoint_type: CheckpointType = CheckpointType.N
-
 signal checkpoint_passed(player_id: int, checkpoint_type: String)
-
-func on_player_passed(player_id: int):
-	var type_str = "N" if checkpoint_type == CheckpointType.N else "S"
-	emit_signal("checkpoint_passed", player_id, type_str)
 ```
 
-### 2. 周回状態管理
-
-#### GameFlowManager
-- **周回状態**: `player_lap_state[player_id]`
-- **フラグ**: N, S の2つ
-- **周回完了条件**: N=true かつ S=true
+### 4. 周回完了処理
 
 ```gdscript
-var player_lap_state = {}  # {player_id: {N: bool, S: bool}}
-
-func _initialize_lap_state(player_count: int):
-	for i in range(player_count):
-		player_lap_state[i] = {"N": false, "S": false}
-
-func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
-	player_lap_state[player_id][checkpoint_type] = true
-	
-	if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
-		_complete_lap(player_id)
-```
-
-### 3. 周回ボーナス適用
-
-#### 対象クリーチャー
-| ID | 名前 | 効果 |
-|----|------|------|
-| 7 | キメラ | 周回ごとにAP+10（上限なし） |
-| 240 | モスタイタン | 周回ごとにMHP+10（MHP≧80でMHP=30にリセット） |
-
-#### ボーナス適用処理
-```gdscript
-func _complete_lap(player_id: int):
-	# フラグをリセット
-	player_lap_state[player_id]["N"] = false
-	player_lap_state[player_id]["S"] = false
-	
-	# 全クリーチャーにボーナス適用
-	var tiles = board_system_3d.get_player_tiles(player_id)
-	for tile in tiles:
-		if tile.creature_data:
-			_apply_lap_bonus_to_creature(tile.creature_data)
-
-func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
-	var stat = effect.get("stat", "ap")
-	var value = effect.get("value", 10)
-	
-	# 周回カウント
-	if not creature_data.has("map_lap_count"):
-		creature_data["map_lap_count"] = 0
-	creature_data["map_lap_count"] += 1
-	
-	# base_up_hp/ap に加算
-	if stat == "ap":
-		creature_data["base_up_ap"] += value
-	elif stat == "max_hp":
-		# リセット条件チェック（モスタイタン用）
-		# ...
-		creature_data["base_up_hp"] += value
+func complete_lap(player_id: int):
+    # 周回数をインクリメント
+    player_lap_state[player_id]["lap_count"] += 1
+    
+    # フラグをリセット
+    player_lap_state[player_id]["N"] = false
+    player_lap_state[player_id]["S"] = false
+    
+    # 魔力ボーナス付与
+    player_system.add_magic(player_id, GameConstants.PASS_BONUS)
+    
+    # ダウン解除
+    board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
+    
+    # HP回復+10
+    board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
+    
+    # クリーチャー固有の周回ボーナス
+    _apply_lap_bonus_to_all_creatures(player_id)
+    
+    lap_completed.emit(player_id)
 ```
 
 ---
 
 ## 📊 データ構造
 
+### player_lap_state
+```gdscript
+{
+    0: {"N": false, "S": true, "lap_count": 2},
+    1: {"N": true, "S": false, "lap_count": 1}
+}
+```
+
+### 周回ボーナス対象クリーチャー
+
+| ID | 名前 | 効果 |
+|----|------|------|
+| 7 | キメラ | 周回ごとにAP+10（上限なし） |
+| 240 | モスタイタン | 周回ごとにMHP+10（MHP≧80でMHP=30にリセット） |
+
 ### ability_parsed例
 
 #### キメラ (ID 7)
 ```json
 {
-  "ability_parsed": {
-	"keywords": ["先制"],
-	"effects": [
-	  {
-		"effect_type": "first_strike"
-	  },
-	  {
-		"effect_type": "per_lap_permanent_bonus",
-		"stat": "ap",
-		"value": 10
-	  }
-	]
-  }
+  "effects": [
+    {
+      "effect_type": "per_lap_permanent_bonus",
+      "stat": "ap",
+      "value": 10
+    }
+  ]
 }
 ```
 
 #### モスタイタン (ID 240)
 ```json
 {
-  "ability_parsed": {
-	"effects": [
-	  {
-		"effect_type": "per_lap_permanent_bonus",
-		"stat": "max_hp",
-		"value": 10,
-		"reset_condition": {
-		  "max_hp_check": {
-			"operator": ">=",
-			"value": 80,
-			"reset_to": 30
-		  }
-		}
-	  }
-	]
-  }
-}
-```
-
-### creature_dataに追加されるフィールド
-```gdscript
-{
-  "map_lap_count": 2,       # 周回数
-  "base_up_ap": 20,         # STボーナス（キメラの場合）
-  "base_up_hp": 20          # MHPボーナス（モスタイタンの場合）
+  "effects": [
+    {
+      "effect_type": "per_lap_permanent_bonus",
+      "stat": "max_hp",
+      "value": 10,
+      "reset_condition": {
+        "max_hp_check": {
+          "operator": ">=",
+          "value": 80,
+          "reset_to": 30
+        }
+      }
+    }
+  ]
 }
 ```
 
@@ -154,14 +176,24 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 
 | ファイル | 役割 |
 |---------|------|
+| `scripts/game_flow/lap_system.gd` | **周回管理クラス（メイン）** |
+| `scripts/game_flow_manager.gd` | ラッパー（外部互換用） |
 | `scripts/tiles/checkpoint_tile.gd` | チェックポイントタイル |
-| `scripts/game_flow_manager.gd` | 周回状態管理・ボーナス適用 |
-| `scripts/board_system_3d.gd` | `get_player_tiles()`追加 |
+| `scripts/board_system_3d.gd` | `get_player_tiles()`提供 |
 | `scripts/movement_controller.gd` | チェックポイント通過検出 |
-| `scenes/Tiles/CheckpointTile.tscn` | チェックポイントタイルシーン |
-| `scenes/Main.tscn` | タイル0,10をCheckpointTileに設定 |
-| `data/fire_1.json` | キメラのability_parsed |
-| `data/earth_2.json` | モスタイタンのability_parsed |
+
+---
+
+## 🔗 外部参照箇所
+
+LapSystemの機能を利用している箇所:
+
+| メソッド | 参照元ファイル |
+|---------|---------------|
+| `get_lap_count()` | spell_magic.gd, player_status_dialog.gd |
+| `get_destroy_count()` | battle_skill_processor.gd, debug_panel.gd, spell_magic.gd |
+| `on_creature_destroyed()` | battle_system.gd |
+| `player_lap_state` | battle_special_effects.gd, skill_legacy.gd, spell_player_move.gd |
 
 ---
 
@@ -169,29 +201,13 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 
 - [x] N→S通過で周回完了
 - [x] S→N通過でも周回完了
+- [x] 周回完了時の魔力ボーナス
+- [x] 周回完了時のダウン解除
+- [x] 周回完了時のHP回復
 - [x] キメラのST上昇（周回ごとに+10）
-- [x] モスタイタンのMHP上昇とリセット（MHP≧80で30に戻る）
-- [x] 周回カウンター正常動作
+- [x] モスタイタンのMHP上昇とリセット
 - [x] 複数プレイヤーの周回状態が独立
-
----
-
-## 🐛 解決した問題
-
-### 問題1: ワープ時のエラー
-**症状**: `core/math/basis.cpp:47 @ invert()` エラー  
-**原因**: `player.scale = Vector3.ZERO`で行列式がゼロになる  
-**解決**: `Vector3(0.001, 0.001, 0.001)`を使用
-
-### 問題2: game_startedフラグ問題
-**症状**: 2周目以降も「初回」扱いされる  
-**原因**: 初期化時に`game_started=false`のまま  
-**解決**: `game_started`フラグを削除し、シンプルなN/Sフラグのみに
-
-### 問題3: get_player_tiles未実装
-**症状**: `Nonexistent function 'get_player_tiles'`エラー  
-**原因**: BoardSystem3Dに関数が存在しない  
-**解決**: `get_player_tiles(player_id)`関数を追加
+- [x] 破壊カウンターの正常動作
 
 ---
 
@@ -201,7 +217,4 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 - [ ] 周回ボーナス対象クリーチャーを追加
 - [ ] 周回数UIの表示
 - [ ] 周回数に応じた特殊イベント
-
----
-
-**最終更新**: 2025年10月27日
+- [ ] 直接参照方式への移行（game_flow_manager経由をやめる）
