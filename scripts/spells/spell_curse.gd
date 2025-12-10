@@ -109,7 +109,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "command_growth", duration, params)
 		
 		"plague_curse":
-			# 衰弱呪い（プレイグ）- 戦闘終了時にHP -= MHP/2（切り上げ）
+			# 衰弱呪い（プレイグ）- 戦闦終了時にHP -= MHP/2（切り上げ）
 			var params = {
 				"name": effect.get("name", "衰弱")
 			}
@@ -117,25 +117,27 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 		
 		"bounty_curse":
 			# 賞金首呪い（バウンティハント）- 武器で破壊時に術者がG300獲得
+			var caster_id = player_system.current_player_index
 			var params = {
 				"name": effect.get("name", "賞金首"),
 				"reward": effect.get("reward", 300),
 				"requires_weapon": effect.get("requires_weapon", true),
 				"prevent_move": effect.get("prevent_move", true),
 				"prevent_swap": effect.get("prevent_swap", true),
-				"caster_id": effect.get("caster_id", -1)
+				"caster_id": caster_id
 			}
 			curse_creature(tile_index, "bounty", duration, params)
 		
 		"land_curse":
 			# 土地呪い（ブラストトラップ等）- 敵停止時に発動
+			var caster_id = player_system.current_player_index
 			var params = {
 				"name": effect.get("curse_name", effect.get("name", "土地呪い")),
 				"curse_type": effect.get("curse_type", ""),
 				"trigger": effect.get("trigger", "on_enemy_stop"),
 				"one_shot": effect.get("one_shot", false),
 				"curse_effects": effect.get("curse_effects", []),
-				"caster_id": effect.get("caster_id", -1)
+				"caster_id": caster_id
 			}
 			curse_creature(tile_index, effect.get("curse_type", "land_trap"), duration, params)
 		
@@ -203,7 +205,8 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 # ========================================
 
 # クリーチャーに呪いを付与
-func curse_creature(tile_index: int, curse_type: String, duration: int = -1, params: Dictionary = {}):
+# is_spread: 拡散処理中かどうか（再帰防止用）
+func curse_creature(tile_index: int, curse_type: String, duration: int = -1, params: Dictionary = {}, is_spread: bool = false):
 	var creature = creature_manager.get_data_ref(tile_index)
 	if not creature:
 		print("[SpellCurse] エラー: タイル ", tile_index, " にクリーチャーが存在しません")
@@ -225,6 +228,10 @@ func curse_creature(tile_index: int, curse_type: String, duration: int = -1, par
 	
 	print("[呪い付与] ", curse_name, " → ", creature.get("name", "不明"), 
 		  " (duration=", duration, ")")
+	
+	# 呪い拡散スキルチェック（再帰防止: is_spread = false の場合のみ）
+	if not is_spread:
+		SpellProtection.apply_curse_spread(self, creature, tile_index, curse_type, duration, params)
 
 # クリーチャーの呪いを取得
 func get_creature_curse(tile_index: int) -> Dictionary:

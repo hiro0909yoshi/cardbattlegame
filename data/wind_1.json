@@ -170,11 +170,12 @@
 			},
 			"ap": 10,
 			"hp": 20,
-			"ability": "巻物強打・マーク付与",
+			"ability": "巻物強打・呪い拡散",
 			"ability_detail": "巻物強打；これに呪い付与時、同じ呪いを使用者の全領地につけ、ダウンする",
 			"ability_parsed": {
 				"keywords": [
-					"巻物強打"
+					"巻物強打",
+					"呪い拡散"
 				],
 				"keyword_conditions": {
 					"巻物強打": {

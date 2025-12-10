@@ -175,6 +175,69 @@ static func _get_target_name(target_data: Dictionary) -> String:
 
 
 # ============================================
+# 呪い拡散スキル判定
+# ============================================
+
+## クリーチャーが呪い拡散スキルを持っているかチェック
+static func has_curse_spread_skill(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	return "呪い拡散" in keywords
+
+
+## 呪い拡散スキルの適用
+## spell_curse: SpellCurseインスタンス
+static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_index: int, curse_type: String, duration: int, params: Dictionary):
+	# 呪い拡散スキルチェック
+	if not has_curse_spread_skill(creature_data):
+		return
+	
+	var board_system = spell_curse.board_system
+	var creature_manager = spell_curse.creature_manager
+	var player_system = spell_curse.player_system
+	var game_flow_manager = spell_curse.game_flow_manager
+	
+	# 現在のプレイヤー（スペル使用者）を取得
+	var caster_id = player_system.current_player_index
+	
+	# 使用者の全領地から拡散対象を取得
+	var context = {}
+	if game_flow_manager:
+		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
+	
+	for target_tile_index in board_system.tile_nodes.keys():
+		var tile = board_system.tile_nodes[target_tile_index]
+		
+		# 使用者の領地かチェック
+		if tile.owner_id != caster_id:
+			continue
+		
+		# 自分自身のタイルはスキップ（既に呪いがついている）
+		if target_tile_index == tile_index:
+			continue
+		
+		# クリーチャーがいるかチェック
+		var target_creature = creature_manager.get_data_ref(target_tile_index)
+		if not target_creature:
+			continue
+		
+		# 防魔チェック
+		if is_creature_protected(target_creature, context):
+			continue
+		
+		# 呪いを付与（is_spread = true で再帰防止）
+		spell_curse.curse_creature(target_tile_index, curse_type, duration, params, true)
+	
+	# 呪い拡散クリーチャーをダウン
+	if board_system.tile_nodes.has(tile_index):
+		var tile = board_system.tile_nodes[tile_index]
+		if tile.has_method("set_down_state"):
+			tile.set_down_state(true)
+
+
+# ============================================
 # スペル使用不可判定
 # ============================================
 

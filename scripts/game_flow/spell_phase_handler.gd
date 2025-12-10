@@ -696,13 +696,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
 				if game_flow_manager and game_flow_manager.spell_curse:
-					# caster_id追加が必要な効果
-					if effect_type in ["bounty_curse", "land_curse"]:
-						var effect_with_caster = effect.duplicate()
-						effect_with_caster["caster_id"] = current_player_id
-						game_flow_manager.spell_curse.apply_effect(effect_with_caster, tile_index)
-					else:
-						game_flow_manager.spell_curse.apply_effect(effect, tile_index)
+					game_flow_manager.spell_curse.apply_effect(effect, tile_index)
 		
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
 			# 通行料呪い系（統合処理）
