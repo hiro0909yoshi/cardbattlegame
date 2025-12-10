@@ -45,6 +45,9 @@ var current_mode: CameraMode = CameraMode.FOLLOW
 var is_dragging: bool = false
 var current_player_id: int = 0
 
+## 現在のTween（競合防止用）
+var current_tween: Tween = null
+
 ## 外部参照
 var board_system = null
 var player_system = null
@@ -57,7 +60,7 @@ func setup(cam: Camera3D, board, player_sys):
 	camera = cam
 	board_system = board
 	player_system = player_sys
-	print("[CameraController] 初期化完了")
+
 
 # ========================================
 # モード管理
@@ -81,13 +84,13 @@ func set_mode_for_phase(phase: int, is_my_turn: bool):
 ## スペル/召喚フェーズで手動モードを有効化
 func enable_manual_mode():
 	current_mode = CameraMode.MANUAL
-	print("[CameraController] 手動モード有効")
+
 
 ## 固定モードに戻す
 func enable_follow_mode():
 	current_mode = CameraMode.FOLLOW
 	is_dragging = false
-	print("[CameraController] 追従モード有効")
+
 
 ## 現在手動操作中かどうか
 func is_user_controlling() -> bool:
@@ -202,13 +205,23 @@ func focus_on_tile(tile_index: int, smooth: bool = true):
 	else:
 		camera.global_position = new_camera_pos
 		camera.look_at(look_target, Vector3.UP)
+		camera.look_at(look_target, Vector3.UP)
 
 ## スムーズにカメラを移動
 func _smooth_move_to(target_pos: Vector3, look_target: Vector3):
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(camera, "global_position", target_pos, camera_move_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	# 既存のTweenをキャンセル
+	cancel_tween()
+	
+	current_tween = create_tween()
+	current_tween.set_parallel(true)
+	current_tween.tween_property(camera, "global_position", target_pos, camera_move_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	
 	# look_atはTweenできないので、移動完了後に設定
-	tween.set_parallel(false)
-	tween.tween_callback(func(): camera.look_at(look_target, Vector3.UP))
+	current_tween.set_parallel(false)
+	current_tween.tween_callback(func(): camera.look_at(look_target, Vector3.UP))
+
+## 現在のTweenをキャンセル（外部からも呼び出し可能）
+func cancel_tween():
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
+		current_tween = null

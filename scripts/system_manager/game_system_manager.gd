@@ -198,7 +198,6 @@ func phase_3_setup_basic_config() -> void:
 			await get_tree().process_frame
 			
 			# === カメラ初期位置をタイル位置基準で設定（移動時と同じ計算） ===
-			print("[Camera Init] tile_nodes keys: %s" % [board_system_3d.tile_nodes.keys().slice(0, 5)])
 			if board_system_3d.tile_nodes.has(0):
 				var tile_pos = board_system_3d.tile_nodes[0].global_position
 				tile_pos.y += 1.0  # MOVE_HEIGHT
@@ -208,9 +207,6 @@ func phase_3_setup_basic_config() -> void:
 				var cam_pos = tile_pos + GameConstants.CAMERA_OFFSET
 				camera_3d.global_position = cam_pos
 				camera_3d.look_at(look_target, Vector3.UP)
-				print("[Camera Init] tile_pos=%s, cam_pos=%s, look=%s" % [tile_pos, cam_pos, look_target])
-			else:
-				print("[Camera Init] ERROR: tile 0 not found!")
 	
 	# CameraController初期化
 	if camera_3d and board_system_3d:
@@ -219,6 +215,10 @@ func phase_3_setup_basic_config() -> void:
 		parent_node.add_child(camera_controller)
 		camera_controller.setup(camera_3d, board_system_3d, player_system)
 		board_system_3d.camera_controller = camera_controller
+		
+		# MovementControllerにも参照を渡す（Tween競合防止用）
+		if board_system_3d.movement_controller:
+			board_system_3d.movement_controller.camera_controller = camera_controller
 	
 	print("[GameSystemManager] Phase 3: システム基本設定完了")
 

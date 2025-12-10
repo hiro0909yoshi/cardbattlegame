@@ -707,10 +707,9 @@ func complete_spell_phase():
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()
 	
-	# カメラを追従モードに戻し、プレイヤー位置に復帰
+	# カメラを追従モードに戻す（位置は移動処理で自然に戻る）
 	if board_system and board_system.camera_controller:
 		board_system.camera_controller.enable_follow_mode()
-		board_system.camera_controller.return_to_player()
 	
 	spell_phase_completed.emit()
 	

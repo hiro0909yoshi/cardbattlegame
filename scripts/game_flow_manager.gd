@@ -809,8 +809,3 @@ func _is_current_player_human() -> bool:
 	if current_id < 0 or current_id >= player_is_cpu.size():
 		return true
 	return not player_is_cpu[current_id]
-
-## カメラをプレイヤーに戻す（外部から呼び出し用）
-func return_camera_to_player():
-	if board_system_3d and board_system_3d.camera_controller:
-		board_system_3d.camera_controller.return_to_player()

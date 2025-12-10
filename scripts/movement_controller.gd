@@ -22,6 +22,7 @@ var tile_nodes = {}        # tile_index -> BaseTile
 var player_nodes = []      # プレイヤー駒ノード配列
 var player_tiles = []      # 各プレイヤーの現在位置
 var camera = null          # Camera3D参照
+var camera_controller: CameraController = null  # CameraController参照
 
 # 状態
 var is_moving = false
@@ -654,8 +655,10 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	
 	# カメラを追従（現在のプレイヤーのみ）
 	if camera and player_system and player_id == player_system.current_player_index:
+		# CameraControllerのTweenをキャンセル（競合防止）
+		if camera_controller and camera_controller.has_method("cancel_tween"):
+			camera_controller.cancel_tween()
 		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-		print("[Camera Move] tile=%d, current=%s, target_pos=%s, cam_target=%s" % [tile_index, camera.global_position, target_pos, cam_target])
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
 	# Tweenの完了を待つ
