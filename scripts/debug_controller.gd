@@ -28,12 +28,18 @@ var card_id_input: LineEdit = null
 func _ready():
 	if enabled and OS.is_debug_build():
 		print("【デバッグコマンド】")
+		print("  SPACEキー: サイコロを振る")
+		print("  Vキー: 通行料/HP/ST表示切替")
+		print("  Sキー: シグナル接続状態を表示")
+		print("  Dキー: CPU手札表示切替")
 		print("  数字キー1-6: サイコロ固定")
 		print("  0キー: サイコロ固定解除")
+		print("  7キー: 敵の土地へ移動")
+		print("  8キー: 空き地へ移動")
 		print("  9キー: 魔力+1000G")
-		print("  Hキー: カードID指定で手札追加（全カード対応）")
-		print("  Dキー: CPU手札表示切替")
-		print("  Uキー: 現在プレイヤーの全土地のダウン状態を解除")
+		print("  Hキー: カードID指定で手札追加")
+		print("  Uキー: 現在プレイヤーの全土地のダウン解除")
+		print("  Lキー: 現在のタイルをレベル4に")
 	
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
@@ -81,6 +87,14 @@ func _input(event):
 	
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
+			KEY_SPACE:
+				_roll_dice()
+			KEY_V:
+				_toggle_tile_display()
+			KEY_S:
+				_show_signal_connections()
+			KEY_D:
+				_toggle_debug_mode()
 			KEY_1:
 				set_debug_dice(1)
 			KEY_2:
@@ -435,3 +449,42 @@ func set_current_tile_level_4():
 	
 	print("【デバッグ】タイル%d をレベル4に設定しました" % tile_index)
 	emit_signal("debug_action", "set_level_4", tile_index)
+
+# ============================================
+# game_3d.gdから移動した入力処理
+# ============================================
+
+# SPACEキー: サイコロを振る
+func _roll_dice():
+	if game_flow_manager:
+		game_flow_manager.roll_dice()
+
+# Vキー: タイル表示モード切替
+func _toggle_tile_display():
+	if not board_system:
+		return
+	
+	if board_system.tile_info_display:
+		board_system.tile_info_display.switch_mode()
+		board_system.update_all_tile_displays()
+		var mode_name = board_system.tile_info_display.get_current_mode_name()
+		print("表示切替: ", mode_name)
+		
+		# UIに一時表示
+		if ui_manager and ui_manager.phase_label:
+			var original_text = ui_manager.phase_label.text
+			ui_manager.phase_label.text = "表示: " + mode_name
+			await get_tree().create_timer(1.0).timeout
+			if ui_manager and ui_manager.phase_label:
+				ui_manager.phase_label.text = original_text
+
+# Sキー: シグナル接続状態を表示
+func _show_signal_connections():
+	SignalRegistry.debug_print_connections()
+	var stats = SignalRegistry.get_stats()
+	print("総接続数: ", stats.get("total_connections", 0))
+
+# Dキー: デバッグモード切替
+func _toggle_debug_mode():
+	if ui_manager:
+		ui_manager.toggle_debug_mode()

@@ -105,8 +105,6 @@ participant.is_mhp_below_or_equal(threshold: int) -> bool
 participant.is_mhp_above_or_equal(threshold: int) -> bool
 participant.is_mhp_in_range(min: int, max: int) -> bool
 
-// デバッグ用
-participant.get_hp_debug_string() -> String  // "50/60 (40+20)"
 ```
 
 **Usage Example**:

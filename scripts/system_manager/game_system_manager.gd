@@ -385,23 +385,7 @@ func phase_6_prepare_game_start() -> void:
 		await get_tree().create_timer(0.1).timeout
 		ui_manager.update_player_info_panels()
 	
-	# 操作説明を表示
-	_print_controls_help()
-	
 	print("[GameSystemManager] Phase 6: ゲーム開始準備完了")
-	
-
-
-# === ヘルパーメソッド ===
-
-func _print_controls_help() -> void:
-	print("\n=== 操作方法 ===")
-	print("【V】キー: 通行料/HP/ST表示切替")
-	print("【S】キー: シグナル接続状態を表示")
-	print("【D】キー: デバッグモード切替")
-	print("【数字1-6】: サイコロ固定（デバッグ）")
-	print("【0】キー: サイコロ固定解除")
-	print("================\n")
 
 # === イベントハンドラ ===
 
