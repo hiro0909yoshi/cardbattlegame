@@ -52,10 +52,11 @@ game_flow_manager.gd
 
 ## 作業順序
 
-1. [ ] spell_phase_handler.gd 分割
-   - [ ] spell_target_selector.gd 抽出
-   - [ ] spell_effect_executor.gd 抽出
-   - [ ] 動作確認
+1. [x] spell_phase_handler.gd 分割 (2025/12/11完了)
+   - [x] spell_effect_executor.gd 抽出 (338行)
+   - [-] spell_target_selector.gd → 不要（TargetSelectionHelperが既に存在）
+   - [x] 動作確認
+   - 結果: 1284行 → 925行 (約360行削減)
 
 2. [ ] game_flow_manager.gd 分割
    - [ ] lap_system.gd 抽出
