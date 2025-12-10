@@ -19,14 +19,6 @@ enum BattleResult {
 	BOTH_DEFEATED           # 相打ち（土地は無所有になる）
 }
 
-# 属性相性テーブル（火→風→土→水→火）
-var element_advantages = {
-	"火": "風",
-	"風": "土", 
-	"土": "水",
-	"水": "火"
-}
-
 # システム参照
 var board_system_ref = null  # BoardSystem3D
 var card_system_ref: CardSystem = null
@@ -613,63 +605,77 @@ func _apply_magic_on_enemy_survive(result: BattleResult, attacker: BattlePartici
 	"""
 	バトル結果が確定した直後に魔力獲得効果をチェック
 	
-	Args:
-		result: バトル結果
-		attacker: 攻撃側
-		defender: 防御側
+	ゴールドハンマー: 「攻撃で敵非破壊時、魔力獲得」
+	- 攻撃側がアイテムを使用し、防御側が生存している場合に発動
+	- DEFENDER_WIN（防御成功）: 防御側生存 → 発動
+	- ATTACKER_SURVIVED（侵略失敗）: 防御側生存 → 発動
 	"""
 	if not spell_magic:
 		return
 	
-	# 攻撃側のアイテムをチェック（ゴールドハンマー）
-	if result == BattleResult.ATTACKER_SURVIVED:  # 攻撃側勝利 & 敵生存
-		_check_and_apply_magic_on_enemy_survive(attacker, defender)
+	# 攻撃側のゴールドハンマーをチェック（防御側が生存している場合）
+	if result == BattleResult.DEFENDER_WIN or result == BattleResult.ATTACKER_SURVIVED:
+		_check_attacker_gold_hammer(attacker, defender)
 	
 	# 防御側のアイテムもチェック（攻撃側生存時）
-	if result == BattleResult.ATTACKER_SURVIVED or result == BattleResult.DEFENDER_WIN:
-		_check_and_apply_magic_on_enemy_survive(defender, attacker)
+	# 防御側が武器を使用し、攻撃側が生存している場合
+	if result == BattleResult.ATTACKER_SURVIVED:
+		_check_defender_magic_on_enemy_survive(defender, attacker)
 
-## ゴールドハンマー用のヘルパー関数
-func _check_and_apply_magic_on_enemy_survive(winner: BattleParticipant, loser: BattleParticipant):
+## 攻撃側のゴールドハンマー効果をチェック
+func _check_attacker_gold_hammer(attacker: BattleParticipant, defender: BattleParticipant):
 	"""
-	勝利側のアイテムをチェックして、敵生存時の魔力獲得効果を適用
+	攻撃側のアイテムをチェックして、敵非破壊時の魔力獲得効果を適用
+	攻撃側が死亡していても、防御側が生存していれば発動する
 	"""
-	if not winner or not loser:
+	if not attacker or not defender:
 		return
 	
-	# 勝者が生存していない場合は何もしない
-	if not winner.is_alive():
+	# 防御側が生存していない場合は発動しない（敵非破壊が条件）
+	if not defender.is_alive():
 		return
 	
-	# 敗者が生存していない場合は何もしない（敵非破壊が条件）
-	if not loser.is_alive():
-		return
-	
-	var items = winner.creature_data.get("items", [])
+	var items = attacker.creature_data.get("items", [])
 	for item in items:
 		var effect_parsed = item.get("effect_parsed", {})
 		var effects = effect_parsed.get("effects", [])
 		
 		for effect in effects:
-			var effect_type = effect.get("effect_type", "")
-			
-			# magic_on_enemy_survive効果をチェック
-			if effect_type == "magic_on_enemy_survive":
+			if effect.get("effect_type", "") == "magic_on_enemy_survive":
+				var amount = effect.get("amount", 200)
+				print("【魔力獲得(敵非破壊)】", attacker.creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", attacker.player_id + 1, "が", amount, "G獲得")
+				spell_magic.add_magic(attacker.player_id, amount)
+
+## 防御側の魔力獲得効果をチェック（攻撃側生存時）
+func _check_defender_magic_on_enemy_survive(defender: BattleParticipant, attacker: BattleParticipant):
+	"""
+	防御側のアイテムをチェックして、敵非破壊時の魔力獲得効果を適用
+	"""
+	if not defender or not attacker:
+		return
+	
+	# 攻撃側が生存していない場合は発動しない
+	if not attacker.is_alive():
+		return
+	
+	var items = defender.creature_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		
+		for effect in effects:
+			if effect.get("effect_type", "") == "magic_on_enemy_survive":
+				# 防御側の場合、condition: "attacker_win_enemy_alive" は適用されない
+				# （防御側は攻撃側ではないため）
 				var condition = effect.get("condition", "")
-				
-				# 条件チェック: attacker_win_enemy_alive
 				if condition == "attacker_win_enemy_alive":
-					# 勝者が攻撃側である必要がある
-					if not winner.is_attacker:
-						continue
+					continue  # この条件は攻撃側専用
 				
 				var amount = effect.get("amount", 200)
-				var player_id = winner.player_id
-				
-				print("【魔力獲得(敵非破壊)】", winner.creature_data.get("name", "?"), "の", item.get("name", "?"), 
-					  " → プレイヤー", player_id + 1, "が", amount, "G獲得")
-				
-				spell_magic.add_magic(player_id, amount)
+				print("【魔力獲得(敵非破壊)】", defender.creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", defender.player_id + 1, "が", amount, "G獲得")
+				spell_magic.add_magic(defender.player_id, amount)
 
 # バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲
 func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:

@@ -471,12 +471,19 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	
 	# 戦闘結果情報を返す
 	# 💰 アイテム不使用時の魔力奪取スキル（アマゾン）
+	# 勝敗に関係なく、生存している参加者それぞれをチェック
 	if spell_magic_ref:
-		var winner = attacker_p if attacker_p.is_alive() else defender_p
-		var loser = defender_p if attacker_p.is_alive() else attacker_p
-		var winner_has_item = winner.creature_data.get("items", []).size() > 0
 		var turn_count = 1  # TODO: 実際の周回数を取得する必要がある
-		SkillMagicSteal.apply_no_item_steal(winner, winner_has_item, turn_count, spell_magic_ref, loser)
+		
+		# 攻撃側のスキルチェック（生存している場合）
+		if attacker_p.is_alive():
+			var attacker_has_item = attacker_p.creature_data.get("items", []).size() > 0
+			SkillMagicSteal.apply_no_item_steal(attacker_p, attacker_has_item, turn_count, spell_magic_ref, defender_p)
+		
+		# 防御側のスキルチェック（生存している場合）
+		if defender_p.is_alive():
+			var defender_has_item = defender_p.creature_data.get("items", []).size() > 0
+			SkillMagicSteal.apply_no_item_steal(defender_p, defender_has_item, turn_count, spell_magic_ref, attacker_p)
 	
 	# 🃏 生き残り時効果（カード獲得スキル）
 	if original_attacker.is_alive():

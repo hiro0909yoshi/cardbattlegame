@@ -212,20 +212,6 @@ func is_mhp_in_range(min_threshold: int, max_threshold: int) -> bool:
 	return mhp >= min_threshold and mhp <= max_threshold
 
 # デバッグ用：MHP情報を文字列で取得
-# "現在HP/MHP (base_hp+base_up_hp)" 形式
-func get_hp_debug_string() -> String:
-	var mhp = get_max_hp()
-	return "%d/%d (%d+%d)" % [current_hp, mhp, base_hp, base_up_hp]
-
-# デバッグ用の情報出力
-func get_status_string() -> String:
-	return "%s (HP:%d/%d, AP:%d)" % [
-		creature_data.get("name", "不明"),
-		current_hp,
-		base_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp,
-		current_ap
-	]
-
 # MHP範囲に直接ダメージ（雪辱効果用）
 # ボーナスを無視してMHP（base_hp + base_up_hp）を直接削る
 # MHPが0以下になった場合は即死扱い

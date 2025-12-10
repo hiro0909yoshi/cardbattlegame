@@ -288,14 +288,6 @@ func calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> i
 	print("  → 地形効果なし")
 	return 0
 
-# バトル準備の完了を通知
-func battle_preparation_completed():
-	pass  # 必要に応じて処理を追加
-
-# バトル終了後の処理
-func process_battle_end(_attacker: BattleParticipant, _defender: BattleParticipant) -> void:
-	pass  # 必要に応じて処理を追加
-
 ## 変身効果を持っているかチェック
 func _has_transform_effect(participant: BattleParticipant, trigger: String) -> bool:
 	if not participant or not participant.creature_data:
