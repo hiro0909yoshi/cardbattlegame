@@ -142,19 +142,10 @@ static func _build_context(handler) -> Dictionary:
 ## 戻り値: 防魔対象を除外したターゲットリスト
 static func filter_protected_targets(targets: Array, handler) -> Array:
 	var filtered = []
-	var protected_count = 0
 	
 	for target in targets:
-		if is_target_protected(target, handler):
-			protected_count += 1
-			# デバッグログ
-			var target_name = _get_target_name(target)
-			print("[防魔] %s は防魔状態のため対象から除外" % target_name)
-		else:
+		if not is_target_protected(target, handler):
 			filtered.append(target)
-	
-	if protected_count > 0:
-		print("[防魔] %d体の対象が防魔により除外されました" % protected_count)
 	
 	return filtered
 

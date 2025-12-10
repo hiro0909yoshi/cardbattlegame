@@ -109,7 +109,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "command_growth", duration, params)
 		
 		"plague_curse":
-			# 衰弱呪い（プレイグ）- 戦闦終了時にHP -= MHP/2（切り上げ）
+			# 衰弱呪い（プレイグ）- 戦闘終了時にHP -= MHP/2（切り上げ）
 			var params = {
 				"name": effect.get("name", "衰弱")
 			}

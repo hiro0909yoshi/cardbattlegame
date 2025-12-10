@@ -1,6 +1,6 @@
 # 呪い拡散スキル
 
-**バージョン**: 1.0  
+**バージョン**: 1.1  
 **最終更新**: 2025年12月10日
 
 ---
@@ -28,7 +28,6 @@
 | 拡散呪い | 自身に付与されたものと同じ呪い |
 | 防魔対象 | 拡散対象から除外 |
 | ダウン | 呪い拡散クリーチャーはダウン状態になる |
-| 不屈 | 不屈を持っていればダウンしない |
 
 ---
 
@@ -82,14 +81,17 @@
 
 | ファイル | 役割 |
 |----------|------|
-| `scripts/spells/spell_curse.gd` | 呪い付与時の拡散チェック |
-| `scripts/game_flow/spell_phase_handler.gd` | caster_id追加 |
+| `scripts/spells/spell_curse.gd` | 呪い付与時にSpellProtectionへ委譲 |
+| `scripts/spells/spell_protection.gd` | 呪い拡散の判定と処理 |
 
 ### 主要メソッド
 
 **spell_curse.gd**:
-- `curse_creature()` - caster_id引数追加、呪い拡散チェック
-- `_check_and_apply_curse_spread()` - 呪い拡散処理
+- `curse_creature()` - 呪い付与後に`SpellProtection.apply_curse_spread()`を呼び出し
+
+**spell_protection.gd**:
+- `has_curse_spread_skill()` - 呪い拡散スキル判定
+- `apply_curse_spread()` - 呪い拡散処理（対象取得、防魔チェック、呪い付与、ダウン）
 
 ---
 
@@ -97,14 +99,14 @@
 
 ```
 1. 呪いスペル使用 → spell_phase_handler._apply_single_effect()
-2. effectにcaster_id追加
-3. spell_curse.apply_effect() → curse_creature()
-4. 呪い付与完了
-5. _check_and_apply_curse_spread()チェック
+2. spell_curse.apply_effect() → curse_creature()
+3. 呪い付与完了
+4. SpellProtection.apply_curse_spread() 呼び出し
    - 呪い拡散keyword確認
-   - caster_idの全領地を取得
+   - player_system.current_player_indexで使用者取得
+   - 使用者の全領地を取得
    - 各クリーチャーに呪い付与（防魔チェック、is_spread=true）
-   - 呪い拡散クリーチャーをダウン（不屈チェック）
+   - 呪い拡散クリーチャーをダウン
 ```
 
 ---
@@ -114,7 +116,6 @@
 - 拡散処理は`is_spread=true`で呼び出し、再帰を防止
 - 自身のタイルは拡散対象から除外（既に呪いがついている）
 - 防魔を持つクリーチャーは拡散対象外
-- ダウンは不屈を持っていれば回避可能
 
 ---
 
@@ -123,3 +124,4 @@
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/12/10 | 1.0 | 初版作成 |
+| 2025/12/10 | 1.1 | 実装をSpellProtectionに移動、不屈チェック削除 |
