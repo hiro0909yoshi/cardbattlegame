@@ -655,6 +655,7 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	# カメラを追従（現在のプレイヤーのみ）
 	if camera and player_system and player_id == player_system.current_player_index:
 		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
+		print("[Camera Move] tile=%d, current=%s, target_pos=%s, cam_target=%s" % [tile_index, camera.global_position, target_pos, cam_target])
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
 	# Tweenの完了を待つ

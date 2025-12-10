@@ -193,6 +193,10 @@ func focus_on_tile(tile_index: int, smooth: bool = true):
 	var look_target = tile_pos + Vector3(0, 1.0, 0)
 	var new_camera_pos = look_target + GameConstants.CAMERA_OFFSET
 	
+	# すでに目標位置に近い場合はスキップ（Tween競合防止）
+	if camera.global_position.distance_to(new_camera_pos) < 0.5:
+		return
+	
 	if smooth:
 		_smooth_move_to(new_camera_pos, look_target)
 	else:

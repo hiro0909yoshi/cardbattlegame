@@ -194,15 +194,23 @@ func phase_3_setup_basic_config() -> void:
 			# collect_players() はカメラ参照を必要とする
 			board_system_3d.collect_players(players_container)
 			
-			# === カメラ初期位置をプレイヤー位置に合わせる ===
-			if board_system_3d.player_nodes and board_system_3d.player_nodes.size() > 0:
-				var current_player_node = board_system_3d.player_nodes[0]  # プレイヤー0（現在のプレイヤー）
-				var player_pos = current_player_node.global_position
-				var player_look_target = player_pos + Vector3(0, 1.0, 0)
+			# プレイヤー配置が反映されるまで待つ
+			await get_tree().process_frame
+			
+			# === カメラ初期位置をタイル位置基準で設定（移動時と同じ計算） ===
+			print("[Camera Init] tile_nodes keys: %s" % [board_system_3d.tile_nodes.keys().slice(0, 5)])
+			if board_system_3d.tile_nodes.has(0):
+				var tile_pos = board_system_3d.tile_nodes[0].global_position
+				tile_pos.y += 1.0  # MOVE_HEIGHT
+				var look_target = tile_pos + Vector3(0, 1.0, 0)
 				
-				# カメラ位置 = プレイヤー位置 + オフセット
-				camera_3d.global_position = player_pos + GameConstants.CAMERA_OFFSET
-				camera_3d.look_at(player_look_target, Vector3.UP)
+				# カメラ位置 = タイル位置 + オフセット（移動時と同じ）
+				var cam_pos = tile_pos + GameConstants.CAMERA_OFFSET
+				camera_3d.global_position = cam_pos
+				camera_3d.look_at(look_target, Vector3.UP)
+				print("[Camera Init] tile_pos=%s, cam_pos=%s, look=%s" % [tile_pos, cam_pos, look_target])
+			else:
+				print("[Camera Init] ERROR: tile 0 not found!")
 	
 	# CameraController初期化
 	if camera_3d and board_system_3d:
