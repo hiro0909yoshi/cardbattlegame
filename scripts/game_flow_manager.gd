@@ -345,16 +345,7 @@ func _on_cpu_summon_decided(card_index: int):
 	if not board_system_3d:
 		return
 	
-	# 修正: TileActionProcessorに処理を委譲（シグナルは自動発火）
-	if board_system_3d.tile_action_processor:
-		board_system_3d.tile_action_processor.execute_summon(card_index)
-	else:
-		# フォールバック: 旧方式（tile_action_processorがない場合）
-		if card_index >= 0:
-			board_system_3d.execute_summon(card_index)
-		else:
-			# パス処理
-			board_system_3d.on_action_pass()
+	board_system_3d.tile_action_processor.execute_summon(card_index)
 
 func _on_cpu_battle_decided(card_index: int):
 	if not board_system_3d:
@@ -376,41 +367,19 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 	if not board_system_3d:
 		return
 	
-	# 修正: TileActionProcessorに処理を委譲
-	if board_system_3d.tile_action_processor:
-		if do_upgrade:
-			var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-			var cost = board_system_3d.get_upgrade_cost(current_tile)
-			# レベルアップ処理を委譲（target_levelは計算が必要なので、直接アップグレード）
-			if player_system.get_current_player().magic_power >= cost:
-				var tile = board_system_3d.tile_nodes[current_tile]
-				var target_level = tile.level + 1
-				board_system_3d.tile_action_processor.on_level_up_selected(target_level, cost)
-			else:
-				# 魔力不足の場合はキャンセル
-				board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
+	if do_upgrade:
+		var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
+		var cost = board_system_3d.get_upgrade_cost(current_tile)
+		if player_system.get_current_player().magic_power >= cost:
+			var tile = board_system_3d.tile_nodes[current_tile]
+			var target_level = tile.level + 1
+			board_system_3d.tile_action_processor.on_level_up_selected(target_level, cost)
 		else:
-			# アップグレードしない場合
+			# 魔力不足の場合はキャンセル
 			board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
 	else:
-		# フォールバック: 旧方式
-		if do_upgrade:
-			var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-			var cost = board_system_3d.get_upgrade_cost(current_tile)
-			if player_system.get_current_player().magic_power >= cost:
-				board_system_3d.upgrade_tile_level(current_tile)
-				player_system.add_magic(board_system_3d.current_player_index, -cost)
-				
-				if board_system_3d.tile_info_display:
-					board_system_3d.update_all_tile_displays()
-				if ui_manager:
-					ui_manager.update_player_info_panels()
-				
-				print("CPU: 土地をレベルアップ！")
-		
-		# フォールバック用の完了通知
-		if board_system_3d.tile_action_processor:
-			board_system_3d.tile_action_processor._complete_action()
+		# アップグレードしない場合
+		board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
 
 # === UIコールバック ===
 
@@ -706,18 +675,12 @@ func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
 # ============================================
 
 # Phase 1-A用ハンドラー
-var phase_manager: PhaseManager = null
 var land_command_handler: LandCommandHandler = null
 var spell_phase_handler: SpellPhaseHandler = null
 var item_phase_handler = null  # ItemPhaseHandler
 
 # Phase 1-A: ハンドラーを初期化
 func initialize_phase1a_systems():
-	# PhaseManagerを作成
-	phase_manager = PhaseManager.new()
-	add_child(phase_manager)
-	phase_manager.phase_changed.connect(_on_phase_manager_phase_changed)
-	
 	# LandCommandHandlerを作成
 	land_command_handler = LandCommandHandlerClass.new()
 	add_child(land_command_handler)
@@ -751,10 +714,6 @@ func initialize_phase1a_systems():
 		item_phase_handler = ItemPhaseHandlerClass.new()
 		add_child(item_phase_handler)
 		item_phase_handler.initialize(ui_manager, self, card_system, player_system, battle_system)
-
-# Phase 1-A: PhaseManagerのフェーズ変更を受信
-func _on_phase_manager_phase_changed(_new_phase, _old_phase):
-	pass
 
 # Phase 1-A: 領地コマンドが閉じられたときの処理
 func _on_land_command_closed():
@@ -790,8 +749,6 @@ func open_land_command():
 
 # Phase 1-A: デバッグ情報表示
 func debug_print_phase1a_status():
-	if phase_manager:
-		print("[Phase 1-A] 現在フェーズ: ", phase_manager.get_current_phase_name())
 	if land_command_handler:
 		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())
 
