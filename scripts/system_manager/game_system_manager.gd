@@ -181,9 +181,6 @@ func phase_3_setup_basic_config() -> void:
 	
 	# BoardSystem3D基本設定
 	if board_system_3d and camera_3d:
-		# カメラ初期位置設定
-		camera_3d.position = GameConstants.CAMERA_OFFSET
-		
 		# カメラ参照を最初に設定（重要：collect_players()内で使用される）
 		board_system_3d.camera = camera_3d
 		board_system_3d.player_count = player_count
@@ -197,12 +194,14 @@ func phase_3_setup_basic_config() -> void:
 			# collect_players() はカメラ参照を必要とする
 			board_system_3d.collect_players(players_container)
 			
-			# === カメラをプレイヤーに向かせる ===
+			# === カメラ初期位置をプレイヤー位置に合わせる ===
 			if board_system_3d.player_nodes and board_system_3d.player_nodes.size() > 0:
 				var current_player_node = board_system_3d.player_nodes[0]  # プレイヤー0（現在のプレイヤー）
-				var player_look_target = current_player_node.global_position
-				player_look_target.y += 1.0  # 頭方向に向かせる
+				var player_pos = current_player_node.global_position
+				var player_look_target = player_pos + Vector3(0, 1.0, 0)
 				
+				# カメラ位置 = プレイヤー位置 + オフセット
+				camera_3d.global_position = player_pos + GameConstants.CAMERA_OFFSET
 				camera_3d.look_at(player_look_target, Vector3.UP)
 	
 	# CameraController初期化

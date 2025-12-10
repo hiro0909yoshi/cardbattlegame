@@ -2,6 +2,8 @@
 extends Node
 class_name SpellPhaseHandler
 
+const GameConstants = preload("res://scripts/game_constants.gd")
+
 ## シグナル
 signal spell_phase_started()
 signal spell_phase_completed()
@@ -627,9 +629,7 @@ func _return_camera_to_player():
 		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
 			
-			# MovementControllerと同じカメラオフセットを使用
-			const CAMERA_OFFSET = Vector3(19, 19, 19)
-			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + CAMERA_OFFSET
+			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + GameConstants.CAMERA_OFFSET
 			
 			board_system.camera.position = new_camera_pos
 			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
