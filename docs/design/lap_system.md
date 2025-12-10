@@ -29,9 +29,9 @@ GameFlowManager
         └── 周回ボーナス適用
 ```
 
-**設計方針**: ラッパー方式
-- 外部からは従来通り`game_flow_manager.get_lap_count()`等で呼び出し可能
-- 内部では`LapSystem`に委譲
+**設計方針**: ファサード方式（プロジェクト標準に統一）
+- 外部から`game_flow_manager.lap_system.get_lap_count()`で直接アクセス
+- GameFlowManagerはラッパーメソッドを持たない
 
 ---
 
