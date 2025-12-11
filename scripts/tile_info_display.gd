@@ -11,7 +11,7 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 enum DisplayMode {
 	TOLL,      # 通行料
 	HP,        # クリーチャーHP
-	ST         # クリーチャーST
+	AP         # クリーチャーAP（攻撃力）
 }
 
 # 現在の表示モード
@@ -38,13 +38,13 @@ func setup_labels(tile_nodes: Dictionary, board_system):
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		label.no_depth_test = true
 		label.fixed_size = false  # falseにして遠近感を有効に
-		label.pixel_size = 0.005  # サイズ調整
-		label.position = Vector3(0, 0.5, 1.5)  # タイルの上に配置
+		label.pixel_size = 0.02  # サイズ調整
+		label.position = Vector3(0, -0.7, 0)  # タイルの上に配置
 		label.modulate = Color.WHITE
 		
 		# フォント設定
 		label.font_size = 70
-		label.outline_size = 8
+		label.outline_size = 20
 		label.outline_modulate = Color.BLACK
 		
 		tile.add_child(label)
@@ -70,8 +70,8 @@ func update_display(tile_index: int, tile_info: Dictionary):
 			show_toll(label, tile_info, tile_index)
 		DisplayMode.HP:
 			show_hp(label, tile_info)
-		DisplayMode.ST:
-			show_st(label, tile_info)
+		DisplayMode.AP:
+			show_ap(label, tile_info)
 
 # 通行料表示
 func show_toll(label: Label3D, tile_info: Dictionary, tile_index: int):
@@ -99,14 +99,14 @@ func show_hp(label: Label3D, tile_info: Dictionary):
 		label.modulate = Color(0.3, 1.0, 0.3)  # 緑
 		label.visible = true
 
-# ST表示（AP=攻撃力）
-func show_st(label: Label3D, tile_info: Dictionary):
+# AP表示（攻撃力）
+func show_ap(label: Label3D, tile_info: Dictionary):
 	var creature = tile_info.get("creature", {})
 	if creature.is_empty():
 		label.visible = false
 	else:
-		var st = creature.get("ap", 0)
-		label.text = "ST:" + str(st)
+		var ap = creature.get("ap", 0)
+		label.text = "AP:" + str(ap)
 		label.modulate = Color(1.0, 0.3, 0.3)  # 赤
 		label.visible = true
 
@@ -128,7 +128,7 @@ func calculate_display_toll(tile_info: Dictionary, tile_index: int) -> int:
 func switch_mode():
 	current_mode = DisplayMode.values()[(current_mode + 1) % 3]
 	
-	var mode_names = ["通行料", "HP", "ST"]
+	var mode_names = ["通行料", "HP", "AP"]
 	print("表示モード切替: ", mode_names[current_mode])
 	
 	# 全タイル更新
@@ -141,8 +141,8 @@ func get_current_mode_name() -> String:
 			return "通行料"
 		DisplayMode.HP:
 			return "HP"
-		DisplayMode.ST:
-			return "ST"
+		DisplayMode.AP:
+			return "AP"
 		_:
 			return "不明"
 

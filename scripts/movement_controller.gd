@@ -14,7 +14,7 @@ signal start_passed(player_id: int)
 const GameConstants = preload("res://scripts/game_constants.gd")
 
 # 移動設定
-const MOVE_DURATION = 0.5  # 1マスの移動時間
+const MOVE_DURATION = 0.1  # 1マスの移動時間
 const MOVE_HEIGHT = 1.0    # 駒の高さオフセット
 
 # 参照
