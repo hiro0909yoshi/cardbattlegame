@@ -282,6 +282,11 @@ func roll_dice():
 		return
 	
 	ui_manager.set_dice_button_enabled(false)
+	
+	# カメラをプレイヤー位置に戻す（即座に移動、向きも正しく設定）
+	if board_system_3d and board_system_3d.camera_controller:
+		board_system_3d.camera_controller.focus_on_player(player_system.current_player_index, false)
+	
 	change_phase(GamePhase.MOVING)
 	
 	# 複数ダイスロールの判定

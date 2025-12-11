@@ -655,18 +655,11 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	
 	# カメラを追従（現在のプレイヤーのみ）
 	if camera and player_system and player_id == player_system.current_player_index:
-		# CameraControllerのTweenをキャンセル（競合防止）
-		if camera_controller and camera_controller.has_method("cancel_tween"):
-			camera_controller.cancel_tween()
 		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
 	
 	# Tweenの完了を待つ
 	await tween.finished
-	
-	# カメラをプレイヤーに向ける（移動完了後に実行）
-	if camera and player_system and player_id == player_system.current_player_index:
-		camera.look_at(target_pos + Vector3(0, 1.0, 0), Vector3.UP)
 
 # === ワープ処理 ===
 

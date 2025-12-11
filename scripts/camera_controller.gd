@@ -205,7 +205,6 @@ func focus_on_tile(tile_index: int, smooth: bool = true):
 	else:
 		camera.global_position = new_camera_pos
 		camera.look_at(look_target, Vector3.UP)
-		camera.look_at(look_target, Vector3.UP)
 
 ## スムーズにカメラを移動
 func _smooth_move_to(target_pos: Vector3, look_target: Vector3):
@@ -225,3 +224,12 @@ func cancel_tween():
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 		current_tween = null
+
+## Tween動作中かどうか
+func is_tweening() -> bool:
+	return current_tween != null and current_tween.is_valid()
+
+## Tween完了を待機（外部からawait可能）
+func await_tween_completion() -> void:
+	if current_tween and current_tween.is_valid():
+		await current_tween.finished
