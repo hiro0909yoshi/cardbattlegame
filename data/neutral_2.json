@@ -10,7 +10,7 @@
 				"mp": 30
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具",
 					"武器",
 					"巻物"
@@ -203,7 +203,7 @@
 				"mp": 40
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -508,7 +508,7 @@
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具"
 				]
 			},
@@ -593,7 +593,7 @@
 				"mp": 90
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具",
 					"巻物",
 					"アクセサリ",
@@ -630,7 +630,7 @@
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具",
 					"武器"
 				]

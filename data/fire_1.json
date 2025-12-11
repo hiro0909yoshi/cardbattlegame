@@ -156,7 +156,7 @@
 			"ap": 20,
 			"hp": 40,
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器,アクセサリ,巻物"
 				]
 			},
@@ -184,7 +184,7 @@
 				"mp": 45
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具"
 				]
 			},
@@ -217,7 +217,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -251,7 +251,7 @@
 				"mp": 100
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -270,7 +270,7 @@
 				"mp": 75
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物",
 					"防具"
 				]
@@ -323,7 +323,7 @@
 				"mp": 55
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物",
 					"防具"
 				]
@@ -393,7 +393,7 @@
 				"mp": 45
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器"
 				]
 			},
@@ -448,7 +448,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -494,7 +494,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"アクセサリ"
 				]
 			},
@@ -680,7 +680,7 @@
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器"
 				]
 			},
@@ -724,7 +724,7 @@
 				"cannot_summon": [
 					"wind"
 				],
-				"item_use": [
+				"cannot_use": [
 					"巻物",
 					"防具"
 				]
@@ -812,7 +812,7 @@
 				"mp": 50
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},

@@ -61,7 +61,7 @@
 				"mp": 75
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器"
 				]
 			},
@@ -147,7 +147,7 @@
 				"mp": 50
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -189,7 +189,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -220,7 +220,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -279,7 +279,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器"
 				]
 			},
@@ -370,7 +370,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -403,7 +403,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -463,7 +463,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -560,7 +560,7 @@
 				"mp": 40
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -638,7 +638,7 @@
 				"cannot_summon": [
 					"wind"
 				],
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -668,7 +668,7 @@
 				"mp": 50
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -699,11 +699,9 @@
 				"mp": 25
 			},
 			"restrictions": {
-				"cannot_summon": [
-					"水"
-				],
-				"item_use": [
-					"防具,巻物"
+				"cannot_use": [
+					"防具",
+					"巻物"
 				]
 			},
 			"creature_type": "defensive",
@@ -722,7 +720,7 @@
 				"mp": 80
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},

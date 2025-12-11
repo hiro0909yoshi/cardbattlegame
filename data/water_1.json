@@ -13,7 +13,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -46,7 +46,7 @@
 				"mp": 80
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器",
 					"巻物"
 				],
@@ -141,7 +141,7 @@
 				"mp": 70
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				],
 				"cannot_summon": [
@@ -220,7 +220,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器",
 					"アクセサリ"
 				]
@@ -308,7 +308,7 @@
 				"mp": 55
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具"
 				]
 			},
@@ -376,7 +376,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -445,7 +445,7 @@
 				"mp": 70
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -512,7 +512,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -545,7 +545,7 @@
 				"mp": 90
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -608,7 +608,7 @@
 				"mp": 50
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -639,7 +639,7 @@
 				"mp": 100
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -663,7 +663,7 @@
 				"mp": 60
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				],
 				"cannot_summon": [
@@ -691,7 +691,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"アクセサリ",
 					"巻物"
 				]
@@ -721,7 +721,7 @@
 				"mp": 75
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具"
 				]
 			},
@@ -759,7 +759,7 @@
 				"mp": 40
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器",
 					"防具",
 					"アクセサリ",

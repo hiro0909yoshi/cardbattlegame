@@ -58,7 +58,7 @@
 				"mp": 55
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"武器"
 				]
 			},
@@ -163,7 +163,7 @@
 				"cannot_summon": [
 					"fire"
 				],
-				"item_use": [
+				"cannot_use": [
 					"武器",
 					"防具"
 				]
@@ -194,7 +194,7 @@
 				"mp": 60
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -358,7 +358,7 @@
 				"cannot_summon": [
 					"earth"
 				],
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -377,7 +377,7 @@
 				"mp": 100
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"防具"
 				]
 			},
@@ -396,7 +396,7 @@
 				"mp": 60
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -487,7 +487,7 @@
 				"cannot_summon": [
 					"fire"
 				],
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -550,7 +550,7 @@
 				]
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -637,7 +637,7 @@
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},
@@ -697,7 +697,7 @@
 				"mp": 70
 			},
 			"restrictions": {
-				"item_use": [
+				"cannot_use": [
 					"巻物"
 				]
 			},

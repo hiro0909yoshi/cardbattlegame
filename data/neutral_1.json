@@ -65,7 +65,7 @@
 		"mp": 100
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "防具"
 		]
 	  },
@@ -221,7 +221,7 @@
 		"mp": 60
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "巻物"
 		]
 	  },
@@ -284,7 +284,7 @@
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "武器",
 		  "巻物"
 		]
@@ -324,7 +324,7 @@
 		"mp": 10
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "武器"
 		]
 	  },
@@ -354,7 +354,7 @@
 		"mp": 0
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "武器",
 		  "巻物"
 		]
@@ -517,7 +517,7 @@
 		"mp": 40
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "巻物"
 		]
 	  },
@@ -568,7 +568,7 @@
 		"mp": 10
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "防具",
 		  "武器",
 		  "巻物"
@@ -593,7 +593,7 @@
 		"mp": 60
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "巻物"
 		]
 	  },
@@ -621,7 +621,7 @@
 		"mp": 50
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "防具",
 		  "武器"
 		]
@@ -677,7 +677,7 @@
 		"mp": 75
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "防具",
 		  "巻物"
 		]
@@ -698,7 +698,7 @@
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
-		"item_use": [
+		"cannot_use": [
 		  "防具",
 		  "武器",
 		  "巻物"
