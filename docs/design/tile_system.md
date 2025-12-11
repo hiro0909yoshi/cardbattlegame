@@ -452,9 +452,100 @@ const NO_STOP_TILES = ["warp", "shop"]
 
 ---
 
+## クリーチャー選択（タップ判定）
+
+### 概要
+
+マップ上の3Dクリーチャーカードをタップ/クリックして選択する機能。
+選択されたクリーチャーの情報パネルを表示する。
+
+### 判定構造
+
+```
+CreatureCard3DQuad (Node3D)
+├── SubViewport
+├── MeshInstance3D (QuadMesh) - 表示用
+└── Area3D (タップ判定用)
+    └── CollisionShape3D (BoxShape3D)
+```
+
+### シグナル
+
+```gdscript
+# CreatureCard3DQuad
+signal creature_tapped(creature_data: Dictionary, tile_index: int)
+```
+
+### タップ判定の有効化
+
+CreatureCard3DQuadの`_setup_tap_detection()`でArea3D + CollisionShape3Dを追加。
+
+```gdscript
+# Area3Dの設定
+var area = Area3D.new()
+area.input_ray_pickable = true  # Raycastでの選択を有効化
+
+# CollisionShapeのサイズ（カードサイズに合わせる）
+var box_shape = BoxShape3D.new()
+box_shape.size = Vector3(CARD_3D_WIDTH, CARD_3D_HEIGHT, 0.1)
+```
+
+### 入力イベント処理
+
+```gdscript
+func _on_input_event(_camera, event, _position, _normal, _shape_idx):
+	# マウスクリック（PC）
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			creature_tapped.emit(creature_data, tile_index)
+	# タッチ（スマホ）
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			creature_tapped.emit(creature_data, tile_index)
+```
+
+### タイルインデックスの取得
+
+クリーチャーがどのタイルに配置されているかを知るため、`tile_index`を保持。
+
+```gdscript
+# CreatureCard3DQuadに追加
+var tile_index: int = -1
+
+# base_tiles.gdで配置時に設定
+func _create_creature_card_3d():
+	creature_card_3d = Node3D.new()
+	creature_card_3d.set_script(CREATURE_CARD_3D_SCRIPT)
+	creature_card_3d.tile_index = tile_index  # タイルインデックスを設定
+	add_child(creature_card_3d)
+```
+
+### UIManagerとの接続
+
+```gdscript
+# UIManager
+func _connect_creature_tap_signals():
+	# 全タイルのクリーチャーカードにシグナル接続
+	for tile in board_system.tile_nodes.values():
+		if tile.creature_card_3d:
+			if not tile.creature_card_3d.creature_tapped.is_connected(_on_creature_tapped):
+				tile.creature_card_3d.creature_tapped.connect(_on_creature_tapped)
+
+func _on_creature_tapped(creature_data: Dictionary, tile_index: int):
+	# 情報パネルを表示
+	creature_info_panel.show_creature_info(creature_data, tile_index)
+```
+
+### 関連ドキュメント
+
+詳細は `docs/design/creature_info_panel.md` を参照。
+
+---
+
 ## 更新履歴
 
 | 日付 | 内容 |
 |------|------|
 | 2025/12/08 | 初版作成。TileHelperによるリファクタリング完了 |
 | 2025/12/09 | 自動同期システム追加（creature_data, owner_id, level変更時に3Dカード・通行料ラベルを自動更新） |
+| 2025/12/11 | クリーチャー選択（タップ判定）セクション追加 |

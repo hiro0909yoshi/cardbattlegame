@@ -77,6 +77,9 @@ func update_hand_display(player_id: int):
 	
 	# 全カードを中央配置
 	rearrange_hand(player_id)
+	
+	# 手札更新シグナルを発火（ボタン位置更新用）
+	hand_updated.emit()
 
 ## カードノードを生成
 func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Node:

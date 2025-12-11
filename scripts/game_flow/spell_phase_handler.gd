@@ -154,6 +154,11 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellPhaseUIManager を初期化
 	_initialize_spell_phase_ui()
 	
+	# hand_displayのシグナルに接続（カードドロー後のボタン位置更新用）
+	if ui_manager and ui_manager.hand_display:
+		if not ui_manager.hand_display.hand_updated.is_connected(_on_hand_updated_for_buttons):
+			ui_manager.hand_display.hand_updated.connect(_on_hand_updated_for_buttons)
+	
 	# 発動通知UIを初期化
 	_initialize_spell_cast_notification_ui()
 	
@@ -932,3 +937,18 @@ func _is_lands_required_disabled() -> bool:
 	if board_system and board_system.tile_action_processor:
 		return board_system.tile_action_processor.debug_disable_lands_required
 	return false
+
+
+## 手札更新時にボタン位置を再計算
+func _on_hand_updated_for_buttons():
+	if spell_phase_ui_manager and current_state != State.INACTIVE:
+		# 現在の手札枚数を取得
+		var hand_count = 6  # デフォルト
+		if card_system:
+			hand_count = card_system.get_hand_size_for_player(current_player_id)
+		
+		# ボタン位置を更新
+		if spell_phase_ui_manager.mystic_button and spell_phase_ui_manager.mystic_button.visible:
+			spell_phase_ui_manager.show_mystic_button(hand_count)
+		if spell_phase_ui_manager.spell_skip_button and spell_phase_ui_manager.spell_skip_button.visible:
+			spell_phase_ui_manager.show_spell_skip_button(hand_count)
