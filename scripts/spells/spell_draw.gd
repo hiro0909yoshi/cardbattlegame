@@ -1051,6 +1051,7 @@ func execute_draw_by_type_with_ui(player_id: int) -> Dictionary:
 			return {"drawn": false, "card_name": "", "selected_type": ""}
 		spell_and_mystic_ui = SpellAndMysticUIClass.new()
 		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		spell_and_mystic_ui.set_ui_manager(ui_manager_ref)
 		ui_manager_ref.add_child(spell_and_mystic_ui)
 	
 	# ガイド表示
@@ -1103,6 +1104,7 @@ func _start_type_selection_draw(player_id: int):
 			return
 		spell_and_mystic_ui = SpellAndMysticUIClass.new()
 		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		spell_and_mystic_ui.set_ui_manager(ui_manager_ref)
 		ui_manager_ref.add_child(spell_and_mystic_ui)
 	
 	# ガイド表示

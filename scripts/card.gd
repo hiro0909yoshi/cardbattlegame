@@ -416,7 +416,7 @@ func _input(event):
 	if is_selectable and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			if not is_selected:
-				# 1回目のクリック：選択（プレビュー）
+				# 1回目のクリック
 				# 他のカードの選択を解除（親ノードの全子要素をチェック）
 				var parent = get_parent()
 				if parent:
@@ -424,7 +424,13 @@ func _input(event):
 						if sibling != self and sibling.has_method("deselect_card"):
 							sibling.deselect_card()
 				
-				select_card()
+				# クリーチャーカードかつ情報パネルONの場合は即決定
+				var card_type = card_data.get("type", "")
+				if card_type == "creature" and GameSettings.use_creature_info_panel:
+					select_card()
+					on_card_confirmed()
+				else:
+					select_card()
 			else:
 				# 2回目のクリック：決定
 				on_card_confirmed()

@@ -22,15 +22,17 @@ var current_tile_info = {}
 
 # システム参照
 var board_system_ref = null
+var ui_manager_ref = null
 
 func _ready():
 	pass
 
 # 初期化
-func initialize(parent: Node, board_system, phase_label: Label):
+func initialize(parent: Node, board_system, phase_label: Label, ui_manager = null):
 	parent_node = parent
 	board_system_ref = board_system
 	phase_label_ref = phase_label
+	ui_manager_ref = ui_manager
 
 # レベルアップUIを表示
 func show_level_up_selection(tile_info: Dictionary, current_magic: int):
@@ -208,32 +210,21 @@ func apply_level_button_style(button: Button, can_afford: bool):
 	btn_style.border_width_bottom = 2
 	button.add_theme_stylebox_override("normal", btn_style)
 
-# キャンセルボタンを追加
+# キャンセルボタンを追加（グローバルボタンに移行）
 func add_cancel_button():
-	var button = Button.new()
-	button.text = "レベルアップしない"
-	button.position = Vector2(150, 330)
-	button.size = Vector2(200, 35)
-	button.pressed.connect(_on_cancel_pressed)
-	
-	# スタイル設定
-	var cancel_style = StyleBoxFlat.new()
-	cancel_style.bg_color = Color(0.3, 0.3, 0.3, 0.9)
-	cancel_style.border_color = Color(0.7, 0.7, 0.7)
-	cancel_style.border_width_left = 2
-	cancel_style.border_width_right = 2
-	cancel_style.border_width_top = 2
-	cancel_style.border_width_bottom = 2
-	button.add_theme_stylebox_override("normal", cancel_style)
-	
-	level_up_panel.add_child(button)
-	level_buttons.append(button)
+	# グローバルボタンに登録
+	if ui_manager_ref:
+		ui_manager_ref.register_back_action(_on_cancel_pressed, "しない")
 
 # レベルアップUIを非表示
 func hide_selection():
 	if level_up_panel and is_instance_valid(level_up_panel):
 		level_up_panel.queue_free()
 		level_up_panel = null
+	
+	# グローバルボタンをクリア
+	if ui_manager_ref:
+		ui_manager_ref.clear_back_action()
 	
 	level_buttons.clear()
 	is_active = false

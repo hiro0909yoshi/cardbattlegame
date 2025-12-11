@@ -466,7 +466,7 @@ CreatureCard3DQuad (Node3D)
 ├── SubViewport
 ├── MeshInstance3D (QuadMesh) - 表示用
 └── Area3D (タップ判定用)
-    └── CollisionShape3D (BoxShape3D)
+	└── CollisionShape3D (BoxShape3D)
 ```
 
 ### シグナル

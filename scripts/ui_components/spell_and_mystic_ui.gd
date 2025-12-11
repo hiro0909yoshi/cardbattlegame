@@ -11,7 +11,9 @@ signal selection_cancelled
 var creature_list: ItemList
 var mystic_art_list: ItemList
 var type_list: ItemList
-var cancel_button: Button
+
+# システム参照
+var ui_manager_ref = null
 
 # タイプ選択用
 var type_options: Array = []
@@ -66,18 +68,16 @@ func _create_ui_elements():
 	add_child(type_list)
 	type_list.visible = false
 	
-	# キャンセルボタン
-	cancel_button = Button.new()
-	cancel_button.text = "キャンセル"
-	cancel_button.z_index = 100
-	cancel_button.pressed.connect(_on_cancel_button_pressed)
-	add_child(cancel_button)
-	
 	_update_positions()
 
 func _setup_signals():
 	"""シグナルハンドラーを設定"""
 	pass
+
+## UIManager参照を設定
+func set_ui_manager(manager) -> void:
+	ui_manager_ref = manager
+
 
 func _update_positions():
 	"""UI要素の位置を更新"""
@@ -85,7 +85,6 @@ func _update_positions():
 	var margin = 20
 	var list_width = 300
 	var list_height = 250
-	var button_height = 50
 	
 	# クリーチャーリスト（画面右上）
 	creature_list.position = Vector2(
@@ -108,13 +107,6 @@ func _update_positions():
 		margin
 	)
 	type_list.size = Vector2(list_width, type_list_height)
-	
-	# キャンセルボタン（画面右下）
-	cancel_button.position = Vector2(
-		viewport_size.x - list_width - margin,
-		viewport_size.y - button_height - margin
-	)
-	cancel_button.size = Vector2(list_width, button_height)
 
 func show_creature_selection(creatures: Array):
 	"""クリーチャー選択を表示"""
@@ -131,7 +123,10 @@ func show_creature_selection(creatures: Array):
 	
 	creature_list.visible = true
 	mystic_art_list.visible = false
-	cancel_button.visible = true
+	
+	# グローバルボタンに登録
+	if ui_manager_ref:
+		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func show_mystic_art_selection(mystic_arts: Array):
 	"""秘術選択を表示"""
@@ -147,7 +142,10 @@ func show_mystic_art_selection(mystic_arts: Array):
 	creature_list.visible = false
 	mystic_art_list.visible = true
 	type_list.visible = false
-	cancel_button.visible = true
+	
+	# グローバルボタンに登録
+	if ui_manager_ref:
+		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func show_type_selection(types: Array = ["creature", "item", "spell"]):
 	"""カードタイプ選択を表示"""
@@ -171,14 +169,20 @@ func show_type_selection(types: Array = ["creature", "item", "spell"]):
 	creature_list.visible = false
 	mystic_art_list.visible = false
 	type_list.visible = true
-	cancel_button.visible = true
+	
+	# グローバルボタンに登録
+	if ui_manager_ref:
+		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func hide_all():
 	"""全UI非表示"""
 	creature_list.visible = false
 	mystic_art_list.visible = false
 	type_list.visible = false
-	cancel_button.visible = false
+	
+	# グローバルボタンをクリア
+	if ui_manager_ref:
+		ui_manager_ref.clear_back_action()
 
 func _on_creature_selected(index: int):
 	"""クリーチャーが選択された（item_selectedシグナル）"""

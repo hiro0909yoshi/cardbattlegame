@@ -189,10 +189,10 @@ static func execute_swap_creature(handler) -> bool:
 		handler._swap_old_creature = old_creature_data
 		handler._swap_tile_index = handler.selected_tile_index
 	
-	# カード選択UIを表示
+	# カード選択UIを表示（交換モード）
 	if handler.ui_manager:
 		handler.ui_manager.phase_label.text = "交換する新しいクリーチャーを選択"
-		handler.ui_manager.show_card_selection_ui(handler.player_system.get_current_player())
+		handler.ui_manager.show_card_selection_ui_mode(handler.player_system.get_current_player(), "swap")
 	
 	handler.action_selected.emit("swap_creature")
 	return true

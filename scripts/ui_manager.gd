@@ -13,6 +13,7 @@ signal land_command_button_pressed()  # Phase 1-A: 領地コマンドボタン
 var land_command_ui: LandCommandUI = null
 var hand_display: HandDisplay = null
 var phase_display: PhaseDisplay = null
+var global_action_buttons: GlobalActionButtons = null
 
 # UIコンポーネント（動的ロード用）
 var player_info_panel = null
@@ -20,6 +21,7 @@ var player_status_dialog = null
 var card_selection_ui = null
 var level_up_ui = null
 var debug_panel = null
+var creature_info_panel_ui: CreatureInfoPanelUI = null
 
 # 基本UI要素
 # フェーズ表示とサイコロUI（PhaseDisplayに移行済み）
@@ -74,10 +76,22 @@ func _ready():
 		debug_panel = DebugPanelClass.new()
 		add_child(debug_panel)
 	
+	# CreatureInfoPanelUI初期化
+	creature_info_panel_ui = CreatureInfoPanelUI.new()
+	creature_info_panel_ui.name = "CreatureInfoPanelUI"
+	creature_info_panel_ui.set_ui_manager(self)
+	add_child(creature_info_panel_ui)
+	
+	# GlobalActionButtons初期化
+	global_action_buttons = GlobalActionButtons.new()
+	global_action_buttons.name = "GlobalActionButtons"
+	add_child(global_action_buttons)
+	
 	# LandCommandUI初期化
 	if LandCommandUIClass:
 		land_command_ui = LandCommandUIClass.new()
 		land_command_ui.name = "LandCommandUI"
+		land_command_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
 		add_child(land_command_ui)
 		# シグナル接続
 		land_command_ui.land_command_button_pressed.connect(_on_land_command_button_pressed)
@@ -128,6 +142,16 @@ func connect_ui_signals():
 	# PlayerInfoPanel
 	if player_info_panel:
 		player_info_panel.player_panel_clicked.connect(_on_player_panel_clicked)
+	
+	# CreatureInfoPanelUI
+	if creature_info_panel_ui:
+		creature_info_panel_ui.selection_confirmed.connect(_on_creature_info_panel_confirmed)
+		# selection_cancelledはcard_selection_ui側で処理（選択UIに戻る）
+	
+	# GlobalActionButtons
+	if global_action_buttons:
+		global_action_buttons.confirm_pressed.connect(_on_global_confirm_pressed)
+		global_action_buttons.back_pressed.connect(_on_global_back_pressed)
 
 # UIを作成
 func create_ui(parent: Node):
@@ -162,7 +186,7 @@ func create_ui(parent: Node):
 		card_selection_ui.game_flow_manager_ref = game_flow_manager_ref
 		
 	if level_up_ui and level_up_ui.has_method("initialize"):
-		level_up_ui.initialize(ui_layer, null, phase_label)  # board_systemはnullで初期化
+		level_up_ui.initialize(ui_layer, null, phase_label, self)  # board_systemはnullで初期化
 		level_up_ui.set("board_system_ref", board_system_ref)  # set()で設定
 		
 	if debug_panel and debug_panel.has_method("initialize"):
@@ -171,6 +195,14 @@ func create_ui(parent: Node):
 	
 	if player_status_dialog and player_status_dialog.has_method("initialize"):
 		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref)
+	
+	# CreatureInfoPanelUI初期化
+	if creature_info_panel_ui:
+		creature_info_panel_ui.set_card_system(card_system_ref)
+		# UIレイヤーに移動（最前面に表示するため）
+		if creature_info_panel_ui.get_parent():
+			creature_info_panel_ui.get_parent().remove_child(creature_info_panel_ui)
+		ui_layer.add_child(creature_info_panel_ui)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -182,7 +214,6 @@ func create_basic_ui(parent: Node):
 	if land_command_ui:
 		land_command_ui.initialize(parent, player_system_ref, board_system_ref, self)
 		land_command_ui.create_land_command_button(parent)
-		land_command_ui.create_cancel_land_command_button(parent)
 		land_command_ui.create_action_menu_panel(parent)
 		land_command_ui.create_level_selection_panel(parent)
 
@@ -282,11 +313,73 @@ func _on_debug_mode_changed(enabled: bool):
 func _on_land_command_button_pressed():
 	emit_signal("land_command_button_pressed")
 
+func _on_creature_info_panel_confirmed(card_data: Dictionary):
+	# カードインデックスを取得してcard_selectedシグナルを発火
+	var card_index = card_data.get("hand_index", -1)
+	if card_index >= 0:
+		emit_signal("card_selected", card_index)
+
+func _on_creature_info_panel_cancelled():
+	emit_signal("pass_button_pressed")
+
 func _on_cancel_land_command_button_pressed():
 	print("[UIManager] キャンセルボタンがクリックされました！")
 	# GameFlowManagerのland_command_handlerに通知
 	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
 		game_flow_manager_ref.land_command_handler.cancel()
+
+# === グローバルアクションボタン管理 ===
+
+# 登録されたコールバック
+var _global_confirm_callback: Callable = Callable()
+var _global_back_callback: Callable = Callable()
+
+func _on_global_confirm_pressed():
+	if _global_confirm_callback.is_valid():
+		_global_confirm_callback.call()
+
+func _on_global_back_pressed():
+	if _global_back_callback.is_valid():
+		_global_back_callback.call()
+
+## 決定ボタンのアクションを登録
+func register_confirm_action(callback: Callable, text: String = "決定"):
+	_global_confirm_callback = callback
+	if global_action_buttons:
+		global_action_buttons.set_confirm_state(true, text)
+
+## 戻るボタンのアクションを登録
+func register_back_action(callback: Callable, text: String = "戻る"):
+	print("[UIManager] register_back_action: ", text)
+	_global_back_callback = callback
+	if global_action_buttons:
+		global_action_buttons.set_back_state(true, text)
+
+## 両方のアクションを一度に登録
+func register_global_actions(confirm_callback: Callable, back_callback: Callable, confirm_text: String = "決定", back_text: String = "戻る"):
+	_global_confirm_callback = confirm_callback
+	_global_back_callback = back_callback
+	if global_action_buttons:
+		global_action_buttons.set_states(true, true, confirm_text, back_text)
+
+## アクションをクリア（ボタンを無効化）
+func clear_global_actions():
+	_global_confirm_callback = Callable()
+	_global_back_callback = Callable()
+	if global_action_buttons:
+		global_action_buttons.disable_all()
+
+## 決定ボタンのみクリア
+func clear_confirm_action():
+	_global_confirm_callback = Callable()
+	if global_action_buttons:
+		global_action_buttons.set_confirm_state(false)
+
+## 戻るボタンのみクリア
+func clear_back_action():
+	_global_back_callback = Callable()
+	if global_action_buttons:
+		global_action_buttons.set_back_state(false)
 
 # === 手札UI管理 ===
 
@@ -321,12 +414,8 @@ func _input(event):
 # Phase 1-A: 領地コマンドUI
 # ============================================
 
-# land_command_button と cancel_land_command_button は
-# LandCommandUIに移行済みのため削除
-
-# 領地コマンドボタンを作成（create_basic_ui内から呼ばれる想定）
-# create_land_command_button と create_cancel_land_command_button は
-# LandCommandUIに移行済みのため削除
+# 領地コマンドボタンはLandCommandUIに移行済み
+# キャンセルボタンはグローバルアクションボタンに移行済み
 
 # 領地コマンドボタンの表示/非表示（LandCommandUIに委譲）
 func show_land_command_button():

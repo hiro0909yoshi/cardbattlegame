@@ -9,6 +9,7 @@ signal selection_cancelled()
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+# GameSettingsはclass_nameで定義されているためグローバルアクセス可能
 
 # UI要素
 var selection_buttons = []     # 追加ボタン配列
@@ -19,6 +20,8 @@ var phase_label_ref: Label     # フェーズラベル参照
 # 状態
 var is_active = false          # 選択UI表示中か
 var selection_mode = ""        # "summon" or "battle"
+var pending_card_index: int = -1  # クリーチャー情報パネル確認待ちのカードインデックス
+var creature_info_panel_connected: bool = false  # シグナル接続済みフラグ
 
 # システム参照
 var card_system_ref: CardSystem = null
@@ -375,44 +378,32 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 	card_node.add_child(highlight)
 
 # パスボタンを作成
-func create_pass_button(hand_count: int):
+func create_pass_button(_hand_count: int):
 	# 捨て札モードではパスボタンを作らない
 	if selection_mode == "discard":
 		return
 	
-	pass_button = Button.new()
+	# 交換/移動など領地コマンド内のモードではパスボタンを作らない
+	# （領地コマンドの「閉じる」ボタンが使われる）
+	if selection_mode in ["swap", "move"]:
+		return
 	
-	# ボタンテキスト設定
-	match selection_mode:
-		"summon":
-			pass_button.text = "召喚しない"
-		"battle":
-			pass_button.text = "バトルしない"
-		"invasion":
-			pass_button.text = "侵略しない"
-		"spell":
-			pass_button.text = "スペルを使わない"
-		"item":
-			pass_button.text = "アイテムを使わない"
-		_:
-			pass_button.text = "パス"
-	
-	# 位置設定（手札の右側）
-	# CardUIHelperを使用してレイアウト計算
-	var viewport_size = get_viewport().get_visible_rect().size
-	var layout = CardUIHelper.calculate_card_layout(viewport_size, hand_count)
-	
-	# 最後のカードの右側に配置（間隔を空けて）
-	var last_card_x = layout.start_x + hand_count * layout.card_width + (hand_count - 1) * layout.spacing + layout.spacing
-	pass_button.position = Vector2(last_card_x, layout.card_y)
-	pass_button.size = Vector2(layout.card_width, layout.card_height)
-	pass_button.pressed.connect(_on_pass_button_pressed)
-	
-	# ボタンスタイル設定
-	apply_button_style(pass_button)
-	
-	parent_node.add_child(pass_button)
-	selection_buttons.append(pass_button)
+	# グローバルボタンに戻るアクションを登録
+	if ui_manager_ref:
+		var back_text = "パス"
+		match selection_mode:
+			"summon":
+				back_text = "召喚しない"
+			"battle":
+				back_text = "バトルしない"
+			"invasion":
+				back_text = "侵略しない"
+			"spell":
+				back_text = "スペルを使わない"
+			"item":
+				back_text = "アイテムを使わない"
+		
+		ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
 
 # ボタンスタイルを適用
 func apply_button_style(button: Button):
@@ -429,6 +420,10 @@ func apply_button_style(button: Button):
 func hide_selection():
 	is_active = false
 	selection_mode = ""
+	
+	# グローバルボタンをクリア
+	if ui_manager_ref:
+		ui_manager_ref.clear_back_action()
 	
 	# カード選択モードを解除
 	if card_system_ref:
@@ -474,15 +469,144 @@ func cleanup_buttons():
 
 # カードが選択された（外部から呼ばれる）
 func on_card_selected(card_index: int):
-	if is_active:
+	if not is_active:
+		return
+	
+	# クリーチャー情報パネルを使用するか判定
+	# 召喚/交換モードでクリーチャーカードの場合
+	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap"]:
+		var card_data = _get_card_data_for_index(card_index)
+		if card_data and card_data.get("type") == "creature":
+			_show_creature_info_panel(card_index, card_data)
+			return
+	
+	# 既存の動作
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
+# クリーチャー情報パネルを表示
+func _show_creature_info_panel(card_index: int, card_data: Dictionary):
+	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
+		# フォールバック：既存の動作
 		hide_selection()
 		emit_signal("card_selected", card_index)
+		return
+	
+	pending_card_index = card_index
+	
+	# シグナル接続（初回のみ）
+	if not creature_info_panel_connected:
+		ui_manager_ref.creature_info_panel_ui.selection_confirmed.connect(_on_creature_panel_confirmed)
+		ui_manager_ref.creature_info_panel_ui.selection_cancelled.connect(_on_creature_panel_cancelled)
+		creature_info_panel_connected = true
+	
+	# カードデータにhand_indexを追加
+	var panel_data = card_data.duplicate()
+	panel_data["hand_index"] = card_index
+	
+	# 確認テキストを設定
+	var confirmation_text = "召喚しますか？"
+	if selection_mode == "battle":
+		confirmation_text = "このクリーチャーで戦いますか？"
+	elif selection_mode == "invasion":
+		confirmation_text = "侵略しますか？"
+	elif selection_mode == "swap":
+		confirmation_text = "このクリーチャーに交換しますか？"
+	
+	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
+
+
+# クリーチャー情報パネルで確認された
+func _on_creature_panel_confirmed(card_data: Dictionary):
+	var card_index = card_data.get("hand_index", pending_card_index)
+	pending_card_index = -1
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
+# クリーチャー情報パネルでキャンセルされた
+func _on_creature_panel_cancelled():
+	pending_card_index = -1
+	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	# グローバルボタンを再登録
+	_register_back_button_for_current_mode()
+
+
+# 現在のモードに応じたグローバル戻るボタンを登録
+func _register_back_button_for_current_mode():
+	if not ui_manager_ref:
+		return
+	
+	var back_text = "パス"
+	match selection_mode:
+		"summon":
+			back_text = "召喚しない"
+		"battle":
+			back_text = "バトルしない"
+		"invasion":
+			back_text = "侵略しない"
+		"spell":
+			back_text = "スペルを使わない"
+		"item":
+			back_text = "アイテムを使わない"
+		"swap":
+			back_text = "交換しない"
+		"move":
+			back_text = "移動しない"
+	
+	ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
+
+
+# カードインデックスからカードデータを取得
+func _get_card_data_for_index(card_index: int) -> Dictionary:
+	if not card_system_ref:
+		return {}
+	
+	# 現在のプレイヤーIDを取得
+	var player_id = 0
+	if game_flow_manager_ref and game_flow_manager_ref.player_system:
+		var current_player = game_flow_manager_ref.player_system.get_current_player()
+		if current_player:
+			player_id = current_player.id
+	
+	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
+	if card_index >= 0 and card_index < hand_data.size():
+		return hand_data[card_index]
+	return {}
 
 # パスボタンが押された
 func _on_pass_button_pressed():
 	if is_active:
-		hide_selection()
-		emit_signal("selection_cancelled")
+		# 交換/移動モードの場合は召喚フェーズに戻る（ターン終了しない）
+		if selection_mode in ["swap", "move"]:
+			_cancel_land_command_and_return_to_summon()
+		else:
+			hide_selection()
+			emit_signal("selection_cancelled")
+
+
+# 領地コマンドをキャンセルして召喚フェーズに戻る
+func _cancel_land_command_and_return_to_summon():
+	hide_selection()
+	
+	# 領地コマンドの状態をリセット
+	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
+		var handler = game_flow_manager_ref.land_command_handler
+		handler._swap_mode = false
+		handler._swap_old_creature = {}
+		handler._swap_tile_index = -1
+		handler.close_land_command()
+	
+	# TileActionProcessorのフラグもリセット
+	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
+		var tap = game_flow_manager_ref.board_system_3d.tile_action_processor
+		if tap:
+			tap.is_action_processing = false
+	
+	# 召喚フェーズに戻る（カード選択UIを再初期化）
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("_reinitialize_card_selection"):
+		game_flow_manager_ref._reinitialize_card_selection()
 
 # 選択中かチェック
 func is_selection_active() -> bool:

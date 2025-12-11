@@ -93,9 +93,10 @@ func open_land_command(player_id: int):
 			ui_manager.phase_label.text = "所有地がありません"
 		return
 	
-	# カード選択UIを無効化
+	# カード選択UIを無効化（グローバルボタンもクリア）
 	if ui_manager and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.is_active = false
+		ui_manager.clear_back_action()  # 「召喚しない」をクリア
 	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND

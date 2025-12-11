@@ -102,6 +102,7 @@ func _select_creature(available_creatures: Array) -> void:
 		
 		spell_and_mystic_ui = SpellAndMysticUIClass.new()
 		spell_and_mystic_ui.name = "SpellAndMysticUI"
+		spell_and_mystic_ui.set_ui_manager(ui_manager)
 		ui_manager.add_child(spell_and_mystic_ui)
 	
 	# クリーチャー選択UIを表示

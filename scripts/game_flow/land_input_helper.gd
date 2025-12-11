@@ -50,8 +50,8 @@ static func handle_land_selection_input(handler, event):
 		else:
 			print("[LandInputHelper] 無効な番号: ", index + 1)
 	
-	# Cキー・Escキーでキャンセル
-	elif event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
+	# Cキーでキャンセル（EscapeキーはグローバルボタンでUIManager経由で処理）
+	elif event.keycode == KEY_C:
 		handler.cancel()
 
 ## アクション選択時のキー入力処理
@@ -66,14 +66,13 @@ static func handle_action_selection_input(handler, event):
 		KEY_T:
 			handler.execute_action("terrain_change")
 		KEY_C:
-			handler.cancel()
-		KEY_ESCAPE:
+			# CキーでキャンセルEscapeキーはグローバルボタン経由）
 			handler.cancel()
 
 ## 移動先選択時のキー入力処理
 static func handle_move_destination_input(handler, event):
-	# Cキーまたはエスケープで前画面に戻る
-	if event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
+	# Cキーで前画面に戻る（EscapeキーはグローバルボタンでUIManager経由で処理）
+	if event.keycode == KEY_C:
 		handler.cancel()
 		return
 	
@@ -132,8 +131,8 @@ static func get_number_from_key(keycode: int) -> int:
 
 ## 地形選択時のキー入力処理
 static func handle_terrain_selection_input(handler, event):
-	# Cキーまたはエスケープでキャンセル
-	if event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
+	# Cキーでキャンセル（EscapeキーはグローバルボタンでUIManager経由で処理）
+	if event.keycode == KEY_C:
 		handler.cancel()
 		return
 	
