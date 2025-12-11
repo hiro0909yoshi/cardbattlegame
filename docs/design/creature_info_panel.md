@@ -1,7 +1,5 @@
 # クリーチャー情報パネル設計書
 
-# クリーチャー情報パネル設計書
-
 ## 概要
 
 マップ上に配置されたクリーチャーをタップ/クリックすると、そのクリーチャーの詳細情報をパネルで表示する機能。
@@ -15,8 +13,8 @@
 | 項目 | 内容 |
 |------|------|
 | 表示トリガー | 3Dクリーチャーカードをタップ/クリック |
-| 非表示トリガー | 閉じるボタン or パネル外タップ |
 | 対応プラットフォーム | PC（クリック）、スマホ（タップ） |
+| 半透明オーバーレイ | あり（パネル表示中は背景を暗くする） |
 
 ### 表示タイミング
 
@@ -30,124 +28,86 @@
 
 ---
 
-## パネル表示内容
+## 2つの表示モード
 
-### 左パネル（カードUI）
-
-Card.tscnをそのまま表示。クリーチャーの見た目を確認できる。
-
-### 右パネル（詳細情報）
-
-| 項目 | データソース | 説明 | 条件 |
-|------|-------------|------|------|
-| HP | `current_hp` / (`hp` + `base_up_hp`) | 現在HP / 最大HP | 常時 |
-| AP | `ap` + `base_up_ap` | 攻撃力 | 常時 |
-| 呪い | `curse_effects`（タイル or クリーチャー） | 適用中の呪い | 常時 |
-| スキル | `ability_parsed.keywords`, `ability_parsed.abilities` | スキル説明 | あれば |
-| 秘術 | `ability_parsed.mystic_art` | 秘術説明 | あれば |
-
-### 中央パネル（選択モードのみ）
-
-確認ダイアログ。Yes/Noボタンで選択を確定またはキャンセル。
+| モード | 用途 | 中央パネル | 閉じ方 |
+|--------|------|-----------|--------|
+| 閲覧モード | タイル配置クリーチャーを見る | なし | どこでもタップ |
+| 選択モード | 召喚/バトル時のカード選択 | Yes/No確認 | Yes/Noボタン |
 
 ---
 
-## UI設計
-
-### 2つの表示モード
-
-| モード | 用途 | 中央パネル |
-|--------|------|-----------|
-| 閲覧モード | タイル配置クリーチャーを見る | なし |
-| 選択モード | 召喚/バトル時のカード選択 | Yes/No確認パネル |
+## UIレイアウト
 
 ### 閲覧モード（タイル配置クリーチャー）
 
 ```
-┌────────┐                    ┌──────────────────────┐
-│        │                    │ HP: 30 / 40         │
-│ カード │                    │ AP: 20              │
-│  UI    │                    │                     │
-│        │                    │ 【呪い】            │
-│        │                    │ なし                │
-│        │                    │                     │
-│        │                    │ 【スキル】          │
-│        │                    │ 地形効果[火]：...   │
-│        │                    │                     │
-│        │                    │ 【秘術】            │
-│        │                    │ 火炎放射：...       │
-└────────┘                    └──────────────────────┘
-   左側                               右側
+┌─────────────────────────────────────────────────────────────────┐
+│                    【半透明オーバーレイ】                        │
+│                    （どこでもタップで閉じる）                    │
+│                                                                 │
+│  ┌────────┐                    ┌─────────────────────────────┐  │
+│  │        │                    │ アームドパラディン    [E]   │  │
+│  │ カード │                    │ 火                          │  │
+│  │  UI    │                    │ コスト: 200G (火火)         │  │
+│  │        │                    │ HP: 30 / 40    AP: 20       │  │
+│  │        │                    │ 配置制限: 地不可  アイテム: 武器│  │
+│  │        │                    │                             │  │
+│  │        │                    │ 【呪い】なし                │  │
+│  │        │                    │ 【スキル】無効化: 巻物...   │  │
+│  │        │                    │ 【秘術】火炎放射(50G): ...  │  │
+│  └────────┘                    └─────────────────────────────┘  │
+│     左側                                   右側                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### 選択モード（召喚/バトル時）
 
 ```
-┌────────┐  ┌──────────────┐  ┌──────────────────────┐
-│        │  │              │  │ HP: 30 / 40         │
-│ カード │  │ 召喚しますか？│  │ AP: 20              │
-│  UI    │  │              │  │                     │
-│        │  │  [Yes] [No]  │  │ 【呪い】            │
-│        │  │              │  │ なし                │
-│        │  └──────────────┘  │                     │
-│        │                    │ 【スキル】          │
-│        │                    │ 地形効果[火]：...   │
-│        │                    │                     │
-│        │                    │ 【秘術】            │
-│        │                    │ 火炎放射：...       │
-└────────┘                    └──────────────────────┘
-   左側         中央                   右側
+┌─────────────────────────────────────────────────────────────────┐
+│                    【半透明オーバーレイ】                        │
+│                                                                 │
+│  ┌────────┐  ┌──────────────┐  ┌─────────────────────────────┐  │
+│  │        │  │              │  │ アームドパラディン    [E]   │  │
+│  │ カード │  │ 召喚しますか？│  │ 火                          │  │
+│  │  UI    │  │              │  │ コスト: 200G (火火)         │  │
+│  │        │  │  [Yes] [No]  │  │ HP: 30 / 40    AP: 20       │  │
+│  │        │  │              │  │ 配置制限: 地不可  アイテム: 武器│  │
+│  │        │  └──────────────┘  │                             │  │
+│  │        │                    │ 【呪い】なし                │  │
+│  │        │                    │ 【スキル】無効化: 巻物...   │  │
+│  │        │                    │ 【秘術】火炎放射(50G): ...  │  │
+│  └────────┘                    └─────────────────────────────┘  │
+│     左側         中央                       右側                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### パネル構成
+---
 
-| パネル | 内容 | 常時表示 |
-|--------|------|----------|
-| 左パネル | カードUI（Card.tscn） | ✅ |
-| 中央パネル | Yes/No確認 | 選択モードのみ |
-| 右パネル | 詳細情報 | ✅ |
+## パネル構成
 
-### 右パネル（詳細情報）の内容
+### 左パネル（カードUI）
 
-**表示順序（上から下）：**
+Card.tscnをそのまま表示。クリーチャーの見た目を確認できる。
 
-| 順序 | 項目 | 表示形式 | 条件付き |
-|------|------|----------|----------|
-| 1 | HP | `HP: 現在HP / MaxHP` | 常時表示 |
-| 2 | AP | `AP: 値` | 常時表示 |
-| 3 | 呪い | `【呪い】説明文` | 常時表示（なければ「なし」） |
-| 4 | スキル | `【スキル】説明文` | あれば表示 |
-| 5 | 秘術 | `【秘術】説明文` | あれば表示 |
+### 右パネル（詳細情報）概要
 
-**表示例：**
+| 項目 | データソース | 条件 |
+|------|-------------|------|
+| 名前 + レア度 | `name`, `rarity` | 常時 |
+| 属性 | `element` | 常時 |
+| コスト + 必要土地 | `cost.mp`, `cost.lands_required` | 常時 |
+| HP / AP | `current_hp` / `hp`, `ap` | 常時（横並び） |
+| 配置制限 / アイテム制限 | `restrictions.cannot_summon`, `restrictions.item_use` | 常時（横並び） |
+| 呪い | `curse_effects` | 常時 |
+| スキル | `ability_parsed.keywords` | あれば |
+| 秘術 | `ability_parsed.mystic_art(s)` | あれば |
 
-```
-HP: 30 / 40
-AP: 20
+### 中央パネル（選択モードのみ）
 
-【呪い】
-なし
-
-【スキル】
-地形効果[火]：火タイルでHP+10
-
-【秘術】
-火炎放射：敵全体に10ダメージ
-```
-
-**スキル/秘術がない場合：**
-
-```
-HP: 30 / 40
-AP: 20
-
-【呪い】
-なし
-```
-
-※ スキル・秘術セクションは該当データがなければ非表示
-
-### 中央パネル（Yes/No確認）
+確認ダイアログ。Yes/Noボタンで選択を確定またはキャンセル。
 
 | 状況 | 確認テキスト |
 |------|-------------|
@@ -155,12 +115,70 @@ AP: 20
 | バトル時 | 「このクリーチャーで戦いますか？」 |
 | 侵略時 | 「侵略しますか？」 |
 
-### 閉じる操作
+### 右パネル（詳細情報）
 
-| モード | 閉じ方 |
-|--------|--------|
-| 閲覧モード | パネル外タップ or 閉じるボタン |
-| 選択モード | Yes/Noボタン押下 |
+**表示順序（上から下）：**
+
+| 順序 | 項目 | データソース | 表示形式 | 条件 |
+|------|------|-------------|----------|------|
+| 1 | 名前 | `name` | テキスト | 常時 |
+| 2 | レア度 | `rarity` | 名前の右隣に表示 | 常時 |
+| 3 | 属性 | `element` | アイコンまたはテキスト | 常時 |
+| 4 | コスト | `cost.mp`, `cost.lands_required` | `コスト: 30G (火火)` | 常時 |
+| 5 | HP | `current_hp` / (`hp` + `base_up_hp`) | `HP: 30 / 40` | 常時 |
+| 6 | AP | `ap` + `base_up_ap` | HPの右隣に表示 | 常時 |
+| 7 | 配置制限 | `restrictions.cannot_summon` | `配置制限: 地不可` | 常時 |
+| 8 | アイテム制限 | `restrictions.item_use` | 配置制限の右隣に表示 | 常時 |
+| 9 | 呪い | `curse_effects` | 適用中の呪い | 常時 |
+| 10 | スキル | `ability_parsed.keywords` | スキル名: 説明 | あれば |
+| 11 | 秘術 | `ability_parsed.mystic_art(s)` | 秘術名: 説明 | あれば |
+
+**レイアウト詳細：**
+
+```
+┌─────────────────────────────────┐
+│ アームドパラディン    [E]       │  ← 名前 + レア度
+│ 火                              │  ← 属性
+│ コスト: 200G (火火)             │  ← コスト + 必要土地
+│ HP: 30 / 40    AP: 20           │  ← HP と AP は横並び
+│ 配置制限: 地不可  アイテム: 武器 │  ← 横並び
+│                                 │
+│ 【呪い】                        │
+│ なし                            │
+│                                 │
+│ 【スキル】                      │  ← あれば表示
+│ 無効化: 巻物攻撃を無効化        │
+│                                 │
+│ 【秘術】                        │  ← あれば表示
+│ 火炎放射(50G): 敵に30ダメージ   │
+└─────────────────────────────────┘
+```
+
+**コストの表示例：**
+- `mp: 200, lands_required: ["fire", "fire"]` → `コスト: 200G (火火)`
+- `mp: 30, lands_required: null` → `コスト: 30G`
+
+**配置制限の表示例：**
+- `restrictions.cannot_summon: ["earth"]` → `配置制限: 地不可`
+- `restrictions.cannot_summon: ["fire", "water"]` → `配置制限: 火水不可`
+- `restrictions.cannot_summon: null` → `配置制限: なし`
+
+**アイテム制限の表示例：**
+- `restrictions.item_use: ["武器"]` → `アイテム制限: 武器`
+- `restrictions.item_use: ["武器", "防具"]` → `アイテム制限: 武器,防具`
+- `restrictions.item_use: null` → `アイテム制限: なし`
+
+**スキル/秘術がない場合は非表示**
+
+---
+
+## 閉じる操作
+
+| モード | 閉じ方 | 結果 |
+|--------|--------|------|
+| 閲覧モード | どこでもタップ | パネルを閉じる |
+| 選択モード | Yesボタン | 選択を確定して閉じる |
+| 選択モード | Noボタン | キャンセルして閉じる |
 
 ---
 
@@ -188,23 +206,24 @@ class_name CreatureInfoPanelUI
 extends Control
 
 signal panel_closed
+signal selection_confirmed(creature_data: Dictionary)
+signal selection_cancelled
 
 # UI要素
-var panel: Panel
-var close_button: Button
-var name_label: Label
-var stats_label: Label
-var ability_label: RichTextLabel
-var status_label: RichTextLabel
-var location_label: Label
+var background_overlay: Control  # 半透明オーバーレイ
+var left_panel: Control          # カードUI
+var center_panel: Control        # Yes/No確認（選択モードのみ）
+var right_panel: Control         # 詳細情報
 
 # 状態
 var is_visible: bool = false
+var is_selection_mode: bool = false
 var current_creature_data: Dictionary = {}
 var current_tile_index: int = -1
 
 # 公開メソッド
-func show_creature_info(creature_data: Dictionary, tile_info: Dictionary)
+func show_view_mode(creature_data: Dictionary, tile_index: int)
+func show_selection_mode(creature_data: Dictionary, confirmation_text: String)
 func hide_panel()
 func is_panel_visible() -> bool
 ```
@@ -234,13 +253,18 @@ creature_tapped(creature_data, tile_index)
         ▼
 [UIManager]
         │
-        │ パネル表示指示
+        │ モード判定
         ▼
 [CreatureInfoPanelUI]
         │
-        │ show_creature_info()
-        ▼
-[パネル表示]
+        ├── 閲覧モード → show_view_mode()
+        │       │
+        │       └── どこでもタップ → hide_panel()
+        │
+        └── 選択モード → show_selection_mode()
+                │
+                ├── Yes → selection_confirmed シグナル
+                └── No  → selection_cancelled シグナル
 ```
 
 ---
@@ -282,28 +306,28 @@ func _on_input_event(_camera, event, _position, _normal, _shape_idx):
 
 ---
 
-## パネル外タップで閉じる
+## 半透明オーバーレイ
 
 ### 実装方法
 
-1. パネル表示中、背景に透明なControlを配置
-2. 背景Controlのクリックでパネルを閉じる
-3. パネル自体のクリックは伝播させない
-
 ```gdscript
-# 背景オーバーレイ
-var background_overlay: Control
+# 背景オーバーレイ（画面全体を覆う）
+var background_overlay: ColorRect
 
-func show_creature_info(...):
-	# 背景を表示
-	background_overlay.visible = true
+func _setup_overlay():
+	background_overlay = ColorRect.new()
+	background_overlay.color = Color(0, 0, 0, 0.5)  # 半透明黒
+	background_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	background_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	
-	# パネル表示
-	panel.visible = true
+	background_overlay.gui_input.connect(_on_overlay_input)
 
-func _on_background_clicked():
-	hide_panel()
+func _on_overlay_input(event):
+	# 閲覧モードの場合、どこでもタップで閉じる
+	if not is_selection_mode:
+		if event is InputEventMouseButton and event.pressed:
+			hide_panel()
+		elif event is InputEventScreenTouch and event.pressed:
+			hide_panel()
 ```
 
 ---
@@ -312,7 +336,7 @@ func _on_background_clicked():
 
 ### Phase 1（現在）
 - 基本的なパネル表示
-- タップで表示、閉じるボタンで非表示
+- 閲覧モード、選択モード
 
 ### Phase 2（将来）
 - 常時表示モード
@@ -340,3 +364,4 @@ func _on_background_clicked():
 | 日付 | 内容 |
 |------|------|
 | 2025/12/11 | 初版作成 |
+| 2025/12/11 | レイアウト更新、半透明オーバーレイ追加、閉じる操作の詳細化 |
