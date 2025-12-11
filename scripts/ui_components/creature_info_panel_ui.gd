@@ -189,8 +189,8 @@ func _update_sizes():
 	var screen_width = viewport_size.x
 	var screen_height = viewport_size.y
 	
-	# フォントサイズ計算
-	var base_font_size = int(screen_height * FONT_SIZE_RATIO)
+	# フォントサイズ計算（全体を1.65倍に拡大）
+	var base_font_size = int(screen_height * FONT_SIZE_RATIO * 1.65)
 	var title_font_size = int(base_font_size * 1.4)
 	var small_font_size = int(base_font_size * 0.85)
 	
@@ -203,9 +203,9 @@ func _update_sizes():
 	var card_height = card_width * (293.0 / 220.0)  # カードの縦横比を維持
 	left_panel.custom_minimum_size = Vector2(card_width, card_height)
 	
-	# 右パネルサイズ（高さをカードと同じ程度に）
+	# 右パネルサイズ（高さを2/3に縮小）
 	var right_width = screen_width * RIGHT_PANEL_WIDTH_RATIO
-	var right_height = card_height * 2.0  # カードの2倍の高さ
+	var right_height = card_height * 1.4  # カードの約1.3倍の高さ（元の2/3）
 	right_panel.custom_minimum_size = Vector2(right_width, right_height)
 	
 	# 右パネルの内部設定
@@ -260,9 +260,9 @@ func _update_sizes():
 	var total_width = card_width + panel_separation + right_width
 	var total_height = max(card_height, right_height)
 	
-	# 中央配置（画面中央からコンテナサイズの半分を引く）
+	# 中央配置（画面中央からコンテナサイズの半分を引く）+ 上に180px移動
 	var center_x = (screen_width - total_width) / 2.0
-	var center_y = (screen_height - total_height) / 2.0
+	var center_y = (screen_height - total_height) / 2.0 - 158
 	
 	main_container.position = Vector2(center_x, center_y)
 	main_container.size = Vector2(total_width, total_height)
@@ -316,14 +316,15 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 
 
 ## パネルを閉じる
-func hide_panel():
+## clear_buttons: グローバルボタンをクリアするかどうか（デフォルト: true）
+func hide_panel(clear_buttons: bool = true):
 	visible = false
 	is_visible_panel = false
 	current_creature_data = {}
 	current_tile_index = -1
 	
-	# グローバルボタンをクリア
-	if ui_manager_ref:
+	# グローバルボタンをクリア（オプション）
+	if clear_buttons and ui_manager_ref:
 		ui_manager_ref.clear_global_actions()
 	
 	# カード表示をクリア
@@ -365,6 +366,10 @@ func _update_card_display():
 		card_display.scale = Vector2(scale_factor, scale_factor)
 	
 	left_panel.add_child(card_display)
+	
+	# カード位置を上に調整
+	card_display.position.y = 0
+	card_display.position.x = -30
 	
 	# カードデータを設定（IDで読み込み）
 	var card_id = current_creature_data.get("id", 0)
@@ -433,14 +438,16 @@ func _update_right_panel():
 	restriction_label.text = "  ".join(restriction_parts)
 	
 	# 呪い
-	var curse_effects = data.get("curse_effects", [])
-	if curse_effects.is_empty():
+	var curse = data.get("curse", {})
+	if curse.is_empty():
 		curse_label.text = "【呪い】なし"
 	else:
-		var curse_texts = []
-		for curse in curse_effects:
-			curse_texts.append(curse.get("name", "不明"))
-		curse_label.text = "【呪い】%s" % ", ".join(curse_texts)
+		var curse_name = curse.get("name", "不明")
+		var duration = curse.get("duration", -1)
+		if duration > 0:
+			curse_label.text = "【呪い】%s（残り%dターン）" % [curse_name, duration]
+		else:
+			curse_label.text = "【呪い】%s" % curse_name
 	
 	# スキル
 	var ability_parsed = data.get("ability_parsed", {})

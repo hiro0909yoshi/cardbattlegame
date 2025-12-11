@@ -615,7 +615,19 @@ static func execute_terrain_change(handler) -> bool:
 	# 地形選択UIを表示
 	update_terrain_selection_ui(handler)
 	
+	# グローバルボタンに「戻る」を登録
+	if handler.ui_manager:
+		handler.ui_manager.register_back_action(func(): _cancel_terrain_change(handler), "戻る")
+	
 	return true
+
+## 地形変化キャンセル
+static func _cancel_terrain_change(handler):
+	handler.terrain_change_tile_index = -1
+	handler.current_state = handler.State.SELECTING_ACTION
+	# アクションメニューに戻る
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
 
 ## 地形選択UIを更新
 static func update_terrain_selection_ui(handler):

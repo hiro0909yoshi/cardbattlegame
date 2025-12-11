@@ -10,12 +10,14 @@
 
 | 項目 | 状態 | 備考 |
 |------|------|------|
-| 基本UI構築 | ✅ 完了 | 3パネル構成（左/中央/右） |
+| 基本UI構築 | ✅ 完了 | 2パネル構成（左:カード/右:詳細） |
 | 画面サイズ対応 | ✅ 完了 | viewport比率ベース |
 | 選択モード | ✅ 完了 | 召喚/交換時の確認ダイアログ |
 | ON/OFF切替 | ✅ 完了 | GameSettings.use_creature_info_panel |
 | 閲覧モード | ✅ 完了 | 領地コマンドのアクションメニュー時 |
 | グローバルボタン対応 | ✅ 完了 | 決定/戻るボタンをグローバル化 |
+| ダブルクリック召喚 | ✅ 完了 | 同じカード2回タップで即召喚 |
+| カードホバー管理 | ✅ 完了 | 戻るボタン時にホバー状態解除 |
 
 ---
 
@@ -80,8 +82,7 @@ viewport比率ベースで動的にサイズ計算：
 const PANEL_MARGIN_RATIO = 0.02      # 画面幅の2%
 const CARD_WIDTH_RATIO = 0.18        # 画面幅の18%（カード幅）
 const RIGHT_PANEL_WIDTH_RATIO = 0.25 # 画面幅の25%
-const CENTER_PANEL_WIDTH_RATIO = 0.12 # 画面幅の12%
-const FONT_SIZE_RATIO = 0.018        # 画面高さの1.8%
+const FONT_SIZE_RATIO = 0.018        # 画面高さの1.8%（×1.65倍で使用）
 ```
 
 ### レイアウト図（選択モード）
@@ -90,19 +91,21 @@ const FONT_SIZE_RATIO = 0.018        # 画面高さの1.8%
 ┌─────────────────────────────────────────────────────────────────┐
 │                    【半透明オーバーレイ】                        │
 │                                                                 │
-│  ┌────────┐  ┌──────────────┐  ┌─────────────────────────────┐  │
-│  │        │  │              │  │ ティアマト [R]              │  │
-│  │ カード │  │ 召喚しますか？│  │ 火                          │  │
-│  │  UI    │  │              │  │ コスト: 110G (火火)         │  │
-│  │        │  │  [はい][いいえ]│  │ HP: 60 / 60    AP: 60       │  │
-│  │        │  │              │  │ 配置制限: なし アイテム: なし │  │
-│  │        │  └──────────────┘  │                             │  │
-│  │        │                    │ 【呪い】なし                │  │
-│  │        │                    │ 【スキル】先制; 強打[水]... │  │
-│  └────────┘                    └─────────────────────────────┘  │
-│   左パネル      中央パネル              右パネル                 │
-│  (18%幅)       (12%幅)                (25%幅)                   │
+│  ┌────────┐  ┌─────────────────────────────┐                    │
+│  │        │  │ ティアマト [R]              │                    │
+│  │ カード │  │ 火                          │                    │
+│  │  UI    │  │ コスト: 110G (火火)         │                    │
+│  │        │  │ HP: 60 / 60    AP: 60       │                    │
+│  │        │  │ 配置制限: なし アイテム: なし │                    │
+│  │        │  │                             │                    │
+│  │        │  │ 【呪い】なし                │                    │
+│  │        │  │ 【スキル】先制; 強打[水]... │                    │
+│  └────────┘  └─────────────────────────────┘                    │
+│   左パネル              右パネル                                 │
+│  (18%幅)              (25%幅、高さ×1.33)                        │
 │                                                                 │
+│          ※パネル全体を180px上に配置                            │
+│          ※カード表示は追加で50px上に配置                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -115,22 +118,35 @@ func _update_sizes():
 	var screen_width = viewport_size.x
 	var screen_height = viewport_size.y
 	
+	# フォントサイズ計算（全体を1.65倍に拡大）
+	var base_font_size = int(screen_height * FONT_SIZE_RATIO * 1.65)
+	var title_font_size = int(base_font_size * 1.4)
+	var small_font_size = int(base_font_size * 0.85)
+	
 	# 各パネルサイズ
 	var card_width = screen_width * CARD_WIDTH_RATIO
 	var card_height = card_width * (293.0 / 220.0)  # カード縦横比維持
-	var center_width = screen_width * CENTER_PANEL_WIDTH_RATIO
 	var right_width = screen_width * RIGHT_PANEL_WIDTH_RATIO
-	var right_height = card_height  # カードと同じ高さ
+	var right_height = card_height * 1.33  # 高さを2/3に縮小
 	var panel_separation = int(screen_width * 0.02)
 	
 	# コンテナ合計サイズ
-	var total_width = card_width + panel_separation + center_width + panel_separation + right_width
+	var total_width = card_width + panel_separation + right_width
 	var total_height = max(card_height, right_height)
 	
-	# 画面中央に配置
+	# 画面中央に配置 + 180px上に移動
 	var center_x = (screen_width - total_width) / 2.0
-	var center_y = (screen_height - total_height) / 2.0
+	var center_y = (screen_height - total_height) / 2.0 - 180
 	main_container.position = Vector2(center_x, center_y)
+
+func _update_card_display():
+	# カードシーンをロードして表示
+	var card_scene = preload("res://scenes/Card.tscn")
+	card_display = card_scene.instantiate()
+	left_panel.add_child(card_display)
+	
+	# カード位置を50px上に調整
+	card_display.position.y = -50
 ```
 
 ---
@@ -147,7 +163,7 @@ func _update_sizes():
 | 4 | HP / AP | `hp`, `ap`, `current_hp` | `HP: 60 / 60  AP: 60` |
 | 5 | 配置制限 | `restrictions.cannot_summon` | `配置制限: なし` |
 | 6 | アイテム制限 | `restrictions.cannot_use` | `アイテム: なし` |
-| 7 | 呪い | `curse_effects` | `【呪い】なし` |
+| 7 | 呪い | `curse` | `【呪い】なし` または `【呪い】○○（残りNターン）` |
 | 8 | スキル | `ability_parsed.keywords` | 条件付き表示 |
 | 9 | 秘術 | `ability_parsed.mystic_art` | 条件付き表示 |
 
@@ -167,6 +183,23 @@ if typeof(cost_value) == TYPE_DICTIONARY:
 else:
 	mp_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
 	lands_required = data.get("cost_lands_required", [])  # 正規化フィールド
+```
+
+### 呪い表示
+
+クリーチャーの呪いは`curse`辞書から取得：
+
+```gdscript
+var curse = data.get("curse", {})
+if curse.is_empty():
+	curse_label.text = "【呪い】なし"
+else:
+	var curse_name = curse.get("name", "不明")
+	var duration = curse.get("duration", -1)
+	if duration > 0:
+		curse_label.text = "【呪い】%s（残り%dターン）" % [curse_name, duration]
+	else:
+		curse_label.text = "【呪い】%s" % curse_name
 ```
 
 ### 属性表示変換
@@ -209,18 +242,46 @@ func _get_element_color(element: String) -> Color:
 		▼
 [creature_info_panel_ui.gd] show_selection_mode()
 		│
-		├── Yesボタン → selection_confirmed シグナル
+		├── 決定ボタン or 同じカード再タップ（ダブルクリック）
 		│       │
 		│       ▼
-		│   [ui_manager.gd] _on_creature_info_panel_confirmed()
+		│   selection_confirmed シグナル
 		│       │
 		│       ▼
 		│   card_selected シグナル発火 → 召喚処理
 		│
-		└── Noボタン → selection_cancelled シグナル
+		└── 戻るボタン → selection_cancelled シグナル
 				│
 				▼
-			選択UIに戻る（再選択可能）
+			カードのホバー状態解除 → 選択UIに戻る（再選択可能）
+```
+
+### ダブルクリック召喚
+
+同じカードを2回タップすると、情報パネルを経由せず即召喚：
+
+```gdscript
+# card_selection_ui.gd
+func _show_creature_info_panel(card_index: int, card_data: Dictionary):
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		var confirm_data = card_data.duplicate()
+		confirm_data["hand_index"] = card_index
+		_on_creature_panel_confirmed(confirm_data)
+		return
+```
+
+### 戻るボタン時のホバー解除
+
+```gdscript
+# card_selection_ui.gd
+func _on_creature_panel_cancelled():
+	pending_card_index = -1
+	
+	# 選択中のカードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card:
+		card_script.currently_selected_card.deselect_card()
 ```
 
 ---
@@ -242,8 +303,7 @@ signal panel_closed
 var background_overlay: ColorRect
 var main_container: HBoxContainer
 var left_panel: Control       # カードUI
-var center_panel: VBoxContainer  # Yes/No確認
-var right_panel: VBoxContainer   # 詳細情報
+var right_panel: VBoxContainer   # 詳細情報（中央パネルは廃止）
 
 # 右パネルのラベル
 var name_label: Label
@@ -256,11 +316,6 @@ var skill_container: VBoxContainer
 var skill_label: Label
 var mystic_container: VBoxContainer
 var mystic_label: Label
-
-# 中央パネルの要素
-var confirm_label: Label
-var yes_button: Button
-var no_button: Button
 
 # カード表示用
 var card_display: Control
@@ -369,31 +424,36 @@ func on_card_selected(card_index: int):
 
 ## 残作業
 
-### 優先度高
+### 完了済み
 
-1. **閲覧モード実装**
-   - CreatureCard3DQuadにArea3D追加
-   - `creature_tapped`シグナル
-   - UIManagerで閲覧モード表示
+1. ~~**閲覧モード実装**~~ ✅
+   - 領地コマンドのアクションメニュー時に自動表示
 
-2. **UIの微調整**
-   - 位置の微調整
-   - フォントサイズ調整
-   - パネル間隔調整
+2. ~~**UIの微調整**~~ ✅
+   - パネル全体を180px上に配置
+   - カード表示を50px上に配置
+   - 右パネル高さを2/3に縮小
+   - フォントサイズ1.65倍に拡大
+
+3. ~~**ダブルクリック召喚**~~ ✅
+   - 同じカード2回タップで即召喚
+
+4. ~~**ホバー状態解除**~~ ✅
+   - 戻るボタン押下時にカードのホバー状態を解除
 
 ### 優先度中
 
-3. **バトルモード対応**
+5. **バトルモード対応**
    - selection_mode == "battle" での確認テキスト変更
    - 侵略モード対応
 
 ### 優先度低（将来）
 
-4. **アニメーション追加**
+6. **アニメーション追加**
    - フェードイン/アウト
    - スライドイン
 
-5. **ホバープレビュー（PC）**
+7. **ホバープレビュー（PC）**
    - マウスオーバーでプレビュー表示
 
 ---
@@ -414,3 +474,5 @@ func on_card_selected(card_index: int):
 | 2025/12/11 | 初版作成 |
 | 2025/12/11 | レイアウト更新、半透明オーバーレイ追加 |
 | 2025/12/11 | 実装完了部分を反映、画面サイズ対応設計追加、クラス設計詳細化 |
+| 2025/12/12 | UI調整（パネル位置180px上、カード位置50px上、右パネル高さ2/3、フォント1.65倍） |
+| 2025/12/12 | ダブルクリック召喚、戻るボタン時のホバー解除、呪い表示修正（curse形式対応） |

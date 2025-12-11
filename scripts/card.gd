@@ -2,6 +2,9 @@ extends Control
 # カード表示・操作・選択スクリプト - CardFrame.tscn対応版
 # 更新日: 2025-11-07
 
+# 静的変数：現在選択中のカード
+static var currently_selected_card: Node = null
+
 var is_dragging = false
 var card_data = {}
 var mouse_over = false
@@ -352,6 +355,11 @@ func select_card():
 	if is_selected:
 		return
 	
+	# 他のカードが選択中なら解除
+	if currently_selected_card and currently_selected_card != self:
+		currently_selected_card.deselect_card()
+	
+	currently_selected_card = self
 	is_selected = true
 	original_position = position
 	
@@ -367,14 +375,17 @@ func select_card():
 			
 			# 上に移動して1.4倍に拡大
 			tween.parallel().tween_property(self, "position", 
-				Vector2(position.x - 20, position.y - 60), 0.3)
+				Vector2(position.x , position.y - 5), 0.3)
 			tween.parallel().tween_property(self, "scale", 
-				Vector2(1.4, 1.4), 0.3)
+				Vector2(1.06, 1.06), 0.3)
 
 # カードの選択を解除
 func deselect_card():
 	if not is_selected:
 		return
+	
+	if currently_selected_card == self:
+		currently_selected_card = null
 	
 	is_selected = false
 	z_index = 0

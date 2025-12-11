@@ -164,14 +164,15 @@ func show_action_menu(tile_index: int):
 	
 
 ## アクションメニュー非表示
-func hide_action_menu():
+## clear_buttons: グローバルボタンをクリアするかどうか（デフォルト: true）
+func hide_action_menu(clear_buttons: bool = true):
 	if action_menu_panel:
 		action_menu_panel.visible = false
 		selected_tile_for_action = -1
 	
-	# クリーチャー情報パネルも閉じる
+	# クリーチャー情報パネルも閉じる（グローバルボタンのクリアは呼び出し側で制御）
 	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-		ui_manager_ref.creature_info_panel_ui.hide_panel()
+		ui_manager_ref.creature_info_panel_ui.hide_panel(clear_buttons)
 
 ## レベル選択表示
 func show_level_selection(tile_index: int, current_level: int, player_magic: int):
@@ -260,7 +261,7 @@ func _on_action_swap_pressed():
 
 func _on_action_terrain_change_pressed():
 	print("[LandCommandUI] 地形変化ボタン押下")
-	hide_action_menu()
+	hide_action_menu(false)  # グローバルボタンはクリアしない（地形選択で再設定される）
 	var event = InputEventKey.new()
 	event.keycode = KEY_T
 	event.pressed = true
@@ -402,13 +403,13 @@ func create_level_selection_panel(parent: Node):
 	level_selection_panel = Panel.new()
 	level_selection_panel.name = "LevelSelectionPanel"
 	
-	# アクションメニューと同じ位置
+	# アクションメニューと同じサイズ・位置
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 250
-	var panel_height = 380  # 戻るボタン削除に伴い縮小
+	var panel_width = 450
+	var panel_height = 600
 	
-	var panel_x = viewport_size.x - panel_width - 20
-	var panel_y = (viewport_size.y - panel_height) / 2
+	var panel_x = viewport_size.x - panel_width - 30
+	var panel_y = (viewport_size.y - panel_height) / 2 - 200
 	
 	level_selection_panel.position = Vector2(panel_x, panel_y)
 	level_selection_panel.size = Vector2(panel_width, panel_height)
@@ -423,44 +424,73 @@ func create_level_selection_panel(parent: Node):
 	panel_style.border_width_top = 3
 	panel_style.border_width_bottom = 3
 	panel_style.border_color = Color(0.2, 0.6, 0.8, 1)
-	panel_style.corner_radius_top_left = 8
-	panel_style.corner_radius_top_right = 8
-	panel_style.corner_radius_bottom_left = 8
-	panel_style.corner_radius_bottom_right = 8
+	panel_style.corner_radius_top_left = 12
+	panel_style.corner_radius_top_right = 12
+	panel_style.corner_radius_bottom_left = 12
+	panel_style.corner_radius_bottom_right = 12
 	level_selection_panel.add_theme_stylebox_override("panel", panel_style)
 	
 	parent.add_child(level_selection_panel)
 	
-	# タイトル
-	var title = Label.new()
-	title.text = "レベルアップ"
-	title.position = Vector2(10, 10)
-	title.add_theme_font_size_override("font_size", 22)
-	title.add_theme_color_override("font_color", Color(1, 1, 1))
-	level_selection_panel.add_child(title)
-	
-	# 現在レベル表示
+	# 現在レベル表示（タイトルなし、レベル表示のみ）
 	current_level_label = Label.new()
 	current_level_label.name = "CurrentLevelLabel"
 	current_level_label.text = "現在: Lv.1"
-	current_level_label.position = Vector2(10, 45)
-	current_level_label.add_theme_font_size_override("font_size", 18)
-	current_level_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	current_level_label.position = Vector2(20, 20)
+	current_level_label.add_theme_font_size_override("font_size", 36)
+	current_level_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	level_selection_panel.add_child(current_level_label)
 	
-	# レベル選択ボタン（2-5）
-	var button_y = 85
-	var button_spacing = 10
+	# レベル選択ボタン（2-5）大きめサイズ
+	var button_y = 90
+	var button_spacing = 30
+	var button_height = 100
+	var button_width = 410
 	
 	# 初期表示用のコスト（後でshow_level_selectionで動的に更新される）
 	for level in [2, 3, 4, 5]:
-		var btn = _create_level_button(level, 0, Vector2(10, button_y))  # コストは0（後で更新）
+		var btn = _create_large_level_button(level, 0, Vector2(20, button_y), Vector2(button_width, button_height))
 		btn.pressed.connect(_on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
-		button_y += 65 + button_spacing
+		button_y += button_height + button_spacing
 	
 	# 戻るボタンはグローバルアクションボタンに移行済み
+
+## 大きめレベルボタン作成ヘルパー
+func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: Vector2) -> Button:
+	var btn = Button.new()
+	btn.text = "Lv.%d → %dG" % [level, cost]
+	btn.position = pos
+	btn.size = btn_size
+	btn.add_theme_font_size_override("font_size", 32)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.5, 0.7)
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = Color(1, 1, 1, 0.3)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	btn.add_theme_stylebox_override("normal", style)
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = Color(0.3, 0.6, 0.8)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = Color(0.1, 0.4, 0.6)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	
+	var disabled_style = style.duplicate()
+	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.8)
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+	
+	return btn
 
 ## メニューボタン作成ヘルパー
 func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
@@ -491,41 +521,5 @@ func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
 	btn.add_theme_stylebox_override("pressed", pressed_style)
 	
 	btn.add_theme_font_size_override("font_size", 16)
-	
-	return btn
-
-## レベルボタン作成ヘルパー
-func _create_level_button(level: int, cost: int, pos: Vector2) -> Button:
-	var btn = Button.new()
-	btn.text = "Lv.%d → %dG" % [level, cost]
-	btn.position = pos
-	btn.size = Vector2(230, 60)
-	
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.5, 0.7)
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_width_top = 2
-	style.border_width_bottom = 2
-	style.border_color = Color(1, 1, 1, 0.8)
-	style.corner_radius_top_left = 5
-	style.corner_radius_top_right = 5
-	style.corner_radius_bottom_left = 5
-	style.corner_radius_bottom_right = 5
-	btn.add_theme_stylebox_override("normal", style)
-	
-	var hover_style = style.duplicate()
-	hover_style.bg_color = Color(0.3, 0.6, 0.8)
-	btn.add_theme_stylebox_override("hover", hover_style)
-	
-	var pressed_style = style.duplicate()
-	pressed_style.bg_color = Color(0.1, 0.4, 0.6)
-	btn.add_theme_stylebox_override("pressed", pressed_style)
-	
-	var disabled_style = style.duplicate()
-	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
-	btn.add_theme_stylebox_override("disabled", disabled_style)
-	
-	btn.add_theme_font_size_override("font_size", 18)
 	
 	return btn

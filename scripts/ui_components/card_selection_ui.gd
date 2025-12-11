@@ -493,6 +493,13 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		emit_signal("card_selected", card_index)
 		return
 	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		var confirm_data = card_data.duplicate()
+		confirm_data["hand_index"] = card_index
+		_on_creature_panel_confirmed(confirm_data)
+		return
+	
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）
@@ -521,6 +528,11 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 func _on_creature_panel_confirmed(card_data: Dictionary):
 	var card_index = card_data.get("hand_index", pending_card_index)
 	pending_card_index = -1
+	
+	# 情報パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
+		ui_manager_ref.creature_info_panel_ui.hide_panel()
+	
 	hide_selection()
 	emit_signal("card_selected", card_index)
 
@@ -529,6 +541,24 @@ func _on_creature_panel_confirmed(card_data: Dictionary):
 func _on_creature_panel_cancelled():
 	pending_card_index = -1
 	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	
+	# 選択中のカードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+		card_script.currently_selected_card.deselect_card()
+	
+	# 交換/移動モードの場合、領地のクリーチャー情報パネルを再表示
+	if selection_mode in ["swap", "move"] and game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
+		var handler = game_flow_manager_ref.land_command_handler
+		var tile_index = handler._swap_tile_index if selection_mode == "swap" else handler._move_from_tile_index
+		if tile_index >= 0 and game_flow_manager_ref.board_system_3d:
+			var board = game_flow_manager_ref.board_system_3d
+			if board.tile_nodes.has(tile_index):
+				var tile = board.tile_nodes[tile_index]
+				var creature = tile.creature_data if tile else {}
+				if not creature.is_empty() and ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
+					ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index)
+	
 	# グローバルボタンを再登録
 	_register_back_button_for_current_mode()
 
