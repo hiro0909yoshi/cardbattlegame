@@ -39,10 +39,10 @@ func initialize(parent: Node, card_system: CardSystem, board_system, player_syst
 
 # デバッグパネルを作成
 func create_debug_panel():
-	# 背景パネル
+	# 背景パネル ※1.4倍
 	debug_panel = Panel.new()
-	debug_panel.position = Vector2(650, 200)
-	debug_panel.size = Vector2(200, 300)
+	debug_panel.position = Vector2(910, 280)
+	debug_panel.size = Vector2(280, 420)
 	debug_panel.visible = false
 	
 	# パネルスタイル設定
@@ -64,13 +64,13 @@ func apply_panel_style():
 	panel_style.border_color = Color(0.5, 0.5, 0.5, 1)
 	debug_panel.add_theme_stylebox_override("panel", panel_style)
 
-# デバッグラベルを作成
+# デバッグラベルを作成 ※1.4倍
 func create_debug_label():
 	debug_label = RichTextLabel.new()
-	debug_label.position = Vector2(10, 10)
-	debug_label.size = Vector2(180, 280)
+	debug_label.position = Vector2(14, 14)
+	debug_label.size = Vector2(252, 392)
 	debug_label.bbcode_enabled = true
-	debug_label.add_theme_font_size_override("normal_font_size", 12)
+	debug_label.add_theme_font_size_override("normal_font_size", 17)
 	debug_panel.add_child(debug_label)
 
 # デバッグモードの切り替え

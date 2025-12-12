@@ -27,12 +27,12 @@ var world_curse_label: RichTextLabel = null
 var panel_count = 2       # 表示するパネル数
 var current_turn_player = -1  # 現在のターンプレイヤー
 
-# パネルサイズ（固定値）
-var panel_width = 160
-var panel_height = 105
-var panel_spacing = 10
-var start_x = 20
-var start_y = 20
+# パネルサイズ（固定値）※1.4倍
+var panel_width = 224
+var panel_height = 147
+var panel_spacing = 14
+var start_x = 28
+var start_y = 28
 
 func _ready():
 	pass
@@ -66,11 +66,11 @@ func create_world_curse_label():
 	# プレイヤーパネルの下に配置
 	var label_y = start_y + (panel_height + panel_spacing) * panel_count
 	world_curse_label.position = Vector2(start_x, label_y)
-	world_curse_label.size = Vector2(panel_width, 30)
+	world_curse_label.size = Vector2(panel_width, 42)
 	world_curse_label.bbcode_enabled = true
 	world_curse_label.scroll_active = false
 	world_curse_label.fit_content = false
-	world_curse_label.add_theme_font_size_override("normal_font_size", 16)
+	world_curse_label.add_theme_font_size_override("normal_font_size", 22)
 	world_curse_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	world_curse_label.visible = false  # 初期は非表示
 	
@@ -110,8 +110,8 @@ func create_single_panel(player_id: int) -> Panel:
 	
 	# 情報ラベル作成
 	var info_label = RichTextLabel.new()
-	info_label.position = Vector2(8, 8)
-	info_label.size = Vector2(panel_width - 16, panel_height - 16)
+	info_label.position = Vector2(11, 11)
+	info_label.size = Vector2(panel_width - 22, panel_height - 22)
 	info_label.bbcode_enabled = true
 	
 	# マウスイベントを親に渡す（パネルクリックを優先）
@@ -122,8 +122,8 @@ func create_single_panel(player_id: int) -> Panel:
 	info_label.fit_content = false
 	info_label.clip_contents = true
 	
-	# フォントサイズを固定値に（魔力・総魔力表示用に大きめに）
-	info_label.add_theme_font_size_override("normal_font_size", 20)
+	# フォントサイズを固定値に（魔力・総魔力表示用に大きめに）※1.4倍
+	info_label.add_theme_font_size_override("normal_font_size", 28)
 	info_label.visible = true
 	info_panel.add_child(info_label)
 	info_labels.append(info_label)

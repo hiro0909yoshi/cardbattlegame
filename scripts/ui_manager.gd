@@ -76,9 +76,9 @@ func _ready():
 		debug_panel = DebugPanelClass.new()
 		add_child(debug_panel)
 	
-	# CreatureInfoPanelUI初期化
-	creature_info_panel_ui = CreatureInfoPanelUI.new()
-	creature_info_panel_ui.name = "CreatureInfoPanelUI"
+	# CreatureInfoPanelUI初期化（シーンからインスタンス化）
+	var creature_info_scene = preload("res://scenes/ui/creature_info_panel.tscn")
+	creature_info_panel_ui = creature_info_scene.instantiate()
 	creature_info_panel_ui.set_ui_manager(self)
 	add_child(creature_info_panel_ui)
 	
@@ -152,6 +152,8 @@ func connect_ui_signals():
 	if global_action_buttons:
 		global_action_buttons.confirm_pressed.connect(_on_global_confirm_pressed)
 		global_action_buttons.back_pressed.connect(_on_global_back_pressed)
+		global_action_buttons.up_pressed.connect(_on_global_up_pressed)
+		global_action_buttons.down_pressed.connect(_on_global_down_pressed)
 
 # UIを作成
 func create_ui(parent: Node):
@@ -199,10 +201,16 @@ func create_ui(parent: Node):
 	# CreatureInfoPanelUI初期化
 	if creature_info_panel_ui:
 		creature_info_panel_ui.set_card_system(card_system_ref)
-		# UIレイヤーに移動（最前面に表示するため）
+		# UIレイヤーに移動
 		if creature_info_panel_ui.get_parent():
 			creature_info_panel_ui.get_parent().remove_child(creature_info_panel_ui)
 		ui_layer.add_child(creature_info_panel_ui)
+	
+	# GlobalActionButtonsをUIレイヤーに移動（最前面に表示するため、最後に追加）
+	if global_action_buttons:
+		if global_action_buttons.get_parent():
+			global_action_buttons.get_parent().remove_child(global_action_buttons)
+		ui_layer.add_child(global_action_buttons)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -333,6 +341,8 @@ func _on_cancel_land_command_button_pressed():
 # 登録されたコールバック
 var _global_confirm_callback: Callable = Callable()
 var _global_back_callback: Callable = Callable()
+var _global_up_callback: Callable = Callable()
+var _global_down_callback: Callable = Callable()
 
 func _on_global_confirm_pressed():
 	if _global_confirm_callback.is_valid():
@@ -341,6 +351,14 @@ func _on_global_confirm_pressed():
 func _on_global_back_pressed():
 	if _global_back_callback.is_valid():
 		_global_back_callback.call()
+
+func _on_global_up_pressed():
+	if _global_up_callback.is_valid():
+		_global_up_callback.call()
+
+func _on_global_down_pressed():
+	if _global_down_callback.is_valid():
+		_global_down_callback.call()
 
 ## 決定ボタンのアクションを登録
 func register_confirm_action(callback: Callable, text: String = "決定"):
@@ -366,6 +384,8 @@ func register_global_actions(confirm_callback: Callable, back_callback: Callable
 func clear_global_actions():
 	_global_confirm_callback = Callable()
 	_global_back_callback = Callable()
+	_global_up_callback = Callable()
+	_global_down_callback = Callable()
 	if global_action_buttons:
 		global_action_buttons.disable_all()
 
@@ -380,6 +400,20 @@ func clear_back_action():
 	_global_back_callback = Callable()
 	if global_action_buttons:
 		global_action_buttons.set_back_state(false)
+
+## 上下ボタンのアクションを登録（選択場面で使用）
+func register_arrow_actions(up_callback: Callable, down_callback: Callable):
+	_global_up_callback = up_callback
+	_global_down_callback = down_callback
+	if global_action_buttons:
+		global_action_buttons.enable_arrows()
+
+## 上下ボタンのアクションをクリア
+func clear_arrow_actions():
+	_global_up_callback = Callable()
+	_global_down_callback = Callable()
+	if global_action_buttons:
+		global_action_buttons.disable_arrows()
 
 # === 手札UI管理 ===
 
@@ -462,8 +496,8 @@ func show_land_selection_mode(_owned_lands: Array):
 			land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
 		phase_label.text = "土地を選択（数字キー） " + land_list
 	
-	# キャンセルボタンを表示
-	show_cancel_button()
+	# キャンセルボタンはland_command_handler側で登録するためここでは呼ばない
+	# show_cancel_button()
 
 # アクション選択UIを表示
 func show_action_selection_ui(tile_index: int):

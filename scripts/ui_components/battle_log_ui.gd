@@ -42,12 +42,12 @@ func _ready():
 	_setup_ui()
 
 func _setup_ui():
-	# スクロールコンテナ設定
-	scroll_container.custom_minimum_size = Vector2(400, 300)
+	# スクロールコンテナ設定 ※1.4倍
+	scroll_container.custom_minimum_size = Vector2(560, 420)
 	
-	# タイトル設定
+	# タイトル設定 ※1.4倍
 	title_label.text = "戦闘・スキルログ"
-	title_label.add_theme_font_size_override("font_size", 18)
+	title_label.add_theme_font_size_override("font_size", 25)
 
 # ログエントリー追加
 func _on_log_added(entry: Dictionary):

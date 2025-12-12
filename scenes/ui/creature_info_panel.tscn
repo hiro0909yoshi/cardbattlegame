@@ -1,0 +1,154 @@
+[gd_scene load_steps=3 format=3 uid="uid://cfwvqledbatah"]
+
+[ext_resource type="Texture2D" uid="uid://dnb0eqi32seh0" path="res://assets/ui/インフォ.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://bex7rfrljxrds" path="res://scripts/ui_components/creature_info_panel_ui.gd" id="2_script"]
+
+[node name="CreatureInfoPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_script")
+
+[node name="BackgroundOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 3.0
+offset_right = 6.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="MainContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 137.0
+offset_top = 149.0
+offset_right = 937.0
+offset_bottom = 549.0
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="LeftPanel" type="Control" parent="MainContainer"]
+custom_minimum_size = Vector2(250, 350)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="RightPanel" type="Control" parent="MainContainer"]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 2
+
+[node name="ParchmentBg" type="TextureRect" parent="MainContainer/RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 793.0
+offset_top = -896.0
+offset_right = 2367.0
+offset_bottom = 1570.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_bg")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ContentMargin" type="MarginContainer" parent="MainContainer/RightPanel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.401
+anchor_top = -0.219
+anchor_right = 0.755
+anchor_bottom = 1.065
+offset_left = 1922.4
+offset_top = 206.6
+offset_right = 1898.0
+offset_bottom = 382.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.2, 0.1, 1)
+theme_override_font_sizes/font_size = 24
+text = "クリーチャー名 [R]"
+
+[node name="ElementLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "火"
+
+[node name="CostLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 18
+text = "コスト: 100G (火火)"
+
+[node name="HpApLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 18
+text = "HP: 60 / 60    AP: 60"
+
+[node name="RestrictionLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+text = "配置制限: なし  アイテム: なし"
+
+[node name="HSeparator" type="HSeparator" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+
+[node name="CurseLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "【呪い】なし"
+autowrap_mode = 2
+
+[node name="SkillContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+
+[node name="SkillHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.4, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "【スキル】"
+
+[node name="SkillLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 14
+text = "先制; 強打[水]; 土地変性[火]"
+autowrap_mode = 2
+
+[node name="MysticContainer" type="VBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+
+[node name="MysticHeader" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.3, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+text = "【秘術】"
+
+[node name="MysticLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/MysticContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 14
+text = "秘術の説明テキスト"
+autowrap_mode = 2

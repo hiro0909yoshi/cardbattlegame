@@ -9,7 +9,7 @@ const CARDFRAME_WIDTH = 220  # Card.tscnの実際のサイズ
 const CARDFRAME_HEIGHT = 293
 const GAME_CARD_WIDTH = 220   # ゲーム内での表示サイズ（元画像サイズ）
 const GAME_CARD_HEIGHT = 293
-const BASE_SCALE = 1.0        # 元画像サイズのまま表示
+const BASE_SCALE = 1.4        # 元画像サイズの1.4倍で表示
 const CARD_SPACING = 30
 const MAX_SCREEN_WIDTH_RATIO = 0.77
 

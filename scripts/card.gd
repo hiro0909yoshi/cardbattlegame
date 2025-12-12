@@ -13,6 +13,7 @@ var is_selectable = false
 var is_selected = false
 var original_position: Vector2
 var original_size: Vector2
+var original_scale: Vector2 = Vector2(1.0, 1.0)
 
 # 密命カード用の変数
 var owner_player_id: int = -1      # このカードの所有者
@@ -362,6 +363,7 @@ func select_card():
 	currently_selected_card = self
 	is_selected = true
 	original_position = position
+	original_scale = scale  # 元のスケールを保存
 	
 	# カードを大きく表示
 	z_index = 100
@@ -373,11 +375,12 @@ func select_card():
 			tween.set_trans(Tween.TRANS_ELASTIC)
 			tween.set_ease(Tween.EASE_OUT)
 			
-			# 上に移動して1.4倍に拡大
+			# 上に移動して1.06倍に拡大（元のスケールを基準に）
+			var target_scale = original_scale * 1.06
 			tween.parallel().tween_property(self, "position", 
 				Vector2(position.x , position.y - 5), 0.3)
 			tween.parallel().tween_property(self, "scale", 
-				Vector2(1.06, 1.06), 0.3)
+				target_scale, 0.3)
 
 # カードの選択を解除
 func deselect_card():
@@ -390,9 +393,9 @@ func deselect_card():
 	is_selected = false
 	z_index = 0
 	
-	# 元の位置とサイズに戻す
+	# 元の位置とスケールに戻す
 	position = original_position
-	scale = Vector2(1.0, 1.0)
+	scale = original_scale
 	
 	# 色を元に戻す
 	modulate = Color(1.0, 1.0, 1.0)

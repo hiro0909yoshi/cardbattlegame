@@ -754,6 +754,10 @@ func _reinitialize_card_selection():
 	if ui_manager:
 		var current_player = player_system.get_current_player()
 		if current_player:
+			# TileActionProcessorのフラグを再設定（召喚フェーズに戻る）
+			if board_system_3d and board_system_3d.tile_action_processor:
+				board_system_3d.tile_action_processor.is_action_processing = true
+			
 			# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)

@@ -124,7 +124,7 @@ func _add_card_list_button():
 	var button = Button.new()
 	button.name = "CardListButton"
 	button.text = "📋 全カード一覧"
-	button.custom_minimum_size = Vector2(0, 40)
+	button.custom_minimum_size = Vector2(0, 56)  # 1.4倍
 	button.pressed.connect(show_card_list_window)
 	
 	# Label（タイトル）とHSeparatorの間に追加

@@ -23,28 +23,28 @@ func initialize(ui_parent: Node):
 	create_phase_label()
 	create_dice_button()
 
-## フェーズラベルを作成
+## フェーズラベルを作成 ※1.4倍
 func create_phase_label():
 	phase_label = Label.new()
 	phase_label.text = "セットアップ中..."
 	
 	var viewport_size = get_viewport().get_visible_rect().size
-	var player_panel_bottom = 20 + 240 + 20  # パネルY + パネル高さ(240) + マージン
+	var player_panel_bottom = 28 + 336 + 28  # パネルY + パネル高さ(336) + マージン ※1.4倍
 	
 	# サイコロボタンの少し上に配置
-	phase_label.position = Vector2(viewport_size.x / 2 - 150, player_panel_bottom)
-	phase_label.add_theme_font_size_override("font_size", 24)
+	phase_label.position = Vector2(viewport_size.x / 2 - 210, player_panel_bottom)
+	phase_label.add_theme_font_size_override("font_size", 34)
 	ui_layer.add_child(phase_label)
 
-## サイコロボタンを作成
+## サイコロボタンを作成 ※1.4倍
 func create_dice_button():
 	dice_button = Button.new()
 	dice_button.text = "サイコロを振る"
 	
 	var viewport_size = get_viewport().get_visible_rect().size
-	var button_width = 200
-	var button_height = 60
-	var player_panel_bottom = 20 + 240 + 70  # パネルY + パネル高さ(240) + マージン(70)
+	var button_width = 280
+	var button_height = 84
+	var player_panel_bottom = 28 + 336 + 98  # ※1.4倍
 	
 	dice_button.position = Vector2((viewport_size.x - button_width) / 2, player_panel_bottom)
 	dice_button.size = Vector2(button_width, button_height)
@@ -80,8 +80,8 @@ func create_dice_button():
 	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.7)
 	dice_button.add_theme_stylebox_override("disabled", disabled_style)
 	
-	# フォントサイズを大きく
-	dice_button.add_theme_font_size_override("font_size", 18)
+	# フォントサイズを大きく ※1.4倍
+	dice_button.add_theme_font_size_override("font_size", 25)
 	
 	ui_layer.add_child(dice_button)
 
@@ -113,7 +113,7 @@ func show_dice_result(value: int):
 	# 新しいダイスラベルを作成（サイコロボタンの近くに表示）
 	current_dice_label = Label.new()
 	current_dice_label.text = "🎲 " + str(value)
-	current_dice_label.add_theme_font_size_override("font_size", 48)
+	current_dice_label.add_theme_font_size_override("font_size", 67)  # 1.4倍
 	current_dice_label.position = Vector2(530, 90)  # サイコロボタンの右横
 	current_dice_label.add_theme_color_override("font_color", Color(1, 1, 0))
 	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))

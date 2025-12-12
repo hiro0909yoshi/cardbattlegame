@@ -25,7 +25,6 @@ GameData="*res://scripts/game_data.gd"
 window/size/viewport_width=3704
 window/size/viewport_height=1712
 window/stretch/mode="viewport"
-window/stretch/scale=1.4
 
 [editor_plugins]
 

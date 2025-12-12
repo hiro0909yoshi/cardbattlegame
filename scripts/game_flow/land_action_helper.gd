@@ -75,6 +75,15 @@ static func execute_level_up(handler) -> bool:
 			handler.ui_manager.phase_label.text = "既に最大レベルです"
 		return false
 	
+	# 状態をレベル選択中に変更
+	handler.current_state = handler.State.SELECTING_LEVEL
+	
+	# 選択可能なレベルを設定（現在レベル+1 〜 5）
+	handler.available_levels = []
+	for level in range(tile.level + 1, 6):
+		handler.available_levels.append(level)
+	handler.current_level_selection_index = 0
+	
 	#　 Phase 1-A: レベル選択UIを表示
 	if handler.ui_manager and handler.ui_manager.has_method("show_level_selection"):
 		var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
@@ -82,6 +91,13 @@ static func execute_level_up(handler) -> bool:
 		var player_magic = current_player.magic_power if current_player else 0
 		
 		handler.ui_manager.show_level_selection(handler.selected_tile_index, tile.level, player_magic)
+	
+	# 上下ボタンを有効化
+	if handler.ui_manager:
+		handler.ui_manager.register_arrow_actions(
+			func(): handler._on_arrow_up(),
+			func(): handler._on_arrow_down()
+		)
 	
 	return true
 
@@ -132,6 +148,13 @@ static func execute_move_creature(handler) -> bool:
 	# UIを更新（移動先選択画面を表示）
 	update_move_destination_ui(handler)
 	
+	# 上下ボタンを有効化
+	if handler.ui_manager:
+		handler.ui_manager.register_arrow_actions(
+			func(): handler._on_arrow_up(),
+			func(): handler._on_arrow_down()
+		)
+	
 	return true
 
 ## 移動先選択UIを更新
@@ -179,6 +202,9 @@ static func execute_swap_creature(handler) -> bool:
 	print("  対象土地: タイル", handler.selected_tile_index)
 	print("  元のクリーチャー: ", old_creature_data.get("name", "不明"), " (※最終的には最新データで処理)")
 	
+	# 状態を交換クリーチャー選択中に変更
+	handler.current_state = handler.State.SELECTING_SWAP
+	
 	# TileActionProcessorに交換モードを設定
 	if handler.board_system.tile_action_processor:
 		# is_action_processingをtrueに設定（通常のアクション処理と同じ）
@@ -188,6 +214,10 @@ static func execute_swap_creature(handler) -> bool:
 		handler._swap_mode = true
 		handler._swap_old_creature = old_creature_data
 		handler._swap_tile_index = handler.selected_tile_index
+	
+	# アクションメニューを閉じる
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.hide_action_menu(false)  # グローバルボタンはクリアしない
 	
 	# カード選択UIを表示（交換モード）
 	if handler.ui_manager:
@@ -619,12 +649,24 @@ static func execute_terrain_change(handler) -> bool:
 	if handler.ui_manager:
 		handler.ui_manager.register_back_action(func(): _cancel_terrain_change(handler), "戻る")
 	
+	# 上下ボタンを有効化
+	if handler.ui_manager:
+		handler.ui_manager.register_arrow_actions(
+			func(): handler._on_arrow_up(),
+			func(): handler._on_arrow_down()
+		)
+	
 	return true
 
 ## 地形変化キャンセル
 static func _cancel_terrain_change(handler):
 	handler.terrain_change_tile_index = -1
 	handler.current_state = handler.State.SELECTING_ACTION
+	
+	# TileActionProcessorのフラグをリセット
+	if handler.board_system and handler.board_system.tile_action_processor:
+		handler.board_system.tile_action_processor.is_action_processing = false
+	
 	# アクションメニューに戻る
 	if handler.ui_manager and handler.ui_manager.land_command_ui:
 		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)

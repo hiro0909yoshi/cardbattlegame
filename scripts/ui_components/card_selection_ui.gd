@@ -383,11 +383,6 @@ func create_pass_button(_hand_count: int):
 	if selection_mode == "discard":
 		return
 	
-	# 交換/移動など領地コマンド内のモードではパスボタンを作らない
-	# （領地コマンドの「閉じる」ボタンが使われる）
-	if selection_mode in ["swap", "move"]:
-		return
-	
 	# グローバルボタンに戻るアクションを登録
 	if ui_manager_ref:
 		var back_text = "パス"
@@ -402,6 +397,10 @@ func create_pass_button(_hand_count: int):
 				back_text = "スペルを使わない"
 			"item":
 				back_text = "アイテムを使わない"
+			"swap":
+				back_text = "交換しない"
+			"move":
+				back_text = "移動しない"
 		
 		ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
 
@@ -608,35 +607,21 @@ func _get_card_data_for_index(card_index: int) -> Dictionary:
 # パスボタンが押された
 func _on_pass_button_pressed():
 	if is_active:
-		# 交換/移動モードの場合は召喚フェーズに戻る（ターン終了しない）
+		# 交換/移動モードの場合はアクションメニューに戻る
 		if selection_mode in ["swap", "move"]:
-			_cancel_land_command_and_return_to_summon()
+			_cancel_land_command_and_return_to_action_menu()
 		else:
 			hide_selection()
 			emit_signal("selection_cancelled")
 
 
-# 領地コマンドをキャンセルして召喚フェーズに戻る
-func _cancel_land_command_and_return_to_summon():
+# 交換/移動モードをキャンセルしてアクションメニューに戻る
+func _cancel_land_command_and_return_to_action_menu():
 	hide_selection()
 	
-	# 領地コマンドの状態をリセット
+	# land_command_handlerのcancel()を呼ぶ（状態管理を統一）
 	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
-		var handler = game_flow_manager_ref.land_command_handler
-		handler._swap_mode = false
-		handler._swap_old_creature = {}
-		handler._swap_tile_index = -1
-		handler.close_land_command()
-	
-	# TileActionProcessorのフラグもリセット
-	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
-		var tap = game_flow_manager_ref.board_system_3d.tile_action_processor
-		if tap:
-			tap.is_action_processing = false
-	
-	# 召喚フェーズに戻る（カード選択UIを再初期化）
-	if game_flow_manager_ref and game_flow_manager_ref.has_method("_reinitialize_card_selection"):
-		game_flow_manager_ref._reinitialize_card_selection()
+		game_flow_manager_ref.land_command_handler.cancel()
 
 # 選択中かチェック
 func is_selection_active() -> bool:

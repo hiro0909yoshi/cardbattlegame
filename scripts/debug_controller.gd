@@ -59,10 +59,10 @@ func create_card_input_dialog():
 	card_input_dialog.dialog_text = "追加するカードIDを入力してください"
 	card_input_dialog.size = Vector2(400, 150)
 	
-	# LineEditを作成
+	# LineEditを作成 ※1.4倍
 	card_id_input = LineEdit.new()
 	card_id_input.placeholder_text = "カードID（例: 2001）"
-	card_id_input.custom_minimum_size = Vector2(200, 30)
+	card_id_input.custom_minimum_size = Vector2(280, 42)
 	
 	# Enterキーで確定できるように設定
 	card_id_input.text_submitted.connect(_on_card_id_text_submitted)

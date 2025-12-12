@@ -76,21 +76,21 @@ func create_card_dialog():
 	vbox.name = "DialogVBox"
 	card_dialog.add_child(vbox)
 	
-	# タイトルラベル
+	# タイトルラベル ※1.4倍
 	var title_label = Label.new()
 	title_label.name = "TitleLabel"
-	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_font_size_override("font_size", 34)
 	vbox.add_child(title_label)
 	
-	# 情報ラベル
+	# 情報ラベル ※1.4倍
 	var info_label = Label.new()
 	info_label.name = "InfoLabel"
-	info_label.add_theme_font_size_override("font_size", 18)
+	info_label.add_theme_font_size_override("font_size", 25)
 	vbox.add_child(info_label)
 	
-	# スペーサー
+	# スペーサー ※1.4倍
 	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 20)
+	spacer.custom_minimum_size = Vector2(0, 28)
 	vbox.add_child(spacer)
 	
 	# 枚数選択ボタン（横並び）
@@ -102,8 +102,8 @@ func create_card_dialog():
 	for i in range(5):
 		var btn = Button.new()
 		btn.text = str(i) + "枚"
-		btn.custom_minimum_size = Vector2(80, 60)
-		btn.add_theme_font_size_override("font_size", 20)
+		btn.custom_minimum_size = Vector2(112, 84)  # 1.4倍
+		btn.add_theme_font_size_override("font_size", 28)  # 1.4倍
 		btn.pressed.connect(_on_count_selected.bind(i))
 		hbox.add_child(btn)
 		count_buttons.append(btn)
@@ -175,7 +175,7 @@ func clear_card_list():
 
 func create_card_button(card_data: Dictionary):
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(300, 500)
+	button.custom_minimum_size = Vector2(420, 700)  # 1.4倍
 	
 	# カードIDをメタデータとして保存
 	button.set_meta("card_id", card_data.id)
@@ -300,8 +300,8 @@ func _on_back_pressed():
 func create_debug_reset_button():
 	var debug_button = Button.new()
 	debug_button.text = "🔧 全データリセット"
-	debug_button.custom_minimum_size = Vector2(200, 60)
-	debug_button.add_theme_font_size_override("font_size", 16)
+	debug_button.custom_minimum_size = Vector2(280, 84)  # 1.4倍
+	debug_button.add_theme_font_size_override("font_size", 22)  # 1.4倍
 	debug_button.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # オレンジ色
 	
 	right_vbox.add_child(debug_button)
@@ -342,8 +342,8 @@ func _on_debug_reset_confirmed():
 func create_reset_button():
 	reset_button = Button.new()
 	reset_button.text = "リセット"
-	reset_button.custom_minimum_size = Vector2(200, 60)
-	reset_button.add_theme_font_size_override("font_size", 20)
+	reset_button.custom_minimum_size = Vector2(280, 84)  # 1.4倍
+	reset_button.add_theme_font_size_override("font_size", 28)  # 1.4倍
 	
 	# 警告色（赤っぽく）
 	reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))

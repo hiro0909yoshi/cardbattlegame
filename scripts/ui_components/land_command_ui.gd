@@ -40,15 +40,15 @@ func create_land_command_button(parent: Node):
 		return
 	
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var button_width = 300
-	var button_height = 70
-	var player_panel_bottom = 150
+	var button_width = 420  # 1.4倍
+	var button_height = 98  # 1.4倍
+	var player_panel_bottom = 210  # 1.4倍
 	
 	land_command_button = Button.new()
 	land_command_button.name = "LandCommandButton"
 	land_command_button.text = "領地コマンド"
 	land_command_button.custom_minimum_size = Vector2(button_width, button_height)
-	land_command_button.position = Vector2(20, viewport_size.y - player_panel_bottom - button_height - 20)
+	land_command_button.position = Vector2(28, viewport_size.y - player_panel_bottom - button_height - 28)
 	land_command_button.z_index = 100
 	
 	# スタイル設定
@@ -80,8 +80,8 @@ func create_land_command_button(parent: Node):
 	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
 	land_command_button.add_theme_stylebox_override("disabled", disabled_style)
 	
-	# フォント設定
-	var font_size = 24
+	# フォント設定 ※1.4倍
+	var font_size = 34
 	land_command_button.add_theme_font_size_override("font_size", font_size)
 	
 	# シグナル接続
@@ -215,6 +215,11 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 	# グローバルボタンに「戻る」を登録
 	if ui_manager_ref:
 		ui_manager_ref.register_back_action(_on_level_cancel_pressed, "戻る")
+	
+	# 最初の有効なレベルをハイライト
+	var first_available_level = current_level + 1
+	if first_available_level <= 5:
+		highlight_level_button(first_available_level)
 
 func _calculate_level_up_cost(_from_level: int, to_level: int) -> int:
 	# TileDataManagerから動的に計算
@@ -230,6 +235,42 @@ func hide_level_selection():
 	if level_selection_panel:
 		level_selection_panel.visible = false
 
+## レベルボタンのハイライト（上下キー選択用）
+func highlight_level_button(selected_level: int):
+	for level in level_selection_buttons.keys():
+		var button = level_selection_buttons[level]
+		if not button:
+			continue
+		
+		if level == selected_level and not button.disabled:
+			# 選択中のボタンをハイライト（枠線を強調）
+			var style = button.get_theme_stylebox("normal").duplicate() if button.get_theme_stylebox("normal") else StyleBoxFlat.new()
+			if style is StyleBoxFlat:
+				style.border_color = Color(1, 1, 0, 1)  # 黄色の枠
+				style.border_width_top = 4
+				style.border_width_bottom = 4
+				style.border_width_left = 4
+				style.border_width_right = 4
+				button.add_theme_stylebox_override("normal", style)
+		else:
+			# 非選択ボタンは通常スタイル
+			_reset_level_button_style(button, level)
+
+## レベルボタンのスタイルをリセット
+func _reset_level_button_style(button: Button, _level: int):
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.3, 0.3, 0.5, 0.9)
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_color = Color(1, 1, 1, 0.5)
+	style.corner_radius_top_left = 5
+	style.corner_radius_top_right = 5
+	style.corner_radius_bottom_left = 5
+	style.corner_radius_bottom_right = 5
+	button.add_theme_stylebox_override("normal", style)
+
 ## シグナルハンドラ
 func _on_land_command_button_pressed():
 	land_command_button_pressed.emit()
@@ -240,7 +281,14 @@ func _on_cancel_land_command_button_pressed():
 	if ui_manager_ref and ui_manager_ref.has_method("_on_cancel_land_command_button_pressed"):
 		ui_manager_ref._on_cancel_land_command_button_pressed()
 
+## クリーチャー情報パネルを閉じる（表示中の場合）
+func _close_creature_info_panel_if_open():
+	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
+		if ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+			ui_manager_ref.creature_info_panel_ui.hide_panel()
+
 func _on_action_level_up_pressed():
+	_close_creature_info_panel_if_open()
 	# LandCommandHandlerに通知（キーボード入力をエミュレート）
 	var event = InputEventKey.new()
 	event.keycode = KEY_L
@@ -248,18 +296,21 @@ func _on_action_level_up_pressed():
 	Input.parse_input_event(event)
 
 func _on_action_move_pressed():
+	_close_creature_info_panel_if_open()
 	var event = InputEventKey.new()
 	event.keycode = KEY_M
 	event.pressed = true
 	Input.parse_input_event(event)
 
 func _on_action_swap_pressed():
+	_close_creature_info_panel_if_open()
 	var event = InputEventKey.new()
 	event.keycode = KEY_S
 	event.pressed = true
 	Input.parse_input_event(event)
 
 func _on_action_terrain_change_pressed():
+	_close_creature_info_panel_if_open()
 	print("[LandCommandUI] 地形変化ボタン押下")
 	hide_action_menu(false)  # グローバルボタンはクリアしない（地形選択で再設定される）
 	var event = InputEventKey.new()
@@ -284,10 +335,14 @@ func _on_level_selected(level: int):
 
 func _on_level_cancel_pressed():
 	print("[LandCommandUI] レベル選択キャンセル")
-	hide_level_selection()
-	# アクションメニューに戻る
-	if selected_tile_for_action >= 0:
-		show_action_menu(selected_tile_for_action)
+	# land_command_handlerのcancel()を呼ぶ（状態管理を統一）
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
+		ui_manager_ref.game_flow_manager_ref.land_command_handler.cancel()
+	else:
+		# フォールバック
+		hide_level_selection()
+		if selected_tile_for_action >= 0:
+			show_action_menu(selected_tile_for_action)
 
 ## アクションメニューパネル作成
 func create_action_menu_panel(parent: Node):
@@ -299,15 +354,15 @@ func create_action_menu_panel(parent: Node):
 	
 	# 右側に配置（大きめパネル）
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 450
-	var panel_height = 600
+	var panel_width = 630  # 1.4倍
+	var panel_height = 840  # 1.4倍
 	
-	var panel_x = viewport_size.x - panel_width - 30
-	var panel_y = (viewport_size.y - panel_height) / 2 - 200
+	var panel_x = viewport_size.x - panel_width - 42  # 1.4倍
+	var panel_y = (viewport_size.y - panel_height) / 2 - 280  # 1.4倍
 	
 	action_menu_panel.position = Vector2(panel_x, panel_y)
 	action_menu_panel.size = Vector2(panel_width, panel_height)
-	action_menu_panel.z_index = 100
+	action_menu_panel.z_index = 1000  # creature_info_panelより上に表示
 	action_menu_panel.visible = false
 	
 	# パネルスタイル
@@ -326,35 +381,35 @@ func create_action_menu_panel(parent: Node):
 	
 	parent.add_child(action_menu_panel)
 	
-	# ボタンを作成（大きめサイズ、タイトル削除で上から配置）
-	var button_y = 30
-	var button_spacing = 40
-	var button_height = 100
-	var button_width = 410
+	# ボタンを作成（大きめサイズ、タイトル削除で上から配置）※1.4倍
+	var button_y = 42
+	var button_spacing = 56
+	var button_height = 140
+	var button_width = 574
 	
 	# レベルアップボタン
-	var level_up_btn = _create_large_menu_button("📈 [L] レベルアップ", Vector2(20, button_y), Vector2(button_width, button_height), Color(0.2, 0.6, 0.8))
+	var level_up_btn = _create_large_menu_button("📈 [L] レベルアップ", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.2, 0.6, 0.8))
 	level_up_btn.pressed.connect(_on_action_level_up_pressed)
 	action_menu_panel.add_child(level_up_btn)
 	action_menu_buttons["level_up"] = level_up_btn
 	button_y += button_height + button_spacing
 	
 	# 移動ボタン
-	var move_btn = _create_large_menu_button("🚶 [M] 移動", Vector2(20, button_y), Vector2(button_width, button_height), Color(0.6, 0.4, 0.8))
+	var move_btn = _create_large_menu_button("🚶 [M] 移動", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.6, 0.4, 0.8))
 	move_btn.pressed.connect(_on_action_move_pressed)
 	action_menu_panel.add_child(move_btn)
 	action_menu_buttons["move"] = move_btn
 	button_y += button_height + button_spacing
 	
 	# 交換ボタン
-	var swap_btn = _create_large_menu_button("🔄 [S] 交換", Vector2(20, button_y), Vector2(button_width, button_height), Color(0.8, 0.6, 0.2))
+	var swap_btn = _create_large_menu_button("🔄 [S] 交換", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.8, 0.6, 0.2))
 	swap_btn.pressed.connect(_on_action_swap_pressed)
 	action_menu_panel.add_child(swap_btn)
 	action_menu_buttons["swap"] = swap_btn
 	button_y += button_height + button_spacing
 	
 	# 地形変化ボタン
-	var terrain_btn = _create_large_menu_button("🌍 [T] 地形変化", Vector2(20, button_y), Vector2(button_width, button_height), Color(0.4, 0.8, 0.4))
+	var terrain_btn = _create_large_menu_button("🌍 [T] 地形変化", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.4, 0.8, 0.4))
 	terrain_btn.pressed.connect(_on_action_terrain_change_pressed)
 	action_menu_panel.add_child(terrain_btn)
 	action_menu_buttons["terrain"] = terrain_btn
@@ -366,7 +421,7 @@ func _create_large_menu_button(text: String, pos: Vector2, btn_size: Vector2, co
 	btn.text = text
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 32)
+	btn.add_theme_font_size_override("font_size", 45)  # 1.4倍
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
@@ -403,17 +458,17 @@ func create_level_selection_panel(parent: Node):
 	level_selection_panel = Panel.new()
 	level_selection_panel.name = "LevelSelectionPanel"
 	
-	# アクションメニューと同じサイズ・位置
+	# アクションメニューと同じサイズ・位置 ※1.4倍
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 450
-	var panel_height = 600
+	var panel_width = 630
+	var panel_height = 840
 	
-	var panel_x = viewport_size.x - panel_width - 30
-	var panel_y = (viewport_size.y - panel_height) / 2 - 200
+	var panel_x = viewport_size.x - panel_width - 42
+	var panel_y = (viewport_size.y - panel_height) / 2 - 280
 	
 	level_selection_panel.position = Vector2(panel_x, panel_y)
 	level_selection_panel.size = Vector2(panel_width, panel_height)
-	level_selection_panel.z_index = 101
+	level_selection_panel.z_index = 1001  # creature_info_panelより上に表示
 	level_selection_panel.visible = false
 	
 	# パネルスタイル
@@ -432,24 +487,24 @@ func create_level_selection_panel(parent: Node):
 	
 	parent.add_child(level_selection_panel)
 	
-	# 現在レベル表示（タイトルなし、レベル表示のみ）
+	# 現在レベル表示（タイトルなし、レベル表示のみ）※1.4倍
 	current_level_label = Label.new()
 	current_level_label.name = "CurrentLevelLabel"
 	current_level_label.text = "現在: Lv.1"
-	current_level_label.position = Vector2(20, 20)
-	current_level_label.add_theme_font_size_override("font_size", 36)
+	current_level_label.position = Vector2(28, 28)
+	current_level_label.add_theme_font_size_override("font_size", 50)  # 1.4倍
 	current_level_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	level_selection_panel.add_child(current_level_label)
 	
-	# レベル選択ボタン（2-5）大きめサイズ
-	var button_y = 90
-	var button_spacing = 30
-	var button_height = 100
-	var button_width = 410
+	# レベル選択ボタン（2-5）大きめサイズ ※1.4倍
+	var button_y = 126
+	var button_spacing = 42
+	var button_height = 140
+	var button_width = 574
 	
 	# 初期表示用のコスト（後でshow_level_selectionで動的に更新される）
 	for level in [2, 3, 4, 5]:
-		var btn = _create_large_level_button(level, 0, Vector2(20, button_y), Vector2(button_width, button_height))
+		var btn = _create_large_level_button(level, 0, Vector2(28, button_y), Vector2(button_width, button_height))
 		btn.pressed.connect(_on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
@@ -463,7 +518,7 @@ func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: V
 	btn.text = "Lv.%d → %dG" % [level, cost]
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 32)
+	btn.add_theme_font_size_override("font_size", 45)  # 1.4倍
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.2, 0.5, 0.7)
@@ -497,7 +552,7 @@ func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
 	var btn = Button.new()
 	btn.text = text
 	btn.position = pos
-	btn.size = Vector2(180, 50)
+	btn.size = Vector2(252, 70)  # 1.4倍
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
@@ -520,6 +575,6 @@ func _create_menu_button(text: String, pos: Vector2, color: Color) -> Button:
 	pressed_style.bg_color = color.darkened(0.2)
 	btn.add_theme_stylebox_override("pressed", pressed_style)
 	
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", 22)  # 1.4倍
 	
 	return btn

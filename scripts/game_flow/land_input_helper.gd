@@ -16,6 +16,9 @@ static func process_input(handler, event):
 		# 地形選択モード時
 		elif handler.current_state == handler.State.SELECTING_TERRAIN:
 			handle_terrain_selection_input(handler, event)
+		# レベル選択モード時
+		elif handler.current_state == handler.State.SELECTING_LEVEL:
+			handle_level_selection_input(handler, event)
 
 ## 土地選択時のキー入力処理
 static func handle_land_selection_input(handler, event):
@@ -161,3 +164,26 @@ static func handle_terrain_selection_input(handler, event):
 		var selected_element = handler.terrain_options[handler.current_terrain_index]
 		print("[LandInputHelper] 地形変化決定: ", selected_element)
 		LandActionHelper.execute_terrain_change_with_element(handler, selected_element)
+
+## レベル選択時のキー入力処理
+static func handle_level_selection_input(handler, event):
+	# Cキーでキャンセル（EscapeキーはグローバルボタンでUIManager経由で処理）
+	if event.keycode == KEY_C:
+		handler.cancel()
+		return
+	
+	# 選択可能なレベルがない場合は何もしない
+	if handler.available_levels.is_empty():
+		return
+	
+	# ↑キー: 前のレベル
+	if event.keycode == KEY_UP:
+		handler._select_previous_level()
+	
+	# ↓キー: 次のレベル
+	elif event.keycode == KEY_DOWN:
+		handler._select_next_level()
+	
+	# Enterキー: 決定
+	elif event.keycode == KEY_ENTER:
+		handler._confirm_level_selection()
