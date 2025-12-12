@@ -120,15 +120,13 @@ func open_land_command(player_id: int):
 	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 		ui_manager.show_land_selection_mode(player_owned_lands)
 	
-	# キャンセルボタンを登録
-	if ui_manager and ui_manager.land_command_ui:
-		ui_manager.land_command_ui.show_cancel_button()
-	
-	# 上下ボタンを有効化（土地選択用）
+	# ナビゲーションボタン設定（土地選択用）
 	if ui_manager:
-		ui_manager.register_arrow_actions(
-			func(): _on_arrow_up(),
-			func(): _on_arrow_down()
+		ui_manager.enable_navigation(
+			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
+			func(): cancel(),  # 戻る
+			func(): _on_arrow_up(),  # 上
+			func(): _on_arrow_down()  # 下
 		)
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
@@ -218,13 +216,22 @@ func close_land_command():
 	terrain_change_tile_index = -1
 	current_terrain_index = 0
 	
+	# レベル選択関連のリセット
+	available_levels.clear()
+	current_level_selection_index = 0
+	
 	# TileActionProcessorのフラグをリセット
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.is_action_processing = false
 	
-	# 上下ボタンをクリア
+	# ナビゲーションボタンをクリア
 	if ui_manager:
-		ui_manager.clear_arrow_actions()
+		ui_manager.disable_navigation()
+	
+	# パネルを閉じる
+	if ui_manager and ui_manager.land_command_ui:
+		ui_manager.land_command_ui.hide_level_selection()
+		ui_manager.land_command_ui.hide_terrain_selection()
 	
 	land_command_closed.emit()
 	
@@ -273,43 +280,39 @@ func rotate_selection_marker(delta: float):
 
 ## キャンセル処理
 func cancel():
+	print("[LandCommandHandler] cancel() called, current_state=%s" % State.keys()[current_state])
+	
 	if current_state == State.SELECTING_TERRAIN:
 		# 地形選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
 		terrain_change_tile_index = -1
 		current_terrain_index = 0
 		
-		# TileActionProcessorのフラグをリセット
 		if board_system and board_system.tile_action_processor:
 			board_system.tile_action_processor.is_action_processing = false
 		
-		# 上下ボタンを無効化（アクション選択では不要）
-		if ui_manager:
-			ui_manager.clear_arrow_actions()
+		# アクション選択用ナビゲーション（戻るのみ）
+		_set_action_selection_navigation()
 		
-		# UIを更新（アクションメニューを再表示）
-		if ui_manager and ui_manager.has_method("show_action_menu"):
-			ui_manager.show_action_menu(selected_tile_index)
+		if ui_manager and ui_manager.land_command_ui:
+			ui_manager.land_command_ui.hide_terrain_selection()
+			ui_manager.land_command_ui.show_action_menu(selected_tile_index)
 	
 	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
 		
-		# マーカーを移動元（選択中の土地）に戻す
 		if move_source_tile >= 0:
 			LandSelectionHelper.show_selection_marker(self, move_source_tile)
 			LandSelectionHelper.focus_camera_on_tile(self, move_source_tile)
 		
-		# 移動先リストをクリア
 		move_destinations.clear()
 		move_source_tile = -1
 		current_destination_index = 0
 		
-		# 上下ボタンを無効化（アクション選択では不要）
-		if ui_manager:
-			ui_manager.clear_arrow_actions()
+		# アクション選択用ナビゲーション（戻るのみ）
+		_set_action_selection_navigation()
 		
-		# UIを更新（アクションメニューを再表示）
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 	
@@ -319,15 +322,12 @@ func cancel():
 		available_levels.clear()
 		current_level_selection_index = 0
 		
-		# 上下ボタンを無効化（アクション選択では不要）
-		if ui_manager:
-			ui_manager.clear_arrow_actions()
+		# アクション選択用ナビゲーション（戻るのみ）
+		_set_action_selection_navigation()
 		
-		# レベル選択UIを閉じる
 		if ui_manager and ui_manager.land_command_ui:
 			ui_manager.land_command_ui.hide_level_selection()
 		
-		# アクションメニューを再表示
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 	
@@ -335,68 +335,82 @@ func cancel():
 		# 交換クリーチャー選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
 		
-		# 交換モードをリセット
 		_swap_mode = false
 		_swap_old_creature = {}
 		_swap_tile_index = -1
 		
-		# TileActionProcessorのフラグもリセット
 		if board_system and board_system.tile_action_processor:
 			board_system.tile_action_processor.is_action_processing = false
 		
-		# カード選択UIを閉じる
+		# カード選択UIを閉じる（先にクリア）
 		if ui_manager and ui_manager.card_selection_ui:
 			ui_manager.card_selection_ui.hide_selection()
 		
-		# アクションメニューを再表示
+		# アクションメニューを表示
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 		
+		# ナビゲーション設定は最後（hide_selectionでクリアされるため）
+		_set_action_selection_navigation()
+		
 	elif current_state == State.SELECTING_ACTION:
 		# アクション選択中なら土地選択に戻る
-		# アクションメニューを閉じる
-		if ui_manager and ui_manager.land_command_ui:
-			ui_manager.land_command_ui.hide_action_menu()
+		print("[LandCommandHandler] cancel: SELECTING_ACTION -> SELECTING_LAND")
 		
-		# マーカーを非表示
-		LandSelectionHelper.hide_selection_marker(self)
+		if ui_manager and ui_manager.land_command_ui:
+			print("[LandCommandHandler] hide_action_menu(false) を呼び出し")
+			ui_manager.land_command_ui.hide_action_menu(false)  # ボタンクリアしない
 		
 		current_state = State.SELECTING_LAND
-		selected_tile_index = -1
 		
-		# 土地選択UIを表示（グローバルボタンは少し遅延して登録）
-		# 同じ位置のボタンがすぐに押されるのを防ぐ
-		if ui_manager:
-			ui_manager.clear_back_action()  # 一旦クリア
+		# 現在選択中の土地を再プレビュー（selected_tile_indexを維持）
+		if player_owned_lands.size() > 0:
+			var tile_index = player_owned_lands[current_land_selection_index]
+			LandSelectionHelper.preview_land(self, tile_index)
+			LandSelectionHelper.update_land_selection_ui(self)
+		
 		if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 			ui_manager.show_land_selection_mode(player_owned_lands)
-		# 遅延してボタン登録
-		_register_land_selection_button_deferred()
 		
-		# 上下ボタンを有効化（土地選択で使用）
-		if ui_manager:
-			ui_manager.register_arrow_actions(
-				func(): _on_arrow_up(),
-				func(): _on_arrow_down()
-			)
+		# 土地選択用ナビゲーション（全ボタン）
+		print("[LandCommandHandler] _set_land_selection_navigation() を呼び出し")
+		_set_land_selection_navigation()
 	
 	elif current_state == State.SELECTING_LAND:
 		# 土地選択中なら閉じる
 		close_land_command()
 
+## アクション選択用ナビゲーション設定（戻るのみ）
+func _set_action_selection_navigation():
+	if ui_manager:
+		ui_manager.enable_navigation(
+			Callable(),  # 決定なし
+			func(): cancel()  # 戻る
+		)
+
+## 土地選択用ナビゲーション設定（全ボタン）
+func _set_land_selection_navigation():
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
+			func(): cancel(),  # 戻る
+			func(): _on_arrow_up(),  # 上
+			func(): _on_arrow_down()  # 下
+		)
+
 ## 上下ボタンのコールバック（上）
 func _on_arrow_up():
 	match current_state:
 		State.SELECTING_LAND:
-			# 前の土地を選択
-			if current_land_selection_index > 0:
-				current_land_selection_index -= 1
+			# 前の土地を選択（ループ）
+			if not player_owned_lands.is_empty():
+				current_land_selection_index = (current_land_selection_index - 1 + player_owned_lands.size()) % player_owned_lands.size()
 				var tile_index = player_owned_lands[current_land_selection_index]
 				LandSelectionHelper.preview_land(self, tile_index)
 				LandSelectionHelper.update_land_selection_ui(self)
 		
 		State.SELECTING_MOVE_DEST:
-			# 前の移動先を選択
+			# 前の移動先を選択（ループ）
 			if not move_destinations.is_empty():
 				current_destination_index = (current_destination_index - 1 + move_destinations.size()) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
@@ -405,27 +419,27 @@ func _on_arrow_up():
 				LandActionHelper.update_move_destination_ui(self)
 		
 		State.SELECTING_TERRAIN:
-			# 前の属性を選択
+			# 前の属性を選択（ループ）
 			current_terrain_index = (current_terrain_index - 1 + terrain_options.size()) % terrain_options.size()
 			LandActionHelper.update_terrain_selection_ui(self)
 		
 		State.SELECTING_LEVEL:
-			# 前のレベルを選択
+			# 前のレベルを選択（ループ）
 			_select_previous_level()
 
 ## 上下ボタンのコールバック（下）
 func _on_arrow_down():
 	match current_state:
 		State.SELECTING_LAND:
-			# 次の土地を選択
-			if current_land_selection_index < player_owned_lands.size() - 1:
-				current_land_selection_index += 1
+			# 次の土地を選択（ループ）
+			if not player_owned_lands.is_empty():
+				current_land_selection_index = (current_land_selection_index + 1) % player_owned_lands.size()
 				var tile_index = player_owned_lands[current_land_selection_index]
 				LandSelectionHelper.preview_land(self, tile_index)
 				LandSelectionHelper.update_land_selection_ui(self)
 		
 		State.SELECTING_MOVE_DEST:
-			# 次の移動先を選択
+			# 次の移動先を選択（ループ）
 			if not move_destinations.is_empty():
 				current_destination_index = (current_destination_index + 1) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
@@ -434,29 +448,27 @@ func _on_arrow_down():
 				LandActionHelper.update_move_destination_ui(self)
 		
 		State.SELECTING_TERRAIN:
-			# 次の属性を選択
+			# 次の属性を選択（ループ）
 			current_terrain_index = (current_terrain_index + 1) % terrain_options.size()
 			LandActionHelper.update_terrain_selection_ui(self)
 		
 		State.SELECTING_LEVEL:
-			# 次のレベルを選択
+			# 次のレベルを選択（ループ）
 			_select_next_level()
 
-## レベル選択: 前のレベルを選択
+## レベル選択: 前のレベルを選択（ループ）
 func _select_previous_level():
 	if available_levels.is_empty():
 		return
-	if current_level_selection_index > 0:
-		current_level_selection_index -= 1
-		_update_level_selection_highlight()
+	current_level_selection_index = (current_level_selection_index - 1 + available_levels.size()) % available_levels.size()
+	_update_level_selection_highlight()
 
-## レベル選択: 次のレベルを選択
+## レベル選択: 次のレベルを選択（ループ）
 func _select_next_level():
 	if available_levels.is_empty():
 		return
-	if current_level_selection_index < available_levels.size() - 1:
-		current_level_selection_index += 1
-		_update_level_selection_highlight()
+	current_level_selection_index = (current_level_selection_index + 1) % available_levels.size()
+	_update_level_selection_highlight()
 
 ## レベル選択: ハイライト更新
 func _update_level_selection_highlight():
@@ -472,12 +484,6 @@ func _confirm_level_selection():
 	# LandCommandUIのシグナル経由で処理
 	if ui_manager and ui_manager.land_command_ui:
 		ui_manager.land_command_ui._on_level_selected(selected_level)
-
-## 土地選択ボタンを遅延登録（同位置ボタンの誤クリック防止）
-func _register_land_selection_button_deferred():
-	await get_tree().create_timer(0.1).timeout
-	if current_state == State.SELECTING_LAND and ui_manager and ui_manager.land_command_ui:
-		ui_manager.land_command_ui.show_cancel_button()
 
 ## Phase 1-A: レベル選択シグナルハンドラ
 func _on_level_up_selected(target_level: int, cost: int):

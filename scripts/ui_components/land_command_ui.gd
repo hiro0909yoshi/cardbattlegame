@@ -11,9 +11,13 @@ signal level_up_selected(target_level: int, cost: int)
 var land_command_button: Button = null
 var action_menu_panel: Panel = null
 var level_selection_panel: Panel = null
+var terrain_selection_panel: Panel = null  # 地形選択パネル
 var action_menu_buttons = {}  # "level_up", "move", "swap", "terrain"
 var level_selection_buttons = {}  # レベル選択ボタン
+var terrain_selection_buttons = {}  # 地形選択ボタン（fire, water, earth, wind）
 var current_level_label: Label = null
+var current_terrain_label: Label = null  # 現在の属性表示
+var terrain_cost_label: Label = null  # 地形変化コスト表示
 var selected_tile_for_action: int = -1
 
 # システム参照
@@ -103,15 +107,15 @@ func hide_land_command_button():
 	if land_command_button:
 		land_command_button.visible = false
 
-## キャンセルボタン表示（グローバルボタンに登録）
+## キャンセルボタン表示（後方互換 - 新方式ではLandCommandHandlerで設定）
 func show_cancel_button():
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_cancel_land_command_button_pressed, "閉じる")
+	# ナビゲーションはLandCommandHandlerで設定済み
+	pass
 
-## キャンセルボタン非表示（グローバルボタンをクリア）
+## キャンセルボタン非表示（後方互換）
 func hide_cancel_button():
-	if ui_manager_ref:
-		ui_manager_ref.clear_back_action()
+	# ナビゲーションはLandCommandHandlerで設定済み
+	pass
 
 ## 土地選択モード表示
 func show_land_selection_mode(_owned_lands: Array):
@@ -143,9 +147,9 @@ func show_action_menu(tile_index: int):
 		var tile = board_system_ref.tile_nodes[tile_index]
 		var creature = tile.creature_data if tile else {}
 		
-		# クリーチャーがいる場合、情報パネルを表示
+		# クリーチャーがいる場合、情報パネルを表示（ボタン設定はスキップ）
 		if not creature.is_empty() and ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-			ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index)
+			ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index, false)
 		
 		# 防御型チェック: 移動ボタンを無効化
 		var creature_type = creature.get("creature_type", "normal")
@@ -158,17 +162,16 @@ func show_action_menu(tile_index: int):
 				action_menu_buttons["move"].disabled = false
 				action_menu_buttons["move"].text = "🚶 [M] 移動"
 	
-	# グローバルボタンに「戻る」を登録（show_view_modeの後に登録して上書き）
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_cancel_land_command_button_pressed, "戻る")
-	
+	# ナビゲーションはLandSelectionHelper.confirm_land_selection()で設定済み
 
 ## アクションメニュー非表示
 ## clear_buttons: グローバルボタンをクリアするかどうか（デフォルト: true）
 func hide_action_menu(clear_buttons: bool = true):
+	print("[LandCommandUI] hide_action_menu called, action_menu_panel=%s" % (action_menu_panel != null))
 	if action_menu_panel:
 		action_menu_panel.visible = false
 		selected_tile_for_action = -1
+		print("[LandCommandUI] action_menu_panel.visible set to false")
 	
 	# クリーチャー情報パネルも閉じる（グローバルボタンのクリアは呼び出し側で制御）
 	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
@@ -212,9 +215,7 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 	
 	level_selection_panel.visible = true
 	
-	# グローバルボタンに「戻る」を登録
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_level_cancel_pressed, "戻る")
+	# ナビゲーションボタンはLandActionHelperで設定済み
 	
 	# 最初の有効なレベルをハイライト
 	var first_available_level = current_level + 1
@@ -247,10 +248,10 @@ func highlight_level_button(selected_level: int):
 			var style = button.get_theme_stylebox("normal").duplicate() if button.get_theme_stylebox("normal") else StyleBoxFlat.new()
 			if style is StyleBoxFlat:
 				style.border_color = Color(1, 1, 0, 1)  # 黄色の枠
-				style.border_width_top = 4
-				style.border_width_bottom = 4
-				style.border_width_left = 4
-				style.border_width_right = 4
+				style.border_width_top = 6
+				style.border_width_bottom = 6
+				style.border_width_left = 6
+				style.border_width_right = 6
 				button.add_theme_stylebox_override("normal", style)
 		else:
 			# 非選択ボタンは通常スタイル
@@ -259,16 +260,16 @@ func highlight_level_button(selected_level: int):
 ## レベルボタンのスタイルをリセット
 func _reset_level_button_style(button: Button, _level: int):
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.3, 0.3, 0.5, 0.9)
-	style.border_width_top = 2
-	style.border_width_bottom = 2
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_color = Color(1, 1, 1, 0.5)
-	style.corner_radius_top_left = 5
-	style.corner_radius_top_right = 5
-	style.corner_radius_bottom_left = 5
-	style.corner_radius_bottom_right = 5
+	style.bg_color = Color(0.2, 0.5, 0.7)
+	style.border_width_top = 4
+	style.border_width_bottom = 4
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.border_color = Color(1, 1, 1, 0.3)
+	style.corner_radius_top_left = 15
+	style.corner_radius_top_right = 15
+	style.corner_radius_bottom_left = 15
+	style.corner_radius_bottom_right = 15
 	button.add_theme_stylebox_override("normal", style)
 
 ## シグナルハンドラ
@@ -458,59 +459,307 @@ func create_level_selection_panel(parent: Node):
 	level_selection_panel = Panel.new()
 	level_selection_panel.name = "LevelSelectionPanel"
 	
-	# アクションメニューと同じサイズ・位置 ※1.4倍
+	# 画面中央に配置 ※1.5倍サイズ
 	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 630
-	var panel_height = 840
+	var panel_width = 945
+	var panel_height = 1260
 	
-	var panel_x = viewport_size.x - panel_width - 42
-	var panel_y = (viewport_size.y - panel_height) / 2 - 280
+	# 中央配置
+	var panel_x = (viewport_size.x - panel_width) / 2
+	var panel_y = (viewport_size.y - panel_height) / 2
 	
 	level_selection_panel.position = Vector2(panel_x, panel_y)
 	level_selection_panel.size = Vector2(panel_width, panel_height)
-	level_selection_panel.z_index = 1001  # creature_info_panelより上に表示
+	level_selection_panel.z_index = 1001
 	level_selection_panel.visible = false
 	
 	# パネルスタイル
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.05, 0.05, 0.15, 0.9)
-	panel_style.border_width_left = 3
-	panel_style.border_width_right = 3
-	panel_style.border_width_top = 3
-	panel_style.border_width_bottom = 3
+	panel_style.border_width_left = 4
+	panel_style.border_width_right = 4
+	panel_style.border_width_top = 4
+	panel_style.border_width_bottom = 4
 	panel_style.border_color = Color(0.2, 0.6, 0.8, 1)
-	panel_style.corner_radius_top_left = 12
-	panel_style.corner_radius_top_right = 12
-	panel_style.corner_radius_bottom_left = 12
-	panel_style.corner_radius_bottom_right = 12
+	panel_style.corner_radius_top_left = 18
+	panel_style.corner_radius_top_right = 18
+	panel_style.corner_radius_bottom_left = 18
+	panel_style.corner_radius_bottom_right = 18
 	level_selection_panel.add_theme_stylebox_override("panel", panel_style)
 	
 	parent.add_child(level_selection_panel)
 	
-	# 現在レベル表示（タイトルなし、レベル表示のみ）※1.4倍
+	# タイトル
+	var title_label = Label.new()
+	title_label.name = "TitleLabel"
+	title_label.text = "レベルアップ"
+	title_label.position = Vector2(42, 30)
+	title_label.add_theme_font_size_override("font_size", 84)
+	title_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
+	level_selection_panel.add_child(title_label)
+	
+	# 現在レベル表示
 	current_level_label = Label.new()
 	current_level_label.name = "CurrentLevelLabel"
 	current_level_label.text = "現在: Lv.1"
-	current_level_label.position = Vector2(28, 28)
-	current_level_label.add_theme_font_size_override("font_size", 50)  # 1.4倍
+	current_level_label.position = Vector2(42, 135)
+	current_level_label.add_theme_font_size_override("font_size", 63)
 	current_level_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	level_selection_panel.add_child(current_level_label)
 	
-	# レベル選択ボタン（2-5）大きめサイズ ※1.4倍
-	var button_y = 126
-	var button_spacing = 42
-	var button_height = 140
-	var button_width = 574
+	# レベル選択ボタン（2-5）
+	var button_y = 240
+	var button_spacing = 45
+	var button_height = 210
+	var button_width = 861
 	
-	# 初期表示用のコスト（後でshow_level_selectionで動的に更新される）
 	for level in [2, 3, 4, 5]:
-		var btn = _create_large_level_button(level, 0, Vector2(28, button_y), Vector2(button_width, button_height))
+		var btn = _create_large_level_button(level, 0, Vector2(42, button_y), Vector2(button_width, button_height))
 		btn.pressed.connect(_on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
 		button_y += button_height + button_spacing
 	
-	# 戻るボタンはグローバルアクションボタンに移行済み
+	# 地形選択パネルも作成
+	_create_terrain_selection_panel(parent)
+
+## 地形選択パネル作成
+func _create_terrain_selection_panel(parent: Node):
+	if terrain_selection_panel:
+		return
+	
+	terrain_selection_panel = Panel.new()
+	terrain_selection_panel.name = "TerrainSelectionPanel"
+	
+	# 画面中央に配置 ※1.5倍サイズ
+	var viewport_size = parent.get_viewport().get_visible_rect().size
+	var panel_width = 945
+	var panel_height = 1050
+	
+	var panel_x = (viewport_size.x - panel_width) / 2
+	var panel_y = (viewport_size.y - panel_height) / 2
+	
+	terrain_selection_panel.position = Vector2(panel_x, panel_y)
+	terrain_selection_panel.size = Vector2(panel_width, panel_height)
+	terrain_selection_panel.z_index = 1001
+	terrain_selection_panel.visible = false
+	
+	# パネルスタイル
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.05, 0.05, 0.15, 0.9)
+	panel_style.border_width_left = 4
+	panel_style.border_width_right = 4
+	panel_style.border_width_top = 4
+	panel_style.border_width_bottom = 4
+	panel_style.border_color = Color(0.8, 0.4, 0.2, 1)
+	panel_style.corner_radius_top_left = 18
+	panel_style.corner_radius_top_right = 18
+	panel_style.corner_radius_bottom_left = 18
+	panel_style.corner_radius_bottom_right = 18
+	terrain_selection_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	parent.add_child(terrain_selection_panel)
+	
+	# タイトル
+	var title_label = Label.new()
+	title_label.name = "TitleLabel"
+	title_label.text = "地形変化"
+	title_label.position = Vector2(42, 30)
+	title_label.add_theme_font_size_override("font_size", 84)
+	title_label.add_theme_color_override("font_color", Color(1, 0.6, 0.2))
+	terrain_selection_panel.add_child(title_label)
+	
+	# 現在の属性表示
+	current_terrain_label = Label.new()
+	current_terrain_label.name = "CurrentTerrainLabel"
+	current_terrain_label.text = "現在: 火属性"
+	current_terrain_label.position = Vector2(42, 135)
+	current_terrain_label.add_theme_font_size_override("font_size", 63)
+	current_terrain_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	terrain_selection_panel.add_child(current_terrain_label)
+	
+	# コスト表示
+	terrain_cost_label = Label.new()
+	terrain_cost_label.name = "TerrainCostLabel"
+	terrain_cost_label.text = "コスト: 400G"
+	terrain_cost_label.position = Vector2(525, 135)
+	terrain_cost_label.add_theme_font_size_override("font_size", 63)
+	terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
+	terrain_selection_panel.add_child(terrain_cost_label)
+	
+	# 属性選択ボタン（火、水、土、風）
+	var elements = [
+		{"key": "fire", "name": "火属性", "color": Color(0.8, 0.2, 0.2)},
+		{"key": "water", "name": "水属性", "color": Color(0.2, 0.4, 0.8)},
+		{"key": "earth", "name": "土属性", "color": Color(0.6, 0.4, 0.2)},
+		{"key": "wind", "name": "風属性", "color": Color(0.2, 0.7, 0.3)}
+	]
+	
+	var button_y = 240
+	var button_spacing = 45
+	var button_height = 165
+	var button_width = 861
+	
+	for element in elements:
+		var btn = _create_terrain_button(element["name"], element["color"], Vector2(42, button_y), Vector2(button_width, button_height))
+		btn.pressed.connect(_on_terrain_selected.bind(element["key"]))
+		terrain_selection_panel.add_child(btn)
+		terrain_selection_buttons[element["key"]] = btn
+		button_y += button_height + button_spacing
+
+## 地形選択ボタン作成
+func _create_terrain_button(text: String, color: Color, pos: Vector2, btn_size: Vector2) -> Button:
+	var btn = Button.new()
+	btn.text = text
+	btn.position = pos
+	btn.size = btn_size
+	btn.add_theme_font_size_override("font_size", 68)
+	btn.focus_mode = Control.FOCUS_NONE
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.border_width_top = 4
+	style.border_width_bottom = 4
+	style.border_color = Color(1, 1, 1, 0.3)
+	style.corner_radius_top_left = 15
+	style.corner_radius_top_right = 15
+	style.corner_radius_bottom_left = 15
+	style.corner_radius_bottom_right = 15
+	btn.add_theme_stylebox_override("normal", style)
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = color.lightened(0.2)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = color.darkened(0.2)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	
+	var disabled_style = style.duplicate()
+	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.8)
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+	
+	return btn
+
+## 地形選択パネル表示
+func show_terrain_selection(tile_index: int, current_element: String, cost: int, player_magic: int):
+	if not terrain_selection_panel:
+		return
+	
+	selected_tile_for_action = tile_index
+	
+	# アクションメニューを隠す
+	if action_menu_panel:
+		action_menu_panel.visible = false
+	
+	# 属性名を日本語に変換
+	var element_names = {
+		"fire": "火属性",
+		"water": "水属性",
+		"earth": "土属性",
+		"wind": "風属性",
+		"neutral": "無属性"
+	}
+	
+	# 現在の属性を表示
+	if current_terrain_label:
+		current_terrain_label.text = "現在: %s" % element_names.get(current_element, "無属性")
+	
+	# コストを表示
+	if terrain_cost_label:
+		terrain_cost_label.text = "コスト: %dG" % cost
+		if player_magic < cost:
+			terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+		else:
+			terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
+	
+	# 各ボタンの有効/無効を設定
+	for key in terrain_selection_buttons.keys():
+		var btn = terrain_selection_buttons[key]
+		if key == current_element:
+			# 現在の属性は選択不可
+			btn.disabled = true
+		elif player_magic < cost:
+			# 魔力不足
+			btn.disabled = true
+		else:
+			btn.disabled = false
+	
+	terrain_selection_panel.visible = true
+	
+	# ナビゲーションボタンはLandActionHelperで設定済み
+
+## 地形選択パネル非表示
+func hide_terrain_selection():
+	if terrain_selection_panel:
+		terrain_selection_panel.visible = false
+
+## 地形ボタンのハイライト（上下キー選択用）
+func highlight_terrain_button(selected_element: String):
+	for key in terrain_selection_buttons.keys():
+		var button = terrain_selection_buttons[key]
+		if not button:
+			continue
+		
+		if key == selected_element and not button.disabled:
+			# 選択中のボタンをハイライト
+			var base_colors = {
+				"fire": Color(0.8, 0.2, 0.2),
+				"water": Color(0.2, 0.4, 0.8),
+				"earth": Color(0.6, 0.4, 0.2),
+				"wind": Color(0.2, 0.7, 0.3)
+			}
+			var style = StyleBoxFlat.new()
+			style.bg_color = base_colors.get(key, Color(0.5, 0.5, 0.5))
+			style.border_color = Color(1, 1, 0, 1)  # 黄色の枠
+			style.border_width_top = 6
+			style.border_width_bottom = 6
+			style.border_width_left = 6
+			style.border_width_right = 6
+			style.corner_radius_top_left = 15
+			style.corner_radius_top_right = 15
+			style.corner_radius_bottom_left = 15
+			style.corner_radius_bottom_right = 15
+			button.add_theme_stylebox_override("normal", style)
+		else:
+			# 非選択ボタンは通常スタイルに戻す
+			_reset_terrain_button_style(button, key)
+
+## 地形ボタンのスタイルをリセット
+func _reset_terrain_button_style(button: Button, element: String):
+	var base_colors = {
+		"fire": Color(0.8, 0.2, 0.2),
+		"water": Color(0.2, 0.4, 0.8),
+		"earth": Color(0.6, 0.4, 0.2),
+		"wind": Color(0.2, 0.7, 0.3)
+	}
+	var style = StyleBoxFlat.new()
+	style.bg_color = base_colors.get(element, Color(0.5, 0.5, 0.5))
+	style.border_width_top = 4
+	style.border_width_bottom = 4
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.border_color = Color(1, 1, 1, 0.3)
+	style.corner_radius_top_left = 15
+	style.corner_radius_top_right = 15
+	style.corner_radius_bottom_left = 15
+	style.corner_radius_bottom_right = 15
+	button.add_theme_stylebox_override("normal", style)
+
+## 地形選択ハンドラ
+func _on_terrain_selected(element: String):
+	# LandCommandHandlerに通知
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
+		var handler = ui_manager_ref.game_flow_manager_ref.land_command_handler
+		handler.current_terrain_index = handler.terrain_options.find(element)
+		LandActionHelper.execute_terrain_change_with_element(handler, element)
+
+## 地形選択キャンセル
+func _on_terrain_cancel_pressed():
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
+		ui_manager_ref.game_flow_manager_ref.land_command_handler.cancel()
 
 ## 大きめレベルボタン作成ヘルパー
 func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: Vector2) -> Button:
@@ -518,19 +767,20 @@ func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: V
 	btn.text = "Lv.%d → %dG" % [level, cost]
 	btn.position = pos
 	btn.size = btn_size
-	btn.add_theme_font_size_override("font_size", 45)  # 1.4倍
+	btn.add_theme_font_size_override("font_size", 68)  # 1.5倍
+	btn.focus_mode = Control.FOCUS_NONE
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.2, 0.5, 0.7)
-	style.border_width_left = 3
-	style.border_width_right = 3
-	style.border_width_top = 3
-	style.border_width_bottom = 3
+	style.border_width_left = 4
+	style.border_width_right = 4
+	style.border_width_top = 4
+	style.border_width_bottom = 4
 	style.border_color = Color(1, 1, 1, 0.3)
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
+	style.corner_radius_top_left = 15
+	style.corner_radius_top_right = 15
+	style.corner_radius_bottom_left = 15
+	style.corner_radius_bottom_right = 15
 	btn.add_theme_stylebox_override("normal", style)
 	
 	var hover_style = style.duplicate()

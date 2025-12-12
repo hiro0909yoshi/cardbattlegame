@@ -92,11 +92,13 @@ static func execute_level_up(handler) -> bool:
 		
 		handler.ui_manager.show_level_selection(handler.selected_tile_index, tile.level, player_magic)
 	
-	# 上下ボタンを有効化
+	# ナビゲーションボタン設定（レベル選択用）
 	if handler.ui_manager:
-		handler.ui_manager.register_arrow_actions(
-			func(): handler._on_arrow_up(),
-			func(): handler._on_arrow_down()
+		handler.ui_manager.enable_navigation(
+			func(): handler._confirm_level_selection(),  # 決定
+			func(): handler.cancel(),  # 戻る
+			func(): handler._on_arrow_up(),  # 上
+			func(): handler._on_arrow_down()  # 下
 		)
 	
 	return true
@@ -141,6 +143,10 @@ static func execute_move_creature(handler) -> bool:
 	handler.current_destination_index = 0
 	var first_dest = handler.move_destinations[handler.current_destination_index]
 	
+	# アクションメニューを閉じる
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.hide_action_menu(false)
+	
 	# マーカーを最初の移動先に表示
 	LandSelectionHelper.show_selection_marker(handler, first_dest)
 	LandSelectionHelper.focus_camera_on_tile(handler, first_dest)
@@ -148,11 +154,13 @@ static func execute_move_creature(handler) -> bool:
 	# UIを更新（移動先選択画面を表示）
 	update_move_destination_ui(handler)
 	
-	# 上下ボタンを有効化
+	# ナビゲーションボタン設定（移動先選択用）
 	if handler.ui_manager:
-		handler.ui_manager.register_arrow_actions(
-			func(): handler._on_arrow_up(),
-			func(): handler._on_arrow_down()
+		handler.ui_manager.enable_navigation(
+			func(): _confirm_move_selection(handler),  # 決定
+			func(): handler.cancel(),  # 戻る
+			func(): handler._on_arrow_up(),  # 上
+			func(): handler._on_arrow_down()  # 下
 		)
 	
 	return true
@@ -219,6 +227,13 @@ static func execute_swap_creature(handler) -> bool:
 	if handler.ui_manager and handler.ui_manager.land_command_ui:
 		handler.ui_manager.land_command_ui.hide_action_menu(false)  # グローバルボタンはクリアしない
 	
+	# ナビゲーション設定（交換選択用：戻るのみ）
+	if handler.ui_manager:
+		handler.ui_manager.enable_navigation(
+			Callable(),  # 決定なし（カード選択で決定）
+			func(): handler.cancel()  # 戻る
+		)
+	
 	# カード選択UIを表示（交換モード）
 	if handler.ui_manager:
 		handler.ui_manager.phase_label.text = "交換する新しいクリーチャーを選択"
@@ -253,6 +268,13 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 		return false
 	
 	return true
+
+## 移動先選択を確定（決定ボタンから呼ばれる）
+static func _confirm_move_selection(handler):
+	if handler.move_destinations.is_empty():
+		return
+	var dest_tile_index = handler.move_destinations[handler.current_destination_index]
+	confirm_move(handler, dest_tile_index)
 
 ## 移動を確定
 static func confirm_move(handler, dest_tile_index: int):
@@ -316,6 +338,11 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# 移動先の所有権を設定
 		handler.board_system.set_tile_owner(dest_tile_index, current_player_index)
+		
+		# 移動完了：状態をリセット
+		handler.move_destinations.clear()
+		handler.move_source_tile = -1
+		handler.current_destination_index = 0
 		
 		# アクション完了を通知
 		# 注: 領地コマンドはend_turn()で閉じられる
@@ -608,6 +635,9 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	if handler.ui_manager:
 		handler.ui_manager.update_player_info_panels()
 	
+	# 地形選択パネルを閉じる
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.hide_terrain_selection()
 	
 	# アクション完了を通知（レベルアップと同様）
 	# 注: 領地コマンドはend_turn()で閉じられる
@@ -642,21 +672,43 @@ static func execute_terrain_change(handler) -> bool:
 	handler.current_state = handler.State.SELECTING_TERRAIN
 	handler.current_terrain_index = 0
 	
-	# 地形選択UIを表示
-	update_terrain_selection_ui(handler)
+	# 地形選択パネルを表示
+	var tile = handler.board_system.tile_nodes[tile_index]
+	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
+	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+	var current_player = p_system.get_current_player() if p_system else null
+	var player_magic = current_player.magic_power if current_player else 0
 	
-	# グローバルボタンに「戻る」を登録
-	if handler.ui_manager:
-		handler.ui_manager.register_back_action(func(): _cancel_terrain_change(handler), "戻る")
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.show_terrain_selection(tile_index, tile.tile_type, cost, player_magic)
+		# 最初の選択可能な属性をハイライト
+		var first_selectable = _get_first_selectable_terrain(handler, tile.tile_type)
+		if first_selectable != "":
+			handler.current_terrain_index = handler.terrain_options.find(first_selectable)
+			handler.ui_manager.land_command_ui.highlight_terrain_button(first_selectable)
 	
-	# 上下ボタンを有効化
+	# ナビゲーションボタン設定（地形選択用）
 	if handler.ui_manager:
-		handler.ui_manager.register_arrow_actions(
-			func(): handler._on_arrow_up(),
-			func(): handler._on_arrow_down()
+		handler.ui_manager.enable_navigation(
+			func(): _confirm_terrain_selection(handler),  # 決定
+			func(): _cancel_terrain_change(handler),  # 戻る
+			func(): handler._on_arrow_up(),  # 上
+			func(): handler._on_arrow_down()  # 下
 		)
 	
 	return true
+
+## 地形選択を確定（決定ボタンから呼ばれる）
+static func _confirm_terrain_selection(handler):
+	var selected_element = handler.terrain_options[handler.current_terrain_index]
+	execute_terrain_change_with_element(handler, selected_element)
+
+## 最初の選択可能な属性を取得
+static func _get_first_selectable_terrain(handler, current_element: String) -> String:
+	for element in handler.terrain_options:
+		if element != current_element:
+			return element
+	return ""
 
 ## 地形変化キャンセル
 static func _cancel_terrain_change(handler):
@@ -667,44 +719,23 @@ static func _cancel_terrain_change(handler):
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.is_action_processing = false
 	
-	# アクションメニューに戻る
+	# アクション選択用ナビゲーション（戻るのみ）
+	if handler.ui_manager:
+		handler.ui_manager.enable_navigation(
+			Callable(),  # 決定なし
+			func(): handler.cancel()  # 戻る
+		)
+	
+	# 地形選択パネルを閉じてアクションメニューに戻る
 	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.hide_terrain_selection()
 		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
 
 ## 地形選択UIを更新
 static func update_terrain_selection_ui(handler):
-	if not handler.ui_manager or not handler.ui_manager.phase_label:
+	if not handler.ui_manager or not handler.ui_manager.land_command_ui:
 		return
 	
-	var tile = handler.board_system.tile_nodes[handler.terrain_change_tile_index]
-	var cost = handler.board_system.calculate_terrain_change_cost(handler.terrain_change_tile_index)
+	# 現在選択中の属性をハイライト
 	var current_element = handler.terrain_options[handler.current_terrain_index]
-	
-	# 属性名を日本語に変換
-	var element_names = {
-		"fire": "火",
-		"water": "水",
-		"earth": "土",
-		"wind": "風"
-	}
-	
-	var text = "地形変化: 属性を選択 [↑↓で切替]
-"
-	text += "現在: %s属性 → 変更後: %s属性
-" % [element_names.get(tile.tile_type, "無"), element_names[current_element]]
-	text += "コスト: %dG
-" % cost
-	text += "
-"
-	
-	# 選択肢を表示
-	for i in range(handler.terrain_options.size()):
-		var element = handler.terrain_options[i]
-		var name = element_names[element]
-		var marker = "→ " if i == handler.current_terrain_index else "  "
-		text += "%s[%d] %s属性
-" % [marker, i + 1, name]
-	
-	text += "
-[Enter] 決定  [C] キャンセル"
-	handler.ui_manager.phase_label.text = text
+	handler.ui_manager.land_command_ui.highlight_terrain_button(current_element)

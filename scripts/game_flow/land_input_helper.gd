@@ -22,16 +22,16 @@ static func process_input(handler, event):
 
 ## 土地選択時のキー入力処理
 static func handle_land_selection_input(handler, event):
-	# ↑↓キーで土地を切り替え（プレビューのみ）
+	# ↑↓キーで土地を切り替え（ループ）
 	if event.keycode == KEY_UP or event.keycode == KEY_LEFT:
-		if handler.current_land_selection_index > 0:
-			handler.current_land_selection_index -= 1
+		if not handler.player_owned_lands.is_empty():
+			handler.current_land_selection_index = (handler.current_land_selection_index - 1 + handler.player_owned_lands.size()) % handler.player_owned_lands.size()
 			var tile_index = handler.player_owned_lands[handler.current_land_selection_index]
 			LandSelectionHelper.preview_land(handler, tile_index)
 			LandSelectionHelper.update_land_selection_ui(handler)
 	elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
-		if handler.current_land_selection_index < handler.player_owned_lands.size() - 1:
-			handler.current_land_selection_index += 1
+		if not handler.player_owned_lands.is_empty():
+			handler.current_land_selection_index = (handler.current_land_selection_index + 1) % handler.player_owned_lands.size()
 			var tile_index = handler.player_owned_lands[handler.current_land_selection_index]
 			LandSelectionHelper.preview_land(handler, tile_index)
 			LandSelectionHelper.update_land_selection_ui(handler)

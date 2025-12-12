@@ -68,7 +68,7 @@ func set_ui_manager(manager) -> void:
 
 
 ## 閲覧モードで表示（タイル配置クリーチャー）
-func show_view_mode(creature_data: Dictionary, tile_index: int = -1):
+func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_buttons: bool = true):
 	current_creature_data = creature_data
 	current_tile_index = tile_index
 	is_selection_mode = false
@@ -79,7 +79,8 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1):
 	is_visible_panel = true
 	
 	# グローバルボタン設定（閲覧モード：戻るのみ）
-	if ui_manager_ref:
+	# setup_buttons=falseの場合はスキップ（呼び出し側でナビゲーション管理）
+	if setup_buttons and ui_manager_ref:
 		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
 
 

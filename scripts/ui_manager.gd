@@ -148,12 +148,7 @@ func connect_ui_signals():
 		creature_info_panel_ui.selection_confirmed.connect(_on_creature_info_panel_confirmed)
 		# selection_cancelledはcard_selection_ui側で処理（選択UIに戻る）
 	
-	# GlobalActionButtons
-	if global_action_buttons:
-		global_action_buttons.confirm_pressed.connect(_on_global_confirm_pressed)
-		global_action_buttons.back_pressed.connect(_on_global_back_pressed)
-		global_action_buttons.up_pressed.connect(_on_global_up_pressed)
-		global_action_buttons.down_pressed.connect(_on_global_down_pressed)
+	# GlobalActionButtonsはシグナルなし（直接コールバック呼び出し）
 
 # UIを作成
 func create_ui(parent: Node):
@@ -338,82 +333,76 @@ func _on_cancel_land_command_button_pressed():
 
 # === グローバルアクションボタン管理 ===
 
-# 登録されたコールバック
-var _global_confirm_callback: Callable = Callable()
-var _global_back_callback: Callable = Callable()
-var _global_up_callback: Callable = Callable()
-var _global_down_callback: Callable = Callable()
-
-func _on_global_confirm_pressed():
-	if _global_confirm_callback.is_valid():
-		_global_confirm_callback.call()
-
-func _on_global_back_pressed():
-	if _global_back_callback.is_valid():
-		_global_back_callback.call()
-
-func _on_global_up_pressed():
-	if _global_up_callback.is_valid():
-		_global_up_callback.call()
-
-func _on_global_down_pressed():
-	if _global_down_callback.is_valid():
-		_global_down_callback.call()
-
-## 決定ボタンのアクションを登録
-func register_confirm_action(callback: Callable, text: String = "決定"):
-	_global_confirm_callback = callback
+## ナビゲーションボタンを設定（推奨）
+## 有効なCallableを渡したボタンのみ表示される
+func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
+	print("[UIManager] enable_navigation: confirm=%s, back=%s, up=%s, down=%s" % [confirm_cb.is_valid(), back_cb.is_valid(), up_cb.is_valid(), down_cb.is_valid()])
+	# 後方互換変数も同期（register_xxx系との競合防止）
+	_compat_confirm_cb = confirm_cb
+	_compat_back_cb = back_cb
+	_compat_up_cb = up_cb
+	_compat_down_cb = down_cb
 	if global_action_buttons:
-		global_action_buttons.set_confirm_state(true, text)
+		global_action_buttons.setup(confirm_cb, back_cb, up_cb, down_cb)
+	else:
+		print("[UIManager] ERROR: global_action_buttons is null!")
 
-## 戻るボタンのアクションを登録
-func register_back_action(callback: Callable, text: String = "戻る"):
-	print("[UIManager] register_back_action: ", text)
-	_global_back_callback = callback
+## ナビゲーションボタンを全てクリア
+func disable_navigation():
 	if global_action_buttons:
-		global_action_buttons.set_back_state(true, text)
+		global_action_buttons.clear_all()
 
-## 両方のアクションを一度に登録
-func register_global_actions(confirm_callback: Callable, back_callback: Callable, confirm_text: String = "決定", back_text: String = "戻る"):
-	_global_confirm_callback = confirm_callback
-	_global_back_callback = back_callback
+# === 後方互換API（他コンポーネント用） ===
+# 注: 新規実装ではenable_navigation()を使用してください
+
+var _compat_confirm_cb: Callable = Callable()
+var _compat_back_cb: Callable = Callable()
+var _compat_up_cb: Callable = Callable()
+var _compat_down_cb: Callable = Callable()
+
+func _update_compat_buttons():
 	if global_action_buttons:
-		global_action_buttons.set_states(true, true, confirm_text, back_text)
+		global_action_buttons.setup(_compat_confirm_cb, _compat_back_cb, _compat_up_cb, _compat_down_cb)
 
-## アクションをクリア（ボタンを無効化）
-func clear_global_actions():
-	_global_confirm_callback = Callable()
-	_global_back_callback = Callable()
-	_global_up_callback = Callable()
-	_global_down_callback = Callable()
-	if global_action_buttons:
-		global_action_buttons.disable_all()
+func register_confirm_action(callback: Callable, _text: String = ""):
+	_compat_confirm_cb = callback
+	_update_compat_buttons()
 
-## 決定ボタンのみクリア
-func clear_confirm_action():
-	_global_confirm_callback = Callable()
-	if global_action_buttons:
-		global_action_buttons.set_confirm_state(false)
+func register_back_action(callback: Callable, _text: String = ""):
+	_compat_back_cb = callback
+	_update_compat_buttons()
 
-## 戻るボタンのみクリア
-func clear_back_action():
-	_global_back_callback = Callable()
-	if global_action_buttons:
-		global_action_buttons.set_back_state(false)
-
-## 上下ボタンのアクションを登録（選択場面で使用）
 func register_arrow_actions(up_callback: Callable, down_callback: Callable):
-	_global_up_callback = up_callback
-	_global_down_callback = down_callback
-	if global_action_buttons:
-		global_action_buttons.enable_arrows()
+	_compat_up_cb = up_callback
+	_compat_down_cb = down_callback
+	_update_compat_buttons()
 
-## 上下ボタンのアクションをクリア
+func clear_confirm_action():
+	_compat_confirm_cb = Callable()
+	_update_compat_buttons()
+
+func clear_back_action():
+	_compat_back_cb = Callable()
+	_update_compat_buttons()
+
 func clear_arrow_actions():
-	_global_up_callback = Callable()
-	_global_down_callback = Callable()
+	_compat_up_cb = Callable()
+	_compat_down_cb = Callable()
+	_update_compat_buttons()
+
+func clear_global_actions():
+	print("[UIManager] clear_global_actions() called")
+	_compat_confirm_cb = Callable()
+	_compat_back_cb = Callable()
+	_compat_up_cb = Callable()
+	_compat_down_cb = Callable()
 	if global_action_buttons:
-		global_action_buttons.disable_arrows()
+		global_action_buttons.clear_all()
+
+func register_global_actions(confirm_callback: Callable, back_callback: Callable, _confirm_text: String = "", _back_text: String = ""):
+	_compat_confirm_cb = confirm_callback
+	_compat_back_cb = back_callback
+	_update_compat_buttons()
 
 # === 手札UI管理 ===
 
