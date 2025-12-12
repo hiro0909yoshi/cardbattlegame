@@ -127,11 +127,9 @@ func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 			if _confirm_callback.is_valid():
-				print("[GlobalActionButtons] ENTER pressed, calling confirm")
 				_on_confirm_pressed()
 				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
-			print("[GlobalActionButtons] ESC pressed, back_callback.is_valid=%s" % _back_callback.is_valid())
 			if _back_callback.is_valid():
 				_on_back_pressed()
 				get_viewport().set_input_as_handled()
@@ -170,18 +168,15 @@ func _on_down_pressed():
 ## ナビゲーションボタンを一括設定
 ## 有効なCallableを渡したボタンのみ表示される
 func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
-	print("[GlobalActionButtons] setup: confirm=%s, back=%s, up=%s, down=%s" % [confirm_cb.is_valid(), back_cb.is_valid(), up_cb.is_valid(), down_cb.is_valid()])
 	_confirm_callback = confirm_cb
 	_back_callback = back_cb
 	_up_callback = up_cb
 	_down_callback = down_cb
 	_update_visibility()
-	print("[GlobalActionButtons] after _update_visibility: back_button.visible=%s" % back_button.visible)
 
 
 ## 全ボタンをクリア
 func clear_all():
-	print("[GlobalActionButtons] clear_all() called")
 	_confirm_callback = Callable()
 	_back_callback = Callable()
 	_up_callback = Callable()

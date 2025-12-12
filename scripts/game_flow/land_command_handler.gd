@@ -280,8 +280,6 @@ func rotate_selection_marker(delta: float):
 
 ## キャンセル処理
 func cancel():
-	print("[LandCommandHandler] cancel() called, current_state=%s" % State.keys()[current_state])
-	
 	if current_state == State.SELECTING_TERRAIN:
 		# 地形選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
@@ -291,12 +289,13 @@ func cancel():
 		if board_system and board_system.tile_action_processor:
 			board_system.tile_action_processor.is_action_processing = false
 		
-		# アクション選択用ナビゲーション（戻るのみ）
-		_set_action_selection_navigation()
-		
+		# UIを先に更新
 		if ui_manager and ui_manager.land_command_ui:
 			ui_manager.land_command_ui.hide_terrain_selection()
 			ui_manager.land_command_ui.show_action_menu(selected_tile_index)
+		
+		# ナビゲーション設定は最後
+		_set_action_selection_navigation()
 	
 	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
@@ -310,11 +309,12 @@ func cancel():
 		move_source_tile = -1
 		current_destination_index = 0
 		
-		# アクション選択用ナビゲーション（戻るのみ）
-		_set_action_selection_navigation()
-		
+		# UIを先に更新
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
+		
+		# ナビゲーション設定は最後
+		_set_action_selection_navigation()
 	
 	elif current_state == State.SELECTING_LEVEL:
 		# レベル選択中ならアクション選択に戻る
@@ -322,14 +322,15 @@ func cancel():
 		available_levels.clear()
 		current_level_selection_index = 0
 		
-		# アクション選択用ナビゲーション（戻るのみ）
-		_set_action_selection_navigation()
-		
+		# UIを先に更新
 		if ui_manager and ui_manager.land_command_ui:
 			ui_manager.land_command_ui.hide_level_selection()
 		
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
+		
+		# ナビゲーション設定は最後
+		_set_action_selection_navigation()
 	
 	elif current_state == State.SELECTING_SWAP:
 		# 交換クリーチャー選択中ならアクション選択に戻る
@@ -355,10 +356,7 @@ func cancel():
 		
 	elif current_state == State.SELECTING_ACTION:
 		# アクション選択中なら土地選択に戻る
-		print("[LandCommandHandler] cancel: SELECTING_ACTION -> SELECTING_LAND")
-		
 		if ui_manager and ui_manager.land_command_ui:
-			print("[LandCommandHandler] hide_action_menu(false) を呼び出し")
 			ui_manager.land_command_ui.hide_action_menu(false)  # ボタンクリアしない
 		
 		current_state = State.SELECTING_LAND
@@ -373,7 +371,6 @@ func cancel():
 			ui_manager.show_land_selection_mode(player_owned_lands)
 		
 		# 土地選択用ナビゲーション（全ボタン）
-		print("[LandCommandHandler] _set_land_selection_navigation() を呼び出し")
 		_set_land_selection_navigation()
 	
 	elif current_state == State.SELECTING_LAND:

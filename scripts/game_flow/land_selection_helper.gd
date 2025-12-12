@@ -33,13 +33,10 @@ static func preview_land(handler, tile_index: int) -> bool:
 ## 
 ## 領地コマンド専用：状態遷移とUIメニュー表示を行う
 static func confirm_land_selection(handler) -> bool:
-	print("[LandSelectionHelper] confirm_land_selection: state=%s, selected_tile_index=%s" % [handler.State.keys()[handler.current_state], handler.selected_tile_index])
 	if handler.current_state != handler.State.SELECTING_LAND:
-		print("[LandSelectionHelper] -> 拒否: stateがSELECTING_LANDではない")
 		return false
 	
 	if handler.selected_tile_index == -1:
-		print("[LandSelectionHelper] -> 拒否: selected_tile_index=-1")
 		return false
 	
 	handler.current_state = handler.State.SELECTING_ACTION

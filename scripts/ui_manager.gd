@@ -336,7 +336,6 @@ func _on_cancel_land_command_button_pressed():
 ## ナビゲーションボタンを設定（推奨）
 ## 有効なCallableを渡したボタンのみ表示される
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
-	print("[UIManager] enable_navigation: confirm=%s, back=%s, up=%s, down=%s" % [confirm_cb.is_valid(), back_cb.is_valid(), up_cb.is_valid(), down_cb.is_valid()])
 	# 後方互換変数も同期（register_xxx系との競合防止）
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
@@ -391,7 +390,6 @@ func clear_arrow_actions():
 	_update_compat_buttons()
 
 func clear_global_actions():
-	print("[UIManager] clear_global_actions() called")
 	_compat_confirm_cb = Callable()
 	_compat_back_cb = Callable()
 	_compat_up_cb = Callable()

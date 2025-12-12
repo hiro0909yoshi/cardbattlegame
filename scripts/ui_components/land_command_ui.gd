@@ -167,11 +167,9 @@ func show_action_menu(tile_index: int):
 ## アクションメニュー非表示
 ## clear_buttons: グローバルボタンをクリアするかどうか（デフォルト: true）
 func hide_action_menu(clear_buttons: bool = true):
-	print("[LandCommandUI] hide_action_menu called, action_menu_panel=%s" % (action_menu_panel != null))
 	if action_menu_panel:
 		action_menu_panel.visible = false
 		selected_tile_for_action = -1
-		print("[LandCommandUI] action_menu_panel.visible set to false")
 	
 	# クリーチャー情報パネルも閉じる（グローバルボタンのクリアは呼び出し側で制御）
 	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:

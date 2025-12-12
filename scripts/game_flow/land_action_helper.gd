@@ -719,16 +719,17 @@ static func _cancel_terrain_change(handler):
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.is_action_processing = false
 	
-	# アクション選択用ナビゲーション（戻るのみ）
+	# 地形選択パネルを閉じてアクションメニューに戻る
+	if handler.ui_manager and handler.ui_manager.land_command_ui:
+		handler.ui_manager.land_command_ui.hide_terrain_selection()
+		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
+	
+	# アクション選択用ナビゲーション（戻るのみ）- 最後に設定
 	if handler.ui_manager:
 		handler.ui_manager.enable_navigation(
 			Callable(),  # 決定なし
 			func(): handler.cancel()  # 戻る
 		)
-	
-	# 地形選択パネルを閉じてアクションメニューに戻る
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.hide_terrain_selection()
 		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
 
 ## 地形選択UIを更新
