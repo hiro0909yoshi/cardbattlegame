@@ -87,14 +87,9 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	enemy_card_selection_is_steal = is_steal
 	current_state = State.SELECTING_ENEMY_CARD
 	
-	# 秘術ボタンは非表示、スキップボタンは敵手札枚数で位置再計算
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.hide_mystic_button()
-		# 敵手札枚数を取得してボタン位置を再計算
-		var enemy_hand_count = 0
-		if card_system:
-			enemy_hand_count = card_system.get_all_cards_for_player(target_player_id).size()
-		spell_phase_ui_manager.show_spell_skip_button(enemy_hand_count)
+	# 秘術ボタンは非表示（敵手札選択中は使用不可）
+	if ui_manager:
+		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
 	if not spell_draw:
@@ -223,13 +218,9 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	current_state = State.SELECTING_DECK_CARD
 	
 	# スペルフェーズボタンを非表示
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.hide_mystic_button()
-		spell_phase_ui_manager.hide_spell_skip_button()
-	
-	# サイコロボタンを非表示
+	# 秘術ボタンは非表示
 	if ui_manager:
-		ui_manager.set_dice_button_enabled(false)
+		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
 	if not spell_draw:
@@ -286,13 +277,9 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 	current_state = State.SELECTING_DECK_CARD
 	
 	# スペルフェーズボタンを非表示
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.hide_mystic_button()
-		spell_phase_ui_manager.hide_spell_skip_button()
-	
-	# サイコロボタンを非表示
+	# 秘術ボタンは非表示
 	if ui_manager:
-		ui_manager.set_dice_button_enabled(false)
+		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
 	if not spell_draw:
@@ -448,13 +435,9 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 	enemy_card_selection_filter_mode = filter_mode
 	current_state = State.SELECTING_TRANSFORM_CARD
 	
-	# スペルフェーズボタンを非表示
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.hide_mystic_button()
-		var enemy_hand_count = 0
-		if card_system:
-			enemy_hand_count = card_system.get_all_cards_for_player(target_player_id).size()
-		spell_phase_ui_manager.show_spell_skip_button(enemy_hand_count)
+	# 秘術ボタンは非表示
+	if ui_manager:
+		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
 	if not spell_draw:

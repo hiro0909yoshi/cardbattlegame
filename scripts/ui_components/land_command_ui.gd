@@ -4,11 +4,10 @@ class_name LandCommandUI
 extends Node
 
 # シグナル
-signal land_command_button_pressed()
 signal level_up_selected(target_level: int, cost: int)
 
 # UI要素
-var land_command_button: Button = null
+# 注: land_command_buttonはGlobalActionButtonsに移行済み
 var action_menu_panel: Panel = null
 var level_selection_panel: Panel = null
 var terrain_selection_panel: Panel = null  # 地形選択パネル
@@ -38,74 +37,13 @@ func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null):
 	board_system_ref = board_sys
 	ui_manager_ref = ui_manager
 
-## 領地コマンドボタン作成
-func create_land_command_button(parent: Node):
-	if land_command_button:
-		return
-	
-	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var button_width = 420  # 1.4倍
-	var button_height = 98  # 1.4倍
-	var player_panel_bottom = 210  # 1.4倍
-	
-	land_command_button = Button.new()
-	land_command_button.name = "LandCommandButton"
-	land_command_button.text = "領地コマンド"
-	land_command_button.custom_minimum_size = Vector2(button_width, button_height)
-	land_command_button.position = Vector2(28, viewport_size.y - player_panel_bottom - button_height - 28)
-	land_command_button.z_index = 100
-	
-	# スタイル設定
-	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.2, 0.6, 0.3, 1.0)
-	button_style.border_width_left = 2
-	button_style.border_width_right = 2
-	button_style.border_width_top = 2
-	button_style.border_width_bottom = 2
-	button_style.border_color = Color(1, 1, 1, 1)
-	button_style.corner_radius_top_left = 5
-	button_style.corner_radius_top_right = 5
-	button_style.corner_radius_bottom_left = 5
-	button_style.corner_radius_bottom_right = 5
-	land_command_button.add_theme_stylebox_override("normal", button_style)
-	
-	# ホバー時
-	var hover_style = button_style.duplicate()
-	hover_style.bg_color = Color(0.3, 0.8, 0.4, 1.0)
-	land_command_button.add_theme_stylebox_override("hover", hover_style)
-	
-	# 押下時
-	var pressed_style = button_style.duplicate()
-	pressed_style.bg_color = Color(0.15, 0.45, 0.2, 1.0)
-	land_command_button.add_theme_stylebox_override("pressed", pressed_style)
-	
-	# 無効時
-	var disabled_style = button_style.duplicate()
-	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
-	land_command_button.add_theme_stylebox_override("disabled", disabled_style)
-	
-	# フォント設定 ※1.4倍
-	var font_size = 34
-	land_command_button.add_theme_font_size_override("font_size", font_size)
-	
-	# シグナル接続
-	land_command_button.pressed.connect(_on_land_command_button_pressed)
-	
-	# 親に追加
-	parent.add_child(land_command_button)
-	
-	# 初期状態は非表示
-	land_command_button.visible = false
-
-## 領地コマンドボタン表示
+## 領地コマンドボタン表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
 func show_land_command_button():
-	if land_command_button:
-		land_command_button.visible = true
+	pass
 
-## 領地コマンドボタン非表示
+## 領地コマンドボタン非表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
 func hide_land_command_button():
-	if land_command_button:
-		land_command_button.visible = false
+	pass
 
 ## キャンセルボタン表示（後方互換 - 新方式ではLandCommandHandlerで設定）
 func show_cancel_button():
@@ -271,9 +209,6 @@ func _reset_level_button_style(button: Button, _level: int):
 	button.add_theme_stylebox_override("normal", style)
 
 ## シグナルハンドラ
-func _on_land_command_button_pressed():
-	land_command_button_pressed.emit()
-
 func _on_cancel_land_command_button_pressed():
 	print("[LandCommandUI] キャンセルボタン押下")
 	# UIManagerのキャンセル処理を呼び出す

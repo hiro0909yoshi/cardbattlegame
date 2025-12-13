@@ -204,6 +204,9 @@ func start_spell_phase(player_id: int):
 			board_system.camera_controller.enable_manual_mode()
 			board_system.camera_controller.set_current_player(player_id)
 		
+		# グローバルナビゲーション設定（戻るボタンのみ = スペルを使わない）
+		_setup_spell_selection_navigation()
+		
 		# 入力待ち
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "スペルを使用するか、ダイスを振ってください"
@@ -292,15 +295,15 @@ func _handle_cpu_spell_turn():
 		cpu_turn_processor.process_cpu_spell_turn(current_player_id)
 	else:
 		# フォールバック: CPUTurnProcessorがない場合はパス
-		pass_spell()
+		pass_spell(false)  # CPUはGameFlowManagerがroll_dice()を呼ぶ
 
 ## CPU スペル処理完了コールバック
 func _on_cpu_spell_completed(used_spell: bool):
 	if used_spell:
 		# TODO: 将来的にはCPUが選んだスペルを実行する
-		pass_spell()
+		pass_spell(false)  # CPUはGameFlowManagerがroll_dice()を呼ぶ
 	else:
-		pass_spell()
+		pass_spell(false)  # CPUはGameFlowManagerがroll_dice()を呼ぶ
 
 ## スペルコストを支払えるか
 func _can_afford_spell(spell_card: Dictionary) -> bool:
@@ -461,6 +464,9 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary):
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
 	
+	# グローバルナビゲーション設定（対象選択用）
+	_setup_target_selection_navigation()
+	
 	# 最初の対象を表示
 	_update_target_selection()
 
@@ -584,11 +590,13 @@ func _cancel_target_selection():
 		spell_mystic_arts.clear_selection()
 		spell_mystic_arts._end_mystic_phase()
 		current_state = State.WAITING_FOR_INPUT
+		# スペル選択画面に戻る
+		_return_to_spell_selection()
 	else:
 		# スペルキャンセル
 		cancel_spell()
 
-## スペルをキャンセル
+## スペルをキャンセル（対象選択からスペル選択に戻る）
 func cancel_spell():
 	# コストを返却
 	var cost_data = selected_spell_card.get("cost", {})
@@ -605,6 +613,28 @@ func cancel_spell():
 	selected_spell_card = {}
 	spell_used_this_turn = false
 	current_state = State.WAITING_FOR_INPUT
+	
+	# スペル選択UIを再表示
+	_return_to_spell_selection()
+
+## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
+func _return_to_spell_selection():
+	# 選択マーカーをクリア
+	TargetSelectionHelper.clear_selection(self)
+	
+	# カメラをプレイヤーに戻す
+	_return_camera_to_player()
+	
+	# UIを更新してスペル選択モードに戻す
+	if ui_manager:
+		_update_spell_phase_ui()
+		
+		# フェーズラベル更新
+		if ui_manager.phase_label:
+			ui_manager.phase_label.text = "スペルを使用するか、ダイスを振ってください"
+	
+	# グローバルナビゲーションをスペル選択用に再設定
+	_setup_spell_selection_navigation()
 
 ## スペル効果を実行（SpellEffectExecutorに委譲）
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
@@ -639,10 +669,16 @@ func _return_camera_to_player():
 			board_system.camera.position = new_camera_pos
 			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
 
-## スペルをパス
-func pass_spell():
+## スペルをパス（×ボタンで呼ばれる）
+## auto_roll: trueの場合、サイコロを自動で振る
+func pass_spell(auto_roll: bool = true):
 	spell_passed.emit()
 	complete_spell_phase()
+	
+	# サイコロを自動で振る（×ボタン押下時）
+	if auto_roll and game_flow_manager:
+		# フェーズ遷移後に呼ぶ必要があるためcall_deferred使用
+		game_flow_manager.roll_dice.call_deferred()
 
 ## タイルリストから選択（SpellCreatureMove用）
 ## 移動先選択などで使用
@@ -711,6 +747,9 @@ func complete_spell_phase():
 	
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()
+	
+	# グローバルナビゲーションをクリア
+	_clear_spell_navigation()
 	
 	# カメラを追従モードに戻す（位置は移動処理で自然に戻る）
 	if board_system and board_system.camera_controller:
@@ -787,58 +826,97 @@ func _initialize_spell_phase_ui():
 		spell_phase_ui_manager = SpellPhaseUIManager.new()
 		add_child(spell_phase_ui_manager)
 		
-		# UIレイヤーへの参照を設定
-		if ui_manager and ui_manager.card_selection_ui and ui_manager.card_selection_ui.parent_node:
-			# CardUIHelper と spell_phase_handler への参照を渡す
-			spell_phase_ui_manager.card_ui_helper = load("res://scripts/ui_components/card_ui_helper.gd")
-			spell_phase_ui_manager.spell_phase_handler_ref = self
-			var ui_parent = ui_manager.card_selection_ui.parent_node
-			spell_phase_ui_manager.create_mystic_button(ui_parent)
-			spell_phase_ui_manager.create_spell_skip_button(ui_parent)
+		# 参照を設定（spell_phase_ui_managerはSpellAndMysticUI等に使用）
+		spell_phase_ui_manager.spell_phase_handler_ref = self
+		# 秘術ボタン/スペルスキップボタンはグローバルボタンに移行済み
 
 ## スペルフェーズ開始時にボタンを表示
 func _show_spell_phase_buttons():
-	if spell_phase_ui_manager:
-		# 現在の手札枚数を取得
-		var hand_count = 6  # デフォルト値
-		if card_system and player_system:
-			var current_player = player_system.get_current_player()
-			if current_player:
-				var hand_data = card_system.get_all_cards_for_player(current_player.id)
-				hand_count = hand_data.size()
-		
-		# 秘術ボタンは使用可能なクリーチャーがいる場合のみ表示
-		if has_available_mystic_arts(current_player_id):
-			spell_phase_ui_manager.show_mystic_button(hand_count)
-		spell_phase_ui_manager.show_spell_skip_button(hand_count)
+	# 秘術ボタンは使用可能なクリーチャーがいる場合のみ表示（特殊ボタン使用）
+	if ui_manager and has_available_mystic_arts(current_player_id):
+		ui_manager.show_mystic_button(func(): start_mystic_arts_phase())
+	# 「スペルを使わない」ボタンは✓ボタンに置き換えたため表示しない
 
 ## スペルフェーズ終了時にボタンを非表示
 func _hide_spell_phase_buttons():
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.hide_mystic_button()
-		spell_phase_ui_manager.hide_spell_skip_button()
+	# 特殊ボタンをクリア
+	if ui_manager:
+		ui_manager.hide_mystic_button()
+
+
+# ============ グローバルナビゲーション設定 ============
+
+## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
+func _setup_spell_selection_navigation():
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
+			Callable()             # 戻るなし
+		)
+
+## 対象選択時のナビゲーション設定
+func _setup_target_selection_navigation():
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): _on_target_confirm(),   # 決定
+			func(): _on_target_cancel(),    # 戻る
+			func(): _on_target_prev(),      # 上
+			func(): _on_target_next()       # 下
+		)
+
+## ナビゲーションをクリア
+func _clear_spell_navigation():
+	if ui_manager:
+		ui_manager.disable_navigation()
+
+## 対象選択：決定
+func _on_target_confirm():
+	if current_state != State.SELECTING_TARGET:
+		return
+	_confirm_target_selection()
+
+## 対象選択：キャンセル
+func _on_target_cancel():
+	if current_state != State.SELECTING_TARGET:
+		return
+	_cancel_target_selection()
+
+## 対象選択：前の対象へ
+func _on_target_prev():
+	if current_state != State.SELECTING_TARGET:
+		return
+	if available_targets.size() <= 1:
+		return
+	
+	current_target_index = (current_target_index - 1 + available_targets.size()) % available_targets.size()
+	_update_target_selection()
+
+## 対象選択：次の対象へ
+func _on_target_next():
+	if current_state != State.SELECTING_TARGET:
+		return
+	if available_targets.size() <= 1:
+		return
+	
+	current_target_index = (current_target_index + 1) % available_targets.size()
+	_update_target_selection()
+
 
 ## 秘術ボタンの表示状態を更新（外部から呼び出し可能）
 func update_mystic_button_visibility():
-	if not spell_phase_ui_manager or current_state == State.INACTIVE:
+	if not ui_manager or current_state == State.INACTIVE:
 		return
 	
-	var hand_count = 6
-	if card_system and player_system:
-		var current_player = player_system.get_current_player()
-		if current_player:
-			var hand_data = card_system.get_all_cards_for_player(current_player.id)
-			hand_count = hand_data.size()
-	
 	if has_available_mystic_arts(current_player_id):
-		spell_phase_ui_manager.show_mystic_button(hand_count)
+		ui_manager.show_mystic_button(func(): start_mystic_arts_phase())
 	else:
-		spell_phase_ui_manager.hide_mystic_button()
+		ui_manager.hide_mystic_button()
 
 ## 秘術使用時にスペルボタンを隠す
 func _on_mystic_art_used():
-	if spell_phase_ui_manager:
-		spell_phase_ui_manager.on_mystic_art_used()
+	# 秘術使用時は秘術ボタンを非表示
+	if ui_manager:
+		ui_manager.hide_mystic_button()
 
 
 ## 秘術フェーズ完了時
@@ -939,16 +1017,7 @@ func _is_lands_required_disabled() -> bool:
 	return false
 
 
-## 手札更新時にボタン位置を再計算
+## 手札更新時にボタン位置を再計算（グローバルボタンは自動配置のため空実装）
 func _on_hand_updated_for_buttons():
-	if spell_phase_ui_manager and current_state != State.INACTIVE:
-		# 現在の手札枚数を取得
-		var hand_count = 6  # デフォルト
-		if card_system:
-			hand_count = card_system.get_hand_size_for_player(current_player_id)
-		
-		# ボタン位置を更新
-		if spell_phase_ui_manager.mystic_button and spell_phase_ui_manager.mystic_button.visible:
-			spell_phase_ui_manager.show_mystic_button(hand_count)
-		if spell_phase_ui_manager.spell_skip_button and spell_phase_ui_manager.spell_skip_button.visible:
-			spell_phase_ui_manager.show_spell_skip_button(hand_count)
+	# グローバルボタンに移行したため、手動での位置更新は不要
+	pass

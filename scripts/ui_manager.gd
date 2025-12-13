@@ -3,7 +3,6 @@ class_name UIManager
 
 # UI要素の統括管理システム（3D対応版）
 
-signal dice_button_pressed()
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
@@ -22,11 +21,10 @@ var card_selection_ui = null
 var level_up_ui = null
 var debug_panel = null
 var creature_info_panel_ui: CreatureInfoPanelUI = null
+var spell_info_panel_ui: SpellInfoPanelUI = null
 
 # 基本UI要素
-# フェーズ表示とサイコロUI（PhaseDisplayに移行済み）
-var dice_button: Button:
-	get: return phase_display.dice_button if phase_display else null
+# フェーズ表示（PhaseDisplayに移行済み）
 var phase_label: Label:
 	get: return phase_display.phase_label if phase_display else null
 
@@ -82,6 +80,12 @@ func _ready():
 	creature_info_panel_ui.set_ui_manager(self)
 	add_child(creature_info_panel_ui)
 	
+	# SpellInfoPanelUI初期化（シーンからインスタンス化）
+	var spell_info_scene = preload("res://scenes/ui/spell_info_panel.tscn")
+	spell_info_panel_ui = spell_info_scene.instantiate()
+	spell_info_panel_ui.set_ui_manager(self)
+	add_child(spell_info_panel_ui)
+	
 	# GlobalActionButtons初期化
 	global_action_buttons = GlobalActionButtons.new()
 	global_action_buttons.name = "GlobalActionButtons"
@@ -93,8 +97,7 @@ func _ready():
 		land_command_ui.name = "LandCommandUI"
 		land_command_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
 		add_child(land_command_ui)
-		# シグナル接続
-		land_command_ui.land_command_button_pressed.connect(_on_land_command_button_pressed)
+		# シグナル接続（land_command_button_pressedは特殊ボタンに移行済み）
 		land_command_ui.level_up_selected.connect(_on_level_ui_selected)
 	
 	# HandDisplay初期化
@@ -134,10 +137,6 @@ func connect_ui_signals():
 	# デバッグパネル
 	if debug_panel:
 		debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
-	
-	# PhaseDisplay
-	if phase_display:
-		phase_display.dice_button_pressed.connect(_on_dice_button_pressed)
 	
 	# PlayerInfoPanel
 	if player_info_panel:
@@ -214,9 +213,9 @@ func create_basic_ui(parent: Node):
 		phase_display.initialize(parent)
 	
 	# Phase 1-A: 領地コマンドUI初期化（LandCommandUIに委譲）
+	# 注: 領地コマンドボタンはグローバル特殊ボタンに移行済み
 	if land_command_ui:
 		land_command_ui.initialize(parent, player_system_ref, board_system_ref, self)
-		land_command_ui.create_land_command_button(parent)
 		land_command_ui.create_action_menu_panel(parent)
 		land_command_ui.create_level_selection_panel(parent)
 
@@ -286,15 +285,7 @@ func show_dice_result(value: int, _parent: Node = null):
 	if phase_display:
 		phase_display.show_dice_result(value)
 
-# サイコロボタンの有効/無効（PhaseDisplayに委譲）
-func set_dice_button_enabled(enabled: bool):
-	if phase_display:
-		phase_display.set_dice_button_enabled(enabled)
-
 # === イベントハンドラ ===
-func _on_dice_button_pressed():
-	emit_signal("dice_button_pressed")
-
 func _on_pass_button_pressed():
 	emit_signal("pass_button_pressed")
 
@@ -348,6 +339,11 @@ func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Ca
 
 ## ナビゲーションボタンを全てクリア
 func disable_navigation():
+	# 後方互換変数もクリア
+	_compat_confirm_cb = Callable()
+	_compat_back_cb = Callable()
+	_compat_up_cb = Callable()
+	_compat_down_cb = Callable()
 	if global_action_buttons:
 		global_action_buttons.clear_all()
 
@@ -397,6 +393,18 @@ func clear_global_actions():
 	if global_action_buttons:
 		global_action_buttons.clear_all()
 
+# === 特殊ボタン（左下）API ===
+
+## 特殊ボタンを設定（秘術/領地コマンド等）
+func set_special_button(text: String, callback: Callable):
+	if global_action_buttons:
+		global_action_buttons.setup_special(text, callback)
+
+## 特殊ボタンをクリア
+func clear_special_button():
+	if global_action_buttons:
+		global_action_buttons.clear_special()
+
 func register_global_actions(confirm_callback: Callable, back_callback: Callable, _confirm_text: String = "", _back_text: String = ""):
 	_compat_confirm_cb = confirm_callback
 	_compat_back_cb = back_callback
@@ -435,17 +443,27 @@ func _input(event):
 # Phase 1-A: 領地コマンドUI
 # ============================================
 
-# 領地コマンドボタンはLandCommandUIに移行済み
-# キャンセルボタンはグローバルアクションボタンに移行済み
+# 領地コマンドボタンは特殊ボタン（左下）に移行済み
 
-# 領地コマンドボタンの表示/非表示（LandCommandUIに委譲）
+## 領地コマンドボタンを表示（特殊ボタン使用）
 func show_land_command_button():
-	if land_command_ui:
-		land_command_ui.show_land_command_button()
+	set_special_button("領地", func(): _on_land_command_button_pressed())
 
+## 領地コマンドボタンを非表示（特殊ボタンクリア）
 func hide_land_command_button():
-	if land_command_ui:
-		land_command_ui.hide_land_command_button()
+	clear_special_button()
+
+# ============================================
+# 秘術ボタン（特殊ボタン使用）
+# ============================================
+
+## 秘術ボタンを表示
+func show_mystic_button(callback: Callable):
+	set_special_button("秘術", callback)
+
+## 秘術ボタンを非表示
+func hide_mystic_button():
+	clear_special_button()
 
 # create_action_menu_panel は LandCommandUIに移行済みのため削除
 

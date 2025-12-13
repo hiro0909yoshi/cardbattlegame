@@ -1,14 +1,10 @@
-# PhaseDisplay - フェーズ表示とサイコロUI管理
+# PhaseDisplay - フェーズ表示UI管理
 # UIManagerから分離されたフェーズ表示関連のUI処理
 class_name PhaseDisplay
 extends Node
 
-# シグナル
-signal dice_button_pressed()
-
 # UI要素
 var phase_label: Label = null
-var dice_button: Button = null
 var current_dice_label: Label = null
 
 # 親UIレイヤー
@@ -21,7 +17,6 @@ func _ready():
 func initialize(ui_parent: Node):
 	ui_layer = ui_parent
 	create_phase_label()
-	create_dice_button()
 
 ## フェーズラベルを作成 ※1.4倍
 func create_phase_label():
@@ -31,59 +26,9 @@ func create_phase_label():
 	var viewport_size = get_viewport().get_visible_rect().size
 	var player_panel_bottom = 28 + 336 + 28  # パネルY + パネル高さ(336) + マージン ※1.4倍
 	
-	# サイコロボタンの少し上に配置
 	phase_label.position = Vector2(viewport_size.x / 2 - 210, player_panel_bottom)
 	phase_label.add_theme_font_size_override("font_size", 34)
 	ui_layer.add_child(phase_label)
-
-## サイコロボタンを作成 ※1.4倍
-func create_dice_button():
-	dice_button = Button.new()
-	dice_button.text = "サイコロを振る"
-	
-	var viewport_size = get_viewport().get_visible_rect().size
-	var button_width = 280
-	var button_height = 84
-	var player_panel_bottom = 28 + 336 + 98  # ※1.4倍
-	
-	dice_button.position = Vector2((viewport_size.x - button_width) / 2, player_panel_bottom)
-	dice_button.size = Vector2(button_width, button_height)
-	dice_button.disabled = true
-	dice_button.pressed.connect(_on_dice_button_pressed)
-	
-	# サイコロボタンのスタイルを設定
-	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.2, 0.5, 0.8, 0.9)
-	button_style.border_width_left = 2
-	button_style.border_width_right = 2
-	button_style.border_width_top = 2
-	button_style.border_width_bottom = 2
-	button_style.border_color = Color(1, 1, 1, 1)
-	button_style.corner_radius_top_left = 5
-	button_style.corner_radius_top_right = 5
-	button_style.corner_radius_bottom_left = 5
-	button_style.corner_radius_bottom_right = 5
-	dice_button.add_theme_stylebox_override("normal", button_style)
-	
-	# ホバー時のスタイル
-	var hover_style = button_style.duplicate()
-	hover_style.bg_color = Color(0.3, 0.6, 0.9, 1.0)
-	dice_button.add_theme_stylebox_override("hover", hover_style)
-	
-	# 押下時のスタイル
-	var pressed_style = button_style.duplicate()
-	pressed_style.bg_color = Color(0.1, 0.4, 0.7, 1.0)
-	dice_button.add_theme_stylebox_override("pressed", pressed_style)
-	
-	# 無効時のスタイル
-	var disabled_style = button_style.duplicate()
-	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.7)
-	dice_button.add_theme_stylebox_override("disabled", disabled_style)
-	
-	# フォントサイズを大きく ※1.4倍
-	dice_button.add_theme_font_size_override("font_size", 25)
-	
-	ui_layer.add_child(dice_button)
 
 ## フェーズ表示を更新
 func update_phase_display(phase: int):
@@ -110,11 +55,11 @@ func show_dice_result(value: int):
 	if current_dice_label and is_instance_valid(current_dice_label):
 		current_dice_label.queue_free()
 	
-	# 新しいダイスラベルを作成（サイコロボタンの近くに表示）
+	# 新しいダイスラベルを作成
 	current_dice_label = Label.new()
 	current_dice_label.text = "🎲 " + str(value)
 	current_dice_label.add_theme_font_size_override("font_size", 67)  # 1.4倍
-	current_dice_label.position = Vector2(530, 90)  # サイコロボタンの右横
+	current_dice_label.position = Vector2(530, 90)
 	current_dice_label.add_theme_color_override("font_color", Color(1, 1, 0))
 	current_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
 	
@@ -126,24 +71,7 @@ func show_dice_result(value: int):
 		current_dice_label.queue_free()
 		current_dice_label = null
 
-## サイコロボタンの有効/無効
-func set_dice_button_enabled(enabled: bool):
-	if not dice_button:
-		return
-		
-	dice_button.disabled = not enabled
-	
-	# 有効時は目立たせる
-	if enabled:
-		dice_button.modulate = Color(1, 1, 1, 1)
-	else:
-		dice_button.modulate = Color(0.7, 0.7, 0.7, 0.8)
-
 ## フェーズラベルのテキストを直接設定
 func set_phase_text(text: String):
 	if phase_label:
 		phase_label.text = text
-
-## シグナルハンドラ
-func _on_dice_button_pressed():
-	dice_button_pressed.emit()

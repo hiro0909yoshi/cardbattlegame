@@ -367,16 +367,16 @@ func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id
 ```gdscript
 # 方向選択開始時
 func _setup_direction_selection_navigation():
-    ui_manager.enable_navigation(
-        func(): _confirm_direction_selection(),  # 決定
-        Callable(),                               # 戻るなし
-        func(): _cycle_direction_selection(),    # 上
-        func(): _cycle_direction_selection()     # 下
-    )
+	ui_manager.enable_navigation(
+		func(): _confirm_direction_selection(),  # 決定
+		Callable(),                               # 戻るなし
+		func(): _cycle_direction_selection(),    # 上
+		func(): _cycle_direction_selection()     # 下
+	)
 
 # 方向選択終了時
 func _clear_direction_selection_navigation():
-    ui_manager.disable_navigation()
+	ui_manager.disable_navigation()
 ```
 
 **表示例**:

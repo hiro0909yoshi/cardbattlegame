@@ -400,6 +400,13 @@ func deselect_card():
 	# 色を元に戻す
 	modulate = Color(1.0, 1.0, 1.0)
 
+# スペルフェーズがアクティブかどうかを判定
+func _is_spell_phase_active() -> bool:
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if ui_manager and ui_manager.card_selection_filter == "spell":
+		return true
+	return false
+
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
@@ -438,9 +445,12 @@ func _input(event):
 						if sibling != self and sibling.has_method("deselect_card"):
 							sibling.deselect_card()
 				
-				# クリーチャーカードかつ情報パネルONの場合は即決定
+				# クリーチャーカード（情報パネルON）またはスペルカード（スペルフェーズ中）は即決定
 				var card_type = card_data.get("type", "")
-				if card_type == "creature" and GameSettings.use_creature_info_panel:
+				var is_creature_with_panel = card_type == "creature" and GameSettings.use_creature_info_panel
+				var is_spell_in_spell_phase = card_type == "spell" and _is_spell_phase_active()
+				
+				if is_creature_with_panel or is_spell_in_spell_phase:
 					select_card()
 					on_card_confirmed()
 				else:

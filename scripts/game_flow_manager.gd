@@ -221,7 +221,6 @@ func start_game():
 		print("[GameFlowManager] プレイヤー%d: スタート時方向選択権付与" % (player.id + 1))
 	
 	current_phase = GamePhase.DICE_ROLL
-	ui_manager.set_dice_button_enabled(true)
 	update_ui()
 	start_turn()
 
@@ -260,28 +259,43 @@ func start_turn():
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
 	if is_cpu_turn:
-		ui_manager.set_dice_button_enabled(false)
 		ui_manager.phase_label.text = "CPUのターン..."
 		current_phase = GamePhase.DICE_ROLL
 		await get_tree().create_timer(1.0).timeout
 		roll_dice()
 	else:
 		current_phase = GamePhase.DICE_ROLL
-		ui_manager.set_dice_button_enabled(true)
 		ui_manager.phase_label.text = "サイコロを振ってください"
 		update_ui()
+		
+		# 決定ボタンでサイコロを振るナビゲーション設定
+		_setup_dice_phase_navigation()
+
+## ダイスフェーズ用ナビゲーション設定（決定ボタンでサイコロを振る）
+func _setup_dice_phase_navigation():
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): roll_dice(),  # 決定 = サイコロを振る
+			Callable()            # 戻るなし
+		)
+
+## ダイスフェーズのナビゲーションをクリア
+func _clear_dice_phase_navigation():
+	if ui_manager:
+		ui_manager.disable_navigation()
 
 # サイコロを振る
 func roll_dice():
 	# スペルフェーズ中の場合は、スペルを使わずにダイスロールに進む
 	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-		spell_phase_handler.pass_spell()
+		spell_phase_handler.pass_spell(false)  # auto_roll=false（ここで既にroll_dice中なので）
 		# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
 	
 	if current_phase != GamePhase.DICE_ROLL:
 		return
 	
-	ui_manager.set_dice_button_enabled(false)
+	# ナビゲーションをクリア（連打防止）
+	_clear_dice_phase_navigation()
 	
 	# カメラをプレイヤー位置に戻す（即座に移動、向きも正しく設定）
 	if board_system_3d and board_system_3d.camera_controller:
@@ -590,7 +604,6 @@ func move_camera_to_next_player():
 func on_player_won(player_id: int):
 	var player = player_system.players[player_id]
 	change_phase(GamePhase.SETUP)
-	ui_manager.set_dice_button_enabled(false)
 	ui_manager.phase_label.text = player.name + "の勝利！"
 	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 

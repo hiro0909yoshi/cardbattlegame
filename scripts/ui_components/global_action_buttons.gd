@@ -1,5 +1,5 @@
-# 右下に縦並びで配置、Enter/Escapeキーと連動
-# ボタンはアイコン固定（✓、✕、▲、▼）、コールバックのみ設定
+# 右下に縦並びで配置（▲▼✓×）、左下に特殊ボタン
+# ボタンは常に表示、機能がない時はグレーアウト
 extends Control
 
 class_name GlobalActionButtons
@@ -9,23 +9,29 @@ var up_button: Button
 var down_button: Button
 var confirm_button: Button
 var back_button: Button
+var special_button: Button  # 左下の特殊ボタン（秘術/領地コマンド等）
 
 # コールバック
 var _confirm_callback: Callable = Callable()
 var _back_callback: Callable = Callable()
 var _up_callback: Callable = Callable()
 var _down_callback: Callable = Callable()
+var _special_callback: Callable = Callable()
+
+# 特殊ボタンのテキスト
+var _special_text: String = ""
 
 # 定数
 const BUTTON_SIZE = 280
 const BUTTON_SPACING = 42
 const MARGIN_RIGHT = 70
 const MARGIN_BOTTOM = 70
+const MARGIN_LEFT = 70
 
 
 func _ready():
 	_setup_ui()
-	_update_visibility()
+	_update_button_states()
 
 
 func _setup_ui():
@@ -52,6 +58,11 @@ func _setup_ui():
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
 	
+	# 特殊ボタン（左下、テキストは動的）
+	special_button = _create_button("", Color(0.4, 0.2, 0.6), 36)  # 紫色
+	special_button.pressed.connect(_on_special_pressed)
+	add_child(special_button)
+	
 	_update_positions()
 	get_tree().root.size_changed.connect(_update_positions)
 
@@ -62,7 +73,7 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	button.custom_minimum_size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
 	button.size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
 	button.focus_mode = Control.FOCUS_NONE
-	button.visible = false
+	button.visible = true  # 常に表示
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
@@ -103,6 +114,7 @@ func _update_positions():
 		return
 	var viewport_size = viewport.get_visible_rect().size
 	
+	# 右下のボタン群
 	var base_x = viewport_size.x - MARGIN_RIGHT - BUTTON_SIZE
 	var back_y = viewport_size.y - MARGIN_BOTTOM - BUTTON_SIZE
 	
@@ -114,13 +126,19 @@ func _update_positions():
 	down_button.position = Vector2(base_x, down_y)
 	confirm_button.position = Vector2(base_x, confirm_y)
 	back_button.position = Vector2(base_x, back_y)
+	
+	# 左下の特殊ボタン（×ボタンと同じ高さ）
+	special_button.position = Vector2(MARGIN_LEFT, back_y)
 
 
-func _update_visibility():
-	up_button.visible = _up_callback.is_valid()
-	down_button.visible = _down_callback.is_valid()
-	confirm_button.visible = _confirm_callback.is_valid()
-	back_button.visible = _back_callback.is_valid()
+## ボタンの有効/無効状態を更新（常に表示、機能がない時はグレーアウト）
+func _update_button_states():
+	up_button.disabled = not _up_callback.is_valid()
+	down_button.disabled = not _down_callback.is_valid()
+	confirm_button.disabled = not _confirm_callback.is_valid()
+	back_button.disabled = not _back_callback.is_valid()
+	special_button.disabled = not _special_callback.is_valid()
+	special_button.text = _special_text if _special_callback.is_valid() else ""
 
 
 func _input(event):
@@ -163,22 +181,43 @@ func _on_down_pressed():
 		_down_callback.call()
 
 
+func _on_special_pressed():
+	if _special_callback.is_valid():
+		_special_callback.call()
+
+
 # === 公開メソッド ===
 
 ## ナビゲーションボタンを一括設定
-## 有効なCallableを渡したボタンのみ表示される
+## 有効なCallableを渡したボタンのみ有効になる
 func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
 	_confirm_callback = confirm_cb
 	_back_callback = back_cb
 	_up_callback = up_cb
 	_down_callback = down_cb
-	_update_visibility()
+	_update_button_states()
 
 
-## 全ボタンをクリア
+## 特殊ボタンを設定（テキストとコールバック）
+func setup_special(text: String, callback: Callable):
+	_special_text = text
+	_special_callback = callback
+	_update_button_states()
+
+
+## 特殊ボタンをクリア
+func clear_special():
+	_special_text = ""
+	_special_callback = Callable()
+	_update_button_states()
+
+
+## 全ボタンをクリア（全てグレーアウト）
 func clear_all():
 	_confirm_callback = Callable()
 	_back_callback = Callable()
 	_up_callback = Callable()
 	_down_callback = Callable()
-	_update_visibility()
+	_special_callback = Callable()
+	_special_text = ""
+	_update_button_states()

@@ -471,11 +471,19 @@ func on_card_selected(card_index: int):
 	if not is_active:
 		return
 	
+	var card_data = _get_card_data_for_index(card_index)
+	if not card_data:
+		return
+	
+	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
+	if selection_mode == "spell" and card_data.get("type") == "spell":
+		_show_spell_info_panel(card_index, card_data)
+		return
+	
 	# クリーチャー情報パネルを使用するか判定
 	# 召喚/交換モードでクリーチャーカードの場合
 	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap"]:
-		var card_data = _get_card_data_for_index(card_index)
-		if card_data and card_data.get("type") == "creature":
+		if card_data.get("type") == "creature":
 			_show_creature_info_panel(card_index, card_data)
 			return
 	
@@ -521,6 +529,83 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		confirmation_text = "このクリーチャーに交換しますか？"
 	
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
+
+
+# スペル情報パネルを表示
+func _show_spell_info_panel(card_index: int, card_data: Dictionary):
+	if not ui_manager_ref or not ui_manager_ref.spell_info_panel_ui:
+		# フォールバック：既存の動作
+		hide_selection()
+		emit_signal("card_selected", card_index)
+		return
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
+	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+		var confirm_data = card_data.duplicate()
+		confirm_data["hand_index"] = card_index
+		_on_spell_panel_confirmed(confirm_data)
+		return
+	
+	pending_card_index = card_index
+	
+	# シグナル接続（初回のみ）
+	if not ui_manager_ref.spell_info_panel_ui.selection_confirmed.is_connected(_on_spell_panel_confirmed):
+		ui_manager_ref.spell_info_panel_ui.selection_confirmed.connect(_on_spell_panel_confirmed)
+		ui_manager_ref.spell_info_panel_ui.selection_cancelled.connect(_on_spell_panel_cancelled)
+	
+	# スペル情報パネルを表示
+	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index)
+
+
+# スペル情報パネルで確認された
+func _on_spell_panel_confirmed(card_data: Dictionary):
+	var card_index = card_data.get("hand_index", pending_card_index)
+	pending_card_index = -1
+	
+	# 情報パネルを閉じる（ダブルクリック時にも確実に閉じる）
+	if ui_manager_ref and ui_manager_ref.spell_info_panel_ui:
+		ui_manager_ref.spell_info_panel_ui.hide_panel()
+	
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
+# スペル情報パネルでキャンセルされた
+func _on_spell_panel_cancelled():
+	pending_card_index = -1
+	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	
+	# 選択中のカードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+		card_script.currently_selected_card.deselect_card()
+	
+	# SpellPhaseHandler経由でスペル選択画面に戻る
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		game_flow_manager_ref.spell_phase_handler._return_to_spell_selection()
+	else:
+		# フォールバック
+		_setup_spell_phase_back_button()
+
+
+# スペルフェーズ用のナビゲーションを設定（決定 = サイコロへ）
+func _setup_spell_phase_back_button():
+	if ui_manager_ref:
+		ui_manager_ref.enable_navigation(
+			func(): _on_spell_phase_skip(),  # 決定 = スペルを使わない → サイコロ
+			Callable()  # 戻るなし
+		)
+
+
+# スペルフェーズをスキップ（スペルを使わない）
+func _on_spell_phase_skip():
+	hide_selection()
+	
+	# SpellPhaseHandlerのpass_spell()を直接呼ぶ
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		game_flow_manager_ref.spell_phase_handler.pass_spell()
+	else:
+		emit_signal("selection_cancelled")
 
 
 # クリーチャー情報パネルで確認された

@@ -380,7 +380,6 @@ func phase_5_connect_signals() -> void:
 	
 	# UIManager のシグナル
 	if ui_manager and game_flow_manager:
-		ui_manager.dice_button_pressed.connect(game_flow_manager.roll_dice)
 		ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
 		ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 		ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
