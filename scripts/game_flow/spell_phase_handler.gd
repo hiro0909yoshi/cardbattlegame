@@ -1036,6 +1036,10 @@ func _on_mystic_target_selection_requested(targets: Array):
 	available_targets = targets
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
+	
+	# グローバルナビゲーション設定（対象選択用 - 秘術でも戻るボタンを表示）
+	_setup_target_selection_navigation()
+	
 	_update_target_selection()
 
 

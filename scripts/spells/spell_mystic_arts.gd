@@ -456,10 +456,6 @@ func _cancel_mystic_confirmation() -> void:
 		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
 		TargetSelectionHelper.clear_confirmation_markers(spell_phase_handler_ref)
-		
-		# ナビゲーションを無効化
-		if spell_phase_handler_ref.ui_manager:
-			spell_phase_handler_ref.ui_manager.disable_navigation()
 	
 	# 確認フェーズ変数をクリア
 	confirmation_creature = {}
@@ -472,10 +468,10 @@ func _cancel_mystic_confirmation() -> void:
 	clear_selection()
 	_end_mystic_phase()
 	
-	# スペルフェーズに戻る
+	# スペルフェーズに戻る（UI再表示 + ナビゲーション再設定）
 	if spell_phase_handler_ref:
 		spell_phase_handler_ref.current_state = spell_phase_handler_ref.State.WAITING_FOR_INPUT
-		spell_phase_handler_ref._return_camera_to_player()
+		spell_phase_handler_ref._return_to_spell_selection()
 
 
 ## 非同期効果を含む秘術かどうかを判定

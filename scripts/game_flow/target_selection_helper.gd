@@ -134,25 +134,25 @@ static func rotate_confirmation_markers(handler, delta: float):
 			marker.rotate_y(delta * 2.0)
 
 
-## マーカーメッシュを作成（内部用）
+## マーカーメッシュを作成（内部用 - create_selection_markerと同じ設定）
 static func _create_marker_mesh() -> MeshInstance3D:
 	var marker = MeshInstance3D.new()
+	
+	# トーラス（ドーナツ型）メッシュを作成
 	var torus = TorusMesh.new()
-	torus.inner_radius = 0.3
-	torus.outer_radius = 0.5
+	torus.inner_radius = 0.8
+	torus.outer_radius = 1.0
+	torus.rings = 32
+	torus.ring_segments = 16
 	marker.mesh = torus
 	
-	# マテリアル設定
+	# マテリアル設定（黄色で発光）
 	var material = StandardMaterial3D.new()
-	material.albedo_color = Color(1, 1, 0, 0.8)  # 黄色
+	material.albedo_color = Color(1.0, 1.0, 0.0, 1.0)  # 黄色
 	material.emission_enabled = true
-	material.emission = Color(1, 1, 0)
-	material.emission_energy_multiplier = 0.5
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.emission = Color(1.0, 1.0, 0.0)
+	material.emission_energy_multiplier = 2.0
 	marker.material_override = material
-	
-	# 水平に回転
-	marker.rotation_degrees = Vector3(90, 0, 0)
 	
 	return marker
 
