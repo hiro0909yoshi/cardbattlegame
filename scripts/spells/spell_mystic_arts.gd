@@ -31,6 +31,14 @@ var selected_mystic_art: Dictionary = {}
 var selected_mystic_creature: Dictionary = {}
 var current_mystic_player_id: int = -1
 
+# 確認フェーズ用
+var is_confirming: bool = false
+var confirmation_creature: Dictionary = {}
+var confirmation_mystic_art: Dictionary = {}
+var confirmation_target_type: String = ""
+var confirmation_target_info: Dictionary = {}
+var confirmation_target_data: Dictionary = {}
+
 
 # ============ 初期化 ============
 
@@ -175,19 +183,20 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 				target_info["target_filter"] = parsed_target_filter
 			target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
 	
-	# ターゲット不要（none）またはセルフターゲット時はUI表示なしで実行
+	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":
 		var target_data = {
 			"type": target_type,
 			"tile_index": selected_creature.get("tile_index", -1),
 			"player_id": current_mystic_player_id
 		}
-		await execute_mystic_art(selected_creature, mystic_art, target_data)
+		await _start_mystic_confirmation(selected_creature, mystic_art, "self", target_info, target_data)
 		return
 	
-	# 全クリーチャー対象時はターゲット選択なしで実行
+	# 全クリーチャー対象時 → 確認フェーズへ
 	if target_type == "all_creatures":
-		await _execute_all_creatures(selected_creature, mystic_art, target_info)
+		var target_data = {"type": "all_creatures"}
+		await _start_mystic_confirmation(selected_creature, mystic_art, "all_creatures", target_info, target_data)
 		return
 	
 	# 秘術選択状態を保存（ターゲット確定時に使用）
@@ -364,6 +373,109 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	_end_mystic_phase()
 	if spell_phase_handler_ref:
 		spell_phase_handler_ref.complete_spell_phase()
+
+
+# ============ 確認フェーズ（全体対象/セルフ等） ============
+
+## 確認フェーズを開始
+func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, target_type: String, target_info: Dictionary, target_data: Dictionary) -> void:
+	is_confirming = true
+	confirmation_creature = creature
+	confirmation_mystic_art = mystic_art
+	confirmation_target_type = target_type
+	confirmation_target_info = target_info
+	confirmation_target_data = target_data
+	
+	# 対象をハイライト表示
+	var target_count = 0
+	if spell_phase_handler_ref:
+		target_count = TargetSelectionHelper.show_confirmation_highlights(spell_phase_handler_ref, target_type, target_info)
+	
+	# 対象がいない場合（all_creaturesで防魔等で0体）
+	if target_type == "all_creatures" and target_count == 0:
+		ui_message_requested.emit("対象となるクリーチャーがいません")
+		_cancel_mystic_confirmation()
+		return
+	
+	# 説明テキストを表示
+	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
+	ui_message_requested.emit(confirmation_text)
+	
+	# ナビゲーションボタン設定（決定/戻る）
+	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
+		spell_phase_handler_ref.ui_manager.enable_navigation(
+			func(): _confirm_mystic_effect(),  # 決定
+			func(): _cancel_mystic_confirmation()  # 戻る
+		)
+
+
+## 確認フェーズ: 効果発動を確定
+func _confirm_mystic_effect() -> void:
+	if not is_confirming:
+		return
+	
+	is_confirming = false
+	
+	# ハイライトとマーカーをクリア
+	if spell_phase_handler_ref:
+		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
+		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
+		TargetSelectionHelper.clear_confirmation_markers(spell_phase_handler_ref)
+		
+		# ナビゲーションを無効化
+		if spell_phase_handler_ref.ui_manager:
+			spell_phase_handler_ref.ui_manager.disable_navigation()
+	
+	# 保存した情報を取得
+	var creature = confirmation_creature
+	var mystic_art = confirmation_mystic_art
+	var target_type = confirmation_target_type
+	var target_info = confirmation_target_info
+	var target_data = confirmation_target_data
+	
+	# 確認フェーズ変数をクリア
+	confirmation_creature = {}
+	confirmation_mystic_art = {}
+	confirmation_target_type = ""
+	confirmation_target_info = {}
+	confirmation_target_data = {}
+	
+	# 対象タイプに応じて実行
+	if target_type == "all_creatures":
+		await _execute_all_creatures(creature, mystic_art, target_info)
+	else:
+		await execute_mystic_art(creature, mystic_art, target_data)
+
+
+## 確認フェーズ: キャンセル
+func _cancel_mystic_confirmation() -> void:
+	is_confirming = false
+	
+	# ハイライトとマーカーをクリア
+	if spell_phase_handler_ref:
+		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
+		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
+		TargetSelectionHelper.clear_confirmation_markers(spell_phase_handler_ref)
+		
+		# ナビゲーションを無効化
+		if spell_phase_handler_ref.ui_manager:
+			spell_phase_handler_ref.ui_manager.disable_navigation()
+	
+	# 確認フェーズ変数をクリア
+	confirmation_creature = {}
+	confirmation_mystic_art = {}
+	confirmation_target_type = ""
+	confirmation_target_info = {}
+	confirmation_target_data = {}
+	
+	# 秘術選択をクリアして秘術フェーズを終了
+	clear_selection()
+	_end_mystic_phase()
+	
+	# スペルフェーズに戻る
+	if spell_phase_handler_ref:
+		spell_phase_handler_ref.current_state = spell_phase_handler_ref.State.WAITING_FOR_INPUT
+		spell_phase_handler_ref._return_camera_to_player()
 
 
 ## 非同期効果を含む秘術かどうかを判定

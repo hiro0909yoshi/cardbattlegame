@@ -78,6 +78,84 @@ static func rotate_selection_marker(handler, delta: float):
 	if handler.selection_marker and handler.selection_marker.has_meta("rotating"):
 		handler.selection_marker.rotate_y(delta * 2.0)  # 1秒で約114度回転
 
+
+## 複数マーカーを表示（確認フェーズ用）
+## 
+## handler: confirmation_markers配列とboard_systemを持つオブジェクト
+## tile_indices: マーカーを表示するタイルインデックスの配列
+static func show_multiple_markers(handler, tile_indices: Array):
+	# 既存のマーカーをクリア
+	clear_confirmation_markers(handler)
+	
+	if not handler.board_system:
+		return
+	
+	for tile_index in tile_indices:
+		if not handler.board_system.tile_nodes.has(tile_index):
+			continue
+		
+		var tile = handler.board_system.tile_nodes[tile_index]
+		
+		# マーカーを作成
+		var marker = _create_marker_mesh()
+		tile.add_child(marker)
+		marker.position = Vector3(0, 0.5, 0)
+		marker.set_meta("rotating", true)
+		
+		handler.confirmation_markers.append(marker)
+
+
+## 確認フェーズ用マーカーをすべてクリア
+## 
+## handler: confirmation_markers配列を持つオブジェクト
+static func clear_confirmation_markers(handler):
+	if not "confirmation_markers" in handler:
+		return
+	
+	for marker in handler.confirmation_markers:
+		if marker and is_instance_valid(marker):
+			if marker.get_parent():
+				marker.get_parent().remove_child(marker)
+			marker.queue_free()
+	
+	handler.confirmation_markers.clear()
+
+
+## 確認フェーズ用マーカーを回転（_process内で呼ぶ）
+## 
+## handler: confirmation_markers配列を持つオブジェクト
+## delta: フレーム間の経過時間
+static func rotate_confirmation_markers(handler, delta: float):
+	if not "confirmation_markers" in handler:
+		return
+	
+	for marker in handler.confirmation_markers:
+		if marker and is_instance_valid(marker) and marker.has_meta("rotating"):
+			marker.rotate_y(delta * 2.0)
+
+
+## マーカーメッシュを作成（内部用）
+static func _create_marker_mesh() -> MeshInstance3D:
+	var marker = MeshInstance3D.new()
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.3
+	torus.outer_radius = 0.5
+	marker.mesh = torus
+	
+	# マテリアル設定
+	var material = StandardMaterial3D.new()
+	material.albedo_color = Color(1, 1, 0, 0.8)  # 黄色
+	material.emission_enabled = true
+	material.emission = Color(1, 1, 0)
+	material.emission_energy_multiplier = 0.5
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	marker.material_override = material
+	
+	# 水平に回転
+	marker.rotation_degrees = Vector3(90, 0, 0)
+	
+	return marker
+
 # ============================================
 # カメラ制御
 # ============================================
@@ -146,6 +224,103 @@ static func clear_all_highlights(handler):
 		var tile = handler.board_system.tile_nodes[tile_idx]
 		if tile.has_method("set_highlight"):
 			tile.set_highlight(false)
+
+
+## 複数タイルをハイライト
+## 
+## handler: board_system を持つオブジェクト
+## tile_indices: ハイライトするタイルインデックスの配列
+static func highlight_multiple_tiles(handler, tile_indices: Array):
+	if not handler.board_system:
+		return
+	
+	for tile_index in tile_indices:
+		if handler.board_system.tile_nodes.has(tile_index):
+			var tile = handler.board_system.tile_nodes[tile_index]
+			if tile.has_method("set_highlight"):
+				tile.set_highlight(true)
+
+
+## 確認フェーズ用：対象タイプに応じたハイライト表示
+## 
+## handler: SpellPhaseHandler等
+## target_type: "self", "all_creatures", "all_players", "world", "none"
+## target_info: フィルター条件
+## 戻り値: ハイライトしたタイル数
+static func show_confirmation_highlights(handler, target_type: String, target_info: Dictionary) -> int:
+	clear_all_highlights(handler)
+	clear_confirmation_markers(handler)
+	
+	var highlighted_tiles: Array = []
+	
+	match target_type:
+		"self", "none":
+			# 自分の位置にマーカー表示
+			if handler.board_system and handler.board_system.movement_controller:
+				var player_tile = handler.board_system.movement_controller.get_player_tile(handler.current_player_id)
+				if player_tile >= 0:
+					show_selection_marker(handler, player_tile)
+					highlight_tile(handler, player_tile)
+					highlighted_tiles.append(player_tile)
+		
+		"all_creatures":
+			# 全クリーチャー対象（防魔除外済み）- 各タイルにマーカー表示
+			var targets = get_valid_targets(handler, "creature", target_info)
+			for target in targets:
+				var tile_index = target.get("tile_index", -1)
+				if tile_index >= 0:
+					highlighted_tiles.append(tile_index)
+			highlight_multiple_tiles(handler, highlighted_tiles)
+			show_multiple_markers(handler, highlighted_tiles)
+		
+		"all_players":
+			# 全プレイヤー対象（防魔除外済み）- 各プレイヤー位置にマーカー表示
+			var targets = get_valid_targets(handler, "player", target_info)
+			for target in targets:
+				var player_id = target.get("player_id", -1)
+				if player_id >= 0 and handler.board_system and handler.board_system.movement_controller:
+					var player_tile = handler.board_system.movement_controller.get_player_tile(player_id)
+					if player_tile >= 0:
+						highlighted_tiles.append(player_tile)
+			highlight_multiple_tiles(handler, highlighted_tiles)
+			show_multiple_markers(handler, highlighted_tiles)
+		
+		"world":
+			# 世界呪い：全タイルをハイライト（マーカーは多すぎるので省略）
+			if handler.board_system:
+				for tile_index in handler.board_system.tile_nodes.keys():
+					highlighted_tiles.append(tile_index)
+				highlight_multiple_tiles(handler, highlighted_tiles)
+	
+	return highlighted_tiles.size()
+
+
+## 確認フェーズ用：対象の説明テキストを生成
+## 
+## target_type: "self", "all_creatures", "all_players", "world", "none"
+## target_count: ハイライトされた対象数
+## 戻り値: 説明テキスト
+static func get_confirmation_text(target_type: String, target_count: int) -> String:
+	match target_type:
+		"self":
+			return "自分自身に効果を発動します"
+		"none":
+			return "効果を発動します"
+		"all_creatures":
+			if target_count > 0:
+				return "クリーチャー %d体に効果を発動します" % target_count
+			else:
+				return "対象となるクリーチャーがいません"
+		"all_players":
+			if target_count > 0:
+				return "プレイヤー %d人に効果を発動します" % target_count
+			else:
+				return "対象となるプレイヤーがいません"
+		"world":
+			return "世界全体に効果を発動します"
+		_:
+			return "効果を発動します"
+
 
 # ============================================
 # 対象タイプ別の処理

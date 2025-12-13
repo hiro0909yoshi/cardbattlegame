@@ -17,6 +17,7 @@ enum State {
 	INACTIVE,
 	WAITING_FOR_INPUT,  # スペル選択またはダイス待ち
 	SELECTING_TARGET,    # 対象選択中
+	CONFIRMING_EFFECT,   # 効果確認中（全体対象等）
 	EXECUTING_EFFECT     # 効果実行中
 }
 
@@ -25,6 +26,11 @@ var current_player_id: int = -1
 var selected_spell_card: Dictionary = {}
 var spell_used_this_turn: bool = false  # 1ターン1回制限
 var skip_dice_phase: bool = false  # ワープ系スペル使用時はサイコロフェーズをスキップ
+
+## 確認フェーズ用
+var confirmation_target_type: String = ""
+var confirmation_target_info: Dictionary = {}
+var confirmation_target_data: Dictionary = {}
 
 ## カード選択ハンドラー（敵手札選択、デッキカード選択）
 var card_selection_handler: CardSelectionHandler = null
@@ -48,6 +54,7 @@ var debug_disable_secret_cards: bool = false
 var available_targets: Array = []
 var current_target_index: int = 0
 var selection_marker: MeshInstance3D = null
+var confirmation_markers: Array = []  # 確認フェーズ用複数マーカー
 var is_tile_selection_mode: bool = false  # タイル選択モード（SpellCreatureMove用）
 var is_borrow_spell_mode: bool = false  # 借用スペル実行中（SpellBorrow用）
 
@@ -80,6 +87,8 @@ func _ready():
 func _process(delta):
 	# 選択マーカーを回転
 	TargetSelectionHelper.rotate_selection_marker(self, delta)
+	# 確認フェーズ用マーカーを回転
+	TargetSelectionHelper.rotate_confirmation_markers(self, delta)
 
 ## 初期化
 func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
@@ -415,22 +424,22 @@ func use_spell(spell_card: Dictionary):
 				cancel_spell()
 				return
 	
-	# target_filter または target_type が "self" の場合は、即座に効果発動（対象選択UIなし）
+	# target_filter または target_type が "self" の場合 → 確認フェーズへ
 	if target_filter == "self" or target_type == "self":
-		# 対象選択なし。効果実行時に current_player_id を使用
 		var target_data = {"type": "player", "player_id": current_player_id}
-		execute_spell_effect(spell_card, target_data)
+		_start_confirmation_phase("self", target_info, target_data)
 	elif target_type == "all_creatures":
-		# 全クリーチャー対象（条件付き）
-		_execute_spell_on_all_creatures(spell_card, target_info)
+		# 全クリーチャー対象（条件付き）→ 確認フェーズへ
+		var target_data = {"type": "all_creatures"}
+		_start_confirmation_phase("all_creatures", target_info, target_data)
 	elif target_type == "all_players":
-		# 全プレイヤー対象（カオスパニック等）- 対象選択なしで即発動
+		# 全プレイヤー対象（カオスパニック等）→ 確認フェーズへ
 		var target_data = {"type": "all_players"}
-		execute_spell_effect(spell_card, target_data)
+		_start_confirmation_phase("all_players", target_info, target_data)
 	elif target_type == "world":
-		# 世界呪い - 対象選択なしで即発動
+		# 世界呪い → 確認フェーズへ
 		var target_data = {"type": "world"}
-		execute_spell_effect(spell_card, target_data)
+		_start_confirmation_phase("world", target_info, target_data)
 	elif not target_type.is_empty() and target_type != "none":
 		# 対象選択が必要
 		current_state = State.SELECTING_TARGET
@@ -443,8 +452,9 @@ func use_spell(spell_card: Dictionary):
 		# 対象選択UIを表示
 		_show_target_selection_ui(target_type, target_info)
 	else:
-		# 即座に効果発動（target_type が空または "none" の場合）
-		execute_spell_effect(spell_card, {})
+		# target_type が空または "none" の場合 → 確認フェーズへ
+		var target_data = {"type": "none"}
+		_start_confirmation_phase("none", target_info, target_data)
 
 ## 対象選択UIを表示（領地コマンドと同じ方式）
 func _show_target_selection_ui(target_type: String, target_info: Dictionary):
@@ -614,6 +624,11 @@ func cancel_spell():
 	spell_used_this_turn = false
 	current_state = State.WAITING_FOR_INPUT
 	
+	# 確認フェーズ変数をクリア
+	confirmation_target_type = ""
+	confirmation_target_info = {}
+	confirmation_target_data = {}
+	
 	# スペル選択UIを再表示
 	_return_to_spell_selection()
 
@@ -651,6 +666,98 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
 	if spell_effect_executor:
 		await spell_effect_executor.execute_spell_on_all_creatures(spell_card, target_info)
+
+
+# ============================================
+# 確認フェーズ（全体対象/セルフ/世界呪い等）
+# ============================================
+
+## 確認フェーズを開始
+func _start_confirmation_phase(target_type: String, target_info: Dictionary, target_data: Dictionary):
+	current_state = State.CONFIRMING_EFFECT
+	confirmation_target_type = target_type
+	confirmation_target_info = target_info
+	confirmation_target_data = target_data
+	
+	# 対象をハイライト表示
+	var target_count = TargetSelectionHelper.show_confirmation_highlights(self, target_type, target_info)
+	
+	# 対象がいない場合（all_creaturesで防魔等で0体）
+	if target_type == "all_creatures" and target_count == 0:
+		if ui_manager and ui_manager.phase_label:
+			ui_manager.phase_label.text = "対象となるクリーチャーがいません"
+		await get_tree().create_timer(1.0).timeout
+		cancel_spell()
+		return
+	
+	# 説明テキストを表示
+	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = confirmation_text
+	
+	# ナビゲーションボタン設定（決定/戻る）
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): _confirm_spell_effect(),  # 決定
+			func(): _cancel_confirmation()    # 戻る
+		)
+
+
+## 確認フェーズ: 効果発動を確定
+func _confirm_spell_effect():
+	if current_state != State.CONFIRMING_EFFECT:
+		return
+	
+	# ハイライトとマーカーをクリア
+	TargetSelectionHelper.clear_all_highlights(self)
+	TargetSelectionHelper.hide_selection_marker(self)
+	TargetSelectionHelper.clear_confirmation_markers(self)
+	
+	# ナビゲーションを無効化
+	if ui_manager:
+		ui_manager.disable_navigation()
+	
+	# 効果を実行
+	var target_type = confirmation_target_type
+	var target_info = confirmation_target_info
+	var target_data = confirmation_target_data
+	
+	# 確認フェーズ変数をクリア
+	confirmation_target_type = ""
+	confirmation_target_info = {}
+	confirmation_target_data = {}
+	
+	# 対象タイプに応じて実行
+	match target_type:
+		"self":
+			execute_spell_effect(selected_spell_card, target_data)
+		"all_creatures":
+			_execute_spell_on_all_creatures(selected_spell_card, target_info)
+		"all_players":
+			execute_spell_effect(selected_spell_card, target_data)
+		"world":
+			execute_spell_effect(selected_spell_card, target_data)
+		"none", _:
+			execute_spell_effect(selected_spell_card, target_data)
+
+
+## 確認フェーズ: キャンセル
+func _cancel_confirmation():
+	if current_state != State.CONFIRMING_EFFECT:
+		return
+	
+	# ハイライトとマーカーをクリア
+	TargetSelectionHelper.clear_all_highlights(self)
+	TargetSelectionHelper.hide_selection_marker(self)
+	TargetSelectionHelper.clear_confirmation_markers(self)
+	
+	# 確認フェーズ変数をクリア
+	confirmation_target_type = ""
+	confirmation_target_info = {}
+	confirmation_target_data = {}
+	
+	# スペルをキャンセル
+	cancel_spell()
 
 ## カメラを使用者に戻す
 func _return_camera_to_player():
