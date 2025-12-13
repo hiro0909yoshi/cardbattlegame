@@ -1,7 +1,7 @@
 # マップシステム仕様
 
 **バージョン**: 1.1  
-**最終更新**: 2025年12月2日
+**最終更新**: 2025年12月13日
 
 ---
 
@@ -524,6 +524,7 @@ CheckpointTile
 - [周回システム実装ノート](../implementation_notes/lap_system_implementation.md)
 - [条件付きステータスバフシステム](conditional_stat_buff_system.md)
 - [スキルシステム設計](skills_design.md)
+- [グローバルナビゲーションボタン設計ガイド](global_navigation_buttons.md)
 
 ---
 
@@ -541,5 +542,5 @@ CheckpointTile
 
 ---
 
-**最終更新**: 2025年12月2日  
+**最終更新**: 2025年12月13日  
 **作成者**: Development Team
