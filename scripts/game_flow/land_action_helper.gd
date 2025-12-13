@@ -172,6 +172,7 @@ static func update_move_destination_ui(handler):
 	
 	if handler.move_destinations.is_empty():
 		handler.ui_manager.phase_label.text = "移動可能なマスがありません"
+		_hide_move_creature_info(handler)
 		return
 	
 	var current_tile = handler.move_destinations[handler.current_destination_index]
@@ -181,6 +182,9 @@ static func update_move_destination_ui(handler):
 	text += "[Enter: 確定] [C: 戻る]"
 	
 	handler.ui_manager.phase_label.text = text
+	
+	# 移動先にクリーチャーがいる場合、情報パネルを表示
+	_show_move_creature_info(handler, current_tile)
 
 ## クリーチャー交換実行
 static func execute_swap_creature(handler) -> bool:
@@ -278,6 +282,8 @@ static func _confirm_move_selection(handler):
 
 ## 移動を確定
 static func confirm_move(handler, dest_tile_index: int):
+	# クリーチャー情報パネルを閉じる
+	_hide_move_creature_info(handler)
 	
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.move_source_tile) or not handler.board_system.tile_nodes.has(dest_tile_index):
 		handler.close_land_command()
@@ -740,3 +746,62 @@ static func update_terrain_selection_ui(handler):
 	# 現在選択中の属性をハイライト
 	var current_element = handler.terrain_options[handler.current_terrain_index]
 	handler.ui_manager.land_command_ui.highlight_terrain_button(current_element)
+
+
+# ============================================
+# 移動先クリーチャー情報パネル
+# ============================================
+
+## 移動先の情報パネルを表示（クリーチャーがいれば情報パネル、いなければ土地情報）
+static func _show_move_creature_info(handler, tile_index: int) -> void:
+	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
+		_hide_move_creature_info(handler)
+		return
+	
+	var tile = handler.board_system.tile_nodes[tile_index]
+	if not tile:
+		_hide_move_creature_info(handler)
+		return
+	
+	# クリーチャーがいる場合
+	if not tile.creature_data.is_empty():
+		# 土地情報パネルを閉じる
+		_hide_land_info_panel(handler)
+		
+		if handler.ui_manager and handler.ui_manager.creature_info_panel_ui:
+			handler.ui_manager.creature_info_panel_ui.show_view_mode(tile.creature_data, tile_index, false)
+	else:
+		# クリーチャーがいない場合は土地情報を表示
+		_hide_creature_info_panel(handler)
+		
+		var tile_info = handler.board_system.get_tile_info(tile_index)
+		var element = tile_info.get("element", "neutral")
+		var level = tile_info.get("level", 1)
+		_show_land_info_panel(handler, element, level)
+
+
+## クリーチャー情報パネルを非表示
+static func _hide_move_creature_info(handler) -> void:
+	_hide_creature_info_panel(handler)
+	_hide_land_info_panel(handler)
+
+
+## クリーチャー情報パネルのみ非表示
+static func _hide_creature_info_panel(handler) -> void:
+	if not handler.ui_manager or not handler.ui_manager.creature_info_panel_ui:
+		return
+	handler.ui_manager.creature_info_panel_ui.hide_panel(false)
+
+
+## 土地情報パネルを表示
+static func _show_land_info_panel(handler, element: String, level: int) -> void:
+	if not handler.land_info_panel:
+		return
+	handler.land_info_panel.show_land_info(element, level)
+
+
+## 土地情報パネルを非表示
+static func _hide_land_info_panel(handler) -> void:
+	if not handler.land_info_panel:
+		return
+	handler.land_info_panel.hide_land_info()

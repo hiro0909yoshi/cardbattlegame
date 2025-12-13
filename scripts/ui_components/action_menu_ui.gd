@@ -96,6 +96,104 @@ func hide_menu():
 		ui_manager_ref.disable_navigation()
 
 
+## 土地情報を表示（クリーチャーがいない移動先用）
+func show_land_info(element: String, level: int):
+	_create_land_info_panel(element, level)
+	visible = true
+
+
+## 土地情報パネルを非表示
+func hide_land_info():
+	if panel:
+		panel.queue_free()
+		panel = null
+	visible = false
+
+
+## 土地情報パネルを作成
+func _create_land_info_panel(element: String, level: int):
+	if panel:
+		panel.queue_free()
+	
+	panel = Panel.new()
+	panel.name = "LandInfoPanel"
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var margin = 30
+	var nav_button_width = 200
+	
+	# サイズ
+	var info_panel_width = 300
+	var info_panel_height = 140
+	
+	# ActionMenuと同じ位置（右端を揃える）
+	var panel_x: float
+	if position_left:
+		panel_x = margin
+	else:
+		# 上下ボタンの左側に配置
+		panel_x = viewport_size.x - info_panel_width - margin - nav_button_width - 700
+	var panel_y = (viewport_size.y - info_panel_height) / 2 - 100
+	
+	panel.position = Vector2(panel_x, panel_y)
+	panel.size = Vector2(info_panel_width, info_panel_height)
+	panel.z_index = 1000
+	
+	# パネルスタイル
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.1, 0.9)
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_color = Color(0.5, 0.5, 0.5, 1)
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	panel.add_theme_stylebox_override("panel", style)
+	
+	add_child(panel)
+	
+	# タイトルラベル
+	var title_label = Label.new()
+	title_label.text = "移動先"
+	title_label.position = Vector2(15, 15)
+	title_label.size = Vector2(info_panel_width - 30, 35)
+	title_label.add_theme_font_size_override("font_size", 28)
+	title_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+	panel.add_child(title_label)
+	
+	# 属性名を日本語に変換
+	var element_name = element
+	var element_color = Color.WHITE
+	match element:
+		"fire":
+			element_name = "火"
+			element_color = Color(1.0, 0.4, 0.3)
+		"water":
+			element_name = "水"
+			element_color = Color(0.3, 0.6, 1.0)
+		"earth":
+			element_name = "地"
+			element_color = Color(0.8, 0.6, 0.3)
+		"wind":
+			element_name = "風"
+			element_color = Color(0.4, 0.9, 0.5)
+		"neutral":
+			element_name = "無"
+			element_color = Color(0.7, 0.7, 0.7)
+	
+	# 属性・レベル情報
+	var info_label = Label.new()
+	info_label.text = "属性: %s　Lv: %d" % [element_name, level]
+	info_label.position = Vector2(15, 60)
+	info_label.size = Vector2(270, 60)
+	info_label.add_theme_font_size_override("font_size", 36)
+	info_label.add_theme_color_override("font_color", element_color)
+	panel.add_child(info_label)
+
+
 ## UIManager参照を設定
 func set_ui_manager(manager) -> void:
 	ui_manager_ref = manager

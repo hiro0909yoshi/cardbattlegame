@@ -929,25 +929,19 @@ static func format_target_info(target_data: Dictionary, current_index: int, tota
 # クリーチャー情報パネル
 # ============================================
 
-## ターゲットにクリーチャーがいる場合、情報パネルを表示
-## type: "creature" → 直接クリーチャーデータを使用
-## type: "land" → タイルからクリーチャーを取得
+## ターゲットがクリーチャーの場合、情報パネルを表示
 static func _show_creature_info_panel(handler, target_data: Dictionary) -> void:
 	var target_type = target_data.get("type", "")
-	var creature_data: Dictionary = {}
 	var tile_index = target_data.get("tile_index", -1)
 	
-	# クリーチャー対象の場合
-	if target_type == "creature":
-		creature_data = target_data.get("creature", {})
-	# 土地対象の場合、タイルにクリーチャーがいるか確認
-	elif target_type == "land" and tile_index >= 0:
-		if handler.board_system and handler.board_system.tile_nodes.has(tile_index):
-			var tile = handler.board_system.tile_nodes[tile_index]
-			if tile and not tile.creature_data.is_empty():
-				creature_data = tile.creature_data
+	# クリーチャー対象でない場合はパネルを閉じる
+	if target_type != "creature":
+		_hide_creature_info_panel(handler)
+		return
 	
-	# クリーチャーがいない場合はパネルを閉じる
+	var creature_data = target_data.get("creature", {})
+	
+	# クリーチャーデータがない場合はパネルを閉じる
 	if creature_data.is_empty():
 		_hide_creature_info_panel(handler)
 		return

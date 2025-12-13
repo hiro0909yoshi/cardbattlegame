@@ -58,6 +58,9 @@ var pending_move_attacker_item: Dictionary = {}
 var pending_move_defender_item: Dictionary = {}
 var is_waiting_for_move_defender_item: bool = false
 
+# 移動先土地情報表示用
+var land_info_panel = null
+
 ## 参照
 var ui_manager = null
 var board_system = null
@@ -85,6 +88,9 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
 		ui_manager.level_up_selected.connect(_on_level_up_selected)
+	
+	# 土地情報パネルを初期化
+	_setup_land_info_panel()
 
 ## 領地コマンドを開く
 func open_land_command(player_id: int):
@@ -299,6 +305,9 @@ func cancel():
 	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
+		
+		# クリーチャー情報パネルを閉じる
+		LandActionHelper._hide_move_creature_info(self)
 		
 		if move_source_tile >= 0:
 			LandSelectionHelper.show_selection_marker(self, move_source_tile)
@@ -678,3 +687,21 @@ func _execute_simple_move_battle(dest_index: int, attacker_data: Dictionary, att
 ## 地形変化実行
 func execute_terrain_change() -> bool:
 	return LandActionHelper.execute_terrain_change(self)
+
+
+## 土地情報パネルの初期化
+func _setup_land_info_panel():
+	if land_info_panel:
+		return
+	
+	var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
+	if not ActionMenuUIClass:
+		return
+	
+	land_info_panel = ActionMenuUIClass.new()
+	land_info_panel.name = "LandInfoPanel"
+	land_info_panel.set_position_left(false)  # 右側（上下ボタンの左）に配置
+	
+	if ui_manager:
+		land_info_panel.set_ui_manager(ui_manager)
+		ui_manager.add_child(land_info_panel)
