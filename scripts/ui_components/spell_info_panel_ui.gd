@@ -9,7 +9,6 @@ signal selection_cancelled
 signal panel_closed
 
 # UI要素（シーンから取得）
-@onready var background_overlay: ColorRect = $BackgroundOverlay
 @onready var main_container: HBoxContainer = $MainContainer
 @onready var left_panel: Control = $MainContainer/LeftPanel
 @onready var right_panel: Control = $MainContainer/RightPanel
@@ -37,10 +36,6 @@ const CARD_SCALE = 1.12
 
 
 func _ready():
-	# 背景オーバーレイのクリックイベント
-	if background_overlay:
-		background_overlay.gui_input.connect(_on_overlay_input)
-	
 	# 初期状態は非表示
 	hide_panel()
 
@@ -157,18 +152,6 @@ func _update_right_panel():
 
 
 # === イベントハンドラ ===
-
-func _on_overlay_input(event: InputEvent):
-	# 背景クリックでキャンセル
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var click_pos = event.global_position
-		
-		# MainContainer外のクリックならキャンセル
-		if main_container:
-			var container_rect = main_container.get_global_rect()
-			if not container_rect.has_point(click_pos):
-				_on_back_action()
-
 
 func _on_confirm_action():
 	"""決定ボタン押下時"""

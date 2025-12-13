@@ -100,60 +100,103 @@ func _select_creature(available_creatures: Array) -> void:
 		_end_mystic_phase()
 		return
 	
-	# SpellAndMysticUI を取得または作成
-	var spell_and_mystic_ui = ui_manager.get_node_or_null("SpellAndMysticUI")
-	if not spell_and_mystic_ui:
-		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
-		if not SpellAndMysticUIClass:
+	# ActionMenuUI を取得または作成
+	var action_menu = ui_manager.get_node_or_null("MysticActionMenu")
+	if not action_menu:
+		var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
+		if not ActionMenuUIClass:
 			_end_mystic_phase()
 			return
 		
-		spell_and_mystic_ui = SpellAndMysticUIClass.new()
-		spell_and_mystic_ui.name = "SpellAndMysticUI"
-		spell_and_mystic_ui.set_ui_manager(ui_manager)
-		ui_manager.add_child(spell_and_mystic_ui)
+		action_menu = ActionMenuUIClass.new()
+		action_menu.name = "MysticActionMenu"
+		action_menu.set_ui_manager(ui_manager)
+		action_menu.set_menu_size(650, 850, 130, 44, 40)  # 領地コマンドと同じサイズ
+		action_menu.set_position_left(false)  # 右側（上下ボタンの左側）に配置
+		ui_manager.add_child(action_menu)
 	
-	# クリーチャー選択UIを表示
-	spell_and_mystic_ui.show_creature_selection(available_creatures)
+	# クリーチャーメニュー項目を作成
+	var menu_items: Array = []
+	for creature in available_creatures:
+		var creature_data = creature.get("creature_data", {})
+		var name_text = creature_data.get("name", "Unknown")
+		var tile_index = creature.get("tile_index", -1)
+		menu_items.append({
+			"text": "%s (タイル%d)" % [name_text, tile_index],
+			"color": Color(0.3, 0.5, 0.7),
+			"icon": "🐉",
+			"disabled": false,
+			"data": creature
+		})
 	
-	# クリーチャー選択を待機
-	var selected_index = await spell_and_mystic_ui.creature_selected
+	# 選択変更時のカメラフォーカス
+	if not action_menu.selection_changed.is_connected(_on_creature_selection_changed):
+		action_menu.selection_changed.connect(_on_creature_selection_changed)
+	
+	# メニュー表示
+	action_menu.show_menu(menu_items, "秘術を使うクリーチャー")
+	
+	# 最初のクリーチャーにカメラフォーカス
+	if not available_creatures.is_empty():
+		_focus_camera_on_creature(available_creatures[0])
+	
+	# 選択を待機
+	var selected_index = await action_menu.item_selected
 	
 	if selected_index < 0 or selected_index >= available_creatures.size():
-		spell_and_mystic_ui.hide_all()
+		# キャンセルされた場合、メニューを閉じてスペルフェーズに戻る
+		action_menu.hide_menu()
+		if spell_phase_handler_ref:
+			spell_phase_handler_ref._return_to_spell_selection()
 		_end_mystic_phase()
 		return
 	
 	var selected_creature = available_creatures[selected_index]
 	
 	# 秘術選択に進む
-	await _select_mystic_art_from_creature(selected_creature, spell_and_mystic_ui)
+	await _select_mystic_art_from_creature(selected_creature, action_menu)
 
 
 ## 秘術選択
-func _select_mystic_art_from_creature(selected_creature: Dictionary, spell_and_mystic_ui: Control) -> void:
+func _select_mystic_art_from_creature(selected_creature: Dictionary, action_menu) -> void:
 	var mystic_arts = selected_creature.get("mystic_arts", [])
 	
 	if mystic_arts.is_empty():
-		spell_and_mystic_ui.hide_all()
+		action_menu.hide_menu()
 		_end_mystic_phase()
 		return
 	
-	# 秘術選択UIを表示
-	spell_and_mystic_ui.show_mystic_art_selection(mystic_arts)
+	# 秘術メニュー項目を作成
+	var menu_items: Array = []
+	for mystic_art in mystic_arts:
+		var cost = mystic_art.get("cost", 0)
+		var name_text = mystic_art.get("name", "Unknown")
+		menu_items.append({
+			"text": "%s [%dG]" % [name_text, cost],
+			"color": Color(0.6, 0.3, 0.7),
+			"icon": "✨",
+			"disabled": false,
+			"data": mystic_art
+		})
+	
+	# メニュー表示
+	action_menu.show_menu(menu_items, "使用する秘術")
 	
 	# 秘術選択を待機
-	var selected_index = await spell_and_mystic_ui.mystic_art_selected
+	var selected_index = await action_menu.item_selected
 	
 	if selected_index < 0 or selected_index >= mystic_arts.size():
-		spell_and_mystic_ui.hide_all()
+		action_menu.hide_menu()
+		# キャンセルされた場合、スペルフェーズに戻る
+		if spell_phase_handler_ref:
+			spell_phase_handler_ref._return_to_spell_selection()
 		_end_mystic_phase()
 		return
 	
 	var mystic_art_selected = mystic_arts[selected_index]
 	
 	# UIを非表示
-	spell_and_mystic_ui.hide_all()
+	action_menu.hide_menu()
 	
 	# ターゲット選択に進む
 	await _select_target(selected_creature, mystic_art_selected)
@@ -841,3 +884,34 @@ func _get_game_stats() -> Dictionary:
 	if not spell_phase_handler_ref.game_flow_manager:
 		return {}
 	return spell_phase_handler_ref.game_flow_manager.game_stats
+
+
+# ============ カメラフォーカス ============
+
+## クリーチャー選択変更時のコールバック
+func _on_creature_selection_changed(_index: int, data: Variant) -> void:
+	if data == null or not data is Dictionary:
+		return
+	_focus_camera_on_creature(data)
+
+
+## クリーチャーのタイルにカメラをフォーカス
+func _focus_camera_on_creature(creature_info: Dictionary) -> void:
+	var tile_index = creature_info.get("tile_index", -1)
+	if tile_index < 0:
+		return
+	
+	if not board_system_ref or not board_system_ref.tile_nodes.has(tile_index):
+		return
+	
+	var tile = board_system_ref.tile_nodes[tile_index]
+	var camera = board_system_ref.camera
+	
+	if not camera:
+		return
+	
+	# カメラを土地の上方に移動
+	var tile_pos = tile.global_position
+	var camera_offset = Vector3(12, 15, 12)
+	camera.position = tile_pos + camera_offset
+	camera.look_at(tile_pos, Vector3.UP)

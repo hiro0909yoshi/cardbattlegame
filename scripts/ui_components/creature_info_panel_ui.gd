@@ -10,7 +10,6 @@ signal selection_cancelled
 signal panel_closed
 
 # UI要素（シーンから取得）
-@onready var background_overlay: ColorRect = $BackgroundOverlay
 @onready var main_container: HBoxContainer = $MainContainer
 @onready var left_panel: Control = $MainContainer/LeftPanel
 @onready var right_panel: Control = $MainContainer/RightPanel
@@ -48,10 +47,6 @@ const CARD_SCALE = 1.12  # 0.8 × 1.4 = 1.12
 
 
 func _ready():
-	# 背景オーバーレイのクリックイベント
-	if background_overlay:
-		background_overlay.gui_input.connect(_on_overlay_input)
-	
 	# 初期状態は非表示
 	hide_panel()
 
@@ -291,77 +286,6 @@ func _get_element_short_name(element: String) -> String:
 
 
 # === イベントハンドラ ===
-
-func _on_overlay_input(event: InputEvent):
-	if not is_selection_mode:
-		var click_pos: Vector2 = Vector2.ZERO
-		var is_click = false
-		
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			click_pos = event.global_position
-			is_click = true
-		elif event is InputEventScreenTouch and event.pressed:
-			click_pos = event.position
-			is_click = true
-		
-		if is_click:
-			# 領地コマンドパネルの範囲内かチェック
-			if ui_manager_ref and ui_manager_ref.land_command_ui:
-				var land_ui = ui_manager_ref.land_command_ui
-				
-				# action_menu_panelが表示中でその範囲内なら
-				if land_ui.action_menu_panel and land_ui.action_menu_panel.visible:
-					var panel_rect = Rect2(land_ui.action_menu_panel.global_position, land_ui.action_menu_panel.size)
-					if panel_rect.has_point(click_pos):
-						# パネルを閉じて、ボタンのコールバックを直接呼び出す
-						hide_panel()
-						_trigger_action_menu_button(land_ui, click_pos)
-						return
-				
-				# level_selection_panelが表示中でその範囲内なら
-				if land_ui.level_selection_panel and land_ui.level_selection_panel.visible:
-					var panel_rect = Rect2(land_ui.level_selection_panel.global_position, land_ui.level_selection_panel.size)
-					if panel_rect.has_point(click_pos):
-						# パネルを閉じて、ボタンのコールバックを直接呼び出す
-						hide_panel()
-						_trigger_level_selection_button(land_ui, click_pos)
-						return
-			
-			# それ以外の場所ならパネルを閉じる
-			hide_panel()
-
-
-## アクションメニューのボタンを直接トリガー
-func _trigger_action_menu_button(land_ui, click_pos: Vector2):
-	# 各ボタンの位置をチェックして対応するコールバックを呼び出す
-	for key in land_ui.action_menu_buttons.keys():
-		var btn = land_ui.action_menu_buttons[key]
-		if btn and is_instance_valid(btn):
-			var btn_rect = Rect2(btn.global_position, btn.size)
-			if btn_rect.has_point(click_pos):
-				match key:
-					"level_up":
-						land_ui._on_action_level_up_pressed()
-					"move":
-						land_ui._on_action_move_pressed()
-					"swap":
-						land_ui._on_action_swap_pressed()
-					"terrain":
-						land_ui._on_action_terrain_change_pressed()
-				return
-
-
-## レベル選択パネルのボタンを直接トリガー
-func _trigger_level_selection_button(land_ui, click_pos: Vector2):
-	# 各レベルボタンの位置をチェック
-	for level in land_ui.level_selection_buttons.keys():
-		var btn = land_ui.level_selection_buttons[level]
-		if btn and is_instance_valid(btn):
-			var btn_rect = Rect2(btn.global_position, btn.size)
-			if btn_rect.has_point(click_pos):
-				land_ui._on_level_selected(level)
-				return
-
 
 func _on_confirm_action():
 	if is_selection_mode:

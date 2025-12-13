@@ -5,19 +5,24 @@ extends Node
 
 # シグナル
 signal level_up_selected(target_level: int, cost: int)
+signal action_selected(action_name: String)
 
 # UI要素
 # 注: land_command_buttonはGlobalActionButtonsに移行済み
-var action_menu_panel: Panel = null
+var action_menu_panel: Panel = null  # 互換性のため残す（非表示判定用）
+var action_menu_ui: Control = null  # ActionMenuUI
 var level_selection_panel: Panel = null
 var terrain_selection_panel: Panel = null  # 地形選択パネル
-var action_menu_buttons = {}  # "level_up", "move", "swap", "terrain"
+var action_menu_buttons = {}  # "level_up", "move", "swap", "terrain" - 互換性のため残す
 var level_selection_buttons = {}  # レベル選択ボタン
 var terrain_selection_buttons = {}  # 地形選択ボタン（fire, water, earth, wind）
 var current_level_label: Label = null
 var current_terrain_label: Label = null  # 現在の属性表示
 var terrain_cost_label: Label = null  # 地形変化コスト表示
 var selected_tile_for_action: int = -1
+
+# 現在の防御型状態（ActionMenuUI用）
+var current_is_defensive: bool = false
 
 # システム参照
 var player_system_ref = null
@@ -74,13 +79,10 @@ func hide_land_command_ui():
 
 ## アクションメニュー表示
 func show_action_menu(tile_index: int):
-	if not action_menu_panel:
-		return
-	
 	selected_tile_for_action = tile_index
-	action_menu_panel.visible = true
 	
-	# クリーチャー情報パネルを表示
+	# 防御型チェック
+	current_is_defensive = false
 	if board_system_ref and board_system_ref.tile_nodes.has(tile_index):
 		var tile = board_system_ref.tile_nodes[tile_index]
 		var creature = tile.creature_data if tile else {}
@@ -89,25 +91,129 @@ func show_action_menu(tile_index: int):
 		if not creature.is_empty() and ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
 			ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index, false)
 		
-		# 防御型チェック: 移動ボタンを無効化
+		# 防御型チェック
 		var creature_type = creature.get("creature_type", "normal")
-		
-		if action_menu_buttons.has("move"):
-			if creature_type == "defensive":
-				action_menu_buttons["move"].disabled = true
-				action_menu_buttons["move"].text = "🚶 [M] 移動 (防御型)"
-			else:
-				action_menu_buttons["move"].disabled = false
-				action_menu_buttons["move"].text = "🚶 [M] 移動"
+		current_is_defensive = (creature_type == "defensive")
 	
-	# ナビゲーションはLandSelectionHelper.confirm_land_selection()で設定済み
+	# ActionMenuUIを作成または取得
+	_ensure_action_menu_ui()
+	
+	# メニュー項目を作成
+	var menu_items = _create_action_menu_items()
+	
+	# メニュー表示
+	if action_menu_ui:
+		action_menu_ui.set_position_left(false)  # 右側（上下ボタンの左）に配置
+		action_menu_ui.show_menu(menu_items, "アクション選択")
+	
+	# 互換性のためaction_menu_panelのvisibleも設定
+	if action_menu_panel:
+		action_menu_panel.visible = false  # 旧パネルは使わない
+
+
+## アクションメニュー用の項目を作成
+func _create_action_menu_items() -> Array:
+	var items: Array = []
+	
+	# レベルアップ
+	items.append({
+		"text": "[L] レベルアップ",
+		"color": Color(0.2, 0.6, 0.8),
+		"icon": "📈",
+		"disabled": false,
+		"action": "level_up"
+	})
+	
+	# 移動（防御型は無効）
+	items.append({
+		"text": "[M] 移動" + (" (防御型)" if current_is_defensive else ""),
+		"color": Color(0.6, 0.4, 0.8),
+		"icon": "🚶",
+		"disabled": current_is_defensive,
+		"action": "move"
+	})
+	
+	# 交換
+	items.append({
+		"text": "[S] 交換",
+		"color": Color(0.8, 0.6, 0.2),
+		"icon": "🔄",
+		"disabled": false,
+		"action": "swap"
+	})
+	
+	# 地形変化
+	items.append({
+		"text": "[T] 地形変化",
+		"color": Color(0.3, 0.7, 0.4),
+		"icon": "🌍",
+		"disabled": false,
+		"action": "terrain"
+	})
+	
+	return items
+
+
+## ActionMenuUIの作成/取得
+func _ensure_action_menu_ui():
+	if action_menu_ui:
+		return
+	
+	var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
+	if not ActionMenuUIClass:
+		return
+	
+	action_menu_ui = ActionMenuUIClass.new()
+	action_menu_ui.name = "LandActionMenu"
+	action_menu_ui.set_ui_manager(ui_manager_ref)
+	action_menu_ui.set_menu_size(650, 850, 140, 44, 40)  # 大きめサイズ、間隔広め
+	
+	# 選択シグナルを接続
+	action_menu_ui.item_selected.connect(_on_action_menu_item_selected)
+	
+	# 親ノードに追加（ui_layerを優先）
+	var parent_node = ui_layer if ui_layer else ui_manager_ref
+	if parent_node:
+		parent_node.add_child(action_menu_ui)
+
+
+## アクションメニュー項目選択時
+func _on_action_menu_item_selected(index: int):
+	if index < 0:
+		# キャンセル
+		_on_cancel_land_command_button_pressed()
+		return
+	
+	var items = _create_action_menu_items()
+	if index >= items.size():
+		return
+	
+	var action = items[index].get("action", "")
+	
+	# クリーチャー情報パネルを閉じる
+	_close_creature_info_panel_if_open()
+	
+	match action:
+		"level_up":
+			_on_action_level_up_pressed()
+		"move":
+			_on_action_move_pressed()
+		"swap":
+			_on_action_swap_pressed()
+		"terrain":
+			_on_action_terrain_change_pressed()
+
 
 ## アクションメニュー非表示
 ## clear_buttons: グローバルボタンをクリアするかどうか（デフォルト: true）
 func hide_action_menu(clear_buttons: bool = true):
+	if action_menu_ui:
+		action_menu_ui.hide_menu()
+	
 	if action_menu_panel:
 		action_menu_panel.visible = false
-		selected_tile_for_action = -1
+	
+	selected_tile_for_action = -1
 	
 	# クリーチャー情報パネルも閉じる（グローバルボタンのクリアは呼び出し側で制御）
 	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
@@ -278,76 +384,10 @@ func _on_level_cancel_pressed():
 		if selected_tile_for_action >= 0:
 			show_action_menu(selected_tile_for_action)
 
-## アクションメニューパネル作成
-func create_action_menu_panel(parent: Node):
-	if action_menu_panel:
-		return
-		
-	action_menu_panel = Panel.new()
-	action_menu_panel.name = "ActionMenuPanel"
-	
-	# 右側に配置（大きめパネル）
-	var viewport_size = parent.get_viewport().get_visible_rect().size
-	var panel_width = 630  # 1.4倍
-	var panel_height = 840  # 1.4倍
-	
-	var panel_x = viewport_size.x - panel_width - 42  # 1.4倍
-	var panel_y = (viewport_size.y - panel_height) / 2 - 280  # 1.4倍
-	
-	action_menu_panel.position = Vector2(panel_x, panel_y)
-	action_menu_panel.size = Vector2(panel_width, panel_height)
-	action_menu_panel.z_index = 1000  # creature_info_panelより上に表示
-	action_menu_panel.visible = false
-	
-	# パネルスタイル
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.1, 0.85)
-	panel_style.border_width_left = 3
-	panel_style.border_width_right = 3
-	panel_style.border_width_top = 3
-	panel_style.border_width_bottom = 3
-	panel_style.border_color = Color(0.5, 0.5, 0.5, 1)
-	panel_style.corner_radius_top_left = 12
-	panel_style.corner_radius_top_right = 12
-	panel_style.corner_radius_bottom_left = 12
-	panel_style.corner_radius_bottom_right = 12
-	action_menu_panel.add_theme_stylebox_override("panel", panel_style)
-	
-	parent.add_child(action_menu_panel)
-	
-	# ボタンを作成（大きめサイズ、タイトル削除で上から配置）※1.4倍
-	var button_y = 42
-	var button_spacing = 56
-	var button_height = 140
-	var button_width = 574
-	
-	# レベルアップボタン
-	var level_up_btn = _create_large_menu_button("📈 [L] レベルアップ", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.2, 0.6, 0.8))
-	level_up_btn.pressed.connect(_on_action_level_up_pressed)
-	action_menu_panel.add_child(level_up_btn)
-	action_menu_buttons["level_up"] = level_up_btn
-	button_y += button_height + button_spacing
-	
-	# 移動ボタン
-	var move_btn = _create_large_menu_button("🚶 [M] 移動", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.6, 0.4, 0.8))
-	move_btn.pressed.connect(_on_action_move_pressed)
-	action_menu_panel.add_child(move_btn)
-	action_menu_buttons["move"] = move_btn
-	button_y += button_height + button_spacing
-	
-	# 交換ボタン
-	var swap_btn = _create_large_menu_button("🔄 [S] 交換", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.8, 0.6, 0.2))
-	swap_btn.pressed.connect(_on_action_swap_pressed)
-	action_menu_panel.add_child(swap_btn)
-	action_menu_buttons["swap"] = swap_btn
-	button_y += button_height + button_spacing
-	
-	# 地形変化ボタン
-	var terrain_btn = _create_large_menu_button("🌍 [T] 地形変化", Vector2(28, button_y), Vector2(button_width, button_height), Color(0.4, 0.8, 0.4))
-	terrain_btn.pressed.connect(_on_action_terrain_change_pressed)
-	action_menu_panel.add_child(terrain_btn)
-	action_menu_buttons["terrain"] = terrain_btn
-	# 戻るボタンはグローバルアクションボタンに移行済み
+## アクションメニューパネル作成（ActionMenuUIに移行済み、互換性のため残す）
+func create_action_menu_panel(_parent: Node):
+	# ActionMenuUIを使用するため、旧パネルは作成しない
+	pass
 
 ## 大きめメニューボタン作成ヘルパー
 func _create_large_menu_button(text: String, pos: Vector2, btn_size: Vector2, color: Color) -> Button:

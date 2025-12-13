@@ -631,18 +631,6 @@ func _on_creature_panel_cancelled():
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
 	
-	# 交換/移動モードの場合、領地のクリーチャー情報パネルを再表示
-	if selection_mode in ["swap", "move"] and game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
-		var handler = game_flow_manager_ref.land_command_handler
-		var tile_index = handler._swap_tile_index if selection_mode == "swap" else handler._move_from_tile_index
-		if tile_index >= 0 and game_flow_manager_ref.board_system_3d:
-			var board = game_flow_manager_ref.board_system_3d
-			if board.tile_nodes.has(tile_index):
-				var tile = board.tile_nodes[tile_index]
-				var creature = tile.creature_data if tile else {}
-				if not creature.is_empty() and ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-					ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index)
-	
 	# グローバルボタンを再登録
 	_register_back_button_for_current_mode()
 

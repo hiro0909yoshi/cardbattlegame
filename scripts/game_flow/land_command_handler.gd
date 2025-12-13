@@ -294,8 +294,7 @@ func cancel():
 			ui_manager.land_command_ui.hide_terrain_selection()
 			ui_manager.land_command_ui.show_action_menu(selected_tile_index)
 		
-		# ナビゲーション設定は最後
-		_set_action_selection_navigation()
+		# ナビゲーションはActionMenuUI内で設定される
 	
 	elif current_state == State.SELECTING_MOVE_DEST:
 		# 移動先選択中ならアクション選択に戻る
@@ -313,8 +312,7 @@ func cancel():
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 		
-		# ナビゲーション設定は最後
-		_set_action_selection_navigation()
+		# ナビゲーションはActionMenuUI内で設定される
 	
 	elif current_state == State.SELECTING_LEVEL:
 		# レベル選択中ならアクション選択に戻る
@@ -329,8 +327,7 @@ func cancel():
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 		
-		# ナビゲーション設定は最後
-		_set_action_selection_navigation()
+		# ナビゲーションはActionMenuUI内で設定される
 	
 	elif current_state == State.SELECTING_SWAP:
 		# 交換クリーチャー選択中ならアクション選択に戻る
@@ -347,12 +344,15 @@ func cancel():
 		if ui_manager and ui_manager.card_selection_ui:
 			ui_manager.card_selection_ui.hide_selection()
 		
+		# クリーチャー情報パネルを閉じる
+		if ui_manager and ui_manager.creature_info_panel_ui:
+			ui_manager.creature_info_panel_ui.hide_panel(false)
+		
 		# アクションメニューを表示
 		if ui_manager and ui_manager.has_method("show_action_menu"):
 			ui_manager.show_action_menu(selected_tile_index)
 		
-		# ナビゲーション設定は最後（hide_selectionでクリアされるため）
-		_set_action_selection_navigation()
+		# ナビゲーションはActionMenuUI内で設定される
 		
 	elif current_state == State.SELECTING_ACTION:
 		# アクション選択中なら土地選択に戻る

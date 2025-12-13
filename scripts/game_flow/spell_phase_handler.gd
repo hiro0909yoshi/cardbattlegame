@@ -650,6 +650,9 @@ func _return_to_spell_selection():
 	
 	# グローバルナビゲーションをスペル選択用に再設定
 	_setup_spell_selection_navigation()
+	
+	# 秘術ボタンを再表示
+	_show_spell_phase_buttons()
 
 ## スペル効果を実行（SpellEffectExecutorに委譲）
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):

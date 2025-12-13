@@ -27,7 +27,25 @@ static func preview_land(handler, tile_index: int) -> bool:
 	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)
 	TargetSelectionHelper.highlight_tile(handler, tile_index)
 	
+	# クリーチャー情報パネルを表示
+	_show_creature_info_for_tile(handler, tile_index)
+	
 	return true
+
+
+## タイルのクリーチャー情報パネルを表示
+static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
+	if not handler.ui_manager or not handler.ui_manager.creature_info_panel_ui:
+		return
+	
+	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
+		return
+	
+	var tile = handler.board_system.tile_nodes[tile_index]
+	var creature = tile.creature_data if tile else {}
+	
+	if not creature.is_empty():
+		handler.ui_manager.creature_info_panel_ui.show_view_mode(creature, tile_index, false)
 
 ## 土地選択を確定してアクションメニューを表示
 ## 
@@ -42,14 +60,7 @@ static func confirm_land_selection(handler) -> bool:
 	handler.current_state = handler.State.SELECTING_ACTION
 	handler.land_selected.emit(handler.selected_tile_index)
 	
-	# アクション選択用ナビゲーション（戻るのみ）
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
-			Callable(),  # 決定なし
-			func(): handler.cancel()  # 戻る
-		)
-	
-	# アクション選択UIを表示
+	# アクション選択UIを表示（ナビゲーションはActionMenuUI内で設定される）
 	if handler.ui_manager and handler.ui_manager.has_method("show_action_menu"):
 		handler.ui_manager.show_action_menu(handler.selected_tile_index)
 	
