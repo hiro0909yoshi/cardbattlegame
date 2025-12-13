@@ -120,10 +120,10 @@ func _apply_permanent_ap_change(handler: Node, tile_index: int, effect: Dictiona
 	if not creature_data.has("base_up_ap"):
 		creature_data["base_up_ap"] = 0
 	
-	var base_ap = creature_data.get("ap", 0)
-	var old_base_up_ap = creature_data.get("base_up_ap", 0)
+	var base_ap = int(creature_data.get("ap", 0))
+	var old_base_up_ap = int(creature_data.get("base_up_ap", 0))
 	var old_total_ap = base_ap + old_base_up_ap
-	var new_base_up_ap = old_base_up_ap + value
+	var new_base_up_ap = old_base_up_ap + int(value)
 	
 	# 最終APが0未満にならないよう調整
 	var new_total_ap = base_ap + new_base_up_ap

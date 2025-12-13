@@ -487,7 +487,7 @@ func _update_target_selection():
 	
 	var target = available_targets[current_target_index]
 	
-	# 汎用ヘルパーを使用して視覚的に選択
+	# 汎用ヘルパーを使用して視覚的に選択（クリーチャー情報パネルも自動表示）
 	TargetSelectionHelper.select_target_visually(self, target)
 	
 	# UI更新
@@ -555,7 +555,7 @@ func _confirm_target_selection():
 	
 	var selected_target = available_targets[current_target_index]
 	
-	# 選択をクリア
+	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
 	
 	# タイル選択モードの場合（SpellCreatureMove用）
@@ -580,7 +580,7 @@ func _confirm_target_selection():
 
 ## 対象選択をキャンセル
 func _cancel_target_selection():
-	# 選択をクリア
+	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
 	
 	# タイル選択モードの場合（SpellCreatureMove用）
@@ -1135,3 +1135,4 @@ func _is_lands_required_disabled() -> bool:
 func _on_hand_updated_for_buttons():
 	# グローバルボタンに移行したため、手動での位置更新は不要
 	pass
+

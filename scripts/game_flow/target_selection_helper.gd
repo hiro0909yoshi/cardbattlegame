@@ -369,6 +369,9 @@ static func select_target_visually(handler, target_data: Dictionary):
 		
 		# ハイライトを表示
 		highlight_tile(handler, tile_index)
+	
+	# クリーチャー対象の場合、情報パネルを表示
+	_show_creature_info_panel(handler, target_data)
 
 ## 対象選択を完全にクリア（マーカー、ハイライト）
 ## 
@@ -379,6 +382,9 @@ static func clear_selection(handler):
 	
 	# マーカーを非表示
 	hide_selection_marker(handler)
+	
+	# クリーチャー情報パネルを非表示
+	_hide_creature_info_panel(handler)
 
 # ============================================
 # 入力ヘルパー
@@ -917,3 +923,59 @@ static func format_target_info(target_data: Dictionary, current_index: int, tota
 	text += "
 [Enter: 次へ] [C: 閉じる]"
 	return text
+
+
+# ============================================
+# クリーチャー情報パネル
+# ============================================
+
+## ターゲットにクリーチャーがいる場合、情報パネルを表示
+## type: "creature" → 直接クリーチャーデータを使用
+## type: "land" → タイルからクリーチャーを取得
+static func _show_creature_info_panel(handler, target_data: Dictionary) -> void:
+	var target_type = target_data.get("type", "")
+	var creature_data: Dictionary = {}
+	var tile_index = target_data.get("tile_index", -1)
+	
+	# クリーチャー対象の場合
+	if target_type == "creature":
+		creature_data = target_data.get("creature", {})
+	# 土地対象の場合、タイルにクリーチャーがいるか確認
+	elif target_type == "land" and tile_index >= 0:
+		if handler.board_system and handler.board_system.tile_nodes.has(tile_index):
+			var tile = handler.board_system.tile_nodes[tile_index]
+			if tile and not tile.creature_data.is_empty():
+				creature_data = tile.creature_data
+	
+	# クリーチャーがいない場合はパネルを閉じる
+	if creature_data.is_empty():
+		_hide_creature_info_panel(handler)
+		return
+	
+	# handlerからui_managerを取得
+	var ui_manager = null
+	if handler.has_method("get") and handler.get("ui_manager"):
+		ui_manager = handler.ui_manager
+	elif "ui_manager" in handler:
+		ui_manager = handler.ui_manager
+	
+	if not ui_manager or not ui_manager.creature_info_panel_ui:
+		return
+	
+	# setup_buttons=false でナビゲーションボタンを設定しない
+	ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+
+
+## クリーチャー情報パネルを非表示
+static func _hide_creature_info_panel(handler) -> void:
+	# handlerからui_managerを取得
+	var ui_manager = null
+	if handler.has_method("get") and handler.get("ui_manager"):
+		ui_manager = handler.ui_manager
+	elif "ui_manager" in handler:
+		ui_manager = handler.ui_manager
+	
+	if not ui_manager or not ui_manager.creature_info_panel_ui:
+		return
+	
+	ui_manager.creature_info_panel_ui.hide_panel(false)  # clear_buttons=false

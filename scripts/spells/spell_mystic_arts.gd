@@ -145,6 +145,7 @@ func _select_creature(available_creatures: Array) -> void:
 	
 	if selected_index < 0 or selected_index >= available_creatures.size():
 		# キャンセルされた場合、メニューを閉じてスペルフェーズに戻る
+		_hide_creature_info_panel()
 		action_menu.hide_menu()
 		if spell_phase_handler_ref:
 			spell_phase_handler_ref._return_to_spell_selection()
@@ -152,6 +153,9 @@ func _select_creature(available_creatures: Array) -> void:
 		return
 	
 	var selected_creature = available_creatures[selected_index]
+	
+	# クリーチャー情報パネルを閉じる
+	_hide_creature_info_panel()
 	
 	# 秘術選択に進む
 	await _select_mystic_art_from_creature(selected_creature, action_menu)
@@ -915,3 +919,33 @@ func _focus_camera_on_creature(creature_info: Dictionary) -> void:
 	var camera_offset = Vector3(12, 15, 12)
 	camera.position = tile_pos + camera_offset
 	camera.look_at(tile_pos, Vector3.UP)
+	
+	# クリーチャー情報パネルを表示
+	var creature_data = creature_info.get("creature_data", {})
+	if not creature_data.is_empty():
+		_show_creature_info_panel(creature_data, tile_index)
+
+
+## クリーチャー情報パネルを表示
+func _show_creature_info_panel(creature_data: Dictionary, tile_index: int) -> void:
+	if not spell_phase_handler_ref or not spell_phase_handler_ref.ui_manager:
+		return
+	
+	var ui_manager = spell_phase_handler_ref.ui_manager
+	var info_panel = ui_manager.creature_info_panel_ui
+	
+	if info_panel and info_panel.has_method("show_view_mode"):
+		# setup_buttons=false でナビゲーションボタンを設定しない（ActionMenuUIが管理）
+		info_panel.show_view_mode(creature_data, tile_index, false)
+
+
+## クリーチャー情報パネルを非表示
+func _hide_creature_info_panel() -> void:
+	if not spell_phase_handler_ref or not spell_phase_handler_ref.ui_manager:
+		return
+	
+	var ui_manager = spell_phase_handler_ref.ui_manager
+	var info_panel = ui_manager.creature_info_panel_ui
+	
+	if info_panel and info_panel.has_method("hide_panel"):
+		info_panel.hide_panel(false)  # clear_buttons=false

@@ -98,7 +98,8 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		# === ステータス呪い系 ===
 		"stat_boost":
-			if target_data.get("type") == "land":
+			var target_type = target_data.get("type", "")
+			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
 				if gfm and gfm.spell_curse_stat:
 					gfm.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
