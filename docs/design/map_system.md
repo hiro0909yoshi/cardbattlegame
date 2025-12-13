@@ -343,14 +343,45 @@ func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id
 
 ### UI操作
 
-| 選択タイプ | キー操作 | 説明 |
-|-----------|---------|------|
-| 分岐タイル選択 | ←→ + Enter | タイル番号から選択 |
-| 方向選択（+1/-1） | ↑↓ + Enter | 順方向/逆方向を選択 |
+#### 入力方法
+
+| 選択タイプ | キーボード | ボタン | 説明 |
+|-----------|-----------|--------|------|
+| 分岐タイル選択 | ←→ + Enter | - | タイル番号から選択 |
+| 方向選択（+1/-1） | ↑↓ + Enter | ▲▼ + ✓ | 順方向/逆方向を選択 |
+
+#### グローバルナビゲーションボタン（方向選択時）
+
+方向選択フェーズではグローバルナビゲーションボタンが表示されます。
+
+| ボタン | アイコン | 動作 |
+|--------|----------|------|
+| 決定 | ✓ | 選択確定 |
+| 上 | ▲ | 方向切り替え |
+| 下 | ▼ | 方向切り替え |
+
+※戻るボタン（✕）は非表示
+
+#### 実装詳細
+
+```gdscript
+# 方向選択開始時
+func _setup_direction_selection_navigation():
+    ui_manager.enable_navigation(
+        func(): _confirm_direction_selection(),  # 決定
+        Callable(),                               # 戻るなし
+        func(): _cycle_direction_selection(),    # 上
+        func(): _cycle_direction_selection()     # 下
+    )
+
+# 方向選択終了時
+func _clear_direction_selection_navigation():
+    ui_manager.disable_navigation()
+```
 
 **表示例**:
 ```
-進む方向を選択: [→タイル1←] タイル19 タイル20 [←→] [Enter確定]
+移動方向を選択: 順方向 →
 ```
 
 ---
@@ -433,7 +464,7 @@ if _has_movement_reverse_curse(player_id):
   - [x] ゲームスタート時の付与
   - [x] スペルワープ後の付与
 - [x] 分岐タイル選択UI（←→キー）
-- [x] 方向選択UI（↑↓キー）
+- [x] 方向選択UI（↑↓キー + グローバルナビゲーションボタン）
 - [x] 方向の推測（_infer_direction_from_choice）
 - [x] current_directionの記憶と継続
 - [x] 歩行逆転呪い（カオスパニック）

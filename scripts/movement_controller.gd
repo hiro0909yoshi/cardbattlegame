@@ -285,12 +285,13 @@ func _show_direction_selection(directions: Array) -> int:
 	available_directions = directions
 	selected_direction = directions[0]  # 初期選択
 	
-	print("[MovementController] 方向選択: ↑↓キーで選択、Enterで確定")
 	_update_direction_selection_ui()
+	_setup_direction_selection_navigation()
 	
 	# 選択完了を待つ
 	var result = await direction_selected
 	is_direction_selection_active = false
+	_clear_direction_selection_navigation()
 	
 	return result
 
@@ -298,7 +299,7 @@ func _show_direction_selection(directions: Array) -> int:
 func _update_direction_selection_ui():
 	if game_flow_manager and game_flow_manager.ui_manager:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
-		game_flow_manager.ui_manager.phase_label.text = "移動方向を選択: [↑↓] %s [Enter確定]" % dir_text
+		game_flow_manager.ui_manager.phase_label.text = "移動方向を選択: %s" % dir_text
 
 # シンプルな方向選択（+1 か -1 を選ぶ）
 func _show_simple_direction_selection() -> int:
@@ -306,13 +307,45 @@ func _show_simple_direction_selection() -> int:
 	available_directions = [1, -1]
 	selected_direction = 1  # デフォルトは順方向
 	
-	print("[MovementController] 方向選択: ↑↓キーで選択、Enter確定")
 	_update_direction_selection_ui()
+	_setup_direction_selection_navigation()
 	
 	var result = await direction_selected
 	is_direction_selection_active = false
+	_clear_direction_selection_navigation()
 	
 	return result
+
+# 方向選択用ナビゲーションボタンを設定
+func _setup_direction_selection_navigation():
+	if game_flow_manager and game_flow_manager.ui_manager:
+		game_flow_manager.ui_manager.enable_navigation(
+			func(): _confirm_direction_selection(),  # 決定
+			Callable(),  # 戻るなし
+			func(): _cycle_direction_selection(),    # 上
+			func(): _cycle_direction_selection()     # 下
+		)
+
+# 方向選択用ナビゲーションボタンをクリア
+func _clear_direction_selection_navigation():
+	if game_flow_manager and game_flow_manager.ui_manager:
+		game_flow_manager.ui_manager.disable_navigation()
+
+# 方向選択を切り替え（上下どちらでも同じ動作）
+func _cycle_direction_selection():
+	if not is_direction_selection_active:
+		return
+	if available_directions.size() > 1:
+		var current_idx = available_directions.find(selected_direction)
+		current_idx = (current_idx + 1) % available_directions.size()
+		selected_direction = available_directions[current_idx]
+		_update_direction_selection_ui()
+
+# 方向選択を確定
+func _confirm_direction_selection():
+	if not is_direction_selection_active:
+		return
+	direction_selected.emit(selected_direction)
 
 # 方向選択権（buffs）をチェック
 func _check_direction_choice_pending(player_id: int) -> bool:
@@ -386,23 +419,17 @@ func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id
 		return _get_player_current_direction(pid)
 
 # 入力処理（方向選択・分岐タイル選択用）
+# 注: 方向選択はGlobalActionButtonsでも処理されるが、キーボード直接入力も維持
 func _input(event):
 	# 方向選択（+1/-1）
 	if is_direction_selection_active:
-		if event is InputEventKey and event.pressed:
+		if event is InputEventKey and event.pressed and not event.echo:
 			if event.keycode == KEY_UP or event.keycode == KEY_DOWN:
-				# 方向を切り替え
-				if available_directions.size() > 1:
-					var current_idx = available_directions.find(selected_direction)
-					current_idx = (current_idx + 1) % available_directions.size()
-					selected_direction = available_directions[current_idx]
-					_update_direction_selection_ui()
+				_cycle_direction_selection()
 				get_viewport().set_input_as_handled()
 			
 			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-				# 確定
-				print("[MovementController] 方向選択確定: %s" % ("順方向" if selected_direction == 1 else "逆方向"))
-				direction_selected.emit(selected_direction)
+				_confirm_direction_selection()
 				get_viewport().set_input_as_handled()
 		return
 	

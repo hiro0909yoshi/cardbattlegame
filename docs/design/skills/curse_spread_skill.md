@@ -69,8 +69,8 @@
 ```json
 {
   "ability_parsed": {
-    "keywords": ["呪い拡散"],
-    "keyword_conditions": {}
+	"keywords": ["呪い拡散"],
+	"keyword_conditions": {}
   }
 }
 ```

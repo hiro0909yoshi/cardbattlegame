@@ -432,8 +432,9 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	terrain_changed.emit(tile_index, old_element, new_element)
 	
 	# クリーチャーがいる場合、永続バフを更新
-	if not old_creature.is_empty():
-		_apply_terrain_change_buff(old_creature)
+	# 注意: new_tile.creature_dataを直接渡して永続化
+	if not new_tile.creature_data.is_empty():
+		_apply_terrain_change_buff(new_tile.creature_data)
 	
 	return true
 
