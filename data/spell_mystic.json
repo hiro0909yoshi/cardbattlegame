@@ -9,10 +9,9 @@
 		"mp": 0
 	  },
 	  "effect_parsed": {
-		"target_type": "land",
+		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "enemy",
-		  "target_filter": "creature"
+		  "owner_filter": "enemy"
 		},
 		"effects": [
 		  {
@@ -88,7 +87,10 @@
 		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy",
-		  "creature_elements": ["fire", "wind"]
+		  "creature_elements": [
+			"fire",
+			"wind"
+		  ]
 		},
 		"effects": [
 		  {
@@ -107,7 +109,10 @@
 		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy",
-		  "creature_elements": ["water", "earth"]
+		  "creature_elements": [
+			"water",
+			"earth"
+		  ]
 		},
 		"effects": [
 		  {
@@ -126,7 +131,9 @@
 		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy",
-		  "creature_elements": ["neutral"]
+		  "creature_elements": [
+			"neutral"
+		  ]
 		},
 		"effects": [
 		  {
@@ -179,8 +186,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "any"
 		},
@@ -198,8 +204,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy"
 		},
@@ -329,8 +334,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy"
 		},
@@ -349,8 +353,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "own"
 		},
@@ -405,8 +408,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "own"
 		},
@@ -448,10 +450,9 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "any",
-		  "target_filter": "creature",
 		  "has_curse": true
 		},
 		"effects": [
@@ -513,8 +514,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy"
 		},
@@ -555,8 +555,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "any"
 		},
@@ -576,8 +575,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "any"
 		},
@@ -595,8 +593,7 @@
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "any"
 		},
@@ -640,8 +637,7 @@
 	  "rarity": "S",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "self"
 		},
@@ -697,8 +693,7 @@
 	  "rarity": "S",
 	  "type": "mystic",
 	  "effect_parsed": {
-		"target_type": "land",
-		"target_filter": "creature",
+		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "enemy"
 		},
