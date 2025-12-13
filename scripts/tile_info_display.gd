@@ -30,25 +30,38 @@ func setup_labels(tile_nodes: Dictionary, board_system):
 	
 	for index in tile_nodes:
 		var tile = tile_nodes[index]
-		
-		# Label3Dを作成
-		var label = Label3D.new()
-		label.name = "InfoLabel"
-		label.text = ""
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.no_depth_test = true
-		label.fixed_size = false  # falseにして遠近感を有効に
-		label.pixel_size = 0.02  # サイズ調整
-		label.position = Vector3(0, -0.7, 0)  # タイルの上に配置
-		label.modulate = Color.WHITE
-		
-		# フォント設定
-		label.font_size = 70
-		label.outline_size = 20
-		label.outline_modulate = Color.BLACK
-		
-		tile.add_child(label)
-		tile_labels[index] = label
+		create_label_for_tile(tile, index)
+
+
+## 単一タイル用のラベルを作成（地形変化時にも使用）
+func create_label_for_tile(tile: Node, tile_index: int) -> Label3D:
+	# 既存のラベルがあれば削除
+	if tile_labels.has(tile_index):
+		var old_label = tile_labels[tile_index]
+		if is_instance_valid(old_label):
+			old_label.queue_free()
+		tile_labels.erase(tile_index)
+	
+	# Label3Dを作成
+	var label = Label3D.new()
+	label.name = "InfoLabel"
+	label.text = ""
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.fixed_size = false  # falseにして遠近感を有効に
+	label.pixel_size = 0.02  # サイズ調整
+	label.position = Vector3(0, -0.7, 0)  # タイルの上に配置
+	label.modulate = Color.WHITE
+	
+	# フォント設定
+	label.font_size = 70
+	label.outline_size = 20
+	label.outline_modulate = Color.BLACK
+	
+	tile.add_child(label)
+	tile_labels[tile_index] = label
+	
+	return label
 
 
 # 単一タイルの表示を更新

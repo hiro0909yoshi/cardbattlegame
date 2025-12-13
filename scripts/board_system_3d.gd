@@ -398,29 +398,7 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	
 	# TileInfoDisplayに新しいタイルのラベルを追加
 	if tile_info_display:
-		# 古いラベルを削除
-		if tile_info_display.tile_labels.has(tile_index):
-			var old_label = tile_info_display.tile_labels[tile_index]
-			if is_instance_valid(old_label):
-				old_label.queue_free()
-			tile_info_display.tile_labels.erase(tile_index)
-		
-		# 新しいラベルを作成
-		var label = Label3D.new()
-		label.name = "InfoLabel"
-		label.text = ""
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.no_depth_test = true
-		label.fixed_size = false
-		label.pixel_size = 0.005
-		label.position = Vector3(0, 0.5, 1.5)
-		label.modulate = Color.WHITE
-		label.font_size = 70
-		label.outline_size = 8
-		label.outline_modulate = Color.BLACK
-		
-		new_tile.add_child(label)
-		tile_info_display.tile_labels[tile_index] = label
+		tile_info_display.create_label_for_tile(new_tile, tile_index)
 	
 	# 全体表示更新
 	if tile_data_manager:
