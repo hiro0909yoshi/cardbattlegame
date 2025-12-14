@@ -49,9 +49,9 @@
 ```
 入力発生
   → 入力経路（手札 or ボタン）
-    → ロックチェック（GameFlowManager.is_input_locked()）
-      → ロック中なら無視
-      → 解除中なら処理実行
+	→ ロックチェック（GameFlowManager.is_input_locked()）
+	  → ロック中なら無視
+	  → 解除中なら処理実行
 ```
 
 ### ロック/アンロックのタイミング
@@ -150,26 +150,26 @@ var _input_locked: bool = false
 var _input_lock_reason: String = ""  # デバッグ用
 
 func lock_input(reason: String = ""):
-    _input_locked = true
-    _input_lock_reason = reason
-    if reason:
-        print("[InputLock] LOCKED: ", reason)
+	_input_locked = true
+	_input_lock_reason = reason
+	if reason:
+		print("[InputLock] LOCKED: ", reason)
 
 func unlock_input():
-    if _input_locked:
-        print("[InputLock] UNLOCKED (was: ", _input_lock_reason, ")")
-    _input_locked = false
-    _input_lock_reason = ""
+	if _input_locked:
+		print("[InputLock] UNLOCKED (was: ", _input_lock_reason, ")")
+	_input_locked = false
+	_input_lock_reason = ""
 
 func is_input_locked() -> bool:
-    return _input_locked
+	return _input_locked
 
 # 安全なアンロック（タイムアウト付き）- オプション
 func unlock_input_after(seconds: float):
-    await get_tree().create_timer(seconds).timeout
-    if _input_locked:
-        print("[InputLock] TIMEOUT UNLOCK")
-        unlock_input()
+	await get_tree().create_timer(seconds).timeout
+	if _input_locked:
+		print("[InputLock] TIMEOUT UNLOCK")
+		unlock_input()
 ```
 
 #### 1.2 UIManager にロックチェック追加
@@ -177,13 +177,13 @@ func unlock_input_after(seconds: float):
 # scripts/ui_manager.gd
 
 func _on_card_button_pressed(card_index: int):
-    # ロックチェック
-    if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
-        print("[InputLock] Card input ignored (locked)")
-        return
-    
-    if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
-        card_selection_ui.on_card_selected(card_index)
+	# ロックチェック
+	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
+		print("[InputLock] Card input ignored (locked)")
+		return
+	
+	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
+		card_selection_ui.on_card_selected(card_index)
 ```
 
 #### 1.3 GlobalActionButtons にロックチェック追加
@@ -193,21 +193,21 @@ func _on_card_button_pressed(card_index: int):
 var game_flow_manager_ref = null  # 参照追加
 
 func _is_input_locked() -> bool:
-    if game_flow_manager_ref and game_flow_manager_ref.has_method("is_input_locked"):
-        return game_flow_manager_ref.is_input_locked()
-    return false
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("is_input_locked"):
+		return game_flow_manager_ref.is_input_locked()
+	return false
 
 func _on_confirm_pressed():
-    if _is_input_locked():
-        return
-    if _confirm_callback.is_valid():
-        _confirm_callback.call()
+	if _is_input_locked():
+		return
+	if _confirm_callback.is_valid():
+		_confirm_callback.call()
 
 func _on_back_pressed():
-    if _is_input_locked():
-        return
-    if _back_callback.is_valid():
-        _back_callback.call()
+	if _is_input_locked():
+		return
+	if _back_callback.is_valid():
+		_back_callback.call()
 
 # 他のボタンも同様
 ```
@@ -218,12 +218,12 @@ func _on_back_pressed():
 ```gdscript
 # カード選択が確定した時（情報パネル経由または直接）
 func _emit_card_selected(card_index: int):
-    # ロック
-    if game_flow_manager_ref:
-        game_flow_manager_ref.lock_input("card_selected")
-    
-    hide_selection()
-    emit_signal("card_selected", card_index)
+	# ロック
+	if game_flow_manager_ref:
+		game_flow_manager_ref.lock_input("card_selected")
+	
+	hide_selection()
+	emit_signal("card_selected", card_index)
 ```
 
 #### 2.2 各Handler - 処理完了時のアンロック
@@ -232,22 +232,22 @@ func _emit_card_selected(card_index: int):
 ```gdscript
 # 例: LandCommandHandler
 func _return_to_action_selection():
-    current_state = State.SELECTING_ACTION
-    _show_action_menu()
-    
-    # 入力待ち状態になったのでアンロック
-    game_flow_manager.unlock_input()
+	current_state = State.SELECTING_ACTION
+	_show_action_menu()
+	
+	# 入力待ち状態になったのでアンロック
+	game_flow_manager.unlock_input()
 ```
 
 **パターンB: フェーズ完了時**
 ```gdscript
 # 例: ItemPhaseHandler
 func complete_item_phase():
-    current_state = State.INACTIVE
-    # ... クリーンアップ処理 ...
-    
-    game_flow_manager.unlock_input()
-    item_phase_completed.emit()
+	current_state = State.INACTIVE
+	# ... クリーンアップ処理 ...
+	
+	game_flow_manager.unlock_input()
+	item_phase_completed.emit()
 ```
 
 ---
@@ -327,10 +327,10 @@ func complete_item_phase():
 ```gdscript
 # デバッグ用強制アンロック
 func _input(event):
-    if event is InputEventKey and event.pressed and event.keycode == KEY_F12:
-        if OS.is_debug_build():
-            print("[DEBUG] Force unlock input")
-            unlock_input()
+	if event is InputEventKey and event.pressed and event.keycode == KEY_F12:
+		if OS.is_debug_build():
+			print("[DEBUG] Force unlock input")
+			unlock_input()
 ```
 
 ### リスク2: ロック範囲が広すぎる
@@ -413,15 +413,15 @@ Step 1-3 で基本的な連打防止が機能し、Step 4-5 で完全な状態�
 
 ```
 [ユーザー操作]
-    ↓
+	↓
 [ロックチェック] ← ロック中なら無視
-    ↓
+	↓
 [ロック実行] ← 操作受付時に即ロック
-    ↓
+	↓
 [処理実行]
-    ↓
+	↓
 [次の入力待ち状態へ]
-    ↓
+	↓
 [アンロック] ← UIManager.enable_navigation()等で自動解除
 ```
 

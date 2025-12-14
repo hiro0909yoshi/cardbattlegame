@@ -179,12 +179,12 @@ func _format_stat_bonus(data: Dictionary) -> String:
 	var hp = stat_bonus.get("hp", 0)
 	
 	if ap != 0:
-		var sign = "+" if ap > 0 else ""
-		parts.append("AP%s%d" % [sign, ap])
+		var sign_str = "+" if ap > 0 else ""
+		parts.append("AP%s%d" % [sign_str, ap])
 	
 	if hp != 0:
-		var sign = "+" if hp > 0 else ""
-		parts.append("HP%s%d" % [sign, hp])
+		var hp_sign_str = "+" if hp > 0 else ""
+		parts.append("HP%s%d" % [hp_sign_str, hp])
 	
 	return "  ".join(parts)
 

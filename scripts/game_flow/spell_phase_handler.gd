@@ -8,6 +8,7 @@ const GameConstants = preload("res://scripts/game_constants.gd")
 signal spell_phase_started()
 signal spell_phase_completed()
 signal spell_passed()
+@warning_ignore("unused_signal")  # spell_effect_executorでemitされる（将来の拡張用）
 signal spell_used(spell_card: Dictionary)
 signal target_selection_required(spell_card: Dictionary, target_type: String)
 signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了時
@@ -1090,8 +1091,9 @@ func _initialize_card_selection_handler():
 	if game_flow_manager and game_flow_manager.spell_draw:
 		game_flow_manager.spell_draw.set_card_selection_handler(card_selection_handler)
 	
-	# 選択完了シグナルを接続
-	card_selection_handler.selection_completed.connect(_on_card_selection_completed)
+	# 選択完了シグナルを接続（重複接続防止）
+	if not card_selection_handler.selection_completed.is_connected(_on_card_selection_completed):
+		card_selection_handler.selection_completed.connect(_on_card_selection_completed)
 
 ## カード選択完了時のコールバック
 func _on_card_selection_completed():
@@ -1135,4 +1137,3 @@ func _is_lands_required_disabled() -> bool:
 func _on_hand_updated_for_buttons():
 	# グローバルボタンに移行したため、手動での位置更新は不要
 	pass
-

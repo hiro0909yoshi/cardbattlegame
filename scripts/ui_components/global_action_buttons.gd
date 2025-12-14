@@ -80,10 +80,11 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
-	style.corner_radius_top_left = BUTTON_SIZE / 2
-	style.corner_radius_top_right = BUTTON_SIZE / 2
-	style.corner_radius_bottom_left = BUTTON_SIZE / 2
-	style.corner_radius_bottom_right = BUTTON_SIZE / 2
+	var corner_radius := int(BUTTON_SIZE / 2)
+	style.corner_radius_top_left = corner_radius
+	style.corner_radius_top_right = corner_radius
+	style.corner_radius_bottom_left = corner_radius
+	style.corner_radius_bottom_right = corner_radius
 	style.border_width_top = 3
 	style.border_width_bottom = 3
 	style.border_width_left = 3

@@ -280,7 +280,7 @@ func _create_buttons(title: String):
 		button_y += button_height + button_spacing
 
 
-func _create_button(item: Dictionary, pos: Vector2, size: Vector2, index: int) -> Button:
+func _create_button(item: Dictionary, pos: Vector2, btn_size: Vector2, index: int) -> Button:
 	var btn = Button.new()
 	
 	var icon_text = item.get("icon", "")
@@ -288,7 +288,7 @@ func _create_button(item: Dictionary, pos: Vector2, size: Vector2, index: int) -
 	btn.text = icon_text + " " + text if not icon_text.is_empty() else text
 	
 	btn.position = pos
-	btn.size = size
+	btn.size = btn_size
 	btn.disabled = item.get("disabled", false)
 	btn.add_theme_font_size_override("font_size", font_size)
 	

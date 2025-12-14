@@ -5,7 +5,6 @@ extends Node
 
 # シグナル
 signal level_up_selected(target_level: int, cost: int)
-signal action_selected(action_name: String)
 
 # UI要素
 # 注: land_command_buttonはGlobalActionButtonsに移行済み

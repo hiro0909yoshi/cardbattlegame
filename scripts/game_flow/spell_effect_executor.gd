@@ -312,7 +312,6 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	var effects = parsed.get("effects", [])
 	
 	# 対象クリーチャーを取得
-	var target_filter = target_info.get("target_filter", "")
 	var targets = TargetSelectionHelper.get_valid_targets(handler, "creature", target_info)
 	
 	# 各対象に効果を適用

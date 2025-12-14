@@ -203,7 +203,7 @@ func _select_mystic_art_from_creature(selected_creature: Dictionary, action_menu
 	action_menu.hide_menu()
 	
 	# ターゲット選択に進む
-	await _select_target(selected_creature, mystic_art_selected)
+	_select_target(selected_creature, mystic_art_selected)
 
 
 ## ターゲット選択
@@ -237,13 +237,13 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 			"tile_index": selected_creature.get("tile_index", -1),
 			"player_id": current_mystic_player_id
 		}
-		await _start_mystic_confirmation(selected_creature, mystic_art, "self", target_info, target_data)
+		_start_mystic_confirmation(selected_creature, mystic_art, "self", target_info, target_data)
 		return
 	
 	# 全クリーチャー対象時 → 確認フェーズへ
 	if target_type == "all_creatures":
 		var target_data = {"type": "all_creatures"}
-		await _start_mystic_confirmation(selected_creature, mystic_art, "all_creatures", target_info, target_data)
+		_start_mystic_confirmation(selected_creature, mystic_art, "all_creatures", target_info, target_data)
 		return
 	
 	# 秘術選択状態を保存（ターゲット確定時に使用）
