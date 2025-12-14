@@ -44,60 +44,81 @@ theme_override_constants/separation = 0
 alignment = 1
 
 [node name="Control" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 75)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 20
 alignment = 1
 
 [node name="DeckButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "本
 "
 
 [node name="NeutralButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "無"
 
 [node name="FireButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "火"
 
 [node name="WaterButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "水"
 
 [node name="EarthButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "地"
 
 [node name="WindButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "風"
 
 [node name="ItemButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "具"
 
 [node name="SpellButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "魔"
 
 [node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
-custom_minimum_size = Vector2(100, 70)
+custom_minimum_size = Vector2(50, 100)
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
 text = "戻る"
 
 [node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
@@ -124,13 +145,15 @@ layout_mode = 2
 theme_override_constants/separation = 700
 
 [node name="CardCountLabel" type="Label" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 36
 text = "現在: 00 / 50枚"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="SaveButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
-custom_minimum_size = Vector2(125, 50)
+custom_minimum_size = Vector2(280, 200)
 layout_mode = 2
+theme_override_font_sizes/font_size = 36
 text = "保存"

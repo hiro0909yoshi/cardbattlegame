@@ -70,31 +70,31 @@ theme_override_constants/v_separation = 100
 columns = 2
 
 [node name="QuestButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "クエスト"
 
 [node name="SoloBattleButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "ソロバトル"
 
 [node name="NetBattleButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "ネット対戦"
 
 [node name="DeckButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "アルバム"
 
 [node name="SettingsButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "設定"
 
 [node name="ShopButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/CenterContainer/GridContainer"]
-custom_minimum_size = Vector2(200, 100)
+custom_minimum_size = Vector2(400, 200)
 layout_mode = 2
 text = "ショップ"

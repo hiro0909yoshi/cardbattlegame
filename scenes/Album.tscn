@@ -50,18 +50,18 @@ text = "アルバム"
 layout_mode = 2
 
 [node name="DeckEditButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(400, 200)
+custom_minimum_size = Vector2(800, 400)
 layout_mode = 2
 text = "デッキ編集"
 
 [node name="CardListButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(400, 200)
+custom_minimum_size = Vector2(800, 400)
 layout_mode = 2
 text = "所持カード一覧
 "
 
 [node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
-custom_minimum_size = Vector2(400, 200)
+custom_minimum_size = Vector2(800, 400)
 layout_mode = 2
 text = "戻る"
 
@@ -86,31 +86,31 @@ theme_override_constants/v_separation = 20
 columns = 2
 
 [node name="book1" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "初ブック"
 
 [node name="book2" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book3" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book4" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book5" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "ブック１"
 
 [node name="book6" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/ScrollContainer/GridContainer"]
-custom_minimum_size = Vector2(500, 200)
+custom_minimum_size = Vector2(1000, 400)
 layout_mode = 2
 text = "ブック１"

@@ -300,8 +300,8 @@ func _on_back_pressed():
 func create_debug_reset_button():
 	var debug_button = Button.new()
 	debug_button.text = "🔧 全データリセット"
-	debug_button.custom_minimum_size = Vector2(280, 84)  # 1.4倍
-	debug_button.add_theme_font_size_override("font_size", 22)  # 1.4倍
+	debug_button.custom_minimum_size = Vector2(280, 200)
+	debug_button.add_theme_font_size_override("font_size", 28)
 	debug_button.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # オレンジ色
 	
 	right_vbox.add_child(debug_button)
@@ -342,8 +342,8 @@ func _on_debug_reset_confirmed():
 func create_reset_button():
 	reset_button = Button.new()
 	reset_button.text = "リセット"
-	reset_button.custom_minimum_size = Vector2(280, 84)  # 1.4倍
-	reset_button.add_theme_font_size_override("font_size", 28)  # 1.4倍
+	reset_button.custom_minimum_size = Vector2(280, 200)
+	reset_button.add_theme_font_size_override("font_size", 36)
 	
 	# 警告色（赤っぽく）
 	reset_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
