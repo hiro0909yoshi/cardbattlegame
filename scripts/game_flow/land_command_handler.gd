@@ -115,6 +115,10 @@ func open_land_command(player_id: int):
 	current_land_selection_index = 0  # 最初の土地を選択
 	land_command_opened.emit()
 	
+	# 入力ロックを解除（土地選択待ち状態になった）
+	if game_flow_manager:
+		game_flow_manager.unlock_input()
+	
 	
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:

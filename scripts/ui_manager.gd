@@ -212,6 +212,8 @@ func create_ui(parent: Node):
 		if global_action_buttons.get_parent():
 			global_action_buttons.get_parent().remove_child(global_action_buttons)
 		ui_layer.add_child(global_action_buttons)
+		# GameFlowManager参照を設定（入力ロック用）
+		global_action_buttons.game_flow_manager_ref = game_flow_manager_ref
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -247,6 +249,10 @@ func hide_card_selection_ui():
 
 # カードボタンが押された（card.gdから呼ばれる）
 func _on_card_button_pressed(card_index: int):
+	# 入力ロックチェック
+	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
+		return
+	
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
 
@@ -334,6 +340,10 @@ func _on_cancel_land_command_button_pressed():
 ## ナビゲーションボタンを設定（推奨）
 ## 有効なCallableを渡したボタンのみ表示される
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
+	# 入力待ち状態になったのでロック解除
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
+	
 	# 後方互換変数も同期（register_xxx系との競合防止）
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
@@ -367,14 +377,23 @@ func _update_compat_buttons():
 		global_action_buttons.setup(_compat_confirm_cb, _compat_back_cb, _compat_up_cb, _compat_down_cb)
 
 func register_confirm_action(callback: Callable, _text: String = ""):
+	# 入力待ち状態になったのでロック解除
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	_compat_confirm_cb = callback
 	_update_compat_buttons()
 
 func register_back_action(callback: Callable, _text: String = ""):
+	# 入力待ち状態になったのでロック解除
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	_compat_back_cb = callback
 	_update_compat_buttons()
 
 func register_arrow_actions(up_callback: Callable, down_callback: Callable):
+	# 入力待ち状態になったのでロック解除
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	_compat_up_cb = up_callback
 	_compat_down_cb = down_callback
 	_update_compat_buttons()
@@ -413,6 +432,9 @@ func clear_special_button():
 		global_action_buttons.clear_special()
 
 func register_global_actions(confirm_callback: Callable, back_callback: Callable, _confirm_text: String = "", _back_text: String = ""):
+	# 入力待ち状態になったのでロック解除
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	_compat_confirm_cb = confirm_callback
 	_compat_back_cb = back_callback
 	_update_compat_buttons()

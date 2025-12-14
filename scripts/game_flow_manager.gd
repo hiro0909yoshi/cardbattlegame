@@ -58,6 +58,9 @@ var spell_player_move: SpellPlayerMove
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
+# 入力ロック機能（連打防止・フェーズ遷移中の入力ガード）
+var _input_locked: bool = false
+
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
 signal lap_completed(player_id: int)
@@ -831,3 +834,20 @@ func _is_current_player_human() -> bool:
 	if current_id < 0 or current_id >= player_is_cpu.size():
 		return true
 	return not player_is_cpu[current_id]
+
+
+# ============================================================
+# 入力ロック機能（連打防止）
+# ============================================================
+
+## 入力をロック
+func lock_input():
+	_input_locked = true
+
+## 入力ロックを解除
+func unlock_input():
+	_input_locked = false
+
+## 入力がロック中かどうか
+func is_input_locked() -> bool:
+	return _input_locked

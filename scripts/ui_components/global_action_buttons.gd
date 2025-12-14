@@ -21,6 +21,9 @@ var _special_callback: Callable = Callable()
 # 特殊ボタンのテキスト
 var _special_text: String = ""
 
+# GameFlowManager参照（入力ロック用）
+var game_flow_manager_ref = null
+
 # 定数
 const BUTTON_SIZE = 280
 const BUTTON_SPACING = 42
@@ -161,27 +164,52 @@ func _input(event):
 				get_viewport().set_input_as_handled()
 
 
+func _is_input_locked() -> bool:
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("is_input_locked"):
+		return game_flow_manager_ref.is_input_locked()
+	return false
+
+
 func _on_confirm_pressed():
+	if _is_input_locked():
+		return
+	# 入力をロック（連打防止）
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
+		game_flow_manager_ref.lock_input()
 	if _confirm_callback.is_valid():
 		_confirm_callback.call()
 
 
 func _on_back_pressed():
+	if _is_input_locked():
+		return
+	# 入力をロック（連打防止）
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
+		game_flow_manager_ref.lock_input()
 	if _back_callback.is_valid():
 		_back_callback.call()
 
 
 func _on_up_pressed():
+	if _is_input_locked():
+		return
 	if _up_callback.is_valid():
 		_up_callback.call()
 
 
 func _on_down_pressed():
+	if _is_input_locked():
+		return
 	if _down_callback.is_valid():
 		_down_callback.call()
 
 
 func _on_special_pressed():
+	if _is_input_locked():
+		return
+	# 入力をロック（連打防止）
+	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
+		game_flow_manager_ref.lock_input()
 	if _special_callback.is_valid():
 		_special_callback.call()
 

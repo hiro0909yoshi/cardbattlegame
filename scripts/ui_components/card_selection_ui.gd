@@ -46,6 +46,10 @@ func show_selection(current_player, mode: String = "summon"):
 		print("Error: CardSystem reference not set")
 		return
 	
+	# 入力ロックを解除（選択待ち状態になった）
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
+	
 	# 既存のボタンをクリア
 	cleanup_buttons()
 	
@@ -469,6 +473,17 @@ func cleanup_buttons():
 	selection_buttons.clear()
 	pass_button = null
 
+
+# カード選択を確定し、シグナルを発火する（入力ロック付き）
+func _confirm_card_selection(card_index: int):
+	# 入力をロック（連打防止）
+	if game_flow_manager_ref:
+		game_flow_manager_ref.lock_input()
+	
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
 # カードが選択された（外部から呼ばれる）
 func on_card_selected(card_index: int):
 	if not is_active:
@@ -478,8 +493,6 @@ func on_card_selected(card_index: int):
 	if not card_data:
 		return
 	
-	print("[CardSelectionUI] on_card_selected: index=", card_index, " mode=", selection_mode, " type=", card_data.get("type", ""), " name=", card_data.get("name", ""))
-	
 	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
 	if selection_mode == "spell" and card_data.get("type") == "spell":
 		_show_spell_info_panel(card_index, card_data)
@@ -488,15 +501,12 @@ func on_card_selected(card_index: int):
 	# アイテムフェーズの場合
 	if selection_mode == "item":
 		var card_type = card_data.get("type", "")
-		print("[CardSelectionUI] item phase: card_type=", card_type)
 		if card_type == "item":
 			# アイテムカード → アイテム情報パネル表示
-			print("[CardSelectionUI] showing item info panel")
 			_show_item_info_panel(card_index, card_data)
 			return
 		elif card_type == "creature":
 			# アイテムクリーチャーまたは援護クリーチャー → クリーチャー情報パネル表示
-			print("[CardSelectionUI] showing creature info panel for item")
 			_show_creature_info_panel_for_item(card_index, card_data)
 			return
 	
@@ -508,16 +518,14 @@ func on_card_selected(card_index: int):
 			return
 	
 	# 既存の動作
-	hide_selection()
-	emit_signal("card_selected", card_index)
+	_confirm_card_selection(card_index)
 
 
 # クリーチャー情報パネルを表示
 func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
 		# フォールバック：既存の動作
-		hide_selection()
-		emit_signal("card_selected", card_index)
+		_confirm_card_selection(card_index)
 		return
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
@@ -563,8 +571,7 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 	if not ui_manager_ref or not ui_manager_ref.spell_info_panel_ui:
 		# フォールバック：既存の動作
-		hide_selection()
-		emit_signal("card_selected", card_index)
+		_confirm_card_selection(card_index)
 		return
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
@@ -594,8 +601,7 @@ func _on_spell_panel_confirmed(card_data: Dictionary):
 	if ui_manager_ref and ui_manager_ref.spell_info_panel_ui:
 		ui_manager_ref.spell_info_panel_ui.hide_panel()
 	
-	hide_selection()
-	emit_signal("card_selected", card_index)
+	_confirm_card_selection(card_index)
 
 
 # スペル情報パネルでキャンセルされた
@@ -618,14 +624,9 @@ func _on_spell_panel_cancelled():
 
 # アイテム情報パネルを表示
 func _show_item_info_panel(card_index: int, card_data: Dictionary):
-	print("[CardSelectionUI] _show_item_info_panel: ui_manager_ref=", ui_manager_ref)
-	print("[CardSelectionUI] _show_item_info_panel: item_info_panel_ui=", ui_manager_ref.item_info_panel_ui if ui_manager_ref else "null")
-	
 	if not ui_manager_ref or not ui_manager_ref.item_info_panel_ui:
 		# フォールバック：既存の動作
-		print("[CardSelectionUI] _show_item_info_panel: FALLBACK - no panel")
-		hide_selection()
-		emit_signal("card_selected", card_index)
+		_confirm_card_selection(card_index)
 		return
 	
 	# 他のパネルを閉じる
@@ -647,7 +648,6 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 		ui_manager_ref.item_info_panel_ui.selection_cancelled.connect(_on_item_panel_cancelled)
 	
 	# アイテム情報パネルを表示
-	print("[CardSelectionUI] _show_item_info_panel: calling show_item_info")
 	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index)
 
 
@@ -660,8 +660,7 @@ func _on_item_panel_confirmed(card_data: Dictionary):
 	if ui_manager_ref and ui_manager_ref.item_info_panel_ui:
 		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
-	hide_selection()
-	emit_signal("card_selected", card_index)
+	_confirm_card_selection(card_index)
 
 
 # アイテム情報パネルでキャンセルされた
@@ -682,15 +681,12 @@ func _on_item_panel_cancelled():
 func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
 		# フォールバック：既存の動作
-		hide_selection()
-		emit_signal("card_selected", card_index)
+		_confirm_card_selection(card_index)
 		return
 	
 	# 他のパネルを閉じる
 	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
 		ui_manager_ref.item_info_panel_ui.hide_panel(false)
-	
-	print("[CardSelectionUI] _show_creature_info_panel_for_item: index=", card_index, " name=", card_data.get("name", ""))
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
@@ -734,8 +730,7 @@ func _on_item_creature_panel_confirmed(card_data: Dictionary):
 	var card_index = card_data.get("hand_index", pending_card_index)
 	pending_card_index = -1
 	
-	hide_selection()
-	emit_signal("card_selected", card_index)
+	_confirm_card_selection(card_index)
 
 
 # アイテムフェーズでクリーチャー情報パネルがキャンセルされた
@@ -790,8 +785,7 @@ func _on_creature_panel_confirmed(card_data: Dictionary):
 	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
 		ui_manager_ref.creature_info_panel_ui.hide_panel()
 	
-	hide_selection()
-	emit_signal("card_selected", card_index)
+	_confirm_card_selection(card_index)
 
 
 # クリーチャー情報パネルでキャンセルされた

@@ -51,7 +51,6 @@ func set_ui_manager(manager) -> void:
 
 ## アイテム情報パネルを表示（使用確認モード）
 func show_item_info(item_data: Dictionary, hand_index: int = -1):
-	print("[ItemInfoPanelUI] show_item_info: name=", item_data.get("name", ""), " id=", item_data.get("id", 0))
 	current_item_data = item_data
 	current_hand_index = hand_index
 	
@@ -59,7 +58,6 @@ func show_item_info(item_data: Dictionary, hand_index: int = -1):
 	
 	visible = true
 	is_visible_panel = true
-	print("[ItemInfoPanelUI] show_item_info: visible=", visible)
 	
 	# グローバルボタン設定（決定と戻る）
 	if ui_manager_ref:
