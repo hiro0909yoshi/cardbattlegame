@@ -20,8 +20,10 @@ var phase_label_ref: Label     # フェーズラベル参照
 # 状態
 var is_active = false          # 選択UI表示中か
 var selection_mode = ""        # "summon" or "battle"
+var current_selection_player_id: int = 0  # 現在選択中のプレイヤーID
 var pending_card_index: int = -1  # クリーチャー情報パネル確認待ちのカードインデックス
 var creature_info_panel_connected: bool = false  # シグナル接続済みフラグ
+var item_creature_panel_connected: bool = false  # アイテムフェーズ用シグナル接続済みフラグ
 
 # システム参照
 var card_system_ref: CardSystem = null
@@ -55,6 +57,7 @@ func show_selection(current_player, mode: String = "summon"):
 	
 	is_active = true
 	selection_mode = mode
+	current_selection_player_id = current_player.id  # 選択中のプレイヤーIDを保存
 	
 	# フェーズラベルを更新
 	update_phase_label(current_player, mode)
@@ -475,10 +478,27 @@ func on_card_selected(card_index: int):
 	if not card_data:
 		return
 	
+	print("[CardSelectionUI] on_card_selected: index=", card_index, " mode=", selection_mode, " type=", card_data.get("type", ""), " name=", card_data.get("name", ""))
+	
 	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
 	if selection_mode == "spell" and card_data.get("type") == "spell":
 		_show_spell_info_panel(card_index, card_data)
 		return
+	
+	# アイテムフェーズの場合
+	if selection_mode == "item":
+		var card_type = card_data.get("type", "")
+		print("[CardSelectionUI] item phase: card_type=", card_type)
+		if card_type == "item":
+			# アイテムカード → アイテム情報パネル表示
+			print("[CardSelectionUI] showing item info panel")
+			_show_item_info_panel(card_index, card_data)
+			return
+		elif card_type == "creature":
+			# アイテムクリーチャーまたは援護クリーチャー → クリーチャー情報パネル表示
+			print("[CardSelectionUI] showing creature info panel for item")
+			_show_creature_info_panel_for_item(card_index, card_data)
+			return
 	
 	# クリーチャー情報パネルを使用するか判定
 	# 召喚/交換モードでクリーチャーカードの場合
@@ -508,6 +528,14 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		return
 	
 	pending_card_index = card_index
+	
+	# アイテム用のシグナル接続を切断（重複呼び出し防止）
+	if item_creature_panel_connected:
+		if ui_manager_ref.creature_info_panel_ui.selection_confirmed.is_connected(_on_item_creature_panel_confirmed):
+			ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_item_creature_panel_confirmed)
+		if ui_manager_ref.creature_info_panel_ui.selection_cancelled.is_connected(_on_item_creature_panel_cancelled):
+			ui_manager_ref.creature_info_panel_ui.selection_cancelled.disconnect(_on_item_creature_panel_cancelled)
+		item_creature_panel_connected = false
 	
 	# シグナル接続（初回のみ）
 	if not creature_info_panel_connected:
@@ -588,6 +616,151 @@ func _on_spell_panel_cancelled():
 		_setup_spell_phase_back_button()
 
 
+# アイテム情報パネルを表示
+func _show_item_info_panel(card_index: int, card_data: Dictionary):
+	print("[CardSelectionUI] _show_item_info_panel: ui_manager_ref=", ui_manager_ref)
+	print("[CardSelectionUI] _show_item_info_panel: item_info_panel_ui=", ui_manager_ref.item_info_panel_ui if ui_manager_ref else "null")
+	
+	if not ui_manager_ref or not ui_manager_ref.item_info_panel_ui:
+		# フォールバック：既存の動作
+		print("[CardSelectionUI] _show_item_info_panel: FALLBACK - no panel")
+		hide_selection()
+		emit_signal("card_selected", card_index)
+		return
+	
+	# 他のパネルを閉じる
+	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
+	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+		var confirm_data = card_data.duplicate()
+		confirm_data["hand_index"] = card_index
+		_on_item_panel_confirmed(confirm_data)
+		return
+	
+	pending_card_index = card_index
+	
+	# シグナル接続（初回のみ）
+	if not ui_manager_ref.item_info_panel_ui.selection_confirmed.is_connected(_on_item_panel_confirmed):
+		ui_manager_ref.item_info_panel_ui.selection_confirmed.connect(_on_item_panel_confirmed)
+		ui_manager_ref.item_info_panel_ui.selection_cancelled.connect(_on_item_panel_cancelled)
+	
+	# アイテム情報パネルを表示
+	print("[CardSelectionUI] _show_item_info_panel: calling show_item_info")
+	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index)
+
+
+# アイテム情報パネルで確認された
+func _on_item_panel_confirmed(card_data: Dictionary):
+	var card_index = card_data.get("hand_index", pending_card_index)
+	pending_card_index = -1
+	
+	# 情報パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.item_info_panel_ui:
+		ui_manager_ref.item_info_panel_ui.hide_panel()
+	
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
+# アイテム情報パネルでキャンセルされた
+func _on_item_panel_cancelled():
+	pending_card_index = -1
+	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	
+	# 選択中のカードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+		card_script.currently_selected_card.deselect_card()
+	
+	# アイテム選択に戻る（ナビゲーション再設定）
+	_setup_item_phase_back_button()
+
+
+# アイテムフェーズでクリーチャー（アイテムクリーチャーまたは援護）の情報パネルを表示
+func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
+	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
+		# フォールバック：既存の動作
+		hide_selection()
+		emit_signal("card_selected", card_index)
+		return
+	
+	# 他のパネルを閉じる
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+		ui_manager_ref.item_info_panel_ui.hide_panel(false)
+	
+	print("[CardSelectionUI] _show_creature_info_panel_for_item: index=", card_index, " name=", card_data.get("name", ""))
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		var confirm_data = card_data.duplicate()
+		confirm_data["hand_index"] = card_index
+		_on_item_creature_panel_confirmed(confirm_data)
+		return
+	
+	pending_card_index = card_index
+	
+	# 召喚用のシグナル接続を一時的に切断（重複呼び出し防止）
+	if creature_info_panel_connected:
+		if ui_manager_ref.creature_info_panel_ui.selection_confirmed.is_connected(_on_creature_panel_confirmed):
+			ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_creature_panel_confirmed)
+		if ui_manager_ref.creature_info_panel_ui.selection_cancelled.is_connected(_on_creature_panel_cancelled):
+			ui_manager_ref.creature_info_panel_ui.selection_cancelled.disconnect(_on_creature_panel_cancelled)
+		creature_info_panel_connected = false
+	
+	# シグナル接続（初回のみ）- アイテムフェーズ用の専用ハンドラを使用
+	if not item_creature_panel_connected:
+		ui_manager_ref.creature_info_panel_ui.selection_confirmed.connect(_on_item_creature_panel_confirmed)
+		ui_manager_ref.creature_info_panel_ui.selection_cancelled.connect(_on_item_creature_panel_cancelled)
+		item_creature_panel_connected = true
+	
+	# カードデータにhand_indexを追加
+	var panel_data = card_data.duplicate()
+	panel_data["hand_index"] = card_index
+	
+	# 確認テキストを設定
+	var confirmation_text = "このクリーチャーを使用しますか？"
+	if SkillItemCreature.is_item_creature(card_data):
+		confirmation_text = "アイテムとして使用しますか？"
+	else:
+		confirmation_text = "援護として使用しますか？"
+	
+	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
+
+
+# アイテムフェーズでクリーチャー情報パネルが確認された
+func _on_item_creature_panel_confirmed(card_data: Dictionary):
+	var card_index = card_data.get("hand_index", pending_card_index)
+	pending_card_index = -1
+	
+	hide_selection()
+	emit_signal("card_selected", card_index)
+
+
+# アイテムフェーズでクリーチャー情報パネルがキャンセルされた
+func _on_item_creature_panel_cancelled():
+	pending_card_index = -1
+	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	
+	# 選択中のカードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+		card_script.currently_selected_card.deselect_card()
+	
+	# アイテム選択に戻る（ナビゲーション再設定）
+	_setup_item_phase_back_button()
+
+
+# アイテムフェーズの戻るボタン設定
+func _setup_item_phase_back_button():
+	if ui_manager_ref:
+		ui_manager_ref.enable_navigation(
+			Callable(),  # 決定なし
+			func(): _on_pass_button_pressed()  # 戻る→パス
+		)
+
+
 # スペルフェーズ用のナビゲーションを設定（決定 = サイコロへ）
 func _setup_spell_phase_back_button():
 	if ui_manager_ref:
@@ -665,14 +838,8 @@ func _get_card_data_for_index(card_index: int) -> Dictionary:
 	if not card_system_ref:
 		return {}
 	
-	# 現在のプレイヤーIDを取得
-	var player_id = 0
-	if game_flow_manager_ref and game_flow_manager_ref.player_system:
-		var current_player = game_flow_manager_ref.player_system.get_current_player()
-		if current_player:
-			player_id = current_player.id
-	
-	var hand_data = card_system_ref.get_all_cards_for_player(player_id)
+	# 選択中のプレイヤーIDを使用（防衛側アイテムフェーズなどに対応）
+	var hand_data = card_system_ref.get_all_cards_for_player(current_selection_player_id)
 	if card_index >= 0 and card_index < hand_data.size():
 		return hand_data[card_index]
 	return {}

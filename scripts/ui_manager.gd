@@ -22,6 +22,7 @@ var level_up_ui = null
 var debug_panel = null
 var creature_info_panel_ui: CreatureInfoPanelUI = null
 var spell_info_panel_ui: SpellInfoPanelUI = null
+var item_info_panel_ui: ItemInfoPanelUI = null
 
 # 基本UI要素
 # フェーズ表示（PhaseDisplayに移行済み）
@@ -85,6 +86,12 @@ func _ready():
 	spell_info_panel_ui = spell_info_scene.instantiate()
 	spell_info_panel_ui.set_ui_manager(self)
 	add_child(spell_info_panel_ui)
+	
+	# ItemInfoPanelUI初期化（シーンからインスタンス化）
+	var item_info_scene = preload("res://scenes/ui/item_info_panel.tscn")
+	item_info_panel_ui = item_info_scene.instantiate()
+	item_info_panel_ui.set_ui_manager(self)
+	add_child(item_info_panel_ui)
 	
 	# GlobalActionButtons初期化
 	global_action_buttons = GlobalActionButtons.new()

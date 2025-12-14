@@ -81,6 +81,7 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 
 ## 選択モードで表示（召喚/バトル時）
 func show_selection_mode(creature_data: Dictionary, confirmation_text: String = "召喚しますか？"):
+	print("[CreatureInfoPanelUI] show_selection_mode: name=", creature_data.get("name", ""), " id=", creature_data.get("id", 0))
 	current_creature_data = creature_data
 	current_confirmation_text = confirmation_text
 	is_selection_mode = true
@@ -133,13 +134,30 @@ func _update_display():
 
 
 func _update_card_display():
-	# 既存のカード表示をクリア
+	print("[CreatureInfoPanelUI] _update_card_display: START, left_panel children=", left_panel.get_child_count() if left_panel else 0)
+	
+	# 既存のカード表示をクリア（即座に削除）
 	if card_display and is_instance_valid(card_display):
+		print("[CreatureInfoPanelUI] _update_card_display: removing old card_display")
+		card_display.get_parent().remove_child(card_display)
 		card_display.queue_free()
 		card_display = null
 	
+	# 左パネルの他のカード表示も全てクリア
+	if left_panel:
+		var children_to_remove = []
+		for child in left_panel.get_children():
+			if child.has_method("load_card_data"):
+				children_to_remove.append(child)
+		for child in children_to_remove:
+			print("[CreatureInfoPanelUI] _update_card_display: removing leftover child=", child.name)
+			left_panel.remove_child(child)
+			child.queue_free()
+	
 	if not left_panel:
 		return
+	
+	print("[CreatureInfoPanelUI] _update_card_display: after cleanup, children=", left_panel.get_child_count())
 	
 	# カードシーンをロードして表示
 	var card_scene = preload("res://scenes/Card.tscn")
@@ -155,8 +173,11 @@ func _update_card_display():
 	
 	# カードデータを設定
 	var card_id = current_creature_data.get("id", 0)
+	print("[CreatureInfoPanelUI] _update_card_display: loading card_id=", card_id, " into new card_display=", card_display.name)
 	if card_display.has_method("load_card_data"):
 		card_display.load_card_data(card_id)
+	
+	print("[CreatureInfoPanelUI] _update_card_display: END, children=", left_panel.get_child_count())
 
 
 func _update_right_panel():
