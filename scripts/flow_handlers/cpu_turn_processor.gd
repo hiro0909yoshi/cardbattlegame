@@ -8,6 +8,7 @@ signal cpu_action_completed()
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # システム参照
 var board_system: BoardSystem3D
@@ -45,6 +46,10 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	var situation = _analyze_tile_situation(tile_info, player_index)
 	
 	match situation:
+		"special_tile":
+			# 特殊タイル（チェックポイント等）では何もせず完了
+			print("CPU: 特殊タイル - アクションなし")
+			_complete_action()
 		"empty_land":
 			_process_empty_land(current_player)
 		"own_land":
@@ -58,6 +63,12 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 
 # タイル状況を分析
 func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String:
+	# 特殊タイル（チェックポイント、ワープ等）は召喚不可
+	var tile_type_raw = tile_info.get("type", "")
+	var tile_type = str(tile_type_raw).to_lower() if tile_type_raw else ""
+	if TileHelper.is_special_type(tile_type):
+		return "special_tile"
+	
 	if tile_info["owner"] == -1:
 		return "empty_land"
 	elif tile_info["owner"] == player_index:

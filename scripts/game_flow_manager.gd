@@ -607,7 +607,11 @@ func move_camera_to_next_player():
 func on_player_won(player_id: int):
 	var player = player_system.players[player_id]
 	change_phase(GamePhase.SETUP)
-	ui_manager.phase_label.text = player.name + "の勝利！"
+	
+	# 勝利演出を表示
+	if ui_manager:
+		ui_manager.show_win_screen(player_id)
+	
 	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 
 # UI更新

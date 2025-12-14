@@ -100,9 +100,14 @@ func add_magic(player_id: int, amount: int):
 	print(player.name, ": 魔力 ", player.magic_power, "G (", 
 		"+" if amount >= 0 else "", amount, ")")
 	
-	# 勝利判定
-	if player.magic_power >= player.target_magic:
-		emit_signal("player_won", player_id)
+	# 勝利判定はチェックポイント通過時に行う（LapSystem）
+
+# 魔力を設定（初期値設定用）
+func set_magic(player_id: int, amount: int):
+	if player_id < 0 or player_id >= players.size():
+		return
+	players[player_id].magic_power = max(0, amount)
+	print(players[player_id].name, ": 魔力を", amount, "Gに設定")
 
 # 魔力を取得
 func get_magic(player_id: int) -> int:

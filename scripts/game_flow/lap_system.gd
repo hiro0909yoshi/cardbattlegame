@@ -58,12 +58,49 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	if not player_lap_state.has(player_id):
 		return
 	
+	# 勝利判定（チェックポイント通過時に魔力が目標以上なら勝利）
+	if _check_win_condition(player_id):
+		return  # 勝利処理で終了
+	
 	# チェックポイントフラグを立てる
 	player_lap_state[player_id][checkpoint_type] = true
 	
 	# N + S 両方揃ったか確認
 	if player_lap_state[player_id]["N"] and player_lap_state[player_id]["S"]:
 		complete_lap(player_id)
+
+## 勝利判定（チェックポイント通過時）
+func _check_win_condition(player_id: int) -> bool:
+	if not player_system:
+		return false
+	
+	var player = player_system.players[player_id]
+	var total_assets = calculate_total_assets(player_id)
+	var target_magic = player.target_magic
+	
+	if total_assets >= target_magic:
+		print("🎉 プレイヤー%d 勝利条件達成！ 総魔力: %d / %d 🎉" % [player_id + 1, total_assets, target_magic])
+		player_system.emit_signal("player_won", player_id)
+		return true
+	
+	return false
+
+## 総魔力を計算（所持魔力＋土地価値）
+func calculate_total_assets(player_id: int) -> int:
+	if not player_system or not board_system_3d:
+		return 0
+	
+	var assets = player_system.players[player_id].magic_power
+	
+	# 土地価値 = 通行料（連鎖ボーナス含む）
+	if board_system_3d != null and "tile_nodes" in board_system_3d:
+		for i in board_system_3d.tile_nodes:
+			var tile = board_system_3d.tile_nodes[i]
+			if tile.owner_id == player_id:
+				var toll = board_system_3d.calculate_toll(i)
+				assets += toll
+	
+	return assets
 
 ## 周回完了処理
 func complete_lap(player_id: int):

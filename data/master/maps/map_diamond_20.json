@@ -1,0 +1,30 @@
+{
+  "id": "map_diamond_20",
+  "name": "ダイヤモンド型",
+  "description": "基本のダイヤモンド型マップ。20マス。",
+  "tile_count": 20,
+  "tiles": [
+	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
+	{"index": 1, "type": "Neutral", "x": 4, "z": 0},
+	{"index": 2, "type": "Neutral", "x": 8, "z": 0},
+	{"index": 3, "type": "Neutral", "x": 12, "z": 0},
+	{"index": 4, "type": "Neutral", "x": 16, "z": 0},
+	{"index": 5, "type": "Warp", "x": 20, "z": 0, "warp_pair": 15},
+	{"index": 6, "type": "Fire", "x": 20, "z": 4},
+	{"index": 7, "type": "Fire", "x": 20, "z": 8},
+	{"index": 8, "type": "Fire", "x": 20, "z": 12},
+	{"index": 9, "type": "Water", "x": 20, "z": 16},
+	{"index": 10, "type": "Checkpoint", "x": 20, "z": 20, "checkpoint_type": "S"},
+	{"index": 11, "type": "Water", "x": 16, "z": 20},
+	{"index": 12, "type": "Water", "x": 12, "z": 20},
+	{"index": 13, "type": "Wind", "x": 8, "z": 20},
+	{"index": 14, "type": "Wind", "x": 4, "z": 20},
+	{"index": 15, "type": "Warp", "x": 0, "z": 20, "warp_pair": 5},
+	{"index": 16, "type": "Wind", "x": 0, "z": 16},
+	{"index": 17, "type": "Earth", "x": 0, "z": 12},
+	{"index": 18, "type": "Earth", "x": 0, "z": 8},
+	{"index": 19, "type": "Earth", "x": 0, "z": 4}
+  ],
+  "connections": {},
+  "loop_size": 20
+}

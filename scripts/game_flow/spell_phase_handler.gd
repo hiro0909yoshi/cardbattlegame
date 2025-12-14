@@ -179,9 +179,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# カード選択ハンドラーを初期化
 	_initialize_card_selection_handler()
 	
-	# CPUTurnProcessorを取得
-	if game_flow_manager and not cpu_turn_processor:
-		cpu_turn_processor = game_flow_manager.get_node_or_null("CPUTurnProcessor")
+	# CPUTurnProcessorを取得（BoardSystem3Dの子ノードから）
+	if board_system and not cpu_turn_processor:
+		cpu_turn_processor = board_system.get_node_or_null("CPUTurnProcessor")
 	
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:

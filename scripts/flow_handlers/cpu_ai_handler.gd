@@ -164,7 +164,7 @@ func select_cheapest_from_list(current_player, card_indices: Array) -> int:
 	for index in card_indices:
 		var card = card_system.get_card_data_for_player(current_player.id, index)
 		if not card.is_empty():
-			var cost = card.get("cost", 999)
+			var cost = calculate_card_cost(card, current_player.id)
 			if cost < min_cost:
 				min_cost = cost
 				best_index = index
@@ -176,10 +176,24 @@ func find_affordable_cards(current_player) -> Array:
 	if not card_system:
 		return []
 	
-	return card_system.find_affordable_cards_for_player(
-		current_player.id, 
-		current_player.magic_power
-	)
+	var affordable = []
+	var available_magic = current_player.magic_power
+	var hand_size = card_system.get_hand_size_for_player(current_player.id)
+	
+	for i in range(hand_size):
+		var card_data = card_system.get_card_data_for_player(current_player.id, i)
+		if card_data.is_empty():
+			continue
+		
+		# クリーチャーカードのみ対象
+		if card_data.get("type", "") != "creature":
+			continue
+		
+		var cost = calculate_card_cost(card_data, current_player.id)
+		if cost <= available_magic:
+			affordable.append(i)
+	
+	return affordable
 
 # カードが支払い可能かチェック
 func can_afford_card(current_player, card_index: int) -> bool:

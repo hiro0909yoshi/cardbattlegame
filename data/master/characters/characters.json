@@ -1,0 +1,10 @@
+{
+  "characters": {
+	"bowser": {
+	  "name": "クッパ",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "",
+	  "description": "最初の敵"
+	}
+  }
+}

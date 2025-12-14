@@ -134,6 +134,13 @@ func draw_card_data() -> Dictionary:
 
 # 新システム: プレイヤーIDを指定してドロー
 func draw_card_data_v2(player_id: int) -> Dictionary:
+	# デッキプールがある場合はそこから引く（クエストモード用）
+	if player_deck_pools.has(player_id) and not player_deck_pools[player_id].is_empty():
+		var card_data = player_deck_pools[player_id].pop_front()
+		print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, card_data.get("name", "?"), card_data.get("id", 0)])
+		return card_data
+	
+	# デッキプールがない場合は従来の処理（ランダム）
 	if not player_decks.has(player_id):
 		push_error("Invalid player_id: " + str(player_id))
 		return {}
@@ -216,6 +223,69 @@ func deal_initial_hands_all_players(player_count: int):
 				player_hands[player_id]["data"].append(card_data)
 	
 	emit_signal("hand_updated")
+
+## 特定プレイヤーにデッキを設定（クエストモード用）
+## deck_data: {"cards": [{"id": card_id, "count": 枚数}, ...]}
+func set_deck_for_player(player_id: int, deck_data: Dictionary):
+	if deck_data.is_empty():
+		print("[CardSystem] プレイヤー%d: ランダムデッキ使用" % (player_id + 1))
+		return
+	
+	# プレイヤー用のデッキプールを作成
+	var deck_pool = []
+	var card_entries = deck_data.get("cards", [])
+	
+	for entry in card_entries:
+		var card_id = entry.get("id", 0)
+		var count = entry.get("count", 1)
+		
+		# カードデータを取得
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data.is_empty():
+			push_warning("[CardSystem] カードID %d が見つかりません" % card_id)
+			continue
+		
+		# 指定枚数分デッキプールに追加
+		for _i in range(count):
+			deck_pool.append(card_data.duplicate())
+	
+	if deck_pool.is_empty():
+		push_error("[CardSystem] デッキが空です")
+		return
+	
+	# デッキプールをシャッフル
+	deck_pool.shuffle()
+	
+	# プレイヤーのデッキプールとして保存
+	if not player_deck_pools.has(player_id):
+		player_deck_pools[player_id] = []
+	player_deck_pools[player_id] = deck_pool
+	
+	print("[CardSystem] プレイヤー%d: デッキ設定完了 (%d枚)" % [player_id + 1, deck_pool.size()])
+
+## プレイヤーごとのデッキプール
+var player_deck_pools: Dictionary = {}  # player_id -> [card_data, ...]
+
+## デッキプールからカードを引く
+func draw_from_deck_pool(player_id: int) -> Dictionary:
+	if not player_deck_pools.has(player_id) or player_deck_pools[player_id].is_empty():
+		# デッキプールがない場合はランダムドロー
+		return draw_card_data_v2(player_id)
+	
+	var deck = player_deck_pools[player_id]
+	var card = deck.pop_front()
+	return card
+
+## 特定プレイヤーに初期手札を配布（デッキプールから）
+func deal_initial_hand_for_player(player_id: int):
+	player_hands[player_id]["data"].clear()
+	
+	for i in range(INITIAL_HAND_SIZE):
+		var card_data = draw_from_deck_pool(player_id)
+		if not card_data.is_empty():
+			player_hands[player_id]["data"].append(card_data)
+	
+	print("[CardSystem] プレイヤー%d: 初期手札配布完了 (%d枚)" % [player_id + 1, player_hands[player_id]["data"].size()])
 
 func use_card_for_player(player_id: int, card_index: int) -> Dictionary:
 	# discard_card()を使用(理由: "use")

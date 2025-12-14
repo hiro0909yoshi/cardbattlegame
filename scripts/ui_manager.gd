@@ -41,6 +41,9 @@ var game_flow_manager_ref = null  # GameFlowManagerの参照
 # デバッグモード
 var debug_mode = false
 
+# UIレイヤー参照
+var ui_layer: CanvasLayer = null
+
 # スペルフェーズ用のフィルター設定
 var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能、"item"の時はアイテムのみ、"item_or_assist"の時はアイテム+援護対象クリーチャー
 var assist_target_elements: Array = []  # 援護対象の属性リスト
@@ -166,7 +169,7 @@ func create_ui(parent: Node):
 	# board_system_ref は BoardSystem3D から設定される
 	
 	# UIレイヤー（CanvasLayer）を作成
-	var ui_layer = CanvasLayer.new()
+	ui_layer = CanvasLayer.new()
 	ui_layer.name = "UILayer"
 	parent.add_child(ui_layer)
 	
@@ -588,3 +591,70 @@ func get_player_card_nodes(player_id: int) -> Array:
 func _on_player_panel_clicked(player_id: int):
 	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
 		player_status_dialog.show_for_player(player_id)
+
+# ============================================
+# 勝利演出
+# ============================================
+
+## 勝利画面を表示
+func show_win_screen(player_id: int):
+	if not ui_layer:
+		return
+	
+	# フェーズラベルを更新
+	if phase_label:
+		phase_label.text = ""
+	
+	# 勝利演出パネルを作成
+	var win_panel = Panel.new()
+	win_panel.name = "WinScreen"
+	win_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	# 半透明の黒背景
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	win_panel.add_theme_stylebox_override("panel", style)
+	
+	# VBoxContainerで中央配置
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	win_panel.add_child(vbox)
+	
+	# 「WIN」ラベル
+	var win_label = Label.new()
+	win_label.text = "WIN"
+	win_label.add_theme_font_size_override("font_size", 200)
+	win_label.add_theme_color_override("font_color", Color.GOLD)
+	win_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(win_label)
+	
+	# プレイヤー名ラベル
+	var player_name = "プレイヤー%d" % (player_id + 1)
+	if player_system_ref and player_id < player_system_ref.players.size():
+		player_name = player_system_ref.players[player_id].name
+	
+	var player_label = Label.new()
+	player_label.text = player_name + " の勝利！"
+	player_label.add_theme_font_size_override("font_size", 48)
+	player_label.add_theme_color_override("font_color", Color.WHITE)
+	player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(player_label)
+	
+	# VBoxの位置を中央に
+	vbox.position = Vector2(-200, -150)
+	vbox.custom_minimum_size = Vector2(400, 300)
+	
+	ui_layer.add_child(win_panel)
+	
+	# アニメーション（フェードイン + スケール）
+	win_panel.modulate.a = 0
+	win_label.scale = Vector2(0.5, 0.5)
+	win_label.pivot_offset = win_label.size / 2
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(win_panel, "modulate:a", 1.0, 0.5)
+	tween.tween_property(win_label, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	print("[UIManager] 勝利画面表示: プレイヤー", player_id + 1)

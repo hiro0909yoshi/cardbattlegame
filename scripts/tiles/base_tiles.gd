@@ -98,11 +98,12 @@ func get_tile_info() -> Dictionary:
 
 # クリーチャー配置可能かチェック
 func can_place_creature() -> bool:
-	# 配置可能タイルでなければ不可
+	# 配置可能タイルでなければ不可（特殊タイルは配置不可）
 	if not TileHelper.is_placeable_type(tile_type):
 		return false
 	
-	return owner_id != -1 and creature_data.is_empty()
+	# クリーチャーがいなければ配置可能
+	return creature_data.is_empty()
 
 # クリーチャーを配置
 func place_creature(data: Dictionary):

@@ -1,0 +1,174 @@
+extends Node
+class_name QuestGame
+
+# クエストモード用ゲーム管理スクリプト
+# StageLoaderからデータを読み込み、動的にゲームを構築
+
+# システム参照
+var system_manager: GameSystemManager
+var stage_loader: StageLoader
+
+# ステージID（外部から設定、またはデフォルト）
+@export var stage_id: String = "stage_1_1"
+
+# 設定（StageLoaderから取得）
+var player_count: int = 2
+var player_is_cpu: Array = [false, true]
+
+# クエストモードでは常にCPUはAI任せ
+var debug_manual_control_all: bool = false
+
+func _ready():
+	# StageLoaderを作成
+	stage_loader = StageLoader.new()
+	stage_loader.name = "StageLoader"
+	add_child(stage_loader)
+	
+	# ステージを読み込み
+	var stage_data = stage_loader.load_stage(stage_id)
+	if stage_data.is_empty():
+		push_error("[QuestGame] ステージ読み込み失敗: " + stage_id)
+		return
+	
+	# 設定を取得
+	player_count = stage_loader.get_player_count()
+	player_is_cpu = stage_loader.get_player_is_cpu()
+	
+	print("[QuestGame] ステージ: %s, プレイヤー数: %d" % [stage_id, player_count])
+	
+	# 3Dシーンを事前に構築（GameSystemManager が収集できるように）
+	_setup_3d_scene_before_init()
+	
+	# GameSystemManagerを作成・初期化
+	system_manager = GameSystemManager.new()
+	add_child(system_manager)
+	
+	system_manager.initialize_all(
+		self,
+		player_count,
+		player_is_cpu,
+		debug_manual_control_all
+	)
+	
+	# ステージ固有の設定を適用
+	_apply_stage_settings()
+	
+	# ゲーム開始待機
+	await get_tree().create_timer(0.5).timeout
+	
+	# ゲーム開始
+	system_manager.start_game()
+
+## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
+func _setup_3d_scene_before_init():
+	# カメラ作成
+	var camera = Camera3D.new()
+	camera.name = "Camera3D"
+	camera.transform = Transform3D(
+		Basis(Vector3(1, 0, 0), Vector3(0, 0.707107, 0.707107), Vector3(0, -0.707107, 0.707107)),
+		Vector3(0, 10, 10)
+	)
+	camera.top_level = true
+	add_child(camera)
+	
+	# ライト作成
+	var light = DirectionalLight3D.new()
+	light.name = "DirectionalLight3D"
+	light.transform = Transform3D(
+		Basis(Vector3(0.707107, 0.5, -0.5), Vector3(0, 0.707107, 0.707107), Vector3(0.707107, -0.5, 0.5)),
+		Vector3(-50, 50, 0)
+	)
+	add_child(light)
+	
+	# タイルコンテナ作成
+	var tiles_container = Node3D.new()
+	tiles_container.name = "Tiles"
+	add_child(tiles_container)
+	
+	# StageLoaderでマップ生成
+	stage_loader.set_tiles_container(tiles_container)
+	stage_loader.generate_map()
+	
+	# プレイヤーコンテナ作成
+	var players_container = Node3D.new()
+	players_container.name = "Players"
+	add_child(players_container)
+	
+	# プレイヤーキャラクター作成
+	_create_player_characters(players_container)
+	
+	print("[QuestGame] 3Dシーン事前構築完了")
+
+## プレイヤーキャラクター作成
+func _create_player_characters(container: Node3D):
+	# プレイヤー1（Mario）
+	var mario_scene = load("res://scenes/Characters/Mario.tscn")
+	if mario_scene:
+		var mario = mario_scene.instantiate()
+		mario.name = "Player"
+		var movement_script = load("res://scripts/player_movement.gd")
+		if movement_script:
+			mario.set_script(movement_script)
+		container.add_child(mario)
+	
+	# CPU敵
+	var enemies = stage_loader.current_stage_data.get("enemies", [])
+	for i in range(enemies.size()):
+		var char_data = stage_loader.get_enemy_character(i)
+		var model_path = char_data.get("model_path", "res://scenes/Characters/Bowser.tscn")
+		var enemy_scene = load(model_path)
+		if enemy_scene:
+			var enemy = enemy_scene.instantiate()
+			enemy.name = "Player%d" % (i + 2)
+			container.add_child(enemy)
+
+## ステージ固有の設定を適用
+func _apply_stage_settings():
+	# 初期魔力を設定
+	if system_manager.player_system:
+		# プレイヤー1
+		var player_magic = stage_loader.get_player_start_magic()
+		system_manager.player_system.set_magic(0, player_magic)
+		
+		# CPU敵
+		var enemies = stage_loader.current_stage_data.get("enemies", [])
+		for i in range(enemies.size()):
+			var enemy_magic = stage_loader.get_enemy_start_magic(i)
+			system_manager.player_system.set_magic(i + 1, enemy_magic)
+		
+		print("[QuestGame] 初期魔力設定完了")
+	
+	# 勝利条件を設定
+	var win_condition = stage_loader.get_win_condition()
+	if win_condition.has("target") and system_manager.player_system:
+		var target = win_condition.get("target", 8000)
+		# 全プレイヤーのtarget_magicを設定
+		for player in system_manager.player_system.players:
+			player.target_magic = target
+		print("[QuestGame] 勝利条件: 総魔力 %dG以上でチェックポイント通過" % target)
+	
+	# CPUのデッキを設定（ランダム）
+	_setup_cpu_decks()
+
+## CPUのデッキを設定
+func _setup_cpu_decks():
+	if not system_manager.card_system:
+		return
+	
+	var enemies = stage_loader.current_stage_data.get("enemies", [])
+	for i in range(enemies.size()):
+		var deck_id = stage_loader.get_enemy_deck_id(i)
+		var player_id = i + 1
+		
+		if deck_id == "random":
+			# ランダムデッキは既にdeal_initial_hands_all_playersで配布済み
+			print("[QuestGame] CPU %d: ランダムデッキ使用" % player_id)
+		else:
+			# 指定デッキを読み込んで設定
+			var deck_data = stage_loader.load_deck(deck_id)
+			if not deck_data.is_empty():
+				system_manager.card_system.set_deck_for_player(player_id, deck_data)
+				system_manager.card_system.deal_initial_hand_for_player(player_id)
+				print("[QuestGame] CPU %d: デッキ %s 設定完了" % [player_id, deck_id])
+			else:
+				print("[QuestGame] CPU %d: デッキ %s が見つからないためランダム" % [player_id, deck_id])

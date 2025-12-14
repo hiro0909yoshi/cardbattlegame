@@ -9,6 +9,7 @@ signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
+const TileHelper = preload("res://scripts/tile_helper.gd")
 
 # システム参照
 var board_system: BoardSystem3D
@@ -332,10 +333,19 @@ func execute_summon(card_index: int):
 		_complete_action()
 		return
 	
+	# 配置可能タイルかチェック（タイル側のメソッドを使用）
+	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var tile = board_system.tile_nodes.get(current_tile)
+	if tile and not tile.can_place_creature():
+		print("[TileActionProcessor] このタイルには配置できません: %s" % tile.tile_type)
+		if ui_manager:
+			ui_manager.phase_label.text = "このタイルには配置できません"
+		_complete_action()
+		return
+	
 	# 防御型チェック: 空き地以外には召喚できない
 	var creature_type = card_data.get("creature_type", "normal")
 	if creature_type == "defensive":
-		var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 		var tile_info = board_system.get_tile_info(current_tile)
 		
 		# 空き地（owner = -1）でなければ召喚不可
@@ -396,14 +406,11 @@ func execute_summon(card_index: int):
 		player_system.add_magic(current_player_index, -cost)
 		
 		# 土地取得とクリーチャー配置
-		var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 		board_system.set_tile_owner(current_tile, current_player_index)
 		board_system.place_creature(current_tile, card_data)
 		
 		# Phase 1-A: 召喚後にダウン状態を設定（不屈チェック）
-		if board_system.tile_nodes.has(current_tile):
-			var tile = board_system.tile_nodes[current_tile]
-			if tile and tile.has_method("set_down_state"):
+		if tile and tile.has_method("set_down_state"):
 				# 不屈持ちでなければダウン状態にする
 				if not PlayerBuffSystem.has_unyielding(card_data):
 					tile.set_down_state(true)

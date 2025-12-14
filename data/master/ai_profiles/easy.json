@@ -1,0 +1,25 @@
+{
+  "id": "easy",
+  "name": "かんたん",
+  "description": "初心者向けの弱いAI",
+  "difficulty_level": 2,
+  "parameters": {
+    "aggression": 0.3,
+    "resource_management": 0.2,
+    "risk_tolerance": 0.3,
+    "combo_seeking": 0.1
+  },
+  "behavior": {
+    "summon_rate": 0.4,
+    "invasion_rate": 0.3,
+    "battle_rate": 0.3,
+    "levelup_rate": 0.2
+  },
+  "features": {
+    "basic_evaluation": true,
+    "tempo_evaluation": false,
+    "synergy_evaluation": false,
+    "lookahead": 0
+  },
+  "random_factor": 0.3
+}
