@@ -29,6 +29,9 @@ var required_checkpoints: Array = ["N", "S"]  # 必要シグナル（デフォ�
 ## UI要素（シグナル表示用ラベルのみ）
 var signal_display_label: Label = null
 
+## 処理中フラグ（通知ポップアップ表示中等）
+var is_processing: bool = false
+
 ## 初期化
 func setup(p_system, b_system, p_ui_manager = null):
 	player_system = p_system
@@ -77,13 +80,16 @@ func _show_signal_display(signal_type: String):
 	tween.tween_callback(func(): signal_display_label.visible = false)
 
 ## コメントを表示してクリック待ち（GlobalCommentUIに委譲）
-func _show_comment_and_wait(message: String):
-	print("[LapSystem] _show_comment_and_wait: ", message)
+## player_id: 明示的にプレイヤーIDを指定（CPU判定に使用）
+func _show_comment_and_wait(message: String, player_id: int = -1):
+	print("[LapSystem] _show_comment_and_wait: ", message, " (player_id: %d)" % player_id)
+	is_processing = true
 	if ui_manager and ui_manager.global_comment_ui:
-		ui_manager.global_comment_ui.show_and_wait(message)
-		await ui_manager.global_comment_ui.click_confirmed
+		# show_and_wait()内でclick_confirmedをawaitするので、ここでawaitするだけでOK
+		await ui_manager.global_comment_ui.show_and_wait(message, player_id)
 	else:
 		print("[LapSystem] WARNING: ui_manager or global_comment_ui is null")
+	is_processing = false
 
 ## 周回状態を初期化
 func initialize_lap_state(player_count: int):
@@ -172,7 +178,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	_show_signal_display(checkpoint_type)
 	
 	# UI表示: 魔力ボーナスのコメント（クリック待ち）
-	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\n魔力 +%d G" % [checkpoint_type, base_bonus])
+	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\n魔力 +%d G" % [checkpoint_type, base_bonus], player_id)
 	
 	# 勝利判定（シグナル取得時に魔力が目標以上なら勝利）
 	if _check_win_condition(player_id):
@@ -292,17 +298,17 @@ func complete_lap(player_id: int):
 	
 	# UI表示: 4段階の通知ポップアップ
 	# 1. O周完了
-	await _show_comment_and_wait("[color=yellow]%d周完了[/color]" % current_lap)
+	await _show_comment_and_wait("[color=yellow]%d周完了[/color]" % current_lap, player_id)
 	
 	# 2. 周回ボーナス（基礎＋追加）
 	var bonus_text = "[color=cyan]周回ボーナス %d G[/color]\n（基礎 %d G + 追加 %d G）" % [lap_total_bonus, base_bonus, additional_bonus]
-	await _show_comment_and_wait(bonus_text)
+	await _show_comment_and_wait(bonus_text, player_id)
 	
 	# 3. ダウン解除
-	await _show_comment_and_wait("[color=lime]ダウン解除[/color]")
+	await _show_comment_and_wait("[color=lime]ダウン解除[/color]", player_id)
 	
 	# 4. HP回復
-	await _show_comment_and_wait("[color=lime]HP回復 [/color]")
+	await _show_comment_and_wait("[color=lime]HP回復 +10[/color]", player_id)
 	
 	# 全クリーチャーに周回ボーナスを適用
 	if board_system_3d:

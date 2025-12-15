@@ -124,6 +124,13 @@ func _create_player_characters(container: Node3D):
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():
+	# 周回システム設定を適用
+	if system_manager.game_flow_manager and system_manager.game_flow_manager.lap_system:
+		var map_data = stage_loader.get_map_data()
+		if not map_data.is_empty():
+			system_manager.game_flow_manager.lap_system.apply_map_settings(map_data)
+			print("[QuestGame] 周回システム設定適用完了")
+	
 	# 初期魔力を設定
 	if system_manager.player_system:
 		# プレイヤー1

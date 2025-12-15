@@ -36,6 +36,9 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	var current_player = player_system.get_current_player()
 	
+	# 通知ポップアップ等の完了を待機
+	await _wait_for_notifications()
+	
 	# CPU思考時間のシミュレート
 	await get_tree().create_timer(CPU_THINKING_DELAY).timeout
 	
@@ -59,7 +62,37 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 		"enemy_land_defended":
 			_process_enemy_land_defended(current_player, tile_info)
 		_:
+			print("CPU: 不明な状況")
 			_complete_action()
+
+## 通知ポップアップ等の完了を待機
+func _wait_for_notifications():
+	if not board_system:
+		return
+	
+	# GameFlowManagerからLapSystemを取得
+	var gfm = board_system.game_flow_manager
+	var lap_system = gfm.lap_system if gfm else null
+	
+	# GlobalCommentUIを取得
+	var global_comment = ui_manager.global_comment_ui if ui_manager else null
+	
+	# 通知処理が完了するまで待機
+	while true:
+		var is_busy = false
+		
+		# LapSystemの処理中チェック
+		if lap_system and lap_system.is_processing:
+			is_busy = true
+		
+		# GlobalCommentUIのクリック待ちチェック
+		if global_comment and global_comment.waiting_for_click:
+			is_busy = true
+		
+		if not is_busy:
+			break
+		
+		await board_system.get_tree().process_frame
 
 # タイル状況を分析
 func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String:

@@ -253,3 +253,7 @@ func load_deck(deck_id: String) -> Dictionary:
 	
 	print("[StageLoader] デッキ読み込み完了: ", deck_id)
 	return parsed
+
+## マップデータを取得（LapSystem設定等で使用）
+func get_map_data() -> Dictionary:
+	return current_map_data

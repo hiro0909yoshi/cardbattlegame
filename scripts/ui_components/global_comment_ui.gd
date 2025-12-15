@@ -21,6 +21,10 @@ var waiting_for_click: bool = false
 var click_wait_timeout: float = 7.0
 var timeout_timer: Timer = null
 
+## CPU自動進行用
+var game_flow_manager_ref = null
+var cpu_auto_advance_delay: float = 0.5  # CPUの場合の自動進行遅延（秒）
+
 func _ready():
 	_setup_ui()
 
@@ -67,12 +71,20 @@ func _setup_ui():
 # ============================================
 
 ## 通知を表示してクリック待ち（await可能）
-func show_and_wait(message: String) -> void:
+## CPUターンの場合は自動で進行する
+## この関数をawaitすると、クリックまたは自動進行まで待機する
+## player_id: 明示的にプレイヤーIDを指定する場合（-1の場合はcurrent_player_idを使用）
+func show_and_wait(message: String, player_id: int = -1) -> void:
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	
+	# CPUターンかどうかを判定
+	var is_cpu_turn = _is_current_player_cpu(player_id)
+	print("[GlobalCommentUI] show_and_wait - player_id: %d, is_cpu_turn: %s" % [player_id, is_cpu_turn])
+	
 	# テキスト設定（中央揃え + クリック待ちの案内）
-	var text = "[center]" + message + "\n\n[color=gray][クリックで次へ][/color][/center]"
+	var hint_text = "[color=gray][自動進行][/color]" if is_cpu_turn else "[color=gray][クリックで次へ][/color]"
+	var text = "[center]" + message + "\n\n" + hint_text + "[/center]"
 	label.text = text
 	
 	modulate.a = 1.0
@@ -80,7 +92,52 @@ func show_and_wait(message: String) -> void:
 	waiting_for_click = true
 	
 	_center_panel()
-	_start_timeout_timer()
+	
+	# CPUターンの場合は短い遅延後に自動進行、人間の場合は通常のタイムアウト
+	if is_cpu_turn:
+		_start_cpu_auto_advance_timer()
+	else:
+		_start_timeout_timer()
+	
+	# 完了するまで待機（これにより呼び出し側のawaitが機能する）
+	await click_confirmed
+
+## 指定プレイヤーがCPUかどうかを判定
+## player_id: -1の場合はcurrent_player_idを使用
+func _is_current_player_cpu(player_id: int = -1) -> bool:
+	if not game_flow_manager_ref or not is_instance_valid(game_flow_manager_ref):
+		print("[GlobalCommentUI] _is_current_player_cpu - game_flow_manager_ref is invalid")
+		return false
+	
+	var check_id = player_id
+	var cpu_flags = []
+	
+	# player_idが-1の場合はcurrent_player_idを使用
+	if check_id < 0:
+		if "current_player_id" in game_flow_manager_ref:
+			check_id = game_flow_manager_ref.current_player_id
+	
+	if "player_is_cpu" in game_flow_manager_ref:
+		cpu_flags = game_flow_manager_ref.player_is_cpu
+	
+	print("[GlobalCommentUI] _is_current_player_cpu - check_id: %d, cpu_flags: %s" % [check_id, cpu_flags])
+	
+	if check_id >= 0 and check_id < cpu_flags.size():
+		return cpu_flags[check_id]
+	
+	return false
+
+## CPU自動進行タイマーを開始
+func _start_cpu_auto_advance_timer():
+	_stop_timeout_timer()
+	
+	timeout_timer = Timer.new()
+	timeout_timer.one_shot = true
+	timeout_timer.wait_time = cpu_auto_advance_delay
+	timeout_timer.timeout.connect(_on_timeout)
+	add_child(timeout_timer)
+	timeout_timer.start()
+	print("[GlobalCommentUI] CPU auto advance timer started: %.1f sec" % cpu_auto_advance_delay)
 
 ## パネルを画面中央に配置
 func _center_panel():
@@ -191,5 +248,5 @@ func show_auto_fade_delayed(message: String, delay: float, duration: float = 2.0
 # ============================================
 
 ## show_notification_and_wait互換（スペルシステムからの移行用）
-func show_notification_and_wait(message: String) -> void:
-	show_and_wait(message)
+func show_notification_and_wait(message: String, player_id: int = -1) -> void:
+	await show_and_wait(message, player_id)

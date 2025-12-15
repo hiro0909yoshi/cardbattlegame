@@ -234,6 +234,9 @@ func create_ui(parent: Node):
 		if global_comment_ui.get_parent():
 			global_comment_ui.get_parent().remove_child(global_comment_ui)
 		notification_layer.add_child(global_comment_ui)
+		
+		# GameFlowManager参照を設定（CPU自動進行用）
+		global_comment_ui.game_flow_manager_ref = game_flow_manager_ref
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):

@@ -199,9 +199,23 @@ data/
   "special_tiles": {
 	"20": {"type": "Branch", "connections": [0, 21]},
 	"21": {"type": "Treasure", "connections": [20]}
-  }
+  },
+  "lap_settings": {
+	"bonus_preset": "standard",
+	"checkpoint_preset": "standard"
+  },
+  "loop_size": 20
 }
 ```
+
+#### lap_settings オプション
+
+| キー | 説明 | 選択肢 |
+|------|------|--------|
+| `bonus_preset` | 基礎ボーナス | "low"(100), "standard"(120), "high"(150), "very_high"(200) |
+| `checkpoint_preset` | 必要シグナル | "standard"(N,S), "three_way"(N,S,W), "four_way"(N,S,W,E) |
+
+詳細は [周回システム実装仕様書](lap_system.md) を参照。
 
 ### 4. characters.json（キャラクター定義）
 
@@ -493,5 +507,6 @@ CREATE TABLE gacha_history (
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 1.0 | 2025/12/15 | 初版作成 |
+| 1.1 | 2025/12/16 | マップJSONスキーマにlap_settings追加、周回システム設定連携 |
 
 ---
