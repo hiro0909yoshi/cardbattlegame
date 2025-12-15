@@ -1,8 +1,12 @@
 # タイルとクリーチャーの分離設計計画
 
+**バージョン**: 2.0  
+**最終更新**: 2025年12月16日  
+**ステータス**: ✅ 実装完了
+
 ## 1. 現状分析
 
-> **⚠️ 注意**: 以下のセクション1-7は、実装前の初期設計案です。
+> **⚠️ 注意**: セクション1-7は実装前の初期設計案（アーカイブ）です。
 > **実際の実装は「10. 新設計: 参照方式による最小限変更」を参照してください。**
 
 ### 1.1 旧実装（Phase 3完了前）
@@ -308,33 +312,34 @@ func _create_creature_visual():
 
 どのオプションを選択されますか？
 
-## 8. 実装状況 (2025年11月5日更新)
+## 8. 実装状況 (2025年12月16日更新)
 
-### ✅ 完了済み (Phase 1-3) 🎉
+### ✅ 全Phase完了 🎉
 
 - **Phase 1: CreatureManager実装** ✅
   - `scripts/creature_manager.gd` 完成
   - 基本機能: get_data_ref, set_data, has_creature, clear_data
   - 拡張機能: find_by_player, find_by_element, validate_integrity
   - セーブ/ロード機能実装
-  - 単体テスト: 10/10 成功 ✅
 
 - **Phase 2: BaseTile統合** ✅
   - `BaseTile.creature_data` をプロパティ化（get/set）
   - CreatureManagerへの透過的なリダイレクト実装
   - `BoardSystem3D` での初期化実装
-  - 統合テスト: 6/6 成功 ✅
 
 - **Phase 3: 完全移行** ✅
   - フォールバック機構（_local_creature_data）を削除
   - CreatureManagerへの完全依存に移行
   - 実ゲームでの動作確認完了
-  - すべての機能が正常動作を確認
 
-- **Phase 4の一部**: 3D表示機能（既存実装）
+- **Phase 4: 3D表示機能** ✅
   - creature_card_3d_quad.gd: QuadMesh方式の3Dカード表示
   - base_tiles.gd: place_creature/remove_creature時の自動3D生成
+  - _sync_creature_card_3d(): setter連動の自動同期
   - 動的データ更新機能（ステータス変化の即時反映）
+
+- **旧Phase 2-3（API統一）**: 不要になりスキップ
+  - 参照方式により既存コード800箇所の変更が不要に
 
 ### 🎉 完全移行完了！
 
@@ -342,12 +347,8 @@ func _create_creature_visual():
 - ✅ 既存コード800箇所を変更せずにデータ一元管理を実現
 - ✅ すべてのクリーチャーデータがCreatureManagerに集約
 - ✅ タイルからクリーチャーデータを完全分離
+- ✅ 3Dカード表示の自動同期
 - ✅ ゲーム内で不具合なく動作確認完了
-
-### ⬜ 未実装
-- Phase 2: 読み取りAPI統一（8-12時間）
-- Phase 3: 書き込みAPI統一（10-15時間）
-- Phase 5: 旧システム削除（3-5時間）
 
 ### 選択した方針
 **Phase 1から段階的に完全分離を開始**
@@ -456,22 +457,38 @@ class_name BaseTile
 # CreatureManagerへの静的参照
 static var creature_manager: CreatureManager = null
 
-# creature_data をプロパティに変更
+# creature_data をプロパティに変更（フォールバックなし - 完全移行済み）
 var creature_data: Dictionary:
 	get:
 		if creature_manager:
 			return creature_manager.get_data_ref(tile_index)
 		else:
-			# フォールバック（CreatureManager未設定時）
-			return _local_creature_data
+			push_error("[BaseTile] CreatureManager が初期化されていません！")
+			return {}
 	set(value):
 		if creature_manager:
 			creature_manager.set_data(tile_index, value)
 		else:
-			_local_creature_data = value
+			push_error("[BaseTile] CreatureManager が初期化されていません！")
+		# 3Dカードの同期（自動）
+		_sync_creature_card_3d(value)
 
-# ローカルバックアップ（移行期の安全装置）
-var _local_creature_data: Dictionary = {}
+# 3Dカード同期（setterから呼ばれる）
+func _sync_creature_card_3d(data: Dictionary):
+	if data.is_empty():
+		# データが空 → 3Dカード削除
+		if creature_card_3d:
+			creature_card_3d.queue_free()
+			creature_card_3d = null
+	else:
+		# データあり → 更新または新規作成
+		if creature_card_3d:
+			if creature_card_3d.has_method("set_creature_data"):
+				creature_card_3d.set_creature_data(data)
+		else:
+			_create_creature_card_3d()
+	# 通行料ラベルの同期
+	_sync_tile_info_display()
 
 # 既存メソッドは変更不要！
 func place_creature(data: Dictionary):
@@ -606,41 +623,31 @@ var ref = tile.creature_data  # → CreatureManager内の辞書への参照
 ref["base_up_hp"] = 10  # → CreatureManager内のデータが直接変更される
 ```
 
-### 10.6 実装ステップ
+### 10.6 実装ステップ（全完了）
 
-#### Step 1: CreatureManager作成 ✅ (完了)
+#### Step 1: CreatureManager作成 ✅
 - `scripts/creature_manager.gd` 作成済み
 - 基本的なデータ保管機能実装済み
+- 拡張機能（検索・集計）実装済み
 
-#### Step 2: BaseTileへのプロパティ追加
+#### Step 2: BaseTileへのプロパティ追加 ✅
+- creature_dataプロパティをget/set化
+- フォールバック機構を削除（完全移行）
+- 3Dカード同期（_sync_creature_card_3d）を追加
+
+#### Step 3: BoardSystemでの初期化 ✅
 ```gdscript
-# base_tiles.gd に追加
-static var creature_manager: CreatureManager = null
-
-var creature_data: Dictionary:
-	get: return creature_manager.get_data_ref(tile_index) if creature_manager else _local_creature_data
-	set(value): 
-		if creature_manager:
-			creature_manager.set_data(tile_index, value)
-		else:
-			_local_creature_data = value
-
-var _local_creature_data: Dictionary = {}
-```
-
-#### Step 3: BoardSystemでの初期化
-```gdscript
-# board_system_3d.gd の _ready() に追加
+# board_system_3d.gd の _ready() で実行済み
 var cm = CreatureManager.new()
 cm.board_system = self
 add_child(cm)
 BaseTile.creature_manager = cm
 ```
 
-#### Step 4: 動作確認
-- 既存の全機能が正常動作することを確認
-- `CreatureManager.debug_print()` でデータ集約を確認
-- バトル、移動、手札復帰などのテスト
+#### Step 4: 動作確認 ✅
+- 既存の全機能が正常動作することを確認済み
+- `CreatureManager.debug_print()` でデータ集約を確認済み
+- バトル、移動、手札復帰などのテスト完了
 
 ### 10.7 Phase 2以降の計画変更
 
@@ -665,12 +672,13 @@ BaseTile.creature_manager = cm
 | 静的変数の初期化タイミング | 中 | 低 | BoardSystemの_ready()で明示的に設定 |
 | セーブ/ロードの互換性 | 中 | 中 | 移行期は両方式をサポート |
 
-### 10.9 成功基準
+### 10.9 成功基準（全達成）
 
-- ✅ すべての既存機能が正常動作
-- ✅ `CreatureManager.debug_print()` でデータが集約されている
-- ✅ バトル、移動、手札復帰が正常動作
-- ✅ 3D表示が正常に更新される
+- ✅ すべての既存機能が正常動作 → **確認済み**
+- ✅ `CreatureManager.debug_print()` でデータが集約されている → **確認済み**
+- ✅ バトル、移動、手札復帰が正常動作 → **確認済み**
+- ✅ 3D表示が正常に更新される → **確認済み**
+- ✅ 3Dカードがsetterで自動同期される → **確認済み**
 
 ### 10.10 今後の拡張
 
@@ -708,15 +716,23 @@ func find_by_element(element: String) -> Array:
 
 ### 10.11 まとめ
 
-**この新設計により:**
+**この設計により達成したこと:**
 - ✅ 既存コード800箇所の変更が不要に
 - ✅ 工数を18-27時間削減
 - ✅ データの一元管理を実現
 - ✅ リスクを最小化
+- ✅ 3Dカード表示の自動同期
 
-**次のステップ:**
-1. Step 2: BaseTileへのプロパティ追加
-2. Step 3: BoardSystemでの初期化
-3. Step 4: テストと動作確認
+**実装完了日**: 2025年11月5日（Phase 1-3）、2025年12月（3D同期強化）
+
+---
+
+## 更新履歴
+
+| 日付 | 内容 |
+|------|------|
+| 2025/10 | 初版作成（設計案） |
+| 2025/11/05 | Phase 1-3 実装完了 |
+| 2025/12/16 | v2.0 - 3D同期強化、ドキュメント整理、フォールバック削除を反映 |
 
 ---

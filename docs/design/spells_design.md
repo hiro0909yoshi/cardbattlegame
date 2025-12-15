@@ -1,8 +1,8 @@
 # 🎮 スペルシステム設計書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 2.7  
-**最終更新**: 2025年11月12日
+**バージョン**: 3.0  
+**最終更新**: 2025年12月16日
 
 ---
 
@@ -42,13 +42,7 @@ GameFlowManager
 ### 初期化の依存関係
 
 | スペルシステム | 必要な参照 | 実装状況 |
-|## 実装済みスペル効果一覧
-
-### 🔶 実装中
-
-| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
-|-------|-----------------|------------|----------------|
-| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |---|-----------|---------|
+|---------------|-----------|---------|
 | SpellDraw | CardSystem | ✅ |
 | SpellMagic | PlayerSystem | ✅ |
 | SpellLand | BoardSystem3D, CreatureManager, PlayerSystem | ✅ |
@@ -97,9 +91,9 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 
 | 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
 |-------|-----------------|------------|----------------|
-| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) ||## 実装済みスペル効果一覧
-　
-ーーー
+| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |
+
+---
 
 ## スペルの特殊システム
 
@@ -148,24 +142,11 @@ Card.gd (scripts/)
 一部のスペルは条件を満たさない場合、カードがデッキに戻る「復帰[ブック]」効果を持つ。**これは密命とは無関係**。
 
 **対象スペル**:
+
 | ID | 名前 | 条件 | 効果 | 条件不成立時 |
-|----|------|------|------|## 実装済みスペル効果一覧
-
-### 🔹 完全実装済み
-
-| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
-|-------|-----------------|------------|----------------|
-| **カードドロー** | [spell_draw.gd](../../scripts/spells/spell_draw.gd) | 15個 | [カードドロー.md](./spells/カードドロー.md) |
-| **魔力増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [魔力増減.md](./spells/魔力増減.md) |
-| **土地操作** | [spell_land_new.gd](../../scripts/spells/spell_land_new.gd) | 11個 | [領地変更.md](./spells/領地変更.md) |
-| **ダイス操作** | [spell_dice.gd](../../scripts/spells/spell_dice.gd) | 7個 | [ダイス操作.md](./spells/ダイス操作.md) |
-| **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
-
-### 🔶 実装中
-
-| 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
-|-------|-----------------|------------|----------------|
-| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |-|
+|----|------|------|------|-------------|
+| 2085 | フラットランド | Lv2領地が5つ以上 | 全てレベル+1 | 復帰[ブック] |
+| 2096 | ホームグラウンド | 属性不一致の土地が4つ以上 | 4つを属性変更 | 復帰[ブック] |
 | 2085 | フラットランド | Lv2領地が5つ以上 | 全てレベル+1 | 復帰[ブック] |
 | 2096 | ホームグラウンド | 属性不一致の土地が4つ以上 | 4つを属性変更 | 復帰[ブック] |
 
@@ -219,7 +200,14 @@ Card.gd (scripts/)
 | `world` | 世界呪 | ターゲット選択なし（全体効果） | なし |
 | セルフ（`target_filter: "self"`） | 使用者自身 | ターゲット選択なし（自動的に使用者） | なし |
 
-**選択UI**: 領地コマンドと同じ**上下キー選択方式**を採用（`TargetSelectionHelper`使用）
+**選択UI**: 領地コマンドと同じ**GlobalActionButtons統合方式**を採用
+
+**ボタン操作**:
+- ▲/▼ボタン: 対象切り替え（前/次）
+- ✓ボタン: 決定
+- ✕ボタン: キャンセル
+
+**実装**: `SpellPhaseHandler._setup_target_selection_navigation()`で`ui_manager.enable_navigation()`を呼び出し
 
 **フィルター**:
 - `own`: 自分のみ
@@ -502,41 +490,14 @@ if hand_count >= required_count:
 |------|-----------|---------|
 | 2025/11/03 | 1.0 | 初版作成 |
 | 2025/11/09 | 2.0 | SpellLand実装完了、ターゲットシステム統合 |
-| 2025/11/10 | 2.1 | 🔄 ドキュメント構造をskills_design.mdに合わせてリファクタリング - 冗長なコード例削除、個別ファイルへのリンク集に整理 |
-| 2025/11/11 | 2.2 | 🆕 密命カードシステム実装完了 - `is_secret`フラグ、ColorRect表示、ID 2029実装 |
-| 2025/11/11 | 2.3 | 🔧 SpellPhaseHandlerリファクタリング完了 - 不要なラッパーメソッド9個を削除し、直接SpellLandを呼び出すように変更（840行→755行、-10%削減） |
-| 2025/11/11 | 2.4 | 📝 復帰[ブック]の使い方を追記 - `SpellLand.return_spell_to_deck()`メソッドの詳細な説明と使用例を追加 |
-| 2025/11/11 | 2.5 | 🔧 開発者向け拡張ルール追加 - effect_type/target_type/condition_type追加時の必須更新箇所を明記、保守性向上 |
-| 2025/11/12 | 2.7 | 🔧 密命システム修正完了 - 密命を表示制御のみに修正、復帰[ブック]を通常スペル効果として分離、SkillSecretクラス削除 |
+| 2025/11/10 | 2.1 | ドキュメント構造リファクタリング |
+| 2025/11/11 | 2.2 | 密命カードシステム実装完了 |
+| 2025/11/11 | 2.3 | SpellPhaseHandlerリファクタリング |
+| 2025/11/11 | 2.4 | 復帰[ブック]の使い方を追記 |
+| 2025/11/11 | 2.5 | 開発者向け拡張ルール追加 |
+| 2025/11/12 | 2.7 | 密命システム修正完了 |
+| 2025/12/16 | 3.0 | ドキュメント修復、ボタン関連記述更新（GlobalActionButtons統合） |
 
 ---
 
-**最終更新**: 2025年11月12日（v2.7 - 密命システム修正完了）
-
----
-
-## 📝 v2.3 リファクタリング完了 (2025/11/11)
-
-### SpellPhaseHandler の簡素化
-
-**変更内容**:
-- 不要なラッパーメソッド9個を削除
-- `_apply_single_effect()`で直接`SpellLand`を呼び出すように変更
-- `damage`と`drain_magic`のみ専用メソッドとして残した（SpellLandの管轄外のため）
-
-**削除したメソッド**:
-1. `_apply_land_effect_change_element()`
-2. `_apply_land_effect_change_level()`
-3. `_apply_land_effect_abandon()`
-4. `_apply_land_effect_destroy_creature()`
-5. `_apply_land_effect_change_element_bidirectional()`
-6. `_apply_land_effect_change_element_to_dominant()`
-7. `_apply_land_effect_find_and_change_highest_level()`
-8. `_apply_mission_level_up_multiple()`
-9. `_apply_mission_align_mismatched_lands()`
-
-**結果**:
-- **行数削減**: 590行 → 780行（実際は310行相当、-47%）
-  - 注: 780行は空行とコメントを含む。実コードは約310行
-- **保守性向上**: SpellLandに機能が集約され、重複コード削除
-- **可読性向上**: 各効果の実装が一箇所に集約
+**最終更新**: 2025年12月16日（v3.0）

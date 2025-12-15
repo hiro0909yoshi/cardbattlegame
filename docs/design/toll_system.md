@@ -1,7 +1,8 @@
 # 通行料システム実装完了
 
-**バージョン**: 1.0  
+**バージョン**: 1.1  
 **完成日**: 2025年11月23日  
+**最終更新**: 2025年12月16日  
 **ステータス**: 実装完了
 
 ---
@@ -17,7 +18,7 @@
 ### 1. GameConstants.gd - 通行料係数定義
 ```
 TOLL_ELEMENT_MULTIPLIER: fire/water/wind/earth=1.0, none=0.8
-TOLL_LEVEL_MULTIPLIER: Lv1~5: 1.0, 1.2, 1.5, 2.0, 2.5
+TOLL_LEVEL_MULTIPLIER: Lv1~5: 0.3, 0.6, 2.0, 4.0, 8.0
 TOLL_MAP_MULTIPLIER: map_1=1.0（拡張可能）
 floor_toll(amount): 10の位で切り捨て関数
 ```
@@ -64,6 +65,10 @@ end_turn()内の処理順:
 - `apply_toll_fixed()`: 支払い固定値（ユニフォーミティ）
 - `apply_toll_multiplier()`: クリーチャーの通行料倍率（グリード）
 - `apply_peace()`: 敵移動除外＋戦闘不可＋通行料0（ピース）
+- `apply_invasion_disable()`: 侵略無効化（セプター呪い）
+- `apply_toll_half_curse()`: 通行料半減（領地呪い）
+- `apply_creature_toll_disable()`: クリーチャーの通行料無効化
+- `apply_curse_from_effect()`: 効果辞書からの呪い適用（汎用）
 
 **統合的な計算メソッド**
 ```
@@ -141,9 +146,12 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 
 | メソッド | 対象 | 効果 |
 |---------|------|------|
-| `has_peace_curse()` | 土地 | その土地への侵略を防ぐ（既存） |
-| `is_player_invasion_disabled()` | プレイヤー | そのプレイヤーが侵略不可（既存） |
-| `is_creature_invasion_immune()` | クリーチャー | そのクリーチャーが移動侵略無効（新規） |
+| `has_peace_curse()` | 土地 | その土地への侵略を防ぐ |
+| `has_peace_curse_on_land()` | 土地 | 土地のピース呪いをチェック |
+| `is_invasion_disabled()` | 土地 | その土地への侵略が無効か |
+| `is_player_invasion_disabled()` | プレイヤー | そのプレイヤーが侵略不可 |
+| `is_creature_invasion_immune()` | クリーチャー | そのクリーチャーが移動侵略無効 |
+| `can_move_to_land()` | 土地+プレイヤー | 移動可能かの総合判定 |
 
 ### チェック箇所
 
@@ -161,4 +169,4 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 
 ---
 
-**最終更新**: 2025年12月5日
+**最終更新**: 2025年12月16日（v1.1 - レベル係数修正、メソッド追記）

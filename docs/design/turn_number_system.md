@@ -2,6 +2,7 @@
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **作成日**: 2025年10月27日  
+**バージョン**: 1.1  
 **ステータス**: ✅ 実装完了
 
 ---
@@ -23,11 +24,7 @@
 
 ```gdscript
 # ゲーム開始
-var current_turn_number = 0  # ラウンド数カウンター
-
-func start_game():
-	current_turn_number = 1  # ラウンド1から開始
-	# ...
+var current_turn_number = 1  # ラウンド数カウンター（初期値1）
 
 func end_turn():
 	# ...
@@ -122,12 +119,14 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 			elif ap_mode == "override":
 				participant.current_ap = current_turn
 			
-			# HP処理
+			# HP処理（temporary_bonus_hpを使用）
 			if hp_mode == "add":
-				participant.current_hp += current_turn
+				participant.temporary_bonus_hp += current_turn
 			elif hp_mode == "subtract":
-				participant.current_hp = max(1, participant.current_hp - current_turn)
+				participant.temporary_bonus_hp -= current_turn
 ```
+
+**注**: HP処理は`current_hp`ではなく`temporary_bonus_hp`に加算する。これにより戦闘後にボーナスがリセットされ、クリーチャー本体のHPには影響しない。
 
 #### 適用タイミング
 - バトル準備時、他のスキルより**最優先**で適用
@@ -207,4 +206,4 @@ static func build_battle_context(...):
 
 ---
 
-**最終更新**: 2025年10月27日
+**最終更新**: 2025年12月16日（v1.1 - 初期値・HP処理の記述修正）

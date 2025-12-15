@@ -40,7 +40,7 @@
 MainMenu
 ├── ソロバトル → Main.tscn（既存のテスト環境、変更なし）
 └── クエスト → StageSelect.tscn（新規）
-              └── Quest.tscn（動的にマップ生成）
+			  └── Quest.tscn（動的にマップ生成）
 ```
 
 ---
@@ -64,11 +64,11 @@ MainMenu
 
 ```
 stage_1_1.json
-    ├── map_id: "map_diamond_20" → maps/map_diamond_20.json
-    └── enemies[0]
-            ├── character_id: "goblin" → characters.json
-            ├── deck_id: "deck_fire_basic" → decks/deck_fire_basic.json
-            └── ai_profile_id: "aggressive" → ai_profiles/aggressive.json
+	├── map_id: "map_diamond_20" → maps/map_diamond_20.json
+	└── enemies[0]
+			├── character_id: "goblin" → characters.json
+			├── deck_id: "deck_fire_basic" → decks/deck_fire_basic.json
+			└── ai_profile_id: "aggressive" → ai_profiles/aggressive.json
 ```
 
 **メリット**: 1ステージ追加 = stage_X_X.json 1ファイル追加のみ
@@ -102,7 +102,7 @@ data/
 │       └── balanced.json
 │
 └── local/                           # ユーザーデータ（将来サーバー移行）
-    └── user_save.json               # 進行状況、所持カード等
+	└── user_save.json               # 進行状況、所持カード等
 ```
 
 ---
@@ -114,18 +114,18 @@ data/
 ```json
 {
   "worlds": [
-    {
-      "id": "world_1",
-      "name": "草原の国",
-      "stages": ["stage_1_1", "stage_1_2", "stage_1_3"],
-      "unlock_condition": null
-    },
-    {
-      "id": "world_2",
-      "name": "炎の国",
-      "stages": ["stage_2_1", "stage_2_2", "stage_2_3"],
-      "unlock_condition": {"type": "stage_clear", "stage_id": "stage_1_1"}
-    }
+	{
+	  "id": "world_1",
+	  "name": "草原の国",
+	  "stages": ["stage_1_1", "stage_1_2", "stage_1_3"],
+	  "unlock_condition": null
+	},
+	{
+	  "id": "world_2",
+	  "name": "炎の国",
+	  "stages": ["stage_2_1", "stage_2_2", "stage_2_3"],
+	  "unlock_condition": {"type": "stage_clear", "stage_id": "stage_1_1"}
+	}
   ]
 }
 ```
@@ -141,25 +141,25 @@ data/
   "player_start_tile": 0,
   "player_start_magic": 1000,
   "enemies": [
-    {
-      "player_id": 1,
-      "character_id": "goblin",
-      "deck_id": "deck_fire_basic",
-      "ai_profile_id": "aggressive",
-      "start_tile": 10,
-      "start_magic": 800
-    }
+	{
+	  "player_id": 1,
+	  "character_id": "goblin",
+	  "deck_id": "deck_fire_basic",
+	  "ai_profile_id": "aggressive",
+	  "start_tile": 10,
+	  "start_magic": 800
+	}
   ],
   "win_condition": {
-    "type": "magic",
-    "target": 8000
+	"type": "magic",
+	"target": 8000
   },
   "lose_condition": {
-    "type": "bankrupt"
+	"type": "bankrupt"
   },
   "rewards": {
-    "first_clear": {"type": "card", "card_id": 101},
-    "repeat": {"type": "gold", "amount": 500}
+	"first_clear": {"type": "card", "card_id": 101},
+	"repeat": {"type": "gold", "amount": 500}
   }
 }
 ```
@@ -172,33 +172,33 @@ data/
   "name": "ダイヤモンド型",
   "tile_count": 20,
   "tiles": [
-    {"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
-    {"index": 1, "type": "Neutral", "x": 4, "z": 0},
-    {"index": 2, "type": "Neutral", "x": 8, "z": 0},
-    {"index": 3, "type": "Neutral", "x": 12, "z": 0},
-    {"index": 4, "type": "Neutral", "x": 16, "z": 0},
-    {"index": 5, "type": "Warp", "x": 20, "z": 0, "warp_pair": 15},
-    {"index": 6, "type": "Fire", "x": 20, "z": 4},
-    {"index": 7, "type": "Fire", "x": 20, "z": 8},
-    {"index": 8, "type": "Fire", "x": 20, "z": 12},
-    {"index": 9, "type": "Water", "x": 20, "z": 16},
-    {"index": 10, "type": "Checkpoint", "x": 20, "z": 20, "checkpoint_type": "S"},
-    {"index": 11, "type": "Water", "x": 16, "z": 20},
-    {"index": 12, "type": "Water", "x": 12, "z": 20},
-    {"index": 13, "type": "Wind", "x": 8, "z": 20},
-    {"index": 14, "type": "Wind", "x": 4, "z": 20},
-    {"index": 15, "type": "Warp", "x": 0, "z": 20, "warp_pair": 5},
-    {"index": 16, "type": "Wind", "x": 0, "z": 16},
-    {"index": 17, "type": "Earth", "x": 0, "z": 12},
-    {"index": 18, "type": "Earth", "x": 0, "z": 8},
-    {"index": 19, "type": "Earth", "x": 0, "z": 4}
+	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
+	{"index": 1, "type": "Neutral", "x": 4, "z": 0},
+	{"index": 2, "type": "Neutral", "x": 8, "z": 0},
+	{"index": 3, "type": "Neutral", "x": 12, "z": 0},
+	{"index": 4, "type": "Neutral", "x": 16, "z": 0},
+	{"index": 5, "type": "Warp", "x": 20, "z": 0, "warp_pair": 15},
+	{"index": 6, "type": "Fire", "x": 20, "z": 4},
+	{"index": 7, "type": "Fire", "x": 20, "z": 8},
+	{"index": 8, "type": "Fire", "x": 20, "z": 12},
+	{"index": 9, "type": "Water", "x": 20, "z": 16},
+	{"index": 10, "type": "Checkpoint", "x": 20, "z": 20, "checkpoint_type": "S"},
+	{"index": 11, "type": "Water", "x": 16, "z": 20},
+	{"index": 12, "type": "Water", "x": 12, "z": 20},
+	{"index": 13, "type": "Wind", "x": 8, "z": 20},
+	{"index": 14, "type": "Wind", "x": 4, "z": 20},
+	{"index": 15, "type": "Warp", "x": 0, "z": 20, "warp_pair": 5},
+	{"index": 16, "type": "Wind", "x": 0, "z": 16},
+	{"index": 17, "type": "Earth", "x": 0, "z": 12},
+	{"index": 18, "type": "Earth", "x": 0, "z": 8},
+	{"index": 19, "type": "Earth", "x": 0, "z": 4}
   ],
   "connections": {
-    "0": [1, 19, 20]
+	"0": [1, 19, 20]
   },
   "special_tiles": {
-    "20": {"type": "Branch", "connections": [0, 21]},
-    "21": {"type": "Treasure", "connections": [20]}
+	"20": {"type": "Branch", "connections": [0, 21]},
+	"21": {"type": "Treasure", "connections": [20]}
   }
 }
 ```
@@ -208,24 +208,24 @@ data/
 ```json
 {
   "characters": {
-    "goblin": {
-      "name": "ゴブリン",
-      "model_path": "res://scenes/Characters/Goblin.tscn",
-      "portrait_path": "res://assets/portraits/goblin.png",
-      "description": "小さいが凶暴な魔物"
-    },
-    "knight": {
-      "name": "騎士",
-      "model_path": "res://scenes/Characters/Knight.tscn",
-      "portrait_path": "res://assets/portraits/knight.png",
-      "description": "正義を信じる戦士"
-    },
-    "witch": {
-      "name": "魔女",
-      "model_path": "res://scenes/Characters/Witch.tscn",
-      "portrait_path": "res://assets/portraits/witch.png",
-      "description": "スペルの達人"
-    }
+	"goblin": {
+	  "name": "ゴブリン",
+	  "model_path": "res://scenes/Characters/Goblin.tscn",
+	  "portrait_path": "res://assets/portraits/goblin.png",
+	  "description": "小さいが凶暴な魔物"
+	},
+	"knight": {
+	  "name": "騎士",
+	  "model_path": "res://scenes/Characters/Knight.tscn",
+	  "portrait_path": "res://assets/portraits/knight.png",
+	  "description": "正義を信じる戦士"
+	},
+	"witch": {
+	  "name": "魔女",
+	  "model_path": "res://scenes/Characters/Witch.tscn",
+	  "portrait_path": "res://assets/portraits/witch.png",
+	  "description": "スペルの達人"
+	}
   }
 }
 ```
@@ -238,10 +238,10 @@ data/
   "name": "炎の基本デッキ",
   "description": "火属性中心の攻撃的デッキ",
   "cards": [
-    {"card_id": 1, "count": 3},
-    {"card_id": 5, "count": 2},
-    {"card_id": 12, "count": 4},
-    {"card_id": 101, "count": 2}
+	{"card_id": 1, "count": 3},
+	{"card_id": 5, "count": 2},
+	{"card_id": 12, "count": 4},
+	{"card_id": 101, "count": 2}
   ],
   "total_cards": 50
 }
@@ -256,22 +256,22 @@ data/
   "description": "積極的に侵略を仕掛ける",
   "difficulty_level": 5,
   "parameters": {
-    "aggression": 0.8,
-    "resource_management": 0.3,
-    "risk_tolerance": 0.7,
-    "combo_seeking": 0.4
+	"aggression": 0.8,
+	"resource_management": 0.3,
+	"risk_tolerance": 0.7,
+	"combo_seeking": 0.4
   },
   "behavior": {
-    "summon_rate": 0.8,
-    "invasion_rate": 0.7,
-    "battle_rate": 0.6,
-    "levelup_rate": 0.4
+	"summon_rate": 0.8,
+	"invasion_rate": 0.7,
+	"battle_rate": 0.6,
+	"levelup_rate": 0.4
   },
   "features": {
-    "basic_evaluation": true,
-    "tempo_evaluation": true,
-    "synergy_evaluation": true,
-    "lookahead": 1
+	"basic_evaluation": true,
+	"tempo_evaluation": true,
+	"synergy_evaluation": true,
+	"lookahead": 1
   }
 }
 ```
@@ -284,15 +284,15 @@ data/
   "cleared_stages": ["stage_1_1", "stage_1_2"],
   "unlocked_worlds": ["world_1", "world_2"],
   "owned_cards": [
-    {"card_id": 1, "count": 3},
-    {"card_id": 5, "count": 1}
+	{"card_id": 1, "count": 3},
+	{"card_id": 5, "count": 1}
   ],
   "gold": 5000,
   "player_decks": [
-    {
-      "name": "メインデッキ",
-      "cards": [1, 1, 5, 12, 12]
-    }
+	{
+	  "name": "メインデッキ",
+	  "cards": [1, 1, 5, 12, 12]
+	}
   ],
   "last_played": "2025-12-15T10:30:00Z"
 }
@@ -326,9 +326,9 @@ debug_manual_control_all = false  # CPUはAI任せ
 ```gdscript
 # StageLoaderで設定
 func setup_cpu_players(stage_data: Dictionary):
-    for enemy in stage_data.enemies:
-        var profile = load_ai_profile(enemy.ai_profile_id)
-        cpu_ai_handler.set_profile(enemy.player_id, profile)
+	for enemy in stage_data.enemies:
+		var profile = load_ai_profile(enemy.ai_profile_id)
+		cpu_ai_handler.set_profile(enemy.player_id, profile)
 ```
 
 ### CPUAIHandlerへの追加（将来実装）
@@ -338,11 +338,11 @@ func setup_cpu_players(stage_data: Dictionary):
 var ai_profiles: Dictionary = {}
 
 func set_profile(player_id: int, profile: Dictionary):
-    ai_profiles[player_id] = profile
+	ai_profiles[player_id] = profile
 
 func get_summon_rate(player_id: int) -> float:
-    var profile = ai_profiles.get(player_id, {})
-    return profile.get("behavior", {}).get("summon_rate", 0.5)
+	var profile = ai_profiles.get(player_id, {})
+	return profile.get("behavior", {}).get("summon_rate", 0.5)
 ```
 
 ### 難易度レベルと機能
@@ -434,15 +434,15 @@ data/
 ```gdscript
 # 今
 class DataLoader:
-    func load_stage(stage_id: String) -> Dictionary:
-        var file = FileAccess.open("res://data/master/stages/%s.json" % stage_id, FileAccess.READ)
-        return JSON.parse_string(file.get_as_text())
+	func load_stage(stage_id: String) -> Dictionary:
+		var file = FileAccess.open("res://data/master/stages/%s.json" % stage_id, FileAccess.READ)
+		return JSON.parse_string(file.get_as_text())
 
 # 将来（差し替えるだけ）
 class DataLoader:
-    func load_stage(stage_id: String) -> Dictionary:
-        var response = await http.request("https://api.example.com/stages/%s" % stage_id)
-        return JSON.parse_string(response.body)
+	func load_stage(stage_id: String) -> Dictionary:
+		var response = await http.request("https://api.example.com/stages/%s" % stage_id)
+		return JSON.parse_string(response.body)
 ```
 
 **JSONの構造は変わらない。読み込み方法だけ変更。**
@@ -454,27 +454,27 @@ class DataLoader:
 ```sql
 -- ユーザーテーブル
 CREATE TABLE users (
-    user_id TEXT PRIMARY KEY,
-    name TEXT,
-    gold INTEGER,
-    created_at TIMESTAMP
+	user_id TEXT PRIMARY KEY,
+	name TEXT,
+	gold INTEGER,
+	created_at TIMESTAMP
 );
 
 -- 所持カードテーブル
 CREATE TABLE user_cards (
-    user_id TEXT,
-    card_id INTEGER,
-    count INTEGER,
-    PRIMARY KEY (user_id, card_id)
+	user_id TEXT,
+	card_id INTEGER,
+	count INTEGER,
+	PRIMARY KEY (user_id, card_id)
 );
 
 -- ガチャ履歴
 CREATE TABLE gacha_history (
-    id INTEGER PRIMARY KEY,
-    user_id TEXT,
-    gacha_type TEXT,
-    card_id INTEGER,
-    timestamp TIMESTAMP
+	id INTEGER PRIMARY KEY,
+	user_id TEXT,
+	gacha_type TEXT,
+	card_id INTEGER,
+	timestamp TIMESTAMP
 );
 ```
 

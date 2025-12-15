@@ -24,9 +24,9 @@
 ```
 GameFlowManager
   └── LapSystem (子ノード)
-        ├── 周回状態管理 (player_lap_state)
-        ├── 破壊カウンター (game_stats)
-        └── 周回ボーナス適用
+		├── 周回状態管理 (player_lap_state)
+		├── 破壊カウンター (game_stats)
+		└── 周回ボーナス適用
 ```
 
 **設計方針**: ファサード方式（プロジェクト標準に統一）
@@ -66,10 +66,10 @@ func reset_destroy_count()
 ```gdscript
 # プロパティ（外部互換用）
 var player_lap_state: Dictionary:
-    get: return lap_system.player_lap_state if lap_system else {}
+	get: return lap_system.player_lap_state if lap_system else {}
 
 var game_stats: Dictionary:
-    get: return lap_system.game_stats if lap_system else {}
+	get: return lap_system.game_stats if lap_system else {}
 
 # メソッド（LapSystemに委譲）
 func get_lap_count(player_id: int) -> int
@@ -94,26 +94,26 @@ signal checkpoint_passed(player_id: int, checkpoint_type: String)
 
 ```gdscript
 func complete_lap(player_id: int):
-    # 周回数をインクリメント
-    player_lap_state[player_id]["lap_count"] += 1
-    
-    # フラグをリセット
-    player_lap_state[player_id]["N"] = false
-    player_lap_state[player_id]["S"] = false
-    
-    # 魔力ボーナス付与
-    player_system.add_magic(player_id, GameConstants.PASS_BONUS)
-    
-    # ダウン解除
-    board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
-    
-    # HP回復+10
-    board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
-    
-    # クリーチャー固有の周回ボーナス
-    _apply_lap_bonus_to_all_creatures(player_id)
-    
-    lap_completed.emit(player_id)
+	# 周回数をインクリメント
+	player_lap_state[player_id]["lap_count"] += 1
+	
+	# フラグをリセット
+	player_lap_state[player_id]["N"] = false
+	player_lap_state[player_id]["S"] = false
+	
+	# 魔力ボーナス付与
+	player_system.add_magic(player_id, GameConstants.PASS_BONUS)
+	
+	# ダウン解除
+	board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
+	
+	# HP回復+10
+	board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
+	
+	# クリーチャー固有の周回ボーナス
+	_apply_lap_bonus_to_all_creatures(player_id)
+	
+	lap_completed.emit(player_id)
 ```
 
 ---
@@ -123,8 +123,8 @@ func complete_lap(player_id: int):
 ### player_lap_state
 ```gdscript
 {
-    0: {"N": false, "S": true, "lap_count": 2},
-    1: {"N": true, "S": false, "lap_count": 1}
+	0: {"N": false, "S": true, "lap_count": 2},
+	1: {"N": true, "S": false, "lap_count": 1}
 }
 ```
 
@@ -141,11 +141,11 @@ func complete_lap(player_id: int):
 ```json
 {
   "effects": [
-    {
-      "effect_type": "per_lap_permanent_bonus",
-      "stat": "ap",
-      "value": 10
-    }
+	{
+	  "effect_type": "per_lap_permanent_bonus",
+	  "stat": "ap",
+	  "value": 10
+	}
   ]
 }
 ```
@@ -154,18 +154,18 @@ func complete_lap(player_id: int):
 ```json
 {
   "effects": [
-    {
-      "effect_type": "per_lap_permanent_bonus",
-      "stat": "max_hp",
-      "value": 10,
-      "reset_condition": {
-        "max_hp_check": {
-          "operator": ">=",
-          "value": 80,
-          "reset_to": 30
-        }
-      }
-    }
+	{
+	  "effect_type": "per_lap_permanent_bonus",
+	  "stat": "max_hp",
+	  "value": 10,
+	  "reset_condition": {
+		"max_hp_check": {
+		  "operator": ">=",
+		  "value": 80,
+		  "reset_to": 30
+		}
+	  }
+	}
   ]
 }
 ```

@@ -1,10 +1,31 @@
-# クリーチャー情報パネル設計書
+# カード情報パネル設計書
+
+**バージョン**: 2.0  
+**最終更新**: 2025年12月16日
 
 ## 概要
 
-クリーチャーの詳細情報をパネルで表示する機能。召喚時の確認ダイアログ、およびマップ上のクリーチャー情報閲覧に使用。
+カード（クリーチャー/スペル/アイテム）の詳細情報をパネルで表示する機能。使用確認ダイアログ、およびマップ上の情報閲覧に使用。
+
+**対象パネル**:
+- クリーチャー情報パネル（CreatureInfoPanelUI）
+- スペル情報パネル（SpellInfoPanelUI）
+- アイテム情報パネル（ItemInfoPanelUI）
+
+**共通設計**: [info_panel.md](info_panel.md) を参照
 
 ---
+
+## 目次
+
+1. [クリーチャー情報パネル](#クリーチャー情報パネル)
+2. [スペル情報パネル](#スペル情報パネル)
+3. [アイテム情報パネル](#アイテム情報パネル)
+4. [共通クラス設計](#共通クラス設計)
+
+---
+
+# クリーチャー情報パネル
 
 ## 実装状況
 
@@ -467,12 +488,189 @@ func on_card_selected(card_index: int):
 
 ---
 
+---
+
+# スペル情報パネル
+
+## 概要
+
+スペルカードの詳細情報を表示し、使用確認を行うパネル。
+
+## ファイル構成
+
+| ファイル | 役割 |
+|----------|------|
+| `scenes/ui/spell_info_panel.tscn` | シーンファイル |
+| `scripts/ui_components/spell_info_panel_ui.gd` | UIスクリプト |
+
+## 表示内容
+
+| 順序 | 項目 | データソース | 表示形式 |
+|------|------|-------------|----------|
+| 1 | 名前 + レア度 | `name`, `rarity` | `ファイアボール [N]` |
+| 2 | コスト | `cost` または `cost.mp` | `コスト: 50G` |
+| 3 | スペルタイプ | `spell_type` | `単体クリーチャー` |
+| 4 | 効果テキスト | `effect` | 効果説明文 |
+
+## 主要メソッド
+
+```gdscript
+## スペル情報パネルを表示（使用確認モード）
+func show_spell_info(spell_data: Dictionary, hand_index: int = -1)
+
+## パネルを閉じる
+func hide_panel(clear_buttons: bool = true)
+
+## パネル表示中かどうか
+func is_panel_visible() -> bool
+```
+
+## シグナル
+
+| シグナル | 発火タイミング |
+|---------|---------------|
+| `selection_confirmed(card_data)` | 決定ボタン押下時 |
+| `selection_cancelled` | 戻るボタン押下時 |
+| `panel_closed` | パネル閉じた時 |
+
+## 呼び出し元
+
+- `CardSelectionUI._show_spell_info_panel()` - スペルフェーズ時
+
+---
+
+# アイテム情報パネル
+
+## 概要
+
+アイテムカードの詳細情報を表示し、使用確認を行うパネル。
+
+## ファイル構成
+
+| ファイル | 役割 |
+|----------|------|
+| `scenes/ui/item_info_panel.tscn` | シーンファイル |
+| `scripts/ui_components/item_info_panel_ui.gd` | UIスクリプト |
+
+## 表示内容
+
+| 順序 | 項目 | データソース | 表示形式 |
+|------|------|-------------|----------|
+| 1 | 名前 + レア度 | `name`, `rarity` | `ロングソード [N]` |
+| 2 | コスト | `cost` または `cost.mp` | `コスト: 30G` |
+| 3 | アイテムタイプ | `item_type` | `武器` / `防具` / `道具` / `巻物` |
+| 4 | ステータス変化 | `effect_parsed.stat_bonus` | `AP+20  HP+10` |
+| 5 | 効果テキスト | `effect` | 効果説明文 |
+
+## 主要メソッド
+
+```gdscript
+## アイテム情報パネルを表示（使用確認モード）
+func show_item_info(item_data: Dictionary, hand_index: int = -1)
+
+## パネルを閉じる
+func hide_panel(clear_buttons: bool = true)
+
+## パネル表示中かどうか
+func is_panel_visible() -> bool
+```
+
+## シグナル
+
+| シグナル | 発火タイミング |
+|---------|---------------|
+| `selection_confirmed(card_data)` | 決定ボタン押下時 |
+| `selection_cancelled` | 戻るボタン押下時 |
+| `panel_closed` | パネル閉じた時 |
+
+## 呼び出し元
+
+- `CardSelectionUI._show_item_info_panel()` - アイテムフェーズ時
+
+## ステータスボーナス表示
+
+`effect_parsed.stat_bonus` からAP/HPボーナスを整形：
+
+```gdscript
+func _format_stat_bonus(data: Dictionary) -> String:
+	var effect_parsed = data.get("effect_parsed", {})
+	var stat_bonus = effect_parsed.get("stat_bonus", {})
+	
+	var parts = []
+	var ap = stat_bonus.get("ap", 0)
+	var hp = stat_bonus.get("hp", 0)
+	
+	if ap != 0:
+		parts.append("AP%s%d" % ["+" if ap > 0 else "", ap])
+	if hp != 0:
+		parts.append("HP%s%d" % ["+" if hp > 0 else "", hp])
+	
+	return "  ".join(parts)
+```
+
+## アイテムフェーズでのクリーチャー表示
+
+アイテムフェーズでは以下もカード選択可能（**クリーチャー情報パネル**で表示）：
+- **アイテムクリーチャー**: `SkillItemCreature.is_item_creature(card_data)` で判定
+- **援護クリーチャー**: バトル参加クリーチャーが援護スキルを持つ場合
+
+---
+
+# 共通クラス設計
+
+## 共通定数
+
+```gdscript
+const CARD_SCALE = 1.12  # カード表示スケール
+```
+
+## 共通パターン
+
+### グローバルボタン連携
+
+```gdscript
+# パネル表示時
+if ui_manager_ref:
+	ui_manager_ref.enable_navigation(
+		func(): _on_confirm_action(),  # 決定
+		func(): _on_back_action()      # 戻る
+	)
+
+# パネル非表示時
+if clear_buttons and ui_manager_ref:
+	ui_manager_ref.disable_navigation()
+```
+
+### カード表示のクリア
+
+```gdscript
+if card_display and is_instance_valid(card_display):
+	card_display.queue_free()
+	card_display = null
+```
+
+### カード読み込み
+
+```gdscript
+var card_scene = preload("res://scenes/Card.tscn")
+card_display = card_scene.instantiate()
+card_display.scale = Vector2(CARD_SCALE, CARD_SCALE)
+left_panel.add_child(card_display)
+
+var card_id = current_data.get("id", 0)
+if card_display.has_method("load_card_data"):
+	card_display.load_card_data(card_id)
+```
+
+---
+
 ## 更新履歴
 
 | 日付 | 内容 |
 |------|------|
-| 2025/12/11 | 初版作成 |
+| 2025/12/11 | 初版作成（クリーチャー情報パネル） |
 | 2025/12/11 | レイアウト更新、半透明オーバーレイ追加 |
 | 2025/12/11 | 実装完了部分を反映、画面サイズ対応設計追加、クラス設計詳細化 |
 | 2025/12/12 | UI調整（パネル位置180px上、カード位置50px上、右パネル高さ2/3、フォント1.65倍） |
 | 2025/12/12 | ダブルクリック召喚、戻るボタン時のホバー解除、呪い表示修正（curse形式対応） |
+| 2025/12/16 | ファイル名変更（creature_info_panel.md → card_info_panels.md）、スペル/アイテムパネル追記 |

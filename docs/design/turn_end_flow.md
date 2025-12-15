@@ -1,14 +1,18 @@
 # ターン終了処理フロー図
 
 ## 概要
-ターン終了処理（`end_turn()`）の呼び出し経路と問題点を可視化
+ターン終了処理（`end_turn()`）の呼び出し経路と実装状況
+
+**バージョン**: 2.0  
+**最終更新**: 2025年12月16日  
+**ステータス**: 実装完了（BUG-000対策済み）
 
 ---
 
 ## 🎯 責任クラス
 **GameFlowManager** (`scripts/game_flow_manager.gd`)
-- **メソッド**: `end_turn()` (Line 236)
-- **トリガー**: `_on_tile_action_completed_3d()` (Line 141)
+- **メソッド**: `end_turn()` (Line 525)
+- **トリガー**: `_on_tile_action_completed_3d()` (Line 363)
 
 ---
 
@@ -43,128 +47,148 @@
 				   │ 呼び出し
 				   ▼
 	  ┌────────────────────────────┐
-	  │  end_turn()  (Line 236)    │
+	  │  end_turn()  (Line 525)    │
 	  │                            │
 	  │  【重複チェック】            │
+	  │  if is_ending_turn: return │
 	  │  if phase == END_TURN:     │
 	  │    return                  │
 	  │                            │
+	  │  is_ending_turn = true     │
+	  │  領地コマンドを閉じる        │
+	  │  手札調整チェック           │
+	  │  敵地通行料支払い           │
 	  │  change_phase(END_TURN)    │
-	  │  skill_system.end_turn_cleanup()
+	  │  player_buff_system.end_turn_cleanup()
+	  │  spell_curse更新           │
 	  │  プレイヤー切り替え          │
+	  │  spell_world_curse更新（ラウンド開始時）
 	  │  await camera移動           │
+	  │  is_ending_turn = false    │
 	  │  start_turn()              │
 	  └────────────────────────────┘
 ```
 
 ---
 
-## ⚠️ 問題：重複実行経路
+## ✅ 実装済み：重複実行防止
 
-### 3D版の正常フロー（推奨）
+### 現在の正常フロー（3D版のみ）
 ```
 アクション完了
   ↓
-BoardSystem3D.emit_signal("tile_action_completed")
+TileActionProcessor._complete_action()
+  ↓
+emit_signal("tile_action_completed")
   ↓
 GameFlowManager._on_tile_action_completed_3d()
-  ↓
-end_turn()
+  │
+  ├─ フェーズチェック（END_TURN/SETUP なら return）
+  ├─ is_ending_turn チェック（true なら return）
+  │
+  └→ end_turn()
+	  ├─ is_ending_turn = true（最優先）
+	  ├─ 領地コマンドを閉じる
+	  ├─ 手札調整
+	  ├─ 通行料支払い
+	  ├─ ターン終了処理
+	  ├─ プレイヤー切り替え
+	  ├─ カメラ移動
+	  ├─ is_ending_turn = false
+	  └→ start_turn()
 ```
 
-### 2D版の残存フロー（削除予定・問題あり）
-```
-CPU判断完了
-  ↓
-_on_cpu_summon_decided() など
-  ↓
-end_turn()  ← 直接呼び出し（問題！）
-```
-
-### 混在時の問題ケース
-```
-シナリオ: CPUターンでカード召喚
-
-1. _on_cpu_summon_decided()
-   ├─ 3D版: board_system_3d.execute_summon()
-   │         └→ 内部でtile_action_completed発火
-   │             └→ _on_tile_action_completed_3d()
-   │                 └→ end_turn() ①
-   │
-   └─ 2D版分岐（else節）
-	   └→ end_turn() ② 【重複！】
-
-結果: end_turn()が2回実行される可能性
-```
+### 2D版コード
+**削除済み** - 2D版の分岐コードは完全に削除され、3D版に一本化されました。
 
 ---
 
 ## 🔍 tile_action_completed発火箇所一覧
 
-### BoardSystem3D内
-| メソッド | 場所 | タイミング |
-|---------|------|-----------|
-| `on_action_pass()` | Line 221 | 通行料支払い後 |
-| `on_card_selected()` | - | カード使用決定後 |
-| `_on_invasion_completed()` | - | バトル完了後 |
-| `execute_summon()` | - | 召喚完了後 |
+### TileActionProcessor内（主要）
+| メソッド | タイミング |
+|---------|-----------|
+| `_complete_action()` | 全アクション完了時の統一出口 |
 
-### GameFlowManager内（明示的emit）
-| メソッド | 場所 | 条件 |
-|---------|------|------|
-| `_on_cpu_summon_decided()` | Line 156 | 3D版・召喚しない場合 |
-| `_on_cpu_summon_decided()` | Line 159 | 2D版（削除予定） |
-| `_on_cpu_battle_decided()` | Line 176 | 2D版（削除予定） |
-| `_on_cpu_level_up_decided()` | Line 195 | 3D版・レベルアップ完了 |
-| `_on_cpu_level_up_decided()` | Line 198 | 2D版（削除予定） |
+### 発火タイミング
+| アクション | 発火元 |
+|-----------|--------|
+| 召喚完了 | `execute_summon()` → `_complete_action()` |
+| パス選択 | `on_action_pass()` → `_complete_action()` |
+| バトル完了 | `_on_battle_completed()` → `_complete_action()` |
+| レベルアップ | `on_level_up_selected()` → `_complete_action()` |
+| 領地コマンド | 各アクション → `_complete_action()` |
+
+### CPU処理（GameFlowManager内）
+| メソッド | 処理 |
+|---------|------|
+| `_on_cpu_summon_decided()` | TileActionProcessor.execute_summon()に委譲 |
+| `_on_cpu_battle_decided()` | TileActionProcessor経由でバトル実行 |
+| `_on_cpu_level_up_decided()` | TileActionProcessor経由でレベルアップ |
+
+**注**: 全てのCPU処理はTileActionProcessorに委譲され、直接emit_signalしない設計に統一済み
 
 ---
 
-## 🛡️ 現在の防御機構
+## 🛡️ 実装済み防御機構
 
-### 1. フェーズチェック（一次防御）
+### 1. is_ending_turnフラグ（最優先）
 ```gdscript
-# game_flow_manager.gd Line 142-145
-func _on_tile_action_completed_3d():
-	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
-		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
+# game_flow_manager.gd
+var is_ending_turn = false
+
+func end_turn():
+	if is_ending_turn:
+		print("Warning: Already ending turn (flag check)")
 		return
 	
-	end_turn()
+	is_ending_turn = true  # ★最優先でフラグを立てる
+	# ... ターン終了処理 ...
+	is_ending_turn = false
+	start_turn()
 ```
 
-**問題点**: 非同期処理で`current_phase`が更新される前に2回目の呼び出しが入る
-
-### 2. 実行中チェック（二次防御）
+### 2. フェーズチェック（二次防御）
 ```gdscript
-# game_flow_manager.gd Line 238-240
+# _on_tile_action_completed_3d() 内
+if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
+	return
+
+if is_ending_turn:
+	return
+
+end_turn()
+```
+
+### 3. end_turn()内のフェーズチェック（三次防御）
+```gdscript
 func end_turn():
 	if current_phase == GamePhase.END_TURN:
-		print("Warning: Already ending turn")
+		print("Warning: Already ending turn (phase check)")
 		return
-	
-	change_phase(GamePhase.END_TURN)  # ここでフェーズ変更
-	# ...
 ```
 
-**問題点**: `change_phase()`の前に2回目の呼び出しが入ると防げない
+**三重の防御機構により、重複実行は完全に防止されています。**
 
 ---
 
-## 💡 修正案
+## ✅ 採用された修正
 
-### Option 1: シグナル一本化（推奨）
+### Option 1: シグナル一本化 → 採用済み
+- 全CPU処理はTileActionProcessorに委譲
+- 直接emit_signalは行わない設計に統一
+
+### Option 2: is_ending_turnフラグ → 採用済み
 ```gdscript
-# 全ての経路をtile_action_completedシグナルに統一
-func _on_cpu_summon_decided(card_index: int):
-	if is_3d_mode and board_system_3d:
-		if card_index >= 0:
-			board_system_3d.execute_summon(card_index)
-		else:
-			board_system_3d.emit_signal("tile_action_completed")
-	# else節削除（2D版削除）
+var is_ending_turn = false
 
-# end_turn()はシグナル経由のみ
+func end_turn():
+	if is_ending_turn:
+		return
+	is_ending_turn = true
+	# ... 処理 ...
+	is_ending_turn = false
+	start_turn()はシグナル経由のみ
 ```
 
 ### Option 2: 排他制御フラグ
@@ -185,39 +209,77 @@ func end_turn():
 	start_turn()
 ```
 
-### Option 3: デバウンス処理
-```gdscript
-var end_turn_timer: Timer = null
+### Option 3: デバウンス処理 → 不採用
+is_ending_turnフラグで十分なため、デバウンス処理は不採用。
 
-func request_end_turn():
-	if end_turn_timer and end_turn_timer.time_left > 0:
-		return  # 既にリクエスト中
-	
-	end_turn_timer = get_tree().create_timer(0.1)
-	await end_turn_timer.timeout
-	end_turn()
+---
+
+## 📋 対応完了チェックリスト
+
+### 完了済み ✅
+- [x] BUG-000対策: is_ending_turnフラグ実装
+- [x] 2D版コード完全削除
+- [x] シグナル経路の一本化
+- [x] 三重防御機構の実装
+
+### 今後の検討事項
+- [ ] ターン管理の専用クラス作成（TurnManager）- 現状で問題ないため優先度低
+- [ ] フェーズ遷移の状態機械パターン適用 - 現状で問題ないため優先度低
+
+---
+
+## 📊 end_turn()処理詳細
+
+```
+end_turn()
+  │
+  ├─ 重複チェック（is_ending_turn, phase）
+  │
+  ├─ is_ending_turn = true
+  │
+  ├─ 領地コマンドを閉じる
+  │   └─ land_command_handler.close_land_command()
+  │
+  ├─ UIを隠す
+  │   ├─ ui_manager.hide_land_command_button()
+  │   └─ ui_manager.hide_card_selection_ui()
+  │
+  ├─ 手札調整チェック
+  │   └─ await check_and_discard_excess_cards()
+  │
+  ├─ 敵地通行料支払い
+  │   └─ await check_and_pay_toll_on_enemy_land()
+  │
+  ├─ ターン終了シグナル発火
+  │   └─ emit_signal("turn_ended", player_id)
+  │
+  ├─ フェーズ変更
+  │   └─ change_phase(GamePhase.END_TURN)
+  │
+  ├─ クリーンアップ
+  │   ├─ player_buff_system.end_turn_cleanup()
+  │   └─ spell_curse.update_player_curse()
+  │
+  ├─ プレイヤー切り替え
+  │   ├─ current_player_index更新
+  │   └─ ラウンド開始時: spell_world_curse.on_round_start()
+  │
+  ├─ カメラ移動
+  │   └─ await move_camera_to_next_player()
+  │
+  ├─ 待機
+  │   └─ await create_timer(TURN_END_DELAY)
+  │
+  ├─ フラグリセット
+  │   ├─ current_phase = SETUP
+  │   └─ is_ending_turn = false
+  │
+  └─ 次ターン開始
+      └─ start_turn()
 ```
 
 ---
 
-## 📋 対応チェックリスト
-
-### 即時対応
-- [ ] BUG-000を最優先バグとして登録
-- [ ] is_ending_turnフラグによる一時対策実装
-- [ ] ログ出力強化（どの経路から呼ばれたか追跡）
-
-### 今週対応
-- [ ] 2D版コード完全削除（TECH-001）
-- [ ] シグナル経路の一本化
-- [ ] テストケース作成
-
-### 来週以降
-- [ ] ターン管理の専用クラス作成（TurnManager）
-- [ ] フェーズ遷移の状態機械パターン適用
-- [ ] リファクタリング完了
-
----
-
-**作成日**: 2025年1月10日  
-**関連Issue**: BUG-000, TECH-001
+**作成日**: 2025年10月  
+**最終更新**: 2025年12月16日（v2.0 - BUG-000対策完了、実装状況反映）  
+**関連Issue**: BUG-000（解決済み）

@@ -82,6 +82,42 @@ tile.creature_data = {}        # 同様に動作
 
 ---
 
+## CreatureManager統合
+
+### 概要
+
+クリーチャーデータはタイルから分離され、`CreatureManager`で一元管理される。
+`tile.creature_data`へのアクセスは透過的に`CreatureManager`へリダイレクトされる。
+
+**詳細設計は [tile_creature_separation_plan.md](tile_creature_separation_plan.md) を参照。**
+
+### 仕組み
+
+```gdscript
+# BaseTile のプロパティ定義
+var creature_data: Dictionary:
+	get:
+		return creature_manager.get_data_ref(tile_index)
+	set(value):
+		creature_manager.set_data(tile_index, value)
+		_sync_creature_card_3d(value)  # 3Dカード同期
+```
+
+### 静的参照
+
+| 参照 | 型 | 用途 |
+|------|-----|------|
+| `creature_manager` | CreatureManager | クリーチャーデータの一元管理 |
+| `tile_info_display` | TileInfoDisplay | 通行料ラベルの表示更新 |
+
+### メリット
+
+- 既存コード800箇所を変更せずにデータ一元管理を実現
+- デバッグが容易（`CreatureManager.debug_print()`で一覧表示）
+- セーブ/ロードの簡素化
+
+---
+
 ## タイルタイプ一覧
 
 ### 配置可能タイル（6種）
@@ -197,31 +233,16 @@ if TileHelper.can_change_terrain(tile):
 - 最小: 1
 - 最大: 5（GameConstants.MAX_LEVEL）
 
-### 通行料計算式
+### 通行料・レベルアップコスト
 
-```gdscript
-# 基本通行料
-base_toll = GameConstants.BASE_TOLL  # 100
+**詳細は [toll_system.md](toll_system.md) を参照。**
 
-# レベル倍率
-level_multipliers = [1.0, 1.5, 2.0, 2.5, 3.0]  # レベル1〜5
-
-# 計算
-toll = base_toll * level_multipliers[level - 1]
-
-# 連鎖ボーナス適用
-toll = toll * chain_bonus
-```
-
-### レベルアップコスト
-
-```gdscript
-# レベル2: 100G
-# レベル3: 200G
-# レベル4: 300G
-# レベル5: 400G
-# 合計（レベル1→5）: 1000G
-```
+| 項目 | 参照先 |
+|------|--------|
+| 通行料計算式 | toll_system.md |
+| レベル倍率 | GameConstants.TOLL_LEVEL_MULTIPLIER |
+| 連鎖ボーナス | GameConstants.CHAIN_BONUS_* |
+| レベルアップコスト | GameConstants.LEVEL_VALUES |
 
 ---
 
@@ -262,17 +283,9 @@ HP += レベル × 10
 
 ### 仕様
 
-同じプレイヤーが所有する同属性タイルが隣接している場合、通行料にボーナスが付く。
+同じプレイヤーが所有する同属性タイルの数に応じて、通行料にボーナスが付く。
 
-### 連鎖ボーナス倍率
-
-| 連鎖数 | 倍率 |
-|--------|------|
-| 1（単独） | 1.0 |
-| 2 | 1.1 |
-| 3 | 1.2 |
-| 4 | 1.3 |
-| 5以上 | 1.5 |
+**詳細は [toll_system.md](toll_system.md) を参照。**
 
 ### 判定場所
 
@@ -448,6 +461,8 @@ const NO_STOP_TILES = ["warp", "shop"]
 | `docs/design/map_system.md` | マップシステム全体 |
 | `docs/design/lap_system.md` | 周回システム（チェックポイント） |
 | `docs/design/land_system.md` | 領地コマンド |
+| `docs/design/toll_system.md` | 通行料システム |
+| `docs/design/tile_creature_separation_plan.md` | タイル・クリーチャー分離設計 |
 | `docs/design/skills/vacant_move_skill.md` | 空地移動・敵地移動スキル |
 
 ---
@@ -538,7 +553,7 @@ func _on_creature_tapped(creature_data: Dictionary, tile_index: int):
 
 ### 関連ドキュメント
 
-詳細は `docs/design/creature_info_panel.md` を参照。
+詳細は `docs/design/card_info_panels.md` を参照。
 
 ---
 
@@ -549,3 +564,4 @@ func _on_creature_tapped(creature_data: Dictionary, tile_index: int):
 | 2025/12/08 | 初版作成。TileHelperによるリファクタリング完了 |
 | 2025/12/09 | 自動同期システム追加（creature_data, owner_id, level変更時に3Dカード・通行料ラベルを自動更新） |
 | 2025/12/11 | クリーチャー選択（タップ判定）セクション追加 |
+| 2025/12/16 | CreatureManager統合セクション追加、通行料計算をtoll_system.mdに集約 |

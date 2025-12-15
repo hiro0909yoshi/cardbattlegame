@@ -241,6 +241,7 @@ static func execute_swap_creature(handler) -> bool:
 	# カード選択UIを表示（交換モード）
 	if handler.ui_manager:
 		handler.ui_manager.phase_label.text = "交換する新しいクリーチャーを選択"
+		handler.ui_manager.card_selection_filter = ""  # disabledフィルターをクリア
 		handler.ui_manager.show_card_selection_ui_mode(handler.player_system.get_current_player(), "swap")
 	
 	handler.action_selected.emit("swap_creature")

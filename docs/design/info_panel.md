@@ -1,7 +1,7 @@
 # インフォパネルシステム
 
-**バージョン**: 1.0  
-**最終更新**: 2025年12月14日
+**バージョン**: 1.1  
+**最終更新**: 2025年12月16日
 
 ---
 
@@ -41,6 +41,8 @@
 ---
 
 ## クリーチャーインフォパネル
+
+**詳細設計**: [card_info_panels.md](card_info_panels.md#クリーチャー情報パネル)
 
 ### 用途
 - **召喚フェーズ**: 召喚するクリーチャーの確認
@@ -87,6 +89,8 @@ hide_panel(clear_buttons: bool = true)
 
 ## スペルインフォパネル
 
+**詳細設計**: [card_info_panels.md](card_info_panels.md#スペル情報パネル)
+
 ### 用途
 - **スペルフェーズ**: 使用するスペルの確認
 
@@ -120,6 +124,8 @@ hide_panel(clear_buttons: bool = true)
 ---
 
 ## アイテムインフォパネル
+
+**詳細設計**: [card_info_panels.md](card_info_panels.md#アイテム情報パネル)
 
 ### 用途
 - **アイテムフェーズ**: 使用するアイテムの確認
@@ -162,6 +168,8 @@ hide_panel(clear_buttons: bool = true)
 ---
 
 ## プレイヤーインフォパネル
+
+**詳細設計**: [player_info_panel_redesign.md](player_info_panel_redesign.md)
 
 ### 用途
 - 画面上部に常時表示
@@ -227,8 +235,8 @@ Panel (Control)
 ```gdscript
 # 選択モード時
 ui_manager_ref.enable_navigation(
-    func(): _on_confirm_action(),  # 決定
-    func(): _on_back_action()      # 戻る
+	func(): _on_confirm_action(),  # 決定
+	func(): _on_back_action()      # 戻る
 )
 
 # または register_global_actions（クリーチャーパネル）
@@ -243,9 +251,9 @@ ui_manager_ref.register_global_actions(confirm_callback, back_callback, confirm_
 パネル切り替え時に古いカードが残る問題を防ぐため、`remove_child()`で即座に削除：
 ```gdscript
 if card_display and is_instance_valid(card_display):
-    card_display.get_parent().remove_child(card_display)
-    card_display.queue_free()
-    card_display = null
+	card_display.get_parent().remove_child(card_display)
+	card_display.queue_free()
+	card_display = null
 ```
 
 ### 2. パネル切り替え時の相互クローズ
@@ -253,7 +261,7 @@ if card_display and is_instance_valid(card_display):
 ```gdscript
 # アイテムパネル表示時
 if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
-    ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+	ui_manager_ref.creature_info_panel_ui.hide_panel(false)
 ```
 
 ### 3. シグナル接続の排他制御
@@ -261,8 +269,8 @@ if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_
 ```gdscript
 # アイテム用表示時、召喚用のシグナルを切断
 if creature_info_panel_connected:
-    ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_creature_panel_confirmed)
-    creature_info_panel_connected = false
+	ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_creature_panel_confirmed)
+	creature_info_panel_connected = false
 ```
 
 ### 4. プレイヤーID管理（防衛側対応）
@@ -283,8 +291,8 @@ var is_spell_in_spell_phase = card_type == "spell" and _is_spell_phase_active()
 var is_item_phase = _is_item_phase_active()
 
 if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
-    select_card()
-    on_card_confirmed()
+	select_card()
+	on_card_confirmed()
 ```
 
 ---
@@ -294,3 +302,4 @@ if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/12/14 | 1.0 | 初版作成（アイテムインフォパネル追加に伴い整理） |
+| 2025/12/16 | 1.1 | 詳細設計へのリンク追加 |

@@ -111,13 +111,8 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		else:
 			show_summon_ui()
 	elif tile_info["owner"] == player_index:
-		# 自分の土地
-		if tile.level < GameConstants.MAX_LEVEL:
-			show_level_up_ui(tile_info)
-		else:
-			# レベルMAXの自分の土地 - アクション不要
-			print("レベルMAXの自分の土地 - アクション不要")
-			_complete_action()
+		# 自分の土地 - 召喚不可（領地コマンドで操作可能）
+		show_summon_ui_disabled()
 	else:
 		# 敵の土地
 		# peace呪いチェック
