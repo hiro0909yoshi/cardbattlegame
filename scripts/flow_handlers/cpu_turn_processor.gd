@@ -8,7 +8,7 @@ signal cpu_action_completed()
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TileHelper = preload("res://scripts/tile_helper.gd")
+# TileHelper はグローバルclass_nameとして定義済み
 
 # システム参照
 var board_system: BoardSystem3D
@@ -82,7 +82,7 @@ func _wait_for_notifications():
 		var is_busy = false
 		
 		# LapSystemの処理中チェック
-		if lap_system and lap_system.is_processing:
+		if lap_system and lap_system.is_showing_notification:
 			is_busy = true
 		
 		# GlobalCommentUIのクリック待ちチェック

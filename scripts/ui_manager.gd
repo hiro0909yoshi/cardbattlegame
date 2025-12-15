@@ -475,9 +475,9 @@ func register_global_actions(confirm_callback: Callable, back_callback: Callable
 # === 手札UI管理 ===
 
 # 手札コンテナを初期化（HandDisplayに委譲）
-func initialize_hand_container(ui_layer: Node):
+func initialize_hand_container(container_layer: Node):
 	if hand_display:
-		hand_display.initialize(ui_layer, card_system_ref, player_system_ref)
+		hand_display.initialize(container_layer, card_system_ref, player_system_ref)
 
 # CardSystemのシグナルに接続（HandDisplayに委譲）
 func connect_card_system_signals():

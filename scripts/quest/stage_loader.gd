@@ -34,6 +34,16 @@ var characters_data: Dictionary = {}
 var tiles_container: Node3D
 var generated_tiles: Dictionary = {}  # tile_index -> BaseTile
 
+# ワープペア（マップ生成時に収集）
+var pending_warp_pairs: Dictionary = {}  # from_tile -> to_tile
+
+## 収集したワープペアをSpecialTileSystemに登録
+func register_warp_pairs_to_system(system: SpecialTileSystem) -> void:
+	system.clear_warp_pairs()
+	for from_tile in pending_warp_pairs:
+		system.register_warp_pair(from_tile, pending_warp_pairs[from_tile])
+	print("[StageLoader] ワープペア登録完了: %d 件" % pending_warp_pairs.size())
+
 func _ready():
 	_load_characters()
 
@@ -136,6 +146,7 @@ func generate_map() -> Dictionary:
 	for child in tiles_container.get_children():
 		child.queue_free()
 	generated_tiles.clear()
+	pending_warp_pairs.clear()
 	
 	# タイルを生成
 	var tiles_data = current_map_data.get("tiles", [])
@@ -174,8 +185,10 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 		tile.checkpoint_type = 0 if cp_type == "N" else 1
 	
 	if tile_type == "Warp" and tile_data.has("warp_pair"):
-		# ワープペアは後で設定（SpecialTileSystemが担当）
-		pass
+		var from_tile = tile_data.get("index", -1)
+		var to_tile = tile_data.get("warp_pair", -1)
+		if from_tile >= 0 and to_tile >= 0:
+			pending_warp_pairs[from_tile] = to_tile
 	
 	return tile
 

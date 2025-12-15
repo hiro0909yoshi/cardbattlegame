@@ -146,16 +146,20 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, is_reversed: bool = false) -> void:
 	var current_tile = player_tiles[player_id]
 	var came_from = _get_player_came_from(player_id)
+	var remaining_steps = steps
+	var is_first_step = true
 	
-	for step in range(steps):
+	while remaining_steps > 0:
 		var next_tile: int
 		
-		if step == 0 and first_tile >= 0:
+		if is_first_step and first_tile >= 0:
 			# 最初の1歩は指定タイル
 			next_tile = first_tile
+			is_first_step = false
 		else:
 			# 次のタイルを決定
 			next_tile = await _get_next_tile_with_branch(current_tile, came_from, player_id, is_reversed)
+			is_first_step = false
 		
 		# 移動前のチェック
 		if next_tile == 0 and current_tile > next_tile:
@@ -171,6 +175,9 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 		player_tiles[player_id] = next_tile
 		_set_player_came_from(player_id, came_from)
 		
+		# 歩数を消費
+		remaining_steps -= 1
+		
 		# ワープチェック
 		var warp_result = await check_and_handle_warp(player_id, next_tile)
 		if warp_result.warped:
@@ -178,6 +185,9 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 			player_tiles[player_id] = current_tile
 			came_from = next_tile  # ワープ元がcame_from
 			_set_player_came_from(player_id, came_from)
+			# ワープタイルでは歩数を消費しない（通過型）
+			remaining_steps += 1
+			continue
 		
 		# 足どめチェック
 		var stop_result = check_forced_stop_at_tile(current_tile, player_id)

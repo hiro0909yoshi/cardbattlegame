@@ -434,11 +434,11 @@ func create_level_selection_panel(parent: Node):
 	# 画面中央に配置 ※1.5倍サイズ
 	var viewport_size = parent.get_viewport().get_visible_rect().size
 	var panel_width = 945
-	var panel_height = 1260
+	var panel_height = 1240
 	
 	# 中央配置
 	var panel_x = (viewport_size.x - panel_width) / 2
-	var panel_y = (viewport_size.y - panel_height) / 2
+	var panel_y = (viewport_size.y - panel_height) / 2 - 200
 	
 	level_selection_panel.position = Vector2(panel_x, panel_y)
 	level_selection_panel.size = Vector2(panel_width, panel_height)
@@ -509,7 +509,7 @@ func _create_terrain_selection_panel(parent: Node):
 	var panel_height = 1050
 	
 	var panel_x = (viewport_size.x - panel_width) / 2
-	var panel_y = (viewport_size.y - panel_height) / 2
+	var panel_y = (viewport_size.y - panel_height) / 2 -200
 	
 	terrain_selection_panel.position = Vector2(panel_x, panel_y)
 	terrain_selection_panel.size = Vector2(panel_width, panel_height)

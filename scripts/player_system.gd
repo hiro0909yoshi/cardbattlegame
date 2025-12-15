@@ -6,6 +6,7 @@ class_name PlayerSystem
 signal dice_rolled(value: int)
 # TODO: 将来実装予定
 # signal magic_changed(player_id: int, new_value: int)
+@warning_ignore("unused_signal")  # GameSystemManagerで接続、将来のLapSystemから発行予定
 signal player_won(player_id: int)
 
 # 定数をpreload

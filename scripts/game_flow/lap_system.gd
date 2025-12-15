@@ -30,7 +30,7 @@ var required_checkpoints: Array = ["N", "S"]  # 必要シグナル（デフォ�
 var signal_display_label: Label = null
 
 ## 処理中フラグ（通知ポップアップ表示中等）
-var is_processing: bool = false
+var is_showing_notification: bool = false
 
 ## 初期化
 func setup(p_system, b_system, p_ui_manager = null):
@@ -83,13 +83,13 @@ func _show_signal_display(signal_type: String):
 ## player_id: 明示的にプレイヤーIDを指定（CPU判定に使用）
 func _show_comment_and_wait(message: String, player_id: int = -1):
 	print("[LapSystem] _show_comment_and_wait: ", message, " (player_id: %d)" % player_id)
-	is_processing = true
+	is_showing_notification = true
 	if ui_manager and ui_manager.global_comment_ui:
 		# show_and_wait()内でclick_confirmedをawaitするので、ここでawaitするだけでOK
 		await ui_manager.global_comment_ui.show_and_wait(message, player_id)
 	else:
 		print("[LapSystem] WARNING: ui_manager or global_comment_ui is null")
-	is_processing = false
+	is_showing_notification = false
 
 ## 周回状態を初期化
 func initialize_lap_state(player_count: int):

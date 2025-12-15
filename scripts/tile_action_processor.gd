@@ -9,7 +9,7 @@ signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const TileHelper = preload("res://scripts/tile_helper.gd")
+# TileHelper はグローバルclass_nameとして定義済み
 
 # システム参照
 var board_system: BoardSystem3D

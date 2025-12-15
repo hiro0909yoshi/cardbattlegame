@@ -124,6 +124,10 @@ func _create_player_characters(container: Node3D):
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():
+	# ワープペアを登録
+	if system_manager.special_tile_system:
+		stage_loader.register_warp_pairs_to_system(system_manager.special_tile_system)
+	
 	# 周回システム設定を適用
 	if system_manager.game_flow_manager and system_manager.game_flow_manager.lap_system:
 		var map_data = stage_loader.get_map_data()

@@ -8,6 +8,7 @@ signal special_tile_activated(tile_type: String, player_id: int, tile_index: int
 # TODO: 将来実装予定
 # signal warp_triggered(from_tile: int, to_tile: int)
 signal card_draw_triggered(player_id: int, count: int)
+@warning_ignore("unused_signal")  # 将来のチェックポイント処理で使用予定
 signal checkpoint_passed(player_id: int, bonus: int)
 signal special_action_completed()
 
@@ -82,13 +83,8 @@ func handle_card_tile(player_id: int):
 	emit_signal("special_tile_activated", "card", player_id, -1)
 	emit_signal("special_action_completed")
 
-# ワープゲートかチェック（MovementController3Dから使用）
-# 注意: 3D版ではマス自体がワープ機能を持つため、常にfalseを返す
-# ワープペア定義（通過後の移動先）
-var warp_pairs = {
-	5: 6,    # タイル5を通過 → タイル6へワープ
-	15: 16   # タイル15を通過 → タイル16へワープ
-}
+# ワープペア定義（マップデータから動的に設定）
+var warp_pairs = {}
 
 func is_warp_gate(tile_index: int) -> bool:
 	return warp_pairs.has(tile_index)
@@ -96,6 +92,14 @@ func is_warp_gate(tile_index: int) -> bool:
 # ワープペアを取得（MovementControllerから使用）
 func get_warp_pair(tile_index: int) -> int:
 	return warp_pairs.get(tile_index, -1)
+
+# ワープペアを登録（StageLoaderから呼び出し）
+func register_warp_pair(from_tile: int, to_tile: int) -> void:
+	warp_pairs[from_tile] = to_tile
+
+# ワープペアをクリア（ステージ切り替え時）
+func clear_warp_pairs() -> void:
+	warp_pairs.clear()
 
 # タイルが特殊マスかチェック（TileHelperに委譲）
 func is_special_tile_3d(tile_type: String) -> bool:

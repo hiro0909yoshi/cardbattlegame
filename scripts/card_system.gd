@@ -136,9 +136,9 @@ func draw_card_data() -> Dictionary:
 func draw_card_data_v2(player_id: int) -> Dictionary:
 	# デッキプールがある場合はそこから引く（クエストモード用）
 	if player_deck_pools.has(player_id) and not player_deck_pools[player_id].is_empty():
-		var card_data = player_deck_pools[player_id].pop_front()
-		print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, card_data.get("name", "?"), card_data.get("id", 0)])
-		return card_data
+		var pool_card = player_deck_pools[player_id].pop_front()
+		print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, pool_card.get("name", "?"), pool_card.get("id", 0)])
+		return pool_card
 	
 	# デッキプールがない場合は従来の処理（ランダム）
 	if not player_decks.has(player_id):
@@ -272,8 +272,8 @@ func draw_from_deck_pool(player_id: int) -> Dictionary:
 		# デッキプールがない場合はランダムドロー
 		return draw_card_data_v2(player_id)
 	
-	var deck = player_deck_pools[player_id]
-	var card = deck.pop_front()
+	var pool_deck = player_deck_pools[player_id]
+	var card = pool_deck.pop_front()
 	return card
 
 ## 特定プレイヤーに初期手札を配布（デッキプールから）

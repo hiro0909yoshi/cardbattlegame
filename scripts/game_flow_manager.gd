@@ -607,7 +607,7 @@ func move_camera_to_next_player():
 
 # プレイヤー勝利処理
 func on_player_won(player_id: int):
-	var player = player_system.players[player_id]
+	var _player = player_system.players[player_id]  # 将来の拡張用
 	change_phase(GamePhase.SETUP)
 	
 	# 勝利演出を表示

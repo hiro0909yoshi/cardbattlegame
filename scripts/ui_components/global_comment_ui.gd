@@ -203,7 +203,7 @@ func _input(event):
 
 ## 通知を表示して自動フェードアウト（await不要）
 ## position: "center"（画面中央）, "bottom"（画面下部）
-func show_auto_fade(message: String, duration: float = 2.0, position: String = "bottom") -> void:
+func show_auto_fade(message: String, duration: float = 2.0, display_position: String = "bottom") -> void:
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	
@@ -221,7 +221,7 @@ func show_auto_fade(message: String, duration: float = 2.0, position: String = "
 	var viewport_size = get_viewport().get_visible_rect().size
 	var panel_size = panel.size
 	
-	if position == "center":
+	if display_position == "center":
 		panel.position = Vector2(
 			(viewport_size.x - panel_size.x) / 2,
 			(viewport_size.y - panel_size.y) / 2
@@ -239,9 +239,9 @@ func show_auto_fade(message: String, duration: float = 2.0, position: String = "
 	current_tween.tween_callback(func(): visible = false)
 
 ## 遅延して自動フェード表示
-func show_auto_fade_delayed(message: String, delay: float, duration: float = 2.0, position: String = "bottom") -> void:
+func show_auto_fade_delayed(message: String, delay: float, duration: float = 2.0, display_position: String = "bottom") -> void:
 	await get_tree().create_timer(delay).timeout
-	show_auto_fade(message, duration, position)
+	show_auto_fade(message, duration, display_position)
 
 # ============================================
 # SpellCastNotificationUI互換メソッド
