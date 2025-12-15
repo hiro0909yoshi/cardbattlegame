@@ -51,9 +51,10 @@
 | **`spell_bonus_hp`** | スペルボーナス | （予約） | 消失 |
 | **`current_hp`** | 状態値の現在HP | ダメージで直接削られる | creature_dataに保存 |
 | | | | |
-| **`base_ap`** | 元のAP | `creature_data["ap"]`から取得 | - |
+| **`base_ap`** | 元のAP（ローカル変数） | `creature_data["ap"]`から取得 | - |
 | **`base_up_ap`** | 永続的な基礎AP上昇 | 合成+20、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_ap`** | 一時的なAPボーナス | 効果配列から計算 | 消失 |
+| **`item_bonus_ap`** | アイテムボーナスAP | アイテム効果 | 消失 |
 | **`current_ap`** | 計算後の現在AP | 全ボーナス + 感応 + 条件効果 | - |
 
 #### 実装上の注意 (2025年11月5日更新)
@@ -196,12 +197,9 @@ func prepare_participants(...):
 	# base_up_hpを設定
 	defender.base_up_hp = base_up_hp
 	
-	# base_hpに現在HPから永続ボーナスを引いた値を設定
-	# （BattleParticipant.base_hpは「基本HPの現在値」を意味する）
-	defender.base_hp = current_hp - base_up_hp
-	
-	# current_hpを設定（状態値として）
+	# current_hpを設定（状態値として直接設定）
 	defender.current_hp = current_hp
+	# 注: base_hp はコンストラクタで original_base_hp から設定される
 ```
 
 **重要な概念**：
@@ -228,8 +226,8 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	# 永続ボーナスも触らない（既に入っている）
 	# creature_data["base_up_hp"] = そのまま
 	
-	# 現在HPを保存（base_hp + base_up_hpの現在値）
-	creature_data["current_hp"] = defender.base_hp + defender.base_up_hp
+	# 現在HPを保存（状態値として直接保存）
+	creature_data["current_hp"] = defender.current_hp
 	
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
@@ -243,19 +241,20 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 # battle_system.gd
 func _apply_post_battle_effects(...):
 	# 侵略成功時
-	var placement_data = attacker.creature_data.duplicate(true)
+	var place_creature_data = attacker.creature_data.duplicate(true)
 	
-	# 元のHPは触らない
-	# placement_data["hp"] = そのまま
+	# 永続バフを反映
+	place_creature_data["base_up_hp"] = attacker.base_up_hp
+	place_creature_data["base_up_ap"] = attacker.base_up_ap
 	
-	# 現在HPを保存
-	placement_data["current_hp"] = attacker.base_hp + attacker.base_up_hp
+	# 現在HPを保存（状態値として直接保存）
+	place_creature_data["current_hp"] = attacker.current_hp
 	
-	board_system_ref.place_creature(tile_index, placement_data)
+	board_system_ref.place_creature(tile_index, place_creature_data)
 	
-	print("[HP保存] ", placement_data.get("name", ""), 
-		  " 現在HP:", placement_data["current_hp"], 
-		  " / MHP:", placement_data.get("hp", 0) + placement_data.get("base_up_hp", 0))
+	print("[HP保存] ", place_creature_data.get("name", ""), 
+		  " 現在HP:", place_creature_data["current_hp"], 
+		  " / MHP:", place_creature_data.get("hp", 0) + place_creature_data.get("base_up_hp", 0))
 ```
 
 **重要**：
@@ -293,32 +292,25 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 
 ---
 
-### 4. マスグロース（MHP上昇＋HP回復）
+### 4. マスグロース（MHP上昇＋現在HP上昇）
 
 ```gdscript
-# スペル処理
-func apply_mass_growth(creature_data: Dictionary):
-	var value = 5  # マスグロース+5
-	
-	# 1. MHPを増やす（base_up_hpを増やす）
-	creature_data["base_up_hp"] = creature_data.get("base_up_hp", 0) + value
-	
-	# 2. 現在HPも回復（増えたMHP分だけ）
-	var base_hp = creature_data.get("hp", 0)
-	var base_up_hp = creature_data["base_up_hp"]
-	var max_hp = base_hp + base_up_hp
-	var current_hp = creature_data.get("current_hp", max_hp)
-	
-	# HP回復（MHPを超えない）
-	var new_hp = min(current_hp + value, max_hp)
-	creature_data["current_hp"] = new_hp
-	
-	print("[マスグロース] ", creature_data.get("name", ""), 
-		  " MHP+", value, " HP+", value,
-		  " HP:", current_hp, "→", new_hp, " / MHP:", max_hp)
+# effect_manager.gd
+static func apply_mass_growth(tile_nodes: Dictionary, player_id: int, hp_bonus: int = 5) -> void:
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile.owner_id == player_id and not tile.creature_data.is_empty():
+			# base_up_hpを増やす（MHP上昇）
+			tile.creature_data["base_up_hp"] = tile.creature_data.get("base_up_hp", 0) + hp_bonus
+			# current_hpも同じ分だけ増やす
+			var current_hp = tile.creature_data.get("current_hp", tile.creature_data.get("hp", 0))
+			tile.creature_data["current_hp"] = current_hp + hp_bonus
+			print("  ", tile.creature_data.get("name", "?"), " MHP +", hp_bonus, " HP +", hp_bonus)
 ```
 
-**例**: ガスクラウド（HP20、現在12）にマスグロース
+**動作**: MHPが上昇すると、current_hpも同じ値だけ上昇する（回復ではなく同時上昇）。
+
+**例**: ガスクラウド（HP20、現在12）にマスグロース+5
 - 適用前: MHP=20, 現在HP=12
 - 適用後: MHP=25(+5), 現在HP=17(+5)
 
@@ -364,7 +356,7 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 
 #### キメラ（AP+10のみ）
 ```gdscript
-# game_flow_manager.gd
+# lap_system.gd
 func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 	var stat = effect.get("stat", "ap")
 	var value = effect.get("value", 10)
@@ -376,7 +368,7 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 
 #### モスタイタン（MHP+10、HP+10回復）
 ```gdscript
-# game_flow_manager.gd
+# lap_system.gd
 func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 	var stat = effect.get("stat", "max_hp")
 	var value = effect.get("value", 10)
@@ -499,4 +491,4 @@ var max_hp = creature.get("hp", 0) + creature.get("base_up_hp", 0)
 
 ---
 
-**最終更新**: 2025年11月20日（HPリファクタリング完了、`update_current_hp()` 削除対応）
+**最終更新**: 2025年12月16日（コード例を実装に合わせて修正、マスグロースの動作を明確化）
