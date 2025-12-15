@@ -202,9 +202,6 @@ func collect_players(players_container: Node):
 func get_tile_info(tile_index: int) -> Dictionary:
 	return tile_data_manager.get_tile_info(tile_index)
 
-func get_tile_type(tile_type_str: String) -> int:
-	return tile_data_manager.get_tile_type(tile_type_str)
-
 func is_special_tile_type(tile_type: String) -> bool:
 	return tile_data_manager.is_special_tile_type(tile_type)
 

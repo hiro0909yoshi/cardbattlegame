@@ -39,7 +39,6 @@ func get_tile_info(tile_index: int) -> Dictionary:
 	var tile = tile_nodes[tile_index]
 	return {
 		"index": tile_index,
-		"type": get_tile_type(tile.tile_type),
 		"element": tile.tile_type if TileHelper.has_land_effect_type(tile.tile_type) else "",
 		"owner": tile.owner_id,
 		"level": tile.level,
@@ -47,14 +46,6 @@ func get_tile_info(tile_index: int) -> Dictionary:
 		"has_creature": not tile.creature_data.is_empty(),
 		"is_special": is_special_tile_type(tile.tile_type)
 	}
-
-# タイルタイプを数値に変換
-func get_tile_type(tile_type_str: String) -> int:
-	match tile_type_str:
-		"start": return 1
-		"checkpoint": return 2
-		"warp", "card", "neutral": return 3
-		_: return 0
 
 # 特殊タイルかチェック（TileHelperに委譲）
 func is_special_tile_type(tile_type: String) -> bool:
@@ -325,10 +316,9 @@ func get_tile_data_array() -> Array:
 		var tile = tile_nodes[tile_index]
 		data.append({
 			"element": tile.tile_type,
-			"type": get_tile_type(tile.tile_type),
 			"owner": tile.owner_id,
 			"level": tile.level,
-			"index": tile_index  # 追加: タイルインデックス
+			"index": tile_index
 		})
 	
 	return data

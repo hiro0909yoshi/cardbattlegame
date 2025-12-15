@@ -140,7 +140,7 @@ var creature_data: Dictionary:
 | tile_type | 停止可 | 備考 |
 |-----------|--------|------|
 | checkpoint | ✅ | ゲート（周回判定用） |
-| warp | ❌ | 通過型ワープ（現在） |
+| warp | ❌ | 通過型ワープ |
 | warp_stop | ✅ | 停止型ワープ（将来追加） |
 | card | ✅ | 購入型カード（将来実装） |
 | card_give | ✅ | 譲渡型カード（将来追加） |
@@ -149,6 +149,8 @@ var creature_data: Dictionary:
 | switch | ✅ | 分岐器タイル（将来実装） |
 | base | ✅ | 拠点タイル（将来実装） |
 | start | ✅ | スタート地点 |
+
+**各特殊タイルの具体的な動作（ワープ先、周回判定など）は [map_system.md](map_system.md) を参照。**
 
 ---
 
@@ -388,7 +390,6 @@ var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_ind
 var info = board_system.get_tile_info(tile_index)
 # {
 #   "index": tile_index,
-#   "type": int,
 #   "element": "fire"等,
 #   "owner": player_id,
 #   "level": 1-5,
@@ -565,3 +566,4 @@ func _on_creature_tapped(creature_data: Dictionary, tile_index: int):
 | 2025/12/09 | 自動同期システム追加（creature_data, owner_id, level変更時に3Dカード・通行料ラベルを自動更新） |
 | 2025/12/11 | クリーチャー選択（タップ判定）セクション追加 |
 | 2025/12/16 | CreatureManager統合セクション追加、通行料計算をtoll_system.mdに集約 |
+| 2025/12/16 | 特殊タイル動作詳細をmap_system.mdに集約、tile_info["type"]削除 |

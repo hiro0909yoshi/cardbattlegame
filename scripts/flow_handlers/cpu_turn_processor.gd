@@ -97,9 +97,7 @@ func _wait_for_notifications():
 # タイル状況を分析
 func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String:
 	# 特殊タイル（チェックポイント、ワープ等）は召喚不可
-	var tile_type_raw = tile_info.get("type", "")
-	var tile_type = str(tile_type_raw).to_lower() if tile_type_raw else ""
-	if TileHelper.is_special_type(tile_type):
+	if tile_info.get("is_special", false):
 		return "special_tile"
 	
 	if tile_info["owner"] == -1:
