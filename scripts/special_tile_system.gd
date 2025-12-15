@@ -56,21 +56,14 @@ func handle_start_tile(player_id: int):
 	emit_signal("special_action_completed")
 
 # チェックポイント処理
+# 注意: 魔力ボーナスとダウン解除はLapSystemで管理
 func handle_checkpoint_tile(player_id: int):
-	var bonus = GameConstants.CHECKPOINT_BONUS
-	player_system.add_magic(player_id, bonus)
-	print("チェックポイント！魔力+", bonus, "G")
-	
-	# ダウン解除
-	if board_system and board_system.movement_controller:
-		board_system.movement_controller.clear_all_down_states_for_player(player_id)
-		print("チェックポイント！ダウン解除")
+	print("チェックポイント通過")
 	
 	# UI更新
 	if ui_manager and ui_manager.has_method("update_player_info_panels"):
 		ui_manager.update_player_info_panels()
 	
-	emit_signal("checkpoint_passed", player_id, bonus)
 	emit_signal("special_tile_activated", "checkpoint", player_id, 5)
 	emit_signal("special_action_completed")
 

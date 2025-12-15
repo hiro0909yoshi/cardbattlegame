@@ -23,6 +23,7 @@ var debug_panel = null
 var creature_info_panel_ui: CreatureInfoPanelUI = null
 var spell_info_panel_ui: SpellInfoPanelUI = null
 var item_info_panel_ui: ItemInfoPanelUI = null
+var global_comment_ui: GlobalCommentUI = null
 
 # 基本UI要素
 # フェーズ表示（PhaseDisplayに移行済み）
@@ -100,6 +101,11 @@ func _ready():
 	global_action_buttons = GlobalActionButtons.new()
 	global_action_buttons.name = "GlobalActionButtons"
 	add_child(global_action_buttons)
+	
+	# GlobalCommentUI初期化
+	global_comment_ui = GlobalCommentUI.new()
+	global_comment_ui.name = "GlobalCommentUI"
+	add_child(global_comment_ui)
 	
 	# LandCommandUI初期化
 	if LandCommandUIClass:
@@ -217,6 +223,17 @@ func create_ui(parent: Node):
 		ui_layer.add_child(global_action_buttons)
 		# GameFlowManager参照を設定（入力ロック用）
 		global_action_buttons.game_flow_manager_ref = game_flow_manager_ref
+	
+	# GlobalCommentUI用の専用レイヤーを作成（最前面に表示）
+	if global_comment_ui:
+		var notification_layer = CanvasLayer.new()
+		notification_layer.name = "NotificationLayer"
+		notification_layer.layer = 100  # 他のUIより高いレイヤー
+		parent.add_child(notification_layer)
+		
+		if global_comment_ui.get_parent():
+			global_comment_ui.get_parent().remove_child(global_comment_ui)
+		notification_layer.add_child(global_comment_ui)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -256,8 +273,18 @@ func _on_card_button_pressed(card_index: int):
 	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
 		return
 	
+	# 通知ポップアップがクリック待ち中なら無視
+	if is_notification_popup_active():
+		return
+	
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
+
+## 通知ポップアップがアクティブ（クリック待ち中）かどうか
+func is_notification_popup_active() -> bool:
+	if global_comment_ui and global_comment_ui.waiting_for_click:
+		return true
+	return false
 
 # === レベルアップUI関連 ===
 func show_level_up_ui(tile_info: Dictionary, current_magic: int):

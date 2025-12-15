@@ -30,7 +30,27 @@ const CARDS_PER_TYPE = 3          # 各カードの枚数
 # === 報酬関連 ===
 const START_BONUS = 100           # スタート地点通過ボーナス
 const CHECKPOINT_BONUS = 100      # チェックポイントボーナス
-const PASS_BONUS = 200            # スタート通過ボーナス
+const PASS_BONUS = 200            # スタート通過ボーナス（旧：互換性のため残す）
+
+# === 周回ボーナス設定 ===
+# 基礎ボーナスプリセット（マップJSONで指定）
+const LAP_BONUS_PRESETS = {
+	"low": 100,
+	"standard": 120,
+	"high": 150,
+	"very_high": 200
+}
+
+# 必要シグナルプリセット（マップJSONで指定）
+const CHECKPOINT_PRESETS = {
+	"standard": ["N", "S"],
+	"three_way": ["N", "S", "W"],
+	"four_way": ["N", "S", "W", "E"]
+}
+
+# 周回ボーナス係数
+const LAP_BONUS_CREATURE_RATE = 0.4   # 配置クリーチャー1体あたり40%
+const LAP_BONUS_LAP_RATE = 0.4        # 1周あたり追加40%
 
 # === 通行料関連 ===
 const BASE_TOLL = 100            # 基礎通行料

@@ -5,81 +5,78 @@
 ユーザー確認により、破壊数カウンターは**1ゲーム内のみ有効**で、**スペルでリセット可能**であることが判明。
 
 - ❌ GameData（グローバル永続データ）に保存するのは誤り
-- ✅ GameFlowManager（ゲーム進行管理）に保存するのが正しい
+- ✅ LapSystem（周回管理システム）に保存するのが正しい
 
 ## 正しい設計
 
 | データ | 保存場所 | 理由 |
 |--------|---------|------|
 | ターン数 | GameFlowManager | 1ゲーム内のみ有効 |
-| 周回数 | GameFlowManager | 1ゲーム内のみ有効 |
-| 破壊数 | GameFlowManager | 1ゲーム内のみ有効、スペルでリセット可能 |
+| 周回数 | LapSystem | 1ゲーム内のみ有効 |
+| 破壊数 | LapSystem | 1ゲーム内のみ有効、スペルでリセット可能 |
 
 ## 実装コード
 
 ```gdscript
-# scripts/game_flow_manager.gd
-class_name GameFlowManager
+# scripts/game_flow/lap_system.gd
+class_name LapSystem
 
-# 追加
-var current_turn: int = 0                    # 現在のターン数
-var player_laps: Dictionary = {}             # 各プレイヤーの周回数 {player_id: lap_count}
-var creatures_destroyed_this_game: int = 0   # このゲームでの破壊数
+## 周回状態
+var player_lap_state: Dictionary = {}  # {player_id: {N: bool, S: bool, lap_count: int}}
 
-func start_game():
-	current_turn = 0
-	player_laps = {0: 0, 1: 0, 2: 0, 3: 0}
-	creatures_destroyed_this_game = 0
-	# ... 既存処理
+## 破壊カウンター
+var destroy_count: int = 0
 
-func start_turn():
-	current_turn += 1
-	# ... 既存処理
+## 周回状態を初期化
+func initialize_lap_state(player_count: int):
+	player_lap_state.clear()
+	destroy_count = 0
+	
+	for i in range(player_count):
+		player_lap_state[i] = {
+			"N": false,
+			"S": false,
+			"lap_count": 1
+		}
 
 func on_creature_destroyed():
 	"""クリーチャー破壊時にカウント増加"""
-	creatures_destroyed_this_game += 1
-	print("このゲームの破壊数: ", creatures_destroyed_this_game)
+	destroy_count += 1
+	print("[破壊カウント] 累計: ", destroy_count)
+
+func get_destroy_count() -> int:
+	return destroy_count
 
 func reset_destroy_count():
 	"""スペルで破壊数をリセット"""
-	creatures_destroyed_this_game = 0
-	print("破壊数リセット")
-
-func get_destroy_count() -> int:
-	return creatures_destroyed_this_game
-
-func on_lap_completed(player_id: int):
-	"""周回完了時"""
-	player_laps[player_id] = player_laps.get(player_id, 0) + 1
-	# クリーチャーへのバフ適用処理...
+	destroy_count = 0
+	print("[破壊カウント] リセット")
 ```
 
 ## 使用方法
 
 ### BattleSystem から呼び出し
 ```gdscript
-# scripts/battle/battle_system.gd
-func on_battle_complete(result: Dictionary):
-	if result.winner == "attacker":
-		game_flow_manager.on_creature_destroyed()  # カウント増加
-		# 永続バフ適用処理...
+# scripts/battle_system.gd
+# 侵略成功時・防御成功時などでカウント増加
+if game_flow_manager_ref:
+	game_flow_manager_ref.lap_system.on_creature_destroyed()
 ```
 
 ### BattleSkillProcessor で取得
 ```gdscript
 # scripts/battle/battle_skill_processor.gd
 func apply_destroy_count_effects(participant: BattleParticipant):
-	var destroy_count = game_flow_manager.get_destroy_count()
+	var destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
 	participant.temporary_bonus_ap += destroy_count * 5
 ```
 
 ### スペルでリセット
 ```gdscript
 # スペル「リセット破壊数」などで
-game_flow_manager.reset_destroy_count()
+game_flow_manager_ref.lap_system.reset_destroy_count()
 ```
 
 ---
 
-**最終更新**: 2025年10月26日
+**最終更新**: 2025年12月16日

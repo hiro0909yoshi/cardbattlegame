@@ -42,7 +42,7 @@ GameSystemManager を実装し、game_3d.gd の複雑な初期化処理を一元
 **発生内容**:
 ```
 エラー: Invalid assignment of property 'card_system' with value of type 'Node (CardSystem)' 
-        on a base object of type 'Node (SpellDraw)'
+		on a base object of type 'Node (SpellDraw)'
 ```
 
 **根本原因**:
@@ -70,7 +70,7 @@ game_flow_manager.spell_draw.card_system = card_system  # プロパティ直接�
 **発生内容**:
 ```
 エラー: Invalid assignment of property 'board_system_3d' with value of type 'Node (BoardSystem3D)' 
-        on a base object of type 'Node (TileActionProcessor)'
+		on a base object of type 'Node (TileActionProcessor)'
 ```
 
 **根本原因**:
@@ -106,7 +106,7 @@ board_system_3d.tile_action_processor.player_system = player_system
 **発生内容**:
 ```
 エラー: Invalid assignment of property 'board_system_3d' with value of type 'Node (BoardSystem3D)' 
-        on a base object of type 'Node (CPUAIHandler)'
+		on a base object of type 'Node (CPUAIHandler)'
 ```
 
 **根本原因**:
@@ -196,8 +196,8 @@ Phase 4-3: BoardSystem3D 子システム初期化（削除）
    # system_manager.initialize_all() 後に再設定
    var camera = get_node("Camera3D")
    if camera:
-       camera.position = Vector3(19, 19, 19)
-       camera.look_at(...)  # 必要に応じて
+	   camera.position = Vector3(19, 19, 19)
+	   camera.look_at(...)  # 必要に応じて
    ```
 
 3. **GameSystemManager の修正**:

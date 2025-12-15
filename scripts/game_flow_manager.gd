@@ -137,9 +137,11 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	if cpu_ai_handler:
 		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
 	
-	# LapSystemにplayer_systemを設定
+	# LapSystemにplayer_systemとui_managerを設定
 	if lap_system:
 		lap_system.player_system = player_system
+		lap_system.ui_manager = ui_manager
+		lap_system._setup_ui()
 
 ## スペル効果システムの初期化
 func _setup_spell_systems(board_system):

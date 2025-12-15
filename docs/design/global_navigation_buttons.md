@@ -222,8 +222,45 @@ func close_system():
 - [ ] 後方互換APIを混在させていないか
 - [ ] 各ボタンのコールバックが正しいか
 
+---
+
+## 通知ポップアップ（GlobalCommentUI）
+
+グローバルなメッセージ表示UI。スペル効果、周回ボーナス等で使用。
+
+### 基本API
+
+```gdscript
+# クリック待ち表示（スペル効果、周回完了等）
+await ui_manager.global_comment_ui.show_and_wait("メッセージ")
+await ui_manager.global_comment_ui.click_confirmed
+
+# 自動フェード表示（即時通知等）
+ui_manager.global_comment_ui.show_auto_fade("メッセージ", 2.0, "bottom")
+```
+
+### 特徴
+
+- 専用CanvasLayer（layer=100）で最前面に表示
+- クリック待ち中は他のUI入力をブロック
+- BBCode対応（`[color=yellow]テキスト[/color]`等）
+
+### 使用例
+
+```gdscript
+# 周回完了時の4段階表示
+await ui_manager.global_comment_ui.show_and_wait("[color=yellow]1周完了[/color]")
+await ui_manager.global_comment_ui.click_confirmed
+await ui_manager.global_comment_ui.show_and_wait("[color=cyan]周回ボーナス 336G[/color]")
+await ui_manager.global_comment_ui.click_confirmed
+```
+
+---
+
 ## 関連ファイル
 
 - `scripts/ui_components/global_action_buttons.gd` - ボタンUI実装
-- `scripts/ui_manager.gd` - API提供（enable_navigation等）
+- `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップUI実装
+- `scripts/ui_manager.gd` - API提供（enable_navigation, global_comment_ui等）
 - `scripts/game_flow/land_command_handler.gd` - 使用例（領地コマンド）
+- `scripts/game_flow/lap_system.gd` - 使用例（周回完了通知）

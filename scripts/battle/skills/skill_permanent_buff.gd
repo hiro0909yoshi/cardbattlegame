@@ -1,7 +1,7 @@
 ## 永続バフ・永続変化スキル処理モジュール
 ##
 ## 敵破壊時の永続バフ（バルキリー・ダスクドウェラー）と
-## バトル後の永続変化（ロックタイタン・リーンタイタン・バイロマンサー・ブルガサリ・スペクター）を処理
+## バトル後の永続変化（ロックタイタン・バイロマンサー・ブルガサリ・スペクター）を処理
 ##
 ## 使用方法:
 ## ```gdscript
@@ -57,8 +57,8 @@ static func apply_on_destroy_buffs(participant: BattleParticipant) -> void:
 # ========================================
 
 ## バトル後の永続的な変化を適用（勝敗問わず）
-## ロックタイタン (ID: 446)、リーンタイタン (ID: 439)、
-## バイロマンサー (ID: 34)、ブルガサリ (ID: 339)、スペクター (ID: 321)
+## ロックタイタン (ID: 446)、バイロマンサー (ID: 34)、
+## ブルガサリ (ID: 339)、スペクター (ID: 321)
 ## @param participant: BattleParticipant
 static func apply_after_battle_changes(participant: BattleParticipant) -> void:
 	if not participant or not participant.creature_data:
@@ -73,7 +73,7 @@ static func apply_after_battle_changes(participant: BattleParticipant) -> void:
 	# ブルガサリ専用処理（敵がアイテムを使用した戦闘後、MHP+10）
 	_apply_bulgasari_effect(participant, creature_id)
 	
-	# 汎用永続変化（ロックタイタン・リーンタイタン等）
+	# 汎用永続変化（ロックタイタン等）
 	_apply_generic_permanent_changes(participant, effects)
 	
 	# スペクター専用処理（戦闘後にランダムステータスをリセット）

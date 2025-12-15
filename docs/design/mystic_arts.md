@@ -1,7 +1,7 @@
 # 秘術システム完成図書
 
 **ステータス**: ✅ 実装完了（Phase 1-3）+ 3方式対応（既存スペル参照/秘術専用スペル/直接effects）  
-**最終更新**: 2025年11月27日（直接effects方式追加、非同期秘術対応）
+**最終更新**: 2025年12月16日
 
 ---
 
@@ -231,14 +231,9 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 | `get_mystic_arts_for_creature(creature_data)` | クリーチャーの秘術一覧を取得 |
 | `can_cast_mystic_art(mystic_art, context)` | 発動可否判定（魔力・ダウン状態・ターゲット有無） |
 | `apply_mystic_art_effect(mystic_art, target_data, context)` | 秘術効果を適用（spell_id参照/直接effects両対応） |
-| `_set_caster_down_state(tile_index, board_system)` | 発動後のダウン状態設定 |
-
-### SpellPhaseHandler
-
-| メソッド | 説明 |
-|---------|------|
+| `execute_mystic_art(creature, mystic_art, target_data)` | 秘術実行（非同期対応） |
 | `_is_async_mystic_art(mystic_art)` | 非同期効果を含む秘術かどうかを判定 |
-| `_execute_mystic_art(creature, mystic_art, target_data, player_id)` | 秘術実行（非同期対応） |
+| `_set_caster_down_state(tile_index, board_system)` | 発動後のダウン状態設定 |
 
 ---
 
@@ -442,3 +437,4 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 | 2025/11/24 | 初版作成、基盤実装 |
 | 2025/11/25 | spell_id参照方式実装完了、バイタリティ動作確認、秘術専用スペル9000番台方式確定、バーナックル（通行料半減）実装完了 |
 | 2025/11/27 | 直接effects方式（パターンC）追加、フェイト・アイアンモンガー・ハイプクイーン・クラウドギズモ・レムレース実装完了、非同期秘術対応（_is_async_mystic_art）、creatureフィルター対応 |
+| 2025/12/16 | ドキュメント整理 - 主要メソッドの実装場所を修正（SpellPhaseHandler→SpellMysticArts） |

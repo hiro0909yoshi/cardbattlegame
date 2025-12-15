@@ -29,17 +29,17 @@ SpellPhaseHandlerやSpellCurseからは委譲のみで、処理ロジックはSp
 ### 依存関係
 ```
 GameSystemManager
-    └── SpellCostModifier（初期化）
-            ├── SpellCurse（呪い付与/解除）
-            └── PlayerSystem（プレイヤー情報）
+	└── SpellCostModifier（初期化）
+			├── SpellCurse（呪い付与/解除）
+			└── PlayerSystem（プレイヤー情報）
 
 SpellPhaseHandler
-    └── SpellCostModifier（委譲）
-            ├── apply_life_force() - 呪い付与
-            └── check_spell_nullify() - スペル無効化
+	└── SpellCostModifier（委譲）
+			├── apply_life_force() - 呪い付与
+			└── check_spell_nullify() - スペル無効化
 
 TileActionProcessor / ItemPhaseHandler / CPUハンドラー
-    └── SpellCostModifier.get_modified_cost() - コスト0化判定
+	└── SpellCostModifier.get_modified_cost() - コスト0化判定
 ```
 
 ### 実装済みインターフェース
@@ -75,28 +75,28 @@ func get_modified_cost(player_id: int, card: Dictionary) -> int
 ### 1. ライフフォース呪い付与
 ```
 SpellPhaseHandler._apply_single_effect()
-    └── "life_force_curse" 
-        └── SpellCostModifier.apply_life_force(target_player_id)
-            └── SpellCurse.curse_player(target_player_id, "life_force", -1, params)
+	└── "life_force_curse" 
+		└── SpellCostModifier.apply_life_force(target_player_id)
+			└── SpellCurse.curse_player(target_player_id, "life_force", -1, params)
 ```
 
 ### 2. カードコスト修正（クリーチャー/アイテム）
 ```
 TileActionProcessor / ItemPhaseHandler / CPUハンドラー
-    └── カードコスト計算時
-        └── SpellCostModifier.get_modified_cost(player_id, card)
-            └── life_force呪いあり && (creature || item) → 0
+	└── カードコスト計算時
+		└── SpellCostModifier.get_modified_cost(player_id, card)
+			└── life_force呪いあり && (creature || item) → 0
 ```
 
 ### 3. スペル使用時の無効化
 ```
 SpellPhaseHandler.use_spell()
-    └── コスト支払い後
-        └── SpellCostModifier.check_spell_nullify(current_player_id)
-            └── life_force呪いあり
-                ├── SpellCurse.remove_curse_from_player(player_id)
-                ├── カードを捨て札へ
-                └── return { "nullified": true, "curse_removed": true }
+	└── コスト支払い後
+		└── SpellCostModifier.check_spell_nullify(current_player_id)
+			└── life_force呪いあり
+				├── SpellCurse.remove_curse_from_player(player_id)
+				├── カードを捨て札へ
+				└── return { "nullified": true, "curse_removed": true }
 ```
 
 ## JSON定義（effect_parsed）
@@ -107,17 +107,17 @@ SpellPhaseHandler.use_spell()
   "id": 2117,
   "name": "ライフフォース",
   "effect_parsed": {
-    "target_type": "player",
-    "target_info": {
-      "include_self": true
-    },
-    "effects": [
-      {
-        "effect_type": "life_force_curse",
-        "curse_type": "life_force",
-        "duration": -1
-      }
-    ]
+	"target_type": "player",
+	"target_info": {
+	  "include_self": true
+	},
+	"effects": [
+	  {
+		"effect_type": "life_force_curse",
+		"curse_type": "life_force",
+		"duration": -1
+	  }
+	]
   }
 }
 ```
@@ -128,15 +128,15 @@ SpellPhaseHandler.use_spell()
 ```gdscript
 # player.curse に格納（player.buffs["curse"]ではない）
 player.curse = {
-    "curse_type": "life_force",
-    "name": "生命力",
-    "duration": -1,  # 永続（スペル使用で解除）
-    "params": {
-        "name": "生命力",
-        "cost_zero_types": ["creature", "item"],
-        "nullify_spell": true
-    },
-    "caster_id": -1
+	"curse_type": "life_force",
+	"name": "生命力",
+	"duration": -1,  # 永続（スペル使用で解除）
+	"params": {
+		"name": "生命力",
+		"cost_zero_types": ["creature", "item"],
+		"nullify_spell": true
+	},
+	"caster_id": -1
 }
 ```
 

@@ -365,7 +365,7 @@ func _apply_post_battle_effects(
 			if defender.current_hp <= 0:
 				SkillPermanentBuff.apply_on_destroy_buffs(defender)
 			
-			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			# バトル後の永続変化を適用（ロックタイタン等）
 			SkillPermanentBuff.apply_after_battle_changes(attacker)
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
@@ -422,7 +422,7 @@ func _apply_post_battle_effects(
 			# 防御側の永続バフ適用（バルキリー・ダスクドウェラー）
 			SkillPermanentBuff.apply_on_destroy_buffs(defender)
 			
-			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			# バトル後の永続変化を適用（ロックタイタン等）
 			SkillPermanentBuff.apply_after_battle_changes(attacker)
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
@@ -458,7 +458,7 @@ func _apply_post_battle_effects(
 			print("
 【結果】侵略失敗！攻撃側が生き残り")
 			
-			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			# バトル後の永続変化を適用（ロックタイタン等）
 			SkillPermanentBuff.apply_after_battle_changes(attacker)
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
@@ -525,7 +525,7 @@ func _apply_post_battle_effects(
 			
 			# バウンティハント: 相打ちの場合は報酬なし（勝者がいない）
 			
-			# バトル後の永続変化を適用（ロックタイタン・リーンタイタン）
+			# バトル後の永続変化を適用（ロックタイタン等）
 			SkillPermanentBuff.apply_after_battle_changes(attacker)
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
