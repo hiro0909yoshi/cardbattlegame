@@ -8,8 +8,8 @@ class_name QuestGame
 var system_manager: GameSystemManager
 var stage_loader: StageLoader
 
-# ステージID（外部から設定、またはデフォルト）
-@export var stage_id: String = "stage_1_1"
+# ステージID（GameDataから取得、またはデフォルト）
+var stage_id: String = "stage_1_1"
 
 # 設定（StageLoaderから取得）
 var player_count: int = 2
@@ -19,6 +19,10 @@ var player_is_cpu: Array = [false, true]
 var debug_manual_control_all: bool = false
 
 func _ready():
+	# GameDataからステージIDを取得
+	if GameData.selected_stage_id != "":
+		stage_id = GameData.selected_stage_id
+	
 	# StageLoaderを作成
 	stage_loader = StageLoader.new()
 	stage_loader.name = "StageLoader"
@@ -158,7 +162,7 @@ func _apply_stage_settings():
 			player.target_magic = target
 		print("[QuestGame] 勝利条件: 総魔力 %dG以上でチェックポイント通過" % target)
 	
-	# CPUのデッキを設定（ランダム）
+	# CPUのデッキを設定
 	_setup_cpu_decks()
 
 ## CPUのデッキを設定

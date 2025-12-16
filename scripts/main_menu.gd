@@ -14,9 +14,8 @@ func _ready():
 
 # ========== ボタン処理 ==========
 func _on_quest_pressed():
-	print("クエスト選択 → ステージ1-1へ")
-	# TODO: 将来はステージ選択画面に遷移
-	get_tree().change_scene_to_file("res://scenes/Quest.tscn")
+	print("クエスト選択 → ステージ選択画面へ")
+	get_tree().change_scene_to_file("res://scenes/QuestSelect.tscn")
 
 func _on_solo_battle_pressed():
 	print("一人対戦選択 → ブック選択へ")

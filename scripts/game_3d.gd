@@ -148,3 +148,4 @@ func _apply_stage_settings():
 		for player in system_manager.player_system.players:
 			player.target_magic = target
 		print("[Game3D] 勝利条件: 総魔力 %dG以上" % target)
+	

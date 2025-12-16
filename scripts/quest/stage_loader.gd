@@ -16,7 +16,12 @@ const TILE_SCENES = {
 	"Wind": preload("res://scenes/Tiles/WindTile.tscn"),
 	"Neutral": preload("res://scenes/Tiles/NeutralTile.tscn"),
 	"Warp": preload("res://scenes/Tiles/WarpTile.tscn"),
-	"WarpStop": preload("res://scenes/Tiles/WarpStopTile.tscn")
+	"WarpStop": preload("res://scenes/Tiles/WarpStopTile.tscn"),
+	"CardBuy": preload("res://scenes/Tiles/CardBuyTile.tscn"),
+	"CardGive": preload("res://scenes/Tiles/CardGiveTile.tscn"),
+	"MagicStone": preload("res://scenes/Tiles/MagicStoneTile.tscn"),
+	"Magic": preload("res://scenes/Tiles/MagicTile.tscn"),
+	"Base": preload("res://scenes/Tiles/SpecialBaseTile.tscn")
 }
 
 # パス定数

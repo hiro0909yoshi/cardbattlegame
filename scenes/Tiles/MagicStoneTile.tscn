@@ -1,0 +1,36 @@
+[gd_scene load_steps=7 format=3 uid="uid://cmagicstone_tile"]
+
+[ext_resource type="Script" path="res://scripts/tiles/magic_stone_tile.gd" id="1_magic_stone"]
+[ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(1, 0.0951538, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(1, 0.0983887, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_magic_stone"]
+albedo_color = Color(0.2, 0.8, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_magic_stone"]
+size = Vector3(3.6, 0.5, 3.6)
+
+[node name="MagicStoneTile" type="StaticBody3D"]
+script = ExtResource("1_magic_stone")
+
+[node name="frame" parent="." instance=ExtResource("2_frame")]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.0162354, 0)
+shape = SubResource("BoxShape3D_area")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0.019043, 0)
+shape = SubResource("BoxShape3D_collision")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0628314, 0)
+material_override = SubResource("StandardMaterial3D_magic_stone")
+mesh = SubResource("BoxMesh_magic_stone")

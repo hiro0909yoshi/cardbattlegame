@@ -7,6 +7,9 @@ const SAVE_FILE_PATH = "user://player_save.json"
 # 選択中のブック番号（0〜5、課金で拡張可能）
 var selected_deck_index = 0
 
+# 選択中のステージID（クエストモード用）
+var selected_stage_id = "stage_1_1"
+
 # プレイヤーデータの構造
 var player_data = {
 	# === 基本情報 ===

@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://cgeli3r44jgw"]
+
+[ext_resource type="Script" path="res://scripts/quest/quest_select.gd" id="1_quest_select"]
+
+[node name="QuestSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_quest_select")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+
+[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="StageLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel"]
+layout_mode = 2
+text = "ステージ選択"
+horizontal_alignment = 1
+
+[node name="StageList" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="StageInfoLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel"]
+layout_mode = 2
+text = "選択中: "
+
+[node name="RightPanel" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="DeckLabel" type="Label" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 2
+text = "デッキ選択"
+horizontal_alignment = 1
+
+[node name="DeckList" type="VBoxContainer" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="StartButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 2
+text = "クエスト開始"
+
+[node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 2
+text = "戻る"

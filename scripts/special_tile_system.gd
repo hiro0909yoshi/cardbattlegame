@@ -36,14 +36,20 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 	print("特殊タイル処理: ", tile_type, " (マス", tile_index, ")")
 	
 	match tile_type:
-		"start":
-			handle_start_tile(player_id)
 		"checkpoint":
 			handle_checkpoint_tile(player_id)
-		"card":
-			handle_card_tile(player_id)
 		"warp_stop":
 			handle_warp_stop_tile(tile_index, player_id)
+		"card_buy":
+			handle_card_buy_tile(player_id)
+		"card_give":
+			handle_card_give_tile(player_id)
+		"magic_stone":
+			handle_magic_stone_tile(player_id)
+		"magic":
+			handle_magic_tile(player_id)
+		"base":
+			handle_base_tile(player_id)
 		"neutral":
 			# 無属性マスは通常タイルとして処理しない（土地取得不可）
 			print("無属性マス - 連鎖は切れます")
@@ -51,12 +57,6 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 		_:
 			print("未実装の特殊タイル: ", tile_type)
 			emit_signal("special_action_completed")
-
-# スタートマス処理
-func handle_start_tile(player_id: int):
-	print("スタート地点")
-	emit_signal("special_tile_activated", "start", player_id, 0)
-	emit_signal("special_action_completed")
 
 # チェックポイント処理
 # 注意: 魔力ボーナスとダウン解除はLapSystemで管理
@@ -68,21 +68,6 @@ func handle_checkpoint_tile(player_id: int):
 		ui_manager.update_player_info_panels()
 	
 	emit_signal("special_tile_activated", "checkpoint", player_id, 5)
-	emit_signal("special_action_completed")
-
-# カードマス処理
-func handle_card_tile(player_id: int):
-	var draw_count = 1
-	
-	if card_system:
-		var drawn_cards = card_system.draw_cards_for_player(player_id, draw_count)
-		if drawn_cards.size() > 0:
-			print("カードマス！", drawn_cards.size(), "枚ドロー")
-			emit_signal("card_draw_triggered", player_id, drawn_cards.size())
-		else:
-			print("カードマス！（手札上限のためドロー失敗）")
-	
-	emit_signal("special_tile_activated", "card", player_id, -1)
 	emit_signal("special_action_completed")
 
 # 停止型ワープマス処理
@@ -102,6 +87,36 @@ func handle_warp_stop_tile(tile_index: int, player_id: int):
 		board_system.movement_controller.player_tiles[player_id] = warp_pair
 	
 	emit_signal("special_tile_activated", "warp_stop", player_id, warp_pair)
+	emit_signal("special_action_completed")
+
+# カード購入マス処理（未実装）
+func handle_card_buy_tile(player_id: int):
+	print("カード購入マス - TODO: 実装予定")
+	emit_signal("special_tile_activated", "card_buy", player_id, -1)
+	emit_signal("special_action_completed")
+
+# カード譲渡マス処理（未実装）
+func handle_card_give_tile(player_id: int):
+	print("カード譲渡マス - TODO: 実装予定")
+	emit_signal("special_tile_activated", "card_give", player_id, -1)
+	emit_signal("special_action_completed")
+
+# 魔法石マス処理（未実装）
+func handle_magic_stone_tile(player_id: int):
+	print("魔法石マス - TODO: 実装予定")
+	emit_signal("special_tile_activated", "magic_stone", player_id, -1)
+	emit_signal("special_action_completed")
+
+# 魔法マス処理（未実装）
+func handle_magic_tile(player_id: int):
+	print("魔法マス - TODO: 実装予定")
+	emit_signal("special_tile_activated", "magic", player_id, -1)
+	emit_signal("special_action_completed")
+
+# 拠点マス処理（未実装）
+func handle_base_tile(player_id: int):
+	print("拠点マス - TODO: 実装予定")
+	emit_signal("special_tile_activated", "base", player_id, -1)
 	emit_signal("special_action_completed")
 
 # ワープペア定義（マップデータから動的に設定）

@@ -23,9 +23,9 @@ const NO_STOP_TILES = ["warp"]
 ## 特殊タイル（配置不可）
 const SPECIAL_TILES = [
 	"checkpoint", "warp", "warp_stop",
-	"card", "card_buy", "card_give",
+	"card_buy", "card_give",
 	"magic", "magic_stone",
-	"switch", "base", "start"
+	"switch", "base"
 ]
 
 ## 地形変化可能タイル
