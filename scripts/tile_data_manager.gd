@@ -59,21 +59,65 @@ func has_tile(tile_index: int) -> bool:
 
 # タイル所有者を設定
 func set_tile_owner(tile_index: int, owner_id: int):
-	if tile_nodes.has(tile_index):
-		tile_nodes[tile_index].set_tile_owner(owner_id)
-		_update_display(tile_index)
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	var old_owner = tile.owner_id
+	var element = tile.tile_type
+	
+	tile.set_tile_owner(owner_id)
+	_update_display(tile_index)
+	
+	# 連鎖が変わるので関連タイルの表示を更新
+	if old_owner != -1 and TileHelper.is_element_type(element):
+		_update_chain_displays(old_owner, element)
+	if owner_id != -1 and TileHelper.is_element_type(element):
+		_update_chain_displays(owner_id, element)
 
 # クリーチャーを配置
 func place_creature(tile_index: int, creature_data: Dictionary):
-	if tile_nodes.has(tile_index):
-		tile_nodes[tile_index].place_creature(creature_data)
-		_update_display(tile_index)
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	var old_owner = tile.owner_id
+	var element = tile.tile_type
+	
+	tile.place_creature(creature_data)
+	_update_display(tile_index)
+	
+	# 所有権が変わった場合、連鎖タイルの表示を更新
+	var new_owner = tile.owner_id
+	if old_owner != new_owner and TileHelper.is_element_type(element):
+		if old_owner != -1:
+			_update_chain_displays(old_owner, element)
+		if new_owner != -1:
+			_update_chain_displays(new_owner, element)
 
 # クリーチャーを除去
 func remove_creature(tile_index: int):
-	if tile_nodes.has(tile_index):
-		tile_nodes[tile_index].remove_creature()
-		_update_display(tile_index)
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	var old_owner = tile.owner_id
+	var element = tile.tile_type
+	
+	tile.remove_creature()
+	_update_display(tile_index)
+	
+	# 所有権が変わった場合、連鎖タイルの表示を更新
+	var new_owner = tile.owner_id
+	if old_owner != new_owner and old_owner != -1 and TileHelper.is_element_type(element):
+		_update_chain_displays(old_owner, element)
+
+# 同じ所有者・同じ属性の全タイルの表示を更新（連鎖ボーナス変動時）
+func _update_chain_displays(owner_id: int, element: String):
+	for idx in tile_nodes:
+		var tile = tile_nodes[idx]
+		if tile.owner_id == owner_id and tile.tile_type == element:
+			_update_display(idx)
 
 # タイルレベルをアップグレード
 func upgrade_tile_level(tile_index: int) -> bool:

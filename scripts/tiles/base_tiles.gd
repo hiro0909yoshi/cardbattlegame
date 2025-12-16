@@ -10,7 +10,6 @@ static var tile_info_display: TileInfoDisplay = null  # 通行料ラベル更新
 @export var _owner_id: int = -1  # 内部変数（直接アクセスしないこと）
 @export var _level: int = 1  # 内部変数（直接アクセスしないこと）
 @export var tile_index: int = 0  # ボード上の位置番号
-@export var warp_destination: int = -1  # ワープ先タイル番号（-1=ワープなし）
 
 # 接続情報（分岐/行き止まりタイルのみ設定）
 # 形式: Array[int] - 接続先タイル番号のリスト

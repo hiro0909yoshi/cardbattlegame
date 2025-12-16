@@ -700,10 +700,16 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 
 # === ワープ処理 ===
 
-# ワープをチェックして処理
+# ワープをチェックして処理（通過型のみ）
 func check_and_handle_warp(player_id: int, tile_index: int) -> Dictionary:
 	if not special_tile_system:
 		return {"warped": false}
+	
+	# タイルタイプを確認（通過型warpのみ処理、warp_stopは停止時に処理）
+	if tile_nodes.has(tile_index):
+		var tile = tile_nodes[tile_index]
+		if tile.tile_type != "warp":
+			return {"warped": false}
 	
 	# 通過型ワープかチェック
 	if special_tile_system.is_warp_gate(tile_index):

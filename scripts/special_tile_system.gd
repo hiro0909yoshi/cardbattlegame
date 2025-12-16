@@ -42,6 +42,8 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 			handle_checkpoint_tile(player_id)
 		"card":
 			handle_card_tile(player_id)
+		"warp_stop":
+			handle_warp_stop_tile(tile_index, player_id)
 		"neutral":
 			# 無属性マスは通常タイルとして処理しない（土地取得不可）
 			print("無属性マス - 連鎖は切れます")
@@ -81,6 +83,25 @@ func handle_card_tile(player_id: int):
 			print("カードマス！（手札上限のためドロー失敗）")
 	
 	emit_signal("special_tile_activated", "card", player_id, -1)
+	emit_signal("special_action_completed")
+
+# 停止型ワープマス処理
+func handle_warp_stop_tile(tile_index: int, player_id: int):
+	var warp_pair = get_warp_pair(tile_index)
+	if warp_pair == -1 or warp_pair == tile_index:
+		print("停止型ワープ: ワープ先なし")
+		emit_signal("special_action_completed")
+		return
+	
+	print("停止型ワープ発動！ タイル%d → タイル%d" % [tile_index, warp_pair])
+	
+	# movement_controllerでワープ実行
+	if board_system and board_system.movement_controller:
+		await board_system.movement_controller.execute_warp(player_id, tile_index, warp_pair)
+		# プレイヤー位置を更新
+		board_system.movement_controller.player_tiles[player_id] = warp_pair
+	
+	emit_signal("special_tile_activated", "warp_stop", player_id, warp_pair)
 	emit_signal("special_action_completed")
 
 # ワープペア定義（マップデータから動的に設定）

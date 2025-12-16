@@ -15,7 +15,8 @@ const TILE_SCENES = {
 	"Earth": preload("res://scenes/Tiles/EarthTile.tscn"),
 	"Wind": preload("res://scenes/Tiles/WindTile.tscn"),
 	"Neutral": preload("res://scenes/Tiles/NeutralTile.tscn"),
-	"Warp": preload("res://scenes/Tiles/WarpTile.tscn")
+	"Warp": preload("res://scenes/Tiles/WarpTile.tscn"),
+	"WarpStop": preload("res://scenes/Tiles/WarpStopTile.tscn")
 }
 
 # パス定数
@@ -184,7 +185,7 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 		var cp_type = tile_data.get("checkpoint_type", "N")
 		tile.checkpoint_type = 0 if cp_type == "N" else 1
 	
-	if tile_type == "Warp" and tile_data.has("warp_pair"):
+	if (tile_type == "Warp" or tile_type == "WarpStop") and tile_data.has("warp_pair"):
 		var from_tile = tile_data.get("index", -1)
 		var to_tile = tile_data.get("warp_pair", -1)
 		if from_tile >= 0 and to_tile >= 0:
