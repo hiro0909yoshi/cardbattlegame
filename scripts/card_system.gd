@@ -537,3 +537,58 @@ func get_deck(player_id: int) -> Array:
 	if not player_decks.has(player_id):
 		return []
 	return player_decks[player_id]
+
+# === カード譲渡タイル用 ===
+
+## 山札から特定タイプのカードID一覧を取得
+func get_deck_cards_by_type(player_id: int, card_type: String) -> Array:
+	if not player_decks.has(player_id):
+		return []
+	
+	var result = []
+	for card_id in player_decks[player_id]:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if not card_data.is_empty() and card_data.get("type", "") == card_type:
+			result.append(card_id)
+	return result
+
+## 山札に特定タイプのカードがあるかチェック
+func has_deck_card_type(player_id: int, card_type: String) -> bool:
+	return get_deck_cards_by_type(player_id, card_type).size() > 0
+
+## 山札から特定カードを引いて手札に追加
+func draw_specific_card_from_deck(player_id: int, card_id: int) -> Dictionary:
+	if not player_decks.has(player_id):
+		return {}
+	
+	var player_deck = player_decks[player_id]
+	var index = player_deck.find(card_id)
+	if index == -1:
+		return {}
+	
+	# 山札から削除
+	player_deck.remove_at(index)
+	
+	# カードデータを取得
+	var card_data = CardLoader.get_card_by_id(card_id)
+	if card_data.is_empty():
+		return {}
+	
+	# 手札に追加
+	player_hands[player_id]["data"].append(card_data.duplicate())
+	
+	emit_signal("card_drawn", card_data)
+	emit_signal("hand_updated")
+	
+	print("[CardSystem] カード譲渡: Player%d が %s を取得" % [player_id + 1, card_data.get("name", "?")])
+	return card_data
+
+## 山札から特定タイプのカードをランダムで1枚引く
+func draw_random_card_by_type(player_id: int, card_type: String) -> Dictionary:
+	var type_cards = get_deck_cards_by_type(player_id, card_type)
+	if type_cards.is_empty():
+		return {}
+	
+	# ランダムで1枚選択
+	var random_card_id = type_cards[randi() % type_cards.size()]
+	return draw_specific_card_from_deck(player_id, random_card_id)

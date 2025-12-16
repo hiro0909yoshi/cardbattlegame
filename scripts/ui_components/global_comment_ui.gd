@@ -5,8 +5,7 @@ class_name GlobalCommentUI
 ## スペル効果、周回ボーナス、バトル結果など様々な場面で使用
 ## 
 ## 使用方法:
-## 1. クリック待ち: await ui_manager.global_comment.show_and_wait("メッセージ")
-## 2. 自動フェード: ui_manager.global_comment.show_auto_fade("メッセージ", 2.0)
+## クリック待ち: await ui_manager.global_comment_ui.show_and_wait("メッセージ")
 
 @onready var panel: PanelContainer
 @onready var label: RichTextLabel
@@ -198,51 +197,6 @@ func _input(event):
 		get_viewport().set_input_as_handled()
 
 # ============================================
-# 自動フェードモード（周回ボーナス等）
-# ============================================
-
-## 通知を表示して自動フェードアウト（await不要）
-## position: "center"（画面中央）, "bottom"（画面下部）
-func show_auto_fade(message: String, duration: float = 2.0, display_position: String = "bottom") -> void:
-	if current_tween and current_tween.is_valid():
-		current_tween.kill()
-	
-	# クリック待ち中なら中断
-	if waiting_for_click:
-		_confirm_and_close()
-	
-	label.text = "[center]" + message + "[/center]"
-	modulate.a = 1.0
-	visible = true
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# 位置設定
-	await get_tree().process_frame
-	var viewport_size = get_viewport().get_visible_rect().size
-	var panel_size = panel.size
-	
-	if display_position == "center":
-		panel.position = Vector2(
-			(viewport_size.x - panel_size.x) / 2,
-			(viewport_size.y - panel_size.y) / 2
-		)
-	else:  # bottom
-		panel.position = Vector2(
-			(viewport_size.x - panel_size.x) / 2,
-			viewport_size.y - panel_size.y - 100
-		)
-	
-	# フェードアウト
-	current_tween = create_tween()
-	current_tween.tween_interval(duration)
-	current_tween.tween_property(self, "modulate:a", 0.0, fade_duration)
-	current_tween.tween_callback(func(): visible = false)
-
-## 遅延して自動フェード表示
-func show_auto_fade_delayed(message: String, delay: float, duration: float = 2.0, display_position: String = "bottom") -> void:
-	await get_tree().create_timer(delay).timeout
-	show_auto_fade(message, duration, display_position)
-
 # ============================================
 # SpellCastNotificationUI互換メソッド
 # ============================================

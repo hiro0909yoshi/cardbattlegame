@@ -259,7 +259,8 @@ func load_deck(deck_id: String) -> Dictionary:
 	var path = DECKS_PATH + "deck_" + deck_id + ".json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[StageLoader] デッキファイルが見つかりません: " + path)
+		# デッキファイルがない場合はランダムデッキとして扱う
+		print("[StageLoader] デッキファイルなし（ランダム使用）: ", path)
 		return {}
 	
 	var json_text = file.get_as_text()

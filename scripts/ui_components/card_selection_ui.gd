@@ -66,14 +66,15 @@ func show_selection(current_player, mode: String = "summon"):
 	# フェーズラベルを更新
 	update_phase_label(current_player, mode)
 	
-	# デバッグモード（全員手動）またはプレイヤー1の場合、カード選択可能
+	# デバッグモード（全員手動）またはプレイヤー1の場合、カード選択・パスボタン有効
 	var allow_manual = (current_player.id == 0) or (game_flow_manager_ref and game_flow_manager_ref.debug_manual_control_all)
-	if allow_manual:
-		enable_card_selection(hand_data, current_player.magic_power, current_player.id)
-		
-		# スペルフェーズではパスボタンを作らない（SpellPhaseUIManager で管理）
-		if mode != "spell":
-			create_pass_button(hand_data.size())
+	
+	# カード選択状態の更新（グレーアウト含む）- CPU/プレイヤー共通
+	enable_card_selection(hand_data, current_player.magic_power, current_player.id)
+	
+	# パスボタンはプレイヤー操作時のみ作成
+	if allow_manual and mode != "spell":
+		create_pass_button(hand_data.size())
 
 # フェーズラベルを更新
 func update_phase_label(current_player, mode: String):
@@ -119,6 +120,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 	
 	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
 	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
+	
+	# 最初に全カードのmodulateをリセット（前の状態をクリア）
+	for card_node in hand_nodes:
+		if card_node and is_instance_valid(card_node):
+			card_node.modulate = Color(1.0, 1.0, 1.0)
 	for i in range(hand_nodes.size()):
 		var card_node = hand_nodes[i]
 		if card_node and is_instance_valid(card_node):
@@ -462,8 +468,8 @@ func remove_card_highlight(card_node: Node):
 	# ハイライトを削除
 	if card_node.has_node("SelectionHighlight"):
 		card_node.get_node("SelectionHighlight").queue_free()
-	# 明度を元に戻す
-	card_node.modulate = Color(1, 1, 1)
+	# 注意: modulateのリセットはenable_card_selection側で行う
+	# ここでリセットすると、グレーアウト状態が意図せず解除されてしまう
 
 # ボタンをクリーンアップ
 func cleanup_buttons():

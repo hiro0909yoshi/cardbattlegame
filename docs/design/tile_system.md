@@ -149,7 +149,8 @@ var creature_data: Dictionary:
 | switch | ✅ | 分岐器タイル（未実装） |
 | base | ✅ | 拠点タイル（未実装） |
 
-**各特殊タイルの具体的な動作（ワープ先、周回判定など）は [map_system.md](map_system.md) を参照。**
+**各特殊タイルの詳細仕様・実装方法は [special_tiles.md](special_tiles.md) を参照。**
+**マップ上の配置（ワープ先、周回判定など）は [map_system.md](map_system.md) を参照。**
 
 ---
 
@@ -566,3 +567,4 @@ func _on_creature_tapped(creature_data: Dictionary, tile_index: int):
 | 2025/12/11 | クリーチャー選択（タップ判定）セクション追加 |
 | 2025/12/16 | CreatureManager統合セクション追加、通行料計算をtoll_system.mdに集約 |
 | 2025/12/16 | 特殊タイル動作詳細をmap_system.mdに集約、tile_info["type"]削除 |
+| 2025/12/17 | 特殊タイル詳細仕様への参照（special_tiles.md）を追加 |

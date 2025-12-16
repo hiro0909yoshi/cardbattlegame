@@ -80,11 +80,11 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
 	
-	# 特殊マス処理（処理後も召喚フェーズに進む）
+	# 特殊マス処理（処理完了を待ってから次フェーズに進む）
 	if _is_special_tile(tile.tile_type):
 		if special_tile_system:
-			# 特殊タイル処理を実行
-			special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
+			# 特殊タイル処理を実行し、完了を待つ
+			await special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
 	
 	# CPUかプレイヤーかで分岐（デバッグモードでは全て手動）
 	var is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
@@ -100,16 +100,15 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		board_system.camera_controller.enable_manual_mode()
 		board_system.camera_controller.set_current_player(player_index)
 	
-	# 特殊タイルかチェック
+	# 特殊タイルかチェック（特殊タイルのUI設定はspecial_tile_system側で完了済み）
+	# パスボタン押下で_complete_action()が呼ばれるため、ここではreturnのみ
 	var is_special = _is_special_tile(tile.tile_type)
+	if is_special:
+		return
 	
 	if tile_info["owner"] == -1:
-		# 空き地
-		if is_special:
-			# 特殊タイルでは召喚UI表示するがグレーアウト
-			show_summon_ui_disabled()
-		else:
-			show_summon_ui()
+		# 空き地 - 召喚UI表示
+		show_summon_ui()
 	elif tile_info["owner"] == player_index:
 		# 自分の土地 - 召喚不可（領地コマンドで操作可能）
 		show_summon_ui_disabled()
@@ -140,6 +139,12 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
+	# 特殊タイルの場合はアクション完了（召喚/戦闘なし）
+	var is_special = _is_special_tile(tile.tile_type)
+	if is_special:
+		_complete_action()
+		return
+	
 	if cpu_turn_processor:
 		cpu_turn_processor.process_cpu_turn(tile, tile_info, player_index)
 	else:
@@ -156,10 +161,10 @@ func show_summon_ui():
 		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
-# 召喚UI表示（グレーアウト）
+# 召喚UI表示（グレーアウト）- 自分の土地に止まった場合
 func show_summon_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
+		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたは領地コマンドを使用）"
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())

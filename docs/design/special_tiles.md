@@ -47,6 +47,10 @@ UI: 3枚表示 + 「買わない」ボタン
 - カードコスト70 → 購入価格35
 - カードコスト15 → 購入価格8（切り上げ）
 
+### 注意
+- 手札上限に達していても購入可能
+- 魔力不足のカードも表示される（グレーアウトで選択不可）
+
 ---
 
 ## 2. カード譲渡タイル (card_give)
@@ -83,6 +87,8 @@ UI: 「クリーチャー」「アイテム」「スペル」ボタン表示
 ### 注意
 - 山札（deck）から取得するため、山札にない種類は取得不可
 - 取得したカードは山札から消える
+- 山札に該当種類がなければ「該当カードなし」表示で終了（選び直し不可）
+- 山札が空の場合は3種類すべて選択不可表示
 
 ---
 
@@ -117,7 +123,7 @@ UI: 「クリーチャー」「アイテム」「スペル」ボタン表示
 
 同属性ボーナス = (同属性クリーチャー数 × 10) + (同属性総レベル × 5)
 相克属性ペナルティ = (相克属性クリーチャー数 × 5) + (相克属性総レベル × 2.5)
-                   ※ペナルティ係数はボーナス係数の半分
+				   ※ペナルティ係数はボーナス係数の半分
 ```
 
 #### 相克関係
@@ -156,6 +162,12 @@ UI: 「クリーチャー」「アイテム」「スペル」ボタン表示
 ### 所持上限
 なし（無制限に購入可能）
 
+### 最低価値
+25G（相克ペナルティで下がっても25未満にはならない）
+
+### 購入/売却単位
+複数個まとめて購入/売却可能
+
 ### 総魔力への影響
 所持している石の**現在価値**が総魔力に加算される
 
@@ -165,16 +177,17 @@ UI: 「クリーチャー」「アイテム」「スペル」ボタン表示
 
 ### 処理フロー
 ```
-通過 or 停止
+通過 or 停止（毎回発動）
   ↓
 UI: ショップ画面表示
   ├─ 各石の現在価値表示
   ├─ 所持数表示
+  ├─ 購入数/売却数選択UI
   ├─ 「購入」「売却」「買わない」ボタン
   ↓
-プレイヤー操作
-  ├─ 購入 → 魔力支払い → 石を取得
-  ├─ 売却 → 石を手放す → 魔力獲得
+プレイヤー操作（複数個可）
+  ├─ 購入 → 個数 × 現在価値を支払い → 石を取得
+  ├─ 売却 → 石を手放す → 個数 × 現在価値を獲得
   └─ 買わない → 何もしない
   ↓
 完了
@@ -217,6 +230,8 @@ UI: 3枚表示 + 「使わない」ボタン
 ### 注意
 - スペル使用処理は既存のSpellPhaseHandler等を流用
 - ターゲット指定が必要なスペルは通常通りUI表示
+- 魔力不足のスペルも表示される（グレーアウトで選択不可）
+- 対象がないスペルも表示される（使用時に対象選択不可で実質使えない）
 
 ---
 
@@ -261,6 +276,18 @@ UI: 手札からクリーチャー選択
 2. **カードコスト**: 魔力が足りているか
 3. **空き地**: 配置可能なタイルがあるか
 
+### 注意
+- 空き地がない場合はタイル選択ができない（エラー表示なし、単に選択不可）
+- neutral（無属性）タイルも空き地として配置可能
+
+---
+
+## CPU対応
+
+- CPUもすべての特殊タイルを使用する
+- AIロジックは後回し（初期実装では「スキップ」動作）
+- 各タイルにCPU判断ロジックを追加予定
+
 ---
 
 ## 実装優先度
@@ -275,9 +302,145 @@ UI: 手札からクリーチャー選択
 
 ---
 
+## 実装詳細
+
+### 共通UI設定関数
+
+全ての特殊タイルハンドラは、処理の最後に共通関数`_show_special_tile_landing_ui(player_id)`を呼び出す。
+
+```gdscript
+## special_tile_system.gd
+
+func _show_special_tile_landing_ui(player_id: int):
+	# カードをグレーアウト（召喚不可）
+	ui_manager.card_selection_filter = "disabled"
+	# 手札UI表示
+	ui_manager.show_card_selection_ui(current_player)
+	# フェーズ表示
+	ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
+```
+
+**この関数が行うこと:**
+- 手札カードをグレーアウト（召喚不可状態）
+- 手札UIの表示更新
+- フェーズラベルの設定
+
+**CPU/プレイヤー共通で呼び出す。**
+
+### ハンドラ実装パターン
+
+新しい特殊タイルを実装する際の基本パターン:
+
+```gdscript
+func handle_xxx_tile(player_id: int):
+	# 1. CPUの場合の処理（必要に応じて）
+	if _is_cpu_player(player_id):
+		print("[SpecialTile] CPU - xxxスキップ")
+		emit_signal("special_tile_activated", "xxx", player_id, -1)
+		_show_special_tile_landing_ui(player_id)
+		return
+	
+	# 2. プレイヤー向けUI表示・処理（await可能）
+	await _show_xxx_ui(player_id)
+	
+	# 3. 処理完了シグナル
+	emit_signal("special_tile_activated", "xxx", player_id, result)
+	
+	# 4. 共通UI設定（必須）
+	_show_special_tile_landing_ui(player_id)
+```
+
+### CPU処理の詳細
+
+CPUが特殊タイルに停止した場合のフロー:
+
+```
+1. process_special_tile_3d() 呼び出し
+   ↓
+2. 各ハンドラ内で _is_cpu_player() チェック
+   ↓
+3. CPU用処理実行（スキップ or AI判断）
+   ↓
+4. _show_special_tile_landing_ui() で手札グレーアウト
+   ↓
+5. process_special_tile_3d() から special_action_completed 発火
+   ↓
+6. tile_action_processor._process_cpu_tile() で早期リターン
+   ↓
+7. _complete_action() でターン終了
+```
+
+**各ハンドラでのCPU処理:**
+
+| タイル | CPU処理 |
+|--------|---------|
+| checkpoint | UI設定のみ（ボーナスはLapSystemで自動処理） |
+| warp_stop | ワープ実行後、UI設定 |
+| card_give | スキップ（後でAI実装予定） |
+| card_buy | スキップ（後でAI実装予定） |
+| magic | スキップ（後でAI実装予定） |
+| magic_stone | スキップ（後でAI実装予定） |
+| base | スキップ（後でAI実装予定） |
+
+**重要:**
+- CPUでも`_show_special_tile_landing_ui()`を呼ぶ（手札グレーアウトのため）
+- CPUはUI操作を待たないので、処理は同期的に完了
+- `tile_action_processor._process_cpu_tile()`で特殊タイルは即`_complete_action()`
+
+### process_special_tile_3d のフロー
+
+```gdscript
+func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int):
+	match tile_type:
+		"checkpoint":
+			await handle_checkpoint_tile(player_id)
+		"card_give":
+			await handle_card_give_tile(player_id)
+		# ... 他のタイル
+	
+	# 全ハンドラ共通: 処理完了シグナル
+	emit_signal("special_action_completed")
+```
+
+**注意:**
+- 各ハンドラでは`emit_signal("special_action_completed")`を呼ばない
+- `process_special_tile_3d`の最後で一括発行
+- 呼び出し側（tile_action_processor）は`await`で完了を待つ
+
+### tile_action_processor側の処理
+
+```gdscript
+# 特殊マス処理（処理完了を待ってから次フェーズに進む）
+if _is_special_tile(tile.tile_type):
+	if special_tile_system:
+		await special_tile_system.process_special_tile_3d(...)
+
+# CPUかプレイヤーかで分岐
+if is_cpu_turn:
+	_process_cpu_tile(...)  # 特殊タイルは早期リターン → _complete_action()
+else:
+	_process_player_tile(...)  # 特殊タイルは早期リターン（UI設定済み）
+```
+
+### _process_cpu_tile での特殊タイル処理
+
+```gdscript
+func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
+	# 特殊タイルの場合はアクション完了（召喚/戦闘なし）
+	var is_special = _is_special_tile(tile.tile_type)
+	if is_special:
+		_complete_action()
+		return
+	
+	# 通常タイルの処理...
+```
+
+---
+
 ## 関連ファイル
 
-- `scripts/special_tile_system.gd` - 特殊タイル処理
+- `scripts/special_tile_system.gd` - 特殊タイル処理・共通UI設定
+- `scripts/tile_action_processor.gd` - タイル着地処理
 - `scripts/tile_helper.gd` - タイルタイプ定数
 - `scripts/quest/stage_loader.gd` - タイルシーンマッピング
 - `data/master/maps/map_diamond_20_v2.json` - 特殊タイル配置マップ
@@ -290,3 +453,5 @@ UI: 手札からクリーチャー選択
 |------|------|
 | 2025/12/16 | 初版作成 |
 | 2025/12/16 | 魔法石の価値計算式追加（相克属性ペナルティ含む） |
+| 2025/12/16 | 詳細仕様追加（手札上限、グレーアウト、最低価値25、複数購入、CPU対応など） |
+| 2025/12/17 | 実装詳細セクション追加（共通UI設定関数、ハンドラ実装パターン） |
