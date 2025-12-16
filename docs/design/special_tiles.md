@@ -304,6 +304,61 @@ UI: 手札からクリーチャー選択
 
 ## 実装詳細
 
+### アーキテクチャ: タイルへの処理委譲
+
+特殊タイルの処理は各タイルクラスに委譲する方式を採用。
+
+```
+special_tile_system.gd
+  ↓ handle_xxx_tile(player_id, tile)
+タイルクラス (xxx_tile.gd)
+  ↓ handle_special_action(player_id, context)
+UI表示・処理実行
+  ↓
+結果を返す
+```
+
+#### コンテキスト
+
+タイルに渡されるcontextには以下のシステム参照が含まれる：
+
+```gdscript
+func _create_tile_context() -> Dictionary:
+	return {
+		"player_system": player_system,
+		"card_system": card_system,
+		"ui_manager": ui_manager,
+		"game_flow_manager": game_flow_manager,
+		"board_system": board_system
+	}
+```
+
+#### タイル側の実装パターン
+
+```gdscript
+extends BaseTile
+
+var _player_system = null
+var _card_system = null
+var _ui_manager = null
+# ...
+
+func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
+	# コンテキストからシステム参照を取得
+	_player_system = context.get("player_system")
+	_card_system = context.get("card_system")
+	_ui_manager = context.get("ui_manager")
+	# ...
+	
+	# CPUの場合はスキップ
+	if _is_cpu_player(player_id):
+		return {"success": true, "xxx_done": false}
+	
+	# プレイヤーの場合はUI表示
+	var result = await _show_xxx_selection(player_id)
+	return result
+```
+
 ### 共通UI設定関数
 
 全ての特殊タイルハンドラは、処理の最後に共通関数`_show_special_tile_landing_ui(player_id)`を呼び出す。
@@ -320,127 +375,56 @@ func _show_special_tile_landing_ui(player_id: int):
 	ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
 ```
 
-**この関数が行うこと:**
-- 手札カードをグレーアウト（召喚不可状態）
-- 手札UIの表示更新
-- フェーズラベルの設定
+### UI共通仕様
 
-**CPU/プレイヤー共通で呼び出す。**
+特殊タイルUIは統一されたサイズ・スタイルを使用：
 
-### ハンドラ実装パターン
+| 項目 | 値 |
+|------|-----|
+| メインパネル | 1800 x 1050 |
+| カードパネル | 500 x 680 |
+| パネル間隔 | 80px |
+| 位置調整 | 中央から150px上 |
+| タイトルフォント | 48〜56 |
+| カード名フォント | 44 |
+| 説明フォント | 40 |
+| ボタン（決定） | 300x90〜350x100 |
+| ボタン（キャンセル） | 400x100〜450x110 |
 
-新しい特殊タイルを実装する際の基本パターン:
+---
 
-```gdscript
-func handle_xxx_tile(player_id: int):
-	# 1. CPUの場合の処理（必要に応じて）
-	if _is_cpu_player(player_id):
-		print("[SpecialTile] CPU - xxxスキップ")
-		emit_signal("special_tile_activated", "xxx", player_id, -1)
-		_show_special_tile_landing_ui(player_id)
-		return
-	
-	# 2. プレイヤー向けUI表示・処理（await可能）
-	await _show_xxx_ui(player_id)
-	
-	# 3. 処理完了シグナル
-	emit_signal("special_tile_activated", "xxx", player_id, result)
-	
-	# 4. 共通UI設定（必須）
-	_show_special_tile_landing_ui(player_id)
-```
+## 実装状況
 
-### CPU処理の詳細
-
-CPUが特殊タイルに停止した場合のフロー:
-
-```
-1. process_special_tile_3d() 呼び出し
-   ↓
-2. 各ハンドラ内で _is_cpu_player() チェック
-   ↓
-3. CPU用処理実行（スキップ or AI判断）
-   ↓
-4. _show_special_tile_landing_ui() で手札グレーアウト
-   ↓
-5. process_special_tile_3d() から special_action_completed 発火
-   ↓
-6. tile_action_processor._process_cpu_tile() で早期リターン
-   ↓
-7. _complete_action() でターン終了
-```
-
-**各ハンドラでのCPU処理:**
-
-| タイル | CPU処理 |
-|--------|---------|
-| checkpoint | UI設定のみ（ボーナスはLapSystemで自動処理） |
-| warp_stop | ワープ実行後、UI設定 |
-| card_give | スキップ（後でAI実装予定） |
-| card_buy | スキップ（後でAI実装予定） |
-| magic | スキップ（後でAI実装予定） |
-| magic_stone | スキップ（後でAI実装予定） |
-| base | スキップ（後でAI実装予定） |
-
-**重要:**
-- CPUでも`_show_special_tile_landing_ui()`を呼ぶ（手札グレーアウトのため）
-- CPUはUI操作を待たないので、処理は同期的に完了
-- `tile_action_processor._process_cpu_tile()`で特殊タイルは即`_complete_action()`
-
-### process_special_tile_3d のフロー
-
-```gdscript
-func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int):
-	match tile_type:
-		"checkpoint":
-			await handle_checkpoint_tile(player_id)
-		"card_give":
-			await handle_card_give_tile(player_id)
-		# ... 他のタイル
-	
-	# 全ハンドラ共通: 処理完了シグナル
-	emit_signal("special_action_completed")
-```
-
-**注意:**
-- 各ハンドラでは`emit_signal("special_action_completed")`を呼ばない
-- `process_special_tile_3d`の最後で一括発行
-- 呼び出し側（tile_action_processor）は`await`で完了を待つ
-
-### tile_action_processor側の処理
-
-```gdscript
-# 特殊マス処理（処理完了を待ってから次フェーズに進む）
-if _is_special_tile(tile.tile_type):
-	if special_tile_system:
-		await special_tile_system.process_special_tile_3d(...)
-
-# CPUかプレイヤーかで分岐
-if is_cpu_turn:
-	_process_cpu_tile(...)  # 特殊タイルは早期リターン → _complete_action()
-else:
-	_process_player_tile(...)  # 特殊タイルは早期リターン（UI設定済み）
-```
-
-### _process_cpu_tile での特殊タイル処理
-
-```gdscript
-func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
-	# 特殊タイルの場合はアクション完了（召喚/戦闘なし）
-	var is_special = _is_special_tile(tile.tile_type)
-	if is_special:
-		_complete_action()
-		return
-	
-	# 通常タイルの処理...
-```
+| タイル | 状態 | 備考 |
+|--------|------|------|
+| magic | ✅ 完了 | タイル委譲、SpellPhaseHandler連携 |
+| card_buy | ✅ 完了 | タイル委譲、購入価格50%表示 |
+| card_give | ✅ 完了 | タイル委譲、3タイプ選択UI |
+| magic_stone | 🔧 未実装 | 動的価格システム必要 |
+| base | 🔧 未実装 | リモート配置システム必要 |
+| checkpoint | ✅ 動作中 | LapSystemで処理 |
+| warp_stop | ✅ 動作中 | special_tile_systemで処理 |
 
 ---
 
 ## 関連ファイル
 
-- `scripts/special_tile_system.gd` - 特殊タイル処理・共通UI設定
+### タイルクラス
+- `scripts/tiles/magic_tile.gd` - 魔法タイル処理
+- `scripts/tiles/card_buy_tile.gd` - カード購入タイル処理
+- `scripts/tiles/card_give_tile.gd` - カード譲渡タイル処理
+
+### UI
+- `scripts/ui_components/magic_tile_ui.gd` - 魔法タイルUI
+- `scripts/ui_components/card_buy_ui.gd` - カード購入タイルUI
+- `scripts/ui_components/card_give_ui.gd` - カード譲渡タイルUI
+
+### システム
+- `scripts/special_tile_system.gd` - 特殊タイル処理・委譲・共通UI設定
 - `scripts/tile_action_processor.gd` - タイル着地処理
+- `scripts/game_flow/spell_phase_handler.gd` - 外部スペル実行（魔法タイル用）
+
+### その他
 - `scripts/tile_helper.gd` - タイルタイプ定数
 - `scripts/quest/stage_loader.gd` - タイルシーンマッピング
 - `data/master/maps/map_diamond_20_v2.json` - 特殊タイル配置マップ
@@ -455,3 +439,5 @@ func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int)
 | 2025/12/16 | 魔法石の価値計算式追加（相克属性ペナルティ含む） |
 | 2025/12/16 | 詳細仕様追加（手札上限、グレーアウト、最低価値25、複数購入、CPU対応など） |
 | 2025/12/17 | 実装詳細セクション追加（共通UI設定関数、ハンドラ実装パターン） |
+| 2025/12/17 | タイル委譲アーキテクチャに移行（magic, card_buy, card_give完了） |
+| 2025/12/17 | UI共通仕様追加、実装状況セクション追加 |

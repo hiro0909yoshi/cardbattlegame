@@ -1,6 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://cmagic_tile"]
+[gd_scene load_steps=7 format=3 uid="uid://op62xi7er7ij"]
 
-[ext_resource type="Script" path="res://scripts/tiles/magic_tile.gd" id="1_magic"]
+[ext_resource type="Script" uid="uid://dn5icl7xw2chs" path="res://scripts/tiles/magic_tile.gd" id="1_magic"]
 [ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]

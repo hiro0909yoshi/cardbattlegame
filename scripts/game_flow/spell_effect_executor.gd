@@ -43,8 +43,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	for effect in effects:
 		await apply_single_effect(effect, target_data)
 	
-	# カードを捨て札に（復帰[ブック]/復帰[手札]時はスキップ）
-	if handler.card_system and not handler.spell_failed:
+	# カードを捨て札に（復帰[ブック]/復帰[手札]/外部スペル時はスキップ）
+	if handler.card_system and not handler.spell_failed and not handler.is_external_spell_mode:
 		var hand = handler.card_system.get_all_cards_for_player(handler.current_player_id)
 		for i in range(hand.size()):
 			if hand[i].get("id", -1) == spell_card.get("id", -2):
@@ -52,6 +52,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 				break
 	elif handler.spell_failed and return_to_hand:
 		print("[復帰[手札]] %s は手札に残ります" % spell_card.get("name", "?"))
+	elif handler.is_external_spell_mode:
+		print("[外部スペル] %s は消滅" % spell_card.get("name", "?"))
 	
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)
@@ -319,16 +321,23 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 		for effect in effects:
 			await apply_single_effect(effect, target)
 	
-	# カードを捨て札に
-	if handler.card_system and not handler.spell_failed:
+	# カードを捨て札に（外部スペル時はスキップ）
+	if handler.card_system and not handler.spell_failed and not handler.is_external_spell_mode:
 		var hand = handler.card_system.get_all_cards_for_player(handler.current_player_id)
 		for i in range(hand.size()):
 			if hand[i].get("id", -1) == spell_card.get("id", -2):
 				handler.card_system.discard_card(handler.current_player_id, i, "use")
 				break
+	elif handler.is_external_spell_mode:
+		print("[外部スペル] %s は消滅" % spell_card.get("name", "?"))
 	
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)
+	
+	# 外部スペルモードの場合は完了シグナルを発火してリターン
+	if handler.is_external_spell_mode:
+		handler.external_spell_finished.emit()
+		return
 	
 	# 少し待機してからカメラを戻す
 	await handler.get_tree().create_timer(0.5).timeout

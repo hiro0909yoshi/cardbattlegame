@@ -19,16 +19,18 @@ var board_system
 var card_system: CardSystem
 var player_system: PlayerSystem
 var ui_manager: UIManager = null
+var game_flow_manager = null  # GameFlowManager参照（魔法タイル用）
 
 func _ready():
 	pass
 
 # システム参照を設定
-func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem, ui_system: UIManager = null):
+func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem, ui_system: UIManager = null, gfm = null):
 	board_system = b_system
 	card_system = c_system
 	player_system = p_system
 	ui_manager = ui_system
+	game_flow_manager = gfm
 
 # ============================================
 # 特殊タイル停止後の共通UI設定
@@ -59,19 +61,22 @@ func _show_special_tile_landing_ui(player_id: int):
 func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int) -> void:
 	print("特殊タイル処理: ", tile_type, " (マス", tile_index, ")")
 	
+	# タイルオブジェクトを取得（タイルに処理を委譲する場合に使用）
+	var tile = _get_tile_by_index(tile_index)
+	
 	match tile_type:
 		"checkpoint":
 			await handle_checkpoint_tile(player_id)
 		"warp_stop":
 			await handle_warp_stop_tile(tile_index, player_id)
 		"card_buy":
-			await handle_card_buy_tile(player_id)
+			await handle_card_buy_tile(player_id, tile)
 		"card_give":
-			await handle_card_give_tile(player_id)
+			await handle_card_give_tile(player_id, tile)
 		"magic_stone":
 			await handle_magic_stone_tile(player_id)
 		"magic":
-			await handle_magic_tile(player_id)
+			await handle_magic_tile(player_id, tile)
 		"base":
 			await handle_base_tile(player_id)
 		"neutral":
@@ -82,6 +87,12 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 	
 	# 処理完了シグナル（全てのハンドラ共通）
 	emit_signal("special_action_completed")
+
+## タイルインデックスからタイルオブジェクトを取得
+func _get_tile_by_index(tile_index: int):
+	if board_system and board_system.tile_nodes and board_system.tile_nodes.has(tile_index):
+		return board_system.tile_nodes[tile_index]
+	return null
 
 # チェックポイント処理
 # 注意: 魔力ボーナスとダウン解除はLapSystemで管理
@@ -119,111 +130,41 @@ func handle_warp_stop_tile(tile_index: int, player_id: int):
 	# 共通UI設定
 	_show_special_tile_landing_ui(player_id)
 
-# カード購入マス処理（未実装）
-func handle_card_buy_tile(player_id: int):
-	print("カード購入マス - TODO: 実装予定")
-	emit_signal("special_tile_activated", "card_buy", player_id, -1)
+# カード購入マス処理（タイルに委譲）
+func handle_card_buy_tile(player_id: int, tile = null):
+	print("[SpecialTile] カード購入マス - Player%d" % (player_id + 1))
 	
-	# 共通UI設定
-	_show_special_tile_landing_ui(player_id)
-
-# カード譲渡マス処理
-var card_give_ui = null
-var _card_give_player_id: int = -1
-
-func handle_card_give_tile(player_id: int):
-	print("[SpecialTile] カード譲渡マス - Player%d" % (player_id + 1))
-	_card_give_player_id = player_id
-	
-	# CPUの場合はスキップ（後でAI実装）
-	if _is_cpu_player(player_id):
-		print("[SpecialTile] CPU - カード譲渡スキップ")
-		emit_signal("special_tile_activated", "card_give", player_id, -1)
-		# 共通UI設定
+	# タイルに処理を委譲
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] カード購入マス処理完了: %s" % result)
+		emit_signal("special_tile_activated", "card_buy", player_id, -1)
 		_show_special_tile_landing_ui(player_id)
 		return
 	
-	# UIを表示して完了を待つ
-	await _show_card_give_ui(player_id)
-
-func _show_card_give_ui(player_id: int):
-	if not ui_manager or not ui_manager.ui_layer:
-		push_error("[SpecialTile] UIManagerまたはui_layerがありません")
-		return
-	
-	# UIがなければ作成
-	if not card_give_ui:
-		var CardGiveUIScene = load("res://scenes/ui/CardGiveUI.tscn")
-		if CardGiveUIScene:
-			card_give_ui = CardGiveUIScene.instantiate()
-			ui_manager.ui_layer.add_child(card_give_ui)
-	
-	# UIをセットアップして表示
-	card_give_ui.setup(card_system, player_id)
-	card_give_ui.show_selection()
-	
-	# UIからの応答を待つ（type_selectedまたはcancelled）
-	var result = await _wait_for_card_give_selection()
-	
-	if result.is_empty():
-		# キャンセルされた
-		print("[SpecialTile] カード譲渡キャンセル")
-	else:
-		# タイプ選択された
-		var card_type = result.get("type", "")
-		print("[SpecialTile] カード種類選択: %s" % card_type)
-		
-		if card_system:
-			# 山札から該当タイプのカードをランダム取得
-			var card_data = card_system.draw_random_card_by_type(player_id, card_type)
-			
-			if card_data.is_empty():
-				print("[SpecialTile] 山札に%sがありません" % card_type)
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.global_comment_ui.show_and_wait("山札に%sがありません" % _get_type_name(card_type), player_id)
-			else:
-				print("[SpecialTile] %sを取得: %s" % [card_type, card_data.get("name", "?")])
-				if ui_manager:
-					# 手札UI更新
-					if ui_manager.hand_display:
-						ui_manager.hand_display.update_hand_display(player_id)
-					# コメント表示
-					if ui_manager.global_comment_ui:
-						await ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id)
-	
-	emit_signal("special_tile_activated", "card_give", player_id, -1)
-	
-	# 共通UI設定
+	# フォールバック：タイルがない場合
+	print("[SpecialTile] カード購入タイルが見つかりません - スキップ")
+	emit_signal("special_tile_activated", "card_buy", player_id, -1)
 	_show_special_tile_landing_ui(player_id)
 
-## UIからの選択結果を待つ
-func _wait_for_card_give_selection() -> Dictionary:
-	# 状態を辞書で管理（ラムダのキャプチャ問題を回避）
-	var state = {"completed": false, "result": {}}
+# カード譲渡マス処理（タイルに委譲）
+func handle_card_give_tile(player_id: int, tile = null):
+	print("[SpecialTile] カード譲渡マス - Player%d" % (player_id + 1))
 	
-	var on_type_selected = func(card_type: String):
-		state.result = {"type": card_type}
-		state.completed = true
+	# タイルに処理を委譲
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] カード譲渡マス処理完了: %s" % result)
+		emit_signal("special_tile_activated", "card_give", player_id, -1)
+		_show_special_tile_landing_ui(player_id)
+		return
 	
-	var on_cancelled = func():
-		state.result = {}
-		state.completed = true
-	
-	card_give_ui.type_selected.connect(on_type_selected, CONNECT_ONE_SHOT)
-	card_give_ui.cancelled.connect(on_cancelled, CONNECT_ONE_SHOT)
-	
-	# 完了を待つ
-	while not state.completed:
-		await get_tree().process_frame
-	
-	return state.result
-
-func _get_type_name(card_type: String) -> String:
-	match card_type:
-		"creature": return "クリーチャー"
-		"item": return "アイテム"
-		"spell": return "スペル"
-		_: return card_type
+	# フォールバック：タイルがない場合
+	print("[SpecialTile] カード譲渡タイルが見つかりません - スキップ")
+	emit_signal("special_tile_activated", "card_give", player_id, -1)
+	_show_special_tile_landing_ui(player_id)
 
 # 魔法石マス処理（未実装）
 func handle_magic_stone_tile(player_id: int):
@@ -233,13 +174,32 @@ func handle_magic_stone_tile(player_id: int):
 	# 共通UI設定
 	_show_special_tile_landing_ui(player_id)
 
-# 魔法マス処理（未実装）
-func handle_magic_tile(player_id: int):
-	print("魔法マス - TODO: 実装予定")
-	emit_signal("special_tile_activated", "magic", player_id, -1)
+# 魔法マス処理（タイルに委譲）
+func handle_magic_tile(player_id: int, tile = null):
+	print("[SpecialTile] 魔法マス - Player%d" % (player_id + 1))
 	
-	# 共通UI設定
+	# タイルに処理を委譲
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] 魔法マス処理完了: %s" % result)
+	else:
+		# フォールバック: CPUの場合はスキップ
+		if _is_cpu_player(player_id):
+			print("[SpecialTile] CPU - 魔法マススキップ")
+	
+	emit_signal("special_tile_activated", "magic", player_id, -1)
 	_show_special_tile_landing_ui(player_id)
+
+## タイル処理用のコンテキストを作成
+func _create_tile_context() -> Dictionary:
+	return {
+		"player_system": player_system,
+		"card_system": card_system,
+		"ui_manager": ui_manager,
+		"game_flow_manager": game_flow_manager,
+		"board_system": board_system
+	}
 
 # 拠点マス処理（未実装）
 func handle_base_tile(player_id: int):

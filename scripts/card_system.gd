@@ -592,3 +592,23 @@ func draw_random_card_by_type(player_id: int, card_type: String) -> Dictionary:
 	# ランダムで1枚選択
 	var random_card_id = type_cards[randi() % type_cards.size()]
 	return draw_specific_card_from_deck(player_id, random_card_id)
+
+# === カード購入タイル用 ===
+
+## 外部カードを手札に追加（購入・魔法タイル等で使用）
+func add_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
+	if not player_hands.has(player_id):
+		return false
+	
+	if card_data.is_empty():
+		return false
+	
+	# カードデータをコピーして追加
+	var clean_card = card_data.duplicate()
+	_clean_battle_fields(clean_card)
+	
+	player_hands[player_id]["data"].append(clean_card)
+	
+	emit_signal("hand_updated")
+	print("[CardSystem] カード追加: Player%d が %s を手札に追加" % [player_id + 1, card_data.get("name", "?")])
+	return true

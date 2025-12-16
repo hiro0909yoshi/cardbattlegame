@@ -247,7 +247,7 @@ func phase_4_setup_system_interconnections() -> void:
 	# Step 3: SpecialTileSystem に必要なシステムを設定
 	if special_tile_system:
 		special_tile_system.setup_systems(
-			board_system_3d, card_system, player_system, ui_manager
+			board_system_3d, card_system, player_system, ui_manager, game_flow_manager
 		)
 	
 	# Step 4: DebugController に設定

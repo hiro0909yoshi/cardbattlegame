@@ -39,6 +39,13 @@ var card_selection_handler: CardSelectionHandler = null
 ## スペル失敗フラグ
 var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立でデッキに戻る）
 
+## 外部スペルモード（魔法タイル等で使用）
+## trueの場合、手札からの削除・捨て札処理をスキップ
+var is_external_spell_mode: bool = false
+var _external_spell_cancelled: bool = false  # キャンセルフラグ
+var _external_spell_no_target: bool = false  # 対象不在フラグ
+signal external_spell_finished()  # 外部スペル実行完了
+
 ## デバッグ設定
 ## 密命カードのテストを一時的に無効化
 ## true: 密命カードを通常カードとして扱う（失敗判定・復帰[ブック]をスキップ）
@@ -343,19 +350,21 @@ func _get_spell_cost(spell_card: Dictionary) -> int:
 
 ## スペルを使用
 func use_spell(spell_card: Dictionary):
-	if current_state != State.WAITING_FOR_INPUT:
-		return
-	
-	if spell_used_this_turn:
-		return
-	
-	if not _can_afford_spell(spell_card):
-		return
+	# 外部スペルモードでない場合のみ状態チェック
+	if not is_external_spell_mode:
+		if current_state != State.WAITING_FOR_INPUT:
+			return
+		
+		if spell_used_this_turn:
+			return
+		
+		if not _can_afford_spell(spell_card):
+			return
 	
 	selected_spell_card = spell_card
 	spell_used_this_turn = true
 	
-	# コストを支払う（ウェイストワールド対応）
+	# コストを支払う（常に実行）
 	var cost = _get_spell_cost(spell_card)
 	
 	if player_system:
@@ -451,24 +460,31 @@ func use_spell(spell_card: Dictionary):
 			target_info["target_filter"] = target_filter
 		
 		# 対象選択UIを表示
-		_show_target_selection_ui(target_type, target_info)
+		var has_targets = await _show_target_selection_ui(target_type, target_info)
+		if not has_targets:
+			# 対象がいない場合
+			if is_external_spell_mode:
+				_external_spell_no_target = true  # 対象不在フラグ
+			cancel_spell()
+			return
 	else:
 		# target_type が空または "none" の場合 → 確認フェーズへ
 		var target_data = {"type": "none"}
 		_start_confirmation_phase("none", target_info, target_data)
 
 ## 対象選択UIを表示（領地コマンドと同じ方式）
-func _show_target_selection_ui(target_type: String, target_info: Dictionary):
+## 戻り値: true=対象選択開始, false=対象なしでキャンセル
+func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	# 有効な対象を取得（ヘルパー使用）
 	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
 	
 	if targets.is_empty():
-		# 対象がいない場合はメッセージ表示してキャンセル
+		# 対象がいない場合はメッセージ表示
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "対象がいません"
 		await get_tree().create_timer(1.0).timeout
-		cancel_spell()
-		return
+		# キャンセル処理は呼び出し元に任せる
+		return false
 	
 	# 領地コマンドと同じ方式で選択開始
 	available_targets = targets
@@ -480,6 +496,7 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary):
 	
 	# 最初の対象を表示
 	_update_target_selection()
+	return true
 
 ## 選択を更新
 func _update_target_selection():
@@ -595,6 +612,11 @@ func _cancel_target_selection():
 		is_borrow_spell_mode = false
 		return
 	
+	# 外部スペルモードの場合（魔法タイル等）
+	if is_external_spell_mode:
+		cancel_spell()
+		return
+	
 	# 秘術かスペルかで分岐
 	if spell_mystic_arts and spell_mystic_arts.is_active():
 		# 秘術キャンセル
@@ -623,23 +645,52 @@ func cancel_spell():
 	
 	selected_spell_card = {}
 	spell_used_this_turn = false
-	current_state = State.WAITING_FOR_INPUT
 	
 	# 確認フェーズ変数をクリア
 	confirmation_target_type = ""
 	confirmation_target_info = {}
 	confirmation_target_data = {}
 	
+	# 外部スペルモードの場合
+	if is_external_spell_mode:
+		_external_spell_cancelled = true  # キャンセルフラグを立てる
+		
+		# 対象選択フェーズを抜ける共通処理
+		_exit_target_selection_phase()
+		
+		current_state = State.INACTIVE
+		# シグナルを遅延発火（use_spell()が完了してからawaitで受け取れるようにする）
+		call_deferred("emit_signal", "external_spell_finished")
+		return
+	
+	current_state = State.WAITING_FOR_INPUT
+	
 	# スペル選択UIを再表示
 	_return_to_spell_selection()
 
-## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
-func _return_to_spell_selection():
+## 対象選択フェーズを抜けるときの共通処理
+func _exit_target_selection_phase():
 	# 選択マーカーをクリア
 	TargetSelectionHelper.clear_selection(self)
 	
+	# ナビゲーションをクリア
+	_clear_spell_navigation()
+	
 	# カメラをプレイヤーに戻す
 	_return_camera_to_player()
+	
+	# フェーズラベルをクリア
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = ""
+	
+	# UI更新
+	if ui_manager and ui_manager.has_method("update_player_info_panels"):
+		ui_manager.update_player_info_panels()
+
+## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
+func _return_to_spell_selection():
+	# 対象選択フェーズを抜ける共通処理
+	_exit_target_selection_phase()
 	
 	# UIを更新してスペル選択モードに戻す
 	if ui_manager:
@@ -839,9 +890,58 @@ signal tile_selection_completed(tile_index: int)
 
 
 
+func execute_external_spell(spell_card: Dictionary, player_id: int) -> String:
+	print("[SpellPhaseHandler] 外部スペル実行: %s (Player%d)" % [spell_card.get("name", "?"), player_id + 1])
+	
+	# 外部スペルモードを有効化
+	is_external_spell_mode = true
+	_external_spell_cancelled = false
+	_external_spell_no_target = false
+	
+	# 現在のプレイヤーIDを保存して設定
+	var original_player_id = current_player_id
+	var original_state = current_state
+	current_player_id = player_id
+	current_state = State.WAITING_FOR_INPUT
+	
+	# use_spellを呼び出す（通常のスペルフェーズと同じ処理）
+	await use_spell(spell_card)
+	
+	# 完了を待つ（対象選択がある場合はUIが表示され、選択後に進む）
+	await external_spell_finished
+	
+	# 結果を保存
+	var was_cancelled = _external_spell_cancelled
+	var was_no_target = _external_spell_no_target
+	
+	# 外部スペルモードを無効化
+	is_external_spell_mode = false
+	_external_spell_cancelled = false
+	_external_spell_no_target = false
+	current_player_id = original_player_id
+	current_state = original_state
+	selected_spell_card = {}
+	spell_used_this_turn = false  # 外部スペルはターン制限に影響しない
+	
+	print("[SpellPhaseHandler] 外部スペル完了 (cancelled: %s, no_target: %s)" % [was_cancelled, was_no_target])
+	
+	# 全て文字列で返す
+	if was_no_target:
+		return "no_target"
+	elif was_cancelled:
+		return "cancelled"
+	else:
+		return "success"
+
 ## スペルフェーズ完了
 func complete_spell_phase():
 	if current_state == State.INACTIVE:
+		return
+	
+	# 外部スペルモードの場合
+	if is_external_spell_mode:
+		current_state = State.INACTIVE
+		external_spell_finished.emit()
 		return
 	
 	current_state = State.INACTIVE
