@@ -280,6 +280,13 @@ func _on_card_button_pressed(card_index: int):
 	if is_notification_popup_active():
 		return
 	
+	# カード選択ハンドラーが選択中の場合はGameFlowManager経由で処理
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
+		if handler and handler.is_selecting():
+			game_flow_manager_ref.on_card_selected(card_index)
+			return
+	
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
 

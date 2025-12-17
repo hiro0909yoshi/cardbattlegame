@@ -21,6 +21,7 @@ var phase_label_ref: Label     # フェーズラベル参照
 var is_active = false          # 選択UI表示中か
 var selection_mode = ""        # "summon" or "battle"
 var current_selection_player_id: int = 0  # 現在選択中のプレイヤーID
+var current_selection_hand_data: Array = []  # 現在選択中のカードデータ配列
 var pending_card_index: int = -1  # クリーチャー情報パネル確認待ちのカードインデックス
 var creature_info_panel_connected: bool = false  # シグナル接続済みフラグ
 var item_creature_panel_connected: bool = false  # アイテムフェーズ用シグナル接続済みフラグ
@@ -114,6 +115,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 	
 	# 選択UIを有効化
 	is_active = true
+	
+	# カードデータとプレイヤーIDを保存（_get_card_data_for_indexで使用）
+	current_selection_hand_data = hand_data
+	current_selection_player_id = player_id
 	
 	# UIManagerのフィルター設定を確認
 	var filter_mode = ui_manager_ref.card_selection_filter
@@ -432,6 +437,7 @@ func apply_button_style(button: Button):
 func hide_selection():
 	is_active = false
 	selection_mode = ""
+	current_selection_hand_data = []  # カードデータをクリア
 	
 	# グローバルボタンをクリア
 	if ui_manager_ref:
@@ -612,6 +618,12 @@ func _on_spell_panel_confirmed(card_data: Dictionary):
 
 # スペル情報パネルでキャンセルされた
 func _on_spell_panel_cancelled():
+	# card_selection_handlerが選択中の場合はそちらに任せる
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
+		if handler and handler.is_selecting():
+			return
+	
 	pending_card_index = -1
 	# パネルを閉じるだけで選択UIは維持（再選択可能）
 	
@@ -671,6 +683,12 @@ func _on_item_panel_confirmed(card_data: Dictionary):
 
 # アイテム情報パネルでキャンセルされた
 func _on_item_panel_cancelled():
+	# card_selection_handlerが選択中の場合はそちらに任せる
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
+		if handler and handler.is_selecting():
+			return
+	
 	pending_card_index = -1
 	# パネルを閉じるだけで選択UIは維持（再選択可能）
 	
@@ -741,6 +759,12 @@ func _on_item_creature_panel_confirmed(card_data: Dictionary):
 
 # アイテムフェーズでクリーチャー情報パネルがキャンセルされた
 func _on_item_creature_panel_cancelled():
+	# card_selection_handlerが選択中の場合はそちらに任せる
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
+		if handler and handler.is_selecting():
+			return
+	
 	pending_card_index = -1
 	# パネルを閉じるだけで選択UIは維持（再選択可能）
 	
@@ -796,6 +820,12 @@ func _on_creature_panel_confirmed(card_data: Dictionary):
 
 # クリーチャー情報パネルでキャンセルされた
 func _on_creature_panel_cancelled():
+	# card_selection_handlerが選択中の場合はそちらに任せる
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
+		if handler and handler.is_selecting():
+			return
+	
 	pending_card_index = -1
 	# パネルを閉じるだけで選択UIは維持（再選択可能）
 	
@@ -835,6 +865,13 @@ func _register_back_button_for_current_mode():
 
 # カードインデックスからカードデータを取得
 func _get_card_data_for_index(card_index: int) -> Dictionary:
+	# enable_card_selectionで保存したカードデータを優先使用（デッキカード選択等に対応）
+	if not current_selection_hand_data.is_empty():
+		if card_index >= 0 and card_index < current_selection_hand_data.size():
+			return current_selection_hand_data[card_index]
+		return {}
+	
+	# フォールバック: CardSystemから取得
 	if not card_system_ref:
 		return {}
 	

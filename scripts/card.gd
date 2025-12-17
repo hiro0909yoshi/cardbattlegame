@@ -414,6 +414,18 @@ func _is_item_phase_active() -> bool:
 		return true
 	return false
 
+# カード選択ハンドラーによる手札選択がアクティブかどうかを判定
+# （敵手札選択、デッキカード選択、カード変換選択など）
+func _is_handler_card_selection_active() -> bool:
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if not ui_manager:
+		return false
+	var filter = ui_manager.card_selection_filter
+	# destroy_*, item_or_spell など card_selection_handler が使うフィルターをチェック
+	if filter.begins_with("destroy_") or filter == "item_or_spell":
+		return true
+	return false
+
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
@@ -458,8 +470,9 @@ func _input(event):
 				var is_creature_with_panel = card_type == "creature" and GameSettings.use_creature_info_panel
 				var is_spell_in_spell_phase = card_type == "spell" and _is_spell_phase_active()
 				var is_item_phase = _is_item_phase_active()
+				var is_handler_selection = _is_handler_card_selection_active()
 				
-				if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
+				if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase or is_handler_selection:
 					select_card()
 					on_card_confirmed()
 				else:

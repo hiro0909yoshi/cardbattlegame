@@ -297,9 +297,53 @@ if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
 
 ---
 
+## スペル使用後の手札選択時
+
+ポイズンマインド、シャッター、セフト等のスペル使用後に敵手札やデッキからカードを選択する際もインフォパネルを表示する。
+
+### 対象スペル
+
+| スペル | filter_mode | 選択対象 |
+|--------|-------------|---------|
+| シャッター | `destroy_item_spell` | 敵手札のアイテム/スペル |
+| スクイーズ | `destroy_any` | 敵手札の全カード |
+| セフト | `destroy_spell` | 敵手札のスペル |
+| ポイズンマインド | - | 敵デッキ上部6枚 |
+| フォーサイト | - | 自デッキ上部6枚 |
+| メタモルフォシス | `item_or_spell` | 敵手札のアイテム/スペル |
+
+### 実装ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `scripts/card.gd` | ワンクリック判定（`_is_handler_card_selection_active()`） |
+| `scripts/ui_manager.gd` | カード選択ハンドラー経由のルーティング |
+| `scripts/spells/card_selection_handler.gd` | インフォパネル表示・確認処理 |
+
+### フロー
+
+1. カードをクリック → `card.gd`が`_is_handler_card_selection_active()`でハンドラー選択中か判定
+2. ハンドラー選択中なら`ui_manager._on_card_button_pressed()`が`game_flow_manager.on_card_selected()`経由で処理
+3. `card_selection_handler`の`on_enemy_card_selected()`等が呼ばれる
+4. `_request_card_confirmation()`でカードタイプに応じたインフォパネル表示
+5. 確認ボタン → アクション実行、キャンセル → 選択画面に戻る（戻るボタン再登録）
+
+### 注意点
+
+- 異なるカードを選択した場合、既存パネルを閉じてから新しいパネルを表示（`_hide_all_info_panels(false)`）
+- キャンセル時は戻るボタンを再登録して選択画面に戻れるようにする
+- パネル内のカード表示は`remove_child()`で即座に削除（`queue_free()`だけでは遅延あり）
+
+### 関連ドキュメント
+
+- [手札操作スペル](spells/手札操作.md) - 詳細な実装パターン
+
+---
+
 ## 変更履歴
 
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/12/14 | 1.0 | 初版作成（アイテムインフォパネル追加に伴い整理） |
 | 2025/12/16 | 1.1 | 詳細設計へのリンク追加 |
+| 2025/12/17 | 1.2 | スペル使用後の手札選択時のインフォパネル表示を追加 |

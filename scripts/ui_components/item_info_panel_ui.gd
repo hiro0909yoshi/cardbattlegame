@@ -98,13 +98,21 @@ func _update_display():
 
 
 func _update_card_display():
-	# 既存のカード表示をクリア
+	# 既存のカード表示をクリア（即座に削除）
 	if card_display and is_instance_valid(card_display):
+		if card_display.get_parent():
+			card_display.get_parent().remove_child(card_display)
 		card_display.queue_free()
 		card_display = null
 	
 	if not left_panel:
 		return
+	
+	# left_panel内の既存カードノードもクリア（念のため）
+	for child in left_panel.get_children():
+		if child.has_method("load_card_data"):
+			left_panel.remove_child(child)
+			child.queue_free()
 	
 	# カードシーンをロードして表示
 	var card_scene = preload("res://scenes/Card.tscn")

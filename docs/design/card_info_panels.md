@@ -664,6 +664,125 @@ if card_display.has_method("load_card_data"):
 
 ---
 
+# スペル使用後の手札選択時
+
+## 概要
+
+ポイズンマインド、シャッター、セフト等のスペル使用後に敵手札やデッキからカードを選択する際、選択したカードの詳細をインフォパネルで表示する。
+
+## 対象スペル
+
+| スペル | filter_mode | 選択対象 |
+|--------|-------------|---------|
+| シャッター | `destroy_item_spell` | 敵手札のアイテム/スペル |
+| スクイーズ | `destroy_any` | 敵手札の全カード |
+| セフト | `destroy_spell` | 敵手札のスペル |
+| ポイズンマインド | - | 敵デッキ上部6枚 |
+| フォーサイト | - | 自デッキ上部6枚 |
+| メタモルフォシス | `item_or_spell` | 敵手札のアイテム/スペル |
+
+## 実装ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `scripts/card.gd` | ワンクリック判定（`_is_handler_card_selection_active()`） |
+| `scripts/ui_manager.gd` | カード選択ハンドラー経由のルーティング |
+| `scripts/spells/card_selection_handler.gd` | インフォパネル表示・確認処理 |
+
+## フロー
+
+```
+[カードクリック]
+	  │
+	  ▼
+[card.gd] _is_handler_card_selection_active() で判定
+	  │
+	  │ filter が destroy_* or item_or_spell
+	  │
+	  ▼
+[ui_manager.gd] _on_card_button_pressed()
+	  │
+	  │ handler.is_selecting() == true
+	  │
+	  ▼
+[game_flow_manager.gd] on_card_selected()
+	  │
+	  ▼
+[card_selection_handler.gd] on_enemy_card_selected() 等
+	  │
+	  ▼
+_request_card_confirmation()
+	  │
+	  ▼
+_show_info_panel_for_card() → カードタイプに応じたパネル表示
+	  │
+	  ├── 確認ボタン → アクション実行
+	  │
+	  └── キャンセル → 選択画面に戻る（戻るボタン再登録）
+```
+
+## CardSelectionHandler の主要メソッド
+
+```gdscript
+## カード選択後、インフォパネルで確認を要求
+func _request_card_confirmation(card_index: int, card_data: Dictionary, 
+								 action_type: String, on_confirmed: Callable, 
+								 on_cancelled: Callable)
+
+## カードタイプに応じたインフォパネルを表示
+func _show_info_panel_for_card(card_data: Dictionary, confirmation_text: String)
+
+## 全インフォパネルを非表示
+func _hide_all_info_panels(clear_buttons: bool = true)
+```
+
+## 注意点
+
+### カード切り替え時の処理
+
+異なるカードを選択した場合、既存パネルを閉じてから新しいパネルを表示：
+
+```gdscript
+# _request_card_confirmation() 内
+if is_panel_visible:
+	_hide_all_info_panels(false)  # ボタンはクリアしない
+```
+
+### キャンセル時の戻るボタン再登録
+
+キャンセル後に選択画面に戻れるよう、戻るボタンを再登録：
+
+```gdscript
+func _on_enemy_selection_cancelled():
+	# ... フェーズラベル更新 ...
+	
+	# 戻るボタンを再登録
+	if ui_manager:
+		ui_manager.enable_navigation(
+			Callable(),  # 決定なし
+			func(): _cancel_enemy_card_selection("キャンセルしました")
+		)
+```
+
+### カード表示の即時削除
+
+`queue_free()` だけでは遅延があるため、`remove_child()` で即座に削除：
+
+```gdscript
+if card_display and is_instance_valid(card_display):
+	if card_display.get_parent():
+		card_display.get_parent().remove_child(card_display)
+	card_display.queue_free()
+	card_display = null
+```
+
+## 関連ドキュメント
+
+- [手札操作スペル](spells/手札操作.md) - スペル側の詳細
+- [インフォパネルシステム](info_panel.md) - 全体設計
+
+---
+
 ## 更新履歴
 
 | 日付 | 内容 |
@@ -674,3 +793,4 @@ if card_display.has_method("load_card_data"):
 | 2025/12/12 | UI調整（パネル位置180px上、カード位置50px上、右パネル高さ2/3、フォント1.65倍） |
 | 2025/12/12 | ダブルクリック召喚、戻るボタン時のホバー解除、呪い表示修正（curse形式対応） |
 | 2025/12/16 | ファイル名変更（creature_info_panel.md → card_info_panels.md）、スペル/アイテムパネル追記 |
+| 2025/12/17 | スペル使用後の手札選択時のインフォパネル表示を追加 |

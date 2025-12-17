@@ -290,6 +290,12 @@ func _select_hand_creature(creatures: Array, message: String) -> int:
 		var player = player_system_ref.players[current_player_id]
 		ui_manager.show_card_selection_ui_mode(player, "summon")
 	
+	# 戻るボタンを登録（キャンセル可能に）
+	ui_manager.enable_navigation(
+		Callable(),  # 決定なし
+		func(): ui_manager.emit_signal("card_selected", -1)
+	)
+	
 	# カード選択を待つ
 	var selected_index = await ui_manager.card_selected
 	
@@ -355,6 +361,12 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	ui_manager.card_selection_filter = ""
 	var player = player_system_ref.players[player_id]
 	ui_manager.show_card_selection_ui_mode(player, "sacrifice")
+	
+	# 戻るボタンを登録（キャンセル可能に）
+	ui_manager.enable_navigation(
+		Callable(),  # 決定なし
+		func(): ui_manager.emit_signal("card_selected", -1)
+	)
 	
 	# カード選択を待つ
 	var selected_index = await ui_manager.card_selected
