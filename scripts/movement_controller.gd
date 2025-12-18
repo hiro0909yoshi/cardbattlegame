@@ -189,6 +189,10 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 			remaining_steps += 1
 			continue
 		
+		# 通過イベントチェック（最終歩でない場合）
+		if remaining_steps > 0:
+			await _check_pass_through_event(player_id, current_tile)
+		
 		# 足どめチェック
 		var stop_result = check_forced_stop_at_tile(current_tile, player_id)
 		if stop_result["stopped"]:
@@ -629,6 +633,10 @@ func move_along_path(player_id: int, path: Array) -> void:
 		# 位置を更新
 		player_tiles[player_id] = tile_index
 		
+		# 通過イベントチェック（最終タイルでない場合）
+		if i < path.size() - 1:
+			await _check_pass_through_event(player_id, tile_index)
+		
 		# 分岐チェック（残り歩数がある場合のみ）
 		if i < path.size() - 1:
 			var branch_result = await _check_and_handle_branch(tile_index, previous_tile, path, i)
@@ -855,6 +863,30 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 	else:
 		camera.global_position = target_pos
 		camera.look_at(look_target, Vector3.UP)
+
+# === 通過イベント ===
+
+## 通過時に発動するタイルイベントをチェック
+func _check_pass_through_event(player_id: int, tile_index: int) -> void:
+	if not tile_nodes.has(tile_index):
+		return
+	
+	var tile = tile_nodes[tile_index]
+	var tile_type = tile.tile_type if "tile_type" in tile else ""
+	
+	# 通過発動するタイルタイプ
+	match tile_type:
+		"magic_stone":
+			await _handle_pass_through_magic_stone(player_id, tile)
+
+## 魔法石タイル通過処理
+func _handle_pass_through_magic_stone(player_id: int, tile) -> void:
+	if not special_tile_system:
+		return
+	
+	# special_tile_systemを経由して処理
+	if special_tile_system.has_method("handle_magic_stone_tile"):
+		await special_tile_system.handle_magic_stone_tile(player_id, tile)
 
 # === 足どめ判定 ===
 
