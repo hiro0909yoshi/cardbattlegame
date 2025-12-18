@@ -246,39 +246,47 @@ UI: 3枚表示 + 「使わない」ボタン
 | 色 | グレー |
 
 ### 効果
-1. 停止すると**任意の空き地**にクリーチャーを配置可能
-2. **手札**からクリーチャーを選択
-3. 通常の**カードコスト**を支払う
-4. 通常の**配置制限**（lands_required）も適用
-5. 配置しない選択肢あり
+1. 停止すると「空き地にクリーチャーを配置しますか？」と確認
+2. 「配置する」選択で**空き地選択UI**を表示
+3. 空き地を選択後、通常の**召喚フロー**（手札選択→コスト支払い→配置）を実行
+4. 配置しない選択肢あり
 
 ### 処理フロー
 ```
 停止
   ↓
-UI: 手札からクリーチャー選択
-  ├─ lands_required を満たさないカードはグレーアウト
-  ├─ コストが足りないカードもグレーアウト
-  ↓
-プレイヤー選択
-  ├─ クリーチャー選択 → 空き地選択UI表示
-  │    ↓
-  │    空き地タイル選択
-  │    ↓
-  │    コスト支払い → 配置実行
-  └─ 配置しない → 何もしない
+空き地があるかチェック
+  ├─ なし → 何もしない（selected_tile: -1）
+  └─ あり → 確認ダイアログ表示
+		↓
+	「空き地にクリーチャーを配置しますか？」
+		├─ 「配置する」→ 空き地選択UI
+		│    ↓
+		│    TargetSelectionHelper で空き地選択
+		│    ↓
+		│    選択タイルインデックスを返却
+		│    ↓
+		│    GameFlowManager が通常召喚フローを実行
+		│    （手札選択 → コスト支払い → 配置）
+		└─ 「しない」→ 何もしない（selected_tile: -1）
   ↓
 完了
 ```
 
-### 制限チェック
+### 制限チェック（召喚フロー内で実行）
 1. **lands_required**: 必要属性土地数を満たしているか
 2. **カードコスト**: 魔力が足りているか
-3. **空き地**: 配置可能なタイルがあるか
+3. **手札**: 召喚可能なクリーチャーがあるか
 
 ### 注意
-- 空き地がない場合はタイル選択ができない（エラー表示なし、単に選択不可）
+- 空き地がない場合は確認ダイアログなしでスキップ
+- CPUは自動的に「しない」を選択（スキップ）
+- 空き地選択後の召喚フローは通常の召喚処理を再利用
 - neutral（無属性）タイルも空き地として配置可能
+
+### 実装ファイル
+- `scripts/tiles/special_base_tile.gd` - ベースタイル処理
+- `scripts/ui_components/global_comment_ui.gd` - 確認ダイアログ（show_choice_and_wait）
 
 ---
 
@@ -400,8 +408,8 @@ func _show_special_tile_landing_ui(player_id: int):
 | magic | ✅ 完了 | タイル委譲、SpellPhaseHandler連携 |
 | card_buy | ✅ 完了 | タイル委譲、購入価格50%表示 |
 | card_give | ✅ 完了 | タイル委譲、3タイプ選択UI |
-| magic_stone | 🔧 未実装 | 動的価格システム必要 |
-| base | 🔧 未実装 | リモート配置システム必要 |
+| magic_stone | ✅ 完了 | タイル委譲、動的価格システム、停止時発動 |
+| base | ✅ 完了 | タイル委譲、遠隔配置+通常召喚フロー |
 | checkpoint | ✅ 動作中 | LapSystemで処理 |
 | warp_stop | ✅ 動作中 | special_tile_systemで処理 |
 
@@ -413,11 +421,15 @@ func _show_special_tile_landing_ui(player_id: int):
 - `scripts/tiles/magic_tile.gd` - 魔法タイル処理
 - `scripts/tiles/card_buy_tile.gd` - カード購入タイル処理
 - `scripts/tiles/card_give_tile.gd` - カード譲渡タイル処理
+- `scripts/tiles/special_base_tile.gd` - ベースタイル処理（遠隔配置）
+- `scripts/tiles/magic_stone_tile.gd` - 魔法石タイル処理
+- `scripts/tiles/magic_stone_system.gd` - 魔法石価値計算・売買処理
 
 ### UI
 - `scripts/ui_components/magic_tile_ui.gd` - 魔法タイルUI
 - `scripts/ui_components/card_buy_ui.gd` - カード購入タイルUI
 - `scripts/ui_components/card_give_ui.gd` - カード譲渡タイルUI
+- `scripts/ui_components/magic_stone_ui.gd` - 魔法石ショップUI
 
 ### システム
 - `scripts/special_tile_system.gd` - 特殊タイル処理・委譲・共通UI設定
@@ -441,3 +453,5 @@ func _show_special_tile_landing_ui(player_id: int):
 | 2025/12/17 | 実装詳細セクション追加（共通UI設定関数、ハンドラ実装パターン） |
 | 2025/12/17 | タイル委譲アーキテクチャに移行（magic, card_buy, card_give完了） |
 | 2025/12/17 | UI共通仕様追加、実装状況セクション追加 |
+| 2025/12/18 | ベースタイル実装完了（確認ダイアログ+空き地選択+通常召喚フロー） |
+| 2025/12/18 | 魔法石タイル実装（停止時発動、動的価格、売買UI）、総魔力計算をPlayerSystemに一元化 |

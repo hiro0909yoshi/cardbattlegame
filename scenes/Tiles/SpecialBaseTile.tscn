@@ -1,6 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://cspecialbase_tile"]
+[gd_scene load_steps=7 format=3 uid="uid://iy8rfgs64qvj"]
 
-[ext_resource type="Script" path="res://scripts/tiles/special_base_tile.gd" id="1_base"]
+[ext_resource type="Script" uid="uid://b07xmonbt2cs3" path="res://scripts/tiles/special_base_tile.gd" id="1_base"]
 [ext_resource type="PackedScene" uid="uid://fila50d048jo" path="res://models/frame.glb" id="2_frame"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]

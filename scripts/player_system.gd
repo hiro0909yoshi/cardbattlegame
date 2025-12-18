@@ -27,6 +27,7 @@ class PlayerData:
 	var last_choice_tile: int = -1
 	var curse: Dictionary = {}  # 呪い効果（SpellCurseで管理）
 	var buffs: Dictionary = {}  # バフ効果（方向選択権等）
+	var magic_stones: Dictionary = {"fire": 0, "water": 0, "earth": 0, "wind": 0}  # 魔法石所持数
 
 # プレイヤー管理
 var players = []
@@ -38,6 +39,10 @@ var is_moving = false
 
 # デバッグコントローラー参照
 var debug_controller: DebugController = null
+
+# 外部システム参照（総魔力計算用）
+var board_system_ref = null
+var magic_stone_system_ref = null  # MagicStoneSystem（tiles/magic_stone_system.gd）
 
 func _ready():
 	pass
@@ -161,3 +166,81 @@ func set_player_piece_node(player_id: int, node: Node):
 		players[player_id].piece_node = node
 		if player_id < player_pieces.size():
 			player_pieces[player_id] = node
+
+# ============================================
+# 総魔力計算（一元化）
+# ============================================
+
+## 総魔力を計算（所持魔力＋土地価値＋魔法石価値）
+## 勝利判定、UI表示など全てここを参照する
+func calculate_total_assets(player_id: int) -> int:
+	if player_id < 0 or player_id >= players.size():
+		return 0
+	
+	var total = players[player_id].magic_power
+	
+	# 土地価値を加算
+	total += _calculate_land_value(player_id)
+	
+	# 魔法石価値を加算
+	total += _calculate_stone_value(player_id)
+	
+	return total
+
+## 土地価値を計算（通行料の合計）
+func _calculate_land_value(player_id: int) -> int:
+	if not board_system_ref or not "tile_nodes" in board_system_ref:
+		return 0
+	
+	var value = 0
+	for i in board_system_ref.tile_nodes:
+		var tile = board_system_ref.tile_nodes[i]
+		if tile.owner_id == player_id:
+			var toll = board_system_ref.calculate_toll(i)
+			value += toll
+	
+	return value
+
+## 魔法石価値を計算
+func _calculate_stone_value(player_id: int) -> int:
+	if player_id < 0 or player_id >= players.size():
+		return 0
+	
+	# MagicStoneSystemが設定されていれば委譲
+	if magic_stone_system_ref and magic_stone_system_ref.has_method("calculate_player_stone_value"):
+		return magic_stone_system_ref.calculate_player_stone_value(player_id)
+	
+	return 0
+
+## 外部システム参照を設定
+func set_board_system(board_system) -> void:
+	board_system_ref = board_system
+
+func set_magic_stone_system(stone_system) -> void:
+	magic_stone_system_ref = stone_system
+
+# ============================================
+# 魔法石操作
+# ============================================
+
+## 魔法石を追加
+func add_magic_stone(player_id: int, element: String, amount: int) -> void:
+	if player_id < 0 or player_id >= players.size():
+		return
+	if not players[player_id].magic_stones.has(element):
+		return
+	
+	players[player_id].magic_stones[element] += amount
+	players[player_id].magic_stones[element] = max(0, players[player_id].magic_stones[element])
+
+## 魔法石の所持数を取得
+func get_magic_stone_count(player_id: int, element: String) -> int:
+	if player_id < 0 or player_id >= players.size():
+		return 0
+	return players[player_id].magic_stones.get(element, 0)
+
+## 全魔法石の所持数を取得
+func get_all_magic_stones(player_id: int) -> Dictionary:
+	if player_id < 0 or player_id >= players.size():
+		return {"fire": 0, "water": 0, "earth": 0, "wind": 0}
+	return players[player_id].magic_stones.duplicate()

@@ -47,6 +47,9 @@ func show_selection(current_player, mode: String = "summon"):
 		print("Error: CardSystem reference not set")
 		return
 	
+	# 前回の選択状態をリセット（ダブルクリック検出誤動作防止）
+	pending_card_index = -1
+	
 	# 入力ロックを解除（選択待ち状態になった）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()

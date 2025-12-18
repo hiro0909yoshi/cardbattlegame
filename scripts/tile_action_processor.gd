@@ -39,6 +39,18 @@ var pending_attacker_item: Dictionary = {}
 var pending_defender_item: Dictionary = {}
 var is_waiting_for_defender_item: bool = false
 
+# 遠隔配置モード（ベースタイル用）
+var remote_placement_tile: int = -1  # -1 = 通常モード、0以上 = 指定タイルに配置
+
+## 遠隔配置モードを設定（ベースタイルから呼び出し）
+func set_remote_placement(tile_index: int):
+	remote_placement_tile = tile_index
+	print("[TileActionProcessor] 遠隔配置モード設定: タイル%d" % tile_index)
+
+## 遠隔配置モードをクリア
+func clear_remote_placement():
+	remote_placement_tile = -1
+
 func _ready():
 	pass
 
@@ -200,7 +212,6 @@ func show_battle_ui_disabled():
 # カード選択時の処理
 func on_card_selected(card_index: int):
 	if not is_action_processing:
-		print("Warning: Not processing any action")
 		return
 	
 	# カード犠牲選択中は通常のカード選択を無視
@@ -212,8 +223,9 @@ func on_card_selected(card_index: int):
 	var tile_info = board_system.get_tile_info(current_tile)
 	
 	# 特殊タイル上ではカード選択を無視（UIは維持）
+	# ただし遠隔配置モードの場合は許可（ベースタイルから別タイルに配置）
 	var tile = board_system.tile_nodes.get(current_tile)
-	if tile and _is_special_tile(tile.tile_type):
+	if tile and _is_special_tile(tile.tile_type) and remote_placement_tile < 0:
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
 		if ui_manager:
 			# メッセージのみ更新し、UIは維持（パスボタンも残る）
@@ -223,7 +235,12 @@ func on_card_selected(card_index: int):
 			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたは領地コマンドを使用）"
 		return
 	
-	if tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
+	# 遠隔配置モードの場合は無条件で召喚処理
+	if remote_placement_tile >= 0:
+		print("[TileActionProcessor] 遠隔配置モードで召喚実行: card_index=%d" % card_index)
+		await execute_summon(card_index)
+		return
+	elif tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
 		# 召喚処理
 		execute_summon(card_index)
 	else:
@@ -322,20 +339,31 @@ func _execute_pending_battle():
 
 # 召喚実行
 func execute_summon(card_index: int):
+	print("[TileActionProcessor] execute_summon開始: card_index=%d, remote=%d" % [card_index, remote_placement_tile])
 	if card_index < 0:
 		_complete_action()
 		return
 	
 	var current_player_index = board_system.current_player_index
 	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	print("[TileActionProcessor] カード取得: %s" % card_data.get("name", "?"))
 	
 	if card_data.is_empty():
 		_complete_action()
 		return
 	
+	# 配置先タイルを決定（遠隔配置モードならremote_placement_tile、通常はcurrent_tile）
+	var target_tile: int
+	var is_remote_placement = remote_placement_tile >= 0
+	if is_remote_placement:
+		target_tile = remote_placement_tile
+		print("[TileActionProcessor] 遠隔配置モード: タイル%d に配置" % target_tile)
+	else:
+		target_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	
+	var tile = board_system.tile_nodes.get(target_tile)
+	
 	# 配置可能タイルかチェック（タイル側のメソッドを使用）
-	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
-	var tile = board_system.tile_nodes.get(current_tile)
 	if tile and not tile.can_place_creature():
 		print("[TileActionProcessor] このタイルには配置できません: %s" % tile.tile_type)
 		if ui_manager:
@@ -346,7 +374,7 @@ func execute_summon(card_index: int):
 	# 防御型チェック: 空き地以外には召喚できない
 	var creature_type = card_data.get("creature_type", "normal")
 	if creature_type == "defensive":
-		var tile_info = board_system.get_tile_info(current_tile)
+		var tile_info = board_system.get_tile_info(target_tile)
 		
 		# 空き地（owner = -1）でなければ召喚不可
 		if tile_info["owner"] != -1:
@@ -405,9 +433,9 @@ func execute_summon(card_index: int):
 		card_system.use_card_for_player(current_player_index, card_index)
 		player_system.add_magic(current_player_index, -cost)
 		
-		# 土地取得とクリーチャー配置
-		board_system.set_tile_owner(current_tile, current_player_index)
-		board_system.place_creature(current_tile, card_data)
+		# 土地取得とクリーチャー配置（遠隔配置でも同様）
+		board_system.set_tile_owner(target_tile, current_player_index)
+		board_system.place_creature(target_tile, card_data)
 		
 		# Phase 1-A: 召喚後にダウン状態を設定（不屈チェック）
 		if tile and tile.has_method("set_down_state"):
@@ -415,9 +443,12 @@ func execute_summon(card_index: int):
 				if not PlayerBuffSystem.has_unyielding(card_data):
 					tile.set_down_state(true)
 				else:
-					print("[TileActionProcessor] 不屈により召喚後もダウンしません: タイル", current_tile)
+					print("[TileActionProcessor] 不屈により召喚後もダウンしません: タイル", target_tile)
 		
-		print("召喚成功！土地を取得しました")
+		if is_remote_placement:
+			print("遠隔召喚成功！タイル%dを取得しました" % target_tile)
+		else:
+			print("召喚成功！土地を取得しました")
 		
 		# UI更新
 		if ui_manager:
@@ -426,6 +457,7 @@ func execute_summon(card_index: int):
 	else:
 		print("魔力不足で召喚できません")
 	
+	print("[TileActionProcessor] execute_summon完了、_complete_action呼び出し")
 	_complete_action()
 
 
@@ -830,10 +862,15 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 
 # アクション完了（内部用）
 func _complete_action():
+	print("[TileActionProcessor] _complete_action開始")
 	# カメラを追従モードに戻し、プレイヤー位置に復帰
 	if board_system and board_system.camera_controller:
 		board_system.camera_controller.enable_follow_mode()
 		board_system.camera_controller.return_to_player()
 	
+	# 遠隔配置モードをクリア
+	remote_placement_tile = -1
+	
 	is_action_processing = false
+	print("[TileActionProcessor] action_completedシグナル発火")
 	emit_signal("action_completed")

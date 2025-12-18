@@ -3,7 +3,7 @@ extends BaseTile
 # カード購入タイル
 # 停止時にスペル・アイテムから3枚表示、1枚選択して購入
 
-signal card_buy_completed(player_id: int, card_bought: bool)
+# シグナルは将来の拡張用（現在はDictionary返却で対応）
 
 # UI
 var card_buy_ui = null
@@ -96,7 +96,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	print("[CardBuyTile] カード購入: %s（価格: %dG）" % [card_data.get("name", "?"), price])
 	
 	# 購入処理
-	var success = await _purchase_card(card_data, player_id, price)
+	var success = _purchase_card(card_data, player_id, price)
 	
 	if success:
 		# 購入完了メッセージ

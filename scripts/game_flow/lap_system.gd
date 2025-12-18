@@ -242,22 +242,11 @@ func _check_win_condition(player_id: int) -> bool:
 	
 	return false
 
-## 総魔力を計算（所持魔力＋土地価値）
+## 総魔力を計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
-	if not player_system or not board_system_3d:
+	if not player_system:
 		return 0
-	
-	var assets = player_system.players[player_id].magic_power
-	
-	# 土地価値 = 通行料（連鎖ボーナス含む）
-	if board_system_3d != null and "tile_nodes" in board_system_3d:
-		for i in board_system_3d.tile_nodes:
-			var tile = board_system_3d.tile_nodes[i]
-			if tile.owner_id == player_id:
-				var toll = board_system_3d.calculate_toll(i)
-				assets += toll
-	
-	return assets
+	return player_system.calculate_total_assets(player_id)
 
 ## 周回完了処理
 func complete_lap(player_id: int):

@@ -43,6 +43,9 @@ var ui_manager: UIManager
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
 
+# 魔法石システム
+var magic_stone_system: MagicStoneSystem
+
 # スペル効果システム
 var spell_draw: SpellDraw
 var spell_magic: SpellMagic
@@ -142,6 +145,21 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 		lap_system.player_system = player_system
 		lap_system.ui_manager = ui_manager
 		lap_system._setup_ui()
+	
+	# MagicStoneSystemの初期化
+	_setup_magic_stone_system(b_system)
+
+## 魔法石システムの初期化
+func _setup_magic_stone_system(board_system):
+	magic_stone_system = MagicStoneSystem.new()
+	magic_stone_system.initialize(board_system, player_system)
+	
+	# PlayerSystemに参照を設定
+	if player_system:
+		player_system.set_board_system(board_system)
+		player_system.set_magic_stone_system(magic_stone_system)
+	
+	print("[MagicStoneSystem] 初期化完了")
 
 ## スペル効果システムの初期化
 func _setup_spell_systems(board_system):
@@ -720,9 +738,15 @@ func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
 var land_command_handler: LandCommandHandler = null
 var spell_phase_handler: SpellPhaseHandler = null
 var item_phase_handler = null  # ItemPhaseHandler
+var target_selection_helper: TargetSelectionHelper = null  # タイル選択ヘルパー
 
 # Phase 1-A: ハンドラーを初期化
 func initialize_phase1a_systems():
+	# TargetSelectionHelperを作成（他のハンドラーより先に）
+	target_selection_helper = TargetSelectionHelper.new()
+	add_child(target_selection_helper)
+	target_selection_helper.initialize(board_system_3d, ui_manager, self)
+	
 	# LandCommandHandlerを作成
 	land_command_handler = LandCommandHandlerClass.new()
 	add_child(land_command_handler)

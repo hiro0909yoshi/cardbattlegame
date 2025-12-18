@@ -3,7 +3,7 @@ extends BaseTile
 # カード譲渡タイル
 # 停止時にカードタイプを選択、山札から1枚引く
 
-signal card_give_completed(player_id: int, card_received: bool)
+# シグナルは将来の拡張用（現在はDictionary返却で対応）
 
 # UI
 var card_give_ui = null

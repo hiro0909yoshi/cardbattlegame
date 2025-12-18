@@ -63,7 +63,7 @@ var available_targets: Array = []
 var current_target_index: int = 0
 var selection_marker: MeshInstance3D = null
 var confirmation_markers: Array = []  # 確認フェーズ用複数マーカー
-var is_tile_selection_mode: bool = false  # タイル選択モード（SpellCreatureMove用）
+# タイル選択はTargetSelectionHelperに委譲
 var is_borrow_spell_mode: bool = false  # 借用スペル実行中（SpellBorrow用）
 
 ## 参照
@@ -576,12 +576,6 @@ func _confirm_target_selection():
 	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
 	
-	# タイル選択モードの場合（SpellCreatureMove用）
-	if is_tile_selection_mode:
-		var tile_index = selected_target.get("tile_index", -1)
-		tile_selection_completed.emit(tile_index)
-		return
-	
 	# 借用スペル実行中の場合（SpellBorrow用）
 	if is_borrow_spell_mode:
 		target_confirmed.emit(selected_target)
@@ -600,11 +594,6 @@ func _confirm_target_selection():
 func _cancel_target_selection():
 	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
-	
-	# タイル選択モードの場合（SpellCreatureMove用）
-	if is_tile_selection_mode:
-		tile_selection_completed.emit(-1)  # キャンセル時は-1
-		return
 	
 	# 借用スペル実行中の場合（SpellBorrow用）
 	if is_borrow_spell_mode:
@@ -842,51 +831,19 @@ func pass_spell(auto_roll: bool = true):
 		# フェーズ遷移後に呼ぶ必要があるためcall_deferred使用
 		game_flow_manager.roll_dice.call_deferred()
 
-## タイルリストから選択（SpellCreatureMove用）
-## 移動先選択などで使用
+## タイルリストから選択（SpellCreatureMove用など）
+## TargetSelectionHelperに委譲
 func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	if tile_indices.is_empty():
 		return -1
 	
-	# タイル選択モードを開始（候補が1つでも選択UIを表示）
-	is_tile_selection_mode = true
+	# TargetSelectionHelperを取得して委譲
+	if game_flow_manager and game_flow_manager.target_selection_helper:
+		return await game_flow_manager.target_selection_helper.select_tile_from_list(tile_indices, message)
 	
-	# ターゲットリストを設定
-	var targets: Array = []
-	for tile_index in tile_indices:
-		targets.append({"type": "land", "tile_index": tile_index})
-	
-	available_targets = targets
-	current_target_index = 0
-	current_state = State.SELECTING_TARGET
-	
-	# メッセージ表示
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = message
-	
-	# 最初の対象を表示
-	_update_target_selection()
-	
-	# 選択完了を待機
-	var selected_target = await _wait_for_tile_selection()
-	
-	# タイル選択モードを終了
-	is_tile_selection_mode = false
-	
-	# 選択マーカーをクリア
-	TargetSelectionHelper.clear_selection(self)
-	
-	return selected_target
-
-
-## タイル選択完了を待機
-func _wait_for_tile_selection() -> int:
-	# 選択完了シグナルを待つ
-	var result = await tile_selection_completed
-	return result
-
-## タイル選択完了シグナル
-signal tile_selection_completed(tile_index: int)
+	# フォールバック：TargetSelectionHelperがない場合は最初のタイルを返す
+	print("[SpellPhaseHandler] WARNING: TargetSelectionHelperが見つかりません、最初のタイルを選択")
+	return tile_indices[0]
 
 
 

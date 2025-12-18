@@ -3,7 +3,7 @@ extends BaseTile
 # 魔法タイル
 # 停止時に全スペルから3枚表示、1枚選択して使用
 
-signal magic_tile_completed(player_id: int, spell_used: bool)
+# シグナルは将来の拡張用（現在はDictionary返却で対応）
 
 # UI
 var magic_tile_ui = null

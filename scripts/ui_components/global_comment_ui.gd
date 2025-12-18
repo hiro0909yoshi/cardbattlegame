@@ -204,3 +204,92 @@ func _input(event):
 ## show_notification_and_wait互換（スペルシステムからの移行用）
 func show_notification_and_wait(message: String, player_id: int = -1) -> void:
 	await show_and_wait(message, player_id)
+
+# ============================================
+# 選択式ダイアログ
+# ============================================
+
+signal choice_made(result: bool)
+
+## 選択式ダイアログを表示してawait可能
+## 戻り値: true=yes_text選択、false=no_text選択
+func show_choice_and_wait(message: String, player_id: int = -1, yes_text: String = "はい", no_text: String = "いいえ") -> bool:
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
+	
+	# CPUターンの場合は自動でfalse（しない）を選択
+	if _is_current_player_cpu(player_id):
+		return false
+	
+	# 一時的な選択UIを作成
+	var choice_panel = PanelContainer.new()
+	choice_panel.name = "ChoicePanel"
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.85)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 20
+	style.content_margin_bottom = 20
+	choice_panel.add_theme_stylebox_override("panel", style)
+	
+	# VBoxContainerでラベルとボタンを縦に並べる
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 15)
+	
+	# メッセージラベル
+	var msg_label = Label.new()
+	msg_label.text = message
+	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg_label.add_theme_font_size_override("font_size", 24)
+	vbox.add_child(msg_label)
+	
+	# ボタンコンテナ
+	var button_container = HBoxContainer.new()
+	button_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	button_container.add_theme_constant_override("separation", 20)
+	
+	# Yesボタン
+	var yes_button = Button.new()
+	yes_button.text = yes_text
+	yes_button.custom_minimum_size = Vector2(120, 40)
+	yes_button.pressed.connect(func(): _on_choice_button_pressed(true, choice_panel))
+	
+	# Noボタン
+	var no_button = Button.new()
+	no_button.text = no_text
+	no_button.custom_minimum_size = Vector2(120, 40)
+	no_button.pressed.connect(func(): _on_choice_button_pressed(false, choice_panel))
+	
+	button_container.add_child(yes_button)
+	button_container.add_child(no_button)
+	vbox.add_child(button_container)
+	
+	choice_panel.add_child(vbox)
+	add_child(choice_panel)
+	
+	# 中央に配置
+	await get_tree().process_frame
+	choice_panel.position = (get_viewport_rect().size - choice_panel.size) / 2
+	
+	# 選択を待つ
+	var result = await choice_made
+	
+	return result
+
+## 選択ボタンが押された
+func _on_choice_button_pressed(result: bool, button_container: Node):
+	# ボタンコンテナを削除
+	if button_container and is_instance_valid(button_container):
+		button_container.queue_free()
+	
+	# UIを閉じる
+	visible = false
+	
+	# 結果を通知
+	choice_made.emit(result)

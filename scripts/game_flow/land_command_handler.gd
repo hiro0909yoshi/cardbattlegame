@@ -72,7 +72,7 @@ func _ready():
 
 func _process(delta):
 	# 選択マーカーを回転
-	LandSelectionHelper.rotate_selection_marker(self, delta)
+	TargetSelectionHelper.rotate_selection_marker(self, delta)
 
 ## 初期化
 func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
@@ -203,7 +203,7 @@ func _check_swap_conditions(player_id: int) -> bool:
 ## 領地コマンドを閉じる
 func close_land_command():
 	# マーカーを非表示
-	LandSelectionHelper.hide_selection_marker(self)
+	TargetSelectionHelper.hide_selection_marker(self)
 	
 	# すべての状態をリセット
 	current_state = State.CLOSED
@@ -274,19 +274,19 @@ func close_land_command():
 
 ## 選択マーカーを作成
 func create_selection_marker():
-	LandSelectionHelper.create_selection_marker(self)
+	TargetSelectionHelper.create_selection_marker(self)
 
 ## 選択マーカーを表示
 func show_selection_marker(tile_index: int):
-	LandSelectionHelper.show_selection_marker(self, tile_index)
+	TargetSelectionHelper.show_selection_marker(self, tile_index)
 
 ## 選択マーカーを非表示
 func hide_selection_marker():
-	LandSelectionHelper.hide_selection_marker(self)
+	TargetSelectionHelper.hide_selection_marker(self)
 
 ## 選択マーカーを回転（process内で呼ぶ）
 func rotate_selection_marker(delta: float):
-	LandSelectionHelper.rotate_selection_marker(self, delta)
+	TargetSelectionHelper.rotate_selection_marker(self, delta)
 
 ## キャンセル処理
 func cancel():
@@ -314,8 +314,8 @@ func cancel():
 		LandActionHelper._hide_move_creature_info(self)
 		
 		if move_source_tile >= 0:
-			LandSelectionHelper.show_selection_marker(self, move_source_tile)
-			LandSelectionHelper.focus_camera_on_tile(self, move_source_tile)
+			TargetSelectionHelper.show_selection_marker(self, move_source_tile)
+			TargetSelectionHelper.focus_camera_on_tile(self, move_source_tile)
 		
 		move_destinations.clear()
 		move_source_tile = -1
@@ -424,8 +424,8 @@ func _on_arrow_up():
 			if not move_destinations.is_empty():
 				current_destination_index = (current_destination_index - 1 + move_destinations.size()) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
-				LandSelectionHelper.show_selection_marker(self, dest_tile_index)
-				LandSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
+				TargetSelectionHelper.show_selection_marker(self, dest_tile_index)
+				TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 				LandActionHelper.update_move_destination_ui(self)
 		
 		State.SELECTING_TERRAIN:
@@ -453,8 +453,8 @@ func _on_arrow_down():
 			if not move_destinations.is_empty():
 				current_destination_index = (current_destination_index + 1) % move_destinations.size()
 				var dest_tile_index = move_destinations[current_destination_index]
-				LandSelectionHelper.show_selection_marker(self, dest_tile_index)
-				LandSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
+				TargetSelectionHelper.show_selection_marker(self, dest_tile_index)
+				TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 				LandActionHelper.update_move_destination_ui(self)
 		
 		State.SELECTING_TERRAIN:
@@ -545,7 +545,7 @@ func is_selecting_action() -> bool:
 
 ## Phase 1-A: 選択した土地にカメラをフォーカス
 func focus_camera_on_tile(tile_index: int):
-	LandSelectionHelper.focus_camera_on_tile(self, tile_index)
+	TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
 
 # ============================================
 # Phase 1-A: キーボード入力処理

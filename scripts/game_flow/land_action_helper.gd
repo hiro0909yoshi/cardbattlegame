@@ -148,8 +148,8 @@ static func execute_move_creature(handler) -> bool:
 		handler.ui_manager.land_command_ui.hide_action_menu(false)
 	
 	# マーカーを最初の移動先に表示
-	LandSelectionHelper.show_selection_marker(handler, first_dest)
-	LandSelectionHelper.focus_camera_on_tile(handler, first_dest)
+	TargetSelectionHelper.show_selection_marker(handler, first_dest)
+	TargetSelectionHelper.focus_camera_on_tile(handler, first_dest)
 	
 	# UIを更新（移動先選択画面を表示）
 	update_move_destination_ui(handler)

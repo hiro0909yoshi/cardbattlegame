@@ -237,23 +237,11 @@ func build_status_text(player_id: int) -> String:
 	
 	return text
 
-# 総資産を計算
+# 総資産を計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
-	if not player_system_ref or not board_system_ref:
+	if not player_system_ref:
 		return 0
-	
-	var assets = player_system_ref.players[player_id].magic_power
-	
-	# 土地価値 = 通行料（連鎖ボーナス含む）
-	if board_system_ref != null and "tile_nodes" in board_system_ref:
-		for i in board_system_ref.tile_nodes:
-			var tile = board_system_ref.tile_nodes[i]
-			if tile.owner_id == player_id:
-				# 土地の価値 = 通行料（連鎖ボーナス、世界呪い効果含む）
-				var toll = board_system_ref.calculate_toll(i)
-				assets += toll
-	
-	return assets
+	return player_system_ref.calculate_total_assets(player_id)
 
 # ダイアログを非表示にする
 func hide_dialog():

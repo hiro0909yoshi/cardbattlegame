@@ -449,9 +449,21 @@ func find_ui_manager_recursive(node: Node) -> Node:
 		if result:
 			return result
 	return null
+
+# GameFlowManagerを取得
+func _get_game_flow_manager():
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if ui_manager and "game_flow_manager_ref" in ui_manager:
+		return ui_manager.game_flow_manager_ref
+	return null
 	
 # 通常の入力処理とカード選択処理
 func _input(event):
+	# 入力ロック中は無視
+	var game_flow_manager = _get_game_flow_manager()
+	if game_flow_manager and game_flow_manager.is_input_locked():
+		return
+	
 	# カード選択モード時のクリック処理
 	if is_selectable and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

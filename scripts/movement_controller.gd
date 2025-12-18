@@ -839,15 +839,22 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 	var player_node = player_nodes[player_id]
 	if not player_node:
 		return
-		
-	var target_pos = player_node.global_position + GameConstants.CAMERA_OFFSET
+	
+	var player_pos = player_node.global_position
+	var look_target = player_pos + Vector3(0, 1.0, 0)
+	var target_pos = look_target + GameConstants.CAMERA_OFFSET
 	
 	if smooth:
 		var tween = get_tree().create_tween()
-		tween.tween_property(camera, "global_position", target_pos, 0.8)
+		tween.set_parallel(true)
+		tween.tween_property(camera, "global_position", target_pos, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		# look_atはTweenできないので、移動完了後に設定
+		tween.set_parallel(false)
+		tween.tween_callback(func(): camera.look_at(look_target, Vector3.UP))
 		await tween.finished
 	else:
 		camera.global_position = target_pos
+		camera.look_at(look_target, Vector3.UP)
 
 # === 足どめ判定 ===
 

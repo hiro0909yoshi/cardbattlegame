@@ -89,8 +89,8 @@ static func handle_move_destination_input(handler, event):
 		var dest_tile_index = handler.move_destinations[handler.current_destination_index]
 		
 		# マーカーを移動
-		LandSelectionHelper.show_selection_marker(handler, dest_tile_index)
-		LandSelectionHelper.focus_camera_on_tile(handler, dest_tile_index)
+		TargetSelectionHelper.show_selection_marker(handler, dest_tile_index)
+		TargetSelectionHelper.focus_camera_on_tile(handler, dest_tile_index)
 		
 		# UI更新
 		LandActionHelper.update_move_destination_ui(handler)
@@ -103,8 +103,8 @@ static func handle_move_destination_input(handler, event):
 		var dest_tile_index = handler.move_destinations[handler.current_destination_index]
 		
 		# マーカーを移動
-		LandSelectionHelper.show_selection_marker(handler, dest_tile_index)
-		LandSelectionHelper.focus_camera_on_tile(handler, dest_tile_index)
+		TargetSelectionHelper.show_selection_marker(handler, dest_tile_index)
+		TargetSelectionHelper.focus_camera_on_tile(handler, dest_tile_index)
 		
 		# UI更新
 		LandActionHelper.update_move_destination_ui(handler)

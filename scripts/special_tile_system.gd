@@ -74,11 +74,14 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 		"card_give":
 			await handle_card_give_tile(player_id, tile)
 		"magic_stone":
-			await handle_magic_stone_tile(player_id)
+			await handle_magic_stone_tile(player_id, tile)
 		"magic":
 			await handle_magic_tile(player_id, tile)
 		"base":
-			await handle_base_tile(player_id)
+			var base_result = await handle_base_tile(player_id, tile)
+			# 遠隔召喚モードに入った場合は、召喚完了を待ってからspecial_action_completedを発火
+			if base_result.get("wait_for_summon", false):
+				return  # special_action_completedは発火しない（召喚完了時にaction_completedが発火）
 		"neutral":
 			# 無属性マスは通常タイルとして処理しない（土地取得不可）
 			print("無属性マス - 連鎖は切れます")
@@ -166,9 +169,20 @@ func handle_card_give_tile(player_id: int, tile = null):
 	emit_signal("special_tile_activated", "card_give", player_id, -1)
 	_show_special_tile_landing_ui(player_id)
 
-# 魔法石マス処理（未実装）
-func handle_magic_stone_tile(player_id: int):
-	print("魔法石マス - TODO: 実装予定")
+# 魔法石マス処理（タイルに委譲）
+func handle_magic_stone_tile(player_id: int, tile = null):
+	print("[SpecialTile] 魔法石マス - Player%d" % (player_id + 1))
+	
+	# タイルに処理を委譲
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] 魔法石マス処理完了: %s" % result)
+	else:
+		# フォールバック: CPUの場合はスキップ
+		if _is_cpu_player(player_id):
+			print("[SpecialTile] CPU - 魔法石マススキップ")
+	
 	emit_signal("special_tile_activated", "magic_stone", player_id, -1)
 	
 	# 共通UI設定
@@ -201,13 +215,68 @@ func _create_tile_context() -> Dictionary:
 		"board_system": board_system
 	}
 
-# 拠点マス処理（未実装）
-func handle_base_tile(player_id: int):
-	print("拠点マス - TODO: 実装予定")
-	emit_signal("special_tile_activated", "base", player_id, -1)
+# 拠点マス処理（タイルに委譲 → 空き地選択後に召喚フローへ）
+func handle_base_tile(player_id: int, tile = null):
+	print("[SpecialTile] 拠点マス - Player%d" % (player_id + 1))
 	
-	# 共通UI設定
+	# タイルに処理を委譲（空き地選択のみ）
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] 拠点マス空き地選択完了: %s" % result)
+		
+		var selected_tile = result.get("selected_tile", -1)
+		
+		if selected_tile >= 0:
+			# 空き地が選択された → 遠隔配置モードで召喚フローへ
+			if board_system and board_system.tile_action_processor:
+				board_system.tile_action_processor.set_remote_placement(selected_tile)
+			
+			# 1フレーム待って入力イベントをクリア（空き地選択の決定ボタンが伝播しないように）
+			await board_system.get_tree().process_frame
+			
+			# 召喚UIを表示（通常の召喚フローを使用）
+			_show_remote_summon_ui(player_id, selected_tile)
+			emit_signal("special_tile_activated", "base", player_id, selected_tile)
+			# 召喚完了を待つフラグを返す
+			return {"wait_for_summon": true}
+		else:
+			# キャンセルまたは空き地なし → 通常の特殊タイル着地処理
+			emit_signal("special_tile_activated", "base", player_id, -1)
+			_show_special_tile_landing_ui(player_id)
+			return {"wait_for_summon": false}
+	
+	# フォールバック：タイルがない場合
+	print("[SpecialTile] 拠点タイルが見つかりません - スキップ")
+	emit_signal("special_tile_activated", "base", player_id, -1)
 	_show_special_tile_landing_ui(player_id)
+	return {"wait_for_summon": false}
+
+## 遠隔召喚UI表示（ベースタイル用）
+func _show_remote_summon_ui(player_id: int, target_tile: int):
+	if not ui_manager:
+		return
+	
+	# グローバルナビゲーションを一度クリア（空き地選択の入力が伝播しないように）
+	ui_manager.disable_navigation()
+	
+	# 入力ロックを解除（特殊タイル処理中にロックされている可能性がある）
+	if game_flow_manager and game_flow_manager.has_method("unlock_input"):
+		game_flow_manager.unlock_input()
+	
+	# 通常の召喚フィルター（スペル以外が選択可能）
+	ui_manager.card_selection_filter = ""
+	
+	# フェーズラベル更新
+	if ui_manager.phase_label:
+		ui_manager.phase_label.text = "タイル%dに召喚するクリーチャーを選択" % target_tile
+	
+	# 手札UI表示
+	var current_player = null
+	if player_system and player_id < player_system.players.size():
+		current_player = player_system.players[player_id]
+	if current_player:
+		ui_manager.show_card_selection_ui(current_player)
 
 # ワープペア定義（マップデータから動的に設定）
 var warp_pairs = {}

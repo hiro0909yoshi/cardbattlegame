@@ -885,4 +885,4 @@ func _restore_camera_to_current_player():
 	var camera_ctrl = ui_manager.board_system_ref.camera_controller
 	if camera_ctrl:
 		camera_ctrl.enable_follow_mode()
-		camera_ctrl.focus_on_player(current_player_id)
+		camera_ctrl.return_to_player()

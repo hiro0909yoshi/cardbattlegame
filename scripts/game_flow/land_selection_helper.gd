@@ -111,27 +111,4 @@ static func update_land_selection_ui(handler):
 	
 	handler.ui_manager.phase_label.text = text
 
-# ============================================
-# 互換性のための転送メソッド
-# 汎用処理は TargetSelectionHelper に委譲
-# ============================================
 
-## 選択マーカーを作成
-static func create_selection_marker(handler):
-	TargetSelectionHelper.create_selection_marker(handler)
-
-## 選択マーカーを表示
-static func show_selection_marker(handler, tile_index: int):
-	TargetSelectionHelper.show_selection_marker(handler, tile_index)
-
-## 選択マーカーを非表示
-static func hide_selection_marker(handler):
-	TargetSelectionHelper.hide_selection_marker(handler)
-
-## 選択マーカーを回転（process内で呼ぶ）
-static func rotate_selection_marker(handler, delta: float):
-	TargetSelectionHelper.rotate_selection_marker(handler, delta)
-
-## 選択した土地にカメラをフォーカス
-static func focus_camera_on_tile(handler, tile_index: int):
-	TargetSelectionHelper.focus_camera_on_tile(handler, tile_index)

@@ -1,10 +1,198 @@
 # TargetSelectionHelper - 対象選択の汎用ヘルパー
+# TargetSelectionHelper - 対象選択の汎用ヘルパー
 # 土地、クリーチャー、プレイヤーなど、あらゆる対象の選択に使用可能
+# 
+# 使い方:
+# - staticメソッド: マーカー表示、ハイライト、ターゲット検索など
+# - インスタンスメソッド: select_tile_from_list() などawaitが必要な処理
+extends Node
 class_name TargetSelectionHelper
 
+# ============================================
+# シグナル（インスタンス用）
+# ============================================
+signal tile_selection_completed(tile_index: int)
 
 # ============================================
-# 選択マーカーシステム
+# インスタンス変数（タイル選択モード用）
+# ============================================
+var board_system = null
+var ui_manager = null
+var game_flow_manager = null
+
+# タイル選択状態
+var is_tile_selecting: bool = false
+var available_tile_indices: Array = []
+var current_tile_index: int = 0
+var selection_marker: MeshInstance3D = null
+
+# ============================================
+# 初期化
+# ============================================
+
+## インスタンス初期化（GameFlowManagerから呼ばれる）
+func initialize(board_sys, ui_mgr, flow_mgr):
+	board_system = board_sys
+	ui_manager = ui_mgr
+	game_flow_manager = flow_mgr
+
+## マーカー回転処理（_processから呼ばれる）
+func process(delta: float):
+	if selection_marker and selection_marker.has_meta("rotating"):
+		selection_marker.rotate_y(delta * 2.0)
+
+# ============================================
+# タイル選択（インスタンスメソッド - await対応）
+# ============================================
+
+## タイルリストから1つ選択（await対応）
+## 
+## tile_indices: 選択可能なタイルインデックスの配列
+## message: 表示メッセージ
+## 戻り値: 選択されたタイルインデックス（キャンセル時は-1）
+func select_tile_from_list(tile_indices: Array, message: String) -> int:
+	if tile_indices.is_empty():
+		return -1
+	
+	# 選択モード開始
+	is_tile_selecting = true
+	available_tile_indices = tile_indices.duplicate()
+	current_tile_index = 0
+	
+	# メッセージ表示
+	if ui_manager and ui_manager.phase_label:
+		ui_manager.phase_label.text = message
+	
+	# ナビゲーション設定
+	_setup_tile_selection_navigation()
+	
+	# 最初のタイルを表示
+	_update_tile_selection_display()
+	
+	# 選択完了を待機
+	var result = await tile_selection_completed
+	
+	# 選択モード終了
+	is_tile_selecting = false
+	available_tile_indices.clear()
+	
+	# マーカーをクリア
+	_hide_instance_marker()
+	
+	return result
+
+## タイル選択のナビゲーション設定
+func _setup_tile_selection_navigation():
+	if not ui_manager:
+		return
+	
+	ui_manager.enable_navigation(
+		func(): _confirm_tile_selection(),  # 決定
+		func(): _cancel_tile_selection(),   # キャンセル
+		func(): _select_previous_tile(),    # 上（前へ）
+		func(): _select_next_tile()         # 下（次へ）
+	)
+
+## タイル選択表示を更新
+func _update_tile_selection_display():
+	if available_tile_indices.is_empty():
+		return
+	
+	var tile_index = available_tile_indices[current_tile_index]
+	
+	# マーカー表示
+	_show_instance_marker(tile_index)
+	
+	# カメラフォーカス
+	_focus_camera(tile_index)
+	
+	# フェーズラベル更新
+	if ui_manager and ui_manager.phase_label:
+		var base_text = ui_manager.phase_label.text.split("\n")[0]  # 最初の行を維持
+		ui_manager.phase_label.text = "%s\nタイル%d (%d/%d) [←→で切替]" % [
+			base_text,
+			tile_index,
+			current_tile_index + 1,
+			available_tile_indices.size()
+		]
+
+## 次のタイルを選択
+func _select_next_tile():
+	if available_tile_indices.is_empty():
+		return
+	current_tile_index = (current_tile_index + 1) % available_tile_indices.size()
+	_update_tile_selection_display()
+
+## 前のタイルを選択
+func _select_previous_tile():
+	if available_tile_indices.is_empty():
+		return
+	current_tile_index = (current_tile_index - 1 + available_tile_indices.size()) % available_tile_indices.size()
+	_update_tile_selection_display()
+
+## タイル選択を確定
+func _confirm_tile_selection():
+	if available_tile_indices.is_empty():
+		tile_selection_completed.emit(-1)
+		return
+	
+	# 入力ロック
+	if game_flow_manager and game_flow_manager.has_method("lock_input"):
+		game_flow_manager.lock_input()
+	
+	var selected = available_tile_indices[current_tile_index]
+	tile_selection_completed.emit(selected)
+
+## タイル選択をキャンセル
+func _cancel_tile_selection():
+	# 入力ロック
+	if game_flow_manager and game_flow_manager.has_method("lock_input"):
+		game_flow_manager.lock_input()
+	
+	tile_selection_completed.emit(-1)
+
+## インスタンス用マーカーを表示
+func _show_instance_marker(tile_index: int):
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return
+	
+	var tile = board_system.tile_nodes[tile_index]
+	
+	# マーカーが未作成なら作成
+	if not selection_marker:
+		selection_marker = _create_marker_mesh()
+	
+	# マーカーを土地の子として追加
+	if selection_marker.get_parent():
+		selection_marker.get_parent().remove_child(selection_marker)
+	
+	tile.add_child(selection_marker)
+	selection_marker.position = Vector3(0, 0.5, 0)
+	selection_marker.set_meta("rotating", true)
+
+## インスタンス用マーカーを非表示
+func _hide_instance_marker():
+	if selection_marker and selection_marker.get_parent():
+		selection_marker.get_parent().remove_child(selection_marker)
+
+## カメラをフォーカス
+func _focus_camera(tile_index: int):
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return
+	
+	var tile = board_system.tile_nodes[tile_index]
+	var camera = board_system.camera
+	
+	if not camera:
+		return
+	
+	var tile_pos = tile.global_position
+	var camera_offset = Vector3(12, 15, 12)
+	camera.position = tile_pos + camera_offset
+	camera.look_at(tile_pos, Vector3.UP)
+
+# ============================================
+# 選択マーカーシステム（staticメソッド）
 # ============================================
 
 ## 選択マーカーを作成
@@ -329,9 +517,9 @@ static func get_confirmation_text(target_type: String, target_count: int) -> Str
 ## 対象データから土地インデックスを取得
 ## 
 ## target_data: 対象データ（type, tile_index, player_idなどを含む）
-## board_system: BoardSystem3Dの参照（プレイヤー位置取得に必要）
+## board_sys: BoardSystem3Dの参照（プレイヤー位置取得に必要）
 ## 戻り値: 土地インデックス、取得できない場合は-1
-static func get_tile_index_from_target(target_data: Dictionary, board_system) -> int:
+static func get_tile_index_from_target(target_data: Dictionary, board_sys) -> int:
 	var target_type = target_data.get("type", "")
 	
 	match target_type:
@@ -342,8 +530,8 @@ static func get_tile_index_from_target(target_data: Dictionary, board_system) ->
 		"player":
 			# プレイヤーの場合、プレイヤーの位置を取得
 			var player_id = target_data.get("player_id", -1)
-			if player_id >= 0 and board_system and board_system.movement_controller:
-				return board_system.movement_controller.get_player_tile(player_id)
+			if player_id >= 0 and board_sys and board_sys.movement_controller:
+				return board_sys.movement_controller.get_player_tile(player_id)
 			return -1
 		
 		_:
@@ -408,21 +596,21 @@ static func get_number_from_key(keycode: int) -> int:
 
 ## 条件付きで全クリーチャーを取得（handlerなしで使用可能）
 ## 
-## board_system: BoardSystem3Dの参照
+## board_sys: BoardSystem3Dの参照
 ## condition: 条件辞書（condition_type, operator, value等）
 ## 戻り値: [{tile_index: int, creature: Dictionary}, ...]
-static func get_all_creatures(board_system, condition: Dictionary = {}) -> Array:
+static func get_all_creatures(board_sys, condition: Dictionary = {}) -> Array:
 	var results = []
 	
-	if not board_system:
+	if not board_sys:
 		return results
 	
 	var condition_type = condition.get("condition_type", "")
 	var operator = condition.get("operator", "")
 	var check_value = condition.get("value", 0)
 	
-	for tile_index in board_system.tile_nodes.keys():
-		var tile = board_system.tile_nodes[tile_index]
+	for tile_index in board_sys.tile_nodes.keys():
+		var tile = board_sys.tile_nodes[tile_index]
 		if not tile or tile.creature_data.is_empty():
 			continue
 		
@@ -453,13 +641,13 @@ static func get_all_creatures(board_system, condition: Dictionary = {}) -> Array
 	return results
 
 ## 隣接する敵領地があるかチェック（アウトレイジ用）
-static func _check_has_adjacent_enemy(board_system, tile_index: int, current_player_id: int) -> bool:
-	if not board_system or not board_system.tile_neighbor_system:
+static func _check_has_adjacent_enemy(board_sys, tile_index: int, current_player_id: int) -> bool:
+	if not board_sys or not board_sys.tile_neighbor_system:
 		return false
 	
-	var adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
+	var adjacent_tiles = board_sys.tile_neighbor_system.get_spatial_neighbors(tile_index)
 	for adj_tile_index in adjacent_tiles:
-		var adj_tile = board_system.tile_nodes.get(adj_tile_index)
+		var adj_tile = board_sys.tile_nodes.get(adj_tile_index)
 		if not adj_tile:
 			continue
 		# 敵領地かチェック（空地や自領地は除外）
@@ -947,29 +1135,29 @@ static func _show_creature_info_panel(handler, target_data: Dictionary) -> void:
 		return
 	
 	# handlerからui_managerを取得
-	var ui_manager = null
+	var ui_mgr = null
 	if handler.has_method("get") and handler.get("ui_manager"):
-		ui_manager = handler.ui_manager
+		ui_mgr = handler.ui_manager
 	elif "ui_manager" in handler:
-		ui_manager = handler.ui_manager
+		ui_mgr = handler.ui_manager
 	
-	if not ui_manager or not ui_manager.creature_info_panel_ui:
+	if not ui_mgr or not ui_mgr.creature_info_panel_ui:
 		return
 	
 	# setup_buttons=false でナビゲーションボタンを設定しない
-	ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+	ui_mgr.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
 static func _hide_creature_info_panel(handler) -> void:
 	# handlerからui_managerを取得
-	var ui_manager = null
+	var ui_mgr = null
 	if handler.has_method("get") and handler.get("ui_manager"):
-		ui_manager = handler.ui_manager
+		ui_mgr = handler.ui_manager
 	elif "ui_manager" in handler:
-		ui_manager = handler.ui_manager
+		ui_mgr = handler.ui_manager
 	
-	if not ui_manager or not ui_manager.creature_info_panel_ui:
+	if not ui_mgr or not ui_mgr.creature_info_panel_ui:
 		return
 	
-	ui_manager.creature_info_panel_ui.hide_panel(false)  # clear_buttons=false
+	ui_mgr.creature_info_panel_ui.hide_panel(false)  # clear_buttons=false
