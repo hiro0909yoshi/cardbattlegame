@@ -32,9 +32,6 @@ var player_is_cpu = []
 # デバッグ用: 全プレイヤーを手動操作にする（trueで有効）
 @export var debug_manual_control_all: bool = false
 
-# ハンドラークラス
-var cpu_ai_handler: CPUAIHandler
-
 # システム参照
 var player_system: PlayerSystem
 var card_system: CardSystem
@@ -75,15 +72,6 @@ var current_turn_number = 1
 var game_stats: Dictionary = {}
 
 func _ready():
-	# CPUAIHandler初期化
-	cpu_ai_handler = CPUAIHandler.new()
-	add_child(cpu_ai_handler)
-	
-	# CPUハンドラーのシグナル接続
-	cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided)
-	cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided)
-	cpu_ai_handler.level_up_decided.connect(_on_cpu_level_up_decided)
-	
 	# LapSystem初期化
 	lap_system = LapSystem.new()
 	lap_system.name = "LapSystem"
@@ -136,9 +124,6 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	if battle_system:
 		battle_system.game_flow_manager_ref = self
 	
-	# CPU AIハンドラー設定
-	if cpu_ai_handler:
-		cpu_ai_handler.setup_systems(c_system, b_system, p_system, bt_system, s_system)
 	
 	# LapSystemにplayer_systemとui_managerを設定
 	if lap_system:
@@ -391,49 +376,6 @@ func _on_tile_action_completed_3d():
 		return
 	
 	end_turn()
-
-# === CPU処理 ===
-# 修正: 全てのCPU処理でboard_system_3dに処理を委譲し、直接emit_signalしない
-
-func _on_cpu_summon_decided(card_index: int):
-	if not board_system_3d:
-		return
-	
-	board_system_3d.tile_action_processor.execute_summon(card_index)
-
-func _on_cpu_battle_decided(card_index: int):
-	if not board_system_3d:
-		return
-	
-	var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-	var tile_info = board_system_3d.get_tile_info(current_tile)
-	
-	if card_index >= 0:
-		# バトル処理をBattleSystemに委譲
-		if not battle_system.invasion_completed.is_connected(board_system_3d._on_invasion_completed):
-			battle_system.invasion_completed.connect(board_system_3d._on_invasion_completed, CONNECT_ONE_SHOT)
-		battle_system.execute_3d_battle(board_system_3d.current_player_index, card_index, tile_info)
-	else:
-		# 修正: 通行料支払い処理を委譲（シグナルは自動発火）
-		board_system_3d.on_action_pass()
-
-func _on_cpu_level_up_decided(do_upgrade: bool):
-	if not board_system_3d:
-		return
-	
-	if do_upgrade:
-		var current_tile = board_system_3d.movement_controller.get_player_tile(board_system_3d.current_player_index)
-		var cost = board_system_3d.get_upgrade_cost(current_tile)
-		if player_system.get_current_player().magic_power >= cost:
-			var tile = board_system_3d.tile_nodes[current_tile]
-			var target_level = tile.level + 1
-			board_system_3d.tile_action_processor.on_level_up_selected(target_level, cost)
-		else:
-			# 魔力不足の場合はキャンセル
-			board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
-	else:
-		# アップグレードしない場合
-		board_system_3d.tile_action_processor.on_level_up_selected(0, 0)
 
 # === UIコールバック ===
 
