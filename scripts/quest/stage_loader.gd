@@ -21,7 +21,8 @@ const TILE_SCENES = {
 	"CardGive": preload("res://scenes/Tiles/CardGiveTile.tscn"),
 	"MagicStone": preload("res://scenes/Tiles/MagicStoneTile.tscn"),
 	"Magic": preload("res://scenes/Tiles/MagicTile.tscn"),
-	"Base": preload("res://scenes/Tiles/SpecialBaseTile.tscn")
+	"Base": preload("res://scenes/Tiles/SpecialBaseTile.tscn"),
+	"Branch": preload("res://scenes/Tiles/BranchTile.tscn")
 }
 
 # パス定数
@@ -160,7 +161,19 @@ func generate_map() -> Dictionary:
 		var tile = _create_tile(tile_data)
 		if tile:
 			tiles_container.add_child(tile)
-			generated_tiles[tile_data.index] = tile
+			generated_tiles[int(tile_data.index)] = tile
+	
+	# マップレベルのconnectionsをタイルに設定
+	var map_connections = current_map_data.get("connections", {})
+	print("[StageLoader] map_connections: %s" % str(map_connections))
+	for tile_index_str in map_connections.keys():
+		var tile_index = int(tile_index_str)
+		if generated_tiles.has(tile_index):
+			var tile = generated_tiles[tile_index]
+			tile.connections.clear()
+			for conn in map_connections[tile_index_str]:
+				tile.connections.append(int(conn))
+			print("[StageLoader] タイル%d connections設定: %s" % [tile_index, str(tile.connections)])
 	
 	print("[StageLoader] マップ生成完了: %d タイル" % generated_tiles.size())
 	map_generated.emit()
@@ -195,6 +208,20 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 		var to_tile = tile_data.get("warp_pair", -1)
 		if from_tile >= 0 and to_tile >= 0:
 			pending_warp_pairs[from_tile] = to_tile
+	
+	# 接続情報（分岐タイル用）
+	if tile_data.has("connections"):
+		var conns = tile_data.get("connections", [])
+		tile.connections.clear()
+		for conn in conns:
+			tile.connections.append(int(conn))
+	
+	# 分岐タイルの方向表示設定
+	if tile_type == "Branch":
+		if tile_data.has("main_dir"):
+			tile.main_dir = tile_data.get("main_dir", "")
+		if tile_data.has("branch_dirs"):
+			tile.branch_dirs = tile_data.get("branch_dirs", [])
 	
 	return tile
 

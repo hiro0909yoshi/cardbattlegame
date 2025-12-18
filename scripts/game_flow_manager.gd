@@ -592,6 +592,10 @@ func end_turn():
 			current_turn_number += 1
 			print("=== ラウンド", current_turn_number, "開始 ===")
 			
+			# 4ターンごとに分岐タイルを切り替え
+			if current_turn_number % 4 == 0:
+				_toggle_all_branch_tiles()
+			
 			# 世界呪いのduration更新
 			if spell_world_curse:
 				spell_world_curse.on_round_start()
@@ -832,6 +836,25 @@ func debug_print_phase1a_status():
 
 func get_current_turn() -> int:
 	return current_turn_number
+
+## 全分岐タイルの方向を切り替え
+func _toggle_all_branch_tiles():
+	if not board_system_3d or not board_system_3d.movement_controller:
+		return
+	
+	var mc = board_system_3d.movement_controller
+	if not mc.tile_nodes:
+		return
+	
+	var toggled_count = 0
+	for tile_index in mc.tile_nodes.keys():
+		var tile = mc.tile_nodes[tile_index]
+		if tile is BranchTile:
+			tile.toggle_branch_direction()
+			toggled_count += 1
+	
+	if toggled_count > 0:
+		print("[GameFlowManager] 分岐タイル切替: %d 個" % toggled_count)
 
 # ============================================
 # カメラ制御

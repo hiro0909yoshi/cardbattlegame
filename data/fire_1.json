@@ -890,7 +890,7 @@
 				"type": "element",
 				"condition": "earth",
 				"effect_type": "transform",
-				"transform_to": "アームドパラディン"
+				"transform_to": 1
 			},
 			"ability_parsed": {
 				"keywords": [

@@ -649,7 +649,7 @@
 				"type": "element",
 				"condition": "water",
 				"effect_type": "transform",
-				"transform_to": "ディープシードラゴン"
+				"transform_to": 128
 			},
 			"ability_parsed": {
 				"effects": [

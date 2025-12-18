@@ -25,7 +25,7 @@ const SPECIAL_TILES = [
 	"checkpoint", "warp", "warp_stop",
 	"card_buy", "card_give",
 	"magic", "magic_stone",
-	"switch", "base"
+	"switch", "base", "branch"
 ]
 
 ## 地形変化可能タイル

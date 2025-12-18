@@ -43,10 +43,10 @@ func _setup_ui():
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 30
-	style.content_margin_right = 30
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
 	panel.add_theme_stylebox_override("panel", style)
 	
 	# RichTextLabel
@@ -57,13 +57,37 @@ func _setup_ui():
 	label.scroll_active = false
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("normal_font_size", 24)
+	label.add_theme_font_size_override("normal_font_size", 60)
 	label.add_theme_color_override("default_color", Color.WHITE)
 	
 	panel.add_child(label)
 	add_child(panel)
 	
 	visible = false
+
+# ============================================
+# 表示のみモード（待機なし）
+# ============================================
+
+## メッセージを表示（クリック待ちなし）
+## 外部でボタン選択などを行う場合に使用
+func show_message(message: String) -> void:
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
+	
+	var text = "[center]" + message + "[/center]"
+	label.text = text
+	
+	modulate.a = 1.0
+	visible = true
+	waiting_for_click = false
+	
+	_center_panel()
+
+## メッセージを非表示
+func hide_message() -> void:
+	visible = false
+	waiting_for_click = false
 
 # ============================================
 # クリック待ちモード（スペル効果等）

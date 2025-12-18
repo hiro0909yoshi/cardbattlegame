@@ -82,6 +82,8 @@ func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int)
 			# 遠隔召喚モードに入った場合は、召喚完了を待ってからspecial_action_completedを発火
 			if base_result.get("wait_for_summon", false):
 				return  # special_action_completedは発火しない（召喚完了時にaction_completedが発火）
+		"branch":
+			await handle_branch_tile(player_id, tile)
 		"neutral":
 			# 無属性マスは通常タイルとして処理しない（土地取得不可）
 			print("無属性マス - 連鎖は切れます")
@@ -203,6 +205,21 @@ func handle_magic_tile(player_id: int, tile = null):
 			print("[SpecialTile] CPU - 魔法マススキップ")
 	
 	emit_signal("special_tile_activated", "magic", player_id, -1)
+	_show_special_tile_landing_ui(player_id)
+
+# 分岐マス処理（タイルに委譲）
+func handle_branch_tile(player_id: int, tile = null):
+	print("[SpecialTile] 分岐マス - Player%d" % (player_id + 1))
+	
+	# タイルに処理を委譲
+	if tile and tile.has_method("handle_special_action"):
+		var context = _create_tile_context()
+		var result = await tile.handle_special_action(player_id, context)
+		print("[SpecialTile] 分岐マス処理完了: %s" % result)
+	else:
+		print("[SpecialTile] 分岐タイルが見つかりません - スキップ")
+	
+	emit_signal("special_tile_activated", "branch", player_id, -1)
 	_show_special_tile_landing_ui(player_id)
 
 ## タイル処理用のコンテキストを作成

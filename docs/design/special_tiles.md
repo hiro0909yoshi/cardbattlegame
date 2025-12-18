@@ -295,6 +295,180 @@ UI: 3枚表示 + 「使わない」ボタン
 
 ---
 
+## 6. 分岐タイル (branch)
+
+### 基本情報
+| 項目 | 値 |
+|------|-----|
+| tile_type | `branch` |
+| 停止可 | ✅ |
+| 発動タイミング | 通過時（自動進行）、停止時（方向変更可） |
+| 色 | 茶色（RGB: 0.55, 0.35, 0.15） |
+
+### 概念
+
+分岐タイルは**メイン方向**と**2つの分岐方向**を持つ特殊タイル。`branch_direction`で「開いている分岐」が決まり、通過時の進行方向が自動的に制御される。
+
+### connections配列の構造
+
+```
+connections = [main, branch1, branch2]
+```
+
+| インデックス | 役割 | 説明 |
+|-------------|------|------|
+| [0] | main | メイン方向（常にアクセス可能） |
+| [1] | branch1 | 分岐選択肢1（branch_direction=0で開） |
+| [2] | branch2 | 分岐選択肢2（branch_direction=1で開） |
+
+### 通過時の動作
+
+| came_from | branch_direction=0 | branch_direction=1 |
+|-----------|-------------------|-------------------|
+| mainから来た | → branch1へ自動 | → branch2へ自動 |
+| branch1から来た | → mainへ固定 | → main or branch2を選択 |
+| branch2から来た | → main or branch1を選択 | → mainへ固定 |
+
+**ルール**:
+- **mainから来た** → 開いている分岐へ自動進行
+- **開いている分岐から来た** → mainへ固定
+- **閉じている分岐から来た** → main or 開いている分岐を選択可能（UI表示）
+
+### 自動切替
+
+4ターン（ラウンド4, 8, 12...）ごとに全分岐タイルの`branch_direction`が切り替わる。
+
+```gdscript
+# GameFlowManager
+if current_turn_number % 4 == 0:
+	_toggle_all_branch_tiles()
+```
+
+### 視覚表示（インジケーター）
+
+黄色の長方形で方向を示す。
+
+| インジケーター | 表示条件 | 説明 |
+|---------------|---------|------|
+| MainIndicator | 常時表示 | メイン方向を示す |
+| Indicator1 | branch_direction=0 | branch1方向を示す |
+| Indicator2 | branch_direction=1 | branch2方向を示す |
+
+**方向とサイズ**:
+```gdscript
+const DIRECTION_OFFSET = {
+	"left": Vector3(-0.8, 0, 0),
+	"right": Vector3(0.8, 0, 0),
+	"up": Vector3(0, 0, -0.8),
+	"down": Vector3(0, 0, 0.8)
+}
+
+const DIRECTION_MESH_SIZE = {
+	"left": Vector3(2.5, 0.2, 1.0),   # X方向に長い
+	"right": Vector3(2.5, 0.2, 1.0),
+	"up": Vector3(1.0, 0.2, 2.5),     # Z方向に長い
+	"down": Vector3(1.0, 0.2, 2.5)
+}
+```
+
+### マップJSON設定
+
+#### タイル定義
+```json
+{
+  "index": 4,
+  "type": "Branch",
+  "x": 16,
+  "z": 0,
+  "main_dir": "left",
+  "branch_dirs": ["down", "right"]
+}
+```
+
+| フィールド | 説明 |
+|-----------|------|
+| main_dir | メイン方向インジケーターの向き |
+| branch_dirs | 分岐方向インジケーターの向き（配列） |
+
+**方向値**: `"left"`, `"right"`, `"up"`, `"down"`
+
+#### マップレベルconnections
+```json
+"connections": {
+  "4": [3, 5, 8]
+}
+```
+
+| インデックス | タイル | 役割 |
+|-------------|-------|------|
+| [0] | 3 | main（左方向） |
+| [1] | 5 | branch1（下方向） |
+| [2] | 8 | branch2（右方向） |
+
+### 処理フロー
+
+```
+通過時:
+  ↓
+get_next_tile_for_direction(came_from) を呼び出し
+  ↓
+came_from を判定
+  ├─ mainから → 開いている分岐へ（tile返却）
+  ├─ 開いている分岐から → mainへ（tile返却）
+  └─ 閉じている分岐から → choices返却（UI表示 + インジケーター表示）
+  ↓
+tileが返却された場合 → 自動移動
+choicesが返却された場合 → 選択UI表示（グローバルボタン対応）
+  ↓
+移動実行
+
+停止時:
+  ↓
+handle_special_action() を呼び出し
+  ↓
+CPUの場合 → スキップ（変更しない）
+  ↓
+プレイヤーの場合 → 通知ポップアップ表示
+  ├─ ✓決定ボタン → 方向変更
+  └─ ✕戻るボタン → 変更しない
+  ↓
+完了
+```
+
+### 分岐選択時インジケーター
+
+通常タイル・分岐タイル問わず、分岐選択時には動的インジケーターが表示される。
+
+**動作**:
+- 分岐選択開始時、現在タイル上にインジケーターを生成
+- 選択中の方向に応じてインジケーターの位置・サイズを更新
+- 選択確定後にインジケーターを非表示
+
+**定数の共用**:
+MovementControllerはBranchTileの定数（`DIRECTION_OFFSET`, `DIRECTION_MESH_SIZE`）を参照し、一貫した見た目を維持。
+
+### 実装ファイル
+- `scripts/tiles/branch_tile.gd` - 分岐タイル処理、インジケーター定数定義
+- `scripts/movement_controller.gd` - 移動時の分岐処理（_get_next_tile_with_branch）、動的インジケーター
+- `scripts/game_flow_manager.gd` - 4ターン自動切替（_toggle_all_branch_tiles）
+- `scripts/quest/stage_loader.gd` - JSON読み込み（main_dir, branch_dirs）
+- `scripts/special_tile_system.gd` - 停止時処理の呼び出し（handle_branch_tile）
+- `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップ（show_message, hide_message）
+- `scenes/Tiles/BranchTile.tscn` - タイルシーン（インジケーター含む）
+
+### 実装状況
+
+| 機能 | 状態 | 備考 |
+|------|------|------|
+| 通過時自動分岐 | ✅ 完了 | main/branch判定で自動選択 |
+| 閉じた分岐からの選択UI | ✅ 完了 | グローバルボタン対応 |
+| 4ターン自動切替 | ✅ 完了 | ラウンド4, 8, 12...で切替 |
+| 視覚インジケーター（固定） | ✅ 完了 | BranchTile上、黄色長方形 |
+| 視覚インジケーター（動的） | ✅ 完了 | 分岐選択時、通常タイルでも表示 |
+| 停止時方向変更UI | ✅ 完了 | 通知ポップアップ + グローバルボタン |
+
+---
+
 ## CPU対応
 
 - CPUもすべての特殊タイルを使用する
@@ -417,12 +591,15 @@ func _show_special_tile_landing_ui(player_id: int):
 | base | ✅ 完了 | タイル委譲、遠隔配置+通常召喚フロー |
 | checkpoint | ✅ 動作中 | LapSystemで処理 |
 | warp_stop | ✅ 動作中 | special_tile_systemで処理 |
+| branch | ✅ 完了 | main/branch判定、4ターン自動切替、視覚インジケーター |
+| branch | 🔄 基本動作 | 通過時自動進行のみ、停止時選択・自動切替は未実装 |
 
 ---
 
 ## 関連ファイル
 
 ### タイルクラス
+- `scripts/tiles/branch_tile.gd` - 分岐タイル処理
 - `scripts/tiles/magic_tile.gd` - 魔法タイル処理
 - `scripts/tiles/card_buy_tile.gd` - カード購入タイル処理
 - `scripts/tiles/card_give_tile.gd` - カード譲渡タイル処理
@@ -461,3 +638,6 @@ func _show_special_tile_landing_ui(player_id: int):
 | 2025/12/18 | ベースタイル実装完了（確認ダイアログ+空き地選択+通常召喚フロー） |
 | 2025/12/18 | 魔法石タイル基盤実装（動的価格、売買UI）、総魔力計算をPlayerSystemに一元化 |
 | 2025/12/18 | 魔法石タイル通過発動追加、価値計算を石所持数ベースに変更（+4G/-2G）、1イベント1回制限 |
+| 2025/12/18 | 分岐タイル仕様追加（通過時自動分岐、停止時方向変更、4ターン自動切替） |
+| 2025/12/19 | 分岐タイル実装完了（main/branch判定、4ターン切替、視覚インジケーター） |
+| 2025/12/19 | 停止時方向変更UI追加、動的インジケーター追加（通常タイル分岐選択時も表示） |

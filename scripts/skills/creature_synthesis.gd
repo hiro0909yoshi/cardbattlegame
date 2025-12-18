@@ -182,32 +182,4 @@ func _apply_transform(creature_data: Dictionary, sacrifice_card: Dictionary, syn
 		else:
 			push_error("[CreatureSynthesis] 変身先クリーチャーID %d が見つかりません" % transform_target)
 	
-	# 変身先名で検索
-	if card_loader and transform_target is String and not transform_target.is_empty():
-		var target_card = _find_card_by_name(transform_target)
-		if not target_card.is_empty():
-			var result = target_card.duplicate(true)
-			result["is_synthesized"] = true
-			result["synthesis_type"] = "transform"
-			result["transformed_from"] = creature_data.get("name", "")
-			print("[CreatureSynthesis] %s → %s に変身" % [
-				creature_data.get("name", "?"),
-				result.get("name", "?")
-			])
-			return result
-		else:
-			push_error("[CreatureSynthesis] 変身先クリーチャー '%s' が見つかりません" % transform_target)
-	
 	return creature_data
-
-
-## カード名で検索
-func _find_card_by_name(card_name: String) -> Dictionary:
-	if not card_loader:
-		return {}
-	
-	for card in card_loader.all_cards:
-		if card.get("name", "") == card_name:
-			return card
-	
-	return {}

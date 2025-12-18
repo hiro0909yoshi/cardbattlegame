@@ -259,7 +259,7 @@
 	  "synthesis": {
 		"type": "spell",
 		"effect_type": "transform",
-		"transform_to": "ヘルバイロン"
+		"transform_to": 43
 	  },
 	  "ability_parsed": {
 		"keywords": [

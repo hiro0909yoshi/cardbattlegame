@@ -29,10 +29,10 @@ func _setup_ui():
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 30
-	style.content_margin_right = 30
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
 	panel.add_theme_stylebox_override("panel", style)
 	
 	# RichTextLabelを作成
@@ -45,7 +45,7 @@ func _setup_ui():
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# スタイル設定
-	label.add_theme_font_size_override("normal_font_size", 24)
+	label.add_theme_font_size_override("normal_font_size", 60)
 	label.add_theme_color_override("default_color", Color.WHITE)
 	
 	panel.add_child(label)

@@ -47,6 +47,13 @@ var selected_branch_index: int = 0
 var available_branches: Array = []  # タイル番号のリスト
 signal branch_selected(tile_index: int)
 
+# 分岐選択インジケーター
+var branch_indicator: MeshInstance3D = null
+var current_branch_tile: int = -1  # 現在分岐選択中のタイル
+
+# インジケーター設定（BranchTileの定数を参照）
+const INDICATOR_HEIGHT = 0.4  # BranchTileと同じ高さ
+
 func _ready():
 	pass
 
@@ -222,6 +229,10 @@ func _get_loop_size() -> int:
 func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int, is_reversed: bool = false) -> int:
 	var tile = tile_nodes.get(current_tile)
 	
+	# デバッグ: connections確認
+	if tile:
+		print("[MovementController] タイル%d connections: %s, came_from: %d" % [current_tile, str(tile.connections), came_from])
+	
 	# connectionsがなければループ内移動
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var direction = _get_player_current_direction(player_id)
@@ -246,8 +257,23 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	# 選択肢が1つなら自動選択
 	if choices.size() == 1:
 		chosen = choices[0]
+	elif tile is BranchTile:
+		# BranchTileの場合は新しいロジックを使用
+		var result = tile.get_next_tile_for_direction(came_from)
+		if result.tile >= 0:
+			# 自動選択
+			chosen = result.tile
+			print("[MovementController] 分岐タイル自動選択: → タイル%d" % chosen)
+		elif not result.choices.is_empty():
+			# 選択UI表示
+			current_branch_tile = current_tile
+			chosen = await _show_branch_tile_selection(result.choices)
+		else:
+			# フォールバック
+			chosen = choices[0]
 	else:
 		# 選択肢が2つ以上なら選択UI
+		current_branch_tile = current_tile
 		chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
@@ -450,20 +476,16 @@ func _input(event):
 	# 分岐タイル選択（タイル番号から選ぶ）
 	if is_branch_selection_active:
 		if event is InputEventKey and event.pressed:
-			if event.keycode == KEY_LEFT:
-				selected_branch_index = (selected_branch_index - 1 + available_branches.size()) % available_branches.size()
-				_update_branch_selection_ui()
+			if event.keycode == KEY_LEFT or event.keycode == KEY_UP:
+				_cycle_branch_selection(-1)
 				get_viewport().set_input_as_handled()
 			
-			elif event.keycode == KEY_RIGHT:
-				selected_branch_index = (selected_branch_index + 1) % available_branches.size()
-				_update_branch_selection_ui()
+			elif event.keycode == KEY_RIGHT or event.keycode == KEY_DOWN:
+				_cycle_branch_selection(1)
 				get_viewport().set_input_as_handled()
 			
 			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-				var selected_tile = available_branches[selected_branch_index]
-				print("[MovementController] 分岐タイル選択確定: タイル%d" % selected_tile)
-				branch_selected.emit(selected_tile)
+				_confirm_branch_selection()
 				get_viewport().set_input_as_handled()
 		return
 	
@@ -533,13 +555,49 @@ func _show_branch_tile_selection(choices: Array) -> int:
 	available_branches = choices
 	selected_branch_index = 0
 	
-	print("[MovementController] 分岐タイル選択: %s から選択 [←→キーで選択、Enter確定]" % str(choices))
+	print("[MovementController] 分岐タイル選択: %s から選択" % str(choices))
 	_update_branch_selection_ui()
+	_update_branch_indicator()
+	_setup_branch_selection_navigation()
 	
 	var result = await branch_selected
 	is_branch_selection_active = false
+	_clear_branch_selection_navigation()
+	_hide_branch_indicator()
 	
 	return result
+
+# 分岐タイル選択用ナビゲーションボタンを設定
+func _setup_branch_selection_navigation():
+	if game_flow_manager and game_flow_manager.ui_manager:
+		game_flow_manager.ui_manager.enable_navigation(
+			func(): _confirm_branch_selection(),    # 決定
+			Callable(),                              # 戻るなし
+			func(): _cycle_branch_selection(-1),    # 上（左へ）
+			func(): _cycle_branch_selection(1)      # 下（右へ）
+		)
+
+# 分岐タイル選択用ナビゲーションボタンをクリア
+func _clear_branch_selection_navigation():
+	if game_flow_manager and game_flow_manager.ui_manager:
+		game_flow_manager.ui_manager.disable_navigation()
+
+# 分岐選択を切り替え
+func _cycle_branch_selection(delta: int):
+	if not is_branch_selection_active:
+		return
+	if available_branches.size() > 1:
+		selected_branch_index = (selected_branch_index + delta + available_branches.size()) % available_branches.size()
+		_update_branch_selection_ui()
+		_update_branch_indicator()
+
+# 分岐選択を確定
+func _confirm_branch_selection():
+	if not is_branch_selection_active:
+		return
+	var selected_tile = available_branches[selected_branch_index]
+	print("[MovementController] 分岐タイル選択確定: タイル%d" % selected_tile)
+	branch_selected.emit(selected_tile)
 
 # 分岐/方向選択UI更新（共用）
 func _update_branch_selection_ui():
@@ -551,7 +609,74 @@ func _update_branch_selection_ui():
 				choices_text += "[→タイル%d←] " % tile_num
 			else:
 				choices_text += " タイル%d " % tile_num
-		game_flow_manager.ui_manager.phase_label.text = "進む方向を選択: %s [←→] [Enter確定]" % choices_text
+		game_flow_manager.ui_manager.phase_label.text = "進む方向を選択: %s" % choices_text
+
+# 分岐選択インジケーターを更新
+func _update_branch_indicator():
+	if current_branch_tile < 0 or available_branches.is_empty():
+		return
+	
+	var current_tile_node = tile_nodes.get(current_branch_tile)
+	var target_tile_index = available_branches[selected_branch_index]
+	var target_tile_node = tile_nodes.get(target_tile_index)
+	
+	if not current_tile_node or not target_tile_node:
+		return
+	
+	# 方向を計算
+	var current_pos = current_tile_node.global_position
+	var target_pos = target_tile_node.global_position
+	var diff = target_pos - current_pos
+	
+	# インジケーター生成（なければ）
+	if not branch_indicator:
+		branch_indicator = MeshInstance3D.new()
+		branch_indicator.name = "BranchIndicator"
+		
+		# マテリアル設定
+		var material = StandardMaterial3D.new()
+		material.albedo_color = Color(1, 1, 0, 1)
+		material.emission_enabled = true
+		material.emission = Color(1, 1, 0, 1)
+		material.emission_energy_multiplier = 0.5
+		branch_indicator.material_override = material
+		
+		# シーンに追加
+		get_tree().root.add_child(branch_indicator)
+	
+	# 方向に応じてメッシュサイズと位置を設定（BranchTileの定数を使用）
+	var offset = Vector3.ZERO
+	var mesh_size = BranchTile.DIRECTION_MESH_SIZE["right"]
+	
+	if abs(diff.x) > abs(diff.z):
+		# 水平方向（左右）
+		mesh_size = BranchTile.DIRECTION_MESH_SIZE["right"]
+		if diff.x > 0:
+			offset = Vector3(BranchTile.DIRECTION_OFFSET["right"].x, 0, 0)
+		else:
+			offset = Vector3(BranchTile.DIRECTION_OFFSET["left"].x, 0, 0)
+	else:
+		# 垂直方向（上下）
+		mesh_size = BranchTile.DIRECTION_MESH_SIZE["down"]
+		if diff.z > 0:
+			offset = Vector3(0, 0, BranchTile.DIRECTION_OFFSET["down"].z)
+		else:
+			offset = Vector3(0, 0, BranchTile.DIRECTION_OFFSET["up"].z)
+	
+	# メッシュ更新
+	var box_mesh = BoxMesh.new()
+	box_mesh.size = mesh_size
+	branch_indicator.mesh = box_mesh
+	
+	# 位置設定（BranchTileと同じ高さ0.4）
+	branch_indicator.global_position = current_pos + offset + Vector3(0, INDICATOR_HEIGHT, 0)
+	branch_indicator.visible = true
+
+# 分岐選択インジケーターを非表示
+func _hide_branch_indicator():
+	if branch_indicator:
+		branch_indicator.visible = false
+	current_branch_tile = -1
 
 # 分岐チェックと処理（Dictionary形式：{タイル番号: 方向}から選ぶ）
 func _check_and_handle_branch(current_tile: int, _came_from: int, path: Array, current_index: int) -> Dictionary:
