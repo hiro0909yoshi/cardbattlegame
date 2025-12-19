@@ -149,3 +149,34 @@ func _apply_stage_settings():
 			player.target_magic = target
 		print("[Game3D] 勝利条件: 総魔力 %dG以上" % target)
 	
+	# 全プレイヤーのデッキを設定
+	print("[Game3D] calling _setup_all_decks...")
+	_setup_all_decks()
+
+## 全プレイヤーのデッキを設定（ソロバトル: 全員同じデッキ）
+func _setup_all_decks():
+	print("[Game3D] _setup_all_decks called")
+	if not system_manager.card_system:
+		print("[Game3D] card_system is null, returning")
+		return
+	
+	# ソロバトルモード: 全プレイヤーがGameDataの選択デッキを使用
+	var deck_info = GameData.get_current_deck()
+	var cards_dict = deck_info.get("cards", {})
+	
+	if cards_dict.is_empty():
+		print("[Game3D] デッキが空のため全員ランダム使用")
+		return
+	
+	# GameDataの形式 {card_id: count} を set_deck_for_player 形式に変換
+	var deck_data = {"cards": []}
+	for card_id in cards_dict.keys():
+		var count = cards_dict[card_id]
+		deck_data["cards"].append({"id": card_id, "count": count})
+	
+	# 全プレイヤーに同じデッキを設定
+	for player_id in range(player_count):
+		system_manager.card_system.set_deck_for_player(player_id, deck_data)
+		system_manager.card_system.deal_initial_hand_for_player(player_id)
+		print("[Game3D] Player %d: ブック%d 設定完了 (%d種類)" % [player_id, GameData.selected_deck_index + 1, cards_dict.size()])
+

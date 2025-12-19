@@ -162,14 +162,21 @@ func _apply_stage_settings():
 			player.target_magic = target
 		print("[QuestGame] 勝利条件: 総魔力 %dG以上でチェックポイント通過" % target)
 	
-	# CPUのデッキを設定
-	_setup_cpu_decks()
+	# 全プレイヤーのデッキを設定
+	print("[QuestGame] calling _setup_all_decks...")
+	_setup_all_decks()
 
-## CPUのデッキを設定
-func _setup_cpu_decks():
+## 全プレイヤーのデッキを設定（プレイヤー0 + CPU）
+func _setup_all_decks():
+	print("[QuestGame] _setup_all_decks called")
 	if not system_manager.card_system:
+		print("[QuestGame] card_system is null, returning")
 		return
 	
+	# プレイヤー0: GameDataから選択中のブックを設定
+	_setup_player_deck()
+	
+	# CPU: ステージ設定から読み込み
 	var enemies = stage_loader.current_stage_data.get("enemies", [])
 	for i in range(enemies.size()):
 		var deck_id = stage_loader.get_enemy_deck_id(i)
@@ -187,3 +194,28 @@ func _setup_cpu_decks():
 				print("[QuestGame] CPU %d: デッキ %s 設定完了" % [player_id, deck_id])
 			else:
 				print("[QuestGame] CPU %d: デッキ %s が見つからないためランダム" % [player_id, deck_id])
+
+## プレイヤー0のデッキを設定（GameDataから）
+func _setup_player_deck():
+	print("[QuestGame] _setup_player_deck called")
+	print("[QuestGame] selected_deck_index: %d" % GameData.selected_deck_index)
+	
+	var deck_info = GameData.get_current_deck()
+	print("[QuestGame] deck_info: %s" % str(deck_info))
+	
+	var cards_dict = deck_info.get("cards", {})
+	print("[QuestGame] cards_dict size: %d" % cards_dict.size())
+	
+	if cards_dict.is_empty():
+		print("[QuestGame] Player 0: デッキが空のためランダム使用")
+		return
+	
+	# GameDataの形式 {card_id: count} を set_deck_for_player 形式に変換
+	var deck_data = {"cards": []}
+	for card_id in cards_dict.keys():
+		var count = cards_dict[card_id]
+		deck_data["cards"].append({"id": card_id, "count": count})
+	
+	system_manager.card_system.set_deck_for_player(0, deck_data)
+	system_manager.card_system.deal_initial_hand_for_player(0)
+	print("[QuestGame] Player 0: ブック%d 設定完了 (%d種類)" % [GameData.selected_deck_index + 1, cards_dict.size()])

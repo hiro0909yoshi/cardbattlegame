@@ -29,3 +29,9 @@ window/stretch/mode="viewport"
 [editor_plugins]
 
 enabled=PackedStringArray()
+
+[gui]
+
+theme/custom="res://assets/ui/default_theme.tres"
+theme/default_font="res://assets/fonts/NotoSansJP-Regular.ttf"
+theme/default_font_size=24

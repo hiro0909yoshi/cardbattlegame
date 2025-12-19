@@ -89,11 +89,6 @@ func _initialize_player_hands():
 func _load_deck_from_game_data(player_id: int):
 	var deck_data = GameData.get_current_deck()["cards"]
 	
-	if deck_data.is_empty():
-		push_warning("Player 0: デッキが空、デフォルトデッキ使用")
-		_load_default_deck(player_id)
-		return
-	
 	# 辞書 {card_id: count} を配列に変換
 	for card_id in deck_data.keys():
 		var count = deck_data[card_id]

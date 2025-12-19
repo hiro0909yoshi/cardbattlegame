@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bwdhauqqw44kd"]
 
-[ext_resource type="Texture2D" uid="uid://tc8y583crw7w" path="res://assets/images/キャラクター/Bowser.png" id="1_ybw1v"]
+[ext_resource type="Texture2D" uid="uid://tc8y583crw7w" path="res://assets/images/characters/Bowser.png" id="1_ybw1v"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_v6fml"]
 

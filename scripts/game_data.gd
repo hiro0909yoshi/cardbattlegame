@@ -87,30 +87,47 @@ func save_to_file() -> bool:
 	print("✅ セーブ完了: ", SAVE_FILE_PATH)
 	return true
 
+const DEFAULT_SAVE_PATH = "res://data/default_save.json"
+
 func load_from_file():
-	if not FileAccess.file_exists(SAVE_FILE_PATH):
-		print("セーブファイルがありません。新規作成します。")
-		_initialize_new_save()
-		return
+	print("[GameData] load_from_file() 開始")
 	
-	var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
-	if file == null:
-		print("ERROR: セーブファイルを読み込めませんでした")
-		_initialize_new_save()
-		return
+	# まずuser://を試す
+	var loaded_from_user = false
+	if FileAccess.file_exists(SAVE_FILE_PATH):
+		var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
+		if file:
+			var json_string = file.get_as_text()
+			file.close()
+			var json = JSON.new()
+			if json.parse(json_string) == OK:
+				var data = json.data
+				# デッキが有効かチェック
+				if _has_valid_deck(data):
+					player_data = data
+					loaded_from_user = true
+					print("[GameData] user://から読み込み成功（有効なデッキあり）")
+				else:
+					print("[GameData] user://のデッキが空、default_save.jsonを試行")
 	
-	var json_string = file.get_as_text()
-	file.close()
-	
-	var json = JSON.new()
-	var parse_result = json.parse(json_string)
-	
-	if parse_result != OK:
-		print("ERROR: JSONパースエラー")
-		_initialize_new_save()
-		return
-	
-	player_data = json.data
+	# user://がない or デッキが空の場合、default_save.jsonを試す
+	if not loaded_from_user:
+		var file = FileAccess.open(DEFAULT_SAVE_PATH, FileAccess.READ)
+		if file:
+			var json_string = file.get_as_text()
+			file.close()
+			var json = JSON.new()
+			if json.parse(json_string) == OK:
+				player_data = json.data
+				print("[GameData] default_save.jsonから読み込み成功")
+			else:
+				print("[GameData] default_save.json パースエラー、新規作成")
+				_initialize_new_save()
+				return
+		else:
+			print("[GameData] default_save.json 開けず、新規作成")
+			_initialize_new_save()
+			return
 	
 	# 🔧 修正: JSONの文字列キーを整数に変換
 	_convert_collection_keys()
@@ -187,6 +204,18 @@ func _initialize_test_data():
 		print("❌ CardLoaderが見つかりません")
 	print("=========================
 ")
+
+## デッキに有効なカードがあるかチェック
+func _has_valid_deck(data: Dictionary) -> bool:
+	if not data.has("decks"):
+		return false
+	var decks = data.get("decks", [])
+	for deck in decks:
+		var cards = deck.get("cards", {})
+		if not cards.is_empty():
+			print("[GameData] 有効なデッキ発見: %d種類のカード" % cards.size())
+			return true
+	return false
 
 func _convert_collection_keys():
 	"""JSONから読み込んだ文字列キーを整数に、値も整数に変換"""
