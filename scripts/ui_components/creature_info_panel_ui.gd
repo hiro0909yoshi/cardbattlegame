@@ -11,15 +11,17 @@ signal panel_closed
 
 # UI要素（シーンから取得）
 @onready var main_container: HBoxContainer = $MainContainer
-@onready var left_panel: Control = $MainContainer/LeftPanel
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
 @onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameLabel
 @onready var element_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ElementLabel
-@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostLabel
+@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
+@onready var cost_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostElementIcons
 @onready var hp_ap_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApLabel
-@onready var restriction_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionLabel
+@onready var restriction_text_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionTextLabel
+@onready var restriction_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionElementIcons
+@onready var item_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/ItemLabel
 @onready var curse_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CurseLabel
 @onready var skill_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer
 @onready var skill_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SkillContainer/SkillLabel
@@ -28,9 +30,6 @@ signal panel_closed
 
 # UIManager参照（グローバルボタン用）
 var ui_manager_ref = null
-
-# カード表示用
-var card_display: Control
 
 # 状態
 var is_visible_panel: bool = false
@@ -41,9 +40,6 @@ var current_confirmation_text: String = ""
 
 # 参照
 var card_system = null
-
-# カード表示スケール（固定値）
-const CARD_SCALE = 1.12  # 0.8 × 1.4 = 1.12
 
 
 func _ready():
@@ -112,11 +108,6 @@ func hide_panel(clear_buttons: bool = true):
 	if clear_buttons and ui_manager_ref:
 		ui_manager_ref.clear_global_actions()
 	
-	# カード表示をクリア
-	if card_display and is_instance_valid(card_display):
-		card_display.queue_free()
-		card_display = null
-	
 	panel_closed.emit()
 
 
@@ -128,46 +119,7 @@ func is_panel_visible() -> bool:
 # === 内部メソッド ===
 
 func _update_display():
-	_update_card_display()
 	_update_right_panel()
-
-
-func _update_card_display():
-	# 既存のカード表示をクリア（即座に削除）
-	if card_display and is_instance_valid(card_display):
-		card_display.get_parent().remove_child(card_display)
-		card_display.queue_free()
-		card_display = null
-	
-	# 左パネルの他のカード表示も全てクリア
-	if left_panel:
-		var children_to_remove = []
-		for child in left_panel.get_children():
-			if child.has_method("load_card_data"):
-				children_to_remove.append(child)
-		for child in children_to_remove:
-			left_panel.remove_child(child)
-			child.queue_free()
-	
-	if not left_panel:
-		return
-	
-	# カードシーンをロードして表示
-	var card_scene = preload("res://scenes/Card.tscn")
-	card_display = card_scene.instantiate()
-	
-	# 固定スケール
-	card_display.scale = Vector2(CARD_SCALE, CARD_SCALE)
-	
-	left_panel.add_child(card_display)
-	
-	# カード位置（左パネル内で中央寄せ）
-	card_display.position = Vector2(0, 0)
-	
-	# カードデータを設定
-	var card_id = current_creature_data.get("id", 0)
-	if card_display.has_method("load_card_data"):
-		card_display.load_card_data(card_id)
 
 
 func _update_right_panel():
@@ -188,19 +140,23 @@ func _update_right_panel():
 		var cost_value = data.get("cost", 0)
 		var mp_cost = 0
 		var lands_required = []
-		if typeof(cost_value) == TYPE_DICTIONARY:
-			mp_cost = cost_value.get("mp", 0)
-			lands_required = cost_value.get("lands_required", [])
+		var cards_sacrifice = 0
+		
+		# 元のカードデータからコスト情報を取得
+		var card_id = data.get("id", 0)
+		var original_data = CardLoader.get_card_by_id(card_id) if card_id > 0 else {}
+		var original_cost = original_data.get("cost", {})
+		
+		if typeof(original_cost) == TYPE_DICTIONARY:
+			mp_cost = original_cost.get("mp", 0)
+			lands_required = original_cost.get("lands_required", [])
+			cards_sacrifice = original_cost.get("cards_sacrifice", 0)
 		else:
 			mp_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
 			lands_required = data.get("cost_lands_required", [])
-		var cost_text = "コスト: %dG" % mp_cost
-		if not lands_required.is_empty():
-			var lands_str = ""
-			for land in lands_required:
-				lands_str += _get_element_short_name(land)
-			cost_text += " (%s)" % lands_str
-		cost_label.text = cost_text
+		
+		cost_label.text = "コスト: %dG" % mp_cost
+		_add_cost_icons(cost_element_icons, lands_required, cards_sacrifice)
 	
 	# HP / AP
 	if hp_ap_label:
@@ -212,26 +168,23 @@ func _update_right_panel():
 		hp_ap_label.text = "HP: %d / %d    AP: %d" % [current_hp, max_hp, total_ap]
 	
 	# 配置制限 / アイテム制限
-	if restriction_label:
-		var restrictions = data.get("restrictions", {})
-		var restriction_parts = []
-		
-		var cannot_summon = restrictions.get("cannot_summon", [])
-		if not cannot_summon.is_empty():
-			var summon_str = ""
-			for elem in cannot_summon:
-				summon_str += _get_element_short_name(elem)
-			restriction_parts.append("配置制限: %s不可" % summon_str)
+	var restrictions = data.get("restrictions", {})
+	var cannot_summon = restrictions.get("cannot_summon", [])
+	
+	if restriction_text_label:
+		if cannot_summon.is_empty():
+			restriction_text_label.text = "配置制限: なし"
 		else:
-			restriction_parts.append("配置制限: なし")
-		
+			restriction_text_label.text = "配置制限:"
+	
+	_add_element_icons(restriction_element_icons, cannot_summon)
+	
+	if item_label:
 		var cannot_use = restrictions.get("cannot_use", [])
 		if not cannot_use.is_empty():
-			restriction_parts.append("アイテム: %s" % ",".join(cannot_use))
+			item_label.text = "アイテム: %s" % ",".join(cannot_use)
 		else:
-			restriction_parts.append("アイテム: なし")
-		
-		restriction_label.text = "  ".join(restriction_parts)
+			item_label.text = "アイテム: なし"
 	
 	# 呪い
 	if curse_label:
@@ -294,6 +247,71 @@ func _get_element_short_name(element: String) -> String:
 		"earth": return "地"
 		"wind": return "風"
 		_: return element
+
+
+# === 属性アイコン ===
+
+var _element_textures: Dictionary = {}
+
+func _get_element_texture(element: String) -> Texture2D:
+	if element not in _element_textures:
+		var path = "res://assets/ui/element_%s.png" % element
+		if ResourceLoader.exists(path):
+			_element_textures[element] = load(path)
+		else:
+			_element_textures[element] = null
+	return _element_textures[element]
+
+func _add_element_icons(container: HBoxContainer, elements: Array) -> void:
+	if not container:
+		return
+	
+	# 既存のアイコンをクリア
+	for child in container.get_children():
+		child.queue_free()
+	
+	# 属性アイコンを追加
+	for element in elements:
+		var texture = _get_element_texture(element)
+		if texture:
+			var icon = TextureRect.new()
+			icon.texture = texture
+			icon.custom_minimum_size = Vector2(40, 40)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			container.add_child(icon)
+
+
+func _add_cost_icons(container: HBoxContainer, elements: Array, cards_sacrifice: int) -> void:
+	if not container:
+		return
+	
+	# 既存のアイコンをクリア
+	for child in container.get_children():
+		child.queue_free()
+	
+	# 属性アイコンを追加
+	for element in elements:
+		var texture = _get_element_texture(element)
+		if texture:
+			var icon = TextureRect.new()
+			icon.texture = texture
+			icon.custom_minimum_size = Vector2(40, 40)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			container.add_child(icon)
+	
+	# カード犠牲アイコンを追加
+	if cards_sacrifice > 0:
+		var sacrifice_texture = load("res://assets/ui/sacrifice_card.png")
+		if sacrifice_texture:
+			for i in range(cards_sacrifice):
+				var icon = TextureRect.new()
+				icon.texture = sacrifice_texture
+				icon.custom_minimum_size = Vector2(40, 40)
+				icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				container.add_child(icon)
 
 
 # === イベントハンドラ ===
