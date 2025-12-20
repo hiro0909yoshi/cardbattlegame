@@ -10,7 +10,6 @@ signal panel_closed
 
 # UI要素（シーンから取得）
 @onready var main_container: HBoxContainer = $MainContainer
-@onready var left_panel: Control = $MainContainer/LeftPanel
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
@@ -23,16 +22,10 @@ signal panel_closed
 # UIManager参照（グローバルボタン用）
 var ui_manager_ref = null
 
-# カード表示用
-var card_display: Control
-
 # 状態
 var is_visible_panel: bool = false
 var current_spell_data: Dictionary = {}
 var current_hand_index: int = -1
-
-# カード表示スケール（固定値）
-const CARD_SCALE = 1.12
 
 
 func _ready():
@@ -75,11 +68,6 @@ func hide_panel(clear_buttons: bool = true):
 	if clear_buttons and ui_manager_ref:
 		ui_manager_ref.disable_navigation()
 	
-	# カード表示をクリア
-	if card_display and is_instance_valid(card_display):
-		card_display.queue_free()
-		card_display = null
-	
 	panel_closed.emit()
 
 
@@ -91,43 +79,7 @@ func is_panel_visible() -> bool:
 # === 内部メソッド ===
 
 func _update_display():
-	_update_card_display()
 	_update_right_panel()
-
-
-func _update_card_display():
-	# 既存のカード表示をクリア（即座に削除）
-	if card_display and is_instance_valid(card_display):
-		if card_display.get_parent():
-			card_display.get_parent().remove_child(card_display)
-		card_display.queue_free()
-		card_display = null
-	
-	if not left_panel:
-		return
-	
-	# left_panel内の既存カードノードもクリア（念のため）
-	for child in left_panel.get_children():
-		if child.has_method("load_card_data"):
-			left_panel.remove_child(child)
-			child.queue_free()
-	
-	# カードシーンをロードして表示
-	var card_scene = preload("res://scenes/Card.tscn")
-	card_display = card_scene.instantiate()
-	
-	# 固定スケール
-	card_display.scale = Vector2(CARD_SCALE, CARD_SCALE)
-	
-	left_panel.add_child(card_display)
-	
-	# カード位置（左パネル内で中央寄せ）
-	card_display.position = Vector2(0, 0)
-	
-	# カードデータを設定
-	var card_id = current_spell_data.get("id", 0)
-	if card_display.has_method("load_card_data"):
-		card_display.load_card_data(card_id)
 
 
 func _update_right_panel():

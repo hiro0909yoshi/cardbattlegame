@@ -15,7 +15,6 @@ signal panel_closed
 
 # 右パネルのラベル（シーンから取得）
 @onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameLabel
-@onready var element_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ElementLabel
 @onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
 @onready var cost_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostElementIcons
 @onready var hp_ap_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApLabel
@@ -129,11 +128,6 @@ func _update_right_panel():
 	if name_label:
 		var rarity = data.get("rarity", "")
 		name_label.text = "%s [%s]" % [data.get("name", "不明"), rarity]
-	
-	# 属性
-	if element_label:
-		var element = data.get("element", "")
-		element_label.text = _get_element_display_name(element)
 	
 	# コスト
 	if cost_label:
