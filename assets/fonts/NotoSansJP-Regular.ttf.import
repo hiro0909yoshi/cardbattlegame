@@ -2,7 +2,7 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://uwa1t5nab20t"
+uid="uid://dwr7ddagywwe0"
 path="res://.godot/imported/NotoSansJP-Regular.ttf-5ab1499f300bf3e5488cf75c47d7d03b.fontdata"
 
 [deps]
@@ -29,12 +29,7 @@ Fallbacks=null
 fallbacks=[]
 Compress=null
 compress=true
-preload=[{
-"chars": [],
-"glyphs": [],
-"name": "新しい構成",
-"size": Vector2i(16, 0)
-}]
+preload=[]
 language_support={}
 script_support={}
 opentype_features={}

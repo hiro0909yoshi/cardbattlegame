@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://ml4x8t2im8y7"]
 
-[ext_resource type="Texture2D" uid="uid://dnb0eqi32seh0" path="res://assets/ui/インフォ.png" id="1_bg"]
-[ext_resource type="Script" path="res://scripts/ui_components/item_info_panel_ui.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://brm3wvfcgsuyg" path="res://assets/ui/インフォ.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://ch6cv55e0krgs" path="res://scripts/ui_components/item_info_panel_ui.gd" id="2_script"]
 
 [node name="ItemInfoPanel" type="Control"]
 layout_mode = 3

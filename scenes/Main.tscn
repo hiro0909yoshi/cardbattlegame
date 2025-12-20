@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dlge0sbyufmq8"]
 
 [ext_resource type="Script" uid="uid://d0ed7a1e8gsei" path="res://scripts/game_3d.gd" id="1_q8u5g"]
-[ext_resource type="MeshLibrary" uid="uid://cyqxg60f1rq73" path="res://assets/building_parts/床3.tres" id="10_lhr70"]
+[ext_resource type="MeshLibrary" uid="uid://cyqxg60f1rq73" path="res://assets/building_parts/floor3.tres" id="10_lhr70"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_q8u5g")

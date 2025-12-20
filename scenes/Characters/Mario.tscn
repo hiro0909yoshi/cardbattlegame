@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dt6tq6krtdu5"]
 
-[ext_resource type="Texture2D" uid="uid://c04c46x1jhtv7" path="res://assets/images/characters/marion.png" id="1_p0vlq"]
+[ext_resource type="Texture2D" path="res://assets/images/characters/marion.png" id="1_p0vlq"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_v6fml"]
 

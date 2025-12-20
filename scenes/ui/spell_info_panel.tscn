@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://dje6kle6c1tb2"]
 
-[ext_resource type="Texture2D" uid="uid://dnb0eqi32seh0" path="res://assets/ui/インフォ.png" id="1_bg"]
-[ext_resource type="Script" path="res://scripts/ui_components/spell_info_panel_ui.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://brm3wvfcgsuyg" path="res://assets/ui/インフォ.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://csaoteboda58s" path="res://scripts/ui_components/spell_info_panel_ui.gd" id="2_script"]
 
 [node name="SpellInfoPanel" type="Control"]
 layout_mode = 3

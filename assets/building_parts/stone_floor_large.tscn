@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://fxm3d62hequ7"]
+
+[ext_resource type="PackedScene" path="res://assets/building_parts/floor4.glb" id="1_q6bbh"]
+
+[node name="floor4" instance=ExtResource("1_q6bbh")]

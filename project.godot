@@ -35,3 +35,7 @@ enabled=PackedStringArray()
 theme/custom="res://assets/ui/default_theme.tres"
 theme/default_font="res://assets/fonts/NotoSansJP-Regular.ttf"
 theme/default_font_size=24
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true

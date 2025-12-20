@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://ccardgiveui"]
 
-[ext_resource type="Script" path="res://scripts/ui_components/card_give_ui.gd" id="1_card_give_ui"]
+[ext_resource type="Script" uid="uid://c2fvfvocg51lx" path="res://scripts/ui_components/card_give_ui.gd" id="1_card_give_ui"]
 
 [node name="CardGiveUI" type="Control"]
 layout_mode = 3

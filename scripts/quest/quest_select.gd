@@ -35,9 +35,9 @@ func _ready():
 	_select_deck(GameData.selected_deck_index)
 
 func _create_stage_buttons():
-	# 既存の子を削除
+	# 既存の子を削除（即時削除でWeb版のタイミング問題を回避）
 	for child in stage_list.get_children():
-		child.queue_free()
+		child.free()
 	
 	# ステージボタン作成
 	for i in range(stages.size()):
@@ -48,9 +48,9 @@ func _create_stage_buttons():
 		stage_list.add_child(btn)
 
 func _create_deck_buttons():
-	# 既存の子を削除
+	# 既存の子を削除（即時削除でWeb版のタイミング問題を回避）
 	for child in deck_list.get_children():
-		child.queue_free()
+		child.free()
 	
 	# デッキボタン作成（6個）
 	for i in range(6):
@@ -100,7 +100,7 @@ func _on_start_pressed():
 	print("クエスト開始: ", GameData.selected_stage_id, " / デッキ: ", selected_deck_index + 1)
 	
 	# クエスト画面へ遷移
-	get_tree().change_scene_to_file("res://scenes/Quest.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/Quest.tscn")
 
 func _on_back_pressed():
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")

@@ -48,11 +48,11 @@ func _on_book_selected(book_index: int):
 		# バトルモードの場合はフラグを消してバトル画面へ
 		GameData.remove_meta("is_selecting_for_battle")
 		print("→ バトル開始")
-		get_tree().change_scene_to_file("res://scenes/Main.tscn")
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/Main.tscn")
 	else:
 		# 通常モードの場合はデッキ編集画面へ
 		print("→ デッキ編集")
-		get_tree().change_scene_to_file("res://scenes/DeckEditor.tscn")
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/DeckEditor.tscn")
 
 func _on_card_list_pressed():
 	print("カード一覧（未実装）")
@@ -63,4 +63,4 @@ func _on_back_pressed():
 	if is_battle_mode:
 		GameData.remove_meta("is_selecting_for_battle")
 	
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
