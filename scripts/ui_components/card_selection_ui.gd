@@ -243,14 +243,18 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# disabledモード: すべてグレーアウト
 				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			elif filter_mode == "battle":
-				# バトルフェーズ中: 防御型クリーチャー + 土地条件未達をグレーアウト
-				var creature_type = card_data.get("creature_type", "normal")
-				if creature_type == "defensive":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				elif card_type == "creature" and not _check_lands_required(card_data, player_id):
+				# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達をグレーアウト
+				if card_type != "creature":
+					# アイテム・スペルなどはグレーアウト
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+					var creature_type = card_data.get("creature_type", "normal")
+					if creature_type == "defensive":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					elif not _check_lands_required(card_data, player_id):
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "spell":
 				# スペルフェーズ中: スペルカード以外をグレーアウト
 				if card_type != "spell":
