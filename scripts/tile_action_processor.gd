@@ -547,8 +547,15 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	# 🎬 バトルステータスオーバーレイ表示（アイテムフェーズ中）
 	var defender_creature = pending_battle_tile_info.get("creature", {})
 	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		# 土地ボーナスを計算（攻撃側=侵略なので0、防御側=自分の土地）
+		var attacker_display = pending_battle_card_data.duplicate()
+		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
+		
+		var defender_display = defender_creature.duplicate()
+		defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
+		
 		game_flow_manager.battle_status_overlay.show_battle_status(
-			pending_battle_card_data, defender_creature, "attacker")
+			attacker_display, defender_display, "attacker")
 	
 	# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
 	if game_flow_manager and game_flow_manager.item_phase_handler:
@@ -873,6 +880,22 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	
 	print("[TileActionProcessor] クリーチャー交換完了")
 	_complete_action()
+
+## アイテムフェーズ表示用の土地ボーナス計算
+func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dictionary) -> int:
+	var creature_element = creature_data.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+	
+	# 無属性タイルは全クリーチャーにボーナス
+	if tile_element == "neutral":
+		return tile_level * 10
+	
+	# 属性が一致すれば土地ボーナス
+	if creature_element != "" and creature_element == tile_element:
+		return tile_level * 10
+	
+	return 0
 
 # アクション完了（内部用）
 func _complete_action():

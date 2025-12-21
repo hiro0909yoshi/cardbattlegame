@@ -98,10 +98,10 @@ func _create_creature_section(y_start: int, header_text: String) -> Dictionary:
 	labels["element"] = _create_label(Vector2(45, y_offset), 64, Color.WHITE)
 	y_offset += line_height
 	
-	# HP（緑）+ 土地ボーナス（黄）+ AP（オレンジ）- 横並び
+	# HP（緑）+ 土地ボーナス（黄）+ AP（深めの赤）- 横並び
 	labels["hp"] = _create_label(Vector2(45, y_offset), 88, Color(0.4, 1.0, 0.4))
 	labels["hp_bonus"] = _create_label(Vector2(320, y_offset), 88, COLOR_LAND_BONUS)
-	labels["ap"] = _create_label(Vector2(580, y_offset), 88, Color(1.0, 0.6, 0.3))
+	labels["ap"] = _create_label(Vector2(580, y_offset), 88, Color(0.85, 0.2, 0.2))
 	
 	return labels
 
