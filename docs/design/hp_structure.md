@@ -79,35 +79,32 @@ current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで
 - `base_hp` は **MHP計算に含まれ、ダメージで削られる** 要素
 - `base_up_hp` は **MHP計算に含まれるが、ダメージでは削られない** 要素
 - ダメージ時は以下の順序で消費される：
-  1. 各種一時的ボーナス（resonance_bonus_hp → land_bonus_hp → temporary_bonus_hp → item_bonus_hp → spell_bonus_hp）
-  2. その後 `base_hp` から消費
-  3. 各ボーナス要素から消費した後、`current_hp` を状態値として直接操作
-- `current_hp` は状態値（`base_hp + base_up_hp + ボーナス群`）のため、ボーナス要素から消費した後で直接削られる
+  1. 各種一時的ボーナス（land_bonus_hp → resonance_bonus_hp → temporary_bonus_hp → spell_bonus_hp → item_bonus_hp）
+  2. その後 `current_hp` から消費
+- `current_hp` は状態値のため、ボーナス要素から消費した後で直接削られる
 
 ### ダメージ消費順序
 
 ダメージを受けた時、以下の順序でHPが消費される：
 
-**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これはMHP計算に使用される値です。一方 `base_hp` は削られます。
+**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これはMHP計算に使用される値です。
 
 ```
-1. resonance_bonus_hp（感応ボーナス）
-2. land_bonus_hp（土地ボーナス）
+1. land_bonus_hp（土地ボーナス）← 最初に消費
+2. resonance_bonus_hp（感応ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
-4. item_bonus_hp（アイテムボーナス）
-5. spell_bonus_hp（スペルボーナス）
-6. base_hp（元のHPの現在値、最後に消費）
+4. spell_bonus_hp（スペルボーナス）
+5. item_bonus_hp（アイテムボーナス）
+6. current_hp（最後に消費）
 ```
 
 ※ `current_hp` は状態値のため、ボーナス要素から消費した後に直接削られます。
 
-#### base_up_hp が消費されない理由（base_hp は消費される）
+#### base_up_hp が消費されない理由
 
-- `base_hp` は **MHP（最大HP）の可変部分**で、ダメージで削られる
 - `base_up_hp` はマスグロース、周回ボーナス、合成などで得た **永続的なMHP増加**で、ダメージでは削られない
 - これらは戦闘終了後も保持される
-- ダメージは最初にボーナスから消費され、残ったダメージが `base_hp` から消費される
-- `current_hp` は計算値で、直接削られず各要素から消費した後で再計算される
+- ダメージは最初に土地ボーナスから消費され、最後にcurrent_hpから消費される
 
 ---
 

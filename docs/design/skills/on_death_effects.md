@@ -197,12 +197,12 @@
 
 通常のダメージ消費順序：
 ```
-1. resonance_bonus_hp（感応）
-2. land_bonus_hp（土地ボーナス）
+1. land_bonus_hp（土地ボーナス）← 最初に消費
+2. resonance_bonus_hp（感応）
 3. temporary_bonus_hp（一時ボーナス）
-4. item_bonus_hp（アイテム）
-5. spell_bonus_hp（スペル）
-6. base_hp（元のHPの現在値、最後に消費）
+4. spell_bonus_hp（スペル）
+5. item_bonus_hp（アイテム）
+6. current_hp ← 最後に消費
 ```
 
 **雪辱の特徴**:

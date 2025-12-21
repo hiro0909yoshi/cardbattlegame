@@ -155,11 +155,12 @@
 **効果**: `participant.item_bonus_hp += value`
 
 **HP消費順序**:
-1. 感応ボーナス (`resonance_bonus_hp`)
-2. 土地ボーナス (`land_bonus_hp`)
-3. **アイテムボーナス** (`item_bonus_hp`)
+1. 土地ボーナス (`land_bonus_hp`) ← 最初に消費
+2. 感応ボーナス (`resonance_bonus_hp`)
+3. 一時ボーナス (`temporary_bonus_hp`)
 4. スペルボーナス (`spell_bonus_hp`)
-5. 基本HP (`base_hp`)
+5. **アイテムボーナス** (`item_bonus_hp`)
+6. current_hp ← 最後に消費
 
 #### 3. grant_skill - スキル付与
 

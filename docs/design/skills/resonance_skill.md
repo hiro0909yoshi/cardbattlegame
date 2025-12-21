@@ -104,7 +104,16 @@ participant.update_current_hp()
 
 ### ダメージ消費順序
 
-感応ボーナスHPは **最優先で消費** されます。
+感応ボーナスHPは **土地ボーナスの次に消費** されます（消費順序2番目）。
+
+```
+1. 土地ボーナス ← 最初に消費
+2. 感応ボーナス ← ここ
+3. 一時ボーナス
+4. スペルボーナス
+5. アイテムボーナス
+6. current_hp ← 最後に消費
+```
 
 詳細は[BattleParticipantとHP管理](../skills_design.md#battleparticipantとhp管理)を参照してください。
 

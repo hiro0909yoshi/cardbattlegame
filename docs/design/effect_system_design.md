@@ -401,22 +401,23 @@ current_ap = base_ap +
 
 ### ダメージ消費順序
 
-**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これは永続的なMHPボーナスで、ダメージでは削られません。
+**重要**: `base_up_hp`（永続的な基礎HP上昇）は消費されません。これは永続的なMHPボーナスです。
 
 ```
-1. resonance_bonus_hp（感応ボーナス）
-2. land_bonus_hp（土地ボーナス）
+1. land_bonus_hp（土地ボーナス）← 最初に消費
+2. resonance_bonus_hp（感応ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
-4. item_bonus_hp（アイテムボーナス）
-5. spell_bonus_hp（スペルボーナス）
+4. spell_bonus_hp（スペルボーナス）
+5. item_bonus_hp（アイテムボーナス）
 6. current_hpから直接消費
 ```
 
 ※ 実装では`current_hp`が状態値として管理され、上記ボーナスから順に消費された後、残りは`current_hp`から直接消費されます。
+※ MHP = base_hp + base_up_hp（item_bonus_hpは含まない）
 
 #### base_up_hp が消費されない理由
 
-`base_up_hp` はマスグロース、周回ボーナス、合成などで得た永続的なMHP増加であり、戦闘終了後も creature_data に保存されます。ダメージでは削られず、MHP計算にのみ使用されます。一方 `base_hp` はダメージで削られます。
+`base_up_hp` はマスグロース、周回ボーナス、合成などで得た永続的なMHP増加であり、戦闘終了後も creature_data に保存されます。ダメージでは削られず、MHP計算にのみ使用されます。
 
 ---
 

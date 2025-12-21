@@ -108,19 +108,19 @@ func take_damage(damage: int) -> Dictionary:
 		"current_hp_consumed": 0
 	}
 	
-	# 1. 感応ボーナスから消費
-	if resonance_bonus_hp > 0 and remaining_damage > 0:
-		var consumed = min(resonance_bonus_hp, remaining_damage)
-		resonance_bonus_hp -= consumed
-		remaining_damage -= consumed
-		damage_breakdown["resonance_bonus_consumed"] = consumed
-	
-	# 2. 土地ボーナスから消費
+	# 1. 土地ボーナスから消費（最初に消費）
 	if land_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(land_bonus_hp, remaining_damage)
 		land_bonus_hp -= consumed
 		remaining_damage -= consumed
 		damage_breakdown["land_bonus_consumed"] = consumed
+	
+	# 2. 感応ボーナスから消費
+	if resonance_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(resonance_bonus_hp, remaining_damage)
+		resonance_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["resonance_bonus_consumed"] = consumed
 	
 	# 3. 一時的なボーナスから消費
 	if temporary_bonus_hp > 0 and remaining_damage > 0:
@@ -129,21 +129,21 @@ func take_damage(damage: int) -> Dictionary:
 		remaining_damage -= consumed
 		damage_breakdown["temporary_bonus_consumed"] = consumed
 	
-	# 4. アイテムボーナスから消費
-	if item_bonus_hp > 0 and remaining_damage > 0:
-		var consumed = min(item_bonus_hp, remaining_damage)
-		item_bonus_hp -= consumed
-		remaining_damage -= consumed
-		damage_breakdown["item_bonus_consumed"] = consumed
-	
-	# 5. スペルボーナスから消費
+	# 4. スペルボーナスから消費
 	if spell_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(spell_bonus_hp, remaining_damage)
 		spell_bonus_hp -= consumed
 		remaining_damage -= consumed
 		damage_breakdown["spell_bonus_consumed"] = consumed
 	
-	# 6. current_hp から直接消費（base_up_hp は永続ボーナスのため削られない）
+	# 5. アイテムボーナスから消費
+	if item_bonus_hp > 0 and remaining_damage > 0:
+		var consumed = min(item_bonus_hp, remaining_damage)
+		item_bonus_hp -= consumed
+		remaining_damage -= consumed
+		damage_breakdown["item_bonus_consumed"] = consumed
+	
+	# 6. current_hp から直接消費（MHP = base_hp + base_up_hp + item_bonus_hp）
 	if remaining_damage > 0:
 		current_hp -= remaining_damage
 		damage_breakdown["current_hp_consumed"] = remaining_damage

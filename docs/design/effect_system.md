@@ -305,15 +305,16 @@ current_ap = base_ap +
 ### ダメージ消費順序（既存仕様）
 
 ```
-1. resonance_bonus_hp（感応ボーナス）
-2. land_bonus_hp（土地ボーナス）
+1. land_bonus_hp（土地ボーナス）← 最初に消費
+2. resonance_bonus_hp（感応ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
-4. item_bonus_hp（アイテムボーナス）
-5. spell_bonus_hp（スペルボーナス）
+4. spell_bonus_hp（スペルボーナス）
+5. item_bonus_hp（アイテムボーナス）
 6. current_hpから直接消費
 ```
 
 **注意**: `base_up_hp`（永続的な基礎HP上昇）は消費されない。これはMHP計算にのみ使用される。
+- MHP = base_hp + base_up_hp（item_bonus_hpは含まない）
 
 ---
 

@@ -70,23 +70,23 @@ HPフィールド一覧
 フィールド説明base_hpクリーチャーの基本HPbase_up_hp永続的な基礎HP上昇（合成・マスグロース等）temporary_bonus_hp一時効果による加算HP（効果配列から計算）resonance_bonus_hp感応スキルのボーナスHPland_bonus_hp土地ボーナスHP（属性一致時）item_bonus_hpアイテム効果のボーナスHPspell_bonus_hpスペル効果のボーナスHPcurrent_hp合計HP（上記すべての合計）
 ダメージ消費順序
 
-1. 感応ボーナス (resonance_bonus_hp - 最優先で消費)
-2. 土地ボーナス (land_bonus_hp - 戦闘ごとに復活)
+1. 土地ボーナス (land_bonus_hp - 最優先で消費、戦闘ごとに復活)
+2. 感応ボーナス (resonance_bonus_hp - バトル限定)
 3. 一時効果 (temporary_bonus_hp - 呪い等)
-4. アイテムボーナス (item_bonus_hp)
-5. スペルボーナス (spell_bonus_hp)
+4. スペルボーナス (spell_bonus_hp)
+5. アイテムボーナス (item_bonus_hp)
 6. 現在HP (current_hp - 最後に消費)
 
 ※ 永続基礎HP (base_up_hp) はダメージで消費されません。これはMHP計算に使用される値です。
-※ current_hp は base_hp + base_up_hp から開始し、ダメージで減少します。
+※ MHP = base_hp + base_up_hp（アイテムボーナスはMHPに含まない）
 
 設計思想
 
 一時的なボーナスを先に消費し、クリーチャーの本来のHPを守る
-感応ボーナス: 最も一時的（バトル限定）なため、最優先消費
-土地ボーナス: 戦闘ごとに復活するため、次に消費
+土地ボーナス: 戦闘ごとに復活するため、最優先消費
+感応ボーナス: バトル限定のため、次に消費
+アイテムボーナス: 戦闘中のみ有効、current_hpの直前に消費
 永続基礎HP (base_up_hp): ダメージでは削られず、MHP計算に使用される
-基本HP (base_hp): 減ると配置クリーチャーの永続的なダメージとなる
 
 ダメージ処理
 take_damage() は消費順序に従い、残ったダメージを次のHPフィールドに適用します。
