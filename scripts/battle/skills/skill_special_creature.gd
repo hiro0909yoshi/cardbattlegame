@@ -17,7 +17,7 @@ class_name SkillSpecialCreature
 ## オーガロード（ID: 407）: オーガ配置時能力値上昇
 ##
 ## 同じプレイヤーのオーガの配置状況に応じてボーナスを付与
-## - 火風オーガ: ST+20
+## - 火風オーガ: AP+20
 ## - 水地オーガ: HP+20
 ##
 ## @param participant バトル参加者
@@ -72,8 +72,9 @@ static func apply_ogre_lord_bonus(participant: BattleParticipant, player_index: 
 	
 	if fire_wind_ogre_count > 0:
 		participant.temporary_bonus_ap += 20
+		participant.update_current_ap()
 		bonus_applied = true
-		print("[オーガロード] 火風オーガ配置(", fire_wind_ogre_count, "体) ST+20")
+		print("[オーガロード] 火風オーガ配置(", fire_wind_ogre_count, "体) AP+20")
 	
 	if water_earth_ogre_count > 0:
 		participant.temporary_bonus_hp += 20

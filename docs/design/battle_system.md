@@ -101,7 +101,17 @@ was_attacked_by_enemy フラグを設定（バイロマンサー用）
 _trigger_magic_from_damage() を呼ぶ（ゼラチンアーマー用）
 
 主要メソッド
-メソッド説明update_current_hp()全フィールドから current_hp を再計算get_max_hp()真のMHP（base_hp + base_up_hp）is_alive()current_hp > 0 かチェックtake_damage(damage)ダメージ処理（消費順序に従う）take_mhp_damage(damage)MHPに直接ダメージ（雪辱効果用）is_damaged()current_hp < get_max_hp() かチェックapply_item_first_strike()アイテムで先制付与（後手を無効化）
+
+| メソッド | 説明 |
+|----------|------|
+| `update_current_ap()` | 全フィールドから current_ap を再計算 |
+| `add_base_up_hp(value)` | base_up_hp を増加し、current_hp と creature_data も同時に更新 |
+| `get_max_hp()` | 真のMHP（base_hp + base_up_hp） |
+| `is_alive()` | current_hp > 0 かチェック |
+| `take_damage(damage)` | ダメージ処理（消費順序に従う） |
+| `take_mhp_damage(damage)` | MHPに直接ダメージ（雪辱効果用） |
+| `is_damaged()` | current_hp < get_max_hp() かチェック |
+| `apply_item_first_strike()` | アイテムで先制付与（後手を無効化） |
 
 スキル適用順序
 相乗効果の設計思想

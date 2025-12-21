@@ -110,13 +110,13 @@
 ```json
 {
   "ability_parsed": {
-    "keywords": ["合体"],
-    "keyword_conditions": {
-      "合体": {
-        "partner_id": 419,
-        "result_id": 406
-      }
-    }
+	"keywords": ["合体"],
+	"keyword_conditions": {
+	  "合体": {
+		"partner_id": 419,
+		"result_id": 406
+	  }
+	}
   }
 }
 ```

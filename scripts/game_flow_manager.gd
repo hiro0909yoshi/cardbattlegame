@@ -39,6 +39,10 @@ var player_buff_system: PlayerBuffSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
+var battle_screen_manager: BattleScreenManager
+
+# アイテムフェーズ用バトルステータスオーバーレイ
+var battle_status_overlay = null
 
 # 魔法石システム
 var magic_stone_system: MagicStoneSystem
@@ -124,6 +128,9 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	if battle_system:
 		battle_system.game_flow_manager_ref = self
 	
+	# BattleScreenManagerの初期化
+	_setup_battle_screen_manager()
+	
 	
 	# LapSystemにplayer_systemとui_managerを設定
 	if lap_system:
@@ -133,6 +140,24 @@ func setup_systems(p_system, c_system, b_system, s_system, ui_system,
 	
 	# MagicStoneSystemの初期化
 	_setup_magic_stone_system(b_system)
+
+## バトル画面マネージャーの初期化
+func _setup_battle_screen_manager():
+	battle_screen_manager = BattleScreenManager.new()
+	battle_screen_manager.name = "BattleScreenManager"
+	add_child(battle_screen_manager)
+	
+	# BattleSystemに参照を渡す
+	if battle_system:
+		battle_system.battle_screen_manager = battle_screen_manager
+	
+	print("[BattleScreenManager] 初期化完了")
+	
+	# アイテムフェーズ用バトルステータスオーバーレイ
+	var BattleStatusOverlay = preload("res://scripts/ui/battle_status_overlay.gd")
+	battle_status_overlay = BattleStatusOverlay.new()
+	battle_status_overlay.name = "BattleStatusOverlay"
+	add_child(battle_status_overlay)
 
 ## 魔法石システムの初期化
 func _setup_magic_stone_system(board_system):

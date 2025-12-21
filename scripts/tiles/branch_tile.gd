@@ -114,7 +114,6 @@ func get_next_tile_for_direction(came_from: int) -> Dictionary:
 		return {"tile": -1, "choices": []}
 	
 	var main_tile = _get_main()
-	var branches = _get_branches()
 	var open_branch = _get_open_branch()
 	
 	# mainから来た → 開いている分岐へ自動

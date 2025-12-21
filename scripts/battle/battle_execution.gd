@@ -13,9 +13,11 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 
 # システム参照
 var card_system_ref = null
+var battle_screen_manager = null
 
-func setup_systems(card_system):
+func setup_systems(card_system, screen_manager = null):
 	card_system_ref = card_system
+	battle_screen_manager = screen_manager
 
 # バトル実行フェーズ処理
 # 攻撃順決定、攻撃シーケンス、結果判定を担当
@@ -159,6 +161,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			var attacker_name = attacker_p.creature_data.get("name", "?")
 			var defender_name = defender_p.creature_data.get("name", "?")
 			
+			# 🎬 攻撃アニメーション
+			if battle_screen_manager:
+				var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+				await battle_screen_manager.show_attack(attacker_side, attacker_p.current_ap)
+			
 			# 攻撃ヘッダー
 			if attacker_p.attack_count > 1:
 				print("\n【第", i + 1, "攻撃 - ", attack_num + 1, "回目】", "侵略側" if attacker_p.is_attacker else "防御側", "の攻撃")
@@ -204,6 +211,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# 軽減ダメージ適用
 					var damage_breakdown_reduced = defender_p.take_damage(actual_damage_reduced)
 					
+					# 🎬 ダメージポップアップ（軽減後）
+					if battle_screen_manager and actual_damage_reduced > 0:
+						var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
+						battle_screen_manager.show_damage(defender_side, actual_damage_reduced)
 				
 					# 💰 ダメージ時の魔力獲得・奪取スキル
 					var actual_damage_dealt_reduced = (
@@ -327,6 +338,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# ダメージ適用
 			var damage_breakdown = defender_p.take_damage(actual_damage)
+			
+			# 🎬 ダメージポップアップ
+			if battle_screen_manager and actual_damage > 0:
+				var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
+				battle_screen_manager.show_damage(defender_side, actual_damage)
 			
 			# 💰 ダメージ時の魔力獲得・奪取スキル
 			var actual_damage_dealt = (

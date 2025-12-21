@@ -207,6 +207,11 @@ func prepare_participants(...):
 - `BattleParticipant.current_hp` = 状態値のHP（各要素から消費した後に直接削られる）
   - 計算式: `base_hp + base_up_hp + temporary_bonus_hp + resonance_bonus_hp + land_bonus_hp + item_bonus_hp + spell_bonus_hp`
 
+**BattleParticipantの主要メソッド**：
+- `add_base_up_hp(value)` = base_up_hpを増加し、current_hpとcreature_dataも同時に更新
+- `update_current_ap()` = 全フィールドからcurrent_apを再計算
+- `get_max_hp()` = 真のMHP（base_hp + base_up_hp）を取得
+
 ---
 
 ### 2. バトル後のHP保存（BattleParticipant → creature_data）

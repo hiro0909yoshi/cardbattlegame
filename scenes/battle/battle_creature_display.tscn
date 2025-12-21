@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bxj9kp4m2nqab"]
+
+[ext_resource type="Script" path="res://scripts/battle_screen/battle_creature_display.gd" id="1_display"]
+
+[node name="BattleCreatureDisplay" type="Control"]
+custom_minimum_size = Vector2(180, 310)
+script = ExtResource("1_display")

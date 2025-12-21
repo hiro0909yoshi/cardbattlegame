@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dp6jsk8n4qyef"]
+
+[ext_resource type="Script" path="res://scripts/battle_screen/transition_layer.gd" id="1_transition"]
+
+[node name="TransitionLayer" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_transition")

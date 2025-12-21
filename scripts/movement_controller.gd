@@ -1091,20 +1091,6 @@ func _apply_dice_condition_effect(creature_data: Dictionary, effect: Dictionary,
 			  " (ダイス: ", dice_value, ")")
 	
 	if stat_changes.has("max_hp"):
-		if not creature_data.has("base_up_hp"):
-			creature_data["base_up_hp"] = 0
-		creature_data["base_up_hp"] += stat_changes["max_hp"]
-		
-		# 現在HPも増加（MHPが増えた分だけ）
-		var base_hp = creature_data.get("hp", 0)
-		var base_up_hp = creature_data["base_up_hp"]
-		var max_hp = base_hp + base_up_hp
-		var current_hp = creature_data.get("current_hp", max_hp)
-		
-		# HP回復（増えたMHP分）
-		var new_hp = min(current_hp + stat_changes["max_hp"], max_hp)
-		creature_data["current_hp"] = new_hp
-		
+		EffectManager.apply_max_hp_effect(creature_data, stat_changes["max_hp"])
 		print("[Dice Buff] ", creature_data.get("name", ""), " MHP+", stat_changes["max_hp"],
-			  " HP: ", current_hp, " → ", new_hp, " / ", max_hp,
 			  " (ダイス: ", dice_value, ")")

@@ -268,6 +268,10 @@ func _on_item_phase_completed():
 		if defender_owner >= 0:
 			is_waiting_for_defender_item = true
 			
+			# 🎬 防御側を強調表示に切り替え
+			if game_flow_manager and game_flow_manager.battle_status_overlay:
+				game_flow_manager.battle_status_overlay.highlight_side("defender")
+			
 			# 防御側のアイテムフェーズ開始
 			if game_flow_manager and game_flow_manager.item_phase_handler:
 				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
@@ -315,6 +319,10 @@ func _execute_pending_battle():
 		print("[TileActionProcessor] エラー: バトル情報が保存されていません")
 		_complete_action()
 		return
+	
+	# 🎬 バトルステータスオーバーレイを非表示
+	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		game_flow_manager.battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
 	
@@ -535,6 +543,12 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	card_system.use_card_for_player(current_player_index, card_index)
 	player_system.add_magic(current_player_index, -cost)
 	print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
+	
+	# 🎬 バトルステータスオーバーレイ表示（アイテムフェーズ中）
+	var defender_creature = pending_battle_tile_info.get("creature", {})
+	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		game_flow_manager.battle_status_overlay.show_battle_status(
+			pending_battle_card_data, defender_creature, "attacker")
 	
 	# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
 	if game_flow_manager and game_flow_manager.item_phase_handler:

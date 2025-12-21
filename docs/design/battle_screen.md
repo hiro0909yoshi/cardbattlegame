@@ -23,9 +23,6 @@
 │  │  AP ██████████ 30                │  AP ██████████ 25   │       │
 │  └───────────────────┘              └───────────────────┘       │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │ [アイテム表示エリア]                                      │    │
-│  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -40,25 +37,22 @@ CanvasLayer (layer = 110) - TransitionLayer（最前面）
 
 CanvasLayer (layer = 90) - BattleScreenLayer  
 └── BattleScreen (メインコンテナ)
-    ├── Background (背景)
-    ├── AttackerSide (左・侵略側)
-    │   ├── SkillLabel (スキル名表示)
-    │   ├── CardDisplay (カード表示)
-    │   ├── NameLabel (クリーチャー名)
-    │   ├── HPBar (複合バー)
-    │   ├── APBar + APLabel
-    │   └── DamagePopup (ダメージ数字)
-    ├── CenterArea (中央)
-    │   └── VSLabel
-    ├── DefenderSide (右・防衛側)
-    │   ├── SkillLabel
-    │   ├── CardDisplay
-    │   ├── NameLabel
-    │   ├── HPBar (複合バー)
-    │   ├── APBar + APLabel
-    │   └── DamagePopup
-    ├── ItemDisplay (使用アイテム表示)
-    └── EffectLayer (エフェクト用)
+	├── Background (背景)
+	├── AttackerSide (左・侵略側)
+	│   ├── SkillLabel (スキル名表示)
+	│   ├── CardDisplay (カード表示)
+	│   ├── HPBar (複合バー)
+	│   ├── APBar + APLabel
+	│   └── DamagePopup (ダメージ数字)
+	├── CenterArea (中央)
+	│   └── VSLabel
+	├── DefenderSide (右・防衛側)
+	│   ├── SkillLabel
+	│   ├── CardDisplay
+	│   ├── HPBar (複合バー)
+	│   ├── APBar + APLabel
+	│   └── DamagePopup
+	└── EffectLayer (エフェクト用)
 ```
 
 ## 画面遷移
@@ -99,7 +93,6 @@ CanvasLayer (layer = 90) - BattleScreenLayer
 
 ### 2. アイテム使用フェーズ（該当時のみ）
 ```
-- アイテムカードを画面下部に表示
 - アイテム効果発動アニメーション
 - HP/APバーを更新:
   - アイテムボーナスHP: 緑セグメントに加算（表示上）
@@ -219,26 +212,26 @@ HPバー構造（左から右）:
 ```gdscript
 # HPバーに渡すデータ（BattleParticipantから取得）
 var hp_data = {
-    # 緑セグメント: base_hp + base_up_hp + item_bonus_hp（表示上）
-    "base_hp": 40,              # クリーチャーの基礎HP
-    "base_up_hp": 10,           # 永続的なHP上昇（レベルアップ等）
-    "item_bonus_hp": 10,        # アイテムによるHP上昇（表示上は緑に含める）
-    # → MHP = 40 + 10 + 10 = 60
-    
-    # バフ（水色）: 感応 + 一時 + スペル
-    "resonance_bonus_hp": 5,    # 感応スキルによるボーナス
-    "temporary_bonus_hp": 0,    # 一時的なHP上昇
-    "spell_bonus_hp": 5,        # スペルによるHP上昇
-    # → バフ合計 = 10
-    
-    # 土地ボーナス（黄）: 防御側のみ、最初に消費
-    "land_bonus_hp": 20,        # 土地レベルに応じたボーナス
-    
-    # 現在HP（ダメージを受けると減少）
-    "current_hp": 90,           # 現在の実HP値
-    
-    # 表示用最大値
-    "display_max": 100          # バー全体幅の基準値
+	# 緑セグメント: base_hp + base_up_hp + item_bonus_hp（表示上）
+	"base_hp": 40,              # クリーチャーの基礎HP
+	"base_up_hp": 10,           # 永続的なHP上昇（レベルアップ等）
+	"item_bonus_hp": 10,        # アイテムによるHP上昇（表示上は緑に含める）
+	# → MHP = 40 + 10 + 10 = 60
+	
+	# バフ（水色）: 感応 + 一時 + スペル
+	"resonance_bonus_hp": 5,    # 感応スキルによるボーナス
+	"temporary_bonus_hp": 0,    # 一時的なHP上昇
+	"spell_bonus_hp": 5,        # スペルによるHP上昇
+	# → バフ合計 = 10
+	
+	# 土地ボーナス（黄）: 防御側のみ、最初に消費
+	"land_bonus_hp": 20,        # 土地レベルに応じたボーナス
+	
+	# 現在HP（ダメージを受けると減少）
+	"current_hp": 90,           # 現在の実HP値
+	
+	# 表示用最大値
+	"display_max": 100          # バー全体幅の基準値
 }
 
 # 合計HP = MHP(60) + バフ(10) + 土地(20) = 90
@@ -327,34 +320,34 @@ signal attack_animation_completed
 signal battle_screen_closed
 
 func start_battle(attacker_data, defender_data, item_data = null):
-    # トランジション → バトル画面表示 → イントロ演出
-    pass
+	# トランジション → バトル画面表示 → イントロ演出
+	pass
 
 func show_skill_activation(side: String, skill_name: String, effects: Dictionary):
-    # スキル発動演出
-    # side: "attacker" or "defender"
-    # effects: {hp_change, ap_change, etc}
-    pass
+	# スキル発動演出
+	# side: "attacker" or "defender"
+	# effects: {hp_change, ap_change, etc}
+	pass
 
 func show_attack(attacker_side: String, damage: int):
-    # 攻撃演出
-    pass
+	# 攻撃演出
+	pass
 
 func show_damage(side: String, amount: int):
-    # ダメージ表示
-    pass
+	# ダメージ表示
+	pass
 
 func update_hp(side: String, current: int, max: int):
-    # HPバー更新
-    pass
+	# HPバー更新
+	pass
 
 func update_ap(side: String, value: int):
-    # APバー更新
-    pass
+	# APバー更新
+	pass
 
 func end_battle(result: int):
-    # 結果表示 → トランジション → 閉じる
-    pass
+	# 結果表示 → トランジション → 閉じる
+	pass
 ```
 
 ### 呼び出し例（battle_system.gdから）

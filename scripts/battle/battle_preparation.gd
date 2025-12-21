@@ -139,48 +139,18 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	_apply_ap_drain_ability(attacker, defender)
 	_apply_ap_drain_ability(defender, attacker)
 	
-	# アイテムクリーチャー・バフ処理
-	# リビングアーマー（ID: 438）: クリーチャーとして戦闘時AP+50
-	var attacker_id = attacker.creature_data.get("id", -1)
-	var defender_id = defender.creature_data.get("id", -1)
+	# ブルガサリ（ID: 339）: アイテム使用時AP+20（skill_permanent_buff.gdで処理）
+	SkillPermanentBuff.apply_bulgasari_battle_bonus(
+		attacker, 
+		not attacker_item.is_empty(), 
+		not defender_item.is_empty()
+	)
+	SkillPermanentBuff.apply_bulgasari_battle_bonus(
+		defender, 
+		not defender_item.is_empty(), 
+		not attacker_item.is_empty()
+	)
 	
-	if attacker_id == 438:
-		attacker.temporary_bonus_ap += 50
-		print("[リビングアーマー] クリーチャーとして戦闘 AP+50")
-	
-	if defender_id == 438:
-		defender.temporary_bonus_ap += 50
-		print("[リビングアーマー] クリーチャーとして戦闘 AP+50")
-	
-	# ブルガサリ（ID: 339）: アイテム使用時AP+20
-	if attacker_id == 339:
-		if not attacker_item.is_empty():
-			attacker.temporary_bonus_ap += 20
-			print("[ブルガサリ] 自分がアイテム使用 AP+20")
-		if not defender_item.is_empty():
-			# 敵がアイテムを使用したフラグを設定（永続バフは後で）
-			attacker.enemy_used_item = true
-	
-	if defender_id == 339:
-		if not defender_item.is_empty():
-			defender.temporary_bonus_ap += 20
-			print("[ブルガサリ] 自分がアイテム使用 AP+20")
-		if not attacker_item.is_empty():
-			# 敵がアイテムを使用したフラグを設定（永続バフは後で）
-			defender.enemy_used_item = true
-	
-	# オーガロード（ID: 407）: オーガ配置時能力値上昇
-	if attacker_id == 407:
-		SkillSpecialCreatureScript.apply_ogre_lord_bonus(attacker, attacker_index, board_system_ref)
-	
-	if defender_id == 407:
-		SkillSpecialCreatureScript.apply_ogre_lord_bonus(defender, defender_owner, board_system_ref)
-	
-	# アイテムクリーチャー効果適用後、current_apを再計算
-	if attacker_id == 438 or attacker_id == 339 or attacker_id == 407:
-		attacker.current_ap = attacker.creature_data.get("ap", 0) + attacker.base_up_ap + attacker.temporary_bonus_ap + attacker.item_bonus_ap
-	if defender_id == 438 or defender_id == 339 or defender_id == 407:
-		defender.current_ap = defender.creature_data.get("ap", 0) + defender.base_up_ap + defender.temporary_bonus_ap + defender.item_bonus_ap
 	
 	# ランダムステータス効果を適用（スペクター用）
 	SkillSpecialCreatureScript.apply_random_stat_effects(attacker)

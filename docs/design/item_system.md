@@ -407,11 +407,11 @@ elif stat == "hp":
 	participant.creature_data["mhp"] = fixed_value
 	participant.creature_data["hp"] = fixed_value
 	participant.base_hp = fixed_value
-	participant.update_current_hp()
+	# current_hp は状態値のため、update_current_hp() は呼ばない
 	
 	# 3. 復元：元のbase_up_hpを戻す
 	participant.base_up_hp = saved_base_up_hp
-	participant.update_current_hp()
+	# current_hp は状態値のため、update_current_hp() は呼ばない
 	
 	print("  [固定値] HP=", fixed_value, " (base_up_hp復元: +", saved_base_up_hp, ")")
 ```

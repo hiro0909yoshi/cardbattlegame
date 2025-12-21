@@ -353,7 +353,7 @@ for tile_index in tile_data_manager.tile_nodes:
 		count += 1
 ```
 **使用箇所**: 1箇所
-- battle_preparation.gd: `_apply_ogre_lord_bonus()` (オーガロード)
+- battle_skill_processor.gd: オーガロード処理
 
 **対象クリーチャー**:
 - オーガロード (407): オーガ種族カウント
@@ -630,7 +630,7 @@ var assist_base_up_hp = item_data.get("base_up_hp", 0)
 var assist_mhp = assist_base_hp + assist_base_up_hp
 ```
 **使用箇所**: 1箇所
-- battle_preparation.gd: ブラッドプリン専用
+- skill_assist.gd: ブラッドプリン専用
 
 **対象クリーチャー**:
 - ブラッドプリン (137): 援護MHP吸収
@@ -755,11 +755,11 @@ if attacker.enemy_used_item:
 	# 永続バフ適用
 ```
 **使用箇所**: 2箇所
-- battle_preparation.gd: ブルガサリ専用
+- skill_permanent_buff.gd: ブルガサリ専用
 - battle_system.gd: 永続バフ適用
 
 **対象クリーチャー**:
-- ブルガサリ (339): 敵アイテム使用で永続AP+10
+- ブルガサリ (339): 敵アイテム使用で永続MHP+10
 
 ---
 
@@ -839,7 +839,7 @@ var dice_value = context.get("dice_value", -1)
 if dice_value <= 3:
 ```
 **使用箇所**: 1箇所
-- battle_preparation.gd: ドゥームデボラー専用（未完全実装）
+- movement_controller.gd: ドゥームデボラー専用
 
 **対象クリーチャー**:
 - ドゥームデボラー (23): ダイス3以下でAP&MHP+10

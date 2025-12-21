@@ -92,6 +92,13 @@ func update_current_ap():
 	var base_ap = creature_data.get("ap", 0)
 	current_ap = base_ap + base_up_ap + temporary_bonus_ap + item_bonus_ap
 
+# base_up_hpを増加し、current_hpも同時に更新
+func add_base_up_hp(value: int) -> void:
+	base_up_hp += value
+	current_hp += value
+	# creature_dataにも反映（戦闘後の永続化用）
+	creature_data["base_up_hp"] = base_up_hp
+
 # ダメージを受ける（消費順序に従う）
 func take_damage(damage: int) -> Dictionary:
 	# 敵から攻撃を受けたフラグを設定（バイロマンサー用）

@@ -91,9 +91,9 @@ static func apply_as_creature(participant, board_system) -> void:
 	
 	match creature_id:
 		LIVING_ARMOR_ID:
-			# リビングアーマー: クリーチャー時AP+50
-			participant.base_up_ap += 50
-			participant.current_ap += 50
+			# リビングアーマー: クリーチャー時AP+50（一時的バフ）
+			participant.temporary_bonus_ap += 50
+			participant.update_current_ap()
 			print("【リビングアーマー】クリーチャー戦闘時 AP+50")
 		
 		LIVING_CLOVE_ID:

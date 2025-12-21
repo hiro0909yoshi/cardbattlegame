@@ -183,7 +183,7 @@ if card.type == "creature":
 
 ## 関連ファイル
 
-- `scripts/battle/battle_preparation.gd` - 戦闘準備（リビングアーマーAP+50）
+- `scripts/battle/skills/skill_item_creature.gd` - アイテムクリーチャースキル処理（リビングアーマーAP+50）
 - `scripts/battle/battle_item_applier.gd` - アイテム効果適用
 - `scripts/battle/battle_skill_processor.gd` - スキル効果処理（other_element_count等）
 - `scripts/ui_components/card_selection_ui.gd` - カード選択UI

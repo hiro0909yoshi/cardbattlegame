@@ -45,10 +45,8 @@ static func apply_on_destroy_buffs(participant: BattleParticipant) -> void:
 					print("[永続バフ] ", participant.creature_data.get("name", ""), " AP+", value)
 				
 				elif stat == "max_hp":
-					# BattleParticipantのプロパティに保存（参照汚染を防ぐ）
 					var old_base_up_hp = participant.base_up_hp
-					participant.base_up_hp += value
-					participant.current_hp += value  # MHPが増えたら現在HPも増やす
+					participant.add_base_up_hp(value)
 					print("[永続バフ] ", participant.creature_data.get("name", ""), " MHP+", value)
 					print("  base_up_hp: ", old_base_up_hp, " → ", participant.base_up_hp)
 
@@ -98,8 +96,8 @@ static func _apply_bairomancer_effect(participant: BattleParticipant, creature_i
 			participant.creature_data["ap"] = 20  # 基礎APを20に上書き
 			participant.base_up_ap = 0  # BattleParticipantのプロパティをリセット
 			
-			# BattleParticipantのプロパティから30減少
-			participant.base_up_hp -= 30
+			# MHP-30（current_hpも減少）
+			participant.add_base_up_hp(-30)
 			
 			# 発動フラグを設定
 			participant.creature_data["bairomancer_triggered"] = true
@@ -114,8 +112,7 @@ static func _apply_bulgasari_effect(participant: BattleParticipant, creature_id:
 		return
 	
 	if participant.enemy_used_item and participant.is_alive():
-		# BattleParticipantのプロパティに保存
-		participant.base_up_hp += 10
+		participant.add_base_up_hp(10)
 		print("[ブルガサリ発動] 敵のアイテム使用後 MHP+10 (合計MHP:", participant.creature_data.get("hp", 0) + participant.base_up_hp, ")")
 
 ## 汎用永続変化処理（after_battle_permanent_change効果タイプ）
@@ -151,18 +148,19 @@ static func _apply_ap_change(participant: BattleParticipant, value: int) -> void
 ## MHP変化を適用（下限0チェック付き）
 static func _apply_mhp_change(participant: BattleParticipant, value: int) -> void:
 	# 下限チェック: MHP（hp + base_up_hp）が0未満にならないようにする
+	var base_hp = participant.creature_data.get("hp", 0)
 	var new_base_up_hp = participant.base_up_hp + value
-	var new_total_hp = participant.creature_data.get("hp", 0) + new_base_up_hp
+	var new_total_hp = base_hp + new_base_up_hp
 	
+	var actual_value = value
 	if new_total_hp < 0:
-		# 合計MHPが0になるように調整
-		new_base_up_hp = -participant.creature_data.get("hp", 0)
+		# 合計MHPが0になるように調整（base_up_hp = -base_hp にする）
+		actual_value = -base_hp - participant.base_up_hp
 		print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", value, " → 下限0に制限")
 	
-	# creature_dataとBattleParticipantの両方に保存（AP処理と統一）
-	participant.creature_data["base_up_hp"] = new_base_up_hp
-	participant.base_up_hp = new_base_up_hp
-	print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", "+" if value >= 0 else "", value, " (合計MHP:", participant.creature_data.get("hp", 0) + new_base_up_hp, ")")
+	# add_base_up_hpで統一（current_hpとcreature_dataも更新される）
+	participant.add_base_up_hp(actual_value)
+	print("[永続変化] ", participant.creature_data.get("name", ""), " MHP", "+" if value >= 0 else "", value, " (合計MHP:", base_hp + participant.base_up_hp, ")")
 
 ## スペクター (ID: 321) - 戦闘後にランダムステータスをリセット
 static func _apply_specter_reset(participant: BattleParticipant, creature_id: int, effects: Array) -> void:
@@ -186,3 +184,27 @@ static func _apply_specter_reset(participant: BattleParticipant, creature_id: in
 		participant.creature_data["ap"] = original_ap
 		
 		print("[ランダムステータスリセット] スペクターの能力値を初期値に戻しました (AP:", original_ap, ", HP:", original_hp, ")")
+
+# ========================================
+# 戦闘時の一時的効果
+# ========================================
+
+## ブルガサリ (ID: 339) - 自分がアイテム使用時AP+20
+## battle_preparation.gdから呼び出される（アイテム適用後に実行する必要があるため）
+## @param participant: BattleParticipant
+## @param used_item: 自分がアイテムを使用したか
+## @param enemy_used_item: 相手がアイテムを使用したか
+static func apply_bulgasari_battle_bonus(participant: BattleParticipant, used_item: bool, enemy_used_item: bool) -> void:
+	var creature_id = participant.creature_data.get("id", -1)
+	if creature_id != 339:
+		return
+	
+	# 自分がアイテム使用時 AP+20
+	if used_item:
+		participant.temporary_bonus_ap += 20
+		participant.update_current_ap()
+		print("[ブルガサリ] 自分がアイテム使用 AP+20")
+	
+	# 敵がアイテムを使用したフラグを設定（永続バフは戦闘後に処理）
+	if enemy_used_item:
+		participant.enemy_used_item = true

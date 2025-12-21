@@ -15,6 +15,7 @@ const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.
 const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike.gd")
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
+const SpecialCreatureSkill = preload("res://scripts/battle/skills/skill_special_creature.gd")
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
 var board_system_ref = null
@@ -126,6 +127,12 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# リビングクローブをアイテムとして使用した場合（フラグで判定）
 	elif participant.creature_data.get("has_living_clove_effect", false):
 		SkillItemCreature.apply_living_clove_stat(participant, board_system_ref)
+	
+	# 0.1. オーガロード（ID: 407）: オーガ配置時能力値上昇
+	var creature_id = participant.creature_data.get("id", -1)
+	if creature_id == 407:
+		var ogre_player_id = context.get("player_id", 0)
+		SpecialCreatureSkill.apply_ogre_lord_bonus(participant, ogre_player_id, board_system_ref)
 	
 	# 0.5. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)

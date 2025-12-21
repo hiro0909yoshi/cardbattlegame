@@ -35,6 +35,9 @@ var battle_special_effects: BattleSpecialEffects
 var spell_draw = null
 var spell_magic = null
 
+# バトル画面マネージャー
+var battle_screen_manager: BattleScreenManager = null
+
 func _ready():
 	# サブシステムを初期化
 	battle_preparation = BattlePreparation.new()
@@ -65,10 +68,13 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 			spell_draw = game_flow_manager_ref.spell_draw
 		if game_flow_manager_ref.spell_magic:
 			spell_magic = game_flow_manager_ref.spell_magic
+		# バトル画面マネージャーの参照を取得
+		if game_flow_manager_ref.battle_screen_manager:
+			battle_screen_manager = game_flow_manager_ref.battle_screen_manager
 	
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
-	battle_execution.setup_systems(card_system)  # 追加: CardSystemの参照を渡す
+	battle_execution.setup_systems(card_system, battle_screen_manager)
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
 	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system)
 	
@@ -150,6 +156,12 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var defender = participants["defender"]
 	var battle_result = participants.get("transform_result", {})
 	
+	# 🎬 バトル画面を開始（準備完了後）
+	if battle_screen_manager:
+		var attacker_screen_data = _create_screen_data(attacker)
+		var defender_screen_data = _create_screen_data(defender)
+		await battle_screen_manager.start_battle(attacker_screen_data, defender_screen_data)
+	
 	print("侵略側: ", attacker.creature_data.get("name", "?"), " [", attacker.creature_data.get("element", "?"), "]")
 	print("  基本HP:", attacker.base_hp, " + 土地ボーナス:", attacker.land_bonus_hp, " = MHP:", attacker.current_hp)
 	var attacker_speed = "アイテム先制" if attacker.has_item_first_strike else ("後手" if attacker.has_last_strike else ("先制" if attacker.has_first_strike else "通常"))
@@ -180,7 +192,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	print("\n【攻撃順】", order_str)
 	
 	# 4. 攻撃シーケンス実行（戦闘結果情報を取得）
-	var attack_result = battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
+	var attack_result = await battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
 	# 戦闘結果を統合（空でない値のみマージ）
 	for key in attack_result.keys():
 		var value = attack_result[key]
@@ -198,8 +210,17 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 		else:
 			battle_result[key] = value
 	
+	# 🎬 バトル画面でHP更新演出（攻撃シーケンス後）
+	if battle_screen_manager:
+		await battle_screen_manager.update_hp("attacker", _create_screen_data(attacker))
+		await battle_screen_manager.update_hp("defender", _create_screen_data(defender))
+	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)
+	
+	# 🎬 バトル画面で結果表示
+	if battle_screen_manager:
+		await battle_screen_manager.end_battle(result)
 	
 	# 6. 結果に応じた処理（死者復活情報も渡す）
 	await _apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
@@ -321,6 +342,20 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 	emit_signal("invasion_completed", invasion_success, tile_index)
 	
 	return true
+
+# バトル画面用データ作成
+func _create_screen_data(participant: BattleParticipant) -> Dictionary:
+	var data = participant.creature_data.duplicate()
+	data["base_hp"] = participant.base_hp
+	data["base_up_hp"] = participant.base_up_hp
+	data["item_bonus_hp"] = participant.item_bonus_hp
+	data["resonance_bonus_hp"] = participant.resonance_bonus_hp
+	data["temporary_bonus_hp"] = participant.temporary_bonus_hp
+	data["spell_bonus_hp"] = participant.spell_bonus_hp
+	data["land_bonus_hp"] = participant.land_bonus_hp
+	data["current_hp"] = participant.current_hp
+	data["current_ap"] = participant.current_ap
+	return data
 
 # システム検証
 func validate_systems() -> bool:

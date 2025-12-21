@@ -73,9 +73,7 @@ static func _apply_blood_purin_effect(participant: BattleParticipant, assist_cre
 	var actual_increase = min(assist_mhp, max_increase)
 	
 	if actual_increase > 0:
-		# 永続的にMHPを上昇（creature_dataのみ更新、戦闘中は適用しない）
-		var blood_purin_base_up_hp = participant.creature_data.get("base_up_hp", 0)
-		participant.creature_data["base_up_hp"] = blood_purin_base_up_hp + actual_increase
+		participant.add_base_up_hp(actual_increase)
 		
 		print("【ブラッドプリン効果】援護クリーチャー", assist_creature_data.get("name", "?"), "のMHP", assist_mhp, "を吸収")
 		print("  MHP: ", current_mhp, " → ", current_mhp + actual_increase, " (+", actual_increase, ")")
