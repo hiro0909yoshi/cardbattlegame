@@ -502,6 +502,7 @@
 		"effects": [
 		  {
 			"effect_type": "ap_drain",
+			"trigger": "on_attack_success",
 			"target": "enemy"
 		  }
 		]

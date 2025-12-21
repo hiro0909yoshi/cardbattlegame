@@ -154,7 +154,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var participants = battle_preparation.prepare_participants(attacker_index, card_data, tile_info, attacker_item, defender_item, battle_tile_index)
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
-	var battle_result = participants.get("transform_result", {})
+	var battle_result = {}  # transform_resultはapply_pre_battle_skillsから取得
 	
 	# 🎬 バトル画面を開始（準備完了後）
 	if battle_screen_manager:
@@ -172,8 +172,10 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var defender_speed = "アイテム先制" if defender.has_item_first_strike else ("後手" if defender.has_last_strike else ("先制" if defender.has_first_strike else "通常"))
 	print("  AP:", defender.current_ap, " 攻撃:", defender_speed)
 	
-	# 2. バトル前スキル適用
-	await battle_skill_processor.apply_pre_battle_skills(participants, tile_info, attacker_index)
+	# 2. バトル前スキル適用（クリック後に実行）
+	var skill_result = await battle_skill_processor.apply_pre_battle_skills(participants, tile_info, attacker_index)
+	if skill_result.has("transform_result"):
+		battle_result = skill_result["transform_result"]
 	
 	# スキル適用後の最終ステータス表示
 	print("\n【スキル適用後の最終ステータス】")

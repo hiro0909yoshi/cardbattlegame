@@ -444,7 +444,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							battle_result["defender_original"] = transform_result["defender_original"]
 						print("  【変身発動】防御側が変身しました")
 			
-			# 🔒 攻撃成功時効果（呪い付与、ダウン付与等）
+			# 🔒 攻撃成功時効果（呪い付与、ダウン付与、APドレイン等）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
 			# ブラックナイト等の無効化チェック
 			if defender_p.is_alive() and attacker_p.current_ap > 0:
@@ -458,6 +458,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if battle_tile_index >= 0 and special_effects.board_system_ref:
 						var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
 						SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
+					# APドレイン（敵のAPを永続的に0にする）
+					var drained = _apply_ap_drain_on_attack_success(attacker_p, defender_p)
+					if drained and battle_screen_manager:
+						# スキル所持者側にスキル名表示
+						var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
+						await battle_screen_manager.show_skill_activation(skill_owner_side, "APドレイン", {})
+						# defender_pのAPが0になったので、defender_p側のAPバーを更新
+						var drained_side = "attacker" if defender_p.is_attacker else "defender"
+						await battle_screen_manager.update_ap(drained_side, defender_p.current_ap)
 			
 			# 防御側撃破チェック
 			if not defender_p.is_alive():
@@ -669,3 +678,26 @@ func _build_battle_end_context(special_effects, tile_info: Dictionary) -> Dictio
 			context["game_stats"] = gfm.game_stats
 	
 	return context
+
+
+## APドレイン効果を適用（攻撃成功時）
+func _apply_ap_drain_on_attack_success(attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "ap_drain" and effect.get("trigger", "") == "on_attack_success":
+			var defender_name = defender.creature_data.get("name", "?")
+			var original_ap = defender.current_ap
+			
+			# 戦闘中のAPを0に
+			defender.current_ap = 0
+			
+			# 永続的にAPを0にする
+			defender.creature_data["ap"] = 0
+			defender.creature_data["base_up_ap"] = 0
+			defender.base_up_ap = 0
+			
+			print("  [APドレイン] ", attacker.creature_data.get("name", "?"), " が ", defender_name, " のAPを永続的に0に (元AP: ", original_ap, ")")
+			return true
+	return false

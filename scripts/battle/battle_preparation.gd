@@ -73,10 +73,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	var defender_base_hp = defender_creature.get("hp", 0)
 	var defender_land_bonus = calculate_land_bonus(defender_creature, tile_info)  # 防御側のみボーナス
 	
-	# 貫通スキルチェック：攻撃側が貫通を持つ場合、防御側の土地ボーナスを無効化
-	if PenetrationSkill.check_penetration_condition(card_data, defender_creature):
-		print("【貫通発動】防御側の土地ボーナス ", defender_land_bonus, " を無効化")
-		defender_land_bonus = 0
+	# 貫通スキルチェックはapply_pre_battle_skills()で実行（クリック後）
 	
 	var defender_ap = defender_creature.get("ap", 0)
 	var defender_owner = tile_info.get("owner", -1)
@@ -135,59 +132,18 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 		defender.creature_data["items"].append(defender_item)
 		item_applier.apply_item_effects(defender, defender_item, attacker, battle_tile_index)
 	
-	# クリーチャー能力のAPドレイン効果を適用
-	_apply_ap_drain_ability(attacker, defender)
-	_apply_ap_drain_ability(defender, attacker)
-	
-	# ブルガサリ（ID: 339）: アイテム使用時AP+20（skill_permanent_buff.gdで処理）
-	SkillPermanentBuff.apply_bulgasari_battle_bonus(
-		attacker, 
-		not attacker_item.is_empty(), 
-		not defender_item.is_empty()
-	)
-	SkillPermanentBuff.apply_bulgasari_battle_bonus(
-		defender, 
-		not defender_item.is_empty(), 
-		not attacker_item.is_empty()
-	)
-	
-	
-	# ランダムステータス効果を適用（スペクター用）
-	SkillSpecialCreatureScript.apply_random_stat_effects(attacker)
-	SkillSpecialCreatureScript.apply_random_stat_effects(defender)
-	
-	# 🔄 戦闘開始時の変身処理（アイテム効果適用後）
-	var transform_result = {}
-	
-	# 変身効果があるかチェック
-	var has_transform_effect = _has_transform_effect(attacker, "on_battle_start") or _has_transform_effect(defender, "on_battle_start")
-	
-	if has_transform_effect and card_system_ref:
-		# CardLoaderのグローバル参照を取得
-		# @GlobalScope.CardLoader は Autoload として自動的に利用可能
-		var card_loader_instance = CardLoader if typeof(CardLoader) != TYPE_NIL else null
-		
-		if card_loader_instance != null and card_loader_instance.has_method("get_all_creatures"):
-			print("【変身】CardLoader取得成功、全カード数: ", card_loader_instance.all_cards.size())
-			transform_result = TransformSkill.process_transform_effects(
-				attacker, 
-				defender, 
-				card_loader_instance, 
-				"on_battle_start"
-			)
-		else:
-			print("【警告】CardLoaderが利用できません - 変身処理をスキップ")
-	
-	# 🚫 ウォーロックディスク: apply_pre_battle_skills()の最初で処理するため、ここでは削除
-	
-	# 🎯 戦闘開始時条件チェック（スラッジタイタン、ギガンテリウム等）
-	var battle_start_result = _apply_battle_start_conditions(attacker, defender)
+	# 以下の処理はapply_pre_battle_skills()で実行（クリック後）:
+	# - クリーチャー能力のAPドレイン
+	# - ブルガサリボーナス
+	# - ランダムステータス（スペクター）
+	# - 変身効果
+	# - 戦闘開始時条件
 	
 	return {
 		"attacker": attacker,
 		"defender": defender,
-		"transform_result": transform_result,
-		"battle_start_conditions": battle_start_result
+		"attacker_used_item": not attacker_item.is_empty(),
+		"defender_used_item": not defender_item.is_empty()
 	}
 
 ## 効果配列（permanent_effects, temporary_effects）を適用
@@ -293,13 +249,4 @@ func _apply_battle_start_conditions(attacker: BattleParticipant, defender: Battl
 	
 	return result
 
-
-## クリーチャー能力のAPドレイン効果を適用
-func _apply_ap_drain_ability(participant: BattleParticipant, enemy: BattleParticipant) -> void:
-	var ability_parsed = participant.creature_data.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "ap_drain":
-			# battle_item_applierのap_drain処理を呼び出す
-			item_applier._apply_ap_drain(participant, enemy, effect)
+# APドレイン（クリーチャー能力）は攻撃成功時効果のためbattle_execution.gdで処理
