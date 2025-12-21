@@ -75,7 +75,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
 	battle_execution.setup_systems(card_system, battle_screen_manager)
-	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref)
+	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref, battle_screen_manager)
 	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system)
 	
 	# アイテム復帰スキルの初期化
@@ -173,7 +173,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	print("  AP:", defender.current_ap, " 攻撃:", defender_speed)
 	
 	# 2. バトル前スキル適用
-	battle_skill_processor.apply_pre_battle_skills(participants, tile_info, attacker_index)
+	await battle_skill_processor.apply_pre_battle_skills(participants, tile_info, attacker_index)
 	
 	# スキル適用後の最終ステータス表示
 	print("\n【スキル適用後の最終ステータス】")

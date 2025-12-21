@@ -19,6 +19,28 @@ func setup_systems(card_system, screen_manager = null):
 	card_system_ref = card_system
 	battle_screen_manager = screen_manager
 
+## 攻撃後のHPバー更新
+func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
+	if not battle_screen_manager:
+		return
+	
+	var side = "attacker" if participant.is_attacker else "defender"
+	var hp_data = {
+		"base_hp": participant.base_hp,
+		"base_up_hp": participant.base_up_hp,
+		"item_bonus_hp": participant.item_bonus_hp,
+		"resonance_bonus_hp": participant.resonance_bonus_hp,
+		"temporary_bonus_hp": participant.temporary_bonus_hp,
+		"spell_bonus_hp": participant.spell_bonus_hp,
+		"land_bonus_hp": participant.land_bonus_hp,
+		"current_hp": participant.current_hp,
+		"display_max": participant.base_hp + participant.base_up_hp + \
+					   participant.item_bonus_hp + participant.resonance_bonus_hp + \
+					   participant.temporary_bonus_hp + participant.spell_bonus_hp + \
+					   participant.land_bonus_hp
+	}
+	await battle_screen_manager.update_hp(side, hp_data)
+
 # バトル実行フェーズ処理
 # 攻撃順決定、攻撃シーケンス、結果判定を担当
 
@@ -215,6 +237,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if battle_screen_manager and actual_damage_reduced > 0:
 						var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
 						battle_screen_manager.show_damage(defender_side, actual_damage_reduced)
+						# 🎬 HPバー更新
+						await _update_hp_bar_after_damage(defender_p)
 				
 					# 💰 ダメージ時の魔力獲得・奪取スキル
 					var actual_damage_dealt_reduced = (
@@ -251,6 +275,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						attacker_p.take_damage(reflect_result_reduced["reflect_damage"])
 						print("    - 攻撃側が受けた反射ダメージ: ", reflect_result_reduced["reflect_damage"])
 						print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
+						
+						# 🎬 反射ダメージ後のHPバー更新
+						await _update_hp_bar_after_damage(attacker_p)
 						
 						# 反射ダメージ後の共通処理
 						if process_damage_aftermath(attacker_p, defender_p, special_effects):
@@ -343,6 +370,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			if battle_screen_manager and actual_damage > 0:
 				var defender_side = "defender" if defender_p.is_attacker == false else "attacker"
 				battle_screen_manager.show_damage(defender_side, actual_damage)
+				# 🎬 HPバー更新
+				await _update_hp_bar_after_damage(defender_p)
 			
 			# 💰 ダメージ時の魔力獲得・奪取スキル
 			var actual_damage_dealt = (
@@ -380,6 +409,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				attacker_p.take_damage(reflect_result["reflect_damage"])
 				print("    - 攻撃側が受けた反射ダメージ: ", reflect_result["reflect_damage"])
 				print("    → 攻撃側残HP: ", attacker_p.current_hp, " (現在HP:", attacker_p.current_hp, ")")
+				
+				# 🎬 反射ダメージ後のHPバー更新
+				await _update_hp_bar_after_damage(attacker_p)
 				
 				# 反射ダメージ後の共通処理
 				if process_damage_aftermath(attacker_p, defender_p, special_effects):

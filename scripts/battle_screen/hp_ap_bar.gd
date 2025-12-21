@@ -12,12 +12,12 @@ const COLOR_GRAY = Color("#424242")       # 灰: 空
 const COLOR_RED = Color("#F44336")        # 赤: ダメージ演出
 const COLOR_BLUE = Color("#2196F3")       # 青: APバー
 
-# バーサイズ
-const HP_BAR_WIDTH = 200.0
-const HP_BAR_HEIGHT = 24.0
-const AP_BAR_WIDTH = 200.0
-const AP_BAR_HEIGHT = 16.0
-const BAR_SPACING = 4.0
+# バーサイズ（4倍 × 1.3 = 5.2倍）
+const HP_BAR_WIDTH = 1040.0
+const HP_BAR_HEIGHT = 125.0
+const AP_BAR_WIDTH = 1040.0
+const AP_BAR_HEIGHT = 83.0
+const BAR_SPACING = 21.0
 
 # HPデータ
 var hp_data := {
@@ -37,7 +37,7 @@ var current_ap := 0
 var max_ap := 100
 
 # 内部状態
-var _displayed_hp := 0.0  # アニメーション用
+
 var _damage_flash_amount := 0.0
 
 # ノード参照
@@ -52,28 +52,28 @@ func _ready() -> void:
 
 
 func _setup_labels() -> void:
-	# HPラベル
+	# HPラベル（フォントサイズ5.2倍）
 	hp_label = Label.new()
 	hp_label.position = Vector2(0, 0)
 	hp_label.size = Vector2(HP_BAR_WIDTH, HP_BAR_HEIGHT)
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_label.add_theme_font_size_override("font_size", 72)
 	hp_label.add_theme_color_override("font_color", Color.WHITE)
 	hp_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	hp_label.add_theme_constant_override("outline_size", 2)
+	hp_label.add_theme_constant_override("outline_size", 10)
 	add_child(hp_label)
 	
-	# APラベル
+	# APラベル（フォントサイズ5.2倍）
 	ap_label = Label.new()
 	ap_label.position = Vector2(0, HP_BAR_HEIGHT + BAR_SPACING)
 	ap_label.size = Vector2(AP_BAR_WIDTH, AP_BAR_HEIGHT)
 	ap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ap_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ap_label.add_theme_font_size_override("font_size", 12)
+	ap_label.add_theme_font_size_override("font_size", 62)
 	ap_label.add_theme_color_override("font_color", Color.WHITE)
 	ap_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	ap_label.add_theme_constant_override("outline_size", 2)
+	ap_label.add_theme_constant_override("outline_size", 10)
 	add_child(ap_label)
 
 
@@ -83,60 +83,45 @@ func _draw() -> void:
 
 
 ## HPバーを描画
+## バトルシステムの実データに従って描画：
+## - バーの最大値は100固定（100以上でもバーは100%で止まる）
+## - 数値ラベルは実際の値を表示
 func _draw_hp_bar() -> void:
 	var bar_rect = Rect2(0, 0, HP_BAR_WIDTH, HP_BAR_HEIGHT)
 	
 	# 背景（灰色）
 	draw_rect(bar_rect, COLOR_GRAY)
 	
-	# 各セグメントの幅を計算
-	var display_max = max(hp_data["display_max"], 1)
-	var green_value = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"]
-	var cyan_value = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
-	var yellow_value = hp_data["land_bonus_hp"]
+	# バーの最大値は100固定
+	const BAR_MAX = 100.0
 	
-	# 現在HPに基づいて表示を調整
-	var current = hp_data["current_hp"]
-	
-	# 消費は右から左（黄→水色→緑の順）
-	# 現在HPから各セグメントの残り量を計算
-	var remaining = current
-	
-	# 黄色セグメント（最初に消費される）- 残りから計算
-	var yellow_remaining = 0
-	if remaining > green_value + cyan_value:
-		yellow_remaining = mini(remaining - green_value - cyan_value, yellow_value)
-	
-	# 水色セグメント
-	var cyan_remaining = 0
-	if remaining > green_value:
-		cyan_remaining = mini(remaining - green_value, cyan_value)
-	
-	# 緑セグメント（最後に消費される）
-	var green_remaining = mini(remaining, green_value)
+	# 各セグメントの現在残り値（実データから直接取得）
+	var green_remaining = hp_data["current_hp"] + hp_data["item_bonus_hp"]
+	var cyan_remaining = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
+	var yellow_remaining = hp_data["land_bonus_hp"]
 	
 	# 描画（左から右: 緑 → 水色 → 黄）
 	var x_offset = 0.0
 	
-	# 緑セグメント
-	if green_value > 0:
-		var green_filled_width = (float(green_remaining) / display_max) * HP_BAR_WIDTH
-		if green_filled_width > 0:
-			draw_rect(Rect2(x_offset, 0, green_filled_width, HP_BAR_HEIGHT), COLOR_GREEN)
-		x_offset += (float(green_value) / display_max) * HP_BAR_WIDTH
+	# 緑セグメント（current_hp + item_bonus_hp）
+	if green_remaining > 0:
+		var green_width = minf((float(green_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
+		if green_width > 0:
+			draw_rect(Rect2(x_offset, 0, green_width, HP_BAR_HEIGHT), COLOR_GREEN)
+		x_offset += green_width
 	
-	# 水色セグメント
-	if cyan_value > 0:
-		var cyan_filled_width = (float(cyan_remaining) / display_max) * HP_BAR_WIDTH
-		if cyan_filled_width > 0:
-			draw_rect(Rect2(x_offset, 0, cyan_filled_width, HP_BAR_HEIGHT), COLOR_CYAN)
-		x_offset += (float(cyan_value) / display_max) * HP_BAR_WIDTH
+	# 水色セグメント（感応 + 一時 + スペル）
+	if cyan_remaining > 0 and x_offset < HP_BAR_WIDTH:
+		var cyan_width = minf((float(cyan_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
+		if cyan_width > 0:
+			draw_rect(Rect2(x_offset, 0, cyan_width, HP_BAR_HEIGHT), COLOR_CYAN)
+		x_offset += cyan_width
 	
-	# 黄色セグメント
-	if yellow_value > 0:
-		var yellow_filled_width = (float(yellow_remaining) / display_max) * HP_BAR_WIDTH
-		if yellow_filled_width > 0:
-			draw_rect(Rect2(x_offset, 0, yellow_filled_width, HP_BAR_HEIGHT), COLOR_YELLOW)
+	# 黄色セグメント（土地ボーナス）
+	if yellow_remaining > 0 and x_offset < HP_BAR_WIDTH:
+		var yellow_width = minf((float(yellow_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
+		if yellow_width > 0:
+			draw_rect(Rect2(x_offset, 0, yellow_width, HP_BAR_HEIGHT), COLOR_YELLOW)
 	
 	# ダメージフラッシュ（赤いオーバーレイ）
 	if _damage_flash_amount > 0:
@@ -144,8 +129,8 @@ func _draw_hp_bar() -> void:
 		flash_color.a = _damage_flash_amount * 0.5
 		draw_rect(bar_rect, flash_color)
 	
-	# 枠線
-	draw_rect(bar_rect, Color.WHITE, false, 2.0)
+	# 枠線（5.2倍の太さ）
+	draw_rect(bar_rect, Color.WHITE, false, 10.0)
 
 
 ## APバーを描画
@@ -156,14 +141,14 @@ func _draw_ap_bar() -> void:
 	# 背景（灰色）
 	draw_rect(bar_rect, COLOR_GRAY)
 	
-	# APバー（単色青）
-	var ap_ratio = float(current_ap) / max(max_ap, 1)
-	var filled_width = ap_ratio * AP_BAR_WIDTH
+	# APバー（単色青）- 最大値は100固定
+	const BAR_MAX = 100.0
+	var filled_width = minf((float(current_ap) / BAR_MAX) * AP_BAR_WIDTH, AP_BAR_WIDTH)
 	if filled_width > 0:
 		draw_rect(Rect2(0, y_offset, filled_width, AP_BAR_HEIGHT), COLOR_BLUE)
 	
-	# 枠線
-	draw_rect(bar_rect, Color.WHITE, false, 2.0)
+	# 枠線（5.2倍の太さ）
+	draw_rect(bar_rect, Color.WHITE, false, 10.0)
 
 
 ## HPデータを設定
@@ -184,10 +169,15 @@ func set_ap(value: int, max_value: int = 100) -> void:
 ## HPラベルを更新
 func _update_hp_label() -> void:
 	if hp_label:
+		# 最大値 = 全セグメントの合計
 		var total = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"] + \
 					hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + \
 					hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
-		hp_label.text = "%d / %d" % [hp_data["current_hp"], total]
+		# 現在値 = current_hp + item_bonus_hp + 全ボーナスの残り
+		var current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
+					  hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + \
+					  hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
+		hp_label.text = "%d / %d" % [current, total]
 
 
 ## APラベルを更新
@@ -196,39 +186,124 @@ func _update_ap_label() -> void:
 		ap_label.text = str(current_ap)
 
 
-## HPをアニメーション付きで更新
-func animate_hp_change(new_hp_data: Dictionary, duration: float = 0.3):
-	var old_current = hp_data["current_hp"]
-	var new_current = new_hp_data["current_hp"]
+## HPをアニメーション付きで更新（全ボーナス値もアニメーション）
+func animate_hp_change(new_hp_data: Dictionary, duration: float = 1.5):
+	var old_hp_data = hp_data.duplicate()
+	var new_hp_data_copy = new_hp_data.duplicate()
+	
+	# 全HP合計の計算（ダメージフラッシュ用）
+	var old_total = _get_total_hp(old_hp_data)
+	var new_total = _get_total_hp(new_hp_data_copy)
 	
 	# ダメージの場合はフラッシュ
-	if new_current < old_current:
+	if new_total < old_total:
 		_damage_flash_amount = 1.0
 		var flash_tween = create_tween()
 		flash_tween.tween_property(self, "_damage_flash_amount", 0.0, 0.2)
 	
-	# HPデータを更新
-	hp_data = new_hp_data.duplicate()
+	# display_maxも更新
+	hp_data["display_max"] = new_hp_data_copy.get("display_max", hp_data.get("display_max", 100))
 	
-	# アニメーション
+	# アニメーション（0.0 → 1.0 の補間値を使用）
 	var tween = create_tween()
-	tween.tween_method(_update_displayed_hp, float(old_current), float(new_current), duration)
+	tween.tween_method(func(t: float): _interpolate_hp_data(old_hp_data, new_hp_data_copy, t), 0.0, 1.0, duration)
 	await tween.finished
 	
+	# 最終値を確定
+	hp_data = new_hp_data_copy.duplicate()
 	_update_hp_label()
 	queue_redraw()
 
 
-func _update_displayed_hp(value: float) -> void:
-	_displayed_hp = value
-	hp_data["current_hp"] = int(value)
+## HP値を補間（右から順に消費：黄色→水色→緑）
+func _interpolate_hp_data(old_data: Dictionary, new_data: Dictionary, t: float) -> void:
+	# 各セグメントの元の値
+	var old_yellow = old_data["land_bonus_hp"]
+	var old_cyan = old_data["resonance_bonus_hp"] + old_data["temporary_bonus_hp"] + old_data["spell_bonus_hp"]
+	var old_green = old_data["current_hp"] + old_data["item_bonus_hp"]
+	
+	# 各セグメントの最終値
+	var new_yellow = new_data["land_bonus_hp"]
+	var new_cyan = new_data["resonance_bonus_hp"] + new_data["temporary_bonus_hp"] + new_data["spell_bonus_hp"]
+	var new_green = new_data["current_hp"] + new_data["item_bonus_hp"]
+	
+	# 総ダメージ量
+	var old_total = old_yellow + old_cyan + old_green
+	var new_total = new_yellow + new_cyan + new_green
+	var total_damage = old_total - new_total
+	
+	if total_damage <= 0:
+		# ダメージではなく回復の場合は単純補間
+		hp_data["land_bonus_hp"] = int(lerp(float(old_yellow), float(new_yellow), t))
+		var cyan_ratio = old_cyan / max(old_cyan, 1) if old_cyan > 0 else 0.0
+		hp_data["resonance_bonus_hp"] = int(lerp(float(old_data["resonance_bonus_hp"]), float(new_data["resonance_bonus_hp"]), t))
+		hp_data["temporary_bonus_hp"] = int(lerp(float(old_data["temporary_bonus_hp"]), float(new_data["temporary_bonus_hp"]), t))
+		hp_data["spell_bonus_hp"] = int(lerp(float(old_data["spell_bonus_hp"]), float(new_data["spell_bonus_hp"]), t))
+		hp_data["current_hp"] = int(lerp(float(old_data["current_hp"]), float(new_data["current_hp"]), t))
+		hp_data["item_bonus_hp"] = int(lerp(float(old_data["item_bonus_hp"]), float(new_data["item_bonus_hp"]), t))
+	else:
+		# ダメージの場合：右から順に削る
+		var damage_applied = int(total_damage * t)
+		var remaining_damage = damage_applied
+		
+		# 1. 黄色（土地ボーナス）から削る
+		var yellow_damage = mini(remaining_damage, old_yellow)
+		var current_yellow = old_yellow - yellow_damage
+		remaining_damage -= yellow_damage
+		
+		# 2. 水色（感応+一時+スペル）から削る
+		var cyan_damage = mini(remaining_damage, old_cyan)
+		var current_cyan = old_cyan - cyan_damage
+		remaining_damage -= cyan_damage
+		
+		# 3. 緑（current_hp + item_bonus_hp）から削る
+		var green_damage = mini(remaining_damage, old_green)
+		var current_green = old_green - green_damage
+		
+		# 値を設定
+		hp_data["land_bonus_hp"] = current_yellow
+		
+		# 水色セグメントの内訳を比率で分配
+		if old_cyan > 0:
+			var cyan_ratio = float(current_cyan) / float(old_cyan)
+			hp_data["resonance_bonus_hp"] = int(old_data["resonance_bonus_hp"] * cyan_ratio)
+			hp_data["temporary_bonus_hp"] = int(old_data["temporary_bonus_hp"] * cyan_ratio)
+			hp_data["spell_bonus_hp"] = int(old_data["spell_bonus_hp"] * cyan_ratio)
+		else:
+			hp_data["resonance_bonus_hp"] = 0
+			hp_data["temporary_bonus_hp"] = 0
+			hp_data["spell_bonus_hp"] = 0
+		
+		# 緑セグメントの内訳を比率で分配
+		if old_green > 0:
+			var green_ratio = float(current_green) / float(old_green)
+			hp_data["current_hp"] = int(old_data["current_hp"] * green_ratio)
+			hp_data["item_bonus_hp"] = int(old_data["item_bonus_hp"] * green_ratio)
+		else:
+			hp_data["current_hp"] = 0
+			hp_data["item_bonus_hp"] = 0
+	
 	_update_hp_label()
 	queue_redraw()
+
+
+## 全HP合計を取得
+func _get_total_hp(data: Dictionary) -> int:
+	return data.get("current_hp", 0) + data.get("item_bonus_hp", 0) + \
+		   data.get("resonance_bonus_hp", 0) + data.get("temporary_bonus_hp", 0) + \
+		   data.get("spell_bonus_hp", 0) + data.get("land_bonus_hp", 0)
 
 
 ## APをアニメーション付きで更新
-func animate_ap_change(new_ap: int, duration: float = 0.3) -> void:
+func animate_ap_change(new_ap: int, duration: float = 1.5):
+	var old_ap = current_ap
 	var tween = create_tween()
-	tween.tween_property(self, "current_ap", new_ap, duration)
-	tween.tween_callback(_update_ap_label)
-	tween.tween_callback(queue_redraw)
+	tween.tween_method(func(value: float): _update_displayed_ap(int(value)), float(old_ap), float(new_ap), duration)
+	await tween.finished
+
+
+## AP表示を更新（アニメーション用）
+func _update_displayed_ap(value: int) -> void:
+	current_ap = value
+	_update_ap_label()
+	queue_redraw()

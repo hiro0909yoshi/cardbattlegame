@@ -55,12 +55,17 @@ func show_skill_activation(side: String, skill_name: String, effects: Dictionary
 	
 	await _battle_screen.show_skill_activation(side, skill_name)
 	
-	# HP/AP変更があれば適用
-	if effects.has("hp_data"):
-		await _battle_screen.show_hp_change(side, effects["hp_data"])
-	
-	if effects.has("ap"):
+	# HP/AP変更があれば適用（同時開始、完了を待つ）
+	if effects.has("hp_data") and effects.has("ap"):
+		# 両方同時に開始
+		_battle_screen.show_hp_change(side, effects["hp_data"])
 		_battle_screen.show_ap_change(side, effects["ap"])
+		# アニメーション時間分待つ
+		await _battle_screen.get_tree().create_timer(1.5).timeout
+	elif effects.has("hp_data"):
+		await _battle_screen.show_hp_change(side, effects["hp_data"])
+	elif effects.has("ap"):
+		await _battle_screen.show_ap_change(side, effects["ap"])
 	
 	# バフ表示
 	if effects.has("buff_text"):
@@ -95,11 +100,11 @@ func update_hp(side: String, hp_data: Dictionary):
 
 
 ## AP更新
-func update_ap(side: String, value: int) -> void:
+func update_ap(side: String, value: int):
 	if not _battle_screen:
 		return
 	
-	_battle_screen.show_ap_change(side, value)
+	await _battle_screen.show_ap_change(side, value)
 
 
 ## バトル終了

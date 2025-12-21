@@ -761,6 +761,10 @@ func _on_item_creature_panel_confirmed(card_data: Dictionary):
 	var card_index = card_data.get("hand_index", pending_card_index)
 	pending_card_index = -1
 	
+	# 情報パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
+		ui_manager_ref.creature_info_panel_ui.hide_panel()
+	
 	_confirm_card_selection(card_index)
 
 

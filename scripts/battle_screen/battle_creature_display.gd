@@ -7,7 +7,9 @@ extends Control
 signal attack_animation_completed
 signal damage_animation_completed
 
-const CARD_SIZE = Vector2(180, 250)
+const CARD_SCENE_PATH = "res://scenes/Card.tscn"
+const CARD_DISPLAY_SIZE = Vector2(220, 293)  # Card.tscnの元サイズ
+const CARD_SCALE = 3.9  # バトル画面での表示スケール（3.0 * 1.3）
 const ATTACK_MOVE_DISTANCE = 80.0
 const SHAKE_AMOUNT = 10.0
 
@@ -15,75 +17,97 @@ var creature_data: Dictionary = {}
 var is_attacker: bool = true
 
 # 子ノード
-var _card_display: Control
+var _card_container: Control
+var _card_instance: Control  # Card.tscnのインスタンス
 var _hp_ap_bar: HpApBar
 var _skill_label: SkillLabel
-var _card_texture: TextureRect
 var _original_position: Vector2
+
+# カードシーン（プリロード）
+var _card_scene: PackedScene
 
 
 func _ready() -> void:
+	_card_scene = load(CARD_SCENE_PATH)
 	_setup_ui()
 
 
 func _setup_ui() -> void:
-	# カード表示エリア
-	_card_display = Control.new()
-	_card_display.custom_minimum_size = CARD_SIZE
-	add_child(_card_display)
+	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
 	
-	# カード画像
-	_card_texture = TextureRect.new()
-	_card_texture.custom_minimum_size = CARD_SIZE
-	_card_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_card_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_card_display.add_child(_card_texture)
+	# カード表示コンテナ
+	_card_container = Control.new()
+	_card_container.custom_minimum_size = scaled_size
+	add_child(_card_container)
 	
 	# スキルラベル（カード上部）
 	_skill_label = SkillLabel.new()
-	_skill_label.position = Vector2((CARD_SIZE.x - 180) / 2, -40)
+	_skill_label.position = Vector2((scaled_size.x - 300) / 2, -70)
 	add_child(_skill_label)
 	
-	# HP/APバー（カード下部）
+	# HP/APバー（カード下部）- 5.2倍サイズ対応
 	_hp_ap_bar = HpApBar.new()
-	_hp_ap_bar.position = Vector2((CARD_SIZE.x - 200) / 2, CARD_SIZE.y + 10)
+	_hp_ap_bar.position = Vector2((scaled_size.x - 1040) / 2, scaled_size.y + 30)
 	add_child(_hp_ap_bar)
 	
-	custom_minimum_size = Vector2(CARD_SIZE.x, CARD_SIZE.y + 60)
+	custom_minimum_size = Vector2(scaled_size.x, scaled_size.y + 260)
 
 
 ## クリーチャーデータを設定
-func setup(data: Dictionary, attacker: bool = true) -> void:
+func setup(data: Dictionary, attacker: bool = true, show_hp_bar: bool = true) -> void:
 	creature_data = data
 	is_attacker = attacker
 	
-	# カード画像を読み込み
-	_load_card_image(data)
+	# 実際のカードをインスタンス化して表示
+	_create_card_instance(data)
 	
-	# HP/APバーを初期化
-	_update_hp_bar()
-	_hp_ap_bar.set_ap(data.get("current_ap", data.get("ap", 0)))
+	# HP/APバーの表示切り替え
+	if show_hp_bar:
+		_hp_ap_bar.visible = true
+		_update_hp_bar()
+		_hp_ap_bar.set_ap(data.get("current_ap", data.get("ap", 0)))
+	else:
+		_hp_ap_bar.visible = false
 	
 	_original_position = position
 
 
-## カード画像を読み込み
-func _load_card_image(data: Dictionary) -> void:
-	var card_id = data.get("id", 0)
-	var image_path = "res://assets/cards/creatures/%d.png" % card_id
+## Card.tscnをインスタンス化してデータを設定
+func _create_card_instance(data: Dictionary) -> void:
+	# 既存のカードインスタンスを削除
+	if _card_instance:
+		_card_instance.queue_free()
+		_card_instance = null
 	
-	if ResourceLoader.exists(image_path):
-		_card_texture.texture = load(image_path)
-	else:
-		# デフォルト画像またはプレースホルダー
-		_card_texture.texture = null
-		# 背景色で代替
-		var bg = ColorRect.new()
-		bg.color = Color(0.3, 0.3, 0.3)
-		bg.custom_minimum_size = CARD_SIZE
-		_card_display.add_child(bg)
-		bg.move_to_front()
-		_card_texture.move_to_front()
+	if not _card_scene:
+		push_error("BattleCreatureDisplay: Card.tscn が読み込めません")
+		return
+	
+	# カードをインスタンス化
+	_card_instance = _card_scene.instantiate()
+	_card_container.add_child(_card_instance)
+	
+	# スケール設定
+	_card_instance.scale = Vector2(CARD_SCALE, CARD_SCALE)
+	
+	# マウスイベントを無効化（バトル画面では選択不要）
+	_card_instance.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_mouse_filter_recursive(_card_instance, Control.MOUSE_FILTER_IGNORE)
+	
+	# クリーチャーデータを設定
+	if _card_instance.has_method("load_dynamic_creature_data"):
+		_card_instance.load_dynamic_creature_data(data)
+	elif _card_instance.has_method("load_card_data"):
+		var card_id = data.get("id", 0)
+		_card_instance.load_card_data(card_id)
+
+
+## 子ノードのマウスフィルターを再帰的に設定
+func _set_mouse_filter_recursive(node: Node, filter: Control.MouseFilter) -> void:
+	if node is Control:
+		node.mouse_filter = filter
+	for child in node.get_children():
+		_set_mouse_filter_recursive(child, filter)
 
 
 ## HPバーを更新
@@ -159,13 +183,13 @@ func play_attack_animation():
 ## 被ダメージアニメーション（揺れ）
 func play_damage_animation():
 	var tween = create_tween()
-	var original_x = _card_display.position.x
+	var original_x = _card_container.position.x
 	
 	# 揺れアニメーション
 	for i in range(3):
-		tween.tween_property(_card_display, "position:x", original_x + SHAKE_AMOUNT, 0.03)
-		tween.tween_property(_card_display, "position:x", original_x - SHAKE_AMOUNT, 0.03)
-	tween.tween_property(_card_display, "position:x", original_x, 0.03)
+		tween.tween_property(_card_container, "position:x", original_x + SHAKE_AMOUNT, 0.03)
+		tween.tween_property(_card_container, "position:x", original_x - SHAKE_AMOUNT, 0.03)
+	tween.tween_property(_card_container, "position:x", original_x, 0.03)
 	
 	await tween.finished
 	damage_animation_completed.emit()
@@ -173,31 +197,35 @@ func play_damage_animation():
 
 ## ダメージポップアップを表示
 func show_damage_popup(amount: int) -> void:
+	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
 	var popup = DamagePopup.new()
-	popup.position = Vector2(CARD_SIZE.x / 2, CARD_SIZE.y / 2)
+	popup.position = Vector2(scaled_size.x / 2, scaled_size.y / 2)
 	add_child(popup)
 	popup.show_damage(amount)
 
 
 ## 回復ポップアップを表示
 func show_heal_popup(amount: int) -> void:
+	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
 	var popup = DamagePopup.new()
-	popup.position = Vector2(CARD_SIZE.x / 2, CARD_SIZE.y / 2)
+	popup.position = Vector2(scaled_size.x / 2, scaled_size.y / 2)
 	add_child(popup)
 	popup.show_heal(amount)
 
 
 ## バフポップアップを表示
 func show_buff_popup(text: String) -> void:
+	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
 	var popup = DamagePopup.new()
-	popup.position = Vector2(CARD_SIZE.x / 2, CARD_SIZE.y / 2)
+	popup.position = Vector2(scaled_size.x / 2, scaled_size.y / 2)
 	add_child(popup)
 	popup.show_buff(text)
 
 
 ## スライドイン
 func slide_in(from_left: bool = true):
-	var start_x = -CARD_SIZE.x if from_left else get_viewport_rect().size.x + CARD_SIZE.x
+	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
+	var start_x = -scaled_size.x if from_left else get_viewport_rect().size.x + scaled_size.x
 	position.x = start_x
 	
 	var tween = create_tween()

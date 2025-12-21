@@ -101,12 +101,12 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	print("  base_up_ap: ", defender.base_up_ap)
 	
 	# 現在HPから復元（ない場合は満タン）
-	# 現在HPから復元（ない場合は満タン）
+	# current_hp は土地ボーナスを含まない値として保存
 	var defender_base_only_hp = defender_creature.get("hp", 0)  # 基本HPのみ
-	var defender_max_hp = defender_base_only_hp + defender.base_up_hp  # MHP計算
+	var defender_max_hp = defender_base_only_hp + defender.base_up_hp  # MHP計算（土地ボーナス含まず）
 	var defender_current_hp = defender_creature.get("current_hp", defender_max_hp)
 	
-	# current_hp を直接設定（新方式）
+	# current_hp を直接設定（土地ボーナスは別途 land_bonus_hp として管理）
 	defender.current_hp = defender_current_hp
 	# base_hp と base_up_hp はコンストラクタで既に設定済み
 	

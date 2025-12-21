@@ -21,13 +21,15 @@ var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd
 var board_system_ref = null
 var game_flow_manager_ref = null
 var card_system_ref = null
+var battle_screen_manager = null
 
-func setup_systems(board_system, game_flow_manager = null, card_system = null):
+func setup_systems(board_system, game_flow_manager = null, card_system = null, p_battle_screen_manager = null):
 	board_system_ref = board_system
 	game_flow_manager_ref = game_flow_manager
 	card_system_ref = card_system
+	battle_screen_manager = p_battle_screen_manager
 
-## バトル前スキル適用
+## バトル前スキル適用（async対応・スキル毎にアニメーション）
 func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, attacker_index: int) -> void:
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
@@ -39,10 +41,9 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	if has_nullify:
 		print("【能力無効化発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
-		# 敵の能力を無効化
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
-		return  # ここで処理を終了し、バトルへ
+		return
 	
 	# 【Phase 0】変身スキル適用（戦闘開始時）
 	var card_loader = load("res://scripts/card_loader.gd").new()
@@ -50,65 +51,67 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
+	var battle_tile_index = tile_info.get("index", -1)
 	
 	# 【Phase 1】応援スキル適用（盤面全体を対象にバフ）
-	var battle_tile_index = tile_info.get("index", -1)
+	var attacker_before = _snapshot_stats(attacker)
+	var defender_before = _snapshot_stats(defender)
 	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
+	await _show_skill_change_if_any(attacker, attacker_before, "応援")
+	await _show_skill_change_if_any(defender, defender_before, "応援")
 	
-	# 侵略側のスキル適用
+	# コンテキスト構築
 	var attacker_context = ConditionChecker.build_battle_context(
-		attacker.creature_data,
-		defender.creature_data,
-		tile_info,
+		attacker.creature_data, defender.creature_data, tile_info,
 		{
 			"player_lands": player_lands,
-			"battle_tile_index": tile_info.get("index", -1),
+			"battle_tile_index": battle_tile_index,
 			"player_id": attacker_index,
 			"board_system": board_system_ref,
 			"game_flow_manager": game_flow_manager_ref,
-			"is_placed_on_tile": false,  # 侵略側は配置されていない
-			"enemy_mhp_override": defender.get_max_hp(),  # 計算済みMHPを渡す
-			"enemy_name": defender.creature_data.get("name", ""),  # 敵の名前
-			"opponent": defender,  # スクイドマントルチェック用
-			"is_attacker": true  # 攻撃側フラグ
+			"is_placed_on_tile": false,
+			"enemy_mhp_override": defender.get_max_hp(),
+			"enemy_name": defender.creature_data.get("name", ""),
+			"opponent": defender,
+			"is_attacker": true
 		}
 	)
-	apply_skills(attacker, attacker_context)
 	
-	# 防御側のスキル適用
 	var defender_lands = board_system_ref.get_player_lands_by_element(defender.player_id) if defender.player_id >= 0 else {}
 	var defender_context = ConditionChecker.build_battle_context(
-		defender.creature_data,
-		attacker.creature_data,
-		tile_info,
+		defender.creature_data, attacker.creature_data, tile_info,
 		{
 			"player_lands": defender_lands,
-			"battle_tile_index": tile_info.get("index", -1),
+			"battle_tile_index": battle_tile_index,
 			"player_id": defender.player_id,
 			"board_system": board_system_ref,
 			"game_flow_manager": game_flow_manager_ref,
-			"is_attacker": false,  # 防御側
-			"is_placed_on_tile": true,  # 防御側は配置されている
-			"enemy_mhp_override": attacker.get_max_hp(),  # 計算済みMHPを渡す
-			"enemy_name": attacker.creature_data.get("name", ""),  # 敵の名前
-			"opponent": attacker,  # スクイドマントルチェック用
-			"is_defender": true  # 防御側フラグ
+			"is_attacker": false,
+			"is_placed_on_tile": true,
+			"enemy_mhp_override": attacker.get_max_hp(),
+			"enemy_name": attacker.creature_data.get("name", ""),
+			"opponent": attacker,
+			"is_defender": true
 		}
 	)
-	apply_skills(defender, defender_context)
 	
-	# 貫通スキルによる土地ボーナスHP無効化
-	# スクイドマントルチェック
+	# 【Phase 2】各スキルを順番に適用（アニメーション付き）
+	await _apply_skills_with_animation(attacker, attacker_context)
+	await _apply_skills_with_animation(defender, defender_context)
+	
+	# 【Phase 3】貫通・巻物攻撃による土地ボーナス無効化
 	if not defender.has_squid_mantle:
+		var defender_land_before = defender.land_bonus_hp
 		PenetrationSkill.apply_penetration(attacker, defender)
+		if defender.land_bonus_hp != defender_land_before:
+			await _show_skill_change(defender, "貫通")
 	else:
 		print("【スクイドマントル】貫通を無効化")
 	
-	# 巻物攻撃による土地ボーナスHP無効化
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
 		defender.land_bonus_hp = 0
-		# update_current_hp() は呼ばない（current_hp が状態値になったため）
+		await _show_skill_change(defender, "巻物攻撃")
 	
 	# アイテム破壊・盗み処理
 	apply_item_manipulation(attacker, defender)
@@ -116,7 +119,191 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# 💰 魔力獲得スキル適用（バトル開始時）
 	apply_magic_gain_on_battle_start(attacker, defender)
 
-## スキル適用
+
+## スキルを順番に適用（アニメーション付き）
+func _apply_skills_with_animation(participant: BattleParticipant, context: Dictionary) -> void:
+	var creature_name = participant.creature_data.get("name", "?")
+	@warning_ignore("unused_variable")
+	var _SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
+	var before: Dictionary
+	
+	# 0. アイテムクリーチャーのクリーチャー時効果
+	if SkillItemCreature.is_item_creature(participant.creature_data):
+		before = _snapshot_stats(participant)
+		SkillItemCreature.apply_as_creature(participant, board_system_ref)
+		await _show_skill_change_if_any(participant, before, "アイテムクリーチャー")
+	elif participant.creature_data.get("has_living_clove_effect", false):
+		before = _snapshot_stats(participant)
+		SkillItemCreature.apply_living_clove_stat(participant, board_system_ref)
+		await _show_skill_change_if_any(participant, before, "リビングクローブ")
+	
+	# 0.1. オーガロード
+	var creature_id = participant.creature_data.get("id", -1)
+	if creature_id == 407:
+		before = _snapshot_stats(participant)
+		var ogre_player_id = context.get("player_id", 0)
+		SpecialCreatureSkill.apply_ogre_lord_bonus(participant, ogre_player_id, board_system_ref)
+		await _show_skill_change_if_any(participant, before, "オーガロード")
+	
+	# 0.5. ターン数ボーナス
+	before = _snapshot_stats(participant)
+	apply_turn_number_bonus(participant, context)
+	await _show_skill_change_if_any(participant, before, "ターン数ボーナス")
+	
+	# 1. 感応スキル
+	before = _snapshot_stats(participant)
+	ResonanceSkill.apply(participant, context)
+	await _show_skill_change_if_any(participant, before, "感応")
+	
+	# 3. 土地数比例効果
+	before = _snapshot_stats(participant)
+	apply_land_count_effects(participant, context)
+	await _show_skill_change_if_any(participant, before, "土地数効果")
+	
+	# 3.5. 破壊数効果
+	before = _snapshot_stats(participant)
+	apply_destroy_count_effects(participant)
+	await _show_skill_change_if_any(participant, before, "破壊数効果")
+	
+	# 3.6. 手札数効果
+	before = _snapshot_stats(participant)
+	var player_id = context.get("player_id", 0)
+	apply_hand_count_effects(participant, player_id, card_system_ref)
+	await _show_skill_change_if_any(participant, before, "手札数効果")
+	
+	# 3.7. 常時補正効果
+	before = _snapshot_stats(participant)
+	apply_constant_stat_bonus(participant)
+	await _show_skill_change_if_any(participant, before, "常時補正")
+	
+	# 3.8. 戦闘地条件効果
+	before = _snapshot_stats(participant)
+	apply_battle_condition_effects(participant, context)
+	await _show_skill_change_if_any(participant, before, "戦闘地効果")
+	
+	# 3.9. Phase 3-B 効果
+	before = _snapshot_stats(participant)
+	apply_phase_3b_effects(participant, context)
+	await _show_skill_change_if_any(participant, before, creature_name + "の能力")
+	
+	# 3.10. Phase 3-C 効果
+	before = _snapshot_stats(participant)
+	apply_phase_3c_effects(participant, context)
+	await _show_skill_change_if_any(participant, before, creature_name + "の能力")
+	
+	# 4. 先制・後手スキル（HP/AP変化なし、表示のみ）
+	FirstStrikeSkill.apply(participant)
+	
+	# 5. 強打スキル
+	before = _snapshot_stats(participant)
+	apply_power_strike_skills(participant, context)
+	await _show_skill_change_if_any(participant, before, "強打")
+	
+	# 6. 巻物攻撃判定
+	ScrollAttackSkill.apply(participant, context)
+	
+	# 7. 2回攻撃スキル
+	check_double_attack(participant, context)
+	
+	# 8. 巻物使用時のAP固定
+	if participant.is_using_scroll:
+		before = _snapshot_stats(participant)
+		_apply_scroll_ap_fix(participant, context)
+		await _show_skill_change_if_any(participant, before, "巻物攻撃")
+
+
+## 巻物使用時のAP固定処理
+func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -> void:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var scroll_config = keyword_conditions.get("巻物攻撃", {})
+	var scroll_type = scroll_config.get("scroll_type", "base_ap")
+	
+	match scroll_type:
+		"fixed_ap":
+			var value = scroll_config.get("value", 0)
+			participant.current_ap = value
+			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP:", value)
+		"base_ap":
+			var base_ap = participant.creature_data.get("ap", 0)
+			participant.current_ap = base_ap
+			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=基本AP:", base_ap)
+		"land_count":
+			var elements = scroll_config.get("elements", [])
+			var multiplier = scroll_config.get("multiplier", 1)
+			var total_count = 0
+			if board_system_ref:
+				var scroll_player_id = context.get("player_id", 0)
+				for element in elements:
+					total_count += board_system_ref.count_creatures_by_element(scroll_player_id, element)
+			var calculated_ap = total_count * multiplier
+			participant.current_ap = calculated_ap
+			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
+
+
+## ステータスのスナップショットを取得
+func _snapshot_stats(participant: BattleParticipant) -> Dictionary:
+	return {
+		"current_hp": participant.current_hp,
+		"current_ap": participant.current_ap,
+		"resonance_bonus_hp": participant.resonance_bonus_hp,
+		"temporary_bonus_hp": participant.temporary_bonus_hp,
+		"spell_bonus_hp": participant.spell_bonus_hp,
+		"land_bonus_hp": participant.land_bonus_hp,
+		"item_bonus_hp": participant.item_bonus_hp
+	}
+
+
+## スキル適用後に変化があればアニメーション表示
+func _show_skill_change_if_any(participant: BattleParticipant, before: Dictionary, skill_name: String) -> void:
+	var changed = (
+		participant.current_hp != before["current_hp"] or
+		participant.current_ap != before["current_ap"] or
+		participant.resonance_bonus_hp != before["resonance_bonus_hp"] or
+		participant.temporary_bonus_hp != before["temporary_bonus_hp"] or
+		participant.spell_bonus_hp != before["spell_bonus_hp"] or
+		participant.land_bonus_hp != before["land_bonus_hp"] or
+		participant.item_bonus_hp != before["item_bonus_hp"]
+	)
+	
+	if changed:
+		await _show_skill_change(participant, skill_name)
+
+
+## BattleParticipantからHP表示用データを作成
+func _create_hp_data(participant: BattleParticipant) -> Dictionary:
+	return {
+		"base_hp": participant.base_hp,
+		"base_up_hp": participant.base_up_hp,
+		"item_bonus_hp": participant.item_bonus_hp,
+		"resonance_bonus_hp": participant.resonance_bonus_hp,
+		"temporary_bonus_hp": participant.temporary_bonus_hp,
+		"spell_bonus_hp": participant.spell_bonus_hp,
+		"land_bonus_hp": participant.land_bonus_hp,
+		"current_hp": participant.current_hp,
+		"display_max": participant.base_hp + participant.base_up_hp + \
+					   participant.item_bonus_hp + participant.resonance_bonus_hp + \
+					   participant.temporary_bonus_hp + participant.spell_bonus_hp + \
+					   participant.land_bonus_hp
+	}
+
+
+## スキル変化をバトル画面に表示
+func _show_skill_change(participant: BattleParticipant, skill_name: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	var side = "attacker" if participant.is_attacker else "defender"
+	var hp_data = _create_hp_data(participant)
+	
+	# スキル名表示 + HP/AP更新
+	await battle_screen_manager.show_skill_activation(side, skill_name, {
+		"hp_data": hp_data,
+		"ap": participant.current_ap
+	})
+
+
+## スキル適用（従来版・内部用）
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)

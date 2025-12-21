@@ -7,6 +7,7 @@ signal battle_intro_completed
 @warning_ignore("unused_signal")
 signal phase_completed(phase_name: String)  # 将来使用予定
 signal battle_ended(result: int)
+signal click_received  # クリック待ち用
 
 const SCREEN_LAYER = 90
 
@@ -14,12 +15,18 @@ const SCREEN_LAYER = 90
 var _background: ColorRect
 var _attacker_display: BattleCreatureDisplay
 var _defender_display: BattleCreatureDisplay
+var _attacker_hp_bar: HpApBar  # 固定位置のHPバー
+var _defender_hp_bar: HpApBar  # 固定位置のHPバー
 var _vs_label: Label
 var _effect_layer: Control
+var _click_area: Control  # クリック受付用
 
 # データ
 var _attacker_data: Dictionary = {}
 var _defender_data: Dictionary = {}
+
+# クリック待ち状態
+var _waiting_for_click: bool = false
 
 
 func _ready() -> void:
@@ -47,6 +54,14 @@ func _setup_ui() -> void:
 	_defender_display = BattleCreatureDisplay.new()
 	container.add_child(_defender_display)
 	
+	# 固定位置のHPバー（攻撃側）
+	_attacker_hp_bar = HpApBar.new()
+	container.add_child(_attacker_hp_bar)
+	
+	# 固定位置のHPバー（防御側）
+	_defender_hp_bar = HpApBar.new()
+	container.add_child(_defender_hp_bar)
+	
 	# VSラベル（中央）
 	_vs_label = Label.new()
 	_vs_label.text = "VS"
@@ -65,8 +80,32 @@ func _setup_ui() -> void:
 	_effect_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_effect_layer)
 	
+	# クリック受付エリア（最前面）
+	_click_area = Control.new()
+	_click_area.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_click_area.mouse_filter = Control.MOUSE_FILTER_STOP
+	_click_area.gui_input.connect(_on_click_area_input)
+	add_child(_click_area)
+	_click_area.visible = false
+	
 	# 初期配置
 	_layout_ui()
+
+
+## クリック入力処理
+func _on_click_area_input(event: InputEvent) -> void:
+	if _waiting_for_click and event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_waiting_for_click = false
+			_click_area.visible = false
+			click_received.emit()
+
+
+## クリック待ち
+func wait_for_click():
+	_waiting_for_click = true
+	_click_area.visible = true
+	await click_received
 
 
 func _layout_ui() -> void:
@@ -74,18 +113,41 @@ func _layout_ui() -> void:
 	if get_viewport():
 		viewport_size = get_viewport().get_visible_rect().size
 	
-	var center_y = viewport_size.y / 2 - 150
+	# カードサイズ（3.9倍スケール）
+	var card_width = 220 * 3.9
+	var card_height = 293 * 3.9
 	
-	# 攻撃側（左）
-	_attacker_display.position = Vector2(viewport_size.x * 0.2, center_y)
+	var center_y = viewport_size.y / 2 - 150 - 500 - 50  # 550ピクセル上に（さらに50px上）
+	
+	# 画面中央を基準に左右均等配置
+	var center_x = viewport_size.x / 2
+	var card_spacing = 300  # カード間のスペース（片側300px = 合計600px）
+	
+	# 攻撃側（左）- カードの右端が中央から少し左
+	var attacker_x = center_x - card_spacing - card_width
+	_attacker_display.position = Vector2(attacker_x, center_y)
 	_attacker_display._original_position = _attacker_display.position
 	
-	# 防御側（右）
-	_defender_display.position = Vector2(viewport_size.x * 0.65, center_y)
+	# 防御側（右）- カードの左端が中央から少し右
+	var defender_x = center_x + card_spacing
+	_defender_display.position = Vector2(defender_x, center_y)
 	_defender_display._original_position = _defender_display.position
 	
 	# VS（中央）
-	_vs_label.position = Vector2(viewport_size.x / 2 - 30, center_y + 100)
+	_vs_label.position = Vector2(center_x - 30, center_y + card_height / 2 - 50)
+	
+	# HPバー固定位置（画面下部、片側300px = 合計600px離す）
+	var hp_bar_width = 1040  # HP_BAR_WIDTH
+	var hp_bar_y = viewport_size.y - 280  # 画面下から280px
+	var hp_bar_spacing = 300  # HPバーの中央からの距離
+	
+	# 攻撃側HPバー - 中央から左に300px
+	var attacker_hp_x = center_x - hp_bar_spacing - hp_bar_width
+	_attacker_hp_bar.position = Vector2(attacker_hp_x, hp_bar_y)
+	
+	# 防御側HPバー - 中央から右に300px
+	var defender_hp_x = center_x + hp_bar_spacing
+	_defender_hp_bar.position = Vector2(defender_hp_x, hp_bar_y)
 
 
 ## バトルを初期化
@@ -93,8 +155,41 @@ func initialize(attacker_data: Dictionary, defender_data: Dictionary) -> void:
 	_attacker_data = attacker_data
 	_defender_data = defender_data
 	
-	_attacker_display.setup(attacker_data, true)
-	_defender_display.setup(defender_data, false)
+	# カード表示（HPバーなし）
+	_attacker_display.setup(attacker_data, true, false)
+	_defender_display.setup(defender_data, false, false)
+	
+	# 固定位置のHPバーを初期化
+	_init_hp_bar(_attacker_hp_bar, attacker_data)
+	_init_hp_bar(_defender_hp_bar, defender_data)
+
+
+## HPバーを初期化
+func _init_hp_bar(hp_bar: HpApBar, data: Dictionary) -> void:
+	var hp_data = {
+		"base_hp": data.get("hp", 0),
+		"base_up_hp": data.get("base_up_hp", 0),
+		"item_bonus_hp": data.get("item_bonus_hp", 0),
+		"resonance_bonus_hp": data.get("resonance_bonus_hp", 0),
+		"temporary_bonus_hp": data.get("temporary_bonus_hp", 0),
+		"spell_bonus_hp": data.get("spell_bonus_hp", 0),
+		"land_bonus_hp": data.get("land_bonus_hp", 0),
+		"current_hp": data.get("current_hp", data.get("hp", 0)),
+		"display_max": _calculate_display_max(data)
+	}
+	hp_bar.set_hp_data(hp_data)
+	hp_bar.set_ap(data.get("current_ap", data.get("ap", 0)))
+
+
+func _calculate_display_max(data: Dictionary) -> int:
+	var total = data.get("hp", 0) + \
+				data.get("base_up_hp", 0) + \
+				data.get("item_bonus_hp", 0) + \
+				data.get("resonance_bonus_hp", 0) + \
+				data.get("temporary_bonus_hp", 0) + \
+				data.get("spell_bonus_hp", 0) + \
+				data.get("land_bonus_hp", 0)
+	return max(total, 100)
 
 
 ## イントロ演出を再生
@@ -105,6 +200,9 @@ func play_intro():
 	
 	# VS表示
 	await _show_vs_label()
+	
+	# クリック待ち
+	await wait_for_click()
 	
 	battle_intro_completed.emit()
 
@@ -123,19 +221,30 @@ func _show_vs_label():
 func show_skill_activation(side: String, skill_name: String):
 	var display = _attacker_display if side == "attacker" else _defender_display
 	display.show_skill(skill_name)
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(1.5).timeout
 
 
-## HP変更演出
+## HP変更演出（固定位置のHPバーを使用）
 func show_hp_change(side: String, new_data: Dictionary):
-	var display = _attacker_display if side == "attacker" else _defender_display
-	await display.update_hp(new_data)
+	var hp_bar = _attacker_hp_bar if side == "attacker" else _defender_hp_bar
+	var hp_data = {
+		"base_hp": new_data.get("base_hp", 0),
+		"base_up_hp": new_data.get("base_up_hp", 0),
+		"item_bonus_hp": new_data.get("item_bonus_hp", 0),
+		"resonance_bonus_hp": new_data.get("resonance_bonus_hp", 0),
+		"temporary_bonus_hp": new_data.get("temporary_bonus_hp", 0),
+		"spell_bonus_hp": new_data.get("spell_bonus_hp", 0),
+		"land_bonus_hp": new_data.get("land_bonus_hp", 0),
+		"current_hp": new_data.get("current_hp", 0),
+		"display_max": new_data.get("display_max", 100)
+	}
+	await hp_bar.animate_hp_change(hp_data)
 
 
-## AP変更演出
-func show_ap_change(side: String, new_ap: int) -> void:
-	var display = _attacker_display if side == "attacker" else _defender_display
-	display.update_ap(new_ap)
+## AP変更演出（固定位置のHPバーを使用）
+func show_ap_change(side: String, new_ap: int):
+	var hp_bar = _attacker_hp_bar if side == "attacker" else _defender_hp_bar
+	await hp_bar.animate_ap_change(new_ap)
 
 
 ## 攻撃演出
