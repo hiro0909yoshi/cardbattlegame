@@ -66,8 +66,10 @@ static func apply_plague(creature_data: Dictionary, name: String = "衰弱") -> 
 ## attacker_data: 攻撃側のcreature_data
 ## defender_data: 防御側のcreature_data
 ## 戻り値: 呪いを付与したかどうか
-static func check_and_apply_on_attack_success(attacker_data: Dictionary, defender_data: Dictionary) -> bool:
-	var applied = false
+## 攻撃成功時の呪い付与
+## @return Dictionary { "applied": bool, "curse_name": String }
+static func check_and_apply_on_attack_success(attacker_data: Dictionary, defender_data: Dictionary) -> Dictionary:
+	var result = {"applied": false, "curse_name": ""}
 	
 	# クリーチャー能力からチェック
 	var ability_parsed = attacker_data.get("ability_parsed", {})
@@ -81,7 +83,10 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 		
 		if is_on_attack_success:
 			var curse_type = effect.get("curse_type", "")
-			applied = _apply_curse_effect(curse_type, effect, attacker_data.get("name", "?"), defender_data) or applied
+			var curse_result = _apply_curse_effect(curse_type, effect, attacker_data.get("name", "?"), defender_data)
+			if curse_result.get("applied", false):
+				result["applied"] = true
+				result["curse_name"] = curse_result.get("curse_name", "")
 	
 	# アイテムからチェック
 	var items = attacker_data.get("items", [])
@@ -94,30 +99,41 @@ static func check_and_apply_on_attack_success(attacker_data: Dictionary, defende
 			
 			if is_on_attack_success:
 				var curse_type = effect.get("curse_type", "")
-				applied = _apply_curse_effect(curse_type, effect, item.get("name", "?"), defender_data) or applied
+				var curse_result = _apply_curse_effect(curse_type, effect, item.get("name", "?"), defender_data)
+				if curse_result.get("applied", false):
+					result["applied"] = true
+					result["curse_name"] = curse_result.get("curse_name", "")
 	
-	return applied
+	return result
 
 
 ## 呪い効果を適用するヘルパー関数
-static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_name: String, defender_data: Dictionary) -> bool:
+## @return Dictionary { "applied": bool, "curse_name": String }
+static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_name: String, defender_data: Dictionary) -> Dictionary:
+	var curse_name = effect.get("name", "")
 	match curse_type:
 		"battle_disable":
-			apply_battle_disable(defender_data, effect.get("name", "戦闘行動不可"))
+			if curse_name.is_empty():
+				curse_name = "戦闘行動不可"
+			apply_battle_disable(defender_data, curse_name)
 			print("【攻撃成功時呪い】", source_name, " → ", 
 				  defender_data.get("name", "?"), " に戦闘行動不可を付与")
-			return true
+			return {"applied": true, "curse_name": curse_name}
 		"plague":
-			apply_plague(defender_data, effect.get("name", "衰弱"))
+			if curse_name.is_empty():
+				curse_name = "衰弱"
+			apply_plague(defender_data, curse_name)
 			print("【攻撃成功時呪い】", source_name, " → ", 
 				  defender_data.get("name", "?"), " に衰弱を付与")
-			return true
+			return {"applied": true, "curse_name": curse_name}
 		"creature_toll_disable":
-			apply_creature_toll_disable(defender_data, effect.get("name", "通行料無効"))
+			if curse_name.is_empty():
+				curse_name = "通行料無効"
+			apply_creature_toll_disable(defender_data, curse_name)
 			print("【攻撃成功時呪い】", source_name, " → ", 
 				  defender_data.get("name", "?"), " に通行料無効を付与")
-			return true
-	return false
+			return {"applied": true, "curse_name": curse_name}
+	return {"applied": false, "curse_name": ""}
 
 
 # =============================================================================

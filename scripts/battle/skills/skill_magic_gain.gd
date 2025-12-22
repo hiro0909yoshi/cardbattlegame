@@ -53,13 +53,14 @@ static func has_destroy_magic_gain(creature_data: Dictionary) -> bool:
 ##
 ## @param participant バトル参加者
 ## @param spell_magic SpellMagicインスタンス
-static func apply_invasion_magic_gain(participant, spell_magic) -> void:
+## @return 発動した場合はtrue
+static func apply_invasion_magic_gain(participant, spell_magic) -> bool:
 	if not spell_magic:
-		return
+		return false
 	
 	# 侵略側のみ発動
 	if not participant.is_attacker:
-		return
+		return false
 	
 	var has_skill = has_invasion_magic_gain(participant.creature_data)
 	
@@ -67,19 +68,26 @@ static func apply_invasion_magic_gain(participant, spell_magic) -> void:
 		var amount = _extract_magic_amount(participant.creature_data.get("ability_detail", ""), 100)
 		spell_magic.add_magic(participant.player_id, amount)
 		print("【侵略時魔力獲得】", participant.creature_data.get("name", "?"), " → ", amount, "G獲得")
+		return true
+	
+	return false
 
 ## 無条件魔力獲得を適用（バトル開始時）
 ##
 ## @param participant バトル参加者
 ## @param spell_magic SpellMagicインスタンス
-static func apply_unconditional_magic_gain(participant, spell_magic) -> void:
+## @return 発動した場合はtrue
+static func apply_unconditional_magic_gain(participant, spell_magic) -> bool:
 	if not spell_magic:
-		return
+		return false
 	
 	if has_unconditional_magic_gain(participant.creature_data):
 		var amount = _extract_magic_amount(participant.creature_data.get("ability_detail", ""), 100)
 		spell_magic.add_magic(participant.player_id, amount)
 		print("【魔力獲得】", participant.creature_data.get("name", "?"), " → ", amount, "G獲得")
+		return true
+	
+	return false
 
 ## ダメージ時魔力獲得を適用
 ##
@@ -105,14 +113,23 @@ static func apply_damage_magic_gain(participant, damage: int, spell_magic) -> vo
 ## @param attacker 攻撃側参加者
 ## @param defender 防御側参加者
 ## @param spell_magic SpellMagicインスタンス
-static func apply_on_battle_start(attacker, defender, spell_magic) -> void:
+## @return 発動した参加者の配列
+static func apply_on_battle_start(attacker, defender, spell_magic) -> Array:
+	var activated = []
+	
 	# 侵略時魔力獲得（攻撃側のみ）
-	apply_invasion_magic_gain(attacker, spell_magic)
+	if apply_invasion_magic_gain(attacker, spell_magic):
+		activated.append(attacker)
 	
 	# 無条件魔力獲得（両側）
-	apply_unconditional_magic_gain(attacker, spell_magic)
+	if apply_unconditional_magic_gain(attacker, spell_magic):
+		if attacker not in activated:
+			activated.append(attacker)
 	
-	apply_unconditional_magic_gain(defender, spell_magic)
+	if apply_unconditional_magic_gain(defender, spell_magic):
+		activated.append(defender)
+	
+	return activated
 
 
 ## ability_detailから魔力獲得量を抽出

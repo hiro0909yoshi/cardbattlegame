@@ -75,8 +75,8 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
 	battle_execution.setup_systems(card_system, battle_screen_manager)
-	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref, battle_screen_manager)
-	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system)
+	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref, battle_screen_manager, battle_preparation)
+	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system, battle_screen_manager)
 	
 	# アイテム復帰スキルの初期化
 	_skill_item_return.setup_systems(card_system)
@@ -222,7 +222,15 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 🎬 バトル画面で結果表示
 	if battle_screen_manager:
-		await battle_screen_manager.end_battle(result)
+		await battle_screen_manager.show_battle_result(result)
+	
+	# 🎬 戦闘終了時能力（バトル画面表示が必要なもの）
+	await battle_special_effects.apply_regeneration(attacker)
+	await battle_special_effects.apply_regeneration(defender)
+	
+	# 🎬 バトル画面を閉じる
+	if battle_screen_manager:
+		await battle_screen_manager.close_battle_screen()
 	
 	# 6. 結果に応じた処理（死者復活情報も渡す）
 	await _apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
@@ -375,10 +383,6 @@ func _apply_post_battle_effects(
 	from_tile_index: int = -1
 ) -> void:
 	var tile_index = tile_info["index"]
-	
-	# 再生スキル処理
-	battle_special_effects.apply_regeneration(attacker)
-	battle_special_effects.apply_regeneration(defender)
 	
 	# 💰 魔力獲得処理（ゴールドハンマー: 敵生存時に魔力獲得）
 	_apply_magic_on_enemy_survive(result, attacker, defender)

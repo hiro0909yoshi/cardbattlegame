@@ -16,6 +16,7 @@ const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const SpecialCreatureSkill = preload("res://scripts/battle/skills/skill_special_creature.gd")
+const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
 # SkillPermanentBuff, SkillBattleStartConditions はグローバルクラスとして利用可能
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
@@ -23,12 +24,14 @@ var board_system_ref = null
 var game_flow_manager_ref = null
 var card_system_ref = null
 var battle_screen_manager = null
+var battle_preparation_ref = null
 
-func setup_systems(board_system, game_flow_manager = null, card_system = null, p_battle_screen_manager = null):
+func setup_systems(board_system, game_flow_manager = null, card_system = null, p_battle_screen_manager = null, battle_preparation = null):
 	board_system_ref = board_system
 	game_flow_manager_ref = game_flow_manager
 	card_system_ref = card_system
 	battle_screen_manager = p_battle_screen_manager
+	battle_preparation_ref = battle_preparation
 
 ## バトル前スキル適用（async対応・スキル毎にアニメーション）
 ## 戻り値: { transform_result: Dictionary }
@@ -37,6 +40,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var defender = participants["defender"]
 	var attacker_used_item = participants.get("attacker_used_item", false)
 	var defender_used_item = participants.get("defender_used_item", false)
+	var battle_tile_index = tile_info.get("index", -1)
 	
 	var result = {"transform_result": {}}
 	
@@ -48,38 +52,86 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		print("【能力無効化発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+		# 能力無効化でもアイテム効果は適用（アイテム破壊スキルも無効化されるため）
+		if battle_preparation_ref:
+			battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
 		return result
+	
+	# ============================================================
+	# 【Phase 0-0】アイテム破壊・盗み（スキル計算前に実行）
+	# ============================================================
+	# 素の先制（クリーチャー能力のみ）で順序決定
+	var attacker_has_raw_first_strike = _has_raw_first_strike(attacker)
+	var defender_has_raw_first_strike = _has_raw_first_strike(defender)
+	
+	var first: BattleParticipant
+	var second: BattleParticipant
+	
+	# 先制判定: 両方先制 or 両方なし → 攻撃側優先
+	if attacker_has_raw_first_strike == defender_has_raw_first_strike:
+		first = attacker
+		second = defender
+	elif attacker_has_raw_first_strike:
+		first = attacker
+		second = defender
+	else:
+		first = defender
+		second = attacker
+	
+	# アイテム破壊・盗み実行
+	await apply_item_manipulation(first, second)
+	
+	# アイテム使用フラグを更新（破壊された場合はfalseに）
+	attacker_used_item = not attacker.creature_data.get("items", []).is_empty()
+	defender_used_item = not defender.creature_data.get("items", []).is_empty()
+	
+	# アイテム効果適用（破壊されなかったアイテムのみ）
+	var attacker_before_item = _snapshot_stats(attacker)
+	var defender_before_item = _snapshot_stats(defender)
+	
+	if battle_preparation_ref:
+		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+	
+	# アイテム効果でステータスが変わった場合、アイテム名を表示してバトル画面を更新
+	await _show_item_effect_if_any(attacker, attacker_before_item, "attacker")
+	await _show_item_effect_if_any(defender, defender_before_item, "defender")
+	
+	# 合体が発生した場合、合体スキル名を表示
+	await _show_merge_if_any(attacker, "attacker")
+	await _show_merge_if_any(defender, "defender")
 	
 	# ============================================================
 	# 【Phase 0-A】クリック後に適用する効果
 	# ============================================================
 	var attacker_before: Dictionary
 	var defender_before: Dictionary
+	var stat_change_name = SkillDisplayConfig.get_skill_name("stat_change")
 	
-	# ブルガサリ: アイテム使用時AP+20
+	# ブルガサリ: アイテム使用時AP+20（アイテムが破壊されていなければ発動）
 	attacker_before = _snapshot_stats(attacker)
 	defender_before = _snapshot_stats(defender)
 	SkillPermanentBuff.apply_bulgasari_battle_bonus(attacker, attacker_used_item, defender_used_item)
 	SkillPermanentBuff.apply_bulgasari_battle_bonus(defender, defender_used_item, attacker_used_item)
-	await _show_skill_change_if_any(attacker, attacker_before, "ブルガサリ")
-	await _show_skill_change_if_any(defender, defender_before, "ブルガサリ")
+	await _show_skill_change_if_any(attacker, attacker_before, stat_change_name)
+	await _show_skill_change_if_any(defender, defender_before, stat_change_name)
 	
 	# APドレインは攻撃成功時効果のためbattle_execution.gdで処理
 	
-	# ランダムステータス（スペクター用）
+	# ランダムステータス（スペクター用）- 固有名を維持
 	attacker_before = _snapshot_stats(attacker)
 	defender_before = _snapshot_stats(defender)
 	SkillSpecialCreatureScript.apply_random_stat_effects(attacker)
 	SkillSpecialCreatureScript.apply_random_stat_effects(defender)
-	await _show_skill_change_if_any(attacker, attacker_before, "ランダム能力値")
-	await _show_skill_change_if_any(defender, defender_before, "ランダム能力値")
+	var random_stat_name = SkillDisplayConfig.get_skill_name("random_stat")
+	await _show_skill_change_if_any(attacker, attacker_before, random_stat_name)
+	await _show_skill_change_if_any(defender, defender_before, random_stat_name)
 	
 	# 戦闘開始時条件（スラッジタイタン、ギガンテリウム等）
 	attacker_before = _snapshot_stats(attacker)
 	defender_before = _snapshot_stats(defender)
 	_apply_battle_start_conditions(attacker, defender)
-	await _show_skill_change_if_any(attacker, attacker_before, "戦闘開始時効果")
-	await _show_skill_change_if_any(defender, defender_before, "戦闘開始時効果")
+	await _show_skill_change_if_any(attacker, attacker_before, stat_change_name)
+	await _show_skill_change_if_any(defender, defender_before, stat_change_name)
 	
 	# ============================================================
 	# 【Phase 0-B】変身スキル適用（戦闘開始時）
@@ -89,14 +141,14 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
-	var battle_tile_index = tile_info.get("index", -1)
 	
-	# 【Phase 1】応援スキル適用（盤面全体を対象にバフ）
+	# 【Phase 1】応援スキル適用（盤面全体を対象にバフ）- 固有名を維持
 	attacker_before = _snapshot_stats(attacker)
 	defender_before = _snapshot_stats(defender)
 	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
-	await _show_skill_change_if_any(attacker, attacker_before, "応援")
-	await _show_skill_change_if_any(defender, defender_before, "応援")
+	var support_name = SkillDisplayConfig.get_skill_name("support")
+	await _show_skill_change_if_any(attacker, attacker_before, support_name)
+	await _show_skill_change_if_any(defender, defender_before, support_name)
 	
 	# コンテキスト構築
 	var attacker_context = ConditionChecker.build_battle_context(
@@ -139,45 +191,49 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	# 【Phase 3】貫通・巻物攻撃による土地ボーナス無効化
 	if not defender.has_squid_mantle:
-		var defender_land_before = defender.land_bonus_hp
+		defender_before = _snapshot_stats(defender)
 		PenetrationSkill.apply_penetration(attacker, defender)
-		if defender.land_bonus_hp != defender_land_before:
-			# スキル所持者（attacker）側にスキル名表示、効果を受けた側（defender）のHPバー更新
-			await _show_skill_change_with_target(attacker, defender, "貫通")
+		# 敵対象スキル: attackerがスキル所持者、defenderが効果対象
+		var penetration_name = SkillDisplayConfig.get_skill_name("penetration")
+		await _show_skill_change_if_any(defender, defender_before, penetration_name, attacker)
 	else:
 		print("【スクイドマントル】貫通を無効化")
 	
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
+		defender_before = _snapshot_stats(defender)
 		defender.land_bonus_hp = 0
-		# スキル所持者（attacker）側にスキル名表示、効果を受けた側（defender）のHPバー更新
-		await _show_skill_change_with_target(attacker, defender, "巻物攻撃")
-	
-	# アイテム破壊・盗み処理
-	apply_item_manipulation(attacker, defender)
+		# 敵対象スキル: attackerがスキル所持者、defenderが効果対象
+		var scroll_name = SkillDisplayConfig.get_skill_name("scroll_attack")
+		await _show_skill_change_if_any(defender, defender_before, scroll_name, attacker)
 	
 	# 💰 魔力獲得スキル適用（バトル開始時）
-	apply_magic_gain_on_battle_start(attacker, defender)
+	await apply_magic_gain_on_battle_start(attacker, defender)
 	
 	return result
 
 
 ## スキルを順番に適用（アニメーション付き）
 func _apply_skills_with_animation(participant: BattleParticipant, context: Dictionary) -> void:
-	var creature_name = participant.creature_data.get("name", "?")
 	@warning_ignore("unused_variable")
 	var _SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
 	var before: Dictionary
+	
+	# 共通の表示名
+	var stat_change_name = SkillDisplayConfig.get_skill_name("stat_change")
+	var resonance_name = SkillDisplayConfig.get_skill_name("resonance")
+	var scroll_attack_name = SkillDisplayConfig.get_skill_name("scroll_attack")
+	var power_strike_name = SkillDisplayConfig.get_skill_name("power_strike")
 	
 	# 0. アイテムクリーチャーのクリーチャー時効果
 	if SkillItemCreature.is_item_creature(participant.creature_data):
 		before = _snapshot_stats(participant)
 		SkillItemCreature.apply_as_creature(participant, board_system_ref)
-		await _show_skill_change_if_any(participant, before, "アイテムクリーチャー")
+		await _show_skill_change_if_any(participant, before, stat_change_name)
 	elif participant.creature_data.get("has_living_clove_effect", false):
 		before = _snapshot_stats(participant)
 		SkillItemCreature.apply_living_clove_stat(participant, board_system_ref)
-		await _show_skill_change_if_any(participant, before, "リビングクローブ")
+		await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 0.1. オーガロード
 	var creature_id = participant.creature_data.get("id", -1)
@@ -185,61 +241,63 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 		before = _snapshot_stats(participant)
 		var ogre_player_id = context.get("player_id", 0)
 		SpecialCreatureSkill.apply_ogre_lord_bonus(participant, ogre_player_id, board_system_ref)
-		await _show_skill_change_if_any(participant, before, "オーガロード")
+		await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 0.5. ターン数ボーナス
 	before = _snapshot_stats(participant)
 	apply_turn_number_bonus(participant, context)
-	await _show_skill_change_if_any(participant, before, "ターン数ボーナス")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
-	# 1. 感応スキル
+	# 1. 感応スキル（固有名を維持）
 	before = _snapshot_stats(participant)
 	ResonanceSkill.apply(participant, context)
-	await _show_skill_change_if_any(participant, before, "感応")
+	await _show_skill_change_if_any(participant, before, resonance_name)
 	
 	# 3. 土地数比例効果
 	before = _snapshot_stats(participant)
 	apply_land_count_effects(participant, context)
-	await _show_skill_change_if_any(participant, before, "土地数効果")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.5. 破壊数効果
 	before = _snapshot_stats(participant)
 	apply_destroy_count_effects(participant)
-	await _show_skill_change_if_any(participant, before, "破壊数効果")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.6. 手札数効果
 	before = _snapshot_stats(participant)
 	var player_id = context.get("player_id", 0)
 	apply_hand_count_effects(participant, player_id, card_system_ref)
-	await _show_skill_change_if_any(participant, before, "手札数効果")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.7. 常時補正効果
 	before = _snapshot_stats(participant)
 	apply_constant_stat_bonus(participant)
-	await _show_skill_change_if_any(participant, before, "常時補正")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.8. 戦闘地条件効果
 	before = _snapshot_stats(participant)
 	apply_battle_condition_effects(participant, context)
-	await _show_skill_change_if_any(participant, before, "戦闘地効果")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.9. Phase 3-B 効果
 	before = _snapshot_stats(participant)
 	apply_phase_3b_effects(participant, context)
-	await _show_skill_change_if_any(participant, before, creature_name + "の能力")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 3.10. Phase 3-C 効果
 	before = _snapshot_stats(participant)
 	apply_phase_3c_effects(participant, context)
-	await _show_skill_change_if_any(participant, before, creature_name + "の能力")
+	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 4. 先制・後手スキル（HP/AP変化なし、表示のみ）
-	FirstStrikeSkill.apply(participant)
+	var strike_skills = FirstStrikeSkill.apply(participant)
+	for skill_type in strike_skills:
+		await _show_skill_no_stat_change(participant, skill_type)
 	
-	# 5. 強打スキル
+	# 5. 強打スキル（固有名を維持）
 	before = _snapshot_stats(participant)
 	apply_power_strike_skills(participant, context)
-	await _show_skill_change_if_any(participant, before, "強打")
+	await _show_skill_change_if_any(participant, before, power_strike_name)
 	
 	# 6. 巻物攻撃判定
 	ScrollAttackSkill.apply(participant, context)
@@ -247,11 +305,11 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	# 7. 2回攻撃スキル
 	check_double_attack(participant, context)
 	
-	# 8. 巻物使用時のAP固定
+	# 8. 巻物使用時のAP固定（固有名を維持）
 	if participant.is_using_scroll:
 		before = _snapshot_stats(participant)
 		_apply_scroll_ap_fix(participant, context)
-		await _show_skill_change_if_any(participant, before, "巻物攻撃")
+		await _show_skill_change_if_any(participant, before, scroll_attack_name)
 
 
 ## 巻物使用時のAP固定処理
@@ -296,9 +354,9 @@ func _snapshot_stats(participant: BattleParticipant) -> Dictionary:
 	}
 
 
-## スキル適用後に変化があればアニメーション表示
-func _show_skill_change_if_any(participant: BattleParticipant, before: Dictionary, skill_name: String) -> void:
-	var changed = (
+## ステータス変化があったかチェック
+func _has_stat_change(participant: BattleParticipant, before: Dictionary) -> bool:
+	return (
 		participant.current_hp != before["current_hp"] or
 		participant.current_ap != before["current_ap"] or
 		participant.resonance_bonus_hp != before["resonance_bonus_hp"] or
@@ -307,9 +365,44 @@ func _show_skill_change_if_any(participant: BattleParticipant, before: Dictionar
 		participant.land_bonus_hp != before["land_bonus_hp"] or
 		participant.item_bonus_hp != before["item_bonus_hp"]
 	)
+
+
+## スキル適用後に変化があればアニメーション表示
+## participant: 変化をチェックしてバー更新する対象
+## before: スナップショット
+## skill_name: スキル名
+## skill_owner: スキル名を表示する側（省略時はparticipant自身）
+##
+## 使い方:
+##   自己バフ: _show_skill_change_if_any(attacker, before, "感応")
+##   敵対象:   _show_skill_change_if_any(defender, before, "貫通", attacker)
+func _show_skill_change_if_any(participant: BattleParticipant, before: Dictionary, skill_name: String, skill_owner: BattleParticipant = null) -> void:
+	if not _has_stat_change(participant, before):
+		return
 	
-	if changed:
+	var display_owner = skill_owner if skill_owner else participant
+	
+	# スキル所持者と効果対象が同じ場合
+	if display_owner == participant:
 		await _show_skill_change(participant, skill_name)
+	else:
+		# スキル所持者と効果対象が異なる場合
+		await _show_skill_change_owner_target(display_owner, participant, skill_name)
+
+
+## ステータス変化のないスキル表示（先制、後手など）
+##
+## @param participant スキル所持者
+## @param effect_type スキルのeffect_type（SkillDisplayConfigのキー）
+func _show_skill_no_stat_change(participant: BattleParticipant, effect_type: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	var side = "attacker" if participant.is_attacker else "defender"
+	var skill_name = SkillDisplayConfig.get_skill_name(effect_type)
+	
+	# スキル名表示のみ（HP/AP更新なし）
+	await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 
 ## BattleParticipantからHP表示用データを作成
@@ -345,10 +438,69 @@ func _show_skill_change(participant: BattleParticipant, skill_name: String) -> v
 	})
 
 
+## 合体が発生した場合、バトル画面に表示
+func _show_merge_if_any(participant: BattleParticipant, side: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	# 合体フラグをチェック
+	if not participant.creature_data.get("_was_merged", false):
+		return
+	
+	var merged_name = participant.creature_data.get("_merged_result_name", "?")
+	var skill_name = SkillDisplayConfig.get_skill_name("merge")
+	var display_name = "%s[%s]" % [skill_name, merged_name]
+	
+	# 合体スキル名を表示（ステータス更新なし）
+	await battle_screen_manager.show_skill_activation(side, display_name, {})
+	
+	# 表示後にフラグをクリア（再表示防止）
+	participant.creature_data.erase("_was_merged")
+	participant.creature_data.erase("_merged_result_name")
+
+
+## アイテム効果の変化をバトル画面に表示（アイテム使用時のみ）
+func _show_item_effect_if_any(participant: BattleParticipant, before: Dictionary, side: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	# アイテムがない場合は表示しない（破壊された場合など）
+	var items = participant.creature_data.get("items", [])
+	if items.is_empty():
+		return
+	
+	var hp_changed = participant.current_hp != before.get("current_hp", 0)
+	var ap_changed = participant.current_ap != before.get("current_ap", 0)
+	var item_hp_changed = participant.item_bonus_hp != before.get("item_bonus_hp", 0)
+	
+	if not hp_changed and not ap_changed and not item_hp_changed:
+		return
+	
+	# アイテム名を取得（援護クリーチャーの場合は「援護[クリーチャー名]」）
+	var item = items[0]
+	var display_name: String
+	var item_type = item.get("type", "")
+	if item_type == "creature":
+		# 援護クリーチャー
+		var creature_name = item.get("name", "?")
+		var skill_name = SkillDisplayConfig.get_skill_name("assist")
+		display_name = "%s[%s]" % [skill_name, creature_name]
+	else:
+		display_name = item.get("name", "アイテム")
+	
+	var hp_data = _create_hp_data(participant)
+	
+	# アイテム名表示 + HP/AP更新
+	await battle_screen_manager.show_skill_activation(side, display_name, {
+		"hp_data": hp_data,
+		"ap": participant.current_ap
+	})
+
+
 ## スキル変化をバトル画面に表示（スキル所持者と効果対象が異なる場合）
 ## skill_owner: スキル名を表示する側
 ## target: HP/APバーを更新する側
-func _show_skill_change_with_target(skill_owner: BattleParticipant, target: BattleParticipant, skill_name: String) -> void:
+func _show_skill_change_owner_target(skill_owner: BattleParticipant, target: BattleParticipant, skill_name: String) -> void:
 	if not battle_screen_manager:
 		return
 	
@@ -534,7 +686,16 @@ func apply_item_manipulation(first: BattleParticipant, second: BattleParticipant
 	@param first: 先に行動する側
 	@param second: 後に行動する側
 	"""
-	ItemManipulationSkill.apply(first, second)
+	var results = ItemManipulationSkill.apply(first, second)
+	
+	# 発動したスキルをバトル画面に表示
+	for result in results:
+		var actor = result.get("actor")
+		var skill_type = result.get("skill_type", "")
+		if actor and skill_type and battle_screen_manager:
+			var side = "attacker" if actor.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name(skill_type)
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 ## ターン数ボーナスを適用（ラーバキン用）
 func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary) -> void:
@@ -898,7 +1059,14 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 		return
 	
 	# 魔力獲得スキルを適用
-	_skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
+	var activated = _skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
+	
+	# 発動したスキルをバトル画面に表示
+	for participant in activated:
+		if battle_screen_manager:
+			var side = "attacker" if participant.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name("magic_gain")
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 ## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
 func apply_battle_condition_effects(participant: BattleParticipant, context: Dictionary):
@@ -1039,3 +1207,21 @@ func _apply_battle_start_conditions(attacker: BattleParticipant, defender: Battl
 	var defender_context = {"creature_data": defender.creature_data}
 	SkillBattleStartConditions.apply(attacker, attacker_context)
 	SkillBattleStartConditions.apply(defender, defender_context)
+
+
+## 素の先制を持っているかチェック（クリーチャー能力のみ、アイテム除く）
+## アイテム破壊・盗みの順序決定に使用
+func _has_raw_first_strike(participant: BattleParticipant) -> bool:
+	var keywords = participant.creature_data.get("keywords", [])
+	if "先制" in keywords:
+		return true
+	
+	# ability_parsed内のeffectsもチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "first_strike":
+			return true
+	
+	return false

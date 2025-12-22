@@ -117,20 +117,16 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# 手札から出すクリーチャーなので、移動侵略でない限り呪いはない
 	curse_applier.apply_creature_curses(defender, battle_tile_index)
 	
-	# アイテム効果を適用
+	# アイテムをitemsに追加（効果適用はアイテム破壊判定後に行う）
 	if not attacker_item.is_empty():
-		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
 		if not attacker.creature_data.has("items"):
 			attacker.creature_data["items"] = []
 		attacker.creature_data["items"].append(attacker_item)
-		item_applier.apply_item_effects(attacker, attacker_item, defender, battle_tile_index)
 	
 	if not defender_item.is_empty():
-		# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
 		if not defender.creature_data.has("items"):
 			defender.creature_data["items"] = []
 		defender.creature_data["items"].append(defender_item)
-		item_applier.apply_item_effects(defender, defender_item, attacker, battle_tile_index)
 	
 	# 以下の処理はapply_pre_battle_skills()で実行（クリック後）:
 	# - クリーチャー能力のAPドレイン
@@ -250,3 +246,23 @@ func _apply_battle_start_conditions(attacker: BattleParticipant, defender: Battl
 	return result
 
 # APドレイン（クリーチャー能力）は攻撃成功時効果のためbattle_execution.gdで処理
+
+
+## アイテム効果を適用（アイテム破壊・盗み後に呼び出す）
+## @param attacker 攻撃側
+## @param defender 防御側
+## @param battle_tile_index 戦闘タイルインデックス
+func apply_remaining_item_effects(attacker: BattleParticipant, defender: BattleParticipant, battle_tile_index: int) -> void:
+	# 攻撃側のアイテム効果を適用
+	var attacker_items = attacker.creature_data.get("items", [])
+	if not attacker_items.is_empty():
+		var item = attacker_items[0]
+		print("[アイテム効果適用（破壊後）] ", attacker.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		item_applier.apply_item_effects(attacker, item, defender, battle_tile_index)
+	
+	# 防御側のアイテム効果を適用
+	var defender_items = defender.creature_data.get("items", [])
+	if not defender_items.is_empty():
+		var item = defender_items[0]
+		print("[アイテム効果適用（破壊後）] ", defender.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		item_applier.apply_item_effects(defender, item, attacker, battle_tile_index)

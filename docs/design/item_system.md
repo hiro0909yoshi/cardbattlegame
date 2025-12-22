@@ -1,8 +1,8 @@
 # 🎮 アイテムシステム設計書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 1.1  
-**最終更新**: 2025年10月31日
+**バージョン**: 1.2  
+**最終更新**: 2025年12月23日
 
 ---## 📝 実装チェックリスト
 
@@ -112,17 +112,34 @@
   ├─ 攻撃側の手札を表示
   ├─ アイテムカード以外はグレーアウト
   ├─ アイテム選択 or パス
-  └─ 効果を保存
+  └─ アイテムデータを保存（効果はまだ適用しない）
   ↓
 防御側アイテムフェーズ
-  ├─ 防御側の手札を表示（正しいプレイヤーIDで取得）
+  ├─ 防御側の手札を表示
   ├─ アイテムカード以外はグレーアウト
   ├─ アイテム選択 or パス
-  └─ 効果を保存
+  └─ アイテムデータを保存（効果はまだ適用しない）
   ↓
-バトル開始
-  ├─ 両者のアイテム効果を適用
-  └─ 通常のバトル処理
+バトル準備（prepare_participants）
+  ├─ BattleParticipant作成
+  └─ アイテムをitemsに追加（効果はまだ適用しない）
+  ↓
+バトル前スキル処理開始
+  ↓
+アイテム破壊・盗み処理
+  ├─ 素の先制（クリーチャー能力のみ）で順序決定
+  └─ 先に動く側からアイテム破壊・盗みを実行
+  ↓
+アイテム効果適用（破壊されなかったアイテムのみ）
+  ├─ ステータスボーナス（AP/HP）を適用
+  ├─ スキル付与（先制など）を適用
+  └─ バトル画面にアイテム名表示
+  ↓
+各種スキル処理
+  ├─ ブルガサリ、感応、強打など
+  └─ 先制判定（アイテムによる先制含む）
+  ↓
+ダメージ計算・バトル実行
 ```
 
 ### アイテム効果タイプ
@@ -230,11 +247,14 @@ func _check_skill_grant_condition(participant: BattleParticipant, condition: Dic
 ```
 execute_3d_battle_with_data()
   ↓
-_apply_item_effects(attacker, attacker_item)
-_apply_item_effects(defender, defender_item)
+prepare_participants()
+  └─ アイテムをitemsに追加（効果はまだ適用しない）
   ↓
-_apply_skills(attacker)
-_apply_skills(defender)
+apply_pre_battle_skills()
+  ├─ アイテム破壊・盗み処理
+  ├─ apply_remaining_item_effects()  ← 破壊後にアイテム効果適用
+  ├─ _apply_skills_with_animation()
+  └─ 先制判定
   ↓
 バトル実行
 ```

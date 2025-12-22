@@ -10,6 +10,7 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 # スキルモジュール
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
+const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
 
 # システム参照
 var card_system_ref = null
@@ -321,6 +322,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						
 						# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
 						var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p, CardLoader)
+						await _show_death_effects(death_effects_attacker, attacker_p)
 						if death_effects_attacker["death_revenge_activated"]:
 							print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
@@ -347,7 +349,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					# ブラックナイト等の無効化チェック
 					if defender_p.is_alive() and attacker_p.current_ap > 0:
 						if not SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
-							_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+							var curse_result = _check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+							# 呪い付与スキル表示
+							if curse_result.get("applied", false) and battle_screen_manager:
+								var skill_name = SkillDisplayConfig.get_skill_name("apply_curse")
+								var curse_name = curse_result.get("curse_name", "")
+								if curse_name:
+									skill_name = "%s[%s]" % [skill_name, curse_name]
+								var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+								await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 							# ダウン付与（ショッカー等）
 							var battle_tile_index = tile_info.get("index", -1)
 							if battle_tile_index >= 0 and special_effects.board_system_ref:
@@ -452,7 +462,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					print("【能力無効化】", defender_p.creature_data.get("name", "?"), " により攻撃成功時能力が無効化")
 				else:
 					# 呪い付与（ナイキー、バインドウィップ等）
-					_check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+					var curse_result = _check_and_apply_on_attack_success_curse(attacker_p, defender_p)
+					# 呪い付与スキル表示
+					if curse_result.get("applied", false) and battle_screen_manager:
+						var skill_name = SkillDisplayConfig.get_skill_name("apply_curse")
+						var curse_name = curse_result.get("curse_name", "")
+						if curse_name:
+							skill_name = "%s[%s]" % [skill_name, curse_name]
+						var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+						await battle_screen_manager.show_skill_activation(attacker_side, skill_name, {})
 					# ダウン付与（ショッカー等）
 					var battle_tile_index = tile_info.get("index", -1)
 					if battle_tile_index >= 0 and special_effects.board_system_ref:
@@ -463,7 +481,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if drained and battle_screen_manager:
 						# スキル所持者側にスキル名表示
 						var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
-						await battle_screen_manager.show_skill_activation(skill_owner_side, "APドレイン", {})
+						var ap_drain_name = SkillDisplayConfig.get_skill_name("ap_drain")
+						await battle_screen_manager.show_skill_activation(skill_owner_side, ap_drain_name, {})
 						# defender_pのAPが0になったので、defender_p側のAPバーを更新
 						var drained_side = "attacker" if defender_p.is_attacker else "defender"
 						await battle_screen_manager.update_ap(drained_side, defender_p.current_ap)
@@ -474,6 +493,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				
 				# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
 				var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p, CardLoader)
+				await _show_death_effects(death_effects, defender_p)
 				if death_effects["death_revenge_activated"]:
 					print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
@@ -502,6 +522,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				
 				# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
 				var death_effects_attacker = special_effects.check_on_death_effects(attacker_p, defender_p, CardLoader)
+				await _show_death_effects(death_effects_attacker, attacker_p)
 				if death_effects_attacker["death_revenge_activated"]:
 					print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
 				
@@ -551,6 +572,21 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	battle_end_context["was_attacked"] = true  # 防御側は攻撃を受けた
 	var battle_end_result = SkillBattleEndEffects.process_all(original_attacker, original_defender, battle_end_context)
 	
+	# 戦闘終了時スキルの表示
+	var activated_skills = battle_end_result.get("activated_skills", [])
+	for skill_info in activated_skills:
+		var actor = skill_info.get("actor")
+		var skill_type = skill_info.get("skill_type", "")
+		if actor and skill_type and battle_screen_manager:
+			var side = "attacker" if actor.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name(skill_type)
+			# 呪い付与の場合は呪い名も表示
+			if skill_type == "apply_curse":
+				var curse_name = skill_info.get("curse_name", "")
+				if curse_name:
+					skill_name = "%s[%s]" % [skill_name, curse_name]
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
 	# 戦闘終了時効果による死亡を反映
 	if battle_end_result.get("attacker_died", false):
 		battle_result["attacker_died_by_battle_end"] = true
@@ -573,7 +609,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			battle_result["spawn_tile_index"] = spawn_tile
 	
 	# 💀 戦闘後破壊呪いチェック（生き残った側に呪いがあれば破壊）
-	_check_destroy_after_battle(attacker_p, defender_p)
+	await _check_destroy_after_battle(attacker_p, defender_p)
 	
 	# 🔮 戦闘後破壊付与スキル（オトヒメ等：両者生存時に敵へ呪い付与）
 	_check_apply_destroy_after_battle_skill(attacker_p, defender_p)
@@ -595,8 +631,10 @@ func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: Battl
 	SkillMagicSteal.apply_damage_based_steal(attacker, defender, damage, spell_magic)
 
 ## 🔒 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
-func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defender: BattleParticipant) -> void:
-	SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)
+## 攻撃成功時の呪い付与
+## @return Dictionary { "applied": bool, "curse_name": String }
+func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defender: BattleParticipant) -> Dictionary:
+	return SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)
 
 
 ## 💰 攻撃無効化時のG移動（magic_barrier呪い用）
@@ -623,6 +661,10 @@ func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattlePa
 	# 攻撃側チェック
 	if attacker.is_alive() and SpellCurseBattle.has_destroy_after_battle(attacker.creature_data):
 		print("【戦闘後破壊】", attacker.creature_data.get("name", "?"), " は呪いにより破壊される")
+		# スキル表示
+		if battle_screen_manager:
+			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
+			await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
 		attacker.current_hp = 0
 		# 呪いを消費
 		attacker.creature_data.erase("curse")
@@ -630,6 +672,10 @@ func _check_destroy_after_battle(attacker: BattleParticipant, defender: BattlePa
 	# 防御側チェック
 	if defender.is_alive() and SpellCurseBattle.has_destroy_after_battle(defender.creature_data):
 		print("【戦闘後破壊】", defender.creature_data.get("name", "?"), " は呪いにより破壊される")
+		# スキル表示
+		if battle_screen_manager:
+			var skill_name = SkillDisplayConfig.get_skill_name("self_destruct")
+			await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 		defender.current_hp = 0
 		# 呪いを消費
 		defender.creature_data.erase("curse")
@@ -678,6 +724,34 @@ func _build_battle_end_context(special_effects, tile_info: Dictionary) -> Dictio
 			context["game_stats"] = gfm.game_stats
 	
 	return context
+
+
+## 💀 死亡時効果の表示
+func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant) -> void:
+	if not battle_screen_manager:
+		return
+	
+	var side = "attacker" if defeated.is_attacker else "defender"
+	
+	# 道連れ
+	if death_effects.get("death_revenge_activated", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("death_revenge")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
+	# 雪辱
+	if death_effects.get("revenge_mhp_activated", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("revenge_mhp_damage")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
+	# 死者復活（タイル復活）
+	if death_effects.get("revived", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("revive")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
+	# 手札復活
+	if death_effects.get("revive_to_hand", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("revive_to_hand")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 
 ## APドレイン効果を適用（攻撃成功時）

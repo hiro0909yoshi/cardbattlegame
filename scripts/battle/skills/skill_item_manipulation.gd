@@ -13,29 +13,45 @@ class_name SkillItemManipulation
 ##
 ## @param first: 先に行動する側
 ## @param second: 後に行動する側
-static func apply(first, second) -> void:
+## @return 発動したスキルの配列 [{"actor": participant, "skill_type": "destroy_item"/"steal_item"}, ...]
+static func apply(first, second) -> Array:
+	var results = []
+	
 	# 先に行動する側の処理
-	_process_item_manipulation(first, second)
+	var first_result = _process_item_manipulation(first, second)
+	if first_result:
+		results.append(first_result)
 	
 	# 後に行動する側の処理（アイテムがまだ残っていれば）
-	_process_item_manipulation(second, first)
+	var second_result = _process_item_manipulation(second, first)
+	if second_result:
+		results.append(second_result)
+	
+	return results
 
 ## 単一参加者のアイテム破壊・盗み処理
-static func _process_item_manipulation(actor, target) -> void:
+## @return 発動したスキルの情報 {"actor": participant, "skill_type": "destroy_item"/"steal_item"} or null
+static func _process_item_manipulation(actor, target):
 	# 対象がアイテム破壊・盗み無効を持つかチェック
 	if _has_nullify_item_manipulation(target):
-		return
+		return null
 	
 	# アイテム破壊スキルをチェック
 	var destroy_effect = _get_destroy_item_effect(actor)
 	if destroy_effect:
-		_execute_destroy_item(actor, target, destroy_effect)
-		return
+		var success = _execute_destroy_item(actor, target, destroy_effect)
+		if success:
+			return {"actor": actor, "skill_type": "destroy_item"}
+		return null
 	
 	# アイテム盗みスキルをチェック
 	var steal_effect = _get_steal_item_effect(actor)
 	if steal_effect:
-		_execute_steal_item(actor, target, steal_effect)
+		var success = _execute_steal_item(actor, target, steal_effect)
+		if success:
+			return {"actor": actor, "skill_type": "steal_item"}
+	
+	return null
 
 ## アイテム破壊・盗み無効を持つかチェック
 static func _has_nullify_item_manipulation(participant) -> bool:
@@ -91,10 +107,11 @@ static func _has_any_item(participant) -> bool:
 	return items.size() > 0
 
 ## アイテム破壊を実行
-static func _execute_destroy_item(actor, target, effect: Dictionary) -> void:
+## @return 成功したらtrue
+static func _execute_destroy_item(actor, target, effect: Dictionary) -> bool:
 	var target_items = target.creature_data.get("items", [])
 	if target_items.is_empty():
-		return
+		return false
 	
 	# 対象のアイテムタイプをチェック
 	var target_item = target_items[0]
@@ -110,7 +127,7 @@ static func _execute_destroy_item(actor, target, effect: Dictionary) -> void:
 		type_matches = true
 	
 	if not type_matches:
-		return
+		return false
 	
 	# アイテム名を取得（先に宣言）
 	var actor_name = actor.creature_data.get("name", "?")
@@ -123,21 +140,20 @@ static func _execute_destroy_item(actor, target, effect: Dictionary) -> void:
 		var item_rarity = target_item.get("rarity", "N")
 		if item_rarity in rarity_exclude:
 			print("  【レア度除外】", item_name, " (レア度: ", item_rarity, ") は破壊対象外")
-			return
+			return false
 	
 	print("【アイテム破壊】", actor_name, " が ", target_name, " の ", item_name, " を破壊")
 	
-	# アイテムを削除
+	# アイテムを削除（効果はまだ適用されていないので、削除するだけでOK）
 	target.creature_data["items"] = []
-	
-	# アイテム効果を無効化（ステータスを再計算）
-	_remove_item_effects(target, target_item)
+	return true
 
 ## アイテム盗みを実行
-static func _execute_steal_item(actor, target, _effect: Dictionary) -> void:
+## @return 成功したらtrue
+static func _execute_steal_item(actor, target, _effect: Dictionary) -> bool:
 	var target_items = target.creature_data.get("items", [])
 	if target_items.is_empty():
-		return
+		return false
 	
 	var actor_name = actor.creature_data.get("name", "?")
 	var target_name = target.creature_data.get("name", "?")
@@ -146,17 +162,14 @@ static func _execute_steal_item(actor, target, _effect: Dictionary) -> void:
 	
 	print("【アイテム盗み】", actor_name, " が ", target_name, " の ", item_name, " を奪った")
 	
-	# 対象からアイテムを削除
+	# 対象からアイテムを削除（効果はまだ適用されていない）
 	target.creature_data["items"] = []
-	_remove_item_effects(target, stolen_item)
 	
-	# 自分にアイテムを追加
+	# 自分にアイテムを追加（効果の適用はapply_remaining_item_effectsで行う）
 	if not actor.creature_data.has("items"):
 		actor.creature_data["items"] = []
 	actor.creature_data["items"].append(stolen_item)
-	
-	# アイテム効果を適用
-	_apply_stolen_item_effects(actor, stolen_item)
+	return true
 
 ## アイテム効果を削除（ステータスを元に戻す）
 static func _remove_item_effects(participant, item: Dictionary) -> void:

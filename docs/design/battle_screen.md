@@ -76,10 +76,14 @@ CanvasLayer (layer = 90) - BattleScreen
 
 ### バトル終了時
 ```
-1. 結果演出（勝敗表示など）
-2. フェードアウト（0.25秒）
-3. バトル画面を非表示に
-4. フェードイン（0.25秒）→ 元のゲーム画面
+1. 結果演出（勝敗表示など） - show_battle_result()
+2. 戦闘終了時能力の表示（再生、土地変性など）
+   - この時点ではまだバトル画面が表示されている
+   - スキル名表示やHP/APバーの更新が可能
+3. バトル画面を閉じる - close_battle_screen()
+   - フェードアウト（0.25秒）
+   - バトル画面を削除
+   - フェードイン（0.25秒）→ 元のゲーム画面
 ```
 
 ## バトル演出フロー
@@ -294,8 +298,19 @@ func update_ap(side: String, value: int):
 	# APバー更新（1.5秒アニメーション）
 	pass
 
+func show_battle_result(result: int):
+	# 結果表示のみ（画面は閉じない）
+	# 戦闘終了時能力の表示のため、結果表示後も画面を維持
+	pass
+
+func close_battle_screen():
+	# バトル画面を閉じる
+	# トランジション → 画面削除 → シグナル発火
+	pass
+
 func end_battle(result: int):
-	# 結果表示 → トランジション → 閉じる
+	# 後方互換性のため残す
+	# show_battle_result() + close_battle_screen() を順番に呼ぶ
 	pass
 ```
 
@@ -344,3 +359,343 @@ func end_battle(result: int):
 - スキル1つずつアニメーション表示（1.5秒）
 - スキル名表示を大きく（36pt、背景300×60px）
 - HP消費アニメーション: 右から順（黄→水色→緑）
+
+---
+
+## スキル追加ガイド
+
+新しいスキルを追加する際のバトル画面表示・アニメーション実装ガイド。
+
+### スキルの種類と処理タイミング
+
+| タイミング | 処理場所 | 例 |
+|-----------|---------|-----|
+| 戦闘開始前（クリック後） | `battle_skill_processor.gd` | 感応、強打、貫通、ブルガサリ |
+| 攻撃成功時 | `battle_execution.gd` | APドレイン、呪い付与、ダウン付与 |
+
+### 共通関数: `_show_skill_change_if_any`
+
+スキル適用後のHP/APバー更新とスキル名表示を自動で行う共通関数。
+
+```gdscript
+func _show_skill_change_if_any(
+	participant: BattleParticipant,  # 変化をチェックする対象
+	before: Dictionary,              # スキル適用前のスナップショット
+	skill_name: String,              # 表示するスキル名
+	skill_owner: BattleParticipant = null  # スキル名を表示する側（省略時はparticipant）
+) -> void
+```
+
+**動作:**
+1. `participant`のステータスが`before`から変化したかチェック
+2. 変化があれば`skill_owner`側にスキル名表示
+3. `participant`側のHP/APバーをアニメーション更新
+
+### 使い方
+
+#### 1. 自己バフ系スキル（自分のステータスが変化）
+
+```gdscript
+# 例: 感応、強打、ターン数ボーナス
+var before = _snapshot_stats(attacker)
+ResonanceSkill.apply_resonance(attacker, board_system_ref)
+await _show_skill_change_if_any(attacker, before, "感応")
+```
+
+#### 2. 敵対象スキル（敵のステータスを変化させる）
+
+第4引数`skill_owner`でスキル所持者を指定。
+
+```gdscript
+# 例: 貫通（attackerのスキルでdefenderの土地ボーナスを無効化）
+var before = _snapshot_stats(defender)
+PenetrationSkill.apply_penetration(attacker, defender)
+await _show_skill_change_if_any(defender, before, "貫通", attacker)
+# → attackerカード側に「貫通」表示、defenderのHPバーが減少
+```
+
+#### 3. 両者チェックするスキル
+
+```gdscript
+# 例: ブルガサリ（どちらかがアイテム使用時に発動）
+attacker_before = _snapshot_stats(attacker)
+defender_before = _snapshot_stats(defender)
+SkillPermanentBuff.apply_bulgasari_battle_bonus(attacker, ...)
+SkillPermanentBuff.apply_bulgasari_battle_bonus(defender, ...)
+await _show_skill_change_if_any(attacker, attacker_before, "ブルガサリ")
+await _show_skill_change_if_any(defender, defender_before, "ブルガサリ")
+```
+
+### 攻撃成功時スキルの追加（battle_execution.gd）
+
+攻撃成功時に発動するスキルは`execute_attack_sequence()`内の攻撃成功ブロックで処理。
+
+```gdscript
+# 攻撃成功時効果ブロック内（約460行目付近）
+if defender_p.is_alive() and attacker_p.current_ap > 0:
+	# 既存: 呪い付与、ダウン付与
+	# 新しいスキル追加例:
+	var drained = _apply_ap_drain_on_attack_success(attacker_p, defender_p)
+	if drained and battle_screen_manager:
+		var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
+		var target_side = "attacker" if defender_p.is_attacker else "defender"
+		await battle_screen_manager.show_skill_activation(skill_owner_side, "APドレイン", {})
+		await battle_screen_manager.update_ap(target_side, defender_p.current_ap)
+```
+
+### スナップショットで検出される変化
+
+```gdscript
+# _snapshot_stats()が記録するフィールド
+- current_hp
+- current_ap
+- resonance_bonus_hp    # 感応ボーナス
+- temporary_bonus_hp    # 一時的ボーナス
+- spell_bonus_hp        # スペルボーナス
+- land_bonus_hp         # 土地ボーナス
+- item_bonus_hp         # アイテムボーナス
+```
+
+これらのフィールドが変化した場合のみアニメーションが実行される。
+
+### チェックリスト（新スキル追加時）
+
+- [ ] スキルの処理タイミングを決定（戦闘開始前 or 攻撃成功時）
+- [ ] 自己バフか敵対象かを確認
+- [ ] `_snapshot_stats()`でスキル適用前の状態を保存
+- [ ] スキルロジックを実行
+- [ ] `_show_skill_change_if_any()`を呼び出し
+  - 自己バフ: 第4引数省略
+  - 敵対象: 第4引数にスキル所持者を指定
+- [ ] 攻撃成功時スキルの場合は`battle_execution.gd`で直接`battle_screen_manager`を使用
+
+---
+
+## スキル表示システム（SkillDisplayConfig）
+
+### 概要
+
+スキル発動時の表示（スキル名、エフェクト、SE）を一元管理するシステム。
+マッピングテーブル方式により、JSONの変更なしでスキル表示を制御できる。
+
+### ファイル構成
+
+```
+res://scripts/battle_screen/
+└── skill_display_config.gd    # スキル表示設定（マッピングテーブル）
+```
+
+### 設計思想
+
+| 項目 | 方針 |
+|------|------|
+| スキル名 | マッピングテーブルで`effect_type`→日本語名 |
+| エフェクト | マッピングテーブルで指定（未実装なら空文字） |
+| SE | マッピングテーブルで指定（未実装なら空文字） |
+| パラメータ分岐 | JSONの値（element等）を渡して動的にエフェクト決定 |
+
+### マッピングテーブル構造
+
+```gdscript
+# skill_display_config.gd
+class_name SkillDisplayConfig
+
+const CONFIG = {
+	# 固定エフェクトのスキル
+	"power_strike": {
+		"name": "強打",
+		"effect": "impact_fire",
+		"sound": "se_power"
+	},
+	"ap_drain": {
+		"name": "APドレイン",
+		"effect": "drain_purple",
+		"sound": "se_drain"
+	},
+	"penetration": {
+		"name": "貫通",
+		"effect": "shield_break",
+		"sound": "se_break"
+	},
+	
+	# パラメータで分岐するスキル
+	"change_tile_element": {
+		"name": "土地変性",
+		"effect_by_element": {
+			"water": "element_change_water",
+			"fire": "element_change_fire",
+			"wind": "element_change_wind",
+			"earth": "element_change_earth"
+		},
+		"sound": "se_element_change"
+	},
+	
+	# エフェクト未実装のスキル（名前のみ表示）
+	"resonance": {
+		"name": "感応",
+		"effect": "",
+		"sound": ""
+	}
+}
+```
+
+### パラメータ分岐の仕組み
+
+同じ`effect_type`でも、JSONのパラメータに応じて異なるエフェクトを再生できる。
+
+**対応パターン:**
+
+| パターン | テーブルのキー | 渡すパラメータ |
+|---------|--------------|---------------|
+| 属性分岐 | `effect_by_element` | `{"element": "water"}` |
+| 条件分岐 | `effect_by_condition` | `{"condition": "enemy_no_item"}` |
+| 対象分岐 | `effect_by_target` | `{"target": "enemy"}` |
+
+**例: 土地変性（バハムート）**
+
+```json
+// JSONデータ
+{
+  "effect_type": "change_tile_element",
+  "element": "water"
+}
+```
+
+```gdscript
+// 呼び出し
+var params = {"element": effect.get("element", "")}
+var config = SkillDisplayConfig.get_config("change_tile_element", params)
+// → {"name": "土地変性", "effect": "element_change_water", "sound": "se_element_change"}
+```
+
+### 公開API
+
+```gdscript
+## 設定を取得
+## @param effect_type: スキルのeffect_type
+## @param params: 分岐用パラメータ（省略可）
+## @return: {name, effect, sound}
+static func get_config(effect_type: String, params: Dictionary = {}) -> Dictionary
+
+## スキル表示を実行（名前 + エフェクト + SE）
+## @param battle_screen_manager: バトル画面マネージャー
+## @param effect_type: スキルのeffect_type
+## @param side: "attacker" or "defender"
+## @param params: 分岐用パラメータ（省略可）
+static func show(battle_screen_manager, effect_type: String, side: String, params: Dictionary = {}) -> void
+```
+
+### 使用例
+
+#### 基本的な使い方（発動箇所で1行追加）
+
+```gdscript
+# 強打発動時
+PowerStrikeSkill.apply(participant, context)
+await SkillDisplayConfig.show(battle_screen_manager, "power_strike", side)
+
+# 土地変性発動時（パラメータ渡し）
+var element = effect.get("element", "")
+apply_tile_element_change(tile, element)
+await SkillDisplayConfig.show(battle_screen_manager, "change_tile_element", side, {"element": element})
+```
+
+#### ステータス変動スキルとの併用
+
+ステータス変動があるスキルは既存の`_show_skill_change_if_any`を使用。
+SkillDisplayConfigはステータス変動がないスキル向け。
+
+```gdscript
+# ステータス変動あり → 既存方式（自動検出）
+var before = _snapshot_stats(participant)
+ResonanceSkill.apply(participant, context)
+await _show_skill_change_if_any(participant, before, "感応")
+
+# ステータス変動なし → SkillDisplayConfig
+if has_first_strike:
+	await SkillDisplayConfig.show(battle_screen_manager, "first_strike", side)
+```
+
+### keywords系スキルの扱い
+
+keywords系（先制、不屈など）はそのまま日本語名なので、特別な処理で対応。
+
+```gdscript
+const KEYWORD_CONFIG = {
+	"先制": {"effect": "speed_up", "sound": "se_speed"},
+	"後手": {"effect": "", "sound": ""},
+	"不屈": {"effect": "endure", "sound": "se_endure"},
+	"再生": {"effect": "regenerate", "sound": "se_heal"},
+	# ...
+}
+
+static func show_keyword(battle_screen_manager, keyword: String, side: String) -> void:
+	var config = KEYWORD_CONFIG.get(keyword, {})
+	await battle_screen_manager.show_skill_activation(side, keyword, {})
+	if config.get("effect", ""):
+		await battle_screen_manager.play_effect(side, config["effect"])
+	if config.get("sound", ""):
+		AudioManager.play_se(config["sound"])
+```
+
+### スキル発動箇所の対応状況
+
+| カテゴリ | スキル例 | 表示方式 | 対応状況 |
+|---------|---------|---------|---------|
+| ステータス変動あり | 感応、強打、貫通、APドレイン | `_show_skill_change_if_any` | ✅ 対応済 |
+| ステータス変動なし（effect_type） | 先制、アイテム破壊、戦闘後破壊付与 | `SkillDisplayConfig.show()` | ❌ 未対応 |
+| ステータス変動なし（keyword） | 不屈、再生 | `SkillDisplayConfig.show_keyword()` | ❌ 未対応 |
+
+### 新スキル追加時のチェックリスト
+
+#### ステータス変動があるスキル
+- [ ] 処理ロジックを実装
+- [ ] `_show_skill_change_if_any`で表示（自動検出）
+- [ ] SkillDisplayConfigへの追加は不要
+
+#### ステータス変動がないスキル
+- [ ] 処理ロジックを実装
+- [ ] SkillDisplayConfig.CONFIGに追加
+  ```gdscript
+  "new_skill": {
+	  "name": "新スキル",
+	  "effect": "",  # 後から追加可
+	  "sound": ""    # 後から追加可
+  }
+  ```
+- [ ] 発動箇所に1行追加
+  ```gdscript
+  await SkillDisplayConfig.show(battle_screen_manager, "new_skill", side)
+  ```
+
+### エフェクト追加時の手順
+
+1. エフェクトリソースを作成（`res://effects/`など）
+2. BattleScreenManagerに`play_effect()`を実装
+3. SkillDisplayConfigのCONFIGにエフェクト名を追加
+
+```gdscript
+# 変更前
+"power_strike": {"name": "強打", "effect": "", "sound": ""}
+
+# 変更後（エフェクト追加）
+"power_strike": {"name": "強打", "effect": "impact_fire", "sound": "se_power"}
+```
+
+### バトル系クラスとの関係
+
+```
+battle_system.gd
+	↓
+battle_preparation.gd
+	↓
+battle_item_applier.gd ──→ SkillDisplayConfig.show()
+	↓
+battle_skill_processor.gd ──→ _show_skill_change_if_any() / SkillDisplayConfig.show()
+	↓
+battle_execution.gd ──→ SkillDisplayConfig.show()
+	↓
+battle_special_effects.gd ──→ SkillDisplayConfig.show()
+```
+
+各バトルクラスから`SkillDisplayConfig`を呼び出すことで、スキル表示を一元管理。

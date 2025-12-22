@@ -6,17 +6,20 @@ class_name BattleSpecialEffects
 
 # スキルモジュール
 var _skill_legacy = preload("res://scripts/battle/skills/skill_legacy.gd")
+const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
 
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null
 var spell_magic_ref: SpellMagic = null
 var card_system_ref = null
+var battle_screen_manager = null
 
-func setup_systems(board_system, spell_draw = null, spell_magic = null, card_system = null):
+func setup_systems(board_system, spell_draw = null, spell_magic = null, card_system = null, p_battle_screen_manager = null):
 	board_system_ref = board_system
 	spell_draw_ref = spell_draw
 	spell_magic_ref = spell_magic
 	card_system_ref = card_system
+	battle_screen_manager = p_battle_screen_manager
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -335,6 +338,39 @@ func apply_regeneration(participant: BattleParticipant) -> void:
 		if healed > 0:
 			print("【再生発動】", participant.creature_data.get("name", "?"), 
 				  " HP回復: +", healed, " → ", participant.current_hp, "/", current_mhp)
+			# スキル表示
+			await _show_regeneration(participant)
+
+## 再生スキル表示
+func _show_regeneration(participant: BattleParticipant) -> void:
+	if not battle_screen_manager:
+		return
+	
+	var side = "attacker" if participant.is_attacker else "defender"
+	var skill_name = SkillDisplayConfig.get_skill_name("regeneration")
+	var hp_data = _create_hp_data(participant)
+	
+	await battle_screen_manager.show_skill_activation(side, skill_name, {
+		"hp_data": hp_data,
+		"ap": participant.current_ap
+	})
+
+## HP表示用データ作成
+func _create_hp_data(participant: BattleParticipant) -> Dictionary:
+	return {
+		"base_hp": participant.base_hp,
+		"base_up_hp": participant.base_up_hp,
+		"item_bonus_hp": participant.item_bonus_hp,
+		"resonance_bonus_hp": participant.resonance_bonus_hp,
+		"temporary_bonus_hp": participant.temporary_bonus_hp,
+		"spell_bonus_hp": participant.spell_bonus_hp,
+		"land_bonus_hp": participant.land_bonus_hp,
+		"current_hp": participant.current_hp,
+		"display_max": participant.base_hp + participant.base_up_hp + \
+					   participant.item_bonus_hp + participant.resonance_bonus_hp + \
+					   participant.temporary_bonus_hp + participant.spell_bonus_hp + \
+					   participant.land_bonus_hp
+	}
 
 ## 防御側クリーチャーのHPを更新
 func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:

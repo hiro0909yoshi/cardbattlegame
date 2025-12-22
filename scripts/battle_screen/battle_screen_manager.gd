@@ -107,13 +107,27 @@ func update_ap(side: String, value: int):
 	await _battle_screen.show_ap_change(side, value)
 
 
-## バトル終了
-func end_battle(result: int):
+## バトル結果表示（画面は閉じない）
+func show_battle_result(result: int):
 	if not _battle_screen:
 		return
 	
 	# 結果演出
 	await _battle_screen.show_result(result)
+
+
+## バトル終了（後方互換性のため残す - 結果表示+画面を閉じる）
+func end_battle(result: int):
+	await show_battle_result(result)
+	await close_battle_screen()
+
+
+## バトル画面を閉じる
+func close_battle_screen():
+	if not _battle_screen:
+		_is_battle_active = false
+		battle_screen_closed.emit()
+		return
 	
 	# トランジション（フェードアウト）
 	await _transition_layer.quick_fade_out()

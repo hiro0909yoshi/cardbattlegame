@@ -487,12 +487,13 @@
 	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 50,
-	  "ability": "防御型・道連れ",
-	  "ability_detail": "防御型；道連れ[周回数×G40]",
+	  "ability": "防御型・遺産",
+	  "ability_detail": "防御型；遺産[周回数×G40]",
 	  "ability_parsed": {
+		"keywords": ["遺産"],
 		"effects": [
 		  {
-			"effect_type": "legacy_gold",
+			"effect_type": "legacy_magic",
 			"trigger": "on_death",
 			"amount_formula": "lap_count * 40"
 		  }

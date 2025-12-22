@@ -343,6 +343,10 @@ func _execute_merge(partner_card: Dictionary):
 	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
 	new_creature_data["current_hp"] = max_hp
 	
+	# 合体情報を追加（バトル画面表示用）
+	new_creature_data["_was_merged"] = true
+	new_creature_data["_merged_result_name"] = result_name
+	
 	# 合体後データを保存
 	merged_creature_data = new_creature_data
 	

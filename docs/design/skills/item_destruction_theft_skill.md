@@ -212,100 +212,109 @@
 ## 処理フロー
 
 ```
-1. 戦闘開始前処理
+1. バトル準備（prepare_participants）
+   ├─ BattleParticipant作成
+   ├─ アイテムをitemsに追加（効果はまだ適用しない）
+   └─ 呪いをtemporary_effectsに変換
    │
-2. 先制攻撃の順序で行動順を決定
+2. バトル前スキル処理（apply_pre_battle_skills）開始
    │
-3. 先に動く側のアイテム破壊・盗みチェック
+3. 【最優先】能力無効化チェック（ウォーロックディスク等）
+   ├─ 無効化あり → アイテム効果のみ適用して終了
+   └─ 無効化なし → 続行
+   │
+4. 素の先制（クリーチャー能力のみ）で行動順を決定
+   │
+5. アイテム破壊・盗みチェック（先に動く側から）
    ├─ 相手が「アイテム破壊・盗み無効」を持つ → スキップ
-   ├─ アイテム破壊の場合 → 4-Aへ
-   └─ アイテム盗みの場合 → 4-Bへ
+   ├─ アイテム破壊の場合 → 対象アイテムを削除
+   └─ アイテム盗みの場合 → アイテムを移動
    │
-4-A. アイテム破壊処理
-   ├─ 相手のアイテムタイプをチェック
-   ├─ 破壊対象に一致するか確認
-   ├─ 一致する場合、相手のアイテムを破壊（消滅）
-   └─ 相手のアイテム効果を無効化
+6. 後に動く側のアイテム破壊・盗みチェック（同様）
    │
-4-B. アイテム盗み処理
-   ├─ 自分がアイテムを使用していないか確認
-   │  └─ 使用している → スキップ
-   ├─ 相手のアイテムを奪う
-   ├─ 奪ったアイテムの効果を自分に適用
-   └─ 相手のアイテム効果を無効化
+7. アイテム効果適用（破壊されなかったアイテムのみ）
+   ├─ ステータスボーナス（AP/HP）を適用
+   ├─ スキル付与（先制など）を適用
+   └─ バトル画面にアイテム名とステータス変化を表示
    │
-5. 後に動く側のアイテム破壊・盗みチェック（同様）
+8. 各種スキル処理（ブルガサリ、感応、強打、先制判定など）
    │
-6. ダメージ計算開始
+9. ダメージ計算開始
 ```
 
 ### 実装イメージ
 
 ```gdscript
-# 戦闘開始前処理
-func _handle_pre_battle_skills(attacker: BattleParticipant, defender: BattleParticipant) -> void:
-	# 行動順を決定（先制スキルなどを考慮）
-	var first_mover = _determine_first_mover(attacker, defender)
-	var second_mover = attacker if first_mover == defender else defender
+# バトル準備（battle_preparation.gd）
+func prepare_participants(...) -> Dictionary:
+	# ...BattleParticipant作成...
 	
-	# 先に動く側の処理
-	_process_item_manipulation(first_mover, second_mover)
+	# アイテムをitemsに追加（効果はまだ適用しない）
+	if not attacker_item.is_empty():
+		attacker.creature_data["items"] = [attacker_item]
+	if not defender_item.is_empty():
+		defender.creature_data["items"] = [defender_item]
 	
-	# 後に動く側の処理
-	_process_item_manipulation(second_mover, first_mover)
+	return { "attacker": attacker, "defender": defender, ... }
 
-func _process_item_manipulation(actor: BattleParticipant, target: BattleParticipant) -> void:
-	var ability_parsed = actor.creature_data.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
+# アイテム効果適用（アイテム破壊・盗み後に呼び出す）
+func apply_remaining_item_effects(attacker, defender, battle_tile_index) -> void:
+	var attacker_items = attacker.creature_data.get("items", [])
+	if not attacker_items.is_empty():
+		item_applier.apply_item_effects(attacker, attacker_items[0], defender, battle_tile_index)
 	
-	# 相手が無効化を持つかチェック
-	if _has_item_manipulation_nullify(target):
-		print("【アイテム破壊・盗み無効】", target.creature_data.get("name"))
-		return
-	
-	# アイテム破壊
-	if "アイテム破壊" in keywords:
-		_handle_item_destruction(actor, target)
-	
-	# アイテム盗み
-	if "アイテム盗み" in keywords:
-		_handle_item_theft(actor, target)
+	var defender_items = defender.creature_data.get("items", [])
+	if not defender_items.is_empty():
+		item_applier.apply_item_effects(defender, defender_items[0], attacker, battle_tile_index)
 
-func _handle_item_destruction(actor: BattleParticipant, target: BattleParticipant) -> void:
-	var effects = actor.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "destroy_item":
-			var target_types = effect.get("target_types", [])
-			var target_item = target.get_equipped_item()
-			
-			if target_item and target_item.get("type") in target_types:
-				print("【アイテム破壊】", actor.creature_data.get("name"), 
-					  " → ", target_item.get("name"), " を破壊")
-				target.remove_item()
 
-func _handle_item_theft(actor: BattleParticipant, target: BattleParticipant) -> void:
-	# 自分がアイテムを持っている場合はスキップ
-	if actor.has_item():
-		return
+# バトル前スキル処理（battle_skill_processor.gd）
+func apply_pre_battle_skills(participants, tile_info, attacker_index) -> Dictionary:
+	var attacker = participants["attacker"]
+	var defender = participants["defender"]
 	
-	var target_item = target.get_equipped_item()
-	if target_item:
-		print("【アイテム盗み】", actor.creature_data.get("name"), 
-			  " → ", target_item.get("name"), " を奪った")
-		
-		# アイテムを移動
-		target.remove_item()
-		actor.equip_item(target_item)
+	# 能力無効化チェック
+	if _has_warlock_disk(attacker) or _has_warlock_disk(defender):
+		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+		return result
+	
+	# 素の先制（クリーチャー能力のみ）で順序決定
+	var first = attacker
+	var second = defender
+	if _has_raw_first_strike(defender) and not _has_raw_first_strike(attacker):
+		first = defender
+		second = attacker
+	
+	# アイテム破壊・盗み実行
+	await apply_item_manipulation(first, second)
+	
+	# アイテム効果適用（破壊されなかったアイテムのみ）
+	battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+	
+	# バトル画面にアイテム効果を表示
+	await _show_item_effect_if_any(attacker, attacker_before_item, "attacker")
+	await _show_item_effect_if_any(defender, defender_before_item, "defender")
+	
+	# 以下、各種スキル処理...
 
-func _has_item_manipulation_nullify(participant: BattleParticipant) -> bool:
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
+
+# アイテム破壊・盗み処理（skill_item_manipulation.gd）
+static func _execute_destroy_item(actor, target, effect: Dictionary) -> bool:
+	# ...対象チェック...
 	
-	for effect in effects:
-		if effect.get("effect_type") == "nullify_item_manipulation":
-			return true
+	# アイテムを削除（効果はまだ適用されていないので、削除するだけでOK）
+	target.creature_data["items"] = []
+	return true
+
+static func _execute_steal_item(actor, target, _effect: Dictionary) -> bool:
+	# ...条件チェック...
 	
-	return false
+	# 対象からアイテムを削除（効果はまだ適用されていない）
+	target.creature_data["items"] = []
+	
+	# 自分にアイテムを追加（効果の適用はapply_remaining_item_effectsで行う）
+	actor.creature_data["items"] = [stolen_item]
+	return true
 ```
 
 ---
@@ -400,6 +409,7 @@ actor.equip_item(target_item)
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/10/25 | 1.0 | 初版作成 - skills_design.mdから分離 |
+| 2025/12/23 | 1.1 | 処理フロー更新 - アイテム効果適用をアイテム破壊後に変更 |
 
 ---
 

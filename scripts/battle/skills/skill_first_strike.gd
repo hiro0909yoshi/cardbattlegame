@@ -36,17 +36,23 @@ static func has_last_strike(creature_data: Dictionary) -> bool:
 ## 先制・後手スキルを適用
 ##
 ## @param participant バトル参加者
-static func apply(participant) -> void:
+## @return 発動したスキルのリスト ["first_strike"] or ["last_strike"] or []
+static func apply(participant) -> Array:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
+	var activated: Array = []
 	
 	if "先制" in keywords:
 		participant.has_first_strike = true
 		print("【先制】", participant.creature_data.get("name", "?"), " 先制攻撃権獲得")
+		activated.append("first_strike")
 	
 	if "後手" in keywords:
 		participant.has_last_strike = true
 		print("【後手】", participant.creature_data.get("name", "?"), " 後手攻撃")
+		activated.append("last_strike")
+	
+	return activated
 
 ## スキル付与（アイテム使用時）
 ##

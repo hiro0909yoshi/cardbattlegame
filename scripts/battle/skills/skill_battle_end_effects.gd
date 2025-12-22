@@ -24,12 +24,13 @@ class_name SkillBattleEndEffects
 ## @param attacker 攻撃側BattleParticipant
 ## @param defender 防御側BattleParticipant
 ## @param context 戦闘コンテキスト {board_system, tile_info, spell_world_curse, was_attacked}
-## @return Dictionary {attacker_died: bool, defender_died: bool, spawn_info: Dictionary}
+## @return Dictionary {attacker_died: bool, defender_died: bool, spawn_info: Dictionary, activated_skills: Array}
 static func process_all(attacker, defender, context: Dictionary = {}) -> Dictionary:
 	var result = {
 		"attacker_died": false,
 		"defender_died": false,
-		"spawn_info": {}  # マイコロン等のspawn情報
+		"spawn_info": {},  # マイコロン等のspawn情報
+		"activated_skills": []  # 発動したスキル情報
 	}
 	
 	# ナチュラルワールド無効化チェック
@@ -43,12 +44,14 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 		var attacker_result = _process_effects(attacker, defender, context)
 		if attacker_result.get("target_died", false):
 			result["defender_died"] = true
+		result["activated_skills"].append_array(attacker_result.get("activated_skills", []))
 	
 	# 防御側の効果を処理（対象: 攻撃側）
 	if defender and defender.is_alive():
 		var defender_result = _process_effects(defender, attacker, context)
 		if defender_result.get("target_died", false):
 			result["attacker_died"] = true
+		result["activated_skills"].append_array(defender_result.get("activated_skills", []))
 	
 	# マイコロン: 防御側が敵攻撃で生き残った場合のspawn処理
 	var board_system = context.get("board_system")
@@ -78,9 +81,9 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 ## @param self_participant 効果発動側
 ## @param enemy_participant 効果対象側（敵）
 ## @param context 戦闘コンテキスト
-## @return Dictionary {target_died: bool}
+## @return Dictionary {target_died: bool, activated_skills: Array}
 static func _process_effects(self_participant, enemy_participant, context: Dictionary) -> Dictionary:
-	var result = {"target_died": false}
+	var result = {"target_died": false, "activated_skills": []}
 	
 	var ability_parsed = self_participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -95,7 +98,8 @@ static func _process_effects(self_participant, enemy_participant, context: Dicti
 		
 		# 土地対象の効果（レーシィ等）
 		if effect_type == "level_up_battle_land":
-			_apply_level_up_battle_land(self_participant, effect, context)
+			if _apply_level_up_battle_land(self_participant, effect, context):
+				result["activated_skills"].append({"actor": self_participant, "skill_type": effect_type})
 			continue
 		
 		# 敵対象の効果は敵が生存している場合のみ
@@ -110,16 +114,20 @@ static func _process_effects(self_participant, enemy_participant, context: Dicti
 			"swap_ap_mhp":
 				if target == "enemy":
 					var swap_result = _apply_swap_ap_mhp(self_participant, enemy_participant)
+					result["activated_skills"].append({"actor": self_participant, "skill_type": effect_type})
 					if swap_result.get("target_died", false):
 						result["target_died"] = true
 			
 			"apply_curse":
 				if target == "enemy":
-					_apply_curse_effect(self_participant, enemy_participant, effect)
+					var curse_name = _apply_curse_effect(self_participant, enemy_participant, effect)
+					if curse_name:
+						result["activated_skills"].append({"actor": self_participant, "skill_type": "apply_curse", "curse_name": curse_name})
 			
 			"reduce_enemy_mhp":
 				if target == "enemy":
 					var reduce_result = _apply_reduce_mhp(self_participant, enemy_participant, effect)
+					result["activated_skills"].append({"actor": self_participant, "skill_type": effect_type})
 					if reduce_result.get("target_died", false):
 						result["target_died"] = true
 	
@@ -191,7 +199,8 @@ static func _apply_swap_ap_mhp(self_participant, enemy_participant) -> Dictionar
 
 
 ## 呪い付与（スキュラ等）
-static func _apply_curse_effect(self_participant, enemy_participant, effect: Dictionary) -> void:
+## @return 呪いを付与できた場合は呪い名、失敗時は空文字
+static func _apply_curse_effect(self_participant, enemy_participant, effect: Dictionary) -> String:
 	var self_name = self_participant.creature_data.get("name", "?")
 	var enemy_data = enemy_participant.creature_data
 	var enemy_name = enemy_data.get("name", "?")
@@ -200,13 +209,13 @@ static func _apply_curse_effect(self_participant, enemy_participant, effect: Dic
 	var curse_name = effect.get("name", curse_type)
 	
 	if curse_type.is_empty():
-		return
+		return ""
 	
 	# 既存の呪いがあるかチェック
 	var existing_curse = enemy_data.get("curse", {})
 	if not existing_curse.is_empty():
 		print("【戦闘終了時効果】%s は既に呪いを持っているため付与できない" % enemy_name)
-		return
+		return ""
 	
 	# 呪い付与
 	enemy_data["curse"] = {
@@ -216,6 +225,7 @@ static func _apply_curse_effect(self_participant, enemy_participant, effect: Dic
 	}
 	
 	print("【戦闘終了時効果】%s が %s に呪い\"%s\"を付与" % [self_name, enemy_name, curse_name])
+	return curse_name
 
 
 ## MHP減少（サムハイン等）
@@ -273,7 +283,8 @@ static func _apply_reduce_mhp(self_participant, enemy_participant, effect: Dicti
 
 
 ## 戦闘地レベルアップ（レーシィ等）
-static func _apply_level_up_battle_land(self_participant, effect: Dictionary, context: Dictionary) -> void:
+## @return 成功した場合true
+static func _apply_level_up_battle_land(self_participant, effect: Dictionary, context: Dictionary) -> bool:
 	var self_name = self_participant.creature_data.get("name", "?")
 	var level_up_value = effect.get("value", 1)
 	
@@ -283,7 +294,7 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 	
 	if not board_system or tile_index < 0:
 		print("【戦闘終了時効果】%s - 土地レベルアップ失敗（タイル情報なし）" % self_name)
-		return
+		return false
 	
 	# 現在のレベルを取得
 	var current_level = tile_info.get("level", 1)
@@ -291,7 +302,7 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 	
 	if current_level >= max_level:
 		print("【戦闘終了時効果】%s - 土地レベルは既に最大（Lv%d）" % [self_name, current_level])
-		return
+		return false
 	
 	# レベルアップ
 	var new_level = mini(current_level + level_up_value, max_level)
@@ -307,6 +318,7 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 			tile.level = new_level
 	
 	print("【戦闘終了時効果】%s - 戦闘地レベルアップ (Lv%d→Lv%d)" % [self_name, current_level, new_level])
+	return true
 
 
 # =============================================================================
