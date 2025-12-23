@@ -192,7 +192,13 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		
 		# 戦闘行動不可呪いチェック
 		if SpellCurseBattle.has_battle_disable(attacker_p.creature_data):
+			var curse = attacker_p.creature_data.get("curse", {})
+			var curse_name = curse.get("name", "戦闘行動不可")
 			print("【戦闘行動不可】", attacker_p.creature_data.get("name", "?"), " は攻撃できない")
+			# 🎬 呪い発動表示
+			if battle_screen_manager:
+				var attacker_side = "attacker" if attacker_p.is_attacker else "defender"
+				await battle_screen_manager.show_skill_activation(attacker_side, "呪い[%s]" % curse_name, {})
 			continue
 		
 		# 攻撃回数分ループ
@@ -233,6 +239,13 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				if reduction_rate == 0.0:
 					# 完全無効化
 					print("  【無効化】", defender_p.creature_data.get("name", "?"), " が攻撃を完全無効化")
+					
+					# 🎬 呪いによる無効化の場合、呪い名を表示
+					if not attacker_p.is_using_scroll:  # 通常攻撃の無効化
+						var curse_nullify_info = _get_curse_nullify_info(defender_p)
+						if curse_nullify_info and battle_screen_manager:
+							var defender_side = "attacker" if defender_p.is_attacker else "defender"
+							await battle_screen_manager.show_skill_activation(defender_side, "呪い[%s]" % curse_nullify_info["name"], {})
 					
 					# magic_barrier呪いによるG100移動チェック
 					_apply_gold_transfer_on_nullify(attacker_p, defender_p)
@@ -729,6 +742,18 @@ func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: Battl
 ## @return Dictionary { "applied": bool, "curse_name": String }
 func _check_and_apply_on_attack_success_curse(attacker: BattleParticipant, defender: BattleParticipant) -> Dictionary:
 	return SpellCurseBattle.check_and_apply_on_attack_success(attacker.creature_data, defender.creature_data)
+
+
+## 🔮 呪いによる通常攻撃無効化の情報を取得
+## @return Dictionary { "name": String, "curse_type": String } または null
+func _get_curse_nullify_info(defender: BattleParticipant) -> Variant:
+	for effect in defender.temporary_effects:
+		if effect.get("type") == "nullify_normal_attack" and effect.get("source") == "curse":
+			return {
+				"name": effect.get("source_name", ""),
+				"curse_type": effect.get("curse_type", "")
+			}
+	return null
 
 
 ## 💰 攻撃無効化時のG移動（magic_barrier呪い用）

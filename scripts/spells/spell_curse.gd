@@ -81,7 +81,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 		
 		"stat_reduce":
 			# ステータス減少呪い（縮小術等）- バトル時にHP/APを減らす
-			var stat = effect.get("stat", "hp")  # "hp", "ap", "both"
+			var stat = effect.get("stat", "both")  # "hp", "ap", "both"
 			var value = effect.get("value", -10)
 			var params = {
 				"name": effect.get("name", "弱体化"),

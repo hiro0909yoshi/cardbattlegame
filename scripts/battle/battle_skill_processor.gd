@@ -118,6 +118,10 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	attacker_used_item = not attacker.creature_data.get("items", []).is_empty()
 	defender_used_item = not defender.creature_data.get("items", []).is_empty()
 	
+	# 呪い効果表示（バトル準備時に適用されたステータス変更呪い）
+	await _show_curse_stat_effect_if_any(attacker, "attacker")
+	await _show_curse_stat_effect_if_any(defender, "defender")
+	
 	# アイテム効果適用（破壊されなかったアイテムのみ）
 	var attacker_before_item = _snapshot_stats(attacker)
 	var defender_before_item = _snapshot_stats(defender)
@@ -544,45 +548,63 @@ func _show_merge_if_any(participant: BattleParticipant, side: String) -> void:
 	participant.creature_data.erase("_merged_result_name")
 
 
-## アイテム効果の変化をバトル画面に表示（アイテム使用時のみ）
-func _show_item_effect_if_any(participant: BattleParticipant, before: Dictionary, side: String) -> void:
+## アイテム使用をバトル画面に表示（ステータス変化に関係なく常に表示）
+func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionary, side: String) -> void:
 	if not battle_screen_manager:
 		return
 	
 	# アイテムがない場合は表示しない（破壊された場合など）
 	var items = participant.creature_data.get("items", [])
-	print("[アイテム表示チェック] ", side, " items=", items)
 	if items.is_empty():
-		print("  → アイテムなし、スキップ")
 		return
 	
-	var hp_changed = participant.current_hp != before.get("current_hp", 0)
-	var ap_changed = participant.current_ap != before.get("current_ap", 0)
-	var item_hp_changed = participant.item_bonus_hp != before.get("item_bonus_hp", 0)
-	
-	print("  hp_changed=", hp_changed, " ap_changed=", ap_changed, " item_hp_changed=", item_hp_changed)
-	print("  before: hp=", before.get("current_hp", 0), " ap=", before.get("current_ap", 0), " item_hp=", before.get("item_bonus_hp", 0))
-	print("  after: hp=", participant.current_hp, " ap=", participant.current_ap, " item_hp=", participant.item_bonus_hp)
-	
-	if not hp_changed and not ap_changed and not item_hp_changed:
-		print("  → 変化なし、スキップ")
-		return
-	
-	# アイテム名を取得（援護クリーチャーの場合は「援護[クリーチャー名]」）
+	# アイテム名を取得
 	var item = items[0]
 	var display_name: String
 	var item_type = item.get("type", "")
 	if item_type == "creature":
-		# 援護クリーチャー
+		# 援護クリーチャー: 「援護[クリーチャー名]」形式
 		var creature_name = item.get("name", "?")
 		var skill_name = SkillDisplayConfig.get_skill_name("assist")
 		display_name = "%s[%s]" % [skill_name, creature_name]
 	else:
-		display_name = item.get("name", "アイテム")
+		# 通常アイテム: 「アイテム名 を使用」形式
+		display_name = "%s を使用" % item.get("name", "アイテム")
 	
 	var hp_data = _create_hp_data(participant)
 	
 	# アイテム名表示 + HP/AP更新
+	await battle_screen_manager.show_skill_activation(side, display_name, {
+		"hp_data": hp_data,
+		"ap": participant.current_ap
+	})
+
+
+## 呪いによるステータス変更効果をバトル画面に表示
+## 対象: stat_boost, stat_reduce, ap_nullify, random_stat
+func _show_curse_stat_effect_if_any(participant: BattleParticipant, side: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	# 呪いがない場合は表示しない
+	var curse = participant.creature_data.get("curse", {})
+	if curse.is_empty():
+		return
+	
+	var curse_type = curse.get("curse_type", "")
+	var curse_name = curse.get("name", "")
+	
+	# ステータス変更系の呪いのみ表示（無効化系は効果発揮時に表示）
+	var stat_change_curses = ["stat_boost", "stat_reduce", "ap_nullify", "random_stat"]
+	if not curse_type in stat_change_curses:
+		return
+	
+	# 「呪い[呪い名]」形式で表示
+	var display_name = "呪い[%s]" % curse_name if curse_name else "呪い"
+	
+	var hp_data = _create_hp_data(participant)
+	
+	# 呪い名表示 + HP/AP更新
 	await battle_screen_manager.show_skill_activation(side, display_name, {
 		"hp_data": hp_data,
 		"ap": participant.current_ap

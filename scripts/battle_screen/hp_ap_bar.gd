@@ -167,17 +167,35 @@ func set_ap(value: int, max_value: int = 100) -> void:
 
 
 ## HPラベルを更新
+## 表示形式: "現在HP / 基本HP+一時バフ+土地ボーナス"
+## 例: "50 / 30+10+10"
 func _update_hp_label() -> void:
 	if hp_label:
-		# 最大値 = 全セグメントの合計
-		var total = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"] + \
-					hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + \
-					hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
+		# 基本HP（緑セグメント: base + base_up + item）
+		var base_hp = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"]
+		# 一時バフ（水色セグメント: 感応 + 一時 + スペル）
+		var cyan_bonus = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
+		# 土地ボーナス（黄色セグメント）
+		var yellow_bonus = hp_data["land_bonus_hp"]
+		
 		# 現在値 = current_hp + item_bonus_hp + 全ボーナスの残り
+		# マイナスの一時ボーナスはcurrent_hpに既に反映済み（呪いによる制限）
+		var temp_bonus = hp_data["temporary_bonus_hp"] if hp_data["temporary_bonus_hp"] > 0 else 0
 		var current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
-					  hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + \
+					  hp_data["resonance_bonus_hp"] + temp_bonus + \
 					  hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
-		hp_label.text = "%d / %d" % [current, total]
+		
+		# 表示文字列を構築
+		var max_text = str(base_hp)
+		if cyan_bonus != 0:
+			if cyan_bonus > 0:
+				max_text += "+%d" % cyan_bonus
+			else:
+				max_text += "%d" % cyan_bonus  # マイナスはそのまま表示（-20など）
+		if yellow_bonus > 0:
+			max_text += "+%d" % yellow_bonus
+		
+		hp_label.text = "%d / %s" % [current, max_text]
 
 
 ## APラベルを更新

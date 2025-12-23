@@ -200,13 +200,13 @@
 	},
 	{
 	  "id": 9011,
-	  "name": "HP減少呪い（敵クリーチャー）",
+	  "name": "HP減少呪い（全クリーチャー）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "enemy"
+		  "owner_filter": "all"
 		},
 		"effects": [
 		  {

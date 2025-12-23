@@ -74,6 +74,13 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 				})
 				participant.temporary_bonus_ap += value
 			
+			# HP減少時、current_hpを有効MHPに制限
+			if value < 0 and (stat == "hp" or stat == "both"):
+				var effective_max_hp = participant.get_effective_max_hp()
+				if participant.current_hp > effective_max_hp:
+					print("[呪い変換] current_hpを有効MHPに制限: ", participant.current_hp, " → ", effective_max_hp)
+					participant.current_hp = effective_max_hp
+			
 			# ログ出力
 			match stat:
 				"hp":

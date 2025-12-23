@@ -360,10 +360,12 @@ func apply_stat_reduce(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", -20)
 	var duration = effect.get("duration", -1)
 	var curse_name = effect.get("name", "能力値-20")
+	var stat = effect.get("stat", "both")  # "hp", "ap", "both"
 	
 	spell_curse.curse_creature(tile_index, "stat_reduce", duration, {
 		"name": curse_name,
-		"value": value
+		"value": value,
+		"stat": stat
 	})
 
 # ========================================

@@ -172,6 +172,12 @@ func is_alive() -> bool:
 func get_max_hp() -> int:
 	return base_hp + base_up_hp
 
+# 戦闘中の有効最大HP（呪い等の一時効果を反映）
+# 土地ボーナスは別枠なので含めない
+func get_effective_max_hp() -> int:
+	return base_hp + base_up_hp + item_bonus_hp + resonance_bonus_hp + \
+		   temporary_bonus_hp + spell_bonus_hp
+
 # ダメージを負っているかチェック
 # 現在HPが真のMHPより低い場合にtrue
 func is_damaged() -> bool:

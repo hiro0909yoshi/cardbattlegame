@@ -836,11 +836,11 @@
       "cost": {
         "mp": 40
       },
-      "effect": "対象の自クリーチャーに呪い\"縮小術\"(秘術[G50・対象クリーチャーのMHP-10])",
+      "effect": "対象クリーチャー1体に呪い\"縮小術\"(秘術[G50・対象クリーチャー1体のMHP-10])",
       "effect_parsed": {
         "target_type": "creature",
         "target_info": {
-          "owner_filter": "own",
+          "owner_filter": "all",
           "has_no_curse": true,
           "has_no_mystic_arts": true
         },
