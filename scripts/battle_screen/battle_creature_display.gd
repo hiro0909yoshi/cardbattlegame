@@ -165,6 +165,16 @@ func update_ap(new_ap: int) -> void:
 	_hp_ap_bar.animate_ap_change(new_ap)
 
 
+## クリーチャーを更新（変身時など）
+func update_creature(new_data: Dictionary) -> void:
+	creature_data = new_data
+	# カード表示を再作成
+	_create_card_instance(new_data)
+	# HP/APバーも更新
+	_update_hp_bar()
+	_hp_ap_bar.set_ap(new_data.get("current_ap", new_data.get("ap", 0)))
+
+
 ## 攻撃アニメーション
 func play_attack_animation():
 	var direction = 1.0 if is_attacker else -1.0

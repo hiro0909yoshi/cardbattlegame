@@ -107,6 +107,14 @@ func update_ap(side: String, value: int):
 	await _battle_screen.show_ap_change(side, value)
 
 
+## クリーチャー更新（変身時など）
+func update_creature(side: String, new_data: Dictionary):
+	if not _battle_screen:
+		return
+	
+	await _battle_screen.update_creature_display(side, new_data)
+
+
 ## バトル結果表示（画面は閉じない）
 func show_battle_result(result: int):
 	if not _battle_screen:

@@ -20,6 +20,19 @@ func setup_systems(card_system, screen_manager = null):
 	card_system_ref = card_system
 	battle_screen_manager = screen_manager
 
+## BattleParticipantから表示用データを作成（変身時のカード更新用）
+func _create_display_data(participant: BattleParticipant) -> Dictionary:
+	var data = participant.creature_data.duplicate(true)
+	data["base_up_hp"] = participant.base_up_hp
+	data["item_bonus_hp"] = participant.item_bonus_hp
+	data["resonance_bonus_hp"] = participant.resonance_bonus_hp
+	data["temporary_bonus_hp"] = participant.temporary_bonus_hp
+	data["spell_bonus_hp"] = participant.spell_bonus_hp
+	data["land_bonus_hp"] = participant.land_bonus_hp
+	data["current_hp"] = participant.current_hp
+	data["current_ap"] = participant.current_ap
+	return data
+
 ## 攻撃後のHPバー更新
 func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
 	if not battle_screen_manager:
@@ -286,7 +299,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					
 					# 軽減の場合は即死判定を行う
 					if defender_p.is_alive():
-						special_effects.check_instant_death(attacker_p, defender_p)
+						var instant_death_activated = special_effects.check_instant_death(attacker_p, defender_p)
+						if instant_death_activated and battle_screen_manager:
+							var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
+							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
 					
 					# 防御側撃破チェック（即死後）
 					if not defender_p.is_alive():
@@ -294,6 +310,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						
 						# 💀 死亡時効果チェック（道連れ、雪辱、死者復活など）
 						var death_effects = special_effects.check_on_death_effects(defender_p, attacker_p, CardLoader)
+						await _show_death_effects(death_effects, defender_p)
 						if death_effects["death_revenge_activated"]:
 							print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
 						
@@ -414,6 +431,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 反射ダメージを攻撃側に適用
 			if reflect_result["has_reflect"] and reflect_result["reflect_damage"] > 0:
+				# 🎬 反射スキル表示
+				if battle_screen_manager:
+					var skill_name = SkillDisplayConfig.get_skill_name("reflect_damage")
+					await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 				print("
   【反射ダメージ適用】")
 				attacker_p.take_damage(reflect_result["reflect_damage"])
@@ -429,7 +450,10 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			
 			# 即死判定（攻撃が通った後）
 			if defender_p.is_alive():
-				special_effects.check_instant_death(attacker_p, defender_p)
+				var instant_death_activated = special_effects.check_instant_death(attacker_p, defender_p)
+				if instant_death_activated and battle_screen_manager:
+					var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
+					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
 			
 			# 🔄 攻撃成功時の変身処理（コカトリス用）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
@@ -448,11 +472,25 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						battle_result["attacker_transformed"] = true
 						if transform_result.has("attacker_original"):
 							battle_result["attacker_original"] = transform_result["attacker_original"]
+						# 🎬 変身スキル表示（攻撃側が変身）
+						if battle_screen_manager:
+							var skill_name = SkillDisplayConfig.get_skill_name("transform")
+							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							# 🎬 カード表示を更新
+							var display_data = _create_display_data(attacker_p)
+							await battle_screen_manager.update_creature("attacker", display_data)
 					if transform_result.get("defender_transformed", false):
 						battle_result["defender_transformed"] = true
 						if transform_result.has("defender_original"):
 							battle_result["defender_original"] = transform_result["defender_original"]
 						print("  【変身発動】防御側が変身しました")
+						# 🎬 変身スキル表示（防御側が変身させられた）
+						if battle_screen_manager:
+							var skill_name = SkillDisplayConfig.get_skill_name("transform")
+							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							# 🎬 カード表示を更新
+							var display_data = _create_display_data(defender_p)
+							await battle_screen_manager.update_creature("defender", display_data)
 			
 			# 🔒 攻撃成功時効果（呪い付与、ダウン付与、APドレイン等）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）

@@ -130,8 +130,7 @@
 ```gdscript
 1. 確率判定（randf() * 100.0 <= probability）
 2. 成功 → opponent.instant_death_flag = true
-3. opponent.base_hp = 0
-4. opponent.update_current_hp()
+3. opponent.current_hp = 0
 ```
 
 #### 実装例

@@ -216,8 +216,7 @@ func _check_instant_death(attacker: BattleParticipant, defender: BattleParticipa
 			  " → ", defender.creature_data.get("name", "?"), 
 			  " (", probability, "% 判定成功)")
 		defender.instant_death_flag = true
-		defender.base_hp = 0
-		defender.update_current_hp()
+		defender.current_hp = 0
 		return true
 	else:
 		print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")

@@ -52,6 +52,15 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		print("【能力無効化発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
+		
+		# 🎬 能力無効化スキル表示（どちらが持っているか判定）
+		if battle_screen_manager:
+			var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")
+			if _has_warlock_disk(attacker) or _has_skill_nullify_curse(attacker):
+				await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+			elif _has_warlock_disk(defender) or _has_skill_nullify_curse(defender):
+				await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+		
 		# 能力無効化でもアイテム効果は適用（アイテム破壊スキルも無効化されるため）
 		if battle_preparation_ref:
 			battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
@@ -136,8 +145,23 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# ============================================================
 	# 【Phase 0-B】変身スキル適用（戦闘開始時）
 	# ============================================================
-	var card_loader = load("res://scripts/card_loader.gd").new()
-	result["transform_result"] = TransformSkill.process_transform_effects(attacker, defender, card_loader, "on_battle_start")
+	# CardLoaderはオートロードなので直接参照
+	result["transform_result"] = TransformSkill.process_transform_effects(attacker, defender, CardLoader, "on_battle_start")
+	
+	# 🎬 変身スキル表示
+	var transform_result = result["transform_result"]
+	if transform_result.get("attacker_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(attacker)
+		await battle_screen_manager.update_creature("attacker", display_data)
+	if transform_result.get("defender_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(defender)
+		await battle_screen_manager.update_creature("defender", display_data)
 	
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
@@ -421,6 +445,20 @@ func _create_hp_data(participant: BattleParticipant) -> Dictionary:
 					   participant.temporary_bonus_hp + participant.spell_bonus_hp + \
 					   participant.land_bonus_hp
 	}
+
+
+## BattleParticipantから表示用データを作成（変身時のカード更新用）
+func _create_display_data(participant: BattleParticipant) -> Dictionary:
+	var data = participant.creature_data.duplicate(true)
+	data["base_up_hp"] = participant.base_up_hp
+	data["item_bonus_hp"] = participant.item_bonus_hp
+	data["resonance_bonus_hp"] = participant.resonance_bonus_hp
+	data["temporary_bonus_hp"] = participant.temporary_bonus_hp
+	data["spell_bonus_hp"] = participant.spell_bonus_hp
+	data["land_bonus_hp"] = participant.land_bonus_hp
+	data["current_hp"] = participant.current_hp
+	data["current_ap"] = participant.current_ap
+	return data
 
 
 ## スキル変化をバトル画面に表示

@@ -149,9 +149,9 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	
 	print("【変身実行】", old_name, " → ", new_name)
 	print("  元のAP/HP: ", participant.current_ap, "/", participant.current_hp)
+	print("  取得データ: ID=", new_creature.get("id"), " HP=", new_creature.get("hp"), " AP=", new_creature.get("ap"))
 	
 	# 重要: 現在のバフ（アイテム効果など）と永続ボーナスを記録
-	var current_ap = participant.current_ap
 	var current_item_bonus_hp = participant.item_bonus_hp
 	var current_items = participant.creature_data.get("items", [])
 	var current_base_up_hp = participant.base_up_hp  # 永続ボーナスを保持
@@ -177,7 +177,6 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	participant.item_bonus_hp = current_item_bonus_hp
 	
 	# HPを再計算（土地ボーナスとアイテムボーナスを含む）
-	# 変身後のMHP = base_hp + base_up_hp + land_bonus_hp + item_bonus_hp + その他ボーナス
 	participant.current_hp = participant.base_hp + participant.base_up_hp + participant.land_bonus_hp + participant.item_bonus_hp + participant.spell_bonus_hp + participant.temporary_bonus_hp + participant.resonance_bonus_hp
 	
 	print("  変身後AP/HP: ", participant.current_ap, "/", participant.current_hp)

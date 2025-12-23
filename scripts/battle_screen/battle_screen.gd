@@ -247,6 +247,30 @@ func show_ap_change(side: String, new_ap: int):
 	await hp_bar.animate_ap_change(new_ap)
 
 
+## クリーチャー表示更新（変身時など）
+func update_creature_display(side: String, new_data: Dictionary):
+	var display = _attacker_display if side == "attacker" else _defender_display
+	var hp_bar = _attacker_hp_bar if side == "attacker" else _defender_hp_bar
+	
+	# カード表示を更新
+	display.update_creature(new_data)
+	
+	# HP/APバーも更新
+	var hp_data = {
+		"base_hp": new_data.get("hp", 0),
+		"base_up_hp": new_data.get("base_up_hp", 0),
+		"item_bonus_hp": new_data.get("item_bonus_hp", 0),
+		"resonance_bonus_hp": new_data.get("resonance_bonus_hp", 0),
+		"temporary_bonus_hp": new_data.get("temporary_bonus_hp", 0),
+		"spell_bonus_hp": new_data.get("spell_bonus_hp", 0),
+		"land_bonus_hp": new_data.get("land_bonus_hp", 0),
+		"current_hp": new_data.get("current_hp", new_data.get("hp", 0)),
+		"display_max": new_data.get("hp", 0) + new_data.get("land_bonus_hp", 0)
+	}
+	hp_bar.set_hp_data(hp_data)
+	hp_bar.set_ap(new_data.get("current_ap", new_data.get("ap", 0)))
+
+
 ## 攻撃演出
 func show_attack(attacker_side: String, damage: int):
 	var attacker = _attacker_display if attacker_side == "attacker" else _defender_display

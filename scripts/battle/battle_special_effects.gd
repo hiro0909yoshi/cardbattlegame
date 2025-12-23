@@ -212,8 +212,7 @@ func check_instant_death(attacker: BattleParticipant, defender: BattleParticipan
 	if random_value <= probability:
 		print("【即死発動】", attacker.creature_data.get("name", "?"), " → ", defender.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
 		defender.instant_death_flag = true
-		defender.base_hp = 0
-		# update_current_hp() は呼ばない（current_hp が状態値になったため）
+		defender.current_hp = 0
 		return true
 	else:
 		print("【即死失敗】確率:", probability, "% 判定値:", int(random_value), "%")
@@ -496,8 +495,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 							
 							# 相手を即死させる
 							opponent.instant_death_flag = true
-							opponent.base_hp = 0
-						# update_current_hp() は呼ばない（current_hp が状態値になったため）
+							opponent.current_hp = 0
 							result["death_revenge_activated"] = true
 						else:
 							print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
@@ -915,7 +913,7 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						
 						# 相手を即死させる
 						opponent.instant_death_flag = true
-						opponent.base_hp = 0
+						opponent.current_hp = 0
 						result["death_revenge_activated"] = true
 					else:
 						print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")

@@ -265,28 +265,34 @@ effect_typeは英語なので、日本語への変換が必要。
 
 - [x] 各種ステータス変動スキル（_show_skill_change_if_anyで表示）
 
-### 未対応（SkillDisplayConfigへの登録が必要）
+### 対応済み（発動箇所に表示処理追加済み）
 
-- [ ] アイテム破壊（destroy_item）
-- [ ] アイテム盗み（steal_item）
-- [ ] アイテム復帰（item_return）
-- [ ] 無効化（nullify_all_enemy_abilities）
-- [ ] 即死（instant_death）
-- [ ] 反射（reflect_damage）
-- [ ] 道連れ（self_destruct_with_revenge）
-- [ ] 自壊（self_destruct）
-- [ ] 死者復活（revive）
-- [ ] 手札復活（revive_to_hand）
-- [ ] 遺産・魔力（legacy_magic）
-- [ ] 遺産・カード（legacy_card）
-- [ ] 戦闘後破壊付与（apply_curse: destroy_after_battle）
-- [ ] 通行料無効付与（apply_curse: toll_disable）
-- [ ] 地形効果無効付与（apply_curse: land_effect_disable）
-- [ ] 地形効果付与（apply_curse: land_effect_grant）
-- [ ] 土地変性（change_tile_element）
-- [ ] AP⇔MHP交換（swap_ap_mhp）
-- [ ] 変身系（transform）
-- [ ] 雪辱（revenge_mhp_damage）
+**即死・反射・変身・無効化**
+- [x] 即死（instant_death）
+- [x] 反射（reflect_damage）
+- [x] 変身（transform）
+- [x] 能力無効化（nullify_abilities）
+
+**アイテム操作**
+- [x] アイテム破壊（destroy_item）
+- [x] アイテム盗み（steal_item）
+
+**戦闘終了時効果（SkillBattleEndEffects経由）**
+- [x] 戦闘後破壊付与（apply_curse: destroy_after_battle）
+- [x] 通行料無効付与（apply_curse: toll_disable）
+- [x] AP⇔MHP交換（swap_ap_mhp）
+- [x] MHP減少（reduce_enemy_mhp）
+- [x] 土地レベルアップ（level_up_battle_land）
+
+**バトル勝利時効果（battle_system.gd）**
+- [x] 土地変性（change_tile_element）→ global_comment_uiで通知
+- [x] 土地破壊（reduce_tile_level）→ global_comment_uiで通知
+
+### スペル効果（バトル外）
+
+以下はスペルカード使用時に表示されるため、バトル画面スキル表示の対象外：
+- 地形効果無効付与（apply_curse: land_effect_disable）
+- 地形効果付与（apply_curse: land_effect_grant）
 
 ---
 

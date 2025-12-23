@@ -442,7 +442,8 @@ func _apply_post_battle_effects(
 			_apply_level_up_effect(attacker, tile_index)
 			
 			# 🌍 戦闘勝利時の土地効果（土地変性・土地破壊）
-			SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
+			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
+			await _show_land_effect_notification(attacker.creature_data, land_effect_result)
 			
 			# 💀 抹消効果（アネイマブル）
 			battle_special_effects.check_and_apply_annihilate(attacker, defender)
@@ -481,7 +482,8 @@ func _apply_post_battle_effects(
 			_apply_level_up_effect(defender, tile_index)
 			
 			# 🌍 戦闘勝利時の土地効果（土地変性 - 防御成功時も発動）
-			SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
+			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
+			await _show_land_effect_notification(defender.creature_data, land_effect_result)
 			
 			# 💀 抹消効果（アネイマブル）
 			battle_special_effects.check_and_apply_annihilate(defender, attacker)
@@ -639,6 +641,39 @@ func _apply_post_battle_effects(
 	# 表示更新
 	if board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
+
+
+## 🌍 土地効果（土地変性・土地破壊）の通知を表示
+func _show_land_effect_notification(creature_data: Dictionary, land_effect_result: Dictionary) -> void:
+	if land_effect_result.is_empty():
+		return
+	
+	var creature_name = creature_data.get("name", "?")
+	var changed_element = land_effect_result.get("changed_element", "")
+	var level_reduced = land_effect_result.get("level_reduced", false)
+	
+	# 何も発動していなければ終了
+	if changed_element == "" and not level_reduced:
+		return
+	
+	# 通知UIを取得（game_flow_manager経由）
+	if not game_flow_manager_ref or not game_flow_manager_ref.ui_manager:
+		return
+	var comment_ui = game_flow_manager_ref.ui_manager.global_comment_ui
+	if not comment_ui:
+		return
+	
+	# 土地変性の通知
+	if changed_element != "":
+		var element_names = {"water": "水", "fire": "火", "wind": "風", "earth": "地", "neutral": "無"}
+		var element_jp = element_names.get(changed_element, changed_element)
+		var text = "%s の土地変性！→ %s属性" % [creature_name, element_jp]
+		await comment_ui.show_and_wait(text)
+	
+	# 土地破壊の通知
+	if level_reduced:
+		var text = "%s の土地破壊！レベル-1" % creature_name
+		await comment_ui.show_and_wait(text)
 
 
 ## 💰 バトル結果確定後の魔力獲得処理（ゴールドハンマー用）
