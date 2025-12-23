@@ -134,6 +134,7 @@ func _calculate_display_max() -> int:
 				creature_data.get("temporary_bonus_hp", 0) + \
 				creature_data.get("spell_bonus_hp", 0) + \
 				creature_data.get("land_bonus_hp", 0)
+	print("[_calculate_display_max] ", creature_data.get("name", "?"), " hp:", creature_data.get("hp", 0), " item:", creature_data.get("item_bonus_hp", 0), " land:", creature_data.get("land_bonus_hp", 0), " total:", total)
 	return max(total, 100)
 
 

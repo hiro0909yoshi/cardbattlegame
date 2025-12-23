@@ -195,20 +195,25 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	# 4. 攻撃シーケンス実行（戦闘結果情報を取得）
 	var attack_result = await battle_execution.execute_attack_sequence(attack_order, tile_info, battle_special_effects, battle_skill_processor)
-	# 戦闘結果を統合（空でない値のみマージ）
+	# 戦闘結果を統合
 	for key in attack_result.keys():
 		var value = attack_result[key]
 		# 復活フラグはtrueの場合のみ上書き
 		if key in ["attacker_revived", "defender_revived"]:
 			if value == true:
 				battle_result[key] = value
-		# 変身情報は値が空でない場合のみ上書き
+		# 変身フラグはtrueの場合のみ上書き
 		elif key in ["attacker_transformed", "defender_transformed"]:
 			if value == true:
 				battle_result[key] = value
+		# original_dataは変身が発生した場合に常に上書き（空の場合は恒久変身なので元に戻さない）
 		elif key in ["attacker_original", "defender_original"]:
-			if not value.is_empty():
+			# 対応する変身フラグがtrueの場合のみ上書き
+			var transform_key = key.replace("_original", "_transformed")
+			if attack_result.get(transform_key, false):
 				battle_result[key] = value
+				if value.is_empty():
+					print("[恒久変身] ", key, " をクリア（元に戻さない）")
 		else:
 			battle_result[key] = value
 	
@@ -600,6 +605,9 @@ func _apply_post_battle_effects(
 		if battle_result.get("defender_original", {}).has("name"):
 			TransformSkill.revert_transform(defender, battle_result["defender_original"])
 			print("[変身復帰] 防御側が元に戻りました")
+			# 変身解除後のHP（制限済み）でタイルを再更新
+			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
+			battle_special_effects.update_defender_hp(updated_tile_info, defender)
 	
 	# 🔄 永続変身のタイル更新（コカトリス用）
 	# 防御側が変身した場合、タイルのcreature_dataを更新

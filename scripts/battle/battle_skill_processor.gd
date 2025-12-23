@@ -67,6 +67,30 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		return result
 	
 	# ============================================================
+	# 【Phase 0-T】変身スキル適用（戦闘開始時・アイテム適用前）
+	# ============================================================
+	# 変身後に土地ボーナスを再計算するため、アイテム適用前に処理
+	# skill_transform.gd内で土地ボーナス再計算も行う
+	result["transform_result"] = TransformSkill.process_transform_effects(
+		attacker, defender, CardLoader, "on_battle_start", board_system_ref, battle_tile_index
+	)
+	
+	# 🎬 変身スキル表示
+	var transform_result = result["transform_result"]
+	if transform_result.get("attacker_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(attacker)
+		await battle_screen_manager.update_creature("attacker", display_data)
+	if transform_result.get("defender_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(defender)
+		await battle_screen_manager.update_creature("defender", display_data)
+	
+	# ============================================================
 	# 【Phase 0-0】アイテム破壊・盗み（スキル計算前に実行）
 	# ============================================================
 	# 素の先制（クリーチャー能力のみ）で順序決定
@@ -141,27 +165,6 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	_apply_battle_start_conditions(attacker, defender)
 	await _show_skill_change_if_any(attacker, attacker_before, stat_change_name)
 	await _show_skill_change_if_any(defender, defender_before, stat_change_name)
-	
-	# ============================================================
-	# 【Phase 0-B】変身スキル適用（戦闘開始時）
-	# ============================================================
-	# CardLoaderはオートロードなので直接参照
-	result["transform_result"] = TransformSkill.process_transform_effects(attacker, defender, CardLoader, "on_battle_start")
-	
-	# 🎬 変身スキル表示
-	var transform_result = result["transform_result"]
-	if transform_result.get("attacker_transformed", false) and battle_screen_manager:
-		var skill_name = SkillDisplayConfig.get_skill_name("transform")
-		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
-		# 🎬 カード表示を更新
-		var display_data = _create_display_data(attacker)
-		await battle_screen_manager.update_creature("attacker", display_data)
-	if transform_result.get("defender_transformed", false) and battle_screen_manager:
-		var skill_name = SkillDisplayConfig.get_skill_name("transform")
-		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
-		# 🎬 カード表示を更新
-		var display_data = _create_display_data(defender)
-		await battle_screen_manager.update_creature("defender", display_data)
 	
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
@@ -504,14 +507,21 @@ func _show_item_effect_if_any(participant: BattleParticipant, before: Dictionary
 	
 	# アイテムがない場合は表示しない（破壊された場合など）
 	var items = participant.creature_data.get("items", [])
+	print("[アイテム表示チェック] ", side, " items=", items)
 	if items.is_empty():
+		print("  → アイテムなし、スキップ")
 		return
 	
 	var hp_changed = participant.current_hp != before.get("current_hp", 0)
 	var ap_changed = participant.current_ap != before.get("current_ap", 0)
 	var item_hp_changed = participant.item_bonus_hp != before.get("item_bonus_hp", 0)
 	
+	print("  hp_changed=", hp_changed, " ap_changed=", ap_changed, " item_hp_changed=", item_hp_changed)
+	print("  before: hp=", before.get("current_hp", 0), " ap=", before.get("current_ap", 0), " item_hp=", before.get("item_bonus_hp", 0))
+	print("  after: hp=", participant.current_hp, " ap=", participant.current_ap, " item_hp=", participant.item_bonus_hp)
+	
 	if not hp_changed and not ap_changed and not item_hp_changed:
+		print("  → 変化なし、スキップ")
 		return
 	
 	# アイテム名を取得（援護クリーチャーの場合は「援護[クリーチャー名]」）

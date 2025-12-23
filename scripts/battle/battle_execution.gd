@@ -23,6 +23,11 @@ func setup_systems(card_system, screen_manager = null):
 ## BattleParticipantから表示用データを作成（変身時のカード更新用）
 func _create_display_data(participant: BattleParticipant) -> Dictionary:
 	var data = participant.creature_data.duplicate(true)
+	# creature_dataに既にボーナスが含まれている場合があるので、一旦クリアしてから設定
+	print("[_create_display_data] creature_data内のボーナス（設定前）:")
+	print("  item_bonus_hp in creature_data:", participant.creature_data.get("item_bonus_hp", "なし"))
+	print("  land_bonus_hp in creature_data:", participant.creature_data.get("land_bonus_hp", "なし"))
+	
 	data["base_up_hp"] = participant.base_up_hp
 	data["item_bonus_hp"] = participant.item_bonus_hp
 	data["resonance_bonus_hp"] = participant.resonance_bonus_hp
@@ -31,6 +36,9 @@ func _create_display_data(participant: BattleParticipant) -> Dictionary:
 	data["land_bonus_hp"] = participant.land_bonus_hp
 	data["current_hp"] = participant.current_hp
 	data["current_ap"] = participant.current_ap
+	print("[_create_display_data] ", participant.creature_data.get("name", "?"))
+	print("  hp(from data):", data.get("hp", 0), " current_hp:", data["current_hp"])
+	print("  land_bonus_hp:", data["land_bonus_hp"], " item_bonus_hp:", data["item_bonus_hp"])
 	return data
 
 ## 攻撃後のHPバー更新
@@ -460,18 +468,22 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			# ブラックナイト等の無効化チェック
 			if defender_p.is_alive() and card_system_ref and attacker_p.current_ap > 0:
 				if not SkillSpecialCreature.is_trigger_nullified(defender_p.creature_data, "on_attack_success"):
+					var battle_tile_index = tile_info.get("index", -1)
+					var board_system = special_effects.board_system_ref if special_effects else null
 					var transform_result = TransformSkill.process_transform_effects(
 						attacker_p,
 						defender_p,
 						CardLoader,
-						"on_attack_success"
+						"on_attack_success",
+						board_system,
+						battle_tile_index
 					)
 					
 					# 変身結果を戦闘結果にマージ
 					if transform_result.get("attacker_transformed", false):
 						battle_result["attacker_transformed"] = true
-						if transform_result.has("attacker_original"):
-							battle_result["attacker_original"] = transform_result["attacker_original"]
+						# 強制変化（revert_after_battle: false）の場合、以前のoriginal_dataをクリア
+						battle_result["attacker_original"] = transform_result.get("attacker_original", {})
 						# 🎬 変身スキル表示（攻撃側が変身）
 						if battle_screen_manager:
 							var skill_name = SkillDisplayConfig.get_skill_name("transform")
@@ -481,8 +493,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							await battle_screen_manager.update_creature("attacker", display_data)
 					if transform_result.get("defender_transformed", false):
 						battle_result["defender_transformed"] = true
-						if transform_result.has("defender_original"):
-							battle_result["defender_original"] = transform_result["defender_original"]
+						# 強制変化（revert_after_battle: false）の場合、以前のoriginal_dataをクリア
+						# 空のoriginal_dataが返された場合も、以前の値を上書きする
+						battle_result["defender_original"] = transform_result.get("defender_original", {})
 						print("  【変身発動】防御側が変身しました")
 						# 🎬 変身スキル表示（防御側が変身させられた）
 						if battle_screen_manager:

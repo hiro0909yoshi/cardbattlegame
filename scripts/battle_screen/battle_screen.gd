@@ -256,6 +256,13 @@ func update_creature_display(side: String, new_data: Dictionary):
 	display.update_creature(new_data)
 	
 	# HP/APバーも更新
+	var display_max = new_data.get("hp", 0) + \
+		new_data.get("base_up_hp", 0) + \
+		new_data.get("item_bonus_hp", 0) + \
+		new_data.get("resonance_bonus_hp", 0) + \
+		new_data.get("temporary_bonus_hp", 0) + \
+		new_data.get("spell_bonus_hp", 0) + \
+		new_data.get("land_bonus_hp", 0)
 	var hp_data = {
 		"base_hp": new_data.get("hp", 0),
 		"base_up_hp": new_data.get("base_up_hp", 0),
@@ -265,8 +272,9 @@ func update_creature_display(side: String, new_data: Dictionary):
 		"spell_bonus_hp": new_data.get("spell_bonus_hp", 0),
 		"land_bonus_hp": new_data.get("land_bonus_hp", 0),
 		"current_hp": new_data.get("current_hp", new_data.get("hp", 0)),
-		"display_max": new_data.get("hp", 0) + new_data.get("land_bonus_hp", 0)
+		"display_max": display_max
 	}
+	print("[update_creature_display] side:", side, " display_max:", display_max, " current_hp:", hp_data["current_hp"])
 	hp_bar.set_hp_data(hp_data)
 	hp_bar.set_ap(new_data.get("current_ap", new_data.get("ap", 0)))
 
