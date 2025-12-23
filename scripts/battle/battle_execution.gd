@@ -326,10 +326,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						if death_effects["revived"]:
 							print("  【死者復活成功】", death_effects["new_creature_name"], "として復活！")
 							# 復活情報を記録
+							var revived_side = "attacker" if defender_p.is_attacker else "defender"
 							if defender_p.is_attacker:
 								battle_result["attacker_revived"] = true
 							else:
 								battle_result["defender_revived"] = true
+							# 🎬 カード表示を更新（復活後のクリーチャーを表示）
+							if battle_screen_manager:
+								var display_data = _create_display_data(defender_p)
+								await battle_screen_manager.update_creature(revived_side, display_data)
 							# 復活したが攻撃はせずに戦闘終了
 							print("  → 復活したため、攻撃せずに戦闘終了")
 							battle_ended = true
@@ -355,10 +360,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						if death_effects_attacker["revived"]:
 							print("  【死者復活成功】", death_effects_attacker["new_creature_name"], "として復活！")
 							# 復活情報を記録
+							var revived_side = "attacker" if attacker_p.is_attacker else "defender"
 							if attacker_p.is_attacker:
 								battle_result["attacker_revived"] = true
 							else:
 								battle_result["defender_revived"] = true
+							# 🎬 カード表示を更新（復活後のクリーチャーを表示）
+							if battle_screen_manager:
+								var display_data = _create_display_data(attacker_p)
+								await battle_screen_manager.update_creature(revived_side, display_data)
 							# 復活したが攻撃はせずに戦闘終了
 							print("  → 復活したため、攻撃せずに戦闘終了")
 							battle_ended = true
@@ -552,10 +562,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				if death_effects["revived"]:
 					print("  【死者復活成功】", death_effects["new_creature_name"], "として復活！")
 					# 復活情報を記録
+					var revived_side = "attacker" if defender_p.is_attacker else "defender"
 					if defender_p.is_attacker:
 						battle_result["attacker_revived"] = true
 					else:
 						battle_result["defender_revived"] = true
+					# 🎬 カード表示を更新（復活後のクリーチャーを表示）
+					if battle_screen_manager:
+						var display_data = _create_display_data(defender_p)
+						await battle_screen_manager.update_creature(revived_side, display_data)
 					# 復活したが攻撃はせずに戦闘終了
 					print("  → 復活したため、攻撃せずに戦闘終了")
 					battle_ended = true
@@ -581,10 +596,15 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				if death_effects_attacker["revived"]:
 					print("  【死者復活成功】", death_effects_attacker["new_creature_name"], "として復活！")
 					# 復活情報を記録
+					var revived_side = "attacker" if attacker_p.is_attacker else "defender"
 					if attacker_p.is_attacker:
 						battle_result["attacker_revived"] = true
 					else:
 						battle_result["defender_revived"] = true
+					# 🎬 カード表示を更新（復活後のクリーチャーを表示）
+					if battle_screen_manager:
+						var display_data = _create_display_data(attacker_p)
+						await battle_screen_manager.update_creature(revived_side, display_data)
 					# 復活したが攻撃はせずに戦闘終了
 					print("  → 復活したため、攻撃せずに戦闘終了")
 					battle_ended = true

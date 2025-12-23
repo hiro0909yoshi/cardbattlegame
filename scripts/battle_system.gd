@@ -416,7 +416,8 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			if battle_result.get("attacker_original", {}).has("name"):
+			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
@@ -474,7 +475,8 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			if battle_result.get("attacker_original", {}).has("name"):
+			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
@@ -511,7 +513,8 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			if battle_result.get("attacker_original", {}).has("name"):
+			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
 			
@@ -578,10 +581,11 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			if battle_result.get("attacker_original", {}).has("name"):
+			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
-			if battle_result.get("defender_original", {}).has("name"):
+			if battle_result.get("defender_original", {}).has("name") and not battle_result.get("defender_revived", false):
 				TransformSkill.revert_transform(defender, battle_result["defender_original"])
 				print("[変身復帰] 防御側が元に戻りました")
 			
@@ -601,8 +605,9 @@ func _apply_post_battle_effects(
 	
 	# 🔄 防御側の変身を元に戻す（バルダンダース専用）
 	# 戦闘後に復帰が必要な変身の場合のみ
+	# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
 	if not battle_result.is_empty():
-		if battle_result.get("defender_original", {}).has("name"):
+		if battle_result.get("defender_original", {}).has("name") and not battle_result.get("defender_revived", false):
 			TransformSkill.revert_transform(defender, battle_result["defender_original"])
 			print("[変身復帰] 防御側が元に戻りました")
 			# 変身解除後のHP（制限済み）でタイルを再更新
@@ -618,27 +623,33 @@ func _apply_post_battle_effects(
 			# 永続変身の場合（元データなし = 戻さない）
 			# tile_indexは既に関数の上部で定義済み
 			var updated_creature = defender.creature_data.duplicate(true)
-			updated_creature["hp"] = defender.base_hp  # 現在のHPを保持
+			updated_creature["hp"] = defender.base_hp  # 基礎HPを設定
+			updated_creature["current_hp"] = defender.current_hp  # 現在HPを設定
+			updated_creature["base_up_hp"] = defender.base_up_hp
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
-			print("[永続変身] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+			print("[永続変身] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", defender.current_hp)
 	
 	# 🔄 死者復活のタイル更新
 	# 死者復活は常に永続なので、タイルのcreature_dataを更新する
 	if battle_result.get("defender_revived", false):
 		# 防御側が復活した場合、タイルのクリーチャーを更新
 		var updated_creature = defender.creature_data.duplicate(true)
-		updated_creature["hp"] = defender.base_hp  # 復活後のHPを保持
+		updated_creature["hp"] = defender.base_hp  # 基礎HPを設定
+		updated_creature["current_hp"] = defender.current_hp  # 現在HP（MHP）を設定
+		updated_creature["base_up_hp"] = defender.base_up_hp  # 永続ボーナスを設定
 		board_system_ref.update_tile_creature(tile_index, updated_creature)
-		print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+		print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", defender.current_hp)
 	
 	if battle_result.get("attacker_revived", false):
 		# 攻撃側が復活した場合も、タイルのクリーチャーを更新
 		# 攻撃側が復活する場合は侵略成功の場合のみ
 		if result == BattleResult.ATTACKER_WIN:
 			var updated_creature = attacker.creature_data.duplicate(true)
-			updated_creature["hp"] = attacker.base_hp  # 復活後のHPを保持
+			updated_creature["hp"] = attacker.base_hp  # 基礎HPを設定
+			updated_creature["current_hp"] = attacker.current_hp  # 現在HP（MHP）を設定
+			updated_creature["base_up_hp"] = attacker.base_up_hp  # 永続ボーナスを設定
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
-			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"))
+			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", attacker.current_hp)
 	
 	# 🔄 手札復活処理はcheck_on_death_effects内で即座に実行済み
 	

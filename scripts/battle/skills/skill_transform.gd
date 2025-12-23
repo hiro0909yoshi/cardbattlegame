@@ -53,15 +53,17 @@ static func process_transform_effects(attacker: BattleParticipant, defender: Bat
 			_apply_transform(defender, attacker_transform, card_loader, result, false, attacker, board_system, battle_tile_index)
 	
 	# 防御側の変身効果チェック
-	var defender_transform = _check_transform(defender, trigger)
-	if defender_transform:
-		var target = defender_transform.get("target", "self")
-		if target == "self":
-			# 自分自身が変身
-			_apply_transform(defender, defender_transform, card_loader, result, false, attacker, board_system, battle_tile_index)
-		elif target == "opponent":
-			# 相手を変身させる
-			_apply_transform(attacker, defender_transform, card_loader, result, true, defender, board_system, battle_tile_index)
+	# ただし「on_attack_success」トリガーの場合、defenderは攻撃していないのでスキップ
+	if trigger != "on_attack_success":
+		var defender_transform = _check_transform(defender, trigger)
+		if defender_transform:
+			var target = defender_transform.get("target", "self")
+			if target == "self":
+				# 自分自身が変身
+				_apply_transform(defender, defender_transform, card_loader, result, false, attacker, board_system, battle_tile_index)
+			elif target == "opponent":
+				# 相手を変身させる
+				_apply_transform(attacker, defender_transform, card_loader, result, true, defender, board_system, battle_tile_index)
 	
 	return result
 

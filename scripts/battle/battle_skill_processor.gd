@@ -134,6 +134,34 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	await _show_merge_if_any(defender, "defender")
 	
 	# ============================================================
+	# 【Phase 0-T2】アイテムによる変身スキル適用（ドラゴンオーブ等）
+	# ============================================================
+	# アイテム効果適用で追加された変身効果を処理
+	var item_transform_result = TransformSkill.process_transform_effects(
+		attacker, defender, CardLoader, "on_battle_start", board_system_ref, battle_tile_index
+	)
+	
+	# 🎬 アイテム変身スキル表示
+	if item_transform_result.get("attacker_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+		var display_data = _create_display_data(attacker)
+		await battle_screen_manager.update_creature("attacker", display_data)
+		# 変身結果をマージ
+		result["transform_result"]["attacker_transformed"] = true
+		if item_transform_result.has("attacker_original") and not item_transform_result["attacker_original"].is_empty():
+			result["transform_result"]["attacker_original"] = item_transform_result["attacker_original"]
+	if item_transform_result.get("defender_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+		var display_data = _create_display_data(defender)
+		await battle_screen_manager.update_creature("defender", display_data)
+		# 変身結果をマージ
+		result["transform_result"]["defender_transformed"] = true
+		if item_transform_result.has("defender_original") and not item_transform_result["defender_original"].is_empty():
+			result["transform_result"]["defender_original"] = item_transform_result["defender_original"]
+	
+	# ============================================================
 	# 【Phase 0-A】クリック後に適用する効果
 	# ============================================================
 	var attacker_before: Dictionary

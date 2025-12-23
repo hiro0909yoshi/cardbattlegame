@@ -143,7 +143,7 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 			pass
 		
 		"revive":
-			_apply_revive_skill(participant)
+			_apply_revive_skill(participant, effect)
 		
 		"random_stat_bonus":
 			_apply_random_stat_bonus(participant, effect)
@@ -296,7 +296,7 @@ func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattlePa
 	print("  [APドレイン] ", participant.creature_data.get("name", "?"), " が ", enemy_name, " のAPを永続的に0に (元AP: ", original_ap, ")")
 
 ## 死者復活スキル付与
-func _apply_revive_skill(participant: BattleParticipant) -> void:
+func _apply_revive_skill(participant: BattleParticipant, item_effect: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
 	if not participant.creature_data["ability_parsed"].has("effects"):
@@ -310,15 +310,13 @@ func _apply_revive_skill(participant: BattleParticipant) -> void:
 			break
 	
 	if not has_revive:
-		# 同じクリーチャーとして復活する効果を追加
-		var creature_id = participant.creature_data.get("id", -1)
-		participant.creature_data["ability_parsed"]["effects"].append({
-			"effect_type": "revive",
-			"trigger": "on_death",
-			"revive_type": "forced",
-			"creature_id": creature_id
-		})
-		print("  スキル付与: 死者復活（ID: ", creature_id, "として復活）")
+		# アイテムの効果をそのまま追加（creature_idはアイテムで指定されたもの）
+		var revive_effect = item_effect.duplicate()
+		# triggerが設定されていない場合はon_deathを設定
+		if not revive_effect.has("trigger"):
+			revive_effect["trigger"] = "on_death"
+		participant.creature_data["ability_parsed"]["effects"].append(revive_effect)
+		print("  スキル付与: 死者復活（ID: ", revive_effect.get("creature_id", "?"), "として復活）")
 
 ## ランダムステータスボーナス
 func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary) -> void:
