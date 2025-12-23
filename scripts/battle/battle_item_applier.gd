@@ -369,27 +369,14 @@ func _apply_fixed_stat(participant: BattleParticipant, effect: Dictionary) -> vo
 	
 	if operation == "set":
 		if stat == "ap":
-			participant.creature_data["ap"] = fixed_value
 			participant.current_ap = fixed_value
 			print("  [固定値] AP=", fixed_value)
 		elif stat == "hp":
-			# 保存：元のbase_up_hpを保存
-			var saved_base_up_hp = participant.base_up_hp
-			
-			# 変更：base_up_hpを一時的に0に設定
-			participant.base_up_hp = 0
-			
 			# HP固定値を適用
-			participant.creature_data["mhp"] = fixed_value
-			participant.creature_data["hp"] = fixed_value
+			# creature_data["hp"]は元の値を維持（戦闘後の復元用）
 			participant.base_hp = fixed_value
-			# update_current_hp() は呼ばない（current_hp が状態値になったため）
-			
-			# 復元：元のbase_up_hpを戻す
-			participant.base_up_hp = saved_base_up_hp
-			# update_current_hp() は呼ばない（current_hp が状態値になったため）
-			
-			print("  [固定値] HP=", fixed_value, " (base_up_hp復元: +", saved_base_up_hp, ")")
+			participant.current_hp = fixed_value
+			print("  [固定値] HP=", fixed_value)
 
 ## アイテム破壊・盗み無効
 func _apply_nullify_item_manipulation(participant: BattleParticipant, effect: Dictionary) -> void:

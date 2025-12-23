@@ -103,7 +103,8 @@ func get_card_by_id(card_id: int) -> Dictionary:
 		# IDを整数に変換して比較（念のため）
 		var check_id = int(card.id) if typeof(card.id) != TYPE_INT else card.id
 		if check_id == card_id:
-			return card
+			# マスターデータを変更しないよう、常にコピーを返す
+			return card.duplicate(true)
 	return {}
 
 func get_cards_by_element(element: String) -> Array:

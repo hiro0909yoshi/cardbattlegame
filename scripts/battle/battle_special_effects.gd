@@ -387,7 +387,13 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	creature_data["base_up_ap"] = defender.base_up_ap
 	
 	# 現在HPを保存（新方式：状態値）
-	creature_data["current_hp"] = defender.current_hp
+	# ただし、戦闘中の計算HP（レッドキャップ、アンダイン等）が元のMHPより高い場合は制限
+	var original_mhp = creature_data.get("hp", 0) + defender.base_up_hp
+	var final_hp = defender.current_hp
+	if final_hp > original_mhp:
+		print("  current_hp制限: ", final_hp, " → ", original_mhp, " (元のMHP)")
+		final_hp = original_mhp
+	creature_data["current_hp"] = final_hp
 	
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data

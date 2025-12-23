@@ -150,7 +150,7 @@ func resolve_battle_result(attacker: BattleParticipant, defender: BattleParticip
 ##     "attacker_original": Dictionary,
 ##     "defender_original": Dictionary
 ##   }
-func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, _skill_processor) -> Dictionary:
+func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special_effects, skill_processor) -> Dictionary:
 	# spell_magic_refを取得
 	var spell_magic_ref = special_effects.spell_magic_ref
 	
@@ -512,6 +512,29 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							var skill_name = SkillDisplayConfig.get_skill_name("transform")
 							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
 							# 🎬 カード表示を更新
+							var display_data = _create_display_data(defender_p)
+							await battle_screen_manager.update_creature("defender", display_data)
+					
+					# 🔄 ツインスパイク：侵略側が変身した場合、スキル再計算
+					if transform_result.get("needs_attacker_skill_recalc", false):
+						print("  【ツインスパイク】侵略側のスキルを再計算")
+						# defender_pは現在の防御者（変身した側）
+						# contextを作成（強打等の条件チェックに必要な情報を含む）
+						var recalc_context = {
+							"player_id": defender_p.player_id,
+							"player_lands": special_effects.board_system_ref.get_player_lands_by_element(defender_p.player_id) if special_effects and special_effects.board_system_ref else {},
+							"battle_tile_index": tile_info.get("index", -1),
+							"battle_tile_element": tile_info.get("element", "neutral"),
+							"battle_land_element": tile_info.get("element", "neutral"),
+							"creature_element": defender_p.creature_data.get("element", ""),
+							"creature_mhp": defender_p.get_max_hp(),
+							"enemy_element": attacker_p.creature_data.get("element", ""),
+							"opponent": attacker_p,
+							"is_attacker": defender_p.is_attacker
+						}
+						await skill_processor.recalculate_skills_after_transform(defender_p, recalc_context)
+						# 🎬 カード表示を再更新（スキル適用後）
+						if battle_screen_manager:
 							var display_data = _create_display_data(defender_p)
 							await battle_screen_manager.update_creature("defender", display_data)
 			

@@ -38,19 +38,26 @@ static func process_transform_effects(attacker: BattleParticipant, defender: Bat
 		"attacker_transformed": false,
 		"defender_transformed": false,
 		"attacker_original": {},
-		"defender_original": {}
+		"defender_original": {},
+		"needs_attacker_skill_recalc": false  # ツインスパイク用: 侵略側のスキル再計算が必要
 	}
 	
 	# 攻撃側の変身効果チェック
 	var attacker_transform = _check_transform(attacker, trigger)
 	if attacker_transform:
 		var target = attacker_transform.get("target", "self")
+		var transform_type = attacker_transform.get("transform_type", "")
 		if target == "self":
 			# 自分自身が変身
 			_apply_transform(attacker, attacker_transform, card_loader, result, true, defender, board_system, battle_tile_index)
 		elif target == "opponent":
 			# 相手を変身させる
 			_apply_transform(defender, attacker_transform, card_loader, result, false, attacker, board_system, battle_tile_index)
+			# ツインスパイク：相手を自分のコピーに変身させた場合
+			# 変身した防御側のスキルを再計算する必要がある
+			if transform_type == "forced_copy_attacker" and result.get("defender_transformed", false):
+				result["needs_attacker_skill_recalc"] = true
+				print("[ツインスパイク] 侵略側のスキル再計算が必要")
 	
 	# 防御側の変身効果チェック
 	# ただし「on_attack_success」トリガーの場合、defenderは攻撃していないのでスキップ
@@ -121,7 +128,6 @@ static func _apply_transform(participant: BattleParticipant, transform_effect: D
 		# 以前のランダム変身で設定されたoriginal_dataをクリア（元に戻らないように）
 		var key = "attacker_original" if is_attacker else "defender_original"
 		if result.has(key) and not result[key].is_empty():
-			print("[変身上書き] 以前の変身データをクリア（恒久的な変身が適用されたため）")
 			result[key] = {}
 	
 	# 変身タイプに応じて処理
@@ -157,7 +163,6 @@ static func _apply_transform(participant: BattleParticipant, transform_effect: D
 			var name_pattern = transform_effect.get("name_pattern", "")
 			new_creature_id = _get_random_creature_by_name_pattern(card_loader, name_pattern)
 			print("[名前パターン変身] ", participant.creature_data.get("name", "?"), " → パターン:", name_pattern, " ID:", new_creature_id)
-
 	
 	# 新しいクリーチャーデータを取得
 	if new_creature_id > 0:
@@ -171,15 +176,11 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	var new_name = new_creature.get("name", "?")
 	
 	print("【変身実行】", old_name, " → ", new_name)
-	print("  元のAP/HP: ", participant.current_ap, "/", participant.current_hp)
-	print("  取得データ: ID=", new_creature.get("id"), " HP=", new_creature.get("hp"), " AP=", new_creature.get("ap"))
 	
-	# 重要: 現在のバフ（アイテム効果など）と永続ボーナスを記録
+	# 現在のバフ（アイテム効果など）と永続ボーナスを記録
 	var current_item_bonus_hp = participant.item_bonus_hp
 	var current_items = participant.creature_data.get("items", [])
-	var current_base_up_hp = participant.base_up_hp  # 永続ボーナスを保持
-	print("  変身前item_bonus_hp: ", current_item_bonus_hp)
-	print("  変身前アイテム: ", current_items)
+	var current_base_up_hp = participant.base_up_hp
 	
 	# creature_dataを新しいクリーチャーに置き換え
 	participant.creature_data = new_creature.duplicate(true)
@@ -187,7 +188,6 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	# アイテム情報を引き継ぐ
 	if not current_items.is_empty():
 		participant.creature_data["items"] = current_items
-		print("  アイテム引き継ぎ: ", current_items)
 	
 	# 永続ボーナス（base_up_hp）を引き継ぐ
 	participant.creature_data["base_up_hp"] = current_base_up_hp
@@ -210,13 +210,6 @@ static func _transform_creature(participant: BattleParticipant, new_creature: Di
 	# 表示時にボーナスが足される
 	participant.current_hp = participant.base_hp + participant.base_up_hp
 	
-	print("  変身後ステータス詳細:")
-	print("    base_hp:", participant.base_hp, " base_up_hp:", participant.base_up_hp)
-	print("    land_bonus_hp:", participant.land_bonus_hp, " item_bonus_hp:", participant.item_bonus_hp)
-	print("    spell_bonus_hp:", participant.spell_bonus_hp, " temporary_bonus_hp:", participant.temporary_bonus_hp)
-	print("    resonance_bonus_hp:", participant.resonance_bonus_hp)
-	print("  変身後AP/HP: ", participant.current_ap, "/", participant.current_hp)
-	
 	# 結果を記録
 	if is_attacker:
 		result["attacker_transformed"] = true
@@ -237,8 +230,6 @@ static func _recalculate_land_bonus(participant: BattleParticipant, board_system
 	var creature_element = participant.creature_data.get("element", "")
 	var tile_element = tile.get("element", "neutral")
 	var tile_level = tile.get("level", 1)
-	
-	var old_land_bonus = participant.land_bonus_hp
 	var new_land_bonus = 0
 	
 	# 属性一致チェック（neutral属性は全ての属性と一致）
@@ -246,10 +237,6 @@ static func _recalculate_land_bonus(participant: BattleParticipant, board_system
 		new_land_bonus = tile_level * 10
 	
 	participant.land_bonus_hp = new_land_bonus
-	
-	print("【土地ボーナス再計算】", participant.creature_data.get("name", "?"))
-	print("  クリーチャー属性:", creature_element, " タイル属性:", tile_element)
-	print("  旧ボーナス:", old_land_bonus, " → 新ボーナス:", new_land_bonus)
 
 ## ランダムなクリーチャーIDを取得
 ##
@@ -299,8 +286,6 @@ static func _get_random_creature_by_race(card_loader, race: String) -> int:
 	var random_index = randi() % filtered_creatures.size()
 	var selected_creature = filtered_creatures[random_index]
 	
-	print("  → 種族「", race, "」から", filtered_creatures.size(), "体中、", selected_creature.get("name", "?"), "を選択")
-	
 	return selected_creature.get("id", -1)
 
 ## 名前パターンでフィルタしてランダムなクリーチャーIDを取得
@@ -333,7 +318,5 @@ static func _get_random_creature_by_name_pattern(card_loader, name_pattern: Stri
 	# ランダムに1体選択
 	var random_index = randi() % filtered_creatures.size()
 	var selected_creature = filtered_creatures[random_index]
-	
-	print("  → 名前に「", name_pattern, "」を含む", filtered_creatures.size(), "体中、", selected_creature.get("name", "?"), "を選択")
 	
 	return selected_creature.get("id", -1)

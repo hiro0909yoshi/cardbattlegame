@@ -268,6 +268,22 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	return result
 
 
+## ツインスパイク用：変身後のスキル再計算
+## 変身したクリーチャーのスキルを再適用する
+func recalculate_skills_after_transform(participant: BattleParticipant, context: Dictionary) -> void:
+	print("[スキル再計算] ", participant.creature_data.get("name", "?"), " のスキルを再適用")
+	
+	# スキルによるボーナスをリセット（変身後の素のステータスから再計算）
+	participant.resonance_bonus_hp = 0
+	participant.temporary_bonus_hp = 0
+	# 注: spell_bonus_hp, item_bonus_hp, land_bonus_hpは変身処理で適切に設定済み
+	
+	# 全スキルを再適用
+	await _apply_skills_with_animation(participant, context)
+	
+	print("[スキル再計算完了] AP:", participant.current_ap, " HP:", participant.current_hp)
+
+
 ## スキルを順番に適用（アニメーション付き）
 func _apply_skills_with_animation(participant: BattleParticipant, context: Dictionary) -> void:
 	@warning_ignore("unused_variable")
@@ -743,10 +759,10 @@ func apply_land_count_effects(participant: BattleParticipant, context: Dictionar
 			if stat == "hp" or stat == "both":
 				var old_hp = participant.current_hp
 				if operation == "set":
-					# setの場合は一度リセットしてから設定
-					var base_mhp = participant.get_max_hp()
-					participant.current_hp = base_mhp
-					participant.temporary_bonus_hp = bonus - base_mhp
+					# setの場合はbase_hpとcurrent_hpを計算値に設定
+					# creature_data["hp"]は元の値を維持（戦闘後の復元用）
+					participant.base_hp = bonus
+					participant.current_hp = bonus
 				else:
 					participant.temporary_bonus_hp += bonus
 				print("【土地数比例】", participant.creature_data.get("name", "?"))
@@ -1042,17 +1058,14 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 			if board_system_ref:
 				race_count = board_system_ref.count_creatures_by_race(player_id, target_race)
 			
-			# 侵略側（配置されていない）は自分を含めない
-			# count_creatures_by_raceは配置済みのみカウントするので追加処理不要
-			
 			var stat_value = int(race_count * multiplier)
 			
-			# ステータスを置き換え（基本値を上書き）
-			participant.creature_data["ap"] = stat_value
-			participant.creature_data["hp"] = stat_value
+			# ステータスを置き換え
+			# creature_data["hp"]は元の値を維持（戦闘後の復元用）
+			# base_hpとcurrent_hpを計算値に設定
+			participant.base_hp = stat_value
 			participant.current_ap = stat_value
 			participant.current_hp = stat_value
-			# max_hpはget_max_hp()で計算されるため、creature_data["hp"]を設定すればOK
 			
 			print("【種族配置数ステータス】", participant.creature_data.get("name", "?"),
 				  " AP&HP=", stat_value, " (", target_race, ":", race_count, " × ", multiplier, ")")

@@ -221,8 +221,7 @@ static func apply_living_clove_stat(participant, board_system) -> void:
 	var calculated_value = _calculate_other_element_count(board_system)
 	
 	# 基礎AP/HPを置換
-	participant.creature_data["ap"] = calculated_value
-	participant.creature_data["hp"] = calculated_value
+	# creature_data["hp"]は元の値を維持（戦闘後の復元用）
 	participant.base_hp = calculated_value
 	participant.current_ap = calculated_value
 	participant.current_hp = calculated_value
