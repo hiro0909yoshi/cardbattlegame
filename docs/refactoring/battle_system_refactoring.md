@@ -1,261 +1,527 @@
-# BattleSystem リファクタリング記録
+# バトルシステム リファクタリング計画
 
-**日付**: 2025年1月  
-**目的**: BattleSystem.gdの肥大化を解消し、保守性と可読性を向上
-
----
-
-## 📊 リファクタリング前後の比較
-
-| 項目 | リファクタリング前 | リファクタリング後 |
-|------|-------------------|-------------------|
-| **行数** | 1,087行 | 250行 (コア) + 800行 (サブシステム) |
-| **メソッド数** | 34個 | 10個 (コア) + 28個 (サブシステム) |
-| **責務** | すべて単一ファイル | 5つのモジュールに分離 |
-| **テスト容易性** | 低 | 高 |
+**バージョン**: 2.0  
+**作成日**: 2025年12月25日  
+**目的**: コアファイルから個別スキル処理を分離し、保守性を向上
 
 ---
 
-## 🏗️ 新しいアーキテクチャ
+## 📋 目次
+
+1. [現状の問題点](#現状の問題点)
+2. [ファイル構成と役割](#ファイル構成と役割)
+3. [発動タイミング別effect_type一覧](#発動タイミング別effect_type一覧)
+4. [コアファイルに直接書かれている処理](#コアファイルに直接書かれている処理)
+5. [リファクタリング計画](#リファクタリング計画)
+6. [影響範囲](#影響範囲)
+
+---
+
+## 現状の問題点
+
+### 1. コアファイルへの個別スキル実装
+`battle_skill_processor.gd`に個別クリーチャーのスキル処理が直接書かれている。
+
+**問題:**
+- ファイルが肥大化（1400行以上）
+- 新スキル追加時にコアファイルを修正する必要がある
+- スキル処理の再利用が困難
+
+### 2. 責任分担の曖昧さ
+コアファイルとスキルファイルの役割が不明確。
+
+**理想:**
+- コアファイル = オーケストレーション（順序制御、呼び出し）
+- スキルファイル = 実際の処理ロジック
+
+---
+
+## ファイル構成と役割
+
+### コアファイル（scripts/battle/）
+
+| ファイル | 現在の役割 | あるべき役割 |
+|---------|-----------|-------------|
+| **battle_participant.gd** | バトル参加者データクラス | ✅ 変更不要 |
+| **battle_preparation.gd** | 参加者準備、土地ボーナス計算 | ✅ 変更不要 |
+| **battle_skill_processor.gd** | 戦闘前スキル処理 + 個別スキル実装 | ⚠️ オーケストレーションのみに |
+| **battle_execution.gd** | ダメージ計算、戦闘実行 | ✅ 概ね良好 |
+| **battle_special_effects.gd** | 即死、再生、死亡時効果 | ✅ 概ね良好 |
+| **battle_item_applier.gd** | アイテム効果適用 | ✅ 変更不要 |
+| **battle_curse_applier.gd** | 呪い効果適用 | ✅ 変更不要 |
+| **battle_skill_granter.gd** | スキル付与処理 | ✅ 変更不要 |
+
+### スキルファイル（scripts/battle/skills/）
+
+| ファイル | 役割 | 状態 |
+|---------|------|------|
+| skill_first_strike.gd | 先制攻撃 | ✅ |
+| skill_double_attack.gd | 2回攻撃 | ✅ |
+| skill_penetration.gd | 貫通 | ✅ |
+| skill_reflect.gd | 反射 | ✅ |
+| skill_power_strike.gd | 強打 | ✅ |
+| skill_scroll_attack.gd | 巻物攻撃 | ✅ |
+| skill_resonance.gd | 感応 | ✅ |
+| skill_transform.gd | 変身 | ✅ |
+| skill_merge.gd | 合体 | ✅ |
+| skill_assist.gd | 援護 | ✅ |
+| skill_support.gd | 応援 | ✅ |
+| skill_item_manipulation.gd | アイテム破壊・盗み | ✅ |
+| skill_item_creature.gd | アイテムクリーチャー | ✅ |
+| skill_item_return.gd | アイテム返却 | ✅ |
+| skill_special_creature.gd | 能力無効化等 | ⚠️ 拡張必要 |
+| skill_creature_spawn.gd | クリーチャー生成 | ✅ |
+| skill_land_effects.gd | 土地効果 | ⚠️ 拡張必要 |
+| skill_battle_start_conditions.gd | 戦闘開始時条件 | ⚠️ 拡張必要 |
+| skill_battle_end_effects.gd | 戦闘終了時効果 | ✅ |
+| skill_permanent_buff.gd | 永続バフ | ✅ |
+| skill_magic_gain.gd | 魔力獲得 | ✅ |
+| skill_magic_steal.gd | 魔力奪取 | ✅ |
+| skill_legacy.gd | 旧スキル処理 | 🔴 廃止検討 |
+| **skill_stat_modifiers.gd** | **ステータス修正** | 🆕 新規作成 |
+
+---
+
+## 発動タイミング別effect_type一覧
+
+### trigger: none（バトル準備時、常時効果）
+
+これらはバトル準備フェーズで適用される。多くが`battle_skill_processor.gd`に直接実装されている。
+
+#### ステータス修正系（→ skill_stat_modifiers.gd へ移動）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **adjacent_owned_land** | [C:226] タイガーヴェタ | 隣接自領地でボーナス |
+| **base_ap_to_hp** | [C:49] ローンビースト | 基礎APをHPに加算 |
+| **battle_land_element_bonus** | [C:110] アンフィビアン | 戦闘地属性でボーナス |
+| **battle_land_level_bonus** | [C:131] ネッシー | 戦闘地レベルでボーナス |
+| **conditional_land_count** | [C:15] ジェネラルカン | 条件付き配置数 |
+| **constant_stat_bonus** | [C:102] アイスウォール, [C:330] トルネード | 固定ボーナス |
+| **defender_fixed_ap** | [C:204] ガーゴイル | 防御時固定ST |
+| **destroy_count_multiplier** | [C:323] ソウルコレクター | 破壊数×倍率 |
+| **dice_condition_bonus** | [C:23] ドゥームデボラー | ダイス条件ボーナス |
+| **enemy_element_bonus** | [C:205] カクタスウォール | 敵属性でボーナス |
+| **hand_count_multiplier** | [C:146] リリス, [I:1055] フォースアンクレット | 手札枚数×倍率 |
+| **land_count_multiplier** | [C:1] アームドパラディン, [C:37] ファイアードレイク, [C:109] アンダイン, [C:236] ブランチアーミー, [C:238] マッドマン, [C:307] ガルーダ, [C:318] サンダースポーン | 土地数×倍率 |
+| **other_element_count** | [C:440] リビングクローブ | 他属性カウント |
+| **owned_land_threshold** | [C:30] バーンタイタン | 自領地数閾値 |
+| **race_creature_stat_replace** | [C:445] レッドキャップ | 種族数でステータス決定 |
+| **random_stat** | [C:321] スペクター | ランダムステータス |
+| **specific_creature_count** | [C:32] ハイプワーカー | 特定クリーチャー数 |
+| **tribe_placement_bonus** | [C:407] オーガロード | 種族配置ボーナス |
+| **turn_number_bonus** | [C:47] ラーバキン | ターン数ボーナス |
+
+#### アイテム専用ステータス修正
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **chain_count_ap_bonus** | [I:1034] チェーンソー | 連鎖数APボーナス |
+| **element_count_bonus** | [I:1023] ストームハルバード, [I:1064] マグマフレイル | 属性カウントボーナス |
+| **element_mismatch_bonus** | [I:1057] プリズムワンド | 属性不一致ボーナス |
+| **fixed_stat** | [I:1059] ペトリフストーン | 固定ステータス |
+| **owned_land_count_bonus** | [I:1019] ストームアーマー, [I:1061] マグマアーマー | 自領地数ボーナス |
+| **random_stat_bonus** | [I:1027] スペクターローブ | ランダムボーナス |
+| **same_element_as_enemy_count** | [I:1014] シェイドクロー | 敵と同属性カウント |
+
+#### 戦闘開始時条件系（→ skill_battle_start_conditions.gd へ統合）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **hp_penalty** | [C:206] ギガンテリウム | HPペナルティ |
+| **self_destruct** | [C:125] スラッジタイタン | 自壊 |
+
+#### アイテム破壊・盗み系（既存: skill_item_manipulation.gd）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **destroy_item** | [C:116] カイザーペンギン, [C:219] シルバンダッチェス, [C:313] グレムリン, [I:1010] グレムリンアイ, [I:1072] リアクトアーマー | アイテム破壊 |
+| **steal_item** | [C:416] シーフ | アイテム盗み |
+| **nullify_item_manipulation** | [C:225] セージ, [I:1006] エンジェルケープ, [I:1037] ティアリングハロー, [I:1038] トゥームストーン | 破壊・盗み無効 |
+
+#### スキル付与系（既存: battle_skill_granter.gd）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **first_strike** | [C:7] キメラ | 先制 |
+| **grant_first_strike** | [I:1000] アージェントキー, [I:1003] イーグルレイピア, [I:1013] サキュバスリング, [I:1028] スリング | 先制付与 |
+| **grant_double_attack** | [I:1043] トンファ | 2回攻撃付与 |
+| **grant_last_strike** | [I:1032] ダイヤアーマー | 後攻付与 |
+| **grant_skill** | 多数 | 各種スキル付与 |
+
+#### 反射・強打系（既存ファイル）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **reflect_damage** | [C:25] ナイトエラント, [C:426] デコイ, [I:1002] アングリーマスク, [I:1025] スパイクシールド, [I:1066] ミラーホブロン, [I:1069] メイガスミラー | 反射 |
+| **nullify_reflect** | [I:1068] ムラサメ | 反射無効 |
+| **power_strike** | 多数（14体） | 強打 |
+| **scroll_attack** | 巻物アイテム（8個） | 巻物攻撃 |
+
+#### その他バトル準備時
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **defensive** | [C:411] グレートフォシル, [C:413] ゴールドトーテム | 防御的 |
+| **synthesis** | [C:25] ナイトエラント | 合体 |
+| **support** | 9体 | 応援 |
+| **ap_drain** | [I:1013] サキュバスリング | APドレイン |
+| **as_creature_bonus** | [C:438] リビングアーマー | クリーチャーとして使用時ボーナス |
+| **change_element** | [I:1045] ニュートラルクローク | 属性変更 |
+
+#### 魔力獲得系（既存: skill_magic_gain.gd）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **magic_gain_on_battle_start** | [C:410] クリーピングコイン | 戦闘開始時魔力 |
+| **magic_gain_on_damage** | [C:127] ゼラチンウォール | ダメージ時魔力 |
+| **magic_gain_on_invasion** | [C:36] ピュトン, [C:331] トレジャーレイダー | 侵略時魔力 |
+| **magic_steal_no_item** | [C:107] アマゾン | アイテムなし時魔力奪取 |
+| **magic_steal_on_damage** | [C:433] バンディット | ダメージ比例魔力奪取 |
+
+#### 永続バフ系（既存: skill_permanent_buff.gd）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **per_lap_permanent_bonus** | [C:7] キメラ, [C:240] モスタイタン | 周回毎永続ボーナス |
+| **on_enemy_destroy_permanent** | [C:35] バルキリー, [C:227] ダスクドウェラー | 敵撃破時永続ボーナス |
+
+#### 非バトル系（対象外）
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **toll_change** | 4体 | 通行料変更 |
+| **terrain_change_cost_modifier** | [C:402] アーキミミック | 地形変化コスト |
+
+---
+
+### trigger: battle_preparation
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **nullify_all_enemy_abilities** | [C:123] シーボンズ, [I:1004] ウォーロックディスク | 能力無効化 |
+
+---
+
+### trigger: on_battle_start
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **transform** | [C:432] バルダンダース, [I:1041] ドラゴンオーブ, [I:1047] ネクロプラズマ | 変身 |
+
+---
+
+### trigger: on_attack_success
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **ap_drain** | [C:418] シャドウガイスト | APドレイン |
+| **apply_curse** | [C:320] スカラベンドラ, [C:332] ナイキー, [I:1050] バインドウィップ, [I:1067] ムーンシミター | 呪い付与 |
+| **down_enemy** | [C:18] ショッカー | ダウン付与 |
+| **transform** | [C:215] コカトリス, [I:1036] ツインスパイク | 変身 |
+
+---
+
+### trigger: on_battle_end
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **after_battle_permanent_change** | [C:446] ロックタイタン | 戦闘後永続変化 |
+| **apply_curse** | [C:124] スキュラ | 呪い付与 |
+| **draw_cards** | [C:130] トリトン | カードドロー |
+| **level_up_battle_land** | [C:245] レーシィ | 戦闘地レベルアップ |
+| **permanent_stat_change** | [C:339] ブルガサリ | 永続ステータス変化 |
+| **reduce_enemy_mhp** | [C:317] サムハイン | 敵MHP減少 |
+| **spawn_copy_on_defend_survive** | [C:140] マイコロン | 防御生存時分裂 |
+| **swap_ap_mhp** | [C:443] ルナティックヘア | AP/MHP交換 |
+
+---
+
+### trigger: on_battle_won
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **change_tile_element** | [C:19] ティアマト, [C:133] バハムート, [C:242] ヨルムンガンド, [C:329] テュポーン | 土地属性変更 |
+| **reduce_tile_level** | [C:327] デバステイター | 土地レベル減少 |
+| **level_up_on_win** | [I:1016] シルバープロウ | 勝利時レベルアップ |
+
+---
+
+### trigger: on_death
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **damage_enemy** | [C:13] サルファバルーン | 敵にダメージ |
+| **draw_cards_on_death** | [I:1038] トゥームストーン | 死亡時ドロー |
+| **instant_death** | [I:1048] バーニングハート | 道連れ |
+| **legacy_card** | [C:136] フェイト | カード遺産 |
+| **legacy_magic** | [C:239] マミー, [C:315] コーンフォーク, [C:410] クリーピングコイン, [I:1011] ゴールドグース | 魔力遺産 |
+| **revenge_mhp_damage** | [I:1044] ナパームアロー | MHP比例復讐ダメージ |
+| **revive** | [C:139] ヘルグラマイト, [C:411] グレートフォシル, [C:439] リビングアムル, [I:1046] ネクロスカラベ | 復活 |
+| **revive_to_hand** | [C:40] フェニックス | 手札に復活 |
+
+---
+
+### trigger: on_kill
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **annihilate** | [C:201] アネイマブル | 殲滅 |
+
+---
+
+### trigger: on_hp_threshold
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **self_destruct_with_revenge** | [C:442] リビングボム | HP閾値で自爆 |
+
+---
+
+### trigger: on_spell_death
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **transform** | [C:217] ジャッカロープ | スペル死亡時変身 |
+
+---
+
+### trigger: after_item_use
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **item_return** | [C:41] フレイムデューク, [C:314] ケンタウロス, [I:1005] エターナルメイル, [I:1030] ソウルレイ, [I:1054] ブーメラン | アイテム返却 |
+
+---
+
+### trigger: after_battle
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **magic_from_damage** | [I:1029] ゼラチンアーマー | ダメージから魔力 |
+| **magic_on_enemy_survive** | [I:1012] ゴールドハンマー | 敵生存時魔力 |
+
+---
+
+### trigger: self_item_use
+
+| effect_type | 対象 | 説明 |
+|-------------|------|------|
+| **on_item_use_bonus** | [C:339] ブルガサリ | アイテム使用時ボーナス |
+
+---
+
+## コアファイルに直接書かれている処理
+
+### battle_skill_processor.gd（要移動）
+
+| 関数名 | 行番号 | 対象effect_type | 対象クリーチャー | 移動先 |
+|--------|--------|-----------------|-----------------|--------|
+| `apply_turn_number_bonus` | 920-975 | turn_number_bonus | ラーバキン(47) | skill_stat_modifiers.gd |
+| `apply_destroy_count_effects` | 976-1002 | destroy_count_multiplier | ソウルコレクター(323) | skill_stat_modifiers.gd |
+| `apply_phase_3c_effects` | 1004-1072 | base_ap_to_hp, conditional_land_count | ローンビースト(49), ジェネラルカン(15) | skill_stat_modifiers.gd |
+| `apply_phase_3b_effects` | 1074-1218 | defender_fixed_ap, battle_land_level_bonus, owned_land_threshold, specific_creature_count, race_creature_stat_replace, adjacent_owned_land | ガーゴイル(204), ネッシー(131), バーンタイタン(30), ハイプワーカー(32), レッドキャップ(445), タイガーヴェタ(226) | skill_stat_modifiers.gd |
+| `apply_random_stat_effects` | 1229-1263 | random_stat | スペクター(321) | skill_stat_modifiers.gd |
+| `apply_constant_stat_bonus` | 1344-1365 | constant_stat_bonus | アイスウォール(102), トルネード(330) | skill_stat_modifiers.gd |
+| `apply_hand_count_effects` | 1367-1400 | hand_count_multiplier | リリス(146) | skill_stat_modifiers.gd |
+| `apply_land_count_effects` | 850-905 | land_count_multiplier | 7体 | skill_stat_modifiers.gd |
+| `_has_warlock_disk` | 1402-1414 | - | - | skill_special_creature.gd |
+| `_has_skill_nullify_curse` | 1416-1419 | - | - | skill_special_creature.gd |
+| `_has_nullify_creature_ability` | 1421-1429 | nullify_all_enemy_abilities | シーボンズ(123) | skill_special_creature.gd |
+
+### battle_execution.gd（要確認）
+
+| 関数名 | 対象effect_type | 移動先 |
+|--------|-----------------|--------|
+| `_check_and_apply_on_attack_success_curse` | apply_curse | skill_land_effects.gd or 新規 |
+| `_apply_ap_drain_on_attack_success` | ap_drain | skill_special_creature.gd |
+| `_check_destroy_after_battle` | - | skill_battle_end_effects.gd |
+
+---
+
+## リファクタリング計画
+
+### Phase 1: skill_stat_modifiers.gd 新規作成
+
+**対象effect_type:**
+- turn_number_bonus
+- destroy_count_multiplier
+- base_ap_to_hp
+- conditional_land_count
+- defender_fixed_ap
+- battle_land_level_bonus
+- battle_land_element_bonus
+- owned_land_threshold
+- specific_creature_count
+- race_creature_stat_replace
+- adjacent_owned_land
+- random_stat
+- constant_stat_bonus
+- hand_count_multiplier
+- land_count_multiplier
+- dice_condition_bonus
+- enemy_element_bonus
+- other_element_count
+- tribe_placement_bonus
+
+**対象クリーチャー（19体）:**
+- [C:1] アームドパラディン
+- [C:15] ジェネラルカン
+- [C:23] ドゥームデボラー
+- [C:30] バーンタイタン
+- [C:32] ハイプワーカー
+- [C:37] ファイアードレイク
+- [C:47] ラーバキン
+- [C:49] ローンビースト
+- [C:102] アイスウォール
+- [C:109] アンダイン
+- [C:110] アンフィビアン
+- [C:131] ネッシー
+- [C:146] リリス
+- [C:204] ガーゴイル
+- [C:205] カクタスウォール
+- [C:226] タイガーヴェタ
+- [C:236] ブランチアーミー
+- [C:238] マッドマン
+- [C:307] ガルーダ
+- [C:318] サンダースポーン
+- [C:321] スペクター
+- [C:323] ソウルコレクター
+- [C:330] トルネード
+- [C:407] オーガロード
+- [C:440] リビングクローブ
+- [C:445] レッドキャップ
+
+### Phase 2: skill_special_creature.gd 拡張
+
+**追加関数:**
+- `has_warlock_disk(participant) -> bool`
+- `has_nullify_creature_ability(participant) -> bool`
+- `has_skill_nullify_curse(participant) -> bool`
+
+### Phase 3: battle_skill_processor.gd リファクタリング
+
+**変更内容:**
+- 個別スキル処理を削除
+- 新規ファイルへの呼び出しに置き換え
+
+---
+
+## 依存関係の調査結果
+
+### 呼び出し関係図
 
 ```
-scripts/
-├── battle_system.gd (250行)
-│   └── コア機能のみ（システム統合、メインフロー制御）
-│
-└── battle/
-	├── battle_preparation.gd (280行)
-	│   └── バトル準備（Participant作成、アイテム効果、土地ボーナス、貫通判定）
-	│
-	├── battle_skill_processor.gd (200行)
-	│   └── スキル処理（感応、強打、2回攻撃、巻物攻撃）
-	│
-	├── battle_execution.gd (180行)
-	│   └── 戦闘実行（攻撃順決定、攻撃シーケンス、結果判定）
-	│
-	└── battle_special_effects.gd (340行)
-		└── 特殊効果（即死、無効化、再生）
+[battle_system.gd]
+    │
+    ├─→ battle_skill_processor.apply_pre_battle_skills()  ← エントリーポイント
+    │       │
+    │       ├─→ _apply_curse_effects()
+    │       │       └─→ BattleCurseApplier.apply_creature_curses()
+    │       │
+    │       ├─→ apply_item_manipulation()
+    │       │       └─→ ItemManipulationSkill.apply()
+    │       │
+    │       ├─→ TransformSkill.process_transform_effects()
+    │       │
+    │       ├─→ battle_preparation.apply_remaining_item_effects()
+    │       │       └─→ BattleItemApplier.apply_item_effects()
+    │       │
+    │       └─→ apply_skills()  ※内部関数を多数呼び出し
+    │               ├─→ apply_turn_number_bonus()      ← 要移動
+    │               ├─→ apply_land_count_effects()     ← 要移動
+    │               ├─→ apply_destroy_count_effects()  ← 要移動
+    │               ├─→ apply_hand_count_effects()     ← 要移動
+    │               ├─→ apply_constant_stat_bonus()    ← 要移動
+    │               ├─→ apply_battle_condition_effects() ← 要移動
+    │               ├─→ apply_phase_3b_effects()       ← 要移動
+    │               └─→ apply_phase_3c_effects()       ← 要移動
+    │
+    └─→ battle_execution.execute_attack_sequence()
+            │
+            └─→ skill_processor.recalculate_skills_after_transform()
+                    └─→ _apply_skills_with_animation()
+                            └─→ 上記と同じ内部関数を呼び出し
 ```
 
----
+### 外部依存の確認結果
 
-## 📦 モジュール詳細
+| 関数名 | 外部からの呼び出し | 移動可否 |
+|--------|-------------------|---------|
+| apply_turn_number_bonus | ❌ なし | ✅ 安全 |
+| apply_destroy_count_effects | ❌ なし | ✅ 安全 |
+| apply_phase_3c_effects | ❌ なし | ✅ 安全 |
+| apply_phase_3b_effects | ❌ なし | ✅ 安全 |
+| apply_random_stat_effects | ❌ 未使用（SkillSpecialCreature版を使用） | ✅ 削除可能 |
+| apply_constant_stat_bonus | ❌ なし | ✅ 安全 |
+| apply_hand_count_effects | ❌ なし | ✅ 安全 |
+| apply_land_count_effects | ❌ なし | ✅ 安全 |
+| apply_battle_condition_effects | ❌ なし | ✅ 安全 |
 
-### 1. BattleSystem (コア)
+### 重複実装の発見
 
-**責務**:
-- システム統合（サブシステムの初期化と管理）
-- メインフロー制御
-- 結果処理とシグナル発行
+| 処理 | 実装箇所 | 状態 |
+|------|---------|------|
+| random_stat | battle_skill_processor.gd:1229 | 🔴 未使用（削除可能） |
+| random_stat | skill_special_creature.gd:94 | ✅ 実際に使用 |
+| random_stat | battle_curse_applier.gd:112 | ✅ 呪い用（別系統） |
+| random_stat_bonus | battle_item_applier.gd:338 | ✅ アイテム用（別系統） |
+| hand_count_multiplier | battle_skill_processor.gd:1367 | ✅ クリーチャー用 |
+| hand_count_multiplier | battle_item_applier.gd:254 | ✅ アイテム用（別系統） |
 
-**主要メソッド**:
-```gdscript
-func setup_systems()
-func execute_3d_battle()
-func execute_3d_battle_with_data()
-func execute_invasion_3d()
-func pay_toll_3d()
-```
-
----
-
-### 2. BattlePreparation
-
-**責務**:
-- BattleParticipant作成
-- アイテム効果適用
-- スキル付与
-- 土地ボーナス計算
-- 貫通スキル判定
-
-**主要メソッド**:
-```gdscript
-func prepare_participants()
-func apply_item_effects()
-func grant_skill_to_participant()
-func calculate_land_bonus()
-func check_penetration_skill()
-```
-
-**依存関係**:
-- BoardSystem (土地情報)
-- CardSystem (カードデータ)
-- PlayerSystem (プレイヤー情報)
-
----
-
-### 3. BattleSkillProcessor
-
-**責務**:
-- バトル前スキル適用
-- 感応スキル処理
-- 強打スキル処理
-- 巻物攻撃処理
-- 2回攻撃判定
-
-**主要メソッド**:
-```gdscript
-func apply_pre_battle_skills()
-func apply_skills()
-func apply_resonance_skill()
-func apply_power_strike_skills()
-func check_scroll_attack()
-func check_double_attack()
-```
-
-**依存関係**:
-- BoardSystem (プレイヤー土地情報)
-- ConditionChecker (条件判定)
-- EffectCombat (強打計算)
-
----
-
-### 4. BattleExecution
-
-**責務**:
-- 攻撃順決定（先制・後手判定）
-- 攻撃シーケンス実行
-- ダメージ処理
-- バトル結果判定
-
-**主要メソッド**:
-```gdscript
-func determine_attack_order()
-func execute_attack_sequence()
-func resolve_battle_result()
-```
-
-**依存関係**:
-- BattleSpecialEffects (無効化、即死判定)
-- BattleParticipant (ステータス参照)
-
----
-
-### 5. BattleSpecialEffects
-
-**責務**:
-- 無効化スキル処理
-- 即死スキル処理
-- 再生スキル処理
-- 防御側HP更新
-
-**主要メソッド**:
-```gdscript
-func check_nullify()
-func check_instant_death()
-func apply_regeneration()
-func update_defender_hp()
-```
-
-**依存関係**:
-- ConditionChecker (条件判定)
-- BoardSystem (タイルデータ更新)
-
----
-
-## 🔄 処理フロー
+### 呪い・スペル・アイテムからの影響
 
 ```
-1. BattleSystem.execute_3d_battle()
-   │
-   ├─> 2. BattlePreparation.prepare_participants()
-   │   ├─ BattleParticipant作成
-   │   ├─ アイテム効果適用
-   │   └─ 土地ボーナス計算
-   │
-   ├─> 3. BattleSkillProcessor.apply_pre_battle_skills()
-   │   ├─ 感応スキル
-   │   ├─ 強打スキル
-   │   └─ 2回攻撃判定
-   │
-   ├─> 4. BattleExecution.determine_attack_order()
-   │   └─ 先制・後手判定
-   │
-   ├─> 5. BattleExecution.execute_attack_sequence()
-   │   ├─ 攻撃ループ
-   │   ├─ BattleSpecialEffects.check_nullify()
-   │   └─ BattleSpecialEffects.check_instant_death()
-   │
-   ├─> 6. BattleExecution.resolve_battle_result()
-   │
-   └─> 7. BattleSystem._apply_post_battle_effects()
-	   ├─ BattleSpecialEffects.apply_regeneration()
-	   └─ 土地奪取 or カード破壊 or 手札復帰
+[スペル]
+    │
+    └─→ クリーチャーに呪いを付与（creature_data["curse"]）
+            │
+            └─→ バトル時にBattleCurseApplierが処理
+
+[アイテム]
+    │
+    └─→ BattleItemApplier.apply_item_effects()
+            ├─→ ステータスボーナス
+            ├─→ スキル付与
+            └─→ hand_count_multiplier等（独自実装）
+
+※ スペル・アイテムからbattle_skill_processor.gdへの直接呼び出しはなし
 ```
 
----
+### 結論
 
-## ✅ メリット
+**安全にリファクタリング可能**
+- 移動対象の関数はすべて`battle_skill_processor.gd`内部でのみ呼び出し
+- 外部依存なし
+- スペル・呪い・アイテムからの直接呼び出しなし
 
-### 1. **保守性向上**
-- 各モジュールが単一責任を持つ
-- 変更の影響範囲が明確
-- バグの特定が容易
-
-### 2. **テスト容易性**
-- モジュール単位でテスト可能
-- モックの作成が簡単
-- 独立したテストケース作成が可能
-
-### 3. **可読性向上**
-- ファイルサイズが適切（200-350行）
-- 責務が明確
-- コードの意図が理解しやすい
-
-### 4. **拡張性**
-- 新しいスキル追加が容易
-- モジュール単位での機能追加
-- 他のモジュールへの影響を最小化
-
-### 5. **並行開発**
-- 複数人での開発が可能
-- コンフリクトの発生を抑制
-- レビューが容易
+**注意点**
+- `recalculate_skills_after_transform`は`battle_execution.gd`から呼び出されている
+- 新規`skill_stat_modifiers.gd`を作成後、`apply_skills`と`_apply_skills_with_animation`の両方を更新する必要あり
 
 ---
 
-## 📝 今後の展開
+## 影響範囲
 
-### 次に分割推奨のファイル
+### テストが必要なクリーチャー（優先度順）
 
-#### 1. **land_command_handler.gd** (881行)
-```
-scripts/game_flow/land_command/
-├── land_command_handler.gd (コア)
-├── land_selection_handler.gd (土地選択)
-├── level_up_handler.gd (レベルアップ)
-├── creature_move_handler.gd (移動処理)
-└── creature_swap_handler.gd (交換処理)
-```
+| 優先度 | クリーチャー | effect_type | 理由 |
+|--------|-------------|-------------|------|
+| 高 | スペクター(321) | random_stat | 特殊なステータス設定 |
+| 高 | ガーゴイル(204) | defender_fixed_ap | 防御時のみ発動 |
+| 高 | シーボンズ(123) | nullify_all_enemy_abilities | 能力無効化 |
+| 中 | ソウルコレクター(323) | destroy_count_multiplier | ゲーム状態依存 |
+| 中 | ラーバキン(47) | turn_number_bonus | ターン数依存 |
+| 中 | ネッシー(131) | battle_land_level_bonus | 土地レベル依存 |
+| 低 | アームドパラディン(1) | land_count_multiplier | 土地数依存（7体共通） |
 
----
-
-## 🔍 注意事項
-
-### 互換性
-- 外部からの呼び出しインターフェースは変更なし
-- `execute_3d_battle()` / `execute_3d_battle_with_data()` は同じ
-- シグナル `invasion_completed` も同じ
-
-### 依存関係
-- サブシステムは親の BattleSystem を通じて連携
-- 直接の相互依存は避ける
-- 必要な参照は setup_systems() で設定
-
-### パフォーマンス
-- サブシステム作成のオーバーヘッドは微小
-- 実行時のパフォーマンスは変わらず
-- メモリ使用量もほぼ同じ
 
 ---
 
-## 📚 参考資料
+## 変更履歴
 
-- **設計パターン**: Strategy Pattern, Facade Pattern
-- **原則**: Single Responsibility Principle (SRP)
-- **参考書籍**: Clean Code, Refactoring
+| 日付 | バージョン | 変更内容 |
+|------|-----------|---------|
+| 2025/12/25 | 1.0 | 初版作成 |
+| 2025/12/25 | 2.0 | 全effect_typeの正確な情報を反映、trigger別に分類 |
 
----
-
-**作成者**: AI Assistant  
-**レビュー**: 必要に応じて更新
