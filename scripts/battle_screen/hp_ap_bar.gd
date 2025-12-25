@@ -96,6 +96,7 @@ func _draw_hp_bar() -> void:
 	const BAR_MAX = 100.0
 	
 	# 各セグメントの現在残り値（実データから直接取得）
+	# マイナスのtemporary_bonus_hpはcurrent_hpに既に反映済み（スペクター、呪い等）
 	var green_remaining = hp_data["current_hp"] + hp_data["item_bonus_hp"]
 	var cyan_remaining = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
 	var yellow_remaining = hp_data["land_bonus_hp"]
@@ -178,8 +179,7 @@ func _update_hp_label() -> void:
 		# 土地ボーナス（黄色セグメント）
 		var yellow_bonus = hp_data["land_bonus_hp"]
 		
-		# 現在値 = current_hp + item_bonus_hp + 全ボーナスの残り
-		# マイナスの一時ボーナスはcurrent_hpに既に反映済み（呪いによる制限）
+		# 現在値 = current_hp + ボーナス（マイナスのtemporary_bonus_hpはcurrent_hpに反映済み）
 		var temp_bonus = hp_data["temporary_bonus_hp"] if hp_data["temporary_bonus_hp"] > 0 else 0
 		var current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
 					  hp_data["resonance_bonus_hp"] + temp_bonus + \
@@ -191,7 +191,7 @@ func _update_hp_label() -> void:
 			if cyan_bonus > 0:
 				max_text += "+%d" % cyan_bonus
 			else:
-				max_text += "%d" % cyan_bonus  # マイナスはそのまま表示（-20など）
+				max_text += "%d" % cyan_bonus  # マイナスはそのまま表示
 		if yellow_bonus > 0:
 			max_text += "+%d" % yellow_bonus
 		

@@ -180,12 +180,14 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	# スキル適用後の最終ステータス表示
 	print("\n【スキル適用後の最終ステータス】")
 	print("侵略側: ", attacker.creature_data.get("name", "?"))
-	# temporary_bonus_hpはマイナスも含めて加算（ランダム能力値等で使用）
-	var attacker_total_hp = attacker.current_hp + attacker.resonance_bonus_hp + attacker.land_bonus_hp + attacker.temporary_bonus_hp + attacker.item_bonus_hp + attacker.spell_bonus_hp
+	# マイナスの一時ボーナスはcurrent_hpに既に反映済みなので加算しない
+	var attacker_temp_bonus = attacker.temporary_bonus_hp if attacker.temporary_bonus_hp > 0 else 0
+	var attacker_total_hp = attacker.current_hp + attacker.resonance_bonus_hp + attacker.land_bonus_hp + attacker_temp_bonus + attacker.item_bonus_hp + attacker.spell_bonus_hp
 	print("  HP:", attacker_total_hp, " (基本:", attacker.current_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, " 一時:", attacker.temporary_bonus_hp, " アイテム:", attacker.item_bonus_hp, " スペル:", attacker.spell_bonus_hp, ")")
 	print("  AP:", attacker.current_ap)
 	print("防御側: ", defender.creature_data.get("name", "?"))
-	var defender_total_hp = defender.current_hp + defender.resonance_bonus_hp + defender.land_bonus_hp + defender.temporary_bonus_hp + defender.item_bonus_hp + defender.spell_bonus_hp
+	var defender_temp_bonus = defender.temporary_bonus_hp if defender.temporary_bonus_hp > 0 else 0
+	var defender_total_hp = defender.current_hp + defender.resonance_bonus_hp + defender.land_bonus_hp + defender_temp_bonus + defender.item_bonus_hp + defender.spell_bonus_hp
 	print("  HP:", defender_total_hp, " (基本:", defender.current_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, " 一時:", defender.temporary_bonus_hp, " アイテム:", defender.item_bonus_hp, " スペル:", defender.spell_bonus_hp, ")")
 	print("  AP:", defender.current_ap)
 	

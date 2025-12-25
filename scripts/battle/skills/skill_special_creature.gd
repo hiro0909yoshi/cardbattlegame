@@ -118,10 +118,9 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 			# HPをランダムに設定
 			if stat == "hp" or stat == "both":
 				var random_hp = randi() % (max_value - min_value + 1) + min_value
-				var base_hp_value = participant.creature_data.get("hp", 0)
-				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
-				# temporary_bonus_hpのみ設定（current_hpはtotal_hp計算に含まれるため直接設定しない）
-				participant.temporary_bonus_hp = random_hp - (base_hp_value + base_up_hp)
+				# current_hpにランダム値を設定（temporary_bonus_hpは0のまま）
+				# これにより二重計算を防ぐ。呪い等の後続効果はtemporary_bonus_hpに加算される
+				participant.current_hp = random_hp
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
 					  " HP=", random_hp, " (", min_value, "~", max_value, ")")
 			
