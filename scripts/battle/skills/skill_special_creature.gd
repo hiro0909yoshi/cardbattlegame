@@ -120,12 +120,10 @@ static func apply_random_stat_effects(participant: BattleParticipant) -> void:
 				var random_hp = randi() % (max_value - min_value + 1) + min_value
 				var base_hp_value = participant.creature_data.get("hp", 0)
 				var base_up_hp = participant.creature_data.get("base_up_hp", 0)
-				var _old_mhp = base_hp_value + base_up_hp
-				var new_mhp = random_hp
+				# temporary_bonus_hpのみ設定（current_hpはtotal_hp計算に含まれるため直接設定しない）
 				participant.temporary_bonus_hp = random_hp - (base_hp_value + base_up_hp)
-				participant.current_hp = new_mhp
 				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
-					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
+					  " HP=", random_hp, " (", min_value, "~", max_value, ")")
 			
 			return
 

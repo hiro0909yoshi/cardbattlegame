@@ -1224,44 +1224,6 @@ func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary)
 					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
 						  " HP+", hp_change)
 
-## ランダムステータス効果を適用（スペクター用）
-## バトル準備時に呼び出され、STとHPをランダムな値に設定する
-func apply_random_stat_effects(participant: BattleParticipant) -> void:
-	if not participant or not participant.creature_data:
-		return
-	
-	var effects = participant.creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "random_stat":
-			var stat = effect.get("stat", "both")
-			var min_value = effect.get("min", 10)
-			var max_value = effect.get("max", 70)
-			
-			randomize()
-			
-			# STをランダムに設定
-			if stat == "ap" or stat == "both":
-				var random_ap = randi() % (max_value - min_value + 1) + min_value
-				var base_ap = participant.creature_data.get("ap", 0)
-				var base_up_ap = participant.creature_data.get("base_up_ap", 0)
-				participant.temporary_bonus_ap = random_ap - (base_ap + base_up_ap)
-				participant.update_current_ap()
-				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
-					  " ST=", participant.current_ap, " (", min_value, "~", max_value, ")")
-			
-			# HPをランダムに設定
-			if stat == "hp" or stat == "both":
-				var random_hp = randi() % (max_value - min_value + 1) + min_value
-				# temporary_bonus_hpを使ってHPを設定
-				var base_mhp = participant.get_max_hp()
-				participant.temporary_bonus_hp = random_hp - base_mhp
-				# update_current_hp() は呼ばない（current_hp が状態値になったため）
-				print("【ランダム能力値】", participant.creature_data.get("name", "?"), 
-					  " HP=", participant.current_hp, " (", min_value, "~", max_value, ")")
-			
-			return
-
 ## 💰 バトル開始時の魔力獲得スキルを適用
 func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	"""

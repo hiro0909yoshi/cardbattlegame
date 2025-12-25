@@ -413,35 +413,35 @@
 
 ```
 [battle_system.gd]
-    │
-    ├─→ battle_skill_processor.apply_pre_battle_skills()  ← エントリーポイント
-    │       │
-    │       ├─→ _apply_curse_effects()
-    │       │       └─→ BattleCurseApplier.apply_creature_curses()
-    │       │
-    │       ├─→ apply_item_manipulation()
-    │       │       └─→ ItemManipulationSkill.apply()
-    │       │
-    │       ├─→ TransformSkill.process_transform_effects()
-    │       │
-    │       ├─→ battle_preparation.apply_remaining_item_effects()
-    │       │       └─→ BattleItemApplier.apply_item_effects()
-    │       │
-    │       └─→ apply_skills()  ※内部関数を多数呼び出し
-    │               ├─→ apply_turn_number_bonus()      ← 要移動
-    │               ├─→ apply_land_count_effects()     ← 要移動
-    │               ├─→ apply_destroy_count_effects()  ← 要移動
-    │               ├─→ apply_hand_count_effects()     ← 要移動
-    │               ├─→ apply_constant_stat_bonus()    ← 要移動
-    │               ├─→ apply_battle_condition_effects() ← 要移動
-    │               ├─→ apply_phase_3b_effects()       ← 要移動
-    │               └─→ apply_phase_3c_effects()       ← 要移動
-    │
-    └─→ battle_execution.execute_attack_sequence()
-            │
-            └─→ skill_processor.recalculate_skills_after_transform()
-                    └─→ _apply_skills_with_animation()
-                            └─→ 上記と同じ内部関数を呼び出し
+	│
+	├─→ battle_skill_processor.apply_pre_battle_skills()  ← エントリーポイント
+	│       │
+	│       ├─→ _apply_curse_effects()
+	│       │       └─→ BattleCurseApplier.apply_creature_curses()
+	│       │
+	│       ├─→ apply_item_manipulation()
+	│       │       └─→ ItemManipulationSkill.apply()
+	│       │
+	│       ├─→ TransformSkill.process_transform_effects()
+	│       │
+	│       ├─→ battle_preparation.apply_remaining_item_effects()
+	│       │       └─→ BattleItemApplier.apply_item_effects()
+	│       │
+	│       └─→ apply_skills()  ※内部関数を多数呼び出し
+	│               ├─→ apply_turn_number_bonus()      ← 要移動
+	│               ├─→ apply_land_count_effects()     ← 要移動
+	│               ├─→ apply_destroy_count_effects()  ← 要移動
+	│               ├─→ apply_hand_count_effects()     ← 要移動
+	│               ├─→ apply_constant_stat_bonus()    ← 要移動
+	│               ├─→ apply_battle_condition_effects() ← 要移動
+	│               ├─→ apply_phase_3b_effects()       ← 要移動
+	│               └─→ apply_phase_3c_effects()       ← 要移動
+	│
+	└─→ battle_execution.execute_attack_sequence()
+			│
+			└─→ skill_processor.recalculate_skills_after_transform()
+					└─→ _apply_skills_with_animation()
+							└─→ 上記と同じ内部関数を呼び出し
 ```
 
 ### 外部依存の確認結果
@@ -473,17 +473,17 @@
 
 ```
 [スペル]
-    │
-    └─→ クリーチャーに呪いを付与（creature_data["curse"]）
-            │
-            └─→ バトル時にBattleCurseApplierが処理
+	│
+	└─→ クリーチャーに呪いを付与（creature_data["curse"]）
+			│
+			└─→ バトル時にBattleCurseApplierが処理
 
 [アイテム]
-    │
-    └─→ BattleItemApplier.apply_item_effects()
-            ├─→ ステータスボーナス
-            ├─→ スキル付与
-            └─→ hand_count_multiplier等（独自実装）
+	│
+	└─→ BattleItemApplier.apply_item_effects()
+			├─→ ステータスボーナス
+			├─→ スキル付与
+			└─→ hand_count_multiplier等（独自実装）
 
 ※ スペル・アイテムからbattle_skill_processor.gdへの直接呼び出しはなし
 ```
@@ -524,4 +524,3 @@
 |------|-----------|---------|
 | 2025/12/25 | 1.0 | 初版作成 |
 | 2025/12/25 | 2.0 | 全effect_typeの正確な情報を反映、trigger別に分類 |
-
