@@ -6,7 +6,6 @@ class_name BattleSpecialEffects
 
 # スキルモジュール
 var _skill_legacy = preload("res://scripts/battle/skills/skill_legacy.gd")
-const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
 
 var board_system_ref = null
 var spell_draw_ref: SpellDraw = null

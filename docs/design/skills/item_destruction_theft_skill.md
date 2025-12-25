@@ -182,7 +182,15 @@
 |----|------|------|-------|--------|
 | 226 | セージ | 地 | 20/30 | 援護；アイテム破壊・盗み無効；巻物強打 |
 
+### 実装アイテム（1個）
+
+| ID | 名前 | タイプ | コスト | 効果 |
+|----|------|--------|--------|------|
+| 1001 | エンジェルケープ | 防具 | 40 | HP+20；アイテム破壊・盗み無効 |
+
 ### データ構造
+
+#### クリーチャー（セージ）
 
 ```json
 {
@@ -207,6 +215,54 @@
 }
 ```
 
+#### アイテム（エンジェルケープ）
+
+```json
+{
+  "id": 1001,
+  "name": "エンジェルケープ",
+  "type": "item",
+  "item_type": "防具",
+  "cost": { "mp": 40 },
+  "effect": "HP+20；アイテム破壊・盗み無効",
+  "effect_parsed": {
+    "stat_bonus": { "hp": 20 },
+    "effects": [
+      {
+        "effect_type": "nullify_item_manipulation"
+      }
+    ]
+  }
+}
+```
+
+### 判定処理
+
+アイテム破壊・盗み無効の判定は、**クリーチャー能力とアイテム両方**をチェックする：
+
+```gdscript
+static func _has_nullify_item_manipulation(participant) -> bool:
+    # クリーチャー能力をチェック
+    var ability_parsed = participant.creature_data.get("ability_parsed", {})
+    var effects = ability_parsed.get("effects", [])
+    for effect in effects:
+        if effect.get("effect_type") == "nullify_item_manipulation":
+            return true
+    
+    # アイテム効果をチェック（エンジェルケープ等）
+    var items = participant.creature_data.get("items", [])
+    for item in items:
+        var item_effect_parsed = item.get("effect_parsed", {})
+        var item_effects = item_effect_parsed.get("effects", [])
+        for item_effect in item_effects:
+            if item_effect.get("effect_type") == "nullify_item_manipulation":
+                return true
+    
+    return false
+```
+
+**重要**: アイテム効果は通常Phase 0-Sで適用されるが、`nullify_item_manipulation`は**アイテム破壊・盗み処理時に直接`items`配列からチェック**する。これにより、エンジェルケープ装備時にアイテム破壊を防げる。
+
 ---
 
 ## 処理フロー
@@ -215,32 +271,49 @@
 1. バトル準備（prepare_participants）
    ├─ BattleParticipant作成
    ├─ アイテムをitemsに追加（効果はまだ適用しない）
-   └─ 呪いをtemporary_effectsに変換
+   └─ 呪いはapply_pre_battle_skillsで適用
    │
-2. バトル前スキル処理（apply_pre_battle_skills）開始
+2. バトル画面セットアップ（start_battle）
    │
-3. 【最優先】能力無効化チェック（ウォーロックディスク等）
-   ├─ 無効化あり → アイテム効果のみ適用して終了
+3. バトル前スキル処理（apply_pre_battle_skills）開始
+   │
+4. 【Phase 0-C】呪い適用
+   └─ ステータス変更系呪いをエフェクト表示付きで適用
+   │
+5. 【Phase 0-N】能力無効化チェック
+   ├─ ウォーロックディスク → 「アイテム名 を使用」表示
+   ├─ skill_nullify呪い/クリーチャー能力 → 「戦闘中能力無効」表示
+   ├─ 無効化あり → アイテムステータスのみ適用してreturn
    └─ 無効化なし → 続行
    │
-4. 素の先制（クリーチャー能力のみ）で行動順を決定
+6. 【Phase 0-D】アイテム破壊・盗み
+   ├─ 素の先制（クリーチャー能力のみ）で行動順を決定
+   ├─ 先に動く側のアイテム破壊・盗みチェック
+   │   ├─ 相手が「アイテム破壊・盗み無効」を持つ → スキップ
+   │   │   └─ クリーチャー能力とアイテム（エンジェルケープ等）両方をチェック
+   │   ├─ アイテム破壊の場合 → 対象アイテムを削除
+   │   └─ アイテム盗みの場合 → アイテムを移動
+   └─ 後に動く側のアイテム破壊・盗みチェック（同様）
    │
-5. アイテム破壊・盗みチェック（先に動く側から）
-   ├─ 相手が「アイテム破壊・盗み無効」を持つ → スキップ
-   ├─ アイテム破壊の場合 → 対象アイテムを削除
-   └─ アイテム盗みの場合 → アイテムを移動
+7. 【Phase 0-T】変身スキル適用（クリーチャー能力）
    │
-6. 後に動く側のアイテム破壊・盗みチェック（同様）
-   │
-7. アイテム効果適用（破壊されなかったアイテムのみ）
+8. 【Phase 0-S】アイテム効果適用（破壊後に残ったアイテムのみ）
    ├─ ステータスボーナス（AP/HP）を適用
    ├─ スキル付与（先制など）を適用
    └─ バトル画面にアイテム名とステータス変化を表示
    │
-8. 各種スキル処理（ブルガサリ、感応、強打、先制判定など）
+9. 【Phase 0-T2】アイテムによる変身スキル適用（ドラゴンオーブ等）
    │
-9. ダメージ計算開始
+10. 各種スキル処理（ブルガサリ、感応、強打、先制判定など）
+    │
+11. ダメージ計算開始
 ```
+
+### 重要な処理順序のポイント
+
+1. **能力無効化は最優先**: ウォーロックディスク等が発動すると、アイテム破壊スキルも無効化される
+2. **アイテム破壊・盗みは変身前**: 破壊後に残ったアイテムのみ効果適用
+3. **アイテム破壊・盗み無効の判定**: クリーチャー能力だけでなく、アイテム（エンジェルケープ等）からも直接チェック
 
 ### 実装イメージ
 
@@ -273,12 +346,22 @@ func apply_pre_battle_skills(participants, tile_info, attacker_index) -> Diction
 	var attacker = participants["attacker"]
 	var defender = participants["defender"]
 	
-	# 能力無効化チェック
-	if _has_warlock_disk(attacker) or _has_warlock_disk(defender):
-		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+	# 【Phase 0-C】呪い適用
+	await _apply_curse_effects(attacker, defender, battle_tile_index)
+	
+	# 【Phase 0-N】能力無効化チェック
+	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
+		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
+		or _has_nullify_creature_ability(attacker) or _has_nullify_creature_ability(defender)
+	
+	if has_nullify:
+		# ウォーロックディスクは「アイテム名 を使用」表示
+		# それ以外は「戦闘中能力無効」表示
+		# アイテムステータスのみ適用してreturn
+		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index, true)
 		return result
 	
-	# 素の先制（クリーチャー能力のみ）で順序決定
+	# 【Phase 0-D】素の先制（クリーチャー能力のみ）で順序決定
 	var first = attacker
 	var second = defender
 	if _has_raw_first_strike(defender) and not _has_raw_first_strike(attacker):
@@ -288,13 +371,17 @@ func apply_pre_battle_skills(participants, tile_info, attacker_index) -> Diction
 	# アイテム破壊・盗み実行
 	await apply_item_manipulation(first, second)
 	
-	# アイテム効果適用（破壊されなかったアイテムのみ）
+	# 【Phase 0-T】変身スキル適用
+	result["transform_result"] = TransformSkill.process_transform_effects(...)
+	
+	# 【Phase 0-S】アイテム効果適用（破壊後に残ったアイテムのみ、ステータス＋スキル両方）
 	battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
 	
 	# バトル画面にアイテム効果を表示
 	await _show_item_effect_if_any(attacker, attacker_before_item, "attacker")
 	await _show_item_effect_if_any(defender, defender_before_item, "defender")
 	
+	# 【Phase 0-T2】アイテムによる変身スキル適用
 	# 以下、各種スキル処理...
 
 
@@ -410,6 +497,9 @@ actor.equip_item(target_item)
 |------|-----------|---------|
 | 2025/10/25 | 1.0 | 初版作成 - skills_design.mdから分離 |
 | 2025/12/23 | 1.1 | 処理フロー更新 - アイテム効果適用をアイテム破壊後に変更 |
+| 2025/12/25 | 2.0 | 処理フロー大幅更新 - 呪い適用→能力無効化→アイテム破壊・盗み→変身→アイテム効果適用の順序に変更 |
+|            |     | エンジェルケープ追加 - アイテムからの直接判定を実装 |
+|            |     | ウォーロックディスクの表示を「アイテム名 を使用」に変更 |
 
 ---
 
@@ -420,4 +510,4 @@ actor.equip_item(target_item)
 
 ---
 
-**最終更新**: 2025年10月25日（v1.0）
+**最終更新**: 2025年12月25日（v2.0）

@@ -10,7 +10,6 @@ const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 # スキルモジュール
 const ReflectSkill = preload("res://scripts/battle/skills/skill_reflect.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
-const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
 
 # システム参照
 var card_system_ref = null

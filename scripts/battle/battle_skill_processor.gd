@@ -16,8 +16,8 @@ const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const SpecialCreatureSkill = preload("res://scripts/battle/skills/skill_special_creature.gd")
-const SkillDisplayConfig = preload("res://scripts/battle_screen/skill_display_config.gd")
-# SkillPermanentBuff, SkillBattleStartConditions はグローバルクラスとして利用可能
+const BattleCurseApplierScript = preload("res://scripts/battle/battle_curse_applier.gd")
+# SkillDisplayConfig, SkillPermanentBuff, SkillBattleStartConditions はグローバルクラスとして利用可能
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
 
 var board_system_ref = null
@@ -43,55 +43,57 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	var battle_tile_index = tile_info.get("index", -1)
 	
 	var result = {"transform_result": {}}
-	
-	# 🚫 【最優先】能力無効化チェック: ウォーロックディスク or skill_nullify呪いがある場合
 	var SkillSpecialCreatureScript = load("res://scripts/battle/skills/skill_special_creature.gd")
-	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender)
+	
+	# ============================================================
+	# 【Phase 0-C】呪い適用（バトル画面セットアップ後・エフェクト表示可能）
+	# ============================================================
+	await _apply_curse_effects(attacker, defender, battle_tile_index)
+	
+	# ============================================================
+	# 【Phase 0-N】能力無効化チェック（呪い適用後）
+	# ============================================================
+	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
+		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
+		or _has_nullify_creature_ability(attacker) or _has_nullify_creature_ability(defender)
 	
 	if has_nullify:
-		print("【能力無効化発動】全スキル・変身・応援をスキップして基礎ステータスでバトル")
+		print("【能力無効化発動】以降のスキル・変身・応援をスキップして基礎ステータスでバトル")
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
 		
 		# 🎬 能力無効化スキル表示（どちらが持っているか判定）
+		# ウォーロックディスクの場合は「アイテム名 を使用」、それ以外は「戦闘中能力無効」
 		if battle_screen_manager:
-			var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")
-			if _has_warlock_disk(attacker) or _has_skill_nullify_curse(attacker):
-				await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
-			elif _has_warlock_disk(defender) or _has_skill_nullify_curse(defender):
-				await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+			if _has_warlock_disk(attacker):
+				var item_name = _get_warlock_disk_name(attacker)
+				await battle_screen_manager.show_skill_activation("attacker", "%s を使用" % item_name, {})
+			elif _has_warlock_disk(defender):
+				var item_name = _get_warlock_disk_name(defender)
+				await battle_screen_manager.show_skill_activation("defender", "%s を使用" % item_name, {})
+			else:
+				# クリーチャー能力 or skill_nullify呪い → 「戦闘中能力無効」
+				var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")
+				if _has_skill_nullify_curse(attacker) or _has_nullify_creature_ability(attacker):
+					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+				elif _has_skill_nullify_curse(defender) or _has_nullify_creature_ability(defender):
+					await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 		
-		# 能力無効化でもアイテム効果は適用（アイテム破壊スキルも無効化されるため）
+		# 能力無効化でもアイテムステータスは適用
+		var attacker_nullify_before = _snapshot_stats(attacker)
+		var defender_nullify_before = _snapshot_stats(defender)
+		
 		if battle_preparation_ref:
-			battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+			battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index, true)  # stat_bonus_only=true
+		
+		# アイテム効果でステータスが変わった場合、アイテム名を表示
+		await _show_item_effect_if_any(attacker, attacker_nullify_before, "attacker")
+		await _show_item_effect_if_any(defender, defender_nullify_before, "defender")
+		
 		return result
 	
 	# ============================================================
-	# 【Phase 0-T】変身スキル適用（戦闘開始時・アイテム適用前）
-	# ============================================================
-	# 変身後に土地ボーナスを再計算するため、アイテム適用前に処理
-	# skill_transform.gd内で土地ボーナス再計算も行う
-	result["transform_result"] = TransformSkill.process_transform_effects(
-		attacker, defender, CardLoader, "on_battle_start", board_system_ref, battle_tile_index
-	)
-	
-	# 🎬 変身スキル表示
-	var transform_result = result["transform_result"]
-	if transform_result.get("attacker_transformed", false) and battle_screen_manager:
-		var skill_name = SkillDisplayConfig.get_skill_name("transform")
-		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
-		# 🎬 カード表示を更新
-		var display_data = _create_display_data(attacker)
-		await battle_screen_manager.update_creature("attacker", display_data)
-	if transform_result.get("defender_transformed", false) and battle_screen_manager:
-		var skill_name = SkillDisplayConfig.get_skill_name("transform")
-		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
-		# 🎬 カード表示を更新
-		var display_data = _create_display_data(defender)
-		await battle_screen_manager.update_creature("defender", display_data)
-	
-	# ============================================================
-	# 【Phase 0-0】アイテム破壊・盗み（スキル計算前に実行）
+	# 【Phase 0-D】アイテム破壊・盗み（能力無効化後に実行）
 	# ============================================================
 	# 素の先制（クリーチャー能力のみ）で順序決定
 	var attacker_has_raw_first_strike = _has_raw_first_strike(attacker)
@@ -114,22 +116,45 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# アイテム破壊・盗み実行
 	await apply_item_manipulation(first, second)
 	
-	# アイテム使用フラグを更新（破壊された場合はfalseに）
+	# アイテム使用フラグを再更新（破壊された場合はfalseに）
 	attacker_used_item = not attacker.creature_data.get("items", []).is_empty()
 	defender_used_item = not defender.creature_data.get("items", []).is_empty()
 	
-	# 呪い効果表示（バトル準備時に適用されたステータス変更呪い）
-	await _show_curse_stat_effect_if_any(attacker, "attacker")
-	await _show_curse_stat_effect_if_any(defender, "defender")
+	# ============================================================
+	# 【Phase 0-T】変身スキル適用（アイテム破壊・盗み後）
+	# ============================================================
+	# 変身後に土地ボーナスを再計算するため
+	# skill_transform.gd内で土地ボーナス再計算も行う
+	result["transform_result"] = TransformSkill.process_transform_effects(
+		attacker, defender, CardLoader, "on_battle_start", board_system_ref, battle_tile_index
+	)
 	
-	# アイテム効果適用（破壊されなかったアイテムのみ）
+	# 🎬 変身スキル表示
+	var transform_result = result["transform_result"]
+	if transform_result.get("attacker_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(attacker)
+		await battle_screen_manager.update_creature("attacker", display_data)
+	if transform_result.get("defender_transformed", false) and battle_screen_manager:
+		var skill_name = SkillDisplayConfig.get_skill_name("transform")
+		await battle_screen_manager.show_skill_activation("defender", skill_name, {})
+		# 🎬 カード表示を更新
+		var display_data = _create_display_data(defender)
+		await battle_screen_manager.update_creature("defender", display_data)
+	
+	# ============================================================
+	# 【Phase 0-S】アイテム効果適用（変身後・破壊後に残ったアイテム）
+	# ============================================================
+	# 残っているアイテムのステータス＋スキル効果を適用
 	var attacker_before_item = _snapshot_stats(attacker)
 	var defender_before_item = _snapshot_stats(defender)
 	
 	if battle_preparation_ref:
-		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)
+		battle_preparation_ref.apply_remaining_item_effects(attacker, defender, battle_tile_index)  # 通常適用（ステータス＋スキル両方）
 	
-	# アイテム効果でステータスが変わった場合、アイテム名を表示してバトル画面を更新
+	# アイテム効果でステータスが変わった場合、アイテム名を表示
 	await _show_item_effect_if_any(attacker, attacker_before_item, "attacker")
 	await _show_item_effect_if_any(defender, defender_before_item, "defender")
 	
@@ -549,6 +574,7 @@ func _show_merge_if_any(participant: BattleParticipant, side: String) -> void:
 
 
 ## アイテム使用をバトル画面に表示（ステータス変化に関係なく常に表示）
+## ウォーロックディスク（能力無効化アイテム）は除外（別フェーズで表示済み）
 func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionary, side: String) -> void:
 	if not battle_screen_manager:
 		return
@@ -560,8 +586,14 @@ func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionar
 	
 	# アイテム名を取得
 	var item = items[0]
-	var display_name: String
 	var item_type = item.get("type", "")
+	
+	# ウォーロックディスク（能力無効化アイテム）は除外
+	# 能力無効化フェーズで「戦闘中能力無効」として表示済み
+	if _is_nullify_abilities_item(item):
+		return
+	
+	var display_name: String
 	if item_type == "creature":
 		# 援護クリーチャー: 「援護[クリーチャー名]」形式
 		var creature_name = item.get("name", "?")
@@ -580,8 +612,81 @@ func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionar
 	})
 
 
+## アイテムが能力無効化効果（ウォーロックディスク）を持っているかチェック
+func _is_nullify_abilities_item(item: Dictionary) -> bool:
+	var effect_parsed = item.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "nullify_all_enemy_abilities":
+			return true
+	return false
+
+
+## ウォーロックディスク（能力無効化アイテム）の名前を取得
+func _get_warlock_disk_name(participant: BattleParticipant) -> String:
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		if _is_nullify_abilities_item(item):
+			return item.get("name", "ウォーロックディスク")
+	return "ウォーロックディスク"
+
+
+## 呪い効果を適用（バトル画面セットアップ後に呼び出し）
+## エフェクト表示付きで呪いを適用する
+func _apply_curse_effects(attacker: BattleParticipant, defender: BattleParticipant, battle_tile_index: int) -> void:
+	# battle_preparationからcurse_applierを取得
+	if not battle_preparation_ref:
+		return
+	
+	var curse_applier = battle_preparation_ref.curse_applier
+	if not curse_applier:
+		return
+	
+	# 攻撃側の呪い適用（移動侵略の場合のみ呪いがある可能性）
+	var attacker_before = _snapshot_stats(attacker)
+	curse_applier.apply_creature_curses(attacker, battle_tile_index)
+	await _show_curse_effect_if_changed(attacker, attacker_before, "attacker")
+	
+	# 防御側の呪い適用
+	var defender_before = _snapshot_stats(defender)
+	curse_applier.apply_creature_curses(defender, battle_tile_index)
+	await _show_curse_effect_if_changed(defender, defender_before, "defender")
+
+
+## 呪い効果によるステータス変化があった場合にエフェクト表示
+func _show_curse_effect_if_changed(participant: BattleParticipant, before: Dictionary, side: String) -> void:
+	if not battle_screen_manager:
+		return
+	
+	# 呪い情報を取得
+	var curse = participant.creature_data.get("curse", {})
+	var curse_type = curse.get("curse_type", "")
+	var curse_name = curse.get("name", "")
+	var display_name = "呪い[%s]" % curse_name if curse_name else "呪い"
+	
+	# ステータスが変化していなければ表示しない
+	var hp_changed = participant.current_hp != before.get("current_hp", 0) or \
+					 participant.temporary_bonus_hp != before.get("temporary_bonus_hp", 0)
+	var ap_changed = participant.current_ap != before.get("current_ap", 0)
+	
+	if not hp_changed and not ap_changed:
+		# 無効化系の呪いもチェック
+		if curse_type in ["metal_form", "magic_barrier"]:
+			await battle_screen_manager.show_skill_activation(side, display_name, {})
+		return
+	
+	var hp_data = _create_hp_data(participant)
+	
+	# 呪い名表示 + HP/AP更新
+	await battle_screen_manager.show_skill_activation(side, display_name, {
+		"hp_data": hp_data,
+		"ap": participant.current_ap
+	})
+
+
 ## 呪いによるステータス変更効果をバトル画面に表示
 ## 対象: stat_boost, stat_reduce, ap_nullify, random_stat
+## 注: この関数は後方互換性のために残しているが、_apply_curse_effectsを使用推奨
 func _show_curse_stat_effect_if_any(participant: BattleParticipant, side: String) -> void:
 	if not battle_screen_manager:
 		return
@@ -1310,6 +1415,16 @@ func _has_warlock_disk(participant: BattleParticipant) -> bool:
 ## skill_nullify 呪いを持っているかチェック
 func _has_skill_nullify_curse(participant: BattleParticipant) -> bool:
 	return SpellCurseBattle.has_skill_nullify(participant.creature_data)
+
+
+## クリーチャー能力による能力無効化を持っているかチェック（シーボンズなど）
+func _has_nullify_creature_ability(participant: BattleParticipant) -> bool:
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "nullify_all_enemy_abilities":
+			return true
+	return false
 
 
 ## 戦闘開始時条件チェック（スラッジタイタン、ギガンテリウム等）

@@ -55,14 +55,26 @@ static func _process_item_manipulation(actor, target):
 
 ## アイテム破壊・盗み無効を持つかチェック
 static func _has_nullify_item_manipulation(participant) -> bool:
+	var participant_name = participant.creature_data.get("name", "?")
+	
+	# クリーチャー能力をチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
 	for effect in effects:
 		if effect.get("effect_type") == "nullify_item_manipulation":
-			var participant_name = participant.creature_data.get("name", "?")
-			print("  【アイテム操作無効】", participant_name, " がアイテム破壊・盗みを無効化")
+			print("  【アイテム操作無効】", participant_name, " がアイテム破壊・盗みを無効化（クリーチャー能力）")
 			return true
+	
+	# アイテム効果をチェック（エンジェルケープ等）
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var item_effect_parsed = item.get("effect_parsed", {})
+		var item_effects = item_effect_parsed.get("effects", [])
+		for item_effect in item_effects:
+			if item_effect.get("effect_type") == "nullify_item_manipulation":
+				print("  【アイテム操作無効】", participant_name, " がアイテム破壊・盗みを無効化（", item.get("name", "?"), "）")
+				return true
 	
 	return false
 

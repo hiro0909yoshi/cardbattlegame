@@ -34,7 +34,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	item_applier.setup_systems(board_system, card_system, spell_magic)
 
 ## 両者のBattleParticipantを準備
-func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, battle_tile_index: int = -1) -> Dictionary:
+func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, _battle_tile_index: int = -1) -> Dictionary:
 	# 侵略側の準備（土地ボーナスなし）
 	var attacker_base_hp = card_data.get("hp", 0)
 	var attacker_land_bonus = 0  # 侵略側は土地ボーナスなし
@@ -111,11 +111,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	apply_effect_arrays(attacker, card_data)
 	apply_effect_arrays(defender, defender_creature)
 	
-	# 呪いをtemporary_effectsに変換して適用
-	# battle_tile_indexは防御側のクリーチャーがいるタイル
-	# attacker（侵略側）の呪いは card_data に含まれているはず
-	# 手札から出すクリーチャーなので、移動侵略でない限り呪いはない
-	curse_applier.apply_creature_curses(defender, battle_tile_index)
+	# 呪い適用はapply_pre_battle_skills()で実行（バトル画面セットアップ後）
 	
 	# アイテムをitemsに追加（効果適用はアイテム破壊判定後に行う）
 	if not attacker_item.is_empty():
@@ -252,17 +248,33 @@ func _apply_battle_start_conditions(attacker: BattleParticipant, defender: Battl
 ## @param attacker 攻撃側
 ## @param defender 防御側
 ## @param battle_tile_index 戦闘タイルインデックス
-func apply_remaining_item_effects(attacker: BattleParticipant, defender: BattleParticipant, battle_tile_index: int) -> void:
+## @param stat_bonus_only trueの場合、ステータスボーナスのみ適用
+## @param skip_stat_bonus trueの場合、ステータスボーナスをスキップ（スキル効果のみ適用）
+func apply_remaining_item_effects(attacker: BattleParticipant, defender: BattleParticipant, battle_tile_index: int, stat_bonus_only: bool = false, skip_stat_bonus: bool = false) -> void:
 	# 攻撃側のアイテム効果を適用
 	var attacker_items = attacker.creature_data.get("items", [])
 	if not attacker_items.is_empty():
 		var item = attacker_items[0]
-		print("[アイテム効果適用（破壊後）] ", attacker.creature_data.get("name", "?"), " → ", item.get("name", "?"))
-		item_applier.apply_item_effects(attacker, item, defender, battle_tile_index)
+		var mode_str = ""
+		if stat_bonus_only:
+			mode_str = "（ステータスのみ）"
+		elif skip_stat_bonus:
+			mode_str = "（スキルのみ）"
+		else:
+			mode_str = "（破壊後）"
+		print("[アイテム効果適用%s] " % mode_str, attacker.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		item_applier.apply_item_effects(attacker, item, defender, battle_tile_index, stat_bonus_only, skip_stat_bonus)
 	
 	# 防御側のアイテム効果を適用
 	var defender_items = defender.creature_data.get("items", [])
 	if not defender_items.is_empty():
 		var item = defender_items[0]
-		print("[アイテム効果適用（破壊後）] ", defender.creature_data.get("name", "?"), " → ", item.get("name", "?"))
-		item_applier.apply_item_effects(defender, item, attacker, battle_tile_index)
+		var mode_str = ""
+		if stat_bonus_only:
+			mode_str = "（ステータスのみ）"
+		elif skip_stat_bonus:
+			mode_str = "（スキルのみ）"
+		else:
+			mode_str = "（破壊後）"
+		print("[アイテム効果適用%s] " % mode_str, defender.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		item_applier.apply_item_effects(defender, item, attacker, battle_tile_index, stat_bonus_only, skip_stat_bonus)

@@ -253,7 +253,6 @@ func _interpolate_hp_data(old_data: Dictionary, new_data: Dictionary, t: float) 
 	if total_damage <= 0:
 		# ダメージではなく回復の場合は単純補間
 		hp_data["land_bonus_hp"] = int(lerp(float(old_yellow), float(new_yellow), t))
-		var cyan_ratio = old_cyan / max(old_cyan, 1) if old_cyan > 0 else 0.0
 		hp_data["resonance_bonus_hp"] = int(lerp(float(old_data["resonance_bonus_hp"]), float(new_data["resonance_bonus_hp"]), t))
 		hp_data["temporary_bonus_hp"] = int(lerp(float(old_data["temporary_bonus_hp"]), float(new_data["temporary_bonus_hp"]), t))
 		hp_data["spell_bonus_hp"] = int(lerp(float(old_data["spell_bonus_hp"]), float(new_data["spell_bonus_hp"]), t))

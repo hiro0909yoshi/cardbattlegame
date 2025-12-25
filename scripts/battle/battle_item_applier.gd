@@ -18,9 +18,17 @@ func setup_systems(board_system, card_system: CardSystem, spell_magic = null):
 	spell_magic_ref = spell_magic
 
 ## アイテムまたは援護クリーチャーの効果を適用
-func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant, battle_tile_index: int = -1) -> void:
+## アイテムまたは援護クリーチャーの効果を適用
+## @param stat_bonus_only trueの場合、ステータスボーナスのみ適用（スキル効果はスキップ）
+## @param skip_stat_bonus trueの場合、ステータスボーナスをスキップ（スキル効果のみ適用）
+func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant, battle_tile_index: int = -1, stat_bonus_only: bool = false, skip_stat_bonus: bool = false) -> void:
 	var item_type = item_data.get("type", "")
-	print("[アイテム効果適用] ", item_data.get("name", "???"), " (type: ", item_type, ")")
+	var mode_str = ""
+	if stat_bonus_only:
+		mode_str = "（ステータスのみ）"
+	elif skip_stat_bonus:
+		mode_str = "（スキルのみ）"
+	print("[アイテム効果適用%s] " % mode_str, item_data.get("name", "???"), " (type: ", item_type, ")")
 	
 	# contextを構築（既存システムと同じ形式）
 	var context = {
@@ -33,6 +41,9 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 	
 	# クリーチャーの場合
 	if item_type == "creature":
+		# stat_bonus_onlyの場合はクリーチャー効果をスキップ
+		if stat_bonus_only:
+			return
 		# アイテムクリーチャー判定
 		if SkillItemCreature.is_item_creature(item_data):
 			# アイテムクリーチャーとして処理
@@ -50,10 +61,15 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		print("  警告: effect_parsedが定義されていません")
 		return
 	
-	# stat_bonusを先に適用（AP+20、HP+20など）
-	var stat_bonus = effect_parsed.get("stat_bonus", {})
-	if not stat_bonus.is_empty():
-		_apply_stat_bonus(participant, stat_bonus)
+	# stat_bonusを適用（skip_stat_bonusがfalseの場合のみ）
+	if not skip_stat_bonus:
+		var stat_bonus = effect_parsed.get("stat_bonus", {})
+		if not stat_bonus.is_empty():
+			_apply_stat_bonus(participant, stat_bonus)
+	
+	# stat_bonus_onlyがtrueならスキル効果をスキップ
+	if stat_bonus_only:
+		return
 	
 	var effects = effect_parsed.get("effects", [])
 	for effect in effects:
