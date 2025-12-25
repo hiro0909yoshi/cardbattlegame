@@ -59,7 +59,7 @@
 			"reflect_ratio": 1.0,
 			"self_damage_ratio": 1.0,
 			"attack_types": ["normal", "scroll"],
-			"triggers": ["on_damaged"]
+			"triggers": ["on_battle_end", "reflect"]
 		  }
 		]
 	  }
@@ -257,9 +257,9 @@
 		"effects": [
 		  {
 			"effect_type": "magic_on_enemy_survive",
-			"trigger": "after_battle",
+			"trigger": "on_attack_success",
 			"amount": 200,
-			"condition": "attacker_win_enemy_alive"
+			"condition": "enemy_alive"
 		  }
 		]
 	  }
@@ -278,6 +278,7 @@
 		"effects": [
 		  {
 			"effect_type": "ap_drain",
+			"trigger": "on_attack_success",
 			"target": "enemy"
 		  },
 		  {
@@ -355,7 +356,8 @@
 		"effects": [
 		  {
 			"effect_type": "level_up_on_win",
-			"trigger": "on_battle_win"
+			"trigger": "on_battle_end",
+			"condition": "win"
 		  }
 		]
 	  }
@@ -451,6 +453,7 @@
 			"skill_params": {
 			  "nullify_type": "normal_attack"
 			},
+			"triggers": ["nullify"],
 			"condition": {
 			  "condition_type": "user_element",
 			  "elements": [
@@ -559,7 +562,7 @@
 			"reflect_ratio": 0.5,
 			"self_damage_ratio": 0.5,
 			"attack_types": ["normal"],
-			"triggers": ["on_damaged"]
+			"triggers": ["on_battle_end", "reflect"]
 		  }
 		]
 	  }
@@ -585,7 +588,8 @@
 			"skill": "無効化",
 			"skill_params": {
 			  "nullify_type": "normal_attack"
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -704,7 +708,8 @@
 			"skill_params": {
 			  "nullify_type": "element",
 			  "elements": ["water", "earth"]
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -905,7 +910,8 @@
 			"skill_params": {
 			  "nullify_type": "element",
 			  "elements": ["fire", "wind"]
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -1210,7 +1216,8 @@
 			"skill_params": {
 			  "nullify_type": "ap_below",
 			  "value": 30
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -1436,6 +1443,7 @@
 			"skill_params": {
 			  "nullify_type": "normal_attack"
 			},
+			"triggers": ["nullify"],
 			"condition": {
 			  "condition_type": "user_element",
 			  "elements": [
@@ -1526,7 +1534,8 @@
 			"skill": "無効化",
 			"skill_params": {
 			  "nullify_type": "scroll_attack"
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -1549,7 +1558,7 @@
 			"reflect_ratio": 1.0,
 			"self_damage_ratio": 0.0,
 			"attack_types": ["normal", "scroll"],
-			"triggers": ["on_damaged"],
+			"triggers": ["on_battle_end", "reflect"],
 			"conditions": [
 			  {
 				"condition_type": "enemy_no_item"
@@ -1568,7 +1577,7 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "AP+30；攻撃成功時、敵に♡\"通行料無効\"",
+	  "effect": "AP+30；攻撃成功時、敵に呪い\"通行料無効\"",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 30
@@ -1598,6 +1607,7 @@
 		"stat_bonus": {
 		  "ap": 20
 		},
+		"nullify_triggers": ["reflect", "nullify"],
 		"effects": [
 		  {
 			"effect_type": "nullify_reflect",
@@ -1627,7 +1637,7 @@
 			"reflect_ratio": 1.0,
 			"self_damage_ratio": 0.0,
 			"attack_types": ["scroll"],
-			"triggers": ["on_damaged"]
+			"triggers": ["on_battle_end", "reflect"]
 		  }
 		]
 	  }
@@ -1665,7 +1675,8 @@
 			"skill": "無効化",
 			"skill_params": {
 			  "nullify_type": "scroll_attack"
-			}
+			},
+			"triggers": ["nullify"]
 		  },
 		  {
 			"effect_type": "grant_skill",
@@ -1673,7 +1684,8 @@
 			"skill_params": {
 			  "nullify_type": "attacker_ap_above",
 			  "use_base_ap": true
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }
@@ -1735,7 +1747,8 @@
 			"skill_params": {
 			  "nullify_type": "normal_attack",
 			  "reduction_rate": 0.2
-			}
+			},
+			"triggers": ["nullify"]
 		  }
 		]
 	  }

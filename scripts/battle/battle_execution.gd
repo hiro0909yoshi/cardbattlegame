@@ -62,6 +62,7 @@ func _update_hp_bar_after_damage(participant: BattleParticipant) -> void:
 	}
 	await battle_screen_manager.update_hp(side, hp_data)
 
+
 # バトル実行フェーズ処理
 # 攻撃順決定、攻撃シーケンス、結果判定を担当
 
@@ -323,6 +324,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						if instant_death_activated and battle_screen_manager:
 							var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
 							await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+							# 🎬 即死でHPが0になった側のHPバーを更新
+							await _update_hp_bar_after_damage(defender_p)
 					
 					# 防御側撃破チェック（即死後）
 					if not defender_p.is_alive():
@@ -333,6 +336,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						await _show_death_effects(death_effects, defender_p)
 						if death_effects["death_revenge_activated"]:
 							print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
+							# 🎬 道連れでHPが0になった側のHPバーを更新
+							await _update_hp_bar_after_damage(attacker_p)
 						
 						# 🔄 死者復活チェック（タイル復活）
 						if death_effects["revived"]:
@@ -367,6 +372,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						await _show_death_effects(death_effects_attacker, attacker_p)
 						if death_effects_attacker["death_revenge_activated"]:
 							print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
+							# 🎬 道連れでHPが0になった側のHPバーを更新
+							await _update_hp_bar_after_damage(defender_p)
 						
 						# 🔄 死者復活チェック（タイル復活）
 						if death_effects_attacker["revived"]:
@@ -484,6 +491,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				if instant_death_activated and battle_screen_manager:
 					var skill_name = SkillDisplayConfig.get_skill_name("instant_death")
 					await battle_screen_manager.show_skill_activation("attacker", skill_name, {})
+					# 🎬 即死でHPが0になった側のHPバーを更新
+					await _update_hp_bar_after_damage(defender_p)
 			
 			# 🔄 攻撃成功時の変身処理（コカトリス用）
 			# 条件: 相手が生存 かつ 実際にダメージを与えた（AP > 0）
@@ -572,9 +581,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if battle_tile_index >= 0 and special_effects.board_system_ref:
 						var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
 						SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
-					# APドレイン（敵のAPを永続的に0にする）
-					var drained = _apply_ap_drain_on_attack_success(attacker_p, defender_p)
-					if drained and battle_screen_manager:
+					# 攻撃成功時効果（APドレイン、魔力獲得等）
+					var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
+					if success_effects.get("ap_drained", false) and battle_screen_manager:
 						# スキル所持者側にスキル名表示
 						var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
 						var ap_drain_name = SkillDisplayConfig.get_skill_name("ap_drain")
@@ -592,6 +601,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				await _show_death_effects(death_effects, defender_p)
 				if death_effects["death_revenge_activated"]:
 					print("  → ", attacker_p.creature_data.get("name", "?"), " 道連れで撃破！")
+					# 🎬 道連れでHPが0になった側のHPバーを更新
+					await _update_hp_bar_after_damage(attacker_p)
 				
 				# 🔄 死者復活チェック（タイル復活）
 				if death_effects["revived"]:
@@ -626,6 +637,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				await _show_death_effects(death_effects_attacker, attacker_p)
 				if death_effects_attacker["death_revenge_activated"]:
 					print("  → ", defender_p.creature_data.get("name", "?"), " 道連れで撃破！")
+					# 🎬 道連れでHPが0になった側のHPバーを更新
+					await _update_hp_bar_after_damage(defender_p)
 				
 				# 🔄 死者復活チェック（タイル復活）
 				if death_effects_attacker["revived"]:
@@ -872,24 +885,63 @@ func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant)
 		await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 
-## APドレイン効果を適用（攻撃成功時）
-func _apply_ap_drain_on_attack_success(attacker: BattleParticipant, defender: BattleParticipant) -> bool:
+## 攻撃成功時効果を適用（APドレイン、魔力獲得等）
+func _apply_on_attack_success_effects(attacker: BattleParticipant, defender: BattleParticipant, spell_magic_ref = null) -> Dictionary:
+	var result = {"ap_drained": false, "magic_gained": 0}
+	
+	# クリーチャーeffectsを取得
 	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
+	var effects = ability_parsed.get("effects", []).duplicate()
+	
+	# アイテムeffectsを追加
+	var items = attacker.creature_data.get("items", [])
+	for item in items:
+		var item_effects = item.get("effect_parsed", {}).get("effects", [])
+		for item_effect in item_effects:
+			var effect_copy = item_effect.duplicate()
+			effect_copy["_item_name"] = item.get("name", "")
+			effects.append(effect_copy)
 	
 	for effect in effects:
-		if effect.get("effect_type") == "ap_drain" and effect.get("trigger", "") == "on_attack_success":
-			var defender_name = defender.creature_data.get("name", "?")
-			var original_ap = defender.current_ap
+		var trigger = effect.get("trigger", "")
+		if trigger != "on_attack_success":
+			continue
+		
+		var effect_type = effect.get("effect_type", "")
+		var item_name = effect.get("_item_name", "")
+		
+		match effect_type:
+			"ap_drain":
+				var defender_name = defender.creature_data.get("name", "?")
+				var original_ap = defender.current_ap
+				
+				# 戦闘中のAPを0に
+				defender.current_ap = 0
+				
+				# 永続的にAPを0にする
+				defender.creature_data["ap"] = 0
+				defender.creature_data["base_up_ap"] = 0
+				defender.base_up_ap = 0
+				
+				var source_name = item_name if item_name else attacker.creature_data.get("name", "?")
+				print("  [APドレイン] %s が %s のAPを永続的に0に (元AP: %d)" % [source_name, defender_name, original_ap])
+				result["ap_drained"] = true
 			
-			# 戦闘中のAPを0に
-			defender.current_ap = 0
-			
-			# 永続的にAPを0にする
-			defender.creature_data["ap"] = 0
-			defender.creature_data["base_up_ap"] = 0
-			defender.base_up_ap = 0
-			
-			print("  [APドレイン] ", attacker.creature_data.get("name", "?"), " が ", defender_name, " のAPを永続的に0に (元AP: ", original_ap, ")")
-			return true
-	return false
+			"magic_on_enemy_survive":
+				# ゴールドハンマー: 敵が生き残っていたら魔力獲得
+				var condition = effect.get("condition", "")
+				if condition == "enemy_alive" and defender.is_alive():
+					var amount = effect.get("amount", 200)
+					if spell_magic_ref:
+						spell_magic_ref.add_magic(attacker.player_id, amount)
+						var source_name = item_name if item_name else attacker.creature_data.get("name", "?")
+						print("  [魔力獲得] %s: 敵非破壊で%dG獲得" % [source_name, amount])
+						result["magic_gained"] = amount
+	
+	return result
+
+
+## APドレイン効果を適用（攻撃成功時）- 後方互換用
+func _apply_ap_drain_on_attack_success(attacker: BattleParticipant, defender: BattleParticipant, spell_magic = null) -> bool:
+	var result = _apply_on_attack_success_effects(attacker, defender, spell_magic)
+	return result.get("ap_drained", false)

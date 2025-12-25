@@ -77,7 +77,7 @@
 | skill_permanent_buff.gd | 永続バフ | ✅ |
 | skill_magic_gain.gd | 魔力獲得 | ✅ |
 | skill_magic_steal.gd | 魔力奪取 | ✅ |
-| skill_legacy.gd | 旧スキル処理 | 🔴 廃止検討 |
+| skill_legacy.gd | 遺産スキル（死亡時魔力/カード獲得） | ✅ |
 | **skill_stat_modifiers.gd** | **ステータス修正** | 🆕 新規作成 |
 
 ---
@@ -518,9 +518,67 @@
 
 ---
 
+## 完了したタスク
+
+### ✅ スペクター random_stat 処理の修正（2025/12/25）
+
+**問題:**
+- `battle_skill_processor.gd`に未使用の`apply_random_stat_effects`関数が残存
+- `skill_special_creature.gd`の`apply_random_stat_effects`で`current_hp`と`temporary_bonus_hp`の二重設定によりHP計算が不正
+
+**修正内容:**
+1. `battle_skill_processor.gd`の未使用`apply_random_stat_effects`関数を削除
+2. `skill_special_creature.gd`の`apply_random_stat_effects`を修正:
+   - `current_hp`にランダム値を直接設定
+   - `temporary_bonus_hp`は設定しない（0のまま）
+   - これにより二重計算を防止
+
+**修正ファイル:**
+- `scripts/battle/battle_skill_processor.gd` - 未使用関数削除
+- `scripts/battle/skills/skill_special_creature.gd` - HP設定ロジック修正
+- `scripts/battle_system.gd` - ログ表示のtotal_hp計算修正
+- `scripts/battle_screen/hp_ap_bar.gd` - HPバー表示ロジック確認
+
+**動作確認:**
+- スペクターのランダムHP値が正しくダメージ計算に使用される
+- プラス/マイナスどちらのランダム値でも正常動作
+
+---
+
+### ✅ ステータス修正系関数の分離（2025/12/25）
+
+**目的:**
+- `battle_skill_processor.gd`から個別スキル処理を分離し、保守性を向上
+
+**新規ファイル:**
+- `scripts/battle/skills/skill_stat_modifiers.gd`（479行）
+
+**移動した関数（8関数）:**
+
+| 関数名 | effect_type | 対象クリーチャー/アイテム |
+|--------|-------------|--------------------------|
+| apply_land_count_effects | land_count_multiplier | アームドパラディン、ファイアードレイク、アンダイン、ブランチアーミー、マッドマン、ガルーダ |
+| apply_turn_number_bonus | turn_number_bonus | ラーバキン |
+| apply_destroy_count_effects | destroy_count_multiplier | ソウルコレクター |
+| apply_constant_stat_bonus | constant_stat_bonus | アイスウォール、トルネード |
+| apply_hand_count_effects | hand_count_multiplier | リリス、フォースアンクレット |
+| apply_battle_condition_effects | battle_land_element_bonus, enemy_element_bonus | アンフィビアン、カクタスウォール |
+| apply_phase_3b_effects | defender_fixed_ap, battle_land_level_bonus, owned_land_threshold, specific_creature_count, race_creature_stat_replace, adjacent_owned_land | ガーゴイル、ネッシー、バーンタイタン、ハイプワーカー、レッドキャップ、タイガーヴェタ |
+| apply_phase_3c_effects | base_ap_to_hp, conditional_land_count | ローンビースト、ジェネラルカン |
+
+**結果:**
+- `battle_skill_processor.gd`: 1400行 → 997行（約400行削減）
+
+**注意事項:**
+- ウォーロックディスク関連の能力無効化処理（`_has_warlock_disk`, `_has_nullify_creature_ability`, `_has_skill_nullify_curse`）は繊細な処理のため移動せず残留
+
+---
+
 ## 変更履歴
 
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/12/25 | 1.0 | 初版作成 |
 | 2025/12/25 | 2.0 | 全effect_typeの正確な情報を反映、trigger別に分類 |
+| 2025/12/25 | 2.1 | スペクター random_stat 処理の修正完了 |
+| 2025/12/25 | 2.2 | ステータス修正系関数をskill_stat_modifiers.gdに分離完了 |

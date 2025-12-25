@@ -95,11 +95,14 @@ func _draw_hp_bar() -> void:
 	# バーの最大値は100固定
 	const BAR_MAX = 100.0
 	
+	# HP0チェック：current_hp <= 0なら全セグメントを0として描画
+	var is_dead = hp_data.get("current_hp", 0) <= 0
+	
 	# 各セグメントの現在残り値（実データから直接取得）
 	# マイナスのtemporary_bonus_hpはcurrent_hpに既に反映済み（スペクター、呪い等）
-	var green_remaining = hp_data["current_hp"] + hp_data["item_bonus_hp"]
-	var cyan_remaining = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
-	var yellow_remaining = hp_data["land_bonus_hp"]
+	var green_remaining = 0 if is_dead else hp_data["current_hp"] + hp_data["item_bonus_hp"]
+	var cyan_remaining = 0 if is_dead else hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
+	var yellow_remaining = 0 if is_dead else hp_data["land_bonus_hp"]
 	
 	# 描画（左から右: 緑 → 水色 → 黄）
 	var x_offset = 0.0
@@ -173,6 +176,9 @@ func set_ap(value: int, max_value: int = 100) -> void:
 func _update_hp_label() -> void:
 	if hp_label:
 		# 基本HP（緑セグメント: base + base_up + item）
+		# HP0チェック：current_hp <= 0なら現在値を0として表示
+		var is_dead = hp_data.get("current_hp", 0) <= 0
+		
 		var base_hp = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"]
 		# 一時バフ（水色セグメント: 感応 + 一時 + スペル）
 		var cyan_bonus = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
@@ -180,8 +186,12 @@ func _update_hp_label() -> void:
 		var yellow_bonus = hp_data["land_bonus_hp"]
 		
 		# 現在値 = current_hp + ボーナス（マイナスのtemporary_bonus_hpはcurrent_hpに反映済み）
-		var temp_bonus = hp_data["temporary_bonus_hp"] if hp_data["temporary_bonus_hp"] > 0 else 0
-		var current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
+		var current: int
+		if is_dead:
+			current = 0
+		else:
+			var temp_bonus = hp_data["temporary_bonus_hp"] if hp_data["temporary_bonus_hp"] > 0 else 0
+			current = hp_data["current_hp"] + hp_data["item_bonus_hp"] + \
 					  hp_data["resonance_bonus_hp"] + temp_bonus + \
 					  hp_data["spell_bonus_hp"] + hp_data["land_bonus_hp"]
 		
@@ -228,9 +238,7 @@ func animate_hp_change(new_hp_data: Dictionary, duration: float = 1.5):
 	await tween.finished
 	
 	# 最終値を確定
-	hp_data = new_hp_data_copy.duplicate()
-	_update_hp_label()
-	queue_redraw()
+	set_hp_data(new_hp_data_copy)
 
 
 ## HP値を補間（右から順に消費：黄色→水色→緑）

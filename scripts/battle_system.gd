@@ -392,8 +392,7 @@ func _apply_post_battle_effects(
 ) -> void:
 	var tile_index = tile_info["index"]
 	
-	# 💰 魔力獲得処理（ゴールドハンマー: 敵生存時に魔力獲得）
-	_apply_magic_on_enemy_survive(result, attacker, defender)
+	# 💰 魔力獲得処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
 	
 	match result:
 		BattleResult.ATTACKER_WIN:
@@ -447,8 +446,7 @@ func _apply_post_battle_effects(
 				board_system_ref.remove_creature(from_tile_index)
 				print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除" % from_tile_index)
 			
-			# 🆙 土地レベルアップ効果（シルバープロウ）
-			_apply_level_up_effect(attacker, tile_index)
+			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
 			# 🌍 戦闘勝利時の土地効果（土地変性・土地破壊）
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
@@ -488,8 +486,7 @@ func _apply_post_battle_effects(
 			var updated_tile_info = board_system_ref.get_tile_info(tile_index)
 			battle_special_effects.update_defender_hp(updated_tile_info, defender)
 			
-			# 🆙 土地レベルアップ効果（シルバープロウ - 防御成功時）
-			_apply_level_up_effect(defender, tile_index)
+			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
 			# 🌍 戦闘勝利時の土地効果（土地変性 - 防御成功時も発動）
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
@@ -698,83 +695,6 @@ func _show_land_effect_notification(creature_data: Dictionary, land_effect_resul
 		await comment_ui.show_and_wait(text)
 
 
-## 💰 バトル結果確定後の魔力獲得処理（ゴールドハンマー用）
-func _apply_magic_on_enemy_survive(result: BattleResult, attacker: BattleParticipant, defender: BattleParticipant):
-	"""
-	バトル結果が確定した直後に魔力獲得効果をチェック
-	
-	ゴールドハンマー: 「攻撃で敵非破壊時、魔力獲得」
-	- 攻撃側がアイテムを使用し、防御側が生存している場合に発動
-	- DEFENDER_WIN（防御成功）: 防御側生存 → 発動
-	- ATTACKER_SURVIVED（侵略失敗）: 防御側生存 → 発動
-	"""
-	if not spell_magic:
-		return
-	
-	# 攻撃側のゴールドハンマーをチェック（防御側が生存している場合）
-	if result == BattleResult.DEFENDER_WIN or result == BattleResult.ATTACKER_SURVIVED:
-		_check_attacker_gold_hammer(attacker, defender)
-	
-	# 防御側のアイテムもチェック（攻撃側生存時）
-	# 防御側が武器を使用し、攻撃側が生存している場合
-	if result == BattleResult.ATTACKER_SURVIVED:
-		_check_defender_magic_on_enemy_survive(defender, attacker)
-
-## 攻撃側のゴールドハンマー効果をチェック
-func _check_attacker_gold_hammer(attacker: BattleParticipant, defender: BattleParticipant):
-	"""
-	攻撃側のアイテムをチェックして、敵非破壊時の魔力獲得効果を適用
-	攻撃側が死亡していても、防御側が生存していれば発動する
-	"""
-	if not attacker or not defender:
-		return
-	
-	# 防御側が生存していない場合は発動しない（敵非破壊が条件）
-	if not defender.is_alive():
-		return
-	
-	var items = attacker.creature_data.get("items", [])
-	for item in items:
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			if effect.get("effect_type", "") == "magic_on_enemy_survive":
-				var amount = effect.get("amount", 200)
-				print("【魔力獲得(敵非破壊)】", attacker.creature_data.get("name", "?"), "の", item.get("name", "?"), 
-					  " → プレイヤー", attacker.player_id + 1, "が", amount, "G獲得")
-				spell_magic.add_magic(attacker.player_id, amount)
-
-## 防御側の魔力獲得効果をチェック（攻撃側生存時）
-func _check_defender_magic_on_enemy_survive(defender: BattleParticipant, attacker: BattleParticipant):
-	"""
-	防御側のアイテムをチェックして、敵非破壊時の魔力獲得効果を適用
-	"""
-	if not defender or not attacker:
-		return
-	
-	# 攻撃側が生存していない場合は発動しない
-	if not attacker.is_alive():
-		return
-	
-	var items = defender.creature_data.get("items", [])
-	for item in items:
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			if effect.get("effect_type", "") == "magic_on_enemy_survive":
-				# 防御側の場合、condition: "attacker_win_enemy_alive" は適用されない
-				# （防御側は攻撃側ではないため）
-				var condition = effect.get("condition", "")
-				if condition == "attacker_win_enemy_alive":
-					continue  # この条件は攻撃側専用
-				
-				var amount = effect.get("amount", 200)
-				print("【魔力獲得(敵非破壊)】", defender.creature_data.get("name", "?"), "の", item.get("name", "?"), 
-					  " → プレイヤー", defender.player_id + 1, "が", amount, "G獲得")
-				spell_magic.add_magic(defender.player_id, amount)
-
 # バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲
 func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:
 	if not loser or not loser.creature_data:
@@ -804,33 +724,4 @@ func _apply_item_return(participant: BattleParticipant, player_id: int):
 		var count = return_result.get("count", 0)
 		print("【アイテム復帰完了】", count, "個のアイテムが復帰しました")
 
-# 土地レベルアップ効果（シルバープロウ）
-func _apply_level_up_effect(participant: BattleParticipant, tile_index: int):
-	if not participant or not participant.creature_data:
-		return
-	
-	# アイテムから土地レベルアップ効果を探す
-	var items = participant.creature_data.get("items", [])
-	for item in items:
-		var effect_parsed = item.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		
-		for effect in effects:
-			if effect.get("effect_type") == "level_up_on_win" and effect.get("trigger") == "on_battle_win":
-				# 現在の土地レベルを取得
-				var tile_info = board_system_ref.get_tile_info(tile_index)
-				var current_level = tile_info.get("level", 1)
-				
-				# レベル5が上限
-				if current_level >= 5:
-					print("【土地レベルアップ】", item.get("name", "?"), " - すでにレベル5のため効果なし")
-					return
-				
-				# レベルを1上げる
-				var new_level = current_level + 1
-				var tile = board_system_ref.tile_nodes[tile_index]
-				if tile and tile.has_method("set_level"):
-					tile.set_level(new_level)
-					print("【土地レベルアップ】", item.get("name", "?"), " - レベル", current_level, " → ", new_level)
-				
-				return  # 最初の1つだけ適用
+# 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsに移動

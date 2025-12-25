@@ -85,21 +85,72 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 static func _process_effects(self_participant, enemy_participant, context: Dictionary) -> Dictionary:
 	var result = {"target_died": false, "activated_skills": []}
 	
+	# クリーチャーのeffectsを取得
 	var ability_parsed = self_participant.creature_data.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
+	var effects = ability_parsed.get("effects", []).duplicate()
+	
+	# アイテムのeffectsも追加
+	var items = self_participant.creature_data.get("items", [])
+	print("【戦闘終了時効果】%sのアイテム数: %d" % [self_participant.creature_data.get("name", "?"), items.size()])
+	for item in items:
+		var item_effects = item.get("effect_parsed", {}).get("effects", [])
+		print("  アイテム: %s, effects数: %d" % [item.get("name", "?"), item_effects.size()])
+		for item_effect in item_effects:
+			# アイテム情報を付加（表示用）
+			var effect_copy = item_effect.duplicate()
+			effect_copy["_item_name"] = item.get("name", "")
+			effects.append(effect_copy)
+			print("    effect_type: %s, trigger: %s, triggers: %s" % [item_effect.get("effect_type", ""), item_effect.get("trigger", ""), item_effect.get("triggers", [])])
 	
 	for effect in effects:
-		var trigger = effect.get("trigger", "")
-		if trigger != "on_battle_end":
+		# trigger または triggers をチェック
+		if not _has_trigger(effect, "on_battle_end"):
+			continue
+		
+		# ムラサメ等による無効化チェック（敵が存在する場合）
+		if enemy_participant and _is_effect_nullified_by_enemy(effect, enemy_participant.creature_data):
+			var item_name = effect.get("_item_name", "")
+			var skill_name = effect.get("effect_type", "能力")
+			if item_name:
+				print("【無効化】%sの%sがムラサメ等により無効化" % [item_name, skill_name])
 			continue
 		
 		var effect_type = effect.get("effect_type", "")
 		var target = effect.get("target", "")
+		var item_name = effect.get("_item_name", "")
 		
 		# 土地対象の効果（レーシィ等）
 		if effect_type == "level_up_battle_land":
 			if _apply_level_up_battle_land(self_participant, effect, context):
 				result["activated_skills"].append({"actor": self_participant, "skill_type": effect_type})
+			continue
+		
+		# シルバープロウ: 戦闘勝利時に土地レベルアップ
+		if effect_type == "level_up_on_win":
+			var condition = effect.get("condition", "")
+			# 勝利条件チェック
+			# 攻撃側: 敵を倒した場合
+			# 防御側: 敵を倒した場合（攻撃側が死亡）
+			var is_winner = false
+			var self_name = self_participant.creature_data.get("name", "?")
+			var enemy_alive = enemy_participant and enemy_participant.is_alive()
+			var self_alive = self_participant.is_alive()
+			
+			print("【シルバープロウチェック】%s: is_attacker=%s, self_alive=%s, enemy_alive=%s" % [self_name, self_participant.is_attacker, self_alive, enemy_alive])
+			
+			if self_participant.is_attacker and not enemy_alive:
+				is_winner = true
+				print("  → 攻撃側勝利判定")
+			elif not self_participant.is_attacker and self_alive and not enemy_alive:
+				is_winner = true
+				print("  → 防御側勝利判定")
+			
+			if condition == "win" and is_winner:
+				print("  → 勝利条件成立、土地レベルアップ実行")
+				if _apply_level_up_battle_land(self_participant, effect, context):
+					result["activated_skills"].append({"actor": self_participant, "skill_type": effect_type, "item_name": item_name})
+			else:
+				print("  → 勝利条件不成立 (condition=%s, is_winner=%s)" % [condition, is_winner])
 			continue
 		
 		# 敵対象の効果は敵が生存している場合のみ
@@ -328,3 +379,53 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 ## ナチュラルワールドによる無効化チェック
 static func _is_battle_end_nullified(game_stats: Dictionary) -> bool:
 	return SpellWorldCurse.is_trigger_disabled("on_battle_end", game_stats)
+
+
+# =============================================================================
+# ヘルパー関数
+# =============================================================================
+
+## 効果が指定したtriggerを持つかチェック
+## trigger（単一）またはtriggers（配列）をサポート
+static func _has_trigger(effect: Dictionary, target_trigger: String) -> bool:
+	# 単一triggerをチェック
+	var trigger = effect.get("trigger", "")
+	if trigger == target_trigger:
+		return true
+	
+	# 配列triggersをチェック
+	var triggers = effect.get("triggers", [])
+	return target_trigger in triggers
+
+
+## 効果が無効化されているかチェック（ムラサメ等）
+## 効果のtriggersのいずれかがnullify_triggersに含まれていれば無効化
+static func _is_effect_nullified_by_enemy(effect: Dictionary, enemy_data: Dictionary) -> bool:
+	# 敵のnullify_triggersを取得（クリーチャー能力 + アイテム）
+	var enemy_nullify_triggers = []
+	
+	# クリーチャー能力
+	var enemy_ability = enemy_data.get("ability_parsed", {})
+	enemy_nullify_triggers.append_array(enemy_ability.get("nullify_triggers", []))
+	
+	# アイテム
+	var enemy_items = enemy_data.get("items", [])
+	for item in enemy_items:
+		var item_parsed = item.get("effect_parsed", {})
+		enemy_nullify_triggers.append_array(item_parsed.get("nullify_triggers", []))
+	
+	if enemy_nullify_triggers.is_empty():
+		return false
+	
+	# 効果のtriggersをチェック
+	var effect_triggers = effect.get("triggers", [])
+	var single_trigger = effect.get("trigger", "")
+	if not single_trigger.is_empty():
+		effect_triggers = effect_triggers.duplicate()
+		effect_triggers.append(single_trigger)
+	
+	for trigger in effect_triggers:
+		if trigger in enemy_nullify_triggers:
+			return true
+	
+	return false

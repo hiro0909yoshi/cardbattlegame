@@ -556,5 +556,3 @@ func _grant_skill_to_participant(participant: BattleParticipant, skill_name: Str
 			# その他のスキルは BattleSkillGranter で処理
 			var granter = BattleSkillGranter.new()
 			granter.grant_skill_to_participant(participant, skill_name, effect_data)
-
-
