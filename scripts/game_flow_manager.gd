@@ -379,7 +379,7 @@ func roll_dice():
 			ui_manager.phase_label.text = "合計: " + str(modified_dice) + "マス移動"
 		await get_tree().create_timer(1.0).timeout
 	else:
-		await get_tree().create_timer(1.0).timeout
+		await get_tree().create_timer(0.5).timeout
 	
 	var current_player = player_system.get_current_player()
 	

@@ -104,7 +104,7 @@ const CAMERA_OFFSET = Vector3(13, 15, 13)  # カメラオフセット位置
 # === アニメーション ===
 const MOVE_SPEED = 0.3            # 移動アニメーション速度（秒）
 const WARP_DELAY = 0.5            # ワープ演出待機時間（秒）
-const TURN_END_DELAY = 1.0        # ターン終了待機時間（秒）
+const TURN_END_DELAY = 0.3        # ターン終了待機時間（秒）
 
 # === 色定義 ===
 const ELEMENT_COLORS = {
