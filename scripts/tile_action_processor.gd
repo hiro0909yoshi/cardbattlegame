@@ -758,23 +758,11 @@ func _on_battle_completed(success: bool, tile_index: int):
 
 
 ## バトル終了後の衰弱ダメージ処理
-func _apply_plague_damage_after_battle(tile_index: int) -> void:
-	if not game_flow_manager or not game_flow_manager.spell_phase_handler:
-		return
-	
-	var spell_damage = game_flow_manager.spell_phase_handler.spell_damage
-	if not spell_damage:
-		return
-	
-	# 衰弱ダメージを適用
-	var result = spell_damage.apply_plague_damage(tile_index)
-	
-	if result["triggered"]:
-		# 通知を表示
-		var notification_text = SpellDamage.format_plague_notification(result)
-		if spell_damage.spell_cast_notification_ui:
-			spell_damage.spell_cast_notification_ui.show_notification_and_wait(notification_text)
-			await spell_damage.spell_cast_notification_ui.click_confirmed
+## ※衰弱はSkillBattleEndEffectsで処理されるため、ここでは何もしない
+func _apply_plague_damage_after_battle(_tile_index: int) -> void:
+	# 衰弱ダメージはbattle_execution.gd内のSkillBattleEndEffects.process_allで処理
+	# ナチュラルワールド等による無効化チェックもそちらで行う
+	pass
 
 # CPUアクション完了時
 func _on_cpu_action_completed():

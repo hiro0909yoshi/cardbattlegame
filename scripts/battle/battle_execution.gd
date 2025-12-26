@@ -712,6 +712,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				var curse_name = skill_info.get("curse_name", "")
 				if curse_name:
 					skill_name = "%s[%s]" % [skill_name, curse_name]
+			# 衰弱ダメージの場合は特別表示
+			elif skill_type == "plague_damage":
+				var damage = skill_info.get("damage", 0)
+				skill_name = "衰弱[-%d]" % damage
+				await battle_screen_manager.show_skill_activation(side, skill_name, {})
+				# HPバーを更新
+				await _update_hp_bar_after_damage(actor)
+				continue
 			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 	
 	# 戦闘終了時効果による死亡を反映

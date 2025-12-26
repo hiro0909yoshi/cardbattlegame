@@ -70,6 +70,31 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 		if spawn_result.get("spawned", false):
 			result["spawn_info"] = spawn_result
 	
+	# 衰弱（plague）呪いダメージ処理
+	# 攻撃側の衰弱チェック（相手=防御側のナチュラルワールドで無効化）
+	if attacker and attacker.is_alive():
+		var plague_result = _process_plague_damage(attacker, defender)
+		if plague_result.get("triggered", false):
+			result["activated_skills"].append({
+				"actor": attacker,
+				"skill_type": "plague_damage",
+				"damage": plague_result.get("damage", 0)
+			})
+			if plague_result.get("destroyed", false):
+				result["attacker_died"] = true
+	
+	# 防御側の衰弱チェック（相手=攻撃側のナチュラルワールドで無効化）
+	if defender and defender.is_alive():
+		var plague_result = _process_plague_damage(defender, attacker)
+		if plague_result.get("triggered", false):
+			result["activated_skills"].append({
+				"actor": defender,
+				"skill_type": "plague_damage",
+				"damage": plague_result.get("damage", 0)
+			})
+			if plague_result.get("destroyed", false):
+				result["defender_died"] = true
+	
 	return result
 
 
@@ -429,3 +454,74 @@ static func _is_effect_nullified_by_enemy(effect: Dictionary, enemy_data: Dictio
 			return true
 	
 	return false
+
+
+# =============================================================================
+# 衰弱（Plague）呪いダメージ処理
+# =============================================================================
+
+## 衰弱呪いをチェックしてダメージを適用
+## @param self_participant 衰弱を持っている可能性のある参加者
+## @param enemy_participant 相手（ナチュラルワールド無効化チェック用）
+## @return Dictionary {triggered: bool, damage: int, destroyed: bool, old_hp: int, new_hp: int}
+static func _process_plague_damage(self_participant, enemy_participant) -> Dictionary:
+	var result = {
+		"triggered": false,
+		"damage": 0,
+		"destroyed": false,
+		"old_hp": 0,
+		"new_hp": 0,
+		"max_hp": 0
+	}
+	
+	if not self_participant:
+		return result
+	
+	var creature_data = self_participant.creature_data
+	
+	# 呪いチェック
+	var curse = creature_data.get("curse", {})
+	if curse.get("curse_type") != "plague":
+		return result
+	
+	# 相手がナチュラルワールド等で on_battle_end を無効化していないかチェック
+	if enemy_participant:
+		var enemy_data = enemy_participant.creature_data
+		# 衰弱を擬似的なeffectとして扱い、on_battle_endトリガーを持つとみなす
+		var plague_effect = {"triggers": ["on_battle_end"]}
+		if _is_effect_nullified_by_enemy(plague_effect, enemy_data):
+			print("【衰弱無効化】%sの衰弱が相手のアイテム/能力により無効化" % creature_data.get("name", "?"))
+			return result
+	
+	result["triggered"] = true
+	
+	# MHP計算
+	var base_hp = creature_data.get("hp", 0)
+	var base_up_hp = creature_data.get("base_up_hp", 0)
+	var max_hp = base_hp + base_up_hp
+	result["max_hp"] = max_hp
+	
+	# ダメージ計算（MHP/2 切り上げ）
+	var damage = ceili(float(max_hp) / 2.0)
+	result["damage"] = damage
+	
+	# current_hp取得
+	var current_hp = self_participant.current_hp
+	result["old_hp"] = current_hp
+	
+	# ダメージ適用
+	var new_hp = max(0, current_hp - damage)
+	self_participant.current_hp = new_hp
+	creature_data["current_hp"] = new_hp
+	result["new_hp"] = new_hp
+	
+	print("【衰弱ダメージ】%s に %d ダメージ (HP: %d → %d / MHP: %d)" % [
+		creature_data.get("name", "?"), damage, current_hp, new_hp, max_hp
+	])
+	
+	# 撃破判定
+	if new_hp <= 0:
+		result["destroyed"] = true
+		print("【衰弱】%s は倒された！" % creature_data.get("name", "?"))
+	
+	return result
