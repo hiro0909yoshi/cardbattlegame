@@ -194,10 +194,6 @@ func _calculate_display_max(data: Dictionary) -> int:
 
 ## イントロ演出を再生
 func play_intro():
-	# カードをスライドイン（順次実行）
-	await _attacker_display.slide_in(true)
-	await _defender_display.slide_in(false)
-	
 	# VS表示
 	await _show_vs_label()
 	

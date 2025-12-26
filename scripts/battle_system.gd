@@ -220,11 +220,6 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 		else:
 			battle_result[key] = value
 	
-	# 🎬 バトル画面でHP更新演出（攻撃シーケンス後）
-	if battle_screen_manager:
-		await battle_screen_manager.update_hp("attacker", _create_screen_data(attacker))
-		await battle_screen_manager.update_hp("defender", _create_screen_data(defender))
-	
 	# 5. 結果判定
 	var result = battle_execution.resolve_battle_result(attacker, defender)
 	
