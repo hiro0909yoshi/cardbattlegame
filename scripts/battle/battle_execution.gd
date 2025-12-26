@@ -417,6 +417,14 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							if battle_tile_index >= 0 and special_effects.board_system_ref:
 								var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
 								SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
+							# 攻撃成功時効果（APドレイン、魔力獲得等）
+							var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
+							if success_effects.get("ap_drained", false) and battle_screen_manager:
+								var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
+								var ap_drain_name = SkillDisplayConfig.get_skill_name("ap_drain")
+								await battle_screen_manager.show_skill_activation(skill_owner_side, ap_drain_name, {})
+								var drained_side = "attacker" if defender_p.is_attacker else "defender"
+								await battle_screen_manager.update_ap(drained_side, defender_p.current_ap)
 					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
 			

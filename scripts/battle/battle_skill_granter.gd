@@ -110,6 +110,11 @@ func _grant_nullify(participant: BattleParticipant, skill_data: Dictionary) -> v
 	
 	if not ability_parsed["keyword_conditions"].has("無効化"):
 		ability_parsed["keyword_conditions"]["無効化"] = []
+	else:
+		# 旧形式（Dictionary）の場合はArrayに変換
+		var existing = ability_parsed["keyword_conditions"]["無効化"]
+		if existing is Dictionary:
+			ability_parsed["keyword_conditions"]["無効化"] = [existing] if not existing.is_empty() else []
 	
 	var skill_params = skill_data.get("skill_params", {})
 	var nullify_type = skill_params.get("nullify_type", "normal_attack")

@@ -143,7 +143,10 @@ func _apply_item_effect(participant: BattleParticipant, enemy_participant: Battl
 			_apply_grant_skill(participant, effect, context)
 		
 		"ap_drain":
-			_apply_ap_drain(participant, enemy_participant, effect)
+			# on_attack_success triggerの場合はbattle_execution.gdで処理するためスキップ
+			var trigger = effect.get("trigger", "")
+			if trigger != "on_attack_success":
+				_apply_ap_drain(participant, enemy_participant, effect)
 		
 		"grant_first_strike":
 			FirstStrikeSkill.grant_skill(participant, "先制")

@@ -31,6 +31,11 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 			"reduction_rate": float  # 軽減率（0.0=完全無効化、0.5=50%軽減、1.0=無効化なし）
 		}
 	"""
+	# ムラサメ等による無効化の無効化チェック
+	if _has_nullify_nullify(attacker):
+		print("【ムラサメ】攻撃無効化を無効化")
+		return {"is_nullified": false, "reduction_rate": 1.0}
+	
 	var ability_parsed = defender.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
@@ -123,6 +128,26 @@ func _check_nullify_element(condition: Dictionary, attacker: BattleParticipant) 
 		return attacker_element in elements
 	
 	return false
+
+## ムラサメ等による「無効化の無効化」チェック
+## 攻撃側のnullify_triggersに"nullify"が含まれていれば無効化を無効化
+func _has_nullify_nullify(attacker: BattleParticipant) -> bool:
+	# クリーチャー能力をチェック
+	var ability_parsed = attacker.creature_data.get("ability_parsed", {})
+	var nullify_triggers = ability_parsed.get("nullify_triggers", [])
+	if "nullify" in nullify_triggers:
+		return true
+	
+	# アイテムをチェック
+	var items = attacker.creature_data.get("items", [])
+	for item in items:
+		var item_parsed = item.get("effect_parsed", {})
+		var item_nullify_triggers = item_parsed.get("nullify_triggers", [])
+		if "nullify" in item_nullify_triggers:
+			return true
+	
+	return false
+
 
 ## MHP以上無効化判定
 func _check_nullify_mhp_above(condition: Dictionary, attacker: BattleParticipant) -> bool:
