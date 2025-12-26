@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マップエディタ - Card Battle Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* 左パネル - エディタ */
+        .editor-panel {
+            flex: 1;
+            max-width: 800px;
+        }
+        
+        /* 右パネル - JSON */
+        .json-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            color: #00d4ff;
+        }
+        
+        h2 {
+            margin: 10px 0;
+            color: #00d4ff;
+            font-size: 16px;
+        }
+        
+        /* メタデータ入力 */
+        .meta-section {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .meta-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .meta-section input, .meta-section textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+        }
+        
+        .meta-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .meta-row > div {
+            flex: 1;
+        }
+        
+        /* タイルパレット */
+        .palette {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .palette-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .palette-tile {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #333;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .palette-tile:hover {
+            transform: scale(1.1);
+        }
+        
+        .palette-tile.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+        
+        .palette-tile.eraser {
+            background: #333;
+            color: #fff;
+        }
+        
+        .tile-fire { background: #e74c3c; color: #fff; }
+        .tile-water { background: #3498db; color: #fff; }
+        .tile-earth { background: #8b4513; color: #fff; }
+        .tile-wind { background: #2ecc71; color: #fff; }
+        .tile-neutral { background: #95a5a6; color: #fff; }
+        .tile-checkpoint { background: #f39c12; color: #fff; }
+        .tile-warp { background: #9b59b6; color: #fff; }
+        .tile-warpstop { background: #8e44ad; color: #fff; }
+        .tile-magic { background: #e91e63; color: #fff; }
+        .tile-shop { background: #00bcd4; color: #fff; }
+        .tile-branch { background: #ff9800; color: #fff; }
+        .tile-base { background: #ffeb3b; color: #333; }
+        
+        /* グリッドエディタ */
+        .grid-container {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            overflow: auto;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 2px;
+            background: #0f0f23;
+            padding: 10px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        
+        .grid-cell {
+            width: 40px;
+            height: 40px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .grid-cell:hover {
+            border-color: #00d4ff;
+        }
+        
+        .grid-cell .tile-index {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 8px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        /* グリッドサイズ設定 */
+        .grid-size {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .grid-size input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+        }
+        
+        .grid-size button {
+            padding: 5px 15px;
+            background: #00d4ff;
+            border: none;
+            border-radius: 4px;
+            color: #000;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* JSONプレビュー */
+        .json-preview {
+            flex: 1;
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        /* ボタン */
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #00d4ff;
+            color: #000;
+        }
+        
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        /* ドロップゾーン */
+        .drop-zone {
+            border: 2px dashed #333;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        /* チェックポイント設定 */
+        .checkpoint-select {
+            margin-top: 5px;
+        }
+        
+        .checkpoint-select select {
+            padding: 5px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+        }
+        
+        /* Warpペア設定 */
+        .warp-config {
+            margin-top: 10px;
+            padding: 10px;
+            background: #0f0f23;
+            border-radius: 4px;
+        }
+        
+        .warp-pair {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .warp-pair input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        /* 接続設定 */
+        .connection-section {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .connection-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .connection-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .connection-item input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+        }
+
+        .connection-item button {
+            padding: 3px 8px;
+            background: #e74c3c;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-panel">
+        <h1>🗺️ マップエディタ</h1>
+        
+        <!-- ファイル読み込み -->
+        <div class="drop-zone" id="dropZone">
+            📁 既存のマップJSONをドラッグ＆ドロップ、またはクリックして読み込み
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+        </div>
+        
+        <!-- メタデータ -->
+        <div class="meta-section">
+            <h2>📋 マップ情報</h2>
+            <div class="meta-row">
+                <div>
+                    <label>マップID</label>
+                    <input type="text" id="mapId" placeholder="map_forest_30">
+                </div>
+                <div>
+                    <label>マップ名</label>
+                    <input type="text" id="mapName" placeholder="森のステージ">
+                </div>
+            </div>
+            <label>説明</label>
+            <textarea id="mapDesc" rows="2" placeholder="マップの説明"></textarea>
+            <div class="meta-row">
+                <div>
+                    <label>ループサイズ</label>
+                    <input type="number" id="loopSize" value="20">
+                </div>
+                <div>
+                    <label>ボーナスプリセット</label>
+                    <input type="text" id="bonusPreset" value="standard">
+                </div>
+                <div>
+                    <label>チェックポイントプリセット</label>
+                    <input type="text" id="checkpointPreset" value="standard">
+                </div>
+            </div>
+        </div>
+        
+        <!-- タイルパレット -->
+        <div class="palette">
+            <h2>🎨 タイルパレット</h2>
+            <div class="palette-tiles">
+                <div class="palette-tile eraser selected" data-type="eraser" title="消しゴム">✕</div>
+                <div class="palette-tile tile-fire" data-type="Fire" title="火">Fire</div>
+                <div class="palette-tile tile-water" data-type="Water" title="水">Water</div>
+                <div class="palette-tile tile-earth" data-type="Earth" title="土">Earth</div>
+                <div class="palette-tile tile-wind" data-type="Wind" title="風">Wind</div>
+                <div class="palette-tile tile-neutral" data-type="Neutral" title="無">Neutral</div>
+                <div class="palette-tile tile-magic" data-type="MagicTile" title="魔法陣">Magic</div>
+                <div class="palette-tile tile-shop" data-type="Shop" title="ショップ">Shop</div>
+                <div class="palette-tile tile-branch" data-type="BranchTile" title="分岐">Branch</div>
+                <div class="palette-tile tile-base" data-type="SpecialBaseTile" title="ベース">Base</div>
+            </div>
+            
+            <h3 style="margin: 15px 0 10px; font-size: 14px; color: #f39c12;">📍 チェックポイント（4種）</h3>
+            <div class="palette-tiles">
+                <div class="palette-tile tile-checkpoint" data-type="Checkpoint_N" title="チェックポイント北">CP-N</div>
+                <div class="palette-tile tile-checkpoint" data-type="Checkpoint_S" title="チェックポイント南">CP-S</div>
+                <div class="palette-tile tile-checkpoint" data-type="Checkpoint_E" title="チェックポイント東">CP-E</div>
+                <div class="palette-tile tile-checkpoint" data-type="Checkpoint_W" title="チェックポイント西">CP-W</div>
+            </div>
+            
+            <h3 style="margin: 15px 0 10px; font-size: 14px; color: #9b59b6;">🌀 ワープ（通過型ペア）</h3>
+            <div class="palette-tiles">
+                <div class="palette-tile tile-warp" data-type="Warp_A" title="ワープ通過A" style="border: 3px solid #ff6b6b;">WarpA</div>
+                <div class="palette-tile tile-warp" data-type="Warp_B" title="ワープ通過B" style="border: 3px solid #ff6b6b;">WarpB</div>
+            </div>
+            
+            <h3 style="margin: 15px 0 10px; font-size: 14px; color: #8e44ad;">🔮 ワープストップ（停止型ペア）</h3>
+            <div class="palette-tiles">
+                <div class="palette-tile tile-warpstop" data-type="WarpStop_A" title="ワープ停止A" style="border: 3px solid #4ecdc4;">WStopA</div>
+                <div class="palette-tile tile-warpstop" data-type="WarpStop_B" title="ワープ停止B" style="border: 3px solid #4ecdc4;">WStopB</div>
+            </div>
+        </div>
+        
+        <!-- グリッドエディタ -->
+        <div class="grid-container">
+            <h2>🔲 グリッド</h2>
+            <div class="grid-size">
+                <label>サイズ:</label>
+                <input type="number" id="gridWidth" value="15" min="5" max="30">
+                <span>×</span>
+                <input type="number" id="gridHeight" value="15" min="5" max="30">
+                <button onclick="resizeGrid()">グリッド更新</button>
+                <button onclick="clearGrid()" class="btn-danger" style="background:#e74c3c;">クリア</button>
+            </div>
+            <div class="grid" id="grid"></div>
+        </div>
+
+        <!-- 接続設定 -->
+        <div class="connection-section">
+            <h2>🔗 カスタム接続（オプション）</h2>
+            <p style="font-size: 12px; color: #888;">通常は自動でindex順に接続されます。分岐等の特殊接続のみ設定してください。</p>
+            <div class="connection-list" id="connectionList"></div>
+            <button class="btn btn-secondary" onclick="addConnection()">+ 接続追加</button>
+        </div>
+    </div>
+    
+    <div class="json-panel">
+        <h2>📄 JSON出力</h2>
+        <div class="json-preview" id="jsonPreview">{}</div>
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="downloadJson()">💾 ダウンロード</button>
+            <button class="btn btn-secondary" onclick="copyJson()">📋 コピー</button>
+        </div>
+    </div>
+    
+    <script>
+        // 状態管理
+        let selectedType = 'eraser';
+        let gridData = {}; // { "x,z": { type, ... } }
+        let tileIndex = 0;
+        let connections = {}; // カスタム接続
+        let warpPairs = {}; // { tileKey: pairTileKey }
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            initPalette();
+            resizeGrid();
+            initDropZone();
+        });
+        
+        // パレット初期化
+        function initPalette() {
+            document.querySelectorAll('.palette-tile').forEach(tile => {
+                tile.addEventListener('click', () => {
+                    document.querySelectorAll('.palette-tile').forEach(t => t.classList.remove('selected'));
+                    tile.classList.add('selected');
+                    selectedType = tile.dataset.type;
+                });
+            });
+        }
+        
+        // グリッドリサイズ
+        function resizeGrid() {
+            const width = parseInt(document.getElementById('gridWidth').value);
+            const height = parseInt(document.getElementById('gridHeight').value);
+            const grid = document.getElementById('grid');
+            
+            grid.style.gridTemplateColumns = `repeat(${width}, 40px)`;
+            grid.innerHTML = '';
+            
+            for (let z = 0; z < height; z++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.x = x * 4; // 4単位で配置
+                    cell.dataset.z = z * 4;
+                    
+                    const key = `${x * 4},${z * 4}`;
+                    if (gridData[key]) {
+                        applyTileStyle(cell, gridData[key]);
+                    }
+                    
+                    cell.addEventListener('click', () => onCellClick(cell));
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        onCellRightClick(cell);
+                    });
+                    
+                    grid.appendChild(cell);
+                }
+            }
+            
+            updateJson();
+        }
+        
+        // セルクリック
+        function onCellClick(cell) {
+            const x = parseInt(cell.dataset.x);
+            const z = parseInt(cell.dataset.z);
+            const key = `${x},${z}`;
+            
+            if (selectedType === 'eraser') {
+                delete gridData[key];
+                cell.className = 'grid-cell';
+                cell.innerHTML = '';
+            } else {
+                const tileData = { x, z };
+                
+                // チェックポイント（Checkpoint_N → type: Checkpoint, checkpoint_type: N）
+                if (selectedType.startsWith('Checkpoint_')) {
+                    tileData.type = 'Checkpoint';
+                    tileData.checkpoint_type = selectedType.split('_')[1];
+                }
+                // ワープ通過型（Warp_A, Warp_B）
+                else if (selectedType.startsWith('Warp_')) {
+                    tileData.type = 'Warp';
+                    tileData.warp_group = selectedType.split('_')[1]; // A or B
+                }
+                // ワープ停止型（WarpStop_A, WarpStop_B）
+                else if (selectedType.startsWith('WarpStop_')) {
+                    tileData.type = 'WarpStop';
+                    tileData.warp_group = selectedType.split('_')[1]; // A or B
+                }
+                else {
+                    tileData.type = selectedType;
+                }
+                
+                gridData[key] = tileData;
+                applyTileStyle(cell, tileData);
+            }
+            
+            updateJson();
+        }
+        
+        // 右クリック（タイル情報表示）
+        function onCellRightClick(cell) {
+            const key = `${cell.dataset.x},${cell.dataset.z}`;
+            const tile = gridData[key];
+            
+            if (tile) {
+                alert(`タイル情報:\n${JSON.stringify(tile, null, 2)}`);
+            }
+        }
+        
+        // タイルスタイル適用
+        function applyTileStyle(cell, data) {
+            const baseType = data.type.toLowerCase();
+            cell.className = 'grid-cell tile-' + baseType;
+            
+            let label = data.type.substring(0, 3);
+            
+            // チェックポイント
+            if (data.type === 'Checkpoint') {
+                label = 'CP-' + (data.checkpoint_type || '?');
+            }
+            // ワープ（グループ表示）
+            else if (data.type === 'Warp') {
+                label = 'Wp' + (data.warp_group || '?');
+                // グループに応じて枠色
+                cell.style.borderColor = data.warp_group === 'A' ? '#ff6b6b' : '#6bff6b';
+            }
+            else if (data.type === 'WarpStop') {
+                label = 'WS' + (data.warp_group || '?');
+                cell.style.borderColor = data.warp_group === 'A' ? '#4ecdc4' : '#c44ecd';
+            }
+            else if (data.type === 'MagicTile') {
+                label = 'Mag';
+            } else if (data.type === 'BranchTile') {
+                label = 'Brn';
+            } else if (data.type === 'SpecialBaseTile') {
+                label = 'Base';
+            }
+            
+            cell.innerHTML = label;
+        }
+        
+        // グリッドクリア
+        function clearGrid() {
+            if (confirm('グリッドをクリアしますか？')) {
+                gridData = {};
+                connections = {};
+                resizeGrid();
+            }
+        }
+        
+        // JSON更新
+        function updateJson() {
+            const mapData = {
+                id: document.getElementById('mapId').value || 'map_new',
+                name: document.getElementById('mapName').value || '新しいマップ',
+                description: document.getElementById('mapDesc').value || '',
+                tile_count: Object.keys(gridData).length,
+                lap_settings: {
+                    bonus_preset: document.getElementById('bonusPreset').value || 'standard',
+                    checkpoint_preset: document.getElementById('checkpointPreset').value || 'standard'
+                },
+                tiles: [],
+                connections: connections,
+                loop_size: parseInt(document.getElementById('loopSize').value) || 20
+            };
+            
+            // タイルをソート（Z順、X順）してインデックス付与
+            const sortedKeys = Object.keys(gridData).sort((a, b) => {
+                const [ax, az] = a.split(',').map(Number);
+                const [bx, bz] = b.split(',').map(Number);
+                if (az !== bz) return az - bz;
+                return ax - bx;
+            });
+            
+            // まずインデックスを付与してタイルを作成
+            const tempTiles = [];
+            sortedKeys.forEach((key, index) => {
+                const tile = { ...gridData[key], index };
+                tempTiles.push({ key, tile });
+            });
+            
+            // ワープペアを自動計算（同じwarp_groupで同じtype同士をペアリング）
+            const warpGroups = { Warp: {}, WarpStop: {} };
+            tempTiles.forEach(({ tile }) => {
+                if ((tile.type === 'Warp' || tile.type === 'WarpStop') && tile.warp_group) {
+                    const groupKey = tile.warp_group;
+                    if (!warpGroups[tile.type][groupKey]) {
+                        warpGroups[tile.type][groupKey] = [];
+                    }
+                    warpGroups[tile.type][groupKey].push(tile);
+                }
+            });
+            
+            // ペアリング設定
+            Object.values(warpGroups).forEach(groups => {
+                Object.values(groups).forEach(tiles => {
+                    if (tiles.length === 2) {
+                        tiles[0].warp_pair = tiles[1].index;
+                        tiles[1].warp_pair = tiles[0].index;
+                    }
+                });
+            });
+            
+            // 最終タイル配列を作成（warp_groupは出力から除外）
+            tempTiles.forEach(({ tile }) => {
+                const outputTile = { ...tile };
+                delete outputTile.warp_group; // 内部用なので出力しない
+                mapData.tiles.push(outputTile);
+            });
+            
+            // タイル数更新
+            mapData.tile_count = mapData.tiles.length;
+            
+            document.getElementById('jsonPreview').textContent = JSON.stringify(mapData, null, 2);
+            
+            return mapData;
+        }
+        
+        // JSONダウンロード
+        function downloadJson() {
+            const mapData = updateJson();
+            const blob = new Blob([JSON.stringify(mapData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (mapData.id || 'map') + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // JSONコピー
+        function copyJson() {
+            const json = document.getElementById('jsonPreview').textContent;
+            navigator.clipboard.writeText(json).then(() => {
+                alert('JSONをクリップボードにコピーしました');
+            });
+        }
+        
+        // ドロップゾーン初期化
+        function initDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) loadJsonFile(file);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) loadJsonFile(file);
+            });
+        }
+        
+        // JSONファイル読み込み
+        function loadJsonFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    loadMapData(data);
+                } catch (err) {
+                    alert('JSONの解析に失敗しました: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // マップデータ読み込み
+        function loadMapData(data) {
+            // メタデータ
+            document.getElementById('mapId').value = data.id || '';
+            document.getElementById('mapName').value = data.name || '';
+            document.getElementById('mapDesc').value = data.description || '';
+            document.getElementById('loopSize').value = data.loop_size || 20;
+            
+            if (data.lap_settings) {
+                document.getElementById('bonusPreset').value = data.lap_settings.bonus_preset || 'standard';
+                document.getElementById('checkpointPreset').value = data.lap_settings.checkpoint_preset || 'standard';
+            }
+            
+            // 接続
+            connections = data.connections || {};
+            
+            // タイル
+            gridData = {};
+            if (data.tiles) {
+                // グリッドサイズを計算
+                let maxX = 0, maxZ = 0;
+                data.tiles.forEach(tile => {
+                    maxX = Math.max(maxX, tile.x);
+                    maxZ = Math.max(maxZ, tile.z);
+                });
+                
+                document.getElementById('gridWidth').value = Math.ceil((maxX + 4) / 4);
+                document.getElementById('gridHeight').value = Math.ceil((maxZ + 4) / 4);
+                
+                // ワープペアからグループを復元するためのマップ
+                const warpPairGroups = {};
+                let groupCounter = { Warp: 0, WarpStop: 0 };
+                const groupLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
+                
+                // タイルデータをグリッドに配置
+                data.tiles.forEach(tile => {
+                    const key = `${tile.x},${tile.z}`;
+                    gridData[key] = {
+                        type: tile.type,
+                        x: tile.x,
+                        z: tile.z
+                    };
+                    
+                    if (tile.checkpoint_type) {
+                        gridData[key].checkpoint_type = tile.checkpoint_type;
+                    }
+                    
+                    // ワープのグループを復元
+                    if ((tile.type === 'Warp' || tile.type === 'WarpStop') && tile.warp_pair !== undefined) {
+                        const pairKey = [tile.index, tile.warp_pair].sort().join('-');
+                        const typeKey = tile.type + '-' + pairKey;
+                        
+                        if (!warpPairGroups[typeKey]) {
+                            warpPairGroups[typeKey] = groupLabels[groupCounter[tile.type]++] || '?';
+                        }
+                        gridData[key].warp_group = warpPairGroups[typeKey];
+                    }
+                });
+            }
+            
+            resizeGrid();
+            updateConnectionList();
+        }
+        
+        // 接続追加
+        function addConnection() {
+            const from = prompt('接続元のタイルインデックス:');
+            if (from === null) return;
+            
+            const to = prompt('接続先のタイルインデックス（カンマ区切りで複数可）:');
+            if (to === null) return;
+            
+            connections[from] = to.split(',').map(n => parseInt(n.trim()));
+            updateConnectionList();
+            updateJson();
+        }
+        
+        // 接続リスト更新
+        function updateConnectionList() {
+            const list = document.getElementById('connectionList');
+            list.innerHTML = '';
+            
+            Object.entries(connections).forEach(([from, toList]) => {
+                const item = document.createElement('div');
+                item.className = 'connection-item';
+                item.innerHTML = `
+                    <span>タイル ${from} → ${Array.isArray(toList) ? toList.join(', ') : toList}</span>
+                    <button onclick="removeConnection('${from}')">削除</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+        
+        // 接続削除
+        function removeConnection(from) {
+            delete connections[from];
+            updateConnectionList();
+            updateJson();
+        }
+        
+        // メタデータ変更時にJSON更新
+        ['mapId', 'mapName', 'mapDesc', 'loopSize', 'bonusPreset', 'checkpointPreset'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateJson);
+        });
+    </script>
+</body>
+</html>
