@@ -341,6 +341,41 @@
             color: #fff;
             cursor: pointer;
         }
+
+        /* 接続モード用スタイル */
+        .connection-mode-active {
+            background: rgba(255, 165, 0, 0.2);
+            border: 2px solid #ffa500;
+        }
+
+        .grid-cell.connection-source {
+            border: 3px solid #00ff00 !important;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .grid-cell.connection-target {
+            border: 3px solid #ff00ff !important;
+            box-shadow: 0 0 10px #ff00ff;
+        }
+
+        .connection-status {
+            padding: 10px;
+            background: #0f0f23;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .connection-status.active {
+            display: block;
+            background: rgba(255, 165, 0, 0.2);
+            border: 1px solid #ffa500;
+        }
+
+        .connection-status .step {
+            font-weight: bold;
+            color: #ffa500;
+        }
     </style>
 </head>
 <body>
@@ -436,11 +471,22 @@
         </div>
 
         <!-- 接続設定 -->
-        <div class="connection-section">
+        <div class="connection-section" id="connectionSection">
             <h2>🔗 カスタム接続（オプション）</h2>
             <p style="font-size: 12px; color: #888;">通常は自動でindex順に接続されます。分岐等の特殊接続のみ設定してください。</p>
+            
+            <!-- 接続モードステータス -->
+            <div class="connection-status" id="connectionStatus">
+                <span class="step" id="connectionStep">ステップ1: 接続元タイルをクリック</span>
+                <div id="connectionInfo" style="margin-top: 5px; font-size: 12px;"></div>
+            </div>
+            
             <div class="connection-list" id="connectionList"></div>
-            <button class="btn btn-secondary" onclick="addConnection()">+ 接続追加</button>
+            <div id="connectionButtons">
+                <button class="btn btn-secondary" id="addConnectionBtn" onclick="startConnectionMode()">+ 接続追加</button>
+                <button class="btn btn-primary" id="finishConnectionBtn" onclick="finishConnection()" style="display: none;">✓ 接続確定</button>
+                <button class="btn btn-danger" id="cancelConnectionBtn" onclick="cancelConnectionMode()" style="display: none;">✕ キャンセル</button>
+            </div>
         </div>
     </div>
     
@@ -456,10 +502,15 @@
     <script>
         // 状態管理
         let selectedType = 'eraser';
-        let gridData = {}; // { "x,z": { type, ... } }
-        let tileIndex = 0;
+        let gridData = {}; // { "x,z": { type, order, ... } }
+        let nextTileOrder = 0; // 次に配置するタイルの順序番号
         let connections = {}; // カスタム接続
         let warpPairs = {}; // { tileKey: pairTileKey }
+        
+        // 接続モード用状態
+        let connectionMode = false;
+        let connectionSource = null; // { key, index }
+        let connectionTargets = []; // [{ key, index }, ...]
         
         // 初期化
         document.addEventListener('DOMContentLoaded', () => {
@@ -519,12 +570,36 @@
             const z = parseInt(cell.dataset.z);
             const key = `${x},${z}`;
             
+            // 接続モードの場合
+            if (connectionMode) {
+                handleConnectionClick(cell, key);
+                return;
+            }
+            
             if (selectedType === 'eraser') {
+                // 削除するタイルのorderを取得
+                const deletedOrder = gridData[key] ? gridData[key].order : -1;
                 delete gridData[key];
                 cell.className = 'grid-cell';
                 cell.innerHTML = '';
+                cell.style.borderColor = '';
+                
+                // 削除したタイルより後のorderを詰める
+                if (deletedOrder >= 0) {
+                    Object.keys(gridData).forEach(k => {
+                        if (gridData[k].order > deletedOrder) {
+                            gridData[k].order--;
+                        }
+                    });
+                    nextTileOrder--;
+                    // グリッド全体を再描画してインデックス表示を更新
+                    refreshGridDisplay();
+                }
             } else {
-                const tileData = { x, z };
+                // 既にタイルがある場合は上書き（orderは維持）
+                const existingOrder = gridData[key] ? gridData[key].order : nextTileOrder++;
+                
+                const tileData = { x, z, order: existingOrder };
                 
                 // チェックポイント（Checkpoint_N → type: Checkpoint, checkpoint_type: N）
                 if (selectedType.startsWith('Checkpoint_')) {
@@ -550,6 +625,16 @@
             }
             
             updateJson();
+        }
+        
+        // グリッド表示を更新（インデックス番号の再描画）
+        function refreshGridDisplay() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                const key = `${cell.dataset.x},${cell.dataset.z}`;
+                if (gridData[key]) {
+                    applyTileStyle(cell, gridData[key]);
+                }
+            });
         }
         
         // 右クリック（タイル情報表示）
@@ -591,7 +676,9 @@
                 label = 'Base';
             }
             
-            cell.innerHTML = label;
+            // インデックス番号を表示（左上に小さく）
+            const orderNum = data.order !== undefined ? data.order : '?';
+            cell.innerHTML = `<span class="tile-index">${orderNum}</span>${label}`;
         }
         
         // グリッドクリア
@@ -599,6 +686,7 @@
             if (confirm('グリッドをクリアしますか？')) {
                 gridData = {};
                 connections = {};
+                nextTileOrder = 0;
                 resizeGrid();
             }
         }
@@ -619,18 +707,15 @@
                 loop_size: parseInt(document.getElementById('loopSize').value) || 20
             };
             
-            // タイルをソート（Z順、X順）してインデックス付与
+            // タイルをクリック順（order）でソート
             const sortedKeys = Object.keys(gridData).sort((a, b) => {
-                const [ax, az] = a.split(',').map(Number);
-                const [bx, bz] = b.split(',').map(Number);
-                if (az !== bz) return az - bz;
-                return ax - bx;
+                return (gridData[a].order || 0) - (gridData[b].order || 0);
             });
             
-            // まずインデックスを付与してタイルを作成
+            // orderをindexとして使用
             const tempTiles = [];
-            sortedKeys.forEach((key, index) => {
-                const tile = { ...gridData[key], index };
+            sortedKeys.forEach((key) => {
+                const tile = { ...gridData[key], index: gridData[key].order };
                 tempTiles.push({ key, tile });
             });
             
@@ -656,10 +741,11 @@
                 });
             });
             
-            // 最終タイル配列を作成（warp_groupは出力から除外）
+            // 最終タイル配列を作成（内部用フィールドは出力から除外）
             tempTiles.forEach(({ tile }) => {
                 const outputTile = { ...tile };
-                delete outputTile.warp_group; // 内部用なので出力しない
+                delete outputTile.warp_group; // 内部用
+                delete outputTile.order;      // 内部用（indexに変換済み）
                 mapData.tiles.push(outputTile);
             });
             
@@ -752,6 +838,8 @@
             
             // タイル
             gridData = {};
+            nextTileOrder = 0;
+            
             if (data.tiles) {
                 // グリッドサイズを計算
                 let maxX = 0, maxZ = 0;
@@ -768,14 +856,18 @@
                 let groupCounter = { Warp: 0, WarpStop: 0 };
                 const groupLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
                 
-                // タイルデータをグリッドに配置
+                // タイルデータをグリッドに配置（indexをorderとして使用）
                 data.tiles.forEach(tile => {
                     const key = `${tile.x},${tile.z}`;
                     gridData[key] = {
                         type: tile.type,
                         x: tile.x,
-                        z: tile.z
+                        z: tile.z,
+                        order: tile.index  // indexをorderとして保存
                     };
+                    
+                    // nextTileOrderを更新
+                    nextTileOrder = Math.max(nextTileOrder, tile.index + 1);
                     
                     if (tile.checkpoint_type) {
                         gridData[key].checkpoint_type = tile.checkpoint_type;
@@ -798,17 +890,125 @@
             updateConnectionList();
         }
         
-        // 接続追加
-        function addConnection() {
-            const from = prompt('接続元のタイルインデックス:');
-            if (from === null) return;
+        // === 接続モード関連 ===
+        
+        // 接続モード開始
+        function startConnectionMode() {
+            connectionMode = true;
+            connectionSource = null;
+            connectionTargets = [];
             
-            const to = prompt('接続先のタイルインデックス（カンマ区切りで複数可）:');
-            if (to === null) return;
+            // UIを更新
+            document.getElementById('connectionSection').classList.add('connection-mode-active');
+            document.getElementById('connectionStatus').classList.add('active');
+            document.getElementById('connectionStep').textContent = 'ステップ1: 接続元タイルをクリック';
+            document.getElementById('connectionInfo').textContent = '';
+            document.getElementById('addConnectionBtn').style.display = 'none';
+            document.getElementById('finishConnectionBtn').style.display = 'none';
+            document.getElementById('cancelConnectionBtn').style.display = 'inline-block';
+        }
+        
+        // 接続モードでのセルクリック処理
+        function handleConnectionClick(cell, key) {
+            // タイルが存在するか確認
+            if (!gridData[key]) {
+                alert('タイルが配置されていません');
+                return;
+            }
             
-            connections[from] = to.split(',').map(n => parseInt(n.trim()));
+            // タイルのインデックスを取得
+            const tileIndex = getTileIndexByKey(key);
+            if (tileIndex === -1) {
+                alert('タイルインデックスが取得できません');
+                return;
+            }
+            
+            if (!connectionSource) {
+                // ステップ1: 接続元を選択
+                connectionSource = { key, index: tileIndex };
+                cell.classList.add('connection-source');
+                
+                document.getElementById('connectionStep').textContent = 'ステップ2: 接続先タイルをクリック（複数可）';
+                document.getElementById('connectionInfo').textContent = `接続元: タイル ${tileIndex}`;
+                document.getElementById('finishConnectionBtn').style.display = 'inline-block';
+            } else {
+                // ステップ2: 接続先を追加
+                if (key === connectionSource.key) {
+                    alert('接続元と同じタイルは選択できません');
+                    return;
+                }
+                
+                // 既に選択されているか確認
+                const existingIndex = connectionTargets.findIndex(t => t.key === key);
+                if (existingIndex !== -1) {
+                    // 選択解除
+                    connectionTargets.splice(existingIndex, 1);
+                    cell.classList.remove('connection-target');
+                } else {
+                    // 追加
+                    connectionTargets.push({ key, index: tileIndex });
+                    cell.classList.add('connection-target');
+                }
+                
+                // 情報更新
+                const targetIndices = connectionTargets.map(t => t.index).join(', ');
+                document.getElementById('connectionInfo').textContent = 
+                    `接続元: タイル ${connectionSource.index} → 接続先: ${targetIndices || '(未選択)'}`;
+            }
+        }
+        
+        // キーからタイルインデックス（order）を取得
+        function getTileIndexByKey(key) {
+            if (gridData[key] && gridData[key].order !== undefined) {
+                return gridData[key].order;
+            }
+            return -1;
+        }
+        
+        // 接続確定
+        function finishConnection() {
+            if (!connectionSource) {
+                alert('接続元が選択されていません');
+                return;
+            }
+            
+            if (connectionTargets.length === 0) {
+                alert('接続先が選択されていません');
+                return;
+            }
+            
+            // 接続を追加
+            const targetIndices = connectionTargets.map(t => t.index);
+            connections[connectionSource.index] = targetIndices;
+            
+            // モード終了
+            exitConnectionMode();
             updateConnectionList();
             updateJson();
+        }
+        
+        // 接続モードキャンセル
+        function cancelConnectionMode() {
+            exitConnectionMode();
+        }
+        
+        // 接続モード終了（共通処理）
+        function exitConnectionMode() {
+            connectionMode = false;
+            connectionSource = null;
+            connectionTargets = [];
+            
+            // セルのハイライトをクリア
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('connection-source', 'connection-target');
+            });
+            
+            // UIをリセット
+            document.getElementById('connectionSection').classList.remove('connection-mode-active');
+            document.getElementById('connectionStatus').classList.remove('active');
+            document.getElementById('addConnectionBtn').style.display = 'inline-block';
+            document.getElementById('finishConnectionBtn').style.display = 'none';
+            document.getElementById('cancelConnectionBtn').style.display = 'none';
         }
         
         // 接続リスト更新

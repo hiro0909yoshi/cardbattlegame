@@ -4,7 +4,7 @@
 	  "id": "world_1",
 	  "name": "草原の国",
 	  "description": "冒険の始まり。基本を学ぼう。",
-	  "stages": ["stage_1_1", "stage_1_2", "stage_1_3"],
+	  "stages": ["stage_1_1", "stage_1_2"],
 	  "unlock_condition": null
 	}
   ]

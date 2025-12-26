@@ -12,8 +12,9 @@ extends Control
 # ステージデータ
 var stages = [
 	{"id": "stage_1_1", "name": "1-1 はじまりの草原"},
+	{"id": "stage_1_2", "name": "1-2 分岐の迷路"},
 	{"id": "stage_2_1", "name": "2-1 荒野の試練"},
-	{"id": "stage_2_2", "name": "2-2 分岐の迷宮"}
+	{"id": "stage_2_2", "name": "2-2 テスト"}
 ]
 
 var selected_stage_index = 0
