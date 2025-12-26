@@ -195,6 +195,14 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			if creature:
 				SpellCurseBattle.apply_destroy_after_battle(creature, effect.get("name", "戦闘後破壊"))
 		
+		"apply_curse":
+			# 汎用呪い付与（マスファンタズム等）
+			var curse_type_inner = effect.get("curse_type", "unknown")
+			var params = {
+				"name": effect.get("name", "呪い")
+			}
+			curse_creature(tile_index, curse_type_inner, duration, params)
+		
 		_:
 			print("[SpellCurse] 未対応の効果タイプ: ", effect_type)
 

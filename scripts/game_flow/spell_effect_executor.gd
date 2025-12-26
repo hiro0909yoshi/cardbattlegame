@@ -110,7 +110,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", \
 		"command_growth_curse", "plague_curse", "creature_curse", "forced_stop", "indomitable", \
 		"land_effect_disable", "land_effect_grant", "metal_form", "magic_barrier", "destroy_after_battle", \
-		"bounty_curse", "grant_mystic_arts", "land_curse":
+		"bounty_curse", "grant_mystic_arts", "land_curse", "apply_curse":
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)

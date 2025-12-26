@@ -75,7 +75,8 @@
 			"effect_type": "damage",
 			"value": 10
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -97,7 +98,8 @@
 			"effect_type": "damage",
 			"value": 20
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -119,7 +121,8 @@
 			"effect_type": "damage",
 			"value": 20
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -140,7 +143,8 @@
 			"effect_type": "damage",
 			"value": 30
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -159,7 +163,8 @@
 			"effect_type": "damage",
 			"value": 20
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -177,7 +182,8 @@
 			"effect_type": "heal",
 			"value": 30
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -195,7 +201,8 @@
 			"effect_type": "permanent_hp_change",
 			"value": 10
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{
@@ -650,7 +657,8 @@
 			  "max_hp": -10
 			}
 		  }
-		]
+		],
+		"affects_hp": true
 	  }
 	},
 	{

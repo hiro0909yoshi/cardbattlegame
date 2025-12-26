@@ -804,6 +804,11 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if is_down:
 							continue
 					
+					# HP効果無効チェック（affects_hpスペルの場合、HP効果無効持ちは除外）
+					if target_info.get("affects_hp", false):
+						if SpellHpImmune.has_hp_effect_immune(creature):
+							continue
+					
 					# most_common_element チェックはここではスキップ（後処理で絞り込む）
 					
 					# 全条件を満たしたターゲットを追加

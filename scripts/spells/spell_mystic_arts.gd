@@ -210,11 +210,17 @@ func _select_mystic_art_from_creature(selected_creature: Dictionary, action_menu
 func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> void:
 	var target_type = mystic_art.get("target_type", "")
 	var target_filter = mystic_art.get("target_filter", "any")
-	var target_info = mystic_art.get("target_info", {})
+	var target_info = mystic_art.get("target_info", {}).duplicate()
+	var affects_hp = false
 	
 	# target_infoからowner_filterを取得
 	if not target_info.is_empty():
 		target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
+	
+	# 秘術自体のeffect_parsedからaffects_hpを取得
+	var mystic_effect_parsed = mystic_art.get("effect_parsed", {})
+	if mystic_effect_parsed.get("affects_hp", false):
+		affects_hp = true
 	
 	# spell_idがある場合はスペルデータからターゲット情報を取得
 	var spell_id = mystic_art.get("spell_id", -1)
@@ -223,12 +229,19 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 		if not spell_data.is_empty():
 			var effect_parsed = spell_data.get("effect_parsed", {})
 			target_type = effect_parsed.get("target_type", target_type)
-			target_info = effect_parsed.get("target_info", target_info)
+			target_info = effect_parsed.get("target_info", target_info).duplicate()
 			# target_filterはeffect_parsed直下にある場合もある（land + creature等）
 			var parsed_target_filter = effect_parsed.get("target_filter", "")
 			if not parsed_target_filter.is_empty():
 				target_info["target_filter"] = parsed_target_filter
 			target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
+			# スペルデータからaffects_hpを取得
+			if effect_parsed.get("affects_hp", false):
+				affects_hp = true
+	
+	# HP効果無効チェック用にaffects_hpをtarget_infoにコピー
+	if affects_hp:
+		target_info["affects_hp"] = true
 	
 	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":

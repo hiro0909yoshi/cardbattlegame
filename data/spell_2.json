@@ -24,7 +24,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -270,7 +271,8 @@
         ],
         "target_info": {
           "owner_filter": "any"
-        }
+        },
+        "affects_hp": true
       }
     },
     {
@@ -536,7 +538,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -587,7 +590,8 @@
             "effect_type": "damage",
             "value": 30
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1002,7 +1006,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1034,7 +1039,8 @@
             "effect_type": "permanent_hp_change",
             "value": 5
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1046,7 +1052,21 @@
       "cost": {
         "mp": 70
       },
-      "effect": "全領地に呪い\"HP効果無効\""
+      "effect": "全領地に呪い\"HP効果無効\"",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "curse_type": "hp_effect_immune",
+            "name": "HP効果無効",
+            "duration": -1
+          }
+        ]
+      }
     },
     {
       "id": 2109,
@@ -1212,7 +1232,8 @@
           {
             "effect_type": "full_heal"
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1336,7 +1357,8 @@
           {
             "effect_type": "full_heal"
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {

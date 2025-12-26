@@ -420,8 +420,12 @@ func use_spell(spell_card: Dictionary):
 		spell_card["is_synthesized"] = true
 	var target_type = parsed.get("target_type", "")
 	var target_filter = parsed.get("target_filter", "")
-	var target_info = parsed.get("target_info", {})
+	var target_info = parsed.get("target_info", {}).duplicate()
 	var effects = parsed.get("effects", [])
+	
+	# HP効果無効チェック用にaffects_hpをtarget_infoにコピー
+	if parsed.get("affects_hp", false):
+		target_info["affects_hp"] = true
 	
 	# リリーフ（swap_board_creatures）: 使用時点で2体未満なら弾く
 	for effect in effects:

@@ -1,780 +1,785 @@
 {
-	"cards": [
-		{
-			"id": 200,
-			"name": "アースズピリット",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 60
-			},
-			"ap": 40,
-			"hp": 30,
-			"ability": "",
-			"ability_detail": "配置領地でレベルアップか地形変化時、MHP+10"
+  "cards": [
+	{
+	  "id": 200,
+	  "name": "アースズピリット",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 60
+	  },
+	  "ap": 40,
+	  "hp": 30,
+	  "ability": "",
+	  "ability_detail": "配置領地でレベルアップか地形変化時、MHP+10"
+	},
+	{
+	  "id": 201,
+	  "name": "アネイマブル",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 30,
+		"lands_required": [
+		  "earth"
+		],
+		"cards_sacrifice": 1
+	  },
+	  "ap": 50,
+	  "hp": 10,
+	  "ability": "後手・即死・抹消",
+	  "ability_detail": "後手；即死[70%]；抹消[倒手の同種カード全て・80%]",
+	  "ability_parsed": {
+		"keywords": [
+		  "後手",
+		  "即死"
+		],
+		"keyword_conditions": {
+		  "即死": {
+			"condition_type": "none",
+			"probability": 70
+		  }
 		},
-		{
-			"id": 201,
-			"name": "アネイマブル",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 30,
-				"lands_required": [
-					"earth"
-				],
-				"cards_sacrifice": 1
-			},
-			"ap": 50,
-			"hp": 10,
-			"ability": "後手・即死・抹消",
-			"ability_detail": "後手；即死[70%]；抹消[倒手の同種カード全て・80%]",
-			"ability_parsed": {
-				"keywords": [
-					"後手",
-					"即死"
-				],
-				"keyword_conditions": {
-					"即死": {
-						"condition_type": "none",
-						"probability": 70
-					}
-				},
-				"effects": [
-					{
-						"trigger": "on_kill",
-						"effect_type": "annihilate",
-						"probability": 80
-					}
-				]
-			}
-		},
-		{
-			"id": 202,
-			"name": "ウッドフォーク",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 75
-			},
-			"restrictions": {
-				"cannot_use": [
-					"武器"
-				]
-			},
-			"ap": 30,
-			"hp": 40,
-			"ability": "援護",
-			"ability_detail": "援護",
-			"ability_parsed": {
-				"keywords": [
-					"援護"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"all"
-						]
-					}
-				}
-			}
-		},
-		{
-			"id": 203,
-			"name": "オドラデク",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 40
-			},
-			"ap": 20,
-			"hp": 20,
-			"ability": "援護・HP効果無効",
-			"ability_detail": "援護；HP効果無効",
-			"ability_parsed": {
-				"keywords": [
-					"援護"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"all"
-						]
-					}
-				}
-			}
-		},
-		{
-			"id": 204,
-			"name": "ガーゴイル",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 70,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"ap": 30,
-			"hp": 50,
-			"ability": "先制・防御時AP=50",
-			"ability_detail": "先制；防御時、AP=50",
-			"ability_parsed": {
-				"keywords": [
-					"先制"
-				],
-				"effects": [
-					{
-						"effect_type": "defender_fixed_ap",
-						"value": 50,
-						"description": "防御時、AP=50"
-					}
-				]
-			}
-		},
-		{
-			"id": 205,
-			"name": "カクタスウォール",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 50
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"creature_type": "defensive",
-			"ap": 10,
-			"hp": 50,
-			"ability": "防御型・再生",
-			"ability_detail": "防御型；敵が水風の場合、HP+50；再生",
-			"ability_parsed": {
-				"keywords": [
-					"再生"
-				],
-				"effects": [
-					{
-						"effect_type": "enemy_element_bonus",
-						"stat": "hp",
-						"value": 50,
-						"condition": {
-							"enemy_elements": [
-								"water",
-								"wind"
-							]
-						},
-						"description": "敵が水風の場合、HP+50"
-					}
-				]
-			}
-		},
-		{
-			"id": 206,
-			"name": "ギガンテリウム",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 70,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 50,
-			"hp": 60,
-			"ability": "♡付き領地で戦闘中",
-			"ability_detail": "♡付き領地で戦闘中、HP-20",
-			"ability_parsed": {
-				"effects": [
-					{
-						"effect_type": "hp_penalty",
-						"condition": "has_mark",
-						"amount": 20
-					}
-				]
-			}
-		},
-		{
-			"id": 207,
-			"name": "キャプテンコック",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 50,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 30,
-			"hp": 30,
-			"ability": "不屈・秘術",
-			"ability_detail": "不屈；秘術[G60・対象自クリーチャーのダウンを解除]",
-			"ability_parsed": {
-				"keywords": [
-					"不屈",
-					"秘術"
-				],
-				"mystic_arts": [
-					{
-						"name": "ダウン解除",
-						"cost": 60,
-						"target_type": "land",
-						"target_info": {
-							"owner_filter": "own",
-							"target_filter": "creature",
-							"is_down": true
-						},
-						"effects": [
-							{
-								"effect_type": "clear_down"
-							}
-						]
-					}
-				]
-			}
-		},
-		{
-			"id": 208,
-			"name": "グーバ",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 0
-			},
-			"ap": 0,
-			"hp": 10,
-			"ability": "",
-			"ability_detail": ""
-		},
-		{
-			"id": 209,
-			"name": "グーバクイーン",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 25,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"武器"
-				]
-			},
-			"ap": 10,
-			"hp": 40,
-			"ability": "秘術",
-			"ability_detail": "秘術[G20・選んだ空地にグーバを配置]",
-			"ability_parsed": {
-				"keywords": [
-					"秘術"
-				],
-				"mystic_arts": [
-					{
-						"name": "グーバ配置",
-						"cost": 20,
-						"target_type": "land",
-						"target_info": {
-							"owner_filter": "any",
-							"target_filter": "empty"
-						},
-						"effects": [
-							{
-								"effect_type": "place_creature",
-								"creature_id": 208,
-								"placement_mode": "select"
-							}
-						]
-					}
-				]
-			}
-		},
-		{
-			"id": 210,
-			"name": "グリーンオーガ",
-			"race": "オーガ",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 80
-			},
-			"ap": 40,
-			"hp": 50,
-			"ability": "",
-			"ability_detail": ""
-		},
-		{
-			"id": 211,
-			"name": "グリマルキン",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 40,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"ap": 20,
-			"hp": 30,
-			"ability": "援護・防魔",
-			"ability_detail": "援護[火地]；防魔",
-			"ability_parsed": {
-				"keywords": [
-					"援護",
-					"防魔"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"fire",
-							"earth"
-						]
-					}
-				}
-			}
-		},
-		{
-			"id": 212,
-			"name": "グレートタスカー",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 80,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 60,
-			"hp": 50,
-			"ability": "無効化",
-			"ability_detail": "無効化[先制の能力を持つクリーチャー]",
-			"ability_parsed": {
-				"keywords": [
-					"無効化"
-				],
-				"keyword_conditions": {
-					"無効化": {
-						"nullify_type": "has_ability",
-						"ability": "先制"
-					}
-				}
-			}
-		},
-		{
-			"id": 213,
-			"name": "グロウホーン",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 50,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 50,
-			"hp": 40,
-			"ability": "感応",
-			"ability_detail": "感応[火・AP&HP+20]",
-			"ability_parsed": {
-				"keywords": [
-					"感応"
-				],
-				"keyword_conditions": {
-					"感応": {
-						"element": "fire",
-						"stat_bonus": {
-							"ap": 20,
-							"hp": 20
-						}
-					}
-				}
-			}
-		},
-		{
-			"id": 214,
-			"name": "コアトリクエ",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 70,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"ap": 30,
-			"hp": 50,
-			"ability": "秘術",
-			"ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]",
-			"ability_parsed": {
-				"keywords": ["秘術"]
-			},
-			"mystic_arts": {
-				"cost": 50,
-				"spell_id": 9038
-			}
-		},
-		{
-			"id": 215,
-			"name": "コカトリス",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 50,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 30,
-			"hp": 40,
-			"ability": "強制変化",
-			"ability_detail": "強制変化[ストーンウォール]",
-			"ability_parsed": {
-				"keywords": [
-					"強制変化"
-				],
-				"effects": [
-					{
-						"effect_type": "transform",
-						"trigger": "on_attack_success",
-						"target": "opponent",
-						"transform_type": "forced",
-						"creature_id": 222,
-						"revert_after_battle": false
-					}
-				]
-			}
-		},
-		{
-			"id": 216,
-			"name": "サクヤ",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 30,
-				"lands_required": [
-					"earth"
-				]
-			},
-			"restrictions": {
-				"cannot_summon": [
-					"wind"
-				]
-			},
-			"ap": 20,
-			"hp": 30,
-			"ability": "秘術",
-			"ability_detail": "秘術[G120・対象自領地を地に変える]",
-			"ability_parsed": {
-				"keywords": ["秘術"]
-			},
-			"mystic_arts": {
-				"cost": 120,
-				"spell_id": 9040
-			}
-		},
-		{
-			"id": 217,
-			"name": "ジャッカロープ",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 60
-			},
-			"ap": 20,
-			"hp": 30,
-			"ability": "援護・変身",
-			"ability_detail": "援護[火地]；スペル破壊時、グレートタスカーに変身",
-			"ability_parsed": {
-				"keywords": [
-					"援護"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"fire",
-							"earth"
-						]
-					}
-				},
-				"effects": [
-					{
-						"effect_type": "transform",
-						"trigger": "on_spell_death",
-						"transform_to": 212
-					}
-				]
-			}
-		},
-		{
-			"id": 218,
-			"name": "ジャングラバー",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 40
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 20,
-			"hp": 20,
-			"ability": "防魔・秘術",
-			"ability_detail": "防魔；秘術[G30・対象敵クリーチャーに呪い\"移動不可\"]",
-			"ability_parsed": {
-				"keywords": [
-					"防魔",
-					"秘術"
-				],
-				"mystic_art": {
-					"name": "移動封じ",
-					"cost": 30,
-					"spell_id": 9013
-				}
-			}
-		},
-		{
-			"id": 219,
-			"name": "シルバンダッチェス",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 60,
-				"lands_required": [
-					"earth",
-					"earth"
-				]
-			},
-			"ap": 50,
-			"hp": 50,
-			"ability": "援護・アイテム破壊・再生",
-			"ability_detail": "援護[地]；アイテム破壊[道具か巻物か援護クリーチャー]；再生",
-			"ability_parsed": {
-				"keywords": [
-					"援護",
-					"アイテム破壊",
-					"再生"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"earth"
-						]
-					}
-				},
-				"effects": [
-					{
-						"effect_type": "destroy_item",
-						"target_types": [
-							"道具",
-							"巻物",
-							"援護クリーチャー"
-						],
-						"triggers": [
-							"before_battle"
-						]
-					}
-				]
-			}
-		},
-		{
-			"id": 220,
-			"name": "スクリーマー",
-			"rarity": "S",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 30
-			},
-			"restrictions": {
-				"cannot_summon": [
-					"wind"
-				],
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"creature_type": "defensive",
-			"ap": 20,
-			"hp": 40,
-			"ability": "防御型・秘術",
-			"ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]",
-			"ability_parsed": {
-				"keywords": [
-					"防御型"
-				],
-				"effects": []
-			},
-			"mystic_arts": {
-				"cost": 40,
-				"spell_id": 9018
-			}
-		},
-		{
-			"id": 221,
-			"name": "スクリリン",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 50
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 20,
-			"hp": 30,
-			"ability": "援護",
-			"ability_detail": "援護",
-			"ability_parsed": {
-				"keywords": [
-					"援護"
-				],
-				"keyword_conditions": {
-					"援護": {
-						"target_elements": [
-							"all"
-						]
-					}
-				}
-			}
-		},
-		{
-			"id": 222,
-			"name": "ストーンウォール",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 25
-			},
-			"restrictions": {
-				"cannot_use": [
-					"防具",
-					"巻物"
-				]
-			},
-			"creature_type": "defensive",
-			"ap": 0,
-			"hp": 60,
-			"ability": "防御型",
-			"ability_detail": "防御型"
-		},
-		{
-			"id": 223,
-			"name": "スピットコブラ",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 80
-			},
-			"restrictions": {
-				"cannot_use": [
-					"巻物"
-				]
-			},
-			"ap": 40,
-			"hp": 40,
-			"ability": "秘術",
-			"ability_detail": "秘術[G30・対象敵領地に呪い\"衰弱\"]",
-			"ability_parsed": {
-				"keywords": [
-					"秘術"
-				],
-				"mystic_art": {
-					"name": "衰弱呪い",
-					"cost": 30,
-					"spell_id": 9028
-				}
-			}
-		},
-		{
-			"id": 224,
-			"name": "スプラウトリング",
-			"rarity": "N",
-			"type": "creature",
-			"element": "earth",
-			"cost": {
-				"mp": 60
-			},
-			"ap": 30,
-			"hp": 30,
-			"ability": "地形効果・秘術",
-			"ability_detail": "火から地形効果を得る；秘術[G50・オールドウィロウに変身]",
-			"ability_parsed": {
-				"keywords": [
-					"秘術"
-				],
-				"effects": [],
-				"extra_land_elements": [
-					"fire"
-				],
-				"mystic_arts": [
-					{
-						"name": "オールドウィロウに変身",
-						"cost": 50,
-						"target_type": "none",
-						"effects": [
-							{
-								"effect_type": "transform",
-								"target": "self",
-								"transform_to": 5
-							}
-						]
-					}
-				]
-			}
+		"effects": [
+		  {
+			"trigger": "on_kill",
+			"effect_type": "annihilate",
+			"probability": 80
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 202,
+	  "name": "ウッドフォーク",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 75
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "武器"
+		]
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "援護",
+	  "ability_detail": "援護",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "all"
+			]
+		  }
 		}
-	]
+	  }
+	},
+	{
+	  "id": 203,
+	  "name": "オドラデク",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 40
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "援護・HP効果無効",
+	  "ability_detail": "援護；HP効果無効",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護",
+		  "HP効果無効"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "all"
+			]
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 204,
+	  "name": "ガーゴイル",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 70,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "ap": 30,
+	  "hp": 50,
+	  "ability": "先制・防御時AP=50",
+	  "ability_detail": "先制；防御時、AP=50",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制"
+		],
+		"effects": [
+		  {
+			"effect_type": "defender_fixed_ap",
+			"value": 50,
+			"description": "防御時、AP=50"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 205,
+	  "name": "カクタスウォール",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 50
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "creature_type": "defensive",
+	  "ap": 10,
+	  "hp": 50,
+	  "ability": "防御型・再生",
+	  "ability_detail": "防御型；敵が水風の場合、HP+50；再生",
+	  "ability_parsed": {
+		"keywords": [
+		  "再生"
+		],
+		"effects": [
+		  {
+			"effect_type": "enemy_element_bonus",
+			"stat": "hp",
+			"value": 50,
+			"condition": {
+			  "enemy_elements": [
+				"water",
+				"wind"
+			  ]
+			},
+			"description": "敵が水風の場合、HP+50"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 206,
+	  "name": "ギガンテリウム",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 70,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 50,
+	  "hp": 60,
+	  "ability": "♡付き領地で戦闘中",
+	  "ability_detail": "♡付き領地で戦闘中、HP-20",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "hp_penalty",
+			"condition": "has_mark",
+			"amount": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 207,
+	  "name": "キャプテンコック",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 50,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "不屈・秘術",
+	  "ability_detail": "不屈；秘術[G60・対象自クリーチャーのダウンを解除]",
+	  "ability_parsed": {
+		"keywords": [
+		  "不屈",
+		  "秘術"
+		],
+		"mystic_arts": [
+		  {
+			"name": "ダウン解除",
+			"cost": 60,
+			"target_type": "land",
+			"target_info": {
+			  "owner_filter": "own",
+			  "target_filter": "creature",
+			  "is_down": true
+			},
+			"effects": [
+			  {
+				"effect_type": "clear_down"
+			  }
+			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 208,
+	  "name": "グーバ",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 0
+	  },
+	  "ap": 0,
+	  "hp": 10,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 209,
+	  "name": "グーバクイーン",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 25,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "武器"
+		]
+	  },
+	  "ap": 10,
+	  "hp": 40,
+	  "ability": "秘術",
+	  "ability_detail": "秘術[G20・選んだ空地にグーバを配置]",
+	  "ability_parsed": {
+		"keywords": [
+		  "秘術"
+		],
+		"mystic_arts": [
+		  {
+			"name": "グーバ配置",
+			"cost": 20,
+			"target_type": "land",
+			"target_info": {
+			  "owner_filter": "any",
+			  "target_filter": "empty"
+			},
+			"effects": [
+			  {
+				"effect_type": "place_creature",
+				"creature_id": 208,
+				"placement_mode": "select"
+			  }
+			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 210,
+	  "name": "グリーンオーガ",
+	  "race": "オーガ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 80
+	  },
+	  "ap": 40,
+	  "hp": 50,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 211,
+	  "name": "グリマルキン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 40,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "援護・防魔",
+	  "ability_detail": "援護[火地]；防魔",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護",
+		  "防魔"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "fire",
+			  "earth"
+			]
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 212,
+	  "name": "グレートタスカー",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 80,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 60,
+	  "hp": 50,
+	  "ability": "無効化",
+	  "ability_detail": "無効化[先制の能力を持つクリーチャー]",
+	  "ability_parsed": {
+		"keywords": [
+		  "無効化"
+		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "has_ability",
+			"ability": "先制"
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 213,
+	  "name": "グロウホーン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 50,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 50,
+	  "hp": 40,
+	  "ability": "感応",
+	  "ability_detail": "感応[火・AP&HP+20]",
+	  "ability_parsed": {
+		"keywords": [
+		  "感応"
+		],
+		"keyword_conditions": {
+		  "感応": {
+			"element": "fire",
+			"stat_bonus": {
+			  "ap": 20,
+			  "hp": 20
+			}
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 214,
+	  "name": "コアトリクエ",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 70,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "ap": 30,
+	  "hp": 50,
+	  "ability": "秘術",
+	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]",
+	  "ability_parsed": {
+		"keywords": [
+		  "秘術"
+		]
+	  },
+	  "mystic_arts": {
+		"cost": 50,
+		"spell_id": 9038
+	  }
+	},
+	{
+	  "id": 215,
+	  "name": "コカトリス",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 50,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "強制変化",
+	  "ability_detail": "強制変化[ストーンウォール]",
+	  "ability_parsed": {
+		"keywords": [
+		  "強制変化"
+		],
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_attack_success",
+			"target": "opponent",
+			"transform_type": "forced",
+			"creature_id": 222,
+			"revert_after_battle": false
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 216,
+	  "name": "サクヤ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 30,
+		"lands_required": [
+		  "earth"
+		]
+	  },
+	  "restrictions": {
+		"cannot_summon": [
+		  "wind"
+		]
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "秘術",
+	  "ability_detail": "秘術[G120・対象自領地を地に変える]",
+	  "ability_parsed": {
+		"keywords": [
+		  "秘術"
+		]
+	  },
+	  "mystic_arts": {
+		"cost": 120,
+		"spell_id": 9040
+	  }
+	},
+	{
+	  "id": 217,
+	  "name": "ジャッカロープ",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 60
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "援護・変身",
+	  "ability_detail": "援護[火地]；スペル破壊時、グレートタスカーに変身",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "fire",
+			  "earth"
+			]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"trigger": "on_spell_death",
+			"transform_to": 212
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 218,
+	  "name": "ジャングラバー",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 40
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "防魔・秘術",
+	  "ability_detail": "防魔；秘術[G30・対象敵クリーチャーに呪い\"移動不可\"]",
+	  "ability_parsed": {
+		"keywords": [
+		  "防魔",
+		  "秘術"
+		],
+		"mystic_art": {
+		  "name": "移動封じ",
+		  "cost": 30,
+		  "spell_id": 9013
+		}
+	  }
+	},
+	{
+	  "id": 219,
+	  "name": "シルバンダッチェス",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 60,
+		"lands_required": [
+		  "earth",
+		  "earth"
+		]
+	  },
+	  "ap": 50,
+	  "hp": 50,
+	  "ability": "援護・アイテム破壊・再生",
+	  "ability_detail": "援護[地]；アイテム破壊[道具か巻物か援護クリーチャー]；再生",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護",
+		  "アイテム破壊",
+		  "再生"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "earth"
+			]
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": [
+			  "道具",
+			  "巻物",
+			  "援護クリーチャー"
+			],
+			"triggers": [
+			  "before_battle"
+			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 220,
+	  "name": "スクリーマー",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 30
+	  },
+	  "restrictions": {
+		"cannot_summon": [
+		  "wind"
+		],
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "creature_type": "defensive",
+	  "ap": 20,
+	  "hp": 40,
+	  "ability": "防御型・秘術",
+	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]",
+	  "ability_parsed": {
+		"keywords": [
+		  "防御型"
+		],
+		"effects": []
+	  },
+	  "mystic_arts": {
+		"cost": 40,
+		"spell_id": 9018
+	  }
+	},
+	{
+	  "id": 221,
+	  "name": "スクリリン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 50
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "援護",
+	  "ability_detail": "援護",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護"
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "all"
+			]
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 222,
+	  "name": "ストーンウォール",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 25
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "防具",
+		  "巻物"
+		]
+	  },
+	  "creature_type": "defensive",
+	  "ap": 0,
+	  "hp": 60,
+	  "ability": "防御型",
+	  "ability_detail": "防御型"
+	},
+	{
+	  "id": 223,
+	  "name": "スピットコブラ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 80
+	  },
+	  "restrictions": {
+		"cannot_use": [
+		  "巻物"
+		]
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "秘術",
+	  "ability_detail": "秘術[G30・対象敵領地に呪い\"衰弱\"]",
+	  "ability_parsed": {
+		"keywords": [
+		  "秘術"
+		],
+		"mystic_art": {
+		  "name": "衰弱呪い",
+		  "cost": 30,
+		  "spell_id": 9028
+		}
+	  }
+	},
+	{
+	  "id": 224,
+	  "name": "スプラウトリング",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "earth",
+	  "cost": {
+		"mp": 60
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "地形効果・秘術",
+	  "ability_detail": "火から地形効果を得る；秘術[G50・オールドウィロウに変身]",
+	  "ability_parsed": {
+		"keywords": [
+		  "秘術"
+		],
+		"effects": [],
+		"extra_land_elements": [
+		  "fire"
+		],
+		"mystic_arts": [
+		  {
+			"name": "オールドウィロウに変身",
+			"cost": 50,
+			"target_type": "none",
+			"effects": [
+			  {
+				"effect_type": "transform",
+				"target": "self",
+				"transform_to": 5
+			  }
+			]
+		  }
+		]
+	  }
+	}
+  ]
 }

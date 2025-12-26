@@ -382,7 +382,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -536,7 +537,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -606,7 +608,8 @@
         ],
         "target_info": {
           "owner_filter": "any"
-        }
+        },
+        "affects_hp": true
       }
     },
     {
@@ -751,7 +754,8 @@
             "value": 30
           }
         ],
-        "is_secret": true
+        "is_secret": true,
+        "affects_hp": true
       }
     },
     {
@@ -803,7 +807,8 @@
             "effect_type": "damage",
             "value": 30
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -914,7 +919,8 @@
             "effect_type": "damage",
             "value": 20
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1003,7 +1009,8 @@
             "effect_type": "damage",
             "value": 30
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1206,7 +1213,8 @@
             "hp_bonus": 10,
             "gold_bonus": 500
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1285,7 +1293,8 @@
             "effect_type": "damage",
             "value": 30
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
@@ -1433,7 +1442,8 @@
             "effect_type": "draw",
             "count": 1
           }
-        ]
+        ],
+        "affects_hp": true
       }
     },
     {
