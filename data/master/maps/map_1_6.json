@@ -1,0 +1,228 @@
+{
+  "id": "map_1_6",
+  "name": "迷路マップ",
+  "description": "内部に分岐とワープがある複雑なマップ",
+  "tile_count": 33,
+  "lap_settings": {
+	"bonus_preset": "standard",
+	"checkpoint_preset": "standard"
+  },
+  "tiles": [
+	{
+	  "x": 0,
+	  "z": 0,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "N",
+	  "index": 0
+	},
+	{
+	  "x": 4,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 1
+	},
+	{
+	  "x": 8,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 2
+	},
+	{
+	  "x": 12,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 3
+	},
+	{
+	  "x": 16,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 4
+	},
+	{
+	  "x": 20,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 5
+	},
+	{
+	  "x": 24,
+	  "z": 0,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "W",
+	  "index": 6
+	},
+	{
+	  "x": 24,
+	  "z": 4,
+	  "type": "Water",
+	  "index": 7
+	},
+	{
+	  "x": 24,
+	  "z": 8,
+	  "type": "Water",
+	  "index": 8
+	},
+	{
+	  "x": 24,
+	  "z": 12,
+	  "type": "Water",
+	  "index": 9
+	},
+	{
+	  "x": 24,
+	  "z": 16,
+	  "type": "Water",
+	  "index": 10
+	},
+	{
+	  "x": 24,
+	  "z": 20,
+	  "type": "Water",
+	  "index": 11
+	},
+	{
+	  "x": 24,
+	  "z": 24,
+	  "type": "Neutral",
+	  "index": 12
+	},
+	{
+	  "x": 20,
+	  "z": 24,
+	  "type": "Earth",
+	  "index": 13
+	},
+	{
+	  "x": 16,
+	  "z": 24,
+	  "type": "Earth",
+	  "index": 14
+	},
+	{
+	  "x": 12,
+	  "z": 24,
+	  "type": "Earth",
+	  "index": 15
+	},
+	{
+	  "x": 8,
+	  "z": 24,
+	  "type": "Earth",
+	  "index": 16
+	},
+	{
+	  "x": 4,
+	  "z": 24,
+	  "type": "Earth",
+	  "index": 17
+	},
+	{
+	  "x": 0,
+	  "z": 24,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "E",
+	  "index": 18
+	},
+	{
+	  "x": 0,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 19
+	},
+	{
+	  "x": 0,
+	  "z": 16,
+	  "type": "Wind",
+	  "index": 20
+	},
+	{
+	  "x": 0,
+	  "z": 12,
+	  "type": "Wind",
+	  "index": 21
+	},
+	{
+	  "x": 0,
+	  "z": 8,
+	  "type": "Wind",
+	  "index": 22
+	},
+	{
+	  "x": 0,
+	  "z": 4,
+	  "type": "Wind",
+	  "index": 23
+	},
+	{
+	  "x": 8,
+	  "z": 4,
+	  "type": "CardBuy",
+	  "index": 24
+	},
+	{
+	  "x": 8,
+	  "z": 8,
+	  "type": "Magic",
+	  "index": 25
+	},
+	{
+	  "x": 4,
+	  "z": 8,
+	  "type": "CardGive",
+	  "index": 26
+	},
+	{
+	  "x": 20,
+	  "z": 12,
+	  "type": "Neutral",
+	  "index": 27
+	},
+	{
+	  "x": 16,
+	  "z": 12,
+	  "type": "Neutral",
+	  "index": 28
+	},
+	{
+	  "x": 16,
+	  "z": 8,
+	  "type": "Warp",
+	  "warp_pair": 30,
+	  "index": 29
+	},
+	{
+	  "x": 8,
+	  "z": 16,
+	  "type": "Warp",
+	  "warp_pair": 29,
+	  "index": 30
+	},
+	{
+	  "x": 12,
+	  "z": 16,
+	  "type": "Neutral",
+	  "index": 31
+	},
+	{
+	  "x": 12,
+	  "z": 20,
+	  "type": "Neutral",
+	  "index": 32
+	}
+  ],
+  "connections": {
+	"0": [1, 23],
+	"2": [1, 3, 24],
+	"9": [27, 8, 10],
+	"15": [16, 32, 14],
+	"22": [21, 23, 26],
+	"23": [22, 0],
+	"24": [2, 25],
+	"25": [24, 26],
+	"26": [22, 25],
+	"27": [9, 28],
+	"32": [15, 31]
+  }
+}

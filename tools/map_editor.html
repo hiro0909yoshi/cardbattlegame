@@ -128,6 +128,8 @@
         .tile-warpstop { background: #8e44ad; color: #fff; }
         .tile-magic { background: #e91e63; color: #fff; }
         .tile-cardbuy { background: #00bcd4; color: #fff; }
+        .tile-cardgive { background: #26a69a; color: #fff; }
+        .tile-magicstone { background: #7e57c2; color: #fff; }
         .tile-branch { background: #ff9800; color: #fff; }
         .tile-base { background: #ffeb3b; color: #333; }
         
@@ -428,6 +430,8 @@
                 <div class="palette-tile tile-neutral" data-type="Neutral" title="無">Neutral</div>
                 <div class="palette-tile tile-magic" data-type="Magic" title="魔法陣">Magic</div>
                 <div class="palette-tile tile-cardbuy" data-type="CardBuy" title="カード購入">CardBuy</div>
+                <div class="palette-tile tile-cardgive" data-type="CardGive" title="カード付与">CardGive</div>
+                <div class="palette-tile tile-magicstone" data-type="MagicStone" title="魔法石">MStone</div>
                 <div class="palette-tile tile-branch" data-type="BranchTile" title="分岐">Branch</div>
                 <div class="palette-tile tile-base" data-type="SpecialBaseTile" title="ベース">Base</div>
             </div>
@@ -667,6 +671,12 @@
             }
             else if (data.type === 'Magic') {
                 label = 'Mag';
+            } else if (data.type === 'CardBuy') {
+                label = 'Buy';
+            } else if (data.type === 'CardGive') {
+                label = 'Give';
+            } else if (data.type === 'MagicStone') {
+                label = 'MStn';
             } else if (data.type === 'BranchTile') {
                 label = 'Brn';
             } else if (data.type === 'SpecialBaseTile') {

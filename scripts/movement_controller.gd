@@ -294,6 +294,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		chosen = choices[0]
 	else:
 		# 選択肢が2つ以上なら選択UI
+		current_branch_tile = current_tile  # インジケーター表示用
 		chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
