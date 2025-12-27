@@ -1,0 +1,29 @@
+{
+  "id": "stage_1_4",
+  "name": "テストステージ",
+  "description": "マップテスト用",
+  "map_id": "map_new",
+  "player_start_tile": 0,
+  "player_start_magic": 3000,
+  "enemies": [
+	{
+	  "player_id": 1,
+	  "character_id": "bowser",
+	  "deck_id": "balance_easy",
+	  "ai_profile_id": "easy",
+	  "start_tile": 0,
+	  "start_magic": 3000
+	}
+  ],
+  "win_condition": {
+	"type": "magic",
+	"target": 4000
+  },
+  "lose_condition": {
+	"type": "bankrupt"
+  },
+  "rewards": {
+	"first_clear": {"type": "gold", "amount": 100},
+	"repeat": {"type": "gold", "amount": 50}
+  }
+}

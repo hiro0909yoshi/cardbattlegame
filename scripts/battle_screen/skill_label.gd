@@ -39,6 +39,8 @@ func _setup_ui() -> void:
 
 ## スキル名を表示
 func show_skill(skill_name: String, duration: float = DISPLAY_DURATION) -> void:
+	if not is_inside_tree():
+		return
 	_label.text = skill_name
 	
 	# サイズ調整

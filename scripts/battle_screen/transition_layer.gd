@@ -43,6 +43,9 @@ func _setup_ui() -> void:
 
 ## フェードアウト（画面を暗くする）
 func fade_out(show_battle_text: bool = true):
+	if not is_inside_tree():
+		fade_out_completed.emit()
+		return
 	var tween = create_tween()
 	
 	# 画面を暗くする
@@ -59,6 +62,9 @@ func fade_out(show_battle_text: bool = true):
 
 ## フェードイン（画面を明るくする）
 func fade_in():
+	if not is_inside_tree():
+		fade_in_completed.emit()
+		return
 	# BATTLE!テキストを非表示
 	_battle_label.modulate.a = 0.0
 	
@@ -71,6 +77,8 @@ func fade_in():
 
 ## BATTLE!テキストを表示
 func _show_battle_text() -> void:
+	if not is_inside_tree():
+		return
 	_battle_label.modulate.a = 0.0
 	_battle_label.scale = Vector2(0.5, 0.5)
 	
@@ -83,12 +91,16 @@ func _show_battle_text() -> void:
 
 ## クイックフェード（テキストなし）
 func quick_fade_out():
+	if not is_inside_tree():
+		return
 	var tween = create_tween()
 	tween.tween_property(_color_rect, "color:a", 1.0, 0.15)
 	await tween.finished
 
 
 func quick_fade_in():
+	if not is_inside_tree():
+		return
 	_battle_label.modulate.a = 0.0
 	var tween = create_tween()
 	tween.tween_property(_color_rect, "color:a", 0.0, 0.15)

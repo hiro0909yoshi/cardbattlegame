@@ -123,7 +123,21 @@ func apply_map_settings(map_data: Dictionary):
 	else:
 		required_checkpoints = GameConstants.CHECKPOINT_PRESETS["standard"].duplicate()
 	
+	# プレイヤー状態を新しいシグナル設定で再初期化
+	_reinitialize_player_states()
+	
 	print("[LapSystem] マップ設定適用 - 基礎ボーナス: %d, 必要シグナル: %s" % [base_bonus, required_checkpoints])
+
+## プレイヤー状態を現在のrequired_checkpointsで再初期化
+func _reinitialize_player_states():
+	for player_id in player_lap_state.keys():
+		var lap_count = player_lap_state[player_id].get("lap_count", 1)
+		var state = {
+			"lap_count": lap_count
+		}
+		for checkpoint in required_checkpoints:
+			state[checkpoint] = false
+		player_lap_state[player_id] = state
 
 ## CheckpointTileのシグナルを接続
 func connect_checkpoint_signals():

@@ -178,6 +178,9 @@ func update_creature(new_data: Dictionary) -> void:
 
 ## 攻撃アニメーション
 func play_attack_animation():
+	if not is_inside_tree():
+		attack_animation_completed.emit()
+		return
 	var direction = 1.0 if is_attacker else -1.0
 	var target_x = _original_position.x + (ATTACK_MOVE_DISTANCE * direction)
 	
@@ -193,6 +196,9 @@ func play_attack_animation():
 
 ## 被ダメージアニメーション（揺れ）
 func play_damage_animation():
+	if not is_inside_tree():
+		damage_animation_completed.emit()
+		return
 	var tween = create_tween()
 	var original_x = _card_container.position.x
 	
@@ -235,6 +241,8 @@ func show_buff_popup(text: String) -> void:
 
 ## スライドイン
 func slide_in(from_left: bool = true):
+	if not is_inside_tree():
+		return
 	var scaled_size = CARD_DISPLAY_SIZE * CARD_SCALE
 	var start_x = -scaled_size.x if from_left else get_viewport_rect().size.x + scaled_size.x
 	position.x = start_x
@@ -246,6 +254,8 @@ func slide_in(from_left: bool = true):
 
 ## 敗北演出（フェードアウト＋落下）
 func play_defeat_animation():
+	if not is_inside_tree():
+		return
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)

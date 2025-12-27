@@ -17,7 +17,7 @@ class_name SkillStatModifiers
 ## - race_creature_stat_replace: 種族配置数ステータス（レッドキャップ）
 ## - adjacent_owned_land: 隣接自領地条件（タイガーヴェタ）
 
-const ConditionChecker = preload("res://scripts/skills/condition_checker.gd")
+# ConditionChecker はグローバルクラスとして利用可能
 
 
 ## 土地数効果を適用（アームドパラディン等）
@@ -72,7 +72,7 @@ static func apply_land_count_effects(participant, context: Dictionary) -> void:
 
 
 ## ターン数ボーナスを適用（ラーバキン用）
-static func apply_turn_number_bonus(participant, context: Dictionary, game_flow_manager_ref: Node) -> void:
+static func apply_turn_number_bonus(participant, _context: Dictionary, game_flow_manager_ref: Node) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	

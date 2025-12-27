@@ -56,6 +56,9 @@ func show_buff(text: String) -> void:
 
 ## アニメーション実行
 func _animate() -> void:
+	if not is_inside_tree():
+		queue_free()
+		return
 	# 初期状態
 	modulate.a = 1.0
 	scale = Vector2.ONE

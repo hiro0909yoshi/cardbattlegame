@@ -747,7 +747,7 @@ func _on_battle_completed(success: bool, tile_index: int):
 	print("バトル結果受信: success=", success, " tile=", tile_index)
 	
 	# 衰弱（プレイグ）ダメージ処理
-	await _apply_plague_damage_after_battle(tile_index)
+	_apply_plague_damage_after_battle(tile_index)
 	
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()

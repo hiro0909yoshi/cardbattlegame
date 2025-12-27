@@ -645,7 +645,7 @@ func _execute_move_battle():
 func _on_move_battle_completed(success: bool, tile_index: int):
 	
 	# 衰弱（プレイグ）ダメージ処理
-	await _apply_plague_damage_after_battle(tile_index)
+	_apply_plague_damage_after_battle(tile_index)
 	
 	if success:
 		# 勝利時: battle_systemが既に土地獲得とクリーチャー配置を完了している

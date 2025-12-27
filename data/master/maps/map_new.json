@@ -1,0 +1,171 @@
+{
+  "id": "map_new",
+  "name": "新しいマップ",
+  "description": "",
+  "tile_count": 21,
+  "lap_settings": {
+	"bonus_preset": "standard",
+	"checkpoint_preset": "three_way_new"
+  },
+  "tiles": [
+	{
+	  "x": 20,
+	  "z": 20,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "N",
+	  "index": 0
+	},
+	{
+	  "x": 20,
+	  "z": 16,
+	  "type": "Fire",
+	  "index": 1
+	},
+	{
+	  "x": 20,
+	  "z": 12,
+	  "type": "Fire",
+	  "index": 2
+	},
+	{
+	  "x": 20,
+	  "z": 8,
+	  "type": "Fire",
+	  "index": 3
+	},
+	{
+	  "x": 20,
+	  "z": 4,
+	  "type": "Fire",
+	  "index": 4
+	},
+	{
+	  "x": 20,
+	  "z": 0,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "W",
+	  "index": 5
+	},
+	{
+	  "x": 24,
+	  "z": 20,
+	  "type": "Earth",
+	  "index": 6
+	},
+	{
+	  "x": 28,
+	  "z": 20,
+	  "type": "Earth",
+	  "index": 7
+	},
+	{
+	  "x": 32,
+	  "z": 20,
+	  "type": "Earth",
+	  "index": 8
+	},
+	{
+	  "x": 36,
+	  "z": 20,
+	  "type": "Earth",
+	  "index": 9
+	},
+	{
+	  "x": 40,
+	  "z": 20,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "E",
+	  "index": 10
+	},
+	{
+	  "x": 16,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 11
+	},
+	{
+	  "x": 12,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 12
+	},
+	{
+	  "x": 8,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 13
+	},
+	{
+	  "x": 4,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 14
+	},
+	{
+	  "x": 0,
+	  "z": 20,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "E",
+	  "index": 15
+	},
+	{
+	  "x": 20,
+	  "z": 24,
+	  "type": "Water",
+	  "index": 16
+	},
+	{
+	  "x": 20,
+	  "z": 28,
+	  "type": "Water",
+	  "index": 17
+	},
+	{
+	  "x": 20,
+	  "z": 32,
+	  "type": "Water",
+	  "index": 18
+	},
+	{
+	  "x": 20,
+	  "z": 36,
+	  "type": "Water",
+	  "index": 19
+	},
+	{
+	  "x": 20,
+	  "z": 40,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "W",
+	  "index": 20
+	}
+  ],
+  "connections": {
+	"0": [
+	  1,
+	  11,
+	  16,
+	  6
+	],
+	"1": [2,0],
+	"2": [3, 1],
+	"3": [4, 2],
+	"4": [5, 3],
+	"6": [0, 7],
+	"7": [6, 8],
+	"8": [7, 9],
+	"9": [8,10],
+	"11": [0,12],
+	"12": [11,13],
+	"13": [12,14],
+	"14": [13,15],
+	"16": [0, 17],
+	"17": [16,18],
+	"18": [17,19],
+	"19": [18,20],
+	"5": [4],
+	"10": [9],
+	"15": [14],
+	"20": [19]
+  },
+}

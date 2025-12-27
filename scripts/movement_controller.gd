@@ -126,8 +126,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 			# first_tileを再計算（分岐点でない場合）
 			var tile = tile_nodes.get(current_tile)
 			if not tile or not tile.connections or tile.connections.is_empty():
-				var loop_size = _get_loop_size()
-				first_tile = (current_tile + reversed_direction + loop_size) % loop_size
+				first_tile = current_tile + reversed_direction
 			print("[MovementController] 歩行逆転適用: first_tile=タイル%d" % first_tile)
 		
 		# came_fromを更新して方向選択権を消費
@@ -209,20 +208,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 		
 		emit_signal("movement_step_completed", player_id, current_tile)
 
-# ループサイズを動的に計算（connectionsが空のタイルの最大インデックス+1）
-func _get_loop_size() -> int:
-	var max_normal_tile = -1
-	for tile_index in tile_nodes.keys():
-		var tile = tile_nodes[tile_index]
-		# connectionsが空 = 通常タイル（ループの一部）
-		if tile.connections.is_empty():
-			max_normal_tile = max(max_normal_tile, tile_index)
-	# 最大の通常タイル + 1 がループサイズ
-	# 例: タイル1-19が通常 → 最大19 → ループ=20
-	if max_normal_tile >= 0:
-		return max_normal_tile + 1
-	else:
-		return tile_nodes.size()
+
 
 # 次のタイルを取得（分岐があれば選択UI）
 # is_reversed: 歩行逆転呪いが有効な場合true（current_directionは変更しない）
@@ -233,14 +219,13 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	if tile:
 		print("[MovementController] タイル%d connections: %s, came_from: %d" % [current_tile, str(tile.connections), came_from])
 	
-	# connectionsがなければループ内移動
+	# connectionsがなければ単純にindex+direction
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var direction = _get_player_current_direction(player_id)
 		# 歩行逆転呪いがある場合は方向を逆転
 		if is_reversed:
 			direction = -direction
-		var loop_size = _get_loop_size()
-		return (current_tile + direction + loop_size) % loop_size
+		return current_tile + direction
 	
 	# connectionsがある場合：came_fromを除外
 	var choices = []
@@ -291,8 +276,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var selected_dir = await _show_simple_direction_selection()
 		_set_player_current_direction(current_moving_player, selected_dir)
-		var first_loop_size = _get_loop_size()
-		return (current_tile + selected_dir + first_loop_size) % first_loop_size
+		return current_tile + selected_dir
 	
 	# connectionsがある場合：came_fromを除外して選択
 	var choices = []
@@ -439,23 +423,15 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 
 # 選んだタイルから方向を推測
 func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int = -1) -> int:
-	var loop_size = _get_loop_size()
 	var pid = player_id if player_id >= 0 else current_moving_player
 	
-	# 選んだタイルがループ外（分岐先）の場合は現在の方向を維持
-	if chosen_tile >= loop_size:
-		return _get_player_current_direction(pid)
-	
-	# ループ内の場合、どちらの方向かを推測
-	var next_plus = (current_tile + 1) % loop_size
-	var next_minus = (current_tile - 1 + loop_size) % loop_size
-	
-	if chosen_tile == next_plus:
+	# 単純比較：chosen_tile > current_tile なら+方向
+	if chosen_tile == current_tile + 1:
 		return 1
-	elif chosen_tile == next_minus:
+	elif chosen_tile == current_tile - 1:
 		return -1
 	else:
-		# どちらでもない場合は現在の方向を維持
+		# 分岐先など：現在の方向を維持
 		return _get_player_current_direction(pid)
 
 # 入力処理（方向選択・分岐タイル選択用）
@@ -495,7 +471,6 @@ func _input(event):
 func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
 	var path = []
 	var current_tile = player_tiles[player_id]
-	var loop_size = _get_loop_size()
 	
 	# 歩行逆転呪いをチェックして方向に反映
 	var final_direction = direction
@@ -505,27 +480,26 @@ func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
 	
 	for i in range(steps):
 		# 単純に direction 方向に進む
-		current_tile = (current_tile + final_direction + loop_size) % loop_size
+		current_tile = current_tile + final_direction
 		path.append(current_tile)
 	
 	print("[MovementController] 経路計算: 方向=%d, 経路=%s" % [final_direction, str(path)])
 	return path
 
-# 次のタイルを取得（connectionsベース or 従来計算）
+# 次のタイルを取得（connectionsベース or 単純計算）
 func _get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
 	var tile = tile_nodes.get(current_tile)
-	var loop_size = _get_loop_size()
 	
 	if not tile:
-		# タイルがなければループ計算
-		return (current_tile + direction + loop_size) % loop_size
+		# タイルがなければ単純計算
+		return current_tile + direction
 	
 	# connectionsが設定されていれば接続情報ベース
 	if tile.connections and not tile.connections.is_empty():
 		return _get_next_from_connections(tile.connections, came_from, direction)
 	
-	# 設定されていなければループ計算
-	return (current_tile + direction + loop_size) % loop_size
+	# 設定されていなければ単純計算
+	return current_tile + direction
 
 # 接続情報から次のタイルを取得（分岐選択UIあり）
 func _get_next_from_connections(connections: Array, came_from: int, direction: int) -> int:
@@ -712,10 +686,9 @@ func _check_and_handle_branch(current_tile: int, _came_from: int, path: Array, c
 	
 	if remaining_steps > 0:
 		new_path.append(first_tile)  # 最初の1歩は選択したタイル
-		var loop_size = _get_loop_size()
 		var current = first_tile
 		for j in range(remaining_steps - 1):
-			current = (current + new_direction + loop_size) % loop_size
+			current = current + new_direction
 			new_path.append(current)
 	
 	print("[MovementController] 分岐後の経路: 方向=%d, %s" % [new_direction, str(new_path)])

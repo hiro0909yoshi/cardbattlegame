@@ -16,7 +16,7 @@ const PowerStrikeSkill = preload("res://scripts/battle/skills/skill_power_strike
 const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_attack.gd")
 const FirstStrikeSkill = preload("res://scripts/battle/skills/skill_first_strike.gd")
 const SpecialCreatureSkill = preload("res://scripts/battle/skills/skill_special_creature.gd")
-const SkillStatModifiers = preload("res://scripts/battle/skills/skill_stat_modifiers.gd")
+# SkillStatModifiers はグローバルクラスとして利用可能
 const BattleCurseApplierScript = preload("res://scripts/battle/battle_curse_applier.gd")
 # SkillDisplayConfig, SkillPermanentBuff, SkillBattleStartConditions はグローバルクラスとして利用可能
 var _skill_magic_gain = preload("res://scripts/battle/skills/skill_magic_gain.gd")
@@ -67,11 +67,11 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		# ウォーロックディスクの場合は「アイテム名 を使用」、それ以外は「戦闘中能力無効」
 		if battle_screen_manager:
 			if _has_warlock_disk(attacker):
-				var item_name = _get_warlock_disk_name(attacker)
-				await battle_screen_manager.show_skill_activation("attacker", "%s を使用" % item_name, {})
+				var attacker_item_name = _get_warlock_disk_name(attacker)
+				await battle_screen_manager.show_skill_activation("attacker", "%s を使用" % attacker_item_name, {})
 			elif _has_warlock_disk(defender):
-				var item_name = _get_warlock_disk_name(defender)
-				await battle_screen_manager.show_skill_activation("defender", "%s を使用" % item_name, {})
+				var defender_item_name = _get_warlock_disk_name(defender)
+				await battle_screen_manager.show_skill_activation("defender", "%s を使用" % defender_item_name, {})
 			else:
 				# クリーチャー能力 or skill_nullify呪い → 「戦闘中能力無効」
 				var skill_name = SkillDisplayConfig.get_skill_name("nullify_abilities")

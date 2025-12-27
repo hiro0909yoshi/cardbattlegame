@@ -1,0 +1,160 @@
+{
+  "id": "map_cross_1",
+  "name": "十字路",
+  "description": "中央から4方向に分岐する十字型マップ",
+  "tile_count": 23,
+  "lap_settings": {
+	"bonus_preset": "standard",
+	"checkpoint_preset": "three_way_new"
+  },
+  "tiles": [
+	{
+	  "x": 28,
+	  "z": 12,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "N",
+	  "index": 0
+	},
+	{
+	  "x": 28,
+	  "z": 8,
+	  "type": "Fire",
+	  "index": 1
+	},
+	{
+	  "x": 28,
+	  "z": 4,
+	  "type": "Fire",
+	  "index": 2
+	},
+	{
+	  "x": 28,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 3
+	},
+	{
+	  "x": 24,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 4
+	},
+	{
+	  "x": 20,
+	  "z": 0,
+	  "type": "Fire",
+	  "index": 5
+	},
+	{
+	  "x": 16,
+	  "z": 0,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "E",
+	  "index": 6
+	},
+	{
+	  "x": 16,
+	  "z": 4,
+	  "type": "Water",
+	  "index": 7
+	},
+	{
+	  "x": 16,
+	  "z": 8,
+	  "type": "Water",
+	  "index": 8
+	},
+	{
+	  "x": 16,
+	  "z": 12,
+	  "type": "Water",
+	  "index": 9
+	},
+	{
+	  "x": 20,
+	  "z": 12,
+	  "type": "Water",
+	  "index": 10
+	},
+	{
+	  "x": 24,
+	  "z": 12,
+	  "type": "Water",
+	  "index": 11
+	},
+	{
+	  "x": 32,
+	  "z": 12,
+	  "type": "Earth",
+	  "index": 12
+	},
+	{
+	  "x": 36,
+	  "z": 12,
+	  "type": "Earth",
+	  "index": 13
+	},
+	{
+	  "x": 40,
+	  "z": 12,
+	  "type": "Earth",
+	  "index": 14
+	},
+	{
+	  "x": 40,
+	  "z": 16,
+	  "type": "Earth",
+	  "index": 15
+	},
+	{
+	  "x": 40,
+	  "z": 20,
+	  "type": "Earth",
+	  "index": 16
+	},
+	{
+	  "x": 40,
+	  "z": 24,
+	  "type": "Checkpoint",
+	  "checkpoint_type": "W",
+	  "index": 17
+	},
+	{
+	  "x": 36,
+	  "z": 24,
+	  "type": "Wind",
+	  "index": 18
+	},
+	{
+	  "x": 32,
+	  "z": 24,
+	  "type": "Wind",
+	  "index": 19
+	},
+	{
+	  "x": 28,
+	  "z": 24,
+	  "type": "Wind",
+	  "index": 20
+	},
+	{
+	  "x": 28,
+	  "z": 20,
+	  "type": "Wind",
+	  "index": 21
+	},
+	{
+	  "x": 28,
+	  "z": 16,
+	  "type": "Wind",
+	  "index": 22
+	}
+  ],
+  "connections": {
+	"0": [11, 1, 12, 22],
+	"11": [0, 10],
+	"12": [0, 13],
+	"22": [0, 21],
+  },
+  "loop_size": 23
+}

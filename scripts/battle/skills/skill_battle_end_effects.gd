@@ -134,10 +134,10 @@ static func _process_effects(self_participant, enemy_participant, context: Dicti
 		
 		# ムラサメ等による無効化チェック（敵が存在する場合）
 		if enemy_participant and _is_effect_nullified_by_enemy(effect, enemy_participant.creature_data):
-			var item_name = effect.get("_item_name", "")
+			var nullified_item_name = effect.get("_item_name", "")
 			var skill_name = effect.get("effect_type", "能力")
-			if item_name:
-				print("【無効化】%sの%sがムラサメ等により無効化" % [item_name, skill_name])
+			if nullified_item_name:
+				print("【無効化】%sの%sがムラサメ等により無効化" % [nullified_item_name, skill_name])
 			continue
 		
 		var effect_type = effect.get("effect_type", "")

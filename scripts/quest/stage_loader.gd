@@ -201,7 +201,17 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 	# 特殊タイルの追加設定
 	if tile_type == "Checkpoint" and tile_data.has("checkpoint_type"):
 		var cp_type = tile_data.get("checkpoint_type", "N")
-		tile.checkpoint_type = 0 if cp_type == "N" else 1
+		match cp_type:
+			"N":
+				tile.checkpoint_type = 0
+			"S":
+				tile.checkpoint_type = 1
+			"E":
+				tile.checkpoint_type = 2
+			"W":
+				tile.checkpoint_type = 3
+			_:
+				tile.checkpoint_type = 0
 	
 	if (tile_type == "Warp" or tile_type == "WarpStop") and tile_data.has("warp_pair"):
 		var from_tile = tile_data.get("index", -1)
@@ -230,6 +240,10 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 ## プレイヤー数を取得
 func get_player_count() -> int:
 	return 1 + current_stage_data.get("enemies", []).size()
+
+## マップのループサイズを取得
+func get_loop_size() -> int:
+	return current_map_data.get("loop_size", current_map_data.get("tile_count", 20))
 
 ## player_is_cpu配列を生成
 func get_player_is_cpu() -> Array:

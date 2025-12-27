@@ -216,6 +216,8 @@ func _update_ap_label() -> void:
 
 ## HPをアニメーション付きで更新（全ボーナス値もアニメーション）
 func animate_hp_change(new_hp_data: Dictionary, duration: float = 1.5):
+	if not is_inside_tree():
+		return
 	var old_hp_data = hp_data.duplicate()
 	var new_hp_data_copy = new_hp_data.duplicate()
 	
@@ -321,6 +323,8 @@ func _get_total_hp(data: Dictionary) -> int:
 
 ## APをアニメーション付きで更新
 func animate_ap_change(new_ap: int, duration: float = 1.5):
+	if not is_inside_tree():
+		return
 	var old_ap = current_ap
 	var tween = create_tween()
 	tween.tween_method(func(value: float): _update_displayed_ap(int(value)), float(old_ap), float(new_ap), duration)

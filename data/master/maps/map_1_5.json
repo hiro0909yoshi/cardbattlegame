@@ -1,0 +1,258 @@
+{
+  "id": "map_1_5",
+  "name": "8の字マップ",
+  "description": "中央から2つのループが繋がる8の字型マップ",
+  "tile_count": 39,
+  "lap_settings": {
+    "bonus_preset": "standard",
+    "checkpoint_preset": "standard"
+  },
+  "tiles": [
+    {
+      "x": 20,
+      "z": 20,
+      "type": "Checkpoint",
+      "checkpoint_type": "N",
+      "index": 0
+    },
+    {
+      "x": 20,
+      "z": 16,
+      "type": "Fire",
+      "index": 1
+    },
+    {
+      "x": 20,
+      "z": 12,
+      "type": "Fire",
+      "index": 2
+    },
+    {
+      "x": 20,
+      "z": 8,
+      "type": "Fire",
+      "index": 3
+    },
+    {
+      "x": 20,
+      "z": 4,
+      "type": "Fire",
+      "index": 4
+    },
+    {
+      "x": 20,
+      "z": 0,
+      "type": "WarpStop",
+      "warp_pair": 34,
+      "index": 5
+    },
+    {
+      "x": 16,
+      "z": 0,
+      "type": "Water",
+      "index": 6
+    },
+    {
+      "x": 12,
+      "z": 0,
+      "type": "Water",
+      "index": 7
+    },
+    {
+      "x": 8,
+      "z": 0,
+      "type": "Water",
+      "index": 8
+    },
+    {
+      "x": 4,
+      "z": 0,
+      "type": "Water",
+      "index": 9
+    },
+    {
+      "x": 0,
+      "z": 0,
+      "type": "Checkpoint",
+      "checkpoint_type": "S",
+      "index": 10
+    },
+    {
+      "x": 0,
+      "z": 4,
+      "type": "Earth",
+      "index": 11
+    },
+    {
+      "x": 0,
+      "z": 8,
+      "type": "Earth",
+      "index": 12
+    },
+    {
+      "x": 0,
+      "z": 12,
+      "type": "Earth",
+      "index": 13
+    },
+    {
+      "x": 0,
+      "z": 16,
+      "type": "Earth",
+      "index": 14
+    },
+    {
+      "x": 0,
+      "z": 20,
+      "type": "CardBuy",
+      "index": 15
+    },
+    {
+      "x": 4,
+      "z": 20,
+      "type": "Wind",
+      "index": 16
+    },
+    {
+      "x": 8,
+      "z": 20,
+      "type": "Wind",
+      "index": 17
+    },
+    {
+      "x": 12,
+      "z": 20,
+      "type": "Wind",
+      "index": 18
+    },
+    {
+      "x": 16,
+      "z": 20,
+      "type": "Wind",
+      "index": 19
+    },
+    {
+      "x": 24,
+      "z": 20,
+      "type": "Earth",
+      "index": 20
+    },
+    {
+      "x": 28,
+      "z": 20,
+      "type": "Earth",
+      "index": 21
+    },
+    {
+      "x": 32,
+      "z": 20,
+      "type": "Earth",
+      "index": 22
+    },
+    {
+      "x": 36,
+      "z": 20,
+      "type": "Earth",
+      "index": 23
+    },
+    {
+      "x": 40,
+      "z": 20,
+      "type": "Magic",
+      "index": 24
+    },
+    {
+      "x": 40,
+      "z": 24,
+      "type": "Fire",
+      "index": 25
+    },
+    {
+      "x": 40,
+      "z": 28,
+      "type": "Fire",
+      "index": 26
+    },
+    {
+      "x": 40,
+      "z": 32,
+      "type": "Fire",
+      "index": 27
+    },
+    {
+      "x": 40,
+      "z": 36,
+      "type": "Fire",
+      "index": 28
+    },
+    {
+      "x": 40,
+      "z": 40,
+      "type": "Checkpoint",
+      "checkpoint_type": "S",
+      "index": 29
+    },
+    {
+      "x": 36,
+      "z": 40,
+      "type": "Wind",
+      "index": 30
+    },
+    {
+      "x": 32,
+      "z": 40,
+      "type": "Wind",
+      "index": 31
+    },
+    {
+      "x": 28,
+      "z": 40,
+      "type": "Wind",
+      "index": 32
+    },
+    {
+      "x": 24,
+      "z": 40,
+      "type": "Wind",
+      "index": 33
+    },
+    {
+      "x": 20,
+      "z": 40,
+      "type": "WarpStop",
+      "warp_pair": 5,
+      "index": 34
+    },
+    {
+      "x": 20,
+      "z": 36,
+      "type": "Water",
+      "index": 35
+    },
+    {
+      "x": 20,
+      "z": 32,
+      "type": "Water",
+      "index": 36
+    },
+    {
+      "x": 20,
+      "z": 28,
+      "type": "Water",
+      "index": 37
+    },
+    {
+      "x": 20,
+      "z": 24,
+      "type": "Water",
+      "index": 38
+    }
+  ],
+  "connections": {
+    "0": [19, 1, 20, 38],
+    "1": [0, 2],
+    "19": [18, 0],
+    "20": [0, 21],
+    "38": [0, 37]
+  }
+}

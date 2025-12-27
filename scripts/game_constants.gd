@@ -45,6 +45,7 @@ const LAP_BONUS_PRESETS = {
 const CHECKPOINT_PRESETS = {
 	"standard": ["N", "S"],
 	"three_way": ["N", "S", "W"],
+	"three_way_new": ["N", "E", "W"],
 	"four_way": ["N", "S", "W", "E"]
 }
 

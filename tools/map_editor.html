@@ -127,7 +127,7 @@
         .tile-warp { background: #9b59b6; color: #fff; }
         .tile-warpstop { background: #8e44ad; color: #fff; }
         .tile-magic { background: #e91e63; color: #fff; }
-        .tile-shop { background: #00bcd4; color: #fff; }
+        .tile-cardbuy { background: #00bcd4; color: #fff; }
         .tile-branch { background: #ff9800; color: #fff; }
         .tile-base { background: #ffeb3b; color: #333; }
         
@@ -404,10 +404,7 @@
             <label>説明</label>
             <textarea id="mapDesc" rows="2" placeholder="マップの説明"></textarea>
             <div class="meta-row">
-                <div>
-                    <label>ループサイズ</label>
-                    <input type="number" id="loopSize" value="20">
-                </div>
+                
                 <div>
                     <label>ボーナスプリセット</label>
                     <input type="text" id="bonusPreset" value="standard">
@@ -429,8 +426,8 @@
                 <div class="palette-tile tile-earth" data-type="Earth" title="土">Earth</div>
                 <div class="palette-tile tile-wind" data-type="Wind" title="風">Wind</div>
                 <div class="palette-tile tile-neutral" data-type="Neutral" title="無">Neutral</div>
-                <div class="palette-tile tile-magic" data-type="MagicTile" title="魔法陣">Magic</div>
-                <div class="palette-tile tile-shop" data-type="Shop" title="ショップ">Shop</div>
+                <div class="palette-tile tile-magic" data-type="Magic" title="魔法陣">Magic</div>
+                <div class="palette-tile tile-cardbuy" data-type="CardBuy" title="カード購入">CardBuy</div>
                 <div class="palette-tile tile-branch" data-type="BranchTile" title="分岐">Branch</div>
                 <div class="palette-tile tile-base" data-type="SpecialBaseTile" title="ベース">Base</div>
             </div>
@@ -668,7 +665,7 @@
                 label = 'WS' + (data.warp_group || '?');
                 cell.style.borderColor = data.warp_group === 'A' ? '#4ecdc4' : '#c44ecd';
             }
-            else if (data.type === 'MagicTile') {
+            else if (data.type === 'Magic') {
                 label = 'Mag';
             } else if (data.type === 'BranchTile') {
                 label = 'Brn';
@@ -703,8 +700,7 @@
                     checkpoint_preset: document.getElementById('checkpointPreset').value || 'standard'
                 },
                 tiles: [],
-                connections: connections,
-                loop_size: parseInt(document.getElementById('loopSize').value) || 20
+                connections: connections
             };
             
             // タイルをクリック順（order）でソート
@@ -826,7 +822,6 @@
             document.getElementById('mapId').value = data.id || '';
             document.getElementById('mapName').value = data.name || '';
             document.getElementById('mapDesc').value = data.description || '';
-            document.getElementById('loopSize').value = data.loop_size || 20;
             
             if (data.lap_settings) {
                 document.getElementById('bonusPreset').value = data.lap_settings.bonus_preset || 'standard';
@@ -1035,7 +1030,7 @@
         }
         
         // メタデータ変更時にJSON更新
-        ['mapId', 'mapName', 'mapDesc', 'loopSize', 'bonusPreset', 'checkpointPreset'].forEach(id => {
+        ['mapId', 'mapName', 'mapDesc', 'bonusPreset', 'checkpointPreset'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateJson);
         });
     </script>
