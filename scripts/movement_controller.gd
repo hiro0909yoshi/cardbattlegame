@@ -239,11 +239,8 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		return came_from
 	
 	var chosen: int
-	# 選択肢が1つなら自動選択
-	if choices.size() == 1:
-		chosen = choices[0]
-	elif tile is BranchTile:
-		# BranchTileの場合は新しいロジックを使用
+	# BranchTileの場合は必ずBranchTileのロジックを使用
+	if tile is BranchTile:
 		var result = tile.get_next_tile_for_direction(came_from)
 		if result.tile >= 0:
 			# 自動選択
@@ -254,8 +251,11 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 			current_branch_tile = current_tile
 			chosen = await _show_branch_tile_selection(result.choices)
 		else:
-			# フォールバック
-			chosen = choices[0]
+			# フォールバック（来た方向に戻る）
+			chosen = came_from
+	# 通常タイル: 選択肢が1つなら自動選択
+	elif choices.size() == 1:
+		chosen = choices[0]
 	else:
 		# 選択肢が2つ以上なら選択UI
 		current_branch_tile = current_tile
@@ -289,8 +289,19 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		return came_from
 	
 	var chosen: int
-	# 選択肢が1つなら自動
-	if choices.size() == 1:
+	# BranchTileの場合は必ずBranchTileのロジックを使用
+	if tile is BranchTile:
+		var result = tile.get_next_tile_for_direction(came_from)
+		if result.tile >= 0:
+			chosen = result.tile
+			print("[MovementController] 最初の1歩: 分岐タイル自動選択 → タイル%d" % chosen)
+		elif not result.choices.is_empty():
+			current_branch_tile = current_tile
+			chosen = await _show_branch_tile_selection(result.choices)
+		else:
+			chosen = came_from
+	# 通常タイル: 選択肢が1つなら自動
+	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
 		# 選択肢が2つ以上なら選択UI

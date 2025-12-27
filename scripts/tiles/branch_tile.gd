@@ -20,8 +20,9 @@ var branch_direction: int = 0:
 		branch_direction = value % max(1, _get_branches().size())
 		_update_indicator()
 
-var main_dir: String = ""      # JSONから設定される（メイン方向）
-var branch_dirs: Array = []    # JSONから設定される（分岐方向）
+var main_dir: String = ""      # 自動計算される（メイン方向）
+var branch_dirs: Array = []    # 自動計算される（分岐方向）
+var _tile_nodes: Dictionary = {}  # 座標計算用
 
 @onready var main_indicator: MeshInstance3D = $MainIndicator
 @onready var indicator1: MeshInstance3D = $Indicator1
@@ -69,22 +70,61 @@ func _get_open_branch() -> int:
 	var idx = branch_direction % branches.size()
 	return branches[idx]
 
+## タイルノード参照を設定し、インジケーターを初期化
+## StageLoaderからconnections設定後に呼び出す
+func setup_with_tile_nodes(tile_nodes: Dictionary):
+	_tile_nodes = tile_nodes
+	_calculate_directions_from_connections()
+	_setup_indicators()
+
+## connectionsから方向を自動計算
+func _calculate_directions_from_connections():
+	if connections.is_empty() or _tile_nodes.is_empty():
+		return
+	
+	var my_pos = global_position
+	
+	# main方向を計算
+	var main_tile = _get_main()
+	if _tile_nodes.has(main_tile):
+		main_dir = _calculate_direction(my_pos, _tile_nodes[main_tile].global_position)
+	
+	# branch方向を計算
+	branch_dirs.clear()
+	var branches = _get_branches()
+	for branch_tile in branches:
+		if _tile_nodes.has(branch_tile):
+			var dir = _calculate_direction(my_pos, _tile_nodes[branch_tile].global_position)
+			branch_dirs.append(dir)
+	
+	print("[BranchTile] タイル%d: main_dir=%s, branch_dirs=%s" % [tile_index, main_dir, str(branch_dirs)])
+
+## 2点間の方向を計算（left/right/up/down）
+func _calculate_direction(from_pos: Vector3, to_pos: Vector3) -> String:
+	var diff = to_pos - from_pos
+	
+	# X方向の差が大きい場合
+	if abs(diff.x) > abs(diff.z):
+		return "right" if diff.x > 0 else "left"
+	else:
+		return "down" if diff.z > 0 else "up"
+
 ## インジケーターの初期位置とサイズを設定
 func _setup_indicators():
-	# メイン方向インジケーター（常時表示）
+	# メイン方向インジケーター（常時表示、緑色）
 	if main_dir != "" and main_indicator:
-		_setup_single_indicator(main_indicator, main_dir)
+		_setup_single_indicator(main_indicator, main_dir, false)
 	
-	# 分岐インジケーター1
+	# 分岐インジケーター1（赤色）
 	if branch_dirs.size() >= 1 and indicator1:
-		_setup_single_indicator(indicator1, branch_dirs[0])
+		_setup_single_indicator(indicator1, branch_dirs[0], true)
 	
-	# 分岐インジケーター2
+	# 分岐インジケーター2（赤色）
 	if branch_dirs.size() >= 2 and indicator2:
-		_setup_single_indicator(indicator2, branch_dirs[1])
+		_setup_single_indicator(indicator2, branch_dirs[1], true)
 
 ## 単一インジケーターの位置とメッシュを設定
-func _setup_single_indicator(indicator: MeshInstance3D, dir: String):
+func _setup_single_indicator(indicator: MeshInstance3D, dir: String, is_branch: bool = false):
 	if not DIRECTION_OFFSET.has(dir):
 		return
 	
@@ -96,6 +136,19 @@ func _setup_single_indicator(indicator: MeshInstance3D, dir: String):
 		var box_mesh = BoxMesh.new()
 		box_mesh.size = DIRECTION_MESH_SIZE[dir]
 		indicator.mesh = box_mesh
+	
+	# マテリアル設定（分岐インジケーターは赤、メインは緑）
+	var material = StandardMaterial3D.new()
+	if is_branch:
+		material.albedo_color = Color(1, 0, 0, 1)  # 赤
+		material.emission_enabled = true
+		material.emission = Color(1, 0, 0, 1)
+	else:
+		material.albedo_color = Color(0, 1, 0, 1)  # 緑
+		material.emission_enabled = true
+		material.emission = Color(0, 1, 0, 1)
+	material.emission_energy_multiplier = 0.5
+	indicator.material_override = material
 
 ## インジケーターの表示を更新
 func _update_indicator():
@@ -109,6 +162,7 @@ func _update_indicator():
 ## 現在の分岐方向に基づいて次のタイルを取得
 ## 戻り値: {"tile": 次のタイル, "choices": 選択肢（複数あればUI表示用）}
 func get_next_tile_for_direction(came_from: int) -> Dictionary:
+	print("[BranchTile] タイル%d: branch_direction=%d, connections=%s" % [tile_index, branch_direction, str(connections)])
 	if connections.is_empty():
 		push_warning("[BranchTile] connectionsが空です")
 		return {"tile": -1, "choices": []}
@@ -116,20 +170,28 @@ func get_next_tile_for_direction(came_from: int) -> Dictionary:
 	var main_tile = _get_main()
 	var open_branch = _get_open_branch()
 	
-	# mainから来た → 開いている分岐へ自動
-	if came_from == main_tile:
-		print("[BranchTile] mainから来た → 開いている分岐%dへ" % open_branch)
-		return {"tile": open_branch, "choices": []}
+	# 進める方向 = [main, 開いている分岐] からcame_fromを除外
+	var available = []
+	if main_tile != came_from:
+		available.append(main_tile)
+	if open_branch >= 0 and open_branch != came_from:
+		available.append(open_branch)
 	
-	# 開いている分岐から来た → mainへ固定
-	if came_from == open_branch:
-		print("[BranchTile] 開いている分岐から来た → main%dへ" % main_tile)
-		return {"tile": main_tile, "choices": []}
+	print("[BranchTile] main=%d, open_branch=%d, came_from=%d, available=%s" % [main_tile, open_branch, came_from, str(available)])
 	
-	# 閉じている分岐から来た → main or 開いている分岐 を選択可能
-	var choices = [main_tile, open_branch]
-	print("[BranchTile] 閉じている分岐から来た → 選択肢: %s" % str(choices))
-	return {"tile": -1, "choices": choices}
+	# 進める方向が0 → 来た方向に戻る（本来起きないはず）
+	if available.is_empty():
+		print("[BranchTile] 進める方向なし → came_from=%dに戻る" % came_from)
+		return {"tile": came_from, "choices": []}
+	
+	# 進める方向が1つ → 自動選択
+	if available.size() == 1:
+		print("[BranchTile] 自動選択 → タイル%d" % available[0])
+		return {"tile": available[0], "choices": []}
+	
+	# 進める方向が2つ以上 → 選択UI表示
+	print("[BranchTile] 選択肢: %s" % str(available))
+	return {"tile": -1, "choices": available}
 
 ## 分岐方向を切り替え
 func toggle_branch_direction():

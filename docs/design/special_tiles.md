@@ -311,28 +311,35 @@ UI: 3枚表示 + 「使わない」ボタン
 
 ### connections配列の構造
 
+**重要**: connectionsの順序で役割が決まる。JSONでは`connections`のみ設定し、方向はタイル座標から自動計算される。
+
 ```
 connections = [main, branch1, branch2]
 ```
 
-| インデックス | 役割 | 説明 |
-|-------------|------|------|
-| [0] | main | メイン方向（常にアクセス可能） |
-| [1] | branch1 | 分岐選択肢1（branch_direction=0で開） |
-| [2] | branch2 | 分岐選択肢2（branch_direction=1で開） |
+| インデックス | 役割 | 説明 | インジケーター色 |
+|-------------|------|------|-----------------|
+| [0] | main | メイン方向（**常にアクセス可能**） | 緑 |
+| [1] | branch1 | 分岐選択肢1（branch_direction=0で開） | 赤 |
+| [2] | branch2 | 分岐選択肢2（branch_direction=1で開） | 赤 |
+
+**ポイント**: 「必ず開通させたい方向」を`connections[0]`に設定する。
 
 ### 通過時の動作
 
-| came_from | branch_direction=0 | branch_direction=1 |
-|-----------|-------------------|-------------------|
-| mainから来た | → branch1へ自動 | → branch2へ自動 |
-| branch1から来た | → mainへ固定 | → main or branch2を選択 |
-| branch2から来た | → main or branch1を選択 | → mainへ固定 |
+進める方向 = **[main, 開いている分岐]** から **came_from を除外**
 
-**ルール**:
-- **mainから来た** → 開いている分岐へ自動進行
-- **開いている分岐から来た** → mainへ固定
-- **閉じている分岐から来た** → main or 開いている分岐を選択可能（UI表示）
+| 進める方向の数 | 動作 |
+|---------------|------|
+| 1つ | 自動選択 |
+| 2つ以上 | 選択UI表示 |
+
+**例（branch_direction=0の場合、branch1が開）**:
+| came_from | 進める方向 | 動作 |
+|-----------|-----------|------|
+| main | [branch1] | → branch1へ自動 |
+| branch1 | [main] | → mainへ自動 |
+| branch2 | [main, branch1] | → 選択UI表示 |
 
 ### 自動切替
 
@@ -341,69 +348,65 @@ connections = [main, branch1, branch2]
 ```gdscript
 # GameFlowManager
 if current_turn_number % 4 == 0:
-	_toggle_all_branch_tiles()
+    _toggle_all_branch_tiles()
 ```
 
 ### 視覚表示（インジケーター）
 
-黄色の長方形で方向を示す。
+インジケーターの方向はconnectionsのタイル座標から自動計算される。
 
-| インジケーター | 表示条件 | 説明 |
-|---------------|---------|------|
-| MainIndicator | 常時表示 | メイン方向を示す |
-| Indicator1 | branch_direction=0 | branch1方向を示す |
-| Indicator2 | branch_direction=1 | branch2方向を示す |
+| インジケーター | 表示条件 | 色 | 説明 |
+|---------------|---------|-----|------|
+| MainIndicator | 常時表示 | **緑** | メイン方向（常に開通） |
+| Indicator1 | branch_direction=0 | **赤** | branch1方向（開いている時のみ） |
+| Indicator2 | branch_direction=1 | **赤** | branch2方向（開いている時のみ） |
 
 **方向とサイズ**:
 ```gdscript
 const DIRECTION_OFFSET = {
-	"left": Vector3(-0.8, 0, 0),
-	"right": Vector3(0.8, 0, 0),
-	"up": Vector3(0, 0, -0.8),
-	"down": Vector3(0, 0, 0.8)
+    "left": Vector3(-0.8, 0, 0),
+    "right": Vector3(0.8, 0, 0),
+    "up": Vector3(0, 0, -0.8),
+    "down": Vector3(0, 0, 0.8)
 }
 
 const DIRECTION_MESH_SIZE = {
-	"left": Vector3(2.5, 0.2, 1.0),   # X方向に長い
-	"right": Vector3(2.5, 0.2, 1.0),
-	"up": Vector3(1.0, 0.2, 2.5),     # Z方向に長い
-	"down": Vector3(1.0, 0.2, 2.5)
+    "left": Vector3(2.5, 0.2, 1.0),   # X方向に長い
+    "right": Vector3(2.5, 0.2, 1.0),
+    "up": Vector3(1.0, 0.2, 2.5),     # Z方向に長い
+    "down": Vector3(1.0, 0.2, 2.5)
 }
 ```
 
 ### マップJSON設定
 
 #### タイル定義
+
+**シンプルに定義（方向は自動計算）**:
 ```json
 {
-  "index": 4,
+  "index": 5,
   "type": "Branch",
-  "x": 16,
-  "z": 0,
-  "main_dir": "left",
-  "branch_dirs": ["down", "right"]
+  "x": 40,
+  "z": 8
 }
 ```
 
-| フィールド | 説明 |
-|-----------|------|
-| main_dir | メイン方向インジケーターの向き |
-| branch_dirs | 分岐方向インジケーターの向き（配列） |
+`main_dir`と`branch_dirs`は**不要**。座標から自動計算される。
 
-**方向値**: `"left"`, `"right"`, `"up"`, `"down"`
+#### マップレベルconnections（必須）
 
-#### マップレベルconnections
 ```json
 "connections": {
-  "4": [3, 5, 8]
+  "5": [6, 4, 9]
 }
 ```
 
-| インデックス | タイル | 役割 |
-|-------------|-------|------|
-| [0] | 3 | main（左方向） |
-| [1] | 5 | branch1（下方向） |
-| [2] | 8 | branch2（右方向） |
+| インデックス | タイル | 役割 | 備考 |
+|-------------|-------|------|------|
+| [0] | 6 | **main（常に開通）** | 必ず開通させたい方向 |
+| [1] | 4 | branch1 | branch_direction=0で開 |
+| [2] | 9 | branch2 | branch_direction=1で開 |
 
 ### 処理フロー
 
@@ -412,13 +415,12 @@ const DIRECTION_MESH_SIZE = {
   ↓
 get_next_tile_for_direction(came_from) を呼び出し
   ↓
-came_from を判定
-  ├─ mainから → 開いている分岐へ（tile返却）
-  ├─ 開いている分岐から → mainへ（tile返却）
-  └─ 閉じている分岐から → choices返却（UI表示 + インジケーター表示）
+進める方向 = [main, 開いている分岐] - came_from
+  ├─ 1つ → 自動移動（tile返却）
+  └─ 2つ以上 → choices返却（UI表示）
   ↓
 tileが返却された場合 → 自動移動
-choicesが返却された場合 → 選択UI表示（グローバルボタン対応）
+choicesが返却された場合 → 選択UI表示（黄色インジケーター）
   ↓
 移動実行
 
@@ -429,29 +431,26 @@ handle_special_action() を呼び出し
 CPUの場合 → スキップ（変更しない）
   ↓
 プレイヤーの場合 → 通知ポップアップ表示
-  ├─ ✓決定ボタン → 方向変更
+  ├─ ✓決定ボタン → 方向変更（branch_directionを切替）
   └─ ✕戻るボタン → 変更しない
   ↓
 完了
 ```
 
-### 分岐選択時インジケーター
+### 分岐選択時インジケーター（方向選択UI）
 
-通常タイル・分岐タイル問わず、分岐選択時には動的インジケーターが表示される。
+通常タイル・分岐タイル問わず、分岐選択時には**黄色**の動的インジケーターが表示される。
 
-**動作**:
-- 分岐選択開始時、現在タイル上にインジケーターを生成
-- 選択中の方向に応じてインジケーターの位置・サイズを更新
-- 選択確定後にインジケーターを非表示
-
-**定数の共用**:
-MovementControllerはBranchTileの定数（`DIRECTION_OFFSET`, `DIRECTION_MESH_SIZE`）を参照し、一貫した見た目を維持。
+**色の区別**:
+- **緑**: BranchTileのメイン方向（常に開通）
+- **赤**: BranchTileの開いている分岐方向
+- **黄色**: 方向選択UI（プレイヤーが選択中の方向）
 
 ### 実装ファイル
-- `scripts/tiles/branch_tile.gd` - 分岐タイル処理、インジケーター定数定義
+- `scripts/tiles/branch_tile.gd` - 分岐タイル処理、インジケーター定数定義、方向自動計算
 - `scripts/movement_controller.gd` - 移動時の分岐処理（_get_next_tile_with_branch）、動的インジケーター
 - `scripts/game_flow_manager.gd` - 4ターン自動切替（_toggle_all_branch_tiles）
-- `scripts/quest/stage_loader.gd` - JSON読み込み（main_dir, branch_dirs）
+- `scripts/quest/stage_loader.gd` - JSON読み込み、BranchTile初期化（setup_with_tile_nodes）
 - `scripts/special_tile_system.gd` - 停止時処理の呼び出し（handle_branch_tile）
 - `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップ（show_message, hide_message）
 - `scenes/Tiles/BranchTile.tscn` - タイルシーン（インジケーター含む）
@@ -460,12 +459,13 @@ MovementControllerはBranchTileの定数（`DIRECTION_OFFSET`, `DIRECTION_MESH_S
 
 | 機能 | 状態 | 備考 |
 |------|------|------|
-| 通過時自動分岐 | ✅ 完了 | main/branch判定で自動選択 |
-| 閉じた分岐からの選択UI | ✅ 完了 | グローバルボタン対応 |
+| 通過時自動分岐 | ✅ 完了 | main + 開いている分岐から選択 |
+| 分岐選択UI | ✅ 完了 | 進める方向が2つ以上の場合に表示 |
 | 4ターン自動切替 | ✅ 完了 | ラウンド4, 8, 12...で切替 |
-| 視覚インジケーター（固定） | ✅ 完了 | BranchTile上、黄色長方形 |
-| 視覚インジケーター（動的） | ✅ 完了 | 分岐選択時、通常タイルでも表示 |
+| 視覚インジケーター（固定） | ✅ 完了 | 緑=main、赤=開いている分岐 |
+| 視覚インジケーター（動的） | ✅ 完了 | 黄色、分岐選択時に表示 |
 | 停止時方向変更UI | ✅ 完了 | 通知ポップアップ + グローバルボタン |
+| 方向自動計算 | ✅ 完了 | connectionsの座標から自動計算 |
 
 ---
 

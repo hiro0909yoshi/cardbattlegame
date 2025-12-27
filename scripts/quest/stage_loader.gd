@@ -175,6 +175,12 @@ func generate_map() -> Dictionary:
 				tile.connections.append(int(conn))
 			print("[StageLoader] タイル%d connections設定: %s" % [tile_index, str(tile.connections)])
 	
+	# BranchTileのインジケーターを初期化（座標から方向を自動計算）
+	for tile_index in generated_tiles.keys():
+		var tile = generated_tiles[tile_index]
+		if tile is BranchTile:
+			tile.setup_with_tile_nodes(generated_tiles)
+	
 	print("[StageLoader] マップ生成完了: %d タイル" % generated_tiles.size())
 	map_generated.emit()
 	return generated_tiles
