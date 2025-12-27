@@ -1,7 +1,7 @@
 {
   "id": "map_1_6",
   "name": "迷路マップ",
-  "description": "内部に分岐とワープがある複雑なマップ",
+  "description": "説明的なマップ、カードバイ、ギブ、魔法ギブ、通過型ワープ",
   "tile_count": 33,
   "lap_settings": {
 	"bonus_preset": "standard",
