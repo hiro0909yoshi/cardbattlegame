@@ -995,3 +995,75 @@ func _has_raw_first_strike(participant: BattleParticipant) -> bool:
 			return true
 	
 	return false
+
+
+# ============================================================
+# シミュレーション用関数（CPUのBattleSimulatorから呼び出される）
+# ============================================================
+
+## シミュレーション用：UI表示なしでスキルを適用
+## CPUのBattleSimulatorから呼び出される
+## @param participants: {"attacker": BattleParticipant, "defender": BattleParticipant}
+## @param tile_info: タイル情報（index, element, level, owner等）
+## @param attacker_index: 攻撃側プレイヤーID
+func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary, attacker_index: int) -> void:
+	var attacker = participants["attacker"]
+	var defender = participants["defender"]
+	var battle_tile_index = tile_info.get("index", -1)
+	
+	# プレイヤー土地情報取得
+	var attacker_lands = {}
+	var defender_lands = {}
+	if board_system_ref:
+		attacker_lands = board_system_ref.get_player_lands_by_element(attacker_index)
+		defender_lands = board_system_ref.get_player_lands_by_element(defender.player_id) if defender.player_id >= 0 else {}
+	
+	# 応援スキル適用
+	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
+	
+	# コンテキスト構築（攻撃側）
+	var attacker_context = ConditionChecker.build_battle_context(
+		attacker.creature_data, defender.creature_data, tile_info,
+		{
+			"player_lands": attacker_lands,
+			"battle_tile_index": battle_tile_index,
+			"player_id": attacker_index,
+			"board_system": board_system_ref,
+			"game_flow_manager": game_flow_manager_ref,
+			"is_placed_on_tile": false,
+			"enemy_mhp_override": defender.get_max_hp(),
+			"enemy_name": defender.creature_data.get("name", ""),
+			"opponent": defender,
+			"is_attacker": true
+		}
+	)
+	
+	# コンテキスト構築（防御側）
+	var defender_context = ConditionChecker.build_battle_context(
+		defender.creature_data, attacker.creature_data, tile_info,
+		{
+			"player_lands": defender_lands,
+			"battle_tile_index": battle_tile_index,
+			"player_id": defender.player_id,
+			"board_system": board_system_ref,
+			"game_flow_manager": game_flow_manager_ref,
+			"is_attacker": false,
+			"is_placed_on_tile": true,
+			"enemy_mhp_override": attacker.get_max_hp(),
+			"enemy_name": attacker.creature_data.get("name", ""),
+			"opponent": attacker,
+			"is_defender": true
+		}
+	)
+	
+	# 各スキル適用（UI表示なし）
+	apply_skills(attacker, attacker_context)
+	apply_skills(defender, defender_context)
+	
+	# 貫通判定
+	if not defender.has_squid_mantle:
+		PenetrationSkill.apply_penetration(attacker, defender)
+	
+	# 巻物攻撃による土地ボーナス無効化
+	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
+		defender.land_bonus_hp = 0

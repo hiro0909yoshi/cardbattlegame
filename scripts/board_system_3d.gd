@@ -105,7 +105,7 @@ func create_subsystems():
 	add_child(tile_action_processor)
 	
 	# CPUTurnProcessorを動的にロード
-	var CPUTurnProcessorClass = load("res://scripts/flow_handlers/cpu_turn_processor.gd")
+	var CPUTurnProcessorClass = load("res://scripts/cpu_ai/cpu_turn_processor.gd")
 	if CPUTurnProcessorClass:
 		cpu_turn_processor = CPUTurnProcessorClass.new()
 		cpu_turn_processor.name = "CPUTurnProcessor"
@@ -165,7 +165,7 @@ func setup_cpu_ai_handler():
 		add_child(cpu_ai_handler)
 	
 	if cpu_ai_handler.has_method("setup_systems"):
-		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, player_buff_system)
+		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, player_buff_system, game_flow_manager)
 
 # === 3Dノード収集 ===
 

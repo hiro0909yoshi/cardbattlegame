@@ -281,6 +281,10 @@ func _on_item_phase_completed():
 				print("[TileActionProcessor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_battle_tile_info.get("creature", {})
+				# 攻撃側クリーチャーデータを設定（無効化判定用）
+				game_flow_manager.item_phase_handler.set_opponent_creature(pending_battle_card_data)
+				# タイル情報を設定（シミュレーション用）
+				game_flow_manager.item_phase_handler.set_defense_tile_info(pending_battle_tile_info)
 				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル

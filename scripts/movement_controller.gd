@@ -110,8 +110,6 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	
 	# 歩行逆転呪いチェック
 	var is_reversed = _has_movement_reverse_curse(player_id)
-	if is_reversed:
-		print("[MovementController] 歩行逆転中: プレイヤー%d" % (player_id + 1))
 	
 	if has_direction_choice:
 		# 現在位置の接続情報をチェック
@@ -127,7 +125,6 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 			var tile = tile_nodes.get(current_tile)
 			if not tile or not tile.connections or tile.connections.is_empty():
 				first_tile = current_tile + reversed_direction
-			print("[MovementController] 歩行逆転適用: first_tile=タイル%d" % first_tile)
 		
 		# came_fromを更新して方向選択権を消費
 		_set_player_came_from(player_id, current_tile)
@@ -215,9 +212,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int, is_reversed: bool = false) -> int:
 	var tile = tile_nodes.get(current_tile)
 	
-	# デバッグ: connections確認
-	if tile:
-		print("[MovementController] タイル%d connections: %s, came_from: %d" % [current_tile, str(tile.connections), came_from])
+
 	
 	# connectionsがなければ単純にindex+direction
 	if not tile or not tile.connections or tile.connections.is_empty():
@@ -235,7 +230,6 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	
 	# 選択肢がなければ来た方向に戻る（行き止まり）
 	if choices.is_empty():
-		print("[MovementController] 行き止まり: タイル%dに戻る" % came_from)
 		return came_from
 	
 	var chosen: int
@@ -245,7 +239,6 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		if result.tile >= 0:
 			# 自動選択
 			chosen = result.tile
-			print("[MovementController] 分岐タイル自動選択: → タイル%d" % chosen)
 		elif not result.choices.is_empty():
 			# 選択UI表示
 			current_branch_tile = current_tile
@@ -264,7 +257,6 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	# 選んだタイルから方向を推測して設定
 	var inferred_direction = _infer_direction_from_choice(current_tile, chosen, player_id)
 	_set_player_current_direction(player_id, inferred_direction)
-	print("[MovementController] 移動中分岐: タイル%d → 方向%s" % [chosen, "+" if inferred_direction > 0 else "-"])
 	
 	return chosen
 
@@ -294,7 +286,6 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		var result = tile.get_next_tile_for_direction(came_from)
 		if result.tile >= 0:
 			chosen = result.tile
-			print("[MovementController] 最初の1歩: 分岐タイル自動選択 → タイル%d" % chosen)
 		elif not result.choices.is_empty():
 			current_branch_tile = current_tile
 			chosen = await _show_branch_tile_selection(result.choices)
@@ -311,7 +302,6 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	# 選んだタイルから方向を推測して設定
 	var inferred_dir = _infer_direction_from_choice(current_tile, chosen)
 	_set_player_current_direction(current_moving_player, inferred_dir)
-	print("[MovementController] 分岐選択: タイル%d → 方向%s" % [chosen, "+" if inferred_dir > 0 else "-"])
 	
 	return chosen
 
@@ -398,7 +388,6 @@ func _consume_direction_choice(player_id: int) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	player_system.players[player_id].buffs.erase("direction_choice_pending")
-	print("[MovementController] プレイヤー%d: 方向選択権を消費" % (player_id + 1))
 
 # プレイヤーの現在の移動方向を取得
 func _get_player_current_direction(player_id: int) -> int:
@@ -415,7 +404,6 @@ func _set_player_current_direction(player_id: int, direction: int) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	player_system.players[player_id].current_direction = direction
-	print("[MovementController] プレイヤー%d: 移動方向を%sに設定" % [player_id + 1, "順方向" if direction == 1 else "逆方向"])
 
 # プレイヤーのcame_from（前にいたタイル）を取得
 func _get_player_came_from(player_id: int) -> int:
@@ -488,14 +476,12 @@ func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
 	var final_direction = direction
 	if _has_movement_reverse_curse(player_id):
 		final_direction = -direction
-		print("[MovementController] 歩行逆転中: プレイヤー%d" % (player_id + 1))
 	
 	for i in range(steps):
 		# 単純に direction 方向に進む
 		current_tile = current_tile + final_direction
 		path.append(current_tile)
 	
-	print("[MovementController] 経路計算: 方向=%d, 経路=%s" % [final_direction, str(path)])
 	return path
 
 # 次のタイルを取得（connectionsベース or 単純計算）
@@ -520,7 +506,6 @@ func _get_next_from_connections(connections: Array, came_from: int, direction: i
 	
 	# 選択肢がなければ来た方向に戻る（行き止まり）
 	if choices.is_empty():
-		print("[MovementController] 行き止まり: タイル%dに戻る" % came_from)
 		return came_from
 	
 	# 選択肢が1つなら自動選択
@@ -541,7 +526,6 @@ func _show_branch_tile_selection(choices: Array) -> int:
 	available_branches = choices
 	selected_branch_index = 0
 	
-	print("[MovementController] 分岐タイル選択: %s から選択" % str(choices))
 	_update_branch_selection_ui()
 	_update_branch_indicator()
 	_setup_branch_selection_navigation()
@@ -582,7 +566,6 @@ func _confirm_branch_selection():
 	if not is_branch_selection_active:
 		return
 	var selected_tile = available_branches[selected_branch_index]
-	print("[MovementController] 分岐タイル選択確定: タイル%d" % selected_tile)
 	branch_selected.emit(selected_tile)
 
 # 分岐/方向選択UI更新（共用）
@@ -686,7 +669,6 @@ func _check_and_handle_branch(current_tile: int, _came_from: int, path: Array, c
 		# 選択肢が1つ → 自動選択（行き止まり）
 		first_tile = choices[0]
 		new_direction = tile.connections[first_tile]
-		print("[MovementController] 行き止まり: タイル%d方向(%s)に自動選択" % [first_tile, "+" if new_direction > 0 else "-"])
 	
 	# 方向を保存
 	if current_moving_player >= 0:
@@ -703,7 +685,6 @@ func _check_and_handle_branch(current_tile: int, _came_from: int, path: Array, c
 			current = current + new_direction
 			new_path.append(current)
 	
-	print("[MovementController] 分岐後の経路: 方向=%d, %s" % [new_direction, str(new_path)])
 	return {"recalculated": true, "new_path": new_path}
 
 # 歩行逆転呪いを持っているかチェック

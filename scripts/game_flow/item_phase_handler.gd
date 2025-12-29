@@ -22,6 +22,17 @@ var selected_item_card: Dictionary = {}
 var item_used_this_battle: bool = false  # 1バトル1回制限
 var battle_creature_data: Dictionary = {}  # バトル参加クリーチャーのデータ（援護/合体判定用）
 var merged_creature_data: Dictionary = {}  # 合体後のクリーチャーデータ
+var opponent_creature_data: Dictionary = {}  # 相手クリーチャーのデータ（無効化判定用）
+
+# 無効化判定用・シミュレーション用
+const BattleSpecialEffectsScript = preload("res://scripts/battle/battle_special_effects.gd")
+const BattleParticipantScript = preload("res://scripts/battle/battle_participant.gd")
+const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
+var _special_effects: BattleSpecialEffects = null
+var _battle_simulator = null
+
+# 防御時のタイル情報（シミュレーション用）
+var defense_tile_info: Dictionary = {}
 
 ## 参照
 var ui_manager = null
@@ -61,12 +72,9 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}):
 	
 	item_phase_started.emit()
 	
-
-	
-	# CPUの場合は簡易AI（現在は実装しない）
+	# CPUの場合のアイテム判断
 	if is_cpu_player(player_id):
-
-		pass_item()
+		_cpu_decide_item()
 		return
 	
 	# 人間プレイヤーの場合はUI表示
@@ -438,3 +446,292 @@ func is_cpu_player(player_id: int) -> bool:
 ## アクティブか
 func is_item_phase_active() -> bool:
 	return current_state != State.INACTIVE
+
+## 相手クリーチャーデータを設定（防御側アイテムフェーズ用）
+func set_opponent_creature(creature_data: Dictionary):
+	opponent_creature_data = creature_data
+
+## 防御時のタイル情報を設定
+func set_defense_tile_info(tile_info: Dictionary):
+	defense_tile_info = tile_info
+
+## CPU防御時のアイテム判断
+## 無効化スキルで勝てる場合はアイテムを温存
+## 負ける場合、防具・アクセサリで勝てるならアイテム使用
+func _cpu_decide_item():
+	print("[CPU防御] アイテム判断開始: %s vs %s" % [
+		battle_creature_data.get("name", "?"),
+		opponent_creature_data.get("name", "?")
+	])
+	
+	# 無効化判定を行う（防御側として）
+	if _should_skip_item_due_to_nullify():
+		print("[CPU防御] 無効化スキルで勝てる → アイテム温存")
+		pass_item()
+		return
+	
+	# タイル情報を取得
+	var tile_info = _get_defense_tile_info()
+	if tile_info.is_empty():
+		print("[CPU防御] タイル情報取得失敗 → パス")
+		pass_item()
+		return
+	
+	# BattleSimulatorを初期化
+	_ensure_battle_simulator()
+	if not _battle_simulator:
+		print("[CPU防御] シミュレーター初期化失敗 → パス")
+		pass_item()
+		return
+	
+	# 1. アイテムなしでシミュレーション
+	var no_item_result = _simulate_defense_battle({})
+	var no_item_outcome = no_item_result.get("result", -1)
+	
+	print("[CPU防御] アイテムなし結果: %s" % _result_to_string(no_item_outcome))
+	
+	# 勝てる/生き残れる場合はアイテム温存
+	if no_item_outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN:
+		print("[CPU防御] アイテムなしで勝利 → アイテム温存")
+		pass_item()
+		return
+	
+	if no_item_outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
+		print("[CPU防御] アイテムなしで両者生存 → アイテム温存")
+		pass_item()
+		return
+	
+	# 2. 負ける場合、防具・アクセサリでシミュレーション
+	var best_item = _find_best_defense_item(no_item_outcome)
+	
+	if not best_item.is_empty():
+		print("[CPU防御] 最適アイテム選択: %s" % best_item.get("name", "?"))
+		use_item(best_item)
+	else:
+		print("[CPU防御] 有効なアイテムなし → パス")
+		pass_item()
+
+## 防御用の最適アイテムを探す
+## 武器は使用しない、防具・アクセサリのみ
+func _find_best_defense_item(current_outcome: int) -> Dictionary:
+	if not card_system:
+		return {}
+	
+	var hand = card_system.get_all_cards_for_player(current_player_id)
+	var current_player = player_system.players[current_player_id] if player_system else null
+	if not current_player:
+		return {}
+	
+	# 防御用アイテムを収集（防具・アクセサリのみ、武器・巻物は除外）
+	var defense_items: Array = []
+	for i in range(hand.size()):
+		var card = hand[i]
+		if card.get("type", "") != "item":
+			continue
+		
+		var item_type = card.get("item_type", "")
+		# 武器と巻物は防御時使用しない
+		if item_type == "武器" or item_type == "巻物":
+			continue
+		
+		# コストチェック
+		var cost = _get_item_cost(card)
+		if cost > current_player.magic_power:
+			continue
+		
+		defense_items.append({"index": i, "data": card, "cost": cost})
+	
+	if defense_items.is_empty():
+		return {}
+	
+	# 各アイテムでシミュレーション
+	var winning_items: Array = []
+	var surviving_items: Array = []
+	
+	for item_entry in defense_items:
+		var item = item_entry["data"]
+		var result = _simulate_defense_battle(item)
+		var outcome = result.get("result", -1)
+		
+		print("  [防御シミュ] %s[%s]: %s" % [
+			item.get("name", "?"),
+			item.get("item_type", "?"),
+			_result_to_string(outcome)
+		])
+		
+		if outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN:
+			winning_items.append(item_entry)
+		elif outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
+			# 両者生存も改善として扱う（死ぬよりマシ）
+			if current_outcome == BattleSimulatorScript.BattleResult.ATTACKER_WIN or \
+			   current_outcome == BattleSimulatorScript.BattleResult.BOTH_DEFEATED:
+				surviving_items.append(item_entry)
+	
+	# 優先順位: 勝てるアイテム > 生き残れるアイテム
+	# 同じカテゴリ内では防具 > アクセサリ、コストが低い方優先
+	if not winning_items.is_empty():
+		return _select_best_defense_item(winning_items)
+	
+	if not surviving_items.is_empty():
+		return _select_best_defense_item(surviving_items)
+	
+	return {}
+
+## 防御用アイテムの優先順位で選択
+## 防具 > アクセサリ、コストが低い方優先
+func _select_best_defense_item(items: Array) -> Dictionary:
+	if items.is_empty():
+		return {}
+	
+	# ソート: 防具優先、次にコスト
+	items.sort_custom(func(a, b):
+		var type_a = a["data"].get("item_type", "")
+		var type_b = b["data"].get("item_type", "")
+		var priority_a = _get_defense_item_priority(type_a)
+		var priority_b = _get_defense_item_priority(type_b)
+		
+		if priority_a != priority_b:
+			return priority_a < priority_b  # 小さい方が優先
+		
+		return a["cost"] < b["cost"]  # コストが低い方優先
+	)
+	
+	return items[0]["data"]
+
+## 防御アイテムの優先度（小さいほど優先）
+func _get_defense_item_priority(item_type: String) -> int:
+	match item_type:
+		"防具": return 0
+		"アクセサリ": return 1
+		_: return 99  # 武器・巻物は使わない
+
+## 防御側としてバトルシミュレーション
+func _simulate_defense_battle(defender_item: Dictionary) -> Dictionary:
+	var tile_info = _get_defense_tile_info()
+	
+	# 攻撃側 = opponent_creature_data
+	# 防御側 = battle_creature_data（自分）
+	var sim_tile_info = {
+		"element": tile_info.get("element", ""),
+		"level": tile_info.get("level", 1),
+		"owner": current_player_id,
+		"tile_index": tile_info.get("index", -1)
+	}
+	
+	# 攻撃側プレイヤーIDを取得（相手）
+	var attacker_player_id = -1
+	if game_flow_manager and game_flow_manager.board_system_3d:
+		attacker_player_id = game_flow_manager.board_system_3d.current_player_index
+	
+	return _battle_simulator.simulate_battle(
+		opponent_creature_data,  # 攻撃側
+		battle_creature_data,    # 防御側（自分）
+		sim_tile_info,
+		attacker_player_id,
+		{},                      # 攻撃側アイテム（不明なので空）
+		defender_item            # 防御側アイテム
+	)
+
+## 防御時のタイル情報を取得
+func _get_defense_tile_info() -> Dictionary:
+	if not defense_tile_info.is_empty():
+		return defense_tile_info
+	
+	# フォールバック: 現在のプレイヤー位置から取得
+	if game_flow_manager and game_flow_manager.board_system_3d:
+		var board = game_flow_manager.board_system_3d
+		if board.movement_controller:
+			var tile_index = board.movement_controller.get_player_tile(current_player_id)
+			if tile_index >= 0:
+				return board.get_tile_info(tile_index)
+	
+	return {}
+
+## BattleSimulatorを初期化
+func _ensure_battle_simulator():
+	if _battle_simulator:
+		return
+	
+	_battle_simulator = BattleSimulatorScript.new()
+	
+	if game_flow_manager and game_flow_manager.board_system_3d:
+		var board = game_flow_manager.board_system_3d
+		_battle_simulator.setup_systems(board, card_system, player_system, game_flow_manager)
+		_battle_simulator.enable_log = false  # ログは抑制
+
+## アイテムコスト取得
+func _get_item_cost(item: Dictionary) -> int:
+	var cost_data = item.get("cost", 0)
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		return cost_data.get("mp", 0)
+	return cost_data
+
+## 結果を文字列に変換
+func _result_to_string(result: int) -> String:
+	match result:
+		BattleSimulatorScript.BattleResult.ATTACKER_WIN:
+			return "攻撃側勝利"
+		BattleSimulatorScript.BattleResult.DEFENDER_WIN:
+			return "防御側勝利"
+		BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
+			return "両者生存"
+		BattleSimulatorScript.BattleResult.BOTH_DEFEATED:
+			return "相打ち"
+		_:
+			return "不明"
+
+## 無効化スキルでアイテムをスキップすべきか判定
+## 防御側（battle_creature_data）が無効化を持っていて、
+## 攻撃側（opponent_creature_data）が無効化の範囲内の場合はtrue
+func _should_skip_item_due_to_nullify() -> bool:
+	# 相手クリーチャーデータがない場合はスキップしない
+	if opponent_creature_data.is_empty():
+		return false
+	
+	# 自分のクリーチャーが無効化スキルを持っているかチェック
+	var ability_parsed = battle_creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	if not "無効化" in keywords:
+		return false
+	
+	# 無効化判定を実行
+	if not _special_effects:
+		_special_effects = BattleSpecialEffectsScript.new()
+	
+	# BattleParticipantを作成（簡易版）
+	var attacker_hp = opponent_creature_data.get("hp", 0)
+	var attacker_ap = opponent_creature_data.get("ap", 0)
+	var attacker = BattleParticipantScript.new(opponent_creature_data, attacker_hp, 0, attacker_ap, true, -1)
+	
+	var defender_hp = battle_creature_data.get("hp", 0)
+	var defender_ap = battle_creature_data.get("ap", 0)
+	var defender = BattleParticipantScript.new(battle_creature_data, defender_hp, 0, defender_ap, false, current_player_id)
+	
+	# 無効化判定用のコンテキスト
+	var context = {
+		"tile_level": 1,  # タイルレベルは後で取得
+		"tile_element": "",
+		"battle_tile_index": -1
+	}
+	
+	# タイル情報を取得（可能であれば）
+	if game_flow_manager and game_flow_manager.board_system_3d:
+		var board = game_flow_manager.board_system_3d
+		if board.movement_controller:
+			var tile_index = board.movement_controller.get_player_tile(current_player_id)
+			if tile_index >= 0:
+				var tile_info = board.get_tile_info(tile_index)
+				context["tile_level"] = tile_info.get("level", 1)
+				context["tile_element"] = tile_info.get("element", "")
+				context["battle_tile_index"] = tile_index
+	
+	var result = _special_effects.check_nullify(attacker, defender, context)
+	
+	if result.get("is_nullified", false):
+		print("[CPU無効化判定] %s の無効化が %s に対して有効" % [
+			battle_creature_data.get("name", "?"),
+			opponent_creature_data.get("name", "?")
+		])
+		return true
+	
+	return false

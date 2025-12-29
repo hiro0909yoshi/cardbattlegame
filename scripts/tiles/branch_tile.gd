@@ -97,7 +97,7 @@ func _calculate_directions_from_connections():
 			var dir = _calculate_direction(my_pos, _tile_nodes[branch_tile].global_position)
 			branch_dirs.append(dir)
 	
-	print("[BranchTile] タイル%d: main_dir=%s, branch_dirs=%s" % [tile_index, main_dir, str(branch_dirs)])
+
 
 ## 2点間の方向を計算（left/right/up/down）
 func _calculate_direction(from_pos: Vector3, to_pos: Vector3) -> String:
@@ -162,9 +162,7 @@ func _update_indicator():
 ## 現在の分岐方向に基づいて次のタイルを取得
 ## 戻り値: {"tile": 次のタイル, "choices": 選択肢（複数あればUI表示用）}
 func get_next_tile_for_direction(came_from: int) -> Dictionary:
-	print("[BranchTile] タイル%d: branch_direction=%d, connections=%s" % [tile_index, branch_direction, str(connections)])
 	if connections.is_empty():
-		push_warning("[BranchTile] connectionsが空です")
 		return {"tile": -1, "choices": []}
 	
 	var main_tile = _get_main()
@@ -177,20 +175,15 @@ func get_next_tile_for_direction(came_from: int) -> Dictionary:
 	if open_branch >= 0 and open_branch != came_from:
 		available.append(open_branch)
 	
-	print("[BranchTile] main=%d, open_branch=%d, came_from=%d, available=%s" % [main_tile, open_branch, came_from, str(available)])
-	
 	# 進める方向が0 → 来た方向に戻る（本来起きないはず）
 	if available.is_empty():
-		print("[BranchTile] 進める方向なし → came_from=%dに戻る" % came_from)
 		return {"tile": came_from, "choices": []}
 	
 	# 進める方向が1つ → 自動選択
 	if available.size() == 1:
-		print("[BranchTile] 自動選択 → タイル%d" % available[0])
 		return {"tile": available[0], "choices": []}
 	
 	# 進める方向が2つ以上 → 選択UI表示
-	print("[BranchTile] 選択肢: %s" % str(available))
 	return {"tile": -1, "choices": available}
 
 ## 分岐方向を切り替え
@@ -199,8 +192,6 @@ func toggle_branch_direction():
 	if branches.size() < 2:
 		return
 	branch_direction = (branch_direction + 1) % branches.size()
-	var open_branch = _get_open_branch()
-	print("[BranchTile] タイル%d: 分岐方向を切替 → タイル%dが開" % [tile_index, open_branch])
 
 ## 分岐方向を設定
 func set_branch_direction(direction: int):
@@ -220,26 +211,19 @@ signal direction_change_selected(change: bool)
 
 ## 特殊タイルアクション実行（special_tile_systemから呼び出される）
 func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
-	print("[BranchTile] 分岐タイル処理開始 - Player%d" % (player_id + 1))
-	print("[BranchTile] connections: %s" % str(connections))
-	
 	# コンテキストからシステム参照を取得
 	_ui_manager = context.get("ui_manager")
 	_board_system = context.get("board_system")
 	
 	# 分岐が1つしかない場合はスキップ
 	var branches = _get_branches()
-	print("[BranchTile] branches: %s (size=%d)" % [str(branches), branches.size()])
 	if branches.size() < 2:
-		print("[BranchTile] 分岐が1つしかないためスキップ")
 		return {"success": true, "changed": false}
 	
 	# CPUの場合はスキップ
 	if _is_cpu_player(player_id):
-		print("[BranchTile] CPU - スキップ")
 		return {"success": true, "changed": false}
 	
-	print("[BranchTile] UI表示へ進む")
 	# プレイヤーの場合はUI表示
 	var result = await _show_direction_change_selection()
 	return result
@@ -286,10 +270,8 @@ func _show_direction_change_selection() -> Dictionary:
 	
 	if changed:
 		toggle_branch_direction()
-		print("[BranchTile] 分岐方向を変更しました")
 		return {"success": true, "changed": true}
 	else:
-		print("[BranchTile] 分岐方向を変更しませんでした")
 		return {"success": true, "changed": false}
 
 ## 選択コールバック

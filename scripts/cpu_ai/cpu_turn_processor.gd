@@ -149,21 +149,31 @@ func _on_cpu_summon_decided(card_index: int):
 		_complete_action()
 
 # CPU侵略決定後の処理
-func _on_cpu_invasion_decided(card_index: int):
+func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
+	if creature_index < 0:
+		_complete_action()
+		return
+	
 	var current_player_index = board_system.current_player_index
 	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
+	
+	# アイテムデータを取得
+	var attacker_item = {}
+	if item_index >= 0:
+		attacker_item = card_system.get_card_data_for_player(current_player_index, item_index)
+		print("[CPU] アイテム使用: %s" % attacker_item.get("name", "?"))
 	
 	# バトルシステムに処理を委譲
 	if not board_system.battle_system.invasion_completed.is_connected(_on_invasion_completed):
 		board_system.battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
 	
-	await board_system.battle_system.execute_3d_battle(current_player_index, card_index, tile_info)
+	await board_system.battle_system.execute_3d_battle(current_player_index, creature_index, tile_info, attacker_item)
 
 # CPUバトル決定後の処理
-func _on_cpu_battle_decided(card_index: int):
+func _on_cpu_battle_decided(creature_index: int, item_index: int = -1):
 	# 侵略と同じ処理
-	_on_cpu_invasion_decided(card_index)
+	_on_cpu_invasion_decided(creature_index, item_index)
 
 # CPUレベルアップ決定後の処理
 func _on_cpu_level_up_decided(do_upgrade: bool):
