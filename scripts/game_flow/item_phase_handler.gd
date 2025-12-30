@@ -479,6 +479,16 @@ func _cpu_decide_item():
 		_execute_merge_for_cpu(merge_result)
 		return
 	
+	# 敵が即死クリーチャーを使っている場合、無効化アイテムを優先使用
+	if _enemy_has_instant_death_skill():
+		print("[CPU防御] 敵が即死スキル持ち → 無効化アイテムを優先検索")
+		var nullify_item = _find_nullify_item_for_defense()
+		if not nullify_item.is_empty():
+			print("[CPU防御] 無効化アイテムを使用: %s" % nullify_item.get("name", "?"))
+			use_item(nullify_item)
+			return
+		print("[CPU防御] 無効化アイテムなし → 通常判断へ")
+	
 	# タイル情報を取得
 	var tile_info = _get_defense_tile_info()
 	if tile_info.is_empty():
@@ -1156,3 +1166,65 @@ func _should_skip_item_due_to_nullify() -> bool:
 			return false
 	
 	return false
+
+## 敵（攻撃側）が即死スキルを持っているかチェック
+func _enemy_has_instant_death_skill() -> bool:
+	if opponent_creature_data.is_empty():
+		return false
+	
+	var ability_parsed = opponent_creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	return "即死" in keywords
+
+## 防御用の無効化アイテムを探す
+## 敵が即死スキルを持っている場合に呼ばれる
+func _find_nullify_item_for_defense() -> Dictionary:
+	if not card_system:
+		return {}
+	
+	var hand = card_system.get_all_cards_for_player(current_player_id)
+	var current_player = player_system.players[current_player_id] if player_system else null
+	if not current_player:
+		return {}
+	
+	var best_nullify_item = {}
+	var best_cost = 999999
+	
+	for card in hand:
+		if card.get("type", "") != "item":
+			continue
+		
+		# 防具タイプをチェック
+		var item_type = card.get("item_type", "")
+		if item_type != "防具":
+			continue
+		
+		# コストチェック
+		var cost = _get_item_cost(card)
+		if cost > current_player.magic_power:
+			continue
+		
+		# 無効化効果を持っているかチェック
+		var effect_parsed = card.get("effect_parsed", {})
+		var effects = effect_parsed.get("effects", [])
+		var has_nullify = false
+		
+		for effect in effects:
+			if effect.get("effect_type", "") == "nullify":
+				has_nullify = true
+				break
+		
+		# keywordsに無効化があるかチェック
+		if not has_nullify:
+			var keywords = effect_parsed.get("keywords", [])
+			if "無効化" in keywords:
+				has_nullify = true
+		
+		if has_nullify:
+			# コストが低いものを優先
+			if cost < best_cost:
+				best_cost = cost
+				best_nullify_item = card
+				print("  [無効化アイテム候補] %s (コスト: %d)" % [card.get("name", "?"), cost])
+	
+	return best_nullify_item

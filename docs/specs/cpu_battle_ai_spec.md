@@ -26,10 +26,10 @@ CPUプレイヤーのバトル時の判断ロジックについて記載する�
 
 ```gdscript
 enum BattleResult {
-    ATTACKER_WIN,      # 攻撃側勝利（侵略成功）
-    DEFENDER_WIN,      # 防御側勝利（防衛成功）
-    ATTACKER_SURVIVED, # 両者生存（攻撃側は土地を奪えない）
-    BOTH_DEFEATED      # 相打ち
+	ATTACKER_WIN,      # 攻撃側勝利（侵略成功）
+	DEFENDER_WIN,      # 防御側勝利（防衛成功）
+	ATTACKER_SURVIVED, # 両者生存（攻撃側は土地を奪えない）
+	BOTH_DEFEATED      # 相打ち
 }
 ```
 
@@ -317,21 +317,21 @@ signal battle_decided(creature_index: int, item_index: int)
 ```gdscript
 ## アイテムの温存判定
 func _is_reserve_item(item: Dictionary) -> bool:
-    var effects = item.get("effect_parsed", {}).get("effects", [])
-    for effect in effects:
-        if effect.get("trigger") == "on_death":
-            if effect.get("effect_type") in ["instant_death", "damage_enemy"]:
-                return true
-    return false
+	var effects = item.get("effect_parsed", {}).get("effects", [])
+	for effect in effects:
+		if effect.get("trigger") == "on_death":
+			if effect.get("effect_type") in ["instant_death", "damage_enemy"]:
+				return true
+	return false
 
 ## クリーチャーの温存判定（援護用）
 func _is_reserve_creature(creature: Dictionary) -> bool:
-    var effects = creature.get("ability_parsed", {}).get("effects", [])
-    for effect in effects:
-        if effect.get("trigger") == "on_death":
-            if effect.get("effect_type") in ["instant_death", "damage_enemy", "self_destruct_with_revenge"]:
-                return true
-    return false
+	var effects = creature.get("ability_parsed", {}).get("effects", [])
+	for effect in effects:
+		if effect.get("trigger") == "on_death":
+			if effect.get("effect_type") in ["instant_death", "damage_enemy", "self_destruct_with_revenge"]:
+				return true
+	return false
 ```
 
 #### 使用判断フロー
@@ -403,10 +403,31 @@ func _is_reserve_creature(creature: Dictionary) -> bool:
    - `restrictions.cannot_use` の考慮
    - 例: アクセサリ使用不可クリーチャー
 
-2. **即死スキル対応**
-   - 確率付き即死（60%〜100%）の期待値計算
-   - バタリングラム（即死[防御型・100%]）は条件を満たせば確定勝利として実装可能
-   - 確率付き即死は複雑なため後回し
+2. **即死スキル対応** ✅ 完全実装
+   - 勝てる組み合わせがない場合、即死スキル持ちで賭ける判断を実装
+   - 即死条件（属性、APチェック等）を満たすクリーチャーを検出
+   - 最も確率が高いクリーチャーを優先選択
+   - 期待値計算ではなく「最後の手段」として扱う
+   - 敵の手札参照機能実装（密命カード除外）
+   - 無効化+即死クリーチャーの優先判断実装
+   
+   **攻撃側判断フロー:**
+   ```
+   1. 合体判断（最優先）
+   2. 敵が無効化アイテムを持っている場合
+	  → 無効化+即死クリーチャー（イエティ、シグルド、ダンピール、セイント）を優先使用
+	  → アイテムなしで、敵に無効化アイテムを消費させつつ即死チャンス
+   3. 通常の勝利判定
+   4. 勝てない場合 → 即死スキル持ちで賭ける
+   ```
+   
+   **防御側判断フロー:**
+   ```
+   1. 無効化スキルで勝てる → アイテム温存
+   2. 合体で勝てる → 合体
+   3. 敵が即死スキル持ち → 無効化アイテム優先使用
+   4. 通常のシミュレーション判断（防具/援護）
+   ```
 
 3. **巻物の防御時使用**
    - 現在は巻物は防御時使用しない
@@ -449,6 +470,9 @@ func _is_reserve_creature(creature: Dictionary) -> bool:
 | 2025-12-30 | 防御側アイテム・援護判断実装 |
 | 2025-12-30 | 防具温存ロジック追加 |
 | 2025-12-30 | 無効化・反射対応 |
+| 2025-12-31 | 即死スキル基本判断実装 |
+| 2025-12-31 | 敵手札参照・無効化+即死優先判断実装 |
+| 2025-12-31 | 防御側: 敵即死クリーチャーに対する無効化アイテム優先使用 |
 | 2025-12-30 | 温存対象アイテム・クリーチャー実装（道連れ、死亡時ダメージ等） |
 | 2025-12-30 | 攻撃側クリーチャーの死亡時効果対応（サルファバルーン等） |
 | 2025-12-30 | 防御側合体判断実装（最優先で合体を選択） |
