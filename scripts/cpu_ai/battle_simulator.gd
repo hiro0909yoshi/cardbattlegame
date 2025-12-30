@@ -13,6 +13,7 @@ const BattleParticipantScript = preload("res://scripts/battle/battle_participant
 const BattlePreparationScript = preload("res://scripts/battle/battle_preparation.gd")
 const BattleSkillProcessorScript = preload("res://scripts/battle/battle_skill_processor.gd")
 const BattleSpecialEffectsScript = preload("res://scripts/battle/battle_special_effects.gd")
+const SkillReflectScript = preload("res://scripts/battle/skills/skill_reflect.gd")
 
 # バトル結果の定数
 enum BattleResult {
@@ -112,21 +113,51 @@ func simulate_battle(
 	}
 	var nullify_result = special_effects.check_nullify(attacker, defender, nullify_context)
 	var is_nullified = nullify_result.get("is_nullified", false)
+	var nullify_reduction_rate = nullify_result.get("reduction_rate", 0.0)
 	
-	if is_nullified:
+	# 完全無効化（reduction_rate == 0.0）の場合のみ早期リターン
+	if is_nullified and nullify_reduction_rate == 0.0:
 		_log("")
 		_log("▼▼▼ 無効化判定 ▼▼▼")
 		_log("  → 【無効化】攻撃が無効化される！侵略不可")
+		
+		# 無効化成功でも、防御側が攻撃側を倒すので死亡時効果を考慮
+		var defender_final_hp_nullify = _calculate_total_hp(defender)
+		var defender_final_ap_nullify = defender.current_ap
+		var attacker_data_for_death = attacker.creature_data
+		
+		# 攻撃側の死亡時ダメージを確認
+		var death_damage = _get_attacker_death_damage(attacker_data_for_death)
+		var final_result = BattleResult.DEFENDER_WIN
+		var final_defender_survives = true
+		
+		if death_damage > 0:
+			# 防御側が攻撃側を倒した後の残りHPを計算
+			# 無効化成功時、攻撃側の攻撃は無効なので防御側はダメージを受けない
+			# 防御側が攻撃 → 攻撃側死亡 → 死亡時効果発動
+			var remaining_hp = defender_final_hp_nullify - death_damage
+			
+			_log("--- 死亡時効果判定（無効化後） ---")
+			_log("攻撃側死亡時ダメージ: %d" % death_damage)
+			_log("防御側HP: %d" % defender_final_hp_nullify)
+			
+			if remaining_hp <= 0:
+				_log("  → 死亡時効果で防御側も撃破！相打ちに変更")
+				final_result = BattleResult.BOTH_DEFEATED
+				final_defender_survives = false
+			else:
+				_log("  → 防御側生存（残りHP: %d）" % remaining_hp)
+		
 		_log("")
 		return {
-			"result": BattleResult.DEFENDER_WIN,
+			"result": final_result,
 			"attacker_ap": attacker.current_ap,
 			"attacker_hp": _calculate_total_hp(attacker),
 			"defender_ap": defender.current_ap,
 			"defender_hp": _calculate_total_hp(defender),
 			"attack_order": "N/A",
 			"attacker_survives": false,
-			"defender_survives": true,
+			"defender_survives": final_defender_survives,
 			"is_nullified": true
 		}
 	
@@ -148,12 +179,37 @@ func simulate_battle(
 	var attack_order = _determine_attack_order(attacker, defender)
 	_log("攻撃順序: %s" % attack_order)
 	
-	# 7. 勝敗判定（2回攻撃を考慮）
+	# 7. 反射情報取得
+	var attacker_reflect = _get_reflect_info(attacker)
+	var defender_reflect = _get_reflect_info(defender)
+	
+	if defender_reflect.has_reflect:
+		_log("防御側反射: %.0f%%反射, %.0f%%軽減" % [defender_reflect.reflect_ratio * 100, (1.0 - defender_reflect.self_damage_ratio) * 100])
+	if attacker_reflect.has_reflect:
+		_log("攻撃側反射: %.0f%%反射, %.0f%%軽減" % [attacker_reflect.reflect_ratio * 100, (1.0 - attacker_reflect.self_damage_ratio) * 100])
+	
+	# 8. ダメージ軽減判定（無効化[1/2]など）
+	var defender_damage_reduction = 1.0  # 1.0 = 軽減なし
+	if is_nullified and nullify_reduction_rate > 0.0:
+		defender_damage_reduction = nullify_reduction_rate  # 例: 0.5 = 50%軽減
+		_log("防御側ダメージ軽減: %.0f%%" % [(1.0 - defender_damage_reduction) * 100])
+	
+	# 9. 勝敗判定（2回攻撃・反射・軽減を考慮）
 	var result = _calculate_battle_result(
 		attacker_final_ap, attacker_final_hp, attacker_attack_count,
 		defender_final_ap, defender_final_hp, defender_attack_count,
-		attack_order
+		attack_order,
+		attacker_reflect, defender_reflect,
+		defender_damage_reduction
 	)
+	
+	# 10. 攻撃側クリーチャーの死亡時効果を考慮
+	var death_effect_result = _apply_attacker_death_effects(
+		result, attacker.creature_data, defender_final_hp,
+		attacker_final_ap, attacker_attack_count, defender_reflect
+	)
+	result = death_effect_result["result"]
+	var adjusted_defender_hp = death_effect_result["defender_hp"]
 	
 	_log("")
 	_log(_get_result_header(result))
@@ -287,6 +343,43 @@ func _determine_attack_order(attacker, defender) -> String:
 	return "attacker_first"
 
 ## 勝敗判定（2回攻撃を考慮）
+## 反射情報を取得
+func _get_reflect_info(participant) -> Dictionary:
+	var result = {
+		"has_reflect": false,
+		"reflect_ratio": 0.0,
+		"self_damage_ratio": 1.0  # デフォルトは100%ダメージを受ける
+	}
+	
+	# クリーチャー自身のスキルをチェック
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "reflect_damage":
+			var attack_types = effect.get("attack_types", [])
+			if "normal" in attack_types:
+				result.has_reflect = true
+				result.reflect_ratio = effect.get("reflect_ratio", 0.5)
+				result.self_damage_ratio = effect.get("self_damage_ratio", 0.5)
+				return result
+	
+	# アイテムをチェック
+	var items = participant.creature_data.get("items", [])
+	for item in items:
+		var effect_parsed = item.get("effect_parsed", {})
+		var item_effects = effect_parsed.get("effects", [])
+		for effect in item_effects:
+			if effect.get("effect_type") == "reflect_damage":
+				var attack_types = effect.get("attack_types", [])
+				if "normal" in attack_types:
+					result.has_reflect = true
+					result.reflect_ratio = effect.get("reflect_ratio", 0.5)
+					result.self_damage_ratio = effect.get("self_damage_ratio", 0.5)
+					return result
+	
+	return result
+
 func _calculate_battle_result(
 	attacker_ap: int,
 	attacker_hp: int,
@@ -294,28 +387,69 @@ func _calculate_battle_result(
 	defender_ap: int,
 	defender_hp: int,
 	defender_attack_count: int,
-	attack_order: String
+	attack_order: String,
+	attacker_reflect: Dictionary = {},
+	defender_reflect: Dictionary = {},
+	defender_damage_reduction: float = 1.0  # 防御側が受けるダメージの軽減率（1.0=軽減なし、0.5=50%軽減）
 ) -> int:
 	
 	var attacker_current_hp = attacker_hp
 	var defender_current_hp = defender_hp
 	
 	# 総ダメージ計算（2回攻撃を考慮）
-	var attacker_total_damage = attacker_ap * attacker_attack_count
+	# 防御側のダメージ軽減を適用（無効化[1/2]など）
+	var attacker_total_damage = int(attacker_ap * attacker_attack_count * defender_damage_reduction)
 	var defender_total_damage = defender_ap * defender_attack_count
+	
+	# 反射計算用
+	var attacker_has_reflect = attacker_reflect.get("has_reflect", false)
+	var attacker_reflect_ratio = attacker_reflect.get("reflect_ratio", 0.0)
+	var attacker_self_damage_ratio = attacker_reflect.get("self_damage_ratio", 1.0)
+	
+	var defender_has_reflect = defender_reflect.get("has_reflect", false)
+	var defender_reflect_ratio = defender_reflect.get("reflect_ratio", 0.0)
+	var defender_self_damage_ratio = defender_reflect.get("self_damage_ratio", 1.0)
 	
 	if attack_order == "attacker_first":
 		# 攻撃側が先攻
-		defender_current_hp -= attacker_total_damage
-		if defender_current_hp > 0:
+		if defender_has_reflect:
+			# 防御側が反射を持っている
+			var reflect_damage = int(attacker_total_damage * defender_reflect_ratio)
+			var actual_damage = int(attacker_total_damage * defender_self_damage_ratio)
+			defender_current_hp -= actual_damage
+			attacker_current_hp -= reflect_damage
+		else:
+			defender_current_hp -= attacker_total_damage
+		
+		if defender_current_hp > 0 and attacker_current_hp > 0:
 			# 防御側が生き残ったら反撃
-			attacker_current_hp -= defender_total_damage
+			if attacker_has_reflect:
+				var reflect_damage = int(defender_total_damage * attacker_reflect_ratio)
+				var actual_damage = int(defender_total_damage * attacker_self_damage_ratio)
+				attacker_current_hp -= actual_damage
+				defender_current_hp -= reflect_damage
+			else:
+				attacker_current_hp -= defender_total_damage
 	else:
 		# 防御側が先攻
-		attacker_current_hp -= defender_total_damage
-		if attacker_current_hp > 0:
+		if attacker_has_reflect:
+			# 攻撃側が反射を持っている
+			var reflect_damage = int(defender_total_damage * attacker_reflect_ratio)
+			var actual_damage = int(defender_total_damage * attacker_self_damage_ratio)
+			attacker_current_hp -= actual_damage
+			defender_current_hp -= reflect_damage
+		else:
+			attacker_current_hp -= defender_total_damage
+		
+		if attacker_current_hp > 0 and defender_current_hp > 0:
 			# 攻撃側が生き残ったら攻撃
-			defender_current_hp -= attacker_total_damage
+			if defender_has_reflect:
+				var reflect_damage = int(attacker_total_damage * defender_reflect_ratio)
+				var actual_damage = int(attacker_total_damage * defender_self_damage_ratio)
+				defender_current_hp -= actual_damage
+				attacker_current_hp -= reflect_damage
+			else:
+				defender_current_hp -= attacker_total_damage
 	
 	var attacker_dies = attacker_current_hp <= 0
 	var defender_dies = defender_current_hp <= 0
@@ -350,6 +484,71 @@ func _result_to_string(result: int) -> String:
 			return "【相打】両方撃破"
 		_:
 			return "【不明】"
+
+## 攻撃側クリーチャーの死亡時効果を考慮
+## サルファバルーン等の「死亡時敵にダメージ」を考慮して結果を調整
+func _apply_attacker_death_effects(
+	current_result: int,
+	attacker_data: Dictionary,
+	defender_hp: int,
+	attacker_ap: int,
+	attacker_attack_count: int,
+	defender_reflect: Dictionary
+) -> Dictionary:
+	var result = current_result
+	var adjusted_defender_hp = defender_hp
+	
+	# 攻撃側が死亡しない場合は効果なし
+	if result != BattleResult.DEFENDER_WIN and result != BattleResult.BOTH_DEFEATED:
+		return {"result": result, "defender_hp": adjusted_defender_hp}
+	
+	# 攻撃側クリーチャーの死亡時効果を確認
+	var death_damage = _get_attacker_death_damage(attacker_data)
+	if death_damage <= 0:
+		return {"result": result, "defender_hp": adjusted_defender_hp}
+	
+	# 防御側の残りHPを計算（反射を考慮した実際のダメージ後）
+	var defender_has_reflect = defender_reflect.get("has_reflect", false)
+	var defender_self_damage_ratio = defender_reflect.get("self_damage_ratio", 1.0)
+	
+	var actual_attacker_damage = attacker_ap * attacker_attack_count
+	if defender_has_reflect:
+		actual_attacker_damage = int(actual_attacker_damage * defender_self_damage_ratio)
+	
+	# 防御側の残りHP（元HPから攻撃ダメージを引いた値）
+	# DEFENDER_WIN の場合、防御側は生き残っているので、残りHPを推測
+	var estimated_remaining_hp = defender_hp - actual_attacker_damage
+	if estimated_remaining_hp < 1:
+		estimated_remaining_hp = 1  # 勝った場合は最低1は残っている
+	
+	_log("--- 死亡時効果判定 ---")
+	_log("攻撃側死亡時ダメージ: %d" % death_damage)
+	_log("防御側推定残りHP: %d" % estimated_remaining_hp)
+	
+	# 死亡時ダメージを適用
+	adjusted_defender_hp = estimated_remaining_hp - death_damage
+	
+	if adjusted_defender_hp <= 0:
+		_log("  → 死亡時効果で防御側も撃破！相打ちに変更")
+		result = BattleResult.BOTH_DEFEATED
+	else:
+		_log("  → 防御側生存（残りHP: %d）" % adjusted_defender_hp)
+	
+	return {"result": result, "defender_hp": adjusted_defender_hp}
+
+## 攻撃側クリーチャーの死亡時ダメージを取得
+func _get_attacker_death_damage(attacker_data: Dictionary) -> int:
+	var ability_parsed = attacker_data.get("ability_parsed", {})
+	var effects = ability_parsed.get("effects", [])
+	
+	for effect in effects:
+		var trigger = effect.get("trigger", "")
+		if trigger == "on_death":
+			var effect_type = effect.get("effect_type", "")
+			if effect_type == "damage_enemy":
+				return effect.get("damage", 0)
+	
+	return 0
 
 ## ログ出力
 func _log(message: String) -> void:

@@ -561,6 +561,19 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		game_flow_manager.battle_status_overlay.show_battle_status(
 			attacker_display, defender_display, "attacker")
 	
+	# CPU攻撃側の合体処理をチェック
+	if _is_cpu_player(current_player_index):
+		var merge_executed = await _check_and_execute_cpu_attacker_merge(current_player_index)
+		if merge_executed:
+			# 合体後のデータでバトルオーバーレイを更新
+			if game_flow_manager and game_flow_manager.battle_status_overlay:
+				var attacker_display = pending_battle_card_data.duplicate()
+				attacker_display["land_bonus_hp"] = 0
+				var defender_display = defender_creature.duplicate()
+				defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
+				game_flow_manager.battle_status_overlay.show_battle_status(
+					attacker_display, defender_display, "attacker")
+	
 	# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
 	if game_flow_manager and game_flow_manager.item_phase_handler:
 		# アイテムフェーズ完了シグナルに接続
@@ -888,6 +901,89 @@ func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dic
 		return tile_level * 10
 	
 	return 0
+
+## プレイヤーがCPUかどうか判定
+func _is_cpu_player(player_index: int) -> bool:
+	if board_system and "player_is_cpu" in board_system:
+		var cpu_flags = board_system.player_is_cpu
+		if player_index >= 0 and player_index < cpu_flags.size():
+			return cpu_flags[player_index]
+	return false
+
+## CPU攻撃側の合体処理をチェック・実行
+func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
+	# cpu_ai_handlerから合体データを取得
+	if not board_system or not board_system.cpu_turn_processor:
+		return false
+	
+	var cpu_handler = board_system.cpu_turn_processor.cpu_ai_handler
+	if not cpu_handler:
+		return false
+	
+	if not cpu_handler.has_pending_merge():
+		return false
+	
+	var merge_data = cpu_handler.get_pending_merge_data()
+	print("[TileActionProcessor] CPU攻撃側合体実行: %s → %s" % [
+		pending_battle_card_data.get("name", "?"),
+		merge_data.get("result_name", "?")
+	])
+	
+	# 合体相手のデータ
+	var partner_index = merge_data.get("partner_index", -1)
+	var partner_data = merge_data.get("partner_data", {})
+	var cost = merge_data.get("cost", 0)
+	var result_id = merge_data.get("result_id", -1)
+	
+	if partner_index < 0 or result_id < 0:
+		cpu_handler.clear_pending_merge_data()
+		return false
+	
+	# 合体結果のクリーチャーを取得
+	var result_creature = CardLoader.get_card_by_id(result_id)
+	if result_creature.is_empty():
+		print("[TileActionProcessor] 合体結果のクリーチャーが見つかりません")
+		cpu_handler.clear_pending_merge_data()
+		return false
+	
+	# 魔力消費（合体相手のコスト）
+	player_system.add_magic(player_index, -cost)
+	print("[CPU合体] 魔力消費: %dG" % cost)
+	
+	# 合体相手を捨て札へ
+	card_system.discard_card(player_index, partner_index, "merge")
+	print("[CPU合体] %s を捨て札へ" % partner_data.get("name", "?"))
+	
+	# 合体後のクリーチャーデータを準備
+	var new_creature_data = result_creature.duplicate(true)
+	
+	# 永続化フィールドの初期化
+	if not new_creature_data.has("base_up_hp"):
+		new_creature_data["base_up_hp"] = 0
+	if not new_creature_data.has("base_up_ap"):
+		new_creature_data["base_up_ap"] = 0
+	if not new_creature_data.has("permanent_effects"):
+		new_creature_data["permanent_effects"] = []
+	if not new_creature_data.has("temporary_effects"):
+		new_creature_data["temporary_effects"] = []
+	
+	# current_hpの初期化
+	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
+	new_creature_data["current_hp"] = max_hp
+	
+	# バトルカードデータを更新
+	pending_battle_card_data = new_creature_data
+	
+	print("[CPU合体] 完了: %s (HP:%d AP:%d)" % [
+		new_creature_data.get("name", "?"),
+		max_hp,
+		new_creature_data.get("ap", 0)
+	])
+	
+	# 合体データをクリア
+	cpu_handler.clear_pending_merge_data()
+	
+	return true
 
 # アクション完了（内部用）
 func _complete_action():
