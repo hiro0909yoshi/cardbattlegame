@@ -202,6 +202,19 @@ func collect_players(players_container: Node):
 func get_tile_info(tile_index: int) -> Dictionary:
 	return tile_data_manager.get_tile_info(tile_index)
 
+## get_tile_data のエイリアス（CPU AI互換用）
+func get_tile_data(tile_index: int) -> Dictionary:
+	return tile_data_manager.get_tile_info(tile_index)
+
+## 全タイル情報を取得（CPU AI用）
+func get_all_tiles() -> Array:
+	var result = []
+	for tile_index in tile_nodes.keys():
+		var info = tile_data_manager.get_tile_info(tile_index)
+		info["index"] = tile_index
+		result.append(info)
+	return result
+
 func is_special_tile_type(tile_type: String) -> bool:
 	return tile_data_manager.is_special_tile_type(tile_type)
 

@@ -26,6 +26,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "water_wind_creature",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -55,6 +60,10 @@
 			"count": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -79,6 +88,10 @@
 			"duration": 5
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -103,6 +116,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -132,6 +149,11 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "enemy_creature",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -154,6 +176,10 @@
 			"duration": 2
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -180,6 +206,10 @@
 			"duration": 5
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -203,6 +233,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -222,6 +256,11 @@
 			"effect_type": "purify_all"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_any_curse",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -245,6 +284,11 @@
 			"element": "fire"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
 	  }
 	},
 	{
@@ -273,6 +317,10 @@
 		  "owner_filter": "any"
 		},
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -296,6 +344,10 @@
 			"select_by": "lowest_mhp"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -323,6 +375,10 @@
 			}
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "immediate",
+		"priority": "low"
 	  }
 	},
 	{
@@ -343,6 +399,10 @@
 			"look_count": 6
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "immediate",
+		"priority": "low"
 	  }
 	},
 	{
@@ -362,6 +422,10 @@
 			"effect_type": "warp_to_nearest_gate"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -383,6 +447,10 @@
 			"duration": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -405,6 +473,10 @@
 			"duration": 6
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -428,6 +500,12 @@
 			"percentage": 30
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "enemy_magic * 0.3",
+		"target_condition": "enemy_has_more_magic",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -464,6 +542,10 @@
 			]
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -486,6 +568,11 @@
 			"duration": 2
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "enemy_has_high_toll",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -512,6 +599,11 @@
 			"return_to_deck_on_fail": true
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_5_level2_lands",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -540,6 +632,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "fire_earth_creature",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -564,6 +661,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -592,6 +693,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "fire_water_creature",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -624,6 +730,11 @@
 			]
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "no_curse_no_mystic",
+		"priority": "low"
 	  }
 	},
 	{
@@ -643,6 +754,10 @@
 			"effect_type": "draw_by_type"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "immediate",
+		"priority": "low"
 	  }
 	},
 	{
@@ -666,6 +781,10 @@
 			"duration": 2
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -677,7 +796,11 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "全ブリードクリーチャーをダウンさせ、呪い\"戦闘行動不可\"をつける"
+	  "effect": "全ブリードクリーチャーをダウンさせ、呪い\"戦闘行動不可\"をつける",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
 	},
 	{
 	  "id": 2093,
@@ -699,6 +822,10 @@
 			"draw_after": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -727,6 +854,10 @@
 			"count": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -747,6 +878,10 @@
 			"count": 2
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "immediate",
+		"priority": "low"
 	  }
 	},
 	{
@@ -771,6 +906,11 @@
 			"return_to_deck_on_fail": true
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_4_mismatched_lands",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -794,6 +934,11 @@
 			"effect_type": "return_to_hand"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "element_mismatch_creature",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -816,6 +961,10 @@
 			"duration": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -838,6 +987,10 @@
 			"duration": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -860,6 +1013,10 @@
 			"duration": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -882,6 +1039,10 @@
 			"duration": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -904,6 +1065,10 @@
 			"duration": 6
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -933,6 +1098,11 @@
 			"element_b": "earth"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
 	  }
 	},
 	{
@@ -956,6 +1126,10 @@
 			"effect_type": "warp_to_target"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -984,6 +1158,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1008,6 +1186,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "can_kill_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1041,6 +1224,10 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1066,6 +1253,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1086,6 +1277,11 @@
 			"multiplier": 50
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "lap_count * 50",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1108,6 +1304,10 @@
 			"duration": 6
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1130,6 +1330,10 @@
 			"duration": 6
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1141,7 +1345,11 @@
 	  "cost": {
 		"mp": 70
 	  },
-	  "effect": "ブリードカードがブックにある場合、それを1枚引く；無い場合、カードを2枚引く"
+	  "effect": "ブリードカードがブックにある場合、それを1枚引く；無い場合、カードを2枚引く",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
 	},
 	{
 	  "id": 2113,
@@ -1164,6 +1372,10 @@
 			"transform_to_id": 2100
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1188,6 +1400,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1211,6 +1427,11 @@
 			"duration": 3
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "enemy_has_high_toll",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1234,6 +1455,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "self_creature_damaged",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1258,6 +1484,10 @@
 			"duration": -1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1281,6 +1511,11 @@
 			"return_rate": 0.7
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "land_value * 0.7",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1302,6 +1537,11 @@
 			"multiplier": 30
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "enemy_land_count * 30",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1333,6 +1573,10 @@
 			"count": 1
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "low"
 	  }
 	},
 	{
@@ -1359,6 +1603,11 @@
 		  }
 		],
 		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "self_creature_damaged",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1379,6 +1628,11 @@
 			"effect_type": "reset_deck"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "deck_nearly_empty",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1398,6 +1652,11 @@
 			"effect_type": "gate_pass"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_unvisited_gate",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1409,7 +1668,11 @@
 	  "cost": {
 		"mp": 30
 	  },
-	  "effect": "全分岐スイッチを切り替える；復帰[ブック]；スイッチが無い場合、カードを1枚引く"
+	  "effect": "全分岐スイッチを切り替える；復帰[ブック]；スイッチが無い場合、カードを1枚引く",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
 	},
 	{
 	  "id": 2125,
@@ -1420,7 +1683,11 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "使用者に呪い\"制限解除\"(4R間、クリーチャーのアイテム制限と配置制限を無視)"
+	  "effect": "使用者に呪い\"制限解除\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
 	},
 	{
 	  "id": 2126,
@@ -1444,6 +1711,11 @@
 			"description": "盤面上の2体を交換"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_priority_swap_target",
+		"priority": "low"
 	  }
 	},
 	{
@@ -1463,6 +1735,11 @@
 			"effect_type": "discard_and_draw_plus"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "low_hand_quality",
+		"priority": "low"
 	  }
 	},
 	{
@@ -1482,6 +1759,11 @@
 			"effect_type": "destroy_curse_cards"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_curse_cards_in_hand",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1502,6 +1784,11 @@
 			"cost_threshold": 100
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_expensive_cards",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1521,6 +1808,11 @@
 			"effect_type": "balance_all_magic"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "self_lowest_magic",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1547,6 +1839,11 @@
 			}
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_4_consecutive_lands",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1569,6 +1866,11 @@
 			"card_type_filter": "creature"
 		  }
 		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_vacant_land",
+		"priority": "low"
 	  }
 	}
   ]

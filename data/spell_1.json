@@ -1,1601 +1,1891 @@
 {
   "cards": [
-    {
-      "id": 2001,
-      "name": "アースシフト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象自領地を地に変える",
-      "effect_parsed": {
-        "target_type": "own_land",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "earth"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2002,
-      "name": "アウトレイジ",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象クリーチャーを隣接する敵領地に移動させる\"敵地移動\"",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any",
-          "has_adjacent_enemy": true,
-          "can_move": true
-        },
-        "effects": [
-          {
-            "effect_type": "move_to_adjacent_enemy",
-            "description": "隣接する敵領地に移動"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2003,
-      "name": "アステロイド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]",
-      "synthesis": {
-        "type": "same_card",
-        "effect_override": {
-          "effect_type": "set_level",
-          "value": 1
-        }
-      },
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "change_level",
-            "value": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2004,
-      "name": "アセンブルカード",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "is_secret": true,
-      "cost": {
-        "mp": 70
-      },
-      "effect": "密命；手札に火水風地があるとG500；未達成の場合、カードを2枚引く",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "check_hand_elements",
-            "required_elements": [
-              "fire",
-              "water",
-              "wind",
-              "earth"
-            ],
-            "success_effect": {
-              "effect_type": "gain_magic",
-              "amount": 500
-            },
-            "fail_effect": {
-              "effect_type": "draw_cards",
-              "count": 2
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 2005,
-      "name": "アラーム",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "全自クリーチャーのダウンを解除",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "down_clear",
-            "target": "own_creatures"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2006,
-      "name": "イモビライズ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数特殊能力付与",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "全領地に呪い\"移動不可\"",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {},
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "move_disable",
-            "name": "移動不可"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2007,
-      "name": "インシネレート",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "自己強化",
-      "cost": {
-        "mp": 10
-      },
-      "effect": "クリーチャー破壊数×G20を得て、その数は0になる",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "gain_magic_from_destroyed_count",
-            "multiplier": 20,
-            "reset_count": true
-          }
-        ]
-      }
-    },
-    {
-      "id": 2008,
-      "name": "インフルエンス",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "対象領地を、その所有者が最も多く持つ属性に変える",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "change_element_to_dominant"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2009,
-      "name": "ウェイストワールド",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "世界呪",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "世界呪い\"コスト上昇\"(6R、カード使用魔力は袋1.5倍、冠袋2倍)",
-      "effect_parsed": {
-        "target_type": "world",
-        "effects": [
-          {
-            "effect_type": "world_curse",
-            "curse_type": "cost_increase",
-            "name": "コスト上昇",
-            "duration": 6,
-            "params": {
-              "bag_multiplier": 1.5,
-              "crown_bag_multiplier": 2.0
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 2010,
-      "name": "ウォーターシフト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象自領地を水に変える",
-      "effect_parsed": {
-        "target_type": "own_land",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "water"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2011,
-      "name": "エアーシフト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象自領地を風に変える",
-      "effect_parsed": {
-        "target_type": "own_land",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "wind"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2012,
-      "name": "エグザイル",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "呪い付きで召喚条件の無い対象クリーチャーを手札に戻す",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any",
-          "has_curse": true,
-          "no_summon_condition": true
-        },
-        "effects": [
-          {
-            "effect_type": "return_to_hand"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2013,
-      "name": "エクスチェンジ",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 60
-      },
-      "effect": "対象自クリーチャーを手札のクリーチャーと交換",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own"
-        },
-        "effects": [
-          {
-            "effect_type": "swap_with_hand",
-            "description": "手札のクリーチャーと交換"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2014,
-      "name": "エスケープ",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "最も近い空地に飛ぶ",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "warp_to_nearest_vacant"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2015,
-      "name": "エナジーフィールド",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 60
-      },
-      "effect": "対象領地に呪い\"魔力結界\"(無効化[通常攻撃]、敵にG100を与える)",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "magic_barrier",
-            "name": "魔力結界",
-            "duration": -1,
-            "gold_transfer": 100
-          }
-        ]
-      }
-    },
-    {
-      "id": 2016,
-      "name": "エレメンタルラス",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "領地と属性の合わない全クリーチャーのHP-20",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "element_mismatch": true
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2017,
-      "name": "エロージョン",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 40,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象手札を参照し、重複カードを全て破壊；合成[スペル・全手札]",
-      "synthesis": {
-        "type": "any_spell",
-        "target_override": {
-          "target_type": "all_players"
-        }
-      },
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "any",
-        "effects": [
-          {
-            "effect_type": "destroy_duplicate_cards"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2018,
-      "name": "オブリタレート",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "全セプターは属性石数×G70を失う；宝石屋が無い場合、魔力の10%を失う"
-    },
-    {
-      "id": 2019,
-      "name": "カオスパニック",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数特殊能力付与",
-      "cost": {
-        "mp": 60
-      },
-      "effect": "全セプターに呪い\"歩行逆転\"",
-      "effect_parsed": {
-        "target_type": "all_players",
-        "effects": [
-          {
-            "effect_type": "curse_movement_reverse",
-            "duration": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2020,
-      "name": "ギフト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "順位×G50を得る；自順位と同じ枚数のカードを引く",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "draw_by_rank"
-          },
-          {
-            "effect_type": "gain_magic_by_rank",
-            "multiplier": 50
-          }
-        ]
-      }
-    },
-    {
-      "id": 2021,
-      "name": "クイックサンド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象領地に呪い\"強制停止\"(2R間、1度だけ足どめ)",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "forced_stop",
-            "name": "強制停止",
-            "duration": 2,
-            "uses": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2022,
-      "name": "クインテッセンス",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "レベル4以下の対象領地を無に変える",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any",
-          "max_level": 4
-        },
-        "effects": [
-          {
-            "effect_type": "change_element",
-            "element": "neutral"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2023,
-      "name": "クラスターバースト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 90
-      },
-      "effect": "最多属性の全クリーチャーのHP-20",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "most_common_element": true
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2024,
-      "name": "グリード",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 30
-      },
-      "effect": "対象領地に呪い\"通行料1.5倍\"；カードを1枚引く",
-      "effect_parsed": {
-        "target_type": "creature",
-        "effects": [
-          {
-            "effect_type": "toll_multiplier",
-            "name": "通行料1.5倍",
-            "multiplier": 1.5,
-            "duration": -1
-          },
-          {
-            "effect_type": "draw",
-            "count": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2025,
-      "name": "クレアボヤンス",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "対象手札のスペル使用魔力総計の1/2の魔力を得る；対象手札の密命カードを見る",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "gain_magic_from_spell_cost",
-            "percentage": 50
-          }
-        ]
-      }
-    },
-    {
-      "id": 2026,
-      "name": "グロースボディ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "対象クリーチャーのMHP+10",
-      "effect_parsed": {
-        "target_type": "creature",
-        "effects": [
-          {
-            "effect_type": "permanent_hp_change",
-            "value": 10
-          }
-        ],
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2027,
-      "name": "クワイエチュード",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数特殊能力付与",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "全セプターに呪い\"スペル不可\"(次R、スペルを使用できない)",
-      "effect_parsed": {
-        "target_type": "all_players",
-        "effects": [
-          {
-            "effect_type": "player_curse",
-            "curse_type": "spell_disable",
-            "name": "スペル不可",
-            "duration": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2028,
-      "name": "ゴブリンズレア",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 10,
-        "cards_sacrifice": 1
-      },
-      "effect": "空地に止まっている場合、ゴブリンを配置する；復帰[手札]",
-      "effect_parsed": {
-        "target_type": "self",
-        "effects": [
-          {
-            "effect_type": "place_creature",
-            "creature_id": 414,
-            "placement_mode": "conditional"
-          }
-        ],
-        "return_to_hand": true
-      }
-    },
-    {
-      "id": 2029,
-      "name": "サドンインパクト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "keywords": [
-        "密命"
-      ],
-      "cost": {
-        "mp": 100
-      },
-      "effect": "密命；対象レベル4領地のレベルを1下げる",
-      "effect_parsed": {
-        "keywords": [
-          "密命"
-        ],
-        "keyword_conditions": {
-          "密命": {
-            "success_conditions": [
-              {
-                "condition_type": "level_land_count",
-                "level": 4,
-                "count": 1
-              }
-            ],
-            "failure_effect": "none"
-          }
-        },
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any",
-          "required_level": 4
-        },
-        "effects": [
-          {
-            "effect_type": "change_level",
-            "value": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2030,
-      "name": "サブサイド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]",
-      "synthesis": {
-        "type": "same_card",
-        "target_override": {
-          "target_type": "all_players",
-          "target_info": {
-            "owner_filter": "enemy"
-          }
-        }
-      },
-      "effect_parsed": {
-        "target_type": "player",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "find_and_change_highest_level",
-            "value": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2031,
-      "name": "サンダークラップ",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "密命；召喚条件のある対象敵クリーチャーのHP-30",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy",
-          "has_summon_condition": true
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 30
-          }
-        ],
-        "is_secret": true,
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2032,
-      "name": "シニリティ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象領地に呪い\"戦闘後破壊\"",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "destroy_after_battle",
-            "name": "戦闘後破壊",
-            "duration": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2033,
-      "name": "シャイニングガイザー",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象敵クリーチャーのHP-30；合成[単体対象スペル・効果はHP-40となる]",
-      "synthesis": {
-        "type": "single_target_spell",
-        "value_override": 40
-      },
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy"
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 30
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2034,
-      "name": "シャッター",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 30
-      },
-      "effect": "対象敵手札のアイテムかスペルを1枚選んで破壊",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "destroy_selected_card",
-            "filter_mode": "destroy_item_spell"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2035,
-      "name": "シュリンクシジル",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 40
-      },
-      "effect": "対象クリーチャー1体に呪い\"縮小術\"(秘術[G50・対象クリーチャー1体のMHP-10])",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "all",
-          "has_no_curse": true,
-          "has_no_mystic_arts": true
-        },
-        "effects": [
-          {
-            "effect_type": "grant_mystic_arts",
-            "curse_name": "縮小術",
-            "mystic_arts": [
-              {
-                "name": "縮小",
-                "cost": 50,
-                "spell_id": 9011
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 2036,
-      "name": "ジョイントワールド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "世界呪",
-      "cost": {
-        "mp": 50
-      },
-      "effect": "世界呪い\"他属性連鎖\"(6R間、火と地、水と風が連鎖)",
-      "effect_parsed": {
-        "target_type": "world",
-        "effects": [
-          {
-            "effect_type": "world_curse",
-            "curse_type": "element_chain",
-            "name": "他属性連鎖",
-            "duration": 6,
-            "params": {
-              "chain_pairs": [
-                [
-                  "fire",
-                  "earth"
-                ],
-                [
-                  "water",
-                  "wind"
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": 2037,
-      "name": "スウォーム",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 120
-      },
-      "effect": "HPが減少している全クリーチャーのHP-20",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "hp_reduced": true
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 20
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2038,
-      "name": "スクイーズ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 50
-      },
-      "effect": "対象の手札1枚を破壊する；対象セプターはG150を得る",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "any",
-        "effects": [
-          {
-            "effect_type": "destroy_selected_card",
-            "filter_mode": "destroy_any",
-            "magic_bonus": 150
-          }
-        ]
-      }
-    },
-    {
-      "id": 2039,
-      "name": "スティールジェム",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 40
-      },
-      "effect": "対象敵セプターの属性石を1つ奪う；宝石屋が無い場合、G80を奪う"
-    },
-    {
-      "id": 2040,
-      "name": "ストームシフト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 120
-      },
-      "effect": "レベル3以下の対象水領地を風に、または風領地を水に変える",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "any",
-          "max_level": 3,
-          "required_elements": [
-            "water",
-            "wind"
-          ]
-        },
-        "effects": [
-          {
-            "effect_type": "change_element_bidirectional",
-            "element_a": "water",
-            "element_b": "wind"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2041,
-      "name": "ストーンブラスト",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "対象、地風のHP-30",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "enemy",
-          "creature_elements": [
-            "earth",
-            "wind"
-          ]
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 30
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2042,
-      "name": "スニークハンド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "密命；アイテムを2枚以上持つ敵手札から1枚を奪う",
-      "secret_mission": true,
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "steal_item_conditional",
-            "required_item_count": 2,
-            "filter_mode": "item"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2043,
-      "name": "スパルトイ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 30,
-        "cards_sacrifice": 1
-      },
-      "effect": "ランダムな空地にスケルトンを配置",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "place_creature",
-            "creature_id": 420,
-            "placement_mode": "random"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2044,
-      "name": "スピードペナルティ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "最多周回数セプター1人から、自周回数との差×G100を奪う",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "drain_magic_by_lap_diff",
-            "multiplier": 100
-          }
-        ]
-      }
-    },
-    {
-      "id": 2045,
-      "name": "スピリットウォーク",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "対象領地に呪い\"遠隔移動\"(離れた空地にも移動できる)",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "creature_curse",
-            "curse_type": "remote_move",
-            "name": "遠隔移動",
-            "description": "全ての空き地に移動可能"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2046,
-      "name": "セフト",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "対象敵手札のスペルを1枚奪う",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "steal_selected_card",
-            "filter_mode": "destroy_spell"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2047,
-      "name": "ソリッドワールド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "世界呪",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "世界呪い\"土地変性無効\"(6R間、全領地は土地破壊・変性無効)",
-      "effect_parsed": {
-        "target_type": "world",
-        "effects": [
-          {
-            "effect_type": "world_curse",
-            "curse_type": "land_protect",
-            "name": "土地変性無効",
-            "duration": 6
-          }
-        ]
-      }
-    },
-    {
-      "id": 2048,
-      "name": "ダークワールド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "世界呪",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "世界呪い\"呪い防魔化\"(6R間、呪いのついた全クリーチャーは防魔)",
-      "effect_parsed": {
-        "target_type": "world",
-        "effects": [
-          {
-            "effect_type": "world_curse",
-            "curse_type": "cursed_protection",
-            "name": "呪い防魔化",
-            "duration": 6
-          }
-        ]
-      }
-    },
-    {
-      "id": 2049,
-      "name": "ターンウォール",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "対象クリーチャーを同属性の防御型クリーチャーに変える",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "transform",
-            "target": "target",
-            "transform_type": "same_element_defensive"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2050,
-      "name": "タイニーアーミー",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 100
-      },
-      "effect": "密命；MHP30以下5体配置時、MHP+10、G500；未達成の場合、復帰[ブック]",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "secret_tiny_army",
-            "mhp_threshold": 30,
-            "required_count": 5,
-            "hp_bonus": 10,
-            "gold_bonus": 500
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2051,
-      "name": "チャージステップ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "対象セプターに呪い\"蓄魔歩行\"(ダイスを2回,2～4にし、G50を得る)",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "any",
-        "effects": [
-          {
-            "effect_type": "dice_range_magic",
-            "min": 2,
-            "max": 4,
-            "magic": 50,
-            "duration": 2
-          }
-        ]
-      }
-    },
-    {
-      "id": 2052,
-      "name": "チャリオット",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 50
-      },
-      "effect": "対象自クリーチャーを2マス移動させる；復帰[ブック]",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "own",
-          "can_move": true
-        },
-        "return_to_deck": true,
-        "effects": [
-          {
-            "effect_type": "move_steps",
-            "steps": 2,
-            "exact_steps": true
-          }
-        ]
-      }
-    },
-    {
-      "id": 2053,
-      "name": "ディザスター",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 120,
-        "cards_sacrifice": 1
-      },
-      "effect": "ダウンしたMHP50以上の全クリーチャーのHP-30",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "is_down": true,
-          "mhp_check": {
-            "operator": ">=",
-            "value": 50
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "damage",
-            "value": 30
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2054,
-      "name": "ディジーズ",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 30
-      },
-      "effect": "対象領地に呪い\"能力値-20\"(戦闘中、AP&HP-20)；カードを1枚引く",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "stat_reduce",
-            "name": "能力値-20",
-            "value": -20,
-            "duration": -1
-          },
-          {
-            "effect_type": "draw",
-            "count": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2055,
-      "name": "ディスエレメント",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 20,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
-      "synthesis": {
-        "type": "creature",
-        "target_override": {
-          "target_type": "all_creatures",
-          "target_info": {
-            "state_filter": "downed"
-          }
-        }
-      },
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "land_effect_disable",
-            "name": "地形効果無効",
-            "duration": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2056,
-      "name": "ディスコード",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "複数対象",
-      "cost": {
-        "mp": 80,
-        "cards_sacrifice": 1
-      },
-      "effect": "最多配置クリーチャーのうち1種類を全てゴブリンに変える",
-      "effect_parsed": {
-        "target_type": "none",
-        "effects": [
-          {
-            "effect_type": "discord_transform"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2057,
-      "name": "ディラニー",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "複数特殊能力付与",
-      "cost": {
-        "mp": 100,
-        "cards_sacrifice": 1
-      },
-      "effect": "MHP30以下の全クリーチャーに呪い\"戦闘行動不可\"",
-      "effect_parsed": {
-        "target_type": "all_creatures",
-        "target_info": {
-          "owner_filter": "any",
-          "condition": {
-            "condition_type": "mhp_check",
-            "operator": "<=",
-            "value": 30
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "battle_disable",
-            "name": "戦闘行動不可",
-            "duration": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2058,
-      "name": "デビリティ",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 40,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象クリーチャーのAP=0；合成[スペル・MHP-20を追加]；カードを1枚引く",
-      "synthesis": {
-        "type": "any_spell",
-        "effects_add": [
-          {
-            "effect_type": "permanent_hp_change",
-            "value": -20
-          }
-        ]
-      },
-      "effect_parsed": {
-        "target_type": "creature",
-        "effects": [
-          {
-            "effect_type": "ap_nullify",
-            "name": "AP=0",
-            "duration": -1
-          },
-          {
-            "effect_type": "draw",
-            "count": 1
-          }
-        ],
-        "affects_hp": true
-      }
-    },
-    {
-      "id": 2059,
-      "name": "テンプテーション",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 70,
-        "cards_sacrifice": 1
-      },
-      "effect": "対象クリーチャーの秘術を使用",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any",
-          "require_mystic_arts": true,
-          "require_not_down": true
-        },
-        "effects": [
-          {
-            "effect_type": "use_target_mystic_art"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2060,
-      "name": "ドミナントグロース",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 50
-      },
-      "effect": "対象領地に呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)",
-      "effect_parsed": {
-        "target_type": "creature",
-        "target_info": {
-          "owner_filter": "any"
-        },
-        "effects": [
-          {
-            "effect_type": "command_growth_curse",
-            "name": "コマンド成長",
-            "hp_bonus": 20,
-            "duration": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2061,
-      "name": "ドリームトレイン",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 40
-      },
-      "effect": "使用者に呪い\"通行料促進\"(5R間、他のセプターが得た通行料の50%を得る)",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "self",
-        "effects": [
-          {
-            "effect_type": "toll_share",
-            "name": "通行料促進",
-            "ratio": 0.5,
-            "duration": 5
-          }
-        ]
-      }
-    },
-    {
-      "id": 2062,
-      "name": "ドレインシジル",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "単体特殊能力付与",
-      "cost": {
-        "mp": 20
-      },
-      "effect": "対象自領地に呪い\"魔力奪取\"(秘術[G20・対象敵セプターから魔力の10%を奪う])",
-      "effect_parsed": {
-        "target_type": "land",
-        "target_info": {
-          "owner_filter": "self",
-          "has_creature": true
-        },
-        "effects": [
-          {
-            "effect_type": "grant_mystic_arts",
-            "spell_id": 9012,
-            "cost": 20,
-            "name": "魔力奪取",
-            "duration": -1
-          }
-        ]
-      }
-    },
-    {
-      "id": 2063,
-      "name": "ドレインマジック",
-      "rarity": "N",
-      "type": "spell",
-      "spell_type": "単体対象",
-      "cost": {
-        "mp": 80
-      },
-      "effect": "対象敵セプターから魔力の30%を奪う",
-      "effect_parsed": {
-        "target_type": "player",
-        "target_filter": "enemy",
-        "effects": [
-          {
-            "effect_type": "drain_magic",
-            "value": 30,
-            "value_type": "percentage"
-          }
-        ]
-      }
-    },
-    {
-      "id": 2064,
-      "name": "ナチュラルワールド",
-      "rarity": "R",
-      "type": "spell",
-      "spell_type": "世界呪",
-      "cost": {
-        "mp": 70
-      },
-      "effect": "世界呪い\"特定能力不可\"(6R間、秘術、自破壊時、戦闘終了時は発動しない)",
-      "effect_parsed": {
-        "target_type": "world",
-        "effects": [
-          {
-            "effect_type": "world_curse",
-            "curse_type": "skill_disable",
-            "name": "ナチュラルワールド",
-            "duration": 6,
-            "params": {
-              "disabled_triggers": [
-                "mystic_arts",
-                "on_death",
-                "on_battle_end"
-              ]
-            }
-          }
-        ]
-      }
-    }
+	{
+	  "id": 2001,
+	  "name": "アースシフト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象自領地を地に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "earth"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2002,
+	  "name": "アウトレイジ",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象クリーチャーを隣接する敵領地に移動させる\"敵地移動\"",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "has_adjacent_enemy": true,
+		  "can_move": true
+		},
+		"effects": [
+		  {
+			"effect_type": "move_to_adjacent_enemy",
+			"description": "隣接する敵領地に移動"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "move_invasion_win",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2003,
+	  "name": "アステロイド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]",
+	  "synthesis": {
+		"type": "same_card",
+		"effect_override": {
+		  "effect_type": "set_level",
+		  "value": 1
+		}
+	  },
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_level",
+			"value": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "enemy_high_level",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2004,
+	  "name": "アセンブルカード",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "is_secret": true,
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "密命；手札に火水風地があるとG500；未達成の場合、カードを2枚引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "check_hand_elements",
+			"required_elements": [
+			  "fire",
+			  "water",
+			  "wind",
+			  "earth"
+			],
+			"success_effect": {
+			  "effect_type": "gain_magic",
+			  "amount": 500
+			},
+			"fail_effect": {
+			  "effect_type": "draw_cards",
+			  "count": 2
+			}
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_all_elements_in_hand",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2005,
+	  "name": "アラーム",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "全自クリーチャーのダウンを解除",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "down_clear",
+			"target": "own_creatures"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_downed_creature",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2006,
+	  "name": "イモビライズ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数特殊能力付与",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "全領地に呪い\"移動不可\"",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "move_disable",
+			"name": "移動不可"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2007,
+	  "name": "インシネレート",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "自己強化",
+	  "cost": {
+		"mp": 10
+	  },
+	  "effect": "クリーチャー破壊数×G20を得て、その数は0になる",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_from_destroyed_count",
+			"multiplier": 20,
+			"reset_count": true
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "destroyed_count * 20",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2008,
+	  "name": "インフルエンス",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "対象領地を、その所有者が最も多く持つ属性に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element_to_dominant"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2009,
+	  "name": "ウェイストワールド",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "世界呪",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "世界呪い\"コスト上昇\"(6R、カード使用魔力は袋1.5倍、冠袋2倍)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "cost_increase",
+			"name": "コスト上昇",
+			"duration": 6,
+			"params": {
+			  "bag_multiplier": 1.5,
+			  "crown_bag_multiplier": 2.0
+			}
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2010,
+	  "name": "ウォーターシフト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象自領地を水に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "water"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2011,
+	  "name": "エアーシフト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象自領地を風に変える",
+	  "effect_parsed": {
+		"target_type": "own_land",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "wind"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2012,
+	  "name": "エグザイル",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "呪い付きで召喚条件の無い対象クリーチャーを手札に戻す",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "has_curse": true,
+		  "no_summon_condition": true
+		},
+		"effects": [
+		  {
+			"effect_type": "return_to_hand"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_cursed_creature",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2013,
+	  "name": "エクスチェンジ",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 60
+	  },
+	  "effect": "対象自クリーチャーを手札のクリーチャーと交換",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own"
+		},
+		"effects": [
+		  {
+			"effect_type": "swap_with_hand",
+			"description": "手札のクリーチャーと交換"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2014,
+	  "name": "エスケープ",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "最も近い空地に飛ぶ",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "warp_to_nearest_vacant"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2015,
+	  "name": "エナジーフィールド",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 60
+	  },
+	  "effect": "対象領地に呪い\"魔力結界\"(無効化[通常攻撃]、敵にG100を与える)",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "magic_barrier",
+			"name": "魔力結界",
+			"duration": -1,
+			"gold_transfer": 100
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2016,
+	  "name": "エレメンタルラス",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "領地と属性の合わない全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "element_mismatch": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "element_mismatch_creatures",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2017,
+	  "name": "エロージョン",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 40,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象手札を参照し、重複カードを全て破壊；合成[スペル・全手札]",
+	  "synthesis": {
+		"type": "any_spell",
+		"target_override": {
+		  "target_type": "all_players"
+		}
+	  },
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "destroy_duplicate_cards"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2018,
+	  "name": "オブリタレート",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "全セプターは属性石数×G70を失う；宝石屋が無い場合、魔力の10%を失う",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2019,
+	  "name": "カオスパニック",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数特殊能力付与",
+	  "cost": {
+		"mp": 60
+	  },
+	  "effect": "全セプターに呪い\"歩行逆転\"",
+	  "effect_parsed": {
+		"target_type": "all_players",
+		"effects": [
+		  {
+			"effect_type": "curse_movement_reverse",
+			"duration": 1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2020,
+	  "name": "ギフト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "順位×G50を得る；自順位と同じ枚数のカードを引く",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "draw_by_rank"
+		  },
+		  {
+			"effect_type": "gain_magic_by_rank",
+			"multiplier": 50
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "rank * 50",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2021,
+	  "name": "クイックサンド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象領地に呪い\"強制停止\"(2R間、1度だけ足どめ)",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "forced_stop",
+			"name": "強制停止",
+			"duration": 2,
+			"uses": 1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2022,
+	  "name": "クインテッセンス",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "レベル4以下の対象領地を無に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "max_level": 4
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element",
+			"element": "neutral"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "enemy_high_level",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2023,
+	  "name": "クラスターバースト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 90
+	  },
+	  "effect": "最多属性の全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "most_common_element": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "most_common_element",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2024,
+	  "name": "グリード",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 30
+	  },
+	  "effect": "対象領地に呪い\"通行料1.5倍\"；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"effects": [
+		  {
+			"effect_type": "toll_multiplier",
+			"name": "通行料1.5倍",
+			"multiplier": 1.5,
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2025,
+	  "name": "クレアボヤンス",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "対象手札のスペル使用魔力総計の1/2の魔力を得る；対象手札の密命カードを見る",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "gain_magic_from_spell_cost",
+			"percentage": 50
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2026,
+	  "name": "グロースボディ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "対象クリーチャーのMHP+10",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"effects": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": 10
+		  }
+		],
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2027,
+	  "name": "クワイエチュード",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数特殊能力付与",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "全セプターに呪い\"スペル不可\"(次R、スペルを使用できない)",
+	  "effect_parsed": {
+		"target_type": "all_players",
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "spell_disable",
+			"name": "スペル不可",
+			"duration": 1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2028,
+	  "name": "ゴブリンズレア",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 10,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "空地に止まっている場合、ゴブリンを配置する；復帰[手札]",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "place_creature",
+			"creature_id": 414,
+			"placement_mode": "conditional"
+		  }
+		],
+		"return_to_hand": true
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_empty_land",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2029,
+	  "name": "サドンインパクト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "keywords": [
+		"密命"
+	  ],
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "密命；対象レベル4領地のレベルを1下げる",
+	  "effect_parsed": {
+		"keywords": [
+		  "密命"
+		],
+		"keyword_conditions": {
+		  "密命": {
+			"success_conditions": [
+			  {
+				"condition_type": "level_land_count",
+				"level": 4,
+				"count": 1
+			  }
+			],
+			"failure_effect": "none"
+		  }
+		},
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "required_level": 4
+		},
+		"effects": [
+		  {
+			"effect_type": "change_level",
+			"value": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "enemy_level_4",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2030,
+	  "name": "サブサイド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]",
+	  "synthesis": {
+		"type": "same_card",
+		"target_override": {
+		  "target_type": "all_players",
+		  "target_info": {
+			"owner_filter": "enemy"
+		  }
+		}
+	  },
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "find_and_change_highest_level",
+			"value": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "enemy_high_level",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2031,
+	  "name": "サンダークラップ",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "密命；召喚条件のある対象敵クリーチャーのHP-30",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "has_summon_condition": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		],
+		"is_secret": true,
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "has_summon_condition",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2032,
+	  "name": "シニリティ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象領地に呪い\"戦闘後破壊\"",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "destroy_after_battle",
+			"name": "戦闘後破壊",
+			"duration": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2033,
+	  "name": "シャイニングガイザー",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象敵クリーチャーのHP-30；合成[単体対象スペル・効果はHP-40となる]",
+	  "synthesis": {
+		"type": "single_target_spell",
+		"value_override": 40
+	  },
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy"
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "can_kill_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2034,
+	  "name": "シャッター",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 30
+	  },
+	  "effect": "対象敵手札のアイテムかスペルを1枚選んで破壊",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "destroy_selected_card",
+			"filter_mode": "destroy_item_spell"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2035,
+	  "name": "シュリンクシジル",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 40
+	  },
+	  "effect": "対象クリーチャー1体に呪い\"縮小術\"(秘術[G50・対象クリーチャー1体のMHP-10])",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "all",
+		  "has_no_curse": true,
+		  "has_no_mystic_arts": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_mystic_arts",
+			"curse_name": "縮小術",
+			"mystic_arts": [
+			  {
+				"name": "縮小",
+				"cost": 50,
+				"spell_id": 9011
+			  }
+			]
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "no_curse_no_mystic",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2036,
+	  "name": "ジョイントワールド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "世界呪",
+	  "cost": {
+		"mp": 50
+	  },
+	  "effect": "世界呪い\"他属性連鎖\"(6R間、火と地、水と風が連鎖)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "element_chain",
+			"name": "他属性連鎖",
+			"duration": 6,
+			"params": {
+			  "chain_pairs": [
+				[
+				  "fire",
+				  "earth"
+				],
+				[
+				  "water",
+				  "wind"
+				]
+			  ]
+			}
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2037,
+	  "name": "スウォーム",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 120
+	  },
+	  "effect": "HPが減少している全クリーチャーのHP-20",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "hp_reduced": true
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 20
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "hp_reduced",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2038,
+	  "name": "スクイーズ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 50
+	  },
+	  "effect": "対象の手札1枚を破壊する；対象セプターはG150を得る",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "destroy_selected_card",
+			"filter_mode": "destroy_any",
+			"magic_bonus": 150
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2039,
+	  "name": "スティールジェム",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 40
+	  },
+	  "effect": "対象敵セプターの属性石を1つ奪う；宝石屋が無い場合、G80を奪う",
+	  "cpu_rule": {
+		"pattern": "skip",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2040,
+	  "name": "ストームシフト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 120
+	  },
+	  "effect": "レベル3以下の対象水領地を風に、または風領地を水に変える",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "any",
+		  "max_level": 3,
+		  "required_elements": [
+			"water",
+			"wind"
+		  ]
+		},
+		"effects": [
+		  {
+			"effect_type": "change_element_bidirectional",
+			"element_a": "water",
+			"element_b": "wind"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "element_mismatch",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2041,
+	  "name": "ストーンブラスト",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "対象、地風のHP-30",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "enemy",
+		  "creature_elements": [
+			"earth",
+			"wind"
+		  ]
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "earth_wind_creature",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2042,
+	  "name": "スニークハンド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "密命；アイテムを2枚以上持つ敵手札から1枚を奪う",
+	  "secret_mission": true,
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "steal_item_conditional",
+			"required_item_count": 2,
+			"filter_mode": "item"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"target_condition": "enemy_has_2_items",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2043,
+	  "name": "スパルトイ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 30,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "ランダムな空地にスケルトンを配置",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "place_creature",
+			"creature_id": 420,
+			"placement_mode": "random"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_vacant_land",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2044,
+	  "name": "スピードペナルティ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "最多周回数セプター1人から、自周回数との差×G100を奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic_by_lap_diff",
+			"multiplier": 100
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "lap_diff * 100",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2045,
+	  "name": "スピリットウォーク",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "対象領地に呪い\"遠隔移動\"(離れた空地にも移動できる)",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "creature_curse",
+			"curse_type": "remote_move",
+			"name": "遠隔移動",
+			"description": "全ての空き地に移動可能"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2046,
+	  "name": "セフト",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "対象敵手札のスペルを1枚奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "steal_selected_card",
+			"filter_mode": "destroy_spell"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "enemy_hand",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2047,
+	  "name": "ソリッドワールド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "世界呪",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "世界呪い\"土地変性無効\"(6R間、全領地は土地破壊・変性無効)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "land_protect",
+			"name": "土地変性無効",
+			"duration": 6
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2048,
+	  "name": "ダークワールド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "世界呪",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "世界呪い\"呪い防魔化\"(6R間、呪いのついた全クリーチャーは防魔)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "cursed_protection",
+			"name": "呪い防魔化",
+			"duration": 6
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2049,
+	  "name": "ターンウォール",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "対象クリーチャーを同属性の防御型クリーチャーに変える",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "transform",
+			"target": "target",
+			"transform_type": "same_element_defensive"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2050,
+	  "name": "タイニーアーミー",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 100
+	  },
+	  "effect": "密命；MHP30以下5体配置時、MHP+10、G500；未達成の場合、復帰[ブック]",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "secret_tiny_army",
+			"mhp_threshold": 30,
+			"required_count": 5,
+			"hp_bonus": 10,
+			"gold_bonus": 500
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "has_5_low_mhp_creatures",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2051,
+	  "name": "チャージステップ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "対象セプターに呪い\"蓄魔歩行\"(ダイスを2回,2～4にし、G50を得る)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "any",
+		"effects": [
+		  {
+			"effect_type": "dice_range_magic",
+			"min": 2,
+			"max": 4,
+			"magic": 50,
+			"duration": 2
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2052,
+	  "name": "チャリオット",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 50
+	  },
+	  "effect": "対象自クリーチャーを2マス移動させる；復帰[ブック]",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "own",
+		  "can_move": true
+		},
+		"return_to_deck": true,
+		"effects": [
+		  {
+			"effect_type": "move_steps",
+			"steps": 2,
+			"exact_steps": true
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "move_invasion_win",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2053,
+	  "name": "ディザスター",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 120,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "ダウンしたMHP50以上の全クリーチャーのHP-30",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "is_down": true,
+		  "mhp_check": {
+			"operator": ">=",
+			"value": 50
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "damage",
+			"value": 30
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "downed_high_mhp",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2054,
+	  "name": "ディジーズ",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 30
+	  },
+	  "effect": "対象領地に呪い\"能力値-20\"(戦闘中、AP&HP-20)；カードを1枚引く",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "stat_reduce",
+			"name": "能力値-20",
+			"value": -20,
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2055,
+	  "name": "ディスエレメント",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
+	  "synthesis": {
+		"type": "creature",
+		"target_override": {
+		  "target_type": "all_creatures",
+		  "target_info": {
+			"state_filter": "downed"
+		  }
+		}
+	  },
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "land_effect_disable",
+			"name": "地形効果無効",
+			"duration": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2056,
+	  "name": "ディスコード",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "複数対象",
+	  "cost": {
+		"mp": 80,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "最多配置クリーチャーのうち1種類を全てゴブリンに変える",
+	  "effect_parsed": {
+		"target_type": "none",
+		"effects": [
+		  {
+			"effect_type": "discord_transform"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "condition",
+		"condition": "duplicate_creatures",
+		"priority": "high"
+	  }
+	},
+	{
+	  "id": 2057,
+	  "name": "ディラニー",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "複数特殊能力付与",
+	  "cost": {
+		"mp": 100,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "MHP30以下の全クリーチャーに呪い\"戦闘行動不可\"",
+	  "effect_parsed": {
+		"target_type": "all_creatures",
+		"target_info": {
+		  "owner_filter": "any",
+		  "condition": {
+			"condition_type": "mhp_check",
+			"operator": "<=",
+			"value": 30
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "battle_disable",
+			"name": "戦闘行動不可",
+			"duration": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "low_mhp_creatures",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2058,
+	  "name": "デビリティ",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 40,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象クリーチャーのAP=0；合成[スペル・MHP-20を追加]；カードを1枚引く",
+	  "synthesis": {
+		"type": "any_spell",
+		"effects_add": [
+		  {
+			"effect_type": "permanent_hp_change",
+			"value": -20
+		  }
+		]
+	  },
+	  "effect_parsed": {
+		"target_type": "creature",
+		"effects": [
+		  {
+			"effect_type": "ap_nullify",
+			"name": "AP=0",
+			"duration": -1
+		  },
+		  {
+			"effect_type": "draw",
+			"count": 1
+		  }
+		],
+		"affects_hp": true
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2059,
+	  "name": "テンプテーション",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 70,
+		"cards_sacrifice": 1
+	  },
+	  "effect": "対象クリーチャーの秘術を使用",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any",
+		  "require_mystic_arts": true,
+		  "require_not_down": true
+		},
+		"effects": [
+		  {
+			"effect_type": "use_target_mystic_art"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "has_mystic_arts",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2060,
+	  "name": "ドミナントグロース",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 50
+	  },
+	  "effect": "対象領地に呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)",
+	  "effect_parsed": {
+		"target_type": "creature",
+		"target_info": {
+		  "owner_filter": "any"
+		},
+		"effects": [
+		  {
+			"effect_type": "command_growth_curse",
+			"name": "コマンド成長",
+			"hp_bonus": 20,
+			"duration": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2061,
+	  "name": "ドリームトレイン",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 40
+	  },
+	  "effect": "使用者に呪い\"通行料促進\"(5R間、他のセプターが得た通行料の50%を得る)",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "self",
+		"effects": [
+		  {
+			"effect_type": "toll_share",
+			"name": "通行料促進",
+			"ratio": 0.5,
+			"duration": 5
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	},
+	{
+	  "id": 2062,
+	  "name": "ドレインシジル",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "単体特殊能力付与",
+	  "cost": {
+		"mp": 20
+	  },
+	  "effect": "対象自領地に呪い\"魔力奪取\"(秘術[G20・対象敵セプターから魔力の10%を奪う])",
+	  "effect_parsed": {
+		"target_type": "land",
+		"target_info": {
+		  "owner_filter": "self",
+		  "has_creature": true
+		},
+		"effects": [
+		  {
+			"effect_type": "grant_mystic_arts",
+			"spell_id": 9012,
+			"cost": 20,
+			"name": "魔力奪取",
+			"duration": -1
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "has_target",
+		"target_condition": "own_creature",
+		"priority": "low"
+	  }
+	},
+	{
+	  "id": 2063,
+	  "name": "ドレインマジック",
+	  "rarity": "N",
+	  "type": "spell",
+	  "spell_type": "単体対象",
+	  "cost": {
+		"mp": 80
+	  },
+	  "effect": "対象敵セプターから魔力の30%を奪う",
+	  "effect_parsed": {
+		"target_type": "player",
+		"target_filter": "enemy",
+		"effects": [
+		  {
+			"effect_type": "drain_magic",
+			"value": 30,
+			"value_type": "percentage"
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "profit_calc",
+		"profit_formula": "enemy_magic * 0.3",
+		"priority": "medium_high"
+	  }
+	},
+	{
+	  "id": 2064,
+	  "name": "ナチュラルワールド",
+	  "rarity": "R",
+	  "type": "spell",
+	  "spell_type": "世界呪",
+	  "cost": {
+		"mp": 70
+	  },
+	  "effect": "世界呪い\"特定能力不可\"(6R間、秘術、自破壊時、戦闘終了時は発動しない)",
+	  "effect_parsed": {
+		"target_type": "world",
+		"effects": [
+		  {
+			"effect_type": "world_curse",
+			"curse_type": "skill_disable",
+			"name": "ナチュラルワールド",
+			"duration": 6,
+			"params": {
+			  "disabled_triggers": [
+				"mystic_arts",
+				"on_death",
+				"on_battle_end"
+			  ]
+			}
+		  }
+		]
+	  },
+	  "cpu_rule": {
+		"pattern": "strategic",
+		"priority": "medium"
+	  }
+	}
   ]
 }

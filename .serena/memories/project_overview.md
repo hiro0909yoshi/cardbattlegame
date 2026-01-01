@@ -22,6 +22,38 @@
 - **Data centralization**: CreatureManager manages all creature data (Nov 2025)
 - **3D-only**: BoardSystem3D manages 3D space, camera, movement
 
+## CPU AI System (Dec 2025 - Jan 2026)
+
+### Architecture
+```
+scripts/cpu_ai/
+├── cpu_ai_handler.gd         # 統合ハンドラー（フェーズ振り分け）
+├── cpu_turn_processor.gd     # ターン処理（召喚・レベルアップ等）
+├── battle_simulator.gd       # バトル結果シミュレーション
+├── cpu_spell_ai.gd           # スペルカード判断
+├── cpu_mystic_arts_ai.gd     # ミスティックアーツ判断
+├── cpu_spell_condition_checker.gd  # スペル条件チェック
+├── cpu_spell_ai_spec.gd      # 評価定数
+└── cpu_battle_ai_spec.gd     # バトル評価定数
+```
+
+### Battle AI (cpu_battle_ai_spec.md)
+- **BattleSimulator**: バトル結果事前シミュレーション
+- 攻撃側: 勝てる組み合わせのみ攻撃、合体最優先
+- 防御側: 無効化→合体→援護→アイテムの優先順
+- 考慮要素: スキル、土地ボーナス、アイテム、死亡時効果
+- 温存ロジック: 道連れ系はLv2+土地でのみ使用
+
+### Spell/Mystic AI (cpu_spell_ai_spec.md)
+- **cpu_rule**: 各スペルJSONに判断ルール追加（173種）
+- パターン: immediate, has_target, condition, profit_calc, strategic, skip
+- ダメージ系: ターゲットスコアリング（倒せる+3.0, 敵+1.0, Lv×0.5）
+- Phase 1-2完了、Phase 3実装中
+
+### Key Files
+- `docs/specs/cpu_battle_ai_spec.md` - バトル判断仕様
+- `docs/specs/cpu_spell_ai_spec.md` - スペル/秘術判断仕様
+
 ## New Systems (Jan 2025)
 
 ### CreatureManager System (Nov 2025) ⭐ NEW

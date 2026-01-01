@@ -1,785 +1,974 @@
 {
   "cards": [
-	{
-	  "id": 9001,
-	  "name": "通行料半減の呪い",
-	  "rarity": "N",
-	  "type": "spell",
-	  "cost": {
-		"mp": 0
-	  },
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "curse_toll_half",
-			"duration": 3
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9002,
-	  "name": "カード獲得",
-	  "rarity": "N",
-	  "type": "skill",
-	  "cost": {
-		"mp": 0
-	  },
-	  "effect_parsed": {
-		"trigger": "on_survive",
-		"effects": [
-		  {
-			"effect_type": "draw_until",
-			"target_hand_size": 5
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9003,
-	  "name": "カード獲得（アイテム使用時・アイテムのみ）",
-	  "rarity": "N",
-	  "type": "skill",
-	  "cost": {
-		"mp": 0
-	  },
-	  "effect_parsed": {
-		"trigger": "on_survive",
-		"trigger_condition": {
-		  "self_used_item": true
-		},
-		"effects": [
-		  {
-			"effect_type": "draw_by_type",
-			"card_type": "item"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9004,
-	  "name": "ダメージ10（敵単体）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 10
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9005,
-	  "name": "ダメージ20（敵火風）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy",
-		  "creature_elements": [
-			"fire",
-			"wind"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9006,
-	  "name": "ダメージ20（敵水地）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy",
-		  "creature_elements": [
-			"water",
-			"earth"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9007,
-	  "name": "ダメージ30（敵無属性）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy",
-		  "creature_elements": [
-			"neutral"
-		  ]
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 30
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9008,
-	  "name": "ダメージ20（呪い付き全体）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"target_info": {
-		  "owner_filter": "any",
-		  "has_curse": true
-		},
-		"effects": [
-		  {
-			"effect_type": "damage",
-			"value": 20
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9009,
-	  "name": "回復30（自クリーチャー）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "heal",
-			"value": 30
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9010,
-	  "name": "MHP増加（敵味方問わず）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "permanent_hp_change",
-			"value": 10
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9011,
-	  "name": "HP減少呪い（全クリーチャー）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "all"
-		},
-		"effects": [
-		  {
-			"effect_type": "stat_reduce",
-			"stat": "hp",
-			"value": -10,
-			"name": "縮小",
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9012,
-	  "name": "魔力奪取",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "enemy",
-		"effects": [
-		  {
-			"effect_type": "drain_magic",
-			"value": 10,
-			"value_type": "percentage"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9013,
-	  "name": "移動不可呪い",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "creature_curse",
-			"curse_type": "move_disable",
-			"name": "移動不可",
-			"description": "移動できない"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9014,
-	  "name": "遠隔移動呪い",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "creature_curse",
-			"curse_type": "remote_move",
-			"name": "遠隔移動",
-			"description": "全ての空き地に移動可能"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9015,
-	  "name": "黄金献身",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "gain_magic",
-			"amount": 200
-		  },
-		  {
-			"effect_type": "self_destroy",
-			"clear_land": true
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9016,
-	  "name": "ダイス6固定（自分）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 6,
-			"duration": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9017,
-	  "name": "ダイス5固定（対象セプター）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_filter": "any",
-		"effects": [
-		  {
-			"effect_type": "dice_fixed",
-			"value": 5,
-			"duration": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9018,
-	  "name": "地形効果無効（スクリーマー秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "land_effect_disable",
-			"name": "地形効果無効",
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9019,
-	  "name": "地形効果付与（ハイドビハインド秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "land_effect_grant",
-			"name": "地形効果",
-			"duration": -1,
-			"grant_elements": []
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9020,
-	  "name": "オールドウィロウに変身（スプラウトリング秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "transform",
-			"transform_type": "specific",
-			"creature_id": 231
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9021,
-	  "name": "方向選択権付与（クロックアウル秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "target_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "grant_direction_choice",
-			"duration": 1,
-			"name": "方向選択"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9022,
-	  "name": "防魔付与（ドモビー秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "own"
-		},
-		"effects": [
-		  {
-			"effect_type": "creature_curse",
-			"curse_type": "spell_protection",
-			"name": "防魔",
-			"description": "スペル・秘術の対象にならない",
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9023,
-	  "name": "防魔付与（パトロナス秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "target_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "player_curse",
-			"curse_type": "spell_protection",
-			"name": "防魔",
-			"description": "スペル・秘術の対象にならない",
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9024,
-	  "name": "領地呪い除去",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any",
-		  "has_curse": true
-		},
-		"effects": [
-		  {
-			"effect_type": "remove_creature_curse"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9025,
-	  "name": "世界呪い除去",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "remove_world_curse"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9026,
-	  "name": "全プレイヤー呪い除去",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "remove_all_player_curses"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9027,
-	  "name": "平和",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "self",
-		"effects": [
-		  {
-			"effect_type": "peace",
-			"name": "平和",
-			"invasion_disable": true,
-			"toll_zero": true,
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9028,
-	  "name": "衰弱呪い（スピットコブラ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "creature_curse",
-			"curse_type": "plague",
-			"name": "衰弱",
-			"description": "戦闘終了時、HP-MHPの1/2"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9029,
-	  "name": "ダイス1～3呪い（スワンプスボーン秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "target_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "dice_range",
-			"name": "ダイス1～3",
-			"min": 1,
-			"max": 3,
-			"duration": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9030,
-	  "name": "能力値+20呪い（カラドリウス秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "stat_boost",
-			"name": "能力値+20",
-			"value": 20,
-			"duration": -1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9031,
-	  "name": "AP+20（フェイ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "permanent_ap_change",
-			"value": 20
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9032,
-	  "name": "AP+10（カワヒメ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "permanent_ap_change",
-			"value": 10
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9033,
-	  "name": "AP調整（ロードオブペイン秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "all_creatures",
-		"effects": [
-		  {
-			"effect_type": "conditional_ap_change",
-			"conditions": [
-			  {
-				"check": "ap_lte",
-				"threshold": 30,
-				"value": 20
-			  },
-			  {
-				"check": "ap_gte",
-				"threshold": 50,
-				"value": -20
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9034,
-	  "name": "MHP変換（ドゥームデボラー秘術）",
-	  "rarity": "S",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "self"
-		},
-		"effects": [
-		  {
-			"effect_type": "mhp_to_magic",
-			"multiplier": 2,
-			"stat_penalty": {
-			  "ap": -10,
-			  "max_hp": -10
-			}
-		  }
-		],
-		"affects_hp": true
-	  }
-	},
-	{
-	  "id": 9035,
-	  "name": "破壊報酬（ヘルバイロン秘術）",
-	  "rarity": "R",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "gain_magic_from_destroyed_count",
-			"multiplier": 30,
-			"reset_count": true
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9036,
-	  "name": "スペル強奪（ウィッチ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "drain_magic_by_spell_count",
-			"multiplier": 40
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9037,
-	  "name": "ダウン付与（アルプ秘術）",
-	  "rarity": "S",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "creature",
-		"target_info": {
-		  "owner_filter": "enemy"
-		},
-		"effects": [
-		  {
-			"effect_type": "set_down"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9038,
-	  "name": "ブック破壊（コアトリクエ秘術）",
-	  "rarity": "S",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "player",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "destroy_deck_top",
-			"count": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9039,
-	  "name": "水への変成（マカラ秘術）",
-	  "rarity": "R",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "none",
-		"effects": [
-		  {
-			"effect_type": "change_caster_tile_element",
-			"element": "water"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9040,
-	  "name": "地への変成（サクヤ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "own_land",
-		"effects": [
-		  {
-			"effect_type": "change_element",
-			"element": "earth"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 9041,
-	  "name": "無への変成（ストーンジゾウ秘術）",
-	  "rarity": "N",
-	  "type": "mystic",
-	  "effect_parsed": {
-		"target_type": "land",
-		"target_info": {
-		  "owner_filter": "any"
-		},
-		"effects": [
-		  {
-			"effect_type": "change_element",
-			"element": "neutral"
-		  },
-		  {
-			"effect_type": "self_destruct"
-		  }
-		]
-	  }
-	}
+    {
+      "id": 9001,
+      "name": "通行料半減の呪い",
+      "rarity": "N",
+      "type": "spell",
+      "cost": {
+        "mp": 0
+      },
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "curse_toll_half",
+            "duration": 3
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9002,
+      "name": "カード獲得",
+      "rarity": "N",
+      "type": "skill",
+      "cost": {
+        "mp": 0
+      },
+      "effect_parsed": {
+        "trigger": "on_survive",
+        "effects": [
+          {
+            "effect_type": "draw_until",
+            "target_hand_size": 5
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9003,
+      "name": "カード獲得（アイテム使用時・アイテムのみ）",
+      "rarity": "N",
+      "type": "skill",
+      "cost": {
+        "mp": 0
+      },
+      "effect_parsed": {
+        "trigger": "on_survive",
+        "trigger_condition": {
+          "self_used_item": true
+        },
+        "effects": [
+          {
+            "effect_type": "draw_by_type",
+            "card_type": "item"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9004,
+      "name": "ダメージ10（敵単体）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 10
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "can_kill_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9005,
+      "name": "ダメージ20（敵火風）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy",
+          "creature_elements": [
+            "fire",
+            "wind"
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "fire_wind_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9006,
+      "name": "ダメージ20（敵水地）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy",
+          "creature_elements": [
+            "water",
+            "earth"
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "water_earth_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9007,
+      "name": "ダメージ30（敵無属性）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy",
+          "creature_elements": [
+            "neutral"
+          ]
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 30
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "neutral_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9008,
+      "name": "ダメージ20（呪い付き全体）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "target_info": {
+          "owner_filter": "any",
+          "has_curse": true
+        },
+        "effects": [
+          {
+            "effect_type": "damage",
+            "value": 20
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "cursed_creatures",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9009,
+      "name": "回復30（自クリーチャー）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "heal",
+            "value": 30
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "self_creature_damaged",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9010,
+      "name": "MHP増加（敵味方問わず）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "permanent_hp_change",
+            "value": 10
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9011,
+      "name": "HP減少呪い（全クリーチャー）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "all"
+        },
+        "effects": [
+          {
+            "effect_type": "stat_reduce",
+            "stat": "hp",
+            "value": -10,
+            "name": "縮小",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9012,
+      "name": "魔力奪取",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "enemy",
+        "effects": [
+          {
+            "effect_type": "drain_magic",
+            "value": 10,
+            "value_type": "percentage"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_formula": "enemy_magic * 0.1",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9013,
+      "name": "移動不可呪い",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "creature_curse",
+            "curse_type": "move_disable",
+            "name": "移動不可",
+            "description": "移動できない"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9014,
+      "name": "遠隔移動呪い",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "creature_curse",
+            "curse_type": "remote_move",
+            "name": "遠隔移動",
+            "description": "全ての空き地に移動可能"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9015,
+      "name": "黄金献身",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "gain_magic",
+            "amount": 200
+          },
+          {
+            "effect_type": "self_destroy",
+            "clear_land": true
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_formula": "200 - caster_value",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9016,
+      "name": "ダイス6固定（自分）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 6,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9017,
+      "name": "ダイス5固定（対象セプター）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_filter": "any",
+        "effects": [
+          {
+            "effect_type": "dice_fixed",
+            "value": 5,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9018,
+      "name": "地形効果無効（スクリーマー秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "land_effect_disable",
+            "name": "地形効果無効",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_has_land_bonus",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9019,
+      "name": "地形効果付与（ハイドビハインド秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "land_effect_grant",
+            "name": "地形効果",
+            "duration": -1,
+            "grant_elements": []
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_no_land_bonus",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9020,
+      "name": "オールドウィロウに変身（スプラウトリング秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "creature_id": 231
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "transform_beneficial",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9021,
+      "name": "方向選択権付与（クロックアウル秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "target_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "grant_direction_choice",
+            "duration": 1,
+            "name": "方向選択"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9022,
+      "name": "防魔付与（ドモビー秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "own"
+        },
+        "effects": [
+          {
+            "effect_type": "creature_curse",
+            "curse_type": "spell_protection",
+            "name": "防魔",
+            "description": "スペル・秘術の対象にならない",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9023,
+      "name": "防魔付与（パトロナス秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "target_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "player_curse",
+            "curse_type": "spell_protection",
+            "name": "防魔",
+            "description": "スペル・秘術の対象にならない",
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9024,
+      "name": "領地呪い除去",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any",
+          "has_curse": true
+        },
+        "effects": [
+          {
+            "effect_type": "remove_creature_curse"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "has_cursed_creature",
+        "priority": "medium_high"
+      }
+    },
+    {
+      "id": 9025,
+      "name": "世界呪い除去",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "remove_world_curse"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "has_bad_world_curse",
+        "priority": "medium_high"
+      }
+    },
+    {
+      "id": 9026,
+      "name": "全プレイヤー呪い除去",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "remove_all_player_curses"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "has_player_curse",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9027,
+      "name": "平和",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "peace",
+            "name": "平和",
+            "invasion_disable": true,
+            "toll_zero": true,
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9028,
+      "name": "衰弱呪い（スピットコブラ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "creature_curse",
+            "curse_type": "plague",
+            "name": "衰弱",
+            "description": "戦闘終了時、HP-MHPの1/2"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9029,
+      "name": "ダイス1～3呪い（スワンプスボーン秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "target_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "dice_range",
+            "name": "ダイス1～3",
+            "min": 1,
+            "max": 3,
+            "duration": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "strategic",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9030,
+      "name": "能力値+20呪い（カラドリウス秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "stat_boost",
+            "name": "能力値+20",
+            "value": 20,
+            "duration": -1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9031,
+      "name": "AP+20（フェイ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "permanent_ap_change",
+            "value": 20
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9032,
+      "name": "AP+10（カワヒメ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "permanent_ap_change",
+            "value": 10
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9033,
+      "name": "AP調整（ロードオブペイン秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "all_creatures",
+        "effects": [
+          {
+            "effect_type": "conditional_ap_change",
+            "conditions": [
+              {
+                "check": "ap_lte",
+                "threshold": 30,
+                "value": 20
+              },
+              {
+                "check": "ap_gte",
+                "threshold": 50,
+                "value": -20
+              }
+            ]
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9034,
+      "name": "MHP変換（ドゥームデボラー秘術）",
+      "rarity": "S",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "self"
+        },
+        "effects": [
+          {
+            "effect_type": "mhp_to_magic",
+            "multiplier": 2,
+            "stat_penalty": {
+              "ap": -10,
+              "max_hp": -10
+            }
+          }
+        ],
+        "affects_hp": true
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_formula": "caster_mhp * 2",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9035,
+      "name": "破壊報酬（ヘルバイロン秘術）",
+      "rarity": "R",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "gain_magic_from_destroyed_count",
+            "multiplier": 30,
+            "reset_count": true
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_formula": "destroyed_count * 30",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9036,
+      "name": "スペル強奪（ウィッチ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "drain_magic_by_spell_count",
+            "multiplier": 40
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "profit_calc",
+        "profit_formula": "enemy_spell_count * 40",
+        "priority": "medium_high"
+      }
+    },
+    {
+      "id": 9037,
+      "name": "ダウン付与（アルプ秘術）",
+      "rarity": "S",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "set_down"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "enemy_creature",
+        "priority": "medium_high"
+      }
+    },
+    {
+      "id": 9038,
+      "name": "ブック破壊（コアトリクエ秘術）",
+      "rarity": "S",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "destroy_deck_top",
+            "count": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9039,
+      "name": "水への変成（マカラ秘術）",
+      "rarity": "R",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "none",
+        "effects": [
+          {
+            "effect_type": "change_caster_tile_element",
+            "element": "water"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "element_mismatch",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9040,
+      "name": "地への変成（サクヤ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "own_land",
+        "effects": [
+          {
+            "effect_type": "change_element",
+            "element": "earth"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "condition",
+        "condition": "element_mismatch",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9041,
+      "name": "無への変成（ストーンジゾウ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "any"
+        },
+        "effects": [
+          {
+            "effect_type": "change_element",
+            "element": "neutral"
+          },
+          {
+            "effect_type": "self_destruct"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "priority": "low"
+      }
+    }
   ]
 }

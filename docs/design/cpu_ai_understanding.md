@@ -500,6 +500,221 @@ effect_typeで識別する：
 
 ---
 
+## 15. スペル/秘術AI 実装状況（2026年1月）
+
+スペルJSONの`cpu_rule`フィールドで使用できるパターンと条件の一覧。
+
+### cpu_rule の構造
+
+```json
+"cpu_rule": {
+  "pattern": "has_target",
+  "target_condition": "enemy_creature",
+  "priority": "medium"
+}
+```
+
+---
+
+### pattern（判断パターン）
+
+| pattern | 状態 | 説明 | 使用例 |
+|---------|------|------|--------|
+| `immediate` | ✅ 実装済 | 手に入り次第すぐ使用 | ドロー系、セルフバフ |
+| `has_target` | ✅ 実装済 | 有効なターゲットがいれば使用 | ダメージ、呪い付与 |
+| `condition` | ✅ 実装済 | 特定条件を満たしたら使用 | 属性変更、状況依存系 |
+| `enemy_hand` | ✅ 実装済 | 敵の手札を見て判断 | カード破壊、奪取系 |
+| `profit_calc` | ⚠️ 枠組みのみ | 損益計算して判断 | 魔力獲得系（計算式未実装多数） |
+| `strategic` | ⚠️ 仮実装 | 戦略的判断（30%ランダム） | ダイス操作、世界呪い |
+| `skip` | ✅ 実装済 | CPUは使用しない | 複雑すぎるスペル |
+
+---
+
+### priority（優先度）
+
+| priority | スコア値 | 説明 |
+|----------|---------|------|
+| `high` | 3.0 | 最優先で使用 |
+| `medium_high` | 2.5 | 高め |
+| `medium` | 2.0 | 標準 |
+| `low` | 1.0 | 低め |
+| `very_low` | 0.5 | 最低 |
+
+---
+
+### target_condition（ターゲット条件）
+
+`has_target`パターンで使用。ターゲットが見つかれば使用する。
+
+#### クリーチャー属性フィルター
+
+| target_condition | 説明 |
+|------------------|------|
+| `fire_wind_creature` | 火/風属性の敵クリーチャー |
+| `water_earth_creature` | 水/地属性の敵クリーチャー |
+| `fire_earth_creature` | 火/地属性の敵クリーチャー |
+| `water_wind_creature` | 水/風属性の敵クリーチャー |
+| `fire_water_creature` | 火/水属性の敵クリーチャー |
+| `earth_wind_creature` | 地/風属性の敵クリーチャー |
+| `neutral_creature` | 無属性の敵クリーチャー |
+
+#### 所有者フィルター
+
+| target_condition | 説明 |
+|------------------|------|
+| `enemy_creature` | 敵クリーチャー全般 |
+| `own_creature` | 自クリーチャー全般 |
+
+#### 状態フィルター
+
+| target_condition | 説明 |
+|------------------|------|
+| `element_mismatch_creatures` | 土地属性と不一致のクリーチャー |
+| `cursed_creatures` | 呪いがかかっているクリーチャー |
+| `hp_reduced` | HPが減っているクリーチャー |
+| `low_mhp_creatures` | MHP30以下のクリーチャー |
+| `downed_high_mhp` | ダウン中でMHP高いクリーチャー |
+
+#### 特殊条件
+
+| target_condition | 説明 |
+|------------------|------|
+| `can_kill_target` | ダメージ値で倒せる敵クリーチャー |
+| `most_common_element` | 最も多い属性のクリーチャー |
+| `has_summon_condition` | 召喚条件を持つクリーチャー |
+| `no_curse_no_mystic` | 呪いも秘術もないクリーチャー |
+| `has_mystic_arts` | 秘術を持つクリーチャー |
+
+#### プレイヤー条件
+
+| target_condition | 説明 |
+|------------------|------|
+| `enemy_has_2_items` | アイテム2枚以上持つ敵プレイヤー |
+| `enemy_has_high_toll` | 高通行料土地を持つ敵プレイヤー |
+| `enemy_has_more_magic` | 自分より魔力が多い敵プレイヤー |
+
+#### 土地条件
+
+| target_condition | 説明 |
+|------------------|------|
+| `enemy_has_land_bonus` | 土地ボーナスを得ている敵土地 |
+| `own_no_land_bonus` | 土地ボーナスがない自土地 |
+
+---
+
+### condition（使用条件）
+
+`condition`パターンで使用。条件を満たしたら使用する。
+
+#### 属性・土地関連
+
+| condition | 説明 |
+|-----------|------|
+| `element_mismatch` | 土地と属性不一致の自クリーチャーがいる |
+| `enemy_high_level` | 敵のレベル3以上土地がある |
+| `enemy_level_4` | 敵のレベル4土地がある |
+| `has_4_mismatched_lands` | 属性不一致土地が4つ以上 |
+| `has_5_level2_lands` | レベル2以上土地が5つ以上 |
+| `has_4_consecutive_lands` | 4連鎖土地がある |
+
+#### クリーチャー状態
+
+| condition | 説明 |
+|-----------|------|
+| `has_downed_creature` | ダウン中の自クリーチャーがいる |
+| `self_creature_damaged` | HPが減った自クリーチャーがいる |
+| `has_cursed_creature` | 呪い付きクリーチャーがいる |
+| `duplicate_creatures` | 同名クリーチャーが複数いる |
+| `has_5_low_mhp_creatures` | MHP30以下が5体以上いる |
+
+#### 土地状態
+
+| condition | 説明 |
+|-----------|------|
+| `has_vacant_land` | 空き地がある |
+| `has_empty_land` | クリーチャーなしの自土地がある |
+
+#### 手札関連
+
+| condition | 説明 |
+|-----------|------|
+| `has_all_elements_in_hand` | 手札に全属性がある |
+| `low_hand_quality` | ⚠️ 手札の質が低い（TODO） |
+| `has_curse_cards_in_hand` | 手札に呪いカードがある |
+| `has_expensive_cards` | 手札に高コストカードがある |
+
+#### 呪い関連
+
+| condition | 説明 |
+|-----------|------|
+| `has_any_curse` | 何らかの呪いがある |
+| `has_bad_world_curse` | 不利な世界呪いがある |
+| `has_player_curse` | プレイヤー呪いがある |
+
+#### その他
+
+| condition | 説明 |
+|-----------|------|
+| `move_invasion_win` | ⚠️ 移動侵略で勝てる（TODO） |
+| `has_priority_swap_target` | 交換優先ターゲットがいる |
+| `deck_nearly_empty` | デッキが残り少ない |
+| `has_unvisited_gate` | 未通過ゲートがある |
+| `self_lowest_magic` | 自分が最低魔力 |
+| `transform_beneficial` | 変身が有利 |
+
+---
+
+### デフォルト動作（target_conditionなしの場合）
+
+`has_target`で`target_condition`を指定しない場合、`effect_parsed.target_type`と`target_info.owner_filter`から自動判定：
+
+| target_type | owner_filter | 動作 |
+|-------------|--------------|------|
+| `creature` | `enemy` | 敵クリーチャーを対象 |
+| `creature` | `own` | 自クリーチャーを対象 |
+| `player` | `enemy` | 敵プレイヤーを対象 |
+| `land` | any | 土地を対象 |
+
+---
+
+### 設定例
+
+```json
+// ダメージ系：倒せるターゲットがいれば使用
+"cpu_rule": {
+  "pattern": "has_target",
+  "target_condition": "can_kill_target",
+  "priority": "medium"
+}
+
+// 回復系：HPが減った味方がいれば使用
+"cpu_rule": {
+  "pattern": "has_target",
+  "target_condition": "hp_reduced",
+  "priority": "medium"
+}
+
+// ドロー系：即座に使用
+"cpu_rule": {
+  "pattern": "immediate",
+  "priority": "low"
+}
+
+// 属性変更：属性不一致土地があれば使用
+"cpu_rule": {
+  "pattern": "condition",
+  "condition": "element_mismatch",
+  "priority": "low"
+}
+
+// 複雑すぎるので使用しない
+"cpu_rule": {
+  "pattern": "skip"
+}
+```
+
+---
+
 ## 変更履歴
 
 | 日付 | 内容 |

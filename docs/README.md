@@ -101,7 +101,10 @@ docs/
 
 | ドキュメント | 内容 |
 |-------------|------|
-| [cpu_ai_design.md](design/cpu_ai_design.md) | CPU AI設計 |
+| [cpu_ai_design.md](design/cpu_ai_design.md) | CPU AI設計（概念） |
+| [cpu_ai_understanding.md](design/cpu_ai_understanding.md) | CPU AI理解メモ |
+| [cpu_spell_ai_spec.md](specs/cpu_spell_ai_spec.md) | CPU スペル/秘術AI仕様 |
+| [cpu_battle_ai_spec.md](specs/cpu_battle_ai_spec.md) | CPU バトル判断仕様 |
 | [quest_system_design.md](design/quest_system_design.md) | クエストシステム設計 |
 
 ### クリーチャー管理
