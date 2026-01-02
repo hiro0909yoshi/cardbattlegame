@@ -474,14 +474,13 @@
           {
             "effect_type": "transform",
             "transform_type": "specific",
-            "creature_id": 231
+            "transform_to": 5
           }
         ]
       },
       "cpu_rule": {
-        "pattern": "condition",
-        "condition": "transform_beneficial",
-        "priority": "medium"
+        "pattern": "immediate",
+        "priority": "low"
       }
     },
     {
@@ -967,6 +966,229 @@
       },
       "cpu_rule": {
         "pattern": "has_target",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9042,
+      "name": "カードドロー（フェイト秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "draw_cards",
+            "count": 1
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9043,
+      "name": "アイテムドロー（アイアンモンガー秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "draw_by_type",
+            "card_type": "item"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9044,
+      "name": "ダウン解除（キャプテンコック秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "own",
+          "target_filter": "creature",
+          "is_down": true
+        },
+        "effects": [
+          {
+            "effect_type": "clear_down"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "own_downed_creature",
+        "priority": "medium"
+      }
+    },
+    {
+      "id": 9045,
+      "name": "手札破壊ドロー（クラウドギズモ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "destroy_and_draw"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9046,
+      "name": "マミーに変身（デスサイズ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 239
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9047,
+      "name": "ケルピーに変身（ヒッポカンパス秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 121
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9048,
+      "name": "アクアホーンに変身（ミストウィング秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 104
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9049,
+      "name": "ミストウィングに変身（アクアホーン秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 142
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9050,
+      "name": "ガルーダに変身（シルフ秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 307
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9051,
+      "name": "アームドプリンセスに変身（ソードプリンセス秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 300
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9052,
+      "name": "マッドマンに変身（ブランチアーミー秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "transform",
+            "transform_type": "specific",
+            "transform_to": 238
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
         "priority": "low"
       }
     }

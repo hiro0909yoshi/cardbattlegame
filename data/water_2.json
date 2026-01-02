@@ -349,14 +349,7 @@
 		  {
 			"name": "ケルピーに変身",
 			"cost": 60,
-			"target_type": "none",
-			"effects": [
-			  {
-				"effect_type": "transform",
-				"target": "self",
-				"transform_to": 121
-			  }
-			]
+			"spell_id": 9047
 		  }
 		]
 	  }
@@ -387,8 +380,7 @@
 		  {
 			"name": "カードドロー",
 			"cost": 40,
-			"target_type": "self",
-			"effects": [{"effect_type": "draw_cards", "count": 1}]
+			"spell_id": 9042
 		  }
 		]
 	  }
@@ -566,14 +558,7 @@
 		  {
 			"name": "アクアホーンに変身",
 			"cost": 30,
-			"target_type": "none",
-			"effects": [
-			  {
-				"effect_type": "transform",
-				"target": "self",
-				"transform_to": 104
-			  }
-			]
+			"spell_id": 9048
 		  }
 		]
 	  }

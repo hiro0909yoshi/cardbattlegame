@@ -107,8 +107,7 @@
 		  {
 			"name": "アイテムドロー",
 			"cost": 50,
-			"target_type": "self",
-			"effects": [{"effect_type": "draw_by_type", "card_type": "item"}]
+			"spell_id": 9043
 		  }
 		]
 	  }

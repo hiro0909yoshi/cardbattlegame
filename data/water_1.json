@@ -171,14 +171,7 @@
           {
             "name": "ミストウィングに変身",
             "cost": 30,
-            "target_type": "none",
-            "effects": [
-              {
-                "effect_type": "transform",
-                "target": "self",
-                "transform_to": 142
-              }
-            ]
+            "spell_id": 9049
           }
         ]
       }

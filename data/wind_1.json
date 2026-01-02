@@ -332,15 +332,7 @@
           {
             "name": "手札破壊ドロー",
             "cost": 20,
-            "target_type": "player",
-            "target_info": {
-              "owner_filter": "enemy"
-            },
-            "effects": [
-              {
-                "effect_type": "destroy_and_draw"
-              }
-            ]
+            "spell_id": 9045
           }
         ]
       }
@@ -614,14 +606,7 @@
           {
             "name": "ガルーダに変身",
             "cost": 60,
-            "target_type": "none",
-            "effects": [
-              {
-                "effect_type": "transform",
-                "target": "self",
-                "transform_to": 307
-              }
-            ]
+            "spell_id": 9050
           }
         ]
       }
@@ -780,14 +765,7 @@
           {
             "name": "アームドプリンセスに変身",
             "cost": 60,
-            "target_type": "none",
-            "effects": [
-              {
-                "effect_type": "transform",
-                "target": "self",
-                "transform_to": 300
-              }
-            ]
+            "spell_id": 9051
           }
         ]
       }

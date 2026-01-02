@@ -696,14 +696,7 @@
 					{
 						"name": "マミーに変身",
 						"cost": 50,
-						"target_type": "none",
-						"effects": [
-							{
-								"effect_type": "transform",
-								"target": "self",
-								"transform_to": 239
-							}
-						]
+						"spell_id": 9046
 					}
 				]
 			}

@@ -238,17 +238,7 @@
 		  {
 			"name": "ダウン解除",
 			"cost": 60,
-			"target_type": "land",
-			"target_info": {
-			  "owner_filter": "own",
-			  "target_filter": "creature",
-			  "is_down": true
-			},
-			"effects": [
-			  {
-				"effect_type": "clear_down"
-			  }
-			]
+			"spell_id": 9044
 		  }
 		]
 	  }
@@ -769,14 +759,7 @@
 		  {
 			"name": "オールドウィロウに変身",
 			"cost": 50,
-			"target_type": "none",
-			"effects": [
-			  {
-				"effect_type": "transform",
-				"target": "self",
-				"transform_to": 5
-			  }
-			]
+			"spell_id": 9020
 		  }
 		]
 	  }
