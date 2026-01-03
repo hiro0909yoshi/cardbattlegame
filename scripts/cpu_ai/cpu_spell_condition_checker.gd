@@ -193,7 +193,7 @@ func _check_enemy_level_4(context: Dictionary) -> bool:
 	return enemy_lands.size() > 0
 
 ## 移動侵略で勝てるかチェック
-func _check_move_invasion_win(context: Dictionary) -> bool:
+func _check_move_invasion_win(_context: Dictionary) -> bool:
 	# TODO: BattleSimulatorと連携して判定
 	# 現時点では簡易実装
 	return false
@@ -228,7 +228,7 @@ func _check_has_cursed_creature(context: Dictionary) -> bool:
 	return false
 
 ## 同じクリーチャーが2体以上配置されているか
-func _check_duplicate_creatures(context: Dictionary) -> bool:
+func _check_duplicate_creatures(_context: Dictionary) -> bool:
 	if not board_system:
 		return false
 	
@@ -247,7 +247,7 @@ func _check_duplicate_creatures(context: Dictionary) -> bool:
 	return false
 
 ## 空地があるか（ボード上）
-func _check_has_vacant_land(context: Dictionary) -> bool:
+func _check_has_vacant_land(_context: Dictionary) -> bool:
 	if not board_system:
 		return false
 	
@@ -287,7 +287,7 @@ func _check_has_all_elements_in_hand(context: Dictionary) -> bool:
 	return elements_found["fire"] and elements_found["water"] and elements_found["wind"] and elements_found["earth"]
 
 ## 手札の質が低いか
-func _check_low_hand_quality(context: Dictionary) -> bool:
+func _check_low_hand_quality(_context: Dictionary) -> bool:
 	# TODO: 手札の質を評価するロジック
 	return false
 
@@ -329,7 +329,7 @@ func _check_has_5_level2_lands(context: Dictionary) -> bool:
 	return level2_lands.size() >= 5
 
 ## 4連続の土地があるか
-func _check_has_4_consecutive_lands(context: Dictionary) -> bool:
+func _check_has_4_consecutive_lands(_context: Dictionary) -> bool:
 	# TODO: 連続判定ロジック
 	return false
 
@@ -350,7 +350,7 @@ func _check_has_any_curse(context: Dictionary) -> bool:
 	return false
 
 ## 不利な世界呪いがあるか
-func _check_has_bad_world_curse(context: Dictionary) -> bool:
+func _check_has_bad_world_curse(_context: Dictionary) -> bool:
 	# TODO: 世界呪いの有利/不利判定
 	return false
 
@@ -380,7 +380,7 @@ func _check_has_5_low_mhp_creatures(context: Dictionary) -> bool:
 	return count >= 5
 
 ## 交換優先度の高いクリーチャーがいるか
-func _check_has_priority_swap_target(context: Dictionary) -> bool:
+func _check_has_priority_swap_target(_context: Dictionary) -> bool:
 	# TODO: 優先度判定ロジック
 	return false
 
@@ -428,7 +428,7 @@ func _check_self_lowest_magic(context: Dictionary) -> bool:
 	return true
 
 ## 変身が有利か
-func _check_transform_beneficial(context: Dictionary) -> bool:
+func _check_transform_beneficial(_context: Dictionary) -> bool:
 	# TODO: 変身先との比較ロジック
 	return false
 
@@ -489,7 +489,7 @@ func _get_creatures_by_owner(owner_filter: String, context: Dictionary) -> Array
 	return results
 
 ## 属性不一致のクリーチャーを取得
-func _get_element_mismatch_creatures(context: Dictionary) -> Array:
+func _get_element_mismatch_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -510,7 +510,7 @@ func _get_element_mismatch_creatures(context: Dictionary) -> Array:
 	return results
 
 ## 呪い付きクリーチャーを取得
-func _get_cursed_creatures(context: Dictionary) -> Array:
+func _get_cursed_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -525,7 +525,7 @@ func _get_cursed_creatures(context: Dictionary) -> Array:
 	return results
 
 ## HP減少中のクリーチャーを取得
-func _get_hp_reduced_creatures(context: Dictionary) -> Array:
+func _get_hp_reduced_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -545,7 +545,7 @@ func _get_hp_reduced_creatures(context: Dictionary) -> Array:
 	return results
 
 ## MHP30以下のクリーチャーを取得
-func _get_low_mhp_creatures(context: Dictionary) -> Array:
+func _get_low_mhp_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -564,7 +564,7 @@ func _get_low_mhp_creatures(context: Dictionary) -> Array:
 	return results
 
 ## ダウン中かつMHP50以上のクリーチャーを取得
-func _get_downed_high_mhp_creatures(context: Dictionary) -> Array:
+func _get_downed_high_mhp_creatures(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -674,7 +674,7 @@ func _get_creatures_with_summon_condition(context: Dictionary) -> Array:
 	return results
 
 ## 呪いも秘術も持たないクリーチャーを取得
-func _get_creatures_without_curse_or_mystic(context: Dictionary) -> Array:
+func _get_creatures_without_curse_or_mystic(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:
@@ -692,7 +692,7 @@ func _get_creatures_without_curse_or_mystic(context: Dictionary) -> Array:
 	return results
 
 ## 秘術持ちクリーチャーを取得
-func _get_creatures_with_mystic_arts(context: Dictionary) -> Array:
+func _get_creatures_with_mystic_arts(_context: Dictionary) -> Array:
 	var results = []
 	
 	if not board_system:

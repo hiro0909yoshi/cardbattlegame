@@ -718,12 +718,7 @@
 		  {
 			"name": "スペル借用",
 			"cost": 100,
-			"target_type": "self",
-			"effects": [
-			  {
-				"effect_type": "use_hand_spell"
-			  }
-			]
+			"spell_id": 9058
 		  }
 		]
 	  }

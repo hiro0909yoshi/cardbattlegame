@@ -193,7 +193,7 @@ func _evaluate_mystic_art(mystic_info: Dictionary, context: Dictionary) -> Dicti
 	return result
 
 ## パターン: immediate
-func _evaluate_immediate(mystic_data: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
+func _evaluate_immediate(_mystic_data: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
 	return {
 		"should_use": true,
 		"score": base_score,
@@ -347,7 +347,7 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 			return []
 
 ## 最適なターゲット選択（スコア付き）
-func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, context: Dictionary) -> Dictionary:
+func _select_best_target_with_score(targets: Array, _mystic_data: Dictionary, context: Dictionary) -> Dictionary:
 	if targets.is_empty():
 		return {"target": {}, "score": 0.0}
 	

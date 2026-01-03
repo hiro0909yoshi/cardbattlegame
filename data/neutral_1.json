@@ -464,18 +464,7 @@
 		  {
 			"name": "対象と同じクリーチャーに変身",
 			"cost": 70,
-			"target_type": "creature",
-			"target_info": {
-			  "owner_filter": "any",
-			  "exclude_self": true
-			},
-			"effects": [
-			  {
-				"effect_type": "transform",
-				"target": "self",
-				"transform_type": "copy_target"
-			  }
-			]
+			"spell_id": 9057
 		  }
 		]
 	  }

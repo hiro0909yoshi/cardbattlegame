@@ -1285,6 +1285,69 @@
         "target_condition": "has_adjacent_empty_land",
         "priority": "low"
       }
+    },
+    {
+      "id": 9057,
+      "name": "対象と同じクリーチャーに変身（シェイプシフター秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "creature",
+        "target_info": {
+          "owner_filter": "any",
+          "exclude_self": true
+        },
+        "effects": [
+          {
+            "effect_type": "transform",
+            "target": "self",
+            "transform_type": "copy_target"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9058,
+      "name": "スペル借用（ルーンアデプト秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "use_hand_spell"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9059,
+      "name": "クリーチャー交換（レムレース秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "player",
+        "target_info": {
+          "owner_filter": "enemy"
+        },
+        "effects": [
+          {
+            "effect_type": "swap_creature"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "skip",
+        "priority": "low"
+      }
     }
   ]
 }

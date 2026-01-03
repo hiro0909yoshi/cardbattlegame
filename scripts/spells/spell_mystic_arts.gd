@@ -56,6 +56,10 @@ func start_mystic_phase(player_id: int) -> void:
 	is_mystic_phase_active = true
 	current_mystic_player_id = player_id
 	
+	# 秘術フェーズ中は入力をロック（手札カード選択を防止）
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		spell_phase_handler_ref.game_flow_manager.lock_input()
+	
 	# ナチュラルワールドによる秘術無効化チェック
 	if _is_mystic_arts_disabled():
 		ui_message_requested.emit("ナチュラルワールド発動中：秘術は使用できません")
@@ -90,6 +94,11 @@ func _end_mystic_phase() -> void:
 	is_mystic_phase_active = false
 	clear_selection()
 	current_mystic_player_id = -1
+	
+	# 入力ロック解除
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		spell_phase_handler_ref.game_flow_manager.unlock_input()
+	
 	mystic_phase_completed.emit()
 
 
@@ -446,6 +455,10 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 	confirmation_target_info = target_info
 	confirmation_target_data = target_data
 	
+	# 確認中は入力をロック（手札カード選択を防止）
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		spell_phase_handler_ref.game_flow_manager.lock_input()
+	
 	# 対象をハイライト表示
 	var target_count = 0
 	if spell_phase_handler_ref:
@@ -475,6 +488,10 @@ func _confirm_mystic_effect() -> void:
 		return
 	
 	is_confirming = false
+	
+	# 入力ロック解除
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		spell_phase_handler_ref.game_flow_manager.unlock_input()
 	
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
@@ -510,6 +527,10 @@ func _confirm_mystic_effect() -> void:
 ## 確認フェーズ: キャンセル
 func _cancel_mystic_confirmation() -> void:
 	is_confirming = false
+	
+	# 入力ロック解除
+	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
+		spell_phase_handler_ref.game_flow_manager.unlock_input()
 	
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:

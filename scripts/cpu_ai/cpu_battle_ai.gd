@@ -137,14 +137,14 @@ func _calculate_battle_score(sim_result: Dictionary, attacker: Dictionary, _defe
 	var defender_hp = sim_result.get("defender_hp", 0)
 	var overkill = attacker_ap - defender_hp
 	if overkill > 0:
-		score += min(overkill / 10, 20)  # オーバーキル分のボーナス（最大20）
+		score += min(overkill / 10.0, 20)  # オーバーキル分のボーナス（最大20）
 	
 	# 攻撃側の残りHP
 	var attacker_hp = sim_result.get("attacker_hp", 0)
 	var defender_ap = sim_result.get("defender_ap", 0)
 	var hp_margin = attacker_hp - defender_ap
 	if hp_margin > 0:
-		score += min(hp_margin / 10, 20)  # HP余裕分のボーナス（最大20）
+		score += min(hp_margin / 10.0, 20)  # HP余裕分のボーナス（最大20）
 	
 	# クリーチャーのレアリティ/コストを考慮（高コストクリーチャーを失うリスク）
 	var attacker_cost = attacker.get("cost", {})
@@ -208,7 +208,7 @@ func evaluate_battle_with_item(
 		# アイテムを使う価値があるか：勝てるようになる場合はボーナス、既に勝てる場合はペナルティ
 		if sim_result.get("result") == BattleSimulator.BattleResult.ATTACKER_WIN:
 			score += 10  # アイテムで勝てるならボーナス
-		score -= item_cost / 10  # アイテムコスト分のペナルティ
+		score -= item_cost / 10.0  # アイテムコスト分のペナルティ
 	
 	return {"score": score, "sim_result": sim_result, "item": attacker_item}
 

@@ -123,7 +123,7 @@ func simulate_battle(
 		
 		# 無効化成功でも、防御側が攻撃側を倒すので死亡時効果を考慮
 		var defender_final_hp_nullify = _calculate_total_hp(defender)
-		var defender_final_ap_nullify = defender.current_ap
+		var _defender_final_ap_nullify = defender.current_ap  # 将来の拡張用
 		var attacker_data_for_death = attacker.creature_data
 		
 		# 攻撃側の死亡時ダメージを確認
@@ -209,7 +209,7 @@ func simulate_battle(
 		attacker_final_ap, attacker_attack_count, defender_reflect
 	)
 	result = death_effect_result["result"]
-	var adjusted_defender_hp = death_effect_result["defender_hp"]
+	var _adjusted_defender_hp = death_effect_result["defender_hp"]  # 現在未使用
 	
 	_log("")
 	_log(_get_result_header(result))

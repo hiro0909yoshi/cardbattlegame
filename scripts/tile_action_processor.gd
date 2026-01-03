@@ -563,7 +563,7 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	
 	# CPU攻撃側の合体処理をチェック
 	if _is_cpu_player(current_player_index):
-		var merge_executed = await _check_and_execute_cpu_attacker_merge(current_player_index)
+		var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
 		if merge_executed:
 			# 合体後のデータでバトルオーバーレイを更新
 			if game_flow_manager and game_flow_manager.battle_status_overlay:

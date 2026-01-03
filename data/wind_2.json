@@ -669,15 +669,7 @@
 		  {
 			"name": "クリーチャー交換",
 			"cost": 50,
-			"target_type": "player",
-			"target_info": {
-			  "owner_filter": "enemy"
-			},
-			"effects": [
-			  {
-				"effect_type": "swap_creature"
-			  }
-			]
+			"spell_id": 9059
 		  }
 		]
 	  }

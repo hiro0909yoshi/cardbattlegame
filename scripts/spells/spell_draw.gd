@@ -169,13 +169,13 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			result = add_specific_card_to_hand(player_id, card_id)
 		
 		"destroy_and_draw":
-			# 敵手札破壊→自分ドロー（クラウドギズモ用）
+			# 敵手札破壊→敵がドロー（クラウドギズモ用）
 			var target_player_id = context.get("target_player_id", -1)
 			if target_player_id >= 0 and card_selection_handler:
 				card_selection_handler.set_current_player(player_id)
 				card_selection_handler.start_enemy_card_selection(target_player_id, "destroy_any", func(_card_index: int):
-					# 破壊後に自分が1枚ドロー
-					draw_cards(player_id, 1)
+					# 破壊後に破壊された側が1枚ドロー
+					draw_cards(target_player_id, 1)
 				)
 				result["async"] = true
 		

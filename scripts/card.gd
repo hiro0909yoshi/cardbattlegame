@@ -426,6 +426,36 @@ func _is_handler_card_selection_active() -> bool:
 		return true
 	return false
 
+# 秘術選択フェーズ中かどうかを判定
+# 秘術効果適用中のカード選択（ルーンアデプト等）は許可する
+func _is_mystic_selection_phase() -> bool:
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if not ui_manager or not ui_manager.game_flow_manager_ref:
+		return false
+	
+	var gfm = ui_manager.game_flow_manager_ref
+	if not gfm.spell_phase_handler or not gfm.spell_phase_handler.spell_mystic_arts:
+		return false
+	
+	var mystic_arts = gfm.spell_phase_handler.spell_mystic_arts
+	
+	# 秘術フェーズがアクティブでない場合は通常処理
+	if not mystic_arts.is_active():
+		return false
+	
+	# 秘術効果適用中のカード選択は許可（filter が special な値の場合）
+	var filter = ui_manager.card_selection_filter
+	if filter in ["single_target_spell", "spell_borrow"]:
+		return false  # 効果適用中のカード選択は許可
+	
+	# CardSelectionHandlerがアクティブなら許可
+	var handler = gfm.spell_phase_handler.card_selection_handler
+	if handler and handler.is_selecting():
+		return false
+	
+	# 秘術選択フェーズ中（クリーチャー/秘術選択中）
+	return true
+
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
@@ -462,6 +492,12 @@ func _input(event):
 	# 入力ロック中は無視
 	var game_flow_manager = _get_game_flow_manager()
 	if game_flow_manager and game_flow_manager.is_input_locked():
+		#print("[Card] 入力ロック中のためスキップ")
+		return
+	
+	# 秘術選択フェーズ中は手札カード選択を無効化
+	if _is_mystic_selection_phase():
+		#print("[Card] 秘術選択フェーズ中のためスキップ")
 		return
 	
 	# カード選択モード時のクリック処理

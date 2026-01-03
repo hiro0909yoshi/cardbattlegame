@@ -146,7 +146,7 @@ func _evaluate_spell(spell: Dictionary, context: Dictionary) -> Dictionary:
 	return result
 
 ## パターン: immediate（即座使用）
-func _evaluate_immediate(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
+func _evaluate_immediate(_spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
 	# 即座使用系は常に使用可能
 	return {
 		"should_use": true,
@@ -353,7 +353,7 @@ func _get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 			return []
 
 ## 最適なターゲット選択（スコア付き）
-func _select_best_target_with_score(targets: Array, spell: Dictionary, context: Dictionary) -> Dictionary:
+func _select_best_target_with_score(targets: Array, _spell: Dictionary, context: Dictionary) -> Dictionary:
 	if targets.is_empty():
 		return {"target": {}, "score": 0.0}
 	
