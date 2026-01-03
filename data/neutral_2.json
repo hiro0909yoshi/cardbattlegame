@@ -527,14 +527,7 @@
 					{
 						"name": "スタチュー配置",
 						"cost": 80,
-						"target_type": "self",
-						"effects": [
-							{
-								"effect_type": "place_creature",
-								"creature_id": 421,
-								"placement_mode": "adjacent"
-							}
-						]
+						"spell_id": 9056
 					}
 				]
 			}

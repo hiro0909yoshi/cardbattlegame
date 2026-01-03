@@ -189,13 +189,7 @@
 		  {
 			"name": "ハイプワーカー生成",
 			"cost": 20,
-			"target_type": "self",
-			"effects": [
-			  {
-				"effect_type": "add_specific_card",
-				"card_id": 32
-			  }
-			]
+			"spell_id": 9053
 		  }
 		]
 	  }

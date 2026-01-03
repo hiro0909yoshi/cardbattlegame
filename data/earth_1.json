@@ -286,18 +286,7 @@
 		  {
 			"name": "グーバ配置",
 			"cost": 20,
-			"target_type": "land",
-			"target_info": {
-			  "owner_filter": "any",
-			  "target_filter": "empty"
-			},
-			"effects": [
-			  {
-				"effect_type": "place_creature",
-				"creature_id": 208,
-				"placement_mode": "select"
-			  }
-			]
+			"spell_id": 9055
 		  }
 		]
 	  }

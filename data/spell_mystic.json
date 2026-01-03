@@ -1191,6 +1191,100 @@
         "pattern": "immediate",
         "priority": "low"
       }
+    },
+    {
+      "id": 9053,
+      "name": "ハイプワーカー生成（ハイプクイーン秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "add_specific_card",
+            "card_id": 32
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "immediate",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9054,
+      "name": "バーアル召喚（コンジャラー秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "any",
+          "target_filter": "empty"
+        },
+        "effects": [
+          {
+            "effect_type": "place_creature",
+            "creature_id": 27,
+            "placement_mode": "select"
+          },
+          {
+            "effect_type": "self_destroy",
+            "clear_land": true
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "has_empty_land",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9055,
+      "name": "グーバ配置（グーバクイーン秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "land",
+        "target_info": {
+          "owner_filter": "any",
+          "target_filter": "empty"
+        },
+        "effects": [
+          {
+            "effect_type": "place_creature",
+            "creature_id": 208,
+            "placement_mode": "select"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "has_empty_land",
+        "priority": "low"
+      }
+    },
+    {
+      "id": 9056,
+      "name": "スタチュー配置（レジェンドファロス秘術）",
+      "rarity": "N",
+      "type": "mystic",
+      "effect_parsed": {
+        "target_type": "self",
+        "effects": [
+          {
+            "effect_type": "place_creature",
+            "creature_id": 421,
+            "placement_mode": "adjacent"
+          }
+        ]
+      },
+      "cpu_rule": {
+        "pattern": "has_target",
+        "target_condition": "has_adjacent_empty_land",
+        "priority": "low"
+      }
     }
   ]
 }
