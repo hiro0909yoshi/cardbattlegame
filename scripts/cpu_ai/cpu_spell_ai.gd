@@ -33,20 +33,12 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 ## スペル使用判断のメインエントリ
 ## 戻り値: {use: bool, spell: Dictionary, target: Dictionary} または null
 func decide_spell(player_id: int) -> Dictionary:
-	print("[CPU Spell AI] decide_spell開始: Player%d" % (player_id + 1))
-	
 	if not card_system or not player_system:
-		print("[CPU Spell AI] エラー: card_system または player_system が未設定")
 		return {"use": false}
 	
 	# 使用可能なスペルを取得
 	var usable_spells = _get_usable_spells(player_id)
-	print("[CPU Spell AI] 使用可能スペル: %d枚" % usable_spells.size())
-	for s in usable_spells:
-		print("  - %s (pattern: %s)" % [s.get("name", "?"), s.get("cpu_rule", {}).get("pattern", "none")])
-	
 	if usable_spells.is_empty():
-		print("[CPU Spell AI] 使用可能なスペルなし")
 		return {"use": false}
 	
 	# コンテキスト作成
@@ -56,7 +48,6 @@ func decide_spell(player_id: int) -> Dictionary:
 	var evaluated_spells = []
 	for spell in usable_spells:
 		var evaluation = _evaluate_spell(spell, context)
-		print("[CPU Spell AI] 評価: %s → should_use=%s, score=%.1f" % [spell.get("name", "?"), evaluation.should_use, evaluation.score])
 		if evaluation.should_use:
 			evaluated_spells.append({
 				"spell": spell,
@@ -64,12 +55,7 @@ func decide_spell(player_id: int) -> Dictionary:
 				"target": evaluation.target
 			})
 	
-	print("[CPU Spell AI] 使用候補: %d件" % evaluated_spells.size())
-	for e in evaluated_spells:
-		print("  - %s (score: %.1f)" % [e.spell.get("name", "?"), e.score])
-	
 	if evaluated_spells.is_empty():
-		print("[CPU Spell AI] 使用すべきスペルなし")
 		return {"use": false}
 	
 	# スコアでソートして最高のものを選択
@@ -158,11 +144,6 @@ func _evaluate_immediate(_spell: Dictionary, context: Dictionary, base_score: fl
 func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
 	var cpu_rule = spell.get("cpu_rule", {})
 	var target_condition = cpu_rule.get("target_condition", "")
-	var effect_parsed = spell.get("effect_parsed", {})
-	
-	print("[has_target] スペル: %s" % spell.get("name", "?"))
-	print("[has_target] target_condition: '%s'" % target_condition)
-	print("[has_target] effect_parsed: %s" % effect_parsed)
 	
 	var targets = []
 	
@@ -170,19 +151,13 @@ func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: fl
 	var damage_value = _get_damage_value(spell)
 	if damage_value > 0:
 		context["damage_value"] = damage_value
-	print("[has_target] damage_value: %d" % damage_value)
 	
 	if target_condition:
-		print("[has_target] condition_checker.check_target_condition呼び出し")
 		targets = condition_checker.check_target_condition(target_condition, context)
 	else:
-		print("[has_target] _get_default_targets呼び出し")
 		targets = _get_default_targets(spell, context)
 	
-	print("[has_target] targets数: %d" % targets.size())
-	
 	if targets.is_empty():
-		print("[has_target] ターゲットなし → 使用しない")
 		return {"should_use": false, "score": 0.0, "target": null}
 	
 	# 最適なターゲットを選択（スコア付き）
@@ -190,10 +165,9 @@ func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: fl
 	var best_target = selection.target
 	var target_score = selection.score
 	
-	# ダメージ系スペルでターゲットを倒せる場合、優先度を上げる
+	# 倒せるターゲットがいる場合はスコアを1.5倍
 	var adjusted_score = base_score
 	if damage_value > 0 and target_score >= 3.0:
-		# 倒せるターゲットがいる場合はスコアを1.5倍
 		adjusted_score = base_score * 1.5
 	
 	return {
@@ -216,6 +190,10 @@ func _evaluate_condition(spell: Dictionary, context: Dictionary, base_score: flo
 	
 	# 条件を満たした場合、ターゲットを取得
 	var target = _get_condition_target(spell, context)
+	
+	# 適切なターゲットがない場合は使用しない
+	if target.is_empty():
+		return {"should_use": false, "score": 0.0, "target": null}
 	
 	return {
 		"should_use": true,
@@ -252,9 +230,25 @@ func _evaluate_enemy_hand(spell: Dictionary, context: Dictionary, base_score: fl
 func _evaluate_profit_calc(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
 	var cpu_rule = spell.get("cpu_rule", {})
 	var profit_formula = cpu_rule.get("profit_formula", "")
+	var profit_condition = cpu_rule.get("profit_condition", "")
 	var cost = _get_spell_cost(spell)
 	
-	# 利益を計算
+	var target = null
+	
+	# profit_conditionがある場合は条件チェック
+	if not profit_condition.is_empty():
+		var condition_met = _check_profit_condition(profit_condition, context, cost)
+		if not condition_met:
+			return {"should_use": false, "score": 0.0, "target": null}
+		
+		target = _get_profit_target(spell, context)
+		return {
+			"should_use": true,
+			"score": base_score,
+			"target": target
+		}
+	
+	# 従来のprofit_formula形式
 	var profit = _calculate_profit(profit_formula, context)
 	
 	# コストより利益が大きければ使用
@@ -265,7 +259,7 @@ func _evaluate_profit_calc(spell: Dictionary, context: Dictionary, base_score: f
 	var profit_ratio = float(profit) / float(cost) if cost > 0 else 1.0
 	var adjusted_score = base_score * min(profit_ratio, 2.0)
 	
-	var target = _get_profit_target(spell, context)
+	target = _get_profit_target(spell, context)
 	
 	return {
 		"should_use": true,
@@ -273,19 +267,148 @@ func _evaluate_profit_calc(spell: Dictionary, context: Dictionary, base_score: f
 		"target": target
 	}
 
+## profit_condition のチェック
+func _check_profit_condition(condition: String, context: Dictionary, cost: int) -> bool:
+	match condition:
+		"destroyed_count_gte_4":
+			return context.get("destroyed_count", 0) >= 4
+		"enemy_lands_gte_3":
+			return _get_enemy_land_count(context) >= 3
+		"enemy_magic_gte_300":
+			return _get_max_enemy_magic(context) >= 300
+		"enemy_magic_higher":
+			var my_magic = context.get("magic", 0)
+			return _get_max_enemy_magic(context) > my_magic
+		"land_value_high":
+			# 最高価値の自領地が価値>コストなら使用
+			var highest_value = _get_highest_own_land_value(context)
+			return highest_value * 0.7 > cost  # 70%回収が有利
+		"lap_behind_enemy":
+			return _calculate_lap_diff(context) > 0
+		_:
+			push_warning("Unknown profit_condition: " + condition)
+			return false
+
+## 最高価値の自領地を取得
+func _get_highest_own_land_value(context: Dictionary) -> int:
+	if not board_system:
+		return 0
+	
+	var player_id = context.get("player_id", 0)
+	var highest = 0
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		if tile.get("owner", tile.get("owner_id", -1)) == player_id:
+			var level = tile.get("level", 1)
+			var base_value = tile.get("base_value", 100)
+			var value = base_value * level
+			highest = max(highest, value)
+	
+	return highest
+
 ## パターン: strategic（戦略的判断）
 func _evaluate_strategic(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
-	# TODO: 複雑な戦略的判断
-	# 現時点では低確率で使用
-	if randf() < 0.3:
+	var cpu_rule = spell.get("cpu_rule", {})
+	var strategy = cpu_rule.get("strategy", "")
+	
+	var should_use = false
+	var score_multiplier = 0.5
+	
+	match strategy:
+		"after_lap_complete":
+			# 周回完了直後に使用（次のターンで城に戻れる場合）
+			should_use = _check_after_lap_complete(context)
+			score_multiplier = 0.8
+		"dice_manipulation":
+			# ダイス操作：高レベル土地を踏ませる/避けるタイミング
+			should_use = _check_dice_manipulation_useful(context)
+			score_multiplier = 0.6
+		"near_enemy_high_toll":
+			# 敵の高額通行料土地の近くにいる時
+			should_use = _check_near_enemy_high_toll(context)
+			score_multiplier = 0.7
+		_:
+			# 不明なstrategyは低確率で使用
+			should_use = randf() < 0.3
+			score_multiplier = 0.5
+	
+	if should_use:
 		var target = _get_strategic_target(spell, context)
 		return {
 			"should_use": true,
-			"score": base_score * 0.5,
+			"score": base_score * score_multiplier,
 			"target": target
 		}
 	
 	return {"should_use": false, "score": 0.0, "target": null}
+
+## 周回完了直後かチェック
+func _check_after_lap_complete(context: Dictionary) -> bool:
+	if not player_system:
+		return false
+	
+	var player_id = context.get("player_id", 0)
+	if player_id < 0 or player_id >= player_system.players.size():
+		return false
+	
+	var player = player_system.players[player_id]
+	if not player:
+		return false
+	
+	# 全ゲートを訪問済みなら周回完了直後
+	var visited_gates = player.visited_gates if "visited_gates" in player else []
+	return visited_gates.size() >= 4  # TODO: マップから取得
+
+## ダイス操作が有用かチェック
+func _check_dice_manipulation_useful(context: Dictionary) -> bool:
+	# 簡易実装：敵の高レベル土地があれば有用
+	var enemy_lands = _get_enemy_high_level_lands(context)
+	return enemy_lands.size() > 0
+
+## 敵の高額通行料土地の近くにいるかチェック
+func _check_near_enemy_high_toll(context: Dictionary) -> bool:
+	if not player_system or not board_system:
+		return false
+	
+	var player_id = context.get("player_id", 0)
+	var player_pos = player_system.get_player_position(player_id)
+	
+	# 前方8マス以内に敵の高レベル土地があるか
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var level = tile.get("level", 1)
+		if level >= 3:
+			var tile_index = tile.get("index", -1)
+			var distance = abs(tile_index - player_pos)
+			if distance <= 8 and distance > 0:
+				return true
+	
+	return false
+
+## 敵の高レベル土地を取得
+func _get_enemy_high_level_lands(context: Dictionary) -> Array:
+	var results = []
+	if not board_system:
+		return results
+	
+	var player_id = context.get("player_id", 0)
+	var tiles = board_system.get_all_tiles()
+	
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var level = tile.get("level", 1)
+		if level >= 3:
+			results.append(tile)
+	
+	return results
 
 # =============================================================================
 # ヘルパー関数
@@ -319,7 +442,11 @@ func _build_context(player_id: int) -> Dictionary:
 ## スペルコスト取得
 func _get_spell_cost(spell: Dictionary) -> int:
 	var cost_data = spell.get("cost", {})
-	return cost_data.get("mp", 0)
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		return cost_data.get("mp", 0)
+	elif typeof(cost_data) == TYPE_INT or typeof(cost_data) == TYPE_FLOAT:
+		return int(cost_data)
+	return 0
 
 ## ダメージ値を取得
 func _get_damage_value(spell: Dictionary) -> int:
@@ -426,20 +553,188 @@ func _select_best_target(targets: Array, spell: Dictionary, context: Dictionary)
 func _get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
+	var cpu_rule = spell.get("cpu_rule", {})
+	var condition = cpu_rule.get("condition", "")
 	
 	match target_type:
 		"self", "none":
 			return {"type": "self", "player_id": context.player_id}
 		"own_land":
+			# 属性変更スペルの場合、属性一致を改善できる土地を選ぶ
+			if condition == "element_mismatch":
+				var best_land = _get_best_element_shift_target(spell, context)
+				if not best_land.is_empty():
+					return best_land
+				# 適切なターゲットがない場合は空を返す（使用しない）
+				return {}
+			# デフォルト: 最初の自領地
 			var lands = _get_land_targets("own", context)
 			if not lands.is_empty():
 				return lands[0]
+		"land":
+			# 条件に応じたターゲット取得
+			match condition:
+				"enemy_high_level":
+					# 敵の高レベル土地（レベル3以上で最もレベルが高いもの）
+					var enemy_lands = _get_enemy_lands_by_level_sorted(context.player_id, 3)
+					if not enemy_lands.is_empty():
+						return {"type": "land", "tile_index": enemy_lands[0].get("index", -1)}
+				"enemy_level_4":
+					# 敵のレベル4土地
+					var enemy_lands = _get_enemy_lands_by_level_sorted(context.player_id, 4)
+					if not enemy_lands.is_empty():
+						return {"type": "land", "tile_index": enemy_lands[0].get("index", -1)}
+				_:
+					# デフォルト: 敵の土地から選択
+					var lands = _get_land_targets("enemy", context)
+					if not lands.is_empty():
+						return lands[0]
 		"creature":
+			# エクスチェンジの場合、属性不一致のクリーチャーを優先
+			if condition == "can_upgrade_creature":
+				var best_target = _get_best_exchange_target(context)
+				if not best_target.is_empty():
+					return best_target
 			var targets = _get_default_targets(spell, context)
 			if not targets.is_empty():
 				return targets[0]
 	
-	return {"type": "self", "player_id": context.player_id}
+	return {}
+
+## エクスチェンジ用：交換対象の自クリーチャーを選ぶ
+## 属性不一致で、手札のクリーチャーで改善できるものを優先
+func _get_best_exchange_target(context: Dictionary) -> Dictionary:
+	var player_id = context.get("player_id", 0)
+	
+	if not board_system or not card_system:
+		return {}
+	
+	# 手札のクリーチャーを取得
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var hand_creatures = []
+	for card in hand:
+		if card.get("type") == "creature":
+			hand_creatures.append(card)
+	
+	if hand_creatures.is_empty():
+		return {}
+	
+	# 手札クリーチャーの属性セットを作成
+	var hand_elements = {}
+	for hc in hand_creatures:
+		hand_elements[hc.get("element", "")] = true
+	
+	# 自クリーチャーを取得
+	var tiles = board_system.get_all_tiles()
+	var candidates = []
+	
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", {})
+		if creature.is_empty():
+			continue
+		
+		var tile_element = tile.get("element", "")
+		var creature_element = creature.get("element", "")
+		var is_mismatched = tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral"
+		
+		# 手札に該当タイルと一致する属性のクリーチャーがいるか
+		var can_improve = hand_elements.has(tile_element)
+		
+		candidates.append({
+			"type": "creature",
+			"tile_index": tile.get("index", -1),
+			"creature": creature,
+			"is_mismatched": is_mismatched,
+			"can_improve": can_improve
+		})
+	
+	if candidates.is_empty():
+		return {}
+	
+	# ソート：改善可能 & 属性不一致を優先
+	candidates.sort_custom(func(a, b):
+		# 改善可能かつ属性不一致が最優先
+		var a_priority = 0
+		var b_priority = 0
+		if a.can_improve and a.is_mismatched:
+			a_priority = 2
+		elif a.is_mismatched:
+			a_priority = 1
+		if b.can_improve and b.is_mismatched:
+			b_priority = 2
+		elif b.is_mismatched:
+			b_priority = 1
+		return a_priority > b_priority
+	)
+	
+	return candidates[0]
+
+## 指定レベル以上の敵土地をレベル降順でソートして取得
+func _get_enemy_lands_by_level_sorted(player_id: int, min_level: int) -> Array:
+	var results = []
+	
+	if not board_system:
+		return results
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var level = tile.get("level", 1)
+		if level >= min_level:
+			results.append(tile)
+	
+	# レベル降順でソート（最もレベルが高いものを優先）
+	results.sort_custom(func(a, b): return a.get("level", 1) > b.get("level", 1))
+	
+	return results
+
+## 属性変更スペルの最適ターゲットを取得
+## 変更先属性とクリーチャーの属性が一致し、現在土地属性が不一致の土地を選ぶ
+func _get_best_element_shift_target(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	# 変更先属性を取得
+	var target_element = ""
+	for effect in effects:
+		if effect.get("effect_type") == "change_element":
+			target_element = effect.get("element", "")
+			break
+	
+	if target_element.is_empty():
+		return {}
+	
+	if not board_system:
+		return {}
+	
+	var player_id = context.get("player_id", 0)
+	var tiles = board_system.get_all_tiles()
+	
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if not creature or creature.is_empty():
+			continue
+		
+		var tile_element = tile.get("element", "")
+		var creature_element = creature.get("element", "")
+		
+		# クリーチャーの属性が変更先属性と一致し、土地属性が不一致の場合
+		if creature_element == target_element and tile_element != target_element:
+			return {"type": "land", "tile_index": tile.get("index", -1)}
+	
+	# 見つからなければ空を返す（使用しない方がいい）
+	return {}
 
 ## 敵プレイヤー取得
 func _get_enemy_players(context: Dictionary) -> Array:

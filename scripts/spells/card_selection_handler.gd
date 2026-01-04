@@ -122,6 +122,11 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		_finish_enemy_card_selection()
 		return
 	
+	# CPUの場合は自動選択
+	if _is_cpu_player(current_player_id):
+		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal)
+		return
+	
 	# フィルターモードを設定
 	if ui_manager:
 		ui_manager.card_selection_filter = filter_mode
@@ -159,6 +164,84 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 			Callable(),  # 決定なし
 			func(): _cancel_enemy_card_selection("キャンセルしました")
 		)
+
+## CPUプレイヤーかどうか判定
+func _is_cpu_player(player_id: int) -> bool:
+	# プレイヤー0は人間、1以降はCPU
+	return player_id > 0
+
+## CPU用: 敵手札から自動でカードを選択
+func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, callback: Callable, is_steal: bool):
+	"""CPUが自動で敵の手札からカードを選択"""
+	await get_tree().create_timer(0.5).timeout  # 思考時間
+	
+	if not card_system:
+		callback.call(-1)
+		_finish_enemy_card_selection()
+		return
+	
+	var hand = card_system.get_all_cards_for_player(target_player_id)
+	var valid_indices = []
+	
+	# フィルターに合うカードを探す
+	for i in range(hand.size()):
+		var card = hand[i]
+		if _card_matches_filter(card, filter_mode):
+			valid_indices.append(i)
+	
+	if valid_indices.is_empty():
+		callback.call(-1)
+		_finish_enemy_card_selection()
+		return
+	
+	# 最も価値の高いカードを選択（コストが高いもの優先）
+	var best_index = valid_indices[0]
+	var best_cost = 0
+	for idx in valid_indices:
+		var card = hand[idx]
+		var cost = 0
+		var cost_data = card.get("cost", {})
+		if typeof(cost_data) == TYPE_DICTIONARY:
+			cost = cost_data.get("mp", 0)
+		elif typeof(cost_data) == TYPE_INT or typeof(cost_data) == TYPE_FLOAT:
+			cost = int(cost_data)
+		if cost > best_cost:
+			best_cost = cost
+			best_index = idx
+	
+	# カードを破壊/奪取
+	var card_data = hand[best_index]
+	var action = "奪取" if is_steal else "破壊"
+	var target_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system and target_player_id < player_system.players.size():
+		target_name = player_system.players[target_player_id].name
+	print("[CPU自動選択] %s: %s を%s" % [target_name, card_data.get("name", "?"), action])
+	
+	if is_steal:
+		# 奪取: 対象の手札から自分の手札へ
+		card_system.discard_card(target_player_id, best_index, "steal")
+		card_system.add_card_to_hand(current_player_id, card_data)
+		print("[手札奪取] プレイヤー%d: %s を奪取" % [current_player_id + 1, card_data.get("name", "?")])
+	else:
+		# 破壊
+		card_system.discard_card(target_player_id, best_index, "destroy")
+		print("[手札破壊] プレイヤー%d: %s を破壊" % [target_player_id + 1, card_data.get("name", "?")])
+	
+	callback.call(best_index)
+	_finish_enemy_card_selection()
+
+## カードがフィルターに合致するか
+func _card_matches_filter(card: Dictionary, filter_mode: String) -> bool:
+	var card_type = card.get("type", "")
+	match filter_mode:
+		"destroy_item_spell":
+			return card_type == "item" or card_type == "spell"
+		"destroy_spell":
+			return card_type == "spell"
+		"destroy_any":
+			return true
+		_:
+			return true
 
 ## 敵手札からカードが選択された
 func on_enemy_card_selected(card_index: int):

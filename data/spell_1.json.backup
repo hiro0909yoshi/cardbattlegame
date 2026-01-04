@@ -128,8 +128,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "condition",
+		"condition": "has_all_elements_in_hand",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -154,7 +155,7 @@
 	  "cpu_rule": {
 		"pattern": "condition",
 		"condition": "has_downed_creature",
-		"priority": "medium"
+		"priority": "low"
 	  }
 	},
 	{
@@ -180,7 +181,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_creature",
 		"priority": "medium"
 	  }
 	},
@@ -206,7 +206,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "profit_calc",
-		"profit_condition": "destroyed_count_gte_4",
+		"profit_formula": "destroyed_count * 20",
 		"priority": "medium"
 	  }
 	},
@@ -263,7 +263,7 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "strategic",
 		"priority": "medium"
 	  }
 	},
@@ -347,9 +347,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "cursed_enemy_creature",
-		"priority": "medium"
+		"pattern": "condition",
+		"condition": "has_cursed_creature",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -375,8 +375,7 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "can_upgrade_creature",
+		"pattern": "has_target",
 		"priority": "medium"
 	  }
 	},
@@ -400,8 +399,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "strategic",
-		"strategy": "after_lap_complete",
-		"priority": "medium"
+		"priority": "low"
 	  }
 	},
 	{
@@ -430,7 +428,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
 		"priority": "medium"
 	  }
 	},
@@ -492,7 +489,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "enemy_hand",
-		"target_condition": "has_duplicate_cards",
 		"priority": "medium"
 	  }
 	},
@@ -532,8 +528,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "strategic",
-		"strategy": "after_lap_complete",
-		"priority": "medium"
+		"priority": "low"
 	  }
 	},
 	{
@@ -559,7 +554,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "profit_calc",
+		"profit_formula": "rank * 50",
 		"priority": "medium"
 	  }
 	},
@@ -589,7 +585,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
 		"priority": "medium"
 	  }
 	},
@@ -647,8 +642,9 @@
 		"affects_hp": true
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "has_target",
+		"target_condition": "most_common_element",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -678,7 +674,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
 		"priority": "medium"
 	  }
 	},
@@ -703,8 +698,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "profit_calc",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -732,7 +727,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
 		"priority": "medium"
 	  }
 	},
@@ -758,7 +752,7 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "strategic",
 		"priority": "medium"
 	  }
 	},
@@ -786,8 +780,8 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "condition",
-		"condition": "standing_on_vacant_land",
-		"priority": "medium"
+		"condition": "has_empty_land",
+		"priority": "low"
 	  }
 	},
 	{
@@ -834,7 +828,7 @@
 	  "cpu_rule": {
 		"pattern": "condition",
 		"condition": "enemy_level_4",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -872,7 +866,7 @@
 	  "cpu_rule": {
 		"pattern": "condition",
 		"condition": "enemy_high_level",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -902,8 +896,8 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "can_kill_target",
-		"priority": "medium_high"
+		"target_condition": "has_summon_condition",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -931,8 +925,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -966,7 +959,7 @@
 	  "cpu_rule": {
 		"pattern": "has_target",
 		"target_condition": "can_kill_target",
-		"priority": "medium_high"
+		"priority": "medium"
 	  }
 	},
 	{
@@ -991,8 +984,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "enemy_hand",
-		"target_condition": "has_item_or_spell",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1028,8 +1020,8 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_creature",
-		"priority": "medium"
+		"target_condition": "no_curse_no_mystic",
+		"priority": "low"
 	  }
 	},
 	{
@@ -1066,8 +1058,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "low"
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1096,7 +1088,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "hp_reduced_enemy",
+		"target_condition": "hp_reduced",
 		"priority": "medium"
 	  }
 	},
@@ -1123,7 +1115,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "enemy_hand",
-		"target_condition": "enemy_player",
 		"priority": "medium"
 	  }
 	},
@@ -1233,8 +1224,8 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "enemy_hand",
-		"target_condition": "has_2_items",
-		"priority": "medium"
+		"target_condition": "enemy_has_2_items",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1259,8 +1250,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "medium"
+		"pattern": "condition",
+		"condition": "has_vacant_land",
+		"priority": "low"
 	  }
 	},
 	{
@@ -1285,7 +1277,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "profit_calc",
-		"profit_condition": "lap_behind_enemy",
+		"profit_formula": "lap_diff * 100",
 		"priority": "medium"
 	  }
 	},
@@ -1314,9 +1306,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "condition",
-		"condition": "element_mismatch",
-		"priority": "low"
+		"pattern": "has_target",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1341,8 +1332,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "enemy_hand",
-		"target_condition": "has_spell",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1367,8 +1357,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "low"
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1393,8 +1383,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
-		"priority": "low"
+		"pattern": "strategic",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1422,7 +1412,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "high_value_or_mystic_enemy",
 		"priority": "medium"
 	  }
 	},
@@ -1450,8 +1439,9 @@
 		"affects_hp": true
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "condition",
+		"condition": "has_5_low_mhp_creatures",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1479,7 +1469,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "strategic",
-		"strategy": "dice_manipulation",
 		"priority": "medium"
 	  }
 	},
@@ -1544,8 +1533,9 @@
 		"affects_hp": true
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "has_target",
+		"target_condition": "downed_high_mhp",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1578,7 +1568,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_creature",
 		"priority": "medium"
 	  }
 	},
@@ -1617,7 +1606,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_creature",
 		"priority": "medium"
 	  }
 	},
@@ -1641,9 +1629,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "has_target",
-		"target_condition": "duplicate_enemy_creatures",
-		"priority": "medium"
+		"pattern": "condition",
+		"condition": "duplicate_creatures",
+		"priority": "high"
 	  }
 	},
 	{
@@ -1677,7 +1665,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "low_mhp_enemy_creatures",
+		"target_condition": "low_mhp_creatures",
 		"priority": "medium"
 	  }
 	},
@@ -1718,8 +1706,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
-		"priority": "medium"
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1747,8 +1734,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "skip",
-		"priority": "low"
+		"pattern": "has_target",
+		"target_condition": "has_mystic_arts",
+		"priority": "medium"
 	  }
 	},
 	{
@@ -1777,7 +1765,6 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
 		"priority": "medium"
 	  }
 	},
@@ -1804,7 +1791,7 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "strategic",
 		"priority": "medium"
 	  }
 	},
@@ -1837,7 +1824,7 @@
 	  "cpu_rule": {
 		"pattern": "has_target",
 		"target_condition": "own_creature",
-		"priority": "medium"
+		"priority": "low"
 	  }
 	},
 	{
@@ -1863,8 +1850,8 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "profit_calc",
-		"profit_condition": "enemy_magic_gte_300",
-		"priority": "medium"
+		"profit_formula": "enemy_magic * 0.3",
+		"priority": "medium_high"
 	  }
 	},
 	{
@@ -1896,7 +1883,7 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "strategic",
 		"priority": "medium"
 	  }
 	}

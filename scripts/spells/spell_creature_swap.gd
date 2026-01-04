@@ -58,15 +58,22 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 	if hand_creatures.is_empty():
 		return {"success": false, "reason": "no_hand_creature", "return_to_deck": true}
 	
-	# 手札クリーチャー選択UI
-	var selected_hand_index = await _select_hand_creature(hand_creatures, "交換するクリーチャーを選択")
-	if selected_hand_index == -1:
-		return {"success": false, "reason": "cancelled"}
+	var hand_creature: Dictionary
+	var is_cpu = _is_cpu_player(caster_player_id)
 	
-	var hand_creature = hand_creatures[selected_hand_index]
+	if is_cpu:
+		# CPU: 自動で最適なクリーチャーを選択（属性一致 + HP/APの合計が高いもの）
+		var tile_element = tile.tile_type if tile else ""
+		hand_creature = _cpu_select_best_creature(hand_creatures, tile.creature_data, tile_element)
+	else:
+		# 人間: 手札クリーチャー選択UI
+		var selected_hand_index = await _select_hand_creature(hand_creatures, "交換するクリーチャーを選択")
+		if selected_hand_index == -1:
+			return {"success": false, "reason": "cancelled"}
+		hand_creature = hand_creatures[selected_hand_index]
 	
-	# カード犠牲処理（クリーチャー合成用）
-	if _requires_card_sacrifice(hand_creature):
+	# カード犠牲処理（クリーチャー合成用）- CPUはスキップ
+	if not is_cpu and _requires_card_sacrifice(hand_creature):
 		var sacrifice_result = await _process_card_sacrifice(caster_player_id, hand_creature)
 		if sacrifice_result.get("cancelled", false):
 			return {"success": false, "reason": "cancelled"}
@@ -87,6 +94,36 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 		"tile_index": tile_index,
 		"hand_creature": hand_creature.get("name", "クリーチャー")
 	}
+
+## CPUプレイヤー判定
+func _is_cpu_player(player_id: int) -> bool:
+	return player_id > 0
+
+## CPU用：最適なクリーチャーを選択（タイルの属性と一致 + HP+APが高いもの）
+func _cpu_select_best_creature(hand_creatures: Array, current_creature: Dictionary, tile_element: String = "") -> Dictionary:
+	var best = hand_creatures[0]
+	var best_score = _get_creature_score_with_element(best, tile_element)
+	
+	for creature in hand_creatures:
+		var score = _get_creature_score_with_element(creature, tile_element)
+		if score > best_score:
+			best = creature
+			best_score = score
+	
+	return best
+
+## クリーチャーのスコア計算（属性一致ボーナス + HP + AP）
+func _get_creature_score_with_element(creature: Dictionary, tile_element: String) -> int:
+	var hp = creature.get("hp", creature.get("current_hp", 0))
+	var ap = creature.get("ap", creature.get("attack", 0))
+	var base_score = hp + ap
+	
+	# 属性一致ボーナス（大きく優先）
+	var creature_element = creature.get("element", "")
+	if tile_element != "" and creature_element == tile_element:
+		base_score += 1000  # 属性一致を最優先
+	
+	return base_score
 
 
 ## 盤面上の2体のクリーチャーを交換（リリーフ）

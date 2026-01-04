@@ -224,7 +224,6 @@ func start_spell_phase(player_id: int):
 		_show_spell_phase_buttons()
 	
 	# CPUの場合は簡易AI
-	print("[SpellPhase] is_cpu_player(%d) = %s" % [player_id, is_cpu_player(player_id)])
 	if is_cpu_player(player_id):
 		_handle_cpu_spell_turn()
 	else:
@@ -319,17 +318,12 @@ func start_mystic_arts_phase():
 
 ## CPUのスペル使用判定（新AI使用）
 func _handle_cpu_spell_turn():
-	print("[CPU Spell] _handle_cpu_spell_turn 開始: Player%d" % (current_player_id + 1))
 	await get_tree().create_timer(0.5).timeout  # 思考時間
 	
 	# スペル判断
 	var spell_decision = {"use": false}
 	if cpu_spell_ai:
-		print("[CPU Spell] cpu_spell_ai あり、判断開始...")
 		spell_decision = cpu_spell_ai.decide_spell(current_player_id)
-		print("[CPU Spell] 判断結果: use=%s" % spell_decision.use)
-	else:
-		print("[CPU Spell] エラー: cpu_spell_ai が未初期化")
 	
 	# ミスティックアーツ判断
 	var mystic_decision = {"use": false}
