@@ -8,13 +8,26 @@ var board_system: Node = null
 var player_system: Node = null
 var card_system: Node = null
 var creature_manager: Node = null
+var lap_system: Node = null
+var game_flow_manager: Node = null
+
+## BattleSimulator
+const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
+var _battle_simulator = null
 
 ## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node) -> void:
+func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
 	creature_manager = cr_manager
+	lap_system = l_system
+	game_flow_manager = gf_manager
+	
+	# BattleSimulatorを初期化
+	_battle_simulator = BattleSimulatorScript.new()
+	_battle_simulator.setup_systems(board_system, card_system, player_system, game_flow_manager)
+	_battle_simulator.enable_log = false
 
 # =============================================================================
 # メイン条件チェック（condition フィールド用）
@@ -100,6 +113,8 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 			return _check_self_lowest_magic(context)
 		"transform_beneficial":
 			return _check_transform_beneficial(context)
+		"nearest_checkpoint_unvisited":
+			return _check_nearest_checkpoint_unvisited(context)
 		
 		_:
 			push_warning("CPUSpellConditionChecker: Unknown condition: " + condition)
@@ -233,10 +248,190 @@ func _check_enemy_level_4(context: Dictionary) -> bool:
 	return enemy_lands.size() > 0
 
 ## 移動侵略で勝てるかチェック
-func _check_move_invasion_win(_context: Dictionary) -> bool:
-	# TODO: BattleSimulatorと連携して判定
-	# 現時点では簡易実装
+## 自クリーチャーを移動させて敵クリーチャーに勝てる組み合わせがあるかを判定
+## contextにspell情報がある場合、スペルの移動距離を考慮
+func _check_move_invasion_win(context: Dictionary) -> bool:
+	if not board_system or not _battle_simulator:
+		return false
+	
+	var player_id = context.get("player_id", 0)
+	
+	# スペル情報から移動距離を取得
+	var spell = context.get("spell", {})
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	var steps = 1  # デフォルト: 隣接（アウトレイジ）
+	var exact_steps = false
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		if effect_type == "move_steps":
+			steps = effect.get("steps", 2)
+			exact_steps = effect.get("exact_steps", false)
+			break
+		elif effect_type == "move_to_adjacent_enemy":
+			steps = 1
+			exact_steps = false
+			break
+	
+	# 自クリーチャーを取得（盤面上）
+	var own_creatures = _get_own_creatures_on_board(player_id)
+	if own_creatures.is_empty():
+		return false
+	
+	# 各自クリーチャーから移動可能な敵領地を探し、勝てるかシミュレーション
+	for own_tile in own_creatures:
+		var attacker = own_tile.get("creature", {})
+		if attacker.is_empty():
+			continue
+		
+		var from_tile = own_tile.get("tile_index", -1)
+		if from_tile < 0:
+			continue
+		
+		# 移動可能な敵領地を取得
+		var reachable_enemy_tiles = _get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
+		
+		for enemy_tile in reachable_enemy_tiles:
+			var defender = enemy_tile.get("creature", {})
+			if defender.is_empty():
+				continue
+			
+			# シミュレーション
+			var sim_tile_info = {
+				"element": enemy_tile.get("element", ""),
+				"level": enemy_tile.get("level", 1),
+				"owner": enemy_tile.get("owner", -1),
+				"tile_index": enemy_tile.get("tile_index", -1)
+			}
+			
+			var sim_result = _battle_simulator.simulate_battle(
+				attacker,
+				defender,
+				sim_tile_info,
+				player_id,
+				{},
+				{}
+			)
+			
+			var result = sim_result.get("result", -1)
+			if result == BattleSimulatorScript.BattleResult.ATTACKER_WIN:
+				return true
+	
 	return false
+
+## 指定距離で到達可能な敵クリーチャーのいるタイルを取得
+func _get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact_steps: bool) -> Array:
+	var results = []
+	if not board_system:
+		return results
+	
+	# BFSで探索
+	var visited = {from_tile: 0}
+	var queue = [from_tile]
+	
+	while not queue.is_empty():
+		var current = queue.pop_front()
+		var current_distance = visited[current]
+		
+		if current_distance >= steps:
+			continue
+		
+		# 隣接タイルを取得
+		var neighbors = []
+		if board_system.tile_neighbor_system:
+			neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(current)
+		
+		for neighbor in neighbors:
+			if visited.has(neighbor):
+				continue
+			
+			visited[neighbor] = current_distance + 1
+			queue.append(neighbor)
+	
+	# 条件に合う敵領地を収集
+	for tile_index in visited.keys():
+		if tile_index == from_tile:
+			continue
+		
+		var distance = visited[tile_index]
+		
+		# exact_stepsの場合はちょうどその距離のみ
+		if exact_steps and distance != steps:
+			continue
+		
+		# exact_stepsでない場合は距離以内
+		if not exact_steps and distance > steps:
+			continue
+		
+		var tile = board_system.tile_nodes.get(tile_index)
+		if not tile:
+			continue
+		
+		# 敵領地でクリーチャーがいる場合のみ
+		if tile.owner_id != -1 and tile.owner_id != player_id:
+			if not tile.creature_data.is_empty():
+				results.append({
+					"tile_index": tile_index,
+					"creature": tile.creature_data,
+					"element": tile.element if "element" in tile else "",
+					"level": tile.level if "level" in tile else 1,
+					"owner": tile.owner_id
+				})
+	
+	return results
+
+## 盤面上の自クリーチャーを取得
+func _get_own_creatures_on_board(player_id: int) -> Array:
+	var results = []
+	if not board_system:
+		return results
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if creature.is_empty():
+			continue
+		
+		results.append({
+			"tile_index": tile.get("index", -1),
+			"creature": creature,
+			"element": tile.get("element", ""),
+			"level": tile.get("level", 1)
+		})
+	
+	return results
+
+## 敵クリーチャーのいるタイルを取得
+func _get_enemy_creature_tiles(player_id: int) -> Array:
+	var results = []
+	if not board_system:
+		return results
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if creature.is_empty():
+			continue
+		
+		results.append({
+			"tile_index": tile.get("index", -1),
+			"creature": creature,
+			"element": tile.get("element", ""),
+			"level": tile.get("level", 1),
+			"owner": owner_id
+		})
+	
+	return results
 
 ## ダウン中の自クリーチャーがいるか
 func _check_has_downed_creature(context: Dictionary) -> bool:
@@ -454,22 +649,23 @@ func _check_deck_nearly_empty(context: Dictionary) -> bool:
 	var deck_count = card_system.get_deck_count(player_id)
 	return deck_count <= 5
 
-## 未訪問ゲートがあるか
+## 未訪問ゲートがあるか（1周完了を引き起こすゲートは除外）
 func _check_has_unvisited_gate(context: Dictionary) -> bool:
+	if not lap_system:
+		return false
+	
 	var player_id = context.get("player_id", 0)
-	if not player_system:
-		return false
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	var required_checkpoints = lap_system.required_checkpoints
 	
-	if player_id < 0 or player_id >= player_system.players.size():
-		return false
+	# 未訪問ゲートをカウント
+	var unvisited_count = 0
+	for checkpoint in required_checkpoints:
+		if not player_state.get(checkpoint, false):
+			unvisited_count += 1
 	
-	var player = player_system.players[player_id]
-	if not player:
-		return false
-	
-	var visited_gates = player.visited_gates if "visited_gates" in player else []
-	var total_gates = 4  # TODO: マップから取得
-	return visited_gates.size() < total_gates
+	# 未訪問が2つ以上あれば使用可能（1つだけだと1周完了を引き起こす）
+	return unvisited_count >= 2
 
 ## 自分が最下位魔力か
 func _check_self_lowest_magic(context: Dictionary) -> bool:
@@ -523,7 +719,8 @@ func _check_standing_on_vacant_land(context: Dictionary) -> bool:
 	var owner = tile.get("owner", -1)
 	return owner == -1
 
-## 手札のクリーチャーでアップグレードできるか（エクスチェンジ用）
+## 手札のクリーチャーで属性一致に改善できるか（エクスチェンジ用）
+## 属性不一致の配置クリーチャーがいて、そのタイル属性と一致する手札クリーチャーがいる場合のみtrue
 func _check_can_upgrade_creature(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	if not card_system or not board_system:
@@ -539,14 +736,36 @@ func _check_can_upgrade_creature(context: Dictionary) -> bool:
 	if hand_creatures.is_empty():
 		return false
 	
-	# 配置中のクリーチャーと比較
-	var own_creatures = _get_own_creatures(player_id)
-	for placed in own_creatures:
-		var placed_value = placed.get("ap", 0) + placed.get("hp", placed.get("max_hp", 0))
-		for hand_c in hand_creatures:
-			var hand_value = hand_c.get("ap", 0) + hand_c.get("hp", 0)
-			if hand_value > placed_value:
-				return true
+	# 手札クリーチャーの属性セットを作成
+	var hand_elements = {}
+	for hc in hand_creatures:
+		var elem = hc.get("element", "")
+		if elem != "" and elem != "neutral":
+			hand_elements[elem] = true
+	
+	# 配置中の自クリーチャーで属性不一致のものを探す
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", {})
+		if creature.is_empty():
+			continue
+		
+		var tile_element = tile.get("element", "")
+		var creature_element = creature.get("element", "")
+		
+		# 属性不一致かチェック
+		if tile_element == "" or tile_element == "neutral":
+			continue
+		if creature_element == tile_element:
+			continue  # 既に一致している
+		
+		# 手札にこのタイル属性と一致するクリーチャーがいるか
+		if hand_elements.has(tile_element):
+			return true
 	
 	return false
 
@@ -1297,3 +1516,88 @@ func _get_enemies_with_cards(context: Dictionary) -> Array:
 			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
 	
 	return results
+
+
+## 最寄りチェックポイントが未訪問かチェック（フォームポータル用）
+func _check_nearest_checkpoint_unvisited(context: Dictionary) -> bool:
+	if not board_system or not lap_system:
+		return false
+	
+	var player_id = context.get("player_id", 0)
+	var current_tile = _get_player_current_tile(player_id)
+	
+	# 最寄りチェックポイントを探す
+	var nearest_checkpoint = _find_nearest_checkpoint(current_tile)
+	if nearest_checkpoint.tile_index < 0:
+		return false
+	
+	# そのチェックポイントが未訪問かチェック
+	var checkpoint_type = nearest_checkpoint.checkpoint_type
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	var is_visited = player_state.get(checkpoint_type, false)
+	
+	return not is_visited
+
+## 最寄りチェックポイントを探す
+func _find_nearest_checkpoint(from_tile: int) -> Dictionary:
+	if not board_system or not "tile_nodes" in board_system:
+		return {"tile_index": -1, "checkpoint_type": ""}
+	
+	var tiles = board_system.tile_nodes
+	var nearest_tile = -1
+	var nearest_distance = 999999
+	var nearest_type = ""
+	
+	for tile_index in tiles.keys():
+		var tile = tiles[tile_index]
+		if tile and tile.tile_type == "checkpoint":
+			var dist = _calculate_tile_distance_simple(from_tile, tile_index)
+			if dist < nearest_distance:
+				nearest_distance = dist
+				nearest_tile = tile_index
+				nearest_type = "N" if tile.checkpoint_type == 0 else "S"
+	
+	return {"tile_index": nearest_tile, "checkpoint_type": nearest_type}
+
+## プレイヤーの現在位置を取得
+func _get_player_current_tile(player_id: int) -> int:
+	if board_system and "movement_controller" in board_system and board_system.movement_controller:
+		return board_system.movement_controller.get_player_tile(player_id)
+	if player_system and player_system.has_method("get_player_position"):
+		return player_system.get_player_position(player_id)
+	return 0
+
+## タイル間の距離を計算（簡易版）
+func _calculate_tile_distance_simple(from_tile: int, to_tile: int) -> int:
+	if from_tile == to_tile:
+		return 0
+	
+	if not board_system or not "tile_neighbor_system" in board_system:
+		return abs(to_tile - from_tile)
+	
+	var neighbor_system = board_system.tile_neighbor_system
+	if not neighbor_system or not neighbor_system.has_method("get_sequential_neighbors"):
+		return abs(to_tile - from_tile)
+	
+	# BFS
+	var visited = {}
+	var queue = [[from_tile, 0]]
+	visited[from_tile] = true
+	
+	while not queue.is_empty():
+		var current = queue.pop_front()
+		var tile = current[0]
+		var dist = current[1]
+		
+		if dist > 30:
+			break
+		
+		var neighbors = neighbor_system.get_sequential_neighbors(tile)
+		for neighbor in neighbors:
+			if neighbor == to_tile:
+				return dist + 1
+			if not visited.has(neighbor):
+				visited[neighbor] = true
+				queue.append([neighbor, dist + 1])
+	
+	return abs(to_tile - from_tile)

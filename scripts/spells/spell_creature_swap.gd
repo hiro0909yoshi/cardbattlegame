@@ -128,31 +128,40 @@ func _get_creature_score_with_element(creature: Dictionary, tile_element: String
 
 ## 盤面上の2体のクリーチャーを交換（リリーフ）
 func _apply_swap_board_creatures(target_data: Dictionary, caster_player_id: int) -> Dictionary:
-	var tile_index_1 = target_data.get("tile_index", -1)  # 最初に選択されたクリーチャー
+	var tile_index_1 = target_data.get("tile_index", -1)
 	var tile_index_2 = target_data.get("tile_index_2", -1)
+	var is_cpu = _is_cpu_player(caster_player_id)
 	
-	# 1体目が選択されていない場合
-	if tile_index_1 == -1:
-		var own_creatures = _get_own_creature_tiles(caster_player_id)
-		if own_creatures.size() < 2:
-			return {"success": false, "reason": "not_enough_creatures", "return_to_deck": true}
-		
-		# 1体目選択
-		tile_index_1 = await _select_tile(own_creatures, "交換する1体目を選択")
+	# CPUの場合は自動で最適なペアを選択
+	if is_cpu:
+		var best_pair = _cpu_select_best_swap_pair(caster_player_id)
+		if best_pair.is_empty():
+			return {"success": false, "reason": "no_valid_swap"}
+		tile_index_1 = best_pair.tile_1
+		tile_index_2 = best_pair.tile_2
+	else:
+		# 人間プレイヤーの場合
+		# 1体目が選択されていない場合
 		if tile_index_1 == -1:
-			return {"success": false, "reason": "cancelled"}
-	
-	# 2体目選択
-	if tile_index_2 == -1:
-		var own_creatures = _get_own_creature_tiles(caster_player_id)
-		var remaining = own_creatures.filter(func(t): return t != tile_index_1)
+			var own_creatures = _get_own_creature_tiles(caster_player_id)
+			if own_creatures.size() < 2:
+				return {"success": false, "reason": "not_enough_creatures", "return_to_deck": true}
+			
+			tile_index_1 = await _select_tile(own_creatures, "交換する1体目を選択")
+			if tile_index_1 == -1:
+				return {"success": false, "reason": "cancelled"}
 		
-		if remaining.is_empty():
-			return {"success": false, "reason": "not_enough_creatures", "return_to_deck": true}
-		
-		tile_index_2 = await _select_tile(remaining, "交換する2体目を選択")
+		# 2体目選択
 		if tile_index_2 == -1:
-			return {"success": false, "reason": "cancelled"}
+			var own_creatures = _get_own_creature_tiles(caster_player_id)
+			var remaining = own_creatures.filter(func(t): return t != tile_index_1)
+			
+			if remaining.is_empty():
+				return {"success": false, "reason": "not_enough_creatures", "return_to_deck": true}
+			
+			tile_index_2 = await _select_tile(remaining, "交換する2体目を選択")
+			if tile_index_2 == -1:
+				return {"success": false, "reason": "cancelled"}
 	
 	# 交換実行
 	_execute_swap_board(tile_index_1, tile_index_2)
@@ -162,6 +171,60 @@ func _apply_swap_board_creatures(target_data: Dictionary, caster_player_id: int)
 		"tile_1": tile_index_1,
 		"tile_2": tile_index_2
 	}
+
+## CPU用：属性一致が改善する交換ペアを選択
+func _cpu_select_best_swap_pair(player_id: int) -> Dictionary:
+	if not board_system_ref:
+		return {}
+	
+	var own_tiles = []
+	for tile_index in board_system_ref.tile_nodes.keys():
+		var tile = board_system_ref.tile_nodes[tile_index]
+		if tile.owner_id == player_id and not tile.creature_data.is_empty():
+			own_tiles.append({
+				"index": tile_index,
+				"element": tile.tile_type,
+				"creature_element": tile.creature_data.get("element", "")
+			})
+	
+	if own_tiles.size() < 2:
+		return {}
+	
+	# 現在の属性一致数を計算
+	var current_matches = 0
+	for t in own_tiles:
+		if t.element == t.creature_element:
+			current_matches += 1
+	
+	# 最も改善するペアを探す
+	var best_pair = {}
+	var best_improvement = 0
+	
+	for i in range(own_tiles.size()):
+		for j in range(i + 1, own_tiles.size()):
+			var tile_a = own_tiles[i]
+			var tile_b = own_tiles[j]
+			
+			var swap_matches = current_matches
+			
+			# 現在の一致を解除
+			if tile_a.element == tile_a.creature_element:
+				swap_matches -= 1
+			if tile_b.element == tile_b.creature_element:
+				swap_matches -= 1
+			
+			# 交換後の一致を追加
+			if tile_a.element == tile_b.creature_element:
+				swap_matches += 1
+			if tile_b.element == tile_a.creature_element:
+				swap_matches += 1
+			
+			var improvement = swap_matches - current_matches
+			if improvement > best_improvement:
+				best_improvement = improvement
+				best_pair = {"tile_1": tile_a.index, "tile_2": tile_b.index}
+	
+	return best_pair
 
 
 # ============ 交換実行 ============

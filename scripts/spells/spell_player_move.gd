@@ -402,8 +402,8 @@ func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) ->
 		# 周回完了チェック
 		var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
 		if lap_state.get("N", false) and lap_state.get("S", false):
-			# 周回完了処理はGameFlowManagerに任せる
-			game_flow_manager._on_checkpoint_passed(player_id, gate_key)
+			# 周回完了処理をlap_systemに委譲
+			game_flow_manager.lap_system.complete_lap(player_id)
 	
 	# 2. ダウン解除（全クリーチャー）
 	_release_all_creature_down()

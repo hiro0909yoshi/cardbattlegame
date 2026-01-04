@@ -8,6 +8,15 @@ var player_system_ref: Object
 var spell_phase_handler_ref: Object
 var game_flow_manager_ref: Object
 
+# ============ バトル保留用変数 ============
+
+var pending_battle_result: Dictionary = {}
+var pending_battle_caster_player_id: int = -1
+var pending_battle_tile_info: Dictionary = {}
+var pending_attacker_item: Dictionary = {}
+var pending_defender_item: Dictionary = {}
+var is_waiting_for_defender_item: bool = false
+
 
 # ============ 初期化 ============
 
@@ -98,6 +107,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 
 
 ## 戦闘を実行（敵領地への移動時）
+## アイテムフェーズを経由してからバトルを実行
 func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	var from_tile = result.get("from_tile", -1)
 	var to_tile = result.get("to_tile", -1)
@@ -112,14 +122,104 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	var attacker_creature = result.get("creature_data", {})
 	var tile_info = board_system_ref.get_tile_info(to_tile) if board_system_ref else {}
 	
+	# バトル情報を保存
+	pending_battle_result = result
+	pending_battle_caster_player_id = caster_player_id
+	pending_battle_tile_info = tile_info
+	pending_attacker_item = {}
+	pending_defender_item = {}
+	is_waiting_for_defender_item = false
+	
+	# 移動中フラグを設定（応援スキル計算から除外するため）
+	attacker_creature["is_moving"] = true
+	
+	# アイテムフェーズを開始（攻撃側）
+	if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
+		# アイテムフェーズ完了シグナルに接続
+		var item_handler = game_flow_manager_ref.item_phase_handler
+		if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
+			item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
+		
+		print("[SpellCreatureMove] 攻撃側アイテムフェーズ開始: プレイヤー%d" % (caster_player_id + 1))
+		item_handler.start_item_phase(caster_player_id, attacker_creature)
+	else:
+		# ItemPhaseHandlerがない場合は直接バトル
+		await _execute_spell_move_battle()
+
+
+## アイテムフェーズ完了時のコールバック
+func _on_spell_move_item_phase_completed() -> void:
+	if not is_waiting_for_defender_item:
+		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
+		
+		# 攻撃側のアイテムを保存
+		if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
+			pending_attacker_item = game_flow_manager_ref.item_phase_handler.get_selected_item()
+		
+		# 防御側のアイテムフェーズを開始
+		var defender_owner = pending_battle_tile_info.get("owner", -1)
+		if defender_owner >= 0:
+			is_waiting_for_defender_item = true
+			
+			# 防御側のアイテムフェーズ開始
+			if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
+				var item_handler = game_flow_manager_ref.item_phase_handler
+				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
+				if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
+					item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
+				
+				print("[SpellCreatureMove] 防御側アイテムフェーズ開始: プレイヤー%d" % (defender_owner + 1))
+				# 防御側クリーチャーのデータを取得して渡す
+				var defender_creature = pending_battle_tile_info.get("creature", {})
+				# 攻撃側クリーチャーデータを設定（無効化判定用）
+				item_handler.set_opponent_creature(pending_battle_result.get("creature_data", {}))
+				# タイル情報を設定（シミュレーション用）
+				item_handler.set_defense_tile_info(pending_battle_tile_info)
+				item_handler.start_item_phase(defender_owner, defender_creature)
+			else:
+				# ItemPhaseHandlerがない場合は直接バトル
+				_execute_spell_move_battle()
+		else:
+			# 防御側がいない場合（ありえないが念のため）
+			_execute_spell_move_battle()
+	else:
+		# 防御側のアイテムフェーズ完了 → バトル開始
+		print("[SpellCreatureMove] 防御側アイテムフェーズ完了、バトル開始")
+		
+		# 防御側のアイテムを保存
+		if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
+			pending_defender_item = game_flow_manager_ref.item_phase_handler.get_selected_item()
+		
+		is_waiting_for_defender_item = false
+		_execute_spell_move_battle()
+
+
+## 保留中のスペル移動バトルを実行
+func _execute_spell_move_battle() -> void:
+	if pending_battle_result.is_empty():
+		return
+	
+	var from_tile = pending_battle_result.get("from_tile", -1)
+	var attacker_creature = pending_battle_result.get("creature_data", {})
+	
+	print("[SpellCreatureMove] バトル実行: タイル%d → タイル%d" % [from_tile, pending_battle_tile_info.get("index", -1)])
+	
 	await game_flow_manager_ref.battle_system.execute_3d_battle_with_data(
-		caster_player_id,
+		pending_battle_caster_player_id,
 		attacker_creature,
-		tile_info,
-		{},  # attacker_item
-		{},  # defender_item
+		pending_battle_tile_info,
+		pending_attacker_item,
+		pending_defender_item,
 		from_tile
 	)
+	
+	# バトル情報をクリア
+	pending_battle_result = {}
+	pending_battle_caster_player_id = -1
+	pending_battle_tile_info = {}
+	pending_attacker_item = {}
+	pending_defender_item = {}
+	is_waiting_for_defender_item = false
 
 
 # ============ 移動先取得 ============
@@ -284,8 +384,17 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	if destinations.is_empty():
 		return {"success": false, "reason": "no_valid_destination", "return_to_deck": true}
 	
-	# 移動先選択（常にUI表示）
-	var to_tile_index = await _select_move_destination(destinations, "移動先の敵領地を選択")
+	# CPUが選んだ移動先があればそれを使用（アウトレイジAI用）
+	var to_tile_index = -1
+	if target_data.has("enemy_tile_index"):
+		var cpu_target = target_data.get("enemy_tile_index", -1)
+		if cpu_target >= 0 and cpu_target in destinations:
+			to_tile_index = cpu_target
+	
+	# それ以外は移動先選択UI表示
+	if to_tile_index == -1:
+		to_tile_index = await _select_move_destination(destinations, "移動先の敵領地を選択")
+	
 	if to_tile_index == -1:
 		return {"success": false, "reason": "cancelled"}
 	
@@ -340,8 +449,17 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	if valid_destinations.is_empty():
 		return {"success": false, "reason": "no_valid_destination", "return_to_deck": true}
 	
-	# 移動先選択
-	var to_tile_index = await _select_move_destination(valid_destinations, "%dマス以内の移動先を選択" % steps)
+	# CPUが選んだ移動先があればそれを使用（チャリオットAI用）
+	var to_tile_index = -1
+	if target_data.has("enemy_tile_index"):
+		var cpu_target = target_data.get("enemy_tile_index", -1)
+		if cpu_target >= 0 and cpu_target in valid_destinations:
+			to_tile_index = cpu_target
+	
+	# それ以外は移動先選択UI表示
+	if to_tile_index == -1:
+		to_tile_index = await _select_move_destination(valid_destinations, "%dマス以内の移動先を選択" % steps)
+	
 	if to_tile_index == -1:
 		return {"success": false, "reason": "cancelled"}
 	

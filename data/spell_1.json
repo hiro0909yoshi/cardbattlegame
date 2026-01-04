@@ -401,7 +401,7 @@
 	  "cpu_rule": {
 		"pattern": "strategic",
 		"strategy": "after_lap_complete",
-		"priority": "medium"
+		"priority": "high"
 	  }
 	},
 	{

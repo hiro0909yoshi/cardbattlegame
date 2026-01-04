@@ -9,6 +9,7 @@ var board_system: Node = null
 var player_system: Node = null
 var card_system: Node = null
 var creature_manager: Node = null
+var lap_system: Node = null
 
 ## ミスティックアーツデータキャッシュ
 var mystic_arts_data: Dictionary = {}
@@ -23,11 +24,12 @@ const PRIORITY_VALUES = {
 }
 
 ## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node) -> void:
+func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null) -> void:
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
 	creature_manager = cr_manager
+	lap_system = l_system
 	
 	# 条件チェッカー初期化
 	condition_checker = CPUSpellConditionChecker.new()
@@ -306,11 +308,9 @@ func _build_context(player_id: int) -> Dictionary:
 		"destroyed_count": 0
 	}
 	
-	if player_system:
-		if player_id >= 0 and player_id < player_system.players.size():
-			var player = player_system.players[player_id]
-			if player:
-				context.destroyed_count = player.destroyed_count if "destroyed_count" in player else 0
+	# 破壊カウントはlap_systemから取得（グローバル）
+	if lap_system:
+		context.destroyed_count = lap_system.get_destroy_count()
 	
 	return context
 

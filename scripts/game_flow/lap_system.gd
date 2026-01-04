@@ -423,3 +423,22 @@ func get_lap_count(player_id: int) -> int:
 func set_checkpoint_flag(player_id: int, checkpoint_type: String):
 	if player_lap_state.has(player_id):
 		player_lap_state[player_id][checkpoint_type] = true
+
+## 訪問済みチェックポイント数を取得
+func get_visited_checkpoint_count(player_id: int) -> int:
+	if not player_lap_state.has(player_id):
+		return 0
+	
+	var count = 0
+	for checkpoint in required_checkpoints:
+		if player_lap_state[player_id].get(checkpoint, false):
+			count += 1
+	return count
+
+## 必要チェックポイント数を取得
+func get_required_checkpoint_count() -> int:
+	return required_checkpoints.size()
+
+## 周回完了判定（全チェックポイント訪問済み）
+func is_lap_complete(player_id: int) -> bool:
+	return _check_lap_complete(player_id)

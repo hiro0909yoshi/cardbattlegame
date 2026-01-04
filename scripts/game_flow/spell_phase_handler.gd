@@ -195,11 +195,13 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# CPU スペル/ミスティックアーツ AI を初期化
 	if not cpu_spell_ai:
 		cpu_spell_ai = CPUSpellAI.new()
-		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager)
+		var l_system = game_flow_manager.lap_system if game_flow_manager else null
+		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
-		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager)
+		var l_system = game_flow_manager.lap_system if game_flow_manager else null
+		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager, l_system)
 	
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:
@@ -439,6 +441,13 @@ func _build_cpu_target_data(spell_or_mystic: Dictionary, target: Dictionary) -> 
 			return {"type": "player", "player_id": current_player_id}
 		"player":
 			return {"type": "player", "player_id": target.get("player_id", current_player_id)}
+		"gate":
+			# リミッション用: ゲートターゲット
+			return {
+				"type": "gate",
+				"tile_index": target.get("tile_index", -1),
+				"gate_key": target.get("gate_key", "")
+			}
 		"land":
 			var tile_index = target.get("tile_index", -1)
 			if tile_index >= 0 and board_system:
@@ -453,11 +462,15 @@ func _build_cpu_target_data(spell_or_mystic: Dictionary, target: Dictionary) -> 
 				if tile_index >= 0 and board_system:
 					var tile = board_system.get_tile_data(tile_index)
 					if tile:
-						return {
+						var result = {
 							"type": "creature",
 							"tile_index": tile_index,
 							"creature_data": target.get("creature", tile.get("placed_creature", {}))
 						}
+						# CPUが選んだ移動先があれば追加（アウトレイジ等用）
+						if target.has("enemy_tile_index"):
+							result["enemy_tile_index"] = target.get("enemy_tile_index")
+						return result
 	
 	# デフォルト: セルフまたはなし
 	if target_type == "self" or target_type.is_empty() or target_type == "none":
@@ -983,6 +996,10 @@ func pass_spell(auto_roll: bool = true):
 func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	if tile_indices.is_empty():
 		return -1
+	
+	# CPUの場合は自動選択（最初の候補を使用）
+	if is_cpu_player(current_player_id):
+		return tile_indices[0]
 	
 	# TargetSelectionHelperを取得して委譲
 	if game_flow_manager and game_flow_manager.target_selection_helper:
