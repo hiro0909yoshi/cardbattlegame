@@ -90,6 +90,7 @@ var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理（旧・バトル�
 var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離クラス）
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUミスティックアーツ判断AI
+var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ
 
 func _ready():
 	pass
@@ -192,11 +193,18 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if board_system and not cpu_turn_processor:
 		cpu_turn_processor = board_system.get_node_or_null("CPUTurnProcessor")
 	
+	# CPU手札ユーティリティを初期化
+	if not cpu_hand_utils:
+		cpu_hand_utils = CPUHandUtils.new()
+		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
+		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
+	
 	# CPU スペル/ミスティックアーツ AI を初期化
 	if not cpu_spell_ai:
 		cpu_spell_ai = CPUSpellAI.new()
 		var l_system = game_flow_manager.lap_system if game_flow_manager else null
 		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
+		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()

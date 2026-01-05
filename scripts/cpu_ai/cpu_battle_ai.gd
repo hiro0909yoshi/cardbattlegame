@@ -274,7 +274,19 @@ func evaluate_all_combinations_for_battle(
 			result["instant_death_probability"] = nullify_instant_death_result.probability
 			return result
 	
-	# 勝てる組み合わせを収集
+	# 1. 敵のアイテム破壊・盗みスキルをチェック
+	var enemy_destroy_types = hand_utils.defender_has_item_destroy(defender)
+	var enemy_has_steal = hand_utils.defender_has_item_steal(defender)
+	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
+	
+	if should_avoid_items:
+		if not enemy_destroy_types.is_empty():
+			print("[CPU AI] 警告: 敵がアイテム破壊スキルを所持 (対象: %s)" % str(enemy_destroy_types))
+		if enemy_has_steal:
+			print("[CPU AI] 警告: 敵がアイテム盗みスキルを所持")
+		print("[CPU AI] → アイテム使用を控えます")
+	
+	# 勝てる組み合わせを収集（ワーストケース対応版）
 	var winning_combinations: Array = []
 	
 	for creature_entry in creatures:
@@ -286,12 +298,20 @@ func evaluate_all_combinations_for_battle(
 		if not hand_utils.can_afford_card(current_player, creature_index):
 			continue
 		
-		# 1. アイテムなしで評価
+		# 1. 両方アイテムなしで評価（攻撃の最低条件）
 		var no_item_result = _simulate_and_check_win(
 			creature, defender, tile_info, current_player.id, {}
 		)
 		
-		if no_item_result.is_win:
+		if not no_item_result.is_win:
+			# 両方アイテムなしで勝てない → このクリーチャーは候補外
+			continue
+		
+		# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+		var worst_case = simulate_worst_case(creature, defender, tile_info, current_player.id, {})
+		
+		if worst_case.is_win:
+			# ワーストケースでも勝てる → アイテムなしで攻撃可能
 			winning_combinations.append({
 				"creature_index": creature_index,
 				"creature": creature,
@@ -300,47 +320,45 @@ func evaluate_all_combinations_for_battle(
 				"item": {},
 				"item_cost": 0,
 				"total_cost": creature_cost,
-				"sim_result": no_item_result.sim_result,
-				"overkill": no_item_result.overkill,
-				"uses_item": false
+				"sim_result": worst_case.sim_result,
+				"overkill": worst_case.overkill,
+				"uses_item": false,
+				"worst_case_option": worst_case.get("worst_case_option", "なし")
 			})
-			print("  [勝利可能] %s (アイテムなし): オーバーキル %d" % [
-				creature.get("name", "?"), no_item_result.overkill
+			print("  [勝利可能] %s (アイテムなし, ワーストケースでも勝利): オーバーキル %d" % [
+				creature.get("name", "?"), worst_case.overkill
 			])
-		
-		# 2. 各アイテムを使った場合を評価
-		for item_entry in items:
-			var item_index = item_entry["index"]
-			var item = item_entry["data"]
-			var item_cost = hand_utils.get_item_cost(item)
-			
-			# アイテムコストチェック
-			if creature_cost + item_cost > current_player.magic_power:
-				continue
-			
-			var with_item_result = _simulate_and_check_win(
-				creature, defender, tile_info, current_player.id, item
-			)
-			
-			if with_item_result.is_win:
-				winning_combinations.append({
-					"creature_index": creature_index,
-					"creature": creature,
-					"creature_cost": creature_cost,
-					"item_index": item_index,
-					"item": item,
-					"item_cost": item_cost,
-					"total_cost": creature_cost + item_cost,
-					"sim_result": with_item_result.sim_result,
-					"overkill": with_item_result.overkill,
-					"uses_item": true
-				})
-				print("  [勝利可能] %s + %s[%s]: オーバーキル %d" % [
-					creature.get("name", "?"),
-					item.get("name", "?"),
-					item.get("item_type", "?"),
-					with_item_result.overkill
-				])
+		else:
+			# ワーストケースで負ける → 自分もアイテムを使って勝てるか探す
+			# ただし、敵がアイテム破壊・盗みを持っている場合はアイテムを使わない
+			if should_avoid_items:
+				print("  [攻撃不可] %s: ワーストケースで負け、敵がアイテム破壊/盗みを持つためアイテム使用不可" % creature.get("name", "?"))
+			else:
+				var counter_item = find_item_to_beat_worst_case(
+					creature, defender, tile_info, current_player.id, current_player, creature_cost,
+					enemy_destroy_types
+				)
+				
+				if counter_item.can_win:
+					winning_combinations.append({
+						"creature_index": creature_index,
+						"creature": creature,
+						"creature_cost": creature_cost,
+						"item_index": counter_item.item_index,
+						"item": counter_item.item,
+						"item_cost": hand_utils.get_item_cost(counter_item.item),
+						"total_cost": creature_cost + hand_utils.get_item_cost(counter_item.item),
+						"sim_result": null,
+						"overkill": 0,
+						"uses_item": true,
+						"worst_case_counter": true
+					})
+					print("  [勝利可能] %s + %s (ワーストケース対策): アイテムで逆転" % [
+						creature.get("name", "?"),
+						counter_item.item.get("name", "?")
+					])
+				else:
+					print("  [攻撃不可] %s: ワーストケースで負け、対抗アイテムなし" % creature.get("name", "?"))
 	
 	# 勝てる組み合わせがない場合 → 即死スキルで賭けるか検討
 	if winning_combinations.is_empty():
@@ -478,6 +496,168 @@ func _get_item_type_priority(item: Dictionary) -> int:
 			return 3
 		_:
 			return 99  # 不明なタイプは最低優先度
+
+# ============================================================
+# ワーストケースシミュレーション（敵の対抗手段を考慮）
+# ============================================================
+
+## 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション
+## @param attacker: 攻撃側クリーチャー
+## @param defender: 防御側クリーチャー
+## @param tile_info: タイル情報
+## @param attacker_player_id: 攻撃側プレイヤーID
+## @param attacker_item: 攻撃側アイテム（空の場合あり）
+## @return: ワーストケースのシミュレーション結果
+func simulate_worst_case(
+	attacker: Dictionary,
+	defender: Dictionary,
+	tile_info: Dictionary,
+	attacker_player_id: int,
+	attacker_item: Dictionary = {}
+) -> Dictionary:
+	var defender_owner = tile_info.get("owner", -1)
+	
+	if defender_owner < 0 or not hand_utils:
+		# 敵情報がない場合は通常シミュレーション
+		return _simulate_and_check_win(attacker, defender, tile_info, attacker_player_id, attacker_item)
+	
+	print("[CPU攻撃] ワーストケース分析開始")
+	
+	# 敵の対抗手段を収集
+	var enemy_items = hand_utils.get_enemy_items(defender_owner)
+	var enemy_assists = hand_utils.get_enemy_assist_creatures(defender_owner, defender)
+	
+	print("[CPU攻撃] 敵の対抗手段: アイテム%d個, 援護%d体" % [enemy_items.size(), enemy_assists.size()])
+	
+	# まず何もない場合のシミュレーション
+	var base_result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
+	
+	# 対抗手段がない場合はそのまま返す
+	if enemy_items.is_empty() and enemy_assists.is_empty():
+		return base_result
+	
+	# ワーストケースを探す
+	var worst_result = base_result
+	var worst_option_name = "なし"
+	
+	# 敵アイテムをすべて試す
+	for enemy_item in enemy_items:
+		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
+		if _is_worse_result(result, worst_result):
+			worst_result = result
+			worst_option_name = "アイテム: " + enemy_item.get("name", "?")
+	
+	# 敵援護をすべて試す
+	for enemy_assist in enemy_assists:
+		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, enemy_assist)
+		if _is_worse_result(result, worst_result):
+			worst_result = result
+			worst_option_name = "援護: " + enemy_assist.get("name", "?")
+	
+	print("[CPU攻撃] ワーストケース: %s → %s" % [worst_option_name, "敗北" if not worst_result.is_win else "勝利"])
+	
+	worst_result["worst_case_option"] = worst_option_name
+	return worst_result
+
+## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
+func _simulate_with_defender_option(
+	attacker: Dictionary,
+	defender: Dictionary,
+	tile_info: Dictionary,
+	attacker_player_id: int,
+	attacker_item: Dictionary,
+	defender_item: Dictionary,
+	assist_creature: Dictionary
+) -> Dictionary:
+	var sim_tile_info = {
+		"element": tile_info.get("element", ""),
+		"level": tile_info.get("level", 1),
+		"owner": tile_info.get("owner", -1),
+		"tile_index": tile_info.get("index", -1)
+	}
+	
+	# 援護がある場合、防御側のステータスに加算
+	var defender_for_sim = defender.duplicate(true)
+	if not assist_creature.is_empty():
+		defender_for_sim["ap"] = defender_for_sim.get("ap", 0) + assist_creature.get("ap", 0)
+		defender_for_sim["hp"] = defender_for_sim.get("hp", 0) + assist_creature.get("hp", 0)
+	
+	var sim_result = battle_simulator.simulate_battle(
+		attacker,
+		defender_for_sim,
+		sim_tile_info,
+		attacker_player_id,
+		attacker_item,
+		defender_item
+	)
+	
+	var is_win = sim_result.get("result") == BattleSimulator.BattleResult.ATTACKER_WIN
+	var overkill = sim_result.get("attacker_ap", 0) - sim_result.get("defender_hp", 0)
+	if overkill < 0:
+		overkill = 0
+	
+	return {
+		"is_win": is_win,
+		"sim_result": sim_result,
+		"overkill": overkill
+	}
+
+## 結果Aが結果Bより悪いか（攻撃側にとって）
+func _is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
+	# 勝ち → 負け は悪化
+	if result_b.is_win and not result_a.is_win:
+		return true
+	# 両方勝ちの場合、オーバーキルが少ない方が悪い（ギリギリ）
+	if result_a.is_win and result_b.is_win:
+		return result_a.overkill < result_b.overkill
+	return false
+
+## ワーストケースでも勝てるアイテムを探す
+## @param enemy_destroy_types: 敵のアイテム破壊対象タイプ（空なら破壊スキルなし）
+## @return: {can_win: bool, item: Dictionary, item_index: int}
+func find_item_to_beat_worst_case(
+	attacker: Dictionary,
+	defender: Dictionary,
+	tile_info: Dictionary,
+	attacker_player_id: int,
+	current_player,
+	creature_cost: int,
+	enemy_destroy_types: Array = []
+) -> Dictionary:
+	var result = {"can_win": false, "item": {}, "item_index": -1}
+	
+	if not hand_utils:
+		return result
+	
+	var items = hand_utils.get_items_from_hand(attacker_player_id)
+	
+	for item_entry in items:
+		var item_index = item_entry["index"]
+		var item = item_entry["data"]
+		var item_cost = hand_utils.get_item_cost(item)
+		
+		# コストチェック
+		if creature_cost + item_cost > current_player.magic_power:
+			continue
+		
+		# アイテム破壊対象チェック（敵がアイテム破壊スキルを持っている場合）
+		if not enemy_destroy_types.is_empty():
+			if hand_utils.is_item_destroy_target(item, enemy_destroy_types):
+				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
+				continue
+		
+		# ワーストケースシミュレーション
+		var worst = simulate_worst_case(attacker, defender, tile_info, attacker_player_id, item)
+		
+		if worst.is_win:
+			# 勝てるアイテムが見つかった
+			if not result.can_win or item_cost < hand_utils.get_item_cost(result.item):
+				# 初めて見つかった or より安いアイテム
+				result.can_win = true
+				result.item = item
+				result.item_index = item_index
+	
+	return result
 
 # ============================================================
 # 合体判断（攻撃側）

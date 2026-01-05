@@ -17,6 +17,9 @@ var pending_attacker_item: Dictionary = {}
 var pending_defender_item: Dictionary = {}
 var is_waiting_for_defender_item: bool = false
 
+# バトル完了待機用シグナル
+signal spell_move_battle_completed
+
 
 # ============ 初期化 ============
 
@@ -140,8 +143,11 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 		if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
 			item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
 		
-		print("[SpellCreatureMove] 攻撃側アイテムフェーズ開始: プレイヤー%d" % (caster_player_id + 1))
+
 		item_handler.start_item_phase(caster_player_id, attacker_creature)
+		
+		# バトル完了シグナルを待機
+		await spell_move_battle_completed
 	else:
 		# ItemPhaseHandlerがない場合は直接バトル
 		await _execute_spell_move_battle()
@@ -149,6 +155,7 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 
 ## アイテムフェーズ完了時のコールバック
 func _on_spell_move_item_phase_completed() -> void:
+
 	if not is_waiting_for_defender_item:
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
 		
@@ -165,10 +172,10 @@ func _on_spell_move_item_phase_completed() -> void:
 			if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
 				var item_handler = game_flow_manager_ref.item_phase_handler
 				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
-				if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
-					item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
+				# ONE_SHOTはコールバック完了後に切断されるため、コールバック内では常に再接続が必要
+				item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
 				
-				print("[SpellCreatureMove] 防御側アイテムフェーズ開始: プレイヤー%d" % (defender_owner + 1))
+
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_battle_tile_info.get("creature", {})
 				# 攻撃側クリーチャーデータを設定（無効化判定用）
@@ -178,10 +185,10 @@ func _on_spell_move_item_phase_completed() -> void:
 				item_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
-				_execute_spell_move_battle()
+				_start_battle_deferred()
 		else:
 			# 防御側がいない場合（ありえないが念のため）
-			_execute_spell_move_battle()
+			_start_battle_deferred()
 	else:
 		# 防御側のアイテムフェーズ完了 → バトル開始
 		print("[SpellCreatureMove] 防御側アイテムフェーズ完了、バトル開始")
@@ -191,12 +198,19 @@ func _on_spell_move_item_phase_completed() -> void:
 			pending_defender_item = game_flow_manager_ref.item_phase_handler.get_selected_item()
 		
 		is_waiting_for_defender_item = false
-		_execute_spell_move_battle()
+		_start_battle_deferred()
+
+
+## バトルを遅延実行（シグナルコールバックからawaitできないため）
+func _start_battle_deferred() -> void:
+	# call_deferredで次フレームに実行
+	_execute_spell_move_battle.call_deferred()
 
 
 ## 保留中のスペル移動バトルを実行
 func _execute_spell_move_battle() -> void:
 	if pending_battle_result.is_empty():
+		spell_move_battle_completed.emit()
 		return
 	
 	var from_tile = pending_battle_result.get("from_tile", -1)
@@ -220,6 +234,9 @@ func _execute_spell_move_battle() -> void:
 	pending_attacker_item = {}
 	pending_defender_item = {}
 	is_waiting_for_defender_item = false
+	
+	# バトル完了シグナルを発火
+	spell_move_battle_completed.emit()
 
 
 # ============ 移動先取得 ============

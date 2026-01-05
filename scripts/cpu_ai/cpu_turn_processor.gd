@@ -17,6 +17,13 @@ var player_system: PlayerSystem
 var card_system: CardSystem
 var ui_manager: UIManager
 
+# バトル保留用変数（CPU攻撃 → 人間防御のアイテムフェーズ用）
+var pending_cpu_battle_creature_index: int = -1
+var pending_cpu_battle_card_data: Dictionary = {}
+var pending_cpu_battle_tile_info: Dictionary = {}
+var pending_cpu_attacker_item: Dictionary = {}
+var pending_cpu_defender_item: Dictionary = {}
+
 # 定数
 const CPU_THINKING_DELAY = 0.5
 
@@ -158,17 +165,176 @@ func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
 	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
-	# アイテムデータを取得
+	# クリーチャーデータを取得
+	var card_data = card_system.get_card_data_for_player(current_player_index, creature_index)
+	if card_data.is_empty():
+		_complete_action()
+		return
+	
+	# アイテムデータを先に取得（クリーチャー使用後はインデックスがずれるため）
 	var attacker_item = {}
+	var adjusted_item_index = item_index
 	if item_index >= 0:
 		attacker_item = card_system.get_card_data_for_player(current_player_index, item_index)
+		# クリーチャーよりアイテムのインデックスが大きい場合、クリーチャー使用後に1つずれる
+		if item_index > creature_index:
+			adjusted_item_index = item_index - 1
+	
+	# コスト計算と支払い
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+	else:
+		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
+	
+	var current_player = player_system.get_current_player()
+	if current_player.magic_power < cost:
+		print("[CPU] 魔力不足でバトルできません")
+		_complete_action()
+		return
+	
+	# カード使用
+	card_system.use_card_for_player(current_player_index, creature_index)
+	player_system.add_magic(current_player_index, -cost)
+	print("[CPU] バトルカード消費: %s" % card_data.get("name", "?"))
+	
+	# アイテム使用処理（調整後のインデックスを使用）
+	if item_index >= 0 and not attacker_item.is_empty():
+		# アイテムコスト支払い
+		var item_cost = attacker_item.get("cost", 0)
+		if typeof(item_cost) == TYPE_DICTIONARY:
+			item_cost = item_cost.get("mp", 0)
+		player_system.add_magic(current_player_index, -item_cost)
+		card_system.use_card_for_player(current_player_index, adjusted_item_index)
 		print("[CPU] アイテム使用: %s" % attacker_item.get("name", "?"))
+	
+	# 防御側が人間プレイヤーかチェック
+	var defender_owner = tile_info.get("owner", -1)
+	var defender_creature = tile_info.get("creature", {})
+	var defender_is_human = defender_owner >= 0 and not _is_cpu_player(defender_owner)
+	
+	# 防御側クリーチャーがいて、人間プレイヤーの場合はアイテムフェーズを開始
+	if not defender_creature.is_empty() and defender_is_human:
+		print("[CPUTurnProcessor] 防御側は人間プレイヤー → アイテムフェーズ開始")
+		
+		# バトル情報を保存
+		pending_cpu_battle_creature_index = creature_index
+		pending_cpu_battle_card_data = card_data
+		pending_cpu_battle_tile_info = tile_info
+		pending_cpu_attacker_item = attacker_item
+		pending_cpu_defender_item = {}
+		
+		# 🎬 バトルステータスオーバーレイ表示
+		if board_system.game_flow_manager and board_system.game_flow_manager.battle_status_overlay:
+			var attacker_display = card_data.duplicate()
+			attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
+			
+			var defender_display = defender_creature.duplicate()
+			defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, tile_info)
+			
+			board_system.game_flow_manager.battle_status_overlay.show_battle_status(
+				attacker_display, defender_display, "defender")  # 防御側を強調
+		
+		# 防御側のアイテムフェーズ開始
+		if board_system.game_flow_manager and board_system.game_flow_manager.item_phase_handler:
+			var item_handler = board_system.game_flow_manager.item_phase_handler
+			
+			# アイテムフェーズ完了シグナルに接続
+			# 既存の接続があれば切断してから再接続（前回のバトルで残っている可能性があるため）
+			if item_handler.item_phase_completed.is_connected(_on_defender_item_phase_completed):
+				item_handler.item_phase_completed.disconnect(_on_defender_item_phase_completed)
+			item_handler.item_phase_completed.connect(_on_defender_item_phase_completed, CONNECT_ONE_SHOT)
+			
+			# 攻撃側クリーチャーデータを設定（無効化判定用）
+			item_handler.set_opponent_creature(card_data)
+			# タイル情報を設定（シミュレーション用）
+			item_handler.set_defense_tile_info(tile_info)
+			# アイテムフェーズ開始
+			item_handler.start_item_phase(defender_owner, defender_creature)
+		else:
+			# ItemPhaseHandlerがない場合は直接バトル
+			await _execute_cpu_pending_battle()
+	else:
+		# 防御側がCPUまたは空き地の場合は直接バトル
+		if not board_system.battle_system.invasion_completed.is_connected(_on_invasion_completed):
+			board_system.battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
+		
+		await board_system.battle_system.execute_3d_battle_with_data(current_player_index, card_data, tile_info, attacker_item, {})
+
+## 防御側アイテムフェーズ完了時のコールバック
+func _on_defender_item_phase_completed():
+	print("[CPUTurnProcessor] 防御側アイテムフェーズ完了、バトル開始")
+	
+	# 防御側のアイテムを保存
+	if board_system.game_flow_manager and board_system.game_flow_manager.item_phase_handler:
+		var item_handler = board_system.game_flow_manager.item_phase_handler
+		pending_cpu_defender_item = item_handler.get_selected_item()
+		
+		# 合体が発生した場合、tile_infoのcreatureを更新
+		if item_handler.was_merged():
+			var merged_data = item_handler.get_merged_creature()
+			pending_cpu_battle_tile_info["creature"] = merged_data
+			print("[CPUTurnProcessor] 防御側合体発生: %s" % merged_data.get("name", "?"))
+			
+			# タイルのクリーチャーデータも永続更新
+			var tile_index = pending_cpu_battle_tile_info.get("index", -1)
+			if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
+				var tile = board_system.tile_nodes[tile_index]
+				tile.creature_data = merged_data
+	
+	await _execute_cpu_pending_battle()
+
+## 保留中のCPUバトルを実行
+func _execute_cpu_pending_battle():
+	# 🎬 バトルステータスオーバーレイを非表示
+	if board_system.game_flow_manager and board_system.game_flow_manager.battle_status_overlay:
+		board_system.game_flow_manager.battle_status_overlay.hide_battle_status()
+	
+	var current_player_index = board_system.current_player_index
 	
 	# バトルシステムに処理を委譲
 	if not board_system.battle_system.invasion_completed.is_connected(_on_invasion_completed):
 		board_system.battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
 	
-	await board_system.battle_system.execute_3d_battle(current_player_index, creature_index, tile_info, attacker_item)
+	await board_system.battle_system.execute_3d_battle_with_data(
+		current_player_index, 
+		pending_cpu_battle_card_data, 
+		pending_cpu_battle_tile_info, 
+		pending_cpu_attacker_item, 
+		pending_cpu_defender_item
+	)
+	
+	# バトル情報をクリア
+	pending_cpu_battle_creature_index = -1
+	pending_cpu_battle_card_data = {}
+	pending_cpu_battle_tile_info = {}
+	pending_cpu_attacker_item = {}
+	pending_cpu_defender_item = {}
+
+## プレイヤーがCPUかどうか判定
+func _is_cpu_player(player_index: int) -> bool:
+	if board_system and "player_is_cpu" in board_system:
+		var cpu_flags = board_system.player_is_cpu
+		if player_index >= 0 and player_index < cpu_flags.size():
+			return cpu_flags[player_index]
+	return false
+
+## アイテムフェーズ表示用の土地ボーナス計算
+func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dictionary) -> int:
+	var creature_element = creature_data.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+	
+	# 無属性タイルは全クリーチャーにボーナス
+	if tile_element == "neutral":
+		return tile_level * 10
+	
+	# 属性が一致すれば土地ボーナス
+	if creature_element != "" and creature_element == tile_element:
+		return tile_level * 10
+	
+	return 0
 
 # CPUバトル決定後の処理
 func _on_cpu_battle_decided(creature_index: int, item_index: int = -1):

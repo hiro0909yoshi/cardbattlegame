@@ -21,6 +21,9 @@ const PRIORITY_VALUES = {
 	"very_low": 0.5
 }
 
+## 手札ユーティリティ（ワーストケースシミュレーション用）
+var hand_utils: CPUHandUtils = null
+
 ## 初期化
 func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
 	board_system = b_system
@@ -32,6 +35,12 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	# 条件チェッカー初期化
 	condition_checker = CPUSpellConditionChecker.new()
 	condition_checker.initialize(b_system, p_system, c_system, cr_manager, l_system, gf_manager)
+
+## 手札ユーティリティを設定
+func set_hand_utils(utils: CPUHandUtils) -> void:
+	hand_utils = utils
+	if condition_checker:
+		condition_checker.set_hand_utils(utils)
 
 ## スペル使用判断のメインエントリ
 ## 戻り値: {use: bool, spell: Dictionary, target: Dictionary} または null
@@ -1066,7 +1075,8 @@ func _get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 				"tile_index": enemy_tile.get("tile_index", -1)
 			}
 			
-			var sim_result = battle_simulator.simulate_battle(
+			# まず両方アイテムなしでシミュレーション（攻撃の最低条件）
+			var base_result = battle_simulator.simulate_battle(
 				attacker,
 				defender,
 				sim_tile_info,
@@ -1075,10 +1085,16 @@ func _get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 				{}
 			)
 			
-			var result = sim_result.get("result", -1)
-			if result == condition_checker.BattleSimulatorScript.BattleResult.ATTACKER_WIN:
+			var base_win = base_result.get("result", -1) == condition_checker.BattleSimulatorScript.BattleResult.ATTACKER_WIN
+			if not base_win:
+				continue  # 両方アイテムなしで勝てない → 候補外
+			
+			# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+			var worst_case_win = condition_checker._check_worst_case_win(attacker, defender, sim_tile_info, player_id)
+			
+			if worst_case_win:
 				# オーバーキル計算（低いほど効率的）
-				var overkill = sim_result.get("attacker_ap", 0) - sim_result.get("defender_hp", 0)
+				var overkill = base_result.get("attacker_ap", 0) - base_result.get("defender_hp", 0)
 				winning_combos.append({
 					"own_tile_index": own_tile.get("tile_index", -1),
 					"enemy_tile_index": enemy_tile.get("tile_index", -1),

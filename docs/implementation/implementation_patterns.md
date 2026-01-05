@@ -765,6 +765,81 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 
 ---
 
+---
+
+## シグナルとフェーズ管理パターン
+
+### パターン1: CONNECT_ONE_SHOTシグナルの再接続
+
+**使用場面**: `CONNECT_ONE_SHOT`で接続したシグナルをコールバック内で再度接続する必要がある場合
+
+**問題**: `CONNECT_ONE_SHOT`はコールバック**完了後**に切断されるため、コールバック実行中に`is_connected()`チェックすると`true`を返し、再接続できない
+
+**悪い例**:
+```gdscript
+func _on_item_phase_completed():
+    # ❌ is_connected()はコールバック実行中にtrueを返すため、再接続されない
+    if not item_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+        item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+```
+
+**良い例**:
+```gdscript
+func _on_item_phase_completed():
+    # ✅ 常に再接続（ONE_SHOTはコールバック完了後に切断されるため安全）
+    item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+```
+
+**実装例**: `spell_creature_move.gd`, `cpu_turn_processor.gd`（2025年1月実装）
+
+---
+
+### パターン2: 複数フェーズが同時アクティブになる場合の優先順位
+
+**使用場面**: スペル効果中にアイテムフェーズが開始される場合など
+
+**問題**: スペル移動（チャリオット/アウトレイジ）による侵略時、スペルフェーズがアクティブなままアイテムフェーズが開始され、カード選択が正しく処理されない
+
+**原因**: `on_card_selected`でスペルフェーズのチェックがアイテムフェーズより先に来ていた
+
+**悪い例**:
+```gdscript
+func on_card_selected(card_index: int):
+    # ❌ スペルフェーズが先にチェックされる
+    if spell_phase_handler.is_spell_phase_active():
+        if card_type == "spell":
+            spell_phase_handler.use_spell(card)
+            return
+        else:
+            return  # アイテムフェーズがアクティブでもここでreturn!
+    
+    if item_phase_handler.is_item_phase_active():
+        # ここに到達しない
+```
+
+**良い例**:
+```gdscript
+func on_card_selected(card_index: int):
+    # ✅ アイテムフェーズを優先（スペル効果中のバトルで使用されるため）
+    if item_phase_handler and item_phase_handler.is_item_phase_active():
+        if card_type == "item":
+            item_phase_handler.use_item(card)
+            return
+        # ... 援護クリーチャー等の処理
+    
+    # スペルフェーズは後でチェック
+    if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
+        if card_type == "spell":
+            spell_phase_handler.use_spell(card)
+            return
+```
+
+**理由**: アイテムフェーズはバトル直前の短い期間のみアクティブになり、その間はアイテム選択が最優先されるべき
+
+**実装例**: `game_flow_manager.gd`の`on_card_selected()`（2025年1月修正）
+
+---
+
 **このパターン集は継続的に更新されます。新しいパターンが見つかったら追加してください！**
 
-**最終更新**: 2025年10月23日（アイテムスキルパターン追加）
+**最終更新**: 2025年1月6日（シグナルとフェーズ管理パターン追加）

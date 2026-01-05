@@ -405,6 +405,7 @@ func _on_tile_action_completed_3d():
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
+
 	# カード選択ハンドラーが選択中の場合
 	if spell_phase_handler and spell_phase_handler.card_selection_handler:
 		var handler = spell_phase_handler.card_selection_handler
@@ -425,22 +426,17 @@ func on_card_selected(card_index: int):
 	
 	var hand = card_system.get_all_cards_for_player(target_player_id)
 	
+
+	
 	if card_index >= hand.size():
 		return
 	
 	var card = hand[card_index]
 	var card_type = card.get("type", "")
+
 	
-	# スペルフェーズ中かチェック
-	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-		# スペルカードのみ使用可能
-		if card_type == "spell":
-			spell_phase_handler.use_spell(card)
-			return
-		else:
-			return
-	
-	# アイテムフェーズ中かチェック
+	# アイテムフェーズ中かチェック（スペルフェーズより優先）
+	# ※スペル移動による侵略時、スペルフェーズがアクティブなままアイテムフェーズが開始されるため
 	if item_phase_handler and item_phase_handler.is_item_phase_active():
 		# アイテムカードまたは援護対象クリーチャーが使用可能
 		if card_type == "item":
@@ -464,6 +460,15 @@ func on_card_selected(card_index: int):
 		else:
 			return
 	
+	# スペルフェーズ中かチェック（アイテムフェーズがアクティブでない場合）
+	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
+		# スペルカードのみ使用可能
+		if card_type == "spell":
+			spell_phase_handler.use_spell(card)
+			return
+		else:
+			return
+	
 	# スペルフェーズ以外でスペルカードが選択された場合
 	if card_type == "spell":
 		return
@@ -479,6 +484,7 @@ func on_card_selected(card_index: int):
 		board_system_3d.on_card_selected(card_index)
 
 func on_pass_button_pressed():
+	print("[GFM] on_pass_button_pressed: item_phase_active=%s" % [item_phase_handler.is_item_phase_active() if item_phase_handler else false])
 	# アイテムフェーズ中の場合
 	if item_phase_handler and item_phase_handler.is_item_phase_active():
 		item_phase_handler.pass_item()
