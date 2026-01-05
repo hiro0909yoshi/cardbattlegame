@@ -1,9 +1,13 @@
-## CPU スペル/ミスティックアーツ 条件チェッカー
-## 各条件の判定ロジックを集約
+## CPU AI用 スペル使用条件チェッカー
+## スペルのconditionに基づいて使用可否を判定
 class_name CPUSpellConditionChecker
 extends RefCounted
 
-## 参照
+## 外部クラス参照
+var board_analyzer: CPUBoardAnalyzer = null
+var target_resolver: CPUTargetResolver = null
+
+## システム参照
 var board_system: Node = null
 var player_system: Node = null
 var card_system: Node = null
@@ -27,6 +31,14 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	lap_system = l_system
 	game_flow_manager = gf_manager
 	
+	# CPUBoardAnalyzerを初期化
+	board_analyzer = CPUBoardAnalyzer.new()
+	board_analyzer.initialize(b_system, p_system, c_system, cr_manager, l_system, gf_manager)
+	
+	# CPUTargetResolverを初期化
+	target_resolver = CPUTargetResolver.new()
+	target_resolver.initialize(board_analyzer, b_system, p_system, c_system)
+	
 	# BattleSimulatorを初期化
 	_battle_simulator = BattleSimulatorScript.new()
 	_battle_simulator.setup_systems(board_system, card_system, player_system, game_flow_manager)
@@ -35,6 +47,18 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
 	hand_utils = utils
+
+# =============================================================================
+# 外部からのアクセス用ラッパー（後方互換性）
+# =============================================================================
+
+## 盤面上の自クリーチャーを取得（後方互換性）
+func _get_own_creatures_on_board(player_id: int) -> Array:
+	return board_analyzer.get_own_creatures_on_board(player_id)
+
+## 到達可能な敵タイルを取得（後方互換性）
+func _get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact_steps: bool) -> Array:
+	return board_analyzer.get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 
 # =============================================================================
 # メイン条件チェック（condition フィールド用）
@@ -66,38 +90,14 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 			return _check_has_cursed_creature(context)
 		
 		# 盤面状態
-		"duplicate_creatures":
-			return _check_duplicate_creatures(context)
-		"has_vacant_land":
-			return _check_has_vacant_land(context)
-		"has_empty_land":
-			return _check_has_empty_land(context)
 		"standing_on_vacant_land":
 			return _check_standing_on_vacant_land(context)
-		
-		# 手札関連
-		"has_all_elements_in_hand":
-			return _check_has_all_elements_in_hand(context)
-		"low_hand_quality":
-			return _check_low_hand_quality(context)
-		"has_curse_cards_in_hand":
-			return _check_has_curse_cards_in_hand(context)
-		"has_expensive_cards":
-			return _check_has_expensive_cards(context)
-		
-		# 土地条件
-		"has_4_mismatched_lands":
-			return _check_has_4_mismatched_lands(context)
-		"has_5_level2_lands":
-			return _check_has_5_level2_lands(context)
-		"has_4_consecutive_lands":
-			return _check_has_4_consecutive_lands(context)
 		
 		# 呪い関連
 		"has_any_curse":
 			return _check_has_any_curse(context)
-		"has_bad_world_curse":
-			return _check_has_bad_world_curse(context)
+		"has_world_curse":
+			return _check_has_world_curse(context)
 		"has_player_curse":
 			return _check_has_player_curse(context)
 		
@@ -108,18 +108,8 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 			return _check_swap_improves_element_match(context)
 		
 		# その他
-		"has_5_low_mhp_creatures":
-			return _check_has_5_low_mhp_creatures(context)
-		"has_priority_swap_target":
-			return _check_has_priority_swap_target(context)
-		"deck_nearly_empty":
-			return _check_deck_nearly_empty(context)
 		"has_unvisited_gate":
 			return _check_has_unvisited_gate(context)
-		"self_lowest_magic":
-			return _check_self_lowest_magic(context)
-		"transform_beneficial":
-			return _check_transform_beneficial(context)
 		"nearest_checkpoint_unvisited":
 			return _check_nearest_checkpoint_unvisited(context)
 		
@@ -129,134 +119,36 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 
 # =============================================================================
 # ターゲット条件チェック（target_condition フィールド用）
+# CPUTargetResolverに委譲
 # =============================================================================
 
 ## ターゲット条件をチェックし、有効なターゲットを返す
 func check_target_condition(target_condition: String, context: Dictionary) -> Array:
-	match target_condition:
-		# クリーチャー属性
-		"fire_wind_creature":
-			return _get_creatures_by_elements(["fire", "wind"], "enemy", context)
-		"water_earth_creature":
-			return _get_creatures_by_elements(["water", "earth"], "enemy", context)
-		"fire_earth_creature":
-			return _get_creatures_by_elements(["fire", "earth"], "enemy", context)
-		"water_wind_creature":
-			return _get_creatures_by_elements(["water", "wind"], "enemy", context)
-		"fire_water_creature":
-			return _get_creatures_by_elements(["fire", "water"], "enemy", context)
-		"earth_wind_creature":
-			return _get_creatures_by_elements(["earth", "wind"], "enemy", context)
-		"neutral_creature":
-			return _get_creatures_by_elements(["neutral"], "enemy", context)
-		
-		# 所有者フィルター
-		"enemy_creature":
-			return _get_creatures_by_owner("enemy", context)
-		"own_creature":
-			return _get_creatures_by_owner("own", context)
-		
-		# 状態フィルター
-		"element_mismatch_creatures":
-			return _get_element_mismatch_creatures(context)
-		"element_mismatch_creature":
-			return _get_element_mismatch_creatures(context)
-		"element_mismatch_enemy":
-			return _get_element_mismatch_enemy_creatures(context)
-		"cursed_creatures":
-			return _get_cursed_creatures(context)
-		"cursed_enemy_creature":
-			return _get_cursed_enemy_creatures(context)
-		"hp_reduced":
-			return _get_hp_reduced_creatures(context)
-		"hp_reduced_enemy":
-			return _get_hp_reduced_enemy_creatures(context)
-		"low_mhp_creatures":
-			return _get_low_mhp_creatures(context)
-		"low_mhp_enemy_creatures":
-			return _get_low_mhp_enemy_creatures(context)
-		"downed_high_mhp":
-			return _get_downed_high_mhp_creatures(context)
-		"duplicate_creatures_exist":
-			return _get_duplicate_creatures(context)
-		"duplicate_enemy_creatures":
-			return _get_duplicate_enemy_creatures(context)
-		
-		# 特殊条件
-		"can_kill_target":
-			return _get_killable_targets(context)
-		"most_common_element":
-			return _get_most_common_element_creatures(context)
-		"has_summon_condition":
-			return _get_creatures_with_summon_condition(context)
-		"no_curse_no_mystic":
-			return _get_creatures_without_curse_or_mystic(context)
-		"has_mystic_arts":
-			return _get_creatures_with_mystic_arts(context)
-		"high_value_or_mystic_enemy":
-			return _get_high_value_or_mystic_enemy(context)
-		
-		# プレイヤー条件
-		"enemy_has_2_items":
-			return _get_enemies_with_items(2, context)
-		"has_2_items":
-			return _get_enemies_with_items(2, context)
-		"enemy_has_high_toll":
-			return _get_enemies_with_high_toll(context)
-		"enemy_has_more_magic":
-			return _get_enemies_with_more_magic(context)
-		"enemy_player":
-			return _get_enemy_players(context)
-		"self_player":
-			return _get_self_player(context)
-		"self_target":
-			return _get_self_player(context)
-		
-		# 敵手札条件（enemy_hand用）
-		"has_item_or_spell":
-			return _get_enemies_with_cards(context)
-		"has_spell":
-			return _get_enemies_with_cards(context)
-		"has_duplicate_cards":
-			return _get_enemies_with_cards(context)
-		"has_expensive_cards":
-			return _get_enemies_with_cards(context)
-		
-		# 土地条件
-		"enemy_has_land_bonus":
-			return _get_enemies_with_land_bonus(context)
-		"own_no_land_bonus":
-			return _get_own_without_land_bonus(context)
-		
-		_:
-			push_warning("CPUSpellConditionChecker: Unknown target_condition: " + target_condition)
-			return []
+	return target_resolver.check_target_condition(target_condition, context)
 
 # =============================================================================
-# 条件チェック実装（condition）
+# 条件チェック実装
 # =============================================================================
 
 ## 属性不一致チェック：配置クリーチャーと土地の属性が違う自領地があるか
 func _check_element_mismatch(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	var mismatched = _get_mismatched_own_lands(player_id)
+	var mismatched = board_analyzer.get_mismatched_own_lands(player_id)
 	return mismatched.size() > 0
 
-## 敵の高レベル土地チェック：レベル3以上
+## 敵高レベル土地チェック（Lv2以上）
 func _check_enemy_high_level(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	var enemy_lands = _get_enemy_lands_by_level(player_id, 3)
+	var enemy_lands = board_analyzer.get_enemy_lands_by_level(player_id, 2)
 	return enemy_lands.size() > 0
 
-## 敵のレベル4土地チェック
+## 敵レベル4土地チェック
 func _check_enemy_level_4(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	var enemy_lands = _get_enemy_lands_by_level(player_id, 4)
+	var enemy_lands = board_analyzer.get_enemy_lands_by_level(player_id, 4)
 	return enemy_lands.size() > 0
 
-## 移動侵略で勝てるかチェック
-## 自クリーチャーを移動させて敵クリーチャーに勝てる組み合わせがあるかを判定
-## contextにspell情報がある場合、スペルの移動距離を考慮
+## 移動侵略で勝てるかチェック（アウトレイジ、チャリオット等）
 func _check_move_invasion_win(context: Dictionary) -> bool:
 	if not board_system or not _battle_simulator:
 		return false
@@ -283,7 +175,7 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 			break
 	
 	# 自クリーチャーを取得（盤面上）
-	var own_creatures = _get_own_creatures_on_board(player_id)
+	var own_creatures = board_analyzer.get_own_creatures_on_board(player_id)
 	if own_creatures.is_empty():
 		return false
 	
@@ -298,7 +190,7 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 			continue
 		
 		# 移動可能な敵領地を取得
-		var reachable_enemy_tiles = _get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
+		var reachable_enemy_tiles = board_analyzer.get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 		
 		for enemy_tile in reachable_enemy_tiles:
 			var defender = enemy_tile.get("creature", {})
@@ -333,67 +225,6 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 				return true
 	
 	return false
-
-## 指定距離で到達可能な敵クリーチャーのいるタイルを取得
-func _get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact_steps: bool) -> Array:
-	var results = []
-	if not board_system:
-		return results
-	
-	# BFSで探索
-	var visited = {from_tile: 0}
-	var queue = [from_tile]
-	
-	while not queue.is_empty():
-		var current = queue.pop_front()
-		var current_distance = visited[current]
-		
-		if current_distance >= steps:
-			continue
-		
-		# 隣接タイルを取得
-		var neighbors = []
-		if board_system.tile_neighbor_system:
-			neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(current)
-		
-		for neighbor in neighbors:
-			if visited.has(neighbor):
-				continue
-			
-			visited[neighbor] = current_distance + 1
-			queue.append(neighbor)
-	
-	# 条件に合う敵領地を収集
-	for tile_index in visited.keys():
-		if tile_index == from_tile:
-			continue
-		
-		var distance = visited[tile_index]
-		
-		# exact_stepsの場合はちょうどその距離のみ
-		if exact_steps and distance != steps:
-			continue
-		
-		# exact_stepsでない場合は距離以内
-		if not exact_steps and distance > steps:
-			continue
-		
-		var tile = board_system.tile_nodes.get(tile_index)
-		if not tile:
-			continue
-		
-		# 敵領地でクリーチャーがいる場合のみ
-		if tile.owner_id != -1 and tile.owner_id != player_id:
-			if not tile.creature_data.is_empty():
-				results.append({
-					"tile_index": tile_index,
-					"creature": tile.creature_data,
-					"element": tile.element if "element" in tile else "",
-					"level": tile.level if "level" in tile else 1,
-					"owner": tile.owner_id
-				})
-	
-	return results
 
 ## ワーストケース（敵がアイテム/援護を使った場合）でも勝てるかチェック
 func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
@@ -447,219 +278,27 @@ func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info
 	
 	return true  # 全ての対抗手段を試しても勝てる
 
-## 盤面上の自クリーチャーを取得
-func _get_own_creatures_on_board(player_id: int) -> Array:
-	var results = []
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature.is_empty():
-			continue
-		
-		results.append({
-			"tile_index": tile.get("index", -1),
-			"creature": creature,
-			"element": tile.get("element", ""),
-			"level": tile.get("level", 1)
-		})
-	
-	return results
-
-## 敵クリーチャーのいるタイルを取得
-func _get_enemy_creature_tiles(player_id: int) -> Array:
-	var results = []
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature.is_empty():
-			continue
-		
-		results.append({
-			"tile_index": tile.get("index", -1),
-			"creature": creature,
-			"element": tile.get("element", ""),
-			"level": tile.get("level", 1),
-			"owner": owner_id
-		})
-	
-	return results
-
 ## ダウン中の自クリーチャーがいるか
 func _check_has_downed_creature(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	if not board_system:
-		return false
-	
-	# get_all_tilesを使用してタイル情報を取得し、タイルノードからdown状態を確認
-	var tiles = board_system.get_all_tiles()
-	for tile_info in tiles:
-		var owner_id = tile_info.get("owner", -1)
-		if owner_id != player_id:
-			continue
-		
-		var creature = tile_info.get("creature", {})
-		if creature.is_empty():
-			continue
-		
-		# タイルノードから直接down状態を確認
-		var tile_index = tile_info.get("index", -1)
-		if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
-			var tile = board_system.tile_nodes[tile_index]
-			if tile.has_method("is_down") and tile.is_down():
-				return true
-	return false
+	return board_analyzer.has_downed_creature(player_id)
 
 ## 自クリーチャーがダメージを受けているか
 func _check_self_creature_damaged(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	var creatures = _get_own_creatures(player_id)
-	for creature_data in creatures:
-		var current_hp = creature_data.get("current_hp", 0)
-		var max_hp = creature_data.get("max_hp", 0)
-		if current_hp < max_hp:
-			return true
-	return false
+	return board_analyzer.has_damaged_creature(player_id)
 
 ## 呪い付きクリーチャーがいるか（自分の）
 func _check_has_cursed_creature(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	var creatures = _get_own_creatures(player_id)
-	for creature_data in creatures:
-		if _has_curse(creature_data):
-			return true
-	return false
-
-## 同じクリーチャーが2体以上配置されているか
-func _check_duplicate_creatures(_context: Dictionary) -> bool:
-	if not board_system:
-		return false
-	
-	var creature_counts = {}
-	var tiles = board_system.get_all_tiles()
-	
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature:
-			var creature_id = creature.get("id", 0)
-			creature_counts[creature_id] = creature_counts.get(creature_id, 0) + 1
-	
-	for count in creature_counts.values():
-		if count >= 2:
-			return true
-	return false
-
-## 空地があるか（ボード上）
-func _check_has_vacant_land(_context: Dictionary) -> bool:
-	if not board_system:
-		return false
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		if tile.get("tile_type") == "normal" and not tile.get("creature", tile.get("placed_creature", {})):
-			return true
-	return false
-
-## プレイヤーが空地に止まっているか
-func _check_has_empty_land(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not player_system or not board_system:
-		return false
-	
-	var player_pos = player_system.get_player_position(player_id)
-	var tile = board_system.get_tile_data(player_pos)
-	
-	if tile and tile.get("tile_type") == "normal":
-		return not tile.get("creature", tile.get("placed_creature", {}))
-	return false
-
-## 手札に全属性があるか
-func _check_has_all_elements_in_hand(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not card_system:
-		return false
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	var elements_found = {"fire": false, "water": false, "wind": false, "earth": false}
-	
-	for card in hand:
-		var element = card.get("element", "")
-		if element in elements_found:
-			elements_found[element] = true
-	
-	return elements_found["fire"] and elements_found["water"] and elements_found["wind"] and elements_found["earth"]
-
-## 手札の質が低いか
-func _check_low_hand_quality(_context: Dictionary) -> bool:
-	# TODO: 手札の質を評価するロジック
-	return false
-
-## 手札に呪いカードがあるか
-func _check_has_curse_cards_in_hand(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not card_system:
-		return false
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	for card in hand:
-		if card.get("is_curse", false):
-			return true
-	return false
-
-## 高コストカードがあるか（G100以上）
-func _check_has_expensive_cards(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not card_system:
-		return false
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	for card in hand:
-		var cost_data = card.get("cost", {})
-		var cost = 0
-		if typeof(cost_data) == TYPE_DICTIONARY:
-			cost = cost_data.get("mp", 0)
-		elif typeof(cost_data) == TYPE_INT or typeof(cost_data) == TYPE_FLOAT:
-			cost = int(cost_data)
-		if cost >= 100:
-			return true
-	return false
-
-## 属性不一致の土地が4つあるか
-func _check_has_4_mismatched_lands(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	var mismatched = _get_mismatched_own_lands(player_id)
-	return mismatched.size() >= 4
-
-## レベル2の土地が5つあるか
-func _check_has_5_level2_lands(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	var level2_lands = _get_own_lands_by_level(player_id, 2)
-	return level2_lands.size() >= 5
-
-## 4連続の土地があるか
-func _check_has_4_consecutive_lands(_context: Dictionary) -> bool:
-	# TODO: 連続判定ロジック
-	return false
+	return board_analyzer.has_cursed_creature(player_id)
 
 ## 何らかの呪いがあるか
 func _check_has_any_curse(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	
 	# クリーチャー呪いチェック
-	if _check_has_cursed_creature(context):
+	if board_analyzer.has_cursed_creature(player_id):
 		return true
 	
 	# プレイヤー呪いチェック
@@ -670,9 +309,17 @@ func _check_has_any_curse(context: Dictionary) -> bool:
 	
 	return false
 
-## 不利な世界呪いがあるか
-func _check_has_bad_world_curse(_context: Dictionary) -> bool:
-	# TODO: 世界呪いの有利/不利判定
+## 世界呪いがあるか
+func _check_has_world_curse(_context: Dictionary) -> bool:
+	if not game_flow_manager:
+		return false
+	
+	# WorldCurseManagerを参照
+	var world_curse_manager = game_flow_manager.get("world_curse_manager")
+	if world_curse_manager and world_curse_manager.has_method("get_active_curses"):
+		var active_curses = world_curse_manager.get_active_curses()
+		return active_curses.size() > 0
+	
 	return false
 
 ## プレイヤー呪いがあるか
@@ -686,33 +333,6 @@ func _check_has_player_curse(context: Dictionary) -> bool:
 	
 	var player = player_system.players[player_id]
 	return player and player.curse.size() > 0
-
-## MHP30以下のクリーチャーが5体あるか
-func _check_has_5_low_mhp_creatures(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	var count = 0
-	var creatures = _get_own_creatures(player_id)
-	
-	for creature_data in creatures:
-		var max_hp = creature_data.get("max_hp", 0)
-		if max_hp <= 30:
-			count += 1
-	
-	return count >= 5
-
-## 交換優先度の高いクリーチャーがいるか
-func _check_has_priority_swap_target(_context: Dictionary) -> bool:
-	# TODO: 優先度判定ロジック
-	return false
-
-## デッキがほぼ空か
-func _check_deck_nearly_empty(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not card_system:
-		return false
-	
-	var deck_count = card_system.get_deck_count(player_id)
-	return deck_count <= 5
 
 ## 未訪問ゲートがあるか（1周完了を引き起こすゲートは除外）
 func _check_has_unvisited_gate(context: Dictionary) -> bool:
@@ -732,28 +352,6 @@ func _check_has_unvisited_gate(context: Dictionary) -> bool:
 	# 未訪問が2つ以上あれば使用可能（1つだけだと1周完了を引き起こす）
 	return unvisited_count >= 2
 
-## 自分が最下位魔力か
-func _check_self_lowest_magic(context: Dictionary) -> bool:
-	var player_id = context.get("player_id", 0)
-	if not player_system:
-		return false
-	
-	var my_magic = player_system.get_magic(player_id)
-	var player_count = player_system.players.size()
-	
-	for i in range(player_count):
-		if i != player_id:
-			var other_magic = player_system.get_magic(i)
-			if other_magic < my_magic:
-				return false
-	
-	return true
-
-## 変身が有利か
-func _check_transform_beneficial(_context: Dictionary) -> bool:
-	# TODO: 変身先との比較ロジック
-	return false
-
 ## プレイヤーが空地に止まっているか（ゴブリンズレア用）
 func _check_standing_on_vacant_land(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
@@ -761,11 +359,7 @@ func _check_standing_on_vacant_land(context: Dictionary) -> bool:
 		return false
 	
 	# movement_controllerから正確な位置を取得
-	var player_pos = -1
-	if board_system.movement_controller:
-		player_pos = board_system.movement_controller.get_player_tile(player_id)
-	elif player_system:
-		player_pos = player_system.get_player_position(player_id)
+	var player_pos = board_analyzer.get_player_current_tile(player_id)
 	
 	var tile = board_system.get_tile_data(player_pos)
 	if not tile:
@@ -785,7 +379,6 @@ func _check_standing_on_vacant_land(context: Dictionary) -> bool:
 	return owner == -1
 
 ## 手札のクリーチャーで属性一致に改善できるか（エクスチェンジ用）
-## 属性不一致の配置クリーチャーがいて、そのタイル属性と一致する手札クリーチャーがいる場合のみtrue
 func _check_can_upgrade_creature(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	if not card_system or not board_system:
@@ -886,713 +479,16 @@ func _check_swap_improves_element_match(context: Dictionary) -> bool:
 	
 	return false
 
-# =============================================================================
-# ターゲット条件実装（target_condition）
-# =============================================================================
-
-## 指定属性のクリーチャーを取得
-func _get_creatures_by_elements(elements: Array, owner_filter: String, context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var creature_element = creature.get("element", "")
-		if creature_element not in elements:
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_filter == "enemy" and owner_id == player_id:
-			continue
-		if owner_filter == "own" and owner_id != player_id:
-			continue
-		
-		results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 所有者でクリーチャーをフィルタ
-func _get_creatures_by_owner(owner_filter: String, context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_filter == "enemy" and (owner_id == player_id or owner_id == -1):
-			continue
-		if owner_filter == "own" and owner_id != player_id:
-			continue
-		
-		results.append({"type": "creature", "tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 属性不一致のクリーチャーを取得
-func _get_element_mismatch_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var tile_element = tile.get("element", "")
-		var creature_element = creature.get("element", "")
-		
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 呪い付きクリーチャーを取得
-func _get_cursed_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature and _has_curse(creature):
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## HP減少中のクリーチャーを取得
-func _get_hp_reduced_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var current_hp = creature.get("current_hp", 0)
-		var max_hp = creature.get("max_hp", 0)
-		if current_hp < max_hp:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## MHP30以下のクリーチャーを取得
-func _get_low_mhp_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var max_hp = creature.get("max_hp", 0)
-		if max_hp <= 30:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## ダウン中かつMHP50以上のクリーチャーを取得
-func _get_downed_high_mhp_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var is_down = creature.get("is_down", false)
-		var max_hp = creature.get("max_hp", 0)
-		if is_down and max_hp >= 50:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 倒せるターゲットを取得（倒せるターゲット優先、なければ敵クリーチャー全体）
-func _get_killable_targets(context: Dictionary) -> Array:
-	var damage = context.get("damage_value", 0)
-	var player_id = context.get("player_id", 0)
-	var killable = []
-	var all_enemies = []
-	
-	if not board_system:
-		return []
-	
-	var tiles = board_system.get_all_tiles()
-	
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		
-		# 敵クリーチャーのみ対象
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var current_hp = creature.get("current_hp", creature.get("hp", 0))
-		var target_data = {"type": "creature", "tile_index": tile.get("index", -1), "creature": creature}
-		
-		all_enemies.append(target_data)
-		
-		if current_hp > 0 and current_hp <= damage:
-			killable.append(target_data)
-	
-	# 倒せるターゲットがいればそれを優先、なければ敵クリーチャー全体
-	if not killable.is_empty():
-		return killable
-	return all_enemies
-
-## 最多属性のクリーチャーを取得
-func _get_most_common_element_creatures(context: Dictionary) -> Array:
-	if not board_system:
-		return []
-	
-	# 属性ごとのカウント
-	var element_counts = {}
-	var tiles = board_system.get_all_tiles()
-	
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature:
-			var element = creature.get("element", "")
-			element_counts[element] = element_counts.get(element, 0) + 1
-	
-	# 最多属性を特定
-	var max_element = ""
-	var max_count = 0
-	for element in element_counts:
-		if element_counts[element] > max_count:
-			max_count = element_counts[element]
-			max_element = element
-	
-	# 該当クリーチャーを返す
-	return _get_creatures_by_elements([max_element], "any", context)
-
-## 召喚条件持ちクリーチャーを取得
-func _get_creatures_with_summon_condition(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id:
-			continue  # 敵のみ
-		
-		if creature.get("summon_condition"):
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 呪いも秘術も持たないクリーチャーを取得
-func _get_creatures_without_curse_or_mystic(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		if not _has_curse(creature) and not creature.get("mystic_arts"):
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 秘術持ちクリーチャーを取得
-func _get_creatures_with_mystic_arts(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		if creature.get("mystic_arts"):
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## アイテムを指定数以上持つ敵を取得
-func _get_enemies_with_items(min_count: int, context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not card_system or not player_system:
-		return results
-	
-	var player_count = player_system.players.size()
-	for i in range(player_count):
-		if i == player_id:
-			continue
-		
-		var hand = card_system.get_all_cards_for_player(i)
-		var item_count = 0
-		for card in hand:
-			if card.get("type") == "item":
-				item_count += 1
-		
-		if item_count >= min_count:
-			results.append({"type": "player", "player_id": i})
-	
-	return results
-
-## 高通行料の土地を持つ敵を取得
-func _get_enemies_with_high_toll(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system or not player_system:
-		return results
-	
-	var player_count = player_system.players.size()
-	for i in range(player_count):
-		if i == player_id:
-			continue
-		
-		# 敵のレベル3以上の土地をチェック
-		var enemy_lands = _get_enemy_lands_by_level(player_id, 3)
-		if enemy_lands.size() > 0:
-			results.append({"type": "player", "player_id": i})
-	
-	return results
-
-## 自分より魔力が多い敵を取得
-func _get_enemies_with_more_magic(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not player_system:
-		return results
-	
-	var my_magic = player_system.get_magic(player_id)
-	var player_count = player_system.players.size()
-	
-	for i in range(player_count):
-		if i == player_id:
-			continue
-		
-		var other_magic = player_system.get_magic(i)
-		if other_magic > my_magic:
-			results.append({"type": "player", "player_id": i, "magic": other_magic})
-	
-	return results
-
-## 地形ボーナスを持つ敵クリーチャーを取得
-func _get_enemies_with_land_bonus(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id:
-			continue
-		
-		var tile_element = tile.get("element", "")
-		var creature_element = creature.get("element", "")
-		if tile_element == creature_element:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 地形ボーナスを持たない自クリーチャーを取得
-func _get_own_without_land_bonus(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
-			continue
-		
-		var tile_element = tile.get("element", "")
-		var creature_element = creature.get("element", "")
-		if tile_element != creature_element:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-# =============================================================================
-# ヘルパー関数
-# =============================================================================
-
-## 自分のクリーチャーを取得
-func _get_own_creatures(player_id: int) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature and tile.get("owner", tile.get("owner_id", -1)) == player_id:
-			results.append(creature)
-	
-	return results
-
-## 属性不一致の自領地を取得
-func _get_mismatched_own_lands(player_id: int) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		if tile.get("owner", tile.get("owner_id", -1)) != player_id:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature:
-			continue
-		
-		var tile_element = tile.get("element", "")
-		var creature_element = creature.get("element", "")
-		
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
-			results.append(tile)
-	
-	return results
-
-## 指定レベル以上の敵土地を取得
-func _get_enemy_lands_by_level(player_id: int, min_level: int) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var level = tile.get("level", 1)
-		if level >= min_level:
-			results.append(tile)
-	
-	return results
-
-## 指定レベルの自領地を取得
-func _get_own_lands_by_level(player_id: int, target_level: int) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		if tile.get("owner", tile.get("owner_id", -1)) != player_id:
-			continue
-		
-		var level = tile.get("level", 1)
-		if level == target_level:
-			results.append(tile)
-	
-	return results
-
-## クリーチャーが呪いを持っているか
-func _has_curse(creature: Dictionary) -> bool:
-	var ability = creature.get("ability_parsed", {})
-	if ability.get("curses", []).size() > 0:
-		return true
-	if creature.get("curse"):
-		return true
-	return false
-
-## 属性不一致の敵クリーチャーを取得
-func _get_element_mismatch_enemy_creatures(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		var tile_element = tile.get("element", "")
-		var creature_element = creature.get("element", "")
-		
-		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 呪い付き敵クリーチャーを取得
-func _get_cursed_enemy_creatures(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature and _has_curse(creature):
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## HP減少中の敵クリーチャーを取得
-func _get_hp_reduced_enemy_creatures(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		var current_hp = creature.get("current_hp", creature.get("hp", 0))
-		var max_hp = creature.get("max_hp", creature.get("hp", 0))
-		if current_hp < max_hp:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## MHP30以下の敵クリーチャーを取得
-func _get_low_mhp_enemy_creatures(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		var max_hp = creature.get("max_hp", creature.get("hp", 0))
-		if max_hp <= 30:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 重複クリーチャーを取得（全体）
-func _get_duplicate_creatures(_context: Dictionary) -> Array:
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var creature_counts = {}
-	var creature_tiles = {}
-	var tiles = board_system.get_all_tiles()
-	
-	for tile in tiles:
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature and not creature.is_empty():
-			var creature_id = creature.get("id", 0)
-			creature_counts[creature_id] = creature_counts.get(creature_id, 0) + 1
-			if not creature_tiles.has(creature_id):
-				creature_tiles[creature_id] = []
-			creature_tiles[creature_id].append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	for creature_id in creature_counts:
-		if creature_counts[creature_id] >= 2:
-			results.append_array(creature_tiles[creature_id])
-	
-	return results
-
-## 重複している敵クリーチャーを取得
-func _get_duplicate_enemy_creatures(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var creature_counts = {}
-	var creature_tiles = {}
-	var tiles = board_system.get_all_tiles()
-	
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if creature and not creature.is_empty():
-			var creature_id = creature.get("id", 0)
-			creature_counts[creature_id] = creature_counts.get(creature_id, 0) + 1
-			if not creature_tiles.has(creature_id):
-				creature_tiles[creature_id] = []
-			creature_tiles[creature_id].append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	for creature_id in creature_counts:
-		if creature_counts[creature_id] >= 2:
-			results.append_array(creature_tiles[creature_id])
-	
-	return results
-
-## 高価値または秘術持ちの敵クリーチャーを取得
-func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not board_system:
-		return results
-	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
-			continue
-		
-		var creature = tile.get("creature", tile.get("placed_creature", {}))
-		if not creature or creature.is_empty():
-			continue
-		
-		# 秘術持ちまたは高レートクリーチャー
-		var has_mystic = creature.get("mystic_arts") != null
-		var rarity = creature.get("rarity", "N")
-		var is_high_value = rarity in ["R", "S"]
-		
-		if has_mystic or is_high_value:
-			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
-	return results
-
-## 敵プレイヤーリストを取得
-func _get_enemy_players(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not player_system:
-		return results
-	
-	var player_count = player_system.players.size()
-	for i in range(player_count):
-		if i != player_id:
-			results.append({"type": "player", "player_id": i})
-	
-	return results
-
-## 自分自身を取得
-func _get_self_player(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	return [{"type": "player", "player_id": player_id}]
-
-## 手札を持つ敵プレイヤーを取得（enemy_hand用簡易版）
-## 注: CPUは敵の手札を見れないので、手札が1枚以上あれば対象とする
-func _get_enemies_with_cards(context: Dictionary) -> Array:
-	var player_id = context.get("player_id", 0)
-	var results = []
-	
-	if not player_system or not card_system:
-		return results
-	
-	var player_count = player_system.players.size()
-	for i in range(player_count):
-		if i == player_id:
-			continue
-		
-		var hand = card_system.get_all_cards_for_player(i)
-		if hand.size() > 0:
-			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
-	
-	return results
-
-
 ## 最寄りチェックポイントが未訪問かチェック（フォームポータル用）
 func _check_nearest_checkpoint_unvisited(context: Dictionary) -> bool:
 	if not board_system or not lap_system:
 		return false
 	
 	var player_id = context.get("player_id", 0)
-	var current_tile = _get_player_current_tile(player_id)
+	var current_tile = board_analyzer.get_player_current_tile(player_id)
 	
 	# 最寄りチェックポイントを探す
-	var nearest_checkpoint = _find_nearest_checkpoint(current_tile)
+	var nearest_checkpoint = board_analyzer.find_nearest_checkpoint(current_tile)
 	if nearest_checkpoint.tile_index < 0:
 		return false
 	
@@ -1602,67 +498,3 @@ func _check_nearest_checkpoint_unvisited(context: Dictionary) -> bool:
 	var is_visited = player_state.get(checkpoint_type, false)
 	
 	return not is_visited
-
-## 最寄りチェックポイントを探す
-func _find_nearest_checkpoint(from_tile: int) -> Dictionary:
-	if not board_system or not "tile_nodes" in board_system:
-		return {"tile_index": -1, "checkpoint_type": ""}
-	
-	var tiles = board_system.tile_nodes
-	var nearest_tile = -1
-	var nearest_distance = 999999
-	var nearest_type = ""
-	
-	for tile_index in tiles.keys():
-		var tile = tiles[tile_index]
-		if tile and tile.tile_type == "checkpoint":
-			var dist = _calculate_tile_distance_simple(from_tile, tile_index)
-			if dist < nearest_distance:
-				nearest_distance = dist
-				nearest_tile = tile_index
-				nearest_type = "N" if tile.checkpoint_type == 0 else "S"
-	
-	return {"tile_index": nearest_tile, "checkpoint_type": nearest_type}
-
-## プレイヤーの現在位置を取得
-func _get_player_current_tile(player_id: int) -> int:
-	if board_system and "movement_controller" in board_system and board_system.movement_controller:
-		return board_system.movement_controller.get_player_tile(player_id)
-	if player_system and player_system.has_method("get_player_position"):
-		return player_system.get_player_position(player_id)
-	return 0
-
-## タイル間の距離を計算（簡易版）
-func _calculate_tile_distance_simple(from_tile: int, to_tile: int) -> int:
-	if from_tile == to_tile:
-		return 0
-	
-	if not board_system or not "tile_neighbor_system" in board_system:
-		return abs(to_tile - from_tile)
-	
-	var neighbor_system = board_system.tile_neighbor_system
-	if not neighbor_system or not neighbor_system.has_method("get_sequential_neighbors"):
-		return abs(to_tile - from_tile)
-	
-	# BFS
-	var visited = {}
-	var queue = [[from_tile, 0]]
-	visited[from_tile] = true
-	
-	while not queue.is_empty():
-		var current = queue.pop_front()
-		var tile = current[0]
-		var dist = current[1]
-		
-		if dist > 30:
-			break
-		
-		var neighbors = neighbor_system.get_sequential_neighbors(tile)
-		for neighbor in neighbors:
-			if neighbor == to_tile:
-				return dist + 1
-			if not visited.has(neighbor):
-				visited[neighbor] = true
-				queue.append([neighbor, dist + 1])
-	
-	return abs(to_tile - from_tile)

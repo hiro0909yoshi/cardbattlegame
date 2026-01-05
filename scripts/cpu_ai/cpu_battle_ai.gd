@@ -1,7 +1,8 @@
 class_name CPUBattleAI
 
 # CPUバトル評価クラス
-# バトルシミュレーションを使用した組み合わせ評価、合体判断、即死スキル判断を担当
+# バトルシミュレーションを使用した組み合わせ評価、即死スキル判断を担当
+# 合体判断はCPUMergeEvaluatorに委譲
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -20,8 +21,8 @@ var battle_simulator: BattleSimulator = null
 # 手札ユーティリティ参照
 var hand_utils: CPUHandUtils = null
 
-# 最後に選択した合体データ（攻撃側）
-var pending_merge_data: Dictionary = {}
+# 合体評価クラス
+var merge_evaluator: CPUMergeEvaluator = null
 
 ## システム参照を設定
 func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_system: PlayerBuffSystem, gf_manager = null):
@@ -39,6 +40,9 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_sys
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils):
 	hand_utils = utils
+	# 合体評価クラスを初期化
+	merge_evaluator = CPUMergeEvaluator.new()
+	merge_evaluator.initialize(card_system, hand_utils, battle_simulator)
 
 ## GameFlowManagerを後から設定
 func set_game_flow_manager(gf_manager) -> void:
@@ -54,38 +58,6 @@ func set_simulator_log_enabled(enabled: bool) -> void:
 # ============================================================
 # バトル評価
 # ============================================================
-
-## バトル用の全カード評価
-func evaluate_all_cards_for_battle(current_player, defender: Dictionary, tile_info: Dictionary) -> Dictionary:
-	var best_result = {"index": -1, "score": -999, "sim_result": null}
-	
-	var hand_size = card_system.get_hand_size_for_player(current_player.id)
-	for i in range(hand_size):
-		var card = card_system.get_card_data_for_player(current_player.id, i)
-		if card.is_empty():
-			continue
-		
-		# クリーチャーカードのみ対象
-		if card.get("type", "") != "creature":
-			continue
-		
-		# コストチェック
-		if not hand_utils.can_afford_card(current_player, i):
-			continue
-		
-		# バトルシミュレーション
-		var eval_result = evaluate_battle_outcome(card, defender, tile_info, current_player.id)
-		if eval_result.score > best_result.score:
-			best_result.score = eval_result.score
-			best_result.index = i
-			best_result.sim_result = eval_result.sim_result
-	
-	# 最良の選択をログ出力
-	if best_result.index >= 0:
-		var best_card = card_system.get_card_data_for_player(current_player.id, best_result.index)
-		print("[CPU AI] 最良の選択: %s (スコア: %d)" % [best_card.get("name", "?"), best_result.score])
-	
-	return best_result
 
 ## バトル結果を評価（BattleSimulatorを使用）
 func evaluate_battle_outcome(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, attacker_player_id: int) -> Dictionary:
@@ -238,21 +210,22 @@ func evaluate_all_combinations_for_battle(
 	print("[CPU AI] バトル組み合わせ評価: クリーチャー%d体, アイテム%d個" % [creatures.size(), items.size()])
 	
 	# 0. 合体判断（最優先）
-	var merge_result = _check_merge_option_for_attack(current_player, creatures, defender, tile_info)
-	if merge_result.can_merge and merge_result.wins_or_survives:
-		print("[CPU AI] 合体で勝利/生存可能 → 合体を選択: %s" % merge_result.result_name)
-		result.creature_index = merge_result.creature_index
-		result.item_index = -1  # 合体は item_index を使わない
-		result.sim_result = merge_result.sim_result
-		result.can_win = merge_result.is_win or merge_result.wins_or_survives  # 生存も勝ち扱い
-		result.score = 150 if merge_result.is_win else 80  # 合体は高スコア
-		result["merge_data"] = merge_result  # 合体データを追加
-		# 合体データを保存（バトル実行時に使用）
-		pending_merge_data = merge_result
-		return result
-	
-	# 合体データをクリア（通常バトルを選択する場合）
-	pending_merge_data = {}
+	if merge_evaluator:
+		var merge_result = merge_evaluator.check_merge_option_for_attack(current_player, creatures, defender, tile_info)
+		if merge_result.can_merge and merge_result.wins_or_survives:
+			print("[CPU AI] 合体で勝利/生存可能 → 合体を選択: %s" % merge_result.result_name)
+			result.creature_index = merge_result.creature_index
+			result.item_index = -1  # 合体は item_index を使わない
+			result.sim_result = merge_result.sim_result
+			result.can_win = merge_result.is_win or merge_result.wins_or_survives  # 生存も勝ち扱い
+			result.score = 150 if merge_result.is_win else 80  # 合体は高スコア
+			result["merge_data"] = merge_result  # 合体データを追加
+			# 合体データを保存（バトル実行時に使用）
+			merge_evaluator.set_pending_merge_data(merge_result)
+			return result
+		
+		# 合体データをクリア（通常バトルを選択する場合）
+		merge_evaluator.clear_pending_merge_data()
 	
 	# 0.5. 敵が無効化アイテムを持っている場合、無効化+即死クリーチャーを優先
 	var enemy_player_id = tile_info.get("owner", -1)
@@ -660,152 +633,25 @@ func find_item_to_beat_worst_case(
 	return result
 
 # ============================================================
-# 合体判断（攻撃側）
+# 合体データアクセス（CPUMergeEvaluatorへの委譲）
 # ============================================================
-
-## 攻撃側の合体オプションをチェック
-## 合体スキルを持ち、手札に合体相手がいて、コストを支払えて、合体で勝てる/生き残れるかを判定
-func _check_merge_option_for_attack(
-	current_player,
-	creatures: Array,
-	defender: Dictionary,
-	tile_info: Dictionary
-) -> Dictionary:
-	var result = {
-		"can_merge": false,
-		"wins_or_survives": false,
-		"is_win": false,
-		"creature_index": -1,
-		"partner_index": -1,
-		"partner_data": {},
-		"result_id": -1,
-		"result_name": "",
-		"cost": 0,
-		"sim_result": null
-	}
-	
-	var hand = card_system.get_all_cards_for_player(current_player.id)
-	
-	# 各クリーチャーについて合体可能かチェック
-	for creature_entry in creatures:
-		var creature_index = creature_entry["index"]
-		var creature = creature_entry["data"]
-		
-		# 合体スキルを持っているかチェック
-		if not SkillMerge.has_merge_skill(creature):
-			continue
-		
-		# 手札に合体相手がいるかチェック
-		var partner_index = SkillMerge.find_merge_partner_in_hand(creature, hand)
-		if partner_index == -1:
-			continue
-		
-		# 合体相手のデータ
-		var partner_data = hand[partner_index]
-		var partner_cost = SkillMerge.get_merge_cost(hand, partner_index)
-		
-		# クリーチャーのコスト
-		var creature_cost = hand_utils.calculate_card_cost(creature, current_player.id)
-		var total_cost = creature_cost + partner_cost
-		
-		# コストチェック
-		if total_cost > current_player.magic_power:
-			print("[CPU合体] 魔力不足: 必要%dG, 現在%dG" % [total_cost, current_player.magic_power])
-			continue
-		
-		# 合体結果のクリーチャーを取得
-		var result_id = SkillMerge.get_merge_result_id(creature)
-		var result_creature = CardLoader.get_card_by_id(result_id)
-		
-		if result_creature.is_empty():
-			continue
-		
-		print("[CPU合体] 合体可能: %s + %s → %s (コスト: %dG)" % [
-			creature.get("name", "?"),
-			partner_data.get("name", "?"),
-			result_creature.get("name", "?"),
-			total_cost
-		])
-		
-		# 合体後のクリーチャーでシミュレーション
-		var sim_result = _simulate_attack_with_merge(result_creature, defender, tile_info, current_player.id)
-		var outcome = sim_result.get("result", -1)
-		
-		print("[CPU合体] シミュレーション結果: %s" % _merge_result_to_string(outcome))
-		
-		var is_win = outcome == BattleSimulator.BattleResult.ATTACKER_WIN
-		var is_survive = outcome == BattleSimulator.BattleResult.ATTACKER_SURVIVED
-		
-		if is_win or is_survive:
-			result["can_merge"] = true
-			result["wins_or_survives"] = true
-			result["is_win"] = is_win
-			result["creature_index"] = creature_index
-			result["partner_index"] = partner_index
-			result["partner_data"] = partner_data
-			result["result_id"] = result_id
-			result["result_name"] = result_creature.get("name", "?")
-			result["cost"] = total_cost
-			result["sim_result"] = sim_result
-			result["merged_creature"] = result_creature
-			
-			# 勝てる場合は即座に返す（生き残りより勝利を優先）
-			if is_win:
-				return result
-	
-	return result
-
-## 合体後のクリーチャーで攻撃シミュレーション
-func _simulate_attack_with_merge(
-	merged_creature: Dictionary,
-	defender: Dictionary,
-	tile_info: Dictionary,
-	attacker_player_id: int
-) -> Dictionary:
-	if not battle_simulator:
-		return {}
-	
-	var sim_tile_info = {
-		"element": tile_info.get("element", ""),
-		"level": tile_info.get("level", 1),
-		"owner": tile_info.get("owner", -1),
-		"tile_index": tile_info.get("index", -1)
-	}
-	
-	return battle_simulator.simulate_battle(
-		merged_creature,  # 攻撃側（合体後）
-		defender,         # 防御側
-		sim_tile_info,
-		attacker_player_id,
-		{},               # 攻撃側アイテム（合体のみ）
-		{}                # 防御側アイテム（不明）
-	)
-
-## 合体シミュレーション結果を文字列に変換
-func _merge_result_to_string(outcome: int) -> String:
-	match outcome:
-		BattleSimulator.BattleResult.ATTACKER_WIN:
-			return "攻撃側勝利"
-		BattleSimulator.BattleResult.DEFENDER_WIN:
-			return "防御側勝利"
-		BattleSimulator.BattleResult.ATTACKER_SURVIVED:
-			return "両者生存"
-		BattleSimulator.BattleResult.BOTH_DEFEATED:
-			return "相打ち"
-		_:
-			return "不明"
 
 ## 保存された合体データを取得
 func get_pending_merge_data() -> Dictionary:
-	return pending_merge_data
+	if merge_evaluator:
+		return merge_evaluator.get_pending_merge_data()
+	return {}
 
 ## 合体データをクリア
-func clear_pending_merge_data():
-	pending_merge_data = {}
+func clear_pending_merge_data() -> void:
+	if merge_evaluator:
+		merge_evaluator.clear_pending_merge_data()
 
 ## 合体が選択されているかチェック
 func has_pending_merge() -> bool:
-	return not pending_merge_data.is_empty() and pending_merge_data.get("can_merge", false)
+	if merge_evaluator:
+		return merge_evaluator.has_pending_merge()
+	return false
 
 # ============================================================
 # 即死スキル判断

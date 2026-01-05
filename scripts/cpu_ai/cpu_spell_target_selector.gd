@@ -1,0 +1,663 @@
+## CPU スペル ターゲット選択クラス
+## スペル使用時の最適ターゲット選択ロジックを担当
+class_name CPUSpellTargetSelector
+extends RefCounted
+
+## 参照
+var board_system: Node = null
+var player_system: Node = null
+var card_system: Node = null
+var condition_checker = null  # CPUSpellConditionChecker
+var lap_system: Node = null
+
+## 初期化
+func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_system: Node = null) -> void:
+	board_system = b_system
+	player_system = p_system
+	card_system = c_system
+	condition_checker = cond_checker
+	lap_system = l_system
+
+# =============================================================================
+# メインターゲット選択
+# =============================================================================
+
+## デフォルトターゲット取得
+func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	var target_info = effect_parsed.get("target_info", {})
+	var owner_filter = target_info.get("owner_filter", "any")
+	
+	match target_type:
+		"creature":
+			return condition_checker.check_target_condition(owner_filter + "_creature", context)
+		"player":
+			if owner_filter == "enemy":
+				return get_enemy_players(context)
+			else:
+				return [{"type": "player", "player_id": context.player_id}]
+		"land", "own_land":
+			return get_land_targets(owner_filter, context)
+		_:
+			return []
+
+## 最適なターゲット選択（スコア付き）
+func select_best_target_with_score(targets: Array, _spell: Dictionary, context: Dictionary) -> Dictionary:
+	if targets.is_empty():
+		return {"target": {}, "score": 0.0}
+	
+	var player_id = context.get("player_id", 0)
+	var damage_value = context.get("damage_value", 0)
+	var is_damage_spell = damage_value > 0
+	
+	var best_target = targets[0]
+	var best_score = -999.0
+	
+	for target in targets:
+		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell)
+		if score > best_score:
+			best_score = score
+			best_target = target
+	
+	return {"target": best_target, "score": best_score}
+
+## ターゲットスコアを計算
+func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool) -> float:
+	var score = 0.0
+	
+	var tile_index = target.get("tile_index", -1)
+	var creature = target.get("creature", {})
+	var tile_data = {}
+	
+	# タイル情報を取得
+	if tile_index >= 0 and board_system:
+		tile_data = board_system.get_tile_data(tile_index)
+		if tile_data and creature.is_empty():
+			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
+	
+	if creature.is_empty():
+		return score
+	
+	# 敵クリーチャーかどうか
+	var owner_id = -1
+	if tile_data:
+		owner_id = tile_data.get("owner_id", -1)
+	var is_enemy = owner_id != player_id and owner_id >= 0
+	
+	if is_enemy:
+		score += 1.0
+	
+	# ダメージスペルの場合
+	if is_damage_spell:
+		var current_hp = creature.get("current_hp", creature.get("hp", 0))
+		
+		# 倒せる場合は最優先
+		if current_hp > 0 and current_hp <= damage_value:
+			score += 3.0
+		# ダメージ効率（HPに対するダメージ割合）
+		elif current_hp > 0:
+			var damage_ratio = float(damage_value) / float(current_hp)
+			score += min(damage_ratio, 1.0)  # 最大+1.0
+	
+	# 土地レベル
+	if tile_data:
+		var level = tile_data.get("level", 1)
+		score += level * 0.5
+	
+	return score
+
+## 旧互換（他の箇所で使用されている場合）
+func select_best_target(targets: Array, spell: Dictionary, context: Dictionary) -> Dictionary:
+	var result = select_best_target_with_score(targets, spell, context)
+	return result.target
+
+# =============================================================================
+# 条件別ターゲット選択
+# =============================================================================
+
+## 条件に基づくターゲット取得
+func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	var cpu_rule = spell.get("cpu_rule", {})
+	var condition = cpu_rule.get("condition", "")
+	
+	match target_type:
+		"self", "none":
+			return {"type": "self", "player_id": context.player_id}
+		"unvisited_gate":
+			# リミッション用：進行方向から遠い未訪問ゲートを選ぶ
+			var farthest_gate = get_farthest_unvisited_gate(context)
+			if not farthest_gate.is_empty():
+				return farthest_gate
+			return {}
+		"own_land":
+			# 属性変更スペルの場合、属性一致を改善できる土地を選ぶ
+			if condition == "element_mismatch":
+				var best_land = get_best_element_shift_target(spell, context)
+				if not best_land.is_empty():
+					return best_land
+				# 適切なターゲットがない場合は空を返す（使用しない）
+				return {}
+			# デフォルト: 最初の自領地
+			var lands = get_land_targets("own", context)
+			if not lands.is_empty():
+				return lands[0]
+		"land":
+			# 条件に応じたターゲット取得
+			match condition:
+				"enemy_high_level":
+					# 敵の高レベル土地（レベル3以上で最もレベルが高いもの）
+					var enemy_lands = get_enemy_lands_by_level_sorted(context.player_id, 3)
+					if not enemy_lands.is_empty():
+						return {"type": "land", "tile_index": enemy_lands[0].get("index", -1)}
+				"enemy_level_4":
+					# 敵のレベル4土地
+					var enemy_lands = get_enemy_lands_by_level_sorted(context.player_id, 4)
+					if not enemy_lands.is_empty():
+						return {"type": "land", "tile_index": enemy_lands[0].get("index", -1)}
+				_:
+					# デフォルト: 敵の土地から選択
+					var lands = get_land_targets("enemy", context)
+					if not lands.is_empty():
+						return lands[0]
+		"creature":
+			# 移動侵略スペルの場合、勝てる自クリーチャーを選ぶ
+			if condition == "move_invasion_win":
+				var best_target = get_best_move_invasion_target(context)
+				if not best_target.is_empty():
+					return best_target
+				return {}
+			# エクスチェンジの場合、属性不一致のクリーチャーを優先
+			if condition == "can_upgrade_creature":
+				var best_target = get_best_exchange_target(context)
+				if not best_target.is_empty():
+					return best_target
+			var targets = get_default_targets(spell, context)
+			if not targets.is_empty():
+				return targets[0]
+	
+	return {}
+
+## profit_calc用ターゲット取得
+func get_profit_target(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	
+	if target_type == "player":
+		var enemies = get_enemy_players(context)
+		if not enemies.is_empty():
+			return enemies[0]
+	
+	return {"type": "self", "player_id": context.player_id}
+
+## strategic用ターゲット取得
+func get_strategic_target(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	var target_filter = effect_parsed.get("target_filter", "any")
+	
+	match target_type:
+		"player":
+			if target_filter == "enemy":
+				var enemies = get_enemy_players(context)
+				if not enemies.is_empty():
+					return enemies[randi() % enemies.size()]
+			elif target_filter == "self":
+				return {"type": "self", "player_id": context.player_id}
+			else:
+				# any: ランダム
+				if randf() < 0.5:
+					return {"type": "self", "player_id": context.player_id}
+				else:
+					var enemies = get_enemy_players(context)
+					if not enemies.is_empty():
+						return enemies[randi() % enemies.size()]
+		"world", "none", "self":
+			return {"type": "self", "player_id": context.player_id}
+	
+	return {"type": "self", "player_id": context.player_id}
+
+# =============================================================================
+# 特殊ターゲット選択
+# =============================================================================
+
+## エクスチェンジ用：交換対象の自クリーチャーを選ぶ
+## 属性不一致で、手札のクリーチャーで改善できるものを優先
+func get_best_exchange_target(context: Dictionary) -> Dictionary:
+	var player_id = context.get("player_id", 0)
+	
+	if not board_system or not card_system:
+		return {}
+	
+	# 手札のクリーチャーを取得
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var hand_creatures = []
+	for card in hand:
+		if card.get("type") == "creature":
+			hand_creatures.append(card)
+	
+	if hand_creatures.is_empty():
+		return {}
+	
+	# 手札クリーチャーの属性セットを作成
+	var hand_elements = {}
+	for hc in hand_creatures:
+		hand_elements[hc.get("element", "")] = true
+	
+	# 自クリーチャーを取得
+	var tiles = board_system.get_all_tiles()
+	var candidates = []
+	
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", {})
+		if creature.is_empty():
+			continue
+		
+		var tile_element = tile.get("element", "")
+		var creature_element = creature.get("element", "")
+		var is_mismatched = tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral"
+		
+		# 手札に該当タイルと一致する属性のクリーチャーがいるか
+		var can_improve = hand_elements.has(tile_element)
+		
+		candidates.append({
+			"type": "creature",
+			"tile_index": tile.get("index", -1),
+			"creature": creature,
+			"is_mismatched": is_mismatched,
+			"can_improve": can_improve
+		})
+	
+	if candidates.is_empty():
+		return {}
+	
+	# ソート：改善可能 & 属性不一致を優先
+	candidates.sort_custom(func(a, b):
+		# 改善可能かつ属性不一致が最優先
+		var a_priority = 0
+		var b_priority = 0
+		if a.can_improve and a.is_mismatched:
+			a_priority = 2
+		elif a.is_mismatched:
+			a_priority = 1
+		if b.can_improve and b.is_mismatched:
+			b_priority = 2
+		elif b.is_mismatched:
+			b_priority = 1
+		return a_priority > b_priority
+	)
+	
+	return candidates[0]
+
+## 移動侵略スペル用：勝てる自クリーチャーをターゲットとして返す
+## アウトレイジ、チャリオット等で使用
+## contextにspell情報がある場合、スペルの移動距離を考慮
+func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
+	var player_id = context.get("player_id", 0)
+	
+	if not board_system or not condition_checker or not condition_checker._battle_simulator:
+		return {}
+	
+	# スペル情報から移動距離を取得
+	var spell = context.get("spell", {})
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	var steps = 1  # デフォルト: 隣接（アウトレイジ）
+	var exact_steps = false
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		if effect_type == "move_steps":
+			steps = effect.get("steps", 2)
+			exact_steps = effect.get("exact_steps", false)
+			break
+		elif effect_type == "move_to_adjacent_enemy":
+			steps = 1
+			exact_steps = false
+			break
+	
+	# 自クリーチャーを取得（盤面上）
+	var own_creatures = condition_checker._get_own_creatures_on_board(player_id)
+	if own_creatures.is_empty():
+		return {}
+	
+	# 勝てる組み合わせを収集
+	var winning_combos = []
+	var battle_simulator = condition_checker._battle_simulator
+	
+	for own_tile in own_creatures:
+		var attacker = own_tile.get("creature", {})
+		if attacker.is_empty():
+			continue
+		
+		var from_tile = own_tile.get("tile_index", -1)
+		if from_tile < 0:
+			continue
+		
+		# 移動可能な敵領地を取得
+		var reachable_enemies = condition_checker._get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
+		
+		for enemy_tile in reachable_enemies:
+			var defender = enemy_tile.get("creature", {})
+			if defender.is_empty():
+				continue
+			
+			# シミュレーション
+			var sim_tile_info = {
+				"element": enemy_tile.get("element", ""),
+				"level": enemy_tile.get("level", 1),
+				"owner": enemy_tile.get("owner", -1),
+				"tile_index": enemy_tile.get("tile_index", -1)
+			}
+			
+			# まず両方アイテムなしでシミュレーション（攻撃の最低条件）
+			var base_result = battle_simulator.simulate_battle(
+				attacker,
+				defender,
+				sim_tile_info,
+				player_id,
+				{},
+				{}
+			)
+			
+			var base_win = base_result.get("result", -1) == condition_checker.BattleSimulatorScript.BattleResult.ATTACKER_WIN
+			if not base_win:
+				continue  # 両方アイテムなしで勝てない → 候補外
+			
+			# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+			var worst_case_win = condition_checker._check_worst_case_win(attacker, defender, sim_tile_info, player_id)
+			
+			if worst_case_win:
+				# オーバーキル計算（低いほど効率的）
+				var overkill = base_result.get("attacker_ap", 0) - base_result.get("defender_hp", 0)
+				winning_combos.append({
+					"own_tile_index": own_tile.get("tile_index", -1),
+					"enemy_tile_index": enemy_tile.get("tile_index", -1),
+					"attacker": attacker,
+					"defender": defender,
+					"enemy_level": enemy_tile.get("level", 1),
+					"overkill": max(0, overkill)
+				})
+	
+	if winning_combos.is_empty():
+		return {}
+	
+	# 優先順位：敵土地レベルが高い > オーバーキルが低い
+	winning_combos.sort_custom(func(a, b):
+		if a.enemy_level != b.enemy_level:
+			return a.enemy_level > b.enemy_level
+		return a.overkill < b.overkill
+	)
+	
+	var best = winning_combos[0]
+	
+	return {
+		"type": "creature",
+		"tile_index": best.own_tile_index,
+		"creature": best.attacker,
+		"enemy_tile_index": best.enemy_tile_index  # CPUが選んだ移動先
+	}
+
+## 属性変更スペルの最適ターゲットを取得
+## 変更先属性とクリーチャーの属性が一致し、現在土地属性が不一致の土地を選ぶ
+func get_best_element_shift_target(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	# 変更先属性を取得
+	var target_element = ""
+	for effect in effects:
+		if effect.get("effect_type") == "change_element":
+			target_element = effect.get("element", "")
+			break
+	
+	if target_element.is_empty():
+		return {}
+	
+	if not board_system:
+		return {}
+	
+	var player_id = context.get("player_id", 0)
+	var tiles = board_system.get_all_tiles()
+	
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id:
+			continue
+		
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if not creature or creature.is_empty():
+			continue
+		
+		var tile_element = tile.get("element", "")
+		var creature_element = creature.get("element", "")
+		
+		# クリーチャーの属性が変更先属性と一致し、土地属性が不一致の場合
+		if creature_element == target_element and tile_element != target_element:
+			return {"type": "land", "tile_index": tile.get("index", -1)}
+	
+	# 見つからなければ空を返す（使用しない方がいい）
+	return {}
+
+# =============================================================================
+# ゲート・チェックポイント関連
+# =============================================================================
+
+## 進行方向から最も遠い未訪問ゲートを取得（リミッション用）
+func get_farthest_unvisited_gate(context: Dictionary) -> Dictionary:
+	var player_id = context.get("player_id", 0)
+	
+	if not lap_system or not board_system:
+		return {}
+	
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	var required_checkpoints = lap_system.required_checkpoints
+	
+	# 未訪問ゲートを収集
+	var unvisited_gates = []
+	for checkpoint in required_checkpoints:
+		if not player_state.get(checkpoint, false):
+			var tile_index = _get_checkpoint_tile_index(checkpoint)
+			if tile_index >= 0:
+				unvisited_gates.append({
+					"type": "unvisited_gate",
+					"checkpoint": checkpoint,
+					"tile_index": tile_index
+				})
+	
+	if unvisited_gates.is_empty():
+		return {}
+	
+	if unvisited_gates.size() == 1:
+		return unvisited_gates[0]
+	
+	# プレイヤーの現在位置を取得
+	var current_tile = _get_player_current_tile(player_id)
+	
+	# 進行方向での距離を計算し、最も遠いものを選択
+	var farthest_gate = null
+	var max_distance = -1
+	
+	for gate in unvisited_gates:
+		var dist = _calculate_forward_distance(current_tile, gate.tile_index, player_id)
+		if dist > max_distance:
+			max_distance = dist
+			farthest_gate = gate
+	
+	return farthest_gate if farthest_gate else {}
+
+## チェックポイントのタイルインデックスを取得
+func _get_checkpoint_tile_index(checkpoint_type: String) -> int:
+	if not board_system:
+		return -1
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var tile_type = tile.get("tile_type", "")
+		if tile_type == checkpoint_type:
+			return tile.get("index", -1)
+		
+		# checkpoint_typeが"gate_N"形式の場合
+		var cp_type = _get_checkpoint_type_string(tile)
+		if cp_type == checkpoint_type:
+			return tile.get("index", -1)
+	
+	return -1
+
+## タイルからチェックポイントタイプ文字列を取得
+func _get_checkpoint_type_string(tile) -> String:
+	var tile_type = tile.get("tile_type", "")
+	if tile_type == "gate":
+		var gate_number = tile.get("gate_number", tile.get("checkpoint_number", 0))
+		return "gate_%d" % gate_number
+	elif tile_type.begins_with("gate_"):
+		return tile_type
+	return tile_type
+
+# =============================================================================
+# ヘルパー関数
+# =============================================================================
+
+## 敵プレイヤー取得
+func get_enemy_players(context: Dictionary) -> Array:
+	var player_id = context.player_id
+	var results = []
+	
+	if not player_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i != player_id:
+			results.append({"type": "player", "player_id": i})
+	
+	return results
+
+## 土地ターゲット取得
+func get_land_targets(owner_filter: String, context: Dictionary) -> Array:
+	var player_id = context.player_id
+	var results = []
+	
+	if not board_system:
+		return results
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		
+		match owner_filter:
+			"own":
+				if owner_id != player_id:
+					continue
+			"enemy":
+				if owner_id == player_id or owner_id == -1:
+					continue
+			"any":
+				pass
+		
+		results.append({"type": "land", "tile_index": tile.get("index", -1)})
+	
+	return results
+
+## 指定レベル以上の敵土地をレベル降順でソートして取得
+func get_enemy_lands_by_level_sorted(player_id: int, min_level: int) -> Array:
+	var results = []
+	
+	if not board_system:
+		return results
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var level = tile.get("level", 1)
+		if level >= min_level:
+			results.append(tile)
+	
+	# レベル降順でソート（最もレベルが高いものを優先）
+	results.sort_custom(func(a, b): return a.get("level", 1) > b.get("level", 1))
+	
+	return results
+
+## プレイヤーの現在位置を取得
+func _get_player_current_tile(player_id: int) -> int:
+	if board_system and "movement_controller" in board_system and board_system.movement_controller:
+		return board_system.movement_controller.get_player_tile(player_id)
+	if player_system:
+		return player_system.get_player_position(player_id)
+	return 0
+
+## プレイヤーの進行方向での距離を計算
+func _calculate_forward_distance(from_tile: int, to_tile: int, player_id: int) -> int:
+	if not board_system or not "tile_neighbor_system" in board_system:
+		return abs(to_tile - from_tile)
+	
+	var neighbor_system = board_system.tile_neighbor_system
+	if not neighbor_system:
+		return abs(to_tile - from_tile)
+	
+	# プレイヤーの進行方向を取得
+	var direction = 1
+	if player_system and player_id < player_system.players.size():
+		direction = player_system.players[player_id].current_direction
+	
+	# 進行方向のみで探索
+	var current = from_tile
+	var came_from = -1
+	var dist = 0
+	var max_steps = 100  # 無限ループ防止
+	
+	while dist < max_steps:
+		# 次のタイルを取得（進行方向のみ）
+		var next_tile = _get_next_tile_in_direction(current, came_from, direction)
+		if next_tile < 0:
+			break
+		
+		dist += 1
+		
+		if next_tile == to_tile:
+			return dist
+		
+		came_from = current
+		current = next_tile
+	
+	return 9999  # 到達不可
+
+## 進行方向で次のタイルを取得
+func _get_next_tile_in_direction(current_tile: int, came_from: int, direction: int) -> int:
+	if not board_system:
+		return current_tile + direction
+	
+	# tile_neighbor_systemを使用
+	if "tile_neighbor_system" in board_system and board_system.tile_neighbor_system:
+		var neighbor_system = board_system.tile_neighbor_system
+		if neighbor_system.has_method("get_sequential_neighbors"):
+			var neighbors = neighbor_system.get_sequential_neighbors(current_tile)
+			var choices = []
+			for n in neighbors:
+				if n != came_from:
+					choices.append(n)
+			
+			if choices.is_empty():
+				return came_from if came_from >= 0 else current_tile + direction
+			if choices.size() == 1:
+				return choices[0]
+			
+			# 複数選択肢がある場合、方向に基づいて選択
+			choices.sort()
+			if direction > 0:
+				return choices[-1]
+			else:
+				return choices[0]
+	
+	# フォールバック: 単純に+direction
+	return current_tile + direction

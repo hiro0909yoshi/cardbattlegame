@@ -5,13 +5,50 @@
 CPUプレイヤーのバトル時の判断ロジックについて記載する。
 攻撃側・防御側それぞれで異なる判断基準を持ち、BattleSimulatorによるシミュレーションを活用して最適な行動を選択する。
 
-## 関連ファイル
+## ファイル構成
+
+### CPU AIコアファイル（scripts/cpu_ai/）
+
+| ファイル | 役割 | 行数 |
+|---------|------|------|
+| `cpu_battle_ai.gd` | バトル評価、アイテム選択、ワーストケース判定 | 838 |
+| `cpu_merge_evaluator.gd` | 合体判断、合体シミュレーション | 181 |
+| `battle_simulator.gd` | バトル結果シミュレーター | 556 |
+| `cpu_hand_utils.gd` | 手札アクセスユーティリティ | 308 |
+| `cpu_ai_handler.gd` | CPU判断のエントリーポイント | 277 |
+| `cpu_turn_processor.gd` | CPUターン処理フロー制御 | 492 |
+
+### 関連ファイル
 
 | ファイル | 役割 |
 |---------|------|
-| `scripts/cpu_ai/battle_simulator.gd` | バトル結果シミュレーター（305行） |
 | `scripts/game_flow/item_phase_handler.gd` | 防御側アイテム・援護判断 |
 | `scripts/tile_action_processor.gd` | 攻撃判断・バトル開始処理 |
+
+### ファイル責務
+
+**cpu_battle_ai.gd**
+- `evaluate_all_combinations_for_battle()` - クリーチャー×アイテムの全組み合わせ評価
+- `simulate_worst_case()` - 敵の対抗手段を考慮したワーストケース判定
+- `find_item_to_beat_worst_case()` - ワーストケースに勝つアイテム探索
+- 即死ギャンブル判断
+- 無効化+即死優先判断
+
+**cpu_merge_evaluator.gd**
+- `check_merge_option_for_attack()` - 攻撃側合体判断
+- `check_merge_option_for_defense()` - 防御側合体判断
+- `simulate_attack_with_merge()` - 合体後シミュレーション
+
+**battle_simulator.gd**
+- `simulate_battle()` - バトル結果シミュレーション
+- スキル効果・アイテム効果・土地ボーナス計算
+- 先制/後手/2回攻撃/反射等の処理
+
+**cpu_hand_utils.gd**
+- 手札からクリーチャー/アイテム抽出
+- コスト計算
+- 敵手札参照（密命カード除外）
+- アイテム破壊/盗みスキル検出
 
 ---
 
@@ -630,3 +667,5 @@ CPUが攻撃を仕掛ける際、敵（防御側）が使用可能な対抗手�
 | 2026-01-05 | 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション設計追加 |
 | 2026-01-05 | CPU性格パラメータ（将来拡張用）の設計追加 |
 | 2026-01-06 | アイテム破壊・盗みスキル対策を実装（敵がスキルを持つ場合はアイテム使用を控える） |
+| 2026-01-06 | ファイル構成を分割計画に合わせて更新 |
+| 2026-01-06 | cpu_merge_evaluator.gd分離完了、実際の行数に更新 |

@@ -595,7 +595,7 @@
       },
       "cpu_rule": {
         "pattern": "condition",
-        "condition": "has_bad_world_curse",
+        "condition": "has_world_curse",
         "priority": "medium_high"
       }
     },

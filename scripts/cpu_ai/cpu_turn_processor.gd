@@ -490,14 +490,3 @@ func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
 	
 	return magic >= cost
 
-# === 拡張用インターフェース ===
-
-# 難易度設定（将来実装用）
-func set_difficulty(_level: String):
-	pass
-	# TODO: 難易度に応じた処理変更
-
-# CPU性格設定（将来実装用）
-func set_personality(_type: String):
-	pass
-	# TODO: 性格に応じた戦略変更

@@ -226,15 +226,7 @@ func has_pending_merge() -> bool:
 		return battle_ai.has_pending_merge()
 	return false
 
-# ============================================================
-# 手札アクセサ（互換性のため委譲）
-# ============================================================
 
-## 支払い可能なカードを検索
-func find_affordable_cards(current_player) -> Array:
-	if hand_utils:
-		return hand_utils.find_affordable_cards(current_player)
-	return []
 
 ## カードが支払い可能かチェック
 func can_afford_card(current_player, card_index: int) -> bool:
