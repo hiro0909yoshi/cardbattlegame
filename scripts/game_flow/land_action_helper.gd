@@ -10,6 +10,12 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 		return false
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		print("[LandActionHelper] レベルアップ失敗: タイル%d はダウン中" % handler.selected_tile_index)
+		return false
+	
 	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
 	var current_player = p_system.get_current_player() if p_system else null
 	
@@ -69,6 +75,12 @@ static func execute_level_up(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
+		return false
+	
 	# 最大レベルチェック
 	if tile.level >= 5:
 		if handler.ui_manager and handler.ui_manager.phase_label:
@@ -108,11 +120,20 @@ static func execute_move_creature(handler) -> bool:
 	# 移動元を保存
 	handler.move_source_tile = handler.selected_tile_index
 	
-	# 移動先選択モードに移行
-	handler.current_state = handler.State.SELECTING_MOVE_DEST
+	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.selected_tile_index):
+		return false
 	
 	# 移動可能なマスを取得（空地移動対応）
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
+		return false
+	
+	# 移動先選択モードに移行
+	handler.current_state = handler.State.SELECTING_MOVE_DEST
 	var creature_data = tile.creature_data
 	
 	# MovementHelperを使用して移動先を取得
@@ -193,6 +214,14 @@ static func execute_swap_creature(handler) -> bool:
 	
 	# 選択した土地を取得
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.selected_tile_index):
+		return false
+	
+	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
 		return false
 	
 	var tile_info = handler.board_system.get_tile_info(handler.selected_tile_index)
@@ -585,6 +614,13 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
 		return false
 	
+	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		print("[LandActionHelper] 属性変更失敗: タイル%d はダウン中" % handler.selected_tile_index)
+		return false
+	
 	var tile_index = handler.selected_tile_index
 	
 	# TileActionProcessorに処理中フラグを設定
@@ -624,8 +660,8 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		handler.player_system.add_magic(current_player.id, cost)
 		return false
 	
-	# タイルを取得（新しいタイルインスタンス）
-	var tile = handler.board_system.tile_nodes[tile_index]
+	# タイルを再取得（属性変更後のインスタンス）
+	tile = handler.board_system.tile_nodes[tile_index]
 	
 	# コマンド成長呪いトリガー（ドミナントグロース）
 	_trigger_command_growth(handler, tile_index)
@@ -661,6 +697,14 @@ static func execute_terrain_change(handler) -> bool:
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
 		return false
 	
+	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
+	
+	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	if tile.has_method("is_down") and tile.is_down():
+		if handler.ui_manager and handler.ui_manager.phase_label:
+			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
+		return false
+	
 	var tile_index = handler.selected_tile_index
 	
 	# ソリッドワールド（土地変性無効）チェック - SpellWorldCurseに委譲
@@ -680,7 +724,6 @@ static func execute_terrain_change(handler) -> bool:
 	handler.current_terrain_index = 0
 	
 	# 地形選択パネルを表示
-	var tile = handler.board_system.tile_nodes[tile_index]
 	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
 	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
 	var current_player = p_system.get_current_player() if p_system else null

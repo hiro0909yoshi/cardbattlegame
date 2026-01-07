@@ -151,12 +151,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
-	# 特殊タイルの場合はアクション完了（召喚/戦闘なし）
-	var is_special = _is_special_tile(tile.tile_type)
-	if is_special:
-		_complete_action()
-		return
-	
+	# CPUはcpu_turn_processorで処理（特殊タイルでも領地コマンドを検討）
 	if cpu_turn_processor:
 		cpu_turn_processor.process_cpu_turn(tile, tile_info, player_index)
 	else:

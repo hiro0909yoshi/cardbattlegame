@@ -87,9 +87,30 @@ func can_afford_card(current_player, card_index: int) -> bool:
 	var cost = calculate_card_cost(card_data, current_player.id)
 	return current_player.magic_power >= cost
 
-## 召喚用の最適カードを選択
-func select_best_summon_card(current_player, affordable_cards: Array) -> int:
-	# 簡易実装：最も安いカードを選択
+## 召喚用の最適カードを選択（属性一致優先）
+func select_best_summon_card(current_player, affordable_cards: Array, tile_element: String = "") -> int:
+	if affordable_cards.is_empty():
+		return -1
+	
+	# 属性一致カードを探す
+	if not tile_element.is_empty():
+		var matching_cards = []
+		for index in affordable_cards:
+			var card = card_system.get_card_data_for_player(current_player.id, index)
+			if card.is_empty():
+				continue
+			var card_element = card.get("element", "")
+			# 属性一致またはneutralタイルならOK
+			if card_element == tile_element or tile_element == "neutral":
+				matching_cards.append(index)
+		
+		# 属性一致カードがあれば、その中から最も安いものを選択
+		if not matching_cards.is_empty():
+			print("[CPU HandUtils] 属性一致カード発見: %d枚" % matching_cards.size())
+			return select_cheapest_from_list(current_player, matching_cards)
+	
+	# 属性一致がなければ最も安いカードを選択
+	print("[CPU HandUtils] 属性一致なし、最安カードを選択")
 	return select_cheapest_from_list(current_player, affordable_cards)
 
 ## 最も安いカードを選択

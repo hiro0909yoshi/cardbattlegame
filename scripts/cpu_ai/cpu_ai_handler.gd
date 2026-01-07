@@ -7,6 +7,7 @@ extends Node
 signal summon_decided(card_index: int)
 signal battle_decided(creature_index: int, item_index: int)
 signal level_up_decided(do_upgrade: bool)
+signal territory_command_decided(command: Dictionary)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -28,6 +29,7 @@ var game_flow_manager_ref = null
 # 分割されたAIモジュール
 var hand_utils: CPUHandUtils = null
 var battle_ai: CPUBattleAI = null
+var territory_ai: CPUTerritoryAI = null
 
 func _ready():
 	pass
@@ -49,6 +51,12 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 	battle_ai = CPUBattleAI.new()
 	battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, game_flow_manager_ref)
 	battle_ai.set_hand_utils(hand_utils)
+	
+	# 領地コマンドAIを初期化
+	territory_ai = CPUTerritoryAI.new()
+	# creature_managerはBaseTileの静的参照から取得
+	var creature_manager = BaseTile.creature_manager if BaseTile.creature_manager else null
+	territory_ai.setup(board_system, card_system, player_system, creature_manager)
 
 # GameFlowManagerを後から設定
 func set_game_flow_manager(gf_manager) -> void:
@@ -60,8 +68,8 @@ func set_game_flow_manager(gf_manager) -> void:
 # 判断メソッド（外部から呼ばれる）
 # ============================================================
 
-# CPU召喚判断
-func decide_summon(current_player) -> void:
+# CPU召喚判断（タイル属性を考慮）
+func decide_summon(current_player, tile_element: String = "") -> void:
 	decision_attempts += 1
 	
 	# 最大試行回数チェック
@@ -76,12 +84,16 @@ func decide_summon(current_player) -> void:
 		emit_signal("summon_decided", -1)
 		return
 	
-	# 確率で召喚を決定
-	if randf() < GameConstants.CPU_SUMMON_RATE:
-		var card_index = hand_utils.select_best_summon_card(current_player, affordable_cards)
-		if card_index >= 0:
-			var card = card_system.get_card_data_for_player(current_player.id, card_index)
-			print("[CPU AI] 召喚: %s" % card.get("name", "?"))
+	# 属性一致カードを優先選択
+	var card_index = hand_utils.select_best_summon_card(current_player, affordable_cards, tile_element)
+	if card_index >= 0:
+		var card = card_system.get_card_data_for_player(current_player.id, card_index)
+		var card_element = card.get("element", "")
+		
+		# 属性一致なら必ず召喚、不一致なら確率で召喚
+		var is_element_match = (card_element == tile_element or tile_element == "neutral")
+		if is_element_match or randf() < GameConstants.CPU_SUMMON_RATE:
+			print("[CPU AI] 召喚: %s (属性: %s, タイル: %s)" % [card.get("name", "?"), card_element, tile_element])
 			decision_attempts = 0
 			emit_signal("summon_decided", card_index)
 			return
@@ -185,6 +197,178 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 	else:
 		decision_attempts = 0
 		emit_signal("level_up_decided", false)
+
+# ============================================================
+# 領地コマンド判断
+# ============================================================
+
+## 領地コマンド判断（召喚フェーズ用）
+## 召喚 vs 領地コマンドのどちらが得かを判断
+func decide_territory_command(current_player, tile_info: Dictionary, situation: String = "own_land") -> void:
+	decision_attempts += 1
+	
+	if decision_attempts > MAX_DECISION_ATTEMPTS:
+		decision_attempts = 0
+		emit_signal("territory_command_decided", {})
+		return
+	
+	if territory_ai == null:
+		print("[CPU AI] territory_ai未初期化")
+		decision_attempts = 0
+		emit_signal("territory_command_decided", {})
+		return
+	
+	# コンテキストを構築
+	var context = _build_territory_context(current_player, tile_info, situation)
+	
+	# 全オプションを評価
+	var best_option = territory_ai.evaluate_all_options(context)
+	
+	if best_option.is_empty():
+		print("[CPU AI] 領地コマンド: 有効なオプションなし")
+		decision_attempts = 0
+		emit_signal("territory_command_decided", {})
+		return
+	
+	print("[CPU AI] 領地コマンド決定: %s (スコア: %d)" % [best_option.get("type", "?"), best_option.get("score", 0)])
+	decision_attempts = 0
+	emit_signal("territory_command_decided", best_option)
+
+
+## 召喚 vs 領地コマンドを比較して最適な行動を返す
+func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
+	print("[CPU Territory] decide_summon_or_territory 開始")
+	print("[CPU Territory] tile_info: %s" % tile_info)
+	
+	if territory_ai == null:
+		print("[CPU Territory] territory_ai is null → 召喚")
+		return {"action": "summon"}
+	
+	var context = _build_territory_context(current_player, tile_info, "empty_land")
+	print("[CPU Territory] context: %s" % context)
+	
+	# 属性一致クリーチャーがあれば召喚優先
+	var tile_element = tile_info.get("element", "")
+	var has_matching_creature = _has_matching_creature(current_player, tile_element)
+	print("[CPU Territory] tile_element: %s, has_matching_creature: %s" % [tile_element, has_matching_creature])
+	
+	if has_matching_creature:
+		print("[CPU Territory] 属性一致クリーチャーあり → 召喚優先")
+		return {"action": "summon"}
+	
+	# 領地コマンドを評価
+	print("[CPU Territory] 領地コマンドを評価中...")
+	var best_option = territory_ai.evaluate_all_options(context)
+	print("[CPU Territory] best_option: %s" % best_option)
+	
+	if best_option.is_empty():
+		print("[CPU Territory] 有効なオプションなし → 召喚")
+		return {"action": "summon"}
+	
+	# 属性不一致召喚のスコアは低い
+	var summon_score = CPUTerritoryAI.SUMMON_MISMATCH_SCORE
+	var command_score = best_option.get("score", 0)
+	print("[CPU Territory] summon_score(不一致): %d, command_score: %d" % [summon_score, command_score])
+	
+	if command_score > summon_score:
+		print("[CPU Territory] 領地コマンド選択: %s" % best_option.get("type", "?"))
+		return {"action": "territory_command", "command": best_option}
+	
+	print("[CPU Territory] スコア不足 → 召喚")
+	return {"action": "summon"}
+
+
+## 敵領地での判断（侵略 vs 領地コマンド）
+func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
+	if territory_ai == null:
+		return {"action": "battle"}
+	
+	var context = _build_territory_context(current_player, tile_info, "enemy_land")
+	
+	# 戦闘可能か判定
+	var can_win = _can_win_current_battle(current_player, tile_info)
+	
+	if not can_win:
+		# 倒せない場合は領地コマンドを検討
+		var best_option = territory_ai.evaluate_all_options(context)
+		if not best_option.is_empty():
+			return {"action": "territory_command", "command": best_option}
+		return {"action": "skip"}
+	
+	# 倒せる場合は侵略スコアと領地コマンドスコアを比較
+	var best_option = territory_ai.evaluate_all_options(context)
+	
+	# 侵略スコアを計算（territory_aiの_evaluate_invasionと同じ計算）
+	var tile = board_system.tile_nodes.get(tile_info.get("index", -1))
+	if tile == null:
+		return {"action": "battle"}
+	
+	var chain_bonus = board_system.tile_data_manager.calculate_chain_bonus(tile_info.get("index", 0), tile.owner_id)
+	var level = tile.level
+	var invasion_score = (level * chain_bonus * 100 + 50) * 2  # ×2は敵資産減少
+	
+	var command_score = best_option.get("score", 0)
+	
+	if command_score > invasion_score:
+		return {"action": "territory_command", "command": best_option}
+	
+	return {"action": "battle"}
+
+
+## 領地コマンド用コンテキストを構築
+func _build_territory_context(current_player, tile_info: Dictionary, situation: String) -> Dictionary:
+	var toll = 0
+	if situation == "enemy_land":
+		toll = tile_info.get("toll", 0)
+	
+	return {
+		"player_id": current_player.id,
+		"current_magic": current_player.magic_power,
+		"current_tile_index": tile_info.get("index", -1),
+		"situation": situation,
+		"toll": toll
+	}
+
+
+## 属性一致クリーチャーを持っているかチェック
+func _has_matching_creature(current_player, tile_element: String) -> bool:
+	if hand_utils == null:
+		print("[CPU Territory] _has_matching_creature: hand_utils is null")
+		return false
+	
+	var creatures = hand_utils.get_creatures_from_hand(current_player.id)
+	print("[CPU Territory] _has_matching_creature: tile_element=%s, creatures count=%d" % [tile_element, creatures.size()])
+	
+	for creature_entry in creatures:
+		# get_creatures_from_handは{"index": i, "data": card}を返す
+		var card_index = creature_entry.get("index", -1)
+		var card_data = creature_entry.get("data", {})
+		var creature_element = card_data.get("element", "")
+		var creature_name = card_data.get("name", "?")
+		var can_afford = hand_utils.can_afford_card(current_player, card_index)
+		print("[CPU Territory]   - %s (element=%s, can_afford=%s)" % [creature_name, creature_element, can_afford])
+		
+		if creature_element == tile_element or tile_element == "neutral":
+			if can_afford:
+				print("[CPU Territory]   → 属性一致で購入可能!")
+				return true
+	
+	print("[CPU Territory] _has_matching_creature: 属性一致クリーチャーなし")
+	return false
+
+
+## 現在のタイルでの戦闘に勝てるかチェック
+func _can_win_current_battle(current_player, tile_info: Dictionary) -> bool:
+	if battle_ai == null:
+		return false
+	
+	var defender = tile_info.get("creature", {})
+	if defender.is_empty():
+		return true  # クリーチャーがいなければ勝ち
+	
+	var best_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
+	return best_result.get("can_win", false)
+
 
 # ============================================================
 # ユーティリティメソッド（互換性のため残す）

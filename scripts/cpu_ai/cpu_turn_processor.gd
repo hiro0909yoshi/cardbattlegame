@@ -57,9 +57,9 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	
 	match situation:
 		"special_tile":
-			# 特殊タイル（チェックポイント等）では何もせず完了
-			print("CPU: 特殊タイル - アクションなし")
-			_complete_action()
+			# 特殊タイル（チェックポイント等）では領地コマンドを検討
+			print("CPU: 特殊タイル - 領地コマンド検討")
+			_process_special_tile(current_player, tile_info)
 		"empty_land":
 			_process_empty_land(current_player)
 		"own_land":
@@ -118,23 +118,36 @@ func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String
 
 # === 各状況の処理 ===
 
+# 特殊タイルの処理（チェックポイント、カードタイル等）
+func _process_special_tile(current_player, tile_info: Dictionary):
+	# 特殊タイルでは召喚不可、領地コマンドのみ検討
+	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
+	cpu_ai_handler.decide_territory_command(current_player, tile_info, "special_tile")
+
 # 空き地の処理
 func _process_empty_land(current_player):
-	if card_system.get_hand_size_for_player(current_player.id) > 0:
+	var current_tile = board_system.movement_controller.get_player_tile(current_player.id)
+	var tile_info = board_system.get_tile_info(current_tile)
+	var tile_element = tile_info.get("element", "")
+	
+	# 召喚 vs 領地コマンドを比較
+	var decision = cpu_ai_handler.decide_summon_or_territory(current_player, tile_info)
+	
+	if decision.get("action") == "territory_command":
+		var command = decision.get("command", {})
+		print("[CPU] 領地コマンドを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
+		_execute_territory_command(current_player, command)
+	elif card_system.get_hand_size_for_player(current_player.id) > 0:
 		cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided, CONNECT_ONE_SHOT)
-		cpu_ai_handler.decide_summon(current_player)
+		cpu_ai_handler.decide_summon(current_player, tile_element)
 	else:
 		_complete_action()
 
 # 自分の土地の処理
-func _process_own_land(current_player, tile: BaseTile, tile_info: Dictionary):
-	if tile.level < GameConstants.MAX_LEVEL:
-		cpu_ai_handler.level_up_decided.connect(_on_cpu_level_up_decided, CONNECT_ONE_SHOT)
-		cpu_ai_handler.decide_level_up(current_player, tile_info)
-	else:
-		# レベルMAXの場合は即座に完了
-		print("CPU: レベルMAXの自分の土地")
-		_complete_action()
+func _process_own_land(current_player, _tile: BaseTile, tile_info: Dictionary):
+	# 領地コマンドを評価
+	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
+	cpu_ai_handler.decide_territory_command(current_player, tile_info, "own_land")
 
 # 敵の空き地（侵略可能）の処理
 func _process_enemy_land_empty(current_player, tile_info: Dictionary):
@@ -143,17 +156,56 @@ func _process_enemy_land_empty(current_player, tile_info: Dictionary):
 
 # 敵の防御地の処理
 func _process_enemy_land_defended(current_player, tile_info: Dictionary):
-	cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
-	cpu_ai_handler.decide_battle(current_player, tile_info)
+	# 侵略 vs 領地コマンドを比較
+	var decision = cpu_ai_handler.decide_invasion_or_territory(current_player, tile_info)
+	
+	if decision.get("action") == "territory_command":
+		var command = decision.get("command", {})
+		print("[CPU] 敵領地で領地コマンドを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
+		_execute_territory_command(current_player, command)
+	elif decision.get("action") == "battle":
+		cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
+		cpu_ai_handler.decide_battle(current_player, tile_info)
+	else:
+		# skip: 倒せないし有効な領地コマンドもない
+		print("[CPU] 通行料を支払います")
+		_complete_action()
 
 # === コールバック処理 ===
+
+# 領地コマンド決定後の処理
+func _on_territory_command_decided(command: Dictionary):
+	if command.is_empty():
+		print("[CPU] 領地コマンド: 有効なオプションなし")
+		_complete_action()
+		return
+	
+	var current_player = player_system.get_current_player()
+	_execute_territory_command(current_player, command)
 
 # CPU召喚決定後の処理
 func _on_cpu_summon_decided(card_index: int):
 	if card_index >= 0:
 		_execute_summon(card_index)
 	else:
+		# 召喚しなかった場合、領地コマンドを検討
+		_try_territory_command_instead()
+
+
+## 召喚しなかった場合に領地コマンドを検討
+func _try_territory_command_instead():
+	var current_player = player_system.get_current_player()
+	if current_player == null:
 		_complete_action()
+		return
+	
+	var current_tile = board_system.movement_controller.get_player_tile(current_player.id)
+	var tile_info = board_system.get_tile_info(current_tile)
+	
+	# 領地コマンドを評価
+	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
+	cpu_ai_handler.decide_territory_command(current_player, tile_info, "empty_land")
+
 
 # CPU侵略決定後の処理
 func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
@@ -490,3 +542,185 @@ func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
 	
 	return magic >= cost
 
+# ============================================================
+# 領地コマンド実行
+# ============================================================
+
+## LandCommandHandlerを取得
+func _get_land_command_handler():
+	if board_system and board_system.game_flow_manager:
+		return board_system.game_flow_manager.land_command_handler
+	return null
+
+## 領地コマンドを実行
+func _execute_territory_command(current_player, command: Dictionary):
+	var command_type = command.get("type", "")
+	
+	match command_type:
+		"level_up":
+			_execute_level_up_command(current_player, command)
+		"element_change":
+			_execute_element_change_command(current_player, command)
+		"move_invasion":
+			_execute_move_invasion_command(current_player, command)
+		"creature_swap":
+			_execute_creature_swap_command(current_player, command)
+		"invasion":
+			# 通常の侵略（敵領地に止まった場合）
+			var tile_index = command.get("tile_index", -1)
+			var tile_info = board_system.get_tile_info(tile_index)
+			cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
+			cpu_ai_handler.decide_battle(current_player, tile_info)
+		_:
+			print("[CPU] 不明な領地コマンド: %s" % command_type)
+			_complete_action()
+
+## レベルアップコマンドを実行（既存のLandCommandHandler経由）
+func _execute_level_up_command(_current_player, command: Dictionary):
+	var tile_index = command.get("tile_index", -1)
+	var target_level = command.get("target_level", 1)
+	var cost = command.get("cost", 0)
+	
+	if tile_index < 0:
+		_complete_action()
+		return
+	
+	# LandCommandHandlerを取得
+	var land_handler = _get_land_command_handler()
+	if land_handler == null:
+		print("[CPU] LandCommandHandler取得失敗")
+		_complete_action()
+		return
+	
+	# 選択タイルを設定
+	land_handler.selected_tile_index = tile_index
+	
+	# 既存のレベルアップ処理を使用
+	var success = land_handler.execute_level_up_with_level(target_level, cost)
+	
+	if success:
+		print("[CPU] レベルアップ: タイル%d → レベル%d (コスト: %dG)" % [tile_index, target_level, cost])
+	else:
+		print("[CPU] レベルアップ失敗: タイル%d" % tile_index)
+	
+	_complete_action()
+
+## 属性変更コマンドを実行（既存のLandCommandHandler経由）
+func _execute_element_change_command(_current_player, command: Dictionary):
+	var tile_index = command.get("tile_index", -1)
+	var new_element = command.get("new_element", "")
+	
+	if tile_index < 0 or new_element.is_empty():
+		_complete_action()
+		return
+	
+	# LandCommandHandlerを取得
+	var land_handler = _get_land_command_handler()
+	if land_handler == null:
+		print("[CPU] LandCommandHandler取得失敗")
+		_complete_action()
+		return
+	
+	# 選択タイルを設定
+	land_handler.selected_tile_index = tile_index
+	
+	# 既存の属性変更処理を使用
+	var success = LandActionHelper.execute_terrain_change_with_element(land_handler, new_element)
+	
+	if success:
+		print("[CPU] 属性変更: タイル%d → %s" % [tile_index, new_element])
+	else:
+		print("[CPU] 属性変更失敗: タイル%d" % tile_index)
+	
+	_complete_action()
+
+## 移動侵略コマンドを実行（既存のLandActionHelper参考）
+func _execute_move_invasion_command(current_player, command: Dictionary):
+	var from_tile_index = command.get("from_tile_index", -1)
+	var to_tile_index = command.get("to_tile_index", -1)
+	var target_type = command.get("target_type", "")
+	
+	if from_tile_index < 0 or to_tile_index < 0:
+		_complete_action()
+		return
+	
+	var from_tile = board_system.tile_nodes.get(from_tile_index)
+	var to_tile = board_system.tile_nodes.get(to_tile_index)
+	
+	if from_tile == null or to_tile == null:
+		_complete_action()
+		return
+	
+	if target_type == "vacant":
+		# 空き地への移動
+		_execute_move_to_vacant(current_player, from_tile, to_tile, from_tile_index, to_tile_index)
+	elif target_type == "enemy":
+		# 敵領地への移動侵略
+		_execute_move_to_enemy(current_player, from_tile, to_tile, from_tile_index, to_tile_index)
+	else:
+		_complete_action()
+
+## 空き地への移動を実行（LandActionHelper.execute_move_to_vacant参考）
+func _execute_move_to_vacant(current_player, from_tile: BaseTile, to_tile: BaseTile, from_index: int, to_index: int):
+	# LandCommandHandlerを取得
+	var land_handler = _get_land_command_handler()
+	if land_handler == null:
+		print("[CPU] LandCommandHandler取得失敗")
+		_complete_action()
+		return
+	
+	# 移動元と移動先を設定
+	land_handler.selected_tile_index = from_index
+	land_handler.move_source_tile = from_index
+	land_handler.move_destinations = [to_index]
+	land_handler.current_destination_index = 0
+	
+	# 既存の移動確定処理を呼び出し
+	LandActionHelper._confirm_move_selection(land_handler)
+	
+	print("[CPU] 移動: タイル%d → タイル%d (空き地)" % [from_index, to_index])
+	_complete_action()
+
+## 敵領地への移動侵略を実行
+func _execute_move_to_enemy(current_player, _from_tile: BaseTile, _to_tile: BaseTile, from_index: int, to_index: int):
+	var tile_info = board_system.get_tile_info(to_index)
+	
+	# TODO: 移動侵略用のバトル処理を実装
+	# 現状は通常のバトル判断にフォールバック
+	print("[CPU] 移動侵略: タイル%d → タイル%d (敵領地)" % [from_index, to_index])
+	
+	cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
+	cpu_ai_handler.decide_battle(current_player, tile_info)
+
+## クリーチャー交換コマンドを実行（既存のLandActionHelper経由）
+func _execute_creature_swap_command(_current_player, command: Dictionary):
+	var tile_index = command.get("tile_index", -1)
+	var hand_index = command.get("hand_index", -1)
+	
+	if tile_index < 0 or hand_index < 0:
+		_complete_action()
+		return
+	
+	# LandCommandHandlerを取得
+	var land_handler = _get_land_command_handler()
+	if land_handler == null:
+		print("[CPU] LandCommandHandler取得失敗")
+		_complete_action()
+		return
+	
+	# 選択タイルを設定
+	land_handler.selected_tile_index = tile_index
+	
+	# 交換モードを有効化
+	land_handler._swap_mode = true
+	land_handler._swap_tile_index = tile_index
+	
+	var tile = board_system.tile_nodes.get(tile_index)
+	if tile:
+		land_handler._swap_old_creature = tile.creature_data.duplicate()
+	
+	# カード選択をシミュレート
+	land_handler.on_card_selected_for_swap(hand_index)
+	
+	print("[CPU] クリーチャー交換: タイル%d, 手札インデックス%d" % [tile_index, hand_index])
+	_complete_action()

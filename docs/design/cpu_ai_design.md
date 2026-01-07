@@ -1,13 +1,17 @@
 # CPU AI 実装設計書
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 1.0  
+**バージョン**: 2.0  
 **作成日**: 2025年11月10日  
-**ステータス**: 部分実装済み（バトルAI・スペルAI実装完了）
+**最終更新**: 2026年1月6日  
+**ステータス**: コア機能実装済み（バトルAI・スペルAI・秘術AI）
 
-> **注**: 実装済みの詳細仕様は以下を参照:
-> - `docs/specs/cpu_battle_ai_spec.md` - バトル判断
+> **実装済み仕様書**:
+> - `docs/specs/cpu_battle_ai_spec.md` - バトル判断（攻撃・防御・合体・即死）
 > - `docs/specs/cpu_spell_ai_spec.md` - スペル/秘術判断
+
+> **本ドキュメントの位置づけ**:
+> 設計思想と将来の拡張計画を記載。コード例は参考実装であり、実際の実装とは異なる場合がある。
 
 ---
 
@@ -16,10 +20,12 @@
 1. [概要](#概要)
 2. [設計思想](#設計思想)
 3. [評価関数ベースAI](#評価関数ベースai)
-4. [シナジー評価](#シナジー評価)
-5. [先読み機能](#先読み機能)
-6. [難易度設定](#難易度設定)
-7. [実装ロードマップ](#実装ロードマップ)
+4. [シナジー評価（将来計画）](#シナジー評価将来計画)
+5. [先読み機能（将来計画）](#先読み機能将来計画)
+6. [難易度設定（将来計画）](#難易度設定将来計画)
+7. [実装状況](#実装状況)
+8. [デバッグ・調整方法](#デバッグ調整方法)
+9. [注意事項](#注意事項)
 
 ---
 
@@ -84,364 +90,76 @@ Level 60: デッキの勝ち筋を理解
 
 ## 評価関数ベースAI
 
-### 基本構造
+### 現在の実装
 
-```gdscript
-# scripts/ai/cpu_thinking.gd
-class_name CPUThinking
+バトル判断とスペル判断は評価関数ベースで実装済み。詳細は以下を参照:
 
-var deck_profile: Dictionary  # デッキの戦術プロファイル
-var difficulty_level: int  # 1-10
+- `docs/specs/cpu_battle_ai_spec.md` - バトル評価の詳細
+- `docs/specs/cpu_spell_ai_spec.md` - スペル評価の詳細
 
-## 行動を評価してスコアを返す
-func evaluate_action(action: Dictionary, game_state: Dictionary) -> float:
-	var score = 0.0
-	
-	# Level 1: 基本評価（全CPUが使用）
-	score += evaluate_basic_value(action)
-	
-	# Level 3+: テンポ評価（効率性）
-	if difficulty_level >= 3:
-		score += evaluate_tempo(action, game_state)
-	
-	# Level 5+: シナジー評価
-	if difficulty_level >= 5:
-		score += evaluate_synergy(action, game_state)
-	
-	# Level 7+: 先読み評価
-	if difficulty_level >= 7:
-		score += evaluate_future_turns(action, game_state)
-	
-	# デッキプロファイルによる補正
-	score *= get_archetype_multiplier(action)
-	
-	# ランダム要素（低難易度ほど大きい）
-	var random_factor = (10 - difficulty_level) * 0.05
-	score += randf_range(-random_factor, random_factor) * score
-	
-	return score
+### 将来の拡張ポイント
 
-## 最良の行動を選択
-func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
-	var best_action = null
-	var best_score = -INF
-	
-	for action in actions:
-		var score = evaluate_action(action, game_state)
-		
-		# デバッグログ
-		if OS.is_debug_build():
-			print("[AI] ", action.type, ": score=", score)
-		
-		if score > best_score:
-			best_score = score
-			best_action = action
-	
-	return best_action
-```
+難易度レベルや性格プロファイルを導入する場合、以下の変更が必要:
 
-### Level 1: 基本評価
-
-```gdscript
-func evaluate_basic_value(action: Dictionary) -> float:
-	var score = 0.0
-	
-	match action.type:
-		"summon":
-			var creature = action.creature
-			var cost = action.cost
-			
-			# クリーチャーの基本価値
-			score += creature.ap * 1.0
-			score += creature.hp * 0.5
-			
-			# コストはマイナス要素
-			score -= cost * 0.3
-			
-		"invade":
-			var my_creature = action.my_creature
-			var enemy_creature = action.enemy_creature
-			
-			# 勝てるなら高評価
-			if my_creature.ap > enemy_creature.hp:
-				score += 50.0
-				
-				# 生き残れるならさらに高評価
-				if my_creature.hp > enemy_creature.ap:
-					score += 30.0
-			else:
-				score -= 100.0  # 負けるなら低評価
-		
-		"level_up":
-			# 土地レベル上昇の価値
-			score += action.current_level * 10.0
-		
-		"use_spell":
-			# スペルの基本価値
-			score += 30.0  # 仮の値
-	
-	return score
-```
-
-### Level 3: テンポ評価
-
-```gdscript
-func evaluate_tempo(action: Dictionary, game_state: Dictionary) -> float:
-	var score = 0.0
-	
-	match action.type:
-		"summon":
-			var cost = action.cost
-			var my_magic = game_state.my_magic
-			
-			# 魔力効率
-			var efficiency = action.creature.ap / max(cost, 1)
-			score += efficiency * 10.0
-			
-			# 魔力を使い切らない方が良い
-			if my_magic - cost > 30:
-				score += 10.0
-		
-		"invade":
-			# 土地を奪えるなら高評価
-			if action.tile_owner != game_state.my_id:
-				score += 40.0
-	
-	return score
-```
+1. **CPUProfileクラスの追加**: 難易度・性格パラメータを保持
+2. **各AIクラスへの注入**: profile参照でスコア調整
+3. **統一的な行動比較**: 全行動を比較してベストを選ぶ仕組み
 
 ---
 
-## シナジー評価
+## シナジー評価（将来計画）
 
-### 最小限のシナジー定義
+### 概要
 
-#### デッキプロファイルの例
+デッキごとにカードの組み合わせ（シナジー）を評価し、より効果的な行動を選択する機能。
 
-```json
-{
-  "deck_id": 1,
-  "name": "炎速攻",
-  "archetype": "aggro",
-  "profile": {
-	"aggression": 0.8,
-	"resource_management": 0.3,
-	"combo_seeking": 0.4
-  },
-  "synergy_rules": [
-	{
-	  "name": "武器+先制",
-	  "item_type": "weapon",
-	  "creature_keywords": ["先制"],
-	  "bonus": 30.0,
-	  "reason": "先制で確実にダメージ"
-	},
-	{
-	  "name": "防具+低HP",
-	  "item_type": "armor",
-	  "creature_condition": "hp < 30",
-	  "bonus": 25.0
-	}
-  ],
-  "special_items": [
-	{
-	  "item_id": 1030,
-	  "name": "ソウルレイ",
-	  "bonus_multiplier": 1.3,
-	  "reason": "手札に戻るので積極的に使う"
-	}
-  ]
-}
-```
+### 実装方針
 
-#### シナジー評価の実装
+1. **デッキプロファイル**: JSONでデッキごとの戦術傾向を定義
+   - `archetype`: aggro / control / combo など
+   - `synergy_rules`: カード組み合わせルール
 
-```gdscript
-func evaluate_synergy(action: Dictionary, game_state: Dictionary) -> float:
-	var score = 0.0
-	
-	if action.type != "use_item":
-		return 0.0
-	
-	var item = action.item
-	var creature = action.creature
-	
-	# カテゴリルールチェック
-	for rule in deck_profile.synergy_rules:
-		if matches_synergy_rule(item, creature, rule):
-			score += rule.bonus
-			if OS.is_debug_build():
-				print("[シナジー] ", rule.name, " +", rule.bonus)
-	
-	# 特殊アイテムチェック
-	for special in deck_profile.special_items:
-		if item.id == special.item_id:
-			score *= special.bonus_multiplier
-			if OS.is_debug_build():
-				print("[特殊] ", special.name, " x", special.bonus_multiplier)
-	
-	return score
+2. **シナジールール例**:
+   - 武器 + 先制クリーチャー → ボーナス（先制で確実にダメージ）
+   - 防具 + 低HPクリーチャー → ボーナス（生存率向上）
 
-func matches_synergy_rule(item: Dictionary, creature: Dictionary, rule: Dictionary) -> bool:
-	# アイテムタイプチェック
-	if rule.has("item_type"):
-		if item.type != rule.item_type:
-			return false
-	
-	# クリーチャーキーワードチェック
-	if rule.has("creature_keywords"):
-		var keywords = creature.get("ability_parsed", {}).get("keywords", [])
-		var has_keyword = false
-		for kw in rule.creature_keywords:
-			if kw in keywords:
-				has_keyword = true
-				break
-		if not has_keyword:
-			return false
-	
-	# 条件チェック
-	if rule.has("creature_condition"):
-		if not evaluate_simple_condition(rule.creature_condition, creature):
-			return false
-	
-	return true
+3. **自然な評価との併用**:
+   - 90%のケースはBattleSimulatorの勝敗判定で対応可能
+   - シナジー評価は特殊なケースの補正として使用
 
-func evaluate_simple_condition(condition: String, creature: Dictionary) -> bool:
-	# 簡易的な条件評価
-	# 例: "hp < 30" → creature.hp < 30
-	if condition.contains("<"):
-		var parts = condition.split("<")
-		var stat = parts[0].strip_edges()
-		var value = int(parts[1].strip_edges())
-		return creature.get(stat, 0) < value
-	
-	return true
-```
+### 現状
 
-### 自然に評価されるシナジー（90%のケース）
-
-```gdscript
-func evaluate_item_on_creature(item: Dictionary, creature: Dictionary, battle: Dictionary) -> float:
-	var score = 0.0
-	
-	# 戦闘シミュレーション
-	var my_ap = creature.ap + item.get("ap_bonus", 0)
-	var my_hp = creature.hp + item.get("hp_bonus", 0)
-	var enemy_ap = battle.enemy.ap
-	var enemy_hp = battle.enemy.hp
-	
-	# 勝てるようになる？（最重要）
-	var can_win_without = creature.ap > enemy_hp
-	var can_win_with = my_ap > enemy_hp
-	
-	if can_win_with and not can_win_without:
-		score += 100.0  # 勝てるようになるなら超重要
-	
-	# 生き残れるようになる？
-	var survives_without = creature.hp > enemy_ap
-	var survives_with = my_hp > enemy_ap
-	
-	if survives_with and not survives_without:
-		score += 80.0  # 生き残れるなら重要
-	
-	# すでに勝てる場合は無駄遣い
-	if can_win_without and survives_without:
-		score -= 30.0
-	
-	return score
-```
-
-**このシンプルな評価だけで90%のケースは正しく判断できる**
+未実装。現在のバトルAIはBattleSimulatorによる勝敗判定のみ。
 
 ---
 
-## 先読み機能
+## 先読み機能（将来計画）
 
-### Level 1: 先読みなし（現在の状態だけ）
+### 概要
 
-```gdscript
-func should_invade_level1(my_creature: Dictionary, enemy_creature: Dictionary) -> bool:
-	# 今の戦闘だけ見る
-	return my_creature.ap > enemy_creature.hp
-```
+現在のターンだけでなく、数ターン先の状況を予測して判断する機能。
 
-### Level 2: 1ターン先読み（相手の反撃を考える）
+### 先読みレベル
 
-```gdscript
-func should_invade_level2(my_creature: Dictionary, enemy_creature: Dictionary) -> bool:
-	# 勝てるか？
-	if my_creature.ap <= enemy_creature.hp:
-		return false
-	
-	# 相手の反撃で生き残れるか？
-	var my_hp_after = my_creature.hp - enemy_creature.ap
-	if my_hp_after <= 0:
-		return false  # 相打ちは避ける
-	
-	return true
-```
+| レベル | 内容 | 例 |
+|--------|------|-----|
+| Level 1 | 先読みなし | AP > 敵HP なら攻撃 |
+| Level 2 | 1ターン先 | 勝てるか + 反撃で生き残れるか |
+| Level 3 | 2ターン先 | 勝利後、敵の次ターン侵略に耐えられるか |
 
-### Level 3: 2ターン先読み（簡易版）
+### 実装方針
 
-```gdscript
-func evaluate_invasion_with_lookahead(my_creature: Dictionary, tile_index: int, game_state: Dictionary) -> float:
-	var score = 0.0
-	
-	# 1. この戦闘に勝てるか？
-	var battle_result = simulate_battle(my_creature, game_state.enemy_creature)
-	if not battle_result.i_win:
-		return -100.0  # 負けるなら大幅マイナス
-	
-	# 2. 勝った後、次のターン敵が侵略してきたら？
-	if battle_result.i_survive:
-		var my_hp_after = battle_result.my_remaining_hp
-		
-		# 敵の手札から最強クリーチャーを推測
-		var estimated_enemy_best = estimate_enemy_strength(game_state)
-		
-		# そのクリーチャーで攻められたら耐えられる？
-		if my_hp_after > estimated_enemy_best.ap:
-			score += 30.0  # 耐えられるなら高評価
-		else:
-			score -= 20.0  # すぐやられるなら低評価
-	
-	return score
+1. **敵の強さ推測**: 敵の魔力から出せるクリーチャーを推測
+2. **リスク評価**: 勝利後に奪い返されるリスクを計算
+3. **スコア調整**: 先読み結果でスコアに補正
 
-func estimate_enemy_strength(game_state: Dictionary) -> Dictionary:
-	# 簡易版：敵の魔力から推測
-	var enemy_magic = game_state.enemy_magic
-	
-	if enemy_magic >= 50:
-		return {"ap": 40, "hp": 40}  # 強いの出せる
-	elif enemy_magic >= 30:
-		return {"ap": 30, "hp": 30}  # 中程度
-	else:
-		return {"ap": 20, "hp": 20}  # 弱い
+### 現状
 
-func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
-	var attacker_hp = attacker.hp
-	var defender_hp = defender.hp
-	
-	# 先制攻撃
-	if has_first_strike(attacker):
-		defender_hp -= attacker.ap
-		if defender_hp <= 0:
-			return {"i_win": true, "i_survive": true, "my_remaining_hp": attacker_hp}
-	
-	# 攻撃
-	defender_hp -= attacker.ap
-	attacker_hp -= defender.ap
-	
-	return {
-		"i_win": defender_hp <= 0,
-		"i_survive": attacker_hp > 0,
-		"my_remaining_hp": attacker_hp
-	}
-```
+未実装。BattleSimulatorは1回のバトル結果のみ。ワーストケース判定は敵の対抗手段を考慮するが、複数ターン先の予測はしない。
 
 ---
 
-## 難易度設定
+## 難易度設定（将来計画）
 
 ### Level 1-3（初心者）
 
@@ -532,69 +250,31 @@ func simulate_battle(attacker: Dictionary, defender: Dictionary) -> Dictionary:
 
 ---
 
-## 実装ロードマップ
+## 実装状況
 
-### Phase 1: 基礎AI（Level 1-3）
+### 実装済み（2026年1月時点）
 
-**推定時間**: 3-4時間
+| 機能 | 状態 | 詳細 |
+|------|------|------|
+| バトルシミュレーション | ✅ 完了 | BattleSimulatorによる正確な勝敗予測 |
+| バトル判断（攻撃側） | ✅ 完了 | クリーチャー×アイテム全組み合わせ評価 |
+| バトル判断（防御側） | ✅ 完了 | アイテム・援護・合体判断 |
+| ワーストケース判定 | ✅ 完了 | 敵の対抗手段を考慮 |
+| 合体判断 | ✅ 完了 | 攻撃側・防御側両方 |
+| 即死スキル判断 | ✅ 完了 | 最後の手段として使用 |
+| スペル使用判断 | ✅ 完了 | cpu_ruleパターン別評価 |
+| 秘術使用判断 | ✅ 完了 | スペルと同様の評価 |
+| ターゲット自動選択 | ✅ 完了 | 条件に基づく最適ターゲット |
 
-**実装内容**:
-1. CPUThinking クラス作成
-2. 基本評価関数実装
-3. 行動選択ロジック
-4. ランダム要素追加
+### 未実装（将来計画）
 
-**成果物**:
-```gdscript
-# scripts/ai/cpu_thinking_v1.gd
-- evaluate_basic_value()
-- choose_best_action()
-- 簡単な判断（勝てる？コスパは？）
-```
-
-### Phase 2: シナジー評価（Level 4-6）
-
-**推定時間**: 4-5時間
-
-**実装内容**:
-1. デッキプロファイル構造定義
-2. シナジールール実装
-3. カテゴリマッチング
-4. 特殊アイテム処理
-
-**成果物**:
-```gdscript
-- evaluate_synergy()
-- matches_synergy_rule()
-- 5-10個のシナジールール定義
-```
-
-### Phase 3: 先読み機能（Level 7-10）
-
-**推定時間**: 5-8時間
-
-**実装内容**:
-1. 戦闘シミュレーション
-2. 敵の強さ推測
-3. リスク評価
-4. 2ターン先読み
-
-**成果物**:
-```gdscript
-- evaluate_future_turns()
-- simulate_battle()
-- estimate_enemy_strength()
-```
-
-### Phase 4: 調整・バランシング
-
-**推定時間**: 3-5時間
-
-**実装内容**:
-1. 実際のプレイテスト
-2. スコアの重み調整
-3. 難易度バランス
-4. バグ修正
+| 機能 | 優先度 | 概要 |
+|------|--------|------|
+| 難易度レベル | 中 | Level 1-3で評価の深さを変更 |
+| CPU性格プロファイル | 中 | 攻撃的/守備的などの倍率調整 |
+| 方向選択評価 | 高 | 分岐点での詳細評価 |
+| シナジー評価 | 低 | デッキごとのカード組み合わせ |
+| 先読み機能 | 低 | 2ターン先の状況予測 |
 
 ---
 
@@ -659,5 +339,6 @@ func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 1.0 | 2025/11/10 | 初版作成：CPU AI実装設計 |
+| 2.0 | 2026/01/06 | 実装状況を更新、specと重複するコード例を削除、将来計画を整理 |
 
 ---

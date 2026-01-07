@@ -165,87 +165,87 @@ IDとAI評価だけを定義し、CPUクラスから参照する。
 
 ---
 
-## 8. 現状の実装状況
+## 8. 現状の実装状況（2026年1月更新）
 
-cpu_ai_handler.gd に基礎的な判断ロジックがある：
-- 召喚判断：支払い可能なカードから最安を選ぶ
-- バトル判断：全カードを評価し、勝てそうなら戦う
-- 侵略判断：守備なし敵地への侵略
-- レベルアップ判断：魔力があれば確率で実行
+### 実装済みファイル構成
 
-まだない機能：
+```
+scripts/cpu_ai/
+├── cpu_ai_handler.gd          # エントリーポイント、各AIクラスの初期化・呼び出し
+├── cpu_turn_processor.gd      # CPUターン処理フロー制御
+├── cpu_battle_ai.gd           # バトル評価、アイテム選択、ワーストケース判定
+├── cpu_merge_evaluator.gd     # 合体判断ロジック
+├── battle_simulator.gd        # バトル結果シミュレーター
+├── cpu_spell_ai.gd            # スペル使用判断
+├── cpu_mystic_arts_ai.gd      # ミスティックアーツ使用判断
+├── cpu_spell_condition_checker.gd  # スペル使用条件判定
+├── cpu_target_resolver.gd     # ターゲット条件解決
+├── cpu_spell_target_selector.gd    # 最適ターゲット選択
+├── cpu_spell_utils.gd         # 距離・利益計算ユーティリティ
+├── cpu_board_analyzer.gd      # 盤面分析ヘルパー
+└── cpu_hand_utils.gd          # 手札アクセスユーティリティ
+```
+
+### 実装済み機能
+
+**バトル判断（cpu_battle_ai.gd）**
+- BattleSimulatorによる正確な勝敗シミュレーション
+- クリーチャー×アイテムの全組み合わせ評価
+- ワーストケース判定（敵の対抗手段を考慮）
+- 合体判断（最優先）
+- 即死スキル判断（最後の手段）
+- 無効化+即死優先判断
+- アイテム破壊/盗みスキル対策
+
+**スペル/秘術判断（cpu_spell_ai.gd, cpu_mystic_arts_ai.gd）**
+- cpu_ruleフィールドによるパターン別評価
+- ターゲット条件による自動ターゲット選択
+- 損益計算（profit_calc）
+- 戦略的判断（strategic）
+
+**防御側判断（item_phase_handler.gd）**
+- 無効化スキルで勝てるならパス
+- 合体判断（最優先）
+- 防具温存ロジック
+- 援護判断
+- 温存対象アイテム/クリーチャー判定
+
+### 未実装機能
+
 - 難易度レベルによる評価の深さ変更
+- CPU性格プロファイル（倍率調整）
+- 方向選択の詳細評価
 - シナジー評価
-- 先読み
-- デッキプロファイル連携
-- 方向選択の評価
-- スペル使用のカテゴリ別評価
 
 ---
 
-## 9. 今後作るもの
+## 9. 今後作るもの（残タスク）
 
-### 実装順序（確定）
+### 優先度高
 
-1. **BattleSimulator**（基盤）
-   - 正確なAP/HP計算、勝敗判定
-   - これがないと他の判断ができない
-
-2. **SpellPhaseEvaluator**（スペルフェーズ評価）
-   - スペル使用判断
-   - 秘術使用判断（スペルと同じ構造で統一的に扱う）
-   - 移動系スペルの戦略的判断（攻撃・回避）
-
-3. **DirectionEvaluator**（サイコロフェーズ・移動選択）
-   - 分岐点での方向選択
+1. **方向選択の詳細評価**
+   - 分岐点での方向選択ロジック
    - 通行料・危険度の計算
-   - 諦めロジック
+   - 諦めロジック（回避回数記録）
 
-4. **SummonPhaseEvaluator**（召喚フェーズ評価）
-   - 召喚判断
-   - 移動侵略判断
-   - レベルアップ判断
-   - クリーチャー交換判断
+### 優先度中
 
-### 難易度（3段階）
+2. **難易度レベル**
+   - Level 1: 基礎ステータスのみ
+   - Level 2: バフ・スキル考慮
+   - Level 3: 全スキル考慮、先読み
 
-| レベル | 名前 | 内容 |
-|--------|------|------|
-| 1 | 簡単 | 基礎ステータスのみで判断 |
-| 2 | 普通 | バフ・スキル考慮、基本的な戦略 |
-| 3 | 難しい | 全スキル考慮、先読み、デッキ考慮 |
+3. **CPU性格プロファイル**
+   - 攻撃的/守備的などの性格設定
+   - JSONで倍率を定義
 
-### テスト方法
+### 優先度低（将来）
 
-思考ログ出力でCPUの判断理由を確認する。
+4. **シナジー評価**
+   - デッキごとのカード組み合わせ評価
 
-```
-=== CPU思考開始（スペルフェーズ）===
-[盤面分析]
-  タイル3: 敵レベル4土地、通行料400G、勝率: 75%
-  
-[スペル評価]
-  ホーリーワード3: 
-	→ タイル3に到達可能
-	→ BattleSimulator: 勝てる
-	→ スコア: +120（攻撃チャンス）
-
-[決定] ホーリーワード3を使用
-```
-
-クエストステージでテストし、ログを見て動作確認。
-
-### 補助クラス
-
-- AvoidanceTracker（回避回数を記録、諦めタイミング判定）
-- TileScanner（盤面スキャン、価値・危険度計算）
-- PathCalculator（距離計算）
-
-### 設定ファイル
-
-- ai_profiles/xxx.json（CPUの性格、難易度レベル）
-- ai_profiles/spell_ai_categories.json（スペルカテゴリ別評価）
-- ai_profiles/combo_definitions.json（コンボ定義、10個未満）
+5. **先読み機能**
+   - 2ターン先までの状況予測
 
 ---
 
@@ -613,9 +613,6 @@ effect_typeで識別する：
 | `element_mismatch` | 土地と属性不一致の自クリーチャーがいる |
 | `enemy_high_level` | 敵のレベル3以上土地がある |
 | `enemy_level_4` | 敵のレベル4土地がある |
-| `has_4_mismatched_lands` | 属性不一致土地が4つ以上 |
-| `has_5_level2_lands` | レベル2以上土地が5つ以上 |
-| `has_4_consecutive_lands` | 4連鎖土地がある |
 
 #### クリーチャー状態
 
@@ -624,43 +621,29 @@ effect_typeで識別する：
 | `has_downed_creature` | ダウン中の自クリーチャーがいる |
 | `self_creature_damaged` | HPが減った自クリーチャーがいる |
 | `has_cursed_creature` | 呪い付きクリーチャーがいる |
-| `duplicate_creatures` | 同名クリーチャーが複数いる |
-| `has_5_low_mhp_creatures` | MHP30以下が5体以上いる |
+| `standing_on_vacant_land` | 空き地に止まっている |
 
-#### 土地状態
-
-| condition | 説明 |
-|-----------|------|
-| `has_vacant_land` | 空き地がある |
-| `has_empty_land` | クリーチャーなしの自土地がある |
-
-#### 手札関連
+#### クリーチャー交換
 
 | condition | 説明 |
 |-----------|------|
-| `has_all_elements_in_hand` | 手札に全属性がある |
-| `low_hand_quality` | ⚠️ 手札の質が低い（TODO） |
-| `has_curse_cards_in_hand` | 手札に呪いカードがある |
-| `has_expensive_cards` | 手札に高コストカードがある |
+| `can_upgrade_creature` | 手札クリーチャーで属性一致に改善可能 |
+| `swap_improves_element_match` | 交換で属性一致が改善される |
 
 #### 呪い関連
 
 | condition | 説明 |
 |-----------|------|
 | `has_any_curse` | 何らかの呪いがある |
-| `has_bad_world_curse` | 不利な世界呪いがある |
+| `has_world_curse` | 世界呪いがある |
 | `has_player_curse` | プレイヤー呪いがある |
 
 #### その他
 
 | condition | 説明 |
 |-----------|------|
-| `move_invasion_win` | ⚠️ 移動侵略で勝てる（TODO） |
-| `has_priority_swap_target` | 交換優先ターゲットがいる |
-| `deck_nearly_empty` | デッキが残り少ない |
-| `has_unvisited_gate` | 未通過ゲートがある |
-| `self_lowest_magic` | 自分が最低魔力 |
-| `transform_beneficial` | 変身が有利 |
+| `has_unvisited_gate` | 未通過ゲートがある（2つ以上） |
+| `nearest_checkpoint_unvisited` | 最寄りチェックポイントが未訪問 |
 
 ---
 
@@ -724,3 +707,6 @@ effect_typeで識別する：
 | 2025/01 | 追記：移動系スペルの戦略的判断（攻撃・回避パターン） |
 | 2025/01 | 追記：実装順序確定、難易度3段階、テスト方法（思考ログ） |
 | 2025/01 | BattleSimulator実装完了（scripts/cpu_ai/battle_simulator.gd） |
+| 2026/01 | セクション8「現状の実装状況」を実装済み内容に更新 |
+| 2026/01 | セクション9「今後作るもの」を残タスクに整理 |
+| 2026/01 | セクション15「condition」一覧を実装済みのみに更新（未使用削除反映） |
