@@ -2,12 +2,16 @@
 
 ## 概要
 
-CPUのバトル時の判断ロジック。攻撃側・防御側それぞれで異なる判断基準を持つ。
+CPUのバトル時の判断ロジック。攻撃側と防御側で別ファイルに分離。
 
-**主要ファイル**:
-- `cpu_battle_ai.gd` - バトル評価、アイテム選択
-- `cpu_merge_evaluator.gd` - 合体判断
-- `battle_simulator.gd` - バトル結果シミュレーション
+**ファイル構成**:
+| ファイル | 役割 |
+|---------|------|
+| `cpu_battle_ai.gd` | 攻撃側判断 |
+| `cpu_defense_ai.gd` | 防御側判断（アイテム/援護/合体） |
+| `cpu_item_evaluator.gd` | アイテム評価共通ロジック |
+| `cpu_merge_evaluator.gd` | 合体シミュレーション |
+| `battle_simulator.gd` | バトル結果シミュレーション |
 
 ---
 
@@ -33,7 +37,7 @@ enum BattleResult {
 
 ---
 
-## 攻撃側判断
+## 攻撃側判断（cpu_battle_ai.gd）
 
 ### 判断フロー
 
@@ -46,6 +50,14 @@ enum BattleResult {
 6. 勝てない → 即死スキル持ちで賭ける
 7. 即死もない → 攻撃しない
 ```
+
+### 主要関数
+
+| 関数 | 役割 |
+|------|------|
+| `evaluate_all_combinations_for_battle()` | クリーチャー×アイテム全組み合わせ評価 |
+| `simulate_worst_case()` | 敵の対抗手段を考慮したワーストケース判定 |
+| `find_item_to_beat_worst_case()` | ワーストケースに勝つアイテム探索 |
 
 ### ワーストケース判定
 
@@ -61,7 +73,14 @@ enum BattleResult {
 
 ---
 
-## 防御側判断
+## 防御側判断（cpu_defense_ai.gd）
+
+### メインエントリ
+
+```gdscript
+func decide_defense_action(context: Dictionary) -> Dictionary
+# 返り値: { action: "item"|"support"|"merge"|"pass", ... }
+```
 
 ### 判断フロー
 
@@ -76,6 +95,16 @@ enum BattleResult {
    - 3枚以上: アイテム優先
 ```
 
+### 主要関数
+
+| 関数 | 役割 |
+|------|------|
+| `_evaluate_nullify_option()` | 無効化スキルで勝てるか判定 |
+| `_evaluate_merge_option()` | 合体で勝てるか判定 |
+| `_evaluate_item_options()` | 使用可能アイテムの評価 |
+| `_evaluate_support_options()` | 援護クリーチャーの評価 |
+| `_check_instant_death_threat()` | 敵の即死スキル脅威判定 |
+
 ### 温存対象
 
 高レベル土地防衛用に取っておくアイテム/クリーチャー：
@@ -86,7 +115,25 @@ enum BattleResult {
 
 ---
 
-## 合体判断
+## アイテム評価（cpu_item_evaluator.gd）
+
+### 主要関数
+
+| 関数 | 役割 |
+|------|------|
+| `evaluate_items_for_attack()` | 攻撃側アイテム評価 |
+| `evaluate_items_for_defense()` | 防御側アイテム評価 |
+| `is_reserve_item()` | 温存対象判定 |
+| `get_item_type_priority()` | アイテム種別優先度 |
+
+### アイテム種別優先度
+
+**攻撃時**: 巻物 > 武器 > アクセサリ > 防具
+**防御時**: 防具 > アクセサリ > 武器（巻物は使用しない）
+
+---
+
+## 合体判断（cpu_merge_evaluator.gd）
 
 ### 条件
 
@@ -106,7 +153,7 @@ enum BattleResult {
 
 ## 即死スキル判断
 
-### 攻撃側
+### 攻撃側（cpu_battle_ai.gd）
 
 勝てる組み合わせがない場合、即死スキル持ちで賭ける。
 
@@ -116,7 +163,7 @@ enum BattleResult {
 3. 敵が無効化アイテム持ち → 無効化+即死クリーチャーを優先
 ```
 
-### 防御側
+### 防御側（cpu_defense_ai.gd）
 
 敵が100%即死スキル持ちの場合：
 
@@ -124,4 +171,31 @@ enum BattleResult {
 1. 通常攻撃100%無効化アイテムを探す
 2. あれば使用
 3. なければアイテムを使わない（即死されるため無駄）
+```
+
+---
+
+## メインファイルとの連携
+
+### item_phase_handler.gd（変更後）
+
+```gdscript
+func _cpu_decide_item():
+	var context = _build_defense_context()
+	var decision = cpu_defense_ai.decide_defense_action(context)
+	
+	match decision.action:
+		"item": use_item(decision.item)
+		"support": use_support(decision.creature)
+		"merge": _execute_merge_for_cpu(decision.merge_data)
+		"pass": pass_item()
+```
+
+### tile_action_processor.gd（変更後）
+
+```gdscript
+func _process_cpu_battle(tile_info: Dictionary):
+	var decision = cpu_battle_ai.evaluate_all_combinations_for_battle(...)
+	if decision.should_attack:
+		cpu_action_executor.execute_battle(decision)
 ```

@@ -58,7 +58,7 @@ LandCommandHandler
 ```
 cpu_turn_processor._execute_level_up_command()
   └─ land_handler.execute_level_up_with_level() を直接呼び出し
-      └─ ダウンチェックなし（※後から追加したが不完全）
+	  └─ ダウンチェックなし（※後から追加したが不完全）
 ```
 
 ### 問題のあるコード箇所
@@ -83,12 +83,12 @@ cpu_turn_processor._execute_level_up_command()
 │   CPU AI        │ ───────────────> │   Handler       │
 │ (何をするか決定) │                   │ (実行・検証)    │
 └─────────────────┘                   └─────────────────┘
-                                              │
-                                              v
-                                      ┌─────────────────┐
-                                      │   実行結果      │
-                                      │ (成功/失敗)     │
-                                      └─────────────────┘
+											  │
+											  v
+									  ┌─────────────────┐
+									  │   実行結果      │
+									  │ (成功/失敗)     │
+									  └─────────────────┘
 ```
 
 ### Handler への追加インターフェース
@@ -100,30 +100,30 @@ cpu_turn_processor._execute_level_up_command()
 
 # CPUが土地を選択
 func select_tile_for_cpu(tile_index: int) -> bool:
-    # 通常の土地選択と同じバリデーション
-    # ダウンチェック、所有権チェック等
-    pass
+	# 通常の土地選択と同じバリデーション
+	# ダウンチェック、所有権チェック等
+	pass
 
 # CPUがアクションを選択
 func select_action_for_cpu(action: String) -> bool:
-    # "level_up", "terrain_change", "move", "swap"
-    pass
+	# "level_up", "terrain_change", "move", "swap"
+	pass
 
 # CPUがレベルを確定（レベルアップ時）
 func confirm_level_for_cpu(target_level: int) -> bool:
-    pass
+	pass
 
 # CPUが属性を確定（属性変更時）
 func confirm_terrain_for_cpu(element: String) -> bool:
-    pass
+	pass
 
 # CPUが移動先を確定（移動時）
 func confirm_move_for_cpu(dest_tile_index: int) -> bool:
-    pass
+	pass
 
 # CPUが交換カードを確定（交換時）
 func confirm_swap_for_cpu(hand_index: int) -> bool:
-    pass
+	pass
 ```
 
 ### 既存メソッドとの関係
@@ -132,18 +132,18 @@ func confirm_swap_for_cpu(hand_index: int) -> bool:
 
 ```gdscript
 func select_tile_for_cpu(tile_index: int) -> bool:
-    # 既存のバリデーションを使用
-    if not _can_select_tile(tile_index):
-        return false
-    
-    selected_tile_index = tile_index
-    current_state = State.SELECTING_ACTION
-    return true
+	# 既存のバリデーションを使用
+	if not _can_select_tile(tile_index):
+		return false
+	
+	selected_tile_index = tile_index
+	current_state = State.SELECTING_ACTION
+	return true
 
 func confirm_level_for_cpu(target_level: int) -> bool:
-    # 既存のレベルアップ処理を使用
-    var cost = _calculate_level_up_cost(target_level)
-    return LandActionHelper.execute_level_up_with_level(self, target_level, cost)
+	# 既存のレベルアップ処理を使用
+	var cost = _calculate_level_up_cost(target_level)
+	return LandActionHelper.execute_level_up_with_level(self, target_level, cost)
 ```
 
 ---
@@ -199,79 +199,79 @@ func confirm_level_for_cpu(target_level: int) -> bool:
 ## CPUが領地コマンドを実行（統合メソッド）
 ## 戻り値: 実行成功/失敗
 func execute_for_cpu(command: Dictionary) -> bool:
-    var command_type = command.get("type", "")
-    var tile_index = command.get("tile_index", -1)
-    
-    # 1. 土地選択（バリデーション含む）
-    if not select_tile_for_cpu(tile_index):
-        return false
-    
-    # 2. コマンド実行
-    match command_type:
-        "level_up":
-            return _execute_level_up_for_cpu(command)
-        "element_change":
-            return _execute_element_change_for_cpu(command)
-        "move_invasion":
-            return _execute_move_for_cpu(command)
-        "creature_swap":
-            return _execute_swap_for_cpu(command)
-    
-    return false
+	var command_type = command.get("type", "")
+	var tile_index = command.get("tile_index", -1)
+	
+	# 1. 土地選択（バリデーション含む）
+	if not select_tile_for_cpu(tile_index):
+		return false
+	
+	# 2. コマンド実行
+	match command_type:
+		"level_up":
+			return _execute_level_up_for_cpu(command)
+		"element_change":
+			return _execute_element_change_for_cpu(command)
+		"move_invasion":
+			return _execute_move_for_cpu(command)
+		"creature_swap":
+			return _execute_swap_for_cpu(command)
+	
+	return false
 
 ## CPU用土地選択
 func select_tile_for_cpu(tile_index: int) -> bool:
-    if not board_system or not board_system.tile_nodes.has(tile_index):
-        return false
-    
-    var tile = board_system.tile_nodes[tile_index]
-    
-    # ダウンチェック
-    if tile.has_method("is_down") and tile.is_down():
-        print("[LandCommandHandler] CPU: タイル%d はダウン中" % tile_index)
-        return false
-    
-    # 所有権チェック
-    var current_player = player_system.get_current_player()
-    if tile.owner_id != current_player.id:
-        print("[LandCommandHandler] CPU: タイル%d は所有していない" % tile_index)
-        return false
-    
-    selected_tile_index = tile_index
-    return true
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return false
+	
+	var tile = board_system.tile_nodes[tile_index]
+	
+	# ダウンチェック
+	if tile.has_method("is_down") and tile.is_down():
+		print("[LandCommandHandler] CPU: タイル%d はダウン中" % tile_index)
+		return false
+	
+	# 所有権チェック
+	var current_player = player_system.get_current_player()
+	if tile.owner_id != current_player.id:
+		print("[LandCommandHandler] CPU: タイル%d は所有していない" % tile_index)
+		return false
+	
+	selected_tile_index = tile_index
+	return true
 
 ## CPU用レベルアップ
 func _execute_level_up_for_cpu(command: Dictionary) -> bool:
-    var target_level = command.get("target_level", 1)
-    var cost = command.get("cost", 0)
-    
-    # LandActionHelperの既存処理を使用
-    return LandActionHelper.execute_level_up_with_level(self, target_level, cost)
+	var target_level = command.get("target_level", 1)
+	var cost = command.get("cost", 0)
+	
+	# LandActionHelperの既存処理を使用
+	return LandActionHelper.execute_level_up_with_level(self, target_level, cost)
 
 ## CPU用属性変更
 func _execute_element_change_for_cpu(command: Dictionary) -> bool:
-    var new_element = command.get("new_element", "")
-    
-    return LandActionHelper.execute_terrain_change_with_element(self, new_element)
+	var new_element = command.get("new_element", "")
+	
+	return LandActionHelper.execute_terrain_change_with_element(self, new_element)
 
 ## CPU用移動侵略
 func _execute_move_for_cpu(command: Dictionary) -> bool:
-    var from_tile = command.get("from_tile_index", -1)
-    var to_tile = command.get("to_tile_index", -1)
-    
-    # 移動元を選択
-    if not select_tile_for_cpu(from_tile):
-        return false
-    
-    # 移動処理
-    return LandActionHelper.confirm_move(self, to_tile)
+	var from_tile = command.get("from_tile_index", -1)
+	var to_tile = command.get("to_tile_index", -1)
+	
+	# 移動元を選択
+	if not select_tile_for_cpu(from_tile):
+		return false
+	
+	# 移動処理
+	return LandActionHelper.confirm_move(self, to_tile)
 
 ## CPU用クリーチャー交換
 func _execute_swap_for_cpu(command: Dictionary) -> bool:
-    var hand_index = command.get("hand_index", -1)
-    
-    # 交換処理（既存のexecute_swapを使用）
-    return _execute_swap_with_hand_index(hand_index)
+	var hand_index = command.get("hand_index", -1)
+	
+	# 交換処理（既存のexecute_swapを使用）
+	return _execute_swap_with_hand_index(hand_index)
 ```
 
 #### cpu_turn_processor.gd の修正
@@ -279,26 +279,26 @@ func _execute_swap_for_cpu(command: Dictionary) -> bool:
 ```gdscript
 # 修正前
 func _execute_territory_command(current_player, command: Dictionary):
-    match command_type:
-        "level_up":
-            _execute_level_up_command(current_player, command)
-        # ...
+	match command_type:
+		"level_up":
+			_execute_level_up_command(current_player, command)
+		# ...
 
 # 修正後
 func _execute_territory_command(current_player, command: Dictionary):
-    var land_handler = _get_land_command_handler()
-    if land_handler == null:
-        _complete_action()
-        return
-    
-    var success = land_handler.execute_for_cpu(command)
-    
-    if success:
-        print("[CPU] 領地コマンド実行成功: %s" % command.get("type", "?"))
-    else:
-        print("[CPU] 領地コマンド実行失敗: %s" % command.get("type", "?"))
-    
-    _complete_action()
+	var land_handler = _get_land_command_handler()
+	if land_handler == null:
+		_complete_action()
+		return
+	
+	var success = land_handler.execute_for_cpu(command)
+	
+	if success:
+		print("[CPU] 領地コマンド実行成功: %s" % command.get("type", "?"))
+	else:
+		print("[CPU] 領地コマンド実行失敗: %s" % command.get("type", "?"))
+	
+	_complete_action()
 ```
 
 ### スペル
@@ -308,17 +308,17 @@ func _execute_territory_command(current_player, command: Dictionary):
 ```gdscript
 ## CPUがスペルを発動
 func cast_spell_for_cpu(spell_index: int, targets: Array = []) -> bool:
-    # 1. スペル選択
-    if not _select_spell(spell_index):
-        return false
-    
-    # 2. ターゲット選択（必要な場合）
-    for target in targets:
-        if not _select_target(target):
-            return false
-    
-    # 3. 発動
-    return _execute_spell()
+	# 1. スペル選択
+	if not _select_spell(spell_index):
+		return false
+	
+	# 2. ターゲット選択（必要な場合）
+	for target in targets:
+		if not _select_target(target):
+			return false
+	
+	# 3. 発動
+	return _execute_spell()
 ```
 
 ### ミスティックアーツ
@@ -328,8 +328,8 @@ func cast_spell_for_cpu(spell_index: int, targets: Array = []) -> bool:
 ```gdscript
 ## CPUがミスティックアーツを発動
 func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
-    # スペルと同様のフロー
-    pass
+	# スペルと同様のフロー
+	pass
 ```
 
 ---
@@ -418,20 +418,20 @@ func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 ```
 LandCommandHandler
   └─ LandActionHelper.confirm_move()
-       ├─ 空き地の場合 → クリーチャー移動、土地獲得
-       └─ 敵領地の場合
-            ├─ peace呪いチェック等
-            ├─ pending_move_battle_* に情報保存
-            ├─ ItemPhaseHandler.start_item_phase()（攻撃側アイテム）
-            ├─ ItemPhaseHandler.start_item_phase()（防御側アイテム）
-            └─ _execute_move_battle()
+	   ├─ 空き地の場合 → クリーチャー移動、土地獲得
+	   └─ 敵領地の場合
+			├─ peace呪いチェック等
+			├─ pending_move_battle_* に情報保存
+			├─ ItemPhaseHandler.start_item_phase()（攻撃側アイテム）
+			├─ ItemPhaseHandler.start_item_phase()（防御側アイテム）
+			└─ _execute_move_battle()
 ```
 
 **CPUの移動侵略（現状 - 誤り）:**
 ```
 cpu_turn_processor._execute_move_to_enemy()
   └─ cpu_ai_handler.decide_battle()  ← 手札から選ぶ通常侵略のフロー
-       └─ 誤り：移動元のクリーチャーで攻撃すべき
+	   └─ 誤り：移動元のクリーチャーで攻撃すべき
 ```
 
 ### 修正後のフロー
@@ -441,14 +441,14 @@ CPUも`LandCommandHandler`経由で移動侵略を実行：
 ```
 cpu_turn_processor._execute_move_invasion_command()
   └─ land_handler.execute_move_for_cpu(from_tile, to_tile)
-       └─ LandActionHelper.confirm_move()
-            ├─ 空き地 → 通常移動
-            └─ 敵領地 → ItemPhaseHandler経由で戦闘
-                         ├─ start_item_phase()で攻撃側アイテム
-                         │    └─ _cpu_decide_item()（既存）
-                         ├─ start_item_phase()で防御側アイテム
-                         │    └─ _cpu_decide_item()（既存）
-                         └─ _execute_move_battle()
+	   └─ LandActionHelper.confirm_move()
+			├─ 空き地 → 通常移動
+			└─ 敵領地 → ItemPhaseHandler経由で戦闘
+						 ├─ start_item_phase()で攻撃側アイテム
+						 │    └─ _cpu_decide_item()（既存）
+						 ├─ start_item_phase()で防御側アイテム
+						 │    └─ _cpu_decide_item()（既存）
+						 └─ _execute_move_battle()
 ```
 
 ### アイテム選択について
@@ -505,20 +505,20 @@ cpu_turn_processor._execute_summon()
 ```
 cpu_turn_processor._execute_summon()
   └─ tile_action_processor.execute_summon_for_cpu(card_index)
-       └─ execute_summon() と同じ処理（土地条件・合成含む）
+	   └─ execute_summon() と同じ処理（土地条件・合成含む）
 ```
 
 **TileActionProcessor に追加するメソッド:**
 ```gdscript
 ## CPU用召喚実行
 func execute_summon_for_cpu(card_index: int) -> bool:
-    # 通常の execute_summon() と同じ処理を実行
-    # - 土地条件チェック
-    # - カード犠牲処理（CPUは自動選択）
-    # - 合成処理
-    # - コスト支払い
-    # - クリーチャー配置
-    pass
+	# 通常の execute_summon() と同じ処理を実行
+	# - 土地条件チェック
+	# - カード犠牲処理（CPUは自動選択）
+	# - 合成処理
+	# - コスト支払い
+	# - クリーチャー配置
+	pass
 ```
 
 ### 通常侵略
@@ -533,21 +533,21 @@ cpu_turn_processor._on_cpu_invasion_decided()
 ```
 cpu_turn_processor._on_cpu_invasion_decided()
   └─ tile_action_processor.execute_battle_for_cpu(card_index, tile_info)
-       └─ execute_battle() と同じ処理（土地条件・合成含む）
-       └─ ItemPhaseHandler 経由でアイテムフェーズ
+	   └─ execute_battle() と同じ処理（土地条件・合成含む）
+	   └─ ItemPhaseHandler 経由でアイテムフェーズ
 ```
 
 **TileActionProcessor に追加するメソッド:**
 ```gdscript
 ## CPU用バトル実行
 func execute_battle_for_cpu(card_index: int, tile_info: Dictionary) -> bool:
-    # 通常の execute_battle() と同じ処理を実行
-    # - 土地条件チェック
-    # - カード犠牲処理（CPUは自動選択）
-    # - 合成処理
-    # - アイテムフェーズ
-    # - バトル実行
-    pass
+	# 通常の execute_battle() と同じ処理を実行
+	# - 土地条件チェック
+	# - カード犠牲処理（CPUは自動選択）
+	# - 合成処理
+	# - アイテムフェーズ
+	# - バトル実行
+	pass
 ```
 
 ### 領地コマンド
@@ -556,15 +556,15 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary) -> bool:
 ```
 cpu_turn_processor._execute_level_up_command()
   └─ land_handler.execute_level_up_with_level() 直接呼び出し
-      └─ ダウンチェックなし
+	  └─ ダウンチェックなし
 ```
 
 **修正後:**
 ```
 cpu_turn_processor._execute_territory_command()
   └─ land_handler.execute_for_cpu(command)
-       ├─ select_tile_for_cpu() でダウンチェック・所有権チェック
-       └─ 各コマンド実行
+	   ├─ select_tile_for_cpu() でダウンチェック・所有権チェック
+	   └─ 各コマンド実行
 ```
 
 ### 移動侵略
@@ -579,9 +579,9 @@ cpu_turn_processor._execute_move_to_enemy()
 ```
 cpu_turn_processor._execute_move_invasion_command()
   └─ land_handler.execute_move_for_cpu(from_tile, to_tile)
-       └─ LandActionHelper.confirm_move()
-            ├─ 空き地 → 通常移動
-            └─ 敵領地 → ItemPhaseHandler経由で戦闘
+	   └─ LandActionHelper.confirm_move()
+			├─ 空き地 → 通常移動
+			└─ 敵領地 → ItemPhaseHandler経由で戦闘
 ```
 
 ---

@@ -34,9 +34,9 @@ CPUのスペルフェーズでのスペル/ミスティックアーツ使用判�
 ```json
 {
   "cpu_rule": {
-    "pattern": "condition",
-    "condition": "element_mismatch",
-    "priority": "medium"
+	"pattern": "condition",
+	"condition": "element_mismatch",
+	"priority": "medium"
   }
 }
 ```

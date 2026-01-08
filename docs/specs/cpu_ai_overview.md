@@ -8,12 +8,15 @@
 |---------|------|
 | `cpu_ai_handler.gd` | CPU判断のエントリーポイント |
 | `cpu_turn_processor.gd` | CPUターン処理フロー制御 |
+| `cpu_action_executor.gd` | CPU用アクション実行（召喚、バトル、領地コマンド） |
 
 ### バトル関連
 
 | ファイル | 役割 |
 |---------|------|
-| `cpu_battle_ai.gd` | バトル評価、アイテム選択 |
+| `cpu_battle_ai.gd` | 攻撃側バトル判断 |
+| `cpu_defense_ai.gd` | 防御側判断（アイテム/援護/合体） |
+| `cpu_item_evaluator.gd` | アイテム評価共通ロジック |
 | `cpu_merge_evaluator.gd` | 合体判断 |
 | `battle_simulator.gd` | バトル結果シミュレーション |
 | `cpu_hand_utils.gd` | 手札アクセスユーティリティ |
@@ -44,6 +47,20 @@
 
 ---
 
+## 設計方針
+
+**メインファイル**: CPUかどうかの判定 → CPU AIに委譲 → 結果を受けて実行
+**CPU AI**: 判断ロジック全般
+
+```
+メインファイル側:
+if is_cpu_player(player_id):
+	var decision = cpu_xxx_ai.decide_xxx(context)
+	execute_xxx(decision)
+```
+
+---
+
 ## 処理フロー
 
 ```
@@ -63,7 +80,7 @@
 │   └─ 自領地/特殊 → cpu_territory_ai（領地コマンド）
 │
 └─ 防御時
-    └─ cpu_battle_ai（アイテム/援護/合体判断）
+	└─ cpu_defense_ai（アイテム/援護/合体判断）
 ```
 
 ---
@@ -73,7 +90,7 @@
 | ドキュメント | 内容 |
 |-------------|------|
 | [cpu_movement_ai_spec.md](cpu_movement_ai_spec.md) | 移動判断、経路シミュレーション、ホーリーワード |
-| [cpu_battle_ai_spec.md](cpu_battle_ai_spec.md) | バトル判断、合体、即死、ワーストケース |
+| [cpu_battle_ai_spec.md](cpu_battle_ai_spec.md) | バトル判断（攻撃側/防御側）、合体、即死 |
 | [cpu_spell_ai_spec.md](cpu_spell_ai_spec.md) | スペル使用判断、パターン分類 |
 | [cpu_territory_command_spec.md](cpu_territory_command_spec.md) | 領地コマンド、利益スコア計算 |
 
