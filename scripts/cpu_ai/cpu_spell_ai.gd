@@ -407,11 +407,8 @@ func _check_after_lap_complete(context: Dictionary) -> bool:
 func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictionary:
 	var result = { "should_use": false, "target": null, "reason": "" }
 	
-	print("[ホーリーワード判断] 開始: spell=%s" % spell.get("name", "unknown"))
-	
 	# CPUMovementEvaluatorがなければ使用しない
 	if not cpu_movement_evaluator:
-		print("[ホーリーワード判断] cpu_movement_evaluatorがnull")
 		return result
 	
 	var player_id = context.get("player_id", 0)
@@ -419,10 +416,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	# スペルからダイス固定値を取得
 	var dice_value = _get_dice_value_from_spell(spell)
 	if dice_value <= 0:
-		print("[ホーリーワード判断] dice_value取得失敗: %d" % dice_value)
 		return result
-	
-	print("[ホーリーワード判断] dice_value=%d, player_id=%d" % [dice_value, player_id])
 	
 	var spell_cost = spell.get("cost", {}).get("mp", 0)
 	
@@ -431,8 +425,6 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	var best_target_id = -1
 	var best_tile_index = -1
 	
-	print("[ホーリーワード判断] 敵プレイヤー評価開始 (player_system.players.size=%d)" % player_system.players.size())
-	
 	for enemy_id in range(player_system.players.size()):
 		if enemy_id == player_id:
 			continue
@@ -440,8 +432,6 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 		# 敵の現在位置と進行方向を取得
 		var enemy_tile = cpu_movement_evaluator._get_player_current_tile(enemy_id)
 		var enemy_direction = cpu_movement_evaluator._get_player_direction(enemy_id)
-		
-		print("[ホーリーワード判断] 敵P%d: tile=%d, direction=%d" % [enemy_id + 1, enemy_tile, enemy_direction])
 		
 		# 敵がdice_value歩進んだ先の停止位置を計算
 		var sim_result = cpu_movement_evaluator.simulate_path(
@@ -463,42 +453,151 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
-		print("[ホーリーワード判断] 敵P%d → 停止タイル%d: owner=%d, level=%d" % [enemy_id + 1, stop_tile, owner, level])
-		
 		# 自分のLv3以上の領地かチェック
 		if owner != player_id:
-			print("[ホーリーワード判断] → 自分の領地ではない (owner=%d, player_id=%d)" % [owner, player_id])
 			continue
 		if level < 3:
-			print("[ホーリーワード判断] → Lv3未満 (level=%d)" % level)
 			continue
 		
 		# 敵が侵略して勝てるかチェック
 		if cpu_movement_evaluator._can_invade_and_win(stop_tile, enemy_id):
-			print("[ホーリーワード判断] → 敵が侵略して勝てる")
 			continue  # 敵が勝てるなら使用しない
 		
 		# 通行料を計算
 		var toll = cpu_movement_evaluator._calculate_toll(stop_tile)
-		print("[ホーリーワード判断] → 通行料=%d (best_toll=%d)" % [toll, best_toll])
 		
 		if toll > best_toll:
 			best_toll = toll
 			best_target_id = enemy_id
 			best_tile_index = stop_tile
 	
-	# 最良の組み合わせがあれば使用
+	# 最良の組み合わせがあれば使用（攻撃的使用）
 	if best_target_id >= 0 and best_toll > 0:
 		result.should_use = true
 		result.target = { "type": "player", "player_id": best_target_id }
-		result.reason = "敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dG）" % [
+		result.reason = "攻撃: 敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dG）" % [
 			best_target_id + 1,
 			cpu_movement_evaluator._get_tile_info(best_tile_index).get("level", 1),
 			best_tile_index,
 			best_toll
 		]
+		return result
+	
+	# 攻撃的使用ができない場合、防御的使用を検討
+	var defensive_result = _evaluate_holy_word_defensive(dice_value, player_id, spell_cost)
+	if defensive_result.should_use:
+		result.should_use = true
+		result.target = { "type": "player", "player_id": player_id }
+		result.reason = defensive_result.reason
 	
 	return result
+
+## ホーリーワード防御的使用の判断
+## 自分が敵の高額領地を回避できるか判断
+func _evaluate_holy_word_defensive(dice_value: int, player_id: int, spell_cost: int) -> Dictionary:
+	var result = { "should_use": false, "reason": "" }
+	
+	if not cpu_movement_evaluator:
+		return result
+	
+	var my_tile = cpu_movement_evaluator._get_player_current_tile(player_id)
+	var my_direction = cpu_movement_evaluator._get_player_direction(player_id)
+	
+	# 経路上の危険な位置（敵Lv3以上領地）をリストアップ
+	# 距離とタイルインデックスのペアで記録
+	var danger_positions = _find_danger_positions_on_path(my_tile, my_direction, player_id)
+	
+	if danger_positions.is_empty():
+		return result
+	
+	# このホーリーワードで止まる位置を計算
+	var sim_result = cpu_movement_evaluator.simulate_path(
+		my_tile + my_direction,
+		dice_value - 1,
+		player_id,
+		my_tile
+	)
+	
+	var stop_tile: int
+	if dice_value == 1:
+		stop_tile = my_tile + my_direction
+	else:
+		stop_tile = sim_result.stop_tile
+	
+	# ホーリーワードでの停止位置までの距離を計算
+	var stop_distance = dice_value
+	
+	# 判定：
+	# 1. 停止位置がいずれかの危険な位置に一致 → ダメ
+	# 2. 最も近い危険な位置を超えていない → ダメ（危険回避になっていない）
+	# 3. 危険な位置を超えつつ、どの危険な位置にも止まらない → OK
+	
+	var min_danger_distance = 999
+	for danger in danger_positions:
+		var danger_distance = danger.distance
+		var danger_tile = danger.tile
+		
+		if danger_distance < min_danger_distance:
+			min_danger_distance = danger_distance
+		
+		# 停止位置が危険な位置に一致
+		if stop_tile == danger_tile:
+			return result
+	
+	# 最も近い危険を超えているかチェック
+	if stop_distance <= min_danger_distance:
+		return result
+	
+	# OK: 危険を超えつつ、どの危険にも止まらない
+	var max_avoided_toll = 0
+	for danger in danger_positions:
+		if danger.distance < stop_distance:
+			max_avoided_toll = max(max_avoided_toll, danger.toll)
+	
+	result.should_use = true
+	result.reason = "防御: 敵の高額領地を回避（回避通行料: %dG）" % max_avoided_toll
+	
+	return result
+
+## 経路上の危険な位置（敵Lv3以上領地）をリストアップ
+## 返り値: Array[{ distance: int, tile: int, toll: int }]
+func _find_danger_positions_on_path(start_tile: int, direction: int, player_id: int) -> Array:
+	var dangers = []
+	
+	if not cpu_movement_evaluator:
+		return dangers
+	
+	# 8マス先までチェック（ホーリーワード8が最大）
+	for distance in range(1, 9):
+		# start_tileからdistance歩進んだ位置を計算
+		var sim_result = cpu_movement_evaluator.simulate_path(
+			start_tile + direction,
+			distance - 1,
+			player_id,
+			start_tile
+		)
+		
+		var check_tile: int
+		if distance == 1:
+			check_tile = start_tile + direction
+		else:
+			check_tile = sim_result.stop_tile
+		
+		# タイル情報を取得
+		var tile_info = cpu_movement_evaluator._get_tile_info(check_tile)
+		var owner = tile_info.get("owner", -1)
+		var level = tile_info.get("level", 1)
+		
+		# 敵のLv3以上の領地かチェック
+		if owner >= 0 and owner != player_id and level >= 3:
+			var toll = cpu_movement_evaluator._calculate_toll(check_tile)
+			dangers.append({
+				"distance": distance,
+				"tile": check_tile,
+				"toll": toll
+			})
+	
+	return dangers
 
 ## スペルからダイス固定値を取得
 func _get_dice_value_from_spell(spell: Dictionary) -> int:
