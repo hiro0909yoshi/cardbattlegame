@@ -472,8 +472,13 @@ static func confirm_move(handler, dest_tile_index: int):
 			if not handler.game_flow_manager.item_phase_handler.item_phase_completed.is_connected(handler._on_move_item_phase_completed):
 				handler.game_flow_manager.item_phase_handler.item_phase_completed.connect(handler._on_move_item_phase_completed, CONNECT_ONE_SHOT)
 			
-			# 攻撃側のアイテムフェーズ開始
-			handler.game_flow_manager.item_phase_handler.start_item_phase(current_player_index, creature_data)
+			# 攻撃側のアイテムフェーズ開始（防御側情報を渡して事前選択）
+			var defender_tile_info = handler.pending_move_battle_tile_info
+			handler.game_flow_manager.item_phase_handler.start_item_phase(
+				current_player_index, 
+				creature_data,
+				defender_tile_info
+			)
 		else:
 			# ItemPhaseHandlerがない場合は直接バトル
 			_execute_move_battle(handler)

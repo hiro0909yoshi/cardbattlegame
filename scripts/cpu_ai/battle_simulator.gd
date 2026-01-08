@@ -179,9 +179,11 @@ func simulate_battle(
 	var attack_order = _determine_attack_order(attacker, defender)
 	_log("攻撃順序: %s" % attack_order)
 	
-	# 7. 反射情報取得
-	var attacker_reflect = _get_reflect_info(attacker)
-	var defender_reflect = _get_reflect_info(defender)
+	# 7. 反射情報取得（相手が巻物攻撃の場合、通常攻撃用の反射は効かない）
+	var attacker_has_scroll = _has_scroll_attack(attacker.creature_data)
+	var defender_has_scroll = _has_scroll_attack(defender.creature_data)
+	var attacker_reflect = _get_reflect_info(attacker, defender_has_scroll)  # 防御側が巻物攻撃なら攻撃側の反射は効かない
+	var defender_reflect = _get_reflect_info(defender, attacker_has_scroll)  # 攻撃側が巻物攻撃なら防御側の反射は効かない
 	
 	if defender_reflect.has_reflect:
 		_log("防御側反射: %.0f%%反射, %.0f%%軽減" % [defender_reflect.reflect_ratio * 100, (1.0 - defender_reflect.self_damage_ratio) * 100])
@@ -342,14 +344,36 @@ func _determine_attack_order(attacker, defender) -> String:
 	# デフォルト：攻撃側が先攻
 	return "attacker_first"
 
+## クリーチャーが巻物攻撃を持っているかチェック
+func _has_scroll_attack(creature_data: Dictionary) -> bool:
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	# 「巻物攻撃」キーワードをチェック
+	for keyword in keywords:
+		if "巻物攻撃" in str(keyword):
+			return true
+	
+	# effectsもチェック
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		if effect.get("effect_type") == "scroll_attack":
+			return true
+	
+	return false
+
 ## 勝敗判定（2回攻撃を考慮）
 ## 反射情報を取得
-func _get_reflect_info(participant) -> Dictionary:
+## opponent_has_scroll: 相手が巻物攻撃を持っているか（巻物攻撃には反射が効かない）
+func _get_reflect_info(participant, opponent_has_scroll: bool = false) -> Dictionary:
 	var result = {
 		"has_reflect": false,
 		"reflect_ratio": 0.0,
 		"self_damage_ratio": 1.0  # デフォルトは100%ダメージを受ける
 	}
+	
+	# 相手が巻物攻撃の場合、通常攻撃用の反射は効かない
+	var required_attack_type = "scroll" if opponent_has_scroll else "normal"
 	
 	# クリーチャー自身のスキルをチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
@@ -358,7 +382,7 @@ func _get_reflect_info(participant) -> Dictionary:
 	for effect in effects:
 		if effect.get("effect_type") == "reflect_damage":
 			var attack_types = effect.get("attack_types", [])
-			if "normal" in attack_types:
+			if required_attack_type in attack_types:
 				result.has_reflect = true
 				result.reflect_ratio = effect.get("reflect_ratio", 0.5)
 				result.self_damage_ratio = effect.get("self_damage_ratio", 0.5)
@@ -372,7 +396,7 @@ func _get_reflect_info(participant) -> Dictionary:
 		for effect in item_effects:
 			if effect.get("effect_type") == "reflect_damage":
 				var attack_types = effect.get("attack_types", [])
-				if "normal" in attack_types:
+				if required_attack_type in attack_types:
 					result.has_reflect = true
 					result.reflect_ratio = effect.get("reflect_ratio", 0.5)
 					result.self_damage_ratio = effect.get("self_damage_ratio", 0.5)

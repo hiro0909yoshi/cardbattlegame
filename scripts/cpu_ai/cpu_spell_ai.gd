@@ -52,6 +52,11 @@ func set_hand_utils(utils: CPUHandUtils) -> void:
 	if condition_checker:
 		condition_checker.set_hand_utils(utils)
 
+## CPUBattleAIを設定（共通バトル評価用）
+func set_battle_ai(ai: CPUBattleAI) -> void:
+	if condition_checker:
+		condition_checker.set_battle_ai(ai)
+
 ## スペル使用判断のメインエントリ
 ## 戻り値: {use: bool, spell: Dictionary, target: Dictionary} または null
 func decide_spell(player_id: int) -> Dictionary:

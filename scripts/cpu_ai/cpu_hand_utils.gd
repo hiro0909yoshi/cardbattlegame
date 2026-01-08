@@ -327,3 +327,96 @@ func is_item_destroy_target(item: Dictionary, destroy_target_types: Array) -> bo
 		return true
 	
 	return false
+
+
+## 攻撃側クリーチャーがアイテム破壊スキルを持っているかチェック（エイリアス）
+## 防御側から見た場合に使用
+func attacker_has_item_destroy(attacker_creature: Dictionary) -> Array:
+	return defender_has_item_destroy(attacker_creature)
+
+
+## 攻撃側クリーチャーがアイテム盗みスキルを持っているかチェック（エイリアス）
+## 防御側から見た場合に使用
+func attacker_has_item_steal(attacker_creature: Dictionary) -> bool:
+	return defender_has_item_steal(attacker_creature)
+
+# ============================================================
+# 即死スキル関連
+# ============================================================
+
+## 攻撃側が即死スキルを持っているかチェック
+## クリーチャー自身のスキル + アイテムの効果を両方確認
+## @param attacker_creature: 攻撃側クリーチャーデータ
+## @param attacker_item: 攻撃側が使用するアイテム（空の場合あり）
+## @return: 即死を持っている場合は即死情報を返す、なければ空のDictionary
+func attacker_has_instant_death(attacker_creature: Dictionary, attacker_item: Dictionary = {}) -> Dictionary:
+	# クリーチャー自身の即死スキルをチェック
+	var ability_parsed = attacker_creature.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	
+	if "即死" in keywords:
+		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+		var instant_death_info = keyword_conditions.get("即死", {})
+		if not instant_death_info.is_empty():
+			return instant_death_info
+	
+	# アイテムの即死効果をチェック
+	if not attacker_item.is_empty():
+		var item_instant_death = _get_item_instant_death_info(attacker_item)
+		if not item_instant_death.is_empty():
+			return item_instant_death
+	
+	return {}
+
+## アイテムの即死効果情報を取得
+func _get_item_instant_death_info(item: Dictionary) -> Dictionary:
+	var effect_parsed = item.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "instant_death":
+			# 道連れ（on_death）は除外、攻撃時の即死のみ
+			var trigger = effect.get("trigger", "")
+			if trigger != "on_death":
+				return effect
+	
+	return {}
+
+## 手札から無効化アイテムを取得
+## @param player_id: プレイヤーID
+## @return: 無効化効果を持つアイテムの配列 [{index, data}]
+func get_nullify_items_from_hand(player_id: int) -> Array:
+	var result = []
+	var items = get_items_from_hand(player_id)
+	
+	for item_entry in items:
+		var item = item_entry.get("data", {})
+		if _item_has_nullify_effect(item):
+			result.append(item_entry)
+	
+	return result
+
+## アイテムが無効化効果を持っているかチェック
+func _item_has_nullify_effect(item: Dictionary) -> bool:
+	var effect_parsed = item.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		# 無効化系の効果タイプをチェック
+		if effect_type in ["nullify", "nullify_attack", "nullify_instant_death"]:
+			return true
+	
+	# キーワードもチェック
+	var keywords = effect_parsed.get("keywords", [])
+	for keyword in keywords:
+		if "無効化" in str(keyword):
+			return true
+	
+	return false
+
+## クリーチャーが無効化スキルを持っているかチェック
+func creature_has_nullify_skill(creature: Dictionary) -> bool:
+	var ability_parsed = creature.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	return "無効化" in keywords

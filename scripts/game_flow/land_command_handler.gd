@@ -697,3 +697,201 @@ func _setup_land_info_panel():
 	if ui_manager:
 		land_info_panel.set_ui_manager(ui_manager)
 		ui_manager.add_child(land_info_panel)
+
+# ============================================================
+# CPU用インターフェース
+# ============================================================
+
+## CPUが領地コマンドを実行（統合メソッド）
+## 戻り値: 実行成功/失敗
+func execute_for_cpu(command: Dictionary) -> bool:
+	var command_type = command.get("type", "")
+	
+	print("[LandCommandHandler] CPU実行: %s" % command_type)
+	
+	# コマンドタイプに応じて処理（各関数内でバリデーション）
+	match command_type:
+		"level_up", "element_change", "creature_swap":
+			# tile_indexを使用するコマンド
+			var tile_index = command.get("tile_index", -1)
+			if not _select_tile_for_cpu(tile_index):
+				print("[LandCommandHandler] CPU: 土地選択失敗 (tile=%d)" % tile_index)
+				return false
+			
+			match command_type:
+				"level_up":
+					return _execute_level_up_for_cpu(command)
+				"element_change":
+					return _execute_element_change_for_cpu(command)
+				"creature_swap":
+					return _execute_swap_for_cpu(command)
+		
+		"move_invasion":
+			# from_tile_indexを使用するコマンド（バリデーションは_execute_move_for_cpu内で行う）
+			return _execute_move_for_cpu(command)
+	
+	print("[LandCommandHandler] CPU: 不明なコマンドタイプ: %s" % command_type)
+	return false
+
+## CPU用土地選択（バリデーション）
+func _select_tile_for_cpu(tile_index: int) -> bool:
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		return false
+	
+	var tile = board_system.tile_nodes[tile_index]
+	
+	# ダウンチェック
+	if tile.has_method("is_down") and tile.is_down():
+		print("[LandCommandHandler] CPU: タイル%d はダウン中" % tile_index)
+		return false
+	
+	# 所有権チェック
+	var current_player = player_system.get_current_player()
+	if tile.owner_id != current_player.id:
+		print("[LandCommandHandler] CPU: タイル%d は所有していない" % tile_index)
+		return false
+	
+	selected_tile_index = tile_index
+	return true
+
+## CPU用レベルアップ
+func _execute_level_up_for_cpu(command: Dictionary) -> bool:
+	var target_level = command.get("target_level", 1)
+	var cost = command.get("cost", 0)
+	
+	# LandActionHelperの既存処理を使用
+	var success = LandActionHelper.execute_level_up_with_level(self, target_level, cost)
+	
+	if success:
+		print("[LandCommandHandler] CPU: レベルアップ成功 → Lv%d" % target_level)
+	
+	return success
+
+## CPU用属性変更
+func _execute_element_change_for_cpu(command: Dictionary) -> bool:
+	var new_element = command.get("new_element", "")
+	
+	if new_element.is_empty():
+		return false
+	
+	# LandActionHelperの既存処理を使用
+	var success = LandActionHelper.execute_terrain_change_with_element(self, new_element)
+	
+	if success:
+		print("[LandCommandHandler] CPU: 属性変更成功 → %s" % new_element)
+	
+	return success
+
+## CPU用移動（空き地・敵領地両対応）
+func _execute_move_for_cpu(command: Dictionary) -> bool:
+	var from_tile_index = command.get("from_tile_index", -1)
+	var to_tile_index = command.get("to_tile_index", -1)
+	
+	print("[LandCommandHandler] CPU移動: from=%d, to=%d" % [from_tile_index, to_tile_index])
+	
+	if from_tile_index < 0 or to_tile_index < 0:
+		print("[LandCommandHandler] CPU: 移動失敗 - 無効なタイルインデックス")
+		return false
+	
+	# 移動元を選択（ダウンチェック含む）
+	if not _select_tile_for_cpu(from_tile_index):
+		print("[LandCommandHandler] CPU: 移動失敗 - 移動元選択不可")
+		return false
+	
+	# 移動元を設定
+	move_source_tile = from_tile_index
+	move_destinations = [to_tile_index]
+	current_destination_index = 0
+	
+	# CPU攻撃側アイテムを事前設定（敵領地への移動の場合）
+	var item_index = command.get("item_index", -1)
+	var item_data = command.get("item_data", {})
+	if item_index >= 0 and not item_data.is_empty():
+		if game_flow_manager and game_flow_manager.item_phase_handler:
+			var item_with_index = item_data.duplicate()
+			item_with_index["_hand_index"] = item_index
+			game_flow_manager.item_phase_handler.set_preselected_attacker_item(item_with_index)
+			print("[LandCommandHandler] CPU: 移動侵略アイテム事前設定: %s (index=%d)" % [item_data.get("name", "?"), item_index])
+	
+	# LandActionHelper.confirm_move を使用（空き地・敵領地両対応）
+	LandActionHelper.confirm_move(self, to_tile_index)
+	
+	print("[LandCommandHandler] CPU: 移動実行 %d → %d" % [from_tile_index, to_tile_index])
+	return true
+
+## CPU用クリーチャー交換
+func _execute_swap_for_cpu(command: Dictionary) -> bool:
+	var tile_index = command.get("tile_index", -1)
+	var hand_index = command.get("hand_index", -1)
+	
+	if tile_index < 0 or hand_index < 0:
+		return false
+	
+	# 土地は既に選択済みなのでselected_tile_indexを使う
+	
+	# 交換情報を設定
+	var tile_info = board_system.get_tile_info(tile_index)
+	_swap_mode = true
+	_swap_old_creature = tile_info.get("creature", {}).duplicate()
+	_swap_tile_index = tile_index
+	
+	# TileActionProcessorに交換モードを設定
+	if board_system.tile_action_processor:
+		board_system.tile_action_processor.is_action_processing = true
+	
+	# 交換実行（既存のexecute_swapを使用）
+	_execute_swap_with_hand_index_for_cpu(hand_index)
+	
+	return true
+
+## CPU用交換実行（手札インデックス指定）
+func _execute_swap_with_hand_index_for_cpu(hand_index: int):
+	var current_player_index = board_system.current_player_index
+	var tile = board_system.tile_nodes.get(_swap_tile_index)
+	
+	if not tile:
+		_complete_swap_for_cpu(false)
+		return
+	
+	# 新しいクリーチャーのデータを取得
+	var card_system = board_system.card_system
+	var new_creature = card_system.get_card_data_for_player(current_player_index, hand_index)
+	
+	if new_creature.is_empty():
+		_complete_swap_for_cpu(false)
+		return
+	
+	# 元のクリーチャーを手札に戻す
+	var old_creature = tile.creature_data.duplicate()
+	card_system.add_card_to_hand(current_player_index, old_creature)
+	
+	# 新しいクリーチャーを手札から消費
+	card_system.use_card_for_player(current_player_index, hand_index)
+	
+	# タイルに新しいクリーチャーを配置
+	tile.place_creature(new_creature)
+	
+	# ダウン状態設定（不屈チェック）
+	if tile.has_method("set_down_state"):
+		if not PlayerBuffSystem.has_unyielding(new_creature):
+			tile.set_down_state(true)
+	
+	print("[LandCommandHandler] CPU: 交換成功 %s → %s" % [
+		old_creature.get("name", "?"), new_creature.get("name", "?")])
+	
+	_complete_swap_for_cpu(true)
+
+## CPU用交換完了処理
+func _complete_swap_for_cpu(_success: bool):
+	_swap_mode = false
+	_swap_old_creature = {}
+	_swap_tile_index = -1
+	selected_tile_index = -1
+	
+	# UI更新
+	if ui_manager:
+		ui_manager.update_player_info_panels()
+	
+	# アクション完了通知
+	if board_system and board_system.tile_action_processor:
+		board_system.tile_action_processor.complete_action()

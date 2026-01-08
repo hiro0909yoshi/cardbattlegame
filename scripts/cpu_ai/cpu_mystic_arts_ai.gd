@@ -38,6 +38,16 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	# ミスティックアーツデータをロード
 	_load_mystic_arts_data()
 
+## 手札ユーティリティを設定
+func set_hand_utils(utils: CPUHandUtils) -> void:
+	if condition_checker:
+		condition_checker.set_hand_utils(utils)
+
+## CPUBattleAIを設定（共通バトル評価用）
+func set_battle_ai(ai: CPUBattleAI) -> void:
+	if condition_checker:
+		condition_checker.set_battle_ai(ai)
+
 ## ミスティックアーツデータをロード
 func _load_mystic_arts_data() -> void:
 	var file = FileAccess.open("res://data/spell_mystic.json", FileAccess.READ)

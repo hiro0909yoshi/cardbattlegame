@@ -317,10 +317,10 @@ func _evaluate_move_to_enemy(context: Dictionary, from_land: Dictionary, dest_ti
 	if dest_tile.creature_data.is_empty():
 		return {}
 	
-	# 戦闘シミュレーション
+	# 戦闘シミュレーション（アイテム込み）
 	var player_id = context.get("player_id", -1)
-	var can_win = _can_win_move_battle(from_land, dest_tile, player_id)
-	if not can_win:
+	var battle_result = _evaluate_move_battle(from_land, dest_tile, player_id)
+	if not battle_result.can_win:
 		return {}
 	
 	# スコア計算
@@ -333,13 +333,20 @@ func _evaluate_move_to_enemy(context: Dictionary, from_land: Dictionary, dest_ti
 	if element_match:
 		score += INVASION_ELEMENT_MATCH_BONUS
 	
-	return {
+	var result = {
 		"type": "move_invasion",
 		"from_tile_index": from_land.tile_index,
 		"to_tile_index": dest_tile.tile_index,
 		"target_type": "enemy",
 		"score": score
 	}
+	
+	# アイテム情報を追加
+	if battle_result.item_index >= 0:
+		result["item_index"] = battle_result.item_index
+		result["item_data"] = battle_result.item_data
+	
+	return result
 
 
 ## レベルアップ評価
@@ -665,7 +672,7 @@ func _get_hand_creatures(player_id: int) -> Array:
 
 
 ## クリーチャーを配置可能かチェック（召喚条件）
-func _can_place_creature(creature_data: Dictionary, land: Dictionary) -> bool:
+func _can_place_creature(creature_data: Dictionary, _land: Dictionary) -> bool:
 	# cost_lands_required チェック
 	if creature_data.has("cost_lands_required"):
 		var required_lands = creature_data.get("cost_lands_required", [])
@@ -683,7 +690,7 @@ func _can_place_creature(creature_data: Dictionary, land: Dictionary) -> bool:
 
 
 ## 侵略時の属性一致チェック
-func _is_element_match_for_invasion(context: Dictionary, tile) -> bool:
+func _is_element_match_for_invasion(_context: Dictionary, _tile) -> bool:
 	# 攻撃側クリーチャーの属性と土地属性の一致をチェック
 	# TODO: 攻撃クリーチャーを特定して判定
 	return false
@@ -719,55 +726,70 @@ func _can_win_battle(context: Dictionary, tile_index: int) -> bool:
 			tile_info,
 			player_id
 		)
-		if result.get("attacker_wins", false):
+		if result.get("result") == BattleSimulator.BattleResult.ATTACKER_WIN:
 			return true
 	
 	return false
 
 
-## 移動侵略時に勝てるか判定
-func _can_win_move_battle(from_land: Dictionary, dest_tile, player_id: int) -> bool:
+## 移動侵略時に勝てるか判定し、使用するアイテム情報も返す
+## CPUBattleAI.evaluate_single_creature_battle を使用（共通ロジック）
+## @return Dictionary: {can_win: bool, item_index: int, item_data: Dictionary}
+func _evaluate_move_battle(from_land: Dictionary, dest_tile, player_id: int) -> Dictionary:
+	var result_data = {
+		"can_win": false,
+		"item_index": -1,
+		"item_data": {}
+	}
+	
+	# battle_aiの共通メソッドを使用
+	if battle_ai != null:
+		var tile_info = {
+			"index": dest_tile.tile_index,
+			"element": dest_tile.tile_type,
+			"level": dest_tile.level,
+			"owner": dest_tile.owner_id
+		}
+		
+		var eval_result = battle_ai.evaluate_single_creature_battle(
+			from_land.creature_data,
+			dest_tile.creature_data,
+			tile_info,
+			player_id
+		)
+		
+		result_data.can_win = eval_result.can_win
+		result_data.item_index = eval_result.item_index
+		result_data.item_data = eval_result.item_data
+		return result_data
+	
+	# フォールバック: battle_aiがない場合は単純シミュレーション
 	if battle_simulator == null:
-		return false
+		return result_data
 	
 	var defender_data = dest_tile.creature_data
 	if defender_data.is_empty():
-		return true
+		result_data.can_win = true
+		return result_data
 	
-	var tile_info = {
+	var fallback_tile_info = {
 		"index": dest_tile.tile_index,
 		"element": dest_tile.tile_type,
-		"level": dest_tile.level
+		"level": dest_tile.level,
+		"owner": dest_tile.owner_id
 	}
 	
-	# まずアイテムなしで評価
-	var result = battle_simulator.simulate_battle(
+	var sim_result = battle_simulator.simulate_battle(
 		from_land.creature_data,
 		defender_data,
-		tile_info,
+		fallback_tile_info,
 		player_id
 	)
 	
-	if result.get("attacker_wins", false):
-		return true
+	if sim_result.get("result") == BattleSimulator.BattleResult.ATTACKER_WIN:
+		result_data.can_win = true
 	
-	# アイテムなしで勝てない場合、アイテム込みで評価
-	if battle_ai != null and card_system != null:
-		var items = _get_hand_items(player_id)
-		for item_entry in items:
-			var item_data = item_entry.get("data", {})
-			var item_result = battle_ai.evaluate_battle_with_item(
-				from_land.creature_data,
-				defender_data,
-				tile_info,
-				player_id,
-				item_data
-			)
-			var sim_result = item_result.get("sim_result", {})
-			if sim_result.get("attacker_wins", false):
-				return true
-	
-	return false
+	return result_data
 
 
 ## 手札のアイテムを取得

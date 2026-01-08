@@ -150,6 +150,13 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 		best_result.get("is_instant_death_gamble", false) or \
 		best_result.get("is_nullify_instant_death", false)
 	
+	print("[CPU AI] バトル判断結果: can_win=%s, instant_death=%s, nullify_instant=%s, creature_index=%d" % [
+		best_result.can_win,
+		best_result.get("is_instant_death_gamble", false),
+		best_result.get("is_nullify_instant_death", false),
+		best_result.creature_index
+	])
+	
 	if should_attack:
 		var creature = card_system.get_card_data_for_player(current_player.id, best_result.creature_index)
 		if best_result.get("is_instant_death_gamble", false):
@@ -290,9 +297,9 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	
 	if not can_win:
 		# 倒せない場合は領地コマンドを検討
-		var best_option = territory_ai.evaluate_all_options(context)
-		if not best_option.is_empty():
-			return {"action": "territory_command", "command": best_option}
+		var territory_option = territory_ai.evaluate_all_options(context)
+		if not territory_option.is_empty():
+			return {"action": "territory_command", "command": territory_option}
 		return {"action": "skip"}
 	
 	# 倒せる場合は侵略スコアと領地コマンドスコアを比較
@@ -366,8 +373,15 @@ func _can_win_current_battle(current_player, tile_info: Dictionary) -> bool:
 	if defender.is_empty():
 		return true  # クリーチャーがいなければ勝ち
 	
+	# ワーストケースを考慮した評価を行う
 	var best_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
-	return best_result.get("can_win", false)
+	
+	# can_winがtrue、または即死ギャンブル/無効化+即死が可能な場合
+	var can_attack = best_result.get("can_win", false) or \
+		best_result.get("is_instant_death_gamble", false) or \
+		best_result.get("is_nullify_instant_death", false)
+	
+	return can_attack
 
 
 # ============================================================

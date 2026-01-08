@@ -22,6 +22,9 @@ var _battle_simulator = null
 ## 手札ユーティリティ（ワーストケースシミュレーション用）
 var hand_utils: CPUHandUtils = null
 
+## CPUBattleAI（共通バトル評価用）
+var battle_ai: CPUBattleAI = null
+
 ## 初期化
 func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
 	board_system = b_system
@@ -47,6 +50,31 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
 	hand_utils = utils
+
+## CPUBattleAIを設定
+func set_battle_ai(ai: CPUBattleAI) -> void:
+	battle_ai = ai
+
+## ワーストケースシミュレーション（敵がアイテム/援護を使った場合でも勝てるか）
+func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
+	# battle_aiがあればそれを使用
+	if battle_ai != null:
+		var worst_case = battle_ai.simulate_worst_case_common(
+			attacker,
+			defender,
+			tile_info,
+			player_id,
+			{},    # 自分のアイテム（なし）
+			true   # is_attacker = true（攻撃側として）
+		)
+		return worst_case.is_win
+	
+	# battle_aiがない場合は基本シミュレーションのみ（フォールバック）
+	if _battle_simulator:
+		var result = _battle_simulator.simulate_battle(attacker, defender, tile_info, player_id, {}, {})
+		return result.get("result", -1) == BattleSimulatorScript.BattleResult.ATTACKER_WIN
+	
+	return false
 
 # =============================================================================
 # 外部からのアクセス用ラッパー（後方互換性）
@@ -149,8 +177,9 @@ func _check_enemy_level_4(context: Dictionary) -> bool:
 	return enemy_lands.size() > 0
 
 ## 移動侵略で勝てるかチェック（アウトレイジ、チャリオット等）
+## CPUBattleAI.evaluate_single_creature_battle を使用（共通ロジック）
 func _check_move_invasion_win(context: Dictionary) -> bool:
-	if not board_system or not _battle_simulator:
+	if not board_system:
 		return false
 	
 	var player_id = context.get("player_id", 0)
@@ -197,86 +226,30 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 			if defender.is_empty():
 				continue
 			
-			var sim_tile_info = {
+			var tile_info = {
+				"index": enemy_tile.get("tile_index", -1),
 				"element": enemy_tile.get("element", ""),
 				"level": enemy_tile.get("level", 1),
-				"owner": enemy_tile.get("owner", -1),
-				"tile_index": enemy_tile.get("tile_index", -1)
+				"owner": enemy_tile.get("owner", -1)
 			}
 			
-			# まず両方アイテムなしでシミュレーション（攻撃の最低条件）
-			var base_result = _battle_simulator.simulate_battle(
-				attacker,
-				defender,
-				sim_tile_info,
-				player_id,
-				{},
-				{}
-			)
-			
-			var base_win = base_result.get("result", -1) == BattleSimulatorScript.BattleResult.ATTACKER_WIN
-			if not base_win:
-				continue  # 両方アイテムなしで勝てない → 候補外
-			
-			# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
-			var worst_case_win = _check_worst_case_win(attacker, defender, sim_tile_info, player_id)
-			
-			if worst_case_win:
-				return true
+			# CPUBattleAIの共通メソッドを使用
+			if battle_ai != null:
+				var eval_result = battle_ai.evaluate_single_creature_battle(
+					attacker, defender, tile_info, player_id, true
+				)
+				if eval_result.can_win:
+					return true
+			else:
+				# フォールバック: 単純シミュレーション
+				var sim_result = _battle_simulator.simulate_battle(
+					attacker, defender, tile_info, player_id, {}, {}
+				)
+				if sim_result.get("result") == BattleSimulatorScript.BattleResult.ATTACKER_WIN:
+					return true
 	
 	return false
 
-## ワーストケース（敵がアイテム/援護を使った場合）でも勝てるかチェック
-func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
-	var defender_owner = tile_info.get("owner", -1)
-	
-	# hand_utilsがない場合は通常シミュレーション結果をそのまま返す
-	if not hand_utils or defender_owner < 0:
-		return true  # 基本シミュレーションで勝っているので
-	
-	# 敵の対抗手段を収集
-	var enemy_items = hand_utils.get_enemy_items(defender_owner)
-	var enemy_assists = hand_utils.get_enemy_assist_creatures(defender_owner, defender)
-	
-	# 対抗手段がない場合は勝ち
-	if enemy_items.is_empty() and enemy_assists.is_empty():
-		return true
-	
-	# 敵アイテムをすべて試す
-	for enemy_item in enemy_items:
-		var sim_result = _battle_simulator.simulate_battle(
-			attacker,
-			defender,
-			tile_info,
-			player_id,
-			{},
-			enemy_item
-		)
-		
-		var result = sim_result.get("result", -1)
-		if result != BattleSimulatorScript.BattleResult.ATTACKER_WIN:
-			return false  # このアイテムで負ける
-	
-	# 敵援護をすべて試す
-	for enemy_assist in enemy_assists:
-		var defender_with_assist = defender.duplicate(true)
-		defender_with_assist["ap"] = defender_with_assist.get("ap", 0) + enemy_assist.get("ap", 0)
-		defender_with_assist["hp"] = defender_with_assist.get("hp", 0) + enemy_assist.get("hp", 0)
-		
-		var sim_result = _battle_simulator.simulate_battle(
-			attacker,
-			defender_with_assist,
-			tile_info,
-			player_id,
-			{},
-			{}
-		)
-		
-		var result = sim_result.get("result", -1)
-		if result != BattleSimulatorScript.BattleResult.ATTACKER_WIN:
-			return false  # この援護で負ける
-	
-	return true  # 全ての対抗手段を試しても勝てる
 
 ## ダウン中の自クリーチャーがいるか
 func _check_has_downed_creature(context: Dictionary) -> bool:

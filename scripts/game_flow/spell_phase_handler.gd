@@ -199,17 +199,28 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
 		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
 	
+	# CPU バトルAIを初期化（共通バトル評価用）
+	var cpu_battle_ai: CPUBattleAI = null
+	if not cpu_battle_ai:
+		cpu_battle_ai = CPUBattleAI.new()
+		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
+		cpu_battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, game_flow_manager)
+		cpu_battle_ai.set_hand_utils(cpu_hand_utils)
+	
 	# CPU スペル/ミスティックアーツ AI を初期化
 	if not cpu_spell_ai:
 		cpu_spell_ai = CPUSpellAI.new()
 		var l_system = game_flow_manager.lap_system if game_flow_manager else null
 		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
 		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
+		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
 		var l_system = game_flow_manager.lap_system if game_flow_manager else null
 		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager, l_system)
+		cpu_mystic_arts_ai.set_hand_utils(cpu_hand_utils)
+		cpu_mystic_arts_ai.set_battle_ai(cpu_battle_ai)
 	
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:

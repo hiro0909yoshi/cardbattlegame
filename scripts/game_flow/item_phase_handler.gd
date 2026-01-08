@@ -34,8 +34,14 @@ var _battle_simulator = null
 # 防御時のタイル情報（シミュレーション用）
 var defense_tile_info: Dictionary = {}
 
+# 現在のフェーズが攻撃側かどうか
+var _is_current_phase_attacker: bool = false
+
 # 手札ユーティリティ（ワーストケースシミュレーション用）
 var cpu_hand_utils: CPUHandUtils = null
+
+# CPUBattleAI（共通バトル評価用）
+var cpu_battle_ai: CPUBattleAI = null
 
 ## 参照
 var ui_manager = null
@@ -61,17 +67,44 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		var board_system = flow_mgr.board_system_3d if flow_mgr else null
 		var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
 		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
+	
+	# CPUBattleAIを初期化（共通バトル評価用）
+	if not cpu_battle_ai:
+		cpu_battle_ai = CPUBattleAI.new()
+		var board_system = flow_mgr.board_system_3d if flow_mgr else null
+		var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
+		cpu_battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, flow_mgr)
+		cpu_battle_ai.set_hand_utils(cpu_hand_utils)
 
 ## アイテムフェーズ開始
-func start_item_phase(player_id: int, creature_data: Dictionary = {}):
+## defender_tile_info: 攻撃側フェーズ開始時に防御側情報を渡す（防御側CPUの事前選択用）
+func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_tile_info: Dictionary = {}):
 	if current_state != State.INACTIVE:
 		return
+	
+	# defender_tile_info が渡された場合 = 攻撃側のアイテムフェーズ開始
+	var is_attacker_phase = not defender_tile_info.is_empty()
+	
+	# 🎯 攻撃側フェーズ開始時に防御側CPUの事前選択を行う
+	if is_attacker_phase:
+		clear_preselected_defender_item()
+		
+		var defender_owner = defender_tile_info.get("owner", -1)
+		if defender_owner >= 0 and is_cpu_player(defender_owner):
+			var defender_creature = defender_tile_info.get("creature", {})
+			preselect_defender_item(
+				defender_owner,
+				defender_creature,
+				creature_data,  # 攻撃側クリーチャー
+				defender_tile_info
+			)
 	
 	current_state = State.WAITING_FOR_SELECTION
 	current_player_id = player_id
 	item_used_this_battle = false
 	selected_item_card = {}
 	battle_creature_data = creature_data
+	_is_current_phase_attacker = is_attacker_phase  # 攻撃側か防御側かを記録
 	merged_creature_data = {}  # 合体データをリセット
 	
 	# 戦闘行動不可呪いチェック（防御側のみ呪いを持つ可能性がある）
@@ -84,8 +117,23 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}):
 	
 	# CPUの場合のアイテム判断
 	if is_cpu_player(player_id):
-		_cpu_decide_item()
-		return
+		if _is_current_phase_attacker:
+			# 攻撃側CPU
+			if not _preselected_attacker_item.is_empty():
+				print("[CPU攻撃] 事前選択アイテムを使用: %s" % _preselected_attacker_item.get("name", "?"))
+				use_item(_preselected_attacker_item)
+				_preselected_attacker_item = {}  # 使用後クリア
+				return
+			else:
+				# 攻撃側で事前選択がない場合はパス
+				# （侵略判断時にアイテムなしで勝てると判断している）
+				print("[CPU攻撃] 事前選択なし → パス")
+				pass_item()
+				return
+		else:
+			# 防御側CPU
+			_cpu_decide_item()
+			return
 	
 	# 人間プレイヤーの場合はUI表示
 	await _show_item_selection_ui()
@@ -466,16 +514,236 @@ func set_opponent_creature(creature_data: Dictionary):
 func set_defense_tile_info(tile_info: Dictionary):
 	defense_tile_info = tile_info
 
+## CPU攻撃側の事前選択アイテムを設定
+## バトルAIで決定したアイテムをセットし、アイテムフェーズで自動使用
+var _preselected_attacker_item: Dictionary = {}
+
+func set_preselected_attacker_item(item_data: Dictionary):
+	_preselected_attacker_item = item_data
+	if not item_data.is_empty():
+		print("[ItemPhaseHandler] CPU攻撃側事前選択アイテム: %s" % item_data.get("name", "?"))
+
+func clear_preselected_attacker_item():
+	_preselected_attacker_item = {}
+
+## CPU防御側の事前選択アイテム（攻撃側アイテムフェーズ前に決定）
+var _preselected_defender_item: Dictionary = {}
+var _defender_preselection_done: bool = false  # 事前選択が実行されたかどうか
+
+## CPU防御側のアイテムを事前選択
+## 攻撃側がアイテムを選ぶ前に呼び出すことで、攻撃側の手札を正しく参照できる
+func preselect_defender_item(defender_player_id: int, defender_creature: Dictionary, attacker_creature: Dictionary, tile_info: Dictionary):
+	# 事前選択状態をリセット
+	_preselected_defender_item = {}
+	_defender_preselection_done = false
+	
+	print("[CPU防御事前選択] 開始: %s vs %s" % [defender_creature.get("name", "?"), attacker_creature.get("name", "?")])
+	
+	# 一時的にデータを設定
+	var saved_player_id = current_player_id
+	var saved_battle_creature = battle_creature_data
+	var saved_opponent_creature = opponent_creature_data
+	var saved_defense_tile = defense_tile_info
+	
+	current_player_id = defender_player_id
+	battle_creature_data = defender_creature
+	opponent_creature_data = attacker_creature
+	defense_tile_info = tile_info
+	
+	# シミュレーター初期化
+	_ensure_battle_simulator()
+	
+	# CPUBattleAI初期化（共通バトル評価用）
+	if not cpu_battle_ai:
+		cpu_battle_ai = CPUBattleAI.new()
+		var board_system = game_flow_manager.board_system_3d if game_flow_manager else null
+		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
+		cpu_battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, game_flow_manager)
+		if cpu_hand_utils:
+			cpu_battle_ai.set_hand_utils(cpu_hand_utils)
+	
+	# CPUHandUtils初期化
+	if not cpu_hand_utils:
+		cpu_hand_utils = CPUHandUtils.new()
+		var board_system = game_flow_manager.board_system_3d if game_flow_manager else null
+		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
+		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
+		if cpu_battle_ai:
+			cpu_battle_ai.set_hand_utils(cpu_hand_utils)
+	
+	# 事前選択ロジック（_cpu_decide_itemの簡易版）
+	var preselected = _preselect_defender_item_internal()
+	
+	# データを復元
+	current_player_id = saved_player_id
+	battle_creature_data = saved_battle_creature
+	opponent_creature_data = saved_opponent_creature
+	defense_tile_info = saved_defense_tile
+	
+	_defender_preselection_done = true  # 事前選択が実行された
+	
+	if not preselected.is_empty():
+		_preselected_defender_item = preselected
+		print("[CPU防御事前選択] 決定: %s" % preselected.get("name", "?"))
+	else:
+		print("[CPU防御事前選択] アイテムなし（事前選択完了）")
+
+## 事前選択の内部ロジック
+func _preselect_defender_item_internal() -> Dictionary:
+	print("[CPU防御事前選択内部] 開始")
+	
+	if not _battle_simulator:
+		print("[CPU防御事前選択内部] シミュレーターなし → 終了")
+		return {}
+	
+	# 戦闘行動不可呪いチェック
+	if SpellCurseBattle.has_battle_disable(battle_creature_data):
+		print("[CPU防御事前選択内部] 戦闘行動不可 → 終了")
+		return {}
+	
+	# 無効化判定
+	if _should_skip_item_due_to_nullify():
+		print("[CPU防御事前選択内部] 無効化で勝てる → 終了")
+		return {}
+	
+	# 合体チェック（合体は事前選択しない、フェーズで処理）
+	var merge_result = _check_merge_option()
+	if merge_result["can_merge"] and merge_result["wins"]:
+		print("[CPU防御事前選択内部] 合体で勝利 → 合体選択")
+		return {"_is_merge": true, "merge_data": merge_result}
+	
+	# 敵のアイテム破壊・盗みスキルチェック
+	var enemy_destroy_types = _attacker_has_item_destroy()
+	var enemy_has_steal = _attacker_has_item_steal()
+	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
+	print("[CPU防御事前選択内部] アイテム回避: %s (破壊:%s, 盗み:%s)" % [should_avoid_items, enemy_destroy_types, enemy_has_steal])
+	
+	# タイル情報（即死判断にも使用）
+	var tile_info = _get_defense_tile_info()
+	var tile_level = tile_info.get("level", 1)
+	print("[CPU防御事前選択内部] タイル: %s Lv%d" % [tile_info.get("element", "?"), tile_level])
+	
+	# 敵が即死スキルを持っていて、自分に適用される場合の特別処理
+	var instant_death_check = _check_instant_death_threat()
+	if not should_avoid_items and instant_death_check.is_applicable:
+		var probability = instant_death_check.probability
+		print("[CPU防御事前選択内部] 敵が即死スキル持ち（%d%%）＆自分に適用される" % probability)
+		
+		# 100%即死、または確率即死でレベル2以上の土地なら無効化アイテムを優先
+		if probability >= 100 or tile_level >= 2:
+			print("[CPU防御事前選択内部] → 無効化アイテムを優先検索（100%%即死 or Lv%d土地）" % tile_level)
+			var nullify_item = _find_nullify_item_for_defense()
+			if not nullify_item.is_empty():
+				print("[CPU防御事前選択内部] 通常攻撃100%%無効化アイテムを使用: %s" % nullify_item.get("name", "?"))
+				return nullify_item
+			# 無効化アイテムがない場合
+			if probability >= 100:
+				# 100%即死はアイテムを使っても即死されるので使わない
+				print("[CPU防御事前選択内部] 無効化アイテムなし → 100%%即死を受けるためアイテム使用しない")
+				return {}
+			else:
+				# 確率即死は通常判断へ（アイテムで生き残れる可能性がある）
+				print("[CPU防御事前選択内部] 無効化アイテムなし → 確率即死（%d%%）のため通常判断へ" % probability)
+		else:
+			# Lv1土地で確率即死 → 通常判断へ
+			print("[CPU防御事前選択内部] Lv1土地で確率即死（%d%%）→ 通常判断へ" % probability)
+	
+	# ワーストケースシミュレーション
+	print("[CPU防御事前選択内部] ワーストケースシミュレーション開始（アイテムなし）")
+	var worst_case_result = _simulate_defense_worst_case({})
+	var worst_case_outcome = worst_case_result.get("result", -1)
+	print("[CPU防御事前選択内部] ワーストケース結果: %s" % _result_to_string(worst_case_outcome))
+	
+	# ワーストケースでも勝てる場合はアイテム不要
+	if worst_case_outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN:
+		print("[CPU防御事前選択内部] ワーストケースで勝利 → アイテム不要")
+		return {}
+	if worst_case_outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
+		print("[CPU防御事前選択内部] ワーストケースで両者生存 → アイテム不要")
+		return {}
+	
+	# 手札の防具枚数
+	var armor_count = _count_armor_in_hand()
+	print("[CPU防御事前選択内部] 手札の防具枚数: %d" % armor_count)
+	
+	# 勝てるアイテム・援護を探す
+	print("[CPU防御事前選択内部] 勝てるアイテム検索開始")
+	var item_results = {"normal": [], "reserve": []}
+	if not should_avoid_items:
+		item_results = _find_winning_items_separated(worst_case_outcome)
+	
+	var winning_items = item_results["normal"]
+	var reserve_items = item_results["reserve"]
+	
+	var assist_results = _find_winning_assist_separated(worst_case_outcome)
+	var winning_assist = assist_results["normal"]
+	var reserve_assist = assist_results["reserve"]
+	
+	# 選択ロジック（防具2枚以下なら援護優先）
+	if should_avoid_items or armor_count <= 2:
+		if not winning_assist.is_empty():
+			return _select_best_assist(winning_assist)
+		if not should_avoid_items and not winning_items.is_empty():
+			return _select_best_defense_item(winning_items)
+	else:
+		if not winning_items.is_empty():
+			return _select_best_defense_item(winning_items)
+		if not winning_assist.is_empty():
+			return _select_best_assist(winning_assist)
+	
+	# 温存対象（レベル2以上）
+	if tile_level >= 2:
+		if should_avoid_items or armor_count <= 2:
+			if not reserve_assist.is_empty():
+				return _select_best_assist(reserve_assist)
+			if not should_avoid_items and not reserve_items.is_empty():
+				return _select_best_defense_item(reserve_items)
+		else:
+			if not reserve_items.is_empty():
+				return _select_best_defense_item(reserve_items)
+			if not reserve_assist.is_empty():
+				return _select_best_assist(reserve_assist)
+	
+	return {}
+
+func clear_preselected_defender_item():
+	_preselected_defender_item = {}
+	_defender_preselection_done = false
+
 ## CPU防御時のアイテム判断
-## 無効化スキルで勝てる場合はアイテムを温存
-## 負ける場合、防具・アクセサリ・援護で勝てるならアイテム使用
-## 防具2枚以下の場合は援護を優先（防具温存）
-## 温存対象（道連れ等）はレベル2以上でのみ使用
+## 事前選択されたアイテムがあればそれを使用
+## なければ従来のロジックで判断
 func _cpu_decide_item():
 	print("[CPU防御] アイテム判断開始: %s vs %s" % [
 		battle_creature_data.get("name", "?"),
 		opponent_creature_data.get("name", "?")
 	])
+	
+	# 事前選択が実行済みの場合
+	if _defender_preselection_done:
+		if not _preselected_defender_item.is_empty():
+			# 合体の場合
+			if _preselected_defender_item.get("_is_merge", false):
+				var merge_data = _preselected_defender_item.get("merge_data", {})
+				print("[CPU防御] 事前選択: 合体を実行 → %s" % merge_data.get("result_name", "?"))
+				_execute_merge_for_cpu(merge_data)
+				clear_preselected_defender_item()
+				return
+			
+			print("[CPU防御] 事前選択アイテム使用: %s" % _preselected_defender_item.get("name", "?"))
+			var item_to_use = _preselected_defender_item
+			clear_preselected_defender_item()
+			use_item(item_to_use)
+			return
+		else:
+			# 事前選択でアイテムなしと判断された場合はパス
+			print("[CPU防御] 事前選択済み: アイテムなし → パス")
+			clear_preselected_defender_item()
+			pass_item()
+			return
+	
+	# 事前選択が実行されていない場合は従来のロジック（人間攻撃側の場合など）
+	print("[CPU防御] 事前選択未実行 → 従来ロジックで判断")
 	
 	# 無効化判定を行う（防御側として）
 	if _should_skip_item_due_to_nullify():
@@ -502,18 +770,7 @@ func _cpu_decide_item():
 			print("[CPU防御] 警告: 敵がアイテム盗みスキルを所持")
 		print("[CPU防御] → アイテム使用を控え、援護のみ検討します")
 	
-	# 敵が即死クリーチャーを使っている場合、無効化アイテムを優先使用
-	# ただし、敵がアイテム破壊・盗みを持っている場合はスキップ
-	if not should_avoid_items and _enemy_has_instant_death_skill():
-		print("[CPU防御] 敵が即死スキル持ち → 無効化アイテムを優先検索")
-		var nullify_item = _find_nullify_item_for_defense()
-		if not nullify_item.is_empty():
-			print("[CPU防御] 無効化アイテムを使用: %s" % nullify_item.get("name", "?"))
-			use_item(nullify_item)
-			return
-		print("[CPU防御] 無効化アイテムなし → 通常判断へ")
-	
-	# タイル情報を取得
+	# タイル情報を取得（即死判断にも使用）
 	var tile_info = _get_defense_tile_info()
 	if tile_info.is_empty():
 		print("[CPU防御] タイル情報取得失敗 → パス")
@@ -526,6 +783,34 @@ func _cpu_decide_item():
 		tile_level
 	])
 	
+	# 敵が即死スキルを持っていて、自分に適用される場合の特別処理
+	# ただし、敵がアイテム破壊・盗みを持っている場合はスキップ
+	var instant_death_check = _check_instant_death_threat()
+	if not should_avoid_items and instant_death_check.is_applicable:
+		var probability = instant_death_check.probability
+		print("[CPU防御] 敵が即死スキル持ち（%d%%）＆自分に適用される" % probability)
+		
+		# 100%即死、または確率即死でレベル2以上の土地なら無効化アイテムを優先
+		if probability >= 100 or tile_level >= 2:
+			print("[CPU防御] → 無効化アイテムを優先検索（100%%即死 or Lv%d土地）" % tile_level)
+			var nullify_item = _find_nullify_item_for_defense()
+			if not nullify_item.is_empty():
+				print("[CPU防御] 通常攻撃100%%無効化アイテムを使用: %s" % nullify_item.get("name", "?"))
+				use_item(nullify_item)
+				return
+			# 無効化アイテムがない場合
+			if probability >= 100:
+				# 100%即死はアイテムを使っても即死されるので使わない
+				print("[CPU防御] 無効化アイテムなし → 100%%即死を受けるためアイテム使用しない")
+				pass_item()
+				return
+			else:
+				# 確率即死は通常判断へ（アイテムで生き残れる可能性がある）
+				print("[CPU防御] 無効化アイテムなし → 確率即死（%d%%）のため通常判断へ" % probability)
+		else:
+			# Lv1土地で確率即死 → 通常判断へ
+			print("[CPU防御] Lv1土地で確率即死（%d%%）→ 通常判断へ" % probability)
+	
 	# BattleSimulatorを初期化
 	_ensure_battle_simulator()
 	if not _battle_simulator:
@@ -533,20 +818,20 @@ func _cpu_decide_item():
 		pass_item()
 		return
 	
-	# 1. アイテムなしでシミュレーション
-	var no_item_result = _simulate_defense_battle({})
-	var no_item_outcome = no_item_result.get("result", -1)
+	# 1. ワーストケースシミュレーション（敵がアイテムを使った場合も考慮）
+	var worst_case_result = _simulate_defense_worst_case({})
+	var worst_case_outcome = worst_case_result.get("result", -1)
 	
-	print("[CPU防御] アイテムなし結果: %s" % _result_to_string(no_item_outcome))
+	print("[CPU防御] ワーストケース結果: %s" % _result_to_string(worst_case_outcome))
 	
-	# 勝てる/生き残れる場合はアイテム温存
-	if no_item_outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN:
-		print("[CPU防御] アイテムなしで勝利 → アイテム温存")
+	# ワーストケースでも勝てる/生き残れる場合はアイテム温存
+	if worst_case_outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN:
+		print("[CPU防御] ワーストケースでも勝利 → アイテム温存")
 		pass_item()
 		return
 	
-	if no_item_outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
-		print("[CPU防御] アイテムなしで両者生存 → アイテム温存")
+	if worst_case_outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
+		print("[CPU防御] ワーストケースでも両者生存 → アイテム温存")
 		pass_item()
 		return
 	
@@ -558,12 +843,12 @@ func _cpu_decide_item():
 	# 敵がアイテム破壊・盗みを持っている場合はアイテムをスキップ
 	var item_results = {"normal": [], "reserve": []}
 	if not should_avoid_items:
-		item_results = _find_winning_items_separated(no_item_outcome)
+		item_results = _find_winning_items_separated(worst_case_outcome)
 	
 	var winning_items = item_results["normal"]
 	var reserve_items = item_results["reserve"]
 	
-	var assist_results = _find_winning_assist_separated(no_item_outcome)
+	var assist_results = _find_winning_assist_separated(worst_case_outcome)
 	var winning_assist = assist_results["normal"]
 	var reserve_assist = assist_results["reserve"]
 	
@@ -723,12 +1008,21 @@ func _find_winning_items_separated(current_outcome: int) -> Dictionary:
 	var result = {"normal": [], "reserve": []}
 	
 	if not card_system:
+		print("[_find_winning_items_separated] card_systemなし")
 		return result
 	
 	var hand = card_system.get_all_cards_for_player(current_player_id)
 	var current_player = player_system.players[current_player_id] if player_system else null
 	if not current_player:
+		print("[_find_winning_items_separated] current_playerなし")
 		return result
+	
+	print("[_find_winning_items_separated] current_player_id=%d 手札%d枚 魔力%d" % [current_player_id, hand.size(), current_player.magic_power])
+	var item_count = 0
+	for c in hand:
+		if c.get("type", "") == "item":
+			item_count += 1
+			print("[_find_winning_items_separated]   アイテム: %s (%s)" % [c.get("name", "?"), c.get("item_type", "?")])
 	
 	for i in range(hand.size()):
 		var card = hand[i]
@@ -1022,50 +1316,64 @@ func _simulate_defense_battle(defender_item: Dictionary) -> Dictionary:
 	)
 
 ## 攻撃側がアイテムを使った場合のワーストケースシミュレーション
-## 自分（防御側）がアイテムを使っても、攻撃側がアイテムを使ったら負けるかどうかを判定
+## CPUBattleAI.simulate_worst_case_common を使用（共通ロジック）
 func _simulate_defense_worst_case(defender_item: Dictionary) -> Dictionary:
 	var tile_info = _get_defense_tile_info()
 	
-	var sim_tile_info = {
+	var worst_tile_info = {
+		"index": tile_info.get("index", -1),
 		"element": tile_info.get("element", ""),
 		"level": tile_info.get("level", 1),
-		"owner": current_player_id,
-		"tile_index": tile_info.get("index", -1)
+		"owner": current_player_id
 	}
 	
+	# CPUBattleAIの共通メソッドを使用
+	if cpu_battle_ai != null:
+		var worst_case = cpu_battle_ai.simulate_worst_case_common(
+			battle_creature_data,      # 自分（防御側）
+			opponent_creature_data,    # 相手（攻撃側）
+			worst_tile_info,
+			current_player_id,
+			defender_item,
+			false  # is_attacker = false（防御側）
+		)
+		
+		# 結果を従来の形式に変換
+		if worst_case.is_win:
+			return {"result": BattleSimulatorScript.BattleResult.DEFENDER_WIN}
+		else:
+			return worst_case.get("sim_result", {"result": BattleSimulatorScript.BattleResult.ATTACKER_WIN})
+	
+	# フォールバック: cpu_battle_aiがない場合は従来のロジック
 	var attacker_player_id = -1
 	if game_flow_manager and game_flow_manager.board_system_3d:
 		attacker_player_id = game_flow_manager.board_system_3d.current_player_index
 	
-	# 攻撃側の手札からアイテムを取得
 	if not cpu_hand_utils or attacker_player_id < 0:
-		# hand_utilsがない場合は通常シミュレーション
 		return _simulate_defense_battle(defender_item)
 	
 	var attacker_items = cpu_hand_utils.get_enemy_items(attacker_player_id)
 	
-	# 対抗手段がない場合は通常シミュレーション
 	if attacker_items.is_empty():
 		return _simulate_defense_battle(defender_item)
 	
-	# ワーストケースを探す（攻撃側にとって最も有利な結果）
 	var worst_result = _simulate_defense_battle(defender_item)
 	
 	for attacker_item in attacker_items:
 		var result = _battle_simulator.simulate_battle(
 			opponent_creature_data,
 			battle_creature_data,
-			sim_tile_info,
+			worst_tile_info,
 			attacker_player_id,
 			attacker_item,
 			defender_item
 		)
 		
-		# 攻撃側にとって有利（防御側にとって不利）なら更新
 		if _is_worse_for_defender(result, worst_result):
 			worst_result = result
 	
 	return worst_result
+
 
 ## 結果Aが結果Bより防御側にとって不利か
 func _is_worse_for_defender(result_a: Dictionary, result_b: Dictionary) -> bool:
@@ -1367,14 +1675,155 @@ func _should_skip_item_due_to_nullify() -> bool:
 
 ## 敵（攻撃側）が即死スキルを持っているかチェック
 func _enemy_has_instant_death_skill() -> bool:
+	var info = _get_enemy_instant_death_info()
+	return not info.is_empty()
+
+## 敵（攻撃側）の即死スキル情報を取得
+## 返り値: { probability: int, condition: Dictionary } または空Dictionary
+func _get_enemy_instant_death_info() -> Dictionary:
 	if opponent_creature_data.is_empty():
-		return false
+		return {}
 	
 	var ability_parsed = opponent_creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	return "即死" in keywords
+	
+	if "即死" not in keywords:
+		return {}
+	
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	var instant_death_condition = keyword_conditions.get("即死", {})
+	
+	var probability = instant_death_condition.get("probability", 0)
+	
+	return {
+		"probability": probability,
+		"condition": instant_death_condition
+	}
 
-## 防御用の無効化アイテムを探す
+## 敵の即死が防御側（自分）に適用されるかチェック
+func _is_instant_death_applicable_to_defender() -> bool:
+	var info = _get_enemy_instant_death_info()
+	if info.is_empty():
+		return false
+	
+	# 100%即死でなければ、通常判断でOK
+	if info.get("probability", 0) < 100:
+		return false
+	
+	var condition = info.get("condition", {})
+	var condition_type = condition.get("condition_type", "")
+	
+	# 無条件
+	if condition_type == "" or condition_type == "none":
+		return true
+	
+	var defender_element = battle_creature_data.get("element", "")
+	var defender_ap = battle_creature_data.get("ap", 0)
+	
+	match condition_type:
+		"enemy_is_element", "enemy_element":
+			# 敵が特定属性（攻撃側から見て敵=防御側）
+			# 単一属性
+			if condition.has("element"):
+				var required_element = condition.get("element", "")
+				if required_element == "全":
+					return true
+				return defender_element == required_element
+			
+			# 複数属性
+			var required_elements = condition.get("elements", [])
+			if typeof(required_elements) == TYPE_STRING:
+				if required_elements == "全":
+					return true
+				required_elements = [required_elements]
+			
+			return defender_element in required_elements
+		
+		"defender_ap_check":
+			# 防御側のAPが一定以上
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 0)
+			
+			match operator:
+				">=": return defender_ap >= value
+				">": return defender_ap > value
+				"==": return defender_ap == value
+				_: return false
+		
+		"defender_role":
+			# 攻撃側クリーチャーが「防御側なら即死」を持つ場合
+			# 攻撃側として使っているので、この条件は適用されない
+			return false
+		
+		_:
+			# 未知の条件タイプは安全側に倒して適用とみなす
+			return true
+
+## 敵の即死スキルが自分に適用されるかチェック（確率も含めて返す）
+## 返り値: { is_applicable: bool, probability: int }
+func _check_instant_death_threat() -> Dictionary:
+	var result = { "is_applicable": false, "probability": 0 }
+	
+	var info = _get_enemy_instant_death_info()
+	if info.is_empty():
+		return result
+	
+	var probability = info.get("probability", 0)
+	var condition = info.get("condition", {})
+	var condition_type = condition.get("condition_type", "")
+	
+	# 無条件
+	if condition_type == "" or condition_type == "none":
+		result.is_applicable = true
+		result.probability = probability
+		return result
+	
+	var defender_element = battle_creature_data.get("element", "")
+	var defender_ap = battle_creature_data.get("ap", 0)
+	var is_applicable = false
+	
+	match condition_type:
+		"enemy_is_element", "enemy_element":
+			# 敵が特定属性（攻撃側から見て敵=防御側）
+			if condition.has("element"):
+				var required_element = condition.get("element", "")
+				if required_element == "全":
+					is_applicable = true
+				else:
+					is_applicable = (defender_element == required_element)
+			else:
+				var required_elements = condition.get("elements", [])
+				if typeof(required_elements) == TYPE_STRING:
+					if required_elements == "全":
+						is_applicable = true
+					else:
+						required_elements = [required_elements]
+				if not is_applicable:
+					is_applicable = (defender_element in required_elements)
+		
+		"defender_ap_check":
+			# 防御側のAPが一定以上
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 0)
+			match operator:
+				">=": is_applicable = (defender_ap >= value)
+				">": is_applicable = (defender_ap > value)
+				"==": is_applicable = (defender_ap == value)
+		
+		"defender_role":
+			# 攻撃側として使っているので、この条件は適用されない
+			is_applicable = false
+		
+		_:
+			# 未知の条件タイプは安全側に倒して適用とみなす
+			is_applicable = true
+	
+	result.is_applicable = is_applicable
+	result.probability = probability
+	return result
+
+## 防御用の無効化アイテムを探す（即死対策用）
+## 通常攻撃を100%無効化するアイテムのみを検索
 ## 敵が即死スキルを持っている場合に呼ばれる
 func _find_nullify_item_for_defense() -> Dictionary:
 	if not card_system:
@@ -1402,27 +1851,31 @@ func _find_nullify_item_for_defense() -> Dictionary:
 		if cost > current_player.magic_power:
 			continue
 		
-		# 無効化効果を持っているかチェック
-		var effect_parsed = card.get("effect_parsed", {})
-		var effects = effect_parsed.get("effects", [])
-		var has_nullify = false
-		
-		for effect in effects:
-			if effect.get("effect_type", "") == "nullify":
-				has_nullify = true
-				break
-		
-		# keywordsに無効化があるかチェック
-		if not has_nullify:
-			var keywords = effect_parsed.get("keywords", [])
-			if "無効化" in keywords:
-				has_nullify = true
-		
-		if has_nullify:
+		# 通常攻撃100%無効化をチェック
+		if _is_full_normal_attack_nullify_item(card):
 			# コストが低いものを優先
 			if cost < best_cost:
 				best_cost = cost
 				best_nullify_item = card
-				print("  [無効化アイテム候補] %s (コスト: %d)" % [card.get("name", "?"), cost])
+				print("  [即死対策アイテム候補] %s (コスト: %d)" % [card.get("name", "?"), cost])
 	
 	return best_nullify_item
+
+## アイテムが通常攻撃を100%無効化するかチェック
+## nullify_type: "normal_attack" かつ reduction_rate がない（または0.0）
+func _is_full_normal_attack_nullify_item(item: Dictionary) -> bool:
+	var effect_parsed = item.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	for effect in effects:
+		# grant_skill で無効化を付与するタイプ
+		if effect.get("effect_type", "") == "grant_skill" and effect.get("skill", "") == "無効化":
+			var skill_params = effect.get("skill_params", {})
+			var nullify_type = skill_params.get("nullify_type", "")
+			var reduction_rate = skill_params.get("reduction_rate", 0.0)
+			
+			# 通常攻撃100%無効化
+			if nullify_type == "normal_attack" and reduction_rate == 0.0:
+				return true
+	
+	return false

@@ -252,15 +252,20 @@ func evaluate_all_combinations_for_battle(
 	var enemy_has_steal = hand_utils.defender_has_item_steal(defender)
 	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
 	
+	print("[CPU AI] アイテム回避判定: destroy_types=%s, has_steal=%s, should_avoid=%s" % [
+		enemy_destroy_types, enemy_has_steal, should_avoid_items
+	])
+	
 	if should_avoid_items:
 		if not enemy_destroy_types.is_empty():
-			print("[CPU AI] 警告: 敵がアイテム破壊スキルを所持 (対象: %s)" % str(enemy_destroy_types))
+			print("[CPU AI] 警告: 敵がアイテム破壊スキルを所持 → 全アイテム使用不可")
 		if enemy_has_steal:
-			print("[CPU AI] 警告: 敵がアイテム盗みスキルを所持")
-		print("[CPU AI] → アイテム使用を控えます")
+			print("[CPU AI] 警告: 敵がアイテム盗みスキルを所持 → 全アイテム使用不可")
 	
 	# 勝てる組み合わせを収集（ワーストケース対応版）
 	var winning_combinations: Array = []
+	
+	print("[CPU AI] クリーチャー評価開始（%d体）" % creatures.size())
 	
 	for creature_entry in creatures:
 		var creature_index = creature_entry["index"]
@@ -269,18 +274,11 @@ func evaluate_all_combinations_for_battle(
 		
 		# コストチェック
 		if not hand_utils.can_afford_card(current_player, creature_index):
+			print("  [スキップ] %s: コスト不足" % creature.get("name", "?"))
 			continue
 		
-		# 1. 両方アイテムなしで評価（攻撃の最低条件）
-		var no_item_result = _simulate_and_check_win(
-			creature, defender, tile_info, current_player.id, {}
-		)
-		
-		if not no_item_result.is_win:
-			# 両方アイテムなしで勝てない → このクリーチャーは候補外
-			continue
-		
-		# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+		# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+		print("  [評価中] %s (コスト: %d)" % [creature.get("name", "?"), creature_cost])
 		var worst_case = simulate_worst_case(creature, defender, tile_info, current_player.id, {})
 		
 		if worst_case.is_win:
@@ -353,7 +351,12 @@ func evaluate_all_combinations_for_battle(
 		return result
 	
 	# ギリギリで勝てる組み合わせを選択
+	print("[CPU AI] 勝てる組み合わせ数: %d" % winning_combinations.size())
 	var best = _select_optimal_combination(winning_combinations)
+	
+	print("[CPU AI] 最適組み合わせ選択: creature_index=%d, item_index=%d" % [
+		best.get("creature_index", -1), best.get("item_index", -1)
+	])
 	
 	result.creature_index = best.creature_index
 	result.item_index = best.item_index
@@ -603,6 +606,7 @@ func find_item_to_beat_worst_case(
 		return result
 	
 	var items = hand_utils.get_items_from_hand(attacker_player_id)
+	print("    [アイテム検索] ワーストケース対策アイテムを検索: %d個のアイテム" % items.size())
 	
 	for item_entry in items:
 		var item_index = item_entry["index"]
@@ -631,6 +635,238 @@ func find_item_to_beat_worst_case(
 				result.item_index = item_index
 	
 	return result
+
+# ============================================================
+# 共通バトル評価（指定クリーチャーで勝てるか＋最適アイテムを返す）
+# ============================================================
+
+## 指定クリーチャーで勝てるか評価し、必要なら最適アイテムを返す
+## 通常バトル、移動侵略、スペル移動、防衛で共通使用
+## @param my_creature: 自分のクリーチャー
+## @param enemy_creature: 相手のクリーチャー
+## @param tile_info: タイル情報 {index, element, level, owner}
+## @param my_player_id: 自分のプレイヤーID
+## @param is_attacker: true=攻撃側, false=防御側
+## @return: {can_win: bool, item_index: int, item_data: Dictionary, worst_case: Dictionary}
+func evaluate_single_creature_battle(
+	my_creature: Dictionary,
+	enemy_creature: Dictionary,
+	tile_info: Dictionary,
+	my_player_id: int,
+	is_attacker: bool = true
+) -> Dictionary:
+	var result = {
+		"can_win": false,
+		"item_index": -1,
+		"item_data": {},
+		"worst_case": {}
+	}
+	
+	if not hand_utils or not battle_simulator:
+		return result
+	
+	# 相手がいない場合は勝利
+	if enemy_creature.is_empty():
+		result.can_win = true
+		return result
+	
+	# 攻撃側/防御側に応じてパラメータを設定
+	var attacker: Dictionary
+	var defender: Dictionary
+	var attacker_player_id: int
+	
+	if is_attacker:
+		attacker = my_creature
+		defender = enemy_creature
+		attacker_player_id = my_player_id
+	else:
+		attacker = enemy_creature
+		defender = my_creature
+		attacker_player_id = tile_info.get("owner", -1)
+		# 防御側の場合、tile_infoのownerは防御側なので、攻撃側のIDを計算
+		# 注: 攻撃側のIDは呼び出し元で渡す必要があるかもしれない
+	
+	# 1. 敵のアイテム破壊・盗みスキルをチェック
+	var enemy_destroy_types: Array
+	var enemy_has_steal: bool
+	
+	if is_attacker:
+		enemy_destroy_types = hand_utils.defender_has_item_destroy(defender)
+		enemy_has_steal = hand_utils.defender_has_item_steal(defender)
+	else:
+		enemy_destroy_types = hand_utils.attacker_has_item_destroy(attacker)
+		enemy_has_steal = hand_utils.attacker_has_item_steal(attacker)
+	
+	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
+	
+	# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+	var worst_case = simulate_worst_case_common(
+		my_creature, enemy_creature, tile_info, my_player_id, {}, is_attacker
+	)
+	result.worst_case = worst_case
+	
+	if worst_case.is_win:
+		# ワーストケースでも勝てる → アイテムなしで可
+		result.can_win = true
+		return result
+	
+	# 3. ワーストケースで負ける → アイテムを使って勝てるか探す
+	# ただし、敵がアイテム破壊・盗みを持っている場合はアイテムを使わない
+	if should_avoid_items:
+		return result
+	
+	# 4. 勝てるアイテムを探す
+	var items = hand_utils.get_items_from_hand(my_player_id)
+	for item_entry in items:
+		var item_index = item_entry.get("index", -1)
+		var item_data = item_entry.get("data", {})
+		
+		# アイテム破壊対象チェック
+		if not enemy_destroy_types.is_empty():
+			if hand_utils.is_item_destroy_target(item_data, enemy_destroy_types):
+				continue  # このアイテムは破壊される
+		
+		# ワーストケースシミュレーション（アイテム込み）
+		var item_worst_case = simulate_worst_case_common(
+			my_creature, enemy_creature, tile_info, my_player_id, item_data, is_attacker
+		)
+		
+		if item_worst_case.is_win:
+			result.can_win = true
+			result.item_index = item_index
+			result.item_data = item_data
+			return result
+	
+	return result
+
+
+## 攻撃側/防御側両対応のワーストケースシミュレーション
+## @param my_creature: 自分のクリーチャー
+## @param enemy_creature: 相手のクリーチャー
+## @param tile_info: タイル情報
+## @param my_player_id: 自分のプレイヤーID
+## @param my_item: 自分が使うアイテム
+## @param is_attacker: true=攻撃側, false=防御側
+func simulate_worst_case_common(
+	my_creature: Dictionary,
+	enemy_creature: Dictionary,
+	tile_info: Dictionary,
+	my_player_id: int,
+	my_item: Dictionary,
+	is_attacker: bool
+) -> Dictionary:
+	# 攻撃側の場合は既存のsimulate_worst_caseを使用
+	if is_attacker:
+		return simulate_worst_case(my_creature, enemy_creature, tile_info, my_player_id, my_item)
+	
+	# 防御側の場合
+	return _simulate_worst_case_as_defender(my_creature, enemy_creature, tile_info, my_player_id, my_item)
+
+
+## 防御側としてのワーストケースシミュレーション
+## 敵（攻撃側）がアイテム/援護を使った場合を想定
+func _simulate_worst_case_as_defender(
+	defender: Dictionary,
+	attacker: Dictionary,
+	tile_info: Dictionary,
+	defender_player_id: int,
+	defender_item: Dictionary
+) -> Dictionary:
+	# 攻撃側プレイヤーIDを計算（2人対戦前提）
+	var attacker_player_id = 1 - defender_player_id
+	
+	if not hand_utils:
+		# hand_utilsがない場合は単純シミュレーション
+		var sim_tile_info = {
+			"element": tile_info.get("element", ""),
+			"level": tile_info.get("level", 1),
+			"owner": tile_info.get("owner", defender_player_id),
+			"tile_index": tile_info.get("index", -1)
+		}
+		var sim_result = battle_simulator.simulate_battle(
+			attacker, defender, sim_tile_info, attacker_player_id, {}, defender_item
+		)
+		var is_win = sim_result.get("result") == BattleSimulator.BattleResult.DEFENDER_WIN
+		return {"is_win": is_win, "sim_result": sim_result, "overkill": 0}
+	
+	# 敵（攻撃側）の対抗手段を収集
+	var enemy_items = hand_utils.get_enemy_items(attacker_player_id)
+	var enemy_assists = hand_utils.get_enemy_assist_creatures(attacker_player_id, attacker)
+	
+	print("[CPU防御WC] 攻撃側プレイヤー: %d, 敵アイテム数: %d, 敵援護数: %d" % [attacker_player_id, enemy_items.size(), enemy_assists.size()])
+	for ei in enemy_items:
+		print("[CPU防御WC]   敵アイテム: %s" % ei.get("name", "?"))
+	
+	var sim_tile_info = {
+		"element": tile_info.get("element", ""),
+		"level": tile_info.get("level", 1),
+		"owner": tile_info.get("owner", defender_player_id),
+		"tile_index": tile_info.get("index", -1)
+	}
+	
+	# ベースライン: 敵がアイテム/援護なし
+	var base_result = battle_simulator.simulate_battle(
+		attacker, defender, sim_tile_info, attacker_player_id, {}, defender_item
+	)
+	# 防御側にとっては「防御側勝利」または「両者生存」が成功（土地を守れた）
+	var base_outcome = base_result.get("result", -1)
+	var base_is_win = (base_outcome == BattleSimulator.BattleResult.DEFENDER_WIN or 
+					   base_outcome == BattleSimulator.BattleResult.ATTACKER_SURVIVED)
+	
+	var worst_result = {
+		"is_win": base_is_win,
+		"sim_result": base_result,
+		"overkill": 0,
+		"worst_case_option": "なし"
+	}
+	
+	print("[CPU防御WC] ベースライン結果: %s → is_win=%s" % [base_outcome, base_is_win])
+	
+	# 対抗手段がない場合はベースラインを返す
+	if enemy_items.is_empty() and enemy_assists.is_empty():
+		return worst_result
+	
+	# 敵アイテムをすべて試す
+	for enemy_item in enemy_items:
+		var sim_result = battle_simulator.simulate_battle(
+			attacker, defender, sim_tile_info, attacker_player_id, enemy_item, defender_item
+		)
+		var outcome = sim_result.get("result", -1)
+		# 防御側にとっては「防御側勝利」または「両者生存」が成功
+		var is_win = (outcome == BattleSimulator.BattleResult.DEFENDER_WIN or 
+					  outcome == BattleSimulator.BattleResult.ATTACKER_SURVIVED)
+		
+		print("[CPU防御WC]   敵アイテム %s 試行: 結果=%s → is_win=%s" % [enemy_item.get("name", "?"), outcome, is_win])
+		
+		# 悪化した場合（防御側にとって）
+		if worst_result.is_win and not is_win:
+			worst_result.is_win = false
+			worst_result.sim_result = sim_result
+			worst_result.worst_case_option = "アイテム: " + enemy_item.get("name", "?")
+			print("[CPU防御WC]   → ワーストケース更新: %s" % worst_result.worst_case_option)
+	
+	# 敵援護をすべて試す
+	for assist in enemy_assists:
+		var boosted_attacker = attacker.duplicate(true)
+		boosted_attacker["ap"] = boosted_attacker.get("ap", 0) + assist.get("ap", 0)
+		boosted_attacker["hp"] = boosted_attacker.get("hp", 0) + assist.get("hp", 0)
+		
+		var sim_result = battle_simulator.simulate_battle(
+			boosted_attacker, defender, sim_tile_info, attacker_player_id, {}, defender_item
+		)
+		var outcome = sim_result.get("result", -1)
+		var is_win = (outcome == BattleSimulator.BattleResult.DEFENDER_WIN or 
+					  outcome == BattleSimulator.BattleResult.ATTACKER_SURVIVED)
+		
+		print("[CPU防御WC]   敵援護 %s 試行: 結果=%s → is_win=%s" % [assist.get("name", "?"), outcome, is_win])
+		
+		if worst_result.is_win and not is_win:
+			worst_result.is_win = false
+			worst_result.sim_result = sim_result
+			worst_result.worst_case_option = "援護: " + assist.get("name", "?")
+			print("[CPU防御WC]   → ワーストケース更新: %s" % worst_result.worst_case_option)
+	
+	return worst_result
 
 # ============================================================
 # 合体データアクセス（CPUMergeEvaluatorへの委譲）

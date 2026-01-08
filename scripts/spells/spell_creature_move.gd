@@ -143,8 +143,8 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 		if not item_handler.item_phase_completed.is_connected(_on_spell_move_item_phase_completed):
 			item_handler.item_phase_completed.connect(_on_spell_move_item_phase_completed, CONNECT_ONE_SHOT)
 		
-
-		item_handler.start_item_phase(caster_player_id, attacker_creature)
+		# 攻撃側フェーズ開始（防御側情報を渡して事前選択）
+		item_handler.start_item_phase(caster_player_id, attacker_creature, tile_info)
 		
 		# バトル完了シグナルを待機
 		await spell_move_battle_completed

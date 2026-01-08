@@ -575,8 +575,12 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
 			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 		
-		# アイテムフェーズ開始（バトル参加クリーチャーのデータを渡す）
-		game_flow_manager.item_phase_handler.start_item_phase(current_player_index, pending_battle_card_data)
+		# アイテムフェーズ開始（バトル参加クリーチャーのデータと防御側情報を渡す）
+		game_flow_manager.item_phase_handler.start_item_phase(
+			current_player_index, 
+			pending_battle_card_data,
+			pending_battle_tile_info  # 防御側タイル情報（事前選択用）
+		)
 	else:
 		# ItemPhaseHandlerがない場合は直接バトル
 		_execute_pending_battle()
@@ -994,3 +998,269 @@ func _complete_action():
 	is_action_processing = false
 	print("[TileActionProcessor] action_completedシグナル発火")
 	emit_signal("action_completed")
+
+# ============================================================
+# CPU用インターフェース
+# ============================================================
+
+## CPU用召喚実行
+## プレイヤーと同じ処理を行う（土地条件、カード犠牲、合成処理含む）
+func execute_summon_for_cpu(card_index: int) -> bool:
+	print("[TileActionProcessor] CPU召喚開始: card_index=%d" % card_index)
+	if card_index < 0:
+		return false
+	
+	is_action_processing = true
+	
+	var current_player_index = board_system.current_player_index
+	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	
+	if card_data.is_empty():
+		is_action_processing = false
+		return false
+	
+	var target_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var tile = board_system.tile_nodes.get(target_tile)
+	
+	# 配置可能タイルかチェック
+	if tile and not tile.can_place_creature():
+		print("[TileActionProcessor] CPU: このタイルには配置できません")
+		is_action_processing = false
+		return false
+	
+	# 防御型チェック: 空き地以外には召喚できない
+	var creature_type = card_data.get("creature_type", "normal")
+	if creature_type == "defensive":
+		var tile_info = board_system.get_tile_info(target_tile)
+		if tile_info["owner"] != -1:
+			print("[TileActionProcessor] CPU: 防御型クリーチャーは空き地にのみ召喚可能")
+			is_action_processing = false
+			return false
+	
+	# 土地条件チェック
+	if not debug_disable_lands_required and not _is_summon_condition_ignored():
+		var check_result = _check_lands_required(card_data, current_player_index)
+		if not check_result.passed:
+			print("[TileActionProcessor] CPU: 土地条件未達: %s" % check_result.message)
+			is_action_processing = false
+			return false
+	
+	# カード犠牲処理（CPUは自動選択）
+	var sacrifice_card = {}
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
+		sacrifice_card = _auto_select_sacrifice_card_for_cpu(current_player_index, card_index)
+		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
+			print("[TileActionProcessor] CPU: 犠牲カードなし、召喚キャンセル")
+			is_action_processing = false
+			return false
+	
+	# クリーチャー合成処理
+	if not sacrifice_card.is_empty() and creature_synthesis:
+		var is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
+		if is_synthesized:
+			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
+			print("[TileActionProcessor] CPU: 合成成立: %s" % card_data.get("name", "?"))
+	
+	# コスト計算
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	else:
+		cost = cost_data
+	
+	# ライフフォース呪いチェック
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
+	
+	var current_player = player_system.get_current_player()
+	
+	if current_player.magic_power < cost:
+		print("[TileActionProcessor] CPU: 魔力不足で召喚できません")
+		is_action_processing = false
+		return false
+	
+	# カード使用と魔力消費
+	card_system.use_card_for_player(current_player_index, card_index)
+	player_system.add_magic(current_player_index, -cost)
+	
+	# 土地取得とクリーチャー配置
+	board_system.set_tile_owner(target_tile, current_player_index)
+	board_system.place_creature(target_tile, card_data)
+	
+	# ダウン状態設定（不屈チェック）
+	if tile and tile.has_method("set_down_state"):
+		if not PlayerBuffSystem.has_unyielding(card_data):
+			tile.set_down_state(true)
+	
+	print("[TileActionProcessor] CPU召喚成功: %s" % card_data.get("name", "?"))
+	
+	# UI更新
+	if ui_manager:
+		ui_manager.hide_card_selection_ui()
+		ui_manager.update_player_info_panels()
+	
+	_complete_action()
+	return true
+
+## CPU用バトル実行
+## プレイヤーと同じ処理を行う（土地条件、カード犠牲、合成処理含む）
+## item_index: CPUが使用するアイテムの手札インデックス（-1=使用しない）
+func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: int = -1) -> bool:
+	print("[TileActionProcessor] CPUバトル開始: card_index=%d, item_index=%d" % [card_index, item_index])
+	if card_index < 0:
+		return false
+	
+	is_action_processing = true
+	
+	var current_player_index = board_system.current_player_index
+	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
+	
+	if card_data.is_empty():
+		is_action_processing = false
+		return false
+	
+	# 土地条件チェック
+	if not debug_disable_lands_required and not _is_summon_condition_ignored():
+		var check_result = _check_lands_required(card_data, current_player_index)
+		if not check_result.passed:
+			print("[TileActionProcessor] CPU: 土地条件未達: %s" % check_result.message)
+			is_action_processing = false
+			return false
+	
+	# カード犠牲処理（CPUは自動選択）
+	var sacrifice_card = {}
+	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
+		sacrifice_card = _auto_select_sacrifice_card_for_cpu(current_player_index, card_index)
+		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
+			print("[TileActionProcessor] CPU: 犠牲カードなし、バトルキャンセル")
+			is_action_processing = false
+			return false
+	
+	# クリーチャー合成処理
+	if not sacrifice_card.is_empty() and creature_synthesis:
+		var is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
+		if is_synthesized:
+			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
+			print("[TileActionProcessor] CPU: 合成成立: %s" % card_data.get("name", "?"))
+	
+	# バトル情報を保存
+	pending_battle_card_index = card_index
+	pending_battle_card_data = card_data
+	pending_battle_tile_info = tile_info
+	
+	# CPUが選択したアイテムを保存（アイテムフェーズで使用）
+	pending_attacker_item = {}
+	if item_index >= 0:
+		var item_data = card_system.get_card_data_for_player(current_player_index, item_index)
+		if not item_data.is_empty():
+			pending_attacker_item = item_data.duplicate()
+			pending_attacker_item["_hand_index"] = item_index  # 手札インデックスを記録
+			print("[TileActionProcessor] CPU: 攻撃側アイテム保存: %s (index=%d)" % [item_data.get("name", "?"), item_index])
+	
+	# コスト計算
+	var cost_data = card_data.get("cost", 1)
+	var cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		cost = cost_data.get("mp", 0)
+	else:
+		cost = cost_data
+	
+	# ライフフォース呪いチェック
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
+	
+	var current_player = player_system.get_current_player()
+	if current_player.magic_power < cost:
+		print("[TileActionProcessor] CPU: 魔力不足でバトルできません")
+		is_action_processing = false
+		return false
+	
+	# カードを使用して魔力消費
+	card_system.use_card_for_player(current_player_index, card_index)
+	player_system.add_magic(current_player_index, -cost)
+	print("[TileActionProcessor] CPU: バトルカード消費: %s" % pending_battle_card_data.get("name", "?"))
+	
+	# バトルステータスオーバーレイ表示
+	var defender_creature = pending_battle_tile_info.get("creature", {})
+	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		var attacker_display = pending_battle_card_data.duplicate()
+		attacker_display["land_bonus_hp"] = 0
+		
+		var defender_display = defender_creature.duplicate()
+		defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
+		
+		game_flow_manager.battle_status_overlay.show_battle_status(
+			attacker_display, defender_display, "attacker")
+	
+	# CPU攻撃側の合体処理をチェック
+	var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
+	if merge_executed:
+		if game_flow_manager and game_flow_manager.battle_status_overlay:
+			var attacker_display = pending_battle_card_data.duplicate()
+			attacker_display["land_bonus_hp"] = 0
+			var defender_display = defender_creature.duplicate()
+			defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
+			game_flow_manager.battle_status_overlay.show_battle_status(
+				attacker_display, defender_display, "attacker")
+	
+	# アイテムフェーズ開始
+	if game_flow_manager and game_flow_manager.item_phase_handler:
+		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+		
+		# CPU攻撃側の事前選択アイテムを設定
+		if not pending_attacker_item.is_empty():
+			game_flow_manager.item_phase_handler.set_preselected_attacker_item(pending_attacker_item)
+		
+		# 攻撃側フェーズ開始時に防御側情報を渡す（防御側CPUの事前選択用）
+		game_flow_manager.item_phase_handler.start_item_phase(
+			current_player_index, 
+			pending_battle_card_data,
+			pending_battle_tile_info
+		)
+	else:
+		_execute_pending_battle()
+	
+	return true
+
+## CPU用犠牲カード自動選択
+## 最も価値の低いクリーチャーを選択
+func _auto_select_sacrifice_card_for_cpu(player_id: int, summon_card_index: int) -> Dictionary:
+	var hand = card_system.get_all_cards_for_player(player_id)
+	
+	var best_sacrifice_index = -1
+	var best_sacrifice_value = 999999
+	
+	for i in range(hand.size()):
+		if i == summon_card_index:
+			continue  # 召喚するカードは除外
+		
+		var card = hand[i]
+		var card_type = card.get("type", card.get("card_type", ""))
+		if card_type != "creature":
+			continue
+		
+		# カード価値を計算（コスト + HP + AP）
+		var cost = 0
+		var cost_data = card.get("cost", 0)
+		if typeof(cost_data) == TYPE_DICTIONARY:
+			cost = cost_data.get("mp", 0)
+		else:
+			cost = cost_data
+		
+		var value = cost + card.get("hp", 0) + card.get("ap", 0)
+		
+		if value < best_sacrifice_value:
+			best_sacrifice_value = value
+			best_sacrifice_index = i
+	
+	if best_sacrifice_index < 0:
+		return {}
+	
+	# 犠牲カードを取得して消費
+	var sacrifice_card = card_system.get_card_data_for_player(player_id, best_sacrifice_index)
+	card_system.use_card_for_player(player_id, best_sacrifice_index)
+	
+	print("[TileActionProcessor] CPU: 犠牲カード選択: %s" % sacrifice_card.get("name", "?"))
+	return sacrifice_card

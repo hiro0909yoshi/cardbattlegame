@@ -100,7 +100,7 @@ func _is_cpu_player(player_id: int) -> bool:
 	return player_id > 0
 
 ## CPU用：最適なクリーチャーを選択（タイルの属性と一致 + HP+APが高いもの）
-func _cpu_select_best_creature(hand_creatures: Array, current_creature: Dictionary, tile_element: String = "") -> Dictionary:
+func _cpu_select_best_creature(hand_creatures: Array, _current_creature: Dictionary, tile_element: String = "") -> Dictionary:
 	var best = hand_creatures[0]
 	var best_score = _get_creature_score_with_element(best, tile_element)
 	
