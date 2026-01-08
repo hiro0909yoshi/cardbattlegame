@@ -12,6 +12,7 @@ var player_system: Node = null
 var card_system: Node = null
 var creature_manager: Node = null
 var lap_system: Node = null
+var cpu_movement_evaluator: CPUMovementEvaluator = null
 
 ## 優先度の数値変換
 const PRIORITY_VALUES = {
@@ -56,6 +57,10 @@ func set_hand_utils(utils: CPUHandUtils) -> void:
 func set_battle_ai(ai: CPUBattleAI) -> void:
 	if condition_checker:
 		condition_checker.set_battle_ai(ai)
+
+## CPUMovementEvaluatorを設定（ホーリーワード判断用）
+func set_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
+	cpu_movement_evaluator = evaluator
 
 ## スペル使用判断のメインエントリ
 ## 戻り値: {use: bool, spell: Dictionary, target: Dictionary} または null
@@ -361,12 +366,15 @@ func _evaluate_strategic(spell: Dictionary, context: Dictionary, base_score: flo
 				# 自動ワープスペル（エスケープ等）: 自分をターゲット
 				target = {"type": "player", "player_id": context.player_id}
 		"dice_manipulation":
-			should_use = _check_dice_manipulation_useful(context)
-			score_multiplier = 0.6
-			# 敵をターゲット（自分の高レベル土地を踏ませたい）
-			var enemies = target_selector.get_enemy_players(context)
-			if not enemies.is_empty():
-				target = enemies[randi() % enemies.size()]
+			# ホーリーワード系スペルの判断（CPUMovementEvaluator経由）
+			var holy_word_result = _evaluate_holy_word_spell(spell, context)
+			should_use = holy_word_result.should_use
+			if should_use:
+				target = holy_word_result.target
+				score_multiplier = 0.9  # 効果的な使用なので高スコア
+				print("[CPUスペルAI] ホーリーワード使用: %s" % holy_word_result.reason)
+			else:
+				score_multiplier = 0.0
 		"near_enemy_high_toll":
 			should_use = _check_near_enemy_high_toll(context)
 			score_multiplier = 0.7
@@ -394,13 +402,116 @@ func _check_after_lap_complete(context: Dictionary) -> bool:
 	var visited_count = lap_system.get_visited_checkpoint_count(player_id)
 	return visited_count == 0
 
-## ダイス操作が有用かチェック
-func _check_dice_manipulation_useful(context: Dictionary) -> bool:
-	# 自分のレベル2以上の土地があれば、敵に踏ませたいので有用
-	var own_high_lands = _get_own_high_level_lands(context)
-	return own_high_lands.size() > 0
+## ホーリーワード系スペルの使用判断
+## 返り値: { should_use: bool, target: Dictionary, reason: String }
+func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var result = { "should_use": false, "target": null, "reason": "" }
+	
+	print("[ホーリーワード判断] 開始: spell=%s" % spell.get("name", "unknown"))
+	
+	# CPUMovementEvaluatorがなければ使用しない
+	if not cpu_movement_evaluator:
+		print("[ホーリーワード判断] cpu_movement_evaluatorがnull")
+		return result
+	
+	var player_id = context.get("player_id", 0)
+	
+	# スペルからダイス固定値を取得
+	var dice_value = _get_dice_value_from_spell(spell)
+	if dice_value <= 0:
+		print("[ホーリーワード判断] dice_value取得失敗: %d" % dice_value)
+		return result
+	
+	print("[ホーリーワード判断] dice_value=%d, player_id=%d" % [dice_value, player_id])
+	
+	var spell_cost = spell.get("cost", {}).get("mp", 0)
+	
+	# 各敵プレイヤーについて評価
+	var best_toll = 0
+	var best_target_id = -1
+	var best_tile_index = -1
+	
+	print("[ホーリーワード判断] 敵プレイヤー評価開始 (player_system.players.size=%d)" % player_system.players.size())
+	
+	for enemy_id in range(player_system.players.size()):
+		if enemy_id == player_id:
+			continue
+		
+		# 敵の現在位置と進行方向を取得
+		var enemy_tile = cpu_movement_evaluator._get_player_current_tile(enemy_id)
+		var enemy_direction = cpu_movement_evaluator._get_player_direction(enemy_id)
+		
+		print("[ホーリーワード判断] 敵P%d: tile=%d, direction=%d" % [enemy_id + 1, enemy_tile, enemy_direction])
+		
+		# 敵がdice_value歩進んだ先の停止位置を計算
+		var sim_result = cpu_movement_evaluator.simulate_path(
+			enemy_tile + enemy_direction,  # 1歩目から開始
+			dice_value - 1,  # 残り歩数
+			enemy_id,
+			enemy_tile  # came_from
+		)
+		
+		# dice_value == 1 の場合は特別処理
+		var stop_tile: int
+		if dice_value == 1:
+			stop_tile = enemy_tile + enemy_direction
+		else:
+			stop_tile = sim_result.stop_tile
+		
+		# 停止位置の情報を取得
+		var tile_info = cpu_movement_evaluator._get_tile_info(stop_tile)
+		var owner = tile_info.get("owner", -1)
+		var level = tile_info.get("level", 1)
+		
+		print("[ホーリーワード判断] 敵P%d → 停止タイル%d: owner=%d, level=%d" % [enemy_id + 1, stop_tile, owner, level])
+		
+		# 自分のLv3以上の領地かチェック
+		if owner != player_id:
+			print("[ホーリーワード判断] → 自分の領地ではない (owner=%d, player_id=%d)" % [owner, player_id])
+			continue
+		if level < 3:
+			print("[ホーリーワード判断] → Lv3未満 (level=%d)" % level)
+			continue
+		
+		# 敵が侵略して勝てるかチェック
+		if cpu_movement_evaluator._can_invade_and_win(stop_tile, enemy_id):
+			print("[ホーリーワード判断] → 敵が侵略して勝てる")
+			continue  # 敵が勝てるなら使用しない
+		
+		# 通行料を計算
+		var toll = cpu_movement_evaluator._calculate_toll(stop_tile)
+		print("[ホーリーワード判断] → 通行料=%d (best_toll=%d)" % [toll, best_toll])
+		
+		if toll > best_toll:
+			best_toll = toll
+			best_target_id = enemy_id
+			best_tile_index = stop_tile
+	
+	# 最良の組み合わせがあれば使用
+	if best_target_id >= 0 and best_toll > 0:
+		result.should_use = true
+		result.target = { "type": "player", "player_id": best_target_id }
+		result.reason = "敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dG）" % [
+			best_target_id + 1,
+			cpu_movement_evaluator._get_tile_info(best_tile_index).get("level", 1),
+			best_tile_index,
+			best_toll
+		]
+	
+	return result
 
-## 自分の高レベル土地を取得（レベル2以上）
+## スペルからダイス固定値を取得
+func _get_dice_value_from_spell(spell: Dictionary) -> int:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	for effect in effects:
+		if effect.get("effect_type") == "dice_fixed":
+			return effect.get("value", 0)
+	
+	return 0
+
+## 自分の高レベル土地を取得（レベル3以上）
 func _get_own_high_level_lands(context: Dictionary) -> Array:
 	var results = []
 	if not board_system:
@@ -415,7 +526,7 @@ func _get_own_high_level_lands(context: Dictionary) -> Array:
 			continue
 		
 		var level = tile.get("level", 1)
-		if level >= 2:
+		if level >= 3:
 			results.append(tile)
 	
 	return results

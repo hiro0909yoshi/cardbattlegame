@@ -757,6 +757,9 @@ func initialize_phase1a_systems():
 		item_phase_handler = ItemPhaseHandlerClass.new()
 		add_child(item_phase_handler)
 		item_phase_handler.initialize(ui_manager, self, card_system, player_system, battle_system)
+	
+	# CPUMovementEvaluatorを作成
+	_setup_cpu_movement_evaluator()
 
 # Phase 1-A: 領地コマンドが閉じられたときの処理
 func _on_land_command_closed():
@@ -809,6 +812,47 @@ func debug_print_phase1a_status():
 
 func get_current_turn() -> int:
 	return current_turn_number
+
+# ============================================
+# CPU移動評価システム
+# ============================================
+
+## CPU移動評価システムの初期化
+func _setup_cpu_movement_evaluator():
+	var cpu_movement_evaluator = CPUMovementEvaluator.new()
+	
+	# バトルシミュレーターを取得（ItemPhaseHandlerから）
+	var battle_sim = null
+	if item_phase_handler and item_phase_handler._battle_simulator:
+		battle_sim = item_phase_handler._battle_simulator
+	
+	# SpellMovementを取得（MovementControllerから）
+	var spell_mov = null
+	if board_system_3d and board_system_3d.movement_controller:
+		spell_mov = board_system_3d.movement_controller.spell_movement
+	
+	cpu_movement_evaluator.setup_systems(
+		board_system_3d,
+		player_system,
+		lap_system,
+		board_system_3d.movement_controller if board_system_3d else null,
+		card_system,
+		battle_sim,
+		spell_mov
+	)
+	
+	# MovementControllerに参照を渡す
+	if board_system_3d and board_system_3d.movement_controller:
+		board_system_3d.movement_controller.cpu_movement_evaluator = cpu_movement_evaluator
+	
+	# SpellPhaseHandlerに参照を渡す（cpu_spell_ai初期化時に使用される）
+	if spell_phase_handler:
+		spell_phase_handler.cpu_movement_evaluator = cpu_movement_evaluator
+		# 既にcpu_spell_aiが初期化されていれば設定
+		if spell_phase_handler.cpu_spell_ai:
+			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
+	
+	print("[CPUMovementEvaluator] 初期化完了")
 
 ## 全分岐タイルの方向を切り替え
 func _toggle_all_branch_tiles():

@@ -54,6 +54,12 @@ var current_branch_tile: int = -1  # 現在分岐選択中のタイル
 # インジケーター設定（BranchTileの定数を参照）
 const INDICATOR_HEIGHT = 0.4  # BranchTileと同じ高さ
 
+# CPU移動評価システム
+var cpu_movement_evaluator: CPUMovementEvaluator = null
+
+# 移動中の残り歩数（CPU分岐選択用）
+var _current_remaining_steps: int = 0
+
 func _ready():
 	pass
 
@@ -115,6 +121,8 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		# 現在位置の接続情報をチェック
 		var current_tile = player_tiles[player_id]
 		var came_from = _get_player_came_from(player_id)
+		# CPU分岐選択用に残り歩数を設定
+		_current_remaining_steps = steps
 		var first_tile = await _select_first_tile(current_tile, came_from)
 		
 		# 歩行逆転呪いがある場合、first_tileを逆転（current_directionは変更しない）
@@ -153,6 +161,9 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 	var is_first_step = true
 	
 	while remaining_steps > 0:
+		# 残り歩数を更新（CPU分岐選択用）
+		_current_remaining_steps = remaining_steps
+		
 		var next_tile: int
 		
 		if is_first_step and first_tile >= 0:
@@ -240,9 +251,14 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 			# 自動選択
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			# 選択UI表示
-			current_branch_tile = current_tile
-			chosen = await _show_branch_tile_selection(result.choices)
+			# CPUの場合は自動選択（残り歩数を渡す）
+			if _is_cpu_player(player_id) and cpu_movement_evaluator:
+				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, _current_remaining_steps)
+				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
+			else:
+				# 選択UI表示
+				current_branch_tile = current_tile
+				chosen = await _show_branch_tile_selection(result.choices)
 		else:
 			# フォールバック（来た方向に戻る）
 			chosen = came_from
@@ -250,9 +266,15 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		# 選択肢が2つ以上なら選択UI
-		current_branch_tile = current_tile
-		chosen = await _show_branch_tile_selection(choices)
+		# 選択肢が2つ以上
+		# CPUの場合は自動選択（残り歩数を渡す）
+		if _is_cpu_player(player_id) and cpu_movement_evaluator:
+			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, _current_remaining_steps)
+			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
+		else:
+			# 選択UI表示
+			current_branch_tile = current_tile
+			chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
 	var inferred_direction = _infer_direction_from_choice(current_tile, chosen, player_id)
@@ -266,7 +288,13 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	
 	# connectionsがなければ+1/-1選択
 	if not tile or not tile.connections or tile.connections.is_empty():
-		var selected_dir = await _show_simple_direction_selection()
+		var selected_dir: int
+		# CPUの場合は自動選択
+		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
+			selected_dir = cpu_movement_evaluator.decide_direction(current_moving_player, [1, -1])
+			print("[CPU方向選択] プレイヤー%d: 方向 %d を選択" % [current_moving_player + 1, selected_dir])
+		else:
+			selected_dir = await _show_simple_direction_selection()
 		_set_player_current_direction(current_moving_player, selected_dir)
 		return current_tile + selected_dir
 	
@@ -287,17 +315,27 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		if result.tile >= 0:
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			current_branch_tile = current_tile
-			chosen = await _show_branch_tile_selection(result.choices)
+			# CPUの場合は自動選択（残り歩数を渡す）
+			if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
+				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, _current_remaining_steps)
+				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
+			else:
+				current_branch_tile = current_tile
+				chosen = await _show_branch_tile_selection(result.choices)
 		else:
 			chosen = came_from
 	# 通常タイル: 選択肢が1つなら自動
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		# 選択肢が2つ以上なら選択UI
-		current_branch_tile = current_tile  # インジケーター表示用
-		chosen = await _show_branch_tile_selection(choices)
+		# 選択肢が2つ以上
+		# CPUの場合は自動選択（残り歩数を渡す）
+		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
+			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, _current_remaining_steps)
+			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
+		else:
+			current_branch_tile = current_tile  # インジケーター表示用
+			chosen = await _show_branch_tile_selection(choices)
 	
 	# 選んだタイルから方向を推測して設定
 	var inferred_dir = _infer_direction_from_choice(current_tile, chosen)
@@ -388,6 +426,18 @@ func _consume_direction_choice(player_id: int) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	player_system.players[player_id].buffs.erase("direction_choice_pending")
+
+# CPUプレイヤーかどうかを判定
+func _is_cpu_player(player_id: int) -> bool:
+	if not game_flow_manager:
+		return false
+	var player_is_cpu = game_flow_manager.player_is_cpu
+	if player_id < 0 or player_id >= player_is_cpu.size():
+		return false
+	# デバッグモードでは全員手動
+	if game_flow_manager.debug_manual_control_all:
+		return false
+	return player_is_cpu[player_id]
 
 # プレイヤーの現在の移動方向を取得
 func _get_player_current_direction(player_id: int) -> int:

@@ -91,6 +91,7 @@ var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離�
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUミスティックアーツ判断AI
 var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ
+var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（ホーリーワード判断用）
 
 func _ready():
 	pass
@@ -214,6 +215,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
 		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
 		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
+		# CPUMovementEvaluatorを設定（ホーリーワード判断用）
+		if cpu_movement_evaluator:
+			cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
