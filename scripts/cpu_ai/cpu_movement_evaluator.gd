@@ -450,8 +450,7 @@ func evaluate_holy_word(spell: Dictionary, context: Dictionary) -> Dictionary:
 	if dice_value == 0:
 		return { "should_use": false }
 	
-	var cost_data = spell.get("cost", 0)
-	var spell_cost = cost_data.get("mp", 0) if typeof(cost_data) == TYPE_DICTIONARY else cost_data
+	var spell_cost = spell.get("cost", {}).get("mp", 0)
 	
 	# 攻撃的使用を評価
 	var offensive_result = _evaluate_holy_word_offensive(dice_value, player_id, spell_cost)

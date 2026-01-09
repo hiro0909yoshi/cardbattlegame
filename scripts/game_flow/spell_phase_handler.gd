@@ -513,13 +513,13 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 
 ## スペルコストを取得（ウェイストワールド対応）
 func _get_spell_cost(spell_card: Dictionary) -> int:
-	var cost_data = spell_card.get("cost", 0)
+	var cost_data = spell_card.get("cost", {})
+	if cost_data == null:
+		cost_data = {}
 	
 	var base_cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		base_cost = cost_data.get("mp", 0)
-	else:
-		base_cost = cost_data
 	
 	# ウェイストワールド（世界呪い）でコスト倍率を適用
 	if game_flow_manager and game_flow_manager.spell_cost_modifier:
