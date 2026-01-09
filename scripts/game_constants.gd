@@ -4,7 +4,7 @@ extends Resource
 # バランス調整時はこのファイルを編集
 
 # === プレイヤー関連 ===
-const INITIAL_MAGIC = 3000        # 初期魔力
+const INITIAL_MAGIC = 1400        # 初期魔力
 const TARGET_MAGIC = 8000         # 勝利条件の魔力
 const MAX_PLAYERS = 4             # 最大プレイヤー数
 

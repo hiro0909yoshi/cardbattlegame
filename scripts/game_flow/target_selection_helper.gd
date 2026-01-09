@@ -12,6 +12,7 @@ class_name TargetSelectionHelper
 # シグナル（インスタンス用）
 # ============================================
 signal tile_selection_completed(tile_index: int)
+signal tile_selection_changed(tile_index: int)  # タイル切り替え時に発火
 
 # ============================================
 # インスタンス変数（タイル選択モード用）
@@ -115,6 +116,9 @@ func _update_tile_selection_display():
 			current_tile_index + 1,
 			available_tile_indices.size()
 		]
+	
+	# タイル切り替えシグナル発火
+	tile_selection_changed.emit(tile_index)
 
 ## 次のタイルを選択
 func _select_next_tile():

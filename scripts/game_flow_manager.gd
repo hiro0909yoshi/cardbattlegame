@@ -12,6 +12,7 @@ signal dice_rolled(value: int)
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
 const LandCommandHandlerClass = preload("res://scripts/game_flow/land_command_handler.gd")
+const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 
 # ゲーム状態
 enum GamePhase {
@@ -58,6 +59,9 @@ var spell_dice: SpellDice
 var spell_curse_stat: SpellCurseStat
 var spell_world_curse: SpellWorldCurse
 var spell_player_move: SpellPlayerMove
+
+# 破産処理ハンドラー
+var bankruptcy_handler: BankruptcyHandler = null
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -236,6 +240,12 @@ func _setup_spell_systems(board_system):
 			if board_system.movement_controller:
 				board_system.movement_controller.spell_player_move = spell_player_move
 			print("[SpellPlayerMove] 初期化完了")
+			
+			# BankruptcyHandlerの初期化
+			bankruptcy_handler = BankruptcyHandlerClass.new()
+			bankruptcy_handler.setup(player_system, board_system, creature_manager, spell_curse, ui_manager, null)  # target_selection_helperは後から設定
+			add_child(bankruptcy_handler)
+			print("[BankruptcyHandler] 初期化完了")
 		else:
 			push_error("GameFlowManager: CreatureManagerが見つかりません")
 	else:
@@ -270,6 +280,9 @@ func start_turn():
 	var drawn = spell_draw.draw_one(current_player.id)
 	if not drawn.is_empty() and current_player.id == 0:
 		await get_tree().create_timer(0.1).timeout
+	
+	# 破産チェック（敵スペル等で魔力マイナスの場合）
+	await check_and_handle_bankruptcy()
 	
 	# UI更新
 	ui_manager.update_player_info_panels()
@@ -545,6 +558,9 @@ func end_turn():
 	# 敵地判定・通行料支払い実行
 	await check_and_pay_toll_on_enemy_land()
 	
+	# 破産チェック（通行料支払い後）
+	await check_and_handle_bankruptcy()
+	
 	emit_signal("turn_ended", current_player.id)
 	
 	change_phase(GamePhase.END_TURN)
@@ -699,6 +715,25 @@ func check_and_pay_toll_on_enemy_land():
 		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
 		print("[副収入] 通行料 ", bonus_toll, "G を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
 
+# === 破産処理 ===
+
+## 破産チェック＆処理
+func check_and_handle_bankruptcy():
+	if not bankruptcy_handler:
+		return
+	
+	var current_player_index = player_system.current_player_index
+	
+	# 破産状態でなければスキップ
+	if not bankruptcy_handler.check_bankruptcy(current_player_index):
+		return
+	
+	# CPUかどうか判定
+	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index]
+	
+	# 破産処理実行
+	await bankruptcy_handler.process_bankruptcy(current_player_index, is_cpu)
+
 # === 土地呪い（移動完了時発動） ===
 
 ## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
@@ -760,6 +795,10 @@ func initialize_phase1a_systems():
 	
 	# CPUMovementEvaluatorを作成
 	_setup_cpu_movement_evaluator()
+	
+	# BankruptcyHandlerにTargetSelectionHelper参照を設定
+	if bankruptcy_handler and target_selection_helper:
+		bankruptcy_handler.target_selection_helper = target_selection_helper
 
 # Phase 1-A: 領地コマンドが閉じられたときの処理
 func _on_land_command_closed():

@@ -4,7 +4,7 @@
   "description": "最初の試練。基本を学ぼう。",
   "map_id": "map_diamond_20",
   "player_start_tile": 0,
-  "player_start_magic": 3000,
+  "player_start_magic": 120,
   "enemies": [
 	{
 	  "player_id": 1,

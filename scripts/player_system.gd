@@ -102,7 +102,7 @@ func add_magic(player_id: int, amount: int):
 		
 	var player = players[player_id]
 	player.magic_power += amount
-	player.magic_power = max(0, player.magic_power)
+	# マイナス値を許容（破産処理で対応）
 	
 	print(player.name, ": 魔力 ", player.magic_power, "G (", 
 		"+" if amount >= 0 else "", amount, ")")
@@ -131,22 +131,23 @@ func pay_toll(payer_id: int, receiver_id: int, amount: int) -> bool:
 		
 	var payer = players[payer_id]
 	
-	if payer.magic_power >= amount:
-		add_magic(payer_id, -amount)
-		add_magic(receiver_id, amount)
-		return true
-	else:
-		# 魔力不足の場合は全額支払い
-		var paid = payer.magic_power
-		add_magic(payer_id, -paid)
-		add_magic(receiver_id, paid)
-		return false
+	# 全額支払い（マイナスになる可能性あり → 破産処理で対応）
+	add_magic(payer_id, -amount)
+	add_magic(receiver_id, amount)
+	
+	# 魔力が足りていたかどうかを返す
+	return payer.magic_power >= 0
 
 # プレイヤーの現在位置を取得
 func get_player_position(player_id: int) -> int:
 	if player_id >= 0 and player_id < players.size():
 		return players[player_id].current_tile
 	return -1
+
+# プレイヤーの現在位置を設定
+func set_player_position(player_id: int, tile_index: int):
+	if player_id >= 0 and player_id < players.size():
+		players[player_id].current_tile = tile_index
 
 # すべてのプレイヤー情報を取得
 func get_all_players_info() -> Array:
