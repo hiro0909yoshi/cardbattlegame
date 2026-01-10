@@ -643,10 +643,14 @@ func check_and_discard_excess_cards():
 	var cards_to_discard = hand_size - GameConstants.MAX_HAND_SIZE
 	print("手札調整が必要: ", hand_size, "枚 → 6枚（", cards_to_discard, "枚捨てる）")
 	
-	# CPUの場合は自動で捨てる（デバッグモードでは無効化）
+	# CPUの場合はレートの低いカードから捨てる（デバッグモードでは無効化）
 	var is_cpu = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
 	if is_cpu:
-		card_system.discard_excess_cards_auto(current_player.id, GameConstants.MAX_HAND_SIZE)
+		if spell_phase_handler and spell_phase_handler.cpu_hand_utils:
+			spell_phase_handler.cpu_hand_utils.discard_excess_cards_by_rate(current_player.id, GameConstants.MAX_HAND_SIZE)
+		else:
+			# フォールバック: 従来の方法
+			card_system.discard_excess_cards_auto(current_player.id, GameConstants.MAX_HAND_SIZE)
 		return
 	
 	# 人間プレイヤーの場合は手動で選択

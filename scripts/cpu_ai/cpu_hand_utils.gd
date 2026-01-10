@@ -87,7 +87,7 @@ func can_afford_card(current_player, card_index: int) -> bool:
 	var cost = calculate_card_cost(card_data, current_player.id)
 	return current_player.magic_power >= cost
 
-## 召喚用の最適カードを選択（属性一致優先）
+## 召喚用の最適カードを選択（属性一致優先、レート最高）
 func select_best_summon_card(current_player, affordable_cards: Array, tile_element: String = "") -> int:
 	if affordable_cards.is_empty():
 		return -1
@@ -104,14 +104,74 @@ func select_best_summon_card(current_player, affordable_cards: Array, tile_eleme
 			if card_element == tile_element or tile_element == "neutral":
 				matching_cards.append(index)
 		
-		# 属性一致カードがあれば、その中から最も安いものを選択
+		# 属性一致カードがあれば、その中からレート最高のものを選択
 		if not matching_cards.is_empty():
 			print("[CPU HandUtils] 属性一致カード発見: %d枚" % matching_cards.size())
-			return select_cheapest_from_list(current_player, matching_cards)
+			return _select_highest_rate_from_list(current_player.id, matching_cards)
 	
-	# 属性一致がなければ最も安いカードを選択
-	print("[CPU HandUtils] 属性一致なし、最安カードを選択")
-	return select_cheapest_from_list(current_player, affordable_cards)
+	# 属性一致がなければ秘術持ちを優先
+	var mystic_cards = _filter_mystic_arts_cards(current_player.id, affordable_cards)
+	if not mystic_cards.is_empty():
+		print("[CPU HandUtils] 属性一致なし、秘術持ちカード発見: %d枚" % mystic_cards.size())
+		return _select_highest_rate_from_list(current_player.id, mystic_cards)
+	
+	# 秘術持ちもなければレート最低のカードを選択
+	print("[CPU HandUtils] 属性一致・秘術持ちなし、レート最低カードを選択")
+	return _select_lowest_rate_from_list(current_player.id, affordable_cards)
+
+
+## リストからレートが最も高いカードを選択
+func _select_highest_rate_from_list(player_id: int, card_indices: Array) -> int:
+	if card_indices.is_empty():
+		return -1
+	
+	var highest_rate = -999999
+	var best_index = -1
+	
+	for index in card_indices:
+		var card = card_system.get_card_data_for_player(player_id, index)
+		if card.is_empty():
+			continue
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate > highest_rate:
+			highest_rate = rate
+			best_index = index
+	
+	return best_index
+
+
+## リストからレートが最も低いカードを選択
+func _select_lowest_rate_from_list(player_id: int, card_indices: Array) -> int:
+	if card_indices.is_empty():
+		return -1
+	
+	var lowest_rate = 999999
+	var best_index = -1
+	
+	for index in card_indices:
+		var card = card_system.get_card_data_for_player(player_id, index)
+		if card.is_empty():
+			continue
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate < lowest_rate:
+			lowest_rate = rate
+			best_index = index
+	
+	return best_index
+
+
+## 秘術持ちカードをフィルタ
+func _filter_mystic_arts_cards(player_id: int, card_indices: Array) -> Array:
+	var result = []
+	for index in card_indices:
+		var card = card_system.get_card_data_for_player(player_id, index)
+		if card.is_empty():
+			continue
+		var ability_parsed = card.get("ability_parsed", {})
+		var keywords = ability_parsed.get("keywords", [])
+		if "秘術" in keywords:
+			result.append(index)
+	return result
 
 ## 最も安いカードを選択
 func select_cheapest_card(current_player) -> int:
@@ -420,3 +480,84 @@ func creature_has_nullify_skill(creature: Dictionary) -> bool:
 	var ability_parsed = creature.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	return "無効化" in keywords
+
+
+# ============================================================
+# カードレート評価
+# ============================================================
+
+const CardRateEvaluator = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
+
+## 手札上限超過時にレートの低いカードから捨てる
+func discard_excess_cards_by_rate(player_id: int, max_cards: int = 6) -> int:
+	if not card_system:
+		return 0
+	
+	var hand_size = card_system.get_hand_size_for_player(player_id)
+	if hand_size <= max_cards:
+		return 0  # 捨てる必要なし
+	
+	var cards_to_discard = hand_size - max_cards
+	print("[CPU手札調整] %d枚 → %d枚（%d枚捨てる）" % [hand_size, max_cards, cards_to_discard])
+	
+	for i in range(cards_to_discard):
+		var hand = card_system.get_all_cards_for_player(player_id)
+		if hand.size() <= max_cards:
+			break
+		
+		# レートの低いカードを探す（重複補正込み）
+		var lowest_index = _find_lowest_rate_card_index_for_discard(player_id)
+		if lowest_index >= 0:
+			var card = card_system.get_card_data_for_player(player_id, lowest_index)
+			var rate = _get_rate_for_discard(card, player_id)
+			print("[CPU手札調整] 捨てるカード: %s (レート: %d)" % [card.get("name", "不明"), rate])
+			card_system.discard_card(player_id, lowest_index, "discard")
+	
+	return cards_to_discard
+
+
+## 捨て札判断用：手札の中で最もレートの低いカードのインデックスを取得
+func _find_lowest_rate_card_index_for_discard(player_id: int) -> int:
+	var hand = card_system.get_all_cards_for_player(player_id)
+	if hand.is_empty():
+		return -1
+	
+	var lowest_index = 0
+	var lowest_rate = _get_rate_for_discard(hand[0], player_id)
+	
+	for i in range(1, hand.size()):
+		var rate = _get_rate_for_discard(hand[i], player_id)
+		if rate < lowest_rate:
+			lowest_rate = rate
+			lowest_index = i
+	
+	return lowest_index
+
+
+## 捨て札判断用：重複補正込みのレート計算
+func _get_rate_for_discard(card: Dictionary, player_id: int) -> int:
+	var base_rate = CardRateEvaluator.get_rate(card)
+	
+	# 手札内の同名カード枚数をカウント
+	var card_id = card.get("id", -1)
+	var count = _count_same_card_in_hand(player_id, card_id)
+	
+	# 重複補正
+	# 2枚目: -30
+	# 3枚目以降: -100
+	if count >= 3:
+		base_rate -= 100
+	elif count == 2:
+		base_rate -= 30
+	
+	return base_rate
+
+
+## 手札内の同一カード枚数をカウント
+func _count_same_card_in_hand(player_id: int, card_id: int) -> int:
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var count = 0
+	for card in hand:
+		if card.get("id", -1) == card_id:
+			count += 1
+	return count

@@ -3,6 +3,8 @@ class_name CardSelectionHandler
 ## カード選択ハンドラー
 ## 敵手札選択、デッキカード選択などのカード選択UIを管理
 
+const CardRateEvaluator = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
+
 ## 選択完了シグナル
 signal selection_completed()
 
@@ -194,19 +196,14 @@ func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, cal
 		_finish_enemy_card_selection()
 		return
 	
-	# 最も価値の高いカードを選択（コストが高いもの優先）
+	# 最も価値の高いカードを選択（レートが高いもの優先）
 	var best_index = valid_indices[0]
-	var best_cost = 0
+	var best_rate = CardRateEvaluator.get_rate(hand[best_index])
 	for idx in valid_indices:
 		var card = hand[idx]
-		var cost = 0
-		var cost_data = card.get("cost", {})
-		if typeof(cost_data) == TYPE_DICTIONARY:
-			cost = cost_data.get("mp", 0)
-		elif typeof(cost_data) == TYPE_INT or typeof(cost_data) == TYPE_FLOAT:
-			cost = int(cost_data)
-		if cost > best_cost:
-			best_cost = cost
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate > best_rate:
+			best_rate = rate
 			best_index = idx
 	
 	# カードを破壊/奪取

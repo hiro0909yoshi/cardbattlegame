@@ -4,7 +4,7 @@
   "description": "最初の試練。基本を学ぼう。",
   "map_id": "map_diamond_20",
   "player_start_tile": 0,
-  "player_start_magic": 120,
+  "player_start_magic": 3000,
   "enemies": [
 	{
 	  "player_id": 1,
@@ -12,7 +12,7 @@
 	  "deck_id": "balance_easy",
 	  "ai_profile_id": "easy",
 	  "start_tile": 0,
-	  "start_magic": 3000
+	  "start_magic": 60
 	}
   ],
   "win_condition": {

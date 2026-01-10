@@ -5,6 +5,8 @@ extends RefCounted
 ## 領地コマンド（レベルアップ、属性変更、移動侵略、クリーチャー交換）の
 ## 利益スコアを計算し、最適な行動を選択する。
 
+const CardRateEvaluator = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
+
 # === 定数 ===
 
 ## 基準スコア: 空き地に属性一致召喚
@@ -663,7 +665,8 @@ func _get_hand_creatures(player_id: int) -> Array:
 	for i in range(hand_size):
 		var card = card_system.get_card_data_for_player(player_id, i)
 		var card_type = card.get("card_type", card.get("type", ""))
-		print("[CPUTerritoryAI]   - %s (card_type=%s, type=%s)" % [card.get("name", "?"), card.get("card_type", "N/A"), card.get("type", "N/A")])
+		var rate = CardRateEvaluator.get_rate(card)
+		print("[CPUTerritoryAI]   - %s (card_type=%s, type=%s, rate=%d)" % [card.get("name", "?"), card.get("card_type", "N/A"), card.get("type", "N/A"), rate])
 		if card_type == "creature":
 			card["hand_index"] = i
 			creatures.append(card)

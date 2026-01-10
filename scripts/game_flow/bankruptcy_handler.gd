@@ -88,11 +88,7 @@ func can_recover_by_selling(player_id: int) -> bool:
 ## コメントを表示してクリック待ち
 func _show_message(message: String, player_id: int = -1):
 	if ui_manager and ui_manager.global_comment_ui:
-		print("[破産処理] メッセージ表示開始: %s" % message)
 		await ui_manager.global_comment_ui.show_and_wait(message, player_id)
-		print("[破産処理] メッセージ表示完了（クリック確認）")
-	else:
-		print("[破産処理] WARNING: global_comment_ui が見つかりません")
 
 
 ## プレイヤー名を取得
@@ -439,18 +435,57 @@ func process_cpu_bankruptcy(player_id: int):
 		print("[破産処理] CPU%d: 現在の魔力 %dG" % [player_id + 1, player_system.get_magic(player_id)])
 
 
-## CPU用：売却する土地を選択（簡易版：最も価値の低い土地）
-func _select_land_to_sell_cpu(_player_id: int, lands: Array) -> int:
+## CPU用：売却する土地を選択
+## 優先順位：
+## 1. 連鎖がない土地（1連鎖）を優先して売却
+## 2. 連鎖がある土地は高額な土地から売却
+func _select_land_to_sell_cpu(player_id: int, lands: Array) -> int:
 	if lands.is_empty():
 		return -1
 	
+	# 土地を連鎖有無で分類
+	var no_chain_lands = []  # 連鎖なし（その属性で1つだけ）
+	var chain_lands = []     # 連鎖あり（同属性複数）
+	
+	# 属性ごとの土地数をカウント
+	var element_counts = {}
+	for tile_index in lands:
+		var tile = board_system.tile_nodes.get(tile_index)
+		if tile:
+			var element = tile.element
+			if not element_counts.has(element):
+				element_counts[element] = []
+			element_counts[element].append(tile_index)
+	
+	# 連鎖有無で分類
+	for element in element_counts:
+		var tiles = element_counts[element]
+		if tiles.size() == 1:
+			no_chain_lands.append(tiles[0])
+		else:
+			chain_lands.append_array(tiles)
+	
+	# 1. 連鎖がない土地があればそこから選択（高額順）
+	if not no_chain_lands.is_empty():
+		return _get_highest_value_tile(no_chain_lands)
+	
+	# 2. 連鎖がある土地は高額から売却
+	if not chain_lands.is_empty():
+		return _get_highest_value_tile(chain_lands)
+	
+	# フォールバック
+	return lands[0]
+
+
+## 最も価値の高い土地を取得
+func _get_highest_value_tile(lands: Array) -> int:
 	var best_tile = -1
-	var lowest_value = INF
+	var highest_value = -1
 	
 	for tile_index in lands:
 		var value = get_land_value(tile_index)
-		if value < lowest_value:
-			lowest_value = value
+		if value > highest_value:
+			highest_value = value
 			best_tile = tile_index
 	
 	return best_tile
