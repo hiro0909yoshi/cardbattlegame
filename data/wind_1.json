@@ -217,6 +217,7 @@
     {
       "id": 307,
       "name": "ガルーダ",
+      "rate": 88,
       "rarity": "N",
       "type": "creature",
       "element": "wind",
@@ -576,6 +577,7 @@
     {
       "id": 319,
       "name": "シルフ",
+      "rate": 75,
       "rarity": "S",
       "type": "creature",
       "element": "wind",

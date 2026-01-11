@@ -938,6 +938,7 @@
 	{
 	  "id": 2033,
 	  "name": "シャイニングガイザー",
+	  "rate": 110,
 	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
@@ -1122,8 +1123,9 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "enemy_hand",
-		"target_condition": "enemy_player",
+		"pattern": "condition",
+		"condition": "has_spare_hand_card",
+		"target_condition": "self",
 		"priority": "medium"
 	  }
 	},

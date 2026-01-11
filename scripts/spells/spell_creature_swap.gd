@@ -112,16 +112,15 @@ func _cpu_select_best_creature(hand_creatures: Array, _current_creature: Diction
 	
 	return best
 
-## クリーチャーのスコア計算（属性一致ボーナス + HP + AP）
+## クリーチャーのスコア計算（レート + 属性一致ボーナス）
 func _get_creature_score_with_element(creature: Dictionary, tile_element: String) -> int:
-	var hp = creature.get("hp", creature.get("current_hp", 0))
-	var ap = creature.get("ap", creature.get("attack", 0))
-	var base_score = hp + ap
+	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+	var base_score = CardRateEvaluator.get_rate(creature)
 	
-	# 属性一致ボーナス（大きく優先）
+	# 属性一致ボーナス
 	var creature_element = creature.get("element", "")
 	if tile_element != "" and creature_element == tile_element:
-		base_score += 1000  # 属性一致を最優先
+		base_score += 200
 	
 	return base_score
 

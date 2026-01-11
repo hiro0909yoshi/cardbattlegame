@@ -663,6 +663,7 @@
 	{
 	  "id": 146,
 	  "name": "リリス",
+	  "rate": 65,
 	  "rarity": "S",
 	  "type": "creature",
 	  "element": "water",

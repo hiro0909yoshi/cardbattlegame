@@ -39,6 +39,9 @@ const SWAP_ELEMENT_MISMATCH_PENALTY = -500
 ## クリーチャー交換: 土地レベル係数
 const SWAP_LEVEL_MULTIPLIER = 20
 
+## クリーチャー交換: 最低スコア閾値
+const SWAP_MIN_SCORE_THRESHOLD = 25
+
 ## 属性変更: 基本スコア
 const ELEMENT_CHANGE_BASE_SCORE = 100
 
@@ -438,10 +441,18 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 			continue
 		
 		var current_creature = land.creature_data
-		var current_cost = _get_cost_value(current_creature.get("cost", 0))
 		var land_element = land.tile_element
 		var current_element = current_creature.get("element", "")
 		var current_match = (current_element == land_element) or (land_element == "neutral")
+		
+		# 秘術持ちは交換対象外
+		if _has_mystic_arts(current_creature):
+			print("[CPUTerritoryAI] 交換評価: %s は秘術持ちのため交換対象外" % current_creature.get("name", "?"))
+			continue
+		
+		# 現在のクリーチャーのレートを取得
+		var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+		var current_rate = CardRateEvaluator.get_rate(current_creature)
 		
 		for hand_creature in hand_creatures:
 			# hand_creatureがDictionaryでない場合はスキップ
@@ -453,12 +464,12 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 				print("[CPUTerritoryAI] 交換評価: %s は配置条件を満たさない" % hand_creature.get("name", "?"))
 				continue
 			
-			var new_cost = _get_cost_value(hand_creature.get("cost", 0))
+			var new_rate = CardRateEvaluator.get_rate(hand_creature)
 			var new_element = hand_creature.get("element", "")
 			var new_match = (new_element == land_element) or (land_element == "neutral")
 			
-			# スコア計算
-			var rate_diff = new_cost - current_cost
+			# スコア計算（コスト差→レート差に変更）
+			var rate_diff = new_rate - current_rate
 			var element_bonus = 0
 			
 			if new_match and not current_match:
@@ -467,6 +478,16 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 				element_bonus = SWAP_ELEMENT_MISMATCH_PENALTY
 			
 			var score = (rate_diff * SWAP_RATE_MULTIPLIER) + element_bonus + (land.level * SWAP_LEVEL_MULTIPLIER)
+			
+			# 最低スコア閾値チェック
+			if score < SWAP_MIN_SCORE_THRESHOLD:
+				print("[CPUTerritoryAI] 交換評価: %s → %s スコア%d < 閾値%d でスキップ" % [
+					current_creature.get("name", "?"), hand_creature.get("name", "?"), score, SWAP_MIN_SCORE_THRESHOLD])
+				continue
+			
+			print("[CPUTerritoryAI] 交換候補: %s(rate:%d) → %s(rate:%d), スコア:%d" % [
+				current_creature.get("name", "?"), current_rate,
+				hand_creature.get("name", "?"), new_rate, score])
 			
 			options.append({
 				"type": "creature_swap",
@@ -696,6 +717,28 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary) -> bool:
 func _is_element_match_for_invasion(_context: Dictionary, _tile) -> bool:
 	# 攻撃側クリーチャーの属性と土地属性の一致をチェック
 	# TODO: 攻撃クリーチャーを特定して判定
+	return false
+
+
+## 秘術持ちかどうかをチェック
+func _has_mystic_arts(creature_data: Dictionary) -> bool:
+	# トップレベルのmystic_artsをチェック
+	if creature_data.has("mystic_arts") and creature_data.get("mystic_arts") != null:
+		return true
+	
+	# ability_parsed.mystic_artsをチェック
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	if ability_parsed and ability_parsed.has("mystic_arts"):
+		var mystic_arts = ability_parsed.get("mystic_arts", [])
+		if not mystic_arts.is_empty():
+			return true
+	
+	# keywordsに秘術があるかチェック
+	if ability_parsed:
+		var keywords = ability_parsed.get("keywords", [])
+		if "秘術" in keywords:
+			return true
+	
 	return false
 
 

@@ -17,14 +17,14 @@ const SKILL_RATE_BONUS = {
 	"土地破壊・変性無効": 30,   # バロン
 	
 	# 防御型
-	"防御型": 15,               # オールドウィロウ, クリーピングフレイム, グレートフォシル 等
-	"再生": 15,                 # エキノダーム, カクタスウォール, スケルトン 等
-	"不屈": 20,                 # アーキビショップ, カワヒメ, キャプテンコック 等
+	"防御型": -5,               # オールドウィロウ, クリーピングフレイム, グレートフォシル 等
+	"再生": 30,                 # エキノダーム, カクタスウォール, スケルトン 等
+	"不屈": 30,                 # アーキビショップ, カワヒメ, キャプテンコック 等
 	"反射": 25,                 # デコイ
 	"反射[1/2]": 30,            # ナイトエラント
 	
 	# 攻撃型
-	"先制": 20,                 # アンドロギア, アーマードラゴン, エルフアーチャー 等
+	"先制": 30,                 # アンドロギア, アーマードラゴン, エルフアーチャー 等
 	"強打": 40,                 # ウルフアント, ケルベロス, デュラハン 等
 	"巻物強打": 10,             # ウィッチ, エアロダッチェス, エンチャントレス 等
 	"巻物攻撃": 10,             # コンジャラー, ラメエル, ワイルドボア
@@ -37,11 +37,11 @@ const SKILL_RATE_BONUS = {
 	# 特殊能力
 	"秘術": 40,                 # アイアンモンガー, アクアホーン, アモン 等
 	"感応": 15,                 # アモン, ヴォジャノーイ, カーバンクル 等
-	"援護": 18,                 # アイアンモンガー, ウィザード, エリニュス 等
-	"応援": 13,                 # エルフ, コダマ, コーンフォーク 等
+	"援護": 35,                 # アイアンモンガー, ウィザード, エリニュス 等
+	"応援": 40,                 # エルフ, コダマ, コーンフォーク 等
 	"合体": 23,                 # アンドロギア, グランギア, スカイギア
 	"合成": 15,                 # デッドウォーロード, ナイトエラント
-	"遺産": 15,                 # クリーピングコイン, コーンフォーク, フェイト, マミー
+	"遺産": 25,                 # クリーピングコイン, コーンフォーク, フェイト, マミー
 	"死者復活": 25,             # コールドフェザー, ネクロマンサー, バンシー
 	"復活": 23,                 # フェニックス
 	"変身": 18,                 # バルダンダース
@@ -51,13 +51,17 @@ const SKILL_RATE_BONUS = {
 	"魔力獲得": 13,             # クリーピングコイン
 	"魔力奪取": 18,             # アマゾン
 	"通行料変化": 10,           # グレートフォシル
-	"足どめ": 15,               # オールドウィロウ, ケルピー
+	"足どめ": 35,               # オールドウィロウ, ケルピー
 	"空地移動": 13,             # ドリアード, ブリーズスピリット, ワイバーン
 	"敵領地移動": 13,           # パイレーツ
-	"アイテム破壊": 20,         # カイザーペンギン, グレムリン, シルバンダッチェス
+	"アイテム破壊": 40,         # カイザーペンギン, グレムリン, シルバンダッチェス
 	"アイテム盗み": 23,         # シーフ
 	"呪い拡散": 10,             # エンチャントレス
 	"強制変化": 13,             # スフィンクス
+	"攻撃成功時": 35,           # ナイキー, 攻撃成功時に効果発動
+	"増殖": 60,                 # マイコロン, バウダーイーター等
+	"アイテム使用時ボーナス": 25, # ブルガサリ等
+	"敵アイテム反応": 20,       # ブルガサリ等
 	
 	# マイナス効果
 	"後手": -15,                # アウロラ, マカラ
@@ -70,128 +74,116 @@ const SKILL_RATE_BONUS = {
 
 const SPELL_EFFECT_BONUS = {
 	# ダメージ系
-	"damage": 40,                        # マジックボルト, サンダークラップ, ストーンブラスト 等
-	"destroy_selected_card": 60,         # シャッター, スクイーズ
-	"destroy_expensive_cards": 50,       # レイオブロウ
-	"destroy_duplicate_cards": 30,       # エロージョン
-	"destroy_curse_cards": 25,           # レイオブパージ
-	"destroy_from_deck_selection": 40,   # ポイズンマインド
-	"destroy_after_battle": 35,          # シニリティ
+	"damage": 60,                        # マジックボルト, サンダークラップ, ストーンブラスト 等
+	"destroy_selected_card": 100,         # シャッター, スクイーズ
+	"destroy_expensive_cards": 40,       # レイオブロウ
+	"destroy_duplicate_cards": 100,       # エロージョン
+	"destroy_curse_cards": 60,           # レイオブパージ
+	"destroy_from_deck_selection": 80,   # ポイズンマインド
+	"destroy_after_battle": 80,          # シニリティ
 	
 	# 土地系
-	"change_element": 35,                # アースシフト, ウォーターシフト, エアーシフト 等
-	"change_element_bidirectional": 40,  # ストームシフト, マグマシフト
-	"change_element_to_dominant": 45,    # インフルエンス
-	"change_level": 40,                  # アステロイド, サドンインパクト
-	"conditional_level_change": 35,      # フラットランド
-	"find_and_change_highest_level": 50, # サブサイド
-	"abandon_land": 20,                  # ランドトランス
-	"align_mismatched_lands": 35,        # ホームグラウンド
+	"change_element": 30,                # アースシフト, ウォーターシフト, エアーシフト 等
+	"change_element_bidirectional": 30,  # ストームシフト, マグマシフト
+	"change_element_to_dominant": 40,    # インフルエンス
+	"change_level": 110,                  # アステロイド, サドンインパクト
+	"conditional_level_change": 40,      # フラットランド
+	"find_and_change_highest_level": 80, # サブサイド
+	"abandon_land": 80,                  # ランドトランス
+	"align_mismatched_lands": 40,        # ホームグラウンド
 	
 	# 魔力系
-	"drain_magic": 50,                   # ドレインマジック
-	"drain_magic_by_lap_diff": 45,       # スピードペナルティ
-	"drain_magic_by_land_count": 55,     # ランドドレイン
-	"drain_magic_conditional": 45,       # フラクション
+	"drain_magic": 40,                   # ドレインマジック
+	"drain_magic_by_lap_diff": 40,       # スピードペナルティ
+	"drain_magic_by_land_count": 40,     # ランドドレイン
+	"drain_magic_conditional": 40,       # フラクション
 	"gain_magic_by_lap": 40,             # マナ
-	"gain_magic_by_rank": 45,            # ギフト
-	"gain_magic_from_destroyed_count": 40, # インシネレート
-	"gain_magic_from_land_chain": 50,    # ロングライン
-	"gain_magic_from_spell_cost": 35,    # クレアボヤンス
-	"balance_all_magic": 30,             # レディビジョン
+	"gain_magic_by_rank": 50,            # ギフト
+	"gain_magic_from_destroyed_count": 60, # インシネレート
+	"gain_magic_from_land_chain": 40,    # ロングライン
+	"gain_magic_from_spell_cost": 40,    # クレアボヤンス
+	"balance_all_magic": 60,             # レディビジョン
 	
 	# 呪い系
 	"creature_curse": 40,                # イモビライズ, スピリットウォーク, マジックシェルター
 	"player_curse": 50,                  # クワイエチュード, バリアー, バンフィズム
 	"world_curse": 70,                   # ウェイストワールド, ジョイントワールド, ソリッドワールド 等
-	"land_curse": 45,                    # ブラストトラップ
+	"land_curse": 60,                    # ブラストトラップ
 	"bounty_curse": 40,                  # バウンティハント
-	"command_growth_curse": 35,          # ドミナントグロース
-	"curse_movement_reverse": 40,        # カオスパニック
-	"life_force_curse": 55,              # ライフフォース
-	"plague_curse": 60,                  # プレイグ
-	"random_stat_curse": 30,             # リキッドフォーム
-	"apply_curse": 40,                   # マスファンタズム
+	"command_growth_curse": 50,          # ドミナントグロース
+	"curse_movement_reverse": 60,        # カオスパニック
+	"life_force_curse": 60,              # ライフフォース
+	"plague_curse": 50,                  # プレイグ
+	"random_stat_curse": 50,             # リキッドフォーム
+	"apply_curse": 50,                   # マスファンタズム
 	
 	# ドロー系
-	"draw": 35,                          # グリード, ディジーズ, デビリティ 等
-	"draw_cards": 35,                    # ホープ
-	"draw_by_type": 45,                  # プロフェシー
+	"draw": 50,                          # グリード, ディジーズ, デビリティ 等
+	"draw_cards": 50,                    # ホープ
+	"draw_by_type": 40,                  # プロフェシー
 	"draw_by_rank": 40,                  # ギフト
-	"draw_from_deck_selection": 50,      # フォーサイト
-	"draw_and_place": 55,                # ワイルドセンス
-	"discard_and_draw_plus": 30,         # リンカネーション
-	"reset_deck": 25,                    # リバイバル
+	"draw_from_deck_selection": 40,      # フォーサイト
+	"draw_and_place": 40,                # ワイルドセンス
+	"discard_and_draw_plus": 80,         # リンカネーション
+	"reset_deck": 50,                    # リバイバル
 	
 	# 移動系
-	"warp_to_target": 50,                # マジカルリープ
-	"warp_to_nearest_vacant": 40,        # エスケープ
-	"warp_to_nearest_gate": 45,          # フォームポータル
-	"move_to_adjacent_enemy": 55,        # アウトレイジ
-	"move_steps": 35,                    # チャリオット
-	"dice_fixed": 60,                    # ホーリーワード1, ホーリーワード3, ホーリーワード6, ホーリーワード8
+	"warp_to_target": 70,                # マジカルリープ
+	"warp_to_nearest_vacant": 70,        # エスケープ
+	"warp_to_nearest_gate": 70,          # フォームポータル
+	"move_to_adjacent_enemy": 60,        # アウトレイジ
+	"move_steps": 60,                    # チャリオット
+	"dice_fixed": 110,                    # ホーリーワード1, ホーリーワード3, ホーリーワード6, ホーリーワード8
 	"dice_range": 40,                    # ヘイスト
-	"dice_range_magic": 45,              # チャージステップ
-	"dice_multi": 50,                    # フライ
-	"forced_stop": 40,                   # クイックサンド
-	"gate_pass": 30,                     # リミッション
+	"dice_range_magic": 40,              # チャージステップ
+	"dice_multi": 40,                    # フライ
+	"forced_stop": 90,                   # クイックサンド
+	"gate_pass": 90,                     # リミッション
 	
 	# 回復・補助系
-	"full_heal": 35,                     # ライフストリーム, リストア
+	"full_heal": 40,                     # ライフストリーム, リストア
 	"permanent_hp_change": 40,           # グロースボディ, ファットボディ, マスグロース
 	"permanent_ap_change": 40,           # ファットボディ
-	"stat_boost": 35,                    # バイタリティ
-	"stat_reduce": 30,                   # ディジーズ
+	"stat_boost": 40,                    # バイタリティ
+	"stat_reduce": 40,                   # ディジーズ
 	"purify_all": 40,                    # ピュアリファイ
-	"clear_down": 25,                    # リストア
-	"down_clear": 25,                    # アラーム
-	"indomitable": 35,                   # ハイパーアクティブ
-	"metal_form": 45,                    # メタルフォーム
-	"magic_barrier": 40,                 # エナジーフィールド
+	"clear_down": 50,                    # リストア
+	"down_clear": 60,                    # アラーム
+	"indomitable": 40,                   # ハイパーアクティブ
+	"metal_form": 40,                    # メタルフォーム
+	"magic_barrier": 60,                 # エナジーフィールド
 	
 	# 特殊
-	"return_to_hand": 45,                # エグザイル, フィアー, ホーリーバニッシュ
-	"swap_board_creatures": 50,          # リリーフ
-	"swap_with_hand": 40,                # エクスチェンジ
-	"steal_selected_card": 70,           # セフト
-	"steal_item_conditional": 55,        # スニークハンド
-	"place_creature": 50,                # ゴブリンズレア, スパルトイ
+	"return_to_hand": 80,                # エグザイル, フィアー, ホーリーバニッシュ
+	"swap_board_creatures": 40,          # リリーフ
+	"swap_with_hand": 60,                # エクスチェンジ
+	"steal_selected_card": 90,           # セフト
+	"steal_item_conditional": 90,        # スニークハンド
+	"place_creature": 40,                # ゴブリンズレア, スパルトイ
 	"transform": 40,                     # ターンウォール
-	"transform_to_card": 45,             # メタモルフォシス
-	"discord_transform": 35,             # ディスコード
-	"grant_mystic_arts": 50,             # シュリンクシジル, ドレインシジル, フロートシジル
-	"use_target_mystic_art": 55,         # テンプテーション
-	"check_hand_elements": 30,           # アセンブルカード
-	"check_hand_synthesis": 35,          # フィロソフィー
-	"secret_tiny_army": 45,              # タイニーアーミー
+	"transform_to_card": 59,             # メタモルフォシス
+	"discord_transform": 40,             # ディスコード
+	"grant_mystic_arts": 40,             # シュリンクシジル, ドレインシジル, フロートシジル
+	"use_target_mystic_art": 40,         # テンプテーション
+	"check_hand_elements": 40,           # アセンブルカード
+	"check_hand_synthesis": 40,          # フィロソフィー
+	"secret_tiny_army": 40,              # タイニーアーミー
 	
 	# 通行料系
-	"toll_multiplier": 50,               # グリード
-	"toll_fixed": 40,                    # ユニフォーミティ
-	"toll_disable": 55,                  # ブラックアウト
-	"toll_share": 45,                    # ドリームトレイン
+	"toll_multiplier": 60,               # グリード
+	"toll_fixed": 60,                    # ユニフォーミティ
+	"toll_disable": 80,                  # ブラックアウト
+	"toll_share": 60,                    # ドリームトレイン
 	"land_effect_disable": 40,           # ディスエレメント
 	
 	# 戦闘系
-	"battle_disable": 50,                # ディラニー, バインドミスト
-	"skill_nullify": 55,                 # ボーテックス
-	"ap_nullify": 45,                    # デビリティ
-	"peace": 30,                         # ピース
+	"battle_disable": 60,                # ディラニー, バインドミスト
+	"skill_nullify": 70,                 # ボーテックス
+	"ap_nullify": 50,                    # デビリティ
+	"peace": 70,                         # ピース
 }
 
-# スペル対象範囲の補正
-const SPELL_TARGET_TYPE_BONUS = {
-	"own_land": 0,           # アースシフト, ウォーターシフト, エアーシフト 等
-	"land": 5,               # アステロイド, インフルエンス, クインテッセンス 等
-	"creature": 10,          # アウトレイジ, エクスチェンジ, エグザイル 等
-	"player": 20,            # エロージョン, クレアボヤンス, サブサイド 等
-	"all_creatures": 30,     # イモビライズ, エレメンタルラス, クラスターバースト 等
-	"all_players": 35,       # カオスパニック, クワイエチュード, バンフィズム
-	"self": -10,             # アセンブルカード, アラーム, インシネレート 等
-	"none": 0,               # エスケープ, スパルトイ, タイニーアーミー 等
-	"world": 25,             # ウェイストワールド, ジョイントワールド, ソリッドワールド 等
-	"unvisited_gate": 15,    # リミッション
-}
+
 
 # ===========================================
 # アイテム効果補正値
@@ -199,47 +191,47 @@ const SPELL_TARGET_TYPE_BONUS = {
 
 const ITEM_EFFECT_BONUS = {
 	# スキル付与系
-	"grant_skill": 40,                   # シャドウブレイズ, ストームシールド, マジックシールド 等
-	"grant_first_strike": 50,            # アージェントキー, イーグルレイピア, サキュバスリング, スリング
-	"grant_last_strike": 30,             # ダイヤアーマー
-	"grant_double_attack": 60,           # トンファ
+	"grant_skill": 15,                   # シャドウブレイズ, ストームシールド, マジックシールド 等
+	"grant_first_strike": 20,            # アージェントキー, イーグルレイピア, サキュバスリング, スリング
+	"grant_last_strike": 50,             # ダイヤアーマー
+	"grant_double_attack": 50,           # トンファ
 	
 	# 無効化系
-	"nullify_item_manipulation": 70,     # エンジェルケープ, ティアリングハロー, トゥームストーン
-	"nullify_all_enemy_abilities": 100,  # ウォーロックディスク
+	"nullify_item_manipulation": 50,     # エンジェルケープ, ティアリングハロー, トゥームストーン
+	"nullify_all_enemy_abilities": 80,  # ウォーロックディスク
 	"nullify_reflect": 50,               # ムラサメ
 	
 	# 攻撃系
-	"scroll_attack": 45,                 # オーラストライク, シャドウブレイズ, スパークボール 等
-	"instant_death": 80,                 # バーニングハート
-	"ap_drain": 40,                      # サキュバスリング
+	"scroll_attack": 25,                 # オーラストライク, シャドウブレイズ, スパークボール 等
+	"instant_death": 50,                 # バーニングハート
+	"ap_drain": 30,                      # サキュバスリング
 	
 	# 防御系
-	"reflect_damage": 50,                # アングリーマスク, スパイクシールド, ミラーホブロン, メイガスミラー
-	"item_return": 35,                   # エターナルメイル, ソウルレイ, ブーメラン
+	"reflect_damage": 60,                # アングリーマスク, スパイクシールド, ミラーホブロン, メイガスミラー
+	"item_return": 20,                   # エターナルメイル, ソウルレイ, ブーメラン
 	
 	# ステータス変動
 	"fixed_stat": 30,                    # ペトリフストーン
-	"random_stat_bonus": 25,             # スペクターローブ
-	"element_count_bonus": 35,           # ストームハルバード, マグマフレイル
-	"owned_land_count_bonus": 40,        # ストームアーマー, マグマアーマー
-	"chain_count_ap_bonus": 45,          # チェーンソー
-	"hand_count_multiplier": 30,         # フォースアンクレット
-	"same_element_as_enemy_count": 35,   # シェイドクロー
-	"element_mismatch_bonus": 30,        # プリズムワンド
+	"random_stat_bonus": 50,             # スペクターローブ
+	"element_count_bonus": 40,           # ストームハルバード, マグマフレイル
+	"owned_land_count_bonus": 60,        # ストームアーマー, マグマアーマー
+	"chain_count_ap_bonus": 70,          # チェーンソー
+	"hand_count_multiplier": 50,         # フォースアンクレット
+	"same_element_as_enemy_count": 40,   # シェイドクロー
+	"element_mismatch_bonus": 20,        # プリズムワンド
 	
 	# 特殊
-	"transform": 40,                     # ツインスパイク, ドラゴンオーブ, ネクロプラズマ
+	"transform": 25,                     # ツインスパイク, ドラゴンオーブ, ネクロプラズマ
 	"change_element": 30,                # ニュートラルクローク
-	"destroy_item": 45,                  # グレムリンアイ, リアクトアーマー
+	"destroy_item": 60,                  # グレムリンアイ, リアクトアーマー
 	"apply_curse": 40,                   # バインドウィップ, ムーンシミター
-	"revive": 60,                        # ネクロスカラベ
+	"revive": 50,                        # ネクロスカラベ
 	"legacy_magic": 35,                  # ゴールドグース
-	"draw_cards_on_death": 40,           # トゥームストーン
-	"level_up_on_win": 50,               # シルバープロウ
-	"magic_on_enemy_survive": 25,        # ゴールドハンマー
-	"magic_from_damage": 35,             # ゼラチンアーマー
-	"revenge_mhp_damage": 45,            # ナパームアロー
+	"draw_cards_on_death": 10,           # トゥームストーン
+	"level_up_on_win": 10,               # シルバープロウ
+	"magic_on_enemy_survive": 20,        # ゴールドハンマー
+	"magic_from_damage": 30,             # ゼラチンアーマー
+	"revenge_mhp_damage": 40,            # ナパームアロー
 }
 
 # ===========================================
@@ -339,14 +331,9 @@ static func _calculate_creature_rate(card: Dictionary) -> int:
 
 ## スペルのレート計算
 static func _calculate_spell_rate(card: Dictionary) -> int:
-	var cost = card.get("cost", 0)
-	if cost is Dictionary:
-		cost = cost.get("mp", 0)
-	
 	# effect_parsedから効果タイプを取得
 	var effect_parsed = card.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
-	var target_type = effect_parsed.get("target_type", "none")
 	
 	# 効果タイプ補正（複数効果の場合は合算）
 	var effect_bonus = 0
@@ -358,19 +345,13 @@ static func _calculate_spell_rate(card: Dictionary) -> int:
 	if effect_bonus == 0:
 		effect_bonus = 30
 	
-	# 対象範囲補正
-	var target_bonus = SPELL_TARGET_TYPE_BONUS.get(target_type, 0)
-	
-	# コスト補正
-	var cost_penalty = cost / 10
-	
-	return effect_bonus + target_bonus - cost_penalty
+	return effect_bonus
 
 
 ## アイテムのレート計算
 static func _calculate_item_rate(card: Dictionary) -> int:
-	# アイテムは基礎値+50（交換対象にならないため優先度を上げる）
-	var base = 50
+	# アイテムは基礎値+30（交換対象にならないため優先度を上げる）
+	var base = 30
 	
 	# effect_parsedからステータスボーナスを取得
 	var effect_parsed = card.get("effect_parsed", {})
@@ -387,6 +368,12 @@ static func _calculate_item_rate(card: Dictionary) -> int:
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		effect_bonus += ITEM_EFFECT_BONUS.get(effect_type, 20)
+		
+		# grant_skillで付与するスキルの補正を追加
+		if effect_type == "grant_skill":
+			var skill_name = effect.get("skill", "")
+			if SKILL_RATE_BONUS.has(skill_name):
+				effect_bonus += SKILL_RATE_BONUS[skill_name]
 	
 	# キーワード補正（アイテムのkeywords）
 	var keywords = effect_parsed.get("keywords", [])
@@ -405,9 +392,54 @@ static func _calculate_skill_bonus(card: Dictionary) -> int:
 	# ability_parsedからキーワードを取得
 	var ability_parsed = card.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 	
 	for keyword in keywords:
 		if SKILL_RATE_BONUS.has(keyword):
-			bonus += SKILL_RATE_BONUS[keyword]
+			var keyword_bonus = SKILL_RATE_BONUS[keyword]
+			# 無効化[巻物攻撃]は価値が低い
+			if keyword == "無効化":
+				var nullify_cond = keyword_conditions.get("無効化", {})
+				if nullify_cond.get("nullify_type", "") == "scroll_attack":
+					keyword_bonus = 20  # 巻物攻撃無効化は低めに設定
+			bonus += keyword_bonus
+	
+	# mystic_artsを持っている場合、秘術ボーナスを追加（keywordsに秘術がない場合のみ）
+	# トップレベルのmystic_artsまたはability_parsed.mystic_artsをチェック
+	var has_mystic_arts = false
+	if card.has("mystic_arts") and card.get("mystic_arts") != null:
+		has_mystic_arts = true
+	elif ability_parsed.has("mystic_arts") and not ability_parsed.get("mystic_arts", []).is_empty():
+		has_mystic_arts = true
+	
+	if has_mystic_arts and "秘術" not in keywords:
+		bonus += SKILL_RATE_BONUS.get("秘術", 0)
+	
+	# cannot_use（使用不可アイテム）のペナルティ
+	var restrictions = card.get("restrictions", {})
+	var cannot_use = restrictions.get("cannot_use", [])
+	for item_type in cannot_use:
+		if item_type == "防具":
+			bonus -= 15
+		elif item_type == "アクセサリ":
+			bonus -= 10
+	
+	# effectsのトリガーをチェック（攻撃成功時など）
+	var effects = ability_parsed.get("effects", [])
+	for effect in effects:
+		var trigger = effect.get("trigger", "")
+		var effect_type = effect.get("effect_type", "")
+		var condition = effect.get("condition", "")
+		if trigger == "on_attack_success":
+			bonus += SKILL_RATE_BONUS.get("攻撃成功時", 0)
+		# 増殖効果
+		if effect_type == "spawn_copy_on_defend_survive" or effect_type == "split_on_move":
+			bonus += SKILL_RATE_BONUS.get("増殖", 0)
+		# アイテム使用時ボーナス
+		if effect_type == "on_item_use_bonus":
+			bonus += SKILL_RATE_BONUS.get("アイテム使用時ボーナス", 0)
+		# 敵アイテム反応（conditionが文字列の場合のみチェック）
+		if typeof(condition) == TYPE_STRING and condition == "enemy_item_used":
+			bonus += SKILL_RATE_BONUS.get("敵アイテム反応", 0)
 	
 	return bonus

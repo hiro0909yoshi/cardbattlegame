@@ -407,15 +407,21 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 		
 		# 倒せる場合は最優先
 		if current_hp > 0 and current_hp <= damage_value:
-			score += 3.0
+			score += 200.0
 		elif current_hp > 0:
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)
 	
-	# 土地レベル
+	# 土地レベル（基礎30 × レベル）
 	if tile_data:
 		var level = tile_data.get("level", 1)
-		score += level * 0.5
+		score += 30 * level
+	
+	# クリーチャーのレート
+	if not creature.is_empty():
+		var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+		var creature_rate = CardRateEvaluator.get_rate(creature)
+		score += creature_rate
 	
 	return score
 

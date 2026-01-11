@@ -94,16 +94,22 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 		
 		# 倒せる場合は最優先
 		if current_hp > 0 and current_hp <= damage_value:
-			score += 3.0
+			score += 200.0
 		# ダメージ効率（HPに対するダメージ割合）
 		elif current_hp > 0:
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)  # 最大+1.0
 	
-	# 土地レベル
+	# 土地レベル（基礎30 × レベル）
 	if tile_data:
 		var level = tile_data.get("level", 1)
-		score += level * 0.5
+		score += 30 * level
+	
+	# クリーチャーのレート
+	if not creature.is_empty():
+		var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+		var creature_rate = CardRateEvaluator.get_rate(creature)
+		score += creature_rate
 	
 	return score
 
@@ -126,6 +132,16 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 	match target_type:
 		"self", "none":
 			return {"type": "self", "player_id": context.player_id}
+		"player":
+			# target_conditionに応じてターゲットを決定
+			var target_condition = cpu_rule.get("target_condition", "")
+			if target_condition == "self":
+				return {"type": "player", "player_id": context.player_id}
+			# デフォルト: 敵プレイヤー
+			var enemies = get_enemy_players(context)
+			if not enemies.is_empty():
+				return enemies[0]
+			return {}
 		"unvisited_gate":
 			# リミッション用：進行方向から遠い未訪問ゲートを選ぶ
 			var farthest_gate = get_farthest_unvisited_gate(context)
@@ -257,6 +273,10 @@ func get_best_exchange_target(context: Dictionary) -> Dictionary:
 		
 		var creature = tile.get("creature", {})
 		if creature.is_empty():
+			continue
+		
+		# 秘術持ちは交換対象外
+		if _has_mystic_arts(creature):
 			continue
 		
 		var tile_element = tile.get("element", "")
@@ -661,3 +681,25 @@ func _get_next_tile_in_direction(current_tile: int, came_from: int, direction: i
 	
 	# フォールバック: 単純に+direction
 	return current_tile + direction
+
+
+## 秘術持ちかどうかをチェック
+func _has_mystic_arts(creature_data: Dictionary) -> bool:
+	# トップレベルのmystic_artsをチェック
+	if creature_data.has("mystic_arts") and creature_data.get("mystic_arts") != null:
+		return true
+	
+	# ability_parsed.mystic_artsをチェック
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	if ability_parsed and ability_parsed.has("mystic_arts"):
+		var mystic_arts = ability_parsed.get("mystic_arts", [])
+		if not mystic_arts.is_empty():
+			return true
+	
+	# keywordsに秘術があるかチェック
+	if ability_parsed:
+		var keywords = ability_parsed.get("keywords", [])
+		if "秘術" in keywords:
+			return true
+	
+	return false

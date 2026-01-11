@@ -923,6 +923,7 @@ func get_top_cards_from_deck(player_id: int, count: int) -> Array:
 	var actual_count = min(count, deck.size())
 	var result = []
 	
+	var RateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
 	print("[デッキ確認] プレイヤー%d のデッキ上部%d枚:" % [player_id + 1, actual_count])
 	for i in range(actual_count):
 		# デッキはカードIDの配列なので、CardLoaderからデータを取得
@@ -931,7 +932,8 @@ func get_top_cards_from_deck(player_id: int, count: int) -> Array:
 		if card_data and not card_data.is_empty():
 			var data_copy = card_data.duplicate(true)
 			result.append(data_copy)
-			print("  [%d] %s (ID: %d)" % [i, card_data.get("name", "?"), card_id])
+			var rate = RateEvaluator.get_rate(card_data)
+			print("  [%d] %s (ID: %d, レート: %d)" % [i, card_data.get("name", "?"), card_id, rate])
 	
 	return result
 

@@ -260,6 +260,7 @@
 	{
 	  "id": 209,
 	  "name": "グーバクイーン",
+	  "rate": 79,
 	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",

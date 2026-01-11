@@ -135,6 +135,10 @@ func check_condition(condition: String, context: Dictionary) -> bool:
 		"swap_improves_element_match":
 			return _check_swap_improves_element_match(context)
 		
+		# 手札関連
+		"has_spare_hand_card":
+			return _check_has_spare_hand_card(context)
+		
 		# その他
 		"has_unvisited_gate":
 			return _check_has_unvisited_gate(context)
@@ -350,6 +354,19 @@ func _check_standing_on_vacant_land(context: Dictionary) -> bool:
 	# 所有者がいないかチェック（空き地 = 所有者なし）
 	var owner = tile.get("owner", -1)
 	return owner == -1
+
+
+## 手札にクリーチャーを1枚残せるか（スクイーズ用）
+## 手札に2枚以上カードがあれば使用可能
+func _check_has_spare_hand_card(context: Dictionary) -> bool:
+	var player_id = context.get("player_id", 0)
+	if not card_system:
+		return false
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	# 2枚以上あれば1枚捨てても残る
+	return hand.size() >= 2
+
 
 ## 手札のクリーチャーで属性一致に改善できるか（エクスチェンジ用）
 func _check_can_upgrade_creature(context: Dictionary) -> bool:

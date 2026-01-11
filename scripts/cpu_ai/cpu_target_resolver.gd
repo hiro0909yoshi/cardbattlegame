@@ -555,6 +555,9 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 	if not board_system:
 		return results
 	
+	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+	const HIGH_RATE_THRESHOLD = 50  # 高レートの閾値
+	
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
@@ -565,10 +568,20 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 		if not creature or creature.is_empty():
 			continue
 		
-		# 秘術持ちまたは高レートクリーチャー
+		# 秘術持ちチェック
 		var has_mystic = creature.get("mystic_arts") != null
-		var rarity = creature.get("rarity", "N")
-		var is_high_value = rarity in ["R", "S"]
+		if not has_mystic:
+			var ability_parsed = creature.get("ability_parsed", {})
+			if ability_parsed:
+				var mystic_arts = ability_parsed.get("mystic_arts", [])
+				has_mystic = not mystic_arts.is_empty()
+				if not has_mystic:
+					var keywords = ability_parsed.get("keywords", [])
+					has_mystic = "秘術" in keywords
+		
+		# レートチェック
+		var rate = CardRateEvaluator.get_rate(creature)
+		var is_high_value = rate >= HIGH_RATE_THRESHOLD
 		
 		if has_mystic or is_high_value:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})

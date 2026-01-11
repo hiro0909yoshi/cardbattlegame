@@ -118,12 +118,11 @@ func _calculate_battle_score(sim_result: Dictionary, attacker: Dictionary, _defe
 	if hp_margin > 0:
 		score += min(hp_margin / 10.0, 20)  # HP余裕分のボーナス（最大20）
 	
-	# クリーチャーのレアリティ/コストを考慮（高コストクリーチャーを失うリスク）
-	var attacker_cost = attacker.get("cost", {})
-	if typeof(attacker_cost) == TYPE_DICTIONARY:
-		attacker_cost = attacker_cost.get("mp", 0)
+	# クリーチャーのレートを考慮（高レートクリーチャーを失うリスク）
+	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+	var attacker_rate = CardRateEvaluator.get_rate(attacker)
 	if result == BattleSimulator.BattleResult.DEFENDER_WIN or result == BattleSimulator.BattleResult.BOTH_DEFEATED:
-		score -= attacker_cost * 5  # 高コストクリーチャーを失うペナルティ
+		score -= attacker_rate * 0.5  # 高レートクリーチャーを失うペナルティ
 	
 	return score
 

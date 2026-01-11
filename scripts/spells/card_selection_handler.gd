@@ -126,7 +126,9 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	
 	# CPUの場合は自動選択
 	if _is_cpu_player(current_player_id):
-		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal)
+		# 自分に使う場合（スクイーズ等）は低レートを選択
+		var is_self_target = (target_player_id == current_player_id)
+		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal, is_self_target)
 		return
 	
 	# フィルターモードを設定
@@ -172,9 +174,9 @@ func _is_cpu_player(player_id: int) -> bool:
 	# プレイヤー0は人間、1以降はCPU
 	return player_id > 0
 
-## CPU用: 敵手札から自動でカードを選択
-func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, callback: Callable, is_steal: bool):
-	"""CPUが自動で敵の手札からカードを選択"""
+## CPU用: 手札から自動でカードを選択
+func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, callback: Callable, is_steal: bool, is_self_target: bool = false):
+	"""CPUが自動で手札からカードを選択（敵の場合は高レート、自分の場合は低レート）"""
 	await get_tree().create_timer(0.5).timeout  # 思考時間
 	
 	if not card_system:
@@ -196,23 +198,38 @@ func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, cal
 		_finish_enemy_card_selection()
 		return
 	
-	# 最も価値の高いカードを選択（レートが高いもの優先）
+	# 対象手札一覧をログ出力
+	var target_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system and target_player_id < player_system.players.size():
+		target_name = player_system.players[target_player_id].name
+	print("[手札確認] %s の対象カード%d枚:" % [target_name, valid_indices.size()])
+	for idx in valid_indices:
+		var card = hand[idx]
+		var rate = CardRateEvaluator.get_rate(card)
+		print("  [%d] %s (レート: %d)" % [idx, card.get("name", "?"), rate])
+	
+	# 自分が対象の場合は低レート、敵が対象の場合は高レートを選択
 	var best_index = valid_indices[0]
 	var best_rate = CardRateEvaluator.get_rate(hand[best_index])
 	for idx in valid_indices:
 		var card = hand[idx]
 		var rate = CardRateEvaluator.get_rate(card)
-		if rate > best_rate:
-			best_rate = rate
-			best_index = idx
+		if is_self_target:
+			# 自分に使う場合は低レートを選択
+			if rate < best_rate:
+				best_rate = rate
+				best_index = idx
+		else:
+			# 敵に使う場合は高レートを選択
+			if rate > best_rate:
+				best_rate = rate
+				best_index = idx
 	
 	# カードを破壊/奪取
 	var card_data = hand[best_index]
 	var action = "奪取" if is_steal else "破壊"
-	var target_name = "プレイヤー%d" % (target_player_id + 1)
-	if player_system and target_player_id < player_system.players.size():
-		target_name = player_system.players[target_player_id].name
-	print("[CPU自動選択] %s: %s を%s" % [target_name, card_data.get("name", "?"), action])
+	var select_reason = "低レート" if is_self_target else "高レート"
+	print("[CPU自動選択] %s: %s を%s (%s: %d)" % [target_name, card_data.get("name", "?"), action, select_reason, best_rate])
 	
 	if is_steal:
 		# 奪取: 対象の手札から自分の手札へ
@@ -395,6 +412,11 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		await get_tree().create_timer(1.0).timeout
 		callback.call(-1)
 		_finish_deck_card_selection()
+		return
+	
+	# CPUの場合は自動選択
+	if _is_cpu_player(current_player_id):
+		await _cpu_auto_select_deck_card(target_player_id, callback)
 		return
 	
 	# フィルターモードを設定（全カード選択可）
@@ -673,6 +695,11 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 			ui_manager.phase_label.text = "変換できるカードがありません"
 		await get_tree().create_timer(1.0).timeout
 		_finish_transform_card_selection()
+		return
+	
+	# CPUの場合は自動選択
+	if _is_cpu_player(current_player_id):
+		await _cpu_auto_select_transform_card(target_player_id, filter_mode)
 		return
 	
 	# フィルターモードを設定
@@ -966,3 +993,86 @@ func _restore_camera_to_current_player():
 	if camera_ctrl:
 		camera_ctrl.enable_follow_mode()
 		camera_ctrl.return_to_player()
+
+
+# ============ CPU自動選択（追加） ============
+
+## CPU用: デッキカードから自動でカードを選択（ポイズンマインド用）
+func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
+	"""CPUが自動でデッキ上部からカードを選択して破壊"""
+	await get_tree().create_timer(0.5).timeout  # 思考時間
+	
+	if deck_card_selection_cards.is_empty():
+		callback.call(-1)
+		_finish_deck_card_selection()
+		return
+	
+	# レートが最も高いカードを選択
+	var best_index = 0
+	var best_rate = CardRateEvaluator.get_rate(deck_card_selection_cards[0])
+	for i in range(1, deck_card_selection_cards.size()):
+		var card = deck_card_selection_cards[i]
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate > best_rate:
+			best_rate = rate
+			best_index = i
+	
+	var card_data = deck_card_selection_cards[best_index]
+	var target_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system and target_player_id < player_system.players.size():
+		target_name = player_system.players[target_player_id].name
+	print("[CPU自動選択] %sのデッキから: %s を破壊 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
+	
+	# デッキからカードを破壊
+	if spell_draw:
+		spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
+	
+	callback.call(best_index)
+	_finish_deck_card_selection()
+
+
+## CPU用: カード変換用の自動選択（メタモルフォシス用）
+func _cpu_auto_select_transform_card(target_player_id: int, filter_mode: String):
+	"""CPUが自動で敵手札からカードを選択して変換"""
+	await get_tree().create_timer(0.5).timeout  # 思考時間
+	
+	if not card_system:
+		_finish_transform_card_selection()
+		return
+	
+	var hand = card_system.get_all_cards_for_player(target_player_id)
+	var valid_indices = []
+	
+	# フィルターに合うカードを探す
+	for i in range(hand.size()):
+		var card = hand[i]
+		if _card_matches_filter(card, filter_mode):
+			valid_indices.append(i)
+	
+	if valid_indices.is_empty():
+		_finish_transform_card_selection()
+		return
+	
+	# レートが最も高いカードを選択
+	var best_index = valid_indices[0]
+	var best_rate = CardRateEvaluator.get_rate(hand[best_index])
+	for idx in valid_indices:
+		var card = hand[idx]
+		var rate = CardRateEvaluator.get_rate(card)
+		if rate > best_rate:
+			best_rate = rate
+			best_index = idx
+	
+	var card_data = hand[best_index]
+	var target_name = "プレイヤー%d" % (target_player_id + 1)
+	if player_system and target_player_id < player_system.players.size():
+		target_name = player_system.players[target_player_id].name
+	print("[CPU自動選択] %sの手札から: %s を変換 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
+	
+	# 同名カードを全て変換
+	if spell_draw:
+		var card_name = card_data.get("name", "")
+		var card_id = card_data.get("id", -1)
+		spell_draw.transform_cards_to_specific(target_player_id, card_name, card_id, transform_to_card_id)
+	
+	_finish_transform_card_selection()

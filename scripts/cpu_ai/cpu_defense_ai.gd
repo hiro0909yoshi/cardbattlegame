@@ -642,8 +642,13 @@ func _select_best_by_cost(entries: Array) -> Dictionary:
 	if entries.is_empty():
 		return {}
 	
+	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
+	
+	# レートが低いものを優先（価値の低いカードを援護に使う）
 	entries.sort_custom(func(a, b):
-		return a.cost < b.cost
+		var rate_a = CardRateEvaluator.get_rate(a.data)
+		var rate_b = CardRateEvaluator.get_rate(b.data)
+		return rate_a < rate_b
 	)
 	
 	return entries[0]
