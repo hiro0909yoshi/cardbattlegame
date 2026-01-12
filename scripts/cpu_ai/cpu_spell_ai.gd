@@ -41,7 +41,7 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	
 	# ターゲット選択クラス初期化
 	target_selector = CPUSpellTargetSelector.new()
-	target_selector.initialize(b_system, p_system, c_system, condition_checker, l_system)
+	target_selector.initialize(b_system, p_system, c_system, condition_checker, l_system, gf_manager)
 	
 	# ユーティリティクラス初期化
 	spell_utils = CPUSpellUtils.new()
@@ -177,6 +177,8 @@ func _evaluate_immediate(_spell: Dictionary, context: Dictionary, base_score: fl
 func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
 	var cpu_rule = spell.get("cpu_rule", {})
 	var target_condition = cpu_rule.get("target_condition", "")
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
 	
 	var targets = []
 	
@@ -192,6 +194,14 @@ func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: fl
 	
 	if targets.is_empty():
 		return {"should_use": false, "score": 0.0, "target": null}
+	
+	# 全体効果スペル（all_creatures, all_lands等）の場合、ターゲット選択不要
+	if target_type in ["all_creatures", "all_lands", "none", "self", "world"]:
+		return {
+			"should_use": true,
+			"score": base_score,
+			"target": null
+		}
 	
 	# 最適なターゲットを選択（スコア付き）
 	var selection = target_selector.select_best_target_with_score(targets, spell, context)

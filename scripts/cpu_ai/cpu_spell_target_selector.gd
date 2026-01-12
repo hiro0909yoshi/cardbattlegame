@@ -10,14 +10,16 @@ var card_system: Node = null
 var condition_checker = null  # CPUSpellConditionChecker
 var lap_system: Node = null
 var target_resolver: CPUTargetResolver = null
+var game_flow_manager: Node = null
 
 ## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_system: Node = null) -> void:
+func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_system: Node = null, gf_manager: Node = null) -> void:
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
 	condition_checker = cond_checker
 	lap_system = l_system
+	game_flow_manager = gf_manager
 	
 	# CPUTargetResolverの初期化
 	target_resolver = CPUTargetResolver.new()
@@ -34,13 +36,6 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
 	var target_info = effect_parsed.get("target_info", {}).duplicate()
-	
-	# game_flow_managerの取得を試みる
-	var game_flow_manager = null
-	if board_system and "get_parent" in board_system:
-		var parent = board_system.get_parent()
-		if parent and "game_stats" in parent:
-			game_flow_manager = parent
 	
 	# systemsを構築
 	var systems = {
@@ -94,11 +89,8 @@ func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
 ## 世界呪いコンテキストを構築
 func _build_world_curse_context() -> Dictionary:
 	var context = {}
-	# board_systemからgame_flow_managerを取得（存在する場合）
-	if board_system and board_system.has_method("get_parent"):
-		var parent = board_system.get_parent()
-		if parent and "game_stats" in parent:
-			context["world_curse"] = parent.game_stats.get("world_curse", {})
+	if game_flow_manager and "game_stats" in game_flow_manager:
+		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
 	return context
 
 ## 最適なターゲット選択（スコア付き）
@@ -429,6 +421,10 @@ func get_profit_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
 	
+	# 全体効果・ターゲット不要のスペル
+	if target_type in ["all_players", "all_creatures", "all_lands", "world", "none"]:
+		return {}
+	
 	if target_type == "player":
 		var enemies = get_enemy_players(context)
 		if not enemies.is_empty():
@@ -458,8 +454,9 @@ func get_strategic_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 					var enemies = get_enemy_players(context)
 					if not enemies.is_empty():
 						return enemies[randi() % enemies.size()]
-		"world", "none", "self":
-			return {"type": "self", "player_id": context.player_id}
+		"world", "none", "self", "all_players", "all_creatures", "all_lands":
+			# 全体効果・自己対象・ターゲット不要のスペル
+			return {}
 	
 	return {"type": "self", "player_id": context.player_id}
 

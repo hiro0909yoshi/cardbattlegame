@@ -394,6 +394,7 @@ func update_player_curse(player_id: int):
 	var player = player_system.players[player_id]
 	if not player.curse.is_empty():
 		var curse = player.curse
+		var curse_type = curse.get("curse_type", "")
 		var duration = curse.get("duration", -1)
 		
 		# duration > 0 の場合のみカウントダウン
@@ -406,6 +407,10 @@ func update_player_curse(player_id: int):
 				var curse_name = curse.get("name", "不明")
 				player.curse = {}
 				print("[呪い消滅] ", curse_name, " (duration=0)")
+				
+				# 歩行逆転呪いの場合、方向を元に戻す
+				if curse_type == "movement_reverse":
+					_on_movement_reverse_curse_removed(player_id)
 
 # 全ての呪いのdurationを更新（デバッグ用）
 func update_all_curses():
@@ -468,3 +473,10 @@ func _update_world_curse():
 				var curse_name = curse.get("name", "不明")
 				game_flow_manager.game_stats.erase("world_curse")
 				print("[呪い消滅] ", curse_name, " (duration=0)")
+
+# 歩行逆転呪い解除時の処理
+func _on_movement_reverse_curse_removed(player_id: int):
+	if board_system and board_system.movement_controller:
+		var mc = board_system.movement_controller
+		if mc.has_method("on_movement_reverse_curse_removed"):
+			mc.on_movement_reverse_curse_removed(player_id)

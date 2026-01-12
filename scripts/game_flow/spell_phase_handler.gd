@@ -222,7 +222,7 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
 		var l_system = game_flow_manager.lap_system if game_flow_manager else null
-		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager, l_system)
+		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
 		cpu_mystic_arts_ai.set_hand_utils(cpu_hand_utils)
 		cpu_mystic_arts_ai.set_battle_ai(cpu_battle_ai)
 	
@@ -399,10 +399,12 @@ func _execute_cpu_spell(decision: Dictionary):
 		var caster_name = "CPU"
 		if current_player_id >= 0 and current_player_id < player_system.players.size():
 			caster_name = player_system.players[current_player_id].name
-		await _show_spell_cast_notification(caster_name, target, spell_card, false)
+		# targetがnullまたは空の場合は空のDictionaryを渡す
+		var notification_target = target if target != null else {}
+		await _show_spell_cast_notification(caster_name, notification_target, spell_card, false)
 	
 	# ターゲットを構築して効果実行
-	var target_data = _build_cpu_target_data(spell_card, target)
+	var target_data = _build_cpu_target_data(spell_card, target if target != null else {})
 	
 	# 効果実行
 	await execute_spell_effect(spell_card, target_data)

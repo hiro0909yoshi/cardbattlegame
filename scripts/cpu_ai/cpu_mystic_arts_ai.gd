@@ -11,6 +11,7 @@ var card_system: Node = null
 var creature_manager: Node = null
 var lap_system: Node = null
 var target_resolver: CPUTargetResolver = null
+var game_flow_manager: Node = null
 
 ## ミスティックアーツデータキャッシュ
 var mystic_arts_data: Dictionary = {}
@@ -25,12 +26,13 @@ const PRIORITY_VALUES = {
 }
 
 ## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null) -> void:
+func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
 	creature_manager = cr_manager
 	lap_system = l_system
+	game_flow_manager = gf_manager
 	
 	# 条件チェッカー初期化
 	condition_checker = CPUSpellConditionChecker.new()
@@ -372,19 +374,12 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 	if target_type == "self":
 		return [{"type": "self", "tile_index": context.get("caster_tile", -1)}]
 	
-	# game_flow_managerの取得を試みる
-	var gfm = null
-	if board_system and "get_parent" in board_system:
-		var parent = board_system.get_parent()
-		if parent and "game_stats" in parent:
-			gfm = parent
-	
 	# systemsを構築
 	var systems = {
 		"board_system": board_system,
 		"player_system": player_system,
 		"current_player_id": context.get("player_id", 0),
-		"game_flow_manager": gfm
+		"game_flow_manager": game_flow_manager
 	}
 	
 	# TargetSelectionHelperの共通ロジックを使用
@@ -780,11 +775,8 @@ func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Ar
 ## 世界呪いコンテキストを構築
 func _build_world_curse_context() -> Dictionary:
 	var context = {}
-	# board_systemからgame_flow_managerを取得（存在する場合）
-	if board_system and board_system.has_method("get_parent"):
-		var parent = board_system.get_parent()
-		if parent and "game_stats" in parent:
-			context["world_curse"] = parent.game_stats.get("world_curse", {})
+	if game_flow_manager and "game_stats" in game_flow_manager:
+		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
 	return context
 
 ## タイルがダウン状態かチェック

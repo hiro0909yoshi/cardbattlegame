@@ -22,14 +22,14 @@ CPUのスペル/秘術ターゲット選択ロジックを、プレイヤーと�
 ```gdscript
 # 従来（handlerが必要）
 static func get_valid_targets(handler, target_type: String, target_info: Dictionary) -> Array:
-    # handlerから情報を抽出してコア関数を呼び出す
-    var systems = {
-        "board_system": handler.board_system,
-        "player_system": handler.player_system,
-        "current_player_id": handler.current_player_id,
-        "game_flow_manager": handler.game_flow_manager
-    }
-    return get_valid_targets_core(systems, target_type, target_info)
+	# handlerから情報を抽出してコア関数を呼び出す
+	var systems = {
+		"board_system": handler.board_system,
+		"player_system": handler.player_system,
+		"current_player_id": handler.current_player_id,
+		"game_flow_manager": handler.game_flow_manager
+	}
+	return get_valid_targets_core(systems, target_type, target_info)
 
 # 新規追加（CPU等から直接呼び出し可能）
 static func get_valid_targets_core(systems: Dictionary, target_type: String, target_info: Dictionary) -> Array:
@@ -42,16 +42,16 @@ static func get_valid_targets_core(systems: Dictionary, target_type: String, tar
 ```gdscript
 ## デフォルトターゲット取得（TargetSelectionHelper共通ロジック使用）
 func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
-    var systems = {
-        "board_system": board_system,
-        "player_system": player_system,
-        "current_player_id": context.get("player_id", 0),
-        "game_flow_manager": game_flow_manager
-    }
-    
-    # TargetSelectionHelperの共通ロジックを使用
-    var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
-    # ...
+	var systems = {
+		"board_system": board_system,
+		"player_system": player_system,
+		"current_player_id": context.get("player_id", 0),
+		"game_flow_manager": game_flow_manager
+	}
+	
+	# TargetSelectionHelperの共通ロジックを使用
+	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
+	# ...
 ```
 
 ### 3. DummyHandlerクラスの追加
@@ -60,16 +60,16 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 
 ```gdscript
 class DummyHandler:
-    var board_system
-    var player_system
-    var current_player_id: int
-    var game_flow_manager
-    
-    func _init(systems: Dictionary):
-        board_system = systems.get("board_system")
-        player_system = systems.get("player_system")
-        current_player_id = systems.get("current_player_id", 0)
-        game_flow_manager = systems.get("game_flow_manager")
+	var board_system
+	var player_system
+	var current_player_id: int
+	var game_flow_manager
+	
+	func _init(systems: Dictionary):
+		board_system = systems.get("board_system")
+		player_system = systems.get("player_system")
+		current_player_id = systems.get("current_player_id", 0)
+		game_flow_manager = systems.get("game_flow_manager")
 ```
 
 ## 共通化されたチェック項目

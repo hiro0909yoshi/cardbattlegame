@@ -114,9 +114,6 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	# 方向選択権チェック
 	var has_direction_choice = _check_direction_choice_pending(player_id)
 	
-	# 歩行逆転呪いチェック
-	var is_reversed = _has_movement_reverse_curse(player_id)
-	
 	if has_direction_choice:
 		# 現在位置の接続情報をチェック
 		var current_tile = player_tiles[player_id]
@@ -125,24 +122,15 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		_current_remaining_steps = steps
 		var first_tile = await _select_first_tile(current_tile, came_from)
 		
-		# 歩行逆転呪いがある場合、first_tileを逆転（current_directionは変更しない）
-		if is_reversed:
-			var direction = _get_player_current_direction(player_id)
-			var reversed_direction = -direction
-			# first_tileを再計算（分岐点でない場合）
-			var tile = tile_nodes.get(current_tile)
-			if not tile or not tile.connections or tile.connections.is_empty():
-				first_tile = current_tile + reversed_direction
-		
 		# came_fromを更新して方向選択権を消費
 		_set_player_came_from(player_id, current_tile)
 		_consume_direction_choice(player_id)
 		
 		# 移動実行（1歩ずつ、分岐があれば都度選択）
-		await _move_steps_with_branch(player_id, steps, first_tile, is_reversed)
+		await _move_steps_with_branch(player_id, steps, first_tile)
 	else:
 		# 方向選択権がない場合は came_from ベースで自動進行
-		await _move_steps_with_branch(player_id, steps, -1, is_reversed)
+		await _move_steps_with_branch(player_id, steps, -1)
 	
 	# 最終位置を取得
 	var final_tile = player_tiles[player_id]
@@ -153,8 +141,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	emit_signal("movement_completed", player_id, final_tile)
 
 # 1歩ずつ移動（分岐があれば選択）
-# is_reversed: 歩行逆転呪いが有効な場合true（移動計算時に方向を逆転）
-func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, is_reversed: bool = false) -> void:
+func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -> void:
 	var current_tile = player_tiles[player_id]
 	var came_from = _get_player_came_from(player_id)
 	var remaining_steps = steps
@@ -172,7 +159,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 			is_first_step = false
 		else:
 			# 次のタイルを決定
-			next_tile = await _get_next_tile_with_branch(current_tile, came_from, player_id, is_reversed)
+			next_tile = await _get_next_tile_with_branch(current_tile, came_from, player_id)
 			is_first_step = false
 		
 		# 移動前のチェック
@@ -184,6 +171,9 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 		await move_to_tile(player_id, next_tile)
 		
 		# 状態を更新
+		# 逆転時: came_fromは「次に進む方向」として維持（更新しない方式に変更）
+		# → 逆転時も通常と同じくcurrent_tileをcame_fromにする
+		#    ただし、_get_next_tile_with_branchで逆転処理を行う
 		came_from = current_tile
 		current_tile = next_tile
 		player_tiles[player_id] = next_tile
@@ -219,21 +209,15 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1, i
 
 
 # 次のタイルを取得（分岐があれば選択UI）
-# is_reversed: 歩行逆転呪いが有効な場合true（current_directionは変更しない）
-func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int, is_reversed: bool = false) -> int:
+func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int) -> int:
 	var tile = tile_nodes.get(current_tile)
-	
-
 	
 	# connectionsがなければ単純にindex+direction
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var direction = _get_player_current_direction(player_id)
-		# 歩行逆転呪いがある場合は方向を逆転
-		if is_reversed:
-			direction = -direction
 		return current_tile + direction
 	
-	# connectionsがある場合：came_fromを除外
+	# connectionsがある場合：came_fromを除外して進む方向を決定
 	var choices = []
 	for conn in tile.connections:
 		if conn != came_from:
@@ -455,6 +439,45 @@ func _set_player_current_direction(player_id: int, direction: int) -> void:
 		return
 	player_system.players[player_id].current_direction = direction
 
+
+## プレイヤーの進行方向を反転（歩行逆転スペル用）
+func reverse_player_direction(player_id: int) -> void:
+	var current_dir = _get_player_current_direction(player_id)
+	var new_dir = -current_dir if current_dir != 0 else -1
+	_set_player_current_direction(player_id, new_dir)
+	print("[MovementController] プレイヤー%d の方向を反転: %d → %d" % [player_id + 1, current_dir, new_dir])
+
+
+## 歩行逆転用: came_fromを「次に進む予定だったタイル」に変更
+## これにより、came_fromを除外するロジックで逆方向に進むようになる
+func swap_came_from_for_reverse(player_id: int) -> void:
+	if player_id < 0 or player_id >= player_tiles.size():
+		return
+	
+	var current_tile = player_tiles[player_id]
+	var old_came_from = _get_player_came_from(player_id)
+	
+	# 現在のタイルのconnectionsを取得
+	var tile = tile_nodes.get(current_tile)
+	if not tile or not tile.connections or tile.connections.is_empty():
+		# connectionsがない場合はcurrent_directionベースで計算
+		var direction = _get_player_current_direction(player_id)
+		var next_tile = current_tile + direction
+		_set_player_came_from(player_id, next_tile)
+		print("[MovementController] プレイヤー%d came_from反転(no conn): %d → %d" % [player_id + 1, old_came_from, next_tile])
+		return
+	
+	# connectionsがある場合: old_came_from以外のタイルを「新しいcame_from」にする
+	# （複数ある場合は最初のものを選択）
+	for conn in tile.connections:
+		if conn != old_came_from:
+			_set_player_came_from(player_id, conn)
+			print("[MovementController] プレイヤー%d came_from反転: %d → %d" % [player_id + 1, old_came_from, conn])
+			return
+	
+	# 全てold_came_fromと同じ場合（通常ありえない）はそのまま
+	print("[MovementController] プレイヤー%d came_from反転失敗: connections=%s" % [player_id + 1, tile.connections])
+
 # プレイヤーのcame_from（前にいたタイル）を取得
 func _get_player_came_from(player_id: int) -> int:
 	if not player_system:
@@ -470,6 +493,14 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	player_system.players[player_id].came_from = tile
+
+
+## 歩行逆転呪いが解除された時に呼ばれる: came_fromを元に戻す
+func on_movement_reverse_curse_removed(player_id: int) -> void:
+	# came_fromを再度入れ替えて元に戻す
+	swap_came_from_for_reverse(player_id)
+	print("[MovementController] 歩行逆転呪い解除: プレイヤー%d came_fromを元に戻す" % [player_id + 1])
+
 
 # 選んだタイルから方向を推測
 func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int = -1) -> int:

@@ -171,12 +171,35 @@ func get_tiles_in_range(from_tile: int, min_dist: int, max_dist: int) -> Array:
 # ========================================
 
 ## 歩行逆転呪いを全セプターに付与（カオスパニック 2019）
+## 呪い付与と同時にcame_fromを入れ替えて逆走させる
 func apply_movement_reverse_curse(duration: int = 1) -> void:
 	for player_id in range(player_system.players.size()):
 		spell_curse.curse_player(player_id, "movement_reverse", duration, {
 			"name": "歩行逆転"
 		})
+		# 即座にcame_fromを入れ替え（逆走開始）
+		_reverse_player_direction(player_id)
 	print("[SpellPlayerMove] 歩行逆転を全プレイヤーに付与 (duration=%d)" % duration)
+
+
+## プレイヤーの進行方向を反転（came_fromを入れ替えて逆走させる）
+func _reverse_player_direction(player_id: int) -> void:
+	if not player_system or player_id < 0 or player_id >= player_system.players.size():
+		return
+	
+	# 方向選択権を消費（反転した方向を固定するため）
+	if player_system.players[player_id].buffs.has("direction_choice_pending"):
+		player_system.players[player_id].buffs.erase("direction_choice_pending")
+		print("[SpellPlayerMove] プレイヤー%d の方向選択権を消費" % [player_id + 1])
+	
+	if not board_system or not "movement_controller" in board_system:
+		return
+	var mc = board_system.movement_controller
+	
+	# came_fromを「次に進む予定だったタイル」に変更
+	# これにより、came_fromを除外するロジックで逆方向に進む
+	if mc.has_method("swap_came_from_for_reverse"):
+		mc.swap_came_from_for_reverse(player_id)
 
 ## ゲート通過効果を発動（リミッション 2123）
 ## 注意: リミッションは「通過したことにする」だけで、停止はしないのでダウン解除は発生しない
