@@ -3,6 +3,9 @@
 class_name CPUTargetResolver
 extends RefCounted
 
+## 呪い判別クラス
+const CurseEvaluator = preload("res://scripts/cpu_ai/cpu_curse_evaluator.gd")
+
 ## 参照
 var board_analyzer: CPUBoardAnalyzer = null
 var board_system: Node = null
@@ -713,3 +716,85 @@ func _get_enemies_with_land_bonus(context: Dictionary) -> Array:
 func _get_own_without_land_bonus(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	return board_analyzer.get_own_without_land_bonus(player_id)
+
+# =============================================================================
+# 呪いスペル用フィルタリング
+# =============================================================================
+
+## 呪いスペルのターゲット候補をフィルタリング
+## curse_is_beneficial: 付与する呪いが有利(true)か不利(false)か
+## targets: ターゲット候補のリスト
+## context: コンテキスト（player_idを含む）
+## 戻り値: フィルタリング後のターゲットリスト
+func filter_curse_spell_targets(curse_is_beneficial: bool, targets: Array, context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var filtered = []
+	
+	for target in targets:
+		var creature = target.get("creature", {})
+		if creature.is_empty():
+			filtered.append(target)  # クリーチャー以外はそのまま
+			continue
+		
+		var tile_index = target.get("tile_index", -1)
+		var owner_id = _get_tile_owner(tile_index)
+		
+		if curse_is_beneficial:
+			# 有利な呪いを付ける場合
+			if CpuCurseEvaluator.is_valid_beneficial_curse_target(player_id, owner_id, creature):
+				filtered.append(target)
+		else:
+			# 不利な呪いを付ける場合
+			if CpuCurseEvaluator.is_valid_harmful_curse_target(player_id, owner_id, creature):
+				filtered.append(target)
+	
+	return filtered
+
+
+## タイルの所有者IDを取得
+func _get_tile_owner(tile_index: int) -> int:
+	if not board_system or tile_index < 0:
+		return -1
+	
+	var tile = board_system.get_tile_data(tile_index)
+	if tile:
+		return tile.get("owner", tile.get("owner_id", -1))
+	return -1
+
+
+## スペルが呪いスペルかどうか判定し、有利/不利を返す
+## 戻り値: {"is_curse": bool, "is_beneficial": bool}
+func analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
+	var result = {"is_curse": false, "is_beneficial": false}
+	
+	var effect_parsed = spell_data.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		var curse_type = effect.get("curse_type", "")
+		
+		# 呪い関連のeffect_typeをチェック
+		if effect_type in ["creature_curse", "player_curse", "apply_curse", 
+						   "skill_nullify", "battle_disable", "plague_curse",
+						   "toll_multiplier", "peace", "forced_stop",
+						   "magic_barrier", "destroy_after_battle", "grant_mystic_arts"]:
+			result.is_curse = true
+			
+			# curse_typeから有利/不利を判定
+			if curse_type != "":
+				if curse_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES:
+					result.is_beneficial = true
+				elif curse_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES:
+					result.is_beneficial = false
+			else:
+				# effect_typeから推測
+				if effect_type in ["grant_mystic_arts", "toll_multiplier", "forced_stop", "magic_barrier"]:
+					result.is_beneficial = true
+				elif effect_type in ["skill_nullify", "battle_disable", "plague_curse", 
+									 "peace", "destroy_after_battle"]:
+					result.is_beneficial = false
+			
+			break
+	
+	return result

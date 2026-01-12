@@ -1,0 +1,208 @@
+class_name CpuCurseEvaluator
+extends RefCounted
+
+## 呪い効果の有利/不利を判定するクラス
+## CPU AIが呪いの上書き判断を行うために使用
+
+# =============================================================================
+# 定数定義
+# =============================================================================
+
+## クリーチャーにとって有利な呪い（所有者視点）
+const BENEFICIAL_CREATURE_CURSES = [
+	"stat_boost",           # 能力値+20
+	"mystic_grant",         # 秘術付与
+	"command_growth",       # コマンド成長
+	"forced_stop",          # 強制停止（敵を足止め）
+	"indomitable",          # 不屈
+	"land_effect_disable",  # 地形効果無効
+	"land_effect_grant",    # 地形効果付与
+	"metal_form",           # メタルフォーム
+	"magic_barrier",        # マジックバリア
+	"toll_multiplier",      # 通行料倍率
+	"remote_move",          # 遠隔移動
+	"spell_protection",     # 防魔
+	"protection_wall",      # 防魔壁
+	"hp_effect_immune",     # HP効果無効
+	"blast_trap",           # 爆発罠
+]
+
+## クリーチャーにとって不利な呪い（所有者視点）
+const HARMFUL_CREATURE_CURSES = [
+	"stat_reduce",          # 能力値-20
+	"skill_nullify",        # 戦闘能力不可
+	"battle_disable",       # 戦闘行動不可
+	"ap_nullify",           # AP=0
+	"random_stat",          # 能力値不定
+	"plague",               # 衰弱
+	"bounty",               # 賞金首
+	"destroy_after_battle", # 戦闘後破壊
+	"peace",                # 平和（通行料0）
+	"move_disable",         # 移動不可
+	"creature_toll_disable", # クリーチャー通行料無効
+]
+
+## プレイヤーにとって有利な呪い
+const BENEFICIAL_PLAYER_CURSES = [
+	"dice_fixed",           # ダイス固定
+	"dice_range",           # ダイス範囲
+	"protection",           # 防魔
+	"life_force",           # 生命力
+	"toll_share",           # 通行料共有
+]
+
+## プレイヤーにとって不利な呪い
+const HARMFUL_PLAYER_CURSES = [
+	"dice_range_magic",     # 範囲+魔力（制限付き）
+	"toll_disable",         # 通行料無効
+	"toll_fixed",           # 通行料固定
+	"spell_disable",        # スペル不可
+	"movement_reverse",     # 歩行逆転
+]
+
+# =============================================================================
+# クリーチャー呪い判定
+# =============================================================================
+
+## クリーチャーの呪いが所有者にとって有利かどうか判定
+## 戻り値: 1=有利, -1=不利, 0=呪いなし/不明
+static func get_creature_curse_benefit(creature: Dictionary) -> int:
+	var curse = creature.get("curse", {})
+	if curse.is_empty():
+		return 0
+	
+	var curse_type = curse.get("curse_type", "")
+	
+	if curse_type in BENEFICIAL_CREATURE_CURSES:
+		return 1
+	elif curse_type in HARMFUL_CREATURE_CURSES:
+		return -1
+	
+	return 0  # 不明な呪いタイプ
+
+
+## CPUから見てクリーチャーの呪い状態が望ましいかどうか判定
+## cpu_id: CPUのプレイヤーID
+## creature_owner_id: クリーチャーの所有者ID
+## creature: クリーチャーデータ
+## 戻り値: true=望ましい状態（上書きすべきでない）, false=上書きしてよい
+static func is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool:
+	var benefit = get_creature_curse_benefit(creature)
+	
+	if benefit == 0:
+		return false  # 呪いなしまたは不明 → 上書きしてよい
+	
+	var is_own_creature = (creature_owner_id == cpu_id)
+	
+	# 自クリーチャーに有利な呪い → 望ましい（上書きしない）
+	# 敵クリーチャーに不利な呪い → 望ましい（上書きしない）
+	if is_own_creature:
+		return benefit > 0
+	else:
+		return benefit < 0
+
+
+## 呪いスペルのターゲットとして適切かどうか判定
+## 不利な呪いを付けるスペルの場合のターゲット判定
+## cpu_id: CPUのプレイヤーID
+## creature_owner_id: クリーチャーの所有者ID
+## creature: クリーチャーデータ
+## 戻り値: true=ターゲットとして適切
+static func is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool:
+	var is_own_creature = (creature_owner_id == cpu_id)
+	
+	# 自クリーチャーには不利な呪いを付けない
+	if is_own_creature:
+		return false
+	
+	# 敵クリーチャーの現在の呪い状態をチェック
+	var benefit = get_creature_curse_benefit(creature)
+	
+	# 敵に既に不利な呪いがついている → ターゲットとして不適切（上書きしない）
+	if benefit < 0:
+		return false
+	
+	# 敵に有利な呪いがついている → ターゲットとして適切（上書きして消す）
+	# 敵に呪いがない → ターゲットとして適切
+	return true
+
+
+## 呪いスペルのターゲットとして適切かどうか判定
+## 有利な呪いを付けるスペルの場合のターゲット判定
+## cpu_id: CPUのプレイヤーID
+## creature_owner_id: クリーチャーの所有者ID
+## creature: クリーチャーデータ
+## 戻り値: true=ターゲットとして適切
+static func is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary) -> bool:
+	var is_own_creature = (creature_owner_id == cpu_id)
+	
+	# 敵クリーチャーには有利な呪いを付けない
+	if not is_own_creature:
+		return false
+	
+	# 自クリーチャーの現在の呪い状態をチェック
+	var benefit = get_creature_curse_benefit(creature)
+	
+	# 自分に既に有利な呪いがついている → ターゲットとして不適切（上書きしない）
+	if benefit > 0:
+		return false
+	
+	# 自分に不利な呪いがついている → ターゲットとして適切（上書きして消す）
+	# 自分に呪いがない → ターゲットとして適切
+	return true
+
+# =============================================================================
+# プレイヤー呪い判定
+# =============================================================================
+
+## プレイヤーの呪いが有利かどうか判定
+## 戻り値: 1=有利, -1=不利, 0=呪いなし/不明
+static func get_player_curse_benefit(player_curse: Dictionary) -> int:
+	if player_curse.is_empty():
+		return 0
+	
+	var curse_type = player_curse.get("curse_type", "")
+	
+	if curse_type in BENEFICIAL_PLAYER_CURSES:
+		return 1
+	elif curse_type in HARMFUL_PLAYER_CURSES:
+		return -1
+	
+	return 0
+
+
+## CPUから見てプレイヤーの呪い状態が望ましいかどうか判定
+static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int, player_curse: Dictionary) -> bool:
+	var benefit = get_player_curse_benefit(player_curse)
+	
+	if benefit == 0:
+		return false
+	
+	var is_self = (target_player_id == cpu_id)
+	
+	if is_self:
+		return benefit > 0  # 自分に有利な呪い → 望ましい
+	else:
+		return benefit < 0  # 敵に不利な呪い → 望ましい
+
+# =============================================================================
+# 呪い解除スペル用判定
+# =============================================================================
+
+## 自クリーチャーに不利な呪いがあるかチェック
+static func has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array) -> bool:
+	for creature_info in creatures:
+		var owner_id = creature_info.get("owner_id", -1)
+		if owner_id != cpu_id:
+			continue
+		
+		var creature = creature_info.get("creature", {})
+		if get_creature_curse_benefit(creature) < 0:
+			return true
+	
+	return false
+
+
+## CPUプレイヤー自身に不利な呪いがあるかチェック
+static func has_harmful_curse_on_self(player_curse: Dictionary) -> bool:
+	return get_player_curse_benefit(player_curse) < 0

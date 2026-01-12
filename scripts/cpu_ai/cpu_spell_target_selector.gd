@@ -9,6 +9,7 @@ var player_system: Node = null
 var card_system: Node = null
 var condition_checker = null  # CPUSpellConditionChecker
 var lap_system: Node = null
+var target_resolver: CPUTargetResolver = null
 
 ## 初期化
 func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_system: Node = null) -> void:
@@ -17,33 +18,91 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_
 	card_system = c_system
 	condition_checker = cond_checker
 	lap_system = l_system
+	
+	# CPUTargetResolverの初期化
+	target_resolver = CPUTargetResolver.new()
+	var board_analyzer = CPUBoardAnalyzer.new()
+	board_analyzer.initialize(b_system, p_system, c_system, null)  # creature_managerはnullでOK
+	target_resolver.initialize(board_analyzer, b_system, p_system, c_system)
 
 # =============================================================================
 # メインターゲット選択
 # =============================================================================
 
-## デフォルトターゲット取得
+## デフォルトターゲット取得（TargetSelectionHelper共通ロジック使用）
 func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
-	var target_info = effect_parsed.get("target_info", {})
-	var owner_filter = target_info.get("owner_filter", "any")
+	var target_info = effect_parsed.get("target_info", {}).duplicate()
 	
-	match target_type:
-		"creature":
-			return condition_checker.check_target_condition(owner_filter + "_creature", context)
-		"player":
-			if owner_filter == "enemy":
-				return get_enemy_players(context)
-			else:
-				return [{"type": "player", "player_id": context.player_id}]
-		"land", "own_land":
-			return get_land_targets(owner_filter, context)
-		_:
-			return []
+	# game_flow_managerの取得を試みる
+	var game_flow_manager = null
+	if board_system and "get_parent" in board_system:
+		var parent = board_system.get_parent()
+		if parent and "game_stats" in parent:
+			game_flow_manager = parent
+	
+	# systemsを構築
+	var systems = {
+		"board_system": board_system,
+		"player_system": player_system,
+		"current_player_id": context.get("player_id", 0),
+		"game_flow_manager": game_flow_manager
+	}
+	
+	# TargetSelectionHelperの共通ロジックを使用
+	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
+	
+	# 呪いスペルの場合、追加のフィルタリングを適用
+	if target_type == "creature" and target_resolver:
+		var curse_info = target_resolver.analyze_curse_spell(spell)
+		if curse_info.is_curse:
+			targets = target_resolver.filter_curse_spell_targets(
+				curse_info.is_beneficial,
+				targets,
+				context
+			)
+	
+	return targets
+
+## 防魔・HP効果無効のクリーチャーをフィルタリング（共通ロジック使用）
+func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
+	var effect_parsed = spell.get("effect_parsed", {})
+	
+	# 世界呪いコンテキスト構築
+	var context = _build_world_curse_context()
+	
+	var filtered = []
+	for target in targets:
+		var creature = target.get("creature", {})
+		if creature.is_empty():
+			filtered.append(target)
+			continue
+		
+		# 防魔チェック（SpellProtection使用）
+		if SpellProtection.is_creature_protected(creature, context):
+			continue
+		
+		# HP効果無効チェック（SpellHpImmune使用）
+		if SpellHpImmune.should_skip_hp_effect(creature, effect_parsed):
+			continue
+		
+		filtered.append(target)
+	
+	return filtered
+
+## 世界呪いコンテキストを構築
+func _build_world_curse_context() -> Dictionary:
+	var context = {}
+	# board_systemからgame_flow_managerを取得（存在する場合）
+	if board_system and board_system.has_method("get_parent"):
+		var parent = board_system.get_parent()
+		if parent and "game_stats" in parent:
+			context["world_curse"] = parent.game_stats.get("world_curse", {})
+	return context
 
 ## 最適なターゲット選択（スコア付き）
-func select_best_target_with_score(targets: Array, _spell: Dictionary, context: Dictionary) -> Dictionary:
+func select_best_target_with_score(targets: Array, spell: Dictionary, context: Dictionary) -> Dictionary:
 	if targets.is_empty():
 		return {"target": {}, "score": 0.0}
 	
@@ -51,11 +110,15 @@ func select_best_target_with_score(targets: Array, _spell: Dictionary, context: 
 	var damage_value = context.get("damage_value", 0)
 	var is_damage_spell = damage_value > 0
 	
+	# 呪いスペルかどうか判定
+	var curse_info = _analyze_curse_spell(spell)
+	print("[SpellAI] curse_info: %s (spell: %s)" % [str(curse_info), spell.get("name", "?")])
+	
 	var best_target = targets[0]
 	var best_score = -999.0
 	
 	for target in targets:
-		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell)
+		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell, curse_info)
 		if score > best_score:
 			best_score = score
 			best_target = target
@@ -63,7 +126,7 @@ func select_best_target_with_score(targets: Array, _spell: Dictionary, context: 
 	return {"target": best_target, "score": best_score}
 
 ## ターゲットスコアを計算
-func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool) -> float:
+func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}) -> float:
 	var score = 0.0
 	
 	var tile_index = target.get("tile_index", -1)
@@ -82,7 +145,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	# 敵クリーチャーかどうか
 	var owner_id = -1
 	if tile_data:
-		owner_id = tile_data.get("owner_id", -1)
+		owner_id = tile_data.get("owner", tile_data.get("owner_id", -1))
 	var is_enemy = owner_id != player_id and owner_id >= 0
 	
 	if is_enemy:
@@ -100,18 +163,128 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)  # 最大+1.0
 	
-	# 土地レベル（基礎30 × レベル）
-	if tile_data:
+	# 呪いスペルの場合、既存の呪い状態でスコア調整
+	if curse_info.get("is_curse", false):
+		score += _calculate_curse_overwrite_score(creature, player_id, owner_id, curse_info.get("is_beneficial", false))
+	
+	# 土地レベル（属性一致の場合のみスコア加算）
+	if tile_data and not creature.is_empty():
 		var level = tile_data.get("level", 1)
-		score += 30 * level
+		var tile_element = tile_data.get("element", "")
+		var creature_element = creature.get("element", "")
+		if tile_element == creature_element or tile_element == "neutral" or creature_element == "neutral":
+			score += 30 * level
 	
 	# クリーチャーのレート
+	var creature_rate = 0.0
 	if not creature.is_empty():
 		var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
-		var creature_rate = CardRateEvaluator.get_rate(creature)
+		creature_rate = CardRateEvaluator.get_rate(creature)
 		score += creature_rate
 	
+	# デバッグ: 最終スコア
+	var creature_name = creature.get("name", "?")
+	var level = tile_data.get("level", 1) if tile_data else 1
+	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, level, creature_rate])
+	
 	return score
+
+
+## 呪い上書きスコアを計算
+## 敵の有利な呪いを消す / 自分の不利な呪いを消す → +150
+## 敵の不利な呪いを消す / 自分の有利な呪いを消す → -300
+func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, spell_is_beneficial: bool) -> float:
+	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
+	var is_own = (owner_id == player_id)
+	var score = 0.0
+	
+	if curse_benefit != 0:
+		if is_own:
+			if curse_benefit > 0:
+				score = -300.0  # 自分の有利な呪いを消したくない
+			else:
+				score = 150.0   # 不利な呪いを消したい
+		else:
+			if curse_benefit > 0:
+				score = 150.0   # 敵の有利な呪いを消したい
+			else:
+				score = -300.0  # 敵の不利な呪いを残したい
+	
+	# デバッグログ
+	var creature_name = creature.get("name", "?")
+	print("[SpellAI] 呪いスコア: %s, benefit=%d, is_own=%s, score=%.1f" % [creature_name, curse_benefit, str(is_own), score])
+	
+	return score
+
+
+## スペルが呪いスペルかどうか判定し、有利/不利を返す
+func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
+	var result = {"is_curse": false, "is_beneficial": false}
+	
+	var effect_parsed = spell_data.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	
+	# 呪い系のeffect_type（有利 - 自クリーチャー向け）
+	const BENEFICIAL_CURSE_EFFECTS = [
+		"command_growth_curse",  # コマンド成長
+		"remote_move",           # 遠隔移動
+		"toll_multiplier",       # 通行料倍率（グリード等）
+		"magic_barrier",         # 魔力結界
+		"forced_stop",           # 強制停止
+		"toll_share",            # 通行料促進
+		"grant_mystic_arts",     # 秘術付与
+		"stat_boost",            # 能力値+20
+		"indomitable",           # 不屈
+		"peace",                 # 平和
+		"metal_form",            # 金属化
+	]
+	
+	# 呪い系のeffect_type（不利 - 敵クリーチャー向け）
+	const HARMFUL_CURSE_EFFECTS = [
+		"skill_nullify",         # スキル無効
+		"battle_disable",        # 戦闘不能
+		"plague_curse",          # 疫病
+		"move_disable",          # 移動不可
+		"stat_reduce",           # ステータス減少
+		"destroy_after_battle",  # 戦闘後破壊
+		"land_effect_disable",   # 地形効果無効
+		"ap_nullify",            # AP=0
+		"bounty_curse",          # 賞金首
+		"life_force_curse",      # ライフフォース
+		"random_stat_curse",     # 能力値不定
+		"toll_fixed",            # 通行料固定
+	]
+	
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		var curse_type = effect.get("curse_type", "")
+		
+		# effect_typeで判定
+		if effect_type in BENEFICIAL_CURSE_EFFECTS:
+			result.is_curse = true
+			result.is_beneficial = true
+			break
+		elif effect_type in HARMFUL_CURSE_EFFECTS:
+			result.is_curse = true
+			result.is_beneficial = false
+			break
+		elif effect_type == "creature_curse" or effect_type == "player_curse":
+			result.is_curse = true
+			# curse_typeで有利/不利を判定
+			if curse_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES:
+				result.is_beneficial = true
+			elif curse_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES:
+				result.is_beneficial = false
+			break
+		elif curse_type != "":
+			result.is_curse = true
+			if curse_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES:
+				result.is_beneficial = true
+			elif curse_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES:
+				result.is_beneficial = false
+			break
+	
+	return result
 
 ## 旧互換（他の箇所で使用されている場合）
 func select_best_target(targets: Array, spell: Dictionary, context: Dictionary) -> Dictionary:
@@ -122,7 +295,43 @@ func select_best_target(targets: Array, spell: Dictionary, context: Dictionary) 
 # 条件別ターゲット選択
 # =============================================================================
 
-## 条件に基づくターゲット取得
+## 条件に基づくターゲット取得（スコア付き）
+func get_condition_target_with_score(spell: Dictionary, context: Dictionary) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	var cpu_rule = spell.get("cpu_rule", {})
+	var condition = cpu_rule.get("condition", "")
+	
+	# element_mismatch + creature の場合、スコア計算を使用
+	if condition == "element_mismatch" and target_type == "creature":
+		var mismatched = target_resolver.check_target_condition("element_mismatch_creatures", context)
+		# 自クリーチャーのみフィルタ（防御型・防魔を除外）
+		var own_mismatched = []
+		for target in mismatched:
+			var tile_index = target.get("tile_index", -1)
+			if tile_index >= 0 and board_system:
+				var tile = board_system.get_tile_data(tile_index)
+				if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
+					var creature = target.get("creature", {})
+					# 防御型クリーチャーは移動できないので除外
+					if _is_defensive_creature(creature):
+						continue
+					# 防魔チェック
+					if SpellProtection.is_creature_protected(creature, _build_world_curse_context()):
+						continue
+					own_mismatched.append(target)
+		
+		if own_mismatched.is_empty():
+			return {"target": {}, "score": 0.0}
+		
+		# スコア計算を使用して最適なターゲットを選択
+		return select_best_target_with_score(own_mismatched, spell, context)
+	
+	# その他の条件は従来通り（スコア0で返す）
+	var target = get_condition_target(spell, context)
+	return {"target": target, "score": 0.0}
+
+## 条件に基づくターゲット取得（旧互換）
 func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 	var effect_parsed = spell.get("effect_parsed", {})
 	var target_type = effect_parsed.get("target_type", "")
@@ -190,6 +399,25 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 				var best_target = get_best_exchange_target(context)
 				if not best_target.is_empty():
 					return best_target
+			# 属性不一致の場合、属性不一致の自クリーチャーをターゲット（スコア計算使用）
+			if condition == "element_mismatch":
+				var mismatched = target_resolver.check_target_condition("element_mismatch_creatures", context)
+				# 自クリーチャーのみフィルタ（防御型を除外）
+				var own_mismatched = []
+				for target in mismatched:
+					var tile_index = target.get("tile_index", -1)
+					if tile_index >= 0 and board_system:
+						var tile = board_system.get_tile_data(tile_index)
+						if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
+							var creature = target.get("creature", {})
+							# 防御型クリーチャーは移動できないので除外
+							if not _is_defensive_creature(creature):
+								own_mismatched.append(target)
+				if not own_mismatched.is_empty():
+					# スコア計算を使用して最適なターゲットを選択
+					var selection = select_best_target_with_score(own_mismatched, spell, context)
+					return selection.target
+				return {}
 			var targets = get_default_targets(spell, context)
 			if not targets.is_empty():
 				return targets[0]
@@ -702,4 +930,19 @@ func _has_mystic_arts(creature_data: Dictionary) -> bool:
 		if "秘術" in keywords:
 			return true
 	
+	return false
+
+## 防御型クリーチャーかどうかをチェック（移動不可）
+func _is_defensive_creature(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+	# creature_typeで判定
+	if creature_data.get("creature_type", "") == "defensive":
+		return true
+	# ability_parsed.keywordsで判定
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	if ability_parsed:
+		var keywords = ability_parsed.get("keywords", [])
+		if "防御型" in keywords:
+			return true
 	return false

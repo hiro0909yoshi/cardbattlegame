@@ -344,8 +344,8 @@
         ]
       },
       "cpu_rule": {
-        "pattern": "has_target",
-        "target_condition": "own_creature",
+        "pattern": "condition",
+        "condition": "element_mismatch",
         "priority": "medium"
       }
     },

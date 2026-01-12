@@ -80,7 +80,8 @@ func decide_spell(player_id: int) -> Dictionary:
 	var evaluated_spells = []
 	for spell in usable_spells:
 		var evaluation = _evaluate_spell(spell, context)
-		if evaluation.should_use:
+		# should_useがtrueかつスコアが0以上の場合のみ使用候補に追加
+		if evaluation.should_use and evaluation.score >= 0:
 			evaluated_spells.append({
 				"spell": spell,
 				"score": evaluation.score,
@@ -224,16 +225,22 @@ func _evaluate_condition(spell: Dictionary, context: Dictionary, base_score: flo
 	if not condition_checker.check_condition(condition, extended_context):
 		return {"should_use": false, "score": 0.0, "target": null}
 	
-	# 条件を満たした場合、ターゲットを取得
-	var target = target_selector.get_condition_target(spell, extended_context)
+	# 条件を満たした場合、ターゲットを取得（スコア付き）
+	var result = target_selector.get_condition_target_with_score(spell, extended_context)
+	var target = result.target
+	var target_score = result.score
 	
 	# 適切なターゲットがない場合は使用しない
 	if target.is_empty():
 		return {"should_use": false, "score": 0.0, "target": null}
 	
+	# ターゲットスコアが負の場合は使用しない（有利な呪いを上書きしたくない等）
+	if target_score < 0:
+		return {"should_use": false, "score": target_score, "target": null}
+	
 	return {
 		"should_use": true,
-		"score": base_score,
+		"score": base_score + target_score,
 		"target": target
 	}
 

@@ -778,16 +778,16 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary) -
 **悪い例**:
 ```gdscript
 func _on_item_phase_completed():
-    # ❌ is_connected()はコールバック実行中にtrueを返すため、再接続されない
-    if not item_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-        item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+	# ❌ is_connected()はコールバック実行中にtrueを返すため、再接続されない
+	if not item_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+		item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 ```
 
 **良い例**:
 ```gdscript
 func _on_item_phase_completed():
-    # ✅ 常に再接続（ONE_SHOTはコールバック完了後に切断されるため安全）
-    item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+	# ✅ 常に再接続（ONE_SHOTはコールバック完了後に切断されるため安全）
+	item_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 ```
 
 **実装例**: `spell_creature_move.gd`, `cpu_turn_processor.gd`（2025年1月実装）
@@ -805,33 +805,33 @@ func _on_item_phase_completed():
 **悪い例**:
 ```gdscript
 func on_card_selected(card_index: int):
-    # ❌ スペルフェーズが先にチェックされる
-    if spell_phase_handler.is_spell_phase_active():
-        if card_type == "spell":
-            spell_phase_handler.use_spell(card)
-            return
-        else:
-            return  # アイテムフェーズがアクティブでもここでreturn!
-    
-    if item_phase_handler.is_item_phase_active():
-        # ここに到達しない
+	# ❌ スペルフェーズが先にチェックされる
+	if spell_phase_handler.is_spell_phase_active():
+		if card_type == "spell":
+			spell_phase_handler.use_spell(card)
+			return
+		else:
+			return  # アイテムフェーズがアクティブでもここでreturn!
+	
+	if item_phase_handler.is_item_phase_active():
+		# ここに到達しない
 ```
 
 **良い例**:
 ```gdscript
 func on_card_selected(card_index: int):
-    # ✅ アイテムフェーズを優先（スペル効果中のバトルで使用されるため）
-    if item_phase_handler and item_phase_handler.is_item_phase_active():
-        if card_type == "item":
-            item_phase_handler.use_item(card)
-            return
-        # ... 援護クリーチャー等の処理
-    
-    # スペルフェーズは後でチェック
-    if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-        if card_type == "spell":
-            spell_phase_handler.use_spell(card)
-            return
+	# ✅ アイテムフェーズを優先（スペル効果中のバトルで使用されるため）
+	if item_phase_handler and item_phase_handler.is_item_phase_active():
+		if card_type == "item":
+			item_phase_handler.use_item(card)
+			return
+		# ... 援護クリーチャー等の処理
+	
+	# スペルフェーズは後でチェック
+	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
+		if card_type == "spell":
+			spell_phase_handler.use_spell(card)
+			return
 ```
 
 **理由**: アイテムフェーズはバトル直前の短い期間のみアクティブになり、その間はアイテム選択が最優先されるべき

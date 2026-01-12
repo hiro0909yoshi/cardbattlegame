@@ -9,10 +9,10 @@
 	{
 	  "player_id": 1,
 	  "character_id": "bowser",
-	  "deck_id": "balance_easy",
+	  "deck_id": "skills_test",
 	  "ai_profile_id": "easy",
 	  "start_tile": 0,
-	  "start_magic": 60
+	  "start_magic": 500
 	}
   ],
   "win_condition": {

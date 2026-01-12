@@ -668,31 +668,51 @@ static func _check_has_adjacent_enemy(board_sys, tile_index: int, current_player
 ## target_info: フィルター条件（owner_filter, max_level, required_elements など）
 ## 戻り値: ターゲット情報の配列
 static func get_valid_targets(handler, target_type: String, target_info: Dictionary) -> Array:
+	# ハンドラーから必要な情報を抽出してコア関数を呼び出す
+	var systems = {
+		"board_system": handler.board_system if handler else null,
+		"player_system": handler.player_system if handler else null,
+		"current_player_id": handler.current_player_id if handler else 0,
+		"game_flow_manager": handler.game_flow_manager if handler and "game_flow_manager" in handler else null
+	}
+	return get_valid_targets_core(systems, target_type, target_info)
+
+
+## CPU等からhandlerなしで呼び出せるコア関数
+## systems: { board_system, player_system, current_player_id, game_flow_manager }
+## target_type: "land", "creature", "player" など
+## target_info: フィルター条件
+## 戻り値: ターゲット情報の配列
+static func get_valid_targets_core(systems: Dictionary, target_type: String, target_info: Dictionary) -> Array:
+	var board_system = systems.get("board_system")
+	var player_system = systems.get("player_system")
+	var current_player_id = systems.get("current_player_id", 0)
+	var game_flow_manager = systems.get("game_flow_manager")
 	var targets = []
 	
 	match target_type:
 		"creature":
 			# クリーチャーを探す（条件フィルタ対応）
-			if handler.board_system:
+			if board_system:
 				# タイル番号順にソート
-				var tile_indices = handler.board_system.tile_nodes.keys()
+				var tile_indices = board_system.tile_nodes.keys()
 				tile_indices.sort()
 				
 				for tile_index in tile_indices:
-					var tile_info = handler.board_system.get_tile_info(tile_index)
+					var tile_info = board_system.get_tile_info(tile_index)
 					var creature = tile_info.get("creature", {})
 					if creature.is_empty():
 						continue
 					
 					var tile_owner = tile_info.get("owner", -1)
 					var tile_element = tile_info.get("element", "")
-					var tile = handler.board_system.tile_nodes[tile_index]
+					var tile = board_system.tile_nodes[tile_index]
 					
 					# owner_filter チェック
 					var owner_filter = target_info.get("owner_filter", "enemy")
-					if owner_filter == "own" and tile_owner != handler.current_player_id:
+					if owner_filter == "own" and tile_owner != current_player_id:
 						continue
-					if owner_filter == "enemy" and (tile_owner == handler.current_player_id or tile_owner < 0):
+					if owner_filter == "enemy" and (tile_owner == current_player_id or tile_owner < 0):
 						continue
 					# "any" は全てのクリーチャー（所有者がいる場合のみ）
 					if owner_filter == "any" and tile_owner < 0:
@@ -753,7 +773,7 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					
 					# has_adjacent_enemy チェック（アウトレイジ用：隣接敵領地があるか）
 					if target_info.get("has_adjacent_enemy", false):
-						var has_adjacent = _check_has_adjacent_enemy(handler.board_system, tile_index, handler.current_player_id)
+						var has_adjacent = _check_has_adjacent_enemy(board_system, tile_index, current_player_id)
 						if not has_adjacent:
 							continue
 					
@@ -825,11 +845,11 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 		
 		"player":
 			# プレイヤーを対象とする
-			if handler.player_system:
+			if player_system:
 				var target_filter = target_info.get("target_filter", "any")  # "own", "enemy", "any"
 				
-				for player in handler.player_system.players:
-					var is_current = (player.id == handler.current_player_id)
+				for player in player_system.players:
+					var is_current = (player.id == current_player_id)
 					
 					# フィルター判定
 					var matches = false
@@ -853,7 +873,7 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 		
 		"land", "own_land", "enemy_land":
 			# 土地を対象とする
-			if handler.board_system:
+			if board_system:
 				# target_typeに応じてデフォルトのowner_filterを設定
 				var default_owner_filter = "any"
 				if target_type == "own_land":
@@ -864,11 +884,11 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 				var target_filter = target_info.get("target_filter", "")  # "creature", "empty", ""
 				
 				# タイル番号順にソート
-				var tile_indices = handler.board_system.tile_nodes.keys()
+				var tile_indices = board_system.tile_nodes.keys()
 				tile_indices.sort()
 				
 				for tile_index in tile_indices:
-					var tile_info = handler.board_system.get_tile_info(tile_index)
+					var tile_info = board_system.get_tile_info(tile_index)
 					var tile_owner = tile_info.get("owner", -1)
 					var creature = tile_info.get("creature", {})
 					
@@ -881,7 +901,7 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						if not creature.is_empty():
 							continue
 						# 特殊タイル（配置不可）は除外
-						var tile = handler.board_system.tile_nodes.get(tile_index)
+						var tile = board_system.tile_nodes.get(tile_index)
 						if tile and TileHelper.is_special_tile(tile):
 							continue
 						# 空き地の場合は所有者フィルターをスキップ
@@ -892,9 +912,9 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						# 所有者フィルター（従来の処理）
 						var matches_owner = false
 						if owner_filter == "own":
-							matches_owner = (tile_owner == handler.current_player_id)
+							matches_owner = (tile_owner == current_player_id)
 						elif owner_filter == "enemy":
-							matches_owner = (tile_owner >= 0 and tile_owner != handler.current_player_id)
+							matches_owner = (tile_owner >= 0 and tile_owner != current_player_id)
 						else:  # "any"
 							matches_owner = (tile_owner >= 0)
 						
@@ -927,19 +947,19 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 					var distance_max = target_info.get("distance_max", -1)
 					if distance_min > 0 or distance_max > 0:
 						# ワープタイルは飛べない（neutral, checkpoint等は可）
-						var tile = handler.board_system.tile_nodes.get(tile_index)
+						var tile = board_system.tile_nodes.get(tile_index)
 						if tile and tile.tile_type == "warp":
 							continue
 						
 						# 使用者の現在位置から距離を計算（MovementController優先）
 						var player_tile = -1
-						if handler.board_system and handler.board_system.movement_controller:
-							player_tile = handler.board_system.movement_controller.get_player_tile(handler.current_player_id)
-						elif handler.player_system and handler.current_player_id >= 0:
-							player_tile = handler.player_system.players[handler.current_player_id].current_tile
+						if board_system and board_system.movement_controller:
+							player_tile = board_system.movement_controller.get_player_tile(current_player_id)
+						elif player_system and current_player_id >= 0:
+							player_tile = player_system.players[current_player_id].current_tile
 						
-						if player_tile >= 0 and handler.game_flow_manager and handler.game_flow_manager.spell_player_move:
-							var dist = handler.game_flow_manager.spell_player_move.calculate_tile_distance(player_tile, tile_index)
+						if player_tile >= 0 and game_flow_manager and game_flow_manager.spell_player_move:
+							var dist = game_flow_manager.spell_player_move.calculate_tile_distance(player_tile, tile_index)
 							if distance_min > 0 and dist < distance_min:
 								continue
 							if distance_max > 0 and dist > distance_max:
@@ -962,7 +982,7 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 						
 						# is_down チェック（ダウン状態のクリーチャーのみ対象）
 						if target_info.get("is_down", false):
-							var tile = handler.board_system.tile_nodes.get(tile_index)
+							var tile = board_system.tile_nodes.get(tile_index)
 							var is_down = tile.is_down() if tile and tile.has_method("is_down") else false
 							if not is_down:
 								continue
@@ -979,8 +999,8 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 		
 		"unvisited_gate":
 			# 未通過ゲートを対象とする（リミッション用）
-			if handler.game_flow_manager and handler.game_flow_manager.spell_player_move:
-				var gate_tiles = handler.game_flow_manager.spell_player_move.get_selectable_gate_tiles(handler.current_player_id)
+			if game_flow_manager and game_flow_manager.spell_player_move:
+				var gate_tiles = game_flow_manager.spell_player_move.get_selectable_gate_tiles(current_player_id)
 				for gate_info in gate_tiles:
 					targets.append({
 						"type": "gate",
@@ -994,9 +1014,31 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 	
 	# 防魔フィルター（ignore_protection: true でスキップ可能）
 	if not target_info.get("ignore_protection", false):
-		targets = SpellProtection.filter_protected_targets(targets, handler)
+		# SpellProtectionに渡すためのダミーハンドラーを作成
+		var dummy_handler = _create_dummy_handler(systems)
+		targets = SpellProtection.filter_protected_targets(targets, dummy_handler)
 	
 	return targets
+
+
+## SpellProtection用のダミーハンドラーを作成
+static func _create_dummy_handler(systems: Dictionary):
+	# Dictionaryをオブジェクトのようにアクセスできるようにする
+	return DummyHandler.new(systems)
+
+
+## SpellProtection用のダミーハンドラークラス
+class DummyHandler:
+	var board_system
+	var player_system
+	var current_player_id: int
+	var game_flow_manager
+	
+	func _init(systems: Dictionary):
+		board_system = systems.get("board_system")
+		player_system = systems.get("player_system")
+		current_player_id = systems.get("current_player_id", 0)
+		game_flow_manager = systems.get("game_flow_manager")
 
 
 ## 最多属性でフィルタリング（クラスターバースト用）
