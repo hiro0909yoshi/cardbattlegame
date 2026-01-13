@@ -114,14 +114,14 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	# 呪い適用はapply_pre_battle_skills()で実行（バトル画面セットアップ後）
 	
 	# アイテムをitemsに追加（効果適用はアイテム破壊判定後に行う）
+	# 注意: 前回のバトルのアイテムが残っている可能性があるため、まずクリア
+	attacker.creature_data["items"] = []
+	defender.creature_data["items"] = []
+	
 	if not attacker_item.is_empty():
-		if not attacker.creature_data.has("items"):
-			attacker.creature_data["items"] = []
 		attacker.creature_data["items"].append(attacker_item)
 	
 	if not defender_item.is_empty():
-		if not defender.creature_data.has("items"):
-			defender.creature_data["items"] = []
 		defender.creature_data["items"].append(defender_item)
 	
 	# 以下の処理はapply_pre_battle_skills()で実行（クリック後）:

@@ -215,6 +215,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
 		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
 		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
+		# SpellSynthesisを設定（犠牲カード選択用）
+		if spell_synthesis:
+			cpu_spell_ai.set_spell_synthesis(spell_synthesis)
 		# CPUMovementEvaluatorを設定（ホーリーワード判断用）
 		if cpu_movement_evaluator:
 			cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
@@ -377,6 +380,8 @@ func _handle_cpu_spell_turn():
 func _execute_cpu_spell(decision: Dictionary):
 	var spell_card = decision.get("spell", {})
 	var target = decision.get("target", {})
+	var sacrifice_card = decision.get("sacrifice_card", {})
+	var should_synthesize = decision.get("should_synthesize", false)
 	
 	if spell_card.is_empty():
 		pass_spell(false)
@@ -388,6 +393,34 @@ func _execute_cpu_spell(decision: Dictionary):
 	var cost = _get_spell_cost(spell_card)
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
+	
+	# カード犠牲処理
+	var is_synthesized = false
+	if not sacrifice_card.is_empty():
+		print("[CPU] カード犠牲: %s" % sacrifice_card.get("name", "?"))
+		
+		# 合成条件判定
+		if should_synthesize and spell_synthesis:
+			is_synthesized = spell_synthesis.check_condition(spell_card, sacrifice_card)
+			if is_synthesized:
+				print("[CPU] 合成成立: %s" % spell_card.get("name", "?"))
+		
+		# カードを破棄
+		if card_sacrifice_helper:
+			card_sacrifice_helper.consume_card(current_player_id, sacrifice_card)
+		elif card_system:
+			# card_sacrifice_helperがない場合の直接破棄
+			var hand = card_system.get_all_cards_for_player(current_player_id)
+			for i in range(hand.size()):
+				if hand[i].get("id") == sacrifice_card.get("id"):
+					card_system.discard_card(current_player_id, i, "sacrifice")
+					break
+	
+	# 合成成立時はeffect_parsedを書き換え
+	if is_synthesized and spell_synthesis:
+		var parsed = spell_synthesis.apply_overrides(spell_card, true)
+		spell_card["effect_parsed"] = parsed
+		spell_card["is_synthesized"] = true
 	
 	# 手札除去はexecute_spell_effect内で行われる
 	

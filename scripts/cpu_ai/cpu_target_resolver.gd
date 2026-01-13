@@ -75,6 +75,8 @@ func check_target_condition(target_condition: String, context: Dictionary) -> Ar
 		# 特殊条件
 		"can_kill_target":
 			return _get_killable_targets(context)
+		"can_kill_with_40_damage":
+			return _get_killable_targets_with_damage(context, 40)
 		"most_common_element":
 			return _get_most_common_element_creatures(context)
 		"has_summon_condition":
@@ -464,6 +466,44 @@ func _get_killable_targets(context: Dictionary) -> Array:
 	if not killable.is_empty():
 		return killable
 	return all_enemies
+
+
+## 指定ダメージで倒せるターゲットを取得（シャイニングガイザー等）
+## 倒せるターゲット優先、なければ敵クリーチャー全体
+func _get_killable_targets_with_damage(context: Dictionary, damage: int) -> Array:
+	var player_id = context.get("player_id", 0)
+	var killable = []
+	var all_enemies = []
+	
+	if not board_system:
+		return []
+	
+	var tiles = board_system.get_all_tiles()
+	
+	for tile in tiles:
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if not creature or creature.is_empty():
+			continue
+		
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		
+		# 敵クリーチャーのみ対象
+		if owner_id == player_id or owner_id == -1:
+			continue
+		
+		var current_hp = creature.get("current_hp", creature.get("hp", 0))
+		var target_data = {"type": "creature", "tile_index": tile.get("index", -1), "creature": creature}
+		
+		all_enemies.append(target_data)
+		
+		if current_hp > 0 and current_hp <= damage:
+			killable.append(target_data)
+	
+	# 倒せるターゲットがいればそれを優先、なければ敵クリーチャー全体
+	if not killable.is_empty():
+		return killable
+	return all_enemies
+
 
 ## 最多属性のクリーチャーを取得
 func _get_most_common_element_creatures(context: Dictionary) -> Array:

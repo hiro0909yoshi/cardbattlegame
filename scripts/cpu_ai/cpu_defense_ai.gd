@@ -11,6 +11,7 @@ var card_system: CardSystem
 var player_system: PlayerSystem
 var game_flow_manager
 var board_system
+var tile_action_processor  # デバッグフラグ参照用
 var battle_simulator: BattleSimulatorScript
 var cpu_hand_utils: CPUHandUtils
 var merge_evaluator: CPUMergeEvaluator
@@ -21,6 +22,10 @@ func setup_systems(c_system: CardSystem, p_system: PlayerSystem, gf_manager, b_s
 	player_system = p_system
 	game_flow_manager = gf_manager
 	board_system = b_system
+	
+	# TileActionProcessor参照を取得（デバッグフラグ用）
+	if b_system:
+		tile_action_processor = b_system.tile_action_processor
 	
 	_ensure_battle_simulator()
 
@@ -90,7 +95,7 @@ func decide_defense_action(context: Dictionary) -> Dictionary:
 		print("[CPUDefenseAI] 敵が即死スキル持ち（%d%%）" % probability)
 		
 		if probability >= 100 or tile_level >= 2:
-			var nullify_item = _find_nullify_item_for_defense(player_id)
+			var nullify_item = _find_nullify_item_for_defense(player_id, defender)
 			if not nullify_item.is_empty():
 				print("[CPUDefenseAI] 無効化アイテム使用: %s" % nullify_item.get("name", "?"))
 				result.action = "item"
@@ -382,7 +387,7 @@ func _check_instant_death_conditions(conditions: Dictionary, defender: Dictionar
 	
 	return true
 
-func _find_nullify_item_for_defense(player_id: int) -> Dictionary:
+func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -> Dictionary:
 	if not card_system:
 		return {}
 	
@@ -391,6 +396,9 @@ func _find_nullify_item_for_defense(player_id: int) -> Dictionary:
 	if not current_player:
 		return {}
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	for card in hand:
 		if card.get("type", "") != "item":
 			continue
@@ -398,6 +406,12 @@ func _find_nullify_item_for_defense(player_id: int) -> Dictionary:
 		var cost = _get_item_cost(card)
 		if cost > current_player.magic_power:
 			continue
+		
+		# cannot_use制限チェック
+		if not disable_cannot_use and not defender.is_empty():
+			var check_result = ItemUseRestriction.check_can_use(defender, card)
+			if not check_result.can_use:
+				continue
 		
 		var effect_parsed = card.get("effect_parsed", {})
 		var effects = effect_parsed.get("effects", [])
@@ -441,8 +455,17 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 	if attacker_items.is_empty():
 		return worst_result
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	# 各アイテムでシミュレーションしてワーストを探す
 	for item in attacker_items:
+		# 攻撃側クリーチャーのcannot_use制限をチェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(attacker, item)
+			if not check_result.can_use:
+				continue
+		
 		var result = battle_simulator.simulate_battle(
 			attacker, defender, sim_tile_info, attacker_player_id, item, defender_item
 		)
@@ -480,6 +503,9 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 	if not current_player:
 		return result
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	for i in range(hand.size()):
 		var card = hand[i]
 		if card.get("type", "") != "item":
@@ -488,6 +514,12 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 		# 巻物は防御時使用しない
 		if card.get("item_type", "") == "巻物":
 			continue
+		
+		# cannot_use制限チェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(defender, card)
+			if not check_result.can_use:
+				continue
 		
 		var cost = _get_item_cost(card)
 		if cost > current_player.magic_power:

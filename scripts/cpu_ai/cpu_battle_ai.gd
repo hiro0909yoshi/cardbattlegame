@@ -14,6 +14,7 @@ var board_system
 var player_system: PlayerSystem
 var player_buff_system: PlayerBuffSystem
 var game_flow_manager_ref = null
+var tile_action_processor = null  # デバッグフラグ参照用
 
 # バトルシミュレーター
 var battle_simulator: BattleSimulator = null
@@ -29,6 +30,10 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_sys
 	card_system = c_system
 	board_system = b_system
 	player_system = p_system
+	
+	# TileActionProcessor参照を取得（デバッグフラグ用）
+	if b_system:
+		tile_action_processor = b_system.tile_action_processor
 	player_buff_system = s_system
 	game_flow_manager_ref = gf_manager
 	
@@ -515,8 +520,17 @@ func simulate_worst_case(
 	var worst_result = base_result
 	var worst_option_name = "なし"
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
+		# 防御側クリーチャーのcannot_use制限をチェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(defender, enemy_item)
+			if not check_result.can_use:
+				continue
+		
 		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
 		if _is_worse_result(result, worst_result):
 			worst_result = result
@@ -607,6 +621,9 @@ func find_item_to_beat_worst_case(
 	var items = hand_utils.get_items_from_hand(attacker_player_id)
 	print("    [アイテム検索] ワーストケース対策アイテムを検索: %d個のアイテム" % items.size())
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	for item_entry in items:
 		var item_index = item_entry["index"]
 		var item = item_entry["data"]
@@ -620,6 +637,13 @@ func find_item_to_beat_worst_case(
 		if not enemy_destroy_types.is_empty():
 			if hand_utils.is_item_destroy_target(item, enemy_destroy_types):
 				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
+				continue
+		
+		# cannot_use制限チェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(attacker, item)
+			if not check_result.can_use:
+				print("    [スキップ] %s: %s" % [item.get("name", "?"), check_result.reason])
 				continue
 		
 		# ワーストケースシミュレーション
@@ -716,6 +740,10 @@ func evaluate_single_creature_battle(
 	
 	# 4. 勝てるアイテムを探す
 	var items = hand_utils.get_items_from_hand(my_player_id)
+	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	for item_entry in items:
 		var item_index = item_entry.get("index", -1)
 		var item_data = item_entry.get("data", {})
@@ -724,6 +752,12 @@ func evaluate_single_creature_battle(
 		if not enemy_destroy_types.is_empty():
 			if hand_utils.is_item_destroy_target(item_data, enemy_destroy_types):
 				continue  # このアイテムは破壊される
+		
+		# cannot_use制限チェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(my_creature, item_data)
+			if not check_result.can_use:
+				continue
 		
 		# ワーストケースシミュレーション（アイテム込み）
 		var item_worst_case = simulate_worst_case_common(
@@ -825,8 +859,17 @@ func _simulate_worst_case_as_defender(
 	if enemy_items.is_empty() and enemy_assists.is_empty():
 		return worst_result
 	
+	# cannot_useチェックのためのフラグ確認
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
+		# 攻撃側クリーチャーのcannot_use制限をチェック
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(attacker, enemy_item)
+			if not check_result.can_use:
+				continue
+		
 		var sim_result = battle_simulator.simulate_battle(
 			attacker, defender, sim_tile_info, attacker_player_id, enemy_item, defender_item
 		)

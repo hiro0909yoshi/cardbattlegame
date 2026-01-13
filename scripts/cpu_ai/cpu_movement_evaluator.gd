@@ -20,6 +20,8 @@ const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 100      # 空き地（属性不一致
 const SCORE_STOP_EMPTY_NO_SUMMON = 0               # 空き地（召喚不可）
 const SCORE_STOP_OWN_LAND = 0                      # 自分の領地
 const SCORE_STOP_SPECIAL_TILE = 50                 # 特殊タイル（城、魔法石等）
+const SCORE_STOP_CHECKPOINT_LAP = 1500             # チェックポイント停止で1周達成
+const SCORE_PATH_CHECKPOINT_PASS = 1500           # 経路上でチェックポイント通過（シグナル取得）
 
 # 経路スコア
 const SCORE_PATH_DIVISOR = 10                      # 経路スコアの除数（1/10にする）
@@ -82,18 +84,20 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	# 停止位置スコアを計算
 	var stop_score = _evaluate_stop_tile(stop_tile, player_id, summonable_elements, forced_stop)
 	
-	# 経路スコアを計算（足止めがあればそこまで）
-	var path_score = _evaluate_path_score(path, player_id, summonable_elements)
+	# 経路スコアを計算（チェックポイント通過ボーナスを分離）
+	var path_result = _evaluate_path_score_with_checkpoint(path, player_id, summonable_elements)
+	var path_score = path_result.path_score
+	var checkpoint_bonus = path_result.checkpoint_bonus
 	
 	# 方向ボーナスを計算（came_fromを渡して正しい方向を判定）
 	var actual_came_from = came_from if came_from >= 0 else _get_player_came_from(player_id)
 	var direction_bonus = _calculate_direction_bonus(start_tile, player_id, actual_came_from)
 	
-	# 総合スコア = 停止位置スコア + (経路スコア / 10) + 方向ボーナス
-	var total_score = stop_score + (path_score / SCORE_PATH_DIVISOR) + direction_bonus
+	# 総合スコア = 停止位置スコア + (経路スコア / 10) + チェックポイント通過ボーナス + 方向ボーナス
+	var total_score = stop_score + (path_score / SCORE_PATH_DIVISOR) + checkpoint_bonus + direction_bonus
 	
-	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d 経路:%d/10 方向:%d)" % [
-		start_tile, total_steps, stop_tile, total_score, stop_score, path_score, direction_bonus
+	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d 経路:%d/10 CP通過:%d 方向:%d)" % [
+		start_tile, total_steps, stop_tile, total_score, stop_score, path_score, checkpoint_bonus, direction_bonus
 	])
 	
 	return {
@@ -103,6 +107,7 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 		"details": {
 			"stop_score": stop_score,
 			"path_score": path_score,
+			"checkpoint_bonus": checkpoint_bonus,
 			"direction_bonus": direction_bonus,
 			"forced_stop": forced_stop,
 			"forced_stop_at": forced_stop_at
@@ -259,6 +264,12 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 	
 	# 特殊タイル
 	if is_special:
+		# チェックポイント/ゲートの場合、停止で1周達成できるかチェック
+		var tile_type = tile_info.get("tile_type", "")
+		if tile_type in ["checkpoint", "gate"]:
+			if _is_gate_unvisited(tile_info, player_id):
+				# 未訪問のゲートに停止 = 1周達成
+				return SCORE_STOP_CHECKPOINT_LAP
 		return SCORE_STOP_SPECIAL_TILE
 	
 	# 自分の領地
@@ -299,13 +310,23 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 # =============================================================================
 
 ## 経路全体のスコアを計算（10マス先まで）
-func _evaluate_path_score(path: Array, player_id: int, summonable_elements: Array) -> int:
+## 経路スコアとチェックポイント通過ボーナスを計算
+## 戻り値: { path_score: int, checkpoint_bonus: int }
+func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonable_elements: Array) -> Dictionary:
 	var score = 0
+	var checkpoint_bonus = 0
 	
 	for tile_index in path:
 		var tile_info = _get_tile_info(tile_index)
 		var owner_id = tile_info.get("owner", -1)
 		var tile_element = tile_info.get("element", "")
+		var tile_type = tile_info.get("tile_type", "")
+		
+		# チェックポイント通過でシグナル取得できる場合、大きなボーナス（除算されない）
+		if tile_type in ["gate", "checkpoint"]:
+			if _is_gate_unvisited(tile_info, player_id):
+				checkpoint_bonus += SCORE_PATH_CHECKPOINT_PASS
+				print("[CPU経路スコア] チェックポイント通過ボーナス: tile=%d, +%d" % [tile_index, SCORE_PATH_CHECKPOINT_PASS])
 		
 		# 自分の領地はスキップ
 		if owner_id == player_id:
@@ -322,7 +343,7 @@ func _evaluate_path_score(path: Array, player_id: int, summonable_elements: Arra
 			elif not summonable_elements.is_empty():
 				score += SCORE_STOP_EMPTY_ELEMENT_MISMATCH
 	
-	return score
+	return { "path_score": score, "checkpoint_bonus": checkpoint_bonus }
 
 ## 方向ボーナスを計算
 ## came_from: 来た方向（分岐元）- 反対方向との比較に使用
@@ -330,27 +351,18 @@ func _calculate_direction_bonus(start_tile: int, player_id: int, came_from: int)
 	# この方向の未訪問ゲートまでの距離を取得
 	var this_distance = _get_distance_to_unvisited_gate(start_tile, player_id, came_from)
 	
+	print("[CPU方向ボーナス] start=%d, came_from=%d, this_distance=%d" % [start_tile, came_from, this_distance])
+	
 	# ゲートが見つからなければボーナスなし
 	if this_distance < 0:
+		print("[CPU方向ボーナス] → ゲート見つからず、ボーナス0")
 		return 0
 	
-	# 反対方向のゲートまでの距離も取得（比較用）
-	# came_fromが分岐元なので、そこから別の方向を探す
-	var other_distance = _get_other_direction_gate_distance(came_from, start_tile, player_id)
-	
-	# 比較してボーナスを決定
-	if other_distance < 0:
-		# 反対方向にはゲートがない → この方向にボーナス
-		return SCORE_DIRECTION_UNVISITED_GATE
-	elif this_distance < other_distance:
-		# この方向が近い → この方向にボーナス
-		return SCORE_DIRECTION_UNVISITED_GATE
-	elif this_distance == other_distance:
-		# 同距離 → 両方にボーナス（この方向にもボーナス）
-		return SCORE_DIRECTION_UNVISITED_GATE
-	else:
-		# 反対方向が近い → この方向にはボーナスなし
-		return 0
+	# 未訪問ゲートがこの方向にあれば、距離に応じたボーナスを付与
+	# 距離が近いほど高いボーナス（最大1200、距離10以上で0に近づく）
+	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (this_distance * 100))
+	print("[CPU方向ボーナス] → 距離%dでボーナス%d" % [this_distance, distance_bonus])
+	return distance_bonus
 
 # =============================================================================
 # 進行方向決定
@@ -665,6 +677,9 @@ func _get_distance_to_unvisited_gate(start_tile: int, player_id: int, came_from:
 	if not lap_system:
 		return -1
 	
+	# ワープフラグをリセット（新しい探索開始）
+	_warp_used_in_search = false
+	
 	var current = start_tile
 	var prev = came_from if came_from >= 0 else _get_player_came_from(player_id)
 	
@@ -677,27 +692,45 @@ func _get_distance_to_unvisited_gate(start_tile: int, player_id: int, came_from:
 		else:
 			direction = 1 if diff > 0 else -1
 	
-	for i in range(PATH_EVALUATION_DISTANCE):
+	var distance = 0
+	print("[CPU方向探索] 開始: start=%d, came_from=%d, direction=%d" % [start_tile, came_from, direction])
+	for i in range(PATH_EVALUATION_DISTANCE * 2):  # ワープ考慮で余裕を持たせる
 		var tile_info = _get_tile_info(current)
 		var tile_type = tile_info.get("tile_type", "")
+		print("[CPU方向探索] i=%d current=%d tile_type=%s" % [i, current, tile_type])
 		
 		if tile_type in ["gate", "checkpoint"]:
 			if _is_gate_unvisited(tile_info, player_id):
-				return i  # 距離を返す
+				print("[CPU方向探索] ★ゲート発見! tile=%d, distance=%d" % [current, distance])
+				return distance  # 距離を返す
+		
+		# ワープタイルの場合、距離を増やさずにジャンプ
+		var is_warp = tile_type in ["warp", "warp_stop"]
 		
 		# 次のタイルへ
 		var next = _get_next_tile_simple_with_direction(current, prev, direction)
+		print("[CPU方向探索]   → next=%d (prev=%d)" % [next, prev])
 		if next < 0 or next == current:
+			print("[CPU方向探索]   ループ終了: next=%d, current=%d" % [next, current])
 			break
 		
-		# 方向を更新
-		var diff = next - current
-		if abs(diff) > 1:
-			direction = -1 if diff > 0 else 1
-		else:
-			direction = 1 if diff > 0 else -1
+		# ワープでない場合のみ距離をカウント
+		if not is_warp:
+			distance += 1
 		
-		prev = current
+		# 方向を更新（ワープの場合はリセット）
+		if is_warp:
+			# ワープ後は新しい位置から方向を再計算する必要があるため、
+			# ワープ先の次のタイルを見て判断
+			prev = -1  # came_fromをリセット
+		else:
+			var diff = next - current
+			if abs(diff) > 1:
+				direction = -1 if diff > 0 else 1
+			else:
+				direction = 1 if diff > 0 else -1
+			prev = current
+		
 		current = next
 	
 	return -1  # 見つからなかった
@@ -745,6 +778,9 @@ func _is_gate_unvisited(tile_info: Dictionary, player_id: int) -> bool:
 	return not player_state.get(checkpoint_type, false)
 
 ## 次のタイルを取得（簡易版、方向対応）
+## ワープ済みフラグ（ループ探索中に一度だけワープする）
+var _warp_used_in_search: bool = false
+
 func _get_next_tile_simple_with_direction(current_tile: int, came_from: int, direction: int) -> int:
 	if not movement_controller or not movement_controller.tile_nodes:
 		return current_tile + direction
@@ -755,6 +791,13 @@ func _get_next_tile_simple_with_direction(current_tile: int, came_from: int, dir
 	
 	var tile = tile_nodes[current_tile]
 	
+	# ワープタイルの場合、ワープ先を返す（まだワープしていない場合のみ）
+	if tile.tile_type in ["warp", "warp_stop"] and not _warp_used_in_search:
+		var warp_dest = _get_warp_destination(current_tile)
+		if warp_dest >= 0:
+			_warp_used_in_search = true  # ワープ済みにする
+			return warp_dest
+	
 	if tile.connections and not tile.connections.is_empty():
 		for conn in tile.connections:
 			if conn != came_from:
@@ -762,3 +805,10 @@ func _get_next_tile_simple_with_direction(current_tile: int, came_from: int, dir
 		return came_from
 	
 	return current_tile + direction
+
+
+## ワープ先タイルを取得
+func _get_warp_destination(tile_index: int) -> int:
+	if board_system and board_system.special_tile_system:
+		return board_system.special_tile_system.get_warp_pair(tile_index)
+	return -1

@@ -11,6 +11,7 @@ var card_system: CardSystem
 var board_system
 var player_system: PlayerSystem
 var player_buff_system: PlayerBuffSystem
+var tile_action_processor = null  # 土地条件チェック用
 
 ## システム参照を設定
 func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_system: PlayerBuffSystem):
@@ -18,6 +19,10 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_sys
 	board_system = b_system
 	player_system = p_system
 	player_buff_system = s_system
+	
+	# TileActionProcessorを取得
+	if board_system and board_system.has_node("TileActionProcessor"):
+		tile_action_processor = board_system.get_node("TileActionProcessor")
 
 # ============================================================
 # コスト計算
@@ -87,15 +92,21 @@ func can_afford_card(current_player, card_index: int) -> bool:
 	var cost = calculate_card_cost(card_data, current_player.id)
 	return current_player.magic_power >= cost
 
-## 召喚用の最適カードを選択（属性一致優先、レート最高）
+## 召喚用の最適カードを選択（属性一致優先、レート最高、土地条件考慮）
 func select_best_summon_card(current_player, affordable_cards: Array, tile_element: String = "") -> int:
 	if affordable_cards.is_empty():
+		return -1
+	
+	# まず召喚可能なカード（土地条件・配置制限を満たすもの）をフィルタ
+	var summonable_cards = _filter_summonable_cards(current_player.id, affordable_cards, tile_element)
+	if summonable_cards.is_empty():
+		print("[CPU HandUtils] 召喚可能なカードなし（土地条件/配置制限）")
 		return -1
 	
 	# 属性一致カードを探す
 	if not tile_element.is_empty():
 		var matching_cards = []
-		for index in affordable_cards:
+		for index in summonable_cards:
 			var card = card_system.get_card_data_for_player(current_player.id, index)
 			if card.is_empty():
 				continue
@@ -110,14 +121,130 @@ func select_best_summon_card(current_player, affordable_cards: Array, tile_eleme
 			return _select_highest_rate_from_list(current_player.id, matching_cards)
 	
 	# 属性一致がなければ秘術持ちを優先
-	var mystic_cards = _filter_mystic_arts_cards(current_player.id, affordable_cards)
+	var mystic_cards = _filter_mystic_arts_cards(current_player.id, summonable_cards)
 	if not mystic_cards.is_empty():
 		print("[CPU HandUtils] 属性一致なし、秘術持ちカード発見: %d枚" % mystic_cards.size())
 		return _select_highest_rate_from_list(current_player.id, mystic_cards)
 	
 	# 秘術持ちもなければレート最低のカードを選択
 	print("[CPU HandUtils] 属性一致・秘術持ちなし、レート最低カードを選択")
-	return _select_lowest_rate_from_list(current_player.id, affordable_cards)
+	return _select_lowest_rate_from_list(current_player.id, summonable_cards)
+
+
+## 土地条件・配置制限を満たすカードのみフィルタ
+## tile_element: 配置先タイルの属性（cannot_summonチェック用）
+func _filter_summonable_cards(player_id: int, card_indices: Array, tile_element: String = "") -> Array:
+	var result = []
+	
+	# デバッグフラグを取得
+	var disable_lands = false
+	var disable_cannot_summon = false
+	if tile_action_processor:
+		disable_lands = tile_action_processor.debug_disable_lands_required
+		disable_cannot_summon = tile_action_processor.debug_disable_cannot_summon
+	
+	for index in card_indices:
+		var card = card_system.get_card_data_for_player(player_id, index)
+		if card.is_empty():
+			continue
+		
+		# 土地条件チェック（フラグで無効化可能）
+		if not disable_lands and not _check_lands_required(card, player_id):
+			print("[CPU HandUtils] 土地条件未達: %s" % card.get("name", "?"))
+			continue
+		
+		# 配置制限チェック（フラグで無効化可能）
+		if not disable_cannot_summon and not tile_element.is_empty() and not _check_cannot_summon(card, tile_element):
+			print("[CPU HandUtils] 配置制限: %s は%s属性の土地に配置不可" % [card.get("name", "?"), tile_element])
+			continue
+		
+		result.append(index)
+	
+	return result
+
+
+## 土地条件をチェック（召喚可能かどうか）
+func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
+	# cost_lands_required がなければOK
+	var cost = card_data.get("cost", {})
+	var lands_required = []
+	
+	if card_data.has("cost_lands_required"):
+		lands_required = card_data.get("cost_lands_required", [])
+	elif typeof(cost) == TYPE_DICTIONARY:
+		lands_required = cost.get("lands_required", [])
+	
+	if lands_required.is_empty():
+		return true
+	
+	# ブライトワールド発動中は召喚条件を無視
+	if tile_action_processor and tile_action_processor.has_method("_is_summon_condition_ignored"):
+		if tile_action_processor._is_summon_condition_ignored():
+			return true
+	
+	# TileActionProcessorがあればそれを使用
+	if tile_action_processor and tile_action_processor.has_method("check_lands_required"):
+		var result = tile_action_processor.check_lands_required(card_data, player_id)
+		return result.passed
+	
+	# フォールバック: 簡易チェック
+	return _check_lands_required_simple(card_data, player_id)
+
+
+## 簡易土地条件チェック（フォールバック用）
+func _check_lands_required_simple(card_data: Dictionary, player_id: int) -> bool:
+	var cost = card_data.get("cost", {})
+	var lands_required = []
+	
+	if card_data.has("cost_lands_required"):
+		lands_required = card_data.get("cost_lands_required", [])
+	elif typeof(cost) == TYPE_DICTIONARY:
+		lands_required = cost.get("lands_required", [])
+	
+	if lands_required.is_empty():
+		return true
+	
+	if not board_system:
+		return false
+	
+	# プレイヤーの所有土地の属性をカウント
+	var owned_elements = {}
+	var player_tiles = board_system.get_player_tiles(player_id)
+	for tile in player_tiles:
+		var element = tile.tile_type if tile else ""
+		if element != "" and element != "neutral":
+			owned_elements[element] = owned_elements.get(element, 0) + 1
+	
+	# 必要な属性をカウント
+	var required_elements = {}
+	for element in lands_required:
+		required_elements[element] = required_elements.get(element, 0) + 1
+	
+	# 各属性の条件を満たしているかチェック
+	for element in required_elements.keys():
+		var required_count = required_elements[element]
+		var owned_count = owned_elements.get(element, 0)
+		if owned_count < required_count:
+			return false
+	
+	return true
+
+
+## 配置制限チェック（cannot_summon）
+## card_data: クリーチャーカード
+## tile_element: 配置先タイルの属性
+func _check_cannot_summon(card_data: Dictionary, tile_element: String) -> bool:
+	var restrictions = card_data.get("restrictions", {})
+	var cannot_summon = restrictions.get("cannot_summon", [])
+	
+	if cannot_summon.is_empty():
+		return true  # 制限なし
+	
+	# タイル属性が配置不可リストに含まれていればfalse
+	if tile_element in cannot_summon:
+		return false
+	
+	return true
 
 
 ## リストからレートが最も高いカードを選択

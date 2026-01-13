@@ -41,7 +41,7 @@ static func get_move_destinations(
 			
 			# フィルタリング適用
 			var current_player_id = board_system.current_player_index
-			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
+			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id, creature_data)
 			
 			return all_destinations
 		"enemy_move":
@@ -63,7 +63,7 @@ static func get_move_destinations(
 			
 			# フィルタリング適用
 			var current_player_id = board_system.current_player_index
-			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id)
+			all_destinations = _filter_invalid_destinations(board_system, all_destinations, current_player_id, creature_data)
 			
 			return all_destinations
 		"adjacent":
@@ -72,7 +72,7 @@ static func get_move_destinations(
 				var adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
 				# フィルタリング適用
 				var current_player_id = board_system.current_player_index
-				adjacent_tiles = _filter_invalid_destinations(board_system, adjacent_tiles, current_player_id)
+				adjacent_tiles = _filter_invalid_destinations(board_system, adjacent_tiles, current_player_id, creature_data)
 				return adjacent_tiles
 			return []
 		"random_vacant":  # 戦闘後のアージェントキー用
@@ -95,7 +95,7 @@ static func get_move_destinations(
 					all_vacant.append(tile)
 			# フィルタリング適用
 			var current_player_id = board_system.current_player_index
-			all_vacant = _filter_invalid_destinations(board_system, all_vacant, current_player_id)
+			all_vacant = _filter_invalid_destinations(board_system, all_vacant, current_player_id, creature_data)
 			return all_vacant
 		_:
 			return []
@@ -327,7 +327,7 @@ static func _get_all_vacant_tiles(board_system: Node) -> Array:
 	return _get_vacant_tiles_by_elements(board_system, ["全"])
 
 ## 移動不可能なタイルをフィルタリング
-static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int) -> Array:
+static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int, creature_data: Dictionary = {}) -> Array:
 	var valid_tiles = []
 	
 	# SpellCurseToll参照を取得（peace呪いチェック用）
@@ -344,6 +344,13 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		# 配置不可タイルは移動不可（クリーチャー移動）
 		if not TileHelper.is_placeable_tile(tile):
 			continue
+		
+		# 配置制限チェック（cannot_summon）
+		if not creature_data.is_empty() and board_system.tile_action_processor:
+			var tile_element = tile.tile_type
+			var cannot_summon_result = board_system.tile_action_processor.check_cannot_summon(creature_data, tile_element)
+			if not cannot_summon_result.get("passed", true):
+				continue  # 配置制限で移動不可
 		
 		# 自分のクリーチャーがいる土地はNG
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
@@ -426,5 +433,3 @@ static func execute_creature_move(
 	# シグナル発信（board_systemがシグナルを持っている場合）
 	if board_system.has_signal("creature_moved"):
 		board_system.creature_moved.emit(from_tile, to_tile)
-
-

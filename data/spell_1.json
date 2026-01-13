@@ -969,7 +969,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "can_kill_target",
+		"target_condition": "can_kill_with_40_damage",
 		"priority": "medium_high"
 	  }
 	},

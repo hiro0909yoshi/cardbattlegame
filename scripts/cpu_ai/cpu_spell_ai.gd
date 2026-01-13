@@ -7,6 +7,7 @@ extends RefCounted
 var condition_checker: CPUSpellConditionChecker = null
 var target_selector: CPUSpellTargetSelector = null
 var spell_utils: CPUSpellUtils = null
+var sacrifice_selector: CPUSacrificeSelector = null
 var board_system: Node = null
 var player_system: Node = null
 var card_system: Node = null
@@ -46,12 +47,21 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	# ユーティリティクラス初期化
 	spell_utils = CPUSpellUtils.new()
 	spell_utils.initialize(b_system, p_system, c_system, l_system)
+	
+	# 犠牲カード選択クラス初期化（SpellSynthesisは後からset_spell_synthesisで設定）
+	sacrifice_selector = CPUSacrificeSelector.new()
+	sacrifice_selector.initialize(c_system, b_system)
 
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
 	hand_utils = utils
 	if condition_checker:
 		condition_checker.set_hand_utils(utils)
+
+## SpellSynthesisを設定（犠牲カード選択用）
+func set_spell_synthesis(spell_synth: SpellSynthesis) -> void:
+	if sacrifice_selector:
+		sacrifice_selector.spell_synthesis = spell_synth
 
 ## CPUBattleAIを設定（共通バトル評価用）
 func set_battle_ai(ai: CPUBattleAI) -> void:
@@ -63,7 +73,7 @@ func set_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
 	cpu_movement_evaluator = evaluator
 
 ## スペル使用判断のメインエントリ
-## 戻り値: {use: bool, spell: Dictionary, target: Dictionary} または null
+## 戻り値: {use: bool, spell: Dictionary, target: Dictionary, sacrifice_card: Dictionary, should_synthesize: bool}
 func decide_spell(player_id: int) -> Dictionary:
 	if not card_system or not player_system:
 		return {"use": false}
@@ -95,11 +105,33 @@ func decide_spell(player_id: int) -> Dictionary:
 	evaluated_spells.sort_custom(func(a, b): return a.score > b.score)
 	
 	var best = evaluated_spells[0]
+	var best_spell = best.spell
+	
+	# カード犠牲処理
+	var sacrifice_card = {}
+	var should_synthesize = false
+	
+	if _requires_card_sacrifice(best_spell):
+		# 合成判断（targetがnullの場合は空のDictionaryを渡す）
+		var target_for_synth = best.target if best.target != null else {}
+		should_synthesize = _should_synthesize_spell(best_spell, target_for_synth, context)
+		
+		# 犠牲カード選択
+		if sacrifice_selector:
+			sacrifice_card = sacrifice_selector.select_sacrifice_card(best_spell, player_id, should_synthesize)
+		
+		# 犠牲カードがない場合は使用しない
+		if sacrifice_card.is_empty():
+			print("[CPUSpellAI] 犠牲カードがないため %s を使用しない" % best_spell.get("name", "?"))
+			return {"use": false}
+	
 	return {
 		"use": true,
-		"spell": best.spell,
+		"spell": best_spell,
 		"target": best.target,
-		"score": best.score
+		"score": best.score,
+		"sacrifice_card": sacrifice_card,
+		"should_synthesize": should_synthesize
 	}
 
 ## 使用可能なスペルを取得
@@ -734,3 +766,96 @@ func _get_best_warp_target_for_checkpoint(spell: Dictionary, context: Dictionary
 		return {"type": "land", "tile_index": best_tile}
 	
 	return {}
+
+
+# =============================================================================
+# カード犠牲・合成判断
+# =============================================================================
+
+## カード犠牲が必要か判定
+func _requires_card_sacrifice(spell_data: Dictionary) -> bool:
+	# 正規化されたフィールドをチェック
+	if spell_data.get("cost_cards_sacrifice", 0) > 0:
+		return true
+	# 正規化されていない場合、元のcostフィールドもチェック
+	var cost = spell_data.get("cost", {})
+	if typeof(cost) == TYPE_DICTIONARY:
+		return cost.get("cards_sacrifice", 0) > 0
+	return false
+
+
+## 合成すべきか判断（スペル使用時）
+## 戻り値: true=合成する, false=合成しない
+func _should_synthesize_spell(spell: Dictionary, target: Dictionary, context: Dictionary) -> bool:
+	var spell_id = spell.get("id", 0)
+	var synthesis = spell.get("synthesis", {})
+	
+	if synthesis.is_empty():
+		return false  # 合成効果なし
+	
+	# スペルごとの合成判断
+	match spell_id:
+		2033:  # シャイニングガイザー
+			return _should_synthesize_shining_geyser(target, context)
+		2058:  # デビリティ
+			return _should_synthesize_debility(context)
+		2107:  # マスグロース
+			return _should_synthesize_mass_growth(context)
+		_:
+			# その他の合成スペルは合成しない（カード犠牲のみ）
+			return false
+
+
+## シャイニングガイザーの合成判断
+## HP31-40の敵がいる場合のみ合成
+func _should_synthesize_shining_geyser(target: Dictionary, _context: Dictionary) -> bool:
+	if target.is_empty():
+		return false
+	
+	var creature = target.get("creature", {})
+	if creature.is_empty():
+		return false
+	
+	var current_hp = creature.get("current_hp", creature.get("hp", 0))
+	
+	# HP31-40なら合成必須（30ダメージでは倒せないが40なら倒せる）
+	return current_hp > 30 and current_hp <= 40
+
+
+## デビリティの合成判断
+## 可能な限り合成（任意スペルが手札にあれば）
+func _should_synthesize_debility(context: Dictionary) -> bool:
+	var player_id = context.get("player_id", 0)
+	
+	if not sacrifice_selector:
+		return false
+	
+	# 手札に任意スペルがあるかチェック
+	var hand = card_system.get_all_cards_for_player(player_id)
+	for card in hand:
+		if card.get("type") == "spell":
+			return true  # スペルがあれば合成する
+	
+	return false
+
+
+## マスグロースの合成判断
+## 敵クリーチャーがいる場合のみ合成（自クリーチャーのみに効果を限定）
+func _should_synthesize_mass_growth(context: Dictionary) -> bool:
+	var player_id = context.get("player_id", 0)
+	
+	if not board_system:
+		return false
+	
+	# 敵クリーチャーがいるかチェック
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var creature = tile.get("creature", tile.get("placed_creature", {}))
+		if creature.is_empty():
+			continue
+		
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id != player_id and owner_id != -1:
+			return true  # 敵クリーチャーがいれば合成する
+	
+	return false

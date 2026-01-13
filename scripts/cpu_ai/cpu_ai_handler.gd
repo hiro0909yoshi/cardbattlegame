@@ -57,6 +57,16 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 	# creature_managerはBaseTileの静的参照から取得
 	var creature_manager = BaseTile.creature_manager if BaseTile.creature_manager else null
 	territory_ai.setup(board_system, card_system, player_system, creature_manager)
+	
+	# クリーチャー合成システムを設定（カード犠牲選択用）
+	if CardLoader:
+		var creature_synth = CreatureSynthesis.new(CardLoader)
+		territory_ai.set_creature_synthesis(creature_synth)
+	
+	# TileActionProcessorを設定（土地条件チェック用）
+	if board_system and board_system.has_node("TileActionProcessor"):
+		var tap = board_system.get_node("TileActionProcessor")
+		territory_ai.set_tile_action_processor(tap)
 
 # GameFlowManagerを後から設定
 func set_game_flow_manager(gf_manager) -> void:
@@ -343,6 +353,13 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		print("[CPU Territory] _has_matching_creature: hand_utils is null")
 		return false
 	
+	# デバッグフラグを取得
+	var disable_lands = false
+	var disable_cannot_summon = false
+	if hand_utils.tile_action_processor:
+		disable_lands = hand_utils.tile_action_processor.debug_disable_lands_required
+		disable_cannot_summon = hand_utils.tile_action_processor.debug_disable_cannot_summon
+	
 	var creatures = hand_utils.get_creatures_from_hand(current_player.id)
 	print("[CPU Territory] _has_matching_creature: tile_element=%s, creatures count=%d" % [tile_element, creatures.size()])
 	
@@ -353,11 +370,17 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		var creature_element = card_data.get("element", "")
 		var creature_name = card_data.get("name", "?")
 		var can_afford = hand_utils.can_afford_card(current_player, card_index)
-		print("[CPU Territory]   - %s (element=%s, can_afford=%s)" % [creature_name, creature_element, can_afford])
+		
+		# 土地条件チェック（フラグで無効化可能）
+		var can_summon_lands = disable_lands or hand_utils._check_lands_required(card_data, current_player.id)
+		# 配置制限チェック（フラグで無効化可能）
+		var can_summon_element = disable_cannot_summon or hand_utils._check_cannot_summon(card_data, tile_element)
+		var can_summon = can_summon_lands and can_summon_element
+		print("[CPU Territory]   - %s (element=%s, can_afford=%s, can_summon=%s)" % [creature_name, creature_element, can_afford, can_summon])
 		
 		if creature_element == tile_element or tile_element == "neutral":
-			if can_afford:
-				print("[CPU Territory]   → 属性一致で購入可能!")
+			if can_afford and can_summon:
+				print("[CPU Territory]   → 属性一致で召喚可能!")
 				return true
 	
 	print("[CPU Territory] _has_matching_creature: 属性一致クリーチャーなし")

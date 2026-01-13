@@ -105,6 +105,10 @@ func open_land_command(player_id: int):
 			ui_manager.phase_label.text = "所有地がありません"
 		return
 	
+	# 領地ボタンを非表示（領地コマンド中は表示しない）
+	if ui_manager and ui_manager.has_method("hide_land_command_button"):
+		ui_manager.hide_land_command_button()
+	
 	# カード選択UIを無効化（グローバルボタンもクリア）
 	if ui_manager and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.is_active = false

@@ -71,6 +71,9 @@ var player_system = null
 var creature_manager = null
 var battle_simulator: BattleSimulator = null
 var battle_ai: CPUBattleAI = null
+var sacrifice_selector: CPUSacrificeSelector = null
+var creature_synthesis: CreatureSynthesis = null
+var tile_action_processor = null  # 土地条件チェック用
 
 
 ## 初期化
@@ -92,6 +95,22 @@ func setup(p_board_system, p_card_system, p_player_system, p_creature_manager) -
 	var hand_utils = CPUHandUtils.new()
 	hand_utils.setup_systems(card_system, board_system, player_system, null)
 	battle_ai.set_hand_utils(hand_utils)
+	
+	# 犠牲カード選択クラスを初期化
+	sacrifice_selector = CPUSacrificeSelector.new()
+	sacrifice_selector.initialize(card_system, board_system)
+
+
+## CreatureSynthesisを設定（クリーチャー合成判定用）
+func set_creature_synthesis(synth: CreatureSynthesis) -> void:
+	creature_synthesis = synth
+	if sacrifice_selector:
+		sacrifice_selector.creature_synthesis = synth
+
+
+## TileActionProcessorを設定（土地条件チェック用）
+func set_tile_action_processor(processor) -> void:
+	tile_action_processor = processor
 
 
 ## メイン判断関数: 全オプションを評価して最適なものを返す
@@ -297,6 +316,15 @@ func _evaluate_move_destination(context: Dictionary, from_land: Dictionary, dest
 func _evaluate_move_to_vacant(from_land: Dictionary, dest_tile, player_id: int, creature_element: String) -> Dictionary:
 	var dest_element = dest_tile.tile_type
 	
+	# 配置制限チェック
+	var land_info = {
+		"tile_index": dest_tile.tile_index,
+		"tile_element": dest_element,
+		"owner": -1
+	}
+	if not _can_place_creature(from_land.creature_data, land_info, player_id):
+		return {}
+	
 	# 属性一致チェック
 	var element_match = (creature_element == dest_element) or (dest_element == "neutral")
 	if not element_match:
@@ -322,8 +350,17 @@ func _evaluate_move_to_enemy(context: Dictionary, from_land: Dictionary, dest_ti
 	if dest_tile.creature_data.is_empty():
 		return {}
 	
-	# 戦闘シミュレーション（アイテム込み）
+	# 配置制限チェック
 	var player_id = context.get("player_id", -1)
+	var land_info = {
+		"tile_index": dest_tile.tile_index,
+		"tile_element": dest_tile.tile_type,
+		"owner": dest_tile.owner_id
+	}
+	if not _can_place_creature(from_land.creature_data, land_info, player_id):
+		return {}
+	
+	# 戦闘シミュレーション（アイテム込み）
 	var battle_result = _evaluate_move_battle(from_land, dest_tile, player_id)
 	if not battle_result.can_win:
 		return {}
@@ -460,7 +497,7 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 				continue
 			
 			# 召喚条件チェック
-			if not _can_place_creature(hand_creature, land):
+			if not _can_place_creature(hand_creature, land, player_id):
 				print("[CPUTerritoryAI] 交換評価: %s は配置条件を満たさない" % hand_creature.get("name", "?"))
 				continue
 			
@@ -696,19 +733,90 @@ func _get_hand_creatures(player_id: int) -> Array:
 
 
 ## クリーチャーを配置可能かチェック（召喚条件）
-func _can_place_creature(creature_data: Dictionary, _land: Dictionary) -> bool:
-	# cost_lands_required チェック
+## player_id: チェック対象のプレイヤーID
+## _land: 配置先の土地情報（空き地の場合owner=-1）
+func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id: int = -1) -> bool:
+	# player_idが指定されていなければ_landのownerを使用
+	var check_player_id = player_id if player_id >= 0 else _land.get("owner", -1)
+	
+	# cannot_summon チェック（配置制限）
+	if tile_action_processor and not tile_action_processor.debug_disable_cannot_summon:
+		var tile_element = _land.get("tile_element", _land.get("element", ""))
+		var cannot_summon_result = tile_action_processor.check_cannot_summon(creature_data, tile_element)
+		if not cannot_summon_result.can_summon:
+			return false
+	
+	# cost_lands_required チェック（TileActionProcessorの機能を使用）
 	if creature_data.has("cost_lands_required"):
 		var required_lands = creature_data.get("cost_lands_required", [])
 		if not required_lands.is_empty():
-			# 必要な土地を所有しているかチェック（簡易版）
-			# TODO: 詳細な召喚条件チェックを実装
-			return false
+			# ブライトワールド発動中は召喚条件を無視
+			if _is_summon_condition_ignored():
+				pass  # 条件チェックをスキップ
+			elif tile_action_processor and check_player_id >= 0:
+				var check_result = tile_action_processor.check_lands_required(creature_data, check_player_id)
+				if not check_result.passed:
+					return false
+			else:
+				# tile_action_processorがない場合は簡易チェック
+				if check_player_id < 0:
+					return true  # player_idが不明な場合は一旦許可
+				if not _check_lands_required_simple(creature_data, check_player_id):
+					return false
 	
 	# cost_cards_sacrifice チェック
-	if creature_data.has("cost_cards_sacrifice"):
-		# 生贄が必要な場合は交換対象外
+	if creature_data.has("cost_cards_sacrifice") and creature_data.get("cost_cards_sacrifice", 0) > 0:
+		# ブライトワールド発動中は召喚条件を無視
+		if _is_summon_condition_ignored():
+			pass  # 条件チェックをスキップ
+		else:
+			# 犠牲カードが選択可能かチェック
+			if not sacrifice_selector:
+				return false
+			if check_player_id < 0:
+				return true  # player_idが不明な場合は一旦許可
+			var sacrifice_result = sacrifice_selector.select_sacrifice_for_creature(creature_data, check_player_id, _land.get("element", ""))
+			if sacrifice_result.card.is_empty():
+				return false
+	
+	return true
+
+
+## ブライトワールド（召喚条件解除）が発動中か
+func _is_summon_condition_ignored() -> bool:
+	if tile_action_processor and tile_action_processor.has_method("_is_summon_condition_ignored"):
+		return tile_action_processor._is_summon_condition_ignored()
+	return false
+
+
+## 簡易土地条件チェック（tile_action_processorがない場合のフォールバック）
+func _check_lands_required_simple(creature_data: Dictionary, player_id: int) -> bool:
+	var required_lands = creature_data.get("cost_lands_required", [])
+	if required_lands.is_empty():
+		return true
+	
+	if not board_system:
 		return false
+	
+	# プレイヤーの所有土地の属性をカウント
+	var owned_elements = {}
+	var player_tiles = board_system.get_player_tiles(player_id)
+	for tile in player_tiles:
+		var element = tile.tile_type if tile else ""
+		if element != "" and element != "neutral":
+			owned_elements[element] = owned_elements.get(element, 0) + 1
+	
+	# 必要な属性をカウント
+	var required_elements = {}
+	for element in required_lands:
+		required_elements[element] = required_elements.get(element, 0) + 1
+	
+	# 各属性の条件を満たしているかチェック
+	for element in required_elements.keys():
+		var required_count = required_elements[element]
+		var owned_count = owned_elements.get(element, 0)
+		if owned_count < required_count:
+			return false
 	
 	return true
 

@@ -52,6 +52,7 @@ var game_flow_manager = null
 var card_system = null
 var player_system = null
 var battle_system = null
+var tile_action_processor = null  # デバッグフラグ参照用
 
 func _ready():
 	pass
@@ -63,6 +64,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
 	battle_system = b_system if b_system else (flow_mgr.battle_system if flow_mgr else null)
+	
+	# TileActionProcessor参照を取得（デバッグフラグ用）
+	if flow_mgr and flow_mgr.board_system_3d:
+		tile_action_processor = flow_mgr.board_system_3d.tile_action_processor
 	
 	# CPU手札ユーティリティを初期化（ワーストケースシミュレーション用）
 	if not cpu_hand_utils:
@@ -95,8 +100,9 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	# defender_tile_info が渡された場合 = 攻撃側のアイテムフェーズ開始
 	var is_attacker_phase = not defender_tile_info.is_empty()
 	
-	# 🎯 攻撃側フェーズ開始時に防御側CPUの事前選択を行う
+	# 🎯 攻撃側フェーズ開始時に事前選択アイテムをクリア
 	if is_attacker_phase:
+		clear_preselected_attacker_item()  # 前回のバトルのアイテムが残らないようにクリア
 		clear_preselected_defender_item()
 		
 		var defender_owner = defender_tile_info.get("owner", -1)
@@ -250,11 +256,23 @@ func _show_item_selection_ui():
 	
 	# フィルター設定（アイテム + 援護対象クリーチャー）
 	if ui_manager:
+		var blocked_types = []
+		
 		# metal_form呪いがある場合、防具をブロック
 		if has_metal_form:
-			ui_manager.blocked_item_types = ["防具"]
-		else:
-			ui_manager.blocked_item_types = []
+			blocked_types.append("防具")
+		
+		# cannot_use制限をチェック（デバッグフラグで無効化可能）
+		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+		if not disable_cannot_use:
+			var cannot_use_list = ItemUseRestriction.get_cannot_use_list(battle_creature_data)
+			if not cannot_use_list.is_empty():
+				print("【アイテム使用制限】", battle_creature_data.get("name", "?"), " は使用不可: ", cannot_use_list)
+				for item_type in cannot_use_list:
+					if item_type not in blocked_types:
+						blocked_types.append(item_type)
+		
+		ui_manager.blocked_item_types = blocked_types
 		
 		if has_assist:
 			# 援護スキルがある場合は特別なフィルターモード
@@ -288,6 +306,15 @@ func use_item(item_card: Dictionary):
 	# カードタイプを判定
 	var card_type = item_card.get("type", "")
 	var card_id = item_card.get("id", -1)
+	
+	# アイテムの場合、cannot_use制限をチェック（デバッグフラグで無効化可能）
+	if card_type == "item":
+		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+		if not disable_cannot_use:
+			var check_result = ItemUseRestriction.check_can_use(battle_creature_data, item_card)
+			if not check_result.can_use:
+				print("[ItemPhaseHandler] アイテム使用制限: %s" % check_result.reason)
+				return
 	
 	# クリーチャーの場合の追加チェック
 	if card_type == "creature":
