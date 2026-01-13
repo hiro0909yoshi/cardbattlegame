@@ -100,9 +100,9 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	# defender_tile_info が渡された場合 = 攻撃側のアイテムフェーズ開始
 	var is_attacker_phase = not defender_tile_info.is_empty()
 	
-	# 🎯 攻撃側フェーズ開始時に事前選択アイテムをクリア
+	# 🎯 攻撃側フェーズ開始時に防御側の事前選択をクリア
+	# （攻撃側の事前選択はLandCommandHandlerで設定されるので、ここではクリアしない）
 	if is_attacker_phase:
-		clear_preselected_attacker_item()  # 前回のバトルのアイテムが残らないようにクリア
 		clear_preselected_defender_item()
 		
 		var defender_owner = defender_tile_info.get("owner", -1)
@@ -480,6 +480,10 @@ func complete_item_phase():
 	
 	# バトルクリーチャーデータをクリア（次のバトルに引き継がないため）
 	battle_creature_data = {}
+	
+	# 攻撃側の事前選択アイテムをクリア（次のバトルに引き継がないため）
+	# ※使用後は既にuse_item内でクリアされるが、パスした場合などに備えてここでもクリア
+	clear_preselected_attacker_item()
 	
 	# フィルターをクリア
 	if ui_manager:

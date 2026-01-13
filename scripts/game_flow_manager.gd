@@ -895,7 +895,10 @@ func _setup_cpu_movement_evaluator():
 		if spell_phase_handler.cpu_spell_ai:
 			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 	
-	print("[CPUMovementEvaluator] 初期化完了")
+	# チェックポイント距離は遅延初期化（最初のCPU分岐選択時に計算）
+	# ワープペアの登録がこの時点では完了していないため
+	
+	print("[CPUMovementEvaluator] 初期化完了（距離計算は遅延実行）")
 
 ## 全分岐タイルの方向を切り替え
 func _toggle_all_branch_tiles():

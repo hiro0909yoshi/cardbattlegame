@@ -5,7 +5,7 @@
   "tile_count": 33,
   "lap_settings": {
 	"bonus_preset": "standard",
-	"checkpoint_preset": "standard"
+	"checkpoint_preset": "three_way_new"
   },
   "tiles": [
 	{

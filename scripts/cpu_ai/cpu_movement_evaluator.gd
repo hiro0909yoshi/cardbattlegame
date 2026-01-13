@@ -47,6 +47,9 @@ var card_system = null
 var battle_simulator = null
 var spell_movement: SpellMovement = null
 
+# チェックポイント距離計算システム
+var checkpoint_calculator: CheckpointDistanceCalculator = null
+
 ## システム参照を設定
 func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system = null, 
 		p_movement_controller = null, p_card_system = null, p_battle_simulator = null,
@@ -58,6 +61,57 @@ func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system =
 	card_system = p_card_system
 	battle_simulator = p_battle_simulator
 	spell_movement = p_spell_movement
+
+
+## チェックポイント距離が計算済みか
+var _checkpoint_distances_calculated: bool = false
+
+## チェックポイント距離が未計算なら計算（遅延初期化）
+func _ensure_checkpoint_distances_calculated():
+	if _checkpoint_distances_calculated:
+		return
+	calculate_checkpoint_distances()
+
+## チェックポイント距離を計算（マップロード後に呼び出し）
+func calculate_checkpoint_distances():
+	if not movement_controller or not movement_controller.tile_nodes:
+		print("[CPUMovementEvaluator] 警告: tile_nodesがありません")
+		return
+	
+	# ワープペアを取得
+	var warp_pairs = {}
+	if board_system and board_system.special_tile_system:
+		warp_pairs = board_system.special_tile_system.warp_pairs
+		print("[CPUMovementEvaluator] ワープペア取得: %s" % str(warp_pairs))
+	else:
+		print("[CPUMovementEvaluator] 警告: special_tile_systemがありません")
+	
+	# 計算機を初期化
+	checkpoint_calculator = CheckpointDistanceCalculator.new()
+	checkpoint_calculator.setup(movement_controller.tile_nodes, warp_pairs)
+	checkpoint_calculator.calculate_all_distances()
+	
+	_checkpoint_distances_calculated = true
+	
+	# デバッグ: 距離テーブルを一部出力
+	if checkpoint_calculator.checkpoints.size() > 0:
+		print("[CPUMovementEvaluator] チェックポイント距離計算完了")
+		for cp_id in checkpoint_calculator.checkpoints:
+			var cp_tile = checkpoint_calculator.checkpoints[cp_id]
+			print("  %s: タイル%d" % [cp_id, cp_tile])
+			# 分岐の選択肢タイル（分岐先）からの距離を表示
+			for sample_tile in [1, 3, 24, 25, 26, 27, 7, 5]:
+				var dist = checkpoint_calculator.get_distance(sample_tile, cp_id)
+				print("    タイル%d → %d歩" % [sample_tile, dist])
+		
+		# ワープ周辺のタイル接続を確認
+		print("[CPUMovementEvaluator] ワープ周辺タイルの接続:")
+		for warp_tile in [28, 29, 30, 31, 32]:
+			if movement_controller.tile_nodes.has(warp_tile):
+				var tile = movement_controller.tile_nodes[warp_tile]
+				var conns = tile.connections if tile.connections else []
+				var tile_type = tile.tile_type if "tile_type" in tile else "unknown"
+				print("    タイル%d (%s): connections=%s" % [warp_tile, tile_type, str(conns)])
 
 # =============================================================================
 # メイン機能: 経路評価
@@ -264,12 +318,8 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 	
 	# 特殊タイル
 	if is_special:
-		# チェックポイント/ゲートの場合、停止で1周達成できるかチェック
-		var tile_type = tile_info.get("tile_type", "")
-		if tile_type in ["checkpoint", "gate"]:
-			if _is_gate_unvisited(tile_info, player_id):
-				# 未訪問のゲートに停止 = 1周達成
-				return SCORE_STOP_CHECKPOINT_LAP
+		# チェックポイント/ゲートの場合
+		# 停止ボーナスは付けない（通過でも取得できるため、方向ボーナスで評価）
 		return SCORE_STOP_SPECIAL_TILE
 	
 	# 自分の領地
@@ -326,7 +376,6 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 		if tile_type in ["gate", "checkpoint"]:
 			if _is_gate_unvisited(tile_info, player_id):
 				checkpoint_bonus += SCORE_PATH_CHECKPOINT_PASS
-				print("[CPU経路スコア] チェックポイント通過ボーナス: tile=%d, +%d" % [tile_index, SCORE_PATH_CHECKPOINT_PASS])
 		
 		# 自分の領地はスキップ
 		if owner_id == player_id:
@@ -345,24 +394,43 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 	
 	return { "path_score": score, "checkpoint_bonus": checkpoint_bonus }
 
-## 方向ボーナスを計算
-## came_from: 来た方向（分岐元）- 反対方向との比較に使用
-func _calculate_direction_bonus(start_tile: int, player_id: int, came_from: int) -> int:
-	# この方向の未訪問ゲートまでの距離を取得
-	var this_distance = _get_distance_to_unvisited_gate(start_tile, player_id, came_from)
+## 方向ボーナスを計算（事前計算テーブルを使用）
+func _calculate_direction_bonus(start_tile: int, player_id: int, _came_from: int) -> int:
+	# チェックポイント距離が未計算なら計算（遅延初期化）
+	_ensure_checkpoint_distances_calculated()
 	
-	print("[CPU方向ボーナス] start=%d, came_from=%d, this_distance=%d" % [start_tile, came_from, this_distance])
+	# 事前計算システムがなければ旧ロジックにフォールバック
+	if not checkpoint_calculator:
+		return _calculate_direction_bonus_legacy(start_tile, player_id)
 	
-	# ゲートが見つからなければボーナスなし
-	if this_distance < 0:
-		print("[CPU方向ボーナス] → ゲート見つからず、ボーナス0")
+	# プレイヤーの訪問済みチェックポイントを取得
+	var visited = _get_visited_checkpoints(player_id)
+	
+	# 最も近い未訪問チェックポイントを取得
+	var result = checkpoint_calculator.get_nearest_unvisited_checkpoint(start_tile, visited)
+	var distance = result.distance
+	var cp_id = result.checkpoint_id
+	
+	if cp_id == "" or distance >= 9999:
+		print("[CPU方向ボーナス] start=%d: 未訪問CPなし、ボーナス0" % start_tile)
 		return 0
 	
-	# 未訪問ゲートがこの方向にあれば、距離に応じたボーナスを付与
-	# 距離が近いほど高いボーナス（最大1200、距離10以上で0に近づく）
-	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (this_distance * 100))
-	print("[CPU方向ボーナス] → 距離%dでボーナス%d" % [this_distance, distance_bonus])
+	# 距離に応じたボーナス（近いほど高い）
+	# 最大1200点（距離0）、距離が1増えるごとに60点減少
+	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (distance * 60))
+	print("[CPU方向ボーナス] start=%d: CP[%s]まで%d歩 → ボーナス%d" % [start_tile, cp_id, distance, distance_bonus])
 	return distance_bonus
+
+
+## 旧ロジック（フォールバック用）
+func _calculate_direction_bonus_legacy(start_tile: int, player_id: int) -> int:
+	var came_from = _get_player_came_from(player_id)
+	var this_distance = _get_distance_to_unvisited_gate(start_tile, player_id, came_from)
+	
+	if this_distance < 0:
+		return 0
+	
+	return max(0, SCORE_DIRECTION_UNVISITED_GATE - (this_distance * 100))
 
 # =============================================================================
 # 進行方向決定
@@ -693,15 +761,12 @@ func _get_distance_to_unvisited_gate(start_tile: int, player_id: int, came_from:
 			direction = 1 if diff > 0 else -1
 	
 	var distance = 0
-	print("[CPU方向探索] 開始: start=%d, came_from=%d, direction=%d" % [start_tile, came_from, direction])
 	for i in range(PATH_EVALUATION_DISTANCE * 2):  # ワープ考慮で余裕を持たせる
 		var tile_info = _get_tile_info(current)
 		var tile_type = tile_info.get("tile_type", "")
-		print("[CPU方向探索] i=%d current=%d tile_type=%s" % [i, current, tile_type])
 		
 		if tile_type in ["gate", "checkpoint"]:
 			if _is_gate_unvisited(tile_info, player_id):
-				print("[CPU方向探索] ★ゲート発見! tile=%d, distance=%d" % [current, distance])
 				return distance  # 距離を返す
 		
 		# ワープタイルの場合、距離を増やさずにジャンプ
@@ -709,9 +774,7 @@ func _get_distance_to_unvisited_gate(start_tile: int, player_id: int, came_from:
 		
 		# 次のタイルへ
 		var next = _get_next_tile_simple_with_direction(current, prev, direction)
-		print("[CPU方向探索]   → next=%d (prev=%d)" % [next, prev])
 		if next < 0 or next == current:
-			print("[CPU方向探索]   ループ終了: next=%d, current=%d" % [next, current])
 			break
 		
 		# ワープでない場合のみ距離をカウント
@@ -776,6 +839,51 @@ func _is_gate_unvisited(tile_info: Dictionary, player_id: int) -> bool:
 	
 	var player_state = lap_system.player_lap_state.get(player_id, {})
 	return not player_state.get(checkpoint_type, false)
+
+
+## プレイヤーの訪問済みチェックポイントIDリストを取得
+func _get_visited_checkpoints(player_id: int) -> Array:
+	if not lap_system:
+		return []
+	
+	var visited = []
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	
+	# lap_systemの状態から訪問済みを取得
+	# 形式: { "N": true, "S": false, "lap_count": int, ... }
+	for cp_id in player_state:
+		# lap_count などの非チェックポイントキーをスキップ
+		if cp_id == "lap_count":
+			continue
+		# 値がbool型でtrueの場合のみ訪問済み
+		var value = player_state[cp_id]
+		if typeof(value) == TYPE_BOOL and value == true:
+			visited.append(cp_id)
+	
+	return visited
+
+
+## プレイヤーが次に取るべきチェックポイントIDを取得
+## 周回ゲームではCPは順番に取得する必要があるため、最短距離ではなく順番で決める
+func _get_next_required_checkpoint(player_id: int) -> String:
+	if not lap_system:
+		return ""
+	
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	var required = lap_system.required_checkpoints  # ["N", "E", "W"] など
+	
+	# 順番に見て、最初の未訪問CPを返す
+	for cp_id in required:
+		var is_visited = player_state.get(cp_id, false)
+		if not is_visited:
+			return cp_id
+	
+	# 全部訪問済み = 周回完了間近、最初のCPを返す
+	if not required.is_empty():
+		return required[0]
+	
+	return ""
+
 
 ## 次のタイルを取得（簡易版、方向対応）
 ## ワープ済みフラグ（ループ探索中に一度だけワープする）
