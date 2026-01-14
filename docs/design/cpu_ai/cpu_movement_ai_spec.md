@@ -8,6 +8,46 @@ CPUの移動方向決定、分岐選択、ホーリーワード使用判断を�
 
 ---
 
+## チェックポイント距離事前計算システム
+
+### 概要
+
+マップロード時に、各チェックポイントから全タイルへの最短距離をBFSで事前計算する。
+これにより、分岐選択時に「どの方向がチェックポイントに近いか」を高速に判定できる。
+
+**ファイル**: `scripts/cpu_ai/checkpoint_distance_calculator.gd`
+
+### 初期化タイミング
+
+- `CPUMovementEvaluator._ensure_checkpoint_distances_calculated()` で遅延初期化
+- 最初のCPU分岐選択時に計算される（ワープペア登録後）
+
+### ワープの扱い
+
+- **通過型ワープ（warp）**: ワープタイルに入ると即座にワープ先に飛び、そのまま進む
+  - ワープタイル自体には停止できない
+  - BFSでは、ワープペアを「同じ場所」として扱い、両方の隣接を統合
+- **停止型ワープ（warp_stop）**: 止まったときにワープ発動 → コスト+1
+
+### 主要メソッド
+
+```gdscript
+# 距離取得
+func get_distance(tile_index: int, checkpoint_id: String) -> int
+
+# 最も近い未訪問チェックポイント取得
+func get_nearest_unvisited_checkpoint(tile_index: int, visited_checkpoints: Array) -> Dictionary
+# 返り値: { "checkpoint_id": String, "distance": int }
+```
+
+### 制限事項
+
+- 進行方向を考慮していない（全方向の最短距離で計算）
+- Uターンを含む経路も最短として計算される
+- そのため、方向ボーナスより**CP通過ボーナス**の影響が大きい
+
+---
+
 ## 経路シミュレーション
 
 ### simulate_path()
@@ -32,7 +72,7 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 ### 総合スコア
 
 ```
-総合スコア = 停止位置スコア + (経路スコア / 10) + 方向ボーナス
+総合スコア = 停止位置スコア + (経路スコア / 10) + CP通過ボーナス + 方向ボーナス
 ```
 
 ### スコア定数
@@ -45,18 +85,32 @@ SCORE_STOP_EMPTY_MATCH = 300               # 空き地（属性一致）
 SCORE_STOP_EMPTY_MISMATCH = 100            # 空き地（属性不一致）
 SCORE_STOP_SPECIAL = 50                    # 特殊タイル
 
+# チェックポイント通過ボーナス（経路スコアとは別枠、除算されない）
+SCORE_PATH_CHECKPOINT_PASS = 1500          # 経路上でチェックポイント通過（シグナル取得）
+
 # 方向ボーナス
-SCORE_DIRECTION_UNVISITED_GATE = 1200      # 未訪問ゲート方向
+SCORE_DIRECTION_UNVISITED_GATE = 1200      # 未訪問ゲート方向（距離で減少）
 
 # 足止め
 SCORE_FORCED_STOP_PENALTY = -500           # 足止めペナルティ（倒せない場合）
 ```
 
+### チェックポイント通過ボーナス
+
+経路上で未訪問のチェックポイントを通過する場合、**1500点**のボーナス。
+- このボーナスは経路スコアの除算（/10）の対象外
+- 分岐選択の最も重要な判断要素
+
 ### 方向ボーナス判定
 
-両方向の未訪問ゲートまでの距離を比較：
-- 片方だけゲートがある → そちらにボーナス
-- 両方にゲートがある → 近い方にボーナス（同距離なら両方）
+事前計算テーブルを使用して、最も近い未訪問チェックポイントへの距離を取得：
+- 最大1200点（距離0の場合）
+- 距離が1増えるごとに60点減少
+- 距離20以上で0点
+
+```gdscript
+var distance_bonus = max(0, 1200 - (distance * 60))
+```
 
 ---
 

@@ -237,7 +237,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		elif not result.choices.is_empty():
 			# CPUの場合は自動選択（残り歩数を渡す）
 			if _is_cpu_player(player_id) and cpu_movement_evaluator:
-				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, _current_remaining_steps)
+				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, _current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
 			else:
 				# 選択UI表示
@@ -253,7 +253,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		# 選択肢が2つ以上
 		# CPUの場合は自動選択（残り歩数を渡す）
 		if _is_cpu_player(player_id) and cpu_movement_evaluator:
-			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, _current_remaining_steps)
+			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, _current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
 		else:
 			# 選択UI表示
@@ -301,7 +301,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		elif not result.choices.is_empty():
 			# CPUの場合は自動選択（残り歩数を渡す）
 			if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
-				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, _current_remaining_steps)
+				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, _current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
 			else:
 				current_branch_tile = current_tile
@@ -315,7 +315,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		# 選択肢が2つ以上
 		# CPUの場合は自動選択（残り歩数を渡す）
 		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
-			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, _current_remaining_steps)
+			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, _current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
 		else:
 			current_branch_tile = current_tile  # インジケーター表示用

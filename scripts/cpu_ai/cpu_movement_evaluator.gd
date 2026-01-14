@@ -50,6 +50,16 @@ var spell_movement: SpellMovement = null
 # チェックポイント距離計算システム
 var checkpoint_calculator: CheckpointDistanceCalculator = null
 
+# 現在の分岐タイル（方向ボーナス計算時にCPを除外するため）
+var _current_branch_tile: int = -1
+
+# ターン開始位置のCP（移動中ずっと除外するため）
+var _turn_start_cp: String = ""
+# ターン開始CPを設定したプレイヤーID（異なるプレイヤーになったらクリア）
+var _turn_start_cp_player: int = -1
+
+
+
 ## システム参照を設定
 func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system = null, 
 		p_movement_controller = null, p_card_system = null, p_battle_simulator = null,
@@ -143,15 +153,12 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	var path_score = path_result.path_score
 	var checkpoint_bonus = path_result.checkpoint_bonus
 	
-	# 方向ボーナスを計算（came_fromを渡して正しい方向を判定）
-	var actual_came_from = came_from if came_from >= 0 else _get_player_came_from(player_id)
-	var direction_bonus = _calculate_direction_bonus(start_tile, player_id, actual_came_from)
+	# 総合スコア = 停止位置スコア + (経路スコア / 10) + チェックポイント通過ボーナス
+	# 方向ボーナスは分岐選択時に別途計算する（経路途中ではなく分岐方向で決まるため）
+	var total_score = stop_score + (path_score / SCORE_PATH_DIVISOR) + checkpoint_bonus
 	
-	# 総合スコア = 停止位置スコア + (経路スコア / 10) + チェックポイント通過ボーナス + 方向ボーナス
-	var total_score = stop_score + (path_score / SCORE_PATH_DIVISOR) + checkpoint_bonus + direction_bonus
-	
-	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d 経路:%d/10 CP通過:%d 方向:%d)" % [
-		start_tile, total_steps, stop_tile, total_score, stop_score, path_score, checkpoint_bonus, direction_bonus
+	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d 経路:%d/10 CP通過:%d)" % [
+		start_tile, total_steps, stop_tile, total_score, stop_score, path_score, checkpoint_bonus
 	])
 	
 	return {
@@ -162,7 +169,6 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 			"stop_score": stop_score,
 			"path_score": path_score,
 			"checkpoint_bonus": checkpoint_bonus,
-			"direction_bonus": direction_bonus,
 			"forced_stop": forced_stop,
 			"forced_stop_at": forced_stop_at
 		}
@@ -235,6 +241,18 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 				result.forced_stop = true
 				result.forced_stop_at = next_tile
 				return result
+		
+		# ワープ処理（歩数を消費せずにワープ先に移動）
+		var tile_type = tile_info.get("tile_type", "")
+		if tile_type in ["warp", "warp_stop"]:
+			var warp_dest = _get_warp_destination(next_tile)
+			if warp_dest >= 0:
+				# ワープ先を経路に追加（歩数消費なし）
+				result.path.append(warp_dest)
+				prev_tile = next_tile
+				current_tile = warp_dest
+				# remaining_stepsは減らさない（ワープは0歩）
+				continue
 		
 		# 次へ進む
 		prev_tile = current_tile
@@ -365,6 +383,7 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonable_elements: Array) -> Dictionary:
 	var score = 0
 	var checkpoint_bonus = 0
+	var checkpoint_already_counted = false  # 最初のCP通過のみカウント
 	
 	for tile_index in path:
 		var tile_info = _get_tile_info(tile_index)
@@ -373,9 +392,11 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 		var tile_type = tile_info.get("tile_type", "")
 		
 		# チェックポイント通過でシグナル取得できる場合、大きなボーナス（除算されない）
+		# ただし、最初の1つのみ（ぐるぐる回り防止）
 		if tile_type in ["gate", "checkpoint"]:
-			if _is_gate_unvisited(tile_info, player_id):
+			if _is_gate_unvisited(tile_info, player_id) and not checkpoint_already_counted:
 				checkpoint_bonus += SCORE_PATH_CHECKPOINT_PASS
+				checkpoint_already_counted = true
 		
 		# 自分の領地はスキップ
 		if owner_id == player_id:
@@ -395,6 +416,7 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 	return { "path_score": score, "checkpoint_bonus": checkpoint_bonus }
 
 ## 方向ボーナスを計算（事前計算テーブルを使用）
+## start_tile: 評価する経路の開始タイル（分岐から1歩進んだ位置）
 func _calculate_direction_bonus(start_tile: int, player_id: int, _came_from: int) -> int:
 	# チェックポイント距離が未計算なら計算（遅延初期化）
 	_ensure_checkpoint_distances_calculated()
@@ -406,8 +428,24 @@ func _calculate_direction_bonus(start_tile: int, player_id: int, _came_from: int
 	# プレイヤーの訪問済みチェックポイントを取得
 	var visited = _get_visited_checkpoints(player_id)
 	
-	# 最も近い未訪問チェックポイントを取得
-	var result = checkpoint_calculator.get_nearest_unvisited_checkpoint(start_tile, visited)
+	# 今いる分岐タイルがCPなら、そのCPも除外（移動途中で通過したCPを目指さない）
+	if _current_branch_tile >= 0:
+		var branch_tile_cp = _get_checkpoint_id_at_tile(_current_branch_tile)
+		if branch_tile_cp != "" and branch_tile_cp not in visited:
+			if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
+				visited = visited.duplicate()
+			visited.append(branch_tile_cp)
+	
+	# 方向別距離を使用（分岐タイルからの方向を考慮）
+	var result: Dictionary
+	if _current_branch_tile >= 0 and checkpoint_calculator.is_branch_tile(_current_branch_tile):
+		# 分岐タイルから start_tile 方向に進んだ場合の距離を取得
+		print("[CPU方向ボーナス詳細] branch=%d, start=%d, visited=%s" % [_current_branch_tile, start_tile, visited])
+		result = checkpoint_calculator.get_directional_nearest_checkpoint(_current_branch_tile, start_tile, visited)
+	else:
+		# 通常の最短距離を使用
+		result = checkpoint_calculator.get_nearest_unvisited_checkpoint(start_tile, visited)
+	
 	var distance = result.distance
 	var cp_id = result.checkpoint_id
 	
@@ -431,6 +469,48 @@ func _calculate_direction_bonus_legacy(start_tile: int, player_id: int) -> int:
 		return 0
 	
 	return max(0, SCORE_DIRECTION_UNVISITED_GATE - (this_distance * 100))
+
+
+## 分岐選択用の方向ボーナス計算
+## 分岐タイルから指定方向に進んだ場合の、最短未訪問CPへの距離に基づくボーナス
+func _calculate_direction_bonus_for_branch(branch_tile: int, next_tile: int, player_id: int) -> int:
+	_ensure_checkpoint_distances_calculated()
+	
+	if not checkpoint_calculator:
+		return 0
+	
+	if not checkpoint_calculator.is_branch_tile(branch_tile):
+		return 0
+	
+	# プレイヤーの訪問済みチェックポイントを取得
+	var visited = _get_visited_checkpoints(player_id)
+	
+	# ターン開始位置のCPを除外（移動中ずっと除外）
+	if _turn_start_cp != "" and _turn_start_cp not in visited:
+		if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
+			visited = visited.duplicate()
+		visited.append(_turn_start_cp)
+	
+	# 分岐タイルがCPなら除外
+	var branch_cp = _get_checkpoint_id_at_tile(branch_tile)
+	if branch_cp != "" and branch_cp not in visited:
+		if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
+			visited = visited.duplicate()
+		visited.append(branch_cp)
+	
+	# この方向での最短CP距離を取得
+	var result = checkpoint_calculator.get_directional_nearest_checkpoint(branch_tile, next_tile, visited)
+	var distance = result.distance
+	var cp_id = result.checkpoint_id
+	
+	if cp_id == "" or distance >= 9999:
+		print("[CPU方向ボーナス] branch=%d→%d: 未訪問CPなし、ボーナス0 (visited=%s)" % [branch_tile, next_tile, visited])
+		return 0
+	
+	# 距離に応じたボーナス（近いほど高い）
+	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (distance * 60))
+	print("[CPU方向ボーナス] branch=%d→%d: CP[%s]まで%d歩 → ボーナス%d (visited=%s)" % [branch_tile, next_tile, cp_id, distance, distance_bonus, visited])
+	return distance_bonus
 
 # =============================================================================
 # 進行方向決定
@@ -476,34 +556,76 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 ## 分岐タイルでの選択（残り歩数を考慮）
 ## available_tiles: 選択可能なタイルインデックス配列
 ## remaining_steps: 残り歩数
+## branch_tile: 現在いる分岐タイル（-1ならプレイヤー位置から取得）
 ## 返り値: 選択したタイルインデックス
-func decide_branch_choice(player_id: int, available_tiles: Array, remaining_steps: int) -> int:
+func decide_branch_choice(player_id: int, available_tiles: Array, remaining_steps: int, branch_tile: int = -1) -> int:
 	if available_tiles.is_empty():
 		return -1
 	
 	if available_tiles.size() == 1:
 		return available_tiles[0]
 	
-	var current_tile = _get_player_current_tile(player_id)
+	var current_tile = branch_tile if branch_tile >= 0 else _get_player_current_tile(player_id)
+	# 今いる分岐タイルを記録（方向ボーナス計算で使用）
+	_current_branch_tile = current_tile
+	
+	# ターン開始位置のCPを記録（移動中ずっと除外するため）
+	# 異なるプレイヤーのターンになったらリセット
+	if _turn_start_cp_player != player_id:
+		_turn_start_cp = ""
+		_turn_start_cp_player = player_id
+	
+	# まだ設定されていなければ、現在位置のCPを記録
+	if _turn_start_cp == "":
+		var player_start_tile = _get_player_current_tile(player_id)
+		_turn_start_cp = _get_checkpoint_id_at_tile(player_start_tile)
+		if _turn_start_cp != "":
+			print("[CPU分岐] ターン開始CP設定: %s (タイル%d)" % [_turn_start_cp, player_start_tile])
+	
 	var best_tile = available_tiles[0]
 	var best_score = -999999
 	
-	print("[CPU分岐選択開始] player=%d, current_tile=%d, available=%s, remaining_steps=%d" % [
-		player_id, current_tile, available_tiles, remaining_steps
+	print("[CPU分岐選択開始] player=%d, current_tile=%d, available=%s, remaining_steps=%d, turn_start_cp=%s" % [
+		player_id, current_tile, available_tiles, remaining_steps, _turn_start_cp
 	])
+	
+	# タイル9または15での分岐選択時は詳細ログを出力
+	var show_detailed_log = (current_tile == 9 or current_tile == 15)
+	
+	if show_detailed_log:
+		print("[CPU分岐詳細] === タイル%d での分岐選択 ===" % current_tile)
+		# 方向別距離テーブルを表示
+		if checkpoint_calculator and checkpoint_calculator.is_branch_tile(current_tile):
+			var dir_distances = checkpoint_calculator.get_branch_directional_distances(current_tile)
+			print("[CPU分岐詳細] 方向別距離テーブル:")
+			for next_tile in dir_distances:
+				var cp_dists = dir_distances[next_tile]
+				var dist_str = ""
+				for cp_id in cp_dists:
+					dist_str += "%s:%d " % [cp_id, cp_dists[cp_id]]
+				print("  → タイル%d方向: %s" % [next_tile, dist_str.strip_edges()])
 	
 	for tile_index in available_tiles:
 		# 残り歩数での停止位置を評価
 		# tile_indexが次の1歩目なので、remaining_steps - 1 で評価
 		var eval_result = evaluate_path(tile_index, remaining_steps - 1, player_id, current_tile)
-		var score = eval_result.score
+		var path_score = eval_result.score
 		
-		print("[CPU分岐評価] タイル%d → 停止%d: スコア%d" % [tile_index, eval_result.stop_tile, score])
+		# 方向ボーナスを計算（この分岐タイルからtile_index方向に進んだ場合のCP距離）
+		var direction_bonus = _calculate_direction_bonus_for_branch(current_tile, tile_index, player_id)
+		var score = path_score + direction_bonus
+		
+		if show_detailed_log:
+			print("[CPU分岐詳細] タイル%d方向: 経路=%s" % [tile_index, eval_result.path])
+		
+		print("[CPU分岐評価] タイル%d → 停止%d: スコア%d (経路:%d 方向:%d)" % [tile_index, eval_result.stop_tile, score, path_score, direction_bonus])
 		
 		if score > best_score:
 			best_score = score
 			best_tile = tile_index
 	
+	# 分岐タイル記録をクリア（ターン開始CPは次の分岐選択でも使うのでクリアしない）
+	_current_branch_tile = -1
 	print("[CPU分岐選択] 選択したタイル: %d (スコア: %d)" % [best_tile, best_score])
 	return best_tile
 
@@ -844,10 +966,12 @@ func _is_gate_unvisited(tile_info: Dictionary, player_id: int) -> bool:
 ## プレイヤーの訪問済みチェックポイントIDリストを取得
 func _get_visited_checkpoints(player_id: int) -> Array:
 	if not lap_system:
+		print("[CPU] _get_visited_checkpoints: lap_system is null")
 		return []
 	
 	var visited = []
 	var player_state = lap_system.player_lap_state.get(player_id, {})
+	print("[CPU] _get_visited_checkpoints: player_id=%d, player_state=%s" % [player_id, player_state])
 	
 	# lap_systemの状態から訪問済みを取得
 	# 形式: { "N": true, "S": false, "lap_count": int, ... }
@@ -860,7 +984,37 @@ func _get_visited_checkpoints(player_id: int) -> Array:
 		if typeof(value) == TYPE_BOOL and value == true:
 			visited.append(cp_id)
 	
+	print("[CPU] _get_visited_checkpoints: visited=%s" % [visited])
 	return visited
+
+
+## 指定タイルがチェックポイントならそのIDを返す、そうでなければ空文字
+func _get_checkpoint_id_at_tile(tile_index: int) -> String:
+	if not movement_controller or not movement_controller.tile_nodes:
+		return ""
+	
+	if not movement_controller.tile_nodes.has(tile_index):
+		return ""
+	
+	var tile = movement_controller.tile_nodes[tile_index]
+	var tile_type = tile.tile_type if "tile_type" in tile else ""
+	
+	if tile_type not in ["checkpoint", "gate"]:
+		return ""
+	
+	# checkpoint_typeを取得
+	if "checkpoint_type" in tile and tile.checkpoint_type != null:
+		var cp_type = tile.checkpoint_type
+		if typeof(cp_type) == TYPE_STRING and cp_type != "":
+			return cp_type
+		elif typeof(cp_type) == TYPE_INT:
+			match cp_type:
+				0: return "N"
+				1: return "S"
+				2: return "E"
+				3: return "W"
+	
+	return ""
 
 
 ## プレイヤーが次に取るべきチェックポイントIDを取得
