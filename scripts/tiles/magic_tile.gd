@@ -30,14 +30,58 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
-	# CPUの場合はスキップ
+	# CPUの場合はAI判断
 	if _is_cpu_player(player_id):
-		print("[MagicTile] CPU - スキップ")
-		return {"success": true, "spell_used": false}
+		return await _handle_cpu_magic_tile(player_id)
 	
 	# プレイヤーの場合はUI表示
 	var result = await _show_magic_selection(player_id)
 	return result
+
+## CPU用魔法タイル処理
+func _handle_cpu_magic_tile(player_id: int) -> Dictionary:
+	var cpu_ai = _get_cpu_special_tile_ai()
+	if not cpu_ai:
+		print("[MagicTile] CPU AI なし - スキップ")
+		return {"success": true, "spell_used": false}
+	
+	# 全スペルからランダム3枚を取得
+	var available_spells = _get_random_spells(3)
+	if available_spells.is_empty():
+		print("[MagicTile] CPU: 使用可能なスペルがありません")
+		return {"success": true, "spell_used": false}
+	
+	# 提示されたスペルをログ出力
+	print("[MagicTile] 提示スペル3枚:")
+	for i in range(available_spells.size()):
+		var spell = available_spells[i]
+		var cost = spell.get("cost", {}).get("mp", 0) if typeof(spell.get("cost")) == TYPE_DICTIONARY else spell.get("cost", 0)
+		print("  %d. %s (コスト: %dG)" % [i + 1, spell.get("name", "?"), cost])
+	
+	var spell_data = cpu_ai.decide_magic_tile_spell(player_id, available_spells)
+	if spell_data.is_empty():
+		return {"success": true, "spell_used": false}
+	
+	print("[MagicTile] CPU: %sを使用" % spell_data.get("name", "?"))
+	
+	# スペル実行
+	var spell_result = await _execute_spell(spell_data, player_id)
+	
+	if spell_result.get("status") == "success":
+		return {
+			"success": true,
+			"spell_used": true,
+			"spell_name": spell_data.get("name", ""),
+			"warped": spell_result.get("warped", false)
+		}
+	else:
+		return {"success": true, "spell_used": false, "warped": false}
+
+## CPUSpecialTileAIを取得
+func _get_cpu_special_tile_ai():
+	if _game_flow_manager and "cpu_special_tile_ai" in _game_flow_manager:
+		return _game_flow_manager.cpu_special_tile_ai
+	return null
 
 ## CPU判定
 func _is_cpu_player(player_id: int) -> bool:
@@ -99,24 +143,46 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 		# SpellPhaseHandlerを使ってスペル実行（コスト支払いも含む）
 		var spell_result = await _execute_spell(spell_data, player_id)
 		
-		match spell_result:
+		var result_status = spell_result.get("status", "cancelled")
+		var was_warped = spell_result.get("warped", false)
+		
+		match result_status:
 			"success":
 				# 使用成功 → ループ終了（発動通知はSpellEffectExecutorで表示済み）
-				return {"success": true, "spell_used": true, "spell_name": spell_data.get("name", "")}
+				return {
+					"success": true,
+					"spell_used": true,
+					"spell_name": spell_data.get("name", ""),
+					"warped": was_warped
+				}
 			"no_target":
 				# 対象不在 → 魔法タイル処理終了（選択画面には戻らない）
 				print("[MagicTile] 対象不在 - 魔法タイル処理終了")
-				return {"success": true, "spell_used": false}
+				return {"success": true, "spell_used": false, "warped": false}
 			"cancelled":
 				# 手動キャンセル → 再度選択画面に戻る（ループ継続）
 				print("[MagicTile] スペルキャンセル - 選択画面に戻る")
 				continue
 	
 	# ここには到達しないはず
-	return {"success": true, "spell_used": false}
+	return {"success": true, "spell_used": false, "warped": false}
+
+## デバッグ用：固定スペルID（空配列で通常のランダム）
+var debug_fixed_spell_ids: Array = [2033, 2014, 2104]  # シャイニングガイザー、エスケープ、マジカルリープ
 
 ## 全スペルからランダム取得
 func _get_random_spells(count: int) -> Array:
+	# デバッグ: 固定スペルIDが設定されている場合はそれを使用
+	if not debug_fixed_spell_ids.is_empty():
+		var fixed_spells = []
+		for spell_id in debug_fixed_spell_ids:
+			var spell = CardLoader.get_card_by_id(spell_id)
+			if spell and not spell.is_empty():
+				fixed_spells.append(spell)
+		if not fixed_spells.is_empty():
+			print("[MagicTile] デバッグ: 固定スペル使用 %s" % debug_fixed_spell_ids)
+			return fixed_spells
+	
 	var all_spells = CardLoader.get_cards_by_type("spell")
 	
 	if all_spells.is_empty():
@@ -159,8 +225,10 @@ func _wait_for_selection() -> Dictionary:
 	return state.result
 
 ## スペル実行（SpellPhaseHandlerに全て委譲）
-## 戻り値: "success"=成功, "cancelled"=手動キャンセル, "no_target"=対象不在
-func _execute_spell(spell_data: Dictionary, player_id: int) -> String:
+## 戻り値: Dictionary {status: String, warped: bool}
+##   status: "success"=成功, "cancelled"=手動キャンセル, "no_target"=対象不在
+##   warped: ワープ系スペルを使用したか
+func _execute_spell(spell_data: Dictionary, player_id: int) -> Dictionary:
 	# SpellPhaseHandlerを取得
 	var spell_phase_handler = null
 	if _game_flow_manager and "spell_phase_handler" in _game_flow_manager:
@@ -168,10 +236,11 @@ func _execute_spell(spell_data: Dictionary, player_id: int) -> String:
 	
 	if not spell_phase_handler:
 		print("[MagicTile] SpellPhaseHandlerが見つかりません - 効果実行スキップ")
-		return "cancelled"
+		return {"status": "cancelled", "warped": false}
 	
 	# 外部スペル実行（対象選択UIなど全てSpellPhaseHandlerが処理）
-	# 戻り値: "success", "cancelled", "no_target"
-	var result = await spell_phase_handler.execute_external_spell(spell_data, player_id)
+	# 戻り値: Dictionary {status: String, warped: bool}
+	# 第3引数: マジックタイル経由フラグ（呪いduration調整用）
+	var result = await spell_phase_handler.execute_external_spell(spell_data, player_id, true)
 	print("[MagicTile] スペル実行結果: %s" % result)
 	return result

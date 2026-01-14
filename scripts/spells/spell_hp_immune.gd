@@ -13,15 +13,19 @@ static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	
+	var creature_name = creature_data.get("name", "?")
+	
 	# 1. クリーチャー固有能力チェック（keywords）
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	if "HP効果無効" in keywords:
+		print("[SpellHpImmune] %s はHP効果無効キーワードを持つため対象外" % creature_name)
 		return true
 	
 	# 2. 呪いチェック（マスファンタズム等で付与）
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") == "hp_effect_immune":
+		print("[SpellHpImmune] %s はHP効果無効呪いを持つため対象外" % creature_name)
 		return true
 	
 	return false

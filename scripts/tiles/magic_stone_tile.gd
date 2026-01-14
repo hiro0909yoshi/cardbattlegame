@@ -28,14 +28,72 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
-	# CPUの場合はスキップ
+	# CPUの場合はAI判断
 	if _is_cpu_player(player_id):
-		print("[MagicStoneTile] CPU - スキップ")
-		return {"success": true, "transaction_done": false}
+		return await _handle_cpu_magic_stone(player_id)
 	
 	# プレイヤーの場合はUI表示
 	var result = await _show_magic_stone_shop(player_id)
 	return result
+
+## CPU用魔法石タイル処理
+func _handle_cpu_magic_stone(player_id: int) -> Dictionary:
+	var cpu_ai = _get_cpu_special_tile_ai()
+	if not cpu_ai:
+		print("[MagicStoneTile] CPU AI なし - スキップ")
+		return {"success": true, "transaction_done": false}
+	
+	var decision = cpu_ai.decide_magic_stone(player_id)
+	if decision.get("action", "skip") == "skip":
+		return {"success": true, "transaction_done": false}
+	
+	# 魔法石を購入
+	var stone_system = _get_magic_stone_system()
+	if not stone_system:
+		print("[MagicStoneTile] CPU: MagicStoneSystemなし - スキップ")
+		return {"success": true, "transaction_done": false}
+	
+	var element = decision.get("element", "")
+	var count = decision.get("count", 1)
+	
+	var result = stone_system.buy_stone(player_id, element, count)
+	var success = result.get("success", false)
+	if success:
+		print("[MagicStoneTile] CPU: %sの石を%d個購入" % [element, count])
+		
+		# コメント表示
+		if _ui_manager and _ui_manager.global_comment_ui:
+			var element_name = _get_element_name(element)
+			await _ui_manager.global_comment_ui.show_and_wait("%sの石を購入した！" % element_name, player_id)
+		
+		# UI更新
+		if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
+			_ui_manager.update_player_info_panels()
+		
+		return {"success": true, "transaction_done": true}
+	
+	return {"success": true, "transaction_done": false}
+
+## CPUSpecialTileAIを取得
+func _get_cpu_special_tile_ai():
+	if _game_flow_manager and "cpu_special_tile_ai" in _game_flow_manager:
+		return _game_flow_manager.cpu_special_tile_ai
+	return null
+
+## MagicStoneSystemを取得
+func _get_magic_stone_system():
+	if _game_flow_manager and "magic_stone_system" in _game_flow_manager:
+		return _game_flow_manager.magic_stone_system
+	return null
+
+## 属性名を日本語で取得
+func _get_element_name(element: String) -> String:
+	match element:
+		"fire": return "火"
+		"water": return "水"
+		"earth": return "土"
+		"wind": return "風"
+		_: return element
 
 ## CPU判定
 func _is_cpu_player(player_id: int) -> bool:

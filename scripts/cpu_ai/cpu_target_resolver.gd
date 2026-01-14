@@ -11,13 +11,15 @@ var board_analyzer: CPUBoardAnalyzer = null
 var board_system: Node = null
 var player_system: Node = null
 var card_system: Node = null
+var game_flow_manager: Node = null
 
 ## 初期化
-func initialize(analyzer: CPUBoardAnalyzer, b_system: Node, p_system: Node, c_system: Node) -> void:
+func initialize(analyzer: CPUBoardAnalyzer, b_system: Node, p_system: Node, c_system: Node, gf_manager: Node = null) -> void:
 	board_analyzer = analyzer
 	board_system = b_system
 	player_system = p_system
 	card_system = c_system
+	game_flow_manager = gf_manager
 
 # =============================================================================
 # メインターゲット条件チェック
@@ -25,6 +27,52 @@ func initialize(analyzer: CPUBoardAnalyzer, b_system: Node, p_system: Node, c_sy
 
 ## ターゲット条件をチェックし、有効なターゲットを返す
 func check_target_condition(target_condition: String, context: Dictionary) -> Array:
+	var results = _check_target_condition_internal(target_condition, context)
+	
+	# 全ての結果に防魔フィルタを適用
+	results = _apply_protection_filter(results, context)
+	
+	return results
+
+## 防魔・HP効果無効フィルタを適用（ターゲット共通）
+func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
+	var filtered = []
+	var world_curse = {}
+	if game_flow_manager and "game_stats" in game_flow_manager:
+		world_curse = game_flow_manager.game_stats.get("world_curse", {})
+	var protection_context = {"world_curse": world_curse}
+	
+	# スペルがHP効果を持つか確認
+	var spell = context.get("spell", {})
+	var effect_parsed = spell.get("effect_parsed", {})
+	var affects_hp = effect_parsed.get("affects_hp", false)
+	
+	for target in targets:
+		var target_type = target.get("type", "")
+		var should_skip = false
+		
+		if target_type == "creature" or target.has("creature"):
+			var creature = target.get("creature", {})
+			if not creature.is_empty():
+				# 防魔チェック
+				if SpellProtection.is_creature_protected(creature, protection_context):
+					should_skip = true
+				# HP効果無効チェック
+				elif affects_hp and SpellHpImmune.has_hp_effect_immune(creature):
+					should_skip = true
+		elif target_type == "player":
+			var player_id = target.get("player_id", -1)
+			if player_id >= 0 and player_system and player_id < player_system.players.size():
+				if SpellProtection.is_player_protected(player_system.players[player_id], protection_context):
+					should_skip = true
+		
+		if not should_skip:
+			filtered.append(target)
+	
+	return filtered
+
+## 内部ターゲット条件チェック
+func _check_target_condition_internal(target_condition: String, context: Dictionary) -> Array:
 	match target_condition:
 		# クリーチャー属性
 		"fire_wind_creature":
@@ -97,6 +145,10 @@ func check_target_condition(target_condition: String, context: Dictionary) -> Ar
 			return _get_enemies_with_more_magic(context)
 		"enemy_player":
 			return _get_enemy_players(context)
+		"enemy_player_with_creatures":
+			return _get_enemy_players_with_creatures(context)
+		"self_has_creatures":
+			return _check_self_has_creatures(context)
 		"self_player", "self_target":
 			return _get_self_player(context)
 		
@@ -714,6 +766,44 @@ func _get_enemy_players(context: Dictionary) -> Array:
 			results.append({"type": "player", "player_id": i})
 	
 	return results
+
+## クリーチャーを持つ敵プレイヤーを取得
+func _get_enemy_players_with_creatures(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var results = []
+	
+	if not player_system or not board_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i != player_id:
+			# このプレイヤーがクリーチャーを持っているかチェック
+			if _player_has_creatures(i):
+				results.append({"type": "player", "player_id": i})
+	
+	return results
+
+## プレイヤーがクリーチャーを持っているかチェック
+func _player_has_creatures(player_id: int) -> bool:
+	if not board_system:
+		return false
+	
+	var tiles = board_system.get_all_tiles()
+	for tile in tiles:
+		var owner_id = tile.get("owner", tile.get("owner_id", -1))
+		if owner_id == player_id:
+			var creature = tile.get("creature", tile.get("placed_creature", {}))
+			if not creature.is_empty():
+				return true
+	return false
+
+## 自分がクリーチャーを持っている場合にtrue
+func _check_self_has_creatures(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	if _player_has_creatures(player_id):
+		return [{"type": "self", "player_id": player_id}]
+	return []
 
 ## 自分自身を取得
 func _get_self_player(context: Dictionary) -> Array:

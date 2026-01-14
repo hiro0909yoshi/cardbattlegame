@@ -36,6 +36,38 @@ func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem, ui_sy
 # 特殊タイル停止後の共通UI設定
 # ============================================
 
+## ワープ後の着地処理（着地先のタイルでタイルアクションを実行）
+func _process_warp_landing(player_id: int) -> void:
+	if not game_flow_manager or not game_flow_manager.board_system_3d:
+		return
+	
+	var board_system = game_flow_manager.board_system_3d
+	
+	# 現在のプレイヤー位置を取得
+	var current_tile = -1
+	if board_system.movement_controller:
+		current_tile = board_system.movement_controller.get_player_tile(player_id)
+	
+	if current_tile < 0:
+		print("[SpecialTile] ワープ後の位置が不明 - 着地処理スキップ")
+		return
+	
+	print("[SpecialTile] ワープ後の着地処理: タイル%d" % current_tile)
+	
+	# 現在のアクション処理を完了（is_action_processingをリセット）
+	if board_system.tile_action_processor:
+		board_system.tile_action_processor.is_action_processing = false
+	
+	# 着地先のタイルアクションを実行
+	if board_system.tile_action_processor:
+		var is_cpu = player_id < board_system.player_is_cpu.size() and board_system.player_is_cpu[player_id]
+		await board_system.tile_action_processor.process_tile_landing(
+			current_tile, 
+			player_id, 
+			board_system.player_is_cpu, 
+			board_system.debug_manual_control_all
+		)
+
 ## 特殊タイル停止後の共通UI状態を設定
 ## 全ての特殊タイルハンドラの最後で呼び出す（CPU/プレイヤー共通）
 func _show_special_tile_landing_ui(player_id: int):
@@ -194,18 +226,27 @@ func handle_magic_stone_tile(player_id: int, tile = null):
 func handle_magic_tile(player_id: int, tile = null):
 	print("[SpecialTile] 魔法マス - Player%d" % (player_id + 1))
 	
+	var was_warped = false
+	
 	# タイルに処理を委譲
 	if tile and tile.has_method("handle_special_action"):
 		var context = _create_tile_context()
 		var result = await tile.handle_special_action(player_id, context)
 		print("[SpecialTile] 魔法マス処理完了: %s" % result)
+		was_warped = result.get("warped", false)
 	else:
 		# フォールバック: CPUの場合はスキップ
 		if _is_cpu_player(player_id):
 			print("[SpecialTile] CPU - 魔法マススキップ")
 	
 	emit_signal("special_tile_activated", "magic", player_id, -1)
-	_show_special_tile_landing_ui(player_id)
+	
+	# ワープした場合は着地先でタイルアクションを実行
+	if was_warped:
+		print("[SpecialTile] ワープ後の着地処理を実行")
+		await _process_warp_landing(player_id)
+	else:
+		_show_special_tile_landing_ui(player_id)
 
 # 分岐マス処理（タイルに委譲）
 func handle_branch_tile(player_id: int, tile = null):
@@ -252,7 +293,13 @@ func handle_base_tile(player_id: int, tile = null):
 			# 1フレーム待って入力イベントをクリア（空き地選択の決定ボタンが伝播しないように）
 			await board_system.get_tree().process_frame
 			
-			# 召喚UIを表示（通常の召喚フローを使用）
+			# CPUの場合は自動召喚処理
+			if _is_cpu_player(player_id):
+				await _cpu_remote_summon(player_id, selected_tile)
+				emit_signal("special_tile_activated", "base", player_id, selected_tile)
+				return {"wait_for_summon": false}  # CPU処理完了
+			
+			# プレイヤーの場合：召喚UIを表示（通常の召喚フローを使用）
 			_show_remote_summon_ui(player_id, selected_tile)
 			emit_signal("special_tile_activated", "base", player_id, selected_tile)
 			# 召喚完了を待つフラグを返す
@@ -328,3 +375,68 @@ func _is_cpu_player(player_id: int) -> bool:
 		if player_id < cpu_flags.size():
 			return cpu_flags[player_id]
 	return false
+
+## CPU用遠隔召喚処理
+## tile_action_processorの既存処理を使用
+func _cpu_remote_summon(player_id: int, target_tile: int):
+	print("[SpecialTile] CPU遠隔召喚開始 - Player%d → タイル%d" % [player_id + 1, target_tile])
+	
+	# 手札からクリーチャーを取得
+	if not card_system:
+		print("[SpecialTile] CardSystemなし - 召喚スキップ")
+		_clear_remote_placement()
+		return
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var creatures = []
+	for i in range(hand.size()):
+		if hand[i].get("type", "") == "creature":
+			creatures.append({"index": i, "card": hand[i]})
+	
+	if creatures.is_empty():
+		print("[SpecialTile] CPU: 手札にクリーチャーなし - 召喚スキップ")
+		_clear_remote_placement()
+		return
+	
+	# タイル情報を取得
+	var tile_info = {}
+	if board_system and board_system.has_method("get_tile_info"):
+		tile_info = board_system.get_tile_info(target_tile)
+	var tile_element = tile_info.get("element", "neutral")
+	
+	# 属性一致するクリーチャーを探す
+	var best_creature_info = null
+	for creature_info in creatures:
+		var creature = creature_info.card
+		var creature_element = creature.get("element", "neutral")
+		if creature_element == tile_element or tile_element == "neutral" or creature_element == "neutral":
+			best_creature_info = creature_info
+			break
+	
+	# 属性一致がなければ最初のクリーチャー
+	if not best_creature_info and not creatures.is_empty():
+		best_creature_info = creatures[0]
+	
+	if not best_creature_info:
+		print("[SpecialTile] CPU: 配置可能なクリーチャーなし - 召喚スキップ")
+		_clear_remote_placement()
+		return
+	
+	print("[SpecialTile] CPU: %s を配置（手札インデックス: %d）" % [best_creature_info.card.get("name", "?"), best_creature_info.index])
+	
+	# tile_action_processorのexecute_summonを使用（遠隔配置モードは既に設定済み）
+	if board_system and board_system.tile_action_processor:
+		await board_system.tile_action_processor.execute_summon(best_creature_info.index)
+	
+	# コメント表示
+	if ui_manager and ui_manager.global_comment_ui:
+		await ui_manager.global_comment_ui.show_and_wait(
+			"%sを配置した！" % best_creature_info.card.get("name", "クリーチャー"), player_id
+		)
+	
+	print("[SpecialTile] CPU遠隔召喚完了")
+
+## 遠隔配置モードをクリア
+func _clear_remote_placement():
+	if board_system and board_system.tile_action_processor:
+		board_system.tile_action_processor.clear_remote_placement()

@@ -328,8 +328,15 @@ func curse_player(player_id: int, curse_type: String, duration: int = -1, params
 		"caster_id": caster_id  # 呪いを付与したプレイヤーID（toll_shareの副収入判定用）
 	}
 	
-	print("[呪い付与] ", params.get("name", curse_type), " → プレイヤー", player_id, 
-		  " (duration=", duration, ")")
+	# マジックタイル経由の場合、付与ターンでのduration減少をスキップするためのフラグを追加
+	if _is_magic_tile_mode():
+		player.curse["from_magic_tile"] = true
+		player.curse["granted_turn"] = _get_current_turn()
+		print("[呪い付与] ", params.get("name", curse_type), " → プレイヤー", player_id, 
+			  " (duration=", duration, ", magic_tile=true, turn=", _get_current_turn(), ")")
+	else:
+		print("[呪い付与] ", params.get("name", curse_type), " → プレイヤー", player_id, 
+			  " (duration=", duration, ")")
 
 # プレイヤーの呪いを取得
 func get_player_curse(player_id: int) -> Dictionary:
@@ -397,6 +404,17 @@ func update_player_curse(player_id: int):
 		var curse_type = curse.get("curse_type", "")
 		var duration = curse.get("duration", -1)
 		
+		# マジックタイル経由で付与された呪いは付与ターンではスキップ
+		if curse.get("from_magic_tile", false):
+			var granted_turn = curse.get("granted_turn", -1)
+			var current_turn = _get_current_turn()
+			if granted_turn >= 0 and granted_turn == current_turn:
+				print("[呪いカウントダウン] ", curse.get("name", ""), " - マジックタイル付与ターンのためスキップ")
+				# フラグをクリア（次ターン以降は通常通り減少）
+				curse.erase("from_magic_tile")
+				curse.erase("granted_turn")
+				return
+		
 		# duration > 0 の場合のみカウントダウン
 		if duration > 0:
 			curse["duration"] = duration - 1
@@ -411,6 +429,18 @@ func update_player_curse(player_id: int):
 				# 歩行逆転呪いの場合、方向を元に戻す
 				if curse_type == "movement_reverse":
 					_on_movement_reverse_curse_removed(player_id)
+
+## 現在のターン番号を取得
+func _get_current_turn() -> int:
+	if game_flow_manager:
+		return game_flow_manager.current_turn_number
+	return -1
+
+## マジックタイルモードかチェック
+func _is_magic_tile_mode() -> bool:
+	if game_flow_manager and game_flow_manager.spell_phase_handler:
+		return game_flow_manager.spell_phase_handler.is_magic_tile_mode
+	return false
 
 # 全ての呪いのdurationを更新（デバッグ用）
 func update_all_curses():

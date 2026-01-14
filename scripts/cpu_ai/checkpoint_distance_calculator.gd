@@ -27,7 +27,6 @@ var warp_pairs: Dictionary = {}
 func setup(p_tile_nodes: Dictionary, p_warp_pairs: Dictionary = {}):
 	tile_nodes = p_tile_nodes
 	warp_pairs = p_warp_pairs
-	print("[CheckpointDistance] setup: tiles=%d, warps=%d" % [tile_nodes.size(), warp_pairs.size()])
 
 
 ## 全チェックポイントへの距離を計算
@@ -39,30 +38,20 @@ func calculate_all_distances():
 	
 	# 1. チェックポイントを検出
 	_find_all_checkpoints()
-	print("[CheckpointDistance] チェックポイント検出: %d個" % checkpoints.size())
-	for cp_id in checkpoints:
-		print("[CheckpointDistance]   %s: タイル%d" % [cp_id, checkpoints[cp_id]])
 	
 	if checkpoints.is_empty():
-		print("[CheckpointDistance] 警告: チェックポイントが見つかりません")
 		return
 	
 	# 2. 分岐タイルを検出
 	_find_branch_tiles()
-	print("[CheckpointDistance] 分岐タイル検出: %d個" % branch_tiles.size())
 	
 	# 3. 各チェックポイントからBFSで距離計算
 	for cp_id in checkpoints:
 		var cp_tile = checkpoints[cp_id]
 		distances[cp_id] = _bfs_from_checkpoint(cp_tile)
-		print("[CheckpointDistance] %s: 計算完了（%d タイル）" % [cp_id, distances[cp_id].size()])
 	
 	# 4. 方向別距離を計算
 	_calculate_directional_distances()
-	print("[CheckpointDistance] 方向別距離計算完了: %d 分岐" % directional_distances.size())
-	
-	# デバッグ: 方向別距離を出力
-	_debug_print_directional_distances()
 
 
 ## 特定タイルから特定チェックポイントへの距離を取得
@@ -464,28 +453,3 @@ func _get_neighbors(tile_index: int) -> Array:
 			neighbors.append(warp_dest)
 	
 	return neighbors
-
-
-## デバッグ: 距離テーブルを出力
-func debug_print_distances():
-	print("===== チェックポイント距離テーブル =====")
-	for cp_id in distances:
-		print("--- %s (タイル%d) ---" % [cp_id, checkpoints.get(cp_id, -1)])
-		var dist_list = distances[cp_id]
-		var sorted_tiles = dist_list.keys()
-		sorted_tiles.sort()
-		for tile_index in sorted_tiles:
-			print("  タイル%d: %d歩" % [tile_index, dist_list[tile_index]])
-
-
-## デバッグ: 方向別距離テーブルを出力
-func _debug_print_directional_distances():
-	print("===== 方向別距離テーブル =====")
-	for branch_tile in directional_distances:
-		print("--- 分岐タイル%d ---" % branch_tile)
-		for next_tile in directional_distances[branch_tile]:
-			var cp_dists = directional_distances[branch_tile][next_tile]
-			var cp_strs = []
-			for cp_id in cp_dists:
-				cp_strs.append("%s:%d" % [cp_id, cp_dists[cp_id]])
-			print("  → タイル%d方向: %s" % [next_tile, ", ".join(cp_strs)])

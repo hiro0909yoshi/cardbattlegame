@@ -80,16 +80,12 @@ func _ensure_checkpoint_distances_calculated():
 ## チェックポイント距離を計算（マップロード後に呼び出し）
 func calculate_checkpoint_distances():
 	if not movement_controller or not movement_controller.tile_nodes:
-		print("[CPUMovementEvaluator] 警告: tile_nodesがありません")
 		return
 	
 	# ワープペアを取得
 	var warp_pairs = {}
 	if board_system and board_system.special_tile_system:
 		warp_pairs = board_system.special_tile_system.warp_pairs
-		print("[CPUMovementEvaluator] ワープペア取得: %s" % str(warp_pairs))
-	else:
-		print("[CPUMovementEvaluator] 警告: special_tile_systemがありません")
 	
 	# 計算機を初期化
 	checkpoint_calculator = CheckpointDistanceCalculator.new()
@@ -97,26 +93,6 @@ func calculate_checkpoint_distances():
 	checkpoint_calculator.calculate_all_distances()
 	
 	_checkpoint_distances_calculated = true
-	
-	# デバッグ: 距離テーブルを一部出力
-	if checkpoint_calculator.checkpoints.size() > 0:
-		print("[CPUMovementEvaluator] チェックポイント距離計算完了")
-		for cp_id in checkpoint_calculator.checkpoints:
-			var cp_tile = checkpoint_calculator.checkpoints[cp_id]
-			print("  %s: タイル%d" % [cp_id, cp_tile])
-			# 分岐の選択肢タイル（分岐先）からの距離を表示
-			for sample_tile in [1, 3, 24, 25, 26, 27, 7, 5]:
-				var dist = checkpoint_calculator.get_distance(sample_tile, cp_id)
-				print("    タイル%d → %d歩" % [sample_tile, dist])
-		
-		# ワープ周辺のタイル接続を確認
-		print("[CPUMovementEvaluator] ワープ周辺タイルの接続:")
-		for warp_tile in [28, 29, 30, 31, 32]:
-			if movement_controller.tile_nodes.has(warp_tile):
-				var tile = movement_controller.tile_nodes[warp_tile]
-				var conns = tile.connections if tile.connections else []
-				var tile_type = tile.tile_type if "tile_type" in tile else "unknown"
-				print("    タイル%d (%s): connections=%s" % [warp_tile, tile_type, str(conns)])
 
 # =============================================================================
 # メイン機能: 経路評価
@@ -149,12 +125,7 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	var checkpoint_bonus = path_result.checkpoint_bonus
 	
 	# 総合スコア = 停止位置スコア + チェックポイント通過ボーナス
-	# 経路スコアは除外してテスト中（方向ボーナスの影響を確認するため）
 	var total_score = stop_score + checkpoint_bonus
-	
-	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d CP通過:%d) ※経路スコア除外中" % [
-		start_tile, total_steps, stop_tile, total_score, stop_score, checkpoint_bonus
-	])
 	
 	return {
 		"score": total_score,
@@ -434,24 +405,18 @@ func _calculate_direction_bonus(start_tile: int, player_id: int, _came_from: int
 	# 方向別距離を使用（分岐タイルからの方向を考慮）
 	var result: Dictionary
 	if _current_branch_tile >= 0 and checkpoint_calculator.is_branch_tile(_current_branch_tile):
-		# 分岐タイルから start_tile 方向に進んだ場合の距離を取得
-		print("[CPU方向ボーナス詳細] branch=%d, start=%d, visited=%s" % [_current_branch_tile, start_tile, visited])
 		result = checkpoint_calculator.get_directional_nearest_checkpoint(_current_branch_tile, start_tile, visited)
 	else:
-		# 通常の最短距離を使用
 		result = checkpoint_calculator.get_nearest_unvisited_checkpoint(start_tile, visited)
 	
 	var distance = result.distance
 	var cp_id = result.checkpoint_id
 	
 	if cp_id == "" or distance >= 9999:
-		print("[CPU方向ボーナス] start=%d: 未訪問CPなし、ボーナス0" % start_tile)
 		return 0
 	
 	# 距離に応じたボーナス（近いほど高い）
-	# 最大1200点（距離0）、距離が1増えるごとに60点減少
 	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (distance * 60))
-	print("[CPU方向ボーナス] start=%d: CP[%s]まで%d歩 → ボーナス%d" % [start_tile, cp_id, distance, distance_bonus])
 	return distance_bonus
 
 
@@ -493,12 +458,10 @@ func _calculate_direction_bonus_for_branch(branch_tile: int, next_tile: int, pla
 	var cp_id = result.checkpoint_id
 	
 	if cp_id == "" or distance >= 9999:
-		print("[CPU方向ボーナス] branch=%d→%d: 未訪問CPなし、ボーナス0 (visited=%s)" % [branch_tile, next_tile, visited])
 		return 0
 	
 	# 距離に応じたボーナス（近いほど高い）
 	var distance_bonus = max(0, SCORE_DIRECTION_UNVISITED_GATE - (distance * 60))
-	print("[CPU方向ボーナス] branch=%d→%d: CP[%s]まで%d歩 → ボーナス%d (visited=%s)" % [branch_tile, next_tile, cp_id, distance, distance_bonus, visited])
 	return distance_bonus
 
 # =============================================================================
@@ -516,7 +479,7 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 		return available_directions[0]
 	
 	var current_tile = _get_player_current_tile(player_id)
-	var came_from = _get_player_came_from(player_id)
+	var _came_from = _get_player_came_from(player_id)  # 将来の拡張用
 	var best_direction = available_directions[0]
 	var best_score = -999999
 	
@@ -529,13 +492,11 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 			total_score += eval_result.score
 		
 		var avg_score = total_score / 6.0
-		print("[CPU方向評価] 方向 %d: 平均スコア %.1f" % [direction, avg_score])
 		
 		if avg_score > best_score:
 			best_score = avg_score
 			best_direction = direction
 	
-	print("[CPU方向選択] 選択した方向: %d (スコア: %.1f)" % [best_direction, best_score])
 	return best_direction
 
 # =============================================================================
@@ -559,10 +520,6 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	
 	# 手持ち魔力を取得（最短CP方向のボーナスとして使用）
 	var current_magic = _get_player_magic(player_id)
-	
-	print("[CPU分岐選択開始] player=%d, tile=%d, available=%s, steps=%d, magic=%d" % [
-		player_id, current_tile, available_tiles, remaining_steps, current_magic
-	])
 	
 	# チェックポイント距離計算を確認
 	_ensure_checkpoint_distances_calculated()
@@ -589,22 +546,18 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			"cp_id": cp_id,
 			"stop_tile": eval_result.stop_tile
 		}
-		
-		print("[CPU分岐評価] タイル%d → 停止%d: 基礎スコア%d, CP[%s]まで%d歩" % [
-			tile_index, eval_result.stop_tile, base_score, cp_id, cp_distance
-		])
 	
 	# 最短CP方向を見つける
 	var nearest_cp_tile = -1
 	var nearest_cp_distance = 9999
-	var nearest_cp_id = ""
+	var _nearest_cp_id = ""
 	
 	for tile_index in tile_scores:
 		var data = tile_scores[tile_index]
 		if data.cp_distance < nearest_cp_distance:
 			nearest_cp_distance = data.cp_distance
 			nearest_cp_tile = tile_index
-			nearest_cp_id = data.cp_id
+			_nearest_cp_id = data.cp_id
 	
 	# 最短CP方向に手持ち魔力をボーナスとして加算
 	var final_scores = {}
@@ -614,21 +567,15 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		if tile_index == nearest_cp_tile:
 			final_score += current_magic  # 最短CP方向に魔力ボーナス
 		final_scores[tile_index] = final_score
-		print("[CPU分岐最終] タイル%d: 最終スコア%d%s" % [
-			tile_index, final_score, 
-			" (+魔力%d)" % current_magic if tile_index == nearest_cp_tile else ""
-		])
 	
 	# 選択ロジック
 	var selected_tile = available_tiles[0]
-	var selected_reason = ""
 	var nearest_score = final_scores.get(nearest_cp_tile, -999999)
 	
 	# 最短CP方向のスコアがマイナスかどうかで判断
 	if nearest_score >= 0:
 		# マイナスでなければ最短CP方向を選択
 		selected_tile = nearest_cp_tile
-		selected_reason = "最短CP[%s]方向(%d歩)" % [nearest_cp_id, nearest_cp_distance]
 	else:
 		# 最短CP方向がマイナスの場合
 		# 他の方向のスコアを確認
@@ -654,22 +601,17 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			if score_diff <= 1000:
 				# 差が1000以内なら最短CP方向
 				selected_tile = nearest_cp_tile
-				selected_reason = "両方マイナス/差%d≤1000→最短CP[%s]" % [score_diff, nearest_cp_id]
 			else:
 				# 差が1000超ならマイナスが小さい方
 				if nearest_score > best_other_score:
 					selected_tile = nearest_cp_tile
-					selected_reason = "両方マイナス/差%d>1000→最短CP(マイナス小)" % score_diff
 				else:
 					selected_tile = best_other_tile
-					selected_reason = "両方マイナス/差%d>1000→タイル%d(マイナス小)" % [score_diff, best_other_tile]
 		else:
 			# 他にプラスの方向がある → そちらを選択
 			selected_tile = best_other_tile
-			selected_reason = "CP方向マイナス→タイル%d(スコア%d)" % [best_other_tile, best_other_score]
 	
 	_current_branch_tile = -1
-	print("[CPU分岐選択] 選択: タイル%d (%s)" % [selected_tile, selected_reason])
 	return selected_tile
 
 # =============================================================================
@@ -1015,12 +957,10 @@ func _is_gate_unvisited(tile_info: Dictionary, player_id: int) -> bool:
 ## プレイヤーの訪問済みチェックポイントIDリストを取得
 func _get_visited_checkpoints(player_id: int) -> Array:
 	if not lap_system:
-		print("[CPU] _get_visited_checkpoints: lap_system is null")
 		return []
 	
 	var visited = []
 	var player_state = lap_system.player_lap_state.get(player_id, {})
-	print("[CPU] _get_visited_checkpoints: player_id=%d, player_state=%s" % [player_id, player_state])
 	
 	# lap_systemの状態から訪問済みを取得
 	# 形式: { "N": true, "S": false, "lap_count": int, ... }
@@ -1033,7 +973,6 @@ func _get_visited_checkpoints(player_id: int) -> Array:
 		if typeof(value) == TYPE_BOOL and value == true:
 			visited.append(cp_id)
 	
-	print("[CPU] _get_visited_checkpoints: visited=%s" % [visited])
 	return visited
 
 

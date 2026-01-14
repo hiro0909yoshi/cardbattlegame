@@ -28,8 +28,6 @@ var opponent_creature_data: Dictionary = {}  # 相手クリーチャーのデー
 const BattleSpecialEffectsScript = preload("res://scripts/battle/battle_special_effects.gd")
 const BattleParticipantScript = preload("res://scripts/battle/battle_participant.gd")
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
-var _special_effects: BattleSpecialEffects = null
-var _battle_simulator = null
 
 # 防御時のタイル情報（シミュレーション用）
 var defense_tile_info: Dictionary = {}
@@ -788,4 +786,3 @@ func _execute_merge_for_cpu(merge_result: Dictionary):
 	# アイテムフェーズ完了
 	current_state = State.ITEM_APPLIED
 	item_phase_completed.emit()
-

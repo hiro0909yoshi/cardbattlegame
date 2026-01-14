@@ -124,6 +124,18 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var target_player_id = target_data.get("player_id", -1)
 				gfm.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, handler.current_player_id)
 		
+		# === プレイヤー呪い系 ===
+		"player_curse":
+			var target_player_id = target_data.get("player_id", handler.current_player_id)
+			if gfm and gfm.spell_curse:
+				var curse_type = effect.get("curse_type", "")
+				var duration = effect.get("duration", -1)
+				var params = {
+					"name": effect.get("name", ""),
+					"description": effect.get("description", "")
+				}
+				gfm.spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
+		
 		# === コスト修飾系 ===
 		"life_force_curse":
 			var target_player_id = target_data.get("player_id", handler.current_player_id)

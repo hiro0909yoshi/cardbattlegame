@@ -5,7 +5,7 @@ class_name CPUDefenseAI
 extends RefCounted
 
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
-const SkillMerge = preload("res://scripts/battle/skills/skill_merge.gd")
+# SkillMergeはグローバルclass_nameなので直接使用
 
 var card_system: CardSystem
 var player_system: PlayerSystem

@@ -126,7 +126,17 @@ HP効果無効は、スペルや秘術による直接的なHP/MHP変更効果を
 | ファイル | 役割 |
 |----------|------|
 | scripts/spells/spell_hp_immune.gd | HP効果無効判定クラス |
-| scripts/game_flow/target_selection_helper.gd | ターゲット選択時の除外処理 |
-| scripts/game_flow/spell_phase_handler.gd | affects_hp フラグの受け渡し |
+| scripts/game_flow/target_selection_helper.gd | ターゲット選択時の除外処理（get_valid_targets_core内） |
+| scripts/cpu_ai/cpu_spell_target_selector.gd | CPUターゲット選択時の除外処理（get_default_targets内） |
 | scripts/spells/spell_curse.gd | マスファンタズム呪い付与 |
 | scripts/game_flow/spell_effect_executor.gd | apply_curse エフェクト処理 |
+
+### フィルタ適用の仕組み
+
+HP効果無効フィルタは以下で**自動的に**適用される：
+
+1. **ターゲット選択時**: `TargetSelectionHelper.get_valid_targets_core()`
+   - `target_info.affects_hp = true` の場合、HP効果無効持ちを除外
+   - `SpellHpImmune.has_hp_effect_immune()` で判定
+
+スペル/秘術のJSONに `"affects_hp": true` を設定すれば、自動的にHP効果無効持ちが除外される。

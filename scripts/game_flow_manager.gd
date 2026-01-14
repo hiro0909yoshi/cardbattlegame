@@ -174,6 +174,17 @@ func _setup_magic_stone_system(board_system):
 		player_system.set_magic_stone_system(magic_stone_system)
 	
 	print("[MagicStoneSystem] 初期化完了")
+	
+	# CPU特殊タイルAIの初期化
+	_setup_cpu_special_tile_ai(board_system)
+
+## CPU特殊タイルAIの初期化
+var cpu_special_tile_ai: CPUSpecialTileAI = null
+
+func _setup_cpu_special_tile_ai(board_system):
+	cpu_special_tile_ai = CPUSpecialTileAI.new()
+	cpu_special_tile_ai.setup(card_system, player_system, board_system, self)
+	print("[CPUSpecialTileAI] 初期化完了")
 
 ## スペル効果システムの初期化
 func _setup_spell_systems(board_system):
@@ -831,8 +842,9 @@ func _reinitialize_card_selection():
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)
 			
-			# 領地コマンドボタンも再表示
-			ui_manager.show_land_command_button()
+			# 領地コマンドボタンも再表示（領地を所有している場合のみ）
+			if board_system_3d and board_system_3d._has_owned_lands(current_player.id):
+				ui_manager.show_land_command_button()
 			
 
 # Phase 1-A: 領地コマンドを開く
@@ -864,10 +876,9 @@ func get_current_turn() -> int:
 func _setup_cpu_movement_evaluator():
 	var cpu_movement_evaluator = CPUMovementEvaluator.new()
 	
-	# バトルシミュレーターを取得（ItemPhaseHandlerから）
-	var battle_sim = null
-	if item_phase_handler and item_phase_handler._battle_simulator:
-		battle_sim = item_phase_handler._battle_simulator
+	# バトルシミュレーターを作成
+	var battle_sim = BattleSimulator.new()
+	battle_sim.setup_systems(board_system_3d, card_system, player_system, self)
 	
 	# SpellMovementを取得（MovementControllerから）
 	var spell_mov = null

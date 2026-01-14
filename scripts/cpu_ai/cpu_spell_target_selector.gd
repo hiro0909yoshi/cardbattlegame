@@ -25,7 +25,7 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_
 	target_resolver = CPUTargetResolver.new()
 	var board_analyzer = CPUBoardAnalyzer.new()
 	board_analyzer.initialize(b_system, p_system, c_system, null)  # creature_managerはnullでOK
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system)
+	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
 
 # =============================================================================
 # メインターゲット選択
@@ -46,6 +46,7 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	}
 	
 	# TargetSelectionHelperの共通ロジックを使用
+	# 防魔・HP効果無効フィルタは get_valid_targets_core 内で適用される
 	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
 	
 	# 呪いスペルの場合、追加のフィルタリングを適用
@@ -176,8 +177,8 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	
 	# デバッグ: 最終スコア
 	var creature_name = creature.get("name", "?")
-	var level = tile_data.get("level", 1) if tile_data else 1
-	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, level, creature_rate])
+	var debug_level = tile_data.get("level", 1) if tile_data else 1
+	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, debug_level, creature_rate])
 	
 	return score
 
@@ -185,7 +186,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 ## 呪い上書きスコアを計算
 ## 敵の有利な呪いを消す / 自分の不利な呪いを消す → +150
 ## 敵の不利な呪いを消す / 自分の有利な呪いを消す → -300
-func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, spell_is_beneficial: bool) -> float:
+func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, _spell_is_beneficial: bool) -> float:
 	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
 	var is_own = (owner_id == player_id)
 	var score = 0.0
@@ -280,6 +281,24 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 
 ## 旧互換（他の箇所で使用されている場合）
 func select_best_target(targets: Array, spell: Dictionary, context: Dictionary) -> Dictionary:
+	var result = select_best_target_with_score(targets, spell, context)
+	return result.target
+
+## 外部から呼び出し用（魔法タイル等）
+## 事前に取得済みのターゲットリストから最適な対象を選択
+func select_best_target_from_list(targets: Array, spell: Dictionary, player_id: int) -> Dictionary:
+	if targets.is_empty():
+		return {}
+	
+	# コンテキスト構築
+	var context = {
+		"player_id": player_id,
+		"magic": 0
+	}
+	if player_system and player_id < player_system.players.size():
+		context.magic = player_system.players[player_id].magic_power
+	
+	# 既存のselect_best_target_with_scoreを使用
 	var result = select_best_target_with_score(targets, spell, context)
 	return result.target
 

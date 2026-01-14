@@ -10,7 +10,7 @@ const RESET_MAGIC = 300
 # シグナル
 signal bankruptcy_completed(player_id: int, was_reset: bool)  # 破産処理完了
 signal land_sold(player_id: int, tile_index: int, value: int)  # 土地売却
-signal land_selection_requested(player_id: int, available_lands: Array)  # 土地選択UI要求
+# signal land_selection_requested(player_id: int, available_lands: Array)  # 土地選択UI要求（未使用）
 
 # 参照
 var player_system: Node = null
@@ -345,7 +345,7 @@ func process_player_bankruptcy(player_id: int):
 func _show_land_selection_ui(player_id: int, lands: Array) -> int:
 	# TargetSelectionHelperを使用
 	if target_selection_helper:
-		var magic = player_system.get_magic(player_id)
+		var _magic = player_system.get_magic(player_id)  # 将来の拡張用
 		var message = "【破産処理】売却する土地を選択"
 		
 		# タイル切り替え時にクリーチャー情報と破産情報パネルを表示
@@ -439,7 +439,7 @@ func process_cpu_bankruptcy(player_id: int):
 ## 優先順位：
 ## 1. 連鎖がない土地（1連鎖）を優先して売却
 ## 2. 連鎖がある土地は高額な土地から売却
-func _select_land_to_sell_cpu(player_id: int, lands: Array) -> int:
+func _select_land_to_sell_cpu(_player_id: int, lands: Array) -> int:
 	if lands.is_empty():
 		return -1
 	

@@ -30,14 +30,51 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
-	# CPUの場合はスキップ
+	# CPUの場合はAI判断
 	if _is_cpu_player(player_id):
-		print("[CardGiveTile] CPU - スキップ")
-		return {"success": true, "card_received": false}
+		return await _handle_cpu_card_give(player_id)
 	
 	# プレイヤーの場合はUI表示
 	var result = await _show_card_give_selection(player_id)
 	return result
+
+## CPU用カードギブ処理
+func _handle_cpu_card_give(player_id: int) -> Dictionary:
+	var cpu_ai = _get_cpu_special_tile_ai()
+	if not cpu_ai:
+		print("[CardGiveTile] CPU AI なし - スキップ")
+		return {"success": true, "card_received": false}
+	
+	var card_type = cpu_ai.decide_card_give(player_id)
+	if card_type == "":
+		return {"success": true, "card_received": false}
+	
+	# 山札から該当タイプのカードをランダム取得
+	var card_data = {}
+	if _card_system:
+		card_data = _card_system.draw_random_card_by_type(player_id, card_type)
+	
+	if card_data.is_empty():
+		print("[CardGiveTile] CPU: 山札に%sがありません" % card_type)
+		return {"success": true, "card_received": false}
+	
+	print("[CardGiveTile] CPU: %sを取得: %s" % [card_type, card_data.get("name", "?")])
+	
+	# コメント表示
+	if _ui_manager and _ui_manager.global_comment_ui:
+		await _ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id)
+	
+	# UI更新
+	if _ui_manager and _ui_manager.hand_display:
+		_ui_manager.hand_display.update_hand_display(player_id)
+	
+	return {"success": true, "card_received": true, "card_name": card_data.get("name", "")}
+
+## CPUSpecialTileAIを取得
+func _get_cpu_special_tile_ai():
+	if _game_flow_manager and "cpu_special_tile_ai" in _game_flow_manager:
+		return _game_flow_manager.cpu_special_tile_ai
+	return null
 
 ## CPU判定
 func _is_cpu_player(player_id: int) -> bool:

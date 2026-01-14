@@ -254,44 +254,31 @@ func decide_territory_command(current_player, tile_info: Dictionary, situation: 
 
 ## 召喚 vs 領地コマンドを比較して最適な行動を返す
 func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
-	print("[CPU Territory] decide_summon_or_territory 開始")
-	print("[CPU Territory] tile_info: %s" % tile_info)
-	
 	if territory_ai == null:
-		print("[CPU Territory] territory_ai is null → 召喚")
 		return {"action": "summon"}
 	
 	var context = _build_territory_context(current_player, tile_info, "empty_land")
-	print("[CPU Territory] context: %s" % context)
 	
 	# 属性一致クリーチャーがあれば召喚優先
 	var tile_element = tile_info.get("element", "")
 	var has_matching_creature = _has_matching_creature(current_player, tile_element)
-	print("[CPU Territory] tile_element: %s, has_matching_creature: %s" % [tile_element, has_matching_creature])
 	
 	if has_matching_creature:
-		print("[CPU Territory] 属性一致クリーチャーあり → 召喚優先")
 		return {"action": "summon"}
 	
 	# 領地コマンドを評価
-	print("[CPU Territory] 領地コマンドを評価中...")
 	var best_option = territory_ai.evaluate_all_options(context)
-	print("[CPU Territory] best_option: %s" % best_option)
 	
 	if best_option.is_empty():
-		print("[CPU Territory] 有効なオプションなし → 召喚")
 		return {"action": "summon"}
 	
 	# 属性不一致召喚のスコアは低い
 	var summon_score = CPUTerritoryAI.SUMMON_MISMATCH_SCORE
 	var command_score = best_option.get("score", 0)
-	print("[CPU Territory] summon_score(不一致): %d, command_score: %d" % [summon_score, command_score])
 	
 	if command_score > summon_score:
-		print("[CPU Territory] 領地コマンド選択: %s" % best_option.get("type", "?"))
 		return {"action": "territory_command", "command": best_option}
 	
-	print("[CPU Territory] スコア不足 → 召喚")
 	return {"action": "summon"}
 
 
@@ -350,7 +337,6 @@ func _build_territory_context(current_player, tile_info: Dictionary, situation: 
 ## 属性一致クリーチャーを持っているかチェック
 func _has_matching_creature(current_player, tile_element: String) -> bool:
 	if hand_utils == null:
-		print("[CPU Territory] _has_matching_creature: hand_utils is null")
 		return false
 	
 	# デバッグフラグを取得
@@ -361,14 +347,11 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		disable_cannot_summon = hand_utils.tile_action_processor.debug_disable_cannot_summon
 	
 	var creatures = hand_utils.get_creatures_from_hand(current_player.id)
-	print("[CPU Territory] _has_matching_creature: tile_element=%s, creatures count=%d" % [tile_element, creatures.size()])
 	
 	for creature_entry in creatures:
-		# get_creatures_from_handは{"index": i, "data": card}を返す
 		var card_index = creature_entry.get("index", -1)
 		var card_data = creature_entry.get("data", {})
 		var creature_element = card_data.get("element", "")
-		var creature_name = card_data.get("name", "?")
 		var can_afford = hand_utils.can_afford_card(current_player, card_index)
 		
 		# 土地条件チェック（フラグで無効化可能）
@@ -376,14 +359,11 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		# 配置制限チェック（フラグで無効化可能）
 		var can_summon_element = disable_cannot_summon or hand_utils._check_cannot_summon(card_data, tile_element)
 		var can_summon = can_summon_lands and can_summon_element
-		print("[CPU Territory]   - %s (element=%s, can_afford=%s, can_summon=%s)" % [creature_name, creature_element, can_afford, can_summon])
 		
 		if creature_element == tile_element or tile_element == "neutral":
 			if can_afford and can_summon:
-				print("[CPU Territory]   → 属性一致で召喚可能!")
 				return true
 	
-	print("[CPU Territory] _has_matching_creature: 属性一致クリーチャーなし")
 	return false
 
 

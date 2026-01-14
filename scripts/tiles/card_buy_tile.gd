@@ -30,14 +30,48 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
-	# CPUの場合はスキップ
+	# CPUの場合はAI判断
 	if _is_cpu_player(player_id):
-		print("[CardBuyTile] CPU - スキップ")
-		return {"success": true, "card_bought": false}
+		return await _handle_cpu_card_buy(player_id)
 	
 	# プレイヤーの場合はUI表示
 	var result = await _show_card_buy_selection(player_id)
 	return result
+
+## CPU用カードバイ処理
+func _handle_cpu_card_buy(player_id: int) -> Dictionary:
+	var cpu_ai = _get_cpu_special_tile_ai()
+	if not cpu_ai:
+		print("[CardBuyTile] CPU AI なし - スキップ")
+		return {"success": true, "card_bought": false}
+	
+	# スペル・アイテムからランダム3枚を取得
+	var available_cards = _get_random_cards(3)
+	if available_cards.is_empty():
+		print("[CardBuyTile] CPU: 購入可能なカードがありません")
+		return {"success": true, "card_bought": false}
+	
+	var card_data = cpu_ai.decide_card_buy(player_id, available_cards)
+	if card_data.is_empty():
+		return {"success": true, "card_bought": false}
+	
+	var price = _get_card_price(card_data)
+	print("[CardBuyTile] CPU: %sを購入（価格: %dG）" % [card_data.get("name", "?"), price])
+	
+	# 購入処理
+	_purchase_card(card_data, player_id, price)
+	
+	# コメント表示
+	if _ui_manager and _ui_manager.global_comment_ui:
+		await _ui_manager.global_comment_ui.show_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
+	
+	return {"success": true, "card_bought": true, "card_name": card_data.get("name", "")}
+
+## CPUSpecialTileAIを取得
+func _get_cpu_special_tile_ai():
+	if _game_flow_manager and "cpu_special_tile_ai" in _game_flow_manager:
+		return _game_flow_manager.cpu_special_tile_ai
+	return null
 
 ## CPU判定
 func _is_cpu_player(player_id: int) -> bool:

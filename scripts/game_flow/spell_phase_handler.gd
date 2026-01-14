@@ -42,6 +42,7 @@ var spell_failed: bool = false  # 復帰[ブック]フラグ（条件不成立�
 ## 外部スペルモード（魔法タイル等で使用）
 ## trueの場合、手札からの削除・捨て札処理をスキップ
 var is_external_spell_mode: bool = false
+var is_magic_tile_mode: bool = false  # マジックタイル経由（呪いduration調整用）
 var _external_spell_cancelled: bool = false  # キャンセルフラグ
 var _external_spell_no_target: bool = false  # 対象不在フラグ
 signal external_spell_finished()  # 外部スペル実行完了
@@ -600,8 +601,9 @@ func use_spell(spell_card: Dictionary):
 			return
 	
 	# カード犠牲処理（スペル合成用）
+	# マジックタイルモードではカード犠牲をスキップ（手札から使用していないため）
 	var is_synthesized = false
-	var disable_sacrifice = _is_card_sacrifice_disabled()
+	var disable_sacrifice = _is_card_sacrifice_disabled() or is_magic_tile_mode
 	if spell_synthesis and spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
 		# 手札選択UIを表示
 		if card_sacrifice_helper:
@@ -704,7 +706,11 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 		# キャンセル処理は呼び出し元に任せる
 		return false
 	
-	# 領地コマンドと同じ方式で選択開始
+	# CPUの場合は自動で対象選択
+	if is_cpu_player(current_player_id):
+		return await _cpu_select_target(targets, target_type, target_info)
+	
+	# プレイヤーの場合：領地コマンドと同じ方式で選択開始
 	available_targets = targets
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
@@ -715,6 +721,44 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 	# 最初の対象を表示
 	_update_target_selection()
 	return true
+
+## CPU用対象選択（自動）
+func _cpu_select_target(targets: Array, _target_type: String, _target_info: Dictionary) -> bool:
+	if targets.is_empty():
+		return false
+	
+	# CPUSpellTargetSelectorで最適な対象を選択
+	var best_target = targets[0]  # デフォルトは最初の対象
+	
+	if cpu_spell_ai and cpu_spell_ai.target_selector:
+		var selector = cpu_spell_ai.target_selector
+		# target_selectorのselect_best_targetを使用
+		if selector.has_method("select_best_target_from_list"):
+			var selected = selector.select_best_target_from_list(targets, selected_spell_card, current_player_id)
+			if selected:
+				best_target = selected
+	
+	print("[SpellPhaseHandler] CPU対象自動選択: %s" % _format_target_for_log(best_target))
+	
+	# 選択した対象で確認フェーズへ
+	var parsed = selected_spell_card.get("effect_parsed", {})
+	var target_info_for_confirm = parsed.get("target_info", {})
+	_start_confirmation_phase(best_target.get("type", ""), target_info_for_confirm, best_target)
+	return true
+
+## 対象をログ用にフォーマット
+func _format_target_for_log(target: Dictionary) -> String:
+	var target_type = target.get("type", "")
+	match target_type:
+		"creature":
+			var creature = target.get("creature", {})
+			return "クリーチャー: %s (タイル%d)" % [creature.get("name", "?"), target.get("tile_index", -1)]
+		"land":
+			return "土地: タイル%d" % target.get("tile_index", -1)
+		"player":
+			return "プレイヤー%d" % (target.get("player_id", 0) + 1)
+		_:
+			return str(target)
 
 ## 選択を更新
 func _update_target_selection():
@@ -952,7 +996,14 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 		cancel_spell()
 		return
 	
-	# 説明テキストを表示
+	# CPUの場合は自動で確定
+	if is_cpu_player(current_player_id):
+		print("[SpellPhaseHandler] CPU: 確認フェーズ自動確定")
+		await get_tree().create_timer(0.3).timeout  # 少し待つ
+		_confirm_spell_effect()
+		return
+	
+	# プレイヤーの場合：説明テキストを表示
 	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
 	if ui_manager and ui_manager.phase_label:
 		ui_manager.phase_label.text = confirmation_text
@@ -1069,13 +1120,15 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 
 
 
-func execute_external_spell(spell_card: Dictionary, player_id: int) -> String:
-	print("[SpellPhaseHandler] 外部スペル実行: %s (Player%d)" % [spell_card.get("name", "?"), player_id + 1])
+func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_tile: bool = false) -> Dictionary:
+	print("[SpellPhaseHandler] 外部スペル実行: %s (Player%d, magic_tile=%s)" % [spell_card.get("name", "?"), player_id + 1, from_magic_tile])
 	
 	# 外部スペルモードを有効化
 	is_external_spell_mode = true
+	is_magic_tile_mode = from_magic_tile
 	_external_spell_cancelled = false
 	_external_spell_no_target = false
+	skip_dice_phase = false  # リセット
 	
 	# 現在のプレイヤーIDを保存して設定
 	var original_player_id = current_player_id
@@ -1092,25 +1145,32 @@ func execute_external_spell(spell_card: Dictionary, player_id: int) -> String:
 	# 結果を保存
 	var was_cancelled = _external_spell_cancelled
 	var was_no_target = _external_spell_no_target
+	var was_warped = skip_dice_phase  # ワープしたかどうか
 	
 	# 外部スペルモードを無効化
 	is_external_spell_mode = false
+	is_magic_tile_mode = false
 	_external_spell_cancelled = false
 	_external_spell_no_target = false
+	skip_dice_phase = false
 	current_player_id = original_player_id
 	current_state = original_state
 	selected_spell_card = {}
 	spell_used_this_turn = false  # 外部スペルはターン制限に影響しない
 	
-	print("[SpellPhaseHandler] 外部スペル完了 (cancelled: %s, no_target: %s)" % [was_cancelled, was_no_target])
+	print("[SpellPhaseHandler] 外部スペル完了 (cancelled: %s, no_target: %s, warped: %s)" % [was_cancelled, was_no_target, was_warped])
 	
-	# 全て文字列で返す
+	# Dictionary形式で結果を返す
+	var result_status = "success"
 	if was_no_target:
-		return "no_target"
+		result_status = "no_target"
 	elif was_cancelled:
-		return "cancelled"
-	else:
-		return "success"
+		result_status = "cancelled"
+	
+	return {
+		"status": result_status,
+		"warped": was_warped
+	}
 
 ## スペルフェーズ完了
 func complete_spell_phase():

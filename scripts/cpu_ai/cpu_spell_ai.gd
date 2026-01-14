@@ -219,6 +219,9 @@ func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: fl
 	if damage_value > 0:
 		context["damage_value"] = damage_value
 	
+	# スペル情報をcontextに追加（HP効果無効フィルタ用）
+	context["spell"] = spell
+	
 	if target_condition:
 		targets = condition_checker.check_target_condition(target_condition, context)
 	else:
@@ -543,7 +546,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 
 ## ホーリーワード防御的使用の判断
 ## 自分が敵の高額領地を回避できるか判断
-func _evaluate_holy_word_defensive(dice_value: int, player_id: int, spell_cost: int) -> Dictionary:
+func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost: int) -> Dictionary:
 	var result = { "should_use": false, "reason": "" }
 	
 	if not cpu_movement_evaluator:
@@ -859,3 +862,58 @@ func _should_synthesize_mass_growth(context: Dictionary) -> bool:
 			return true  # 敵クリーチャーがいれば合成する
 	
 	return false
+
+# =============================================================================
+# 魔法タイル用評価（外部呼び出し用）
+# =============================================================================
+
+## 魔法タイル用スペル評価
+## 魔法タイルで提示されたスペルを使用すべきか判断する
+## 通常のスペルフェーズとは異なり、手札からではなくランダムで提示されたスペルを評価
+func evaluate_spell_for_magic_tile(spell: Dictionary, player_id: int) -> Dictionary:
+	var result = {
+		"should_use": false,
+		"score": 0.0,
+		"target": null
+	}
+	
+	# コンテキスト構築
+	var context = _build_context(player_id)
+	if context.is_empty():
+		return result
+	
+	# スペル評価（既存の_evaluate_spellを使用）
+	var eval_result = _evaluate_spell(spell, context)
+	
+	# 魔法タイルでは閾値を下げる（無料ではないが、提示されたスペルを活用したい）
+	# 通常フェーズでは使わないような低スコアのスペルも、魔法タイルなら使う価値がある
+	var magic_tile_threshold = 1.0  # 低めの閾値
+	
+	if eval_result.get("should_use", false) and eval_result.get("score", 0) >= magic_tile_threshold:
+		result.should_use = true
+		result.score = eval_result.get("score", 0)
+		result.target = eval_result.get("target")
+	
+	return result
+
+## コンテキスト構築（内部用）
+func _build_context(player_id: int) -> Dictionary:
+	if not player_system or not board_system:
+		return {}
+	
+	if player_id >= player_system.players.size():
+		return {}
+	
+	var player = player_system.players[player_id]
+	var current_tile = player.current_tile
+	var tile_info = {}
+	if board_system.has_method("get_tile_info"):
+		tile_info = board_system.get_tile_info(current_tile)
+	
+	return {
+		"player_id": player_id,
+		"magic": player.magic_power,
+		"current_tile": current_tile,
+		"tile_info": tile_info,
+		"player": player
+	}

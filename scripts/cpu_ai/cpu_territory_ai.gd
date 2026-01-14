@@ -488,7 +488,6 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 			continue
 		
 		# 現在のクリーチャーのレートを取得
-		var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
 		var current_rate = CardRateEvaluator.get_rate(current_creature)
 		
 		for hand_creature in hand_creatures:

@@ -40,7 +40,7 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	
 	# CPUTargetResolverを初期化
 	target_resolver = CPUTargetResolver.new()
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system)
+	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
 	
 	# BattleSimulatorを初期化
 	_battle_simulator = BattleSimulatorScript.new()

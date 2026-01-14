@@ -181,7 +181,8 @@
 		]
 	  },
 	  "cpu_rule": {
-		"pattern": "immediate",
+		"pattern": "has_target",
+		"target_condition": "self_has_creatures",
 		"priority": "medium"
 	  }
 	},
@@ -353,7 +354,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "enemy_player",
+		"target_condition": "enemy_player_with_creatures",
 		"priority": "medium"
 	  }
 	},

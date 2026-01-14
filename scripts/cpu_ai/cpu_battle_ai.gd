@@ -696,18 +696,13 @@ func evaluate_single_creature_battle(
 	# 攻撃側/防御側に応じてパラメータを設定
 	var attacker: Dictionary
 	var defender: Dictionary
-	var attacker_player_id: int
 	
 	if is_attacker:
 		attacker = my_creature
 		defender = enemy_creature
-		attacker_player_id = my_player_id
 	else:
 		attacker = enemy_creature
 		defender = my_creature
-		attacker_player_id = tile_info.get("owner", -1)
-		# 防御側の場合、tile_infoのownerは防御側なので、攻撃側のIDを計算
-		# 注: 攻撃側のIDは呼び出し元で渡す必要があるかもしれない
 	
 	# 1. 敵のアイテム破壊・盗みスキルをチェック
 	var enemy_destroy_types: Array
@@ -810,14 +805,14 @@ func _simulate_worst_case_as_defender(
 	
 	if not hand_utils:
 		# hand_utilsがない場合は単純シミュレーション
-		var sim_tile_info = {
+		var simple_tile_info = {
 			"element": tile_info.get("element", ""),
 			"level": tile_info.get("level", 1),
 			"owner": tile_info.get("owner", defender_player_id),
 			"tile_index": tile_info.get("index", -1)
 		}
 		var sim_result = battle_simulator.simulate_battle(
-			attacker, defender, sim_tile_info, attacker_player_id, {}, defender_item
+			attacker, defender, simple_tile_info, attacker_player_id, {}, defender_item
 		)
 		var is_win = sim_result.get("result") == BattleSimulator.BattleResult.DEFENDER_WIN
 		return {"is_win": is_win, "sim_result": sim_result, "overkill": 0}

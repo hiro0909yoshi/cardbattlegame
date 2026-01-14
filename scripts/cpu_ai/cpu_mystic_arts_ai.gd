@@ -42,7 +42,7 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	target_resolver = CPUTargetResolver.new()
 	var board_analyzer = CPUBoardAnalyzer.new()
 	board_analyzer.initialize(b_system, p_system, c_system, cr_manager)
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system)
+	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, game_flow_manager)
 	
 	# ミスティックアーツデータをロード
 	_load_mystic_arts_data()
@@ -481,8 +481,8 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	
 	# デバッグ: 最終スコア
 	var creature_name = creature.get("name", "?")
-	var level = tile_data.get("level", 1) if tile_data else 1
-	print("[MysticAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, level, creature_rate])
+	var debug_level = tile_data.get("level", 1) if tile_data else 1
+	print("[MysticAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, debug_level, creature_rate])
 	
 	return score
 

@@ -103,7 +103,6 @@ func show_and_wait(message: String, player_id: int = -1) -> void:
 	
 	# CPUターンかどうかを判定
 	var is_cpu_turn = _is_current_player_cpu(player_id)
-	print("[GlobalCommentUI] show_and_wait - player_id: %d, is_cpu_turn: %s" % [player_id, is_cpu_turn])
 	
 	# テキスト設定（中央揃え + クリック待ちの案内）
 	var hint_text = "[color=gray][自動進行][/color]" if is_cpu_turn else "[color=gray][クリックで次へ][/color]"
@@ -129,7 +128,6 @@ func show_and_wait(message: String, player_id: int = -1) -> void:
 ## player_id: -1の場合はcurrent_player_idを使用
 func _is_current_player_cpu(player_id: int = -1) -> bool:
 	if not game_flow_manager_ref or not is_instance_valid(game_flow_manager_ref):
-		print("[GlobalCommentUI] _is_current_player_cpu - game_flow_manager_ref is invalid")
 		return false
 	
 	var check_id = player_id
@@ -142,8 +140,6 @@ func _is_current_player_cpu(player_id: int = -1) -> bool:
 	
 	if "player_is_cpu" in game_flow_manager_ref:
 		cpu_flags = game_flow_manager_ref.player_is_cpu
-	
-	print("[GlobalCommentUI] _is_current_player_cpu - check_id: %d, cpu_flags: %s" % [check_id, cpu_flags])
 	
 	if check_id >= 0 and check_id < cpu_flags.size():
 		return cpu_flags[check_id]
@@ -160,7 +156,6 @@ func _start_cpu_auto_advance_timer():
 	timeout_timer.timeout.connect(_on_timeout)
 	add_child(timeout_timer)
 	timeout_timer.start()
-	print("[GlobalCommentUI] CPU auto advance timer started: %.1f sec" % cpu_auto_advance_delay)
 
 ## パネルを画面中央に配置
 func _center_panel():
@@ -244,6 +239,9 @@ func show_choice_and_wait(message: String, player_id: int = -1, yes_text: String
 	# CPUターンの場合は自動でfalse（しない）を選択
 	if _is_current_player_cpu(player_id):
 		return false
+	
+	# 表示状態にする
+	visible = true
 	
 	# 一時的な選択UIを作成
 	var choice_panel = PanelContainer.new()

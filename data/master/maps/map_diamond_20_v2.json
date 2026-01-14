@@ -29,6 +29,19 @@
 	{"index": 18, "type": "Earth", "x": 0, "z": 8},
 	{"index": 19, "type": "Earth", "x": 0, "z": 4}
   ],
-  "connections": {},
+  "connections": {
+	"0": [
+	  19,
+	  1
+	],
+	"1": [
+	  0,
+	  2
+	],
+	"19": [
+	  18,
+	  0
+	],
+},
   "loop_size": 20
 }

@@ -15,22 +15,27 @@ static func is_creature_protected(creature_data: Dictionary, context: Dictionary
 	if creature_data.is_empty():
 		return false
 	
+	var creature_name = creature_data.get("name", "?")
+	
 	# 1. パッシブスキル「防魔」チェック
 	# ability_parsed.keywordsをチェック
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	if "防魔" in keywords:
+		print("[SpellProtection] %s は防魔キーワードを持つため対象外" % creature_name)
 		return true
 	
 	# abilityフィールドからも「防魔」を検出（データが不完全な場合の対応）
 	var ability = creature_data.get("ability", "")
 	if "防魔" in ability:
+		print("[SpellProtection] %s は防魔abilityを持つため対象外" % creature_name)
 		return true
 	
 	# 2. クリーチャー呪い「防魔」チェック
 	var curse = creature_data.get("curse", {})
 	var curse_type = curse.get("curse_type", "")
 	if curse_type in ["spell_protection", "protection_wall"]:
+		print("[SpellProtection] %s は防魔呪いを持つため対象外" % creature_name)
 		return true
 	
 	# 3. 世界呪い「呪い防魔化」チェック（呪い付きクリーチャーのみ）
@@ -38,6 +43,7 @@ static func is_creature_protected(creature_data: Dictionary, context: Dictionary
 	if world_curse.get("curse_type") == "cursed_protection":
 		# 何らかの呪いがかかっているクリーチャーは防魔
 		if not curse.is_empty():
+			print("[SpellProtection] %s は呪い防魔化により対象外" % creature_name)
 			return true
 	
 	return false
@@ -52,15 +58,19 @@ static func is_player_protected(player, context: Dictionary = {}) -> bool:
 	if player == null:
 		return false
 	
+	var player_name = player.name if "name" in player else "?"
+	
 	# 1. プレイヤー呪い「防魔」チェック
 	var curse = player.curse if "curse" in player else {}
 	if curse is Dictionary and not curse.is_empty():
 		if curse.get("curse_type") == "spell_protection":
+			print("[SpellProtection] プレイヤー %s は防魔呪いを持つため対象外" % player_name)
 			return true
 	
 	# 2. 世界呪い「防魔」チェック（全セプター対象）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "world_spell_protection":
+		print("[SpellProtection] プレイヤー %s は世界呪い防魔により対象外" % player_name)
 		return true
 	
 	return false
