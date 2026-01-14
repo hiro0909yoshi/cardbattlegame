@@ -67,7 +67,72 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 
 ---
 
-## スコア計算
+## スコア計算（現行方式: v2 - 最短CP方向優先 + 魔力ボーナス）
+
+### 基本方針
+
+**分岐での選択ルール**:
+1. **最短未所持CP方向に進む**（絶対原則）
+2. ただし、その方向のスコアがマイナスなら選ばない
+3. 両方マイナスの場合:
+   - マイナス差が1000以内 → 最短CP方向を選ぶ
+   - マイナス差が1000超 → マイナスが小さい方を選ぶ
+
+### 総合スコア（経路評価）
+
+```
+基礎スコア = 停止位置スコア（のみ）
+```
+
+※経路スコア、CP通過ボーナスは除外
+
+### 分岐選択時の最終スコア
+
+```
+最終スコア = 基礎スコア + (最短CP方向なら手持ち魔力)
+```
+
+最短CP方向には手持ち魔力をボーナスとして加算。
+これにより、マイナススコア時に破産するかどうかの判断が可能。
+
+### スコア定数
+
+```gdscript
+# 停止位置
+SCORE_STOP_ENEMY_CANT_WIN = -通行料        # 敵領地（倒せない）
+SCORE_STOP_ENEMY_CAN_WIN = +通行料×2       # 敵領地（倒せる）
+SCORE_STOP_EMPTY_MATCH = 50                # 空き地（属性一致）
+SCORE_STOP_EMPTY_MISMATCH = 20             # 空き地（属性不一致）
+SCORE_STOP_SPECIAL = 50                    # 特殊タイル
+
+# 足止め
+SCORE_FORCED_STOP_PENALTY = -500           # 足止めペナルティ（倒せない場合）
+
+# 以下は現行方式では未使用
+# SCORE_PATH_CHECKPOINT_PASS = 0           # 経路上CP通過ボーナス（削除）
+# SCORE_DIRECTION_UNVISITED_GATE = 1200    # 方向ボーナス（削除）
+```
+
+### 動作例（タイル2での分岐、魔力2950）
+
+```
+タイル3方向: CP[W]まで4歩（最短）
+  基礎スコア: 50
+  最終スコア: 50 + 2950 = 3000
+
+タイル24方向: CP[N]まで6歩
+  基礎スコア: 50
+  最終スコア: 50（魔力ボーナスなし）
+
+→ タイル3選択 ✓
+```
+
+---
+
+## 旧方式参考（v1 - 方向ボーナス + CP通過ボーナス）
+
+<details>
+<summary>クリックして展開</summary>
 
 ### 総合スコア
 
@@ -79,27 +144,15 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 
 ```gdscript
 # 停止位置
-SCORE_STOP_ENEMY_CANT_WIN = -通行料        # 敵領地（倒せない）
-SCORE_STOP_ENEMY_CAN_WIN = +通行料×2       # 敵領地（倒せる）
 SCORE_STOP_EMPTY_MATCH = 300               # 空き地（属性一致）
 SCORE_STOP_EMPTY_MISMATCH = 100            # 空き地（属性不一致）
-SCORE_STOP_SPECIAL = 50                    # 特殊タイル
 
 # チェックポイント通過ボーナス（経路スコアとは別枠、除算されない）
 SCORE_PATH_CHECKPOINT_PASS = 1500          # 経路上でチェックポイント通過（シグナル取得）
 
 # 方向ボーナス
 SCORE_DIRECTION_UNVISITED_GATE = 1200      # 未訪問ゲート方向（距離で減少）
-
-# 足止め
-SCORE_FORCED_STOP_PENALTY = -500           # 足止めペナルティ（倒せない場合）
 ```
-
-### チェックポイント通過ボーナス
-
-経路上で未訪問のチェックポイントを通過する場合、**1500点**のボーナス。
-- このボーナスは経路スコアの除算（/10）の対象外
-- 分岐選択の最も重要な判断要素
 
 ### 方向ボーナス判定
 
@@ -111,6 +164,8 @@ SCORE_FORCED_STOP_PENALTY = -500           # 足止めペナルティ（倒せ�
 ```gdscript
 var distance_bonus = max(0, 1200 - (distance * 60))
 ```
+
+</details>
 
 ---
 

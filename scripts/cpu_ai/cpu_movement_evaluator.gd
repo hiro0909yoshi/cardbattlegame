@@ -15,13 +15,13 @@ class_name CPUMovementEvaluator
 # 停止位置スコア
 const SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER = -1    # 敵領地（倒せない）: -通行料 × 1
 const SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER = 2      # 敵領地（倒せる）: +通行料 × 2
-const SCORE_STOP_EMPTY_ELEMENT_MATCH = 300         # 空き地（属性一致・召喚可能）
-const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 100      # 空き地（属性不一致・召喚可能）
+const SCORE_STOP_EMPTY_ELEMENT_MATCH = 50          # 空き地（属性一致・召喚可能）
+const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 20       # 空き地（属性不一致・召喚可能）
 const SCORE_STOP_EMPTY_NO_SUMMON = 0               # 空き地（召喚不可）
 const SCORE_STOP_OWN_LAND = 0                      # 自分の領地
 const SCORE_STOP_SPECIAL_TILE = 50                 # 特殊タイル（城、魔法石等）
-const SCORE_STOP_CHECKPOINT_LAP = 1500             # チェックポイント停止で1周達成
-const SCORE_PATH_CHECKPOINT_PASS = 1500           # 経路上でチェックポイント通過（シグナル取得）
+const SCORE_STOP_CHECKPOINT_LAP = 1500             # チェックポイント停止で1周達成（未使用）
+const SCORE_PATH_CHECKPOINT_PASS = 0              # 経路上でチェックポイント通過（削除）
 
 # 経路スコア
 const SCORE_PATH_DIVISOR = 10                      # 経路スコアの除数（1/10にする）
@@ -52,11 +52,6 @@ var checkpoint_calculator: CheckpointDistanceCalculator = null
 
 # 現在の分岐タイル（方向ボーナス計算時にCPを除外するため）
 var _current_branch_tile: int = -1
-
-# ターン開始位置のCP（移動中ずっと除外するため）
-var _turn_start_cp: String = ""
-# ターン開始CPを設定したプレイヤーID（異なるプレイヤーになったらクリア）
-var _turn_start_cp_player: int = -1
 
 
 
@@ -153,12 +148,12 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	var path_score = path_result.path_score
 	var checkpoint_bonus = path_result.checkpoint_bonus
 	
-	# 総合スコア = 停止位置スコア + (経路スコア / 10) + チェックポイント通過ボーナス
-	# 方向ボーナスは分岐選択時に別途計算する（経路途中ではなく分岐方向で決まるため）
-	var total_score = stop_score + (path_score / SCORE_PATH_DIVISOR) + checkpoint_bonus
+	# 総合スコア = 停止位置スコア + チェックポイント通過ボーナス
+	# 経路スコアは除外してテスト中（方向ボーナスの影響を確認するため）
+	var total_score = stop_score + checkpoint_bonus
 	
-	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d 経路:%d/10 CP通過:%d)" % [
-		start_tile, total_steps, stop_tile, total_score, stop_score, path_score, checkpoint_bonus
+	print("[CPU経路評価] 開始:%d 歩数:%d 停止:%d スコア:%d (停止:%d CP通過:%d) ※経路スコア除外中" % [
+		start_tile, total_steps, stop_tile, total_score, stop_score, checkpoint_bonus
 	])
 	
 	return {
@@ -485,12 +480,6 @@ func _calculate_direction_bonus_for_branch(branch_tile: int, next_tile: int, pla
 	# プレイヤーの訪問済みチェックポイントを取得
 	var visited = _get_visited_checkpoints(player_id)
 	
-	# ターン開始位置のCPを除外（移動中ずっと除外）
-	if _turn_start_cp != "" and _turn_start_cp not in visited:
-		if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
-			visited = visited.duplicate()
-		visited.append(_turn_start_cp)
-	
 	# 分岐タイルがCPなら除外
 	var branch_cp = _get_checkpoint_id_at_tile(branch_tile)
 	if branch_cp != "" and branch_cp not in visited:
@@ -566,68 +555,122 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		return available_tiles[0]
 	
 	var current_tile = branch_tile if branch_tile >= 0 else _get_player_current_tile(player_id)
-	# 今いる分岐タイルを記録（方向ボーナス計算で使用）
 	_current_branch_tile = current_tile
 	
-	# ターン開始位置のCPを記録（移動中ずっと除外するため）
-	# 異なるプレイヤーのターンになったらリセット
-	if _turn_start_cp_player != player_id:
-		_turn_start_cp = ""
-		_turn_start_cp_player = player_id
+	# 手持ち魔力を取得（最短CP方向のボーナスとして使用）
+	var current_magic = _get_player_magic(player_id)
 	
-	# まだ設定されていなければ、現在位置のCPを記録
-	if _turn_start_cp == "":
-		var player_start_tile = _get_player_current_tile(player_id)
-		_turn_start_cp = _get_checkpoint_id_at_tile(player_start_tile)
-		if _turn_start_cp != "":
-			print("[CPU分岐] ターン開始CP設定: %s (タイル%d)" % [_turn_start_cp, player_start_tile])
-	
-	var best_tile = available_tiles[0]
-	var best_score = -999999
-	
-	print("[CPU分岐選択開始] player=%d, current_tile=%d, available=%s, remaining_steps=%d, turn_start_cp=%s" % [
-		player_id, current_tile, available_tiles, remaining_steps, _turn_start_cp
+	print("[CPU分岐選択開始] player=%d, tile=%d, available=%s, steps=%d, magic=%d" % [
+		player_id, current_tile, available_tiles, remaining_steps, current_magic
 	])
 	
-	# タイル9または15での分岐選択時は詳細ログを出力
-	var show_detailed_log = (current_tile == 9 or current_tile == 15)
+	# チェックポイント距離計算を確認
+	_ensure_checkpoint_distances_calculated()
 	
-	if show_detailed_log:
-		print("[CPU分岐詳細] === タイル%d での分岐選択 ===" % current_tile)
-		# 方向別距離テーブルを表示
-		if checkpoint_calculator and checkpoint_calculator.is_branch_tile(current_tile):
-			var dir_distances = checkpoint_calculator.get_branch_directional_distances(current_tile)
-			print("[CPU分岐詳細] 方向別距離テーブル:")
-			for next_tile in dir_distances:
-				var cp_dists = dir_distances[next_tile]
-				var dist_str = ""
-				for cp_id in cp_dists:
-					dist_str += "%s:%d " % [cp_id, cp_dists[cp_id]]
-				print("  → タイル%d方向: %s" % [next_tile, dist_str.strip_edges()])
+	# 各方向の経路スコアと最短CP距離を計算
+	var tile_scores = {}  # tile_index -> { score, cp_distance, cp_id }
+	var visited = _get_visited_checkpoints(player_id)
 	
 	for tile_index in available_tiles:
-		# 残り歩数での停止位置を評価
-		# tile_indexが次の1歩目なので、remaining_steps - 1 で評価
 		var eval_result = evaluate_path(tile_index, remaining_steps - 1, player_id, current_tile)
-		var path_score = eval_result.score
+		var base_score = eval_result.score
 		
-		# 方向ボーナスを計算（この分岐タイルからtile_index方向に進んだ場合のCP距離）
-		var direction_bonus = _calculate_direction_bonus_for_branch(current_tile, tile_index, player_id)
-		var score = path_score + direction_bonus
+		# この方向での最短未訪問CP距離を取得
+		var cp_distance = 9999
+		var cp_id = ""
+		if checkpoint_calculator and checkpoint_calculator.is_branch_tile(current_tile):
+			var result = checkpoint_calculator.get_directional_nearest_checkpoint(current_tile, tile_index, visited)
+			cp_distance = result.distance
+			cp_id = result.checkpoint_id
 		
-		if show_detailed_log:
-			print("[CPU分岐詳細] タイル%d方向: 経路=%s" % [tile_index, eval_result.path])
+		tile_scores[tile_index] = {
+			"base_score": base_score,
+			"cp_distance": cp_distance,
+			"cp_id": cp_id,
+			"stop_tile": eval_result.stop_tile
+		}
 		
-		print("[CPU分岐評価] タイル%d → 停止%d: スコア%d (経路:%d 方向:%d)" % [tile_index, eval_result.stop_tile, score, path_score, direction_bonus])
-		
-		if score > best_score:
-			best_score = score
-			best_tile = tile_index
+		print("[CPU分岐評価] タイル%d → 停止%d: 基礎スコア%d, CP[%s]まで%d歩" % [
+			tile_index, eval_result.stop_tile, base_score, cp_id, cp_distance
+		])
 	
-	# 分岐タイル記録をクリア（ターン開始CPは次の分岐選択でも使うのでクリアしない）
+	# 最短CP方向を見つける
+	var nearest_cp_tile = -1
+	var nearest_cp_distance = 9999
+	var nearest_cp_id = ""
+	
+	for tile_index in tile_scores:
+		var data = tile_scores[tile_index]
+		if data.cp_distance < nearest_cp_distance:
+			nearest_cp_distance = data.cp_distance
+			nearest_cp_tile = tile_index
+			nearest_cp_id = data.cp_id
+	
+	# 最短CP方向に手持ち魔力をボーナスとして加算
+	var final_scores = {}
+	for tile_index in tile_scores:
+		var data = tile_scores[tile_index]
+		var final_score = data.base_score
+		if tile_index == nearest_cp_tile:
+			final_score += current_magic  # 最短CP方向に魔力ボーナス
+		final_scores[tile_index] = final_score
+		print("[CPU分岐最終] タイル%d: 最終スコア%d%s" % [
+			tile_index, final_score, 
+			" (+魔力%d)" % current_magic if tile_index == nearest_cp_tile else ""
+		])
+	
+	# 選択ロジック
+	var selected_tile = available_tiles[0]
+	var selected_reason = ""
+	var nearest_score = final_scores.get(nearest_cp_tile, -999999)
+	
+	# 最短CP方向のスコアがマイナスかどうかで判断
+	if nearest_score >= 0:
+		# マイナスでなければ最短CP方向を選択
+		selected_tile = nearest_cp_tile
+		selected_reason = "最短CP[%s]方向(%d歩)" % [nearest_cp_id, nearest_cp_distance]
+	else:
+		# 最短CP方向がマイナスの場合
+		# 他の方向のスコアを確認
+		var other_scores = {}
+		for tile_index in final_scores:
+			if tile_index != nearest_cp_tile:
+				other_scores[tile_index] = final_scores[tile_index]
+		
+		# 全方向マイナスかチェック
+		var all_negative = true
+		var best_other_tile = -1
+		var best_other_score = -999999
+		for tile_index in other_scores:
+			if other_scores[tile_index] >= 0:
+				all_negative = false
+			if other_scores[tile_index] > best_other_score:
+				best_other_score = other_scores[tile_index]
+				best_other_tile = tile_index
+		
+		if all_negative:
+			# 両方マイナス → マイナス差で判断
+			var score_diff = abs(nearest_score - best_other_score)
+			if score_diff <= 1000:
+				# 差が1000以内なら最短CP方向
+				selected_tile = nearest_cp_tile
+				selected_reason = "両方マイナス/差%d≤1000→最短CP[%s]" % [score_diff, nearest_cp_id]
+			else:
+				# 差が1000超ならマイナスが小さい方
+				if nearest_score > best_other_score:
+					selected_tile = nearest_cp_tile
+					selected_reason = "両方マイナス/差%d>1000→最短CP(マイナス小)" % score_diff
+				else:
+					selected_tile = best_other_tile
+					selected_reason = "両方マイナス/差%d>1000→タイル%d(マイナス小)" % [score_diff, best_other_tile]
+		else:
+			# 他にプラスの方向がある → そちらを選択
+			selected_tile = best_other_tile
+			selected_reason = "CP方向マイナス→タイル%d(スコア%d)" % [best_other_tile, best_other_score]
+	
 	_current_branch_tile = -1
-	print("[CPU分岐選択] 選択したタイル: %d (スコア: %d)" % [best_tile, best_score])
-	return best_tile
+	print("[CPU分岐選択] 選択: タイル%d (%s)" % [selected_tile, selected_reason])
+	return selected_tile
 
 # =============================================================================
 # ホーリーワード判断
@@ -848,6 +891,12 @@ func _get_summonable_elements(player_id: int) -> Array:
 func _get_player_current_tile(player_id: int) -> int:
 	if movement_controller and player_id >= 0 and player_id < movement_controller.player_tiles.size():
 		return movement_controller.player_tiles[player_id]
+	return 0
+
+## プレイヤーの手持ち魔力を取得
+func _get_player_magic(player_id: int) -> int:
+	if player_system:
+		return player_system.get_magic(player_id)
 	return 0
 
 ## プレイヤーのcame_fromを取得
