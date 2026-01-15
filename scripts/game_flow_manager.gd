@@ -885,6 +885,14 @@ func _setup_cpu_movement_evaluator():
 	if board_system_3d and board_system_3d.movement_controller:
 		spell_mov = board_system_3d.movement_controller.spell_movement
 	
+	# CPUBattleAIを作成（共通バトル評価用）
+	var battle_ai = CPUBattleAI.new()
+	battle_ai.setup_systems(card_system, board_system_3d, player_system, player_buff_system, self)
+	# CPUHandUtilsを作成して設定
+	var cpu_hand_utils = CPUHandUtils.new()
+	cpu_hand_utils.setup_systems(card_system, board_system_3d, player_system, player_buff_system)
+	battle_ai.set_hand_utils(cpu_hand_utils)
+	
 	cpu_movement_evaluator.setup_systems(
 		board_system_3d,
 		player_system,
@@ -892,7 +900,8 @@ func _setup_cpu_movement_evaluator():
 		board_system_3d.movement_controller if board_system_3d else null,
 		card_system,
 		battle_sim,
-		spell_mov
+		spell_mov,
+		battle_ai
 	)
 	
 	# MovementControllerに参照を渡す

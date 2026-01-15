@@ -919,7 +919,6 @@ func is_selection_active() -> bool:
 func get_selection_mode() -> String:
 	return selection_mode
 
-
 # 土地条件チェック（true: 条件OK、false: 条件未達）
 func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 	# ブライトワールド（召喚条件解除）が発動中ならOK
@@ -927,6 +926,15 @@ func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 		var game_stats = game_flow_manager_ref.game_stats
 		if SpellWorldCurse.is_summon_condition_ignored(game_stats):
 			return true
+	
+	# リリース呪い（制限解除）が発動中ならOK
+	if game_flow_manager_ref and game_flow_manager_ref.player_system:
+		var p_system = game_flow_manager_ref.player_system
+		if player_id >= 0 and player_id < p_system.players.size():
+			var player = p_system.players[player_id]
+			var player_dict = {"curse": player.curse}
+			if SpellRestriction.is_summon_condition_released(player_dict):
+				return true
 	
 	# デバッグフラグで無効化されている場合はOK
 	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:

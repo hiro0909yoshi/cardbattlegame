@@ -5,6 +5,10 @@ class_name SpellCurse
 # 複数ターンにわたって効果が持続する呪いを管理
 # ドキュメント: docs/design/spells/呪い効果.md
 
+# ========================================
+# インスタンス変数
+# ========================================
+
 # 参照
 var board_system: BoardSystem3D
 var creature_manager: CreatureManager
@@ -142,11 +146,15 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, effect.get("curse_type", "land_trap"), duration, params)
 		
 		"creature_curse":
-			# クリーチャー呪い（汎用）- ジャングラバーの移動不可等
+			# クリーチャー呪い（汎用）- マジックシェルター、ジャングラバーの移動不可等
 			var curse_type_inner = effect.get("curse_type", "unknown")
 			var params = {
 				"name": effect.get("name", effect.get("description", "呪い"))
 			}
+			# 追加パラメータをコピー（spell_protection, defensive_form等）
+			for key in ["spell_protection", "defensive_form", "description"]:
+				if effect.has(key):
+					params[key] = effect.get(key)
 			curse_creature(tile_index, curse_type_inner, duration, params)
 		
 		"forced_stop":

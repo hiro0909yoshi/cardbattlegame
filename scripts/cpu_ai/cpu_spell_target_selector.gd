@@ -961,4 +961,9 @@ func _is_defensive_creature(creature_data: Dictionary) -> bool:
 		var keywords = ability_parsed.get("keywords", [])
 		if "防御型" in keywords:
 			return true
+	# 呪いによる防御型付与（マジックシェルター等）
+	var curse = creature_data.get("curse", {})
+	var curse_params = curse.get("params", {})
+	if curse_params.get("defensive_form", false):
+		return true
 	return false

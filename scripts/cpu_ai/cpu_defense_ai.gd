@@ -407,8 +407,8 @@ func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -
 		if cost > current_player.magic_power:
 			continue
 		
-		# cannot_use制限チェック
-		if not disable_cannot_use and not defender.is_empty():
+		# cannot_use制限チェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not defender.is_empty() and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
 				continue
@@ -460,8 +460,8 @@ func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info:
 	
 	# 各アイテムでシミュレーションしてワーストを探す
 	for item in attacker_items:
-		# 攻撃側クリーチャーのcannot_use制限をチェック
-		if not disable_cannot_use:
+		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)
 			if not check_result.can_use:
 				continue
@@ -515,8 +515,8 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 		if card.get("item_type", "") == "巻物":
 			continue
 		
-		# cannot_use制限チェック
-		if not disable_cannot_use:
+		# cannot_use制限チェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(player_id):
 			var check_result = ItemUseRestriction.check_can_use(defender, card)
 			if not check_result.can_use:
 				continue
@@ -722,3 +722,13 @@ func _result_to_string(result: int) -> String:
 			return "不明"
 
 #endregion
+
+
+
+## リリース呪いによるアイテム制限解除をチェック
+func _is_item_restriction_released(player_id: int) -> bool:
+	if not player_system or player_id < 0 or player_id >= player_system.players.size():
+		return false
+	var player = player_system.players[player_id]
+	var player_dict = {"curse": player.curse}
+	return SpellRestriction.is_item_restriction_released(player_dict)

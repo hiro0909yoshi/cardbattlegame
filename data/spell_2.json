@@ -1704,6 +1704,20 @@
 		"mp": 50
 	  },
 	  "effect": "使用者に呪い\"制限解除\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
+	  "effect_parsed": {
+		"target_type": "self",
+		"effects": [
+		  {
+			"effect_type": "player_curse",
+			"curse_type": "restriction_release",
+			"name": "制限解除",
+			"description": "アイテム制限と配置制限を無視",
+			"ignore_item_restriction": true,
+			"ignore_summon_condition": true,
+			"duration": 4
+		  }
+		]
+	  },
 	  "cpu_rule": {
 		"pattern": "immediate",
 		"priority": "medium"

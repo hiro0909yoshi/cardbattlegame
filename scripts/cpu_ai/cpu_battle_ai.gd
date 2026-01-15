@@ -525,8 +525,8 @@ func simulate_worst_case(
 	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
-		# 防御側クリーチャーのcannot_use制限をチェック
-		if not disable_cannot_use:
+		# 防御側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(defender_owner):
 			var check_result = ItemUseRestriction.check_can_use(defender, enemy_item)
 			if not check_result.can_use:
 				continue
@@ -639,8 +639,8 @@ func find_item_to_beat_worst_case(
 				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
 				continue
 		
-		# cannot_use制限チェック
-		if not disable_cannot_use:
+		# cannot_use制限チェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, item)
 			if not check_result.can_use:
 				print("    [スキップ] %s: %s" % [item.get("name", "?"), check_result.reason])
@@ -748,8 +748,8 @@ func evaluate_single_creature_battle(
 			if hand_utils.is_item_destroy_target(item_data, enemy_destroy_types):
 				continue  # このアイテムは破壊される
 		
-		# cannot_use制限チェック
-		if not disable_cannot_use:
+		# cannot_use制限チェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(my_player_id):
 			var check_result = ItemUseRestriction.check_can_use(my_creature, item_data)
 			if not check_result.can_use:
 				continue
@@ -859,8 +859,8 @@ func _simulate_worst_case_as_defender(
 	
 	# 敵アイテムをすべて試す
 	for enemy_item in enemy_items:
-		# 攻撃側クリーチャーのcannot_use制限をチェック
-		if not disable_cannot_use:
+		# 攻撃側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
+		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
 			var check_result = ItemUseRestriction.check_can_use(attacker, enemy_item)
 			if not check_result.can_use:
 				continue
@@ -1109,3 +1109,15 @@ func _check_instant_death_condition_for_cpu(condition: Dictionary, defender: Dic
 		_:
 			print("[CPU AI] 未知の即死条件タイプ: ", condition_type)
 			return false
+
+
+
+## リリース呪いによるアイテム制限解除をチェック
+## @param player_id: チェックするプレイヤーID
+## @return bool: アイテム制限が解除されているか
+func _is_item_restriction_released(player_id: int) -> bool:
+	if not player_system or player_id < 0 or player_id >= player_system.players.size():
+		return false
+	var player = player_system.players[player_id]
+	var player_dict = {"curse": player.curse}
+	return SpellRestriction.is_item_restriction_released(player_dict)

@@ -260,8 +260,15 @@ func _show_item_selection_ui():
 		if has_metal_form:
 			blocked_types.append("防具")
 		
-		# cannot_use制限をチェック（デバッグフラグで無効化可能）
+		# cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
 		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+		# リリース呪いチェック
+		if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
+			var player = player_system.players[current_player_id]
+			var player_dict = {"curse": player.curse}
+			if SpellRestriction.is_item_restriction_released(player_dict):
+				disable_cannot_use = true
+				print("【リリース呪い】アイテム制限を無視")
 		if not disable_cannot_use:
 			var cannot_use_list = ItemUseRestriction.get_cannot_use_list(battle_creature_data)
 			if not cannot_use_list.is_empty():
@@ -305,9 +312,15 @@ func use_item(item_card: Dictionary):
 	var card_type = item_card.get("type", "")
 	var card_id = item_card.get("id", -1)
 	
-	# アイテムの場合、cannot_use制限をチェック（デバッグフラグで無効化可能）
+	# アイテムの場合、cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
 	if card_type == "item":
 		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+		# リリース呪いチェック
+		if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
+			var player = player_system.players[current_player_id]
+			var player_dict = {"curse": player.curse}
+			if SpellRestriction.is_item_restriction_released(player_dict):
+				disable_cannot_use = true
 		if not disable_cannot_use:
 			var check_result = ItemUseRestriction.check_can_use(battle_creature_data, item_card)
 			if not check_result.can_use:

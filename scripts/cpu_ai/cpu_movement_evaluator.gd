@@ -15,8 +15,8 @@ class_name CPUMovementEvaluator
 # 停止位置スコア
 const SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER = -1    # 敵領地（倒せない）: -通行料 × 1
 const SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER = 2      # 敵領地（倒せる）: +通行料 × 2
-const SCORE_STOP_EMPTY_ELEMENT_MATCH = 50          # 空き地（属性一致・召喚可能）
-const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 20       # 空き地（属性不一致・召喚可能）
+const SCORE_STOP_EMPTY_ELEMENT_MATCH = 200         # 空き地（属性一致・召喚可能）
+const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 50       # 空き地（属性不一致・召喚可能）
 const SCORE_STOP_EMPTY_NO_SUMMON = 0               # 空き地（召喚不可）
 const SCORE_STOP_OWN_LAND = 0                      # 自分の領地
 const SCORE_STOP_SPECIAL_TILE = 50                 # 特殊タイル（城、魔法石等）
@@ -27,10 +27,11 @@ const SCORE_PATH_CHECKPOINT_PASS = 0              # 経路上でチェックポ�
 const SCORE_PATH_DIVISOR = 10                      # 経路スコアの除数（1/10にする）
 
 # 方向ボーナス
-const SCORE_DIRECTION_UNVISITED_GATE = 1200        # 未訪問ゲート方向ボーナス
+const SCORE_DIRECTION_UNVISITED_GATE = 1200        # 未訪問ゲート方向ボーナス（未使用）
+const SCORE_CHECKPOINT_DIRECTION_BONUS = 900       # 最短CP方向ボーナス
 
 # 足止めペナルティ
-const SCORE_FORCED_STOP_PENALTY = -500             # 足止めペナルティ基礎値（倒せない場合のみ）
+const SCORE_FORCED_STOP_PENALTY = -200             # 足止めペナルティ基礎値
 
 # 経路評価の最大距離
 const PATH_EVALUATION_DISTANCE = 10
@@ -46,6 +47,7 @@ var movement_controller = null
 var card_system = null
 var battle_simulator = null
 var spell_movement: SpellMovement = null
+var battle_ai: CPUBattleAI = null
 
 # チェックポイント距離計算システム
 var checkpoint_calculator: CheckpointDistanceCalculator = null
@@ -58,7 +60,7 @@ var _current_branch_tile: int = -1
 ## システム参照を設定
 func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system = null, 
 		p_movement_controller = null, p_card_system = null, p_battle_simulator = null,
-		p_spell_movement: SpellMovement = null):
+		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null):
 	board_system = p_board_system
 	player_system = p_player_system
 	lap_system = p_lap_system
@@ -66,6 +68,7 @@ func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system =
 	card_system = p_card_system
 	battle_simulator = p_battle_simulator
 	spell_movement = p_spell_movement
+	battle_ai = p_battle_ai
 
 
 ## チェックポイント距離が計算済みか
@@ -315,16 +318,18 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 		var toll = _calculate_toll(tile_index)
 		var can_win = _can_invade_and_win(tile_index, player_id)
 		
+		var score: int
 		if can_win:
 			# 倒せる → 侵略ボーナス
-			return toll * SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER
+			score = toll * SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER
 		else:
 			# 倒せない → 通行料ペナルティ
-			var score = toll * SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER
-			# 足止めの場合は追加ペナルティ
-			if is_forced_stop:
-				score += SCORE_FORCED_STOP_PENALTY
-			return score
+			score = toll * SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER
+		
+		# 足止めの場合は追加ペナルティ（勝敗に関わらず）
+		if is_forced_stop:
+			score += SCORE_FORCED_STOP_PENALTY
+		return score
 	
 	# 空き地
 	if owner_id == -1:
@@ -479,23 +484,98 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 		return available_directions[0]
 	
 	var current_tile = _get_player_current_tile(player_id)
-	var _came_from = _get_player_came_from(player_id)  # 将来の拡張用
+	var current_magic = _get_player_magic(player_id)
+	
+	# チェックポイント距離計算を確認
+	_ensure_checkpoint_distances_calculated()
+	
+	# プレイヤーの訪問済みチェックポイントを取得
+	var visited = _get_visited_checkpoints(player_id)
+	
+	# 各方向のスコアとCP距離を計算
+	var direction_data = {}  # direction -> { base_score, cp_distance }
+	
+	for direction in available_directions:
+		var start_tile = current_tile + direction
+		
+		# 1〜6のダイス目の平均スコアを計算
+		var total_score = 0
+		for dice in range(1, 7):
+			var eval_result = evaluate_path(start_tile, dice, player_id, current_tile)
+			total_score += eval_result.score
+		var avg_score = total_score / 6.0
+		
+		# この方向での最短未訪問CP距離を取得
+		var cp_distance = 9999
+		if checkpoint_calculator:
+			var result = checkpoint_calculator.get_nearest_unvisited_checkpoint(start_tile, visited)
+			cp_distance = result.distance
+		
+		direction_data[direction] = {
+			"base_score": avg_score,
+			"cp_distance": cp_distance
+		}
+	
+	# 最短CP方向を見つける
+	var nearest_cp_direction = available_directions[0]
+	var nearest_cp_distance = 9999
+	var distances_equal = false
+	
+	for direction in direction_data:
+		var data = direction_data[direction]
+		if data.cp_distance < nearest_cp_distance:
+			nearest_cp_distance = data.cp_distance
+			nearest_cp_direction = direction
+			distances_equal = false
+		elif data.cp_distance == nearest_cp_distance and data.cp_distance < 9999:
+			# 両方向のCP距離が同じ
+			distances_equal = true
+	
+	# 最短CP方向を記録（同距離の場合は複数）
+	var nearest_cp_directions = []
+	for direction in direction_data:
+		var data = direction_data[direction]
+		if data.cp_distance == nearest_cp_distance and data.cp_distance < 9999:
+			nearest_cp_directions.append(direction)
+	
+	# 最終スコアを計算
+	# 最短CP方向にCPボーナス＋魔力ボーナスを加算（同距離なら両方に）
+	var final_scores = {}
+	for direction in direction_data:
+		var data = direction_data[direction]
+		var final_score = data.base_score
+		
+		if direction in nearest_cp_directions:
+			final_score += SCORE_CHECKPOINT_DIRECTION_BONUS  # CPボーナス
+			final_score += current_magic  # 魔力ボーナス
+		
+		final_scores[direction] = final_score
+	
+	# 最高スコアの方向を選択
 	var best_direction = available_directions[0]
 	var best_score = -999999
 	
-	for direction in available_directions:
-		# 10マス先までの平均スコアを計算
-		var total_score = 0
-		for dice in range(1, 7):  # 1〜6
-			var start_tile = current_tile + direction
-			var eval_result = evaluate_path(start_tile, dice, player_id, current_tile)
-			total_score += eval_result.score
-		
-		var avg_score = total_score / 6.0
-		
-		if avg_score > best_score:
-			best_score = avg_score
+	for direction in final_scores:
+		if final_scores[direction] > best_score:
+			best_score = final_scores[direction]
 			best_direction = direction
+	
+	# デバッグ出力
+	print("[CPU方向決定] タイル%d: " % current_tile)
+	for direction in final_scores:
+		var data = direction_data[direction]
+		var is_cp_dir = direction in nearest_cp_directions
+		var cp_bonus = SCORE_CHECKPOINT_DIRECTION_BONUS if is_cp_dir else 0
+		var magic_bonus = current_magic if is_cp_dir else 0
+		print("  方向%+d: base=%.0f + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
+			direction,
+			data.base_score,
+			cp_bonus,
+			magic_bonus,
+			final_scores[direction],
+			data.cp_distance,
+			" ★" if direction == best_direction else ""
+		])
 	
 	return best_direction
 
@@ -529,8 +609,34 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	var visited = _get_visited_checkpoints(player_id)
 	
 	for tile_index in available_tiles:
-		var eval_result = evaluate_path(tile_index, remaining_steps - 1, player_id, current_tile)
-		var base_score = eval_result.score
+		# 最初の1歩目（tile_index）の足止めをチェック
+		var first_step_forced = false
+		var first_step_toll = 0
+		var tile_info = _get_tile_info(tile_index)
+		var tile_owner = tile_info.get("owner", -1)
+		
+		if tile_owner != player_id and tile_owner >= 0:
+			# 敵領地の場合、足止めチェック
+			var forced_stop_result = _check_forced_stop(tile_index, player_id)
+			if forced_stop_result.stopped:
+				first_step_forced = true
+				first_step_toll = _calculate_toll(tile_index)
+		
+		var eval_result: Dictionary
+		var base_score: float
+		
+		if first_step_forced:
+			# 最初の1歩で足止め → そこで停止として評価
+			var summonable_elements = _get_summonable_elements(player_id)
+			var can_win = _can_invade_and_win(tile_index, player_id)
+			if can_win:
+				base_score = first_step_toll * SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER + SCORE_FORCED_STOP_PENALTY
+			else:
+				base_score = first_step_toll * SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER + SCORE_FORCED_STOP_PENALTY
+			eval_result = {"score": base_score, "stop_tile": tile_index, "details": {"forced_stop": true, "stop_score": base_score}}
+		else:
+			eval_result = evaluate_path(tile_index, remaining_steps - 1, player_id, current_tile)
+			base_score = eval_result.score
 		
 		# この方向での最短未訪問CP距離を取得
 		var cp_distance = 9999
@@ -547,33 +653,44 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			"stop_tile": eval_result.stop_tile
 		}
 	
-	# 最短CP方向を見つける
-	var nearest_cp_tile = -1
+	# 最短CP方向を見つける（同距離の場合は複数）
 	var nearest_cp_distance = 9999
-	var _nearest_cp_id = ""
+	var nearest_cp_tiles = []  # 同距離のタイルを全て記録
 	
 	for tile_index in tile_scores:
 		var data = tile_scores[tile_index]
 		if data.cp_distance < nearest_cp_distance:
 			nearest_cp_distance = data.cp_distance
-			nearest_cp_tile = tile_index
-			_nearest_cp_id = data.cp_id
+			nearest_cp_tiles = [tile_index]
+		elif data.cp_distance == nearest_cp_distance and data.cp_distance < 9999:
+			# 同距離のタイルを追加
+			nearest_cp_tiles.append(tile_index)
 	
-	# 最短CP方向に手持ち魔力をボーナスとして加算
+	# 最短CP方向にCPボーナス＋魔力ボーナスを加算
+	# 同距離の場合は両方にボーナスを付与
 	var final_scores = {}
 	for tile_index in tile_scores:
 		var data = tile_scores[tile_index]
 		var final_score = data.base_score
-		if tile_index == nearest_cp_tile:
-			final_score += current_magic  # 最短CP方向に魔力ボーナス
+		if tile_index in nearest_cp_tiles:
+			final_score += SCORE_CHECKPOINT_DIRECTION_BONUS  # CPボーナス
+			final_score += current_magic  # 魔力ボーナス
 		final_scores[tile_index] = final_score
 	
 	# 選択ロジック
 	var selected_tile = available_tiles[0]
+	var nearest_cp_tile = nearest_cp_tiles[0] if not nearest_cp_tiles.is_empty() else -1
 	var nearest_score = final_scores.get(nearest_cp_tile, -999999)
 	
+	# 両方向同距離の場合は単純に最高スコアで選択
+	if nearest_cp_tiles.size() > 1:
+		var best_score = -999999
+		for tile_index in final_scores:
+			if final_scores[tile_index] > best_score:
+				best_score = final_scores[tile_index]
+				selected_tile = tile_index
 	# 最短CP方向のスコアがマイナスかどうかで判断
-	if nearest_score >= 0:
+	elif nearest_score >= 0:
 		# マイナスでなければ最短CP方向を選択
 		selected_tile = nearest_cp_tile
 	else:
@@ -610,6 +727,41 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		else:
 			# 他にプラスの方向がある → そちらを選択
 			selected_tile = best_other_tile
+	
+	# デバッグ出力
+	print("[CPU分岐決定] タイル%d (残り%d歩):" % [current_tile, remaining_steps])
+	for tile_index in available_tiles:
+		var data = tile_scores[tile_index]
+		var is_cp_dir = tile_index in nearest_cp_tiles
+		var cp_bonus = SCORE_CHECKPOINT_DIRECTION_BONUS if is_cp_dir else 0
+		var magic_bonus = current_magic if is_cp_dir else 0
+		
+		# 詳細情報を再取得（最初の1歩の足止めもチェック）
+		var first_step_forced = false
+		var first_step_toll = 0
+		var debug_tile_info = _get_tile_info(tile_index)
+		var debug_tile_owner = debug_tile_info.get("owner", -1)
+		var debug_creature = debug_tile_info.get("creature", {})
+		
+		if debug_tile_owner != player_id and debug_tile_owner >= 0:
+			var debug_forced_result = _check_forced_stop(tile_index, player_id)
+			if debug_forced_result.stopped:
+				first_step_forced = true
+			first_step_toll = _calculate_toll(tile_index)
+		
+		print("  →タイル%d: base=%.0f(owner=%d, toll=%d, creature=%s, forced=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
+			tile_index,
+			data.base_score,
+			debug_tile_owner,
+			first_step_toll,
+			debug_creature.get("name", "なし"),
+			str(first_step_forced),
+			cp_bonus,
+			magic_bonus,
+			final_scores[tile_index],
+			data.cp_distance,
+			" ★" if tile_index == selected_tile else ""
+		])
 	
 	_current_branch_tile = -1
 	return selected_tile
@@ -782,30 +934,43 @@ func _check_forced_stop(tile_index: int, player_id: int) -> Dictionary:
 		return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, movement_controller.tile_nodes)
 	return {"stopped": false}
 
-## 侵略して勝てるか判定
+## 侵略して勝てるか判定（CPUBattleAIを使用）
 func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
-	if not battle_simulator or not card_system:
-		return false
-	
 	var tile_info = _get_tile_info(tile_index)
 	var defender = tile_info.get("creature", {})
+	
 	if defender.is_empty():
 		return true  # クリーチャーがいなければ勝ち
 	
-	# 攻撃側の手札からクリーチャーを取得
-	var hand = card_system.get_all_cards_for_player(attacker_id)
+	# CPUBattleAIがあれば使う
+	if battle_ai:
+		# 手札のクリーチャーで勝てるかチェック
+		var hand = card_system.get_all_cards_for_player(attacker_id) if card_system else []
+		for card in hand:
+			if card.get("hidden", false):
+				continue
+			if card.get("type", "") != "creature":
+				continue
+			
+			var eval_result = battle_ai.evaluate_single_creature_battle(
+				card, defender, tile_info, attacker_id, true  # is_attacker = true
+			)
+			if eval_result.get("can_win", false):
+				return true
+		return false
 	
+	# フォールバック: 簡易判定
+	if not card_system:
+		return false
+	
+	var hand = card_system.get_all_cards_for_player(attacker_id)
 	for card in hand:
-		if card.get("type") != "creature":
-			continue
 		if card.get("hidden", false):
 			continue
-		
-		var sim_result = battle_simulator.simulate_battle(
-			card, defender, tile_info, attacker_id, {}, {}
-		)
-		
-		if sim_result.get("result", -1) == 0:  # ATTACKER_WIN
+		if card.get("type", "") != "creature":
+			continue
+		# 簡易比較: AP >= 敵HP なら勝てると仮定
+		if card.get("ap", 0) >= defender.get("hp", 0):
 			return true
 	
 	return false

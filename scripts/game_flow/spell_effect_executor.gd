@@ -134,6 +134,10 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					"name": effect.get("name", ""),
 					"description": effect.get("description", "")
 				}
+				# 追加パラメータをコピー（ignore_item_restriction, ignore_summon_condition等）
+				for key in ["ignore_item_restriction", "ignore_summon_condition", "spell_protection"]:
+					if effect.has(key):
+						params[key] = effect.get(key)
 				gfm.spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
 		
 		# === コスト修飾系 ===

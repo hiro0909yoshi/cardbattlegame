@@ -26,10 +26,10 @@ var sacrifice_selector: CPUSacrificeSelector = null  # CPU用犠牲カード選�
 
 # デバッグフラグ
 ## 召喚条件デバッグフラグ（CPU側も参照）
-var debug_disable_card_sacrifice: bool = true  # true=カード犠牲を無効化
-var debug_disable_lands_required: bool = true  # true=土地条件（必要シンボル）を無効化
-var debug_disable_cannot_summon: bool = true   # true=配置制限を無効化
-var debug_disable_cannot_use: bool = true      # true=アイテム使用制限を無効化
+var debug_disable_card_sacrifice: bool = true   # true=カード犠牲を無効化
+var debug_disable_lands_required: bool = true   # true=土地条件（必要シンボル）を無効化
+var debug_disable_cannot_summon: bool = true    # true=配置制限を無効化
+var debug_disable_cannot_use: bool = true       # true=アイテム使用制限を無効化
 
 # 状態管理
 var is_action_processing = false
@@ -715,11 +715,22 @@ func check_cannot_summon(card_data: Dictionary, tile_element: String) -> Diction
 
 
 ## ブライトワールド（召喚条件解除）が発動中か
-func _is_summon_condition_ignored() -> bool:
+func _is_summon_condition_ignored(player_id: int = -1) -> bool:
 	if not game_flow_manager:
 		return false
+	# ブライトワールド（世界呪い）チェック
 	var game_stats = game_flow_manager.game_stats
-	return SpellWorldCurse.is_summon_condition_ignored(game_stats)
+	if SpellWorldCurse.is_summon_condition_ignored(game_stats):
+		return true
+	# リリース呪い（プレイヤー呪い）チェック
+	var check_player_id = player_id if player_id >= 0 else board_system.current_player_index
+	if not game_flow_manager.player_system:
+		return false
+	if check_player_id < 0 or check_player_id >= game_flow_manager.player_system.players.size():
+		return false
+	var player = game_flow_manager.player_system.players[check_player_id]
+	var player_dict = {"curse": player.curse}
+	return SpellRestriction.is_summon_condition_released(player_dict)
 
 
 ## カード犠牲処理（手札選択UI表示→カード破棄）

@@ -749,8 +749,8 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 	if creature_data.has("cost_lands_required"):
 		var required_lands = creature_data.get("cost_lands_required", [])
 		if not required_lands.is_empty():
-			# ブライトワールド発動中は召喚条件を無視
-			if _is_summon_condition_ignored():
+			# ブライトワールドまたはリリース呪い発動中は召喚条件を無視
+			if _is_summon_condition_ignored(check_player_id):
 				pass  # 条件チェックをスキップ
 			elif tile_action_processor and check_player_id >= 0:
 				var check_result = tile_action_processor.check_lands_required(creature_data, check_player_id)
@@ -765,8 +765,8 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 	
 	# cost_cards_sacrifice チェック
 	if creature_data.has("cost_cards_sacrifice") and creature_data.get("cost_cards_sacrifice", 0) > 0:
-		# ブライトワールド発動中は召喚条件を無視
-		if _is_summon_condition_ignored():
+		# ブライトワールドまたはリリース呪い発動中は召喚条件を無視
+		if _is_summon_condition_ignored(check_player_id):
 			pass  # 条件チェックをスキップ
 		else:
 			# 犠牲カードが選択可能かチェック
@@ -782,9 +782,9 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 
 
 ## ブライトワールド（召喚条件解除）が発動中か
-func _is_summon_condition_ignored() -> bool:
+func _is_summon_condition_ignored(player_id: int = -1) -> bool:
 	if tile_action_processor and tile_action_processor.has_method("_is_summon_condition_ignored"):
-		return tile_action_processor._is_summon_condition_ignored()
+		return tile_action_processor._is_summon_condition_ignored(player_id)
 	return false
 
 

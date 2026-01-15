@@ -470,7 +470,12 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	if dice_value <= 0:
 		return result
 	
-	var spell_cost = spell.get("cost", {}).get("mp", 0)
+	var cost_data = spell.get("cost", {})
+	var spell_cost = 0
+	if typeof(cost_data) == TYPE_DICTIONARY:
+		spell_cost = cost_data.get("mp", 0)
+	elif typeof(cost_data) == TYPE_INT:
+		spell_cost = cost_data
 	
 	# 各敵プレイヤーについて評価
 	var best_toll = 0
