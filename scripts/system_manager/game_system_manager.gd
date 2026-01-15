@@ -286,9 +286,23 @@ func phase_4_setup_system_interconnections() -> void:
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
 	
 	# ===== 4-2: GameFlowManager 子システム初期化 =====
-	# 注記: Spell系は GameFlowManager._setup_spell_systems() で既に作成・初期化されている
-	# ここではハンドラーの参照設定のみを行う
-	print("[GameSystemManager] Phase 4-2: GameFlowManager 子システム参照設定")
+	# 全初期化ロジックをGameSystemManagerが担当
+	print("[GameSystemManager] Phase 4-2: GameFlowManager 子システム初期化")
+	
+	# LapSystem 初期化
+	_setup_lap_system()
+	
+	# スペルシステム初期化
+	_setup_spell_systems()
+	
+	# BattleScreenManager 初期化
+	_setup_battle_screen_manager()
+	
+	# MagicStoneSystem 初期化
+	_setup_magic_stone_system()
+	
+	# CPUSpecialTileAI 初期化
+	_setup_cpu_special_tile_ai()
 	
 	if game_flow_manager:
 		# LandCommandHandler の初期化
@@ -339,8 +353,7 @@ func phase_4_setup_system_interconnections() -> void:
 			)
 			print("[SpellCostModifier] 初期化完了")
 		
-		# CPUAIHandler の初期化（setup_systems で行われる）
-		# GameFlowManager._ready() で既に初期化済みなため、ここでは参照設定のみ
+		# CPUAIHandler の初期化は initialize_phase1a_systems() で行われる
 	
 	print("[GameSystemManager] Phase 4-2: GameFlowManager 子システム初期化完了")
 	
@@ -352,9 +365,11 @@ func phase_4_setup_system_interconnections() -> void:
 	# ===== 4-4: 特別な初期化 =====
 	print("[GameSystemManager] Phase 4-4: 特別な初期化")
 	
-	# GameFlowManager の最終初期化
-	if game_flow_manager:
-		game_flow_manager.initialize_phase1a_systems()
+	# Phase 1-A ハンドラーの初期化（GameFlowManagerの子として作成）
+	_initialize_phase1a_handlers()
+	
+	# CPU移動評価システムの初期化
+	_initialize_cpu_movement_evaluator()
 	
 	# 手札UIを初期化
 	if ui_manager and ui_layer:
@@ -416,3 +431,221 @@ func _on_turn_ended(_player_id: int) -> void:
 
 func _on_phase_changed(_new_phase) -> void:
 	pass  # 必要に応じて処理追加
+
+# ============================================
+# 初期化ヘルパー関数（GameFlowManagerから移動）
+# ============================================
+
+## LapSystem初期化
+func _setup_lap_system() -> void:
+	var lap_system = LapSystem.new()
+	lap_system.name = "LapSystem"
+	game_flow_manager.add_child(lap_system)
+	game_flow_manager.set_lap_system(lap_system)
+	
+	# board_system_3dを設定してシグナル接続
+	if board_system_3d:
+		lap_system.board_system_3d = board_system_3d
+		lap_system.connect_checkpoint_signals()
+	
+	# 周回状態を初期化
+	lap_system.initialize_lap_state(player_is_cpu.size())
+	print("[LapSystem] 初期化完了")
+
+## スペルシステム初期化
+func _setup_spell_systems() -> void:
+	if not card_system or not player_system:
+		push_error("[GameSystemManager] CardSystem/PlayerSystemが初期化されていません")
+		return
+	
+	var spell_systems: Dictionary = {}
+	
+	# SpellDraw
+	var spell_draw = SpellDraw.new()
+	spell_draw.setup(card_system, player_system)
+	spell_draw.set_board_system(board_system_3d)
+	spell_systems["spell_draw"] = spell_draw
+	print("[SpellDraw] 初期化完了")
+	
+	# SpellMagic
+	var spell_magic = SpellMagic.new()
+	spell_magic.setup(player_system, board_system_3d, game_flow_manager, null)
+	spell_systems["spell_magic"] = spell_magic
+	print("[SpellMagic] 初期化完了")
+	
+	# CreatureManager取得
+	var creature_manager = board_system_3d.get_node_or_null("CreatureManager") if board_system_3d else null
+	if not creature_manager:
+		push_error("[GameSystemManager] CreatureManagerが見つかりません")
+		game_flow_manager.set_spell_systems(spell_systems)
+		return
+	
+	# SpellLand
+	var spell_land = SpellLand.new()
+	spell_land.setup(board_system_3d, creature_manager, player_system, card_system)
+	spell_land.set_game_flow_manager(game_flow_manager)
+	spell_systems["spell_land"] = spell_land
+	print("[SpellLand] 初期化完了")
+	
+	# SpellCurse
+	var spell_curse = SpellCurse.new()
+	spell_curse.setup(board_system_3d, creature_manager, player_system, game_flow_manager)
+	spell_systems["spell_curse"] = spell_curse
+	print("[SpellCurse] 初期化完了")
+	
+	# SpellMagicにSpellCurse参照を追加
+	spell_magic.spell_curse_ref = spell_curse
+	
+	# SpellDice
+	var spell_dice = SpellDice.new()
+	spell_dice.setup(player_system, spell_curse)
+	spell_systems["spell_dice"] = spell_dice
+	print("[SpellDice] 初期化完了")
+	
+	# SpellCurseStat
+	var spell_curse_stat = SpellCurseStat.new()
+	spell_curse_stat.setup(spell_curse, creature_manager)
+	spell_systems["spell_curse_stat"] = spell_curse_stat
+	print("[SpellCurseStat] 初期化完了")
+	
+	# SpellWorldCurse
+	var spell_world_curse = SpellWorldCurse.new()
+	spell_world_curse.setup(spell_curse, game_flow_manager)
+	spell_systems["spell_world_curse"] = spell_world_curse
+	print("[SpellWorldCurse] 初期化完了")
+	
+	# SpellPlayerMove
+	var spell_player_move = SpellPlayerMove.new()
+	spell_player_move.setup(board_system_3d, player_system, game_flow_manager, spell_curse)
+	if board_system_3d and board_system_3d.movement_controller:
+		board_system_3d.movement_controller.spell_player_move = spell_player_move
+	spell_systems["spell_player_move"] = spell_player_move
+	print("[SpellPlayerMove] 初期化完了")
+	
+	# BankruptcyHandler
+	var BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
+	var bankruptcy_handler = BankruptcyHandlerClass.new()
+	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse, ui_manager, null)
+	spell_systems["bankruptcy_handler"] = bankruptcy_handler
+	print("[BankruptcyHandler] 初期化完了")
+	
+	# GameFlowManagerに一括設定
+	game_flow_manager.set_spell_systems(spell_systems)
+
+## BattleScreenManager初期化
+func _setup_battle_screen_manager() -> void:
+	var battle_screen_manager = BattleScreenManager.new()
+	battle_screen_manager.name = "BattleScreenManager"
+	game_flow_manager.add_child(battle_screen_manager)
+	
+	# バトルステータスオーバーレイ
+	var BattleStatusOverlayClass = preload("res://scripts/ui/battle_status_overlay.gd")
+	var battle_status_overlay = BattleStatusOverlayClass.new()
+	battle_status_overlay.name = "BattleStatusOverlay"
+	game_flow_manager.add_child(battle_status_overlay)
+	
+	game_flow_manager.set_battle_screen_manager(battle_screen_manager, battle_status_overlay)
+	print("[BattleScreenManager] 初期化完了")
+
+## MagicStoneSystem初期化
+func _setup_magic_stone_system() -> void:
+	var magic_stone_system = MagicStoneSystem.new()
+	magic_stone_system.initialize(board_system_3d, player_system)
+	
+	# PlayerSystemに参照を設定
+	if player_system:
+		player_system.set_board_system(board_system_3d)
+		player_system.set_magic_stone_system(magic_stone_system)
+	
+	game_flow_manager.set_magic_stone_system(magic_stone_system)
+	print("[MagicStoneSystem] 初期化完了")
+
+## CPUSpecialTileAI初期化
+func _setup_cpu_special_tile_ai() -> void:
+	var cpu_special_tile_ai = CPUSpecialTileAI.new()
+	cpu_special_tile_ai.setup(card_system, player_system, board_system_3d, game_flow_manager)
+	game_flow_manager.set_cpu_special_tile_ai(cpu_special_tile_ai)
+	print("[CPUSpecialTileAI] 初期化完了")
+
+## Phase 1-A ハンドラーの初期化
+func _initialize_phase1a_handlers() -> void:
+	if not game_flow_manager:
+		return
+	
+	# TargetSelectionHelperを作成
+	var TargetSelectionHelperClass = preload("res://scripts/game_flow/target_selection_helper.gd")
+	var target_selection_helper = TargetSelectionHelperClass.new()
+	game_flow_manager.add_child(target_selection_helper)
+	target_selection_helper.initialize(board_system_3d, ui_manager, game_flow_manager)
+	
+	# LandCommandHandlerを作成
+	var LandCommandHandlerClass = preload("res://scripts/game_flow/land_command_handler.gd")
+	var land_command_handler = LandCommandHandlerClass.new()
+	game_flow_manager.add_child(land_command_handler)
+	land_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
+	
+	# SpellPhaseHandlerを作成
+	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")
+	var spell_phase_handler = SpellPhaseHandlerClass.new()
+	game_flow_manager.add_child(spell_phase_handler)
+	spell_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, board_system_3d)
+	
+	# デバッグ: 密命カードを一時的に無効化（テスト用）
+	spell_phase_handler.debug_disable_secret_cards = true
+	
+	# ItemPhaseHandlerを作成
+	var ItemPhaseHandlerClass = preload("res://scripts/game_flow/item_phase_handler.gd")
+	var item_phase_handler = ItemPhaseHandlerClass.new()
+	game_flow_manager.add_child(item_phase_handler)
+	item_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, battle_system)
+	
+	# GameFlowManagerにハンドラーを設定
+	game_flow_manager.set_phase1a_handlers(
+		target_selection_helper,
+		land_command_handler,
+		spell_phase_handler,
+		item_phase_handler
+	)
+	
+	print("[Phase1A Handlers] 初期化完了")
+
+## CPU移動評価システムの初期化
+func _initialize_cpu_movement_evaluator() -> void:
+	if not game_flow_manager or not board_system_3d:
+		return
+	
+	var cpu_movement_evaluator = CPUMovementEvaluator.new()
+	
+	# バトルシミュレーターを作成
+	var battle_sim = BattleSimulator.new()
+	battle_sim.setup_systems(board_system_3d, card_system, player_system, game_flow_manager)
+	
+	# SpellMovementを取得（MovementControllerから）
+	var spell_mov = null
+	if board_system_3d.movement_controller:
+		spell_mov = board_system_3d.movement_controller.spell_movement
+	
+	# CPUBattleAIを作成（共通バトル評価用）
+	var battle_ai = CPUBattleAI.new()
+	battle_ai.setup_systems(card_system, board_system_3d, player_system, player_buff_system, game_flow_manager)
+	
+	# CPUHandUtilsを作成して設定
+	var cpu_hand_utils = CPUHandUtils.new()
+	cpu_hand_utils.setup_systems(card_system, board_system_3d, player_system, player_buff_system)
+	battle_ai.set_hand_utils(cpu_hand_utils)
+	
+	cpu_movement_evaluator.setup_systems(
+		board_system_3d,
+		player_system,
+		game_flow_manager.lap_system,
+		board_system_3d.movement_controller,
+		card_system,
+		battle_sim,
+		spell_mov,
+		battle_ai
+	)
+	
+	# GameFlowManagerに設定
+	game_flow_manager.set_cpu_movement_evaluator(cpu_movement_evaluator)
+	
+	print("[CPUMovementEvaluator] 初期化完了（距離計算は遅延実行）")

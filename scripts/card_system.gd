@@ -129,24 +129,35 @@ func draw_card_data() -> Dictionary:
 
 # 新システム: プレイヤーIDを指定してドロー
 func draw_card_data_v2(player_id: int) -> Dictionary:
-	# デッキプールがある場合はそこから引く（クエストモード用）
-	if player_deck_pools.has(player_id) and not player_deck_pools[player_id].is_empty():
+	# クエストモード: デッキプールを使用
+	if player_deck_pools.has(player_id):
+		# デッキプールが空の場合、捨て札プールから補充
+		if player_deck_pools[player_id].is_empty():
+			if player_discard_pools.has(player_id) and not player_discard_pools[player_id].is_empty():
+				print("Player ", player_id + 1, ": 捨て札をシャッフルしてデッキに戻します（クエストモード）")
+				player_deck_pools[player_id] = player_discard_pools[player_id].duplicate()
+				player_discard_pools[player_id].clear()
+				player_deck_pools[player_id].shuffle()
+			else:
+				print("Player ", player_id + 1, ": デッキも捨て札も空（クエストモード）")
+				return {}
+		
 		var pool_card = player_deck_pools[player_id].pop_front()
 		print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, pool_card.get("name", "?"), pool_card.get("id", 0)])
 		return pool_card
 	
-	# デッキプールがない場合は従来の処理（ランダム）
+	# 通常モード: player_decks/player_discards を使用
 	if not player_decks.has(player_id):
 		push_error("Invalid player_id: " + str(player_id))
 		return {}
 	
 	if player_decks[player_id].is_empty():
 		if player_discards[player_id].is_empty():
-			print("Player ", player_id, ": デッキも捨て札も空")
+			print("Player ", player_id + 1, ": デッキも捨て札も空")
 			return {}
 		
 		# 捨て札をシャッフルしてデッキに戻す
-		print("Player ", player_id, ": 捨て札をシャッフルしてデッキに戻します")
+		print("Player ", player_id + 1, ": 捨て札をシャッフルしてデッキに戻します")
 		player_decks[player_id] = player_discards[player_id].duplicate()
 		player_discards[player_id].clear()
 		player_decks[player_id].shuffle()
@@ -258,18 +269,15 @@ func set_deck_for_player(player_id: int, deck_data: Dictionary):
 	
 	print("[CardSystem] プレイヤー%d: デッキ設定完了 (%d枚)" % [player_id + 1, deck_pool.size()])
 
-## プレイヤーごとのデッキプール
+## プレイヤーごとのデッキプール（クエストモード用）
 var player_deck_pools: Dictionary = {}  # player_id -> [card_data, ...]
+var player_discard_pools: Dictionary = {}  # player_id -> [card_data, ...] クエストモード用捨て札
 
-## デッキプールからカードを引く
+## デッキプールからカードを引く（クエストモード用）
+## 注: draw_card_data_v2() がデッキプールを自動処理するため、このメソッドは直接呼び出さないでください
 func draw_from_deck_pool(player_id: int) -> Dictionary:
-	if not player_deck_pools.has(player_id) or player_deck_pools[player_id].is_empty():
-		# デッキプールがない場合はランダムドロー
-		return draw_card_data_v2(player_id)
-	
-	var pool_deck = player_deck_pools[player_id]
-	var card = pool_deck.pop_front()
-	return card
+	# draw_card_data_v2 に処理を委譲（捨て札からの補充も含む）
+	return draw_card_data_v2(player_id)
 
 ## 特定プレイヤーに初期手札を配布（デッキプールから）
 func deal_initial_hand_for_player(player_id: int):
@@ -303,8 +311,16 @@ func discard_card(player_id: int, card_index: int, reason: String = "discard") -
 	
 	var card_data = player_hand_data[card_index]
 	player_hand_data.remove_at(card_index)
-	# 新システム: プレイヤーの捨て札に追加
-	player_discards[player_id].append(card_data.id)
+	
+	# 捨て札に追加（クエストモードとそれ以外で分岐）
+	if player_deck_pools.has(player_id):
+		# クエストモード: player_discard_pools に card_data を追加
+		if not player_discard_pools.has(player_id):
+			player_discard_pools[player_id] = []
+		player_discard_pools[player_id].append(card_data.duplicate())
+	else:
+		# 通常モード: player_discards に card_id を追加
+		player_discards[player_id].append(card_data.id)
 	
 	# 理由に応じたメッセージ
 	match reason:
@@ -435,9 +451,19 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	
 	# 捨て札から該当カードを削除
 	var card_id = card_data.get("id", -1)
-	# 新システム: プレイヤーの捨て札から削除
-	if card_id in player_discards[player_id]:
-		player_discards[player_id].erase(card_id)
+	
+	# クエストモードとそれ以外で分岐
+	if player_deck_pools.has(player_id):
+		# クエストモード: player_discard_pools から削除
+		if player_discard_pools.has(player_id):
+			for i in range(player_discard_pools[player_id].size() - 1, -1, -1):
+				if player_discard_pools[player_id][i].get("id", -1) == card_id:
+					player_discard_pools[player_id].remove_at(i)
+					break
+	else:
+		# 通常モード: player_discards から削除
+		if card_id in player_discards[player_id]:
+			player_discards[player_id].erase(card_id)
 	
 	# 🔧 合成処理による分岐
 	var clean_card_data: Dictionary

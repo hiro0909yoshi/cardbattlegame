@@ -2,7 +2,7 @@
 
 ## Basic Info
 - Engine: Godot 4.4.1 (GDScript)
-- Status: Prototype 85% complete
+- Status: Prototype 95% complete
 - Type: Board game + card battle hybrid
 
 ## Core Systems
@@ -259,7 +259,7 @@ Chain  Toll Multiplier  HP Bonus
 
 ## Dev Priorities
 ### High (2 weeks)
-- Complete remaining 20 items (27%)
+- ~~Complete remaining 20 items~~ ✅ (75/75 done)
 - Balance tuning
 - CPU infinite loop fix
 - Phoenix "復活" skill implementation
@@ -327,6 +327,12 @@ scripts/
   - Key: `is_ending_turn` flag set BEFORE `close_land_command()` call
   - All actions now only call `complete_action()`, never `close_land_command()`
 - **UI Flag Management**: `is_ending_turn` prevents premature card selection reinitialization
-- **Item System**: 55/75 items implemented with transformation and item_return support
+- **Item System**: 75/75 items implemented (100% complete)
 
-Last updated: 2025-11-05
+## Recent Refactoring (Jan 2026)
+- **GameFlowManager cleanup**: 902行→848行に削減
+  - `_ready()` 削除（ルール違反だった）
+  - `initialize_phase1a_systems()` → GameSystemManagerに移動
+  - `_setup_cpu_movement_evaluator()` → GameSystemManagerに移動
+  - セッターメソッド追加: `set_phase1a_handlers()`, `set_cpu_movement_evaluator()`
+- **初期化責任の明確化**: すべての初期化はGameSystemManagerが担当

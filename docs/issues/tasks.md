@@ -162,74 +162,19 @@
 
 ---
 
-### 🚧 Phase 2: 通行料システム実装（進行中: 2025/11/23）
+### ✅ Phase 2: 通行料システム実装（完了）
 
-#### タスク内容
-- [x] **支払い処理の一本化**
-  - [x] 仕様決定: end_turn()に敵地判定を一本化
-  - [x] シグナル不要（end_turn()は必ず呼ばれる）
-  - [x] ドキュメント更新完了
-- [ ] **実装**
-  - [ ] `game_flow_manager.gd` に `check_and_pay_toll_on_enemy_land()` 新規作成
-	- 敵地判定ロジック
-	- 支払い処理（board_system.calculate_toll() + player_system.pay_toll()）
-  - [ ] `game_flow_manager.end_turn()` の **手札調整後に呼び出し追加**
-	- `await check_and_discard_excess_cards()` の後
-  - [ ] `tile_action_processor.on_action_pass()` から支払い処理削除
-	- 敵地判定と支払いロジックを削除
-	- `_complete_action()` のみ残す
-  - [ ] `battle_system.gd` の `pay_toll_3d()` 関数削除
-	- 関数定義削除
-	- 4箇所の呼び出し削除（Line 95, 100, 112, 131付近）
-- [ ] **テスト・検証**
-  - [ ] パスボタン押下後の支払い確認
-  - [ ] 敗北後（DEFENDER_WIN/ATTACKER_SURVIVED）の支払い確認
-  - [ ] 勝利時（ATTACKER_WIN）の支払いなし確認
-  - [ ] 相打ち時（BOTH_DEFEATED）の支払いなし確認
-  - [ ] 敵地に留まらない場合の支払いなし確認
+- [x] 支払い処理の一本化（end_turn()に統合）
+- [x] `check_and_pay_toll_on_enemy_land()` 実装完了
+- [x] 通行料呪いシステムとの統合
 
-**目標完了日**: 2025年11月30日  
-**難易度**: 低～中（ロジック単純、デバッグ簡単）
-
----
 
 ### 🚧 現在作業中
 
-#### 0. バトルテストツール実装 ★追加
-**優先度**: 高  
-**担当**: 開発者  
-**進捗**: 17% (Phase 1 完了)
-
-**目的**: スペル・アイテム・スキルの効果を網羅的にテストし、バランス調整とバグ検出を支援
-
-**Phase進捗**:
-- [x] Phase 1: 設計・仕様策定 (100%)
-- [ ] Phase 2: データ構造実装 (0%)
-- [ ] Phase 3: UI実装 (0%)
-- [ ] Phase 4: バトルロジック統合 (0%)
-  - [ ] アイテムによるスキル付与実装 ★重要
-  - [ ] スペルによるスキル付与実装（将来）
-- [ ] Phase 5: 結果表示実装 (0%)
-- [ ] Phase 6: テスト・デバッグ (0%)
-
-**主要機能**:
-- ID入力式の選択UI
-- プリセット機能（火水風地・先制・強打・無効化）
-- 土地保有数・バトル土地属性の設定
-- **アイテム・スペルによるスキル付与機能** ★追加
-- テーブル形式での結果表示（付与スキル情報含む）
-- 統計サマリー・CSV出力
-
-**関連ドキュメント**:
-- [battle_test_tool_design.md](../design/battle_test_tool_design.md)
-- [battle_test_tool_spec.md](../specs/battle_test_tool_spec.md)
-- [battle_test_tool_progress.md](../progress/battle_test_tool_progress.md)
-
-**次のステップ**:
-1. Phase 2: データ構造実装（見積もり: 1時間）
-2. Phase 3: UI実装（見積もり: 2.5時間）
-
----
+#### ✅ バトルテストツール実装（完了）
+- [x] Phase 1-6: 全フェーズ実装完了
+- [x] UI、Executor、Statistics、Presets実装済み
+- [x] scenes/battle_test_tool.tscn で利用可能
 
 #### 1. スキルシステムの拡張
 **優先度**: 高  
@@ -322,21 +267,9 @@
 }
 ```
 
-#### 2. アイテムシステム
-**目標**: 2週間  
-**難易度**: 中
-
-タスク:
-- [ ] アイテムデータ構造
-- [ ] 装備システム
-- [ ] アイテム効果適用
-- [ ] ショップ実装
-- [ ] インベントリUI
-
-アイテム種類案:
-- 武器（ST上昇）
-- 防具（HP上昇）
-- アクセサリ（特殊効果）
+#### ✅ アイテムシステム（完了）
+- [x] 75/75 アイテム実装完了
+- [x] 全アイテムに effect_parsed 設定済み
 
 #### 3. デッキ編集UI改善
 **目標**: 1週間  
