@@ -616,33 +616,32 @@ func _initialize_cpu_movement_evaluator() -> void:
 	if not game_flow_manager or not board_system_3d:
 		return
 	
-	var cpu_movement_evaluator = CPUMovementEvaluator.new()
-	
-	# バトルシミュレーターを作成
-	var battle_sim = BattleSimulator.new()
-	battle_sim.setup_systems(board_system_3d, card_system, player_system, game_flow_manager)
+	# CPU AI共有コンテキストを作成
+	const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+	var cpu_context = CPUAIContextScript.new()
+	cpu_context.setup(board_system_3d, player_system, card_system)
+	cpu_context.setup_optional(
+		BaseTile.creature_manager if BaseTile.creature_manager else null,
+		game_flow_manager.lap_system,
+		game_flow_manager,
+		null,  # battle_system
+		player_buff_system
+	)
 	
 	# SpellMovementを取得（MovementControllerから）
 	var spell_mov = null
 	if board_system_3d.movement_controller:
 		spell_mov = board_system_3d.movement_controller.spell_movement
 	
-	# CPUBattleAIを作成（共通バトル評価用）
+	# CPUBattleAIを作成（コンテキスト経由）
 	var battle_ai = CPUBattleAI.new()
-	battle_ai.setup_systems(card_system, board_system_3d, player_system, player_buff_system, game_flow_manager)
+	battle_ai.setup_with_context(cpu_context)
 	
-	# CPUHandUtilsを作成して設定
-	var cpu_hand_utils = CPUHandUtils.new()
-	cpu_hand_utils.setup_systems(card_system, board_system_3d, player_system, player_buff_system)
-	battle_ai.set_hand_utils(cpu_hand_utils)
-	
-	cpu_movement_evaluator.setup_systems(
-		board_system_3d,
-		player_system,
-		game_flow_manager.lap_system,
+	# CPUMovementEvaluatorを作成（コンテキスト経由）
+	var cpu_movement_evaluator = CPUMovementEvaluator.new()
+	cpu_movement_evaluator.setup_with_context(
+		cpu_context,
 		board_system_3d.movement_controller,
-		card_system,
-		battle_sim,
 		spell_mov,
 		battle_ai
 	)

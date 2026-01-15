@@ -172,14 +172,24 @@ func get_empty_lands() -> Array:
 		if creature and not creature.is_empty():
 			continue
 		
-		# 通常の土地タイプのみ（特殊タイルは除外）
+		# 属性がある土地のみ（特殊タイルは除外）
+		# tile_typeが空の場合はelementで判定
+		var element = tile.get("element", "")
 		var tile_type = tile.get("tile_type", "")
-		if not TileHelper.has_land_effect_type(tile_type):
+		var is_land = false
+		
+		if tile_type != "":
+			is_land = TileHelper.has_land_effect_type(tile_type)
+		else:
+			# elementで判定：属性タイル(fire/water/earth/wind)またはneutral
+			is_land = element in ["fire", "water", "earth", "wind", "neutral"]
+		
+		if not is_land:
 			continue
 		
 		results.append({
 			"tile_index": tile.get("index", -1),
-			"element": tile.get("element", ""),
+			"element": element,
 			"level": tile.get("level", 1)
 		})
 	

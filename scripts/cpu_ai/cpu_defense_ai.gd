@@ -10,70 +10,32 @@ const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 # 共有コンテキスト
 var _context: CPUAIContextScript = null
 
-# システム参照（後方互換性のため）
-var _card_system: CardSystem = null
-var _player_system: PlayerSystem = null
-var _game_flow_manager = null
-var _board_system = null
-var _tile_action_processor = null
-var _battle_simulator_local: BattleSimulatorScript = null
-var _cpu_hand_utils_local: CPUHandUtils = null
-
-# システム参照のgetter
+# システム参照のgetter（contextから取得）
 var card_system: CardSystem:
-	get: return _context.card_system if _context else _card_system
+	get: return _context.card_system if _context else null
 var player_system: PlayerSystem:
-	get: return _context.player_system if _context else _player_system
+	get: return _context.player_system if _context else null
 var game_flow_manager:
-	get: return _context.game_flow_manager if _context else _game_flow_manager
+	get: return _context.game_flow_manager if _context else null
 var board_system:
-	get: return _context.board_system if _context else _board_system
+	get: return _context.board_system if _context else null
 var tile_action_processor:
-	get: return _context.tile_action_processor if _context else _tile_action_processor
+	get: return _context.tile_action_processor if _context else null
 var battle_simulator: BattleSimulatorScript:
-	get:
-		if _context:
-			return _context.get_battle_simulator()
-		return _battle_simulator_local
+	get: return _context.get_battle_simulator() if _context else null
 var cpu_hand_utils: CPUHandUtils:
-	get:
-		if _context:
-			return _context.get_hand_utils()
-		return _cpu_hand_utils_local
+	get: return _context.get_hand_utils() if _context else null
 
 var merge_evaluator: CPUMergeEvaluator
 
 
-## 共有コンテキストでセットアップ（推奨）
+## 共有コンテキストでセットアップ
 func setup_with_context(context: CPUAIContextScript) -> void:
 	_context = context
 
 
-## セットアップ（後方互換性のため残す）
-func setup_systems(c_system: CardSystem, p_system: PlayerSystem, gf_manager, b_system) -> void:
-	_card_system = c_system
-	_player_system = p_system
-	_game_flow_manager = gf_manager
-	_board_system = b_system
-	
-	# TileActionProcessor参照を取得（デバッグフラグ用）
-	if b_system:
-		_tile_action_processor = b_system.tile_action_processor
-	
-	_ensure_battle_simulator()
-
-func set_hand_utils(utils: CPUHandUtils) -> void:
-	_cpu_hand_utils_local = utils
-
 func set_merge_evaluator(evaluator: CPUMergeEvaluator) -> void:
 	merge_evaluator = evaluator
-
-func _ensure_battle_simulator() -> void:
-	if _battle_simulator_local or _context:
-		return
-	_battle_simulator_local = BattleSimulatorScript.new()
-	if _board_system:
-		_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system, _game_flow_manager)
 
 ## 防御アクションを決定
 ## @param context: {
@@ -238,7 +200,6 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 #region 無効化判定
 
 func _should_skip_due_to_nullify(defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int) -> bool:
-	_ensure_battle_simulator()
 	if not battle_simulator:
 		return false
 	
@@ -326,7 +287,6 @@ func _evaluate_merge_option(player_id: int, defender: Dictionary, attacker: Dict
 	result.cost = cost
 	
 	# 合体後シミュレーション
-	_ensure_battle_simulator()
 	var sim_tile_info = {
 		"element": tile_info.get("element", ""),
 		"level": tile_info.get("level", 1),
@@ -464,7 +424,6 @@ func _find_nullify_item_for_defense(player_id: int, defender: Dictionary = {}) -
 #region ワーストケースシミュレーション
 
 func _simulate_worst_case(defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int, defender_item: Dictionary) -> Dictionary:
-	_ensure_battle_simulator()
 	if not battle_simulator:
 		return {}
 	

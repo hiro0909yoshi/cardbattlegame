@@ -68,6 +68,15 @@ func set_battle_ai(ai: CPUBattleAI) -> void:
 	if condition_checker:
 		condition_checker.set_battle_ai(ai)
 
+## 共有コンテキストを設定
+func set_context(context) -> void:
+	if condition_checker:
+		condition_checker.set_context(context)
+	if target_selector:
+		target_selector.set_context(context)
+	if spell_utils:
+		spell_utils.set_context(context)
+
 ## CPUMovementEvaluatorを設定（ホーリーワード判断用）
 func set_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
 	cpu_movement_evaluator = evaluator

@@ -3,6 +3,11 @@
 class_name CPUSpellTargetSelector
 extends RefCounted
 
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+## 共有コンテキスト
+var _context: CPUAIContextScript = null
+
 ## 参照
 var board_system: Node = null
 var player_system: Node = null
@@ -26,6 +31,17 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_
 	var board_analyzer = CPUBoardAnalyzer.new()
 	board_analyzer.initialize(b_system, p_system, c_system, null)  # creature_managerはnullでOK
 	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
+
+
+## 共有コンテキストを設定
+func set_context(context: CPUAIContextScript) -> void:
+	_context = context
+	if _context:
+		board_system = _context.board_system
+		player_system = _context.player_system
+		card_system = _context.card_system
+		lap_system = _context.lap_system
+		game_flow_manager = _context.game_flow_manager
 
 # =============================================================================
 # メインターゲット選択

@@ -3,6 +3,10 @@ extends Node
 class_name SpellPhaseHandler
 
 const GameConstants = preload("res://scripts/game_constants.gd")
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+# 共有コンテキスト（CPU AI用）
+var _cpu_context: CPUAIContextScript = null
 
 ## シグナル
 signal spell_phase_started()
@@ -195,27 +199,17 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if board_system and not cpu_turn_processor:
 		cpu_turn_processor = board_system.get_node_or_null("CPUTurnProcessor")
 	
-	# CPU手札ユーティリティを初期化
-	if not cpu_hand_utils:
-		cpu_hand_utils = CPUHandUtils.new()
-		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
-		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
-	
-	# CPU バトルAIを初期化（共通バトル評価用）
-	var cpu_battle_ai: CPUBattleAI = null
-	if not cpu_battle_ai:
-		cpu_battle_ai = CPUBattleAI.new()
-		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
-		cpu_battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, game_flow_manager)
-		cpu_battle_ai.set_hand_utils(cpu_hand_utils)
+	# CPU AI共有コンテキストを初期化
+	_initialize_cpu_context(game_flow_manager)
 	
 	# CPU スペル/ミスティックアーツ AI を初期化
 	if not cpu_spell_ai:
 		cpu_spell_ai = CPUSpellAI.new()
 		var l_system = game_flow_manager.lap_system if game_flow_manager else null
 		cpu_spell_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
+		cpu_spell_ai.set_context(_cpu_context)  # 共有コンテキストを設定
 		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
-		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
+		cpu_spell_ai.set_battle_ai(_cpu_battle_ai)
 		# SpellSynthesisを設定（犠牲カード選択用）
 		if spell_synthesis:
 			cpu_spell_ai.set_spell_synthesis(spell_synthesis)
@@ -225,10 +219,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
-		var l_system = game_flow_manager.lap_system if game_flow_manager else null
-		cpu_mystic_arts_ai.initialize(board_system, player_system, card_system, creature_manager, l_system, game_flow_manager)
+		cpu_mystic_arts_ai.set_context(_cpu_context)
 		cpu_mystic_arts_ai.set_hand_utils(cpu_hand_utils)
-		cpu_mystic_arts_ai.set_battle_ai(cpu_battle_ai)
+		cpu_mystic_arts_ai.set_battle_ai(_cpu_battle_ai)
 	
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:
@@ -1476,3 +1469,37 @@ func _is_lands_required_disabled() -> bool:
 func _on_hand_updated_for_buttons():
 	# グローバルボタンに移行したため、手動での位置更新は不要
 	pass
+
+
+# =============================================================================
+# CPU AI コンテキスト初期化
+# =============================================================================
+
+# CPUBattleAI（ローカル）
+var _cpu_battle_ai: CPUBattleAI = null
+
+## CPU AI用の共有コンテキストを初期化
+func _initialize_cpu_context(flow_mgr) -> void:
+	if _cpu_context:
+		return  # 既に初期化済み
+	
+	var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
+	
+	# コンテキストを作成
+	_cpu_context = CPUAIContextScript.new()
+	_cpu_context.setup(board_system, player_system, card_system)
+	_cpu_context.setup_optional(
+		creature_manager,
+		flow_mgr.lap_system if flow_mgr else null,
+		flow_mgr,
+		null,  # battle_system
+		player_buff_system
+	)
+	
+	# CPUBattleAIを初期化（共通バトル評価用）
+	if not _cpu_battle_ai:
+		_cpu_battle_ai = CPUBattleAI.new()
+		_cpu_battle_ai.setup_with_context(_cpu_context)
+	
+	# cpu_hand_utilsはcontextから取得
+	cpu_hand_utils = _cpu_context.get_hand_utils()

@@ -53,68 +53,32 @@ const MAGIC_RESERVE_MINIMUM = CPUAIConstantsScript.MAGIC_RESERVE_MINIMUM
 # === 共有コンテキスト ===
 var _context: CPUAIContextScript = null
 
-# === 参照（後方互換性のため） ===
-var _board_system = null
-var _card_system = null
-var _player_system = null
-var _creature_manager = null
-var _battle_simulator_local: BattleSimulator = null
-var _tile_action_processor = null
-
-# システム参照のgetter
+# システム参照のgetter（contextから取得）
 var board_system:
-	get: return _context.board_system if _context else _board_system
+	get: return _context.board_system if _context else null
 var card_system:
-	get: return _context.card_system if _context else _card_system
+	get: return _context.card_system if _context else null
 var player_system:
-	get: return _context.player_system if _context else _player_system
+	get: return _context.player_system if _context else null
 var creature_manager:
-	get: return _context.creature_manager if _context else _creature_manager
+	get: return _context.creature_manager if _context else null
 var battle_simulator: BattleSimulator:
-	get:
-		if _context:
-			return _context.get_battle_simulator()
-		return _battle_simulator_local
+	get: return _context.get_battle_simulator() if _context else null
 var tile_action_processor:
-	get: return _context.tile_action_processor if _context else _tile_action_processor
+	get: return _context.tile_action_processor if _context else null
 
 var battle_ai: CPUBattleAI = null
 var sacrifice_selector: CPUSacrificeSelector = null
 var creature_synthesis: CreatureSynthesis = null
 
 
-## 共有コンテキストでセットアップ（推奨）
+## 共有コンテキストでセットアップ
 func setup_with_context(context: CPUAIContextScript) -> void:
 	_context = context
 	
 	# BattleAIを作成（コンテキストを共有）
 	battle_ai = CPUBattleAI.new()
 	battle_ai.setup_with_context(context)
-	
-	# 犠牲カード選択クラスを初期化
-	sacrifice_selector = CPUSacrificeSelector.new()
-	sacrifice_selector.initialize(card_system, board_system)
-
-
-## 初期化（後方互換性のため残す）
-func setup(p_board_system, p_card_system, p_player_system, p_creature_manager) -> void:
-	_board_system = p_board_system
-	_card_system = p_card_system
-	_player_system = p_player_system
-	_creature_manager = p_creature_manager
-	
-	# BattleSimulatorを作成
-	_battle_simulator_local = BattleSimulator.new()
-	_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system)
-	
-	# BattleAIを作成（アイテム込みの評価用）
-	battle_ai = CPUBattleAI.new()
-	battle_ai.setup_systems(_card_system, _board_system, _player_system, null)
-	
-	# hand_utilsを作成してbattle_aiに設定
-	var hand_utils = CPUHandUtils.new()
-	hand_utils.setup_systems(_card_system, _board_system, _player_system, null)
-	battle_ai.set_hand_utils(hand_utils)
 	
 	# 犠牲カード選択クラスを初期化
 	sacrifice_selector = CPUSacrificeSelector.new()

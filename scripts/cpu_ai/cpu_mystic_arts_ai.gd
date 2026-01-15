@@ -3,6 +3,11 @@
 class_name CPUMysticArtsAI
 extends RefCounted
 
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+## 共有コンテキスト
+var _context: CPUAIContextScript = null
+
 ## 参照
 var condition_checker: CPUSpellConditionChecker = null
 var board_system: Node = null
@@ -25,24 +30,26 @@ const PRIORITY_VALUES = {
 	"very_low": 0.5
 }
 
-## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
-	board_system = b_system
-	player_system = p_system
-	card_system = c_system
-	creature_manager = cr_manager
-	lap_system = l_system
-	game_flow_manager = gf_manager
+## 共有コンテキストを設定
+func set_context(context: CPUAIContextScript) -> void:
+	_context = context
+	if _context:
+		board_system = _context.board_system
+		player_system = _context.player_system
+		card_system = _context.card_system
+		creature_manager = _context.creature_manager
+		lap_system = _context.lap_system
+		game_flow_manager = _context.game_flow_manager
 	
-	# 条件チェッカー初期化
+	# 条件チェッカー初期化（contextを共有）
 	condition_checker = CPUSpellConditionChecker.new()
-	condition_checker.initialize(b_system, p_system, c_system, cr_manager)
+	condition_checker.set_context(_context)
 	
 	# CPUTargetResolverの初期化
 	target_resolver = CPUTargetResolver.new()
 	var board_analyzer = CPUBoardAnalyzer.new()
-	board_analyzer.initialize(b_system, p_system, c_system, cr_manager)
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, game_flow_manager)
+	board_analyzer.initialize(board_system, player_system, card_system, creature_manager, lap_system, game_flow_manager)
+	target_resolver.initialize(board_analyzer, board_system, player_system, card_system, game_flow_manager)
 	
 	# ミスティックアーツデータをロード
 	_load_mystic_arts_data()

@@ -6,54 +6,37 @@ class_name CPUBattleAI
 
 # 定数・共通クラスをpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 
-# 共有コンテキスト（設定されている場合はこちらを優先）
+# 共有コンテキスト
 var _context: CPUAIContextScript = null
 
-# システム参照（後方互換性のため残す）
-var _card_system: CardSystem = null
-var _board_system = null
-var _player_system: PlayerSystem = null
-var _player_buff_system: PlayerBuffSystem = null
-var _game_flow_manager_ref = null
-var _tile_action_processor = null
-
-# システム参照のgetter（contextがあればcontextから取得）
+# システム参照のgetter（contextから取得）
 var card_system: CardSystem:
-	get: return _context.card_system if _context else _card_system
+	get: return _context.card_system if _context else null
 var board_system:
-	get: return _context.board_system if _context else _board_system
+	get: return _context.board_system if _context else null
 var player_system: PlayerSystem:
-	get: return _context.player_system if _context else _player_system
+	get: return _context.player_system if _context else null
 var player_buff_system: PlayerBuffSystem:
-	get: return _context.player_buff_system if _context else _player_buff_system
+	get: return _context.player_buff_system if _context else null
 var game_flow_manager_ref:
-	get: return _context.game_flow_manager if _context else _game_flow_manager_ref
+	get: return _context.game_flow_manager if _context else null
 var tile_action_processor:
-	get: return _context.tile_action_processor if _context else _tile_action_processor
+	get: return _context.tile_action_processor if _context else null
 
-# バトルシミュレーター（contextがあればcontextから取得）
-var _battle_simulator_local: BattleSimulator = null
+# バトルシミュレーター（contextから取得）
 var battle_simulator: BattleSimulator:
-	get: 
-		if _context:
-			return _context.get_battle_simulator()
-		return _battle_simulator_local
+	get: return _context.get_battle_simulator() if _context else null
 
-# 手札ユーティリティ参照（contextがあればcontextから取得）
-var _hand_utils_local: CPUHandUtils = null
+# 手札ユーティリティ参照（contextから取得）
 var hand_utils: CPUHandUtils:
-	get:
-		if _context:
-			return _context.get_hand_utils()
-		return _hand_utils_local
+	get: return _context.get_hand_utils() if _context else null
 
 # 合体評価クラス
 var merge_evaluator: CPUMergeEvaluator = null
 
-## 共有コンテキストを設定（推奨）
+## 共有コンテキストを設定
 func setup_with_context(context: CPUAIContextScript) -> void:
 	_context = context
 	# 合体評価クラスを初期化
@@ -61,46 +44,16 @@ func setup_with_context(context: CPUAIContextScript) -> void:
 	merge_evaluator.initialize(card_system, hand_utils, battle_simulator)
 
 
-## システム参照を設定（後方互換性のため残す）
-func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_system: PlayerBuffSystem, gf_manager = null):
-	_card_system = c_system
-	_board_system = b_system
-	_player_system = p_system
-	
-	# TileActionProcessor参照を取得（デバッグフラグ用）
-	if b_system:
-		_tile_action_processor = b_system.tile_action_processor
-	_player_buff_system = s_system
-	_game_flow_manager_ref = gf_manager
-	
-	# BattleSimulatorを初期化（context未使用時のみ）
-	_battle_simulator_local = BattleSimulatorScript.new()
-	_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system, _game_flow_manager_ref)
-	_battle_simulator_local.enable_log = true  # デバッグ用にログ有効
-
-## 手札ユーティリティを設定（後方互換性のため残す、context使用時は不要）
-func set_hand_utils(utils: CPUHandUtils):
-	_hand_utils_local = utils
-	# 合体評価クラスを初期化（contextがない場合のみ）
-	if not _context:
-		merge_evaluator = CPUMergeEvaluator.new()
-		merge_evaluator.initialize(card_system, hand_utils, battle_simulator)
-
 ## GameFlowManagerを後から設定
 func set_game_flow_manager(gf_manager) -> void:
 	if _context:
 		_context.set_game_flow_manager(gf_manager)
-	else:
-		_game_flow_manager_ref = gf_manager
-		if _battle_simulator_local:
-			_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system, _game_flow_manager_ref)
+
 
 ## BattleSimulatorのログ出力を切り替え
 func set_simulator_log_enabled(enabled: bool) -> void:
 	if _context:
 		_context.set_simulator_log_enabled(enabled)
-	elif _battle_simulator_local:
-		_battle_simulator_local.enable_log = enabled
 
 # ============================================================
 # バトル評価

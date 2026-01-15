@@ -28,6 +28,10 @@ var opponent_creature_data: Dictionary = {}  # 相手クリーチャーのデー
 const BattleSpecialEffectsScript = preload("res://scripts/battle/battle_special_effects.gd")
 const BattleParticipantScript = preload("res://scripts/battle/battle_participant.gd")
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+# 共有コンテキスト（CPU AI用）
+var _cpu_context: CPUAIContextScript = null
 
 # 防御時のタイル情報（シミュレーション用）
 var defense_tile_info: Dictionary = {}
@@ -67,27 +71,8 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if flow_mgr and flow_mgr.board_system_3d:
 		tile_action_processor = flow_mgr.board_system_3d.tile_action_processor
 	
-	# CPU手札ユーティリティを初期化（ワーストケースシミュレーション用）
-	if not cpu_hand_utils:
-		cpu_hand_utils = CPUHandUtils.new()
-		var board_system = flow_mgr.board_system_3d if flow_mgr else null
-		var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
-		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
-	
-	# CPUBattleAIを初期化（共通バトル評価用）
-	if not cpu_battle_ai:
-		cpu_battle_ai = CPUBattleAI.new()
-		var board_system = flow_mgr.board_system_3d if flow_mgr else null
-		var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
-		cpu_battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, flow_mgr)
-		cpu_battle_ai.set_hand_utils(cpu_hand_utils)
-	
-	# CPU防御AIを初期化
-	if not cpu_defense_ai:
-		cpu_defense_ai = CPUDefenseAI.new()
-		var board_system = flow_mgr.board_system_3d if flow_mgr else null
-		cpu_defense_ai.setup_systems(card_system, player_system, flow_mgr, board_system)
-		cpu_defense_ai.set_hand_utils(cpu_hand_utils)
+	# CPU AI共有コンテキストを初期化
+	_initialize_cpu_context(flow_mgr)
 
 ## アイテムフェーズ開始
 ## defender_tile_info: 攻撃側フェーズ開始時に防御側情報を渡す（防御側CPUの事前選択用）
@@ -597,21 +582,9 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 		_defender_preselection_done = true
 		return
 	
-	# CPUDefenseAI初期化
-	if not cpu_defense_ai:
-		cpu_defense_ai = CPUDefenseAI.new()
-		var board_system = game_flow_manager.board_system_3d if game_flow_manager else null
-		cpu_defense_ai.setup_systems(card_system, player_system, game_flow_manager, board_system)
-		if cpu_hand_utils:
-			cpu_defense_ai.set_hand_utils(cpu_hand_utils)
-	
-	# CPUHandUtils初期化
-	if not cpu_hand_utils:
-		cpu_hand_utils = CPUHandUtils.new()
-		var board_system = game_flow_manager.board_system_3d if game_flow_manager else null
-		var player_buff_system = game_flow_manager.player_buff_system if game_flow_manager else null
-		cpu_hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
-		cpu_defense_ai.set_hand_utils(cpu_hand_utils)
+	# CPU AI初期化（コンテキスト経由）
+	if not _cpu_context:
+		_initialize_cpu_context(game_flow_manager)
 	
 	# 攻撃側プレイヤーID取得
 	var attacker_player_id = -1
@@ -799,3 +772,39 @@ func _execute_merge_for_cpu(merge_result: Dictionary):
 	# アイテムフェーズ完了
 	current_state = State.ITEM_APPLIED
 	item_phase_completed.emit()
+
+# =============================================================================
+# CPU AI コンテキスト初期化
+# =============================================================================
+
+## CPU AI用の共有コンテキストを初期化
+func _initialize_cpu_context(flow_mgr) -> void:
+	if _cpu_context:
+		return  # 既に初期化済み
+	
+	var board_system = flow_mgr.board_system_3d if flow_mgr else null
+	var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
+	
+	# コンテキストを作成
+	_cpu_context = CPUAIContextScript.new()
+	_cpu_context.setup(board_system, player_system, card_system)
+	_cpu_context.setup_optional(
+		BaseTile.creature_manager if BaseTile.creature_manager else null,
+		null,  # lap_system
+		flow_mgr,
+		battle_system,
+		player_buff_system
+	)
+	
+	# CPUBattleAIを初期化（共通バトル評価用）
+	if not cpu_battle_ai:
+		cpu_battle_ai = CPUBattleAI.new()
+		cpu_battle_ai.setup_with_context(_cpu_context)
+	
+	# CPU防御AIを初期化
+	if not cpu_defense_ai:
+		cpu_defense_ai = CPUDefenseAI.new()
+		cpu_defense_ai.setup_with_context(_cpu_context)
+	
+	# cpu_hand_utilsはcontextから取得
+	cpu_hand_utils = _cpu_context.get_hand_utils()

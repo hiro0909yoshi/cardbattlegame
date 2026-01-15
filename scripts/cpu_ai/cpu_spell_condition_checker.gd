@@ -3,6 +3,11 @@
 class_name CPUSpellConditionChecker
 extends RefCounted
 
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+## 共有コンテキスト
+var _context: CPUAIContextScript = null
+
 ## 外部クラス参照
 var board_analyzer: CPUBoardAnalyzer = null
 var target_resolver: CPUTargetResolver = null
@@ -17,7 +22,14 @@ var game_flow_manager: Node = null
 
 ## BattleSimulator
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
-var _battle_simulator = null
+var _battle_simulator_local = null
+
+## BattleSimulatorのgetter（contextがあればcontextから取得）
+var _battle_simulator:
+	get:
+		if _context:
+			return _context.get_battle_simulator()
+		return _battle_simulator_local
 
 ## 手札ユーティリティ（ワーストケースシミュレーション用）
 var hand_utils: CPUHandUtils = null
@@ -42,10 +54,33 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node
 	target_resolver = CPUTargetResolver.new()
 	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
 	
-	# BattleSimulatorを初期化
-	_battle_simulator = BattleSimulatorScript.new()
-	_battle_simulator.setup_systems(board_system, card_system, player_system, game_flow_manager)
-	_battle_simulator.enable_log = false
+	# BattleSimulatorを初期化（contextがない場合のみ）
+	if not _context:
+		_battle_simulator_local = BattleSimulatorScript.new()
+		_battle_simulator_local.setup_systems(board_system, card_system, player_system, game_flow_manager)
+		_battle_simulator_local.enable_log = false
+
+
+## 共有コンテキストを設定
+func set_context(context: CPUAIContextScript) -> void:
+	_context = context
+	# contextからシステム参照を取得
+	if _context:
+		board_system = _context.board_system
+		player_system = _context.player_system
+		card_system = _context.card_system
+		creature_manager = _context.creature_manager
+		lap_system = _context.lap_system
+		game_flow_manager = _context.game_flow_manager
+		
+		# CPUBoardAnalyzerを初期化
+		board_analyzer = CPUBoardAnalyzer.new()
+		board_analyzer.initialize(board_system, player_system, card_system, creature_manager, lap_system, game_flow_manager)
+		
+		# CPUTargetResolverを初期化
+		target_resolver = CPUTargetResolver.new()
+		target_resolver.initialize(board_analyzer, board_system, player_system, card_system, game_flow_manager)
+
 
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:

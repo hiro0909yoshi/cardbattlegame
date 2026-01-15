@@ -46,30 +46,17 @@ const PATH_EVALUATION_DISTANCE = CPUAIConstantsScript.PATH_EVALUATION_DISTANCE
 
 var _context: CPUAIContextScript = null
 
-# =============================================================================
-# システム参照（後方互換性のため）
-# =============================================================================
-
-var _board_system = null
-var _player_system: PlayerSystem = null
-var _lap_system = null
-var _card_system = null
-var _battle_simulator = null
-
-# システム参照のgetter
+# システム参照のgetter（contextから取得）
 var board_system:
-	get: return _context.board_system if _context else _board_system
+	get: return _context.board_system if _context else null
 var player_system: PlayerSystem:
-	get: return _context.player_system if _context else _player_system
+	get: return _context.player_system if _context else null
 var lap_system:
-	get: return _context.lap_system if _context else _lap_system
+	get: return _context.lap_system if _context else null
 var card_system:
-	get: return _context.card_system if _context else _card_system
+	get: return _context.card_system if _context else null
 var battle_simulator:
-	get:
-		if _context:
-			return _context.get_battle_simulator()
-		return _battle_simulator
+	get: return _context.get_battle_simulator() if _context else null
 
 var movement_controller = null
 var spell_movement: SpellMovement = null
@@ -82,26 +69,11 @@ var checkpoint_calculator: CheckpointDistanceCalculator = null
 var _current_branch_tile: int = -1
 
 
-
-## 共有コンテキストでセットアップ（推奨）
+## 共有コンテキストでセットアップ
 func setup_with_context(context: CPUAIContextScript, p_movement_controller = null,
 		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null) -> void:
 	_context = context
 	movement_controller = p_movement_controller
-	spell_movement = p_spell_movement
-	battle_ai = p_battle_ai
-
-
-## システム参照を設定（後方互換性のため残す）
-func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system = null, 
-		p_movement_controller = null, p_card_system = null, p_battle_simulator = null,
-		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null):
-	_board_system = p_board_system
-	_player_system = p_player_system
-	_lap_system = p_lap_system
-	movement_controller = p_movement_controller
-	_card_system = p_card_system
-	_battle_simulator = p_battle_simulator
 	spell_movement = p_spell_movement
 	battle_ai = p_battle_ai
 

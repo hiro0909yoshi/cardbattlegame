@@ -3,6 +3,11 @@
 class_name CPUSpellUtils
 extends RefCounted
 
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+
+## 共有コンテキスト
+var _context: CPUAIContextScript = null
+
 ## システム参照
 var board_system: Node = null
 var player_system: Node = null
@@ -15,6 +20,16 @@ func initialize(b_system: Node, p_system: Node, c_system: Node, l_system: Node =
 	player_system = p_system
 	card_system = c_system
 	lap_system = l_system
+
+
+## 共有コンテキストを設定
+func set_context(context: CPUAIContextScript) -> void:
+	_context = context
+	if _context:
+		board_system = _context.board_system
+		player_system = _context.player_system
+		card_system = _context.card_system
+		lap_system = _context.lap_system
 
 # =============================================================================
 # コンテキスト構築
