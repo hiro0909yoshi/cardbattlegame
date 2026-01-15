@@ -8,44 +8,70 @@
 extends RefCounted
 class_name CPUMovementEvaluator
 
+# 定数・共通クラスをpreload
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUAIConstantsScript = preload("res://scripts/cpu_ai/cpu_ai_constants.gd")
+
 # =============================================================================
-# スコア定数
+# スコア定数（CPUAIConstantsへのエイリアス）
 # =============================================================================
 
 # 停止位置スコア
-const SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER = -1    # 敵領地（倒せない）: -通行料 × 1
-const SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER = 2      # 敵領地（倒せる）: +通行料 × 2
-const SCORE_STOP_EMPTY_ELEMENT_MATCH = 200         # 空き地（属性一致・召喚可能）
-const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 50       # 空き地（属性不一致・召喚可能）
-const SCORE_STOP_EMPTY_NO_SUMMON = 0               # 空き地（召喚不可）
-const SCORE_STOP_OWN_LAND = 0                      # 自分の領地
-const SCORE_STOP_SPECIAL_TILE = 50                 # 特殊タイル（城、魔法石等）
-const SCORE_STOP_CHECKPOINT_LAP = 1500             # チェックポイント停止で1周達成（未使用）
-const SCORE_PATH_CHECKPOINT_PASS = 0              # 経路上でチェックポイント通過（削除）
+const SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER = CPUAIConstantsScript.SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER
+const SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER = CPUAIConstantsScript.SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER
+const SCORE_STOP_EMPTY_ELEMENT_MATCH = CPUAIConstantsScript.SCORE_STOP_EMPTY_ELEMENT_MATCH
+const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = CPUAIConstantsScript.SCORE_STOP_EMPTY_ELEMENT_MISMATCH
+const SCORE_STOP_EMPTY_NO_SUMMON = CPUAIConstantsScript.SCORE_STOP_EMPTY_NO_SUMMON
+const SCORE_STOP_OWN_LAND = CPUAIConstantsScript.SCORE_STOP_OWN_LAND
+const SCORE_STOP_SPECIAL_TILE = CPUAIConstantsScript.SCORE_STOP_SPECIAL_TILE
+const SCORE_STOP_CHECKPOINT_LAP = CPUAIConstantsScript.SCORE_STOP_CHECKPOINT_LAP
+const SCORE_PATH_CHECKPOINT_PASS = CPUAIConstantsScript.SCORE_PATH_CHECKPOINT_PASS
 
 # 経路スコア
-const SCORE_PATH_DIVISOR = 10                      # 経路スコアの除数（1/10にする）
+const SCORE_PATH_DIVISOR = CPUAIConstantsScript.SCORE_PATH_DIVISOR
 
 # 方向ボーナス
-const SCORE_DIRECTION_UNVISITED_GATE = 1200        # 未訪問ゲート方向ボーナス（未使用）
-const SCORE_CHECKPOINT_DIRECTION_BONUS = 900       # 最短CP方向ボーナス
+const SCORE_DIRECTION_UNVISITED_GATE = CPUAIConstantsScript.SCORE_DIRECTION_UNVISITED_GATE
+const SCORE_CHECKPOINT_DIRECTION_BONUS = CPUAIConstantsScript.SCORE_CHECKPOINT_DIRECTION_BONUS
 
 # 足止めペナルティ
-const SCORE_FORCED_STOP_PENALTY = -200             # 足止めペナルティ基礎値
+const SCORE_FORCED_STOP_PENALTY = CPUAIConstantsScript.SCORE_FORCED_STOP_PENALTY
 
 # 経路評価の最大距離
-const PATH_EVALUATION_DISTANCE = 10
+const PATH_EVALUATION_DISTANCE = CPUAIConstantsScript.PATH_EVALUATION_DISTANCE
 
 # =============================================================================
-# システム参照
+# 共有コンテキスト
 # =============================================================================
 
-var board_system = null
-var player_system: PlayerSystem = null
-var lap_system = null
+var _context: CPUAIContextScript = null
+
+# =============================================================================
+# システム参照（後方互換性のため）
+# =============================================================================
+
+var _board_system = null
+var _player_system: PlayerSystem = null
+var _lap_system = null
+var _card_system = null
+var _battle_simulator = null
+
+# システム参照のgetter
+var board_system:
+	get: return _context.board_system if _context else _board_system
+var player_system: PlayerSystem:
+	get: return _context.player_system if _context else _player_system
+var lap_system:
+	get: return _context.lap_system if _context else _lap_system
+var card_system:
+	get: return _context.card_system if _context else _card_system
+var battle_simulator:
+	get:
+		if _context:
+			return _context.get_battle_simulator()
+		return _battle_simulator
+
 var movement_controller = null
-var card_system = null
-var battle_simulator = null
 var spell_movement: SpellMovement = null
 var battle_ai: CPUBattleAI = null
 
@@ -57,16 +83,25 @@ var _current_branch_tile: int = -1
 
 
 
-## システム参照を設定
+## 共有コンテキストでセットアップ（推奨）
+func setup_with_context(context: CPUAIContextScript, p_movement_controller = null,
+		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null) -> void:
+	_context = context
+	movement_controller = p_movement_controller
+	spell_movement = p_spell_movement
+	battle_ai = p_battle_ai
+
+
+## システム参照を設定（後方互換性のため残す）
 func setup_systems(p_board_system, p_player_system: PlayerSystem, p_lap_system = null, 
 		p_movement_controller = null, p_card_system = null, p_battle_simulator = null,
 		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null):
-	board_system = p_board_system
-	player_system = p_player_system
-	lap_system = p_lap_system
+	_board_system = p_board_system
+	_player_system = p_player_system
+	_lap_system = p_lap_system
 	movement_controller = p_movement_controller
-	card_system = p_card_system
-	battle_simulator = p_battle_simulator
+	_card_system = p_card_system
+	_battle_simulator = p_battle_simulator
 	spell_movement = p_spell_movement
 	battle_ai = p_battle_ai
 

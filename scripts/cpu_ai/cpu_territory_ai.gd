@@ -5,95 +5,115 @@ extends RefCounted
 ## 領地コマンド（レベルアップ、属性変更、移動侵略、クリーチャー交換）の
 ## 利益スコアを計算し、最適な行動を選択する。
 
+# 定数・共通クラスをpreload
 const CardRateEvaluator = preload("res://scripts/cpu_ai/card_rate_evaluator.gd")
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUAIConstantsScript = preload("res://scripts/cpu_ai/cpu_ai_constants.gd")
 
-# === 定数 ===
+# === 定数（CPUAIConstantsへのエイリアス） ===
+# 後方互換性のため、既存コードが参照できるようにエイリアスを定義
 
 ## 基準スコア: 空き地に属性一致召喚
-const SUMMON_BASE_SCORE = 290
-
+const SUMMON_BASE_SCORE = CPUAIConstantsScript.SUMMON_BASE_SCORE
 ## 基準スコア: 空き地に属性不一致召喚
-const SUMMON_MISMATCH_SCORE = 100
-
+const SUMMON_MISMATCH_SCORE = CPUAIConstantsScript.SUMMON_MISMATCH_SCORE
 ## 移動侵略（空き地）: 属性一致ボーナス
-const MOVE_ELEMENT_MATCH_BONUS = 150
-
+const MOVE_ELEMENT_MATCH_BONUS = CPUAIConstantsScript.MOVE_ELEMENT_MATCH_BONUS
 ## 移動侵略（空き地）: 連鎖数係数
-const MOVE_CHAIN_MULTIPLIER = 50
-
+const MOVE_CHAIN_MULTIPLIER = CPUAIConstantsScript.MOVE_CHAIN_MULTIPLIER
 ## 移動侵略/侵略: 属性一致ボーナス
-const INVASION_ELEMENT_MATCH_BONUS = 50
-
+const INVASION_ELEMENT_MATCH_BONUS = CPUAIConstantsScript.INVASION_ELEMENT_MATCH_BONUS
 ## 侵略: 敵資産減少倍率（自分の増加 + 敵の減少）
-const INVASION_ASSET_MULTIPLIER = 2
-
+const INVASION_ASSET_MULTIPLIER = CPUAIConstantsScript.INVASION_ASSET_MULTIPLIER
 ## クリーチャー交換: レート差係数
-const SWAP_RATE_MULTIPLIER = 2
-
+const SWAP_RATE_MULTIPLIER = CPUAIConstantsScript.SWAP_RATE_MULTIPLIER
 ## クリーチャー交換: 属性一致ボーナス
-const SWAP_ELEMENT_MATCH_BONUS = 150
-
+const SWAP_ELEMENT_MATCH_BONUS = CPUAIConstantsScript.SWAP_ELEMENT_MATCH_BONUS
 ## クリーチャー交換: 属性不一致ペナルティ
-const SWAP_ELEMENT_MISMATCH_PENALTY = -500
-
+const SWAP_ELEMENT_MISMATCH_PENALTY = CPUAIConstantsScript.SWAP_ELEMENT_MISMATCH_PENALTY
 ## クリーチャー交換: 土地レベル係数
-const SWAP_LEVEL_MULTIPLIER = 20
-
+const SWAP_LEVEL_MULTIPLIER = CPUAIConstantsScript.SWAP_LEVEL_MULTIPLIER
 ## クリーチャー交換: 最低スコア閾値
-const SWAP_MIN_SCORE_THRESHOLD = 25
-
+const SWAP_MIN_SCORE_THRESHOLD = CPUAIConstantsScript.SWAP_MIN_SCORE_THRESHOLD
 ## 属性変更: 基本スコア
-const ELEMENT_CHANGE_BASE_SCORE = 100
-
+const ELEMENT_CHANGE_BASE_SCORE = CPUAIConstantsScript.ELEMENT_CHANGE_BASE_SCORE
 ## 属性変更: 無属性ボーナス
-const ELEMENT_CHANGE_NEUTRAL_BONUS = 100
-
+const ELEMENT_CHANGE_NEUTRAL_BONUS = CPUAIConstantsScript.ELEMENT_CHANGE_NEUTRAL_BONUS
 ## 属性変更: コスト係数
-const ELEMENT_CHANGE_COST_MULTIPLIER = 0.3
-
+const ELEMENT_CHANGE_COST_MULTIPLIER = CPUAIConstantsScript.ELEMENT_CHANGE_COST_MULTIPLIER
 ## 危機モード: 残り魔力閾値
-const CRISIS_MODE_THRESHOLD = 100
-
+const CRISIS_MODE_THRESHOLD = CPUAIConstantsScript.CRISIS_MODE_THRESHOLD
 ## 危機モード: スコア（最優先）
-const CRISIS_MODE_SCORE = 9999
-
+const CRISIS_MODE_SCORE = CPUAIConstantsScript.CRISIS_MODE_SCORE
 ## 魔力温存: 残す割合（30%）
-const MAGIC_RESERVE_RATIO = 0.3
-
+const MAGIC_RESERVE_RATIO = CPUAIConstantsScript.MAGIC_RESERVE_RATIO
 ## 魔力温存: 最低残高
-const MAGIC_RESERVE_MINIMUM = 100
+const MAGIC_RESERVE_MINIMUM = CPUAIConstantsScript.MAGIC_RESERVE_MINIMUM
 
-# === 参照 ===
+# === 共有コンテキスト ===
+var _context: CPUAIContextScript = null
 
-var board_system = null
-var card_system = null
-var player_system = null
-var creature_manager = null
-var battle_simulator: BattleSimulator = null
+# === 参照（後方互換性のため） ===
+var _board_system = null
+var _card_system = null
+var _player_system = null
+var _creature_manager = null
+var _battle_simulator_local: BattleSimulator = null
+var _tile_action_processor = null
+
+# システム参照のgetter
+var board_system:
+	get: return _context.board_system if _context else _board_system
+var card_system:
+	get: return _context.card_system if _context else _card_system
+var player_system:
+	get: return _context.player_system if _context else _player_system
+var creature_manager:
+	get: return _context.creature_manager if _context else _creature_manager
+var battle_simulator: BattleSimulator:
+	get:
+		if _context:
+			return _context.get_battle_simulator()
+		return _battle_simulator_local
+var tile_action_processor:
+	get: return _context.tile_action_processor if _context else _tile_action_processor
+
 var battle_ai: CPUBattleAI = null
 var sacrifice_selector: CPUSacrificeSelector = null
 var creature_synthesis: CreatureSynthesis = null
-var tile_action_processor = null  # 土地条件チェック用
 
 
-## 初期化
+## 共有コンテキストでセットアップ（推奨）
+func setup_with_context(context: CPUAIContextScript) -> void:
+	_context = context
+	
+	# BattleAIを作成（コンテキストを共有）
+	battle_ai = CPUBattleAI.new()
+	battle_ai.setup_with_context(context)
+	
+	# 犠牲カード選択クラスを初期化
+	sacrifice_selector = CPUSacrificeSelector.new()
+	sacrifice_selector.initialize(card_system, board_system)
+
+
+## 初期化（後方互換性のため残す）
 func setup(p_board_system, p_card_system, p_player_system, p_creature_manager) -> void:
-	board_system = p_board_system
-	card_system = p_card_system
-	player_system = p_player_system
-	creature_manager = p_creature_manager
+	_board_system = p_board_system
+	_card_system = p_card_system
+	_player_system = p_player_system
+	_creature_manager = p_creature_manager
 	
 	# BattleSimulatorを作成
-	battle_simulator = BattleSimulator.new()
-	battle_simulator.setup_systems(board_system, card_system, player_system)
+	_battle_simulator_local = BattleSimulator.new()
+	_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system)
 	
 	# BattleAIを作成（アイテム込みの評価用）
 	battle_ai = CPUBattleAI.new()
-	battle_ai.setup_systems(card_system, board_system, player_system, null)
+	battle_ai.setup_systems(_card_system, _board_system, _player_system, null)
 	
 	# hand_utilsを作成してbattle_aiに設定
 	var hand_utils = CPUHandUtils.new()
-	hand_utils.setup_systems(card_system, board_system, player_system, null)
+	hand_utils.setup_systems(_card_system, _board_system, _player_system, null)
 	battle_ai.set_hand_utils(hand_utils)
 	
 	# 犠牲カード選択クラスを初期化

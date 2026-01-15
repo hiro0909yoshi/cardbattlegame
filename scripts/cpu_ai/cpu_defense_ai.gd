@@ -1,46 +1,79 @@
 ## CPU防御側判断AI
-## CPU防御側判断AI
 ## 防御時のアイテム/援護/合体の判断を行う
 class_name CPUDefenseAI
 extends RefCounted
 
+# 定数・共通クラスをpreload
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
-# SkillMergeはグローバルclass_nameなので直接使用
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 
-var card_system: CardSystem
-var player_system: PlayerSystem
-var game_flow_manager
-var board_system
-var tile_action_processor  # デバッグフラグ参照用
-var battle_simulator: BattleSimulatorScript
-var cpu_hand_utils: CPUHandUtils
+# 共有コンテキスト
+var _context: CPUAIContextScript = null
+
+# システム参照（後方互換性のため）
+var _card_system: CardSystem = null
+var _player_system: PlayerSystem = null
+var _game_flow_manager = null
+var _board_system = null
+var _tile_action_processor = null
+var _battle_simulator_local: BattleSimulatorScript = null
+var _cpu_hand_utils_local: CPUHandUtils = null
+
+# システム参照のgetter
+var card_system: CardSystem:
+	get: return _context.card_system if _context else _card_system
+var player_system: PlayerSystem:
+	get: return _context.player_system if _context else _player_system
+var game_flow_manager:
+	get: return _context.game_flow_manager if _context else _game_flow_manager
+var board_system:
+	get: return _context.board_system if _context else _board_system
+var tile_action_processor:
+	get: return _context.tile_action_processor if _context else _tile_action_processor
+var battle_simulator: BattleSimulatorScript:
+	get:
+		if _context:
+			return _context.get_battle_simulator()
+		return _battle_simulator_local
+var cpu_hand_utils: CPUHandUtils:
+	get:
+		if _context:
+			return _context.get_hand_utils()
+		return _cpu_hand_utils_local
+
 var merge_evaluator: CPUMergeEvaluator
 
-## セットアップ
+
+## 共有コンテキストでセットアップ（推奨）
+func setup_with_context(context: CPUAIContextScript) -> void:
+	_context = context
+
+
+## セットアップ（後方互換性のため残す）
 func setup_systems(c_system: CardSystem, p_system: PlayerSystem, gf_manager, b_system) -> void:
-	card_system = c_system
-	player_system = p_system
-	game_flow_manager = gf_manager
-	board_system = b_system
+	_card_system = c_system
+	_player_system = p_system
+	_game_flow_manager = gf_manager
+	_board_system = b_system
 	
 	# TileActionProcessor参照を取得（デバッグフラグ用）
 	if b_system:
-		tile_action_processor = b_system.tile_action_processor
+		_tile_action_processor = b_system.tile_action_processor
 	
 	_ensure_battle_simulator()
 
 func set_hand_utils(utils: CPUHandUtils) -> void:
-	cpu_hand_utils = utils
+	_cpu_hand_utils_local = utils
 
 func set_merge_evaluator(evaluator: CPUMergeEvaluator) -> void:
 	merge_evaluator = evaluator
 
 func _ensure_battle_simulator() -> void:
-	if battle_simulator:
+	if _battle_simulator_local or _context:
 		return
-	battle_simulator = BattleSimulatorScript.new()
-	if board_system:
-		battle_simulator.setup_systems(board_system, card_system, player_system, game_flow_manager)
+	_battle_simulator_local = BattleSimulatorScript.new()
+	if _board_system:
+		_battle_simulator_local.setup_systems(_board_system, _card_system, _player_system, _game_flow_manager)
 
 ## 防御アクションを決定
 ## @param context: {
@@ -51,14 +84,14 @@ func _ensure_battle_simulator() -> void:
 ##   attacker_player_id: int
 ## }
 ## @return: { action: "item"|"support"|"merge"|"pass", item: Dictionary, creature: Dictionary, merge_data: Dictionary }
-func decide_defense_action(context: Dictionary) -> Dictionary:
+func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	var result = { "action": "pass" }
 	
-	var player_id = context.get("player_id", 0)
-	var defender = context.get("defender_creature", {})
-	var attacker = context.get("attacker_creature", {})
-	var tile_info = context.get("tile_info", {})
-	var attacker_player_id = context.get("attacker_player_id", -1)
+	var player_id = defense_context.get("player_id", 0)
+	var defender = defense_context.get("defender_creature", {})
+	var attacker = defense_context.get("attacker_creature", {})
+	var tile_info = defense_context.get("tile_info", {})
+	var attacker_player_id = defense_context.get("attacker_player_id", -1)
 	var tile_level = tile_info.get("level", 1)
 	
 	print("[CPUDefenseAI] 判断開始: %s vs %s (Lv%d)" % [

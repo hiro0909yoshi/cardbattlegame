@@ -226,6 +226,9 @@ func phase_3_setup_basic_config() -> void:
 func phase_4_setup_system_interconnections() -> void:
 	print("[GameSystemManager] Phase 4: システム間連携設定開始")
 	
+	# BattleScreenManager を先に初期化（battle_system.setup_systems()より前に必要）
+	_setup_battle_screen_manager()
+	
 	# ===== 4-1: 基本システム参照設定 =====
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定")
 	
@@ -295,8 +298,7 @@ func phase_4_setup_system_interconnections() -> void:
 	# スペルシステム初期化
 	_setup_spell_systems()
 	
-	# BattleScreenManager 初期化
-	_setup_battle_screen_manager()
+	# BattleScreenManager は Phase 4開始時に初期化済み
 	
 	# MagicStoneSystem 初期化
 	_setup_magic_stone_system()

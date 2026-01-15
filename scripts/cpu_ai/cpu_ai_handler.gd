@@ -9,25 +9,34 @@ signal battle_decided(creature_index: int, item_index: int)
 signal level_up_decided(do_upgrade: bool)
 signal territory_command_decided(command: Dictionary)
 
-# 定数をpreload
+# 定数・共通クラスをpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-
-# 無限ループ防止用定数
-const MAX_DECISION_ATTEMPTS = 3
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUAIConstantsScript = preload("res://scripts/cpu_ai/cpu_ai_constants.gd")
 
 # 試行回数カウンター
 var decision_attempts = 0
 
-# システム参照
-var card_system: CardSystem
-var board_system
-var player_system: PlayerSystem
-var battle_system: BattleSystem
-var player_buff_system: PlayerBuffSystem
-var game_flow_manager_ref = null
+# 共有コンテキスト
+var context: CPUAIContextScript = null
+
+# システム参照（後方互換性のため残す、contextから取得）
+var card_system: CardSystem:
+	get: return context.card_system if context else null
+var board_system:
+	get: return context.board_system if context else null
+var player_system: PlayerSystem:
+	get: return context.player_system if context else null
+var battle_system: BattleSystem:
+	get: return context.battle_system if context else null
+var player_buff_system: PlayerBuffSystem:
+	get: return context.player_buff_system if context else null
+var game_flow_manager_ref:
+	get: return context.game_flow_manager if context else null
 
 # 分割されたAIモジュール
-var hand_utils: CPUHandUtils = null
+var hand_utils: CPUHandUtils:
+	get: return context.get_hand_utils() if context else null
 var battle_ai: CPUBattleAI = null
 var territory_ai: CPUTerritoryAI = null
 
@@ -36,27 +45,24 @@ func _ready():
 
 # システム参照を設定
 func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_system: BattleSystem, s_system: PlayerBuffSystem, gf_manager = null):
-	card_system = c_system
-	board_system = b_system
-	player_system = p_system
-	battle_system = bt_system
-	player_buff_system = s_system
-	game_flow_manager_ref = gf_manager
+	# コンテキストを初期化
+	context = CPUAIContextScript.new()
+	context.setup(b_system, p_system, c_system)
+	context.setup_optional(
+		BaseTile.creature_manager if BaseTile.creature_manager else null,
+		null,  # lap_system
+		gf_manager,
+		bt_system,
+		s_system
+	)
 	
-	# 手札ユーティリティを初期化
-	hand_utils = CPUHandUtils.new()
-	hand_utils.setup_systems(card_system, board_system, player_system, player_buff_system)
-	
-	# バトルAIを初期化
+	# バトルAIを初期化（context方式）
 	battle_ai = CPUBattleAI.new()
-	battle_ai.setup_systems(card_system, board_system, player_system, player_buff_system, game_flow_manager_ref)
-	battle_ai.set_hand_utils(hand_utils)
+	battle_ai.setup_with_context(context)
 	
-	# 領地コマンドAIを初期化
+	# 領地コマンドAIを初期化（context方式）
 	territory_ai = CPUTerritoryAI.new()
-	# creature_managerはBaseTileの静的参照から取得
-	var creature_manager = BaseTile.creature_manager if BaseTile.creature_manager else null
-	territory_ai.setup(board_system, card_system, player_system, creature_manager)
+	territory_ai.setup_with_context(context)
 	
 	# クリーチャー合成システムを設定（カード犠牲選択用）
 	if CardLoader:
@@ -64,13 +70,19 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 		territory_ai.set_creature_synthesis(creature_synth)
 	
 	# TileActionProcessorを設定（土地条件チェック用）
-	if board_system and board_system.has_node("TileActionProcessor"):
-		var tap = board_system.get_node("TileActionProcessor")
-		territory_ai.set_tile_action_processor(tap)
+	if context.tile_action_processor:
+		territory_ai.set_tile_action_processor(context.tile_action_processor)
+
+
+## 共有コンテキストを取得（他のAIモジュールから参照用）
+func get_context() -> CPUAIContextScript:
+	return context
+
 
 # GameFlowManagerを後から設定
 func set_game_flow_manager(gf_manager) -> void:
-	game_flow_manager_ref = gf_manager
+	if context:
+		context.set_game_flow_manager(gf_manager)
 	if battle_ai:
 		battle_ai.set_game_flow_manager(gf_manager)
 
@@ -83,7 +95,7 @@ func decide_summon(current_player, tile_element: String = "") -> void:
 	decision_attempts += 1
 	
 	# 最大試行回数チェック
-	if decision_attempts > MAX_DECISION_ATTEMPTS:
+	if decision_attempts > CPUAIConstantsScript.MAX_DECISION_ATTEMPTS:
 		decision_attempts = 0
 		emit_signal("summon_decided", -1)
 		return
@@ -116,7 +128,7 @@ func decide_invasion(current_player, _tile_info: Dictionary) -> void:
 	decision_attempts += 1
 	
 	# 最大試行回数チェック
-	if decision_attempts > MAX_DECISION_ATTEMPTS:
+	if decision_attempts > CPUAIConstantsScript.MAX_DECISION_ATTEMPTS:
 		decision_attempts = 0
 		emit_signal("battle_decided", -1, -1)
 		return
@@ -141,7 +153,7 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	print("[CPU AI] バトル判断中...")
 	
 	# 最大試行回数チェック
-	if decision_attempts > MAX_DECISION_ATTEMPTS:
+	if decision_attempts > CPUAIConstantsScript.MAX_DECISION_ATTEMPTS:
 		print("[CPU AI] 最大試行回数に達しました（バトル）")
 		decision_attempts = 0
 		emit_signal("battle_decided", -1, -1)
@@ -199,7 +211,7 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 	decision_attempts += 1
 	
 	# 最大試行回数チェック
-	if decision_attempts > MAX_DECISION_ATTEMPTS:
+	if decision_attempts > CPUAIConstantsScript.MAX_DECISION_ATTEMPTS:
 		decision_attempts = 0
 		emit_signal("level_up_decided", false)
 		return
@@ -224,7 +236,7 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 func decide_territory_command(current_player, tile_info: Dictionary, situation: String = "own_land") -> void:
 	decision_attempts += 1
 	
-	if decision_attempts > MAX_DECISION_ATTEMPTS:
+	if decision_attempts > CPUAIConstantsScript.MAX_DECISION_ATTEMPTS:
 		decision_attempts = 0
 		emit_signal("territory_command_decided", {})
 		return
@@ -236,10 +248,10 @@ func decide_territory_command(current_player, tile_info: Dictionary, situation: 
 		return
 	
 	# コンテキストを構築
-	var context = _build_territory_context(current_player, tile_info, situation)
+	var cmd_context = _build_territory_context(current_player, tile_info, situation)
 	
 	# 全オプションを評価
-	var best_option = territory_ai.evaluate_all_options(context)
+	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	if best_option.is_empty():
 		print("[CPU AI] 領地コマンド: 有効なオプションなし")
@@ -257,7 +269,7 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 	if territory_ai == null:
 		return {"action": "summon"}
 	
-	var context = _build_territory_context(current_player, tile_info, "empty_land")
+	var cmd_context = _build_territory_context(current_player, tile_info, "empty_land")
 	
 	# 属性一致クリーチャーがあれば召喚優先
 	var tile_element = tile_info.get("element", "")
@@ -267,13 +279,13 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 		return {"action": "summon"}
 	
 	# 領地コマンドを評価
-	var best_option = territory_ai.evaluate_all_options(context)
+	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	if best_option.is_empty():
 		return {"action": "summon"}
 	
 	# 属性不一致召喚のスコアは低い
-	var summon_score = CPUTerritoryAI.SUMMON_MISMATCH_SCORE
+	var summon_score = CPUAIConstantsScript.SUMMON_MISMATCH_SCORE
 	var command_score = best_option.get("score", 0)
 	
 	if command_score > summon_score:
@@ -287,20 +299,20 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	if territory_ai == null:
 		return {"action": "battle"}
 	
-	var context = _build_territory_context(current_player, tile_info, "enemy_land")
+	var cmd_context = _build_territory_context(current_player, tile_info, "enemy_land")
 	
 	# 戦闘可能か判定
 	var can_win = _can_win_current_battle(current_player, tile_info)
 	
 	if not can_win:
 		# 倒せない場合は領地コマンドを検討
-		var territory_option = territory_ai.evaluate_all_options(context)
+		var territory_option = territory_ai.evaluate_all_options(cmd_context)
 		if not territory_option.is_empty():
 			return {"action": "territory_command", "command": territory_option}
 		return {"action": "skip"}
 	
 	# 倒せる場合は侵略スコアと領地コマンドスコアを比較
-	var best_option = territory_ai.evaluate_all_options(context)
+	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	# 侵略スコアを計算（territory_aiの_evaluate_invasionと同じ計算）
 	var tile = board_system.tile_nodes.get(tile_info.get("index", -1))
@@ -309,7 +321,7 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	
 	var chain_bonus = board_system.tile_data_manager.calculate_chain_bonus(tile_info.get("index", 0), tile.owner_id)
 	var level = tile.level
-	var invasion_score = (level * chain_bonus * 100 + 50) * 2  # ×2は敵資産減少
+	var invasion_score = (level * chain_bonus * 100 + 50) * CPUAIConstantsScript.INVASION_ASSET_MULTIPLIER
 	
 	var command_score = best_option.get("score", 0)
 	
@@ -393,7 +405,7 @@ func _can_win_current_battle(current_player, tile_info: Dictionary) -> bool:
 
 # CPUの思考時間をシミュレート
 func simulate_thinking_time() -> void:
-	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(CPUAIConstantsScript.CPU_THINKING_DELAY).timeout
 
 # デバッグ：CPU判断を表示
 func debug_print_decision(action: String, params: Dictionary):
@@ -403,6 +415,8 @@ func debug_print_decision(action: String, params: Dictionary):
 
 # BattleSimulatorのログ出力を切り替え
 func set_simulator_log_enabled(enabled: bool) -> void:
+	if context:
+		context.set_simulator_log_enabled(enabled)
 	if battle_ai:
 		battle_ai.set_simulator_log_enabled(enabled)
 
