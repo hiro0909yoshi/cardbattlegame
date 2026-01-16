@@ -31,9 +31,9 @@ const PRIORITY_VALUES = {
 }
 
 ## 共有コンテキストを設定
-func set_context(context: CPUAIContextScript) -> void:
-	_context = context
-	if _context:
+func initialize(ctx: CPUAIContextScript) -> void:
+	_context = ctx
+	if ctx:
 		board_system = _context.board_system
 		player_system = _context.player_system
 		card_system = _context.card_system
@@ -43,7 +43,7 @@ func set_context(context: CPUAIContextScript) -> void:
 	
 	# 条件チェッカー初期化（contextを共有）
 	condition_checker = CPUSpellConditionChecker.new()
-	condition_checker.set_context(_context)
+	condition_checker.initialize(_context)
 	
 	# CPUTargetResolverの初期化
 	target_resolver = CPUTargetResolver.new()

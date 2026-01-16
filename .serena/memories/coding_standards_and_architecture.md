@@ -120,6 +120,44 @@ if creature_mhp >= 50:  // ✅ Correct calculation
     qualified_count += 1
 ```
 
+## Naming Conventions (2026-01-16)
+
+### Initialization Methods
+メソッドの処理内容に応じて使い分ける：
+
+| メソッド名 | 用途 | 処理内容 |
+|-----------|------|---------|
+| `_init()` | コンストラクタ | 外部依存なし |
+| `initialize()` | 初期化 | 外部システム参照を受け取り、内部で`new()`で子オブジェクトも生成 |
+| `setup()` / `setup_systems()` | 初期化 | `initialize()`と同義、複数システムを受け取る場合に使用 |
+| `setup_with_context()` | context初期化 | contextを受け取り、内部で子オブジェクトも生成 |
+| `set_xxx()` | 単一値設定 | 1つのプロパティをセット、後から変更可能 |
+| `set_context()` | context設定 | contextオブジェクトを保存するだけ（子オブジェクト生成なし） |
+
+**判定基準**:
+- `new()`で子オブジェクト生成あり → `initialize()` または `setup_with_context()`
+- context保存のみ → `set_context()` でOK
+- 子への伝播のみ → `set_context()` でOK
+
+```gdscript
+// ❌ BAD: 名前と処理が不一致
+func set_context(context):
+    _context = context
+    target_resolver = CPUTargetResolver.new()  # new()があるのにset_context
+
+// ✅ GOOD: 処理に合った名前
+func initialize(context):
+    _context = context
+    target_resolver = CPUTargetResolver.new()  # 初期化処理なのでinitialize
+```
+
+### Reference Variable Naming (`_ref` suffix)
+現状、プロジェクト内で混在している（統一されていない）：
+- battle系: `board_system_ref`, `card_system_ref` (`_ref`あり)
+- その他: `board_system`, `card_system` (`_ref`なし)
+
+**現状維持**: 動作に影響なし。新規コードでは既存ファイルのスタイルに合わせる。
+
 ## Core Architecture
 
 ### Main Systems
@@ -371,4 +409,4 @@ Chain  Toll    HP Bonus
 - [ ] Prevent phase duplication
 - [ ] **Use viewport-relative positioning (NEVER hardcode coordinates)**
 
-Last updated: 2025-10-30
+Last updated: 2026-01-16

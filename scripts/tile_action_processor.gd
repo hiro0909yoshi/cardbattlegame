@@ -23,13 +23,14 @@ var cpu_turn_processor  # CPUTurnProcessor型を一時的に削除
 var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
 var creature_synthesis: CreatureSynthesis = null  # クリーチャー合成システム
 var sacrifice_selector: CPUSacrificeSelector = null  # CPU用犠牲カード選択
+var cpu_tile_action_executor: CPUTileActionExecutor = null  # CPU実行処理
 
 # デバッグフラグ
 ## 召喚条件デバッグフラグ（CPU側も参照）
-var debug_disable_card_sacrifice: bool = true   # true=カード犠牲を無効化
-var debug_disable_lands_required: bool = true   # true=土地条件（必要シンボル）を無効化
-var debug_disable_cannot_summon: bool = true    # true=配置制限を無効化
-var debug_disable_cannot_use: bool = true       # true=アイテム使用制限を無効化
+var debug_disable_card_sacrifice: bool = false   # false=カード犠牲を有効化
+var debug_disable_lands_required: bool = false   # false=土地条件（必要シンボル）を有効化
+var debug_disable_cannot_summon: bool = false    # false=配置制限を有効化
+var debug_disable_cannot_use: bool = false       # false=アイテム使用制限を有効化
 
 # 状態管理
 var is_action_processing = false
@@ -1110,109 +1111,33 @@ func _complete_action():
 # ============================================================
 
 ## CPU用召喚実行
-## プレイヤーと同じ処理を行う（土地条件、カード犠牲、合成処理含む）
+## CPUTileActionExecutorに委譲
 func execute_summon_for_cpu(card_index: int) -> bool:
 	print("[TileActionProcessor] CPU召喚開始: card_index=%d" % card_index)
-	if card_index < 0:
-		return false
+	
+	# CPUTileActionExecutorを初期化
+	if not cpu_tile_action_executor:
+		cpu_tile_action_executor = CPUTileActionExecutor.new()
+		cpu_tile_action_executor.initialize(self)
 	
 	is_action_processing = true
-	
 	var current_player_index = board_system.current_player_index
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
 	
-	if card_data.is_empty():
+	# 準備処理（条件チェック、犠牲処理、合成処理）
+	var prep = cpu_tile_action_executor.prepare_summon(card_index, current_player_index)
+	if not prep.get("success", false):
+		var reason = prep.get("reason", "unknown")
+		print("[TileActionProcessor] CPU: 召喚準備失敗: %s" % reason)
 		is_action_processing = false
 		return false
 	
-	var target_tile = board_system.movement_controller.get_player_tile(current_player_index)
-	var tile = board_system.tile_nodes.get(target_tile)
-	
-	# 配置可能タイルかチェック
-	if tile and not tile.can_place_creature():
-		print("[TileActionProcessor] CPU: このタイルには配置できません")
+	# 召喚実行
+	var success = cpu_tile_action_executor.execute_summon(prep, current_player_index)
+	if not success:
 		is_action_processing = false
 		return false
 	
-	# 防御型チェック: 空き地以外には召喚できない
-	var creature_type = card_data.get("creature_type", "normal")
-	if creature_type == "defensive":
-		var tile_info = board_system.get_tile_info(target_tile)
-		if tile_info["owner"] != -1:
-			print("[TileActionProcessor] CPU: 防御型クリーチャーは空き地にのみ召喚可能")
-			is_action_processing = false
-			return false
-	
-	# 土地条件チェック
-	if not debug_disable_lands_required and not _is_summon_condition_ignored():
-		var check_result = check_lands_required(card_data, current_player_index)
-		if not check_result.passed:
-			print("[TileActionProcessor] CPU: 土地条件未達: %s" % check_result.message)
-			is_action_processing = false
-			return false
-	
-	# 配置制限チェック（cannot_summon）
-	if not debug_disable_cannot_summon and not _is_summon_condition_ignored():
-		var tile_element_for_check = tile.element if tile and "element" in tile else ""
-		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
-		if not cannot_result.passed:
-			print("[TileActionProcessor] CPU: 配置制限: %s" % cannot_result.message)
-			is_action_processing = false
-			return false
-	
-	# カード犠牲処理（CPUは自動選択）
-	var sacrifice_card = {}
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		# タイル属性を取得
-		var tile_element = ""
-		if tile:
-			tile_element = tile.element if "element" in tile else ""
-		sacrifice_card = _auto_select_sacrifice_card_for_cpu(current_player_index, card_data, tile_element)
-		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
-			print("[TileActionProcessor] CPU: 犠牲カードなし、召喚キャンセル")
-			is_action_processing = false
-			return false
-	
-	# クリーチャー合成処理
-	if not sacrifice_card.is_empty() and creature_synthesis:
-		var is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
-		if is_synthesized:
-			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
-			print("[TileActionProcessor] CPU: 合成成立: %s" % card_data.get("name", "?"))
-	
-	# コスト計算
-	var cost_data = card_data.get("cost", 1)
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
-	else:
-		cost = cost_data
-	
-	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
-	
-	var current_player = player_system.get_current_player()
-	
-	if current_player.magic_power < cost:
-		print("[TileActionProcessor] CPU: 魔力不足で召喚できません")
-		is_action_processing = false
-		return false
-	
-	# カード使用と魔力消費
-	card_system.use_card_for_player(current_player_index, card_index)
-	player_system.add_magic(current_player_index, -cost)
-	
-	# 土地取得とクリーチャー配置
-	board_system.set_tile_owner(target_tile, current_player_index)
-	board_system.place_creature(target_tile, card_data)
-	
-	# ダウン状態設定（不屈チェック）
-	if tile and tile.has_method("set_down_state"):
-		if not PlayerBuffSystem.has_unyielding(card_data):
-			tile.set_down_state(true)
-	
-	print("[TileActionProcessor] CPU召喚成功: %s" % card_data.get("name", "?"))
+	print("[TileActionProcessor] CPU召喚成功: %s" % prep.get("card_data", {}).get("name", "?"))
 	
 	# UI更新
 	if ui_manager:
@@ -1223,88 +1148,40 @@ func execute_summon_for_cpu(card_index: int) -> bool:
 	return true
 
 ## CPU用バトル実行
-## プレイヤーと同じ処理を行う（土地条件、カード犠牲、合成処理含む）
+## CPUTileActionExecutorに準備処理を委譲
 ## item_index: CPUが使用するアイテムの手札インデックス（-1=使用しない）
 func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: int = -1) -> bool:
 	print("[TileActionProcessor] CPUバトル開始: card_index=%d, item_index=%d" % [card_index, item_index])
-	if card_index < 0:
-		return false
+	
+	# CPUTileActionExecutorを初期化
+	if not cpu_tile_action_executor:
+		cpu_tile_action_executor = CPUTileActionExecutor.new()
+		cpu_tile_action_executor.initialize(self)
 	
 	is_action_processing = true
-	
 	var current_player_index = board_system.current_player_index
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
 	
-	if card_data.is_empty():
+	# 準備処理（条件チェック、犠牲処理、合成処理）
+	var prep = cpu_tile_action_executor.prepare_battle(card_index, tile_info, item_index, current_player_index)
+	if not prep.get("success", false):
+		var reason = prep.get("reason", "unknown")
+		print("[TileActionProcessor] CPU: バトル準備失敗: %s" % reason)
 		is_action_processing = false
 		return false
 	
-	# 土地条件チェック
-	if not debug_disable_lands_required and not _is_summon_condition_ignored():
-		var check_result = check_lands_required(card_data, current_player_index)
-		if not check_result.passed:
-			print("[TileActionProcessor] CPU: 土地条件未達: %s" % check_result.message)
-			is_action_processing = false
-			return false
-	
-	# 配置制限チェック（cannot_summon）
-	if not debug_disable_cannot_summon and not _is_summon_condition_ignored():
-		var tile_element_for_check = tile_info.get("element", "")
-		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
-		if not cannot_result.passed:
-			print("[TileActionProcessor] CPU: 配置制限（バトル）: %s" % cannot_result.message)
-			is_action_processing = false
-			return false
-	
-	# カード犠牲処理（CPUは自動選択）
-	var sacrifice_card = {}
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		# タイル属性を取得
-		var tile_element = tile_info.get("element", "")
-		sacrifice_card = _auto_select_sacrifice_card_for_cpu(current_player_index, card_data, tile_element)
-		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
-			print("[TileActionProcessor] CPU: 犠牲カードなし、バトルキャンセル")
-			is_action_processing = false
-			return false
-	
-	# クリーチャー合成処理
-	if not sacrifice_card.is_empty() and creature_synthesis:
-		var is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
-		if is_synthesized:
-			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
-			print("[TileActionProcessor] CPU: 合成成立: %s" % card_data.get("name", "?"))
+	var card_data = prep.get("card_data", {})
+	var cost = prep.get("cost", 0)
+	var item_data = prep.get("item_data", {})
 	
 	# バトル情報を保存
 	pending_battle_card_index = card_index
 	pending_battle_card_data = card_data
 	pending_battle_tile_info = tile_info
 	
-	# CPUが選択したアイテムを保存（アイテムフェーズで使用）
-	pending_attacker_item = {}
-	if item_index >= 0:
-		var item_data = card_system.get_card_data_for_player(current_player_index, item_index)
-		if not item_data.is_empty():
-			pending_attacker_item = item_data.duplicate()
-			pending_attacker_item["_hand_index"] = item_index  # 手札インデックスを記録
-			print("[TileActionProcessor] CPU: 攻撃側アイテム保存: %s (index=%d)" % [item_data.get("name", "?"), item_index])
-	
-	# コスト計算
-	var cost_data = card_data.get("cost", 1)
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
-	else:
-		cost = cost_data
-	
-	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
-	
-	var current_player = player_system.get_current_player()
-	if current_player.magic_power < cost:
-		print("[TileActionProcessor] CPU: 魔力不足でバトルできません")
-		is_action_processing = false
-		return false
+	# CPUが選択したアイテムを保存
+	pending_attacker_item = item_data
+	if not item_data.is_empty():
+		print("[TileActionProcessor] CPU: 攻撃側アイテム保存: %s (index=%d)" % [item_data.get("name", "?"), item_data.get("_hand_index", -1)])
 	
 	# カードを使用して魔力消費
 	card_system.use_card_for_player(current_player_index, card_index)
@@ -1358,27 +1235,9 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: 
 ## creature_card: 召喚するクリーチャーカード
 ## tile_element: 配置先タイルの属性（イド等のクリーチャー合成用）
 func _auto_select_sacrifice_card_for_cpu(player_id: int, creature_card: Dictionary, tile_element: String = "") -> Dictionary:
-	# CPUSacrificeSelectorを初期化
-	if not sacrifice_selector:
-		sacrifice_selector = CPUSacrificeSelector.new()
-		sacrifice_selector.initialize(card_system, board_system)
-		if creature_synthesis:
-			sacrifice_selector.creature_synthesis = creature_synthesis
+	# CPUTileActionExecutorに委譲
+	if not cpu_tile_action_executor:
+		cpu_tile_action_executor = CPUTileActionExecutor.new()
+		cpu_tile_action_executor.initialize(self)
 	
-	# 犠牲カードを選択
-	var result = sacrifice_selector.select_sacrifice_for_creature(creature_card, player_id, tile_element)
-	var sacrifice_card = result.get("card", {})
-	
-	if sacrifice_card.is_empty():
-		print("[TileActionProcessor] CPU: 犠牲カードが選択できませんでした")
-		return {}
-	
-	# カードを破棄（インデックスを探して破棄）
-	var hand = card_system.get_all_cards_for_player(player_id)
-	for i in range(hand.size()):
-		if hand[i].get("id") == sacrifice_card.get("id"):
-			card_system.discard_card(player_id, i, "sacrifice")
-			print("[TileActionProcessor] CPU: %s を犠牲にしました" % sacrifice_card.get("name", "?"))
-			break
-	
-	return sacrifice_card
+	return cpu_tile_action_executor.select_sacrifice_card(player_id, creature_card, tile_element)

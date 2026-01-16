@@ -70,9 +70,9 @@ var _current_branch_tile: int = -1
 
 
 ## 共有コンテキストでセットアップ
-func setup_with_context(context: CPUAIContextScript, p_movement_controller = null,
+func setup_with_context(ctx: CPUAIContextScript, p_movement_controller = null,
 		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null) -> void:
-	_context = context
+	_context = ctx
 	movement_controller = p_movement_controller
 	spell_movement = p_spell_movement
 	battle_ai = p_battle_ai
@@ -523,20 +523,12 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 			"cp_distance": cp_distance
 		}
 	
-	# 最短CP方向を見つける
-	var nearest_cp_direction = available_directions[0]
+	# 最短CP距離を見つける
 	var nearest_cp_distance = 9999
-	var distances_equal = false
-	
 	for direction in direction_data:
 		var data = direction_data[direction]
 		if data.cp_distance < nearest_cp_distance:
 			nearest_cp_distance = data.cp_distance
-			nearest_cp_direction = direction
-			distances_equal = false
-		elif data.cp_distance == nearest_cp_distance and data.cp_distance < 9999:
-			# 両方向のCP距離が同じ
-			distances_equal = true
 	
 	# 最短CP方向を記録（同距離の場合は複数）
 	var nearest_cp_directions = []
@@ -634,7 +626,6 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		
 		if first_step_forced:
 			# 最初の1歩で足止め → そこで停止として評価
-			var summonable_elements = _get_summonable_elements(player_id)
 			var can_win = _can_invade_and_win(tile_index, player_id)
 			if can_win:
 				base_score = first_step_toll * SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER + SCORE_FORCED_STOP_PENALTY
@@ -952,8 +943,8 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 	# CPUBattleAIがあれば使う
 	if battle_ai:
 		# 手札のクリーチャーで勝てるかチェック
-		var hand = card_system.get_all_cards_for_player(attacker_id) if card_system else []
-		for card in hand:
+		var attacker_hand = card_system.get_all_cards_for_player(attacker_id) if card_system else []
+		for card in attacker_hand:
 			if card.get("hidden", false):
 				continue
 			if card.get("type", "") != "creature":

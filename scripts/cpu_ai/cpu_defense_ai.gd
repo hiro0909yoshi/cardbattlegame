@@ -30,8 +30,8 @@ var merge_evaluator: CPUMergeEvaluator
 
 
 ## 共有コンテキストでセットアップ
-func setup_with_context(context: CPUAIContextScript) -> void:
-	_context = context
+func setup_with_context(ctx: CPUAIContextScript) -> void:
+	_context = ctx
 
 
 func set_merge_evaluator(evaluator: CPUMergeEvaluator) -> void:

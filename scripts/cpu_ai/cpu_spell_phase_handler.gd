@@ -1,0 +1,290 @@
+class_name CPUSpellPhaseHandler
+extends RefCounted
+## CPUのスペルフェーズ処理
+##
+## SpellPhaseHandlerからCPU専用ロジックを分離
+## - スペル/ミスティックアーツの使用判断呼び出し
+## - CPU用ターゲットデータ構築
+## - CPU用効果実行
+
+
+# ============================================================
+# システム参照
+# ============================================================
+
+var spell_phase_handler = null  # 親ハンドラー参照
+var player_system = null
+var board_system = null
+var card_system = null
+var spell_synthesis: SpellSynthesis = null
+var spell_mystic_arts = null
+var card_sacrifice_helper = null
+var cpu_spell_ai: CPUSpellAI = null
+var cpu_mystic_arts_ai: CPUMysticArtsAI = null
+
+
+# ============================================================
+# 初期化
+# ============================================================
+
+func initialize(handler) -> void:
+	spell_phase_handler = handler
+	_sync_references()
+
+
+func _sync_references() -> void:
+	"""親ハンドラーから参照を同期"""
+	if not spell_phase_handler:
+		return
+	
+	player_system = spell_phase_handler.player_system
+	board_system = spell_phase_handler.board_system
+	card_system = spell_phase_handler.card_system
+	spell_synthesis = spell_phase_handler.spell_synthesis
+	spell_mystic_arts = spell_phase_handler.spell_mystic_arts
+	card_sacrifice_helper = spell_phase_handler.card_sacrifice_helper
+	cpu_spell_ai = spell_phase_handler.cpu_spell_ai
+	cpu_mystic_arts_ai = spell_phase_handler.cpu_mystic_arts_ai
+
+
+func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
+	cpu_spell_ai = ai
+
+
+func set_cpu_mystic_arts_ai(ai: CPUMysticArtsAI) -> void:
+	cpu_mystic_arts_ai = ai
+
+
+# ============================================================
+# メイン処理
+# ============================================================
+
+## CPUのスペルターンを処理
+## 戻り値: Dictionary {action: String, decision: Dictionary}
+##   action: "spell", "mystic", "pass"
+func decide_action(player_id: int) -> Dictionary:
+	# 参照を同期
+	_sync_references()
+	
+	# スペル判断
+	var spell_decision = {"use": false}
+	if cpu_spell_ai:
+		spell_decision = cpu_spell_ai.decide_spell(player_id)
+	
+	# ミスティックアーツ判断
+	var mystic_decision = {"use": false}
+	if cpu_mystic_arts_ai and spell_phase_handler and spell_phase_handler.has_available_mystic_arts(player_id):
+		mystic_decision = cpu_mystic_arts_ai.decide_mystic_arts(player_id)
+	
+	# どちらも使わない場合
+	if not spell_decision.use and not mystic_decision.use:
+		return {"action": "pass", "decision": {}}
+	
+	# スコア比較してどちらを使うか決定
+	var spell_score = spell_decision.get("score", 0.0)
+	var mystic_score = mystic_decision.get("score", 0.0)
+	
+	if spell_decision.use and spell_score >= mystic_score:
+		return {"action": "spell", "decision": spell_decision}
+	elif mystic_decision.use:
+		return {"action": "mystic", "decision": mystic_decision}
+	else:
+		return {"action": "pass", "decision": {}}
+
+
+## CPUスペル実行の準備処理
+## 戻り値: Dictionary {success: bool, spell_card: Dictionary, target_data: Dictionary, cost: int}
+func prepare_spell_execution(decision: Dictionary, player_id: int) -> Dictionary:
+	_sync_references()
+	
+	var spell_card = decision.get("spell", {})
+	var target = decision.get("target", {})
+	var sacrifice_card = decision.get("sacrifice_card", {})
+	var should_synthesize = decision.get("should_synthesize", false)
+	
+	if spell_card.is_empty():
+		return {"success": false}
+	
+	print("[CPU] スペル使用: %s" % spell_card.get("name", "?"))
+	
+	# コスト取得
+	var cost = _get_spell_cost(spell_card)
+	
+	# カード犠牲処理
+	var is_synthesized = false
+	if not sacrifice_card.is_empty():
+		print("[CPU] カード犠牲: %s" % sacrifice_card.get("name", "?"))
+		
+		# 合成条件判定
+		if should_synthesize and spell_synthesis:
+			is_synthesized = spell_synthesis.check_condition(spell_card, sacrifice_card)
+			if is_synthesized:
+				print("[CPU] 合成成立: %s" % spell_card.get("name", "?"))
+		
+		# カードを破棄
+		_consume_sacrifice_card(player_id, sacrifice_card)
+	
+	# 合成成立時はeffect_parsedを書き換え
+	if is_synthesized and spell_synthesis:
+		var parsed = spell_synthesis.apply_overrides(spell_card, true)
+		spell_card["effect_parsed"] = parsed
+		spell_card["is_synthesized"] = true
+	
+	# ターゲットデータを構築
+	var target_data = build_target_data(spell_card, target if target != null else {}, player_id)
+	
+	return {
+		"success": true,
+		"spell_card": spell_card,
+		"target_data": target_data,
+		"cost": cost,
+		"target": target if target != null else {}
+	}
+
+
+## CPUミスティックアーツ実行の準備処理
+## 戻り値: Dictionary {success: bool, mystic: Dictionary, mystic_data: Dictionary, creature_info: Dictionary, target_data: Dictionary, cost: int}
+func prepare_mystic_execution(decision: Dictionary, player_id: int) -> Dictionary:
+	_sync_references()
+	
+	var creature_tile = decision.get("creature_tile", -1)
+	var mystic = decision.get("mystic", {})
+	var mystic_data = decision.get("mystic_data", {})
+	var target = decision.get("target", {})
+	
+	if creature_tile < 0 or mystic.is_empty():
+		return {"success": false}
+	
+	print("[CPU] 秘術使用: %s (タイル%d)" % [mystic_data.get("name", "?"), creature_tile])
+	
+	# コスト取得
+	var cost = mystic.get("cost", 0)
+	
+	# クリーチャー情報を構築
+	var tile = board_system.get_tile_data(creature_tile) if board_system else {}
+	var creature_info = {
+		"tile_index": creature_tile,
+		"creature_data": tile.get("placed_creature", {}) if tile else {}
+	}
+	
+	# ターゲットデータを構築
+	var target_data = build_target_data(mystic_data, target, player_id)
+	
+	return {
+		"success": true,
+		"mystic": mystic,
+		"mystic_data": mystic_data,
+		"creature_info": creature_info,
+		"target_data": target_data,
+		"cost": cost,
+		"target": target
+	}
+
+
+## CPUターゲットデータを構築
+func build_target_data(spell_or_mystic: Dictionary, target: Dictionary, player_id: int) -> Dictionary:
+	var effect_parsed = spell_or_mystic.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	
+	# ターゲットタイプに応じてデータを構築
+	match target.get("type", ""):
+		"self":
+			return {"type": "player", "player_id": player_id}
+		"player":
+			return {"type": "player", "player_id": target.get("player_id", player_id)}
+		"gate":
+			# リミッション用: ゲートターゲット
+			return {
+				"type": "gate",
+				"tile_index": target.get("tile_index", -1),
+				"gate_key": target.get("gate_key", "")
+			}
+		"land":
+			var tile_index = target.get("tile_index", -1)
+			if tile_index >= 0 and board_system:
+				var tile = board_system.get_tile_data(tile_index)
+				if tile:
+					return {"type": "land", "tile_index": tile_index, "tile_data": tile}
+			return {"type": "none"}
+		_:
+			# クリーチャーターゲット
+			if target.has("tile_index"):
+				var tile_index = target.get("tile_index", -1)
+				if tile_index >= 0 and board_system:
+					var tile = board_system.get_tile_data(tile_index)
+					if tile:
+						var result = {
+							"type": "creature",
+							"tile_index": tile_index,
+							"creature_data": target.get("creature", tile.get("placed_creature", {}))
+						}
+						# CPUが選んだ移動先があれば追加（アウトレイジ等用）
+						if target.has("enemy_tile_index"):
+							result["enemy_tile_index"] = target.get("enemy_tile_index")
+						return result
+	
+	# デフォルト: セルフまたはなし
+	if target_type == "self" or target_type.is_empty() or target_type == "none":
+		return {"type": "player", "player_id": player_id}
+	
+	return {"type": "none"}
+
+
+## CPU対象選択（ターゲットリストから最適なものを選択）
+func select_best_target(targets: Array, spell_card: Dictionary, player_id: int) -> Dictionary:
+	if targets.is_empty():
+		return {}
+	
+	# デフォルトは最初の対象
+	var best_target = targets[0]
+	
+	# CPUSpellTargetSelectorで最適な対象を選択
+	if cpu_spell_ai and cpu_spell_ai.target_selector:
+		var selector = cpu_spell_ai.target_selector
+		if selector.has_method("select_best_target_from_list"):
+			var selected = selector.select_best_target_from_list(targets, spell_card, player_id)
+			if selected:
+				best_target = selected
+	
+	print("[CPUSpellPhaseHandler] 対象自動選択: %s" % format_target_for_log(best_target))
+	return best_target
+
+
+# ============================================================
+# ヘルパー
+# ============================================================
+
+## スペルコストを取得
+func _get_spell_cost(spell_card: Dictionary) -> int:
+	var cost_data = spell_card.get("cost", {})
+	if cost_data is Dictionary:
+		return cost_data.get("mp", 0)
+	return cost_data if cost_data is int else 0
+
+
+## 犠牲カードを消費
+func _consume_sacrifice_card(player_id: int, sacrifice_card: Dictionary) -> void:
+	if card_sacrifice_helper:
+		card_sacrifice_helper.consume_card(player_id, sacrifice_card)
+	elif card_system:
+		# card_sacrifice_helperがない場合の直接破棄
+		var hand = card_system.get_all_cards_for_player(player_id)
+		for i in range(hand.size()):
+			if hand[i].get("id") == sacrifice_card.get("id"):
+				card_system.discard_card(player_id, i, "sacrifice")
+				break
+
+
+## 対象をログ用にフォーマット
+func format_target_for_log(target: Dictionary) -> String:
+	var target_type = target.get("type", "")
+	match target_type:
+		"creature":
+			var creature = target.get("creature", {})
+			return "クリーチャー: %s (タイル%d)" % [creature.get("name", "?"), target.get("tile_index", -1)]
+		"land":
+			return "土地: タイル%d" % target.get("tile_index", -1)
+		"player":
+			return "プレイヤー%d" % (target.get("player_id", 0) + 1)
+		_:
+			return str(target)

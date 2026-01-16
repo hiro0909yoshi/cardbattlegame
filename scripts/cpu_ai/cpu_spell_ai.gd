@@ -28,29 +28,12 @@ const PRIORITY_VALUES = {
 ## 手札ユーティリティ（ワーストケースシミュレーション用）
 var hand_utils: CPUHandUtils = null
 
-## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
-	board_system = b_system
-	player_system = p_system
-	card_system = c_system
-	creature_manager = cr_manager
-	lap_system = l_system
-	
-	# 条件チェッカー初期化
+## 内部コンポーネントを初期化
+func _init() -> void:
 	condition_checker = CPUSpellConditionChecker.new()
-	condition_checker.initialize(b_system, p_system, c_system, cr_manager, l_system, gf_manager)
-	
-	# ターゲット選択クラス初期化
 	target_selector = CPUSpellTargetSelector.new()
-	target_selector.initialize(b_system, p_system, c_system, condition_checker, l_system, gf_manager)
-	
-	# ユーティリティクラス初期化
 	spell_utils = CPUSpellUtils.new()
-	spell_utils.initialize(b_system, p_system, c_system, l_system)
-	
-	# 犠牲カード選択クラス初期化（SpellSynthesisは後からset_spell_synthesisで設定）
 	sacrifice_selector = CPUSacrificeSelector.new()
-	sacrifice_selector.initialize(c_system, b_system)
 
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
@@ -68,14 +51,24 @@ func set_battle_ai(ai: CPUBattleAI) -> void:
 	if condition_checker:
 		condition_checker.set_battle_ai(ai)
 
-## 共有コンテキストを設定
-func set_context(context) -> void:
+## 共有コンテキストで初期化
+func initialize(context) -> void:
+	# contextからシステム参照を取得
+	if context:
+		board_system = context.board_system
+		player_system = context.player_system
+		card_system = context.card_system
+		creature_manager = context.creature_manager
+		lap_system = context.lap_system
+	
 	if condition_checker:
-		condition_checker.set_context(context)
+		condition_checker.initialize(context)
 	if target_selector:
-		target_selector.set_context(context)
+		target_selector.initialize(context)
 	if spell_utils:
 		spell_utils.set_context(context)
+	if sacrifice_selector and context:
+		sacrifice_selector.initialize(context.card_system, context.board_system)
 
 ## CPUMovementEvaluatorを設定（ホーリーワード判断用）
 func set_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:

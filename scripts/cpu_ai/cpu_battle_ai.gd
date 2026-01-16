@@ -37,8 +37,8 @@ var hand_utils: CPUHandUtils:
 var merge_evaluator: CPUMergeEvaluator = null
 
 ## 共有コンテキストを設定
-func setup_with_context(context: CPUAIContextScript) -> void:
-	_context = context
+func setup_with_context(ctx: CPUAIContextScript) -> void:
+	_context = ctx
 	# 合体評価クラスを初期化
 	merge_evaluator = CPUMergeEvaluator.new()
 	merge_evaluator.initialize(card_system, hand_utils, battle_simulator)

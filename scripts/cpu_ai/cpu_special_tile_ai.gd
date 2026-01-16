@@ -41,15 +41,15 @@ func decide_card_give(player_id: int) -> String:
 	
 	if not missing_types.is_empty():
 		# 足りない種類からランダムで選択
-		var selected = missing_types[randi() % missing_types.size()]
-		print("[CPUSpecialTileAI] カードギブ: %s が不足 - 補充" % selected)
-		return selected
+		var selected_type = missing_types[randi() % missing_types.size()]
+		print("[CPUSpecialTileAI] カードギブ: %s が不足 - 補充" % selected_type)
+		return selected_type
 	
 	# 全種類持っている場合はランダム
 	var all_types = ["creature", "item", "spell"]
-	var selected = all_types[randi() % all_types.size()]
-	print("[CPUSpecialTileAI] カードギブ: 全種類所持 - ランダムで %s" % selected)
-	return selected
+	var random_type = all_types[randi() % all_types.size()]
+	print("[CPUSpecialTileAI] カードギブ: 全種類所持 - ランダムで %s" % random_type)
+	return random_type
 
 # =============================================================================
 # カードバイタイル判断

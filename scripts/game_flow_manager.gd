@@ -114,7 +114,7 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		lap_system.initialize_lap_state(cpu_settings.size())
 
 # システム参照を設定（初期化ロジックはGameSystemManagerが担当）
-func setup_systems(p_system, c_system, b_system, s_system, ui_system, 
+func setup_systems(p_system, c_system, _b_system, s_system, ui_system, 
 					bt_system = null, st_system = null):
 	player_system = p_system
 	card_system = c_system

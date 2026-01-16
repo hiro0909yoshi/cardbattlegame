@@ -14,18 +14,10 @@ var player_system: Node = null
 var card_system: Node = null
 var lap_system: Node = null
 
-## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, l_system: Node = null) -> void:
-	board_system = b_system
-	player_system = p_system
-	card_system = c_system
-	lap_system = l_system
-
-
 ## 共有コンテキストを設定
-func set_context(context: CPUAIContextScript) -> void:
-	_context = context
-	if _context:
+func set_context(ctx: CPUAIContextScript) -> void:
+	_context = ctx
+	if ctx:
 		board_system = _context.board_system
 		player_system = _context.player_system
 		card_system = _context.card_system

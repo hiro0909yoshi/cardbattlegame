@@ -37,35 +37,12 @@ var hand_utils: CPUHandUtils = null
 ## CPUBattleAI（共通バトル評価用）
 var battle_ai: CPUBattleAI = null
 
-## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cr_manager: Node, l_system: Node = null, gf_manager: Node = null) -> void:
-	board_system = b_system
-	player_system = p_system
-	card_system = c_system
-	creature_manager = cr_manager
-	lap_system = l_system
-	game_flow_manager = gf_manager
-	
-	# CPUBoardAnalyzerを初期化
-	board_analyzer = CPUBoardAnalyzer.new()
-	board_analyzer.initialize(b_system, p_system, c_system, cr_manager, l_system, gf_manager)
-	
-	# CPUTargetResolverを初期化
-	target_resolver = CPUTargetResolver.new()
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
-	
-	# BattleSimulatorを初期化（contextがない場合のみ）
-	if not _context:
-		_battle_simulator_local = BattleSimulatorScript.new()
-		_battle_simulator_local.setup_systems(board_system, card_system, player_system, game_flow_manager)
-		_battle_simulator_local.enable_log = false
-
 
 ## 共有コンテキストを設定
-func set_context(context: CPUAIContextScript) -> void:
-	_context = context
+func initialize(ctx: CPUAIContextScript) -> void:
+	_context = ctx
 	# contextからシステム参照を取得
-	if _context:
+	if ctx:
 		board_system = _context.board_system
 		player_system = _context.player_system
 		card_system = _context.card_system
@@ -322,7 +299,7 @@ func _check_has_any_curse(context: Dictionary) -> bool:
 	return false
 
 ## 世界呪いがあるか
-func _check_has_world_curse(_context: Dictionary) -> bool:
+func _check_has_world_curse(_ctx: Dictionary) -> bool:
 	if not game_flow_manager:
 		return false
 	

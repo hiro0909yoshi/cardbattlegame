@@ -73,12 +73,12 @@ var creature_synthesis: CreatureSynthesis = null
 
 
 ## 共有コンテキストでセットアップ
-func setup_with_context(context: CPUAIContextScript) -> void:
-	_context = context
+func setup_with_context(ctx: CPUAIContextScript) -> void:
+	_context = ctx
 	
 	# BattleAIを作成（コンテキストを共有）
 	battle_ai = CPUBattleAI.new()
-	battle_ai.setup_with_context(context)
+	battle_ai.setup_with_context(ctx)
 	
 	# 犠牲カード選択クラスを初期化
 	sacrifice_selector = CPUSacrificeSelector.new()
@@ -805,7 +805,7 @@ func _check_lands_required_simple(creature_data: Dictionary, player_id: int) -> 
 
 
 ## 侵略時の属性一致チェック
-func _is_element_match_for_invasion(_context: Dictionary, _tile) -> bool:
+func _is_element_match_for_invasion(_ctx: Dictionary, _tile) -> bool:
 	# 攻撃側クリーチャーの属性と土地属性の一致をチェック
 	# TODO: 攻撃クリーチャーを特定して判定
 	return false

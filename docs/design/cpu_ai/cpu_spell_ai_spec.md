@@ -4,25 +4,103 @@
 
 CPUのスペルフェーズでのスペル/ミスティックアーツ使用判断。
 
-**主要ファイル**:
-- `cpu_spell_ai.gd` - スペル使用判断
-- `cpu_mystic_arts_ai.gd` - ミスティックアーツ判断
-- `cpu_spell_target_selector.gd` - ターゲット選択
-- `cpu_spell_condition_checker.gd` - 使用条件判定
+### アーキテクチャ
+
+```
+┌────────────────────────────────────────────────────────┐
+│ SpellPhaseHandler (spell_phase_handler.gd)             │
+│   - スペルフェーズ状態管理                              │
+│   - UI制御                                             │
+│   - プレイヤー/CPU共通の効果実行                        │
+└─────────────────────┬──────────────────────────────────┘
+                      │ CPUの場合
+                      ▼
+┌────────────────────────────────────────────────────────┐
+│ CPUSpellPhaseHandler (cpu_spell_phase_handler.gd)      │
+│   - decide_action(): スペル/ミスティック判断呼び出し   │
+│   - prepare_spell_execution(): 実行準備（犠牲、合成）  │
+│   - prepare_mystic_execution(): 秘術実行準備           │
+│   - build_target_data(): ターゲットデータ構築          │
+│   - select_best_target(): 最適ターゲット選択           │
+└─────────────────────┬──────────────────────────────────┘
+                      │ 判断委譲
+                      ▼
+┌────────────────────────────────────────────────────────┐
+│ CPUSpellAI (cpu_spell_ai.gd)                           │
+│   - decide_spell(): どのスペルをどのターゲットに       │
+│   - _evaluate_xxx(): 各パターンの評価                  │
+│   - 内部コンポーネント:                                 │
+│     - CPUSpellConditionChecker: 使用条件判定           │
+│     - CPUSpellTargetSelector: ターゲット選択           │
+│     - CPUSpellUtils: 距離・利益計算                    │
+│     - CPUSacrificeSelector: カード犠牲選択             │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ CPUMysticArtsAI (cpu_mystic_arts_ai.gd)                │
+│   - decide_mystic_arts(): 秘術判断                     │
+│   - 配置クリーチャーの秘術をスコアリング               │
+└────────────────────────────────────────────────────────┘
+```
+
+### 役割分担
+
+| クラス | 責務 |
+|--------|------|
+| `CPUSpellAI` | **判断**: どのスペルを使うか、ターゲットは誰か |
+| `CPUMysticArtsAI` | **判断**: どの秘術を使うか |
+| `CPUSpellPhaseHandler` | **処理**: 判断結果を受けて実行準備、データ構築 |
+| `SpellPhaseHandler` | **実行**: 効果の実際の実行、UI表示 |
+
+---
+
+## 主要ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `cpu_spell_ai.gd` | スペル使用判断 |
+| `cpu_spell_phase_handler.gd` | CPUスペルフェーズ処理（実行準備） |
+| `cpu_mystic_arts_ai.gd` | ミスティックアーツ判断 |
+| `cpu_spell_target_selector.gd` | ターゲット選択 |
+| `cpu_spell_condition_checker.gd` | 使用条件判定 |
+| `cpu_spell_utils.gd` | 距離・利益計算 |
+| `cpu_sacrifice_selector.gd` | カード犠牲選択 |
 
 ---
 
 ## 判断フロー
 
 ```
-1. スペル/ミスティックアーツの使用可否チェック
-2. 両方使用可能な場合:
-   - 手札6枚以上 → スペル優先
-   - 手札3枚以下 → ミスティックアーツ優先
-   - それ以外 → 効果の有用性で比較
-3. 使用するスペルを選択
-4. ターゲットを選択
-5. 実行
+1. CPUSpellPhaseHandler.decide_action()
+   │
+   ├─ CPUSpellAI.decide_spell()
+   │   └─ 手札のスペルを評価、最高スコアを返す
+   │
+   ├─ CPUMysticArtsAI.decide_mystic_arts()
+   │   └─ 配置クリーチャーの秘術を評価
+   │
+   └─ スコア比較
+       ├─ spell_score >= mystic_score → "spell"
+       ├─ mystic_score > spell_score → "mystic"
+       └─ どちらも使わない → "pass"
+
+2. SpellPhaseHandler側
+   │
+   ├─ "spell" → prepare_spell_execution() → execute_spell_effect()
+   ├─ "mystic" → prepare_mystic_execution() → execute_mystic_art()
+   └─ "pass" → pass_spell()
+```
+
+### スペル vs ミスティックアーツの優先判断
+
+```gdscript
+# 手札が多いならスペル消費優先
+if hand_size >= 6:
+    spell_score += 0.5
+
+# 手札が少ないなら秘術優先（カード温存）
+if hand_size <= 3:
+    mystic_score += 0.5
 ```
 
 ---
@@ -34,9 +112,9 @@ CPUのスペルフェーズでのスペル/ミスティックアーツ使用判�
 ```json
 {
   "cpu_rule": {
-	"pattern": "condition",
-	"condition": "element_mismatch",
-	"priority": "medium"
+    "pattern": "condition",
+    "condition": "element_mismatch",
+    "priority": "medium"
   }
 }
 ```
@@ -121,3 +199,47 @@ CPUのスペルフェーズでのスペル/ミスティックアーツ使用判�
 3. スペルとスコア比較
 4. 高い方を使用
 ```
+
+---
+
+## 初期化
+
+### CPUSpellAI
+
+```gdscript
+# _init()で内部コンポーネントを生成
+func _init() -> void:
+    condition_checker = CPUSpellConditionChecker.new()
+    target_selector = CPUSpellTargetSelector.new()
+    spell_utils = CPUSpellUtils.new()
+    sacrifice_selector = CPUSacrificeSelector.new()
+
+# initialize()で外部システム参照を設定
+func initialize(context) -> void:
+    if context:
+        board_system = context.board_system
+        player_system = context.player_system
+        # ... 他の参照
+    
+    # 内部コンポーネントも初期化
+    if condition_checker:
+        condition_checker.initialize(context)
+    # ...
+```
+
+### CPUSpellPhaseHandler
+
+```gdscript
+# initialize()で親ハンドラー参照を設定
+func initialize(handler) -> void:
+    spell_phase_handler = handler
+    _sync_references()  # 親から参照を同期
+```
+
+---
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026/01/16 | アーキテクチャ図追加、CPUSpellPhaseHandlerとの役割分担を明記 |

@@ -17,31 +17,21 @@ var lap_system: Node = null
 var target_resolver: CPUTargetResolver = null
 var game_flow_manager: Node = null
 
-## 初期化
-func initialize(b_system: Node, p_system: Node, c_system: Node, cond_checker, l_system: Node = null, gf_manager: Node = null) -> void:
-	board_system = b_system
-	player_system = p_system
-	card_system = c_system
-	condition_checker = cond_checker
-	lap_system = l_system
-	game_flow_manager = gf_manager
-	
-	# CPUTargetResolverの初期化
-	target_resolver = CPUTargetResolver.new()
-	var board_analyzer = CPUBoardAnalyzer.new()
-	board_analyzer.initialize(b_system, p_system, c_system, null)  # creature_managerはnullでOK
-	target_resolver.initialize(board_analyzer, b_system, p_system, c_system, gf_manager)
-
-
-## 共有コンテキストを設定
-func set_context(context: CPUAIContextScript) -> void:
-	_context = context
-	if _context:
+## 共有コンテキストで初期化
+func initialize(ctx: CPUAIContextScript) -> void:
+	_context = ctx
+	if ctx:
 		board_system = _context.board_system
 		player_system = _context.player_system
 		card_system = _context.card_system
 		lap_system = _context.lap_system
 		game_flow_manager = _context.game_flow_manager
+		
+		# CPUTargetResolverの初期化
+		target_resolver = CPUTargetResolver.new()
+		var board_analyzer = CPUBoardAnalyzer.new()
+		board_analyzer.initialize(board_system, player_system, card_system, _context.creature_manager, lap_system, game_flow_manager)
+		target_resolver.initialize(board_analyzer, board_system, player_system, card_system, game_flow_manager)
 
 # =============================================================================
 # メインターゲット選択

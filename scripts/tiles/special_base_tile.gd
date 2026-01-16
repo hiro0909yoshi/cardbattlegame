@@ -28,7 +28,7 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	
 	# CPUの場合はAI判断
 	if _is_cpu_player(player_id):
-		return await _handle_cpu_base_tile(player_id)
+		return _handle_cpu_base_tile(player_id)
 	
 	# プレイヤーの場合は空き地選択UI
 	return await _handle_player_base_tile(player_id)

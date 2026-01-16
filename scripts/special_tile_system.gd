@@ -41,12 +41,12 @@ func _process_warp_landing(player_id: int) -> void:
 	if not game_flow_manager or not game_flow_manager.board_system_3d:
 		return
 	
-	var board_system = game_flow_manager.board_system_3d
+	var b_system = game_flow_manager.board_system_3d
 	
 	# 現在のプレイヤー位置を取得
 	var current_tile = -1
-	if board_system.movement_controller:
-		current_tile = board_system.movement_controller.get_player_tile(player_id)
+	if b_system.movement_controller:
+		current_tile = b_system.movement_controller.get_player_tile(player_id)
 	
 	if current_tile < 0:
 		print("[SpecialTile] ワープ後の位置が不明 - 着地処理スキップ")
@@ -55,17 +55,16 @@ func _process_warp_landing(player_id: int) -> void:
 	print("[SpecialTile] ワープ後の着地処理: タイル%d" % current_tile)
 	
 	# 現在のアクション処理を完了（is_action_processingをリセット）
-	if board_system.tile_action_processor:
-		board_system.tile_action_processor.is_action_processing = false
+	if b_system.tile_action_processor:
+		b_system.tile_action_processor.is_action_processing = false
 	
 	# 着地先のタイルアクションを実行
-	if board_system.tile_action_processor:
-		var is_cpu = player_id < board_system.player_is_cpu.size() and board_system.player_is_cpu[player_id]
-		await board_system.tile_action_processor.process_tile_landing(
+	if b_system.tile_action_processor:
+		await b_system.tile_action_processor.process_tile_landing(
 			current_tile, 
 			player_id, 
-			board_system.player_is_cpu, 
-			board_system.debug_manual_control_all
+			b_system.player_is_cpu, 
+			b_system.debug_manual_control_all
 		)
 
 ## 特殊タイル停止後の共通UI状態を設定

@@ -265,6 +265,8 @@ Level 60: デッキの勝ち筋を理解
 | スペル使用判断 | ✅ 完了 | cpu_ruleパターン別評価 |
 | 秘術使用判断 | ✅ 完了 | スペルと同様の評価 |
 | ターゲット自動選択 | ✅ 完了 | 条件に基づく最適ターゲット |
+| CPUスペルフェーズ処理 | ✅ 完了 | CPUSpellPhaseHandlerで処理分離 |
+| context方式 | ✅ 完了 | CPUAIContextによる参照一元管理 |
 
 ### 未実装（将来計画）
 
@@ -340,5 +342,6 @@ func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
 |-----------|------|---------|
 | 1.0 | 2025/11/10 | 初版作成：CPU AI実装設計 |
 | 2.0 | 2026/01/06 | 実装状況を更新、specと重複するコード例を削除、将来計画を整理 |
+| 2.1 | 2026/01/16 | CPUSpellPhaseHandler追加、context方式完了を反映 |
 
 ---

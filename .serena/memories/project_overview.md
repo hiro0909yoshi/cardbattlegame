@@ -336,3 +336,12 @@ scripts/
   - `_setup_cpu_movement_evaluator()` → GameSystemManagerに移動
   - セッターメソッド追加: `set_phase1a_handlers()`, `set_cpu_movement_evaluator()`
 - **初期化責任の明確化**: すべての初期化はGameSystemManagerが担当
+- **CPU AI context方式移行** (Jan 16): CPUAIContextによる共有参照管理
+  - 初期化メソッド命名規則整理: `set_context()` → `initialize()` (子オブジェクト生成時)
+  - `cpu_spell_condition_checker`, `cpu_mystic_arts_ai`, `cpu_spell_target_selector` 修正
+  - `cpu_spell_target_selector`の`target_resolver`初期化漏れ修正
+  - 後方互換用の古い`initialize()`削除
+
+## Current Work (Jan 2026)
+- **ダメージシステム実装中**: スペル/秘術によるダメージ・回復処理
+- **完了済み**: Mystic Arts(spell_id参照方式)、スペルドロー(16種)、バトル制限呪い(skill_nullify, battle_disable)
