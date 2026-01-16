@@ -12,63 +12,26 @@
 
 ---
 
-## 2025年1月16日
+## 2026年1月17日
 
-### SpellDraw リファクタリング完了 ✅
+### cannot_summon グレーアウト構文エラー修正 ✅
 
-元の`spell_draw.gd`（1400行）をStrategy分割:
-- `spell_draw.gd` (304), `basic_draw_handler.gd` (357), `destroy_handler.gd` (333)
-- `steal_handler.gd` (204), `deck_handler.gd` (193), `condition_handler.gd` (218)
+**問題**: `card_selection_ui.gd` 353行目で構文エラー
+- `elif filter_mode == "creature":` のインデントが1レベル深すぎた
+- `else:` ブロック内に `elif` があり、パースエラー発生
 
-### SpellPhaseHandler CPU処理分離 ✅
-
-| ファイル | 行数 | 変更 |
-|---------|------|------|
-| `spell_phase_handler.gd` | 1395 | -83行（1478→1395） |
-| `cpu_spell_phase_handler.gd` | 290 | 新規作成 |
-
-### TileActionProcessor CPU処理分離 ✅
-
-| ファイル | 行数 | 変更 |
-|---------|------|------|
-| `tile_action_processor.gd` | 1243 | -141行（1384→1243） |
-| `cpu_tile_action_executor.gd` | 303 | 新規作成 |
-
-**分離した処理**:
-- `prepare_summon()`: 召喚準備（条件チェック、犠牲処理、合成処理）
-- `execute_summon()`: 召喚実行
-- `prepare_battle()`: バトル準備
-- `select_sacrifice_card()`: 犠牲カード自動選択
-
-### ドキュメント更新 ✅
-
-- `docs/design/cpu_ai/cpu_ai_overview.md`: アーキテクチャ図、context方式、新クラス追加
-- `docs/design/cpu_ai/cpu_spell_ai_spec.md`: 役割分担図追加
-- `docs/design/cpu_ai/cpu_ai_design.md`: 実装状況テーブル更新
-
-### CPUSpellAI 初期化バグ修正 ✅
-
-context移行時に`_init()`が削除され、内部コンポーネントが未初期化だった問題を修正
+**修正**: インデントを修正し、`elif` チェーンの正しい位置に配置
 
 ### 次のステップ
 
-#### 優先度高: ダメージシステム実装
-- スペル・ミスティックアーツからのダメージ/回復処理
-- HP管理とクリーチャー破壊メカニクス
-
 #### 優先度中: 残りのリファクタリング
 1. `target_selection_helper.gd` (1217行) - ターゲット種別分割
-2. `cpu_ai_overview.md`にCPUTileActionExecutor追加
 
 ### 完了済みシステム（参考）
 - ✅ Mystic Arts（spell_id参照方式）
-- ✅ スペルドロー（16種類）→ リファクタリング完了
-- ✅ SpellPhaseHandler CPU処理分離
-- ✅ TileActionProcessor CPU処理分離
+- ✅ スペルドロー（16種類）
 - ✅ バトル制限呪い（skill_nullify, battle_disable）
-- ✅ HP計算修正（一時ボーナスHP二重計算問題）
-- ✅ CPU AI共通ロジック抽出（Phase 1-2完了）
-
-**⚠️ 残りトークン数: 約50,000 / 200,000**
+- ✅ 召喚制限システム（lands_required, cannot_summon, cards_sacrifice）
+- ✅ ダメージシステム（スペル/秘術によるダメージ・回復処理）
 
 ---

@@ -227,9 +227,14 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
 				is_selectable = card_type == "creature"
 			
-			# 土地条件チェック（召喚/バトルフェーズでクリーチャーの場合）
+				# 土地条件チェック（召喚/バトルフェーズでクリーチャーの場合）
 			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):
 				if not _check_lands_required(card_data, player_id):
+					is_selectable = false
+			
+			# 配置制限チェック（召喚/バトルフェーズでクリーチャーの場合）
+			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):
+				if not _check_cannot_summon(card_data, player_id):
 					is_selectable = false
 			
 			# カードを選択可能/不可にする
@@ -238,12 +243,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif card_node.has_method("set_selectable"):
 				card_node.set_selectable(false, -1)
 			
-			# グレーアウト処理を適用
+				# グレーアウト処理を適用
 			if filter_mode == "disabled":
 				# disabledモード: すべてグレーアウト
 				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			elif filter_mode == "battle":
-				# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達をグレーアウト
+				# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達 + 配置制限をグレーアウト
 				if card_type != "creature":
 					# アイテム・スペルなどはグレーアウト
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
@@ -252,6 +257,8 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					if creature_type == "defensive":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					elif not _check_lands_required(card_data, player_id):
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					elif not _check_cannot_summon(card_data, player_id):
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -351,10 +358,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "":
 				# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
-				# + 土地条件未達のクリーチャーもグレーアウト
+				# + 土地条件未達/配置制限のクリーチャーもグレーアウト
 				if card_type == "spell" or card_type == "item":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				elif card_type == "creature" and not _check_lands_required(card_data, player_id):
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				elif card_type == "creature" and not _check_cannot_summon(card_data, player_id):
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -987,3 +996,65 @@ func _get_lands_required_array(card_data: Dictionary) -> Array:
 		if typeof(lands) == TYPE_ARRAY:
 			return lands
 	return []
+
+
+# 配置制限チェック（true: 配置OK、false: 配置不可）
+# cannot_summon: 特定属性の土地には配置できない制限
+func _check_cannot_summon(card_data: Dictionary, player_id: int) -> bool:
+	# ブライトワールド（召喚条件解除）が発動中ならOK
+	if game_flow_manager_ref:
+		var game_stats = game_flow_manager_ref.game_stats
+		if SpellWorldCurse.is_summon_condition_ignored(game_stats):
+			return true
+	
+	# リリース呪い（制限解除）が発動中ならOK
+	if game_flow_manager_ref and game_flow_manager_ref.player_system:
+		var p_system = game_flow_manager_ref.player_system
+		if player_id >= 0 and player_id < p_system.players.size():
+			var player = p_system.players[player_id]
+			var player_dict = {"curse": player.curse}
+			if SpellRestriction.is_summon_condition_released(player_dict):
+				return true
+	
+	# デバッグフラグで無効化されている場合はOK
+	if game_flow_manager_ref and game_flow_manager_ref.board_system_3d:
+		var board = game_flow_manager_ref.board_system_3d
+		if board.tile_action_processor and board.tile_action_processor.debug_disable_cannot_summon:
+			return true
+	
+	# 配置制限を取得
+	var restrictions = card_data.get("restrictions", {})
+	var cannot_summon = restrictions.get("cannot_summon", [])
+	if cannot_summon.is_empty():
+		return true  # 制限なし
+	
+	# 現在のタイル属性を取得
+	var current_tile_element = _get_current_tile_element(player_id)
+	if current_tile_element.is_empty():
+		return true  # タイル情報取得不可の場合はOK
+	
+	# 配置制限に引っかかるかチェック
+	if current_tile_element in cannot_summon:
+		return false
+	
+	return true
+
+
+# プレイヤーの現在タイル属性を取得
+func _get_current_tile_element(player_id: int) -> String:
+	if not game_flow_manager_ref or not game_flow_manager_ref.board_system_3d:
+		return ""
+	
+	var board = game_flow_manager_ref.board_system_3d
+	if not board.movement_controller:
+		return ""
+	
+	var tile_index = board.movement_controller.get_player_tile(player_id)
+	if tile_index < 0:
+		return ""
+	
+	if not board.tile_nodes.has(tile_index):
+		return ""
+	
+	var tile = board.tile_nodes[tile_index]
+	return tile.tile_type if tile else ""

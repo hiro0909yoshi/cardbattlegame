@@ -410,7 +410,7 @@ func execute_summon(card_index: int):
 	# 配置制限チェック（cannot_summon）
 	# ブライトワールド発動中は配置制限を無視
 	if not debug_disable_cannot_summon and not _is_summon_condition_ignored():
-		var tile_element_for_check = tile.element if tile and "element" in tile else ""
+		var tile_element_for_check = tile.tile_type if tile and "tile_type" in tile else ""
 		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
 		if not cannot_result.passed:
 			print("[TileActionProcessor] 配置制限: %s" % cannot_result.message)
@@ -422,12 +422,9 @@ func execute_summon(card_index: int):
 	# カード犠牲処理（クリーチャー合成用）
 	# ブライトワールド発動中はカード犠牲を無視
 	var sacrifice_card = {}
+	var tile_element_for_sacrifice = tile.tile_type if tile and "tile_type" in tile else ""
 	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		# タイル属性を取得（クリーチャー合成のイド等で使用）
-		var tile_element = ""
-		if tile:
-			tile_element = tile.element if tile.has_method("get") else tile.get("element", "")
-		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element)
+		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時は召喚をキャンセル
 			if ui_manager:
@@ -528,13 +525,12 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	# カード犠牲処理（クリーチャー合成用）
 	# ブライトワールド発動中はカード犠牲を無視
 	var sacrifice_card = {}
+	var tile_element_for_sacrifice = tile_info.get("element", "")
 	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
 		# カード選択UIを一度閉じる
 		if ui_manager:
 			ui_manager.hide_card_selection_ui()
-		# タイル属性を取得
-		var tile_element = tile_info.get("element", "")
-		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element)
+		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時はバトルをキャンセル
 			if ui_manager:
@@ -622,116 +618,24 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 
 
 ## カード犠牲が必要か判定
+## カード犠牲が必要か判定（SummonConditionCheckerに委譲）
 func _requires_card_sacrifice(card_data: Dictionary) -> bool:
-	# 正規化されたフィールドをチェック
-	if card_data.get("cost_cards_sacrifice", 0) > 0:
-		return true
-	# 正規化されていない場合、元のcostフィールドもチェック
-	var cost = card_data.get("cost", {})
-	if typeof(cost) == TYPE_DICTIONARY:
-		return cost.get("cards_sacrifice", 0) > 0
-	return false
+	return SummonConditionChecker.requires_card_sacrifice(card_data)
 
 
-## 土地条件チェック（属性ごとにカウント）
-## 戻り値: {passed: bool, message: String}
-## 土地条件をチェック（公開メソッド - CPU AIからも使用）
+## 土地条件チェック（SummonConditionCheckerに委譲）
 func check_lands_required(card_data: Dictionary, player_id: int) -> Dictionary:
-	var lands_required = _get_lands_required_array(card_data)
-	if lands_required.is_empty():
-		return {"passed": true, "message": ""}
-	
-	# プレイヤーの所有土地の属性をカウント
-	var owned_elements = {}  # {"fire": 2, "water": 1, ...}
-	var player_tiles = board_system.get_player_tiles(player_id)
-	for tile in player_tiles:
-		var element = tile.tile_type if tile else ""
-		if element != "" and element != "neutral":
-			owned_elements[element] = owned_elements.get(element, 0) + 1
-	
-	# 必要な属性をカウント
-	var required_elements = {}  # {"fire": 2, ...}
-	for element in lands_required:
-		required_elements[element] = required_elements.get(element, 0) + 1
-	
-	# 各属性の条件を満たしているかチェック
-	for element in required_elements.keys():
-		var required_count = required_elements[element]
-		var owned_count = owned_elements.get(element, 0)
-		if owned_count < required_count:
-			var element_name = _get_element_display_name(element)
-			return {
-				"passed": false,
-				"message": "%s属性の土地が%d個必要です（所有: %d）" % [element_name, required_count, owned_count]
-			}
-	
-	return {"passed": true, "message": ""}
+	return SummonConditionChecker.check_lands_required(card_data, player_id, board_system)
 
 
-## 土地条件の配列を取得
-func _get_lands_required_array(card_data: Dictionary) -> Array:
-	# 正規化されたフィールドをチェック
-	if card_data.has("cost_lands_required"):
-		var lands = card_data.get("cost_lands_required", [])
-		if typeof(lands) == TYPE_ARRAY:
-			return lands
-		return []
-	# 正規化されていない場合、元のcostフィールドもチェック
-	var cost = card_data.get("cost", {})
-	if typeof(cost) == TYPE_DICTIONARY:
-		var lands = cost.get("lands_required", [])
-		if typeof(lands) == TYPE_ARRAY:
-			return lands
-	return []
-
-
-## 属性の表示名を取得
-func _get_element_display_name(element: String) -> String:
-	match element:
-		"fire": return "火"
-		"water": return "水"
-		"earth": return "地"
-		"wind": return "風"
-		_: return element
-
-
-## 配置制限チェック（cannot_summon - 公開メソッド）
-## 戻り値: {passed: bool, message: String}
+## 配置制限チェック（SummonConditionCheckerに委譲）
 func check_cannot_summon(card_data: Dictionary, tile_element: String) -> Dictionary:
-	var restrictions = card_data.get("restrictions", {})
-	var cannot_summon = restrictions.get("cannot_summon", [])
-	
-	if cannot_summon.is_empty():
-		return {"passed": true, "message": ""}
-	
-	# タイル属性が配置不可リストに含まれているかチェック
-	if tile_element in cannot_summon:
-		var element_name = _get_element_display_name(tile_element)
-		return {
-			"passed": false,
-			"message": "このクリーチャーは%s属性の土地には配置できません" % element_name
-		}
-	
-	return {"passed": true, "message": ""}
+	return SummonConditionChecker.check_cannot_summon(card_data, tile_element)
 
 
-## ブライトワールド（召喚条件解除）が発動中か
+## 召喚条件が解除されているか（SummonConditionCheckerに委譲）
 func _is_summon_condition_ignored(player_id: int = -1) -> bool:
-	if not game_flow_manager:
-		return false
-	# ブライトワールド（世界呪い）チェック
-	var game_stats = game_flow_manager.game_stats
-	if SpellWorldCurse.is_summon_condition_ignored(game_stats):
-		return true
-	# リリース呪い（プレイヤー呪い）チェック
-	var check_player_id = player_id if player_id >= 0 else board_system.current_player_index
-	if not game_flow_manager.player_system:
-		return false
-	if check_player_id < 0 or check_player_id >= game_flow_manager.player_system.players.size():
-		return false
-	var player = game_flow_manager.player_system.players[check_player_id]
-	var player_dict = {"curse": player.curse}
-	return SpellRestriction.is_summon_condition_released(player_dict)
+	return SummonConditionChecker.is_summon_condition_ignored(player_id, game_flow_manager, board_system)
 
 
 ## カード犠牲処理（手札選択UI表示→カード破棄）

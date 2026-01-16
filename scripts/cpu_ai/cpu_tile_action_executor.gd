@@ -79,16 +79,17 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 		if not check_result.passed:
 			return {"success": false, "reason": "lands_required", "message": check_result.message}
 	
+	# タイル属性を取得
+	var tile_element = tile.tile_type if tile and "tile_type" in tile else ""
+	
 	# 配置制限チェック（cannot_summon）
 	if not _is_condition_check_disabled("cannot_summon"):
-		var tile_element = tile.element if tile and "element" in tile else ""
 		var cannot_result = tile_action_processor.check_cannot_summon(card_data, tile_element)
 		if not cannot_result.passed:
 			return {"success": false, "reason": "cannot_summon", "message": cannot_result.message}
 	
 	# カード犠牲処理
 	var sacrifice_card = {}
-	var tile_element = tile.element if tile and "element" in tile else ""
 	if _requires_card_sacrifice(card_data) and not _is_condition_check_disabled("card_sacrifice"):
 		sacrifice_card = select_sacrifice_card(player_id, card_data, tile_element)
 		if sacrifice_card.is_empty():
@@ -256,14 +257,9 @@ func select_sacrifice_card(player_id: int, creature_card: Dictionary, tile_eleme
 # ヘルパー
 # ============================================================
 
-## カード犠牲が必要か判定
+## カード犠牲が必要か判定（SummonConditionCheckerに委譲）
 func _requires_card_sacrifice(card_data: Dictionary) -> bool:
-	var sacrifice = card_data.get("sacrifice", {})
-	if sacrifice.is_empty():
-		return false
-	
-	var sacrifice_type = sacrifice.get("type", "")
-	return sacrifice_type != "" and sacrifice_type != "none"
+	return SummonConditionChecker.requires_card_sacrifice(card_data)
 
 
 ## コスト計算（ライフフォース呪い対応）
