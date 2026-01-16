@@ -36,12 +36,24 @@ var hand_utils: CPUHandUtils:
 # 合体評価クラス
 var merge_evaluator: CPUMergeEvaluator = null
 
+# 分離クラス
+var _defense_evaluator: CPUBattleDefenseEvaluator = null
+var _instant_death_evaluator: CPUInstantDeathEvaluator = null
+
 ## 共有コンテキストを設定
 func setup_with_context(ctx: CPUAIContextScript) -> void:
 	_context = ctx
 	# 合体評価クラスを初期化
 	merge_evaluator = CPUMergeEvaluator.new()
 	merge_evaluator.initialize(card_system, hand_utils, battle_simulator)
+	
+	# 防御評価クラスを初期化
+	_defense_evaluator = CPUBattleDefenseEvaluator.new()
+	_defense_evaluator.setup(battle_simulator, hand_utils, tile_action_processor, player_system)
+	
+	# 即死評価クラスを初期化
+	_instant_death_evaluator = CPUInstantDeathEvaluator.new()
+	_instant_death_evaluator.setup(hand_utils)
 
 
 ## GameFlowManagerを後から設定
@@ -473,16 +485,11 @@ func _get_item_type_priority(item: Dictionary) -> int:
 			return 99  # 不明なタイプは最低優先度
 
 # ============================================================
-# ワーストケースシミュレーション（敵の対抗手段を考慮）
+# ============================================================
+# ワーストケースシミュレーション（CPUBattleDefenseEvaluatorに委譲）
 # ============================================================
 
 ## 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション
-## @param attacker: 攻撃側クリーチャー
-## @param defender: 防御側クリーチャー
-## @param tile_info: タイル情報
-## @param attacker_player_id: 攻撃側プレイヤーID
-## @param attacker_item: 攻撃側アイテム（空の場合あり）
-## @return: ワーストケースのシミュレーション結果
 func simulate_worst_case(
 	attacker: Dictionary,
 	defender: Dictionary,
@@ -490,58 +497,9 @@ func simulate_worst_case(
 	attacker_player_id: int,
 	attacker_item: Dictionary = {}
 ) -> Dictionary:
-	var defender_owner = tile_info.get("owner", -1)
-	
-	if defender_owner < 0 or not hand_utils:
-		# 敵情報がない場合は通常シミュレーション
-		return _simulate_and_check_win(attacker, defender, tile_info, attacker_player_id, attacker_item)
-	
-	print("[CPU攻撃] ワーストケース分析開始")
-	
-	# 敵の対抗手段を収集
-	var enemy_items = hand_utils.get_enemy_items(defender_owner)
-	var enemy_assists = hand_utils.get_enemy_assist_creatures(defender_owner, defender)
-	
-	print("[CPU攻撃] 敵の対抗手段: アイテム%d個, 援護%d体" % [enemy_items.size(), enemy_assists.size()])
-	
-	# まず何もない場合のシミュレーション
-	var base_result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
-	
-	# 対抗手段がない場合はそのまま返す
-	if enemy_items.is_empty() and enemy_assists.is_empty():
-		return base_result
-	
-	# ワーストケースを探す
-	var worst_result = base_result
-	var worst_option_name = "なし"
-	
-	# cannot_useチェックのためのフラグ確認
-	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-	
-	# 敵アイテムをすべて試す
-	for enemy_item in enemy_items:
-		# 防御側クリーチャーのcannot_use制限をチェック（リリース呪いで解除可能）
-		if not disable_cannot_use and not _is_item_restriction_released(defender_owner):
-			var check_result = ItemUseRestriction.check_can_use(defender, enemy_item)
-			if not check_result.can_use:
-				continue
-		
-		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
-		if _is_worse_result(result, worst_result):
-			worst_result = result
-			worst_option_name = "アイテム: " + enemy_item.get("name", "?")
-	
-	# 敵援護をすべて試す
-	for enemy_assist in enemy_assists:
-		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, enemy_assist)
-		if _is_worse_result(result, worst_result):
-			worst_result = result
-			worst_option_name = "援護: " + enemy_assist.get("name", "?")
-	
-	print("[CPU攻撃] ワーストケース: %s → %s" % [worst_option_name, "敗北" if not worst_result.is_win else "勝利"])
-	
-	worst_result["worst_case_option"] = worst_option_name
-	return worst_result
+	if _defense_evaluator:
+		return _defense_evaluator.simulate_worst_case(attacker, defender, tile_info, attacker_player_id, attacker_item)
+	return {"is_win": false, "sim_result": {}, "overkill": 0}
 
 ## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
 func _simulate_with_defender_option(
@@ -553,52 +511,17 @@ func _simulate_with_defender_option(
 	defender_item: Dictionary,
 	assist_creature: Dictionary
 ) -> Dictionary:
-	var sim_tile_info = {
-		"element": tile_info.get("element", ""),
-		"level": tile_info.get("level", 1),
-		"owner": tile_info.get("owner", -1),
-		"tile_index": tile_info.get("index", -1)
-	}
-	
-	# 援護がある場合、防御側のステータスに加算
-	var defender_for_sim = defender.duplicate(true)
-	if not assist_creature.is_empty():
-		defender_for_sim["ap"] = defender_for_sim.get("ap", 0) + assist_creature.get("ap", 0)
-		defender_for_sim["hp"] = defender_for_sim.get("hp", 0) + assist_creature.get("hp", 0)
-	
-	var sim_result = battle_simulator.simulate_battle(
-		attacker,
-		defender_for_sim,
-		sim_tile_info,
-		attacker_player_id,
-		attacker_item,
-		defender_item
-	)
-	
-	var is_win = sim_result.get("result") == BattleSimulator.BattleResult.ATTACKER_WIN
-	var overkill = sim_result.get("attacker_ap", 0) - sim_result.get("defender_hp", 0)
-	if overkill < 0:
-		overkill = 0
-	
-	return {
-		"is_win": is_win,
-		"sim_result": sim_result,
-		"overkill": overkill
-	}
+	if _defense_evaluator:
+		return _defense_evaluator._simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, defender_item, assist_creature)
+	return {"is_win": false, "sim_result": {}, "overkill": 0}
 
 ## 結果Aが結果Bより悪いか（攻撃側にとって）
 func _is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
-	# 勝ち → 負け は悪化
-	if result_b.is_win and not result_a.is_win:
-		return true
-	# 両方勝ちの場合、オーバーキルが少ない方が悪い（ギリギリ）
-	if result_a.is_win and result_b.is_win:
-		return result_a.overkill < result_b.overkill
+	if _defense_evaluator:
+		return _defense_evaluator._is_worse_result(result_a, result_b)
 	return false
 
 ## ワーストケースでも勝てるアイテムを探す
-## @param enemy_destroy_types: 敵のアイテム破壊対象タイプ（空なら破壊スキルなし）
-## @return: {can_win: bool, item: Dictionary, item_index: int}
 func find_item_to_beat_worst_case(
 	attacker: Dictionary,
 	defender: Dictionary,
@@ -608,51 +531,9 @@ func find_item_to_beat_worst_case(
 	creature_cost: int,
 	enemy_destroy_types: Array = []
 ) -> Dictionary:
-	var result = {"can_win": false, "item": {}, "item_index": -1}
-	
-	if not hand_utils:
-		return result
-	
-	var items = hand_utils.get_items_from_hand(attacker_player_id)
-	print("    [アイテム検索] ワーストケース対策アイテムを検索: %d個のアイテム" % items.size())
-	
-	# cannot_useチェックのためのフラグ確認
-	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-	
-	for item_entry in items:
-		var item_index = item_entry["index"]
-		var item = item_entry["data"]
-		var item_cost = hand_utils.get_item_cost(item)
-		
-		# コストチェック
-		if creature_cost + item_cost > current_player.magic_power:
-			continue
-		
-		# アイテム破壊対象チェック（敵がアイテム破壊スキルを持っている場合）
-		if not enemy_destroy_types.is_empty():
-			if hand_utils.is_item_destroy_target(item, enemy_destroy_types):
-				print("    [スキップ] %s: 敵のアイテム破壊対象" % item.get("name", "?"))
-				continue
-		
-		# cannot_use制限チェック（リリース呪いで解除可能）
-		if not disable_cannot_use and not _is_item_restriction_released(attacker_player_id):
-			var check_result = ItemUseRestriction.check_can_use(attacker, item)
-			if not check_result.can_use:
-				print("    [スキップ] %s: %s" % [item.get("name", "?"), check_result.reason])
-				continue
-		
-		# ワーストケースシミュレーション
-		var worst = simulate_worst_case(attacker, defender, tile_info, attacker_player_id, item)
-		
-		if worst.is_win:
-			# 勝てるアイテムが見つかった
-			if not result.can_win or item_cost < hand_utils.get_item_cost(result.item):
-				# 初めて見つかった or より安いアイテム
-				result.can_win = true
-				result.item = item
-				result.item_index = item_index
-	
-	return result
+	if _defense_evaluator:
+		return _defense_evaluator.find_item_to_beat_worst_case(attacker, defender, tile_info, attacker_player_id, current_player, creature_cost, enemy_destroy_types)
+	return {"can_win": false, "item": {}, "item_index": -1}
 
 # ============================================================
 # 共通バトル評価（指定クリーチャーで勝てるか＋最適アイテムを返す）
@@ -677,7 +558,9 @@ func evaluate_single_creature_battle(
 		"can_win": false,
 		"item_index": -1,
 		"item_data": {},
-		"worst_case": {}
+		"worst_case": {},
+		"is_instant_death_gamble": false,
+		"instant_death_probability": 0
 	}
 	
 	if not hand_utils or not battle_simulator:
@@ -759,6 +642,19 @@ func evaluate_single_creature_battle(
 			result.item_index = item_index
 			result.item_data = item_data
 			return result
+	
+	# 5. 勝てない場合、即死スキルで賭けられるか判定（攻撃側のみ）
+	if is_attacker and _instant_death_evaluator:
+		var instant_death_info = _instant_death_evaluator.get_instant_death_info(my_creature)
+		if not instant_death_info.is_empty():
+			# 即死条件をチェック
+			if _instant_death_evaluator.check_instant_death_condition(instant_death_info, defender):
+				var probability = instant_death_info.get("probability", 0)
+				# 一定確率以上なら賭ける価値あり
+				if probability >= 30:
+					result.is_instant_death_gamble = true
+					result.instant_death_probability = probability
+					print("[evaluate_single_creature] 即死ギャンブル可能: %s (%d%%)" % [my_creature.get("name", "?"), probability])
 	
 	return result
 
@@ -922,189 +818,38 @@ func has_pending_merge() -> bool:
 	return false
 
 # ============================================================
-# 即死スキル判断
+# 即死スキル判断（CPUInstantDeathEvaluatorに委譲）
 # ============================================================
 
 ## 無効化+即死クリーチャーを優先使用するかチェック
-## 敵が無効化アイテムを持っている場合に呼び出される
 func _check_nullify_instant_death_priority(current_player, creatures: Array, defender: Dictionary) -> Dictionary:
-	var result = {
-		"can_use": false,
-		"creature_index": -1,
-		"creature": {},
-		"probability": 0
-	}
-	
-	var best_candidate = null
-	var best_probability = 0
-	
-	for creature_entry in creatures:
-		var creature_index = creature_entry["index"]
-		var creature = creature_entry["data"]
-		
-		# コストチェック
-		if not hand_utils.can_afford_card(current_player, creature_index):
-			continue
-		
-		# 無効化スキルを持っているかチェック
-		if not _has_nullify_skill(creature):
-			continue
-		
-		# 即死スキルを持っているかチェック
-		var instant_death_info = _get_instant_death_info(creature)
-		if instant_death_info.is_empty():
-			continue
-		
-		# 即死条件を満たすかチェック
-		if not _check_instant_death_condition_for_cpu(instant_death_info, defender):
-			continue
-		
-		var probability = instant_death_info.get("probability", 0)
-		print("  [無効化+即死候補] %s: 確率 %d%%" % [creature.get("name", "?"), probability])
-		
-		# 最も確率が高いクリーチャーを選択
-		if probability > best_probability:
-			best_probability = probability
-			best_candidate = {
-				"creature_index": creature_index,
-				"creature": creature,
-				"probability": probability
-			}
-	
-	if best_candidate:
-		result.can_use = true
-		result.creature_index = best_candidate.creature_index
-		result.creature = best_candidate.creature
-		result.probability = best_candidate.probability
-	
-	return result
+	if _instant_death_evaluator:
+		return _instant_death_evaluator.check_nullify_instant_death_priority(current_player, creatures, defender)
+	return {"can_use": false, "creature_index": -1, "creature": {}, "probability": 0}
 
 ## クリーチャーが無効化スキルを持っているかチェック
 func _has_nullify_skill(creature: Dictionary) -> bool:
-	var ability_parsed = creature.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
-	return "無効化" in keywords
+	if _instant_death_evaluator:
+		return _instant_death_evaluator.has_nullify_skill(creature)
+	return false
 
 ## 即死スキルで賭けるかチェック
-## 勝てる組み合わせがない場合に、即死スキル持ちで条件を満たすクリーチャーを探す
 func _check_instant_death_gamble(current_player, creatures: Array, defender: Dictionary) -> Dictionary:
-	var result = {
-		"can_gamble": false,
-		"creature_index": -1,
-		"creature": {},
-		"probability": 0
-	}
-	
-	var best_candidate = null
-	var best_probability = 0
-	
-	for creature_entry in creatures:
-		var creature_index = creature_entry["index"]
-		var creature = creature_entry["data"]
-		
-		# コストチェック
-		if not hand_utils.can_afford_card(current_player, creature_index):
-			continue
-		
-		# 即死スキルをチェック
-		var instant_death_info = _get_instant_death_info(creature)
-		if instant_death_info.is_empty():
-			continue
-		
-		# 即死条件を満たすかチェック
-		if not _check_instant_death_condition_for_cpu(instant_death_info, defender):
-			continue
-		
-		var probability = instant_death_info.get("probability", 0)
-		print("  [即死候補] %s: 確率 %d%%" % [creature.get("name", "?"), probability])
-		
-		# 最も確率が高いクリーチャーを選択
-		if probability > best_probability:
-			best_probability = probability
-			best_candidate = {
-				"creature_index": creature_index,
-				"creature": creature,
-				"probability": probability
-			}
-	
-	if best_candidate:
-		result.can_gamble = true
-		result.creature_index = best_candidate.creature_index
-		result.creature = best_candidate.creature
-		result.probability = best_candidate.probability
-	
-	return result
+	if _instant_death_evaluator:
+		return _instant_death_evaluator.check_instant_death_gamble(current_player, creatures, defender)
+	return {"can_gamble": false, "creature_index": -1, "creature": {}, "probability": 0}
 
 ## クリーチャーの即死スキル情報を取得
 func _get_instant_death_info(creature: Dictionary) -> Dictionary:
-	var ability_parsed = creature.get("ability_parsed", {})
-	var keywords = ability_parsed.get("keywords", [])
-	
-	if not "即死" in keywords:
-		return {}
-	
-	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var instant_death_condition = keyword_conditions.get("即死", {})
-	
-	if instant_death_condition.is_empty():
-		return {}
-	
-	return instant_death_condition
+	if _instant_death_evaluator:
+		return _instant_death_evaluator.get_instant_death_info(creature)
+	return {}
 
 ## 即死条件をCPU側でチェック（攻撃時）
 func _check_instant_death_condition_for_cpu(condition: Dictionary, defender: Dictionary) -> bool:
-	var condition_type = condition.get("condition_type", "")
-	
-	match condition_type:
-		"none", "":
-			# 無条件
-			return true
-		
-		"enemy_is_element", "enemy_element":
-			# 敵が特定属性
-			var defender_element = defender.get("element", "")
-			
-			# 単一属性
-			if condition.has("element"):
-				var required_element = condition.get("element", "")
-				if required_element == "全":
-					return true
-				return defender_element == required_element
-			
-			# 複数属性
-			var required_elements = condition.get("elements", [])
-			if typeof(required_elements) == TYPE_STRING:
-				if required_elements == "全":
-					return true
-				required_elements = [required_elements]
-			
-			return defender_element in required_elements
-		
-		"defender_ap_check":
-			# 防御側のAPが一定以上
-			var operator = condition.get("operator", ">=")
-			var value = condition.get("value", 0)
-			var defender_base_ap = defender.get("ap", 0)
-			
-			match operator:
-				">=": return defender_base_ap >= value
-				">": return defender_base_ap > value
-				"==": return defender_base_ap == value
-				_: return false
-		
-		"defender_role":
-			# 使用者が防御側の時のみ発動（キロネックス）
-			# CPUが攻撃側なので、この条件は満たせない
-			return false
-		
-		"後手":
-			# 後手条件は先制判定で処理されるため、ここでは常にtrue
-			return true
-		
-		_:
-			print("[CPU AI] 未知の即死条件タイプ: ", condition_type)
-			return false
-
+	if _instant_death_evaluator:
+		return _instant_death_evaluator.check_instant_death_condition(condition, defender)
+	return false
 
 
 ## リリース呪いによるアイテム制限解除をチェック

@@ -256,6 +256,11 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 				)
 				if eval_result.can_win:
 					return true
+				# 即死ギャンブルも考慮（50%以上）
+				if eval_result.get("is_instant_death_gamble", false):
+					var probability = eval_result.get("instant_death_probability", 0)
+					if probability >= 50:
+						return true
 			else:
 				# フォールバック: 単純シミュレーション
 				var sim_result = _battle_simulator.simulate_battle(

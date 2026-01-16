@@ -89,13 +89,23 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 		var probability = instant_death_check.probability
 		print("[CPUDefenseAI] 敵が即死スキル持ち（%d%%）" % probability)
 		
-		if probability >= 100 or tile_level >= 2:
+		# 即死確率とタイルレベルに応じて無効化アイテムを検討
+		# - 100%即死: 常に使う
+		# - 高確率（50%以上）かつLv2以上: 使う
+		var should_use_nullify = (
+			probability >= 100 or
+			(probability >= 50 and tile_level >= 2)
+		)
+		
+		if should_use_nullify:
 			var nullify_item = _find_nullify_item_for_defense(player_id, defender)
 			if not nullify_item.is_empty():
-				print("[CPUDefenseAI] 無効化アイテム使用: %s" % nullify_item.get("name", "?"))
+				print("[CPUDefenseAI] 無効化アイテム使用: %s（即死%d%% Lv%d）" % [nullify_item.get("name", "?"), probability, tile_level])
 				result.action = "item"
 				result.item = nullify_item
 				return result
+			else:
+				print("[CPUDefenseAI] 無効化アイテムなし（即死%d%%）" % probability)
 			
 			if probability >= 100:
 				print("[CPUDefenseAI] 100%%即死 & 無効化アイテムなし → パス")
@@ -108,10 +118,14 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	print("[CPUDefenseAI] ワーストケース: %s" % _result_to_string(worst_outcome))
 	
 	# ワーストケースでも勝てる/生き残れる → パス
+	# ただし即死スキル持ちの場合は油断しない（即死で負ける可能性がある）
 	if worst_outcome == BattleSimulatorScript.BattleResult.DEFENDER_WIN or \
 	   worst_outcome == BattleSimulatorScript.BattleResult.ATTACKER_SURVIVED:
-		print("[CPUDefenseAI] ワーストケースでも安全 → パス")
-		return result
+		if instant_death_check.is_applicable and instant_death_check.probability >= 50:
+			print("[CPUDefenseAI] ワーストケースは安全だが即死リスクあり（%d%%）→ 継続判断" % instant_death_check.probability)
+		else:
+			print("[CPUDefenseAI] ワーストケースでも安全 → パス")
+			return result
 	
 	# 6. 勝てるアイテム・援護を探す
 	var armor_count = _count_armor_in_hand(player_id)
@@ -341,8 +355,22 @@ func _check_instant_death_threat(attacker: Dictionary, defender: Dictionary) -> 
 	var result = { "is_applicable": false, "probability": 0 }
 	
 	var ability_parsed = attacker.get("ability_parsed", {})
-	var effects = ability_parsed.get("effects", [])
 	
+	# 1. keywordsで即死を持っているかチェック
+	var keywords = ability_parsed.get("keywords", [])
+	if "即死" in keywords:
+		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+		var instant_death_condition = keyword_conditions.get("即死", {})
+		
+		if not instant_death_condition.is_empty():
+			# 条件をチェック
+			if _check_instant_death_keyword_condition(instant_death_condition, defender):
+				result.is_applicable = true
+				result.probability = instant_death_condition.get("probability", 100)
+				return result
+	
+	# 2. effectsで即死を持っているかチェック（旧形式との互換）
+	var effects = ability_parsed.get("effects", [])
 	for effect in effects:
 		if effect.get("effect_type") == "instant_death":
 			var triggers = effect.get("triggers", [])
@@ -359,6 +387,49 @@ func _check_instant_death_threat(attacker: Dictionary, defender: Dictionary) -> 
 				break
 	
 	return result
+
+
+## keyword_conditions形式の即死条件をチェック
+func _check_instant_death_keyword_condition(condition: Dictionary, defender: Dictionary) -> bool:
+	var condition_type = condition.get("condition_type", "")
+	
+	match condition_type:
+		"none", "":
+			return true
+		
+		"defender_ap_check":
+			var operator = condition.get("operator", ">=")
+			var value = condition.get("value", 0)
+			var defender_ap = defender.get("ap", 0)
+			
+			match operator:
+				">=": return defender_ap >= value
+				">": return defender_ap > value
+				"<=": return defender_ap <= value
+				"<": return defender_ap < value
+				"==": return defender_ap == value
+				_: return false
+		
+		"enemy_is_element", "enemy_element":
+			var defender_element = defender.get("element", "")
+			if condition.has("element"):
+				var required = condition.get("element", "")
+				if required == "全":
+					return true
+				return defender_element == required
+			var required_elements = condition.get("elements", [])
+			if typeof(required_elements) == TYPE_STRING:
+				if required_elements == "全":
+					return true
+				required_elements = [required_elements]
+			return defender_element in required_elements
+		
+		"defender_role":
+			# 攻撃時は発動しない（防御時のみ）
+			return false
+		
+		_:
+			return true
 
 func _check_instant_death_conditions(conditions: Dictionary, defender: Dictionary) -> bool:
 	if conditions.is_empty():

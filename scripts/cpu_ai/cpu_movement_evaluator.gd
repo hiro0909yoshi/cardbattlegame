@@ -68,6 +68,9 @@ var checkpoint_calculator: CheckpointDistanceCalculator = null
 # 現在の分岐タイル（方向ボーナス計算時にCPを除外するため）
 var _current_branch_tile: int = -1
 
+# ホーリーワード評価（分離クラス）
+var _holy_word_evaluator: CPUHolyWordEvaluator = null
+
 
 ## 共有コンテキストでセットアップ
 func setup_with_context(ctx: CPUAIContextScript, p_movement_controller = null,
@@ -76,6 +79,10 @@ func setup_with_context(ctx: CPUAIContextScript, p_movement_controller = null,
 	movement_controller = p_movement_controller
 	spell_movement = p_spell_movement
 	battle_ai = p_battle_ai
+	
+	# ホーリーワード評価をセットアップ
+	_holy_word_evaluator = CPUHolyWordEvaluator.new()
+	_holy_word_evaluator.setup(self)
 
 
 ## チェックポイント距離が計算済みか
@@ -765,7 +772,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	return selected_tile
 
 # =============================================================================
-# ホーリーワード判断
+# ホーリーワード判断（CPUHolyWordEvaluatorに委譲）
 # =============================================================================
 
 ## ホーリーワード系スペルの使用判断
@@ -773,134 +780,9 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 ## context: { player_id, ... }
 ## 返り値: { "should_use": bool, "target": Dictionary, "reason": String }
 func evaluate_holy_word(spell: Dictionary, context: Dictionary) -> Dictionary:
-	var player_id = context.get("player_id", 0)
-	var effect_parsed = spell.get("effect_parsed", {})
-	var effects = effect_parsed.get("effects", [])
-	
-	# ダイス固定値を取得
-	var dice_value = 0
-	for effect in effects:
-		if effect.get("effect_type") == "dice_fixed":
-			dice_value = effect.get("value", 0)
-			break
-	
-	if dice_value == 0:
-		return { "should_use": false }
-	
-	var spell_cost = spell.get("cost", {}).get("mp", 0)
-	
-	# 攻撃的使用を評価
-	var offensive_result = _evaluate_holy_word_offensive(dice_value, player_id, spell_cost)
-	
-	# 防御的使用を評価
-	var defensive_result = _evaluate_holy_word_defensive(dice_value, player_id, spell_cost)
-	
-	# 攻撃と防御を比較
-	if offensive_result.should_use and offensive_result.expected_toll >= spell_cost:
-		return {
-			"should_use": true,
-			"target": { "type": "player", "player_id": offensive_result.target_player_id },
-			"reason": "攻撃: 敵を自分の土地に止まらせる（通行料: %dG）" % offensive_result.expected_toll
-		}
-	
-	if defensive_result.should_use and defensive_result.avoided_toll >= spell_cost:
-		return {
-			"should_use": true,
-			"target": { "type": "player", "player_id": player_id },
-			"reason": "防御: 敵の土地を回避（回避通行料: %dG）" % defensive_result.avoided_toll
-		}
-	
+	if _holy_word_evaluator:
+		return _holy_word_evaluator.evaluate(spell, context)
 	return { "should_use": false }
-
-## 攻撃的使用を評価
-func _evaluate_holy_word_offensive(dice_value: int, player_id: int, spell_cost: int) -> Dictionary:
-	var result = {
-		"should_use": false,
-		"target_player_id": -1,
-		"expected_toll": 0
-	}
-	
-	if not player_system:
-		return result
-	
-	var best_toll = 0
-	var best_target = -1
-	
-	for enemy_id in range(player_system.players.size()):
-		if enemy_id == player_id:
-			continue
-		
-		var enemy_tile = _get_player_current_tile(enemy_id)
-		var enemy_direction = _get_player_direction(enemy_id)
-		
-		# 敵がdice_value歩進んだ先を計算
-		var sim_result = simulate_path(enemy_tile, dice_value * enemy_direction, enemy_id)
-		var stop_tile = sim_result.stop_tile
-		
-		var tile_info = _get_tile_info(stop_tile)
-		var owner = tile_info.get("owner", -1)
-		
-		# 自分の土地かチェック
-		if owner == player_id:
-			var toll = _calculate_toll(stop_tile)
-			
-			# 侵略リスクをチェック
-			if not _can_enemy_invade(stop_tile, enemy_id):
-				if toll > best_toll:
-					best_toll = toll
-					best_target = enemy_id
-	
-	if best_target >= 0 and best_toll > spell_cost:
-		result.should_use = true
-		result.target_player_id = best_target
-		result.expected_toll = best_toll
-	
-	return result
-
-## 防御的使用を評価
-func _evaluate_holy_word_defensive(dice_value: int, player_id: int, spell_cost: int) -> Dictionary:
-	var result = {
-		"should_use": false,
-		"avoided_toll": 0
-	}
-	
-	var current_tile = _get_player_current_tile(player_id)
-	var my_direction = _get_player_direction(player_id)
-	
-	# dice_valueで止まる位置を計算
-	var target_sim = simulate_path(current_tile, dice_value * my_direction, player_id)
-	var target_tile = target_sim.stop_tile
-	var target_info = _get_tile_info(target_tile)
-	var target_owner = target_info.get("owner", -1)
-	
-	# このダイス目で敵の土地に止まるか？
-	if target_owner >= 0 and target_owner != player_id:
-		if not _can_invade_and_win(target_tile, player_id):
-			# 倒せない敵の土地 → このダイス目は使いたくない
-			return result
-	
-	# 他のダイス目で危険な場所があるか確認
-	var max_danger_toll = 0
-	for check_dice in [1, 2, 3, 4, 5, 6, 8]:
-		if check_dice == dice_value:
-			continue
-		
-		var check_sim = simulate_path(current_tile, check_dice * my_direction, player_id)
-		var check_tile = check_sim.stop_tile
-		var check_info = _get_tile_info(check_tile)
-		var check_owner = check_info.get("owner", -1)
-		
-		if check_owner >= 0 and check_owner != player_id:
-			if not _can_invade_and_win(check_tile, player_id):
-				var toll = _calculate_toll(check_tile)
-				if toll > max_danger_toll:
-					max_danger_toll = toll
-	
-	if max_danger_toll > spell_cost:
-		result.should_use = true
-		result.avoided_toll = max_danger_toll
-	
-	return result
 
 # =============================================================================
 # ヘルパー関数
@@ -955,6 +837,11 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 			)
 			if eval_result.get("can_win", false):
 				return true
+			# 即死ギャンブルでも勝てる可能性あり（50%以上なら考慮）
+			if eval_result.get("is_instant_death_gamble", false):
+				var probability = eval_result.get("instant_death_probability", 0)
+				if probability >= 50:
+					return true
 		return false
 	
 	# フォールバック: 簡易判定

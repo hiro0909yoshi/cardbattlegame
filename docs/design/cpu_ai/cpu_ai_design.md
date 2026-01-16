@@ -3,8 +3,8 @@
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **バージョン**: 2.0  
 **作成日**: 2025年11月10日  
-**最終更新**: 2026年1月6日  
-**ステータス**: コア機能実装済み（バトルAI・スペルAI・秘術AI）
+**最終更新**: 2026年1月17日  
+**ステータス**: コア機能実装済み（バトルAI・スペルAI・秘術AI・リファクタリング完了）
 
 > **実装済み仕様書**:
 > - `docs/specs/cpu_battle_ai_spec.md` - バトル判断（攻撃・防御・合体・即死）
@@ -259,14 +259,33 @@ Level 60: デッキの勝ち筋を理解
 | バトルシミュレーション | ✅ 完了 | BattleSimulatorによる正確な勝敗予測 |
 | バトル判断（攻撃側） | ✅ 完了 | クリーチャー×アイテム全組み合わせ評価 |
 | バトル判断（防御側） | ✅ 完了 | アイテム・援護・合体判断 |
-| ワーストケース判定 | ✅ 完了 | 敵の対抗手段を考慮 |
-| 合体判断 | ✅ 完了 | 攻撃側・防御側両方 |
-| 即死スキル判断 | ✅ 完了 | 最後の手段として使用 |
+| ワーストケース判定 | ✅ 完了 | 敵の対抗手段を考慮（CPUBattleDefenseEvaluator） |
+| 合体判断 | ✅ 完了 | 攻撃側・防御側両方（CPUMergeEvaluator） |
+| 即死スキル判断 | ✅ 完了 | 攻撃・防御・移動すべてで考慮（CPUInstantDeathEvaluator） |
 | スペル使用判断 | ✅ 完了 | cpu_ruleパターン別評価 |
 | 秘術使用判断 | ✅ 完了 | スペルと同様の評価 |
 | ターゲット自動選択 | ✅ 完了 | 条件に基づく最適ターゲット |
 | CPUスペルフェーズ処理 | ✅ 完了 | CPUSpellPhaseHandlerで処理分離 |
 | context方式 | ✅ 完了 | CPUAIContextによる参照一元管理 |
+| ホーリーワード判断 | ✅ 完了 | CPUHolyWordEvaluatorに分離 |
+
+### クラス構成（リファクタリング後）
+
+```
+CPUAIContext（共通コンテキスト）
+├── CPUAIHandler（メイン制御）
+├── CPUBattleAI（バトル評価）
+│   ├── CPUBattleDefenseEvaluator（防御時評価・ワーストケース）
+│   ├── CPUInstantDeathEvaluator（即死スキル判断）
+│   └── CPUMergeEvaluator（合体評価）
+├── CPUDefenseAI（防御判断）
+├── CPUMovementEvaluator（移動評価）
+│   └── CPUHolyWordEvaluator（ホーリーワード判断）
+├── CPUSpellAI（スペル判断）
+├── CPUMysticArtsAI（秘術判断）
+├── CPUTerritoryAI（領地コマンド判断）
+└── CPUSpellPhaseHandler（スペルフェーズ処理）
+```
 
 ### 未実装（将来計画）
 
@@ -343,5 +362,6 @@ func choose_best_action(actions: Array, game_state: Dictionary) -> Dictionary:
 | 1.0 | 2025/11/10 | 初版作成：CPU AI実装設計 |
 | 2.0 | 2026/01/06 | 実装状況を更新、specと重複するコード例を削除、将来計画を整理 |
 | 2.1 | 2026/01/16 | CPUSpellPhaseHandler追加、context方式完了を反映 |
+| 2.2 | 2026/01/17 | リファクタリング完了（CPUBattleDefenseEvaluator、CPUInstantDeathEvaluator、CPUHolyWordEvaluator分離）、即死スキル判断を全場面で対応、クラス構成図追加 |
 
 ---

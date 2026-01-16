@@ -726,7 +726,7 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 	if tile_action_processor and not tile_action_processor.debug_disable_cannot_summon:
 		var tile_element = _land.get("tile_element", _land.get("element", ""))
 		var cannot_summon_result = tile_action_processor.check_cannot_summon(creature_data, tile_element)
-		if not cannot_summon_result.can_summon:
+		if not cannot_summon_result.passed:
 			return false
 	
 	# cost_lands_required チェック（TileActionProcessorの機能を使用）
@@ -898,6 +898,13 @@ func _evaluate_move_battle(from_land: Dictionary, dest_tile, player_id: int) -> 
 		result_data.can_win = eval_result.can_win
 		result_data.item_index = eval_result.item_index
 		result_data.item_data = eval_result.item_data
+		# 即死ギャンブルも考慮
+		if not result_data.can_win and eval_result.get("is_instant_death_gamble", false):
+			var probability = eval_result.get("instant_death_probability", 0)
+			if probability >= 50:
+				result_data.can_win = true  # ギャンブルで勝てる可能性
+				result_data["is_instant_death_gamble"] = true
+				result_data["instant_death_probability"] = probability
 		return result_data
 	
 	# フォールバック: battle_aiがない場合は単純シミュレーション
