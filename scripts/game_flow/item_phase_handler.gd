@@ -375,82 +375,40 @@ func use_item(item_card: Dictionary):
 	# フェーズ完了
 	complete_item_phase()
 
-## 合体処理を実行
+## 合体処理を実行（SkillMerge.execute_merge()に委譲）
 func _execute_merge(partner_card: Dictionary):
-	# コストチェック
-	if not _can_afford_card(partner_card):
-		print("[合体] 魔力不足")
-		return
-	
-	# 合体結果のクリーチャーデータを取得
-	var result_id = get_merge_result_id()
-	var result_creature = CardLoader.get_card_by_id(result_id)
-	
-	if result_creature.is_empty():
-		print("[合体] 合体結果のクリーチャーが見つかりません: ID=%d" % result_id)
-		return
-	
-	var partner_name = partner_card.get("name", "?")
-	var original_name = battle_creature_data.get("name", "?")
-	var result_name = result_creature.get("name", "?")
-	
-	print("[合体] %s + %s → %s" % [original_name, partner_name, result_name])
-	
-	item_used_this_battle = true
-	current_state = State.ITEM_APPLIED
-	
-	# コストを支払う
-	var cost_data = partner_card.get("cost", {})
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
-	else:
-		cost = cost_data
-	
-	# ライフフォース呪いチェック（コスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, partner_card)
-	
-	if player_system:
-		player_system.add_magic(current_player_id, -cost)
-		print("[合体] 魔力消費: %dG" % cost)
-	
-	# 合体相手を捨て札へ
+	# 手札からパートナーのインデックスを検索
+	var partner_index = -1
 	if card_system:
 		var hand = card_system.get_all_cards_for_player(current_player_id)
 		for i in range(hand.size()):
 			if hand[i].get("id", -1) == partner_card.get("id", -2):
-				card_system.discard_card(current_player_id, i, "merge")
-				print("[合体] %s を捨て札へ" % partner_name)
+				partner_index = i
 				break
 	
-	# 合体後のクリーチャーデータを準備
-	var new_creature_data = result_creature.duplicate(true)
+	if partner_index < 0:
+		print("[ItemPhaseHandler] 合体相手が手札に見つかりません")
+		return
 	
-	# 永続化フィールドの初期化
-	if not new_creature_data.has("base_up_hp"):
-		new_creature_data["base_up_hp"] = 0
-	if not new_creature_data.has("base_up_ap"):
-		new_creature_data["base_up_ap"] = 0
-	if not new_creature_data.has("permanent_effects"):
-		new_creature_data["permanent_effects"] = []
-	if not new_creature_data.has("temporary_effects"):
-		new_creature_data["temporary_effects"] = []
-	if not new_creature_data.has("map_lap_count"):
-		new_creature_data["map_lap_count"] = 0
+	# SkillMergeに委譲
+	var merge_result = SkillMerge.execute_merge(
+		battle_creature_data,
+		partner_index,
+		current_player_id,
+		card_system,
+		player_system,
+		game_flow_manager
+	)
 	
-	# current_hpの初期化
-	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
-	new_creature_data["current_hp"] = max_hp
+	if not merge_result.get("success", false):
+		print("[ItemPhaseHandler] 合体失敗")
+		return
 	
-	# 合体情報を追加（バトル画面表示用）
-	new_creature_data["_was_merged"] = true
-	new_creature_data["_merged_result_name"] = result_name
+	item_used_this_battle = true
+	current_state = State.ITEM_APPLIED
 	
 	# 合体後データを保存
-	merged_creature_data = new_creature_data
-	
-	print("[合体] 完了: %s (HP:%d AP:%d)" % [result_name, max_hp, new_creature_data.get("ap", 0)])
+	merged_creature_data = merge_result.get("result_creature", {})
 	
 	# シグナル発信
 	creature_merged.emit(merged_creature_data)
@@ -711,60 +669,35 @@ func _get_defense_tile_info() -> Dictionary:
 	return {}
 
 
-## CPUが合体を実行
+## CPUが合体を実行（SkillMerge.execute_merge()に委譲）
 func _execute_merge_for_cpu(merge_result: Dictionary):
-	var partner_index = merge_result["partner_index"]
-	var partner_data = merge_result["partner_data"]
-	var result_id = merge_result["result_id"]
-	var cost = merge_result["cost"]
+	var partner_index = merge_result.get("partner_index", -1)
 	
-	# 合体結果のクリーチャーを取得
-	var result_creature = CardLoader.get_card_by_id(result_id)
-	if result_creature.is_empty():
-		print("[CPU合体] 合体結果のクリーチャーが見つかりません")
+	if partner_index < 0:
+		print("[CPU合体] 無効なパートナーインデックス")
 		pass_item()
 		return
 	
-	# 魔力消費
-	if player_system:
-		player_system.add_magic(current_player_id, -cost)
-		print("[CPU合体] 魔力消費: %dG" % cost)
+	# SkillMergeに委譲
+	var skill_merge_result = SkillMerge.execute_merge(
+		battle_creature_data,
+		partner_index,
+		current_player_id,
+		card_system,
+		player_system,
+		game_flow_manager
+	)
 	
-	# 合体相手を捨て札へ
-	if card_system:
-		card_system.discard_card(current_player_id, partner_index, "merge")
-		print("[CPU合体] %s を捨て札へ" % partner_data.get("name", "?"))
-	
-	# 合体後のクリーチャーデータを準備
-	var new_creature_data = result_creature.duplicate(true)
-	
-	# 永続化フィールドの初期化
-	if not new_creature_data.has("base_up_hp"):
-		new_creature_data["base_up_hp"] = 0
-	if not new_creature_data.has("base_up_ap"):
-		new_creature_data["base_up_ap"] = 0
-	if not new_creature_data.has("permanent_effects"):
-		new_creature_data["permanent_effects"] = []
-	if not new_creature_data.has("temporary_effects"):
-		new_creature_data["temporary_effects"] = []
-	
-	# current_hpの初期化
-	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
-	new_creature_data["current_hp"] = max_hp
-	
-	# タイルインデックスを保持
-	var tile_index = battle_creature_data.get("tile_index", -1)
-	new_creature_data["tile_index"] = tile_index
+	if not skill_merge_result.get("success", false):
+		print("[CPU合体] 合体失敗")
+		pass_item()
+		return
 	
 	# 合体後のデータを保存
-	merged_creature_data = new_creature_data
-	battle_creature_data = new_creature_data
+	merged_creature_data = skill_merge_result.get("result_creature", {})
+	battle_creature_data = merged_creature_data
 	
-	print("[CPU合体] 完了: %s (HP:%d AP:%d)" % [
-		new_creature_data.get("name", "?"),
-		max_hp,
-		new_creature_data.get("ap", 0)
-	])
+	print("[CPU合体] 完了: %s" % merged_creature_data.get("name", "?"))
 	
 	# 合体シグナルを発行
 	creature_merged.emit(merged_creature_data)

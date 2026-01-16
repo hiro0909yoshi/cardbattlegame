@@ -1016,7 +1016,7 @@ func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dic
 	
 	return 0
 
-## CPU攻撃側の合体処理をチェック・実行
+## CPU攻撃側の合体処理をチェック・実行（SkillMerge.execute_merge()に委譲）
 func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
 	# cpu_ai_handlerから合体データを取得
 	if not board_system or not board_system.cpu_turn_processor:
@@ -1035,56 +1035,30 @@ func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
 		merge_data.get("result_name", "?")
 	])
 	
-	# 合体相手のデータ
 	var partner_index = merge_data.get("partner_index", -1)
-	var partner_data = merge_data.get("partner_data", {})
-	var cost = merge_data.get("cost", 0)
-	var result_id = merge_data.get("result_id", -1)
-	
-	if partner_index < 0 or result_id < 0:
+	if partner_index < 0:
 		cpu_handler.clear_pending_merge_data()
 		return false
 	
-	# 合体結果のクリーチャーを取得
-	var result_creature = CardLoader.get_card_by_id(result_id)
-	if result_creature.is_empty():
-		print("[TileActionProcessor] 合体結果のクリーチャーが見つかりません")
+	# SkillMergeに委譲
+	var skill_merge_result = SkillMerge.execute_merge(
+		pending_battle_card_data,
+		partner_index,
+		player_index,
+		card_system,
+		player_system,
+		game_flow_manager
+	)
+	
+	if not skill_merge_result.get("success", false):
+		print("[TileActionProcessor] CPU合体失敗")
 		cpu_handler.clear_pending_merge_data()
 		return false
-	
-	# 魔力消費（合体相手のコスト）
-	player_system.add_magic(player_index, -cost)
-	print("[CPU合体] 魔力消費: %dG" % cost)
-	
-	# 合体相手を捨て札へ
-	card_system.discard_card(player_index, partner_index, "merge")
-	print("[CPU合体] %s を捨て札へ" % partner_data.get("name", "?"))
-	
-	# 合体後のクリーチャーデータを準備
-	var new_creature_data = result_creature.duplicate(true)
-	
-	# 永続化フィールドの初期化
-	if not new_creature_data.has("base_up_hp"):
-		new_creature_data["base_up_hp"] = 0
-	if not new_creature_data.has("base_up_ap"):
-		new_creature_data["base_up_ap"] = 0
-	if not new_creature_data.has("permanent_effects"):
-		new_creature_data["permanent_effects"] = []
-	if not new_creature_data.has("temporary_effects"):
-		new_creature_data["temporary_effects"] = []
-	
-	# current_hpの初期化
-	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
-	new_creature_data["current_hp"] = max_hp
 	
 	# バトルカードデータを更新
-	pending_battle_card_data = new_creature_data
+	pending_battle_card_data = skill_merge_result.get("result_creature", {})
 	
-	print("[CPU合体] 完了: %s (HP:%d AP:%d)" % [
-		new_creature_data.get("name", "?"),
-		max_hp,
-		new_creature_data.get("ap", 0)
-	])
+	print("[TileActionProcessor] CPU合体完了: %s" % pending_battle_card_data.get("name", "?"))
 	
 	# 合体データをクリア
 	cpu_handler.clear_pending_merge_data()

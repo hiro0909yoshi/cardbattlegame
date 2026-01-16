@@ -134,44 +134,61 @@
 
 ### 実装ファイル
 
-**コアロジック**:
-- `scripts/battle/skills/skill_merge.gd` - 合体スキル判定
+**コアロジック（統一インターフェース）**:
+- `scripts/battle/skills/skill_merge.gd` - 合体スキル判定・実行
   - `has_merge_skill()` - 合体スキル所持チェック
   - `get_merge_partner_id()` - 合体相手IDを取得
   - `get_merge_result_id()` - 合体結果IDを取得
   - `find_merge_partner_in_hand()` - 手札に合体相手がいるかチェック
+  - **`execute_merge()`** - 合体実行（統一インターフェース）
+  - `_create_merged_creature_data()` - 合体後クリーチャーデータ作成
 
-**統合部分**:
-- `scripts/game_flow/item_phase_handler.gd` - 合体処理の実行
-  - `_execute_merge()` - 合体効果を適用
-  - `was_merged()` - 合体が発生したか
-  - `get_merged_creature()` - 合体後のクリーチャーデータ取得
-- `scripts/tile_action_processor.gd` - 合体後データをバトルに渡す
+**呼び出し元**:
+- `scripts/game_flow/item_phase_handler.gd`
+  - `_execute_merge()` → `SkillMerge.execute_merge()` に委譲
+  - `_execute_merge_for_cpu()` → `SkillMerge.execute_merge()` に委譲
+- `scripts/tile_action_processor.gd`
+  - `_check_and_execute_cpu_attacker_merge()` → `SkillMerge.execute_merge()` に委譲
+
+**CPU判断**:
+- `scripts/cpu_ai/cpu_merge_evaluator.gd` - 合体オプション評価・シミュレーション
 
 ### 援護スキルとの違い
 
 | 項目 | 援護 | 合体 |
 |------|------|------|
-| 発動タイミング | アイテムフェーズ | アイテムフェーズ後 |
-| 発動方式 | 手動選択 | 自動発動 |
+| 発動タイミング | アイテムフェーズ | アイテムフェーズ |
+| 発動方式 | 手動選択 | 手動選択 |
 | 効果 | AP/HP加算 | クリーチャー変身 |
 | 永続性 | 戦闘中のみ | 永続変化 |
 | スキル継承 | なし | 変身先のスキル |
-| タイルデータ | 変更なし | 更新必要 |
+| タイルデータ | 変更なし | バトル勝利時に更新 |
 
 ### 処理フロー
 
 ```
-1. アイテムフェーズ開始時、合体スキルをチェック
-2. 手札に合体相手がいれば選択可能として表示
-3. プレイヤーが合体相手を選択した場合:
-   a. 魔力消費
-   b. 合体相手を捨て札へ
-   c. result_idのクリーチャーデータを取得
-   d. merged_creature_dataに保存
-4. アイテムフェーズ完了時、tile_action_processorで合体データを取得
-5. pending_battle_card_dataを合体後のデータに更新
-6. バトル開始処理へ（合体後のクリーチャーでバトル）
+【プレイヤー】
+1. バトル開始 → ItemPhaseHandler.start_item_phase()
+2. 合体スキル持ちなら手札に合体相手を選択可能として表示
+3. プレイヤーが合体相手を選択 → use_item() → _execute_merge()
+4. _execute_merge() → SkillMerge.execute_merge() に委譲
+5. 合体後データをmerged_creature_dataに保存
+6. creature_mergedシグナル発行
+7. バトル開始処理へ
+
+【CPU攻撃側】
+1. CPUBattleAI.decide_invasion() で合体判断
+2. CPUMergeEvaluator.check_merge_option_for_attack() でシミュレーション
+3. 合体選択時 → pending_merge_data に保存
+4. TileActionProcessor.execute_battle()
+5. _check_and_execute_cpu_attacker_merge() → SkillMerge.execute_merge() に委譲
+6. pending_battle_card_data を更新
+7. ItemPhaseHandler.start_item_phase() へ
+
+【CPU防御側】
+1. ItemPhaseHandler._cpu_decide_item() で合体判断
+2. 合体選択時 → _execute_merge_for_cpu()
+3. _execute_merge_for_cpu() → SkillMerge.execute_merge() に委譲
 ```
 
 ※ 永続化は侵略成功時にタイルに配置されるため、バトルシステム側で行われる
@@ -183,3 +200,4 @@
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2025/12/10 | 1.0 | 初版作成 |
+| 2026/01/16 | 1.1 | SkillMerge.execute_merge()統一インターフェース追加、実装フローを更新 |

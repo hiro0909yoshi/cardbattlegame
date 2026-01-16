@@ -241,3 +241,142 @@ static func apply_merge_effect(
 	print("[合体] 完了: %s (HP:%d AP:%d)" % [result_name, max_hp, participant.base_ap])
 	
 	return result
+
+
+# ============================================================
+# 統一インターフェース（ItemPhaseHandler/TileActionProcessor用）
+# ============================================================
+
+## 合体を実行（BattleParticipantなしバージョン）
+##
+## ItemPhaseHandlerやTileActionProcessorから呼び出す統一インターフェース
+## タイル更新は行わない（呼び出し側の責務）
+##
+## @param creature_data 合体元クリーチャーデータ
+## @param partner_index 手札の合体相手インデックス
+## @param player_id プレイヤーID
+## @param card_system CardSystem参照
+## @param player_system PlayerSystem参照
+## @param game_flow_manager GameFlowManager参照（コスト修正用、オプション）
+## @return Dictionary { success, result_creature, cost, partner_data }
+static func execute_merge(
+	creature_data: Dictionary,
+	partner_index: int,
+	player_id: int,
+	card_system,
+	player_system,
+	game_flow_manager = null
+) -> Dictionary:
+	var result = {
+		"success": false,
+		"result_creature": {},
+		"cost": 0,
+		"partner_data": {}
+	}
+	
+	# 合体スキルチェック
+	if not has_merge_skill(creature_data):
+		print("[SkillMerge] 合体スキルなし")
+		return result
+	
+	# 手札を取得
+	if not card_system:
+		print("[SkillMerge] card_systemがnull")
+		return result
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	if partner_index < 0 or partner_index >= hand.size():
+		print("[SkillMerge] 無効なパートナーインデックス: %d" % partner_index)
+		return result
+	
+	var partner_data = hand[partner_index]
+	var partner_id = partner_data.get("id", -1)
+	var expected_partner_id = get_merge_partner_id(creature_data)
+	
+	# 合体相手のIDを確認
+	if partner_id != expected_partner_id:
+		print("[SkillMerge] 合体相手が一致しない: expected=%d, actual=%d" % [expected_partner_id, partner_id])
+		return result
+	
+	# コスト計算
+	var cost = get_merge_cost(hand, partner_index)
+	
+	# ライフフォース呪いチェック
+	if game_flow_manager and game_flow_manager.spell_cost_modifier:
+		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, partner_data)
+	
+	# 魔力チェック
+	var player_magic = player_system.get_magic(player_id) if player_system else 0
+	if player_magic < cost:
+		print("[SkillMerge] 魔力不足: 必要%dG, 現在%dG" % [cost, player_magic])
+		return result
+	
+	# 合体結果のクリーチャーを取得
+	var result_id = get_merge_result_id(creature_data)
+	var result_creature = CardLoader.get_card_by_id(result_id)
+	
+	if result_creature.is_empty():
+		print("[SkillMerge] 合体結果のクリーチャーが見つかりません: ID=%d" % result_id)
+		return result
+	
+	var original_name = creature_data.get("name", "?")
+	var partner_name = partner_data.get("name", "?")
+	var result_name = result_creature.get("name", "?")
+	
+	print("[SkillMerge] %s + %s → %s" % [original_name, partner_name, result_name])
+	
+	# 魔力消費
+	if player_system:
+		player_system.add_magic(player_id, -cost)
+		print("[SkillMerge] 魔力消費: %dG" % cost)
+	
+	# 合体相手を捨て札へ
+	if card_system:
+		card_system.discard_card(player_id, partner_index, "merge")
+		print("[SkillMerge] %s を捨て札へ" % partner_name)
+	
+	# 合体後のクリーチャーデータを準備
+	var new_creature_data = _create_merged_creature_data(result_creature, creature_data)
+	
+	result["success"] = true
+	result["result_creature"] = new_creature_data
+	result["cost"] = cost
+	result["partner_data"] = partner_data
+	result["result_name"] = result_name
+	
+	var max_hp = new_creature_data.get("current_hp", 0)
+	print("[SkillMerge] 完了: %s (HP:%d AP:%d)" % [result_name, max_hp, new_creature_data.get("ap", 0)])
+	
+	return result
+
+
+## 合体後のクリーチャーデータを作成（内部ヘルパー）
+static func _create_merged_creature_data(result_creature: Dictionary, original_creature: Dictionary) -> Dictionary:
+	var new_creature_data = result_creature.duplicate(true)
+	
+	# 永続化フィールドの初期化
+	if not new_creature_data.has("base_up_hp"):
+		new_creature_data["base_up_hp"] = 0
+	if not new_creature_data.has("base_up_ap"):
+		new_creature_data["base_up_ap"] = 0
+	if not new_creature_data.has("permanent_effects"):
+		new_creature_data["permanent_effects"] = []
+	if not new_creature_data.has("temporary_effects"):
+		new_creature_data["temporary_effects"] = []
+	if not new_creature_data.has("map_lap_count"):
+		new_creature_data["map_lap_count"] = 0
+	
+	# current_hpの初期化
+	var max_hp = new_creature_data.get("hp", 0) + new_creature_data.get("base_up_hp", 0)
+	new_creature_data["current_hp"] = max_hp
+	
+	# タイルインデックスを保持
+	var tile_index = original_creature.get("tile_index", -1)
+	if tile_index >= 0:
+		new_creature_data["tile_index"] = tile_index
+	
+	# 合体情報を追加（バトル画面表示用）
+	new_creature_data["_was_merged"] = true
+	new_creature_data["_merged_result_name"] = new_creature_data.get("name", "?")
+	
+	return new_creature_data
