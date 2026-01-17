@@ -12,13 +12,14 @@ config_version=5
 
 config/name="CardBattleGame"
 run/main_scene="uid://dwp056svuqcek"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 CardLoader="*res://scripts/card_loader.gd"
 GameData="*res://scripts/game_data.gd"
+UserCardDB="*res://scripts/user_card_db.gd"
 
 [display]
 
@@ -28,7 +29,7 @@ window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/godot-sqlite/plugin.cfg")
 
 [gui]
 
