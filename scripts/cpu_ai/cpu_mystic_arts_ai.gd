@@ -18,8 +18,7 @@ var lap_system: Node = null
 var target_resolver: CPUTargetResolver = null
 var game_flow_manager: Node = null
 
-## ミスティックアーツデータキャッシュ
-var mystic_arts_data: Dictionary = {}
+
 
 ## 優先度の数値変換
 const PRIORITY_VALUES = {
@@ -51,9 +50,6 @@ func initialize(ctx: CPUAIContextScript) -> void:
 	board_analyzer.initialize(board_system, player_system, card_system, creature_manager, lap_system, game_flow_manager)
 	target_resolver.initialize(board_analyzer, board_system, player_system, card_system, game_flow_manager)
 	
-	# ミスティックアーツデータをロード
-	_load_mystic_arts_data()
-
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
 	if condition_checker:
@@ -63,27 +59,6 @@ func set_hand_utils(utils: CPUHandUtils) -> void:
 func set_battle_ai(ai: CPUBattleAI) -> void:
 	if condition_checker:
 		condition_checker.set_battle_ai(ai)
-
-## ミスティックアーツデータをロード
-func _load_mystic_arts_data() -> void:
-	var file = FileAccess.open("res://data/spell_mystic.json", FileAccess.READ)
-	if not file:
-		push_warning("CPUMysticArtsAI: Failed to load spell_mystic.json")
-		return
-	
-	var json = JSON.new()
-	var error = json.parse(file.get_as_text())
-	file.close()
-	
-	if error != OK:
-		push_warning("CPUMysticArtsAI: Failed to parse spell_mystic.json")
-		return
-	
-	var data = json.get_data()
-	if data and data.has("cards"):
-		for card in data.cards:
-			var id = card.get("id", 0)
-			mystic_arts_data[id] = card
 
 ## ミスティックアーツ使用判断のメインエントリ
 ## 戻り値: {use: bool, creature_tile: int, mystic: Dictionary, target: Dictionary}
@@ -172,8 +147,8 @@ func _get_usable_mystic_arts(player_id: int) -> Array:
 			if cost > magic:
 				continue
 			
-			# spell_idからデータを取得
-			var mystic_data = mystic_arts_data.get(spell_id, {})
+			# spell_idからCardLoader経由でデータを取得
+			var mystic_data = CardLoader.get_card_by_id(spell_id) if spell_id > 0 else {}
 			
 			# cpu_ruleがskipのものは除外
 			var cpu_rule = mystic_data.get("cpu_rule", {})
