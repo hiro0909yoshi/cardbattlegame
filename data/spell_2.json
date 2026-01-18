@@ -189,7 +189,7 @@
 	{
 	  "id": 2071,
 	  "name": "バリアー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1755,7 +1755,7 @@
 	{
 	  "id": 2127,
 	  "name": "リンカネーション",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {

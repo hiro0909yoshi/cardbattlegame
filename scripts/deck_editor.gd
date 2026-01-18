@@ -8,14 +8,21 @@ var count_buttons = []  # 枚数選択ボタンの配列
 
 # 正確なノードパス
 @onready var button_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer
-@onready var scroll_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/DeckScrollContainer
-@onready var grid_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/DeckScrollContainer/GridContainer
+@onready var scroll_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer
+@onready var grid_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer/GridContainer
+@onready var info_panel_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/InfoPanelContainer
 @onready var right_vbox = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer
 @onready var card_count_label = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardCountLabel
 @onready var save_button = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/SaveButton
 
 # リセットボタン（コードで生成）
 var reset_button: Button = null
+
+# インフォパネル
+var CreatureInfoPanelScene = preload("res://scenes/ui/creature_info_panel.tscn")
+var ItemInfoPanelScene = preload("res://scenes/ui/item_info_panel.tscn")
+var SpellInfoPanelScene = preload("res://scenes/ui/spell_info_panel.tscn")
+var current_info_panel: Control = null
 
 func _ready():
 	# フィルターボタン接続（8個）
@@ -58,8 +65,8 @@ func _ready():
 	# ダイアログ作成
 	create_card_dialog()
 	
-	# カード一覧を表示
-	display_cards("all")
+	# カード一覧を表示（最初はデッキ内のカードのみ）
+	display_cards("deck")
 
 func load_deck():
 	# GameDataから現在のブックを読み込み
@@ -68,49 +75,69 @@ func load_deck():
 
 func create_card_dialog():
 	card_dialog = Popup.new()
-	card_dialog.size = Vector2(600, 300)
+	card_dialog.size = Vector2(1183, 500)
 	
+	# シンプルなVBox
 	var vbox = VBoxContainer.new()
-	vbox.position = Vector2(20, 20)
-	vbox.size = Vector2(560, 260)
 	vbox.name = "DialogVBox"
+	vbox.position = Vector2(30, 30)
+	vbox.size = Vector2(1123, 440)
+	vbox.add_theme_constant_override("separation", 30)
 	card_dialog.add_child(vbox)
 	
-	# タイトルラベル ※1.4倍
-	var title_label = Label.new()
-	title_label.name = "TitleLabel"
-	title_label.add_theme_font_size_override("font_size", 34)
-	vbox.add_child(title_label)
-	
-	# 情報ラベル ※1.4倍
+	# 所持枚数/デッキ内枚数ラベル
 	var info_label = Label.new()
 	info_label.name = "InfoLabel"
-	info_label.add_theme_font_size_override("font_size", 25)
+	info_label.add_theme_font_size_override("font_size", 70)
+	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(info_label)
-	
-	# スペーサー ※1.4倍
-	var spacer = Control.new()
-	spacer.custom_minimum_size = Vector2(0, 28)
-	vbox.add_child(spacer)
 	
 	# 枚数選択ボタン（横並び）
 	var hbox = HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_theme_constant_override("separation", 30)
 	
 	count_buttons.clear()
 	for i in range(5):
 		var btn = Button.new()
 		btn.text = str(i) + "枚"
-		btn.custom_minimum_size = Vector2(112, 84)  # 1.4倍
-		btn.add_theme_font_size_override("font_size", 28)  # 1.4倍
+		btn.custom_minimum_size = Vector2(180, 100)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.add_theme_font_size_override("font_size", 50)
 		btn.pressed.connect(_on_count_selected.bind(i))
 		hbox.add_child(btn)
 		count_buttons.append(btn)
 	
 	vbox.add_child(hbox)
 	
+	# スペーサー
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 20)
+	vbox.add_child(spacer)
+	
+	# 閉じるボタン
+	var close_btn = Button.new()
+	close_btn.text = "閉じる"
+	close_btn.custom_minimum_size = Vector2(375, 125)
+	close_btn.add_theme_font_size_override("font_size", 55)
+	close_btn.pressed.connect(_on_dialog_closed)
+	vbox.add_child(close_btn)
+	
+	# ダイアログが非表示になったときの処理
+	card_dialog.popup_hide.connect(_on_dialog_closed)
+	
 	add_child(card_dialog)
+
+## ダイアログが閉じられたとき（インフォパネルも閉じる）
+func _on_dialog_closed():
+	card_dialog.hide()
+	_close_info_panel()
+
+## インフォパネルを閉じる
+func _close_info_panel():
+	if current_info_panel and is_instance_valid(current_info_panel):
+		current_info_panel.queue_free()
+		current_info_panel = null
 
 func _on_filter_pressed(filter_type: String):
 	current_filter = filter_type
@@ -147,11 +174,6 @@ func display_cards(filter: String):
 		for card in CardLoader.all_cards:
 			if card.type == "item" and GameData.get_card_count(card.id) > 0:
 				cards_to_show.append(card)
-	elif filter == "all":
-		# 全ての所持カード
-		for card in CardLoader.all_cards:
-			if GameData.get_card_count(card.id) > 0:
-				cards_to_show.append(card)
 	else:
 		# 属性フィルター（火・水・地・風・無）
 		var target_element = element_map.get(filter, filter)  # マッピング適用
@@ -174,44 +196,151 @@ func clear_card_list():
 		child.queue_free()
 
 func create_card_button(card_data: Dictionary):
-	var button = Button.new()
-	button.custom_minimum_size = Vector2(420, 700)  # 1.4倍
-	
-	# カードIDをメタデータとして保存
-	button.set_meta("card_id", card_data.id)
-	
 	# 所持枚数を取得（DB連携）
 	var owned_count = GameData.get_card_count(card_data.id)
 	var deck_count = current_deck.get(card_data.id, 0)
+	var rarity = card_data.get("rarity", "N")
 	
-	# ボタンテキスト
+	# ボタン（元のサイズに戻す）
+	var button = Button.new()
+	button.custom_minimum_size = Vector2(420, 700)
+	button.set_meta("card_id", card_data.id)
+	
+	# テキスト表示
 	var card_name = card_data.get("name", "???")
 	var element = card_data.get("element", "")
+	var card_type = card_data.get("type", "")
 	
-	button.text = card_name + "\n"
+	button.text = card_name + "\n[" + rarity + "]"
 	if not element.is_empty():
-		button.text += "[" + element + "] "
-	button.text += str(owned_count) + "枚"
+		button.text += " " + element
+	button.text += "\n所持: " + str(owned_count) + "枚"
 	if deck_count > 0:
-		button.text += " (デッキ:" + str(deck_count) + ")"
+		button.text += "\nデッキ: " + str(deck_count) + "枚"
 	
-	# ボタン押下時の処理
+	# クリーチャーならAP/HP表示
+	if card_type == "creature":
+		var ap = card_data.get("ap", 0)
+		var hp = card_data.get("hp", 0)
+		button.text += "\nAP:%d / HP:%d" % [ap, hp]
+	
+	button.add_theme_font_size_override("font_size", 32)
+	
+	# レアリティで背景色
+	match rarity:
+		"R":
+			button.modulate = Color(1.0, 0.9, 0.7)
+		"S":
+			button.modulate = Color(0.9, 0.85, 1.0)
+		"N":
+			button.modulate = Color(0.85, 0.9, 1.0)
+		"C":
+			button.modulate = Color(0.9, 0.9, 0.9)
+	
 	button.pressed.connect(_on_card_button_pressed.bind(card_data.id))
-	
 	grid_container.add_child(button)
+
+## カードシーンをプリロード
+var CardScene = preload("res://scenes/Card.tscn")
 
 func _on_card_button_pressed(card_id: int):
 	selected_card_id = card_id
 	var card = CardLoader.get_card_by_id(card_id)
+	var card_type = card.get("type", "")
 	
-	var owned = GameData.get_card_count(card_id)
-	var in_deck = current_deck.get(card_id, 0)
+	# カードタイプに応じたインフォパネルを表示
+	_show_info_panel(card, card_type)
+
+## カードタイプに応じたインフォパネルを表示
+func _show_info_panel(card: Dictionary, card_type: String):
+	# 既存のインフォパネルを削除
+	if current_info_panel and is_instance_valid(current_info_panel):
+		current_info_panel.queue_free()
+		current_info_panel = null
 	
-	var title_label = card_dialog.get_node("DialogVBox/TitleLabel")
-	var info_label = card_dialog.get_node("DialogVBox/InfoLabel")
+	# インフォパネルの紙部分を右側パネルに表示
+	_show_info_in_right_panel(card, card_type)
 	
-	title_label.text = card.get("name", "???")
-	info_label.text = "所持: " + str(owned) + "枚 / デッキ内: " + str(in_deck) + "枚\n\nデッキに入れる枚数を選択してください"
+	# 枚数選択ダイアログを表示
+	_show_count_dialog()
+
+## InfoPanelContainerにインフォパネルを表示
+func _show_info_in_right_panel(card: Dictionary, card_type: String):
+	# 既存のプレビューを削除
+	if current_info_panel and is_instance_valid(current_info_panel):
+		current_info_panel.queue_free()
+		current_info_panel = null
+	
+	# タイプに応じたパネルをインスタンス化
+	match card_type:
+		"creature":
+			current_info_panel = CreatureInfoPanelScene.instantiate()
+		"item":
+			current_info_panel = ItemInfoPanelScene.instantiate()
+		"spell":
+			current_info_panel = SpellInfoPanelScene.instantiate()
+	
+	if not current_info_panel:
+		return
+	
+	# InfoPanelContainerに追加
+	info_panel_container.add_child(current_info_panel)
+	
+	# アンカーをリセット（左上基準に）
+	current_info_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	current_info_panel.anchor_left = 0
+	current_info_panel.anchor_top = 0
+	current_info_panel.anchor_right = 0
+	current_info_panel.anchor_bottom = 0
+	
+	# データを読み込む
+	match card_type:
+		"creature":
+			current_info_panel.show_view_mode(card, -1, false)
+		"item":
+			current_info_panel.show_item_info(card)
+		"spell":
+			current_info_panel.show_spell_info(card)
+	
+	await get_tree().process_frame
+	
+	# デバッグ出力
+	var container_size = info_panel_container.size
+	var panel_size = current_info_panel.size
+	print("Container size: ", container_size)
+	print("Panel size: ", panel_size)
+	
+	# スケール調整
+	var scale_factor = 0.95
+	current_info_panel.scale = Vector2(scale_factor, scale_factor)
+	
+	# 位置を調整
+	current_info_panel.position = Vector2(0, 0)
+	
+	# 中のMainContainerの位置を調整（左に265、上に210）
+	var main_container = current_info_panel.get_node_or_null("MainContainer")
+	if main_container:
+		main_container.position.x -= 265
+		main_container.position.y -= 210
+	
+	print("Applied scale: ", current_info_panel.scale)
+	print("Panel position: ", current_info_panel.position)
+
+## インフォパネルが閉じられたとき
+func _on_info_panel_closed():
+	if current_info_panel and is_instance_valid(current_info_panel):
+		current_info_panel.queue_free()
+		current_info_panel = null
+
+## 枚数選択ダイアログを表示
+func _show_count_dialog():
+	var owned = GameData.get_card_count(selected_card_id)
+	var in_deck = current_deck.get(selected_card_id, 0)
+	
+	# 情報ラベルを更新
+	var info_label = card_dialog.get_node_or_null("DialogVBox/InfoLabel")
+	if info_label:
+		info_label.text = "所持: %d枚 / デッキ内: %d枚" % [owned, in_deck]
 	
 	# ボタンの有効/無効を設定
 	var max_count = min(4, owned)
@@ -223,7 +352,11 @@ func _on_card_button_pressed(card_id: int):
 			count_buttons[i].disabled = false
 			count_buttons[i].modulate = Color(1, 1, 1)
 	
-	card_dialog.popup_centered()
+	# インフォパネルの下に配置
+	await get_tree().process_frame
+	var info_rect = info_panel_container.get_global_rect()
+	card_dialog.position = Vector2(info_rect.position.x, info_rect.end.y + 10)
+	card_dialog.popup()
 
 func _on_count_selected(count: int):
 	var owned = GameData.get_card_count(selected_card_id)

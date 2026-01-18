@@ -121,14 +121,27 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 36
 text = "戻る"
 
-[node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+[node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
 horizontal_scroll_mode = 0
 
-[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/DeckScrollContainer"]
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer"]
 layout_mode = 2
 columns = 5
+
+[node name="InfoPanelContainer" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+clip_contents = true
 
 [node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
 layout_mode = 2

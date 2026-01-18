@@ -250,7 +250,7 @@
 	{
 	  "id": 233,
 	  "name": "ヒーラー",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -606,7 +606,7 @@
 	{
 	  "id": 243,
 	  "name": "ランドアーチン",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {

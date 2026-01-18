@@ -467,7 +467,7 @@
 	{
 	  "id": 2017,
 	  "name": "エロージョン",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1327,7 +1327,7 @@
 	{
 	  "id": 2046,
 	  "name": "セフト",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {

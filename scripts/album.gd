@@ -29,15 +29,41 @@ func _ready():
 	left_vbox.get_node("ResetCardsButton").pressed.connect(_on_reset_cards_pressed)
 	left_vbox.get_node("BackButton").pressed.connect(_on_back_pressed)
 	
-	# ブックボタン接続（book1〜book6）
-	for i in range(1, 7):
-		var book_button = grid_container.get_node("book" + str(i))
-		book_button.pressed.connect(_on_book_selected.bind(i - 1))
+	# バトルモードならブック選択を表示
+	if is_battle_mode:
+		_show_book_selection()
 
 func _on_deck_edit_pressed():
 	print("ブック選択画面表示")
 	# 右側パネルを表示
 	scroll_container.visible = true
+	# ブック選択画面を表示
+	_show_book_selection()
+
+## ブック選択画面を表示
+func _show_book_selection():
+	# GridContainerをクリア
+	for child in grid_container.get_children():
+		child.queue_free()
+	
+	# ブックボタンを再作成（6個）
+	for i in range(6):
+		var book_button = Button.new()
+		book_button.name = "book" + str(i + 1)
+		book_button.custom_minimum_size = Vector2(1000, 400)
+		
+		# デッキ名を取得
+		var deck_name = "ブック" + str(i + 1)
+		if i < GameData.player_data.decks.size():
+			deck_name = GameData.player_data.decks[i].get("name", deck_name)
+			var card_count = GameData.player_data.decks[i].get("cards", {}).size()
+			book_button.text = deck_name + "\n(" + str(card_count) + "種類)"
+		else:
+			book_button.text = deck_name
+		
+		book_button.add_theme_font_size_override("font_size", 48)
+		book_button.pressed.connect(_on_book_selected.bind(i))
+		grid_container.add_child(book_button)
 
 func _on_book_selected(book_index: int):
 	print("ブック", book_index + 1, "選択")
@@ -96,35 +122,47 @@ func _show_collection_stats():
 		"spell": "📜 スペル"
 	}
 	
+	# 戻るボタンを追加
+	var back_btn = Button.new()
+	back_btn.text = "← 戻る"
+	back_btn.custom_minimum_size = Vector2(200, 80)
+	back_btn.add_theme_font_size_override("font_size", 32)
+	back_btn.pressed.connect(_show_collection_stats)
+	back_btn.visible = false
+	back_btn.name = "CategoryBackButton"
+	grid_container.add_child(back_btn)
+	
 	for category in categories:
 		if not stats.has(category):
 			continue
 		
-		var panel = _create_stats_panel(category_names[category], stats[category])
+		var panel = _create_stats_panel(category_names[category], stats[category], category)
 		grid_container.add_child(panel)
 
-## カテゴリ別の統計パネルを作成
-func _create_stats_panel(title: String, data: Dictionary) -> Control:
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(900, 400)
+# カテゴリ名マップ（クラス変数として保持）
+var _category_names = {
+	"fire": "🔥 火",
+	"water": "💧 水", 
+	"earth": "🪨 地",
+	"wind": "🌪️ 風",
+	"neutral": "⚪ 無",
+	"item": "📦 アイテム",
+	"spell": "📜 スペル"
+}
+
+## カテゴリ別の統計パネルを作成（ボタンとして）
+func _create_stats_panel(title: String, data: Dictionary, category: String) -> Control:
+	var button = Button.new()
+	button.custom_minimum_size = Vector2(900, 400)
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	
-	var vbox = VBoxContainer.new()
-	panel.add_child(vbox)
+	# ボタンテキストを構築
+	var text = title + "\n"
 	
-	# タイトル
-	var title_label = Label.new()
-	title_label.text = title
-	title_label.add_theme_font_size_override("font_size", 64)
-	vbox.add_child(title_label)
-	
-	# 合計
-	var total_label = Label.new()
 	var total_owned = data.get("total_owned", 0)
 	var total_cards = data.get("total_cards", 0)
 	var total_percent = 0.0 if total_cards == 0 else (float(total_owned) / total_cards * 100.0)
-	total_label.text = "合計: %d / %d (%.1f%%)" % [total_owned, total_cards, total_percent]
-	total_label.add_theme_font_size_override("font_size", 48)
-	vbox.add_child(total_label)
+	text += "合計: %d / %d (%.1f%%)\n" % [total_owned, total_cards, total_percent]
 	
 	# レアリティ別（C < N < S < R）
 	var rarities = ["C", "N", "S", "R"]
@@ -133,25 +171,87 @@ func _create_stats_panel(title: String, data: Dictionary) -> Control:
 		var owned = rarity_data.get("owned", 0)
 		var total = rarity_data.get("total", 0)
 		var percent = 0.0 if total == 0 else (float(owned) / total * 100.0)
+		text += "  [%s] %d / %d (%.1f%%)\n" % [rarity, owned, total, percent]
+	
+	button.text = text
+	button.add_theme_font_size_override("font_size", 36)
+	
+	# クリックでカード一覧を表示
+	button.pressed.connect(_show_category_cards.bind(category))
+	
+	return button
+
+## カテゴリ別のカード一覧を表示
+func _show_category_cards(category: String):
+	print("カテゴリ表示: ", category)
+	
+	# GridContainerをクリア
+	for child in grid_container.get_children():
+		child.queue_free()
+	
+	# 戻るボタン
+	var back_btn = Button.new()
+	back_btn.text = "← 戻る"
+	back_btn.custom_minimum_size = Vector2(200, 80)
+	back_btn.add_theme_font_size_override("font_size", 32)
+	back_btn.pressed.connect(_show_collection_stats)
+	grid_container.add_child(back_btn)
+	
+	# タイトル
+	var title_label = Label.new()
+	title_label.text = _category_names.get(category, category) + " のカード一覧"
+	title_label.add_theme_font_size_override("font_size", 48)
+	grid_container.add_child(title_label)
+	
+	# カードを取得
+	var cards_to_show = []
+	for card in CardLoader.all_cards:
+		var card_type = card.get("type", "")
+		var element = card.get("element", "")
 		
-		var rarity_label = Label.new()
-		rarity_label.text = "  [%s] %d / %d (%.1f%%)" % [rarity, owned, total, percent]
-		rarity_label.add_theme_font_size_override("font_size", 40)
+		var card_category = ""
+		if card_type == "creature":
+			card_category = element
+		elif card_type == "item":
+			card_category = "item"
+		elif card_type == "spell":
+			card_category = "spell"
 		
-		# 色分け（C < N < S < R）
+		if card_category == category:
+			cards_to_show.append(card)
+	
+	# カードボタンを作成
+	for card in cards_to_show:
+		var card_btn = _create_card_button(card)
+		grid_container.add_child(card_btn)
+
+## カードボタンを作成
+func _create_card_button(card: Dictionary) -> Button:
+	var button = Button.new()
+	button.custom_minimum_size = Vector2(280, 120)
+	
+	var card_id = card.get("id", 0)
+	var card_name = card.get("name", "???")
+	var rarity = card.get("rarity", "N")
+	var owned = UserCardDB.get_card_count(card_id)
+	
+	button.text = "%s\n[%s] %d枚" % [card_name, rarity, owned]
+	button.add_theme_font_size_override("font_size", 24)
+	
+	# 所持していない場合は暗くする
+	if owned <= 0:
+		button.modulate = Color(0.5, 0.5, 0.5)
+	else:
+		# レアリティで色分け
 		match rarity:
 			"R":
-				rarity_label.modulate = Color(1.0, 0.8, 0.0)  # 金色（最高）
+				button.modulate = Color(1.0, 0.9, 0.7)
 			"S":
-				rarity_label.modulate = Color(0.6, 0.3, 1.0)  # 紫色
+				button.modulate = Color(0.9, 0.8, 1.0)
 			"N":
-				rarity_label.modulate = Color(0.3, 0.6, 1.0)  # 青色
-			"C":
-				rarity_label.modulate = Color(0.7, 0.7, 0.7)  # 灰色（最低）
-		
-		vbox.add_child(rarity_label)
+				button.modulate = Color(0.8, 0.9, 1.0)
 	
-	return panel
+	return button
 
 ## 所持カード統計を計算
 func _calculate_collection_stats() -> Dictionary:

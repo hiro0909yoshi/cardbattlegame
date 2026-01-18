@@ -74,14 +74,24 @@ func _check_deck_validity() -> Dictionary:
 func _show_invalid_deck_warning(invalid_cards: Array):
 	var dialog = AcceptDialog.new()
 	dialog.title = "デッキエラー"
+	dialog.ok_button_text = "OK"
+	
+	# カスタムLabelでフォントサイズを大きくする
+	var label = Label.new()
+	label.add_theme_font_size_override("font_size", 36)
 	
 	var message = "所持していないカードがデッキに含まれています。\nアルバムでデッキを修正してください。\n\n"
-	
 	for info in invalid_cards:
 		message += "・%s: %s\n" % [info.deck_name, info.card_name]
 	
-	dialog.dialog_text = message
-	dialog.ok_button_text = "OK"
+	label.text = message
+	dialog.add_child(label)
+	
+	# OKボタンのサイズを大きくする（横3倍、縦1.5倍）
+	var ok_button = dialog.get_ok_button()
+	ok_button.custom_minimum_size = Vector2(240, 60)
+	ok_button.add_theme_font_size_override("font_size", 32)
+	
 	add_child(dialog)
 	dialog.popup_centered()
 
