@@ -226,8 +226,8 @@ func import_all_cards_from_json():
 		"res://data/neutral_2.json",
 		"res://data/item.json",
 		"res://data/spell_1.json",
-		"res://data/spell_2.json",
-		"res://data/spell_mystic.json"
+		"res://data/spell_2.json"
+		# spell_mystic.jsonはミスティックアーツ専用（所持カードには含めない）
 	]
 	
 	var total_count = 0

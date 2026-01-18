@@ -22,8 +22,8 @@ func load_all_cards():
 		"res://data/wind_2.json",
 		"res://data/item.json",
 		"res://data/spell_1.json",
-		"res://data/spell_2.json",
-		"res://data/spell_mystic.json"
+		"res://data/spell_2.json"
+		# spell_mystic.jsonはミスティックアーツ専用（all_cardsには含めない）
 	]
 	
 	for file_path in files:

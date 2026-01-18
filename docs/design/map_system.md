@@ -1,19 +1,19 @@
 # マップシステム仕様
 
-**バージョン**: 1.1  
-**最終更新**: 2025年12月16日
+**バージョン**: 1.2  
+**最終更新**: 2025年1月19日
 
 ---
 
 ## 📐 マップ構造
 
 ### 基本仕様
-- **形状**: ダイヤモンド型
-- **タイル数**: 20マス
-- **移動方向**: 時計回り（0 → 1 → 2 ... → 19 → 0）
+- **形状**: マップごとに異なる（ダイヤモンド型、十字型など）
+- **タイル数**: マップJSONの`tile_count`で定義
+- **移動方向**: 時計回り（0 → 1 → 2 ... → N → 0）
 - **座標系**: 3D空間（XZ平面）
 
-### タイル配置
+### タイル配置例（ダイヤモンド型20マス）
 ```
 タイル番号は時計回りに0〜19
 	  
@@ -30,13 +30,10 @@
 
 ### 1. CheckpointTile（チェックポイントタイル）
 
-**配置場所**:
-- **タイル0** - タイプN（スタート地点）
-- **タイル10** - タイプS（対角線上）
-
 **役割**: 周回検出
-- プレイヤーが通過するとシグナル発行（N または S）
-- N + S のセット = 1周完了
+- プレイヤーが通過するとシグナル発行（N, S, E, W）
+- 必要なシグナルがすべて揃う = 1周完了
+- 必要シグナルはマップJSONの`checkpoint_preset`で指定
 
 **視覚的特徴**: 黒色のオーバーレイメッシュ
 
@@ -46,19 +43,17 @@
 
 ### 2. WarpTile（ワープタイル）
 
-**配置場所**:
-- **タイル4** ↔ **タイル5** （ワープペア）
-- **タイル15** ↔ **タイル16** （ワープペア）
+**種類**:
+- `Warp` - 通過型（歩数消費なし）
+- `WarpStop` - 停止型（そのマスで止まる）
 
-**動作**: 通過型ワープ（歩数消費なし）
-- タイル4を通過 → タイル5へ瞬間移動（歩数を消費せず移動継続）
-- タイル5を通過 → タイル4へ瞬間移動（歩数を消費せず移動継続）
-- タイル15を通過 → タイル16へ瞬間移動（歩数を消費せず移動継続）
-- タイル16を通過 → タイル15へ瞬間移動（歩数を消費せず移動継続）
+**動作**:
+- 通過型: 瞬間移動後も移動継続
+- 停止型: 瞬間移動後にそのマスで停止
 
 **視覚的特徴**: 紫色のオーバーレイメッシュ
 
-**ワープペア設定**: マップJSONの`warp_pair`フィールドで定義（動的読み込み）
+**ワープペア設定**: マップJSONの`warp_pair`フィールドで定義
 
 **実装**:
 - `MovementController.check_and_handle_warp()` - ワープ判定・歩数戻し
@@ -84,25 +79,52 @@
 
 ---
 
+### 4. その他の特殊タイル
+
+| タイル | 説明 |
+|--------|------|
+| BranchTile | 分岐点（複数方向への接続） |
+| CardBuyTile | カード購入マス |
+| CardGiveTile | カード獲得マス |
+| MagicStoneTile | 魔法石マス |
+| MagicTile | 魔力マス |
+
+---
+
 ## 🔄 周回システム
 
 ### 仕組み
 
 **周回完了の条件**:
-1. プレイヤーがタイル0（N）を通過 → **Nシグナル**
-2. プレイヤーがタイル10（S）を通過 → **Sシグナル**
-3. **N + S 両方揃う** → **周回完了**
+1. マップで指定された全チェックポイントを通過
+2. チェックポイントプリセットで必要シグナルが決まる
+
+**チェックポイントプリセット**: [オンラインルール設計書](online_rules_design.md#checkpoint_presetsチェックポイントプリセット) を参照
 
 **特殊ルール**:
-- ゲーム開始時のタイル0通過はカウントしない
-- 2回目以降の通過からNシグナル発行
-- 順序は問わない（N→S でも S→N でもOK）
+- ゲーム開始時のスタート地点通過はカウントしない
+- 2回目以降の通過からシグナル発行
+- 順序は問わない
 
 ---
 
 ### 周回完了時の効果
 
-#### 永続バフ対象クリーチャー
+#### 1. 魔力ボーナス
+
+マップの`lap_bonus_preset`で指定されたボーナスを獲得。
+プリセット詳細: [オンラインルール設計書](online_rules_design.md#lap_bonus_presets周回ボーナスプリセット) を参照
+
+#### 2. ダウン状態クリア
+- プレイヤーの**全領地**のダウン状態を解除
+- 次のターンで領地コマンド（レベルアップ/移動/交換）が再び可能に
+
+#### 3. クリーチャーHP回復
+- プレイヤーの**全クリーチャー**のHPを**+10回復**
+- MHP（最大HP）を超えない
+- 計算式: `new_HP = min(current_HP + 10, MHP)`
+
+#### 4. 永続バフ対象クリーチャー
 
 | ID | 名前 | 効果 |
 |----|------|------|
@@ -120,38 +142,9 @@ creature_data["base_up_hp"] += 10       # モスタイタン用
 
 ---
 
-## 🎁 スタート通過ボーナス
-
-### タイル0通過時の効果
-
-プレイヤーがタイル0を通過するたび、以下の3つの効果が発動：
-
-#### 1. 💰 魔力ボーナス
-- `GameConstants.PASS_BONUS`分の魔力を獲得
-- 現在値: 500G
-
-#### 2. 🔓 ダウン状態クリア
-- プレイヤーの**全領地**のダウン状態を解除
-- 次のターンで領地コマンド（レベルアップ/移動/交換）が再び可能に
-
-#### 3. 💚 クリーチャーHP回復
-- プレイヤーの**全クリーチャー**のHPを**+10回復**
-- MHP（最大HP）を超えない
-- 計算式: `new_HP = min(current_HP + 10, MHP)`
-
-**例**:
-```
-MHP 50, 現在HP 30 → 40に回復
-MHP 50, 現在HP 45 → 50に回復（上限）
-```
-
----
-
 ## 🚶 移動方向システム
 
 ### 基本概念
-
-プレイヤーの移動は以下の方向が存在する：
 
 | 方向 | 値 | 説明 |
 |------|-----|------|
@@ -175,17 +168,16 @@ class PlayerData:
 
 #### ループタイルと分岐タイル
 
-| タイプ | タイル番号 | connections | 説明 |
-|--------|-----------|-------------|------|
-| ループタイル | 1〜19 | `[]`（空） | 通常の円形ループ |
-| 分岐点 | 0 | `[1, 19, 20]` | 3方向に分岐 |
-| 中継点 | 20 | `[0, 21]` | 2方向に接続 |
-| 行き止まり | 21 | `[20]` | 1方向のみ |
+| タイプ | connections | 説明 |
+|--------|-------------|------|
+| ループタイル | `[]`（空） | 通常の円形ループ |
+| 分岐点 | `[1, 19, 20]` | 複数方向に分岐 |
+| 中継点 | `[0, 21]` | 2方向に接続 |
+| 行き止まり | `[20]` | 1方向のみ |
 
 #### ループサイズの動的計算
 
 ```gdscript
-# connectionsが空のタイル（ループタイル）の最大インデックス + 1
 func _get_loop_size() -> int:
 	var max_normal_tile = -1
 	for tile_index in tile_nodes.keys():
@@ -193,14 +185,10 @@ func _get_loop_size() -> int:
 		if tile.connections.is_empty():
 			max_normal_tile = max(max_normal_tile, tile_index)
 	if max_normal_tile >= 0:
-		return max_normal_tile + 1  # 例: 最大19 → ループサイズ20
+		return max_normal_tile + 1
 	else:
 		return tile_nodes.size()
 ```
-
-**計算例**:
-- タイル1〜19: connections空 → 最大19 → ループサイズ = 20
-- タイル0, 20, 21: connectionsあり → 除外
 
 ---
 
@@ -213,25 +201,9 @@ func _get_loop_size() -> int:
 | ゲームスタート時 | `GameFlowManager.start_game()` |
 | スペルワープ後 | `SpellPlayerMove._warp_player()` |
 
-#### 実装
-
-```gdscript
-# ゲームスタート時
-func start_game():
-	for player in player_system.players:
-		player.buffs["direction_choice_pending"] = true
-
-# スペルワープ後
-func _warp_player(player_id: int, target_tile: int):
-	# ...ワープ処理...
-	player_system.players[player_id].buffs["direction_choice_pending"] = true
-```
-
 ---
 
 ### 分岐選択のロジック
-
-#### 基本フロー
 
 ```
 現在タイルにconnectionsがある？
@@ -240,154 +212,6 @@ func _warp_player(player_id: int, target_tile: int):
 		  ├─ 選択肢 0個 → 来た方向に戻る（行き止まり）
 		  ├─ 選択肢 1個 → 自動選択
 		  └─ 選択肢 2個以上 → UI表示
-```
-
-#### 実装（_get_next_tile_with_branch）
-
-```gdscript
-func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int) -> int:
-	var tile = tile_nodes.get(current_tile)
-	
-	# connectionsがなければループ内移動
-	if not tile or tile.connections.is_empty():
-		var direction = _get_player_current_direction(player_id)
-		var loop_size = _get_loop_size()
-		return (current_tile + direction + loop_size) % loop_size
-	
-	# connectionsからcame_fromを除外
-	var choices = []
-	for conn in tile.connections:
-		if conn != came_from:
-			choices.append(conn)
-	
-	# 選択肢なし → 来た方向に戻る
-	if choices.is_empty():
-		return came_from
-	
-	# 選択肢1つ → 自動選択
-	if choices.size() == 1:
-		return choices[0]
-	
-	# 選択肢2つ以上 → UI表示
-	return await _show_branch_tile_selection(choices)
-```
-
----
-
-### 方向の推測
-
-選んだタイルから移動方向（+1/-1）を推測する：
-
-```gdscript
-func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int) -> int:
-	var loop_size = _get_loop_size()
-	
-	# 選んだタイルがループ外なら現在の方向を維持
-	if chosen_tile >= loop_size:
-		return _get_player_current_direction(player_id)
-	
-	# ループ内なら方向を判定
-	var next_plus = (current_tile + 1) % loop_size
-	var next_minus = (current_tile - 1 + loop_size) % loop_size
-	
-	if chosen_tile == next_plus:
-		return 1   # 順方向
-	elif chosen_tile == next_minus:
-		return -1  # 逆方向
-	else:
-		return _get_player_current_direction(player_id)
-```
-
-**例**:
-- タイル0で「タイル1」選択 → +1（順方向）
-- タイル0で「タイル19」選択 → -1（逆方向）
-- タイル0で「タイル20」選択 → 現在の方向を維持
-
----
-
-### 移動の実例
-
-#### 例1: ループ内移動
-
-```
-現在: タイル5, direction=+1, came_from=4
-→ connectionsなし → ループ計算
-→ (5 + 1) % 20 = 6
-→ タイル6へ移動
-```
-
-#### 例2: 分岐点での選択
-
-```
-現在: タイル0, came_from=19
-→ connections=[1, 19, 20]
-→ 19を除外 → 選択肢=[1, 20]
-→ UI表示 → 「タイル1」選択
-→ direction=+1 を設定
-→ タイル1へ移動
-```
-
-#### 例3: 行き止まりからの戻り
-
-```
-現在: タイル21, came_from=20
-→ connections=[20]
-→ 20を除外 → 選択肢=[]（空）
-→ came_fromに戻る → タイル20へ
-```
-
-#### 例4: 分岐タイル20の通過
-
-```
-現在: タイル20, came_from=0
-→ connections=[0, 21]
-→ 0を除外 → 選択肢=[21]
-→ 自動選択 → タイル21へ
-```
-
----
-
-### UI操作
-
-#### 入力方法
-
-| 選択タイプ | キーボード | ボタン | 説明 |
-|-----------|-----------|--------|------|
-| 分岐タイル選択 | ←→ + Enter | - | タイル番号から選択 |
-| 方向選択（+1/-1） | ↑↓ + Enter | ▲▼ + ✓ | 順方向/逆方向を選択 |
-
-#### グローバルナビゲーションボタン（方向選択時）
-
-方向選択フェーズではグローバルナビゲーションボタンが表示されます。
-
-| ボタン | アイコン | 動作 |
-|--------|----------|------|
-| 決定 | ✓ | 選択確定 |
-| 上 | ▲ | 方向切り替え |
-| 下 | ▼ | 方向切り替え |
-
-※戻るボタン（✕）は非表示
-
-#### 実装詳細
-
-```gdscript
-# 方向選択開始時
-func _setup_direction_selection_navigation():
-	ui_manager.enable_navigation(
-		func(): _confirm_direction_selection(),  # 決定
-		Callable(),                               # 戻るなし
-		func(): _cycle_direction_selection(),    # 上
-		func(): _cycle_direction_selection()     # 下
-	)
-
-# 方向選択終了時
-func _clear_direction_selection_navigation():
-	ui_manager.disable_navigation()
-```
-
-**表示例**:
-```
-移動方向を選択: 順方向 →
 ```
 
 ---
@@ -402,13 +226,6 @@ func _clear_direction_selection_navigation():
 
 **持続**: 1ターン
 
-**実装**:
-```gdscript
-# calculate_path内で方向を反転
-if _has_movement_reverse_curse(player_id):
-	final_direction = -direction
-```
-
 ---
 
 ### 移動フェーズの流れ
@@ -416,7 +233,7 @@ if _has_movement_reverse_curse(player_id):
 ```
 1. ターン開始
    ↓
-2. スペルフェーズ（省略）
+2. スペルフェーズ
    ↓
 3. ダイスロール
    ↓
@@ -426,14 +243,10 @@ if _has_movement_reverse_curse(player_id):
    │   └─ 通常タイル → +1/-1選択UI
    └─ false → 前回のdirectionを使用
    ↓
-5. 1歩ずつ移動（_move_steps_with_branch）
+5. 1歩ずつ移動
    各ステップで:
-   │
-   ├─ 次タイル判定（_get_next_tile_with_branch）
-   │   ├─ connectionsあり → 選択肢作成 → UI or 自動選択
-   │   └─ connectionsなし → ループ計算
-   │
-   ├─ 移動実行（move_to_tile）
+   ├─ 次タイル判定
+   ├─ 移動実行
    ├─ came_from更新
    ├─ ワープチェック
    ├─ チェックポイントチェック
@@ -446,107 +259,74 @@ if _has_movement_reverse_curse(player_id):
 
 ---
 
+## 📄 マップJSONスキーマ
+
+```json
+{
+	"id": "map_diamond_20",
+	"name": "ダイヤモンド型",
+	"description": "基本の20マスマップ",
+	"tile_count": 20,
+	"loop_size": 20,
+	"tiles": [
+		{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
+		{"index": 1, "type": "Neutral", "x": 4, "z": 0},
+		{"index": 4, "type": "Warp", "x": 16, "z": 0, "warp_pair": 5}
+	],
+	"connections": {
+		"0": [1, 19, 20]
+	},
+	"lap_bonus_preset": "standard",
+	"checkpoint_preset": "standard"
+}
+```
+
+### フィールド説明
+
+| フィールド | 説明 |
+|-----------|------|
+| `id` | マップ識別子 |
+| `tile_count` | タイル総数 |
+| `loop_size` | メインループのタイル数 |
+| `tiles` | タイル配置データ |
+| `connections` | 分岐タイルの接続情報 |
+| `lap_bonus_preset` | 周回ボーナスプリセット名 |
+| `checkpoint_preset` | チェックポイントプリセット名 |
+
+プリセットの詳細: [オンラインルール設計書](online_rules_design.md) を参照
+
+---
+
 ## 📊 実装状況
 
 ### ✅ 実装済み
 
-#### 基本システム
-- [x] 20マスのダイヤモンド型マップ（ループタイル0-19）
-- [x] CheckpointTile（N/S）と周回検出
-- [x] 周回完了時の永続バフ（キメラ、モスタイタン）
-- [x] スタート通過ボーナス（魔力、ダウンクリア、HP回復）
-- [x] WarpTile（4↔5、15↔16）通過型ワープ（歩数消費なし、JSONから動的読み込み）
+- [x] 動的マップ生成（JSONから）
+- [x] CheckpointTile（N/S/E/W）と周回検出
+- [x] 周回完了時の永続バフ
+- [x] 周回ボーナス（プリセット対応）
+- [x] WarpTile（通過型・停止型）
 - [x] 属性タイル（火/水/土/風/無）
 - [x] 土地ボーナスシステム
-
-#### 分岐・方向選択システム
-- [x] タイル接続システム（connections: Array[int]）
-- [x] ループサイズの動的計算（_get_loop_size）
-- [x] 分岐タイル（タイル0: [1, 19, 20]）
-- [x] 中継タイル（タイル20: [0, 21]）
-- [x] 行き止まりタイル（タイル21: [20]）
-- [x] came_from追跡による戻り方向除外
-- [x] 方向選択権（direction_choice_pending）
-  - [x] ゲームスタート時の付与
-  - [x] スペルワープ後の付与
-- [x] 分岐タイル選択UI（←→キー）
-- [x] 方向選択UI（↑↓キー + グローバルナビゲーションボタン）
-- [x] 方向の推測（_infer_direction_from_choice）
-- [x] current_directionの記憶と継続
-- [x] 歩行逆転呪い（カオスパニック）
-
-#### 修正済みハードコード
-- [x] movement_controller.gd: ループサイズを動的計算
-- [x] spell_curse.gd: tile_nodes.keys()でループ
-- [x] debug_controller.gd: tile_nodes.has()でチェック
-- [x] spell_land_new.gd: tile_nodes.has()でチェック
+- [x] 分岐・方向選択システム
+- [x] 歩行逆転呪い
 
 ### 🚧 未実装
+
 - [ ] 追加のワープゲート
-- [ ] 停止型ワープタイル
 - [ ] 停止型特殊マス（宿屋、店など）
 - [ ] マップ選択システム
 - [ ] ランダムマップ生成
-- [ ] 複数マップ対応
-
----
-
-## 🔧 技術詳細
-
-### 周回状態管理
-
-**GameFlowManager.player_lap_state**:
-```gdscript
-{
-  player_id: {
-	"game_started": bool,  # ゲーム開始フラグ
-	"N": bool,             # Nシグナル受信フラグ
-	"S": bool              # Sシグナル受信フラグ
-  }
-}
-```
-
-### シグナルフロー
-
-```
-CheckpointTile
-  └─ checkpoint_passed(player_id, "N"|"S")
-	   ↓
-  GameFlowManager._on_checkpoint_passed()
-	   ↓
-  両方のフラグが立つ？
-	   ├─ YES → _complete_lap()
-	   │          ├─ フラグリセット
-	   │          ├─ 永続バフ適用
-	   │          └─ lap_completed シグナル
-	   │
-	   └─ NO → 待機
-```
 
 ---
 
 ## 📝 関連ドキュメント
 
-- [周回システム実装ノート](../implementation_notes/lap_system_implementation.md)
+- [オンラインルール設計書](online_rules_design.md) - プリセット、勝利条件、カード制限
+- [クエストシステム設計](quest_system_design.md) - ソロクエスト専用の仕様
 - [条件付きステータスバフシステム](conditional_stat_buff_system.md)
 - [スキルシステム設計](skills_design.md)
-- [グローバルナビゲーションボタン設計ガイド](global_navigation_buttons.md)
 
 ---
 
-## 🎮 プレイヤー向けヒント
-
-### 周回を効率よく回るコツ
-1. **ワープゲートを活用**: タイル5→6でショートカット
-2. **チェックポイントの位置を把握**: タイル0とタイル10
-3. **周回ボーナスを狙う**: キメラ、モスタイタンを配置すれば強力
-
-### スタート通過を意識した戦略
-- ダウン状態の土地が多い時は早めにスタートを目指す
-- 瀕死のクリーチャーはスタート通過で+10回復
-- 魔力が不足している時は周回で補充
-
----
-
-**最終更新**: 2025年12月16日  
-**作成者**: Development Team
+**最終更新**: 2025年1月19日
