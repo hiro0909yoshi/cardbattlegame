@@ -3,7 +3,7 @@
 	{
 	  "id": 1000,
 	  "name": "アージェントキー",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -41,7 +41,7 @@
 	{
 	  "id": 1002,
 	  "name": "アングリーマスク",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -88,7 +88,7 @@
 	{
 	  "id": 1004,
 	  "name": "ウォーロックディスク",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -107,7 +107,7 @@
 	{
 	  "id": 1005,
 	  "name": "エターナルメイル",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -130,7 +130,7 @@
 	{
 	  "id": 1006,
 	  "name": "エンジェルケープ",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -152,7 +152,7 @@
 	{
 	  "id": 1007,
 	  "name": "オーラストライク",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -188,7 +188,7 @@
 	{
 	  "id": 1009,
 	  "name": "クレイモア",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -211,7 +211,7 @@
 	  "cost": {
 		"mp": 80
 	  },
-	  "effect": "アイテム破壊[レア度額以外]",
+	  "effect": "アイテム破壊[レア度N以外]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -226,7 +226,7 @@
 	{
 	  "id": 1011,
 	  "name": "ゴールドグース",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -268,7 +268,7 @@
 	{
 	  "id": 1013,
 	  "name": "サキュバスリング",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -291,7 +291,7 @@
 	{
 	  "id": 1014,
 	  "name": "シェイドクロー",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -311,7 +311,7 @@
 	{
 	  "id": 1015,
 	  "name": "シャドウブレイズ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -342,7 +342,7 @@
 	{
 	  "id": 1016,
 	  "name": "シルバープロウ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -401,7 +401,7 @@
 	{
 	  "id": 1019,
 	  "name": "ストームアーマー",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -422,7 +422,7 @@
 	{
 	  "id": 1020,
 	  "name": "ストームコーザー",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -440,7 +440,7 @@
 	  "id": 1021,
 	  "name": "ストームシールド",
 	  "rate": 130,
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -470,7 +470,7 @@
 	{
 	  "id": 1022,
 	  "name": "ストームスピア",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -573,7 +573,7 @@
 	  "id": 1026,
 	  "name": "スフィアシールド",
 	  "rate": 140,
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -663,7 +663,7 @@
 	{
 	  "id": 1030,
 	  "name": "ソウルレイ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -689,7 +689,7 @@
 	  "id": 1031,
 	  "name": "ターコイズアムル",
 	  "rate": 100,
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -721,7 +721,7 @@
 	{
 	  "id": 1032,
 	  "name": "ダイヤアーマー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -759,7 +759,7 @@
 	{
 	  "id": 1034,
 	  "name": "チェーンソー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -778,7 +778,7 @@
 	{
 	  "id": 1035,
 	  "name": "チリングブラスト",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -809,7 +809,7 @@
 		{
 	  "id": 1036,
 	  "name": "ツインスパイク",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -868,7 +868,7 @@
 	{
 	  "id": 1038,
 	  "name": "トゥームストーン",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -893,7 +893,7 @@
 	  "id": 1039,
 	  "name": "トパーズアムル",
 	  "rate": 100,
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -942,7 +942,7 @@
 	{
 	  "id": 1041,
 	  "name": "ドラゴンオーブ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -987,7 +987,7 @@
 	{
 	  "id": 1043,
 	  "name": "トンファ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -1005,7 +1005,7 @@
 	{
 	  "id": 1044,
 	  "name": "ナパームアロー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -1035,7 +1035,7 @@
 	  "cost": {
 		"mp": 50
 	  },
-	  "effect": "HP+40；属性変化[⬜]",
+	  "effect": "HP+40；属性変化[無]",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "hp": 40
@@ -1051,7 +1051,7 @@
 	{
 	  "id": 1046,
 	  "name": "ネクロスカラベ",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -1073,7 +1073,7 @@
 	{
 	  "id": 1047,
 	  "name": "ネクロプラズマ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -1101,7 +1101,7 @@
 	{
 	  "id": 1048,
 	  "name": "バーニングハート",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -1126,7 +1126,7 @@
 	{
 	  "id": 1049,
 	  "name": "バーニングロッド",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
@@ -1299,7 +1299,7 @@
 	  "cost": {
 		"mp": 40
 	  },
-	  "effect": "AP+40；レア度額が使用時、強打",
+	  "effect": "AP+40；レア度Nが使用時、強打",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 40
@@ -1386,7 +1386,7 @@
 	{
 	  "id": 1060,
 	  "name": "ボーパルソード",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -1415,7 +1415,7 @@
 	{
 	  "id": 1061,
 	  "name": "マグマアーマー",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -1437,7 +1437,7 @@
 	  "id": 1062,
 	  "name": "マグマシールド",
 	  "rate": 130,
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -1467,7 +1467,7 @@
 	{
 	  "id": 1063,
 	  "name": "マグマハンマー",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -1552,7 +1552,7 @@
 	{
 	  "id": 1066,
 	  "name": "ミラーホブロン",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
@@ -1604,7 +1604,7 @@
 	{
 	  "id": 1068,
 	  "name": "ムラサメ",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
@@ -1670,7 +1670,7 @@
 	{
 	  "id": 1071,
 	  "name": "ラグドール",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
@@ -1742,7 +1742,7 @@
 	  "id": 1074,
 	  "name": "ワンダーチャーム",
 	  "rate": 120,
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {

@@ -3,7 +3,7 @@
 	{
 	  "id": 2065,
 	  "name": "バーニングベイル",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
@@ -36,7 +36,7 @@
 	{
 	  "id": 2066,
 	  "name": "バイタリティ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -128,7 +128,7 @@
 	{
 	  "id": 2069,
 	  "name": "バウンティハント",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -162,7 +162,7 @@
 	{
 	  "id": 2070,
 	  "name": "バンフィズム",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
@@ -189,7 +189,7 @@
 	{
 	  "id": 2071,
 	  "name": "バリアー",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -220,7 +220,7 @@
 	{
 	  "id": 2072,
 	  "name": "ピース",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -248,7 +248,7 @@
 	{
 	  "id": 2073,
 	  "name": "ピュアリファイ",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
@@ -272,7 +272,7 @@
 	{
 	  "id": 2074,
 	  "name": "ファイアーシフト",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -300,7 +300,7 @@
 	{
 	  "id": 2075,
 	  "name": "ファットボディ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -361,7 +361,7 @@
 	{
 	  "id": 2077,
 	  "name": "フィロソフィー",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -416,7 +416,7 @@
 	{
 	  "id": 2079,
 	  "name": "フォームポータル",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -440,7 +440,7 @@
 	{
 	  "id": 2080,
 	  "name": "フライ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -491,7 +491,7 @@
 	{
 	  "id": 2082,
 	  "name": "フラクション",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -519,7 +519,7 @@
 	{
 	  "id": 2083,
 	  "name": "ブラストトラップ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -560,7 +560,7 @@
 	{
 	  "id": 2084,
 	  "name": "ブラックアウト",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -587,7 +587,7 @@
 	{
 	  "id": 2085,
 	  "name": "フラットランド",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -617,7 +617,7 @@
 	{
 	  "id": 2086,
 	  "name": "フリーズサイクロン",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
@@ -712,7 +712,7 @@
 	{
 	  "id": 2089,
 	  "name": "フロートシジル",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -772,7 +772,7 @@
 	{
 	  "id": 2091,
 	  "name": "ヘイスト",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -799,7 +799,7 @@
 	{
 	  "id": 2092,
 	  "name": "ペナライズ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
@@ -814,7 +814,7 @@
 	{
 	  "id": 2093,
 	  "name": "ポイズンマインド",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -873,7 +873,7 @@
 	{
 	  "id": 2095,
 	  "name": "ホープ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -926,7 +926,7 @@
 	{
 	  "id": 2097,
 	  "name": "ホーリーバニッシュ",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -954,7 +954,7 @@
 	{
 	  "id": 2098,
 	  "name": "ホーリーワード1",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -981,7 +981,7 @@
 	{
 	  "id": 2099,
 	  "name": "ホーリーワード3",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1008,7 +1008,7 @@
 	{
 	  "id": 2100,
 	  "name": "ホーリーワード6",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1035,7 +1035,7 @@
 	{
 	  "id": 2101,
 	  "name": "ホーリーワード8",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1062,7 +1062,7 @@
 	{
 	  "id": 2102,
 	  "name": "マーシフルワールド",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "世界呪",
 	  "cost": {
@@ -1088,7 +1088,7 @@
 	{
 	  "id": 2103,
 	  "name": "マグマシフト",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1122,7 +1122,7 @@
 	{
 	  "id": 2104,
 	  "name": "マジカルリープ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1280,7 +1280,7 @@
 	{
 	  "id": 2109,
 	  "name": "マナ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "自己強化",
 	  "cost": {
@@ -1357,7 +1357,7 @@
 	{
 	  "id": 2112,
 	  "name": "ミラクルコール",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1372,7 +1372,7 @@
 	{
 	  "id": 2113,
 	  "name": "メタモルフォシス",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1400,7 +1400,7 @@
 	{
 	  "id": 2114,
 	  "name": "メタルフォーム",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1429,7 +1429,7 @@
 	{
 	  "id": 2115,
 	  "name": "ユニフォーミティ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1457,7 +1457,7 @@
 	{
 	  "id": 2116,
 	  "name": "ライフストリーム",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
@@ -1485,7 +1485,7 @@
 	{
 	  "id": 2117,
 	  "name": "ライフフォース",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1513,7 +1513,7 @@
 	{
 	  "id": 2118,
 	  "name": "ランドトランス",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1567,7 +1567,7 @@
 	{
 	  "id": 2120,
 	  "name": "リキッドフォーム",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
@@ -1603,7 +1603,7 @@
 	{
 	  "id": 2121,
 	  "name": "リストア",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1634,7 +1634,7 @@
 	{
 	  "id": 2122,
 	  "name": "リバイバル",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1682,7 +1682,7 @@
 	{
 	  "id": 2124,
 	  "name": "リモートスイッチ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1726,7 +1726,7 @@
 	{
 	  "id": 2126,
 	  "name": "リリーフ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
@@ -1778,7 +1778,7 @@
 	{
 	  "id": 2128,
 	  "name": "レイオブパージ",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
@@ -1850,7 +1850,7 @@
 	{
 	  "id": 2131,
 	  "name": "ロングライン",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "spell",
 	  "spell_type": "自己強化",
 	  "cost": {
@@ -1880,7 +1880,7 @@
 	{
 	  "id": 2132,
 	  "name": "ワイルドセンス",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
