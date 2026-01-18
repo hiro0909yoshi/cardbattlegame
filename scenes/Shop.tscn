@@ -1,0 +1,183 @@
+[gd_scene load_steps=2 format=3 uid="uid://shop_scene_001"]
+
+[ext_resource type="Script" uid="uid://shop_script_001" path="res://scripts/shop.gd" id="1_shop"]
+
+[node name="Shop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shop")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15, 0.15, 0.2, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "ショップ"
+
+[node name="GoldLabel" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "💰 0 G"
+
+[node name="ModeButtons" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 50
+alignment = 1
+
+[node name="PurchaseButton" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "購入（ガチャ）"
+
+[node name="SellButton" type="Button" parent="VBoxContainer/ModeButtons"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "売却"
+
+[node name="ContentPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GachaSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="GachaTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/GachaSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "カードガチャ"
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="SingleGachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
+custom_minimum_size = Vector2(250, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "1回ガチャ
+100 G"
+
+[node name="MultiGachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
+custom_minimum_size = Vector2(250, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "10連ガチャ
+1,000 G"
+
+[node name="Multi100GachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
+custom_minimum_size = Vector2(250, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "100連ガチャ
+10,000 G"
+
+[node name="ResultSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
+layout_mode = 2
+
+[node name="ResultLabel" type="Label" parent="VBoxContainer/ContentPanel/GachaSection/ResultSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = ""
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/ContentPanel/GachaSection/ResultSection"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="ResultGrid" type="GridContainer" parent="VBoxContainer/ContentPanel/GachaSection/ResultSection/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 10
+
+[node name="SellSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SellTitleLabel" type="Label" parent="VBoxContainer/ContentPanel/SellSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "カード売却"
+
+[node name="SellPriceInfo" type="Label" parent="VBoxContainer/ContentPanel/SellSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "売却価格: N=10G / S=50G / R=200G"
+
+[node name="SellButtonsHBox" type="HBoxContainer" parent="VBoxContainer/ContentPanel/SellSection"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="ManualSellButton" type="Button" parent="VBoxContainer/ContentPanel/SellSection/SellButtonsHBox"]
+custom_minimum_size = Vector2(300, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "手動売却
+カードを選んで売る"
+
+[node name="AutoSellButton" type="Button" parent="VBoxContainer/ContentPanel/SellSection/SellButtonsHBox"]
+custom_minimum_size = Vector2(300, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "自動売却
+4枚超えを一括売却"
+
+[node name="SellResultLabel" type="Label" parent="VBoxContainer/ContentPanel/SellSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = ""
+
+[node name="ManualSellPanel" type="VBoxContainer" parent="VBoxContainer/ContentPanel/SellSection"]
+visible = false
+layout_mode = 2
+
+[node name="CardScrollContainer" type="ScrollContainer" parent="VBoxContainer/ContentPanel/SellSection/ManualSellPanel"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="CardGrid" type="GridContainer" parent="VBoxContainer/ContentPanel/SellSection/ManualSellPanel/CardScrollContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 8
+
+[node name="Footer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="VBoxContainer/Footer"]
+custom_minimum_size = Vector2(200, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "戻る"

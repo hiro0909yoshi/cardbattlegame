@@ -3,7 +3,7 @@
 		{
 			"id": 100.0,
 			"name": "G・イール",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -135,7 +135,7 @@
 		{
 			"id": 104.0,
 			"name": "アクアホーン",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -269,7 +269,7 @@
 		{
 			"id": 108.0,
 			"name": "アルプ",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -297,7 +297,7 @@
 		{
 			"id": 109.0,
 			"name": "アンダイン",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -339,7 +339,7 @@
 		{
 			"id": 110.0,
 			"name": "アンフィビアン",
-			"rarity": "S",
+			"rarity": "R",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -411,7 +411,7 @@
 		{
 			"id": 112.0,
 			"name": "イド",
-			"rarity": "R",
+			"rarity": "N",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -444,7 +444,7 @@
 		{
 			"id": 113.0,
 			"name": "エキノダーム",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -508,7 +508,7 @@
 		{
 			"id": 115.0,
 			"name": "オドントティラヌス",
-			"rarity": "R",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -544,7 +544,7 @@
 		{
 			"id": 116.0,
 			"name": "カイザーペンギン",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -609,7 +609,7 @@
 		{
 			"id": 118.0,
 			"name": "キロネックス",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -664,7 +664,7 @@
 		{
 			"id": 120.0,
 			"name": "グルイースラッグ",
-			"rarity": "R",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -692,7 +692,7 @@
 			"id": 121.0,
 			"name": "ケルピー",
 			"rate": 69.0,
-			"rarity": "S",
+			"rarity": "R",
 			"type": "creature",
 			"element": "water",
 			"cost": {
@@ -803,7 +803,7 @@
 			"id": 124.0,
 			"name": "スキュラ",
 			"rate": 90.0,
-			"rarity": "R",
+			"rarity": "S",
 			"type": "creature",
 			"element": "water",
 			"cost": {

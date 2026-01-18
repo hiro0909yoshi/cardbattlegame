@@ -32,7 +32,7 @@
 	{
 	  "id": 403,
 	  "name": "アーキビショップ",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -58,7 +58,7 @@
 	  "id": 404,
 	  "name": "アーマードラゴン",
 	  "race": "ドラゴン",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -115,7 +115,7 @@
 	{
 	  "id": 406,
 	  "name": "アンドロギア",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -185,7 +185,7 @@
 	{
 	  "id": 408,
 	  "name": "ギアリオン",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -213,7 +213,7 @@
 	{
 	  "id": 409,
 	  "name": "グランギア",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -247,7 +247,7 @@
 	{
 	  "id": 410,
 	  "name": "クリーピングコイン",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -316,7 +316,7 @@
 	{
 	  "id": 412,
 	  "name": "クロックアウル",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -346,7 +346,7 @@
 	{
 	  "id": 413,
 	  "name": "ゴールドトーテム",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -448,7 +448,7 @@
 	{
 	  "id": 417,
 	  "name": "シェイプシフター",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -472,7 +472,7 @@
 	{
 	  "id": 418,
 	  "name": "シャドウガイスト",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -499,7 +499,7 @@
 	{
 	  "id": 419,
 	  "name": "スカイギア",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -575,7 +575,7 @@
 	{
 	  "id": 422,
 	  "name": "スチームギア",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -659,7 +659,7 @@
 	{
 	  "id": 425,
 	  "name": "ティラノサウルス",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
@@ -679,7 +679,7 @@
 	{
 	  "id": 426,
 	  "name": "デコイ",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {

@@ -3,7 +3,7 @@
 		{
 			"id": 427,
 			"name": "トロージャンホース",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -37,7 +37,7 @@
 		{
 			"id": 428,
 			"name": "ニルーバーナ",
-			"rarity": "N",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -99,7 +99,7 @@
 		{
 			"id": 430,
 			"name": "ハーフリング",
-			"rarity": "N",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -196,7 +196,7 @@
 		{
 			"id": 434,
 			"name": "ビーストギア",
-			"rarity": "S",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -240,7 +240,7 @@
 		{
 			"id": 436,
 			"name": "ボージェス",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -358,7 +358,7 @@
 		{
 			"id": 439,
 			"name": "リビングアムル",
-			"rarity": "S",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -398,7 +398,7 @@
 		{
 			"id": 440,
 			"name": "リビングクローブ",
-			"rarity": "N",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -429,7 +429,7 @@
 		{
 			"id": 441,
 			"name": "リビングヘルム",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -449,7 +449,7 @@
 		{
 			"id": 442,
 			"name": "リビングボム",
-			"rarity": "N",
+			"rarity": "S",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -477,7 +477,7 @@
 		{
 			"id": 443,
 			"name": "ルナティックヘア",
-			"rarity": "S",
+			"rarity": "R",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -536,7 +536,7 @@
 			"id": 445,
 			"name": "レッドキャップ",
 			"race": "ゴブリン",
-			"rarity": "S",
+			"rarity": "N",
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
@@ -649,6 +649,21 @@
 					}
 				}
 			}
+		},
+		{
+			"id": 450,
+			"name": "コボルト",
+			"race": "コボルト",
+			"rarity": "C",
+			"type": "creature",
+			"element": "neutral",
+			"cost": {
+				"mp": 20
+			},
+			"ap": 20,
+			"hp": 20,
+			"ability": "",
+			"ability_detail": ""
 		},
 		{
 			"id": 448,

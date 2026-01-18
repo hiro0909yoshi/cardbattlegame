@@ -7,6 +7,16 @@ var db_path: String = "user://user_cards.db"
 
 func _ready():
 	_initialize_database()
+	
+	# 開発用：全カード所持状態にする場合はコメント解除
+	#_setup_dev_mode()
+
+## 開発用：全カード4枚ずつ登録
+func _setup_dev_mode():
+	var cards = get_all_cards()
+	if cards.size() == 0:
+		print("[UserCardDB] 開発モード：全カードを登録します")
+		import_all_cards_from_json()
 
 ## データベース初期化
 func _initialize_database() -> bool:
@@ -36,6 +46,12 @@ func _initialize_database() -> bool:
 	
 	print("[UserCardDB] データベース初期化完了: " + db_path)
 	return true
+
+## DBをフラッシュ（変更を確実に保存）
+func flush():
+	if db:
+		db.close_db()
+		db.open_db()
 
 ## カード情報を取得
 func get_card(card_id: int, user_id: String = "player1") -> Dictionary:

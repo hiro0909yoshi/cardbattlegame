@@ -18,8 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 CardLoader="*res://scripts/card_loader.gd"
-GameData="*res://scripts/game_data.gd"
 UserCardDB="*res://scripts/user_card_db.gd"
+GameData="*res://scripts/game_data.gd"
 
 [display]
 

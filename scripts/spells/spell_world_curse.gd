@@ -172,8 +172,8 @@ static func is_invasion_restricted(attacker_rank: int, defender_rank: int, game_
 ## card: カードデータ（rarityを含む）
 ## レアリティによる倍率:
 ##   R = crown_bag_multiplier (2.0)
-##   S, SS = bag_multiplier (1.5)
-##   N以下 = 1.0（倍率なし）
+##   S = bag_multiplier (1.5)
+##   N, C = 1.0（倍率なし）
 static func get_cost_multiplier(card: Dictionary, game_stats: Dictionary) -> float:
 	var world_curse = game_stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "cost_increase":
@@ -183,10 +183,10 @@ static func get_cost_multiplier(card: Dictionary, game_stats: Dictionary) -> flo
 	
 	if rarity == "R":
 		return params.get("crown_bag_multiplier", 2.0)
-	elif rarity in ["S", "SS"]:
+	elif rarity == "S":
 		return params.get("bag_multiplier", 1.5)
 	
-	# N以下は倍率なし
+	# N, C は倍率なし
 	return 1.0
 
 ## ブライトワールド: 召喚条件が無視されるか

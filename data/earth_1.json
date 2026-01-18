@@ -17,7 +17,7 @@
 	{
 	  "id": 201,
 	  "name": "アネイマブル",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -85,7 +85,7 @@
 	{
 	  "id": 203,
 	  "name": "オドラデク",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -141,7 +141,7 @@
 	{
 	  "id": 205,
 	  "name": "カクタスウォール",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -211,7 +211,7 @@
 	{
 	  "id": 207,
 	  "name": "キャプテンコック",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -246,7 +246,7 @@
 	{
 	  "id": 208,
 	  "name": "グーバ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -261,7 +261,7 @@
 	  "id": 209,
 	  "name": "グーバクイーン",
 	  "rate": 79,
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -310,7 +310,7 @@
 	{
 	  "id": 211,
 	  "name": "グリマルキン",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -341,7 +341,7 @@
 	{
 	  "id": 212,
 	  "name": "グレートタスカー",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -410,7 +410,7 @@
 	{
 	  "id": 214,
 	  "name": "コアトリクエ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -473,7 +473,7 @@
 	{
 	  "id": 216,
 	  "name": "サクヤ",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -504,7 +504,7 @@
 	{
 	  "id": 217,
 	  "name": "ジャッカロープ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -538,7 +538,7 @@
 	{
 	  "id": 218,
 	  "name": "ジャングラバー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
@@ -568,7 +568,7 @@
 	{
 	  "id": 219,
 	  "name": "シルバンダッチェス",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {

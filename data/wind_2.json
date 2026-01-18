@@ -51,7 +51,7 @@
 	{
 	  "id": 328,
 	  "name": "デュータイタン",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -70,7 +70,7 @@
 	{
 	  "id": 329,
 	  "name": "テュポーン",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -186,7 +186,7 @@
 	{
 	  "id": 332,
 	  "name": "ナイキー",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -221,7 +221,7 @@
 	{
 	  "id": 333,
 	  "name": "ナイト",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -260,7 +260,7 @@
 	{
 	  "id": 334,
 	  "name": "ナイトメア",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -282,7 +282,7 @@
 	{
 	  "id": 335,
 	  "name": "バウダーイーター",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -310,7 +310,7 @@
 	{
 	  "id": 336,
 	  "name": "パトロナス",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -339,7 +339,7 @@
 	{
 	  "id": 337,
 	  "name": "ブリーズスピリット",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -538,7 +538,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "強打・通行料変化",
-	  "ability_detail": "強打[🔥]；通行料変化[1/2~2.5倍]",
+	  "ability_detail": "強打[火]；通行料変化[1/2~2.5倍]",
 	  "ability_parsed": {
 		"keywords": [
 		  "強打"
@@ -574,7 +574,7 @@
 	  "id": 344,
 	  "name": "ライトニングドラゴン",
 	  "race": "ドラゴン",
-	  "rarity": "N",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -677,7 +677,7 @@
 	{
 	  "id": 347,
 	  "name": "ロードオブペイン",
-	  "rarity": "N",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
@@ -758,6 +758,21 @@
 		},
 		"effects": []
 	  }
-	}
+	},
+	{
+	  "id": 350,
+	  "name": "イエローコボルト",
+	  "race": "コボルト",
+	  "rarity": "C",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 20
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "",
+	  "ability_detail": ""
+	},
   ]
 }

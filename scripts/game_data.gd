@@ -18,13 +18,14 @@ var player_data = {
 		"name": "プレイヤー",
 		"level": 1,
 		"exp": 0,
-		"gold": 1000,
+		"gold": 100000,
 		"created_at": "",
 		"last_played": ""
 	},
 	
 	# === カード関連 ===
-	"collection": {},      # 所持カード {card_id: count}
+	# collection → UserCardDB（SQLite）に移行済み
+	# unlocks.cards → UserCardDB.obtained に移行済み
 	"decks": [],           # デッキ構成（最大6個、課金で増加可能）
 	"max_decks": 6,
 	
@@ -37,7 +38,6 @@ var player_data = {
 	
 	# === アンロック情報 ===
 	"unlocks": {
-		"cards": [],      # アンロック済みカードID配列
 		"stages": [1],    # アンロック済みステージ（最初は1だけ）
 		"modes": ["story"] # アンロック済みモード
 	},
@@ -64,8 +64,10 @@ var player_data = {
 }
 
 func _ready():
+	load_from_file()
 	
-	load_from_file() 
+	# デッキ検証（所持していないカードを削除）
+	call_deferred("_validate_decks") 
 
 # ==========================================
 # セーブ/ロード
@@ -134,7 +136,6 @@ func load_from_file():
 	
 	_validate_save_data()  # データの整合性チェック
 	print("✅ ロード完了: Lv.", player_data.profile.level, " / ゴールド: ", player_data.profile.gold)
-	print("所持カード種類: ", player_data.collection.size())
 
 func _initialize_new_save():
 	# 作成日時を設定
@@ -155,55 +156,17 @@ func _initialize_new_save():
 func _initialize_test_data():
 	await get_tree().process_frame
 	
-	print("
-=== テストデータ初期化 ===")
-	print("CardLoaderは存在する？: ", CardLoader != null)
+	print("\n=== テストデータ初期化 ===")
 	
-	if CardLoader:
-		print("CardLoader.all_cardsのサイズ: ", CardLoader.all_cards.size())
-		
-		if CardLoader.all_cards.size() > 0:
-			# 🎯 開発用：全カードを4枚ずつ所持
-			var test_card_count = 0
-			var element_counts = {"fire": 0, "water": 0, "earth": 0, "wind": 0, "neutral": 0}
-			var type_counts = {"item": 0, "spell": 0, "creature": 0}
-			
-			for card in CardLoader.all_cards:
-				player_data.collection[card.id] = 4  # 各4枚ずつ
-				if not player_data.unlocks.cards.has(card.id):
-					player_data.unlocks.cards.append(card.id)
-				test_card_count += 1
-				
-				# 統計用カウント
-				if card.type == "creature" and card.has("element"):
-					var elem = card.element
-					if element_counts.has(elem):
-						element_counts[elem] += 1
-					type_counts["creature"] += 1
-				elif card.type == "item":
-					type_counts["item"] += 1
-				elif card.type == "spell":
-					type_counts["spell"] += 1
-			
-			print("✅ テストデータ: ", test_card_count, "種類のカードを追加")
-			print("  🔥 火: ", element_counts["fire"])
-			print("  💧 水: ", element_counts["water"])
-			print("  🪨 地: ", element_counts["earth"])
-			print("  🌪️ 風: ", element_counts["wind"])
-			print("  ⚪ 無: ", element_counts["neutral"])
-			print("  🎭 クリーチャー合計: ", type_counts["creature"])
-			print("  📦 アイテム: ", type_counts["item"])
-			print("  📜 スペル: ", type_counts["spell"])
-			print("collection登録完了: ", player_data.collection.size(), "種類")
-			
-			# 🔧 修正: ここでセーブ！
-			save_to_file()
-		else:
-			print("❌ CardLoader.all_cardsが空です")
+	# DBに全カードを登録
+	if UserCardDB:
+		UserCardDB.reset_database()
+		UserCardDB.import_all_cards_from_json()
+		print("✅ テストデータ: DBに全カード登録完了")
 	else:
-		print("❌ CardLoaderが見つかりません")
-	print("=========================
-")
+		print("❌ UserCardDBが見つかりません")
+	
+	print("=========================\n")
 
 ## デッキに有効なカードがあるかチェック
 func _has_valid_deck(data: Dictionary) -> bool:
@@ -219,16 +182,6 @@ func _has_valid_deck(data: Dictionary) -> bool:
 
 func _convert_collection_keys():
 	"""JSONから読み込んだ文字列キーを整数に、値も整数に変換"""
-	# collectionのキーと値を変換
-	var new_collection = {}
-	for key in player_data.collection.keys():
-		var int_key = int(key) if typeof(key) == TYPE_STRING else key
-		# ⚠️ 値もintに変換
-		var value = player_data.collection[key]
-		var int_value = int(value) if typeof(value) == TYPE_FLOAT else value
-		new_collection[int_key] = int_value
-	player_data.collection = new_collection
-	
 	# decksのcardsのキーと値も変換
 	for deck in player_data.decks:
 		if deck.has("cards"):
@@ -240,14 +193,6 @@ func _convert_collection_keys():
 				var int_value = int(value) if typeof(value) == TYPE_FLOAT else value
 				new_cards[int_key] = int_value
 			deck["cards"] = new_cards
-	
-	# unlocksのcardsも整数に変換
-	if player_data.has("unlocks") and player_data.unlocks.has("cards"):
-		var new_unlocks = []
-		for card_id in player_data.unlocks.cards:
-			var int_id = int(card_id) if typeof(card_id) == TYPE_STRING else card_id
-			new_unlocks.append(int_id)
-		player_data.unlocks.cards = new_unlocks
 	
 	# profileのgold, level, expも整数に変換
 	if player_data.has("profile"):
@@ -285,6 +230,50 @@ func _validate_save_data():
 # デッキ操作
 # ==========================================
 
+## デッキ検証：所持していないカードを削除
+func _validate_decks():
+	if not UserCardDB:
+		return
+	
+	var modified = false
+	
+	for deck_index in range(player_data.decks.size()):
+		var deck = player_data.decks[deck_index]
+		var cards = deck.get("cards", {})
+		var cards_to_remove = []
+		
+		for card_id in cards.keys():
+			var owned = UserCardDB.get_card_count(card_id)
+			var in_deck = cards[card_id]
+			
+			if owned == 0:
+				# 所持0枚 → デッキから完全削除
+				cards_to_remove.append(card_id)
+				print("[GameData] デッキ%d: カードID %d を削除（所持0枚）" % [deck_index + 1, card_id])
+				modified = true
+			elif in_deck > owned:
+				# デッキ枚数 > 所持枚数 → 所持数に合わせる
+				cards[card_id] = owned
+				print("[GameData] デッキ%d: カードID %d を%d枚に調整（所持%d枚）" % [deck_index + 1, card_id, owned, owned])
+				modified = true
+		
+		for card_id in cards_to_remove:
+			cards.erase(card_id)
+	
+	if modified:
+		save_to_file()
+		print("[GameData] デッキ検証完了：修正あり")
+	else:
+		print("[GameData] デッキ検証完了：問題なし")
+
+## カードが全デッキで使用されている合計枚数を取得
+func get_card_usage_in_decks(card_id: int) -> int:
+	var total = 0
+	for deck in player_data.decks:
+		var cards = deck.get("cards", {})
+		total += cards.get(card_id, 0)
+	return total
+
 func get_current_deck() -> Dictionary:
 	if selected_deck_index < 0 or selected_deck_index >= player_data.decks.size():
 		return {"name": "", "cards": {}}
@@ -300,19 +289,15 @@ func save_deck(deck_index: int, cards: Dictionary):
 	print("✅ ブック", deck_index + 1, "を保存")
 
 # ==========================================
-# カードコレクション操作
+# カードコレクション操作（DB連携）
 # ==========================================
 
 func add_card(card_id: int, count: int = 1):
-	if not player_data.collection.has(card_id):
-		player_data.collection[card_id] = 0
+	# DBに追加
+	UserCardDB.add_card(card_id, count)
 	
-	player_data.collection[card_id] += count
+	# 統計更新
 	player_data.stats.cards_obtained += count
-	
-	# 初入手ならアンロックリストに追加
-	if not player_data.unlocks.cards.has(card_id):
-		player_data.unlocks.cards.append(card_id)
 	
 	if player_data.settings.auto_save:
 		save_to_file()
@@ -320,18 +305,27 @@ func add_card(card_id: int, count: int = 1):
 	print("✅ カード入手: ID=", card_id, " +", count, "枚")
 
 func remove_card(card_id: int, count: int = 1):
-	if not player_data.collection.has(card_id):
-		return
-	
-	player_data.collection[card_id] -= count
-	if player_data.collection[card_id] <= 0:
-		player_data.collection.erase(card_id)
+	# DBから削除
+	UserCardDB.remove_card(card_id, count)
 	
 	if player_data.settings.auto_save:
 		save_to_file()
 
 func get_card_count(card_id: int) -> int:
-	return player_data.collection.get(card_id, 0)
+	# DBから取得
+	return UserCardDB.get_card_count(card_id)
+
+## カードレベルを取得（DB連携）
+func get_card_level(card_id: int) -> int:
+	return UserCardDB.get_card_level(card_id)
+
+## カードが図鑑に登録済みか（DB連携）
+func is_card_obtained(card_id: int) -> bool:
+	return UserCardDB.is_card_obtained(card_id)
+
+## 所持カード一覧を取得（DB連携）
+func get_all_owned_cards() -> Array:
+	return UserCardDB.get_all_cards()
 
 # ==========================================
 # 進行状況管理
@@ -449,7 +443,7 @@ func print_save_info():
 	print("プレイヤー: ", player_data.profile.name)
 	print("レベル: ", player_data.profile.level, " (EXP: ", player_data.profile.exp, ")")
 	print("ゴールド: ", player_data.profile.gold)
-	print("所持カード種類: ", player_data.collection.size())
+	print("所持カード種類: ", UserCardDB.get_all_cards().size())
 	print("デッキ数: ", player_data.decks.size())
 	print("ストーリー進行: ", player_data.story_progress.current_stage)
 	print("勝率: ", _calculate_win_rate(), "%")

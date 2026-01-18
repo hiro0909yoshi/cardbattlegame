@@ -180,8 +180,8 @@ func create_card_button(card_data: Dictionary):
 	# カードIDをメタデータとして保存
 	button.set_meta("card_id", card_data.id)
 	
-	# 所持枚数を取得
-	var owned_count = GameData.player_data.collection.get(card_data.id, 0)
+	# 所持枚数を取得（DB連携）
+	var owned_count = GameData.get_card_count(card_data.id)
 	var deck_count = current_deck.get(card_data.id, 0)
 	
 	# ボタンテキスト
@@ -204,7 +204,7 @@ func _on_card_button_pressed(card_id: int):
 	selected_card_id = card_id
 	var card = CardLoader.get_card_by_id(card_id)
 	
-	var owned = GameData.player_data.collection.get(card_id, 0)
+	var owned = GameData.get_card_count(card_id)
 	var in_deck = current_deck.get(card_id, 0)
 	
 	var title_label = card_dialog.get_node("DialogVBox/TitleLabel")
@@ -226,7 +226,7 @@ func _on_card_button_pressed(card_id: int):
 	card_dialog.popup_centered()
 
 func _on_count_selected(count: int):
-	var owned = GameData.player_data.collection.get(selected_card_id, 0)
+	var owned = GameData.get_card_count(selected_card_id)
 	var max_count = min(4, owned)
 	
 	if count > max_count:
@@ -262,7 +262,7 @@ func _on_count_selected(count: int):
 
 func update_single_card_button(card_id: int):
 	var card = CardLoader.get_card_by_id(card_id)
-	var owned_count = GameData.player_data.collection.get(card_id, 0)
+	var owned_count = GameData.get_card_count(card_id)
 	var deck_count = current_deck.get(card_id, 0)
 	
 	# 既存のボタンを探して更新

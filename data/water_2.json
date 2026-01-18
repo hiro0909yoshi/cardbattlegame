@@ -3,7 +3,7 @@
 	{
 	  "id": 125,
 	  "name": "スラッジタイタン",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -34,7 +34,7 @@
 	{
 	  "id": 126,
 	  "name": "スワンプスボーン",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -69,7 +69,7 @@
 	{
 	  "id": 127,
 	  "name": "ゼラチンウォール",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -103,7 +103,7 @@
 	  "id": 128,
 	  "name": "ディープシードラゴン",
 	  "race": "ドラゴン",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -141,7 +141,7 @@
 	{
 	  "id": 129,
 	  "name": "テンタクルズ",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -299,7 +299,7 @@
 	{
 	  "id": 134,
 	  "name": "ビジランテ",
-	  "rarity": "R",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -316,7 +316,7 @@
 	{
 	  "id": 135,
 	  "name": "ヒッポカンパス",
-	  "rarity": "S",
+	  "rarity": "N",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -357,7 +357,7 @@
 	{
 	  "id": 136,
 	  "name": "フェイト",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -463,7 +463,7 @@
 	{
 	  "id": 140,
 	  "name": "マイコロン",
-	  "rarity": "S",
+	  "rarity": "R",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -500,7 +500,7 @@
 	{
 	  "id": 141,
 	  "name": "マカラ",
-	  "rarity": "R",
+	  "rarity": "S",
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
@@ -723,6 +723,21 @@
 		  }
 		]
 	  }
-	}
+	},
+	{
+	  "id": 150,
+	  "name": "ブルーコボルト",
+	  "race": "コボルト",
+	  "rarity": "C",
+	  "type": "creature",
+	  "element": "water",
+	  "cost": {
+		"mp": 20
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "",
+	  "ability_detail": ""
+	},
   ]
 }

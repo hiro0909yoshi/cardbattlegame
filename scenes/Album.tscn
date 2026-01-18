@@ -60,6 +60,13 @@ layout_mode = 2
 text = "所持カード一覧
 "
 
+[node name="ResetCardsButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(800, 200)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "🗑️ カードリセット
+(デバッグ用)"
+
 [node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
 custom_minimum_size = Vector2(800, 400)
 layout_mode = 2

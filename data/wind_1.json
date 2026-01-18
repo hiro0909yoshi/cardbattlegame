@@ -1,810 +1,810 @@
 {
   "cards": [
-    {
-      "id": 300,
-      "name": "アームドプリンセス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 200,
-        "lands_required": [
-          "wind",
+	{
+	  "id": 300,
+	  "name": "アームドプリンセス",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 200,
+		"lands_required": [
+		  "wind",
           "wind"
-        ]
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "援護・先制・防魔",
-      "ability_detail": "援護[水風]；先制；防魔",
-      "ability_parsed": {
-        "keywords": [
-          "援護",
+		]
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "援護・先制・防魔",
+	  "ability_detail": "援護[水風]；先制；防魔",
+	  "ability_parsed": {
+		"keywords": [
+		  "援護",
           "先制"
-        ],
-        "keyword_conditions": {
-          "援護": {
-            "target_elements": [
-              "water",
+		],
+		"keyword_conditions": {
+		  "援護": {
+			"target_elements": [
+			  "water",
               "wind"
-            ]
-          }
-        },
-        "effects": []
-      }
-    },
-    {
-      "id": 301,
-      "name": "イエローオーガ",
-      "race": "オーガ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 80
-      },
-      "ap": 40,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 302,
-      "name": "ウィッチ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 55
-      },
-      "restrictions": {
-        "cannot_use": [
+			]
+		  }
+		},
+		"effects": []
+	  }
+	},
+	{
+	  "id": 301,
+	  "name": "イエローオーガ",
+	  "race": "オーガ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 80
+	  },
+	  "ap": 40,
+	  "hp": 50,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 302,
+	  "name": "ウィッチ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 55
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "武器"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "巻物強打・秘術",
-      "ability_detail": "巻物強打；秘術[G30・対象から手札のスペルの数×G40を奪う]",
-      "ability_parsed": {
-        "keywords": [
-          "巻物強打",
+		]
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "巻物強打・秘術",
+	  "ability_detail": "巻物強打；秘術[G30・対象から手札のスペルの数×G40を奪う]",
+	  "ability_parsed": {
+		"keywords": [
+		  "巻物強打",
           "秘術"
-        ],
-        "keyword_conditions": {
-          "巻物強打": {
-            "scroll_type": "base_ap"
-          }
-        }
-      },
-      "mystic_arts": {
-        "cost": 30,
-        "spell_id": 9036
-      }
-    },
-    {
-      "id": 303,
-      "name": "エアロダッチェス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 60,
-        "lands_required": [
-          "wind",
+		],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_ap"
+		  }
+		}
+	  },
+	  "mystic_arts": {
+		"cost": 30,
+		"spell_id": 9036
+	  }
+	},
+	{
+	  "id": 303,
+	  "name": "エアロダッチェス",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 60,
+		"lands_required": [
+		  "wind",
           "wind"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "先制・巻物強打・秘術",
-      "ability_detail": "先制；巻物強打；秘術[G50・対象敵クリーチャーのMHP-10]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
+		]
+	  },
+	  "ap": 50,
+	  "hp": 50,
+	  "ability": "先制・巻物強打・秘術",
+	  "ability_detail": "先制；巻物強打；秘術[G50・対象敵クリーチャーのMHP-10]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
           "巻物強打"
-        ],
-        "keyword_conditions": {
-          "巻物強打": {
-            "scroll_type": "base_ap"
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "HP減少呪い",
-            "cost": 50,
-            "spell_id": 9011
-          }
-        ],
-        "effects": []
-      }
-    },
-    {
-      "id": 304,
-      "name": "エルフアーチャー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70,
-        "lands_required": [
+		],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_ap"
+		  }
+		},
+		"mystic_arts": [
+		  {
+			"name": "HP減少呪い",
+			"cost": 50,
+			"spell_id": 9011
+		  }
+		],
+		"effects": []
+	  }
+	},
+	{
+	  "id": 304,
+	  "name": "エルフアーチャー",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70,
+		"lands_required": [
           "wind"
-        ]
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "先制・秘術",
-      "ability_detail": "先制；秘術[G20・対象敵クリーチャーのHP-10]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
+		]
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "先制・秘術",
+	  "ability_detail": "先制；秘術[G20・対象敵クリーチャーのHP-10]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
           "秘術"
-        ],
-        "mystic_arts": [
-          {
-            "name": "ダメージボルト",
-            "description": "対象敵クリーチャーのHP-10",
-            "spell_id": 9004,
-            "cost": 20
-          }
-        ]
-      }
-    },
-    {
-      "id": 305,
-      "name": "エンチャントレス",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 30
-      },
-      "restrictions": {
-        "cannot_summon": [
+		],
+		"mystic_arts": [
+		  {
+			"name": "ダメージボルト",
+			"description": "対象敵クリーチャーのHP-10",
+			"spell_id": 9004,
+			"cost": 20
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 305,
+	  "name": "エンチャントレス",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 30
+	  },
+	  "restrictions": {
+		"cannot_summon": [
           "fire"
-        ],
-        "cannot_use": [
-          "武器",
+		],
+		"cannot_use": [
+		  "武器",
           "防具"
-        ]
-      },
-      "ap": 10,
-      "hp": 20,
-      "ability": "巻物強打・呪い拡散",
-      "ability_detail": "巻物強打；これに呪い付与時、同じ呪いを使用者の全領地につけ、ダウンする",
-      "ability_parsed": {
-        "keywords": [
-          "巻物強打",
+		]
+	  },
+	  "ap": 10,
+	  "hp": 20,
+	  "ability": "巻物強打・呪い拡散",
+	  "ability_detail": "巻物強打；これに呪い付与時、同じ呪いを使用者の全領地につけ、ダウンする",
+	  "ability_parsed": {
+		"keywords": [
+		  "巻物強打",
           "呪い拡散"
-        ],
-        "keyword_conditions": {
-          "巻物強打": {
-            "scroll_type": "base_ap"
-          }
-        }
-      }
-    },
-    {
-      "id": 306,
-      "name": "カラドリウス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 60
-      },
-      "restrictions": {
-        "cannot_use": [
+		],
+		"keyword_conditions": {
+		  "巻物強打": {
+			"scroll_type": "base_ap"
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 306,
+	  "name": "カラドリウス",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 60
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 30,
-      "ability": "先制・秘術",
-      "ability_detail": "先制；秘術[G40・対象領地に呪い\"能力値+20\"]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
+		]
+	  },
+	  "ap": 30,
+	  "hp": 30,
+	  "ability": "先制・秘術",
+	  "ability_detail": "先制；秘術[G40・対象領地に呪い\"能力値+20\"]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
           "秘術"
-        ],
-        "mystic_art": {
-          "name": "能力値+20呪い",
-          "cost": 40,
-          "spell_id": 9030
-        }
-      }
-    },
-    {
-      "id": 307,
-      "name": "ガルーダ",
-      "rate": 88,
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 40,
-        "lands_required": [
-          "wind",
+		],
+		"mystic_art": {
+		  "name": "能力値+20呪い",
+		  "cost": 40,
+		  "spell_id": 9030
+		}
+	  }
+	},
+	{
+	  "id": 307,
+	  "name": "ガルーダ",
+	  "rate": 88,
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 40,
+		"lands_required": [
+		  "wind",
           "wind"
-        ]
-      },
-      "restrictions": {
-        "cannot_summon": [
+		]
+	  },
+	  "restrictions": {
+		"cannot_summon": [
           "earth"
-        ]
-      },
-      "ap": 0,
-      "hp": 40,
-      "ability": "AP&HP計算",
-      "ability_detail": "AP&HP=風配置数×10",
-      "ability_parsed": {
-        "keywords": [],
-        "effects": [
-          {
-            "effect_type": "land_count_multiplier",
-            "stat": "both",
-            "elements": [
+		]
+	  },
+	  "ap": 0,
+	  "hp": 40,
+	  "ability": "AP&HP計算",
+	  "ability_detail": "AP&HP=風配置数×10",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "both",
+			"elements": [
               "wind"
-            ],
-            "multiplier": 10,
-            "operation": "set",
-            "description": "AP&HP=風配置数×10"
-          }
-        ]
-      }
-    },
-    {
-      "id": 308,
-      "name": "キリン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 80
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "先制・感応",
-      "ability_detail": "先制；感応[水・AP&HP+20]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
+			],
+			"multiplier": 10,
+			"operation": "set",
+			"description": "AP&HP=風配置数×10"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 308,
+	  "name": "キリン",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 80
+	  },
+	  "ap": 20,
+	  "hp": 40,
+	  "ability": "先制・感応",
+	  "ability_detail": "先制；感応[水・AP&HP+20]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
           "感応"
-        ],
-        "keyword_conditions": {
-          "感応": {
-            "element": "water",
-            "stat_bonus": {
-              "ap": 20,
-              "hp": 20
-            }
-          }
-        },
-        "effects": []
-      }
-    },
-    {
-      "id": 309,
-      "name": "クー・シー",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70
-      },
-      "ap": 40,
-      "hp": 30,
-      "ability": "感応・防魔",
-      "ability_detail": "感応[水・AP+10、HP+20]；防魔",
-      "ability_parsed": {
-        "keywords": [
-          "感応",
+		],
+		"keyword_conditions": {
+		  "感応": {
+			"element": "water",
+			"stat_bonus": {
+			  "ap": 20,
+			  "hp": 20
+			}
+		  }
+		},
+		"effects": []
+	  }
+	},
+	{
+	  "id": 309,
+	  "name": "クー・シー",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70
+	  },
+	  "ap": 40,
+	  "hp": 30,
+	  "ability": "感応・防魔",
+	  "ability_detail": "感応[水・AP+10、HP+20]；防魔",
+	  "ability_parsed": {
+		"keywords": [
+		  "感応",
           "防魔"
-        ],
-        "keyword_conditions": {
-          "感応": {
-            "element": "water",
-            "stat_bonus": {
-              "ap": 10,
-              "hp": 20
-            }
-          }
-        }
-      }
-    },
-    {
-      "id": 310,
-      "name": "クラウドギズモ",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 30
-      },
-      "ap": 10,
-      "hp": 30,
-      "ability": "秘術",
-      "ability_detail": "秘術[G20・対象の手札を1枚破壊、対象はカードを1枚引く]",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"keyword_conditions": {
+		  "感応": {
+			"element": "water",
+			"stat_bonus": {
+			  "ap": 10,
+			  "hp": 20
+			}
+		  }
+		}
+	  }
+	},
+	{
+	  "id": 310,
+	  "name": "クラウドギズモ",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 30
+	  },
+	  "ap": 10,
+	  "hp": 30,
+	  "ability": "秘術",
+	  "ability_detail": "秘術[G20・対象の手札を1枚破壊、対象はカードを1枚引く]",
+	  "ability_parsed": {
+		"keywords": [
           "秘術"
-        ],
-        "mystic_arts": [
-          {
-            "name": "手札破壊ドロー",
-            "cost": 20,
-            "spell_id": 9045
-          }
-        ]
-      }
-    },
-    {
-      "id": 311,
-      "name": "グリフォン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 80
-      },
-      "restrictions": {
-        "cannot_summon": [
+		],
+		"mystic_arts": [
+		  {
+			"name": "手札破壊ドロー",
+			"cost": 20,
+			"spell_id": 9045
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 311,
+	  "name": "グリフォン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 80
+	  },
+	  "restrictions": {
+		"cannot_summon": [
           "earth"
-        ],
-        "cannot_use": [
+		],
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 50,
-      "hp": 50,
-      "ability": "",
-      "ability_detail": ""
-    },
-    {
-      "id": 312,
-      "name": "グレートニンバス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 100
-      },
-      "restrictions": {
-        "cannot_use": [
+		]
+	  },
+	  "ap": 50,
+	  "hp": 50,
+	  "ability": "",
+	  "ability_detail": ""
+	},
+	{
+	  "id": 312,
+	  "name": "グレートニンバス",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 100
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "防具"
-        ]
-      },
-      "ap": 30,
-      "hp": 60,
-      "ability": "不屈",
-      "ability_detail": "不屈"
-    },
-    {
-      "id": 313,
-      "name": "グレムリン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 60
-      },
-      "restrictions": {
-        "cannot_use": [
+		]
+	  },
+	  "ap": 30,
+	  "hp": 60,
+	  "ability": "不屈",
+	  "ability_detail": "不屈"
+	},
+	{
+	  "id": 313,
+	  "name": "グレムリン",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 60
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "アイテム破壊",
-      "ability_detail": "アイテム破壊[道具]",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "アイテム破壊",
+	  "ability_detail": "アイテム破壊[道具]",
+	  "ability_parsed": {
+		"keywords": [
           "アイテム破壊"
-        ],
-        "effects": [
-          {
-            "effect_type": "destroy_item",
-            "target_types": [
+		],
+		"effects": [
+		  {
+			"effect_type": "destroy_item",
+			"target_types": [
               "道具"
-            ],
-            "triggers": [
+			],
+			"triggers": [
               "before_battle"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 314,
-      "name": "ケンタウロス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 80
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "先制・アイテム復帰",
-      "ability_detail": "先制；アイテム復帰[ブック]",
-      "ability_parsed": {
-        "keywords": [
+			]
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 314,
+	  "name": "ケンタウロス",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 80
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "先制・アイテム復帰",
+	  "ability_detail": "先制；アイテム復帰[ブック]",
+	  "ability_parsed": {
+		"keywords": [
           "先制"
-        ],
-        "effects": [
-          {
-            "effect_type": "item_return",
-            "trigger": "after_item_use",
-            "return_type": "return_to_deck",
-            "target": "all_items"
-          }
-        ]
-      }
-    },
-    {
-      "id": 315,
-      "name": "コーンフォーク",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "自破壊時魔力獲得",
-      "ability_detail": "戦闘やスペルでの破壊時、遺産[G200]",
-      "ability_parsed": {
-        "keywords": [
+		],
+		"effects": [
+		  {
+			"effect_type": "item_return",
+			"trigger": "after_item_use",
+			"return_type": "return_to_deck",
+			"target": "all_items"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 315,
+	  "name": "コーンフォーク",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "自破壊時魔力獲得",
+	  "ability_detail": "戦闘やスペルでの破壊時、遺産[G200]",
+	  "ability_parsed": {
+		"keywords": [
           "遺産"
-        ],
-        "effects": [
-          {
-            "effect_type": "legacy_magic",
-            "trigger": "on_death",
-            "amount": 200
-          }
-        ]
-      }
-    },
-    {
-      "id": 316,
-      "name": "サーペントフライ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70
-      },
-      "restrictions": {
-        "cannot_summon": [
+		],
+		"effects": [
+		  {
+			"effect_type": "legacy_magic",
+			"trigger": "on_death",
+			"amount": 200
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 316,
+	  "name": "サーペントフライ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70
+	  },
+	  "restrictions": {
+		"cannot_summon": [
           "fire"
-        ],
-        "cannot_use": [
+		],
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 40,
-      "hp": 30,
-      "ability": "先制・地形効果",
-      "ability_detail": "先制；水からも地形効果を得る",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  },
+	  "ap": 40,
+	  "hp": 30,
+	  "ability": "先制・地形効果",
+	  "ability_detail": "先制；水からも地形効果を得る",
+	  "ability_parsed": {
+		"keywords": [
           "先制"
-        ],
-        "effects": [],
-        "extra_land_elements": [
+		],
+		"effects": [],
+		"extra_land_elements": [
           "water"
-        ]
-      }
-    },
-    {
-      "id": 317,
-      "name": "サムハイン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 50,
-        "cards_sacrifice": 1
-      },
-      "ap": 20,
-      "hp": 40,
-      "ability": "合成・戦闘後効果",
-      "ability_detail": "合成[呪いスペル・AP+20]；戦闘後、敵のMHP-これの基本AP",
-      "synthesis": {
-        "type": "curse_spell",
-        "effect_type": "stat_boost",
-        "effect": {
-          "ap": 20
-        }
-      },
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "reduce_enemy_mhp",
-            "trigger": "on_battle_end",
-            "target": "enemy",
-            "damage_source": "self_base_ap"
-          }
-        ]
-      }
-    },
-    {
-      "id": 318,
-      "name": "サンダースポーン",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 50,
-        "lands_required": [
+		]
+	  }
+	},
+	{
+	  "id": 317,
+	  "name": "サムハイン",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 50,
+		"cards_sacrifice": 1
+	  },
+	  "ap": 20,
+	  "hp": 40,
+	  "ability": "合成・戦闘後効果",
+	  "ability_detail": "合成[呪いスペル・AP+20]；戦闘後、敵のMHP-これの基本AP",
+	  "synthesis": {
+		"type": "curse_spell",
+		"effect_type": "stat_boost",
+		"effect": {
+		  "ap": 20
+		}
+	  },
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "reduce_enemy_mhp",
+			"trigger": "on_battle_end",
+			"target": "enemy",
+			"damage_source": "self_base_ap"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 318,
+	  "name": "サンダースポーン",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 50,
+		"lands_required": [
           "wind"
-        ]
-      },
-      "restrictions": {
-        "cannot_use": [
+		]
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "AP計算・敵地移動",
-      "ability_detail": "AP+水自領地数×10；敵領地移動[属性の違う敵領地]",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "AP計算・敵地移動",
+	  "ability_detail": "AP+水自領地数×10；敵領地移動[属性の違う敵領地]",
+	  "ability_parsed": {
+		"keywords": [
           "敵領地移動"
-        ],
-        "keyword_conditions": {
-          "敵領地移動": {
-            "condition": {
-              "different_element": true
-            }
-          }
-        },
-        "effects": [
-          {
-            "effect_type": "land_count_multiplier",
-            "stat": "ap",
-            "elements": [
+		],
+		"keyword_conditions": {
+		  "敵領地移動": {
+			"condition": {
+			  "different_element": true
+			}
+		  }
+		},
+		"effects": [
+		  {
+			"effect_type": "land_count_multiplier",
+			"stat": "ap",
+			"elements": [
               "water"
-            ],
-            "multiplier": 10
-          }
-        ]
-      }
-    },
-    {
-      "id": 319,
-      "name": "シルフ",
-      "rate": 75,
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 30
-      },
-      "restrictions": {
-        "cannot_summon": [
+			],
+			"multiplier": 10
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 319,
+	  "name": "シルフ",
+	  "rate": 75,
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 30
+	  },
+	  "restrictions": {
+		"cannot_summon": [
           "earth"
-        ]
-      },
-      "ap": 20,
-      "hp": 20,
-      "ability": "無効化・秘術",
-      "ability_detail": "無効化[MHP40以上]；秘術[G60・ガルーダに変身]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
+		]
+	  },
+	  "ap": 20,
+	  "hp": 20,
+	  "ability": "無効化・秘術",
+	  "ability_detail": "無効化[MHP40以上]；秘術[G60・ガルーダに変身]",
+	  "ability_parsed": {
+		"keywords": [
+		  "無効化",
           "秘術"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "mhp_above",
-            "value": 40
-          }
-        },
-        "mystic_arts": [
-          {
-            "name": "ガルーダに変身",
-            "cost": 60,
-            "spell_id": 9050
-          }
-        ]
-      }
-    },
-    {
-      "id": 320,
-      "name": "スカラベンドラ",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 50,
-        "cards_sacrifice": 1
-      },
-      "restrictions": {
-        "cannot_use": [
+		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "mhp_above",
+			"value": 40
+		  }
+		},
+		"mystic_arts": [
+		  {
+			"name": "ガルーダに変身",
+			"cost": 60,
+			"spell_id": 9050
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 320,
+	  "name": "スカラベンドラ",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 50,
+		"cards_sacrifice": 1
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "合成・攻撃成功時",
-      "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\"",
-      "synthesis": {
-        "type": "element",
-        "condition": "water",
-        "effect_type": "transform",
-        "transform_to": 128
-      },
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "apply_curse",
-            "trigger": "on_attack_success",
-            "curse_type": "plague",
-            "name": "衰弱"
-          }
-        ]
-      }
-    },
-    {
-      "id": 321,
-      "name": "スペクター",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 30
-      },
-      "ap": 0,
-      "hp": 30,
-      "ability": "ランダム能力値",
-      "ability_detail": "AP&HP=10~70",
-      "ability_parsed": {
-        "effects": [
-          {
-            "effect_type": "random_stat",
-            "stat": "both",
-            "min": 10,
-            "max": 70,
-            "description": "バトル準備時にAP&HPをランダムに10~70に設定"
-          }
-        ]
-      }
-    },
-    {
-      "id": 322,
-      "name": "スレイプニール",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70
-      },
-      "restrictions": {
-        "cannot_use": [
+		]
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "合成・攻撃成功時",
+	  "ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に呪い\"衰弱\"",
+	  "synthesis": {
+		"type": "element",
+		"condition": "water",
+		"effect_type": "transform",
+		"transform_to": 128
+	  },
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "apply_curse",
+			"trigger": "on_attack_success",
+			"curse_type": "plague",
+			"name": "衰弱"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 321,
+	  "name": "スペクター",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 30
+	  },
+	  "ap": 0,
+	  "hp": 30,
+	  "ability": "ランダム能力値",
+	  "ability_detail": "AP&HP=10~70",
+	  "ability_parsed": {
+		"effects": [
+		  {
+			"effect_type": "random_stat",
+			"stat": "both",
+			"min": 10,
+			"max": 70,
+			"description": "バトル準備時にAP&HPをランダムに10~70に設定"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 322,
+	  "name": "スレイプニール",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70
+	  },
+	  "restrictions": {
+		"cannot_use": [
           "巻物"
-        ]
-      },
-      "ap": 30,
-      "hp": 40,
-      "ability": "秘術",
-      "ability_detail": "秘術[G60・対象自クリーチャーを1~2マス移動]",
-      "ability_parsed": {
-        "keywords": [
+		]
+	  },
+	  "ap": 30,
+	  "hp": 40,
+	  "ability": "秘術",
+	  "ability_detail": "秘術[G60・対象自クリーチャーを1~2マス移動]",
+	  "ability_parsed": {
+		"keywords": [
           "秘術"
-        ],
-        "mystic_art": {
-          "name": "1~2マス移動",
-          "cost": 60,
-          "target_type": "creature",
-          "target_info": {
-            "owner_filter": "own",
-            "can_move": true
-          },
-          "effects": [
-            {
-              "effect_type": "move_steps",
-              "steps": 2,
-              "exact_steps": false
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": 323,
-      "name": "ソウルコレクター",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 30,
-        "cards_sacrifice": 1
-      },
-      "ap": 20,
-      "hp": 30,
-      "ability": "AP計算",
-      "ability_detail": "AP+クリーチャー破壊数×5",
-      "ability_parsed": {
-        "keywords": [],
-        "effects": [
-          {
-            "effect_type": "destroy_count_multiplier",
-            "stat": "ap",
-            "multiplier": 5,
-            "description": "AP+破壊数×5"
-          }
-        ]
-      }
-    },
-    {
-      "id": 324,
-      "name": "ソードプリンセス",
-      "rarity": "N",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 70,
-        "lands_required": [
+		],
+		"mystic_art": {
+		  "name": "1~2マス移動",
+		  "cost": 60,
+		  "target_type": "creature",
+		  "target_info": {
+			"owner_filter": "own",
+			"can_move": true
+		  },
+		  "effects": [
+			{
+			  "effect_type": "move_steps",
+			  "steps": 2,
+			  "exact_steps": false
+			}
+		  ]
+		}
+	  }
+	},
+	{
+	  "id": 323,
+	  "name": "ソウルコレクター",
+	  "rarity": "N",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 30,
+		"cards_sacrifice": 1
+	  },
+	  "ap": 20,
+	  "hp": 30,
+	  "ability": "AP計算",
+	  "ability_detail": "AP+クリーチャー破壊数×5",
+	  "ability_parsed": {
+		"keywords": [],
+		"effects": [
+		  {
+			"effect_type": "destroy_count_multiplier",
+			"stat": "ap",
+			"multiplier": 5,
+			"description": "AP+破壊数×5"
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 324,
+	  "name": "ソードプリンセス",
+	  "rarity": "R",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 70,
+		"lands_required": [
           "wind"
-        ]
-      },
-      "ap": 40,
-      "hp": 30,
-      "ability": "先制・HP効果無効・秘術",
-      "ability_detail": "先制；HP効果無効；秘術[G60・アームドプリンセスに変身]",
-      "ability_parsed": {
-        "keywords": [
-          "先制",
-          "HP効果無効",
+		]
+	  },
+	  "ap": 40,
+	  "hp": 30,
+	  "ability": "先制・HP効果無効・秘術",
+	  "ability_detail": "先制；HP効果無効；秘術[G60・アームドプリンセスに変身]",
+	  "ability_parsed": {
+		"keywords": [
+		  "先制",
+		  "HP効果無効",
           "秘術"
-        ],
-        "effects": [],
-        "mystic_arts": [
-          {
-            "name": "アームドプリンセスに変身",
-            "cost": 60,
-            "spell_id": 9051
-          }
-        ]
-      }
-    },
-    {
-      "id": 325,
-      "name": "ダンピール",
-      "rarity": "S",
-      "type": "creature",
-      "element": "wind",
-      "cost": {
-        "mp": 60,
-        "lands_required": [
+		],
+		"effects": [],
+		"mystic_arts": [
+		  {
+			"name": "アームドプリンセスに変身",
+			"cost": 60,
+			"spell_id": 9051
+		  }
+		]
+	  }
+	},
+	{
+	  "id": 325,
+	  "name": "ダンピール",
+	  "rarity": "S",
+	  "type": "creature",
+	  "element": "wind",
+	  "cost": {
+		"mp": 60,
+		"lands_required": [
           "wind"
-        ]
-      },
-      "ap": 40,
-      "hp": 40,
-      "ability": "無効化・即死",
-      "ability_detail": "無効化[地]；即死[地・60%]",
-      "ability_parsed": {
-        "keywords": [
-          "無効化",
+		]
+	  },
+	  "ap": 40,
+	  "hp": 40,
+	  "ability": "無効化・即死",
+	  "ability_detail": "無効化[地]；即死[地・60%]",
+	  "ability_parsed": {
+		"keywords": [
+		  "無効化",
           "即死"
-        ],
-        "keyword_conditions": {
-          "無効化": {
-            "nullify_type": "element",
-            "element": "earth"
-          },
-          "即死": {
-            "condition_type": "enemy_is_element",
-            "elements": "earth",
-            "probability": 60
-          }
-        }
-      }
-    }
+		],
+		"keyword_conditions": {
+		  "無効化": {
+			"nullify_type": "element",
+			"element": "earth"
+		  },
+		  "即死": {
+			"condition_type": "enemy_is_element",
+			"elements": "earth",
+			"probability": 60
+		  }
+		}
+	  }
+	}
   ]
 }
