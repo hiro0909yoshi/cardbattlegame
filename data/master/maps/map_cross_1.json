@@ -3,10 +3,8 @@
   "name": "十字路",
   "description": "中央から4方向に分岐する十字型マップ",
   "tile_count": 23,
-  "lap_settings": {
-	"bonus_preset": "standard",
-	"checkpoint_preset": "three_way_new"
-  },
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "three_way_alt",
   "tiles": [
 	{
 	  "x": 28,

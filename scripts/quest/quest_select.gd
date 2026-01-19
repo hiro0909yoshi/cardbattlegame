@@ -30,6 +30,14 @@ var worlds = [
 			{"id": "stage_2_1", "name": "2-1 荒野の試練"},
 			{"id": "stage_2_2", "name": "2-2 テスト"}
 		]
+	},
+	{
+		"id": "world_test",
+		"name": "テスト - 開発用",
+		"stages": [
+			{"id": "stage_test_4p", "name": "ソロ4人対戦テスト"},
+			{"id": "stage_quest_4p", "name": "クエスト4人対戦テスト"}
+		]
 	}
 ]
 

@@ -202,6 +202,9 @@ func draw_card_for_player(player_id: int) -> Dictionary:
 	# 新システムを使用
 	var card_data = draw_card_data_v2(player_id)
 	if not card_data.is_empty():
+		# player_handsが未初期化の場合は初期化
+		if not player_hands.has(player_id):
+			player_hands[player_id] = {"data": []}
 		player_hands[player_id]["data"].append(card_data)
 		
 		emit_signal("card_drawn", card_data)
@@ -220,6 +223,9 @@ func draw_cards_for_player(player_id: int, count: int) -> Array:
 
 func deal_initial_hands_all_players(player_count: int):
 	for player_id in range(player_count):
+		# player_handsが未初期化の場合は初期化
+		if not player_hands.has(player_id):
+			player_hands[player_id] = {"data": []}
 		player_hands[player_id]["data"].clear()
 		
 		for i in range(INITIAL_HAND_SIZE):

@@ -3,27 +3,30 @@
   "name": "分岐の迷宮",
   "description": "分岐タイルテスト用ステージ。",
   "map_id": "map_branch_test",
-  "player_start_tile": 0,
-  "player_start_magic": 3500,
-  "enemies": [
-	{
-	  "player_id": 1,
-	  "character_id": "bowser",
-	  "deck_id": "balance_easy",
-	  "ai_profile_id": "normal",
-	  "start_tile": 0,
-	  "start_magic": 3500
-	}
-  ],
-  "win_condition": {
-	"type": "magic",
-	"target": 5000
+
+  "rule_preset": "quick",
+  "rule_overrides": {
+    "initial_magic": {"player": 3500, "cpu": 3500},
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {"type": "magic", "target": 5000, "timing": "checkpoint"}
+      ]
+    }
   },
-  "lose_condition": {
-	"type": "bankrupt"
-  },
-  "rewards": {
-	"first_clear": {"type": "gold", "amount": 1500},
-	"repeat": {"type": "gold", "amount": 300}
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "balance_easy",
+        "ai_level": 5,
+        "start_tile": 0
+      }
+    ],
+    "rewards": {
+      "first_clear": {"type": "gold", "amount": 1500},
+      "repeat": {"type": "gold", "amount": 300}
+    }
   }
 }

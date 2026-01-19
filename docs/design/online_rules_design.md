@@ -1,8 +1,8 @@
 # オンラインルール設計書
 
-**バージョン**: 1.0  
-**作成日**: 2025年1月19日  
-**ステータス**: 設計中
+**バージョン**: 1.1  
+**最終更新**: 2025年1月20日  
+**ステータス**: 実装中
 
 ---
 
@@ -14,6 +14,7 @@
 4. [カード制限](#カード制限)
 5. [JSONスキーマ](#jsonスキーマ)
 6. [game_constants.gd との対応](#game_constantsgd-との対応)
+7. [実装状況](#実装状況)
 
 ---
 
@@ -40,6 +41,8 @@ game_constants.gd（プリセット定義）
 マップJSON / ステージJSON（プリセット名で参照）
     ↓
 rule_overrides（オプション：カスタム値で上書き）
+    ↓
+StageLoader（プリセット取得・適用）
     ↓
 ゲーム実行
 ```
@@ -288,27 +291,35 @@ const CHECKPOINT_PRESETS = {
 
 ```json
 {
-    "id": "stage_1_1",
-    "name": "はじまりの草原",
-    "description": "最初の試練",
+    "id": "stage_quest_4p",
+    "name": "4人クエストテスト",
+    "description": "プレイヤー1名 + CPU3名のクエストテスト",
     "map_id": "map_diamond_20",
     
-    "rule_preset": "quick",
+    "rule_preset": "standard",
     "rule_overrides": {
-        "initial_magic": {"player": 3000, "cpu": 500},
-        "win_conditions": {
-            "mode": "all",
-            "conditions": [
-                {"type": "magic", "target": 4000, "timing": "checkpoint"}
-            ]
-        }
+        "initial_magic": {"player": 1000, "cpu": 1000}
     },
     
     "quest": {
         "enemies": [
             {
+                "character_id": "bowser",
+                "deck_id": "skills_test",
                 "ai_level": 3,
-                "deck_id": "deck_fire_basic"
+                "start_tile": 0
+            },
+            {
+                "character_id": "bowser",
+                "deck_id": "balance_easy",
+                "ai_level": 3,
+                "start_tile": 0
+            },
+            {
+                "character_id": "bowser",
+                "deck_id": "random",
+                "ai_level": 3,
+                "start_tile": 0
             }
         ],
         "rewards": {
@@ -358,40 +369,53 @@ const CHECKPOINT_PRESETS = {
 | `LAP_BONUS_PRESETS` | game_constants.gd | JSONからプリセット名で参照 |
 | `CHECKPOINT_PRESETS` | game_constants.gd | JSONからプリセット名で参照 |
 
-### 削除候補（現在のgame_constants.gd）
+### 取得関数
 
-| 定数 | 理由 |
-|------|------|
-| `INITIAL_MAGIC` | JSONで指定（プリセット経由） |
-| `TARGET_MAGIC` | JSONで指定（勝利条件として） |
-| `TOTAL_TILES` | 非推奨、マップJSONで定義 |
-| `TOLL_MAP_MULTIPLIER` | 未使用、将来はマップJSON |
-| `PASS_BONUS` | LAP_BONUS_PRESETSに統合 |
-| `START_BONUS` | LAP_BONUS_PRESETSに統合 |
-| `CHECKPOINT_BONUS` | LAP_BONUS_PRESETSに統合 |
+```gdscript
+# game_constants.gd
+
+static func get_initial_magic(preset_name: String) -> int:
+    var preset = RULE_PRESETS.get(preset_name, RULE_PRESETS["standard"])
+    return preset.get("initial_magic", 1000)
+
+static func get_win_conditions(preset_name: String) -> Dictionary:
+    var preset = RULE_PRESETS.get(preset_name, RULE_PRESETS["standard"])
+    return preset.get("win_conditions", {})
+
+static func get_lap_bonus(preset_name: String) -> int:
+    var preset = LAP_BONUS_PRESETS.get(preset_name, LAP_BONUS_PRESETS["standard"])
+    return preset.get("lap_bonus", 120)
+
+static func get_checkpoint_bonus(preset_name: String) -> int:
+    var preset = LAP_BONUS_PRESETS.get(preset_name, LAP_BONUS_PRESETS["standard"])
+    return preset.get("checkpoint_bonus", 100)
+
+static func get_required_checkpoints(preset_name: String) -> Array:
+    return CHECKPOINT_PRESETS.get(preset_name, CHECKPOINT_PRESETS["standard"])
+```
 
 ---
 
-## 実装ロードマップ
+## 実装状況
 
-### Phase 1: game_constants.gd 更新
-- [ ] RULE_PRESETS 追加
-- [ ] LAP_BONUS_PRESETS 更新（checkpoint_bonus追加）
-- [ ] 不要な定数を非推奨マーク
+### ✅ 実装済み
 
-### Phase 2: ローダー更新
-- [ ] StageLoader でプリセット読み込み対応
-- [ ] rule_overrides の適用処理
+- [x] game_constants.gd にプリセット定義追加
+  - [x] RULE_PRESETS
+  - [x] LAP_BONUS_PRESETS
+  - [x] CHECKPOINT_PRESETS
+- [x] プリセット取得関数
+- [x] StageLoader でプリセット読み込み対応
+- [x] rule_overrides の適用処理
+- [x] マップJSON 7種類（プリセット参照形式）
+- [x] ステージJSON 10種類（プリセット参照形式）
+- [x] 旧形式との後方互換性
 
-### Phase 3: 勝利条件システム
-- [ ] WinConditionChecker クラス作成
-- [ ] 各条件タイプの判定実装
-- [ ] timing に応じた判定タイミング制御
+### 🚧 未実装
 
-### Phase 4: カード制限システム
-- [ ] CardRestrictionChecker クラス作成
-- [ ] デッキ構築時のバリデーション
-- [ ] ゲーム中のカード使用チェック
+- [ ] 勝利条件システム（WinConditionChecker）
+- [ ] カード制限システム（CardRestrictionChecker）
+- [ ] オンライン対戦ルーム
 
 ---
 
@@ -399,7 +423,7 @@ const CHECKPOINT_PRESETS = {
 
 - [マップシステム仕様](map_system.md) - 地形・タイル・移動の仕様
 - [クエストシステム設計](quest_system_design.md) - ソロクエスト専用の仕様
-- [CPU AI設計](cpu_ai_design.md) - CPUの行動ロジック
+- [CPU AI設計](cpu_ai/cpu_ai_design.md) - CPUの行動ロジック
 
 ---
 
@@ -408,3 +432,4 @@ const CHECKPOINT_PRESETS = {
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 1.0 | 2025/01/19 | 初版作成 |
+| 1.1 | 2025/01/20 | 実装状況更新、取得関数の例を追加 |

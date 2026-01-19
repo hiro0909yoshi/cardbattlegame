@@ -3,10 +3,9 @@
   "name": "ダイヤモンド型",
   "description": "基本のダイヤモンド型マップ。20マス。",
   "tile_count": 20,
-  "lap_settings": {
-	"bonus_preset": "standard",
-	"checkpoint_preset": "standard"
-  },
+  "loop_size": 20,
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "standard",
   "tiles": [
 	{"index": 0, "type": "Checkpoint", "x": 0, "z": 0, "checkpoint_type": "N"},
 	{"index": 1, "type": "Neutral", "x": 4, "z": 0},
@@ -29,6 +28,9 @@
 	{"index": 18, "type": "Earth", "x": 0, "z": 8},
 	{"index": 19, "type": "Earth", "x": 0, "z": 4}
   ],
-  "connections": {},
-  "loop_size": 20
+  "connections": {
+	"0": [19, 1,],
+	"19": [18, 0,],
+  }
+  
 }

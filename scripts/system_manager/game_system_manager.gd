@@ -179,6 +179,10 @@ func phase_3_setup_basic_config() -> void:
 	if player_system:
 		player_system.initialize_players(player_count)
 	
+	# CardSystemを正しいプレイヤー数で再初期化
+	if card_system and card_system.has_method("_initialize_decks"):
+		card_system._initialize_decks(player_count)
+	
 	# BoardSystem3D基本設定
 	if board_system_3d and camera_3d:
 		# カメラ参照を最初に設定（重要：collect_players()内で使用される）
@@ -444,6 +448,11 @@ func _setup_lap_system() -> void:
 	lap_system.name = "LapSystem"
 	game_flow_manager.add_child(lap_system)
 	game_flow_manager.set_lap_system(lap_system)
+	
+	# システム参照を設定
+	lap_system.player_system = player_system
+	lap_system.ui_manager = ui_manager
+	lap_system._setup_ui()
 	
 	# board_system_3dを設定してシグナル接続
 	if board_system_3d:

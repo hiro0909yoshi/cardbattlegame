@@ -4,6 +4,8 @@ class_name StageLoader
 # ステージ読み込み・マップ生成クラス
 # JSONからステージデータを読み込み、動的にマップを生成する
 
+const GameConstants = preload("res://scripts/game_constants.gd")
+
 signal stage_loaded(stage_data: Dictionary)
 signal map_generated()
 
@@ -245,7 +247,8 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 
 ## プレイヤー数を取得
 func get_player_count() -> int:
-	return 1 + current_stage_data.get("enemies", []).size()
+	var enemies = _get_enemies()
+	return 1 + enemies.size()
 
 ## マップのループサイズを取得
 func get_loop_size() -> int:
@@ -254,29 +257,77 @@ func get_loop_size() -> int:
 ## player_is_cpu配列を生成
 func get_player_is_cpu() -> Array:
 	var result = [false]  # プレイヤー1は人間
-	var enemies = current_stage_data.get("enemies", [])
+	var enemies = _get_enemies()
 	for _enemy in enemies:
 		result.append(true)  # CPUとして追加
 	return result
 
-## 初期魔力を取得
+## 初期魔力を取得（プレイヤー用）
 func get_player_start_magic() -> int:
-	return current_stage_data.get("player_start_magic", 1000)
+	# 新形式: rule_overrides.initial_magic.player
+	var rule_overrides = current_stage_data.get("rule_overrides", {})
+	var initial_magic = rule_overrides.get("initial_magic", {})
+	if initial_magic is Dictionary and initial_magic.has("player"):
+		return initial_magic.get("player", 1000)
+	# 旧形式: player_start_magic
+	if current_stage_data.has("player_start_magic"):
+		return current_stage_data.get("player_start_magic", 1000)
+	# プリセットから取得
+	var rule_preset = current_stage_data.get("rule_preset", "standard")
+	return GameConstants.get_initial_magic(rule_preset)
 
 ## 敵の初期魔力を取得
 func get_enemy_start_magic(enemy_index: int) -> int:
-	var enemies = current_stage_data.get("enemies", [])
+	# 新形式: rule_overrides.initial_magic.cpu
+	var rule_overrides = current_stage_data.get("rule_overrides", {})
+	var initial_magic = rule_overrides.get("initial_magic", {})
+	if initial_magic is Dictionary and initial_magic.has("cpu"):
+		return initial_magic.get("cpu", 1000)
+	# 旧形式: enemies[].start_magic
+	var enemies = _get_enemies()
 	if enemy_index < enemies.size():
-		return enemies[enemy_index].get("start_magic", 1000)
-	return 1000
+		if enemies[enemy_index].has("start_magic"):
+			return enemies[enemy_index].get("start_magic", 1000)
+	# プリセットから取得
+	var rule_preset = current_stage_data.get("rule_preset", "standard")
+	return GameConstants.get_initial_magic(rule_preset)
 
 ## 勝利条件を取得
 func get_win_condition() -> Dictionary:
-	return current_stage_data.get("win_condition", {"type": "magic", "target": 8000})
+	# 新形式: rule_overrides.win_conditions
+	var rule_overrides = current_stage_data.get("rule_overrides", {})
+	if rule_overrides.has("win_conditions"):
+		return rule_overrides.get("win_conditions", {})
+	# 旧形式: win_condition
+	if current_stage_data.has("win_condition"):
+		# 旧形式を新形式に変換
+		var old_condition = current_stage_data.get("win_condition", {})
+		return {
+			"mode": "all",
+			"conditions": [
+				{
+					"type": old_condition.get("type", "magic"),
+					"target": old_condition.get("target", 8000),
+					"timing": "checkpoint"
+				}
+			]
+		}
+	# プリセットから取得
+	var rule_preset = current_stage_data.get("rule_preset", "standard")
+	return GameConstants.get_win_conditions(rule_preset)
+
+## 敵リストを取得（新旧形式対応）
+func _get_enemies() -> Array:
+	# 新形式: quest.enemies
+	var quest = current_stage_data.get("quest", {})
+	if quest.has("enemies"):
+		return quest.get("enemies", [])
+	# 旧形式: enemies
+	return current_stage_data.get("enemies", [])
 
 ## 敵キャラクター情報を取得
 func get_enemy_character(enemy_index: int) -> Dictionary:
-	var enemies = current_stage_data.get("enemies", [])
+	var enemies = _get_enemies()
 	if enemy_index >= enemies.size():
 		return {}
 	
@@ -284,16 +335,32 @@ func get_enemy_character(enemy_index: int) -> Dictionary:
 	var char_id = enemy.get("character_id", "")
 	return characters_data.get(char_id, {})
 
-## 敵のAIプロファイルIDを取得
+## 敵のAIレベルを取得
+func get_enemy_ai_level(enemy_index: int) -> int:
+	var enemies = _get_enemies()
+	if enemy_index < enemies.size():
+		# 新形式: ai_level
+		if enemies[enemy_index].has("ai_level"):
+			return enemies[enemy_index].get("ai_level", 3)
+		# 旧形式: ai_profile_id から推測（互換用）
+		var profile_id = enemies[enemy_index].get("ai_profile_id", "easy")
+		match profile_id:
+			"easy": return 3
+			"normal": return 5
+			"hard": return 7
+			_: return 3
+	return 3
+
+## 敵のAIプロファイルIDを取得（旧形式互換）
 func get_enemy_ai_profile_id(enemy_index: int) -> String:
-	var enemies = current_stage_data.get("enemies", [])
+	var enemies = _get_enemies()
 	if enemy_index < enemies.size():
 		return enemies[enemy_index].get("ai_profile_id", "easy")
 	return "easy"
 
 ## 敵のデッキIDを取得
 func get_enemy_deck_id(enemy_index: int) -> String:
-	var enemies = current_stage_data.get("enemies", [])
+	var enemies = _get_enemies()
 	if enemy_index < enemies.size():
 		return enemies[enemy_index].get("deck_id", "random")
 	return "random"

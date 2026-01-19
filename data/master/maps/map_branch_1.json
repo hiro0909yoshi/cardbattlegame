@@ -3,10 +3,8 @@
   "name": "新しいマップ",
   "description": "",
   "tile_count": 34,
-  "lap_settings": {
-	"bonus_preset": "standard",
-	"checkpoint_preset": "standard"
-  },
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "standard",
   "tiles": [
 	{
 	  "x": 28,

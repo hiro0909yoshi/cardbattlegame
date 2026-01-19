@@ -1,0 +1,38 @@
+{
+  "id": "stage_test_4p",
+  "name": "4人対戦テスト",
+  "description": "プレイヤー1名 + CPU3名のテスト用ステージ",
+  "map_id": "map_diamond_20",
+
+  "rule_preset": "standard",
+  "rule_overrides": {
+	"initial_magic": {"player": 1000, "cpu": 1000}
+  },
+
+  "quest": {
+	"enemies": [
+	  {
+		"character_id": "bowser",
+		"deck_id": "random",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "random",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "random",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	],
+	"rewards": {
+	  "first_clear": {"type": "gold", "amount": 500},
+	  "repeat": {"type": "gold", "amount": 100}
+	}
+  }
+}

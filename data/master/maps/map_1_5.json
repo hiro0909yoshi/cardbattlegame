@@ -3,10 +3,8 @@
   "name": "8の字マップ",
   "description": "ワープストップ、ギブ系置き。中央から2つのループが繋がる8の字型マップ",
   "tile_count": 39,
-  "lap_settings": {
-	"bonus_preset": "standard",
-	"checkpoint_preset": "standard"
-  },
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "standard",
   "tiles": [
 	{
 	  "x": 20,

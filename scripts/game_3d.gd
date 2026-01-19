@@ -7,8 +7,8 @@ extends Node
 var system_manager: GameSystemManager
 var stage_loader: StageLoader
 
-# ソロバトルはデフォルトでstage_1_1を使用
-var stage_id: String = "stage_1_1"
+# ソロバトルはデフォルトでstage_test_4pを使用（4人対戦テスト）
+var stage_id: String = "stage_test_4p"
 
 # 設定（StageLoaderから取得）
 var player_count: int = 2
@@ -103,8 +103,8 @@ func _create_player_characters(container: Node3D):
 			mario.set_script(movement_script)
 		container.add_child(mario)
 	
-	# CPU敵
-	var enemies = stage_loader.current_stage_data.get("enemies", [])
+	# CPU敵（新旧形式両対応）
+	var enemies = stage_loader._get_enemies()
 	for i in range(enemies.size()):
 		var char_data = stage_loader.get_enemy_character(i)
 		var model_path = char_data.get("model_path", "res://scenes/Characters/Bowser.tscn")
@@ -133,8 +133,8 @@ func _apply_stage_settings():
 		var player_magic = stage_loader.get_player_start_magic()
 		system_manager.player_system.set_magic(0, player_magic)
 		
-		# CPU敵
-		var enemies = stage_loader.current_stage_data.get("enemies", [])
+		# CPU敵（新旧形式両対応）
+		var enemies = stage_loader._get_enemies()
 		for i in range(enemies.size()):
 			var enemy_magic = stage_loader.get_enemy_start_magic(i)
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
@@ -179,4 +179,3 @@ func _setup_all_decks():
 		system_manager.card_system.set_deck_for_player(player_id, deck_data)
 		system_manager.card_system.deal_initial_hand_for_player(player_id)
 		print("[Game3D] Player %d: ブック%d 設定完了 (%d種類)" % [player_id, GameData.selected_deck_index + 1, cards_dict.size()])
-

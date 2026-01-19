@@ -62,8 +62,8 @@ func initialize_players(player_count: int):
 		player.id = i
 		player.name = "プレイヤー" + str(i + 1)
 		player.current_tile = 0
-		player.magic_power = GameConstants.INITIAL_MAGIC
-		player.target_magic = GameConstants.TARGET_MAGIC
+		player.magic_power = GameConstants.DEFAULT_INITIAL_MAGIC
+		player.target_magic = GameConstants.DEFAULT_TARGET_MAGIC
 		player.color = GameConstants.PLAYER_COLORS[i % GameConstants.PLAYER_COLORS.size()]
 		player.piece_node = null  # 3D駒は後で設定
 		

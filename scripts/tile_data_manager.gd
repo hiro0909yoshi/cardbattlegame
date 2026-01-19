@@ -171,10 +171,9 @@ func calculate_toll(tile_index: int, map_id: String = "") -> int:
 	# 実際の連鎖ボーナスを計算
 	var chain_bonus = calculate_chain_bonus(tile_index, tile.owner_id)
 	
-	# マップ係数を取得
+	# マップ係数を取得（将来的にはマップJSONから読み込み）
 	var map_mult = 1.0
-	if map_id != "" and GameConstants.TOLL_MAP_MULTIPLIER.has(map_id):
-		map_mult = GameConstants.TOLL_MAP_MULTIPLIER[map_id]
+	# TODO: マップJSONからtoll_multiplierを読み込む
 	
 	# 計算実行
 	var raw_toll = base * element_mult * level_mult * chain_bonus * map_mult

@@ -184,8 +184,10 @@ func create_ui(parent: Node):
 	
 	# 各コンポーネントを初期化（3D版対応）
 	if player_info_panel and player_info_panel.has_method("initialize"):
+		# プレイヤー数を取得
+		var player_count = player_system_ref.players.size() if player_system_ref else 2
 		# 3D版の場合、board_systemは渡さずに初期化
-		player_info_panel.initialize(ui_layer, player_system_ref, null)
+		player_info_panel.initialize(ui_layer, player_system_ref, null, player_count)
 		# 3D版のboard_systemを手動で設定（プロパティとして直接設定）
 		player_info_panel.set("board_system_ref", board_system_ref)
 		# 初期化後にパネルの状態を確認

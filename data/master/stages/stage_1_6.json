@@ -3,27 +3,30 @@
   "name": "迷路の試練",
   "description": "内部に分岐とワープがある複雑なマップ",
   "map_id": "map_1_6",
-  "player_start_tile": 0,
-  "player_start_magic": 3000,
-  "enemies": [
-	{
-	  "player_id": 1,
-	  "character_id": "bowser",
-	  "deck_id": "skills_test",
-	  "ai_profile_id": "easy",
-	  "start_tile": 0,
-	  "start_magic": 3000
-	}
-  ],
-  "win_condition": {
-	"type": "magic",
-	"target": 4000
+
+  "rule_preset": "quick",
+  "rule_overrides": {
+    "initial_magic": {"player": 3000, "cpu": 3000},
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {"type": "magic", "target": 4000, "timing": "checkpoint"}
+      ]
+    }
   },
-  "lose_condition": {
-	"type": "bankrupt"
-  },
-  "rewards": {
-	"first_clear": {"type": "gold", "amount": 2000},
-	"repeat": {"type": "gold", "amount": 400}
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "skills_test",
+        "ai_level": 3,
+        "start_tile": 0
+      }
+    ],
+    "rewards": {
+      "first_clear": {"type": "gold", "amount": 2000},
+      "repeat": {"type": "gold", "amount": 400}
+    }
   }
 }

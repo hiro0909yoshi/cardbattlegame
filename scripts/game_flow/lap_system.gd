@@ -23,7 +23,8 @@ var board_system_3d = null
 var ui_manager = null
 
 ## マップ設定（動的に変更可能）
-var base_bonus: int = 120  # 基礎ボーナス（デフォルト: standard）
+var base_bonus: int = 120  # 周回ボーナス（デフォルト: standard）
+var checkpoint_bonus: int = 100  # チェックポイント通過ボーナス（デフォルト: standard）
 var required_checkpoints: Array = ["N", "S"]  # 必要シグナル（デフォルト: standard）
 
 ## UI要素（シグナル表示用ラベルのみ）
@@ -107,26 +108,32 @@ func initialize_lap_state(player_count: int):
 
 ## マップ設定を適用
 func apply_map_settings(map_data: Dictionary):
-	var lap_settings = map_data.get("lap_settings", {})
+	# 新形式: lap_bonus_preset / checkpoint_preset
+	# 旧形式: lap_settings.bonus_preset / lap_settings.checkpoint_preset
+	var lap_bonus_preset: String
+	var checkpoint_preset: String
 	
-	# 基礎ボーナス設定
-	var bonus_preset = lap_settings.get("bonus_preset", "standard")
-	if GameConstants.LAP_BONUS_PRESETS.has(bonus_preset):
-		base_bonus = GameConstants.LAP_BONUS_PRESETS[bonus_preset]
+	if map_data.has("lap_bonus_preset"):
+		# 新形式
+		lap_bonus_preset = map_data.get("lap_bonus_preset", "standard")
+		checkpoint_preset = map_data.get("checkpoint_preset", "standard")
 	else:
-		base_bonus = GameConstants.LAP_BONUS_PRESETS["standard"]
+		# 旧形式（後方互換）
+		var lap_settings = map_data.get("lap_settings", {})
+		lap_bonus_preset = lap_settings.get("bonus_preset", "standard")
+		checkpoint_preset = lap_settings.get("checkpoint_preset", "standard")
 	
-	# 必要シグナル設定
-	var checkpoint_preset = lap_settings.get("checkpoint_preset", "standard")
-	if GameConstants.CHECKPOINT_PRESETS.has(checkpoint_preset):
-		required_checkpoints = GameConstants.CHECKPOINT_PRESETS[checkpoint_preset].duplicate()
-	else:
-		required_checkpoints = GameConstants.CHECKPOINT_PRESETS["standard"].duplicate()
+	# プリセットからボーナス値を取得
+	base_bonus = GameConstants.get_lap_bonus(lap_bonus_preset)
+	checkpoint_bonus = GameConstants.get_checkpoint_bonus(lap_bonus_preset)
+	
+	# 必要シグナルを取得
+	required_checkpoints = GameConstants.get_required_checkpoints(checkpoint_preset)
 	
 	# プレイヤー状態を新しいシグナル設定で再初期化
 	_reinitialize_player_states()
 	
-	print("[LapSystem] マップ設定適用 - 基礎ボーナス: %d, 必要シグナル: %s" % [base_bonus, required_checkpoints])
+	print("[LapSystem] マップ設定適用 - 周回ボーナス: %d, CP通過ボーナス: %d, 必要シグナル: %s" % [base_bonus, checkpoint_bonus, required_checkpoints])
 
 ## プレイヤー状態を現在のrequired_checkpointsで再初期化
 func _reinitialize_player_states():
@@ -170,11 +177,11 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 		print("[LapSystem] プレイヤー%d: シグナル %s は既に取得済み" % [player_id + 1, checkpoint_type])
 		return
 	
-	# シグナル取得 - 基礎ボーナス付与
+	# シグナル取得 - チェックポイント通過ボーナス付与
 	player_lap_state[player_id][checkpoint_type] = true
 	if player_system:
-		player_system.add_magic(player_id, base_bonus)
-		print("[シグナル取得] プレイヤー%d: %s 魔力+%d" % [player_id + 1, checkpoint_type, base_bonus])
+		player_system.add_magic(player_id, checkpoint_bonus)
+		print("[シグナル取得] プレイヤー%d: %s 魔力+%d" % [player_id + 1, checkpoint_type, checkpoint_bonus])
 	
 	# シグナル発行
 	checkpoint_signal_obtained.emit(player_id, checkpoint_type)
@@ -192,7 +199,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	_show_signal_display(checkpoint_type)
 	
 	# UI表示: 魔力ボーナスのコメント（クリック待ち）
-	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\n魔力 +%d G" % [checkpoint_type, base_bonus], player_id)
+	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\n魔力 +%d G" % [checkpoint_type, checkpoint_bonus], player_id)
 	
 	# 勝利判定（シグナル取得時に魔力が目標以上なら勝利）
 	if _check_win_condition(player_id):

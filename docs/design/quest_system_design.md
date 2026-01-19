@@ -1,7 +1,7 @@
 # クエストシステム設計書
 
-**バージョン**: 1.2  
-**最終更新**: 2025年1月19日  
+**バージョン**: 1.3  
+**最終更新**: 2025年1月20日  
 **ステータス**: 実装中
 
 ---
@@ -12,9 +12,10 @@
 2. [システム構成](#システム構成)
 3. [ディレクトリ構造](#ディレクトリ構造)
 4. [JSONスキーマ設計](#jsonスキーマ設計)
-5. [CPU AI設計](#cpu-ai設計)
-6. [実装状況](#実装状況)
-7. [将来のサーバー移行](#将来のサーバー移行)
+5. [4人対戦対応](#4人対戦対応)
+6. [CPU AI設計](#cpu-ai設計)
+7. [実装状況](#実装状況)
+8. [将来のサーバー移行](#将来のサーバー移行)
 
 ---
 
@@ -31,16 +32,16 @@
 | ステージ数 | 20以上 |
 | マップ種類 | 10種類（使い回し） |
 | 敵キャラ | 10種類（使い回し） |
-| プレイヤー構成 | 1人 vs CPU 1〜3体 |
+| プレイヤー構成 | 1人 vs CPU 1〜3体（最大4人対戦） |
 | 進行方式 | ワールド制（1-1 → 1-2 → 1-3、並行して2-1 → 2-2等） |
 
 ### 既存システムとの関係
 
 ```
 MainMenu
-├── ソロバトル → Main.tscn（テスト環境、StageLoaderを使用）
-└── クエスト → StageSelect.tscn
-			  └── Quest.tscn（動的にマップ生成）
+├── ソロバトル → Main.tscn（game_3d.gd、テスト環境）
+└── クエスト → StageSelect.tscn（quest_select.gd）
+			  └── Quest.tscn（quest_game.gd、動的にマップ生成）
 ```
 
 ### 関連ドキュメント
@@ -87,6 +88,8 @@ data/
 │   ├── stages/
 │   │   ├── stage_1_1.json           # ステージ定義
 │   │   ├── stage_1_2.json
+│   │   ├── stage_test_4p.json       # ソロ4人対戦テスト
+│   │   ├── stage_quest_4p.json      # クエスト4人対戦テスト
 │   │   └── ...
 │   ├── maps/
 │   │   ├── map_diamond_20.json
@@ -94,7 +97,8 @@ data/
 │   ├── characters/
 │   │   └── characters.json          # 全CPUキャラ定義
 │   ├── decks/
-│   │   ├── deck_fire_basic.json
+│   │   ├── deck_balance_easy.json
+│   │   ├── deck_skills_test.json
 │   │   └── ...
 │   └── ai_profiles/
 │       ├── easy.json
@@ -137,27 +141,33 @@ data/
 
 ```json
 {
-  "id": "stage_1_1",
-  "name": "はじまりの草原",
-  "description": "最初の試練。基本を学ぼう。",
+  "id": "stage_quest_4p",
+  "name": "4人クエストテスト",
+  "description": "プレイヤー1名 + CPU3名のクエストテスト",
   "map_id": "map_diamond_20",
-  
-  "rule_preset": "quick",
+
+  "rule_preset": "standard",
   "rule_overrides": {
-	"initial_magic": {"player": 3000, "cpu": 500},
-	"win_conditions": {
-	  "mode": "all",
-	  "conditions": [
-		{"type": "magic", "target": 4000, "timing": "checkpoint"}
-	  ]
-	}
+	"initial_magic": {"player": 1000, "cpu": 1000}
   },
-  
+
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "goblin",
-		"deck_id": "deck_fire_basic",
+		"character_id": "bowser",
+		"deck_id": "skills_test",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "balance_easy",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "random",
 		"ai_level": 3,
 		"start_tile": 0
 	  }
@@ -172,12 +182,25 @@ data/
 
 #### フィールド説明
 
-| フィールド | 説明 |
-|-----------|------|
-| `map_id` | 使用するマップのID |
-| `rule_preset` | ルールプリセット名（game_constants.gdから） |
-| `rule_overrides` | プリセットを上書きするカスタム設定（オプション） |
-| `quest` | ソロクエスト専用データ |
+| フィールド | 必須 | 説明 |
+|-----------|:----:|------|
+| `id` | ✓ | ステージ識別子 |
+| `name` | | ステージ名（表示用） |
+| `description` | | 説明文 |
+| `map_id` | ✓ | 使用するマップのID |
+| `rule_preset` | | ルールプリセット名（デフォルト: "standard"） |
+| `rule_overrides` | | プリセットを上書きするカスタム設定 |
+| `quest` | | ソロクエスト専用データ |
+| `quest.enemies` | | CPU敵の配列（1〜3体） |
+
+#### 敵（enemies）の設定
+
+| フィールド | 必須 | 説明 |
+|-----------|:----:|------|
+| `character_id` | ✓ | キャラクターID（characters.jsonから） |
+| `deck_id` | | デッキID（"random"でランダムデッキ） |
+| `ai_level` | | AIレベル（1-10、デフォルト: 3） |
+| `start_tile` | | 開始タイル（デフォルト: 0） |
 
 #### ルール関連
 
@@ -190,17 +213,17 @@ data/
 ```json
 {
   "characters": {
+	"bowser": {
+	  "name": "クッパ",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "res://assets/portraits/bowser.png",
+	  "description": "強力な敵キャラ"
+	},
 	"goblin": {
 	  "name": "ゴブリン",
 	  "model_path": "res://scenes/Characters/Goblin.tscn",
 	  "portrait_path": "res://assets/portraits/goblin.png",
 	  "description": "小さいが凶暴な魔物"
-	},
-	"knight": {
-	  "name": "騎士",
-	  "model_path": "res://scenes/Characters/Knight.tscn",
-	  "portrait_path": "res://assets/portraits/knight.png",
-	  "description": "正義を信じる戦士"
 	}
   }
 }
@@ -212,13 +235,15 @@ data/
 
 ```json
 {
-  "id": "deck_fire_basic",
-  "name": "炎の基本デッキ",
-  "description": "火属性中心の攻撃的デッキ",
+  "id": "balance_easy",
+  "name": "バランスデッキ（初級）",
+  "description": "各属性均等・低コストのバランス型デッキ",
   "cards": [
-	{"id": 1, "count": 3},
-	{"id": 5, "count": 2},
-	{"id": 12, "count": 4}
+	{"id": 217, "count": 2},
+	{"id": 218, "count": 2},
+	{"id": 305, "count": 2},
+	{"id": 306, "count": 2},
+	{"id": 2033, "count": 4}
   ]
 }
 ```
@@ -268,6 +293,51 @@ data/
 
 ---
 
+## 4人対戦対応
+
+### プレイヤー数の決定
+
+プレイヤー数はステージJSONの`quest.enemies`配列のサイズで決まります。
+
+```
+プレイヤー数 = 1（人間） + enemies.size()（CPU）
+```
+
+| enemies数 | プレイヤー数 | 構成 |
+|-----------|------------|------|
+| 1 | 2 | 人間1 + CPU1 |
+| 2 | 3 | 人間1 + CPU2 |
+| 3 | 4 | 人間1 + CPU3 |
+
+### CPUごとのデッキ設定
+
+各CPUに異なるデッキを設定できます。
+
+```json
+"enemies": [
+  {"character_id": "bowser", "deck_id": "skills_test"},
+  {"character_id": "bowser", "deck_id": "balance_easy"},
+  {"character_id": "bowser", "deck_id": "random"}
+]
+```
+
+| deck_id | 動作 |
+|---------|------|
+| `"random"` | デフォルトデッキ（ID 1-12を各3枚） |
+| `"XXX"` | `deck_XXX.json`から読み込み |
+
+### 実装箇所
+
+| ファイル | 役割 |
+|---------|------|
+| `stage_loader.gd` | プレイヤー数計算、デッキ読み込み |
+| `quest_game.gd` | CPUキャラクター作成、デッキ設定 |
+| `game_system_manager.gd` | CardSystem/PlayerSystem初期化 |
+| `card_system.gd` | プレイヤーごとのデッキ管理 |
+| `ui_manager.gd` | プレイヤー情報パネル作成 |
+
+---
+
 ## CPU AI設計
 
 ### 既存実装
@@ -285,7 +355,7 @@ player_is_cpu = [false, true]
 debug_manual_control_all = true  # CPUも手動操作可能
 
 # クエストモード
-player_is_cpu = [false, true, true, true]
+player_is_cpu = [false, true, true, true]  # 4人対戦
 debug_manual_control_all = false  # CPUはAI任せ
 ```
 
@@ -306,20 +376,22 @@ debug_manual_control_all = false  # CPUはAI任せ
 - [x] ディレクトリ構造
 - [x] StageLoader（JSON読み込み・マップ生成）
 - [x] QuestGame（クエスト用ゲーム管理）
-- [x] マップJSON（map_diamond_20等）
-- [x] ステージJSON（stage_1_1〜stage_2_2）
+- [x] マップJSON（7種類）
+- [x] ステージJSON（8種類 + テスト用2種類）
 - [x] キャラクターJSON
 - [x] AIプロファイルJSON（easy）
-- [x] デッキJSON
+- [x] デッキJSON（2種類）
+- [x] **4人対戦対応**
+- [x] **CPUごとのデッキ設定**
+- [x] **プレイヤー情報パネル動的生成**
+- [x] **プリセットベース設定システム**
 
 ### 🚧 未実装
 
-- [ ] ステージ選択UI
 - [ ] ワールド選択UI
 - [ ] 報酬システム
 - [ ] 進行状況保存
 - [ ] AIプロファイル適用（難易度調整）
-- [ ] ルールプリセット対応（game_constants.gd更新）
 
 ---
 
@@ -366,3 +438,4 @@ func load_stage(stage_id: String) -> Dictionary:
 | 1.0 | 2025/12/15 | 初版作成 |
 | 1.1 | 2025/12/16 | マップJSONスキーマにlap_settings追加 |
 | 1.2 | 2025/01/19 | ルール関連をonline_rules_design.mdに分離、ステージJSON構造を更新 |
+| 1.3 | 2025/01/20 | 4人対戦対応、CPUごとのデッキ設定、実装状況更新 |

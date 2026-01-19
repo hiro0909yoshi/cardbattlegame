@@ -3,10 +3,8 @@
   "name": "迷路マップ",
   "description": "説明的なマップ、カードバイ、ギブ、魔法ギブ、通過型ワープ",
   "tile_count": 33,
-  "lap_settings": {
-	"bonus_preset": "standard",
-	"checkpoint_preset": "three_way_new"
-  },
+  "lap_bonus_preset": "standard",
+  "checkpoint_preset": "three_way_alt",
   "tiles": [
 	{
 	  "x": 0,
