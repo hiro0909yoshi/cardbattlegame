@@ -1,6 +1,9 @@
 extends Node3D
 class_name BaseTile
 
+# 定数参照
+const GameConstants = preload("res://scripts/game_constants.gd")
+
 # 静的参照（全タイル共通）
 static var creature_manager: CreatureManager = null
 static var tile_info_display: TileInfoDisplay = null  # 通行料ラベル更新用
@@ -34,13 +37,14 @@ var creature_data: Dictionary:
 		# 3Dカードの同期
 		_sync_creature_card_3d(value)
 
-# owner_id プロパティ（setterで通行料ラベルも自動同期）
+# owner_id プロパティ（setterで通行料ラベル・枠発光も自動同期）
 var owner_id: int:
 	get:
 		return _owner_id
 	set(value):
 		_owner_id = value
 		_sync_tile_info_display()
+		_update_frame_glow()
 
 # level プロパティ（setterで通行料ラベルも自動同期）
 var level: int:
@@ -253,6 +257,44 @@ func update_visual():
 		
 		# レベルに応じた明度調整
 		mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, (level - 1) * 0.1)
+	
+	# 枠発光も更新
+	_update_frame_glow()
+
+# 枠発光更新（所有者に応じて発光）
+func _update_frame_glow():
+	# frameノードを検索（GLBインスタンスの子にMeshInstance3Dがある）
+	var frame_node = get_node_or_null("frame")
+	if not frame_node:
+		return
+	
+	# frameの子からMeshInstance3Dを探す
+	var mesh_instance: MeshInstance3D = null
+	for child in frame_node.get_children():
+		if child is MeshInstance3D:
+			mesh_instance = child
+			break
+	
+	if not mesh_instance:
+		return
+	
+	# マテリアルを取得または作成
+	if not mesh_instance.material_override:
+		mesh_instance.material_override = StandardMaterial3D.new()
+	
+	var mat = mesh_instance.material_override as StandardMaterial3D
+	
+	if owner_id == -1:
+		# 未所有: 発光なし
+		mat.emission_enabled = false
+		mat.albedo_color = Color(0.3, 0.3, 0.3)  # 暗めのグレー
+	else:
+		# 所有者あり: プレイヤー色で発光
+		var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
+		mat.albedo_color = player_color
+		mat.emission_enabled = true
+		mat.emission = player_color
+		mat.emission_energy_multiplier = 1.5  # 発光の強さ
 
 # 属性連鎖数を取得（子クラスでオーバーライド可能）
 func get_chain_count(_board_system) -> int:
