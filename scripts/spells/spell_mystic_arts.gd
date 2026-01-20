@@ -39,6 +39,16 @@ var confirmation_target_type: String = ""
 var confirmation_target_info: Dictionary = {}
 var confirmation_target_data: Dictionary = {}
 
+# 使用者選択用
+var _is_selecting_caster: bool = false
+var _available_caster_creatures: Array = []
+var _current_caster_index: int = 0
+
+
+# ============ 定数 ============
+
+const TapTargetManager = preload("res://scripts/ui_components/tap_target_manager.gd")
+
 
 # ============ 初期化 ============
 
@@ -109,7 +119,199 @@ func _select_creature(available_creatures: Array) -> void:
 		_end_mystic_phase()
 		return
 	
-	# ActionMenuUI を取得または作成
+	# 使用者選択用の状態を保存
+	_available_caster_creatures = available_creatures
+	_current_caster_index = 0
+	_is_selecting_caster = true
+	
+	# TapTargetManagerでタップ選択を開始
+	_start_caster_tap_selection(available_creatures)
+	
+	# グローバルナビゲーション設定
+	_setup_caster_selection_navigation()
+	
+	# 最初のクリーチャーを表示
+	_update_caster_selection()
+
+
+## 使用者選択用のタップ選択を開始
+func _start_caster_tap_selection(available_creatures: Array) -> void:
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	ttm.set_current_player(current_mystic_player_id)
+	
+	# シグナル接続（重複防止）
+	if not ttm.target_selected.is_connected(_on_caster_tap_selected):
+		ttm.target_selected.connect(_on_caster_tap_selected)
+	
+	# 有効なタイルインデックスを抽出
+	var valid_tile_indices: Array = []
+	for creature in available_creatures:
+		var tile_index = creature.get("tile_index", -1)
+		if tile_index >= 0:
+			valid_tile_indices.append(tile_index)
+	
+	ttm.start_selection(
+		valid_tile_indices,
+		TapTargetManager.SelectionType.CREATURE,
+		"SpellMysticArts_Caster"
+	)
+
+
+## 使用者タップ選択を終了
+func _end_caster_tap_selection() -> void:
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	
+	# シグナル切断
+	if ttm.target_selected.is_connected(_on_caster_tap_selected):
+		ttm.target_selected.disconnect(_on_caster_tap_selected)
+	
+	ttm.end_selection()
+
+
+## タップで使用者が選択された時
+func _on_caster_tap_selected(tile_index: int, _creature_data: Dictionary) -> void:
+	if not _is_selecting_caster:
+		return
+	
+	# 該当するクリーチャーを探す
+	for i in range(_available_caster_creatures.size()):
+		var creature = _available_caster_creatures[i]
+		if creature.get("tile_index", -1) == tile_index:
+			_current_caster_index = i
+			_update_caster_selection()
+			return
+
+
+## 使用者選択のナビゲーション設定
+func _setup_caster_selection_navigation() -> void:
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if not ui_manager:
+		return
+	
+	ui_manager.enable_navigation(
+		func(): _confirm_caster_selection(),  # 決定
+		func(): _cancel_caster_selection(),   # 戻る
+		func(): _prev_caster(),               # 上
+		func(): _next_caster()                # 下
+	)
+
+
+## 使用者選択を更新
+func _update_caster_selection() -> void:
+	if _available_caster_creatures.is_empty():
+		return
+	
+	var creature = _available_caster_creatures[_current_caster_index]
+	var tile_index = creature.get("tile_index", -1)
+	
+	# カメラフォーカス
+	_focus_camera_on_creature(creature)
+	
+	# 選択マーカー表示
+	if spell_phase_handler_ref:
+		TargetSelectionHelper.show_selection_marker(spell_phase_handler_ref, tile_index)
+	
+	# クリーチャー情報パネル表示
+	var creature_data = creature.get("creature_data", {})
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if ui_manager and ui_manager.creature_info_panel_ui:
+		ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+	
+	# フェーズラベル更新
+	if ui_manager and ui_manager.phase_label:
+		var name_text = creature_data.get("name", "Unknown")
+		ui_manager.phase_label.text = "秘術を使うクリーチャー: %s (%d/%d)" % [
+			name_text, _current_caster_index + 1, _available_caster_creatures.size()
+		]
+
+
+## 使用者選択を確定
+func _confirm_caster_selection() -> void:
+	if not _is_selecting_caster or _available_caster_creatures.is_empty():
+		return
+	
+	_is_selecting_caster = false
+	_end_caster_tap_selection()
+	
+	var selected_creature = _available_caster_creatures[_current_caster_index]
+	
+	# クリーチャー情報パネルを閉じる
+	_hide_creature_info_panel()
+	
+	# 選択マーカーを非表示
+	if spell_phase_handler_ref:
+		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
+	
+	# 秘術選択に進む
+	await _select_mystic_art_from_creature_tap(selected_creature)
+
+
+## 使用者選択をキャンセル
+func _cancel_caster_selection() -> void:
+	_is_selecting_caster = false
+	_end_caster_tap_selection()
+	
+	# クリーチャー情報パネルを閉じる
+	_hide_creature_info_panel()
+	
+	# 選択マーカーを非表示
+	if spell_phase_handler_ref:
+		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
+	
+	# ナビゲーションを無効化
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if ui_manager:
+		ui_manager.disable_navigation()
+	
+	# スペルフェーズに戻る
+	if spell_phase_handler_ref:
+		spell_phase_handler_ref._return_to_spell_selection()
+	_end_mystic_phase()
+
+
+## 前の使用者へ
+func _prev_caster() -> void:
+	if _available_caster_creatures.size() <= 1:
+		return
+	_current_caster_index = (_current_caster_index - 1 + _available_caster_creatures.size()) % _available_caster_creatures.size()
+	_update_caster_selection()
+
+
+## 次の使用者へ
+func _next_caster() -> void:
+	if _available_caster_creatures.size() <= 1:
+		return
+	_current_caster_index = (_current_caster_index + 1) % _available_caster_creatures.size()
+	_update_caster_selection()
+
+
+## 秘術選択（タップ対応版） - ActionMenuUIを使用
+func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void:
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if not ui_manager:
+		_end_mystic_phase()
+		return
+	
+	var mystic_arts = selected_creature.get("mystic_arts", [])
+	
+	if mystic_arts.is_empty():
+		_end_mystic_phase()
+		return
+	
+	# 秘術が1つだけなら自動選択
+	if mystic_arts.size() == 1:
+		await _select_target(selected_creature, mystic_arts[0])
+		return
+	
+	# 複数の秘術がある場合はActionMenuUIで選択
 	var action_menu = ui_manager.get_node_or_null("MysticActionMenu")
 	if not action_menu:
 		var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
@@ -120,64 +322,9 @@ func _select_creature(available_creatures: Array) -> void:
 		action_menu = ActionMenuUIClass.new()
 		action_menu.name = "MysticActionMenu"
 		action_menu.set_ui_manager(ui_manager)
-		action_menu.set_menu_size(650, 850, 130, 44, 40)  # 領地コマンドと同じサイズ
-		action_menu.set_position_left(false)  # 右側（上下ボタンの左側）に配置
+		action_menu.set_menu_size(650, 850, 130, 44, 40)
+		action_menu.set_position_left(false)
 		ui_manager.add_child(action_menu)
-	
-	# クリーチャーメニュー項目を作成
-	var menu_items: Array = []
-	for creature in available_creatures:
-		var creature_data = creature.get("creature_data", {})
-		var name_text = creature_data.get("name", "Unknown")
-		var tile_index = creature.get("tile_index", -1)
-		menu_items.append({
-			"text": "%s (タイル%d)" % [name_text, tile_index],
-			"color": Color(0.3, 0.5, 0.7),
-			"icon": "🐉",
-			"disabled": false,
-			"data": creature
-		})
-	
-	# 選択変更時のカメラフォーカス
-	if not action_menu.selection_changed.is_connected(_on_creature_selection_changed):
-		action_menu.selection_changed.connect(_on_creature_selection_changed)
-	
-	# メニュー表示
-	action_menu.show_menu(menu_items, "秘術を使うクリーチャー")
-	
-	# 最初のクリーチャーにカメラフォーカス
-	if not available_creatures.is_empty():
-		_focus_camera_on_creature(available_creatures[0])
-	
-	# 選択を待機
-	var selected_index = await action_menu.item_selected
-	
-	if selected_index < 0 or selected_index >= available_creatures.size():
-		# キャンセルされた場合、メニューを閉じてスペルフェーズに戻る
-		_hide_creature_info_panel()
-		action_menu.hide_menu()
-		if spell_phase_handler_ref:
-			spell_phase_handler_ref._return_to_spell_selection()
-		_end_mystic_phase()
-		return
-	
-	var selected_creature = available_creatures[selected_index]
-	
-	# クリーチャー情報パネルを閉じる
-	_hide_creature_info_panel()
-	
-	# 秘術選択に進む
-	await _select_mystic_art_from_creature(selected_creature, action_menu)
-
-
-## 秘術選択
-func _select_mystic_art_from_creature(selected_creature: Dictionary, action_menu) -> void:
-	var mystic_arts = selected_creature.get("mystic_arts", [])
-	
-	if mystic_arts.is_empty():
-		action_menu.hide_menu()
-		_end_mystic_phase()
-		return
 	
 	# 秘術メニュー項目を作成
 	var menu_items: Array = []
@@ -212,7 +359,8 @@ func _select_mystic_art_from_creature(selected_creature: Dictionary, action_menu
 	action_menu.hide_menu()
 	
 	# ターゲット選択に進む
-	_select_target(selected_creature, mystic_art_selected)
+	await _select_target(selected_creature, mystic_art_selected)
+
 
 
 ## ターゲット選択

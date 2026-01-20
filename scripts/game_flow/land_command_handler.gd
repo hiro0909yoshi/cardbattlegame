@@ -123,6 +123,8 @@ func open_land_command(player_id: int):
 	if game_flow_manager:
 		game_flow_manager.unlock_input()
 	
+	# 領地コマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
+	# _start_tap_target_selection(player_id)
 	
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
@@ -208,6 +210,9 @@ func _check_swap_conditions(player_id: int) -> bool:
 func close_land_command():
 	# マーカーを非表示
 	TargetSelectionHelper.hide_selection_marker(self)
+	
+	# 領地コマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
+	# _end_tap_target_selection()
 	
 	# すべての状態をリセット
 	current_state = State.CLOSED
@@ -899,3 +904,88 @@ func _complete_swap_for_cpu(_success: bool):
 	# アクション完了通知
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.complete_action()
+
+
+# ========================================
+# TapTargetManager連携
+# ========================================
+
+## タップターゲット選択を開始
+func _start_tap_target_selection(player_id: int):
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	ttm.set_current_player(player_id)
+	
+	# シグナル接続（重複防止）
+	if not ttm.target_selected.is_connected(_on_tap_target_selected):
+		ttm.target_selected.connect(_on_tap_target_selected)
+	
+	# 有効なターゲット：自分の非ダウンクリーチャーがいるタイル
+	var valid_targets = ttm.get_own_active_creature_tiles()
+	
+	ttm.start_selection(
+		valid_targets,
+		TapTargetManager.SelectionType.CREATURE,
+		"LandCommandHandler"
+	)
+	
+	print("[LandCommandHandler] タップターゲット選択開始: %d件" % valid_targets.size())
+
+
+## タップターゲット選択を終了
+func _end_tap_target_selection():
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	
+	# シグナル切断
+	if ttm.target_selected.is_connected(_on_tap_target_selected):
+		ttm.target_selected.disconnect(_on_tap_target_selected)
+	
+	ttm.end_selection()
+	print("[LandCommandHandler] タップターゲット選択終了")
+
+
+## タップでターゲットが選択された時
+func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
+	print("[LandCommandHandler] タップでタイル選択: %d (状態: %s)" % [tile_index, State.keys()[current_state]])
+	
+	match current_state:
+		State.SELECTING_LAND:
+			# 土地選択中 → そのタイルを選択
+			if tile_index in player_owned_lands:
+				# インデックスを更新
+				current_land_selection_index = player_owned_lands.find(tile_index)
+				LandSelectionHelper.preview_land(self, tile_index)
+				LandSelectionHelper.update_land_selection_ui(self)
+				# 自動で確定
+				LandSelectionHelper.confirm_land_selection(self)
+		
+		State.SELECTING_ACTION:
+			# アクション選択中 → 別のタイルに切り替え
+			if tile_index in player_owned_lands and tile_index != selected_tile_index:
+				# 一旦土地選択に戻してから新しいタイルを選択
+				current_state = State.SELECTING_LAND
+				current_land_selection_index = player_owned_lands.find(tile_index)
+				LandSelectionHelper.preview_land(self, tile_index)
+				LandSelectionHelper.update_land_selection_ui(self)
+				LandSelectionHelper.confirm_land_selection(self)
+		
+		State.SELECTING_MOVE_DEST:
+			# 移動先選択中 → 移動先を選択（確認待ち）
+			if tile_index in move_destinations:
+				current_destination_index = move_destinations.find(tile_index)
+				# マーカーを移動先に表示
+				TargetSelectionHelper.show_selection_marker(self, tile_index)
+				TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
+				# UI更新
+				LandActionHelper.update_move_destination_ui(self)
+				# 確認フェーズへ（即座に移動しない）
+				print("[LandCommandHandler] 移動先選択: タイル%d - 決定ボタンで確定してください" % tile_index)
+		
+		_:
+			# その他の状態では何もしない
+			pass

@@ -599,6 +599,10 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
 	
+	# TapTargetManagerでタップ選択を開始
+	if ui_manager and ui_manager.tap_target_manager:
+		_start_spell_tap_target_selection(targets, target_type)
+	
 	# グローバルナビゲーション設定（対象選択用）
 	_setup_target_selection_navigation()
 	
@@ -718,6 +722,9 @@ func _confirm_target_selection():
 	
 	var selected_target = available_targets[current_target_index]
 	
+	# TapTargetManagerの選択を終了
+	_end_spell_tap_target_selection()
+	
 	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
 	
@@ -737,6 +744,9 @@ func _confirm_target_selection():
 
 ## 対象選択をキャンセル
 func _cancel_target_selection():
+	# TapTargetManagerの選択を終了
+	_end_spell_tap_target_selection()
+	
 	# 選択をクリア（クリーチャー情報パネルも自動で閉じる）
 	TargetSelectionHelper.clear_selection(self)
 	
@@ -1263,6 +1273,10 @@ func _on_mystic_target_selection_requested(targets: Array):
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
 	
+	# TapTargetManagerでタップ選択を開始（秘術用）
+	if ui_manager and ui_manager.tap_target_manager:
+		_start_mystic_tap_target_selection(targets)
+	
 	# グローバルナビゲーション設定（対象選択用 - 秘術でも戻るボタンを表示）
 	_setup_target_selection_navigation()
 	
@@ -1393,3 +1407,107 @@ func _initialize_cpu_context(flow_mgr) -> void:
 	
 	# cpu_hand_utilsはcontextから取得
 	cpu_hand_utils = _cpu_context.get_hand_utils()
+
+
+# =============================================================================
+# TapTargetManager連携（スペルターゲット選択）
+# =============================================================================
+
+## スペルターゲット選択用のタップ選択を開始
+func _start_spell_tap_target_selection(targets: Array, target_type: String):
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	ttm.set_current_player(current_player_id)
+	
+	# シグナル接続（重複防止）
+	if not ttm.target_selected.is_connected(_on_spell_tap_target_selected):
+		ttm.target_selected.connect(_on_spell_tap_target_selected)
+	
+	# ターゲットからタイルインデックスを抽出
+	var valid_tile_indices: Array = []
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index >= 0 and tile_index not in valid_tile_indices:
+			valid_tile_indices.append(tile_index)
+	
+	# 選択タイプを決定
+	var selection_type = TapTargetManager.SelectionType.CREATURE
+	if target_type == "land" or target_type == "empty_land":
+		selection_type = TapTargetManager.SelectionType.TILE
+	elif target_type == "creature_or_land":
+		selection_type = TapTargetManager.SelectionType.CREATURE_OR_TILE
+	
+	ttm.start_selection(
+		valid_tile_indices,
+		selection_type,
+		"SpellPhaseHandler"
+	)
+	
+	print("[SpellPhaseHandler] タップターゲット選択開始: %d件 (type: %s)" % [valid_tile_indices.size(), target_type])
+
+
+## スペルターゲット選択を終了
+func _end_spell_tap_target_selection():
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	
+	# シグナル切断
+	if ttm.target_selected.is_connected(_on_spell_tap_target_selected):
+		ttm.target_selected.disconnect(_on_spell_tap_target_selected)
+	
+	ttm.end_selection()
+	print("[SpellPhaseHandler] タップターゲット選択終了")
+
+
+## タップでターゲットが選択された時
+func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary):
+	print("[SpellPhaseHandler] タップでタイル選択: %d" % tile_index)
+	
+	if current_state != State.SELECTING_TARGET:
+		return
+	
+	# available_targetsから該当するターゲットを探す
+	for i in range(available_targets.size()):
+		var target = available_targets[i]
+		if target.get("tile_index", -1) == tile_index:
+			current_target_index = i
+			# UIを更新（確認待ち状態に）
+			_update_target_selection()
+			# 確認フェーズへ（即座に確定しない）
+			# ユーザーがグローバルボタンの「決定」で確定する
+			print("[SpellPhaseHandler] ターゲット選択: タイル%d - 決定ボタンで確定してください" % tile_index)
+			return
+	
+	print("[SpellPhaseHandler] タップしたタイルは有効なターゲットではない: %d" % tile_index)
+
+
+## 秘術ターゲット選択用のタップ選択を開始
+func _start_mystic_tap_target_selection(targets: Array):
+	if not ui_manager or not ui_manager.tap_target_manager:
+		return
+	
+	var ttm = ui_manager.tap_target_manager
+	ttm.set_current_player(current_player_id)
+	
+	# シグナル接続（重複防止）- スペルと同じハンドラを使用
+	if not ttm.target_selected.is_connected(_on_spell_tap_target_selected):
+		ttm.target_selected.connect(_on_spell_tap_target_selected)
+	
+	# ターゲットからタイルインデックスを抽出
+	var valid_tile_indices: Array = []
+	for target in targets:
+		var tile_index = target.get("tile_index", -1)
+		if tile_index >= 0 and tile_index not in valid_tile_indices:
+			valid_tile_indices.append(tile_index)
+	
+	ttm.start_selection(
+		valid_tile_indices,
+		TapTargetManager.SelectionType.CREATURE,
+		"SpellMysticArts"
+	)
+	
+	print("[SpellPhaseHandler] 秘術タップターゲット選択開始: %d件" % valid_tile_indices.size())

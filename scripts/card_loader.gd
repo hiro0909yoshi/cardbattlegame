@@ -1,10 +1,12 @@
 extends Node
 
 var all_cards = []
+var mystic_arts_data = []  # 秘術専用データ（カードではない）
 
 func _ready():
 	print("=== CardLoader起動 ===")
 	load_all_cards()
+	load_mystic_arts_data()
 	print("=== 読み込み終了 ===")
 
 func load_all_cards():
@@ -64,6 +66,13 @@ func load_all_cards():
 	print("  ⚪ 無: ", element_counts["neutral"])
 	print("  📦 アイテム: ", element_counts["item"])
 	print("  📜 スペル: ", element_counts["spell"])
+
+## 秘術専用データを読み込む（カードではない）
+func load_mystic_arts_data():
+	var path = "res://data/spell_mystic.json"
+	print("秘術データ読み込み中: ", path)
+	mystic_arts_data = load_json_file(path)
+	print("秘術データ読み込み完了: ", mystic_arts_data.size(), "件")
 	
 func load_json_file(path: String) -> Array:
 	var file = FileAccess.open(path, FileAccess.READ)
@@ -99,12 +108,20 @@ func load_json_file(path: String) -> Array:
 	return []
 
 func get_card_by_id(card_id: int) -> Dictionary:
+	# 通常カードから検索
 	for card in all_cards:
 		# IDを整数に変換して比較（念のため）
 		var check_id = int(card.id) if typeof(card.id) != TYPE_INT else card.id
 		if check_id == card_id:
 			# マスターデータを変更しないよう、常にコピーを返す
 			return card.duplicate(true)
+	
+	# 秘術データからも検索（spell_id参照用）
+	for data in mystic_arts_data:
+		var check_id = int(data.id) if typeof(data.id) != TYPE_INT else data.id
+		if check_id == card_id:
+			return data.duplicate(true)
+	
 	return {}
 
 func get_cards_by_element(element: String) -> Array:

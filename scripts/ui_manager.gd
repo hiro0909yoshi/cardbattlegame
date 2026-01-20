@@ -24,6 +24,7 @@ var creature_info_panel_ui: CreatureInfoPanelUI = null
 var spell_info_panel_ui: SpellInfoPanelUI = null
 var item_info_panel_ui: ItemInfoPanelUI = null
 var global_comment_ui: GlobalCommentUI = null
+var tap_target_manager: TapTargetManager = null
 
 # 基本UI要素
 # フェーズ表示（PhaseDisplayに移行済み）
@@ -128,10 +129,10 @@ func _ready():
 		phase_display.name = "PhaseDisplay"
 		add_child(phase_display)
 	
-	# PlayerStatusDialog初期化（シーンからインスタンス化）
-	var player_status_dialog_scene = load("res://scenes/ui/player_status_dialog.tscn")
-	if player_status_dialog_scene:
-		player_status_dialog = player_status_dialog_scene.instantiate()
+	# PlayerStatusDialog初期化
+	var PlayerStatusDialogClass = load("res://scripts/ui_components/player_status_dialog.gd")
+	if PlayerStatusDialogClass:
+		player_status_dialog = PlayerStatusDialogClass.new()
 		player_status_dialog.name = "PlayerStatusDialog"
 		add_child(player_status_dialog)
 	
@@ -208,7 +209,7 @@ func create_ui(parent: Node):
 		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定で設定
 	
 	if player_status_dialog and player_status_dialog.has_method("initialize"):
-		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref, card_system_ref)
+		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref)
 	
 	# CreatureInfoPanelUI初期化
 	if creature_info_panel_ui:
@@ -217,6 +218,14 @@ func create_ui(parent: Node):
 		if creature_info_panel_ui.get_parent():
 			creature_info_panel_ui.get_parent().remove_child(creature_info_panel_ui)
 		ui_layer.add_child(creature_info_panel_ui)
+	
+	# TapTargetManager初期化
+	tap_target_manager = TapTargetManager.new()
+	tap_target_manager.name = "TapTargetManager"
+	add_child(tap_target_manager)
+	tap_target_manager.setup(board_system_ref, player_system_ref)
+	tap_target_manager.target_selected.connect(_on_tap_target_selected)
+	tap_target_manager.selection_cancelled.connect(_on_tap_target_cancelled)
 	
 	# GlobalActionButtonsをUIレイヤーに移動（最前面に表示するため、最後に追加）
 	if global_action_buttons:
@@ -697,3 +706,102 @@ func show_win_screen(player_id: int):
 	tween.tween_property(win_label, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	
 	print("[UIManager] 勝利画面表示: プレイヤー", player_id + 1)
+
+
+# ============================================
+# カメラタップによるクリーチャー情報表示
+# ============================================
+
+## CameraControllerのシグナルを接続
+func connect_camera_signals():
+	print("[UIManager] connect_camera_signals 呼び出し")
+	
+	if not board_system_ref:
+		print("[UIManager] board_system_ref がない")
+		return
+	
+	if not board_system_ref.camera_controller:
+		print("[UIManager] camera_controller がない (board_system_ref: %s)" % board_system_ref)
+		print("[UIManager] board_system_ref の camera_controller: %s" % board_system_ref.get("camera_controller"))
+		return
+	
+	var cam_ctrl = board_system_ref.camera_controller
+	
+	# 既に接続されていたらスキップ
+	if cam_ctrl.creature_tapped.is_connected(_on_creature_tapped):
+		print("[UIManager] シグナル既に接続済み")
+		return
+	
+	cam_ctrl.creature_tapped.connect(_on_creature_tapped)
+	cam_ctrl.tile_tapped.connect(_on_tile_tapped)
+	cam_ctrl.empty_tapped.connect(_on_empty_tapped)
+	print("[UIManager] カメラタップシグナル接続完了")
+
+
+## クリーチャーがタップされた時のハンドラ
+func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
+	print("[UIManager] _on_creature_tapped 呼び出し: タイル%d" % tile_index)
+	
+	if creature_data.is_empty():
+		print("[UIManager] creature_data が空")
+		return
+	
+	# TapTargetManagerでターゲット選択中かチェック
+	if tap_target_manager and tap_target_manager.is_active:
+		if tap_target_manager.handle_creature_tap(tile_index, creature_data):
+			# ターゲットとして処理された
+			return
+	
+	# ターゲット選択されなかった場合はインフォパネル表示
+	# ターゲット選択中は setup_buttons=false でグローバルボタンを変更しない
+	var setup_buttons = not (tap_target_manager and tap_target_manager.is_active)
+	
+	if creature_info_panel_ui:
+		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
+		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons])
+	else:
+		print("[UIManager] creature_info_panel_ui がない")
+
+
+## タイルがタップされた時のハンドラ（クリーチャーがいない場合）
+func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
+	# TapTargetManagerでターゲット選択中かチェック
+	if tap_target_manager and tap_target_manager.is_active:
+		if tap_target_manager.handle_tile_tap(tile_index, tile_data):
+			# ターゲットとして処理された
+			return
+		
+		# ターゲット選択中だが無効なタイル → インフォパネルだけ閉じる（ボタンはそのまま）
+		if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+			creature_info_panel_ui.hide_panel(false)  # clear_buttons=false
+		return
+	
+	# 通常時はインフォパネルを閉じる
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel()
+
+
+## 空（タイル外）がタップされた時のハンドラ
+func _on_empty_tapped():
+	# TapTargetManagerでターゲット選択中かチェック
+	if tap_target_manager and tap_target_manager.is_active:
+		if tap_target_manager.handle_empty_tap():
+			# 選択モード中は何もしない
+			return
+	
+	# 通常時はインフォパネルを閉じる
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel()
+		print("[UIManager] 空タップでパネル閉じ")
+
+
+## TapTargetManagerからターゲットが選択された時
+func _on_tap_target_selected(tile_index: int, creature_data: Dictionary):
+	print("[UIManager] タップターゲット選択: タイル%d" % tile_index)
+	# 領地コマンドハンドラなど、呼び出し元に通知（シグナルを中継）
+	# 具体的な処理は各ハンドラが tap_target_manager.target_selected に直接接続
+
+
+## TapTargetManagerから選択がキャンセルされた時
+func _on_tap_target_cancelled():
+	print("[UIManager] タップターゲット選択キャンセル")

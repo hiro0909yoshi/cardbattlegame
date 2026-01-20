@@ -1,46 +1,110 @@
-extends Control
+extends Node
 class_name PlayerStatusDialog
 
 # プレイヤーステータスダイアログ
 # 土地情報と保有クリーチャーを表示するモーダルダイアログ
-# シーン: scenes/ui/player_status_dialog.tscn
 
-# UIノード（シーンから取得）
-@onready var background_rect: ColorRect = $BackgroundRect
-@onready var main_panel: Control = $MainPanel
-@onready var title_label: Label = $MainPanel/ContentMargin/VBoxContainer/TitleLabel
-@onready var status_label: RichTextLabel = $MainPanel/ContentMargin/VBoxContainer/StatusLabel
+# UIノード
+var dialog_panel: PanelContainer = null
+var title_label: Label = null
+var status_label: RichTextLabel = null
+var close_button: Button = null
 
+# 背景（フェードアウト）
+var background_rect: ColorRect = null
 
 # システム参照
 var player_system_ref = null
 var board_system_ref = null
 var game_flow_manager_ref = null
-var card_system_ref = null
 var player_info_panel: PlayerInfoPanel = null
 
 # 状態
 var current_player_id = -1
+var is_visible = false
 
 func _ready():
-	# 初期状態は非表示
-	hide_dialog()
-	
-	# シグナル接続
-	if background_rect:
-		background_rect.gui_input.connect(_on_background_clicked)
-
-	
-	# ESCキー検出用
-	set_process_input(true)
+	pass
 
 # 初期化
-func initialize(parent: Node, player_system, board_system, player_info_panel_ref, game_flow_manager = null, card_system = null):
+func initialize(parent: Node, player_system, board_system, player_info_panel_ref, game_flow_manager = null):
 	player_system_ref = player_system
 	board_system_ref = board_system
 	player_info_panel = player_info_panel_ref
-	card_system_ref = card_system
 	game_flow_manager_ref = game_flow_manager
+	
+	create_dialog_ui(parent)
+
+# ダイアログUIを作成
+func create_dialog_ui(parent: Node):
+	# 背景レイヤー（クリックを遮断する）
+	background_rect = ColorRect.new()
+	background_rect.color = Color(0, 0, 0, 0.5)
+	background_rect.anchor_left = 0.0
+	background_rect.anchor_top = 0.0
+	background_rect.anchor_right = 1.0
+	background_rect.anchor_bottom = 1.0
+	background_rect.visible = false
+	background_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	parent.add_child(background_rect)
+	background_rect.gui_input.connect(_on_background_clicked)
+	
+	# メインダイアログパネル
+	dialog_panel = PanelContainer.new()
+	dialog_panel.custom_minimum_size = Vector2(800, 800)
+	dialog_panel.visible = false
+	
+	# パネルの位置（上寄りに配置）
+	dialog_panel.anchor_left = 0.5
+	dialog_panel.anchor_top = 0.5
+	dialog_panel.anchor_right = 0.5
+	dialog_panel.anchor_bottom = 0.5
+	dialog_panel.offset_left = -400
+	dialog_panel.offset_top = -580  # さらに上に移動
+	
+	# パネルスタイル
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.15, 0.15, 0.95)
+	panel_style.border_width_left = 3
+	panel_style.border_width_right = 3
+	panel_style.border_width_top = 3
+	panel_style.border_width_bottom = 3
+	panel_style.border_color = Color(0.5, 0.5, 0.5, 0.8)
+	dialog_panel.add_theme_stylebox_override("panel", panel_style)
+	
+	# VBoxContainer（ダイアログの内容）
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	dialog_panel.add_child(vbox)
+	
+	# タイトルラベル
+	title_label = Label.new()
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.text = ""
+	vbox.add_child(title_label)
+	
+	# ステータス表示ラベル
+	status_label = RichTextLabel.new()
+	status_label.custom_minimum_size = Vector2(750, 700)
+	status_label.bbcode_enabled = true
+	status_label.scroll_active = true
+	status_label.fit_content = false
+	status_label.clip_contents = true
+	status_label.add_theme_font_size_override("normal_font_size", 16)
+	vbox.add_child(status_label)
+	
+	# 閉じるボタン
+	close_button = Button.new()
+	close_button.text = "閉じる"
+	close_button.custom_minimum_size = Vector2(0, 30)
+	close_button.pressed.connect(_on_close_button_pressed)
+	vbox.add_child(close_button)
+	
+	# ダイアログをUIレイヤーに追加
+	parent.add_child(dialog_panel)
+	
+	# ESCキー検出用
+	set_process_input(true)
 
 # プレイヤーのステータスを表示
 func show_for_player(player_id: int):
@@ -61,7 +125,9 @@ func show_for_player(player_id: int):
 	status_label.text = status_text
 	
 	# ダイアログを表示
-	visible = true
+	background_rect.visible = true
+	dialog_panel.visible = true
+	is_visible = true
 
 # ステータステキストを構築
 func build_status_text(player_id: int) -> String:
@@ -72,8 +138,8 @@ func build_status_text(player_id: int) -> String:
 	
 	var player = player_system_ref.players[player_id]
 	
-	# 基本情報、マップ情報、手札を横並びで表示（5列: 左、スペーサー、中央、スペーサー、右）
-	text += "[table=5]"
+	# 基本情報とマップ情報を横並びで表示（3列: 左、スペーサー、右）
+	text += "[table=3]"
 	
 	# 左列: 基本情報
 	text += "[cell][b][color=yellow]基本情報[/color][/b]\n"
@@ -88,10 +154,10 @@ func build_status_text(player_id: int) -> String:
 	text += "魔力: " + str(player.magic_power) + "G\n"
 	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G[/cell]"
 	
-	# スペーサー1
-	text += "[cell]     [/cell]"
+	# 中央: スペーサー
+	text += "[cell]          [/cell]"
 	
-	# 中央列: マップ情報
+	# 右列: マップ情報
 	text += "[cell][b][color=yellow]マップ情報[/color][/b]\n"
 	if game_flow_manager_ref:
 		var lap_count = 0
@@ -105,14 +171,6 @@ func build_status_text(player_id: int) -> String:
 		text += "破壊数: " + str(destroy_count)
 	else:
 		text += "データなし"
-	text += "[/cell]"
-	
-	# スペーサー2（手札を右に配置するため広めに）
-	text += "[cell]                    [/cell]"
-	
-	# 右列: 手札情報
-	text += "[cell][b][color=yellow]手札[/color][/b]\n"
-	text += build_hand_text(player_id)
 	text += "[/cell]"
 	
 	text += "[/table]\n\n"
@@ -179,30 +237,6 @@ func build_status_text(player_id: int) -> String:
 	
 	return text
 
-# 手札テキストを構築
-func build_hand_text(player_id: int) -> String:
-	if not card_system_ref:
-		return "データなし"
-	
-	# CardSystemから手札を取得（player_hands[player_id]["data"]）
-	if not card_system_ref.player_hands.has(player_id):
-		return "なし"
-	
-	var hand = card_system_ref.player_hands[player_id].get("data", [])
-	if hand.is_empty():
-		return "なし"
-	
-	var text = "[font_size=55]"
-	for card in hand:
-		if card is Dictionary:
-			var card_name = card.get("name", "不明")
-			text += card_name + "\n"
-		else:
-			text += str(card) + "\n"
-	text += "[/font_size]"
-	
-	return text.strip_edges()
-
 # 総資産を計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
 	if not player_system_ref:
@@ -211,23 +245,23 @@ func calculate_total_assets(player_id: int) -> int:
 
 # ダイアログを非表示にする
 func hide_dialog():
-	visible = false
+	background_rect.visible = false
+	dialog_panel.visible = false
+	is_visible = false
 	current_player_id = -1
-
-# 表示中かどうか
-func is_dialog_visible() -> bool:
-	return visible
 
 # 背景をクリックしたときのハンドラ
 func _on_background_clicked(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		hide_dialog()
 
-
+# 閉じるボタン
+func _on_close_button_pressed():
+	hide_dialog()
 
 # ESCキー検出
 func _input(event):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		if visible:
+		if is_visible:
 			hide_dialog()
 			get_tree().root.set_input_as_handled()

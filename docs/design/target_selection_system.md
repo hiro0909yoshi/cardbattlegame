@@ -1,7 +1,7 @@
 # ターゲット選択システム設計
 
-**ステータス**: 🔄 リファクタリング計画中  
-**最終更新**: 2026年1月17日
+**ステータス**: ✅ タップ選択対応完了  
+**最終更新**: 2026年1月20日
 
 ---
 
@@ -12,6 +12,119 @@
 
 ---
 
+## タップ選択システム（2026/01/20追加）
+
+### TapTargetManager
+
+タップによるターゲット選択を管理する専用クラス。
+
+**ファイル**: `scripts/ui_components/tap_target_manager.gd`
+
+#### 選択タイプ
+```gdscript
+enum SelectionType {
+    NONE,            # 選択なし
+    CREATURE,        # クリーチャー選択
+    TILE,            # タイル選択
+    PLAYER,          # プレイヤー選択
+    CREATURE_OR_TILE # クリーチャーまたはタイル
+}
+```
+
+#### 主要メソッド
+| メソッド | 説明 |
+|---------|------|
+| `start_selection(targets, type, source)` | タップ選択開始 |
+| `end_selection()` | タップ選択終了 |
+| `handle_creature_tap(tile_index, creature_data)` | クリーチャータップ処理 |
+| `handle_tile_tap(tile_index, tile_data)` | タイルタップ処理 |
+| `handle_empty_tap()` | 空タップ処理 |
+
+#### シグナル
+| シグナル | 説明 |
+|---------|------|
+| `target_selected(tile_index, creature_data)` | ターゲット選択時 |
+| `selection_cancelled()` | 選択キャンセル時 |
+
+#### ユーティリティメソッド
+| メソッド | 説明 |
+|---------|------|
+| `get_own_active_creature_tiles()` | 自分の非ダウンクリーチャータイル取得 |
+| `get_player_creature_tiles(player_id, include_down)` | 指定プレイヤーのクリーチャータイル |
+| `get_all_creature_tiles(include_down)` | 全クリーチャータイル |
+
+### 対応機能
+
+| 機能 | タップ選択 | グローバルボタン | 備考 |
+|------|----------|-----------------|------|
+| スペル・ターゲット選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
+| 秘術・使用者選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
+| 秘術・ターゲット選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
+| 領地コマンド | ❌ | ✅ | グローバルボタンのみ |
+
+### 動作フロー
+
+#### スペル・ターゲット選択
+```
+1. スペル選択
+2. _show_target_selection_ui() 
+   → _start_spell_tap_target_selection()
+   → TapTargetManager.start_selection()
+3. タップまたは上下ボタンでターゲット選択
+4. 決定ボタンで _confirm_target_selection()
+5. _end_spell_tap_target_selection()
+   → TapTargetManager.end_selection()
+```
+
+#### 秘術・使用者選択
+```
+1. 秘術ボタン押下
+2. _select_creature()
+   → _start_caster_tap_selection()
+   → TapTargetManager.start_selection()
+3. タップまたは上下ボタンで使用者選択
+4. 決定ボタンで _confirm_caster_selection()
+5. _end_caster_tap_selection()
+   → TapTargetManager.end_selection()
+6. 秘術選択（ActionMenuUI）
+7. ターゲット選択（スペルと同じ）
+```
+
+### UI競合防止
+
+タップ選択中は以下の制御が行われる：
+
+1. **クリーチャー情報パネル**: `setup_buttons=false`で表示（グローバルボタンを変更しない）
+2. **空タップ**: 無視（選択をキャンセルしない）
+3. **無効なターゲットタップ**: インフォパネル表示のみ（選択状態維持）
+
+### 初期化
+
+UIManagerの`create_ui()`で初期化：
+
+```gdscript
+tap_target_manager = TapTargetManager.new()
+tap_target_manager.setup(board_system_ref, player_system_ref)
+tap_target_manager.target_selected.connect(_on_tap_target_selected)
+```
+
+CameraControllerのシグナルとUIManagerを経由してタップイベントを処理：
+
+```gdscript
+# CameraController → UIManager
+cam_ctrl.creature_tapped.connect(_on_creature_tapped)
+cam_ctrl.tile_tapped.connect(_on_tile_tapped)
+cam_ctrl.empty_tapped.connect(_on_empty_tapped)
+
+# UIManager._on_creature_tapped()
+if tap_target_manager and tap_target_manager.is_active:
+    if tap_target_manager.handle_creature_tap(tile_index, creature_data):
+        return  # ターゲットとして処理
+# 通常のインフォパネル表示へ
+```
+
+---
+
 ## 現状のファイル構成
 
 ### メインファイル
@@ -19,6 +132,7 @@
 | ファイル | 行数 | 役割 |
 |---------|------|------|
 | `scripts/game_flow/target_selection_helper.gd` | 1217 | ターゲット選択の汎用ヘルパー |
+| `scripts/ui_components/tap_target_manager.gd` | 200 | タップによるターゲット選択管理 |
 
 ### 関連ファイル
 
@@ -28,6 +142,7 @@
 | `scripts/cpu_ai/cpu_spell_target_selector.gd` | CPUスペルターゲット選択 |
 | `scripts/spells/spell_protection.gd` | 防魔フィルタ |
 | `scripts/spells/spell_hp_immune.gd` | HP効果無効フィルタ |
+| `scripts/camera_controller.gd` | タップ検出・シグナル発火 |
 
 ---
 
@@ -319,3 +434,6 @@ var targets = TargetSelectionHelper.get_valid_targets_core(systems, "creature", 
 |------|------|
 | 2026/01/17 | 初版作成、リファクタリング計画策定 |
 | 2026/01/17 | 呼び出し元調査結果追加、影響範囲分析 |
+| 2026/01/20 | タップ選択システム（TapTargetManager）追加 |
+| 2026/01/20 | スペル・秘術のタップターゲット選択対応 |
+| 2026/01/20 | 秘術の使用者選択をタップ対応に変更 |

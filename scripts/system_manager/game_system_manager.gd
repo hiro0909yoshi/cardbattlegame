@@ -226,6 +226,17 @@ func phase_3_setup_basic_config() -> void:
 	
 	print("[GameSystemManager] Phase 3: システム基本設定完了")
 
+## カメラシグナル接続を遅延実行（Phase 3のawait完了後）
+func _connect_camera_signals_deferred():
+	# 次フレームで実行（Phase 3のawait完了を待つ）
+	await get_tree().process_frame
+	await get_tree().process_frame  # 念のため2フレーム待つ
+	
+	if ui_manager and board_system_3d:
+		ui_manager.board_system_ref = board_system_3d
+		ui_manager.connect_camera_signals()
+		print("[GameSystemManager] カメラシグナル遅延接続完了")
+
 # Phase 4: システム間連携設定
 func phase_4_setup_system_interconnections() -> void:
 	print("[GameSystemManager] Phase 4: システム間連携設定開始")
@@ -276,6 +287,8 @@ func phase_4_setup_system_interconnections() -> void:
 		ui_manager.create_ui(parent_node)
 		# 作成されたUILayerを参照
 		ui_layer = parent_node.get_node_or_null("UILayer")
+		# カメラタップシグナルを接続（Phase 3のawait完了後に実行）
+		_connect_camera_signals_deferred()
 	
 	# Step 7: CardSelectionUI に設定
 	if ui_manager and ui_manager.card_selection_ui:
