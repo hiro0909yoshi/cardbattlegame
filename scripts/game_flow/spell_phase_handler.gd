@@ -38,6 +38,9 @@ var confirmation_target_type: String = ""
 var confirmation_target_info: Dictionary = {}
 var confirmation_target_data: Dictionary = {}
 
+## カード犠牲の一時保存（ターゲット選択後に消費）
+var pending_sacrifice_card: Dictionary = {}
+
 ## カード選択ハンドラー（敵手札選択、デッキカード選択）
 var card_selection_handler: CardSelectionHandler = null
 
@@ -487,6 +490,7 @@ func use_spell(spell_card: Dictionary):
 	# カード犠牲処理（スペル合成用）
 	# マジックタイルモードではカード犠牲をスキップ（手札から使用していないため）
 	var is_synthesized = false
+	pending_sacrifice_card = {}  # リセット
 	var disable_sacrifice = _is_card_sacrifice_disabled() or is_magic_tile_mode
 	if spell_synthesis and spell_synthesis.requires_sacrifice(spell_card) and not disable_sacrifice:
 		# 手札選択UIを表示
@@ -509,8 +513,9 @@ func use_spell(spell_card: Dictionary):
 			if is_synthesized:
 				print("[SpellPhaseHandler] 合成成立: %s" % spell_card.get("name", "?"))
 			
-			# カードを破棄
-			card_sacrifice_helper.consume_card(current_player_id, sacrifice_card)
+			# カードを一時保存（スペル実行確定時に消費）
+			pending_sacrifice_card = sacrifice_card
+			print("[SpellPhaseHandler] 犠牲カードを一時保存: %s" % sacrifice_card.get("name", "?"))
 	
 	# 合成成立時はeffect_parsedを書き換え
 	var parsed = spell_card.get("effect_parsed", {})
@@ -790,6 +795,11 @@ func cancel_spell():
 	selected_spell_card = {}
 	spell_used_this_turn = false
 	
+	# 犠牲カードをクリア（消費せずに破棄）
+	if not pending_sacrifice_card.is_empty():
+		print("[SpellPhaseHandler] スペルキャンセル: 犠牲カード %s を破棄せずにクリア" % pending_sacrifice_card.get("name", "?"))
+		pending_sacrifice_card = {}
+	
 	# 確認フェーズ変数をクリア
 	confirmation_target_type = ""
 	confirmation_target_info = {}
@@ -852,6 +862,12 @@ func _return_to_spell_selection():
 
 ## スペル効果を実行（SpellEffectExecutorに委譲）
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
+	# 犠牲カードを消費（スペル実行確定時）
+	if not pending_sacrifice_card.is_empty() and card_sacrifice_helper:
+		card_sacrifice_helper.consume_card(current_player_id, pending_sacrifice_card)
+		print("[SpellPhaseHandler] 犠牲カード消費: %s" % pending_sacrifice_card.get("name", "?"))
+		pending_sacrifice_card = {}
+	
 	if spell_effect_executor:
 		await spell_effect_executor.execute_spell_effect(spell_card, target_data)
 
