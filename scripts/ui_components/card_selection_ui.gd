@@ -155,9 +155,16 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			# 捨て札モードではすべて選択可能
 			elif selection_mode == "discard":
 				is_selectable = true
-			# 犠牲モードではすべて選択可能
+			# 犠牲モードではすべて選択可能（ただし召喚カード自身は除外）
 			elif selection_mode == "sacrifice":
-				is_selectable = true
+				var is_excluded = false
+				# インデックスで除外
+				if ui_manager_ref and ui_manager_ref.excluded_card_index == i:
+					is_excluded = true
+				# IDで除外
+				if ui_manager_ref and ui_manager_ref.excluded_card_id != "" and card_data.get("id", "") == ui_manager_ref.excluded_card_id:
+					is_excluded = true
+				is_selectable = not is_excluded
 			elif filter_mode == "spell":
 				# スペルフェーズ中: スペルカードのみ選択可能
 				is_selectable = card_type == "spell"
@@ -228,14 +235,18 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				is_selectable = card_type == "creature"
 			
 				# 土地条件チェック（召喚/バトルフェーズでクリーチャーの場合）
+			# 犠牲/捨て札モードではスキップ
 			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):
-				if not _check_lands_required(card_data, player_id):
-					is_selectable = false
+				if selection_mode != "sacrifice" and selection_mode != "discard":
+					if not _check_lands_required(card_data, player_id):
+						is_selectable = false
 			
 			# 配置制限チェック（召喚/バトルフェーズでクリーチャーの場合）
+			# 犠牲/捨て札モードではスキップ
 			if is_selectable and card_type == "creature" and (filter_mode == "" or filter_mode == "battle"):
-				if not _check_cannot_summon(card_data, player_id):
-					is_selectable = false
+				if selection_mode != "sacrifice" and selection_mode != "discard":
+					if not _check_cannot_summon(card_data, player_id):
+						is_selectable = false
 			
 			# カードを選択可能/不可にする
 			if card_node.has_method("set_selectable") and is_selectable:
@@ -244,7 +255,19 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				card_node.set_selectable(false, -1)
 			
 				# グレーアウト処理を適用
-			if filter_mode == "disabled":
+			# 犠牲/捨て札モードは最優先で全カード選択可能（ただし除外カードはグレーアウト）
+			if selection_mode == "sacrifice" or selection_mode == "discard":
+				var is_excluded = false
+				if selection_mode == "sacrifice" and ui_manager_ref:
+					if ui_manager_ref.excluded_card_index == i:
+						is_excluded = true
+					if ui_manager_ref.excluded_card_id != "" and card_data.get("id", "") == ui_manager_ref.excluded_card_id:
+						is_excluded = true
+				if is_excluded:
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				else:
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+			elif filter_mode == "disabled":
 				# disabledモード: すべてグレーアウト
 				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			elif filter_mode == "battle":
@@ -514,12 +537,18 @@ func _confirm_card_selection(card_index: int):
 
 # カードが選択された（外部から呼ばれる）
 func on_card_selected(card_index: int):
+	print("[CardSelectionUI] on_card_selected called: index=%d, is_active=%s, selection_mode=%s" % [card_index, is_active, selection_mode])
+	
 	if not is_active:
+		print("[CardSelectionUI] not active, returning")
 		return
 	
 	var card_data = _get_card_data_for_index(card_index)
 	if not card_data:
+		print("[CardSelectionUI] no card_data for index %d" % card_index)
 		return
+	
+	print("[CardSelectionUI] card_type=%s, card_name=%s" % [card_data.get("type", "?"), card_data.get("name", "?")])
 	
 	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
 	if selection_mode == "spell" and card_data.get("type") == "spell":
@@ -539,12 +568,26 @@ func on_card_selected(card_index: int):
 			return
 	
 	# クリーチャー情報パネルを使用するか判定
-	# 召喚/交換モードでクリーチャーカードの場合
-	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap"]:
+	# 召喚/交換/犠牲モードでクリーチャーカードの場合
+	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap", "sacrifice"]:
 		if card_data.get("type") == "creature":
+			print("[CardSelectionUI] showing creature_info_panel for sacrifice/summon/swap")
 			_show_creature_info_panel(card_index, card_data)
 			return
 	
+	# 犠牲モードでスペル/アイテムカードの場合も確認パネル表示
+	if selection_mode == "sacrifice":
+		var card_type = card_data.get("type", "")
+		if card_type == "spell":
+			print("[CardSelectionUI] showing spell_info_panel for sacrifice")
+			_show_spell_info_panel(card_index, card_data)
+			return
+		elif card_type == "item":
+			print("[CardSelectionUI] showing item_info_panel for sacrifice")
+			_show_item_info_panel(card_index, card_data)
+			return
+	
+	print("[CardSelectionUI] fallback to _confirm_card_selection")
 	# 既存の動作
 	_confirm_card_selection(card_index)
 
@@ -555,6 +598,12 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
+	
+	# 他のパネルを閉じる
+	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
@@ -591,6 +640,8 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		confirmation_text = "侵略しますか？"
 	elif selection_mode == "swap":
 		confirmation_text = "このクリーチャーに交換しますか？"
+	elif selection_mode == "sacrifice":
+		confirmation_text = "犠牲にしますか？"
 	
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
 
@@ -601,6 +652,12 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
+	
+	# 他のパネルを閉じる
+	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
@@ -666,6 +723,8 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 	# 他のパネルを閉じる
 	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
 		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_visible_panel:

@@ -117,7 +117,7 @@ func select_best_target_with_score(targets: Array, spell: Dictionary, context: D
 	var best_score = -999.0
 	
 	for target in targets:
-		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell, curse_info)
+		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell, curse_info, spell)
 		if score > best_score:
 			best_score = score
 			best_target = target
@@ -125,7 +125,7 @@ func select_best_target_with_score(targets: Array, spell: Dictionary, context: D
 	return {"target": best_target, "score": best_score}
 
 ## ターゲットスコアを計算
-func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}) -> float:
+func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}, spell: Dictionary = {}) -> float:
 	var score = 0.0
 	
 	var tile_index = target.get("tile_index", -1)
@@ -139,7 +139,8 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
 	
 	if creature.is_empty():
-		return score
+		# 空き土地の場合：配置するクリーチャーの属性と土地属性の一致をチェック
+		return _calculate_empty_land_score(target, tile_data, spell)
 	
 	# 敵クリーチャーかどうか
 	var owner_id = -1
@@ -187,6 +188,68 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, debug_level, creature_rate])
 	
 	return score
+
+
+## 空き土地のスコアを計算（配置クリーチャーの属性一致を考慮）
+func _calculate_empty_land_score(target: Dictionary, tile_data: Dictionary, spell: Dictionary) -> float:
+	var score = 1.0  # 空き土地の基本スコア
+	
+	if tile_data.is_empty():
+		return score
+	
+	var tile_element = tile_data.get("element", "")
+	if tile_element.is_empty():
+		tile_element = target.get("element", "")
+	
+	# place_creature効果からcreature_idを取得
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	var creature_id = 0
+	
+	for effect in effects:
+		if effect.get("effect_type") == "place_creature":
+			creature_id = effect.get("creature_id", 0)
+			break
+	
+	if creature_id == 0:
+		return score
+	
+	# creature_idから属性を取得
+	var creature_element = _get_creature_element_by_id(creature_id)
+	
+	if creature_element.is_empty():
+		return score
+	
+	# 属性一致で大幅加点（最優先）
+	if tile_element == creature_element:
+		score += 100.0
+		print("[SpellAI] 空き土地スコア: tile=%d, element=%s, creature_element=%s → 属性一致ボーナス" % [target.get("tile_index", -1), tile_element, creature_element])
+	elif tile_element == "neutral":
+		score += 10.0  # ニュートラルは次善
+	
+	# 分岐数ボーナス（複数の道に繋がる土地を優先）
+	var connections = tile_data.get("connections", [])
+	if connections.size() >= 3:
+		score += 20.0  # 3分岐以上
+		print("[SpellAI] 空き土地スコア: tile=%d, 分岐数=%d → 分岐ボーナス" % [target.get("tile_index", -1), connections.size()])
+	elif connections.size() == 2:
+		score += 5.0   # 2分岐
+	
+	return score
+
+
+## creature_idからクリーチャーの属性を取得
+func _get_creature_element_by_id(creature_id: int) -> String:
+	if not card_system:
+		return ""
+	
+	# CardLoaderから取得を試みる
+	if CardLoader:
+		var creature_data = CardLoader.get_creature_by_id(creature_id)
+		if creature_data and not creature_data.is_empty():
+			return creature_data.get("element", "")
+	
+	return ""
 
 
 ## 呪い上書きスコアを計算

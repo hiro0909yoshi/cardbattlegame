@@ -50,6 +50,8 @@ var ui_layer: CanvasLayer = null
 var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能、"item"の時はアイテムのみ、"item_or_assist"の時はアイテム+援護対象クリーチャー
 var assist_target_elements: Array = []  # 援護対象の属性リスト
 var blocked_item_types: Array = []  # ブロックするアイテムタイプ（例: ["防具"]）
+var excluded_card_index: int = -1  # 犠牲選択時に除外するカードインデックス（召喚するカード自身）
+var excluded_card_id: String = ""  # 犠牲選択時に除外するカードID（召喚するカード自身）
 
 # 手札UI管理（HandDisplayに移行済み）
 # 以下の変数は削除予定
@@ -289,6 +291,11 @@ func _on_card_button_pressed(card_index: int):
 	
 	# 通知ポップアップがクリック待ち中なら無視
 	if is_notification_popup_active():
+		return
+	
+	# 犠牲選択中はcard_selection_uiで処理（card_selection_handlerをバイパス）
+	if card_selection_ui and card_selection_ui.selection_mode == "sacrifice":
+		card_selection_ui.on_card_selected(card_index)
 		return
 	
 	# カード選択ハンドラーが選択中の場合はGameFlowManager経由で処理
@@ -754,11 +761,22 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	
 	# ターゲット選択されなかった場合はインフォパネル表示
 	# ターゲット選択中は setup_buttons=false でグローバルボタンを変更しない
-	var setup_buttons = not (tap_target_manager and tap_target_manager.is_active)
+	# 領地コマンド選択中は専用の処理を行う
+	var is_land_command_active = game_flow_manager_ref and game_flow_manager_ref.land_command_handler and game_flow_manager_ref.land_command_handler.current_state != game_flow_manager_ref.land_command_handler.State.CLOSED
+	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
+	var setup_buttons = not is_tap_target_active and not is_land_command_active
 	
 	if creature_info_panel_ui:
 		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
-		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons])
+		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_land_command_active])
+		
+		# 領地コマンド中はパネルを閉じるだけの×ボタンを設定
+		if is_land_command_active:
+			register_back_action(func():
+				creature_info_panel_ui.hide_panel(false)
+				# 領地コマンドのナビゲーションを復元
+				game_flow_manager_ref.land_command_handler._restore_navigation()
+			, "閉じる")
 	else:
 		print("[UIManager] creature_info_panel_ui がない")
 

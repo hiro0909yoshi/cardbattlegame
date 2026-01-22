@@ -116,6 +116,7 @@ func calculate_checkpoint_distances():
 # =============================================================================
 
 ## 経路を評価（総合スコアを計算）
+## 経路を評価（総合スコアを計算）
 ## start_tile: 開始タイル
 ## total_steps: 総移動歩数（サイコロの目）
 ## player_id: CPUプレイヤーID
@@ -129,6 +130,7 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	var path = sim_result.path
 	var forced_stop = sim_result.forced_stop
 	var forced_stop_at = sim_result.forced_stop_at
+	var skipped_cp_count = sim_result.skipped_cp_count
 	
 	# 手札情報を取得
 	var summonable_elements = _get_summonable_elements(player_id)
@@ -141,8 +143,11 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 	var path_score = path_result.path_score
 	var checkpoint_bonus = path_result.checkpoint_bonus
 	
-	# 総合スコア = 停止位置スコア + チェックポイント通過ボーナス
-	var total_score = stop_score + checkpoint_bonus
+	# 途中分岐でCP方向を選ばなかった場合、CPボーナス相当のペナルティを適用
+	var cp_skip_penalty = skipped_cp_count * SCORE_CHECKPOINT_DIRECTION_BONUS
+	
+	# 総合スコア = 停止位置スコア + チェックポイント通過ボーナス - CPスキップペナルティ
+	var total_score = stop_score + checkpoint_bonus - cp_skip_penalty
 	
 	return {
 		"score": total_score,
@@ -153,22 +158,26 @@ func evaluate_path(start_tile: int, total_steps: int, player_id: int, came_from:
 			"path_score": path_score,
 			"checkpoint_bonus": checkpoint_bonus,
 			"forced_stop": forced_stop,
-			"forced_stop_at": forced_stop_at
+			"forced_stop_at": forced_stop_at,
+			"skipped_cp_count": skipped_cp_count,
+			"cp_skip_penalty": cp_skip_penalty
 		}
 	}
+
 
 # =============================================================================
 # 経路シミュレーション
 # =============================================================================
 
 ## 経路をシミュレート（足止め・分岐考慮）
-## 返り値: { path: Array, stop_tile: int, forced_stop: bool, forced_stop_at: int }
+## 返り値: { path: Array, stop_tile: int, forced_stop: bool, forced_stop_at: int, skipped_cp_count: int }
 func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int = -1) -> Dictionary:
 	var result = {
 		"path": [],
 		"stop_tile": start_tile,
 		"forced_stop": false,
-		"forced_stop_at": -1
+		"forced_stop_at": -1,
+		"skipped_cp_count": 0  # 途中分岐でCP方向を選ばなかった回数
 	}
 	
 	if steps <= 0:
@@ -205,7 +214,12 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 				direction = 1 if diff > 0 else -1
 		
 		# 次のタイルを取得
-		var next_tile = _get_next_tile_simulated(current_tile, prev_tile, player_id, remaining_steps, direction)
+		var next_result = _get_next_tile_simulated(current_tile, prev_tile, player_id, remaining_steps, direction)
+		var next_tile = next_result.tile
+		
+		# CP方向スキップをカウント
+		if next_result.skipped_cp_direction:
+			result.skipped_cp_count += 1
 		
 		if next_tile < 0 or next_tile == current_tile:
 			break
@@ -247,28 +261,35 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 
 ## 次のタイルを取得（シミュレーション用、分岐は最良選択肢を仮定）
 ## direction: 進行方向（connectionsがない場合に使用）
-func _get_next_tile_simulated(current_tile: int, came_from: int, player_id: int, remaining_steps: int, direction: int = 0) -> int:
+## 返り値: { tile: int, skipped_cp_direction: bool }
+func _get_next_tile_simulated(current_tile: int, came_from: int, player_id: int, remaining_steps: int, direction: int = 0) -> Dictionary:
+	var result = {"tile": -1, "skipped_cp_direction": false}
+	
 	if not movement_controller or not movement_controller.tile_nodes:
-		return current_tile + (direction if direction != 0 else 1)
+		result.tile = current_tile + (direction if direction != 0 else 1)
+		return result
 	
 	var tile_nodes = movement_controller.tile_nodes
 	if not tile_nodes.has(current_tile):
-		return current_tile + (direction if direction != 0 else 1)
+		result.tile = current_tile + (direction if direction != 0 else 1)
+		return result
 	
 	var tile = tile_nodes[current_tile]
 	
 	# connectionsがなければ単純にindex+direction（実際の移動処理と同じ）
 	if not tile.connections or tile.connections.is_empty():
-		return current_tile + direction
+		result.tile = current_tile + direction
+		return result
 	
 	# BranchTileの場合
 	if tile is BranchTile:
-		var result = tile.get_next_tile_for_direction(came_from)
-		if result.tile >= 0:
-			return result.tile
-		elif not result.choices.is_empty():
+		var branch_result = tile.get_next_tile_for_direction(came_from)
+		if branch_result.tile >= 0:
+			result.tile = branch_result.tile
+			return result
+		elif not branch_result.choices.is_empty():
 			# 複数選択肢がある場合、最良の選択肢を選ぶ
-			return _select_best_branch_choice(result.choices, player_id, remaining_steps - 1, current_tile)
+			return _select_best_branch_choice(branch_result.choices, player_id, remaining_steps - 1, current_tile)
 	
 	# 通常タイル（connectionsあり）
 	var choices = []
@@ -277,34 +298,80 @@ func _get_next_tile_simulated(current_tile: int, came_from: int, player_id: int,
 			choices.append(conn)
 	
 	if choices.is_empty():
-		return came_from if came_from >= 0 else current_tile + direction
+		result.tile = came_from if came_from >= 0 else current_tile + direction
+		return result
 	if choices.size() == 1:
-		return choices[0]
+		result.tile = choices[0]
+		return result
 	
 	# 複数選択肢がある場合、最良の選択肢を選ぶ
 	return _select_best_branch_choice(choices, player_id, remaining_steps - 1, current_tile)
 
+
 ## 分岐で最良の選択肢を選ぶ（再帰的に評価）
-func _select_best_branch_choice(choices: Array, player_id: int, remaining_steps: int, came_from: int) -> int:
+## 返り値: { tile: int, skipped_cp_direction: bool }
+func _select_best_branch_choice(choices: Array, player_id: int, remaining_steps: int, came_from: int) -> Dictionary:
+	var result = {
+		"tile": choices[0] if not choices.is_empty() else -1,
+		"skipped_cp_direction": false
+	}
+	
 	if choices.is_empty():
-		return -1
+		result.tile = -1
+		return result
 	
 	if choices.size() == 1:
-		return choices[0]
+		result.tile = choices[0]
+		return result
 	
 	var best_choice = choices[0]
 	var best_score = -999999
 	
+	# 各選択肢のスコアを計算
+	var choice_scores = {}
 	for choice in choices:
 		# 残り歩数で停止する位置を評価
 		var eval_result = evaluate_path(choice, remaining_steps, player_id, came_from)
 		var score = eval_result.score
+		choice_scores[choice] = score
 		
 		if score > best_score:
 			best_score = score
 			best_choice = choice
 	
-	return best_choice
+	# CP方向を判定（checkpoint_calculatorがあれば）
+	var cp_direction_tile = -1
+	if checkpoint_calculator and came_from >= 0:
+		var visited = _get_visited_checkpoints(player_id)
+		
+		# 分岐タイル（came_from）がCPなら除外
+		var branch_cp = _get_checkpoint_id_at_tile(came_from)
+		if branch_cp != "" and branch_cp not in visited:
+			if typeof(visited) != TYPE_ARRAY or visited.is_read_only():
+				visited = visited.duplicate()
+			visited.append(branch_cp)
+		
+		# 各方向の最短CP距離を比較
+		var nearest_cp_distance = 9999
+		for choice in choices:
+			if checkpoint_calculator.is_branch_tile(came_from):
+				var cp_result = checkpoint_calculator.get_directional_nearest_checkpoint(came_from, choice, visited)
+				if cp_result.distance < nearest_cp_distance:
+					nearest_cp_distance = cp_result.distance
+					cp_direction_tile = choice
+			else:
+				var cp_result = checkpoint_calculator.get_nearest_unvisited_checkpoint(choice, visited)
+				if cp_result.distance < nearest_cp_distance:
+					nearest_cp_distance = cp_result.distance
+					cp_direction_tile = choice
+	
+	# 選択した方向がCP方向でない場合、フラグを立てる
+	if cp_direction_tile >= 0 and best_choice != cp_direction_tile:
+		result.skipped_cp_direction = true
+	
+	result.tile = best_choice
+	return result
+
 
 # =============================================================================
 # 停止位置評価
@@ -741,26 +808,25 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var cp_bonus = SCORE_CHECKPOINT_DIRECTION_BONUS if is_cp_dir else 0
 		var magic_bonus = current_magic if is_cp_dir else 0
 		
-		# 詳細情報を再取得（最初の1歩の足止めもチェック）
-		var first_step_forced = false
-		var first_step_toll = 0
-		var debug_tile_info = _get_tile_info(tile_index)
-		var debug_tile_owner = debug_tile_info.get("owner", -1)
-		var debug_creature = debug_tile_info.get("creature", {})
+		# 着地点（stop_tile）の情報を取得
+		var stop_tile = data.get("stop_tile", -1)
+		if stop_tile < 0:
+			print("  →方向%d: stop_tile未取得！ data=%s" % [tile_index, str(data)])
+			continue
+		var stop_tile_info = _get_tile_info(stop_tile)
+		var stop_tile_owner = stop_tile_info.get("owner", -1)
+		var stop_creature = stop_tile_info.get("creature", {})
+		var stop_toll = 0
+		if stop_tile_owner != player_id and stop_tile_owner >= 0:
+			stop_toll = _calculate_toll(stop_tile)
 		
-		if debug_tile_owner != player_id and debug_tile_owner >= 0:
-			var debug_forced_result = _check_forced_stop(tile_index, player_id)
-			if debug_forced_result.stopped:
-				first_step_forced = true
-			first_step_toll = _calculate_toll(tile_index)
-		
-		print("  →タイル%d: base=%.0f(owner=%d, toll=%d, creature=%s, forced=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
+		print("  →方向%d→着地%d: base=%.0f(owner=%d, toll=%d, creature=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
 			tile_index,
+			stop_tile,
 			data.base_score,
-			debug_tile_owner,
-			first_step_toll,
-			debug_creature.get("name", "なし"),
-			str(first_step_forced),
+			stop_tile_owner,
+			stop_toll,
+			stop_creature.get("name", "なし"),
 			cp_bonus,
 			magic_bonus,
 			final_scores[tile_index],

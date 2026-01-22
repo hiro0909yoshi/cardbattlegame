@@ -407,6 +407,51 @@ func _set_action_selection_navigation():
 			func(): cancel()  # 戻る
 		)
 
+## 現在の状態に応じてナビゲーションを復元
+func _restore_navigation():
+	match current_state:
+		State.SELECTING_LAND:
+			_set_land_selection_navigation()
+		State.SELECTING_ACTION:
+			# ActionMenuUIがナビゲーションを設定するので、ここでは戻るボタンのみ
+			_set_action_selection_navigation()
+		State.SELECTING_MOVE_DEST:
+			# 移動先選択用ナビゲーション
+			if ui_manager:
+				ui_manager.enable_navigation(
+					func(): LandActionHelper._confirm_move_selection(self),
+					func(): cancel(),
+					func(): _on_arrow_up(),
+					func(): _on_arrow_down()
+				)
+		State.SELECTING_LEVEL:
+			# レベル選択用ナビゲーション（LevelSelectionUIで管理されるのでキャンセルのみ）
+			if ui_manager:
+				ui_manager.enable_navigation(
+					Callable(),  # 決定はLevelSelectionUIで処理
+					func(): cancel(),
+					func(): _on_arrow_up(),
+					func(): _on_arrow_down()
+				)
+		State.SELECTING_TERRAIN:
+			# 地形選択用ナビゲーション
+			if ui_manager:
+				ui_manager.enable_navigation(
+					func(): LandActionHelper._confirm_terrain_selection(self),
+					func(): cancel(),
+					func(): _on_arrow_up(),
+					func(): _on_arrow_down()
+				)
+		State.SELECTING_SWAP:
+			# 交換選択用ナビゲーション（カード選択UI側で管理）
+			if ui_manager:
+				ui_manager.enable_navigation(
+					Callable(),  # 決定はカード選択で処理
+					func(): cancel()
+				)
+		_:
+			pass
+
 ## 土地選択用ナビゲーション設定（全ボタン）
 func _set_land_selection_navigation():
 	if ui_manager:

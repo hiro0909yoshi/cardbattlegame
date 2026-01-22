@@ -414,6 +414,13 @@ func _is_item_phase_active() -> bool:
 		return true
 	return false
 
+# 犠牲選択モードがアクティブかどうかを判定
+func _is_sacrifice_mode_active() -> bool:
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if ui_manager and ui_manager.card_selection_ui:
+		return ui_manager.card_selection_ui.selection_mode == "sacrifice"
+	return false
+
 # カード選択ハンドラーによる手札選択がアクティブかどうかを判定
 # （敵手札選択、デッキカード選択、カード変換選択など）
 func _is_handler_card_selection_active() -> bool:
@@ -513,14 +520,15 @@ func _input(event):
 							sibling.deselect_card()
 				
 				# クリーチャーカード（情報パネルON）、スペルカード（スペルフェーズ中）、
-				# アイテムフェーズ中のカードは即決定
+				# アイテムフェーズ中のカード、犠牲選択モードは即決定
 				var card_type = card_data.get("type", "")
 				var is_creature_with_panel = card_type == "creature" and GameSettings.use_creature_info_panel
 				var is_spell_in_spell_phase = card_type == "spell" and _is_spell_phase_active()
 				var is_item_phase = _is_item_phase_active()
 				var is_handler_selection = _is_handler_card_selection_active()
+				var is_sacrifice_mode = _is_sacrifice_mode_active()
 				
-				if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase or is_handler_selection:
+				if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase or is_handler_selection or is_sacrifice_mode:
 					select_card()
 					on_card_confirmed()
 				else:

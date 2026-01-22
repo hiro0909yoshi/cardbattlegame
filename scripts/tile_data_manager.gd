@@ -44,7 +44,8 @@ func get_tile_info(tile_index: int) -> Dictionary:
 		"level": tile.level,
 		"creature": tile.creature_data,
 		"has_creature": not tile.creature_data.is_empty(),
-		"is_special": is_special_tile_type(tile.tile_type)
+		"is_special": is_special_tile_type(tile.tile_type),
+		"connections": tile.connections if "connections" in tile else []
 	}
 
 # 特殊タイルかチェック（TileHelperに委譲）

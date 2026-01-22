@@ -50,6 +50,34 @@
 - CPUSacrificeSelectorは「どのカードを選ぶか」のみ担当
 - 破棄・合成適用は既存の`CardSacrificeHelper`と`SpellSynthesis`/`CreatureSynthesis`を使用
 
+## プレイヤー側カード犠牲UI（2025年1月追加）
+
+### UIManager変更
+`scripts/ui_manager.gd`
+- `excluded_card_index`: 犠牲選択時に除外するカードインデックス
+- `excluded_card_id`: 犠牲選択時に除外するカードID
+
+### CardSelectionUI変更
+`scripts/ui_components/card_selection_ui.gd`
+- `selection_mode == "sacrifice"`: 全カード選択可能（土地条件チェックスキップ）
+- 除外カード（召喚カード自身）のグレイアウト処理
+- 犠牲モードで確認パネル表示（クリーチャー/スペル/アイテム各情報パネル）
+- `_show_creature_info_panel`: 確認テキスト「犠牲にしますか？」
+
+### card.gd変更
+`scripts/card.gd`
+- `_is_sacrifice_mode_active()`: 犠牲選択モード判定
+- 犠牲モードでも即確定（情報パネル表示のため）
+
+### TileActionProcessor変更
+`scripts/tile_action_processor.gd`
+- `_process_card_sacrifice()`: 戻り値を`{card, index}`形式に変更
+- `execute_summon()`: 犠牲カード破棄後のcard_index調整
+  - 犠牲カードが召喚カードより前のインデックスの場合、card_indexを-1
+
+### 情報パネル切り替え
+`card_selection_ui.gd`内の各`_show_xxx_info_panel()`で他のパネルを閉じる処理追加
+
 ## デバッグフラグ
 ```gdscript
 tile_action_processor.debug_disable_card_sacrifice = true  # 現在無効化中

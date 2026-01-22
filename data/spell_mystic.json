@@ -1226,7 +1226,8 @@
 		  {
 			"effect_type": "place_creature",
 			"creature_id": 27,
-			"placement_mode": "select"
+			"placement_mode": "select",
+			"set_down": true
 		  },
 		  {
 			"effect_type": "self_destroy",
@@ -1255,7 +1256,8 @@
 		  {
 			"effect_type": "place_creature",
 			"creature_id": 208,
-			"placement_mode": "select"
+			"placement_mode": "select",
+			"set_down": true
 		  }
 		]
 	  },

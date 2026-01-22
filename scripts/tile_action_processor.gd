@@ -422,15 +422,23 @@ func execute_summon(card_index: int):
 	# カード犠牲処理（クリーチャー合成用）
 	# ブライトワールド発動中はカード犠牲を無視
 	var sacrifice_card = {}
+	var sacrifice_index = -1
 	var tile_element_for_sacrifice = tile.tile_type if tile and "tile_type" in tile else ""
 	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
+		var sacrifice_result = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
+		sacrifice_card = sacrifice_result.get("card", {})
+		sacrifice_index = sacrifice_result.get("index", -1)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時は召喚をキャンセル
 			if ui_manager:
 				ui_manager.phase_label.text = "召喚をキャンセルしました"
 			_complete_action()
 			return
+		
+		# 犠牲カードが召喚カードより前のインデックスにあった場合、召喚カードのインデックスを調整
+		if sacrifice_index >= 0 and sacrifice_index < card_index:
+			card_index -= 1
+			print("[TileActionProcessor] 犠牲カード破棄によりcard_indexを調整: %d" % card_index)
 	
 	# クリーチャー合成処理
 	var is_synthesized = false
@@ -657,6 +665,7 @@ func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_ca
 	if ui_manager:
 		ui_manager.phase_label.text = "犠牲にするカードを選択"
 		ui_manager.card_selection_filter = ""
+		ui_manager.excluded_card_index = summon_card_index  # 召喚カードを除外
 		var player = player_system.players[player_id]
 		ui_manager.show_card_selection_ui_mode(player, "sacrifice")
 	
@@ -669,19 +678,23 @@ func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_ca
 	# UIを閉じる
 	ui_manager.hide_card_selection_ui()
 	
+	# 除外インデックスをリセット
+	if ui_manager:
+		ui_manager.excluded_card_index = -1
+	
 	# 選択されたカードを取得
 	if selected_index < 0:
-		return {}
+		return {"card": {}, "index": -1}
 	
 	# 召喚するカードと同じインデックスは選択不可
 	if selected_index == summon_card_index:
 		if ui_manager:
 			ui_manager.phase_label.text = "召喚するカードは犠牲にできません"
-		return {}
+		return {"card": {}, "index": -1}
 	
 	var hand = card_system.get_all_cards_for_player(player_id)
 	if selected_index >= hand.size():
-		return {}
+		return {"card": {}, "index": -1}
 	
 	var sacrifice_card = hand[selected_index]
 	
@@ -689,7 +702,7 @@ func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_ca
 	card_system.discard_card(player_id, selected_index, "sacrifice")
 	print("[TileActionProcessor] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
 	
-	return sacrifice_card
+	return {"card": sacrifice_card, "index": selected_index}
 
 
 ## CPU用カード犠牲処理（自動選択）
@@ -707,17 +720,19 @@ func _process_card_sacrifice_cpu(player_id: int, creature_card: Dictionary, tile
 	
 	if sacrifice_card.is_empty():
 		print("[TileActionProcessor] CPU: 犠牲カードが選択できませんでした")
-		return {}
+		return {"card": {}, "index": -1}
 	
 	# カードを破棄（インデックスを探して破棄）
 	var hand = card_system.get_all_cards_for_player(player_id)
+	var sacrifice_index = -1
 	for i in range(hand.size()):
 		if hand[i].get("id") == sacrifice_card.get("id"):
 			card_system.discard_card(player_id, i, "sacrifice")
+			sacrifice_index = i
 			print("[TileActionProcessor] CPU: %s を犠牲にしました" % sacrifice_card.get("name", "?"))
 			break
 	
-	return sacrifice_card
+	return {"card": sacrifice_card, "index": sacrifice_index}
 
 
 ## CPUプレイヤーかどうか判定

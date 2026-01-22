@@ -458,6 +458,7 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	# 手札選択UIを表示（犠牲モード）
 	ui_manager.phase_label.text = "犠牲にするカードを選択"
 	ui_manager.card_selection_filter = ""
+	ui_manager.excluded_card_id = summon_creature.get("id", "")  # 召喚カードを除外
 	var player = player_system_ref.players[player_id]
 	ui_manager.show_card_selection_ui_mode(player, "sacrifice")
 	
@@ -472,6 +473,9 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	
 	# UIを閉じる
 	ui_manager.hide_card_selection_ui()
+	
+	# 除外IDをリセット
+	ui_manager.excluded_card_id = ""
 	
 	# 選択されたカードを取得
 	if selected_index < 0:
