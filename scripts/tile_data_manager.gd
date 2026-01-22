@@ -153,7 +153,7 @@ func get_upgrade_cost(tile_index: int) -> int:
 	return 0
 
 # 通行料を計算（新設計：要素係数・レベル係数・連鎖ボーナス・マップ係数を使用）
-func calculate_toll(tile_index: int, map_id: String = "") -> int:
+func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	if not tile_nodes.has(tile_index):
 		return 0
 	

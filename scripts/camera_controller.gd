@@ -283,7 +283,7 @@ func _input(event):
 
 
 ## 指定位置にUIがあるかチェック
-func _is_over_ui(screen_pos: Vector2) -> bool:
+func _is_over_ui(_screen_pos: Vector2) -> bool:
 	"""画面位置にUIコントロールがあるかを判定"""
 	var viewport = camera.get_viewport()
 	if not viewport:

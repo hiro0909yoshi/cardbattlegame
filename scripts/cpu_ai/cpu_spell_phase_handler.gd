@@ -155,6 +155,11 @@ func prepare_mystic_execution(decision: Dictionary, player_id: int) -> Dictionar
 	if creature_tile < 0 or mystic.is_empty():
 		return {"success": false}
 	
+	# ダウン状態チェック（決定後に状態が変わっている可能性があるため再チェック）
+	if _is_tile_down(creature_tile):
+		print("[CPU] 秘術使用失敗: タイル%dはダウン中" % creature_tile)
+		return {"success": false}
+	
 	print("[CPU] 秘術使用: %s (タイル%d)" % [mystic_data.get("name", "?"), creature_tile])
 	
 	# コスト取得
@@ -288,3 +293,19 @@ func format_target_for_log(target: Dictionary) -> String:
 			return "プレイヤー%d" % (target.get("player_id", 0) + 1)
 		_:
 			return str(target)
+
+
+## タイルがダウン状態かチェック
+func _is_tile_down(tile_index: int) -> bool:
+	if tile_index < 0:
+		return false
+	if not board_system:
+		return false
+	if not board_system.tile_nodes.has(tile_index):
+		return false
+	var tile_node = board_system.tile_nodes[tile_index]
+	if tile_node == null:
+		return false
+	if not tile_node.has_method("is_down"):
+		return false
+	return tile_node.is_down()

@@ -399,7 +399,7 @@ func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, con
 	var best_score = -999.0
 	
 	for target in targets:
-		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell, curse_info)
+		var score = _calculate_target_score(target, player_id, damage_value, is_damage_spell, curse_info, mystic_data)
 		if score > best_score:
 			best_score = score
 			best_target = target
@@ -407,7 +407,7 @@ func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, con
 	return {"target": best_target, "score": best_score}
 
 ## ターゲットスコアを計算
-func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}) -> float:
+func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}, mystic_data: Dictionary = {}) -> float:
 	var score = 0.0
 	
 	var tile_index = target.get("tile_index", -1)
@@ -420,7 +420,8 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
 	
 	if creature.is_empty():
-		return score
+		# 空き土地の場合は専用スコア計算
+		return _calculate_empty_land_score_for_mystic(target, tile_data, mystic_data)
 	
 	# 敵クリーチャーかどうか
 	var owner_id = -1
@@ -777,3 +778,45 @@ func _check_tile_is_down(tile_index: int) -> bool:
 	if not tile_node.has_method("is_down"):
 		return false
 	return tile_node.is_down()
+
+
+## 空き土地のスコアを計算（配置クリーチャーの属性一致を考慮）
+func _calculate_empty_land_score_for_mystic(target: Dictionary, tile_data: Dictionary, mystic_data: Dictionary) -> float:
+	var score = 1.0  # 空き土地の基本スコア
+	
+	if tile_data.is_empty():
+		return score
+	
+	var tile_element = tile_data.get("element", "")
+	if tile_element.is_empty():
+		tile_element = target.get("element", "")
+	
+	# place_creature効果からcreature_idを取得
+	var effect_parsed = mystic_data.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	var creature_id = 0
+	
+	for effect in effects:
+		if effect.get("effect_type") == "place_creature":
+			creature_id = effect.get("creature_id", 0)
+			break
+	
+	if creature_id == 0:
+		return score
+	
+	# creature_idから属性を取得
+	var creature_data = CardLoader.get_card_by_id(creature_id) if CardLoader else {}
+	var creature_element = creature_data.get("element", "") if creature_data else ""
+	
+	if creature_element.is_empty():
+		return score
+	
+	# 属性一致で大幅加点（最優先）
+	if tile_element == creature_element:
+		score += 100.0
+		print("[MysticAI] 空き土地スコア: tile=%d, element=%s, creature_element=%s → 属性一致ボーナス+100" % [target.get("tile_index", -1), tile_element, creature_element])
+	elif tile_element == "neutral":
+		score += 10.0  # ニュートラルは次善
+		print("[MysticAI] 空き土地スコア: tile=%d, element=%s → ニュートラルボーナス+10" % [target.get("tile_index", -1), tile_element])
+	
+	return score

@@ -814,7 +814,7 @@ func _on_empty_tapped():
 
 
 ## TapTargetManagerからターゲットが選択された時
-func _on_tap_target_selected(tile_index: int, creature_data: Dictionary):
+func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 	print("[UIManager] タップターゲット選択: タイル%d" % tile_index)
 	# 領地コマンドハンドラなど、呼び出し元に通知（シグナルを中継）
 	# 具体的な処理は各ハンドラが tap_target_manager.target_selected に直接接続

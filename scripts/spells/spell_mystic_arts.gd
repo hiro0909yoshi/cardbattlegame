@@ -46,8 +46,7 @@ var _current_caster_index: int = 0
 
 
 # ============ 定数 ============
-
-const TapTargetManager = preload("res://scripts/ui_components/tap_target_manager.gd")
+# TapTargetManager はグローバルクラスとして登録済み
 
 
 # ============ 初期化 ============
@@ -85,7 +84,7 @@ func start_mystic_phase(player_id: int) -> void:
 		return
 	
 	# クリーチャー選択UIを表示
-	await _select_creature(available_creatures)
+	_select_creature(available_creatures)
 
 
 ## 秘術フェーズ中かどうか
@@ -308,7 +307,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 	
 	# 秘術が1つだけなら自動選択
 	if mystic_arts.size() == 1:
-		await _select_target(selected_creature, mystic_arts[0])
+		_select_target(selected_creature, mystic_arts[0])
 		return
 	
 	# 複数の秘術がある場合はActionMenuUIで選択
@@ -359,7 +358,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 	action_menu.hide_menu()
 	
 	# ターゲット選択に進む
-	await _select_target(selected_creature, mystic_art_selected)
+	_select_target(selected_creature, mystic_art_selected)
 
 
 

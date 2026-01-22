@@ -3,24 +3,27 @@
 ## 盤面に配置されているクリーチャーが、バトル参加者（侵略側・防御側）に対してバフを与えるパッシブスキル
 ##
 ## 【主な機能】
-## - 属性条件による応援（火属性クリーチャーに+10など）
+## - 属性条件による応援（火地属性クリーチャーにAP+10など）
 ## - バトルロール条件（攻撃側/防御側のみ）
 ## - 種族条件（ゴブリン種族のみなど）
 ## - 所有者一致条件（自分のクリーチャーのみ）
 ## - 動的ボーナス（隣接自領地数に応じて変動）
+## - 重複防止: 同じクリーチャーIDの応援は1回のみ適用（敵味方関係なく）
+##   ※例外: マッドハーレクイン(ID:342)はプレイヤーごとに1回適用
 ##
 ## 【実装済みクリーチャー】
-## - Boges (ID: 401) - 火属性クリーチャーにST+10
-## - Grimalkin (ID: 404) - 風属性クリーチャーにST+10
-## - Salamander (ID: 421) - 攻撃側にST+10
-## - Naiad (ID: 424) - 防御側にHP+10
-## - Phantom Warrior (ID: 431) - 地属性クリーチャーにST+10
-## - Banshee (ID: 441) - 水属性クリーチャーにST+10
-## - Mad Harlequin (ID: 444) - 自領地（動的、ST +N×10）
-## - Red Cap (ID: 445) - ゴブリン種族にST+10、HP+10
+## - デッドウォーロード (ID: 22, 火) - 侵略側にAP+10
+## - ヘルバイロン (ID: 43, 火) - 火地属性クリーチャーにAP+10
+## - オトヒメ (ID: 114, 水) - 防御側にHP+10
+## - ラハブ (ID: 144, 水) - 水風属性クリーチャーにHP+10
+## - プロンディーデス (ID: 237, 地) - 火地属性クリーチャーにHP+10
+## - マッドハーレクイン (ID: 342, 風) - 自クリーチャーにAP&HP+隣接自領地数×20
+## - ロードオブペイン (ID: 347, 風) - 風水属性クリーチャーにAP+10
+## - ボージェス (ID: 436, 無) - 無属性クリーチャーにHP+20
+## - レッドキャップ (ID: 445, 無) - ゴブリン種族にAP+20
 ##
-## @version 1.0
-## @date 2025-10-31
+## @version 1.2
+## @date 2026-01-22
 
 class_name SkillSupport
 
@@ -50,6 +53,11 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 	# バトル参加者（侵略側・防御側）に応援効果を適用
 	var battle_participants = [participants["attacker"], participants["defender"]]
 	
+	# 適用済み応援を追跡（重複防止）
+	# 通常: クリーチャーIDごとに1回のみ
+	# マッドハーレクイン(ID:342): プレイヤーIDごとに1回
+	var applied_support: Dictionary = {}  # {participant_index: {creature_id: true または {player_id: true}}}
+	
 	for supporter_data in support_creatures:
 		var supporter_creature = supporter_data["creature_data"]
 		
@@ -58,6 +66,7 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 			continue
 		
 		var supporter_player_id = supporter_data["player_id"]
+		var supporter_id = supporter_creature.get("id", -1)
 		var ability_parsed = supporter_creature.get("ability_parsed", {})
 		var effects = ability_parsed.get("effects", [])
 		
@@ -70,10 +79,33 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 			var bonus = effect.get("bonus", {})
 			
 			# 各バトル参加者に対して応援効果をチェック
-			for participant in battle_participants:
+			for i in range(battle_participants.size()):
+				var participant = battle_participants[i]
+				
+				# 重複チェック
+				if not applied_support.has(i):
+					applied_support[i] = {}
+				
+				# マッドハーレクイン(ID:342)は特殊処理（プレイヤーごとにカウント）
+				if supporter_id == 342:
+					if not applied_support[i].has(supporter_id):
+						applied_support[i][supporter_id] = {}
+					if applied_support[i][supporter_id].has(supporter_player_id):
+						continue  # このプレイヤーのマッドハーレクインは既に適用済み
+				else:
+					# 通常の応援: クリーチャーIDごとに1回のみ
+					if applied_support[i].has(supporter_id):
+						continue  # このクリーチャーIDは既に適用済み
+				
 				if _check_support_target(participant, target, supporter_player_id):
 					_apply_support_bonus(participant, bonus, supporter_creature.get("name", "?"), 
 										battle_tile_index, participant.player_id, board_system)
+					
+					# 適用済みとしてマーク
+					if supporter_id == 342:
+						applied_support[i][supporter_id][supporter_player_id] = true
+					else:
+						applied_support[i][supporter_id] = true
 
 ## 応援対象判定
 ##
@@ -185,7 +217,7 @@ static func _apply_support_bonus(participant: BattleParticipant, bonus: Dictiona
 ## 隣接自領地数を数える
 ##
 ## バトルタイルに隣接する自分の領地の数をカウントする
-## Mad Harlequinなどの動的ボーナス計算に使用
+## マッドハーレクインなどの動的ボーナス計算に使用
 ##
 ## @param tile_index: 対象タイルのインデックス
 ## @param player_id: プレイヤーID

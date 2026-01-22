@@ -171,16 +171,17 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 		if not check_result.passed:
 			return {"success": false, "reason": "lands_required", "message": check_result.message}
 	
+	# カード犠牲処理用の属性を先に取得
+	var tile_element = tile_info.get("element", "")
+	
 	# 配置制限チェック
 	if not _is_condition_check_disabled("cannot_summon"):
-		var tile_element = tile_info.get("element", "")
 		var cannot_result = tile_action_processor.check_cannot_summon(card_data, tile_element)
 		if not cannot_result.passed:
 			return {"success": false, "reason": "cannot_summon", "message": cannot_result.message}
 	
 	# カード犠牲処理
 	var sacrifice_card = {}
-	var tile_element = tile_info.get("element", "")
 	if _requires_card_sacrifice(card_data) and not _is_condition_check_disabled("card_sacrifice"):
 		sacrifice_card = select_sacrifice_card(player_id, card_data, tile_element)
 		if sacrifice_card.is_empty():

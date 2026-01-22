@@ -394,7 +394,7 @@ func _execute_cpu_spell(decision: Dictionary):
 
 ## CPUがミスティックアーツを実行
 func _execute_cpu_mystic_arts(decision: Dictionary):
-	# CPUSpellPhaseHandlerで準備処理
+	# CPUSpellPhaseHandlerで準備処理（ダウンチェック含む）
 	var prep = cpu_spell_phase_handler.prepare_mystic_execution(decision, current_player_id)
 	if not prep.get("success", false):
 		pass_spell(false)
@@ -404,19 +404,17 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 	var mystic_data = prep.get("mystic_data", {})
 	var creature_info = prep.get("creature_info", {})
 	var target_data = prep.get("target_data", {})
-	var cost = prep.get("cost", 0)
 	var target = prep.get("target", {})
 	
-	# コストを支払う
-	if player_system:
-		player_system.add_magic(current_player_id, -cost)
+	# 注意: コストはspell_mystic_arts.execute_mystic_art()内で支払われる
+	# ここで先に支払うと、can_cast_mystic_artで失敗した場合にコストが戻らない
 	
 	# 発動通知表示
 	if spell_cast_notification_ui:
 		var caster_name = creature_info.get("creature_data", {}).get("name", "クリーチャー")
 		await _show_spell_cast_notification(caster_name, target, mystic_data, true)
 	
-	# 秘術効果を実行
+	# 秘術効果を実行（コスト支払いはexecute_mystic_art内で行われる）
 	if spell_mystic_arts:
 		spell_mystic_arts.current_mystic_player_id = current_player_id
 		await spell_mystic_arts.execute_mystic_art(creature_info, mystic, target_data)
