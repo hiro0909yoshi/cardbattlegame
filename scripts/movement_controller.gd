@@ -274,11 +274,23 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var selected_dir: int
 		# CPUの場合は自動選択
-		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
-			selected_dir = cpu_movement_evaluator.decide_direction(current_moving_player, [1, -1])
-			print("[CPU方向選択] プレイヤー%d: 方向 %d を選択" % [current_moving_player + 1, selected_dir])
+		if _is_cpu_player(current_moving_player):
+			# チュートリアルモードの場合はTutorialManagerから方向を取得
+			var tutorial_manager = _get_tutorial_manager()
+			if tutorial_manager and tutorial_manager.is_active:
+				selected_dir = tutorial_manager.get_cpu_direction()
+				print("[CPU方向選択] チュートリアル: プレイヤー%d: 方向 %d" % [current_moving_player + 1, selected_dir])
+			elif cpu_movement_evaluator:
+				selected_dir = cpu_movement_evaluator.decide_direction(current_moving_player, [1, -1])
+				print("[CPU方向選択] プレイヤー%d: 方向 %d を選択" % [current_moving_player + 1, selected_dir])
+			else:
+				selected_dir = 1  # フォールバック
 		else:
 			selected_dir = await _show_simple_direction_selection()
+			# チュートリアルモードの場合はプレイヤーの選択方向を記録
+			var tutorial_manager = _get_tutorial_manager()
+			if tutorial_manager and tutorial_manager.is_active:
+				tutorial_manager.set_player_direction(selected_dir)
 		_set_player_current_direction(current_moving_player, selected_dir)
 		return current_tile + selected_dir
 	
@@ -422,6 +434,15 @@ func _is_cpu_player(player_id: int) -> bool:
 	if game_flow_manager.debug_manual_control_all:
 		return false
 	return player_is_cpu[player_id]
+
+# TutorialManagerを取得
+func _get_tutorial_manager():
+	# game_flow_managerの親（Game3D）からTutorialManagerを取得
+	if game_flow_manager and game_flow_manager.get_parent():
+		var game_3d = game_flow_manager.get_parent().get_parent()
+		if game_3d and game_3d.has_node("TutorialManager"):
+			return game_3d.get_node("TutorialManager")
+	return null
 
 # プレイヤーの現在の移動方向を取得
 func _get_player_current_direction(player_id: int) -> int:

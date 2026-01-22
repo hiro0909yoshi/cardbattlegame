@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://d2settings"]
+[gd_scene load_steps=2 format=3 uid="uid://help_scene"]
 
-[ext_resource type="Script" path="res://scripts/settings.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/help.gd" id="1_script"]
 
-[node name="Settings" type="Control"]
+[node name="Help" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,25 +35,25 @@ theme_override_constants/separation = 40
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "設定"
+text = "説明"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="TutorialButton" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="CardSymbolButton" type="Button" parent="MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(400, 80)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 36
-text = "チュートリアル"
+text = "カード記号について"
 
-[node name="HelpButton" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="InfoPanelButton" type="Button" parent="MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(400, 80)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 36
-text = "説明"
+text = "インフォパネルについて"
 
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

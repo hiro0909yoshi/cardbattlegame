@@ -201,9 +201,11 @@ func start_turn():
 		ui_manager.hide_land_command_button()
 	
 	# カードドロー処理（常に1枚引く）
-	var drawn = spell_draw.draw_one(current_player.id)
-	if not drawn.is_empty() and current_player.id == 0:
-		await get_tree().create_timer(0.1).timeout
+	# チュートリアルモードではドローをスキップ
+	if not _is_tutorial_mode():
+		var drawn = spell_draw.draw_one(current_player.id)
+		if not drawn.is_empty() and current_player.id == 0:
+			await get_tree().create_timer(0.1).timeout
 	
 	# 破産チェック（敵スペル等で魔力マイナスの場合）
 	await check_and_handle_bankruptcy()
@@ -846,3 +848,23 @@ func unlock_input():
 ## 入力がロック中かどうか
 func is_input_locked() -> bool:
 	return _input_locked
+
+# ============================================================
+# チュートリアルモード判定
+# ============================================================
+
+## チュートリアルモードかどうか
+func _is_tutorial_mode() -> bool:
+	var game_3d = get_parent().get_parent() if get_parent() else null
+	if game_3d and "tutorial_manager" in game_3d:
+		var tm = game_3d.tutorial_manager
+		if tm and tm.is_active:
+			return true
+	return false
+
+## TutorialManagerを取得
+func get_tutorial_manager():
+	var game_3d = get_parent().get_parent() if get_parent() else null
+	if game_3d and "tutorial_manager" in game_3d:
+		return game_3d.tutorial_manager
+	return null

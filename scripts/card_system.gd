@@ -236,6 +236,23 @@ func deal_initial_hands_all_players(player_count: int):
 	
 	emit_signal("hand_updated")
 
+## チュートリアル用: 特定のカードIDで手札を設定
+func set_fixed_hand_for_player(player_id: int, card_ids: Array):
+	if not player_hands.has(player_id):
+		player_hands[player_id] = {"data": []}
+	player_hands[player_id]["data"].clear()
+	
+	for card_id in card_ids:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if not card_data.is_empty():
+			# 複製して追加（同じカードでも独立したデータにする）
+			player_hands[player_id]["data"].append(card_data.duplicate(true))
+		else:
+			print("[CardSystem] WARNING: カードID %d が見つかりません" % card_id)
+	
+	print("[CardSystem] プレイヤー%d: 固定手札設定完了 (%d枚)" % [player_id + 1, player_hands[player_id]["data"].size()])
+	emit_signal("hand_updated")
+
 ## 特定プレイヤーにデッキを設定（クエストモード用）
 ## deck_data: {"cards": [{"id": card_id, "count": 枚数}, ...]}
 func set_deck_for_player(player_id: int, deck_data: Dictionary):

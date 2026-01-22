@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://d2settings"]
+[gd_scene load_steps=2 format=3 uid="uid://help_card_symbol"]
 
-[ext_resource type="Script" path="res://scripts/settings.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/help_card_symbol.gd" id="1_script"]
 
-[node name="Settings" type="Control"]
+[node name="HelpCardSymbol" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,41 +23,34 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 100
-theme_override_constants/margin_top = 100
-theme_override_constants/margin_right = 100
-theme_override_constants/margin_bottom = 100
+theme_override_constants/margin_left = 80
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 80
+theme_override_constants/margin_bottom = 60
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 40
+theme_override_constants/separation = 20
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "設定"
+text = "カード記号について"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="TutorialButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "チュートリアル"
-
-[node name="HelpButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "説明"
-
-[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="ContentLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
 
 [node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
 custom_minimum_size = Vector2(200, 60)
