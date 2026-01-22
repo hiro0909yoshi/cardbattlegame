@@ -131,11 +131,10 @@ func _ready():
 		phase_display.name = "PhaseDisplay"
 		add_child(phase_display)
 	
-	# PlayerStatusDialog初期化
-	var PlayerStatusDialogClass = load("res://scripts/ui_components/player_status_dialog.gd")
-	if PlayerStatusDialogClass:
-		player_status_dialog = PlayerStatusDialogClass.new()
-		player_status_dialog.name = "PlayerStatusDialog"
+	# PlayerStatusDialog初期化（シーンからインスタンス化）
+	var player_status_scene = preload("res://scenes/ui/player_status_dialog.tscn")
+	if player_status_scene:
+		player_status_dialog = player_status_scene.instantiate()
 		add_child(player_status_dialog)
 	
 	# シグナル接続
@@ -211,7 +210,7 @@ func create_ui(parent: Node):
 		debug_panel.set("board_system_ref", board_system_ref)  # set()で設定で設定
 	
 	if player_status_dialog and player_status_dialog.has_method("initialize"):
-		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref)
+		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref, card_system_ref)
 	
 	# CreatureInfoPanelUI初期化
 	if creature_info_panel_ui:

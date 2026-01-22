@@ -189,7 +189,7 @@
 	  "name": "インシネレート",
 	  "rarity": "N",
 	  "type": "spell",
-	  "spell_type": "自己強化",
+	  "spell_type": "単体対象",
 	  "cost": {
 		"mp": 10
 	  },

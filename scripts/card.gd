@@ -71,6 +71,7 @@ func load_card_data(card_id):
 			set_element_color()
 			load_creature_image(card_id)
 			_adjust_children_size()
+			_update_card_type_symbol()  # 記号表示を追加
 		return
 	
 	print("[Card] ERROR: CardLoaderが見つかりません")
@@ -606,3 +607,105 @@ func _show_card_front():
 	var overlay = get_node_or_null("SecretBlackOverlay")
 	if overlay:
 		overlay.queue_free()
+
+# ========================================
+# カードタイプ記号表示システム
+# ========================================
+
+# カードタイプに応じた記号を表示
+func _update_card_type_symbol():
+	# 既存の記号ラベルを削除
+	var existing_label = get_node_or_null("CardTypeSymbol")
+	if existing_label:
+		existing_label.queue_free()
+	
+	if card_data.is_empty():
+		return
+	
+	# 記号と色を取得
+	var symbol_info = _get_card_type_symbol_info()
+	if symbol_info.symbol.is_empty():
+		return
+	
+	# 記号ラベルを作成
+	var symbol_label = Label.new()
+	symbol_label.name = "CardTypeSymbol"
+	symbol_label.text = symbol_info.symbol
+	symbol_label.add_theme_font_size_override("font_size", 24)
+	symbol_label.add_theme_color_override("font_color", symbol_info.color)
+	
+	# 左上に配置
+	symbol_label.position = Vector2(8, 5)
+	symbol_label.z_index = 10
+	symbol_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	add_child(symbol_label)
+
+# カードタイプに応じた記号と色を取得
+func _get_card_type_symbol_info() -> Dictionary:
+	var card_type = card_data.get("type", "")
+	
+	match card_type:
+		"creature":
+			# クリーチャー: ● 属性色
+			var element = card_data.get("element", "neutral")
+			return {"symbol": "●", "color": _get_element_color(element)}
+		
+		"item":
+			# アイテム: ▲ 種類色
+			var item_type = card_data.get("item_type", "")
+			return {"symbol": "▲", "color": _get_item_type_color(item_type)}
+		
+		"spell":
+			# スペル: ◆ スペルタイプ色
+			var spell_type = card_data.get("spell_type", "")
+			return {"symbol": "◆", "color": _get_spell_type_color(spell_type)}
+		
+		_:
+			return {"symbol": "", "color": Color.WHITE}
+
+# 属性の色を取得
+func _get_element_color(element: String) -> Color:
+	match element:
+		"fire":
+			return Color(1.0, 0.27, 0.27)  # 赤
+		"water":
+			return Color(0.27, 0.53, 1.0)  # 青
+		"earth":
+			return Color(0.53, 0.8, 0.27)  # 緑
+		"wind":
+			return Color(1.0, 0.8, 0.27)  # 黄
+		"neutral":
+			return Color(0.67, 0.67, 0.67)  # グレー
+		_:
+			return Color.WHITE
+
+# アイテム種類の色を取得
+func _get_item_type_color(item_type: String) -> Color:
+	match item_type:
+		"武器":
+			return Color(1.0, 0.4, 0.27)  # オレンジ
+		"防具":
+			return Color(0.27, 0.4, 1.0)  # 青
+		"アクセサリ":
+			return Color(0.27, 0.8, 0.53)  # 緑
+		"巻物":
+			return Color(0.8, 0.27, 1.0)  # 紫
+		_:
+			return Color.WHITE
+
+# スペルタイプの色を取得
+func _get_spell_type_color(spell_type: String) -> Color:
+	match spell_type:
+		"単体対象":
+			return Color(1.0, 0.27, 0.27)  # 赤
+		"単体特殊能力付与":
+			return Color(0.27, 1.0, 0.53)  # 緑
+		"複数対象":
+			return Color(1.0, 0.67, 0.27)  # オレンジ
+		"複数特殊能力付与":
+			return Color(0.27, 0.8, 1.0)  # 水色
+		"世界呪":
+			return Color(0.67, 0.27, 1.0)  # 紫
+		_:
+			return Color.WHITE
