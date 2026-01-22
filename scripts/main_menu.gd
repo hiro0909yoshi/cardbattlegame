@@ -136,7 +136,7 @@ func _on_album_pressed():
 
 func _on_settings_pressed():
 	print("設定選択")
-	# get_tree().change_scene_to_file("res://scenes/Settings.tscn")
+	get_tree().change_scene_to_file("res://scenes/Settings.tscn")
 
 func _on_shop_pressed():
 	print("ショップ選択")

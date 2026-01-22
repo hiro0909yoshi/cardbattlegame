@@ -1,0 +1,27 @@
+{
+  "id": "stage_tutorial",
+  "name": "チュートリアル",
+  "description": "基本操作を学ぶチュートリアルステージ",
+  "map_id": "map_tutorial",
+
+  "rule_preset": "standard",
+  "rule_overrides": {
+    "initial_magic": {"player": 200, "cpu": 200},
+    "goal_magic": 300
+  },
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "random",
+        "ai_level": 1,
+        "start_tile": 0
+      }
+    ],
+    "rewards": {
+      "first_clear": {"type": "gold", "amount": 100},
+      "repeat": {"type": "gold", "amount": 50}
+    }
+  }
+}

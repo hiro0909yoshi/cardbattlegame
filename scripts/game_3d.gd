@@ -8,7 +8,11 @@ var system_manager: GameSystemManager
 var stage_loader: StageLoader
 
 # ソロバトルはデフォルトでstage_test_4pを使用（4人対戦テスト）
+# GameData.set_meta("stage_id", "xxx") で外部から指定可能
 var stage_id: String = "stage_test_4p"
+
+# チュートリアルモードフラグ
+var is_tutorial_mode: bool = false
 
 # 設定（StageLoaderから取得）
 var player_count: int = 2
@@ -18,6 +22,16 @@ var player_is_cpu: Array = [false, true]
 var debug_manual_control_all: bool = true
 
 func _ready():
+	# 外部から指定されたステージIDがあれば使用
+	if GameData.has_meta("stage_id"):
+		stage_id = GameData.get_meta("stage_id")
+		GameData.remove_meta("stage_id")
+	
+	# チュートリアルモード確認
+	if GameData.has_meta("is_tutorial_mode"):
+		is_tutorial_mode = GameData.get_meta("is_tutorial_mode")
+		GameData.remove_meta("is_tutorial_mode")
+	
 	# StageLoaderを作成
 	stage_loader = StageLoader.new()
 	stage_loader.name = "StageLoader"

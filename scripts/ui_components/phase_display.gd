@@ -18,17 +18,30 @@ func initialize(ui_parent: Node):
 	ui_layer = ui_parent
 	create_phase_label()
 
-## フェーズラベルを作成 ※1.4倍
+## フェーズラベルを作成（大きめ半透明スタイル）
 func create_phase_label():
 	phase_label = Label.new()
 	phase_label.text = "セットアップ中..."
 	
-	var viewport_size = get_viewport().get_visible_rect().size
-	var player_panel_bottom = 28 + 336 + 28  # パネルY + パネル高さ(336) + マージン ※1.4倍
+	# フォントサイズ2.5倍（34 → 85）、半透明
+	phase_label.add_theme_font_size_override("font_size", 85)
+	phase_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.3))  # 白、薄め
 	
-	phase_label.position = Vector2(viewport_size.x / 2 - 210, player_panel_bottom)
-	phase_label.add_theme_font_size_override("font_size", 34)
-	ui_layer.add_child(phase_label)
+	# 画面幅いっぱいに広げて中央揃え
+	phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	phase_label.set_anchors_preset(Control.PRESET_TOP_WIDE)  # 上部全幅
+	phase_label.offset_top = 150
+	phase_label.offset_bottom = 250
+	
+	# マウス入力を透過（クリック不可）
+	phase_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# 背面レイヤーに配置（インフォパネル等より後ろ）
+	var background_layer = CanvasLayer.new()
+	background_layer.name = "PhaseDisplayLayer"
+	background_layer.layer = -1  # UILayer(0)より後ろ
+	ui_layer.get_parent().add_child(background_layer)
+	background_layer.add_child(phase_label)
 
 ## フェーズ表示を更新
 func update_phase_display(phase: int):
