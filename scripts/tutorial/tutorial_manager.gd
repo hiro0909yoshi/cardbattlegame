@@ -590,9 +590,8 @@ func start_tutorial():
 	_last_player_id = -1
 	tutorial_started.emit()
 	
-	# GameFlowManagerにチュートリアルモードを設定
-	if game_flow_manager:
-		game_flow_manager.is_tutorial_mode = true
+	# CPUのバトルポリシーをチュートリアル用に設定（常に戦闘する）
+	_set_cpu_tutorial_policy()
 	
 	# 初期手札を設定
 	_set_initial_hands()
@@ -603,19 +602,39 @@ func start_tutorial():
 	# 最初のステップを表示
 	_show_current_step()
 
+## CPUにチュートリアル用のバトルポリシーを設定
+func _set_cpu_tutorial_policy():
+	if not board_system_3d:
+		return
+	
+	# CPUTurnProcessorからcpu_ai_handlerを取得
+	var cpu_turn_processor = board_system_3d.get_node_or_null("CPUTurnProcessor")
+	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
+		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("tutorial")
+		print("[TutorialManager] CPUにチュートリアルポリシーを設定")
+
 # チュートリアル終了
 func end_tutorial():
 	is_active = false
 	
-	# GameFlowManagerのチュートリアルモードを解除
-	if game_flow_manager:
-		game_flow_manager.is_tutorial_mode = false
+	# CPUのバトルポリシーをデフォルトに戻す
+	_reset_cpu_policy()
 	
 	if tutorial_popup:
 		tutorial_popup.hide()
 	if tutorial_overlay:
 		tutorial_overlay.hide_overlay()
 	tutorial_ended.emit()
+
+## CPUのバトルポリシーをデフォルトに戻す
+func _reset_cpu_policy():
+	if not board_system_3d:
+		return
+	
+	var cpu_turn_processor = board_system_3d.get_node_or_null("CPUTurnProcessor")
+	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
+		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("balanced")
+		print("[TutorialManager] CPUのポリシーをデフォルトに戻す")
 
 # 次のステップへ
 func advance_step():

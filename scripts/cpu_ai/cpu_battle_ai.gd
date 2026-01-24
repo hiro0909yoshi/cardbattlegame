@@ -212,11 +212,24 @@ func evaluate_all_combinations_for_battle(
 		"item_index": -1,  # -1 = アイテムなし
 		"score": -999,
 		"sim_result": null,
-		"can_win": false
+		"can_win": false,
+		# ポリシー判断用フィールド
+		"can_win_both_no_item": false,      # 両方アイテムなしで勝てるか
+		"can_win_vs_enemy_item": false,     # 防衛側アイテム使用でも勝てるか（ワーストケース）
+		"best_both_no_item_creature_index": -1,  # 両方アイテムなしで勝てる最善のクリーチャー
+		"best_both_no_item_overkill": -999,      # 両方アイテムなし時のオーバーキル値
+		"best_no_item_creature_index": -1,  # ワーストケースで勝てる最善のクリーチャー
+		"best_no_item_overkill": -999,      # ワーストケース時のオーバーキル値
+		"first_creature_index": -1,         # 最初のクリーチャー（ALWAYS_BATTLE用）
+		"creature_evaluations": []          # 各クリーチャーの詳細評価
 	}
 	
 	var creatures = hand_utils.get_creatures_from_hand(current_player.id)
 	var items = hand_utils.get_items_from_hand(current_player.id)
+	
+	# 最初のクリーチャーを記録（aggressive用）
+	if not creatures.is_empty():
+		result["first_creature_index"] = creatures[0]["index"]
 	
 	print("[CPU AI] バトル組み合わせ評価: クリーチャー%d体, アイテム%d個" % [creatures.size(), items.size()])
 	
@@ -283,17 +296,56 @@ func evaluate_all_combinations_for_battle(
 		var creature = creature_entry["data"]
 		var creature_cost = hand_utils.calculate_card_cost(creature, current_player.id)
 		
+		# 各クリーチャーの評価結果を保存
+		var creature_eval = {
+			"index": creature_index,
+			"name": creature.get("name", "?"),
+			"cost": creature_cost,
+			"can_afford": false,
+			"can_win_both_no_item": false,      # 両方アイテムなしで勝てるか
+			"can_win_vs_enemy_item": false,     # 防衛側アイテム使用でも勝てるか
+			"overkill_both_no_item": -999,
+			"overkill_vs_enemy_item": -999
+		}
+		
 		# コストチェック
 		if not hand_utils.can_afford_card(current_player, creature_index):
 			print("  [スキップ] %s: コスト不足" % creature.get("name", "?"))
+			result["creature_evaluations"].append(creature_eval)
 			continue
 		
-		# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+		creature_eval["can_afford"] = true
+		
 		print("  [評価中] %s (コスト: %d)" % [creature.get("name", "?"), creature_cost])
+		
+		# 1. 両方アイテムなしシミュレーション
+		var both_no_item_result = _simulate_both_no_item(creature, defender, tile_info, current_player.id)
+		if both_no_item_result.is_win:
+			creature_eval["can_win_both_no_item"] = true
+			creature_eval["overkill_both_no_item"] = both_no_item_result.overkill
+			result["can_win_both_no_item"] = true
+			
+			# best_both_no_itemの更新（オーバーキルが大きいものを優先）
+			if not result.has("best_both_no_item_creature_index") or both_no_item_result.overkill > result.get("best_both_no_item_overkill", -999):
+				result["best_both_no_item_creature_index"] = creature_index
+				result["best_both_no_item_overkill"] = both_no_item_result.overkill
+			
+			print("    [両方アイテムなし] 勝利可能: オーバーキル %d" % both_no_item_result.overkill)
+		
+		# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
 		var worst_case = simulate_worst_case(creature, defender, tile_info, current_player.id, {})
 		
 		if worst_case.is_win:
-			# ワーストケースでも勝てる → アイテムなしで攻撃可能
+			# ワーストケースでも勝てる → 防衛側アイテム使用でも勝てる
+			creature_eval["can_win_vs_enemy_item"] = true
+			creature_eval["overkill_vs_enemy_item"] = worst_case.overkill
+			
+			# サマリーを更新
+			result["can_win_vs_enemy_item"] = true
+			if worst_case.overkill > result["best_no_item_overkill"]:
+				result["best_no_item_creature_index"] = creature_index
+				result["best_no_item_overkill"] = worst_case.overkill
+			
 			winning_combinations.append({
 				"creature_index": creature_index,
 				"creature": creature,
@@ -307,14 +359,12 @@ func evaluate_all_combinations_for_battle(
 				"uses_item": false,
 				"worst_case_option": worst_case.get("worst_case_option", "なし")
 			})
-			print("  [勝利可能] %s (アイテムなし, ワーストケースでも勝利): オーバーキル %d" % [
-				creature.get("name", "?"), worst_case.overkill
-			])
+			print("    [ワーストケース] 勝利可能: オーバーキル %d" % worst_case.overkill)
 		else:
 			# ワーストケースで負ける → 自分もアイテムを使って勝てるか探す
 			# ただし、敵がアイテム破壊・盗みを持っている場合はアイテムを使わない
 			if should_avoid_items:
-				print("  [攻撃不可] %s: ワーストケースで負け、敵がアイテム破壊/盗みを持つためアイテム使用不可" % creature.get("name", "?"))
+				print("    [ワーストケース] 敗北: 敵がアイテム破壊/盗みを持つためアイテム使用不可")
 			else:
 				var counter_item = find_item_to_beat_worst_case(
 					creature, defender, tile_info, current_player.id, current_player, creature_cost,
@@ -322,6 +372,9 @@ func evaluate_all_combinations_for_battle(
 				)
 				
 				if counter_item.can_win:
+					# CPUがアイテムを使えば逆転可能
+					result["can_win_vs_enemy_item"] = true
+					
 					winning_combinations.append({
 						"creature_index": creature_index,
 						"creature": creature,
@@ -331,16 +384,18 @@ func evaluate_all_combinations_for_battle(
 						"item_cost": hand_utils.get_item_cost(counter_item.item),
 						"total_cost": creature_cost + hand_utils.get_item_cost(counter_item.item),
 						"sim_result": null,
-						"overkill": 0,
+						"overkill": counter_item.get("overkill", 0),
 						"uses_item": true,
 						"worst_case_counter": true
 					})
-					print("  [勝利可能] %s + %s (ワーストケース対策): アイテムで逆転" % [
+					print("    [ワーストケース] %s + %s でアイテム使用して逆転可能" % [
 						creature.get("name", "?"),
 						counter_item.item.get("name", "?")
 					])
 				else:
-					print("  [攻撃不可] %s: ワーストケースで負け、対抗アイテムなし" % creature.get("name", "?"))
+					print("    [ワーストケース] 敗北: 対抗アイテムなし")
+		
+		result["creature_evaluations"].append(creature_eval)
 	
 	# 勝てる組み合わせがない場合 → 即死スキルで賭けるか検討
 	if winning_combinations.is_empty():
@@ -488,6 +543,34 @@ func _get_item_type_priority(item: Dictionary) -> int:
 # ============================================================
 # ワーストケースシミュレーション（CPUBattleDefenseEvaluatorに委譲）
 # ============================================================
+
+## 両方アイテムなしでのシミュレーション
+func _simulate_both_no_item(
+	attacker: Dictionary,
+	defender: Dictionary,
+	tile_info: Dictionary,
+	attacker_player_id: int
+) -> Dictionary:
+	if not battle_simulator:
+		return {"is_win": false, "sim_result": {}, "overkill": 0}
+	
+	# 両方アイテムなしでシミュレーション
+	var sim_result = battle_simulator.simulate_battle(
+		attacker, defender, tile_info, attacker_player_id,
+		{},  # attacker_item = なし
+		{}   # defender_item = なし
+	)
+	
+	var is_win = sim_result.get("result", -1) == BattleSimulator.BattleResult.ATTACKER_WIN
+	var overkill = 0
+	if is_win:
+		overkill = sim_result.get("attacker_final_ap", 0) - sim_result.get("defender_final_hp", 0)
+	
+	return {
+		"is_win": is_win,
+		"sim_result": sim_result,
+		"overkill": overkill
+	}
 
 ## 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション
 func simulate_worst_case(

@@ -358,6 +358,27 @@ func get_enemy_ai_profile_id(enemy_index: int) -> String:
 		return enemies[enemy_index].get("ai_profile_id", "easy")
 	return "easy"
 
+## 敵のバトルポリシーを取得（ステージ設定 > キャラクター設定 > デフォルト）
+func get_enemy_battle_policy(enemy_index: int) -> Dictionary:
+	var enemies = _get_enemies()
+	if enemy_index >= enemies.size():
+		return {}
+	
+	var enemy = enemies[enemy_index]
+	
+	# 1. ステージの敵設定に直接指定があればそれを使用
+	if enemy.has("battle_policy"):
+		return enemy.get("battle_policy", {})
+	
+	# 2. キャラクターのデフォルト設定を使用
+	var char_id = enemy.get("character_id", "")
+	var char_data = characters_data.get(char_id, {})
+	if char_data.has("battle_policy"):
+		return char_data.get("battle_policy", {})
+	
+	# 3. 指定がなければ空を返す（呼び出し側でデフォルト処理）
+	return {}
+
 ## 敵のデッキIDを取得
 func get_enemy_deck_id(enemy_index: int) -> String:
 	var enemies = _get_enemies()

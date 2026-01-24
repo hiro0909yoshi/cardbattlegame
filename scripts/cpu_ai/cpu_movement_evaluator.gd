@@ -61,6 +61,7 @@ var battle_simulator:
 var movement_controller = null
 var spell_movement: SpellMovement = null
 var battle_ai: CPUBattleAI = null
+var cpu_ai_handler = null  # 性格を反映したバトル結果取得用
 
 # チェックポイント距離計算システム
 var checkpoint_calculator: CheckpointDistanceCalculator = null
@@ -74,11 +75,18 @@ var _holy_word_evaluator: CPUHolyWordEvaluator = null
 
 ## 共有コンテキストでセットアップ
 func setup_with_context(ctx: CPUAIContextScript, p_movement_controller = null,
-		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null) -> void:
+		p_spell_movement: SpellMovement = null, p_battle_ai: CPUBattleAI = null,
+		p_cpu_ai_handler = null) -> void:
 	_context = ctx
 	movement_controller = p_movement_controller
 	spell_movement = p_spell_movement
 	battle_ai = p_battle_ai
+	cpu_ai_handler = p_cpu_ai_handler
+
+## cpu_ai_handlerを後から設定（ポリシー設定後に呼び出し）
+func set_cpu_ai_handler(handler) -> void:
+	cpu_ai_handler = handler
+	print("[CPUMovementEvaluator] cpu_ai_handler設定完了")
 	
 	# ホーリーワード評価をセットアップ
 	_holy_word_evaluator = CPUHolyWordEvaluator.new()
@@ -880,7 +888,7 @@ func _check_forced_stop(tile_index: int, player_id: int) -> Dictionary:
 		return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, movement_controller.tile_nodes)
 	return {"stopped": false}
 
-## 侵略して勝てるか判定（CPUBattleAIを使用）
+## 侵略して勝てるか判定（性格を反映したバトル結果を使用）
 func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 	var tile_info = _get_tile_info(tile_index)
 	var defender = tile_info.get("creature", {})
@@ -888,9 +896,29 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 	if defender.is_empty():
 		return true  # クリーチャーがいなければ勝ち
 	
-	# CPUBattleAIがあれば使う
+	# cpu_ai_handlerがあれば性格を反映したバトル結果を取得
+	if cpu_ai_handler and battle_ai:
+		var current_player = player_system.players[attacker_id] if player_system and attacker_id < player_system.players.size() else null
+		if current_player:
+			var eval_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
+			var policy_result = cpu_ai_handler.get_policy_based_battle_result(eval_result)
+			
+			print("[MovementEvaluator] _can_invade_and_win: tile=%d, will_battle=%s, will_win=%s" % [
+				tile_index, 
+				policy_result.get("will_battle", false), 
+				policy_result.get("will_win", false)
+			])
+			
+			# 戦闘して勝てる場合のみtrue
+			if policy_result.get("will_battle", false) and policy_result.get("will_win", false):
+				return true
+			# 戦闘しない、または戦闘しても勝てない場合はfalse
+			return false
+	else:
+		print("[MovementEvaluator] _can_invade_and_win: cpu_ai_handler=%s, battle_ai=%s (フォールバック使用)" % [cpu_ai_handler != null, battle_ai != null])
+	
+	# CPUBattleAIのみがあれば従来のロジック（フォールバック）
 	if battle_ai:
-		# 手札のクリーチャーで勝てるかチェック
 		var attacker_hand = card_system.get_all_cards_for_player(attacker_id) if card_system else []
 		for card in attacker_hand:
 			if card.get("hidden", false):
@@ -899,11 +927,10 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 				continue
 			
 			var eval_result = battle_ai.evaluate_single_creature_battle(
-				card, defender, tile_info, attacker_id, true  # is_attacker = true
+				card, defender, tile_info, attacker_id, true
 			)
 			if eval_result.get("can_win", false):
 				return true
-			# 即死ギャンブルでも勝てる可能性あり（50%以上なら考慮）
 			if eval_result.get("is_instant_death_gamble", false):
 				var probability = eval_result.get("instant_death_probability", 0)
 				if probability >= 50:
@@ -920,7 +947,6 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 			continue
 		if card.get("type", "") != "creature":
 			continue
-		# 簡易比較: AP >= 敵HP なら勝てると仮定
 		if card.get("ap", 0) >= defender.get("hp", 0):
 			return true
 	

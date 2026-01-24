@@ -13,9 +13,16 @@ signal territory_command_decided(command: Dictionary)
 const GameConstants = preload("res://scripts/game_constants.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUAIConstantsScript = preload("res://scripts/cpu_ai/cpu_ai_constants.gd")
+const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
 
 # 試行回数カウンター
 var decision_attempts = 0
+
+# バトルポリシー（性格）
+var battle_policy: CPUBattlePolicyScript = null
+
+# ターン内の侵略ポリシーキャッシュ（同一ターン内で一貫した判断を保つ）
+var _turn_attack_action_cache: int = -1
 
 # 共有コンテキスト
 var context: CPUAIContextScript = null
@@ -85,6 +92,48 @@ func set_game_flow_manager(gf_manager) -> void:
 		context.set_game_flow_manager(gf_manager)
 	if battle_ai:
 		battle_ai.set_game_flow_manager(gf_manager)
+
+## バトルポリシーを設定
+func set_battle_policy(policy: CPUBattlePolicyScript) -> void:
+	battle_policy = policy
+	if policy:
+		print("[CPU AI] バトルポリシーを設定")
+		policy.print_weights()
+
+## JSONデータからバトルポリシーを読み込んで設定
+func load_battle_policy_from_json(policy_data: Dictionary) -> void:
+	battle_policy = CPUBattlePolicyScript.new()
+	battle_policy.load_from_json(policy_data)
+	print("[CPU AI] JSONからバトルポリシーを読み込み")
+	battle_policy.print_weights()
+
+## プリセットポリシーを設定
+func set_battle_policy_preset(preset_name: String) -> void:
+	match preset_name:
+		"tutorial":
+			battle_policy = CPUBattlePolicyScript.create_tutorial_policy()
+		"standard":
+			battle_policy = CPUBattlePolicyScript.create_standard_policy()
+		"optimistic":
+			battle_policy = CPUBattlePolicyScript.create_optimistic_policy()
+		"passive":
+			battle_policy = CPUBattlePolicyScript.create_passive_policy()
+		"balanced":
+			battle_policy = CPUBattlePolicyScript.create_balanced_policy()
+		_:
+			battle_policy = CPUBattlePolicyScript.create_balanced_policy()
+	print("[CPU AI] プリセットポリシー '%s' を設定" % preset_name)
+	battle_policy.print_weights()
+
+# ============================================================
+# ターン管理
+# ============================================================
+
+## ターン開始時にキャッシュをリセット
+## CPUターン開始時に必ず呼び出すこと
+func reset_turn_cache() -> void:
+	_turn_attack_action_cache = -1
+	print("[CPU AI] ターンキャッシュをリセット")
 
 # ============================================================
 # 判断メソッド（外部から呼ばれる）
@@ -164,63 +213,127 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	print("[CPU AI] 防御側: %s (AP:%d, HP:%d)" % [defender_name, defender.get("ap", 0), defender.get("hp", 0)])
 	
 	# クリーチャー×アイテムの全組み合わせを評価（battle_aiに委譲）
-	var best_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
+	var eval_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
 	
-	# 勝てるなら攻撃、勝てないなら見送り
-	# 即死ギャンブルや無効化+即死の場合も攻撃する
-	# チュートリアルモード時は常に攻撃する
-	var is_tutorial = game_flow_manager_ref and game_flow_manager_ref.is_tutorial_mode
-	print("[CPU AI] is_tutorial=%s, game_flow_manager_ref=%s" % [is_tutorial, game_flow_manager_ref])
-	var should_attack = is_tutorial or best_result.can_win or \
-		best_result.get("is_instant_death_gamble", false) or \
-		best_result.get("is_nullify_instant_death", false)
-	
-	print("[CPU AI] バトル判断結果: can_win=%s, instant_death=%s, nullify_instant=%s, creature_index=%d" % [
-		best_result.can_win,
-		best_result.get("is_instant_death_gamble", false),
-		best_result.get("is_nullify_instant_death", false),
-		best_result.creature_index
+	print("[CPU AI] バトル評価結果: can_win_both_no_item=%s, can_win_vs_enemy_item=%s, creature_index=%d" % [
+		eval_result.get("can_win_both_no_item", false),
+		eval_result.get("can_win_vs_enemy_item", false),
+		eval_result.creature_index
 	])
 	
-	if should_attack:
-		var creature_index = best_result.creature_index
-		var item_index = best_result.item_index
-		
-		# チュートリアルモードでクリーチャーが選択されていない場合、最初のクリーチャーを使用
-		if is_tutorial and creature_index < 0:
-			var hand = card_system.get_hand_for_player(current_player.id)
-			for i in range(hand.size()):
-				var card = hand[i]
-				if card.get("type") == "creature":
-					creature_index = i
-					break
-			print("[CPU AI] チュートリアルモード: 最初のクリーチャー(index=%d)を強制選択" % creature_index)
-		
+	# 即死ギャンブルや無効化+即死は特別扱い（ポリシーより優先）
+	if eval_result.get("is_instant_death_gamble", false) or eval_result.get("is_nullify_instant_death", false):
+		var creature_index = eval_result.creature_index
 		var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
-		if best_result.get("is_instant_death_gamble", false):
+		if eval_result.get("is_instant_death_gamble", false):
 			print("[CPU AI] バトル決定: %s で即死に賭けます（確率: %d%%）" % [
 				creature.get("name", "?"),
-				best_result.get("instant_death_probability", 0)
-			])
-		elif best_result.get("is_nullify_instant_death", false):
-			print("[CPU AI] バトル決定: %s で無効化+即死を狙います（確率: %d%%）" % [
-				creature.get("name", "?"),
-				best_result.get("instant_death_probability", 0)
-			])
-		elif item_index >= 0:
-			var item = card_system.get_card_data_for_player(current_player.id, item_index)
-			print("[CPU AI] バトル決定: %s + %s で侵略します" % [
-				creature.get("name", "?"),
-				item.get("name", "?")
+				eval_result.get("instant_death_probability", 0)
 			])
 		else:
-			print("[CPU AI] バトル決定: %s で侵略します" % creature.get("name", "?"))
+			print("[CPU AI] バトル決定: %s で無効化+即死を狙います（確率: %d%%）" % [
+				creature.get("name", "?"),
+				eval_result.get("instant_death_probability", 0)
+			])
 		decision_attempts = 0
-		emit_signal("battle_decided", creature_index, item_index)
+		emit_signal("battle_decided", creature_index, -1)
+		return
+	
+	# ポリシーに基づいて行動を決定
+	var action = _decide_attack_action_by_policy(eval_result)
+	
+	print("[CPU AI] ポリシー判断結果: %s" % CPUBattlePolicyScript.AttackAction.keys()[action])
+	
+	var creature_index = -1
+	var item_index = -1
+	
+	match action:
+		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
+			# 必ず戦闘（最初のクリーチャーを使用）
+			creature_index = eval_result.get("first_creature_index", -1)
+			item_index = -1
+			if creature_index >= 0:
+				var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
+				print("[CPU AI] バトル決定（ALWAYS_BATTLE）: %s で強行突破" % creature.get("name", "?"))
+		
+		CPUBattlePolicyScript.AttackAction.BATTLE_IF_BOTH_NO_ITEM:
+			# 両方アイテムなしで勝てるクリーチャーを選択
+			creature_index = eval_result.get("best_both_no_item_creature_index", -1)
+			item_index = -1
+			if creature_index >= 0:
+				var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
+				print("[CPU AI] バトル決定（BOTH_NO_ITEM）: %s で侵略" % creature.get("name", "?"))
+		
+		CPUBattlePolicyScript.AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM:
+			# ワーストケースで勝てる組み合わせを選択（従来ロジック）
+			# アイテムなしで勝てるならアイテムなし、アイテム必要ならアイテムあり
+			creature_index = eval_result.creature_index
+			item_index = eval_result.item_index
+			if creature_index >= 0:
+				var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
+				if item_index >= 0:
+					var item = card_system.get_card_data_for_player(current_player.id, item_index)
+					print("[CPU AI] バトル決定（VS_ENEMY_ITEM）: %s + %s で侵略" % [creature.get("name", "?"), item.get("name", "?")])
+				else:
+					print("[CPU AI] バトル決定（VS_ENEMY_ITEM）: %s で侵略" % creature.get("name", "?"))
+		
+		CPUBattlePolicyScript.AttackAction.NEVER_BATTLE:
+			print("[CPU AI] バトルしない → 通行料を支払います")
+	
+	decision_attempts = 0
+	emit_signal("battle_decided", creature_index, item_index)
+
+## ポリシーに基づいて侵略時の行動を決定（ターン内キャッシュあり）
+func _decide_attack_action_by_policy(eval_result: Dictionary) -> int:
+	# 既にこのターンで決定済みならキャッシュを返す
+	if _turn_attack_action_cache >= 0:
+		print("[CPU AI] キャッシュされたポリシーを使用: %s" % CPUBattlePolicyScript.AttackAction.keys()[_turn_attack_action_cache])
+		return _turn_attack_action_cache
+	
+	# ポリシーが設定されていない場合はデフォルト（バランス型）を使用
+	var policy = battle_policy
+	if policy == null:
+		print("[CPU AI] ポリシー未設定、デフォルト（balanced）を使用")
+		policy = CPUBattlePolicyScript.create_balanced_policy()
 	else:
-		print("[CPU AI] 勝てる組み合わせなし → 通行料を支払います")
-		decision_attempts = 0
-		emit_signal("battle_decided", -1, -1)
+		print("[CPU AI] ポリシー設定済み")
+		policy.print_weights()
+	
+	# 抽選してキャッシュに保存
+	var action = policy.decide_attack_action(eval_result)
+	_turn_attack_action_cache = action
+	print("[CPU AI] ポリシー抽選結果をキャッシュ: %s" % CPUBattlePolicyScript.AttackAction.keys()[action])
+	
+	return action
+
+## 性格を反映したバトル結果を取得（移動シミュレーション用）
+## 戻り値: { "will_battle": bool, "will_win": bool }
+func get_policy_based_battle_result(eval_result: Dictionary) -> Dictionary:
+	var action = _decide_attack_action_by_policy(eval_result)
+	
+	match action:
+		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
+			# 勝てるかどうかに関わらず戦闘する
+			var can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
+			return {"will_battle": true, "will_win": can_win}
+		
+		CPUBattlePolicyScript.AttackAction.BATTLE_IF_BOTH_NO_ITEM:
+			if eval_result.get("can_win_both_no_item", false):
+				return {"will_battle": true, "will_win": true}
+			else:
+				return {"will_battle": false, "will_win": false}
+		
+		CPUBattlePolicyScript.AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM:
+			if eval_result.get("can_win_vs_enemy_item", false):
+				return {"will_battle": true, "will_win": true}
+			else:
+				return {"will_battle": false, "will_win": false}
+		
+		CPUBattlePolicyScript.AttackAction.NEVER_BATTLE:
+			return {"will_battle": false, "will_win": false}
+	
+	# フォールバック
+	return {"will_battle": false, "will_win": false}
 
 # CPUレベルアップ判断
 func decide_level_up(current_player, tile_info: Dictionary) -> void:
@@ -315,19 +428,35 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	if territory_ai == null:
 		return {"action": "battle"}
 	
-	# チュートリアルモード時は常にバトルを選択
-	var is_tutorial = game_flow_manager_ref and game_flow_manager_ref.is_tutorial_mode
-	if is_tutorial:
-		print("[CPU AI] チュートリアルモード: 強制的にバトルを選択")
-		return {"action": "battle"}
-	
 	var cmd_context = _build_territory_context(current_player, tile_info, "enemy_land")
 	
-	# 戦闘可能か判定
-	var can_win = _can_win_current_battle(current_player, tile_info)
+	# バトル評価を取得
+	var defender = tile_info.creature
+	var eval_result = battle_ai.evaluate_all_combinations_for_battle(current_player, defender, tile_info)
 	
-	if not can_win:
-		# 倒せない場合は領地コマンドを検討
+	# ポリシーに基づいて行動を決定
+	var action = _decide_attack_action_by_policy(eval_result)
+	
+	print("[CPU AI] decide_invasion_or_territory: ポリシー判断=%s" % CPUBattlePolicyScript.AttackAction.keys()[action])
+	
+	# ALWAYS_BATTLEまたはバトル可能な場合は戦闘を検討
+	if action != CPUBattlePolicyScript.AttackAction.NEVER_BATTLE:
+		# 戦闘を選択する場合でも、領地コマンドの方が有利なら領地コマンドを選ぶ
+		var can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
+		if can_win:
+			# 倒せる場合は侵略スコアと領地コマンドスコアを比較（下の処理へ）
+			pass
+		elif action == CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
+			# ALWAYS_BATTLEで勝てない場合は領地コマンドを検討しない（戦闘を強行）
+			return {"action": "battle"}
+		else:
+			# 勝てない場合は領地コマンドを検討
+			var territory_option = territory_ai.evaluate_all_options(cmd_context)
+			if not territory_option.is_empty():
+				return {"action": "territory_command", "command": territory_option}
+			return {"action": "skip"}
+	else:
+		# NEVER_BATTLEの場合は領地コマンドを検討
 		var territory_option = territory_ai.evaluate_all_options(cmd_context)
 		if not territory_option.is_empty():
 			return {"action": "territory_command", "command": territory_option}

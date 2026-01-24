@@ -659,13 +659,19 @@ func _initialize_cpu_movement_evaluator() -> void:
 	var battle_ai = CPUBattleAI.new()
 	battle_ai.setup_with_context(cpu_context)
 	
+	# CPUAIHandlerを取得（CPUTurnProcessorから）
+	var cpu_ai_handler = null
+	if board_system_3d.cpu_turn_processor:
+		cpu_ai_handler = board_system_3d.cpu_turn_processor.cpu_ai_handler
+	
 	# CPUMovementEvaluatorを作成（コンテキスト経由）
 	var cpu_movement_evaluator = CPUMovementEvaluator.new()
 	cpu_movement_evaluator.setup_with_context(
 		cpu_context,
 		board_system_3d.movement_controller,
 		spell_mov,
-		battle_ai
+		battle_ai,
+		cpu_ai_handler
 	)
 	
 	# GameFlowManagerに設定

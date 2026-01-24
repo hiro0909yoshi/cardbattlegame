@@ -196,6 +196,9 @@ func _apply_stage_settings():
 	# 全プレイヤーのデッキを設定
 	print("[Game3D] calling _setup_all_decks...")
 	_setup_all_decks()
+	
+	# CPUのバトルポリシーを設定
+	_setup_cpu_battle_policies()
 
 ## 全プレイヤーのデッキを設定（ソロバトル: 全員同じデッキ）
 func _setup_all_decks():
@@ -223,3 +226,41 @@ func _setup_all_decks():
 		system_manager.card_system.set_deck_for_player(player_id, deck_data)
 		system_manager.card_system.deal_initial_hand_for_player(player_id)
 		print("[Game3D] Player %d: ブック%d 設定完了 (%d種類)" % [player_id, GameData.selected_deck_index + 1, cards_dict.size()])
+
+## CPUのバトルポリシーを設定
+func _setup_cpu_battle_policies():
+	print("[Game3D] _setup_cpu_battle_policies 開始")
+	
+	if not system_manager:
+		print("[Game3D] system_manager が null")
+		return
+	if not system_manager.board_system_3d:
+		print("[Game3D] board_system_3d が null")
+		return
+	
+	var cpu_turn_processor = system_manager.board_system_3d.get_node_or_null("CPUTurnProcessor")
+	if not cpu_turn_processor:
+		print("[Game3D] CPUTurnProcessor が見つかりません")
+		return
+	if not cpu_turn_processor.cpu_ai_handler:
+		print("[Game3D] cpu_ai_handler が見つかりません")
+		return
+	
+	# CPU敵の数だけポリシーを設定（現在は1体のみ対応）
+	var enemies = stage_loader._get_enemies()
+	print("[Game3D] 敵の数: %d" % enemies.size())
+	if enemies.is_empty():
+		print("[Game3D] 敵がいないためポリシー設定スキップ")
+		return
+	
+	# 最初の敵のポリシーを取得して設定
+	var policy_data = stage_loader.get_enemy_battle_policy(0)
+	print("[Game3D] policy_data: %s" % policy_data)
+	
+	if policy_data.is_empty():
+		# ポリシー指定がなければデフォルト（balanced）を使用
+		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("balanced")
+		print("[Game3D] CPUバトルポリシー: デフォルト (balanced)")
+	else:
+		cpu_turn_processor.cpu_ai_handler.load_battle_policy_from_json(policy_data)
+		print("[Game3D] CPUバトルポリシー: JSONから読み込み")

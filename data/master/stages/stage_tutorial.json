@@ -13,7 +13,7 @@
   "quest": {
     "enemies": [
       {
-        "character_id": "bowser",
+        "character_id": "tutorial_enemy",
         "deck_id": "random",
         "ai_level": 1,
         "start_tile": 0

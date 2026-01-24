@@ -43,6 +43,10 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	var current_player = player_system.get_current_player()
 	
+	# ターン開始時にポリシーキャッシュをリセット
+	if cpu_ai_handler:
+		cpu_ai_handler.reset_turn_cache()
+	
 	# 通知ポップアップ等の完了を待機
 	await _wait_for_notifications()
 	

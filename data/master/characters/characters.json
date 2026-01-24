@@ -4,7 +4,39 @@
 	  "name": "クッパ",
 	  "model_path": "res://scenes/Characters/Bowser.tscn",
 	  "portrait_path": "",
-	  "description": "最初の敵"
+	  "description": "最初の敵",
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "both_no_item": 1.0,
+		  "vs_enemy_item": 0.0,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 1.0,
+		  "with_item": 1.0,
+		  "surrender": 0.0
+		}
+	  }
+	},
+	"tutorial_enemy": {
+	  "name": "チュートリアル敵",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "",
+	  "description": "チュートリアル用の敵（常に戦闘する）",
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 1.0,
+		  "both_no_item": 0.0,
+		  "vs_enemy_item": 0.0,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 1.0,
+		  "with_item": 0.0,
+		  "surrender": 0.0
+		}
+	  }
 	}
   }
 }

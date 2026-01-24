@@ -6,27 +6,27 @@
 
   "rule_preset": "quick",
   "rule_overrides": {
-    "initial_magic": {"player": 3000, "cpu": 3000},
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {"type": "magic", "target": 4000, "timing": "checkpoint"}
-      ]
-    }
+	"initial_magic": {"player": 3000, "cpu": 3000},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{"type": "magic", "target": 4000, "timing": "checkpoint"}
+	  ]
+	}
   },
 
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "skills_test",
-        "ai_level": 3,
-        "start_tile": 0
-      }
-    ],
-    "rewards": {
-      "first_clear": {"type": "gold", "amount": 1200},
-      "repeat": {"type": "gold", "amount": 250}
-    }
+	"enemies": [
+	  {
+		"character_id": "bowser",
+		"deck_id": "skills_test",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	],
+	"rewards": {
+	  "first_clear": {"type": "gold", "amount": 1200},
+	  "repeat": {"type": "gold", "amount": 250}
+	}
   }
 }

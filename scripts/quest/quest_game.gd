@@ -62,6 +62,9 @@ func _ready():
 	
 	# ゲーム開始
 	system_manager.start_game()
+	
+	# CPUのバトルポリシーを設定（start_game後にCPUTurnProcessorが初期化される）
+	_setup_cpu_battle_policies()
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():
@@ -219,3 +222,45 @@ func _setup_player_deck():
 	system_manager.card_system.set_deck_for_player(0, deck_data)
 	system_manager.card_system.deal_initial_hand_for_player(0)
 	print("[QuestGame] Player 0: ブック%d 設定完了 (%d種類)" % [GameData.selected_deck_index + 1, cards_dict.size()])
+
+## CPUのバトルポリシーを設定
+func _setup_cpu_battle_policies():
+	print("[QuestGame] _setup_cpu_battle_policies 開始")
+	
+	if not system_manager or not system_manager.board_system_3d:
+		print("[QuestGame] system_manager または board_system_3d が null")
+		return
+	
+	var cpu_turn_processor = system_manager.board_system_3d.get_node_or_null("CPUTurnProcessor")
+	if not cpu_turn_processor or not cpu_turn_processor.cpu_ai_handler:
+		print("[QuestGame] CPUTurnProcessor または cpu_ai_handler が見つかりません")
+		return
+	
+	var cpu_ai_handler = cpu_turn_processor.cpu_ai_handler
+	
+	# CPU敵のポリシーを設定
+	var enemies = stage_loader._get_enemies()
+	print("[QuestGame] 敵の数: %d" % enemies.size())
+	if enemies.is_empty():
+		return
+	
+	# 最初の敵のポリシーを取得して設定
+	var policy_data = stage_loader.get_enemy_battle_policy(0)
+	print("[QuestGame] policy_data: %s" % policy_data)
+	
+	if policy_data.is_empty():
+		print("[QuestGame] CPUバトルポリシー: 指定なし（デフォルト使用）")
+	else:
+		cpu_ai_handler.load_battle_policy_from_json(policy_data)
+		print("[QuestGame] CPUバトルポリシー: JSONから読み込み完了")
+	
+	# CPUMovementEvaluatorにもcpu_ai_handlerを設定（移動シミュレーション用）
+	print("[QuestGame] game_flow_manager: %s" % (system_manager.game_flow_manager != null))
+	print("[QuestGame] movement_controller: %s" % (system_manager.board_system_3d.movement_controller != null))
+	if system_manager.game_flow_manager and system_manager.board_system_3d.movement_controller:
+		var cpu_movement_evaluator = system_manager.board_system_3d.movement_controller.cpu_movement_evaluator
+		print("[QuestGame] cpu_movement_evaluator: %s" % (cpu_movement_evaluator != null))
+		if cpu_movement_evaluator:
+			cpu_movement_evaluator.set_cpu_ai_handler(cpu_ai_handler)
+		else:
+			print("[QuestGame] cpu_movement_evaluator が見つかりません")
