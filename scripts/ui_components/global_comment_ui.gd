@@ -24,6 +24,9 @@ var timeout_timer: Timer = null
 var game_flow_manager_ref = null
 var cpu_auto_advance_delay: float = 0.5  # CPUの場合の自動進行遅延（秒）
 
+## チュートリアルモード用
+var is_tutorial_style: bool = false
+
 func _ready():
 	_setup_ui()
 
@@ -36,6 +39,9 @@ func _setup_ui():
 	panel = PanelContainer.new()
 	panel.name = "CommentPanel"
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# サイズを内容に合わせる
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0, 0, 0, 0.7)
@@ -43,10 +49,10 @@ func _setup_ui():
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
 	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 40
-	style.content_margin_right = 40
-	style.content_margin_top = 25
-	style.content_margin_bottom = 25
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
 	panel.add_theme_stylebox_override("panel", style)
 	
 	# RichTextLabel
@@ -59,6 +65,10 @@ func _setup_ui():
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("normal_font_size", 60)
 	label.add_theme_color_override("default_color", Color.WHITE)
+	# ラベルのサイズも内容に合わせる
+	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	label.custom_minimum_size = Vector2.ZERO
 	
 	panel.add_child(label)
 	add_child(panel)
@@ -82,7 +92,10 @@ func show_message(message: String) -> void:
 	visible = true
 	waiting_for_click = false
 	
-	_center_panel()
+	if is_tutorial_style:
+		_position_panel_top()
+	else:
+		_center_panel()
 
 ## メッセージを非表示
 func hide_message() -> void:
@@ -113,7 +126,10 @@ func show_and_wait(message: String, player_id: int = -1) -> void:
 	visible = true
 	waiting_for_click = true
 	
-	_center_panel()
+	if is_tutorial_style:
+		_position_panel_top()
+	else:
+		_center_panel()
 	
 	# CPUターンの場合は短い遅延後に自動進行、人間の場合は通常のタイムアウト
 	if is_cpu_turn:
@@ -159,6 +175,8 @@ func _start_cpu_auto_advance_timer():
 
 ## パネルを画面中央に配置
 func _center_panel():
+	# パネルサイズをリセットして内容に合わせる
+	panel.reset_size()
 	await get_tree().process_frame
 	
 	var viewport_size = get_viewport().get_visible_rect().size
@@ -167,6 +185,55 @@ func _center_panel():
 		(viewport_size.x - panel_size.x) / 2,
 		(viewport_size.y - panel_size.y) / 2
 	)
+
+## パネルを画面上部に配置（チュートリアル用）
+func _position_panel_top():
+	# パネルサイズをリセットして内容に合わせる
+	panel.reset_size()
+	await get_tree().process_frame
+	
+	var viewport_size = get_viewport().get_visible_rect().size
+	var panel_size = panel.size
+	panel.position = Vector2(
+		(viewport_size.x - panel_size.x) / 2,
+		viewport_size.y * 0.1  # 上から10%の位置
+	)
+
+## チュートリアルモード用のスタイル設定
+func set_tutorial_style():
+	is_tutorial_style = true
+	label.add_theme_font_size_override("normal_font_size", 120)
+	
+	# パネルのマージンをコンパクトに
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.8)
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	style.content_margin_left = 25
+	style.content_margin_right = 25
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	panel.add_theme_stylebox_override("panel", style)
+
+## 通常モード用のスタイル設定
+func set_normal_style():
+	is_tutorial_style = false
+	label.add_theme_font_size_override("normal_font_size", 60)
+	
+	# パネルのマージンを通常に
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	style.content_margin_left = 40
+	style.content_margin_right = 40
+	style.content_margin_top = 25
+	style.content_margin_bottom = 25
+	panel.add_theme_stylebox_override("panel", style)
 
 func _start_timeout_timer():
 	_stop_timeout_timer()

@@ -6,6 +6,7 @@ class_name CardSelectionUI
 
 signal card_selected(card_index: int)
 signal selection_cancelled()
+signal card_info_shown(card_index: int)  # インフォパネル表示時
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
@@ -573,6 +574,7 @@ func on_card_selected(card_index: int):
 		if card_data.get("type") == "creature":
 			print("[CardSelectionUI] showing creature_info_panel for sacrifice/summon/swap")
 			_show_creature_info_panel(card_index, card_data)
+			emit_signal("card_info_shown", card_index)
 			return
 	
 	# 犠牲モードでスペル/アイテムカードの場合も確認パネル表示
@@ -742,6 +744,9 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 	
 	# アイテム情報パネルを表示
 	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index)
+	
+	# インフォパネル表示シグナル発火
+	emit_signal("card_info_shown", card_index)
 
 
 # アイテム情報パネルで確認された

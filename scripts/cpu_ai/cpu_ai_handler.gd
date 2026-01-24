@@ -168,7 +168,10 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	
 	# 勝てるなら攻撃、勝てないなら見送り
 	# 即死ギャンブルや無効化+即死の場合も攻撃する
-	var should_attack = best_result.can_win or \
+	# チュートリアルモード時は常に攻撃する
+	var is_tutorial = game_flow_manager_ref and game_flow_manager_ref.is_tutorial_mode
+	print("[CPU AI] is_tutorial=%s, game_flow_manager_ref=%s" % [is_tutorial, game_flow_manager_ref])
+	var should_attack = is_tutorial or best_result.can_win or \
 		best_result.get("is_instant_death_gamble", false) or \
 		best_result.get("is_nullify_instant_death", false)
 	
@@ -180,7 +183,20 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	])
 	
 	if should_attack:
-		var creature = card_system.get_card_data_for_player(current_player.id, best_result.creature_index)
+		var creature_index = best_result.creature_index
+		var item_index = best_result.item_index
+		
+		# チュートリアルモードでクリーチャーが選択されていない場合、最初のクリーチャーを使用
+		if is_tutorial and creature_index < 0:
+			var hand = card_system.get_hand_for_player(current_player.id)
+			for i in range(hand.size()):
+				var card = hand[i]
+				if card.get("type") == "creature":
+					creature_index = i
+					break
+			print("[CPU AI] チュートリアルモード: 最初のクリーチャー(index=%d)を強制選択" % creature_index)
+		
+		var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
 		if best_result.get("is_instant_death_gamble", false):
 			print("[CPU AI] バトル決定: %s で即死に賭けます（確率: %d%%）" % [
 				creature.get("name", "?"),
@@ -191,8 +207,8 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 				creature.get("name", "?"),
 				best_result.get("instant_death_probability", 0)
 			])
-		elif best_result.item_index >= 0:
-			var item = card_system.get_card_data_for_player(current_player.id, best_result.item_index)
+		elif item_index >= 0:
+			var item = card_system.get_card_data_for_player(current_player.id, item_index)
 			print("[CPU AI] バトル決定: %s + %s で侵略します" % [
 				creature.get("name", "?"),
 				item.get("name", "?")
@@ -200,7 +216,7 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 		else:
 			print("[CPU AI] バトル決定: %s で侵略します" % creature.get("name", "?"))
 		decision_attempts = 0
-		emit_signal("battle_decided", best_result.creature_index, best_result.item_index)
+		emit_signal("battle_decided", creature_index, item_index)
 	else:
 		print("[CPU AI] 勝てる組み合わせなし → 通行料を支払います")
 		decision_attempts = 0
@@ -297,6 +313,12 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 ## 敵領地での判断（侵略 vs 領地コマンド）
 func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
 	if territory_ai == null:
+		return {"action": "battle"}
+	
+	# チュートリアルモード時は常にバトルを選択
+	var is_tutorial = game_flow_manager_ref and game_flow_manager_ref.is_tutorial_mode
+	if is_tutorial:
+		print("[CPU AI] チュートリアルモード: 強制的にバトルを選択")
 		return {"action": "battle"}
 	
 	var cmd_context = _build_territory_context(current_player, tile_info, "enemy_land")

@@ -33,6 +33,9 @@ var player_is_cpu = []
 # デバッグ用: 全プレイヤーを手動操作にする（trueで有効）
 @export var debug_manual_control_all: bool = false
 
+# チュートリアルモード（CPUは常にバトルを仕掛ける）
+var is_tutorial_mode: bool = false
+
 # システム参照
 var player_system: PlayerSystem
 var card_system: CardSystem
@@ -340,6 +343,8 @@ func _on_tile_action_completed_3d():
 		return
 	
 	end_turn()
+
+
 
 # === UIコールバック ===
 
@@ -855,12 +860,8 @@ func is_input_locked() -> bool:
 
 ## チュートリアルモードかどうか
 func _is_tutorial_mode() -> bool:
-	var game_3d = get_parent().get_parent() if get_parent() else null
-	if game_3d and "tutorial_manager" in game_3d:
-		var tm = game_3d.tutorial_manager
-		if tm and tm.is_active:
-			return true
-	return false
+	var tm = get_tutorial_manager()
+	return tm != null and tm.is_active
 
 ## TutorialManagerを取得
 func get_tutorial_manager():
@@ -868,3 +869,5 @@ func get_tutorial_manager():
 	if game_3d and "tutorial_manager" in game_3d:
 		return game_3d.tutorial_manager
 	return null
+
+

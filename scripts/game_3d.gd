@@ -99,33 +99,8 @@ func _setup_tutorial():
 		tutorial_manager.name = "TutorialManager"
 		add_child(tutorial_manager)
 		
-		# 参照を設定（system_managerから取得）
-		var game_flow_manager = system_manager.game_flow_manager if system_manager else null
-		var ui_manager = system_manager.ui_manager if system_manager else null
-		var debug_controller = system_manager.debug_controller if system_manager else null
-		var card_system = system_manager.card_system if system_manager else null
-		tutorial_manager.initialize(game_flow_manager, ui_manager, debug_controller, card_system)
-		
-		# ターン開始シグナルに接続
-		if game_flow_manager:
-			game_flow_manager.turn_started.connect(_on_tutorial_turn_started)
-
-## チュートリアル中のターン開始処理
-var _last_tutorial_player_id: int = -1
-
-func _on_tutorial_turn_started(player_id: int):
-	print("[Game3D] _on_tutorial_turn_started: player_id=%d" % player_id)
-	if tutorial_manager and tutorial_manager.is_active:
-		# CPUターン(1)からプレイヤーターン(0)に戻った時 = 新しいターン
-		if _last_tutorial_player_id == 1 and player_id == 0:
-			tutorial_manager.advance_turn()
-		
-		# プレイヤー0のターン開始時にダイスを設定
-		if player_id == 0:
-			print("[Game3D] プレイヤー0のターン, tutorial_turn=%d" % tutorial_manager.current_turn)
-			tutorial_manager.set_dice_for_current_turn()
-		
-		_last_tutorial_player_id = player_id
+		# system_managerを渡して初期化（シグナル接続もTutorialManager内で行う）
+		tutorial_manager.initialize_with_systems(system_manager)
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():
