@@ -414,9 +414,18 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 
 
 ## 巻物使用時のAP固定処理
+## 注: 巻物強打の×1.5は SkillScrollAttack.apply() 内で処理済み
 func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	
+	# 巻物強打の場合は SkillScrollAttack.apply() で処理済みなので何もしない
+	if "巻物強打" in keywords:
+		print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
+		return
+	
+	# 巻物攻撃のみの場合
 	var scroll_config = keyword_conditions.get("巻物攻撃", {})
 	var scroll_type = scroll_config.get("scroll_type", "base_ap")
 	
@@ -793,37 +802,45 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 7. 2回攻撃スキルを判定
 	check_double_attack(participant, context)
 	
-	# 8. アイテム巻物が使用中の場合、AP を最終固定
+	# 8. 巻物使用中の場合、AP最終確認
+	# 注: 巻物強打の×1.5は SkillScrollAttack.apply() 内で処理済み
 	if participant.is_using_scroll:
 		var ability_parsed = participant.creature_data.get("ability_parsed", {})
-		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-		var scroll_config = keyword_conditions.get("巻物攻撃", {})
-		var scroll_type = scroll_config.get("scroll_type", "base_ap")
-		var board_system = board_system_ref
+		var keywords = ability_parsed.get("keywords", [])
 		
-		match scroll_type:
-			"fixed_ap":
-				var value = scroll_config.get("value", 0)
-				participant.current_ap = value
-				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-					  " AP:", value)
-			"base_ap":
-				var base_ap = participant.creature_data.get("ap", 0)
-				participant.current_ap = base_ap
-				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-					  " AP=基本AP:", base_ap)
-			"land_count":
-				var elements = scroll_config.get("elements", [])
-				var multiplier = scroll_config.get("multiplier", 1)
-				var total_count = 0
-				if board_system:
-					var scroll_player_id = context.get("player_id", 0)
-					for element in elements:
-						total_count += board_system.count_creatures_by_element(scroll_player_id, element)
-				var calculated_ap = total_count * multiplier
-				participant.current_ap = calculated_ap
-				print("【AP最終固定】", participant.creature_data.get("name", "?"), 
-					  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
+		# 巻物強打の場合は SkillScrollAttack.apply() で処理済み
+		if "巻物強打" in keywords:
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
+		else:
+			# 巻物攻撃のみの場合、AP最終固定
+			var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+			var scroll_config = keyword_conditions.get("巻物攻撃", {})
+			var scroll_type = scroll_config.get("scroll_type", "base_ap")
+			var board_system = board_system_ref
+			
+			match scroll_type:
+				"fixed_ap":
+					var value = scroll_config.get("value", 0)
+					participant.current_ap = value
+					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+						  " AP:", value)
+				"base_ap":
+					var base_ap = participant.creature_data.get("ap", 0)
+					participant.current_ap = base_ap
+					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+						  " AP=基本AP:", base_ap)
+				"land_count":
+					var elements = scroll_config.get("elements", [])
+					var multiplier = scroll_config.get("multiplier", 1)
+					var total_count = 0
+					if board_system:
+						var scroll_player_id = context.get("player_id", 0)
+						for element in elements:
+							total_count += board_system.count_creatures_by_element(scroll_player_id, element)
+					var calculated_ap = total_count * multiplier
+					participant.current_ap = calculated_ap
+					print("【AP最終固定】", participant.creature_data.get("name", "?"), 
+						  " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
 
 ## 2回攻撃スキル判定
 func check_double_attack(participant: BattleParticipant, context: Dictionary) -> void:

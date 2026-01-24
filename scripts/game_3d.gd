@@ -238,11 +238,9 @@ func _setup_cpu_battle_policies():
 		print("[Game3D] board_system_3d が null")
 		return
 	
-	var cpu_turn_processor = system_manager.board_system_3d.get_node_or_null("CPUTurnProcessor")
-	if not cpu_turn_processor:
-		print("[Game3D] CPUTurnProcessor が見つかりません")
-		return
-	if not cpu_turn_processor.cpu_ai_handler:
+	# board_system_3d.cpu_ai_handler を直接参照
+	var cpu_ai_handler = system_manager.board_system_3d.cpu_ai_handler
+	if not cpu_ai_handler:
 		print("[Game3D] cpu_ai_handler が見つかりません")
 		return
 	
@@ -259,8 +257,8 @@ func _setup_cpu_battle_policies():
 	
 	if policy_data.is_empty():
 		# ポリシー指定がなければデフォルト（balanced）を使用
-		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("balanced")
+		cpu_ai_handler.set_battle_policy_preset("balanced")
 		print("[Game3D] CPUバトルポリシー: デフォルト (balanced)")
 	else:
-		cpu_turn_processor.cpu_ai_handler.load_battle_policy_from_json(policy_data)
+		cpu_ai_handler.load_battle_policy_from_json(policy_data)
 		print("[Game3D] CPUバトルポリシー: JSONから読み込み")

@@ -100,6 +100,8 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 				is_nullified = attacker.is_using_scroll
 			"normal_attack":
 				is_nullified = not attacker.is_using_scroll
+			"ap_threshold":
+				is_nullified = _check_nullify_ap_threshold(nullify_condition, attacker)
 			_:
 				print("【無効化】未知のタイプ: ", nullify_type)
 				continue  # 次の無効化条件へ
@@ -178,6 +180,15 @@ func _check_nullify_ap_above(condition: Dictionary, attacker: BattleParticipant)
 	var base_up_ap = attacker.creature_data.get("base_up_ap", 0)
 	var attacker_base_ap = base_ap + base_up_ap
 	return attacker_base_ap >= threshold
+
+## AP閾値無効化判定（ケットシー用：AP40以上の攻撃を無効化など）
+## 攻撃時の最終APで判定
+func _check_nullify_ap_threshold(condition: Dictionary, attacker: BattleParticipant) -> bool:
+	var threshold = condition.get("threshold", 0)
+	# 攻撃時の最終AP（戦闘中に計算されたAP）を使用
+	var attacker_ap = attacker.current_ap
+	print("  【AP閾値無効化チェック】攻撃側AP: %d, 閾値: %d以上" % [attacker_ap, threshold])
+	return attacker_ap >= threshold
 
 ## 能力持ち無効化判定
 func _check_nullify_has_ability(condition: Dictionary, attacker: BattleParticipant) -> bool:

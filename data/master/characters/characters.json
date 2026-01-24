@@ -14,8 +14,14 @@
 		},
 		"defense": {
 		  "no_item": 1.0,
-		  "with_item": 1.0,
-		  "surrender": 0.0
+		  "always_protect": 0.0,
+		  "protect_mystic_arts": true,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": false,
+			"threshold": 200,
+			"min_defense_items": 2
+		  }
 		}
 	  }
 	},
@@ -33,8 +39,7 @@
 		},
 		"defense": {
 		  "no_item": 1.0,
-		  "with_item": 0.0,
-		  "surrender": 0.0
+		  "always_protect": 0.0
 		}
 	  }
 	}

@@ -158,12 +158,16 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 								card_system, ui_manager)
 
 func setup_cpu_ai_handler():
-	cpu_ai_handler = get_node_or_null("CPUAIHandler")
-	if not cpu_ai_handler:
+	var existing = get_node_or_null("CPUAIHandler")
+	if existing:
+		cpu_ai_handler = existing
+	elif not cpu_ai_handler:
+		# 新規作成
 		cpu_ai_handler = CPUAIHandler.new()
 		cpu_ai_handler.name = "CPUAIHandler"
 		add_child(cpu_ai_handler)
 	
+	# システム参照は毎回更新（battle_policyは保持される）
 	if cpu_ai_handler.has_method("setup_systems"):
 		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, player_buff_system, game_flow_manager)
 

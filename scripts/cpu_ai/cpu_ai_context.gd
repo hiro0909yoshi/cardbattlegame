@@ -25,6 +25,12 @@ var player_buff_system: PlayerBuffSystem = null
 var tile_action_processor: Node = null
 
 # ============================================================
+# バトルポリシー（性格）参照
+# ============================================================
+const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
+var battle_policy: CPUBattlePolicyScript = null
+
+# ============================================================
 # 共有インスタンス（遅延初期化）
 # ============================================================
 

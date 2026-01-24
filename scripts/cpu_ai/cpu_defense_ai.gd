@@ -6,9 +6,13 @@ extends RefCounted
 # 定数・共通クラスをpreload
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
 
 # 共有コンテキスト
 var _context: CPUAIContextScript = null
+
+# バトルポリシー（性格）への参照
+var battle_policy: CPUBattlePolicyScript = null
 
 # システム参照のgetter（contextから取得）
 var card_system: CardSystem:
@@ -33,6 +37,9 @@ var merge_evaluator: CPUMergeEvaluator
 func setup_with_context(ctx: CPUAIContextScript) -> void:
 	_context = ctx
 
+## バトルポリシーを設定
+func set_battle_policy(policy: CPUBattlePolicyScript) -> void:
+	battle_policy = policy
 
 func set_merge_evaluator(evaluator: CPUMergeEvaluator) -> void:
 	merge_evaluator = evaluator
@@ -55,12 +62,37 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	var tile_info = defense_context.get("tile_info", {})
 	var attacker_player_id = defense_context.get("attacker_player_id", -1)
 	var tile_level = tile_info.get("level", 1)
+	var tile_index = tile_info.get("index", -1)
 	
 	print("[CPUDefenseAI] 判断開始: %s vs %s (Lv%d)" % [
 		defender.get("name", "?"),
 		attacker.get("name", "?"),
 		tile_level
 	])
+	
+	# ポリシー判定：アイテムを使用するかどうか
+	var use_items = true  # デフォルトはアイテム使用
+	print("[CPUDefenseAI] battle_policy: %s" % (battle_policy != null))
+	if battle_policy:
+		# 通行料を取得
+		var toll = _calculate_toll(tile_index)
+		# 防御アイテム数を取得
+		var defense_item_count = _count_defense_items_in_hand(player_id)
+		
+		var policy_context = {
+			"defender": defender,
+			"tile_info": tile_info,
+			"toll": toll,
+			"defense_item_count": defense_item_count
+		}
+		
+		var defense_action = battle_policy.decide_defense_action(policy_context)
+		
+		if defense_action == CPUBattlePolicyScript.DefenseAction.NO_ITEM:
+			use_items = false
+			print("[CPUDefenseAI] ポリシー判断: アイテム使用しない")
+		else:
+			print("[CPUDefenseAI] ポリシー判断: アイテム使用可能")
 	
 	# 1. 無効化スキルで勝てるか判定
 	if _should_skip_due_to_nullify(defender, attacker, tile_info, attacker_player_id):
@@ -83,9 +115,9 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	if should_avoid_items:
 		print("[CPUDefenseAI] 敵がアイテム破壊/盗み持ち → アイテム使用不可")
 	
-	# 4. 即死脅威判定
+	# 4. 即死脅威判定（ポリシーでアイテム使用が許可されている場合のみ）
 	var instant_death_check = _check_instant_death_threat(attacker, defender)
-	if not should_avoid_items and instant_death_check.is_applicable:
+	if use_items and not should_avoid_items and instant_death_check.is_applicable:
 		var probability = instant_death_check.probability
 		print("[CPUDefenseAI] 敵が即死スキル持ち（%d%%）" % probability)
 		
@@ -131,7 +163,8 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	var armor_count = _count_armor_in_hand(player_id)
 	
 	var item_results = {"normal": [], "reserve": []}
-	if not should_avoid_items:
+	# ポリシーでアイテム使用が許可されており、敵のアイテム破壊/盗みがない場合のみ検索
+	if use_items and not should_avoid_items:
 		item_results = _find_winning_items(player_id, defender, attacker, tile_info, attacker_player_id, worst_outcome)
 	
 	var assist_results = _find_winning_assists(player_id, defender, attacker, tile_info, attacker_player_id, worst_outcome)
@@ -795,3 +828,31 @@ func _is_item_restriction_released(player_id: int) -> bool:
 	var player = player_system.players[player_id]
 	var player_dict = {"curse": player.curse}
 	return SpellRestriction.is_item_restriction_released(player_dict)
+
+## 通行料を計算
+func _calculate_toll(tile_index: int) -> int:
+	if tile_index < 0 or not board_system:
+		return 0
+	
+	if board_system.has_method("calculate_toll"):
+		return board_system.calculate_toll(tile_index)
+	
+	# TileDataManagerがあれば使用
+	if board_system.tile_data_manager and board_system.tile_data_manager.has_method("calculate_toll"):
+		return board_system.tile_data_manager.calculate_toll(tile_index, "map_1")
+	
+	return 0
+
+## 防御アイテム（防具・アクセサリ）の数をカウント
+func _count_defense_items_in_hand(player_id: int) -> int:
+	if not card_system:
+		return 0
+	
+	var hand = card_system.get_all_cards_for_player(player_id)
+	var count = 0
+	for card in hand:
+		if card.get("type", "") == "item":
+			var item_type = card.get("item_type", "")
+			if item_type in ["防具", "アクセサリ"]:
+				count += 1
+	return count

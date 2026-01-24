@@ -52,6 +52,8 @@ func _ready():
 
 # システム参照を設定
 func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_system: BattleSystem, s_system: PlayerBuffSystem, gf_manager = null):
+	# 既存のbattle_policyを保持
+	var existing_policy = battle_policy
 	# コンテキストを初期化
 	context = CPUAIContextScript.new()
 	context.setup(b_system, p_system, c_system)
@@ -79,6 +81,10 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 	# TileActionProcessorを設定（土地条件チェック用）
 	if context.tile_action_processor:
 		territory_ai.set_tile_action_processor(context.tile_action_processor)
+	
+	# 既存のbattle_policyを復元
+	if existing_policy:
+		battle_policy = existing_policy
 
 
 ## 共有コンテキストを取得（他のAIモジュールから参照用）
@@ -106,6 +112,9 @@ func load_battle_policy_from_json(policy_data: Dictionary) -> void:
 	battle_policy.load_from_json(policy_data)
 	print("[CPU AI] JSONからバトルポリシーを読み込み")
 	battle_policy.print_weights()
+	# コンテキストにも反映
+	if context:
+		context.battle_policy = battle_policy
 
 ## プリセットポリシーを設定
 func set_battle_policy_preset(preset_name: String) -> void:
@@ -124,6 +133,9 @@ func set_battle_policy_preset(preset_name: String) -> void:
 			battle_policy = CPUBattlePolicyScript.create_balanced_policy()
 	print("[CPU AI] プリセットポリシー '%s' を設定" % preset_name)
 	battle_policy.print_weights()
+	# コンテキストにも反映
+	if context:
+		context.battle_policy = battle_policy
 
 # ============================================================
 # ターン管理

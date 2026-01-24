@@ -231,12 +231,11 @@ func _setup_cpu_battle_policies():
 		print("[QuestGame] system_manager または board_system_3d が null")
 		return
 	
-	var cpu_turn_processor = system_manager.board_system_3d.get_node_or_null("CPUTurnProcessor")
-	if not cpu_turn_processor or not cpu_turn_processor.cpu_ai_handler:
-		print("[QuestGame] CPUTurnProcessor または cpu_ai_handler が見つかりません")
+	# board_system_3d.cpu_ai_handler を直接参照（確実に存在する）
+	var cpu_ai_handler = system_manager.board_system_3d.cpu_ai_handler
+	if not cpu_ai_handler:
+		print("[QuestGame] board_system_3d.cpu_ai_handler が見つかりません")
 		return
-	
-	var cpu_ai_handler = cpu_turn_processor.cpu_ai_handler
 	
 	# CPU敵のポリシーを設定
 	var enemies = stage_loader._get_enemies()
@@ -249,17 +248,16 @@ func _setup_cpu_battle_policies():
 	print("[QuestGame] policy_data: %s" % policy_data)
 	
 	if policy_data.is_empty():
-		print("[QuestGame] CPUバトルポリシー: 指定なし（デフォルト使用）")
+		# デフォルトポリシーを設定
+		cpu_ai_handler.set_battle_policy_preset("balanced")
+		print("[QuestGame] CPUバトルポリシー: デフォルト (balanced)")
 	else:
 		cpu_ai_handler.load_battle_policy_from_json(policy_data)
 		print("[QuestGame] CPUバトルポリシー: JSONから読み込み完了")
 	
 	# CPUMovementEvaluatorにもcpu_ai_handlerを設定（移動シミュレーション用）
-	print("[QuestGame] game_flow_manager: %s" % (system_manager.game_flow_manager != null))
-	print("[QuestGame] movement_controller: %s" % (system_manager.board_system_3d.movement_controller != null))
 	if system_manager.game_flow_manager and system_manager.board_system_3d.movement_controller:
 		var cpu_movement_evaluator = system_manager.board_system_3d.movement_controller.cpu_movement_evaluator
-		print("[QuestGame] cpu_movement_evaluator: %s" % (cpu_movement_evaluator != null))
 		if cpu_movement_evaluator:
 			cpu_movement_evaluator.set_cpu_ai_handler(cpu_ai_handler)
 		else:

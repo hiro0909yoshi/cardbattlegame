@@ -29,6 +29,7 @@ const BattleSpecialEffectsScript = preload("res://scripts/battle/battle_special_
 const BattleParticipantScript = preload("res://scripts/battle/battle_participant.gd")
 const BattleSimulatorScript = preload("res://scripts/cpu_ai/battle_simulator.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
 
 # 共有コンテキスト（CPU AI用）
 var _cpu_context: CPUAIContextScript = null
@@ -544,6 +545,11 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 	if not _cpu_context:
 		_initialize_cpu_context(game_flow_manager)
 	
+	# 最新のバトルポリシーを取得して設定（JSONから読み込んだポリシーが反映されるように）
+	var latest_policy = _get_cpu_battle_policy(game_flow_manager)
+	if latest_policy and cpu_defense_ai:
+		cpu_defense_ai.set_battle_policy(latest_policy)
+	
 	# 攻撃側プレイヤーID取得
 	var attacker_player_id = -1
 	if game_flow_manager and game_flow_manager.board_system_3d:
@@ -712,22 +718,20 @@ func _execute_merge_for_cpu(merge_result: Dictionary):
 
 ## CPU AI用の共有コンテキストを初期化
 func _initialize_cpu_context(flow_mgr) -> void:
-	if _cpu_context:
-		return  # 既に初期化済み
-	
 	var board_system = flow_mgr.board_system_3d if flow_mgr else null
 	var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
 	
-	# コンテキストを作成
-	_cpu_context = CPUAIContextScript.new()
-	_cpu_context.setup(board_system, player_system, card_system)
-	_cpu_context.setup_optional(
-		BaseTile.creature_manager if BaseTile.creature_manager else null,
-		null,  # lap_system
-		flow_mgr,
-		battle_system,
-		player_buff_system
-	)
+	# コンテキストを作成（未作成の場合のみ）
+	if not _cpu_context:
+		_cpu_context = CPUAIContextScript.new()
+		_cpu_context.setup(board_system, player_system, card_system)
+		_cpu_context.setup_optional(
+			BaseTile.creature_manager if BaseTile.creature_manager else null,
+			null,  # lap_system
+			flow_mgr,
+			battle_system,
+			player_buff_system
+		)
 	
 	# CPUBattleAIを初期化（共通バトル評価用）
 	if not cpu_battle_ai:
@@ -739,5 +743,40 @@ func _initialize_cpu_context(flow_mgr) -> void:
 		cpu_defense_ai = CPUDefenseAI.new()
 		cpu_defense_ai.setup_with_context(_cpu_context)
 	
+	# バトルポリシーを毎回取得して設定（ゲーム中に変更される可能性があるため）
+	var battle_policy = _get_cpu_battle_policy(flow_mgr)
+	print("[ItemPhaseHandler] battle_policy取得: %s" % (battle_policy != null))
+	if battle_policy:
+		cpu_defense_ai.set_battle_policy(battle_policy)
+		print("[ItemPhaseHandler] cpu_defense_aiにポリシー設定完了")
+	else:
+		print("[ItemPhaseHandler] WARNING: バトルポリシーがnull")
+	
 	# cpu_hand_utilsはcontextから取得
 	cpu_hand_utils = _cpu_context.get_hand_utils()
+
+## cpu_ai_handlerからバトルポリシーを取得（なければデフォルト作成）
+func _get_cpu_battle_policy(flow_mgr):
+	if not flow_mgr:
+		return _create_default_policy()
+	
+	var board_system = flow_mgr.board_system_3d
+	if not board_system:
+		return _create_default_policy()
+	
+	# board_system_3d.cpu_ai_handler を直接参照
+	var cpu_ai_handler = board_system.cpu_ai_handler
+	if not cpu_ai_handler:
+		return _create_default_policy()
+	
+	var policy = cpu_ai_handler.battle_policy
+	if not policy:
+		# ポリシーが未設定の場合、デフォルトを作成して設定
+		policy = CPUBattlePolicyScript.create_balanced_policy()
+		cpu_ai_handler.battle_policy = policy
+	return policy
+
+## デフォルトのバトルポリシーを作成
+func _create_default_policy():
+	print("[ItemPhaseHandler] デフォルトポリシーを作成")
+	return CPUBattlePolicyScript.create_balanced_policy()
