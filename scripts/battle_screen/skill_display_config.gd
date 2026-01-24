@@ -73,6 +73,11 @@ const CONFIG = {
 		"effect": "",
 		"sound": ""
 	},
+	"scroll_power_strike": {
+		"name": "巻物強打",
+		"effect": "",
+		"sound": ""
+	},
 	
 	# ========================================
 	# 戦闘終了時に発動するスキル

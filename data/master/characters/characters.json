@@ -15,7 +15,7 @@
 		"defense": {
 		  "no_item": 1.0,
 		  "always_protect": 0.0,
-		  "protect_mystic_arts": true,
+		  "protect_mystic_arts": false,
 		  "protect_element_match": false,
 		  "protect_by_value": {
 			"enabled": false,

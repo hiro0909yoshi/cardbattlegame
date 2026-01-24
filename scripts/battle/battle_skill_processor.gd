@@ -285,11 +285,17 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		print("【スクイドマントル】貫通を無効化")
 	
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
-		print("【巻物攻撃】防御側の土地ボーナス ", defender.land_bonus_hp, " を無効化")
+		# 巻物強打か巻物攻撃かを判定
+		var attacker_ability = attacker.creature_data.get("ability_parsed", {})
+		var attacker_keywords = attacker_ability.get("keywords", [])
+		var is_scroll_power_strike = "巻物強打" in attacker_keywords
+		var scroll_skill_key = "scroll_power_strike" if is_scroll_power_strike else "scroll_attack"
+		var scroll_skill_name = "巻物強打" if is_scroll_power_strike else "巻物攻撃"
+		print("【%s】防御側の土地ボーナス %d を無効化" % [scroll_skill_name, defender.land_bonus_hp])
 		defender_before = _snapshot_stats(defender)
 		defender.land_bonus_hp = 0
 		# 敵対象スキル: attackerがスキル所持者、defenderが効果対象
-		var scroll_name = SkillDisplayConfig.get_skill_name("scroll_attack")
+		var scroll_name = SkillDisplayConfig.get_skill_name(scroll_skill_key)
 		await _show_skill_change_if_any(defender, defender_before, scroll_name, attacker)
 	
 	# 💰 魔力獲得スキル適用（バトル開始時）
@@ -406,11 +412,19 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	# 7. 2回攻撃スキル
 	check_double_attack(participant, context)
 	
-	# 8. 巻物使用時のAP固定（固有名を維持）
+	# 8. 巻物使用時のAP固定（巻物攻撃 or 巻物強打を区別して表示）
 	if participant.is_using_scroll:
 		before = _snapshot_stats(participant)
 		_apply_scroll_ap_fix(participant, context)
-		await _show_skill_change_if_any(participant, before, scroll_attack_name)
+		# 巻物強打を持っているか判定
+		var ability_parsed_scroll = participant.creature_data.get("ability_parsed", {})
+		var keywords_scroll = ability_parsed_scroll.get("keywords", [])
+		var scroll_display_name: String
+		if "巻物強打" in keywords_scroll:
+			scroll_display_name = SkillDisplayConfig.get_skill_name("scroll_power_strike")
+		else:
+			scroll_display_name = scroll_attack_name
+		await _show_skill_change_if_any(participant, before, scroll_display_name)
 
 
 ## 巻物使用時のAP固定処理
