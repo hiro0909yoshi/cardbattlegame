@@ -1,9 +1,9 @@
 extends Node
 class_name SpellMagic
 
-## 魔力操作の汎用化モジュール
+## EP操作の汎用化モジュール
 ## バトル外・バトル中のマップ効果として使用する
-## ドキュメント: docs/design/spells/魔力増減.md
+## ドキュメント: docs/design/spells/EP増減.md
 
 var player_system_ref: PlayerSystem = null
 var board_system_ref = null  # BoardSystem3D
@@ -42,34 +42,34 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 			var multiplier = effect.get("multiplier", 50)
 			var amount = rank * multiplier
 			add_magic(player_id, amount)
-			print("[魔力効果] 順位魔力: %d位 × %dG = %dG" % [rank, multiplier, amount])
+			print("[EP効果] 順位EP: %d位 × %dEP = %dEP" % [rank, multiplier, amount])
 			result = {"success": true, "amount": amount}
 			if amount > 0:
-				notification_text = _format_gain_notification(player_id, amount, "【順位ボーナス】%d位 × %dG" % [rank, multiplier])
+				notification_text = _format_gain_notification(player_id, amount, "【順位ボーナス】%d位 × %dEP" % [rank, multiplier])
 		
 		"gain_magic_by_lap":
-			# マナ: 周回数×G50獲得
+			# マナ: 周回数×50EP獲得
 			result = gain_magic_by_lap(player_id, effect)
 			if result.get("amount", 0) > 0:
 				var lap = result.get("lap_count", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【マナ】%d周 × %dG" % [lap, effect.get("multiplier", 50)])
+				notification_text = _format_gain_notification(player_id, result["amount"], "【マナ】%d周 × %dEP" % [lap, effect.get("multiplier", 50)])
 		
 		"gain_magic_from_destroyed_count":
-			# インシネレート: 破壊数×G20
+			# インシネレート: 破壊数×20EP
 			result = gain_magic_from_destroyed_count(player_id, effect)
 			if result.get("amount", 0) > 0:
 				var count = result.get("destroy_count", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【インシネレート】%d体破壊 × %dG" % [count, effect.get("multiplier", 20)])
+				notification_text = _format_gain_notification(player_id, result["amount"], "【インシネレート】%d体破壊 × %dEP" % [count, effect.get("multiplier", 20)])
 		
 		"gain_magic_from_spell_cost":
-			# クレアボヤンス: 敵スペル魔力合計×50%
+			# クレアボヤンス: 敵スペルEP合計×50%
 			var target_player_id = context.get("from_player_id", -1)
 			var card_system = context.get("card_system", null)
 			if target_player_id >= 0 and card_system:
 				result = gain_magic_from_spell_cost(player_id, effect, target_player_id, card_system)
 				if result.get("amount", 0) > 0:
 					var total = result.get("spell_cost_total", 0)
-					notification_text = _format_gain_notification(player_id, result["amount"], "【クレアボヤンス】敵スペルコスト%dGの%d%%" % [total, effect.get("percentage", 50)])
+					notification_text = _format_gain_notification(player_id, result["amount"], "【クレアボヤンス】敵スペルコスト%dEPの%d%%" % [total, effect.get("percentage", 50)])
 		
 		"drain_magic":
 			if from_id >= 0:
@@ -79,40 +79,40 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 					notification_text = _format_drain_notification(from_id, player_id, amount, "【ドレインマジック】")
 		
 		"drain_magic_conditional":
-			# フラクション: 自分より魔力多い敵から30%奪取
+			# フラクション: 自分よりEPが多い敵から30%奪取
 			if from_id >= 0:
 				result = drain_magic_conditional(effect, from_id, player_id)
 				if result.get("amount", 0) > 0:
 					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【フラクション】%d%%奪取" % effect.get("percentage", 30))
 				elif result.get("reason") == "condition_not_met":
-					notification_text = "【フラクション】\n条件不成立: 対象の魔力が術者以下"
+					notification_text = "【フラクション】\n条件不成立: 対象のEPが術者以下"
 		
 		"drain_magic_by_land_count":
-			# ランドドレイン: 敵領地数×G30奪取
+			# ランドドレイン: 敵領地数×30EP奪取
 			if from_id >= 0:
 				result = drain_magic_by_land_count(effect, from_id, player_id)
 				if result.get("amount", 0) > 0:
 					var lands = result.get("land_count", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%d領地 × %dG" % [lands, effect.get("multiplier", 30)])
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%d領地 × %dEP" % [lands, effect.get("multiplier", 30)])
 		
 		"drain_magic_by_lap_diff":
-			# スピードペナルティ: 周回数差×G100奪取
+			# スピードペナルティ: 周回数差×100EP奪取
 			if from_id >= 0:
 				result = drain_magic_by_lap_diff(effect, from_id, player_id)
 				if result.get("amount", 0) > 0:
 					var diff = result.get("diff", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【スピードペナルティ】%d周差 × %dG" % [diff, effect.get("multiplier", 100)])
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【スピードペナルティ】%d周差 × %dEP" % [diff, effect.get("multiplier", 100)])
 				elif result.get("diff", 0) <= 0:
 					notification_text = "【スピードペナルティ】\n周回数差なし"
 		
 		"balance_all_magic":
-			# レディビジョン: 全プレイヤー魔力平均化
+			# レディビジョン: 全プレイヤーEP平均化
 			result = balance_all_magic()
 			if result.get("success", false):
-				notification_text = "【レディビジョン】\n全プレイヤー魔力を[color=yellow]%dG[/color]に平均化" % result.get("average", 0)
+				notification_text = "【レディビジョン】\n全プレイヤーEPを[color=yellow]%dEP[/color]に平均化" % result.get("average", 0)
 		
 		"gain_magic_from_land_chain":
-			# ロングライン: 連続領地×G500、未達成ならドロー
+			# ロングライン: 連続領地×5EP00、未達成ならドロー
 			result = gain_magic_from_land_chain(player_id, effect, context)
 			var chain = result.get("chain", 0)
 			var required = effect.get("required_chain", 4)
@@ -122,21 +122,21 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				notification_text = "【ロングライン】\n連続%d領地 (必要%d)\n条件未達成 → カードドロー" % [chain, required]
 		
 		"mhp_to_magic":
-			# ドゥームデボラー秘術: MHP×G2を得て、ST&MHP-10
+			# ドゥームデボラー秘術: MHP×2EPを得て、ST&MHP-10
 			var tile_index = context.get("tile_index", -1)
 			result = mhp_to_magic(player_id, effect, tile_index)
 			if result.get("success", false):
 				var mhp = result.get("mhp", 0)
-				notification_text = _format_gain_notification(player_id, result["amount"], "【ドゥームデボラー】MHP%d × G2\nST&MHP-10" % mhp)
+				notification_text = _format_gain_notification(player_id, result["amount"], "【ドゥームデボラー】MHP%d × 2EP\nST&MHP-10" % mhp)
 		
 		"drain_magic_by_spell_count":
-			# ウィッチ秘術: 対象の手札スペル数×G40を奪う
+			# ウィッチ秘術: 対象の手札スペル数×40EPを奪う
 			if from_id >= 0:
 				var card_system = context.get("card_system", null)
 				result = drain_magic_by_spell_count(effect, from_id, player_id, card_system)
 				if result.get("amount", 0) > 0:
 					var spell_count = result.get("spell_count", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ウィッチ】スペル%d枚 × %dG" % [spell_count, effect.get("multiplier", 40)])
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ウィッチ】スペル%d枚 × %dEP" % [spell_count, effect.get("multiplier", 40)])
 				else:
 					notification_text = "【ウィッチ】\n対象の手札にスペルがありません"
 		
@@ -149,10 +149,10 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 	
 	return result
 
-## 魔力増加
+## EP増加
 func add_magic(player_id: int, amount: int) -> void:
 	"""
-	魔力を増やす
+	EPを増やす
 	
 	引数:
 	  player_id: プレイヤーID（0-3）
@@ -163,7 +163,7 @@ func add_magic(player_id: int, amount: int) -> void:
 		return
 	
 	if amount <= 0:
-		print("[魔力増加] プレイヤー", player_id + 1, "は0以下の増加量のため何もしません")
+		print("[EP増加] プレイヤー", player_id + 1, "は0以下の増加量のため何もしません")
 		return
 	
 	if player_id < 0 or player_id >= player_system_ref.players.size():
@@ -176,12 +176,12 @@ func add_magic(player_id: int, amount: int) -> void:
 		return
 	
 	player.magic_power += amount
-	print("[魔力増加] プレイヤー", player_id + 1, " +", amount, "G → 合計:", player.magic_power, "G")
+	print("[EP増加] プレイヤー", player_id + 1, " +", amount, "EP → 合計:", player.magic_power, "EP")
 
-## 魔力減少
+## EP減少
 func reduce_magic(player_id: int, amount: int) -> void:
 	"""
-	魔力を減らす
+	EPを減らす
 	
 	引数:
 	  player_id: プレイヤーID（0-3）
@@ -192,7 +192,7 @@ func reduce_magic(player_id: int, amount: int) -> void:
 		return
 	
 	if amount <= 0:
-		print("[魔力減少] プレイヤー", player_id + 1, "は0以下の減少量のため何もしません")
+		print("[EP減少] プレイヤー", player_id + 1, "は0以下の減少量のため何もしません")
 		return
 	
 	if player_id < 0 or player_id >= player_system_ref.players.size():
@@ -207,12 +207,12 @@ func reduce_magic(player_id: int, amount: int) -> void:
 	# 0未満にならないようにする
 	var actual_reduction = min(amount, player.magic_power)
 	player.magic_power -= actual_reduction
-	print("[魔力減少] プレイヤー", player_id + 1, " -", actual_reduction, "G → 合計:", player.magic_power, "G")
+	print("[EP減少] プレイヤー", player_id + 1, " -", actual_reduction, "EP → 合計:", player.magic_power, "EP")
 
-## 魔力奪取
+## EP奪取
 func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 	"""
-	魔力を奪う（相手から自分へ）
+	EPを奪う（相手から自分へ）
 	
 	引数:
 	  from_player_id: 奪われるプレイヤーID
@@ -220,14 +220,14 @@ func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 	  amount: 奪取量
 	
 	戻り値:
-	  実際に奪った量（相手の魔力が足りない場合は少なくなる）
+	  実際に奪った量（相手のEPが足りない場合は少なくなる）
 	"""
 	if not player_system_ref:
 		push_error("SpellMagic: PlayerSystemが設定されていません")
 		return 0
 	
 	if amount <= 0:
-		print("[魔力奪取] 0以下の奪取量のため何もしません")
+		print("[EP奪取] 0以下の奪取量のため何もしません")
 		return 0
 	
 	if from_player_id < 0 or from_player_id >= player_system_ref.players.size():
@@ -247,16 +247,16 @@ func steal_magic(from_player_id: int, to_player_id: int, amount: int) -> int:
 	from_player.magic_power -= actual_amount
 	to_player.magic_power += actual_amount
 	
-	print("[魔力奪取] プレイヤー", from_player_id + 1, " -", actual_amount, "G → プレイヤー", 
-		  to_player_id + 1, " +", actual_amount, "G")
+	print("[EP奪取] プレイヤー", from_player_id + 1, " -", actual_amount, "EP → プレイヤー", 
+		  to_player_id + 1, " +", actual_amount, "EP")
 	
 	return actual_amount
 
 
-## 魔力奪取（effect辞書から）
+## EP奪取（effect辞書から）
 func drain_magic_from_effect(effect: Dictionary, from_player_id: int, to_player_id: int) -> int:
 	"""
-	effect辞書に基づいて魔力を奪う
+	effect辞書に基づいてEPを奪う
 	
 	引数:
 	  effect: 効果辞書 {value, value_type: "fixed"|"percentage"}
@@ -284,18 +284,18 @@ func drain_magic_from_effect(effect: Dictionary, from_player_id: int, to_player_
 	else:
 		drain_amount = value
 	
-	# 実際に奪える量（所持魔力以上は奪えない）
+	# 実際に奪える量（所持EP以上は奪えない）
 	drain_amount = min(drain_amount, current_magic)
 	
 	if drain_amount <= 0:
 		return 0
 	
-	# 魔力を移動
+	# EPを移動
 	player_system_ref.add_magic(from_player_id, -drain_amount)
 	player_system_ref.add_magic(to_player_id, drain_amount)
 	
-	print("[魔力奪取] プレイヤー", from_player_id + 1, " -", drain_amount, "G → プレイヤー", 
-		  to_player_id + 1, " +", drain_amount, "G (", value_type, ")")
+	print("[EP奪取] プレイヤー", from_player_id + 1, " -", drain_amount, "EP → プレイヤー", 
+		  to_player_id + 1, " +", drain_amount, "EP (", value_type, ")")
 	
 	return drain_amount
 
@@ -303,22 +303,22 @@ func drain_magic_from_effect(effect: Dictionary, from_player_id: int, to_player_
 # 汎用計算関数
 # ========================================
 
-## 計算型魔力獲得（乗算）
+## 計算型EP獲得（乗算）
 func gain_magic_calculated(player_id: int, base_value: int, multiplier: int, description: String = "") -> int:
 	var amount = base_value * multiplier
 	if amount > 0:
 		add_magic(player_id, amount)
 		if description != "":
-			print("[魔力獲得] ", description, ": ", base_value, " × ", multiplier, "G = ", amount, "G")
+			print("[EP獲得] ", description, ": ", base_value, " × ", multiplier, "EP = ", amount, "EP")
 	return amount
 
-## 計算型魔力奪取（乗算）
+## 計算型EP奪取（乗算）
 func drain_magic_calculated(from_player_id: int, to_player_id: int, base_value: int, multiplier: int, description: String = "") -> int:
 	var amount = base_value * multiplier
 	if amount > 0:
 		var actual = steal_magic(from_player_id, to_player_id, amount)
 		if description != "":
-			print("[魔力奪取] ", description, ": ", base_value, " × ", multiplier, "G = ", amount, "G (実際: ", actual, "G)")
+			print("[EP奪取] ", description, ": ", base_value, " × ", multiplier, "EP = ", amount, "EP (実際: ", actual, "EP)")
 		return actual
 	return 0
 
@@ -326,7 +326,7 @@ func drain_magic_calculated(from_player_id: int, to_player_id: int, base_value: 
 # Phase 1: 基本奪取系
 # ========================================
 
-## ランドドレイン: 敵領地数×G30奪取
+## ランドドレイン: 敵領地数×30EP奪取
 func drain_magic_by_land_count(effect: Dictionary, from_player_id: int, to_player_id: int) -> Dictionary:
 	if not board_system_ref:
 		print("[ランドドレイン] BoardSystemが設定されていません")
@@ -347,7 +347,7 @@ func drain_magic_by_land_count(effect: Dictionary, from_player_id: int, to_playe
 	var actual = drain_magic_calculated(from_player_id, to_player_id, land_count, multiplier, "ランドドレイン")
 	return {"success": actual > 0, "amount": actual, "land_count": land_count}
 
-## フラクション: 自分より魔力多い敵から30%奪取（条件付き）
+## フラクション: 自分よりEPが多い敵から30%奪取（条件付き）
 func drain_magic_conditional(effect: Dictionary, from_player_id: int, to_player_id: int) -> Dictionary:
 	if not player_system_ref:
 		return {"success": false, "amount": 0}
@@ -355,11 +355,11 @@ func drain_magic_conditional(effect: Dictionary, from_player_id: int, to_player_
 	var from_magic = player_system_ref.get_magic(from_player_id)
 	var to_magic = player_system_ref.get_magic(to_player_id)
 	
-	# 条件チェック: 対象が術者より魔力が多いか
+	# 条件チェック: 対象が術者よりEPが多いか
 	var condition = effect.get("condition", "")
 	if condition == "target_has_more_magic":
 		if from_magic <= to_magic:
-			print("[フラクション] 条件不成立: 対象の魔力(%dG)が術者(%dG)以下" % [from_magic, to_magic])
+			print("[フラクション] 条件不成立: 対象のEP(%dEP)が術者(%dEP)以下" % [from_magic, to_magic])
 			return {"success": false, "amount": 0, "reason": "condition_not_met"}
 	
 	# パーセンテージ奪取
@@ -370,7 +370,7 @@ func drain_magic_conditional(effect: Dictionary, from_player_id: int, to_player_
 		return {"success": false, "amount": 0}
 	
 	var actual = steal_magic(from_player_id, to_player_id, drain_amount)
-	print("[フラクション] 敵魔力%dGの%d%% = %dG奪取" % [from_magic, percentage, actual])
+	print("[フラクション] 敵EP%dEPの%d%% = %dEP奪取" % [from_magic, percentage, actual])
 	
 	return {"success": actual > 0, "amount": actual}
 
@@ -378,7 +378,7 @@ func drain_magic_conditional(effect: Dictionary, from_player_id: int, to_player_
 # Phase 2: 計算・参照型
 # ========================================
 
-## マナ: 周回数×G50獲得
+## マナ: 周回数×50EP獲得
 func gain_magic_by_lap(player_id: int, effect: Dictionary) -> Dictionary:
 	if not game_flow_manager_ref:
 		print("[マナ] GameFlowManagerが設定されていません")
@@ -394,10 +394,10 @@ func gain_magic_by_lap(player_id: int, effect: Dictionary) -> Dictionary:
 	if amount > 0:
 		add_magic(player_id, amount)
 	
-	print("[マナ] 周回数%d × %dG = %dG獲得" % [lap_count, multiplier, amount])
+	print("[マナ] 周回数%d × %dEP = %dEP獲得" % [lap_count, multiplier, amount])
 	return {"success": true, "amount": amount, "lap_count": lap_count}
 
-## インシネレート: 破壊数×G20獲得
+## インシネレート: 破壊数×20EP獲得
 func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dictionary:
 	if not game_flow_manager_ref:
 		print("[インシネレート] GameFlowManagerが設定されていません")
@@ -413,7 +413,7 @@ func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dict
 	if amount > 0:
 		add_magic(player_id, amount)
 	
-	print("[インシネレート] 破壊数%d × %dG = %dG獲得" % [destroy_count, multiplier, amount])
+	print("[インシネレート] 破壊数%d × %dEP = %dEP獲得" % [destroy_count, multiplier, amount])
 	
 	# reset_count: trueの場合、破壊数を0にリセット
 	if effect.get("reset_count", false):
@@ -439,7 +439,7 @@ func gain_magic_from_spell_cost(player_id: int, effect: Dictionary, target_playe
 			var cost = card.get("cost", {})
 			# costが辞書の場合とintの場合に対応
 			if cost is Dictionary:
-				spell_cost_total += cost.get("mp", 0)
+				spell_cost_total += cost.get("ep", 0)
 			elif cost is int:
 				spell_cost_total += cost
 	
@@ -448,13 +448,13 @@ func gain_magic_from_spell_cost(player_id: int, effect: Dictionary, target_playe
 	
 	if amount > 0:
 		add_magic(player_id, amount)
-		print("[クレアボヤンス] 敵手札スペルコスト合計%dGの%d%% = %dG獲得" % [spell_cost_total, percentage, amount])
+		print("[クレアボヤンス] 敵手札スペルコスト合計%dEPの%d%% = %dEP獲得" % [spell_cost_total, percentage, amount])
 	else:
 		print("[クレアボヤンス] 敵手札にスペルがないか、コスト0")
 	
 	return {"success": amount > 0, "amount": amount, "spell_cost_total": spell_cost_total}
 
-## スピードペナルティ: 対象の周回数と術者の周回数の差×G100奪取
+## スピードペナルティ: 対象の周回数と術者の周回数の差×100EP奪取
 func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_id: int) -> Dictionary:
 	if not game_flow_manager_ref or not player_system_ref:
 		print("[スピードペナルティ] システム参照が設定されていません")
@@ -472,14 +472,14 @@ func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_
 		return {"success": false, "amount": 0, "diff": 0}
 	
 	var actual = drain_magic_calculated(from_player_id, to_player_id, diff, multiplier, "スピードペナルティ")
-	print("[スピードペナルティ] 対象%d周 - 術者%d周 = %d周差 × %dG" % [target_lap, caster_lap, diff, multiplier])
+	print("[スピードペナルティ] 対象%d周 - 術者%d周 = %d周差 × %dEP" % [target_lap, caster_lap, diff, multiplier])
 	return {"success": actual > 0, "amount": actual, "diff": diff, "target_lap": target_lap, "caster_lap": caster_lap}
 
 # ========================================
 # Phase 4: グローバル効果
 # ========================================
 
-## ロングライン: 連続領地4つでG500、未達成ならドロー
+## ロングライン: 連続領地4つで500EP、未達成ならドロー
 func gain_magic_from_land_chain(player_id: int, effect: Dictionary, _context: Dictionary) -> Dictionary:
 	if not board_system_ref:
 		print("[ロングライン] BoardSystemが設定されていません")
@@ -492,9 +492,9 @@ func gain_magic_from_land_chain(player_id: int, effect: Dictionary, _context: Di
 	var max_chain = _calculate_max_land_chain(player_id)
 	
 	if max_chain >= required_chain:
-		# 条件達成: 魔力獲得
+		# 条件達成: EP獲得
 		add_magic(player_id, amount)
-		print("[ロングライン] 連続領地%d達成！ %dG獲得" % [max_chain, amount])
+		print("[ロングライン] 連続領地%d達成！ %dEP獲得" % [max_chain, amount])
 		return {"success": true, "amount": amount, "chain": max_chain, "condition_met": true}
 	else:
 		# 条件未達成: フォールバック効果（ドロー）を返す
@@ -549,7 +549,7 @@ func _calculate_max_land_chain(player_id: int) -> int:
 	
 	return max_chain
 
-## レディビジョン: 全プレイヤー魔力平均化
+## レディビジョン: 全プレイヤーEP平均化
 func balance_all_magic() -> Dictionary:
 	if not player_system_ref:
 		return {"success": false}
@@ -570,9 +570,9 @@ func balance_all_magic() -> Dictionary:
 		var old_magic = player_system_ref.players[i].magic_power
 		player_system_ref.players[i].magic_power = average
 		changes.append({"player_id": i, "old": old_magic, "new": average})
-		print("[レディビジョン] プレイヤー%d: %dG → %dG" % [i + 1, old_magic, average])
+		print("[レディビジョン] プレイヤー%d: %dEP → %dEP" % [i + 1, old_magic, average])
 	
-	print("[レディビジョン] 全プレイヤー魔力を%dGに平均化" % average)
+	print("[レディビジョン] 全プレイヤーEPを%dEPに平均化" % average)
 	return {"success": true, "average": average, "changes": changes}
 
 # ========================================
@@ -629,7 +629,7 @@ func apply_bounty_reward(loser_creature: Dictionary, winner_creature: Dictionary
 	result["success"] = true
 	
 	var loser_name = loser_creature.get("name", "クリーチャー")
-	print("[バウンティハント] 賞金首「%s」撃破！プレイヤー%d が %dG獲得" % [loser_name, caster_id + 1, reward])
+	print("[バウンティハント] 賞金首「%s」撃破！プレイヤー%d が %dEP獲得" % [loser_name, caster_id + 1, reward])
 	
 	return result
 
@@ -639,7 +639,7 @@ func apply_bounty_reward_with_notification(loser_creature: Dictionary, winner_cr
 	
 	if result["success"]:
 		var loser_name = loser_creature.get("name", "クリーチャー")
-		var notification_text = "【バウンティハント】\n賞金首「%s」撃破！\n[color=yellow]+%dG[/color] 獲得！" % [loser_name, result["reward"]]
+		var notification_text = "【バウンティハント】\n賞金首「%s」撃破！\n[color=yellow]+%dEP[/color] 獲得！" % [loser_name, result["reward"]]
 		await _show_notification_and_wait(notification_text)
 	
 	return result
@@ -654,19 +654,19 @@ func _show_notification_and_wait(text: String) -> void:
 		spell_cast_notification_ui.show_notification_and_wait(text)
 		await spell_cast_notification_ui.click_confirmed
 
-## 魔力獲得の通知テキスト生成
+## EP獲得の通知テキスト生成
 @warning_ignore("unused_variable")
 func _format_gain_notification(player_id: int, amount: int, source: String = "") -> String:
 	var _player_name = "プレイヤー%d" % (player_id + 1)
 	if player_system_ref and player_id >= 0 and player_id < player_system_ref.players.size():
 		_player_name = player_system_ref.players[player_id].name
 	
-	var text = "[color=yellow]+%dG[/color] 獲得！" % amount
+	var text = "[color=yellow]+%dEP[/color] 獲得！" % amount
 	if source != "":
 		text = "%s\n%s" % [source, text]
 	return text
 
-## 魔力奪取の通知テキスト生成
+## EP奪取の通知テキスト生成
 @warning_ignore("unused_variable")
 func _format_drain_notification(from_id: int, to_id: int, amount: int, source: String = "") -> String:
 	var from_name = "プレイヤー%d" % (from_id + 1)
@@ -677,7 +677,7 @@ func _format_drain_notification(from_id: int, to_id: int, amount: int, source: S
 		if to_id >= 0 and to_id < player_system_ref.players.size():
 			_to_name = player_system_ref.players[to_id].name
 	
-	var text = "%sから[color=yellow]%dG[/color]奪取！" % [from_name, amount]
+	var text = "%sから[color=yellow]%dEP[/color]奪取！" % [from_name, amount]
 	if source != "":
 		text = "%s\n%s" % [source, text]
 	return text
@@ -736,14 +736,14 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 	
 	match effect_type:
 		"reduce_magic_percentage":
-			# 停止プレイヤーの魔力を割合減少
+			# 停止プレイヤーのEPを割合減少
 			if target == "stopped_player":
 				var percentage = effect.get("percentage", 0)
 				var current_magic = player_system_ref.get_magic(stopped_player_id)
 				var reduction = int(current_magic * percentage / 100.0)
 				if reduction > 0:
 					player_system_ref.add_magic(stopped_player_id, -reduction)
-					print("[土地呪い効果] プレイヤー%d の魔力 -%dG (%d%%)" % [stopped_player_id + 1, reduction, percentage])
+					print("[土地呪い効果] プレイヤー%d のEP -%dEP (%d%%)" % [stopped_player_id + 1, reduction, percentage])
 		
 		"damage_creature":
 			# 土地のクリーチャーにダメージ
@@ -801,10 +801,10 @@ func apply_self_destroy(tile_index: int, clear_land: bool = true) -> bool:
 
 
 # ========================================
-# 秘術用魔力獲得効果
+# 秘術用EP獲得効果
 # ========================================
 
-## MHP変換（ドゥームデボラー秘術）: MHP×G2を得て、ST&MHP-10
+## MHP変換（ドゥームデボラー秘術）: MHP×2EPを得て、ST&MHP-10
 func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictionary:
 	if tile_index < 0 or not board_system_ref or not player_system_ref:
 		return {"success": false}
@@ -819,13 +819,13 @@ func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictio
 	var base_up_hp = creature.get("base_up_hp", 0)
 	var mhp = base_hp + base_up_hp
 	
-	# 魔力獲得量を計算
+	# EP獲得量を計算
 	var multiplier = effect.get("multiplier", 2)
 	var amount = mhp * multiplier
 	
-	# 魔力を獲得
+	# EPを獲得
 	player_system_ref.add_magic(player_id, amount)
-	print("[ドゥームデボラー秘術] MHP%d × G%d = %dG 獲得" % [mhp, multiplier, amount])
+	print("[ドゥームデボラー秘術] MHP%d × %dEP = %dEP 獲得" % [mhp, multiplier, amount])
 	
 	# ステータスペナルティを適用
 	var stat_penalty = effect.get("stat_penalty", {})
@@ -851,7 +851,7 @@ func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictio
 	return {"success": true, "amount": amount, "mhp": mhp}
 
 
-## スペル数魔力奪取（ウィッチ秘術）: 対象の手札スペル数×G40を奪う
+## スペル数EP奪取（ウィッチ秘術）: 対象の手札スペル数×40EPを奪う
 func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, card_system) -> Dictionary:
 	if not player_system_ref or not card_system:
 		return {"success": false, "amount": 0}
@@ -877,6 +877,6 @@ func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, ca
 	if actual_amount > 0:
 		player_system_ref.add_magic(from_id, -actual_amount)
 		player_system_ref.add_magic(to_id, actual_amount)
-		print("[ウィッチ秘術] スペル%d枚 × G%d = %dG 奪取" % [spell_count, multiplier, actual_amount])
+		print("[ウィッチ秘術] スペル%d枚 × %dEP = %dEP 奪取" % [spell_count, multiplier, actual_amount])
 	
 	return {"success": true, "amount": actual_amount, "spell_count": spell_count}

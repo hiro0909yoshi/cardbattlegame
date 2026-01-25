@@ -122,7 +122,7 @@ const CONFIG = {
 		"sound": ""
 	},
 	"legacy_magic": {
-		"name": "遺産（魔力）",
+		"name": "遺産（EP）",
 		"effect": "",
 		"sound": ""
 	},
@@ -176,7 +176,7 @@ const CONFIG = {
 		"sound": ""
 	},
 	"magic_gain": {
-		"name": "魔力獲得",
+		"name": "EP獲得",
 		"effect": "",
 		"sound": ""
 	},

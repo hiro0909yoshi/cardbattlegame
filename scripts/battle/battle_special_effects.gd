@@ -567,7 +567,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						
 						var amount = mhp * multiplier
 						print("【遺産発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), 
-							  " → プレイヤー", player_id + 1, "が", amount, "G獲得（MHP", mhp, "×", multiplier, "）")
+							  " → プレイヤー", player_id + 1, "が", amount, "EP獲得（MHP", mhp, "×", multiplier, "）")
 						spell_magic_ref.add_magic(player_id, amount)
 						if not result.has("legacy_magic_activated"):
 							result["legacy_magic_activated"] = false
@@ -975,8 +975,8 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						print("【自破壊時効果】%s は死亡" % opponent.creature_data.get("name", "?"))
 						result["opponent_killed"] = true
 			
-			"legacy_gold":
-				# マミー等: 遺産（ゴールド獲得）- skill_legacy.gdで処理
+			"legacy_ep":
+				# マミー等: 遺産（EP獲得）- skill_legacy.gdで処理
 				pass
 	
 	return result

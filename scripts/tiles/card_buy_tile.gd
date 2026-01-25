@@ -56,7 +56,7 @@ func _handle_cpu_card_buy(player_id: int) -> Dictionary:
 		return {"success": true, "card_bought": false}
 	
 	var price = _get_card_price(card_data)
-	print("[CardBuyTile] CPU: %sを購入（価格: %dG）" % [card_data.get("name", "?"), price])
+	print("[CardBuyTile] CPU: %sを購入（価格: %dEP）" % [card_data.get("name", "?"), price])
 	
 	# 購入処理
 	_purchase_card(card_data, player_id, price)
@@ -106,7 +106,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 			if card_buy_ui.has_method("_setup_ui"):
 				card_buy_ui._setup_ui()
 	
-	# プレイヤーの魔力を取得
+	# プレイヤーのEPを取得
 	var player_magic = 0
 	if _player_system and player_id < _player_system.players.size():
 		player_magic = _player_system.players[player_id].magic_power
@@ -127,7 +127,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	var card_data = selection_result.get("card", {})
 	var price = _get_card_price(card_data)
 	
-	print("[CardBuyTile] カード購入: %s（価格: %dG）" % [card_data.get("name", "?"), price])
+	print("[CardBuyTile] カード購入: %s（価格: %dEP）" % [card_data.get("name", "?"), price])
 	
 	# 購入処理
 	var success = _purchase_card(card_data, player_id, price)
@@ -163,7 +163,7 @@ func _get_card_price(card_data: Dictionary) -> int:
 	var cost_data = card_data.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = int(cost_data)
 	return int(ceil(cost / 2.0))
@@ -191,7 +191,7 @@ func _wait_for_selection() -> Dictionary:
 
 ## カード購入処理
 func _purchase_card(card_data: Dictionary, player_id: int, price: int) -> bool:
-	# 魔力を支払う
+	# EPを支払う
 	if _player_system and player_id < _player_system.players.size():
 		_player_system.players[player_id].magic_power -= price
 	
@@ -206,5 +206,5 @@ func _purchase_card(card_data: Dictionary, player_id: int, price: int) -> bool:
 		if _ui_manager.hand_display:
 			_ui_manager.hand_display.update_hand_display(player_id)
 	
-	print("[CardBuyTile] プレイヤー%d: %dG支払い、%sを手札に追加" % [player_id + 1, price, card_data.get("name", "?")])
+	print("[CardBuyTile] プレイヤー%d: %dEP支払い、%sを手札に追加" % [player_id + 1, price, card_data.get("name", "?")])
 	return true

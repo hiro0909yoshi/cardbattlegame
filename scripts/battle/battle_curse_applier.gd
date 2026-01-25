@@ -181,16 +181,16 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			})
 			print("[呪い変換] ", curse_type, ": 無効化[通常攻撃]を付与")
 			
-			# magic_barrierの場合、G100移動パラメータを記録
+			# magic_barrierの場合、EP移動パラメータを記録
 			if curse_type == "magic_barrier":
-				var gold_transfer = params.get("gold_transfer", 100)
+				var ep_transfer = params.get("ep_transfer", 100)
 				participant.temporary_effects.append({
-					"type": "gold_transfer_on_nullify",
-					"value": gold_transfer,
+					"type": "ep_transfer_on_nullify",
+					"value": ep_transfer,
 					"source": "curse",
 					"source_name": curse_name
 				})
-				print("[呪い変換] magic_barrier: 攻撃無効化時にG", gold_transfer, "移動")
+				print("[呪い変換] magic_barrier: 攻撃無効化時に", ep_transfer, "EP移動")
 	
 	# current_hpとcurrent_apを更新
 	participant.current_ap += participant.temporary_bonus_ap

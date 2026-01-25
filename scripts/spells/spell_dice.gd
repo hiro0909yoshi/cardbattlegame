@@ -67,7 +67,7 @@ func apply_dice_multi_effect(effect: Dictionary, target_data: Dictionary, curren
 		"count": count
 	})
 
-# 範囲指定 + 魔力獲得効果を適用
+# 範囲指定 + EP獲得効果を適用
 func apply_dice_range_magic_effect(effect: Dictionary, target_data: Dictionary, current_player_id: int):
 	var target_player_id = _get_target_player_id(target_data, current_player_id)
 	if target_player_id < 0:
@@ -170,19 +170,19 @@ func get_multi_roll_count(player_id: int) -> int:
 		return curse.get("params", {}).get("count", 1)
 	return 1
 
-# ダイスロール後に魔力を付与するか判定
+# ダイスロール後にEPを付与するか判定
 func should_grant_magic(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	return curse.get("curse_type", "") == "dice_range_magic"
 
-# 付与する魔力量を取得
+# 付与するEP量を取得
 func get_magic_grant_amount(player_id: int) -> int:
 	var curse = spell_curse.get_player_curse(player_id)
 	if curse.get("curse_type", "") == "dice_range_magic":
 		return curse.get("params", {}).get("magic", 0)
 	return 0
 
-# ダイスロール後の魔力付与処理（GameFlowManagerから呼ばれる）
+# ダイスロール後のEP付与処理（GameFlowManagerから呼ばれる）
 func process_magic_grant(player_id: int, ui_manager) -> void:
 	if not should_grant_magic(player_id):
 		return
@@ -192,9 +192,9 @@ func process_magic_grant(player_id: int, ui_manager) -> void:
 	var magic_amount = get_magic_grant_amount(player_id)
 	if magic_amount > 0:
 		player_system.add_magic(player_id, magic_amount)
-		print("[", curse_name, "] 魔力獲得 +", magic_amount, "G")
+		print("[", curse_name, "] EP獲得 +", magic_amount, "EP")
 		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "魔力 +" + str(magic_amount) + "G 獲得！"
+			ui_manager.phase_label.text = "EP +" + str(magic_amount) + "EP 獲得！"
 
 # ダイスロール時に呪いを適用
 # 通常のダイスシステムから呼ばれる
@@ -227,7 +227,7 @@ func get_modified_dice_value(player_id: int, original_value: int) -> int:
 			return original_value
 		
 		"dice_range_magic":
-			# 範囲指定 + 魔力獲得（チャージステップ）
+			# 範囲指定 + EP獲得（チャージステップ）
 			var min_val = int(params.get("min", 1))
 			var max_val = int(params.get("max", 6))
 			var new_value = randi() % (max_val - min_val + 1) + min_val

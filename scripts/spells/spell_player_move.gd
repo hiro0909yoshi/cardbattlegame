@@ -221,7 +221,7 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 	var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
 	var lap_completed = false
 	if lap_state.get("N", false) and lap_state.get("S", false):
-		# 周回完了処理を呼び出し（魔力ボーナス付与）
+		# 周回完了処理を呼び出し（EPボーナス付与）
 		game_flow_manager.lap_system.complete_lap(player_id)
 		lap_completed = true
 	

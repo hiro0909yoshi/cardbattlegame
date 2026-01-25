@@ -95,8 +95,8 @@ func update_label():
 	var cost_label = get_node_or_null("CostBadge/CostCircle/CostLabel")
 	if cost_label:
 		var cost = card_data.get("cost", 1)
-		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
-			cost = cost.mp
+		if typeof(cost) == TYPE_DICTIONARY and cost.has("ep"):
+			cost = cost.ep
 		cost_label.text = str(cost)
 		cost_label.add_theme_color_override("font_color", Color.WHITE)
 	
@@ -145,8 +145,8 @@ func update_dynamic_stats():
 	var cost_label = get_node_or_null("CostBadge/CostCircle/CostLabel")
 	if cost_label:
 		var cost = card_data.get("cost", 1)
-		if typeof(cost) == TYPE_DICTIONARY and cost.has("mp"):
-			cost = cost.mp
+		if typeof(cost) == TYPE_DICTIONARY and cost.has("ep"):
+			cost = cost.ep
 		cost_label.text = str(cost)
 		cost_label.add_theme_color_override("font_color", Color.WHITE)
 	

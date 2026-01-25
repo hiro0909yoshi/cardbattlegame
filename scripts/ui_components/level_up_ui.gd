@@ -96,10 +96,10 @@ func add_current_level_label(current_level: int):
 	label.add_theme_font_size_override("font_size", 16)
 	level_up_panel.add_child(label)
 
-# 保有魔力表示を追加
+# 保有EP表示を追加
 func add_magic_label(current_magic: int):
 	var label = Label.new()
-	label.text = "保有魔力: " + str(current_magic) + "G"
+	label.text = "保有EP: " + str(current_magic) + "EP"
 	label.position = Vector2(300, 60)
 	label.add_theme_font_size_override("font_size", 16)
 	label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
@@ -185,8 +185,8 @@ func calculate_expected_toll(level: int, chain_bonus: float) -> int:
 # ボタンテキストを構築
 func build_button_text(target_level: int, cost: int, toll: int, chain_bonus: float) -> String:
 	var text = "レベル" + str(target_level) + "にする"
-	text += " (コスト: " + str(cost) + "G)"
-	text += " → 通行料: " + str(toll) + "G"
+	text += " (コスト: " + str(cost) + "EP)"
+	text += " → 通行料: " + str(toll) + "EP"
 	if chain_bonus > 1.0:
 		text += " (連鎖込)"
 	return text
@@ -200,7 +200,7 @@ func apply_level_button_style(button: Button, can_afford: bool):
 		btn_style.bg_color = Color(0.2, 0.4, 0.2, 0.9)
 		btn_style.border_color = Color(0.3, 1.0, 0.3)
 	else:
-		# 魔力不足
+		# EP不足
 		btn_style.bg_color = Color(0.3, 0.2, 0.2, 0.9)
 		btn_style.border_color = Color(0.5, 0.3, 0.3)
 	

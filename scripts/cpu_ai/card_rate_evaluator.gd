@@ -48,8 +48,8 @@ const SKILL_RATE_BONUS = {
 	"アイテムクリーチャー": 20, # リビングアムル, リビングアーマー, リビングクローブ 等
 	
 	# その他
-	"魔力獲得": 13,             # クリーピングコイン
-	"魔力奪取": 18,             # アマゾン
+	"EP獲得": 13,             # クリーピングコイン
+	"EP奪取": 18,             # アマゾン
 	"通行料変化": 10,           # グレートフォシル
 	"足どめ": 35,               # オールドウィロウ, ケルピー
 	"空地移動": 13,             # ドリアード, ブリーズスピリット, ワイバーン
@@ -92,7 +92,7 @@ const SPELL_EFFECT_BONUS = {
 	"abandon_land": 80,                  # ランドトランス
 	"align_mismatched_lands": 40,        # ホームグラウンド
 	
-	# 魔力系
+	# EP系
 	"drain_magic": 40,                   # ドレインマジック
 	"drain_magic_by_lap_diff": 40,       # スピードペナルティ
 	"drain_magic_by_land_count": 40,     # ランドドレイン
@@ -315,7 +315,7 @@ static func _calculate_creature_rate(card: Dictionary) -> int:
 	var hp = card.get("hp", 0)
 	var cost = card.get("cost", 0)
 	if cost is Dictionary:
-		cost = cost.get("mp", 0)
+		cost = cost.get("ep", 0)
 	
 	# ベース: (ST + HP) // 2
 	var base = (st + hp) / 2

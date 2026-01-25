@@ -186,8 +186,8 @@ func _load_card_data(card_id: int) -> Dictionary:
 				if card_data.cost.has("cards_sacrifice"):
 					card_data["cost_cards_sacrifice"] = card_data.cost.cards_sacrifice
 				# mpをcostに変換
-				if card_data.cost.has("mp"):
-					card_data.cost = card_data.cost.mp
+				if card_data.cost.has("ep"):
+					card_data.cost = card_data.cost.ep
 				else:
 					card_data.cost = 1
 		else:

@@ -298,7 +298,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		var scroll_name = SkillDisplayConfig.get_skill_name(scroll_skill_key)
 		await _show_skill_change_if_any(defender, defender_before, scroll_name, attacker)
 	
-	# 💰 魔力獲得スキル適用（バトル開始時）
+	# 💰 EP獲得スキル適用（バトル開始時）
 	await apply_magic_gain_on_battle_start(attacker, defender)
 	
 	return result
@@ -930,19 +930,19 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary):
 	SkillStatModifiers.apply_phase_3b_effects(participant, context, board_system_ref)
 
-## 💰 バトル開始時の魔力獲得スキルを適用
+## 💰 バトル開始時のEP獲得スキルを適用
 func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	"""
-	バトル開始時に発動する魔力獲得スキルをまとめて適用
-	- 侵略時魔力獲得（攻撃側のみ）
-	- 無条件魔力獲得（両側）
+	バトル開始時に発動するEP獲得スキルをまとめて適用
+	- 侵略時EP獲得（攻撃側のみ）
+	- 無条件EP獲得（両側）
 	"""
 	# spell_magic_refを直接使う（BattleParticipantから取得）
 	var spell_magic = attacker.spell_magic_ref
 	if not spell_magic:
 		return
 	
-	# 魔力獲得スキルを適用
+	# EP獲得スキルを適用
 	var activated = _skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
 	
 	# 発動したスキルをバトル画面に表示

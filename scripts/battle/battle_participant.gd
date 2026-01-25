@@ -45,7 +45,7 @@ var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフ�
 var has_squid_mantle: bool = false  # スクイドマントル効果（敵の特殊攻撃無効化）
 
 # システム参照
-var spell_magic_ref = null  # SpellMagicの参照（魔力獲得系アイテム用）
+var spell_magic_ref = null  # SpellMagicの参照（EP獲得系アイテム用）
 
 # 初期化
 func _init(
@@ -158,7 +158,7 @@ func take_damage(damage: int) -> Dictionary:
 	# update_current_hp() は呼ばない
 	# current_hp が状態値になったため、計算値ではなくなる
 	
-	# 💰 魔力獲得処理（ゼラチンアーマー: 受けたダメージから魔力獲得）
+	# 💰 EP獲得処理（ゼラチンアーマー: 受けたダメージからEP獲得）
 	_trigger_magic_from_damage(damage)
 	
 	return damage_breakdown
@@ -248,10 +248,10 @@ func take_mhp_damage(damage: int) -> void:
 	else:
 		print("  → 現在HP:", current_hp, " / MHP:", new_mhp)
 
-## 💰 ダメージを受けた時の魔力獲得処理（ゼラチンアーマー用）
+## 💰 ダメージを受けた時のEP獲得処理（ゼラチンアーマー用）
 func _trigger_magic_from_damage(damage: int) -> void:
 	"""
-	ダメージを受けた直後に魔力獲得効果をチェック
+	ダメージを受けた直後にEP獲得効果をチェック
 	
 	Args:
 		damage: 受けたダメージ量
@@ -275,18 +275,18 @@ func _trigger_magic_from_damage(damage: int) -> void:
 				var multiplier = effect.get("multiplier", 5)
 				var amount = damage * multiplier
 				
-				print("【魔力獲得(ダメージ)】", creature_data.get("name", "?"), "の", item.get("name", "?"), 
-					  " → プレイヤー", player_id + 1, "が", amount, "G獲得（ダメージ", damage, "×", multiplier, "）")
+				print("【EP獲得(ダメージ)】", creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", player_id + 1, "が", amount, "EP獲得（ダメージ", damage, "×", multiplier, "）")
 				
 				spell_magic_ref.add_magic(player_id, amount)
 	
-	# 💰 クリーチャースキル: ダメージ時魔力獲得（ゼラチンウォールなど）
+	# 💰 クリーチャースキル: ダメージ時EP獲得（ゼラチンウォールなど）
 	_skill_magic_gain.apply_damage_magic_gain(self, damage, spell_magic_ref)
 
-## 💰 魔力奪取効果をチェック（攻撃側が呼ぶ）
+## 💰 EP奪取効果をチェック（攻撃側が呼ぶ）
 func trigger_magic_steal_on_damage(defender, damage: int, spell_magic) -> void:
 	"""
-	敵にダメージを与えた時に魔力奪取効果をチェック
+	敵にダメージを与えた時にEP奪取効果をチェック
 	
 	Args:
 		defender: ダメージを受けた敵
@@ -299,5 +299,5 @@ func trigger_magic_steal_on_damage(defender, damage: int, spell_magic) -> void:
 	if damage <= 0:
 		return
 	
-	# クリーチャースキル: ダメージベース魔力奪取（バンディットなど）
+	# クリーチャースキル: ダメージベースEP奪取（バンディットなど）
 	_skill_magic_steal.apply_damage_based_steal(self, defender, damage, spell_magic)

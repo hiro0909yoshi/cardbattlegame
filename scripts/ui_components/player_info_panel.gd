@@ -2,7 +2,7 @@ extends Node
 class_name PlayerInfoPanel
 
 # プレイヤー情報パネル管理クラス（3D対応版）
-# 各プレイヤーの魔力、総魔力情報を簡潔に表示
+# 各プレイヤーのEP、TEP情報を簡潔に表示
 
 # シグナル
 signal player_panel_clicked(player_id: int)
@@ -122,7 +122,7 @@ func create_single_panel(player_id: int) -> Panel:
 	info_label.fit_content = false
 	info_label.clip_contents = true
 	
-	# フォントサイズを固定値に（魔力・総魔力表示用に大きめに）※1.4倍
+	# フォントサイズを固定値に（EP・TEP表示用に大きめに）※1.4倍
 	info_label.add_theme_font_size_override("normal_font_size", 28)
 	info_label.visible = true
 	info_panel.add_child(info_label)
@@ -189,8 +189,8 @@ func build_player_info_text(player, player_id: int) -> String:
 		text += "[color=yellow]● [/color]"
 	
 	text += "[b]" + player.name + "[/b]\n"
-	text += "魔力: " + str(player.magic_power) + "G\n"
-	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G"
+	text += "EP: " + str(player.magic_power) + "EP\n"
+	text += "TEP: " + str(calculate_total_assets(player_id)) + "EP"
 	
 	# プレイヤー呪いがあれば別行で表示
 	if player.curse and not player.curse.is_empty():
@@ -210,18 +210,18 @@ func get_land_count(player_id: int) -> int:
 	
 	return 0
 
-# 総資産を計算（PlayerSystemに委譲）
+# TEPを計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
 	if not player_system_ref:
 		return 0
 	return player_system_ref.calculate_total_assets(player_id)
 
-# 全プレイヤーの順位を計算（総魔力降順、1位=1）
+# 全プレイヤーの順位を計算（TEP降順、1位=1）
 func calculate_all_rankings() -> Array:
 	if not player_system_ref:
 		return []
 	
-	# 各プレイヤーの総魔力を取得
+	# 各プレイヤーのTEPを取得
 	var player_assets = []
 	for i in range(player_system_ref.players.size()):
 		player_assets.append({
@@ -229,7 +229,7 @@ func calculate_all_rankings() -> Array:
 			"total": calculate_total_assets(i)
 		})
 	
-	# 総魔力降順でソート
+	# TEP降順でソート
 	player_assets.sort_custom(func(a, b): return a["total"] > b["total"])
 	
 	# 順位を割り当て（同率は同順位）

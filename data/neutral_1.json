@@ -7,12 +7,12 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "無効化・地形変化コスト変化",
-	  "ability_detail": "無効化[巻物]；地形変化コスト変化[G50]"
+	  "ability_detail": "無効化[巻物]；地形変化コスト変化[EP50]"
 	,
 	  "ability_parsed": {
 		"keywords": ["無効化"],
@@ -36,12 +36,12 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術・アイテム破壊無効・不屈",
-	  "ability_detail": "秘術[G30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
+	  "ability_detail": "秘術[EP30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
 	  "ability_parsed": {
 		"keywords": ["秘術", "不屈"],
 		"item_immunity": ["destroy", "steal"],
@@ -62,7 +62,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -72,7 +72,7 @@
 	  "ap": 50,
 	  "hp": 60,
 	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[G80・対象無のHP-30]",
+	  "ability_detail": "先制；秘術[EP80・対象無のHP-30]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -95,12 +95,12 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・アイテムカードを1枚引く]",
+	  "ability_detail": "秘術[EP50・アイテムカードを1枚引く]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -119,7 +119,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 250,
+		"ep": 250,
 		"cards_sacrifice": 1
 	  },
 	  "ap": 60,
@@ -151,7 +151,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -189,7 +189,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 300,
+		"ep": 300,
 		"cards_sacrifice": 1
 	  },
 	  "ap": 80,
@@ -217,7 +217,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -251,14 +251,14 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "ap": 10,
 	  "hp": 30,
-	  "ability": "魔力獲得・破壊時魔力遺産",
-	  "ability_detail": "魔力獲得[G100]；戦闘やスペルで破壊時、遺産[G100]",
+	  "ability": "EP獲得・破壊時EP遺産",
+	  "ability_detail": "EP獲得[EP100]；戦闘やスペルで破壊時、遺産[EP100]",
 	  "ability_parsed": {
-		"keywords": ["魔力獲得", "遺産"],
+		"keywords": ["EP獲得", "遺産"],
 		"effects": [
 		  {
 			"effect_type": "magic_gain_on_battle_start",
@@ -279,7 +279,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
@@ -292,7 +292,7 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・通行料変化・死者復活",
-	  "ability_detail": "防御型；通行料変化[G0]；死者復活[ティラノサウルス]",
+	  "ability_detail": "防御型；通行料変化[EP0]；死者復活[ティラノサウルス]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "通行料変化", "死者復活"],
 		"effects": [
@@ -302,7 +302,7 @@
 		  {
 			"effect_type": "toll_change",
 			"value": 0,
-			"description": "通行料変化[G0]"
+			"description": "通行料変化[EP0]"
 		  },
 		  {
 			"effect_type": "revive",
@@ -320,7 +320,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -330,7 +330,7 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G40・次R、対象セプターは選んだ方向に進める]",
+	  "ability_detail": "秘術[EP40・次R、対象セプターは選んだ方向に進める]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -350,7 +350,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -362,7 +362,7 @@
 	  "ap": 0,
 	  "hp": 30,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G0・使用者にG200を与え、自壊]",
+	  "ability_detail": "防御型；秘術[EP0・使用者にEP200を与え、自壊]",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -385,7 +385,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -399,7 +399,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "ap": 50,
 	  "hp": 30,
@@ -424,7 +424,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -452,12 +452,12 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G70・対象と同じクリーチャーに変身]",
+	  "ability_detail": "秘術[EP70・対象と同じクリーチャーに変身]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -476,7 +476,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 40,
 	  "hp": 30,
@@ -503,7 +503,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -535,7 +535,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -554,7 +554,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -579,7 +579,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -607,7 +607,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -619,7 +619,7 @@
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "防御型・防魔・秘術",
-	  "ability_detail": "防御型；防魔；秘術[G100・対象領地を無に変え、自壊]",
+	  "ability_detail": "防御型；防魔；秘術[EP100・対象領地を無に変え、自壊]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "防魔", "秘術"]
 	  },
@@ -635,7 +635,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -663,7 +663,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 75
+		"ep": 75
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -683,7 +683,7 @@
 	  "type": "creature",
 	  "element": "neutral",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {

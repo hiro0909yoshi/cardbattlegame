@@ -259,7 +259,7 @@ static func apply_metal_form(creature_data: Dictionary, name: String = "メタ�
 
 
 # =============================================================================
-# マジックバリア（magic_barrier）: 無効化[通常攻撃]、攻撃無効化時に敵にG100
+# マジックバリア（magic_barrier）: 無効化[通常攻撃]、攻撃無効化時に敵に100EP
 # =============================================================================
 
 ## magic_barrier 呪いを持っているかチェック
@@ -275,7 +275,7 @@ static func apply_magic_barrier(creature_data: Dictionary, name: String = "マ�
 		"name": name,
 		"duration": -1,
 		"params": {
-			"gold_transfer": 100
+			"ep_transfer": 100
 		}
 	}
 	print("[SpellCurseBattle] マジックバリアを付与: ", creature_data.get("name", "?"))

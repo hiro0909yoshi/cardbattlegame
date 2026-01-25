@@ -6,8 +6,8 @@ class_name MagicStoneSystem
 # 定数
 const BASE_VALUE = 50  # 初期価値
 const MIN_VALUE = 25   # 最低価値
-const SAME_ELEMENT_BONUS = 4    # 同属性の石1つあたり+4G
-const OPPOSING_ELEMENT_PENALTY = 2  # 対照属性の石1つあたり-2G
+const SAME_ELEMENT_BONUS = 4    # 同属性の石1つあたり+4EP
+const OPPOSING_ELEMENT_PENALTY = 2  # 対照属性の石1つあたり-2EP
 
 # 属性と相克関係
 const OPPOSING_ELEMENTS = {
@@ -41,10 +41,10 @@ func calculate_stone_value(element: String) -> int:
 			same_count += player.magic_stones.get(element, 0)
 			opposing_count += player.magic_stones.get(opposing_element, 0)
 	
-	# ボーナス計算（同属性の石1つにつき+4G）
+	# ボーナス計算（同属性の石1つにつき+4EP）
 	var same_bonus = same_count * SAME_ELEMENT_BONUS
 	
-	# ペナルティ計算（対照属性の石1つにつき-2G）
+	# ペナルティ計算（対照属性の石1つにつき-2EP）
 	var opposing_penalty = opposing_count * OPPOSING_ELEMENT_PENALTY
 	
 	# 最終価値（最低値保証）
@@ -95,13 +95,13 @@ func buy_stone(player_id: int, element: String, count: int = 1) -> Dictionary:
 	if player.magic_power < total_cost:
 		return {"success": false, "reason": "insufficient_magic", "required": total_cost, "available": player.magic_power}
 	
-	# 魔力を消費
+	# EPを消費
 	player_system_ref.add_magic(player_id, -total_cost)
 	
 	# 石を追加
 	player.magic_stones[element] += count
 	
-	print("[魔法石購入] プレイヤー%d: %s石 ×%d (単価%dG, 合計%dG)" % [player_id + 1, element, count, unit_value, total_cost])
+	print("[魔法石購入] プレイヤー%d: %s石 ×%d (単価%dEP, 合計%dEP)" % [player_id + 1, element, count, unit_value, total_cost])
 	
 	return {"success": true, "element": element, "count": count, "unit_value": unit_value, "total_cost": total_cost}
 
@@ -125,10 +125,10 @@ func sell_stone(player_id: int, element: String, count: int = 1) -> Dictionary:
 	# 石を減らす
 	player.magic_stones[element] -= count
 	
-	# 魔力を獲得
+	# EPを獲得
 	player_system_ref.add_magic(player_id, total_value)
 	
-	print("[魔法石売却] プレイヤー%d: %s石 ×%d (単価%dG, 合計%dG)" % [player_id + 1, element, count, unit_value, total_value])
+	print("[魔法石売却] プレイヤー%d: %s石 ×%d (単価%dEP, 合計%dEP)" % [player_id + 1, element, count, unit_value, total_value])
 	
 	return {"success": true, "element": element, "count": count, "unit_value": unit_value, "total_value": total_value}
 

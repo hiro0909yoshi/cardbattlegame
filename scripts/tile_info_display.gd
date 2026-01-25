@@ -94,7 +94,7 @@ func show_toll(label: Label3D, tile_info: Dictionary, tile_index: int):
 	else:
 		var toll = calculate_display_toll(tile_info, tile_index)
 		if toll > 0:
-			label.text = str(toll) + "G"
+			label.text = str(toll) + "EP"
 			label.modulate = Color(1.0, 0.9, 0.3)  # 金色
 			label.visible = true
 		else:

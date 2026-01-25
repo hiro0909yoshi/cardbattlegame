@@ -132,7 +132,7 @@ func _update_right_panel():
 	# コスト
 	if cost_label:
 		var cost_value = data.get("cost", 0)
-		var mp_cost = 0
+		var ep_cost = 0
 		var lands_required = []
 		var cards_sacrifice = 0
 		
@@ -142,14 +142,14 @@ func _update_right_panel():
 		var original_cost = original_data.get("cost", {})
 		
 		if typeof(original_cost) == TYPE_DICTIONARY:
-			mp_cost = original_cost.get("mp", 0)
+			ep_cost = original_cost.get("ep", 0)
 			lands_required = original_cost.get("lands_required", [])
 			cards_sacrifice = original_cost.get("cards_sacrifice", 0)
 		else:
-			mp_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
+			ep_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
 			lands_required = data.get("cost_lands_required", [])
 		
-		cost_label.text = "コスト: %dG" % mp_cost
+		cost_label.text = "コスト: %dEP" % ep_cost
 		_add_cost_icons(cost_element_icons, lands_required, cards_sacrifice)
 	
 	# HP / AP
@@ -213,11 +213,11 @@ func _update_right_panel():
 			mystic_container.visible = true
 			var mystic_text = ""
 			if not mystic_art.is_empty():
-				mystic_text = "%s (%dG)" % [mystic_art.get("name", ""), mystic_art.get("cost", 0)]
+				mystic_text = "%s (%dEP)" % [mystic_art.get("name", ""), mystic_art.get("cost", 0)]
 			elif not mystic_arts.is_empty():
 				var parts = []
 				for ma in mystic_arts:
-					parts.append("%s (%dG)" % [ma.get("name", ""), ma.get("cost", 0)])
+					parts.append("%s (%dEP)" % [ma.get("name", ""), ma.get("cost", 0)])
 				mystic_text = "\n".join(parts)
 			mystic_label.text = mystic_text
 		else:

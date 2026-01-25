@@ -172,7 +172,7 @@ func _apply_stage_settings():
 			system_manager.game_flow_manager.lap_system.apply_map_settings(map_data)
 			print("[Game3D] 周回システム設定適用完了")
 	
-	# 初期魔力を設定
+	# 初期EPを設定
 	if system_manager.player_system:
 		# プレイヤー1
 		var player_magic = stage_loader.get_player_start_magic()
@@ -184,7 +184,7 @@ func _apply_stage_settings():
 			var enemy_magic = stage_loader.get_enemy_start_magic(i)
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
 		
-		print("[Game3D] 初期魔力設定完了")
+		print("[Game3D] 初期EP設定完了")
 	
 	# 勝利条件を設定
 	var win_condition = stage_loader.get_win_condition()
@@ -192,7 +192,7 @@ func _apply_stage_settings():
 		var target = win_condition.get("target", 8000)
 		for player in system_manager.player_system.players:
 			player.target_magic = target
-		print("[Game3D] 勝利条件: 総魔力 %dG以上" % target)
+		print("[Game3D] 勝利条件: TEP %dEP以上" % target)
 	
 	# 全プレイヤーのデッキを設定
 	print("[Game3D] calling _setup_all_decks...")

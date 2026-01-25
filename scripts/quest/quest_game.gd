@@ -142,7 +142,7 @@ func _apply_stage_settings():
 			system_manager.game_flow_manager.lap_system.apply_map_settings(map_data)
 			print("[QuestGame] 周回システム設定適用完了")
 	
-	# 初期魔力を設定
+	# 初期EPを設定
 	if system_manager.player_system:
 		# プレイヤー1
 		var player_magic = stage_loader.get_player_start_magic()
@@ -154,7 +154,7 @@ func _apply_stage_settings():
 			var enemy_magic = stage_loader.get_enemy_start_magic(i)
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
 		
-		print("[QuestGame] 初期魔力設定完了")
+		print("[QuestGame] 初期EP設定完了")
 	
 	# 勝利条件を設定
 	var win_condition = stage_loader.get_win_condition()
@@ -163,7 +163,7 @@ func _apply_stage_settings():
 		# 全プレイヤーのtarget_magicを設定
 		for player in system_manager.player_system.players:
 			player.target_magic = target
-		print("[QuestGame] 勝利条件: 総魔力 %dG以上でチェックポイント通過" % target)
+		print("[QuestGame] 勝利条件: TEP %dEP以上でチェックポイント通過" % target)
 	
 	# 全プレイヤーのデッキを設定
 	print("[QuestGame] calling _setup_all_decks...")

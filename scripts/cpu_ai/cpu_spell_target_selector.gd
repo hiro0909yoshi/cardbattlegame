@@ -291,7 +291,7 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 		"command_growth_curse",  # コマンド成長
 		"remote_move",           # 遠隔移動
 		"toll_multiplier",       # 通行料倍率（グリード等）
-		"magic_barrier",         # 魔力結界
+		"magic_barrier",         # EP結界
 		"forced_stop",           # 強制停止
 		"toll_share",            # 通行料促進
 		"grant_mystic_arts",     # 秘術付与

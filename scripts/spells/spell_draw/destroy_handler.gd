@@ -178,7 +178,7 @@ func destroy_expensive_cards(cost_threshold: int) -> Dictionary:
 			var cost_data = card.get("cost", 0)
 			var card_cost = 0
 			if cost_data is Dictionary:
-				card_cost = cost_data.get("mp", 0)
+				card_cost = cost_data.get("ep", 0)
 			else:
 				card_cost = cost_data
 			

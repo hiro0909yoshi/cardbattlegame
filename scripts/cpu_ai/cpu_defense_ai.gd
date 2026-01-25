@@ -757,13 +757,13 @@ func _count_armor_in_hand(player_id: int) -> int:
 func _get_item_cost(item: Dictionary) -> int:
 	var cost_data = item.get("cost", 0)
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return cost_data
 
 func _get_creature_cost(creature: Dictionary) -> int:
 	var cost_data = creature.get("cost", 0)
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return cost_data
 
 func _select_best_by_cost(entries: Array) -> Dictionary:

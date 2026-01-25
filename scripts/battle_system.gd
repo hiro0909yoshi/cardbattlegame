@@ -101,7 +101,7 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data.get("ep", 0) * GameConstants.CARD_COST_MULTIPLIER
 	else:
 		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	var current_player = player_system_ref.get_current_player()
@@ -387,7 +387,7 @@ func _apply_post_battle_effects(
 ) -> void:
 	var tile_index = tile_info["index"]
 	
-	# 💰 魔力獲得処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
+	# 💰 EP獲得処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
 	
 	match result:
 		BattleResult.ATTACKER_WIN:

@@ -7,7 +7,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "全水風のHP-20",
 	  "effect_parsed": {
@@ -40,7 +40,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "対象領地に呪い\"能力値+20\"(戦闘中、AP&HP+20)；カードを1枚引く",
 	  "effect_parsed": {
@@ -74,7 +74,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象領地に呪い\"不屈\"(5R間、不屈を得る)",
 	  "effect_parsed": {
@@ -103,7 +103,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象領地に呪い\"戦闘行動不可\"",
 	  "effect_parsed": {
@@ -132,9 +132,9 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
-	  "effect": "対象領地に呪い\"賞金首\"(移動・交換不可、武器で破壊した場合G300)",
+	  "effect": "対象領地に呪い\"賞金首\"(移動・交換不可、武器で破壊した場合30EP0)",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -166,7 +166,7 @@
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "全セプターに呪い\"侵略不可\"(2R間、侵略できない)",
 	  "effect_parsed": {
@@ -193,7 +193,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "対象セプターに呪い\"防魔\"(5R間、スペルの対象に選べない)",
 	  "effect_parsed": {
@@ -224,7 +224,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料はG0)",
 	  "effect_parsed": {
@@ -252,9 +252,9 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
-	  "effect": "全呪いを消し、消した呪いの種類×G50を得る",
+	  "effect": "全呪いを消し、消した呪いの種類×50EPを得る",
 	  "effect_parsed": {
 		"target_type": "none",
 		"effects": [
@@ -276,7 +276,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "対象自領地を火に変える",
 	  "effect_parsed": {
@@ -304,7 +304,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象クリーチャーのMHP+20、AP-20",
 	  "effect_parsed": {
@@ -337,7 +337,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "対象セプターの最もMHPの低いクリーチャーを手札に戻す",
 	  "effect_parsed": {
@@ -365,7 +365,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "合成を持つカードが手札にある場合、カードを3枚引く；無い場合、カードを2枚引く",
 	  "effect_parsed": {
@@ -396,7 +396,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "自ブックの上6枚を見て、好きな1枚を引く",
 	  "effect_parsed": {
@@ -420,7 +420,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 140
+		"ep": 140
 	  },
 	  "effect": "最も近いゲートに飛ぶ",
 	  "effect_parsed": {
@@ -444,7 +444,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "使用者の次のダイスを3つにする",
 	  "effect_parsed": {
@@ -469,9 +469,9 @@
 	  "type": "spell",
 	  "spell_type": "世界呪",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
-	  "effect": "世界呪い\"召喚条件解除\"(6R間、クリーチャー配置時、魔力以外のコストは無視される)",
+	  "effect": "世界呪い\"召喚条件解除\"(6R間、クリーチャー配置時、EP以外のコストは無視される)",
 	  "effect_parsed": {
 		"target_type": "world",
 		"effects": [
@@ -495,9 +495,9 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
-	  "effect": "密命；使用者より魔力の多い対象敵セプターから30%を奪う",
+	  "effect": "密命；使用者よりEPの多い対象敵セプターから30%を奪う",
 	  "is_secret": true,
 	  "effect_parsed": {
 		"target_type": "player",
@@ -523,9 +523,9 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"爆発罠\"(停止セプターは魔力40%を失い、クリーチャーのHP-20)",
+	  "effect": "対象領地に呪い\"爆発罠\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_filter": "has_creature",
@@ -564,7 +564,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象敵セプターに呪い\"通行料無効\"(2R間、通行料を取れない)",
 	  "effect_parsed": {
@@ -591,7 +591,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "レベル2領地を5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
 	  "keywords": [
@@ -621,7 +621,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "全火地のHP-20",
 	  "effect_parsed": {
@@ -654,7 +654,7 @@
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "全領地に呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
 	  "effect_parsed": {
@@ -683,7 +683,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "対象火水のHP-30",
 	  "effect_parsed": {
@@ -716,9 +716,9 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
-	  "effect": "対象自領地に呪い\"移動術\"(秘術[G50・対象セプターに呪い\"ダイス5\"])",
+	  "effect": "対象自領地に呪い\"移動術\"(秘術[EP50・対象セプターに呪い\"ダイス5\"])",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -753,7 +753,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "選んだタイプのカードを1枚引く",
 	  "effect_parsed": {
@@ -776,7 +776,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "対象セプターに呪い\"ダイス6～8\"(2R間、ダイスを6～8にする)",
 	  "effect_parsed": {
@@ -803,7 +803,7 @@
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "全ブリードクリーチャーをダウンさせ、呪い\"戦闘行動不可\"をつける",
 	  "cpu_rule": {
@@ -818,7 +818,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "対象敵ブックの上6枚を見て1枚を選び、破壊する；カードを1枚引く",
 	  "effect_parsed": {
@@ -844,7 +844,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象領地に呪い\"戦闘能力不可\"；カードを1枚引く",
 	  "effect_parsed": {
@@ -877,7 +877,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "カードを2枚引く",
 	  "effect_parsed": {
@@ -901,7 +901,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "属性違いの領地を4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
 	  "keywords": [
@@ -930,7 +930,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "effect": "対象の、属性違いのクリーチャーを手札に戻す",
 	  "effect_parsed": {
@@ -958,7 +958,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "対象セプターに呪い\"ダイス1\"(次のダイスを1にする)",
 	  "effect_parsed": {
@@ -985,7 +985,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "effect": "対象セプターに呪い\"ダイス3\"(次のダイスを3にする)",
 	  "effect_parsed": {
@@ -1012,7 +1012,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "対象セプターに呪い\"ダイス6\"(次のダイスを6にする)",
 	  "effect_parsed": {
@@ -1039,7 +1039,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "対象セプターに呪い\"ダイス8\"(次のダイスを8にする)",
 	  "effect_parsed": {
@@ -1066,7 +1066,7 @@
 	  "type": "spell",
 	  "spell_type": "世界呪",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "世界呪い\"下位侵略不可\"(6R間、順位が下のセプターの領地に侵略できない)",
 	  "effect_parsed": {
@@ -1092,7 +1092,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 120
+		"ep": 120
 	  },
 	  "effect": "レベル3以下の対象火領地を地に、または地領地を火に変える",
 	  "effect_parsed": {
@@ -1126,7 +1126,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "距離1～4マスの対象の土地に飛ぶ",
 	  "effect_parsed": {
@@ -1154,7 +1154,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "対象領地に呪い\"防魔壁\"(防魔と防御型を持つ)",
 	  "effect_parsed": {
@@ -1187,7 +1187,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "対象敵クリーチャーのHP-20",
 	  "effect_parsed": {
@@ -1216,7 +1216,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"cards_sacrifice": 1
 	  },
 	  "effect": "全クリーチャーのMHP+5；合成[アイテム・全自クリーチャーとなる]",
@@ -1254,7 +1254,7 @@
 	  "type": "spell",
 	  "spell_type": "複数特殊能力付与",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "全領地に呪い\"HP効果無効\"",
 	  "effect_parsed": {
@@ -1284,9 +1284,9 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
-	  "effect": "周回数×G50を得る",
+	  "effect": "周回数×50EPを得る",
 	  "effect_parsed": {
 		"target_type": "self",
 		"effects": [
@@ -1308,7 +1308,7 @@
 	  "type": "spell",
 	  "spell_type": "世界呪",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "世界呪い\"防魔\"(6R間、全セプターはスペルの対象に選べない)",
 	  "effect_parsed": {
@@ -1334,7 +1334,7 @@
 	  "type": "spell",
 	  "spell_type": "世界呪",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "世界呪い\"同種相殺\"(6R間、同クリーチャー2体配置なら戦闘時破壊)",
 	  "effect_parsed": {
@@ -1361,7 +1361,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "ブリードカードがブックにある場合、それを1枚引く；無い場合、カードを2枚引く",
 	  "cpu_rule": {
@@ -1376,7 +1376,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"cards_sacrifice": 1
 	  },
 	  "effect": "対象敵手札からアイテムかスペルを選び、同カードを全てホーリーワード6に変える",
@@ -1404,7 +1404,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "対象領地に呪い\"金属化\"(無効化[通常攻撃]を得て、防具使用不可)",
 	  "effect_parsed": {
@@ -1433,9 +1433,9 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
-	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料はG200になる)",
+	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は20EP0になる)",
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_filter": "enemy",
@@ -1461,7 +1461,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "全自クリーチャーのHPを全回復",
 	  "effect_parsed": {
@@ -1489,7 +1489,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "対象セプターに呪い\"生命力\"(クリーチャーとアイテムG0、スペルは無効化され呪いは消える)",
 	  "effect_parsed": {
@@ -1517,7 +1517,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "対象自領地を手放し、その価値の70%を得る",
 	  "effect_parsed": {
@@ -1545,9 +1545,9 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
-	  "effect": "対象敵セプターから、敵領地数×G30を奪う",
+	  "effect": "対象敵セプターから、敵領地数×30EPを奪う",
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_filter": "enemy",
@@ -1571,7 +1571,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "対象領地に呪い\"能力値不定\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
 	  "effect_parsed": {
@@ -1607,7 +1607,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "対象クリーチャーのダウン解除；対象クリーチャーのHPを全回復",
 	  "effect_parsed": {
@@ -1638,7 +1638,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "対象ブックを初期化する",
 	  "effect_parsed": {
@@ -1662,7 +1662,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "対象ゲートを通過したことになる",
 	  "effect_parsed": {
@@ -1686,7 +1686,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "全分岐スイッチを切り替える；復帰[ブック]；スイッチが無い場合、カードを1枚引く",
 	  "cpu_rule": {
@@ -1701,7 +1701,7 @@
 	  "type": "spell",
 	  "spell_type": "単体特殊能力付与",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "使用者に呪い\"制限解除\"(4R間、クリーチャーのアイテム制限と配置制限を無視)",
 	  "effect_parsed": {
@@ -1730,7 +1730,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "2体の対象自クリーチャーを交換；復帰[ブック]",
 	  "return_to_deck": true,
@@ -1759,7 +1759,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "手札を全て捨て、その枚数+1枚のカードを引く",
 	  "effect_parsed": {
@@ -1782,7 +1782,7 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "全セプターの手札の呪いカードを破壊",
 	  "effect_parsed": {
@@ -1805,9 +1805,9 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
-	  "effect": "全手札の使用魔力G100以上のカードを全て破壊する",
+	  "effect": "全手札の使用EP100以上のカードを全て破壊する",
 	  "effect_parsed": {
 		"target_type": "self",
 		"effects": [
@@ -1830,9 +1830,9 @@
 	  "type": "spell",
 	  "spell_type": "複数対象",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
-	  "effect": "全セプターの魔力を平均化する",
+	  "effect": "全セプターのEPを平均化する",
 	  "effect_parsed": {
 		"target_type": "self",
 		"effects": [
@@ -1854,9 +1854,9 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
-	  "effect": "密命；自領地が4つ連続している場合、G500；未達成の場合、カードを2枚引く",
+	  "effect": "密命；自領地が4つ連続している場合、500EP；未達成の場合、カードを2枚引く",
 	  "is_secret": true,
 	  "effect_parsed": {
 		"target_type": "self",
@@ -1884,7 +1884,7 @@
 	  "type": "spell",
 	  "spell_type": "単体対象",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "カードを1枚引く；クリーチャーだった場合、ランダムな空地に配置",
 	  "effect_parsed": {

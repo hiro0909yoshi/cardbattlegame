@@ -97,8 +97,8 @@ func load_json_file(path: String) -> Array:
 			if card.has("id"):
 				card.id = int(card.id)
 			# costのmpもintに変換
-			if card.has("cost") and card.cost.has("mp"):
-				card.cost.mp = int(card.cost.mp)
+			if card.has("cost") and card.cost.has("ep"):
+				card.cost.ep = int(card.cost.ep)
 			# apとhpもintに変換
 			if card.has("ap"):
 				card.ap = int(card.ap)

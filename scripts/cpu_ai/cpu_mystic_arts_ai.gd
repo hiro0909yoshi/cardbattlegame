@@ -623,7 +623,7 @@ func _calculate_profit(formula: String, context: Dictionary) -> int:
 		"caster_mhp * 2":
 			return context.get("caster_mhp", 0) * 2
 		"200 - caster_value":
-			# 黄金献身: 200G獲得 - 術者の価値
+			# 黄金献身: 200EP獲得 - 術者の価値
 			return 200  # TODO: 術者価値の計算
 		_:
 			if "enemy_magic" in formula:
@@ -636,7 +636,7 @@ func _calculate_profit(formula: String, context: Dictionary) -> int:
 	
 	return 0
 
-## 最大敵魔力取得
+## 最大敵EP取得
 func _get_max_enemy_magic(context: Dictionary) -> int:
 	if not player_system:
 		return 0

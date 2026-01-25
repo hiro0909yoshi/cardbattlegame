@@ -359,9 +359,9 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 	
 	var upgrade_cost = board_system.get_upgrade_cost(tile_info.get("index", 0))
 	
-	# 魔力とレベルアップ確率で判断
+	# EPとレベルアップ確率で判断
 	if current_player.magic_power >= upgrade_cost and randf() < GameConstants.CPU_LEVELUP_RATE:
-		print("[CPU AI] レベルアップ: コスト%dG" % upgrade_cost)
+		print("[CPU AI] レベルアップ: コスト%dEP" % upgrade_cost)
 		decision_attempts = 0
 		emit_signal("level_up_decided", true)
 	else:

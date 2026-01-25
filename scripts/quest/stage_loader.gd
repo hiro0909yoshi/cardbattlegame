@@ -262,7 +262,7 @@ func get_player_is_cpu() -> Array:
 		result.append(true)  # CPUとして追加
 	return result
 
-## 初期魔力を取得（プレイヤー用）
+## 初期EPを取得（プレイヤー用）
 func get_player_start_magic() -> int:
 	# 新形式: rule_overrides.initial_magic.player
 	var rule_overrides = current_stage_data.get("rule_overrides", {})
@@ -276,7 +276,7 @@ func get_player_start_magic() -> int:
 	var rule_preset = current_stage_data.get("rule_preset", "standard")
 	return GameConstants.get_initial_magic(rule_preset)
 
-## 敵の初期魔力を取得
+## 敵の初期EPを取得
 func get_enemy_start_magic(enemy_index: int) -> int:
 	# 新形式: rule_overrides.initial_magic.cpu
 	var rule_overrides = current_stage_data.get("rule_overrides", {})

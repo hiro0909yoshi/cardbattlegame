@@ -7,7 +7,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "fire"
 		]
@@ -46,7 +46,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "fire"
 		],
@@ -70,7 +70,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 65
+		"ep": 65
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -80,7 +80,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[G50・対象自領地に呪い遠隔移動]",
+	  "ability_detail": "不屈；秘術[EP50・対象自領地に呪い遠隔移動]",
 	  "ability_parsed": {
 		"keywords": ["不屈", "秘術"],
 		"mystic_art": {
@@ -97,7 +97,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -111,7 +111,7 @@
 	  "ap": 30,
 	  "hp": 60,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G50・対象敵領地に呪い通行料1/2]",
+	  "ability_detail": "防御型；秘術[EP50・対象敵領地に呪い通行料1/2]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "秘術"],
 		"mystic_arts": [
@@ -132,7 +132,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -169,7 +169,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "fire"
 		]
@@ -182,7 +182,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G20・手札にハイプワーカーを加える]",
+	  "ability_detail": "秘術[EP20・手札にハイプワーカーを加える]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -201,7 +201,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -235,7 +235,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"cards_sacrifice": 1
 	  },
 	  "restrictions": {
@@ -273,7 +273,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 30,
 	  "hp": 50,
@@ -298,7 +298,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "fire"
 		]
@@ -339,7 +339,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 75,
+		"ep": 75,
 		"lands_required": [
 		  "fire"
 		]
@@ -351,8 +351,8 @@
 	  },
 	  "ap": 40,
 	  "hp": 50,
-	  "ability": "貫通・侵略時魔力獲得",
-	  "ability_detail": "貫通[敵AP40以上]；侵略時、魔力獲得[G100]",
+	  "ability": "貫通・侵略時EP獲得",
+	  "ability_detail": "貫通[敵AP40以上]；侵略時、EP獲得[EP100]",
 	  "ability_parsed": {
 		"keywords": [
 		  "貫通"
@@ -379,7 +379,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -408,7 +408,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 95,
+		"ep": 95,
 		"lands_required": [
 		  "fire"
 		]
@@ -469,7 +469,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -479,7 +479,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術・巻物強打",
-	  "ability_detail": "秘術[G50・対象クリーチャーのAP+20]；巻物強打",
+	  "ability_detail": "秘術[EP50・対象クリーチャーのAP+20]；巻物強打",
 	  "ability_parsed": {
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {
@@ -500,7 +500,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -528,7 +528,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 60,
+		"ep": 60,
 		"lands_required": [
 		  "fire",
 		  "fire"
@@ -574,7 +574,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 35
+		"ep": 35
 	  },
 	  "ap": 30,
 	  "hp": 30,
@@ -611,7 +611,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "fire",
 		  "fire"
@@ -629,7 +629,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[火地・AP+10]；秘術[G30・クリーチャー破壊数×G30を得る]",
+	  "ability_detail": "応援[火地・AP+10]；秘術[EP30・クリーチャー破壊数×30EPを得る]",
 	  "ability_parsed": {
 		"keywords": [
 		  "応援",
@@ -669,7 +669,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "fire",
 		  "fire"
@@ -707,7 +707,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -721,7 +721,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "fire"
 		]
@@ -780,7 +780,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 60,
 	  "hp": 30,
@@ -804,7 +804,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -818,7 +818,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "ap": 20,
 	  "hp": 40,
@@ -858,7 +858,7 @@
 	  "type": "creature",
 	  "element": "fire",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "ap": 20,
 	  "hp": 20,

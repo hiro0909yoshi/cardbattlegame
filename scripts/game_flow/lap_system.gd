@@ -181,7 +181,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	player_lap_state[player_id][checkpoint_type] = true
 	if player_system:
 		player_system.add_magic(player_id, checkpoint_bonus)
-		print("[シグナル取得] プレイヤー%d: %s 魔力+%d" % [player_id + 1, checkpoint_type, checkpoint_bonus])
+		print("[シグナル取得] プレイヤー%d: %s EP+%d" % [player_id + 1, checkpoint_type, checkpoint_bonus])
 	
 	# シグナル発行
 	checkpoint_signal_obtained.emit(player_id, checkpoint_type)
@@ -198,10 +198,10 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	# UI表示: シグナルを画面中央に大きく表示
 	_show_signal_display(checkpoint_type)
 	
-	# UI表示: 魔力ボーナスのコメント（クリック待ち）
-	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\n魔力 +%d G" % [checkpoint_type, checkpoint_bonus], player_id)
+	# UI表示: EPボーナスのコメント（クリック待ち）
+	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\nEP +%d" % [checkpoint_type, checkpoint_bonus], player_id)
 	
-	# 勝利判定（シグナル取得時に魔力が目標以上なら勝利）
+	# 勝利判定（シグナル取得時にEPが目標以上なら勝利）
 	if _check_win_condition(player_id):
 		return  # 勝利処理で終了
 
@@ -226,7 +226,7 @@ func _calculate_additional_bonus(player_id: int, lap_count: int) -> int:
 	# 追加ボーナスを計算（切り捨て）
 	var bonus = int(base_bonus * total_rate)
 	
-	print("[周回ボーナス計算] クリーチャー%d体(×%.1f=%.1f) + 周回%d(×%.1f=%.1f) = 係数%.1f → %dG" % [
+	print("[周回ボーナス計算] クリーチャー%d体(×%.1f=%.1f) + 周回%d(×%.1f=%.1f) = 係数%.1f → %dEP" % [
 		creature_count, GameConstants.LAP_BONUS_CREATURE_RATE, creature_rate,
 		lap_count - 1, GameConstants.LAP_BONUS_LAP_RATE, lap_rate,
 		total_rate, bonus
@@ -257,13 +257,13 @@ func _check_win_condition(player_id: int) -> bool:
 	var target_magic = player.target_magic
 	
 	if total_assets >= target_magic:
-		print("🎉 プレイヤー%d 勝利条件達成！ 総魔力: %d / %d 🎉" % [player_id + 1, total_assets, target_magic])
+		print("🎉 プレイヤー%d 勝利条件達成！ TEP: %d / %d 🎉" % [player_id + 1, total_assets, target_magic])
 		player_system.emit_signal("player_won", player_id)
 		return true
 	
 	return false
 
-## 総魔力を計算（PlayerSystemに委譲）
+## TEPを計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
 	if not player_system:
 		return 0

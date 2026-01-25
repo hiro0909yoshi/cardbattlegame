@@ -7,7 +7,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "AP+10；先制",
 	  "effect_parsed": {
@@ -28,7 +28,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 45
+		"ep": 45
 	  },
 	  "effect": "AP-10；HP+40",
 	  "effect_parsed": {
@@ -45,7 +45,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "HP+30；追加ダメージ[自分が受けたダメージ]",
 	  "effect_parsed": {
@@ -71,7 +71,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "AP+30；先制",
 	  "effect_parsed": {
@@ -92,7 +92,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 110
+		"ep": 110
 	  },
 	  "effect": "戦闘中能力無効",
 	  "effect_parsed": {
@@ -111,7 +111,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "HP+40；復帰[ブック]",
 	  "effect_parsed": {
@@ -134,7 +134,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "HP+40；アイテム破壊・盗み無効",
 	  "effect_parsed": {
@@ -156,7 +156,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "effect": "巻物攻撃[AP=基本AP]",
 	  "effect_parsed": {
@@ -175,7 +175,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+30；HP+30",
 	  "effect_parsed": {
@@ -192,7 +192,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+50",
 	  "effect_parsed": {
@@ -209,7 +209,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "アイテム破壊[レア度N以外]",
 	  "effect_parsed": {
@@ -230,9 +230,9 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
-	  "effect": "遺産[MHP×G7]",
+	  "effect": "遺産[MHP×7EP]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -250,9 +250,9 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
-	  "effect": "AP+40；攻撃で敵非破壊時、魔力獲得[G200]",
+	  "effect": "AP+40；攻撃で敵非破壊時、EP獲得[EP200]",
 	  "effect_parsed": {
 		"stat_bonus": {"ap": 40},
 		"effects": [
@@ -272,7 +272,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "APドレイン；先制",
 	  "effect_parsed": {
@@ -295,7 +295,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "effect": "AP+敵と同属性の配置数×10",
 	  "effect_parsed": {
@@ -315,7 +315,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "巻物攻撃[AP40]；敵と同じクリーチャー配置時、巻物強打",
 	  "effect_parsed": {
@@ -346,7 +346,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "土地レベルアップ；AP+10；HP+20",
 	  "effect_parsed": {
@@ -370,7 +370,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "HP+40；敵の攻撃成功時能力無効",
 	  "effect_parsed": {
@@ -389,7 +389,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "HP+40",
 	  "effect_parsed": {
@@ -405,7 +405,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "HP+水風自領地数×20",
 	  "effect_parsed": {
@@ -426,7 +426,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 55
+		"ep": 55
 	  },
 	  "effect": "AP+60；HP-30",
 	  "effect_parsed": {
@@ -444,7 +444,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "水風使用時、無効化[通常攻撃]",
 	  "effect_parsed": {
@@ -474,7 +474,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "AP+20；水風使用時、強打",
 	  "effect_parsed": {
@@ -502,7 +502,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "AP+水風配置数×5；強打[火地]",
 	  "effect_parsed": {
@@ -533,7 +533,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "巻物攻撃[AP40]",
 	  "effect_parsed": {
@@ -553,7 +553,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "反射[1/2]",
 	  "effect_parsed": {
@@ -577,7 +577,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 100
+		"ep": 100
 	  },
 	  "effect": "AP=0；無効化[通常攻撃]",
 	  "effect_parsed": {
@@ -604,7 +604,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "AP+HP+10~70",
 	  "effect_parsed": {
@@ -624,7 +624,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "AP&HP+10；先制",
 	  "effect_parsed": {
@@ -646,9 +646,9 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
-	  "effect": "HP+40；魔力獲得[受けたダメージ×G5]",
+	  "effect": "HP+40；EP獲得[受けたダメージ×5EP]",
 	  "effect_parsed": {
 		"stat_bonus": {"hp": 40},
 		"effects": [
@@ -667,7 +667,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "巻物攻撃[AP30]；復帰[手札]",
 	  "effect_parsed": {
@@ -693,7 +693,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "即死[水地・60%]；無効化[水地]",
 	  "effect_parsed": {
@@ -725,7 +725,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "AP-30；HP+60；後手",
 	  "effect_parsed": {
@@ -747,7 +747,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "effect": "HP+30",
 	  "effect_parsed": {
@@ -763,7 +763,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+戦闘地の連鎖数×20",
 	  "effect_parsed": {
@@ -782,7 +782,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "effect": "巻物攻撃[AP=水風自領地数×10]；巻物強打[火地]",
 	  "effect_parsed": {
@@ -813,7 +813,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "AP+20；強制変化[使用クリーチャー]",
 	  "effect_parsed": {
@@ -839,7 +839,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "巻物攻撃[AP30]；無以外使用時、巻物強打；アイテム破壊・盗み無効",
 	  "effect_parsed": {
@@ -872,7 +872,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "effect": "自破壊時、手札6枚までカードを引く；アイテム破壊・盗み無効",
 	  "effect_parsed": {
@@ -897,7 +897,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "即死[火風・60%]；無効化[火風]",
 	  "effect_parsed": {
@@ -929,7 +929,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+40；HP+20",
 	  "effect_parsed": {
@@ -946,7 +946,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "変身[いずれかのドラゴン]",
 	  "effect_parsed": {
@@ -969,7 +969,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+20；貫通",
 	  "effect_parsed": {
@@ -991,7 +991,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "2回攻撃",
 	  "effect_parsed": {
@@ -1009,7 +1009,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+30；HP+20；雪辱[敵のMHP-40]",
 	  "effect_parsed": {
@@ -1033,7 +1033,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "HP+40；属性変化[無]",
 	  "effect_parsed": {
@@ -1055,7 +1055,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "死者復活[スケルトン]",
 	  "effect_parsed": {
@@ -1077,7 +1077,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "巻物攻撃[AP50]；変身[スケルトン]",
 	  "effect_parsed": {
@@ -1105,7 +1105,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "AP&HP+20；道連れ",
 	  "effect_parsed": {
@@ -1130,7 +1130,7 @@
 	  "type": "item",
 	  "item_type": "巻物",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "effect": "巻物攻撃[AP=火地自領地数×10]；巻物強打[水風]",
 	  "effect_parsed": {
@@ -1161,7 +1161,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "AP+30；攻撃成功時、敵に呪い\"戦闘行動不可\"",
 	  "effect_parsed": {
@@ -1186,7 +1186,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "AP+30；即死[防御型]",
 	  "effect_parsed": {
@@ -1213,7 +1213,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "無効化[AP30以下]",
 	  "effect_parsed": {
@@ -1237,7 +1237,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "AP+40",
 	  "effect_parsed": {
@@ -1253,7 +1253,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "AP+20；HP+10；復帰[手札]",
 	  "effect_parsed": {
@@ -1277,7 +1277,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "HP+自手札数×10",
 	  "effect_parsed": {
@@ -1297,7 +1297,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "effect": "AP+40；レア度Nが使用時、強打",
 	  "effect_parsed": {
@@ -1325,7 +1325,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "敵と属性が違う場合、AP&HP+40",
 	  "effect_parsed": {
@@ -1347,7 +1347,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "HP+50",
 	  "effect_parsed": {
@@ -1363,7 +1363,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "AP=0；HP=80",
 	  "effect_parsed": {
@@ -1390,7 +1390,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "AP+30；強打[MHP40以上]",
 	  "effect_parsed": {
@@ -1419,7 +1419,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "HP+火地自領地数×20",
 	  "effect_parsed": {
@@ -1441,7 +1441,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "火地使用時、無効化[通常攻撃]",
 	  "effect_parsed": {
@@ -1471,7 +1471,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "AP+20；火地使用時、強打",
 	  "effect_parsed": {
@@ -1499,7 +1499,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "AP+火地配置数×5；強打[水風]",
 	  "effect_parsed": {
@@ -1530,7 +1530,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "effect": "HP+30；無効化[巻物]",
 	  "effect_parsed": {
@@ -1556,7 +1556,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "敵アイテム未使用時、反射[全]",
 	  "effect_parsed": {
@@ -1584,7 +1584,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "AP+30；攻撃成功時、敵に呪い\"通行料無効\"",
 	  "effect_parsed": {
@@ -1608,7 +1608,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "effect": "AP+20；敵の攻撃無効化・反射無効",
 	  "effect_parsed": {
@@ -1632,7 +1632,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "effect": "HP+20；反射[巻物]",
 	  "effect_parsed": {
@@ -1658,7 +1658,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "effect": "AP+20",
 	  "effect_parsed": {
@@ -1674,7 +1674,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "effect": "無効化[巻物]；無効化[自分よりAPの大きなクリーチャー]",
 	  "effect_parsed": {
@@ -1706,7 +1706,7 @@
 	  "type": "item",
 	  "item_type": "防具",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "effect": "HP+30；アイテム破壊[武器]",
 	  "effect_parsed": {
@@ -1729,7 +1729,7 @@
 	  "type": "item",
 	  "item_type": "武器",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "effect": "AP+30",
 	  "effect_parsed": {
@@ -1746,7 +1746,7 @@
 	  "type": "item",
 	  "item_type": "アクセサリ",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "effect": "無効化[通常攻撃の80%]",
 	  "effect_parsed": {

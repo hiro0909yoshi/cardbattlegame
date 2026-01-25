@@ -224,7 +224,7 @@ func _apply_conditional_ap_change(handler: Node, _tile_index: int, effect: Dicti
 		await _show_notification_and_wait("条件に該当するクリーチャーがいません")
 
 
-## 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、G500）
+## 密命: タイニーアーミー（MHP30以下5体以上でMHP+10、500EP）
 ## 失敗時の通知とカード復帰も含む
 func apply_secret_tiny_army(handler: Node, effect: Dictionary, current_player_id: int, selected_spell_card: Dictionary) -> void:
 	if not board_system or not player_system:
@@ -233,7 +233,7 @@ func apply_secret_tiny_army(handler: Node, effect: Dictionary, current_player_id
 	var mhp_threshold = effect.get("mhp_threshold", 30)
 	var required_count = effect.get("required_count", 5)
 	var hp_bonus = effect.get("hp_bonus", 10)
-	var gold_bonus = effect.get("gold_bonus", 500)
+	var ep_bonus = effect.get("ep_bonus", 500)
 	
 	# MHP30以下の自クリーチャーを収集
 	var qualifying_creatures: Array[Dictionary] = []
@@ -306,10 +306,10 @@ func apply_secret_tiny_army(handler: Node, effect: Dictionary, current_player_id
 		
 		await _show_notification_and_wait(notification_text)
 	
-	# G500獲得
-	player_system.add_magic(current_player_id, gold_bonus)
-	var gold_notification = "G%d獲得！" % gold_bonus
-	await _show_notification_and_wait(gold_notification)
+	# EP獲得
+	player_system.add_magic(current_player_id, ep_bonus)
+	var ep_notification = "%dEP獲得！" % ep_bonus
+	await _show_notification_and_wait(ep_notification)
 
 
 ## スペルカードをデッキに戻す（復帰[ブック]）

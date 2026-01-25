@@ -6,7 +6,7 @@
 	  "rarity": "N",
 	  "type": "spell",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "effect_parsed": {
 		"target_type": "creature",
@@ -32,7 +32,7 @@
 	  "rarity": "N",
 	  "type": "skill",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "effect_parsed": {
 		"trigger": "on_survive",
@@ -54,7 +54,7 @@
 	  "rarity": "N",
 	  "type": "skill",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "effect_parsed": {
 		"trigger": "on_survive",
@@ -279,7 +279,7 @@
 	},
 	{
 	  "id": 9012,
-	  "name": "魔力奪取",
+	  "name": "EP奪取",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {

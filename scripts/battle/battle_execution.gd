@@ -247,8 +247,8 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							var defender_side = "attacker" if defender_p.is_attacker else "defender"
 							await battle_screen_manager.show_skill_activation(defender_side, "呪い[%s]" % curse_nullify_info["name"], {})
 					
-					# magic_barrier呪いによるG100移動チェック
-					_apply_gold_transfer_on_nullify(attacker_p, defender_p)
+					# magic_barrier呪いによる100EP移動チェック
+					_apply_ep_transfer_on_nullify(attacker_p, defender_p)
 					
 					continue  # ダメージ処理と即死判定をスキップ
 				else:
@@ -275,7 +275,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						# 🎬 HPバー更新
 						await _update_hp_bar_after_damage(defender_p)
 				
-					# 💰 ダメージ時の魔力獲得・奪取スキル
+					# 💰 ダメージ時のEP獲得・奪取スキル
 					var actual_damage_dealt_reduced = (
 					damage_breakdown_reduced.get("resonance_bonus_consumed", 0) +
 					damage_breakdown_reduced.get("land_bonus_consumed", 0) +
@@ -285,9 +285,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					damage_breakdown_reduced.get("base_hp_consumed", 0)
 				)
 					if spell_magic_ref:
-						# 魔力奪取（攻撃側）: 与えたダメージベース
+						# EP奪取（攻撃側）: 与えたダメージベース
 						apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
-						# 魔力獲得（防御側）: 受けたダメージベース
+						# EP獲得（防御側）: 受けたダメージベース
 						SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt_reduced, spell_magic_ref)
 
 					print("  ダメージ処理:")
@@ -417,7 +417,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							if battle_tile_index >= 0 and special_effects.board_system_ref:
 								var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
 								SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
-							# 攻撃成功時効果（APドレイン、魔力獲得等）
+							# 攻撃成功時効果（APドレイン、EP獲得等）
 							var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
 							if success_effects.get("ap_drained", false) and battle_screen_manager:
 								var skill_owner_side = "attacker" if attacker_p.is_attacker else "defender"
@@ -445,7 +445,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				# 🎬 HPバー更新
 				await _update_hp_bar_after_damage(defender_p)
 			
-			# 💰 ダメージ時の魔力獲得・奪取スキル
+			# 💰 ダメージ時のEP獲得・奪取スキル
 			var actual_damage_dealt = (
 			damage_breakdown.get("resonance_bonus_consumed", 0) +
 			damage_breakdown.get("land_bonus_consumed", 0) +
@@ -455,9 +455,9 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			damage_breakdown.get("current_hp_consumed", 0)
 		)
 			if spell_magic_ref:
-				# 魔力奪取（攻撃側）: 与えたダメージベース
+				# EP奪取（攻撃側）: 与えたダメージベース
 				apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
-				# 魔力獲得（防御側）: 受けたダメージベース
+				# EP獲得（防御側）: 受けたダメージベース
 				SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt, spell_magic_ref)
 
 			
@@ -589,7 +589,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					if battle_tile_index >= 0 and special_effects.board_system_ref:
 						var tile = special_effects.board_system_ref.tile_nodes.get(battle_tile_index)
 						SkillLandEffects.check_and_apply_on_attack_success_down(attacker_p.creature_data, tile)
-					# 攻撃成功時効果（APドレイン、魔力獲得等）
+					# 攻撃成功時効果（APドレイン、EP獲得等）
 					var success_effects = _apply_on_attack_success_effects(attacker_p, defender_p, spell_magic_ref)
 					if success_effects.get("ap_drained", false) and battle_screen_manager:
 						# スキル所持者側にスキル名表示
@@ -673,7 +673,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					break
 	
 	# 戦闘結果情報を返す
-	# 💰 アイテム不使用時の魔力奪取スキル（アマゾン）
+	# 💰 アイテム不使用時のEP奪取スキル（アマゾン）
 	# 勝敗に関係なく、生存している参加者それぞれをチェック
 	if spell_magic_ref:
 		var turn_count = 1  # TODO: 実際の周回数を取得する必要がある
@@ -751,11 +751,11 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 	
 	return battle_result
 
-## 💰 魔力奪取スキルを適用（ダメージベース）
+## 💰 EP奪取スキルを適用（ダメージベース）
 func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: BattleParticipant, damage: int, spell_magic) -> void:
 	"""
-	与えたダメージに応じて魔力を奪う
-	- バンディット: 敵に与えたダメージ×G2
+	与えたダメージに応じてEPを奪う
+	- バンディット: 敵に与えたダメージ×2EP
 	"""
 	if not spell_magic:
 		return
@@ -784,22 +784,22 @@ func _get_curse_nullify_info(defender: BattleParticipant) -> Variant:
 	return null
 
 
-## 💰 攻撃無効化時のG移動（magic_barrier呪い用）
-func _apply_gold_transfer_on_nullify(attacker: BattleParticipant, defender: BattleParticipant) -> void:
+## 💰 攻撃無効化時のEP移動（magic_barrier呪い用）
+func _apply_ep_transfer_on_nullify(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	# defender（無効化した側）のtemporary_effectsをチェック
 	for effect in defender.temporary_effects:
-		if effect.get("type") == "gold_transfer_on_nullify":
-			var gold_amount = effect.get("value", 100)
+		if effect.get("type") == "ep_transfer_on_nullify":
+			var ep_amount = effect.get("value", 100)
 			
 			# プレイヤーIDを取得
 			var attacker_player_id = attacker.player_id
 			var defender_player_id = defender.player_id
 			
-			# 防御側から攻撃側へG移動（steal_magicを使用）
+			# 防御側から攻撃側へEP移動（steal_magicを使用）
 			var spell_magic = defender.spell_magic_ref
 			if spell_magic:
-				spell_magic.steal_magic(defender_player_id, attacker_player_id, gold_amount)
-				print("【マジックバリア】攻撃無効化！ G", gold_amount, " を攻撃側へ移動")
+				spell_magic.steal_magic(defender_player_id, attacker_player_id, ep_amount)
+				print("【マジックバリア】攻撃無効化！ ", ep_amount, "EP を攻撃側へ移動")
 			return
 
 
@@ -901,7 +901,7 @@ func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant)
 		await battle_screen_manager.show_skill_activation(side, skill_name, {})
 
 
-## 攻撃成功時効果を適用（APドレイン、魔力獲得等）
+## 攻撃成功時効果を適用（APドレイン、EP獲得等）
 func _apply_on_attack_success_effects(attacker: BattleParticipant, defender: BattleParticipant, spell_magic_ref = null) -> Dictionary:
 	var result = {"ap_drained": false, "magic_gained": 0}
 	
@@ -944,14 +944,14 @@ func _apply_on_attack_success_effects(attacker: BattleParticipant, defender: Bat
 				result["ap_drained"] = true
 			
 			"magic_on_enemy_survive":
-				# ゴールドハンマー: 敵が生き残っていたら魔力獲得
+				# ゴールドハンマー: 敵が生き残っていたらEP獲得
 				var condition = effect.get("condition", "")
 				if condition == "enemy_alive" and defender.is_alive():
 					var amount = effect.get("amount", 200)
 					if spell_magic_ref:
 						spell_magic_ref.add_magic(attacker.player_id, amount)
 						var source_name = item_name if item_name else attacker.creature_data.get("name", "?")
-						print("  [魔力獲得] %s: 敵非破壊で%dG獲得" % [source_name, amount])
+						print("  [EP獲得] %s: 敵非破壊で%dEP獲得" % [source_name, amount])
 						result["magic_gained"] = amount
 	
 	return result

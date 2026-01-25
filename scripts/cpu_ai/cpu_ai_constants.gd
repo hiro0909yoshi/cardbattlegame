@@ -110,19 +110,19 @@ const ELEMENT_CHANGE_NEUTRAL_BONUS = 100
 const ELEMENT_CHANGE_COST_MULTIPLIER = 0.3
 
 # ============================================================
-# 危機モード・魔力管理（CPUTerritoryAI用）
+# 危機モード・EP管理（CPUTerritoryAI用）
 # ============================================================
 
-## 危機モード: 残り魔力閾値
+## 危機モード: 残りEP閾値
 const CRISIS_MODE_THRESHOLD = 100
 
 ## 危機モード: スコア（最優先）
 const CRISIS_MODE_SCORE = 9999
 
-## 魔力温存: 残す割合（30%）
+## EP温存: 残す割合（30%）
 const MAGIC_RESERVE_RATIO = 0.3
 
-## 魔力温存: 最低残高
+## EP温存: 最低残高
 const MAGIC_RESERVE_MINIMUM = 100
 
 # ============================================================

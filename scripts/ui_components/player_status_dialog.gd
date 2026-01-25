@@ -85,8 +85,8 @@ func build_status_text(player_id: int) -> String:
 		text += " [" + curse_name + "]"
 	
 	text += "\n"
-	text += "魔力: " + str(player.magic_power) + "G\n"
-	text += "総魔力: " + str(calculate_total_assets(player_id)) + "G[/cell]"
+	text += "EP: " + str(player.magic_power) + "EP\n"
+	text += "TEP: " + str(calculate_total_assets(player_id)) + "EP[/cell]"
 	
 	# スペーサー1
 	text += "[cell]     [/cell]"
@@ -276,7 +276,7 @@ func _get_spell_type_color(spell_type: String) -> String:
 		_:
 			return "#ffffff"  # 白
 
-# 総資産を計算（PlayerSystemに委譲）
+# TEPを計算（PlayerSystemに委譲）
 func calculate_total_assets(player_id: int) -> int:
 	if not player_system_ref:
 		return 0

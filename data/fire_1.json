@@ -7,7 +7,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 200,
+				"ep": 200,
 				"lands_required": [
 					"fire",
 					"fire"
@@ -47,12 +47,12 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 70
+				"ep": 70
 			},
 			"ap": 30,
 			"hp": 30,
 			"ability": "感応・防魔・秘術",
-			"ability_detail": "感応[地]・AP&HP+20；防魔；秘術[G50・対象敵に30ダメージ]",
+			"ability_detail": "感応[地]・AP&HP+20；防魔；秘術[EP50・対象敵に30ダメージ]",
 			"ability_parsed": {
 				"keywords": [
 					"感応",
@@ -86,7 +86,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 50,
+				"ep": 50,
 				"lands_required": [
 					"fire"
 				]
@@ -103,12 +103,12 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 90
+				"ep": 90
 			},
 			"ap": 40,
 			"hp": 40,
 			"ability": "強打・世界消去",
-			"ability_detail": "強打[呪い付きクリーチャー]；秘術[G50・世界呪いを消す]",
+			"ability_detail": "強打[呪い付きクリーチャー]；秘術[EP50・世界呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"強打",
@@ -146,7 +146,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 70,
+				"ep": 70,
 				"lands_required": [
 					"fire",
 					"fire"
@@ -181,7 +181,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 45
+				"ep": 45
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -211,7 +211,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 80,
+				"ep": 80,
 				"lands_required": [
 					"fire"
 				]
@@ -248,7 +248,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 100
+				"ep": 100
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -267,7 +267,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 75
+				"ep": 75
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -320,7 +320,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 55
+				"ep": 55
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -332,7 +332,7 @@
 			"ap": 30,
 			"hp": 50,
 			"ability": "防御型・秘術",
-			"ability_detail": "防御型；秘術[G30・1マス移動]",
+			"ability_detail": "防御型；秘術[EP30・1マス移動]",
 			"ability_parsed": {
 				"keywords": [
 					"防御型",
@@ -359,7 +359,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 50
+				"ep": 50
 			},
 			"restrictions": {
 				"cannot_summon": [
@@ -390,7 +390,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 45
+				"ep": 45
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -400,7 +400,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "巻物強打",
-			"ability_detail": "巻物強打；秘術[G80・好きな空地にバーアルを召喚し自壊]",
+			"ability_detail": "巻物強打；秘術[EP80・好きな空地にバーアルを召喚し自壊]",
 			"ability_parsed": {
 				"keywords": [
 					"巻物強打",
@@ -427,7 +427,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 20,
+				"ep": 20,
 				"lands_required": [
 					"fire"
 				]
@@ -459,7 +459,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 80
+				"ep": 80
 			},
 			"ap": 40,
 			"hp": 40,
@@ -473,7 +473,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 65,
+				"ep": 65,
 				"lands_required": [
 					"fire"
 				]
@@ -512,7 +512,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 80,
+				"ep": 80,
 				"lands_required": [
 					"fire"
 				]
@@ -547,12 +547,12 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 50
+				"ep": 50
 			},
 			"ap": 20,
 			"hp": 30,
 			"ability": "援護・秘術",
-			"ability_detail": "援護[火地]；秘術[G30・全セブターの呪いを消す]",
+			"ability_detail": "援護[火地]；秘術[EP30・全セブターの呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"援護",
@@ -582,7 +582,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 70
+				"ep": 70
 			},
 			"ap": 10,
 			"hp": 40,
@@ -608,7 +608,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 110,
+				"ep": 110,
 				"lands_required": [
 					"fire",
 					"fire"
@@ -661,7 +661,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 15,
+				"ep": 15,
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
@@ -672,7 +672,7 @@
 			"ap": 70,
 			"hp": 10,
 			"ability": "秘術",
-			"ability_detail": "秘術[G50・マミーに変身]",
+			"ability_detail": "秘術[EP50・マミーに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"秘術"
@@ -693,7 +693,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 20,
+				"ep": 20,
 				"lands_required": [
 					"fire"
 				]
@@ -710,7 +710,7 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
+			"ability_detail": "秘術[EP80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
 			"ability_parsed": {
 				"keywords": [
 					"秘術"
@@ -740,7 +740,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 60,
+				"ep": 60,
 				"cards_sacrifice": 1
 			},
 			"ap": 40,
@@ -787,7 +787,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 50
+				"ep": 50
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -797,7 +797,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "秘術",
-			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[G0・MHP×G2を得て、ST&MHP-10]",
+			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[EP0・MHP×G2を得て、ST&MHP-10]",
 			"ability_parsed": {
 				"effects": [
 					{
@@ -829,12 +829,12 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 20
+				"ep": 20
 			},
 			"ap": 10,
 			"hp": 20,
 			"ability": "秘術",
-			"ability_detail": "秘術[G80・対象自領地に呪い防魔]",
+			"ability_detail": "秘術[EP80・対象自領地に呪い防魔]",
 			"ability_parsed": {
 				"keywords": [
 					"秘術"
@@ -857,7 +857,7 @@
 			"type": "creature",
 			"element": "fire",
 			"cost": {
-				"mp": 60,
+				"ep": 60,
 				"cards_sacrifice": 1
 			},
 			"ap": 40,

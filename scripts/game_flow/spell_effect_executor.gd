@@ -77,7 +77,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var gfm = handler.game_flow_manager  # 短縮参照
 	
 	match effect_type:
-		# === 魔力操作系 ===
+		# === EP操作系 ===
 		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count", "drain_magic_by_lap_diff", \
 		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap", "gain_magic_from_destroyed_count", \
 		"gain_magic_from_spell_cost", "balance_all_magic", "gain_magic_from_land_chain", \
@@ -241,7 +241,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				var result = handler.spell_purify.purify_all(handler.current_player_id)
 				if handler.ui_manager and handler.ui_manager.phase_label:
 					var type_count = result.removed_types.size()
-					handler.ui_manager.phase_label.text = "%d種類の呪いを消去 G%d獲得" % [type_count, result.gold_gained]
+					handler.ui_manager.phase_label.text = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
 		
 		"remove_creature_curse":
 			if handler.spell_purify:

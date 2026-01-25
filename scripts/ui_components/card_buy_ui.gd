@@ -236,17 +236,17 @@ func _update_card_panel(card_panel: Panel, card_data: Dictionary, show: bool):
 	var cost_data = card_data.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = int(cost_data)
 	var price = int(ceil(cost / 2.0))
-	price_label.text = "購入: " + str(price) + "G"
+	price_label.text = "購入: " + str(price) + "EP"
 	
 	# 購入可能かチェック
 	var can_buy = player_magic >= price
 	buy_button.disabled = not can_buy
 	if not can_buy:
-		buy_button.text = "魔力不足"
+		buy_button.text = "EP不足"
 		price_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 	else:
 		buy_button.text = "購入"

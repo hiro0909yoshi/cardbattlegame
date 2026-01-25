@@ -2,7 +2,7 @@ extends Node
 class_name SpellPurify
 
 # 呪い除去システム
-# 2073: ピュアリファイ - 全呪いを消し、種類×G50を得る
+# 2073: ピュアリファイ - 全呪いを消し、種類×5EP0を得る
 # 秘術9024: 対象領地の呪いを消す（ギアリオン）
 # 秘術9025: 世界呪いを消す（ウリエル）
 # 秘術9026: 全セプターの呪いを消す（シャラザード）
@@ -25,9 +25,9 @@ func _init(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 # 2073: ピュアリファイ
 # ========================================
 
-## 全呪いを消し、消した呪いの種類×G50を得る
+## 全呪いを消し、消した呪いの種類×50EPを得る
 ## @param caster_id: 術者のプレイヤーID
-## @return Dictionary: {removed_types: Array, gold_gained: int}
+## @return Dictionary: {removed_types: Array, ep_gained: int}
 func purify_all(caster_id: int) -> Dictionary:
 	var removed_curse_types: Array = []
 	
@@ -48,15 +48,15 @@ func purify_all(caster_id: int) -> Dictionary:
 	if world_type != "" and world_type not in removed_curse_types:
 		removed_curse_types.append(world_type)
 	
-	# 4. 魔力獲得（種類×G50）
-	var gold_gained = removed_curse_types.size() * 50
-	if gold_gained > 0 and caster_id >= 0 and caster_id < player_system.players.size():
-		player_system.players[caster_id].magic_power += gold_gained
-		print("[ピュアリファイ] プレイヤー%d: %d種類の呪いを消し、G%dを得た" % [caster_id, removed_curse_types.size(), gold_gained])
+	# 4. EP獲得（種類×50EP）
+	var ep_gained = removed_curse_types.size() * 50
+	if ep_gained > 0 and caster_id >= 0 and caster_id < player_system.players.size():
+		player_system.players[caster_id].magic_power += ep_gained
+		print("[ピュアリファイ] プレイヤー%d: %d種類の呪いを消し、%dEPを得た" % [caster_id, removed_curse_types.size(), ep_gained])
 	
 	return {
 		"removed_types": removed_curse_types,
-		"gold_gained": gold_gained
+		"ep_gained": ep_gained
 	}
 
 ## 全クリーチャーの呪いを除去し、呪いタイプのリストを返す

@@ -131,7 +131,7 @@ func _get_tile_by_index(tile_index: int):
 	return null
 
 # チェックポイント処理
-# 注意: 魔力ボーナスとダウン解除はLapSystemで管理
+# 注意: EPボーナスとダウン解除はLapSystemで管理
 func handle_checkpoint_tile(player_id: int):
 	print("チェックポイント通過")
 	

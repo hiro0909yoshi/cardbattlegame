@@ -106,7 +106,7 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 	# コスト計算
 	var cost = _calculate_cost(card_data, player_id)
 	
-	# 魔力チェック
+	# EPチェック
 	var current_magic = player_system.get_magic(player_id)
 	if current_magic < cost:
 		return {"success": false, "reason": "insufficient_magic"}
@@ -131,7 +131,7 @@ func execute_summon(prep: Dictionary, player_id: int) -> bool:
 	var cost = prep.get("cost", 0)
 	var target_tile = prep.get("target_tile", -1)
 	
-	# カード使用と魔力消費
+	# カード使用とEP消費
 	card_system.use_card_for_player(player_id, card_index)
 	player_system.add_magic(player_id, -cost)
 	
@@ -206,7 +206,7 @@ func prepare_battle(card_index: int, tile_info: Dictionary, item_index: int, pla
 	# コスト計算
 	var cost = _calculate_cost(card_data, player_id)
 	
-	# 魔力チェック
+	# EPチェック
 	var current_magic = player_system.get_magic(player_id)
 	if current_magic < cost:
 		return {"success": false, "reason": "insufficient_magic"}
@@ -268,7 +268,7 @@ func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = cost_data
 	

@@ -17,7 +17,7 @@ func calculate_toll_with_multiplier(base_toll: int, multiplier: float) -> int:
 	return max(0, final_toll)
 
 ## 固定値型: 通行料を固定値に設定
-## 例: 0G、200Gなど
+## 例: 0EP、200EPなど
 func calculate_toll_with_fixed_value(_base_toll: int, fixed_value: int) -> int:
 	return max(0, fixed_value)
 
@@ -83,7 +83,7 @@ func log_toll_calculation(creature_name: String, base_toll: int, final_toll: int
 		var multiplier = float(final_toll) / float(base_toll) if base_toll > 0 else 1.0
 		multiplier_str = " (%.2f倍)" % multiplier
 	
-	print("[通行料スキル] %s: %dG → %dG%s" % [creature_name, base_toll, final_toll, multiplier_str])
+	print("[通行料スキル] %s: %dEP → %dEP%s" % [creature_name, base_toll, final_toll, multiplier_str])
 
 # ========================================
 # 対象クリーチャー一覧
@@ -91,5 +91,5 @@ func log_toll_calculation(creature_name: String, base_toll: int, final_toll: int
 
 ## ID 230（ドワーフマイナー）- 1.5倍
 ## ID 343（ヨーウィ）- 1/2～2.5倍（可変）
-## ID 411（グレートフォシル）- G0（固定値）
+## ID 411（グレートフォシル）- 0EP（固定値）
 ## ID 422（スチームギア）- 1/2（倍率）

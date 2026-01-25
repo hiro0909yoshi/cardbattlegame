@@ -55,8 +55,8 @@ func _handle_cpu_magic_tile(player_id: int) -> Dictionary:
 	print("[MagicTile] 提示スペル3枚:")
 	for i in range(available_spells.size()):
 		var spell = available_spells[i]
-		var cost = spell.get("cost", {}).get("mp", 0) if typeof(spell.get("cost")) == TYPE_DICTIONARY else spell.get("cost", 0)
-		print("  %d. %s (コスト: %dG)" % [i + 1, spell.get("name", "?"), cost])
+		var cost = spell.get("cost", {}).get("ep", 0) if typeof(spell.get("cost")) == TYPE_DICTIONARY else spell.get("cost", 0)
+		print("  %d. %s (コスト: %dEP)" % [i + 1, spell.get("name", "?"), cost])
 	
 	var spell_data = cpu_ai.decide_magic_tile_spell(player_id, available_spells)
 	if spell_data.is_empty():
@@ -118,7 +118,7 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 	
 	# 選択ループ（キャンセル時は再度選択画面に戻る）
 	while true:
-		# プレイヤーの魔力を取得（ループ毎に更新）
+		# プレイヤーのEPを取得（ループ毎に更新）
 		var player_magic = 0
 		if _player_system and player_id < _player_system.players.size():
 			player_magic = _player_system.players[player_id].magic_power
@@ -200,7 +200,7 @@ func _get_random_spells(count: int) -> Array:
 func _get_spell_cost(spell_data: Dictionary) -> int:
 	var cost_data = spell_data.get("cost", {})
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return int(cost_data)
 
 ## UIからの選択結果を待つ

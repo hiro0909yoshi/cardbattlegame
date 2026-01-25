@@ -2,7 +2,7 @@ class_name SpellCostModifier
 extends RefCounted
 
 ## コスト操作スペルシステム
-## - ライフフォース（2117）: クリーチャー/アイテムG0、スペル無効化で解除
+## - ライフフォース（2117）: クリーチャー/アイテム0EP、スペル無効化で解除
 ## - ウェイストワールド（2009）: カード使用コスト倍率（世界呪い）
 
 var spell_curse = null
@@ -98,7 +98,7 @@ func get_modified_cost(player_id: int, card: Dictionary) -> int:
 func _get_card_cost(card: Dictionary) -> int:
 	var cost_data = card.get("cost", 0)
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return cost_data
 
 

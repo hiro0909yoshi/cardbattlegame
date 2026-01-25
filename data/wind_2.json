@@ -7,7 +7,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "wind"
 		]
@@ -29,7 +29,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "wind"
 		]
@@ -55,7 +55,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 75
+		"ep": 75
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -74,7 +74,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 110,
+		"ep": 110,
 		"lands_required": [
 		  "wind",
 		  "wind"
@@ -127,7 +127,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 55
+		"ep": 55
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -167,12 +167,12 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "侵略時魔力獲得・不屈",
-	  "ability_detail": "侵略時、魔力獲得[G100]；不屈",
+	  "ability": "侵略時EP獲得・不屈",
+	  "ability_detail": "侵略時、EP獲得[EP100]；不屈",
 	  "ability_parsed": {
 		"keywords": ["不屈"],
 		"effects": [
@@ -190,7 +190,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "wind"
 		]
@@ -225,7 +225,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "ap": 50,
 	  "hp": 40,
@@ -264,7 +264,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "wind"
 		]
@@ -286,7 +286,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 10
+		"ep": 10
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -314,7 +314,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"lands_required": [
 		  "wind"
 		]
@@ -322,7 +322,7 @@
 	  "ap": 30,
 	  "hp": 20,
 	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[G50・対象セプターに呪い\"防魔\"]",
+	  "ability_detail": "防魔；秘術[EP50・対象セプターに呪い\"防魔\"]",
 	  "ability_parsed": {
 		"keywords": ["防魔", "秘術"],
 		"mystic_arts": [
@@ -343,7 +343,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -370,7 +370,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -395,7 +395,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -436,7 +436,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -446,7 +446,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・使用者に呪い\"ダイス6\"]",
+	  "ability_detail": "秘術[EP50・使用者に呪い\"ダイス6\"]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -465,7 +465,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"cards_sacrifice": 1
 	  },
 	  "ap": 20,
@@ -491,7 +491,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -533,7 +533,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 40,
 	  "hp": 40,
@@ -578,7 +578,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "wind",
 		  "wind"
@@ -595,7 +595,7 @@
 	  "ap": 50,
 	  "hp": 50,
 	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[G60・対象敵水地のHP-20]",
+	  "ability_detail": "先制；秘術[EP60・対象敵水地のHP-20]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -618,7 +618,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 60,
+		"ep": 60,
 		"lands_required": [
 		  "wind"
 		]
@@ -654,7 +654,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"lands_required": [
 		  "wind"
 		]
@@ -662,7 +662,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
+	  "ability_detail": "秘術[EP50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -681,7 +681,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "wind",
 		  "wind"
@@ -699,7 +699,7 @@
 	  "ap": 70,
 	  "hp": 60,
 	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・AP+10]；秘術[G60・AP30以下をAP+20、AP50以上をAP-20]",
+	  "ability_detail": "応援[風水・AP+10]；秘術[EP60・AP30以下をAP+20、AP50以上をAP-20]",
 	  "ability_parsed": {
 		"keywords": ["応援", "秘術"],
 		"effects": [
@@ -732,7 +732,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 60,
+		"ep": 60,
 		"lands_required": [
 		  "wind"
 		]
@@ -767,7 +767,7 @@
 	  "type": "creature",
 	  "element": "wind",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "ap": 20,
 	  "hp": 20,

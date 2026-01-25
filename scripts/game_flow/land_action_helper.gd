@@ -22,11 +22,11 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	if not current_player:
 		return false
 	
-	# 魔力チェック
+	# EPチェック
 	if current_player.magic_power < cost:
 		return false
 	
-	# 魔力消費
+	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
 	
 	# レベルアップ実行
@@ -643,7 +643,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	if cost < 0:
 		return false
 	
-	# 魔力チェック
+	# EPチェック
 	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
 	var current_player = p_system.get_current_player() if p_system else null
 	
@@ -652,16 +652,16 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	if current_player.magic_power < cost:
 		if handler.ui_manager and handler.ui_manager.phase_label:
-			handler.ui_manager.phase_label.text = "魔力が足りません (必要: %dG)" % cost
+			handler.ui_manager.phase_label.text = "EPが足りません (必要: %dEP)" % cost
 		return false
 	
-	# 魔力消費
+	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
 	
 	# 地形変化実行（SpellLand経由でソリッドワールドチェックも行う）
 	var success = handler.game_flow_manager.spell_land.change_element(tile_index, new_element)
 	if not success:
-		# 魔力を返却
+		# EPを返却
 		handler.player_system.add_magic(current_player.id, cost)
 		return false
 	

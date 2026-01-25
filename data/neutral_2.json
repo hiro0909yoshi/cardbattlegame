@@ -7,7 +7,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 30
+				"ep": 30
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -41,13 +41,13 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 70,
+				"ep": 70,
 				"cards_sacrifice": 1
 			},
 			"ap": 40,
 			"hp": 40,
 			"ability": "援護・先制・秘術",
-			"ability_detail": "援護[無]；先制；秘術[G100・呪いのついた全クリーチャーのHP-20]",
+			"ability_detail": "援護[無]；先制；秘術[EP100・呪いのついた全クリーチャーのHP-20]",
 			"ability_parsed": {
 				"keywords": [
 					"援護",
@@ -78,7 +78,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 70
+				"ep": 70
 			},
 			"ap": 40,
 			"hp": 40,
@@ -103,7 +103,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 50
+				"ep": 50
 			},
 			"ap": 30,
 			"hp": 30,
@@ -129,12 +129,12 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 40
+				"ep": 40
 			},
 			"ap": 30,
 			"hp": 40,
 			"ability": "秘術",
-			"ability_detail": "秘術[G40・対象自クリーチャーに呪い\"地形効果\"]",
+			"ability_detail": "秘術[EP40・対象自クリーチャーに呪い\"地形効果\"]",
 			"mystic_arts": {
 				"cost": 40,
 				"spell_id": 9019
@@ -147,7 +147,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 20
+				"ep": 20
 			},
 			"ap": 0,
 			"hp": 30,
@@ -175,12 +175,12 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 20
+				"ep": 20
 			},
 			"ap": 20,
 			"hp": 20,
-			"ability": "援護・魔力奪取",
-			"ability_detail": "援護；魔力奪取[敵に与えたダメージ×G2]",
+			"ability": "援護・EP奪取",
+			"ability_detail": "援護；EP奪取[敵に与えたダメージ×2EP]",
 			"ability_parsed": {
 				"keywords": [
 					"援護"
@@ -200,7 +200,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 40
+				"ep": 40
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -230,7 +230,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 30
+				"ep": 30
 			},
 			"ap": 40,
 			"hp": 40,
@@ -244,7 +244,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 40
+				"ep": 40
 			},
 			"ap": 30,
 			"hp": 30,
@@ -282,7 +282,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 40,
+				"ep": 40,
 				"cards_sacrifice": 1
 			},
 			"ap": 40,
@@ -334,7 +334,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 70
+				"ep": 70
 			},
 			"ap": 0,
 			"hp": 40,
@@ -362,7 +362,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 60
+				"ep": 60
 			},
 			"ap": 20,
 			"hp": 10,
@@ -402,7 +402,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 70
+				"ep": 70
 			},
 			"ap": 0,
 			"hp": 30,
@@ -433,7 +433,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 50
+				"ep": 50
 			},
 			"ap": 20,
 			"hp": 30,
@@ -453,7 +453,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 60
+				"ep": 60
 			},
 			"ap": 10,
 			"hp": 30,
@@ -481,7 +481,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 30
+				"ep": 30
 			},
 			"ap": 20,
 			"hp": 30,
@@ -504,7 +504,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 50,
+				"ep": 50,
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
@@ -516,7 +516,7 @@
 			"ap": 40,
 			"hp": 50,
 			"ability": "防御型・周回回復不可・秘術",
-			"ability_detail": "防御型；周回回復不可；秘術[G80・隣接空地にスタチューを配置]",
+			"ability_detail": "防御型；周回回復不可；秘術[EP80・隣接空地にスタチューを配置]",
 			"ability_parsed": {
 				"keywords": [
 					"防御型",
@@ -540,7 +540,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 30,
+				"ep": 30,
 				"cards_sacrifice": 1
 			},
 			"ap": 30,
@@ -583,7 +583,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 90
+				"ep": 90
 			},
 			"restrictions": {
 				"cannot_use": [
@@ -619,7 +619,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 10,
+				"ep": 10,
 				"cards_sacrifice": 1
 			},
 			"restrictions": {
@@ -658,7 +658,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 20
+				"ep": 20
 			},
 			"ap": 20,
 			"hp": 20,
@@ -672,7 +672,7 @@
 			"type": "creature",
 			"element": "neutral",
 			"cost": {
-				"mp": 0
+				"ep": 0
 			},
 			"ap": 20,
 			"hp": 30,

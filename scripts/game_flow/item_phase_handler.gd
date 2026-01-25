@@ -350,7 +350,7 @@ func use_item(item_card: Dictionary):
 	var cost_data = item_card.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)  # アイテムはmp値をそのまま使用（等倍）
+		cost = cost_data.get("ep", 0)  # アイテムはmp値をそのまま使用（等倍）
 	else:
 		cost = cost_data
 	
@@ -467,7 +467,7 @@ func _can_afford_card(card_data: Dictionary) -> bool:
 	var cost_data = card_data.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)  # アイテムはmp値をそのまま使用（等倍）
+		cost = cost_data.get("ep", 0)  # アイテムはmp値をそのまま使用（等倍）
 	else:
 		cost = cost_data
 	

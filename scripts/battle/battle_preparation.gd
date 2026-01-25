@@ -22,7 +22,7 @@ var skill_granter = BattleSkillGranterScript.new()
 var board_system_ref = null
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
-var spell_magic_ref = null  # SpellMagicの参照（魔力獲得系アイテム用）
+var spell_magic_ref = null  # SpellMagicの参照（EP獲得系アイテム用）
 
 func setup_systems(board_system, card_system: CardSystem, player_system: PlayerSystem, spell_magic = null):
 	board_system_ref = board_system

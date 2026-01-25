@@ -39,7 +39,7 @@ func evaluate(spell: Dictionary, context: Dictionary) -> Dictionary:
 	if dice_value == 0:
 		return { "should_use": false }
 	
-	var spell_cost = spell.get("cost", {}).get("mp", 0)
+	var spell_cost = spell.get("cost", {}).get("ep", 0)
 	
 	# 攻撃的使用を評価
 	var offensive_result = _evaluate_offensive(dice_value, player_id, spell_cost)
@@ -52,14 +52,14 @@ func evaluate(spell: Dictionary, context: Dictionary) -> Dictionary:
 		return {
 			"should_use": true,
 			"target": { "type": "player", "player_id": offensive_result.target_player_id },
-			"reason": "攻撃: 敵を自分の土地に止まらせる（通行料: %dG）" % offensive_result.expected_toll
+			"reason": "攻撃: 敵を自分の土地に止まらせる（通行料: %dEP）" % offensive_result.expected_toll
 		}
 	
 	if defensive_result.should_use and defensive_result.avoided_toll >= spell_cost:
 		return {
 			"should_use": true,
 			"target": { "type": "player", "player_id": player_id },
-			"reason": "防御: 敵の土地を回避（回避通行料: %dG）" % defensive_result.avoided_toll
+			"reason": "防御: 敵の土地を回避（回避通行料: %dEP）" % defensive_result.avoided_toll
 		}
 	
 	return { "should_use": false }

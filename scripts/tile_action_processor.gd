@@ -451,7 +451,7 @@ func execute_summon(card_index: int):
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = cost_data
 	
@@ -462,7 +462,7 @@ func execute_summon(card_index: int):
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power >= cost:
-		# カード使用と魔力消費
+		# カード使用とEP消費
 		card_system.use_card_for_player(current_player_index, card_index)
 		player_system.add_magic(current_player_index, -cost)
 		
@@ -488,7 +488,7 @@ func execute_summon(card_index: int):
 			ui_manager.hide_card_selection_ui()
 			ui_manager.update_player_info_panels()
 	else:
-		print("魔力不足で召喚できません")
+		print("EP不足で召喚できません")
 	
 	print("[TileActionProcessor] execute_summon完了、_complete_action呼び出し")
 	_complete_action()
@@ -563,7 +563,7 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = cost_data
 	
@@ -573,11 +573,11 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	
 	var current_player = player_system.get_current_player()
 	if current_player.magic_power < cost:
-		print("[TileActionProcessor] 魔力不足でバトルできません")
+		print("[TileActionProcessor] EP不足でバトルできません")
 		_complete_action()
 		return
 	
-	# カードを使用して魔力消費
+	# カードを使用してEP消費
 	card_system.use_card_for_player(current_player_index, card_index)
 	player_system.add_magic(current_player_index, -cost)
 	print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
@@ -785,7 +785,7 @@ func on_level_up_selected(target_level: int, cost: int):
 			ui_manager.update_player_info_panels()
 			ui_manager.hide_level_up_ui()
 		
-		print("土地をレベル", target_level, "にアップグレード！（コスト: ", cost, "G）")
+		print("土地をレベル", target_level, "にアップグレード！（コスト: ", cost, "EP）")
 	
 	_complete_action()
 
@@ -869,7 +869,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)  # 等倍
+		cost = cost_data.get("ep", 0)  # 等倍
 	else:
 		cost = cost_data  # 等倍
 	
@@ -880,7 +880,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power < cost:
-		print("[TileActionProcessor] 魔力不足で交換できません")
+		print("[TileActionProcessor] EP不足で交換できません")
 		_complete_action()
 		return
 	
@@ -895,7 +895,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	# 2. 選択したカードを使用（手札から削除）
 	card_system.use_card_for_player(current_player_index, card_index)
 	
-	# 3. 魔力消費
+	# 3. EP消費
 	player_system.add_magic(current_player_index, -cost)
 	
 	# 4. 新しいクリーチャーを配置（土地レベル・属性は維持される）
@@ -1076,7 +1076,7 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: 
 	if not item_data.is_empty():
 		print("[TileActionProcessor] CPU: 攻撃側アイテム保存: %s (index=%d)" % [item_data.get("name", "?"), item_data.get("_hand_index", -1)])
 	
-	# カードを使用して魔力消費
+	# カードを使用してEP消費
 	card_system.use_card_for_player(current_player_index, card_index)
 	player_system.add_magic(current_player_index, -cost)
 	print("[TileActionProcessor] CPU: バトルカード消費: %s" % pending_battle_card_data.get("name", "?"))

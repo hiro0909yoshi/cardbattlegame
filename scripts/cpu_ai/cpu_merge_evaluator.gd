@@ -71,7 +71,7 @@ func check_merge_option_for_attack(
 		
 		# コストチェック
 		if total_cost > current_player.magic_power:
-			print("[CPU合体] 魔力不足: 必要%dG, 現在%dG" % [total_cost, current_player.magic_power])
+			print("[CPU合体] EP不足: 必要%dEP, 現在%dEP" % [total_cost, current_player.magic_power])
 			continue
 		
 		# 合体結果のクリーチャーを取得
@@ -81,7 +81,7 @@ func check_merge_option_for_attack(
 		if result_creature.is_empty():
 			continue
 		
-		print("[CPU合体] 合体可能: %s + %s → %s (コスト: %dG)" % [
+		print("[CPU合体] 合体可能: %s + %s → %s (コスト: %dEP)" % [
 			creature.get("name", "?"),
 			partner_data.get("name", "?"),
 			result_creature.get("name", "?"),

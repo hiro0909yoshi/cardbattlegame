@@ -118,7 +118,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		# 条件に合うカードがない場合
 		if ui_manager and ui_manager.phase_label:
 			ui_manager.phase_label.text = "破壊できるカードがありません"
-		# コールバックを呼び出して処理を続行（ペナルティとして魔力は消費済み）
+		# コールバックを呼び出して処理を続行（ペナルティとしてEPは消費済み）
 		await get_tree().create_timer(1.0).timeout
 		callback.call(-1)
 		_finish_enemy_card_selection()
@@ -144,7 +144,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	# 選択UIを有効化
 	if ui_manager and ui_manager.card_selection_ui and card_system:
 		var hand_data = card_system.get_all_cards_for_player(target_player_id)
-		var magic = 999999  # 魔力チェック不要
+		var magic = 999999  # EPチェック不要
 		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
 	
 	# 入力ロックを解除（グローバルボタン対応）
@@ -431,7 +431,7 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	
 	# 選択UIを有効化（player_id = -1 はデッキカード表示用）
 	if ui_manager and ui_manager.card_selection_ui:
-		var magic = 999999  # 魔力チェック不要
+		var magic = 999999  # EPチェック不要
 		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
 	
 	# 入力ロックを解除（グローバルボタン対応）

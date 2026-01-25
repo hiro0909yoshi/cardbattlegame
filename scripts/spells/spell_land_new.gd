@@ -185,7 +185,7 @@ func abandon_land(tile_index: int, return_rate: float = 0.7) -> int:
 	tile.owner_id = -1
 	tile.update_visual()
 	
-	# 魔力を付与
+	# EPを付与
 	player_system_ref.add_magic(player_id, land_value)
 	
 	print("[土地放棄] タイル%d: P%d Lv%d %s G%d獲得" % [tile_index, player_id, tile.level, element, land_value])
@@ -628,7 +628,7 @@ func calculate_terrain_change_cost(tile_index: int) -> int:
 	var level = tile.level
 	var tile_type = tile.tile_type
 	
-	# 1. アーキミミックがいる土地 → 50G固定
+	# 1. アーキミミックがいる土地 → 50EP固定
 	if _has_land_cost_modifier(tile_index):
 		return 50
 	

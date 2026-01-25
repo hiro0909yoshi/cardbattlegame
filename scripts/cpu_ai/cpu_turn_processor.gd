@@ -417,7 +417,7 @@ func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
 	
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	
 	return magic >= cost
 

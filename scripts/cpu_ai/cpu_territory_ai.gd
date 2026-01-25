@@ -41,13 +41,13 @@ const ELEMENT_CHANGE_BASE_SCORE = CPUAIConstantsScript.ELEMENT_CHANGE_BASE_SCORE
 const ELEMENT_CHANGE_NEUTRAL_BONUS = CPUAIConstantsScript.ELEMENT_CHANGE_NEUTRAL_BONUS
 ## 属性変更: コスト係数
 const ELEMENT_CHANGE_COST_MULTIPLIER = CPUAIConstantsScript.ELEMENT_CHANGE_COST_MULTIPLIER
-## 危機モード: 残り魔力閾値
+## 危機モード: 残りEP閾値
 const CRISIS_MODE_THRESHOLD = CPUAIConstantsScript.CRISIS_MODE_THRESHOLD
 ## 危機モード: スコア（最優先）
 const CRISIS_MODE_SCORE = CPUAIConstantsScript.CRISIS_MODE_SCORE
-## 魔力温存: 残す割合（30%）
+## EP温存: 残す割合（30%）
 const MAGIC_RESERVE_RATIO = CPUAIConstantsScript.MAGIC_RESERVE_RATIO
-## 魔力温存: 最低残高
+## EP温存: 最低残高
 const MAGIC_RESERVE_MINIMUM = CPUAIConstantsScript.MAGIC_RESERVE_MINIMUM
 
 # === 共有コンテキスト ===
@@ -382,7 +382,7 @@ func _evaluate_level_up(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", -1)
 	var current_magic = context.get("current_magic", 0)
 	
-	# 使用可能魔力を計算（30%または100Gは残す）
+	# 使用可能EPを計算（30%または100EPは残す）
 	var available_magic = _calculate_available_magic(current_magic)
 	
 	var own_lands = _get_own_lands(player_id)
@@ -396,7 +396,7 @@ func _evaluate_level_up(context: Dictionary) -> Array:
 		if not land.element_match:
 			continue
 		
-		# 使用可能魔力で上げられる最大レベルと合計コストを計算
+		# 使用可能EPで上げられる最大レベルと合計コストを計算
 		var result = _calculate_affordable_level_up(land.tile_index, land.level, available_magic)
 		var max_level = result.max_level
 		var total_cost = result.total_cost
@@ -404,7 +404,7 @@ func _evaluate_level_up(context: Dictionary) -> Array:
 		if max_level <= land.level:
 			continue
 		
-		# スコア = 手持ち魔力で上げられる分の合計コスト
+		# スコア = 手持ちEPで上げられる分の合計コスト
 		var score = total_cost
 		
 		options.append({
@@ -418,7 +418,7 @@ func _evaluate_level_up(context: Dictionary) -> Array:
 	return options
 
 
-## 手持ち魔力で上げられる最大レベルと合計コストを計算（動的計算）
+## 手持ちEPで上げられる最大レベルと合計コストを計算（動的計算）
 func _calculate_affordable_level_up(tile_index: int, current_level: int, magic: int) -> Dictionary:
 	var max_level = current_level
 	var total_cost = 0
@@ -431,7 +431,7 @@ func _calculate_affordable_level_up(tile_index: int, current_level: int, magic: 
 		if cost <= remaining_magic:
 			max_level = target_level
 			total_cost = cost  # 差分コストをそのまま使う
-			remaining_magic = magic - cost  # 残り魔力も累計から計算
+			remaining_magic = magic - cost  # 残りEPも累計から計算
 		else:
 			break
 	
@@ -526,7 +526,7 @@ func _evaluate_element_change(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", -1)
 	var current_magic = context.get("current_magic", 0)
 	
-	# 使用可能魔力を計算（30%または100Gは残す）
+	# 使用可能EPを計算（30%または100EPは残す）
 	var available_magic = _calculate_available_magic(current_magic)
 	
 	var own_lands = _get_own_lands(player_id)
@@ -567,10 +567,10 @@ func _evaluate_element_change(context: Dictionary) -> Array:
 ## コスト値を取得（Dictionaryの場合はmpを取得）
 func _get_cost_value(cost) -> int:
 	if typeof(cost) == TYPE_DICTIONARY:
-		return cost.get("mp", 0)
+		return cost.get("ep", 0)
 	return int(cost)
 
-## 使用可能魔力を計算（30%または100Gは残す）
+## 使用可能EPを計算（30%または100EPは残す）
 func _calculate_available_magic(current_magic: int) -> int:
 	var reserve = max(current_magic * MAGIC_RESERVE_RATIO, MAGIC_RESERVE_MINIMUM)
 	return max(0, current_magic - int(reserve))
@@ -679,7 +679,7 @@ func _get_best_chain_element(player_id: int) -> Dictionary:
 	}
 
 
-## 残り魔力で上げられる最大レベルを計算
+## 残りEPで上げられる最大レベルを計算
 func _get_max_affordable_level(tile_index: int, current_level: int, magic: int) -> int:
 	var max_level = current_level
 	

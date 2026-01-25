@@ -93,12 +93,12 @@ func _update_right_panel():
 	# コスト
 	if cost_label:
 		var cost_value = data.get("cost", {})
-		var mp_cost = 0
+		var ep_cost = 0
 		if typeof(cost_value) == TYPE_DICTIONARY:
-			mp_cost = cost_value.get("mp", 0)
+			ep_cost = cost_value.get("ep", 0)
 		else:
-			mp_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
-		cost_label.text = "コスト: %dG" % mp_cost
+			ep_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
+		cost_label.text = "コスト: %dEP" % ep_cost
 	
 	# スペルタイプ（対象タイプ）
 	if spell_type_label:

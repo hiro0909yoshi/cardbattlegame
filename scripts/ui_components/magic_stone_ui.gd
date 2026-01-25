@@ -77,7 +77,7 @@ func _setup_ui():
 	vbox.add_theme_constant_override("separation", 20)
 	margin.add_child(vbox)
 	
-	# ヘッダー（タイトル + 所持魔力）
+	# ヘッダー（タイトル + 所持EP）
 	var header = HBoxContainer.new()
 	header.alignment = BoxContainer.ALIGNMENT_CENTER
 	header.add_theme_constant_override("separation", 100)
@@ -90,7 +90,7 @@ func _setup_ui():
 	header.add_child(title_label)
 	
 	magic_label = Label.new()
-	magic_label.text = "所持魔力: 0G"
+	magic_label.text = "所持EP: 0"
 	magic_label.add_theme_font_size_override("font_size", 44)
 	magic_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
 	header.add_child(magic_label)
@@ -170,7 +170,7 @@ func _create_stone_panel(element: String) -> Panel:
 	# 現在価値
 	var value_label = Label.new()
 	value_label.name = "value_label"
-	value_label.text = "価値: 50G"
+	value_label.text = "価値: 50EP"
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	value_label.add_theme_font_size_override("font_size", 40)
 	value_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
@@ -250,7 +250,7 @@ func _create_stone_panel(element: String) -> Panel:
 	# 合計表示
 	var total_label = Label.new()
 	total_label.name = "total_label"
-	total_label.text = "合計: 50G"
+	total_label.text = "合計: 50EP"
 	total_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	total_label.add_theme_font_size_override("font_size", 36)
 	total_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
@@ -304,9 +304,9 @@ func show_shop():
 
 ## 表示更新
 func _update_display():
-	# 魔力表示更新
+	# EP表示更新
 	if magic_label:
-		magic_label.text = "所持魔力: %dG" % player_magic
+		magic_label.text = "所持EP: %dEP" % player_magic
 	
 	# 各属性パネル更新
 	for element in ELEMENTS:
@@ -320,7 +320,7 @@ func _update_display():
 		# 価値
 		var value_label = _find_child_by_name(panel_node, "value_label")
 		if value_label:
-			value_label.text = "価値: %dG" % value
+			value_label.text = "価値: %dEP" % value
 		
 		# 所持数
 		var owned_label = _find_child_by_name(panel_node, "owned_label")
@@ -334,7 +334,7 @@ func _update_display():
 		# 合計
 		var total_label = _find_child_by_name(panel_node, "total_label")
 		if total_label:
-			total_label.text = "合計: %dG" % (value * qty)
+			total_label.text = "合計: %dEP" % (value * qty)
 		
 		# ボタン有効/無効
 		var buy_btn = _find_child_by_name(panel_node, "buy_btn")

@@ -210,7 +210,7 @@ func start_turn():
 		if not drawn.is_empty() and current_player.id == 0:
 			await get_tree().create_timer(0.1).timeout
 	
-	# 破産チェック（敵スペル等で魔力マイナスの場合）
+	# 破産チェック（敵スペル等でEPマイナスの場合）
 	await check_and_handle_bankruptcy()
 	
 	# UI更新
@@ -308,7 +308,7 @@ func roll_dice():
 	
 	var modified_dice = total_dice
 	
-	# ダイスロール後の魔力付与（チャージステップなど）
+	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:
 		spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
 		if spell_dice.should_grant_magic(player_system.current_player_index):
@@ -643,12 +643,12 @@ func check_and_pay_toll_on_enemy_land():
 	# 主通行料の支払い実行
 	if receiver_id >= 0 and receiver_id < player_system.players.size():
 		player_system.pay_toll(current_player_index, receiver_id, main_toll)
-		print("[敵地支払い] 通行料 ", main_toll, "G を支払いました (受取: プレイヤー", receiver_id + 1, ")")
+		print("[敵地支払い] 通行料 ", main_toll, "EP を支払いました (受取: プレイヤー", receiver_id + 1, ")")
 	
 	# 副収入の支払い実行
 	if bonus_toll > 0 and bonus_receiver_id >= 0 and bonus_receiver_id < player_system.players.size():
 		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
-		print("[副収入] 通行料 ", bonus_toll, "G を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
+		print("[副収入] 通行料 ", bonus_toll, "EP を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
 
 # === 破産処理 ===
 

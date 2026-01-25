@@ -620,7 +620,7 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 			nearest_cp_directions.append(direction)
 	
 	# 最終スコアを計算
-	# 最短CP方向にCPボーナス＋魔力ボーナスを加算（同距離なら両方に）
+	# 最短CP方向にCPボーナス＋EPボーナスを加算（同距離なら両方に）
 	var final_scores = {}
 	for direction in direction_data:
 		var data = direction_data[direction]
@@ -628,7 +628,7 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 		
 		if direction in nearest_cp_directions:
 			final_score += SCORE_CHECKPOINT_DIRECTION_BONUS  # CPボーナス
-			final_score += current_magic  # 魔力ボーナス
+			final_score += current_magic  # EPボーナス
 		
 		final_scores[direction] = final_score
 	
@@ -679,7 +679,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	var current_tile = branch_tile if branch_tile >= 0 else _get_player_current_tile(player_id)
 	_current_branch_tile = current_tile
 	
-	# 手持ち魔力を取得（最短CP方向のボーナスとして使用）
+	# 手持ちEPを取得（最短CP方向のボーナスとして使用）
 	var current_magic = _get_player_magic(player_id)
 	
 	# チェックポイント距離計算を確認
@@ -746,7 +746,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			# 同距離のタイルを追加
 			nearest_cp_tiles.append(tile_index)
 	
-	# 最短CP方向にCPボーナス＋魔力ボーナスを加算
+	# 最短CP方向にCPボーナス＋EPボーナスを加算
 	# 同距離の場合は両方にボーナスを付与
 	var final_scores = {}
 	for tile_index in tile_scores:
@@ -754,7 +754,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var final_score = data.base_score
 		if tile_index in nearest_cp_tiles:
 			final_score += SCORE_CHECKPOINT_DIRECTION_BONUS  # CPボーナス
-			final_score += current_magic  # 魔力ボーナス
+			final_score += current_magic  # EPボーナス
 		final_scores[tile_index] = final_score
 	
 	# 選択ロジック
@@ -977,7 +977,7 @@ func _get_player_current_tile(player_id: int) -> int:
 		return movement_controller.player_tiles[player_id]
 	return 0
 
-## プレイヤーの手持ち魔力を取得
+## プレイヤーの手持ちEPを取得
 func _get_player_magic(player_id: int) -> int:
 	if player_system:
 		return player_system.get_magic(player_id)

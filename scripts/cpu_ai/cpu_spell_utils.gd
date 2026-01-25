@@ -63,7 +63,7 @@ func build_context(player_id: int) -> Dictionary:
 func get_spell_cost(spell: Dictionary) -> int:
 	var cost_data = spell.get("cost", {})
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	elif typeof(cost_data) == TYPE_INT or typeof(cost_data) == TYPE_FLOAT:
 		return int(cost_data)
 	return 0
@@ -132,7 +132,7 @@ func calculate_lap_diff(context: Dictionary) -> int:
 	var diff = max_enemy_lap - my_lap
 	return diff
 
-## 最大敵魔力取得
+## 最大敵EP取得
 func get_max_enemy_magic(context: Dictionary) -> int:
 	if not player_system:
 		return 0

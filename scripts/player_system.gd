@@ -41,7 +41,7 @@ var is_moving = false
 # デバッグコントローラー参照
 var debug_controller: DebugController = null
 
-# 外部システム参照（総魔力計算用）
+# 外部システム参照（TEP計算用）
 var board_system_ref = null
 var magic_stone_system_ref = null  # MagicStoneSystem（tiles/magic_stone_system.gd）
 
@@ -95,7 +95,7 @@ func roll_dice() -> int:
 	emit_signal("dice_rolled", value)
 	return value
 
-# 魔力を増減
+# EPを増減
 func add_magic(player_id: int, amount: int):
 	if player_id < 0 or player_id >= players.size():
 		return
@@ -104,19 +104,19 @@ func add_magic(player_id: int, amount: int):
 	player.magic_power += amount
 	# マイナス値を許容（破産処理で対応）
 	
-	print(player.name, ": 魔力 ", player.magic_power, "G (", 
+	print(player.name, ": EP ", player.magic_power, "EP (", 
 		"+" if amount >= 0 else "", amount, ")")
 	
 	# 勝利判定はチェックポイント通過時に行う（LapSystem）
 
-# 魔力を設定（初期値設定用）
+# EPを設定（初期値設定用）
 func set_magic(player_id: int, amount: int):
 	if player_id < 0 or player_id >= players.size():
 		return
 	players[player_id].magic_power = max(0, amount)
-	print(players[player_id].name, ": 魔力を", amount, "Gに設定")
+	print(players[player_id].name, ": EPを", amount, "EPに設定")
 
-# 魔力を取得
+# EPを取得
 func get_magic(player_id: int) -> int:
 	if player_id >= 0 and player_id < players.size():
 		return players[player_id].magic_power
@@ -135,7 +135,7 @@ func pay_toll(payer_id: int, receiver_id: int, amount: int) -> bool:
 	add_magic(payer_id, -amount)
 	add_magic(receiver_id, amount)
 	
-	# 魔力が足りていたかどうかを返す
+	# EPが足りていたかどうかを返す
 	return payer.magic_power >= 0
 
 # プレイヤーの現在位置を取得
@@ -170,10 +170,10 @@ func set_player_piece_node(player_id: int, node: Node):
 			player_pieces[player_id] = node
 
 # ============================================
-# 総魔力計算（一元化）
+# TEP計算（一元化）
 # ============================================
 
-## 総魔力を計算（所持魔力＋土地価値＋魔法石価値）
+## TEPを計算（所持EP＋土地価値＋魔法石価値）
 ## 勝利判定、UI表示など全てここを参照する
 func calculate_total_assets(player_id: int) -> int:
 	if player_id < 0 or player_id >= players.size():

@@ -338,7 +338,7 @@ func _destroy_creature(tile: Node) -> void:
 		print("[SpellDamage] %s は変身しました" % creature_name)
 		return
 	
-	# 遺産効果（魔力獲得）
+	# 遺産効果（EP獲得）
 	var legacy_amount = death_result.get("legacy_amount", 0)
 	if legacy_amount > 0 and owner_id >= 0 and board_system_ref and board_system_ref.player_system:
 		board_system_ref.player_system.add_magic(owner_id, legacy_amount)

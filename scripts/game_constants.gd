@@ -26,7 +26,7 @@ const LEVEL_VALUES = {
 # === カード関連 ===
 const MAX_HAND_SIZE = 6           # 手札上限
 const INITIAL_HAND_SIZE = 5       # 初期手札枚数
-const CARD_COST_MULTIPLIER = 1    # カードコスト倍率（コスト×10G）
+const CARD_COST_MULTIPLIER = 1    # カードコスト倍率（コスト×10EP）
 const CARDS_PER_TYPE = 3          # 各カードの枚数
 
 # === 通行料関連（固定） ===
@@ -83,7 +83,7 @@ const LAP_BONUS_LAP_RATE = 0.4        # 1周あたり追加40%
 # =============================================================================
 
 # === ルールプリセット ===
-# 初期魔力と勝利条件のセット
+# 初期EPと勝利条件のセット
 const RULE_PRESETS = {
 	"standard": {
 		"initial_magic": 1000,
@@ -171,7 +171,7 @@ const DEFAULT_RULE_PRESET = "standard"
 static func floor_toll(amount: float) -> int:
 	return int(floor(amount / 10.0) * 10.0)
 
-# ルールプリセットから初期魔力を取得
+# ルールプリセットから初期EPを取得
 static func get_initial_magic(preset_name: String) -> int:
 	if RULE_PRESETS.has(preset_name):
 		return RULE_PRESETS[preset_name].get("initial_magic", DEFAULT_INITIAL_MAGIC)

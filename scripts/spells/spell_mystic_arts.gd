@@ -331,7 +331,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		var cost = mystic_art.get("cost", 0)
 		var name_text = mystic_art.get("name", "Unknown")
 		menu_items.append({
-			"text": "%s [%dG]" % [name_text, cost],
+			"text": "%s [%dEP]" % [name_text, cost],
 			"color": Color(0.6, 0.3, 0.7),
 			"icon": "✨",
 			"disabled": false,
@@ -473,7 +473,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	var success = await apply_mystic_art_effect(mystic_art, target_data, context)
 	
 	if success:
-		# 魔力消費
+		# EP消費
 		var cost = mystic_art.get("cost", 0)
 		if player_system_ref:
 			player_system_ref.add_magic(player_id, -cost)
@@ -562,7 +562,7 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 					var target_data = {"type": "all_creatures", "caster_tile_index": creature.get("tile_index", -1)}
 					await spell_phase_handler_ref.game_flow_manager.spell_curse_stat.apply_effect(spell_phase_handler_ref, effect, target_data, player_id, mystic_art)
 	
-	# 魔力消費
+	# EP消費
 	var cost = mystic_art.get("cost", 0)
 	if player_system_ref:
 		player_system_ref.add_magic(player_id, -cost)
@@ -862,7 +862,7 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 
 ## 秘術発動可能か判定
 func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
-	# 魔力確認
+	# EP確認
 	var cost = mystic_art.get("cost", 0)
 	var player_magic = context.get("player_magic", 0)
 	

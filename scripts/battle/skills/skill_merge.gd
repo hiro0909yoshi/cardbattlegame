@@ -10,7 +10,7 @@ class_name SkillMerge
 ## 【発動条件】
 ## - バトル参加クリーチャーが「合体」キーワードを持つ
 ## - 手札に合体相手（partner_id）のクリーチャーがいる
-## - 合体相手のコスト分の魔力を支払える
+## - 合体相手のコスト分のEPを支払える
 ##
 ## 【発動タイミング】
 ## 召喚フェーズ → アイテム選択フェーズ → 【合体フェーズ】 → バトル開始処理
@@ -86,11 +86,11 @@ static func find_merge_partner_in_hand(creature_data: Dictionary, hand_cards: Ar
 	return -1
 
 
-## 合体可能かチェック（手札と魔力）
+## 合体可能かチェック（手札とEP）
 ##
 ## @param creature_data バトル参加クリーチャーのデータ
 ## @param hand_cards 手札のカード配列
-## @param player_magic プレイヤーの現在魔力
+## @param player_magic プレイヤーの現在EP
 ## @return 合体可能か
 static func can_merge(creature_data: Dictionary, hand_cards: Array, player_magic: int) -> bool:
 	# 合体スキルチェック
@@ -102,19 +102,19 @@ static func can_merge(creature_data: Dictionary, hand_cards: Array, player_magic
 	if partner_index == -1:
 		return false
 	
-	# 魔力チェック
+	# EPチェック
 	var partner_card = hand_cards[partner_index]
 	var partner_cost = partner_card.get("cost", {})
-	var mp_cost = partner_cost.get("mp", 0) if partner_cost is Dictionary else partner_cost
+	var ep_cost = partner_cost.get("ep", 0) if partner_cost is Dictionary else partner_cost
 	
-	return player_magic >= mp_cost
+	return player_magic >= ep_cost
 
 
 ## 合体相手のコストを取得
 ##
 ## @param hand_cards 手札のカード配列
 ## @param partner_index 合体相手のカードインデックス
-## @return コスト（魔力消費量）
+## @return コスト（EP消費量）
 static func get_merge_cost(hand_cards: Array, partner_index: int) -> int:
 	if partner_index < 0 or partner_index >= hand_cards.size():
 		return 0
@@ -123,7 +123,7 @@ static func get_merge_cost(hand_cards: Array, partner_index: int) -> int:
 	var cost = partner_card.get("cost", {})
 	
 	if cost is Dictionary:
-		return cost.get("mp", 0)
+		return cost.get("ep", 0)
 	return cost
 
 
@@ -163,12 +163,12 @@ static func apply_merge_effect(
 		print("[合体] 手札に合体相手がいません")
 		return result
 	
-	# 魔力チェック
+	# EPチェック
 	var player_magic = player_system.get_magic(player_id) if player_system else 0
 	var cost = get_merge_cost(hand_cards, partner_index)
 	
 	if player_magic < cost:
-		print("[合体] 魔力不足: 必要%dG, 現在%dG" % [cost, player_magic])
+		print("[合体] EP不足: 必要%dEP, 現在%dEP" % [cost, player_magic])
 		return result
 	
 	# 合体結果のクリーチャーデータを取得
@@ -187,10 +187,10 @@ static func apply_merge_effect(
 	
 	print("[合体] %s + %s → %s" % [original_name, partner_name, result_name])
 	
-	# 魔力消費
+	# EP消費
 	if player_system:
 		player_system.add_magic(player_id, -cost)
-		print("[合体] 魔力消費: %dG" % cost)
+		print("[合体] EP消費: %dEP" % cost)
 	
 	# 合体相手を捨て札へ
 	if card_system:
@@ -305,10 +305,10 @@ static func execute_merge(
 	if game_flow_manager and game_flow_manager.spell_cost_modifier:
 		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, partner_data)
 	
-	# 魔力チェック
+	# EPチェック
 	var player_magic = player_system.get_magic(player_id) if player_system else 0
 	if player_magic < cost:
-		print("[SkillMerge] 魔力不足: 必要%dG, 現在%dG" % [cost, player_magic])
+		print("[SkillMerge] EP不足: 必要%dEP, 現在%dEP" % [cost, player_magic])
 		return result
 	
 	# 合体結果のクリーチャーを取得
@@ -325,10 +325,10 @@ static func execute_merge(
 	
 	print("[SkillMerge] %s + %s → %s" % [original_name, partner_name, result_name])
 	
-	# 魔力消費
+	# EP消費
 	if player_system:
 		player_system.add_magic(player_id, -cost)
-		print("[SkillMerge] 魔力消費: %dG" % cost)
+		print("[SkillMerge] EP消費: %dEP" % cost)
 	
 	# 合体相手を捨て札へ
 	if card_system:

@@ -244,15 +244,15 @@ func show_level_selection(tile_index: int, current_level: int, player_magic: int
 			# レベルアップコストを動的に計算
 			var cost = _calculate_level_up_cost(current_level, level)
 			if player_magic >= cost:
-				# 魔力が足りる
+				# EPが足りる
 				if level_selection_buttons.has(level):
 					level_selection_buttons[level].disabled = false
-					level_selection_buttons[level].text = "Lv.%d → %dG" % [level, cost]
+					level_selection_buttons[level].text = "Lv.%d → %dEP" % [level, cost]
 			else:
-				# 魔力不足
+				# EP不足
 				if level_selection_buttons.has(level):
 					level_selection_buttons[level].disabled = true
-					level_selection_buttons[level].text = "Lv.%d → %dG (不足)" % [level, cost]
+					level_selection_buttons[level].text = "Lv.%d → %dEP (不足)" % [level, cost]
 	
 	level_selection_panel.visible = true
 	
@@ -553,7 +553,7 @@ func _create_terrain_selection_panel(parent: Node):
 	# コスト表示
 	terrain_cost_label = Label.new()
 	terrain_cost_label.name = "TerrainCostLabel"
-	terrain_cost_label.text = "コスト: 400G"
+	terrain_cost_label.text = "コスト: 400EP"
 	terrain_cost_label.position = Vector2(525, 135)
 	terrain_cost_label.add_theme_font_size_override("font_size", 63)
 	terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.9, 0.3))
@@ -641,7 +641,7 @@ func show_terrain_selection(tile_index: int, current_element: String, cost: int,
 	
 	# コストを表示
 	if terrain_cost_label:
-		terrain_cost_label.text = "コスト: %dG" % cost
+		terrain_cost_label.text = "コスト: %dEP" % cost
 		if player_magic < cost:
 			terrain_cost_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
 		else:
@@ -654,7 +654,7 @@ func show_terrain_selection(tile_index: int, current_element: String, cost: int,
 			# 現在の属性は選択不可
 			btn.disabled = true
 		elif player_magic < cost:
-			# 魔力不足
+			# EP不足
 			btn.disabled = true
 		else:
 			btn.disabled = false
@@ -736,7 +736,7 @@ func _on_terrain_cancel_pressed():
 ## 大きめレベルボタン作成ヘルパー
 func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: Vector2) -> Button:
 	var btn = Button.new()
-	btn.text = "Lv.%d → %dG" % [level, cost]
+	btn.text = "Lv.%d → %dEP" % [level, cost]
 	btn.position = pos
 	btn.size = btn_size
 	btn.add_theme_font_size_override("font_size", 68)  # 1.5倍

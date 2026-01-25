@@ -165,7 +165,7 @@ func _get_sample_creature_data() -> Dictionary:
 		"element": "fire",
 		"ap": 30,
 		"hp": 30,
-		"cost": {"mp": 50},
+		"cost": {"ep": 50},
 		"ability": ""
 	}
 
@@ -181,7 +181,7 @@ func _get_sample_spell_data() -> Dictionary:
 		"name": "アースシフト",
 		"type": "spell",
 		"spell_type": "単体対象",
-		"cost": {"mp": 100},
+		"cost": {"ep": 100},
 		"effect": "対象自領地を地に変える"
 	}
 
@@ -207,7 +207,7 @@ func _get_player_info_description() -> String:
 	text += "画面左上のプレイヤー情報パネルをタップすると\n"
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"
-	text += "・基本情報（名前、魔力、総魔力）\n"
+	text += "・基本情報（名前、EP、TEP）\n"
 	text += "・マップ情報（周回数、ターン数、破壊数）\n"
 	text += "・手札一覧\n"
 	text += "・保有土地（属性別）\n"

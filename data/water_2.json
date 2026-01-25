@@ -7,7 +7,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 90
+		"ep": 90
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -38,7 +38,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -53,7 +53,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G50・対象セプターに呪いダイス1～3]",
+	  "ability_detail": "防御型；秘術[EP50・対象セプターに呪いダイス1～3]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防御型",
@@ -73,7 +73,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -87,8 +87,8 @@
 	  "creature_type": "defensive",
 	  "ap": 10,
 	  "hp": 50,
-	  "ability": "防御型・魔力獲得",
-	  "ability_detail": "防御型；魔力獲得[受けたダメージ×G5]",
+	  "ability": "防御型・EP獲得",
+	  "ability_detail": "防御型；EP獲得[受けたダメージ×5EP]",
 	  "ability_parsed": {
 		"keywords": ["防御型"],
 		"effects": [
@@ -107,7 +107,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "water",
 		  "water"
@@ -145,7 +145,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "water"
 		]
@@ -173,7 +173,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -204,7 +204,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 45,
+		"ep": 45,
 		"lands_required": [
 		  "water"
 		]
@@ -239,7 +239,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 20,
+		"ep": 20,
 		"lands_required": [
 		  "water"
 		]
@@ -252,7 +252,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G50・対象敵領地に呪い戦闘行動不可]",
+	  "ability_detail": "秘術[EP50・対象敵領地に呪い戦闘行動不可]",
 	  "ability_parsed": {
 		"keywords": ["秘術"],
 		"mystic_arts": [
@@ -272,7 +272,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 110,
+		"ep": 110,
 		"lands_required": [
 		  "water",
 		  "water"
@@ -303,7 +303,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "water"
 		]
@@ -320,7 +320,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "water"
 		]
@@ -336,7 +336,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[無]；秘術[G60・ケルピーに変身]",
+	  "ability_detail": "無効化[無]；秘術[EP60・ケルピーに変身]",
 	  "ability_parsed": {
 		"keywords": ["無効化", "秘術"],
 		"keyword_conditions": {
@@ -361,12 +361,12 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "カード引き・秘術",
-	  "ability_detail": "遺産[カード1枚]；秘術[G40・カードを1枚引く]",
+	  "ability_detail": "遺産[カード1枚]；秘術[EP40・カードを1枚引く]",
 	  "ability_parsed": {
 		"keywords": ["遺産", "秘術"],
 		"effects": [
@@ -392,7 +392,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -420,7 +420,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -434,7 +434,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 60,
+		"ep": 60,
 		"lands_required": [
 		  "water"
 		]
@@ -467,7 +467,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 35
+		"ep": 35
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -504,7 +504,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 65
+		"ep": 65
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -516,7 +516,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；不屈；秘術[G100・配置領地を水に変える]",
+	  "ability_detail": "防御型；不屈；秘術[EP100・配置領地を水に変える]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "不屈", "秘術"]
 	  },
@@ -532,7 +532,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -545,7 +545,7 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[火風]；秘術[G30・アクアホーンに変身]",
+	  "ability_detail": "無効化[火風]；秘術[EP30・アクアホーンに変身]",
 	  "ability_parsed": {
 		"keywords": ["無効化", "秘術"],
 		"keyword_conditions": {
@@ -570,7 +570,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -594,7 +594,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "water",
 		  "water"
@@ -647,7 +647,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 70
+		"ep": 70
 	  },
 	  "ap": 30,
 	  "hp": 40,
@@ -668,7 +668,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 0,
 	  "hp": 30,
@@ -693,7 +693,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "water"
 		]
@@ -707,7 +707,7 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；防魔；秘術[G100・自手札のスペルカードの効果を使用]",
+	  "ability_detail": "巻物強打；防魔；秘術[EP100・自手札のスペルカードの効果を使用]",
 	  "ability_parsed": {
 		"keywords": ["巻物強打", "防魔", "秘術"],
 		"keyword_conditions": {
@@ -732,7 +732,7 @@
 	  "type": "creature",
 	  "element": "water",
 	  "cost": {
-		"mp": 20
+		"ep": 20
 	  },
 	  "ap": 20,
 	  "hp": 20,

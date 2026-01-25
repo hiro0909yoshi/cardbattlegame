@@ -131,11 +131,11 @@ func format_card_info(index: int, card: Dictionary) -> String:
 	var cost_data = card.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		cost = cost_data.get("ep", 0) * GameConstants.CARD_COST_MULTIPLIER
 	else:
 		cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	var text = str(index + 1) + ". " + card.get("name", "不明")
-	text += " [color=yellow](コスト:" + str(cost) + "G)[/color]\n"
+	text += " [color=yellow](コスト:" + str(cost) + "EP)[/color]\n"
 	text += "   ST:" + str(card.get("damage", 0))
 	text += " HP:" + str(card.get("block", 0))
 	text += " [" + card.get("element", "?") + "]\n\n"
@@ -220,7 +220,7 @@ func display_game_stats():
 	for i in range(player_system_ref.players.size()):
 		var player = player_system_ref.players[i]
 		text += "[b]" + player.name + "[/b]\n"
-		text += "魔力: " + str(player.magic_power) + "G\n"
+		text += "EP: " + str(player.magic_power) + "EP\n"
 		text += "位置: マス" + str(player.current_tile) + "\n\n"
 	
 	debug_label.text = text

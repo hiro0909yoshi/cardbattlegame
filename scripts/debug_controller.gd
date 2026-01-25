@@ -36,7 +36,7 @@ func _ready():
 		print("  0キー: サイコロ固定解除")
 		print("  7キー: 敵の土地へ移動")
 		print("  8キー: 空き地へ移動")
-		print("  9キー: 魔力+1000G")
+		print("  9キー: EP+1000")
 		print("  Hキー: カードID指定で手札追加")
 		print("  Uキー: 現在プレイヤーの全土地のダウン解除")
 		print("  Lキー: 現在のタイルをレベル4に")
@@ -317,7 +317,7 @@ func move_to_empty_land():
 	
 	print("【デバッグ】空き地が見つかりません")
 
-# デバッグ: 魔力追加
+# デバッグ: EP追加
 func add_debug_magic():
 	if not player_system:
 		return
@@ -325,7 +325,7 @@ func add_debug_magic():
 	var current_player = player_system.get_current_player()
 	if current_player:
 		player_system.add_magic(current_player.id, 1000)
-		print("【デバッグ】魔力+1000G")
+		print("【デバッグ】EP+1000")
 		emit_signal("debug_action", "add_magic", 1000)
 
 # CPU手札表示切替

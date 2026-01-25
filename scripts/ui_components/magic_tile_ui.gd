@@ -229,16 +229,16 @@ func _update_spell_panel(spell_panel: Panel, spell_data: Dictionary, show: bool)
 	var cost_data = spell_data.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = int(cost_data)
-	cost_label.text = "コスト: " + str(cost) + "G"
+	cost_label.text = "コスト: " + str(cost) + "EP"
 	
 	# 使用可能かチェック
 	var can_use = player_magic >= cost
 	use_button.disabled = not can_use
 	if not can_use:
-		use_button.text = "魔力不足"
+		use_button.text = "EP不足"
 		cost_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 	else:
 		use_button.text = "使用"

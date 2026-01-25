@@ -120,7 +120,7 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "plague", duration, params)
 		
 		"bounty_curse":
-			# 賞金首呪い（バウンティハント）- 武器で破壊時に術者がG300獲得
+			# 賞金首呪い（バウンティハント）- 武器で破壊時に術者が300EP獲得
 			var caster_id = player_system.current_player_index
 			var params = {
 				"name": effect.get("name", "賞金首"),

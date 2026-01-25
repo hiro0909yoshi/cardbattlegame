@@ -475,7 +475,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	var cost_data = spell.get("cost", {})
 	var spell_cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		spell_cost = cost_data.get("mp", 0)
+		spell_cost = cost_data.get("ep", 0)
 	elif typeof(cost_data) == TYPE_INT:
 		spell_cost = cost_data
 	
@@ -534,7 +534,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	if best_target_id >= 0 and best_toll > 0:
 		result.should_use = true
 		result.target = { "type": "player", "player_id": best_target_id }
-		result.reason = "攻撃: 敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dG）" % [
+		result.reason = "攻撃: 敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dEP）" % [
 			best_target_id + 1,
 			cpu_movement_evaluator._get_tile_info(best_tile_index).get("level", 1),
 			best_tile_index,
@@ -614,7 +614,7 @@ func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost:
 			max_avoided_toll = max(max_avoided_toll, danger.toll)
 	
 	result.should_use = true
-	result.reason = "防御: 敵の高額領地を回避（回避通行料: %dG）" % max_avoided_toll
+	result.reason = "防御: 敵の高額領地を回避（回避通行料: %dEP）" % max_avoided_toll
 	
 	return result
 

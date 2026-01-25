@@ -1,22 +1,22 @@
-## 魔力奪取スキル - 敵から魔力を奪う
+## EP奪取スキル - 敵からEPを奪う
 ##
 ## 【主な機能】
-## - ダメージベース魔力奪取: 与えたダメージに応じて魔力を奪う
-## - アイテム不使用時魔力奪取: アイテムを使用していない時に魔力を奪う
+## - ダメージベースEP奪取: 与えたダメージに応じてEPを奪う
+## - アイテム不使用時EP奪取: アイテムを使用していない時にEPを奪う
 ##
 ## 【該当クリーチャー】
-## - バンディット (ID: 433): 援護；魔力奪取[敵に与えたダメージ×G2]
-## - アマゾン (ID: 107): アイテム不使用時、魔力奪取[周回数×G30]
+## - バンディット (ID: 433): 援護；EP奪取[敵に与えたダメージ×2EP]
+## - アマゾン (ID: 107): アイテム不使用時、EP奪取[周回数×30EP]
 ##
 ## @version 1.0
 ## @date 2025-11-03
 
 class_name SkillMagicSteal
 
-## ダメージベース魔力奪取スキルを持っているかチェック
+## ダメージベースEP奪取スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return ダメージベース魔力奪取スキルを持っているか
+## @return ダメージベースEP奪取スキルを持っているか
 static func has_damage_based_steal(creature_data: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -27,15 +27,15 @@ static func has_damage_based_steal(creature_data: Dictionary) -> bool:
 	
 	return false
 
-## アイテム不使用時魔力奪取スキルを持っているかチェック
+## アイテム不使用時EP奪取スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return アイテム不使用時魔力奪取スキルを持っているか
+## @return アイテム不使用時EP奪取スキルを持っているか
 static func has_no_item_steal(creature_data: Dictionary) -> bool:
 	var ability = creature_data.get("ability", "")
-	return "アイテム不使用時・魔力奪取" in ability
+	return "アイテム不使用時・EP奪取" in ability
 
-## ダメージベース魔力奪取を適用
+## ダメージベースEP奪取を適用
 ##
 ## @param attacker 攻撃側参加者
 ## @param defender 防御側参加者
@@ -63,10 +63,10 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 		
 		var actual_stolen = spell_magic.steal_magic(defender.player_id, attacker.player_id, amount)
 		
-		print("【魔力奪取】", attacker.creature_data.get("name", "?"), 
-			  " → ", actual_stolen, "G奪取（ダメージ", damage, "×", multiplier, "）")
+		print("【EP奪取】", attacker.creature_data.get("name", "?"), 
+			  " → ", actual_stolen, "EP奪取（ダメージ", damage, "×", multiplier, "）")
 
-## アイテム不使用時魔力奪取を適用（バトル開始時チェック）
+## アイテム不使用時EP奪取を適用（バトル開始時チェック）
 ##
 ## @param participant バトル参加者
 ## @param has_item アイテムを使用しているか
@@ -87,8 +87,8 @@ static func apply_no_item_steal(participant, has_item: bool, turn_count: int, sp
 		
 		var actual_stolen = spell_magic.steal_magic(enemy_participant.player_id, participant.player_id, amount)
 		
-		print("【アイテム不使用時魔力奪取】", participant.creature_data.get("name", "?"), 
-			  " → ", actual_stolen, "G奪取（周回数", turn_count, "×", multiplier, "）")
+		print("【アイテム不使用時EP奪取】", participant.creature_data.get("name", "?"), 
+			  " → ", actual_stolen, "EP奪取（周回数", turn_count, "×", multiplier, "）")
 
 ## ability_detailから倍率を抽出
 ##
@@ -96,7 +96,7 @@ static func apply_no_item_steal(participant, has_item: bool, turn_count: int, sp
 ## @param default_multiplier デフォルト倍率
 ## @return 倍率
 static func _extract_multiplier(ability_detail: String, default_multiplier: int) -> int:
-	# "敵に与えたダメージ×G2" のような形式から数値を抽出
+	# "敵に与えたダメージ×2EP" のような形式から数値を抽出
 	var regex = RegEx.new()
 	regex.compile("×G(\\d+)")
 	var result = regex.search(ability_detail)
@@ -112,7 +112,7 @@ static func _extract_multiplier(ability_detail: String, default_multiplier: int)
 ## @param default_multiplier デフォルト倍率
 ## @return 倍率
 static func _extract_turn_multiplier(ability_detail: String, default_multiplier: int) -> int:
-	# "周回数×G30" のような形式から数値を抽出
+	# "周回数×30EP" のような形式から数値を抽出
 	var regex = RegEx.new()
 	regex.compile("周回数×G(\\d+)")
 	var result = regex.search(ability_detail)

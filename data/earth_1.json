@@ -7,7 +7,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 40,
 	  "hp": 30,
@@ -21,7 +21,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"lands_required": [
 		  "earth"
 		],
@@ -58,7 +58,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 75
+		"ep": 75
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -89,7 +89,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "ap": 20,
 	  "hp": 20,
@@ -116,7 +116,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "earth"
 		]
@@ -145,7 +145,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -184,7 +184,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "earth"
 		]
@@ -215,7 +215,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "earth"
 		]
@@ -228,7 +228,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[G60・対象自クリーチャーのダウンを解除]",
+	  "ability_detail": "不屈；秘術[EP60・対象自クリーチャーのダウンを解除]",
 	  "ability_parsed": {
 		"keywords": [
 		  "不屈",
@@ -250,7 +250,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 0
+		"ep": 0
 	  },
 	  "ap": 0,
 	  "hp": 10,
@@ -265,7 +265,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 25,
+		"ep": 25,
 		"lands_required": [
 		  "earth"
 		]
@@ -278,7 +278,7 @@
 	  "ap": 10,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G20・選んだ空地にグーバを配置]",
+	  "ability_detail": "秘術[EP20・選んだ空地にグーバを配置]",
 	  "ability_parsed": {
 		"keywords": [
 		  "秘術"
@@ -300,7 +300,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "ap": 40,
 	  "hp": 50,
@@ -314,7 +314,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 40,
+		"ep": 40,
 		"lands_required": [
 		  "earth"
 		]
@@ -345,7 +345,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 80,
+		"ep": 80,
 		"lands_required": [
 		  "earth"
 		]
@@ -378,7 +378,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "earth"
 		]
@@ -414,7 +414,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 70,
+		"ep": 70,
 		"lands_required": [
 		  "earth"
 		]
@@ -422,7 +422,7 @@
 	  "ap": 30,
 	  "hp": 50,
 	  "ability": "秘術",
-	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[G50・対象ブックの上1枚を破壊]",
+	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[EP50・対象ブックの上1枚を破壊]",
 	  "ability_parsed": {
 		"keywords": [
 		  "秘術"
@@ -440,7 +440,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 50,
+		"ep": 50,
 		"lands_required": [
 		  "earth"
 		]
@@ -477,7 +477,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 30,
+		"ep": 30,
 		"lands_required": [
 		  "earth"
 		]
@@ -490,7 +490,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G120・対象自領地を地に変える]",
+	  "ability_detail": "秘術[EP120・対象自領地を地に変える]",
 	  "ability_parsed": {
 		"keywords": [
 		  "秘術"
@@ -508,7 +508,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 20,
 	  "hp": 30,
@@ -542,7 +542,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 40
+		"ep": 40
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -552,7 +552,7 @@
 	  "ap": 20,
 	  "hp": 20,
 	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[G30・対象敵クリーチャーに呪い\"移動不可\"]",
+	  "ability_detail": "防魔；秘術[EP30・対象敵クリーチャーに呪い\"移動不可\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防魔",
@@ -572,7 +572,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 60,
+		"ep": 60,
 		"lands_required": [
 		  "earth",
 		  "earth"
@@ -617,7 +617,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 30
+		"ep": 30
 	  },
 	  "restrictions": {
 		"cannot_summon": [
@@ -631,7 +631,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[G40・対象敵クリーチャーに呪い\"地形効果無効\"]",
+	  "ability_detail": "防御型；秘術[EP40・対象敵クリーチャーに呪い\"地形効果無効\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防御型"
@@ -650,7 +650,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 50
+		"ep": 50
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -681,7 +681,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 25
+		"ep": 25
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -702,7 +702,7 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 80
+		"ep": 80
 	  },
 	  "restrictions": {
 		"cannot_use": [
@@ -712,7 +712,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "秘術",
-	  "ability_detail": "秘術[G30・対象敵領地に呪い\"衰弱\"]",
+	  "ability_detail": "秘術[EP30・対象敵領地に呪い\"衰弱\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "秘術"
@@ -731,12 +731,12 @@
 	  "type": "creature",
 	  "element": "earth",
 	  "cost": {
-		"mp": 60
+		"ep": 60
 	  },
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "地形効果・秘術",
-	  "ability_detail": "火から地形効果を得る；秘術[G50・オールドウィロウに変身]",
+	  "ability_detail": "火から地形効果を得る；秘術[EP50・オールドウィロウに変身]",
 	  "ability_parsed": {
 		"keywords": [
 		  "秘術"

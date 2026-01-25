@@ -263,7 +263,7 @@ func select_best_target(targets: Array, spell_card: Dictionary, player_id: int) 
 func _get_spell_cost(spell_card: Dictionary) -> int:
 	var cost_data = spell_card.get("cost", {})
 	if cost_data is Dictionary:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return cost_data if cost_data is int else 0
 
 

@@ -731,7 +731,7 @@ func _get_enemies_with_high_toll(context: Dictionary) -> Array:
 	
 	return results
 
-## 自分より魔力が多い敵を取得
+## 自分よりEPが多い敵を取得
 func _get_enemies_with_more_magic(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []

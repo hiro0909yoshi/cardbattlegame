@@ -198,7 +198,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 		var ratio = receiver_curse.get("params", {}).get("ratio", 0.5)
 		bonus_toll = int(final_toll * ratio)
 		bonus_receiver_id = curse_caster  # 呪いの付与者（ドリームトレインを使ったプレイヤー）が副収入を得る
-		print("[通行料呪い] ", receiver_curse.get("name"), " により副収入 ", bonus_toll, "G (受取: プレイヤー", bonus_receiver_id + 1, ")")
+		print("[通行料呪い] ", receiver_curse.get("name"), " により副収入 ", bonus_toll, "EP (受取: プレイヤー", bonus_receiver_id + 1, ")")
 		return {
 			"main_toll": final_toll,
 			"bonus_toll": bonus_toll,
@@ -217,7 +217,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 			if not toll_effect.is_empty():
 				var creature_name = creature.get("name", "Unknown")
 				var final_toll_with_skill = skill_toll_change.calculate_final_toll(final_toll, toll_effect)
-				print("[通行料スキル] ", creature_name, " により通行料 ", final_toll, "G → ", final_toll_with_skill, "G")
+				print("[通行料スキル] ", creature_name, " により通行料 ", final_toll, "EP → ", final_toll_with_skill, "EP")
 				return {
 					"main_toll": final_toll_with_skill,
 					"bonus_toll": 0,

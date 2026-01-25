@@ -1,5 +1,5 @@
 ## 破産処理ハンドラー
-## 魔力がマイナスになった際の土地売却処理を管理
+## EPがマイナスになった際の土地売却処理を管理
 class_name BankruptcyHandler
 extends Node
 
@@ -41,7 +41,7 @@ func setup(p_player_system: Node, p_board_system: Node, p_creature_manager: Node
 # 判定メソッド
 # ===========================================
 
-## 破産状態か判定（魔力 < 0）
+## 破産状態か判定（EP < 0）
 func check_bankruptcy(player_id: int) -> bool:
 	if not player_system:
 		return false
@@ -145,9 +145,9 @@ func _show_bankruptcy_info_panel(current_magic: int, land_value: int):
 	style.corner_radius_bottom_right = 8
 	bankruptcy_info_panel.add_theme_stylebox_override("panel", style)
 	
-	# 現在の魔力
+	# 現在のEP
 	var current_label = Label.new()
-	current_label.text = "現在の魔力: %dG" % current_magic
+	current_label.text = "現在のEP: %dEP" % current_magic
 	current_label.position = Vector2(60, 60)
 	current_label.add_theme_font_size_override("font_size", 80)
 	if current_magic < 0:
@@ -156,10 +156,10 @@ func _show_bankruptcy_info_panel(current_magic: int, land_value: int):
 		current_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
 	bankruptcy_info_panel.add_child(current_label)
 	
-	# 売却後の魔力
+	# 売却後のEP
 	var after_magic = current_magic + land_value
 	var after_label = Label.new()
-	after_label.text = "売却後: %dG (+%dG)" % [after_magic, land_value]
+	after_label.text = "売却後: %dEP (+%dEP)" % [after_magic, land_value]
 	after_label.position = Vector2(60, 180)
 	after_label.add_theme_font_size_override("font_size", 80)
 	if after_magic >= 0:
@@ -213,14 +213,14 @@ func sell_land(tile_index: int) -> int:
 	if board_system and board_system.has_method("update_all_tile_displays"):
 		board_system.update_all_tile_displays()
 	
-	# 魔力を加算
+	# EPを加算
 	if player_system:
 		player_system.add_magic(owner_id, value)
 	
 	# UIを更新
 	_update_ui()
 	
-	print("[破産処理] タイル%d売却: %dG獲得 (プレイヤー%d)" % [tile_index, value, owner_id + 1])
+	print("[破産処理] タイル%d売却: %dEP獲得 (プレイヤー%d)" % [tile_index, value, owner_id + 1])
 	
 	land_sold.emit(owner_id, tile_index, value)
 	
@@ -238,7 +238,7 @@ func force_sell_all_and_reset(player_id: int):
 	for tile_index in lands:
 		sell_land(tile_index)
 	
-	# 魔力を300Gにリセット
+	# EPを300にリセット
 	if player_system:
 		var current_magic = player_system.get_magic(player_id)
 		var diff = RESET_MAGIC - current_magic
@@ -254,7 +254,7 @@ func force_sell_all_and_reset(player_id: int):
 	# スタート地点に移動
 	_move_player_to_start(player_id)
 	
-	print("[破産処理] プレイヤー%d: リセット完了 (魔力%dG, タイル%d)" % [player_id + 1, RESET_MAGIC, START_TILE_INDEX])
+	print("[破産処理] プレイヤー%d: リセット完了 (EP: %d, タイル%d)" % [player_id + 1, RESET_MAGIC, START_TILE_INDEX])
 
 
 ## プレイヤーをスタート地点に移動
@@ -288,9 +288,9 @@ func process_bankruptcy(player_id: int, is_cpu: bool) -> bool:
 	_is_processing = true
 	current_player_id = player_id
 	
-	print("[破産処理] プレイヤー%d: 破産処理開始 (魔力: %dG)" % [player_id + 1, player_system.get_magic(player_id)])
+	print("[破産処理] プレイヤー%d: 破産処理開始 (EP: %d)" % [player_id + 1, player_system.get_magic(player_id)])
 	
-	# UIを更新（マイナス魔力を表示）
+	# UIを更新（マイナスEPを表示）
 	_update_ui()
 	
 	var was_reset = false
@@ -324,7 +324,7 @@ func process_player_bankruptcy(player_id: int):
 	var player_name = _get_player_name(player_id)
 	
 	# 破産開始メッセージ
-	await _show_message("%sは魔力不足！\n土地を売却してください" % player_name, player_id)
+	await _show_message("%sはEP不足！\n土地を売却してください" % player_name, player_id)
 	
 	while check_bankruptcy(player_id):
 		var lands = get_player_lands(player_id)
@@ -336,9 +336,9 @@ func process_player_bankruptcy(player_id: int):
 		
 		if selected_tile >= 0:
 			var value = sell_land(selected_tile)
-			await _show_message("土地を売却して%dG獲得！\n現在の魔力: %dG" % [value, player_system.get_magic(player_id)], player_id)
+			await _show_message("土地を売却して%dEP獲得！\n現在のEP: %dEP" % [value, player_system.get_magic(player_id)], player_id)
 		
-		print("[破産処理] プレイヤー%d: 現在の魔力 %dG" % [player_id + 1, player_system.get_magic(player_id)])
+		print("[破産処理] プレイヤー%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
 
 
 ## 土地選択UIを表示して選択を待つ
@@ -432,7 +432,7 @@ func process_cpu_bankruptcy(player_id: int):
 		# 少し待機（演出用）
 		await get_tree().create_timer(0.5).timeout
 		
-		print("[破産処理] CPU%d: 現在の魔力 %dG" % [player_id + 1, player_system.get_magic(player_id)])
+		print("[破産処理] CPU%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
 
 
 ## CPU用：売却する土地を選択

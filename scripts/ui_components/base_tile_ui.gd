@@ -260,7 +260,7 @@ func _update_creature_panel(creature_panel: Panel, creature_info: Dictionary):
 	
 	# コスト
 	var cost = _get_creature_cost(creature_data)
-	cost_label.text = "コスト: %dG" % cost
+	cost_label.text = "コスト: %dEP" % cost
 	
 	# 配置条件
 	var lands_required = _get_lands_required(creature_data)
@@ -293,7 +293,7 @@ func _update_creature_panel(creature_panel: Panel, creature_info: Dictionary):
 func _get_creature_cost(creature_data: Dictionary) -> int:
 	var cost_data = creature_data.get("cost", {})
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return int(cost_data)
 
 func _get_lands_required(creature_data: Dictionary) -> Array:

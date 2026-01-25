@@ -33,7 +33,7 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 	var cost_data = card_data.get("cost", 1)
 	var base_cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		base_cost = cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		base_cost = cost_data.get("ep", 0) * GameConstants.CARD_COST_MULTIPLIER
 	else:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
@@ -52,7 +52,7 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 func get_item_cost(item: Dictionary) -> int:
 	var cost_data = item.get("cost", 0)
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0) * GameConstants.CARD_COST_MULTIPLIER
+		return cost_data.get("ep", 0) * GameConstants.CARD_COST_MULTIPLIER
 	return cost_data * GameConstants.CARD_COST_MULTIPLIER
 
 # ============================================================

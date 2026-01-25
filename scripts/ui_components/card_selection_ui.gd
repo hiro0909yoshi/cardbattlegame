@@ -88,7 +88,7 @@ func update_phase_label(current_player, mode: String):
 	
 	match mode:
 		"summon":
-			phase_label_ref.text = "召喚するクリーチャーを選択 (魔力: " + str(current_player.magic_power) + "G)"
+			phase_label_ref.text = "召喚するクリーチャーを選択 (EP: " + str(current_player.magic_power) + "EP)"
 		"battle":
 			phase_label_ref.text = "バトルするクリーチャーを選択（またはパスで通行料）"
 		"invasion":
@@ -98,13 +98,13 @@ func update_phase_label(current_player, mode: String):
 			var cards_to_discard = hand_size - 6
 			phase_label_ref.text = "手札を6枚まで減らしてください（" + str(cards_to_discard) + "枚捨てる）"
 		"spell":
-			phase_label_ref.text = "スペルを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+			phase_label_ref.text = "スペルを選択してください (EP: " + str(current_player.magic_power) + "EP)"
 		"item":
 			# 援護スキルの有無でメッセージを変更
 			if ui_manager_ref and ui_manager_ref.card_selection_filter == "item_or_assist":
-				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (魔力: " + str(current_player.magic_power) + "G)"
+				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (EP: " + str(current_player.magic_power) + "EP)"
 			else:
-				phase_label_ref.text = "アイテムを選択してください (魔力: " + str(current_player.magic_power) + "G)"
+				phase_label_ref.text = "アイテムを選択してください (EP: " + str(current_player.magic_power) + "EP)"
 		"sacrifice":
 			phase_label_ref.text = "犠牲にするカードを選択"
 		"spell_borrow":
@@ -422,11 +422,11 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = cost_data
 	if cost > available_magic:
-		# 魔力不足の場合
+		# EP不足の場合
 		card_node.modulate = Color(0.5, 0.5, 0.5)
 		highlight.color = Color(0.5, 0.5, 0.5, 0.3)
 	else:

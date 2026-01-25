@@ -440,7 +440,7 @@ func _get_spell_cost(spell_card: Dictionary) -> int:
 	
 	var base_cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		base_cost = cost_data.get("mp", 0)
+		base_cost = cost_data.get("ep", 0)
 	
 	# ウェイストワールド（世界呪い）でコスト倍率を適用
 	if game_flow_manager and game_flow_manager.spell_cost_modifier:
@@ -785,7 +785,7 @@ func cancel_spell():
 	
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	
 	if player_system and cost > 0:
 		player_system.add_magic(current_player_id, cost)

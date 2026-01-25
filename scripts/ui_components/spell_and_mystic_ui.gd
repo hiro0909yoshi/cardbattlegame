@@ -178,7 +178,7 @@ func show_mystic_art_selection(mystic_arts: Array):
 	mystic_art_list.clear()
 	
 	for mystic_art in mystic_arts:
-		var name_text = "%s [%dG]" % [
+		var name_text = "%s [%dEP]" % [
 			mystic_art.get("name", "Unknown"),
 			mystic_art.get("cost", 0)
 		]

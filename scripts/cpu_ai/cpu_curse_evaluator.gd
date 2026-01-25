@@ -53,7 +53,7 @@ const BENEFICIAL_PLAYER_CURSES = [
 
 ## プレイヤーにとって不利な呪い
 const HARMFUL_PLAYER_CURSES = [
-	"dice_range_magic",     # 範囲+魔力（制限付き）
+	"dice_range_magic",     # 範囲+EP（制限付き）
 	"toll_disable",         # 通行料無効
 	"toll_fixed",           # 通行料固定
 	"spell_disable",        # スペル不可

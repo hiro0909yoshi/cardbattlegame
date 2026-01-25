@@ -64,13 +64,13 @@ func decide_card_buy(player_id: int, available_cards: Array) -> Dictionary:
 		print("[CPUSpecialTileAI] カードバイ: 手札7枚以上 - スキップ")
 		return {}
 	
-	# 魔力取得
+	# EP取得
 	var magic = _get_magic(player_id)
 	
 	# 手札のカード種類を集計
 	var type_counts = _count_card_types(hand)
 	
-	# 購入候補を絞り込む（購入後100G以上残る）
+	# 購入候補を絞り込む（購入後100EP以上残る）
 	var buyable_cards = []
 	for card in available_cards:
 		var price = _get_card_price(card)
@@ -78,7 +78,7 @@ func decide_card_buy(player_id: int, available_cards: Array) -> Dictionary:
 			buyable_cards.append(card)
 	
 	if buyable_cards.is_empty():
-		print("[CPUSpecialTileAI] カードバイ: 購入可能なカードなし（魔力不足）- スキップ")
+		print("[CPUSpecialTileAI] カードバイ: 購入可能なカードなし（EP不足）- スキップ")
 		return {}
 	
 	# 足りない種類を探す
@@ -111,7 +111,7 @@ func decide_magic_tile_spell(player_id: int, available_spells: Array) -> Diction
 	# CPUSpellAIを取得して評価に使用
 	var cpu_spell_ai = _get_cpu_spell_ai()
 	
-	# 魔力取得
+	# EP取得
 	var magic = _get_magic(player_id)
 	
 	# 各スペルを評価（CPUSpellAIがあればスコア評価、なければ対象チェックのみ）
@@ -259,7 +259,7 @@ func decide_magic_stone(player_id: int) -> Dictionary:
 	if stone_system:
 		var price = stone_system.calculate_stone_value(max_element)
 		if magic < price:
-			print("[CPUSpecialTileAI] 魔法石タイル: 魔力不足 - スキップ")
+			print("[CPUSpecialTileAI] 魔法石タイル: EP不足 - スキップ")
 			return {"action": "skip"}
 	
 	print("[CPUSpecialTileAI] 魔法石タイル: %sの石を1つ購入" % max_element)
@@ -291,7 +291,7 @@ func _get_card_price(card: Dictionary) -> int:
 	var cost_data = card.get("cost", {})
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("mp", 0)
+		cost = cost_data.get("ep", 0)
 	else:
 		cost = int(cost_data)
 	return int(ceil(cost / 2.0))
@@ -299,7 +299,7 @@ func _get_card_price(card: Dictionary) -> int:
 func _get_spell_cost(spell: Dictionary) -> int:
 	var cost_data = spell.get("cost", {})
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		return cost_data.get("mp", 0)
+		return cost_data.get("ep", 0)
 	return int(cost_data)
 
 func _get_tile_info(tile_index: int) -> Dictionary:
