@@ -3,11 +3,12 @@ extends Control
 
 class_name TutorialPopup
 
-signal clicked
+signal clicked(wait_id: int)
 
 var panel: PanelContainer
 var label: RichTextLabel
 var waiting_for_click: bool = false
+var _current_wait_id: int = 0
 
 func _ready():
 	# ポーズ中でも動作するように設定
@@ -59,28 +60,38 @@ func _setup_ui():
 func _on_panel_input(event: InputEvent):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			print("[TutorialPopup] クリック検知: waiting_for_click=%s" % waiting_for_click)
+			
 			if waiting_for_click:
 				waiting_for_click = false
-				clicked.emit()
+				clicked.emit(_current_wait_id)
 
 ## メッセージを表示（クリック待ちなし）
-func show_message(message: String, pos_name: String = "top"):
+func show_message(message: String, pos_name: String = "top", offset_y: float = 0.0):
 	label.text = "[center]" + message + "[/center]"
 	visible = true
 	waiting_for_click = false
-	_apply_position(pos_name)
+	_apply_position(pos_name, offset_y)
 
 ## メッセージを表示してクリック待ち
-func show_and_wait(message: String, pos_name: String = "top"):
+func show_and_wait(message: String, pos_name: String = "top", offset_y: float = 0.0):
+	# 新しい待機IDを生成
+	_current_wait_id += 1
+	var my_wait_id = _current_wait_id
+	
 	label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
 	visible = true
 	waiting_for_click = true
-	_apply_position(pos_name)
-	await clicked
+	_apply_position(pos_name, offset_y)
+	
+	# 自分のwait_idと一致するクリックが来るまで待機
+	while true:
+		var received_id = await clicked
+		if received_id == my_wait_id:
+			break
+		# 違うIDのクリックは無視して待ち続ける
 
 ## 位置を設定
-func _apply_position(pos_name: String):
+func _apply_position(pos_name: String, offset_y: float = 0.0):
 	match pos_name:
 		"left":
 			_position_left()
@@ -88,6 +99,9 @@ func _apply_position(pos_name: String):
 			_position_right()
 		_:
 			_position_top()
+	# Y軸オフセットを適用
+	if offset_y != 0.0:
+		panel.position.y += offset_y
 
 ## 左寄せ配置
 func _position_left():

@@ -120,9 +120,19 @@ func _setup_steps():
 			"pause_game": true,
 			"disable_all_buttons": true
 		},
-		# ターン1: CPU
 		{
 			"id": 9,
+			"turn": 1,
+			"phase": "land_value_info",
+			"message": "土地の価値は召喚したクリーチャーカードの\n下に出ている30Gという数字です\n\n土地の価値は連鎖数や土地のレベルで決まります",
+			"wait_for_click": true,
+			"pause_game": true,
+			"disable_all_buttons": true,
+			"highlight_tile_toll": "player_creature"
+		},
+		# ターン1: CPU
+		{
+			"id": 10,
 			"turn": 1,
 			"phase": "cpu_turn_start",
 			"message": "相手のターンです\n\n相手の行動を見てみましょう",
@@ -130,14 +140,14 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 10,
+			"id": 11,
 			"turn": 1,
 			"phase": "cpu_turn",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 11,
+			"id": 12,
 			"turn": 1,
 			"phase": "cpu_summon_complete",
 			"message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の領地になりました\nあなたが敵の領地に止まると通行料を取られます",
@@ -147,7 +157,7 @@ func _setup_steps():
 		},
 		# ターン2: プレイヤー
 		{
-			"id": 12,
+			"id": 13,
 			"turn": 2,
 			"phase": "turn2_start",
 			"message": "あなたのターンです\n\n✓ボタンを押してサイコロを振りましょう",
@@ -155,14 +165,14 @@ func _setup_steps():
 			"highlight": ["confirm"]
 		},
 		{
-			"id": 13,
+			"id": 14,
 			"turn": 2,
 			"phase": "dice",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 14,
+			"id": 15,
 			"turn": 2,
 			"phase": "checkpoint",
 			"message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得すると魔力がもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
@@ -171,14 +181,14 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 15,
+			"id": 16,
 			"turn": 2,
 			"phase": "wait_movement",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 16,
+			"id": 17,
 			"turn": 2,
 			"phase": "battle_arrival",
 			"message": "敵の領地に止まってしまいました！\n\nバトルが始まります",
@@ -187,7 +197,7 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 17,
+			"id": 18,
 			"turn": 2,
 			"phase": "battle_select_creature",
 			"message": "バトルに出すクリーチャーを選んでください\n\nカードを2回タップして選択します",
@@ -197,7 +207,7 @@ func _setup_steps():
 			"popup_position": "right"
 		},
 		{
-			"id": 18,
+			"id": 19,
 			"turn": 2,
 			"phase": "battle_info1",
 			"message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地に配置されているクリーチャーです",
@@ -207,7 +217,7 @@ func _setup_steps():
 			"popup_position": "left"
 		},
 		{
-			"id": 19,
+			"id": 20,
 			"turn": 2,
 			"phase": "battle_info2",
 			"message": "カードの属性と土地の属性が一致していると\n土地のレベルに応じてHPにボーナスが入ります\n\n敵のグリーンオーガは地属性の土地に\n配置されているのでHPが+10されています",
@@ -217,17 +227,17 @@ func _setup_steps():
 			"popup_position": "left"
 		},
 		{
-			"id": 20,
+			"id": 21,
 			"turn": 2,
 			"phase": "battle_info3",
-			"message": "あなたのグリーンオーガの攻撃力はAP40です\n\n敵のグリーンオーガのHPは50+10で60です\n\nこのままでは倒せません！\nアイテムを使用しましょう",
+			"message": "あなたのグリーンオーガの攻撃力(AP)は40です\n\n敵のグリーンオーガのHPは50+10で60です\n\nこのままでは倒せません！\nアイテムを使用しましょう",
 			"wait_for_click": true,
 			"pause_game": true,
 			"disable_all_buttons": true,
 			"popup_position": "left"
 		},
 		{
-			"id": 21,
+			"id": 22,
 			"turn": 2,
 			"phase": "battle_item_prompt",
 			"message": "アイテムカードを選択しましょう\n\nロングソードをタップしてください",
@@ -238,41 +248,43 @@ func _setup_steps():
 			"popup_position": "right"
 		},
 		{
-			"id": 22,
+			"id": 23,
 			"turn": 2,
 			"phase": "battle_item_info",
-			"message": "ロングソードはAPを30上昇させる\nアイテムカードです\n\nもう一度タップして装備しましょう",
+			"message": "ロングソードは攻撃力（AP）を30上昇させる\nアイテムカードです\n\nもう一度タップして装備しましょう",
 			"wait_for_click": false,
 			"disable_all_buttons": true,
 			"popup_position": "right"
 		},
 		{
-			"id": 23,
+			"id": 24,
 			"turn": 2,
 			"phase": "battle_start",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 24,
-			"turn": 2,
-			"phase": "battle_ap_explain",
-			"message": "ロングソードの効果でAPが40→70に上昇します！\n\n敵のHP60を上回っているので勝てます\n\n画面をタップしてバトルを進めましょう",
-			"wait_for_click": false,
-			"disable_all_buttons": true
-		},
-		{
 			"id": 25,
 			"turn": 2,
+			"phase": "battle_ap_explain",
+			"message": "ロングソードの効果で\n攻撃力（AP）が40→70に上昇します！\n\n敵のHP60を上回っているので勝てます",
+			"wait_for_click": false,
+			"disable_all_buttons": true,
+			"popup_offset_y": -50
+		},
+		{
+			"id": 26,
+			"turn": 2,
 			"phase": "battle_win",
-			"message": "勝利！領地を奪いました！\n\nバトルに勝つと敵の領地を自分のものにできます",
+			"message": "勝利！領地を奪いました！\n\nバトルに勝つと敵の領地を自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
 			"wait_for_click": true,
 			"pause_game": true,
-			"disable_all_buttons": true
+			"disable_all_buttons": true,
+			"highlight_tile_toll": "player_position"
 		},
 		# ターン2: CPU
 		{
-			"id": 26,
+			"id": 27,
 			"turn": 2,
 			"phase": "cpu_turn_start2",
 			"message": "相手のターンです",
@@ -280,7 +292,7 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 27,
+			"id": 28,
 			"turn": 2,
 			"phase": "cpu_battle_explain",
 			"message": "相手があなたの領地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
@@ -289,14 +301,14 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 28,
+			"id": 29,
 			"turn": 2,
 			"phase": "cpu_battle",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 29,
+			"id": 30,
 			"turn": 2,
 			"phase": "toll_explain",
 			"message": "相手はバトルに負けました！\n\nバトルに負けると通行料を支払います",
@@ -306,7 +318,7 @@ func _setup_steps():
 		},
 		# ターン3: プレイヤー
 		{
-			"id": 30,
+			"id": 31,
 			"turn": 3,
 			"phase": "turn3_start",
 			"message": "最終ターンです！\n\n✓ボタンを押してサイコロを振りましょう",
@@ -314,14 +326,14 @@ func _setup_steps():
 			"highlight": ["confirm"]
 		},
 		{
-			"id": 31,
+			"id": 32,
 			"turn": 3,
 			"phase": "dice",
 			"message": "",
 			"wait_for_click": false
 		},
 		{
-			"id": 32,
+			"id": 33,
 			"turn": 3,
 			"phase": "checkpoint",
 			"message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\n城に戻ると周回ボーナスがもらえます",
@@ -330,14 +342,14 @@ func _setup_steps():
 			"disable_all_buttons": true
 		},
 		{
-			"id": 33,
+			"id": 34,
 			"turn": 3,
 			"phase": "lap_bonus",
 			"message": "城に到着！周回ボーナス獲得！\n\n魔力が増え、クリーチャーのHPも全回復します。",
 			"wait_for_click": true
 		},
 		{
-			"id": 34,
+			"id": 35,
 			"turn": 3,
 			"phase": "victory",
 			"message": "おめでとうございます！\n\n目標魔力に到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
@@ -455,13 +467,15 @@ func _on_turn_started(player_id: int):
 	if player_id == 0:
 		set_dice_for_current_turn()
 	
-	# CPUターン開始時（summon_complete後）
-	if player_id == 1 and is_phase("summon_complete"):
-		advance_step()  # cpu_turn_startへ
+	# CPUターン開始時（land_value_info後）
+	# land_value_infoはwait_for_clickでクリック後に自動でcpu_turn_startへ進むため、ここでは何もしない
 	
-	# CPUターン開始時（battle_win後）- ターン2のCPUバトル
-	if player_id == 1 and is_phase("battle_win"):
-		advance_step()  # cpu_turn_start2へ
+	# CPUターン開始時（battle_ap_explain後）- battle_winへ進む
+	# battle_winはwait_for_clickなので、クリック後に自動でcpu_turn_start2へ進む
+	if player_id == 1:
+		var phase = get_current_step().get("phase", "")
+		if phase == "battle_ap_explain":
+			advance_step()  # battle_winへ
 	
 	_last_player_id = player_id
 
@@ -528,15 +542,19 @@ func _on_card_selected(_card_index: int):
 func _on_action_completed():
 	if not is_active:
 		return
-	var phase = get_current_step().get("phase", "")
+	# phaseは最初に取得して保持（awaitで変わる可能性があるため）
+	var initial_phase = get_current_step().get("phase", "")
 	
 	# プレイヤーの召喚関連フェーズなら召喚完了フェーズへスキップ
-	if phase in ["summon_info", "summon_confirm", "summon_execute"]:
+	if initial_phase in ["summon_info", "summon_confirm", "summon_execute"]:
+		# summon_completeまでステップを進める（wait_for_click: falseのステップのみスキップ）
 		while is_active and not is_phase("summon_complete"):
 			advance_step()
+		# summon_completeに到達したら終了（クリック待ちは_show_current_step内で処理）
+		return
 	
 	# CPUターン中（cpu_turn_startまたはcpu_turn）なら召喚完了フェーズへ
-	elif phase in ["cpu_turn_start", "cpu_turn"]:
+	if initial_phase in ["cpu_turn_start", "cpu_turn"]:
 		# cpu_summon_completeまでスキップ
 		while is_active and not is_phase("cpu_summon_complete"):
 			advance_step()
@@ -641,6 +659,7 @@ func advance_step():
 	if not is_active:
 		return
 	
+
 	current_step += 1
 	
 	if current_step >= steps.size():
@@ -672,26 +691,46 @@ func _show_current_step():
 	
 	print("[TutorialManager] Step %d: %s" % [step.id, step.phase])
 	
-	# ハイライト処理
+	# ハイライト処理（各オプションは独立して処理）
 	if tutorial_overlay:
 		var highlight = step.get("highlight", [])
 		var highlight_card = step.get("highlight_card", false)
 		var disable_all = step.get("disable_all_buttons", false)
+		var has_any_highlight = false
 		
-		# まずボタン無効化を処理
+		# ボタン無効化（他のハイライトより先に処理）
 		if disable_all:
 			tutorial_overlay.disable_all_buttons()
 		
-		# 次にハイライト処理
+		# カードハイライト
 		if highlight_card:
-			# カードをハイライト（ボタンは発光しない）
 			var card_filter = step.get("highlight_card_filter", "")
 			var card_nodes = _get_hand_card_nodes(card_filter)
 			tutorial_overlay.highlight_hand_cards(card_nodes, with_overlay)
-		elif not highlight.is_empty():
-			# ボタンをハイライト
+			has_any_highlight = true
+		
+		# ボタンハイライト
+		if not highlight.is_empty():
 			tutorial_overlay.highlight_buttons(highlight, with_overlay)
-		elif not disable_all:
+			has_any_highlight = true
+		
+		# タイル通行料ハイライト（他と併用可能）
+		if step.has("highlight_tile_toll"):
+			var tile_value = step.get("highlight_tile_toll")
+			var tile_index: int = -1
+			if tile_value == "player_creature":
+				tile_index = _find_player_creature_tile(0)
+			elif tile_value == "player_position":
+				if game_flow_manager and game_flow_manager.player_system:
+					tile_index = game_flow_manager.player_system.get_player_position(0)
+			else:
+				tile_index = int(tile_value)
+			if tile_index >= 0:
+				_highlight_tile_toll_with_overlay(tile_index)
+				has_any_highlight = true
+		
+		# 何もハイライトがなく、ボタン無効化もない場合のみオーバーレイを隠す
+		if not has_any_highlight and not disable_all:
 			tutorial_overlay.hide_overlay()
 	
 	# ゲーム一時停止（SceneTreeをポーズ）
@@ -702,24 +741,31 @@ func _show_current_step():
 	if message and tutorial_popup:
 		message_shown.emit(message)
 		var popup_position = step.get("popup_position", "top")
+		var popup_offset_y = step.get("popup_offset_y", 0.0)
 		
 		if step.get("wait_for_click", false):
 			# クリック待ちモード
-			await tutorial_popup.show_and_wait(message, popup_position)
-			# ゲーム再開
-			if should_pause:
-				get_tree().paused = false
+			await tutorial_popup.show_and_wait(message, popup_position, popup_offset_y)
 			# ハイライトを消す
 			if tutorial_overlay:
 				tutorial_overlay.hide_overlay()
 			# 最終ステップなら終了、そうでなければ次へ
 			if step.get("is_final", false):
+				# ゲーム再開してから終了
+				if should_pause:
+					get_tree().paused = false
 				end_tutorial()
 			else:
+				# 次のステップへ
+				# ポーズ中はcall_deferredが動作しないので、一旦解除
+				if should_pause:
+					get_tree().paused = false
+				# 1フレーム待ってから次のステップへ（シグナル処理の完了を待つ）
+				await get_tree().process_frame
 				advance_step()
 		else:
 			# 単純表示（他の操作待ち）
-			tutorial_popup.show_message(message, popup_position)
+			tutorial_popup.show_message(message, popup_position, popup_offset_y)
 			
 			# 自動進行（指定秒数後に次のステップへ）
 			var auto_delay = step.get("auto_advance_delay", 0)
@@ -809,3 +855,40 @@ func _set_initial_hands():
 	card_system.set_fixed_hand_for_player(1, CPU_INITIAL_HAND.duplicate())
 	
 	print("[TutorialManager] 初期手札設定完了")
+
+# === 通行料ラベルハイライト（TutorialOverlayの発光を使用） ===
+
+# プレイヤーがクリーチャーを配置しているタイルを探す
+func _find_player_creature_tile(player_id: int) -> int:
+	if not board_system_3d:
+		return -1
+	
+	# tile_nodesから直接タイルを探す
+	for tile_index in board_system_3d.tile_nodes.keys():
+		var tile = board_system_3d.tile_nodes[tile_index]
+		if tile and tile.owner_id == player_id and not tile.creature_data.is_empty():
+			return tile_index
+	
+	return -1
+
+# タイルの通行料ラベルをハイライト（TutorialOverlayの発光エフェクト使用）
+func _highlight_tile_toll_with_overlay(tile_index: int):
+	if not board_system_3d or not tutorial_overlay:
+		return
+	
+	# TileInfoDisplayから通行料ラベル（Label3D）を取得
+	var tile_info_display = board_system_3d.tile_info_display
+	if not tile_info_display:
+		return
+	
+	var label = tile_info_display.tile_labels.get(tile_index)
+	if not label or not label.visible:
+		return
+	
+	# カメラを取得
+	var camera = board_system_3d.camera
+	if not camera:
+		return
+	
+	# TutorialOverlayの3Dハイライト機能を使用
+	tutorial_overlay.highlight_3d_object(label, camera, Vector2(200, 80))

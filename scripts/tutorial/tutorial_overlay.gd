@@ -170,12 +170,28 @@ func _get_button_info(button_name: String) -> Dictionary:
 		_:
 			return {}
 
-
+## 3Dオブジェクトをスクリーン座標に変換してハイライト
+func highlight_3d_object(object_3d: Node3D, camera: Camera3D, size: Vector2 = Vector2(200, 100)):
+	if not object_3d or not camera:
+		return
+	
+	clear_holes()
+	allowed_buttons = []
+	
+	# 3D位置をスクリーン座標に変換
+	var screen_pos = camera.unproject_position(object_3d.global_position)
+	
+	# 矩形の中心をスクリーン座標に合わせる
+	var rect_pos = screen_pos - size / 2
+	add_rect_hole(rect_pos, size)
+	
+	_update_button_states()
+	visible = true
 
 func _draw():
 	# 発光エフェクトのみ描画
-	var glow_alpha = (sin(glow_time) + 1.0) / 2.0 * 0.8 + 0.2  # 0.2〜1.0で脈動
-	var glow_scale = 1.0 + (sin(glow_time) + 1.0) / 2.0 * 0.15  # 1.0〜1.15で拡縮
+	var glow_alpha = (sin(glow_time) + 1.0) / 2.0 * 0.6 + 0.4  # 0.4〜1.0で脈動
+	var glow_scale = 1.0 + (sin(glow_time) + 1.0) / 2.0 * 0.2  # 1.0〜1.2で拡縮
 	
 	for hole in holes:
 		var center = hole.position + hole.size / 2
@@ -183,20 +199,20 @@ func _draw():
 		if hole.shape == "circle":
 			var radius = hole.size.x / 2
 			# 外側の光（複数リングで発光感を出す）
-			for i in range(3):
-				var ring_radius = radius * glow_scale + 10 + i * 8
-				var ring_alpha = glow_alpha * (1.0 - i * 0.3)
-				var ring_color = Color(glow_color.r, glow_color.g, glow_color.b, ring_alpha * 0.6)
-				draw_arc(center, ring_radius, 0, TAU, 64, ring_color, 4.0 - i)
+			for i in range(5):
+				var ring_radius = radius * glow_scale + 8 + i * 10
+				var ring_alpha = glow_alpha * (1.0 - i * 0.18)
+				var ring_color = Color(glow_color.r, glow_color.g, glow_color.b, ring_alpha * 0.9)
+				draw_arc(center, ring_radius, 0, TAU, 64, ring_color, 6.0 - i * 0.8)
 		else:
 			# 矩形の場合
 			var rect = Rect2(hole.position, hole.size)
-			var expanded = rect.grow(8 * glow_scale)
-			for i in range(3):
-				var ring_rect = expanded.grow(i * 6)
-				var ring_alpha = glow_alpha * (1.0 - i * 0.3)
-				var ring_color = Color(glow_color.r, glow_color.g, glow_color.b, ring_alpha * 0.6)
-				draw_rect(ring_rect, ring_color, false, 3.0 - i)
+			var expanded = rect.grow(10 * glow_scale)
+			for i in range(5):
+				var ring_rect = expanded.grow(i * 8)
+				var ring_alpha = glow_alpha * (1.0 - i * 0.18)
+				var ring_color = Color(glow_color.r, glow_color.g, glow_color.b, ring_alpha * 0.9)
+				draw_rect(ring_rect, ring_color, false, 5.0 - i * 0.8)
 
 
 
