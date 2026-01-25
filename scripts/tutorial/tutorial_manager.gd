@@ -3,362 +3,106 @@ extends Node
 
 class_name TutorialManager
 
+## チュートリアルの進行を管理するクラス
+## JSONファイルからステップデータを読み込み、ExplanationModeを使用して表示を行う
+
+# =============================================================================
 # シグナル
+# =============================================================================
+
 signal tutorial_started
 signal tutorial_ended
 signal step_changed(step_id: int)
-signal message_shown(message: String)
 
+# =============================================================================
+# 定数
+# =============================================================================
+
+const TUTORIAL_DATA_PATH = "res://data/tutorial/tutorial_stage1.json"
+
+# =============================================================================
 # チュートリアル状態
+# =============================================================================
+
 var is_active: bool = false
 var current_step: int = 0
 var current_turn: int = 1
 
-# 固定データ
-const PLAYER_INITIAL_HAND = [210, 210, 1073]  # グリーンオーガ×2、ロングソード
-const CPU_INITIAL_HAND = [210, 210]  # グリーンオーガ×2
-const DICE_SEQUENCE = [3, 6, 5]  # ターン1, 2, 3のダイス目
+# =============================================================================
+# 設定データ（JSONから読み込み）
+# =============================================================================
 
-# プレイヤーが選んだ方向（CPUは逆方向に進む）
-var player_chosen_direction: int = 0
+var player_initial_hand: Array = []
+var cpu_initial_hand: Array = []
+var dice_sequence: Array = []
+var steps: Array = []
 
-# 参照
+# =============================================================================
+# システム参照
+# =============================================================================
+
 var game_flow_manager = null
 var ui_manager = null
 var debug_controller = null
 var card_system = null
-
-# チュートリアル専用UI
-var tutorial_popup = null
-var tutorial_overlay = null
-
-# ステップデータ
-var steps: Array = []
-
-# システム参照
 var board_system_3d = null
 
+# =============================================================================
+# チュートリアル専用UI
+# =============================================================================
+
+var tutorial_popup = null
+var tutorial_overlay = null
+var explanation_mode: ExplanationMode = null
+
+# =============================================================================
 # 内部状態
+# =============================================================================
+
 var _last_player_id: int = -1
 
+# =============================================================================
+# 初期化
+# =============================================================================
+
 func _ready():
-	# ポーズ中でも動作するように設定
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_setup_steps()
+	_load_tutorial_data()
 
-# ステップデータを設定
-func _setup_steps():
-	steps = [
-		# ターン1: プレイヤー
-		{
-			"id": 1,
-			"turn": 1,
-			"phase": "start",
-			"message": "チュートリアルへようこそ！\n\nこのゲームの目標は、魔力を貯めて城に戻ることです。",
-			"wait_for_click": true,
-			"highlight": [],
-			"disable_all_buttons": true
-		},
-		{
-			"id": 2,
-			"turn": 1,
-			"phase": "dice",
-			"message": "✓ボタンを押してダイスを振りましょう！",
-			"wait_for_click": false,
-			"highlight": ["confirm"]
-		},
-		{
-			"id": 3,
-			"turn": 1,
-			"phase": "direction",
-			"message": "進む方向を選んでください\n\n▲▼ボタンで方向を選び\n✓ボタンで決定します",
-			"wait_for_click": false,
-			"highlight": ["up", "down", "confirm"]
-		},
-		{
-			"id": 4,
-			"turn": 1,
-			"phase": "summon_select",
-			"message": "クリーチャーを召喚しましょう\n召喚したいカードをタップしてください",
-			"wait_for_click": false,
-			"highlight_card": true,
-			"highlight_card_filter": "green_ogre",
-			"highlight": []
-		},
-		{
-			"id": 5,
-			"turn": 1,
-			"phase": "summon_info",
-			"message": "これはクリーチャーの能力が書かれた説明書です\n召喚をする前に確認をしましょう\n\n設定＞説明＞インフォパネル で\n読み方を確認できます",
-			"wait_for_click": true,
-			"highlight": [],
-			"disable_all_buttons": true,
-			"popup_position": "right"
-		},
-		{
-			"id": 6,
-			"turn": 1,
-			"phase": "summon_confirm",
-			"message": "もう一度カードをタップして召喚を決定しましょう",
-			"wait_for_click": false,
-			"highlight_card": true,
-			"highlight_card_filter": "green_ogre"
-		},
-		{
-			"id": 7,
-			"turn": 1,
-			"phase": "summon_execute",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 8,
-			"turn": 1,
-			"phase": "summon_complete",
-			"message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値が総魔力に加算されます",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 9,
-			"turn": 1,
-			"phase": "land_value_info",
-			"message": "土地の価値は召喚したクリーチャーカードの\n下に出ている30Gという数字です\n\n土地の価値は連鎖数や土地のレベルで決まります",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true,
-			"highlight_tile_toll": "player_creature"
-		},
-		# ターン1: CPU
-		{
-			"id": 10,
-			"turn": 1,
-			"phase": "cpu_turn_start",
-			"message": "相手のターンです\n\n相手の行動を見てみましょう",
-			"wait_for_click": false,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 11,
-			"turn": 1,
-			"phase": "cpu_turn",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 12,
-			"turn": 1,
-			"phase": "cpu_summon_complete",
-			"message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の領地になりました\nあなたが敵の領地に止まると通行料を取られます",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		# ターン2: プレイヤー
-		{
-			"id": 13,
-			"turn": 2,
-			"phase": "turn2_start",
-			"message": "あなたのターンです\n\n✓ボタンを押してサイコロを振りましょう",
-			"wait_for_click": false,
-			"highlight": ["confirm"]
-		},
-		{
-			"id": 14,
-			"turn": 2,
-			"phase": "dice",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 15,
-			"turn": 2,
-			"phase": "checkpoint",
-			"message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得すると魔力がもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 16,
-			"turn": 2,
-			"phase": "wait_movement",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 17,
-			"turn": 2,
-			"phase": "battle_arrival",
-			"message": "敵の領地に止まってしまいました！\n\nバトルが始まります",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 18,
-			"turn": 2,
-			"phase": "battle_select_creature",
-			"message": "バトルに出すクリーチャーを選んでください\n\nカードを2回タップして選択します",
-			"wait_for_click": false,
-			"highlight_card": true,
-			"disable_all_buttons": true,
-			"popup_position": "right"
-		},
-		{
-			"id": 19,
-			"turn": 2,
-			"phase": "battle_info1",
-			"message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地に配置されているクリーチャーです",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true,
-			"popup_position": "left"
-		},
-		{
-			"id": 20,
-			"turn": 2,
-			"phase": "battle_info2",
-			"message": "カードの属性と土地の属性が一致していると\n土地のレベルに応じてHPにボーナスが入ります\n\n敵のグリーンオーガは地属性の土地に\n配置されているのでHPが+10されています",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true,
-			"popup_position": "left"
-		},
-		{
-			"id": 21,
-			"turn": 2,
-			"phase": "battle_info3",
-			"message": "あなたのグリーンオーガの攻撃力(AP)は40です\n\n敵のグリーンオーガのHPは50+10で60です\n\nこのままでは倒せません！\nアイテムを使用しましょう",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true,
-			"popup_position": "left"
-		},
-		{
-			"id": 22,
-			"turn": 2,
-			"phase": "battle_item_prompt",
-			"message": "アイテムカードを選択しましょう\n\nロングソードをタップしてください",
-			"wait_for_click": false,
-			"highlight_card": true,
-			"highlight_card_filter": "long_sword",
-			"disable_all_buttons": true,
-			"popup_position": "right"
-		},
-		{
-			"id": 23,
-			"turn": 2,
-			"phase": "battle_item_info",
-			"message": "ロングソードは攻撃力（AP）を30上昇させる\nアイテムカードです\n\nもう一度タップして装備しましょう",
-			"wait_for_click": false,
-			"disable_all_buttons": true,
-			"popup_position": "right"
-		},
-		{
-			"id": 24,
-			"turn": 2,
-			"phase": "battle_start",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 25,
-			"turn": 2,
-			"phase": "battle_ap_explain",
-			"message": "ロングソードの効果で\n攻撃力（AP）が40→70に上昇します！\n\n敵のHP60を上回っているので勝てます",
-			"wait_for_click": false,
-			"disable_all_buttons": true,
-			"popup_offset_y": -50
-		},
-		{
-			"id": 26,
-			"turn": 2,
-			"phase": "battle_win",
-			"message": "勝利！領地を奪いました！\n\nバトルに勝つと敵の領地を自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true,
-			"highlight_tile_toll": "player_position"
-		},
-		# ターン2: CPU
-		{
-			"id": 27,
-			"turn": 2,
-			"phase": "cpu_turn_start2",
-			"message": "相手のターンです",
-			"wait_for_click": false,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 28,
-			"turn": 2,
-			"phase": "cpu_battle_explain",
-			"message": "相手があなたの領地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 29,
-			"turn": 2,
-			"phase": "cpu_battle",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 30,
-			"turn": 2,
-			"phase": "toll_explain",
-			"message": "相手はバトルに負けました！\n\nバトルに負けると通行料を支払います",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		# ターン3: プレイヤー
-		{
-			"id": 31,
-			"turn": 3,
-			"phase": "turn3_start",
-			"message": "最終ターンです！\n\n✓ボタンを押してサイコロを振りましょう",
-			"wait_for_click": false,
-			"highlight": ["confirm"]
-		},
-		{
-			"id": 32,
-			"turn": 3,
-			"phase": "dice",
-			"message": "",
-			"wait_for_click": false
-		},
-		{
-			"id": 33,
-			"turn": 3,
-			"phase": "checkpoint",
-			"message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\n城に戻ると周回ボーナスがもらえます",
-			"wait_for_click": true,
-			"pause_game": true,
-			"disable_all_buttons": true
-		},
-		{
-			"id": 34,
-			"turn": 3,
-			"phase": "lap_bonus",
-			"message": "城に到着！周回ボーナス獲得！\n\n魔力が増え、クリーチャーのHPも全回復します。",
-			"wait_for_click": true
-		},
-		{
-			"id": 35,
-			"turn": 3,
-			"phase": "victory",
-			"message": "おめでとうございます！\n\n目標魔力に到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
-			"wait_for_click": true,
-			"is_final": true
-		}
-	]
+## JSONからチュートリアルデータを読み込む
+func _load_tutorial_data():
+	var file = FileAccess.open(TUTORIAL_DATA_PATH, FileAccess.READ)
+	if not file:
+		push_error("[TutorialManager] チュートリアルデータを読み込めません: %s" % TUTORIAL_DATA_PATH)
+		return
+	
+	var json_text = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	var error = json.parse(json_text)
+	if error != OK:
+		push_error("[TutorialManager] JSONパースエラー: %s" % json.get_error_message())
+		return
+	
+	var data = json.data
+	
+	# 設定データを読み込み
+	var config = data.get("config", {})
+	player_initial_hand = config.get("player_initial_hand", [210, 210, 1073])
+	cpu_initial_hand = config.get("cpu_initial_hand", [210, 210])
+	dice_sequence = config.get("dice_sequence", [3, 6, 5])
+	
+	# ステップデータを読み込み
+	steps = data.get("steps", [])
+	
+	print("[TutorialManager] チュートリアルデータ読み込み完了: %d ステップ" % steps.size())
 
-# system_managerから初期化（推奨）
+# =============================================================================
+# システム初期化
+# =============================================================================
+
+## system_managerから初期化
 func initialize_with_systems(system_manager):
 	if not system_manager:
 		print("[TutorialManager] ERROR: system_managerがnull")
@@ -371,9 +115,17 @@ func initialize_with_systems(system_manager):
 	board_system_3d = system_manager.board_system_3d
 	
 	_setup_ui()
+	_setup_explanation_mode()
 	_connect_signals()
 
-# チュートリアル専用UIをセットアップ
+## ExplanationModeをセットアップ
+func _setup_explanation_mode():
+	explanation_mode = ExplanationMode.new()
+	explanation_mode.name = "ExplanationMode"
+	add_child(explanation_mode)
+	explanation_mode.setup(ui_manager, board_system_3d)
+
+## チュートリアル専用UIをセットアップ
 func _setup_ui():
 	# TutorialPopup
 	var TutorialPopupClass = load("res://scripts/tutorial/tutorial_popup.gd")
@@ -401,7 +153,11 @@ func _setup_ui():
 	overlay_canvas.add_child(tutorial_overlay)
 	add_child(overlay_canvas)
 
+# =============================================================================
 # シグナル接続
+# =============================================================================
+
+## ゲームシステムのシグナルを接続
 func _connect_signals():
 	# ターン開始・ダイス
 	if game_flow_manager:
@@ -449,10 +205,11 @@ func _connect_battle_signals():
 			if not battle_screen_manager.battle_screen_closed.is_connected(_on_battle_screen_closed):
 				battle_screen_manager.battle_screen_closed.connect(_on_battle_screen_closed)
 
-# === シグナルハンドラ ===
+# =============================================================================
+# シグナルハンドラ
+# =============================================================================
 
 func _on_turn_started(player_id: int):
-	print("[TutorialManager] _on_turn_started: player_id=%d, current_phase=%s" % [player_id, get_current_step().get("phase", "")])
 	if not is_active:
 		return
 	
@@ -492,6 +249,7 @@ func _on_dice_rolled(_value: int):
 		if next_step_index < steps.size():
 			var next_phase = steps[next_step_index].get("phase", "")
 			if next_phase != "checkpoint":
+				_exit_explanation_mode_if_active()
 				advance_step()
 
 func _on_movement_completed(player_id: int, _final_tile: int):
@@ -500,13 +258,16 @@ func _on_movement_completed(player_id: int, _final_tile: int):
 	var phase = get_current_step().get("phase", "")
 	if player_id == 0:
 		if phase == "direction":
+			_exit_explanation_mode_if_active()
 			advance_step()
 		# 移動完了待ちフェーズなら次へ（敵領地に到着）
 		elif phase == "wait_movement":
+			_exit_explanation_mode_if_active()
 			advance_step()  # battle_arrivalへ
 	# CPU移動完了時（プレイヤーの領地に止まった）
 	elif player_id == 1:
 		if phase == "cpu_turn_start2":
+			_exit_explanation_mode_if_active()
 			advance_step()  # cpu_battle_explainへ
 
 func _on_card_info_shown(_card_index: int):
@@ -514,9 +275,11 @@ func _on_card_info_shown(_card_index: int):
 		return
 	var phase = get_current_step().get("phase", "")
 	if phase == "summon_select":
+		_exit_explanation_mode_if_active()
 		advance_step()
 	# アイテムカード1回目タップ
 	elif phase == "battle_item_prompt":
+		_exit_explanation_mode_if_active()
 		advance_step()  # battle_item_infoへ
 
 func _on_card_selected(_card_index: int):
@@ -525,18 +288,19 @@ func _on_card_selected(_card_index: int):
 	var phase = get_current_step().get("phase", "")
 	# summon_infoフェーズ中にカード選択 → summon_confirmをスキップしてsummon_executeへ
 	if phase == "summon_info":
+		_exit_explanation_mode_if_active()
 		advance_step()  # summon_confirmへ
 		advance_step()  # summon_executeへ
 	elif phase == "summon_confirm":
+		_exit_explanation_mode_if_active()
 		advance_step()
 	# バトルクリーチャー選択確定時（2回目タップ）
 	elif phase == "battle_select_creature":
+		_exit_explanation_mode_if_active()
 		advance_step()  # battle_info1へ
 	# アイテム選択確定時（2回目タップ）- battle_startへ進む
 	elif phase == "battle_item_info":
-		# コメントを消す
-		if tutorial_popup:
-			tutorial_popup.hide()
+		_exit_explanation_mode_if_active()
 		advance_step()  # battle_startへ
 
 func _on_action_completed():
@@ -559,21 +323,18 @@ func _on_action_completed():
 		while is_active and not is_phase("cpu_summon_complete"):
 			advance_step()
 
-func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
-	print("[TutorialManager] _on_checkpoint_passed: player_id=%d, type=%s, current_phase=%s" % [player_id, checkpoint_type, get_current_step().get("phase", "")])
+func _on_checkpoint_passed(player_id: int, _checkpoint_type: String):
 	if not is_active:
 		return
 	# プレイヤー0がチェックポイント通過時、diceフェーズならcheckpointへ
 	if player_id == 0:
 		var phase = get_current_step().get("phase", "")
 		if phase == "dice":
-			print("[TutorialManager] -> checkpointへ進む（少し待機）")
 			# 少し待ってからコメント表示（移動アニメーションがチェックポイントに到達するのを待つ）
 			await get_tree().create_timer(0.15).timeout
 			advance_step()  # checkpointへ
 
 func _on_battle_intro_completed():
-	print("[TutorialManager] _on_battle_intro_completed: current_phase=%s" % get_current_step().get("phase", ""))
 	if not is_active:
 		return
 	var phase = get_current_step().get("phase", "")
@@ -582,7 +343,6 @@ func _on_battle_intro_completed():
 		advance_step()  # battle_ap_explainへ
 
 func _on_battle_screen_closed():
-	print("[TutorialManager] _on_battle_screen_closed: current_phase=%s" % get_current_step().get("phase", ""))
 	if not is_active:
 		return
 	var phase = get_current_step().get("phase", "")
@@ -591,16 +351,19 @@ func _on_battle_screen_closed():
 		# コメントを消す
 		if tutorial_popup:
 			tutorial_popup.hide()
+		# 通行料ラベルが更新されるまで少し待つ
+		await get_tree().create_timer(0.3).timeout
 		advance_step()  # battle_winへ
+	# CPUバトル終了後 → ダメージ説明へ
+	elif phase == "cpu_battle":
+		await get_tree().create_timer(0.3).timeout
+		advance_step()  # damage_explainへ
 
-# 旧initialize（互換性のため残す）
-func initialize(gfm, uim, dc = null, cs = null):
-	game_flow_manager = gfm
-	ui_manager = uim
-	debug_controller = dc
-	card_system = cs
+# =============================================================================
+# チュートリアル開始・終了
+# =============================================================================
 
-# チュートリアル開始
+## チュートリアル開始
 func start_tutorial():
 	is_active = true
 	current_step = 0
@@ -629,7 +392,6 @@ func _set_cpu_tutorial_policy():
 	var cpu_turn_processor = board_system_3d.get_node_or_null("CPUTurnProcessor")
 	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
 		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("tutorial")
-		print("[TutorialManager] CPUにチュートリアルポリシーを設定")
 
 # チュートリアル終了
 func end_tutorial():
@@ -652,7 +414,6 @@ func _reset_cpu_policy():
 	var cpu_turn_processor = board_system_3d.get_node_or_null("CPUTurnProcessor")
 	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
 		cpu_turn_processor.cpu_ai_handler.set_battle_policy_preset("balanced")
-		print("[TutorialManager] CPUのポリシーをデフォルトに戻す")
 
 # 次のステップへ
 func advance_step():
@@ -672,8 +433,7 @@ func advance_step():
 # ターンを進める
 func advance_turn():
 	current_turn += 1
-	print("[TutorialManager] advance_turn: current_turn=%d" % current_turn)
-
+	
 # 現在のフェーズかどうか
 func is_phase(phase_name: String) -> bool:
 	if current_step >= steps.size():
@@ -686,143 +446,10 @@ func _show_current_step():
 		return
 	
 	var step = steps[current_step]
-	var message = step.get("message", "")
-	var with_overlay = step.get("with_overlay", false)
-	
 	print("[TutorialManager] Step %d: %s" % [step.id, step.phase])
 	
-	# ハイライト処理（各オプションは独立して処理）
-	if tutorial_overlay:
-		var highlight = step.get("highlight", [])
-		var highlight_card = step.get("highlight_card", false)
-		var disable_all = step.get("disable_all_buttons", false)
-		var has_any_highlight = false
-		
-		# ボタン無効化（他のハイライトより先に処理）
-		if disable_all:
-			tutorial_overlay.disable_all_buttons()
-		
-		# カードハイライト
-		if highlight_card:
-			var card_filter = step.get("highlight_card_filter", "")
-			var card_nodes = _get_hand_card_nodes(card_filter)
-			tutorial_overlay.highlight_hand_cards(card_nodes, with_overlay)
-			has_any_highlight = true
-		
-		# ボタンハイライト
-		if not highlight.is_empty():
-			tutorial_overlay.highlight_buttons(highlight, with_overlay)
-			has_any_highlight = true
-		
-		# タイル通行料ハイライト（他と併用可能）
-		if step.has("highlight_tile_toll"):
-			var tile_value = step.get("highlight_tile_toll")
-			var tile_index: int = -1
-			if tile_value == "player_creature":
-				tile_index = _find_player_creature_tile(0)
-			elif tile_value == "player_position":
-				if game_flow_manager and game_flow_manager.player_system:
-					tile_index = game_flow_manager.player_system.get_player_position(0)
-			else:
-				tile_index = int(tile_value)
-			if tile_index >= 0:
-				_highlight_tile_toll_with_overlay(tile_index)
-				has_any_highlight = true
-		
-		# 何もハイライトがなく、ボタン無効化もない場合のみオーバーレイを隠す
-		if not has_any_highlight and not disable_all:
-			tutorial_overlay.hide_overlay()
-	
-	# ゲーム一時停止（SceneTreeをポーズ）
-	var should_pause = step.get("pause_game", false)
-	if should_pause:
-		get_tree().paused = true
-	
-	if message and tutorial_popup:
-		message_shown.emit(message)
-		var popup_position = step.get("popup_position", "top")
-		var popup_offset_y = step.get("popup_offset_y", 0.0)
-		
-		if step.get("wait_for_click", false):
-			# クリック待ちモード
-			await tutorial_popup.show_and_wait(message, popup_position, popup_offset_y)
-			# ハイライトを消す
-			if tutorial_overlay:
-				tutorial_overlay.hide_overlay()
-			# 最終ステップなら終了、そうでなければ次へ
-			if step.get("is_final", false):
-				# ゲーム再開してから終了
-				if should_pause:
-					get_tree().paused = false
-				end_tutorial()
-			else:
-				# 次のステップへ
-				# ポーズ中はcall_deferredが動作しないので、一旦解除
-				if should_pause:
-					get_tree().paused = false
-				# 1フレーム待ってから次のステップへ（シグナル処理の完了を待つ）
-				await get_tree().process_frame
-				advance_step()
-		else:
-			# 単純表示（他の操作待ち）
-			tutorial_popup.show_message(message, popup_position, popup_offset_y)
-			
-			# 自動進行（指定秒数後に次のステップへ）
-			var auto_delay = step.get("auto_advance_delay", 0)
-			if auto_delay > 0:
-				await get_tree().create_timer(auto_delay).timeout
-				advance_step()
-	else:
-		# メッセージが空の場合はポップアップを非表示
-		if tutorial_popup:
-			tutorial_popup.hide()
-
-# 手札のカードノードを取得（フィルタ指定可能）
-func _get_hand_card_nodes(filter: String = "") -> Array:
-	if not ui_manager:
-		return []
-	
-	# UIManagerのhand_displayプロパティから取得
-	var hand_display = ui_manager.hand_display if "hand_display" in ui_manager else null
-	
-	if not hand_display:
-		return []
-	
-	# player_card_nodesからプレイヤー0のカードを取得
-	var cards = []
-	if "player_card_nodes" in hand_display:
-		var player_cards = hand_display.player_card_nodes
-		if player_cards.has(0):
-			for card in player_cards[0]:
-				if is_instance_valid(card) and card.visible:
-					# フィルタがある場合はカード名でチェック
-					if filter.is_empty():
-						cards.append(card)
-					else:
-						var card_name = _get_card_name(card)
-						if _matches_filter(card_name, filter):
-							cards.append(card)
-	
-	return cards
-
-# カードノードからカード名を取得
-func _get_card_name(card_node) -> String:
-	if card_node.has_method("get_card_data"):
-		var data = card_node.get_card_data()
-		return data.get("name", "")
-	elif "card_data" in card_node:
-		return card_node.card_data.get("name", "")
-	return ""
-
-# フィルタにマッチするかチェック
-func _matches_filter(card_name: String, filter: String) -> bool:
-	match filter:
-		"green_ogre":
-			return card_name == "グリーンオーガ"
-		"long_sword":
-			return card_name == "ロングソード"
-		_:
-			return card_name.to_lower().contains(filter.to_lower())
+	# ExplanationModeでステップを表示
+	await _show_step_with_explanation_mode(step)
 
 # 現在のステップデータを取得
 func get_current_step() -> Dictionary:
@@ -832,8 +459,8 @@ func get_current_step() -> Dictionary:
 
 # 固定ダイス目を取得
 func get_fixed_dice() -> int:
-	if current_turn <= DICE_SEQUENCE.size():
-		return DICE_SEQUENCE[current_turn - 1]
+	if current_turn <= dice_sequence.size():
+		return dice_sequence[current_turn - 1]
 	return -1
 
 # 現在のターンのダイスを設定
@@ -849,46 +476,124 @@ func _set_initial_hands():
 		return
 	
 	# プレイヤー0の手札
-	card_system.set_fixed_hand_for_player(0, PLAYER_INITIAL_HAND.duplicate())
+	card_system.set_fixed_hand_for_player(0, player_initial_hand.duplicate())
 	
 	# プレイヤー1（CPU）の手札
-	card_system.set_fixed_hand_for_player(1, CPU_INITIAL_HAND.duplicate())
+	card_system.set_fixed_hand_for_player(1, cpu_initial_hand.duplicate())
 	
 	print("[TutorialManager] 初期手札設定完了")
+# =============================================================================
+# ExplanationMode関連
+# =============================================================================
 
-# === 通行料ラベルハイライト（TutorialOverlayの発光を使用） ===
+## ExplanationModeがアクティブなら終了する
+func _exit_explanation_mode_if_active():
+	if explanation_mode and explanation_mode.is_active():
+		explanation_mode.exit()
 
-# プレイヤーがクリーチャーを配置しているタイルを探す
-func _find_player_creature_tile(player_id: int) -> int:
-	if not board_system_3d:
-		return -1
-	
-	# tile_nodesから直接タイルを探す
-	for tile_index in board_system_3d.tile_nodes.keys():
-		var tile = board_system_3d.tile_nodes[tile_index]
-		if tile and tile.owner_id == player_id and not tile.creature_data.is_empty():
-			return tile_index
-	
-	return -1
+## カードUIが準備完了するまで待つ
+func _wait_for_card_ui_ready():
+	var max_wait = 30  # 最大30フレーム
+	for i in range(max_wait):
+		await get_tree().process_frame
+		# hand_displayのplayer_card_nodesを確認
+		if ui_manager and ui_manager.hand_display:
+			var hd = ui_manager.hand_display
+			if "player_card_nodes" in hd and hd.player_card_nodes.has(0):
+				if hd.player_card_nodes[0].size() > 0:
+					return
+	print("[TutorialManager] WARNING: Card UI not ready after %d frames" % max_wait)
 
-# タイルの通行料ラベルをハイライト（TutorialOverlayの発光エフェクト使用）
-func _highlight_tile_toll_with_overlay(tile_index: int):
-	if not board_system_3d or not tutorial_overlay:
+# ExplanationModeでステップを表示
+func _show_step_with_explanation_mode(step: Dictionary):
+	if not explanation_mode:
 		return
 	
-	# TileInfoDisplayから通行料ラベル（Label3D）を取得
-	var tile_info_display = board_system_3d.tile_info_display
-	if not tile_info_display:
+	var message = step.get("message", "")
+	var popup_position = step.get("popup_position", "top")
+	var popup_offset_y = step.get("popup_offset_y", 0.0)
+	var wait_for_click = step.get("wait_for_click", false)
+	var highlight_buttons = step.get("highlight", [])
+	var highlight_card = step.get("highlight_card", false)
+	var highlight_card_filter = step.get("highlight_card_filter", "")
+	var disable_all_buttons = step.get("disable_all_buttons", false)
+	
+	# 空メッセージ、かつwait_for_clickでない場合はスキップ（シグナル待ち）
+	if message == "" and not wait_for_click:
+		# ポップアップを非表示
+		if explanation_mode._popup:
+			explanation_mode._popup.hide()
+		# シグナルで次のステップへ進む
 		return
 	
-	var label = tile_info_display.tile_labels.get(tile_index)
-	if not label or not label.visible:
+	# ハイライト設定を構築
+	var highlights = []
+	
+	# ボタンハイライト
+	if not highlight_buttons.is_empty():
+		highlights.append({"type": "button", "targets": highlight_buttons})
+	
+	# カードハイライト
+	if highlight_card:
+		highlights.append({"type": "card", "filter": highlight_card_filter})
+	
+	# タイル通行料ハイライト
+	if step.has("highlight_tile_toll"):
+		var tile_value = step.get("highlight_tile_toll")
+		highlights.append({"type": "tile_toll", "target": tile_value})
+	
+	# プレイヤーインフォパネルハイライト
+	if step.has("highlight_player_info"):
+		var player_id = step.get("highlight_player_info")
+		highlights.append({"type": "player_info", "player_id": player_id})
+	
+	# 終了トリガーを決定
+	var exit_trigger = "click"
+	var allowed_buttons = []
+	
+	if wait_for_click:
+		exit_trigger = "click"
+	elif highlight_card:
+		# カード選択待ち: カードをタップしたら終了
+		exit_trigger = "card_tap"
+	elif not highlight_buttons.is_empty():
+		# ボタン待ち: ハイライトされたボタンのいずれかを押したら終了
+		exit_trigger = "button"
+		allowed_buttons = highlight_buttons
+	elif disable_all_buttons and message != "":
+		# ボタン無効化 + メッセージあり → シグナル待ち（表示だけしてシグナルで進む）
+		exit_trigger = "signal"
+	
+	# ExplanationMode設定
+	var config = {
+		"message": message,
+		"popup_position": popup_position,
+		"popup_offset_y": popup_offset_y,
+		"exit_trigger": exit_trigger,
+		"allowed_buttons": allowed_buttons,
+		"highlights": highlights
+	}
+	
+		
+	# ボタン待ち/カード選択/シグナル待ちパターンの場合は、enterだけ呼んでawaitしない
+	# ゲームのシグナルで次のステップへ進む
+	if exit_trigger in ["button", "card_tap", "card_select", "signal"]:
+		# カード選択の場合は、UIが表示されるまで待つ
+		if exit_trigger in ["card_tap", "card_select"]:
+			await _wait_for_card_ui_ready()
+		explanation_mode.enter(config)
+		# 操作後に説明モードを抜けて、ゲームが進行する
+		# 次のステップへはシグナルハンドラで進む
 		return
 	
-	# カメラを取得
-	var camera = board_system_3d.camera
-	if not camera:
+	# クリック待ちパターンの場合はawaitで待つ
+	await explanation_mode.enter_and_wait(config)
+	
+	# 最終ステップなら終了
+	if step.get("is_final", false):
+		end_tutorial()
 		return
 	
-	# TutorialOverlayの3Dハイライト機能を使用
-	tutorial_overlay.highlight_3d_object(label, camera, Vector2(200, 80))
+	# クリック待ちパターンの場合は次のステップへ
+	await get_tree().process_frame
+	advance_step()

@@ -24,6 +24,9 @@ var _special_text: String = ""
 # GameFlowManager参照（入力ロック用）
 var game_flow_manager_ref = null
 
+# 説明モード中フラグ（trueの場合、入力ロックを無視）
+var explanation_mode_active: bool = false
+
 # 定数
 const BUTTON_SIZE = 280
 const BUTTON_SPACING = 42
@@ -166,6 +169,9 @@ func _input(event):
 
 
 func _is_input_locked() -> bool:
+	# 説明モード中はロックを無視
+	if explanation_mode_active:
+		return false
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("is_input_locked"):
 		return game_flow_manager_ref.is_input_locked()
 	return false

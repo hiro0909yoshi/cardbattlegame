@@ -35,7 +35,7 @@ func _ready():
 	set_process_input(true)
 
 # 初期化
-func initialize(parent: Node, player_system, board_system, player_info_panel_ref, game_flow_manager = null, card_system = null):
+func initialize(_parent: Node, player_system, board_system, player_info_panel_ref, game_flow_manager = null, card_system = null):
 	player_system_ref = player_system
 	board_system_ref = board_system
 	player_info_panel = player_info_panel_ref

@@ -92,31 +92,16 @@ func _ready():
 func _setup_tutorial():
 	print("[Game3D] チュートリアルモード初期化")
 	
-	# 新チュートリアルシステムを使用（テスト中）
-	var use_new_system = true
-	
-	if use_new_system:
-		# 新システム: TutorialController
-		var TutorialControllerClass = load("res://scripts/tutorial/tutorial_controller.gd")
-		if TutorialControllerClass:
-			tutorial_manager = TutorialControllerClass.new()
-			tutorial_manager.name = "TutorialManager"
-			add_child(tutorial_manager)
-			tutorial_manager.setup_systems(system_manager)
-			
-			# ステージ1をロード
-			if tutorial_manager.load_stage("res://data/tutorial/tutorial_stage1.json"):
-				print("[Game3D] 新チュートリアルシステム初期化完了")
-			else:
-				push_error("[Game3D] チュートリアルステージ読み込み失敗")
-	else:
-		# 旧システム: TutorialManager
-		var TutorialManagerClass = load("res://scripts/tutorial/tutorial_manager.gd")
-		if TutorialManagerClass:
-			tutorial_manager = TutorialManagerClass.new()
-			tutorial_manager.name = "TutorialManager"
-			add_child(tutorial_manager)
-			tutorial_manager.initialize_with_systems(system_manager)
+	# テストモード: ExplanationModeの単体テスト
+	# TutorialManager
+	var TutorialManagerClass = load("res://scripts/tutorial/tutorial_manager.gd")
+	if TutorialManagerClass:
+		tutorial_manager = TutorialManagerClass.new()
+		tutorial_manager.name = "TutorialManager"
+		add_child(tutorial_manager)
+		
+		# system_managerを渡して初期化（シグナル接続もTutorialManager内で行う）
+		tutorial_manager.initialize_with_systems(system_manager)
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():

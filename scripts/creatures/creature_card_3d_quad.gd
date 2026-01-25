@@ -68,6 +68,7 @@ func _setup_card():
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED  # カメラに向く
+	material.render_priority = -1  # 他の3D要素より後ろに描画
 	
 	# テクスチャを設定（次のフレームで）
 	await get_tree().process_frame

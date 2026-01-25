@@ -1,364 +1,332 @@
 {
   "stage_id": "stage1",
   "stage_name": "基本チュートリアル",
-  "description": "ゲームの基本操作を学ぶ",
   "config": {
-    "player_initial_hand": [210, 210, 1073],
-    "cpu_initial_hand": [210, 210],
-    "dice_sequence": [3, 6, 5],
-    "target_mana": 200
+	"player_initial_hand": [210, 210, 1073],
+	"cpu_initial_hand": [210, 210],
+	"dice_sequence": [3, 6, 5]
   },
   "steps": [
-    {
-      "id": 1,
-      "phase": "start",
-      "trigger": { "type": "immediate" },
-      "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、魔力を貯めて城に戻ることです。",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 2,
-      "phase": "dice",
-      "trigger": { "type": "after_step", "step_id": 1 },
-      "message": "✓ボタンを押してダイスを振りましょう！",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "button", "targets": ["confirm"] }],
-      "completion": { "type": "signal", "signal": "dice_rolled" }
-    },
-    {
-      "id": 3,
-      "phase": "direction",
-      "trigger": { "type": "signal", "signal": "dice_rolled" },
-      "message": "進む方向を選んでください\n\n▲▼ボタンで方向を選び\n✓ボタンで決定します",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "button", "targets": ["up", "down", "confirm"] }],
-      "completion": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 0 } }
-    },
-    {
-      "id": 4,
-      "phase": "summon_select",
-      "trigger": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 0 } },
-      "message": "クリーチャーを召喚しましょう\n召喚したいカードをタップしてください",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "card", "filter": "green_ogre" }],
-      "completion": { "type": "signal", "signal": "card_info_shown" }
-    },
-    {
-      "id": 5,
-      "phase": "summon_info",
-      "trigger": { "type": "signal", "signal": "card_info_shown" },
-      "message": "これはクリーチャーの能力が書かれた説明書です\n召喚をする前に確認をしましょう\n\n設定＞説明＞インフォパネル で\n読み方を確認できます",
-      "ui": { "position": "right" },
-      "actions": { "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 6,
-      "phase": "summon_confirm",
-      "trigger": { "type": "after_step", "step_id": 5 },
-      "message": "もう一度カードをタップして召喚を決定しましょう",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "card", "filter": "green_ogre" }],
-      "completion": { "type": "signal", "signal": "card_selected" }
-    },
-    {
-      "id": 7,
-      "phase": "summon_execute",
-      "trigger": { "type": "signal", "signal": "card_selected" },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "action_completed" }
-    },
-    {
-      "id": 8,
-      "phase": "summon_complete",
-      "trigger": { "type": "signal", "signal": "action_completed", "conditions": { "phase_match": ["summon_info", "summon_confirm", "summon_execute"] } },
-      "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値が総魔力に加算されます",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 9,
-      "phase": "land_value_info",
-      "trigger": { "type": "after_step", "step_id": 8 },
-      "message": "土地の価値は召喚したクリーチャーカードの\n下に出ている30Gという数字です\n\n土地の価値は連鎖数や土地のレベルで決まります",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [{ "type": "tile_toll", "target": "player_creature" }],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 10,
-      "phase": "cpu_turn_start",
-      "trigger": { "type": "signal", "signal": "turn_started", "conditions": { "player_id": 1 } },
-      "message": "相手のターンです\n\n相手の行動を見てみましょう",
-      "ui": { "position": "top" },
-      "actions": { "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "auto" }
-    },
-    {
-      "id": 11,
-      "phase": "cpu_turn",
-      "trigger": { "type": "after_step", "step_id": 10 },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "action_completed" }
-    },
-    {
-      "id": 12,
-      "phase": "cpu_summon_complete",
-      "trigger": { "type": "signal", "signal": "action_completed", "conditions": { "phase_match": ["cpu_turn_start", "cpu_turn"] } },
-      "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の領地になりました\nあなたが敵の領地に止まると通行料を取られます",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 13,
-      "phase": "turn2_start",
-      "trigger": { "type": "signal", "signal": "turn_started", "conditions": { "player_id": 0, "turn": 2 } },
-      "message": "あなたのターンです\n\n✓ボタンを押してサイコロを振りましょう",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "button", "targets": ["confirm"] }],
-      "completion": { "type": "signal", "signal": "dice_rolled" }
-    },
-    {
-      "id": 14,
-      "phase": "dice",
-      "trigger": { "type": "signal", "signal": "dice_rolled" },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "checkpoint_passed" }
-    },
-    {
-      "id": 15,
-      "phase": "checkpoint",
-      "trigger": { "type": "signal", "signal": "checkpoint_passed", "conditions": { "player_id": 0 } },
-      "message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得すると魔力がもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 16,
-      "phase": "wait_movement",
-      "trigger": { "type": "after_step", "step_id": 15 },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 0 } }
-    },
-    {
-      "id": 17,
-      "phase": "battle_arrival",
-      "trigger": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 0 } },
-      "message": "敵の領地に止まってしまいました！\n\nバトルが始まります",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 18,
-      "phase": "battle_select_creature",
-      "trigger": { "type": "after_step", "step_id": 17 },
-      "message": "バトルに出すクリーチャーを選んでください\n\nカードを2回タップして選択します",
-      "ui": { "position": "right" },
-      "actions": { "disable_buttons": true },
-      "highlights": [{ "type": "card" }],
-      "completion": { "type": "signal", "signal": "card_selected" }
-    },
-    {
-      "id": 19,
-      "phase": "battle_info1",
-      "trigger": { "type": "signal", "signal": "card_selected" },
-      "message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地に配置されているクリーチャーです",
-      "ui": { "position": "left" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 20,
-      "phase": "battle_info2",
-      "trigger": { "type": "after_step", "step_id": 19 },
-      "message": "カードの属性と土地の属性が一致していると\n土地のレベルに応じてHPにボーナスが入ります\n\n敵のグリーンオーガは地属性の土地に\n配置されているのでHPが+10されています",
-      "ui": { "position": "left" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 21,
-      "phase": "battle_info3",
-      "trigger": { "type": "after_step", "step_id": 20 },
-      "message": "あなたのグリーンオーガの攻撃力(AP)は40です\n\n敵のグリーンオーガのHPは50+10で60です\n\nこのままでは倒せません！\nアイテムを使用しましょう",
-      "ui": { "position": "left" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 22,
-      "phase": "battle_item_prompt",
-      "trigger": { "type": "after_step", "step_id": 21 },
-      "message": "アイテムカードを選択しましょう\n\nロングソードをタップしてください",
-      "ui": { "position": "right" },
-      "actions": { "disable_buttons": true },
-      "highlights": [{ "type": "card", "filter": "long_sword" }],
-      "completion": { "type": "signal", "signal": "card_info_shown" }
-    },
-    {
-      "id": 23,
-      "phase": "battle_item_info",
-      "trigger": { "type": "signal", "signal": "card_info_shown" },
-      "message": "ロングソードは攻撃力（AP）を30上昇させる\nアイテムカードです\n\nもう一度タップして装備しましょう",
-      "ui": { "position": "right" },
-      "actions": { "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "card_selected" }
-    },
-    {
-      "id": 24,
-      "phase": "battle_start",
-      "trigger": { "type": "signal", "signal": "card_selected" },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "battle_intro_completed" }
-    },
-    {
-      "id": 25,
-      "phase": "battle_ap_explain",
-      "trigger": { "type": "signal", "signal": "battle_intro_completed" },
-      "message": "ロングソードの効果で\n攻撃力（AP）が40→70に上昇します！\n\n敵のHP60を上回っているので勝てます",
-      "ui": { "position": "top", "offset_y": -50 },
-      "actions": { "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "battle_screen_closed" }
-    },
-    {
-      "id": 26,
-      "phase": "battle_win",
-      "trigger": { "type": "signal", "signal": "battle_screen_closed" },
-      "message": "勝利！領地を奪いました！\n\nバトルに勝つと敵の領地を自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [{ "type": "tile_toll", "target": "player_position" }],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 27,
-      "phase": "cpu_turn_start2",
-      "trigger": { "type": "signal", "signal": "turn_started", "conditions": { "player_id": 1 } },
-      "message": "相手のターンです",
-      "ui": { "position": "top" },
-      "actions": { "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 1 } }
-    },
-    {
-      "id": 28,
-      "phase": "cpu_battle_explain",
-      "trigger": { "type": "signal", "signal": "movement_completed", "conditions": { "player_id": 1 } },
-      "message": "相手があなたの領地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 29,
-      "phase": "cpu_battle",
-      "trigger": { "type": "after_step", "step_id": 28 },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "battle_screen_closed" }
-    },
-    {
-      "id": 30,
-      "phase": "toll_explain",
-      "trigger": { "type": "signal", "signal": "battle_screen_closed" },
-      "message": "相手はバトルに負けました！\n\nバトルに負けると通行料を支払います",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 31,
-      "phase": "turn3_start",
-      "trigger": { "type": "signal", "signal": "turn_started", "conditions": { "player_id": 0, "turn": 3 } },
-      "message": "最終ターンです！\n\n✓ボタンを押してサイコロを振りましょう",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [{ "type": "button", "targets": ["confirm"] }],
-      "completion": { "type": "signal", "signal": "dice_rolled" }
-    },
-    {
-      "id": 32,
-      "phase": "dice",
-      "trigger": { "type": "signal", "signal": "dice_rolled" },
-      "message": "",
-      "ui": {},
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "signal", "signal": "checkpoint_passed" }
-    },
-    {
-      "id": 33,
-      "phase": "checkpoint",
-      "trigger": { "type": "signal", "signal": "checkpoint_passed", "conditions": { "player_id": 0 } },
-      "message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\n城に戻ると周回ボーナスがもらえます",
-      "ui": { "position": "top" },
-      "actions": { "pause_game": true, "disable_buttons": true },
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 34,
-      "phase": "lap_bonus",
-      "trigger": { "type": "signal", "signal": "lap_completed" },
-      "message": "城に到着！周回ボーナス獲得！\n\n魔力が増え、クリーチャーのHPも全回復します。",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "click" }
-    },
-    {
-      "id": 35,
-      "phase": "victory",
-      "trigger": { "type": "after_step", "step_id": 34 },
-      "message": "おめでとうございます！\n\n目標魔力に到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
-      "ui": { "position": "top" },
-      "actions": {},
-      "highlights": [],
-      "completion": { "type": "click" },
-      "is_final": true
-    }
+	{
+	  "id": 1,
+	  "turn": 1,
+	  "phase": "start",
+	  "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、魔力を貯めて城に戻ることです。",
+	  "wait_for_click": true,
+	  "highlight": [],
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 2,
+	  "turn": 1,
+	  "phase": "dice",
+	  "message": "✓ボタンを押してダイスを振りましょう！",
+	  "wait_for_click": false,
+	  "highlight": ["confirm"]
+	},
+	{
+	  "id": 3,
+	  "turn": 1,
+	  "phase": "direction",
+	  "message": "進む方向を選んでください\n\n▲▼ボタンで方向を選び\n✓ボタンで決定します",
+	  "wait_for_click": false,
+	  "highlight": ["up", "down", "confirm"]
+	},
+	{
+	  "id": 4,
+	  "turn": 1,
+	  "phase": "summon_select",
+	  "message": "クリーチャーを召喚しましょう\n召喚したいカードをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "green_ogre",
+	  "highlight": []
+	},
+	{
+	  "id": 5,
+	  "turn": 1,
+	  "phase": "summon_info",
+	  "message": "これはクリーチャーの能力が書かれた説明書です\n召喚をする前に確認をしましょう\n\n設定＞説明＞インフォパネル で\n読み方を確認できます",
+	  "wait_for_click": true,
+	  "highlight": [],
+	  "disable_all_buttons": true,
+	  "popup_position": "right"
+	},
+	{
+	  "id": 6,
+	  "turn": 1,
+	  "phase": "summon_confirm",
+	  "message": "もう一度カードをタップして召喚を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "green_ogre"
+	},
+	{
+	  "id": 7,
+	  "turn": 1,
+	  "phase": "summon_execute",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 8,
+	  "turn": 1,
+	  "phase": "summon_complete",
+	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値が総魔力に加算されます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 9,
+	  "turn": 1,
+	  "phase": "land_value_info",
+	  "message": "土地の価値は召喚したクリーチャーカードの\n下に出ている30Gという数字です\n\n土地の価値は連鎖数や土地のレベルで決まります",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_tile_toll": "player_creature"
+	},
+	{
+	  "id": 10,
+	  "turn": 1,
+	  "phase": "cpu_turn_start",
+	  "message": "相手のターンです\n\n相手の行動を見てみましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 11,
+	  "turn": 1,
+	  "phase": "cpu_turn",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 12,
+	  "turn": 1,
+	  "phase": "cpu_summon_complete",
+	  "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の領地になりました\nあなたが敵の領地に止まると通行料を取られます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 13,
+	  "turn": 2,
+	  "phase": "turn2_start",
+	  "message": "あなたのターンです\n\n✓ボタンを押してサイコロを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": ["confirm"]
+	},
+	{
+	  "id": 14,
+	  "turn": 2,
+	  "phase": "dice",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 15,
+	  "turn": 2,
+	  "phase": "checkpoint",
+	  "message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得すると魔力がもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 16,
+	  "turn": 2,
+	  "phase": "wait_movement",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 17,
+	  "turn": 2,
+	  "phase": "battle_arrival",
+	  "message": "敵の領地に止まってしまいました！\n\nバトルが始まります",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 18,
+	  "turn": 2,
+	  "phase": "battle_select_creature",
+	  "message": "バトルに出すクリーチャーを選んでください\n\nカードを2回タップして選択します",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "disable_all_buttons": true,
+	  "popup_position": "right"
+	},
+	{
+	  "id": 19,
+	  "turn": 2,
+	  "phase": "battle_info1",
+	  "message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地に配置されているクリーチャーです",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "popup_position": "left"
+	},
+	{
+	  "id": 20,
+	  "turn": 2,
+	  "phase": "battle_info2",
+	  "message": "カードの属性と土地の属性が一致していると\n土地のレベルに応じてHPにボーナスが入ります\n\n敵のグリーンオーガは地属性の土地に\n配置されているのでHPが+10されています",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "popup_position": "left"
+	},
+	{
+	  "id": 21,
+	  "turn": 2,
+	  "phase": "battle_info3",
+	  "message": "あなたのグリーンオーガの攻撃力(AP)は40です\n\n敵のグリーンオーガのHPは50+10で60です\n\nこのままでは倒せません！\nアイテムを使用しましょう",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "popup_position": "left"
+	},
+	{
+	  "id": 22,
+	  "turn": 2,
+	  "phase": "battle_item_prompt",
+	  "message": "アイテムカードを選択しましょう\n\nロングソードをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "long_sword",
+	  "disable_all_buttons": true,
+	  "popup_position": "right"
+	},
+	{
+	  "id": 23,
+	  "turn": 2,
+	  "phase": "battle_item_info",
+	  "message": "ロングソードは攻撃力（AP）を30上昇させる\nアイテムカードです\n\nもう一度タップして装備しましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "popup_position": "right"
+	},
+	{
+	  "id": 24,
+	  "turn": 2,
+	  "phase": "battle_start",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 25,
+	  "turn": 2,
+	  "phase": "battle_ap_explain",
+	  "message": "ロングソードの効果で\n攻撃力（AP）が40→70に上昇します！\n\n敵のHP60を上回っているので勝てます",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "popup_offset_y": -50
+	},
+	{
+	  "id": 26,
+	  "turn": 2,
+	  "phase": "battle_win",
+	  "message": "勝利！領地を奪いました！\nバトルに勝つと敵の領地を自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_tile_toll": "player_all_creatures"
+	},
+	{
+	  "id": 27,
+	  "turn": 2,
+	  "phase": "cpu_turn_start2",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 28,
+	  "turn": 2,
+	  "phase": "cpu_battle_explain",
+	  "message": "相手があなたの領地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 29,
+	  "turn": 2,
+	  "phase": "cpu_battle",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 30,
+	  "turn": 2,
+	  "phase": "damage_explain",
+	  "message": "相手はバトルに負けました！\nバトルに負けると通行料を支払います\n\nクリーチャーの受けたダメージは\n配置されている限り消えません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 31,
+	  "turn": 2,
+	  "phase": "damage_check_explain",
+	  "message": "クリーチャーのダメージを確認するには\nカメラモードでその土地をタップするか\nプレイヤーインフォパネルの\n配置クリーチャーから確認できます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 32,
+	  "turn": 2,
+	  "phase": "player_info_explain",
+	  "message": "プレイヤーインフォパネルには\n魔力・手札枚数・配置クリーチャーの\n情報が表示されています",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_player_info": 0
+	},
+	{
+	  "id": 33,
+	  "turn": 3,
+	  "phase": "turn3_start",
+	  "message": "最終ターンです！\n\n✓ボタンを押してサイコロを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": ["confirm"]
+	},
+	{
+	  "id": 34,
+	  "turn": 3,
+	  "phase": "dice",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 35,
+	  "turn": 3,
+	  "phase": "checkpoint",
+	  "message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\n城に戻ると周回ボーナスがもらえます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 36,
+	  "turn": 3,
+	  "phase": "lap_bonus",
+	  "message": "城に到着！周回ボーナス獲得！\n\n魔力が増え、クリーチャーのHPも回復します。",
+	  "wait_for_click": true
+	},
+	{
+	  "id": 37,
+	  "turn": 3,
+	  "phase": "victory",
+	  "message": "おめでとうございます！\n\n目標魔力に到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
+	  "wait_for_click": true,
+	  "is_final": true
+	}
   ]
 }

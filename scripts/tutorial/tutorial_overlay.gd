@@ -67,10 +67,10 @@ func add_circle_hole(center: Vector2, radius: float):
 	})
 
 ## 矩形の穴を追加（カード用）
-func add_rect_hole(position: Vector2, size: Vector2):
+func add_rect_hole(pos: Vector2, rect_size: Vector2):
 	holes.append({
-		"position": position,
-		"size": size,
+		"position": pos,
+		"size": rect_size,
 		"shape": "rect"
 	})
 
@@ -96,8 +96,8 @@ func highlight_buttons(button_names: Array, _with_overlay: bool = false):
 	clear_holes()
 	allowed_buttons = button_names.duplicate()
 	
-	for name in button_names:
-		var button_info = _get_button_info(name)
+	for btn_name in button_names:
+		var button_info = _get_button_info(btn_name)
 		if not button_info.is_empty():
 			add_circle_hole(button_info.center, button_info.radius)
 	
@@ -171,7 +171,7 @@ func _get_button_info(button_name: String) -> Dictionary:
 			return {}
 
 ## 3Dオブジェクトをスクリーン座標に変換してハイライト
-func highlight_3d_object(object_3d: Node3D, camera: Camera3D, size: Vector2 = Vector2(200, 100)):
+func highlight_3d_object(object_3d: Node3D, camera: Camera3D, rect_size: Vector2 = Vector2(200, 100)):
 	if not object_3d or not camera:
 		return
 	
@@ -182,8 +182,8 @@ func highlight_3d_object(object_3d: Node3D, camera: Camera3D, size: Vector2 = Ve
 	var screen_pos = camera.unproject_position(object_3d.global_position)
 	
 	# 矩形の中心をスクリーン座標に合わせる
-	var rect_pos = screen_pos - size / 2
-	add_rect_hole(rect_pos, size)
+	var rect_pos = screen_pos - rect_size / 2
+	add_rect_hole(rect_pos, rect_size)
 	
 	_update_button_states()
 	visible = true
@@ -247,10 +247,10 @@ func _update_button_states():
 				button.visible = false
 	
 	# 許可されたボタンのみ有効化＆表示
-	for name in allowed_buttons:
-		if buttons_map.has(name) and buttons_map[name]:
-			buttons_map[name].disabled = false
-			buttons_map[name].visible = true
+	for btn_name in allowed_buttons:
+		if buttons_map.has(btn_name) and buttons_map[btn_name]:
+			buttons_map[btn_name].disabled = false
+			buttons_map[btn_name].visible = true
 
 ## ボタン状態を元に戻す
 func _restore_button_states():

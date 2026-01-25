@@ -57,6 +57,11 @@ var level: int:
 var base_color: Color = Color.WHITE  # タイルの基本色
 var is_occupied: bool = false  # プレイヤーが乗っているか
 var down_state: bool = false  # ダウン状態（Phase 1-A追加）
+var frame_material: StandardMaterial3D = null  # プレイヤー色マテリアル
+var frame_original_material: Material = null  # 元のマテリアル保存用
+var frame_mesh_instance: MeshInstance3D = null  # 枠のMeshInstance3D参照
+var _blink_active: bool = false  # 点滅中フラグ
+var _blink_time: float = 0.0  # 点滅用タイマー
 
 # クリーチャーカード3D表示
 var creature_card_3d: Node3D = null  # 3Dカード表示ノード
@@ -71,6 +76,9 @@ func _ready():
 	if has_node("Area3D"):
 		$Area3D.body_entered.connect(_on_area_entered)
 		$Area3D.body_exited.connect(_on_area_exited)
+	
+	# 点滅処理は初期状態でオフ
+	set_process(false)
 	
 	# 初期ビジュアル更新
 	update_visual()
@@ -230,71 +238,122 @@ func level_up() -> bool:
 
 # ビジュアル更新
 func update_visual():
-	# 属性タイル以外は色を変更しない
-	if not TileHelper.is_element_type(tile_type):
-		return
+	# 属性タイルの場合のみタイル本体の色を変更
+	if TileHelper.is_element_type(tile_type):
+		# MeshInstance3Dの色を更新
+		if has_node("MeshInstance3D"):
+			var mesh = $MeshInstance3D
+			
+			# マテリアルを取得または作成
+			if not mesh.material_override:
+				mesh.material_override = StandardMaterial3D.new()
+			
+			var mat = mesh.material_override as StandardMaterial3D
+			
+			# 所有者に応じた色設定
+			if owner_id == -1:
+				# 未所有
+				mat.albedo_color = base_color
+			elif owner_id == 0:
+				# プレイヤー1（黄色系）
+				mat.albedo_color = base_color.lerp(Color.YELLOW, 0.3)
+			elif owner_id == 1:
+				# プレイヤー2（青系）
+				mat.albedo_color = base_color.lerp(Color.BLUE, 0.3)
+			
+			# レベルに応じた明度調整
+			mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, (level - 1) * 0.1)
 	
-	# MeshInstance3Dの色を更新
-	if has_node("MeshInstance3D"):
-		var mesh = $MeshInstance3D
-		
-		# マテリアルを取得または作成
-		if not mesh.material_override:
-			mesh.material_override = StandardMaterial3D.new()
-		
-		var mat = mesh.material_override as StandardMaterial3D
-		
-		# 所有者に応じた色設定
-		if owner_id == -1:
-			# 未所有
-			mat.albedo_color = base_color
-		elif owner_id == 0:
-			# プレイヤー1（黄色系）
-			mat.albedo_color = base_color.lerp(Color.YELLOW, 0.3)
-		elif owner_id == 1:
-			# プレイヤー2（青系）
-			mat.albedo_color = base_color.lerp(Color.BLUE, 0.3)
-		
-		# レベルに応じた明度調整
-		mat.albedo_color = mat.albedo_color.lerp(Color.WHITE, (level - 1) * 0.1)
-	
-	# 枠発光も更新
+	# 枠発光は全タイルで更新（属性タイル以外も含む）
 	_update_frame_glow()
 
-# 枠発光更新（所有者に応じて発光）
+# 枠発光更新（所有者に応じて発光、ダウン状態で点灯/アクティブで点滅）
 func _update_frame_glow():
-	# frameノードを検索（GLBインスタンスの子にMeshInstance3Dがある）
+	# frameノードを検索
 	var frame_node = get_node_or_null("frame")
 	if not frame_node:
 		return
 	
-	# frameの子からMeshInstance3Dを探す
-	var mesh_instance: MeshInstance3D = null
-	for child in frame_node.get_children():
-		if child is MeshInstance3D:
-			mesh_instance = child
-			break
+	# frameの子からMeshInstance3Dを取得（初回のみ）
+	if not frame_mesh_instance:
+		for child in frame_node.get_children():
+			if child is MeshInstance3D:
+				frame_mesh_instance = child
+				# 元のマテリアルを保存
+				if frame_mesh_instance.mesh and frame_mesh_instance.mesh.get_surface_count() > 0:
+					frame_original_material = frame_mesh_instance.mesh.surface_get_material(0)
+				break
 	
-	if not mesh_instance:
+	if not frame_mesh_instance:
 		return
 	
-	# マテリアルを取得または作成
-	if not mesh_instance.material_override:
-		mesh_instance.material_override = StandardMaterial3D.new()
-	
-	var mat = mesh_instance.material_override as StandardMaterial3D
+	# プレイヤー色マテリアルを作成（初回のみ）
+	if not frame_material:
+		frame_material = StandardMaterial3D.new()
 	
 	if owner_id == -1:
-		# 未所有: 発光なし
-		mat.emission_enabled = false
-		mat.albedo_color = Color(0.3, 0.3, 0.3)  # 暗めのグレー
+		# 未所有: 元のマテリアルに戻す、点滅停止
+		_stop_frame_blink()
+		frame_mesh_instance.material_override = null
 	else:
-		# 所有者あり: プレイヤー色で発光
+		# 所有者あり
 		var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
-		mat.albedo_color = player_color
-		mat.emission_enabled = true
-		mat.emission = player_color
-		mat.emission_energy_multiplier = 1.5  # 発光の強さ
+		frame_material.emission_enabled = true
+		
+		if down_state:
+			# ダウン状態: プレイヤー色で常時点灯、点滅停止
+			_stop_frame_blink()
+			frame_material.albedo_color = player_color
+			frame_material.emission = player_color.darkened(0.3)
+			frame_material.emission_energy_multiplier = 1.0
+			frame_mesh_instance.material_override = frame_material
+		else:
+			# アクティブ状態: 点滅開始
+			if not _blink_active:
+				_start_frame_blink()
+
+# 枠点滅開始
+func _start_frame_blink():
+	_blink_active = true
+	_blink_time = 0.0
+	set_process(true)
+
+# 枠点滅停止
+func _stop_frame_blink():
+	_blink_active = false
+	_blink_time = 0.0
+	set_process(false)
+
+# 点滅処理（_processで実行）
+func _process(delta):
+	if not _blink_active or not frame_mesh_instance:
+		return
+	_blink_time += delta
+	
+	# sin波で0〜1を滑らかに変化（周期2.5秒）
+	var t = (sin(_blink_time * TAU / 2.5) + 1.0) / 2.0  # 0〜1
+	
+	# 常にmaterial_overrideを使用
+	frame_mesh_instance.material_override = frame_material
+	
+	# プレイヤー色と元の色（グレー）を補間
+	var player_color = GameConstants.PLAYER_COLORS[owner_id % GameConstants.PLAYER_COLORS.size()]
+	var original_color = Color(0.15, 0.15, 0.15)  # 元の枠の色（暗めグレー）
+	
+	frame_material.albedo_color = original_color.lerp(player_color, t)
+	frame_material.emission = original_color.lerp(player_color.darkened(0.3), t)  # 発光色を少し暗めに
+	frame_material.emission_energy_multiplier = 0.3 + t * 0.7  # 0.3〜1.0（控えめに）
+
+# frameノード以下の全MeshInstance3Dを再帰的に収集
+func _collect_mesh_instances(node: Node, result: Array[MeshInstance3D]):
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			result.append(child)
+		_collect_mesh_instances(child, result)
+
+
+
+
 
 # 属性連鎖数を取得（子クラスでオーバーライド可能）
 func get_chain_count(_board_system) -> int:

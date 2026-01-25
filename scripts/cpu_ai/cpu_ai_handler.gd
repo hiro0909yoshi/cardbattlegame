@@ -235,8 +235,8 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 	
 	# 即死ギャンブルや無効化+即死は特別扱い（ポリシーより優先）
 	if eval_result.get("is_instant_death_gamble", false) or eval_result.get("is_nullify_instant_death", false):
-		var creature_index = eval_result.creature_index
-		var creature = card_system.get_card_data_for_player(current_player.id, creature_index)
+		var instant_death_creature_idx = eval_result.creature_index
+		var creature = card_system.get_card_data_for_player(current_player.id, instant_death_creature_idx)
 		if eval_result.get("is_instant_death_gamble", false):
 			print("[CPU AI] バトル決定: %s で即死に賭けます（確率: %d%%）" % [
 				creature.get("name", "?"),
@@ -248,7 +248,7 @@ func decide_battle(current_player, tile_info: Dictionary) -> void:
 				eval_result.get("instant_death_probability", 0)
 			])
 		decision_attempts = 0
-		emit_signal("battle_decided", creature_index, -1)
+		emit_signal("battle_decided", instant_death_creature_idx, -1)
 		return
 	
 	# ポリシーに基づいて行動を決定
