@@ -797,7 +797,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "秘術",
-			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[EP0・MHP×G2を得て、ST&MHP-10]",
+			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[EP0・MHP×2EPを得て、ST&MHP-10]",
 			"ability_parsed": {
 				"effects": [
 					{

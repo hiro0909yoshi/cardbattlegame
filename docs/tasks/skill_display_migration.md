@@ -46,7 +46,7 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 |--------|-------------|---------|
 | アイテム破壊 | destroy_item | [x] |
 | アイテム盗み | steal_item | [x] |
-| 魔力獲得 | magic_gain | [x] |
+| EP獲得 | magic_gain | [x] |
 | APドレイン | ap_drain | [x] |
 | 変身 | transform | [ ] |
 | 呪い付与 | apply_curse | [x] |
@@ -65,7 +65,7 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 
 | スキル | effect_type | 対応状況 |
 |--------|-------------|---------|
-| 遺産（魔力） | legacy_magic | [ ] |
+| 遺産（EP） | legacy_magic | [ ] |
 | 遺産（カード） | legacy_card | [ ] |
 | 死者復活 | revive | [x] |
 | 手札復活 | revive_to_hand | [x] |

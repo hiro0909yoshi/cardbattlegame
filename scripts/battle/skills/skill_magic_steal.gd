@@ -43,12 +43,15 @@ static func has_no_item_steal(creature_data: Dictionary) -> bool:
 ## @param spell_magic SpellMagicインスタンス
 static func apply_damage_based_steal(attacker, defender, damage: int, spell_magic) -> void:
 	if not spell_magic:
+		print("[EP奪取] spell_magic is null")
 		return
 	
 	if damage <= 0:
+		print("[EP奪取] damage <= 0: ", damage)
 		return
 	
 	var has_skill = has_damage_based_steal(attacker.creature_data)
+	print("[EP奪取] チェック: ", attacker.creature_data.get("name", "?"), " has_skill=", has_skill)
 	
 	if has_skill:
 		# ability_parsedから倍率を取得

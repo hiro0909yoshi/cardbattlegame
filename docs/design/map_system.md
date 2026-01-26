@@ -87,7 +87,7 @@
 | CardBuyTile | カード購入マス |
 | CardGiveTile | カード獲得マス |
 | MagicStoneTile | 魔法石マス |
-| MagicTile | 魔力マス |
+| MagicTile | EPマス |
 
 ---
 
@@ -110,7 +110,7 @@
 
 ### 周回完了時の効果
 
-#### 1. 魔力ボーナス
+#### 1. EPボーナス
 
 マップの`lap_bonus_preset`で指定されたボーナスを獲得。
 プリセット詳細: [オンラインルール設計書](online_rules_design.md#lap_bonus_presets周回ボーナスプリセット) を参照

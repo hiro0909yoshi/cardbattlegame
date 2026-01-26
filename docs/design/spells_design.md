@@ -32,7 +32,7 @@
 ```
 GameFlowManager
   ├─ spell_draw: SpellDraw          # カードドロー ✅
-  ├─ spell_magic: SpellMagic        # 魔力増減 ✅
+  ├─ spell_magic: SpellMagic        # EP増減 ✅
   ├─ spell_land: SpellLand          # 土地操作 ✅
   ├─ spell_dice: SpellDice          # ダイス操作 ✅
   ├─ spell_curse: SpellCurse        # 呪い管理 ⏳
@@ -59,14 +59,14 @@ GameFlowManager
 ```
 scripts/spells/              # スペル効果モジュール
   ├── spell_draw.gd         # ドロー処理 ✅
-  ├── spell_magic.gd        # 魔力増減 ✅
+  ├── spell_magic.gd        # EP増減 ✅
   ├── spell_land_new.gd     # 土地操作 ✅
   ├── spell_dice.gd         # ダイス操作 ✅
   └── spell_curse.gd        # 呪い管理 ⏳
 
 docs/design/spells/          # 個別スペル効果のドキュメント
   ├── カードドロー.md       # ドロー処理の詳細 ✅
-  ├── 魔力増減.md          # 魔力増減の詳細 ✅
+  ├── EP増減.md          # EP増減の詳細 ✅
   ├── 領地変更.md          # 土地操作の詳細 ✅
   ├── ダイス操作.md        # ダイス操作の詳細 ✅
   ├── ステータス増減.md    # ステータス増減の詳細 ⏳
@@ -82,7 +82,7 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
 |-------|-----------------|------------|----------------|
 | **カードドロー** | [spell_draw.gd](../../scripts/spells/spell_draw.gd) | 15個 | [カードドロー.md](./spells/カードドロー.md) |
-| **魔力増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [魔力増減.md](./spells/魔力増減.md) |
+| **EP増減** | [spell_magic.gd](../../scripts/spells/spell_magic.gd) | 20個 | [EP増減.md](./spells/EP増減.md) |
 | **土地操作** | [spell_land_new.gd](../../scripts/spells/spell_land_new.gd) | 11個 | [領地変更.md](./spells/領地変更.md) |
 | **ダイス操作** | [spell_dice.gd](../../scripts/spells/spell_dice.gd) | 7個 | [ダイス操作.md](./spells/ダイス操作.md) |
 | **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
@@ -292,7 +292,7 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 
 **特徴**:
 - 発動者：自分のクリーチャー
-- コスト：魔力
+- コスト：EP
 - タイミング：スペルフェーズで1ターン1回
 - 制約：**スペルカードと排他的**（同じターンに両方使えない）
 
@@ -381,7 +381,7 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 
 - **土地操作系** → `scripts/spells/spell_land_new.gd` に新メソッド追加 + `docs/design/spells/領地変更.md` 更新
 - **ドロー系** → `scripts/spells/spell_draw.gd` に新メソッド追加 + `docs/design/spells/カードドロー.md` 更新
-- **魔力系** → `scripts/spells/spell_magic.gd` に新メソッド追加 + `docs/design/spells/魔力増減.md` 更新
+- **EP系** → `scripts/spells/spell_magic.gd` に新メソッド追加 + `docs/design/spells/EP増減.md` 更新
 - **新カテゴリ** → 新しい `SpellXxx.gd` クラスを作成 + 専用ドキュメント作成
 
 ---
@@ -466,7 +466,7 @@ if hand_count >= required_count:
 2. **該当する詳細ドキュメント**
    - 土地操作 → `docs/design/spells/領地変更.md` の「対応スペル一覧」
    - ドロー → `docs/design/spells/カードドロー.md` の対応表
-   - 魔力 → `docs/design/spells/魔力増減.md` の対応表
+   - EP → `docs/design/spells/EP増減.md` の対応表
 
 3. **密命カードの場合**
    - `docs/design/skills/密命カード.md` の「密命スペル一覧」に追加

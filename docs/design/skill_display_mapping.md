@@ -42,7 +42,7 @@ keywordsはすでに日本語名なので、そのまま表示できる。
 | keyword | 表示 | エフェクト | 備考 |
 |---------|------|-----------|------|
 | 死者復活 | ✅ | 未定 | 死亡時に別クリーチャーとして復活 |
-| 遺産 | ✅ | 未定 | 死亡時に魔力/カード獲得 |
+| 遺産 | ✅ | 未定 | 死亡時にEP/カード獲得 |
 | 戦闘後破壊 | ✅ | 未定 | 両者生存時に敵に呪い付与 |
 | 通行料無効付与 | ✅ | 未定 | 両者生存時に敵に呪い付与 |
 
@@ -80,7 +80,7 @@ effect_typeは英語なので、日本語への変換が必要。
 | random_stat | ランダムステータス | 未定 | ステータスをランダム決定 |
 | support | 援護 | 未定 | 隣接援護効果 |
 | scroll_attack | 巻物攻撃 | 未定 | 巻物による攻撃モード |
-| magic_gain_on_battle_start | 魔力獲得 | 未定 | バトル開始時に魔力獲得（クリーピングコイン） |
+| magic_gain_on_battle_start | EP獲得 | 未定 | バトル開始時にEP獲得（クリーピングコイン） |
 
 #### 「ステータス変化」で統一表示するスキル
 
@@ -120,11 +120,11 @@ effect_typeは英語なので、日本語への変換が必要。
 | apply_curse | 呪い付与 | 未定 | 敵に呪いを付与 |
 | down_enemy | ダウン付与 | 未定 | 敵にダウンを付与 |
 | transform | 変身 | 未定 | 攻撃成功で敵を変身 |
-| magic_steal_on_damage | ダメージ魔力奪取 | 未定 | ダメージで魔力奪取 |
+| magic_steal_on_damage | ダメージEP奪取 | 未定 | ダメージでEP奪取 |
 | destroy_item | アイテム破壊 | 未定 | 敵のアイテム破壊 |
 | steal_item | アイテム盗み | 未定 | 敵のアイテムを盗む |
-| magic_gain_on_invasion | 魔力獲得 | 未定 | 侵略成功時に魔力獲得（ピュトン、トレジャーレイダー） |
-| magic_gain_on_damage | 魔力獲得 | 未定 | ダメージを受けた時に魔力獲得（ゼラチンウォール） |
+| magic_gain_on_invasion | EP獲得 | 未定 | 侵略成功時にEP獲得（ピュトン、トレジャーレイダー） |
+| magic_gain_on_damage | EP獲得 | 未定 | ダメージを受けた時にEP獲得（ゼラチンウォール） |
 
 ### 無効化判定時
 
@@ -166,7 +166,7 @@ effect_typeは英語なので、日本語への変換が必要。
 | revive_to_hand | 手札復活 | 未定 | 手札に戻る |
 | self_destruct | 自壊 | 未定 | 条件を満たすと自壊 |
 | self_destruct_with_revenge | 道連れ自爆 | 未定 | 自爆して敵も道連れ |
-| legacy_magic | 遺産（魔力） | 未定 | 死亡時に魔力獲得 |
+| legacy_magic | 遺産（EP） | 未定 | 死亡時にEP獲得 |
 | legacy_card | 遺産（カード） | 未定 | 死亡時にカード獲得 |
 | draw_cards_on_death | 死亡時ドロー | 未定 | 死亡時にカードを引く |
 | revenge_mhp_damage | 雪辱 | 未定 | 死亡時に敵MHPダメージ |
@@ -236,7 +236,7 @@ effect_typeは英語なので、日本語への変換が必要。
 - [x] 巻物攻撃（scroll_attack）
 - [x] アイテム破壊（destroy_item）
 - [x] アイテム盗み（steal_item）
-- [x] 魔力獲得（magic_gain）
+- [x] EP獲得（magic_gain）
 
 **攻撃成功時**
 - [x] APドレイン（ap_drain）
@@ -252,7 +252,7 @@ effect_typeは英語なので、日本語への変換が必要。
 **死亡時**
 - [x] 自壊（self_destruct）
 - [x] 道連れ（death_revenge）
-- [x] 遺産・魔力（legacy_magic）
+- [x] 遺産・EP（legacy_magic）
 - [x] 遺産・カード（legacy_card）
 - [x] 死者復活（revive）
 - [x] 手札復活（revive_to_hand）

@@ -226,7 +226,7 @@
 	  "cost": {
 		"ep": 80
 	  },
-	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料はG0)",
+	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料は0EP)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"effects": [
@@ -1491,7 +1491,7 @@
 	  "cost": {
 		"ep": 50
 	  },
-	  "effect": "対象セプターに呪い\"生命力\"(クリーチャーとアイテムG0、スペルは無効化され呪いは消える)",
+	  "effect": "対象セプターに呪い\"生命力\"(クリーチャーとアイテム0EP、スペルは無効化され呪いは消える)",
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_info": {

@@ -555,6 +555,16 @@ func _setup_spell_systems() -> void:
 	
 	# GameFlowManagerに一括設定
 	game_flow_manager.set_spell_systems(spell_systems)
+	
+	# BattleSystemにspell_magic/spell_drawを設定（setup_systemsより後に初期化されるため）
+	if battle_system:
+		battle_system.spell_magic = spell_systems.get("spell_magic")
+		battle_system.spell_draw = spell_systems.get("spell_draw")
+		if battle_system.battle_special_effects:
+			battle_system.battle_special_effects.spell_magic_ref = spell_systems.get("spell_magic")
+			battle_system.battle_special_effects.spell_draw_ref = spell_systems.get("spell_draw")
+		if battle_system.battle_preparation:
+			battle_system.battle_preparation.spell_magic_ref = spell_systems.get("spell_magic")
 
 ## BattleScreenManager初期化
 func _setup_battle_screen_manager() -> void:

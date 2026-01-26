@@ -6,33 +6,33 @@
 
   "rule_preset": "standard",
   "rule_overrides": {
-    "initial_magic": {"player": 1000, "cpu": 1000}
+	"initial_magic": {"player": 1000, "cpu": 1000}
   },
 
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "skills_test",
-        "ai_level": 3,
-        "start_tile": 0
-      },
-      {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
-        "ai_level": 3,
-        "start_tile": 0
-      },
-      {
-        "character_id": "bowser",
-        "deck_id": "random",
-        "ai_level": 3,
-        "start_tile": 0
-      }
-    ],
-    "rewards": {
-      "first_clear": {"type": "gold", "amount": 1000},
-      "repeat": {"type": "gold", "amount": 200}
-    }
+	"enemies": [
+	  {
+		"character_id": "bowser",
+		"deck_id": "skills_test",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "balance_easy",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "bowser",
+		"deck_id": "random",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	],
+	"rewards": {
+	  "first_clear": {"type": "gold", "amount": 1000},
+	  "repeat": {"type": "gold", "amount": 200}
+	}
   }
 }

@@ -50,7 +50,7 @@ LandCommandHandler
   ├─ SELECTING_ACTION（アクション選択）
   │    └─ 利用可能アクションの表示
   ├─ SELECTING_LEVEL（レベル選択）※レベルアップ時
-  │    └─ 魔力チェック、コスト計算
+  │    └─ EPチェック、コスト計算
   └─ 実行
 ```
 

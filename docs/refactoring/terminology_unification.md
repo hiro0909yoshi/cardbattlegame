@@ -8,7 +8,7 @@
 
 | 用途 | 旧用語 | 新用語 | 略称 |
 |------|--------|--------|------|
-| ゲーム内通貨（バトル・通行料・スペル） | 魔力 | エレメントパワー | **EP** |
+| ゲーム内通貨（バトル・通行料・スペル） | 魔力 / Gold / MP | エレメントパワー | **EP** |
 | ゲーム内総資産 | 総魔力 / 総資産 | トータルエレメントパワー | **TEP** |
 | メタゲーム通貨（ガチャ・ショップ） | ゴールド | ゴールド（変更なし） | **G** |
 | 支払い金額 | コスト | コスト（変更なし） | - |
@@ -51,7 +51,7 @@ TEP: 5000
 
 ## 進捗状況
 
-### コード変更: ✅ 完了
+### ✅ 全て完了
 
 | 項目 | ステータス | 備考 |
 |------|-----------|------|
@@ -67,40 +67,8 @@ TEP: 5000
 | `gold_transfer` → `ep_transfer` | ✅ 完了 | ゲーム内通貨のみ |
 | `gold_gained` → `ep_gained` | ✅ 完了 | |
 | `legacy_gold` → `legacy_ep` | ✅ 完了 | |
-
-### ドキュメント変更: 🔄 未着手
-
-| 項目 | ステータス | 対象ファイル数 |
-|------|-----------|---------------|
-| 「魔力」→「EP」 | 未着手 | 30+ファイル |
-| 「総魔力」→「TEP」 | 未着手 | ~15ファイル |
-| 「G」→「EP」 | 未着手 | 多数 |
-| ファイル名変更 | 未着手 | 2ファイル |
-
----
-
-## 変更対象ドキュメント一覧
-
-### ファイル名変更が必要
-- `docs/design/spells/魔力増減.md` → `EP増減.md`
-- `docs/design/skills/魔力獲得奪取.md` → `EP獲得奪取.md`
-
-### 内容変更が必要（主要ファイル）
-- `docs/design/player_info_panel.md` - UI仕様
-- `docs/design/special_tiles.md` - 魔法石・TEP計算
-- `docs/design/online_rules_design.md` - 勝利条件
-- `docs/design/info_panel.md` - 表示項目
-- `docs/design/tutorial_system.md` - チュートリアル
-- `docs/design/lap_system.md` - 周回システム
-- `docs/design/bankruptcy_system.md` - 破産処理
-- `docs/design/mystic_arts.md` - 秘術
-- `docs/design/mystic_arts_tasks.md` - 秘術タスク
-- `docs/design/spells_tasks.md` - スペルタスク（一部完了）
-- `docs/design/creatures_tasks.md` - クリーチャータスク
-- `docs/design/item_system.md` - アイテム
-- `docs/design/skills_design.md` - スキル設計
-- `docs/design/cpu_ai/*.md` - CPU AI関連
-- `docs/refactoring/toll_system_refactoring.md` - 通行料リファクタリング
+| JSONデータ内テキスト | ✅ 完了 | ability, ability_detail, effect等 |
+| ドキュメント更新 | ✅ 完了 | 27ファイル |
 
 ---
 
@@ -140,7 +108,8 @@ TEP: 5000
 | 日付 | バージョン | 変更内容 |
 |------|-----------|---------|
 | 2026/01/26 | 1.0 | 初版作成 |
-| 2026/01/26 | 2.0 | コード変更完了、進捗状況を更新 |
+| 2026/01/26 | 2.0 | コード変更完了 |
+| 2026/01/26 | 3.0 | JSONデータ・ドキュメント変更完了、全て完了 |
 
 ---
 

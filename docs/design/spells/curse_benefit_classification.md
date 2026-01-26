@@ -32,7 +32,7 @@
 | `move_disable` | 移動不可 | 移動できない | 2|
 | `protection_wall` | 防魔壁 | 防魔と防御型を持つ | 1|
 | `hp_effect_immune` | HP効果無効 | HP変動効果を無効化 | 1|
-| `blast_trap` | 爆発罠 | 敵停止時に魔力40%減&HP-20 | 1|
+| `blast_trap` | 爆発罠 | 敵停止時にEP40%減&HP-20 | 1|
 | `creature_toll_disable` | クリーチャー通行料無効 | そのクリーチャーの通行料が0 | 2|
 
 ---
@@ -43,14 +43,14 @@
 |-----------|------|------|----------|
 | `dice_fixed` | ダイス固定 | ダイスを固定値にする | 1|
 | `dice_range` | ダイス範囲 | ダイスを範囲内にする | 1|
-| `dice_range_magic` | 範囲+魔力 | ダイス範囲+魔力獲得 | 2|
+| `dice_range_magic` | 範囲+EP | ダイス範囲+EP獲得 | 2|
 | `protection` | 防魔 | スペルの対象にならない | 1|
 | `toll_disable` | 通行料無効 | 通行料を取れない | 2|
 | `toll_share` | 通行料共有 | 他セプターの通行料の50%を得る | 1|
 | `toll_fixed` | 通行料固定 | 通行料が固定値になる | 2|
 | `spell_disable` | スペル不可 | スペルを使用できない | 2|
 | `movement_reverse` | 歩行逆転 | 移動方向が逆になる | 2|
-| `life_force` | 生命力 | クリーチャーとアイテムG0、スペル無効化で呪い消滅 | 1|
+| `life_force` | 生命力 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 | 1|
 
 ---
 
@@ -58,8 +58,8 @@
 
 | curse_type | 名前 | 効果 | 有利/不利 |
 |-----------|------|------|----------|
-| `cost_increase` | コスト上昇 | カード使用魔力増加 | |
-| `summon_free` | 召喚条件解除 | 魔力以外のコスト無視 | |
+| `cost_increase` | コスト上昇 | カード使用EP増加 | |
+| `summon_free` | 召喚条件解除 | EP以外のコスト無視 | |
 | `invasion_disable` | 侵略不可 | 侵略できない | |
 | `element_chain` | 他属性連鎖 | 火と地、水と風が連鎖 | |
 | `world_spell_protection` | 防魔 | 全セプターがスペル対象外 | |

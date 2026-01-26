@@ -7,14 +7,14 @@
 
 ## 概要
 
-秘術（Mystic Arts）は、クリーチャーが持つ特殊な魔法効果。スペルフェーズで発動でき、コストとして魔力を消費する。
+秘術（Mystic Arts）は、クリーチャーが持つ特殊な魔法効果。スペルフェーズで発動でき、コストとしてEPを消費する。
 
 ### 基本仕様
 
 | 項目 | 内容 |
 |------|------|
 | 発動者 | 自分のクリーチャーのみ |
-| コスト | 魔力（プレイヤーの共通資源） |
+| コスト | EP（プレイヤーの共通資源） |
 | タイミング | スペルフェーズ内（ターン1回） |
 | 排他性 | スペルカード使用時は秘術は使えない（逆も同様） |
 | 発動後 | クリーチャーはダウン状態（不屈で回避可） |
@@ -129,7 +129,7 @@
 | フィールド | 説明 |
 |-----------|------|
 | `name` | 秘術名（UI表示用） |
-| `cost` | 魔力コスト |
+| `cost` | EPコスト |
 | `target_type` | ターゲットタイプ（`self`, `player`, `land`等） |
 | `target_info` | ターゲット条件（オプション） |
 | `effects` | 効果配列（SpellDrawやSpellPhaseHandlerで処理） |
@@ -142,7 +142,7 @@
 | `name` | 秘術名（UI表示用） |
 | `description` | 説明テキスト |
 | `spell_id` | 参照するスペルのID（9000番台：秘術専用、2000番台：既存スペル） |
-| `cost` | 魔力コスト（スペル本来のコストとは独立） |
+| `cost` | EPコスト（スペル本来のコストとは独立） |
 
 ### 秘術専用スペルID範囲
 
@@ -191,7 +191,7 @@
   │   ├─ 秘術選択UI表示
   │   ├─ ターゲット選択（セルフターゲット時は自動）
   │   ├─ 秘術発動・効果適用
-  │   ├─ 魔力消費
+  │   ├─ EP消費
   │   ├─ クリーチャーをダウン状態に設定
   │   └─ スペルUIを非表示（排他制御）
   │
@@ -229,7 +229,7 @@ data/spell_mystic.json                   # 秘術専用スペル（9000番台）
 |---------|------|
 | `get_available_creatures(player_id)` | 秘術発動可能なクリーチャー一覧を取得 |
 | `get_mystic_arts_for_creature(creature_data)` | クリーチャーの秘術一覧を取得 |
-| `can_cast_mystic_art(mystic_art, context)` | 発動可否判定（魔力・ダウン状態・ターゲット有無） |
+| `can_cast_mystic_art(mystic_art, context)` | 発動可否判定（EP・ダウン状態・ターゲット有無） |
 | `apply_mystic_art_effect(mystic_art, target_data, context)` | 秘術効果を適用（spell_id参照/直接effects両対応） |
 | `execute_mystic_art(creature, mystic_art, target_data)` | 秘術実行（非同期対応） |
 | `_is_async_mystic_art(mystic_art)` | 非同期効果を含む秘術かどうかを判定 |

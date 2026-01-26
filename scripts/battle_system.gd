@@ -83,6 +83,15 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 
 # バトル実行（3D版メイン処理）
 func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}):
+	# spell_magic/spell_drawの再取得（setup_systems時にnullだった場合の対策）
+	if not spell_magic and game_flow_manager_ref and game_flow_manager_ref.spell_magic:
+		spell_magic = game_flow_manager_ref.spell_magic
+		battle_special_effects.spell_magic_ref = spell_magic
+		battle_preparation.spell_magic_ref = spell_magic
+	if not spell_draw and game_flow_manager_ref and game_flow_manager_ref.spell_draw:
+		spell_draw = game_flow_manager_ref.spell_draw
+		battle_special_effects.spell_draw_ref = spell_draw
+	
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))

@@ -310,7 +310,7 @@ func _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_inde
 	return false
 ```
 バウンティハント（賞金首）報酬
-敗北したクリーチャーに「賞金首」呪いがある場合、勝者は報酬魔力を獲得。
+敗北したクリーチャーに「賞金首」呪いがある場合、勝者は報酬EPを獲得。
 ```
 発動タイミング: 各バトル結果処理の冒頭
 報酬: 呪いに設定された magic_amount

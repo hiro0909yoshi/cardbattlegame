@@ -177,8 +177,8 @@ hide_panel(clear_buttons: bool = true)
 
 ### 表示内容
 - プレイヤー名
-- 魔力（現在値）
-- 総魔力
+- EP（現在値）
+- TEP
 - 土地数
 - クリーチャー数
 

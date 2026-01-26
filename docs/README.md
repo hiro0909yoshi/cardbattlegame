@@ -150,7 +150,7 @@ docs/
 | 変身 | [transform_skill.md](design/skills/transform_skill.md) |
 | 空地移動・敵地移動 | [vacant_move_skill.md](design/skills/vacant_move_skill.md) |
 | 遺産 | [遺産.md](design/skills/遺産.md) |
-| 魔力獲得・奪取 | [魔力獲得奪取.md](design/skills/魔力獲得奪取.md) |
+| EP獲得・奪取 | [EP獲得奪取.md](design/skills/EP獲得奪取.md) |
 | 密命カード | [密命カード.md](design/skills/密命カード.md) |
 | 通行料操作 | [通行料操作.md](design/skills/通行料操作.md) |
 
@@ -180,7 +180,7 @@ docs/
 | 通行料呪い | [通行料呪い.md](design/spells/通行料呪い.md) |
 | 防魔 | [防魔.md](design/spells/防魔.md) |
 | 領地変更 | [領地変更.md](design/spells/領地変更.md) |
-| 魔力増減 | [魔力増減.md](design/spells/魔力増減.md) |
+| EP増減 | [EP増減.md](design/spells/EP増減.md) |
 | 行動制限 | [行動制限.md](design/spells/行動制限.md) |
 
 ---

@@ -55,10 +55,10 @@ StageLoader（プリセット取得・適用）
 
 ゲームの基本ルールを定義。
 
-| プリセット名 | 初期魔力 | 勝利条件 | 用途 |
+| プリセット名 | 初期EP | 勝利条件 | 用途 |
 |-------------|---------|---------|------|
-| `standard` | 1000 | 魔力8000以上（チェックポイント） | 通常対戦 |
-| `quick` | 2000 | 魔力4000以上（チェックポイント） | 短時間対戦 |
+| `standard` | 1000 | TEP8000以上（チェックポイント） | 通常対戦 |
+| `quick` | 2000 | TEP4000以上（チェックポイント） | 短時間対戦 |
 | `elimination` | 1000 | 敵を破産させる | サバイバル戦 |
 | `territory` | 1000 | 領地10個以上（チェックポイント） | 領地争奪戦 |
 
@@ -167,7 +167,7 @@ const CHECKPOINT_PRESETS = {
 
 | type | target | timing | 説明 |
 |------|--------|--------|------|
-| `magic` | 数値 | `checkpoint` | 総魔力がtarget以上 |
+| `magic` | 数値 | `checkpoint` | TEPがtarget以上 |
 | `laps` | 数値 | `checkpoint` | 周回数がtarget以上 |
 | `territories` | 数値 | `checkpoint` | 領地数がtarget以上 |
 | `enemy_no_territory` | - | `checkpoint` | 敵が領地0 |
@@ -207,7 +207,7 @@ const CHECKPOINT_PRESETS = {
 }
 ```
 
-**例**: 魔力8000以上 **かつ** 敵が領地0
+**例**: TEP8000以上 **かつ** 敵が領地0
 
 #### mode: "any"（OR条件）
 
@@ -223,7 +223,7 @@ const CHECKPOINT_PRESETS = {
 }
 ```
 
-**例**: 魔力8000以上 **または** 敵を破産
+**例**: TEP8000以上 **または** 敵を破産
 
 ---
 

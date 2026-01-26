@@ -8,7 +8,7 @@
 
 ## 概要
 
-現在の通行料システムの実装に基づいて、新しい仕様（土地価値＝通行料、総魔力に反映）に対応させるためのリファクタリング計画です。
+現在の通行料システムの実装に基づいて、新しい仕様（土地価値＝通行料、TEPに反映）に対応させるためのリファクタリング計画です。
 
 **参照**: `docs/design/toll_system_spec.md` - 新仕様書
 
@@ -44,22 +44,22 @@
 - UI に 240, 620, 1200 が表示される → GameConstants が呼び出されていない
 
 **影響範囲**:
-- レベルアップ実行時の魔力消費も同時に修正される（cost パラメータが GameConstants から計算されるため）
+- レベルアップ実行時のEP消費も同時に修正される（cost パラメータが GameConstants から計算されるため）
 - land_action_helper.gd の `execute_level_up_with_level()` は修正不要（cost を受け取るだけ）
 
 ---
 
-#### 1. 総魔力の UI表示
+#### 1. TEPの UI表示
 
-**内容**: プレイヤー情報パネルに総魔力を表示
+**内容**: プレイヤー情報パネルにTEPを表示
 
 **実装箇所**: `scripts/ui_manager.gd` / UIコンポーネント
 
 **表示内容**:
 ```
-手持ち魔力: 2500G
+手持ちEP: 2500G
 土地価値: 1200G
-総魔力: 3700G ← 新規追加
+TEP: 3700G ← 新規追加
 ```
 
 **計算式**:
@@ -69,9 +69,9 @@ var total_magic = player.magic_power + tile_data_manager.calculate_total_land_va
 
 #### 2. 勝利判定の修正
 
-**現在**: 手持ち魔力で判定（不正確）
+**現在**: 手持ちEPで判定（不正確）
 
-**変更**: 総魔力で判定
+**変更**: TEPで判定
 
 **実装箇所**: `scripts/player_system.gd` の add_magic()
 
@@ -94,7 +94,7 @@ if total_magic >= player.target_magic:
 
 #### 1. 売却処理の実装
 
-**内容**: 手持ち魔力不足時に土地を売却
+**内容**: 手持ちEP不足時に土地を売却
 
 **実装箇所**: `scripts/tile_action_processor.gd`
 
@@ -108,7 +108,7 @@ pay_toll()で支払い不可
   ↓
 売却額 = その土地の通行料
   ↓
-手持ち魔力 += 売却額
+手持ちEP += 売却額
   ↓
 土地を失う（所有者 = -1）
   ↓
@@ -189,7 +189,7 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 
 #### 1. UI自動更新
 
-**内容**: 土地レベルアップ時に通行料と総魔力を自動更新
+**内容**: 土地レベルアップ時に通行料とTEPを自動更新
 
 **実装箇所**: `scripts/ui_manager.gd`
 
@@ -203,7 +203,7 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 ## 実装順序
 
 ```
-1. 総魔力 UI表示 (1-2時間)
+1. TEP UI表示 (1-2時間)
    ↓
 2. 勝利判定の修正 (30分)
    ↓
@@ -222,12 +222,12 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 
 - [ ] calculate_toll()の計算が正確か
 - [ ] calculate_total_land_value()の合計が正しいか
-- [ ] pay_toll()での魔力移動が正確か
+- [ ] pay_toll()でのEP移動が正確か
 
 ### Integration Tests
 
-- [ ] 土地売却時に総魔力が正しく更新されるか
-- [ ] 勝利判定が総魔力で行われるか
+- [ ] 土地売却時にTEPが正しく更新されるか
+- [ ] 勝利判定がTEPで行われるか
 - [ ] 呪いが通行料に正しく適用されるか
 
 ### Manual Tests
@@ -240,7 +240,7 @@ func calculate_toll_with_curse(tile_index, payer_id, receiver_id) -> int:
 
 ## 注意事項
 
-### 1. 総魔力計算のパフォーマンス
+### 1. TEP計算のパフォーマンス
 
 **現状**: 毎回全タイルをループ
 

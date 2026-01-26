@@ -25,7 +25,7 @@
    - [特殊移動](#特殊移動-special-movement)
    - [不屈](#不屈-unyielding)
    - [遺産](./skills/遺産.md)
-   - [魔力獲得・奪取](./skills/魔力獲得奪取.md)
+   - [EP獲得・奪取](./skills/EP獲得奪取.md)
    - [密命カード](./skills/密命カード.md)
 4. [スキル適用順序](#スキル適用順序)
 5. [スキル条件システム](#スキル条件システム)
@@ -194,7 +194,7 @@ AP: 75 (×1.5)
 | **貫通** | [skill_penetration.gd](../../scripts/battle/skills/skill_penetration.gd) | ✅ 完全分離 |
 | **死亡時効果（道連れ・雪辱）** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **遺産** | [skill_legacy.gd](../../scripts/battle/skills/skill_legacy.gd) | ✅ 完全分離 |
-| **魔力獲得・奪取** | [skill_magic_gain.gd](../../scripts/battle/skills/skill_magic_gain.gd) / [skill_magic_steal.gd](../../scripts/battle/skills/skill_magic_steal.gd) | ✅ 完全分離 |
+| **EP獲得・奪取** | [skill_magic_gain.gd](../../scripts/battle/skills/skill_magic_gain.gd) / [skill_magic_steal.gd](../../scripts/battle/skills/skill_magic_steal.gd) | ✅ 完全分離 |
 | **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | ✅ 完全実装 |
 
 

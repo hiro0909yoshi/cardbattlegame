@@ -158,12 +158,12 @@ if hand_size <= 3:
 | `draw` / `draw_cards` | 手札が少ない |
 | `draw_by_type` | 欲しいタイプがある |
 
-### 魔力系
+### EP系
 
 | effect_type | 損益分岐点 |
 |-------------|-----------|
 | `gain_magic` | コスト < 獲得量 |
-| `drain_magic` | コスト < 敵魔力×% |
+| `drain_magic` | コスト < 敵EP×% |
 
 ### ダイス操作系
 

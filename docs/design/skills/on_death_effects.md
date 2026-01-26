@@ -475,7 +475,7 @@ check_on_death_effects(defender, attacker)  # 防御側が死亡
   "heal_amount": 30
 }
 
-// 魔力獲得（遺産）
+// EP獲得（遺産）
 {
   "effect_type": "grant_magic_on_death",
   "trigger": "on_death",

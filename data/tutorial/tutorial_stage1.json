@@ -11,7 +11,7 @@
 	  "id": 1,
 	  "turn": 1,
 	  "phase": "start",
-	  "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、魔力を貯めて城に戻ることです。",
+	  "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、EPを貯めて城に戻ることです。",
 	  "wait_for_click": true,
 	  "highlight": [],
 	  "disable_all_buttons": true
@@ -72,7 +72,7 @@
 	  "id": 8,
 	  "turn": 1,
 	  "phase": "summon_complete",
-	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値が総魔力に加算されます",
+	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値がTEPに加算されます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -130,7 +130,7 @@
 	  "id": 15,
 	  "turn": 2,
 	  "phase": "checkpoint",
-	  "message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得すると魔力がもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
+	  "message": "砦を通過しました！\n\n砦に書かれているシグナルを獲得できます\nシグナルを取得するとEPがもらえます\n\nシグナルを全て集めると周回ボーナスがもらえます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -283,7 +283,7 @@
 	  "id": 32,
 	  "turn": 2,
 	  "phase": "player_info_explain",
-	  "message": "プレイヤーインフォパネルには\n魔力・手札枚数・配置クリーチャーの\n情報が表示されています",
+	  "message": "プレイヤーインフォパネルには\nEP・手札枚数・配置クリーチャーの\n情報が表示されています",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -317,14 +317,14 @@
 	  "id": 36,
 	  "turn": 3,
 	  "phase": "lap_bonus",
-	  "message": "城に到着！周回ボーナス獲得！\n\n魔力が増え、クリーチャーのHPも回復します。",
+	  "message": "城に到着！周回ボーナス獲得！\n\nEPが増え、クリーチャーのHPも回復します。",
 	  "wait_for_click": true
 	},
 	{
 	  "id": 37,
 	  "turn": 3,
 	  "phase": "victory",
-	  "message": "おめでとうございます！\n\n目標魔力に到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
+	  "message": "おめでとうございます！\n\n目標EPに到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
 	  "wait_for_click": true,
 	  "is_final": true
 	}
