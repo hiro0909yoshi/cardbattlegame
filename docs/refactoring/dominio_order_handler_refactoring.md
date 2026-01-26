@@ -1,17 +1,17 @@
-# LandCommandHandler リファクタリング記録
+# DominioOrderHandler リファクタリング記録
 
 ## 概要
 - **日付**: 2025年10月21日
-- **対象**: `scripts/game_flow/land_command_handler.gd`
+- **対象**: `scripts/game_flow/dominio_order_handler.gd`
 - **目的**: 大規模ファイル（881行）を保守性の高い構造に分割
 
 ## 分割結果
 
 ### 元のファイル
-- `land_command_handler.gd`: **881行**
+- `dominio_order_handler.gd`: **881行**
 
 ### 分割後のファイル構成
-1. **land_command_handler.gd**: 352行（メインファイル）
+1. **dominio_order_handler.gd**: 352行（メインファイル）
    - 外部インターフェース
    - 状態管理
    - コンポーネント間の調整
@@ -79,8 +79,8 @@ static func preview_land(handler, tile_index: int) -> bool:
 
 ```gdscript
 # 外部からの呼び出し（変更なし）
-land_command_handler.preview_land(5)
-land_command_handler.execute_action("level_up")
+dominio_order_handler.preview_land(5)
+dominio_order_handler.execute_action("level_up")
 
 # 内部実装（ヘルパーに委譲）
 func preview_land(tile_index: int) -> bool:
@@ -178,12 +178,12 @@ func preview_land(tile_index: int) -> bool:
 ## バックアップ
 
 元のファイルは以下に保存：
-- `land_command_handler_old.gd.disabled`
-- `land_command_handler.gd.backup.disabled`
+- `dominio_order_handler_old.gd.disabled`
+- `dominio_order_handler.gd.backup.disabled`
 
 ## まとめ
 
-LandCommandHandlerの分割は完全に成功しました：
+DominioOrderHandlerの分割は完全に成功しました：
 - ✅ コード増加はわずか12%
 - ✅ 機能は完全に維持
 - ✅ 保守性が大幅に向上

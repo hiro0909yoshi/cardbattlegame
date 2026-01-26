@@ -4,7 +4,7 @@ class_name LandSelectionHelper
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
 ## 
-## 領地コマンド専用：所有地チェックとダウン状態チェックを行う
+## ドミニオオーダー専用：所有地チェックとダウン状態チェックを行う
 static func preview_land(handler, tile_index: int) -> bool:
 	if handler.current_state != handler.State.SELECTING_LAND:
 		return false
@@ -49,7 +49,7 @@ static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
 
 ## 土地選択を確定してアクションメニューを表示
 ## 
-## 領地コマンド専用：状態遷移とUIメニュー表示を行う
+## ドミニオオーダー専用：状態遷移とUIメニュー表示を行う
 static func confirm_land_selection(handler) -> bool:
 	if handler.current_state != handler.State.SELECTING_LAND:
 		return false
@@ -72,7 +72,7 @@ static func select_land(handler, tile_index: int) -> bool:
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
 ## 
-## 領地コマンド専用：ダウン状態の土地を自動的に除外する
+## ドミニオオーダー専用：ダウン状態の土地を自動的に除外する
 static func get_player_owned_lands(board_system, player_id: int) -> Array:
 	if not board_system:
 		return []
@@ -95,7 +95,7 @@ static func get_player_owned_lands(board_system, player_id: int) -> Array:
 
 ## 土地選択UIを更新
 ## 
-## 領地コマンド専用：領地コマンド固有のUI表示
+## ドミニオオーダー専用：ドミニオオーダー固有のUI表示
 static func update_land_selection_ui(handler):
 	if not handler.ui_manager or not handler.ui_manager.phase_label:
 		return

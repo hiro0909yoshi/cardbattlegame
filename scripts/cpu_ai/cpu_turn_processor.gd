@@ -61,8 +61,8 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	
 	match situation:
 		"special_tile":
-			# 特殊タイル（チェックポイント等）では領地コマンドを検討
-			print("CPU: 特殊タイル - 領地コマンド検討")
+			# 特殊タイル（チェックポイント等）ではドミニオオーダーを検討
+			print("CPU: 特殊タイル - ドミニオオーダー検討")
 			_process_special_tile(current_player, tile_info)
 		"empty_land":
 			_process_empty_land(current_player)
@@ -124,7 +124,7 @@ func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String
 
 # 特殊タイルの処理（チェックポイント、カードタイル等）
 func _process_special_tile(current_player, tile_info: Dictionary):
-	# 特殊タイルでは召喚不可、領地コマンドのみ検討
+	# 特殊タイルでは召喚不可、ドミニオオーダーのみ検討
 	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
 	cpu_ai_handler.decide_territory_command(current_player, tile_info, "special_tile")
 
@@ -134,12 +134,12 @@ func _process_empty_land(current_player):
 	var tile_info = board_system.get_tile_info(current_tile)
 	var tile_element = tile_info.get("element", "")
 	
-	# 召喚 vs 領地コマンドを比較
+	# 召喚 vs ドミニオオーダーを比較
 	var decision = cpu_ai_handler.decide_summon_or_territory(current_player, tile_info)
 	
 	if decision.get("action") == "territory_command":
 		var command = decision.get("command", {})
-		print("[CPU] 領地コマンドを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
+		print("[CPU] ドミニオオーダーを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
 		_execute_territory_command(current_player, command)
 	elif card_system.get_hand_size_for_player(current_player.id) > 0:
 		cpu_ai_handler.summon_decided.connect(_on_cpu_summon_decided, CONNECT_ONE_SHOT)
@@ -149,7 +149,7 @@ func _process_empty_land(current_player):
 
 # 自分の土地の処理
 func _process_own_land(current_player, _tile: BaseTile, tile_info: Dictionary):
-	# 領地コマンドを評価
+	# ドミニオオーダーを評価
 	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
 	cpu_ai_handler.decide_territory_command(current_player, tile_info, "own_land")
 
@@ -160,27 +160,27 @@ func _process_enemy_land_empty(current_player, tile_info: Dictionary):
 
 # 敵の防御地の処理
 func _process_enemy_land_defended(current_player, tile_info: Dictionary):
-	# 侵略 vs 領地コマンドを比較
+	# 侵略 vs ドミニオオーダーを比較
 	var decision = cpu_ai_handler.decide_invasion_or_territory(current_player, tile_info)
 	
 	if decision.get("action") == "territory_command":
 		var command = decision.get("command", {})
-		print("[CPU] 敵領地で領地コマンドを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
+		print("[CPU] 敵ドミニオでドミニオオーダーを選択: %s (スコア: %d)" % [command.get("type", "?"), command.get("score", 0)])
 		_execute_territory_command(current_player, command)
 	elif decision.get("action") == "battle":
 		cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
 		cpu_ai_handler.decide_battle(current_player, tile_info)
 	else:
-		# skip: 倒せないし有効な領地コマンドもない
+		# skip: 倒せないし有効なドミニオオーダーもない
 		print("[CPU] 通行料を支払います")
 		_complete_action()
 
 # === コールバック処理 ===
 
-# 領地コマンド決定後の処理
+# ドミニオオーダー決定後の処理
 func _on_territory_command_decided(command: Dictionary):
 	if command.is_empty():
-		print("[CPU] 領地コマンド: 有効なオプションなし")
+		print("[CPU] ドミニオオーダー: 有効なオプションなし")
 		_complete_action()
 		return
 	
@@ -196,11 +196,11 @@ func _on_cpu_summon_decided(card_index: int):
 			print("[CPU] 召喚失敗 → パス")
 			_complete_action()
 	else:
-		# 召喚しなかった場合、領地コマンドを検討
+		# 召喚しなかった場合、ドミニオオーダーを検討
 		_try_territory_command_instead()
 
 
-## 召喚しなかった場合に領地コマンドを検討
+## 召喚しなかった場合にドミニオオーダーを検討
 func _try_territory_command_instead():
 	var current_player = player_system.get_current_player()
 	if current_player == null:
@@ -210,7 +210,7 @@ func _try_territory_command_instead():
 	var current_tile = board_system.movement_controller.get_player_tile(current_player.id)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
-	# 領地コマンドを評価
+	# ドミニオオーダーを評価
 	cpu_ai_handler.territory_command_decided.connect(_on_territory_command_decided, CONNECT_ONE_SHOT)
 	cpu_ai_handler.decide_territory_command(current_player, tile_info, "empty_land")
 
@@ -422,16 +422,16 @@ func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
 	return magic >= cost
 
 # ============================================================
-# 領地コマンド実行
+# ドミニオオーダー実行
 # ============================================================
 
-## LandCommandHandlerを取得
-func _get_land_command_handler():
+## DominioOrderHandlerを取得
+func _get_dominio_order_handler():
 	if board_system and board_system.game_flow_manager:
-		return board_system.game_flow_manager.land_command_handler
+		return board_system.game_flow_manager.dominio_order_handler
 	return null
 
-## 領地コマンドを実行（LandCommandHandler経由）
+## ドミニオオーダーを実行（DominioOrderHandler経由）
 func _execute_territory_command(_current_player, command: Dictionary):
 	var command_type = command.get("type", "")
 	
@@ -443,10 +443,10 @@ func _execute_territory_command(_current_player, command: Dictionary):
 		cpu_ai_handler.decide_battle(_current_player, tile_info)
 		return
 	
-	# LandCommandHandlerを取得
-	var land_handler = _get_land_command_handler()
+	# DominioOrderHandlerを取得
+	var land_handler = _get_dominio_order_handler()
 	if land_handler == null:
-		print("[CPU] LandCommandHandler取得失敗")
+		print("[CPU] DominioOrderHandler取得失敗")
 		_complete_action()
 		return
 	
@@ -454,9 +454,9 @@ func _execute_territory_command(_current_player, command: Dictionary):
 	var success = land_handler.execute_for_cpu(command)
 	
 	if success:
-		print("[CPU] 領地コマンド実行成功: %s" % command_type)
+		print("[CPU] ドミニオオーダー実行成功: %s" % command_type)
 	else:
-		print("[CPU] 領地コマンド実行失敗: %s" % command_type)
+		print("[CPU] ドミニオオーダー実行失敗: %s" % command_type)
 		_complete_action()
 
-# 旧領地コマンド実装は削除済み（LandCommandHandler.execute_for_cpu経由に変更）
+# 旧ドミニオオーダー実装は削除済み（DominioOrderHandler.execute_for_cpu経由に変更）

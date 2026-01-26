@@ -5,7 +5,7 @@ extends RefCounted
 ##
 ## 対象クリーチャー:
 ## - 140: マイコロン - 敵攻撃で生き残った戦闘後、ランダム空地にコピー配置
-## - 335: バウダーイーター - 領地コマンド移動時、元の領地に自分を残す
+## - 335: バウダーイーター - ドミニオオーダー移動時、元のドミニオに自分を残す
 
 const MYCOLON_ID = 140
 const BOULDER_EATER_ID = 335
@@ -108,28 +108,28 @@ static func spawn_mycolon_copy(board_system, tile_index: int, creature_data: Dic
 # ============================================================
 
 ## バウダーイーターの分裂移動チェック
-## 領地コマンド移動時に呼び出す
+## ドミニオオーダー移動時に呼び出す
 static func check_boulder_eater_split(creature_data: Dictionary) -> bool:
 	return is_boulder_eater(creature_data)
 
 
 ## バウダーイーターの分裂処理
-## 元の領地に残すクリーチャーデータを生成（呪い維持）
+## 元のドミニオに残すクリーチャーデータを生成（呪い維持）
 ## 移動先用のコピーデータを生成（呪い除去）
 static func process_boulder_eater_split(creature_data: Dictionary) -> Dictionary:
 	var result = {
-		"original": {},  # 元の領地に残る（呪い維持）
+		"original": {},  # 元のドミニオに残る（呪い維持）
 		"copy": {}       # 移動先に配置（呪い除去）
 	}
 	
-	# 元の領地用（呪い維持）
+	# 元のドミニオ用（呪い維持）
 	result["original"] = create_creature_copy(creature_data, false)
 	
 	# 移動先用（呪い除去）
 	result["copy"] = create_creature_copy(creature_data, true)
 	
 	print("【バウダーイーター】分裂処理")
-	print("  元の領地: 呪い維持")
+	print("  元のドミニオ: 呪い維持")
 	print("  移動先: 呪い除去")
 	
 	return result

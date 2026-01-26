@@ -4,8 +4,8 @@
 1. [隣接判定システム（TileNeighborSystem）](#隣接判定システムtileneighborsystem)
 2. [土地ボーナスシステム](#土地ボーナスシステム)
 3. [ダウン状態システム](#ダウン状態システム)
-4. [領地コマンド詳細](#領地コマンド詳細)
-5. [地形変化システム](#地形変化システム)(#領地コマンド詳細)
+4. [ドミニオオーダー詳細](#ドミニオオーダー詳細)
+5. [地形変化システム](#地形変化システム)(#ドミニオオーダー詳細)
 
 ---
 
@@ -30,7 +30,7 @@ if distance_xz < NEIGHBOR_THRESHOLD:
 
 ### 使用例
 ```gdscript
-# スキル条件: 「隣接した自領地なら強打」
+# スキル条件: 「隣接した自ドミニオなら強打」
 var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
 # → [5, 7]  # タイル6の隣接タイル
 
@@ -123,14 +123,14 @@ creature_data = {
 
 ### 例外: 不屈スキル
 - 不屈スキルを持つクリーチャーがいる土地は、アクション後もダウン状態にならない
-- 何度でも領地コマンドを実行可能
+- 何度でもドミニオオーダーを実行可能
 
 ### ダウン状態の解除タイミング
 - プレイヤーがスタートマスを通過したとき
 - 全プレイヤーの全土地のダウン状態が一括解除される
 
 ### 制約
-- **ダウン状態の土地は領地コマンドで選択できない**
+- **ダウン状態の土地はドミニオオーダーで選択できない**
   - `get_player_owned_lands()`でダウン状態の土地を除外
   - UI上で選択肢として表示されない
 - ダウン状態でもクリーチャーは通常通り機能する
@@ -195,7 +195,7 @@ if tile.has_method("set_down_state"):
 
 ---
 
-## 領地コマンド詳細
+## ドミニオオーダー詳細
 
 ### タイル到着時の動作
 
@@ -204,24 +204,24 @@ if tile.has_method("set_down_state"):
 | 到着タイル | 動作 | 備考 |
 |-----------|------|------|
 | 空き地 | 召喚UI表示 | クリーチャーを召喚して土地獲得可能 |
-| 自分の土地 | 召喚不可（パスして領地コマンドへ） | 領地コマンドでレベルアップ・交換等を実行 |
+| 自分の土地 | 召喚不可（パスしてドミニオオーダーへ） | ドミニオオーダーでレベルアップ・交換等を実行 |
 | 敵の土地 | バトルUI表示 | クリーチャーで侵略可能 |
-| 特殊タイル（空き地） | 召喚不可（パスして領地コマンドへ） | チェックポイント・ワープ等は召喚不可 |
+| 特殊タイル（空き地） | 召喚不可（パスしてドミニオオーダーへ） | チェックポイント・ワープ等は召喚不可 |
 | 特殊タイル（敵地） | バトルUI表示 | 通常の敵地と同様 |
 
 **実装**:
 - 召喚不可の場合は `show_summon_ui_disabled()` でカード選択UIをグレーアウト表示
-- プレイヤーは「召喚しない」（パス）を選択して領地コマンドフェーズへ進む
-- 領地コマンドで交換等を行う際は `card_selection_filter` をクリアして正常に動作させる
+- プレイヤーは「召喚しない」（パス）を選択してドミニオオーダーフェーズへ進む
+- ドミニオオーダーで交換等を行う際は `card_selection_filter` をクリアして正常に動作させる
 
 ### フェーズ管理（状態遷移）
 
-領地コマンドは以下の状態（フェーズ）で管理される。各フェーズは「戻る」操作で1つ前のフェーズに戻れる。
+ドミニオオーダーは以下の状態（フェーズ）で管理される。各フェーズは「戻る」操作で1つ前のフェーズに戻れる。
 
-**状態定義（LandCommandHandler.State）**:
+**状態定義（DominioOrderHandler.State）**:
 ```gdscript
 enum State {
-	CLOSED,              # 領地コマンド非表示
+	CLOSED,              # ドミニオオーダー非表示
 	SELECTING_LAND,      # 土地選択中
 	SELECTING_ACTION,    # アクション選択中
 	SELECTING_LEVEL,     # レベル選択中
@@ -237,13 +237,13 @@ enum State {
 │                        召喚フェーズ                              │
 │                     (card_selection_ui)                          │
 └─────────────────────┬───────────────────────────────────────────┘
-					  │ 領地コマンドボタン押下
+					  │ ドミニオオーダーボタン押下
 					  ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     SELECTING_LAND                               │
 │                     （土地選択中）                                │
 │   操作: ↑↓で土地切替、Enterで確定、数字キーで即確定             │
-│   戻る: 領地コマンド終了 → 召喚フェーズへ                        │
+│   戻る: ドミニオオーダー終了 → 召喚フェーズへ                        │
 └─────────────────────┬───────────────────────────────────────────┘
 					  │ Enter / 数字キー
 					  ▼
@@ -274,13 +274,13 @@ enum State {
 
 **重要な設計原則**:
 - 各フェーズは`cancel()`メソッドで1つ前に戻る
-- `cancel()`は`land_command_handler.gd`で統一管理
+- `cancel()`は`dominio_order_handler.gd`で統一管理
 - 各選択UI（レベル選択、カード選択等）の戻るボタンは`cancel()`を呼ぶ
 - アクション実行後は`complete_action()`→`end_turn()`で統一的にターン終了
 
 ### グローバルアクションボタン
 
-領地コマンドを含む全UIで、画面右下の**グローバルアクションボタン**（決定/戻る）を使用する。
+ドミニオオーダーを含む全UIで、画面右下の**グローバルアクションボタン**（決定/戻る）を使用する。
 
 **ボタン仕様**:
 - 配置: 画面右下に縦並び（上: 決定、下: 戻る）
@@ -291,7 +291,7 @@ enum State {
 | 状況 | 決定ボタン | 戻るボタン |
 |------|-----------|-----------|
 | 召喚フェーズ | - | 召喚しない |
-| 領地選択 | - | 閉じる |
+| ドミニオ選択 | - | 閉じる |
 | アクションメニュー | - | 戻る |
 | レベル選択 | - | 戻る |
 | クリーチャー交換選択 | - | 交換しない |
@@ -300,7 +300,7 @@ enum State {
 
 **交換キャンセル時の動作**:
 - 「交換しない」ボタン → 召喚フェーズに戻る（ターン終了しない）
-- 領地コマンドの状態をリセットし、カード選択UIを再初期化
+- ドミニオオーダーの状態をリセットし、カード選択UIを再初期化
 
 **アクションメニュー表示時**:
 - 選択した土地のクリーチャー情報パネルを自動表示（閲覧モード）
@@ -310,33 +310,33 @@ enum State {
 
 **重要なフラグ**: `card_selection_ui.is_active`
 - `true`: カード選択可能（召喚フェーズ）
-- `false`: カード選択不可（領地コマンド中・その他のフェーズ）
+- `false`: カード選択不可（ドミニオオーダー中・その他のフェーズ）
 
 **実装**:
 ```gdscript
-// 領地コマンドを開く時
+// ドミニオオーダーを開く時
 ui_manager.card_selection_ui.is_active = false  // カード選択を無効化
 ui_manager.clear_back_action()  // グローバルボタンの「召喚しない」をクリア
 
-// 領地コマンドを閉じる時（end_turn()で統一的に処理）
+// ドミニオオーダーを閉じる時（end_turn()で統一的に処理）
 // 1. is_ending_turnフラグを立てる（最優先）
 is_ending_turn = true
 
-// 2. 領地コマンドを閉じる
-land_command_handler.close_land_command()
+// 2. ドミニオオーダーを閉じる
+dominio_order_handler.close_dominio_order()
 
 // 3. UIを非表示にする
-ui_manager.hide_land_command_button()
+ui_manager.hide_dominio_order_button()
 ui_manager.hide_card_selection_ui()
 
-// 4. _on_land_command_closed()がis_ending_turnをチェックして再初期化をスキップ
+// 4. _on_dominio_order_closed()がis_ending_turnをチェックして再初期化をスキップ
 ```
 
 **重要な設計原則**:
 - すべてのアクション（レベルアップ、移動、交換、地形変化）は`complete_action()`を呼ぶだけ
 - `complete_action()` → `tile_action_completed`シグナル → `end_turn()`
-- `end_turn()`で領地コマンドとUIを統一的に閉じる
-- 各アクション内で個別に`close_land_command()`を呼ばない
+- `end_turn()`でドミニオオーダーとUIを統一的に閉じる
+- 各アクション内で個別に`close_dominio_order()`を呼ばない
 - **各UI画面はアクティブ時にグローバルボタンにコールバック登録、非アクティブ時にクリア**
 
 ### 基本制約
@@ -344,9 +344,9 @@ ui_manager.hide_card_selection_ui()
    - レベルアップ、移動、交換、地形変化のいずれか1つのみ
    - 実行後は自動的にターン終了
    
-2. **召喚と領地コマンドは排他的**
-   - 召喚を実行した場合、領地コマンドは実行できない
-   - 領地コマンドを実行した場合、召喚は実行できない
+2. **召喚とドミニオオーダーは排他的**
+   - 召喚を実行した場合、ドミニオオーダーは実行できない
+   - ドミニオオーダーを実行した場合、召喚は実行できない
    - どちらか一方のみ選択可能
 
 3. **ダウン状態の土地は選択不可**
@@ -375,7 +375,7 @@ ui_manager.hide_card_selection_ui()
 ```
 移動完了
   ↓
-領地コマンドボタン表示（人間プレイヤーのみ）
+ドミニオオーダーボタン表示（人間プレイヤーのみ）
   ↓
 土地選択（数字キー1-0）
   ├─ ダウン状態の土地は選択不可
@@ -427,7 +427,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ```
 
 ### 実装クラス
-- `LandCommandHandler`: 領地コマンドのロジック
+- `DominioOrderHandler`: ドミニオオーダーのロジック
 - `UIManager`: アクションメニュー・レベル選択パネルのUI
 - `GameFlowManager`: ターン終了処理
 
@@ -437,7 +437,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 
 ### フロー
 ```
-領地コマンド → 移動を選択
+ドミニオオーダー → 移動を選択
   ↓
 移動元の土地を選択（ダウン状態除外）
   ↓
@@ -464,8 +464,8 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ```
 
 ### 実装クラス
-- `LandCommandHandler.execute_move_creature()`
-- `LandCommandHandler.confirm_move()`
+- `DominioOrderHandler.execute_move_creature()`
+- `DominioOrderHandler.confirm_move()`
 
 ---
 
@@ -473,7 +473,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 
 ### フロー
 ```
-領地コマンド → 交換を選択
+ドミニオオーダー → 交換を選択
   ↓
 交換対象の土地を選択（ダウン状態除外）
   ↓
@@ -495,7 +495,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ```
 
 ### 実装クラス
-- `LandCommandHandler.execute_swap_creature()`
+- `DominioOrderHandler.execute_swap_creature()`
 - `TileActionProcessor.execute_swap()`
 
 ---
@@ -503,7 +503,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ## 4. 地形変化
 
 ### 概要
-土地の属性（火/水/土/風）を変更するシステム。領地コマンドから実行、またはスペル/スキルからも発動可能。
+土地の属性（火/水/土/風）を変更するシステム。ドミニオオーダーから実行、またはスペル/スキルからも発動可能。
 
 ### 操作方法
 1. 土地を選択 → [T]キーで地形変化
@@ -547,24 +547,24 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ### 永続バフ対応クリーチャー
 | ID | 名前 | 効果 |
 |----|------|------|
-| 200 | アースズピリット | 配置領地で地形変化時、MHP+10 |
-| 328 | デュータイタン | 配置領地で地形変化時、MHP-10 |
+| 200 | アースズピリット | 配置ドミニオで地形変化時、MHP+10 |
+| 328 | デュータイタン | 配置ドミニオで地形変化時、MHP-10 |
 
 ### 実装クラス
 - `BoardSystem3D.change_tile_terrain()` - タイル交換処理
 - `LandActionHelper.execute_terrain_change()` - 属性選択UI表示
 - `LandActionHelper.execute_terrain_change_with_element()` - 実行処理
 - `LandInputHelper.handle_terrain_selection_input()` - キー入力処理
-- `LandCommandHandler` - 状態管理（`SELECTING_TERRAIN`）
+- `DominioOrderHandler` - 状態管理（`SELECTING_TERRAIN`）
 
 ### ソリッドワールド（世界呪い）対応 ⚠️
 
-**ソリッドワールド（ID: 2047）**発動中は、全領地の土地変性（属性変更・レベルダウン）が無効になる。
+**ソリッドワールド（ID: 2047）**発動中は、全ドミニオの土地変性（属性変更・レベルダウン）が無効になる。
 
 **ブロックされる操作**:
 | 操作 | チェック箇所 | 結果 |
 |------|-------------|------|
-| 領地コマンドの地形変化 | `BoardSystem3D.change_tile_terrain()` | 失敗（false返却） |
+| ドミニオオーダーの地形変化 | `BoardSystem3D.change_tile_terrain()` | 失敗（false返却） |
 | スペルによる属性変更 | `SpellLand.change_element()` | 失敗（false返却） |
 | スペルによるレベルダウン | `SpellLand.change_level(delta < 0)` | 失敗（false返却） |
 
@@ -584,7 +584,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 **関連ドキュメント**: [世界呪い.md](spells/世界呪い.md) - ソリッドワールド詳細
 
 ### スペル/スキル連携
-スペルコストのみで地形変化可能（領地コマンドの追加コスト不要）：
+スペルコストのみで地形変化可能（ドミニオオーダーの追加コスト不要）：
 ```gdscript
 {
   "effect_type": "terrain_change",

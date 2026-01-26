@@ -260,11 +260,11 @@ func _on_movement_completed(player_id: int, _final_tile: int):
 		if phase == "direction":
 			_exit_explanation_mode_if_active()
 			advance_step()
-		# 移動完了待ちフェーズなら次へ（敵領地に到着）
+		# 移動完了待ちフェーズなら次へ（敵ドミニオに到着）
 		elif phase == "wait_movement":
 			_exit_explanation_mode_if_active()
 			advance_step()  # battle_arrivalへ
-	# CPU移動完了時（プレイヤーの領地に止まった）
+	# CPU移動完了時（プレイヤーのドミニオに止まった）
 	elif player_id == 1:
 		if phase == "cpu_turn_start2":
 			_exit_explanation_mode_if_active()

@@ -380,7 +380,7 @@ mkdir -p scripts/battle/skills
 
 ## 参考: 過去の成功事例
 
-### LandCommandHandler分割（2025年10月）
+### DominioOrderHandler分割（2025年10月）
 - **元**: 881行
 - **分割後**: 4ファイル、合計988行
 - **増加率**: +12%

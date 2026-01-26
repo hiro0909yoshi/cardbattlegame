@@ -51,13 +51,13 @@ func _get_spell_curse_toll():
 	return null
 
 
-## 敵領地への侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い + マーシフルワールド + クリーチャー移動侵略無効）
+## 敵ドミニオへの侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い + マーシフルワールド + クリーチャー移動侵略無効）
 func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	var spell_curse_toll = _get_spell_curse_toll()
 	if not spell_curse_toll:
 		return true
 	
-	# peace呪いチェック（領地側の防御）
+	# peace呪いチェック（ドミニオ側の防御）
 	if spell_curse_toll.has_peace_curse(tile_index):
 		return false
 	
@@ -109,7 +109,7 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 	return result
 
 
-## 戦闘を実行（敵領地への移動時）
+## 戦闘を実行（敵ドミニオへの移動時）
 ## アイテムフェーズを経由してからバトルを実行
 func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	var from_tile = result.get("from_tile", -1)
@@ -251,7 +251,7 @@ func get_two_tiles_destinations(from_tile_index: int) -> Array:
 	return _get_tiles_within_steps(from_tile_index, 2)
 
 
-## 隣接する敵領地の候補を取得（アウトレイジ用）
+## 隣接する敵ドミニオの候補を取得（アウトレイジ用）
 func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 	var destinations: Array = []
 	
@@ -263,7 +263,7 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 	if board_system_ref.tile_neighbor_system:
 		adjacent_tiles = board_system_ref.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
 	
-	# 敵領地のみフィルタ
+	# 敵ドミニオのみフィルタ
 	var current_player_id = board_system_ref.current_player_index
 	
 	for tile_index in adjacent_tiles:
@@ -275,7 +275,7 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
-		# 敵領地のみ（自領地や空地は除外）
+		# 敵ドミニオのみ（自ドミニオや空地は除外）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			# 侵略可能かチェック（peace呪い + バンフィズム）
 			if not _can_invade_tile(tile_index, current_player_id):
@@ -326,7 +326,7 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 		var tile = board_system_ref.tile_nodes.get(tile_index)
 		if tile and not TileHelper.is_placeable_tile(tile):
 			continue  # 配置不可タイルは除外（クリーチャー移動）
-		# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
+		# 敵ドミニオの場合は侵略可能かチェック（peace呪い + バンフィズム）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if not _can_invade_tile(tile_index, current_player_id):
 				continue
@@ -375,7 +375,7 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 			var tile = board_system_ref.tile_nodes.get(tile_index)
 			if tile and not TileHelper.is_placeable_tile(tile):
 				continue  # 配置不可タイルは除外（クリーチャー移動）
-			# 敵領地の場合は侵略可能かチェック（peace呪い + バンフィズム）
+			# 敵ドミニオの場合は侵略可能かチェック（peace呪い + バンフィズム）
 			if tile.owner_id != -1 and tile.owner_id != current_player_id:
 				if not _can_invade_tile(tile_index, current_player_id):
 					continue
@@ -386,7 +386,7 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 
 # ============ 移動効果実装 ============
 
-## 隣接敵領地への移動（アウトレイジ）
+## 隣接敵ドミニオへの移動（アウトレイジ）
 func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: int) -> Dictionary:
 	var from_tile_index = target_data.get("tile_index", -1)
 	if from_tile_index == -1:
@@ -410,7 +410,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	
 	# それ以外は移動先選択UI表示
 	if to_tile_index == -1:
-		to_tile_index = await _select_move_destination(destinations, "移動先の敵領地を選択")
+		to_tile_index = await _select_move_destination(destinations, "移動先の敵ドミニオを選択")
 	
 	if to_tile_index == -1:
 		return {"success": false, "reason": "cancelled"}
@@ -422,7 +422,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	# 注意: 移動はここでは実行しない（バトルシステムが処理する）
 	# バトルシステムにfrom_tile_indexを渡し、勝敗に応じて移動を処理させる
 	
-	# 戦闘発生（敵領地への移動）
+	# 戦闘発生（敵ドミニオへの移動）
 	return {
 		"success": true,
 		"from_tile": from_tile_index,
@@ -480,11 +480,11 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	if to_tile_index == -1:
 		return {"success": false, "reason": "cancelled"}
 	
-	# 移動先が敵領地かチェック（敵クリーチャーがいる場合のみ戦闘）
+	# 移動先が敵ドミニオかチェック（敵クリーチャーがいる場合のみ戦闘）
 	var to_tile = board_system_ref.tile_nodes.get(to_tile_index)
 	var trigger_battle = false
 	if to_tile and to_tile.owner_id != -1 and to_tile.owner_id != current_player_id:
-		# 敵領地で、かつクリーチャーがいる場合は戦闘
+		# 敵ドミニオで、かつクリーチャーがいる場合は戦闘
 		if not to_tile.creature_data.is_empty():
 			trigger_battle = true
 	
@@ -546,11 +546,11 @@ func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatur
 	if to_tile_index == -1:
 		return {"success": false, "reason": "cancelled"}
 	
-	# 移動先が敵領地かチェック（敵クリーチャーがいる場合のみ戦闘）
+	# 移動先が敵ドミニオかチェック（敵クリーチャーがいる場合のみ戦闘）
 	var to_tile = board_system_ref.tile_nodes.get(to_tile_index)
 	var trigger_battle = false
 	if to_tile and to_tile.owner_id != -1 and to_tile.owner_id != current_player_id:
-		# 敵領地で、かつクリーチャーがいる場合は戦闘
+		# 敵ドミニオで、かつクリーチャーがいる場合は戦闘
 		if not to_tile.creature_data.is_empty():
 			trigger_battle = true
 	
@@ -674,7 +674,7 @@ func _select_move_destination(destinations: Array, message: String) -> int:
 
 # ============ ターゲット取得（スペル/アルカナアーツ発動判定用） ============
 
-## アウトレイジのターゲット取得（全クリーチャーで隣接敵領地があるもの）
+## アウトレイジのターゲット取得（全クリーチャーで隣接敵ドミニオがあるもの）
 func get_outrage_targets() -> Array:
 	var targets: Array = []
 	
@@ -683,7 +683,7 @@ func get_outrage_targets() -> Array:
 		if not tile or tile.creature_data.is_empty():
 			continue
 		
-		# 隣接敵領地があるか確認
+		# 隣接敵ドミニオがあるか確認
 		var adjacent_enemies = get_adjacent_enemy_destinations(tile_index)
 		if adjacent_enemies.size() > 0:
 			targets.append(tile_index)

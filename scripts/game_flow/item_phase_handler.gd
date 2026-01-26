@@ -85,7 +85,7 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	var is_attacker_phase = not defender_tile_info.is_empty()
 	
 	# 🎯 攻撃側フェーズ開始時に防御側の事前選択をクリア
-	# （攻撃側の事前選択はLandCommandHandlerで設定されるので、ここではクリアしない）
+	# （攻撃側の事前選択はDominioOrderHandlerで設定されるので、ここではクリアしない）
 	if is_attacker_phase:
 		clear_preselected_defender_item()
 		

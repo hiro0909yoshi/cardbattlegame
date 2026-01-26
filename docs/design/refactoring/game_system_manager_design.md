@@ -17,7 +17,7 @@ game_3d.gd と GameFlowManager が管理している複雑なシステム初期�
 | カテゴリ | システム数 | 詳細 |
 |---------|----------|------|
 | **Tier 1（GameSystemManager が直接作成）** | 11個 | SignalRegistry, BoardSystem3D, PlayerSystem, CardSystem, BattleSystem, SkillSystem, PlayerBuffSystem, SpecialTileSystem, UIManager, DebugController, GameFlowManager |
-| **GameFlowManager の子システム** | 10個 | SpellDraw, SpellMagic, SpellLand, SpellCurse, SpellDice, SpellCurseStat, LandCommandHandler, SpellPhaseHandler, ItemPhaseHandler, CPUAIHandler |
+| **GameFlowManager の子システム** | 10個 | SpellDraw, SpellMagic, SpellLand, SpellCurse, SpellDice, SpellCurseStat, DominioOrderHandler, SpellPhaseHandler, ItemPhaseHandler, CPUAIHandler |
 | **BoardSystem3D の子システム** | 4個 | TileActionProcessor, CPUTurnProcessor, MovementController, CPUAIHandler |
 | **内部管理システム** | 2個 | CreatureManager (in BoardSystem3D), TileDataManager (in BoardSystem3D) |
 | **合計対応システム** | **27個** | 全120ファイル以上のプロジェクトをカバー |
@@ -368,12 +368,12 @@ func phase_4_setup_system_interconnections() -> void:
 		game_flow_manager.spell_land.card_system = card_system
 		# creature_manager, tile_data_manager は board_system_3d から取得
 	
-	# Step 15: LandCommandHandler の初期化
+	# Step 15: DominioOrderHandler の初期化
 	# 依存: board_system_3d, player_system, ui_manager
-	if game_flow_manager.land_command_handler:
-		game_flow_manager.land_command_handler.board_system_3d = board_system_3d
-		game_flow_manager.land_command_handler.player_system = player_system
-		game_flow_manager.land_command_handler.ui_manager = ui_manager
+	if game_flow_manager.dominio_order_handler:
+		game_flow_manager.dominio_order_handler.board_system_3d = board_system_3d
+		game_flow_manager.dominio_order_handler.player_system = player_system
+		game_flow_manager.dominio_order_handler.ui_manager = ui_manager
 	
 	# Step 16: SpellPhaseHandler の初期化
 	# 依存: board_system_3d, game_flow_manager, ui_manager
@@ -480,7 +480,7 @@ func phase_5_connect_signals() -> void:
 	ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
 	ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 	ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
-	ui_manager.land_command_button_pressed.connect(game_flow_manager.open_land_command)
+	ui_manager.dominio_order_button_pressed.connect(game_flow_manager.open_dominio_order)
 	
 	print("[GameSystemManager] Phase 5: シグナル接続完了")
 ```

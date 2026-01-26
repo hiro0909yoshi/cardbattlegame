@@ -82,7 +82,7 @@ enum ConditionType {
 	TOTAL_LAND_COUNT,    # 総土地数
 	LAND_LEVEL_CHECK,    # 土地レベル条件
 	ELEMENT_LAND_COUNT,  # 属性土地数
-	CONSECUTIVE_LANDS,   # 連続領地条件
+	CONSECUTIVE_LANDS,   # 連続ドミニオ条件
 	
 	# 状態条件
 	HP_BELOW,            # HP以下

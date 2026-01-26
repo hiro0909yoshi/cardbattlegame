@@ -224,7 +224,7 @@ static func get_target_display_name(target_data: Dictionary, board_system = null
 				var tile = board_system.tile_nodes[tile_index]
 				if tile and "creature_data" in tile and not tile.creature_data.is_empty():
 					return tile.creature_data.get("name", "クリーチャー")
-			return "領地"
+			return "ドミニオ"
 		
 		"player":
 			var player_id = target_data.get("player_id", -1)

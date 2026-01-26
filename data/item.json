@@ -407,7 +407,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "HP+水風自領地数×20",
+	  "effect": "HP+水風自ドミニオ数×20",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -784,7 +784,7 @@
 	  "cost": {
 		"ep": 90
 	  },
-	  "effect": "巻物攻撃[AP=水風自領地数×10]；巻物強打[火地]",
+	  "effect": "巻物攻撃[AP=水風自ドミニオ数×10]；巻物強打[火地]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -1132,7 +1132,7 @@
 	  "cost": {
 		"ep": 90
 	  },
-	  "effect": "巻物攻撃[AP=火地自領地数×10]；巻物強打[水風]",
+	  "effect": "巻物攻撃[AP=火地自ドミニオ数×10]；巻物強打[水風]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -1421,7 +1421,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "HP+火地自領地数×20",
+	  "effect": "HP+火地自ドミニオ数×20",
 	  "effect_parsed": {
 		"effects": [
 		  {

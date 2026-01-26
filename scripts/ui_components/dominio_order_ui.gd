@@ -1,13 +1,13 @@
-# LandCommandUI - 領地コマンドUI管理
-# UIManagerから分離された領地コマンド関連のUI処理
-class_name LandCommandUI
+# DominioOrderUI - ドミニオオーダーUI管理
+# UIManagerから分離されたドミニオオーダー関連のUI処理
+class_name DominioOrderUI
 extends Node
 
 # シグナル
 signal level_up_selected(target_level: int, cost: int)
 
 # UI要素
-# 注: land_command_buttonはGlobalActionButtonsに移行済み
+# 注: dominio_order_buttonはGlobalActionButtonsに移行済み
 var action_menu_panel: Panel = null  # 互換性のため残す（非表示判定用）
 var action_menu_ui: Control = null  # ActionMenuUI
 var level_selection_panel: Panel = null
@@ -41,22 +41,22 @@ func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null):
 	board_system_ref = board_sys
 	ui_manager_ref = ui_manager
 
-## 領地コマンドボタン表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
-func show_land_command_button():
+## ドミニオオーダーボタン表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
+func show_dominio_order_button():
 	pass
 
-## 領地コマンドボタン非表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
-func hide_land_command_button():
+## ドミニオオーダーボタン非表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
+func hide_dominio_order_button():
 	pass
 
-## キャンセルボタン表示（後方互換 - 新方式ではLandCommandHandlerで設定）
+## キャンセルボタン表示（後方互換 - 新方式ではDominioOrderHandlerで設定）
 func show_cancel_button():
-	# ナビゲーションはLandCommandHandlerで設定済み
+	# ナビゲーションはDominioOrderHandlerで設定済み
 	pass
 
 ## キャンセルボタン非表示（後方互換）
 func hide_cancel_button():
-	# ナビゲーションはLandCommandHandlerで設定済み
+	# ナビゲーションはDominioOrderHandlerで設定済み
 	pass
 
 ## 土地選択モード表示
@@ -69,12 +69,12 @@ func show_land_selection_mode(_owned_lands: Array):
 func show_action_selection_ui(tile_index: int):
 	show_action_menu(tile_index)
 
-## 領地コマンドUI非表示
-func hide_land_command_ui():
+## ドミニオオーダーUI非表示
+func hide_dominio_order_ui():
 	hide_action_menu()
 	hide_level_selection()
 	hide_cancel_button()
-	hide_land_command_button()
+	hide_dominio_order_button()
 
 ## アクションメニュー表示
 func show_action_menu(tile_index: int):
@@ -180,7 +180,7 @@ func _ensure_action_menu_ui():
 func _on_action_menu_item_selected(index: int):
 	if index < 0:
 		# キャンセル
-		_on_cancel_land_command_button_pressed()
+		_on_cancel_dominio_order_button_pressed()
 		return
 	
 	var items = _create_action_menu_items()
@@ -314,11 +314,11 @@ func _reset_level_button_style(button: Button, _level: int):
 	button.add_theme_stylebox_override("normal", style)
 
 ## シグナルハンドラ
-func _on_cancel_land_command_button_pressed():
-	print("[LandCommandUI] キャンセルボタン押下")
+func _on_cancel_dominio_order_button_pressed():
+	print("[DominioOrderUI] キャンセルボタン押下")
 	# UIManagerのキャンセル処理を呼び出す
-	if ui_manager_ref and ui_manager_ref.has_method("_on_cancel_land_command_button_pressed"):
-		ui_manager_ref._on_cancel_land_command_button_pressed()
+	if ui_manager_ref and ui_manager_ref.has_method("_on_cancel_dominio_order_button_pressed"):
+		ui_manager_ref._on_cancel_dominio_order_button_pressed()
 
 ## クリーチャー情報パネルを閉じる（表示中の場合）
 func _close_creature_info_panel_if_open():
@@ -328,7 +328,7 @@ func _close_creature_info_panel_if_open():
 
 func _on_action_level_up_pressed():
 	_close_creature_info_panel_if_open()
-	# LandCommandHandlerに通知（キーボード入力をエミュレート）
+	# DominioOrderHandlerに通知（キーボード入力をエミュレート）
 	var event = InputEventKey.new()
 	event.keycode = KEY_L
 	event.pressed = true
@@ -350,7 +350,7 @@ func _on_action_swap_pressed():
 
 func _on_action_terrain_change_pressed():
 	_close_creature_info_panel_if_open()
-	print("[LandCommandUI] 地形変化ボタン押下")
+	print("[DominioOrderUI] 地形変化ボタン押下")
 	hide_action_menu(false)  # グローバルボタンはクリアしない（地形選択で再設定される）
 	var event = InputEventKey.new()
 	event.keycode = KEY_T
@@ -373,10 +373,10 @@ func _on_level_selected(level: int):
 	hide_level_selection()
 
 func _on_level_cancel_pressed():
-	print("[LandCommandUI] レベル選択キャンセル")
-	# land_command_handlerのcancel()を呼ぶ（状態管理を統一）
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
-		ui_manager_ref.game_flow_manager_ref.land_command_handler.cancel()
+	print("[DominioOrderUI] レベル選択キャンセル")
+	# dominio_order_handlerのcancel()を呼ぶ（状態管理を統一）
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_order_handler:
+		ui_manager_ref.game_flow_manager_ref.dominio_order_handler.cancel()
 	else:
 		# フォールバック
 		hide_level_selection()
@@ -722,16 +722,16 @@ func _reset_terrain_button_style(button: Button, element: String):
 
 ## 地形選択ハンドラ
 func _on_terrain_selected(element: String):
-	# LandCommandHandlerに通知
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
-		var handler = ui_manager_ref.game_flow_manager_ref.land_command_handler
+	# DominioOrderHandlerに通知
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_order_handler:
+		var handler = ui_manager_ref.game_flow_manager_ref.dominio_order_handler
 		handler.current_terrain_index = handler.terrain_options.find(element)
 		LandActionHelper.execute_terrain_change_with_element(handler, element)
 
 ## 地形選択キャンセル
 func _on_terrain_cancel_pressed():
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.land_command_handler:
-		ui_manager_ref.game_flow_manager_ref.land_command_handler.cancel()
+	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_order_handler:
+		ui_manager_ref.game_flow_manager_ref.dominio_order_handler.cancel()
 
 ## 大きめレベルボタン作成ヘルパー
 func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: Vector2) -> Button:

@@ -1,6 +1,6 @@
 # TargetFinder - ターゲット検索システム
 #
-# スペル・アルカナアーツ・領地コマンドで使用するターゲットの検索・フィルタリングを担当
+# スペル・アルカナアーツ・ドミニオオーダーで使用するターゲットの検索・フィルタリングを担当
 # - クリーチャー検索（属性、呪い、MHP、ダウン状態など）
 # - プレイヤー検索（自分/敵/全員）
 # - 土地検索（レベル、属性、距離）
@@ -457,7 +457,7 @@ static func _find_gate_targets(sys_flow, current_player_id: int) -> Array:
 # フィルター・ヘルパー
 # ============================================
 
-## 隣接する敵領地があるかチェック（アウトレイジ用）
+## 隣接する敵ドミニオがあるかチェック（アウトレイジ用）
 static func _check_has_adjacent_enemy(board_sys, tile_index: int, current_player_id: int) -> bool:
 	if not board_sys or not board_sys.tile_neighbor_system:
 		return false

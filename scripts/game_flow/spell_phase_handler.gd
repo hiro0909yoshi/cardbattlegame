@@ -67,7 +67,7 @@ var debug_disable_secret_cards: bool = false
 ## 参照: board_system.tile_action_processor.debug_disable_card_sacrifice
 ## 参照: board_system.tile_action_processor.debug_disable_lands_required
 
-## ターゲット選択（領地コマンドと同じ構造）
+## ターゲット選択（ドミニオオーダーと同じ構造）
 var available_targets: Array = []
 var current_target_index: int = 0
 var selection_marker: MeshInstance3D = null
@@ -579,7 +579,7 @@ func use_spell(spell_card: Dictionary):
 		var target_data = {"type": "none"}
 		_start_confirmation_phase("none", target_info, target_data)
 
-## 対象選択UIを表示（領地コマンドと同じ方式）
+## 対象選択UIを表示（ドミニオオーダーと同じ方式）
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
 func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	# 有効な対象を取得（ヘルパー使用）
@@ -597,7 +597,7 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 	if is_cpu_player(current_player_id):
 		return _cpu_select_target(targets, target_type, target_info)
 	
-	# プレイヤーの場合：領地コマンドと同じ方式で選択開始
+	# プレイヤーの場合：ドミニオオーダーと同じ方式で選択開始
 	available_targets = targets
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
@@ -663,7 +663,7 @@ func _update_target_selection():
 	# UI更新
 	_update_selection_ui()
 
-## 選択UIを更新（領地コマンドと同じ形式）
+## 選択UIを更新（ドミニオオーダーと同じ形式）
 func _update_selection_ui():
 	if not ui_manager or not ui_manager.phase_label:
 		return

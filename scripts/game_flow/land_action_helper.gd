@@ -11,7 +11,7 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		print("[LandActionHelper] レベルアップ失敗: タイル%d はダウン中" % handler.selected_tile_index)
 		return false
@@ -56,9 +56,12 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	if handler.ui_manager:
 		handler.ui_manager.update_player_info_panels()
 	
+	# ドミニオオーダー使用コメント表示（staticメソッドではawait不可のため無効化）
+	#if handler.has_method("_show_dominio_order_comment"):
+	#	await handler._show_dominio_order_comment("レベルアップ")
 	
 	# アクション完了を通知（正しいターン終了フロー）
-	# 注: 領地コマンドはend_turn()で閉じられる
+	# 注: ドミニオオーダーはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
@@ -75,7 +78,7 @@ static func execute_level_up(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -126,7 +129,7 @@ static func execute_move_creature(handler) -> bool:
 	# 移動可能なマスを取得（空地移動対応）
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -165,8 +168,8 @@ static func execute_move_creature(handler) -> bool:
 	var first_dest = handler.move_destinations[handler.current_destination_index]
 	
 	# アクションメニューを閉じる
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.hide_action_menu(false)
+	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+		handler.ui_manager.dominio_order_ui.hide_action_menu(false)
 	
 	# マーカーを最初の移動先に表示
 	TargetSelectionHelper.show_selection_marker(handler, first_dest)
@@ -218,7 +221,7 @@ static func execute_swap_creature(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -257,8 +260,8 @@ static func execute_swap_creature(handler) -> bool:
 		handler._swap_tile_index = handler.selected_tile_index
 	
 	# アクションメニューを閉じる
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.hide_action_menu(false)  # グローバルボタンはクリアしない
+	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+		handler.ui_manager.dominio_order_ui.hide_action_menu(false)  # グローバルボタンはクリアしない
 	
 	# ナビゲーション設定（交換選択用：戻るのみ）
 	if handler.ui_manager:
@@ -316,7 +319,7 @@ static func confirm_move(handler, dest_tile_index: int):
 	_hide_move_creature_info(handler)
 	
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.move_source_tile) or not handler.board_system.tile_nodes.has(dest_tile_index):
-		handler.close_land_command()
+		handler.close_dominio_order()
 		return
 	
 	var source_tile = handler.board_system.tile_nodes[handler.move_source_tile]
@@ -325,7 +328,7 @@ static func confirm_move(handler, dest_tile_index: int):
 	# 移動元のクリーチャー情報を取得
 	var creature_data = source_tile.creature_data.duplicate()
 	if creature_data.is_empty():
-		handler.close_land_command()
+		handler.close_dominio_order()
 		return
 	
 	var current_player_index = source_tile.owner_id
@@ -380,8 +383,12 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.move_source_tile = -1
 		handler.current_destination_index = 0
 		
+		# ドミニオオーダー使用コメント表示
+		#if handler.has_method("_show_dominio_order_comment"):
+		#	await handler._show_dominio_order_comment("移動")
+		
 		# アクション完了を通知
-		# 注: 領地コマンドはend_turn()で閉じられる
+		# 注: ドミニオオーダーはend_turn()で閉じられる
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.tile_action_processor.complete_action()
 		
@@ -389,7 +396,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		# 自分の土地の場合: エラー（通常はありえない）
 		# クリーチャーを元に戻す
 		source_tile.place_creature(creature_data)
-		handler.close_land_command()
+		handler.close_dominio_order()
 		
 	else:
 		# 敵の土地の場合: peace呪いチェック
@@ -404,7 +411,7 @@ static func confirm_move(handler, dest_tile_index: int):
 				handler.ui_manager.phase_label.text = "peace呪い: このタイルへは侵略できません"
 			# 移動元にクリーチャーを戻す
 			source_tile.place_creature(creature_data)
-			handler.close_land_command()
+			handler.close_dominio_order()
 			return
 		
 		# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
@@ -414,7 +421,7 @@ static func confirm_move(handler, dest_tile_index: int):
 				if handler.ui_manager and handler.ui_manager.phase_label:
 					handler.ui_manager.phase_label.text = "%s は移動侵略を受けません" % defender_name
 				source_tile.place_creature(creature_data)
-				handler.close_land_command()
+				handler.close_dominio_order()
 				return
 		
 		# プレイヤー侵略不可呪いチェック（バンフィズム）
@@ -423,7 +430,7 @@ static func confirm_move(handler, dest_tile_index: int):
 			if handler.ui_manager and handler.ui_manager.phase_label:
 				handler.ui_manager.phase_label.text = "侵略不可呪い: 侵略できません"
 			source_tile.place_creature(creature_data)
-			handler.close_land_command()
+			handler.close_dominio_order()
 			return
 		
 		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
@@ -431,7 +438,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		if handler.game_flow_manager and handler.game_flow_manager.spell_world_curse:
 			if handler.game_flow_manager.spell_world_curse.check_invasion_blocked(current_player_id, defender_id, true):
 				source_tile.place_creature(creature_data)
-				handler.close_land_command()
+				handler.close_dominio_order()
 				return
 		
 		# バトル発生
@@ -441,8 +448,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		if is_boulder_eater:
 			var split_result = SkillCreatureSpawn.process_boulder_eater_split(creature_data)
 			battle_creature_data = split_result["copy"]  # 呪い除去済みコピーで戦闘
-			# 元の領地にはオリジナルが残る（既に削除していないので何もしない）
-			print("[LandActionHelper] バウダーイーター分裂: 元の領地に残留、コピーで戦闘")
+			# 元のドミニオにはオリジナルが残る（既に削除していないので何もしない）
+			print("[LandActionHelper] バウダーイーター分裂: 元のドミニオに残留、コピーで戦闘")
 		else:
 			# 通常移動: 移動による呪い消滅（バトル前に消す）
 			if creature_data.has("curse"):
@@ -459,12 +466,16 @@ static func confirm_move(handler, dest_tile_index: int):
 		battle_creature_data["is_moving"] = true
 		
 		# バトル情報を保存
-		# 注: 領地コマンドはバトル開始前に閉じる必要があるため、ここでは閉じない
+		# 注: ドミニオオーダーはバトル開始前に閉じる必要があるため、ここでは閉じない
 		handler.pending_move_battle_creature_data = battle_creature_data
 		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
 		handler.pending_move_attacker_item = {}
 		handler.pending_move_defender_item = {}
 		handler.is_waiting_for_move_defender_item = false
+		
+		# ドミニオオーダー使用コメント表示（移動侵略確定時）
+		#if handler.has_method("_show_dominio_order_comment"):
+		#	await handler._show_dominio_order_comment("移動侵略")
 		
 		# アイテムフェーズを開始（攻撃側）
 		if handler.game_flow_manager and handler.game_flow_manager.item_phase_handler:
@@ -621,7 +632,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		print("[LandActionHelper] 属性変更失敗: タイル%d はダウン中" % handler.selected_tile_index)
 		return false
@@ -684,11 +695,15 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		handler.ui_manager.update_player_info_panels()
 	
 	# 地形選択パネルを閉じる
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.hide_terrain_selection()
+	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+		handler.ui_manager.dominio_order_ui.hide_terrain_selection()
+	
+	# ドミニオオーダー使用コメント表示
+	#if handler.has_method("_show_dominio_order_comment"):
+	#	await handler._show_dominio_order_comment("属性変更")
 	
 	# アクション完了を通知（レベルアップと同様）
-	# 注: 領地コマンドはend_turn()で閉じられる
+	# 注: ドミニオオーダーはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
@@ -704,7 +719,7 @@ static func execute_terrain_change(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中は領地コマンド使用不可）
+	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -734,13 +749,13 @@ static func execute_terrain_change(handler) -> bool:
 	var current_player = p_system.get_current_player() if p_system else null
 	var player_magic = current_player.magic_power if current_player else 0
 	
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.show_terrain_selection(tile_index, tile.tile_type, cost, player_magic)
+	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+		handler.ui_manager.dominio_order_ui.show_terrain_selection(tile_index, tile.tile_type, cost, player_magic)
 		# 最初の選択可能な属性をハイライト
 		var first_selectable = _get_first_selectable_terrain(handler, tile.tile_type)
 		if first_selectable != "":
 			handler.current_terrain_index = handler.terrain_options.find(first_selectable)
-			handler.ui_manager.land_command_ui.highlight_terrain_button(first_selectable)
+			handler.ui_manager.dominio_order_ui.highlight_terrain_button(first_selectable)
 	
 	# ナビゲーションボタン設定（地形選択用）
 	if handler.ui_manager:
@@ -775,9 +790,9 @@ static func _cancel_terrain_change(handler):
 		handler.board_system.tile_action_processor.is_action_processing = false
 	
 	# 地形選択パネルを閉じてアクションメニューに戻る
-	if handler.ui_manager and handler.ui_manager.land_command_ui:
-		handler.ui_manager.land_command_ui.hide_terrain_selection()
-		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
+	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+		handler.ui_manager.dominio_order_ui.hide_terrain_selection()
+		handler.ui_manager.dominio_order_ui.show_action_menu(handler.selected_tile_index)
 	
 	# アクション選択用ナビゲーション（戻るのみ）- 最後に設定
 	if handler.ui_manager:
@@ -785,16 +800,16 @@ static func _cancel_terrain_change(handler):
 			Callable(),  # 決定なし
 			func(): handler.cancel()  # 戻る
 		)
-		handler.ui_manager.land_command_ui.show_action_menu(handler.selected_tile_index)
+		handler.ui_manager.dominio_order_ui.show_action_menu(handler.selected_tile_index)
 
 ## 地形選択UIを更新
 static func update_terrain_selection_ui(handler):
-	if not handler.ui_manager or not handler.ui_manager.land_command_ui:
+	if not handler.ui_manager or not handler.ui_manager.dominio_order_ui:
 		return
 	
 	# 現在選択中の属性をハイライト
 	var current_element = handler.terrain_options[handler.current_terrain_index]
-	handler.ui_manager.land_command_ui.highlight_terrain_button(current_element)
+	handler.ui_manager.dominio_order_ui.highlight_terrain_button(current_element)
 
 
 # ============================================

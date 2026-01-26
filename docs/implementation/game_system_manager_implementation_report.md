@@ -148,7 +148,7 @@ Phase 4-1: 基本システム参照設定（実装）
   ✅ 実装完了
 
 Phase 4-2: GameFlowManager 子システム初期化（簡潔化）
-  - LandCommandHandler への参照設定のみ
+  - DominioOrderHandler への参照設定のみ
   - SpellPhaseHandler への参照設定
   - ItemPhaseHandler への参照設定
   - （Spell系は削除 → GameFlowManager が管理）

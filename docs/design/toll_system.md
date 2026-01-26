@@ -36,11 +36,11 @@ end_turn()内の処理順:
 3. ★手札調整実行
 4. ★敵地判定・支払い実行 ← ここで統一
    - check_and_pay_toll_on_enemy_land()
-   - 敵地なら支払い、自領地・スタートなら支払いなし
+   - 敵地なら支払い、自ドミニオ・スタートなら支払いなし
    ★通行料呪いを判定・計算
 	 - SpellCurseToll.calculate_final_toll()で呪い判定
 	 - セプター呪い（toll_disable, toll_fixed, toll_share）
-	 - 領地呪い（toll_multiplier, peace）を適用
+	 - ドミニオ呪い（toll_multiplier, peace）を適用
 	 - 主通行料 + 副収入を支払い
 5. ターン終了処理・次ターン
 ```
@@ -53,7 +53,7 @@ end_turn()内の処理順:
 - 関数定義・呼び出し（3箇所）完全削除
 - invasion_completed シグナルで処理継続
 
-### 6. land_command_ui.gd - レベルアップコスト動的計算
+### 6. dominio_order_ui.gd - レベルアップコスト動的計算
 - ハードコード値（80, 240, 620, 1200）削除
 - board_system_ref.tile_data_manager.calculate_level_up_cost()で動的計算
 - show_level_selection()・_calculate_level_up_cost()実装
@@ -66,7 +66,7 @@ end_turn()内の処理順:
 - `apply_toll_multiplier()`: クリーチャーの通行料倍率（グリード）
 - `apply_peace()`: 敵移動除外＋戦闘不可＋通行料0（ピース）
 - `apply_invasion_disable()`: 侵略無効化（セプター呪い）
-- `apply_toll_half_curse()`: 通行料半減（領地呪い）
+- `apply_toll_half_curse()`: 通行料半減（ドミニオ呪い）
 - `apply_creature_toll_disable()`: クリーチャーの通行料無効化
 - `apply_curse_from_effect()`: 効果辞書からの呪い適用（汎用）
 
@@ -74,7 +74,7 @@ end_turn()内の処理順:
 ```
 calculate_final_toll(tile_index, payer_id, receiver_id, base_toll)
   ↓
-1. 領地呪いチェック（peace, toll_multiplier）
+1. ドミニオ呪いチェック（peace, toll_multiplier）
    ├─ peace → 通行料=0
    └─ toll_multiplier → 倍率適用
 2. セプター呪いチェック（支払い側）
@@ -113,7 +113,7 @@ calculate_final_toll(tile_index, payer_id, receiver_id, base_toll)
 | パスボタン選択後 | ✅ | 敵地に留まる |
 | 戦闘敗北（DEFENDER_WIN） | ✅ | 敵地に留まる |
 | 敵地生き残り（ATTACKER_SURVIVED） | ✅ | 敵地に留まる |
-| 戦闘勝利（ATTACKER_WIN） | ❌ | 土地奪取→自領地に |
+| 戦闘勝利（ATTACKER_WIN） | ❌ | 土地奪取→自ドミニオに |
 | 相打ち（BOTH_DEFEATED） | ❌ | 土地無所有に |
 
 ---

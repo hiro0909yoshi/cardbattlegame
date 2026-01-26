@@ -235,7 +235,7 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 		# 経路に追加
 		result.path.append(next_tile)
 		
-		# 足止め判定（自分の領地以外）
+		# 足止め判定（自分のドミニオ以外）
 		var tile_info = _get_tile_info(next_tile)
 		var tile_owner = tile_info.get("owner", -1)
 		
@@ -398,11 +398,11 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 		# 停止ボーナスは付けない（通過でも取得できるため、方向ボーナスで評価）
 		return SCORE_STOP_SPECIAL_TILE
 	
-	# 自分の領地
+	# 自分のドミニオ
 	if owner_id == player_id:
 		return SCORE_STOP_OWN_LAND
 	
-	# 敵の領地
+	# 敵のドミニオ
 	if owner_id >= 0 and owner_id != player_id:
 		var toll = _calculate_toll(tile_index)
 		var can_win = _can_invade_and_win(tile_index, player_id)
@@ -458,11 +458,11 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 				checkpoint_bonus += SCORE_PATH_CHECKPOINT_PASS
 				checkpoint_already_counted = true
 		
-		# 自分の領地はスキップ
+		# 自分のドミニオはスキップ
 		if owner_id == player_id:
 			continue
 		
-		# 敵の領地
+		# 敵のドミニオ
 		if owner_id >= 0:
 			var toll = _calculate_toll(tile_index)
 			score -= toll
@@ -697,7 +697,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var tile_owner = tile_info.get("owner", -1)
 		
 		if tile_owner != player_id and tile_owner >= 0:
-			# 敵領地の場合、足止めチェック
+			# 敵ドミニオの場合、足止めチェック
 			var forced_stop_result = _check_forced_stop(tile_index, player_id)
 			if forced_stop_result.stopped:
 				first_step_forced = true

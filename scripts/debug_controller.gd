@@ -377,16 +377,16 @@ func is_debug_mode() -> bool:
 	return enabled and OS.is_debug_build()
 
 # ============================================
-# Phase 1-A: 領地コマンド用デバッグキー
+# Phase 1-A: ドミニオオーダー用デバッグキー
 # ============================================
 
-# 領地コマンドハンドラー参照
-var land_command_handler = null
+# ドミニオオーダーハンドラー参照
+var dominio_order_handler = null
 
-# 領地コマンドハンドラーを設定
-func set_land_command_handler(handler):
-	land_command_handler = handler
-	print("[DebugController] LandCommandHandler参照を設定")
+# ドミニオオーダーハンドラーを設定
+func set_dominio_order_handler(handler):
+	dominio_order_handler = handler
+	print("[DebugController] DominioOrderHandler参照を設定")
 
 # Uキー: 現在プレイヤーの全土地のダウン状態を解除
 func clear_current_player_down_states():

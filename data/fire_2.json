@@ -80,7 +80,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "不屈・アルカナアーツ",
-	  "ability_detail": "不屈；アルカナアーツ[EP50・対象自領地に呪い遠隔移動]",
+	  "ability_detail": "不屈；アルカナアーツ[EP50・対象自ドミニオに呪い遠隔移動]",
 	  "ability_parsed": {
 		"keywords": ["不屈", "アルカナアーツ"],
 		"mystic_art": {
@@ -111,14 +111,14 @@
 	  "ap": 30,
 	  "hp": 60,
 	  "ability": "防御型・アルカナアーツ",
-	  "ability_detail": "防御型；アルカナアーツ[EP50・対象敵領地に呪い通行料1/2]",
+	  "ability_detail": "防御型；アルカナアーツ[EP50・対象敵ドミニオに呪い通行料1/2]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"id": "barnacle_mystic_001",
 			"name": "通行料半減",
-			"description": "対象敵領地に通行料半減の呪いをかける（3ターン）",
+			"description": "対象敵ドミニオに通行料半減の呪いをかける（3ターン）",
 			"spell_id": 9001,
 			"cost": 50
 		  }
@@ -145,8 +145,8 @@
 	  },
 	  "ap": 60,
 	  "hp": 60,
-	  "ability": "自領地HP-30",
-	  "ability_detail": "自領地が5つ以上の場合、AP&HP-30",
+	  "ability": "自ドミニオHP-30",
+	  "ability_detail": "自ドミニオが5つ以上の場合、AP&HP-30",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -157,7 +157,7 @@
 			  "ap": -30,
 			  "hp": -30
 			},
-			"description": "自領地が5つ以上の場合、AP&HP-30"
+			"description": "自ドミニオが5つ以上の場合、AP&HP-30"
 		  }
 		]
 	  }
@@ -823,7 +823,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "HP+基本AP",
-	  "ability_detail": "HP+基本AP；隣が自領地なら強打",
+	  "ability_detail": "HP+基本AP；隣が自ドミニオなら強打",
 	  "ability_parsed": {
 		"keywords": [
 		  "強打"

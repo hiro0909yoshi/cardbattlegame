@@ -411,7 +411,7 @@ func _apply_per_lap_bonus(creature_data: Dictionary, effect: Dictionary):
 | 名前 | ID | effect_type | 効果 |
 |------|-----|-------------|------|
 | レッドキャップ | 445 | `race_creature_stat_replace` | AP&HP=ゴブリン配置数×20 |
-| アンダイン | 109 | `land_count_multiplier` (set) | HP=水自領地数×20 |
+| アンダイン | 109 | `land_count_multiplier` (set) | HP=水自ドミニオ数×20 |
 | ガルーダ | 307 | `land_count_multiplier` (set) | AP&HP=風配置数×10 |
 | リビングクローブ | 440 | `other_element_count` | AP&HP=他属性の配置数×5 |
 | ペトリフストーン | 1059 | `fixed_stat` (set) | AP=0；HP=80 |

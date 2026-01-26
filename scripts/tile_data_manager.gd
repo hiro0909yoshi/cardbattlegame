@@ -183,7 +183,7 @@ func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	var final_toll = GameConstants.floor_toll(raw_toll)
 	
 	# ========================================
-	# 領地呪い判定（toll_multiplier, peace）
+	# ドミニオ呪い判定（toll_multiplier, peace）
 	# ========================================
 	
 	# クリーチャーの呪いをチェック

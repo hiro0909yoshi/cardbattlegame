@@ -21,10 +21,10 @@ const PRIORITY_VALUES = {
 # 移動評価スコア（CPUMovementEvaluator用）
 # ============================================================
 
-## 敵領地（倒せない）: -通行料 × 係数
+## 敵ドミニオ（倒せない）: -通行料 × 係数
 const SCORE_STOP_ENEMY_CANT_WIN_MULTIPLIER = -1
 
-## 敵領地（倒せる）: +通行料 × 係数
+## 敵ドミニオ（倒せる）: +通行料 × 係数
 const SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER = 2
 
 ## 空き地（属性一致・召喚可能）
@@ -36,7 +36,7 @@ const SCORE_STOP_EMPTY_ELEMENT_MISMATCH = 50
 ## 空き地（召喚不可）
 const SCORE_STOP_EMPTY_NO_SUMMON = 0
 
-## 自分の領地
+## 自分のドミニオ
 const SCORE_STOP_OWN_LAND = 0
 
 ## 特殊タイル（城、魔法石等）
@@ -64,7 +64,7 @@ const SCORE_FORCED_STOP_PENALTY = -200
 const PATH_EVALUATION_DISTANCE = 10
 
 # ============================================================
-# 領地コマンド評価スコア（CPUTerritoryAI用）
+# ドミニオオーダー評価スコア（CPUTerritoryAI用）
 # ============================================================
 
 ## 基準スコア: 空き地に属性一致召喚

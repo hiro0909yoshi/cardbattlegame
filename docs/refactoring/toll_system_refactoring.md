@@ -24,7 +24,7 @@
 
 **現状**:
 - `game_constants.gd` の `LEVEL_VALUES` - 間違った値（検証用に現状のまま）
-- `land_command_ui.gd` - 183行目、238行目、315行目にハードコード
+- `dominio_order_ui.gd` - 183行目、238行目、315行目にハードコード
   ```gdscript
   var level_costs = {0: 0, 1: 0, 2: 80, 3: 240, 4: 620, 5: 1200}
   ```
@@ -34,7 +34,7 @@
 **実装内容**:
 
 1. `game_constants.gd` の LEVEL_VALUES をテスト用の誤った値のまま保持（検証目的）
-2. `land_command_ui.gd` の 3箇所すべてで GameConstants.LEVEL_VALUES を参照するように修正
+2. `dominio_order_ui.gd` の 3箇所すべてで GameConstants.LEVEL_VALUES を参照するように修正
    - 183行目: `show_level_selection()` メソッド内
    - 238行目: `create_level_selection_panel()` メソッド内
    - 315行目: `_calculate_level_up_cost()` メソッド内

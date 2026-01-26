@@ -99,8 +99,8 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 
 ```gdscript
 # 停止位置
-SCORE_STOP_ENEMY_CANT_WIN = -通行料        # 敵領地（倒せない）
-SCORE_STOP_ENEMY_CAN_WIN = +通行料×2       # 敵領地（倒せる）
+SCORE_STOP_ENEMY_CANT_WIN = -通行料        # 敵ドミニオ（倒せない）
+SCORE_STOP_ENEMY_CAN_WIN = +通行料×2       # 敵ドミニオ（倒せる）
 SCORE_STOP_EMPTY_MATCH = 50                # 空き地（属性一致）
 SCORE_STOP_EMPTY_MISMATCH = 20             # 空き地（属性不一致）
 SCORE_STOP_SPECIAL = 50                    # 特殊タイル
@@ -197,21 +197,21 @@ var distance_bonus = max(0, 1200 - (distance * 60))
 
 ### 攻撃的使用
 
-敵を自分のLv3以上領地に止まらせる。
+敵を自分のLv3以上ドミニオに止まらせる。
 
 ```
 1. 各敵の停止位置を計算（ダイス固定値）
-2. 自分のLv3+領地に止まるか判定
+2. 自分のLv3+ドミニオに止まるか判定
 3. 敵が侵略して勝てないか確認
 4. 最高通行料の組み合わせを選択
 ```
 
 ### 防御的使用
 
-自分が敵の高額領地を回避する。
+自分が敵の高額ドミニオを回避する。
 
 ```
-1. 経路上の危険な位置（敵Lv3+領地）をリストアップ
+1. 経路上の危険な位置（敵Lv3+ドミニオ）をリストアップ
 2. ホーリーワードの停止位置が：
    - いずれの危険にも止まらない
    - かつ、少なくとも1つの危険を超えている

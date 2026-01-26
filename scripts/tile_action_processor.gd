@@ -127,7 +127,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		# 空き地 - 召喚UI表示
 		show_summon_ui()
 	elif tile_info["owner"] == player_index:
-		# 自分の土地 - 召喚不可（領地コマンドで操作可能）
+		# 自分の土地 - 召喚不可（ドミニオオーダーで操作可能）
 		show_summon_ui_disabled()
 	else:
 		# 敵の土地
@@ -156,7 +156,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
-	# CPUはcpu_turn_processorで処理（特殊タイルでも領地コマンドを検討）
+	# CPUはcpu_turn_processorで処理（特殊タイルでもドミニオオーダーを検討）
 	if cpu_turn_processor:
 		cpu_turn_processor.process_cpu_turn(tile, tile_info, player_index)
 	else:
@@ -176,7 +176,7 @@ func show_summon_ui():
 # 召喚UI表示（グレーアウト）- 自分の土地に止まった場合
 func show_summon_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたは領地コマンドを使用）"
+		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたはドミニオオーダーを使用）"
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -202,7 +202,7 @@ func show_battle_ui(mode: String):
 # バトルUI表示（グレーアウト）peace呪い用
 func show_battle_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたは領地コマンドを使用）"
+		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたはドミニオオーダーを使用）"
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -232,7 +232,7 @@ func on_card_selected(card_index: int):
 			ui_manager.phase_label.text = "❌ 特殊タイル上では召喚できません"
 			# 少し待ってから元のメッセージに戻す
 			await board_system.get_tree().create_timer(1.5).timeout
-			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたは領地コマンドを使用）"
+			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたはドミニオオーダーを使用）"
 		return
 	
 	# 遠隔配置モードの場合は無条件で召喚処理
@@ -915,6 +915,12 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
+	
+	# ドミニオオーダー使用コメント表示（一時無効化）
+	#if game_flow_manager and game_flow_manager.dominio_order_handler:
+	#	var handler = game_flow_manager.dominio_order_handler
+	#	if handler.has_method("_show_dominio_order_comment"):
+	#		await handler._show_dominio_order_comment("交換")
 	
 	print("[TileActionProcessor] クリーチャー交換完了")
 	_complete_action()

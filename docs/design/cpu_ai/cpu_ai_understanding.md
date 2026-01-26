@@ -29,7 +29,7 @@ CPUが行動を決めるとき、各選択肢に点数をつけて、一番高�
 召喚フェーズで可能な行動：
 - 空き地にクリーチャー召喚
 - 移動侵略（自クリーチャーを移動して戦闘）
-- 領地レベルアップ
+- ドミニオレベルアップ
 - クリーチャー交換
 - 何もしない（パス）
 
@@ -281,7 +281,7 @@ scripts/cpu_ai/
 **配置数・土地数系**
 - 属性別配置数×倍率（element_count_bonus）
 - 敵と同属性の自分の配置数×倍率（same_element_as_enemy_count）
-- 自領地数×倍率（owned_land_count_bonus）
+- 自ドミニオ数×倍率（owned_land_count_bonus）
 - 連鎖数×倍率（chain_count_ap_bonus）
 
 **手札・その他**

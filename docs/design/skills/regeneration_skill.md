@@ -308,7 +308,7 @@ func _apply_regeneration(participant: BattleParticipant) -> void:
    【再生発動】HP: 15 → 40
 
 4. 同じターン内
-   - 不屈により領地コマンド実行可能
+   - 不屈によりドミニオオーダー実行可能
    - レベルアップで防御力強化
    - HPは40で維持
 

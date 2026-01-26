@@ -85,7 +85,7 @@ func _show_special_tile_landing_ui(player_id: int):
 	
 	# フェーズ表示（show_card_selection_ui後に設定して上書きされないようにする）
 	if ui_manager.phase_label:
-		ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
+		ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたはドミニオオーダーを使用）"
 
 # 3Dタイル処理（BoardSystem3Dから呼び出される）
 # 注意: この関数はawaitで呼び出すこと

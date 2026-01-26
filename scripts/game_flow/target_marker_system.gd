@@ -17,7 +17,7 @@ class_name TargetMarkerSystem
 
 ## 選択マーカーを作成
 ## 
-## handler: 選択マーカーを保持するオブジェクト（LandCommandHandler、SpellPhaseHandlerなど）
+## handler: 選択マーカーを保持するオブジェクト（DominioOrderHandler、SpellPhaseHandlerなど）
 ##          handler.selection_marker プロパティが必要
 static func create_selection_marker(handler):
 	if handler.selection_marker:

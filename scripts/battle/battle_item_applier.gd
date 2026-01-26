@@ -273,7 +273,7 @@ func _apply_hand_count_bonus(participant: BattleParticipant, effect: Dictionary,
 		# update_current_hp() は呼ばない（current_hp が状態値になったため）
 		print("  [手札数ボーナス] 手札:", hand_count, "枚 × ", multiplier, " = HP+", bonus)
 
-## 自領地数ボーナス
+## 自ドミニオ数ボーナス
 func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:
 	var elements = effect.get("elements", [])
 	var multiplier = effect.get("multiplier", 1)
@@ -290,11 +290,11 @@ func _apply_owned_land_count_bonus(participant: BattleParticipant, effect: Dicti
 	
 	if stat == "ap":
 		participant.current_ap += bonus
-		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = AP+", bonus)
+		print("  [自ドミニオ数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = AP+", bonus)
 	elif stat == "hp":
 		participant.item_bonus_hp += bonus
 		# update_current_hp() は呼ばない（current_hp が状態値になったため）
-		print("  [自領地数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
+		print("  [自ドミニオ数ボーナス] ", elements, ":", total_land_count, "枚 × ", multiplier, " = HP+", bonus)
 
 ## APドレイン（敵のAPを永続的に0にする）
 func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattleParticipant, _effect: Dictionary) -> void:

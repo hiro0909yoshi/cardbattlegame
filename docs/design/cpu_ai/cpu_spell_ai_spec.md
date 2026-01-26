@@ -179,11 +179,11 @@ if hand_size <= 3:
 
 ### 攻撃的使用
 
-敵を自分のLv3+領地に止まらせる。
+敵を自分のLv3+ドミニオに止まらせる。
 
 ### 防御的使用
 
-自分が敵のLv3+領地を回避する。
+自分が敵のLv3+ドミニオを回避する。
 
 詳細は [cpu_movement_ai_spec.md](cpu_movement_ai_spec.md) 参照。
 

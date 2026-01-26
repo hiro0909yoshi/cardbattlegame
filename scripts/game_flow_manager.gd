@@ -11,7 +11,7 @@ signal dice_rolled(value: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const LandCommandHandlerClass = preload("res://scripts/game_flow/land_command_handler.gd")
+const DominioOrderHandlerClass = preload("res://scripts/game_flow/dominio_order_handler.gd")
 const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 
 # ゲーム状態
@@ -199,9 +199,9 @@ func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
 	
-	# Phase 1-A: ターン開始時は領地コマンドボタンを隠す
+	# Phase 1-A: ターン開始時はドミニオオーダーボタンを隠す
 	if ui_manager:
-		ui_manager.hide_land_command_button()
+		ui_manager.hide_dominio_order_button()
 	
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
@@ -422,8 +422,8 @@ func on_card_selected(card_index: int):
 		return
 	
 	# Phase 1-D: 交換モードチェック
-	if land_command_handler and land_command_handler._swap_mode:
-		land_command_handler.on_card_selected_for_swap(card_index)
+	if dominio_order_handler and dominio_order_handler._swap_mode:
+		dominio_order_handler.on_card_selected_for_swap(card_index)
 	elif board_system_3d:
 		board_system_3d.on_card_selected(card_index)
 
@@ -472,12 +472,12 @@ func end_turn():
 	# ★重要: フラグを最優先で立てる
 	is_ending_turn = true
 	
-	# Phase 1-A: 領地コマンドを閉じる、カード選択UIとボタンを隠す
-	if land_command_handler and land_command_handler.current_state != land_command_handler.State.CLOSED:
-		land_command_handler.close_land_command()
+	# Phase 1-A: ドミニオオーダーを閉じる、カード選択UIとボタンを隠す
+	if dominio_order_handler and dominio_order_handler.current_state != dominio_order_handler.State.CLOSED:
+		dominio_order_handler.close_dominio_order()
 	
 	if ui_manager:
-		ui_manager.hide_land_command_button()
+		ui_manager.hide_dominio_order_button()
 		ui_manager.hide_card_selection_ui()
 	
 	var current_player = player_system.get_current_player()
@@ -682,7 +682,7 @@ func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
 # ============================================
 
 # Phase 1-A用ハンドラー
-var land_command_handler: LandCommandHandler = null
+var dominio_order_handler: DominioOrderHandler = null
 var spell_phase_handler: SpellPhaseHandler = null
 var item_phase_handler = null  # ItemPhaseHandler
 var target_selection_helper: TargetSelectionHelper = null  # タイル選択ヘルパー
@@ -690,18 +690,18 @@ var target_selection_helper: TargetSelectionHelper = null  # タイル選択ヘ�
 # Phase 1-A: ハンドラーを外部から設定（初期化はGameSystemManagerが担当）
 func set_phase1a_handlers(
 	p_target_selection_helper: TargetSelectionHelper,
-	p_land_command_handler: LandCommandHandler,
+	p_dominio_order_handler: DominioOrderHandler,
 	p_spell_phase_handler: SpellPhaseHandler,
 	p_item_phase_handler
 ) -> void:
 	target_selection_helper = p_target_selection_helper
-	land_command_handler = p_land_command_handler
+	dominio_order_handler = p_dominio_order_handler
 	spell_phase_handler = p_spell_phase_handler
 	item_phase_handler = p_item_phase_handler
 	
-	# land_command_closedシグナルを接続
-	if land_command_handler and land_command_handler.has_signal("land_command_closed"):
-		land_command_handler.land_command_closed.connect(_on_land_command_closed)
+	# dominio_order_closedシグナルを接続
+	if dominio_order_handler and dominio_order_handler.has_signal("dominio_order_closed"):
+		dominio_order_handler.dominio_order_closed.connect(_on_dominio_order_closed)
 	
 	# SpellCurseStatにシステム参照と通知UIを設定
 	if spell_curse_stat:
@@ -717,8 +717,8 @@ func set_phase1a_handlers(
 	if bankruptcy_handler and target_selection_helper:
 		bankruptcy_handler.target_selection_helper = target_selection_helper
 
-# Phase 1-A: 領地コマンドが閉じられたときの処理
-func _on_land_command_closed():
+# Phase 1-A: ドミニオオーダーが閉じられたときの処理
+func _on_dominio_order_closed():
 	
 	# ターンエンド中またはターンエンドフェーズの場合は処理しない
 	if is_ending_turn or current_phase == GamePhase.END_TURN:
@@ -744,24 +744,24 @@ func _reinitialize_card_selection():
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)
 			
-			# 領地コマンドボタンも再表示（領地を所有している場合のみ）
+			# ドミニオオーダーボタンも再表示（ドミニオを所有している場合のみ）
 			if board_system_3d and board_system_3d._has_owned_lands(current_player.id):
-				ui_manager.show_land_command_button()
+				ui_manager.show_dominio_order_button()
 			
 
-# Phase 1-A: 領地コマンドを開く
-func open_land_command():
-	if not land_command_handler:
+# Phase 1-A: ドミニオオーダーを開く
+func open_dominio_order():
+	if not dominio_order_handler:
 		return
 	
 	var current_player = player_system.get_current_player()
 	if current_player:
-		land_command_handler.open_land_command(current_player.id)
+		dominio_order_handler.open_dominio_order(current_player.id)
 
 # Phase 1-A: デバッグ情報表示
 func debug_print_phase1a_status():
-	if land_command_handler:
-		print("[Phase 1-A] 領地コマンド状態: ", land_command_handler.get_current_state())
+	if dominio_order_handler:
+		print("[Phase 1-A] ドミニオオーダー状態: ", dominio_order_handler.get_current_state())
 
 # ============================================
 # ターン数取得

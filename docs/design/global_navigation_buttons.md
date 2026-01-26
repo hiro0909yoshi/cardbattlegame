@@ -262,5 +262,5 @@ await ui_manager.global_comment_ui.click_confirmed
 - `scripts/ui_components/global_action_buttons.gd` - ボタンUI実装
 - `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップUI実装
 - `scripts/ui_manager.gd` - API提供（enable_navigation, global_comment_ui等）
-- `scripts/game_flow/land_command_handler.gd` - 使用例（領地コマンド）
+- `scripts/game_flow/dominio_order_handler.gd` - 使用例（ドミニオオーダー）
 - `scripts/game_flow/lap_system.gd` - 使用例（周回完了通知）

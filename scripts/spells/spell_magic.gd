@@ -88,12 +88,12 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 					notification_text = "【フラクション】\n条件不成立: 対象のEPが術者以下"
 		
 		"drain_magic_by_land_count":
-			# ランドドレイン: 敵領地数×30EP奪取
+			# ランドドレイン: 敵ドミニオ数×30EP奪取
 			if from_id >= 0:
 				result = drain_magic_by_land_count(effect, from_id, player_id)
 				if result.get("amount", 0) > 0:
 					var lands = result.get("land_count", 0)
-					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%d領地 × %dEP" % [lands, effect.get("multiplier", 30)])
+					notification_text = _format_drain_notification(from_id, player_id, result["amount"], "【ランドドレイン】%dドミニオ × %dEP" % [lands, effect.get("multiplier", 30)])
 		
 		"drain_magic_by_lap_diff":
 			# スピードペナルティ: 周回数差×100EP奪取
@@ -112,14 +112,14 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				notification_text = "【レディビジョン】\n全プレイヤーEPを[color=yellow]%dEP[/color]に平均化" % result.get("average", 0)
 		
 		"gain_magic_from_land_chain":
-			# ロングライン: 連続領地×5EP00、未達成ならドロー
+			# ロングライン: 連続ドミニオ×5EP00、未達成ならドロー
 			result = gain_magic_from_land_chain(player_id, effect, context)
 			var chain = result.get("chain", 0)
 			var required = effect.get("required_chain", 4)
 			if result.get("condition_met", false):
-				notification_text = _format_gain_notification(player_id, result["amount"], "【ロングライン】連続%d領地達成！" % chain)
+				notification_text = _format_gain_notification(player_id, result["amount"], "【ロングライン】連続%dドミニオ達成！" % chain)
 			else:
-				notification_text = "【ロングライン】\n連続%d領地 (必要%d)\n条件未達成 → カードドロー" % [chain, required]
+				notification_text = "【ロングライン】\n連続%dドミニオ (必要%d)\n条件未達成 → カードドロー" % [chain, required]
 		
 		"mhp_to_magic":
 			# ドゥームデボラーアルカナアーツ: MHP×2EPを得て、ST&MHP-10
@@ -326,7 +326,7 @@ func drain_magic_calculated(from_player_id: int, to_player_id: int, base_value: 
 # Phase 1: 基本奪取系
 # ========================================
 
-## ランドドレイン: 敵領地数×30EP奪取
+## ランドドレイン: 敵ドミニオ数×30EP奪取
 func drain_magic_by_land_count(effect: Dictionary, from_player_id: int, to_player_id: int) -> Dictionary:
 	if not board_system_ref:
 		print("[ランドドレイン] BoardSystemが設定されていません")
@@ -335,7 +335,7 @@ func drain_magic_by_land_count(effect: Dictionary, from_player_id: int, to_playe
 	var multiplier = effect.get("multiplier", 30)
 	var land_count = 0
 	
-	# 敵の領地数を取得
+	# 敵のドミニオ数を取得
 	if board_system_ref.has_method("get_owner_land_count"):
 		land_count = board_system_ref.get_owner_land_count(from_player_id)
 	elif "tile_nodes" in board_system_ref:
@@ -479,7 +479,7 @@ func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_
 # Phase 4: グローバル効果
 # ========================================
 
-## ロングライン: 連続領地4つで500EP、未達成ならドロー
+## ロングライン: 連続ドミニオ4つで500EP、未達成ならドロー
 func gain_magic_from_land_chain(player_id: int, effect: Dictionary, _context: Dictionary) -> Dictionary:
 	if not board_system_ref:
 		print("[ロングライン] BoardSystemが設定されていません")
@@ -488,21 +488,21 @@ func gain_magic_from_land_chain(player_id: int, effect: Dictionary, _context: Di
 	var required_chain = effect.get("required_chain", 4)
 	var amount = effect.get("amount", 500)
 	
-	# 連続領地数を計算
+	# 連続ドミニオ数を計算
 	var max_chain = _calculate_max_land_chain(player_id)
 	
 	if max_chain >= required_chain:
 		# 条件達成: EP獲得
 		add_magic(player_id, amount)
-		print("[ロングライン] 連続領地%d達成！ %dEP獲得" % [max_chain, amount])
+		print("[ロングライン] 連続ドミニオ%d達成！ %dEP獲得" % [max_chain, amount])
 		return {"success": true, "amount": amount, "chain": max_chain, "condition_met": true}
 	else:
 		# 条件未達成: フォールバック効果（ドロー）を返す
-		print("[ロングライン] 連続領地%d（必要%d）未達成" % [max_chain, required_chain])
+		print("[ロングライン] 連続ドミニオ%d（必要%d）未達成" % [max_chain, required_chain])
 		var fallback = effect.get("fallback_effect", {})
 		return {"success": true, "amount": 0, "chain": max_chain, "condition_met": false, "next_effect": fallback}
 
-## 連続領地の最大数を計算
+## 連続ドミニオの最大数を計算
 func _calculate_max_land_chain(player_id: int) -> int:
 	if not board_system_ref or not "tile_nodes" in board_system_ref:
 		return 0
@@ -511,7 +511,7 @@ func _calculate_max_land_chain(player_id: int) -> int:
 	var current_chain = 0
 	var total_tiles = board_system_ref.tile_nodes.size()
 	
-	# マップを1周して連続領地を数える
+	# マップを1周して連続ドミニオを数える
 	for i in range(total_tiles):
 		var tile = board_system_ref.tile_nodes[i]
 		if tile.owner_id == player_id:

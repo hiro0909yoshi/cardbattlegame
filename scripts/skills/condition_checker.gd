@@ -13,7 +13,7 @@ enum PowerStrikeCondition {
 	ENEMY_ELEMENT,       # 敵と同/異属性
 	WITH_ITEM,           # アイテム使用時
 	WITHOUT_ENEMY_ITEM,  # 敵アイテム不使用時
-	ADJACENT_ALLY_LAND,  # 隣が自領地
+	ADJACENT_ALLY_LAND,  # 隣が自ドミニオ
 	WITH_WEAPON,         # 武器使用時
 	LEVEL_CAP            # レベル使用時
 }

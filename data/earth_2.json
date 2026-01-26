@@ -48,8 +48,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "隣接領地条件",
-	  "ability_detail": "隣接領地が自領地の場合、AP&HP+20",
+	  "ability": "隣接ドミニオ条件",
+	  "ability_detail": "隣接ドミニオが自ドミニオの場合、AP&HP+20",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -58,7 +58,7 @@
 			  "ap": 20,
 			  "hp": 20
 			},
-			"description": "隣接領地が自領地の場合、AP&HP+20"
+			"description": "隣接ドミニオが自ドミニオの場合、AP&HP+20"
 		  }
 		]
 	  }

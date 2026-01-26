@@ -559,7 +559,7 @@ func _show_special_tile_landing_ui(player_id: int):
 	# 手札UI表示
 	ui_manager.show_card_selection_ui(current_player)
 	# フェーズ表示
-	ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたは領地コマンドを使用）"
+	ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたはドミニオオーダーを使用）"
 ```
 
 ### UI共通仕様

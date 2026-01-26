@@ -55,7 +55,7 @@
 	  │    return                  │
 	  │                            │
 	  │  is_ending_turn = true     │
-	  │  領地コマンドを閉じる        │
+	  │  ドミニオオーダーを閉じる        │
 	  │  手札調整チェック           │
 	  │  敵地通行料支払い           │
 	  │  change_phase(END_TURN)    │
@@ -88,7 +88,7 @@ GameFlowManager._on_tile_action_completed_3d()
   │
   └→ end_turn()
 	  ├─ is_ending_turn = true（最優先）
-	  ├─ 領地コマンドを閉じる
+	  ├─ ドミニオオーダーを閉じる
 	  ├─ 手札調整
 	  ├─ 通行料支払い
 	  ├─ ターン終了処理
@@ -117,7 +117,7 @@ GameFlowManager._on_tile_action_completed_3d()
 | パス選択 | `on_action_pass()` → `_complete_action()` |
 | バトル完了 | `_on_battle_completed()` → `_complete_action()` |
 | レベルアップ | `on_level_up_selected()` → `_complete_action()` |
-| 領地コマンド | 各アクション → `_complete_action()` |
+| ドミニオオーダー | 各アクション → `_complete_action()` |
 
 ### CPU処理（GameFlowManager内）
 | メソッド | 処理 |
@@ -237,11 +237,11 @@ end_turn()
   │
   ├─ is_ending_turn = true
   │
-  ├─ 領地コマンドを閉じる
-  │   └─ land_command_handler.close_land_command()
+  ├─ ドミニオオーダーを閉じる
+  │   └─ dominio_order_handler.close_dominio_order()
   │
   ├─ UIを隠す
-  │   ├─ ui_manager.hide_land_command_button()
+  │   ├─ ui_manager.hide_dominio_order_button()
   │   └─ ui_manager.hide_card_selection_ui()
   │
   ├─ 手札調整チェック

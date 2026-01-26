@@ -42,7 +42,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"能力値+20\"(戦闘中、AP&HP+20)；カードを1枚引く",
+	  "effect": "対象ドミニオに呪い\"能力値+20\"(戦闘中、AP&HP+20)；カードを1枚引く",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -76,7 +76,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "対象領地に呪い\"不屈\"(5R間、不屈を得る)",
+	  "effect": "対象ドミニオに呪い\"不屈\"(5R間、不屈を得る)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -105,7 +105,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "対象領地に呪い\"戦闘行動不可\"",
+	  "effect": "対象ドミニオに呪い\"戦闘行動不可\"",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -134,7 +134,7 @@
 	  "cost": {
 		"ep": 50
 	  },
-	  "effect": "対象領地に呪い\"賞金首\"(移動・交換不可、武器で破壊した場合30EP0)",
+	  "effect": "対象ドミニオに呪い\"賞金首\"(移動・交換不可、武器で破壊した場合30EP0)",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -226,7 +226,7 @@
 	  "cost": {
 		"ep": 80
 	  },
-	  "effect": "対象領地に呪い\"平和\"(侵略を受けず、通行料は0EP)",
+	  "effect": "対象ドミニオに呪い\"平和\"(侵略を受けず、通行料は0EP)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"effects": [
@@ -278,7 +278,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象自領地を火に変える",
+	  "effect": "対象自ドミニオを火に変える",
 	  "effect_parsed": {
 		"target_type": "own_land",
 		"target_info": {
@@ -525,7 +525,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"爆発罠\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
+	  "effect": "対象ドミニオに呪い\"爆発罠\"(停止セプターはEP40%を失い、クリーチャーのHP-20)",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_filter": "has_creature",
@@ -593,7 +593,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "レベル2領地を5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
+	  "effect": "レベル2ドミニオを5つ持つ場合、それらを1上げる；未達成の場合、復帰[ブック]",
 	  "keywords": [
 		"密命"
 	  ],
@@ -656,7 +656,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "全領地に呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
+	  "effect": "全ドミニオに呪い\"衰弱\"(戦闘終了時、HP-MHPの1/2)",
 	  "effect_parsed": {
 		"target_type": "all_creatures",
 		"target_info": {
@@ -718,7 +718,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "対象自領地に呪い\"移動術\"(アルカナアーツ[EP50・対象セプターに呪い\"ダイス5\"])",
+	  "effect": "対象自ドミニオに呪い\"移動術\"(アルカナアーツ[EP50・対象セプターに呪い\"ダイス5\"])",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -846,7 +846,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "対象領地に呪い\"戦闘能力不可\"；カードを1枚引く",
+	  "effect": "対象ドミニオに呪い\"戦闘能力不可\"；カードを1枚引く",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -903,7 +903,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "属性違いの領地を4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
+	  "effect": "属性違いのドミニオを4つ持つ場合、合う属性に変化；未達成の場合、復帰[ブック]",
 	  "keywords": [
 		"密命"
 	  ],
@@ -1068,7 +1068,7 @@
 	  "cost": {
 		"ep": 50
 	  },
-	  "effect": "世界呪い\"下位侵略不可\"(6R間、順位が下のセプターの領地に侵略できない)",
+	  "effect": "世界呪い\"下位侵略不可\"(6R間、順位が下のセプターのドミニオに侵略できない)",
 	  "effect_parsed": {
 		"target_type": "world",
 		"effects": [
@@ -1094,7 +1094,7 @@
 	  "cost": {
 		"ep": 120
 	  },
-	  "effect": "レベル3以下の対象火領地を地に、または地領地を火に変える",
+	  "effect": "レベル3以下の対象火ドミニオを地に、または地ドミニオを火に変える",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -1156,7 +1156,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "対象領地に呪い\"防魔壁\"(防魔と防御型を持つ)",
+	  "effect": "対象ドミニオに呪い\"防魔壁\"(防魔と防御型を持つ)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1256,7 +1256,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "全領地に呪い\"HP効果無効\"",
+	  "effect": "全ドミニオに呪い\"HP効果無効\"",
 	  "effect_parsed": {
 		"target_type": "all_creatures",
 		"target_info": {
@@ -1406,7 +1406,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "対象領地に呪い\"金属化\"(無効化[通常攻撃]を得て、防具使用不可)",
+	  "effect": "対象ドミニオに呪い\"金属化\"(無効化[通常攻撃]を得て、防具使用不可)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1519,7 +1519,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象自領地を手放し、その価値の70%を得る",
+	  "effect": "対象自ドミニオを手放し、その価値の70%を得る",
 	  "effect_parsed": {
 		"target_type": "own_land",
 		"target_info": {
@@ -1547,7 +1547,7 @@
 	  "cost": {
 		"ep": 50
 	  },
-	  "effect": "対象敵セプターから、敵領地数×30EPを奪う",
+	  "effect": "対象敵セプターから、敵ドミニオ数×30EPを奪う",
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_filter": "enemy",
@@ -1573,7 +1573,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"能力値不定\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
+	  "effect": "対象ドミニオに呪い\"能力値不定\"(戦闘中、AP&HP=10～70)；カードを1枚引く",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1856,7 +1856,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "密命；自領地が4つ連続している場合、500EP；未達成の場合、カードを2枚引く",
+	  "effect": "密命；自ドミニオが4つ連続している場合、500EP；未達成の場合、カードを2枚引く",
 	  "is_secret": true,
 	  "effect_parsed": {
 		"target_type": "self",

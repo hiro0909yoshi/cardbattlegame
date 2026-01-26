@@ -67,7 +67,7 @@
 - `cpu_target_resolver.gd` - ターゲット解決
 
 ### Territory AI
-- `cpu_territory_ai.gd` - 領地コマンド判断
+- `cpu_territory_ai.gd` - ドミニオオーダー判断
 - `cpu_sacrifice_selector.gd` - 犠牲カード選択
 - `cpu_special_tile_ai.gd` - 特殊タイル判断
 
@@ -86,10 +86,10 @@
 - `bankruptcy_handler.gd` - 破産処理
 
 ### Land Command
-- `land_command_handler.gd` - 領地コマンド管理
-- `land_action_helper.gd` - 領地アクション実行
-- `land_selection_helper.gd` - 領地選択
-- `land_input_helper.gd` - 領地入力処理
+- `dominio_order_handler.gd` - ドミニオオーダー管理
+- `land_action_helper.gd` - ドミニオアクション実行
+- `land_selection_helper.gd` - ドミニオ選択
+- `land_input_helper.gd` - ドミニオ入力処理
 
 ### Utilities
 - `target_selection_helper.gd` - ターゲット選択
@@ -214,7 +214,7 @@
 - `phase_display.gd` - フェーズ表示
 
 ### Land/Tile
-- `land_command_ui.gd` - 領地コマンド
+- `dominio_order_ui.gd` - ドミニオオーダー
 - `level_up_ui.gd` - レベルアップ
 - `base_tile_ui.gd` - タイルUI基底
 - `magic_tile_ui.gd` - 魔法陣UI

@@ -445,7 +445,7 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 					return best_land
 				# 適切なターゲットがない場合は空を返す（使用しない）
 				return {}
-			# デフォルト: 最初の自領地
+			# デフォルト: 最初の自ドミニオ
 			var lands = get_land_targets("own", context)
 			if not lands.is_empty():
 				return lands[0]
@@ -674,7 +674,7 @@ func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 		if from_tile < 0:
 			continue
 		
-		# 移動可能な敵領地を取得
+		# 移動可能な敵ドミニオを取得
 		var reachable_enemies = condition_checker._get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 		
 		for enemy_tile in reachable_enemies:

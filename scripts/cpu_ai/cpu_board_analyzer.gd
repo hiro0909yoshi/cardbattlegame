@@ -98,7 +98,7 @@ func get_enemy_creature_tiles(player_id: int) -> Array:
 # 土地取得
 # =============================================================================
 
-## 属性不一致の自領地を取得
+## 属性不一致の自ドミニオを取得
 func get_mismatched_own_lands(player_id: int) -> Array:
 	var results = []
 	
@@ -141,7 +141,7 @@ func get_enemy_lands_by_level(player_id: int, min_level: int) -> Array:
 	
 	return results
 
-## 指定レベルの自領地を取得
+## 指定レベルの自ドミニオを取得
 func get_own_lands_by_level(player_id: int, target_level: int) -> Array:
 	var results = []
 	

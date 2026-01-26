@@ -72,7 +72,7 @@
 					{
 						"id": "amon_mystic_001",
 						"name": "バイタリティ",
-						"description": "対象領地に呪い\"能力値+20\"；カードを1枚引く",
+						"description": "対象ドミニオに呪い\"能力値+20\"；カードを1枚引く",
 						"spell_id": 2066,
 						"cost": 50
 					}
@@ -834,7 +834,7 @@
 			"ap": 10,
 			"hp": 20,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP80・対象自領地に呪い防魔]",
+			"ability_detail": "アルカナアーツ[EP80・対象自ドミニオに呪い防魔]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"
@@ -843,7 +843,7 @@
 					{
 						"id": "domovoi_mystic_001",
 						"name": "防魔付与",
-						"description": "対象自領地のクリーチャーに防魔を付与",
+						"description": "対象自ドミニオのクリーチャーに防魔を付与",
 						"spell_id": 9022,
 						"cost": 80
 					}

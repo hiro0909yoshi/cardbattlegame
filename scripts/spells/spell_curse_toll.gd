@@ -3,7 +3,7 @@ class_name SpellCurseToll
 
 # 通行料呪いシステム
 # セプター呪い: toll_share, toll_disable, toll_fixed
-# 領地呪い: toll_multiplier, peace
+# ドミニオ呪い: toll_multiplier, peace
 # ドキュメント: docs/design/spells/通行料呪い_final.md
 
 # 参照
@@ -49,7 +49,7 @@ func apply_invasion_disable(player_id: int, duration: int = 2):
 	})
 
 # ========================================
-# 領地呪い付与
+# ドミニオ呪い付与
 # ========================================
 
 ## toll_multiplier: 通行料を倍率で増加
@@ -118,14 +118,14 @@ func apply_curse_from_effect(effect: Dictionary, tile_index: int, player_id: int
 # ========================================
 
 ## 最終通行料を計算（Dictionary 形式で戻る）
-## 領地呪い（peace, toll_multiplier）とセプター呪い（toll_disable, toll_fixed, toll_share）を適用
+## ドミニオ呪い（peace, toll_multiplier）とセプター呪い（toll_disable, toll_fixed, toll_share）を適用
 func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base_toll: int) -> Dictionary:
 	var final_toll = base_toll
 	var bonus_toll = 0
 	var bonus_receiver_id = -1
 	
 	# ========================================
-	# 領地呪い判定（peace, toll_multiplier）
+	# ドミニオ呪い判定（peace, toll_multiplier）
 	# ========================================
 	var land_curse = spell_curse.get_creature_curse(tile_index)
 	var land_curse_type = land_curse.get("curse_type", "")
@@ -255,19 +255,19 @@ func is_creature_invasion_immune(creature_data: Dictionary) -> bool:
 	var keywords = ability_parsed.get("keywords", [])
 	return "移動侵略無効" in keywords
 
-## peace 呪いが領地のクリーチャーにあるか確認（通行料判定用）
+## peace 呪いがドミニオのクリーチャーにあるか確認（通行料判定用）
 func has_peace_curse_on_land(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)
 	if curse.get("curse_type") == "peace":
 		return curse.get("params", {}).get("toll_zero", false)
 	return false
 
-## 敵プレイヤーが peace 呪い領地への移動可能かチェック
+## 敵プレイヤーが peace 呪いドミニオへの移動可能かチェック
 ## 移動不可な場合は false を返す
 func can_move_to_land(tile_index: int, moving_player_id: int, land_owner_id: int) -> bool:
 	# peace 呪いがある場合、敵プレイヤーは移動不可
 	if has_peace_curse(tile_index):
-		# 領地所有者は移動可能、他のプレイヤーは不可
+		# ドミニオ所有者は移動可能、他のプレイヤーは不可
 		if moving_player_id != land_owner_id:
 			return false
 	return true

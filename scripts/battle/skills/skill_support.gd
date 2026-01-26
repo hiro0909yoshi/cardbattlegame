@@ -7,7 +7,7 @@
 ## - バトルロール条件（攻撃側/防御側のみ）
 ## - 種族条件（ゴブリン種族のみなど）
 ## - 所有者一致条件（自分のクリーチャーのみ）
-## - 動的ボーナス（隣接自領地数に応じて変動）
+## - 動的ボーナス（隣接自ドミニオ数に応じて変動）
 ## - 重複防止: 同じクリーチャーIDの応援は1回のみ適用（敵味方関係なく）
 ##   ※例外: マッドハーレクイン(ID:342)はプレイヤーごとに1回適用
 ##
@@ -17,7 +17,7 @@
 ## - オトヒメ (ID: 114, 水) - 防御側にHP+10
 ## - ラハブ (ID: 144, 水) - 水風属性クリーチャーにHP+10
 ## - プロンディーデス (ID: 237, 地) - 火地属性クリーチャーにHP+10
-## - マッドハーレクイン (ID: 342, 風) - 自クリーチャーにAP&HP+隣接自領地数×20
+## - マッドハーレクイン (ID: 342, 風) - 自クリーチャーにAP&HP+隣接自ドミニオ数×20
 ## - ロードオブペイン (ID: 347, 風) - 風水属性クリーチャーにAP+10
 ## - ボージェス (ID: 436, 無) - 無属性クリーチャーにHP+20
 ## - レッドキャップ (ID: 445, 無) - ゴブリン種族にAP+20
@@ -174,7 +174,7 @@ static func _check_support_target(participant: BattleParticipant, target: Dictio
 ## 応援ボーナス適用
 ##
 ## 対象のバトル参加者にAPとHPのボーナスを適用する
-## 動的ボーナス（隣接自領地数に応じた加算）にも対応
+## 動的ボーナス（隣接自ドミニオ数に応じた加算）にも対応
 ##
 ## @param participant: バトル参加者
 ## @param bonus: ボーナス内容の辞書
@@ -187,16 +187,16 @@ static func _apply_support_bonus(participant: BattleParticipant, bonus: Dictiona
 	var hp_bonus = bonus.get("hp", 0)
 	var ap_bonus = bonus.get("ap", 0)
 	
-	# 隣接自領地数による動的ボーナス
+	# 隣接自ドミニオ数による動的ボーナス
 	var ap_per_adjacent = bonus.get("ap_per_adjacent_land", 0)
 	var hp_per_adjacent = bonus.get("hp_per_adjacent_land", 0)
 	
 	if ap_per_adjacent > 0 or hp_per_adjacent > 0:
-		# 戦闘タイルの隣接自領地数を取得
+		# 戦闘タイルの隣接自ドミニオ数を取得
 		var adjacent_ally_count = _count_adjacent_ally_lands(battle_tile_index, target_player_id, board_system)
 		ap_bonus += ap_per_adjacent * adjacent_ally_count
 		hp_bonus += hp_per_adjacent * adjacent_ally_count
-		print("  → 戦闘タイル", battle_tile_index, "の隣接自領地数: ", adjacent_ally_count)
+		print("  → 戦闘タイル", battle_tile_index, "の隣接自ドミニオ数: ", adjacent_ally_count)
 	
 	if hp_bonus == 0 and ap_bonus == 0:
 		return
@@ -214,15 +214,15 @@ static func _apply_support_bonus(participant: BattleParticipant, bonus: Dictiona
 		participant.current_ap += ap_bonus
 		print("  AP: ", old_ap, " → ", participant.current_ap, " (+", ap_bonus, ")")
 
-## 隣接自領地数を数える
+## 隣接自ドミニオ数を数える
 ##
-## バトルタイルに隣接する自分の領地の数をカウントする
+## バトルタイルに隣接する自分のドミニオの数をカウントする
 ## マッドハーレクインなどの動的ボーナス計算に使用
 ##
 ## @param tile_index: 対象タイルのインデックス
 ## @param player_id: プレイヤーID
 ## @param board_system: BoardSystemへの参照
-## @return int: 隣接する自領地の数
+## @return int: 隣接する自ドミニオの数
 static func _count_adjacent_ally_lands(tile_index: int, player_id: int, board_system) -> int:
 	if board_system == null or tile_index < 0:
 		return 0

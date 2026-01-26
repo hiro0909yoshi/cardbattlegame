@@ -1,8 +1,8 @@
 class_name CPUTerritoryAI
 extends RefCounted
-## CPU領地コマンドAI
+## CPUドミニオオーダーAI
 ## 
-## 領地コマンド（レベルアップ、属性変更、移動侵略、クリーチャー交換）の
+## ドミニオオーダー（レベルアップ、属性変更、移動侵略、クリーチャー交換）の
 ## 利益スコアを計算し、最適な行動を選択する。
 
 # 定数・共通クラスをpreload
@@ -192,7 +192,7 @@ func evaluate_crisis_level_up(context: Dictionary) -> Dictionary:
 
 # === 個別評価関数 ===
 
-## 侵略評価（敵領地に止まった場合）
+## 侵略評価（敵ドミニオに止まった場合）
 func _evaluate_invasion(context: Dictionary) -> Array:
 	var options: Array = []
 	
@@ -206,7 +206,7 @@ func _evaluate_invasion(context: Dictionary) -> Array:
 	if tile == null:
 		return options
 	
-	# 敵領地でない場合はスキップ
+	# 敵ドミニオでない場合はスキップ
 	if tile.owner_id == -1 or tile.owner_id == player_id:
 		return options
 	
@@ -245,7 +245,7 @@ func _evaluate_move_invasion(context: Dictionary) -> Array:
 	
 	var player_id = context.get("player_id", -1)
 	
-	# 自分の領地でダウンしていないクリーチャーを取得
+	# 自分のドミニオでダウンしていないクリーチャーを取得
 	var own_lands = _get_own_lands(player_id)
 	
 	for land in own_lands:
@@ -289,7 +289,7 @@ func _evaluate_move_destination(context: Dictionary, from_land: Dictionary, dest
 	if dest_tile.owner_id == -1:
 		return _evaluate_move_to_vacant(from_land, dest_tile, player_id, creature_element)
 	
-	# 敵領地の場合
+	# 敵ドミニオの場合
 	if dest_tile.owner_id != player_id:
 		return _evaluate_move_to_enemy(context, from_land, dest_tile, creature_element)
 	
@@ -328,7 +328,7 @@ func _evaluate_move_to_vacant(from_land: Dictionary, dest_tile, player_id: int, 
 	}
 
 
-## 敵領地への移動評価
+## 敵ドミニオへの移動評価
 func _evaluate_move_to_enemy(context: Dictionary, from_land: Dictionary, dest_tile, creature_element: String) -> Dictionary:
 	# クリーチャーがいない場合はスキップ
 	if dest_tile.creature_data.is_empty():
@@ -454,7 +454,7 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 		return options
 	
 	var own_lands = _get_own_lands(player_id)
-	print("[CPUTerritoryAI] 交換評価: 自領地数=%d" % own_lands.size())
+	print("[CPUTerritoryAI] 交換評価: 自ドミニオ数=%d" % own_lands.size())
 	
 	for land in own_lands:
 		print("[CPUTerritoryAI] 交換評価: tile=%d, downed=%s" % [land.tile_index, land.is_downed])
@@ -597,7 +597,7 @@ func _get_tile(tile_index: int):
 	return board_system.tile_nodes[tile_index]
 
 
-## 自分の領地一覧を取得
+## 自分のドミニオ一覧を取得
 func _get_own_lands(player_id: int) -> Array:
 	var lands: Array = []
 	
@@ -630,7 +630,7 @@ func _get_own_lands(player_id: int) -> Array:
 	return lands
 
 
-## 特定属性の自分の領地を取得
+## 特定属性の自分のドミニオを取得
 func _get_own_lands_by_element(player_id: int, element: String) -> Array:
 	var all_lands = _get_own_lands(player_id)
 	var filtered: Array = []
@@ -833,7 +833,7 @@ func _has_mystic_arts(creature_data: Dictionary) -> bool:
 	return false
 
 
-## 戦闘に勝てるか判定（敵領地に止まった場合）
+## 戦闘に勝てるか判定（敵ドミニオに止まった場合）
 func _can_win_battle(context: Dictionary, tile_index: int) -> bool:
 	if battle_simulator == null:
 		return false

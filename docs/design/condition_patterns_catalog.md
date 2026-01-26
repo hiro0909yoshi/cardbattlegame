@@ -20,11 +20,11 @@
 1-8. 属性別土地数カウント（複数属性合計）
 
 ### 2. 土地・配置条件
-2-1. 自領地数カウント
-2-2. 自領地数閾値チェック
+2-1. 自ドミニオ数カウント
+2-2. 自ドミニオ数閾値チェック
 2-3. 戦闘地のレベル取得
-2-4. 隣接土地が自領地かチェック
-2-5. 隣接自領地数カウント
+2-4. 隣接土地が自ドミニオかチェック
+2-5. 隣接自ドミニオ数カウント
 2-6. 特定クリーチャー名でカウント
 2-7. 属性別クリーチャーカウント
 2-8. 種族別クリーチャーカウント
@@ -67,7 +67,7 @@
 6-2. ターン数取得
 6-3. 周回数取得
 6-4. 手札数取得
-6-5. 領地レベル取得
+6-5. ドミニオレベル取得
 6-6. ダイス値取得
 6-7. ランダム値生成
 6-8. 応援スキル持ちカウント
@@ -242,7 +242,7 @@ for element in target_elements:
 
 ## 2️⃣ 土地・配置条件パターン
 
-### 2-1. 自領地数カウント
+### 2-1. 自ドミニオ数カウント
 ```gdscript
 var owned_land_count = board_system_ref.get_player_owned_land_count(player_id)
 ```
@@ -251,11 +251,11 @@ var owned_land_count = board_system_ref.get_player_owned_land_count(player_id)
 - board_system_3d.gd: `get_player_owned_land_count()`
 
 **対象クリーチャー**:
-- バーンタイタン (30): 自領地5個以上で AP&HP-30
+- バーンタイタン (30): 自ドミニオ5個以上で AP&HP-30
 
 ---
 
-### 2-2. 自領地数閾値チェック
+### 2-2. 自ドミニオ数閾値チェック
 ```gdscript
 var threshold = effect.get("threshold", 5)
 if owned_land_count >= threshold:
@@ -282,7 +282,7 @@ var bonus = tile_level * multiplier
 
 ---
 
-### 2-4. 隣接土地が自領地かチェック
+### 2-4. 隣接土地が自ドミニオかチェック
 ```gdscript
 var battle_tile = context.get("battle_tile_index", -1)
 var player_id = context.get("player_id", -1)
@@ -295,12 +295,12 @@ var result = board_system.tile_neighbor_system.has_adjacent_ally_land(
 - battle_skill_processor.gd: 応援スキルのボーナス計算
 
 **対象クリーチャー**:
-- タイガーヴェタ (226): 隣接自領地で AP&HP+20
-- 応援スキル持ち: 隣接自領地数でボーナス変動
+- タイガーヴェタ (226): 隣接自ドミニオで AP&HP+20
+- 応援スキル持ち: 隣接自ドミニオ数でボーナス変動
 
 ---
 
-### 2-5. 隣接自領地数カウント
+### 2-5. 隣接自ドミニオ数カウント
 ```gdscript
 func _count_adjacent_ally_lands(tile_index: int, player_id: int) -> int:
 	var neighbors = board_system_ref.tile_neighbor_system.get_spatial_neighbors(tile_index)
@@ -818,7 +818,7 @@ var hand_count = card_system.get_hand_size_for_player(player_id)
 
 ---
 
-### 6-5. 領地レベル取得
+### 6-5. ドミニオレベル取得
 ```gdscript
 var tile_level = context.get("tile_level", 1)
 # または
@@ -1009,10 +1009,10 @@ match effect_type:
 7. `hand_count_multiplier` - 手札数比例
 8. `defender_fixed_ap` - 防御時固定AP
 9. `battle_land_level_bonus` - 戦闘地レベルボーナス
-10. `owned_land_threshold` - 自領地数閾値
+10. `owned_land_threshold` - 自ドミニオ数閾値
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
-13. `adjacent_owned_land` - 隣接自領地条件
+13. `adjacent_owned_land` - 隣接自ドミニオ条件
 14. `base_ap_to_hp` - 基礎AP→HP変換
 15. `conditional_land_count` - 条件付き配置数
 16. `random_stat` - ランダムステータス
@@ -1199,11 +1199,11 @@ class ItemChecker:
 - **行数**: 約131-134行目
 - **使用例**: 自分のクリーチャーのみにバフ（Mad Harlequin）
 
-#### 2-5. 隣接自領地数カウント
+#### 2-5. 隣接自ドミニオ数カウント
 - **ファイル**: `scripts/battle/skills/skill_support.gd`
 - **関数**: `_count_adjacent_ally_lands()`
 - **行数**: 約190-200行目
-- **使用例**: 隣接自領地数 × 10 のAP加算（Mad Harlequin）
+- **使用例**: 隣接自ドミニオ数 × 10 のAP加算（Mad Harlequin）
 
 **分離日**: 2025-10-31
 
@@ -1233,11 +1233,11 @@ class ItemChecker:
 
 **使用している条件パターン**:
 
-#### 2-4. 隣接土地が自領地かチェック (adjacent_ally_land)
+#### 2-4. 隣接土地が自ドミニオかチェック (adjacent_ally_land)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
 - **行数**: 約78-86行目
-- **使用例**: 隣接自領地で強打×1.5（多数のクリーチャー）
+- **使用例**: 隣接自ドミニオで強打×1.5（多数のクリーチャー）
 
 #### 1-3. 戦闘地の属性確認 (on_element_land)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`

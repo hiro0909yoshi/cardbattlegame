@@ -31,10 +31,10 @@ EPの増加・減少・奪取・平均化を一元管理するモジュール。
 | 2082 | フラクション | 敵EP30%奪取(自分より多い敵のみ) | ✅ |
 | 2083 | ブラストトラップ | 土地呪い: 停止時EP40%減+HP-20 | ✅ |
 | 2109 | マナ | 周回数×50EP獲得 | ✅ |
-| 2118 | ランドトランス | 自領地放棄→価値×70%獲得 | ✅ |
-| 2119 | ランドドレイン | 敵領地数×30EP奪取 | ✅ |
+| 2118 | ランドトランス | 自ドミニオ放棄→価値×70%獲得 | ✅ |
+| 2119 | ランドドレイン | 敵ドミニオ数×30EP奪取 | ✅ |
 | 2130 | レディビジョン | 全プレイヤーEP平均化 | ✅ |
-| 2131 | ロングライン | 4連続領地で500EP、未達成→ドロー | ✅ |
+| 2131 | ロングライン | 4連続ドミニオで500EP、未達成→ドロー | ✅ |
 
 ### クリーチャーアルカナアーツ（2個）
 
@@ -54,10 +54,10 @@ EPの増加・減少・奪取・平均化を一元管理するモジュール。
 | `gain_magic_by_lap` | 周回×倍率 | マナ、ドワーフマイナー |
 | `gain_magic_from_destroyed_count` | 破壊数×倍率 | インシネレート |
 | `gain_magic_from_spell_cost` | 敵スペルコスト参照 | クレアボヤンス |
-| `gain_magic_from_land_chain` | 連続領地条件 | ロングライン |
+| `gain_magic_from_land_chain` | 連続ドミニオ条件 | ロングライン |
 | `drain_magic` | 固定値奪取 | - |
 | `drain_magic_percentage` | 割合奪取 | ドレインマジック、フラクション |
-| `drain_magic_by_land_count` | 領地数×倍率奪取 | ランドドレイン |
+| `drain_magic_by_land_count` | ドミニオ数×倍率奪取 | ランドドレイン |
 | `drain_magic_by_lap_diff` | 周回差×倍率奪取 | スピードペナルティ |
 | `balance_all_magic` | 全員平均化 | レディビジョン |
 | `reduce_magic_percentage` | 割合減少（土地呪い） | ブラストトラップ |
@@ -88,7 +88,7 @@ gain_magic_from_destroyed_count(player_id, effect) # 破壊数×倍率
 gain_magic_from_spell_cost(player_id, effect, target_id, card_system)
 
 # 乗算型奪取
-drain_magic_by_land_count(effect, from_id, to_id)  # 領地数×倍率
+drain_magic_by_land_count(effect, from_id, to_id)  # ドミニオ数×倍率
 drain_magic_by_lap_diff(effect, from_id, to_id)    # 周回差×倍率
 ```
 

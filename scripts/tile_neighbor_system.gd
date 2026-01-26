@@ -68,7 +68,7 @@ func get_sequential_neighbors(tile_index: int) -> Array:
 	var next = (tile_index + 1) % total
 	return [prev, next]
 
-# 隣接に指定プレイヤーの領地があるかチェック
+# 隣接に指定プレイヤーのドミニオがあるかチェック
 func has_adjacent_ally_land(tile_index: int, player_id: int, board_system) -> bool:
 	var neighbors = get_spatial_neighbors(tile_index)
 	

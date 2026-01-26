@@ -267,7 +267,7 @@ func change_level_multiple_with_condition(player_id: int, condition: Dictionary,
 	
 	return changed_count
 
-## 最高レベル領地を検索
+## 最高レベルドミニオを検索
 func find_highest_level_land(player_id: int) -> int:
 	if player_id < 0 or player_id >= player_system_ref.players.size():
 		return -1
@@ -284,7 +284,7 @@ func find_highest_level_land(player_id: int) -> int:
 	
 	return highest_tile
 
-## 最低レベル領地を検索
+## 最低レベルドミニオを検索
 func find_lowest_level_land(player_id: int) -> int:
 	if player_id < 0 or player_id >= player_system_ref.players.size():
 		return -1
@@ -547,7 +547,7 @@ func _apply_effect_find_and_change_highest_level(effect: Dictionary, target_data
 			if highest_tile >= 0:
 				var success = change_level(highest_tile, level_change)
 				if success:
-					print("[サブサイド合成] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [player_id + 1, highest_tile])
+					print("[サブサイド合成] プレイヤー%dの最高レベルドミニオ（タイル%d）のレベルを変更" % [player_id + 1, highest_tile])
 					success_count += 1
 		
 		return success_count > 0
@@ -560,7 +560,7 @@ func _apply_effect_find_and_change_highest_level(effect: Dictionary, target_data
 		if highest_tile >= 0:
 			var success = change_level(highest_tile, level_change)
 			if success:
-				print("[サブサイド] プレイヤー%dの最高レベル領地（タイル%d）のレベルを変更" % [target_player_id + 1, highest_tile])
+				print("[サブサイド] プレイヤー%dの最高レベルドミニオ（タイル%d）のレベルを変更" % [target_player_id + 1, highest_tile])
 			return success
 	return false
 

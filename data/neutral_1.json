@@ -41,7 +41,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "アルカナアーツ・アイテム破壊無効・不屈",
-	  "ability_detail": "アルカナアーツ[EP30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
+	  "ability_detail": "アルカナアーツ[EP30・対象ドミニオの呪いを消す]；アイテム破壊・盗み無効；不屈",
 	  "ability_parsed": {
 		"keywords": ["アルカナアーツ", "不屈"],
 		"item_immunity": ["destroy", "steal"],
@@ -619,7 +619,7 @@
 	  "ap": 10,
 	  "hp": 30,
 	  "ability": "防御型・防魔・アルカナアーツ",
-	  "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象領地を無に変え、自壊]",
+	  "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象ドミニオを無に変え、自壊]",
 	  "ability_parsed": {
 		"keywords": ["防御型", "防魔", "アルカナアーツ"]
 	  },

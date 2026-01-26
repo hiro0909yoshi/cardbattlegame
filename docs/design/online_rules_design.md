@@ -60,7 +60,7 @@ StageLoader（プリセット取得・適用）
 | `standard` | 1000 | TEP8000以上（チェックポイント） | 通常対戦 |
 | `quick` | 2000 | TEP4000以上（チェックポイント） | 短時間対戦 |
 | `elimination` | 1000 | 敵を破産させる | サバイバル戦 |
-| `territory` | 1000 | 領地10個以上（チェックポイント） | 領地争奪戦 |
+| `territory` | 1000 | ドミニオ10個以上（チェックポイント） | ドミニオ争奪戦 |
 
 ```gdscript
 const RULE_PRESETS = {
@@ -169,8 +169,8 @@ const CHECKPOINT_PRESETS = {
 |------|--------|--------|------|
 | `magic` | 数値 | `checkpoint` | TEPがtarget以上 |
 | `laps` | 数値 | `checkpoint` | 周回数がtarget以上 |
-| `territories` | 数値 | `checkpoint` | 領地数がtarget以上 |
-| `enemy_no_territory` | - | `checkpoint` | 敵が領地0 |
+| `territories` | 数値 | `checkpoint` | ドミニオ数がtarget以上 |
+| `enemy_no_territory` | - | `checkpoint` | 敵がドミニオ0 |
 | `bankrupt_enemy` | - | `immediate` | 敵を破産させる |
 | `destroy` | 数値 | `immediate` | 敵クリーチャー撃破数がtarget以上 |
 | `toll_single` | 数値 | `immediate` | 1回の通行料でtarget以上獲得 |
@@ -207,7 +207,7 @@ const CHECKPOINT_PRESETS = {
 }
 ```
 
-**例**: TEP8000以上 **かつ** 敵が領地0
+**例**: TEP8000以上 **かつ** 敵がドミニオ0
 
 #### mode: "any"（OR条件）
 

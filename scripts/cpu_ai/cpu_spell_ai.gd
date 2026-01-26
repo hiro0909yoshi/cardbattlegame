@@ -378,7 +378,7 @@ func _check_profit_condition(condition: String, context: Dictionary, cost: int) 
 			push_warning("Unknown profit_condition: " + condition)
 			return false
 
-## 最高価値の自領地を取得
+## 最高価値の自ドミニオを取得
 func _get_highest_own_land_value(context: Dictionary) -> int:
 	if not board_system:
 		return 0
@@ -512,7 +512,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
-		# 自分のLv3以上の領地かチェック
+		# 自分のLv3以上のドミニオかチェック
 		if owner != player_id:
 			continue
 		if level < 3:
@@ -552,7 +552,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	return result
 
 ## ホーリーワード防御的使用の判断
-## 自分が敵の高額領地を回避できるか判断
+## 自分が敵の高額ドミニオを回避できるか判断
 func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost: int) -> Dictionary:
 	var result = { "should_use": false, "reason": "" }
 	
@@ -562,7 +562,7 @@ func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost:
 	var my_tile = cpu_movement_evaluator._get_player_current_tile(player_id)
 	var my_direction = cpu_movement_evaluator._get_player_direction(player_id)
 	
-	# 経路上の危険な位置（敵Lv3以上領地）をリストアップ
+	# 経路上の危険な位置（敵Lv3以上ドミニオ）をリストアップ
 	# 距離とタイルインデックスのペアで記録
 	var danger_positions = _find_danger_positions_on_path(my_tile, my_direction, player_id)
 	
@@ -614,11 +614,11 @@ func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost:
 			max_avoided_toll = max(max_avoided_toll, danger.toll)
 	
 	result.should_use = true
-	result.reason = "防御: 敵の高額領地を回避（回避通行料: %dEP）" % max_avoided_toll
+	result.reason = "防御: 敵の高額ドミニオを回避（回避通行料: %dEP）" % max_avoided_toll
 	
 	return result
 
-## 経路上の危険な位置（敵Lv3以上領地）をリストアップ
+## 経路上の危険な位置（敵Lv3以上ドミニオ）をリストアップ
 ## 返り値: Array[{ distance: int, tile: int, toll: int }]
 func _find_danger_positions_on_path(start_tile: int, direction: int, player_id: int) -> Array:
 	var dangers = []
@@ -647,7 +647,7 @@ func _find_danger_positions_on_path(start_tile: int, direction: int, player_id: 
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
-		# 敵のLv3以上の領地かチェック
+		# 敵のLv3以上のドミニオかチェック
 		if owner >= 0 and owner != player_id and level >= 3:
 			var toll = cpu_movement_evaluator._calculate_toll(check_tile)
 			dangers.append({

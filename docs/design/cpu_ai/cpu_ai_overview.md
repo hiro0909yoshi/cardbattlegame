@@ -8,7 +8,7 @@
 |---------|------|
 | `cpu_ai_handler.gd` | CPU判断のエントリーポイント |
 | `cpu_turn_processor.gd` | CPUターン処理フロー制御 |
-| `cpu_action_executor.gd` | CPU用アクション実行（召喚、バトル、領地コマンド） |
+| `cpu_action_executor.gd` | CPU用アクション実行（召喚、バトル、ドミニオオーダー） |
 | `cpu_tile_action_executor.gd` | CPU召喚/バトル準備（条件チェック、犠牲、合成） |
 | `cpu_ai_context.gd` | 共有コンテキスト（システム参照を一元管理） |
 | `cpu_ai_constants.gd` | 共通定数（スコア閾値、重み等） |
@@ -44,11 +44,11 @@
 |---------|------|
 | `cpu_movement_evaluator.gd` | 移動経路評価、方向決定、分岐選択 |
 
-### 領地コマンド関連
+### ドミニオオーダー関連
 
 | ファイル | 役割 |
 |---------|------|
-| `cpu_territory_ai.gd` | 領地コマンド判断（レベルアップ、交換等） |
+| `cpu_territory_ai.gd` | ドミニオオーダー判断（レベルアップ、交換等） |
 
 ---
 
@@ -115,9 +115,9 @@ if is_cpu_player(player_id):
 │   └─ ホーリーワード判断 → cpu_spell_ai._evaluate_holy_word_spell()
 │
 ├─ 停止タイル処理
-│   ├─ 敵領地 → cpu_battle_ai（侵略判断）
+│   ├─ 敵ドミニオ → cpu_battle_ai（侵略判断）
 │   ├─ 空き地 → 召喚判断
-│   └─ 自領地/特殊 → cpu_territory_ai（領地コマンド）
+│   └─ 自ドミニオ/特殊 → cpu_territory_ai（ドミニオオーダー）
 │
 └─ 防御時
     └─ cpu_defense_ai（アイテム/援護/合体判断）
@@ -160,7 +160,7 @@ cpu_spell_ai.initialize(context)
 | [cpu_movement_ai_spec.md](cpu_movement_ai_spec.md) | 移動判断、経路シミュレーション、ホーリーワード |
 | [cpu_battle_ai_spec.md](cpu_battle_ai_spec.md) | バトル判断（攻撃側/防御側）、合体、即死 |
 | [cpu_spell_ai_spec.md](cpu_spell_ai_spec.md) | スペル使用判断、パターン分類 |
-| [cpu_territory_command_spec.md](cpu_territory_command_spec.md) | 領地コマンド、利益スコア計算 |
+| [cpu_territory_command_spec.md](cpu_territory_command_spec.md) | ドミニオオーダー、利益スコア計算 |
 
 ---
 

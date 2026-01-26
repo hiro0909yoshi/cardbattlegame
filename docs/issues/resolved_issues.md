@@ -15,47 +15,47 @@
 
 ### ✅ 解決済み（2025/10/27）
 
-#### ~~BUG-013: 領地コマンドをキャンセルできない / 召喚フェーズに戻れない~~
+#### ~~BUG-013: ドミニオオーダーをキャンセルできない / 召喚フェーズに戻れない~~
 **解決日**: 2025/10/27  
 **解決方法**: シグナル接続 + カード選択UI制御 + フラグ管理
 
 **元の問題**: 
-- 領地コマンドを開いた後、Cキーでキャンセルできない
+- ドミニオオーダーを開いた後、Cキーでキャンセルできない
 - キャンセルしても召喚フェーズに戻れない  
 - 召喚フェーズに戻ってもカード選択ができない
-- 領地コマンド中にカードが選択できてしまう
+- ドミニオオーダー中にカードが選択できてしまう
 
 **根本原因**:
-1. **シグナル未接続**: `land_command_closed` シグナルが発行されていたが、誰も受け取っていなかった
-2. **カードUI制御なし**: 領地コマンド開閉時にカード選択UIの有効/無効を制御していなかった
+1. **シグナル未接続**: `dominio_order_closed` シグナルが発行されていたが、誰も受け取っていなかった
+2. **カードUI制御なし**: ドミニオオーダー開閉時にカード選択UIの有効/無効を制御していなかった
 3. **フラグ誤リセット**: `is_action_processing` を不要にリセットしていた
 
 **影響範囲**: 
 - `scripts/game_flow_manager.gd`
-- `scripts/game_flow/land_command_handler.gd`
+- `scripts/game_flow/dominio_order_handler.gd`
 
 **修正内容**:
 
 **修正1**: GameFlowManager - シグナル接続と再初期化  
 カード選択UIを一度非表示にしてから再表示することで、状態を完全にリセット
 
-**修正2**: LandCommandHandler - カード選択UIの無効化  
-領地コマンドを開くときに `is_active = false` でカード選択を無効化
+**修正2**: DominioOrderHandler - カード選択UIの無効化  
+ドミニオオーダーを開くときに `is_active = false` でカード選択を無効化
 
-**修正3**: LandCommandHandler - 不要なフラグリセット削除  
-`is_action_processing` のリセット処理を削除（領地コマンドでは変更しないため）
+**修正3**: DominioOrderHandler - 不要なフラグリセット削除  
+`is_action_processing` のリセット処理を削除（ドミニオオーダーでは変更しないため）
 
 **重要なフラグ**: `card_selection_ui.is_active`
 - `true`: カード選択可能（召喚フェーズ）
-- `false`: カード選択不可（領地コマンド中・その他のフェーズ）
+- `false`: カード選択不可（ドミニオオーダー中・その他のフェーズ）
 
 **処理フロー**:
 ```
 召喚フェーズ (is_active = true)
-  ↓ 領地コマンドボタン押下
-領地コマンド開始 (is_active = false) ← カード選択不可
+  ↓ ドミニオオーダーボタン押下
+ドミニオオーダー開始 (is_active = false) ← カード選択不可
   ↓ Cキーでキャンセル
-land_command_closed シグナル発行
+dominio_order_closed シグナル発行
   ↓ GameFlowManager が受信
 カード選択UI再初期化 (is_active = true) ← カード選択可能
   ↓
@@ -63,10 +63,10 @@ land_command_closed シグナル発行
 ```
 
 **テスト結果**:
-- ✅ 領地コマンドをCキーでキャンセルできる
+- ✅ ドミニオオーダーをCキーでキャンセルできる
 - ✅ 召喚フェーズに正しく戻る
 - ✅ カード選択・召喚が可能になる
-- ✅ 領地コマンド中はカード選択できない
+- ✅ ドミニオオーダー中はカード選択できない
 - ✅ ターンが勝手に変わらない
 
 **教訓**:
@@ -79,12 +79,12 @@ land_command_closed シグナル発行
 
 ### ✅ 解決済み（2025/10/27）
 
-#### ~~BUG-012: 領地コマンド移動時にクリーチャーが消える~~
+#### ~~BUG-012: ドミニオオーダー移動時にクリーチャーが消える~~
 **解決日**: 2025/10/27  
 **解決方法**: 参照渡しの問題を修正 + 直接配置処理に変更
 
 **元の問題**: 
-- 領地コマンドで配置済みクリーチャーを移動させると、移動先でクリーチャーが消える
+- ドミニオオーダーで配置済みクリーチャーを移動させると、移動先でクリーチャーが消える
 - 特に特殊移動スキル（空地移動・敵地移動）実装後に発生
 
 **根本原因**:
@@ -133,7 +133,7 @@ dest_tile.owner_id = current_player_index
 
 **テスト結果**:
 - ✅ 空地移動でクリーチャーが正しく移動先に配置される
-- ✅ 通常の領地コマンド移動が正常動作
+- ✅ 通常のドミニオオーダー移動が正常動作
 - ✅ バフが移動後も保持される
 - ✅ ダウン状態が正しく設定される
 
@@ -147,7 +147,7 @@ dest_tile.owner_id = current_player_index
 
 #### ~~FEAT-004: レベルアップ機能の完全実装~~
 **解決日**: 2025/10/15  
-**解決方法**: UIパネル作成とLandCommandHandler修正
+**解決方法**: UIパネル作成とDominioOrderHandler修正
 
 **元の問題**: 
 - レベルアップUIが未実装
@@ -168,7 +168,7 @@ dest_tile.owner_id = current_player_index
    - EPによる有効/無効判定
    - 前の画面に戻る機能
 
-3. **LandCommandHandler修正**
+3. **DominioOrderHandler修正**
    - `board_system.get_tile()` → `board_system.tile_nodes[]`
    - `execute_level_up_with_level()` 新規実装
    - レベルアップ後のダウン状態設定
@@ -180,7 +180,7 @@ dest_tile.owner_id = current_player_index
 
 **修正ファイル**:
 - `scripts/ui_manager.gd` (~150行追加)
-- `scripts/game_flow/land_command_handler.gd` (~50行修正・追加)
+- `scripts/game_flow/dominio_order_handler.gd` (~50行修正・追加)
 
 **実装されたフロー**:
 ```
@@ -521,7 +521,7 @@ for pid in player_card_nodes.keys():
   - 座標ベースで物理的に隣接するタイルを判定（XZ平面距離4.5以内）
   - 初回起動時に隣接関係をキャッシュ（パフォーマンス最適化）
   - `get_spatial_neighbors(tile_index)` - 隣接タイルリストを取得
-  - `has_adjacent_ally_land(tile_index, player_id)` - 隣接自領地判定
+  - `has_adjacent_ally_land(tile_index, player_id)` - 隣接自ドミニオ判定
 - **BoardSystem3Dへの統合**
   - `tile_neighbor_system`インスタンスの作成と初期化
   - タイル配置後に自動でキャッシュ構築
@@ -534,8 +534,8 @@ for pid in player_card_nodes.keys():
   - スキル条件評価時に必要な情報を提供
 
 **動作確認**:
-- ローンビースト（ID:49）の「隣接自領地なら強打」が正常動作
-- タイル6で攻撃時、隣接タイル5が自領地の場合にAP20→30に上昇
+- ローンビースト（ID:49）の「隣接自ドミニオなら強打」が正常動作
+- タイル6で攻撃時、隣接タイル5が自ドミニオの場合にAP20→30に上昇
 
 **技術詳細**:
 ```gdscript

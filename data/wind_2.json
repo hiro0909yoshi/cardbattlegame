@@ -64,8 +64,8 @@
 	  },
 	  "ap": 50,
 	  "hp": 60,
-	  "ability": "配置領地でレベルアップまたは地形変化時",
-	  "ability_detail": "配置領地でレベルアップまたは地形変化時、MHP-10"
+	  "ability": "配置ドミニオでレベルアップまたは地形変化時",
+	  "ability_detail": "配置ドミニオでレベルアップまたは地形変化時、MHP-10"
 	},
 	{
 	  "id": 329,
@@ -296,13 +296,13 @@
 	  "ap": 1,
 	  "hp": 1,
 	  "ability": "移動時配置",
-	  "ability_detail": "移動時、元の領地と移動先の両方に配置される",
+	  "ability_detail": "移動時、元のドミニオと移動先の両方に配置される",
 	  "ability_parsed": {
 		"effects": [
 		  {
 			"effect_type": "split_on_move",
 			"trigger": "on_territory_command_move",
-			"description": "領地コマンド移動時、元の領地に自分を残す"
+			"description": "ドミニオオーダー移動時、元のドミニオに自分を残す"
 		  }
 		]
 	  }
@@ -504,7 +504,7 @@
 	  "ap": 20,
 	  "hp": 40,
 	  "ability": "応援・不屈",
-	  "ability_detail": "応援[自クリーチャー・AP&HP+隣接自領地数×20]；不屈",
+	  "ability_detail": "応援[自クリーチャー・AP&HP+隣接自ドミニオ数×20]；不屈",
 	  "ability_parsed": {
 		"keywords": ["応援", "不屈"],
 		"effects": [

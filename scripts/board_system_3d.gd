@@ -476,7 +476,7 @@ func _on_movement_started(_player_id: int):
 	if ui_manager:
 		ui_manager.phase_label.text = "移動中..."
 
-## プレイヤーが領地を所有しているかチェック
+## プレイヤーがドミニオを所有しているかチェック
 func _has_owned_lands(player_id: int) -> bool:
 	for tile_index in tile_nodes.keys():
 		var tile = tile_nodes[tile_index]
@@ -489,12 +489,12 @@ func _on_movement_completed(_player_id: int, final_tile: int):
 	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
 		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
 	
-	# 移動完了後、領地コマンドボタンを表示（人間プレイヤーかつ領地を所有している場合のみ）
+	# 移動完了後、ドミニオオーダーボタンを表示（人間プレイヤーかつドミニオを所有している場合のみ）
 	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not debug_manual_control_all
 	if not is_cpu and ui_manager and _has_owned_lands(current_player_index):
-		ui_manager.show_land_command_button()
+		ui_manager.show_dominio_order_button()
 	elif ui_manager:
-		ui_manager.hide_land_command_button()
+		ui_manager.hide_dominio_order_button()
 	
 	process_tile_landing(final_tile)
 
@@ -561,7 +561,7 @@ func debug_print_skill_index() -> void:
 	print("  応援: ", skill_index["support"].keys())
 	print("  世界呪: ", skill_index["world_spell"].keys())
 
-## Phase 3-B用: 自領地数をカウント（バーンタイタン用）
+## Phase 3-B用: 自ドミニオ数をカウント（バーンタイタン用）
 func get_player_owned_land_count(player_id: int) -> int:
 	if not tile_data_manager:
 		return 0

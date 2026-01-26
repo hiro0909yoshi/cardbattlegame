@@ -71,7 +71,7 @@ if creature_type == "defensive":
 
 ### 2. Movement Restriction
 
-**Implementation File**: `scripts/ui_components/land_command_ui.gd` → `show_action_menu()`
+**Implementation File**: `scripts/ui_components/dominio_order_ui.gd` → `show_action_menu()`
 
 **UI Display**:
 - Move button is grayed out (disabled)
@@ -187,7 +187,7 @@ Defensive creatures counterattack normally when defending, just like regular cre
 | File | Role |
 |------|------|
 | `scripts/tile_action_processor.gd` | Summon restriction |
-| `scripts/ui_components/land_command_ui.gd` | Movement restriction UI |
+| `scripts/ui_components/dominio_order_ui.gd` | Movement restriction UI |
 | `scripts/ui_components/hand_display.gd` | Invasion restriction UI (grayout) |
 | `scripts/ui_components/card_selection_ui.gd` | Invasion restriction (not selectable) |
 

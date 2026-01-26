@@ -222,7 +222,7 @@ var p_system = ...
 **Solution (TECH-002 completed)**:
 - Unified in TileActionProcessor
 - BoardSystem3D only forwards signals
-- LandCommandHandler notifies via complete_action()
+- DominioOrderHandler notifies via complete_action()
 
 **Critical**: Never add additional action flags outside TileActionProcessor
 

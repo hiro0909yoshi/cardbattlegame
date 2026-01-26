@@ -72,7 +72,7 @@
 	  "id": 8,
 	  "turn": 1,
 	  "phase": "summon_complete",
-	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの領地になりました\n領地の価値がTEPに加算されます",
+	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたのドミニオになりました\nドミニオの価値がTEPに加算されます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -106,7 +106,7 @@
 	  "id": 12,
 	  "turn": 1,
 	  "phase": "cpu_summon_complete",
-	  "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の領地になりました\nあなたが敵の領地に止まると通行料を取られます",
+	  "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手のドミニオになりました\nあなたが敵のドミニオに止まると通行料を取られます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -146,7 +146,7 @@
 	  "id": 17,
 	  "turn": 2,
 	  "phase": "battle_arrival",
-	  "message": "敵の領地に止まってしまいました！\n\nバトルが始まります",
+	  "message": "敵のドミニオに止まってしまいました！\n\nバトルが始まります",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -231,7 +231,7 @@
 	  "id": 26,
 	  "turn": 2,
 	  "phase": "battle_win",
-	  "message": "勝利！領地を奪いました！\nバトルに勝つと敵の領地を自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
+	  "message": "勝利！ドミニオを奪いました！\nバトルに勝つと敵のドミニオを自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -249,7 +249,7 @@
 	  "id": 28,
 	  "turn": 2,
 	  "phase": "cpu_battle_explain",
-	  "message": "相手があなたの領地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
+	  "message": "相手があなたのドミニオに止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true

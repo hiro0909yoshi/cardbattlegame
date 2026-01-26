@@ -130,7 +130,7 @@ Three types of effects:
 scripts/
 ├── game_flow/              # Game flow management
 │   ├── game_flow_manager.gd
-│   ├── land_command_handler.gd
+│   ├── dominio_order_handler.gd
 │   ├── spell_phase_handler.gd
 │   └── item_phase_handler.gd
 ├── battle/                 # Battle system
@@ -156,7 +156,7 @@ data/
 
 ### Recent Major Refactorings
 - `TileActionProcessor`: 1,284 lines → 5 files
-- `LandCommandHandler`: 881 lines → 4 files
+- `DominioOrderHandler`: 881 lines → 4 files
 - `UIManager`: Split into 7+ components
 
 ## Development Workflow

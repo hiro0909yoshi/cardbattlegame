@@ -26,14 +26,14 @@
 ### ✅ BUG-004: アクション処理フラグの二重管理（解決済み）
 - **報告**: 2025/10/16
 - **解決**: 2025/10/16
-- **影響**: BoardSystem3D, TileActionProcessor, LandCommandHandler
-- **症状**: 領地コマンド実行後、次のプレイヤーがカードを選択しても召喚できない
+- **影響**: BoardSystem3D, TileActionProcessor, DominioOrderHandler
+- **症状**: ドミニオオーダー実行後、次のプレイヤーがカードを選択しても召喚できない
 - **原因**: アクション処理中を示すフラグが2箇所で管理されていた
 - **解決方法**: 
   - `BoardSystem3D.is_waiting_for_action` を削除
   - `TileActionProcessor.is_action_processing` に統一
   - `TileActionProcessor.complete_action()` 公開メソッド追加
-  - `LandCommandHandler` の3箇所を修正
+  - `DominioOrderHandler` の3箇所を修正
 - **ステータス**: ✅ 解決済み（TECH-002完了）
 
 ---
@@ -137,7 +137,7 @@
 
 ### ✅ FEAT-004: レベルアップ機能完全実装
 - **解決**: 2025/10/15
-- **内容**: アクションメニュー・レベル選択UIパネル作成、LandCommandHandler修正
+- **内容**: アクションメニュー・レベル選択UIパネル作成、DominioOrderHandler修正
 - **対応**: 右側パネル配置、Lv2-5選択、コスト表示、EP判定、ターン終了統合
 - **苦労した点**: シグナル発火時の`selected_tile_for_action = -1`問題、`modify_magic_power`関数名エラー
 

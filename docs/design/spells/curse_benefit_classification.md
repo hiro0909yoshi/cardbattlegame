@@ -65,7 +65,7 @@
 | `world_spell_protection` | 防魔 | 全セプターがスペル対象外 | |
 | `invasion_restrict` | 下位侵略不可 | 順位下のセプターに侵略不可 | |
 | `summon_cost_free` | 召喚条件解除 | クリーチャー配置時コスト無視 | |
-| `land_protect` | 土地変性無効 | 全領地は土地破壊・変性無効 | |
+| `land_protect` | 土地変性無効 | 全ドミニオは土地破壊・変性無効 | |
 | `cursed_protection` | 呪い防魔化 | 呪いのついた全クリーチャーは防魔 | |
 | `skill_disable` | 特定能力不可 | アルカナアーツ、自破壊時、戦闘終了時は発動しない | |
 | `same_creature_destroy` | 同種相殺 | 同クリーチャー2体配置なら戦闘時破壊 | |

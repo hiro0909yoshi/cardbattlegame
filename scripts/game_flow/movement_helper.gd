@@ -81,7 +81,7 @@ static func get_move_destinations(
 			return _get_tiles_within_steps(board_system, from_tile_index, 1)
 		"two_tiles":  # 2マス移動（チャリオット、スレイプニールアルカナアーツ用）
 			return _get_tiles_within_steps(board_system, from_tile_index, 2)
-		"adjacent_enemy":  # 隣接する敵領地のみ（アウトレイジ用）
+		"adjacent_enemy":  # 隣接する敵ドミニオのみ（アウトレイジ用）
 			return _get_adjacent_enemy_tiles(board_system, from_tile_index)
 		"remote_move":  # 遠隔移動呪い（全空き地 + 隣接タイル）
 			var all_vacant = _get_all_vacant_tiles(board_system)
@@ -143,7 +143,7 @@ static func _get_tiles_within_steps(board_system: Node, from_tile_index: int, ma
 	return destinations
 
 
-## 隣接する敵領地のみ取得（アウトレイジ用）
+## 隣接する敵ドミニオのみ取得（アウトレイジ用）
 static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) -> Array:
 	var destinations: Array = []
 	
@@ -155,7 +155,7 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 	if board_system.tile_neighbor_system:
 		adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
 	
-	# 敵領地のみフィルタ
+	# 敵ドミニオのみフィルタ
 	var current_player_id = board_system.current_player_index
 	
 	for tile_index in adjacent_tiles:
@@ -167,7 +167,7 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
-		# 敵領地のみ（自領地や空地は除外）
+		# 敵ドミニオのみ（自ドミニオや空地は除外）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			destinations.append(tile_index)
 	
@@ -204,7 +204,7 @@ static func _detect_move_type(creature_data: Dictionary) -> String:
 		return "vacant_move"
 	
 	# 敵地移動チェック
-	if "敵領地移動" in keywords and conditions.has("敵領地移動"):
+	if "敵ドミニオ移動" in keywords and conditions.has("敵ドミニオ移動"):
 		return "enemy_move"
 	
 	# デフォルトは隣接移動
@@ -271,7 +271,7 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 static func _get_enemy_move_condition(creature_data: Dictionary) -> Dictionary:
 	var parsed = creature_data.get("ability_parsed", {})
 	var conditions = parsed.get("keyword_conditions", {})
-	var enemy_move = conditions.get("敵領地移動", {})
+	var enemy_move = conditions.get("敵ドミニオ移動", {})
 	return enemy_move.get("condition", {})
 
 ## 条件に合う敵地を取得
@@ -356,20 +356,20 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
 			continue
 		
-		# peace呪いチェック（敵領地への移動除外）
+		# peace呪いチェック（敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if spell_curse_toll.has_peace_curse(tile_index):
-				continue  # peace呪いがある敵領地は移動不可
+				continue  # peace呪いがある敵ドミニオは移動不可
 		
 		# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if not tile.creature_data.is_empty() and spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
-				continue  # 移動侵略無効のクリーチャーがいる敵領地は移動不可
+				continue  # 移動侵略無効のクリーチャーがいる敵ドミニオは移動不可
 		
-		# プレイヤー侵略不可呪いチェック（バンフィズム：全敵領地への移動除外）
+		# プレイヤー侵略不可呪いチェック（バンフィズム：全敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if spell_curse_toll.is_player_invasion_disabled(current_player_id):
-				continue  # 侵略不可呪いで敵領地は移動不可
+				continue  # 侵略不可呪いで敵ドミニオは移動不可
 		
 		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:

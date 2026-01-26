@@ -14,7 +14,7 @@
 - **PlayerSystem**: 4 players, magic points, land tracking
 - **SkillSystem**: Condition checking, effect application
 - **ItemSystem**: Battle preparation, effect application (55/75 items complete)
-- **UIManager**: 8 components (PlayerInfo, CardSelection, LevelUp, Debug, LandCommand, Hand, Phase, BattleItemSelection)
+- **UIManager**: 8 components (PlayerInfo, CardSelection, LevelUp, Debug, DominioOrder, Hand, Phase, BattleItemSelection)
 
 ## Key Architecture Patterns
 - **Signal-driven**: Systems communicate via signals (decoupled)
@@ -131,17 +131,17 @@ tile_action_completed / action_completed signal
   ↓
 end_turn()
   ├─ Set is_ending_turn = true (FIRST - most critical)
-  ├─ close_land_command()
+  ├─ close_dominio_order()
   ├─ hide UI
-  └─ _on_land_command_closed() checks flag, skips reinit
+  └─ _on_dominio_order_closed() checks flag, skips reinit
   ↓
 Next Phase
 ```
 
 **Critical Implementation Details:**
-- `is_ending_turn` flag MUST be set before `close_land_command()` call
+- `is_ending_turn` flag MUST be set before `close_dominio_order()` call
 - All actions (level/move/swap/terrain) only call `complete_action()`
-- NO action should call `close_land_command()` directly
+- NO action should call `close_dominio_order()` directly
 - This prevents "召喚しない" button from remaining visible after actions
 
 ### Item System (55/75 Complete - 73%)
@@ -281,7 +281,7 @@ scripts/
 │   └── game_system_manager.gd (6-phase initialization, 560 lines)
 ├── creature_manager.gd (NEW - 230 lines)
 ├── game_flow/
-│   ├── land_command_handler.gd (352L)
+│   ├── dominio_order_handler.gd (352L)
 │   ├── land_selection_helper.gd (177L)
 │   ├── land_action_helper.gd (500L+)
 │   ├── spell_phase_handler.gd
@@ -324,8 +324,8 @@ scripts/
   - **Progress Update**: 52/75 → 55/75 items (69% → 73%)
 - **Turn End Centralization (Nov 2)**: Unified all land command actions to use `end_turn()`
   - Fixed: "召喚しない" button remaining visible after land actions
-  - Key: `is_ending_turn` flag set BEFORE `close_land_command()` call
-  - All actions now only call `complete_action()`, never `close_land_command()`
+  - Key: `is_ending_turn` flag set BEFORE `close_dominio_order()` call
+  - All actions now only call `complete_action()`, never `close_dominio_order()`
 - **UI Flag Management**: `is_ending_turn` prevents premature card selection reinitialization
 - **Item System**: 75/75 items implemented (100% complete)
 

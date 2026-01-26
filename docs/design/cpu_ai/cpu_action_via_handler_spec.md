@@ -40,11 +40,11 @@ CPUもプレイヤーと同じHandler経由でアクションを実行するこ�
 
 ## 現状の問題
 
-### 領地コマンドの例
+### ドミニオオーダーの例
 
 **プレイヤーのフロー:**
 ```
-LandCommandHandler
+DominioOrderHandler
   ├─ SELECTING_LAND（土地選択）
   │    └─ ダウンチェック、所有権チェック
   ├─ SELECTING_ACTION（アクション選択）
@@ -96,7 +96,7 @@ cpu_turn_processor._execute_level_up_command()
 各Handlerに「CPUモード」用のメソッドを追加する：
 
 ```gdscript
-## LandCommandHandler に追加
+## DominioOrderHandler に追加
 
 # CPUが土地を選択
 func select_tile_for_cpu(tile_index: int) -> bool:
@@ -150,14 +150,14 @@ func confirm_level_for_cpu(target_level: int) -> bool:
 
 ## 対象アクション一覧
 
-### 1. 領地コマンド
+### 1. ドミニオオーダー
 
 | アクション | Handler | 現状 | 対応方針 |
 |-----------|---------|------|---------|
-| レベルアップ | LandCommandHandler | 直接実行 | CPU用メソッド追加 |
-| 属性変更 | LandCommandHandler | 直接実行 | CPU用メソッド追加 |
-| 移動侵略 | LandCommandHandler | 直接実行 | CPU用メソッド追加 |
-| クリーチャー交換 | LandCommandHandler | 独自実装 | CPU用メソッド追加 |
+| レベルアップ | DominioOrderHandler | 直接実行 | CPU用メソッド追加 |
+| 属性変更 | DominioOrderHandler | 直接実行 | CPU用メソッド追加 |
+| 移動侵略 | DominioOrderHandler | 直接実行 | CPU用メソッド追加 |
+| クリーチャー交換 | DominioOrderHandler | 独自実装 | CPU用メソッド追加 |
 
 ### 2. スペル
 
@@ -189,14 +189,14 @@ func confirm_level_for_cpu(target_level: int) -> bool:
 
 ## 詳細設計
 
-### 領地コマンド
+### ドミニオオーダー
 
-#### LandCommandHandler への追加
+#### DominioOrderHandler への追加
 
 ```gdscript
 # === CPU用インターフェース ===
 
-## CPUが領地コマンドを実行（統合メソッド）
+## CPUがドミニオオーダーを実行（統合メソッド）
 ## 戻り値: 実行成功/失敗
 func execute_for_cpu(command: Dictionary) -> bool:
 	var command_type = command.get("type", "")
@@ -228,13 +228,13 @@ func select_tile_for_cpu(tile_index: int) -> bool:
 	
 	# ダウンチェック
 	if tile.has_method("is_down") and tile.is_down():
-		print("[LandCommandHandler] CPU: タイル%d はダウン中" % tile_index)
+		print("[DominioOrderHandler] CPU: タイル%d はダウン中" % tile_index)
 		return false
 	
 	# 所有権チェック
 	var current_player = player_system.get_current_player()
 	if tile.owner_id != current_player.id:
-		print("[LandCommandHandler] CPU: タイル%d は所有していない" % tile_index)
+		print("[DominioOrderHandler] CPU: タイル%d は所有していない" % tile_index)
 		return false
 	
 	selected_tile_index = tile_index
@@ -286,7 +286,7 @@ func _execute_territory_command(current_player, command: Dictionary):
 
 # 修正後
 func _execute_territory_command(current_player, command: Dictionary):
-	var land_handler = _get_land_command_handler()
+	var land_handler = _get_dominio_order_handler()
 	if land_handler == null:
 		_complete_action()
 		return
@@ -294,9 +294,9 @@ func _execute_territory_command(current_player, command: Dictionary):
 	var success = land_handler.execute_for_cpu(command)
 	
 	if success:
-		print("[CPU] 領地コマンド実行成功: %s" % command.get("type", "?"))
+		print("[CPU] ドミニオオーダー実行成功: %s" % command.get("type", "?"))
 	else:
-		print("[CPU] 領地コマンド実行失敗: %s" % command.get("type", "?"))
+		print("[CPU] ドミニオオーダー実行失敗: %s" % command.get("type", "?"))
 	
 	_complete_action()
 ```
@@ -336,14 +336,14 @@ func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 
 ## 実装計画
 
-### Phase 1: 領地コマンド（優先度: 高）
+### Phase 1: ドミニオオーダー（優先度: 高）
 
 **対象ファイル:**
-- `scripts/game_flow/land_command_handler.gd` - CPU用メソッド追加
+- `scripts/game_flow/dominio_order_handler.gd` - CPU用メソッド追加
 - `scripts/cpu_ai/cpu_turn_processor.gd` - Handler経由に修正
 
 **作業内容:**
-1. LandCommandHandler に `execute_for_cpu()` 等を追加
+1. DominioOrderHandler に `execute_for_cpu()` 等を追加
 2. cpu_turn_processor の `_execute_*_command()` を修正
 3. 動作確認・テスト
 
@@ -386,7 +386,7 @@ func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 
 | ファイル | 修正内容 |
 |---------|---------|
-| land_command_handler.gd | CPU用メソッド追加 |
+| dominio_order_handler.gd | CPU用メソッド追加 |
 | cpu_turn_processor.gd | Handler経由に変更 |
 | spell_cast_handler.gd | CPU用メソッド追加（要確認） |
 | cpu_ai_handler.gd | 必要に応じて修正 |
@@ -416,10 +416,10 @@ func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 
 **プレイヤーの移動侵略フロー:**
 ```
-LandCommandHandler
+DominioOrderHandler
   └─ LandActionHelper.confirm_move()
 	   ├─ 空き地の場合 → クリーチャー移動、土地獲得
-	   └─ 敵領地の場合
+	   └─ 敵ドミニオの場合
 			├─ peace呪いチェック等
 			├─ pending_move_battle_* に情報保存
 			├─ ItemPhaseHandler.start_item_phase()（攻撃側アイテム）
@@ -436,14 +436,14 @@ cpu_turn_processor._execute_move_to_enemy()
 
 ### 修正後のフロー
 
-CPUも`LandCommandHandler`経由で移動侵略を実行：
+CPUも`DominioOrderHandler`経由で移動侵略を実行：
 
 ```
 cpu_turn_processor._execute_move_invasion_command()
   └─ land_handler.execute_move_for_cpu(from_tile, to_tile)
 	   └─ LandActionHelper.confirm_move()
 			├─ 空き地 → 通常移動
-			└─ 敵領地 → ItemPhaseHandler経由で戦闘
+			└─ 敵ドミニオ → ItemPhaseHandler経由で戦闘
 						 ├─ start_item_phase()で攻撃側アイテム
 						 │    └─ _cpu_decide_item()（既存）
 						 ├─ start_item_phase()で防御側アイテム
@@ -473,14 +473,14 @@ cpu_turn_processor._execute_move_invasion_command()
 | **アイテム選択** | ItemPhaseHandler | ItemPhaseHandler._cpu_decide_item() | ✅ Handler経由 |
 | **召喚** | TileActionProcessor.execute_summon() | cpu_turn_processor._execute_summon() | ❌ 別コード |
 | **通常侵略** | TileActionProcessor.execute_battle() | cpu_turn_processor._on_cpu_invasion_decided() | ❌ 別コード |
-| **領地コマンド** | LandCommandHandler | cpu_turn_processor._execute_*_command() | ❌ 直接実行 |
+| **ドミニオオーダー** | DominioOrderHandler | cpu_turn_processor._execute_*_command() | ❌ 直接実行 |
 | **移動侵略** | LandActionHelper.confirm_move() | cpu_turn_processor._execute_move_to_enemy() | ❌ 間違ったフロー |
 
 ### 修正が必要なもの
 
 1. **召喚** - CPUは土地条件チェック・カード犠牲・合成処理がない
 2. **通常侵略** - CPUは土地条件チェック・カード犠牲・合成処理がない
-3. **領地コマンド** - CPUは直接実行でダウンチェック等がバイパスされる
+3. **ドミニオオーダー** - CPUは直接実行でダウンチェック等がバイパスされる
 4. **移動侵略** - CPUは間違ったフロー（手札選択）を使用
 
 ### 修正不要なもの
@@ -550,9 +550,9 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary) -> bool:
 	pass
 ```
 
-### 領地コマンド
+### ドミニオオーダー
 
-**現状のCPU領地コマンド（問題あり）:**
+**現状のCPUドミニオオーダー（問題あり）:**
 ```
 cpu_turn_processor._execute_level_up_command()
   └─ land_handler.execute_level_up_with_level() 直接呼び出し
@@ -581,24 +581,24 @@ cpu_turn_processor._execute_move_invasion_command()
   └─ land_handler.execute_move_for_cpu(from_tile, to_tile)
 	   └─ LandActionHelper.confirm_move()
 			├─ 空き地 → 通常移動
-			└─ 敵領地 → ItemPhaseHandler経由で戦闘
+			└─ 敵ドミニオ → ItemPhaseHandler経由で戦闘
 ```
 
 ---
 
 ## 実装計画（修正版）
 
-### Phase 1: 領地コマンド（優先度: 高）
+### Phase 1: ドミニオオーダー（優先度: 高）
 
 **対象:**
 - レベルアップ
 - 属性変更
 - 移動（空き地）
-- 移動侵略（敵領地）
+- 移動侵略（敵ドミニオ）
 - クリーチャー交換
 
 **作業:**
-1. LandCommandHandler に `execute_for_cpu()` 追加
+1. DominioOrderHandler に `execute_for_cpu()` 追加
 2. cpu_turn_processor を Handler経由に修正
 
 **見積もり:** 2-3時間

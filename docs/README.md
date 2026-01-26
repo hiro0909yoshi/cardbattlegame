@@ -41,7 +41,7 @@ docs/
 | [design.md](design/design.md) | 種族システム・効果システム・開発ツール |
 | [tile_system.md](design/tile_system.md) | タイルタイプ・TileHelper・地形効果・レベルシステム |
 | [tile_creature_separation_plan.md](design/tile_creature_separation_plan.md) | タイル・クリーチャー分離設計 |
-| [land_system.md](design/land_system.md) | 隣接判定・土地ボーナス・ダウン状態・領地コマンド |
+| [land_system.md](design/land_system.md) | 隣接判定・土地ボーナス・ダウン状態・ドミニオオーダー |
 | [toll_system.md](design/toll_system.md) | 通行料計算・呪い効果 |
 | [map_system.md](design/map_system.md) | マップシステム設計 |
 
@@ -179,7 +179,7 @@ docs/
 | 戦闘制限呪い | [戦闘制限呪い.md](design/spells/戦闘制限呪い.md) |
 | 通行料呪い | [通行料呪い.md](design/spells/通行料呪い.md) |
 | 防魔 | [防魔.md](design/spells/防魔.md) |
-| 領地変更 | [領地変更.md](design/spells/領地変更.md) |
+| ドミニオ変更 | [ドミニオ変更.md](design/spells/ドミニオ変更.md) |
 | EP増減 | [EP増減.md](design/spells/EP増減.md) |
 | 行動制限 | [行動制限.md](design/spells/行動制限.md) |
 
@@ -211,7 +211,7 @@ docs/
 - **条件付きバフ**: 全クリーチャー実装完了
 - **防御型クリーチャー**: 全21体実装完了
 - **バトルテストツール**: 基本機能完成
-- **土地システム**: 隣接判定・ダウン状態・領地コマンド実装完了
+- **土地システム**: 隣接判定・ダウン状態・ドミニオオーダー実装完了
 - **通行料システム**: 計算・呪い効果実装完了
 - **周回システム**: チェックポイント・ボーナス適用実装完了
 - **ラウンド数カウンター**: 実装完了

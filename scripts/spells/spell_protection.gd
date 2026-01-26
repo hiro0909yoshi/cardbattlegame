@@ -203,7 +203,7 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 	# 現在のプレイヤー（スペル使用者）を取得
 	var caster_id = player_system.current_player_index
 	
-	# 使用者の全領地から拡散対象を取得
+	# 使用者の全ドミニオから拡散対象を取得
 	var context = {}
 	if game_flow_manager:
 		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
@@ -211,7 +211,7 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 	for target_tile_index in board_system.tile_nodes.keys():
 		var tile = board_system.tile_nodes[target_tile_index]
 		
-		# 使用者の領地かチェック
+		# 使用者のドミニオかチェック
 		if tile.owner_id != caster_id:
 			continue
 		

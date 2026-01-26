@@ -6,10 +6,10 @@ class_name UIManager
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
-signal land_command_button_pressed()  # Phase 1-A: 領地コマンドボタン
+signal dominio_order_button_pressed()  # Phase 1-A: ドミニオオーダーボタン
 
 # UIコンポーネント（分割されたサブシステム）
-var land_command_ui: LandCommandUI = null
+var dominio_order_ui: DominioOrderUI = null
 var hand_display: HandDisplay = null
 var phase_display: PhaseDisplay = null
 var global_action_buttons: GlobalActionButtons = null
@@ -31,8 +31,8 @@ var tap_target_manager: TapTargetManager = null
 var phase_label: Label:
 	get: return phase_display.phase_label if phase_display else null
 
-# Phase 1-A: 領地コマンドUI（LandCommandUIに委譲）
-# 以下の変数は削除予定（LandCommandUIに移行済み）
+# Phase 1-A: ドミニオオーダーUI（DominioOrderUIに委譲）
+# 以下の変数は削除予定（DominioOrderUIに移行済み）
 
 # システム参照（型指定なし - 3D対応のため）
 var card_system_ref = null
@@ -62,7 +62,7 @@ func _ready():
 	var CardSelectionUIClass = load("res://scripts/ui_components/card_selection_ui.gd")
 	var LevelUpUIClass = load("res://scripts/ui_components/level_up_ui.gd")
 	var DebugPanelClass = load("res://scripts/ui_components/debug_panel.gd")
-	var LandCommandUIClass = load("res://scripts/ui_components/land_command_ui.gd")
+	var DominioOrderUIClass = load("res://scripts/ui_components/dominio_order_ui.gd")
 	var HandDisplayClass = load("res://scripts/ui_components/hand_display.gd")
 	var PhaseDisplayClass = load("res://scripts/ui_components/phase_display.gd")
 	
@@ -110,14 +110,14 @@ func _ready():
 	global_comment_ui.name = "GlobalCommentUI"
 	add_child(global_comment_ui)
 	
-	# LandCommandUI初期化
-	if LandCommandUIClass:
-		land_command_ui = LandCommandUIClass.new()
-		land_command_ui.name = "LandCommandUI"
-		land_command_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
-		add_child(land_command_ui)
-		# シグナル接続（land_command_button_pressedは特殊ボタンに移行済み）
-		land_command_ui.level_up_selected.connect(_on_level_ui_selected)
+	# DominioOrderUI初期化
+	if DominioOrderUIClass:
+		dominio_order_ui = DominioOrderUIClass.new()
+		dominio_order_ui.name = "DominioOrderUI"
+		dominio_order_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
+		add_child(dominio_order_ui)
+		# シグナル接続（dominio_order_button_pressedは特殊ボタンに移行済み）
+		dominio_order_ui.level_up_selected.connect(_on_level_ui_selected)
 	
 	# HandDisplay初期化
 	if HandDisplayClass:
@@ -256,12 +256,12 @@ func create_basic_ui(parent: Node):
 	if phase_display:
 		phase_display.initialize(parent)
 	
-	# Phase 1-A: 領地コマンドUI初期化（LandCommandUIに委譲）
-	# 注: 領地コマンドボタンはグローバル特殊ボタンに移行済み
-	if land_command_ui:
-		land_command_ui.initialize(parent, player_system_ref, board_system_ref, self)
-		land_command_ui.create_action_menu_panel(parent)
-		land_command_ui.create_level_selection_panel(parent)
+	# Phase 1-A: ドミニオオーダーUI初期化（DominioOrderUIに委譲）
+	# 注: ドミニオオーダーボタンはグローバル特殊ボタンに移行済み
+	if dominio_order_ui:
+		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self)
+		dominio_order_ui.create_action_menu_panel(parent)
+		dominio_order_ui.create_level_selection_panel(parent)
 
 # === プレイヤー情報パネル関連 ===
 func update_player_info_panels():
@@ -374,8 +374,8 @@ func _on_level_up_cancelled():
 func _on_debug_mode_changed(enabled: bool):
 	debug_mode = enabled
 
-func _on_land_command_button_pressed():
-	emit_signal("land_command_button_pressed")
+func _on_dominio_order_button_pressed():
+	emit_signal("dominio_order_button_pressed")
 
 func _on_creature_info_panel_confirmed(card_data: Dictionary):
 	# カードインデックスを取得してcard_selectedシグナルを発火
@@ -386,11 +386,11 @@ func _on_creature_info_panel_confirmed(card_data: Dictionary):
 func _on_creature_info_panel_cancelled():
 	emit_signal("pass_button_pressed")
 
-func _on_cancel_land_command_button_pressed():
+func _on_cancel_dominio_order_button_pressed():
 	print("[UIManager] キャンセルボタンがクリックされました！")
-	# GameFlowManagerのland_command_handlerに通知
-	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
-		game_flow_manager_ref.land_command_handler.cancel()
+	# GameFlowManagerのdominio_order_handlerに通知
+	if game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler:
+		game_flow_manager_ref.dominio_order_handler.cancel()
 
 # === グローバルアクションボタン管理 ===
 
@@ -478,7 +478,7 @@ func clear_global_actions():
 
 # === 特殊ボタン（左下）API ===
 
-## 特殊ボタンを設定（アルカナアーツ/領地コマンド等）
+## 特殊ボタンを設定（アルカナアーツ/ドミニオオーダー等）
 func set_special_button(text: String, callback: Callable):
 	if global_action_buttons:
 		global_action_buttons.setup_special(text, callback)
@@ -526,17 +526,17 @@ func _input(event):
 			toggle_debug_mode()
 
 # ============================================
-# Phase 1-A: 領地コマンドUI
+# Phase 1-A: ドミニオオーダーUI
 # ============================================
 
-# 領地コマンドボタンは特殊ボタン（左下）に移行済み
+# ドミニオオーダーボタンは特殊ボタン（左下）に移行済み
 
-## 領地コマンドボタンを表示（特殊ボタン使用）
-func show_land_command_button():
-	set_special_button("領地", func(): _on_land_command_button_pressed())
+## ドミニオオーダーボタンを表示（特殊ボタン使用）
+func show_dominio_order_button():
+	set_special_button("D", func(): _on_dominio_order_button_pressed())
 
-## 領地コマンドボタンを非表示（特殊ボタンクリア）
-func hide_land_command_button():
+## ドミニオオーダーボタンを非表示（特殊ボタンクリア）
+func hide_dominio_order_button():
 	clear_special_button()
 
 # ============================================
@@ -551,20 +551,20 @@ func show_mystic_button(callback: Callable):
 func hide_mystic_button():
 	clear_special_button()
 
-# create_action_menu_panel は LandCommandUIに移行済みのため削除
+# create_action_menu_panel は DominioOrderUIに移行済みのため削除
 
-# _create_menu_button は LandCommandUIに移行済みのため削除
+# _create_menu_button は DominioOrderUIに移行済みのため削除
 
-# create_level_selection_panel と _create_level_button は LandCommandUIに移行済みのため削除
+# create_level_selection_panel と _create_level_button は DominioOrderUIに移行済みのため削除
 
 # キャンセルボタンの表示/非表示
 func show_cancel_button():
-	if land_command_ui:
-		land_command_ui.show_cancel_button()
+	if dominio_order_ui:
+		dominio_order_ui.show_cancel_button()
 
 func hide_cancel_button():
-	if land_command_ui:
-		land_command_ui.hide_cancel_button()
+	if dominio_order_ui:
+		dominio_order_ui.hide_cancel_button()
 
 # スペルカードフィルターを設定（スペルフェーズ用）
 func set_card_selection_filter(filter_type: String):
@@ -587,7 +587,7 @@ func show_land_selection_mode(_owned_lands: Array):
 			land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
 		phase_label.text = "土地を選択（数字キー） " + land_list
 	
-	# キャンセルボタンはland_command_handler側で登録するためここでは呼ばない
+	# キャンセルボタンはdominio_order_handler側で登録するためここでは呼ばない
 	# show_cancel_button()
 
 # アクション選択UIを表示
@@ -596,8 +596,8 @@ func show_action_selection_ui(tile_index: int):
 	# Phase 1-A: 新しいUIパネルを使用
 	show_action_menu(tile_index)
 
-# 領地コマンドUIを非表示
-func hide_land_command_ui():
+# ドミニオオーダーUIを非表示
+func hide_dominio_order_ui():
 	# Phase 1-A: 新UIパネルを非表示
 	hide_action_menu()
 	hide_level_selection()
@@ -609,29 +609,29 @@ func hide_land_command_ui():
 	# キャンセルボタンを非表示
 	hide_cancel_button()
 
-# ==== Phase 1-A: アクションメニュー表示/非表示（LandCommandUIに委譲） ====
+# ==== Phase 1-A: アクションメニュー表示/非表示（DominioOrderUIに委譲） ====
 
 func show_action_menu(tile_index: int):
-	if land_command_ui:
-		land_command_ui.show_action_menu(tile_index)
+	if dominio_order_ui:
+		dominio_order_ui.show_action_menu(tile_index)
 
 func hide_action_menu():
-	if land_command_ui:
-		land_command_ui.hide_action_menu()
+	if dominio_order_ui:
+		dominio_order_ui.hide_action_menu()
 
-# ==== Phase 1-A: レベル選択パネル表示/非表示（LandCommandUIに委譲） ====
+# ==== Phase 1-A: レベル選択パネル表示/非表示（DominioOrderUIに委譲） ====
 
 func show_level_selection(tile_index: int, current_level: int, player_magic: int):
-	if land_command_ui:
-		land_command_ui.show_level_selection(tile_index, current_level, player_magic)
+	if dominio_order_ui:
+		dominio_order_ui.show_level_selection(tile_index, current_level, player_magic)
 
 func hide_level_selection():
-	if land_command_ui:
-		land_command_ui.hide_level_selection()
+	if dominio_order_ui:
+		dominio_order_ui.hide_level_selection()
 
 # ==== Phase 1-A: イベントハンドラ ====
 
-# イベントハンドラはLandCommandUIに移行済み
+# イベントハンドラはDominioOrderUIに移行済み
 
 # === 手札UI関連（HandDisplayへのアクセサ） ===
 func get_player_card_nodes(player_id: int) -> Array:
@@ -760,21 +760,21 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	
 	# ターゲット選択されなかった場合はインフォパネル表示
 	# ターゲット選択中は setup_buttons=false でグローバルボタンを変更しない
-	# 領地コマンド選択中は専用の処理を行う
-	var is_land_command_active = game_flow_manager_ref and game_flow_manager_ref.land_command_handler and game_flow_manager_ref.land_command_handler.current_state != game_flow_manager_ref.land_command_handler.State.CLOSED
+	# ドミニオオーダー選択中は専用の処理を行う
+	var is_dominio_order_active = game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler and game_flow_manager_ref.dominio_order_handler.current_state != game_flow_manager_ref.dominio_order_handler.State.CLOSED
 	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
-	var setup_buttons = not is_tap_target_active and not is_land_command_active
+	var setup_buttons = not is_tap_target_active and not is_dominio_order_active
 	
 	if creature_info_panel_ui:
 		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
-		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_land_command_active])
+		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_dominio_order_active])
 		
-		# 領地コマンド中はパネルを閉じるだけの×ボタンを設定
-		if is_land_command_active:
+		# ドミニオオーダー中はパネルを閉じるだけの×ボタンを設定
+		if is_dominio_order_active:
 			register_back_action(func():
 				creature_info_panel_ui.hide_panel(false)
-				# 領地コマンドのナビゲーションを復元
-				game_flow_manager_ref.land_command_handler._restore_navigation()
+				# ドミニオオーダーのナビゲーションを復元
+				game_flow_manager_ref.dominio_order_handler._restore_navigation()
 			, "閉じる")
 	else:
 		print("[UIManager] creature_info_panel_ui がない")
@@ -815,7 +815,7 @@ func _on_empty_tapped():
 ## TapTargetManagerからターゲットが選択された時
 func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 	print("[UIManager] タップターゲット選択: タイル%d" % tile_index)
-	# 領地コマンドハンドラなど、呼び出し元に通知（シグナルを中継）
+	# ドミニオオーダーハンドラなど、呼び出し元に通知（シグナルを中継）
 	# 具体的な処理は各ハンドラが tap_target_manager.target_selected に直接接続
 
 

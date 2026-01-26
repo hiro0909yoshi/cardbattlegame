@@ -970,19 +970,19 @@ func _on_pass_button_pressed():
 	if is_active:
 		# 交換/移動モードの場合はアクションメニューに戻る
 		if selection_mode in ["swap", "move"]:
-			_cancel_land_command_and_return_to_action_menu()
+			_cancel_dominio_order_and_return_to_action_menu()
 		else:
 			hide_selection()
 			emit_signal("selection_cancelled")
 
 
 # 交換/移動モードをキャンセルしてアクションメニューに戻る
-func _cancel_land_command_and_return_to_action_menu():
+func _cancel_dominio_order_and_return_to_action_menu():
 	hide_selection()
 	
-	# land_command_handlerのcancel()を呼ぶ（状態管理を統一）
-	if game_flow_manager_ref and game_flow_manager_ref.land_command_handler:
-		game_flow_manager_ref.land_command_handler.cancel()
+	# dominio_order_handlerのcancel()を呼ぶ（状態管理を統一）
+	if game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler:
+		game_flow_manager_ref.dominio_order_handler.cancel()
 
 # 選択中かチェック
 func is_selection_active() -> bool:

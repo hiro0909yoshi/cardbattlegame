@@ -36,8 +36,8 @@
 ### 2.2 戦闘地・敵属性条件（3体）
 戦闘地の属性や敵の属性によってステータスが変動
 
-### 2.3 領地条件（7体）
-自領地数、隣接領地、土地イベントによってステータスが変動
+### 2.3 ドミニオ条件（7体）
+自ドミニオ数、隣接ドミニオ、土地イベントによってステータスが変動
 
 ### 2.4 戦闘イベント（6体）
 破壊数、バトル後変化などのイベントによってステータスが変動
@@ -92,10 +92,10 @@
 7. `hand_count_multiplier` - 手札数比例
 8. `defender_fixed_ap` - 防御時固定AP
 9. `battle_land_level_bonus` - 戦闘地レベルボーナス
-10. `owned_land_threshold` - 自領地数閾値
+10. `owned_land_threshold` - 自ドミニオ数閾値
 11. `specific_creature_count` - 特定クリーチャーカウント
 12. `other_element_count` - 他属性カウント
-13. `adjacent_owned_land` - 隣接自領地条件
+13. `adjacent_owned_land` - 隣接自ドミニオ条件
 14. `base_ap_to_hp` - 基礎AP|基本AP→HP変換
 15. `conditional_land_count` - 条件付き配置数
 

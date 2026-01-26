@@ -7,7 +7,7 @@
 
 ## 概要
 
-スペル、アルカナアーツ、領地コマンドなどで使用するターゲット選択の統一システム。
+スペル、アルカナアーツ、ドミニオオーダーなどで使用するターゲット選択の統一システム。
 土地、クリーチャー、プレイヤー、ゲートなど様々な対象の選択・フィルタリング・表示を担当。
 
 ---
@@ -60,7 +60,7 @@ enum SelectionType {
 | スペル・ターゲット選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
 | アルカナアーツ・使用者選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
 | アルカナアーツ・ターゲット選択 | ✅ | ✅ | タップで選択→決定ボタンで確定 |
-| 領地コマンド | ❌ | ✅ | グローバルボタンのみ |
+| ドミニオオーダー | ❌ | ✅ | グローバルボタンのみ |
 
 ### 動作フロー
 
@@ -274,7 +274,7 @@ scripts/game_flow/
 
 | フィルタ | 説明 | 例 |
 |---------|------|-----|
-| `owner_filter` | own/enemy/any | 自/敵/全領地 |
+| `owner_filter` | own/enemy/any | 自/敵/全ドミニオ |
 | `target_filter` | creature/empty | クリーチャーあり/空地 |
 | `max_level` / `min_level` | レベル制限 | Lv1-4 |
 | `required_level` | 特定レベル | Lv4のみ |
@@ -369,10 +369,10 @@ var targets = TargetSelectionHelper.get_valid_targets_core(systems, "creature", 
 | `spell_curse.gd` | get_all_creatures |
 | `spell_borrow.gd` | clear_selection |
 
-#### 領地コマンド関連（4ファイル）
+#### ドミニオオーダー関連（4ファイル）
 | ファイル | 使用メソッド |
 |---------|-------------|
-| `land_command_handler.gd` | create/show/hide/rotate_marker, focus_camera |
+| `dominio_order_handler.gd` | create/show/hide/rotate_marker, focus_camera |
 | `land_selection_helper.gd` | clear_highlights, show_marker, focus_camera, highlight_tile |
 | `land_action_helper.gd` | show_marker, focus_camera |
 | `land_input_helper.gd` | show_marker, focus_camera |

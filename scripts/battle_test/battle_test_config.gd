@@ -14,7 +14,7 @@ var attacker_owned_lands: Dictionary = {     # 保有土地数
 }
 var attacker_battle_land: String = "neutral"    # バトル発生土地の属性
 var attacker_battle_land_level: int = 1      # バトル発生土地のレベル (1-5)
-var attacker_has_adjacent: bool = false      # 隣接味方領地あり
+var attacker_has_adjacent: bool = false      # 隣接味方ドミニオあり
 
 ## 防御側設定
 var defender_creatures: Array = []  # (int配列)

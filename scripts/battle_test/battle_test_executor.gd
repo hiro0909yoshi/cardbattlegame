@@ -31,7 +31,7 @@ class MockBoardSystem extends RefCounted:
 		}
 		print("[MockBoardSystem] 応援登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
 	
-	# Phase 3-B用: 自領地数をカウント（テスト用モック）
+	# Phase 3-B用: 自ドミニオ数をカウント（テスト用モック）
 	func get_player_owned_land_count(_player_id: int) -> int:
 		return 0  # テスト環境では常に0
 	

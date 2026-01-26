@@ -324,11 +324,11 @@ func phase_4_setup_system_interconnections() -> void:
 	_setup_cpu_special_tile_ai()
 	
 	if game_flow_manager:
-		# LandCommandHandler の初期化
-		if game_flow_manager.land_command_handler:
-			game_flow_manager.land_command_handler.board_system_3d = board_system_3d
-			game_flow_manager.land_command_handler.player_system = player_system
-			game_flow_manager.land_command_handler.ui_manager = ui_manager
+		# DominioOrderHandler の初期化
+		if game_flow_manager.dominio_order_handler:
+			game_flow_manager.dominio_order_handler.board_system_3d = board_system_3d
+			game_flow_manager.dominio_order_handler.player_system = player_system
+			game_flow_manager.dominio_order_handler.ui_manager = ui_manager
 		
 		# ItemPhaseHandler の初期化
 		if game_flow_manager.item_phase_handler:
@@ -417,7 +417,7 @@ func phase_5_connect_signals() -> void:
 		ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
 		ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 		ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
-		ui_manager.land_command_button_pressed.connect(game_flow_manager.open_land_command)
+		ui_manager.dominio_order_button_pressed.connect(game_flow_manager.open_dominio_order)
 	
 	print("[GameSystemManager] Phase 5: シグナル接続完了")
 
@@ -612,11 +612,11 @@ func _initialize_phase1a_handlers() -> void:
 	game_flow_manager.add_child(target_selection_helper)
 	target_selection_helper.initialize(board_system_3d, ui_manager, game_flow_manager)
 	
-	# LandCommandHandlerを作成
-	var LandCommandHandlerClass = preload("res://scripts/game_flow/land_command_handler.gd")
-	var land_command_handler = LandCommandHandlerClass.new()
-	game_flow_manager.add_child(land_command_handler)
-	land_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
+	# DominioOrderHandlerを作成
+	var DominioOrderHandlerClass = preload("res://scripts/game_flow/dominio_order_handler.gd")
+	var dominio_order_handler = DominioOrderHandlerClass.new()
+	game_flow_manager.add_child(dominio_order_handler)
+	dominio_order_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
 	
 	# SpellPhaseHandlerを作成
 	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")
@@ -636,7 +636,7 @@ func _initialize_phase1a_handlers() -> void:
 	# GameFlowManagerにハンドラーを設定
 	game_flow_manager.set_phase1a_handlers(
 		target_selection_helper,
-		land_command_handler,
+		dominio_order_handler,
 		spell_phase_handler,
 		item_phase_handler
 	)

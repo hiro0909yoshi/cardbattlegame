@@ -9,7 +9,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象自領地を地に変える",
+	  "effect": "対象自ドミニオを地に変える",
 	  "effect_parsed": {
 		"target_type": "own_land",
 		"target_info": {
@@ -37,7 +37,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象クリーチャーを隣接する敵領地に移動させる\"敵地移動\"",
+	  "effect": "対象クリーチャーを隣接する敵ドミニオに移動させる\"敵地移動\"",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -48,7 +48,7 @@
 		"effects": [
 		  {
 			"effect_type": "move_to_adjacent_enemy",
-			"description": "隣接する敵領地に移動"
+			"description": "隣接する敵ドミニオに移動"
 		  }
 		]
 	  },
@@ -68,7 +68,7 @@
 		"ep": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象領地のレベルを1下げる；合成[アステロイド・対象領地のレベルを1にする]",
+	  "effect": "対象ドミニオのレベルを1下げる；合成[アステロイド・対象ドミニオのレベルを1にする]",
 	  "synthesis": {
 		"type": "same_card",
 		"effect_override": {
@@ -166,7 +166,7 @@
 	  "cost": {
 		"ep": 80
 	  },
-	  "effect": "全領地に呪い\"移動不可\"",
+	  "effect": "全ドミニオに呪い\"移動不可\"",
 	  "effect_parsed": {
 		"target_type": "all_creatures",
 		"target_info": {},
@@ -219,7 +219,7 @@
 	  "cost": {
 		"ep": 80
 	  },
-	  "effect": "対象領地を、その所有者が最も多く持つ属性に変える",
+	  "effect": "対象ドミニオを、その所有者が最も多く持つ属性に変える",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -276,7 +276,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象自領地を水に変える",
+	  "effect": "対象自ドミニオを水に変える",
 	  "effect_parsed": {
 		"target_type": "own_land",
 		"target_info": {
@@ -304,7 +304,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象自領地を風に変える",
+	  "effect": "対象自ドミニオを風に変える",
 	  "effect_parsed": {
 		"target_type": "own_land",
 		"target_info": {
@@ -413,7 +413,7 @@
 	  "cost": {
 		"ep": 60
 	  },
-	  "effect": "対象領地に呪い\"EP結界\"(無効化[通常攻撃]、敵にEP100を与える)",
+	  "effect": "対象ドミニオに呪い\"EP結界\"(無効化[通常攻撃]、敵にEP100を与える)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -443,7 +443,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "領地と属性の合わない全クリーチャーのHP-20",
+	  "effect": "ドミニオと属性の合わない全クリーチャーのHP-20",
 	  "effect_parsed": {
 		"target_type": "all_creatures",
 		"target_info": {
@@ -572,7 +572,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象領地に呪い\"強制停止\"(2R間、1度だけ足どめ)",
+	  "effect": "対象ドミニオに呪い\"強制停止\"(2R間、1度だけ足どめ)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -602,7 +602,7 @@
 	  "cost": {
 		"ep": 80
 	  },
-	  "effect": "レベル4以下の対象領地を無に変える",
+	  "effect": "レベル4以下の対象ドミニオを無に変える",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -660,7 +660,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"通行料1.5倍\"；カードを1枚引く",
+	  "effect": "対象ドミニオに呪い\"通行料1.5倍\"；カードを1枚引く",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -805,7 +805,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "密命；対象レベル4領地のレベルを1下げる",
+	  "effect": "密命；対象レベル4ドミニオのレベルを1下げる",
 	  "effect_parsed": {
 		"keywords": [
 		  "密命"
@@ -850,7 +850,7 @@
 		"ep": 100,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象敵セプターの最高レベル領地のレベルを1下げる；合成[サブサイド・対象は全セプター]",
+	  "effect": "対象敵セプターの最高レベルドミニオのレベルを1下げる；合成[サブサイド・対象は全セプター]",
 	  "synthesis": {
 		"type": "same_card",
 		"target_override": {
@@ -918,7 +918,7 @@
 	  "cost": {
 		"ep": 100
 	  },
-	  "effect": "対象領地に呪い\"戦闘後破壊\"",
+	  "effect": "対象ドミニオに呪い\"戦闘後破壊\"",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1156,7 +1156,7 @@
 	  "cost": {
 		"ep": 120
 	  },
-	  "effect": "レベル3以下の対象水領地を風に、または風領地を水に変える",
+	  "effect": "レベル3以下の対象水ドミニオを風に、または風ドミニオを水に変える",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -1303,7 +1303,7 @@
 	  "cost": {
 		"ep": 20
 	  },
-	  "effect": "対象領地に呪い\"遠隔移動\"(離れた空地にも移動できる)",
+	  "effect": "対象ドミニオに呪い\"遠隔移動\"(離れた空地にも移動できる)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1359,7 +1359,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "世界呪い\"土地変性無効\"(6R間、全領地は土地破壊・変性無効)",
+	  "effect": "世界呪い\"土地変性無効\"(6R間、全ドミニオは土地破壊・変性無効)",
 	  "effect_parsed": {
 		"target_type": "world",
 		"effects": [
@@ -1562,7 +1562,7 @@
 	  "cost": {
 		"ep": 30
 	  },
-	  "effect": "対象領地に呪い\"能力値-20\"(戦闘中、AP&HP-20)；カードを1枚引く",
+	  "effect": "対象ドミニオに呪い\"能力値-20\"(戦闘中、AP&HP-20)；カードを1枚引く",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1597,7 +1597,7 @@
 		"ep": 20,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象領地に呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
+	  "effect": "対象ドミニオに呪い\"地形効果無効\"；合成[クリーチャー・ダウンした全クリーチャー]",
 	  "synthesis": {
 		"type": "creature",
 		"target_override": {
@@ -1765,7 +1765,7 @@
 	  "cost": {
 		"ep": 50
 	  },
-	  "effect": "対象領地に呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)",
+	  "effect": "対象ドミニオに呪い\"コマンド成長\"(レベルアップか地形変化でMHP+20)",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1822,7 +1822,7 @@
 	  "cost": {
 		"ep": 20
 	  },
-	  "effect": "対象自領地に呪い\"EP奪取\"(アルカナアーツ[EP20・対象敵セプターからEPの10%を奪う])",
+	  "effect": "対象自ドミニオに呪い\"EP奪取\"(アルカナアーツ[EP20・対象敵セプターからEPの10%を奪う])",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {

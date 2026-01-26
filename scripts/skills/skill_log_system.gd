@@ -230,7 +230,7 @@ func _format_condition_details(condition_type: String, details: Dictionary) -> S
 		"with_weapon":
 			return "(武器装備中)"
 		"adjacent_ally_land":
-			return "(隣接地が自領地)"
+			return "(隣接地が自ドミニオ)"
 		_:
 			return ""
 

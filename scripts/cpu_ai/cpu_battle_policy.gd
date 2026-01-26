@@ -45,7 +45,7 @@ var protect_mystic_arts: bool = false      # アルカナアーツ持ちを優�
 var protect_element_match: bool = false    # 属性一致を優先保護
 var protect_by_value_enabled: bool = false # 土地価値による判断を有効化
 var protect_by_value_threshold: int = 200  # この通行料以上なら優先保護
-var protect_by_value_min_items: int = 2    # 低価値領地はこの枚数以上ある場合のみアイテム使用
+var protect_by_value_min_items: int = 2    # 低価値ドミニオはこの枚数以上ある場合のみアイテム使用
 
 # =============================================================================
 # 初期化
@@ -161,7 +161,7 @@ func decide_defense_action(defense_context: Dictionary) -> DefenseAction:
 	if protect_by_value_enabled:
 		if toll >= protect_by_value_threshold:
 			is_priority_target = true
-			print("[CPUBattlePolicy] 高価値領地（通行料%d >= %d） → 優先保護対象" % [toll, protect_by_value_threshold])
+			print("[CPUBattlePolicy] 高価値ドミニオ（通行料%d >= %d） → 優先保護対象" % [toll, protect_by_value_threshold])
 		elif defense_item_count >= protect_by_value_min_items:
 			is_priority_target = true
 			print("[CPUBattlePolicy] 防御アイテム十分（%d >= %d） → 保護可能" % [defense_item_count, protect_by_value_min_items])

@@ -4,7 +4,7 @@ class_name DebugCommandHandler
 
 ## 参照
 var board_system_3d
-var land_command_handler
+var dominio_order_handler
 
 ## デバッグモード
 var debug_mode: bool = false
@@ -16,7 +16,7 @@ func _ready():
 ## 初期化
 func initialize(board_sys, land_cmd_handler):
 	board_system_3d = board_sys
-	land_command_handler = land_cmd_handler
+	dominio_order_handler = land_cmd_handler
 	print("[DebugCommandHandler] 参照設定完了")
 
 ## デバッグモード切り替え
@@ -43,8 +43,8 @@ func _input(event):
 func on_number_key_pressed(tile_index: int):
 	print("[DebugCommandHandler] 数字キー押下: ", tile_index)
 	
-	if land_command_handler and land_command_handler.is_active:
-		land_command_handler.select_tile(tile_index)
+	if dominio_order_handler and dominio_order_handler.is_active:
+		dominio_order_handler.select_tile(tile_index)
 
 ## Cキー押下（ダウン解除）
 func on_clear_down_pressed():

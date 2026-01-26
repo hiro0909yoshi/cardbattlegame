@@ -283,7 +283,7 @@ CPUAIContext（共通コンテキスト）
 │   └── CPUHolyWordEvaluator（ホーリーワード判断）
 ├── CPUSpellAI（スペル判断）
 ├── CPUMysticArtsAI（アルカナアーツ判断）
-├── CPUTerritoryAI（領地コマンド判断）
+├── CPUTerritoryAI（ドミニオオーダー判断）
 └── CPUSpellPhaseHandler（スペルフェーズ処理）
 ```
 

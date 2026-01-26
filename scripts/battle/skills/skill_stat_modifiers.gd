@@ -12,10 +12,10 @@ class_name SkillStatModifiers
 ## - battle_land_element_bonus / enemy_element_bonus: 戦闘地条件（アンフィビアン、カクタスウォール）
 ## - defender_fixed_ap: 防御時固定ST（ガーゴイル）
 ## - battle_land_level_bonus: 戦闘地レベル効果（ネッシー）
-## - owned_land_threshold: 自領地数閾値（バーンタイタン）
+## - owned_land_threshold: 自ドミニオ数閾値（バーンタイタン）
 ## - specific_creature_count: 特定クリーチャーカウント（ハイプワーカー）
 ## - race_creature_stat_replace: 種族配置数ステータス（レッドキャップ）
-## - adjacent_owned_land: 隣接自領地条件（タイガーヴェタ）
+## - adjacent_owned_land: 隣接自ドミニオ条件（タイガーヴェタ）
 
 # ConditionChecker はグローバルクラスとして利用可能
 
@@ -300,12 +300,12 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 					print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
 						  " HP+", bonus, " (レベル:", tile_level, " × ", multiplier, ")")
 		
-		# 3. 自領地数閾値効果（バーンタイタン）
+		# 3. 自ドミニオ数閾値効果（バーンタイタン）
 		elif effect_type == "owned_land_threshold":
 			var threshold = effect.get("threshold", 5)
 			var operation = effect.get("operation", "gte")  # gte, lt, etc
 			
-			# BoardSystemから自領地数を取得
+			# BoardSystemから自ドミニオ数を取得
 			var player_id = context.get("player_id", 0)
 			var owned_land_count = 0
 			if board_system_ref:
@@ -323,15 +323,15 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				if ap_change != 0:
 					participant.temporary_bonus_ap += ap_change
 					participant.current_ap += ap_change
-					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
+					print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
 						  " ST", ("+" if ap_change >= 0 else ""), ap_change, 
-						  " (自領地:", owned_land_count, ")")
+						  " (自ドミニオ:", owned_land_count, ")")
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					print("【自領地数閾値】", participant.creature_data.get("name", "?"), 
+					print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
 						  " HP", ("+" if hp_change >= 0 else ""), hp_change, 
-						  " (自領地:", owned_land_count, ")")
+						  " (自ドミニオ:", owned_land_count, ")")
 		
 		# 4. 特定クリーチャーカウント（ハイプワーカー）
 		elif effect_type == "specific_creature_count":
@@ -395,7 +395,7 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 		elif effect_type == "other_element_count":
 			pass  # apply_skills()の先頭でSkillItemCreature.apply_as_creature()により処理済み
 		
-		# 6. 隣接自領地条件（タイガーヴェタ）
+		# 6. 隣接自ドミニオ条件（タイガーヴェタ）
 		elif effect_type == "adjacent_owned_land":
 			# 既存のConditionCheckerを使用
 			var checker = ConditionChecker.new()
@@ -410,12 +410,12 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				if ap_change != 0:
 					participant.temporary_bonus_ap += ap_change
 					participant.current_ap += ap_change
-					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
+					print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
 						  " ST+", ap_change)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					print("【隣接自領地】", participant.creature_data.get("name", "?"), 
+					print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
 						  " HP+", hp_change)
 
 

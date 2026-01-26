@@ -12,7 +12,7 @@
 	  "ap": 40,
 	  "hp": 30,
 	  "ability": "",
-	  "ability_detail": "配置領地でレベルアップか地形変化時、MHP+10"
+	  "ability_detail": "配置ドミニオでレベルアップか地形変化時、MHP+10"
 	},
 	{
 	  "id": 201,
@@ -196,8 +196,8 @@
 	  },
 	  "ap": 50,
 	  "hp": 60,
-	  "ability": "♡付き領地で戦闘中",
-	  "ability_detail": "♡付き領地で戦闘中、HP-20",
+	  "ability": "♡付きドミニオで戦闘中",
+	  "ability_detail": "♡付きドミニオで戦闘中、HP-20",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -490,7 +490,7 @@
 	  "ap": 20,
 	  "hp": 30,
 	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP120・対象自領地を地に変える]",
+	  "ability_detail": "アルカナアーツ[EP120・対象自ドミニオを地に変える]",
 	  "ability_parsed": {
 		"keywords": [
 		  "アルカナアーツ"
@@ -712,7 +712,7 @@
 	  "ap": 40,
 	  "hp": 40,
 	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP30・対象敵領地に呪い\"衰弱\"]",
+	  "ability_detail": "アルカナアーツ[EP30・対象敵ドミニオに呪い\"衰弱\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "アルカナアーツ"

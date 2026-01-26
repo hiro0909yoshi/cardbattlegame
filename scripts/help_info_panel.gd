@@ -182,7 +182,7 @@ func _get_sample_spell_data() -> Dictionary:
 		"type": "spell",
 		"spell_type": "単体対象",
 		"cost": {"ep": 100},
-		"effect": "対象自領地を地に変える"
+		"effect": "対象自ドミニオを地に変える"
 	}
 
 func _get_sample_item_data() -> Dictionary:
@@ -222,7 +222,7 @@ func _get_creature_info_description() -> String:
 	text += "詳細情報が表示されます。\n\n"
 	text += "[b]表示内容：[/b]\n"
 	text += "・カード名と属性\n"
-	text += "・コスト（MP、必要領地）\n"
+	text += "・コスト（MP、必要ドミニオ）\n"
 	text += "・ST（攻撃力）/ HP（体力）\n"
 	text += "・能力説明\n"
 	text += "・アルカナアーツ情報（ある場合）\n"

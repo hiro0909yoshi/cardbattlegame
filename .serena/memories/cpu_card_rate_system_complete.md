@@ -58,7 +58,7 @@
 
 対象スペル: シャッター, スクイーズ, ポイズンマインド, セフト, スニークハンド, メタモルフォシス
 
-### 5. 領地コマンド交換判断 (cpu_territory_ai.gd)
+### 5. ドミニオオーダー交換判断 (cpu_territory_ai.gd)
 - コスト差 → レート差に変更
 - 最低スコア閾値: 25
 - **アルカナアーツ持ちは交換対象外**
@@ -81,7 +81,7 @@
 
 ## アルカナアーツ持ち保護ルール
 以下の場面でアルカナアーツ持ちクリーチャーを保護:
-1. 領地コマンド交換 - 交換対象外
+1. ドミニオオーダー交換 - 交換対象外
 2. エクスチェンジ - 盤面のアルカナアーツ持ちは交換対象外
 3. 配置時 - 属性不一致でもアルカナアーツ持ちを優先配置
 
@@ -129,7 +129,7 @@ CPUが呪いの効果を判断し、場合によっては上書きする思考�
 - scripts/cpu_ai/cpu_spell_target_selector.gd - スペル対象選択
 - scripts/cpu_ai/cpu_spell_condition_checker.gd - スペル条件判定
 - scripts/cpu_ai/cpu_mystic_arts_ai.gd - アルカナアーツ使用判断
-- scripts/cpu_ai/cpu_territory_ai.gd - 領地コマンド判断
+- scripts/cpu_ai/cpu_territory_ai.gd - ドミニオオーダー判断
 - scripts/cpu_ai/cpu_battle_ai.gd - バトル判断
 - scripts/cpu_ai/cpu_defense_ai.gd - 防御判断
 - scripts/cpu_ai/cpu_target_resolver.gd - ターゲット解決

@@ -461,7 +461,7 @@ const NO_STOP_TILES = ["warp", "shop"]
 |----------|------|
 | `docs/design/map_system.md` | マップシステム全体 |
 | `docs/design/lap_system.md` | 周回システム（チェックポイント） |
-| `docs/design/land_system.md` | 領地コマンド |
+| `docs/design/land_system.md` | ドミニオオーダー |
 | `docs/design/toll_system.md` | 通行料システム |
 | `docs/design/tile_creature_separation_plan.md` | タイル・クリーチャー分離設計 |
 | `docs/design/skills/vacant_move_skill.md` | 空地移動・敵地移動スキル |

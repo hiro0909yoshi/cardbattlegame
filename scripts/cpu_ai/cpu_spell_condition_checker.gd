@@ -174,7 +174,7 @@ func check_target_condition(target_condition: String, context: Dictionary) -> Ar
 # 条件チェック実装
 # =============================================================================
 
-## 属性不一致チェック：配置クリーチャーと土地の属性が違う自領地があるか
+## 属性不一致チェック：配置クリーチャーと土地の属性が違う自ドミニオがあるか
 func _check_element_mismatch(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	var mismatched = board_analyzer.get_mismatched_own_lands(player_id)
@@ -224,7 +224,7 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 	if own_creatures.is_empty():
 		return false
 	
-	# 各自クリーチャーから移動可能な敵領地を探し、勝てるかシミュレーション
+	# 各自クリーチャーから移動可能な敵ドミニオを探し、勝てるかシミュレーション
 	for own_tile in own_creatures:
 		var attacker = own_tile.get("creature", {})
 		if attacker.is_empty():
@@ -234,7 +234,7 @@ func _check_move_invasion_win(context: Dictionary) -> bool:
 		if from_tile < 0:
 			continue
 		
-		# 移動可能な敵領地を取得
+		# 移動可能な敵ドミニオを取得
 		var reachable_enemy_tiles = board_analyzer.get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 		
 		for enemy_tile in reachable_enemy_tiles:
