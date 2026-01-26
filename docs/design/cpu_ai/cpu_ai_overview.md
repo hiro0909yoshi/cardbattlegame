@@ -35,7 +35,7 @@
 | `cpu_spell_condition_checker.gd` | 使用条件判定 |
 | `cpu_target_resolver.gd` | ターゲット候補取得 |
 | `cpu_board_analyzer.gd` | 盤面分析 |
-| `cpu_mystic_arts_ai.gd` | ミスティックアーツ判断 |
+| `cpu_mystic_arts_ai.gd` | アルカナアーツ判断 |
 | `cpu_sacrifice_selector.gd` | カード犠牲選択 |
 
 ### 移動関連

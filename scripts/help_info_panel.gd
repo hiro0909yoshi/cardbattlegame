@@ -225,7 +225,7 @@ func _get_creature_info_description() -> String:
 	text += "・コスト（MP、必要領地）\n"
 	text += "・ST（攻撃力）/ HP（体力）\n"
 	text += "・能力説明\n"
-	text += "・秘術情報（ある場合）\n"
+	text += "・アルカナアーツ情報（ある場合）\n"
 	text += "[/font_size]"
 	return text
 

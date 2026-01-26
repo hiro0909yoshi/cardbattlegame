@@ -3,7 +3,7 @@ extends RefCounted
 ## CPUのスペルフェーズ処理
 ##
 ## SpellPhaseHandlerからCPU専用ロジックを分離
-## - スペル/ミスティックアーツの使用判断呼び出し
+## - スペル/アルカナアーツの使用判断呼び出し
 ## - CPU用ターゲットデータ構築
 ## - CPU用効果実行
 
@@ -71,7 +71,7 @@ func decide_action(player_id: int) -> Dictionary:
 	if cpu_spell_ai:
 		spell_decision = cpu_spell_ai.decide_spell(player_id)
 	
-	# ミスティックアーツ判断
+	# アルカナアーツ判断
 	var mystic_decision = {"use": false}
 	if cpu_mystic_arts_ai and spell_phase_handler and spell_phase_handler.has_available_mystic_arts(player_id):
 		mystic_decision = cpu_mystic_arts_ai.decide_mystic_arts(player_id)
@@ -142,7 +142,7 @@ func prepare_spell_execution(decision: Dictionary, player_id: int) -> Dictionary
 	}
 
 
-## CPUミスティックアーツ実行の準備処理
+## CPUアルカナアーツ実行の準備処理
 ## 戻り値: Dictionary {success: bool, mystic: Dictionary, mystic_data: Dictionary, creature_info: Dictionary, target_data: Dictionary, cost: int}
 func prepare_mystic_execution(decision: Dictionary, player_id: int) -> Dictionary:
 	_sync_references()
@@ -157,10 +157,10 @@ func prepare_mystic_execution(decision: Dictionary, player_id: int) -> Dictionar
 	
 	# ダウン状態チェック（決定後に状態が変わっている可能性があるため再チェック）
 	if _is_tile_down(creature_tile):
-		print("[CPU] 秘術使用失敗: タイル%dはダウン中" % creature_tile)
+		print("[CPU] アルカナアーツ使用失敗: タイル%dはダウン中" % creature_tile)
 		return {"success": false}
 	
-	print("[CPU] 秘術使用: %s (タイル%d)" % [mystic_data.get("name", "?"), creature_tile])
+	print("[CPU] アルカナアーツ使用: %s (タイル%d)" % [mystic_data.get("name", "?"), creature_tile])
 	
 	# コスト取得
 	var cost = mystic.get("cost", 0)

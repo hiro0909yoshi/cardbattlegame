@@ -151,12 +151,12 @@
 			},
 			"ap": 50.0,
 			"hp": 30.0,
-			"ability": "無効化・秘術",
-			"ability_detail": "無効化[水地]；秘術[EP30・ミストウィングに変身　]",
+			"ability": "無効化・アルカナアーツ",
+			"ability_detail": "無効化[水地]；アルカナアーツ[EP30・ミストウィングに変身　]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"無効化": {
@@ -282,11 +282,11 @@
 			},
 			"ap": 20.0,
 			"hp": 20.0,
-			"ability": "秘術",
-			"ability_detail": "秘術[EP50・対象敵クリーチャーをダウン]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP50・対象敵クリーチャーをダウン]",
 			"ability_parsed": {
 				"keywords": [
-					"秘術"
+					"アルカナアーツ"
 				]
 			},
 			"mystic_arts": {
@@ -594,8 +594,8 @@
 			},
 			"ap": 30.0,
 			"hp": 40.0,
-			"ability": "不屈・秘術",
-			"ability_detail": "不屈；秘術[EP30・対象クリーチャーのAP+10]",
+			"ability": "不屈・アルカナアーツ",
+			"ability_detail": "不屈；アルカナアーツ[EP30・対象クリーチャーのAP+10]",
 			"ability_parsed": {
 				"keywords": [
 					"不屈"

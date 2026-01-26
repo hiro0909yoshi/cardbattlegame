@@ -2,7 +2,7 @@
 
 ## 概要
 
-CPUのスペル/秘術ターゲット選択ロジックを、プレイヤーと同じフィルタリングが適用されるようにリファクタリングしました。
+CPUのスペル/アルカナアーツターゲット選択ロジックを、プレイヤーと同じフィルタリングが適用されるようにリファクタリングしました。
 
 ## 背景・問題点
 
@@ -120,7 +120,7 @@ class DummyHandler:
 - レベル制限（min_level, max_level, required_level）
 - 呪い有無チェック（has_curse, has_no_curse）
 - ダウン状態チェック（is_down, require_not_down）
-- 秘術有無チェック（has_no_mystic_arts, require_mystic_arts）
+- アルカナアーツ有無チェック（has_no_mystic_arts, require_mystic_arts）
 - 移動可否チェック（can_move）
 - 等
 

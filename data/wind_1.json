@@ -64,12 +64,12 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；秘術[EP30・対象から手札のスペルの数×40EPを奪う]",
+	  "ability": "巻物強打・アルカナアーツ",
+	  "ability_detail": "巻物強打；アルカナアーツ[EP30・対象から手札のスペルの数×40EPを奪う]",
 	  "ability_parsed": {
 		"keywords": [
 		  "巻物強打",
-          "秘術"
+          "アルカナアーツ"
 		],
 		"keyword_conditions": {
 		  "巻物強打": {
@@ -97,8 +97,8 @@
 	  },
 	  "ap": 50,
 	  "hp": 50,
-	  "ability": "先制・巻物強打・秘術",
-	  "ability_detail": "先制；巻物強打；秘術[EP50・対象敵クリーチャーのMHP-10]",
+	  "ability": "先制・巻物強打・アルカナアーツ",
+	  "ability_detail": "先制；巻物強打；アルカナアーツ[EP50・対象敵クリーチャーのMHP-10]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
@@ -133,12 +133,12 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[EP20・対象敵クリーチャーのHP-10]",
+	  "ability": "先制・アルカナアーツ",
+	  "ability_detail": "先制；アルカナアーツ[EP20・対象敵クリーチャーのHP-10]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "秘術"
+          "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -200,12 +200,12 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[EP40・対象領地に呪い\"能力値+20\"]",
+	  "ability": "先制・アルカナアーツ",
+	  "ability_detail": "先制；アルカナアーツ[EP40・対象領地に呪い\"能力値+20\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "秘術"
+          "アルカナアーツ"
 		],
 		"mystic_art": {
 		  "name": "能力値+20呪い",
@@ -323,11 +323,11 @@
 	  },
 	  "ap": 10,
 	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP20・対象の手札を1枚破壊、対象はカードを1枚引く]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP20・対象の手札を1枚破壊、対象はカードを1枚引く]",
 	  "ability_parsed": {
 		"keywords": [
-          "秘術"
+          "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -591,12 +591,12 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[MHP40以上]；秘術[EP60・ガルーダに変身]",
+	  "ability": "無効化・アルカナアーツ",
+	  "ability_detail": "無効化[MHP40以上]；アルカナアーツ[EP60・ガルーダに変身]",
 	  "ability_parsed": {
 		"keywords": [
 		  "無効化",
-          "秘術"
+          "アルカナアーツ"
 		],
 		"keyword_conditions": {
 		  "無効化": {
@@ -690,11 +690,11 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP60・対象自クリーチャーを1~2マス移動]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP60・対象自クリーチャーを1~2マス移動]",
 	  "ability_parsed": {
 		"keywords": [
-          "秘術"
+          "アルカナアーツ"
 		],
 		"mystic_art": {
 		  "name": "1~2マス移動",
@@ -754,13 +754,13 @@
 	  },
 	  "ap": 40,
 	  "hp": 30,
-	  "ability": "先制・HP効果無効・秘術",
-	  "ability_detail": "先制；HP効果無効；秘術[EP60・アームドプリンセスに変身]",
+	  "ability": "先制・HP効果無効・アルカナアーツ",
+	  "ability_detail": "先制；HP効果無効；アルカナアーツ[EP60・アームドプリンセスに変身]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
 		  "HP効果無効",
-          "秘術"
+          "アルカナアーツ"
 		],
 		"effects": [],
 		"mystic_arts": [

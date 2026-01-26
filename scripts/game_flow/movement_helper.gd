@@ -77,9 +77,9 @@ static func get_move_destinations(
 			return []
 		"random_vacant":  # 戦闘後のアージェントキー用
 			return _get_all_vacant_tiles(board_system)
-		"one_tile":  # 1マス移動（クリーピングフレイム秘術、スペル用）
+		"one_tile":  # 1マス移動（クリーピングフレイムアルカナアーツ、スペル用）
 			return _get_tiles_within_steps(board_system, from_tile_index, 1)
-		"two_tiles":  # 2マス移動（チャリオット、スレイプニール秘術用）
+		"two_tiles":  # 2マス移動（チャリオット、スレイプニールアルカナアーツ用）
 			return _get_tiles_within_steps(board_system, from_tile_index, 2)
 		"adjacent_enemy":  # 隣接する敵領地のみ（アウトレイジ用）
 			return _get_adjacent_enemy_tiles(board_system, from_tile_index)

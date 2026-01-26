@@ -120,14 +120,14 @@ func select_best_summon_card(current_player, affordable_cards: Array, tile_eleme
 			print("[CPU HandUtils] 属性一致カード発見: %d枚" % matching_cards.size())
 			return _select_highest_rate_from_list(current_player.id, matching_cards)
 	
-	# 属性一致がなければ秘術持ちを優先
+	# 属性一致がなければアルカナアーツ持ちを優先
 	var mystic_cards = _filter_mystic_arts_cards(current_player.id, summonable_cards)
 	if not mystic_cards.is_empty():
-		print("[CPU HandUtils] 属性一致なし、秘術持ちカード発見: %d枚" % mystic_cards.size())
+		print("[CPU HandUtils] 属性一致なし、アルカナアーツ持ちカード発見: %d枚" % mystic_cards.size())
 		return _select_highest_rate_from_list(current_player.id, mystic_cards)
 	
-	# 秘術持ちもなければレート最低のカードを選択
-	print("[CPU HandUtils] 属性一致・秘術持ちなし、レート最低カードを選択")
+	# アルカナアーツ持ちもなければレート最低のカードを選択
+	print("[CPU HandUtils] 属性一致・アルカナアーツ持ちなし、レート最低カードを選択")
 	return _select_lowest_rate_from_list(current_player.id, summonable_cards)
 
 
@@ -287,7 +287,7 @@ func _select_lowest_rate_from_list(player_id: int, card_indices: Array) -> int:
 	return best_index
 
 
-## 秘術持ちカードをフィルタ
+## アルカナアーツ持ちカードをフィルタ
 func _filter_mystic_arts_cards(player_id: int, card_indices: Array) -> Array:
 	var result = []
 	for index in card_indices:
@@ -296,7 +296,7 @@ func _filter_mystic_arts_cards(player_id: int, card_indices: Array) -> Array:
 			continue
 		var ability_parsed = card.get("ability_parsed", {})
 		var keywords = ability_parsed.get("keywords", [])
-		if "秘術" in keywords:
+		if "アルカナアーツ" in keywords:
 			result.append(index)
 	return result
 

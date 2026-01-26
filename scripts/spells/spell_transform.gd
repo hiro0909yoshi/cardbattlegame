@@ -2,7 +2,7 @@ class_name SpellTransform
 
 ## クリーチャー変身処理モジュール
 ##
-## スペル・秘術による変身効果を処理する
+## スペル・アルカナアーツによる変身効果を処理する
 ##
 ## 使用方法:
 ## ```gdscript
@@ -58,17 +58,17 @@ func apply_effect(effect: Dictionary, target_data: Dictionary, caster_player_id:
 
 ## 変身効果を適用
 func _apply_transform(effect: Dictionary, target_data: Dictionary, _caster_player_id: int) -> Dictionary:
-	var target = effect.get("target", "self")  # self: 秘術使用者, target: 選択対象
+	var target = effect.get("target", "self")  # self: アルカナアーツ使用者, target: 選択対象
 	var transform_to = effect.get("transform_to", -1)  # 固定ID変身
 	var transform_type = effect.get("transform_type", "")  # 変身タイプ
 	
-	# 秘術使用者のタイルを取得
+	# アルカナアーツ使用者のタイルを取得
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
 	
 	# 変身対象のタイルを決定
 	var transform_tile_index = -1
 	if target == "self":
-		# 自分自身を変身（秘術使用者のタイル）
+		# 自分自身を変身（アルカナアーツ使用者のタイル）
 		transform_tile_index = caster_tile_index
 	else:
 		# 選択した対象を変身
@@ -165,7 +165,7 @@ func _execute_transform(tile: Object, old_creature: Dictionary, new_creature: Di
 		board_system_ref.remove_creature(tile_index)
 		board_system_ref.place_creature(tile_index, transformed_creature, tile_owner_id)
 	
-	# ダウン状態にする（秘術使用後）
+	# ダウン状態にする（アルカナアーツ使用後）
 	if tile.has_method("set_down_state"):
 		tile.set_down_state(true)
 

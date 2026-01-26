@@ -1,12 +1,12 @@
 # SpellProtection - 防魔システム
-# スペル/秘術の対象選択時に防魔判定を行う
+# スペル/アルカナアーツの対象選択時に防魔判定を行う
 class_name SpellProtection
 
 # ============================================
 # 防魔判定メソッド
 # ============================================
 
-## クリーチャーがスペル/秘術から保護されているか判定
+## クリーチャーがスペル/アルカナアーツから保護されているか判定
 ## 
 ## creature_data: クリーチャーデータ（ability_parsed, curseを含む）
 ## context: 追加コンテキスト（world_curse等のチェック用）
@@ -49,7 +49,7 @@ static func is_creature_protected(creature_data: Dictionary, context: Dictionary
 	return false
 
 
-## プレイヤーがスペル/秘術から保護されているか判定
+## プレイヤーがスペル/アルカナアーツから保護されているか判定
 ## 
 ## player: PlayerDataオブジェクト（curseプロパティを持つ）
 ## context: 追加コンテキスト（world_curse等のチェック用）
@@ -246,7 +246,7 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 ## 
 ## player: PlayerDataオブジェクト（curseプロパティを持つ）
 ## context: 追加コンテキスト（world_curse等のチェック用）
-## 戻り値: true = スペル使用不可（秘術は使用可能）
+## 戻り値: true = スペル使用不可（アルカナアーツは使用可能）
 static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
 	if player == null:
 		return false

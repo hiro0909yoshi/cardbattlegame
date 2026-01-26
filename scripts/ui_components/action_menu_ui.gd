@@ -2,7 +2,7 @@ class_name ActionMenuUI
 extends Control
 
 ## 汎用アクションメニューUI
-## 領地コマンド、秘術選択などで共通使用
+## 領地コマンド、アルカナアーツ選択などで共通使用
 
 # シグナル
 signal item_selected(index: int)

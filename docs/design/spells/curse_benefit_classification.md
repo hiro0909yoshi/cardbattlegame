@@ -13,7 +13,7 @@
 | `skill_nullify` | 戦闘能力不可 | スキル無効化 | 2|
 | `battle_disable` | 戦闘行動不可 | 戦闘不可 | 2|
 | `ap_nullify` | AP=0 | APを0にする | 2|
-| `mystic_grant` | 秘術付与 | 秘術を付与 | 1|
+| `mystic_grant` | アルカナアーツ付与 | アルカナアーツを付与 | 1|
 | `random_stat` | 能力値不定 | AP&HPランダム化 | 2|
 | `command_growth` | コマンド成長 | LvUP/地形変化でMHP+20 | 1|
 | `plague` | 衰弱 | 戦闘終了時HP -= MHP/2 | 2|
@@ -28,7 +28,7 @@
 | `toll_multiplier` | 通行料倍率 | 通行料×倍率 | 1|
 | `peace` | 平和 | 侵略不可+通行料0 | 2|
 | `remote_move` | 遠隔移動 | 離れた空地にも移動できる | 1|
-| `spell_protection` | 防魔 | スペル・秘術の対象にならない | 1|
+| `spell_protection` | 防魔 | スペル・アルカナアーツの対象にならない | 1|
 | `move_disable` | 移動不可 | 移動できない | 2|
 | `protection_wall` | 防魔壁 | 防魔と防御型を持つ | 1|
 | `hp_effect_immune` | HP効果無効 | HP変動効果を無効化 | 1|
@@ -67,7 +67,7 @@
 | `summon_cost_free` | 召喚条件解除 | クリーチャー配置時コスト無視 | |
 | `land_protect` | 土地変性無効 | 全領地は土地破壊・変性無効 | |
 | `cursed_protection` | 呪い防魔化 | 呪いのついた全クリーチャーは防魔 | |
-| `skill_disable` | 特定能力不可 | 秘術、自破壊時、戦闘終了時は発動しない | |
+| `skill_disable` | 特定能力不可 | アルカナアーツ、自破壊時、戦闘終了時は発動しない | |
 | `same_creature_destroy` | 同種相殺 | 同クリーチャー2体配置なら戦闘時破壊 | |
 
 ---

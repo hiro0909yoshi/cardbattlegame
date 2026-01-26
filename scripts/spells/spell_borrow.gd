@@ -1,6 +1,6 @@
 # SpellBorrow - スペル借用効果
-# ルーンアデプト秘術「自手札のスペルカードの効果を使用」
-# テンプテーション「対象クリーチャーの秘術を使用」
+# ルーンアデプトアルカナアーツ「自手札のスペルカードの効果を使用」
+# テンプテーション「対象クリーチャーのアルカナアーツを使用」
 class_name SpellBorrow
 extends RefCounted
 
@@ -22,7 +22,7 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	spell_phase_handler_ref = spell_phase_handler
 
 
-# ============ ルーンアデプト秘術 ============
+# ============ ルーンアデプトアルカナアーツ ============
 
 ## 手札から「単体対象」スペルのみを取得
 func get_hand_single_target_spells(player_id: int) -> Array:
@@ -35,12 +35,12 @@ func get_hand_single_target_spells(player_id: int) -> Array:
 	)
 
 
-## ルーンアデプト秘術の発動可能判定
+## ルーンアデプトアルカナアーツの発動可能判定
 func can_cast_use_hand_spell(player_id: int) -> bool:
 	return get_hand_single_target_spells(player_id).size() > 0
 
 
-## 手札スペル借用（ルーンアデプト秘術）
+## 手札スペル借用（ルーンアデプトアルカナアーツ）
 func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 	# 1. 手札から単体対象スペルを取得
 	var spells = get_hand_single_target_spells(caster_player_id)
@@ -191,7 +191,7 @@ func _destroy_card_at_hand_index(player_id: int, hand_index: int) -> void:
 
 # ============ テンプテーション ============
 
-## 対象クリーチャーの秘術を使用（テンプテーション）
+## 対象クリーチャーのアルカナアーツを使用（テンプテーション）
 func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	if not spell_phase_handler_ref:
 		return {"success": false, "reason": "no_handler"}
@@ -200,14 +200,14 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 	if not spell_mystic_arts:
 		return {"success": false, "reason": "no_mystic_arts_handler"}
 	
-	# ターゲットクリーチャーの秘術を取得
+	# ターゲットクリーチャーのアルカナアーツを取得
 	var creature_data = target_data.get("creature", {})
 	var tile_index = target_data.get("tile_index", -1)
 	
 	if creature_data.is_empty():
 		return {"success": false, "reason": "no_creature"}
 	
-	# 秘術を取得（use_hand_spell は除外）
+	# アルカナアーツを取得（use_hand_spell は除外）
 	var all_mystic_arts = spell_mystic_arts._get_all_mystic_arts(creature_data)
 	var mystic_arts = all_mystic_arts.filter(func(art):
 		var effects = art.get("effects", [])
@@ -220,24 +220,24 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 	if mystic_arts.is_empty():
 		return {"success": false, "reason": "no_mystic_arts"}
 	
-	# 秘術が1つなら自動選択、複数なら選択UI
+	# アルカナアーツが1つなら自動選択、複数なら選択UI
 	var selected_mystic_art: Dictionary
 	if mystic_arts.size() == 1:
 		selected_mystic_art = mystic_arts[0]
 	else:
-		# 秘術選択UI表示
+		# アルカナアーツ選択UI表示
 		selected_mystic_art = _select_mystic_art(mystic_arts, creature_data.get("name", "クリーチャー"))
 		if selected_mystic_art.is_empty():
 			return {"cancelled": true}
 	
-	# 秘術を実行（コスト無料）
+	# アルカナアーツを実行（コスト無料）
 	var selected_creature = {
 		"tile_index": tile_index,
 		"creature_data": creature_data,
 		"mystic_arts": mystic_arts
 	}
 	
-	# 秘術のターゲット情報を取得
+	# アルカナアーツのターゲット情報を取得
 	var target_type = selected_mystic_art.get("target_type", "")
 	var target_info = selected_mystic_art.get("target_info", {})
 	
@@ -264,10 +264,10 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 	return {"success": true}
 
 
-## 秘術選択UI（複数ある場合）
+## アルカナアーツ選択UI（複数ある場合）
 func _select_mystic_art(mystic_arts: Array, _creature_name: String) -> Dictionary:
-	# 簡易実装：複数秘術の場合は最初のものを選択
-	# TODO: 秘術選択UIを実装
+	# 簡易実装：複数アルカナアーツの場合は最初のものを選択
+	# TODO: アルカナアーツ選択UIを実装
 	if mystic_arts.size() > 0:
 		return mystic_arts[0]
 	return {}

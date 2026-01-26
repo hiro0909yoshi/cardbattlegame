@@ -3,9 +3,9 @@ class_name SpellPurify
 
 # 呪い除去システム
 # 2073: ピュアリファイ - 全呪いを消し、種類×5EP0を得る
-# 秘術9024: 対象領地の呪いを消す（ギアリオン）
-# 秘術9025: 世界呪いを消す（ウリエル）
-# 秘術9026: 全セプターの呪いを消す（シャラザード）
+# アルカナアーツ9024: 対象領地の呪いを消す（ギアリオン）
+# アルカナアーツ9025: 世界呪いを消す（ウリエル）
+# アルカナアーツ9026: 全セプターの呪いを消す（シャラザード）
 
 # 参照
 var board_system: BoardSystem3D
@@ -111,7 +111,7 @@ func _remove_world_curse_internal() -> String:
 	return curse_type
 
 # ========================================
-# 秘術9024: 対象領地の呪いを消す（ギアリオン）
+# アルカナアーツ9024: 対象領地の呪いを消す（ギアリオン）
 # ========================================
 
 ## 対象領地のクリーチャー呪いを除去
@@ -129,11 +129,11 @@ func remove_creature_curse(tile_index: int) -> bool:
 	
 	var curse_name = creature["curse"].get("name", "不明")
 	creature.erase("curse")
-	print("[秘術:呪い除去] クリーチャー「%s」の呪い「%s」を消した" % [creature.get("name", "?"), curse_name])
+	print("[アルカナアーツ:呪い除去] クリーチャー「%s」の呪い「%s」を消した" % [creature.get("name", "?"), curse_name])
 	return true
 
 # ========================================
-# 秘術9025: 世界呪いを消す（ウリエル）
+# アルカナアーツ9025: 世界呪いを消す（ウリエル）
 # ========================================
 
 ## 世界呪いを除去
@@ -145,11 +145,11 @@ func remove_world_curse() -> bool:
 	
 	var curse_name = game_flow_manager.game_stats["world_curse"].get("name", "不明")
 	game_flow_manager.game_stats.erase("world_curse")
-	print("[秘術:世界呪い除去] 世界呪い「%s」を消した" % curse_name)
+	print("[アルカナアーツ:世界呪い除去] 世界呪い「%s」を消した" % curse_name)
 	return true
 
 # ========================================
-# 秘術9026: 全セプターの呪いを消す（シャラザード）
+# アルカナアーツ9026: 全セプターの呪いを消す（シャラザード）
 # ========================================
 
 ## 全プレイヤーの呪いを除去
@@ -163,7 +163,7 @@ func remove_all_player_curses() -> int:
 			var curse_name = player.curse.get("name", "不明")
 			player.curse = {}
 			removed_count += 1
-			print("[秘術:プレイヤー呪い除去] プレイヤー%dの呪い「%s」を消した" % [i, curse_name])
+			print("[アルカナアーツ:プレイヤー呪い除去] プレイヤー%dの呪い「%s」を消した" % [i, curse_name])
 	
-	print("[秘術:プレイヤー呪い除去] 合計%d人の呪いを消した" % removed_count)
+	print("[アルカナアーツ:プレイヤー呪い除去] 合計%d人の呪いを消した" % removed_count)
 	return removed_count

@@ -40,10 +40,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "秘術・アイテム破壊無効・不屈",
-	  "ability_detail": "秘術[EP30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
+	  "ability": "アルカナアーツ・アイテム破壊無効・不屈",
+	  "ability_detail": "アルカナアーツ[EP30・対象領地の呪いを消す]；アイテム破壊・盗み無効；不屈",
 	  "ability_parsed": {
-		"keywords": ["秘術", "不屈"],
+		"keywords": ["アルカナアーツ", "不屈"],
 		"item_immunity": ["destroy", "steal"],
 		"mystic_arts": [
 		  {
@@ -71,12 +71,12 @@
 	  },
 	  "ap": 50,
 	  "hp": 60,
-	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[EP80・対象無のHP-30]",
+	  "ability": "先制・アルカナアーツ",
+	  "ability_detail": "先制；アルカナアーツ[EP80・対象無のHP-30]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -99,10 +99,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP50・アイテムカードを1枚引く]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP50・アイテムカードを1枚引く]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "アイテムドロー",
@@ -329,10 +329,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP40・次R、対象セプターは選んだ方向に進める]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP40・次R、対象セプターは選んだ方向に進める]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "方向選択権付与",
@@ -361,8 +361,8 @@
 	  "creature_type": "defensive",
 	  "ap": 0,
 	  "hp": 30,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[EP0・使用者にEP200を与え、自壊]",
+	  "ability": "防御型・アルカナアーツ",
+	  "ability_detail": "防御型；アルカナアーツ[EP0・使用者にEP200を与え、自壊]",
 	  "ability_parsed": {
 		"effects": [
 		  {
@@ -456,10 +456,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP70・対象と同じクリーチャーに変身]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP70・対象と同じクリーチャーに変身]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "対象と同じクリーチャーに変身",
@@ -618,10 +618,10 @@
 	  "creature_type": "defensive",
 	  "ap": 10,
 	  "hp": 30,
-	  "ability": "防御型・防魔・秘術",
-	  "ability_detail": "防御型；防魔；秘術[EP100・対象領地を無に変え、自壊]",
+	  "ability": "防御型・防魔・アルカナアーツ",
+	  "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象領地を無に変え、自壊]",
 	  "ability_parsed": {
-		"keywords": ["防御型", "防魔", "秘術"]
+		"keywords": ["防御型", "防魔", "アルカナアーツ"]
 	  },
 	  "mystic_arts": {
 		"cost": 100,

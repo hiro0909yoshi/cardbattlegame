@@ -1,6 +1,6 @@
 ##
 ## HP効果無効（HP Effect Immune）判定
-## スペルや秘術によるHP/MHP変更効果を無効化する能力の判定を行う
+## スペルやアルカナアーツによるHP/MHP変更効果を無効化する能力の判定を行う
 ##
 
 class_name SpellHpImmune
@@ -31,7 +31,7 @@ static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
 	return false
 
 
-## スペル/秘術がHP変更効果を持つか判定
+## スペル/アルカナアーツがHP変更効果を持つか判定
 ## @param effect_parsed スペルのeffect_parsed
 ## @return bool HP変更効果を持つか
 static func affects_hp(effect_parsed: Dictionary) -> bool:

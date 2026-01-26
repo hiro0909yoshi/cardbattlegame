@@ -1,7 +1,7 @@
 extends Node
 
 var all_cards = []
-var mystic_arts_data = []  # 秘術専用データ（カードではない）
+var mystic_arts_data = []  # アルカナアーツ専用データ（カードではない）
 
 func _ready():
 	print("=== CardLoader起動 ===")
@@ -25,7 +25,7 @@ func load_all_cards():
 		"res://data/item.json",
 		"res://data/spell_1.json",
 		"res://data/spell_2.json"
-		# spell_mystic.jsonはミスティックアーツ専用（all_cardsには含めない）
+		# spell_mystic.jsonはアルカナアーツ専用（all_cardsには含めない）
 	]
 	
 	for file_path in files:
@@ -67,12 +67,12 @@ func load_all_cards():
 	print("  📦 アイテム: ", element_counts["item"])
 	print("  📜 スペル: ", element_counts["spell"])
 
-## 秘術専用データを読み込む（カードではない）
+## アルカナアーツ専用データを読み込む（カードではない）
 func load_mystic_arts_data():
 	var path = "res://data/spell_mystic.json"
-	print("秘術データ読み込み中: ", path)
+	print("アルカナアーツデータ読み込み中: ", path)
 	mystic_arts_data = load_json_file(path)
-	print("秘術データ読み込み完了: ", mystic_arts_data.size(), "件")
+	print("アルカナアーツデータ読み込み完了: ", mystic_arts_data.size(), "件")
 	
 func load_json_file(path: String) -> Array:
 	var file = FileAccess.open(path, FileAccess.READ)
@@ -116,7 +116,7 @@ func get_card_by_id(card_id: int) -> Dictionary:
 			# マスターデータを変更しないよう、常にコピーを返す
 			return card.duplicate(true)
 	
-	# 秘術データからも検索（spell_id参照用）
+	# アルカナアーツデータからも検索（spell_id参照用）
 	for data in mystic_arts_data:
 		var check_id = int(data.id) if typeof(data.id) != TYPE_INT else data.id
 		if check_id == card_id:

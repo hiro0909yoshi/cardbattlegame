@@ -82,7 +82,7 @@ var card_system = null
 var player_system = null
 var board_system = null
 var creature_manager = null
-var spell_mystic_arts = null  # 秘術システム
+var spell_mystic_arts = null  # アルカナアーツシステム
 var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
 var spell_damage: SpellDamage = null  # ダメージ・回復処理
@@ -98,7 +98,7 @@ var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲シス�
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理（旧・バトル用）
 var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離クラス）
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
-var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUミスティックアーツ判断AI
+var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI
 var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ
 var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（ホーリーワード判断用）
 var cpu_spell_phase_handler = null  # CPUスペルフェーズ処理
@@ -207,7 +207,7 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# CPU AI共有コンテキストを初期化
 	_initialize_cpu_context(game_flow_manager)
 	
-	# CPU スペル/ミスティックアーツ AI を初期化
+	# CPU スペル/アルカナアーツ AI を初期化
 	if not cpu_spell_ai:
 		cpu_spell_ai = CPUSpellAI.new()
 		cpu_spell_ai.initialize(_cpu_context)
@@ -322,12 +322,12 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 	if ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "spell")
 
-## 秘術フェーズ開始（SpellMysticArtsに委譲）
+## アルカナアーツフェーズ開始（SpellMysticArtsに委譲）
 func start_mystic_arts_phase():
-	"""秘術選択フェーズを開始"""
+	"""アルカナアーツ選択フェーズを開始"""
 	if not spell_mystic_arts:
 		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "秘術システムが初期化されていません"
+			ui_manager.phase_label.text = "アルカナアーツシステムが初期化されていません"
 		return
 	
 	if not player_system:
@@ -392,7 +392,7 @@ func _execute_cpu_spell(decision: Dictionary):
 	# 効果実行
 	await execute_spell_effect(spell_card, target_data)
 
-## CPUがミスティックアーツを実行
+## CPUがアルカナアーツを実行
 func _execute_cpu_mystic_arts(decision: Dictionary):
 	# CPUSpellPhaseHandlerで準備処理（ダウンチェック含む）
 	var prep = cpu_spell_phase_handler.prepare_mystic_execution(decision, current_player_id)
@@ -414,7 +414,7 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 		var caster_name = creature_info.get("creature_data", {}).get("name", "クリーチャー")
 		await _show_spell_cast_notification(caster_name, target, mystic_data, true)
 	
-	# 秘術効果を実行（コスト支払いはexecute_mystic_art内で行われる）
+	# アルカナアーツ効果を実行（コスト支払いはexecute_mystic_art内で行われる）
 	if spell_mystic_arts:
 		spell_mystic_arts.current_mystic_player_id = current_player_id
 		await spell_mystic_arts.execute_mystic_art(creature_info, mystic, target_data)
@@ -737,9 +737,9 @@ func _confirm_target_selection():
 		is_borrow_spell_mode = false
 		return
 	
-	# 秘術かスペルかで分岐
+	# アルカナアーツかスペルかで分岐
 	if spell_mystic_arts and spell_mystic_arts.is_active():
-		# 秘術実行（SpellMysticArtsに委譲）
+		# アルカナアーツ実行（SpellMysticArtsに委譲）
 		spell_mystic_arts.on_target_confirmed(selected_target)
 	else:
 		# スペル実行
@@ -764,9 +764,9 @@ func _cancel_target_selection():
 		cancel_spell()
 		return
 	
-	# 秘術かスペルかで分岐
+	# アルカナアーツかスペルかで分岐
 	if spell_mystic_arts and spell_mystic_arts.is_active():
-		# 秘術キャンセル
+		# アルカナアーツキャンセル
 		spell_mystic_arts.clear_selection()
 		spell_mystic_arts._end_mystic_phase()
 		current_state = State.WAITING_FOR_INPUT
@@ -855,7 +855,7 @@ func _return_to_spell_selection():
 	# グローバルナビゲーションをスペル選択用に再設定
 	_setup_spell_selection_navigation()
 	
-	# 秘術ボタンを再表示
+	# アルカナアーツボタンを再表示
 	_show_spell_phase_buttons()
 
 ## スペル効果を実行（SpellEffectExecutorに委譲）
@@ -1161,9 +1161,9 @@ func _get_player_ranking(player_id: int) -> int:
 func is_spell_phase_active() -> bool:
 	return current_state != State.INACTIVE
 
-# ============ 秘術システム対応（新規追加）============
+# ============ アルカナアーツシステム対応（新規追加）============
 
-## 秘術が利用可能か確認
+## アルカナアーツが利用可能か確認
 func has_available_mystic_arts(player_id: int) -> bool:
 	if not has_spell_mystic_arts():
 		return false
@@ -1185,11 +1185,11 @@ func _initialize_spell_phase_ui():
 		
 		# 参照を設定（spell_phase_ui_managerはSpellAndMysticUI等に使用）
 		spell_phase_ui_manager.spell_phase_handler_ref = self
-		# 秘術ボタン/スペルスキップボタンはグローバルボタンに移行済み
+		# アルカナアーツボタン/スペルスキップボタンはグローバルボタンに移行済み
 
 ## スペルフェーズ開始時にボタンを表示
 func _show_spell_phase_buttons():
-	# 秘術ボタンは使用可能なクリーチャーがいる場合のみ表示（特殊ボタン使用）
+	# アルカナアーツボタンは使用可能なクリーチャーがいる場合のみ表示（特殊ボタン使用）
 	if ui_manager and has_available_mystic_arts(current_player_id):
 		ui_manager.show_mystic_button(func(): start_mystic_arts_phase())
 	# 「スペルを使わない」ボタンは✓ボタンに置き換えたため表示しない
@@ -1259,7 +1259,7 @@ func _on_target_next():
 	_update_target_selection()
 
 
-## 秘術ボタンの表示状態を更新（外部から呼び出し可能）
+## アルカナアーツボタンの表示状態を更新（外部から呼び出し可能）
 func update_mystic_button_visibility():
 	if not ui_manager or current_state == State.INACTIVE:
 		return
@@ -1269,35 +1269,35 @@ func update_mystic_button_visibility():
 	else:
 		ui_manager.hide_mystic_button()
 
-## 秘術使用時にスペルボタンを隠す
+## アルカナアーツ使用時にスペルボタンを隠す
 func _on_mystic_art_used():
-	# 秘術使用時は秘術ボタンを非表示
+	# アルカナアーツ使用時はアルカナアーツボタンを非表示
 	if ui_manager:
 		ui_manager.hide_mystic_button()
 
 
-## 秘術フェーズ完了時
+## アルカナアーツフェーズ完了時
 func _on_mystic_phase_completed():
 	current_state = State.WAITING_FOR_INPUT
 
 
-## 秘術ターゲット選択要求時
+## アルカナアーツターゲット選択要求時
 func _on_mystic_target_selection_requested(targets: Array):
 	available_targets = targets
 	current_target_index = 0
 	current_state = State.SELECTING_TARGET
 	
-	# TapTargetManagerでタップ選択を開始（秘術用）
+	# TapTargetManagerでタップ選択を開始（アルカナアーツ用）
 	if ui_manager and ui_manager.tap_target_manager:
 		_start_mystic_tap_target_selection(targets)
 	
-	# グローバルナビゲーション設定（対象選択用 - 秘術でも戻るボタンを表示）
+	# グローバルナビゲーション設定（対象選択用 - アルカナアーツでも戻るボタンを表示）
 	_setup_target_selection_navigation()
 	
 	_update_target_selection()
 
 
-## 秘術UIメッセージ表示要求時
+## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
 	if ui_manager and ui_manager.phase_label:
 		ui_manager.phase_label.text = message
@@ -1349,7 +1349,7 @@ func _initialize_card_selection_handler():
 func _on_card_selection_completed():
 	complete_spell_phase()
 
-## スペル/秘術発動通知を表示（クリック待ち）
+## スペル/アルカナアーツ発動通知を表示（クリック待ち）
 func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false) -> void:
 	if not spell_cast_notification_ui:
 		return
@@ -1499,7 +1499,7 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 	print("[SpellPhaseHandler] タップしたタイルは有効なターゲットではない: %d" % tile_index)
 
 
-## 秘術ターゲット選択用のタップ選択を開始
+## アルカナアーツターゲット選択用のタップ選択を開始
 func _start_mystic_tap_target_selection(targets: Array):
 	if not ui_manager or not ui_manager.tap_target_manager:
 		return
@@ -1524,4 +1524,4 @@ func _start_mystic_tap_target_selection(targets: Array):
 		"SpellMysticArts"
 	)
 	
-	print("[SpellPhaseHandler] 秘術タップターゲット選択開始: %d件" % valid_tile_indices.size())
+	print("[SpellPhaseHandler] アルカナアーツタップターゲット選択開始: %d件" % valid_tile_indices.size())

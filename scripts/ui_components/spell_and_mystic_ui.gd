@@ -41,7 +41,7 @@ func _input(event):
 		# クリーチャーリスト表示中
 		if creature_list.visible and creature_list.item_count > 0:
 			_handle_list_input(event, creature_list, _on_creature_selected)
-		# 秘術リスト表示中
+		# アルカナアーツリスト表示中
 		elif mystic_art_list.visible and mystic_art_list.item_count > 0:
 			_handle_list_input(event, mystic_art_list, _on_mystic_art_selected)
 		# タイプリスト表示中
@@ -89,7 +89,7 @@ func _create_ui_elements():
 	creature_list.add_theme_font_size_override("font_size", 28)
 	add_child(creature_list)
 	
-	# 秘術リスト（大きめ）
+	# アルカナアーツリスト（大きめ）
 	mystic_art_list = ItemList.new()
 	mystic_art_list.name = "MysticArtList"
 	mystic_art_list.custom_minimum_size = Vector2(400, 500)
@@ -139,7 +139,7 @@ func _update_positions():
 	creature_list.position = Vector2(margin, margin + 50)
 	creature_list.size = Vector2(list_width, list_height)
 	
-	# 秘術リスト（同じ位置 - クリーチャーリストと排他表示）
+	# アルカナアーツリスト（同じ位置 - クリーチャーリストと排他表示）
 	mystic_art_list.position = Vector2(margin, margin + 50)
 	mystic_art_list.size = Vector2(list_width, list_height)
 	
@@ -174,7 +174,7 @@ func show_creature_selection(creatures: Array):
 		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func show_mystic_art_selection(mystic_arts: Array):
-	"""秘術選択を表示"""
+	"""アルカナアーツ選択を表示"""
 	mystic_art_list.clear()
 	
 	for mystic_art in mystic_arts:
@@ -243,7 +243,7 @@ func _on_creature_selected(index: int):
 	creature_selected.emit(index)
 
 func _on_mystic_art_selected(index: int):
-	"""秘術が選択された（item_selectedシグナル）"""
+	"""アルカナアーツが選択された（item_selectedシグナル）"""
 	mystic_art_selected.emit(index)
 
 func _on_type_selected(index: int):

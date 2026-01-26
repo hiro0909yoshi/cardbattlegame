@@ -13,7 +13,7 @@
 ### スキル補正 (SKILL_RATE_BONUS)
 - 先制/強打/不屈/復活: +50
 - 無効化: +50（巻物攻撃無効化は+20）
-- 秘術: +40
+- アルカナアーツ: +40
 - 攻撃成功時: +35
 - 増殖: +30
 - アイテム使用時ボーナス: +25
@@ -39,10 +39,10 @@
 
 ### 2. クリーチャー配置判断 (cpu_hand_utils.gd)
 - 属性一致 → レート最高を選択
-- 秘術持ち → レート最高を選択
+- アルカナアーツ持ち → レート最高を選択
 - それ以外 → レート最低を選択
 
-### 3. スペル・秘術のクリーチャー対象選択
+### 3. スペル・アルカナアーツのクリーチャー対象選択
 **ファイル**: cpu_spell_target_selector.gd, cpu_mystic_arts_ai.gd
 
 **スコア計算**:
@@ -61,10 +61,10 @@
 ### 5. 領地コマンド交換判断 (cpu_territory_ai.gd)
 - コスト差 → レート差に変更
 - 最低スコア閾値: 25
-- **秘術持ちは交換対象外**
+- **アルカナアーツ持ちは交換対象外**
 
 ### 6. エクスチェンジ (spell_creature_swap.gd, cpu_spell_target_selector.gd)
-- 盤面の秘術持ちは交換対象外
+- 盤面のアルカナアーツ持ちは交換対象外
 - レート + 属性一致ボーナス(+200)で手札クリーチャー選択
 - 使用条件: `has_spare_hand_card`（手札2枚以上）
 
@@ -75,20 +75,20 @@
 - 低レート優先（価値の低いカードを援護に使う）
 
 ### 9. ターンウォール対象選択 (cpu_target_resolver.gd)
-- 秘術持ちまたはレート50以上を対象
+- アルカナアーツ持ちまたはレート50以上を対象
 
 ---
 
-## 秘術持ち保護ルール
-以下の場面で秘術持ちクリーチャーを保護:
+## アルカナアーツ持ち保護ルール
+以下の場面でアルカナアーツ持ちクリーチャーを保護:
 1. 領地コマンド交換 - 交換対象外
-2. エクスチェンジ - 盤面の秘術持ちは交換対象外
-3. 配置時 - 属性不一致でも秘術持ちを優先配置
+2. エクスチェンジ - 盤面のアルカナアーツ持ちは交換対象外
+3. 配置時 - 属性不一致でもアルカナアーツ持ちを優先配置
 
-秘術判定関数 `_has_mystic_arts()` は以下をチェック:
+アルカナアーツ判定関数 `_has_mystic_arts()` は以下をチェック:
 - トップレベル `mystic_arts` フィールド
 - `ability_parsed.mystic_arts` 配列
-- `ability_parsed.keywords` に「秘術」
+- `ability_parsed.keywords` に「アルカナアーツ」
 
 ---
 
@@ -128,7 +128,7 @@ CPUが呪いの効果を判断し、場合によっては上書きする思考�
 - scripts/cpu_ai/cpu_spell_ai.gd - スペル使用判断
 - scripts/cpu_ai/cpu_spell_target_selector.gd - スペル対象選択
 - scripts/cpu_ai/cpu_spell_condition_checker.gd - スペル条件判定
-- scripts/cpu_ai/cpu_mystic_arts_ai.gd - 秘術使用判断
+- scripts/cpu_ai/cpu_mystic_arts_ai.gd - アルカナアーツ使用判断
 - scripts/cpu_ai/cpu_territory_ai.gd - 領地コマンド判断
 - scripts/cpu_ai/cpu_battle_ai.gd - バトル判断
 - scripts/cpu_ai/cpu_defense_ai.gd - 防御判断

@@ -1,5 +1,5 @@
 # SpellDamage - ダメージ・回復処理の統合クラス
-# スペル・秘術共通で使用
+# スペル・アルカナアーツ共通で使用
 class_name SpellDamage
 
 var board_system_ref: Node = null
@@ -268,7 +268,7 @@ func _show_notification_and_wait(text: String) -> void:
 # 低レベルダメージ処理
 # ============================================
 
-## ダメージを適用（スペル・秘術共通）
+## ダメージを適用（スペル・アルカナアーツ共通）
 ## 戻り値: {success: bool, old_hp: int, new_hp: int, max_hp: int, destroyed: bool, creature_name: String}
 func apply_damage(tile_index: int, value: int) -> Dictionary:
 	var result = {

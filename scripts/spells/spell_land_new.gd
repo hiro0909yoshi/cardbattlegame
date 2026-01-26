@@ -668,7 +668,7 @@ func _has_land_cost_modifier(tile_index: int) -> bool:
 	return false
 
 
-## 秘術使用者のいるタイルの属性を変更（マカラ等）
+## アルカナアーツ使用者のいるタイルの属性を変更（マカラ等）
 func _apply_effect_change_caster_tile_element(effect: Dictionary, target_data: Dictionary) -> bool:
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
 	if caster_tile_index < 0:
@@ -683,9 +683,9 @@ func _apply_effect_change_caster_tile_element(effect: Dictionary, target_data: D
 	return change_element(caster_tile_index, new_element)
 
 
-## 秘術使用後に自壊
+## アルカナアーツ使用後に自壊
 func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -> bool:
-	# 秘術を使用したクリーチャーのタイルを取得
+	# アルカナアーツを使用したクリーチャーのタイルを取得
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
 	if caster_tile_index < 0:
 		push_error("SpellLand._apply_effect_self_destruct: caster_tile_indexが未設定")
@@ -698,7 +698,7 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	var tile = board_system_ref.tile_nodes[caster_tile_index]
 	var creature_data = tile.creature_data
 	if creature_data.is_empty():
-		print("[秘術自壊] タイル%dにクリーチャーがいません" % caster_tile_index)
+		print("[アルカナアーツ自壊] タイル%dにクリーチャーがいません" % caster_tile_index)
 		return false
 	
 	var creature_name = creature_data.get("name", "?")
@@ -719,7 +719,7 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	if board_system_ref.tile_data_manager:
 		board_system_ref.tile_data_manager.update_all_displays()
 	
-	print("[秘術自壊] %s (タイル%d) が自壊しました" % [creature_name, caster_tile_index])
+	print("[アルカナアーツ自壊] %s (タイル%d) が自壊しました" % [creature_name, caster_tile_index])
 	return true
 
 

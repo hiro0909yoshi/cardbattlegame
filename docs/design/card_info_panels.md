@@ -186,7 +186,7 @@ func _update_card_display():
 | 6 | アイテム制限 | `restrictions.cannot_use` | `アイテム: なし` |
 | 7 | 呪い | `curse` | `【呪い】なし` または `【呪い】○○（残りNターン）` |
 | 8 | スキル | `ability_parsed.keywords` | 条件付き表示 |
-| 9 | 秘術 | `ability_parsed.mystic_art` | 条件付き表示 |
+| 9 | アルカナアーツ | `ability_parsed.mystic_art` | 条件付き表示 |
 
 ### データ形式対応
 

@@ -31,7 +31,7 @@ scripts/cpu_ai/
 ├── cpu_turn_processor.gd     # ターン処理（召喚・レベルアップ等）
 ├── battle_simulator.gd       # バトル結果シミュレーション
 ├── cpu_spell_ai.gd           # スペルカード判断
-├── cpu_mystic_arts_ai.gd     # ミスティックアーツ判断
+├── cpu_mystic_arts_ai.gd     # アルカナアーツ判断
 ├── cpu_spell_condition_checker.gd  # スペル条件チェック
 ├── cpu_spell_ai_spec.gd      # 評価定数
 └── cpu_battle_ai_spec.gd     # バトル評価定数
@@ -52,7 +52,7 @@ scripts/cpu_ai/
 
 ### Key Files
 - `docs/specs/cpu_battle_ai_spec.md` - バトル判断仕様
-- `docs/specs/cpu_spell_ai_spec.md` - スペル/秘術判断仕様
+- `docs/specs/cpu_spell_ai_spec.md` - スペル/アルカナアーツ判断仕様
 
 ## New Systems (Jan 2025)
 
@@ -343,5 +343,5 @@ scripts/
   - 後方互換用の古い`initialize()`削除
 
 ## Current Work (Jan 2026)
-- **ダメージシステム実装中**: スペル/秘術によるダメージ・回復処理
+- **ダメージシステム実装中**: スペル/アルカナアーツによるダメージ・回復処理
 - **完了済み**: Mystic Arts(spell_id参照方式)、スペルドロー(16種)、バトル制限呪い(skill_nullify, battle_disable)

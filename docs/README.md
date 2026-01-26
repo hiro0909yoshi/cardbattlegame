@@ -59,7 +59,7 @@ docs/
 |-------------|------|
 | [skills_design.md](design/skills_design.md) | スキルシステム全体設計 |
 | [spells_design.md](design/spells_design.md) | スペル効果システム全体設計 |
-| [mystic_arts.md](design/mystic_arts.md) | 秘術システム（3方式対応） |
+| [mystic_arts.md](design/mystic_arts.md) | アルカナアーツシステム（3方式対応） |
 | [item_system.md](design/item_system.md) | アイテムシステム |
 | [合成.md](design/合成.md) | 合成システム |
 
@@ -103,7 +103,7 @@ docs/
 |-------------|------|
 | [cpu_ai_design.md](design/cpu_ai_design.md) | CPU AI設計（概念） |
 | [cpu_ai_understanding.md](design/cpu_ai_understanding.md) | CPU AI理解メモ |
-| [cpu_spell_ai_spec.md](specs/cpu_spell_ai_spec.md) | CPU スペル/秘術AI仕様 |
+| [cpu_spell_ai_spec.md](specs/cpu_spell_ai_spec.md) | CPU スペル/アルカナアーツAI仕様 |
 | [cpu_battle_ai_spec.md](specs/cpu_battle_ai_spec.md) | CPU バトル判断仕様 |
 | [quest_system_design.md](design/quest_system_design.md) | クエストシステム設計 |
 
@@ -205,7 +205,7 @@ docs/
 
 - **スキルシステム**: 29種類のスキル仕様書完成、実装完了
 - **スペルシステム**: 20カテゴリのスペル効果仕様書完成、大部分実装完了
-- **秘術システム**: 3方式対応（既存スペル参照/秘術専用スペル/直接effects）
+- **アルカナアーツシステム**: 3方式対応（既存スペル参照/アルカナアーツ専用スペル/直接effects）
 - **呪いシステム**: クリーチャー/プレイヤー/世界呪の3種類実装完了
 - **効果システム**: Phase 1-3実装完了
 - **条件付きバフ**: 全クリーチャー実装完了

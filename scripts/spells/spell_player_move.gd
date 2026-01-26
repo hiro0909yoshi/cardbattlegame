@@ -232,7 +232,7 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 		"message": "%sを通過しました" % gate_key
 	}
 
-## 方向選択権を付与（クロックアウル秘術 9021）
+## 方向選択権を付与（クロックアウルアルカナアーツ 9021）
 func grant_direction_choice(player_id: int, _duration: int = 1) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return

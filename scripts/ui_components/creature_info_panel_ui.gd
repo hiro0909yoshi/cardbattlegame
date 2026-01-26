@@ -204,7 +204,7 @@ func _update_right_panel():
 		else:
 			skill_container.visible = false
 	
-	# 秘術
+	# アルカナアーツ
 	if mystic_container and mystic_label:
 		var ability_parsed = data.get("ability_parsed", {})
 		var mystic_art = ability_parsed.get("mystic_art", {})

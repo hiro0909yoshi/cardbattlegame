@@ -142,7 +142,7 @@ func _apply_permanent_ap_change(handler: Node, tile_index: int, effect: Dictiona
 	await _show_notification_and_wait(notification_text)
 
 
-## 条件付きAP変更（ロードオブペイン秘術用）
+## 条件付きAP変更（ロードオブペインアルカナアーツ用）
 ## 盤面全体のクリーチャーに対してAP30以下→AP+20、AP50以上→AP-20
 func _apply_conditional_ap_change(handler: Node, _tile_index: int, effect: Dictionary) -> void:
 	if not board_system:

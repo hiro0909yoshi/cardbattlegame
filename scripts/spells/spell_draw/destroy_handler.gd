@@ -8,7 +8,7 @@ extends RefCounted
 ## - destroy_duplicate_cards: 重複カード破壊（エロージョン）
 ## - destroy_selected_card: 選択破壊（シャッター、スクイーズ）
 ## - destroy_and_draw: 破壊＋ドロー（クラウドギズモ）
-## - destroy_deck_top: デッキ上部破壊（コアトリクエ秘術）
+## - destroy_deck_top: デッキ上部破壊（コアトリクエアルカナアーツ）
 
 
 # ============================================================

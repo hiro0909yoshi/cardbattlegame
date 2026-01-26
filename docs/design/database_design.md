@@ -96,7 +96,7 @@ data/
 
 ### 仕様（案）
 
-| レベル | HP/AP補正 | スキル/秘術 |
+| レベル | HP/AP補正 | スキル/アルカナアーツ |
 |--------|-----------|------------|
 | 1 | 基礎値-4 | 使用不可 |
 | 2 | 基礎値-3 | 使用不可 |
@@ -125,7 +125,7 @@ data/
 - レベルアップUI
 - レベルアップ条件
 - ステータス補正処理
-- スキル/秘術の解放判定
+- スキル/アルカナアーツの解放判定
 
 ---
 
@@ -154,7 +154,7 @@ data/
 ### Phase 2: レベルシステム実装
 - レベルアップUI
 - ステータス補正
-- スキル/秘術解放
+- スキル/アルカナアーツ解放
 
 ### Phase 3: ユーザーアカウント
 ```sql
@@ -189,7 +189,7 @@ CREATE TABLE users (
 | `fire_*.json`等 | クリーチャー定義 | 完成 |
 | `spell_*.json` | スペル定義 | 完成 |
 | `item.json` | アイテム定義 | 完成 |
-| `spell_mystic.json` | ミスティックアーツ | 完成 |
+| `spell_mystic.json` | アルカナアーツ | 完成 |
 | `maps/*.json` | マップ定義 | **整理中** |
 | `stages/*.json` | ステージ定義 | **整理中** |
 
@@ -217,7 +217,7 @@ CREATE TABLE users (
 
 - [ ] `creature_level_system.gd` 作成
 - [ ] ステータス補正処理
-- [ ] スキル/秘術の発動条件修正
+- [ ] スキル/アルカナアーツの発動条件修正
 - [ ] UI: カードレベル表示
 - [ ] UI: レベルアップ画面
 
@@ -280,5 +280,5 @@ user://user_cards.db  # Godotのユーザーディレクトリ
 ## 関連ドキュメント
 
 - `docs/design/card_system_multi_deck.md` - デッキシステム
-- `docs/design/mystic_arts.md` - ミスティックアーツ
+- `docs/design/mystic_arts.md` - アルカナアーツ
 - `docs/design/skills_design.md` - スキルシステム

@@ -166,7 +166,7 @@ func confirm_level_for_cpu(target_level: int) -> bool:
 | スペル発動 | SpellCastHandler | 要確認 | CPU用メソッド追加 |
 | ターゲット選択 | SpellCastHandler | 要確認 | CPU用メソッド追加 |
 
-### 3. ミスティックアーツ
+### 3. アルカナアーツ
 
 | アクション | Handler | 現状 | 対応方針 |
 |-----------|---------|------|---------|
@@ -321,12 +321,12 @@ func cast_spell_for_cpu(spell_index: int, targets: Array = []) -> bool:
 	return _execute_spell()
 ```
 
-### ミスティックアーツ
+### アルカナアーツ
 
 #### MysticArtsHandler への追加（案）
 
 ```gdscript
-## CPUがミスティックアーツを発動
+## CPUがアルカナアーツを発動
 func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 	# スペルと同様のフロー
 	pass
@@ -362,10 +362,10 @@ func use_arts_for_cpu(spell_id: int, targets: Array = []) -> bool:
 
 **見積もり:** 2-3時間
 
-### Phase 3: ミスティックアーツ（優先度: 中）
+### Phase 3: アルカナアーツ（優先度: 中）
 
 **対象ファイル:**
-- ミスティックアーツ関連Handler
+- アルカナアーツ関連Handler
 - 関連するCPU処理ファイル
 
 **見積もり:** 1-2時間
@@ -469,7 +469,7 @@ cpu_turn_processor._execute_move_invasion_command()
 | 機能 | プレイヤー | CPU | 状態 |
 |------|-----------|-----|------|
 | **スペル発動** | SpellPhaseHandler | SpellPhaseHandler._handle_cpu_spell_turn() | ✅ Handler経由 |
-| **ミスティックアーツ** | SpellPhaseHandler | SpellPhaseHandler._execute_cpu_mystic_arts() | ✅ Handler経由 |
+| **アルカナアーツ** | SpellPhaseHandler | SpellPhaseHandler._execute_cpu_mystic_arts() | ✅ Handler経由 |
 | **アイテム選択** | ItemPhaseHandler | ItemPhaseHandler._cpu_decide_item() | ✅ Handler経由 |
 | **召喚** | TileActionProcessor.execute_summon() | cpu_turn_processor._execute_summon() | ❌ 別コード |
 | **通常侵略** | TileActionProcessor.execute_battle() | cpu_turn_processor._on_cpu_invasion_decided() | ❌ 別コード |
@@ -486,7 +486,7 @@ cpu_turn_processor._execute_move_invasion_command()
 ### 修正不要なもの
 
 1. **スペル発動** - 既にHandler経由
-2. **ミスティックアーツ** - 既にHandler経由
+2. **アルカナアーツ** - 既にHandler経由
 3. **アイテム選択** - 既にHandler経由
 
 ---

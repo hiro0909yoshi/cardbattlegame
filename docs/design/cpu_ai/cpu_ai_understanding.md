@@ -177,7 +177,7 @@ scripts/cpu_ai/
 ├── cpu_merge_evaluator.gd     # 合体判断ロジック
 ├── battle_simulator.gd        # バトル結果シミュレーター
 ├── cpu_spell_ai.gd            # スペル使用判断
-├── cpu_mystic_arts_ai.gd      # ミスティックアーツ使用判断
+├── cpu_mystic_arts_ai.gd      # アルカナアーツ使用判断
 ├── cpu_spell_condition_checker.gd  # スペル使用条件判定
 ├── cpu_target_resolver.gd     # ターゲット条件解決
 ├── cpu_spell_target_selector.gd    # 最適ターゲット選択
@@ -197,7 +197,7 @@ scripts/cpu_ai/
 - 無効化+即死優先判断
 - アイテム破壊/盗みスキル対策
 
-**スペル/秘術判断（cpu_spell_ai.gd, cpu_mystic_arts_ai.gd）**
+**スペル/アルカナアーツ判断（cpu_spell_ai.gd, cpu_mystic_arts_ai.gd）**
 - cpu_ruleフィールドによるパターン別評価
 - ターゲット条件による自動ターゲット選択
 - 損益計算（profit_calc）
@@ -500,7 +500,7 @@ effect_typeで識別する：
 
 ---
 
-## 15. スペル/秘術AI 実装状況（2026年1月）
+## 15. スペル/アルカナアーツAI 実装状況（2026年1月）
 
 スペルJSONの`cpu_rule`フィールドで使用できるパターンと条件の一覧。
 
@@ -582,8 +582,8 @@ effect_typeで識別する：
 | `can_kill_target` | ダメージ値で倒せる敵クリーチャー |
 | `most_common_element` | 最も多い属性のクリーチャー |
 | `has_summon_condition` | 召喚条件を持つクリーチャー |
-| `no_curse_no_mystic` | 呪いも秘術もないクリーチャー |
-| `has_mystic_arts` | 秘術を持つクリーチャー |
+| `no_curse_no_mystic` | 呪いもアルカナアーツもないクリーチャー |
+| `has_mystic_arts` | アルカナアーツを持つクリーチャー |
 
 #### プレイヤー条件
 

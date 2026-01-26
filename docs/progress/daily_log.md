@@ -32,6 +32,6 @@
 - ✅ スペルドロー（16種類）
 - ✅ バトル制限呪い（skill_nullify, battle_disable）
 - ✅ 召喚制限システム（lands_required, cannot_summon, cards_sacrifice）
-- ✅ ダメージシステム（スペル/秘術によるダメージ・回復処理）
+- ✅ ダメージシステム（スペル/アルカナアーツによるダメージ・回復処理）
 
 ---

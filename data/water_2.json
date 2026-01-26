@@ -52,12 +52,12 @@
 	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[EP50・対象セプターに呪いダイス1～3]",
+	  "ability": "防御型・アルカナアーツ",
+	  "ability_detail": "防御型；アルカナアーツ[EP50・対象セプターに呪いダイス1～3]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防御型",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_art": {
 		  "name": "ダイス1～3呪い",
@@ -251,10 +251,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP50・対象敵領地に呪い戦闘行動不可]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP50・対象敵領地に呪い戦闘行動不可]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "戦闘行動不可",
@@ -335,10 +335,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[無]；秘術[EP60・ケルピーに変身]",
+	  "ability": "無効化・アルカナアーツ",
+	  "ability_detail": "無効化[無]；アルカナアーツ[EP60・ケルピーに変身]",
 	  "ability_parsed": {
-		"keywords": ["無効化", "秘術"],
+		"keywords": ["無効化", "アルカナアーツ"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "element",
@@ -365,10 +365,10 @@
 	  },
 	  "ap": 10,
 	  "hp": 40,
-	  "ability": "カード引き・秘術",
-	  "ability_detail": "遺産[カード1枚]；秘術[EP40・カードを1枚引く]",
+	  "ability": "カード引き・アルカナアーツ",
+	  "ability_detail": "遺産[カード1枚]；アルカナアーツ[EP40・カードを1枚引く]",
 	  "ability_parsed": {
-		"keywords": ["遺産", "秘術"],
+		"keywords": ["遺産", "アルカナアーツ"],
 		"effects": [
 		  {
 			"effect_type": "legacy_card",
@@ -515,10 +515,10 @@
 	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；不屈；秘術[EP100・配置領地を水に変える]",
+	  "ability": "防御型・アルカナアーツ",
+	  "ability_detail": "防御型；不屈；アルカナアーツ[EP100・配置領地を水に変える]",
 	  "ability_parsed": {
-		"keywords": ["防御型", "不屈", "秘術"]
+		"keywords": ["防御型", "不屈", "アルカナアーツ"]
 	  },
 	  "mystic_arts": {
 		"cost": 100,
@@ -544,10 +544,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "無効化・秘術",
-	  "ability_detail": "無効化[火風]；秘術[EP30・アクアホーンに変身]",
+	  "ability": "無効化・アルカナアーツ",
+	  "ability_detail": "無効化[火風]；アルカナアーツ[EP30・アクアホーンに変身]",
 	  "ability_parsed": {
-		"keywords": ["無効化", "秘術"],
+		"keywords": ["無効化", "アルカナアーツ"],
 		"keyword_conditions": {
 		  "無効化": {
 			"nullify_type": "element",
@@ -706,10 +706,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "巻物強打・秘術",
-	  "ability_detail": "巻物強打；防魔；秘術[EP100・自手札のスペルカードの効果を使用]",
+	  "ability": "巻物強打・アルカナアーツ",
+	  "ability_detail": "巻物強打；防魔；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
 	  "ability_parsed": {
-		"keywords": ["巻物強打", "防魔", "秘術"],
+		"keywords": ["巻物強打", "防魔", "アルカナアーツ"],
 		"keyword_conditions": {
 		  "巻物強打": {
 			"scroll_type": "base_ap"

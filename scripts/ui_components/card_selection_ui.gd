@@ -226,10 +226,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# セフト用: スペルのみ選択可能
 				is_selectable = card_type == "spell"
 			elif filter_mode == "single_target_spell":
-				# ルーンアデプト秘術用: 単体対象スペルのみ選択可能
+				# ルーンアデプトアルカナアーツ用: 単体対象スペルのみ選択可能
 				is_selectable = card_type == "spell" and card_data.get("spell_type") == "単体対象"
 			elif filter_mode == "creature":
-				# レムレース秘術用: クリーチャーのみ選択可能
+				# レムレースアルカナアーツ用: クリーチャーのみ選択可能
 				is_selectable = card_type == "creature"
 			else:
 				# 召喚フェーズ等: クリーチャーカードのみ選択可能
@@ -293,7 +293,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "spell_disabled":
-				# スペル不可呪い中: スペルカードをグレーアウト（秘術は使用可能）
+				# スペル不可呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
 				if card_type == "spell":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
@@ -369,13 +369,13 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "single_target_spell":
-				# ルーンアデプト秘術用: 単体対象スペル以外をグレーアウト
+				# ルーンアデプトアルカナアーツ用: 単体対象スペル以外をグレーアウト
 				if card_type != "spell" or card_data.get("spell_type") != "単体対象":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			elif filter_mode == "creature":
-				# レムレース秘術用: クリーチャー以外をグレーアウト
+				# レムレースアルカナアーツ用: クリーチャー以外をグレーアウト
 				if card_type != "creature":
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:

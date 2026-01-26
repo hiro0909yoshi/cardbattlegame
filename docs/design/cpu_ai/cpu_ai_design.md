@@ -4,11 +4,11 @@
 **バージョン**: 2.0  
 **作成日**: 2025年11月10日  
 **最終更新**: 2026年1月17日  
-**ステータス**: コア機能実装済み（バトルAI・スペルAI・秘術AI・リファクタリング完了）
+**ステータス**: コア機能実装済み（バトルAI・スペルAI・アルカナアーツAI・リファクタリング完了）
 
 > **実装済み仕様書**:
 > - `docs/specs/cpu_battle_ai_spec.md` - バトル判断（攻撃・防御・合体・即死）
-> - `docs/specs/cpu_spell_ai_spec.md` - スペル/秘術判断
+> - `docs/specs/cpu_spell_ai_spec.md` - スペル/アルカナアーツ判断
 
 > **本ドキュメントの位置づけ**:
 > 設計思想と将来の拡張計画を記載。コード例は参考実装であり、実際の実装とは異なる場合がある。
@@ -263,7 +263,7 @@ Level 60: デッキの勝ち筋を理解
 | 合体判断 | ✅ 完了 | 攻撃側・防御側両方（CPUMergeEvaluator） |
 | 即死スキル判断 | ✅ 完了 | 攻撃・防御・移動すべてで考慮（CPUInstantDeathEvaluator） |
 | スペル使用判断 | ✅ 完了 | cpu_ruleパターン別評価 |
-| 秘術使用判断 | ✅ 完了 | スペルと同様の評価 |
+| アルカナアーツ使用判断 | ✅ 完了 | スペルと同様の評価 |
 | ターゲット自動選択 | ✅ 完了 | 条件に基づく最適ターゲット |
 | CPUスペルフェーズ処理 | ✅ 完了 | CPUSpellPhaseHandlerで処理分離 |
 | context方式 | ✅ 完了 | CPUAIContextによる参照一元管理 |
@@ -282,7 +282,7 @@ CPUAIContext（共通コンテキスト）
 ├── CPUMovementEvaluator（移動評価）
 │   └── CPUHolyWordEvaluator（ホーリーワード判断）
 ├── CPUSpellAI（スペル判断）
-├── CPUMysticArtsAI（秘術判断）
+├── CPUMysticArtsAI（アルカナアーツ判断）
 ├── CPUTerritoryAI（領地コマンド判断）
 └── CPUSpellPhaseHandler（スペルフェーズ処理）
 ```

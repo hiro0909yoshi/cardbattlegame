@@ -46,13 +46,13 @@
 			},
 			"ap": 40,
 			"hp": 40,
-			"ability": "援護・先制・秘術",
-			"ability_detail": "援護[無]；先制；秘術[EP100・呪いのついた全クリーチャーのHP-20]",
+			"ability": "援護・先制・アルカナアーツ",
+			"ability_detail": "援護[無]；先制；アルカナアーツ[EP100・呪いのついた全クリーチャーのHP-20]",
 			"ability_parsed": {
 				"keywords": [
 					"援護",
 					"先制",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"援護": {
@@ -133,8 +133,8 @@
 			},
 			"ap": 30,
 			"hp": 40,
-			"ability": "秘術",
-			"ability_detail": "秘術[EP40・対象自クリーチャーに呪い\"地形効果\"]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP40・対象自クリーチャーに呪い\"地形効果\"]",
 			"mystic_arts": {
 				"cost": 40,
 				"spell_id": 9019
@@ -515,13 +515,13 @@
 			"creature_type": "defensive",
 			"ap": 40,
 			"hp": 50,
-			"ability": "防御型・周回回復不可・秘術",
-			"ability_detail": "防御型；周回回復不可；秘術[EP80・隣接空地にスタチューを配置]",
+			"ability": "防御型・周回回復不可・アルカナアーツ",
+			"ability_detail": "防御型；周回回復不可；アルカナアーツ[EP80・隣接空地にスタチューを配置]",
 			"ability_parsed": {
 				"keywords": [
 					"防御型",
 					"周回回復不可",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{

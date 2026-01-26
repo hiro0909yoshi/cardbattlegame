@@ -260,7 +260,7 @@ func clear_down_state_for_player(player_id: int, tile_nodes: Dictionary) -> int:
 # ダウン付与 (set_down)
 # =============================================================================
 
-## 指定タイルのクリーチャーをダウン状態にする（アルプ秘術等）
+## 指定タイルのクリーチャーをダウン状態にする（アルプアルカナアーツ等）
 func set_down_state_for_tile(tile_index: int, tile_nodes: Dictionary) -> bool:
 	if not tile_nodes.has(tile_index):
 		return false

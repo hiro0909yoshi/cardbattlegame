@@ -7,7 +7,7 @@
 
 ## 概要
 
-CPU AIが呪いスペル/秘術を使用する際に、呪いの有利/不利を判別して適切なターゲット選択や上書き判断を行うためのシステム。
+CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの有利/不利を判別して適切なターゲット選択や上書き判断を行うためのシステム。
 
 ---
 
@@ -43,7 +43,7 @@ CPU AIが呪いスペル/秘術を使用する際に、呪いの有利/不利を
 | curse_type | 名前 | 効果 |
 |-----------|------|------|
 | `stat_boost` | 能力値+20 | AP&HP+20 |
-| `mystic_grant` | 秘術付与 | 秘術を付与 |
+| `mystic_grant` | アルカナアーツ付与 | アルカナアーツを付与 |
 | `command_growth` | コマンド成長 | LvUP/地形変化でMHP+20 |
 | `forced_stop` | 強制停止 | 移動中のプレイヤーを足どめ |
 | `indomitable` | 不屈 | ダウン状態にならない |
@@ -53,7 +53,7 @@ CPU AIが呪いスペル/秘術を使用する際に、呪いの有利/不利を
 | `magic_barrier` | マジックバリア | スペル対象にならない |
 | `toll_multiplier` | 通行料倍率 | 通行料×倍率 |
 | `remote_move` | 遠隔移動 | 離れた空地にも移動できる |
-| `spell_protection` | 防魔 | スペル・秘術の対象にならない |
+| `spell_protection` | 防魔 | スペル・アルカナアーツの対象にならない |
 | `protection_wall` | 防魔壁 | 防魔と防御型を持つ |
 | `hp_effect_immune` | HP効果無効 | HP変動効果を無効化 |
 | `blast_trap` | 爆発罠 | 敵停止時にEP40%減&HP-20 |
@@ -133,7 +133,7 @@ CpuCurseEvaluator.has_harmful_curse_on_self(player_curse: Dictionary) -> bool
 |---------|------|
 | `cpu_target_resolver.gd` | 呪いスペルのターゲット選択時にフィルタ |
 | `cpu_spell_condition_checker.gd` | 呪い解除スペルの使用判断 |
-| `cpu_mystic_arts_ai.gd` | 呪い付与秘術の使用判断 |
+| `cpu_mystic_arts_ai.gd` | 呪い付与アルカナアーツの使用判断 |
 
 ---
 

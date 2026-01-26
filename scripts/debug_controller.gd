@@ -417,7 +417,7 @@ func clear_current_player_down_states():
 	
 	if cleared_count > 0:
 		print("【デバッグ】プレイヤー", player_id + 1, "の", cleared_count, "個の土地のダウン状態を解除しました")
-		# 秘術ボタンの表示を更新
+		# アルカナアーツボタンの表示を更新
 		if game_flow_manager and game_flow_manager.spell_phase_handler:
 			game_flow_manager.spell_phase_handler.update_mystic_button_visibility()
 	else:

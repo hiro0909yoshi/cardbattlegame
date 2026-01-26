@@ -2,7 +2,7 @@ extends Node
 class_name SpellCreaturePlace
 
 # クリーチャー配置システム
-# スペル・秘術でのクリーチャー配置を統一管理
+# スペル・アルカナアーツでのクリーチャー配置を統一管理
 
 # ===== ユーティリティメソッド =====
 
@@ -188,7 +188,7 @@ func place_creature_adjacent(
 	card_loader: CardLoader,
 	set_down: bool = false
 ) -> Array:
-	"""隣接空地配置（レジェンドファロス秘術用）
+	"""隣接空地配置（レジェンドファロスアルカナアーツ用）
 	
 	Args:
 		target_tile: 中心となるタイル（自クリーチャーがいるタイル）
@@ -261,7 +261,7 @@ func return_to_hand(
 
 # ===== 汎用配置メソッド（SpellPhaseHandler/SpellMysticArts連携用） =====
 
-## ターゲット選択済みの配置を実行（秘術・スペル共通）
+## ターゲット選択済みの配置を実行（アルカナアーツ・スペル共通）
 func place_creature_at_target(
 	board_system: BoardSystem3D,
 	player_id: int,

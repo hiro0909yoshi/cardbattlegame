@@ -51,13 +51,13 @@
 			},
 			"ap": 30,
 			"hp": 30,
-			"ability": "感応・防魔・秘術",
-			"ability_detail": "感応[地]・AP&HP+20；防魔；秘術[EP50・対象敵に30ダメージ]",
+			"ability": "感応・防魔・アルカナアーツ",
+			"ability_detail": "感応[地]・AP&HP+20；防魔；アルカナアーツ[EP50・対象敵に30ダメージ]",
 			"ability_parsed": {
 				"keywords": [
 					"感応",
 					"防魔",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"感応": {
@@ -108,11 +108,11 @@
 			"ap": 40,
 			"hp": 40,
 			"ability": "強打・世界消去",
-			"ability_detail": "強打[呪い付きクリーチャー]；秘術[EP50・世界呪いを消す]",
+			"ability_detail": "強打[呪い付きクリーチャー]；アルカナアーツ[EP50・世界呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"強打",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"強打": {
@@ -331,12 +331,12 @@
 			"creature_type": "defensive",
 			"ap": 30,
 			"hp": 50,
-			"ability": "防御型・秘術",
-			"ability_detail": "防御型；秘術[EP30・1マス移動]",
+			"ability": "防御型・アルカナアーツ",
+			"ability_detail": "防御型；アルカナアーツ[EP30・1マス移動]",
 			"ability_parsed": {
 				"keywords": [
 					"防御型",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"mystic_art": {
 					"name": "1マス移動",
@@ -400,11 +400,11 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "巻物強打",
-			"ability_detail": "巻物強打；秘術[EP80・好きな空地にバーアルを召喚し自壊]",
+			"ability_detail": "巻物強打；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自壊]",
 			"ability_parsed": {
 				"keywords": [
 					"巻物強打",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"巻物強打": {
@@ -551,12 +551,12 @@
 			},
 			"ap": 20,
 			"hp": 30,
-			"ability": "援護・秘術",
-			"ability_detail": "援護[火地]；秘術[EP30・全セブターの呪いを消す]",
+			"ability": "援護・アルカナアーツ",
+			"ability_detail": "援護[火地]；アルカナアーツ[EP30・全セブターの呪いを消す]",
 			"ability_parsed": {
 				"keywords": [
 					"援護",
-					"秘術"
+					"アルカナアーツ"
 				],
 				"keyword_conditions": {
 					"援護": {
@@ -671,11 +671,11 @@
 			},
 			"ap": 70,
 			"hp": 10,
-			"ability": "秘術",
-			"ability_detail": "秘術[EP50・マミーに変身]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP50・マミーに変身]",
 			"ability_parsed": {
 				"keywords": [
-					"秘術"
+					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{
@@ -709,11 +709,11 @@
 			},
 			"ap": 20,
 			"hp": 20,
-			"ability": "秘術",
-			"ability_detail": "秘術[EP80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP80・HPが減少しダウンした対象クリーチャーを破壊し、そこに移動]",
 			"ability_parsed": {
 				"keywords": [
-					"秘術"
+					"アルカナアーツ"
 				],
 				"mystic_art": {
 					"name": "破壊移動",
@@ -796,8 +796,8 @@
 			},
 			"ap": 30,
 			"hp": 30,
-			"ability": "秘術",
-			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；秘術[EP0・MHP×2EPを得て、ST&MHP-10]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "自ダイス3以下の場合、ST&MHP+10；アルカナアーツ[EP0・MHP×2EPを得て、ST&MHP-10]",
 			"ability_parsed": {
 				"effects": [
 					{
@@ -814,7 +814,7 @@
 					}
 				],
 				"keywords": [
-					"秘術"
+					"アルカナアーツ"
 				]
 			},
 			"mystic_arts": {
@@ -833,11 +833,11 @@
 			},
 			"ap": 10,
 			"hp": 20,
-			"ability": "秘術",
-			"ability_detail": "秘術[EP80・対象自領地に呪い防魔]",
+			"ability": "アルカナアーツ",
+			"ability_detail": "アルカナアーツ[EP80・対象自領地に呪い防魔]",
 			"ability_parsed": {
 				"keywords": [
-					"秘術"
+					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{

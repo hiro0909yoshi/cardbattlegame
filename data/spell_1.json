@@ -1008,7 +1008,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "対象クリーチャー1体に呪い\"縮小術\"(秘術[EP50・対象クリーチャー1体のMHP-10])",
+	  "effect": "対象クリーチャー1体に呪い\"縮小術\"(アルカナアーツ[EP50・対象クリーチャー1体のMHP-10])",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1737,7 +1737,7 @@
 		"ep": 70,
 		"cards_sacrifice": 1
 	  },
-	  "effect": "対象クリーチャーの秘術を使用",
+	  "effect": "対象クリーチャーのアルカナアーツを使用",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
@@ -1822,7 +1822,7 @@
 	  "cost": {
 		"ep": 20
 	  },
-	  "effect": "対象自領地に呪い\"EP奪取\"(秘術[EP20・対象敵セプターからEPの10%を奪う])",
+	  "effect": "対象自領地に呪い\"EP奪取\"(アルカナアーツ[EP20・対象敵セプターからEPの10%を奪う])",
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
@@ -1881,7 +1881,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "世界呪い\"特定能力不可\"(6R間、秘術、自破壊時、戦闘終了時は発動しない)",
+	  "effect": "世界呪い\"特定能力不可\"(6R間、アルカナアーツ、自破壊時、戦闘終了時は発動しない)",
 	  "effect_parsed": {
 		"target_type": "world",
 		"effects": [

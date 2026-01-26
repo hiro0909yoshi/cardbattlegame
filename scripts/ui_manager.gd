@@ -478,7 +478,7 @@ func clear_global_actions():
 
 # === 特殊ボタン（左下）API ===
 
-## 特殊ボタンを設定（秘術/領地コマンド等）
+## 特殊ボタンを設定（アルカナアーツ/領地コマンド等）
 func set_special_button(text: String, callback: Callable):
 	if global_action_buttons:
 		global_action_buttons.setup_special(text, callback)
@@ -540,14 +540,14 @@ func hide_land_command_button():
 	clear_special_button()
 
 # ============================================
-# 秘術ボタン（特殊ボタン使用）
+# アルカナアーツボタン（特殊ボタン使用）
 # ============================================
 
-## 秘術ボタンを表示
+## アルカナアーツボタンを表示
 func show_mystic_button(callback: Callable):
-	set_special_button("秘術", callback)
+	set_special_button("A", callback)
 
-## 秘術ボタンを非表示
+## アルカナアーツボタンを非表示
 func hide_mystic_button():
 	clear_special_button()
 

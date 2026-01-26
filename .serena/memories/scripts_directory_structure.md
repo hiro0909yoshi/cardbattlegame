@@ -60,7 +60,7 @@
 
 ### Spell/Mystic AI
 - `cpu_spell_ai.gd` - スペル使用判断
-- `cpu_mystic_arts_ai.gd` - ミスティックアーツ判断
+- `cpu_mystic_arts_ai.gd` - アルカナアーツ判断
 - `cpu_spell_condition_checker.gd` - スペル条件チェック
 - `cpu_spell_target_selector.gd` - スペルターゲット選択
 - `cpu_spell_utils.gd` - スペルユーティリティ
@@ -139,7 +139,7 @@
 - `condition_checker.gd` - 条件判定
 - `skill_effect_base.gd` - 効果基底クラス
 - `skill_log_system.gd` - スキルログ
-- `skill_secret.gd` - 秘術
+- `skill_secret.gd` - アルカナアーツ
 - `skill_toll_change.gd` - 通行料変更
 - `creature_synthesis.gd` - クリーチャー合成
 
@@ -179,7 +179,7 @@
 - `spell_hp_immune.gd` - HP変更無効
 - `spell_cost_modifier.gd` - コスト変更
 - `spell_synthesis.gd` - スペル合成
-- `spell_mystic_arts.gd` - ミスティックアーツ
+- `spell_mystic_arts.gd` - アルカナアーツ
 - `card_selection_handler.gd` - カード選択処理
 
 ---
@@ -224,7 +224,7 @@
 
 ### Spell
 - `spell_phase_ui_manager.gd` - スペルフェーズUI管理
-- `spell_and_mystic_ui.gd` - スペル/秘術選択
+- `spell_and_mystic_ui.gd` - スペル/アルカナアーツ選択
 - `spell_info_panel_ui.gd` - スペル情報
 - `spell_cast_notification_ui.gd` - 発動通知
 

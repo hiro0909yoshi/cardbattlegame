@@ -606,7 +606,7 @@ func _get_creatures_with_summon_condition(context: Dictionary) -> Array:
 	
 	return results
 
-## 呪いも秘術も持たないクリーチャーを取得
+## 呪いもアルカナアーツも持たないクリーチャーを取得
 func _get_creatures_without_curse_or_mystic(_context: Dictionary) -> Array:
 	var results = []
 	
@@ -624,7 +624,7 @@ func _get_creatures_without_curse_or_mystic(_context: Dictionary) -> Array:
 	
 	return results
 
-## 秘術持ちクリーチャーを取得
+## アルカナアーツ持ちクリーチャーを取得
 func _get_creatures_with_mystic_arts(_context: Dictionary) -> Array:
 	var results = []
 	
@@ -642,7 +642,7 @@ func _get_creatures_with_mystic_arts(_context: Dictionary) -> Array:
 	
 	return results
 
-## 高価値または秘術持ちの敵クリーチャーを取得
+## 高価値またはアルカナアーツ持ちの敵クリーチャーを取得
 func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
@@ -663,7 +663,7 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 		if not creature or creature.is_empty():
 			continue
 		
-		# 秘術持ちチェック
+		# アルカナアーツ持ちチェック
 		var has_mystic = creature.get("mystic_arts") != null
 		if not has_mystic:
 			var ability_parsed = creature.get("ability_parsed", {})
@@ -672,7 +672,7 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 				has_mystic = not mystic_arts.is_empty()
 				if not has_mystic:
 					var keywords = ability_parsed.get("keywords", [])
-					has_mystic = "秘術" in keywords
+					has_mystic = "アルカナアーツ" in keywords
 		
 		# レートチェック
 		var rate = CardRateEvaluator.get_rate(creature)

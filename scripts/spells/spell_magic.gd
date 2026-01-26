@@ -122,7 +122,7 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				notification_text = "【ロングライン】\n連続%d領地 (必要%d)\n条件未達成 → カードドロー" % [chain, required]
 		
 		"mhp_to_magic":
-			# ドゥームデボラー秘術: MHP×2EPを得て、ST&MHP-10
+			# ドゥームデボラーアルカナアーツ: MHP×2EPを得て、ST&MHP-10
 			var tile_index = context.get("tile_index", -1)
 			result = mhp_to_magic(player_id, effect, tile_index)
 			if result.get("success", false):
@@ -130,7 +130,7 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				notification_text = _format_gain_notification(player_id, result["amount"], "【ドゥームデボラー】MHP%d × 2EP\nST&MHP-10" % mhp)
 		
 		"drain_magic_by_spell_count":
-			# ウィッチ秘術: 対象の手札スペル数×40EPを奪う
+			# ウィッチアルカナアーツ: 対象の手札スペル数×40EPを奪う
 			if from_id >= 0:
 				var card_system = context.get("card_system", null)
 				result = drain_magic_by_spell_count(effect, from_id, player_id, card_system)
@@ -773,7 +773,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 						print("[土地呪い効果] %s は破壊されました" % creature.get("name", "?"))
 
 # ========================================
-# 秘術用効果（ゴールドトーテム等）
+# アルカナアーツ用効果（ゴールドトーテム等）
 # ========================================
 
 ## 自壊効果（クリーチャー破壊＋土地無所有）
@@ -793,18 +793,18 @@ func apply_self_destroy(tile_index: int, clear_land: bool = true) -> bool:
 	# 土地を無所有にする
 	if clear_land:
 		board_system_ref.set_tile_owner(tile_index, -1)
-		print("[秘術効果] %s が自壊、土地は無所有になりました" % creature_name)
+		print("[アルカナアーツ効果] %s が自壊、土地は無所有になりました" % creature_name)
 	else:
-		print("[秘術効果] %s が自壊しました" % creature_name)
+		print("[アルカナアーツ効果] %s が自壊しました" % creature_name)
 	
 	return true
 
 
 # ========================================
-# 秘術用EP獲得効果
+# アルカナアーツ用EP獲得効果
 # ========================================
 
-## MHP変換（ドゥームデボラー秘術）: MHP×2EPを得て、ST&MHP-10
+## MHP変換（ドゥームデボラーアルカナアーツ）: MHP×2EPを得て、ST&MHP-10
 func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictionary:
 	if tile_index < 0 or not board_system_ref or not player_system_ref:
 		return {"success": false}
@@ -825,7 +825,7 @@ func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictio
 	
 	# EPを獲得
 	player_system_ref.add_magic(player_id, amount)
-	print("[ドゥームデボラー秘術] MHP%d × %dEP = %dEP 獲得" % [mhp, multiplier, amount])
+	print("[ドゥームデボラーアルカナアーツ] MHP%d × %dEP = %dEP 獲得" % [mhp, multiplier, amount])
 	
 	# ステータスペナルティを適用
 	var stat_penalty = effect.get("stat_penalty", {})
@@ -846,12 +846,12 @@ func mhp_to_magic(player_id: int, effect: Dictionary, tile_index: int) -> Dictio
 	if current_hp > new_mhp:
 		creature["current_hp"] = new_mhp
 	
-	print("[ドゥームデボラー秘術] ペナルティ適用: AP%+d, MHP%+d" % [ap_change, hp_change])
+	print("[ドゥームデボラーアルカナアーツ] ペナルティ適用: AP%+d, MHP%+d" % [ap_change, hp_change])
 	
 	return {"success": true, "amount": amount, "mhp": mhp}
 
 
-## スペル数EP奪取（ウィッチ秘術）: 対象の手札スペル数×40EPを奪う
+## スペル数EP奪取（ウィッチアルカナアーツ）: 対象の手札スペル数×40EPを奪う
 func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, card_system) -> Dictionary:
 	if not player_system_ref or not card_system:
 		return {"success": false, "amount": 0}
@@ -864,7 +864,7 @@ func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, ca
 			spell_count += 1
 	
 	if spell_count == 0:
-		print("[ウィッチ秘術] 対象の手札にスペルがありません")
+		print("[ウィッチアルカナアーツ] 対象の手札にスペルがありません")
 		return {"success": false, "amount": 0, "spell_count": 0}
 	
 	var multiplier = effect.get("multiplier", 40)
@@ -877,6 +877,6 @@ func drain_magic_by_spell_count(effect: Dictionary, from_id: int, to_id: int, ca
 	if actual_amount > 0:
 		player_system_ref.add_magic(from_id, -actual_amount)
 		player_system_ref.add_magic(to_id, actual_amount)
-		print("[ウィッチ秘術] スペル%d枚 × %dEP = %dEP 奪取" % [spell_count, multiplier, actual_amount])
+		print("[ウィッチアルカナアーツ] スペル%d枚 × %dEP = %dEP 奪取" % [spell_count, multiplier, actual_amount])
 	
 	return {"success": true, "amount": actual_amount, "spell_count": spell_count}

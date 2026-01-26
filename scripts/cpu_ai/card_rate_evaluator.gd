@@ -35,7 +35,7 @@ const SKILL_RATE_BONUS = {
 	"道連れ": 15,               # リビングボム
 	
 	# 特殊能力
-	"秘術": 40,                 # アイアンモンガー, アクアホーン, アモン 等
+	"アルカナアーツ": 40,                 # アイアンモンガー, アクアホーン, アモン 等
 	"感応": 15,                 # アモン, ヴォジャノーイ, カーバンクル 等
 	"援護": 35,                 # アイアンモンガー, ウィザード, エリニュス 等
 	"応援": 40,                 # エルフ, コダマ, コーンフォーク 等
@@ -404,7 +404,7 @@ static func _calculate_skill_bonus(card: Dictionary) -> int:
 					keyword_bonus = 20  # 巻物攻撃無効化は低めに設定
 			bonus += keyword_bonus
 	
-	# mystic_artsを持っている場合、秘術ボーナスを追加（keywordsに秘術がない場合のみ）
+	# mystic_artsを持っている場合、アルカナアーツボーナスを追加（keywordsにアルカナアーツがない場合のみ）
 	# トップレベルのmystic_artsまたはability_parsed.mystic_artsをチェック
 	var has_mystic_arts = false
 	if card.has("mystic_arts") and card.get("mystic_arts") != null:
@@ -412,8 +412,8 @@ static func _calculate_skill_bonus(card: Dictionary) -> int:
 	elif ability_parsed.has("mystic_arts") and not ability_parsed.get("mystic_arts", []).is_empty():
 		has_mystic_arts = true
 	
-	if has_mystic_arts and "秘術" not in keywords:
-		bonus += SKILL_RATE_BONUS.get("秘術", 0)
+	if has_mystic_arts and "アルカナアーツ" not in keywords:
+		bonus += SKILL_RATE_BONUS.get("アルカナアーツ", 0)
 	
 	# cannot_use（使用不可アイテム）のペナルティ
 	var restrictions = card.get("restrictions", {})

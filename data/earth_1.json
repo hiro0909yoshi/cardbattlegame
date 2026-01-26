@@ -227,12 +227,12 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[EP60・対象自クリーチャーのダウンを解除]",
+	  "ability": "不屈・アルカナアーツ",
+	  "ability_detail": "不屈；アルカナアーツ[EP60・対象自クリーチャーのダウンを解除]",
 	  "ability_parsed": {
 		"keywords": [
 		  "不屈",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -277,11 +277,11 @@
 	  },
 	  "ap": 10,
 	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP20・選んだ空地にグーバを配置]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP20・選んだ空地にグーバを配置]",
 	  "ability_parsed": {
 		"keywords": [
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -421,11 +421,11 @@
 	  },
 	  "ap": 30,
 	  "hp": 50,
-	  "ability": "秘術",
-	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；秘術[EP50・対象ブックの上1枚を破壊]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "ブックが相手より多い場合、AP&HP+20；アルカナアーツ[EP50・対象ブックの上1枚を破壊]",
 	  "ability_parsed": {
 		"keywords": [
-		  "秘術"
+		  "アルカナアーツ"
 		]
 	  },
 	  "mystic_arts": {
@@ -489,11 +489,11 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP120・対象自領地を地に変える]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP120・対象自領地を地に変える]",
 	  "ability_parsed": {
 		"keywords": [
-		  "秘術"
+		  "アルカナアーツ"
 		]
 	  },
 	  "mystic_arts": {
@@ -551,12 +551,12 @@
 	  },
 	  "ap": 20,
 	  "hp": 20,
-	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[EP30・対象敵クリーチャーに呪い\"移動不可\"]",
+	  "ability": "防魔・アルカナアーツ",
+	  "ability_detail": "防魔；アルカナアーツ[EP30・対象敵クリーチャーに呪い\"移動不可\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防魔",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_art": {
 		  "name": "移動封じ",
@@ -630,8 +630,8 @@
 	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[EP40・対象敵クリーチャーに呪い\"地形効果無効\"]",
+	  "ability": "防御型・アルカナアーツ",
+	  "ability_detail": "防御型；アルカナアーツ[EP40・対象敵クリーチャーに呪い\"地形効果無効\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "防御型"
@@ -711,11 +711,11 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP30・対象敵領地に呪い\"衰弱\"]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP30・対象敵領地に呪い\"衰弱\"]",
 	  "ability_parsed": {
 		"keywords": [
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_art": {
 		  "name": "衰弱呪い",
@@ -735,11 +735,11 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "地形効果・秘術",
-	  "ability_detail": "火から地形効果を得る；秘術[EP50・オールドウィロウに変身]",
+	  "ability": "地形効果・アルカナアーツ",
+	  "ability_detail": "火から地形効果を得る；アルカナアーツ[EP50・オールドウィロウに変身]",
 	  "ability_parsed": {
 		"keywords": [
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"effects": [],
 		"extra_land_elements": [

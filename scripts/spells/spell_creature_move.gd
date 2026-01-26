@@ -1,4 +1,4 @@
-# SpellCreatureMove - クリーチャー移動・交換スペル/秘術
+# SpellCreatureMove - クリーチャー移動・交換スペル/アルカナアーツ
 class_name SpellCreatureMove
 
 # ============ 参照 ============
@@ -432,7 +432,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	}
 
 
-## 指定マス数移動（チャリオット、スレイプニール秘術）
+## 指定マス数移動（チャリオット、スレイプニールアルカナアーツ）
 func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _caster_player_id: int) -> Dictionary:
 	var from_tile_index = target_data.get("tile_index", -1)
 	if from_tile_index == -1:
@@ -505,10 +505,10 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	}
 
 
-## 自己移動（クリーピングフレイム秘術）
+## 自己移動（クリーピングフレイムアルカナアーツ）
 ## exclude_enemy_creatures: 敵クリーチャーがいるタイルを除外（防御型用）
 func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatures: bool = false) -> Dictionary:
-	# target_dataには秘術発動者の情報が入っている
+	# target_dataにはアルカナアーツ発動者の情報が入っている
 	var from_tile_index = target_data.get("tile_index", -1)
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
@@ -572,7 +572,7 @@ func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatur
 	}
 
 
-## 破壊して移動（デスリーチ秘術）
+## 破壊して移動（デスリーチアルカナアーツ）
 func _apply_destroy_and_move(target_data: Dictionary) -> Dictionary:
 	var target_tile_index = target_data.get("tile_index", -1)
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
@@ -672,7 +672,7 @@ func _select_move_destination(destinations: Array, message: String) -> int:
 
 
 
-# ============ ターゲット取得（スペル/秘術発動判定用） ============
+# ============ ターゲット取得（スペル/アルカナアーツ発動判定用） ============
 
 ## アウトレイジのターゲット取得（全クリーチャーで隣接敵領地があるもの）
 func get_outrage_targets() -> Array:

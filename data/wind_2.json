@@ -321,10 +321,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 20,
-	  "ability": "防魔・秘術",
-	  "ability_detail": "防魔；秘術[EP50・対象セプターに呪い\"防魔\"]",
+	  "ability": "防魔・アルカナアーツ",
+	  "ability_detail": "防魔；アルカナアーツ[EP50・対象セプターに呪い\"防魔\"]",
 	  "ability_parsed": {
-		"keywords": ["防魔", "秘術"],
+		"keywords": ["防魔", "アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"id": "patronus_mystic_001",
@@ -445,10 +445,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP50・使用者に呪い\"ダイス6\"]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP50・使用者に呪い\"ダイス6\"]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "ダイス6",
@@ -594,12 +594,12 @@
 	  },
 	  "ap": 50,
 	  "hp": 50,
-	  "ability": "先制・秘術",
-	  "ability_detail": "先制；秘術[EP60・対象敵水地のHP-20]",
+	  "ability": "先制・アルカナアーツ",
+	  "ability_detail": "先制；アルカナアーツ[EP60・対象敵水地のHP-20]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
@@ -661,10 +661,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "クリーチャー交換",
@@ -698,10 +698,10 @@
 	  },
 	  "ap": 70,
 	  "hp": 60,
-	  "ability": "応援・秘術",
-	  "ability_detail": "応援[風水・AP+10]；秘術[EP60・AP30以下をAP+20、AP50以上をAP-20]",
+	  "ability": "応援・アルカナアーツ",
+	  "ability_detail": "応援[風水・AP+10]；アルカナアーツ[EP60・AP30以下をAP+20、AP50以上をAP-20]",
 	  "ability_parsed": {
-		"keywords": ["応援", "秘術"],
+		"keywords": ["応援", "アルカナアーツ"],
 		"effects": [
 		  {
 			"effect_type": "support",

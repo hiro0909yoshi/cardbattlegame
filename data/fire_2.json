@@ -79,10 +79,10 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "不屈・秘術",
-	  "ability_detail": "不屈；秘術[EP50・対象自領地に呪い遠隔移動]",
+	  "ability": "不屈・アルカナアーツ",
+	  "ability_detail": "不屈；アルカナアーツ[EP50・対象自領地に呪い遠隔移動]",
 	  "ability_parsed": {
-		"keywords": ["不屈", "秘術"],
+		"keywords": ["不屈", "アルカナアーツ"],
 		"mystic_art": {
 		  "name": "遠隔移動付与",
 		  "cost": 50,
@@ -110,10 +110,10 @@
 	  "creature_type": "defensive",
 	  "ap": 30,
 	  "hp": 60,
-	  "ability": "防御型・秘術",
-	  "ability_detail": "防御型；秘術[EP50・対象敵領地に呪い通行料1/2]",
+	  "ability": "防御型・アルカナアーツ",
+	  "ability_detail": "防御型；アルカナアーツ[EP50・対象敵領地に呪い通行料1/2]",
 	  "ability_parsed": {
-		"keywords": ["防御型", "秘術"],
+		"keywords": ["防御型", "アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"id": "barnacle_mystic_001",
@@ -181,10 +181,10 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "秘術",
-	  "ability_detail": "秘術[EP20・手札にハイプワーカーを加える]",
+	  "ability": "アルカナアーツ",
+	  "ability_detail": "アルカナアーツ[EP20・手札にハイプワーカーを加える]",
 	  "ability_parsed": {
-		"keywords": ["秘術"],
+		"keywords": ["アルカナアーツ"],
 		"mystic_arts": [
 		  {
 			"name": "ハイプワーカー生成",
@@ -478,8 +478,8 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "秘術・巻物強打",
-	  "ability_detail": "秘術[EP50・対象クリーチャーのAP+20]；巻物強打",
+	  "ability": "アルカナアーツ・巻物強打",
+	  "ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；巻物強打",
 	  "ability_parsed": {
 		"keywords": ["巻物強打"],
 		"keyword_conditions": {
@@ -628,12 +628,12 @@
 	  },
 	  "ap": 70,
 	  "hp": 60,
-	  "ability": "応援・秘術",
-	  "ability_detail": "応援[火地・AP+10]；秘術[EP30・クリーチャー破壊数×30EPを得る]",
+	  "ability": "応援・アルカナアーツ",
+	  "ability_detail": "応援[火地・AP+10]；アルカナアーツ[EP30・クリーチャー破壊数×30EPを得る]",
 	  "ability_parsed": {
 		"keywords": [
 		  "応援",
-		  "秘術"
+		  "アルカナアーツ"
 		],
 		"effects": [
 		  {

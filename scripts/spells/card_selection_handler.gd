@@ -103,7 +103,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	enemy_card_selection_is_steal = is_steal
 	current_state = State.SELECTING_ENEMY_CARD
 	
-	# 秘術ボタンは非表示（敵手札選択中は使用不可）
+	# アルカナアーツボタンは非表示（敵手札選択中は使用不可）
 	if ui_manager:
 		ui_manager.hide_mystic_button()
 	
@@ -394,7 +394,7 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	current_state = State.SELECTING_DECK_CARD
 	
 	# スペルフェーズボタンを非表示
-	# 秘術ボタンは非表示
+	# アルカナアーツボタンは非表示
 	if ui_manager:
 		ui_manager.hide_mystic_button()
 	
@@ -469,7 +469,7 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 	current_state = State.SELECTING_DECK_CARD
 	
 	# スペルフェーズボタンを非表示
-	# 秘術ボタンは非表示
+	# アルカナアーツボタンは非表示
 	if ui_manager:
 		ui_manager.hide_mystic_button()
 	
@@ -679,7 +679,7 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 	enemy_card_selection_filter_mode = filter_mode
 	current_state = State.SELECTING_TRANSFORM_CARD
 	
-	# 秘術ボタンは非表示
+	# アルカナアーツボタンは非表示
 	if ui_manager:
 		ui_manager.hide_mystic_button()
 	

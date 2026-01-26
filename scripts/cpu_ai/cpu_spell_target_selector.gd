@@ -294,7 +294,7 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 		"magic_barrier",         # EP結界
 		"forced_stop",           # 強制停止
 		"toll_share",            # 通行料促進
-		"grant_mystic_arts",     # 秘術付与
+		"grant_mystic_arts",     # アルカナアーツ付与
 		"stat_boost",            # 能力値+20
 		"indomitable",           # 不屈
 		"peace",                 # 平和
@@ -588,7 +588,7 @@ func get_best_exchange_target(context: Dictionary) -> Dictionary:
 		if creature.is_empty():
 			continue
 		
-		# 秘術持ちは交換対象外
+		# アルカナアーツ持ちは交換対象外
 		if _has_mystic_arts(creature):
 			continue
 		
@@ -996,7 +996,7 @@ func _get_next_tile_in_direction(current_tile: int, came_from: int, direction: i
 	return current_tile + direction
 
 
-## 秘術持ちかどうかをチェック
+## アルカナアーツ持ちかどうかをチェック
 func _has_mystic_arts(creature_data: Dictionary) -> bool:
 	# トップレベルのmystic_artsをチェック
 	if creature_data.has("mystic_arts") and creature_data.get("mystic_arts") != null:
@@ -1009,10 +1009,10 @@ func _has_mystic_arts(creature_data: Dictionary) -> bool:
 		if not mystic_arts.is_empty():
 			return true
 	
-	# keywordsに秘術があるかチェック
+	# keywordsにアルカナアーツがあるかチェック
 	if ability_parsed:
 		var keywords = ability_parsed.get("keywords", [])
-		if "秘術" in keywords:
+		if "アルカナアーツ" in keywords:
 			return true
 	
 	return false

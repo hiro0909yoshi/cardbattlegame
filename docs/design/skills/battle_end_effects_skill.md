@@ -65,7 +65,7 @@
 世界呪い「特定能力不可」により以下のトリガーを無効化：
 - `on_battle_end` (戦闘終了時効果)
 - `on_death` (自破壊時効果)
-- `mystic_arts` (秘術)
+- `mystic_arts` (アルカナアーツ)
 
 ```json
 // spell_world.json での定義

@@ -1,5 +1,5 @@
-## CPU ミスティックアーツ使用判断
-## 配置クリーチャーの秘術を評価し、使用すべきか判断する
+## CPU アルカナアーツ使用判断
+## 配置クリーチャーのアルカナアーツを評価し、使用すべきか判断する
 class_name CPUMysticArtsAI
 extends RefCounted
 
@@ -60,13 +60,13 @@ func set_battle_ai(ai: CPUBattleAI) -> void:
 	if condition_checker:
 		condition_checker.set_battle_ai(ai)
 
-## ミスティックアーツ使用判断のメインエントリ
+## アルカナアーツ使用判断のメインエントリ
 ## 戻り値: {use: bool, creature_tile: int, mystic: Dictionary, target: Dictionary}
 func decide_mystic_arts(player_id: int) -> Dictionary:
 	if not board_system or not player_system:
 		return {"use": false}
 	
-	# 使用可能なミスティックアーツを取得
+	# 使用可能なアルカナアーツを取得
 	var usable_mystics = _get_usable_mystic_arts(player_id)
 	if usable_mystics.is_empty():
 		return {"use": false}
@@ -74,7 +74,7 @@ func decide_mystic_arts(player_id: int) -> Dictionary:
 	# コンテキスト作成
 	var context = _build_context(player_id)
 	
-	# 各ミスティックアーツを評価
+	# 各アルカナアーツを評価
 	var evaluated_mystics = []
 	for mystic_info in usable_mystics:
 		var evaluation = _evaluate_mystic_art(mystic_info, context)
@@ -104,7 +104,7 @@ func decide_mystic_arts(player_id: int) -> Dictionary:
 		"score": best.score
 	}
 
-## 使用可能なミスティックアーツを取得
+## 使用可能なアルカナアーツを取得
 func _get_usable_mystic_arts(player_id: int) -> Array:
 	var results = []
 	
@@ -129,7 +129,7 @@ func _get_usable_mystic_arts(player_id: int) -> Array:
 		if is_down:
 			continue
 		
-		# 秘術を取得
+		# アルカナアーツを取得
 		var ability = creature.get("ability_parsed", {})
 		
 		# mystic_art（単数）またはmystic_arts（複数）に対応
@@ -165,7 +165,7 @@ func _get_usable_mystic_arts(player_id: int) -> Array:
 	
 	return results
 
-## ミスティックアーツを評価
+## アルカナアーツを評価
 func _evaluate_mystic_art(mystic_info: Dictionary, context: Dictionary) -> Dictionary:
 	var mystic_data = mystic_info.mystic_data
 	var cpu_rule = mystic_data.get("cpu_rule", {})
@@ -371,7 +371,7 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 	if _is_movement_curse(mystic_data):
 		targets = targets.filter(func(t): return not _is_defensive_creature(t.get("creature", {})))
 	
-	# 呪い秘術の場合、追加のフィルタリングを適用
+	# 呪いアルカナアーツの場合、追加のフィルタリングを適用
 	if target_type == "creature" and target_resolver:
 		var curse_info = target_resolver.analyze_curse_spell(mystic_data)
 		if curse_info.is_curse:
@@ -392,7 +392,7 @@ func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, con
 	var damage_value = context.get("damage_value", 0)
 	var is_damage_spell = damage_value > 0
 	
-	# 呪い秘術かどうか判定
+	# 呪いアルカナアーツかどうか判定
 	var curse_info = _analyze_curse_mystic(mystic_data)
 	
 	var best_target = targets[0]
@@ -443,7 +443,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 			var damage_ratio = float(damage_value) / float(current_hp)
 			score += min(damage_ratio, 1.0)
 	
-	# 呪い秘術の場合、既存の呪い状態でスコア調整
+	# 呪いアルカナアーツの場合、既存の呪い状態でスコア調整
 	if curse_info.get("is_curse", false):
 		score += _calculate_curse_overwrite_score(creature, player_id, owner_id, curse_info.get("is_beneficial", false))
 	
@@ -470,7 +470,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	return score
 
 
-## 呪い秘術かどうか判定
+## 呪いアルカナアーツかどうか判定
 func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 	var result = {"is_curse": false, "is_beneficial": false}
 	

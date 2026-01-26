@@ -1,7 +1,7 @@
 extends Control
 class_name SpellCastNotificationUI
 
-## 画面中央にスペル/秘術発動を通知するUI
+## 画面中央にスペル/アルカナアーツ発動を通知するUI
 ## 「Aは、BにCを使った」形式で表示
 
 @onready var label: RichTextLabel
@@ -66,7 +66,7 @@ var click_wait_timeout: float = 7.0
 ## タイムアウト用タイマー
 var timeout_timer: Timer = null
 
-## 通知を表示してクリック待ち（全スペル・秘術共通）
+## 通知を表示してクリック待ち（全スペル・アルカナアーツ共通）
 ## message: 表示するメッセージ
 ## await で待機可能
 func show_notification_and_wait(message: String) -> void:
@@ -201,7 +201,7 @@ static func get_effect_display_name(spell_card: Dictionary) -> String:
 	# 3. スペル名を使用
 	return spell_card.get("name", "不明")
 
-## 秘術から効果名を取得
+## アルカナアーツから効果名を取得
 static func get_mystic_art_display_name(mystic_art: Dictionary) -> String:
 	# spell_idがある場合はスペルデータから取得
 	var spell_id = mystic_art.get("spell_id", -1)
@@ -210,7 +210,7 @@ static func get_mystic_art_display_name(mystic_art: Dictionary) -> String:
 		if not spell_data.is_empty():
 			return get_effect_display_name(spell_data)
 	
-	# 秘術自体のnameを使用
+	# アルカナアーツ自体のnameを使用
 	return mystic_art.get("name", "不明")
 
 ## 対象名を取得

@@ -3,10 +3,10 @@ extends RefCounted
 
 # ============ シグナル ============
 
-## 秘術フェーズ完了時（成功/キャンセル問わず）
+## アルカナアーツフェーズ完了時（成功/キャンセル問わず）
 signal mystic_phase_completed()
 
-## 秘術使用完了時（スペル使用フラグ更新用）
+## アルカナアーツ使用完了時（スペル使用フラグ更新用）
 signal mystic_art_used()
 
 ## ターゲット選択が必要な時
@@ -24,7 +24,7 @@ var card_system_ref: Object
 var spell_phase_handler_ref: Object  # ターゲット取得用
 
 
-# ============ 秘術フェーズ状態 ============
+# ============ アルカナアーツフェーズ状態 ============
 
 var is_mystic_phase_active: bool = false
 var selected_mystic_art: Dictionary = {}
@@ -58,28 +58,28 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	spell_phase_handler_ref = spell_phase_handler
 
 
-# ============ 秘術フェーズ管理 ============
+# ============ アルカナアーツフェーズ管理 ============
 
-## 秘術フェーズを開始
+## アルカナアーツフェーズを開始
 func start_mystic_phase(player_id: int) -> void:
 	is_mystic_phase_active = true
 	current_mystic_player_id = player_id
 	
-	# 秘術フェーズ中は入力をロック（手札カード選択を防止）
+	# アルカナアーツフェーズ中は入力をロック（手札カード選択を防止）
 	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
 		spell_phase_handler_ref.game_flow_manager.lock_input()
 	
-	# ナチュラルワールドによる秘術無効化チェック
+	# ナチュラルワールドによるアルカナアーツ無効化チェック
 	if _is_mystic_arts_disabled():
-		ui_message_requested.emit("ナチュラルワールド発動中：秘術は使用できません")
+		ui_message_requested.emit("ナチュラルワールド発動中：アルカナアーツは使用できません")
 		_end_mystic_phase()
 		return
 	
-	# 秘術を持つクリーチャーを取得
+	# アルカナアーツを持つクリーチャーを取得
 	var available_creatures = get_available_creatures(player_id)
 	
 	if available_creatures.is_empty():
-		ui_message_requested.emit("秘術を持つクリーチャーがありません")
+		ui_message_requested.emit("アルカナアーツを持つクリーチャーがありません")
 		_end_mystic_phase()
 		return
 	
@@ -87,18 +87,18 @@ func start_mystic_phase(player_id: int) -> void:
 	_select_creature(available_creatures)
 
 
-## 秘術フェーズ中かどうか
+## アルカナアーツフェーズ中かどうか
 func is_active() -> bool:
 	return is_mystic_phase_active
 
 
-## 秘術選択状態をクリア
+## アルカナアーツ選択状態をクリア
 func clear_selection() -> void:
 	selected_mystic_art = {}
 	selected_mystic_creature = {}
 
 
-## 秘術フェーズを終了
+## アルカナアーツフェーズを終了
 func _end_mystic_phase() -> void:
 	is_mystic_phase_active = false
 	clear_selection()
@@ -227,7 +227,7 @@ func _update_caster_selection() -> void:
 	# フェーズラベル更新
 	if ui_manager and ui_manager.phase_label:
 		var name_text = creature_data.get("name", "Unknown")
-		ui_manager.phase_label.text = "秘術を使うクリーチャー: %s (%d/%d)" % [
+		ui_manager.phase_label.text = "アルカナアーツを使うクリーチャー: %s (%d/%d)" % [
 			name_text, _current_caster_index + 1, _available_caster_creatures.size()
 		]
 
@@ -249,7 +249,7 @@ func _confirm_caster_selection() -> void:
 	if spell_phase_handler_ref:
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
 	
-	# 秘術選択に進む
+	# アルカナアーツ選択に進む
 	await _select_mystic_art_from_creature_tap(selected_creature)
 
 
@@ -292,7 +292,7 @@ func _next_caster() -> void:
 	_update_caster_selection()
 
 
-## 秘術選択（タップ対応版） - ActionMenuUIを使用
+## アルカナアーツ選択（タップ対応版） - ActionMenuUIを使用
 func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void:
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 	if not ui_manager:
@@ -305,12 +305,12 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		_end_mystic_phase()
 		return
 	
-	# 秘術が1つだけなら自動選択
+	# アルカナアーツが1つだけなら自動選択
 	if mystic_arts.size() == 1:
 		_select_target(selected_creature, mystic_arts[0])
 		return
 	
-	# 複数の秘術がある場合はActionMenuUIで選択
+	# 複数のアルカナアーツがある場合はActionMenuUIで選択
 	var action_menu = ui_manager.get_node_or_null("MysticActionMenu")
 	if not action_menu:
 		var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
@@ -325,7 +325,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		action_menu.set_position_left(false)
 		ui_manager.add_child(action_menu)
 	
-	# 秘術メニュー項目を作成
+	# アルカナアーツメニュー項目を作成
 	var menu_items: Array = []
 	for mystic_art in mystic_arts:
 		var cost = mystic_art.get("cost", 0)
@@ -339,9 +339,9 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		})
 	
 	# メニュー表示
-	action_menu.show_menu(menu_items, "使用する秘術")
+	action_menu.show_menu(menu_items, "使用するアルカナアーツ")
 	
-	# 秘術選択を待機
+	# アルカナアーツ選択を待機
 	var selected_index = await action_menu.item_selected
 	
 	if selected_index < 0 or selected_index >= mystic_arts.size():
@@ -373,7 +373,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	if not target_info.is_empty():
 		target_filter = target_info.get("owner_filter", target_info.get("target_filter", target_filter))
 	
-	# 秘術自体のeffect_parsedからaffects_hpを取得
+	# アルカナアーツ自体のeffect_parsedからaffects_hpを取得
 	var mystic_effect_parsed = mystic_art.get("effect_parsed", {})
 	if mystic_effect_parsed.get("affects_hp", false):
 		affects_hp = true
@@ -415,7 +415,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 		_start_mystic_confirmation(selected_creature, mystic_art, "all_creatures", target_info, target_data)
 		return
 	
-	# 秘術選択状態を保存（ターゲット確定時に使用）
+	# アルカナアーツ選択状態を保存（ターゲット確定時に使用）
 	selected_mystic_creature = selected_creature
 	selected_mystic_art = mystic_art
 	
@@ -443,7 +443,7 @@ func on_target_confirmed(target_data: Dictionary) -> void:
 	await execute_mystic_art(selected_mystic_creature, selected_mystic_art, target_data)
 
 
-## 秘術実行
+## アルカナアーツ実行
 func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary) -> void:
 	var player_id = current_mystic_player_id
 	
@@ -456,7 +456,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	}
 	
 	if not can_cast_mystic_art(mystic_art, context):
-		ui_message_requested.emit("秘術発動条件を満たしていません")
+		ui_message_requested.emit("アルカナアーツ発動条件を満たしていません")
 		clear_selection()
 		_end_mystic_phase()
 		return
@@ -469,7 +469,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	# 非同期効果かどうかを事前判定
 	var is_async = _is_async_mystic_art(mystic_art)
 	
-	# 秘術効果を適用
+	# アルカナアーツ効果を適用
 	var success = await apply_mystic_art_effect(mystic_art, target_data, context)
 	
 	if success:
@@ -488,9 +488,9 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		# 排他制御
 		mystic_art_used.emit()
 	else:
-		ui_message_requested.emit("秘術の発動に失敗しました")
+		ui_message_requested.emit("アルカナアーツの発動に失敗しました")
 	
-	# 秘術選択状態をクリア
+	# アルカナアーツ選択状態をクリア
 	clear_selection()
 	
 	# ターゲット選択をクリア
@@ -507,7 +507,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		if spell_phase_handler_ref.card_selection_handler.is_selecting():
 			return
 	
-	# 秘術フェーズ完了
+	# アルカナアーツフェーズ完了
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
 	_end_mystic_phase()
@@ -515,7 +515,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		spell_phase_handler_ref.complete_spell_phase()
 
 
-## 秘術実行（全クリーチャー対象）
+## アルカナアーツ実行（全クリーチャー対象）
 func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target_info: Dictionary) -> void:
 	var player_id = current_mystic_player_id
 	
@@ -528,7 +528,7 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	}
 	
 	if not can_cast_mystic_art(mystic_art, context):
-		ui_message_requested.emit("秘術発動条件を満たしていません")
+		ui_message_requested.emit("アルカナアーツ発動条件を満たしていません")
 		clear_selection()
 		_end_mystic_phase()
 		return
@@ -577,7 +577,7 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	# 排他制御
 	mystic_art_used.emit()
 	
-	# 秘術選択状態をクリア
+	# アルカナアーツ選択状態をクリア
 	clear_selection()
 	
 	# スペルフェーズ完了
@@ -692,7 +692,7 @@ func _cancel_mystic_confirmation() -> void:
 	confirmation_target_info = {}
 	confirmation_target_data = {}
 	
-	# 秘術選択をクリアして秘術フェーズを終了
+	# アルカナアーツ選択をクリアしてアルカナアーツフェーズを終了
 	clear_selection()
 	_end_mystic_phase()
 	
@@ -702,7 +702,7 @@ func _cancel_mystic_confirmation() -> void:
 		spell_phase_handler_ref._return_to_spell_selection()
 
 
-## 非同期効果を含む秘術かどうかを判定
+## 非同期効果を含むアルカナアーツかどうかを判定
 func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
 	const ASYNC_EFFECT_TYPES = [
 		"destroy_and_draw", "swap_creature",
@@ -731,9 +731,9 @@ func _is_async_mystic_art(mystic_art: Dictionary) -> bool:
 	return false
 
 
-# ============ 秘術情報取得 ============
+# ============ アルカナアーツ情報取得 ============
 
-## プレイヤーの秘術発動可能クリーチャーを取得
+## プレイヤーのアルカナアーツ発動可能クリーチャーを取得
 func get_available_creatures(player_id: int) -> Array:
 	var available: Array = []
 	
@@ -745,14 +745,14 @@ func get_available_creatures(player_id: int) -> Array:
 		if not tile or not tile.creature_data:
 			continue
 		
-		# ダウン状態のクリーチャーは秘術使用不可
+		# ダウン状態のクリーチャーはアルカナアーツ使用不可
 		if tile.is_down():
 			continue
 		
-		# 秘術を取得（元々の秘術 + 呪いからの秘術）
+		# アルカナアーツを取得（元々のアルカナアーツ + 呪いからのアルカナアーツ）
 		var mystic_arts = _get_all_mystic_arts(tile.creature_data)
 		
-		# 使用可能な秘術のみフィルタリング
+		# 使用可能なアルカナアーツのみフィルタリング
 		var usable_mystic_arts = _filter_usable_mystic_arts(mystic_arts, tile.creature_data, player_id)
 		
 		if usable_mystic_arts.size() > 0:
@@ -765,7 +765,7 @@ func get_available_creatures(player_id: int) -> Array:
 	return available
 
 
-## 使用可能な秘術のみをフィルタリング
+## 使用可能なアルカナアーツのみをフィルタリング
 func _filter_usable_mystic_arts(mystic_arts: Array, creature_data: Dictionary, player_id: int) -> Array:
 	var usable: Array = []
 	
@@ -776,13 +776,13 @@ func _filter_usable_mystic_arts(mystic_arts: Array, creature_data: Dictionary, p
 	return usable
 
 
-## 秘術が使用可能かチェック
+## アルカナアーツが使用可能かチェック
 func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, player_id: int) -> bool:
 	var effects = mystic_art.get("effects", [])
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		
-		# 移動系秘術で移動不可呪いを持っている場合は使用不可
+		# 移動系アルカナアーツで移動不可呪いを持っている場合は使用不可
 		if effect_type in ["move_self", "move_steps", "move_to_adjacent_enemy"]:
 			var curse = creature_data.get("curse", {})
 			if curse.get("curse_type", "") == "move_disable":
@@ -797,7 +797,7 @@ func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, play
 	return true
 
 
-## クリーチャーの秘術一覧を取得（元々の秘術 + 呪いからの秘術）
+## クリーチャーのアルカナアーツ一覧を取得（元々のアルカナアーツ + 呪いからのアルカナアーツ）
 func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	if creature_data.is_empty():
 		return []
@@ -805,20 +805,20 @@ func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	return _get_all_mystic_arts(creature_data)
 
 
-## 全秘術を取得（ability_parsed + 呪いの両方）
+## 全アルカナアーツを取得（ability_parsed + 呪いの両方）
 func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	var all_mystic_arts: Array = []
 	
-	# 1. 元々の秘術（creature_data直下のmystic_arts）
+	# 1. 元々のアルカナアーツ（creature_data直下のmystic_arts）
 	var root_mystic_arts = creature_data.get("mystic_arts", {})
 	if root_mystic_arts is Dictionary and not root_mystic_arts.is_empty():
-		# 辞書形式（単体の秘術）
+		# 辞書形式（単体のアルカナアーツ）
 		all_mystic_arts.append(root_mystic_arts)
 	elif root_mystic_arts is Array:
-		# 配列形式（複数の秘術）
+		# 配列形式（複数のアルカナアーツ）
 		all_mystic_arts.append_array(root_mystic_arts)
 	
-	# 2. ability_parsed内の秘術（従来方式）
+	# 2. ability_parsed内のアルカナアーツ（従来方式）
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	
 	# 複数形 mystic_arts（配列）
@@ -830,7 +830,7 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	if not single_art.is_empty():
 		all_mystic_arts.append(single_art)
 	
-	# 2. 呪いから付与された秘術
+	# 2. 呪いから付与されたアルカナアーツ
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type", "") == "mystic_grant":
 		var params = curse.get("params", {})
@@ -842,14 +842,14 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 			var spell_data = CardLoader.get_card_by_id(spell_id)
 			if spell_data and not spell_data.is_empty():
 				var mystic_art = {
-					"name": params.get("name", spell_data.get("name", "秘術")),
+					"name": params.get("name", spell_data.get("name", "アルカナアーツ")),
 					"cost": params.get("cost", 0),
 					"spell_id": spell_id
 				}
 				all_mystic_arts.append(mystic_art)
-				print("[秘術取得] 呪いから秘術付与: ", mystic_art.get("name"), " (spell_id: ", spell_id, ")")
+				print("[アルカナアーツ取得] 呪いからアルカナアーツ付与: ", mystic_art.get("name"), " (spell_id: ", spell_id, ")")
 			else:
-				print("[秘術取得] spell_id ", spell_id, " のカードが見つかりません")
+				print("[アルカナアーツ取得] spell_id ", spell_id, " のカードが見つかりません")
 		else:
 			# mystic_arts配列方式（旧方式）
 			var curse_arts = params.get("mystic_arts", [])
@@ -860,7 +860,7 @@ func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
 
 # ============ 発動判定 ============
 
-## 秘術発動可能か判定
+## アルカナアーツ発動可能か判定
 func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	# EP確認
 	var cost = mystic_art.get("cost", 0)
@@ -878,7 +878,7 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	if caster_tile_index != -1:
 		var caster_tile = board_system_ref.tile_nodes.get(caster_tile_index)
 		if caster_tile and caster_tile.is_down():
-			return false  # ダウン状態のクリーチャーは秘術使用不可
+			return false  # ダウン状態のクリーチャーはアルカナアーツ使用不可
 	
 	# ターゲット有無確認
 	if not _has_valid_target(mystic_art, context):
@@ -931,7 +931,7 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 
 # ============ 効果適用 ============
 
-## 秘術効果を適用（メインエンジン）
+## アルカナアーツ効果を適用（メインエンジン）
 func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
 	if mystic_art.is_empty():
 		return false
@@ -943,7 +943,7 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 		var effect_override = mystic_art.get("effect_override", {})
 		return await _apply_spell_effect(spell_id, target_data, context, effect_override)
 	
-	# spell_idがない場合は秘術独自のeffectsを使用（従来方式）
+	# spell_idがない場合はアルカナアーツ独自のeffectsを使用（従来方式）
 	var effects = mystic_art.get("effects", [])
 	var success = true
 	
@@ -979,7 +979,7 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 				applied_effect[key] = effect_override[key]
 		
 		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
-			# 秘術発動者のタイルインデックスを追加（self_destroy等で必要）
+			# アルカナアーツ発動者のタイルインデックスを追加（self_destroy等で必要）
 			var extended_target_data = target_data.duplicate()
 			if _context.has("tile_index"):
 				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
@@ -1002,7 +1002,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 		var extended_target_data = target_data.duplicate()
 		if not extended_target_data.has("tile_index") and context.has("tile_index"):
 			extended_target_data["tile_index"] = context.get("tile_index", -1)
-		# 秘術発動者のタイルインデックスも別キーで追加（self_destroy等で必要）
+		# アルカナアーツ発動者のタイルインデックスも別キーで追加（self_destroy等で必要）
 		if context.has("tile_index"):
 			extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
 		await spell_phase_handler_ref._apply_single_effect(effect, extended_target_data)
@@ -1014,7 +1014,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 
 # ============ ダウン状態管理 ============
 
-## 秘術発動後、キャスター（クリーチャー）をダウン状態に設定
+## アルカナアーツ発動後、キャスター（クリーチャー）をダウン状態に設定
 func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Object) -> void:
 	if caster_tile_index == -1:
 		return
@@ -1056,7 +1056,7 @@ func _has_unyielding(creature_data: Dictionary) -> bool:
 	return false
 
 
-## ナチュラルワールドで秘術が無効化されているか
+## ナチュラルワールドでアルカナアーツが無効化されているか
 func _is_mystic_arts_disabled() -> bool:
 	var game_stats = _get_game_stats()
 	return SpellWorldCurse.is_trigger_disabled("mystic_arts", game_stats)

@@ -41,7 +41,7 @@ var defense_weights: Dictionary = {
 }
 
 # 防衛時の優先保護設定
-var protect_mystic_arts: bool = false      # 秘術持ちを優先保護
+var protect_mystic_arts: bool = false      # アルカナアーツ持ちを優先保護
 var protect_element_match: bool = false    # 属性一致を優先保護
 var protect_by_value_enabled: bool = false # 土地価値による判断を有効化
 var protect_by_value_threshold: int = 200  # この通行料以上なら優先保護
@@ -143,11 +143,11 @@ func decide_defense_action(defense_context: Dictionary) -> DefenseAction:
 	# 1. 優先保護対象かどうかを判定
 	var is_priority_target = false
 	
-	# 秘術持ちを優先保護
+	# アルカナアーツ持ちを優先保護
 	if protect_mystic_arts:
 		if _has_mystic_arts(defender):
 			is_priority_target = true
-			print("[CPUBattlePolicy] 秘術持ちクリーチャー → 優先保護対象")
+			print("[CPUBattlePolicy] アルカナアーツ持ちクリーチャー → 優先保護対象")
 	
 	# 属性一致を優先保護
 	if protect_element_match:
@@ -193,11 +193,11 @@ func decide_defense_action(defense_context: Dictionary) -> DefenseAction:
 	print("[CPUBattlePolicy] 防衛判断: %s（抽選）" % DefenseAction.keys()[selected])
 	return selected as DefenseAction
 
-## 秘術持ちかどうかを判定
+## アルカナアーツ持ちかどうかを判定
 func _has_mystic_arts(creature: Dictionary) -> bool:
 	var ability_parsed = creature.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	return "秘術" in keywords
+	return "アルカナアーツ" in keywords
 
 ## 重み付き抽選
 func _weighted_random_select(weights: Dictionary) -> int:

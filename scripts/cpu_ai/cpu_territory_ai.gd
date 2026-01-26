@@ -466,9 +466,9 @@ func _evaluate_creature_swap(context: Dictionary) -> Array:
 		var current_element = current_creature.get("element", "")
 		var current_match = (current_element == land_element) or (land_element == "neutral")
 		
-		# 秘術持ちは交換対象外
+		# アルカナアーツ持ちは交換対象外
 		if _has_mystic_arts(current_creature):
-			print("[CPUTerritoryAI] 交換評価: %s は秘術持ちのため交換対象外" % current_creature.get("name", "?"))
+			print("[CPUTerritoryAI] 交換評価: %s はアルカナアーツ持ちのため交換対象外" % current_creature.get("name", "?"))
 			continue
 		
 		# 現在のクリーチャーのレートを取得
@@ -811,7 +811,7 @@ func _is_element_match_for_invasion(_ctx: Dictionary, _tile) -> bool:
 	return false
 
 
-## 秘術持ちかどうかをチェック
+## アルカナアーツ持ちかどうかをチェック
 func _has_mystic_arts(creature_data: Dictionary) -> bool:
 	# トップレベルのmystic_artsをチェック
 	if creature_data.has("mystic_arts") and creature_data.get("mystic_arts") != null:
@@ -824,10 +824,10 @@ func _has_mystic_arts(creature_data: Dictionary) -> bool:
 		if not mystic_arts.is_empty():
 			return true
 	
-	# keywordsに秘術があるかチェック
+	# keywordsにアルカナアーツがあるかチェック
 	if ability_parsed:
 		var keywords = ability_parsed.get("keywords", [])
-		if "秘術" in keywords:
+		if "アルカナアーツ" in keywords:
 			return true
 	
 	return false

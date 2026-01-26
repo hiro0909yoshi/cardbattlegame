@@ -59,7 +59,7 @@ func apply_toll_multiplier(tile_index: int, multiplier: float = 1.5):
 		"multiplier": multiplier
 	})
 
-## toll_half_curse: 通行料半減（秘術専用）
+## toll_half_curse: 通行料半減（アルカナアーツ専用）
 func apply_toll_half_curse(tile_index: int, duration: int = 3):
 	spell_curse.curse_creature(tile_index, "toll_multiplier", duration, {
 		"name": "通行料半減",
@@ -81,7 +81,7 @@ func apply_creature_toll_disable(tile_index: int, duration: int = -1):
 	})
 
 # ========================================
-# 汎用呪い適用（秘術用）
+# 汎用呪い適用（アルカナアーツ用）
 # ========================================
 
 ## スペル効果から通行料呪いを適用

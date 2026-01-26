@@ -11,7 +11,7 @@ extends RefCounted
 ## クリーチャーにとって有利な呪い（所有者視点）
 const BENEFICIAL_CREATURE_CURSES = [
 	"stat_boost",           # 能力値+20
-	"mystic_grant",         # 秘術付与
+	"mystic_grant",         # アルカナアーツ付与
 	"command_growth",       # コマンド成長
 	"forced_stop",          # 強制停止（敵を足止め）
 	"indomitable",          # 不屈

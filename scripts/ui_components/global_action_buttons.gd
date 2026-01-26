@@ -9,7 +9,7 @@ var up_button: Button
 var down_button: Button
 var confirm_button: Button
 var back_button: Button
-var special_button: Button  # 左下の特殊ボタン（秘術/領地コマンド等）
+var special_button: Button  # 左下の特殊ボタン（アルカナアーツ/領地コマンド等）
 
 # コールバック
 var _confirm_callback: Callable = Callable()
@@ -65,7 +65,7 @@ func _setup_ui():
 	add_child(back_button)
 	
 	# 特殊ボタン（左下、テキストは動的）
-	special_button = _create_button("", Color(0.4, 0.2, 0.6), 36)  # 紫色
+	special_button = _create_special_button("", Color(0.4, 0.2, 0.6))  # 紫色、専用スタイル
 	special_button.pressed.connect(_on_special_pressed)
 	add_child(special_button)
 	
@@ -111,6 +111,60 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	button.add_theme_font_size_override("font_size", font_size)
 	button.add_theme_color_override("font_color", Color.WHITE)
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
+	
+	return button
+
+
+## 特殊ボタン（アルカナアーツ用）専用作成 - 大きなフォントとスタイリッシュなデザイン
+func _create_special_button(text: String, color: Color) -> Button:
+	var button = Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
+	button.size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
+	button.focus_mode = Control.FOCUS_NONE
+	button.visible = true
+	
+	# グラデーション風の背景スタイル
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.5, 0.15, 0.7)  # 鮮やかな紫
+	var corner_radius := int(BUTTON_SIZE / 2.0)
+	style.corner_radius_top_left = corner_radius
+	style.corner_radius_top_right = corner_radius
+	style.corner_radius_bottom_left = corner_radius
+	style.corner_radius_bottom_right = corner_radius
+	style.border_width_top = 5
+	style.border_width_bottom = 5
+	style.border_width_left = 5
+	style.border_width_right = 5
+	style.border_color = Color(1, 0.85, 0.4, 0.9)  # ゴールドの縁取り
+	style.shadow_color = Color(0.2, 0.0, 0.3, 0.6)
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(4, 4)
+	button.add_theme_stylebox_override("normal", style)
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = Color(0.6, 0.2, 0.8)  # 明るい紫
+	hover_style.border_color = Color(1, 0.95, 0.6, 1)  # 明るいゴールド
+	button.add_theme_stylebox_override("hover", hover_style)
+	
+	var pressed_style = style.duplicate()
+	pressed_style.bg_color = Color(0.35, 0.1, 0.5)  # 暗い紫
+	pressed_style.shadow_size = 2
+	pressed_style.shadow_offset = Vector2(1, 1)
+	button.add_theme_stylebox_override("pressed", pressed_style)
+	
+	var disabled_style = style.duplicate()
+	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
+	disabled_style.border_color = Color(0.5, 0.5, 0.5, 0.3)
+	disabled_style.shadow_size = 0
+	button.add_theme_stylebox_override("disabled", disabled_style)
+	
+	# 大きなフォントサイズ
+	button.add_theme_font_size_override("font_size", 120)
+	button.add_theme_color_override("font_color", Color(1, 0.95, 0.7))  # クリーム色
+	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
+	button.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
+	button.add_theme_constant_override("outline_size", 4)  # 文字のアウトライン
 	
 	return button
 

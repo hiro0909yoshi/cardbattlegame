@@ -416,7 +416,7 @@
 	},
 	{
 	  "id": 9018,
-	  "name": "地形効果無効（スクリーマー秘術）",
+	  "name": "地形効果無効（スクリーマーアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -440,7 +440,7 @@
 	},
 	{
 	  "id": 9019,
-	  "name": "地形効果付与（ハイドビハインド秘術）",
+	  "name": "地形効果付与（ハイドビハインドアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -465,7 +465,7 @@
 	},
 	{
 	  "id": 9020,
-	  "name": "オールドウィロウに変身（スプラウトリング秘術）",
+	  "name": "オールドウィロウに変身（スプラウトリングアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -485,7 +485,7 @@
 	},
 	{
 	  "id": 9021,
-	  "name": "方向選択権付与（クロックアウル秘術）",
+	  "name": "方向選択権付与（クロックアウルアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -508,7 +508,7 @@
 	},
 	{
 	  "id": 9022,
-	  "name": "防魔付与（ドモビー秘術）",
+	  "name": "防魔付与（ドモビーアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -521,7 +521,7 @@
 			"effect_type": "creature_curse",
 			"curse_type": "spell_protection",
 			"name": "防魔",
-			"description": "スペル・秘術の対象にならない",
+			"description": "スペル・アルカナアーツの対象にならない",
 			"duration": -1
 		  }
 		]
@@ -534,7 +534,7 @@
 	},
 	{
 	  "id": 9023,
-	  "name": "防魔付与（パトロナス秘術）",
+	  "name": "防魔付与（パトロナスアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -547,7 +547,7 @@
 			"effect_type": "player_curse",
 			"curse_type": "spell_protection",
 			"name": "防魔",
-			"description": "スペル・秘術の対象にならない",
+			"description": "スペル・アルカナアーツの対象にならない",
 			"duration": -1
 		  }
 		]
@@ -642,7 +642,7 @@
 	},
 	{
 	  "id": 9028,
-	  "name": "衰弱呪い（スピットコブラ秘術）",
+	  "name": "衰弱呪い（スピットコブラアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -667,7 +667,7 @@
 	},
 	{
 	  "id": 9029,
-	  "name": "ダイス1～3呪い（スワンプスボーン秘術）",
+	  "name": "ダイス1～3呪い（スワンプスボーンアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -692,7 +692,7 @@
 	},
 	{
 	  "id": 9030,
-	  "name": "能力値+20呪い（カラドリウス秘術）",
+	  "name": "能力値+20呪い（カラドリウスアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -716,7 +716,7 @@
 	},
 	{
 	  "id": 9031,
-	  "name": "AP+20（フェイ秘術）",
+	  "name": "AP+20（フェイアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -738,7 +738,7 @@
 	},
 	{
 	  "id": 9032,
-	  "name": "AP+10（カワヒメ秘術）",
+	  "name": "AP+10（カワヒメアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -760,7 +760,7 @@
 	},
 	{
 	  "id": 9033,
-	  "name": "AP調整（ロードオブペイン秘術）",
+	  "name": "AP調整（ロードオブペインアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -790,7 +790,7 @@
 	},
 	{
 	  "id": 9034,
-	  "name": "MHP変換（ドゥームデボラー秘術）",
+	  "name": "MHP変換（ドゥームデボラーアルカナアーツ）",
 	  "rarity": "S",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -818,7 +818,7 @@
 	},
 	{
 	  "id": 9035,
-	  "name": "破壊報酬（ヘルバイロン秘術）",
+	  "name": "破壊報酬（ヘルバイロンアルカナアーツ）",
 	  "rarity": "R",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -839,7 +839,7 @@
 	},
 	{
 	  "id": 9036,
-	  "name": "スペル強奪（ウィッチ秘術）",
+	  "name": "スペル強奪（ウィッチアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -862,7 +862,7 @@
 	},
 	{
 	  "id": 9037,
-	  "name": "ダウン付与（アルプ秘術）",
+	  "name": "ダウン付与（アルプアルカナアーツ）",
 	  "rarity": "S",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -884,7 +884,7 @@
 	},
 	{
 	  "id": 9038,
-	  "name": "ブック破壊（コアトリクエ秘術）",
+	  "name": "ブック破壊（コアトリクエアルカナアーツ）",
 	  "rarity": "S",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -906,7 +906,7 @@
 	},
 	{
 	  "id": 9039,
-	  "name": "水への変成（マカラ秘術）",
+	  "name": "水への変成（マカラアルカナアーツ）",
 	  "rarity": "R",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -926,7 +926,7 @@
 	},
 	{
 	  "id": 9040,
-	  "name": "地への変成（サクヤ秘術）",
+	  "name": "地への変成（サクヤアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -946,7 +946,7 @@
 	},
 	{
 	  "id": 9041,
-	  "name": "無への変成（ストーンジゾウ秘術）",
+	  "name": "無への変成（ストーンジゾウアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -971,7 +971,7 @@
 	},
 	{
 	  "id": 9042,
-	  "name": "カードドロー（フェイト秘術）",
+	  "name": "カードドロー（フェイトアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -990,7 +990,7 @@
 	},
 	{
 	  "id": 9043,
-	  "name": "アイテムドロー（アイアンモンガー秘術）",
+	  "name": "アイテムドロー（アイアンモンガーアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1009,7 +1009,7 @@
 	},
 	{
 	  "id": 9044,
-	  "name": "ダウン解除（キャプテンコック秘術）",
+	  "name": "ダウン解除（キャプテンコックアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1033,7 +1033,7 @@
 	},
 	{
 	  "id": 9045,
-	  "name": "手札破壊ドロー（クラウドギズモ秘術）",
+	  "name": "手札破壊ドロー（クラウドギズモアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1054,7 +1054,7 @@
 	},
 	{
 	  "id": 9046,
-	  "name": "マミーに変身（デスサイズ秘術）",
+	  "name": "マミーに変身（デスサイズアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1074,7 +1074,7 @@
 	},
 	{
 	  "id": 9047,
-	  "name": "ケルピーに変身（ヒッポカンパス秘術）",
+	  "name": "ケルピーに変身（ヒッポカンパスアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1094,7 +1094,7 @@
 	},
 	{
 	  "id": 9048,
-	  "name": "アクアホーンに変身（ミストウィング秘術）",
+	  "name": "アクアホーンに変身（ミストウィングアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1114,7 +1114,7 @@
 	},
 	{
 	  "id": 9049,
-	  "name": "ミストウィングに変身（アクアホーン秘術）",
+	  "name": "ミストウィングに変身（アクアホーンアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1134,7 +1134,7 @@
 	},
 	{
 	  "id": 9050,
-	  "name": "ガルーダに変身（シルフ秘術）",
+	  "name": "ガルーダに変身（シルフアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1154,7 +1154,7 @@
 	},
 	{
 	  "id": 9051,
-	  "name": "アームドプリンセスに変身（ソードプリンセス秘術）",
+	  "name": "アームドプリンセスに変身（ソードプリンセスアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1174,7 +1174,7 @@
 	},
 	{
 	  "id": 9052,
-	  "name": "マッドマンに変身（ブランチアーミー秘術）",
+	  "name": "マッドマンに変身（ブランチアーミーアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1194,7 +1194,7 @@
 	},
 	{
 	  "id": 9053,
-	  "name": "ハイプワーカー生成（ハイプクイーン秘術）",
+	  "name": "ハイプワーカー生成（ハイプクイーンアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1213,7 +1213,7 @@
 	},
 	{
 	  "id": 9054,
-	  "name": "バーアル召喚（コンジャラー秘術）",
+	  "name": "バーアル召喚（コンジャラーアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1243,7 +1243,7 @@
 	},
 	{
 	  "id": 9055,
-	  "name": "グーバ配置（グーバクイーン秘術）",
+	  "name": "グーバ配置（グーバクイーンアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1269,7 +1269,7 @@
 	},
 	{
 	  "id": 9056,
-	  "name": "スタチュー配置（レジェンドファロス秘術）",
+	  "name": "スタチュー配置（レジェンドファロスアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1290,7 +1290,7 @@
 	},
 	{
 	  "id": 9057,
-	  "name": "対象と同じクリーチャーに変身（シェイプシフター秘術）",
+	  "name": "対象と同じクリーチャーに変身（シェイプシフターアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1314,7 +1314,7 @@
 	},
 	{
 	  "id": 9058,
-	  "name": "スペル借用（ルーンアデプト秘術）",
+	  "name": "スペル借用（ルーンアデプトアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
@@ -1332,7 +1332,7 @@
 	},
 	{
 	  "id": 9059,
-	  "name": "クリーチャー交換（レムレース秘術）",
+	  "name": "クリーチャー交換（レムレースアルカナアーツ）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {

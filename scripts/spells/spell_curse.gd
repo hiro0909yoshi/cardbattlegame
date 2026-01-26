@@ -62,9 +62,9 @@ func apply_effect(effect: Dictionary, tile_index: int) -> void:
 			curse_creature(tile_index, "ap_nullify", duration, params)
 		
 		"grant_mystic_arts":
-			# 秘術付与呪い（シュリンクシジル、ドレインシジル等）
+			# アルカナアーツ付与呪い（シュリンクシジル、ドレインシジル等）
 			# spell_id参照方式と旧mystic_arts配列方式の両方に対応
-			var curse_name = effect.get("name", effect.get("curse_name", "秘術付与"))
+			var curse_name = effect.get("name", effect.get("curse_name", "アルカナアーツ付与"))
 			var spell_id = effect.get("spell_id", 0)
 			var cost = effect.get("cost", 0)
 			var mystic_arts = effect.get("mystic_arts", [])
