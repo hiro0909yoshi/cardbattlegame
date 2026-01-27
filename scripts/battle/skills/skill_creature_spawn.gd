@@ -5,7 +5,7 @@ extends RefCounted
 ##
 ## 対象クリーチャー:
 ## - 140: マイコロン - 敵攻撃で生き残った戦闘後、ランダム空地にコピー配置
-## - 335: バウダーイーター - ドミニオオーダー移動時、元のドミニオに自分を残す
+## - 335: バウダーイーター - ドミニオコマンド移動時、元のドミニオに自分を残す
 
 const MYCOLON_ID = 140
 const BOULDER_EATER_ID = 335
@@ -108,7 +108,7 @@ static func spawn_mycolon_copy(board_system, tile_index: int, creature_data: Dic
 # ============================================================
 
 ## バウダーイーターの分裂移動チェック
-## ドミニオオーダー移動時に呼び出す
+## ドミニオコマンド移動時に呼び出す
 static func check_boulder_eater_split(creature_data: Dictionary) -> bool:
 	return is_boulder_eater(creature_data)
 

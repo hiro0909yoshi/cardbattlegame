@@ -69,7 +69,7 @@ func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, bt_sy
 	battle_ai = CPUBattleAI.new()
 	battle_ai.setup_with_context(context)
 	
-	# ドミニオオーダーAIを初期化（context方式）
+	# ドミニオコマンドAIを初期化（context方式）
 	territory_ai = CPUTerritoryAI.new()
 	territory_ai.setup_with_context(context)
 	
@@ -369,11 +369,11 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 		emit_signal("level_up_decided", false)
 
 # ============================================================
-# ドミニオオーダー判断
+# ドミニオコマンド判断
 # ============================================================
 
-## ドミニオオーダー判断（召喚フェーズ用）
-## 召喚 vs ドミニオオーダーのどちらが得かを判断
+## ドミニオコマンド判断（召喚フェーズ用）
+## 召喚 vs ドミニオコマンドのどちらが得かを判断
 func decide_territory_command(current_player, tile_info: Dictionary, situation: String = "own_land") -> void:
 	decision_attempts += 1
 	
@@ -395,17 +395,17 @@ func decide_territory_command(current_player, tile_info: Dictionary, situation: 
 	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	if best_option.is_empty():
-		print("[CPU AI] ドミニオオーダー: 有効なオプションなし")
+		print("[CPU AI] ドミニオコマンド: 有効なオプションなし")
 		decision_attempts = 0
 		emit_signal("territory_command_decided", {})
 		return
 	
-	print("[CPU AI] ドミニオオーダー決定: %s (スコア: %d)" % [best_option.get("type", "?"), best_option.get("score", 0)])
+	print("[CPU AI] ドミニオコマンド決定: %s (スコア: %d)" % [best_option.get("type", "?"), best_option.get("score", 0)])
 	decision_attempts = 0
 	emit_signal("territory_command_decided", best_option)
 
 
-## 召喚 vs ドミニオオーダーを比較して最適な行動を返す
+## 召喚 vs ドミニオコマンドを比較して最適な行動を返す
 func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
 	if territory_ai == null:
 		return {"action": "summon"}
@@ -419,7 +419,7 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 	if has_matching_creature:
 		return {"action": "summon"}
 	
-	# ドミニオオーダーを評価
+	# ドミニオコマンドを評価
 	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	if best_option.is_empty():
@@ -435,7 +435,7 @@ func decide_summon_or_territory(current_player, tile_info: Dictionary) -> Dictio
 	return {"action": "summon"}
 
 
-## 敵ドミニオでの判断（侵略 vs ドミニオオーダー）
+## 敵ドミニオでの判断（侵略 vs ドミニオコマンド）
 func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dictionary:
 	if territory_ai == null:
 		return {"action": "battle"}
@@ -453,28 +453,28 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	
 	# ALWAYS_BATTLEまたはバトル可能な場合は戦闘を検討
 	if action != CPUBattlePolicyScript.AttackAction.NEVER_BATTLE:
-		# 戦闘を選択する場合でも、ドミニオオーダーの方が有利ならドミニオオーダーを選ぶ
+		# 戦闘を選択する場合でも、ドミニオコマンドの方が有利ならドミニオコマンドを選ぶ
 		var can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
 		if can_win:
-			# 倒せる場合は侵略スコアとドミニオオーダースコアを比較（下の処理へ）
+			# 倒せる場合は侵略スコアとドミニオコマンドスコアを比較（下の処理へ）
 			pass
 		elif action == CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
-			# ALWAYS_BATTLEで勝てない場合はドミニオオーダーを検討しない（戦闘を強行）
+			# ALWAYS_BATTLEで勝てない場合はドミニオコマンドを検討しない（戦闘を強行）
 			return {"action": "battle"}
 		else:
-			# 勝てない場合はドミニオオーダーを検討
+			# 勝てない場合はドミニオコマンドを検討
 			var territory_option = territory_ai.evaluate_all_options(cmd_context)
 			if not territory_option.is_empty():
 				return {"action": "territory_command", "command": territory_option}
 			return {"action": "skip"}
 	else:
-		# NEVER_BATTLEの場合はドミニオオーダーを検討
+		# NEVER_BATTLEの場合はドミニオコマンドを検討
 		var territory_option = territory_ai.evaluate_all_options(cmd_context)
 		if not territory_option.is_empty():
 			return {"action": "territory_command", "command": territory_option}
 		return {"action": "skip"}
 	
-	# 倒せる場合は侵略スコアとドミニオオーダースコアを比較
+	# 倒せる場合は侵略スコアとドミニオコマンドスコアを比較
 	var best_option = territory_ai.evaluate_all_options(cmd_context)
 	
 	# 侵略スコアを計算（territory_aiの_evaluate_invasionと同じ計算）
@@ -494,7 +494,7 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	return {"action": "battle"}
 
 
-## ドミニオオーダー用コンテキストを構築
+## ドミニオコマンド用コンテキストを構築
 func _build_territory_context(current_player, tile_info: Dictionary, situation: String) -> Dictionary:
 	var toll = 0
 	if situation == "enemy_land":

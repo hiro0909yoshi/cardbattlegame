@@ -165,10 +165,12 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 		# 移動前のチェック
 		if next_tile == 0 and current_tile > next_tile:
 			handle_start_pass(player_id)
-		check_and_handle_checkpoint(player_id, next_tile, current_tile)
 		
 		# タイルへ移動
 		await move_to_tile(player_id, next_tile)
+		
+		# 移動後にチェックポイント通過処理（コメント表示のため移動完了後）
+		await check_and_handle_checkpoint(player_id, next_tile, current_tile)
 		
 		# 状態を更新
 		# 逆転時: came_fromは「次に進む方向」として維持（更新しない方式に変更）
@@ -817,11 +819,11 @@ func move_along_path(player_id: int, path: Array) -> void:
 		if tile_index == 0 and previous_tile > tile_index:
 			handle_start_pass(player_id)
 		
-		# チェックポイント通過チェック
-		check_and_handle_checkpoint(player_id, tile_index, previous_tile)
-		
 		# タイルへ移動
 		await move_to_tile(player_id, tile_index)
+		
+		# 移動後にチェックポイント通過処理（コメント表示のため移動完了後）
+		await check_and_handle_checkpoint(player_id, tile_index, previous_tile)
 		
 		# 位置を更新
 		player_tiles[player_id] = tile_index
@@ -984,6 +986,17 @@ func check_and_handle_checkpoint(player_id: int, tile_index: int, previous_tile:
 		# CheckpointTileのon_player_passedを呼ぶ
 		if tile.has_method("on_player_passed"):
 			tile.on_player_passed(player_id)
+			
+			# LapSystemの処理完了を待つ（コメント表示等）
+			var lap_system = _get_lap_system()
+			if lap_system:
+				await lap_system.checkpoint_processing_completed
+
+# LapSystemを取得
+func _get_lap_system():
+	if game_flow_manager and "lap_system" in game_flow_manager:
+		return game_flow_manager.lap_system
+	return null
 
 # 特定タイルへ直接配置（初期配置用）
 func place_player_at_tile(player_id: int, tile_index: int) -> void:

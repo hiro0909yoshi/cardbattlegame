@@ -64,7 +64,7 @@ func _handle_cpu_magic_stone(player_id: int) -> Dictionary:
 		# コメント表示
 		if _ui_manager and _ui_manager.global_comment_ui:
 			var element_name = _get_element_name(element)
-			await _ui_manager.global_comment_ui.show_and_wait("%sの石を購入した！" % element_name, player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("%sの石を購入した！" % element_name, player_id, true)
 		
 		# UI更新
 		if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
@@ -117,7 +117,7 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 	if not stone_system:
 		push_error("[MagicStoneTile] MagicStoneSystemが初期化されていません")
 		if _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("魔法石ショップは準備中です", player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("魔法石ショップは準備中です", player_id, true)
 		return {"success": true, "transaction_done": false}
 	
 	# UIがなければ作成

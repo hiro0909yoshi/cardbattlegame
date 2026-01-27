@@ -6,7 +6,7 @@ class_name UIManager
 signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
-signal dominio_order_button_pressed()  # Phase 1-A: ドミニオオーダーボタン
+signal dominio_order_button_pressed()  # Phase 1-A: ドミニオコマンドボタン
 
 # UIコンポーネント（分割されたサブシステム）
 var dominio_order_ui: DominioOrderUI = null
@@ -31,7 +31,7 @@ var tap_target_manager: TapTargetManager = null
 var phase_label: Label:
 	get: return phase_display.phase_label if phase_display else null
 
-# Phase 1-A: ドミニオオーダーUI（DominioOrderUIに委譲）
+# Phase 1-A: ドミニオコマンドUI（DominioOrderUIに委譲）
 # 以下の変数は削除予定（DominioOrderUIに移行済み）
 
 # システム参照（型指定なし - 3D対応のため）
@@ -256,8 +256,8 @@ func create_basic_ui(parent: Node):
 	if phase_display:
 		phase_display.initialize(parent)
 	
-	# Phase 1-A: ドミニオオーダーUI初期化（DominioOrderUIに委譲）
-	# 注: ドミニオオーダーボタンはグローバル特殊ボタンに移行済み
+	# Phase 1-A: ドミニオコマンドUI初期化（DominioOrderUIに委譲）
+	# 注: ドミニオコマンドボタンはグローバル特殊ボタンに移行済み
 	if dominio_order_ui:
 		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self)
 		dominio_order_ui.create_action_menu_panel(parent)
@@ -388,9 +388,9 @@ func _on_creature_info_panel_cancelled():
 
 func _on_cancel_dominio_order_button_pressed():
 	print("[UIManager] キャンセルボタンがクリックされました！")
-	# GameFlowManagerのdominio_order_handlerに通知
-	if game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler:
-		game_flow_manager_ref.dominio_order_handler.cancel()
+	# GameFlowManagerのdominio_command_handlerに通知
+	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
+		game_flow_manager_ref.dominio_command_handler.cancel()
 
 # === グローバルアクションボタン管理 ===
 
@@ -478,7 +478,7 @@ func clear_global_actions():
 
 # === 特殊ボタン（左下）API ===
 
-## 特殊ボタンを設定（アルカナアーツ/ドミニオオーダー等）
+## 特殊ボタンを設定（アルカナアーツ/ドミニオコマンド等）
 func set_special_button(text: String, callback: Callable):
 	if global_action_buttons:
 		global_action_buttons.setup_special(text, callback)
@@ -526,16 +526,16 @@ func _input(event):
 			toggle_debug_mode()
 
 # ============================================
-# Phase 1-A: ドミニオオーダーUI
+# Phase 1-A: ドミニオコマンドUI
 # ============================================
 
-# ドミニオオーダーボタンは特殊ボタン（左下）に移行済み
+# ドミニオコマンドボタンは特殊ボタン（左下）に移行済み
 
-## ドミニオオーダーボタンを表示（特殊ボタン使用）
+## ドミニオコマンドボタンを表示（特殊ボタン使用）
 func show_dominio_order_button():
 	set_special_button("D", func(): _on_dominio_order_button_pressed())
 
-## ドミニオオーダーボタンを非表示（特殊ボタンクリア）
+## ドミニオコマンドボタンを非表示（特殊ボタンクリア）
 func hide_dominio_order_button():
 	clear_special_button()
 
@@ -587,7 +587,7 @@ func show_land_selection_mode(_owned_lands: Array):
 			land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
 		phase_label.text = "土地を選択（数字キー） " + land_list
 	
-	# キャンセルボタンはdominio_order_handler側で登録するためここでは呼ばない
+	# キャンセルボタンはdominio_command_handler側で登録するためここでは呼ばない
 	# show_cancel_button()
 
 # アクション選択UIを表示
@@ -596,7 +596,7 @@ func show_action_selection_ui(tile_index: int):
 	# Phase 1-A: 新しいUIパネルを使用
 	show_action_menu(tile_index)
 
-# ドミニオオーダーUIを非表示
+# ドミニオコマンドUIを非表示
 func hide_dominio_order_ui():
 	# Phase 1-A: 新UIパネルを非表示
 	hide_action_menu()
@@ -760,8 +760,8 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	
 	# ターゲット選択されなかった場合はインフォパネル表示
 	# ターゲット選択中は setup_buttons=false でグローバルボタンを変更しない
-	# ドミニオオーダー選択中は専用の処理を行う
-	var is_dominio_order_active = game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler and game_flow_manager_ref.dominio_order_handler.current_state != game_flow_manager_ref.dominio_order_handler.State.CLOSED
+	# ドミニオコマンド選択中は専用の処理を行う
+	var is_dominio_order_active = game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler and game_flow_manager_ref.dominio_command_handler.current_state != game_flow_manager_ref.dominio_command_handler.State.CLOSED
 	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
 	var setup_buttons = not is_tap_target_active and not is_dominio_order_active
 	
@@ -769,12 +769,12 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
 		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_dominio_order_active])
 		
-		# ドミニオオーダー中はパネルを閉じるだけの×ボタンを設定
+		# ドミニオコマンド中はパネルを閉じるだけの×ボタンを設定
 		if is_dominio_order_active:
 			register_back_action(func():
 				creature_info_panel_ui.hide_panel(false)
-				# ドミニオオーダーのナビゲーションを復元
-				game_flow_manager_ref.dominio_order_handler._restore_navigation()
+				# ドミニオコマンドのナビゲーションを復元
+				game_flow_manager_ref.dominio_command_handler._restore_navigation()
 			, "閉じる")
 	else:
 		print("[UIManager] creature_info_panel_ui がない")
@@ -815,7 +815,7 @@ func _on_empty_tapped():
 ## TapTargetManagerからターゲットが選択された時
 func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 	print("[UIManager] タップターゲット選択: タイル%d" % tile_index)
-	# ドミニオオーダーハンドラなど、呼び出し元に通知（シグナルを中継）
+	# ドミニオコマンドハンドラなど、呼び出し元に通知（シグナルを中継）
 	# 具体的な処理は各ハンドラが tap_target_manager.target_selected に直接接続
 
 

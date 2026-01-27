@@ -1,12 +1,12 @@
-# DominioOrderHandler - ドミニオオーダーの処理を担当
+# DominioCommandHandler - ドミニオコマンドの処理を担当
 extends Node
-class_name DominioOrderHandler
+class_name DominioCommandHandler
 
 const GameConstants = preload("res://scripts/game_constants.gd")
 
 ## シグナル
-signal dominio_order_opened()
-signal dominio_order_closed()
+signal dominio_command_opened()
+signal dominio_command_closed()
 @warning_ignore("unused_signal")
 signal land_selected(tile_index: int)
 @warning_ignore("unused_signal")
@@ -14,7 +14,7 @@ signal action_selected(action_type: String)
 
 ## 状態
 enum State {
-	CLOSED,              # ドミニオオーダー非表示
+	CLOSED,              # ドミニオコマンド非表示
 	SELECTING_LAND,      # 土地選択中
 	SELECTING_ACTION,    # アクション選択中
 	SELECTING_LEVEL,     # レベル選択中
@@ -92,7 +92,7 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# 土地情報パネルを初期化
 	_setup_land_info_panel()
 
-## ドミニオオーダーを開く
+## ドミニオコマンドを開く
 func open_dominio_order(player_id: int):
 	if current_state != State.CLOSED:
 		return
@@ -105,7 +105,7 @@ func open_dominio_order(player_id: int):
 			ui_manager.phase_label.text = "所有地がありません"
 		return
 	
-	# ドミニオボタンを非表示（ドミニオオーダー中は表示しない）
+	# ドミニオボタンを非表示（ドミニオコマンド中は表示しない）
 	if ui_manager and ui_manager.has_method("hide_dominio_order_button"):
 		ui_manager.hide_dominio_order_button()
 	
@@ -117,13 +117,13 @@ func open_dominio_order(player_id: int):
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
 	current_land_selection_index = 0  # 最初の土地を選択
-	dominio_order_opened.emit()
+	dominio_command_opened.emit()
 	
 	# 入力ロックを解除（土地選択待ち状態になった）
 	if game_flow_manager:
 		game_flow_manager.unlock_input()
 	
-	# ドミニオオーダーはグローバルキーで選択するため、TapTargetManagerは使用しない
+	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
 	# _start_tap_target_selection(player_id)
 	
 	# 最初の土地を自動プレビュー
@@ -206,12 +206,12 @@ func execute_swap_creature() -> bool:
 func _check_swap_conditions(player_id: int) -> bool:
 	return LandActionHelper.check_swap_conditions(self, player_id)
 
-## ドミニオオーダーを閉じる
+## ドミニオコマンドを閉じる
 func close_dominio_order():
 	# マーカーを非表示
 	TargetSelectionHelper.hide_selection_marker(self)
 	
-	# ドミニオオーダーはグローバルキーで選択するため、TapTargetManagerは使用しない
+	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
 	# _end_tap_target_selection()
 	
 	# すべての状態をリセット
@@ -252,7 +252,7 @@ func close_dominio_order():
 		ui_manager.dominio_order_ui.hide_level_selection()
 		ui_manager.dominio_order_ui.hide_terrain_selection()
 	
-	dominio_order_closed.emit()
+	dominio_command_closed.emit()
 	
 	
 	# カメラを現在のプレイヤーに戻す
@@ -569,7 +569,7 @@ func on_card_selected_for_swap(card_index: int):
 	_swap_tile_index = -1
 	
 	# TileActionProcessorの交換処理を呼び出す
-	# 注: ドミニオオーダーはend_turn()で閉じられる
+	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.execute_swap(
 			tile_index,
@@ -714,6 +714,13 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 		# 移動元情報をクリア
 		move_source_tile = -1
 	
+	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
+	if board_system and board_system.tile_action_processor:
+		var player_name = _get_current_player_name()
+		board_system.tile_action_processor.set_pending_comment(
+			"%s がドミニオコマンド：移動侵略" % player_name
+		)
+	
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:
 		board_system.tile_action_processor.complete_action()
@@ -756,12 +763,12 @@ func _setup_land_info_panel():
 # CPU用インターフェース
 # ============================================================
 
-## CPUがドミニオオーダーを実行（統合メソッド）
+## CPUがドミニオコマンドを実行（統合メソッド）
 ## 戻り値: 実行成功/失敗
 func execute_for_cpu(command: Dictionary) -> bool:
 	var command_type = command.get("type", "")
 	
-	print("[DominioOrderHandler] CPU実行: %s" % command_type)
+	print("[DominioCommandHandler] CPU実行: %s" % command_type)
 	
 	# コマンドタイプに応じて処理（各関数内でバリデーション）
 	match command_type:
@@ -769,7 +776,7 @@ func execute_for_cpu(command: Dictionary) -> bool:
 			# tile_indexを使用するコマンド
 			var tile_index = command.get("tile_index", -1)
 			if not _select_tile_for_cpu(tile_index):
-				print("[DominioOrderHandler] CPU: 土地選択失敗 (tile=%d)" % tile_index)
+				print("[DominioCommandHandler] CPU: 土地選択失敗 (tile=%d)" % tile_index)
 				return false
 			
 			match command_type:
@@ -784,7 +791,7 @@ func execute_for_cpu(command: Dictionary) -> bool:
 			# from_tile_indexを使用するコマンド（バリデーションは_execute_move_for_cpu内で行う）
 			return _execute_move_for_cpu(command)
 	
-	print("[DominioOrderHandler] CPU: 不明なコマンドタイプ: %s" % command_type)
+	print("[DominioCommandHandler] CPU: 不明なコマンドタイプ: %s" % command_type)
 	return false
 
 ## CPU用土地選択（バリデーション）
@@ -796,13 +803,13 @@ func _select_tile_for_cpu(tile_index: int) -> bool:
 	
 	# ダウンチェック
 	if tile.has_method("is_down") and tile.is_down():
-		print("[DominioOrderHandler] CPU: タイル%d はダウン中" % tile_index)
+		print("[DominioCommandHandler] CPU: タイル%d はダウン中" % tile_index)
 		return false
 	
 	# 所有権チェック
 	var current_player = player_system.get_current_player()
 	if tile.owner_id != current_player.id:
-		print("[DominioOrderHandler] CPU: タイル%d は所有していない" % tile_index)
+		print("[DominioCommandHandler] CPU: タイル%d は所有していない" % tile_index)
 		return false
 	
 	selected_tile_index = tile_index
@@ -817,7 +824,7 @@ func _execute_level_up_for_cpu(command: Dictionary) -> bool:
 	var success = LandActionHelper.execute_level_up_with_level(self, target_level, cost)
 	
 	if success:
-		print("[DominioOrderHandler] CPU: レベルアップ成功 → Lv%d" % target_level)
+		print("[DominioCommandHandler] CPU: レベルアップ成功 → Lv%d" % target_level)
 	
 	return success
 
@@ -832,7 +839,7 @@ func _execute_element_change_for_cpu(command: Dictionary) -> bool:
 	var success = LandActionHelper.execute_terrain_change_with_element(self, new_element)
 	
 	if success:
-		print("[DominioOrderHandler] CPU: 属性変更成功 → %s" % new_element)
+		print("[DominioCommandHandler] CPU: 属性変更成功 → %s" % new_element)
 	
 	return success
 
@@ -841,15 +848,15 @@ func _execute_move_for_cpu(command: Dictionary) -> bool:
 	var from_tile_index = command.get("from_tile_index", -1)
 	var to_tile_index = command.get("to_tile_index", -1)
 	
-	print("[DominioOrderHandler] CPU移動: from=%d, to=%d" % [from_tile_index, to_tile_index])
+	print("[DominioCommandHandler] CPU移動: from=%d, to=%d" % [from_tile_index, to_tile_index])
 	
 	if from_tile_index < 0 or to_tile_index < 0:
-		print("[DominioOrderHandler] CPU: 移動失敗 - 無効なタイルインデックス")
+		print("[DominioCommandHandler] CPU: 移動失敗 - 無効なタイルインデックス")
 		return false
 	
 	# 移動元を選択（ダウンチェック含む）
 	if not _select_tile_for_cpu(from_tile_index):
-		print("[DominioOrderHandler] CPU: 移動失敗 - 移動元選択不可")
+		print("[DominioCommandHandler] CPU: 移動失敗 - 移動元選択不可")
 		return false
 	
 	# 移動元を設定
@@ -865,12 +872,12 @@ func _execute_move_for_cpu(command: Dictionary) -> bool:
 			var item_with_index = item_data.duplicate()
 			item_with_index["_hand_index"] = item_index
 			game_flow_manager.item_phase_handler.set_preselected_attacker_item(item_with_index)
-			print("[DominioOrderHandler] CPU: 移動侵略アイテム事前設定: %s (index=%d)" % [item_data.get("name", "?"), item_index])
+			print("[DominioCommandHandler] CPU: 移動侵略アイテム事前設定: %s (index=%d)" % [item_data.get("name", "?"), item_index])
 	
 	# LandActionHelper.confirm_move を使用（空き地・敵ドミニオ両対応）
 	LandActionHelper.confirm_move(self, to_tile_index)
 	
-	print("[DominioOrderHandler] CPU: 移動実行 %d → %d" % [from_tile_index, to_tile_index])
+	print("[DominioCommandHandler] CPU: 移動実行 %d → %d" % [from_tile_index, to_tile_index])
 	return true
 
 ## CPU用クリーチャー交換
@@ -930,7 +937,7 @@ func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 		if not PlayerBuffSystem.has_unyielding(new_creature):
 			tile.set_down_state(true)
 	
-	print("[DominioOrderHandler] CPU: 交換成功 %s → %s" % [
+	print("[DominioCommandHandler] CPU: 交換成功 %s → %s" % [
 		old_creature.get("name", "?"), new_creature.get("name", "?")])
 	
 	_complete_swap_for_cpu(true)
@@ -973,10 +980,10 @@ func _start_tap_target_selection(player_id: int):
 	ttm.start_selection(
 		valid_targets,
 		TapTargetManager.SelectionType.CREATURE,
-		"DominioOrderHandler"
+		"DominioCommandHandler"
 	)
 	
-	print("[DominioOrderHandler] タップターゲット選択開始: %d件" % valid_targets.size())
+	print("[DominioCommandHandler] タップターゲット選択開始: %d件" % valid_targets.size())
 
 
 ## タップターゲット選択を終了
@@ -991,12 +998,12 @@ func _end_tap_target_selection():
 		ttm.target_selected.disconnect(_on_tap_target_selected)
 	
 	ttm.end_selection()
-	print("[DominioOrderHandler] タップターゲット選択終了")
+	print("[DominioCommandHandler] タップターゲット選択終了")
 
 
 ## タップでターゲットが選択された時
 func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
-	print("[DominioOrderHandler] タップでタイル選択: %d (状態: %s)" % [tile_index, State.keys()[current_state]])
+	print("[DominioCommandHandler] タップでタイル選択: %d (状態: %s)" % [tile_index, State.keys()[current_state]])
 	
 	match current_state:
 		State.SELECTING_LAND:
@@ -1029,14 +1036,14 @@ func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 				# UI更新
 				LandActionHelper.update_move_destination_ui(self)
 				# 確認フェーズへ（即座に移動しない）
-				print("[DominioOrderHandler] 移動先選択: タイル%d - 決定ボタンで確定してください" % tile_index)
+				print("[DominioCommandHandler] 移動先選択: タイル%d - 決定ボタンで確定してください" % tile_index)
 		
 		_:
 			# その他の状態では何もしない
 			pass
 
 
-## ドミニオオーダー使用コメントを表示（アクション確定時）
+## ドミニオコマンド使用コメントを表示（アクション確定時）
 func _show_dominio_order_comment(action_name: String):
 	if not ui_manager or not ui_manager.global_comment_ui:
 		return
@@ -1048,5 +1055,15 @@ func _show_dominio_order_comment(action_name: String):
 		if player:
 			player_name = player.name
 	
-	var message = "%s がドミニオオーダー：%s" % [player_name, action_name]
-	await ui_manager.global_comment_ui.show_and_wait(message, player_id)
+	var message = "%s がドミニオコマンド：%s" % [player_name, action_name]
+	await ui_manager.global_comment_ui.show_and_wait(message, player_id, true)
+
+
+## 現在のプレイヤー名を取得（コメント表示用）
+func _get_current_player_name() -> String:
+	var player_id = board_system.current_player_index if board_system else 0
+	if player_system and player_id < player_system.players.size():
+		var player = player_system.players[player_id]
+		if player:
+			return player.name
+	return "プレイヤー"

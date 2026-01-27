@@ -11,7 +11,7 @@
 	  "id": 1,
 	  "turn": 1,
 	  "phase": "start",
-	  "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、EPを貯めて城に戻ることです。",
+	  "message": "チュートリアルへようこそ！\n\nこのゲームの目標は、EP（精霊力）を\n貯めて城に戻ることです。",
 	  "wait_for_click": true,
 	  "highlight": [],
 	  "disable_all_buttons": true
@@ -72,7 +72,7 @@
 	  "id": 8,
 	  "turn": 1,
 	  "phase": "summon_complete",
-	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたのドミニオになりました\nドミニオの価値がTEPに加算されます",
+	  "message": "クリーチャーを召喚しました！\n\nこの土地はあなたの支配地になりました\n支配地の価値がTEP（総精霊力）\nに加算されます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -81,7 +81,7 @@
 	  "id": 9,
 	  "turn": 1,
 	  "phase": "land_value_info",
-	  "message": "土地の価値は召喚したクリーチャーカードの\n下に出ている30Gという数字です\n\n土地の価値は連鎖数や土地のレベルで決まります",
+	  "message": "支配地の精霊力は召喚したクリーチャーカードの\n下に出ている30EPという数字です\n\n支配地の精霊力は連鎖数や土地のレベルで決まります",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -106,7 +106,7 @@
 	  "id": 12,
 	  "turn": 1,
 	  "phase": "cpu_summon_complete",
-	  "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手のドミニオになりました\nあなたが敵のドミニオに止まると通行料を取られます",
+	  "message": "相手がクリーチャーを召喚しました！\n\nこの土地は相手の支配地になりました\nあなたが敵の支配地に止まるとEP(精霊力)を取られます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -146,7 +146,7 @@
 	  "id": 17,
 	  "turn": 2,
 	  "phase": "battle_arrival",
-	  "message": "敵のドミニオに止まってしまいました！\n\nバトルが始まります",
+	  "message": "敵の支配地に止まってしまいました！\n\nバトルが始まります",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -165,7 +165,7 @@
 	  "id": 19,
 	  "turn": 2,
 	  "phase": "battle_info1",
-	  "message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地に配置されているクリーチャーです",
+	  "message": "攻撃側はあなたが選んだクリーチャーです\n\n防御側は土地を支配しているクリーチャーです",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -231,7 +231,7 @@
 	  "id": 26,
 	  "turn": 2,
 	  "phase": "battle_win",
-	  "message": "勝利！ドミニオを奪いました！\nバトルに勝つと敵のドミニオを自分のものにできます\n地属性の連鎖が２になったので\n土地の価値も４０に上昇しました",
+	  "message": "勝利！支配地を奪いました！\nバトルに勝つと敵の支配地を自分のものにできます\n地属性の連鎖が２になったので\n支配地のEP(精霊力)も４０に上昇しました",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -249,7 +249,7 @@
 	  "id": 28,
 	  "turn": 2,
 	  "phase": "cpu_battle_explain",
-	  "message": "相手があなたのドミニオに止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n相手がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
+	  "message": "敵があなたの支配地に止まりました！\n\nお互いにアイテムがない場合\nバトルは自動で進行します\n\n敵がアイテムを持っている場合でも\n何を使うかは事前には分かりません",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -265,7 +265,7 @@
 	  "id": 30,
 	  "turn": 2,
 	  "phase": "damage_explain",
-	  "message": "相手はバトルに負けました！\nバトルに負けると通行料を支払います\n\nクリーチャーの受けたダメージは\n配置されている限り消えません",
+	  "message": "敵はバトルに負けました！\nバトルに負けるとEP(精霊力)を支払います\n\nクリーチャーの受けたダメージは\n配置されている限り消えません",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -308,7 +308,7 @@
 	  "id": 35,
 	  "turn": 3,
 	  "phase": "checkpoint",
-	  "message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\n城に戻ると周回ボーナスがもらえます",
+	  "message": "2つ目のシグナルを獲得しました！\n\nこれで全てのシグナルが揃いました\nこれで周回ボーナスがもらえます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -317,14 +317,14 @@
 	  "id": 36,
 	  "turn": 3,
 	  "phase": "lap_bonus",
-	  "message": "城に到着！周回ボーナス獲得！\n\nEPが増え、クリーチャーのHPも回復します。",
+	  "message": "EP（精霊力）が増え\nクリーチャーのHPも回復します。",
 	  "wait_for_click": true
 	},
 	{
 	  "id": 37,
 	  "turn": 3,
 	  "phase": "victory",
-	  "message": "おめでとうございます！\n\n目標EPに到達して城に戻ったので勝利です！\n\nチュートリアル完了！",
+	  "message": "基本操作のチュートリアルはここまでです！\n最後にチュートリアル終了の報酬を受け取ってください",
 	  "wait_for_click": true,
 	  "is_final": true
 	}

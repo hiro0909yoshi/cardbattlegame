@@ -11,7 +11,7 @@ signal dice_rolled(value: int)
 
 # 定数をpreload
 const GameConstants = preload("res://scripts/game_constants.gd")
-const DominioOrderHandlerClass = preload("res://scripts/game_flow/dominio_order_handler.gd")
+const DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
 const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 
 # ゲーム状態
@@ -199,7 +199,7 @@ func start_turn():
 	var current_player = player_system.get_current_player()
 	emit_signal("turn_started", current_player.id)
 	
-	# Phase 1-A: ターン開始時はドミニオオーダーボタンを隠す
+	# Phase 1-A: ターン開始時はドミニオコマンドボタンを隠す
 	if ui_manager:
 		ui_manager.hide_dominio_order_button()
 	
@@ -422,8 +422,8 @@ func on_card_selected(card_index: int):
 		return
 	
 	# Phase 1-D: 交換モードチェック
-	if dominio_order_handler and dominio_order_handler._swap_mode:
-		dominio_order_handler.on_card_selected_for_swap(card_index)
+	if dominio_command_handler and dominio_command_handler._swap_mode:
+		dominio_command_handler.on_card_selected_for_swap(card_index)
 	elif board_system_3d:
 		board_system_3d.on_card_selected(card_index)
 
@@ -472,9 +472,9 @@ func end_turn():
 	# ★重要: フラグを最優先で立てる
 	is_ending_turn = true
 	
-	# Phase 1-A: ドミニオオーダーを閉じる、カード選択UIとボタンを隠す
-	if dominio_order_handler and dominio_order_handler.current_state != dominio_order_handler.State.CLOSED:
-		dominio_order_handler.close_dominio_order()
+	# Phase 1-A: ドミニオコマンドを閉じる、カード選択UIとボタンを隠す
+	if dominio_command_handler and dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
+		dominio_command_handler.close_dominio_order()
 	
 	if ui_manager:
 		ui_manager.hide_dominio_order_button()
@@ -644,11 +644,30 @@ func check_and_pay_toll_on_enemy_land():
 	if receiver_id >= 0 and receiver_id < player_system.players.size():
 		player_system.pay_toll(current_player_index, receiver_id, main_toll)
 		print("[敵地支払い] 通行料 ", main_toll, "EP を支払いました (受取: プレイヤー", receiver_id + 1, ")")
+		
+		# 通行料支払いコメント表示
+		if main_toll > 0:
+			await _show_toll_comment(current_player_index, main_toll)
 	
 	# 副収入の支払い実行
 	if bonus_toll > 0 and bonus_receiver_id >= 0 and bonus_receiver_id < player_system.players.size():
 		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
 		print("[副収入] 通行料 ", bonus_toll, "EP を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
+
+## 通行料支払いコメント表示
+func _show_toll_comment(payer_id: int, toll_amount: int):
+	if not ui_manager or not ui_manager.global_comment_ui:
+		return
+	
+	var player_name = "プレイヤー"
+	if payer_id < player_system.players.size():
+		var player = player_system.players[payer_id]
+		if player:
+			player_name = player.name
+	
+	var message = "%s が %dEP 奪われた" % [player_name, toll_amount]
+	await ui_manager.global_comment_ui.show_and_wait(message, payer_id, true)
+
 
 # === 破産処理 ===
 
@@ -682,7 +701,7 @@ func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
 # ============================================
 
 # Phase 1-A用ハンドラー
-var dominio_order_handler: DominioOrderHandler = null
+var dominio_command_handler: DominioCommandHandler = null
 var spell_phase_handler: SpellPhaseHandler = null
 var item_phase_handler = null  # ItemPhaseHandler
 var target_selection_helper: TargetSelectionHelper = null  # タイル選択ヘルパー
@@ -690,18 +709,18 @@ var target_selection_helper: TargetSelectionHelper = null  # タイル選択ヘ�
 # Phase 1-A: ハンドラーを外部から設定（初期化はGameSystemManagerが担当）
 func set_phase1a_handlers(
 	p_target_selection_helper: TargetSelectionHelper,
-	p_dominio_order_handler: DominioOrderHandler,
+	p_dominio_command_handler: DominioCommandHandler,
 	p_spell_phase_handler: SpellPhaseHandler,
 	p_item_phase_handler
 ) -> void:
 	target_selection_helper = p_target_selection_helper
-	dominio_order_handler = p_dominio_order_handler
+	dominio_command_handler = p_dominio_command_handler
 	spell_phase_handler = p_spell_phase_handler
 	item_phase_handler = p_item_phase_handler
 	
-	# dominio_order_closedシグナルを接続
-	if dominio_order_handler and dominio_order_handler.has_signal("dominio_order_closed"):
-		dominio_order_handler.dominio_order_closed.connect(_on_dominio_order_closed)
+	# dominio_command_closedシグナルを接続
+	if dominio_command_handler and dominio_command_handler.has_signal("dominio_command_closed"):
+		dominio_command_handler.dominio_command_closed.connect(_on_dominio_command_closed)
 	
 	# SpellCurseStatにシステム参照と通知UIを設定
 	if spell_curse_stat:
@@ -717,8 +736,8 @@ func set_phase1a_handlers(
 	if bankruptcy_handler and target_selection_helper:
 		bankruptcy_handler.target_selection_helper = target_selection_helper
 
-# Phase 1-A: ドミニオオーダーが閉じられたときの処理
-func _on_dominio_order_closed():
+# Phase 1-A: ドミニオコマンドが閉じられたときの処理
+func _on_dominio_command_closed():
 	
 	# ターンエンド中またはターンエンドフェーズの場合は処理しない
 	if is_ending_turn or current_phase == GamePhase.END_TURN:
@@ -744,24 +763,24 @@ func _reinitialize_card_selection():
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)
 			
-			# ドミニオオーダーボタンも再表示（ドミニオを所有している場合のみ）
+			# ドミニオコマンドボタンも再表示（ドミニオを所有している場合のみ）
 			if board_system_3d and board_system_3d._has_owned_lands(current_player.id):
 				ui_manager.show_dominio_order_button()
 			
 
-# Phase 1-A: ドミニオオーダーを開く
+# Phase 1-A: ドミニオコマンドを開く
 func open_dominio_order():
-	if not dominio_order_handler:
+	if not dominio_command_handler:
 		return
 	
 	var current_player = player_system.get_current_player()
 	if current_player:
-		dominio_order_handler.open_dominio_order(current_player.id)
+		dominio_command_handler.open_dominio_order(current_player.id)
 
 # Phase 1-A: デバッグ情報表示
 func debug_print_phase1a_status():
-	if dominio_order_handler:
-		print("[Phase 1-A] ドミニオオーダー状態: ", dominio_order_handler.get_current_state())
+	if dominio_command_handler:
+		print("[Phase 1-A] ドミニオコマンド状態: ", dominio_command_handler.get_current_state())
 
 # ============================================
 # ターン数取得

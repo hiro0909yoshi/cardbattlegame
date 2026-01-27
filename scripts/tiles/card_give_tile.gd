@@ -62,7 +62,7 @@ func _handle_cpu_card_give(player_id: int) -> Dictionary:
 	
 	# コメント表示
 	if _ui_manager and _ui_manager.global_comment_ui:
-		await _ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id)
+		await _ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id, true)
 	
 	# UI更新
 	if _ui_manager and _ui_manager.hand_display:
@@ -124,7 +124,7 @@ func _show_card_give_selection(player_id: int) -> Dictionary:
 	if card_data.is_empty():
 		print("[CardGiveTile] 山札に%sがありません" % card_type)
 		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("山札に%sがありません" % _get_type_name(card_type), player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("山札に%sがありません" % _get_type_name(card_type), player_id, true)
 		return {"success": true, "card_received": false}
 	
 	print("[CardGiveTile] %sを取得: %s" % [card_type, card_data.get("name", "?")])
@@ -134,7 +134,7 @@ func _show_card_give_selection(player_id: int) -> Dictionary:
 		if _ui_manager.hand_display:
 			_ui_manager.hand_display.update_hand_display(player_id)
 		if _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("%sを手に入れた！" % card_data.get("name", "カード"), player_id, true)
 	
 	return {"success": true, "card_received": true, "card_name": card_data.get("name", "")}
 

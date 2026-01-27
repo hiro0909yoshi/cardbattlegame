@@ -147,13 +147,13 @@
 
 ### マップ案（仮）
 ```
-    [城]
+	[城]
    /    \
  [火]   [水]
   |      |
  [地]---[風]
    \    /
-    [無]
+	[無]
 ```
 
 ## システム構成
@@ -178,13 +178,13 @@ TutorialManager
 
 ```gdscript
 var step_data = {
-    "step_id": 1,
-    "message": "ダイスを振って移動しましょう！\n✓ボタンを押してください",
-    "allowed_actions": ["roll_dice"],      # 許可するアクション
-    "expected_result": {},                  # 期待する結果（オプション）
-    "highlight_elements": ["dice_button"], # ハイライトするUI要素
-    "cpu_actions": [],                      # このステップでのCPU行動
-    "on_complete": "advance"                # 完了時の動作
+	"step_id": 1,
+	"message": "ダイスを振って移動しましょう！\n✓ボタンを押してください",
+	"allowed_actions": ["roll_dice"],      # 許可するアクション
+	"expected_result": {},                  # 期待する結果（オプション）
+	"highlight_elements": ["dice_button"], # ハイライトするUI要素
+	"cpu_actions": [],                      # このステップでのCPU行動
+	"on_complete": "advance"                # 完了時の動作
 }
 ```
 
@@ -202,9 +202,9 @@ var step_data = {
 
 ```gdscript
 var cpu_script = [
-    {"turn": 1, "action": "pass_spell", "dice": 3, "summon": "goblin", "tile": 2},
-    {"turn": 2, "action": "pass_spell", "dice": 2, "summon": null, "tile": null},
-    # ...
+	{"turn": 1, "action": "pass_spell", "dice": 3, "summon": "goblin", "tile": 2},
+	{"turn": 2, "action": "pass_spell", "dice": 2, "summon": null, "tile": null},
+	# ...
 ]
 ```
 
@@ -232,18 +232,18 @@ var cpu_script = [
 ```
 scripts/
 └── tutorial/
-    ├── tutorial_manager.gd      # メイン管理クラス
-    ├── tutorial_step.gd         # ステップデータクラス
-    └── tutorial_ui.gd           # チュートリアル専用UI
+	├── tutorial_manager.gd      # メイン管理クラス
+	├── tutorial_step.gd         # ステップデータクラス
+	└── tutorial_ui.gd           # チュートリアル専用UI
 
 data/
 └── tutorial/
-    ├── tutorial_steps.json      # ステップ定義
-    └── tutorial_cpu_script.json # CPU行動スクリプト
+	├── tutorial_steps.json      # ステップ定義
+	└── tutorial_cpu_script.json # CPU行動スクリプト
 
 scenes/
 └── maps/
-    └── tutorial_map.json        # チュートリアル専用マップ
+	└── tutorial_map.json        # チュートリアル専用マップ
 ```
 
 ## 実装順序

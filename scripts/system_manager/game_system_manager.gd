@@ -324,11 +324,11 @@ func phase_4_setup_system_interconnections() -> void:
 	_setup_cpu_special_tile_ai()
 	
 	if game_flow_manager:
-		# DominioOrderHandler の初期化
-		if game_flow_manager.dominio_order_handler:
-			game_flow_manager.dominio_order_handler.board_system_3d = board_system_3d
-			game_flow_manager.dominio_order_handler.player_system = player_system
-			game_flow_manager.dominio_order_handler.ui_manager = ui_manager
+		# DominioCommandHandler の初期化
+		if game_flow_manager.dominio_command_handler:
+			game_flow_manager.dominio_command_handler.board_system_3d = board_system_3d
+			game_flow_manager.dominio_command_handler.player_system = player_system
+			game_flow_manager.dominio_command_handler.ui_manager = ui_manager
 		
 		# ItemPhaseHandler の初期化
 		if game_flow_manager.item_phase_handler:
@@ -612,11 +612,11 @@ func _initialize_phase1a_handlers() -> void:
 	game_flow_manager.add_child(target_selection_helper)
 	target_selection_helper.initialize(board_system_3d, ui_manager, game_flow_manager)
 	
-	# DominioOrderHandlerを作成
-	var DominioOrderHandlerClass = preload("res://scripts/game_flow/dominio_order_handler.gd")
-	var dominio_order_handler = DominioOrderHandlerClass.new()
-	game_flow_manager.add_child(dominio_order_handler)
-	dominio_order_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
+	# DominioCommandHandlerを作成
+	var DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
+	var dominio_command_handler = DominioCommandHandlerClass.new()
+	game_flow_manager.add_child(dominio_command_handler)
+	dominio_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
 	
 	# SpellPhaseHandlerを作成
 	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")
@@ -636,7 +636,7 @@ func _initialize_phase1a_handlers() -> void:
 	# GameFlowManagerにハンドラーを設定
 	game_flow_manager.set_phase1a_handlers(
 		target_selection_helper,
-		dominio_order_handler,
+		dominio_command_handler,
 		spell_phase_handler,
 		item_phase_handler
 	)

@@ -691,12 +691,12 @@ func _show_land_effect_notification(creature_data: Dictionary, land_effect_resul
 		var element_names = {"water": "水", "fire": "火", "wind": "風", "earth": "地", "neutral": "無"}
 		var element_jp = element_names.get(changed_element, changed_element)
 		var text = "%s の土地変性！→ %s属性" % [creature_name, element_jp]
-		await comment_ui.show_and_wait(text)
+		await comment_ui.show_and_wait(text, -1, true)
 	
 	# 土地破壊の通知
 	if level_reduced:
 		var text = "%s の土地破壊！レベル-1" % creature_name
-		await comment_ui.show_and_wait(text)
+		await comment_ui.show_and_wait(text, -1, true)
 
 
 # バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲

@@ -47,6 +47,11 @@ var is_waiting_for_defender_item: bool = false
 # 遠隔配置モード（ベースタイル用）
 var remote_placement_tile: int = -1  # -1 = 通常モード、0以上 = 指定タイルに配置
 
+# コメント表示用
+var pending_comment: String = ""
+var pending_comment_player_id: int = -1
+var pending_comment_force_click: bool = true
+
 ## 遠隔配置モードを設定（ベースタイルから呼び出し）
 func set_remote_placement(tile_index: int):
 	remote_placement_tile = tile_index
@@ -127,7 +132,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		# 空き地 - 召喚UI表示
 		show_summon_ui()
 	elif tile_info["owner"] == player_index:
-		# 自分の土地 - 召喚不可（ドミニオオーダーで操作可能）
+		# 自分の土地 - 召喚不可（ドミニオコマンドで操作可能）
 		show_summon_ui_disabled()
 	else:
 		# 敵の土地
@@ -156,7 +161,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
-	# CPUはcpu_turn_processorで処理（特殊タイルでもドミニオオーダーを検討）
+	# CPUはcpu_turn_processorで処理（特殊タイルでもドミニオコマンドを検討）
 	if cpu_turn_processor:
 		cpu_turn_processor.process_cpu_turn(tile, tile_info, player_index)
 	else:
@@ -176,7 +181,7 @@ func show_summon_ui():
 # 召喚UI表示（グレーアウト）- 自分の土地に止まった場合
 func show_summon_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたはドミニオオーダーを使用）"
+		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたはドミニオコマンドを使用）"
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -202,7 +207,7 @@ func show_battle_ui(mode: String):
 # バトルUI表示（グレーアウト）peace呪い用
 func show_battle_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたはドミニオオーダーを使用）"
+		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたはドミニオコマンドを使用）"
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -232,7 +237,7 @@ func on_card_selected(card_index: int):
 			ui_manager.phase_label.text = "❌ 特殊タイル上では召喚できません"
 			# 少し待ってから元のメッセージに戻す
 			await board_system.get_tree().create_timer(1.5).timeout
-			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたはドミニオオーダーを使用）"
+			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたはドミニオコマンドを使用）"
 		return
 	
 	# 遠隔配置モードの場合は無条件で召喚処理
@@ -916,11 +921,9 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
 	
-	# ドミニオオーダー使用コメント表示（一時無効化）
-	#if game_flow_manager and game_flow_manager.dominio_order_handler:
-	#	var handler = game_flow_manager.dominio_order_handler
-	#	if handler.has_method("_show_dominio_order_comment"):
-	#		await handler._show_dominio_order_comment("交換")
+	# ドミニオコマンド使用コメント表示
+	var player_name = _get_current_player_name()
+	set_pending_comment("%s がドミニオコマンド：交換" % player_name)
 	
 	print("[TileActionProcessor] クリーチャー交換完了")
 	_complete_action()
@@ -990,9 +993,29 @@ func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
 	
 	return true
 
+# コメントを設定（complete_action時に表示）
+## force_click_wait: trueの場合、CPUターンでもクリック待ちにする
+func set_pending_comment(message: String, player_id: int = -1, force_click_wait: bool = true):
+	pending_comment = message
+	pending_comment_player_id = player_id
+	pending_comment_force_click = force_click_wait
+
 # アクション完了（内部用）
 func _complete_action():
 	print("[TileActionProcessor] _complete_action開始")
+	
+	# 既に処理中でなければ何もしない（二重呼び出し防止）
+	if not is_action_processing:
+		print("[TileActionProcessor] 既に完了済み、スキップ")
+		return
+	
+	# 先にフラグをリセット（await中の再呼び出し防止）
+	is_action_processing = false
+	
+	# コメント表示（設定されている場合）
+	if not pending_comment.is_empty():
+		await _show_pending_comment()
+	
 	# カメラを追従モードに戻し、プレイヤー位置に復帰
 	if board_system and board_system.camera_controller:
 		board_system.camera_controller.enable_follow_mode()
@@ -1001,9 +1024,39 @@ func _complete_action():
 	# 遠隔配置モードをクリア
 	remote_placement_tile = -1
 	
-	is_action_processing = false
 	print("[TileActionProcessor] action_completedシグナル発火")
 	emit_signal("action_completed")
+
+# コメント表示処理
+func _show_pending_comment():
+	if pending_comment.is_empty():
+		return
+	
+	var player_id = pending_comment_player_id
+	if player_id < 0 and board_system:
+		player_id = board_system.current_player_index
+	
+	# GlobalCommentUIで表示
+	if ui_manager and ui_manager.global_comment_ui:
+		await ui_manager.global_comment_ui.show_and_wait(pending_comment, player_id, pending_comment_force_click)
+	
+	# クリア
+	pending_comment = ""
+	pending_comment_player_id = -1
+	pending_comment_force_click = true
+
+
+# 現在のプレイヤー名を取得（コメント表示用）
+func _get_current_player_name() -> String:
+	if not player_system or not board_system:
+		return "プレイヤー"
+	
+	var player_id = board_system.current_player_index
+	if player_id < player_system.players.size():
+		var player = player_system.players[player_id]
+		if player:
+			return player.name
+	return "プレイヤー"
 
 # ============================================================
 # CPU用インターフェース

@@ -70,7 +70,7 @@ func _handle_player_base_tile(player_id: int) -> Dictionary:
 	if empty_tiles.is_empty():
 		print("[SpecialBaseTile] 空き地なし")
 		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("配置できる空き地がありません", player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("配置できる空き地がありません", player_id, true)
 		return {"success": true, "selected_tile": -1}
 	
 	# 配置するかどうかの確認

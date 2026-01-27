@@ -11,7 +11,7 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		print("[LandActionHelper] レベルアップ失敗: タイル%d はダウン中" % handler.selected_tile_index)
 		return false
@@ -56,12 +56,15 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	if handler.ui_manager:
 		handler.ui_manager.update_player_info_panels()
 	
-	# ドミニオオーダー使用コメント表示（staticメソッドではawait不可のため無効化）
-	#if handler.has_method("_show_dominio_order_comment"):
-	#	await handler._show_dominio_order_comment("レベルアップ")
+	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
+	if handler.board_system and handler.board_system.tile_action_processor:
+		var player_name = _get_player_name(handler)
+		handler.board_system.tile_action_processor.set_pending_comment(
+			"%s がドミニオコマンド：レベルアップ" % player_name
+		)
 	
 	# アクション完了を通知（正しいターン終了フロー）
-	# 注: ドミニオオーダーはend_turn()で閉じられる
+	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
@@ -78,7 +81,7 @@ static func execute_level_up(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -129,7 +132,7 @@ static func execute_move_creature(handler) -> bool:
 	# 移動可能なマスを取得（空地移動対応）
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -221,7 +224,7 @@ static func execute_swap_creature(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -383,12 +386,15 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.move_source_tile = -1
 		handler.current_destination_index = 0
 		
-		# ドミニオオーダー使用コメント表示
-		#if handler.has_method("_show_dominio_order_comment"):
-		#	await handler._show_dominio_order_comment("移動")
+		# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
+		if handler.board_system and handler.board_system.tile_action_processor:
+			var player_name = _get_player_name(handler)
+			handler.board_system.tile_action_processor.set_pending_comment(
+				"%s がドミニオコマンド：移動" % player_name
+			)
 		
 		# アクション完了を通知
-		# 注: ドミニオオーダーはend_turn()で閉じられる
+		# 注: ドミニオコマンドはend_turn()で閉じられる
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.tile_action_processor.complete_action()
 		
@@ -466,14 +472,14 @@ static func confirm_move(handler, dest_tile_index: int):
 		battle_creature_data["is_moving"] = true
 		
 		# バトル情報を保存
-		# 注: ドミニオオーダーはバトル開始前に閉じる必要があるため、ここでは閉じない
+		# 注: ドミニオコマンドはバトル開始前に閉じる必要があるため、ここでは閉じない
 		handler.pending_move_battle_creature_data = battle_creature_data
 		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
 		handler.pending_move_attacker_item = {}
 		handler.pending_move_defender_item = {}
 		handler.is_waiting_for_move_defender_item = false
 		
-		# ドミニオオーダー使用コメント表示（移動侵略確定時）
+		# ドミニオコマンド使用コメント表示（移動侵略確定時）
 		#if handler.has_method("_show_dominio_order_comment"):
 		#	await handler._show_dominio_order_comment("移動侵略")
 		
@@ -632,7 +638,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		print("[LandActionHelper] 属性変更失敗: タイル%d はダウン中" % handler.selected_tile_index)
 		return false
@@ -698,12 +704,15 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
 		handler.ui_manager.dominio_order_ui.hide_terrain_selection()
 	
-	# ドミニオオーダー使用コメント表示
-	#if handler.has_method("_show_dominio_order_comment"):
-	#	await handler._show_dominio_order_comment("属性変更")
+	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
+	if handler.board_system and handler.board_system.tile_action_processor:
+		var player_name = _get_player_name(handler)
+		handler.board_system.tile_action_processor.set_pending_comment(
+			"%s がドミニオコマンド：属性変更" % player_name
+		)
 	
 	# アクション完了を通知（レベルアップと同様）
-	# 注: ドミニオオーダーはend_turn()で閉じられる
+	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.tile_action_processor.complete_action()
 	
@@ -719,7 +728,7 @@ static func execute_terrain_change(handler) -> bool:
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 	
-	# ダウンチェック（ダウン中はドミニオオーダー使用不可）
+	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_label:
 			handler.ui_manager.phase_label.text = "ダウン中は使用できません"
@@ -869,3 +878,16 @@ static func _hide_land_info_panel(handler) -> void:
 	if not handler.land_info_panel:
 		return
 	handler.land_info_panel.hide_land_info()
+
+
+## プレイヤー名を取得（コメント表示用）
+static func _get_player_name(handler) -> String:
+	if not handler.player_system or not handler.board_system:
+		return "プレイヤー"
+	
+	var player_id = handler.board_system.current_player_index
+	if player_id < handler.player_system.players.size():
+		var player = handler.player_system.players[player_id]
+		if player:
+			return player.name
+	return "プレイヤー"

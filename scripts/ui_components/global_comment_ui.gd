@@ -110,12 +110,13 @@ func hide_message() -> void:
 ## CPUターンの場合は自動で進行する
 ## この関数をawaitすると、クリックまたは自動進行まで待機する
 ## player_id: 明示的にプレイヤーIDを指定する場合（-1の場合はcurrent_player_idを使用）
-func show_and_wait(message: String, player_id: int = -1) -> void:
+## force_click_wait: trueの場合、CPUターンでも自動進行せずクリック待ちにする
+func show_and_wait(message: String, player_id: int = -1, force_click_wait: bool = false) -> void:
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 	
-	# CPUターンかどうかを判定
-	var is_cpu_turn = _is_current_player_cpu(player_id)
+	# CPUターンかどうかを判定（force_click_waitがtrueなら強制的にクリック待ち）
+	var is_cpu_turn = _is_current_player_cpu(player_id) and not force_click_wait
 	
 	# テキスト設定（中央揃え + クリック待ちの案内）
 	var hint_text = "[color=gray][自動進行][/color]" if is_cpu_turn else "[color=gray][クリックで次へ][/color]"

@@ -103,7 +103,7 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 	if available_spells.is_empty():
 		print("[MagicTile] 使用可能なスペルがありません")
 		if _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("使用可能なスペルがありません", player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("使用可能なスペルがありません", player_id, true)
 		return {"success": true, "spell_used": false}
 	
 	# UIがなければ作成

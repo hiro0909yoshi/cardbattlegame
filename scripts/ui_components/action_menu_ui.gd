@@ -2,7 +2,7 @@ class_name ActionMenuUI
 extends Control
 
 ## 汎用アクションメニューUI
-## ドミニオオーダー、アルカナアーツ選択などで共通使用
+## ドミニオコマンド、アルカナアーツ選択などで共通使用
 
 # シグナル
 signal item_selected(index: int)

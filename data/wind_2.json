@@ -302,7 +302,7 @@
 		  {
 			"effect_type": "split_on_move",
 			"trigger": "on_territory_command_move",
-			"description": "ドミニオオーダー移動時、元のドミニオに自分を残す"
+			"description": "ドミニオコマンド移動時、元の支配地に自分を残す"
 		  }
 		]
 	  }

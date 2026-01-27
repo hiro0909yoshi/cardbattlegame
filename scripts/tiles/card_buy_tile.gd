@@ -93,7 +93,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	if available_cards.is_empty():
 		print("[CardBuyTile] 購入可能なカードがありません")
 		if _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("購入可能なカードがありません", player_id)
+			await _ui_manager.global_comment_ui.show_and_wait("購入可能なカードがありません", player_id, true)
 		return {"success": true, "card_bought": false}
 	
 	# UIがなければ作成

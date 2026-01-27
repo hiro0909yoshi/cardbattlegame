@@ -980,9 +980,9 @@ func _on_pass_button_pressed():
 func _cancel_dominio_order_and_return_to_action_menu():
 	hide_selection()
 	
-	# dominio_order_handlerのcancel()を呼ぶ（状態管理を統一）
-	if game_flow_manager_ref and game_flow_manager_ref.dominio_order_handler:
-		game_flow_manager_ref.dominio_order_handler.cancel()
+	# dominio_command_handlerのcancel()を呼ぶ（状態管理を統一）
+	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
+		game_flow_manager_ref.dominio_command_handler.cancel()
 
 # 選択中かチェック
 func is_selection_active() -> bool:

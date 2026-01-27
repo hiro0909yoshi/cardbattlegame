@@ -9,7 +9,7 @@ var up_button: Button
 var down_button: Button
 var confirm_button: Button
 var back_button: Button
-var special_button: Button  # 左下の特殊ボタン（アルカナアーツ/ドミニオオーダー等）
+var special_button: Button  # 左下の特殊ボタン（アルカナアーツ/ドミニオコマンド等）
 
 # コールバック
 var _confirm_callback: Callable = Callable()
