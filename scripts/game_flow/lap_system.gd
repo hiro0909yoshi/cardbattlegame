@@ -22,6 +22,7 @@ var destroy_count: int = 0
 var player_system = null
 var board_system_3d = null
 var ui_manager = null
+var game_flow_manager = null  # ゲーム終了判定用
 
 ## マップ設定（動的に変更可能）
 var base_bonus: int = 120  # 周回ボーナス（デフォルト: standard）
@@ -35,10 +36,11 @@ var signal_display_label: Label = null
 var is_showing_notification: bool = false
 
 ## 初期化
-func setup(p_system, b_system, p_ui_manager = null):
+func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null):
 	player_system = p_system
 	board_system_3d = b_system
 	ui_manager = p_ui_manager
+	game_flow_manager = p_game_flow_manager
 	_setup_ui()
 
 ## UIのセットアップ
@@ -165,6 +167,12 @@ func connect_checkpoint_signals():
 
 ## チェックポイント通過イベント
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
+	# ゲーム終了判定
+	if game_flow_manager and game_flow_manager._game_ended:
+		print("[LapSystem] ゲーム終了済み、チェックポイント処理スキップ")
+		checkpoint_processing_completed.emit()
+		return
+	
 	if not player_lap_state.has(player_id):
 		return
 	

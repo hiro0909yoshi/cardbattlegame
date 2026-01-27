@@ -465,6 +465,7 @@ func _setup_lap_system() -> void:
 	# システム参照を設定
 	lap_system.player_system = player_system
 	lap_system.ui_manager = ui_manager
+	lap_system.game_flow_manager = game_flow_manager  # ゲーム終了判定用
 	lap_system._setup_ui()
 	
 	# board_system_3dを設定してシグナル接続

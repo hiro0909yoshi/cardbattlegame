@@ -131,6 +131,17 @@ func _create_player_characters(container: Node3D):
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():
+	# ステージデータをGameFlowManagerに渡す（リザルト処理用）
+	if system_manager.game_flow_manager:
+		var stage_data = stage_loader.get_stage_data()
+		system_manager.game_flow_manager.set_stage_data(stage_data)
+		
+		# リザルト画面を作成・設定
+		var result_screen = ResultScreen.new()
+		result_screen.name = "ResultScreen"
+		add_child(result_screen)
+		system_manager.game_flow_manager.set_result_screen(result_screen)
+	
 	# ワープペアを登録
 	if system_manager.special_tile_system:
 		stage_loader.register_warp_pairs_to_system(system_manager.special_tile_system)
@@ -157,9 +168,21 @@ func _apply_stage_settings():
 		print("[QuestGame] 初期EP設定完了")
 	
 	# 勝利条件を設定
-	var win_condition = stage_loader.get_win_condition()
-	if win_condition.has("target") and system_manager.player_system:
-		var target = win_condition.get("target", 8000)
+	var win_conditions = stage_loader.get_win_condition()
+	var target = 8000  # デフォルト値
+	
+	# 新形式: conditions配列から取得
+	if win_conditions.has("conditions"):
+		var conditions = win_conditions.get("conditions", [])
+		for condition in conditions:
+			if condition.get("type") == "magic":
+				target = condition.get("target", 8000)
+				break
+	# 旧形式: 直接targetを持っている場合
+	elif win_conditions.has("target"):
+		target = win_conditions.get("target", 8000)
+	
+	if system_manager.player_system:
 		# 全プレイヤーのtarget_magicを設定
 		for player in system_manager.player_system.players:
 			player.target_magic = target

@@ -412,3 +412,8 @@ func load_deck(deck_id: String) -> Dictionary:
 ## マップデータを取得（LapSystem設定等で使用）
 func get_map_data() -> Dictionary:
 	return current_map_data
+
+
+## ステージデータを取得（リザルト処理等で使用）
+func get_stage_data() -> Dictionary:
+	return current_stage_data

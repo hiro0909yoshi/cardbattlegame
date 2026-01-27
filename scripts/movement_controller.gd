@@ -103,6 +103,11 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
 		return
 	
+	# ゲーム終了チェック
+	if game_flow_manager and game_flow_manager._game_ended:
+		print("[MovementController] ゲーム終了済み、移動スキップ")
+		return
+	
 	is_moving = true
 	current_moving_player = player_id
 	emit_signal("movement_started", player_id)
@@ -148,6 +153,10 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 	var is_first_step = true
 	
 	while remaining_steps > 0:
+		# ゲーム終了チェック
+		if game_flow_manager and game_flow_manager._game_ended:
+			print("[MovementController] ゲーム終了済み、移動中断")
+			break
 		# 残り歩数を更新（CPU分岐選択用）
 		_current_remaining_steps = remaining_steps
 		

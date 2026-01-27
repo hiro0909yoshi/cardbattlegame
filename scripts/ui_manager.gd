@@ -49,6 +49,11 @@ var ui_layer: CanvasLayer = null
 # スペルフェーズ用のフィルター設定
 var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能、"item"の時はアイテムのみ、"item_or_assist"の時はアイテム+援護対象クリーチャー
 var assist_target_elements: Array = []  # 援護対象の属性リスト
+
+# ゲームメニュー関連
+var game_menu_button: GameMenuButton = null
+var game_menu: GameMenu = null
+var surrender_dialog: SurrenderDialog = null
 var blocked_item_types: Array = []  # ブロックするアイテムタイプ（例: ["防具"]）
 var excluded_card_index: int = -1  # 犠牲選択時に除外するカードインデックス（召喚するカード自身）
 var excluded_card_id: String = ""  # 犠牲選択時に除外するカードID（召喚するカード自身）
@@ -249,6 +254,9 @@ func create_ui(parent: Node):
 		
 		# GameFlowManager参照を設定（CPU自動進行用）
 		global_comment_ui.game_flow_manager_ref = game_flow_manager_ref
+	
+	# ゲームメニュー初期化
+	_setup_game_menu()
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -714,6 +722,81 @@ func show_win_screen(player_id: int):
 	print("[UIManager] 勝利画面表示: プレイヤー", player_id + 1)
 
 
+## 勝利画面を表示（非同期版 - クリック待ち）
+func show_win_screen_async(player_id: int):
+	show_win_screen(player_id)
+	
+	# クリック待ち
+	await _wait_for_click()
+	
+	# 勝利画面を削除
+	var win_screen = ui_layer.get_node_or_null("WinScreen")
+	if win_screen:
+		win_screen.queue_free()
+
+
+## 敗北画面を表示（非同期版 - クリック待ち）
+func show_lose_screen_async(player_id: int):
+	if not ui_layer:
+		return
+	
+	# フェーズラベルを更新
+	if phase_label:
+		phase_label.text = ""
+	
+	# 敗北演出パネルを作成
+	var lose_panel = Panel.new()
+	lose_panel.name = "LoseScreen"
+	lose_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	# 半透明の黒背景
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	lose_panel.add_theme_stylebox_override("panel", style)
+	
+	# VBoxContainerで中央配置
+	var vbox = VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	lose_panel.add_child(vbox)
+	
+	# 「LOSE」ラベル
+	var lose_label = Label.new()
+	lose_label.text = "LOSE..."
+	lose_label.add_theme_font_size_override("font_size", 150)
+	lose_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	lose_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(lose_label)
+	
+	# VBoxの位置を中央に
+	vbox.position = Vector2(-200, -100)
+	vbox.custom_minimum_size = Vector2(400, 200)
+	
+	ui_layer.add_child(lose_panel)
+	
+	# アニメーション（フェードイン）
+	lose_panel.modulate.a = 0
+	
+	var tween = create_tween()
+	tween.tween_property(lose_panel, "modulate:a", 1.0, 0.5)
+	
+	print("[UIManager] 敗北画面表示: プレイヤー", player_id + 1)
+	
+	# クリック待ち
+	await _wait_for_click()
+	
+	# 敗北画面を削除
+	lose_panel.queue_free()
+
+
+## クリック待ち
+func _wait_for_click():
+	print("[UIManager] クリック待ち開始")
+	# 単純にタイマーで待機
+	await get_tree().create_timer(2.0).timeout
+	print("[UIManager] クリック待ち完了")
+
+
 # ============================================
 # カメラタップによるクリーチャー情報表示
 # ============================================
@@ -822,3 +905,70 @@ func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 ## TapTargetManagerから選択がキャンセルされた時
 func _on_tap_target_cancelled():
 	print("[UIManager] タップターゲット選択キャンセル")
+
+
+# ============================================
+# ゲームメニュー
+# ============================================
+
+## ゲームメニューをセットアップ
+func _setup_game_menu():
+	if not ui_layer:
+		print("[UIManager] ui_layerがないためゲームメニュー初期化スキップ")
+		return
+	
+	# メニューボタン
+	game_menu_button = GameMenuButton.new()
+	game_menu_button.name = "GameMenuButton"
+	game_menu_button.menu_pressed.connect(_on_game_menu_button_pressed)
+	ui_layer.add_child(game_menu_button)
+	
+	# メニュー
+	game_menu = GameMenu.new()
+	game_menu.name = "GameMenu"
+	game_menu.settings_selected.connect(_on_settings_selected)
+	game_menu.help_selected.connect(_on_help_selected)
+	game_menu.surrender_selected.connect(_on_surrender_selected)
+	ui_layer.add_child(game_menu)
+	
+	# 降参確認ダイアログ
+	surrender_dialog = SurrenderDialog.new()
+	surrender_dialog.name = "SurrenderDialog"
+	surrender_dialog.surrendered.connect(_on_surrender_confirmed)
+	ui_layer.add_child(surrender_dialog)
+	
+	print("[UIManager] ゲームメニュー初期化完了")
+
+
+## メニューボタン押下
+func _on_game_menu_button_pressed():
+	print("[UIManager] メニューボタン押下受信")
+	if game_menu:
+		game_menu.show_menu()
+	else:
+		print("[UIManager] game_menu が null")
+
+
+## 設定選択
+func _on_settings_selected():
+	print("[UIManager] 設定選択（未実装）")
+	# TODO: 設定画面を開く
+
+
+## ヘルプ選択
+func _on_help_selected():
+	print("[UIManager] ヘルプ選択（未実装）")
+	# TODO: ヘルプ画面を開く
+
+
+## 降参選択
+func _on_surrender_selected():
+	if surrender_dialog:
+		surrender_dialog.show_dialog()
+
+
+## 降参確認
+func _on_surrender_confirmed():
+	print("[UIManager] 降参確認")
+	if game_flow_manager_ref:
+		game_flow_manager_ref.on_player_defeated("surrender")

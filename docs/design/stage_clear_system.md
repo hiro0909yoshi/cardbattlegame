@@ -86,14 +86,15 @@ total = ceil(stage_gold * 0.2)
 
 ## データ構造
 
-### ステージJSON（rewards追加）
+### ステージJSON（rewards・max_turns追加）
 
 ```json
 {
   "id": "stage_1_1",
   "name": "はじまりの草原",
-  "map_id": "standard",
-  "rule_preset": "standard",
+  "map_id": "map_diamond_20",
+  "rule_preset": "quick",
+  "max_turns": 50,
   "rewards": {
     "gold": 1000,
     "rank_bonus": {
@@ -310,6 +311,129 @@ func is_all_ss() -> bool
 
 ---
 
+## ゲームメニュー
+
+### UIレイアウト
+
+```
+┌─────────────────────────────────────────┐
+│                                    [≡]  │  ← 右上にメニューボタン
+│                                         │
+│  ┌─────────┐                            │
+│  │P1 info  │                            │
+│  │P2 info  │                            │
+│  └─────────┘                            │
+│                                         │
+│                 ゲーム画面               │
+│                                         │
+│        ┌─────────────────┐              │
+│        │ ゲーム設定       │              │  ← メニューボタン押下で
+│        │ ヘルプ          │              │    ActionMenuUI位置に表示
+│        │ 降参            │              │
+│        └─────────────────┘              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### メニュー項目
+
+| 項目 | 動作 |
+|------|------|
+| ゲーム設定 | BGM/SE音量等の設定画面を開く |
+| ヘルプ | 操作説明を表示 |
+| 降参 | 確認ダイアログ → 敗北リザルトへ |
+
+### 降参フロー
+
+```
+メニューボタン押下
+    ↓
+ActionMenuUI位置にメニュー表示
+    ↓
+「降参」選択
+    ↓
+確認ダイアログ表示
+┌─────────────────────────────┐
+│   本当に降参しますか？       │
+│   報酬は獲得できません。     │
+│                             │
+│   [キャンセル] [降参する]    │
+└─────────────────────────────┘
+    ↓
+「降参する」選択
+    ↓
+敗北リザルト画面へ（報酬0G）
+    ↓
+ステージセレクトへ戻る
+```
+
+### 実装ファイル
+
+| ファイル | 役割 |
+|----------|------|
+| `scripts/ui_components/game_menu_button.gd` | 右上メニューボタン |
+| `scripts/ui_components/game_menu.gd` | メニュー表示（ActionMenuUI再利用） |
+| `scripts/ui_components/surrender_dialog.gd` | 降参確認ダイアログ |
+
+---
+
+## 敗北システム
+
+### 敗北条件
+
+| 条件 | 説明 |
+|------|------|
+| 規定ターン終了 | `max_turns`経過時にTEP比較で負け |
+| 降参 | プレイヤーがメニューから降参を選択 |
+| TEP同値 | プレイヤー敗北扱い |
+
+### 規定ターン数
+
+ステージJSONで設定：
+```json
+{
+  "id": "stage_1_1",
+  "max_turns": 50,
+  ...
+}
+```
+
+### 敗北リザルト画面
+
+```
+┌─────────────────────────────┐
+│                             │
+│          LOSE...            │
+│                             │
+│    クリアターン: 50         │
+│    （規定ターン終了）        │
+│                             │
+│    ───────────────         │
+│    報酬: 0G                 │
+│                             │
+│      [ タップで続ける ]      │
+│                             │
+└─────────────────────────────┘
+```
+
+降参時：
+```
+┌─────────────────────────────┐
+│                             │
+│          LOSE...            │
+│                             │
+│         （降参）             │
+│                             │
+│    ───────────────         │
+│    報酬: 0G                 │
+│                             │
+│      [ タップで続ける ]      │
+│                             │
+└─────────────────────────────┘
+```
+
+---
+
 ## 実装タスク
 
 ### Phase 1: 基盤クラス作成
@@ -342,6 +466,27 @@ func is_all_ss() -> bool
   - [ ] ベストランク表示（2回目以降）
   - [ ] クリック待ち処理
   - [ ] シグナル: `result_confirmed`
+
+### Phase 2.5: ゲームメニュー・敗北システム
+
+- [ ] `scripts/ui_components/game_menu_button.gd`
+  - [ ] 右上にメニューボタン（≡）配置
+  - [ ] 押下でメニュー表示
+
+- [ ] `scripts/ui_components/game_menu.gd`
+  - [ ] ActionMenuUI位置にメニュー表示
+  - [ ] 項目：ゲーム設定 / ヘルプ / 降参
+  - [ ] 降参選択時に確認ダイアログ呼び出し
+
+- [ ] `scripts/ui_components/surrender_dialog.gd`
+  - [ ] 確認ダイアログ表示
+  - [ ] キャンセル / 降参する ボタン
+  - [ ] シグナル: `surrendered`
+
+- [ ] 敗北判定処理
+  - [ ] 規定ターン終了時のTEP比較
+  - [ ] TEP同値はプレイヤー敗北
+  - [ ] ステージJSONに`max_turns`追加
 
 ### Phase 3: 統合
 
@@ -470,15 +615,20 @@ func _return_to_title():
 | フェーズ | 項目 | ステータス |
 |----------|------|-----------|
 | 設計 | 設計書作成 | ✅ 完了 |
-| Phase 1 | RankCalculator | ⬜ 未実装 |
-| Phase 1 | RewardCalculator | ⬜ 未実装 |
-| Phase 1 | StageRecordManager | ⬜ 未実装 |
-| Phase 2 | ResultScreen | ⬜ 未実装 |
-| Phase 3 | GameFlowManager統合 | ⬜ 未実装 |
-| Phase 3 | UIManager修正 | ⬜ 未実装 |
-| Phase 3 | ステージJSON更新 | ⬜ 未実装 |
-| Phase 4 | ゴールド連携 | ⬜ 未実装 |
-| テスト | 全項目確認 | ⬜ 未実施 |
+| Phase 1 | RankCalculator | ✅ 完了 |
+| Phase 1 | RewardCalculator | ✅ 完了 |
+| Phase 1 | StageRecordManager | ✅ 完了 |
+| Phase 2 | ResultScreen | ✅ 完了 |
+| Phase 2.5 | GameMenuButton | ✅ 完了 |
+| Phase 2.5 | GameMenu | ✅ 完了 |
+| Phase 2.5 | SurrenderDialog | ✅ 完了 |
+| Phase 2.5 | 敗北判定処理 | ✅ 完了 |
+| Phase 3 | GameFlowManager統合 | ✅ 完了 |
+| Phase 3 | UIManager修正 | ✅ 完了 |
+| Phase 3 | ステージJSON更新 | ✅ 完了（stage_1_1） |
+| Phase 4 | ゴールド連携 | ✅ 完了 |
+| テスト | 勝利フロー | ✅ 完了 |
+| テスト | 降参フロー | ✅ 完了 |
 
 ---
 

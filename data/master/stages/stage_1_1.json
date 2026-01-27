@@ -5,12 +5,13 @@
   "map_id": "map_diamond_20",
 
   "rule_preset": "quick",
+  "max_turns": 50,
   "rule_overrides": {
 	"initial_magic": {"player": 3000, "cpu": 500},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 4000, "timing": "checkpoint"}
+		{"type": "magic", "target": 3000, "timing": "checkpoint"}
 	  ]
 	}
   },
@@ -23,10 +24,17 @@
 		"ai_level": 3,
 		"start_tile": 0
 	  }
-	],
-	"rewards": {
-	  "first_clear": {"type": "gold", "amount": 1000},
-	  "repeat": {"type": "gold", "amount": 200}
+	]
+  },
+
+  "rewards": {
+	"gold": 1000,
+	"rank_bonus": {
+	  "SS": 500,
+	  "S": 300,
+	  "A": 200,
+	  "B": 100,
+	  "C": 0
 	}
   }
 }
