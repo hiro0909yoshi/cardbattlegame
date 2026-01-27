@@ -88,6 +88,15 @@ func _ready():
 	if is_tutorial_mode and tutorial_manager:
 		tutorial_manager.start_tutorial()
 
+
+## チュートリアル終了時
+func _on_tutorial_ended():
+	print("[Game3D] チュートリアル終了")
+	# チュートリアルはリザルト画面をスキップしてメインメニューへ直接遷移
+	await get_tree().create_timer(0.5).timeout
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+
+
 ## チュートリアルセットアップ
 func _setup_tutorial():
 	print("[Game3D] チュートリアルモード初期化")
@@ -102,6 +111,9 @@ func _setup_tutorial():
 		
 		# system_managerを渡して初期化（シグナル接続もTutorialManager内で行う）
 		tutorial_manager.initialize_with_systems(system_manager)
+		
+		# チュートリアル終了シグナルを接続
+		tutorial_manager.tutorial_ended.connect(_on_tutorial_ended)
 
 ## 3Dシーンを事前構築（タイル・プレイヤー・カメラ）
 func _setup_3d_scene_before_init():

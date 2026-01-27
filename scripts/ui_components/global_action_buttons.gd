@@ -116,7 +116,7 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 
 
 ## 特殊ボタン（アルカナアーツ用）専用作成 - 大きなフォントとスタイリッシュなデザイン
-func _create_special_button(text: String, color: Color) -> Button:
+func _create_special_button(text: String, _color: Color) -> Button:
 	var button = Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(BUTTON_SIZE, BUTTON_SIZE)

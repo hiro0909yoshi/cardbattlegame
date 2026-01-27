@@ -334,6 +334,7 @@ func _on_checkpoint_passed(player_id: int, _checkpoint_type: String):
 			await get_tree().create_timer(0.15).timeout
 			advance_step()  # checkpointへ
 
+
 func _on_battle_intro_completed():
 	if not is_active:
 		return
@@ -420,11 +421,12 @@ func advance_step():
 	if not is_active:
 		return
 	
-
 	current_step += 1
 	
 	if current_step >= steps.size():
-		end_tutorial()
+		# 最後のステップを超えた場合は何もしない
+		# （is_final: trueのステップでend_tutorial()が呼ばれる）
+		print("[TutorialManager] 全ステップ完了")
 		return
 	
 	step_changed.emit(current_step)

@@ -324,7 +324,7 @@
 	  "id": 37,
 	  "turn": 3,
 	  "phase": "victory",
-	  "message": "基本操作のチュートリアルはここまでです！\n最後にチュートリアル終了の報酬を受け取ってください",
+	  "message": "基本操作のチュートリアルはここまでです！",
 	  "wait_for_click": true,
 	  "is_final": true
 	}

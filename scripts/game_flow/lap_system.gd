@@ -197,10 +197,13 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	
 	# 全シグナル揃ったか確認（周回完了時はそちらでまとめて表示）
 	if _check_lap_complete(player_id):
-		# 勝利判定（周回完了前に確認）
-		if _check_win_condition(player_id):
-			checkpoint_processing_completed.emit()
-			return  # 勝利処理で終了
+		# チュートリアルモードでは勝利判定をスキップ（lap_completedで終了処理）
+		var is_tutorial = _is_tutorial_mode()
+		if not is_tutorial:
+			# 勝利判定（周回完了前に確認）
+			if _check_win_condition(player_id):
+				checkpoint_processing_completed.emit()
+				return  # 勝利処理で終了
 		await complete_lap(player_id)
 		checkpoint_processing_completed.emit()
 		return
@@ -213,9 +216,11 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	await _show_comment_and_wait("[color=yellow]シグナル %s 取得！[/color]\nEP +%d" % [checkpoint_type, checkpoint_bonus], player_id)
 	
 	# 勝利判定（シグナル取得時にEPが目標以上なら勝利）
-	if _check_win_condition(player_id):
-		checkpoint_processing_completed.emit()
-		return  # 勝利処理で終了
+	# チュートリアルモードではスキップ
+	if not _is_tutorial_mode():
+		if _check_win_condition(player_id):
+			checkpoint_processing_completed.emit()
+			return  # 勝利処理で終了
 	
 	# 処理完了を通知
 	checkpoint_processing_completed.emit()
@@ -261,6 +266,16 @@ func _get_player_creature_count(player_id: int) -> int:
 			count += 1
 	
 	return count
+
+## チュートリアルモード判定
+func _is_tutorial_mode() -> bool:
+	if not game_flow_manager:
+		return false
+	var game_3d = game_flow_manager.get_parent()
+	if game_3d and "is_tutorial_mode" in game_3d:
+		return game_3d.is_tutorial_mode
+	return false
+
 
 ## 勝利判定（チェックポイント通過時）
 func _check_win_condition(player_id: int) -> bool:

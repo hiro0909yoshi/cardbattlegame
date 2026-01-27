@@ -5,9 +5,20 @@
   "map_id": "map_tutorial",
 
   "rule_preset": "standard",
+  "max_turns": 30,
   "rule_overrides": {
-	"initial_magic": {"player": 200, "cpu": 200},
-	"goal_magic": 300
+	"initial_magic": {"player": 200, "cpu": 200}
+  },
+
+  "rewards": {
+	"gold": 0,
+	"rank_bonus": {
+	  "SS": 0,
+	  "S": 0,
+	  "A": 0,
+	  "B": 0,
+	  "C": 0
+	}
   },
 
   "quest": {
@@ -18,10 +29,6 @@
 		"ai_level": 1,
 		"start_tile": 0
 	  }
-	],
-	"rewards": {
-	  "first_clear": {"type": "gold", "amount": 100},
-	  "repeat": {"type": "gold", "amount": 50}
-	}
+	]
   }
 }

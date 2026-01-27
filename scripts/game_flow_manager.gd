@@ -1054,8 +1054,13 @@ func _on_result_confirmed():
 func _return_to_stage_select():
 	print("[GameFlowManager] _return_to_stage_select 開始")
 	
+	# チュートリアルはメインメニューへ
+	var stage_id = current_stage_data.get("id", "")
+	if stage_id == "stage_tutorial":
+		print("[GameFlowManager] チュートリアル終了、メインメニューへ遷移")
+		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 	# クエストモードならクエストセレクトへ
-	if not current_stage_data.is_empty():
+	elif not current_stage_data.is_empty():
 		print("[GameFlowManager] クエストセレクトへ遷移")
 		get_tree().change_scene_to_file("res://scenes/QuestSelect.tscn")
 	else:

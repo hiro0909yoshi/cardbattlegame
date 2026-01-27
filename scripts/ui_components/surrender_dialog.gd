@@ -119,7 +119,7 @@ func show_dialog():
 	# アニメーション
 	panel.modulate.a = 0
 	panel.scale = Vector2(0.9, 0.9)
-	panel.pivot_offset = Vector2(PANEL_WIDTH / 2, PANEL_HEIGHT / 2)
+	panel.pivot_offset = Vector2(PANEL_WIDTH / 2.0, PANEL_HEIGHT / 2.0)
 	
 	var tween = create_tween()
 	tween.set_parallel(true)
