@@ -18,7 +18,7 @@ signal step_changed(step_id: int)
 # 定数
 # =============================================================================
 
-const TUTORIAL_DATA_PATH = "res://data/tutorial/tutorial_stage1.json"
+const DEFAULT_TUTORIAL_PATH = "res://data/tutorial/tutorial_stage1.json"
 
 # =============================================================================
 # チュートリアル状態
@@ -27,6 +27,7 @@ const TUTORIAL_DATA_PATH = "res://data/tutorial/tutorial_stage1.json"
 var is_active: bool = false
 var current_step: int = 0
 var current_turn: int = 1
+var tutorial_data_path: String = DEFAULT_TUTORIAL_PATH
 
 # =============================================================================
 # 設定データ（JSONから読み込み）
@@ -34,7 +35,11 @@ var current_turn: int = 1
 
 var player_initial_hand: Array = []
 var cpu_initial_hand: Array = []
+var player_deck: Array = []
+var cpu_deck: Array = []
 var dice_sequence: Array = []
+var cpu_dice_sequence: Array = []
+var enable_draw: bool = false  # ドロー有効化フラグ
 var steps: Array = []
 
 # =============================================================================
@@ -60,6 +65,19 @@ var explanation_mode: ExplanationMode = null
 # =============================================================================
 
 var _last_player_id: int = -1
+var _is_showing_step: bool = false  # ステップ表示中フラグ（再入防止）
+
+# チュートリアル用カード選択制限
+var allowed_card_ids: Array = []  # 空なら制限なし
+
+# チュートリアル用ターゲット選択制限
+var allowed_target_tile_condition: String = ""  # 空なら制限なし（条件ベース）
+
+# チュートリアル用アクション選択制限
+var allowed_action: String = ""  # 空なら制限なし
+
+# チュートリアル用レベル選択制限
+var allowed_level: int = -1  # -1なら制限なし
 
 # =============================================================================
 # 初期化
@@ -69,11 +87,16 @@ func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_load_tutorial_data()
 
+## チュートリアルデータパスを設定
+func set_tutorial_path(path: String):
+	tutorial_data_path = path
+	_load_tutorial_data()
+
 ## JSONからチュートリアルデータを読み込む
 func _load_tutorial_data():
-	var file = FileAccess.open(TUTORIAL_DATA_PATH, FileAccess.READ)
+	var file = FileAccess.open(tutorial_data_path, FileAccess.READ)
 	if not file:
-		push_error("[TutorialManager] チュートリアルデータを読み込めません: %s" % TUTORIAL_DATA_PATH)
+		push_error("[TutorialManager] チュートリアルデータを読み込めません: %s" % tutorial_data_path)
 		return
 	
 	var json_text = file.get_as_text()
@@ -91,7 +114,11 @@ func _load_tutorial_data():
 	var config = data.get("config", {})
 	player_initial_hand = config.get("player_initial_hand", [210, 210, 1073])
 	cpu_initial_hand = config.get("cpu_initial_hand", [210, 210])
+	player_deck = config.get("player_deck", [])
+	cpu_deck = config.get("cpu_deck", [])
 	dice_sequence = config.get("dice_sequence", [3, 6, 5])
+	cpu_dice_sequence = config.get("cpu_dice_sequence", [])
+	enable_draw = config.get("enable_draw", false)  # ドロー有効化フラグ
 	
 	# ステップデータを読み込み
 	steps = data.get("steps", [])
@@ -194,6 +221,43 @@ func _connect_action_signals():
 		var tap = board_system_3d.tile_action_processor
 		if not tap.action_completed.is_connected(_on_action_completed):
 			tap.action_completed.connect(_on_action_completed)
+	
+	# スペルフェーズ完了シグナル
+	if game_flow_manager and game_flow_manager.spell_phase_handler:
+		var sph = game_flow_manager.spell_phase_handler
+		if not sph.spell_phase_completed.is_connected(_on_spell_phase_completed):
+			sph.spell_phase_completed.connect(_on_spell_phase_completed)
+	
+	# ドミニオコマンド関連シグナル
+	if game_flow_manager and game_flow_manager.dominio_command_handler:
+		var dch = game_flow_manager.dominio_command_handler
+		if not dch.land_selected.is_connected(_on_dominio_land_selected):
+			dch.land_selected.connect(_on_dominio_land_selected)
+		if not dch.dominio_command_opened.is_connected(_on_dominio_command_opened):
+			dch.dominio_command_opened.connect(_on_dominio_command_opened)
+		if not dch.action_selected.is_connected(_on_dominio_action_selected):
+			dch.action_selected.connect(_on_dominio_action_selected)
+	
+	# レベルアップ選択シグナル
+	if ui_manager and ui_manager.has_signal("level_up_selected"):
+		if not ui_manager.level_up_selected.is_connected(_on_level_up_selected):
+			ui_manager.level_up_selected.connect(_on_level_up_selected)
+	
+	# アルカナアーツ関連シグナル
+	if game_flow_manager and game_flow_manager.spell_phase_handler:
+		var sph = game_flow_manager.spell_phase_handler
+		if sph.spell_mystic_arts:
+			var sma = sph.spell_mystic_arts
+			if not sma.target_selection_requested.is_connected(_on_mystic_target_selection_requested):
+				sma.target_selection_requested.connect(_on_mystic_target_selection_requested)
+			if not sma.mystic_phase_completed.is_connected(_on_mystic_phase_completed):
+				sma.mystic_phase_completed.connect(_on_mystic_phase_completed)
+	
+	# スペシャルボタン押下シグナル
+	if ui_manager and ui_manager.global_action_buttons:
+		var gab = ui_manager.global_action_buttons
+		if not gab.special_button_pressed.is_connected(_on_special_button_pressed):
+			gab.special_button_pressed.connect(_on_special_button_pressed)
 
 func _connect_battle_signals():
 	# BattleScreenManagerへの参照を取得
@@ -216,16 +280,13 @@ func _on_turn_started(player_id: int):
 	# CPUターン(1)からプレイヤーターン(0)に戻った時 = 新しいターン
 	if _last_player_id == 1 and player_id == 0:
 		advance_turn()
-		# cpu_summon_complete後ならturn2_startへ
-		if is_phase("cpu_summon_complete"):
+		# cpu_turn*_complete または cpu_summon_complete フェーズなら次のプレイヤーターンステップへ
+		var phase = get_current_step().get("phase", "")
+		if phase.begins_with("cpu_") and phase.ends_with("_complete"):
 			advance_step()
 	
-	# プレイヤー0のターン開始時にダイスを設定
-	if player_id == 0:
-		set_dice_for_current_turn()
-	
-	# CPUターン開始時（land_value_info後）
-	# land_value_infoはwait_for_clickでクリック後に自動でcpu_turn_startへ進むため、ここでは何もしない
+	# ダイスを設定（プレイヤーIDに応じて）
+	set_dice_for_current_turn(player_id)
 	
 	# CPUターン開始時（battle_ap_explain後）- battle_winへ進む
 	# battle_winはwait_for_clickなので、クリック後に自動でcpu_turn_start2へ進む
@@ -243,12 +304,21 @@ func _on_dice_rolled(_value: int):
 	# turn2_startやturn3_startの場合はdiceを経由してcheckpointへ
 	if phase in ["turn2_start", "turn3_start"]:
 		advance_step()  # diceへ
+	# dice_promptフェーズ → diceへ進む
+	# dice_prompt（番号なし）は分岐選択があるのでdirectionへも進む
+	# dice_prompt2以降は分岐なしなので移動完了後に次へ進む
+	elif phase.begins_with("dice_prompt"):
+		_exit_explanation_mode_if_active()
+		advance_step()  # diceへ
+		# dice_prompt（番号なし、最初のダイス）の場合のみdirectionへ進む
+		if phase == "dice_prompt":
+			advance_step()  # directionへ
 	# diceフェーズでは次のフェーズがcheckpointなら待機、そうでなければ進む
-	elif phase == "dice":
+	elif phase.begins_with("dice") and not phase.begins_with("dice_prompt"):
 		var next_step_index = current_step + 1
 		if next_step_index < steps.size():
 			var next_phase = steps[next_step_index].get("phase", "")
-			if next_phase != "checkpoint":
+			if not next_phase.begins_with("checkpoint"):
 				_exit_explanation_mode_if_active()
 				advance_step()
 
@@ -257,13 +327,18 @@ func _on_movement_completed(player_id: int, _final_tile: int):
 		return
 	var phase = get_current_step().get("phase", "")
 	if player_id == 0:
-		if phase == "direction":
+		# directionで始まるフェーズ（direction, direction2, direction4, etc.）
+		if phase.begins_with("direction"):
+			_exit_explanation_mode_if_active()
+			advance_step()
+		# diceフェーズ（dice2, dice3など、dice_prompt以外）で移動完了 → 次へ
+		elif phase.begins_with("dice") and not phase.begins_with("dice_prompt"):
 			_exit_explanation_mode_if_active()
 			advance_step()
 		# 移動完了待ちフェーズなら次へ（敵ドミニオに到着）
-		elif phase == "wait_movement":
+		elif phase.begins_with("wait_movement"):
 			_exit_explanation_mode_if_active()
-			advance_step()  # battle_arrivalへ
+			advance_step()
 	# CPU移動完了時（プレイヤーのドミニオに止まった）
 	elif player_id == 1:
 		if phase == "cpu_turn_start2":
@@ -274,13 +349,18 @@ func _on_card_info_shown(_card_index: int):
 	if not is_active:
 		return
 	var phase = get_current_step().get("phase", "")
-	if phase == "summon_select":
+	# summon_selectで始まるフェーズ（summon_select, summon_sakuya_select, summon_ogre3_select, etc.）
+	if phase.begins_with("summon") and phase.ends_with("_select"):
 		_exit_explanation_mode_if_active()
 		advance_step()
 	# アイテムカード1回目タップ
 	elif phase == "battle_item_prompt":
 		_exit_explanation_mode_if_active()
 		advance_step()  # battle_item_infoへ
+	# スペルカード1回目タップ
+	elif phase.ends_with("_select") and ("spell" in phase or "vitality" in phase or "greed" in phase or "holyword" in phase or "earth_shift" in phase):
+		_exit_explanation_mode_if_active()
+		advance_step()
 
 func _on_card_selected(_card_index: int):
 	if not is_active:
@@ -291,17 +371,99 @@ func _on_card_selected(_card_index: int):
 		_exit_explanation_mode_if_active()
 		advance_step()  # summon_confirmへ
 		advance_step()  # summon_executeへ
-	elif phase == "summon_confirm":
+	# summon_confirmで始まるフェーズ（summon_confirm, summon_sakuya_confirm, etc.）
+	elif phase.begins_with("summon") and phase.ends_with("_confirm"):
+		_exit_explanation_mode_if_active()
+		advance_step()
+	# スペルカード確定（2回目タップ）
+	elif phase.ends_with("_confirm") and ("spell" in phase or "vitality" in phase or "greed" in phase or "holyword" in phase or "earth_shift" in phase):
 		_exit_explanation_mode_if_active()
 		advance_step()
 	# バトルクリーチャー選択確定時（2回目タップ）
-	elif phase == "battle_select_creature":
+	elif phase.begins_with("battle") and phase.ends_with("_select"):
 		_exit_explanation_mode_if_active()
-		advance_step()  # battle_info1へ
+		advance_step()
 	# アイテム選択確定時（2回目タップ）- battle_startへ進む
 	elif phase == "battle_item_info":
 		_exit_explanation_mode_if_active()
 		advance_step()  # battle_startへ
+
+func _on_spell_phase_completed():
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# スペルターゲット選択フェーズならスペル完了フェーズへ進む
+	# spell_target, vitality_target, greed_target など *_target フェーズ全般に対応
+	if phase == "spell_target" or phase.ends_with("_target"):
+		_exit_explanation_mode_if_active()
+		advance_step()  # *_completeへ
+
+func _on_dominio_land_selected(_tile_index: int):
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# レベルアップ土地選択フェーズなら次へ進む
+	if phase == "levelup_select":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_dominio_command_opened():
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# ドミニオコマンド説明フェーズならレベルアップ選択へ進む
+	if phase == "dominion_command_explain":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_dominio_action_selected(_action_type: String):
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# アクション選択フェーズなら次へ進む
+	if phase == "action_select":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_level_up_selected(_target_level: int, _cost: int):
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# レベル選択フェーズなら次へ進む
+	if phase == "level_select":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_special_button_pressed():
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# アルカナアーツ説明フェーズなら選択へ進む
+	if phase == "mystic_arts_explain":
+		_exit_explanation_mode_if_active()
+		advance_step()
+	# ドミニオコマンド説明フェーズなら選択へ進む
+	elif phase == "dominion_command_explain":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_mystic_target_selection_requested(_targets: Array):
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# アルカナアーツ選択フェーズなら対象選択へ進む
+	if phase == "mystic_arts_select":
+		_exit_explanation_mode_if_active()
+		advance_step()
+
+func _on_mystic_phase_completed():
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# アルカナアーツ対象選択フェーズなら次へ進む
+	if phase == "mystic_arts_target":
+		_exit_explanation_mode_if_active()
+		advance_step()
 
 func _on_action_completed():
 	if not is_active:
@@ -309,18 +471,29 @@ func _on_action_completed():
 	# phaseは最初に取得して保持（awaitで変わる可能性があるため）
 	var initial_phase = get_current_step().get("phase", "")
 	
-	# プレイヤーの召喚関連フェーズなら召喚完了フェーズへスキップ
-	if initial_phase in ["summon_info", "summon_confirm", "summon_execute"]:
-		# summon_completeまでステップを進める（wait_for_click: falseのステップのみスキップ）
-		while is_active and not is_phase("summon_complete"):
+	# プレイヤーの召喚関連フェーズなら_completeステップまで進む
+	# summon_select, summon_confirm, summon_execute, summon_sakuya_select, etc.
+	if initial_phase.begins_with("summon"):
+		# 次のwait_for_click: trueまたはpause_game: trueのステップまで進める
+		while is_active:
+			var step = get_current_step()
+			if step.get("wait_for_click", false) or step.get("pause_game", false):
+				break
 			advance_step()
-		# summon_completeに到達したら終了（クリック待ちは_show_current_step内で処理）
 		return
 	
-	# CPUターン中（cpu_turn_startまたはcpu_turn）なら召喚完了フェーズへ
-	if initial_phase in ["cpu_turn_start", "cpu_turn"]:
-		# cpu_summon_completeまでスキップ
-		while is_active and not is_phase("cpu_summon_complete"):
+	# CPUターン中（cpu_turnで始まるフェーズ）なら_completeステップまで進む
+	if initial_phase.begins_with("cpu_turn"):
+		# cpu_turn*_completeステップまで進める（プレイヤーターンのステップには進まない）
+		while is_active:
+			var step = get_current_step()
+			var phase = step.get("phase", "")
+			# cpu_turn*_completeで停止
+			if phase.begins_with("cpu_") and phase.ends_with("_complete"):
+				break
+			# wait_for_click/pause_gameでも停止（安全策）
+			if step.get("wait_for_click", false) or step.get("pause_game", false):
+				break
 			advance_step()
 
 func _on_checkpoint_passed(player_id: int, _checkpoint_type: String):
@@ -398,6 +571,9 @@ func _set_cpu_tutorial_policy():
 func end_tutorial():
 	is_active = false
 	
+	# カード制限をクリア
+	allowed_card_ids.clear()
+	
 	# CPUのバトルポリシーをデフォルトに戻す
 	_reset_cpu_policy()
 	
@@ -420,6 +596,9 @@ func _reset_cpu_policy():
 func advance_step():
 	if not is_active:
 		return
+	
+	# 前のステップ表示中フラグをリセット（シグナルハンドラからの呼び出し対応）
+	_is_showing_step = false
 	
 	current_step += 1
 	
@@ -447,11 +626,19 @@ func _show_current_step():
 	if current_step >= steps.size():
 		return
 	
+	# 再入防止（前のステップ表示中に次のステップが呼ばれた場合はスキップ）
+	if _is_showing_step:
+		return
+	_is_showing_step = true
+	
 	var step = steps[current_step]
 	print("[TutorialManager] Step %d: %s" % [step.id, step.phase])
 	
 	# ExplanationModeでステップを表示
 	await _show_step_with_explanation_mode(step)
+	
+	# ステップ表示完了（シグナル待ち以外のパターン）
+	_is_showing_step = false
 
 # 現在のステップデータを取得
 func get_current_step() -> Dictionary:
@@ -459,15 +646,16 @@ func get_current_step() -> Dictionary:
 		return steps[current_step]
 	return {}
 
-# 固定ダイス目を取得
-func get_fixed_dice() -> int:
-	if current_turn <= dice_sequence.size():
-		return dice_sequence[current_turn - 1]
+# 固定ダイス目を取得（プレイヤーID指定）
+func get_fixed_dice(player_id: int = 0) -> int:
+	var seq = dice_sequence if player_id == 0 else cpu_dice_sequence
+	if current_turn <= seq.size():
+		return seq[current_turn - 1]
 	return -1
 
-# 現在のターンのダイスを設定
-func set_dice_for_current_turn():
-	var dice_value = get_fixed_dice()
+# 現在のターンのダイスを設定（プレイヤーID指定）
+func set_dice_for_current_turn(player_id: int = 0):
+	var dice_value = get_fixed_dice(player_id)
 	if dice_value > 0 and debug_controller:
 		debug_controller.set_debug_dice(dice_value)
 		print("[TutorialManager] 【デバッグ】固定ダイス: %d" % dice_value)
@@ -483,7 +671,15 @@ func _set_initial_hands():
 	# プレイヤー1（CPU）の手札
 	card_system.set_fixed_hand_for_player(1, cpu_initial_hand.duplicate())
 	
-	print("[TutorialManager] 初期手札設定完了")
+	# プレイヤー0のデッキ（ドロー順固定）
+	if not player_deck.is_empty():
+		card_system.set_fixed_deck_for_player(0, player_deck.duplicate())
+	
+	# プレイヤー1（CPU）のデッキ
+	if not cpu_deck.is_empty():
+		card_system.set_fixed_deck_for_player(1, cpu_deck.duplicate())
+	
+	print("[TutorialManager] 初期手札・デッキ設定完了")
 # =============================================================================
 # ExplanationMode関連
 # =============================================================================
@@ -493,18 +689,151 @@ func _exit_explanation_mode_if_active():
 	if explanation_mode and explanation_mode.is_active():
 		explanation_mode.exit()
 
+## ドミニオコマンドを開く
+func _open_dominio_command():
+	if game_flow_manager and game_flow_manager.dominio_command_handler:
+		var player_id = game_flow_manager.get("current_player_id")
+		if player_id == null:
+			player_id = 0
+		game_flow_manager.dominio_command_handler.open_dominio_order(player_id)
+
+## ドミニオボタンを表示
+func _show_dominio_button():
+	if ui_manager and ui_manager.has_method("show_dominio_order_button"):
+		ui_manager.show_dominio_order_button()
+
+## アルカナアーツボタンを表示
+func _show_arcana_arts_button():
+	if ui_manager and ui_manager.has_method("show_arcana_arts_button"):
+		ui_manager.show_arcana_arts_button()
+
 ## カードUIが準備完了するまで待つ
 func _wait_for_card_ui_ready():
-	var max_wait = 30  # 最大30フレーム
+	var max_wait = 60  # 最大60フレーム
 	for i in range(max_wait):
 		await get_tree().process_frame
-		# hand_displayのplayer_card_nodesを確認
-		if ui_manager and ui_manager.hand_display:
-			var hd = ui_manager.hand_display
-			if "player_card_nodes" in hd and hd.player_card_nodes.has(0):
-				if hd.player_card_nodes[0].size() > 0:
-					return
+		# card_selection_uiがアクティブかつhand_displayにカードがあることを確認
+		if ui_manager:
+			# card_selection_uiがアクティブになるまで待つ
+			if ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active:
+				# hand_displayのplayer_card_nodesを確認
+				if ui_manager.hand_display:
+					var hd = ui_manager.hand_display
+					if "player_card_nodes" in hd and hd.player_card_nodes.has(0):
+						if hd.player_card_nodes[0].size() > 0:
+							return
 	print("[TutorialManager] WARNING: Card UI not ready after %d frames" % max_wait)
+
+## チュートリアル用カード制限を更新
+func _update_allowed_cards(filter: String):
+	allowed_card_ids.clear()
+	
+	if filter == "":
+		return
+	
+	# フィルタはIDのみ（数値文字列）
+	if filter.is_valid_int():
+		allowed_card_ids.append(int(filter))
+
+## 指定カードIDが選択可能かチェック（card_selection_uiから呼び出し）
+func is_card_allowed(card_id: int) -> bool:
+	if allowed_card_ids.is_empty():
+		return true  # 制限なし
+	return card_id in allowed_card_ids
+
+## 指定タイルがターゲットとして選択可能かチェック（TapTargetManagerから呼び出し）
+func is_target_tile_allowed(tile_index: int) -> bool:
+	if allowed_target_tile_condition == "":
+		return true  # 制限なし
+	
+	# BoardSystemを取得
+	var board_system = _get_board_system()
+	if not board_system:
+		return true
+	
+	# タイル情報を取得（get_tile_infoを使用）
+	var tile_info = board_system.get_tile_info(tile_index)
+	if tile_info.is_empty():
+		return false
+	
+	# 条件をパース
+	var condition = allowed_target_tile_condition
+	
+	# "creature:<creature_name>" - 特定のクリーチャーがいる土地
+	if condition.begins_with("creature:"):
+		var creature_name = condition.substr(9)  # "creature:"の後
+		return _check_creature_on_tile(tile_info, creature_name)
+	
+	# "mismatched_creature:<creature_name>" - 属性が合っていない特定クリーチャーの土地
+	if condition.begins_with("mismatched_creature:"):
+		var creature_name = condition.substr(20)  # "mismatched_creature:"の後
+		return _check_mismatched_creature_on_tile(tile_info, creature_name)
+	
+	# "enemy_player" - 敵プレイヤーのみ（プレイヤー選択スペル用）
+	if condition == "enemy_player":
+		return _check_enemy_player_target(tile_index)
+	
+	# 数値（タイルインデックス）- 後方互換
+	if condition.is_valid_int():
+		return tile_index == int(condition)
+	
+	return true  # 不明な条件は許可
+
+## BoardSystemを取得
+func _get_board_system():
+	return board_system_3d
+
+## タイル上に特定のクリーチャーがいるかチェック
+func _check_creature_on_tile(tile_info: Dictionary, creature_name: String) -> bool:
+	if not tile_info.get("has_creature", false):
+		return false
+	var creature = tile_info.get("creature", {})
+	if creature.is_empty():
+		return false
+	# クリーチャー名をチェック（部分一致）
+	var name = creature.get("name", "")
+	return name.to_lower().contains(creature_name.to_lower())
+
+## タイル上に属性が合っていない特定クリーチャーがいるかチェック
+func _check_mismatched_creature_on_tile(tile_info: Dictionary, creature_name: String) -> bool:
+	if not _check_creature_on_tile(tile_info, creature_name):
+		return false
+	# タイルの属性とクリーチャーの属性を比較
+	var creature = tile_info.get("creature", {})
+	var tile_element = tile_info.get("element", "")  # タイルの属性
+	var creature_element = creature.get("element", "")  # クリーチャーの属性
+	# 属性が異なる場合にtrue
+	return tile_element != creature_element
+
+## 敵プレイヤーかどうかチェック（プレイヤー選択スペル用）
+func _check_enemy_player_target(tile_index: int) -> bool:
+	# プレイヤーの位置を取得
+	if not game_flow_manager or not game_flow_manager.player_system:
+		return true
+	
+	var player_system = game_flow_manager.player_system
+	var current_player_id = game_flow_manager.current_player_index
+	
+	# 敵プレイヤー（CPU）の位置を取得
+	for player in player_system.players:
+		if player.id != current_player_id:
+			var enemy_tile = board_system_3d.movement_controller.get_player_tile(player.id) if board_system_3d else -1
+			if tile_index == enemy_tile:
+				return true
+	
+	return false
+
+## 指定アクションが選択可能かチェック（DominioCommandHandlerから呼び出し）
+func is_action_allowed(action_type: String) -> bool:
+	if allowed_action == "":
+		return true  # 制限なし
+	return action_type == allowed_action
+
+## 指定レベルが選択可能かチェック（LevelUpUIから呼び出し）
+func is_level_allowed(level: int) -> bool:
+	if allowed_level < 0:
+		return true  # 制限なし
+	return level == allowed_level
 
 # ExplanationModeでステップを表示
 func _show_step_with_explanation_mode(step: Dictionary):
@@ -519,12 +848,39 @@ func _show_step_with_explanation_mode(step: Dictionary):
 	var highlight_card = step.get("highlight_card", false)
 	var highlight_card_filter = step.get("highlight_card_filter", "")
 	var disable_all_buttons = step.get("disable_all_buttons", false)
+	var explicit_exit_trigger = step.get("exit_trigger", "")  # 明示的な終了トリガー
+	
+	# チュートリアル用カード制限を設定
+	_update_allowed_cards(highlight_card_filter)
+	
+	# チュートリアル用ターゲット制限を設定（数値または文字列条件）
+	var target_tile_value = step.get("allowed_target_tile", "")
+	if target_tile_value is int:
+		allowed_target_tile_condition = str(target_tile_value) if target_tile_value >= 0 else ""
+	else:
+		allowed_target_tile_condition = str(target_tile_value)
+	
+	# チュートリアル用アクション制限を設定
+	allowed_action = step.get("allowed_action", "")
+	
+	# チュートリアル用レベル制限を設定
+	allowed_level = step.get("allowed_level", -1)
+	
+	# ドミニオボタンを表示
+	if step.get("show_dominio_button", false):
+		_show_dominio_button()
+	
+	# アルカナアーツボタンを表示
+	if step.get("show_arcana_arts_button", false):
+		_show_arcana_arts_button()
 	
 	# 空メッセージ、かつwait_for_clickでない場合はスキップ（シグナル待ち）
 	if message == "" and not wait_for_click:
 		# ポップアップを非表示
 		if explanation_mode._popup:
 			explanation_mode._popup.hide()
+		# フラグをリセット（シグナルハンドラからadvance_step可能にする）
+		_is_showing_step = false
 		# シグナルで次のステップへ進む
 		return
 	
@@ -553,7 +909,12 @@ func _show_step_with_explanation_mode(step: Dictionary):
 	var exit_trigger = "click"
 	var allowed_buttons = []
 	
-	if wait_for_click:
+	# 明示的に指定されていればそれを使用
+	if explicit_exit_trigger != "":
+		exit_trigger = explicit_exit_trigger
+		if exit_trigger == "button":
+			allowed_buttons = highlight_buttons
+	elif wait_for_click:
 		exit_trigger = "click"
 	elif highlight_card:
 		# カード選択待ち: カードをタップしたら終了
@@ -567,13 +928,15 @@ func _show_step_with_explanation_mode(step: Dictionary):
 		exit_trigger = "signal"
 	
 	# ExplanationMode設定
+	var pause_game = step.get("pause_game", true)  # デフォルトはtrue
 	var config = {
 		"message": message,
 		"popup_position": popup_position,
 		"popup_offset_y": popup_offset_y,
 		"exit_trigger": exit_trigger,
 		"allowed_buttons": allowed_buttons,
-		"highlights": highlights
+		"highlights": highlights,
+		"pause_game": pause_game
 	}
 	
 		
@@ -584,6 +947,8 @@ func _show_step_with_explanation_mode(step: Dictionary):
 		if exit_trigger in ["card_tap", "card_select"]:
 			await _wait_for_card_ui_ready()
 		explanation_mode.enter(config)
+		# フラグをリセット（シグナルハンドラからadvance_step可能にする）
+		_is_showing_step = false
 		# 操作後に説明モードを抜けて、ゲームが進行する
 		# 次のステップへはシグナルハンドラで進む
 		return
@@ -595,6 +960,10 @@ func _show_step_with_explanation_mode(step: Dictionary):
 	if step.get("is_final", false):
 		end_tutorial()
 		return
+	
+	# ドミニオコマンドを開く指定がある場合
+	if step.get("open_dominio_command", false):
+		_open_dominio_command()
 	
 	# クリック待ちパターンの場合は次のステップへ
 	await get_tree().process_frame

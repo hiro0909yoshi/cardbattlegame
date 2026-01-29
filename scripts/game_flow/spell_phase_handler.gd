@@ -725,6 +725,11 @@ func _confirm_target_selection():
 	
 	var selected_target = available_targets[current_target_index]
 	
+	# チュートリアルのターゲット制限チェック
+	if not _check_tutorial_target_allowed(selected_target.get("tile_index", -1)):
+		print("[SpellPhaseHandler] チュートリアル制限: タイル%d は選択不可" % selected_target.get("tile_index", -1))
+		return
+	
 	# TapTargetManagerの選択を終了
 	_end_spell_tap_target_selection()
 	
@@ -1475,6 +1480,21 @@ func _end_spell_tap_target_selection():
 	
 	ttm.end_selection()
 	print("[SpellPhaseHandler] タップターゲット選択終了")
+
+
+## チュートリアルのターゲット制限をチェック
+func _check_tutorial_target_allowed(tile_index: int) -> bool:
+	# TutorialManagerを取得（game_flow_manager → system_manager → game_3d）
+	var system_manager = game_flow_manager.get_parent() if game_flow_manager else null
+	var game_3d = system_manager.get_parent() if system_manager else null
+	if not game_3d or not "tutorial_manager" in game_3d:
+		return true  # チュートリアルなし = 制限なし
+	
+	var tutorial_manager = game_3d.tutorial_manager
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアル非アクティブ = 制限なし
+	
+	return tutorial_manager.is_target_tile_allowed(tile_index)
 
 
 ## タップでターゲットが選択された時

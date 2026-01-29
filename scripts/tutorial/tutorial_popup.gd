@@ -60,7 +60,6 @@ func _setup_ui():
 func _on_panel_input(event: InputEvent):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			
 			if waiting_for_click:
 				waiting_for_click = false
 				clicked.emit(_current_wait_id)

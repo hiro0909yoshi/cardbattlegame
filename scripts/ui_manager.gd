@@ -891,7 +891,7 @@ func _on_empty_tapped():
 	
 	# 通常時はインフォパネルを閉じる
 	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel()
+		creature_info_panel_ui.hide_panel(false)  # ボタンはクリアしない（チュートリアル等の状態を維持）
 		print("[UIManager] 空タップでパネル閉じ")
 
 

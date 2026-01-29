@@ -165,6 +165,8 @@ func execute_action(action_type: String) -> bool:
 	if selected_tile_index == -1:
 		return false
 	
+	# アクション選択シグナルを発火
+	action_selected.emit(action_type)
 	
 	match action_type:
 		"level_up":

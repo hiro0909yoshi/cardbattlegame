@@ -4,6 +4,8 @@ extends Control
 
 class_name GlobalActionButtons
 
+signal special_button_pressed()  # スペシャルボタン押下シグナル
+
 # UI要素
 var up_button: Button
 var down_button: Button
@@ -271,6 +273,8 @@ func _on_special_pressed():
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
+	# シグナル発火（チュートリアル用）
+	special_button_pressed.emit()
 	if _special_callback.is_valid():
 		_special_callback.call()
 

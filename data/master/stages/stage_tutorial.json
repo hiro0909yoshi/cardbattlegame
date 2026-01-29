@@ -7,7 +7,7 @@
   "rule_preset": "standard",
   "max_turns": 30,
   "rule_overrides": {
-	"initial_magic": {"player": 200, "cpu": 200}
+	"initial_magic": {"player": 1800, "cpu": 800}
   },
 
   "rewards": {

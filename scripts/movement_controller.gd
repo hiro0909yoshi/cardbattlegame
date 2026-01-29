@@ -101,6 +101,7 @@ func set_player_tile(player_id: int, tile_index: int):
 # プレイヤーを移動（外部から呼ばれるメイン関数）
 func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
+		print("[MovementController] move_player早期リターン: is_moving=%s, player_id=%d, player_nodes.size=%d" % [is_moving, player_id, player_nodes.size()])
 		return
 	
 	# ゲーム終了チェック
@@ -110,6 +111,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	
 	is_moving = true
 	current_moving_player = player_id
+	print("[MovementController] 移動開始: player=%d, steps=%d" % [player_id, steps])
 	emit_signal("movement_started", player_id)
 	
 	# ダイス条件バフをチェックして適用（移動前）
@@ -143,16 +145,19 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	is_moving = false
 	current_moving_player = -1
 	
+	print("[MovementController] 移動完了: player=%d, final_tile=%d" % [player_id, final_tile])
 	emit_signal("movement_completed", player_id, final_tile)
 
 # 1歩ずつ移動（分岐があれば選択）
 func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -> void:
+	print("[MovementController] _move_steps_with_branch開始: steps=%d, first_tile=%d" % [steps, first_tile])
 	var current_tile = player_tiles[player_id]
 	var came_from = _get_player_came_from(player_id)
 	var remaining_steps = steps
 	var is_first_step = true
 	
 	while remaining_steps > 0:
+		print("[MovementController] 移動ループ: remaining=%d, current=%d" % [remaining_steps, current_tile])
 		# ゲーム終了チェック
 		if game_flow_manager and game_flow_manager._game_ended:
 			print("[MovementController] ゲーム終了済み、移動中断")
@@ -889,11 +894,14 @@ func move_along_path(player_id: int, path: Array) -> void:
 # 単一タイルへの移動
 func move_to_tile(player_id: int, tile_index: int) -> void:
 	if not tile_nodes.has(tile_index):
+		print("[MovementController] move_to_tile: tile_nodes has no tile %d" % tile_index)
 		return
 	
 	var player_node = player_nodes[player_id]
 	var target_pos = tile_nodes[tile_index].global_position
 	target_pos.y += MOVE_HEIGHT
+	
+
 	
 	# Tweenで滑らかな移動
 	var tween = get_tree().create_tween()
@@ -1048,11 +1056,14 @@ func heal_all_creatures_for_player(player_id: int, heal_amount: int):
 			creature["current_hp"] = new_hp
 
 # Phase 1-A: プレイヤーの全土地のダウン状態をクリア
-func clear_all_down_states_for_player(player_id: int):
+func clear_all_down_states_for_player(player_id: int) -> int:
+	var cleared_count = 0
 	for tile_index in tile_nodes.keys():
 		var tile = tile_nodes[tile_index]
 		if tile.owner_id == player_id and tile.has_method("is_down") and tile.is_down():
 			tile.clear_down_state()
+			cleared_count += 1
+	return cleared_count
 
 # カメラをプレイヤーにフォーカス
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:

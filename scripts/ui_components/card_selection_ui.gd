@@ -146,12 +146,16 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# 常にプレイヤー0（人間）が見ている
 				card_node.set_viewing_player(0)
 			var card_type = card_data.get("type", "")
+			var card_id = card_data.get("id", -1)
 			
 			# 選択可能状態を判定
 			var is_selectable = true
 			
+			# チュートリアル制限チェック
+			if not _check_tutorial_card_allowed(card_id):
+				is_selectable = false
 			# disabledモード: すべて選択不可
-			if filter_mode == "disabled":
+			elif filter_mode == "disabled":
 				is_selectable = false
 			# 捨て札モードではすべて選択可能
 			elif selection_mode == "discard":
@@ -549,11 +553,18 @@ func on_card_selected(card_index: int):
 		print("[CardSelectionUI] no card_data for index %d" % card_index)
 		return
 	
+	# チュートリアル制限チェック（タップ時に弾く）
+	var card_id = card_data.get("id", -1)
+	if not _check_tutorial_card_allowed(card_id):
+		print("[CardSelectionUI] card %d blocked by tutorial restriction" % card_id)
+		return
+	
 	print("[CardSelectionUI] card_type=%s, card_name=%s" % [card_data.get("type", "?"), card_data.get("name", "?")])
 	
 	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
 	if selection_mode == "spell" and card_data.get("type") == "spell":
 		_show_spell_info_panel(card_index, card_data)
+		emit_signal("card_info_shown", card_index)
 		return
 	
 	# アイテムフェーズの場合
@@ -1122,3 +1133,25 @@ func _get_current_tile_element(player_id: int) -> String:
 	
 	var tile = board.tile_nodes[tile_index]
 	return tile.tile_type if tile else ""
+
+
+# チュートリアル制限チェック
+func _check_tutorial_card_allowed(card_id: int) -> bool:
+	# TutorialManagerを取得
+	var tutorial_manager = _get_tutorial_manager()
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアルでなければ制限なし
+	
+	return tutorial_manager.is_card_allowed(card_id)
+
+
+# TutorialManagerを取得
+func _get_tutorial_manager():
+	if not game_flow_manager_ref:
+		return null
+	
+	# game_flow_managerの親（Game3D）からTutorialManagerを取得
+	var game_3d = game_flow_manager_ref.get_parent()
+	if game_3d and game_3d.has_node("TutorialManager"):
+		return game_3d.get_node("TutorialManager")
+	return null

@@ -17,12 +17,8 @@ func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _on_tutorial_pressed():
-	print("チュートリアル開始")
-	# チュートリアルモードフラグを設定
-	GameData.set_meta("is_tutorial_mode", true)
-	GameData.set_meta("stage_id", "stage_tutorial")
-	# ゲーム画面へ遷移
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+	print("チュートリアル選択画面へ")
+	get_tree().change_scene_to_file("res://scenes/TutorialSelect.tscn")
 
 func _on_help_pressed():
 	print("説明画面へ")

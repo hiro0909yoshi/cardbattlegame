@@ -253,6 +253,23 @@ func set_fixed_hand_for_player(player_id: int, card_ids: Array):
 	print("[CardSystem] プレイヤー%d: 固定手札設定完了 (%d枚)" % [player_id + 1, player_hands[player_id]["data"].size()])
 	emit_signal("hand_updated")
 
+## チュートリアル用: 特定のカードIDで固定順序デッキを設定（シャッフルなし）
+func set_fixed_deck_for_player(player_id: int, card_ids: Array):
+	var deck_pool = []
+	
+	for card_id in card_ids:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if not card_data.is_empty():
+			deck_pool.append(card_data.duplicate(true))
+		else:
+			print("[CardSystem] WARNING: カードID %d が見つかりません" % card_id)
+	
+	if not player_deck_pools.has(player_id):
+		player_deck_pools[player_id] = []
+	player_deck_pools[player_id] = deck_pool
+	
+	print("[CardSystem] プレイヤー%d: 固定デッキ設定完了 (%d枚)" % [player_id + 1, deck_pool.size()])
+
 ## 特定プレイヤーにデッキを設定（クエストモード用）
 ## deck_data: {"cards": [{"id": card_id, "count": 枚数}, ...]}
 func set_deck_for_player(player_id: int, deck_data: Dictionary):

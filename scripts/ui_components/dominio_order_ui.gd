@@ -189,6 +189,17 @@ func _on_action_menu_item_selected(index: int):
 	
 	var action = items[index].get("action", "")
 	
+	# チュートリアルのアクション制限チェック
+	if not _check_tutorial_action_allowed(action):
+		print("[DominioOrderUI] チュートリアル制限: %s は選択不可" % action)
+		# 入力ロックを解除
+		if ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
+			ui_manager_ref.game_flow_manager_ref.unlock_input()
+		# アクションメニューを再表示
+		if selected_tile_for_action >= 0:
+			show_action_menu(selected_tile_for_action)
+		return
+	
 	# クリーチャー情報パネルを閉じる
 	_close_creature_info_panel_if_open()
 	
@@ -313,6 +324,30 @@ func _reset_level_button_style(button: Button, _level: int):
 	style.corner_radius_bottom_right = 15
 	button.add_theme_stylebox_override("normal", style)
 
+## チュートリアルのアクション制限をチェック
+func _check_tutorial_action_allowed(action: String) -> bool:
+	var tutorial_manager = _get_tutorial_manager()
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアル非アクティブ = 制限なし
+	return tutorial_manager.is_action_allowed(action)
+
+## チュートリアルのレベル制限をチェック
+func _check_tutorial_level_allowed(level: int) -> bool:
+	var tutorial_manager = _get_tutorial_manager()
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアル非アクティブ = 制限なし
+	return tutorial_manager.is_level_allowed(level)
+
+## TutorialManagerを取得
+func _get_tutorial_manager():
+	if not ui_manager_ref:
+		return null
+	var system_manager = ui_manager_ref.get_parent()
+	var game_3d = system_manager.get_parent() if system_manager else null
+	if not game_3d or not "tutorial_manager" in game_3d:
+		return null
+	return game_3d.tutorial_manager
+
 ## シグナルハンドラ
 func _on_cancel_dominio_order_button_pressed():
 	print("[DominioOrderUI] キャンセルボタン押下")
@@ -358,6 +393,14 @@ func _on_action_terrain_change_pressed():
 	Input.parse_input_event(event)
 
 func _on_level_selected(level: int):
+	# チュートリアルのレベル制限チェック
+	if not _check_tutorial_level_allowed(level):
+		print("[DominioOrderUI] チュートリアル制限: レベル%d は選択不可" % level)
+		# 入力ロックを解除
+		if ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
+			ui_manager_ref.game_flow_manager_ref.unlock_input()
+		return
+	
 	var current_player = player_system_ref.get_current_player() if player_system_ref else null
 	if not current_player:
 		return

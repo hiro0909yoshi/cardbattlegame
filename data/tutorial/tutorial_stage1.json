@@ -39,7 +39,7 @@
 	  "message": "クリーチャーを召喚しましょう\n召喚したいカードをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
-	  "highlight_card_filter": "green_ogre",
+	  "highlight_card_filter": "210",
 	  "highlight": []
 	},
 	{
@@ -59,7 +59,7 @@
 	  "message": "もう一度カードをタップして召喚を決定しましょう",
 	  "wait_for_click": false,
 	  "highlight_card": true,
-	  "highlight_card_filter": "green_ogre"
+	  "highlight_card_filter": "210"
 	},
 	{
 	  "id": 7,
@@ -198,7 +198,7 @@
 	  "message": "アイテムカードを選択しましょう\n\nロングソードをタップしてください",
 	  "wait_for_click": false,
 	  "highlight_card": true,
-	  "highlight_card_filter": "long_sword",
+	  "highlight_card_filter": "1073",
 	  "disable_all_buttons": true,
 	  "popup_position": "right"
 	},

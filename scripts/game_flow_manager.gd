@@ -243,11 +243,16 @@ func start_turn():
 		ui_manager.phase_label.text = "サイコロを振ってください"
 		update_ui()
 		
+		# カメラを手動モードに設定（マップ確認可能にする）
+		if board_system_3d and board_system_3d.camera_controller:
+			board_system_3d.camera_controller.enable_manual_mode()
+		
 		# 決定ボタンでサイコロを振るナビゲーション設定
 		_setup_dice_phase_navigation()
 
 ## ダイスフェーズ用ナビゲーション設定（決定ボタンでサイコロを振る）
 func _setup_dice_phase_navigation():
+	print("[GameFlowManager] _setup_dice_phase_navigation called")
 	if ui_manager:
 		ui_manager.enable_navigation(
 			func(): roll_dice(),  # 決定 = サイコロを振る
@@ -323,11 +328,14 @@ func roll_dice():
 	else:
 		await get_tree().create_timer(0.5).timeout
 	
+	print("[GameFlowManager] roll_dice: await完了、移動開始 (phase=%s)" % current_phase)
+	
 	var current_player = player_system.get_current_player()
 	
 	# 3D移動
 	if board_system_3d:
 		ui_manager.phase_label.text = "移動中..."
+		print("[GameFlowManager] roll_dice: move_player_3d呼び出し (player=%d, dice=%d)" % [current_player.id, modified_dice])
 		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
 
 # === 3Dモード用イベント ===
@@ -920,7 +928,12 @@ func is_input_locked() -> bool:
 ## チュートリアルモードかどうか
 func _is_tutorial_mode() -> bool:
 	var tm = get_tutorial_manager()
-	return tm != null and tm.is_active
+	if tm == null or not tm.is_active:
+		return false
+	# チュートリアルでもenable_drawがtrueならドローを有効にする
+	if tm.enable_draw:
+		return false
+	return true
 
 ## TutorialManagerを取得
 func get_tutorial_manager():

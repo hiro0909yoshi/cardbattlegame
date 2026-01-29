@@ -136,6 +136,11 @@ func handle_tile_tap(tile_index: int, tile_data: Dictionary) -> bool:
 			print("[TapTargetManager] カスタムフィルターで除外: タイル%d" % tile_index)
 			return false
 	
+	# チュートリアルのターゲット制限チェック
+	if not _check_tutorial_target_allowed(tile_index):
+		print("[TapTargetManager] チュートリアル制限: タイル%d は選択不可" % tile_index)
+		return false
+	
 	# ターゲットとして選択
 	var creature_data = _get_creature_data(tile_index)
 	print("[TapTargetManager] ターゲット選択: タイル%d" % tile_index)
@@ -164,6 +169,11 @@ func handle_creature_tap(tile_index: int, creature_data: Dictionary) -> bool:
 			print("[TapTargetManager] カスタムフィルターで除外: タイル%d" % tile_index)
 			return false
 	
+	# チュートリアルのターゲット制限チェック
+	if not _check_tutorial_target_allowed(tile_index):
+		print("[TapTargetManager] チュートリアル制限: タイル%d は選択不可" % tile_index)
+		return false
+	
 	# ターゲットとして選択
 	print("[TapTargetManager] クリーチャー選択: タイル%d - %s" % [tile_index, creature_data.get("name", "不明")])
 	target_selected.emit(tile_index, creature_data)
@@ -190,6 +200,21 @@ func _is_valid_target(tile_index: int, _tile_data: Dictionary) -> bool:
 		return false
 	
 	return true
+
+
+## チュートリアルのターゲット制限をチェック
+func _check_tutorial_target_allowed(tile_index: int) -> bool:
+	# TutorialManagerを取得（board_system → system_manager → game_3d）
+	var system_manager = board_system.get_parent() if board_system else null
+	var game_3d = system_manager.get_parent() if system_manager else null
+	if not game_3d or not "tutorial_manager" in game_3d:
+		return true  # チュートリアルなし = 制限なし
+	
+	var tutorial_manager = game_3d.tutorial_manager
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアル非アクティブ = 制限なし
+	
+	return tutorial_manager.is_target_tile_allowed(tile_index)
 
 
 func _get_creature_data(tile_index: int) -> Dictionary:

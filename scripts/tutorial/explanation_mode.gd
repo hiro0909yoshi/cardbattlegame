@@ -111,15 +111,20 @@ func enter(config: Dictionary):
 	_config = config
 	
 	var exit_trigger = config.get("exit_trigger", "click")
+	var pause_game = config.get("pause_game", true)  # デフォルトはtrue
 	
-	# ゲーム一時停止（クリック待ちの場合のみ）
+	# ゲーム一時停止（クリック待ちの場合のみ、かつpause_gameがtrueの場合）
 	# ボタン待ちの場合はゲームを動かしたまま
-	if exit_trigger == "click":
+	if exit_trigger == "click" and pause_game:
 		get_tree().paused = true
 	
 	# ボタン終了の場合、GlobalActionButtonsを設定
 	if exit_trigger == "button":
 		_setup_button_callbacks(config.get("allowed_buttons", []))
+	
+	# シグナル待ちの場合でもexplanation_mode_activeを設定（入力ロック回避）
+	if exit_trigger == "signal" and _ui_manager and _ui_manager.global_action_buttons:
+		_ui_manager.global_action_buttons.explanation_mode_active = true
 	
 	# メッセージ表示
 	var message = config.get("message", "")
@@ -157,6 +162,10 @@ func exit():
 	# ボタンコールバックを復元
 	_restore_button_callbacks()
 	
+	# explanation_mode_activeをリセット（signal待ちの場合も含む）
+	if _ui_manager and _ui_manager.global_action_buttons:
+		_ui_manager.global_action_buttons.explanation_mode_active = false
+	
 	# ゲーム再開
 	get_tree().paused = false
 	
@@ -188,6 +197,8 @@ func _setup_button_callbacks(allowed_buttons: Array):
 	_saved_back_callback = gab._back_callback
 	_saved_up_callback = gab._up_callback
 	_saved_down_callback = gab._down_callback
+	
+
 	
 	# ボタン設定フラグを立てる
 	_buttons_were_setup = true
@@ -329,7 +340,7 @@ func _get_card_nodes(filter: String) -> Array:
 	
 	return result
 
-## カードがフィルタにマッチするか
+## カードがフィルタにマッチするか（フィルタはID文字列のみ）
 func _card_matches_filter(card_node, filter: String) -> bool:
 	if filter == "":
 		return true
@@ -339,17 +350,9 @@ func _card_matches_filter(card_node, filter: String) -> bool:
 	if card_id < 0:
 		return false
 	
-	# フィルタ名からIDにマッピング
-	# green_ogre = 210, long_sword = 1073
-	match filter:
-		"green_ogre":
-			return card_id == 210
-		"long_sword":
-			return card_id == 1073
-		_:
-			# 数値文字列の場合は直接比較
-			if filter.is_valid_int():
-				return card_id == int(filter)
+	# フィルタはIDのみ（数値文字列）
+	if filter.is_valid_int():
+		return card_id == int(filter)
 	
 	return false
 
@@ -398,7 +401,6 @@ func _highlight_tile_toll(target):
 	
 	var tile_info_display = _board_system_3d.tile_info_display
 	if not tile_info_display:
-		print("[ExplanationMode] _highlight_tile_toll: tile_info_display is null")
 		return
 	
 	var label = tile_info_display.tile_labels.get(tile_index)

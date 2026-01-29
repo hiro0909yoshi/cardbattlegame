@@ -89,6 +89,7 @@ func set_cpu_processor(cpu_processor):  # CPUTurnProcessor型を一時的に削�
 
 # タイル到着時のメイン処理
 func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array, debug_manual_control_all: bool = false):
+	print("[TileActionProcessor] process_tile_landing: tile=%d, is_action_processing=%s" % [tile_index, is_action_processing])
 	if is_action_processing:
 		print("Warning: Already processing tile action")
 		return

@@ -101,13 +101,23 @@ func _on_tutorial_ended():
 func _setup_tutorial():
 	print("[Game3D] チュートリアルモード初期化")
 	
-	# テストモード: ExplanationModeの単体テスト
+	# チュートリアルID取得（デフォルトはstage1）
+	var tutorial_id = "stage1"
+	if GameData.has_meta("tutorial_id"):
+		tutorial_id = GameData.get_meta("tutorial_id")
+		GameData.remove_meta("tutorial_id")
+	
 	# TutorialManager
 	var TutorialManagerClass = load("res://scripts/tutorial/tutorial_manager.gd")
 	if TutorialManagerClass:
 		tutorial_manager = TutorialManagerClass.new()
 		tutorial_manager.name = "TutorialManager"
 		add_child(tutorial_manager)
+		
+		# チュートリアルデータパスを設定
+		var tutorial_path = "res://data/tutorial/tutorial_%s.json" % tutorial_id
+		tutorial_manager.set_tutorial_path(tutorial_path)
+		print("[Game3D] チュートリアルデータ: %s" % tutorial_path)
 		
 		# system_managerを渡して初期化（シグナル接続もTutorialManager内で行う）
 		tutorial_manager.initialize_with_systems(system_manager)
