@@ -846,7 +846,9 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	# ドミニオコマンド選択中は専用の処理を行う
 	var is_dominio_order_active = game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler and game_flow_manager_ref.dominio_command_handler.current_state != game_flow_manager_ref.dominio_command_handler.State.CLOSED
 	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
-	var setup_buttons = not is_tap_target_active and not is_dominio_order_active
+	# チュートリアルのExplanationModeがアクティブな時もボタンを変更しない
+	var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
+	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active
 	
 	if creature_info_panel_ui:
 		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
@@ -878,7 +880,9 @@ func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
 	
 	# 通常時はインフォパネルを閉じる
 	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel()
+		# チュートリアル中はボタンをクリアしない
+		var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
+		creature_info_panel_ui.hide_panel(not is_tutorial_active)
 
 
 ## 空（タイル外）がタップされた時のハンドラ

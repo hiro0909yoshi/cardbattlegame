@@ -228,6 +228,18 @@ func _connect_action_signals():
 		if not sph.spell_phase_completed.is_connected(_on_spell_phase_completed):
 			sph.spell_phase_completed.connect(_on_spell_phase_completed)
 	
+	# アイテム使用シグナル（バトル時）
+	if game_flow_manager and game_flow_manager.item_phase_handler:
+		var iph = game_flow_manager.item_phase_handler
+		if not iph.item_used.is_connected(_on_item_used):
+			iph.item_used.connect(_on_item_used)
+	
+	# 破産完了シグナル
+	if game_flow_manager and game_flow_manager.bankruptcy_handler:
+		var bh = game_flow_manager.bankruptcy_handler
+		if not bh.bankruptcy_completed.is_connected(_on_bankruptcy_completed):
+			bh.bankruptcy_completed.connect(_on_bankruptcy_completed)
+	
 	# ドミニオコマンド関連シグナル
 	if game_flow_manager and game_flow_manager.dominio_command_handler:
 		var dch = game_flow_manager.dominio_command_handler
@@ -387,6 +399,14 @@ func _on_card_selected(_card_index: int):
 	elif phase == "battle_item_info":
 		_exit_explanation_mode_if_active()
 		advance_step()  # battle_startへ
+	# 武器選択（1回目タップ）→ weapon_confirmへ
+	elif phase.ends_with("_weapon_prompt"):
+		_exit_explanation_mode_if_active()
+		advance_step()
+	# 武器選択確定（2回目タップ）→ battle_startへ
+	elif phase.ends_with("_weapon_confirm"):
+		_exit_explanation_mode_if_active()
+		advance_step()
 
 func _on_spell_phase_completed():
 	if not is_active:
@@ -397,6 +417,36 @@ func _on_spell_phase_completed():
 	if phase == "spell_target" or phase.ends_with("_target"):
 		_exit_explanation_mode_if_active()
 		advance_step()  # *_completeへ
+
+func _on_item_used(_item_card: Dictionary):
+	if not is_active:
+		return
+	var phase = get_current_step().get("phase", "")
+	# 武器選択フェーズならバトル開始フェーズへ進む
+	if phase.ends_with("_weapon_prompt"):
+		_exit_explanation_mode_if_active()
+		advance_step()  # battle_startへ
+
+func _on_bankruptcy_completed(player_id: int, was_reset: bool):
+	if not is_active:
+		return
+	print("[TutorialManager] 破産完了シグナル: player=%d, was_reset=%s, phase=%s" % [player_id, was_reset, get_current_step().get("phase", "")])
+	
+	# CPUが破産した場合、破産関連フェーズを進める
+	if player_id == 1:  # CPU
+		var phase = get_current_step().get("phase", "")
+		
+		# cpu_toll_paidフェーズなら、リセット完了を待ってから進める
+		if phase == "cpu_toll_paid" and was_reset:
+			# 少し待ってから表示（移動アニメーション完了を待つ）
+			await get_tree().create_timer(0.8).timeout
+			_exit_explanation_mode_if_active()
+			# 最後のwait_for_click（victory）まで進める
+			while is_active:
+				var step = get_current_step()
+				if step.get("wait_for_click", false) or step.get("pause_game", false):
+					break
+				advance_step()
 
 func _on_dominio_land_selected(_tile_index: int):
 	if not is_active:
@@ -532,6 +582,10 @@ func _on_battle_screen_closed():
 	elif phase == "cpu_battle":
 		await get_tree().create_timer(0.3).timeout
 		advance_step()  # damage_explainへ
+	# スタチューバトル完了 → battle_statue_winへ
+	elif phase == "battle_statue_start":
+		await get_tree().create_timer(0.3).timeout
+		advance_step()  # battle_statue_winへ
 
 # =============================================================================
 # チュートリアル開始・終了
@@ -823,6 +877,26 @@ func _check_enemy_player_target(tile_index: int) -> bool:
 	
 	return false
 
+## 指定プレイヤーがターゲットとして選択可能かチェック（SpellPhaseHandlerから呼び出し）
+func is_player_target_allowed(player_id: int) -> bool:
+	if allowed_target_tile_condition == "":
+		return true  # 制限なし
+	
+	# 現在のプレイヤーIDを取得
+	var current_player_id = 0
+	if game_flow_manager and game_flow_manager.player_system:
+		current_player_id = game_flow_manager.player_system.current_player_index
+	
+	# "enemy_player" - 敵プレイヤーのみ
+	if allowed_target_tile_condition == "enemy_player":
+		return player_id != current_player_id
+	
+	# "self_player" - 自分のみ
+	if allowed_target_tile_condition == "self_player":
+		return player_id == current_player_id
+	
+	return true  # 不明な条件は許可
+
 ## 指定アクションが選択可能かチェック（DominioCommandHandlerから呼び出し）
 func is_action_allowed(action_type: String) -> bool:
 	if allowed_action == "":
@@ -873,6 +947,9 @@ func _show_step_with_explanation_mode(step: Dictionary):
 	# アルカナアーツボタンを表示
 	if step.get("show_arcana_arts_button", false):
 		_show_arcana_arts_button()
+		# ボタン状態を保護するためにexplanation_mode_activeを設定
+		if ui_manager and ui_manager.global_action_buttons:
+			ui_manager.global_action_buttons.explanation_mode_active = true
 	
 	# 空メッセージ、かつwait_for_clickでない場合はスキップ（シグナル待ち）
 	if message == "" and not wait_for_click:

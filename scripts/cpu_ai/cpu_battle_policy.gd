@@ -4,6 +4,8 @@
 extends RefCounted
 class_name CPUBattlePolicy
 
+const GameConstantsScript = preload("res://scripts/game_constants.gd")
+
 # =============================================================================
 # 侵略時の行動タイプ
 # =============================================================================
@@ -47,6 +49,9 @@ var protect_by_value_enabled: bool = false # 土地価値による判断を有�
 var protect_by_value_threshold: int = 200  # この通行料以上なら優先保護
 var protect_by_value_min_items: int = 2    # 低価値ドミニオはこの枚数以上ある場合のみアイテム使用
 
+# 召喚確率（属性不一致時）
+var summon_rate: float = -1.0  # -1.0ならGameConstants.CPU_SUMMON_RATEを使用
+
 # =============================================================================
 # 初期化
 # =============================================================================
@@ -87,6 +92,10 @@ func load_from_json(policy_data: Dictionary) -> void:
 				protect_by_value_enabled = pbv.get("enabled", false)
 				protect_by_value_threshold = int(pbv.get("threshold", 200))
 				protect_by_value_min_items = int(pbv.get("min_defense_items", 2))
+	
+	# 召喚確率
+	if policy_data.has("summon_rate"):
+		summon_rate = float(policy_data["summon_rate"])
 
 # =============================================================================
 # 抽選ロジック
@@ -238,6 +247,7 @@ static func create_tutorial_policy() -> CPUBattlePolicy:
 		DefenseAction.NO_ITEM: 1.0,
 		DefenseAction.ALWAYS_PROTECT: 0.0
 	}
+	policy.summon_rate = 1.0  # チュートリアルでは必ず召喚
 	return policy
 
 ## 従来ロジック（ワーストケースで勝てるなら戦闘、アイテム使用）
@@ -319,3 +329,11 @@ func print_weights() -> void:
 	print("  protect_by_value: enabled=%s, threshold=%d, min_items=%d" % [
 		protect_by_value_enabled, protect_by_value_threshold, protect_by_value_min_items
 	])
+	if summon_rate >= 0:
+		print("[CPUBattlePolicy] 召喚確率: %.1f" % summon_rate)
+
+## 召喚確率を取得（-1.0の場合はGameConstantsの値を使用）
+func get_summon_rate() -> float:
+	if summon_rate >= 0:
+		return summon_rate
+	return GameConstantsScript.CPU_SUMMON_RATE

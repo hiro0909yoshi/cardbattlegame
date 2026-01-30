@@ -2,1011 +2,989 @@
   "stage_id": "stage2",
   "stage_name": "応用チュートリアル",
   "config": {
-    "enable_draw": true,
-    "player_initial_hand": [
-      210,
-      210,
-      216,
-      2001,
-      1025
-    ],
-    "cpu_initial_hand": [
-      421,
-      421,
-      420,
-      420,
-      421
-    ],
-    "player_deck": [
-      2066,
-      1018,
-      2024,
-      2024,
-      2098,
-      210,
-      1073
-    ],
-    "cpu_deck": [
-      420,
-      1033,
-      1033,
-      420,
-      1042,
-      1042
-    ],
-    "dice_sequence": [
-      1,
-      2,
-      3,
-      2,
-      1,
-      5
-    ],
-    "cpu_dice_sequence": [
-      1,
-      1,
-      3,
-      2,
-      3
-    ]
+	"enable_draw": true,
+	"player_initial_hand": [
+	  210,
+	  210,
+	  216,
+	  2001,
+	  1025
+	],
+	"cpu_initial_hand": [
+	  421,
+	  421,
+	  420,
+	  420,
+	  421
+	],
+	"player_deck": [
+	  2066,
+	  1018,
+	  2024,
+	  2098,
+	  210,
+	  1073,
+	  235
+	],
+	"cpu_deck": [
+	  420,
+	  1033,
+	  1033,
+	  1042,
+	  1042,
+	  1042
+	],
+	"dice_sequence": [
+	  1,
+	  2,
+	  3,
+	  2,
+	  1,
+	  5
+	],
+	"cpu_dice_sequence": [
+	  1,
+	  1,
+	  3,
+	  2,
+	  3
+	]
   },
   "steps": [
-    {
-      "id": 1,
-      "turn": 1,
-      "phase": "start",
-      "message": "応用チュートリアルへようこそ！\n\nここではスペル、レベルアップ、\n連鎖などの応用テクニックを学びます。",
-      "wait_for_click": true,
-      "highlight": [],
-      "disable_all_buttons": true
-    },
-    {
-      "id": 2,
-      "turn": 1,
-      "phase": "dice_prompt",
-      "message": "✓ボタンを押してダイスを振りましょう！",
-      "wait_for_click": false,
-      "highlight": [
+	{
+	  "id": 1,
+	  "turn": 1,
+	  "phase": "start",
+	  "message": "応用チュートリアルへようこそ！\n\nここではスペル、レベルアップ、\n連鎖などの応用テクニックを学びます。",
+	  "wait_for_click": true,
+	  "highlight": [],
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 2,
+	  "turn": 1,
+	  "phase": "dice_prompt",
+	  "message": "✓ボタンを押してダイスを振りましょう！",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 3,
-      "turn": 1,
-      "phase": "dice",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 4,
-      "turn": 1,
-      "phase": "direction",
-      "message": "進む方向を選んでください",
-      "wait_for_click": false,
-      "highlight": [
-        "up",
-        "down",
+	  ]
+	},
+	{
+	  "id": 3,
+	  "turn": 1,
+	  "phase": "dice",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 4,
+	  "turn": 1,
+	  "phase": "direction",
+	  "message": "進む方向を選んでください",
+	  "wait_for_click": false,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ]
-    },
-    {
-      "id": 5,
-      "turn": 1,
-      "phase": "summon_select",
-      "message": "グリーンオーガを召喚しましょう\n\nサクヤは「地属性土地が1つ必要」\nという召喚条件があり、今は召喚できません",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "210",
-      "highlight": []
-    },
-    {
-      "id": 6,
-      "turn": 1,
-      "phase": "summon_confirm",
-      "message": "もう一度タップして召喚を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "210"
-    },
-    {
-      "id": 7,
-      "turn": 1,
-      "phase": "summon_execute",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 8,
-      "turn": 1,
-      "phase": "summon_complete",
-      "message": "クリーチャーを召喚しました！",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 9,
-      "turn": 1,
-      "phase": "down_explain",
-      "message": "召喚したクリーチャーは「ダウン状態」になります\n\nダウン状態のクリーチャーは\n土地の周囲の光が点灯して表示さます\n\nダウン中はレベルアップやクリーチャー交換ができません",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 10,
-      "turn": 1,
-      "phase": "cpu_turn_start",
-      "message": "相手のターンです",
-      "wait_for_click": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 11,
-      "turn": 1,
-      "phase": "cpu_turn",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 12,
-      "turn": 1,
-      "phase": "cpu_summon_complete",
-      "message": "相手がスタチューを召喚しました\n\nスタチューは「防御型」クリーチャーです\n攻撃力(AP)が0で、防具・武器・巻物が使えません\n\n防御型はスキルの一種です",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 13,
-      "turn": 2,
-      "phase": "turn2_start",
-      "message": "あなたのターンです\n\nスペルを使ってみましょう！",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 14,
-      "turn": 2,
-      "phase": "spell_explain",
-      "message": "アースシフトを使って\nグリーンオーガの土地を地属性に変えます\n\nこれでサクヤの召喚条件を満たせます",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 15,
-      "turn": 2,
-      "phase": "spell_select",
-      "message": "アースシフトをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2001"
-    },
-    {
-      "id": 16,
-      "turn": 2,
-      "phase": "spell_confirm",
-      "message": "もう一度タップして使用を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2001"
-    },
-    {
-      "id": 17,
-      "turn": 2,
-      "phase": "spell_target",
-      "message": "スペルの対象を選んでください\n\nグリーンオーガの土地をタップして✓ボタンで決定",
-      "wait_for_click": false,
-      "highlight": [
+	  ]
+	},
+	{
+	  "id": 5,
+	  "turn": 1,
+	  "phase": "summon_select",
+	  "message": "グリーンオーガを召喚しましょう\n\nサクヤは「地属性土地が1つ必要」\nという召喚条件があり、今は召喚できません",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "210",
+	  "highlight": []
+	},
+	{
+	  "id": 6,
+	  "turn": 1,
+	  "phase": "summon_confirm",
+	  "message": "もう一度タップして召喚を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "210"
+	},
+	{
+	  "id": 7,
+	  "turn": 1,
+	  "phase": "summon_execute",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 8,
+	  "turn": 1,
+	  "phase": "summon_complete",
+	  "message": "クリーチャーを召喚しました！",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 9,
+	  "turn": 1,
+	  "phase": "down_explain",
+	  "message": "召喚したクリーチャーは「ダウン状態」になります\n\nダウン状態のクリーチャーは\n土地の周囲の光が点灯して表示されます\n\nダウン中はレベルアップやクリーチャー交換ができません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 10,
+	  "turn": 1,
+	  "phase": "cpu_turn_start",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 11,
+	  "turn": 1,
+	  "phase": "cpu_turn",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 12,
+	  "turn": 1,
+	  "phase": "cpu_summon_complete",
+	  "message": "相手がスタチューを召喚しました\n\nスタチューは「防御型」クリーチャーです\n防御型は高いHPと引き換えに移動ができません\n\n防御型はスキルの一種です",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 13,
+	  "turn": 2,
+	  "phase": "turn2_start",
+	  "message": "あなたのターンです\n\nスペルを使ってみましょう！\nスペルはターンの最初スペルフェーズで使用ができます\n後に説明するアルカナアーツもスペルフェーズでのみ\n使用可能です。",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 14,
+	  "turn": 2,
+	  "phase": "spell_explain",
+	  "message": "アースシフトを使って\nグリーンオーガの土地を地属性に変えます\n\nスペルの効果は様々です。\nカードを手に入れたら使用してみましょう",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 15,
+	  "turn": 2,
+	  "phase": "spell_select",
+	  "message": "アースシフトをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2001"
+	},
+	{
+	  "id": 16,
+	  "turn": 2,
+	  "phase": "spell_confirm",
+	  "message": "もう一度タップして使用を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2001"
+	},
+	{
+	  "id": 17,
+	  "turn": 2,
+	  "phase": "spell_target",
+	  "message": "スペルの対象を選んでください\n\nグリーンオーガの土地をタップして✓ボタンで決定",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 18,
-      "turn": 2,
-      "phase": "spell_complete",
-      "message": "土地が地属性に変わりました！\n\nこれでサクヤの召喚条件を満たしました",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 19,
-      "turn": 2,
-      "phase": "dice_prompt2",
-      "message": "✓ボタンを押してダイスを振りましょう",
-      "wait_for_click": false,
-      "highlight": [
+	  ]
+	},
+	{
+	  "id": 18,
+	  "turn": 2,
+	  "phase": "spell_complete",
+	  "message": "土地が地属性に変わりました！\n\nこれでサクヤの召喚条件を満たしました",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 19,
+	  "turn": 2,
+	  "phase": "dice_prompt2",
+	  "message": "✓ボタンを押してダイスを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 20,
-      "turn": 2,
-      "phase": "dice2",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 21,
-      "turn": 2,
-      "phase": "summon_sakuya_prompt",
-      "message": "地属性の土地に止まりました\n\nサクヤを召喚しましょう！\n召喚条件を満たしたので召喚可能になっています",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 22,
-      "turn": 2,
-      "phase": "summon_sakuya_select",
-      "message": "サクヤをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "216"
-    },
-    {
-      "id": 23,
-      "turn": 2,
-      "phase": "summon_sakuya_confirm",
-      "message": "もう一度タップして召喚を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "216"
-    },
-    {
-      "id": 24,
-      "turn": 2,
-      "phase": "summon_sakuya_execute",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 25,
-      "turn": 2,
-      "phase": "chain_explain",
-      "message": "サクヤを召喚しました！\n\n地属性の土地が2つになり「連鎖2」になりました\n連鎖が増えると土地の価値が上がります",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true,
-      "highlight_tile_toll": "player_all_creatures"
-    },
-    {
-      "id": 26,
-      "turn": 2,
-      "phase": "draw_explain",
-      "message": "ターン終了時にカードをドローします\n\n手札が少なくなったら\n自動的に補充されます",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 27,
-      "turn": 2,
-      "phase": "cpu_turn_start2",
-      "message": "相手のターンです",
-      "wait_for_click": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 28,
-      "turn": 2,
-      "phase": "cpu_turn2",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 29,
-      "turn": 2,
-      "phase": "cpu_turn2_complete",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 30,
-      "turn": 3,
-      "phase": "turn3_start",
-      "message": "あなたのターンです\n\nダウン状態を確認してみましょう\n土地が点灯しているのがダウン中のクリーチャーです",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 31,
-      "turn": 3,
-      "phase": "curse_explain",
-      "message": "バイタリティを使ってみましょう\n\nこのスペルはクリーチャーに\n「呪い」をかけることができます",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 32,
-      "turn": 3,
-      "phase": "vitality_select",
-      "message": "バイタリティをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2066"
-    },
-    {
-      "id": 33,
-      "turn": 3,
-      "phase": "vitality_confirm",
-      "message": "もう一度タップして使用を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2066"
-    },
-    {
-      "id": 34,
-      "turn": 3,
-      "phase": "vitality_target",
-      "message": "呪いをかけるクリーチャーを選んでください\n\n他のクリーチャーも選べますが\n今回はグリーンオーガにかけましょう",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ]
+	},
+	{
+	  "id": 20,
+	  "turn": 2,
+	  "phase": "dice2",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 21,
+	  "turn": 2,
+	  "phase": "summon_sakuya_prompt",
+	  "message": "地属性の土地に止まりました\n\nサクヤを召喚しましょう！先ほどのスペルで\n地属性の土地を保有したので\n召喚条件を満たし召喚可能になっています",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 22,
+	  "turn": 2,
+	  "phase": "summon_sakuya_select",
+	  "message": "サクヤをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "216"
+	},
+	{
+	  "id": 23,
+	  "turn": 2,
+	  "phase": "summon_sakuya_confirm",
+	  "message": "もう一度タップして召喚を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "216"
+	},
+	{
+	  "id": 24,
+	  "turn": 2,
+	  "phase": "summon_sakuya_execute",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 25,
+	  "turn": 2,
+	  "phase": "chain_explain",
+	  "message": "サクヤを召喚しました！\n\n地属性の土地が2つになり「連鎖2」になりました\n連鎖が増えると土地の価値（EP）が上昇します",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_tile_toll": "player_all_creatures"
+	},
+	{
+	  "id": 26,
+	  "turn": 2,
+	  "phase": "draw_explain",
+	  "message": "効率的にEPを増やすには連鎖が効果的です\n連鎖が多い土地をドミニオコマンド（支配地司令）で\nレベルアップさせることで大幅に土地のEPが\n上昇するからです",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 27,
+	  "turn": 2,
+	  "phase": "cpu_turn_start2",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 28,
+	  "turn": 2,
+	  "phase": "cpu_turn2",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 29,
+	  "turn": 2,
+	  "phase": "cpu_turn2_complete",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 30,
+	  "turn": 3,
+	  "phase": "turn3_start",
+	  "message": "あなたのターンです\n\nダウン状態を確認してみましょう\n土地が点灯しているのがダウン中のクリーチャーです",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 31,
+	  "turn": 3,
+	  "phase": "curse_explain",
+	  "message": "続いてバイタリティを使ってみましょう\n\nこのスペルはクリーチャーに\n「呪い」をかけることができます",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 32,
+	  "turn": 3,
+	  "phase": "vitality_select",
+	  "message": "バイタリティをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2066"
+	},
+	{
+	  "id": 33,
+	  "turn": 3,
+	  "phase": "vitality_confirm",
+	  "message": "もう一度タップして使用を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2066"
+	},
+	{
+	  "id": 34,
+	  "turn": 3,
+	  "phase": "vitality_target",
+	  "message": "呪いをかけるクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はグリーンオーガにかけましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_target_tile": "creature:グリーンオーガ"
-    },
-    {
-      "id": 35,
-      "turn": 3,
-      "phase": "vitality_complete",
-      "message": "グリーンオーガに呪い「能力値+20」がかかりました！\n\n呪いは戦闘中にAP・HPが+20されます",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 36,
-      "turn": 3,
-      "phase": "dice_prompt3",
-      "message": "✓ボタンを押してダイスを振りましょう",
-      "wait_for_click": false,
-      "highlight": [
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_target_tile": "creature:グリーンオーガ"
+	},
+	{
+	  "id": 35,
+	  "turn": 3,
+	  "phase": "vitality_complete",
+	  "message": "グリーンオーガに呪い「能力値+20」がかかりました！\n\n呪いは戦闘中にAP・HPが+20されます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 36,
+	  "turn": 3,
+	  "phase": "dice_prompt3",
+	  "message": "✓ボタンを押してダイスを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 37,
-      "turn": 3,
-      "phase": "dice3",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 38,
-      "turn": 3,
-      "phase": "checkpoint_explain",
-      "message": "チェックポイントに止まりました！\n\nチェックポイントに止まると\nダウン状態が解除されます",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 39,
-      "turn": 3,
-      "phase": "dominion_command_explain",
-      "message": "ダウンしていないクリーチャーは\nドミニオコマンドが使えます\n\nドミニオボタンを押してみましょう！",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
+	  ]
+	},
+	{
+	  "id": 37,
+	  "turn": 3,
+	  "phase": "dice3",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 38,
+	  "turn": 3,
+	  "phase": "checkpoint_explain",
+	  "message": "チェックポイントに止まりました！\n\nチェックポイントに止まると\nダウン状態が解除されます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 39,
+	  "turn": 3,
+	  "phase": "dominion_command_explain",
+	  "message": "ダウンしていないクリーチャーは\nドミニオコマンドが使えます\n\nドミニオボタンを押してみましょう！",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
         "special"
-      ],
-      "show_dominio_button": true
-    },
-    {
-      "id": 40,
-      "turn": 3,
-      "phase": "levelup_select",
-      "message": "他の土地も選べますが\n今回はグリーンオーガの土地を選び\n土地をレベルアップをしましょう",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "show_dominio_button": true
+	},
+	{
+	  "id": 40,
+	  "turn": 3,
+	  "phase": "levelup_select",
+	  "message": "他の土地も選べますが\n今回はグリーンオーガの土地を選び\n土地をレベルアップしましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_target_tile": "creature:グリーンオーガ"
-    },
-    {
-      "id": 41,
-      "turn": 3,
-      "phase": "action_select",
-      "message": "アクション選択で\nレベルアップを選択してください",
-      "popup_position": "left",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_target_tile": "creature:グリーンオーガ"
+	},
+	{
+	  "id": 41,
+	  "turn": 3,
+	  "phase": "action_select",
+	  "message": "アクション選択で\nレベルアップを選択してください",
+	  "popup_position": "left",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_action": "level_up"
-    },
-    {
-      "id": 42,
-      "turn": 3,
-      "phase": "level_select",
-      "message": "レベルを上げるにはEPを使用します\n\n今回は最大のレベル5を選んでみましょう\n\n",
-      "popup_position": "left",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_action": "level_up"
+	},
+	{
+	  "id": 42,
+	  "turn": 3,
+	  "phase": "level_select",
+	  "message": "レベルを上げるにはEPを使用します\n\n今回は最大のレベル5を選んでみましょう\n\n",
+	  "popup_position": "left",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_level": 5
-    },
-    {
-      "id": 43,
-      "turn": 3,
-      "phase": "levelup_complete",
-      "message": "土地のレベルが上がりました！\n\nレベルが上がると土地のEPが\n大幅に上昇します。また土地の属性と\n\nクリーチャーの属性が合うとHPにボーナスが入ります",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true,
-      "highlight_tile_toll": "player_creature"
-    },
-    {
-      "id": 44,
-      "turn": 3,
-      "phase": "levelup_down_explain",
-      "message": "コマンドを利用したクリーチャーは\n再びダウン状態になります\n\n点灯（ダウン）しているのを確認してください",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 45,
-      "turn": 3,
-      "phase": "cpu_turn_start3",
-      "message": "相手のターンです",
-      "wait_for_click": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 46,
-      "turn": 3,
-      "phase": "cpu_turn3",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 47,
-      "turn": 3,
-      "phase": "cpu_turn3_complete",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 48,
-      "turn": 4,
-      "phase": "turn4_start",
-      "message": "あなたのターンです\n\n今度は別の呪いスペルを使ってみましょう",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 49,
-      "turn": 4,
-      "phase": "curse_overwrite_explain",
-      "message": "グリードを使います\n\nこのスペルは「通行料1.5倍」の呪いをかけます\n\n同じクリーチャーに別の呪いをかけると\n前の呪いは上書きされます",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 50,
-      "turn": 4,
-      "phase": "greed_select",
-      "message": "グリードをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2024"
-    },
-    {
-      "id": 51,
-      "turn": 4,
-      "phase": "greed_confirm",
-      "message": "もう一度タップして使用を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2024"
-    },
-    {
-      "id": 52,
-      "turn": 4,
-      "phase": "greed_target",
-      "message": "呪いを上書きするクリーチャーを選んでください\n\n他のクリーチャーも選べますが\n今回はグリーンオーガを選びましょう",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_level": 5
+	},
+	{
+	  "id": 43,
+	  "turn": 3,
+	  "phase": "levelup_complete",
+	  "message": "土地のレベルが上がりました！\n\nレベルが上がると土地のEPが\n大幅に上昇します。また土地の属性と\n\nクリーチャーの属性が合うとHPにボーナスが入ります",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_tile_toll": "player_creature"
+	},
+	{
+	  "id": 44,
+	  "turn": 3,
+	  "phase": "levelup_down_explain",
+	  "message": "コマンドを利用したクリーチャーは\n再びダウン状態になります\n\n点灯（ダウン）しているのを確認してください",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 45,
+	  "turn": 3,
+	  "phase": "cpu_turn_start3",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 46,
+	  "turn": 3,
+	  "phase": "cpu_turn3",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 47,
+	  "turn": 3,
+	  "phase": "cpu_turn3_complete",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 48,
+	  "turn": 4,
+	  "phase": "turn4_start",
+	  "message": "あなたのターンです\n\n今度は別の呪いスペルを使ってみましょう",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 49,
+	  "turn": 4,
+	  "phase": "curse_overwrite_explain",
+	  "message": "グリードを使います\n\nこのスペルは「通行料1.5倍」の呪いをかけます\n\n同じクリーチャーに別の呪いをかけると\n前の呪いは上書きされます",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 50,
+	  "turn": 4,
+	  "phase": "greed_select",
+	  "message": "グリードをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2024"
+	},
+	{
+	  "id": 51,
+	  "turn": 4,
+	  "phase": "greed_confirm",
+	  "message": "もう一度タップして使用を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2024"
+	},
+	{
+	  "id": 52,
+	  "turn": 4,
+	  "phase": "greed_target",
+	  "message": "使用するクリーチャーを選んでください\n他のクリーチャーも選べますが\n今回はグリーンオーガを選びましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_target_tile": "creature:グリーンオーガ"
-    },
-    {
-      "id": 53,
-      "turn": 4,
-      "phase": "greed_complete",
-      "message": "呪いが「通行料1.5倍」に上書きされました！\n\n前の「能力値+20」は消えました\n呪いは1つしかかけられないので注意しましょう",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 54,
-      "turn": 4,
-      "phase": "camera_check_greed",
-      "message": "画面をスワイプしてカメラを動かし\nグリーンオーガをタップして\n呪い効果を確認してみましょう",
-      "wait_for_click": true,
-      "pause_game": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 55,
-      "turn": 4,
-      "phase": "dice_prompt4",
-      "message": "✓ボタンを押してダイスを振りましょう",
-      "wait_for_click": false,
-      "highlight": [
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_target_tile": "creature:グリーンオーガ"
+	},
+	{
+	  "id": 53,
+	  "turn": 4,
+	  "phase": "greed_complete",
+	  "message": "呪いが「通行料1.5倍」に上書きされました！\n\n前の「能力値+20」は消えました\n呪いは1つしかかけられないので注意しましょう",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 54,
+	  "turn": 4,
+	  "phase": "camera_check_greed",
+	  "message": "画面をスワイプしてカメラを動かし\nグリーンオーガをタップして\n呪い効果を確認してみましょう",
+	  "wait_for_click": true,
+	  "pause_game": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 55,
+	  "turn": 4,
+	  "phase": "dice_prompt4",
+	  "message": "✓ボタンを押してダイスを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 56,
-      "turn": 4,
-      "phase": "dice4",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 57,
-      "turn": 4,
-      "phase": "summon_ogre3_prompt",
-      "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 58,
-      "turn": 4,
-      "phase": "summon_ogre3_select",
-      "message": "グリーンオーガをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "210"
-    },
-    {
-      "id": 59,
-      "turn": 4,
-      "phase": "summon_ogre3_confirm",
-      "message": "もう一度タップして召喚を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "210"
-    },
-    {
-      "id": 60,
-      "turn": 4,
-      "phase": "summon_ogre3_execute",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 61,
-      "turn": 4,
-      "phase": "summon_ogre3_complete",
-      "message": "3体目のクリーチャーを召喚しました！\n\nただし、この土地は水属性なので\n地属性の連鎖には含まれません",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 62,
-      "turn": 4,
-      "phase": "cpu_turn_start4",
-      "message": "相手のターンです",
-      "wait_for_click": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 63,
-      "turn": 4,
-      "phase": "cpu_turn4",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 64,
-      "turn": 4,
-      "phase": "cpu_turn4_complete",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 65,
-      "turn": 5,
-      "phase": "turn5_start",
-      "message": "あなたのターンです\n\nアルカナアーツを使ってみましょう！",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 66,
-      "turn": 5,
-      "phase": "mystic_arts_explain",
-      "message": "サクヤは「アルカナアーツ」を持っています\nアルカナアーツは配置中のクリーチャーが\n使える特別なスペルです\n\nサクヤアルカナアーツは\n対象の自分の土地を地属性に変えます",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 67,
-      "turn": 5,
-      "phase": "mystic_arts_explain",
-      "message": "サクヤのアルカナアーツを使いましょう\n\nアルカナアーツボタンを押してください",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
+	  ]
+	},
+	{
+	  "id": 56,
+	  "turn": 4,
+	  "phase": "dice4",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 57,
+	  "turn": 4,
+	  "phase": "summon_ogre3_prompt",
+	  "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 58,
+	  "turn": 4,
+	  "phase": "summon_ogre3_select",
+	  "message": "グリーンオーガをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "210"
+	},
+	{
+	  "id": 59,
+	  "turn": 4,
+	  "phase": "summon_ogre3_confirm",
+	  "message": "もう一度タップして召喚を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "210"
+	},
+	{
+	  "id": 60,
+	  "turn": 4,
+	  "phase": "summon_ogre3_execute",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 61,
+	  "turn": 4,
+	  "phase": "summon_ogre3_complete",
+	  "message": "3体目のクリーチャーを召喚しました！\n\nただし、この土地は地属性ではないので\n地属性の連鎖には含まれません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 62,
+	  "turn": 4,
+	  "phase": "cpu_turn_start4",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 63,
+	  "turn": 4,
+	  "phase": "cpu_turn4",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 64,
+	  "turn": 4,
+	  "phase": "cpu_turn4_complete",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 65,
+	  "turn": 5,
+	  "phase": "turn5_start",
+	  "message": "あなたのターンです\n\nアルカナアーツを使ってみましょう！",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 66,
+	  "turn": 5,
+	  "phase": "mystic_arts_explain",
+	  "message": "サクヤは「アルカナアーツ」を持っています\nアルカナアーツは配置中のクリーチャーが\nEPコストを払って使える特別なスペルです\n\nサクヤのアルカナアーツは\n自ドミニオ（支配地）の土地を地属性に変えます",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 67,
+	  "turn": 5,
+	  "phase": "mystic_arts_explain",
+	  "message": "ではサクヤのアルカナアーツを使いましょう\n\n左下の点灯しているアルカナアーツボタンを押してください",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
         "special"
-      ],
-      "show_arcana_arts_button": true
-    },
-    {
-      "id": 68,
-      "turn": 5,
-      "phase": "mystic_arts_select",
-      "message": "サクヤの土地をタップしてください",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "show_arcana_arts_button": true
+	},
+	{
+	  "id": 68,
+	  "turn": 5,
+	  "phase": "mystic_arts_select",
+	  "message": "アルカナを使用するクリチャーを選びます\nサクヤの土地をタップしてください",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal"
-    },
-    {
-      "id": 69,
-      "turn": 5,
-      "phase": "mystic_arts_target",
-      "message": "アルカナアーツの対象を選んでください\n\n属性の合っていないグリーンオーガの土地をタップします",
-      "wait_for_click": false,
-      "disable_all_buttons": true,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "exit_trigger": "signal"
+	},
+	{
+	  "id": 69,
+	  "turn": 5,
+	  "phase": "mystic_arts_target",
+	  "message": "アルカナアーツの対象を選んでください\n\n属性の合っていないグリーンオーガがいますね。\nその土地をタップして土地属性を変化させましょう",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_target_tile": "mismatched_creature:グリーンオーガ"
-    },
-    {
-      "id": 70,
-      "turn": 5,
-      "phase": "mystic_arts_complete",
-      "message": "グリーンオーガの土地が地属性になりました！\n\n地属性の連鎖が3になり\n土地の価値が大幅に上昇しました",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true,
-      "highlight_tile_toll": "player_all_creatures"
-    },
-    {
-      "id": 71,
-      "turn": 5,
-      "phase": "dice_prompt5",
-      "message": "✓ボタンを押してダイスを振りましょう",
-      "wait_for_click": false,
-      "highlight": [
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_target_tile": "mismatched_creature:グリーンオーガ"
+	},
+	{
+	  "id": 70,
+	  "turn": 5,
+	  "phase": "mystic_arts_complete",
+	  "message": "グリーンオーガの土地が地属性になりました！\n\nこれで地属性の連鎖が3になり\n土地の価値（EP）が大幅に上昇しました",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "highlight_tile_toll": "player_all_creatures"
+	},
+	{
+	  "id": 71,
+	  "turn": 5,
+	  "phase": "dice_prompt5",
+	  "message": "✓ボタンを押してダイスを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 72,
-      "turn": 5,
-      "phase": "dice5",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 73,
-      "turn": 5,
-      "phase": "summon_ogre2_prompt",
-      "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 74,
-      "turn": 5,
-      "phase": "summon_ogre2_select",
-      "message": "グリーンオーガをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "113"
-    },
-    {
-      "id": 75,
-      "turn": 5,
-      "phase": "summon_ogre2_confirm",
-      "message": "✓ボタンで召喚を確定します",
-      "wait_for_click": false,
-      "highlight": [
+	  ]
+	},
+	{
+	  "id": 72,
+	  "turn": 5,
+	  "phase": "dice5",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 73,
+	  "turn": 5,
+	  "phase": "summon_ogre2_prompt",
+	  "message": "空き地に止まりました\n\nグリーンオーガを召喚しましょう",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 74,
+	  "turn": 5,
+	  "phase": "summon_ogre2_select",
+	  "message": "グリーンオーガをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "113"
+	},
+	{
+	  "id": 75,
+	  "turn": 5,
+	  "phase": "summon_ogre2_confirm",
+	  "message": "✓ボタンで召喚を確定します",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ],
-      "exit_trigger": "signal"
-    },
-    {
-      "id": 76,
-      "turn": 5,
-      "phase": "summon_ogre2_complete",
-      "message": "グリーンオーガを召喚しました！\n\nこれで地属性の連鎖が4になりました",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 77,
-      "turn": 5,
-      "phase": "cpu_turn_start5",
-      "message": "相手のターンです",
-      "wait_for_click": false,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 78,
-      "turn": 5,
-      "phase": "cpu_turn5",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 79,
-      "turn": 5,
-      "phase": "cpu_turn5_complete",
-      "message": "相手がスタチューを召喚しました",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 80,
-      "turn": 6,
-      "phase": "turn6_start",
-      "message": "あなたのターンです\n\n相手にダイス操作の呪いをかけてみましょう！",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 81,
-      "turn": 6,
-      "phase": "holyword_explain",
-      "message": "ホーリーワード1を使います\n\nこのスペルは対象のプレイヤーの\n次のダイスを1に固定します\n\n相手をあなたの高レベル領地に誘導しましょう！",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 82,
-      "turn": 6,
-      "phase": "holyword_select",
-      "message": "ホーリーワード1をタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2098"
-    },
-    {
-      "id": 83,
-      "turn": 6,
-      "phase": "holyword_confirm",
-      "message": "もう一度タップして使用を決定しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "2098"
-    },
-    {
-      "id": 84,
-      "turn": 6,
-      "phase": "holyword_target",
-      "message": "呪いをかける対象を選んでください\n\n相手プレイヤーをタップします",
-      "wait_for_click": false,
-      "disable_all_buttons": false,
-      "highlight": [
-        "up",
-        "down",
+	  ],
+	  "exit_trigger": "signal"
+	},
+	{
+	  "id": 76,
+	  "turn": 5,
+	  "phase": "summon_ogre2_complete",
+	  "message": "グリーンオーガを召喚しました！\n\nこれで地属性の連鎖が4になりました",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 77,
+	  "turn": 5,
+	  "phase": "cpu_turn_start5",
+	  "message": "相手のターンです",
+	  "wait_for_click": false,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 78,
+	  "turn": 5,
+	  "phase": "cpu_turn5",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 79,
+	  "turn": 5,
+	  "phase": "cpu_turn5_complete",
+	  "message": "相手がスタチューを召喚しました",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 80,
+	  "turn": 6,
+	  "phase": "turn6_start",
+	  "message": "あなたのターンです\n\n相手にダイス操作の呪いをかけてみましょう！",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 81,
+	  "turn": 6,
+	  "phase": "holyword_explain",
+	  "message": "ホーリーワード1を使います\n\nこのスペルは対象のプレイヤーの\n次のダイスを1に固定します\n\n相手をあなたの高レベル領地に誘導しましょう！",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 82,
+	  "turn": 6,
+	  "phase": "holyword_select",
+	  "message": "ホーリーワード1をタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2098"
+	},
+	{
+	  "id": 83,
+	  "turn": 6,
+	  "phase": "holyword_confirm",
+	  "message": "もう一度タップして使用を決定しましょう",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "2098"
+	},
+	{
+	  "id": 84,
+	  "turn": 6,
+	  "phase": "holyword_target",
+	  "message": "呪いをかける対象を選んでください\n\n相手プレイヤーをタップします",
+	  "wait_for_click": false,
+	  "disable_all_buttons": false,
+	  "highlight": [
+		"up",
+		"down",
         "confirm"
-      ],
-      "exit_trigger": "signal",
-      "allowed_target_tile": "enemy_player"
-    },
-    {
-      "id": 85,
-      "turn": 6,
-      "phase": "holyword_complete",
-      "message": "相手に呪い「ダイス1」がかかりました！\n\n相手の次のダイスは1に固定されます\nプレイヤーにも呪いをかけられることを覚えておきましょう",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 86,
-      "turn": 6,
-      "phase": "dice_prompt6",
-      "message": "✓ボタンを押してダイスを振りましょう",
-      "wait_for_click": false,
-      "highlight": [
+	  ],
+	  "exit_trigger": "signal",
+	  "allowed_target_tile": "enemy_player"
+	},
+	{
+	  "id": 85,
+	  "turn": 6,
+	  "phase": "holyword_complete",
+	  "message": "相手に呪い「ダイス1」がかかりました！\n\n相手の次のダイスは1に固定されます\nプレイヤーにも呪いをかけられることを覚えておきましょう",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 86,
+	  "turn": 6,
+	  "phase": "dice_prompt6",
+	  "message": "✓ボタンを押してダイスを振りましょう",
+	  "wait_for_click": false,
+	  "highlight": [
         "confirm"
-      ]
-    },
-    {
-      "id": 87,
-      "turn": 6,
-      "phase": "dice6",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 88,
-      "turn": 6,
-      "phase": "battle_statue_arrival",
-      "message": "相手の支配地に止まりました！\n\nスタチューとバトルです",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 89,
-      "turn": 6,
-      "phase": "battle_statue_select",
-      "message": "バトルに出すクリーチャーを選んでください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "disable_all_buttons": true,
-      "popup_position": "right"
-    },
-    {
-      "id": 90,
-      "turn": 6,
-      "phase": "battle_statue_item_explain",
-      "message": "スタチューは防御型なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true,
-      "popup_position": "left"
-    },
-    {
-      "id": 91,
-      "turn": 6,
-      "phase": "battle_statue_weapon_prompt",
-      "message": "武器を使って攻撃しましょう\n\nロングソードをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "1073",
-      "disable_all_buttons": true,
-      "popup_position": "right"
-    },
-    {
-      "id": 92,
-      "turn": 6,
-      "phase": "battle_statue_weapon_confirm",
-      "message": "もう一度タップして装備しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "1073",
-      "disable_all_buttons": true,
-      "popup_position": "right"
-    },
-    {
-      "id": 93,
-      "turn": 6,
-      "phase": "battle_statue_start",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 94,
-      "turn": 6,
-      "phase": "battle_statue_win",
-      "message": "スタチューを倒しました！\n\n防御型は攻撃力が0なので\n反撃ダメージを受けません",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 95,
-      "turn": 6,
-      "phase": "cpu_turn_start6",
-      "message": "相手のターンです\n\n呪いでダイスが1に固定されています",
-      "wait_for_click": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 96,
-      "turn": 6,
-      "phase": "cpu_turn6",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 97,
-      "turn": 6,
-      "phase": "cpu_battle_arrival",
-      "message": "相手があなたの高レベル領地に止まりました！\n\n土地のレベルが高いと\n同属性クリーチャーのHPに大きなボーナスが入ります",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 98,
-      "turn": 6,
-      "phase": "cpu_battle_penetrate_explain",
-      "message": "相手がドリルランスを使いました！\n\nドリルランスは「貫通」スキルを持っています\n貫通は防御側のHPボーナスを無視します\n\n高レベル領地でも油断できません！",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true,
-      "popup_position": "left"
-    },
-    {
-      "id": 99,
-      "turn": 6,
-      "phase": "cpu_battle_armor_prompt",
-      "message": "防具で守りましょう！\n\nスケールアーマーをタップしてください",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "1018",
-      "disable_all_buttons": true,
-      "popup_position": "right"
-    },
-    {
-      "id": 100,
-      "turn": 6,
-      "phase": "cpu_battle_armor_confirm",
-      "message": "もう一度タップして装備しましょう",
-      "wait_for_click": false,
-      "highlight_card": true,
-      "highlight_card_filter": "1018",
-      "disable_all_buttons": true,
-      "popup_position": "right"
-    },
-    {
-      "id": 101,
-      "turn": 6,
-      "phase": "cpu_battle_start",
-      "message": "",
-      "wait_for_click": false
-    },
-    {
-      "id": 102,
-      "turn": 6,
-      "phase": "cpu_battle_win",
-      "message": "防衛成功！\n\n相手は大量のEPを失いました\n高レベル領地の通行料は非常に高額です",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 103,
-      "turn": 6,
-      "phase": "bankruptcy_explain",
-      "message": "相手のEPがマイナスになりました！\n\nEPがマイナスになると「破産」となり\nゲームから脱落します",
-      "wait_for_click": true,
-      "pause_game": true,
-      "disable_all_buttons": true
-    },
-    {
-      "id": 104,
-      "turn": 6,
-      "phase": "victory",
-      "message": "応用チュートリアルはここまでです！\n\nスペル、呪い、レベルアップ、連鎖、\nアルカナアーツ、アイテム制限、貫通など\n様々なテクニックを学びました\n\n実戦で活用してください！",
-      "wait_for_click": true,
-      "is_final": true
-    }
+	  ]
+	},
+	{
+	  "id": 87,
+	  "turn": 6,
+	  "phase": "dice6",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 88,
+	  "turn": 6,
+	  "phase": "battle_statue_arrival",
+	  "message": "相手の支配地に止まりました！\n\nブラックナイトが召喚できます！\n非常に強力なスキル[強打]を持っています\n",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 89,
+	  "turn": 6,
+	  "phase": "battle_statue_select",
+	  "message": "このスキルは最終攻撃力を１.５倍にします\nスキルには条件がある場合があるので注意しましょう!\n今回は敵攻撃力が３０以下なので発動します",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "420",
+	  "disable_all_buttons": true,
+	  "popup_position": "right"
+	},
+	{
+	  "id": 90,
+	  "turn": 6,
+	  "phase": "battle_statue_item_explain",
+	  "message": "スタチューは防御型なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "popup_position": "left"
+	},
+	{
+	  "id": 91,
+	  "turn": 6,
+	  "phase": "battle_statue_weapon_prompt",
+	  "message": "十分倒せますが今回はどの程度強力なスキルか\n見て欲しいので武器を使って攻撃しましょう\n\nロングソードをタップしてください",
+	  "wait_for_click": false,
+	  "highlight_card": true,
+	  "highlight_card_filter": "1073",
+	  "disable_all_buttons": false,
+	  "popup_position": "right",
+	  "exit_trigger": "signal"
+	},
+	{
+	  "id": 92,
+	  "turn": 6,
+	  "phase": "battle_statue_start",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 93,
+	  "turn": 6,
+	  "phase": "battle_statue_win",
+	  "message": "スタチューを倒しました！\n\n防御型は攻撃力が0なので\n反撃ダメージを受けません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 94,
+	  "turn": 6,
+	  "phase": "cpu_turn_start6",
+	  "message": "相手のターンです\n\n呪いでダイスが1に固定されています",
+	  "wait_for_click": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 95,
+	  "turn": 6,
+	  "phase": "cpu_turn6",
+	  "message": "",
+	  "wait_for_click": false
+	},
+	{
+	  "id": 96,
+	  "turn": 7,
+	  "phase": "cpu_toll_arrival",
+	  "message": "相手があなたの高レベル領地に止まりました！\n\n土地のレベルが高いと通行料も高くなります",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 97,
+	  "turn": 7,
+	  "phase": "cpu_toll_explain",
+	  "message": "相手は攻撃できるクリーチャーがいないため\n通行料を支払って通過します\n\n高レベル領地の通行料は非常に高額です！",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 98,
+	  "turn": 7,
+	  "phase": "cpu_toll_paid",
+	  "message": ""
+	},
+	{
+	  "id": 99,
+	  "turn": 7,
+	  "phase": "cpu_ep_minus",
+	  "message": "相手のEPがマイナスになりました！\n\n土地を手放してEPを回復しなければなりません",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 100,
+	  "turn": 7,
+	  "phase": "cpu_still_minus",
+	  "message": "土地を売っても足りませんでした...\n\n全ての土地を売ってもEPがマイナスのままだと\n「破産」となりゲームから脱落します",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 101,
+	  "turn": 7,
+	  "phase": "bankruptcy_explain",
+	  "message": "相手が破産しました！\n\nこれであなたの勝利です",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true
+	},
+	{
+	  "id": 102,
+	  "turn": 7,
+	  "phase": "victory",
+	  "message": "応用チュートリアルはここまでです！\n\nスペル、呪い、レベルアップ、連鎖、\nアルカナアーツ、アイテム制限、防衛など\n様々な要素を学びました\n\n実戦で試してみましょう！",
+	  "wait_for_click": true,
+	  "pause_game": true,
+	  "disable_all_buttons": true,
+	  "is_final": true
+	}
   ]
 }

@@ -29,7 +29,7 @@
 	  "name": "チュートリアル敵",
 	  "model_path": "res://scenes/Characters/Bowser.tscn",
 	  "portrait_path": "",
-	  "description": "チュートリアル用の敵（常に戦闘する）",
+	  "description": "チュートリアル用の敵（常に戦闘・常に召喚）",
 	  "battle_policy": {
 		"attack": {
 		  "always_battle": 1.0,
@@ -40,7 +40,8 @@
 		"defense": {
 		  "no_item": 1.0,
 		  "always_protect": 0.0
-		}
+		},
+		"summon_rate": 1.0
 	  }
 	}
   }

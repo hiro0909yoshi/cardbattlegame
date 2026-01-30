@@ -726,9 +726,17 @@ func _confirm_target_selection():
 	var selected_target = available_targets[current_target_index]
 	
 	# チュートリアルのターゲット制限チェック
-	if not _check_tutorial_target_allowed(selected_target.get("tile_index", -1)):
-		print("[SpellPhaseHandler] チュートリアル制限: タイル%d は選択不可" % selected_target.get("tile_index", -1))
-		return
+	# プレイヤーターゲットの場合はplayer_idで、それ以外はtile_indexでチェック
+	var target_type = selected_target.get("type", "")
+	if target_type == "player":
+		var player_id = selected_target.get("player_id", -1)
+		if not _check_tutorial_player_target_allowed(player_id):
+			print("[SpellPhaseHandler] チュートリアル制限: プレイヤー%d は選択不可" % player_id)
+			return
+	else:
+		if not _check_tutorial_target_allowed(selected_target.get("tile_index", -1)):
+			print("[SpellPhaseHandler] チュートリアル制限: タイル%d は選択不可" % selected_target.get("tile_index", -1))
+			return
 	
 	# TapTargetManagerの選択を終了
 	_end_spell_tap_target_selection()
@@ -1495,6 +1503,19 @@ func _check_tutorial_target_allowed(tile_index: int) -> bool:
 		return true  # チュートリアル非アクティブ = 制限なし
 	
 	return tutorial_manager.is_target_tile_allowed(tile_index)
+
+func _check_tutorial_player_target_allowed(player_id: int) -> bool:
+	# TutorialManagerを取得
+	var system_manager = game_flow_manager.get_parent() if game_flow_manager else null
+	var game_3d = system_manager.get_parent() if system_manager else null
+	if not game_3d or not "tutorial_manager" in game_3d:
+		return true  # チュートリアルなし = 制限なし
+	
+	var tutorial_manager = game_3d.tutorial_manager
+	if not tutorial_manager or not tutorial_manager.is_active:
+		return true  # チュートリアル非アクティブ = 制限なし
+	
+	return tutorial_manager.is_player_target_allowed(player_id)
 
 
 ## タップでターゲットが選択された時

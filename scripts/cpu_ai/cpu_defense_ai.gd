@@ -856,3 +856,4 @@ func _count_defense_items_in_hand(player_id: int) -> int:
 			if item_type in ["防具", "アクセサリ"]:
 				count += 1
 	return count
+

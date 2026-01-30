@@ -175,11 +175,16 @@ func decide_summon(current_player, tile_element: String = "") -> void:
 		
 		# 属性一致なら必ず召喚、不一致なら確率で召喚
 		var is_element_match = (card_element == tile_element or tile_element == "neutral")
-		if is_element_match or randf() < GameConstants.CPU_SUMMON_RATE:
+		var summon_rate = _get_summon_rate()
+		print("[CPU AI] 召喚判定: card=%s, element=%s, tile=%s, match=%s, rate=%.2f" % [
+			card.get("name", "?"), card_element, tile_element, is_element_match, summon_rate])
+		if is_element_match or randf() < summon_rate:
 			print("[CPU AI] 召喚: %s (属性: %s, タイル: %s)" % [card.get("name", "?"), card_element, tile_element])
 			decision_attempts = 0
 			emit_signal("summon_decided", card_index)
 			return
+		else:
+			print("[CPU AI] 召喚スキップ: 確率判定失敗")
 	
 	decision_attempts = 0
 	emit_signal("summon_decided", -1)
@@ -653,3 +658,12 @@ func get_enemy_items(enemy_player_id: int) -> Array:
 	if hand_utils:
 		return hand_utils.get_enemy_items(enemy_player_id)
 	return []
+
+
+## キャラクターポリシーから召喚確率を取得
+func _get_summon_rate() -> float:
+	# バトルポリシーから召喚確率を取得（設定されていればそれを使用）
+	if battle_policy and battle_policy.has_method("get_summon_rate"):
+		return battle_policy.get_summon_rate()
+	# デフォルトはGameConstantsの値
+	return GameConstants.CPU_SUMMON_RATE
