@@ -66,12 +66,23 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="NameContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.2, 0.1, 1)
 theme_override_font_sizes/font_size = 80
-text = "アイテム名 [R]"
-horizontal_alignment = 1
+text = "アイテム名"
+
+[node name="RarityLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.3, 0.1, 1)
+theme_override_font_sizes/font_size = 60
+text = "[R]"
+vertical_alignment = 1
 
 [node name="Control" type="Control" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 40)
@@ -83,11 +94,20 @@ theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
 theme_override_font_sizes/font_size = 40
 text = "コスト: 100G"
 
-[node name="ItemTypeLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="ItemTypeContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ItemTypeLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.3, 0.2, 1)
 theme_override_font_sizes/font_size = 40
 text = "武器"
+
+[node name="ItemTypeIcon" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "▲"
 
 [node name="HSeparator" type="HSeparator" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
 layout_mode = 2

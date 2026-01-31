@@ -13,9 +13,12 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameLabel
-@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostLabel
-@onready var spell_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SpellTypeLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
+@onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
+@onready var cost_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostIcons
+@onready var spell_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SpellTypeContainer/SpellTypeLabel
+@onready var spell_type_icon: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/SpellTypeContainer/SpellTypeIcon
 @onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer
 @onready var effect_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer/EffectLabel
 
@@ -85,30 +88,86 @@ func _update_display():
 func _update_right_panel():
 	var data = current_spell_data
 	
-	# 名前 + レア度
+	# 名前
 	if name_label:
+		name_label.text = data.get("name", "不明")
+	
+	# レア度
+	if rarity_label:
 		var rarity = data.get("rarity", "")
-		name_label.text = "%s [%s]" % [data.get("name", "不明"), rarity]
+		rarity_label.text = "[%s]" % rarity if rarity else ""
 	
 	# コスト
 	if cost_label:
 		var cost_value = data.get("cost", {})
 		var ep_cost = 0
+		var cards_sacrifice = 0
 		if typeof(cost_value) == TYPE_DICTIONARY:
 			ep_cost = cost_value.get("ep", 0)
+			cards_sacrifice = cost_value.get("cards_sacrifice", 0)
 		else:
 			ep_cost = cost_value if typeof(cost_value) == TYPE_INT else 0
 		cost_label.text = "コスト: %dEP" % ep_cost
+		
+		# 犠牲カードアイコンを追加
+		_update_cost_icons(cards_sacrifice)
 	
 	# スペルタイプ（対象タイプ）
 	if spell_type_label:
 		var spell_type = data.get("spell_type", "")
 		spell_type_label.text = spell_type if not spell_type.is_empty() else "その他"
+		
+		# スペルタイプアイコンを更新
+		_update_spell_type_icon(spell_type)
 	
 	# 効果テキスト
 	if effect_label:
 		var effect_text = data.get("effect", "")
 		effect_label.text = effect_text if not effect_text.is_empty() else "効果なし"
+
+func _update_cost_icons(cards_sacrifice: int) -> void:
+	"""犠牲カードアイコンを更新"""
+	if not cost_icons:
+		return
+	
+	# 既存のアイコンをクリア
+	for child in cost_icons.get_children():
+		child.queue_free()
+	
+	# 犠牲カードアイコンを追加
+	if cards_sacrifice > 0:
+		var sacrifice_texture = load("res://assets/ui/sacrifice_card.png")
+		if sacrifice_texture:
+			for i in range(cards_sacrifice):
+				var icon = TextureRect.new()
+				icon.texture = sacrifice_texture
+				icon.custom_minimum_size = Vector2(32, 32)
+				icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+				cost_icons.add_child(icon)
+
+func _update_spell_type_icon(spell_type: String) -> void:
+	"""スペルタイプアイコンを更新"""
+	if not spell_type_icon:
+		return
+	
+	# スペルタイプに応じた色を設定
+	var color = Color.WHITE
+	match spell_type:
+		"単体対象":
+			color = Color("#ff4545")  # 赤
+		"単体特殊能力付与":
+			color = Color("#45ff87")  # 緑
+		"複数対象":
+			color = Color("#ffaa45")  # オレンジ
+		"複数特殊能力付与":
+			color = Color("#45ccff")  # 水色
+		"世界呪":
+			color = Color("#aa45ff")  # 紫
+		_:
+			color = Color("#aaaaaa")  # グレー
+	
+	spell_type_icon.text = "◆"
+	spell_type_icon.add_theme_color_override("font_color", color)
 
 
 # === イベントハンドラ ===

@@ -13,9 +13,11 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
 @onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostLabel
-@onready var item_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeLabel
+@onready var item_type_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer/ItemTypeLabel
+@onready var item_type_icon: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/ItemTypeContainer/ItemTypeIcon
 @onready var stat_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/StatContainer
 @onready var stat_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/StatContainer/StatLabel
 @onready var effect_container: VBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/EffectContainer
@@ -87,10 +89,14 @@ func _update_display():
 func _update_right_panel():
 	var data = current_item_data
 	
-	# 名前 + レア度
+	# 名前
 	if name_label:
+		name_label.text = data.get("name", "不明")
+	
+	# レア度
+	if rarity_label:
 		var rarity = data.get("rarity", "")
-		name_label.text = "%s [%s]" % [data.get("name", "不明"), rarity]
+		rarity_label.text = "[%s]" % rarity if rarity else ""
 	
 	# コスト
 	if cost_label:
@@ -106,6 +112,9 @@ func _update_right_panel():
 	if item_type_label:
 		var item_type = data.get("item_type", "")
 		item_type_label.text = item_type if not item_type.is_empty() else "アイテム"
+		
+		# アイテムタイプアイコンを更新
+		_update_item_type_icon(item_type)
 	
 	# ステータス変化
 	if stat_label:
@@ -125,6 +134,28 @@ func _update_right_panel():
 			effect_container.visible = true
 			effect_label.text = effect_text
 
+
+func _update_item_type_icon(item_type: String) -> void:
+	"""アイテムタイプアイコンを更新"""
+	if not item_type_icon:
+		return
+	
+	# アイテムタイプに応じた色を設定
+	var color = Color.WHITE
+	match item_type:
+		"武器":
+			color = Color("#ff6645")  # 赤オレンジ
+		"防具":
+			color = Color("#4566ff")  # 青
+		"アクセサリ":
+			color = Color("#45cc87")  # 緑
+		"巻物":
+			color = Color("#cc45ff")  # 紫
+		_:
+			color = Color("#aaaaaa")  # グレー
+	
+	item_type_icon.text = "▲"
+	item_type_icon.add_theme_color_override("font_color", color)
 
 ## ステータスボーナスを整形
 func _format_stat_bonus(data: Dictionary) -> String:

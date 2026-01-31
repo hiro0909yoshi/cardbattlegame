@@ -69,7 +69,7 @@ theme_override_constants/separation = 15
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 62
-text = "クリーチャーインフォパネル"
+text = ""
 
 [node name="ContentHeader" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -79,6 +79,47 @@ text = "表示内容："
 [node name="AnnotationLabels" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 25
+
+[node name="SpellAnnotationLabels" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="SpellNameAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・名前"
+
+[node name="SpellRarityAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・レアリティ（C < N < S < R）"
+
+[node name="SpellCostAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 62
+text = "・使用に必要なコスト"
+
+[node name="SpellCostIconAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 0.3, 1)
+theme_override_font_sizes/font_size = 62
+text = "・犠牲カード"
+
+[node name="SpellTypeAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 62
+text = "・スペルタイプ"
+
+[node name="SpellEffectAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 0.6, 1)
+theme_override_font_sizes/font_size = 62
+text = "・スペル効果の説明"
 
 [node name="NameAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
 layout_mode = 2
@@ -139,6 +180,47 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
 theme_override_font_sizes/font_size = 62
 text = "・使用可能なスキルと効果"
+
+[node name="ItemAnnotationLabels" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="ItemNameAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・名前"
+
+[node name="ItemRarityAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・レアリティ（C < N < S < R）"
+
+[node name="ItemCostAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 62
+text = "・使用に必要なコスト"
+
+[node name="ItemTypeAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 62
+text = "・アイテムタイプ"
+
+[node name="ItemStatAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 62
+text = "・ステータス変化"
+
+[node name="ItemEffectAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 0.6, 1)
+theme_override_font_sizes/font_size = 62
+text = "・アイテム効果の説明"
 
 [node name="Spacer2" type="Control" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2

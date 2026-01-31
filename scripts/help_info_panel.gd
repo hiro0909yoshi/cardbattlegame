@@ -11,7 +11,10 @@ extends Control
 @onready var left_panel: Control = $MarginContainer/VBoxContainer/ContentHBox/LeftPanel
 @onready var right_label: RichTextLabel = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/RightLabel
 @onready var right_vbox: VBoxContainer = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer
+@onready var right_title_label: Label = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/TitleLabel
 @onready var annotation_labels: VBoxContainer = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels
+@onready var spell_annotation_labels: VBoxContainer = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/SpellAnnotationLabels
+@onready var item_annotation_labels: VBoxContainer = $MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/ItemAnnotationLabels
 
 # 注釈オーバーレイ
 var annotation_overlay: AnnotationOverlay = null
@@ -110,6 +113,10 @@ func _update_page():
 	# 注釈ラベルを非表示（各ページで必要に応じて表示）
 	if annotation_labels:
 		annotation_labels.visible = false
+	if spell_annotation_labels:
+		spell_annotation_labels.visible = false
+	if item_annotation_labels:
+		item_annotation_labels.visible = false
 	
 	# 現在のページのパネルを表示
 	match current_page:
@@ -142,6 +149,10 @@ func _show_creature_info_panel():
 		if creature_info_panel_instance.has_method("show_view_mode"):
 			creature_info_panel_instance.show_view_mode(sample_data, -1, false)
 		
+		# 右パネルのタイトルを設定
+		if right_title_label:
+			right_title_label.text = "クリーチャーインフォパネル"
+		
 		# 注釈ラベルを表示
 		if annotation_labels:
 			annotation_labels.visible = true
@@ -155,26 +166,50 @@ func _show_creature_info_panel():
 func _show_spell_info_panel():
 	if spell_info_panel_instance:
 		spell_info_panel_instance.visible = true
-		spell_info_panel_instance.position = Vector2.ZERO
-		spell_info_panel_instance.scale = Vector2(0.8, 0.8)
+		spell_info_panel_instance.position = Vector2(50, -100)
+		spell_info_panel_instance.scale = Vector2(1.0, 1.0)
 		
 		# サンプルデータを設定
 		var sample_data = _get_sample_spell_data()
 		if spell_info_panel_instance.has_method("show_spell_info"):
 			spell_info_panel_instance.show_spell_info(sample_data, -1)
+		
+		# 右パネルのタイトルを設定
+		if right_title_label:
+			right_title_label.text = "スペルインフォパネル"
+		
+		# 注釈ラベルを表示
+		if spell_annotation_labels:
+			spell_annotation_labels.visible = true
+		
+		# 注釈を追加（1フレーム待ってから位置を取得）
+		await get_tree().process_frame
+		_setup_spell_annotations()
 	
 	right_label.text = _get_spell_info_description()
 
 func _show_item_info_panel():
 	if item_info_panel_instance:
 		item_info_panel_instance.visible = true
-		item_info_panel_instance.position = Vector2.ZERO
-		item_info_panel_instance.scale = Vector2(0.8, 0.8)
+		item_info_panel_instance.position = Vector2(50, -100)
+		item_info_panel_instance.scale = Vector2(1.0, 1.0)
 		
 		# サンプルデータを設定
 		var sample_data = _get_sample_item_data()
 		if item_info_panel_instance.has_method("show_item_info"):
 			item_info_panel_instance.show_item_info(sample_data, -1)
+		
+		# 右パネルのタイトルを設定
+		if right_title_label:
+			right_title_label.text = "アイテムインフォパネル"
+		
+		# 注釈ラベルを表示
+		if item_annotation_labels:
+			item_annotation_labels.visible = true
+		
+		# 注釈を追加（1フレーム待ってから位置を取得）
+		await get_tree().process_frame
+		_setup_item_annotations()
 	
 	right_label.text = _get_item_info_description()
 
@@ -240,13 +275,13 @@ func _setup_creature_annotations() -> void:
 	if cost_icons and cost_icon_annotation:
 		var source_rect = _get_control_rect_in_overlay(cost_icons)
 		var target_pos = _get_label_left_center(cost_icon_annotation)
-		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.7, 0.3),930)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.7, 0.3),940)
 	
 	# 5. HP
 	if hp_label and hp_annotation:
 		var source_rect = _get_control_rect_in_overlay(hp_label)
 		var target_pos = _get_label_left_center(hp_annotation)
-		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.2, 0.6, 0.8), 1000.0, "right_top")
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.2, 0.6, 0.8), 990, "right_top")
 	
 	# 6. AP
 	if ap_label and ap_annotation:
@@ -277,6 +312,136 @@ func _setup_creature_annotations() -> void:
 		var source_rect = _get_control_rect_in_overlay(skill_container)
 		var target_pos = _get_label_left_center(skill_annotation)
 		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.6, 1.0))
+
+func _setup_spell_annotations() -> void:
+	if not annotation_overlay or not spell_info_panel_instance:
+		return
+	
+	annotation_overlay.clear_annotations()
+	
+	# スペルパネル内のノードを取得
+	var content_vbox = spell_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/VBoxContainer")
+	if not content_vbox:
+		return
+	
+	# 左パネルの各要素を取得
+	var name_container = content_vbox.get_node_or_null("NameContainer")
+	var name_label = name_container.get_node_or_null("NameLabel") if name_container else null
+	var rarity_label = name_container.get_node_or_null("RarityLabel") if name_container else null
+	var cost_container = content_vbox.get_node_or_null("CostContainer")
+	var cost_label = cost_container.get_node_or_null("CostLabel") if cost_container else null
+	var cost_icons = cost_container.get_node_or_null("CostIcons") if cost_container else null
+	var spell_type_container = content_vbox.get_node_or_null("SpellTypeContainer")
+	var spell_type_label = spell_type_container.get_node_or_null("SpellTypeLabel") if spell_type_container else null
+	var effect_container = content_vbox.get_node_or_null("EffectContainer")
+	
+	# 右パネルの注釈ラベルを取得
+	var name_annotation = spell_annotation_labels.get_node_or_null("SpellNameAnnotation")
+	var rarity_annotation = spell_annotation_labels.get_node_or_null("SpellRarityAnnotation")
+	var cost_annotation = spell_annotation_labels.get_node_or_null("SpellCostAnnotation")
+	var cost_icon_annotation = spell_annotation_labels.get_node_or_null("SpellCostIconAnnotation")
+	var type_annotation = spell_annotation_labels.get_node_or_null("SpellTypeAnnotation")
+	var effect_annotation = spell_annotation_labels.get_node_or_null("SpellEffectAnnotation")
+	
+	# 1. 名前（上から線を出す）
+	if name_label and name_annotation:
+		var source_rect = _get_control_rect_in_overlay(name_label)
+		var target_pos = _get_label_left_center(name_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(1.0, 0.8, 0.2), 800.0, "top", 30.0)
+	
+	# 2. レアリティ
+	if rarity_label and rarity_annotation:
+		var source_rect = _get_control_rect_in_overlay(rarity_label)
+		var target_pos = _get_label_left_center(rarity_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.9, 0.6, 0.2),300)
+	
+	# 3. コスト
+	if cost_label and cost_annotation:
+		var source_rect = _get_control_rect_in_overlay(cost_label)
+		var target_pos = _get_label_left_center(cost_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.2, 0.8, 0.4) ,1170, "top", 30.0)
+	
+	# 4. 犠牲カードアイコン
+	if cost_icons and cost_icon_annotation:
+		var source_rect = _get_control_rect_in_overlay(cost_icons)
+		var target_pos = _get_label_left_center(cost_icon_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.7, 0.3), 910)
+	
+	# 5. スペルタイプ
+	if spell_type_container and type_annotation:
+		var source_rect = _get_control_rect_in_overlay(spell_type_container)
+		var target_pos = _get_label_left_center(type_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.6, 1.0),40)
+	
+	# 6. 効果
+	if effect_container and effect_annotation:
+		var source_rect = _get_control_rect_in_overlay(effect_container)
+		var target_pos = _get_label_left_center(effect_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.8, 0.4, 0.6) ,110)
+
+func _setup_item_annotations() -> void:
+	if not annotation_overlay or not item_info_panel_instance:
+		return
+	
+	annotation_overlay.clear_annotations()
+	
+	# アイテムパネル内のノードを取得
+	var content_vbox = item_info_panel_instance.get_node_or_null("MainContainer/RightPanel/ContentMargin/VBoxContainer")
+	if not content_vbox:
+		return
+	
+	# 左パネルの各要素を取得
+	var name_container = content_vbox.get_node_or_null("NameContainer")
+	var name_label = name_container.get_node_or_null("NameLabel") if name_container else null
+	var rarity_label = name_container.get_node_or_null("RarityLabel") if name_container else null
+	var cost_label = content_vbox.get_node_or_null("CostLabel")
+	var item_type_container = content_vbox.get_node_or_null("ItemTypeContainer")
+	var stat_container = content_vbox.get_node_or_null("StatContainer")
+	var effect_container = content_vbox.get_node_or_null("EffectContainer")
+	
+	# 右パネルの注釈ラベルを取得
+	var name_annotation = item_annotation_labels.get_node_or_null("ItemNameAnnotation")
+	var rarity_annotation = item_annotation_labels.get_node_or_null("ItemRarityAnnotation")
+	var cost_annotation = item_annotation_labels.get_node_or_null("ItemCostAnnotation")
+	var type_annotation = item_annotation_labels.get_node_or_null("ItemTypeAnnotation")
+	var stat_annotation = item_annotation_labels.get_node_or_null("ItemStatAnnotation")
+	var effect_annotation = item_annotation_labels.get_node_or_null("ItemEffectAnnotation")
+	
+	# 1. 名前（上から線を出す）
+	if name_label and name_annotation:
+		var source_rect = _get_control_rect_in_overlay(name_label)
+		var target_pos = _get_label_left_center(name_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(1.0, 0.8, 0.2), 700, "top", 30.0)
+	
+	# 2. レアリティ
+	if rarity_label and rarity_annotation:
+		var source_rect = _get_control_rect_in_overlay(rarity_label)
+		var target_pos = _get_label_left_center(rarity_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.9, 0.6, 0.2),270)
+	
+	# 3. コスト
+	if cost_label and cost_annotation:
+		var source_rect = _get_control_rect_in_overlay(cost_label)
+		var target_pos = _get_label_left_center(cost_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.2, 0.8, 0.4),150)
+	
+	# 4. アイテムタイプ
+	if item_type_container and type_annotation:
+		var source_rect = _get_control_rect_in_overlay(item_type_container)
+		var target_pos = _get_label_left_center(type_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.4, 0.6, 1.0),70)
+	
+	# 5. ステータス
+	if stat_container and stat_annotation:
+		var source_rect = _get_control_rect_in_overlay(stat_container)
+		var target_pos = _get_label_left_center(stat_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.6, 0.8, 0.3))
+	
+	# 6. 効果
+	if effect_container and effect_annotation:
+		var source_rect = _get_control_rect_in_overlay(effect_container)
+		var target_pos = _get_label_left_center(effect_annotation)
+		annotation_overlay.add_annotation(source_rect, target_pos, "", Color(0.8, 0.4, 0.6),1)
 
 func _get_control_rect_in_overlay(control: Control) -> Rect2:
 	## Controlのグローバル矩形をオーバーレイのローカル座標に変換
@@ -343,30 +508,30 @@ func _get_sample_creature_data() -> Dictionary:
 	}
 
 func _get_sample_spell_data() -> Dictionary:
-	# ID 2001 のアースシフト
+	# ID 2033 を使用
 	if CardLoader:
-		var data = CardLoader.get_card_by_id(2001)
+		var data = CardLoader.get_card_by_id(2033)
 		if not data.is_empty():
 			return data
 	
 	return {
-		"id": 2001,
-		"name": "アースシフト",
+		"id": 2033,
+		"name": "サンプルスペル",
 		"type": "spell",
 		"spell_type": "単体対象",
 		"cost": {"ep": 100},
-		"effect": "対象自ドミニオを地に変える"
+		"effect": "サンプル効果"
 	}
 
 func _get_sample_item_data() -> Dictionary:
-	# アイテムデータを取得
+	# ID 1012 を使用
 	if CardLoader:
-		var data = CardLoader.get_card_by_id(3001)
+		var data = CardLoader.get_card_by_id(1012)
 		if not data.is_empty():
 			return data
 	
 	return {
-		"id": 3001,
+		"id": 1012,
 		"name": "サンプルアイテム",
 		"type": "item",
 		"item_type": "武器",
