@@ -66,12 +66,23 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="NameContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.2, 0.1, 1)
 theme_override_font_sizes/font_size = 80
-text = "クリーチャー名 [R]"
-horizontal_alignment = 1
+text = "クリーチャー名"
+
+[node name="RarityLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.3, 0.1, 1)
+theme_override_font_sizes/font_size = 60
+text = "[R]"
+vertical_alignment = 1
 
 [node name="Control" type="Control" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 40)
@@ -91,11 +102,21 @@ text = "コスト: 100G"
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HpApLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+[node name="HpApContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="HpLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
 theme_override_font_sizes/font_size = 60
-text = "HP: 60 / 60    AP: 60"
+text = "HP: 60 / 60"
+
+[node name="ApLabel" type="Label" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 60
+text = "AP: 70"
 
 [node name="RestrictionContainer" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
 layout_mode = 2
@@ -105,7 +126,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
 theme_override_font_sizes/font_size = 40
-text = "配置制限:"
+text = "配置不可:"
 
 [node name="RestrictionElementIcons" type="HBoxContainer" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer"]
 layout_mode = 2
@@ -115,7 +136,7 @@ theme_override_constants/separation = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.4, 0.3, 1)
 theme_override_font_sizes/font_size = 40
-text = "アイテム: なし"
+text = "アイテム制限: なし"
 
 [node name="HSeparator" type="HSeparator" parent="MainContainer/RightPanel/ContentMargin/VBoxContainer"]
 layout_mode = 2

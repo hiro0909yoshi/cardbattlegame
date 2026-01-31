@@ -55,7 +55,97 @@ size_flags_stretch_ratio = 1.2
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 62
+text = "クリーチャーインフォパネル"
+
+[node name="ContentHeader" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 62
+text = "表示内容："
+
+[node name="AnnotationLabels" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="NameAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・名前"
+
+[node name="RarityAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・レアリティ（C < N < S < R）"
+
+[node name="CostAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 62
+text = "・召喚に必要なコスト"
+
+[node name="CostIconAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 0.3, 1)
+theme_override_font_sizes/font_size = 62
+text = "・召喚に必要な土地及び犠牲カード"
+
+[node name="HpAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.6, 0.8, 1)
+theme_override_font_sizes/font_size = 62
+text = "・現在HP / 最大HP"
+
+[node name="ApAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.5, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・AP（攻撃力）"
+
+[node name="RestrictionAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・配置不可な属性"
+
+[node name="ItemAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.4, 0.8, 1)
+theme_override_font_sizes/font_size = 62
+text = "・使用できないアイテムタイプ"
+
+[node name="CurseAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 62
+text = "・クリーチャーに付与されている呪い"
+
+[node name="SkillAnnotation" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer/AnnotationLabels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 62
+text = "・使用可能なスキルと効果"
+
+[node name="Spacer2" type="Control" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RightLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ContentHBox/RightPanel/MarginContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3

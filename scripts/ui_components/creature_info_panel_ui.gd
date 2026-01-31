@@ -14,10 +14,12 @@ signal panel_closed
 @onready var right_panel: Control = $MainContainer/RightPanel
 
 # 右パネルのラベル（シーンから取得）
-@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameLabel
+@onready var name_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/NameLabel
+@onready var rarity_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/NameContainer/RarityLabel
 @onready var cost_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostLabel
 @onready var cost_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/CostContainer/CostElementIcons
-@onready var hp_ap_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApLabel
+@onready var hp_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer/HpLabel
+@onready var ap_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/HpApContainer/ApLabel
 @onready var restriction_text_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionTextLabel
 @onready var restriction_element_icons: HBoxContainer = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/RestrictionElementIcons
 @onready var item_label: Label = $MainContainer/RightPanel/ContentMargin/VBoxContainer/RestrictionContainer/ItemLabel
@@ -124,10 +126,14 @@ func _update_display():
 func _update_right_panel():
 	var data = current_creature_data
 	
-	# 名前 + レア度
+	# 名前
 	if name_label:
+		name_label.text = data.get("name", "不明")
+	
+	# レア度
+	if rarity_label:
 		var rarity = data.get("rarity", "")
-		name_label.text = "%s [%s]" % [data.get("name", "不明"), rarity]
+		rarity_label.text = "[%s]" % rarity if rarity else ""
 	
 	# コスト
 	if cost_label:
@@ -153,13 +159,16 @@ func _update_right_panel():
 		_add_cost_icons(cost_element_icons, lands_required, cards_sacrifice)
 	
 	# HP / AP
-	if hp_ap_label:
-		var hp = data.get("hp", 0)
-		var ap = data.get("ap", 0)
-		var current_hp = data.get("current_hp", hp)
-		var max_hp = hp + data.get("base_up_hp", 0)
-		var total_ap = ap + data.get("base_up_ap", 0)
-		hp_ap_label.text = "HP: %d / %d    AP: %d" % [current_hp, max_hp, total_ap]
+	var hp = data.get("hp", 0)
+	var ap = data.get("ap", 0)
+	var current_hp = data.get("current_hp", hp)
+	var max_hp = hp + data.get("base_up_hp", 0)
+	var total_ap = ap + data.get("base_up_ap", 0)
+	
+	if hp_label:
+		hp_label.text = "HP: %d / %d" % [current_hp, max_hp]
+	if ap_label:
+		ap_label.text = "AP: %d" % total_ap
 	
 	# 配置制限 / アイテム制限
 	var restrictions = data.get("restrictions", {})
@@ -167,18 +176,18 @@ func _update_right_panel():
 	
 	if restriction_text_label:
 		if cannot_summon.is_empty():
-			restriction_text_label.text = "配置制限: なし"
+			restriction_text_label.text = "配置不可: なし"
 		else:
-			restriction_text_label.text = "配置制限:"
+			restriction_text_label.text = "配置不可:"
 	
 	_add_element_icons(restriction_element_icons, cannot_summon)
 	
 	if item_label:
 		var cannot_use = restrictions.get("cannot_use", [])
 		if not cannot_use.is_empty():
-			item_label.text = "アイテム: %s" % ",".join(cannot_use)
+			item_label.text = "アイテム制限: %s" % ",".join(cannot_use)
 		else:
-			item_label.text = "アイテム: なし"
+			item_label.text = "アイテム制限: なし"
 	
 	# 呪い
 	if curse_label:
