@@ -1,17 +1,17 @@
 {
-  "id": "stage_1_5",
-  "name": "8の字の試練",
-  "description": "2つのループが繋がる8の字型マップ",
-  "map_id": "map_1_5",
+  "id": "stage_2_4",
+  "name": "砂塵の戦場",
+  "description": "視界が悪い砂嵐の中での戦い。",
+  "map_id": "map_branch_1",
 
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 2000},
+    "initial_magic": {"player": 2500, "cpu": 2500},
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 4500, "timing": "checkpoint"}
+        {"type": "magic", "target": 5500, "timing": "checkpoint"}
       ]
     }
   },

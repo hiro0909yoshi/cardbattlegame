@@ -1,8 +1,8 @@
 {
-  "id": "stage_1_6",
-  "name": "迷路の試練",
-  "description": "内部に分岐とワープがある複雑なマップ",
-  "map_id": "map_1_6",
+  "id": "stage_1_7",
+  "name": "風の試練",
+  "description": "風属性が多いマップ。素早い戦略が求められる。",
+  "map_id": "map_diamond_20",
 
   "rule_preset": "quick",
   "max_turns": 50,
@@ -20,7 +20,7 @@
     "enemies": [
       {
         "character_id": "bowser",
-        "deck_id": "skills_test",
+        "deck_id": "balance_easy",
         "ai_level": 4,
         "start_tile": 0
       }

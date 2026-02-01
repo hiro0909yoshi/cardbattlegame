@@ -4,6 +4,7 @@ class_name PlayerSystem
 # プレイヤー管理システム - 3D専用版
 
 signal dice_rolled(value: int)
+signal dice_rolled_double(value1: int, value2: int, total: int)  # 2個ダイス用
 # TODO: 将来実装予定
 # signal magic_changed(player_id: int, new_value: int)
 @warning_ignore("unused_signal")  # GameSystemManagerで接続、将来のLapSystemから発行予定
@@ -81,7 +82,7 @@ func next_player():
 	current_player_index = (current_player_index + 1) % players.size()
 	print("PlayerSystem: ", players[current_player_index].name, "のターン")
 
-# サイコロを振る
+# サイコロを振る（旧版 - 互換性のため残す）
 func roll_dice() -> int:
 	var value: int
 	
@@ -94,6 +95,74 @@ func roll_dice() -> int:
 	
 	emit_signal("dice_rolled", value)
 	return value
+
+# サイコロ2個を振る（新版）
+# ダイス1: 0, 1, 2, 3, 4, 5
+# ダイス2: 0, 2, 3, 4, 5, 6
+# 両方0の場合: 12（特殊ボーナス）
+func roll_dice_double() -> Dictionary:
+	var dice1: int
+	var dice2: int
+	var total: int
+	
+	# デバッグコントローラーから固定値を取得
+	if debug_controller and debug_controller.get_fixed_dice() > 0:
+		total = debug_controller.get_fixed_dice()
+		# 固定値の場合は適当に分配
+		dice1 = mini(total / 2, 5)
+		dice2 = total - dice1
+		print("【デバッグ】固定ダイス: ", total)
+	else:
+		# ダイス1: 0-5
+		dice1 = randi_range(0, 5)
+		# ダイス2: 0, 2, 3, 4, 5, 6（1がない）
+		var dice2_faces = [0, 2, 3, 4, 5, 6]
+		dice2 = dice2_faces[randi_range(0, 5)]
+		
+		# 両方0なら12
+		if dice1 == 0 and dice2 == 0:
+			total = 12
+		else:
+			total = dice1 + dice2
+	
+	emit_signal("dice_rolled_double", dice1, dice2, total)
+	return {"dice1": dice1, "dice2": dice2, "total": total}
+
+# サイコロ3個を振る（フライ効果用）
+# ダイス1: 0, 1, 2, 3, 4, 5
+# ダイス2: 0, 2, 3, 4, 5, 6
+# ダイス3: 1, 2, 3, 4, 5, 6（通常ダイス）
+# ダイス1とダイス2が両方0の場合: 12 + ダイス3
+func roll_dice_triple() -> Dictionary:
+	var dice1: int
+	var dice2: int
+	var dice3: int
+	var total: int
+	
+	# デバッグコントローラーから固定値を取得
+	if debug_controller and debug_controller.get_fixed_dice() > 0:
+		total = debug_controller.get_fixed_dice()
+		# 固定値の場合は適当に分配
+		dice1 = mini(total / 3, 5)
+		dice2 = mini((total - dice1) / 2, 6)
+		dice3 = total - dice1 - dice2
+		print("【デバッグ】固定ダイス: ", total)
+	else:
+		# ダイス1: 0-5
+		dice1 = randi_range(0, 5)
+		# ダイス2: 0, 2, 3, 4, 5, 6（1がない）
+		var dice2_faces = [0, 2, 3, 4, 5, 6]
+		dice2 = dice2_faces[randi_range(0, 5)]
+		# ダイス3: 1-6（通常ダイス）
+		dice3 = randi_range(1, 6)
+		
+		# ダイス1とダイス2が両方0なら12 + ダイス3
+		if dice1 == 0 and dice2 == 0:
+			total = 12 + dice3
+		else:
+			total = dice1 + dice2 + dice3
+	
+	return {"dice1": dice1, "dice2": dice2, "dice3": dice3, "total": total}
 
 # EPを増減
 func add_magic(player_id: int, amount: int):

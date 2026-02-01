@@ -1,8 +1,8 @@
 {
-  "id": "stage_1_6",
-  "name": "迷路の試練",
-  "description": "内部に分岐とワープがある複雑なマップ",
-  "map_id": "map_1_6",
+  "id": "stage_2_5",
+  "name": "灼熱の大地",
+  "description": "火属性が優勢なマップ。",
+  "map_id": "map_cross_1",
 
   "rule_preset": "quick",
   "max_turns": 50,
@@ -11,7 +11,7 @@
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
+        {"type": "magic", "target": 5500, "timing": "checkpoint"}
       ]
     }
   },
@@ -20,8 +20,8 @@
     "enemies": [
       {
         "character_id": "bowser",
-        "deck_id": "skills_test",
-        "ai_level": 4,
+        "deck_id": "balance_easy",
+        "ai_level": 5,
         "start_tile": 0
       }
     ]

@@ -104,7 +104,7 @@ func _on_quest_pressed():
 		return
 	
 	print("クエスト選択 → ステージ選択画面へ")
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/QuestSelect.tscn")
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/WorldStageSelect.tscn")
 
 func _on_solo_battle_pressed():
 	# デッキ検証

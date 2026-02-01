@@ -1,0 +1,40 @@
+{
+  "id": "stage_3_2",
+  "name": "凍てつく道",
+  "description": "水属性が優勢なマップ。",
+  "map_id": "map_branch_1",
+
+  "rule_preset": "standard",
+  "max_turns": 55,
+  "rule_overrides": {
+    "initial_magic": {"player": 2500, "cpu": 3000},
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {"type": "magic", "target": 6500, "timing": "checkpoint"}
+      ]
+    }
+  },
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "skills_test",
+        "ai_level": 5,
+        "start_tile": 0
+      }
+    ]
+  },
+
+  "rewards": {
+    "gold": 2100,
+    "rank_bonus": {
+      "SS": 1050,
+      "S": 630,
+      "A": 420,
+      "B": 210,
+      "C": 0
+    }
+  }
+}

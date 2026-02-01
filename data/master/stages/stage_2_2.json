@@ -1,12 +1,13 @@
 {
   "id": "stage_2_2",
   "name": "分岐の迷宮",
-  "description": "分岐タイルテスト用ステージ。",
+  "description": "分岐タイルが多い複雑なマップ。",
   "map_id": "map_branch_test",
 
   "rule_preset": "quick",
+  "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 3500, "cpu": 3500},
+    "initial_magic": {"player": 2500, "cpu": 2500},
     "win_conditions": {
       "mode": "all",
       "conditions": [
@@ -20,13 +21,20 @@
       {
         "character_id": "bowser",
         "deck_id": "balance_easy",
-        "ai_level": 5,
+        "ai_level": 4,
         "start_tile": 0
       }
-    ],
-    "rewards": {
-      "first_clear": {"type": "gold", "amount": 1500},
-      "repeat": {"type": "gold", "amount": 300}
+    ]
+  },
+
+  "rewards": {
+    "gold": 1900,
+    "rank_bonus": {
+      "SS": 950,
+      "S": 570,
+      "A": 380,
+      "B": 190,
+      "C": 0
     }
   }
 }

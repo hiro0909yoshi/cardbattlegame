@@ -283,35 +283,47 @@ func roll_dice():
 	
 	change_phase(GamePhase.MOVING)
 	
-	# 複数ダイスロールの判定
-	var total_dice = 0
-	var roll_count = 1
+	# フライ効果（3個ダイス）の判定
+	var needs_third = spell_dice and spell_dice.needs_third_dice(player_system.current_player_index)
 	
-	if spell_dice and spell_dice.needs_multi_roll(player_system.current_player_index):
-		roll_count = spell_dice.get_multi_roll_count(player_system.current_player_index)
-		print("[複数ダイス] ", roll_count, "回振ります")
+	var dice1: int
+	var dice2: int
+	var dice3: int = 0
+	var total_dice: int
 	
-	# ダイスを指定回数振る
-	for i in range(roll_count):
-		var dice_value = player_system.roll_dice()
-		
-		# 呪いによるダイス変更を適用（dice_multi以外）
-		if spell_dice:
-			dice_value = spell_dice.get_modified_dice_value(player_system.current_player_index, dice_value)
-		
-		var modified = player_buff_system.modify_dice_roll(dice_value, player_system.current_player_index)
-		total_dice += modified
-		
-		# 各ダイスの結果を表示
-		if roll_count > 1:
-			print("[ダイス", i + 1, "/", roll_count, "] ", modified)
-			emit_signal("dice_rolled", modified)
-			await get_tree().create_timer(0.8).timeout
+	if needs_third:
+		# 3個ダイスを振る（フライ効果）
+		var dice_result = player_system.roll_dice_triple()
+		dice1 = dice_result.dice1
+		dice2 = dice_result.dice2
+		dice3 = dice_result.dice3
+		total_dice = dice_result.total
+		print("[ダイス/フライ] %d + %d + %d = %d" % [dice1, dice2, dice3, total_dice])
+	else:
+		# 2個ダイスを振る（通常）
+		var dice_result = player_system.roll_dice_double()
+		dice1 = dice_result.dice1
+		dice2 = dice_result.dice2
+		total_dice = dice_result.total
+	
+	# 呪いによるダイス変更を適用（dice_multi以外）
+	if spell_dice and not needs_third:
+		total_dice = spell_dice.get_modified_dice_value(player_system.current_player_index, total_dice)
+	
+	# バフによるダイス変更を適用
+	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
+	
+	# ダイス結果を表示
+	if ui_manager and ui_manager.phase_display:
+		if needs_third:
+			ui_manager.phase_display.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
 		else:
-			# 通常の1回のみのダイス
-			emit_signal("dice_rolled", modified)
+			ui_manager.phase_display.show_dice_result_double(dice1, dice2, modified_dice)
 	
-	var modified_dice = total_dice
+	if needs_third:
+		print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
+	else:
+		print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
 	
 	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:
@@ -319,14 +331,8 @@ func roll_dice():
 		if spell_dice.should_grant_magic(player_system.current_player_index):
 			await get_tree().create_timer(1.0).timeout
 	
-	# 複数ダイスの場合は合計を表示
-	if roll_count > 1:
-		print("[ダイス合計] ", modified_dice)
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "合計: " + str(modified_dice) + "マス移動"
-		await get_tree().create_timer(1.0).timeout
-	else:
-		await get_tree().create_timer(0.5).timeout
+	# 表示待ち
+	await get_tree().create_timer(1.5).timeout
 	
 	print("[GameFlowManager] roll_dice: await完了、移動開始 (phase=%s)" % current_phase)
 	
@@ -1075,7 +1081,7 @@ func _return_to_stage_select():
 	# クエストモードならクエストセレクトへ
 	elif not current_stage_data.is_empty():
 		print("[GameFlowManager] クエストセレクトへ遷移")
-		get_tree().change_scene_to_file("res://scenes/QuestSelect.tscn")
+		get_tree().change_scene_to_file("res://scenes/WorldStageSelect.tscn")
 	else:
 		# それ以外はメインメニューへ
 		print("[GameFlowManager] メインメニューへ遷移")

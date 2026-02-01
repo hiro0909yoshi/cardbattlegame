@@ -5,8 +5,9 @@
   "map_id": "map_branch_1",
 
   "rule_preset": "quick",
+  "max_turns": 50,
   "rule_overrides": {
-	"initial_magic": {"player": 3000, "cpu": 3000},
+	"initial_magic": {"player": 3000, "cpu": 1000},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
@@ -23,10 +24,17 @@
 		"ai_level": 3,
 		"start_tile": 0
 	  }
-	],
-	"rewards": {
-	  "first_clear": {"type": "gold", "amount": 1200},
-	  "repeat": {"type": "gold", "amount": 250}
+	]
+  },
+
+  "rewards": {
+	"gold": 1200,
+	"rank_bonus": {
+	  "SS": 600,
+	  "S": 360,
+	  "A": 240,
+	  "B": 120,
+	  "C": 0
 	}
   }
 }

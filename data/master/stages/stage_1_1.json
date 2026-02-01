@@ -7,11 +7,11 @@
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-	"initial_magic": {"player": 3000, "cpu": 500},
+	"initial_magic": {"player": 1200, "cpu": 200},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 3000, "timing": "checkpoint"}
+		{"type": "magic", "target": 1000, "timing": "checkpoint"}
 	  ]
 	}
   },

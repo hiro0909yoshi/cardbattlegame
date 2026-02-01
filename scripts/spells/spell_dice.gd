@@ -156,13 +156,22 @@ func haste(player_id: int):
 # ダイス判定（呪い適用）
 # ========================================
 
-# 複数ダイスロールが必要か判定
+# 3個目のダイスが必要か判定（フライ効果）
+func needs_third_dice(player_id: int) -> bool:
+	var curse = spell_curse.get_player_curse(player_id)
+	var curse_type = curse.get("curse_type", "")
+	if curse_type == "dice_multi":
+		var count = curse.get("params", {}).get("count", 2)
+		return count >= 3
+	return false
+
+# 複数ダイスロールが必要か判定（旧版 - 互換性のため残す）
 func needs_multi_roll(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	var curse_type = curse.get("curse_type", "")
 	return curse_type == "dice_multi"
 
-# 複数ダイスロールの回数を取得
+# 複数ダイスロールの回数を取得（旧版 - 互換性のため残す）
 func get_multi_roll_count(player_id: int) -> int:
 	var curse = spell_curse.get_player_curse(player_id)
 	var curse_type = curse.get("curse_type", "")

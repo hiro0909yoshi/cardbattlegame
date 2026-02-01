@@ -1,0 +1,40 @@
+{
+  "id": "stage_3_7",
+  "name": "氷帝の間",
+  "description": "氷の王が待ち構える。",
+  "map_id": "map_diamond_20",
+
+  "rule_preset": "standard",
+  "max_turns": 60,
+  "rule_overrides": {
+    "initial_magic": {"player": 2000, "cpu": 4000},
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {"type": "magic", "target": 8000, "timing": "checkpoint"}
+      ]
+    }
+  },
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "balance_easy",
+        "ai_level": 7,
+        "start_tile": 0
+      }
+    ]
+  },
+
+  "rewards": {
+    "gold": 2700,
+    "rank_bonus": {
+      "SS": 1350,
+      "S": 810,
+      "A": 540,
+      "B": 270,
+      "C": 0
+    }
+  }
+}

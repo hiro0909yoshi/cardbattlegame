@@ -41,13 +41,59 @@ horizontal_alignment = 1
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+[node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 60
+alignment = 1
 
-[node name="ContentLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+[node name="CreatureColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="CreatureTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/CreatureColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "クリーチャー ●"
+horizontal_alignment = 1
+
+[node name="CreatureList" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ContentHBox/CreatureColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+
+[node name="ItemColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="ItemTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/ItemColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "アイテム ▲"
+horizontal_alignment = 1
+
+[node name="ItemList" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ContentHBox/ItemColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+
+[node name="SpellColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="SpellTitle" type="Label" parent="MarginContainer/VBoxContainer/ContentHBox/SpellColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 72
+text = "スペル ◆"
+horizontal_alignment = 1
+
+[node name="SpellList" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ContentHBox/SpellColumn"]
+layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true

@@ -1,0 +1,130 @@
+[gd_scene load_steps=2 format=3 uid="uid://world_stage_select"]
+
+[ext_resource type="Script" path="res://scripts/quest/world_stage_select.gd" id="1_script"]
+
+[node name="WorldStageSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.12, 0.15, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="MainContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+theme_override_constants/separation = 30
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+text = "クエスト選択"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 48
+
+[node name="WorldLabel" type="Label" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+text = "ワールド"
+theme_override_font_sizes/font_size = 28
+
+[node name="WorldContainer" type="VBoxContainer" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="StageLabel" type="Label" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+text = "ステージ"
+theme_override_font_sizes/font_size = 28
+
+[node name="StageContainer" type="HBoxContainer" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 200)
+theme_override_constants/separation = 0
+
+[node name="Spacer" type="Control" parent="MarginContainer/MainContainer/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RightPanel" type="VBoxContainer" parent="MarginContainer/MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="DetailLabel" type="Label" parent="MarginContainer/MainContainer/RightPanel"]
+layout_mode = 2
+text = "ステージ詳細"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="DetailPanel" type="PanelContainer" parent="MarginContainer/MainContainer/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainContainer/RightPanel/DetailPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MapPreview" type="TextureRect" parent="MarginContainer/MainContainer/RightPanel/DetailPanel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(600, 500)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StageNameLabel" type="Label" parent="MarginContainer/MainContainer/RightPanel/DetailPanel/VBox"]
+layout_mode = 2
+text = "ステージ名"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 72
+
+[node name="RewardLabel" type="Label" parent="MarginContainer/MainContainer/RightPanel/DetailPanel/VBox"]
+layout_mode = 2
+text = "報酬: 1000G"
+theme_override_font_sizes/font_size = 72
+
+[node name="RecordLabel" type="Label" parent="MarginContainer/MainContainer/RightPanel/DetailPanel/VBox"]
+layout_mode = 2
+text = "クリアランク: S"
+theme_override_font_sizes/font_size = 72
+
+[node name="StatsLabel" type="Label" parent="MarginContainer/MainContainer/RightPanel/DetailPanel/VBox"]
+layout_mode = 2
+text = "戦績: 5戦3勝2敗"
+theme_override_font_sizes/font_size = 72
+
+[node name="StartButton" type="Button" parent="MarginContainer/MainContainer/RightPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+text = "ブック選択へ"
+theme_override_font_sizes/font_size = 32
+
+[node name="BackButton" type="Button" parent="MarginContainer/MainContainer/RightPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+text = "戻る"
+theme_override_font_sizes/font_size = 24

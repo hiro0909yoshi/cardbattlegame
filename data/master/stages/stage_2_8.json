@@ -1,0 +1,40 @@
+{
+  "id": "stage_2_8",
+  "name": "荒野の覇者",
+  "description": "ワールド2最終ステージ。荒野を制する者。",
+  "map_id": "map_cross_1",
+
+  "rule_preset": "standard",
+  "max_turns": 60,
+  "rule_overrides": {
+    "initial_magic": {"player": 2000, "cpu": 3500},
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {"type": "magic", "target": 7000, "timing": "checkpoint"}
+      ]
+    }
+  },
+
+  "quest": {
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "skills_test",
+        "ai_level": 6,
+        "start_tile": 0
+      }
+    ]
+  },
+
+  "rewards": {
+    "gold": 2500,
+    "rank_bonus": {
+      "SS": 1250,
+      "S": 750,
+      "A": 500,
+      "B": 250,
+      "C": 0
+    }
+  }
+}
