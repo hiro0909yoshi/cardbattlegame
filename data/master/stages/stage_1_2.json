@@ -7,11 +7,11 @@
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-	"initial_magic": {"player": 3000, "cpu": 1000},
+	"initial_magic": {"player": 300, "cpu": 300},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 4000, "timing": "checkpoint"}
+		{"type": "magic", "target": 2000, "timing": "checkpoint"}
 	  ]
 	}
   },
@@ -19,8 +19,8 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "bowser",
-		"deck_id": "skills_test",
+		"character_id": "zako_1",
+		"deck_id": "cpu_deck_1",
 		"ai_level": 3,
 		"start_tile": 0
 	  }
@@ -28,12 +28,12 @@
   },
 
   "rewards": {
-	"gold": 1200,
+	"gold": 1000,
 	"rank_bonus": {
-	  "SS": 600,
-	  "S": 360,
-	  "A": 240,
-	  "B": 120,
+	  "SS": 500,
+	  "S": 300,
+	  "A": 200,
+	  "B": 100,
 	  "C": 0
 	}
   }

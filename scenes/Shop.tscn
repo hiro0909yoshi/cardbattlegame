@@ -74,6 +74,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 32
 text = "カードガチャ"
 
+[node name="GachaTypeContainer" type="HBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
 [node name="ButtonsHBox" type="HBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
 layout_mode = 2
 theme_override_constants/separation = 30
@@ -83,22 +88,15 @@ alignment = 1
 custom_minimum_size = Vector2(250, 120)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "1回ガチャ
-100 G"
+text = "1回引く
+50 G"
 
 [node name="MultiGachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
 custom_minimum_size = Vector2(250, 120)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "10連ガチャ
-1,000 G"
-
-[node name="Multi100GachaButton" type="Button" parent="VBoxContainer/ContentPanel/GachaSection/ButtonsHBox"]
-custom_minimum_size = Vector2(250, 120)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "100連ガチャ
-10,000 G"
+text = "10連
+450 G"
 
 [node name="ResultSection" type="VBoxContainer" parent="VBoxContainer/ContentPanel/GachaSection"]
 layout_mode = 2

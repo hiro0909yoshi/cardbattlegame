@@ -9,15 +9,22 @@ const SELL_PRICES = {
 	"R": 100
 }
 
+# ガチャタイプ名
+const GACHA_NAMES = {
+	0: "ノーマルガチャ",  # GachaType.NORMAL
+	1: "Sガチャ",         # GachaType.S_GACHA
+	2: "Rガチャ"          # GachaType.R_GACHA
+}
+
 @onready var gold_label = $VBoxContainer/Header/GoldLabel
 @onready var purchase_button = $VBoxContainer/ModeButtons/PurchaseButton
 @onready var sell_button = $VBoxContainer/ModeButtons/SellButton
 
 # ガチャセクション
 @onready var gacha_section = $VBoxContainer/ContentPanel/GachaSection
+@onready var gacha_type_container = $VBoxContainer/ContentPanel/GachaSection/GachaTypeContainer
 @onready var single_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/SingleGachaButton
 @onready var multi_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/MultiGachaButton
-@onready var multi_100_button = $VBoxContainer/ContentPanel/GachaSection/ButtonsHBox/Multi100GachaButton
 @onready var result_label = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ResultLabel
 @onready var result_grid = $VBoxContainer/ContentPanel/GachaSection/ResultSection/ScrollContainer/ResultGrid
 
@@ -32,6 +39,7 @@ const SELL_PRICES = {
 @onready var back_button = $VBoxContainer/Footer/BackButton
 
 var gacha_system: Node
+var gacha_type_buttons: Array = []
 
 func _ready():
 	# ガチャシステムを初期化
@@ -45,7 +53,6 @@ func _ready():
 	# ガチャボタン接続
 	single_button.pressed.connect(_on_single_gacha)
 	multi_button.pressed.connect(_on_multi_gacha)
-	multi_100_button.pressed.connect(_on_multi_100_gacha)
 	
 	# 売却ボタン接続
 	manual_sell_button.pressed.connect(_on_manual_sell)
@@ -53,9 +60,69 @@ func _ready():
 	
 	back_button.pressed.connect(_on_back)
 	
+	# ガチャタイプボタンを生成
+	_create_gacha_type_buttons()
+	
 	# 初期状態：購入モード
 	_on_purchase_mode()
 	_update_gold_display()
+
+## ガチャタイプ選択ボタンを生成
+func _create_gacha_type_buttons():
+	# 既存のボタンをクリア
+	for child in gacha_type_container.get_children():
+		child.queue_free()
+	gacha_type_buttons.clear()
+	
+	# 各ガチャタイプのボタンを作成
+	for type_id in range(3):  # NORMAL, S_GACHA, R_GACHA
+		var button = Button.new()
+		button.custom_minimum_size = Vector2(300, 80)
+		button.add_theme_font_size_override("font_size", 24)
+		
+		var is_unlocked = gacha_system.is_gacha_unlocked(type_id)
+		var single_cost = gacha_system.get_single_cost(type_id)
+		var multi_cost = gacha_system.get_multi_10_cost(type_id)
+		
+		if is_unlocked:
+			button.text = "%s\n1回: %dG / 10連: %dG" % [GACHA_NAMES[type_id], single_cost, multi_cost]
+			button.pressed.connect(_on_gacha_type_selected.bind(type_id))
+		else:
+			var unlock_stage = ""
+			if type_id == 1:
+				unlock_stage = "1-8"
+			elif type_id == 2:
+				unlock_stage = "2-8"
+			button.text = "%s\n🔒 %sクリアで解禁" % [GACHA_NAMES[type_id], unlock_stage]
+			button.disabled = true
+			button.modulate = Color(0.5, 0.5, 0.5)
+		
+		gacha_type_container.add_child(button)
+		gacha_type_buttons.append(button)
+	
+	# 最初のガチャタイプを選択
+	_on_gacha_type_selected(0)
+
+## ガチャタイプが選択された
+func _on_gacha_type_selected(type_id: int):
+	gacha_system.set_gacha_type(type_id)
+	
+	# ボタンの見た目を更新
+	for i in range(gacha_type_buttons.size()):
+		var btn = gacha_type_buttons[i]
+		if not btn.disabled:
+			if i == type_id:
+				btn.modulate = Color(1.0, 1.0, 0.7)  # 選択中
+			else:
+				btn.modulate = Color(1.0, 1.0, 1.0)  # 非選択
+	
+	# ガチャボタンのテキストを更新
+	var single_cost = gacha_system.get_single_cost(type_id)
+	var multi_cost = gacha_system.get_multi_10_cost(type_id)
+	single_button.text = "1回引く\n%dG" % single_cost
+	multi_button.text = "10連\n%dG" % multi_cost
+	
+	result_label.text = "%s を選択中" % GACHA_NAMES[type_id]
 
 func _update_gold_display():
 	gold_label.text = "💰 " + str(GameData.player_data.profile.gold) + " G"
@@ -88,14 +155,6 @@ func _on_single_gacha():
 
 func _on_multi_gacha():
 	var result = gacha_system.pull_multi_10()
-	if result.success:
-		_show_gacha_result(result.cards)
-	else:
-		result_label.text = result.error
-	_update_gold_display()
-
-func _on_multi_100_gacha():
-	var result = gacha_system.pull_multi_100()
 	if result.success:
 		_show_gacha_result(result.cards)
 	else:

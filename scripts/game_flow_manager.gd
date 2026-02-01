@@ -470,6 +470,10 @@ func change_phase(new_phase: GamePhase):
 	emit_signal("phase_changed", current_phase)
 	update_ui()
 	
+	# 全てのインフォパネルを閉じる
+	if ui_manager:
+		ui_manager.close_all_info_panels()
+	
 	# カメラモード切り替え
 	_update_camera_mode(new_phase)
 
@@ -895,9 +899,9 @@ func _update_camera_mode(phase: GamePhase):
 		camera_ctrl.enable_follow_mode()
 		return
 	
-	# スペルフェーズと召喚フェーズ（TILE_ACTION）で手動モード
+	# ダイスロールとタイルアクションで手動モード
 	match phase:
-		GamePhase.TILE_ACTION:
+		GamePhase.DICE_ROLL, GamePhase.TILE_ACTION:
 			camera_ctrl.enable_manual_mode()
 		_:
 			camera_ctrl.enable_follow_mode()

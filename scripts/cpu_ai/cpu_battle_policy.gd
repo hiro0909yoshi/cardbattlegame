@@ -49,8 +49,16 @@ var protect_by_value_enabled: bool = false # 土地価値による判断を有�
 var protect_by_value_threshold: int = 200  # この通行料以上なら優先保護
 var protect_by_value_min_items: int = 2    # 低価値ドミニオはこの枚数以上ある場合のみアイテム使用
 
-# 召喚確率（属性不一致時）
-var summon_rate: float = -1.0  # -1.0ならGameConstants.CPU_SUMMON_RATEを使用
+# 召喚確率
+var summon_rate: float = -1.0  # 旧版（互換性のため残す）、-1.0ならGameConstants.CPU_SUMMON_RATEを使用
+var summon_rate_match: float = -1.0  # 属性一致時の召喚確率（-1.0なら1.0を使用）
+var summon_rate_mismatch: float = -1.0  # 属性不一致時の召喚確率（-1.0ならGameConstants.CPU_SUMMON_RATEを使用）
+
+# スペル/ミスティックアーツ使用確率（1.0 = 必ず使う、0.0 = 使わない）
+var spell_use_rate: float = 1.0
+
+# ドミニオコマンド使用確率（1.0 = 必ず使う、0.0 = 使わない）
+var dominio_use_rate: float = 1.0
 
 # =============================================================================
 # 初期化
@@ -93,9 +101,25 @@ func load_from_json(policy_data: Dictionary) -> void:
 				protect_by_value_threshold = int(pbv.get("threshold", 200))
 				protect_by_value_min_items = int(pbv.get("min_defense_items", 2))
 	
-	# 召喚確率
+	# 召喚確率（旧版との互換性）
 	if policy_data.has("summon_rate"):
 		summon_rate = float(policy_data["summon_rate"])
+	
+	# 召喚確率（属性一致時）
+	if policy_data.has("summon_rate_match"):
+		summon_rate_match = float(policy_data["summon_rate_match"])
+	
+	# 召喚確率（属性不一致時）
+	if policy_data.has("summon_rate_mismatch"):
+		summon_rate_mismatch = float(policy_data["summon_rate_mismatch"])
+	
+	# スペル使用確率
+	if policy_data.has("spell_use_rate"):
+		spell_use_rate = float(policy_data["spell_use_rate"])
+	
+	# ドミニオコマンド使用確率
+	if policy_data.has("dominio_use_rate"):
+		dominio_use_rate = float(policy_data["dominio_use_rate"])
 
 # =============================================================================
 # 抽選ロジック
@@ -332,8 +356,47 @@ func print_weights() -> void:
 	if summon_rate >= 0:
 		print("[CPUBattlePolicy] 召喚確率: %.1f" % summon_rate)
 
-## 召喚確率を取得（-1.0の場合はGameConstantsの値を使用）
+## 召喚確率を取得（旧版、互換性のため残す）
 func get_summon_rate() -> float:
 	if summon_rate >= 0:
 		return summon_rate
 	return GameConstantsScript.CPU_SUMMON_RATE
+
+## 属性一致時の召喚確率を取得
+func get_summon_rate_match() -> float:
+	if summon_rate_match >= 0:
+		return summon_rate_match
+	# 旧版summon_rateが設定されていればそれを使用（互換性）
+	if summon_rate >= 0:
+		return summon_rate
+	return 1.0  # デフォルトは必ず召喚
+
+## 属性不一致時の召喚確率を取得
+func get_summon_rate_mismatch() -> float:
+	if summon_rate_mismatch >= 0:
+		return summon_rate_mismatch
+	# 旧版summon_rateが設定されていればそれを使用（互換性）
+	if summon_rate >= 0:
+		return summon_rate
+	return GameConstantsScript.CPU_SUMMON_RATE
+
+## 召喚するか確率判定（属性一致/不一致を考慮）
+func should_summon(is_element_match: bool) -> bool:
+	var rate = get_summon_rate_match() if is_element_match else get_summon_rate_mismatch()
+	return randf() < rate
+
+## スペル使用確率を取得
+func get_spell_use_rate() -> float:
+	return spell_use_rate
+
+## スペルを使用するか確率判定
+func should_use_spell() -> bool:
+	return randf() < spell_use_rate
+
+## ドミニオコマンド使用確率を取得
+func get_dominio_use_rate() -> float:
+	return dominio_use_rate
+
+## ドミニオコマンドを使用するか確率判定
+func should_use_dominio() -> bool:
+	return randf() < dominio_use_rate

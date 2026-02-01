@@ -43,6 +43,35 @@
 		},
 		"summon_rate": 1.0
 	  }
+	},
+	"zako_1": {
+	  "name": "雑魚1",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "",
+	  "description": "雑魚敵1",
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "both_no_item": 1.0,
+		  "vs_enemy_item": 0.0,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 1.0,
+		  "always_protect": 0.0,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": false,
+			"threshold": 200,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.4,
+		"summon_rate_mismatch": 0.2,
+		"spell_use_rate": 0.5,
+		"dominio_use_rate": 0.0
+	  }
 	}
   }
 }

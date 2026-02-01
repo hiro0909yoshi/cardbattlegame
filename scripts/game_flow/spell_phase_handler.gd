@@ -345,6 +345,13 @@ func start_mystic_arts_phase():
 func _handle_cpu_spell_turn():
 	await get_tree().create_timer(0.5).timeout  # 思考時間
 	
+	# スペル使用確率判定（キャラクターポリシー）
+	var battle_policy = _get_cpu_battle_policy()
+	if battle_policy and not battle_policy.should_use_spell():
+		print("[CPU SpellPhase] スペル使用スキップ（確率判定: %.0f%%）" % (battle_policy.get_spell_use_rate() * 100))
+		pass_spell(false)
+		return
+	
 	# CPUSpellPhaseHandlerで判断
 	if not cpu_spell_phase_handler:
 		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
@@ -1566,3 +1573,14 @@ func _start_mystic_tap_target_selection(targets: Array):
 	)
 	
 	print("[SpellPhaseHandler] アルカナアーツタップターゲット選択開始: %d件" % valid_tile_indices.size())
+
+
+# =============================================================================
+# CPUバトルポリシー取得
+# =============================================================================
+
+## 現在のCPUのバトルポリシーを取得
+func _get_cpu_battle_policy():
+	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
+		return cpu_turn_processor.cpu_ai_handler.battle_policy
+	return null

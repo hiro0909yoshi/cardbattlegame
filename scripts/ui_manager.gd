@@ -217,13 +217,31 @@ func create_ui(parent: Node):
 	if player_status_dialog and player_status_dialog.has_method("initialize"):
 		player_status_dialog.initialize(ui_layer, player_system_ref, board_system_ref, player_info_panel, game_flow_manager_ref, card_system_ref)
 	
+	# インフォパネル用の専用レイヤーを作成（バトル画面より前面に表示）
+	var info_panel_layer = CanvasLayer.new()
+	info_panel_layer.name = "InfoPanelLayer"
+	info_panel_layer.layer = 85  # バトル準備画面(80)より上、バトル画面(90)より下
+	parent.add_child(info_panel_layer)
+	
 	# CreatureInfoPanelUI初期化
 	if creature_info_panel_ui:
 		creature_info_panel_ui.set_card_system(card_system_ref)
-		# UIレイヤーに移動
+		# インフォパネルレイヤーに移動
 		if creature_info_panel_ui.get_parent():
 			creature_info_panel_ui.get_parent().remove_child(creature_info_panel_ui)
-		ui_layer.add_child(creature_info_panel_ui)
+		info_panel_layer.add_child(creature_info_panel_ui)
+	
+	# SpellInfoPanelUIもインフォパネルレイヤーに移動
+	if spell_info_panel_ui:
+		if spell_info_panel_ui.get_parent():
+			spell_info_panel_ui.get_parent().remove_child(spell_info_panel_ui)
+		info_panel_layer.add_child(spell_info_panel_ui)
+	
+	# ItemInfoPanelUIもインフォパネルレイヤーに移動
+	if item_info_panel_ui:
+		if item_info_panel_ui.get_parent():
+			item_info_panel_ui.get_parent().remove_child(item_info_panel_ui)
+		info_panel_layer.add_child(item_info_panel_ui)
 	
 	# TapTargetManager初期化
 	tap_target_manager = TapTargetManager.new()
@@ -526,6 +544,15 @@ func update_hand_display(player_id: int):
 # create_card_node は HandDisplayに移行済みのため削除
 
 # rearrange_hand は HandDisplayに移行済みのため削除
+
+## 全てのインフォパネルを閉じる（フェーズ変更時に呼び出す）
+func close_all_info_panels():
+	if creature_info_panel_ui and creature_info_panel_ui.visible:
+		creature_info_panel_ui.hide_panel()
+	if spell_info_panel_ui and spell_info_panel_ui.visible:
+		spell_info_panel_ui.hide_panel()
+	if item_info_panel_ui and item_info_panel_ui.visible:
+		item_info_panel_ui.hide_panel()
 
 # デバッグ入力を処理
 func _input(event):

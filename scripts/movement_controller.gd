@@ -644,6 +644,10 @@ func _show_branch_tile_selection(choices: Array) -> int:
 	available_branches = choices
 	selected_branch_index = 0
 	
+	# カメラを手動モードに切り替え（分岐先を確認できるように）
+	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
+		game_flow_manager.board_system_3d.camera_controller.enable_manual_mode()
+	
 	_update_branch_selection_ui()
 	_update_branch_indicator()
 	_setup_branch_selection_navigation()
@@ -652,6 +656,10 @@ func _show_branch_tile_selection(choices: Array) -> int:
 	is_branch_selection_active = false
 	_clear_branch_selection_navigation()
 	_hide_branch_indicator()
+	
+	# カメラを追従モードに戻す
+	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
+		game_flow_manager.board_system_3d.camera_controller.enable_follow_mode()
 	
 	return result
 
@@ -696,7 +704,8 @@ func _update_branch_selection_ui():
 				choices_text += "[→タイル%d←] " % tile_num
 			else:
 				choices_text += " タイル%d " % tile_num
-		game_flow_manager.ui_manager.phase_label.text = "進む方向を選択: %s" % choices_text
+		var remaining_text = "（残り%dマス）" % _current_remaining_steps if _current_remaining_steps > 0 else ""
+		game_flow_manager.ui_manager.phase_label.text = "進む方向を選択: %s %s" % [choices_text, remaining_text]
 
 # 分岐選択インジケーターを更新
 func _update_branch_indicator():

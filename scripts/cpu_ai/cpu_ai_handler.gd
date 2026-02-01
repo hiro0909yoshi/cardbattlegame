@@ -173,12 +173,13 @@ func decide_summon(current_player, tile_element: String = "") -> void:
 		var card = card_system.get_card_data_for_player(current_player.id, card_index)
 		var card_element = card.get("element", "")
 		
-		# 属性一致なら必ず召喚、不一致なら確率で召喚
+		# 属性一致/不一致で召喚確率を判定
 		var is_element_match = (card_element == tile_element or tile_element == "neutral")
-		var summon_rate = _get_summon_rate()
+		var should_summon = _should_summon(is_element_match)
+		var summon_rate = _get_summon_rate_for_log(is_element_match)
 		print("[CPU AI] 召喚判定: card=%s, element=%s, tile=%s, match=%s, rate=%.2f" % [
 			card.get("name", "?"), card_element, tile_element, is_element_match, summon_rate])
-		if is_element_match or randf() < summon_rate:
+		if should_summon:
 			print("[CPU AI] 召喚: %s (属性: %s, タイル: %s)" % [card.get("name", "?"), card_element, tile_element])
 			decision_attempts = 0
 			emit_signal("summon_decided", card_index)
@@ -389,6 +390,13 @@ func decide_territory_command(current_player, tile_info: Dictionary, situation: 
 	
 	if territory_ai == null:
 		print("[CPU AI] territory_ai未初期化")
+		decision_attempts = 0
+		emit_signal("territory_command_decided", {})
+		return
+	
+	# ドミニオコマンド使用確率判定（キャラクターポリシー）
+	if battle_policy and not battle_policy.should_use_dominio():
+		print("[CPU AI] ドミニオコマンドスキップ（確率判定: %.0f%%）" % (battle_policy.get_dominio_use_rate() * 100))
 		decision_attempts = 0
 		emit_signal("territory_command_decided", {})
 		return
@@ -660,10 +668,29 @@ func get_enemy_items(enemy_player_id: int) -> Array:
 	return []
 
 
-## キャラクターポリシーから召喚確率を取得
+## キャラクターポリシーから召喚確率を取得（旧版、互換性のため残す）
 func _get_summon_rate() -> float:
-	# バトルポリシーから召喚確率を取得（設定されていればそれを使用）
 	if battle_policy and battle_policy.has_method("get_summon_rate"):
 		return battle_policy.get_summon_rate()
-	# デフォルトはGameConstantsの値
+	return GameConstants.CPU_SUMMON_RATE
+
+## 召喚するか確率判定（属性一致/不一致を考慮）
+func _should_summon(is_element_match: bool) -> bool:
+	if battle_policy and battle_policy.has_method("should_summon"):
+		return battle_policy.should_summon(is_element_match)
+	# デフォルト：属性一致なら必ず召喚、不一致なら90%
+	if is_element_match:
+		return true
+	return randf() < GameConstants.CPU_SUMMON_RATE
+
+## ログ用に召喚確率を取得
+func _get_summon_rate_for_log(is_element_match: bool) -> float:
+	if battle_policy:
+		if is_element_match:
+			return battle_policy.get_summon_rate_match()
+		else:
+			return battle_policy.get_summon_rate_mismatch()
+	# デフォルト
+	if is_element_match:
+		return 1.0
 	return GameConstants.CPU_SUMMON_RATE

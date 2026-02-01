@@ -5,7 +5,7 @@
   "map_id": "map_diamond_20",
 
   "rule_preset": "quick",
-  "max_turns": 50,
+  "max_turns": 40,
   "rule_overrides": {
 	"initial_magic": {"player": 200, "cpu": 200},
 	"win_conditions": {
@@ -19,7 +19,7 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "bowser",
+		"character_id": "zako_1",
 		"deck_id": "cpu_deck_1",
 		"ai_level": 3,
 		"start_tile": 0
