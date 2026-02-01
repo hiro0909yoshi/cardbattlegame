@@ -3,8 +3,10 @@ class_name PlayerSystem
 
 # プレイヤー管理システム - 3D専用版
 
+@warning_ignore("unused_signal")  # 旧版ダイス用、互換性のため残す
 signal dice_rolled(value: int)
-signal dice_rolled_double(value1: int, value2: int, total: int)  # 2個ダイス用
+@warning_ignore("unused_signal")  # 2個ダイス用
+signal dice_rolled_double(value1: int, value2: int, total: int)
 # TODO: 将来実装予定
 # signal magic_changed(player_id: int, new_value: int)
 @warning_ignore("unused_signal")  # GameSystemManagerで接続、将来のLapSystemから発行予定
@@ -109,7 +111,7 @@ func roll_dice_double() -> Dictionary:
 	if debug_controller and debug_controller.get_fixed_dice() > 0:
 		total = debug_controller.get_fixed_dice()
 		# 固定値の場合は適当に分配
-		dice1 = mini(total / 2, 5)
+		dice1 = mini(int(total / 2.0), 5)
 		dice2 = total - dice1
 		print("【デバッグ】固定ダイス: ", total)
 	else:
@@ -143,8 +145,8 @@ func roll_dice_triple() -> Dictionary:
 	if debug_controller and debug_controller.get_fixed_dice() > 0:
 		total = debug_controller.get_fixed_dice()
 		# 固定値の場合は適当に分配
-		dice1 = mini(total / 3, 5)
-		dice2 = mini((total - dice1) / 2, 6)
+		dice1 = mini(int(total / 3.0), 5)
+		dice2 = mini(int((total - dice1) / 2.0), 6)
 		dice3 = total - dice1 - dice2
 		print("【デバッグ】固定ダイス: ", total)
 	else:

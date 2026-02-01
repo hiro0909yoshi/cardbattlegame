@@ -148,10 +148,11 @@ func _create_stage_buttons(world_index: int):
 		
 		# スタイル設定
 		var style = StyleBoxFlat.new()
-		style.corner_radius_top_left = STAGE_BUTTON_SIZE / 2
-		style.corner_radius_top_right = STAGE_BUTTON_SIZE / 2
-		style.corner_radius_bottom_left = STAGE_BUTTON_SIZE / 2
-		style.corner_radius_bottom_right = STAGE_BUTTON_SIZE / 2
+		var corner_radius := int(STAGE_BUTTON_SIZE / 2.0)
+		style.corner_radius_top_left = corner_radius
+		style.corner_radius_top_right = corner_radius
+		style.corner_radius_bottom_left = corner_radius
+		style.corner_radius_bottom_right = corner_radius
 		
 		if not is_unlocked:
 			# ロック状態（グレー）

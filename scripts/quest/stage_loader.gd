@@ -391,6 +391,16 @@ func load_deck(deck_id: String) -> Dictionary:
 	if deck_id == "random":
 		return {}  # ランダムデッキは空を返す
 	
+	# CPUデッキ（cpu_deck_XX形式）の場合
+	if deck_id.begins_with("cpu_deck_"):
+		var cards = CpuDeckData.get_deck_cards_by_id(deck_id)
+		if cards.is_empty():
+			print("[StageLoader] CPUデッキが空（ランダム使用）: ", deck_id)
+			return {}
+		print("[StageLoader] CPUデッキ読み込み完了: ", deck_id, " (", cards.size(), "種類)")
+		return {"id": deck_id, "cards": cards}
+	
+	# 従来のJSONデッキの場合
 	var path = DECKS_PATH + "deck_" + deck_id + ".json"
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:

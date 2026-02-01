@@ -7,7 +7,7 @@
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-	"initial_magic": {"player": 1200, "cpu": 200},
+	"initial_magic": {"player": 200, "cpu": 200},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
@@ -20,7 +20,7 @@
 	"enemies": [
 	  {
 		"character_id": "bowser",
-		"deck_id": "skills_test",
+		"deck_id": "cpu_deck_1",
 		"ai_level": 3,
 		"start_tile": 0
 	  }

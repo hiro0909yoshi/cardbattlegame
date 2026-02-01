@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://d2settings"]
+[gd_scene load_steps=2 format=3 uid="uid://player_card_manager"]
 
-[ext_resource type="Script" path="res://scripts/settings.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/player_card_manager.gd" id="1_script"]
 
-[node name="Settings" type="Control"]
+[node name="PlayerCardManager" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,52 +30,48 @@ theme_override_constants/margin_bottom = 100
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 40
+theme_override_constants/separation = 50
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "設定"
+text = "プレイヤーカード管理"
 horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="TutorialButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="StatusLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "チュートリアル"
+theme_override_font_sizes/font_size = 40
+text = "所持カード: 0種類 / 合計0枚"
+horizontal_alignment = 1
 
-[node name="HelpButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="HSeparator2" type="HSeparator" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "説明"
 
-[node name="CpuDeckButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="AddAllButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 100)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "CPUデッキ編集"
+theme_override_font_sizes/font_size = 40
+text = "全カードを4枚ずつ追加"
 
-[node name="PlayerCardButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(400, 80)
+[node name="ResetButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(500, 100)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 36
-text = "プレイヤーカード管理"
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "所持カードをリセット"
 
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
 [node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(200, 60)
+custom_minimum_size = Vector2(200, 80)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 32
 text = "戻る"

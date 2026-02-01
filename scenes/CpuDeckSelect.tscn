@@ -1,0 +1,85 @@
+[gd_scene load_steps=2 format=3 uid="uid://cpu_deck_select"]
+
+[ext_resource type="Script" path="res://scripts/cpu_deck_select.gd" id="1_script"]
+
+[node name="CpuDeckSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.14, 0.18, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "CPUデッキ選択"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 64
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 30
+theme_override_constants/v_separation = 30
+columns = 5
+
+[node name="PageContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 50
+
+[node name="PrevButton" type="Button" parent="MarginContainer/VBoxContainer/PageContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "< 前へ"
+theme_override_font_sizes/font_size = 32
+
+[node name="PageLabel" type="Label" parent="MarginContainer/VBoxContainer/PageContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 0)
+text = "ページ 1 / 5"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="NextButton" type="Button" parent="MarginContainer/VBoxContainer/PageContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 80)
+text = "次へ >"
+theme_override_font_sizes/font_size = 32
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 100)
+size_flags_horizontal = 4
+text = "戻る"
+theme_override_font_sizes/font_size = 40

@@ -1,0 +1,200 @@
+[gd_scene load_steps=2 format=3 uid="uid://cpu_deck_editor"]
+
+[ext_resource type="Script" path="res://scripts/cpu_deck_editor.gd" id="1_script"]
+
+[node name="CpuDeckEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.14, 0.18, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="LeftPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 9.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
+text = "CPUデッキ編集"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 48
+
+[node name="Control" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="DeckButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "本"
+
+[node name="AllButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "全"
+
+[node name="NeutralButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "無"
+
+[node name="FireButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "火"
+
+[node name="WaterButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "水"
+
+[node name="EarthButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "地"
+
+[node name="WindButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "風"
+
+[node name="ItemButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "具"
+
+[node name="SpellButton" type="Button" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/Control/HBoxContainer"]
+custom_minimum_size = Vector2(50, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "魔"
+
+[node name="ContentHBox" type="HBoxContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="DeckScrollContainer" type="ScrollContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+horizontal_scroll_mode = 0
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer"]
+layout_mode = 2
+columns = 5
+
+[node name="InfoPanelContainer" type="Control" parent="MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox"]
+clip_contents = true
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="RightPanel" type="Control" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/RightPanel"]
+layout_mode = 0
+offset_right = 300.0
+offset_bottom = 800.0
+theme_override_constants/separation = 25
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 500
+
+[node name="CardCountLabel" type="Label" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "現在: 00 / 50枚"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SaveButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(280, 120)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "保存"
+
+[node name="RenameButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(280, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "名前変更"
+
+[node name="ResetButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(280, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "リセット"
+
+[node name="BackButton" type="Button" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(280, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "戻る"

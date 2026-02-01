@@ -7,6 +7,7 @@ class_name GameFlowManager
 signal phase_changed(new_phase: int)
 signal turn_started(player_id: int)
 signal turn_ended(player_id: int)
+@warning_ignore("unused_signal")  # 旧版ダイス用、互換性のため残す
 signal dice_rolled(value: int)
 
 # 定数をpreload
