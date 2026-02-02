@@ -316,15 +316,17 @@ func roll_dice():
 	
 	# ダイス結果を表示
 	if ui_manager and ui_manager.phase_display:
-		if needs_third:
+		# ダイス範囲呪いがある場合は特殊表示
+		if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
+			var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
+			ui_manager.phase_display.show_dice_result_range(range_info.get("name", ""), modified_dice)
+			print("[ダイス/%s] %d（範囲: %d〜%d）" % [range_info.get("name", ""), modified_dice, range_info.get("min", 1), range_info.get("max", 6)])
+		elif needs_third:
 			ui_manager.phase_display.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
+			print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
 		else:
 			ui_manager.phase_display.show_dice_result_double(dice1, dice2, modified_dice)
-	
-	if needs_third:
-		print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
-	else:
-		print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
+			print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
 	
 	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:

@@ -179,6 +179,25 @@ func get_multi_roll_count(player_id: int) -> int:
 		return curse.get("params", {}).get("count", 1)
 	return 1
 
+# ダイス範囲呪い（dice_range または dice_range_magic）があるか判定
+func has_dice_range_curse(player_id: int) -> bool:
+	var curse = spell_curse.get_player_curse(player_id)
+	var curse_type = curse.get("curse_type", "")
+	return curse_type == "dice_range" or curse_type == "dice_range_magic"
+
+# ダイス範囲呪いの情報を取得（表示用）
+func get_dice_range_info(player_id: int) -> Dictionary:
+	var curse = spell_curse.get_player_curse(player_id)
+	var curse_type = curse.get("curse_type", "")
+	if curse_type == "dice_range" or curse_type == "dice_range_magic":
+		var params = curse.get("params", {})
+		return {
+			"name": curse.get("name", ""),
+			"min": params.get("min", 1),
+			"max": params.get("max", 6)
+		}
+	return {}
+
 # ダイスロール後にEPを付与するか判定
 func should_grant_magic(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
