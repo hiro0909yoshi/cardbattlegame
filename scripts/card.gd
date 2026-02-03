@@ -478,8 +478,8 @@ func deselect_card():
 	position = original_position
 	scale = original_scale
 	
-	# グレーアウト状態の場合はグレー色を維持、そうでなければ元に戻す
-	if is_grayed_out:
+	# グレーアウト状態または制限理由がある場合はグレー色を維持
+	if is_grayed_out or restriction_reason != "":
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 	else:
 		modulate = Color(1.0, 1.0, 1.0)
