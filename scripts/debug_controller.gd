@@ -7,7 +7,6 @@ class_name DebugController
 signal debug_action(action: String, value: Variant)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # デバッグモード
 var enabled = true  # falseにすればデバッグ機能を完全無効化

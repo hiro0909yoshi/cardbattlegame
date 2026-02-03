@@ -8,7 +8,6 @@ class_name PlayerInfoPanel
 signal player_panel_clicked(player_id: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # パネル要素
 var panels = []           # Panel配列

@@ -10,7 +10,6 @@ signal terrain_changed(tile_index: int, old_element: String, new_element: String
 signal level_up_completed(tile_index: int, new_level: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # タイルシーン
 const TILE_SCENES = {

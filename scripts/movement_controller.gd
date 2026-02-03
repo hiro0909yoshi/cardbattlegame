@@ -11,7 +11,6 @@ signal warp_executed(player_id: int, from_tile: int, to_tile: int)
 signal start_passed(player_id: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # 移動設定
 const MOVE_DURATION = 0.1  # 1マスの移動時間

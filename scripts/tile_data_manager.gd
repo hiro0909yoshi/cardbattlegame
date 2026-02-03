@@ -5,7 +5,6 @@ class_name TileDataManager
 # タイル情報の取得・更新・計算処理を担当
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # タイルノード管理
 var tile_nodes = {}  # tile_index -> BaseTile

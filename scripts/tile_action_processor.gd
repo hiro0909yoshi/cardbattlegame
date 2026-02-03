@@ -8,7 +8,6 @@ signal action_completed()
 signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 # TileHelper はグローバルclass_nameとして定義済み
 
 # システム参照

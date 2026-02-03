@@ -12,7 +12,6 @@ signal checkpoint_passed(player_id: int, bonus: int)
 signal special_action_completed()
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # システム参照
 var board_system

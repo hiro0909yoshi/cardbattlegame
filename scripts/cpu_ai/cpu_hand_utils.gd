@@ -4,7 +4,6 @@ class_name CPUHandUtils
 # 手札の取得、コスト計算、敵手札参照などを担当
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # システム参照
 var card_system: CardSystem

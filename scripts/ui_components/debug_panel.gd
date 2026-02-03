@@ -7,7 +7,6 @@ class_name DebugPanel
 signal debug_mode_changed(enabled: bool)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # UI要素
 var debug_panel: Panel = null

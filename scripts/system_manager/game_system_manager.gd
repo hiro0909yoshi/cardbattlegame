@@ -6,7 +6,6 @@ class_name GameSystemManager
 # 6フェーズ初期化により、複雑な初期化プロセスを明確化
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const SpellCurseTollClass = preload("res://scripts/spells/spell_curse_toll.gd")
 const SpellCostModifierClass = preload("res://scripts/spells/spell_cost_modifier.gd")
 

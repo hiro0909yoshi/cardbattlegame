@@ -5,7 +5,6 @@ class_name CPUBattleAI
 # 合体判断はCPUMergeEvaluatorに委譲
 
 # 定数・共通クラスをpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 
 # 共有コンテキスト

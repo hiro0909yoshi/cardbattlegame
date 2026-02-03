@@ -11,7 +11,6 @@ signal turn_ended(player_id: int)
 signal dice_rolled(value: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
 const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 

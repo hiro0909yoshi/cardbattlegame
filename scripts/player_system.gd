@@ -13,7 +13,6 @@ signal dice_rolled_double(value1: int, value2: int, total: int)
 signal player_won(player_id: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # プレイヤーデータ
 class PlayerData:

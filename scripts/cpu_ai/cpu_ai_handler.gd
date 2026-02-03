@@ -10,7 +10,6 @@ signal level_up_decided(do_upgrade: bool)
 signal territory_command_decided(command: Dictionary)
 
 # 定数・共通クラスをpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUAIConstantsScript = preload("res://scripts/cpu_ai/cpu_ai_constants.gd")
 const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")

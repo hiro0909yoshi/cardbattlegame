@@ -8,7 +8,6 @@ signal level_selected(target_level: int, cost: int)
 signal selection_cancelled()
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # UI要素
 var level_up_panel: Panel = null

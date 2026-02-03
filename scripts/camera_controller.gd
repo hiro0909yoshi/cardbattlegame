@@ -39,7 +39,6 @@ signal empty_tapped()  # タイル外をタップした時
 @export var tap_threshold: float = 10.0
 
 ## カメラオフセット（GameConstantsから参照）
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # ========================================
 # 状態

@@ -5,7 +5,6 @@ class_name LapSystem
 ## ゲーム内の周回状態、チェックポイント通過、周回完了ボーナスを管理
 ## 破壊カウンターも含む
 
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 ## シグナル
 signal lap_completed(player_id: int)

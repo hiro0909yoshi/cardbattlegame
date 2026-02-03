@@ -5,7 +5,6 @@ class_name BattlePreparation
 # BattleParticipantの作成と各処理の委譲を担当
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 const PenetrationSkill = preload("res://scripts/battle/skills/skill_penetration.gd")
 const SkillSpecialCreatureScript = preload("res://scripts/battle/skills/skill_special_creature.gd")

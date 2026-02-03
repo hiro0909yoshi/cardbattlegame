@@ -5,7 +5,6 @@ class_name TileInfoDisplay
 # 通行料、HP、STを切り替えて表示
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # 表示モード
 enum DisplayMode {

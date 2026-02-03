@@ -2,7 +2,6 @@
 extends Node
 class_name DominioCommandHandler
 
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 ## シグナル
 signal dominio_command_opened()

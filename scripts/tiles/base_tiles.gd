@@ -2,7 +2,6 @@ extends Node3D
 class_name BaseTile
 
 # 定数参照
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 # 静的参照（全タイル共通）
 static var creature_manager: CreatureManager = null

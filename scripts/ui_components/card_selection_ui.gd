@@ -471,11 +471,11 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 				return ""  # フェーズ不一致はアイコンなし
 	
 	# EP不足チェック
-	var cost = card_data.get("cost", 0)
-	if typeof(cost) == TYPE_DICTIONARY:
-		cost = cost.get("ep", 0)
+	var card_cost = card_data.get("cost", 0)
+	if typeof(card_cost) == TYPE_DICTIONARY:
+		card_cost = card_cost.get("ep", 0)
 	
-	if cost > available_magic:
+	if card_cost > available_magic:
 		# フェーズに合ったカードタイプの場合のみ
 		if filter_mode == "spell" and card_type == "spell":
 			return "ep"
@@ -1246,9 +1246,9 @@ func _get_lands_required_array(card_data: Dictionary) -> Array:
 			return lands
 		return []
 	# 正規化されていない場合、元のcostフィールドもチェック
-	var cost = card_data.get("cost", {})
-	if typeof(cost) == TYPE_DICTIONARY:
-		var lands = cost.get("lands_required", [])
+	var cost_dict = card_data.get("cost", {})
+	if typeof(cost_dict) == TYPE_DICTIONARY:
+		var lands = cost_dict.get("lands_required", [])
 		if typeof(lands) == TYPE_ARRAY:
 			return lands
 	return []

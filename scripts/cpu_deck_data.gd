@@ -25,7 +25,7 @@ func save_to_file() -> bool:
 	# 保存用にカード名を追加したデータを作成
 	var save_decks = []
 	for deck in decks:
-		var save_deck = {
+		var deck_data = {
 			"name": deck.get("name", ""),
 			"cards": {}
 		}
@@ -35,8 +35,8 @@ func save_to_file() -> bool:
 			var card_name = _get_card_name(card_id)
 			# "ID // カード名": 枚数 の形式で保存
 			var key_with_name = "%d // %s" % [card_id, card_name]
-			save_deck["cards"][key_with_name] = count
-		save_decks.append(save_deck)
+			deck_data["cards"][key_with_name] = count
+		save_decks.append(deck_data)
 	
 	var save_data = {
 		"version": 1,

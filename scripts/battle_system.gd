@@ -7,7 +7,6 @@ class_name BattleSystem
 signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 const TransformSkill = preload("res://scripts/battle/skills/skill_transform.gd")
 var _skill_item_return = preload("res://scripts/battle/skills/skill_item_return.gd")
 

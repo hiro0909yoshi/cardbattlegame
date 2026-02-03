@@ -2,7 +2,6 @@
 extends Node
 class_name SpellPhaseHandler
 
-const GameConstants = preload("res://scripts/game_constants.gd")
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
 

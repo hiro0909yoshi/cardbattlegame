@@ -4,7 +4,6 @@ class_name StageLoader
 # ステージ読み込み・マップ生成クラス
 # JSONからステージデータを読み込み、動的にマップを生成する
 
-const GameConstants = preload("res://scripts/game_constants.gd")
 
 signal stage_loaded(stage_data: Dictionary)
 signal map_generated()
