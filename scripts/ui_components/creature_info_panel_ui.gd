@@ -363,4 +363,25 @@ func _on_back_action():
 		hide_panel()
 		selection_cancelled.emit()
 	else:
-		hide_panel()
+		# 閲覧モードの場合、特殊フェーズ中はボタンをクリアしない
+		var is_dominio_active = false
+		var is_arcana_active = false
+		if ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
+			var gfm = ui_manager_ref.game_flow_manager_ref
+			# ドミニオコマンド中
+			if gfm.dominio_command_handler:
+				var dominio = gfm.dominio_command_handler
+				if dominio.current_state != dominio.State.CLOSED:
+					is_dominio_active = true
+			# アルカナアーツ中
+			if gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
+				if gfm.spell_phase_handler.spell_mystic_arts.is_active():
+					is_arcana_active = true
+		
+		var clear_buttons = not (is_dominio_active or is_arcana_active)
+		hide_panel(clear_buttons)
+		
+		# ドミニオコマンド中はナビゲーションを再設定
+		if is_dominio_active and ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
+			var dominio = ui_manager_ref.game_flow_manager_ref.dominio_command_handler
+			dominio._restore_navigation()

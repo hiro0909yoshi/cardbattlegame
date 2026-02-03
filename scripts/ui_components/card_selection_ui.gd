@@ -709,12 +709,6 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# 他のパネルを閉じる
-	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
-		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
-		ui_manager_ref.item_info_panel_ui.hide_panel()
-	
 	# カードノードから制限理由を取得
 	var restriction_reason = _get_card_restriction_reason(card_index)
 	
@@ -724,6 +718,14 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		confirm_data["hand_index"] = card_index
 		_on_creature_panel_confirmed(confirm_data)
 		return
+	
+	# 他のパネルを閉じる（ボタンはクリアしない）
+	if ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+		ui_manager_ref.item_info_panel_ui.hide_panel(false)
 	
 	pending_card_index = card_index
 	
@@ -755,6 +757,10 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		confirmation_text = "犠牲にしますか？"
 	
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text, restriction_reason)
+	
+	# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
+	if selection_mode in ["summon", "battle"]:
+		ui_manager_ref.show_dominio_order_button()
 
 
 # スペル情報パネルを表示
@@ -1035,6 +1041,10 @@ func _on_creature_panel_cancelled():
 	
 	# グローバルボタンを再登録
 	_register_back_button_for_current_mode()
+	
+	# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
+	if selection_mode in ["summon", "battle"] and ui_manager_ref:
+		ui_manager_ref.show_dominio_order_button()
 
 
 # 現在のモードに応じたグローバル戻るボタンを登録
@@ -1125,6 +1135,23 @@ func _on_pass_button_pressed():
 	
 	# インフォパネルが開いていた場合は閉じてナビゲーションを復元
 	if info_panel_was_open:
+		# ドミニオコマンド中またはアルカナアーツ中かどうか確認
+		var is_special_phase_active = false
+		if game_flow_manager_ref:
+			# ドミニオコマンド中
+			if game_flow_manager_ref.dominio_command_handler:
+				var dominio = game_flow_manager_ref.dominio_command_handler
+				if dominio.current_state != dominio.State.CLOSED:
+					is_special_phase_active = true
+			# アルカナアーツ中
+			if game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.spell_mystic_arts:
+				if game_flow_manager_ref.spell_phase_handler.spell_mystic_arts.is_active():
+					is_special_phase_active = true
+		
+		# 特殊フェーズ中は何もしない（各フェーズ側でナビゲーション管理）
+		if is_special_phase_active:
+			return
+		
 		# スペルフェーズとアイテムフェーズは専用のナビゲーション設定
 		if selection_mode == "spell":
 			_setup_spell_phase_back_button()

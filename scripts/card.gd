@@ -518,6 +518,15 @@ func _is_handler_card_selection_active() -> bool:
 	return false
 
 # アルカナアーツ選択フェーズ中かどうかを判定
+# ドミニオコマンド中かどうか
+func _is_dominio_command_active() -> bool:
+	var gfm = _get_game_flow_manager()
+	if not gfm or not gfm.dominio_command_handler:
+		return false
+	var dominio = gfm.dominio_command_handler
+	return dominio.current_state != dominio.State.CLOSED
+
+
 # アルカナアーツ効果適用中のカード選択（ルーンアデプト等）は許可する
 func _is_mystic_selection_phase() -> bool:
 	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
@@ -568,45 +577,76 @@ func _show_info_panel_only():
 	if not ui_manager:
 		return
 	
-	# 他のインフォパネルを先に閉じる（ボタンもクリア）
-	# 使用可能カードの選択状態を解除するため、hide_panel(true)で閉じる
+	# ドミニオコマンド中またはアルカナアーツ中かどうか先に確認
+	var gfm = null
+	if "game_flow_manager_ref" in ui_manager:
+		gfm = ui_manager.game_flow_manager_ref
+	
+	var is_special_phase_active = false
+	var is_summon_or_battle_phase = false
+	if gfm:
+		# ドミニオコマンド中
+		if gfm.dominio_command_handler:
+			var dominio = gfm.dominio_command_handler
+			if dominio.current_state != dominio.State.CLOSED:
+				is_special_phase_active = true
+		# アルカナアーツ中
+		if gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
+			if gfm.spell_phase_handler.spell_mystic_arts.is_active():
+				is_special_phase_active = true
+	
+	# 召喚/バトルフェーズ中かどうか（ドミニオボタンを維持するため）
+	if ui_manager.card_selection_ui:
+		var mode = ui_manager.card_selection_ui.selection_mode
+		if mode in ["summon", "battle"]:
+			is_summon_or_battle_phase = true
+	
+	# 他のインフォパネルを先に閉じる
+	# 特殊フェーズ中または召喚/バトルフェーズ中はボタンをクリアしない
+	var clear_buttons = not (is_special_phase_active or is_summon_or_battle_phase)
 	var any_panel_closed = false
 	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
-		ui_manager.creature_info_panel_ui.hide_panel(true)
+		ui_manager.creature_info_panel_ui.hide_panel(clear_buttons)
 		any_panel_closed = true
 	if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
-		ui_manager.spell_info_panel_ui.hide_panel(true)
+		ui_manager.spell_info_panel_ui.hide_panel(clear_buttons)
 		any_panel_closed = true
 	if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
-		ui_manager.item_info_panel_ui.hide_panel(true)
+		ui_manager.item_info_panel_ui.hide_panel(clear_buttons)
 		any_panel_closed = true
 	
-	# インフォパネルが開いていなかった場合でも、確認ボタン（チェック）をクリア
-	if not any_panel_closed:
+	# 特殊フェーズ中でなく、インフォパネルが開いていなかった場合、確認ボタンをクリア
+	if not is_special_phase_active and not any_panel_closed:
 		ui_manager.clear_confirm_action()
 	
 	# 選択中のカードがあれば選択解除
 	if currently_selected_card and currently_selected_card != self:
 		currently_selected_card.deselect_card()
 	
-	# カード選択UIのバックボタンを再登録し、フェーズコメントを復元
-	if ui_manager.card_selection_ui:
+	# 特殊フェーズ中でない場合のみ、カード選択UIの状態を復元
+	if not is_special_phase_active and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui._register_back_button_for_current_mode()
 		ui_manager.card_selection_ui.restore_phase_comment()
 	
 	var card_type = card_data.get("type", "")
 	
-	# 閲覧モードで表示（ボタン登録なし）
+	# 閲覧モードで表示
+	# 特殊フェーズ中は×ボタンで閉じるを登録（setup_buttons=true）
+	var setup_buttons = is_special_phase_active
 	match card_type:
 		"creature":
 			if ui_manager.creature_info_panel_ui:
-				ui_manager.creature_info_panel_ui.show_view_mode(card_data, -1, false)
+				ui_manager.creature_info_panel_ui.show_view_mode(card_data, -1, setup_buttons)
 		"spell":
 			if ui_manager.spell_info_panel_ui:
-				ui_manager.spell_info_panel_ui.show_view_mode(card_data)
+				ui_manager.spell_info_panel_ui.show_view_mode(card_data, setup_buttons)
 		"item":
 			if ui_manager.item_info_panel_ui:
-				ui_manager.item_info_panel_ui.show_view_mode(card_data)
+				ui_manager.item_info_panel_ui.show_view_mode(card_data, setup_buttons)
+	
+	# 召喚/バトルフェーズ中はドミニオボタンを再表示
+	if is_summon_or_battle_phase:
+		ui_manager.show_dominio_order_button()
 
 # UIManagerを再帰的に探す
 func find_ui_manager_recursive(node: Node) -> Node:
@@ -637,6 +677,13 @@ func _input(event):
 	if _is_mystic_selection_phase():
 		#print("[Card] アルカナアーツ選択フェーズ中のためスキップ")
 		return
+	
+	# ドミニオコマンド中はインフォパネル表示のみ許可
+	if _is_dominio_command_active() and mouse_over and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_show_info_panel_only()
+			get_viewport().set_input_as_handled()
+			return
 	
 	# カード選択モード時のクリック処理（グレーアウト時もインフォパネル表示のみ許可）
 	if (is_selectable or is_grayed_out) and mouse_over and event is InputEventMouseButton:

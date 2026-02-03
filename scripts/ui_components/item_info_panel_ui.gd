@@ -86,8 +86,9 @@ func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_rea
 			)
 
 
-## 閲覧モードで表示（ボタン登録なし）
-func show_view_mode(item_data: Dictionary):
+## 閲覧モードで表示
+## setup_buttons=trueの場合は×ボタンで「閉じる」を登録
+func show_view_mode(item_data: Dictionary, setup_buttons: bool = false):
 	current_item_data = item_data
 	current_hand_index = -1
 	is_info_only_mode = true
@@ -96,7 +97,10 @@ func show_view_mode(item_data: Dictionary):
 	
 	visible = true
 	is_visible_panel = true
-	# ボタンは登録しない（既存のボタン状態を維持）
+	
+	# ボタン登録（オプション）
+	if setup_buttons and ui_manager_ref:
+		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
 
 
 ## パネルを閉じる
