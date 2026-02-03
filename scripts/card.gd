@@ -11,6 +11,10 @@ var mouse_over = false
 var card_index = -1
 var is_selectable = false
 var is_selected = false
+var is_grayed_out = false  # グレーアウト状態（選択不可だがインフォパネルは表示可能）
+var restriction_label: Label = null  # 制限理由表示用ラベル（🚫）
+var restriction_e_label: Label = null  # EP不足用ラベル（E）
+var restriction_reason: String = ""  # 制限理由（"ep", "restriction", ""）
 var original_position: Vector2
 var original_size: Vector2
 var original_scale: Vector2 = Vector2(1.0, 1.0)
@@ -40,6 +44,9 @@ func _ready():
 	# サイズ変更時に子要素を調整
 	resized.connect(_on_resized)
 	_adjust_children_size()
+	
+	# 制限理由ラベルを作成
+	_create_restriction_label()
 
 # サイズ変更時の処理
 func _on_resized():
@@ -51,6 +58,78 @@ func _adjust_children_size():
 	# フォントサイズはシーンファイルのデフォルト値を使用
 	# 必要に応じて将来的に調整可能
 	pass
+
+
+# 制限理由ラベルを作成（2つのラベルを重ねて表示）
+func _create_restriction_label():
+	if restriction_label:
+		return
+	
+	# コンテナを作成（カード中央に配置）
+	var container = Control.new()
+	container.name = "RestrictionContainer"
+	container.set_anchors_preset(Control.PRESET_CENTER)
+	container.size = Vector2(150, 150)
+	container.position = Vector2(-75, -75)  # 中央配置
+	container.z_index = 10
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(container)
+	
+	# 背景の「E」ラベル（白色、大きめ）
+	restriction_e_label = Label.new()
+	restriction_e_label.name = "RestrictionELabel"
+	restriction_e_label.text = "E"
+	restriction_e_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restriction_e_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	restriction_e_label.add_theme_font_size_override("font_size", 150)
+	restriction_e_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))  # 白色
+	restriction_e_label.add_theme_constant_override("outline_size", 8)
+	restriction_e_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+	restriction_e_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	restriction_e_label.visible = false
+	container.add_child(restriction_e_label)
+	
+	# 前面の「🚫」ラベル（赤色）
+	restriction_label = Label.new()
+	restriction_label.name = "RestrictionLabel"
+	restriction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restriction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	restriction_label.add_theme_font_size_override("font_size", 150)
+	restriction_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))  # 赤色
+	restriction_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	restriction_label.visible = false
+	container.add_child(restriction_label)
+
+
+# 制限理由を設定
+# reason: "ep"（EP不足/土地条件）, "restriction"（配置制限/呪い等）, ""（制限なし）
+func set_restriction_reason(reason: String):
+	print("[Card] set_restriction_reason called: reason=%s" % reason)
+	restriction_reason = reason
+	_update_restriction_display()
+
+
+# 制限理由の表示を更新
+func _update_restriction_display():
+	if not restriction_label:
+		_create_restriction_label()
+	
+	match restriction_reason:
+		"ep":
+			# EP不足 / 土地条件未達 - 「E」と「🚫」を重ねて表示
+			restriction_e_label.visible = true
+			restriction_label.text = "🚫"
+			restriction_label.visible = true
+		"restriction":
+			# 配置制限 / スペル不可呪い等 - 「🚫」のみ
+			restriction_e_label.visible = false
+			restriction_label.text = "🚫"
+			restriction_label.visible = true
+		_:
+			# 制限なし
+			restriction_e_label.visible = false
+			restriction_label.text = ""
+			restriction_label.visible = false
 
 func _on_mouse_entered():
 	mouse_over = true
@@ -398,8 +477,11 @@ func deselect_card():
 	position = original_position
 	scale = original_scale
 	
-	# 色を元に戻す
-	modulate = Color(1.0, 1.0, 1.0)
+	# グレーアウト状態の場合はグレー色を維持、そうでなければ元に戻す
+	if is_grayed_out:
+		modulate = Color(0.5, 0.5, 0.5, 1.0)
+	else:
+		modulate = Color(1.0, 1.0, 1.0)
 
 # スペルフェーズがアクティブかどうかを判定
 func _is_spell_phase_active() -> bool:
@@ -478,6 +560,52 @@ func on_card_confirmed():
 		else:
 			print("WARNING: UIManagerが見つかりません")
 
+# グレーアウト時のインフォパネル表示（使用不可）
+# グレーアウトカードのインフォパネル表示（閲覧専用）
+func _show_info_panel_only():
+	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
+	if not ui_manager:
+		return
+	
+	# 他のインフォパネルを先に閉じる（ボタンもクリア）
+	# 使用可能カードの選択状態を解除するため、hide_panel(true)で閉じる
+	var any_panel_closed = false
+	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
+		ui_manager.creature_info_panel_ui.hide_panel(true)
+		any_panel_closed = true
+	if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
+		ui_manager.spell_info_panel_ui.hide_panel(true)
+		any_panel_closed = true
+	if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
+		ui_manager.item_info_panel_ui.hide_panel(true)
+		any_panel_closed = true
+	
+	# インフォパネルが開いていなかった場合でも、確認ボタン（チェック）をクリア
+	if not any_panel_closed:
+		ui_manager.clear_confirm_action()
+	
+	# 選択中のカードがあれば選択解除
+	if currently_selected_card and currently_selected_card != self:
+		currently_selected_card.deselect_card()
+	
+	# カード選択UIのバックボタンを再登録
+	if ui_manager.card_selection_ui:
+		ui_manager.card_selection_ui._register_back_button_for_current_mode()
+	
+	var card_type = card_data.get("type", "")
+	
+	# 閲覧モードで表示（ボタン登録なし）
+	match card_type:
+		"creature":
+			if ui_manager.creature_info_panel_ui:
+				ui_manager.creature_info_panel_ui.show_view_mode(card_data, -1, false)
+		"spell":
+			if ui_manager.spell_info_panel_ui:
+				ui_manager.spell_info_panel_ui.show_view_mode(card_data)
+		"item":
+			if ui_manager.item_info_panel_ui:
+				ui_manager.item_info_panel_ui.show_view_mode(card_data)
+
 # UIManagerを再帰的に探す
 func find_ui_manager_recursive(node: Node) -> Node:
 	if node.name == "UIManager":
@@ -508,9 +636,16 @@ func _input(event):
 		#print("[Card] アルカナアーツ選択フェーズ中のためスキップ")
 		return
 	
-	# カード選択モード時のクリック処理
-	if is_selectable and mouse_over and event is InputEventMouseButton:
+	# カード選択モード時のクリック処理（グレーアウト時もインフォパネル表示のみ許可）
+	if (is_selectable or is_grayed_out) and mouse_over and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			# グレーアウト時はインフォパネル表示のみ（使用不可）
+			if is_grayed_out:
+				# 他のカードの選択状態は維持したまま、インフォパネルだけ表示
+				_show_info_panel_only()
+				get_viewport().set_input_as_handled()
+				return
+			
 			if not is_selected:
 				# 1回目のクリック
 				# 他のカードの選択を解除（親ノードの全子要素をチェック）

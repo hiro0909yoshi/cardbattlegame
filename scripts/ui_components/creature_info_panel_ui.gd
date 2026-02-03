@@ -35,8 +35,10 @@ var ui_manager_ref = null
 # 状態
 var is_visible_panel: bool = false
 var is_selection_mode: bool = false
+var is_info_only_mode: bool = false  # 閲覧専用モード（キャンセルシグナル発行しない）
 var current_creature_data: Dictionary = {}
 var current_tile_index: int = -1
+var current_hand_index: int = -1
 var current_confirmation_text: String = ""
 
 # 参照
@@ -64,6 +66,7 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 	current_creature_data = creature_data
 	current_tile_index = tile_index
 	is_selection_mode = false
+	is_info_only_mode = false
 	
 	_update_display()
 	
@@ -77,34 +80,63 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 
 
 ## 選択モードで表示（召喚/バトル時）
-func show_selection_mode(creature_data: Dictionary, confirmation_text: String = "召喚しますか？"):
+## restriction_reason: ""=制限なし, "ep"=EP不足/土地条件, "restriction"=配置制限等
+func show_selection_mode(creature_data: Dictionary, confirmation_text: String = "召喚しますか？", restriction_reason: String = ""):
 	current_creature_data = creature_data
 	current_confirmation_text = confirmation_text
 	is_selection_mode = true
+	is_info_only_mode = false
 	
 	_update_display()
 	
 	visible = true
 	is_visible_panel = true
 	
-	# グローバルボタン設定（選択モード：決定と戻る）
-	if ui_manager_ref:
-		var confirm_btn_text = "召喚"
-		if "バトル" in confirmation_text:
-			confirm_btn_text = "バトル"
-		elif "侵略" in confirmation_text:
-			confirm_btn_text = "侵略"
-		elif "交換" in confirmation_text:
-			confirm_btn_text = "交換"
-		ui_manager_ref.register_global_actions(_on_confirm_action, _on_back_action, confirm_btn_text, "戻る")
+	# 制限理由に応じてコメントとボタンを変更
+	var creature_name = creature_data.get("name", "クリーチャー")
+	
+	if restriction_reason == "ep":
+		# EP不足/土地条件
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%s：EP不足または土地条件未達" % creature_name, "right")
+		# 戻るボタンのみ
+		if ui_manager_ref:
+			ui_manager_ref.register_back_action(_on_back_action, "戻る")
+	elif restriction_reason == "restriction":
+		# 配置制限等
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % creature_name, "right")
+		# 戻るボタンのみ
+		if ui_manager_ref:
+			ui_manager_ref.register_back_action(_on_back_action, "戻る")
+	else:
+		# 制限なし - 通常の確認
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%sを%s" % [creature_name, confirmation_text], "right")
+		
+		# グローバルボタン設定（選択モード：決定と戻る）
+		if ui_manager_ref:
+			var confirm_btn_text = "召喚"
+			if "バトル" in confirmation_text:
+				confirm_btn_text = "バトル"
+			elif "侵略" in confirmation_text:
+				confirm_btn_text = "侵略"
+			elif "交換" in confirmation_text:
+				confirm_btn_text = "交換"
+			ui_manager_ref.register_global_actions(_on_confirm_action, _on_back_action, confirm_btn_text, "戻る")
 
 
 ## パネルを閉じる
 func hide_panel(clear_buttons: bool = true):
 	visible = false
 	is_visible_panel = false
+	is_info_only_mode = false  # フラグをリセット
 	current_creature_data = {}
 	current_tile_index = -1
+	
+	# 選択モードの場合はアクション指示を消す
+	if is_selection_mode and ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.hide_action_prompt()
 	
 	if clear_buttons and ui_manager_ref:
 		ui_manager_ref.clear_global_actions()

@@ -126,7 +126,6 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		# === プレイヤー呪い系 ===
 		"player_curse":
-			var target_player_id = target_data.get("player_id", handler.current_player_id)
 			if gfm and gfm.spell_curse:
 				var curse_type = effect.get("curse_type", "")
 				var duration = effect.get("duration", -1)
@@ -138,7 +137,15 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				for key in ["ignore_item_restriction", "ignore_summon_condition", "spell_protection"]:
 					if effect.has(key):
 						params[key] = effect.get(key)
-				gfm.spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
+				
+				# all_playersの場合は全プレイヤーに呪いをかける
+				if effect.get("all_players", false) or target_data.get("type") == "all_players":
+					var player_count = gfm.player_system.players.size() if gfm.player_system else 2
+					for pid in range(player_count):
+						gfm.spell_curse.curse_player(pid, curse_type, duration, params, handler.current_player_id)
+				else:
+					var target_player_id = target_data.get("player_id", handler.current_player_id)
+					gfm.spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
 		
 		# === コスト修飾系 ===
 		"life_force_curse":

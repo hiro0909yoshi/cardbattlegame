@@ -12,6 +12,8 @@ var current_dice_label: Label = null
 var action_prompt_panel: PanelContainer = null
 var action_prompt_label: Label = null
 var action_prompt_layer: CanvasLayer = null
+var action_prompt_center_container: CenterContainer = null  # 中央配置用
+var action_prompt_right_container: Control = null  # 右側配置用
 
 # 親UIレイヤー
 var ui_layer: Node = null
@@ -241,13 +243,18 @@ func _create_action_prompt_ui():
 	action_prompt_layer.layer = 50
 	ui_layer.get_parent().add_child(action_prompt_layer)
 	
-	# パネルコンテナ（文字数に応じて自動サイズ、中央配置）
-	# CenterContainerで囲むことで確実に中央配置
-	var center_container = CenterContainer.new()
-	center_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	center_container.offset_top = 50
-	center_container.offset_bottom = 150
-	action_prompt_layer.add_child(center_container)
+	# 中央配置用コンテナ
+	action_prompt_center_container = CenterContainer.new()
+	action_prompt_center_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	action_prompt_center_container.offset_top = 50
+	action_prompt_center_container.offset_bottom = 150
+	action_prompt_layer.add_child(action_prompt_center_container)
+	
+	# 右側配置用コンテナ（FULL_RECTで配置し、子の位置は動的に計算）
+	action_prompt_right_container = Control.new()
+	action_prompt_right_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	action_prompt_right_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	action_prompt_layer.add_child(action_prompt_right_container)
 	
 	action_prompt_panel = PanelContainer.new()
 	action_prompt_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -275,23 +282,55 @@ func _create_action_prompt_ui():
 	action_prompt_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	
 	action_prompt_panel.add_child(action_prompt_label)
-	center_container.add_child(action_prompt_panel)
+	# 初期は中央コンテナに配置
+	action_prompt_center_container.add_child(action_prompt_panel)
 	
 	# 初期状態は非表示
 	action_prompt_panel.visible = false
 
 ## アクション指示を表示
-func show_action_prompt(message: String):
+## position: "center"（デフォルト）または "right"
+func show_action_prompt(message: String, position: String = "center"):
 	_create_action_prompt_ui()
 	
 	if action_prompt_label:
 		action_prompt_label.text = message
+	
+	# パネルを適切なコンテナに移動
 	if action_prompt_panel:
+		var current_parent = action_prompt_panel.get_parent()
+		var target_parent = action_prompt_center_container if position == "center" else action_prompt_right_container
+		
+		if current_parent != target_parent:
+			current_parent.remove_child(action_prompt_panel)
+			target_parent.add_child(action_prompt_panel)
+		
+		# 右側配置の場合は位置を動的に計算
+		if position == "right":
+			# call_deferredで次フレームに位置調整
+			call_deferred("_position_panel_right")
+		
 		action_prompt_panel.visible = true
 	
-	# フェーズラベルは薄く
-	if phase_label:
+	# フェーズラベルは薄く（中央表示時のみ）
+	if phase_label and position == "center":
 		phase_label.modulate.a = 0.1
+
+
+## パネルを右側に配置（インフォパネル表示時用：画面幅の3/4位置を中心）
+func _position_panel_right():
+	if not action_prompt_panel or not action_prompt_panel.is_inside_tree():
+		return
+	
+	var viewport_size = action_prompt_panel.get_viewport().get_visible_rect().size
+	
+	# 画面幅の3/4の位置を中心にする
+	var center_x = viewport_size.x * 0.75
+	var panel_size = action_prompt_panel.size
+	var panel_x = center_x - panel_size.x / 2
+	var panel_y = 230  # 上からのマージン
+	
+	action_prompt_panel.position = Vector2(panel_x, panel_y)
 
 ## アクション指示を非表示
 func hide_action_prompt():

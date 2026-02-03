@@ -27,6 +27,7 @@ var ui_manager_ref = null
 
 # 状態
 var is_visible_panel: bool = false
+var is_info_only_mode: bool = false  # 閲覧専用モード（キャンセルシグナル発行しない）
 var current_spell_data: Dictionary = {}
 var current_hand_index: int = -1
 
@@ -44,27 +45,68 @@ func set_ui_manager(manager) -> void:
 
 
 ## スペル情報パネルを表示（使用確認モード）
-func show_spell_info(spell_data: Dictionary, hand_index: int = -1):
+## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=呪い等
+func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_reason: String = ""):
 	current_spell_data = spell_data
 	current_hand_index = hand_index
+	is_info_only_mode = false
 	
 	_update_display()
 	
 	visible = true
 	is_visible_panel = true
 	
-	# グローバルボタン設定（決定と戻る）
-	if ui_manager_ref:
-		ui_manager_ref.enable_navigation(
-			func(): _on_confirm_action(),  # 決定: 使用
-			func(): _on_back_action()      # 戻る: キャンセル
-		)
+	var spell_name = spell_data.get("name", "スペル")
+	
+	if restriction_reason == "ep":
+		# EP不足
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%s：EP不足" % spell_name, "right")
+		# 戻るボタンのみ
+		if ui_manager_ref:
+			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
+	elif restriction_reason == "restriction":
+		# スペル不可呪い等
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % spell_name, "right")
+		# 戻るボタンのみ
+		if ui_manager_ref:
+			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
+	else:
+		# 制限なし - 通常の確認
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt("%sを使用しますか？" % spell_name, "right")
+		
+		# グローバルボタン設定（決定と戻る）
+		if ui_manager_ref:
+			ui_manager_ref.enable_navigation(
+				func(): _on_confirm_action(),  # 決定: 使用
+				func(): _on_back_action()      # 戻る: キャンセル
+			)
+
+
+## 閲覧モードで表示（ボタン登録なし）
+func show_view_mode(spell_data: Dictionary):
+	current_spell_data = spell_data
+	current_hand_index = -1
+	is_info_only_mode = true
+	
+	_update_display()
+	
+	visible = true
+	is_visible_panel = true
+	# ボタンは登録しない（既存のボタン状態を維持）
 
 
 ## パネルを閉じる
 func hide_panel(clear_buttons: bool = true):
+	# 使用確認モードの場合はアクション指示を消す
+	if not is_info_only_mode and ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.hide_action_prompt()
+	
 	visible = false
 	is_visible_panel = false
+	is_info_only_mode = false  # フラグをリセット
 	current_spell_data = {}
 	current_hand_index = -1
 	

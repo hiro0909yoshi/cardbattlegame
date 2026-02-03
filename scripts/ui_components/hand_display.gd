@@ -81,6 +81,19 @@ func update_hand_display(player_id: int):
 	# 手札更新シグナルを発火（ボタン位置更新用）
 	hand_updated.emit()
 
+
+## カードインデックスからカードノードを取得
+func get_card_node(card_index: int, player_id: int = 0) -> Node:
+	if player_id not in player_card_nodes:
+		return null
+	
+	var card_nodes = player_card_nodes[player_id]
+	for card_node in card_nodes:
+		if is_instance_valid(card_node) and card_node.card_index == card_index:
+			return card_node
+	return null
+
+
 ## カードノードを生成
 func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Node:
 	if not is_instance_valid(hand_container):

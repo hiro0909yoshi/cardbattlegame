@@ -260,8 +260,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			# カードを選択可能/不可にする
 			if card_node.has_method("set_selectable") and is_selectable:
 				card_node.set_selectable(true, i)
+				card_node.is_grayed_out = false
 			elif card_node.has_method("set_selectable"):
 				card_node.set_selectable(false, -1)
+				# グレーアウト状態でもインフォパネル表示のためにインデックスは設定
+				card_node.card_index = i
+				card_node.is_grayed_out = true
 			
 				# グレーアウト処理を適用
 			# 犠牲/捨て札モードは最優先で全カード選択可能（ただし除外カードはグレーアウト）
@@ -403,6 +407,14 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# デフォルト: グレーアウトなし
 				card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			
+			# 制限理由を設定（選択可能なカードも含む）
+			if card_node.has_method("set_restriction_reason"):
+				var reason = _get_restriction_reason(card_data, card_type, filter_mode, player_id, available_magic)
+				print("[CardSelectionUI] set_restriction_reason: card=%s, type=%s, filter=%s, reason=%s, is_selectable=%s" % [card_data.get("name", ""), card_type, filter_mode, reason, is_selectable])
+				card_node.set_restriction_reason(reason)
+			else:
+				print("[CardSelectionUI] card_node does not have set_restriction_reason method")
+			
 			# 捨て札モードでは全て選択可能、それ以外はコストチェック
 			if selection_mode == "discard":
 				add_card_highlight(card_node, card_data, 999999, is_selectable)  # 全て選択可能
@@ -442,6 +454,95 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 		highlight.color = Color(1, 1, 0, 0.3)
 	
 	card_node.add_child(highlight)
+
+
+# 制限理由を判定（選択可能でも制限がある場合はアイコン表示）
+# 戻り値: "ep"（EP不足/土地条件）, "restriction"（配置制限/呪い等）, ""（制限なし）
+func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mode: String, player_id: int, available_magic: int) -> String:
+	# フェーズで使えないカード（タイプ不一致）は制限アイコンなし（グレーアウトのみ）
+	match filter_mode:
+		"spell":
+			if card_type != "spell":
+				return ""  # フェーズ不一致はアイコンなし
+		"spell_disabled":
+			pass  # 後でチェック
+		"item", "item_or_assist":
+			if card_type != "item":
+				var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+				if "アイテムクリーチャー" not in keywords:
+					# 援護対象の場合もアイコンなし
+					if filter_mode == "item_or_assist" and card_type == "creature":
+						pass  # 援護対象は後でチェック
+					else:
+						return ""  # フェーズ不一致はアイコンなし
+		"battle":
+			if card_type != "creature":
+				return ""  # フェーズ不一致はアイコンなし
+		"":
+			if card_type != "creature":
+				return ""  # フェーズ不一致はアイコンなし
+	
+	# EP不足チェック
+	var cost = card_data.get("cost", 0)
+	if typeof(cost) == TYPE_DICTIONARY:
+		cost = cost.get("ep", 0)
+	
+	if cost > available_magic:
+		# フェーズに合ったカードタイプの場合のみ
+		if filter_mode == "spell" and card_type == "spell":
+			print("[_get_restriction_reason] spell EP shortage -> ep")
+			return "ep"
+		if filter_mode in ["item", "item_or_assist"] and card_type == "item":
+			print("[_get_restriction_reason] item EP shortage -> ep")
+			return "ep"
+		if filter_mode in ["", "battle"] and card_type == "creature":
+			print("[_get_restriction_reason] creature EP shortage -> ep")
+			return "ep"
+	
+	# クリーチャーカードの場合、土地条件/配置制限をチェック
+	if card_type == "creature" and filter_mode in ["", "battle"]:
+		# 土地条件未達
+		if not _check_lands_required(card_data, player_id):
+			print("[_get_restriction_reason] creature, lands_required failed -> ep")
+			return "ep"
+		
+		# 配置制限
+		if not _check_cannot_summon(card_data, player_id):
+			print("[_get_restriction_reason] creature, cannot_summon failed -> restriction")
+			return "restriction"
+		
+		# 防御型クリーチャー（バトルフェーズ）
+		if filter_mode == "battle":
+			var creature_type = card_data.get("creature_type", "normal")
+			if creature_type == "defensive":
+				print("[_get_restriction_reason] battle phase, defensive creature -> restriction")
+				return "restriction"
+	
+	# スペル不可呪い
+	if filter_mode == "spell_disabled" and card_type == "spell":
+		print("[_get_restriction_reason] spell_disabled curse -> restriction")
+		return "restriction"
+	
+	# ブロックされたアイテムタイプ
+	if card_type == "item" and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+		var item_type = card_data.get("item_type", "")
+		if item_type in ui_manager_ref.blocked_item_types:
+			print("[_get_restriction_reason] blocked item type -> restriction")
+			return "restriction"
+	
+	return ""
+
+
+# カードインデックスから制限理由を取得
+func _get_card_restriction_reason(card_index: int) -> String:
+	if not ui_manager_ref or not ui_manager_ref.hand_display:
+		return ""
+	
+	var card_node = ui_manager_ref.hand_display.get_card_node(card_index)
+	if card_node and "restriction_reason" in card_node:
+		return card_node.restriction_reason
+	return ""
+
 
 # パスボタンを作成
 func create_pass_button(_hand_count: int):
@@ -624,8 +725,11 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
 		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
-	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
-	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+	# カードノードから制限理由を取得
+	var restriction_reason = _get_card_restriction_reason(card_index)
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_creature_panel_confirmed(confirm_data)
@@ -660,7 +764,7 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 	elif selection_mode == "sacrifice":
 		confirmation_text = "犠牲にしますか？"
 	
-	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
+	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text, restriction_reason)
 
 
 # スペル情報パネルを表示
@@ -676,8 +780,11 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
 		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
-	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
-	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+	# カードノードから制限理由を取得
+	var restriction_reason = _get_card_restriction_reason(card_index)
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
+	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_spell_panel_confirmed(confirm_data)
@@ -691,7 +798,7 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 		ui_manager_ref.spell_info_panel_ui.selection_cancelled.connect(_on_spell_panel_cancelled)
 	
 	# スペル情報パネルを表示
-	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index)
+	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index, restriction_reason)
 
 
 # スペル情報パネルで確認された
@@ -743,8 +850,11 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
 		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
 	
-	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
-	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+	# カードノードから制限理由を取得
+	var restriction_reason = _get_card_restriction_reason(card_index)
+	
+	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
+	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_visible_panel and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_item_panel_confirmed(confirm_data)
@@ -758,7 +868,7 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 		ui_manager_ref.item_info_panel_ui.selection_cancelled.connect(_on_item_panel_cancelled)
 	
 	# アイテム情報パネルを表示
-	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index)
+	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index, restriction_reason)
 	
 	# インフォパネル表示シグナル発火
 	emit_signal("card_info_shown", card_index)
@@ -980,6 +1090,24 @@ func _get_card_data_for_index(card_index: int) -> Dictionary:
 
 # パスボタンが押された
 func _on_pass_button_pressed():
+	# 開いているインフォパネルがあれば閉じるだけ（パスしない）
+	var info_panel_was_open = false
+	if ui_manager_ref:
+		if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+			ui_manager_ref.creature_info_panel_ui.hide_panel(false)
+			info_panel_was_open = true
+		if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
+			ui_manager_ref.spell_info_panel_ui.hide_panel(false)
+			info_panel_was_open = true
+		if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+			ui_manager_ref.item_info_panel_ui.hide_panel(false)
+			info_panel_was_open = true
+	
+	# インフォパネルが開いていた場合は閉じてバックボタンを再登録
+	if info_panel_was_open:
+		_register_back_button_for_current_mode()
+		return
+	
 	if is_active:
 		# 交換/移動モードの場合はアクションメニューに戻る
 		if selection_mode in ["swap", "move"]:
