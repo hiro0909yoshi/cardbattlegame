@@ -117,13 +117,25 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 		# グローバルボタン設定（選択モード：決定と戻る）
 		if ui_manager_ref:
 			var confirm_btn_text = "召喚"
+			var is_discard_mode = false
 			if "バトル" in confirmation_text:
 				confirm_btn_text = "バトル"
 			elif "侵略" in confirmation_text:
 				confirm_btn_text = "侵略"
 			elif "交換" in confirmation_text:
 				confirm_btn_text = "交換"
-			ui_manager_ref.register_global_actions(_on_confirm_action, _on_back_action, confirm_btn_text, "戻る")
+			elif "捨て" in confirmation_text:
+				confirm_btn_text = "捨てる"
+				is_discard_mode = true
+			elif "犠牲" in confirmation_text:
+				confirm_btn_text = "犠牲"
+			
+			# 捨て札モードは戻るボタンなし（強制）
+			if is_discard_mode:
+				ui_manager_ref.register_confirm_action(_on_confirm_action, confirm_btn_text)
+				ui_manager_ref.register_back_action(_on_back_action, "閉じる")
+			else:
+				ui_manager_ref.register_global_actions(_on_confirm_action, _on_back_action, confirm_btn_text, "戻る")
 
 
 ## パネルを閉じる

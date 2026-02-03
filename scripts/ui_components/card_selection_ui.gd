@@ -258,17 +258,6 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					if not _check_cannot_summon(card_data, player_id):
 						is_selectable = false
 			
-			# カードを選択可能/不可にする
-			if card_node.has_method("set_selectable") and is_selectable:
-				card_node.set_selectable(true, i)
-				card_node.is_grayed_out = false
-			elif card_node.has_method("set_selectable"):
-				card_node.set_selectable(false, -1)
-				# グレーアウト状態でもインフォパネル表示のためにインデックスは設定
-				card_node.card_index = i
-				card_node.is_grayed_out = true
-			
-				# グレーアウト処理を適用
 			# 犠牲/捨て札モードは最優先で全カード選択可能（ただし除外カードはグレーアウト）
 			if selection_mode == "sacrifice" or selection_mode == "discard":
 				var is_excluded = false
@@ -277,136 +266,137 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						is_excluded = true
 					if ui_manager_ref.excluded_card_id != "" and card_data.get("id", "") == ui_manager_ref.excluded_card_id:
 						is_excluded = true
-				if is_excluded:
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
+				
+				# 除外カード以外は全て選択可能
+				if not is_excluded:
+					card_node.set_selectable(true, i)
+					card_node.is_grayed_out = false
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "disabled":
-				# disabledモード: すべてグレーアウト
-				card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-			elif filter_mode == "battle":
-				# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達 + 配置制限をグレーアウト
-				if card_type != "creature":
-					# アイテム・スペルなどはグレーアウト
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				else:
-					var creature_type = card_data.get("creature_type", "normal")
-					if creature_type == "defensive":
+					card_node.set_selectable(false, -1)
+					card_node.card_index = i
+					card_node.is_grayed_out = true
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+			else:
+				# 通常モード: カードを選択可能/不可にする
+				if card_node.has_method("set_selectable") and is_selectable:
+					card_node.set_selectable(true, i)
+					card_node.is_grayed_out = false
+				elif card_node.has_method("set_selectable"):
+					card_node.set_selectable(false, -1)
+					card_node.card_index = i
+					card_node.is_grayed_out = true
+				
+				# グレーアウト処理
+				if filter_mode == "disabled":
+					# disabledモード: すべてグレーアウト
+					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+				elif filter_mode == "battle":
+					# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達 + 配置制限をグレーアウト
+					if card_type != "creature":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-					elif not _check_lands_required(card_data, player_id):
-						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-					elif not _check_cannot_summon(card_data, player_id):
+					else:
+						var creature_type = card_data.get("creature_type", "normal")
+						if creature_type == "defensive":
+							card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+						elif not _check_lands_required(card_data, player_id):
+							card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+						elif not _check_cannot_summon(card_data, player_id):
+							card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+						else:
+							card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "spell":
+					# スペルフェーズ中: スペルカード以外をグレーアウト
+					if card_type != "spell":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "spell":
-				# スペルフェーズ中: スペルカード以外をグレーアウト
-				if card_type != "spell":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "spell_disabled":
-				# スペル不可呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
-				if card_type == "spell":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "item":
-				# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト
-				var should_gray = true
-				if card_type == "item":
-					should_gray = false
-				elif card_type == "creature":
-					# アイテムクリーチャー判定
-					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-					if "アイテムクリーチャー" in keywords:
+				elif filter_mode == "spell_disabled":
+					# スペル不可呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
+					if card_type == "spell":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "item":
+					# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト
+					var should_gray = true
+					if card_type == "item":
 						should_gray = false
-				# ブロックされたアイテムタイプもグレーアウト
-				if not should_gray and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
-					var item_type = card_data.get("item_type", "")
-					if item_type in ui_manager_ref.blocked_item_types:
-						should_gray = true
-				if should_gray:
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "item_or_assist":
-				# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャー以外をグレーアウト
-				var should_gray_out = true
-				
-				if card_type == "item":
-					should_gray_out = false
-					# ブロックされたアイテムタイプをチェック
-					if ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+					elif card_type == "creature":
+						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+						if "アイテムクリーチャー" in keywords:
+							should_gray = false
+					if not should_gray and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
 						var item_type = card_data.get("item_type", "")
 						if item_type in ui_manager_ref.blocked_item_types:
-							should_gray_out = true
-				elif card_type == "creature":
-					# アイテムクリーチャー判定
-					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-					if "アイテムクリーチャー" in keywords:
-						should_gray_out = false
+							should_gray = true
+					if should_gray:
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
-						# 援護対象判定
-						var assist_elements = []
-						if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
-							assist_elements = ui_manager_ref.assist_target_elements
-						
-						var card_element = card_data.get("element", "")
-						if ("all" in assist_elements) or (card_element in assist_elements):
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "item_or_assist":
+					# アイテムフェーズ（援護あり）
+					var should_gray_out = true
+					if card_type == "item":
+						should_gray_out = false
+						if ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+							var item_type = card_data.get("item_type", "")
+							if item_type in ui_manager_ref.blocked_item_types:
+								should_gray_out = true
+					elif card_type == "creature":
+						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
+						if "アイテムクリーチャー" in keywords:
 							should_gray_out = false
-				
-				if should_gray_out:
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+						else:
+							var assist_elements = []
+							if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
+								assist_elements = ui_manager_ref.assist_target_elements
+							var card_element = card_data.get("element", "")
+							if ("all" in assist_elements) or (card_element in assist_elements):
+								should_gray_out = false
+					if should_gray_out:
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "destroy_item_spell":
+					if card_type == "creature":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "item_or_spell":
+					if card_type == "creature":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "destroy_any":
+					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "destroy_spell":
+					if card_type != "spell":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "single_target_spell":
+					if card_type != "spell" or card_data.get("spell_type") != "単体対象":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "creature":
+					if card_type != "creature":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
+				elif filter_mode == "":
+					# 通常フェーズ（召喚等）
+					if card_type == "spell" or card_type == "item":
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					elif card_type == "creature" and not _check_lands_required(card_data, player_id):
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					elif card_type == "creature" and not _check_cannot_summon(card_data, player_id):
+						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
+					else:
+						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "destroy_item_spell":
-				# シャッター用: クリーチャーをグレーアウト
-				if card_type == "creature":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "item_or_spell":
-				# メタモルフォシス用: クリーチャーをグレーアウト
-				if card_type == "creature":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "destroy_any":
-				# スクイーズ用: グレーアウトなし
-				card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "destroy_spell":
-				# セフト用: スペル以外をグレーアウト
-				if card_type != "spell":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "single_target_spell":
-				# ルーンアデプトアルカナアーツ用: 単体対象スペル以外をグレーアウト
-				if card_type != "spell" or card_data.get("spell_type") != "単体対象":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "creature":
-				# レムレースアルカナアーツ用: クリーチャー以外をグレーアウト
-				if card_type != "creature":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			elif filter_mode == "":
-				# 通常フェーズ（召喚等）: スペルカードとアイテムカードをグレーアウト
-				# + 土地条件未達/配置制限のクリーチャーもグレーアウト
-				if card_type == "spell" or card_type == "item":
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				elif card_type == "creature" and not _check_lands_required(card_data, player_id):
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				elif card_type == "creature" and not _check_cannot_summon(card_data, player_id):
-					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
-				else:
-					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			else:
-				# デフォルト: グレーアウトなし
-				card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			
 			# 制限理由を設定（選択可能なカードも含む）
 			if card_node.has_method("set_restriction_reason"):
@@ -678,22 +668,20 @@ func on_card_selected(card_index: int):
 	
 	# クリーチャー情報パネルを使用するか判定
 	# 召喚/交換/犠牲モードでクリーチャーカードの場合
-	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap", "sacrifice"]:
+	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap", "sacrifice", "discard"]:
 		if card_data.get("type") == "creature":
-			print("[CardSelectionUI] showing creature_info_panel for sacrifice/summon/swap")
+			print("[CardSelectionUI] showing creature_info_panel for sacrifice/summon/swap/discard")
 			_show_creature_info_panel(card_index, card_data)
 			emit_signal("card_info_shown", card_index)
 			return
 	
-	# 犠牲モードでスペル/アイテムカードの場合も確認パネル表示
-	if selection_mode == "sacrifice":
+	# 犠牲/捨て札モードでスペル/アイテムカードの場合も確認パネル表示
+	if selection_mode in ["sacrifice", "discard"]:
 		var card_type = card_data.get("type", "")
 		if card_type == "spell":
-			print("[CardSelectionUI] showing spell_info_panel for sacrifice")
 			_show_spell_info_panel(card_index, card_data)
 			return
 		elif card_type == "item":
-			print("[CardSelectionUI] showing item_info_panel for sacrifice")
 			_show_item_info_panel(card_index, card_data)
 			return
 	
@@ -755,6 +743,8 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		confirmation_text = "このクリーチャーに交換しますか？"
 	elif selection_mode == "sacrifice":
 		confirmation_text = "犠牲にしますか？"
+	elif selection_mode == "discard":
+		confirmation_text = "このカードを捨てますか？"
 	
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text, restriction_reason)
 	
@@ -794,7 +784,7 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 		ui_manager_ref.spell_info_panel_ui.selection_cancelled.connect(_on_spell_panel_cancelled)
 	
 	# スペル情報パネルを表示
-	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index, restriction_reason)
+	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index, restriction_reason, selection_mode)
 
 
 # スペル情報パネルで確認された
@@ -864,7 +854,7 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 		ui_manager_ref.item_info_panel_ui.selection_cancelled.connect(_on_item_panel_cancelled)
 	
 	# アイテム情報パネルを表示
-	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index, restriction_reason)
+	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index, restriction_reason, selection_mode)
 	
 	# インフォパネル表示シグナル発火
 	emit_signal("card_info_shown", card_index)
@@ -1050,6 +1040,14 @@ func _on_creature_panel_cancelled():
 # 現在のモードに応じたグローバル戻るボタンを登録
 func _register_back_button_for_current_mode():
 	if not ui_manager_ref:
+		return
+	
+	# 捨て札モードは戻るボタンなし（強制）
+	if selection_mode == "discard":
+		ui_manager_ref.clear_back_action()
+		# 入力ロック解除（カード選択は継続）
+		if game_flow_manager_ref:
+			game_flow_manager_ref.unlock_input()
 		return
 	
 	var back_text = "パス"

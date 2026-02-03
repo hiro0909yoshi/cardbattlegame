@@ -498,11 +498,11 @@ func _is_item_phase_active() -> bool:
 		return true
 	return false
 
-# 犠牲選択モードがアクティブかどうかを判定
+# 犠牲選択モードまたは捨て札モードがアクティブかどうかを判定
 func _is_sacrifice_mode_active() -> bool:
 	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
 	if ui_manager and ui_manager.card_selection_ui:
-		return ui_manager.card_selection_ui.selection_mode == "sacrifice"
+		return ui_manager.card_selection_ui.selection_mode in ["sacrifice", "discard"]
 	return false
 
 # カード選択ハンドラーによる手札選択がアクティブかどうかを判定

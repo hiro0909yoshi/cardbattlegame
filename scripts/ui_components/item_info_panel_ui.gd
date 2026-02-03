@@ -47,7 +47,8 @@ func set_ui_manager(manager) -> void:
 
 ## アイテム情報パネルを表示（使用確認モード）
 ## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=ブロック等
-func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_reason: String = ""):
+## current_selection_mode: 選択モード（item, sacrifice, discard等）
+func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_reason: String = "", current_selection_mode: String = "item"):
 	current_item_data = item_data
 	current_hand_index = hand_index
 	is_info_only_mode = false
@@ -75,15 +76,31 @@ func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_rea
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	else:
 		# 制限なし - 通常の確認
-		if ui_manager_ref and ui_manager_ref.phase_display:
-			ui_manager_ref.phase_display.show_action_prompt("%sを使用しますか？" % item_name, "right")
+		var prompt_message = "%sを使用しますか？" % item_name
+		var confirm_text = "使用"
+		var is_discard_mode = false
+		if current_selection_mode == "discard":
+			prompt_message = "%sを捨てますか？" % item_name
+			confirm_text = "捨てる"
+			is_discard_mode = true
+		elif current_selection_mode == "sacrifice":
+			prompt_message = "%sを犠牲にしますか？" % item_name
+			confirm_text = "犠牲"
 		
-		# グローバルボタン設定（決定と戻る）
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_action_prompt(prompt_message, "right")
+		
+		# グローバルボタン設定
 		if ui_manager_ref:
-			ui_manager_ref.enable_navigation(
-				func(): _on_confirm_action(),  # 決定: 使用
-				func(): _on_back_action()      # 戻る: キャンセル
-			)
+			if is_discard_mode:
+				# 捨て札モードは戻るボタンなし（強制）、閉じるのみ
+				ui_manager_ref.register_confirm_action(func(): _on_confirm_action(), confirm_text)
+				ui_manager_ref.register_back_action(func(): _on_back_action(), "閉じる")
+			else:
+				ui_manager_ref.enable_navigation(
+					func(): _on_confirm_action(),  # 決定: 使用/犠牲
+					func(): _on_back_action()      # 戻る: キャンセル
+				)
 
 
 ## 閲覧モードで表示
