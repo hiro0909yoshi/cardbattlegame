@@ -106,15 +106,18 @@ static func update_land_selection_ui(handler):
 		return
 	
 	if handler.player_owned_lands.is_empty():
-		handler.ui_manager.phase_label.text = "所有している土地がありません"
+		if handler.ui_manager.phase_display:
+			handler.ui_manager.phase_display.show_toast("所有している土地がありません")
 		return
 	
-	var text = "土地を選択: [↑↓で切替]\n"
-	text += "土地 " + str(handler.current_land_selection_index + 1) + "/" + str(handler.player_owned_lands.size()) + ": "
-	text += "タイル" + str(handler.selected_tile_index) + "\n"
-	text += "[Enter: 次へ] [C: 閉じる]"
+	var text = "土地を選択: タイル%d (%d/%d)" % [
+		handler.selected_tile_index,
+		handler.current_land_selection_index + 1,
+		handler.player_owned_lands.size()
+	]
 	
-	handler.ui_manager.phase_label.text = text
+	if handler.ui_manager.phase_display:
+		handler.ui_manager.phase_display.show_action_prompt(text)
 
 
 ## チュートリアルのターゲット制限をチェック

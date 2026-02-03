@@ -86,31 +86,35 @@ func update_phase_label(current_player, mode: String):
 	if not phase_label_ref:
 		return
 	
+	# アクション指示パネルで表示
+	var message = ""
 	match mode:
 		"summon":
-			phase_label_ref.text = "召喚するクリーチャーを選択 (EP: " + str(current_player.magic_power) + "EP)"
+			message = "召喚するクリーチャーを選択"
 		"battle":
-			phase_label_ref.text = "バトルするクリーチャーを選択（またはパスで通行料）"
-		"invasion":
-			phase_label_ref.text = "無防備な土地！侵略するクリーチャーを選択（またはパスで通行料）"
+			message = "バトルするクリーチャーを選択、または×でパス"
 		"discard":
 			var hand_size = card_system_ref.get_hand_size_for_player(current_player.id)
 			var cards_to_discard = hand_size - 6
-			phase_label_ref.text = "手札を6枚まで減らしてください（" + str(cards_to_discard) + "枚捨てる）"
+			message = "手札を6枚まで減らしてください（%d枚捨てる）" % cards_to_discard
 		"spell":
-			phase_label_ref.text = "スペルを選択してください (EP: " + str(current_player.magic_power) + "EP)"
+			message = "スペルを選択してください"
 		"item":
-			# 援護スキルの有無でメッセージを変更
 			if ui_manager_ref and ui_manager_ref.card_selection_filter == "item_or_assist":
-				phase_label_ref.text = "アイテムまたは援護クリーチャーを選択 (EP: " + str(current_player.magic_power) + "EP)"
+				message = "アイテムまたは援護クリーチャーを選択"
 			else:
-				phase_label_ref.text = "アイテムを選択してください (EP: " + str(current_player.magic_power) + "EP)"
+				message = "アイテムを選択、または×でバトル開始"
 		"sacrifice":
-			phase_label_ref.text = "犠牲にするカードを選択"
+			message = "犠牲にするカードを選択"
 		"spell_borrow":
-			phase_label_ref.text = "使用するスペルを選択してください"
+			message = "使用するスペルを選択してください"
 		_:
-			phase_label_ref.text = "カードを選択してください"
+			message = "カードを選択してください"
+	
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.show_action_prompt(message)
+	else:
+		phase_label_ref.text = message
 
 # カード選択を有効化
 func enable_card_selection(hand_data: Array, available_magic: int, player_id: int = 0):
@@ -453,8 +457,6 @@ func create_pass_button(_hand_count: int):
 				back_text = "召喚しない"
 			"battle":
 				back_text = "バトルしない"
-			"invasion":
-				back_text = "侵略しない"
 			"spell":
 				back_text = "スペルを使わない"
 			"item":
@@ -494,9 +496,9 @@ func hide_selection():
 	# ボタンをクリア
 	cleanup_buttons()
 	
-	# フェーズラベルを元に戻す
-	if phase_label_ref:
-		phase_label_ref.text = "アクション選択"
+	# アクション指示パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.hide_action_prompt()
 
 # カード選択を無効化
 func disable_card_selection():
@@ -535,6 +537,10 @@ func _confirm_card_selection(card_index: int):
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.lock_input()
+	
+	# アクション指示パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.hide_action_prompt()
 	
 	hide_selection()
 	emit_signal("card_selected", card_index)
@@ -649,8 +655,6 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 	var confirmation_text = "召喚しますか？"
 	if selection_mode == "battle":
 		confirmation_text = "このクリーチャーで戦いますか？"
-	elif selection_mode == "invasion":
-		confirmation_text = "侵略しますか？"
 	elif selection_mode == "swap":
 		confirmation_text = "このクリーチャーに交換しますか？"
 	elif selection_mode == "sacrifice":
@@ -944,8 +948,6 @@ func _register_back_button_for_current_mode():
 			back_text = "召喚しない"
 		"battle":
 			back_text = "バトルしない"
-		"invasion":
-			back_text = "侵略しない"
 		"spell":
 			back_text = "スペルを使わない"
 		"item":

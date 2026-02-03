@@ -616,11 +616,11 @@ func clear_card_selection_filter():
 
 # 土地選択モードを表示
 func show_land_selection_mode(_owned_lands: Array):
-	if phase_label:
-		var land_list = ""
-		for i in range(_owned_lands.size()):
-			land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
-		phase_label.text = "土地を選択（数字キー） " + land_list
+	var land_list = ""
+	for i in range(_owned_lands.size()):
+		land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
+	if phase_display:
+		phase_display.show_action_prompt("土地を選択（数字キー） " + land_list)
 	
 	# キャンセルボタンはdominio_command_handler側で登録するためここでは呼ばない
 	# show_cancel_button()

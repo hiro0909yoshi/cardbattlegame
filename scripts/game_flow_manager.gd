@@ -667,6 +667,10 @@ func prompt_discard_card():
 	
 	# UIを閉じる
 	ui_manager.hide_card_selection_ui()
+	
+	# アクション指示を非表示
+	if ui_manager.phase_display:
+		ui_manager.phase_display.hide_action_prompt()
 
 # === 敵地判定・通行料支払い ===
 

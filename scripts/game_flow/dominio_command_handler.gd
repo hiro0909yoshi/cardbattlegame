@@ -101,8 +101,8 @@ func open_dominio_order(player_id: int):
 	player_owned_lands = LandSelectionHelper.get_player_owned_lands(board_system, player_id)
 	
 	if player_owned_lands.is_empty():
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "所有地がありません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("所有地がありません")
 		return
 	
 	# ドミニオボタンを非表示（ドミニオコマンド中は表示しない）

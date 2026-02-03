@@ -273,8 +273,8 @@ func _start_type_selection_draw(player_id: int) -> void:
 		spell_and_mystic_ui.set_ui_manager(ui_manager_ref)
 		ui_manager_ref.add_child(spell_and_mystic_ui)
 	
-	if ui_manager_ref.phase_label:
-		ui_manager_ref.phase_label.text = "引くカードのタイプを選択してください"
+	if ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.show_action_prompt("引くカードのタイプを選択してください")
 	
 	spell_and_mystic_ui.show_type_selection()
 	
@@ -290,11 +290,11 @@ func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node) ->
 	var result = draw_card_by_type(player_id, selected_type)
 	
 	if result.get("drawn", false):
-		if ui_manager_ref and ui_manager_ref.phase_label:
-			ui_manager_ref.phase_label.text = "『%s』を引きました" % result.get("card_name", "?")
+		if ui_manager_ref and ui_manager_ref.global_comment_ui:
+			ui_manager_ref.global_comment_ui.show_comment("『%s』を引きました" % result.get("card_name", "?"))
 	else:
-		if ui_manager_ref and ui_manager_ref.phase_label:
-			ui_manager_ref.phase_label.text = "デッキに該当タイプがありません"
+		if ui_manager_ref and ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.show_toast("デッキに該当タイプがありません")
 	
 	if ui_manager_ref and ui_manager_ref.hand_display:
 		ui_manager_ref.hand_display.update_hand_display(player_id)

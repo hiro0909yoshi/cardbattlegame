@@ -155,10 +155,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 			show_battle_ui_disabled()
 		else:
 			# 通常の戦闘UI
-			if tile_info.get("creature", {}).is_empty():
-				show_battle_ui("invasion")
-			else:
-				show_battle_ui("battle")
+			show_battle_ui("battle")
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
@@ -176,13 +173,15 @@ func show_summon_ui():
 	if ui_manager:
 		# スペルカードは召喚フェーズでは使えないので、フィルターは空（スペル以外が選択可能）
 		ui_manager.card_selection_filter = ""
-		ui_manager.phase_label.text = "召喚するクリーチャーを選択"
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("召喚するクリーチャーを選択")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 # 召喚UI表示（グレーアウト）- 自分の土地に止まった場合
 func show_summon_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "自分の土地: 召喚不可（パスまたはドミニオコマンドを使用）"
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("自分の土地: 召喚不可（×でパス）")
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -195,20 +194,19 @@ func show_level_up_ui(tile_info: Dictionary):
 		ui_manager.show_level_up_ui(tile_info, current_magic)
 
 # バトルUI表示
-func show_battle_ui(mode: String):
+func show_battle_ui(_mode: String = "battle"):
 	if ui_manager:
 		# 防御型クリーチャーはバトルで使用不可
 		ui_manager.card_selection_filter = "battle"
-		if mode == "invasion":
-			ui_manager.phase_label.text = "侵略するクリーチャーを選択"
-		else:
-			ui_manager.phase_label.text = "バトルするクリーチャーを選択"
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 # バトルUI表示（グレーアウト）peace呪い用
 func show_battle_ui_disabled():
 	if ui_manager:
-		ui_manager.phase_label.text = "peace呪い: 侵略不可（パスまたはドミニオコマンドを使用）"
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("peace呪い: 侵略不可（×でパス）")
 		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
@@ -233,12 +231,8 @@ func on_card_selected(card_index: int):
 	var tile = board_system.tile_nodes.get(current_tile)
 	if tile and _is_special_tile(tile.tile_type) and remote_placement_tile < 0:
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
-		if ui_manager:
-			# メッセージのみ更新し、UIは維持（パスボタンも残る）
-			ui_manager.phase_label.text = "❌ 特殊タイル上では召喚できません"
-			# 少し待ってから元のメッセージに戻す
-			await board_system.get_tree().create_timer(1.5).timeout
-			ui_manager.phase_label.text = "特殊タイル: 召喚できません（パスまたはドミニオコマンドを使用）"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("特殊タイル上では召喚できません")
 		return
 	
 	# 遠隔配置モードの場合は無条件で召喚処理
@@ -384,8 +378,8 @@ func execute_summon(card_index: int):
 	# 配置可能タイルかチェック（タイル側のメソッドを使用）
 	if tile and not tile.can_place_creature():
 		print("[TileActionProcessor] このタイルには配置できません: %s" % tile.tile_type)
-		if ui_manager:
-			ui_manager.phase_label.text = "このタイルには配置できません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("このタイルには配置できません")
 		_complete_action()
 		return
 	
@@ -397,8 +391,8 @@ func execute_summon(card_index: int):
 		# 空き地（owner = -1）でなければ召喚不可
 		if tile_info["owner"] != -1:
 			print("[TileActionProcessor] 防御型クリーチャーは空き地にのみ召喚できます")
-			if ui_manager:
-				ui_manager.phase_label.text = "防御型は空き地にのみ召喚可能です"
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast("防御型は空き地にのみ召喚可能です")
 			_complete_action()
 			return
 	
@@ -408,8 +402,8 @@ func execute_summon(card_index: int):
 		var check_result = check_lands_required(card_data, current_player_index)
 		if not check_result.passed:
 			print("[TileActionProcessor] 土地条件未達: %s" % check_result.message)
-			if ui_manager:
-				ui_manager.phase_label.text = check_result.message
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast(check_result.message)
 			_complete_action()
 			return
 	
@@ -420,8 +414,8 @@ func execute_summon(card_index: int):
 		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
 		if not cannot_result.passed:
 			print("[TileActionProcessor] 配置制限: %s" % cannot_result.message)
-			if ui_manager:
-				ui_manager.phase_label.text = cannot_result.message
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast(cannot_result.message)
 			_complete_action()
 			return
 	
@@ -436,8 +430,8 @@ func execute_summon(card_index: int):
 		sacrifice_index = sacrifice_result.get("index", -1)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時は召喚をキャンセル
-			if ui_manager:
-				ui_manager.phase_label.text = "召喚をキャンセルしました"
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast("召喚をキャンセルしました")
 			_complete_action()
 			return
 		
@@ -493,11 +487,14 @@ func execute_summon(card_index: int):
 		if ui_manager:
 			ui_manager.hide_card_selection_ui()
 			ui_manager.update_player_info_panels()
+		print("[TileActionProcessor] execute_summon完了、_complete_action呼び出し")
+		_complete_action()
 	else:
 		print("EP不足で召喚できません")
-	
-	print("[TileActionProcessor] execute_summon完了、_complete_action呼び出し")
-	_complete_action()
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+		# 召喚UIを再表示（ターン終了せずに再選択可能にする）
+		show_summon_ui()
 
 
 # バトル（侵略）実行
@@ -519,8 +516,8 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		var check_result = check_lands_required(card_data, current_player_index)
 		if not check_result.passed:
 			print("[TileActionProcessor] 土地条件未達（バトル）: %s" % check_result.message)
-			if ui_manager:
-				ui_manager.phase_label.text = check_result.message
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast(check_result.message)
 			_complete_action()
 			return
 	
@@ -531,8 +528,8 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
 		if not cannot_result.passed:
 			print("[TileActionProcessor] 配置制限（バトル）: %s" % cannot_result.message)
-			if ui_manager:
-				ui_manager.phase_label.text = cannot_result.message
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast(cannot_result.message)
 			_complete_action()
 			return
 	
@@ -547,8 +544,8 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
 			# キャンセル時はバトルをキャンセル
-			if ui_manager:
-				ui_manager.phase_label.text = "バトルをキャンセルしました"
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast("バトルをキャンセルしました")
 			_complete_action()
 			return
 	
@@ -580,7 +577,10 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 	var current_player = player_system.get_current_player()
 	if current_player.magic_power < cost:
 		print("[TileActionProcessor] EP不足でバトルできません")
-		_complete_action()
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+		# バトルUIを再表示（ターン終了せずに再選択可能にする）
+		show_battle_ui()
 		return
 	
 	# カードを使用してEP消費
@@ -669,7 +669,8 @@ func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_ca
 	
 	# 手札選択UIを表示（召喚するカード以外を選択可能）
 	if ui_manager:
-		ui_manager.phase_label.text = "犠牲にするカードを選択"
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("犠牲にするカードを選択")
 		ui_manager.card_selection_filter = ""
 		ui_manager.excluded_card_index = summon_card_index  # 召喚カードを除外
 		var player = player_system.players[player_id]
@@ -694,8 +695,8 @@ func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_ca
 	
 	# 召喚するカードと同じインデックスは選択不可
 	if selected_index == summon_card_index:
-		if ui_manager:
-			ui_manager.phase_label.text = "召喚するカードは犠牲にできません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("召喚するカードは犠牲にできません")
 		return {"card": {}, "index": -1}
 	
 	var hand = card_system.get_all_cards_for_player(player_id)

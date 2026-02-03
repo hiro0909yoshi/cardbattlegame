@@ -221,8 +221,8 @@ func process_magic_grant(player_id: int, ui_manager) -> void:
 	if magic_amount > 0:
 		player_system.add_magic(player_id, magic_amount)
 		print("[", curse_name, "] EP獲得 +", magic_amount, "EP")
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "EP +" + str(magic_amount) + "EP 獲得！"
+		if ui_manager and ui_manager.global_comment_ui:
+			ui_manager.global_comment_ui.show_comment("EP +" + str(magic_amount) + "EP 獲得！")
 
 # ダイスロール時に呪いを適用
 # 通常のダイスシステムから呼ばれる

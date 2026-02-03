@@ -224,12 +224,13 @@ func _update_caster_selection() -> void:
 	if ui_manager and ui_manager.creature_info_panel_ui:
 		ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
 	
-	# フェーズラベル更新
-	if ui_manager and ui_manager.phase_label:
+	# アクション指示パネルで表示
+	if ui_manager and ui_manager.phase_display:
 		var name_text = creature_data.get("name", "Unknown")
-		ui_manager.phase_label.text = "アルカナアーツを使うクリーチャー: %s (%d/%d)" % [
+		var message = "アルカナアーツを使うクリーチャー: %s (%d/%d)" % [
 			name_text, _current_caster_index + 1, _available_caster_creatures.size()
 		]
+		ui_manager.phase_display.show_action_prompt(message)
 
 
 ## 使用者選択を確定

@@ -84,8 +84,8 @@ func _show_special_tile_landing_ui(player_id: int):
 		ui_manager.show_card_selection_ui(current_player)
 	
 	# フェーズ表示（show_card_selection_ui後に設定して上書きされないようにする）
-	if ui_manager.phase_label:
-		ui_manager.phase_label.text = "特殊タイル: 召喚不可（パスまたはドミニオコマンドを使用）"
+	if ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
 
 # 3Dタイル処理（BoardSystem3Dから呼び出される）
 # 注意: この関数はawaitで呼び出すこと
@@ -337,8 +337,8 @@ func _show_remote_summon_ui(player_id: int, target_tile: int):
 	ui_manager.card_selection_filter = ""
 	
 	# フェーズラベル更新
-	if ui_manager.phase_label:
-		ui_manager.phase_label.text = "タイル%dに召喚するクリーチャーを選択" % target_tile
+	if ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt("タイル%dに召喚するクリーチャーを選択" % target_tile)
 	
 	# 手札UI表示
 	var current_player = null

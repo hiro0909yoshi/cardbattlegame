@@ -375,7 +375,8 @@ func _show_direction_selection(directions: Array) -> int:
 func _update_direction_selection_ui():
 	if game_flow_manager and game_flow_manager.ui_manager:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
-		game_flow_manager.ui_manager.phase_label.text = "移動方向を選択: %s" % dir_text
+		if game_flow_manager.ui_manager.phase_display:
+			game_flow_manager.ui_manager.phase_display.show_action_prompt("移動方向を選択: %s" % dir_text)
 
 # シンプルな方向選択（+1 か -1 を選ぶ）
 func _show_simple_direction_selection() -> int:
@@ -705,7 +706,8 @@ func _update_branch_selection_ui():
 			else:
 				choices_text += " タイル%d " % tile_num
 		var remaining_text = "（残り%dマス）" % _current_remaining_steps if _current_remaining_steps > 0 else ""
-		game_flow_manager.ui_manager.phase_label.text = "進む方向を選択: %s %s" % [choices_text, remaining_text]
+		if game_flow_manager.ui_manager.phase_display:
+			game_flow_manager.ui_manager.phase_display.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
 
 # 分岐選択インジケーターを更新
 func _update_branch_indicator():

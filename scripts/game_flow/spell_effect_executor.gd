@@ -239,9 +239,10 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"purify_all":
 			if handler.spell_purify:
 				var result = handler.spell_purify.purify_all(handler.current_player_id)
-				if handler.ui_manager and handler.ui_manager.phase_label:
+				if handler.ui_manager and handler.ui_manager.global_comment_ui:
 					var type_count = result.removed_types.size()
-					handler.ui_manager.phase_label.text = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
+					var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
+					handler.ui_manager.global_comment_ui.show_comment(message)
 		
 		"remove_creature_curse":
 			if handler.spell_purify:

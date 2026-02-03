@@ -66,8 +66,8 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	current_tile_index = 0
 	
 	# メッセージ表示
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = message
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt(message)
 	
 	# ナビゲーション設定
 	_setup_tile_selection_navigation()
@@ -112,15 +112,14 @@ func _update_tile_selection_display():
 	# カメラフォーカス
 	_focus_camera(tile_index)
 	
-	# フェーズラベル更新
-	if ui_manager and ui_manager.phase_label:
-		var base_text = ui_manager.phase_label.text.split("\n")[0]  # 最初の行を維持
-		ui_manager.phase_label.text = "%s\nタイル%d (%d/%d) [←→で切替]" % [
-			base_text,
+	# アクション指示パネル更新
+	if ui_manager and ui_manager.phase_display:
+		var message = "タイル%d を選択中 (%d/%d) [←→で切替]" % [
 			tile_index,
 			current_tile_index + 1,
 			available_tile_indices.size()
 		]
+		ui_manager.phase_display.show_action_prompt(message)
 	
 	# タイル切り替えシグナル発火
 	tile_selection_changed.emit(tile_index)

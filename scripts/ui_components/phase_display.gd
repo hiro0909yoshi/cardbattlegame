@@ -1,4 +1,5 @@
 # PhaseDisplay - フェーズ表示UI管理
+# PhaseDisplay - フェーズ表示UI管理
 # UIManagerから分離されたフェーズ表示関連のUI処理
 class_name PhaseDisplay
 extends Node
@@ -6,6 +7,11 @@ extends Node
 # UI要素
 var phase_label: Label = null
 var current_dice_label: Label = null
+
+# アクション指示用UI
+var action_prompt_panel: PanelContainer = null
+var action_prompt_label: Label = null
+var action_prompt_layer: CanvasLayer = null
 
 # 親UIレイヤー
 var ui_layer: Node = null
@@ -219,3 +225,169 @@ func show_dice_result_range(curse_name: String, total: int):
 func set_phase_text(text: String):
 	if phase_label:
 		phase_label.text = text
+
+# ========================================
+# アクション指示表示（手札調整など）
+# ========================================
+
+## アクション指示用のUIを作成
+func _create_action_prompt_ui():
+	if action_prompt_layer:
+		return  # 既に作成済み
+	
+	# 専用レイヤー（通常UIより前面）
+	action_prompt_layer = CanvasLayer.new()
+	action_prompt_layer.name = "ActionPromptLayer"
+	action_prompt_layer.layer = 50
+	ui_layer.get_parent().add_child(action_prompt_layer)
+	
+	# パネルコンテナ（文字数に応じて自動サイズ、中央配置）
+	# CenterContainerで囲むことで確実に中央配置
+	var center_container = CenterContainer.new()
+	center_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	center_container.offset_top = 50
+	center_container.offset_bottom = 150
+	action_prompt_layer.add_child(center_container)
+	
+	action_prompt_panel = PanelContainer.new()
+	action_prompt_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	action_prompt_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
+	# パネルのスタイル
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.15, 0.9)
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = Color(0.4, 0.6, 1.0, 0.8)
+	style.corner_radius_top_left = 10
+	style.corner_radius_top_right = 10
+	style.corner_radius_bottom_left = 10
+	style.corner_radius_bottom_right = 10
+	action_prompt_panel.add_theme_stylebox_override("panel", style)
+	
+	# ラベル（自動サイズ、折り返しなし）
+	action_prompt_label = Label.new()
+	action_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	action_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	action_prompt_label.add_theme_font_size_override("font_size", 64)
+	action_prompt_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	
+	action_prompt_panel.add_child(action_prompt_label)
+	center_container.add_child(action_prompt_panel)
+	
+	# 初期状態は非表示
+	action_prompt_panel.visible = false
+
+## アクション指示を表示
+func show_action_prompt(message: String):
+	_create_action_prompt_ui()
+	
+	if action_prompt_label:
+		action_prompt_label.text = message
+	if action_prompt_panel:
+		action_prompt_panel.visible = true
+	
+	# フェーズラベルは薄く
+	if phase_label:
+		phase_label.modulate.a = 0.1
+
+## アクション指示を非表示
+func hide_action_prompt():
+	if action_prompt_panel:
+		action_prompt_panel.visible = false
+	
+	# フェーズラベルを元に戻す
+	if phase_label:
+		phase_label.modulate.a = 1.0
+
+# ========================================
+# エラー・警告トースト表示（パターン3）
+# ========================================
+
+var toast_panel: PanelContainer = null
+var toast_label: Label = null
+var toast_layer: CanvasLayer = null
+var toast_timer: Timer = null
+
+## トースト用UIを作成
+func _create_toast_ui():
+	if toast_layer:
+		return  # 既に作成済み
+	
+	# 専用レイヤー（アクション指示より前面）
+	toast_layer = CanvasLayer.new()
+	toast_layer.name = "ToastLayer"
+	toast_layer.layer = 55
+	ui_layer.get_parent().add_child(toast_layer)
+	
+	# CenterContainerで囲むことで確実に中央配置
+	var toast_center = CenterContainer.new()
+	toast_center.name = "ToastCenter"
+	toast_center.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	toast_center.offset_top = 150
+	toast_center.offset_bottom = 250
+	toast_layer.add_child(toast_center)
+	
+	# パネルコンテナ（文字数に応じて自動サイズ）
+	toast_panel = PanelContainer.new()
+	toast_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	toast_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	
+	# パネルのスタイル（オレンジ/赤枠）
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.1, 0.1, 0.9)
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = Color(1.0, 0.5, 0.2, 0.9)  # オレンジ
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	toast_panel.add_theme_stylebox_override("panel", style)
+	
+	# ラベル（自動サイズ、折り返しなし）
+	toast_label = Label.new()
+	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	toast_label.add_theme_font_size_override("font_size", 64)
+	toast_label.add_theme_color_override("font_color", Color(1, 0.9, 0.8, 1))
+	
+	toast_panel.add_child(toast_label)
+	toast_center.add_child(toast_panel)
+	
+	# タイマー
+	toast_timer = Timer.new()
+	toast_timer.one_shot = true
+	toast_timer.timeout.connect(_on_toast_timeout)
+	add_child(toast_timer)
+	
+	# 初期状態は非表示
+	toast_panel.visible = false
+
+## エラー・警告トーストを表示（数秒で自動的に消える）
+func show_toast(message: String, duration: float = 2.0):
+	_create_toast_ui()
+	
+	if toast_label:
+		toast_label.text = message
+	if toast_panel:
+		toast_panel.visible = true
+	
+	# タイマー開始
+	if toast_timer:
+		toast_timer.stop()
+		toast_timer.wait_time = duration
+		toast_timer.start()
+
+## トーストを非表示
+func hide_toast():
+	if toast_panel:
+		toast_panel.visible = false
+
+## トーストタイマー完了
+func _on_toast_timeout():
+	hide_toast()

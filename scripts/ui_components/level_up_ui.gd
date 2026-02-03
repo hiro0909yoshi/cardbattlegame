@@ -57,9 +57,9 @@ func show_level_up_selection(tile_info: Dictionary, current_magic: int):
 	add_level_buttons(current_level, current_magic, tile_index, tile_info)
 	add_cancel_button()
 	
-	# フェーズラベル更新
-	if phase_label_ref:
-		phase_label_ref.text = "土地レベルアップ選択"
+	# アクション指示パネルで表示
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.show_action_prompt("土地レベルアップ選択")
 
 # パネルを作成
 func create_panel() -> Panel:
@@ -230,8 +230,9 @@ func hide_selection():
 	is_active = false
 	current_tile_info = {}
 	
-	if phase_label_ref:
-		phase_label_ref.text = "アクション選択"
+	# アクション指示パネルを閉じる
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.hide_action_prompt()
 
 # レベルが選択された
 func _on_level_selected(target_level: int, cost: int):

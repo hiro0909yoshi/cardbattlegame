@@ -261,8 +261,8 @@ func start_spell_phase(player_id: int):
 		_setup_spell_selection_navigation()
 		
 		# 入力待ち
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "スペルを使用するか、ダイスを振ってください"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
 
 ## スペルフェーズUIの更新
 func _update_spell_phase_ui():
@@ -285,8 +285,8 @@ func _update_spell_phase_ui():
 	if ui_manager:
 		if is_spell_disabled:
 			ui_manager.card_selection_filter = "spell_disabled"
-			if ui_manager.phase_label:
-				ui_manager.phase_label.text = "スペル不可の呪いがかかっています"
+			if ui_manager.phase_display:
+				ui_manager.phase_display.show_toast("スペル不可の呪いがかかっています")
 		else:
 			ui_manager.card_selection_filter = "spell"
 		# 手札表示を更新してグレーアウトを適用
@@ -326,8 +326,8 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 func start_mystic_arts_phase():
 	"""アルカナアーツ選択フェーズを開始"""
 	if not spell_mystic_arts:
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "アルカナアーツシステムが初期化されていません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("アルカナアーツシステムが初期化されていません")
 		return
 	
 	if not player_system:
@@ -466,10 +466,35 @@ func use_spell(spell_card: Dictionary):
 			return
 		
 		if not _can_afford_spell(spell_card):
+			# EPが足りない場合はエラー表示して戻る
+			var cost = _get_spell_cost(spell_card)
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+			# インフォパネルを閉じる
+			if ui_manager and ui_manager.creature_info_panel_ui:
+				ui_manager.creature_info_panel_ui.hide_panel()
+			if ui_manager and ui_manager.spell_info_panel_ui:
+				ui_manager.spell_info_panel_ui.hide_panel()
+			# カードのホバー状態を解除
+			var card_script = load("res://scripts/card.gd")
+			if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+				card_script.currently_selected_card.deselect_card()
+			# カード選択状態をリセット
+			if ui_manager and ui_manager.card_selection_ui:
+				ui_manager.card_selection_ui.pending_card_index = -1
+			# 入力ロックを解除
+			if game_flow_manager and game_flow_manager.has_method("unlock_input"):
+				game_flow_manager.unlock_input()
+			# スペル選択画面に戻る
+			_return_to_spell_selection()
 			return
 	
 	selected_spell_card = spell_card
 	spell_used_this_turn = true
+	
+	# アクション指示パネルを閉じる
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.hide_action_prompt()
 	
 	# コストを支払う（常に実行）
 	var cost = _get_spell_cost(spell_card)
@@ -482,8 +507,8 @@ func use_spell(spell_card: Dictionary):
 		var nullify_result = game_flow_manager.spell_cost_modifier.check_spell_nullify(current_player_id)
 		if nullify_result.get("nullified", false):
 			# スペルは無効化 → カードを捨て札へ
-			if ui_manager and ui_manager.phase_label:
-				ui_manager.phase_label.text = nullify_result.get("message", "スペル無効化")
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt(nullify_result.get("message", "スペル無効化"))
 			# 手札からカードを除去（捨て札へ）
 			if player_system:
 				player_system.remove_card_from_hand(current_player_id, selected_spell_card)
@@ -542,8 +567,8 @@ func use_spell(spell_card: Dictionary):
 		if effect.get("effect_type") == "swap_board_creatures":
 			var own_creature_count = _count_own_creatures(current_player_id)
 			if own_creature_count < 2:
-				if ui_manager and ui_manager.phase_label:
-					ui_manager.phase_label.text = "対象がいません"
+				if ui_manager and ui_manager.phase_display:
+					ui_manager.phase_display.show_toast("対象がいません")
 				await get_tree().create_timer(1.0).timeout
 				cancel_spell()
 				return
@@ -594,8 +619,8 @@ func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> 
 	
 	if targets.is_empty():
 		# 対象がいない場合はメッセージ表示
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "対象がいません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("対象がいません")
 		await get_tree().create_timer(1.0).timeout
 		# キャンセル処理は呼び出し元に任せる
 		return false
@@ -682,7 +707,8 @@ func _update_selection_ui():
 	
 	# ヘルパーを使用してテキスト生成
 	var text = TargetSelectionHelper.format_target_info(target, current_target_index + 1, available_targets.size())
-	ui_manager.phase_label.text = text
+	if ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt(text)
 
 
 
@@ -851,9 +877,9 @@ func _exit_target_selection_phase():
 	# カメラをプレイヤーに戻す
 	_return_camera_to_player()
 	
-	# フェーズラベルをクリア
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = ""
+	# アクション指示パネルを閉じる
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.hide_action_prompt()
 	
 	# UI更新
 	if ui_manager and ui_manager.has_method("update_player_info_panels"):
@@ -868,9 +894,9 @@ func _return_to_spell_selection():
 	if ui_manager:
 		_update_spell_phase_ui()
 		
-		# フェーズラベル更新
-		if ui_manager.phase_label:
-			ui_manager.phase_label.text = "スペルを使用するか、ダイスを振ってください"
+		# アクション指示パネルで表示
+		if ui_manager.phase_display:
+			ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
 	
 	# グローバルナビゲーションをスペル選択用に再設定
 	_setup_spell_selection_navigation()
@@ -917,8 +943,8 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 	
 	# 対象がいない場合（all_creaturesで防魔等で0体）
 	if target_type == "all_creatures" and target_count == 0:
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = "対象となるクリーチャーがいません"
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("対象となるクリーチャーがいません")
 		await get_tree().create_timer(1.0).timeout
 		cancel_spell()
 		return
@@ -930,10 +956,10 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 		_confirm_spell_effect()
 		return
 	
-	# プレイヤーの場合：説明テキストを表示
+	# プレイヤーの場合：アクション指示パネルで確認テキストを表示
 	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = confirmation_text
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt(confirmation_text)
 	
 	# ナビゲーションボタン設定（決定/戻る）
 	if ui_manager:
@@ -1112,6 +1138,10 @@ func complete_spell_phase():
 	
 	current_state = State.INACTIVE
 	selected_spell_card = {}
+	
+	# アクション指示パネルを閉じる
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.hide_action_prompt()
 	
 	# スペルフェーズのフィルターをクリア
 	if ui_manager:
@@ -1319,8 +1349,8 @@ func _on_mystic_target_selection_requested(targets: Array):
 
 ## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
-	if ui_manager and ui_manager.phase_label:
-		ui_manager.phase_label.text = message
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.show_action_prompt(message)
 
 
 # ============ 発動通知UI ============
