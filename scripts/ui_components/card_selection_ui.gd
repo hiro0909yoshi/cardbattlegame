@@ -410,10 +410,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			# 制限理由を設定（選択可能なカードも含む）
 			if card_node.has_method("set_restriction_reason"):
 				var reason = _get_restriction_reason(card_data, card_type, filter_mode, player_id, available_magic)
-				print("[CardSelectionUI] set_restriction_reason: card=%s, type=%s, filter=%s, reason=%s, is_selectable=%s" % [card_data.get("name", ""), card_type, filter_mode, reason, is_selectable])
 				card_node.set_restriction_reason(reason)
-			else:
-				print("[CardSelectionUI] card_node does not have set_restriction_reason method")
 			
 			# 捨て札モードでは全て選択可能、それ以外はコストチェック
 			if selection_mode == "discard":
@@ -490,44 +487,36 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 	if cost > available_magic:
 		# フェーズに合ったカードタイプの場合のみ
 		if filter_mode == "spell" and card_type == "spell":
-			print("[_get_restriction_reason] spell EP shortage -> ep")
 			return "ep"
 		if filter_mode in ["item", "item_or_assist"] and card_type == "item":
-			print("[_get_restriction_reason] item EP shortage -> ep")
 			return "ep"
 		if filter_mode in ["", "battle"] and card_type == "creature":
-			print("[_get_restriction_reason] creature EP shortage -> ep")
 			return "ep"
 	
 	# クリーチャーカードの場合、土地条件/配置制限をチェック
 	if card_type == "creature" and filter_mode in ["", "battle"]:
 		# 土地条件未達
 		if not _check_lands_required(card_data, player_id):
-			print("[_get_restriction_reason] creature, lands_required failed -> ep")
 			return "ep"
 		
 		# 配置制限
 		if not _check_cannot_summon(card_data, player_id):
-			print("[_get_restriction_reason] creature, cannot_summon failed -> restriction")
 			return "restriction"
 		
 		# 防御型クリーチャー（バトルフェーズ）
 		if filter_mode == "battle":
 			var creature_type = card_data.get("creature_type", "normal")
 			if creature_type == "defensive":
-				print("[_get_restriction_reason] battle phase, defensive creature -> restriction")
 				return "restriction"
 	
 	# スペル不可呪い
 	if filter_mode == "spell_disabled" and card_type == "spell":
-		print("[_get_restriction_reason] spell_disabled curse -> restriction")
 		return "restriction"
 	
 	# ブロックされたアイテムタイプ
 	if card_type == "item" and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
 		var item_type = card_data.get("item_type", "")
 		if item_type in ui_manager_ref.blocked_item_types:
-			print("[_get_restriction_reason] blocked item type -> restriction")
 			return "restriction"
 	
 	return ""

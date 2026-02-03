@@ -104,7 +104,6 @@ func _create_restriction_label():
 # 制限理由を設定
 # reason: "ep"（EP不足/土地条件）, "restriction"（配置制限/呪い等）, ""（制限なし）
 func set_restriction_reason(reason: String):
-	print("[Card] set_restriction_reason called: reason=%s" % reason)
 	restriction_reason = reason
 	_update_restriction_display()
 
