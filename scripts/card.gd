@@ -1,6 +1,8 @@
 extends Control
 # カード表示・操作・選択スクリプト - CardFrame.tscn対応版
+const GC = preload("res://scripts/game_constants.gd")
 # 更新日: 2025-11-07
+
 
 # 静的変数：現在選択中のカード
 static var currently_selected_card: Node = null
@@ -82,9 +84,9 @@ func _create_restriction_label():
 	restriction_e_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restriction_e_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	restriction_e_label.add_theme_font_size_override("font_size", 150)
-	restriction_e_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))  # 白色
+	restriction_e_label.add_theme_color_override("font_color", GC.COLOR_WHITE)
 	restriction_e_label.add_theme_constant_override("outline_size", 8)
-	restriction_e_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+	restriction_e_label.add_theme_color_override("font_outline_color", GC.COLOR_BLACK)
 	restriction_e_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	restriction_e_label.visible = false
 	container.add_child(restriction_e_label)
@@ -95,7 +97,7 @@ func _create_restriction_label():
 	restriction_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	restriction_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	restriction_label.add_theme_font_size_override("font_size", 150)
-	restriction_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1.0))  # 赤色
+	restriction_label.add_theme_color_override("font_color", GC.COLOR_RESTRICTION_ICON)
 	restriction_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	restriction_label.visible = false
 	container.add_child(restriction_label)
@@ -587,9 +589,10 @@ func _show_info_panel_only():
 	if currently_selected_card and currently_selected_card != self:
 		currently_selected_card.deselect_card()
 	
-	# カード選択UIのバックボタンを再登録
+	# カード選択UIのバックボタンを再登録し、フェーズコメントを復元
 	if ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui._register_back_button_for_current_mode()
+		ui_manager.card_selection_ui.restore_phase_comment()
 	
 	var card_type = card_data.get("type", "")
 	

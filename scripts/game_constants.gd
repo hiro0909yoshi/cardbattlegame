@@ -1,4 +1,5 @@
 extends Resource
+class_name GameConstants
 
 # ゲーム定数管理ファイル
 # バランス調整時はこのファイルを編集
@@ -235,3 +236,39 @@ const SPECIAL_TILE_COLORS = {
 	"START": Color(1.0, 0.9, 0.3),        # 金
 	"CHECKPOINT": Color(0.3, 0.8, 0.3)    # 緑
 }
+
+# =============================================================================
+# フォントサイズ定義
+# =============================================================================
+
+# 基本サイズ
+const FONT_SIZE_XS = 14      # 極小（補足テキスト）
+const FONT_SIZE_S = 16       # 小（ラベル）
+const FONT_SIZE_M = 28       # 中（説明文）
+const FONT_SIZE_L = 36       # 大（ボタン、タイトル）
+const FONT_SIZE_XL = 48      # 特大（強調）
+const FONT_SIZE_XXL = 64     # 超大（アクション指示）
+const FONT_SIZE_XXXL = 96    # 最大（メニュー）
+const FONT_SIZE_ICON = 120   # アイコン用（グローバルボタン）
+
+# UI別サイズ
+const FONT_SIZE_BUTTON = 36          # 通常ボタン
+const FONT_SIZE_BUTTON_LARGE = 48    # 大きいボタン
+const FONT_SIZE_MENU_BUTTON = 96     # メニューボタン
+const FONT_SIZE_TOAST = 60           # トースト通知
+const FONT_SIZE_COMMENT = 60         # コメント表示
+const FONT_SIZE_COMMENT_LARGE = 120  # 大きいコメント
+const FONT_SIZE_DICE = 64            # ダイス表示
+const FONT_SIZE_ACTION_PROMPT = 64   # アクション指示
+
+# =============================================================================
+# UI色定義
+# =============================================================================
+
+const COLOR_GRAYOUT = Color(0.5, 0.5, 0.5, 1.0)           # グレーアウト
+const COLOR_GRAYOUT_MODULATE = Color(0.5, 0.5, 0.5, 1.0)  # グレーアウト（modulate用）
+const COLOR_NORMAL_MODULATE = Color(1.0, 1.0, 1.0, 1.0)   # 通常（modulate用）
+const COLOR_HIGHLIGHT = Color(1, 1, 0, 0.3)               # ハイライト
+const COLOR_RESTRICTION_ICON = Color(1.0, 0.3, 0.3, 1.0)  # 制限アイコン（赤）
+const COLOR_WHITE = Color(1.0, 1.0, 1.0, 1.0)             # 白
+const COLOR_BLACK = Color(0, 0, 0, 1.0)                   # 黒（アウトライン用）

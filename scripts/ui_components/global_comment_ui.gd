@@ -1,5 +1,7 @@
 extends Control
 class_name GlobalCommentUI
+const GC = preload("res://scripts/game_constants.gd")
+
 
 ## グローバルコメント表示UI
 ## スペル効果、周回ボーナス、バトル結果など様々な場面で使用
@@ -63,7 +65,7 @@ func _setup_ui():
 	label.scroll_active = false
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("normal_font_size", 60)
+	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT)
 	label.add_theme_color_override("default_color", Color.WHITE)
 	# ラベルのサイズも内容に合わせる
 	label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -203,7 +205,7 @@ func _position_panel_top():
 ## チュートリアルモード用のスタイル設定
 func set_tutorial_style():
 	is_tutorial_style = true
-	label.add_theme_font_size_override("normal_font_size", 120)
+	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT_LARGE)
 	
 	# パネルのマージンをコンパクトに
 	var style = StyleBoxFlat.new()
@@ -221,7 +223,7 @@ func set_tutorial_style():
 ## 通常モード用のスタイル設定
 func set_normal_style():
 	is_tutorial_style = false
-	label.add_theme_font_size_override("normal_font_size", 60)
+	label.add_theme_font_size_override("normal_font_size", GC.FONT_SIZE_COMMENT)
 	
 	# パネルのマージンを通常に
 	var style = StyleBoxFlat.new()

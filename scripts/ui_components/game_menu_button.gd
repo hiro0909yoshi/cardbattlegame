@@ -1,5 +1,8 @@
-class_name GameMenuButton
 extends Control
+class_name GameMenuButton
+
+const GC = preload("res://scripts/game_constants.gd")
+
 
 ## ゲームメニューボタン（右上に配置）
 ## 押すとゲームメニューを表示する
@@ -27,7 +30,7 @@ func _build_ui():
 	button.text = "≡"
 	button.custom_minimum_size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
 	button.size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
-	button.add_theme_font_size_override("font_size", 96)
+	button.add_theme_font_size_override("font_size", GC.FONT_SIZE_MENU_BUTTON)
 	button.modulate.a = 0.7
 	button.pressed.connect(_on_button_pressed)
 	add_child(button)

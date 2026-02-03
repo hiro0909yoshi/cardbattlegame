@@ -3,6 +3,8 @@
 extends Control
 
 class_name GlobalActionButtons
+const GC = preload("res://scripts/game_constants.gd")
+
 
 signal special_button_pressed()  # スペシャルボタン押下シグナル
 
@@ -162,7 +164,7 @@ func _create_special_button(text: String, _color: Color) -> Button:
 	button.add_theme_stylebox_override("disabled", disabled_style)
 	
 	# 大きなフォントサイズ
-	button.add_theme_font_size_override("font_size", 120)
+	button.add_theme_font_size_override("font_size", GC.FONT_SIZE_ICON)
 	button.add_theme_color_override("font_color", Color(1, 0.95, 0.7))  # クリーム色
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
 	button.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))

@@ -29,8 +29,8 @@ const ELEMENT_NAMES = {
 }
 
 # パネルサイズ
-const PANEL_WIDTH = 1110  # +150
-const PANEL_HEIGHT = 1130  # +50
+const PANEL_WIDTH = 1100
+const PANEL_HEIGHT = 1100
 const PANEL_MARGIN = 40
 
 # 土地ボーナス色（HPバーと同じ）
@@ -123,8 +123,8 @@ func _update_panel_position() -> void:
 	var viewport_size = Vector2(1920, 1080)
 	if get_viewport():
 		viewport_size = get_viewport().get_visible_rect().size
-	# 画面中央から右に200ピクセル
-	_panel.position = Vector2(viewport_size.x / 2 + 200, 80)
+	# 画面中央から右に200ピクセル、上から120ピクセル
+	_panel.position = Vector2(viewport_size.x / 2 + 200, 120)
 
 
 ## アイテムフェーズ開始時に表示

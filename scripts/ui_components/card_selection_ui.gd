@@ -1,6 +1,8 @@
 extends Node
 class_name CardSelectionUI
 
+const GC = preload("res://scripts/game_constants.gd")
+
 # カード選択UI管理クラス
 # 召喚・バトル時のカード選択インターフェース
 
@@ -9,7 +11,6 @@ signal selection_cancelled()
 signal card_info_shown(card_index: int)  # インフォパネル表示時
 
 # 定数をpreload
-const GameConstants = preload("res://scripts/game_constants.gd")
 # GameSettingsはclass_nameで定義されているためグローバルアクセス可能
 
 # UI要素
@@ -444,11 +445,11 @@ func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic:
 		cost = cost_data
 	if cost > available_magic:
 		# EP不足の場合
-		card_node.modulate = Color(0.5, 0.5, 0.5)
+		card_node.modulate = GC.COLOR_GRAYOUT_MODULATE
 		highlight.color = Color(0.5, 0.5, 0.5, 0.3)
 	else:
 		# 選択可能
-		highlight.color = Color(1, 1, 0, 0.3)
+		highlight.color = GC.COLOR_HIGHLIGHT
 	
 	card_node.add_child(highlight)
 
@@ -1059,6 +1060,36 @@ func _register_back_button_for_current_mode():
 	ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
 
 
+# フェーズコメントを再表示（グレーアウトカード閲覧後など）
+func restore_phase_comment():
+	if not ui_manager_ref or not ui_manager_ref.phase_display:
+		return
+	
+	var message = ""
+	match selection_mode:
+		"summon":
+			message = "召喚するクリーチャーを選択"
+		"battle":
+			message = "バトルするクリーチャーを選択、または×でパス"
+		"spell":
+			message = "スペルを使用するか、ダイスを振ってください"
+		"item":
+			if ui_manager_ref.card_selection_filter == "item_or_assist":
+				message = "アイテムまたは援護クリーチャーを選択"
+			else:
+				message = "アイテムを選択、または×でバトル開始"
+		"sacrifice":
+			message = "犠牲にするカードを選択"
+		"swap":
+			message = "交換する新しいクリーチャーを選択"
+		"move":
+			message = "移動先のクリーチャーを選択"
+		_:
+			message = "カードを選択してください"
+	
+	ui_manager_ref.phase_display.show_action_prompt(message)
+
+
 # カードインデックスからカードデータを取得
 func _get_card_data_for_index(card_index: int) -> Dictionary:
 	# enable_card_selectionで保存したカードデータを優先使用（デッキカード選択等に対応）
@@ -1092,9 +1123,15 @@ func _on_pass_button_pressed():
 			ui_manager_ref.item_info_panel_ui.hide_panel(false)
 			info_panel_was_open = true
 	
-	# インフォパネルが開いていた場合は閉じてバックボタンを再登録
+	# インフォパネルが開いていた場合は閉じてナビゲーションを復元
 	if info_panel_was_open:
-		_register_back_button_for_current_mode()
+		# スペルフェーズとアイテムフェーズは専用のナビゲーション設定
+		if selection_mode == "spell":
+			_setup_spell_phase_back_button()
+		elif selection_mode == "item":
+			_setup_item_phase_back_button()
+		else:
+			_register_back_button_for_current_mode()
 		return
 	
 	if is_active:

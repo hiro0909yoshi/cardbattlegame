@@ -1,8 +1,11 @@
-# PhaseDisplay - フェーズ表示UI管理
+extends Node
+class_name PhaseDisplay
+
+const GC = preload("res://scripts/game_constants.gd")
+
 # PhaseDisplay - フェーズ表示UI管理
 # UIManagerから分離されたフェーズ表示関連のUI処理
-class_name PhaseDisplay
-extends Node
+
 
 # UI要素
 var phase_label: Label = null
@@ -12,7 +15,7 @@ var current_dice_label: Label = null
 var action_prompt_panel: PanelContainer = null
 var action_prompt_label: Label = null
 var action_prompt_layer: CanvasLayer = null
-var action_prompt_center_container: CenterContainer = null  # 中央配置用
+var action_prompt_center_container: Control = null  # 中央配置用
 var action_prompt_right_container: Control = null  # 右側配置用
 
 # 親UIレイヤー
@@ -202,7 +205,7 @@ func show_dice_result_range(curse_name: String, total: int):
 	# 新しいダイスラベルを作成
 	current_dice_label = Label.new()
 	current_dice_label.text = display_text
-	current_dice_label.add_theme_font_size_override("font_size", 64)
+	current_dice_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_ACTION_PROMPT)
 	
 	# 画面中央上部に配置
 	current_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -243,11 +246,10 @@ func _create_action_prompt_ui():
 	action_prompt_layer.layer = 50
 	ui_layer.get_parent().add_child(action_prompt_layer)
 	
-	# 中央配置用コンテナ
-	action_prompt_center_container = CenterContainer.new()
-	action_prompt_center_container.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	action_prompt_center_container.offset_top = 50
-	action_prompt_center_container.offset_bottom = 150
+	# 中央配置用コンテナ（画面幅の3/5位置）
+	action_prompt_center_container = Control.new()
+	action_prompt_center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	action_prompt_center_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	action_prompt_layer.add_child(action_prompt_center_container)
 	
 	# 右側配置用コンテナ（FULL_RECTで配置し、子の位置は動的に計算）
@@ -278,7 +280,7 @@ func _create_action_prompt_ui():
 	action_prompt_label = Label.new()
 	action_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	action_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	action_prompt_label.add_theme_font_size_override("font_size", 64)
+	action_prompt_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_ACTION_PROMPT)
 	action_prompt_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	
 	action_prompt_panel.add_child(action_prompt_label)
@@ -305,10 +307,11 @@ func show_action_prompt(message: String, position: String = "center"):
 			current_parent.remove_child(action_prompt_panel)
 			target_parent.add_child(action_prompt_panel)
 		
-		# 右側配置の場合は位置を動的に計算
+		# 位置を動的に計算（両方とも3/5位置）
 		if position == "right":
-			# call_deferredで次フレームに位置調整
 			call_deferred("_position_panel_right")
+		else:
+			call_deferred("_position_panel_center")
 		
 		action_prompt_panel.visible = true
 	
@@ -317,20 +320,37 @@ func show_action_prompt(message: String, position: String = "center"):
 		phase_label.modulate.a = 0.1
 
 
-## パネルを右側に配置（インフォパネル表示時用：画面幅の3/4位置を中心）
+## パネルを中央に配置（フェーズコメント・確認コメント共通）
+func _position_panel_center():
+	if not action_prompt_panel or not action_prompt_panel.is_inside_tree():
+		return
+	
+	var viewport_size = action_prompt_panel.get_viewport().get_visible_rect().size
+	
+	# 画面中央
+	var center_x = viewport_size.x * 0.5
+	var panel_size = action_prompt_panel.size
+	var panel_x = center_x - panel_size.x / 2
+	var panel_y = 15  # 上からのマージン
+	
+	action_prompt_panel.position = Vector2(panel_x, panel_y)
+
+
+## パネルを右側に配置（インフォパネル表示時用：画面中央）
 func _position_panel_right():
 	if not action_prompt_panel or not action_prompt_panel.is_inside_tree():
 		return
 	
 	var viewport_size = action_prompt_panel.get_viewport().get_visible_rect().size
 	
-	# 画面幅の3/4の位置を中心にする
-	var center_x = viewport_size.x * 0.75
+	# 画面中央
+	var center_x = viewport_size.x * 0.5
 	var panel_size = action_prompt_panel.size
 	var panel_x = center_x - panel_size.x / 2
-	var panel_y = 230  # 上からのマージン
+	var panel_y = 15  # 上からのマージン
 	
 	action_prompt_panel.position = Vector2(panel_x, panel_y)
+
 
 ## アクション指示を非表示
 func hide_action_prompt():
@@ -392,7 +412,7 @@ func _create_toast_ui():
 	toast_label = Label.new()
 	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	toast_label.add_theme_font_size_override("font_size", 64)
+	toast_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_ACTION_PROMPT)
 	toast_label.add_theme_color_override("font_color", Color(1, 0.9, 0.8, 1))
 	
 	toast_panel.add_child(toast_label)

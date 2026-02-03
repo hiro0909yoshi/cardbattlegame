@@ -1,5 +1,8 @@
-class_name GameMenu
 extends Control
+class_name GameMenu
+
+const GC = preload("res://scripts/game_constants.gd")
+
 
 ## ゲームメニュー
 ## 画面中央に表示される
@@ -66,7 +69,7 @@ func _add_menu_button(text: String, callback: Callable, color: Color = Color.WHI
 	var button = Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(1040, 240)
-	button.add_theme_font_size_override("font_size", 96)
+	button.add_theme_font_size_override("font_size", GC.FONT_SIZE_MENU_BUTTON)
 	button.add_theme_color_override("font_color", color)
 	button.pressed.connect(callback)
 	button_container.add_child(button)
