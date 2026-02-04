@@ -131,10 +131,12 @@ func calculate_display_toll(tile_info: Dictionary, tile_index: int) -> int:
 	if board_system_ref.has_method("calculate_toll"):
 		return board_system_ref.calculate_toll(tile_index)
 	
-	# フォールバック計算
+	# フォールバック計算（土地価値ベース）
 	var level = tile_info.get("level", 1)
-	var base_toll = GameConstants.BASE_TOLL
-	return base_toll * level
+	var base_value = GameConstants.BASE_LAND_VALUE
+	var level_mult = GameConstants.LAND_VALUE_LEVEL_MULTIPLIER.get(level, 1)
+	var toll_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(level, 0.2)
+	return GameConstants.floor_toll(base_value * level_mult * toll_mult)
 
 # 表示モードを切り替え
 func switch_mode():

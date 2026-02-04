@@ -30,28 +30,44 @@ const INITIAL_HAND_SIZE = 5       # 初期手札枚数
 const CARD_COST_MULTIPLIER = 1    # カードコスト倍率（コスト×10EP）
 const CARDS_PER_TYPE = 3          # 各カードの枚数
 
-# === 通行料関連（固定） ===
-const BASE_TOLL = 100             # 基礎通行料
-const CHAIN_BONUS_2 = 1.5         # 2個連鎖倍率
-const CHAIN_BONUS_3 = 2.5         # 3個連鎖倍率
-const CHAIN_BONUS_4 = 4.0         # 4個連鎖倍率
-const CHAIN_BONUS_5 = 5.0         # 5個以上連鎖倍率（上限）
+# === 土地価値関連 ===
+const BASE_LAND_VALUE = 120       # 基礎土地価値
 
-# === 通行料係数（動的計算用） ===
-const TOLL_ELEMENT_MULTIPLIER = {
+# 土地価値用レベル倍率
+const LAND_VALUE_LEVEL_MULTIPLIER = {
+	1: 1,
+	2: 2,
+	3: 4,
+	4: 8,
+	5: 16
+}
+
+# 土地価値用連鎖倍率
+const LAND_VALUE_CHAIN_MULTIPLIER = {
+	1: 1.0,
+	2: 1.5,
+	3: 1.8,
+	4: 2.0,
+	5: 2.2   # 5個以上
+}
+
+# 土地価値用属性係数
+const LAND_VALUE_ELEMENT_MULTIPLIER = {
 	"fire": 1.0,
 	"water": 1.0,
 	"wind": 1.0,
 	"earth": 1.0,
-	"none": 0.8
+	"neutral": 0.8
 }
 
+# === 通行料関連 ===
+# 通行料用レベル倍率（土地価値に対する倍率）
 const TOLL_LEVEL_MULTIPLIER = {
-	1: 0.3,
-	2: 0.6,
-	3: 2.0,
-	4: 4.0,
-	5: 8.0
+	1: 0.2,
+	2: 0.3,
+	3: 0.4,
+	4: 0.6,
+	5: 0.8
 }
 
 # === バトル関連 ===
@@ -168,9 +184,9 @@ const DEFAULT_RULE_PRESET = "standard"
 # ユーティリティ関数
 # =============================================================================
 
-# 10の位で切り捨て（通行料用）
+# 1の位で切り捨て（通行料・土地価値用）
 static func floor_toll(amount: float) -> int:
-	return int(floor(amount / 10.0) * 10.0)
+	return int(floor(amount))
 
 # ルールプリセットから初期EPを取得
 static func get_initial_magic(preset_name: String) -> int:

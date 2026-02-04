@@ -56,11 +56,11 @@ func get_player_lands(player_id: int) -> Array:
 	return board_system.get_player_owned_tiles(player_id)
 
 
-## 土地の価値を取得（通行料 = 売却価格）
+## 土地の価値を取得（土地価値 = 売却価格）
 func get_land_value(tile_index: int) -> int:
 	if not board_system:
 		return 0
-	return board_system.calculate_toll(tile_index)
+	return board_system.calculate_land_value(tile_index)
 
 
 ## 全土地の売却額合計を取得
@@ -452,7 +452,7 @@ func _select_land_to_sell_cpu(_player_id: int, lands: Array) -> int:
 	for tile_index in lands:
 		var tile = board_system.tile_nodes.get(tile_index)
 		if tile:
-			var element = tile.element
+			var element = tile.tile_type
 			if not element_counts.has(element):
 				element_counts[element] = []
 			element_counts[element].append(tile_index)

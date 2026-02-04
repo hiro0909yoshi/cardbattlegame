@@ -293,6 +293,9 @@ func get_upgrade_cost(tile_index: int) -> int:
 func calculate_toll(tile_index: int, map_id: String = "") -> int:
 	return tile_data_manager.calculate_toll(tile_index, map_id)
 
+func calculate_land_value(tile_index: int) -> int:
+	return tile_data_manager.calculate_land_value(tile_index)
+
 func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	return tile_data_manager.calculate_chain_bonus(tile_index, owner_id)
 

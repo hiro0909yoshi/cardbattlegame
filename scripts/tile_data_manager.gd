@@ -151,7 +151,36 @@ func get_upgrade_cost(tile_index: int) -> int:
 	
 	return 0
 
-# 通行料を計算（新設計：要素係数・レベル係数・連鎖ボーナス・マップ係数を使用）
+# 土地価値を計算
+# 土地価値 = 基本価値 × 属性係数 × レベル倍率(価値用) × 連鎖倍率(価値用)
+func calculate_land_value(tile_index: int) -> int:
+	if not tile_nodes.has(tile_index):
+		return 0
+	
+	var tile = tile_nodes[tile_index]
+	if tile.owner_id == -1:
+		return 0
+	
+	var base = GameConstants.BASE_LAND_VALUE
+	
+	# 属性係数を取得
+	var element_mult = GameConstants.LAND_VALUE_ELEMENT_MULTIPLIER.get(tile.tile_type, 1.0)
+	
+	# レベル倍率（価値用）を取得
+	var level_mult = GameConstants.LAND_VALUE_LEVEL_MULTIPLIER.get(tile.level, 1)
+	
+	# 連鎖倍率（価値用）を計算
+	var chain_count = get_element_chain_count(tile_index, tile.owner_id)
+	var chain_mult = GameConstants.LAND_VALUE_CHAIN_MULTIPLIER.get(min(chain_count, 5), 1.0)
+	
+	# 計算実行
+	var raw_value = base * element_mult * level_mult * chain_mult
+	
+	# 10の位で切り捨て
+	return GameConstants.floor_toll(raw_value)
+
+# 通行料を計算
+# 通行料 = 土地価値 × レベル倍率(通行料用)
 func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	if not tile_nodes.has(tile_index):
 		return 0
@@ -160,23 +189,14 @@ func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	if tile.owner_id == -1:
 		return 0
 	
-	var base = GameConstants.BASE_TOLL
+	# 土地価値を取得
+	var land_value = calculate_land_value(tile_index)
 	
-	# 要素係数を取得（英語に対応）
-	var element_mult = GameConstants.TOLL_ELEMENT_MULTIPLIER.get(tile.tile_type, 1.0)
-	
-	# レベル係数を取得
-	var level_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(tile.level, 1.0)
-	
-	# 実際の連鎖ボーナスを計算
-	var chain_bonus = calculate_chain_bonus(tile_index, tile.owner_id)
-	
-	# マップ係数を取得（将来的にはマップJSONから読み込み）
-	var map_mult = 1.0
-	# TODO: マップJSONからtoll_multiplierを読み込む
+	# 通行料用レベル倍率を取得
+	var toll_level_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(tile.level, 0.2)
 	
 	# 計算実行
-	var raw_toll = base * element_mult * level_mult * chain_bonus * map_mult
+	var raw_toll = land_value * toll_level_mult
 	
 	# 10の位で切り捨て
 	var final_toll = GameConstants.floor_toll(raw_toll)
@@ -216,34 +236,13 @@ func calculate_level_up_cost(tile_index: int, target_level: int, _from_level: St
 	return target_cost - current_cost
 
 
-# レベルへの累計コストを計算
-func _calculate_cumulative_level_cost(tile, level: int) -> int:
-	if level <= 1:
-		return 0
-	
-	var base = GameConstants.BASE_TOLL
-	
-	# 要素係数を取得（英語に対応）
-	var element_mult = GameConstants.TOLL_ELEMENT_MULTIPLIER.get(tile.tile_type, 1.0)
-	
-	# レベル係数を取得
-	var level_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(level, 1.0)
-	
-	# 連鎖ボーナスは固定値1.5（連鎖2個相当）
-	var chain_bonus = 1.5
-	
-	# マップ係数を取得（現在は常に1.0）
-	var map_mult = 1.0
-	
-	# 計算実行
-	var raw_cost = base * element_mult * level_mult * chain_bonus * map_mult
-	
-	# 10の位で切り捨て
-	return GameConstants.floor_toll(raw_cost)
+# レベルへの累計コストを計算（従来のLEVEL_VALUESを使用）
+func _calculate_cumulative_level_cost(_tile, level: int) -> int:
+	return GameConstants.LEVEL_VALUES.get(level, 0)
 
 # === 連鎖計算 ===
 
-# 連鎖ボーナスを計算
+# 連鎖倍率を計算（土地価値用）
 func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	if not tile_nodes.has(tile_index):
 		return 1.0
@@ -254,19 +253,10 @@ func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 	if target_element == "" or not TileHelper.is_element_type(target_element):
 		return 1.0
 	
-	var same_element_count = get_element_chain_count(tile_index, owner_id)
+	var chain_count = get_element_chain_count(tile_index, owner_id)
 	
-	# 連鎖数に応じたボーナス
-	if same_element_count >= 5:
-		return GameConstants.CHAIN_BONUS_5
-	elif same_element_count == 4:
-		return GameConstants.CHAIN_BONUS_4
-	elif same_element_count == 3:
-		return GameConstants.CHAIN_BONUS_3
-	elif same_element_count == 2:
-		return GameConstants.CHAIN_BONUS_2
-	
-	return 1.0
+	# 新しい連鎖倍率を返す
+	return GameConstants.LAND_VALUE_CHAIN_MULTIPLIER.get(min(chain_count, 5), 1.0)
 
 # 属性連鎖数を取得
 func get_element_chain_count(tile_index: int, owner_id: int) -> int:
@@ -321,16 +311,15 @@ func get_owner_element_counts(owner_id: int) -> Dictionary:
 	
 	return counts
 
-# 所有者の総土地価値を計算（通行料ベース、連鎖ボーナス含む）
+# 所有者の総土地価値を計算（土地価値ベース、連鎖ボーナス含む）
 func calculate_total_land_value(owner_id: int) -> int:
 	var total_value = 0
 	
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
-			# 土地の価値 = 通行料（連鎖ボーナス、世界呪い効果含む）
-			var toll = calculate_toll(i)
-			total_value += toll
+			# 土地の価値 = 土地価値（連鎖ボーナス含む）
+			total_value += calculate_land_value(i)
 	
 	return total_value
 

@@ -265,19 +265,30 @@ func calculate_total_assets(player_id: int) -> int:
 	
 	return total
 
-## 土地価値を計算（通行料の合計）
+## 土地価値を計算（土地価値の合計）
 func _calculate_land_value(player_id: int) -> int:
-	if not board_system_ref or not "tile_nodes" in board_system_ref:
+	if not board_system_ref:
 		return 0
 	
-	var value = 0
-	for i in board_system_ref.tile_nodes:
-		var tile = board_system_ref.tile_nodes[i]
-		if tile.owner_id == player_id:
-			var toll = board_system_ref.calculate_toll(i)
-			value += toll
+	# tile_data_manager経由で土地価値を取得
+	if board_system_ref.has_method("calculate_land_value"):
+		var value = 0
+		for i in board_system_ref.tile_nodes:
+			var tile = board_system_ref.tile_nodes[i]
+			if tile.owner_id == player_id:
+				value += board_system_ref.calculate_land_value(i)
+		return value
 	
-	return value
+	# フォールバック（tile_data_manager経由）
+	if board_system_ref.tile_data_manager and board_system_ref.tile_data_manager.has_method("calculate_land_value"):
+		var value = 0
+		for i in board_system_ref.tile_nodes:
+			var tile = board_system_ref.tile_nodes[i]
+			if tile.owner_id == player_id:
+				value += board_system_ref.tile_data_manager.calculate_land_value(i)
+		return value
+	
+	return 0
 
 ## 魔法石価値を計算
 func _calculate_stone_value(player_id: int) -> int:

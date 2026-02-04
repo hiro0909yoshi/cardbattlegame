@@ -177,9 +177,14 @@ func calculate_total_cost(current_level: int, target_level: int) -> int:
 
 # 予想通行料を計算
 func calculate_expected_toll(level: int, chain_bonus: float) -> int:
-	# レベルに応じた基本通行料
-	var base_toll = GameConstants.BASE_TOLL
-	return int(base_toll * level * chain_bonus)
+	# 土地価値 = 基本価値 × レベル倍率(価値用) × 連鎖倍率
+	var base_value = GameConstants.BASE_LAND_VALUE
+	var level_mult = GameConstants.LAND_VALUE_LEVEL_MULTIPLIER.get(level, 1)
+	var land_value = base_value * level_mult * chain_bonus
+	
+	# 通行料 = 土地価値 × レベル倍率(通行料用)
+	var toll_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(level, 0.2)
+	return GameConstants.floor_toll(land_value * toll_mult)
 
 # ボタンテキストを構築
 func build_button_text(target_level: int, cost: int, toll: int, chain_bonus: float) -> String:
