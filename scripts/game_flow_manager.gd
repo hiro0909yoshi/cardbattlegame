@@ -318,7 +318,11 @@ func roll_dice():
 	# バフによるダイス変更を適用
 	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
 	
-	# ダイス結果を表示
+	# ダイス結果を大きく表示（1.5秒）
+	if ui_manager and ui_manager.phase_display:
+		ui_manager.phase_display.show_big_dice_result(modified_dice, 1.5)
+	
+	# ダイス結果を詳細表示（上部）
 	if ui_manager and ui_manager.phase_display:
 		# ダイス範囲呪いがある場合は特殊表示
 		if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):

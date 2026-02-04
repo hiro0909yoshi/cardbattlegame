@@ -95,6 +95,41 @@ func show_dice_result(value: int):
 		current_dice_label.queue_free()
 		current_dice_label = null
 
+## ダイス結果を画面中央に大きく表示（1.5秒）
+var _big_dice_label: Label = null
+
+func show_big_dice_result(value: int, duration: float = 1.5):
+	# 既存のラベルがあれば削除
+	if _big_dice_label and is_instance_valid(_big_dice_label):
+		_big_dice_label.queue_free()
+	
+	# 新しいラベルを作成
+	_big_dice_label = Label.new()
+	_big_dice_label.text = str(value)
+	_big_dice_label.add_theme_font_size_override("font_size", 200)  # 大きなフォント
+	_big_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_big_dice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	# 画面中央に配置
+	_big_dice_label.set_anchors_preset(Control.PRESET_CENTER)
+	_big_dice_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_big_dice_label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	
+	# 白い文字に黒いアウトライン
+	_big_dice_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	_big_dice_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0))
+	_big_dice_label.add_theme_constant_override("shadow_offset_x", 4)
+	_big_dice_label.add_theme_constant_override("shadow_offset_y", 4)
+	_big_dice_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	ui_layer.add_child(_big_dice_label)
+	
+	# 指定時間後に自動的に消す
+	await get_tree().create_timer(duration).timeout
+	if _big_dice_label and is_instance_valid(_big_dice_label):
+		_big_dice_label.queue_free()
+		_big_dice_label = null
+
 ## 2個ダイス結果を表示
 ## dice1: 0-5 (0は特殊マーク)
 ## dice2: 0,2-6 (0は特殊マーク)

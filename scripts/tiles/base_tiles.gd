@@ -325,6 +325,25 @@ func _stop_frame_blink():
 
 # 点滅処理（_processで実行）
 func _process(delta):
+	# 到着予測ハイライト処理（優先）
+	if _destination_highlight_active and frame_mesh_instance:
+		_destination_highlight_time += delta
+		
+		# sin波で0〜1を滑らかに変化（周期1.0秒 - 速めの点滅）
+		var t = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
+		
+		# 黄色でハイライト
+		var highlight_color = Color(1.0, 0.9, 0.2)  # 黄色
+		var dim_color = Color(0.3, 0.27, 0.06)  # 暗い黄色
+		
+		_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, t)
+		_destination_highlight_material.emission = dim_color.lerp(highlight_color, t)
+		_destination_highlight_material.emission_energy_multiplier = 0.5 + t * 1.5  # 0.5〜2.0（明るめ）
+		
+		frame_mesh_instance.material_override = _destination_highlight_material
+		return  # 到着予測ハイライト中は通常点滅を行わない
+	
+	# 通常の所有者点滅処理
 	if not _blink_active or not frame_mesh_instance:
 		return
 	_blink_time += delta
@@ -398,3 +417,76 @@ func can_use_dominio_order() -> bool:
 	# 所有地でクリーチャーがいる場合のみ使用可能
 	# ダウン状態でも使用可能（不屈スキル対応）
 	return owner_id != -1 and not creature_data.is_empty()
+
+# ============================================
+# 到着予測ハイライト
+# ============================================
+
+var _destination_highlight_active: bool = false
+var _destination_highlight_material: StandardMaterial3D = null
+var _destination_highlight_time: float = 0.0
+
+## 到着予測ハイライトを開始（黄色で点滅）
+func start_destination_highlight():
+	if _destination_highlight_active:
+		return
+	
+	# frame_mesh_instanceが未初期化の場合は初期化
+	if not frame_mesh_instance:
+		var frame_node = get_node_or_null("frame")
+		if frame_node:
+			for child in frame_node.get_children():
+				if child is MeshInstance3D:
+					frame_mesh_instance = child
+					break
+			# 直接の子にない場合は再帰的に探索
+			if not frame_mesh_instance:
+				frame_mesh_instance = _find_mesh_instance_recursive(frame_node)
+	
+	# frame_mesh_instanceがなければハイライト不可
+	if not frame_mesh_instance:
+		print("[BaseTile] frame_mesh_instance not found for tile: ", name)
+		return
+	
+	_destination_highlight_active = true
+	_destination_highlight_time = 0.0
+	
+	# ハイライト用マテリアルを作成
+	if not _destination_highlight_material:
+		_destination_highlight_material = StandardMaterial3D.new()
+		_destination_highlight_material.emission_enabled = true
+	
+	set_process(true)
+
+## MeshInstance3Dを再帰的に探索
+func _find_mesh_instance_recursive(node: Node) -> MeshInstance3D:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			return child
+		var found = _find_mesh_instance_recursive(child)
+		if found:
+			return found
+	return null
+
+## 到着予測ハイライトを停止
+func stop_destination_highlight():
+	if not _destination_highlight_active:
+		return
+	
+	_destination_highlight_active = false
+	_destination_highlight_time = 0.0
+	
+	# 元の状態に戻す
+	if frame_mesh_instance:
+		if owner_id == -1:
+			frame_mesh_instance.material_override = null
+		else:
+			_update_frame_glow()
+	
+	# 通常の点滅も停止中なら処理を止める
+	if not _blink_active:
+		set_process(false)
+
+## 到着予測ハイライト中かチェック
+func is_destination_highlighted() -> bool:
+	return _destination_highlight_active
