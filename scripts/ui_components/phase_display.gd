@@ -295,6 +295,10 @@ func _create_action_prompt_ui():
 func show_action_prompt(message: String, position: String = "center"):
 	_create_action_prompt_ui()
 	
+	# パネルサイズをリセット（前のメッセージのサイズが残らないように）
+	if action_prompt_panel:
+		action_prompt_panel.reset_size()
+	
 	if action_prompt_label:
 		action_prompt_label.text = message
 	

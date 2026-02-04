@@ -833,6 +833,7 @@ func _cancel_target_selection():
 
 ## スペルをキャンセル（対象選択からスペル選択に戻る）
 func cancel_spell():
+	print("[SpellPhaseHandler] cancel_spell called, spell=%s" % selected_spell_card.get("name", "?"))
 	# コストを返却
 	var cost_data = selected_spell_card.get("cost", {})
 	if cost_data == null:
@@ -842,8 +843,10 @@ func cancel_spell():
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		cost = cost_data.get("ep", 0)
 	
+	print("[SpellPhaseHandler] cancel_spell: cost=%d" % cost)
 	if player_system and cost > 0:
 		player_system.add_magic(current_player_id, cost)
+		print("[SpellPhaseHandler] cancel_spell: EP返却 +%d" % cost)
 	
 	selected_spell_card = {}
 	spell_used_this_turn = false

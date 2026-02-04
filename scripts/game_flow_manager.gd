@@ -339,7 +339,7 @@ func roll_dice():
 			await get_tree().create_timer(1.0).timeout
 	
 	# 表示待ち
-	await get_tree().create_timer(1.5).timeout
+	await get_tree().create_timer(1.0).timeout
 	
 	print("[GameFlowManager] roll_dice: await完了、移動開始 (phase=%s)" % current_phase)
 	
