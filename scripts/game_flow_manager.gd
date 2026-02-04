@@ -197,7 +197,13 @@ func start_game():
 # ターン開始
 func start_turn():
 	var current_player = player_system.get_current_player()
+	
+	# ターン開始時に順番アイコンを即座に更新（最初に呼ぶ）
 	emit_signal("turn_started", current_player.id)
+	
+	# UI更新：順番アイコンを設定
+	if ui_manager and ui_manager.player_info_panel:
+		ui_manager.player_info_panel.set_current_turn(current_player.id)
 	
 	# Phase 1-A: ターン開始時はドミニオコマンドボタンを隠す
 	if ui_manager:
@@ -241,7 +247,6 @@ func start_turn():
 	else:
 		current_phase = GamePhase.DICE_ROLL
 		ui_manager.phase_label.text = "サイコロを振ってください"
-		update_ui()
 		
 		# カメラを手動モードに設定（マップ確認可能にする）
 		if board_system_3d and board_system_3d.camera_controller:

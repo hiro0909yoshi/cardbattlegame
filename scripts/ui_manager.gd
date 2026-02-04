@@ -364,10 +364,6 @@ func update_ui(current_player, current_phase):
 	# プレイヤー情報パネルを更新
 	update_player_info_panels()
 	
-	# 現在のターンプレイヤーを設定
-	if current_player and player_info_panel and player_info_panel.has_method("set_current_turn"):
-		player_info_panel.set_current_turn(current_player.id)
-	
 	# フェーズ表示を更新
 	update_phase_display(current_phase)
 

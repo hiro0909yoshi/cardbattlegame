@@ -46,10 +46,18 @@ func initialize(parent: Node, player_system: PlayerSystem, board_system, count: 
 	create_panels()
 	create_world_curse_label()
 	update_all_panels()
+	
+	# EP変更シグナルを接続（即座更新用）
+	if player_system_ref:
+		player_system_ref.magic_changed.connect(_on_magic_changed)
 
-# GameFlowManager参照を設定（世界呪い表示用）
+# GameFlowManager参照を設定（世界呪い表示用、ターン開始シグナル接続用）
 func set_game_flow_manager(gfm):
 	game_flow_manager_ref = gfm
+	
+	# ターン開始シグナルを接続（ターン開始時に即座に順番アイコンを更新）
+	if game_flow_manager_ref:
+		game_flow_manager_ref.turn_started.connect(_on_turn_started)
 
 # パネルを作成
 func create_panels():
@@ -310,6 +318,14 @@ func set_current_turn(player_id: int):
 func update_player(player_id: int):
 	if player_id >= 0 and player_id < info_labels.size():
 		update_single_panel(player_id)
+
+# EP変更時コールバック（即座更新用）
+func _on_magic_changed(player_id: int, new_value: int):
+	update_player(player_id)
+
+# ターン開始時コールバック（順番アイコン即座更新用）
+func _on_turn_started(player_id: int):
+	set_current_turn(player_id)
 
 # パネルの表示/非表示
 func set_visible(visible: bool):

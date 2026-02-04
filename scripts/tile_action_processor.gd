@@ -428,10 +428,10 @@ func execute_summon(card_index: int):
 		sacrifice_card = sacrifice_result.get("card", {})
 		sacrifice_index = sacrifice_result.get("index", -1)
 		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
-			# キャンセル時は召喚をキャンセル
+			# キャンセル時は召喚UIを再表示
 			if ui_manager and ui_manager.phase_display:
 				ui_manager.phase_display.show_toast("召喚をキャンセルしました")
-			_complete_action()
+			show_summon_ui()
 			return
 		
 		# 犠牲カードが召喚カードより前のインデックスにあった場合、召喚カードのインデックスを調整
@@ -541,19 +541,20 @@ func execute_battle(card_index: int, tile_info: Dictionary):
 		if ui_manager:
 			ui_manager.hide_card_selection_ui()
 		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
-		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
-			# キャンセル時はバトルをキャンセル
+		if sacrifice_card.get("card", {}).is_empty() and _requires_card_sacrifice(card_data):
+			# キャンセル時はバトルUIを再表示
 			if ui_manager and ui_manager.phase_display:
 				ui_manager.phase_display.show_toast("バトルをキャンセルしました")
-			_complete_action()
+			show_battle_ui()
 			return
 	
 	# クリーチャー合成処理
 	var is_synthesized = false
-	if not sacrifice_card.is_empty() and creature_synthesis:
-		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
+	var sacrifice_card_data = sacrifice_card.get("card", {})
+	if not sacrifice_card_data.is_empty() and creature_synthesis:
+		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card_data)
 		if is_synthesized:
-			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
+			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card_data, true)
 			print("[TileActionProcessor] 合成成立（バトル）: %s" % card_data.get("name", "?"))
 	
 	# バトル情報を保存

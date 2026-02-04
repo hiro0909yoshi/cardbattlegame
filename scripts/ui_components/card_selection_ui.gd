@@ -398,14 +398,17 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			
-			# 制限理由を設定（選択可能なカードも含む）
+			# 制限理由を設定（犠牲/捨て札モードでは設定しない）
 			if card_node.has_method("set_restriction_reason"):
-				var reason = _get_restriction_reason(card_data, card_type, filter_mode, player_id, available_magic)
-				card_node.set_restriction_reason(reason)
+				if selection_mode in ["sacrifice", "discard"]:
+					card_node.set_restriction_reason("")  # 制限なし
+				else:
+					var reason = _get_restriction_reason(card_data, card_type, filter_mode, player_id, available_magic)
+					card_node.set_restriction_reason(reason)
 			
-			# 捨て札モードでは全て選択可能、それ以外はコストチェック
-			if selection_mode == "discard":
-				add_card_highlight(card_node, card_data, 999999, is_selectable)  # 全て選択可能
+			# 犠牲/捨て札モードでは全て選択可能、それ以外はコストチェック
+			if selection_mode in ["sacrifice", "discard"]:
+				add_card_highlight(card_node, card_data, 999999, true)  # 全て選択可能
 			else:
 				add_card_highlight(card_node, card_data, available_magic, is_selectable)
 
@@ -546,6 +549,8 @@ func create_pass_button(_hand_count: int):
 				back_text = "交換しない"
 			"move":
 				back_text = "移動しない"
+			"sacrifice":
+				back_text = "召喚をキャンセル"
 		
 		ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
 
@@ -697,8 +702,10 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# カードノードから制限理由を取得
-	var restriction_reason = _get_card_restriction_reason(card_index)
+	# カードノードから制限理由を取得（犠牲/捨て札モードでは無視）
+	var restriction_reason = ""
+	if selection_mode not in ["sacrifice", "discard"]:
+		restriction_reason = _get_card_restriction_reason(card_index)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
 	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel and restriction_reason == "":
@@ -815,6 +822,12 @@ func _on_spell_panel_cancelled():
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
 	
+	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
+	if selection_mode in ["sacrifice", "discard"]:
+		restore_phase_comment()
+		_register_back_button_for_current_mode()
+		return
+	
 	# SpellPhaseHandler経由でスペル選択画面に戻る
 	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
 		game_flow_manager_ref.spell_phase_handler._return_to_spell_selection()
@@ -887,6 +900,12 @@ func _on_item_panel_cancelled():
 	var card_script = load("res://scripts/card.gd")
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
+	
+	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
+	if selection_mode in ["sacrifice", "discard"]:
+		restore_phase_comment()
+		_register_back_button_for_current_mode()
+		return
 	
 	# アイテム選択に戻る（ナビゲーション再設定）
 	_setup_item_phase_back_button()
@@ -1029,6 +1048,9 @@ func _on_creature_panel_cancelled():
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
 	
+	# フェーズコメントを復元
+	restore_phase_comment()
+	
 	# グローバルボタンを再登録
 	_register_back_button_for_current_mode()
 	
@@ -1064,6 +1086,8 @@ func _register_back_button_for_current_mode():
 			back_text = "交換しない"
 		"move":
 			back_text = "移動しない"
+		"sacrifice":
+			back_text = "召喚をキャンセル"
 	
 	ui_manager_ref.register_back_action(_on_pass_button_pressed, back_text)
 
@@ -1163,6 +1187,11 @@ func _on_pass_button_pressed():
 		# 交換/移動モードの場合はアクションメニューに戻る
 		if selection_mode in ["swap", "move"]:
 			_cancel_dominio_order_and_return_to_action_menu()
+		elif selection_mode == "sacrifice":
+			# 犠牲モードの場合はcard_selectedに-1を送って召喚をキャンセル
+			hide_selection()
+			if ui_manager_ref:
+				ui_manager_ref.emit_signal("card_selected", -1)
 		else:
 			hide_selection()
 			emit_signal("selection_cancelled")

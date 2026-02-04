@@ -317,7 +317,8 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 	if not current_player:
 		return
 	
-	# CardSelectionUIを使用してスペル選択
+	# フィルターを設定してスペル選択UIを表示
+	ui_manager.card_selection_filter = "spell"
 	if ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "spell")
 
@@ -535,6 +536,15 @@ func use_spell(spell_card: Dictionary):
 				selected_spell_card = {}
 				spell_used_this_turn = false
 				current_state = State.WAITING_FOR_INPUT
+				# ホバー状態を解除
+				var card_script = load("res://scripts/card.gd")
+				if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
+					card_script.currently_selected_card.deselect_card()
+				# スペル選択UIを再表示
+				if player_system and card_system:
+					var current_player = player_system.get_current_player()
+					var hand_data = card_system.get_all_cards_for_player(current_player_id)
+					_show_spell_selection_ui(hand_data, current_player.magic_power)
 				return
 			
 			# 合成条件判定

@@ -7,8 +7,8 @@ class_name PlayerSystem
 signal dice_rolled(value: int)
 @warning_ignore("unused_signal")  # 2個ダイス用
 signal dice_rolled_double(value1: int, value2: int, total: int)
-# TODO: 将来実装予定
-# signal magic_changed(player_id: int, new_value: int)
+# EP変更時シグナル（即座にUIを更新するため）
+signal magic_changed(player_id: int, new_value: int)
 @warning_ignore("unused_signal")  # GameSystemManagerで接続、将来のLapSystemから発行予定
 signal player_won(player_id: int)
 
@@ -177,6 +177,9 @@ func add_magic(player_id: int, amount: int):
 	print(player.name, ": EP ", player.magic_power, "EP (", 
 		"+" if amount >= 0 else "", amount, ")")
 	
+	# EP変更をシグナル発行（UI即座更新用）
+	emit_signal("magic_changed", player_id, player.magic_power)
+	
 	# 勝利判定はチェックポイント通過時に行う（LapSystem）
 
 # EPを設定（初期値設定用）
@@ -185,6 +188,9 @@ func set_magic(player_id: int, amount: int):
 		return
 	players[player_id].magic_power = max(0, amount)
 	print(players[player_id].name, ": EPを", amount, "EPに設定")
+	
+	# EP変更をシグナル発行（UI即座更新用）
+	emit_signal("magic_changed", player_id, players[player_id].magic_power)
 
 # EPを取得
 func get_magic(player_id: int) -> int:

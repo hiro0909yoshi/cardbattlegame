@@ -72,10 +72,8 @@ func show_hand_selection(player_id: int, filter: String = "", message: String = 
 	if selected_index >= 0 and selected_index < hand.size():
 		_selected_card = hand[selected_index]
 		_selected_index = selected_index
-		print("[CardSacrificeHelper] カード選択: %s" % _selected_card.get("name", "不明"))
 		return _selected_card
 	
-	print("[CardSacrificeHelper] カード選択キャンセル")
 	return {}
 
 
