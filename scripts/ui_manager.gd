@@ -563,7 +563,12 @@ func _input(event):
 # ドミニオコマンドボタンは特殊ボタン（左下）に移行済み
 
 ## ドミニオコマンドボタンを表示（特殊ボタン使用）
+## 操作可能な所有地がない場合は表示しない
 func show_dominio_order_button():
+	if board_system_ref and board_system_ref.has_method("_has_owned_lands"):
+		var player_id = board_system_ref.current_player_index
+		if not board_system_ref._has_owned_lands(player_id):
+			return
 	set_special_button("D", func(): _on_dominio_order_button_pressed())
 
 ## ドミニオコマンドボタンを非表示（特殊ボタンクリア）

@@ -836,9 +836,8 @@ func _reinitialize_card_selection():
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)
 			
-			# ドミニオコマンドボタンも再表示（ドミニオを所有している場合のみ）
-			if board_system_3d and board_system_3d._has_owned_lands(current_player.id):
-				ui_manager.show_dominio_order_button()
+			# ドミニオコマンドボタンも再表示（ダウンチェックはshow_dominio_order_button内で実施）
+			ui_manager.show_dominio_order_button()
 			
 
 # Phase 1-A: ドミニオコマンドを開く
