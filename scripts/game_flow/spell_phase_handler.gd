@@ -1341,6 +1341,7 @@ func _on_mystic_art_used():
 ## アルカナアーツフェーズ完了時
 func _on_mystic_phase_completed():
 	current_state = State.WAITING_FOR_INPUT
+	_return_to_spell_selection()
 
 
 ## アルカナアーツターゲット選択要求時

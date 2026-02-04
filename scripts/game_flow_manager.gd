@@ -338,9 +338,7 @@ func roll_dice():
 	
 	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:
-		spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
-		if spell_dice.should_grant_magic(player_system.current_player_index):
-			await get_tree().create_timer(1.0).timeout
+		await spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
 	
 	# 表示待ち
 	await get_tree().create_timer(1.0).timeout
@@ -836,7 +834,7 @@ func _reinitialize_card_selection():
 			ui_manager.hide_card_selection_ui()
 			ui_manager.show_card_selection_ui(current_player)
 			
-			# ドミニオコマンドボタンも再表示（ダウンチェックはshow_dominio_order_button内で実施）
+			# ドミニオコマンドボタンも再表示
 			ui_manager.show_dominio_order_button()
 			
 

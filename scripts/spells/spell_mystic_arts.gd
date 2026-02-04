@@ -427,7 +427,10 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	var targets = TargetSelectionHelper.get_valid_targets(spell_phase_handler_ref, target_type, target_info)
 	
 	if targets.is_empty():
-		ui_message_requested.emit("有効なターゲットがありません")
+		# コメントで通知してからフェーズ終了
+		var ui_mgr = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+		if ui_mgr and ui_mgr.global_comment_ui:
+			await ui_mgr.global_comment_ui.show_and_wait("有効なターゲットがありません", current_mystic_player_id)
 		clear_selection()
 		_end_mystic_phase()
 		return

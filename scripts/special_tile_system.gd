@@ -139,6 +139,9 @@ func handle_checkpoint_tile(player_id: int):
 		var cleared_count = board_system.movement_controller.clear_all_down_states_for_player(player_id)
 		if cleared_count > 0:
 			print("[チェックポイント] プレイヤー%d ダウン解除: %d体" % [player_id + 1, cleared_count])
+			# ダウン解除によりドミニオコマンドが使用可能になった場合、ボタンを表示
+			if ui_manager and ui_manager.has_method("show_dominio_order_button"):
+				ui_manager.show_dominio_order_button()
 	
 	# UI更新
 	if ui_manager and ui_manager.has_method("update_player_info_panels"):
