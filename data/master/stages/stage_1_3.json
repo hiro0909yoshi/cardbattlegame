@@ -1,17 +1,17 @@
 {
   "id": "stage_1_3",
-  "name": "十字路の試練",
-  "description": "4方向に分岐する十字型マップ。全チェックポイントを巡れ。",
-  "map_id": "map_cross_1",
+  "name": "はじまりの草原",
+  "description": "最初の試練。基本を学ぼう。",
+  "map_id": "map_diamond_20",
 
   "rule_preset": "quick",
-  "max_turns": 50,
+  "max_turns": 40,
   "rule_overrides": {
-	"initial_magic": {"player": 3000, "cpu": 1500},
+	"initial_magic": {"player": 200, "cpu": 200},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 4000, "timing": "checkpoint"}
+		{"type": "magic", "target": 5000, "timing": "checkpoint"}
 	  ]
 	}
   },
@@ -19,8 +19,8 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "bowser",
-		"deck_id": "balance_easy",
+		"character_id": "zako_1",
+		"deck_id": "cpu_deck_1",
 		"ai_level": 3,
 		"start_tile": 0
 	  }
@@ -28,12 +28,12 @@
   },
 
   "rewards": {
-	"gold": 1300,
+	"gold": 1000,
 	"rank_bonus": {
-	  "SS": 650,
-	  "S": 390,
-	  "A": 260,
-	  "B": 130,
+	  "SS": 500,
+	  "S": 300,
+	  "A": 200,
+	  "B": 100,
 	  "C": 0
 	}
   }

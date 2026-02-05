@@ -444,10 +444,11 @@ func _apply_post_battle_effects(
 			place_creature_data.erase("is_moving")
 			board_system_ref.place_creature(tile_index, place_creature_data)
 			
-			# 移動侵略の場合、移動元のクリーチャーを削除（配置の後に行う）
+			# 移動侵略の場合、移動元のクリーチャーを削除して空き地にする（配置の後に行う）
 			if from_tile_index >= 0:
 				board_system_ref.remove_creature(from_tile_index)
-				print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除" % from_tile_index)
+				board_system_ref.set_tile_owner(from_tile_index, -1)
+				print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除・空き地化" % from_tile_index)
 			
 			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
@@ -501,7 +502,8 @@ func _apply_post_battle_effects(
 			# 移動侵略の場合、移動元のクリーチャーも削除
 			if from_tile_index >= 0:
 				board_system_ref.remove_creature(from_tile_index)
-				print("[移動侵略失敗] 移動元タイル%d のクリーチャーを削除（破壊）" % from_tile_index)
+				board_system_ref.set_tile_owner(from_tile_index, -1)
+				print("[移動侵略失敗] 移動元タイル%d のクリーチャーを削除・空き地化（破壊）" % from_tile_index)
 			else:
 				print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
 			
@@ -596,10 +598,11 @@ func _apply_post_battle_effects(
 			board_system_ref.set_tile_owner(tile_index, -1)  # 無所有
 			board_system_ref.remove_creature(tile_index)
 			
-			# 移動侵略の場合、移動元のクリーチャーも削除
+			# 移動侵略の場合、移動元のクリーチャーも削除して空き地にする
 			if from_tile_index >= 0:
 				board_system_ref.remove_creature(from_tile_index)
-				print("[相打ち] 移動元タイル%d のクリーチャーも削除" % from_tile_index)
+				board_system_ref.set_tile_owner(from_tile_index, -1)
+				print("[相打ち] 移動元タイル%d のクリーチャーも削除・空き地化" % from_tile_index)
 			
 			# 攻撃側カードは破壊される（手札に戻らない）
 			print("[相打ち] 両方のクリーチャーが破壊されました")

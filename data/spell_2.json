@@ -1438,7 +1438,7 @@
 	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は20EP0になる)",
 	  "effect_parsed": {
 		"target_type": "player",
-		"target_filter": "enemy",
+		"target_filter": "any",
 		"effects": [
 		  {
 			"effect_type": "toll_fixed",

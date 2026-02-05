@@ -1,17 +1,17 @@
 {
   "id": "stage_1_2",
-  "name": "分岐の迷路",
-  "description": "8の字型の分岐マップ。ルート選択が勝敗を分ける。",
-  "map_id": "map_branch_1",
+  "name": "はじまりの草原",
+  "description": "最初の試練。基本を学ぼう。",
+  "map_id": "map_diamond_20",
 
   "rule_preset": "quick",
-  "max_turns": 50,
+  "max_turns": 40,
   "rule_overrides": {
-	"initial_magic": {"player": 300, "cpu": 300},
+	"initial_magic": {"player": 200, "cpu": 200},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 2000, "timing": "checkpoint"}
+		{"type": "magic", "target": 3000, "timing": "checkpoint"}
 	  ]
 	}
   },
