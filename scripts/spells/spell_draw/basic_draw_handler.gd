@@ -291,7 +291,7 @@ func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node) ->
 	
 	if result.get("drawn", false):
 		if ui_manager_ref and ui_manager_ref.global_comment_ui:
-			ui_manager_ref.global_comment_ui.show_message("『%s』を引きました" % result.get("card_name", "?"))
+			await ui_manager_ref.global_comment_ui.show_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 	else:
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_toast("デッキに該当タイプがありません")

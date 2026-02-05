@@ -527,6 +527,15 @@ func _is_dominio_command_active() -> bool:
 	return dominio.current_state != dominio.State.CLOSED
 
 
+# 移動中の方向選択・分岐選択中かどうか
+func _is_movement_selection_active() -> bool:
+	var gfm = _get_game_flow_manager()
+	if not gfm or not gfm.board_system_3d or not gfm.board_system_3d.movement_controller:
+		return false
+	var mc = gfm.board_system_3d.movement_controller
+	return mc.is_direction_selection_active or mc.is_branch_selection_active
+
+
 # アルカナアーツ効果適用中のカード選択（ルーンアデプト等）は許可する
 func _is_mystic_selection_phase() -> bool:
 	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
@@ -594,6 +603,12 @@ func _show_info_panel_only():
 		if gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
 			if gfm.spell_phase_handler.spell_mystic_arts.is_active():
 				is_special_phase_active = true
+		# 方向選択・分岐選択中
+		if gfm.board_system_3d and gfm.board_system_3d.movement_controller:
+			var mc = gfm.board_system_3d.movement_controller
+			if mc.is_direction_selection_active or mc.is_branch_selection_active:
+				is_special_phase_active = true
+
 	
 	# 召喚/バトルフェーズ中かどうか（ドミニオボタンを維持するため）
 	if ui_manager.card_selection_ui:
@@ -630,9 +645,16 @@ func _show_info_panel_only():
 	
 	var card_type = card_data.get("type", "")
 	
+	# 方向/分岐選択中かどうか
+	var is_movement_selection = false
+	if gfm and gfm.board_system_3d and gfm.board_system_3d.movement_controller:
+		var mc = gfm.board_system_3d.movement_controller
+		if mc.is_direction_selection_active or mc.is_branch_selection_active:
+			is_movement_selection = true
+	
 	# 閲覧モードで表示
-	# 特殊フェーズ中は×ボタンで閉じるを登録（setup_buttons=true）
-	var setup_buttons = is_special_phase_active
+	# 方向/分岐選択中はsetup_buttons=falseにして自前でナビゲーション管理
+	var setup_buttons = is_special_phase_active and not is_movement_selection
 	match card_type:
 		"creature":
 			if ui_manager.creature_info_panel_ui:
@@ -643,6 +665,25 @@ func _show_info_panel_only():
 		"item":
 			if ui_manager.item_info_panel_ui:
 				ui_manager.item_info_panel_ui.show_view_mode(card_data, setup_buttons)
+	
+	# 方向/分岐選択中は×ボタンのみ設定し、閉じた時にナビゲーション復元
+	if is_movement_selection:
+		var mc = gfm.board_system_3d.movement_controller
+		# 既存のナビゲーション（決定/上下）をクリアして×ボタンだけにする
+		ui_manager.disable_navigation()
+		ui_manager.register_back_action(func():
+			if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
+				ui_manager.creature_info_panel_ui.hide_panel(false)
+			if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
+				ui_manager.spell_info_panel_ui.hide_panel(false)
+			if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
+				ui_manager.item_info_panel_ui.hide_panel(false)
+			# 分岐/方向選択のナビゲーションを復元
+			if mc.is_direction_selection_active:
+				mc._setup_direction_selection_navigation()
+			elif mc.is_branch_selection_active:
+				mc._setup_branch_selection_navigation()
+		, "閉じる")
 	
 	# 召喚/バトルフェーズ中はドミニオボタンを再表示
 	if is_summon_or_battle_phase:
@@ -667,6 +708,8 @@ func _get_game_flow_manager():
 	
 # 通常の入力処理とカード選択処理
 func _input(event):
+
+	
 	# 入力ロック中は無視
 	var game_flow_manager = _get_game_flow_manager()
 	if game_flow_manager and game_flow_manager.is_input_locked():
@@ -684,6 +727,14 @@ func _input(event):
 			_show_info_panel_only()
 			get_viewport().set_input_as_handled()
 			return
+	
+	# 方向選択・分岐選択中はインフォパネル表示のみ許可（mouse_overが効かないためRect判定）
+	if _is_movement_selection_active() and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if get_global_rect().has_point(event.position):
+				_show_info_panel_only()
+				get_viewport().set_input_as_handled()
+				return
 	
 	# カード選択モード時のクリック処理（グレーアウト時もインフォパネル表示のみ許可）
 	if (is_selectable or is_grayed_out) and mouse_over and event is InputEventMouseButton:

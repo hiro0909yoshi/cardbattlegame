@@ -238,10 +238,14 @@ func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, cal
 		card_system.discard_card(target_player_id, best_index, "steal")
 		card_system.add_card_to_hand(current_player_id, card_data)
 		print("[手札奪取] プレイヤー%d: %s を奪取" % [current_player_id + 1, card_data.get("name", "?")])
+		if ui_manager and ui_manager.global_comment_ui:
+			await ui_manager.global_comment_ui.show_and_wait("『%s』を奪いました" % card_data.get("name", "?"))
 	else:
 		# 破壊
 		card_system.discard_card(target_player_id, best_index, "destroy")
 		print("[手札破壊] プレイヤー%d: %s を破壊" % [target_player_id + 1, card_data.get("name", "?")])
+		if ui_manager and ui_manager.global_comment_ui:
+			await ui_manager.global_comment_ui.show_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
 	
 	callback.call(best_index)
 	_finish_enemy_card_selection()
@@ -606,13 +610,13 @@ func _execute_deck_card_action(card_index: int):
 			var result = spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
 			if result.get("drawn", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_message("『%s』を引きました" % result.get("card_name", "?"))
+					await ui_manager.global_comment_ui.show_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード
 			var result = spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_message("『%s』を破壊しました" % result.get("card_name", "?"))
+					await ui_manager.global_comment_ui.show_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
 	
 	# コールバックを呼び出し
 	if deck_card_selection_callback:
@@ -811,7 +815,7 @@ func _execute_transform_card_action(card_index: int):
 			
 			if result.get("transformed_count", 0) > 0:
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_message("『%s』%d枚を『%s』に変換" % [
+					await ui_manager.global_comment_ui.show_and_wait("『%s』%d枚を『%s』に変換" % [
 						result.get("original_name", "?"),
 						result.get("transformed_count", 0),
 						result.get("new_name", "?")
@@ -1035,6 +1039,9 @@ func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
 	if spell_draw:
 		spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
 	
+	if ui_manager and ui_manager.global_comment_ui:
+		await ui_manager.global_comment_ui.show_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
+	
 	callback.call(best_index)
 	_finish_deck_card_selection()
 
@@ -1079,8 +1086,14 @@ func _cpu_auto_select_transform_card(target_player_id: int, filter_mode: String)
 	
 	# 同名カードを全て変換
 	if spell_draw:
-		var card_name = card_data.get("name", "")
+		var card_name_str = card_data.get("name", "")
 		var card_id = card_data.get("id", -1)
-		spell_draw.transform_cards_to_specific(target_player_id, card_name, card_id, transform_to_card_id)
+		var result = spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
+		if result.get("transformed_count", 0) > 0 and ui_manager and ui_manager.global_comment_ui:
+			await ui_manager.global_comment_ui.show_and_wait("『%s』%d枚を『%s』に変換" % [
+				result.get("original_name", "?"),
+				result.get("transformed_count", 0),
+				result.get("new_name", "?")
+			])
 	
 	_finish_transform_card_selection()
