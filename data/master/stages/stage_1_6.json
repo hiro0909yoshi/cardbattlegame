@@ -1,40 +1,40 @@
 {
   "id": "stage_1_6",
-  "name": "迷路の試練",
-  "description": "内部に分岐とワープがある複雑なマップ",
-  "map_id": "map_1_6",
+  "name": "8の字の試練II",
+  "description": "2つのループが繋がる8の字型マップ。戦略的な位置取りが重要。",
+  "map_id": "map_1_5",
 
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 2500},
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
-      ]
-    }
+	"initial_magic": {"player": 200, "cpu": 200},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{"type": "magic", "target": 5000, "timing": "checkpoint"}
+	  ]
+	}
   },
 
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "skills_test",
-        "ai_level": 4,
-        "start_tile": 0
-      }
-    ]
+	"enemies": [
+	  {
+		"character_id": "zako_2",
+		"deck_id": "cpu_deck_2",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	]
   },
 
   "rewards": {
-    "gold": 1600,
-    "rank_bonus": {
-      "SS": 800,
-      "S": 480,
-      "A": 320,
-      "B": 160,
-      "C": 0
-    }
+	"gold": 1000,
+	"rank_bonus": {
+	  "SS": 500,
+	  "S": 200,
+	  "A": 100,
+	  "B": 50,
+	  "C": 0
+	}
   }
 }

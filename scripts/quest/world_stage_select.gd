@@ -3,6 +3,8 @@ extends Control
 ## ワールド・ステージ選択画面
 ## ワールドを選択→展開してステージ一覧表示→ステージ詳細→ブック選択へ
 
+const GC = preload("res://scripts/game_constants.gd")
+
 # UI参照
 @onready var world_container: VBoxContainer = $MarginContainer/MainContainer/LeftPanel/WorldContainer
 @onready var stage_container: HBoxContainer = $MarginContainer/MainContainer/LeftPanel/StageContainer
@@ -12,6 +14,7 @@ extends Control
 @onready var reward_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/RewardLabel
 @onready var record_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/RecordLabel
 @onready var stats_label: Label = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/StatsLabel
+@onready var special_tile_container: VBoxContainer = $MarginContainer/MainContainer/RightPanel/DetailPanel/VBox/SpecialTileContainer
 @onready var start_button: Button = $MarginContainer/MainContainer/RightPanel/StartButton
 @onready var back_button: Button = $MarginContainer/MainContainer/RightPanel/BackButton
 
@@ -44,6 +47,9 @@ var world_buttons: Array = []
 var stage_buttons: Array = []
 
 # 定数
+# 通常タイル（特殊タイル一覧から除外するタイプ）
+const NORMAL_TILE_TYPES = ["Fire", "Water", "Wind", "Earth", "Neutral", "Checkpoint"]
+
 const STAGE_BUTTON_SIZE = 165
 const STAGE_BUTTON_MARGIN = 40
 
@@ -265,8 +271,10 @@ func _show_stage_detail(stage_id: String):
 	var map_id = stage_data.get("map_id", "")
 	if not map_id.is_empty():
 		_show_map_preview(map_id)
+		_show_special_tiles(map_id)
 	else:
 		map_preview.texture = null
+		_clear_special_tiles()
 
 ## ステージデータを読み込み（キャッシュ付き）
 func _load_stage_data(stage_id: String) -> Dictionary:
@@ -463,3 +471,184 @@ func _get_tile_scene(tile_type: String) -> PackedScene:
 	if ResourceLoader.exists(path):
 		return load(path)
 	return null
+
+## 特殊タイル表示をクリア
+func _clear_special_tiles():
+	for child in special_tile_container.get_children():
+		child.queue_free()
+
+## マップデータから特殊タイルを検出して表示
+func _show_special_tiles(map_id: String):
+	_clear_special_tiles()
+	
+	# マップデータ読み込み
+	var path = "res://data/master/maps/%s.json" % map_id
+	if not FileAccess.file_exists(path):
+		return
+	
+	var file = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	
+	var json = JSON.new()
+	if json.parse(file.get_as_text()) != OK:
+		return
+	
+	var map_data = json.get_data()
+	var tiles = map_data.get("tiles", [])
+	
+	# 特殊タイルタイプを重複なしで収集（出現順）
+	var special_types: Array[String] = []
+	for tile in tiles:
+		var tile_type: String = tile.get("type", "")
+		if tile_type not in NORMAL_TILE_TYPES and tile_type not in special_types and not tile_type.is_empty():
+			special_types.append(tile_type)
+	
+	if special_types.is_empty():
+		return
+	
+	# ヘッダー
+	var header = Label.new()
+	header.text = "特殊タイル"
+	header.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+	header.add_theme_color_override("font_color", Color(0.8, 0.8, 0.6))
+	special_tile_container.add_child(header)
+	
+	# 各特殊タイルを2列で配置
+	var current_hbox: HBoxContainer = null
+	for i in range(special_types.size()):
+		if i % 2 == 0:
+			current_hbox = HBoxContainer.new()
+			current_hbox.add_theme_constant_override("separation", 16)
+			special_tile_container.add_child(current_hbox)
+		_add_special_tile_button(current_hbox, special_types[i])
+
+## 特殊タイルのボタン項目を追加（クリックでオーバーレイ表示）
+func _add_special_tile_button(parent: HBoxContainer, tile_type: String):
+	# SpecialTileInfoDialogの定義から情報を取得
+	var tile_info = _get_special_tile_info(tile_type)
+	if tile_info.is_empty():
+		return
+	
+	var tile_name: String = tile_info.get("name", tile_type)
+	var tile_color: Color = tile_info.get("color", Color.WHITE)
+	
+	# ボタン（タイル名）
+	var btn = Button.new()
+	btn.text = "▶ " + tile_name
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+	btn.add_theme_color_override("font_color", tile_color)
+	btn.add_theme_color_override("font_hover_color", tile_color.lightened(0.3))
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# フラットスタイル
+	var flat_style = StyleBoxFlat.new()
+	flat_style.bg_color = Color(0, 0, 0, 0)
+	btn.add_theme_stylebox_override("normal", flat_style)
+	var hover_style = StyleBoxFlat.new()
+	hover_style.bg_color = Color(1, 1, 1, 0.05)
+	btn.add_theme_stylebox_override("hover", hover_style)
+	var pressed_style = StyleBoxFlat.new()
+	pressed_style.bg_color = Color(1, 1, 1, 0.1)
+	btn.add_theme_stylebox_override("pressed", pressed_style)
+	
+	parent.add_child(btn)
+	
+	# クリックでオーバーレイ表示
+	btn.pressed.connect(func():
+		_show_special_tile_overlay(tile_info)
+	)
+
+## 特殊タイルの説明をオーバーレイで全画面表示
+func _show_special_tile_overlay(tile_info: Dictionary):
+	var tile_name: String = tile_info.get("name", "")
+	var tile_color: Color = tile_info.get("color", Color.WHITE)
+	var tile_desc: String = tile_info.get("description", "")
+	
+	# 背景オーバーレイ
+	var overlay = ColorRect.new()
+	overlay.anchor_right = 1.0
+	overlay.anchor_bottom = 1.0
+	overlay.color = Color(0, 0, 0, 0.75)
+	add_child(overlay)
+	
+	# 中央パネル（内容に合わせたサイズ、画面中央配置）
+	var center = CenterContainer.new()
+	center.anchor_right = 1.0
+	center.anchor_bottom = 1.0
+	overlay.add_child(center)
+	
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(get_viewport().get_visible_rect().size.x * 0.7, 0)
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.12, 0.14, 0.2, 1.0)
+	panel_style.set_corner_radius_all(16)
+	panel_style.set_border_width_all(2)
+	panel_style.border_color = tile_color.darkened(0.3)
+	panel_style.content_margin_left = 50
+	panel_style.content_margin_top = 40
+	panel_style.content_margin_right = 50
+	panel_style.content_margin_bottom = 40
+	panel.add_theme_stylebox_override("panel", panel_style)
+	center.add_child(panel)
+	
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 24)
+	panel.add_child(vbox)
+	
+	# タイル色サンプル + 名前
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 20)
+	header_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(header_hbox)
+	
+	var color_rect = ColorRect.new()
+	color_rect.custom_minimum_size = Vector2(48, 48)
+	color_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	color_rect.color = tile_color
+	header_hbox.add_child(color_rect)
+	
+	var name_label = Label.new()
+	name_label.text = tile_name
+	name_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_MENU_BUTTON)
+	name_label.add_theme_color_override("font_color", tile_color)
+	header_hbox.add_child(name_label)
+	
+	# 区切り線
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+	
+	# 説明文
+	var desc_label = Label.new()
+	desc_label.text = tile_desc
+	desc_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_COMMENT)
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(desc_label)
+	
+	# 閉じるボタン
+	var close_btn = Button.new()
+	close_btn.text = "閉じる"
+	close_btn.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+	close_btn.custom_minimum_size = Vector2(200, 60)
+	close_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vbox.add_child(close_btn)
+	
+	close_btn.pressed.connect(func():
+		overlay.queue_free()
+	)
+	
+	# 背景クリックでも閉じる
+	overlay.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed:
+			overlay.queue_free()
+	)
+	center.mouse_filter = Control.MOUSE_FILTER_PASS
+
+## SpecialTileInfoDialogの定義からタイル情報を取得
+func _get_special_tile_info(tile_type: String) -> Dictionary:
+	for info in SpecialTileInfoDialog.SPECIAL_TILES_INFO:
+		if info.get("type", "") == tile_type:
+			return info
+	return {}

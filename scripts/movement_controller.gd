@@ -642,7 +642,12 @@ func _get_next_from_connections(connections: Array, came_from: int, direction: i
 func _show_branch_tile_selection(choices: Array) -> int:
 	is_branch_selection_active = true
 	available_branches = choices
-	selected_branch_index = 0
+	
+	# 次のチェックポイントに近い方向をデフォルト選択
+	if cpu_movement_evaluator and current_branch_tile >= 0:
+		selected_branch_index = cpu_movement_evaluator.get_nearest_checkpoint_branch_index(current_moving_player, choices, current_branch_tile)
+	else:
+		selected_branch_index = 0
 	
 	# カメラを手動モードに切り替え（分岐先を確認できるように）
 	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:

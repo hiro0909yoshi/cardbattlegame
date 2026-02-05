@@ -525,6 +525,40 @@ func _calculate_direction_bonus_legacy(start_tile: int, player_id: int) -> int:
 	return max(0, SCORE_DIRECTION_UNVISITED_GATE - (this_distance * 100))
 
 
+## 分岐先から最寄り未訪問チェックポイントに最も近い選択肢のインデックスを返す
+## プレイヤーの分岐デフォルトカーソル位置に使用（CPU判定には影響しない）
+## 戻り値: choices配列内のインデックス（判定不能の場合は0）
+func get_nearest_checkpoint_branch_index(player_id: int, choices: Array, branch_tile: int) -> int:
+	if choices.size() <= 1:
+		return 0
+	
+	# チェックポイント距離計算を遅延初期化
+	_ensure_checkpoint_distances_calculated()
+	
+	if not checkpoint_calculator or not checkpoint_calculator.is_branch_tile(branch_tile):
+		return 0
+	
+	# プレイヤーの訪問済みチェックポイントを取得
+	var visited = _get_visited_checkpoints(player_id)
+	
+	# 分岐タイル自体がCPなら除外
+	var branch_cp = _get_checkpoint_id_at_tile(branch_tile)
+	if branch_cp != "" and branch_cp not in visited:
+		visited = visited.duplicate()
+		visited.append(branch_cp)
+	
+	# 各分岐先の最短CP距離を比較
+	var best_index = 0
+	var best_distance = 9999
+	for i in range(choices.size()):
+		var result = checkpoint_calculator.get_directional_nearest_checkpoint(branch_tile, choices[i], visited)
+		if result.distance < best_distance:
+			best_distance = result.distance
+			best_index = i
+	
+	return best_index
+
+
 ## 分岐選択用の方向ボーナス計算
 ## 分岐タイルから指定方向に進んだ場合の、最短未訪問CPへの距離に基づくボーナス
 func _calculate_direction_bonus_for_branch(branch_tile: int, next_tile: int, player_id: int) -> int:

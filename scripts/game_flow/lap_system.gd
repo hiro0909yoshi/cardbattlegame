@@ -178,11 +178,22 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	# 必要なシグナルかチェック
 	if not checkpoint_type in required_checkpoints:
 		print("[LapSystem] 不明なシグナル: %s (必要: %s)" % [checkpoint_type, required_checkpoints])
+		await get_tree().process_frame
+		checkpoint_processing_completed.emit()
 		return
 	
-	# 既に取得済みならスキップ
+	# 既に取得済みでも勝敗判定は行う
 	if player_lap_state[player_id].get(checkpoint_type, false):
 		print("[LapSystem] プレイヤー%d: シグナル %s は既に取得済み" % [player_id + 1, checkpoint_type])
+		# 勝敗判定（チェックポイント到達時は常に判定）
+		if not _is_tutorial_mode():
+			if _check_win_condition(player_id):
+				await get_tree().process_frame
+				checkpoint_processing_completed.emit()
+				return
+		# 呼び出し元のawaitが先にセットアップされるよう1フレーム待ってからemit
+		await get_tree().process_frame
+		checkpoint_processing_completed.emit()
 		return
 	
 	# シグナル取得 - チェックポイント通過ボーナス付与

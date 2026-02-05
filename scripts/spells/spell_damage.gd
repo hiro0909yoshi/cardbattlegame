@@ -256,6 +256,15 @@ func apply_permanent_hp_to_all_creatures(handler: Node, target_info: Dictionary,
 		]
 		
 		await _show_notification_and_wait(notification_text)
+		
+		# HP0以下の場合はクリーチャーを破壊
+		if new_current_hp <= 0:
+			if board_system_ref.tile_nodes.has(tile_index):
+				var tile = board_system_ref.tile_nodes[tile_index]
+				if not tile.creature_data.is_empty():
+					_destroy_creature(tile)
+					var destroy_text = "%s は倒された！" % creature_name
+					await _show_notification_and_wait(destroy_text)
 
 
 ## 通知表示＋クリック待ち（共通処理）

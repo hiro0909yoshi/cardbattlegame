@@ -72,6 +72,35 @@
 		"spell_use_rate": 0.5,
 		"dominio_use_rate": 0.0
 	  }
+	},
+	"zako_2": {
+	  "name": "雑魚2",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "",
+	  "description": "雑魚敵2",
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.5,
+		  "both_no_item": 0.5,
+		  "vs_enemy_item": 0.0,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.5,
+		  "always_protect": 0.5,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": false,
+		  "protect_by_value": {
+			"enabled": false,
+			"threshold": 200,
+			"min_defense_items": 2
+		  }
+		},
+		"summon_rate_match": 0.7,
+		"summon_rate_mismatch": 0.7,
+		"spell_use_rate": 0.7,
+		"dominio_use_rate": 0.5
+	  }
 	}
   }
 }

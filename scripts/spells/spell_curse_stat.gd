@@ -95,6 +95,10 @@ func _apply_permanent_hp_change(handler: Node, tile_index: int, effect: Dictiona
 	print("[恒久変更] ", creature_name, " MHP ", sign_str, value)
 	
 	await _show_notification_and_wait(notification_text)
+	
+	# HP0以下の場合はクリーチャーを破壊
+	if new_current_hp <= 0:
+		await _destroy_creature_on_tile(handler, tile_index, creature_name)
 
 
 ## 恒久AP変更効果を適用（内部用）
@@ -338,6 +342,40 @@ func _show_notification_and_wait(text: String) -> void:
 	if spell_cast_notification_ui:
 		spell_cast_notification_ui.show_notification_and_wait(text)
 		await spell_cast_notification_ui.click_confirmed
+
+
+## MHP減少によりHP0以下になったクリーチャーを破壊
+## SpellDamageの_destroy_creatureに委譲（スペル破壊時の死亡効果も処理）
+func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: String) -> void:
+	if not board_system or not board_system.tile_nodes.has(tile_index):
+		print("[SpellCurseStat] 破壊失敗: タイル%d が見つかりません" % tile_index)
+		return
+	
+	var tile = board_system.tile_nodes[tile_index]
+	if tile.creature_data.is_empty():
+		return
+	
+	# SpellDamageの_destroy_creatureに委譲（死亡効果・遺産・変身を含む）
+	if handler and handler.has("spell_damage") and handler.spell_damage:
+		handler.spell_damage._destroy_creature(tile)
+		print("[SpellCurseStat] MHP減少により %s を撃破（SpellDamage経由）" % creature_name)
+	else:
+		# フォールバック: SpellDamageが取得できない場合は直接破壊
+		var saved_level = tile.level
+		tile.remove_creature()
+		tile.owner_id = -1
+		tile.level = saved_level
+		if tile.has_method("update_visual"):
+			tile.update_visual()
+		print("[SpellCurseStat] MHP減少により %s を撃破（フォールバック）" % creature_name)
+	
+	# 破壊通知
+	var destroy_text = "%s は倒された！" % creature_name
+	await _show_notification_and_wait(destroy_text)
+	
+	# 表示更新
+	if board_system.has_method("update_all_tile_displays"):
+		board_system.update_all_tile_displays()
 
 
 # ========================================
