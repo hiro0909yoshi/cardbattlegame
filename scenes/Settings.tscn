@@ -69,6 +69,14 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 36
 text = "プレイヤーカード管理"
 
+[node name="MapButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(400, 80)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 36
+text = "マップ"
+
+
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3

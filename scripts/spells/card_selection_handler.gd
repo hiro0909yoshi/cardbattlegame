@@ -328,13 +328,13 @@ func _execute_enemy_card_action(card_index: int):
 			)
 			if result.get("stolen", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_comment("『%s』を奪いました" % result.get("card_name", "?"))
+					ui_manager.global_comment_ui.show_message("『%s』を奪いました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード（シャッター、スクイーズ）
 			var result = spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_comment("『%s』を破壊しました" % result.get("card_name", "?"))
+					ui_manager.global_comment_ui.show_message("『%s』を破壊しました" % result.get("card_name", "?"))
 	
 	# コールバックを呼び出し
 	if enemy_card_selection_callback:
@@ -606,13 +606,13 @@ func _execute_deck_card_action(card_index: int):
 			var result = spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
 			if result.get("drawn", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_comment("『%s』を引きました" % result.get("card_name", "?"))
+					ui_manager.global_comment_ui.show_message("『%s』を引きました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード
 			var result = spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_comment("『%s』を破壊しました" % result.get("card_name", "?"))
+					ui_manager.global_comment_ui.show_message("『%s』を破壊しました" % result.get("card_name", "?"))
 	
 	# コールバックを呼び出し
 	if deck_card_selection_callback:
@@ -811,7 +811,7 @@ func _execute_transform_card_action(card_index: int):
 			
 			if result.get("transformed_count", 0) > 0:
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_comment("『%s』%d枚を『%s』に変換" % [
+					ui_manager.global_comment_ui.show_message("『%s』%d枚を『%s』に変換" % [
 						result.get("original_name", "?"),
 						result.get("transformed_count", 0),
 						result.get("new_name", "?")

@@ -10,6 +10,7 @@ extends Control
 @onready var dominion_command_button: Button = $MarginContainer/VBoxContainer/DominionCommandButton
 @onready var down_state_button: Button = $MarginContainer/VBoxContainer/DownStateButton
 @onready var skill_button: Button = $MarginContainer/VBoxContainer/SkillButton
+@onready var special_tile_button: Button = $MarginContainer/VBoxContainer/SpecialTileButton
 
 func _ready():
 	back_button.pressed.connect(_on_back_pressed)
@@ -19,6 +20,7 @@ func _ready():
 	dominion_command_button.pressed.connect(_on_dominion_command_pressed)
 	down_state_button.pressed.connect(_on_down_state_pressed)
 	skill_button.pressed.connect(_on_skill_pressed)
+	special_tile_button.pressed.connect(_on_special_tile_pressed)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/Settings.tscn")
@@ -40,3 +42,6 @@ func _on_down_state_pressed():
 
 func _on_skill_pressed():
 	get_tree().change_scene_to_file("res://scenes/HelpSkill.tscn")
+
+func _on_special_tile_pressed():
+	get_tree().change_scene_to_file("res://scenes/HelpSpecialTile.tscn")

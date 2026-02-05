@@ -1435,7 +1435,7 @@
 	  "cost": {
 		"ep": 60
 	  },
-	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は20EP0になる)",
+	  "effect": "対象セプターに呪い\"通行料200\"(3R間、通行料は200EPになる)",
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_filter": "any",

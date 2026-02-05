@@ -298,9 +298,21 @@ func _on_background_clicked(event: InputEvent):
 
 
 
-# ESCキー検出
+# ESCキーおよびパネル外クリック検出
 func _input(event):
+	if not visible:
+		return
+	
+	# ESCキー
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		if visible:
-			hide_dialog()
-			get_tree().root.set_input_as_handled()
+		hide_dialog()
+		get_tree().root.set_input_as_handled()
+		return
+	
+	# マウスクリック: MainPanel外なら閉じる
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if main_panel:
+			var panel_rect = Rect2(main_panel.global_position, main_panel.size)
+			if not panel_rect.has_point(event.global_position):
+				hide_dialog()
+				get_tree().root.set_input_as_handled()

@@ -1,5 +1,5 @@
 72322a848ab928aa5c89f0cb78209805
-::res://::1770247940
+::res://::1770300014
 CLAUDE.md::TextFile::-1::1770220521::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile/TextFile::-1::1766642301::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D/CompressedTexture2D::8473286213771878842::1756938033::1766349759::1::::<><><>0<>0<>90e028d7961bcfb9e7d95aa1be8ff5d6<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
@@ -98,7 +98,7 @@ item.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 neutral_1.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 neutral_2.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 spell_1.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
-spell_2.json::JSON::-1::1770236532::0::1::::<><><>0<>0<><>::
+spell_2.json::JSON::-1::1770250615::0::1::::<><><>0<>0<><>::
 spell_mystic.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 water_1.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 water_2.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
@@ -127,8 +127,8 @@ map_new.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 map_tutorial.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 ::res://data/master/stages/::1770244919
 stage_1_1.json::JSON::-1::1770244919::0::1::::<><><>0<>0<><>::
-stage_1_2.json::JSON::-1::1770236532::0::1::::<><><>0<>0<><>::
-stage_1_3.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
+stage_1_2.json::JSON::-1::1770248914::0::1::::<><><>0<>0<><>::
+stage_1_3.json::JSON::-1::1770248918::0::1::::<><><>0<>0<><>::
 stage_1_4.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 stage_1_5.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
 stage_1_6.json::JSON::-1::1770220522::0::1::::<><><>0<>0<><>::
@@ -370,9 +370,9 @@ creature_info_panel.tscn::PackedScene::5170506109789987011::1770220522::0::1::::
 item_info_panel.tscn::PackedScene::866777908860882644::1770244919::0::1::::<><><>0<>0<><>::uid://brm3wvfcgsuyg::::res://assets/ui/インフォ.png<>uid://ch6cv55e0krgs::::res://scripts/ui_components/item_info_panel_ui.gd
 player_status_dialog.tscn::PackedScene::7464334503728191713::1770220522::0::1::::<><><>0<>0<><>::uid://brm3wvfcgsuyg::::res://assets/ui/インフォ.png<>uid://dk7tpt1l8qukt::::res://scripts/ui_components/player_status_dialog.gd
 spell_info_panel.tscn::PackedScene::7801119824900927065::1770220522::0::1::::<><><>0<>0<><>::uid://brm3wvfcgsuyg::::res://assets/ui/インフォ.png<>uid://csaoteboda58s::::res://scripts/ui_components/spell_info_panel_ui.gd
-::res://scripts/::1770220522
+::res://scripts/::1770250261
 album.gd::GDScript::1951588888871976032::1770220522::0::1::::<>Control<><>0<>0<><>::
-battle_system.gd::GDScript::4614449625058468659::1770220522::0::1::::BattleSystem<>Node<><>0<>0<><>::
+battle_system.gd::GDScript::4614449625058468659::1770249821::0::1::::BattleSystem<>Node<><>0<>0<><>::
 board_system_3d.gd::GDScript::3130236809901248202::1770245116::0::1::::BoardSystem3D<>Node<><>0<>0<><>::
 camera_controller.gd::GDScript::2491755637044340830::1770220522::0::1::::CameraController<>Node<><>0<>0<><>::
 card.gd::GDScript::3994261600844812483::1770220522::0::1::::<>Control<><>0<>0<><>::
@@ -382,7 +382,7 @@ cpu_deck_data.gd::GDScript::4553544679408868010::1770220522::0::1::::<>Node<><>0
 cpu_deck_editor.gd::GDScript::7537623342045152904::1770220522::0::1::::<>Control<><>0<>0<><>::
 cpu_deck_select.gd::GDScript::3342030227119058217::1770220522::0::1::::<>Control<><>0<>0<><>::
 creature_manager.gd::GDScript::5199114753775265115::1769456219::0::1::::CreatureManager<>Node<><>0<>0<><>::
-debug_controller.gd::GDScript::1063903359284985093::1770220522::0::1::::DebugController<>Node<><>0<>0<><>::
+debug_controller.gd::GDScript::1063903359284985093::1770250368::0::1::::DebugController<>Node<><>0<>0<><>::
 deck_editor.gd::GDScript::2881829560532986006::1770220522::0::1::::<>Control<><>0<>0<><>::
 deck_select.gd::GDScript::4110864844101582121::1769456220::0::1::::<>Control<><>0<>0<><>::
 effect_manager.gd::GDScript::6041034237716278969::1769456220::0::1::::EffectManager<>Node<><>0<>0<><>::
@@ -512,7 +512,7 @@ land_selection_helper.gd::GDScript::5598424868310526064::1770220522::0::1::::Lan
 lap_system.gd::GDScript::6765520482242992667::1770245138::0::1::::LapSystem<>Node<><>0<>0<><>::
 movement_helper.gd::GDScript::7395911989598384816::1770220522::0::1::::MovementHelper<>RefCounted<><>0<>0<><>::
 spell_effect_executor.gd::GDScript::5172603576269600406::1770220522::0::1::::SpellEffectExecutor<>RefCounted<><>0<>0<><>::
-spell_phase_handler.gd::GDScript::6084142974766040335::1770225022::0::1::::SpellPhaseHandler<>Node<><>0<>0<><>::
+spell_phase_handler.gd::GDScript::6084142974766040335::1770248302::0::1::::SpellPhaseHandler<>Node<><>0<>0<><>::
 target_finder.gd::GDScript::6395880129118645329::1770220522::0::1::::TargetFinder<>RefCounted<><>0<>0<><>::
 target_marker_system.gd::GDScript::1990416815325305491::1770220522::0::1::::TargetMarkerSystem<>RefCounted<><>0<>0<><>::
 target_selection_helper.gd::GDScript::3057869841316598696::1770220522::0::1::::TargetSelectionHelper<>Node<><>0<>0<><>::
@@ -560,7 +560,7 @@ spell_hp_immune.gd::GDScript::74725982026158041::1770220522::0::1::::SpellHpImmu
 spell_land_new.gd::GDScript::8832455011676387351::1770220522::0::1::::SpellLand<>RefCounted<><>0<>0<><>::
 spell_magic.gd::GDScript::8650300187604863361::1770220522::0::1::::SpellMagic<>Node<><>0<>0<><>::
 spell_movement.gd::GDScript::4532547179405323108::1770245318::0::1::::SpellMovement<>RefCounted<><>0<>0<><>::
-spell_mystic_arts.gd::GDScript::2212917536751568533::1770220522::0::1::::SpellMysticArts<>RefCounted<><>0<>0<><>::
+spell_mystic_arts.gd::GDScript::2212917536751568533::1770248432::0::1::::SpellMysticArts<>RefCounted<><>0<>0<><>::
 spell_player_move.gd::GDScript::3624613596502917505::1770220522::0::1::::SpellPlayerMove<>Node<><>0<>0<><>::
 spell_protection.gd::GDScript::7020713540461062937::1770220522::0::1::::SpellProtection<>RefCounted<><>0<>0<><>::
 spell_purify.gd::GDScript::2856751510842758574::1770220522::0::1::::SpellPurify<>Node<><>0<>0<><>::

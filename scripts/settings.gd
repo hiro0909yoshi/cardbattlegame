@@ -8,6 +8,8 @@ extends Control
 @onready var help_button: Button = $MarginContainer/VBoxContainer/HelpButton
 @onready var cpu_deck_button: Button = $MarginContainer/VBoxContainer/CpuDeckButton
 @onready var player_card_button: Button = $MarginContainer/VBoxContainer/PlayerCardButton
+@onready var map_button: Button = $MarginContainer/VBoxContainer/MapButton
+
 
 func _ready():
 	# ボタン接続
@@ -16,6 +18,8 @@ func _ready():
 	help_button.pressed.connect(_on_help_pressed)
 	cpu_deck_button.pressed.connect(_on_cpu_deck_pressed)
 	player_card_button.pressed.connect(_on_player_card_pressed)
+	map_button.pressed.connect(_on_map_pressed)
+
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
@@ -35,3 +39,10 @@ func _on_cpu_deck_pressed():
 func _on_player_card_pressed():
 	print("プレイヤーカード管理画面へ")
 	get_tree().change_scene_to_file("res://scenes/PlayerCardManager.tscn")
+
+func _on_map_pressed():
+	var dialog = MapPreviewDialog.new()
+	add_child(dialog)
+	dialog.popup_centered()
+
+

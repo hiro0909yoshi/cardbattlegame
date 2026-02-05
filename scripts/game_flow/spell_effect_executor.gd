@@ -249,7 +249,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				if handler.ui_manager and handler.ui_manager.global_comment_ui:
 					var type_count = result.removed_types.size()
 					var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
-					handler.ui_manager.global_comment_ui.show_comment(message)
+					handler.ui_manager.global_comment_ui.show_message(message)
 		
 		"remove_creature_curse":
 			if handler.spell_purify:
