@@ -328,13 +328,13 @@ func _execute_enemy_card_action(card_index: int):
 			)
 			if result.get("stolen", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_message("『%s』を奪いました" % result.get("card_name", "?"))
+					await ui_manager.global_comment_ui.show_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード（シャッター、スクイーズ）
 			var result = spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
 				if ui_manager and ui_manager.global_comment_ui:
-					ui_manager.global_comment_ui.show_message("『%s』を破壊しました" % result.get("card_name", "?"))
+					await ui_manager.global_comment_ui.show_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
 	
 	# コールバックを呼び出し
 	if enemy_card_selection_callback:
@@ -939,12 +939,14 @@ func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
 				_on_info_panel_confirmed({})
 		"spell":
 			if ui_manager.spell_info_panel_ui:
-				ui_manager.spell_info_panel_ui.show_spell_info(card_data, card_index)
+				var prompt = "『%s』に使用しますか？" % card_name
+				ui_manager.spell_info_panel_ui.show_spell_info(card_data, card_index, "", "spell", prompt)
 			else:
 				_on_info_panel_confirmed({})
 		"item":
 			if ui_manager.item_info_panel_ui:
-				ui_manager.item_info_panel_ui.show_item_info(card_data, card_index)
+				var prompt = "『%s』に使用しますか？" % card_name
+				ui_manager.item_info_panel_ui.show_item_info(card_data, card_index, "", "item", prompt)
 			else:
 				_on_info_panel_confirmed({})
 		_:

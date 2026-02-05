@@ -47,7 +47,7 @@ func set_ui_manager(manager) -> void:
 ## スペル情報パネルを表示（使用確認モード）
 ## restriction_reason: ""=制限なし, "ep"=EP不足, "restriction"=呪い等
 ## current_selection_mode: 選択モード（spell, sacrifice, discard等）
-func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_reason: String = "", current_selection_mode: String = "spell"):
+func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_reason: String = "", current_selection_mode: String = "spell", custom_confirmation: String = ""):
 	current_spell_data = spell_data
 	current_hand_index = hand_index
 	is_info_only_mode = false
@@ -75,16 +75,21 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	else:
 		# 制限なし - 通常の確認
-		var prompt_message = "%sを使用しますか？" % spell_name
+		var prompt_message = ""
 		var confirm_text = "使用"
 		var is_discard_mode = false
-		if current_selection_mode == "discard":
+		if custom_confirmation != "":
+			prompt_message = custom_confirmation
+			confirm_text = "決定"
+		elif current_selection_mode == "discard":
 			prompt_message = "%sを捨てますか？" % spell_name
 			confirm_text = "捨てる"
 			is_discard_mode = true
 		elif current_selection_mode == "sacrifice":
 			prompt_message = "%sを犠牲にしますか？" % spell_name
 			confirm_text = "犠牲"
+		else:
+			prompt_message = "%sを使用しますか？" % spell_name
 		
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt(prompt_message, "right")
