@@ -451,6 +451,29 @@ var _compat_back_cb: Callable = Callable()
 var _compat_up_cb: Callable = Callable()
 var _compat_down_cb: Callable = Callable()
 
+# スペルフェーズ中のインフォパネル表示用バックアップ
+var _spell_phase_saved_confirm: Callable = Callable()
+var _spell_phase_saved_back: Callable = Callable()
+var _spell_phase_saved_up: Callable = Callable()
+var _spell_phase_saved_down: Callable = Callable()
+var _spell_phase_buttons_saved: bool = false
+
+## スペルフェーズ中のインフォパネル閉じ後にボタンを復元
+func _restore_spell_phase_buttons():
+	if _spell_phase_buttons_saved:
+		_compat_confirm_cb = _spell_phase_saved_confirm
+		_compat_back_cb = _spell_phase_saved_back
+		_compat_up_cb = _spell_phase_saved_up
+		_compat_down_cb = _spell_phase_saved_down
+		_spell_phase_buttons_saved = false
+		_update_compat_buttons()
+		# 入力ロックを解除（×ボタン押下時にlock_inputされるため）
+		if game_flow_manager_ref:
+			game_flow_manager_ref.unlock_input()
+		# ×ボタン押下時にlock_inputされるので解除する
+		if game_flow_manager_ref:
+			game_flow_manager_ref.unlock_input()
+
 func _update_compat_buttons():
 	if global_action_buttons:
 		global_action_buttons.setup(_compat_confirm_cb, _compat_back_cb, _compat_up_cb, _compat_down_cb)
@@ -876,11 +899,13 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
 	# チュートリアルのExplanationModeがアクティブな時もボタンを変更しない
 	var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
-	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active
+	# スペルフェーズ中もボタンを変更しない（チェックボタンが消える問題の防止）
+	var is_spell_phase_active = game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.is_spell_phase_active()
+	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active
 	
 	if creature_info_panel_ui:
 		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
-		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_dominio_order_active])
+		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s, spell=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_dominio_order_active, is_spell_phase_active])
 		
 		# ドミニオコマンド中はパネルを閉じるだけの×ボタンを設定
 		if is_dominio_order_active:
@@ -888,6 +913,19 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 				creature_info_panel_ui.hide_panel(false)
 				# ドミニオコマンドのナビゲーションを復元
 				game_flow_manager_ref.dominio_command_handler._restore_navigation()
+			, "閉じる")
+		# スペルフェーズ中もパネルを閉じるだけ（ボタンクリアしない）
+		# 元のコールバックをバックアップして復元する（パネル未表示時のみバックアップ）
+		elif is_spell_phase_active:
+			if not _spell_phase_buttons_saved:
+				_spell_phase_saved_confirm = _compat_confirm_cb
+				_spell_phase_saved_back = _compat_back_cb
+				_spell_phase_saved_up = _compat_up_cb
+				_spell_phase_saved_down = _compat_down_cb
+				_spell_phase_buttons_saved = true
+			register_back_action(func():
+				creature_info_panel_ui.hide_panel(false)
+				_restore_spell_phase_buttons()
 			, "閉じる")
 	else:
 		print("[UIManager] creature_info_panel_ui がない")
@@ -908,9 +946,14 @@ func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
 	
 	# 通常時はインフォパネルを閉じる
 	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		# チュートリアル中はボタンをクリアしない
+		# チュートリアル中・スペルフェーズ中はボタンをクリアしない
 		var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
-		creature_info_panel_ui.hide_panel(not is_tutorial_active)
+		var is_spell_phase_active = game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.is_spell_phase_active()
+		var clear_buttons = not is_tutorial_active and not is_spell_phase_active
+		creature_info_panel_ui.hide_panel(clear_buttons)
+		# スペルフェーズ中はボタンを復元
+		if is_spell_phase_active:
+			_restore_spell_phase_buttons()
 
 
 ## 空（タイル外）がタップされた時のハンドラ
@@ -924,6 +967,9 @@ func _on_empty_tapped():
 	# 通常時はインフォパネルを閉じる
 	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
 		creature_info_panel_ui.hide_panel(false)  # ボタンはクリアしない（チュートリアル等の状態を維持）
+		# スペルフェーズ中はボタンを復元
+		if _spell_phase_buttons_saved:
+			_restore_spell_phase_buttons()
 		print("[UIManager] 空タップでパネル閉じ")
 
 
