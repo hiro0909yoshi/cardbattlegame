@@ -21,7 +21,7 @@ var tile_nodes = {}        # tile_index -> BaseTile
 var player_nodes = []      # プレイヤー駒ノード配列
 var player_tiles = []      # 各プレイヤーの現在位置
 var camera = null          # Camera3D参照
-var camera_controller: CameraController = null  # CameraController参照
+var camera_controller = null  # CameraController参照
 
 # 状態
 var is_moving = false
@@ -58,6 +58,7 @@ var cpu_movement_evaluator: CPUMovementEvaluator = null
 
 # 移動中の残り歩数（CPU分岐選択用）
 var _current_remaining_steps: int = 0
+
 
 func _ready():
 	pass
@@ -368,6 +369,9 @@ func _show_direction_selection(directions: Array) -> int:
 	is_direction_selection_active = false
 	_clear_direction_selection_navigation()
 	
+	# 到着予測地点にカメラをゆっくり移動（awaitしない＝移動と並行）
+	_start_camera_to_destination()
+	
 	return result
 
 # 方向選択UIを更新
@@ -376,6 +380,29 @@ func _update_direction_selection_ui():
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
 		if game_flow_manager.ui_manager.phase_display:
 			game_flow_manager.ui_manager.phase_display.show_action_prompt("移動方向を選択: %s" % dir_text)
+	# カメラを選択方向に少しずらす
+	if current_moving_player >= 0:
+		var ct = player_tiles[current_moving_player]
+		var nt = ct + selected_direction
+		if tile_nodes.has(ct) and tile_nodes.has(nt):
+			var cp = tile_nodes[ct].global_position
+			var np = tile_nodes[nt].global_position
+			var dv = (np - cp).normalized()
+			var offset_pos = cp + dv * cp.distance_to(np) * 3.0
+			if game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
+				game_flow_manager.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
+	# カメラを選択方向に少しずらす
+	if current_moving_player >= 0:
+		var ct = player_tiles[current_moving_player]
+		var nt = ct + selected_direction
+		if tile_nodes.has(ct) and tile_nodes.has(nt):
+			var cp = tile_nodes[ct].global_position
+			var np = tile_nodes[nt].global_position
+			var dv = (np - cp).normalized()
+			var offset_pos = cp + dv * cp.distance_to(np) * 3.0
+			var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager.board_system_3d else null
+			if cc and cc.has_method("focus_on_position_slow"):
+				cc.focus_on_position_slow(offset_pos, 0.5)
 
 # シンプルな方向選択（+1 か -1 を選ぶ）
 func _show_simple_direction_selection() -> int:
@@ -389,6 +416,9 @@ func _show_simple_direction_selection() -> int:
 	var result = await direction_selected
 	is_direction_selection_active = false
 	_clear_direction_selection_navigation()
+	
+	# 到着予測地点にカメラをゆっくり移動（awaitしない＝移動と並行）
+	_start_camera_to_destination()
 	
 	return result
 
@@ -665,7 +695,6 @@ func _show_branch_tile_selection(choices: Array) -> int:
 	# 到着予測ハイライトをクリア
 	clear_destination_highlight()
 	
-	# カメラを追従モードに戻す
 	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
 		game_flow_manager.board_system_3d.camera_controller.enable_follow_mode()
 	
@@ -718,6 +747,12 @@ func _update_branch_selection_ui():
 	
 	# 到着予測ハイライトを更新
 	update_destination_highlight()
+	
+	# カメラを選択中の分岐先にずらす
+	if not available_branches.is_empty() and game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
+		var target_tile = available_branches[selected_branch_index]
+		if tile_nodes.has(target_tile):
+			game_flow_manager.board_system_3d.camera_controller.focus_on_tile_slow(target_tile, 0.5)
 
 # 分岐選択インジケーターを更新
 func _update_branch_indicator():
@@ -931,7 +966,7 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	# プレイヤー駒を移動
 	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
 	
-	# カメラを追従（現在のプレイヤーのみ）
+	# カメラを追従（現在のプレイヤーのみ、戻りTween中はスキップ）
 	if camera and player_system and player_id == player_system.current_player_index:
 		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
@@ -1217,6 +1252,35 @@ func _apply_dice_condition_effect(creature_data: Dictionary, effect: Dictionary,
 		print("[Dice Buff] ", creature_data.get("name", ""), " MHP+", stat_changes["max_hp"],
 			  " (ダイス: ", dice_value, ")")
 
+
+
+# ============================================
+# 方向確定後カメラ移動
+# ============================================
+
+## 方向確定後、到着予測地点にカメラをゆっくり移動（awaitしない）
+func _start_camera_to_destination():
+	if current_moving_player < 0 or _current_remaining_steps <= 0:
+		return
+	if not game_flow_manager or not game_flow_manager.board_system_3d:
+		return
+	var cc = game_flow_manager.board_system_3d.camera_controller
+	if not cc or not cc.has_method("focus_on_tile_slow"):
+		return
+	
+	var current_tile = player_tiles[current_moving_player]
+	var first_step = current_tile + selected_direction
+	if not tile_nodes.has(first_step):
+		return
+	
+	var remaining = _current_remaining_steps - 1
+	if remaining <= 0:
+		cc.focus_on_tile_slow(first_step, 1.2)
+		return
+	
+	var destinations = predict_all_destinations(first_step, remaining, current_tile)
+	if not destinations.is_empty() and tile_nodes.has(destinations[0]):
+		cc.focus_on_tile_slow(destinations[0], 1.2)
 
 # ============================================
 # 到着予測システム
