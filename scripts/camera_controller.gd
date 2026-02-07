@@ -56,6 +56,7 @@ var _is_potential_tap: bool = false
 
 ## 現在のTween（競合防止用）
 var current_tween: Tween = null
+var _direction_tween: Tween = null  # 方向選択/到着予測カメラ用Tween
 
 ## 外部参照
 var board_system = null
@@ -501,12 +502,7 @@ func focus_on_tile_slow(tile_index: int, duration: float = 1.2):
 	var cp = lt + GameConstants.CAMERA_OFFSET
 	if camera.global_position.distance_to(cp) < 0.3:
 		return
-	cancel_tween()
-	current_tween = create_tween()
-	current_tween.set_parallel(true)
-	current_tween.tween_property(camera, "global_position", cp, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	current_tween.set_parallel(false)
-	current_tween.tween_callback(func(): camera.look_at(lt, Vector3.UP))
+	_smooth_transition_to(cp, lt, duration)
 
 ## 指定位置にゆっくりフォーカス（方向選択カメラ用）
 func focus_on_position_slow(world_pos: Vector3, duration: float = 0.5):
@@ -516,12 +512,25 @@ func focus_on_position_slow(world_pos: Vector3, duration: float = 0.5):
 	var cp = lt + GameConstants.CAMERA_OFFSET
 	if camera.global_position.distance_to(cp) < 0.3:
 		return
-	cancel_tween()
-	current_tween = create_tween()
-	current_tween.set_parallel(true)
-	current_tween.tween_property(camera, "global_position", cp, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	current_tween.set_parallel(false)
-	current_tween.tween_callback(func(): camera.look_at(lt, Vector3.UP))
+	_smooth_transition_to(cp, lt, duration)
+
+## 方向選択/到着予測のカメラTweenが動作中か
+func is_direction_camera_active() -> bool:
+	return _direction_tween != null and _direction_tween.is_valid() and _direction_tween.is_running()
+
+## 方向選択/到着予測カメラTweenをキャンセル
+func cancel_direction_tween():
+	if _direction_tween and _direction_tween.is_valid():
+		_direction_tween.kill()
+		_direction_tween = null
+
+## 前のTweenをキャンセルせず滑らかに新目標へ移行（方向選択用）
+## カメラ位置のみ移動し、アングル（look_at）は変えない
+func _smooth_transition_to(target_pos: Vector3, _look_target: Vector3, duration: float):
+	if _direction_tween and _direction_tween.is_valid():
+		_direction_tween.kill()
+	_direction_tween = create_tween()
+	_direction_tween.tween_property(camera, "global_position", target_pos, duration).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 
 ## スムーズにカメラを移動
 func _smooth_move_to(target_pos: Vector3, look_target: Vector3):
