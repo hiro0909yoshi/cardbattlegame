@@ -192,7 +192,7 @@ static func focus_camera_on_tile(handler, tile_index: int):
 	camera.position = tile_pos + camera_offset
 	
 	# カメラを土地に向ける
-	camera.look_at(tile_pos, Vector3.UP)
+	camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 
 ## カメラをプレイヤーにフォーカス

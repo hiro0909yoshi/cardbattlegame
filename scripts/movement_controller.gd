@@ -1144,11 +1144,11 @@ func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
 		tween.tween_property(camera, "global_position", target_pos, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 		# look_atはTweenできないので、移動完了後に設定
 		tween.set_parallel(false)
-		tween.tween_callback(func(): camera.look_at(look_target, Vector3.UP))
+		tween.tween_callback(func(): camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP))
 		await tween.finished
 	else:
 		camera.global_position = target_pos
-		camera.look_at(look_target, Vector3.UP)
+		camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 # === 通過イベント ===
 

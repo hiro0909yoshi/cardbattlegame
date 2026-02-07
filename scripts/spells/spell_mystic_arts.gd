@@ -1103,7 +1103,7 @@ func _focus_camera_on_creature(creature_info: Dictionary) -> void:
 	var tile_pos = tile.global_position
 	var camera_offset = Vector3(12, 15, 12)
 	camera.position = tile_pos + camera_offset
-	camera.look_at(tile_pos, Vector3.UP)
+	camera.look_at(tile_pos + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 	
 	# クリーチャー情報パネルを表示
 	var creature_data = creature_info.get("creature_data", {})

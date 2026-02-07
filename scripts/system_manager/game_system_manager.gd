@@ -209,7 +209,7 @@ func phase_3_setup_basic_config() -> void:
 				# カメラ位置 = タイル位置 + オフセット（移動時と同じ）
 				var cam_pos = tile_pos + GameConstants.CAMERA_OFFSET
 				camera_3d.global_position = cam_pos
-				camera_3d.look_at(look_target, Vector3.UP)
+				camera_3d.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 	
 	# CameraController初期化
 	if camera_3d and board_system_3d:

@@ -488,7 +488,7 @@ func focus_on_tile(tile_index: int, smooth: bool = true):
 		_smooth_move_to(new_camera_pos, look_target)
 	else:
 		camera.global_position = new_camera_pos
-		camera.look_at(look_target, Vector3.UP)
+		camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 ## 指定タイルにゆっくりフォーカス（到着予測カメラ用）
 func focus_on_tile_slow(tile_index: int, duration: float = 1.2):
@@ -541,7 +541,7 @@ func _smooth_move_to(target_pos: Vector3, look_target: Vector3):
 	current_tween.tween_property(camera, "global_position", target_pos, camera_move_duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	
 	current_tween.set_parallel(false)
-	current_tween.tween_callback(func(): camera.look_at(look_target, Vector3.UP))
+	current_tween.tween_callback(func(): camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP))
 
 ## 現在のTweenをキャンセル
 func cancel_tween():

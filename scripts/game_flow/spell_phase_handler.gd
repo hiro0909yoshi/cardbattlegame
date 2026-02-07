@@ -1052,7 +1052,7 @@ func _return_camera_to_player():
 			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + GameConstants.CAMERA_OFFSET
 			
 			board_system.camera.position = new_camera_pos
-			board_system.camera.look_at(tile_pos + Vector3(0, 1.0, 0), Vector3.UP)
+			board_system.camera.look_at(tile_pos + Vector3(0, 1.0 + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 ## スペルをパス（×ボタンで呼ばれる）
 ## auto_roll: trueの場合、サイコロを自動で振る
