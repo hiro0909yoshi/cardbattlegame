@@ -1018,8 +1018,11 @@ func _complete_action():
 	if not pending_comment.is_empty():
 		await _show_pending_comment()
 	
-	# カメラを追従モードに戻し、プレイヤー位置に復帰
-	if board_system and board_system.camera_controller:
+	# カメラを追従モードに戻し、プレイヤー位置に復帰（人間プレイヤーのみ）
+	var current_idx = board_system.current_player_index if board_system else 0
+	var cpu_flags = game_flow_manager.player_is_cpu if game_flow_manager else []
+	var is_cpu = cpu_flags[current_idx] if current_idx < cpu_flags.size() else false
+	if board_system and board_system.camera_controller and not is_cpu:
 		board_system.camera_controller.enable_follow_mode()
 		board_system.camera_controller.return_to_player()
 	

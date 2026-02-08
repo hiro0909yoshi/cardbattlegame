@@ -3,19 +3,24 @@
   "name": "十字路の戦い",
   "description": "4方向に分岐する十字型マップ。戦略的な位置取りが重要。",
   "map_id": "map_cross_1",
-
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-	"initial_magic": {"player": 200, "cpu": 200},
+	"initial_magic": {
+	  "player": 200,
+	  "cpu": 200
+	},
 	"win_conditions": {
 	  "mode": "all",
 	  "conditions": [
-		{"type": "magic", "target": 5000, "timing": "checkpoint"}
+		{
+		  "type": "magic",
+		  "target": 5000,
+		  "timing": "checkpoint"
+		}
 	  ]
 	}
   },
-
   "quest": {
 	"enemies": [
 	  {
@@ -26,15 +31,8 @@
 	  }
 	]
   },
-
   "rewards": {
 	"gold": 1000,
-	"rank_bonus": {
-	  "SS": 500,
-	  "S": 200,
-	  "A": 100,
-	  "B": 50,
-	  "C": 0
-	}
+	"rank_bonus_preset": "default"
   }
 }

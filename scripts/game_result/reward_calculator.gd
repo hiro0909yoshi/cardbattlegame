@@ -15,7 +15,9 @@ const REPEAT_REWARD_RATE = 0.2
 static func calculate_rewards(stage_data: Dictionary, rank: String, is_first_clear: bool) -> Dictionary:
 	var rewards = stage_data.get("rewards", {})
 	var base_gold = rewards.get("gold", 0)
-	var rank_bonus_table = rewards.get("rank_bonus", {})
+	# rank_bonus_preset からプリセット名を取得、なければデフォルト
+	var rank_bonus_preset = rewards.get("rank_bonus_preset", GameConstants.DEFAULT_RANK_BONUS_PRESET)
+	var rank_bonus_table = GameConstants.get_rank_bonus_table(rank_bonus_preset)
 	
 	var result = {
 		"base_gold": 0,

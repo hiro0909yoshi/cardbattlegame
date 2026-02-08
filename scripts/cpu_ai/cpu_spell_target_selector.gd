@@ -886,6 +886,13 @@ func get_enemy_players(context: Dictionary) -> Array:
 		if i != player_id:
 			results.append({"type": "player", "player_id": i})
 	
+	# EP（魔力）が多い順にソート
+	results.sort_custom(func(a, b):
+		var magic_a = player_system.get_magic(a.player_id)
+		var magic_b = player_system.get_magic(b.player_id)
+		return magic_a > magic_b
+	)
+	
 	return results
 
 ## 土地ターゲット取得

@@ -16,6 +16,7 @@ var count_buttons = []  # 枚数選択ボタンの配列
 @onready var grid_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/DeckScrollContainer/GridContainer
 @onready var info_panel_container = $MarginContainer/HBoxContainer/LeftPanel/VBoxContainer/ContentHBox/InfoPanelContainer
 @onready var right_vbox = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer
+@onready var card_type_count = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardTypeCount
 @onready var card_count_label = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/CardCountLabel
 @onready var save_button = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/SaveButton
 @onready var rename_button = $MarginContainer/HBoxContainer/RightPanel/VBoxContainer/RenameButton
@@ -336,10 +337,7 @@ func _on_count_selected(count: int):
 		if card_id != selected_card_id:
 			current_total += current_deck[card_id]
 	
-	# 新しい枚数を追加した時の合計
-	if current_total + count > 50:
-		print("デッキが50枚を超えます！")
-		return
+	# 50枚超えても追加可能（ただし保存不可）
 	
 	# デッキに設定
 	if count == 0:
@@ -378,13 +376,53 @@ func update_single_card_button(card_id: int):
 
 func update_card_count():
 	var total = 0
-	for count in current_deck.values():
+	var fire_count = 0
+	var water_count = 0
+	var earth_count = 0
+	var wind_count = 0
+	var neutral_count = 0
+	var item_count = 0
+	var spell_count = 0
+	
+	for card_id in current_deck.keys():
+		var count = current_deck[card_id]
 		total += count
+		var card = CardLoader.get_card_by_id(card_id)
+		if card.is_empty():
+			continue
+		if card.type == "item":
+			item_count += count
+		elif card.type == "spell":
+			spell_count += count
+		else:
+			match card.get("element", ""):
+				"fire": fire_count += count
+				"water": water_count += count
+				"earth": earth_count += count
+				"wind": wind_count += count
+				_: neutral_count += count
+	
+	# 種別カウント表示
+	var type_text = "[font_size=48]"
+	type_text += "[color=#ff4545]●[/color] %d\n" % fire_count
+	type_text += "[color=#4587ff]●[/color] %d\n" % water_count
+	type_text += "[color=#87cc45]●[/color] %d\n" % earth_count
+	type_text += "[color=#ffcc45]●[/color] %d\n" % wind_count
+	type_text += "[color=#aaaaaa]●[/color] %d\n" % neutral_count
+	type_text += "[color=#aaaaaa]▲[/color] %d\n" % item_count
+	type_text += "[color=#aaaaaa]◆[/color] %d" % spell_count
+	type_text += "[/font_size]"
+	card_type_count.text = type_text
 	
 	card_count_label.text = "現在: " + str(total) + "/50"
 	
-	# 保存ボタンは常に有効
-	save_button.disabled = false
+	# 50枚以下なら保存可能
+	if total <= 50:
+		save_button.disabled = false
+		save_button.modulate = Color(1, 1, 1)
+	else:
+		save_button.disabled = true
+		save_button.modulate = Color(0.5, 0.5, 0.5)
 
 func _on_save_pressed():
 	CpuDeckData.save_deck(CpuDeckData.selected_deck_index, current_deck)

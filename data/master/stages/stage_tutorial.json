@@ -3,32 +3,26 @@
   "name": "チュートリアル",
   "description": "基本操作を学ぶチュートリアルステージ",
   "map_id": "map_tutorial",
-
   "rule_preset": "standard",
   "max_turns": 30,
   "rule_overrides": {
-	"initial_magic": {"player": 1800, "cpu": 800}
+    "initial_magic": {
+      "player": 1800,
+      "cpu": 800
+    }
   },
-
   "rewards": {
-	"gold": 0,
-	"rank_bonus": {
-	  "SS": 0,
-	  "S": 0,
-	  "A": 0,
-	  "B": 0,
-	  "C": 0
-	}
+    "gold": 0,
+    "rank_bonus_preset": "default"
   },
-
   "quest": {
-	"enemies": [
-	  {
-		"character_id": "tutorial_enemy",
-		"deck_id": "random",
-		"ai_level": 1,
-		"start_tile": 0
-	  }
-	]
+    "enemies": [
+      {
+        "character_id": "tutorial_enemy",
+        "deck_id": "random",
+        "ai_level": 1,
+        "start_tile": 0
+      }
+    ]
   }
 }

@@ -2,39 +2,43 @@
   "id": "stage_2_1",
   "name": "荒野の試練",
   "description": "より強い敵が待ち受ける。戦略を磨け。",
-  "map_id": "map_diamond_20_v2",
-
+  "map_id": "map_1_5",
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 2500},
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
-      ]
-    }
+	"initial_magic": {
+	  "player": 200,
+	  "cpu": 200
+	},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{
+		  "type": "magic",
+		  "target": 5000,
+		  "timing": "checkpoint"
+		}
+	  ]
+	}
   },
-
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
-        "ai_level": 4,
-        "start_tile": 0
-      }
-    ]
+	"enemies": [
+	  {
+		"character_id": "zako_2",
+		"deck_id": "cpu_deck_2",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "goblin",
+		"deck_id": "cpu_deck_3",
+		"ai_level": 5,
+		"start_tile": 0
+	  }
+	]
   },
-
   "rewards": {
-    "gold": 1800,
-    "rank_bonus": {
-      "SS": 900,
-      "S": 540,
-      "A": 360,
-      "B": 180,
-      "C": 0
-    }
+	"gold": 1200,
+	"rank_bonus_preset": "default"
   }
 }

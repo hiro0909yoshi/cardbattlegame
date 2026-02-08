@@ -389,15 +389,24 @@ func _execute_cpu_spell(decision: Dictionary):
 	selected_spell_card = spell_card
 	spell_used_this_turn = true
 	
-	# 発動通知表示
-	if spell_cast_notification_ui and player_system:
-		var caster_name = "CPU"
-		if current_player_id >= 0 and current_player_id < player_system.players.size():
-			caster_name = player_system.players[current_player_id].name
-		await _show_spell_cast_notification(caster_name, target, spell_card, false)
+	# 効果実行（target_typeに応じて分岐）
+	var parsed = spell_card.get("effect_parsed", {})
+	var target_type = parsed.get("target_type", "")
 	
-	# 効果実行
-	await execute_spell_effect(spell_card, target_data)
+	if target_type == "all_creatures":
+		# 全クリーチャー対象スペル（スウォーム等）は専用ルートで実行
+		# 通知・カード捨て札・フェーズ完了は_execute_spell_on_all_creatures内で処理
+		var target_info = parsed.get("target_info", {})
+		await _execute_spell_on_all_creatures(spell_card, target_info)
+	else:
+		# 発動通知表示
+		if spell_cast_notification_ui and player_system:
+			var caster_name = "CPU"
+			if current_player_id >= 0 and current_player_id < player_system.players.size():
+				caster_name = player_system.players[current_player_id].name
+			await _show_spell_cast_notification(caster_name, target, spell_card, false)
+		
+		await execute_spell_effect(spell_card, target_data)
 
 ## CPUがアルカナアーツを実行
 func _execute_cpu_mystic_arts(decision: Dictionary):

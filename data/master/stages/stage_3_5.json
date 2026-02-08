@@ -3,19 +3,24 @@
   "name": "氷竜の領域",
   "description": "伝説の氷竜が棲む地。",
   "map_id": "map_branch_1",
-
   "rule_preset": "standard",
   "max_turns": 60,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 3500},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 3500
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 7000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 7000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 2400,
-    "rank_bonus": {
-      "SS": 1200,
-      "S": 720,
-      "A": 480,
-      "B": 240,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

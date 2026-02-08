@@ -150,7 +150,7 @@ func _apply_transform(creature_data: Dictionary, sacrifice_card: Dictionary, syn
 	var transform_target = synthesis.get("transform_to", "")
 	
 	# "sacrifice" の場合は犠牲カードに変身
-	if transform_target == "sacrifice":
+	if typeof(transform_target) == TYPE_STRING and transform_target == "sacrifice":
 		if sacrifice_card.get("type", "") == "creature":
 			var result = sacrifice_card.duplicate(true)
 			result["is_synthesized"] = true
@@ -165,8 +165,9 @@ func _apply_transform(creature_data: Dictionary, sacrifice_card: Dictionary, syn
 			push_error("[CreatureSynthesis] 犠牲カードがクリーチャーではありません")
 			return creature_data
 	
-	# 特定のクリーチャーIDに変身
-	if card_loader and transform_target is int:
+	# 特定のクリーチャーIDに変身（JSONからはfloatで来る場合がある）
+	if card_loader and (transform_target is int or transform_target is float):
+		transform_target = int(transform_target)
 		var target_card = card_loader.get_card_by_id(transform_target)
 		if not target_card.is_empty():
 			var result = target_card.duplicate(true)

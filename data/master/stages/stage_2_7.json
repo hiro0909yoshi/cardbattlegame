@@ -3,19 +3,24 @@
   "name": "荒野の王",
   "description": "強力な敵との戦い。",
   "map_id": "map_branch_1",
-
   "rule_preset": "standard",
   "max_turns": 55,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 3000},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 3000
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 6500, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 6500,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 1800,
-    "rank_bonus": {
-      "SS": 900,
-      "S": 540,
-      "A": 360,
-      "B": 180,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

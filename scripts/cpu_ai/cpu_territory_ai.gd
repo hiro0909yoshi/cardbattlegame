@@ -551,6 +551,10 @@ func _evaluate_element_change(context: Dictionary) -> Array:
 		
 		var creature_element = land.creature_data.get("element", "")
 		
+		# 無属性クリーチャーの場合は属性変更しない（無属性への変更は無意味）
+		if creature_element.is_empty() or creature_element == "neutral":
+			continue
+		
 		options.append({
 			"type": "element_change",
 			"tile_index": land.tile_index,

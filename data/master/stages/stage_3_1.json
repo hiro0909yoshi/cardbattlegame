@@ -3,19 +3,24 @@
   "name": "氷河の入口",
   "description": "ワールド3の始まり。氷に覆われた大地。",
   "map_id": "map_diamond_20",
-
   "rule_preset": "standard",
   "max_turns": 55,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 3000},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 3000
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 6000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 6000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 2000,
-    "rank_bonus": {
-      "SS": 1000,
-      "S": 600,
-      "A": 400,
-      "B": 200,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

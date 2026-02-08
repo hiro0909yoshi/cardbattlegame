@@ -3,19 +3,24 @@
   "name": "氷の要塞",
   "description": "堅固な氷の城塞。",
   "map_id": "map_diamond_20",
-
   "rule_preset": "standard",
   "max_turns": 55,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 3200},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 3200
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 7000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 7000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 2300,
-    "rank_bonus": {
-      "SS": 1150,
-      "S": 690,
-      "A": 460,
-      "B": 230,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

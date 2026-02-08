@@ -169,7 +169,7 @@ func prepare_mystic_execution(decision: Dictionary, player_id: int) -> Dictionar
 	var tile = board_system.get_tile_data(creature_tile) if board_system else {}
 	var creature_info = {
 		"tile_index": creature_tile,
-		"creature_data": tile.get("placed_creature", {}) if tile else {}
+		"creature_data": tile.get("creature", tile.get("placed_creature", {})) if tile else {}
 	}
 	
 	# ターゲットデータを構築
@@ -221,7 +221,7 @@ func build_target_data(spell_or_mystic: Dictionary, target: Dictionary, player_i
 						var result = {
 							"type": "creature",
 							"tile_index": tile_index,
-							"creature_data": target.get("creature", tile.get("placed_creature", {}))
+							"creature_data": target.get("creature", tile.get("creature", tile.get("placed_creature", {})))
 						}
 						# CPUが選んだ移動先があれば追加（アウトレイジ等用）
 						if target.has("enemy_tile_index"):

@@ -3,38 +3,36 @@
   "name": "吹雪の戦場",
   "description": "視界が悪い吹雪の中での戦い。",
   "map_id": "map_cross_1",
-
   "rule_preset": "standard",
   "max_turns": 55,
   "rule_overrides": {
-	"initial_magic": {"player": 2500, "cpu": 3200},
-	"win_conditions": {
-	  "mode": "all",
-	  "conditions": [
-		{"type": "magic", "target": 6500, "timing": "checkpoint"}
-	  ]
-	}
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 3200
+    },
+    "win_conditions": {
+      "mode": "all",
+      "conditions": [
+        {
+          "type": "magic",
+          "target": 6500,
+          "timing": "checkpoint"
+        }
+      ]
+    }
   },
-
   "quest": {
-	"enemies": [
-	  {
-		"character_id": "bowser",
-		"deck_id": "balance_easy",
-		"ai_level": 5,
-		"start_tile": 0
-	  }
-	]
+    "enemies": [
+      {
+        "character_id": "bowser",
+        "deck_id": "balance_easy",
+        "ai_level": 5,
+        "start_tile": 0
+      }
+    ]
   },
-
   "rewards": {
-	"gold": 2200,
-	"rank_bonus": {
-	  "SS": 1100,
-	  "S": 660,
-	  "A": 440,
-	  "B": 220,
-	  "C": 0
-	}
+    "gold": 2200,
+    "rank_bonus_preset": "default"
   }
 }

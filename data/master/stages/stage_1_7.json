@@ -3,44 +3,42 @@
   "name": "風の試練",
   "description": "風属性が多いマップ。素早い戦略が求められる。",
   "map_id": "map_1_5",
-
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 200, "cpu": 200},
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
-      ]
-    }
+	"initial_magic": {
+	  "player": 200,
+	  "cpu": 200
+	},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{
+		  "type": "magic",
+		  "target": 5000,
+		  "timing": "checkpoint"
+		}
+	  ]
+	}
   },
-
   "quest": {
-    "enemies": [
-      {
-        "character_id": "zako_1",
-        "deck_id": "cpu_deck_1",
-        "ai_level": 3,
-        "start_tile": 0
-      },
-      {
-        "character_id": "zako_2",
-        "deck_id": "cpu_deck_2",
-        "ai_level": 3,
-        "start_tile": 0
-      }
-    ]
+	"enemies": [
+	  {
+		"character_id": "zako_1",
+		"deck_id": "cpu_deck_1",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "zako_2",
+		"deck_id": "cpu_deck_2",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	]
   },
-
   "rewards": {
-    "gold": 1600,
-    "rank_bonus": {
-      "SS": 800,
-      "S": 480,
-      "A": 320,
-      "B": 160,
-      "C": 0
-    }
+	"gold": 1000,
+	"rank_bonus_preset": "default"
   }
 }

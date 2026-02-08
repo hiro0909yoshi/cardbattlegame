@@ -203,6 +203,11 @@ static func get_effect_display_name(spell_card: Dictionary) -> String:
 
 ## アルカナアーツから効果名を取得
 static func get_mystic_art_display_name(mystic_art: Dictionary) -> String:
+	# アルカナアーツ自体のnameを最優先
+	var art_name = mystic_art.get("name", "")
+	if not art_name.is_empty():
+		return art_name
+	
 	# spell_idがある場合はスペルデータから取得
 	var spell_id = mystic_art.get("spell_id", -1)
 	if spell_id > 0:
@@ -210,8 +215,7 @@ static func get_mystic_art_display_name(mystic_art: Dictionary) -> String:
 		if not spell_data.is_empty():
 			return get_effect_display_name(spell_data)
 	
-	# アルカナアーツ自体のnameを使用
-	return mystic_art.get("name", "不明")
+	return "不明"
 
 ## 対象名を取得
 static func get_target_display_name(target_data: Dictionary, board_system = null, player_system = null) -> String:

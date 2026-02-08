@@ -4,7 +4,14 @@ extends CanvasLayer
 ## リザルト画面
 ## 勝利/敗北時に表示され、ランクと報酬を表示する
 
+const GachaSystemScript = preload("res://scripts/gacha_system.gd")
+
 signal result_confirmed
+signal _unlock_popup_closed
+
+# ポップアップ管理
+var _waiting_unlock_popup: bool = false
+var _unlock_overlay: ColorRect = null
 
 # UI要素
 var panel: Panel
@@ -39,50 +46,50 @@ func _build_ui():
 	# メインコンテナ
 	var main_container = VBoxContainer.new()
 	main_container.set_anchors_preset(Control.PRESET_CENTER)
-	main_container.custom_minimum_size = Vector2(500, 400)
-	main_container.position = Vector2(-250, -200)
-	main_container.add_theme_constant_override("separation", 20)
+	main_container.custom_minimum_size = Vector2(600, 500)
+	main_container.position = Vector2(-300, -250)
+	main_container.add_theme_constant_override("separation", 24)
 	panel.add_child(main_container)
 	
 	# タイトル（WIN / LOSE）
 	title_label = Label.new()
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 72)
+	title_label.add_theme_font_size_override("font_size", 84)
 	main_container.add_child(title_label)
 	
 	# ランク表示
 	rank_label = Label.new()
 	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rank_label.add_theme_font_size_override("font_size", 48)
+	rank_label.add_theme_font_size_override("font_size", 56)
 	main_container.add_child(rank_label)
 	
 	# ターン数
 	turn_label = Label.new()
 	turn_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	turn_label.add_theme_font_size_override("font_size", 24)
+	turn_label.add_theme_font_size_override("font_size", 32)
 	main_container.add_child(turn_label)
 	
 	# ベスト情報（2回目以降）
 	best_info_label = Label.new()
 	best_info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	best_info_label.add_theme_font_size_override("font_size", 20)
+	best_info_label.add_theme_font_size_override("font_size", 28)
 	best_info_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	main_container.add_child(best_info_label)
 	
 	# 区切り線
 	var separator = HSeparator.new()
-	separator.custom_minimum_size = Vector2(400, 2)
+	separator.custom_minimum_size = Vector2(500, 2)
 	main_container.add_child(separator)
 	
 	# 報酬コンテナ
 	reward_container = VBoxContainer.new()
-	reward_container.add_theme_constant_override("separation", 8)
+	reward_container.add_theme_constant_override("separation", 10)
 	main_container.add_child(reward_container)
 	
 	# 合計ラベル
 	total_label = Label.new()
 	total_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	total_label.add_theme_font_size_override("font_size", 32)
+	total_label.add_theme_font_size_override("font_size", 40)
 	total_label.add_theme_color_override("font_color", Color.GOLD)
 	main_container.add_child(total_label)
 	
@@ -90,7 +97,7 @@ func _build_ui():
 	continue_label = Label.new()
 	continue_label.text = "[ タップで続ける ]"
 	continue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	continue_label.add_theme_font_size_override("font_size", 20)
+	continue_label.add_theme_font_size_override("font_size", 26)
 	continue_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	main_container.add_child(continue_label)
 
@@ -125,6 +132,15 @@ func show_victory(data: Dictionary):
 	_build_reward_display(data.get("rewards", {}))
 	
 	_show_with_animation()
+	
+	# ガチャ解禁ポップアップ（アニメーション後に表示）
+	if data.get("is_first_clear", false):
+		var stage_id = data.get("stage_id", "")
+		var unlocked_list = GachaSystemScript.get_newly_unlocked_gacha_types(stage_id)
+		if not unlocked_list.is_empty():
+			await get_tree().create_timer(0.5).timeout
+			for gacha_name in unlocked_list:
+				await _show_unlock_popup(gacha_name)
 
 
 ## 敗北リザルトを表示
@@ -196,21 +212,100 @@ func _build_reward_display(rewards: Dictionary):
 ## 報酬行を作成
 func _create_reward_line(label_text: String, value_text: String) -> HBoxContainer:
 	var hbox = HBoxContainer.new()
-	hbox.custom_minimum_size = Vector2(350, 0)
+	hbox.custom_minimum_size = Vector2(450, 0)
 	
 	var label = Label.new()
 	label.text = label_text
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", 32)
 	hbox.add_child(label)
 	
 	var value = Label.new()
 	value.text = value_text
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value.add_theme_font_size_override("font_size", 24)
+	value.add_theme_font_size_override("font_size", 32)
 	hbox.add_child(value)
 	
 	return hbox
+
+
+## ガチャ解禁ポップアップを表示（タップで閉じる）
+func _show_unlock_popup(gacha_name: String) -> void:
+	# オーバーレイ（暗転）
+	var overlay = ColorRect.new()
+	overlay.name = "UnlockOverlay"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0, 0, 0, 0.6)
+	panel.add_child(overlay)
+	
+	# ポップアップパネル
+	var popup = PanelContainer.new()
+	popup.name = "UnlockPopup"
+	popup.set_anchors_preset(Control.PRESET_CENTER)
+	popup.custom_minimum_size = Vector2(700, 280)
+	popup.position = Vector2(-350, -140)
+	
+	var popup_style = StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.12, 0.08, 0.2, 0.95)
+	popup_style.border_color = Color(1.0, 0.84, 0.0)
+	popup_style.set_border_width_all(3)
+	popup_style.set_corner_radius_all(16)
+	popup_style.content_margin_left = 40
+	popup_style.content_margin_right = 40
+	popup_style.content_margin_top = 30
+	popup_style.content_margin_bottom = 30
+	popup.add_theme_stylebox_override("panel", popup_style)
+	overlay.add_child(popup)
+	
+	# ポップアップ内レイアウト
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 16)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	popup.add_child(vbox)
+	
+	# 🎉 アイコン行
+	var icon_label = Label.new()
+	icon_label.text = "🎉 NEW 🎉"
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 40)
+	icon_label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
+	vbox.add_child(icon_label)
+	
+	# メッセージ
+	var msg_label = Label.new()
+	msg_label.text = "%s が解禁されました！" % gacha_name
+	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg_label.add_theme_font_size_override("font_size", 48)
+	msg_label.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(msg_label)
+	
+	# タップで閉じる
+	var hint_label = Label.new()
+	hint_label.text = "[ タップで閉じる ]"
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.add_theme_font_size_override("font_size", 24)
+	hint_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	vbox.add_child(hint_label)
+	
+	# 登場アニメーション（スケール＋フェードイン）
+	popup.pivot_offset = popup.custom_minimum_size / 2
+	popup.scale = Vector2(0.5, 0.5)
+	popup.modulate.a = 0
+	overlay.modulate.a = 0
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(overlay, "modulate:a", 1.0, 0.2)
+	tween.tween_property(popup, "modulate:a", 1.0, 0.3)
+	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# タップ待ち
+	await tween.finished
+	_waiting_unlock_popup = true
+	_unlock_overlay = overlay
+	await _unlock_popup_closed
+	_waiting_unlock_popup = false
+	_unlock_overlay = null
 
 
 ## ランク色を取得
@@ -250,9 +345,25 @@ func _input(event):
 		return
 	
 	if event is InputEventMouseButton and event.pressed:
-		_on_continue_pressed()
+		if _waiting_unlock_popup:
+			_close_unlock_popup()
+		else:
+			_on_continue_pressed()
 	elif event is InputEventScreenTouch and event.pressed:
-		_on_continue_pressed()
+		if _waiting_unlock_popup:
+			_close_unlock_popup()
+		else:
+			_on_continue_pressed()
+
+
+## 解禁ポップアップを閉じる
+func _close_unlock_popup():
+	if _unlock_overlay:
+		var tween = create_tween()
+		tween.tween_property(_unlock_overlay, "modulate:a", 0.0, 0.2)
+		await tween.finished
+		_unlock_overlay.queue_free()
+	_unlock_popup_closed.emit()
 
 
 ## 続けるボタン押下

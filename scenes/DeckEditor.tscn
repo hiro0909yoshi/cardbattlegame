@@ -155,7 +155,15 @@ theme_override_constants/separation = 25
 
 [node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 700
+theme_override_constants/separation = 400
+
+[node name="CardTypeCount" type="RichTextLabel" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+bbcode_enabled = true
+text = ""
+fit_content = true
+scroll_active = false
 
 [node name="CardCountLabel" type="Label" parent="MarginContainer/HBoxContainer/RightPanel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 80)

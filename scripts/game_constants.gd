@@ -181,6 +181,25 @@ const DEFAULT_LAP_BONUS_PRESET = "standard"
 const DEFAULT_CHECKPOINT_PRESET = "standard"
 const DEFAULT_RULE_PRESET = "standard"
 
+# ランクボーナスプリセット
+const RANK_BONUS_PRESETS = {
+	"default": {
+		"SS": 500,
+		"S": 200,
+		"A": 100,
+		"B": 50,
+		"C": 0
+	}
+}
+
+const DEFAULT_RANK_BONUS_PRESET = "default"
+
+# プリセット名からランクボーナステーブルを取得
+static func get_rank_bonus_table(preset_name: String) -> Dictionary:
+	if RANK_BONUS_PRESETS.has(preset_name):
+		return RANK_BONUS_PRESETS[preset_name]
+	return RANK_BONUS_PRESETS[DEFAULT_RANK_BONUS_PRESET]
+
 # =============================================================================
 # ユーティリティ関数
 # =============================================================================

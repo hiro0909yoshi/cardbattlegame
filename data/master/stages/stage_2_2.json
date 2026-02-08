@@ -3,19 +3,24 @@
   "name": "分岐の迷宮",
   "description": "分岐タイルが多い複雑なマップ。",
   "map_id": "map_branch_test",
-
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 2500},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 2500
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 5000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 1900,
-    "rank_bonus": {
-      "SS": 950,
-      "S": 570,
-      "A": 380,
-      "B": 190,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

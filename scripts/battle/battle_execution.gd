@@ -425,6 +425,12 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 								await battle_screen_manager.show_skill_activation(skill_owner_side, ap_drain_name, {})
 								var drained_side = "attacker" if defender_p.is_attacker else "defender"
 								await battle_screen_manager.update_ap(drained_side, defender_p.current_ap)
+							if success_effects.get("magic_gained", 0) > 0 and battle_screen_manager:
+								var ep_side = "attacker" if attacker_p.is_attacker else "defender"
+								var ep_amount = success_effects["magic_gained"]
+								var item_name_str = attacker_p.creature_data.get("item", {}).get("name", "")
+								var ep_skill_name = "%s: %dEP獲得" % [item_name_str, ep_amount] if item_name_str else "%dEP獲得" % ep_amount
+								await battle_screen_manager.show_skill_activation(ep_side, ep_skill_name, {})
 					
 					continue  # 次の攻撃へ（通常のダメージ処理はスキップ）
 			
@@ -600,6 +606,12 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 						# defender_pのAPが0になったので、defender_p側のAPバーを更新
 						var drained_side = "attacker" if defender_p.is_attacker else "defender"
 						await battle_screen_manager.update_ap(drained_side, defender_p.current_ap)
+					if success_effects.get("magic_gained", 0) > 0 and battle_screen_manager:
+						var ep_side = "attacker" if attacker_p.is_attacker else "defender"
+						var ep_amount = success_effects["magic_gained"]
+						var item_name_str = attacker_p.creature_data.get("item", {}).get("name", "")
+						var ep_skill_name = "%s: %dEP獲得" % [item_name_str, ep_amount] if item_name_str else "%dEP獲得" % ep_amount
+						await battle_screen_manager.show_skill_activation(ep_side, ep_skill_name, {})
 			
 			# 防御側撃破チェック
 			if not defender_p.is_alive():

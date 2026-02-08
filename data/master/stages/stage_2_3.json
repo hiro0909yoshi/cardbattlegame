@@ -3,19 +3,24 @@
   "name": "荒野の激闘",
   "description": "厳しい環境での戦い。",
   "map_id": "map_diamond_20",
-
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {"player": 2500, "cpu": 2500},
+    "initial_magic": {
+      "player": 2500,
+      "cpu": 2500
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 5000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 5000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 1400,
-    "rank_bonus": {
-      "SS": 700,
-      "S": 420,
-      "A": 280,
-      "B": 140,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }

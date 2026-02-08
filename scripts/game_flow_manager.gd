@@ -553,6 +553,10 @@ func end_turn():
 		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		
+		# カメラの追従対象を次のプレイヤーに更新
+		if board_system_3d.camera_controller:
+			board_system_3d.camera_controller.set_current_player(player_system.current_player_index)
+		
 		# カメラを次のプレイヤーに移動
 		await move_camera_to_next_player()
 	

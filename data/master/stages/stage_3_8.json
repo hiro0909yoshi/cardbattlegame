@@ -3,19 +3,24 @@
   "name": "氷河の覇者",
   "description": "ワールド3最終ステージ。全ての試練を超えた者だけが辿り着く。",
   "map_id": "map_cross_1",
-
   "rule_preset": "standard",
   "max_turns": 65,
   "rule_overrides": {
-    "initial_magic": {"player": 2000, "cpu": 4500},
+    "initial_magic": {
+      "player": 2000,
+      "cpu": 4500
+    },
     "win_conditions": {
       "mode": "all",
       "conditions": [
-        {"type": "magic", "target": 10000, "timing": "checkpoint"}
+        {
+          "type": "magic",
+          "target": 10000,
+          "timing": "checkpoint"
+        }
       ]
     }
   },
-
   "quest": {
     "enemies": [
       {
@@ -26,15 +31,8 @@
       }
     ]
   },
-
   "rewards": {
     "gold": 3000,
-    "rank_bonus": {
-      "SS": 1500,
-      "S": 900,
-      "A": 600,
-      "B": 300,
-      "C": 0
-    }
+    "rank_bonus_preset": "default"
   }
 }
