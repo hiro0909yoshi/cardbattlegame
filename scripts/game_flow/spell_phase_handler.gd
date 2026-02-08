@@ -1142,12 +1142,16 @@ func complete_spell_phase():
 	if current_state == State.INACTIVE:
 		return
 	
-	# 外部スペルモードの場合
+	# 外部スペルモードの場合（マジックタイル等から呼ばれた場合）
 	if is_external_spell_mode:
 		current_state = State.INACTIVE
-		# UIクリーンアップ（ナビゲーションやボタンが残らないようにする）
-		_hide_spell_phase_buttons()
-		_clear_spell_navigation()
+		# スペル用のナビゲーションのみクリア（ドミニオボタン等の特殊ボタンは維持）
+		# _hide_spell_phase_buttons()は呼ばない（外部モードではミスティックボタン未設定、
+		# 代わりにドミニオボタンが表示されており消してはいけない）
+		if ui_manager:
+			ui_manager.clear_confirm_action()
+			ui_manager.clear_back_action()
+			ui_manager.clear_arrow_actions()
 		external_spell_finished.emit()
 		return
 	

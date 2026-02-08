@@ -26,9 +26,10 @@ func _ready():
 	# 初期状態は非表示
 	hide_dialog()
 	
-	# シグナル接続
+	# 背景は入力を下層に通す（カードタップ等を妨げない）
+	# パネル外クリックでの閉じ処理は_input()で行う
 	if background_rect:
-		background_rect.gui_input.connect(_on_background_clicked)
+		background_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	
 	# ESCキー検出用

@@ -85,11 +85,19 @@ func _show_special_tile_landing_ui(player_id: int):
 	# フェーズ表示（show_card_selection_ui後に設定して上書きされないようにする）
 	if ui_manager.phase_display:
 		ui_manager.phase_display.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
+	
+	# 人間プレイヤーの場合、ドミニオコマンドボタンを再表示
+	if not _is_cpu_player(player_id):
+		ui_manager.show_dominio_order_button()
 
 # 3Dタイル処理（BoardSystem3Dから呼び出される）
 # 注意: この関数はawaitで呼び出すこと
 func process_special_tile_3d(tile_type: String, tile_index: int, player_id: int) -> void:
 	print("特殊タイル処理: ", tile_type, " (マス", tile_index, ")")
+	
+	# 特殊タイル処理中はドミニオコマンドボタンを非表示
+	if ui_manager:
+		ui_manager.hide_dominio_order_button()
 	
 	# タイルオブジェクトを取得（タイルに処理を委譲する場合に使用）
 	var tile = _get_tile_by_index(tile_index)
