@@ -175,6 +175,10 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 		if tile_element == creature_element or tile_element == "neutral" or creature_element == "neutral":
 			score += 30 * level
 	
+	# アルカナアーツ持ちの敵クリーチャーは優先ターゲット
+	if is_enemy and _has_mystic_arts(creature):
+		score += 50.0
+	
 	# クリーチャーのレート
 	var creature_rate = 0.0
 	if not creature.is_empty():
@@ -185,7 +189,8 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	# デバッグ: 最終スコア
 	var creature_name = creature.get("name", "?")
 	var debug_level = tile_data.get("level", 1) if tile_data else 1
-	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f)" % [creature_name, score, debug_level, creature_rate])
+	var has_ma = _has_mystic_arts(creature)
+	print("[SpellAI] 最終スコア: %s = %.1f (level=%d, rate=%.1f%s)" % [creature_name, score, debug_level, creature_rate, ", MA持ち" if has_ma else ""])
 	
 	return score
 
@@ -362,10 +367,20 @@ func select_best_target_from_list(targets: Array, spell: Dictionary, player_id: 
 	# コンテキスト構築
 	var context = {
 		"player_id": player_id,
-		"magic": 0
+		"magic": 0,
+		"damage_value": 0
 	}
 	if player_system and player_id < player_system.players.size():
 		context.magic = player_system.players[player_id].magic_power
+	
+	# スペルのダメージ値をコンテキストに設定
+	var effect_parsed = spell.get("effect_parsed", {})
+	var effects = effect_parsed.get("effects", [])
+	for effect in effects:
+		var effect_type = effect.get("effect_type", "")
+		if effect_type == "damage" or effect_type == "hp_damage":
+			context.damage_value = effect.get("value", effect.get("damage", 0))
+			break
 	
 	# 既存のselect_best_target_with_scoreを使用
 	var result = select_best_target_with_score(targets, spell, context)

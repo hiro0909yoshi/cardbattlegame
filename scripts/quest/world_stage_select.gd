@@ -56,10 +56,25 @@ const STAGE_BUTTON_MARGIN = 40
 # マッププレビュー画像キャッシュ
 var map_preview_cache: Dictionary = {}
 
+# ブック選択モード
+var _is_book_selection_mode: bool = false
+var _book_container: VBoxContainer = null
+var _book_buttons: Array = []
+var _selected_deck_index: int = 0
+
+# 左パネルの参照（ブック選択切り替え用）
+@onready var left_panel: VBoxContainer = $MarginContainer/MainContainer/LeftPanel
+@onready var title_label: Label = $MarginContainer/MainContainer/LeftPanel/TitleLabel
+@onready var world_label: Label = $MarginContainer/MainContainer/LeftPanel/WorldLabel
+@onready var stage_label: Label = $MarginContainer/MainContainer/LeftPanel/StageLabel
+
 func _ready():
 	# ボタン接続
 	start_button.pressed.connect(_on_start_pressed)
 	back_button.pressed.connect(_on_back_pressed)
+	
+	# 前回のデッキ選択を復元
+	_selected_deck_index = GameData.selected_deck_index
 	
 	# 初期状態
 	detail_panel.visible = false
@@ -307,17 +322,26 @@ func _on_start_pressed():
 	if selected_stage_id.is_empty():
 		return
 	
-	# 選択を保存
-	GameData.selected_stage_id = selected_stage_id
-	
-	print("[WorldStageSelect] ステージ選択完了: ", selected_stage_id)
-	
-	# ブック選択画面へ遷移
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/BookSelect.tscn")
+	if _is_book_selection_mode:
+		# ブック選択モード → クエスト開始
+		GameData.selected_stage_id = selected_stage_id
+		GameData.selected_deck_index = _selected_deck_index
+		
+		print("[WorldStageSelect] クエスト開始: ステージ=%s, デッキ=%d" % [selected_stage_id, _selected_deck_index + 1])
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/Quest.tscn")
+	else:
+		# ステージ選択モード → ブック選択に切り替え
+		GameData.selected_stage_id = selected_stage_id
+		
+		print("[WorldStageSelect] ブック選択へ切り替え: ", selected_stage_id)
+		_show_book_selection()
 
-## 戻るボタン押下
 func _on_back_pressed():
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
+	if _is_book_selection_mode:
+		# ブック選択中 → ステージ選択に戻る
+		_hide_book_selection()
+	else:
+		get_tree().call_deferred("change_scene_to_file", "res://scenes/MainMenu.tscn")
 
 ## マッププレビューを表示
 func _show_map_preview(map_id: String):
@@ -652,3 +676,207 @@ func _get_special_tile_info(tile_type: String) -> Dictionary:
 		if info.get("type", "") == tile_type:
 			return info
 	return {}
+
+# =============================================================================
+# ブック選択モード
+# =============================================================================
+
+## 左パネルをブック選択に切り替え
+func _show_book_selection():
+	_is_book_selection_mode = true
+	
+	# 左パネルの既存UIを非表示
+	title_label.visible = false
+	world_label.visible = false
+	world_container.visible = false
+	stage_label.visible = false
+	stage_container.visible = false
+	
+	# スペーサーを非表示
+	for child in left_panel.get_children():
+		if child is Control and child.name == "Spacer":
+			child.visible = false
+	
+	# ブック選択UIを作成
+	_book_container = VBoxContainer.new()
+	_book_container.name = "BookContainer"
+	_book_container.add_theme_constant_override("separation", 20)
+	_book_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_panel.add_child(_book_container)
+	
+	# タイトル
+	var book_title = Label.new()
+	book_title.text = "ブック選択"
+	book_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	book_title.add_theme_font_size_override("font_size", 48)
+	_book_container.add_child(book_title)
+	
+	# デッキボタン作成（スクロール対応）
+	_book_buttons.clear()
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, 400)
+	_book_container.add_child(scroll)
+	
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 40)
+	grid.add_theme_constant_override("v_separation", 30)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
+	
+	for i in range(6):
+		var deck = GameData.player_data.decks[i] if i < GameData.player_data.decks.size() else {"name": "ブック" + str(i + 1)}
+		
+		var btn = Button.new()
+		btn.text = deck.get("name", "ブック" + str(i + 1))
+		btn.custom_minimum_size = Vector2(400, 150)
+		btn.add_theme_font_size_override("font_size", GC.FONT_SIZE_BUTTON_LARGE)
+		btn.pressed.connect(_on_book_selected.bind(i))
+		
+		grid.add_child(btn)
+		_book_buttons.append(btn)
+	
+	# 選択状態を反映
+	_update_book_button_states()
+	
+	# スペーサー（クリア条件を下に押す）
+	var bottom_spacer = Control.new()
+	bottom_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_book_container.add_child(bottom_spacer)
+	
+	# クリア条件を表示
+	_add_win_condition_display()
+	
+	# 右パネルのボタンテキスト変更
+	start_button.text = "クエスト開始"
+	back_button.text = "ステージ選択に戻る"
+
+## ブック選択を閉じてステージ選択に戻る
+func _hide_book_selection():
+	_is_book_selection_mode = false
+	
+	# ブック選択UIを削除
+	if _book_container:
+		_book_container.queue_free()
+		_book_container = null
+	_book_buttons.clear()
+	
+	# 左パネルの既存UIを再表示
+	title_label.visible = true
+	world_label.visible = true
+	world_container.visible = true
+	stage_label.visible = true
+	if selected_world_index >= 0:
+		stage_container.visible = true
+	
+	# スペーサーを再表示
+	for child in left_panel.get_children():
+		if child is Control and child.name == "Spacer":
+			child.visible = true
+	
+	# 右パネルのボタンテキスト戻す
+	start_button.text = "ブック選択へ"
+	back_button.text = "戻る"
+
+## ブック選択時
+func _on_book_selected(index: int):
+	print("[WorldStageSelect] ブック選択: ブック", index + 1)
+	_selected_deck_index = index
+	_update_book_button_states()
+
+## ブックボタンの選択状態を更新
+func _update_book_button_states():
+	for i in range(_book_buttons.size()):
+		var btn = _book_buttons[i]
+		if i == _selected_deck_index:
+			btn.disabled = true
+			btn.add_theme_color_override("font_color", Color.YELLOW)
+		else:
+			btn.disabled = false
+			btn.remove_theme_color_override("font_color")
+
+## クリア条件をブック選択パネル下部に表示
+func _add_win_condition_display():
+	if not _book_container or selected_stage_id.is_empty():
+		return
+	
+	var stage_data = _load_stage_data(selected_stage_id)
+	if stage_data.is_empty():
+		return
+	
+	# クリア条件パネル
+	var condition_panel = PanelContainer.new()
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.18, 0.25, 1.0)
+	panel_style.set_corner_radius_all(8)
+	panel_style.content_margin_left = 20
+	panel_style.content_margin_top = 15
+	panel_style.content_margin_right = 20
+	panel_style.content_margin_bottom = 15
+	condition_panel.add_theme_stylebox_override("panel", panel_style)
+	_book_container.add_child(condition_panel)
+	
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	condition_panel.add_child(vbox)
+	
+	# ヘッダー
+	var header = Label.new()
+	header.text = "クリア条件"
+	header.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+	header.add_theme_color_override("font_color", Color(0.9, 0.8, 0.4))
+	vbox.add_child(header)
+	
+	# 区切り線
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+	
+	# 勝利条件
+	var rule_overrides = stage_data.get("rule_overrides", {})
+	var win_conditions = rule_overrides.get("win_conditions", {})
+	var conditions = win_conditions.get("conditions", [])
+	var max_turns = stage_data.get("max_turns", 0)
+	
+	for condition in conditions:
+		var cond_type = condition.get("type", "")
+		var target_value = condition.get("target", 0)
+		var timing = condition.get("timing", "")
+		
+		var text = ""
+		match cond_type:
+			"magic":
+				text = "総魔力 %dEP 達成" % target_value
+				if timing == "checkpoint":
+					text += "（チェックポイント通過時）"
+			"dominion":
+				text = "ドミニオ %d箇所 確保" % target_value
+			"destroy":
+				text = "敵クリーチャー %d体 撃破" % target_value
+			_:
+				text = "%s: %d" % [cond_type, target_value]
+		
+		var cond_label = Label.new()
+		cond_label.text = "・" + text
+		cond_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+		cond_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(cond_label)
+	
+	# ターン制限
+	if max_turns > 0:
+		var turn_label = Label.new()
+		turn_label.text = "・制限ターン: %dターン" % max_turns
+		turn_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+		turn_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.6))
+		vbox.add_child(turn_label)
+	
+	# 対戦人数
+	var quest = stage_data.get("quest", {})
+	var enemies = quest.get("enemies", [])
+	if not enemies.is_empty():
+		var player_count = enemies.size() + 1
+		var enemy_label = Label.new()
+		enemy_label.text = "・%d人対戦" % player_count
+		enemy_label.add_theme_font_size_override("font_size", GC.FONT_SIZE_TOAST)
+		vbox.add_child(enemy_label)

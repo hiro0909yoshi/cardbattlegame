@@ -508,7 +508,10 @@ func focus_on_tile_slow(tile_index: int, duration: float = 1.2):
 func focus_on_position_slow(world_pos: Vector3, duration: float = 0.5):
 	if not camera:
 		return
-	var lt = world_pos + Vector3(0, 1.0, 0)
+	# マップ境界内にクランプ
+	var clamped_xz = _clamp_to_hull(Vector2(world_pos.x, world_pos.z))
+	var clamped_pos = Vector3(clamped_xz.x, world_pos.y, clamped_xz.y)
+	var lt = clamped_pos + Vector3(0, 1.0, 0)
 	var cp = lt + GameConstants.CAMERA_OFFSET
 	if camera.global_position.distance_to(cp) < 0.3:
 		return

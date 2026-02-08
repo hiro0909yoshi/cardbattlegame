@@ -196,7 +196,7 @@ func show_selection(spells: Array):
 	_center_panel()
 	visible = true
 
-func _update_spell_panel(spell_panel: Panel, spell_data: Dictionary, show: bool):
+func _update_spell_panel(spell_panel: Panel, spell_data: Dictionary, is_visible: bool):
 	var margin = spell_panel.get_child(0)
 	var vbox = margin.get_child(0)
 	
@@ -206,7 +206,7 @@ func _update_spell_panel(spell_panel: Panel, spell_data: Dictionary, show: bool)
 	var cost_label = vbox.get_node("CostLabel")
 	var use_button = vbox.get_node("UseButton")
 	
-	if not show or spell_data.is_empty():
+	if not is_visible or spell_data.is_empty():
 		spell_panel.visible = false
 		return
 	

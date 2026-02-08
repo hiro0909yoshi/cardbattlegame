@@ -106,7 +106,8 @@ func _ensure_checkpoint_distances_calculated():
 
 ## チェックポイント距離を計算（マップロード後に呼び出し）
 func calculate_checkpoint_distances():
-	print("[CPUMovementEvaluator] calculate_checkpoint_distances呼び出し mc=%s, tile_nodes=%s" % [movement_controller != null, movement_controller.tile_nodes != null if movement_controller else "N/A"])
+	var tile_nodes_info = str(movement_controller.tile_nodes != null) if movement_controller else "N/A"
+	print("[CPUMovementEvaluator] calculate_checkpoint_distances呼び出し mc=%s, tile_nodes=%s" % [movement_controller != null, tile_nodes_info])
 	if not movement_controller or not movement_controller.tile_nodes:
 		print("[CPUMovementEvaluator] movement_controller未設定 - スキップ")
 		return

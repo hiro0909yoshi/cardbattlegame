@@ -586,6 +586,10 @@ func _show_info_panel_only():
 	if not ui_manager:
 		return
 	
+	# プレイヤーステータスダイアログが開いていたら閉じる
+	if ui_manager.player_status_dialog and ui_manager.player_status_dialog.is_dialog_visible():
+		ui_manager.player_status_dialog.hide_dialog()
+	
 	# ドミニオコマンド中またはアルカナアーツ中かどうか先に確認
 	var gfm = null
 	if "game_flow_manager_ref" in ui_manager:

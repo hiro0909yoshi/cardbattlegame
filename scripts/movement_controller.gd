@@ -1334,15 +1334,15 @@ func _get_next_tile_choices(current_tile: int, came_from: int) -> Array:
 	# タイルが見つからない、またはconnectionsがない場合
 	if not tile or not tile.connections or tile.connections.is_empty():
 		# 単純に+1/-1の両方向（came_fromを除外）
-		var choices = []
+		var simple_choices = []
 		if came_from != current_tile + 1:
-			choices.append(current_tile + 1)
+			simple_choices.append(current_tile + 1)
 		if came_from != current_tile - 1:
-			choices.append(current_tile - 1)
+			simple_choices.append(current_tile - 1)
 		# came_fromが不明(-1)なら両方向
 		if came_from < 0:
 			return [current_tile + 1, current_tile - 1]
-		return choices
+		return simple_choices
 	
 	# BranchTileの場合
 	if tile is BranchTile:

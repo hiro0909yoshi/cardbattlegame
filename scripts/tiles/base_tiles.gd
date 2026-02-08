@@ -330,15 +330,15 @@ func _process(delta):
 		_destination_highlight_time += delta
 		
 		# sin波で0〜1を滑らかに変化（周期1.0秒 - 速めの点滅）
-		var t = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
+		var ht = (sin(_destination_highlight_time * TAU / 1.0) + 1.0) / 2.0
 		
 		# 黄色でハイライト
 		var highlight_color = Color(1.0, 0.9, 0.2)  # 黄色
 		var dim_color = Color(0.3, 0.27, 0.06)  # 暗い黄色
 		
-		_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, t)
-		_destination_highlight_material.emission = dim_color.lerp(highlight_color, t)
-		_destination_highlight_material.emission_energy_multiplier = 0.5 + t * 1.5  # 0.5〜2.0（明るめ）
+		_destination_highlight_material.albedo_color = dim_color.lerp(highlight_color, ht)
+		_destination_highlight_material.emission = dim_color.lerp(highlight_color, ht)
+		_destination_highlight_material.emission_energy_multiplier = 0.5 + ht * 1.5  # 0.5〜2.0（明るめ）
 		
 		frame_mesh_instance.material_override = _destination_highlight_material
 		return  # 到着予測ハイライト中は通常点滅を行わない

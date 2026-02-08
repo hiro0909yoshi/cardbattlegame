@@ -320,7 +320,7 @@ func update_player(player_id: int):
 		update_single_panel(player_id)
 
 # EP変更時コールバック（即座更新用）
-func _on_magic_changed(player_id: int, new_value: int):
+func _on_magic_changed(player_id: int, _new_value: int):
 	update_player(player_id)
 
 # ターン開始時コールバック（順番アイコン即座更新用）

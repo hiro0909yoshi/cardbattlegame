@@ -467,9 +467,9 @@ func use_spell(spell_card: Dictionary):
 		
 		if not _can_afford_spell(spell_card):
 			# EPが足りない場合はエラー表示して戻る
-			var cost = _get_spell_cost(spell_card)
+			var needed_cost = _get_spell_cost(spell_card)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+				ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % needed_cost)
 			# インフォパネルを閉じる
 			if ui_manager and ui_manager.creature_info_panel_ui:
 				ui_manager.creature_info_panel_ui.hide_panel()

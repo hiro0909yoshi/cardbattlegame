@@ -180,7 +180,7 @@ func _get_random_spells(count: int) -> Array:
 			if spell and not spell.is_empty():
 				fixed_spells.append(spell)
 		if not fixed_spells.is_empty():
-			print("[MagicTile] デバッグ: 固定スペル使用 %s" % debug_fixed_spell_ids)
+			print("[MagicTile] デバッグ: 固定スペル使用 %s" % str(debug_fixed_spell_ids))
 			return fixed_spells
 	
 	var all_spells = CardLoader.get_cards_by_type("spell")

@@ -360,7 +360,7 @@ func update_cpu_hand_display(player_id: int):
 		debug_panel.update_cpu_hand(player_id)
 
 # === 基本UI操作 ===
-func update_ui(current_player, current_phase):
+func update_ui(_current_player, current_phase):
 	# プレイヤー情報パネルを更新
 	update_player_info_panels()
 	
