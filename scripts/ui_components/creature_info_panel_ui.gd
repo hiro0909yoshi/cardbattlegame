@@ -44,6 +44,13 @@ var current_confirmation_text: String = ""
 # 参照
 var card_system = null
 
+# ナビゲーション保存用
+var _has_saved_navigation: bool = false
+var _saved_confirm_cb: Callable = Callable()
+var _saved_back_cb: Callable = Callable()
+var _saved_up_cb: Callable = Callable()
+var _saved_down_cb: Callable = Callable()
+
 
 func _ready():
 	# 初期状態は非表示
@@ -76,6 +83,8 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 	# グローバルボタン設定（閲覧モード：戻るのみ）
 	# setup_buttons=falseの場合はスキップ（呼び出し側でナビゲーション管理）
 	if setup_buttons and ui_manager_ref:
+		# 現在のナビゲーションを保存（パネル閉じ後に復元）
+		_save_navigation()
 		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
 
 
@@ -140,6 +149,8 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 
 ## パネルを閉じる
 func hide_panel(clear_buttons: bool = true):
+	var was_view_mode = not is_selection_mode
+	
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット
@@ -151,7 +162,11 @@ func hide_panel(clear_buttons: bool = true):
 		ui_manager_ref.phase_display.hide_action_prompt()
 	
 	if clear_buttons and ui_manager_ref:
-		ui_manager_ref.clear_global_actions()
+		# 閲覧モードの場合は元のナビゲーションを復元
+		if was_view_mode and _has_saved_navigation:
+			_restore_navigation()
+		else:
+			ui_manager_ref.clear_global_actions()
 	
 	panel_closed.emit()
 
@@ -209,10 +224,16 @@ func _update_right_panel():
 	var max_hp = hp + data.get("base_up_hp", 0)
 	var total_ap = ap + data.get("base_up_ap", 0)
 	
+	# ランドボーナス計算（配置済みクリーチャーのみ）
+	var land_bonus = _calculate_land_bonus(data)
+	
 	if hp_label:
 		hp_label.text = "HP: %d / %d" % [current_hp, max_hp]
 	if ap_label:
 		ap_label.text = "AP: %d" % total_ap
+	
+	# ランドボーナス表示（(+N)を緑色で別ラベルとして追加）
+	_update_land_bonus_label(land_bonus)
 	
 	# 配置制限 / アイテム制限
 	var restrictions = data.get("restrictions", {})
@@ -294,6 +315,78 @@ func _get_element_short_name(element: String) -> String:
 		"earth": return "地"
 		"wind": return "風"
 		_: return element
+
+
+## 現在のナビゲーション状態を保存（既に保存済みなら上書きしない）
+func _save_navigation():
+	if ui_manager_ref and not _has_saved_navigation:
+		_saved_confirm_cb = ui_manager_ref._compat_confirm_cb
+		_saved_back_cb = ui_manager_ref._compat_back_cb
+		_saved_up_cb = ui_manager_ref._compat_up_cb
+		_saved_down_cb = ui_manager_ref._compat_down_cb
+		_has_saved_navigation = true
+
+
+## 保存したナビゲーション状態を復元
+func _restore_navigation():
+	if ui_manager_ref and _has_saved_navigation:
+		ui_manager_ref.enable_navigation(_saved_confirm_cb, _saved_back_cb, _saved_up_cb, _saved_down_cb)
+		_has_saved_navigation = false
+
+
+## ランドボーナスラベルの表示更新
+func _update_land_bonus_label(land_bonus: int):
+	# HpApContainer（HBoxContainer）内にボーナスラベルを管理
+	var container = hp_label.get_parent() if hp_label else null
+	if not container:
+		return
+	
+	var bonus_label = container.get_node_or_null("LandBonusLabel")
+	
+	if land_bonus <= 0:
+		if bonus_label:
+			bonus_label.visible = false
+		return
+	
+	# ラベルがなければ作成（HpLabelの直後に挿入）
+	if not bonus_label:
+		bonus_label = Label.new()
+		bonus_label.name = "LandBonusLabel"
+		bonus_label.add_theme_font_size_override("font_size", hp_label.get_theme_font_size("font_size"))
+		bonus_label.add_theme_color_override("font_color", Color(0.1, 0.5, 0.15))
+		var hp_index = hp_label.get_index()
+		container.add_child(bonus_label)
+		container.move_child(bonus_label, hp_index + 1)
+	
+	bonus_label.text = "(+%d)" % land_bonus
+	bonus_label.visible = true
+
+
+## 配置済みクリーチャーのランドボーナスを計算
+## 戻り値: ボーナス値（属性不一致や未配置の場合は0）
+func _calculate_land_bonus(creature_data: Dictionary) -> int:
+	if current_tile_index < 0:
+		return 0
+	
+	# board_systemからタイル情報を取得
+	var board_system = null
+	if ui_manager_ref and "board_system_ref" in ui_manager_ref:
+		board_system = ui_manager_ref.board_system_ref
+	if not board_system:
+		return 0
+	
+	var tile_info = board_system.get_tile_info(current_tile_index) if board_system.has_method("get_tile_info") else {}
+	if tile_info.is_empty():
+		return 0
+	
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+	
+	# 属性一致判定（SpellCurseBattle経由で呪い効果等も考慮）
+	if SpellCurseBattle.can_get_land_bonus(creature_data, tile_element):
+		return tile_level * 10
+	
+	return 0
 
 
 # === 属性アイコン ===

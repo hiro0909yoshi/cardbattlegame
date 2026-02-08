@@ -74,16 +74,16 @@ const SKILL_RATE_BONUS = {
 
 const SPELL_EFFECT_BONUS = {
 	# ダメージ系
-	"damage": 60,                        # マジックボルト, サンダークラップ, ストーンブラスト 等
+	"damage": 81,                        # マジックボルト, サンダークラップ, ストーンブラスト 等
 	"destroy_selected_card": 100,         # シャッター, スクイーズ
 	"destroy_expensive_cards": 40,       # レイオブロウ
 	"destroy_duplicate_cards": 100,       # エロージョン
 	"destroy_curse_cards": 60,           # レイオブパージ
-	"destroy_from_deck_selection": 80,   # ポイズンマインド
-	"destroy_after_battle": 80,          # シニリティ
+	"destroy_from_deck_selection": 91,   # ポイズンマインド
+	"destroy_after_battle": 91,          # シニリティ
 	
 	# 土地系
-	"change_element": 30,                # アースシフト, ウォーターシフト, エアーシフト 等
+	"change_element": 51,                # アースシフト, ウォーターシフト, エアーシフト 等
 	"change_element_bidirectional": 30,  # ストームシフト, マグマシフト
 	"change_element_to_dominant": 40,    # インフルエンス
 	"change_level": 110,                  # アステロイド, サドンインパクト
@@ -93,12 +93,12 @@ const SPELL_EFFECT_BONUS = {
 	"align_mismatched_lands": 40,        # ホームグラウンド
 	
 	# EP系
-	"drain_magic": 40,                   # ドレインマジック
+	"drain_magic": 71,                   # ドレインマジック
 	"drain_magic_by_lap_diff": 40,       # スピードペナルティ
 	"drain_magic_by_land_count": 40,     # ランドドレイン
 	"drain_magic_conditional": 40,       # フラクション
-	"gain_magic_by_lap": 40,             # マナ
-	"gain_magic_by_rank": 50,            # ギフト
+	"gain_magic_by_lap": 61,             # マナ
+	"gain_magic_by_rank": 81,            # ギフト
 	"gain_magic_from_destroyed_count": 60, # インシネレート
 	"gain_magic_from_land_chain": 40,    # ロングライン
 	"gain_magic_from_spell_cost": 40,    # クレアボヤンス
@@ -154,7 +154,7 @@ const SPELL_EFFECT_BONUS = {
 	"magic_barrier": 60,                 # エナジーフィールド
 	
 	# 特殊
-	"return_to_hand": 80,                # エグザイル, フィアー, ホーリーバニッシュ
+	"return_to_hand": 81,                # エグザイル, フィアー, ホーリーバニッシュ
 	"swap_board_creatures": 40,          # リリーフ
 	"swap_with_hand": 60,                # エクスチェンジ
 	"steal_selected_card": 90,           # セフト
@@ -178,7 +178,7 @@ const SPELL_EFFECT_BONUS = {
 	
 	# 戦闘系
 	"battle_disable": 60,                # ディラニー, バインドミスト
-	"skill_nullify": 70,                 # ボーテックス
+	"skill_nullify": 72,                 # ボーテックス
 	"ap_nullify": 50,                    # デビリティ
 	"peace": 70,                         # ピース
 }

@@ -702,6 +702,14 @@ func get_player_card_nodes(player_id: int) -> Array:
 
 # プレイヤー情報パネルがクリックされたときのハンドラ
 func _on_player_panel_clicked(player_id: int):
+	# 他のインフォパネルが開いていたら閉じる
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel()
+	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
+		spell_info_panel_ui.hide_panel()
+	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
+		item_info_panel_ui.hide_panel()
+	
 	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
 		player_status_dialog.show_for_player(player_id)
 

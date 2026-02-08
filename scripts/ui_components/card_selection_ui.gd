@@ -636,6 +636,10 @@ func _confirm_card_selection(card_index: int):
 func on_card_selected(card_index: int):
 	print("[CardSelectionUI] on_card_selected called: index=%d, is_active=%s, selection_mode=%s" % [card_index, is_active, selection_mode])
 	
+	# プレイヤーステータスダイアログが開いていたら閉じる
+	if ui_manager_ref and ui_manager_ref.player_status_dialog and ui_manager_ref.player_status_dialog.is_dialog_visible():
+		ui_manager_ref.player_status_dialog.hide_dialog()
+	
 	if not is_active:
 		print("[CardSelectionUI] not active, returning")
 		return

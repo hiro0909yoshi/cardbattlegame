@@ -1145,6 +1145,9 @@ func complete_spell_phase():
 	# 外部スペルモードの場合
 	if is_external_spell_mode:
 		current_state = State.INACTIVE
+		# UIクリーンアップ（ナビゲーションやボタンが残らないようにする）
+		_hide_spell_phase_buttons()
+		_clear_spell_navigation()
 		external_spell_finished.emit()
 		return
 	

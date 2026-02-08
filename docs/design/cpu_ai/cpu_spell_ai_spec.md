@@ -13,8 +13,8 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
 │   - UI制御                                             │
 │   - プレイヤー/CPU共通の効果実行                        │
 └─────────────────────┬──────────────────────────────────┘
-                      │ CPUの場合
-                      ▼
+					  │ CPUの場合
+					  ▼
 ┌────────────────────────────────────────────────────────┐
 │ CPUSpellPhaseHandler (cpu_spell_phase_handler.gd)      │
 │   - decide_action(): スペル/ミスティック判断呼び出し   │
@@ -23,8 +23,8 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
 │   - build_target_data(): ターゲットデータ構築          │
 │   - select_best_target(): 最適ターゲット選択           │
 └─────────────────────┬──────────────────────────────────┘
-                      │ 判断委譲
-                      ▼
+					  │ 判断委譲
+					  ▼
 ┌────────────────────────────────────────────────────────┐
 │ CPUSpellAI (cpu_spell_ai.gd)                           │
 │   - decide_spell(): どのスペルをどのターゲットに       │
@@ -80,9 +80,9 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
    │   └─ 配置クリーチャーのアルカナアーツを評価
    │
    └─ スコア比較
-       ├─ spell_score >= mystic_score → "spell"
-       ├─ mystic_score > spell_score → "mystic"
-       └─ どちらも使わない → "pass"
+	   ├─ spell_score >= mystic_score → "spell"
+	   ├─ mystic_score > spell_score → "mystic"
+	   └─ どちらも使わない → "pass"
 
 2. SpellPhaseHandler側
    │
@@ -96,11 +96,11 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
 ```gdscript
 # 手札が多いならスペル消費優先
 if hand_size >= 6:
-    spell_score += 0.5
+	spell_score += 0.5
 
 # 手札が少ないならアルカナアーツ優先（カード温存）
 if hand_size <= 3:
-    mystic_score += 0.5
+	mystic_score += 0.5
 ```
 
 ---
@@ -112,9 +112,9 @@ if hand_size <= 3:
 ```json
 {
   "cpu_rule": {
-    "pattern": "condition",
-    "condition": "element_mismatch",
-    "priority": "medium"
+	"pattern": "condition",
+	"condition": "element_mismatch",
+	"priority": "medium"
   }
 }
 ```
@@ -209,22 +209,22 @@ if hand_size <= 3:
 ```gdscript
 # _init()で内部コンポーネントを生成
 func _init() -> void:
-    condition_checker = CPUSpellConditionChecker.new()
-    target_selector = CPUSpellTargetSelector.new()
-    spell_utils = CPUSpellUtils.new()
-    sacrifice_selector = CPUSacrificeSelector.new()
+	condition_checker = CPUSpellConditionChecker.new()
+	target_selector = CPUSpellTargetSelector.new()
+	spell_utils = CPUSpellUtils.new()
+	sacrifice_selector = CPUSacrificeSelector.new()
 
 # initialize()で外部システム参照を設定
 func initialize(context) -> void:
-    if context:
-        board_system = context.board_system
-        player_system = context.player_system
-        # ... 他の参照
-    
-    # 内部コンポーネントも初期化
-    if condition_checker:
-        condition_checker.initialize(context)
-    # ...
+	if context:
+		board_system = context.board_system
+		player_system = context.player_system
+		# ... 他の参照
+	
+	# 内部コンポーネントも初期化
+	if condition_checker:
+		condition_checker.initialize(context)
+	# ...
 ```
 
 ### CPUSpellPhaseHandler
@@ -232,8 +232,8 @@ func initialize(context) -> void:
 ```gdscript
 # initialize()で親ハンドラー参照を設定
 func initialize(handler) -> void:
-    spell_phase_handler = handler
-    _sync_references()  # 親から参照を同期
+	spell_phase_handler = handler
+	_sync_references()  # 親から参照を同期
 ```
 
 ---

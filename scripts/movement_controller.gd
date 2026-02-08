@@ -688,7 +688,6 @@ func _show_branch_tile_selection(choices: Array) -> int:
 		if _current_remaining_steps > 1:
 			var from_tile = player_tiles[current_moving_player] if current_moving_player >= 0 else -1
 			var destinations = predict_all_destinations(result, _current_remaining_steps - 1, from_tile)
-			print("[BranchCamDest] result=%d, remaining=%d, from=%d, destinations=%s" % [result, _current_remaining_steps - 1, from_tile, destinations])
 			if not destinations.is_empty() and tile_nodes.has(destinations[0]):
 				cc.focus_on_tile_slow(destinations[0], 1.2)
 		elif tile_nodes.has(result):

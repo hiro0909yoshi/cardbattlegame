@@ -80,10 +80,10 @@
 	  "description": "雑魚敵2",
 	  "battle_policy": {
 		"attack": {
-		  "always_battle": 0.5,
-		  "both_no_item": 0.5,
-		  "vs_enemy_item": 0.0,
-		  "never_battle": 0.0
+		  "always_battle": 0.4,
+		  "both_no_item": 0.2,
+		  "vs_enemy_item": 0.3,
+		  "never_battle": 0.1
 		},
 		"defense": {
 		  "no_item": 0.5,
@@ -97,8 +97,8 @@
 		  }
 		},
 		"summon_rate_match": 0.7,
-		"summon_rate_mismatch": 0.7,
-		"spell_use_rate": 0.7,
+		"summon_rate_mismatch": 0.4,
+		"spell_use_rate": 0.6,
 		"dominio_use_rate": 0.5
 	  }
 	}

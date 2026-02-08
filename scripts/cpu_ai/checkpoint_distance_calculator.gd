@@ -39,19 +39,54 @@ func calculate_all_distances():
 	# 1. チェックポイントを検出
 	_find_all_checkpoints()
 	
+	print("[CP距離] _find_all_checkpoints完了: %d個, tile_nodes数: %d" % [checkpoints.size(), tile_nodes.size()])
 	if checkpoints.is_empty():
+		# タイルタイプをサンプル出力
+		var count = 0
+		for ti in tile_nodes:
+			var t = tile_nodes[ti]
+			if t and count < 5:
+				var tt = t.tile_type if "tile_type" in t else "NO_PROP"
+				print("[CP距離]   tile%d: tile_type='%s'" % [ti, tt])
+				count += 1
+		print("[CP距離] チェックポイント未検出 - 距離計算スキップ")
 		return
 	
 	# 2. 分岐タイルを検出
 	_find_branch_tiles()
 	
-	# 3. 各チェックポイントからBFSで距離計算
+	# 3. 各チェックポイントからBFSで距離計算（同IDの複数タイルは最短距離を採用）
 	for cp_id in checkpoints:
-		var cp_tile = checkpoints[cp_id]
-		distances[cp_id] = _bfs_from_checkpoint(cp_tile)
+		var cp_tiles = checkpoints[cp_id]  # Array of tile indices
+		var merged = {}
+		for cp_tile in cp_tiles:
+			var bfs_result = _bfs_from_checkpoint(cp_tile)
+			for tile_idx in bfs_result:
+				if not merged.has(tile_idx) or bfs_result[tile_idx] < merged[tile_idx]:
+					merged[tile_idx] = bfs_result[tile_idx]
+		distances[cp_id] = merged
 	
 	# 4. 方向別距離を計算
 	_calculate_directional_distances()
+	
+	# デバッグ: 距離テーブル出力
+	print("[CP距離] チェックポイント: %s" % str(checkpoints))
+	print("[CP距離] 分岐タイル: %s" % str(branch_tiles))
+	for cp_id in distances:
+		var dist_table = distances[cp_id]
+		var cp_tiles = checkpoints.get(cp_id, [])
+		# タイル0周辺の距離を出力
+		var nearby = [0, 1, 2, 19, 18, 20, 21, 38, 37]
+		var dist_str = ""
+		for t in nearby:
+			if dist_table.has(t):
+				dist_str += "tile%d=%d " % [t, dist_table[t]]
+		print("[CP距離] CP '%s'(tiles%s): %s" % [cp_id, str(cp_tiles), dist_str])
+	# 方向別距離
+	for branch in directional_distances:
+		print("[CP距離] 分岐タイル%d の方向別距離:" % branch)
+		for next_tile in directional_distances[branch]:
+			print("[CP距離]   →%d: %s" % [next_tile, str(directional_distances[branch][next_tile])])
 
 
 ## 特定タイルから特定チェックポイントへの距離を取得
@@ -170,7 +205,7 @@ func _calculate_directional_distances():
 		# 分岐タイルがCPかどうか確認
 		var branch_cp_id = ""
 		for cp_id in checkpoints:
-			if checkpoints[cp_id] == branch_tile:
+			if branch_tile in checkpoints[cp_id]:
 				branch_cp_id = cp_id
 				break
 		
@@ -201,22 +236,31 @@ func _bfs_directional(start_tile: int, excluded_tile: int) -> Dictionary:
 	var queue: Array = []
 	var visited: Dictionary = {}
 	
-	# 除外タイルを最初から訪問済みとしてマーク
-	visited[excluded_tile] = true
-	
 	# 開始タイル
 	queue.append({ "tile": start_tile, "distance": 1 })  # 分岐から1歩進んでいる
 	visited[start_tile] = true
+	# 最初の1歩目だけ逆戻り防止（excluded_tileへの即座の戻りを防ぐ）
+	visited[excluded_tile] = true
 	
 	# 開始タイルがCPか確認
 	for cp_id in checkpoints:
-		if checkpoints[cp_id] == start_tile:
+		if start_tile in checkpoints[cp_id]:
 			result[cp_id] = 1
+	
+	# 逆戻り防止解除フラグ（最初のループ後に解除）
+	var first_expansion_done = false
 	
 	while not queue.is_empty():
 		var current = queue.pop_front()
 		var current_tile = current.tile
 		var current_distance = current.distance
+		
+		# 最初の展開が完了したらexcluded_tileへの到達を許可
+		# （他のルートから分岐タイルに戻ることを許可する）
+		if not first_expansion_done and current_distance >= 2:
+			first_expansion_done = true
+			if visited.has(excluded_tile):
+				visited.erase(excluded_tile)
 		
 		# 隣接タイルを取得
 		var neighbors = _get_neighbors_with_cost(current_tile)
@@ -233,7 +277,7 @@ func _bfs_directional(start_tile: int, excluded_tile: int) -> Dictionary:
 			
 			# このタイルがCPか確認
 			for cp_id in checkpoints:
-				if checkpoints[cp_id] == neighbor:
+				if neighbor in checkpoints[cp_id]:
 					if not result.has(cp_id) or new_distance < result[cp_id]:
 						result[cp_id] = new_distance
 			
@@ -258,7 +302,9 @@ func _find_all_checkpoints():
 		if tile_type in ["checkpoint", "gate"]:
 			# チェックポイントIDを決定
 			var cp_id = _get_checkpoint_id(tile, tile_index)
-			checkpoints[cp_id] = tile_index
+			if not checkpoints.has(cp_id):
+				checkpoints[cp_id] = []
+			checkpoints[cp_id].append(tile_index)
 
 
 ## チェックポイントIDを取得（タイルの属性から）
