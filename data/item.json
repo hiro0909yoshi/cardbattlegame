@@ -1299,7 +1299,7 @@
 	  "cost": {
 		"ep": 40
 	  },
-	  "effect": "AP+40；レア度Nが使用時、強打",
+	  "effect": "AP+40；レアリティNが使用時、強打",
 	  "effect_parsed": {
 		"stat_bonus": {
 		  "ap": 40

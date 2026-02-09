@@ -707,9 +707,9 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# カードノードから制限理由を取得（犠牲/捨て札モードでは無視）
+	# カードノードから制限理由を取得（犠牲/捨て札/交換モードでは無視）
 	var restriction_reason = ""
-	if selection_mode not in ["sacrifice", "discard"]:
+	if selection_mode not in ["sacrifice", "discard", "swap"]:
 		restriction_reason = _get_card_restriction_reason(card_index)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）

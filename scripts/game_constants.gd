@@ -297,6 +297,14 @@ const FONT_SIZE_COMMENT_LARGE = 120  # 大きいコメント
 const FONT_SIZE_DICE = 64            # ダイス表示
 const FONT_SIZE_ACTION_PROMPT = 64   # アクション指示
 
+# リザルト画面
+const FONT_SIZE_RESULT_TITLE = 96    # リザルトタイトル（STAGE CLEAR / LOSE）
+const FONT_SIZE_RESULT_RANK = 72     # ランク表示
+const FONT_SIZE_RESULT_INFO = 48     # ターン数・ベスト情報
+const FONT_SIZE_RESULT_REWARD = 40   # 報酬行
+const FONT_SIZE_RESULT_TOTAL = 52    # 合計報酬
+const FONT_SIZE_RESULT_HINT = 32     # タップで続ける等
+
 # =============================================================================
 # UI色定義
 # =============================================================================

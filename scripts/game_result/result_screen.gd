@@ -54,25 +54,25 @@ func _build_ui():
 	# タイトル（WIN / LOSE）
 	title_label = Label.new()
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 84)
+	title_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_TITLE)
 	main_container.add_child(title_label)
 	
 	# ランク表示
 	rank_label = Label.new()
 	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rank_label.add_theme_font_size_override("font_size", 56)
+	rank_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_RANK)
 	main_container.add_child(rank_label)
 	
 	# ターン数
 	turn_label = Label.new()
 	turn_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	turn_label.add_theme_font_size_override("font_size", 32)
+	turn_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_INFO)
 	main_container.add_child(turn_label)
 	
 	# ベスト情報（2回目以降）
 	best_info_label = Label.new()
 	best_info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	best_info_label.add_theme_font_size_override("font_size", 28)
+	best_info_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_REWARD)
 	best_info_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	main_container.add_child(best_info_label)
 	
@@ -89,7 +89,7 @@ func _build_ui():
 	# 合計ラベル
 	total_label = Label.new()
 	total_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	total_label.add_theme_font_size_override("font_size", 40)
+	total_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_TOTAL)
 	total_label.add_theme_color_override("font_color", Color.GOLD)
 	main_container.add_child(total_label)
 	
@@ -97,7 +97,7 @@ func _build_ui():
 	continue_label = Label.new()
 	continue_label.text = "[ タップで続ける ]"
 	continue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	continue_label.add_theme_font_size_override("font_size", 26)
+	continue_label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_HINT)
 	continue_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	main_container.add_child(continue_label)
 
@@ -217,13 +217,13 @@ func _create_reward_line(label_text: String, value_text: String) -> HBoxContaine
 	var label = Label.new()
 	label.text = label_text
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_REWARD)
 	hbox.add_child(label)
 	
 	var value = Label.new()
 	value.text = value_text
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value.add_theme_font_size_override("font_size", 32)
+	value.add_theme_font_size_override("font_size", GameConstants.FONT_SIZE_RESULT_REWARD)
 	hbox.add_child(value)
 	
 	return hbox

@@ -715,12 +715,7 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 		# 移動元情報をクリア
 		move_source_tile = -1
 	
-	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
-	if board_system and board_system.tile_action_processor:
-		var player_name = _get_current_player_name()
-		board_system.tile_action_processor.set_pending_comment(
-			"%s がドミニオコマンド：移動侵略" % player_name
-		)
+	# コメントはバトル前に表示済みのため、ここでは表示しない
 	
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:
@@ -1042,6 +1037,32 @@ func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 		_:
 			# その他の状態では何もしない
 			pass
+
+
+## 移動侵略シーケンス（カメラ移動→コメント→アイテムフェーズ）
+func _start_move_battle_sequence(dest_tile_index: int, attacker_player: int, creature_data: Dictionary):
+	# 1. カメラを移動先タイルにフォーカス
+	TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
+	
+	# 2. コメント表示（クリック待ち）
+	await _show_dominio_order_comment("移動侵略")
+	
+	# 3. アイテムフェーズを開始（攻撃側）
+	if game_flow_manager and game_flow_manager.item_phase_handler:
+		# アイテムフェーズ完了シグナルに接続
+		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
+			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+		
+		# 攻撃側のアイテムフェーズ開始（防御側情報を渡して事前選択）
+		var defender_tile_info = pending_move_battle_tile_info
+		game_flow_manager.item_phase_handler.start_item_phase(
+			attacker_player,
+			creature_data,
+			defender_tile_info
+		)
+	else:
+		# ItemPhaseHandlerがない場合は直接バトル
+		_execute_move_battle()
 
 
 ## ドミニオコマンド使用コメントを表示（アクション確定時）

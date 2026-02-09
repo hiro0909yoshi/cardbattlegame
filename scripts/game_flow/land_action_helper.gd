@@ -483,26 +483,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.pending_move_defender_item = {}
 		handler.is_waiting_for_move_defender_item = false
 		
-		# ドミニオコマンド使用コメント表示（移動侵略確定時）
-		#if handler.has_method("_show_dominio_order_comment"):
-		#	await handler._show_dominio_order_comment("移動侵略")
-		
-		# アイテムフェーズを開始（攻撃側）
-		if handler.game_flow_manager and handler.game_flow_manager.item_phase_handler:
-			# アイテムフェーズ完了シグナルに接続
-			if not handler.game_flow_manager.item_phase_handler.item_phase_completed.is_connected(handler._on_move_item_phase_completed):
-				handler.game_flow_manager.item_phase_handler.item_phase_completed.connect(handler._on_move_item_phase_completed, CONNECT_ONE_SHOT)
-			
-			# 攻撃側のアイテムフェーズ開始（防御側情報を渡して事前選択）
-			var defender_tile_info = handler.pending_move_battle_tile_info
-			handler.game_flow_manager.item_phase_handler.start_item_phase(
-				current_player_index, 
-				creature_data,
-				defender_tile_info
-			)
-		else:
-			# ItemPhaseHandlerがない場合は直接バトル
-			_execute_move_battle(handler)
+		# 移動侵略シーケンスを開始（カメラ移動→コメント→アイテムフェーズ）
+		handler._start_move_battle_sequence(dest_tile_index, current_player_index, creature_data)
 
 ## 簡易移動バトル（カードシステム使用不可時）
 static func execute_simple_move_battle(handler, dest_index: int, attacker_data: Dictionary, attacker_player: int):

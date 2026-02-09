@@ -430,6 +430,7 @@ static func build_battle_context(attacker_data: Dictionary, defender_data: Dicti
 		# クリーチャー情報
 		"creature_mhp": attacker_data.get("mhp", 0),
 		"creature_element": attacker_data.get("element", ""),
+		"creature_rarity": attacker_data.get("rarity", ""),
 		"enemy_element": defender_data.get("element", ""),
 		"enemy_name": game_state.get("enemy_name", defender_data.get("name", "")),
 		"enemy_ap": defender_data.get("ap", 0),

@@ -211,7 +211,7 @@ func _update_hp_label() -> void:
 ## APラベルを更新
 func _update_ap_label() -> void:
 	if ap_label:
-		ap_label.text = str(current_ap)
+		ap_label.text = str(int(current_ap))
 
 
 ## HPをアニメーション付きで更新（全ボーナス値もアニメーション）

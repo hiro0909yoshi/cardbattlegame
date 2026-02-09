@@ -524,6 +524,12 @@ func _is_dominio_command_active() -> bool:
 	if not gfm or not gfm.dominio_command_handler:
 		return false
 	var dominio = gfm.dominio_command_handler
+	# 交換モード中はカード選択UIが表示されるため、通常のカード操作を許可する
+	if dominio.current_state == dominio.State.SELECTING_SWAP:
+		return false
+	# アイテムフェーズ中は通常のカード操作を許可する（移動侵略時のアイテム選択）
+	if gfm.item_phase_handler and gfm.item_phase_handler.is_item_phase_active():
+		return false
 	return dominio.current_state != dominio.State.CLOSED
 
 
