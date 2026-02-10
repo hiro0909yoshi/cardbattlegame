@@ -484,11 +484,25 @@ func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 		if effect_type == "creature_curse" or effect_type == "player_curse" or curse_type != "":
 			result.is_curse = true
 			
-			if curse_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES:
+			if curse_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES \
+				or curse_type in CpuCurseEvaluator.BENEFICIAL_PLAYER_CURSES:
 				result.is_beneficial = true
-			elif curse_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES:
+			elif curse_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES \
+				or curse_type in CpuCurseEvaluator.HARMFUL_PLAYER_CURSES:
 				result.is_beneficial = false
 			
+			break
+		
+		# effect_type自体が呪いリストに含まれる場合（stat_boost, dice_fixed等）
+		if effect_type in CpuCurseEvaluator.BENEFICIAL_CREATURE_CURSES \
+			or effect_type in CpuCurseEvaluator.BENEFICIAL_PLAYER_CURSES:
+			result.is_curse = true
+			result.is_beneficial = true
+			break
+		if effect_type in CpuCurseEvaluator.HARMFUL_CREATURE_CURSES \
+			or effect_type in CpuCurseEvaluator.HARMFUL_PLAYER_CURSES:
+			result.is_curse = true
+			result.is_beneficial = false
 			break
 	
 	return result

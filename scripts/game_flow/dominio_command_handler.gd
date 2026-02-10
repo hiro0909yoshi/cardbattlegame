@@ -648,6 +648,11 @@ func _on_move_item_phase_completed():
 				
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
+				
+				# バトルステータスオーバーレイを防御側に切り替え
+				if game_flow_manager.battle_status_overlay:
+					game_flow_manager.battle_status_overlay.highlight_side("defender")
+				
 				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
@@ -671,6 +676,10 @@ func _execute_move_battle():
 		if board_system and board_system.tile_action_processor:
 			board_system.tile_action_processor.complete_action()
 		return
+	
+	# バトルステータスオーバーレイを非表示
+	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		game_flow_manager.battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
 	
@@ -1047,7 +1056,19 @@ func _start_move_battle_sequence(dest_tile_index: int, attacker_player: int, cre
 	# 2. コメント表示（クリック待ち）
 	await _show_dominio_order_comment("移動侵略")
 	
-	# 3. アイテムフェーズを開始（攻撃側）
+	# 3. バトルステータスオーバーレイ表示
+	if game_flow_manager and game_flow_manager.battle_status_overlay:
+		var attacker_display = creature_data.duplicate()
+		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
+		
+		var defender_creature = pending_move_battle_tile_info.get("creature", {})
+		var defender_display = defender_creature.duplicate()
+		defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, pending_move_battle_tile_info)
+		
+		game_flow_manager.battle_status_overlay.show_battle_status(
+			attacker_display, defender_display, "attacker")
+	
+	# 4. アイテムフェーズを開始（攻撃側）
 	if game_flow_manager and game_flow_manager.item_phase_handler:
 		# アイテムフェーズ完了シグナルに接続
 		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
@@ -1089,3 +1110,18 @@ func _get_current_player_name() -> String:
 		if player:
 			return player.name
 	return "プレイヤー"
+
+
+## バトルステータスオーバーレイ用の土地ボーナス計算
+func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> int:
+	var creature_element = creature_data.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+	
+	if tile_element == "neutral":
+		return tile_level * 10
+	
+	if creature_element != "" and creature_element == tile_element:
+		return tile_level * 10
+	
+	return 0

@@ -1,38 +1,38 @@
 {
   "id": "stage_2_5",
-  "name": "灼熱の大地",
-  "description": "火属性が優勢なマップ。",
-  "map_id": "map_cross_1",
+  "name": "シーフの迷宮",
+  "description": "新キャラクター「シーフ」が登場する分岐マップ。",
+  "map_id": "map_branch_1",
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {
-      "player": 2500,
-      "cpu": 2500
-    },
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {
-          "type": "magic",
-          "target": 5500,
-          "timing": "checkpoint"
-        }
-      ]
-    }
+	"initial_magic": {
+	  "player": 200,
+	  "cpu": 200
+	},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{
+		  "type": "magic",
+		  "target": 8000,
+		  "timing": "checkpoint"
+		}
+	  ]
+	}
   },
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
-        "ai_level": 5,
-        "start_tile": 0
-      }
-    ]
+	"enemies": [
+	  {
+		"character_id": "thief",
+		"deck_id": "cpu_deck_6",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	]
   },
   "rewards": {
-    "gold": 1600,
-    "rank_bonus_preset": "default"
+	"gold": 1500,
+	"rank_bonus_preset": "default"
   }
 }

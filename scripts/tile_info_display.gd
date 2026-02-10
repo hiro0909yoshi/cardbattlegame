@@ -93,8 +93,8 @@ func show_toll(label: Label3D, tile_info: Dictionary, tile_index: int):
 	else:
 		var toll = calculate_display_toll(tile_info, tile_index)
 		if toll > 0:
-			label.text = str(toll) + "EP"
-			label.modulate = Color(1.0, 0.9, 0.3)  # 金色
+			label.text = str(toll)
+			label.modulate = _get_owner_color(tile_info)
 			label.visible = true
 		else:
 			label.visible = false
@@ -108,7 +108,7 @@ func show_hp(label: Label3D, tile_info: Dictionary):
 		# current_hpがあれば使用、なければ基礎HPを表示
 		var hp = creature.get("current_hp", creature.get("hp", 0))
 		label.text = "HP:" + str(hp)
-		label.modulate = Color(0.3, 1.0, 0.3)  # 緑
+		label.modulate = _get_owner_color(tile_info)
 		label.visible = true
 
 # AP表示（攻撃力）
@@ -119,7 +119,7 @@ func show_ap(label: Label3D, tile_info: Dictionary):
 	else:
 		var ap = creature.get("ap", 0)
 		label.text = "AP:" + str(ap)
-		label.modulate = Color(1.0, 0.3, 0.3)  # 赤
+		label.modulate = _get_owner_color(tile_info)
 		label.visible = true
 
 # 通行料を計算
@@ -137,6 +137,13 @@ func calculate_display_toll(tile_info: Dictionary, tile_index: int) -> int:
 	var level_mult = GameConstants.LAND_VALUE_LEVEL_MULTIPLIER.get(level, 1)
 	var toll_mult = GameConstants.TOLL_LEVEL_MULTIPLIER.get(level, 0.2)
 	return GameConstants.floor_toll(base_value * level_mult * toll_mult)
+
+# タイル所有者のプレイヤーカラーを取得
+func _get_owner_color(tile_info: Dictionary) -> Color:
+	var owner_id = tile_info.get("owner", -1)
+	if owner_id >= 0 and owner_id < GameConstants.PLAYER_COLORS.size():
+		return GameConstants.PLAYER_COLORS[owner_id]
+	return Color.WHITE
 
 # 表示モードを切り替え
 func switch_mode():

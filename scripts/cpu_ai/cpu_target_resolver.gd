@@ -153,8 +153,14 @@ func _check_target_condition_internal(target_condition: String, context: Diction
 			return _get_self_player(context)
 		
 		# 敵手札条件（enemy_hand用）
-		"has_item_or_spell", "has_spell", "has_duplicate_cards", "has_expensive_cards":
-			return _get_enemies_with_cards(context)
+		"has_item_or_spell":
+			return _get_enemies_with_item_or_spell(context)
+		"has_spell":
+			return _get_enemies_with_spell(context)
+		"has_duplicate_cards":
+			return _get_enemies_with_duplicate_cards(context)
+		"has_expensive_cards":
+			return _get_enemies_with_expensive_cards(context)
 		
 		# 土地条件
 		"has_empty_land":
@@ -809,6 +815,112 @@ func _check_self_has_creatures(context: Dictionary) -> Array:
 func _get_self_player(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	return [{"type": "player", "player_id": player_id}]
+
+## アイテムまたはスペルを持つ敵プレイヤーを取得（シャッター、メタモルフォシス用）
+func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var results = []
+	
+	if not player_system or not card_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i == player_id:
+			continue
+		
+		var hand = card_system.get_all_cards_for_player(i)
+		var has_target_card = false
+		for card in hand:
+			var card_type = card.get("type", "")
+			if card_type == "item" or card_type == "spell":
+				has_target_card = true
+				break
+		
+		if has_target_card:
+			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
+	
+	return results
+
+## スペルを持つ敵プレイヤーを取得（セフト用）
+func _get_enemies_with_spell(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var results = []
+	
+	if not player_system or not card_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i == player_id:
+			continue
+		
+		var hand = card_system.get_all_cards_for_player(i)
+		var has_spell = false
+		for card in hand:
+			if card.get("type", "") == "spell":
+				has_spell = true
+				break
+		
+		if has_spell:
+			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
+	
+	return results
+
+## 手札に重複カードがある敵プレイヤーを取得（エロージョン用）
+func _get_enemies_with_duplicate_cards(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var results = []
+	
+	if not player_system or not card_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i == player_id:
+			continue
+		
+		var hand = card_system.get_all_cards_for_player(i)
+		var card_ids = {}
+		var has_duplicate = false
+		for card in hand:
+			var card_id = card.get("id", 0)
+			if card_ids.has(card_id):
+				has_duplicate = true
+				break
+			card_ids[card_id] = true
+		
+		if has_duplicate:
+			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
+	
+	return results
+
+## 手札にEP100以上のカードがある敵プレイヤーを取得（レイオブロウ用）
+func _get_enemies_with_expensive_cards(context: Dictionary) -> Array:
+	var player_id = context.get("player_id", 0)
+	var results = []
+	
+	if not player_system or not card_system:
+		return results
+	
+	var player_count = player_system.players.size()
+	for i in range(player_count):
+		if i == player_id:
+			continue
+		
+		var hand = card_system.get_all_cards_for_player(i)
+		var has_expensive = false
+		for card in hand:
+			var cost = card.get("cost", {})
+			var ep = cost.get("ep", 0) if cost is Dictionary else 0
+			if ep >= 100:
+				has_expensive = true
+				break
+		
+		if has_expensive:
+			results.append({"type": "player", "player_id": i, "hand_size": hand.size()})
+	
+	return results
 
 ## 手札を持つ敵プレイヤーを取得（enemy_hand用簡易版）
 func _get_enemies_with_cards(context: Dictionary) -> Array:

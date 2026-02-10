@@ -589,7 +589,12 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	
 	# 💰 クリーチャースキル: 遺産（フェイト、コーンフォーク、マミー等）
 	var game_flow_manager = _get_game_flow_manager()
-	_skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, game_flow_manager)
+	var legacy_result = _skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, game_flow_manager)
+	# キー名を統一して結果にマージ
+	if legacy_result.get("legacy_ep_activated", false):
+		result["legacy_magic_activated"] = true
+	if legacy_result.get("legacy_card_activated", false):
+		result["draw_cards_activated"] = true
 	
 	# 🔄 手札復活チェック（フェニックス等）
 	if _check_revive_to_hand(defeated):

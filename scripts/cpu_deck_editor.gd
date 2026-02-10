@@ -296,6 +296,10 @@ func _show_info_in_right_panel(card: Dictionary, card_type: String):
 	
 	await get_tree().process_frame
 	
+	# await中にパネルが解放された場合のガード
+	if not current_info_panel or not is_instance_valid(current_info_panel):
+		return
+	
 	# スケール調整
 	var scale_factor = 0.95
 	current_info_panel.scale = Vector2(scale_factor, scale_factor)

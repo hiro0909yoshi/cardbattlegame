@@ -11,7 +11,7 @@
 	  "id": "world_2",
 	  "name": "分岐の迷宮",
 	  "description": "複雑な分岐が待ち受ける。",
-	  "stages": ["stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4"],
+	  "stages": ["stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4", "stage_2_5", "stage_2_6", "stage_2_7"],
 	  "unlock_condition": "world_1_clear"
 	}
   ]

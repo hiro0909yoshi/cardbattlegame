@@ -15,7 +15,6 @@ const BENEFICIAL_CREATURE_CURSES = [
 	"command_growth",       # コマンド成長
 	"forced_stop",          # 強制停止（敵を足止め）
 	"indomitable",          # 不屈
-	"land_effect_disable",  # 地形効果無効
 	"land_effect_grant",    # 地形効果付与
 	"metal_form",           # メタルフォーム
 	"magic_barrier",        # マジックバリア
@@ -25,10 +24,12 @@ const BENEFICIAL_CREATURE_CURSES = [
 	"protection_wall",      # 防魔壁
 	"hp_effect_immune",     # HP効果無効
 	"blast_trap",           # 爆発罠
+	"peace",                # 平和（侵略不可＝防御）
 ]
 
 ## クリーチャーにとって不利な呪い（所有者視点）
 const HARMFUL_CREATURE_CURSES = [
+	"curse_toll_half",      # 通行料半減
 	"stat_reduce",          # 能力値-20
 	"skill_nullify",        # 戦闘能力不可
 	"battle_disable",       # 戦闘行動不可
@@ -37,7 +38,7 @@ const HARMFUL_CREATURE_CURSES = [
 	"plague",               # 衰弱
 	"bounty",               # 賞金首
 	"destroy_after_battle", # 戦闘後破壊
-	"peace",                # 平和（通行料0）
+	"land_effect_disable",  # 地形効果無効
 	"move_disable",         # 移動不可
 	"creature_toll_disable", # クリーチャー通行料無効
 ]

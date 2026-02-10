@@ -696,7 +696,7 @@
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "own"
 		},
 		"effects": [
 		  {

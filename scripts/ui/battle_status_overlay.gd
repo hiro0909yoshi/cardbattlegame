@@ -144,7 +144,7 @@ func _update_creature_data(labels: Dictionary, data: Dictionary) -> void:
 	labels["element"].add_theme_color_override("font_color", ELEMENT_COLORS.get(element, Color.WHITE))
 	
 	# HP表示（カレントHP + 土地ボーナス）
-	var hp = data.get("hp", 0)
+	var hp = data.get("current_hp", data.get("hp", 0))
 	var land_bonus = data.get("land_bonus_hp", 0)
 	labels["hp"].text = "HP: %d" % hp
 	

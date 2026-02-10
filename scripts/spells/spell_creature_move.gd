@@ -136,6 +136,18 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	# 移動中フラグを設定（応援スキル計算から除外するため）
 	attacker_creature["is_moving"] = true
 	
+	# バトルステータスオーバーレイ表示
+	if game_flow_manager_ref and game_flow_manager_ref.battle_status_overlay:
+		var attacker_display = attacker_creature.duplicate()
+		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
+		
+		var defender_creature = tile_info.get("creature", {})
+		var defender_display = defender_creature.duplicate()
+		defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, tile_info)
+		
+		game_flow_manager_ref.battle_status_overlay.show_battle_status(
+			attacker_display, defender_display, "attacker")
+	
 	# アイテムフェーズを開始（攻撃側）
 	if game_flow_manager_ref and game_flow_manager_ref.item_phase_handler:
 		# アイテムフェーズ完了シグナルに接続
@@ -182,6 +194,11 @@ func _on_spell_move_item_phase_completed() -> void:
 				item_handler.set_opponent_creature(pending_battle_result.get("creature_data", {}))
 				# タイル情報を設定（シミュレーション用）
 				item_handler.set_defense_tile_info(pending_battle_tile_info)
+				
+				# バトルステータスオーバーレイを防御側に切り替え
+				if game_flow_manager_ref.battle_status_overlay:
+					game_flow_manager_ref.battle_status_overlay.highlight_side("defender")
+				
 				item_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
@@ -212,6 +229,10 @@ func _execute_spell_move_battle() -> void:
 	if pending_battle_result.is_empty():
 		spell_move_battle_completed.emit()
 		return
+	
+	# バトルステータスオーバーレイを非表示
+	if game_flow_manager_ref and game_flow_manager_ref.battle_status_overlay:
+		game_flow_manager_ref.battle_status_overlay.hide_battle_status()
 	
 	var from_tile = pending_battle_result.get("from_tile", -1)
 	var attacker_creature = pending_battle_result.get("creature_data", {})
@@ -694,3 +715,18 @@ func get_outrage_targets() -> Array:
 ## チャリオットのターゲット取得（自クリーチャー）
 func get_chariot_targets(player_id: int) -> Array:
 	return _get_own_creature_tiles(player_id)
+
+
+## バトルステータスオーバーレイ用の土地ボーナス計算
+func _calculate_land_bonus(creature_data: Dictionary, tile_info: Dictionary) -> int:
+	var creature_element = creature_data.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	var tile_level = tile_info.get("level", 1)
+
+	if tile_element == "neutral":
+		return tile_level * 10
+
+	if creature_element != "" and creature_element == tile_element:
+		return tile_level * 10
+
+	return 0
