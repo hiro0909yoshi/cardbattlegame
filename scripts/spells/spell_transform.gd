@@ -196,7 +196,7 @@ func _get_copy_target_id(target_tile_index: int) -> int:
 func _get_same_element_defensive_id(element: String) -> int:
 	# 属性ごとに固定の防御型クリーチャーを返す
 	const DEFENSIVE_CREATURES = {
-		"fire": 5,       # オールドウィロウ
+		"fire": 10,      # クリーピングフレイム
 		"water": 102,    # アイスウォール
 		"earth": 222,    # ストーンウォール
 		"wind": 330,     # トルネード

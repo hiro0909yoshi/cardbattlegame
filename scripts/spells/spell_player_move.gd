@@ -110,13 +110,10 @@ func warp_to_nearest_gate(player_id: int) -> Dictionary:
 			"message": "ゲートが見つかりません"
 		}
 	
-	# プレイヤーをワープ
-	_warp_player(player_id, nearest)
+	# プレイヤーをワープ（チェックポイント処理・ダウン解除は_warp_player内で実行）
+	await _warp_player(player_id, nearest)
 	
-	# ゲート効果を発動（通過扱い + ダウン解除）
 	var gate_key = _get_gate_key(nearest)
-	_trigger_gate_effect(player_id, nearest, gate_key)
-	
 	return {
 		"success": true,
 		"from": current_tile,
@@ -141,8 +138,8 @@ func warp_to_target(player_id: int, target_tile: int) -> Dictionary:
 			"message": "距離が範囲外です（%dマス）" % distance
 		}
 	
-	# プレイヤーをワープ
-	_warp_player(player_id, target_tile)
+	# プレイヤーをワープ（チェックポイント処理は_warp_player内で実行）
+	await _warp_player(player_id, target_tile)
 	
 	return {
 		"success": true,
@@ -217,10 +214,9 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 	game_flow_manager.lap_system.player_lap_state[player_id][gate_key] = true
 	print("[SpellPlayerMove] ゲート通過: プレイヤー%d → %s" % [player_id, gate_key])
 	
-	# 周回完了チェック
-	var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
+	# 周回完了チェック（全シグナルが揃っているか）
 	var lap_completed = false
-	if lap_state.get("N", false) and lap_state.get("S", false):
+	if game_flow_manager.lap_system._check_lap_complete(player_id):
 		# 周回完了処理を呼び出し（EPボーナス付与）
 		game_flow_manager.lap_system.complete_lap(player_id)
 		lap_completed = true
@@ -414,6 +410,20 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 	print("[SpellPlayerMove] プレイヤー%d: 次ターン方向選択権付与" % (player_id + 1))
 	
 	print("[SpellPlayerMove] プレイヤー%d ワープ: %d → %d" % [player_id, from_tile, target_tile])
+	
+	# ワープ先がチェックポイントの場合
+	var tile = board_system.tile_nodes.get(target_tile)
+	if tile and tile.tile_type == "checkpoint":
+		# 1. チェックポイント通過処理（ボーナス付与・周回判定）
+		if tile.has_method("on_player_passed"):
+			tile.on_player_passed(player_id)
+			# lap_systemのチェックポイント処理完了を待つ
+			if game_flow_manager and game_flow_manager.lap_system:
+				await game_flow_manager.lap_system.checkpoint_processing_completed
+		
+		# 2. ダウン解除（訪問済み・未訪問に関わらず常に実行）
+		if board_system and board_system.movement_controller:
+			board_system.movement_controller.clear_all_down_states_for_player(player_id)
 
 ## ゲート効果を発動（ゲートワープ時）
 func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) -> void:
@@ -442,9 +452,8 @@ func _release_all_creature_down() -> void:
 ## ゲートキーを取得（タイルインデックスから）
 func _get_gate_key(tile_index: int) -> String:
 	var tile = board_system.tile_nodes.get(tile_index)
-	if tile and tile.tile_type == "checkpoint":
-		# checkpoint_type: 0 = N, 1 = S
-		return "N" if tile.checkpoint_type == 0 else "S"
+	if tile and tile.tile_type == "checkpoint" and tile.has_method("_get_checkpoint_type_string"):
+		return tile._get_checkpoint_type_string()
 	return ""
 
 ## ゲートキーからタイルインデックスを取得
@@ -452,7 +461,7 @@ func _get_tile_index_for_gate(gate_key: String) -> int:
 	for tile_index in board_system.tile_nodes.keys():
 		var tile = board_system.tile_nodes[tile_index]
 		if tile.tile_type == "checkpoint":
-			var type_str = "N" if tile.checkpoint_type == 0 else "S"
+			var type_str = tile._get_checkpoint_type_string() if tile.has_method("_get_checkpoint_type_string") else ""
 			if type_str == gate_key:
 				return tile_index
 	return -1

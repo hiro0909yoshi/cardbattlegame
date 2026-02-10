@@ -197,6 +197,9 @@ func create_ui(parent: Node):
 		player_info_panel.initialize(ui_layer, player_system_ref, null, player_count)
 		# 3D版のboard_systemを手動で設定（プロパティとして直接設定）
 		player_info_panel.set("board_system_ref", board_system_ref)
+		# GameFlowManager参照を設定（シグナル表示用）
+		if game_flow_manager_ref:
+			player_info_panel.set_game_flow_manager(game_flow_manager_ref)
 		# 初期化後にパネルの状態を確認
 		if player_info_panel.has_method("update_all_panels"):
 			player_info_panel.update_all_panels()

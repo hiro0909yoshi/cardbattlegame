@@ -623,7 +623,7 @@ func _show_info_panel_only():
 	# 召喚/バトルフェーズ中かどうか（ドミニオボタンを維持するため）
 	if ui_manager.card_selection_ui:
 		var mode = ui_manager.card_selection_ui.selection_mode
-		if mode in ["summon", "battle"]:
+		if mode in ["summon", "battle", "item"]:
 			is_summon_or_battle_phase = true
 	
 	# 他のインフォパネルを先に閉じる

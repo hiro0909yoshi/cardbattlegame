@@ -1,6 +1,24 @@
 # GameSystemManager 設計書
 
-**バージョン**: 1.0  
+> **⚠️ 注意**: この文書は初期設計時（2025-11-22）のものです。
+> 実装後に多数のシステム追加・リファクタリングが行われたため、
+> **最新の初期化順序・実装詳細は以下を参照してください**:
+> - 実装ドキュメント: `docs/design/game_system_manager_implementation.md`
+> - コーディングスキル: `/mnt/skills/user/gdscript-coding/SKILL.md`
+> - 実装コード: `scripts/system_manager/game_system_manager.gd`
+>
+> 本文書は設計意図・背景の参考資料として残しています。
+> 具体的なコード例やシステム一覧は古い可能性があります。
+>
+> **主な差分**:
+> - SkillSystem は廃止（スキル処理は BattleSystem 配下に統合）
+> - Phase 4-2 のスペル初期化は setup() メソッド方式に変更
+> - Phase 1A ハンドラー（TargetSelectionHelper, DominioCommandHandler, SpellPhaseHandler, ItemPhaseHandler）が追加
+> - CPUMovementEvaluator, CPUAIContext が追加
+> - BattleScreenManager の初期化が Phase 4-1 最初に必要（順序制約追加）
+> - SpellCurseToll, SpellCostModifier, SpellWorldCurse, SpellPlayerMove が追加
+
+**バージョン**: 1.0（設計時）/ 注記追加: 2026-02-11  
 **作成日**: 2025-11-22  
 **目的**: game_3d.gd の複雑度を軽減し、システム初期化を一元管理
 
@@ -874,4 +892,6 @@ achievement_system.achievement_unlocked.connect(_on_achievement_unlocked)
 
 **作成日**: 2025-11-22  
 **作成者**: Game Development AI Assistant  
-**バージョン**: 1.0
+**バージョン**: 1.0（設計時）  
+**注記追加日**: 2026-02-11  
+**注記**: 実装後の変更が多数あり。最新情報は `docs/design/game_system_manager_implementation.md` を参照。

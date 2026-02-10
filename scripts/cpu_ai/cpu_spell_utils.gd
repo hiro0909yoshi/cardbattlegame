@@ -264,9 +264,13 @@ func calculate_forward_distance(from_tile: int, to_tile: int, player_id: int) ->
 	if player_system and player_id < player_system.players.size():
 		direction = player_system.players[player_id].current_direction
 	
+	# プレイヤーの実際のcame_fromを取得
+	var came_from = -1
+	if player_system and player_id < player_system.players.size():
+		came_from = player_system.players[player_id].came_from
+	
 	# 進行方向のみで探索
 	var current = from_tile
-	var came_from = -1
 	var dist = 0
 	var max_steps = 100  # 無限ループ防止
 	
@@ -306,7 +310,21 @@ func _get_next_tile_in_direction(current_tile: int, came_from: int, direction: i
 			if choices.size() == 1:
 				return choices[0]
 			
-			# 複数選択肢がある場合、方向に基づいて選択
+			# came_from不明（スタート直後等）の場合、directionに基づいてインデックスで判定
+			if came_from < 0:
+				var best = choices[0]
+				for c in choices:
+					var diff_c = c - current_tile
+					var diff_best = best - current_tile
+					if direction > 0:
+						if diff_c > 0 and (diff_best <= 0 or diff_c < diff_best):
+							best = c
+					else:
+						if diff_c < 0 and (diff_best >= 0 or diff_c > diff_best):
+							best = c
+				return best
+			
+			# came_fromがある場合、方向に基づいて選択
 			choices.sort()
 			if direction > 0:
 				return choices[-1]

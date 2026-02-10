@@ -382,6 +382,39 @@ func _create_screen_data(participant: BattleParticipant) -> Dictionary:
 func validate_systems() -> bool:
 	return board_system_ref != null and card_system_ref != null and player_system_ref != null
 
+## バトル中の一時的なcreature_data変更をクリーンアップ
+## battle_skill_granter/battle_curse_applierが無効化をArray化したり、
+## battle_item_applierが巻物攻撃設定を追加するため、バトル後に元に戻す
+func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
+	if not participant or not participant.creature_data:
+		return
+	var ability_parsed = participant.creature_data.get("ability_parsed", {})
+	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
+	if keyword_conditions.is_empty():
+		return
+	
+	# 巻物攻撃設定を削除（バトル中のみ使用）
+	if keyword_conditions.has("巻物攻撃"):
+		keyword_conditions.erase("巻物攻撃")
+	if keyword_conditions.has("巻物強打"):
+		keyword_conditions.erase("巻物強打")
+	
+	# 無効化がArrayに変換されていた場合、元のDictionary形式に復元
+	if keyword_conditions.has("無効化") and keyword_conditions["無効化"] is Array:
+		var original_card = CardLoader.get_card_by_id(participant.creature_data.get("id", -1))
+		if original_card and not original_card.is_empty():
+			var original_kc = original_card.get("ability_parsed", {}).get("keyword_conditions", {})
+			if original_kc.has("無効化"):
+				keyword_conditions["無効化"] = original_kc["無効化"].duplicate(true)
+			else:
+				# 元のカードに無効化がない場合（呪いで一時付与されただけ）→ 削除
+				keyword_conditions.erase("無効化")
+				var keywords = ability_parsed.get("keywords", [])
+				if "無効化" in keywords:
+					keywords.erase("無効化")
+		else:
+			keyword_conditions.erase("無効化")
+
 # バトル後の処理（非同期：バウンティハント通知等）
 func _apply_post_battle_effects(
 	result: BattleResult,
@@ -394,6 +427,10 @@ func _apply_post_battle_effects(
 	from_tile_index: int = -1
 ) -> void:
 	var tile_index = tile_info["index"]
+	
+	# 🧹 バトル中の一時的なcreature_data変更をクリーンアップ
+	_cleanup_battle_temporary_data(attacker)
+	_cleanup_battle_temporary_data(defender)
 	
 	# 💰 EP獲得処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
 	

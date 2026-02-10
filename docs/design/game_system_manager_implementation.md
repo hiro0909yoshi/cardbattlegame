@@ -11,366 +11,324 @@
 - **保守性向上**: 初期化ロジックの変更が容易で、トラブルシューティングが簡単
 - **スケーラビリティ**: 新規システム追加時に初期化フローを拡張しやすい
 
+**実装ファイル**: `scripts/system_manager/game_system_manager.gd`
+
 ---
 
-## 6フェーズ初期化
+## game_3d.gd の役割
 
-### Phase 1: システム作成
-
-**目的**: すべてのゲームシステムのインスタンスを生成
-
-**作成対象** (11個):
-1. `SignalRegistry` - シグナル管理
-2. `BoardSystem3D` - 3Dボード管理
-3. `PlayerSystem` - プレイヤー状態管理
-4. `CardSystem` - デッキ・手札管理
-5. `BattleSystem` - バトル実行
-6. `PlayerBuffSystem` - バフ効果管理
-7. `SpecialTileSystem` - 特殊マス管理
-8. `UIManager` - UI統括管理
-9. `DebugController` - デバッグ機能
-10. `GameFlowManager` - ゲームフロー管理
-11. `CreatureManager` - クリーチャー管理（BoardSystem3D 内部）
-
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_1_create_systems()`
+game_3d.gd は GameSystemManager の呼び出し元であり、以下のみを行う：
 
 ```gdscript
-# 例: BoardSystem3D の作成
-var BoardSystem3DClass = load("res://scripts/board_system_3d.gd")
-board_system_3d = BoardSystem3DClass.new()
-board_system_3d.name = "BoardSystem3D"
-add_child(board_system_3d)
-systems["BoardSystem3D"] = board_system_3d
+func _ready():
+    # 1. StageLoader でステージ読み込み
+    stage_loader = StageLoader.new()
+    add_child(stage_loader)
+    var stage_data = stage_loader.load_stage(stage_id)
+
+    # 2. 3Dシーンを事前構築（Tiles/Players/Camera）
+    _setup_3d_scene_before_init()
+
+    # 3. GameSystemManager 初期化
+    system_manager = GameSystemManager.new()
+    add_child(system_manager)
+    system_manager.initialize_all(self, player_count, player_is_cpu, debug_manual_control_all)
+
+    # 4. ステージ固有設定
+    _apply_stage_settings()
+
+    # 5. チュートリアル初期化（該当時のみ）
+    if is_tutorial_mode:
+        _setup_tutorial()
+
+    # 6. ゲーム開始
+    system_manager.start_game()
 ```
 
 ---
 
-### Phase 2: 3D ノード収集
+## 6フェーズ初期化
 
-**目的**: シーンから必要な 3D ノード（タイル、プレイヤー、カメラ）を取得
+### Phase 1: システム作成 (`phase_1_create_systems`)
 
-**収集対象**:
-- `Tiles` コンテナ → タイルノード群
-- `Players` コンテナ → プレイヤー駒ノード群
-- `Camera3D` → ゲームカメラ
+**目的**: すべてのゲームシステムのインスタンスを生成し、GameSystemManager の子として追加
 
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_2_collect_3d_nodes()`
+**作成対象（10個）**:
+
+| # | システム | クラス名 | 役割 |
+|---|---------|---------|------|
+| 1 | SignalRegistry | `SignalRegistry` | シグナル管理（最初に作成：他が参照する可能性） |
+| 2 | BoardSystem3D | `BoardSystem3D` | 3Dボード管理 |
+| 3 | PlayerSystem | `PlayerSystem` | プレイヤー状態管理 |
+| 4 | CardSystem | `CardSystem` | デッキ・手札管理 |
+| 5 | BattleSystem | `BattleSystem` | バトル実行 |
+| 6 | PlayerBuffSystem | `PlayerBuffSystem` | バフ効果管理 |
+| 7 | SpecialTileSystem | `SpecialTileSystem` | 特殊マス管理 |
+| 8 | UIManager | `UIManager` | UI統括管理 |
+| 9 | DebugController | `DebugController` | デバッグ機能 |
+| 10 | GameFlowManager | `GameFlowManager` | ゲームフロー管理 |
+
+**注意**: CreatureManager, TileDataManager は BoardSystem3D の `_ready()` 内で自動作成される（Phase 1 には含まない）
+
+---
+
+### Phase 2: 3Dノード収集 (`phase_2_collect_3d_nodes`)
+
+**目的**: game_3d シーン（parent_node）から必要な 3D ノードを取得
 
 ```gdscript
 tiles_container = parent_node.get_node_or_null("Tiles")
 players_container = parent_node.get_node_or_null("Players")
 camera_3d = parent_node.get_node_or_null("Camera3D")
+# ui_layer は Phase 4-1 の create_ui() で作成される
 ```
 
 ---
 
-### Phase 3: システム基本設定
+### Phase 3: システム基本設定 (`phase_3_setup_basic_config`)
 
-**目的**: システムの基本初期化と 3D ノードの紐づけ
+**目的**: 各システムの基本初期化と 3D ノードの紐づけ
 
-**実施内容**:
+**実施内容（順序重要）**:
 
 1. **PlayerSystem 初期化**
    ```gdscript
    player_system.initialize_players(player_count)
    ```
 
-2. **カメラ初期位置設定**
+2. **CardSystem 再初期化**
    ```gdscript
-   camera_3d.position = GameConstants.CAMERA_OFFSET  # Vector3(19, 19, 19)
+   card_system._initialize_decks(player_count)
    ```
 
-3. **BoardSystem3D への参照設定**
+3. **BoardSystem3D 基本設定**
    ```gdscript
+   # ★重要: カメラ参照を最初に設定（collect_players()内でMovementControllerが使用）
    board_system_3d.camera = camera_3d
    board_system_3d.player_count = player_count
    board_system_3d.player_is_cpu = player_is_cpu
    board_system_3d.current_player_index = 0
-   ```
 
-4. **3D ノード収集**
-   ```gdscript
+   # タイル・プレイヤー収集（カメラ設定後に実行すること）
    board_system_3d.collect_tiles(tiles_container)
    board_system_3d.collect_players(players_container)
+   await get_tree().process_frame  # プレイヤー配置反映待ち
    ```
 
-5. **初期カメラ向き設定**
+4. **カメラ初期位置設定（タイル位置基準）**
    ```gdscript
-   # プレイヤー0（現在のプレイヤー）に向かせる
-   var current_player_node = board_system_3d.player_nodes[0]
-   var player_look_target = current_player_node.global_position
-   player_look_target.y += 1.0  # 頭方向
-   camera_3d.look_at(player_look_target, Vector3.UP)
+   if board_system_3d.tile_nodes.has(0):
+       var tile_pos = board_system_3d.tile_nodes[0].global_position
+       tile_pos.y += 1.0  # MOVE_HEIGHT
+       var look_target = tile_pos + Vector3(0, 1.0, 0)
+       var cam_pos = tile_pos + GameConstants.CAMERA_OFFSET
+       camera_3d.global_position = cam_pos
+       camera_3d.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
    ```
 
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_3_setup_basic_config()`
-
----
-
-### Phase 4: システム間連携設定
-
-**目的**: システム間の参照を設定し、相互通信を可能にする
-
-**実施内容** (4セクション):
-
-#### 4-1: 基本システム参照設定
-- GameFlowManager にすべてのシステムを設定
-- BoardSystem3D にすべてのシステムを設定
-
-#### 4-2: SpecialTileSystem 初期化
-- 特殊マス効果を設定
-
-#### 4-3: GameFlowManager のスペル・ハンドラー初期化
-- spell_draw, spell_magic, spell_land, spell_curse, spell_dice 等を初期化
-
-#### 4-4: BoardSystem3D のサブシステム初期化
-- movement_controller に参照を設定
-
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_4_setup_system_interconnections()`
-
----
-
-### Phase 5: シグナル接続
-
-**目的**: システム間のシグナル通信を確立
-
-**実施内容**:
-- `tile_action_completed` → GameFlowManager への接続
-- `hand_updated` → UIManager への接続
-- その他システム間シグナルの接続
-
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_5_connect_signals()`
-
----
-
-### Phase 6: ゲーム開始準備
-
-**目的**: ゲーム開始前の最終準備
-
-**実施内容**:
-```gdscript
-# プレイヤー情報パネルの更新
-ui_manager.update_player_info_panels()
-
-# ゲーム開始フラグの設定
-is_initialized = true
-```
-
-**実装位置**: `scripts/system_manager/game_system_manager.gd` - `phase_6_prepare_game_start()`
-
----
-
-## システム間の依存関係
-
-```
-GameSystemManager (統括)
-├── Phase 1: 各システムインスタンス作成
-├── Phase 2: 3D ノード収集
-├── Phase 3: 基本初期化 + カメラ設定
-│   └── BoardSystem3D.collect_players()
-│       └── MovementController3D.initialize()
-└── Phase 4: システム間連携
-	├── GameFlowManager.setup_systems(...)
-	├── BoardSystem3D.setup_systems(...)
-	└── その他システム.setup_systems(...)
-```
-
-### 参照流れ
-
-1. **GameFlowManager** ← すべてのシステム参照
-2. **BoardSystem3D** ← board/battle/player 関連システム
-3. **MovementController3D** ← player_system, special_tile_system
-
-### 循環参照の回避
-
-- **game_flow_manager** が中央のハブ
-- 各サブシステムは game_flow_manager を参照するが、逆参照はない
-- シグナルで疎結合を実現
-
----
-
-## カメラシステムの実装
-
-### カメラオフセット定数化
-
-**背景**: 以前は `Vector3(19, 19, 19)` がハードコードされていました。
-
-**改善**:
-
-1. **定数化** (`scripts/game_constants.gd`)
+5. **CameraController 作成**
    ```gdscript
-   # === カメラ関連 ===
-   const CAMERA_OFFSET = Vector3(19, 19, 19)  # カメラオフセット位置
+   camera_controller = CameraController.new()
+   parent_node.add_child(camera_controller)
+   camera_controller.setup(camera_3d, board_system_3d, player_system)
+   board_system_3d.camera_controller = camera_controller
+   board_system_3d.movement_controller.camera_controller = camera_controller
    ```
 
-2. **使用箇所統一**
-   - `GameSystemManager` Phase 3
-   - `MovementController3D` move_to_tile()
-   - `MovementController3D` warp 時のカメラ移動
-
-**利点**:
-- バランス調整時に CAMERA_OFFSET を変更するだけで全体に反映
-- ハードコード排除による保守性向上
+**⚠️ 順序依存**: `board_system_3d.camera = camera_3d` は `collect_players()` より前に設定すること。`collect_players()` 内で `movement_controller.initialize(camera)` が呼ばれる。
 
 ---
 
-### カメラワークの実装
+### Phase 4: システム間連携設定 (`phase_4_setup_system_interconnections`)
 
-#### ゲーム開始時（Phase 3）
+Phase 4 は4つのサブフェーズに分かれる。
 
+#### Phase 4-1: 基本システム参照設定
+
+**⚠️ BattleScreenManager を最初に初期化**（battle_system.setup_systems() が参照するため）:
 ```gdscript
-# 1. カメラ位置をオフセット位置に設定
-camera_3d.position = GameConstants.CAMERA_OFFSET
-
-# 2. プレイヤー0に向かせる
-var current_player_node = board_system_3d.player_nodes[0]
-var player_look_target = current_player_node.global_position
-player_look_target.y += 1.0
-camera_3d.look_at(player_look_target, Vector3.UP)
+_setup_battle_screen_manager()  # BattleScreenManager + BattleStatusOverlay
 ```
 
-#### プレイヤー移動時
-
+**Step 1**: GameFlowManager に全システムを設定
 ```gdscript
-func move_to_tile(player_id: int, tile_index: int) -> void:
-	# 1. プレイヤーとカメラを並行して移動
-	var tween = get_tree().create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
-	
-	if camera and player_system and player_id == player_system.current_player_index:
-		var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-		tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
-	
-	# 2. 移動完了後にカメラをプレイヤーに向ける
-	await tween.finished
-	camera_3d.look_at(target_pos + Vector3(0, 1.0, 0), Vector3.UP)
-```
-
-**重要**: `look_at()` は移動完了後に実行することで、スムーズで自然なカメラワークを実現
-
----
-
-## 問題解決の履歴
-
-### Issue 1: カメラが初期化時にプレイヤーを向かない
-
-**原因**: ハードコードされたカメラ位置のみ設定し、向きの初期化がなかった
-
-**解決**: Phase 3 の最後に初期カメラ向きを設定
-
-```gdscript
-camera_3d.look_at(player_look_target, Vector3.UP)
-```
-
-### Issue 2: 移動時にカメラがガクッと動く
-
-**原因**: `look_at()` が移動中に即座に実行され、カメラ位置が変動中に向きが固定される
-
-**解決**: `await tween.finished` で移動完了後に `look_at()` を実行
-
-```gdscript
-await tween.finished
-camera_3d.look_at(target_pos + Vector3(0, 1.0, 0), Vector3.UP)
-```
-
-### Issue 3: カメラ角度が斜めになる
-
-**原因**: オフセットと look_at の目標位置のバランスが取れていなかった
-
-**解決**: 
-- `Vector3(19, 19, 19)` をハードコード値として確立
-- `look_at()` の目標を `player_position + Vector3(0, 1.0, 0)` に統一
-- `Vector3.UP` を常に使用
-
----
-
-## 使用方法
-
-### ゲーム開始時
-
-```gdscript
-# game_3d.gd または main scene
-var game_system_manager = GameSystemManager.new()
-game_system_manager.name = "GameSystemManager"
-add_child(game_system_manager)
-
-# 6フェーズ初期化を実行
-game_system_manager.initialize_all(
-	self,                    # parent_node
-	player_count,            # プレイヤー数
-	player_is_cpu,           # CPU フラグ配列
-	debug_manual_control_all # デバッグモード
+game_flow_manager.setup_systems(
+    player_system, card_system, board_system_3d, player_buff_system,
+    ui_manager, battle_system, special_tile_system
 )
-
-# ゲーム開始
-game_system_manager.start_game()
 ```
 
-### システムへのアクセス
+**Step 2**: BoardSystem3D に全システムを設定
+```gdscript
+board_system_3d.setup_systems(
+    player_system, card_system, battle_system, player_buff_system,
+    special_tile_system, game_flow_manager
+)
+board_system_3d.ui_manager = ui_manager
+```
+
+**Step 3**: SpecialTileSystem
+```gdscript
+special_tile_system.setup_systems(
+    board_system_3d, card_system, player_system, ui_manager, game_flow_manager
+)
+```
+
+**Step 4**: DebugController
+```gdscript
+debug_controller.setup_systems(
+    player_system, board_system_3d, card_system, ui_manager, game_flow_manager
+)
+player_system.set_debug_controller(debug_controller)
+```
+
+**Step 5**: UIManager に参照設定
+```gdscript
+ui_manager.board_system_ref = board_system_3d
+ui_manager.player_system_ref = player_system
+ui_manager.card_system_ref = card_system
+ui_manager.game_flow_manager_ref = game_flow_manager
+```
+
+**Step 10**: UIManager.create_ui() 実行（**全参照設定後**）
+```gdscript
+ui_manager.create_ui(parent_node)
+ui_layer = parent_node.get_node_or_null("UILayer")
+_connect_camera_signals_deferred()  # カメラシグナルは遅延接続
+```
+
+その後: CardSelectionUI, BattleSystem, GameFlowManager の追加参照設定
+
+**Step 9**: GameFlowManager の 3D 設定
+```gdscript
+game_flow_manager.debug_manual_control_all = debug_manual_control_all
+game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
+```
+
+#### Phase 4-2: GameFlowManager 子システム初期化
+
+GameSystemManager のヘルパー関数で各子システムを初期化:
+
+| ヘルパー関数 | 初期化対象 | 依存 |
+|-------------|-----------|------|
+| `_setup_lap_system()` | LapSystem | player_system, ui_manager, game_flow_manager, board_system_3d |
+| `_setup_spell_systems()` | SpellDraw, SpellMagic, SpellLand, SpellCurse, SpellDice, SpellCurseStat, SpellWorldCurse, SpellPlayerMove, BankruptcyHandler | 多数（下記参照） |
+| `_setup_battle_screen_manager()` | ※Phase 4-1冒頭で実行済み | game_flow_manager |
+| `_setup_magic_stone_system()` | MagicStoneSystem | board_system_3d, player_system |
+| `_setup_cpu_special_tile_ai()` | CPUSpecialTileAI | card_system, player_system, board_system_3d, game_flow_manager |
+
+**SpellCurse の初期化順序（重要）**:
+SpellCurse は複数の子システムから依存されるため、最初に初期化する:
+```
+1. SpellDraw    → setup(card_system, player_system)
+2. SpellMagic   → setup(player_system, board_system_3d, game_flow_manager, null)
+3. SpellLand    → setup(board_system_3d, creature_manager, player_system, card_system)
+4. SpellCurse   → setup(board_system_3d, creature_manager, player_system, game_flow_manager)
+5. SpellDice    → setup(player_system, spell_curse)  ← SpellCurse に依存
+6. SpellCurseStat → setup(spell_curse, creature_manager)  ← SpellCurse に依存
+7. SpellWorldCurse → setup(spell_curse, game_flow_manager)
+8. SpellPlayerMove → setup(board_system_3d, player_system, game_flow_manager, spell_curse)
+9. BankruptcyHandler → setup(player_system, board_system_3d, creature_manager, spell_curse, ui_manager, null)
+```
+
+**追加初期化**:
+- SpellCurseToll: spell_curse + skill_toll_change + creature_manager
+- SpellCostModifier: spell_curse + player_system + game_flow_manager
+- DominioCommandHandler, ItemPhaseHandler への参照設定
+
+#### Phase 4-3: BoardSystem3D 子システム
+
+BoardSystem3D の子システム（TileActionProcessor, CPUTurnProcessor, MovementController, CreatureManager, TileDataManager）は `_ready()` で自動初期化済み。**追加設定不要**。
+
+#### Phase 4-4: 特別な初期化
+
+| 処理 | 内容 |
+|------|------|
+| `_initialize_phase1a_handlers()` | TargetSelectionHelper, DominioCommandHandler, SpellPhaseHandler, ItemPhaseHandler を GameFlowManager の子として作成・初期化 |
+| `_initialize_cpu_movement_evaluator()` | CPUAIContext 作成 → CPUBattleAI → CPUMovementEvaluator を初期化 |
+| 手札UI初期化 | `ui_manager.initialize_hand_container(ui_layer)` + `connect_card_system_signals()` |
+
+---
+
+### Phase 5: シグナル接続 (`phase_5_connect_signals`)
 
 ```gdscript
-# GameSystemManager から各システムを取得
-var board = game_system_manager.board_system_3d
-var player = game_system_manager.player_system
-var card = game_system_manager.card_system
+# GameFlowManager → GameSystemManager
+game_flow_manager.dice_rolled.connect(_on_dice_rolled)
+game_flow_manager.turn_started.connect(_on_turn_started)
+game_flow_manager.turn_ended.connect(_on_turn_ended)
+game_flow_manager.phase_changed.connect(_on_phase_changed)
+
+# PlayerSystem → GameFlowManager
+player_system.player_won.connect(game_flow_manager.on_player_won)
+
+# UIManager → GameFlowManager
+ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
+ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
+ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
+ui_manager.dominio_order_button_pressed.connect(game_flow_manager.open_dominio_order)
 ```
 
 ---
 
-## トラブルシューティング
+### Phase 6: ゲーム開始準備 (`phase_6_prepare_game_start`)
 
-### カメラが動かない
-
-**確認事項**:
-1. Phase 2 で `camera_3d` が正しく取得されているか
-2. `player_system` が設定されているか
-3. `player_system.current_player_index` が正しいか
-
-**ログ確認**:
-```
-[GameSystemManager] Phase 3 カメラ設定前: (0.0, 10.0, 10.0)
-[GameSystemManager] Phase 3 カメラ設定直後: (19.0, 19.0, 19.0)
-```
-
-### プレイヤーが停止する
-
-**原因**: `await tween.finished` の重複実行
-
-**確認**: `move_to_tile()` に `await tween.finished` が複数回ないか確認
-
-### カメラが斜め
-
-**原因**: 
-- CAMERA_OFFSET が不正な値
-- `look_at()` の target_pos 計算が不正
-
-**確認**:
 ```gdscript
-print("Camera position: ", camera_3d.position)
-print("Camera target: ", target_pos)
+# 初期手札配布
+card_system.deal_initial_hands_all_players(player_count)
+
+# UI更新（0.1秒待機後）
+await get_tree().create_timer(0.1).timeout
+ui_manager.update_player_info_panels()
 ```
 
 ---
 
-## 今後の改善案
+## カメラシグナル遅延接続
 
-1. **カメラスムージング**: `look_at()` を Tween で滑らかに実行
-2. **複数カメラモード**: 俯瞰・追従・固定カメラの切り替え
-3. **カメラアニメーション**: ターン開始時の演出カメラ
-4. **マルチプレイヤー対応**: プレイヤー切り替え時のスムーズなカメラ遷移
+Phase 3 の await 完了を待つため、カメラシグナル接続は遅延実行する:
+
+```gdscript
+func _connect_camera_signals_deferred():
+    await get_tree().process_frame
+    await get_tree().process_frame  # 2フレーム待つ
+    if ui_manager and board_system_3d:
+        ui_manager.board_system_ref = board_system_3d
+        ui_manager.connect_camera_signals()
+```
 
 ---
 
-## 参考リンク
+## 重要な順序制約まとめ
 
-- `docs/design/design.md` - 全体アーキテクチャ
+| 制約 | 理由 |
+|------|------|
+| BattleScreenManager は Phase 4-1 の最初 | battle_system.setup_systems() が参照するため |
+| camera 設定 → collect_players() | MovementController.initialize(camera) が呼ばれるため |
+| UIManager 全参照設定 → create_ui() | create_ui() 内で参照を使ってUI初期化するため |
+| SpellCurse → SpellDice/SpellCurseStat | setup() 引数に spell_curse が必要 |
+| カメラシグナル接続は遅延実行 | Phase 3 の await 完了待ち |
+
+---
+
+## 新しいシステムを追加する場合
+
+1. **Phase 1**: `phase_1_create_systems()` で `new()` → `add_child()`
+2. **Phase 4**: 適切なサブフェーズでヘルパー関数を追加し、参照設定・初期化
+3. **Phase 5**: 必要なシグナル接続を追加
+4. **game_3d.gd は変更不要**
+
+---
+
+## 関連ファイル
+
 - `scripts/system_manager/game_system_manager.gd` - 実装コード
-- `scripts/game_constants.gd` - 定数定義
-- `scripts/movement_controller.gd` - カメラワーク実装
+- `scripts/game_3d.gd` - 呼び出し元
+- `scripts/game_constants.gd` - 定数定義（CAMERA_OFFSET 等）
+- `docs/design/refactoring/game_system_manager_design.md` - 元の設計書
 
 ---
 
-**作成日**: 2025-11-22  
-**最終更新**: 2025-11-22  
-**ステータス**: 実装完了
+**作成日**: 2025-11-22
+**最終更新**: 2026-02-11
+**ステータス**: 実装完了・ドキュメント更新済み

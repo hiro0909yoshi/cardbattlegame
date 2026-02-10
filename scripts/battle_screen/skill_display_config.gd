@@ -180,6 +180,21 @@ const CONFIG = {
 		"effect": "",
 		"sound": ""
 	},
+	"magic_steal": {
+		"name": "EP奪取",
+		"effect": "",
+		"sound": ""
+	},
+	"ep_transfer": {
+		"name": "EP移動",
+		"effect": "",
+		"sound": ""
+	},
+	"card_draw": {
+		"name": "カード獲得",
+		"effect": "",
+		"sound": ""
+	},
 	
 	# ========================================
 	# 即死・反射判定時に発動するスキル

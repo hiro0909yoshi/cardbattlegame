@@ -197,12 +197,12 @@ func build_target_data(spell_or_mystic: Dictionary, target: Dictionary, player_i
 			return {"type": "player", "player_id": player_id}
 		"player":
 			return {"type": "player", "player_id": target.get("player_id", player_id)}
-		"gate":
+		"gate", "unvisited_gate":
 			# リミッション用: ゲートターゲット
 			return {
 				"type": "gate",
 				"tile_index": target.get("tile_index", -1),
-				"gate_key": target.get("gate_key", "")
+				"gate_key": target.get("gate_key", target.get("checkpoint", ""))
 			}
 		"land":
 			var tile_index = target.get("tile_index", -1)

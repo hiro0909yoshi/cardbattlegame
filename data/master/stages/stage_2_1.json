@@ -2,7 +2,7 @@
   "id": "stage_2_1",
   "name": "荒野の試練",
   "description": "より強い敵が待ち受ける。戦略を磨け。",
-  "map_id": "map_1_5",
+  "map_id": "map_branch_1",
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
@@ -15,7 +15,7 @@
 	  "conditions": [
 		{
 		  "type": "magic",
-		  "target": 5000,
+		  "target": 6000,
 		  "timing": "checkpoint"
 		}
 	  ]
@@ -24,21 +24,15 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "zako_2",
-		"deck_id": "cpu_deck_2",
+		"character_id":"cleric",
+		"deck_id": "cpu_deck_5",
 		"ai_level": 3,
-		"start_tile": 0
-	  },
-	  {
-		"character_id": "goblin",
-		"deck_id": "cpu_deck_3",
-		"ai_level": 5,
 		"start_tile": 0
 	  }
 	]
   },
   "rewards": {
-	"gold": 1200,
+	"gold": 1500,
 	"rank_bonus_preset": "default"
   }
 }

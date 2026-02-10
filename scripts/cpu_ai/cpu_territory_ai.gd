@@ -617,7 +617,7 @@ func _get_own_lands(player_id: int) -> Array:
 		
 		var creature_element = tile.creature_data.get("element", "")
 		var tile_element = tile.tile_type
-		var element_match = (creature_element == tile_element) or (tile_element == "neutral")
+		var element_match = (creature_element == tile_element)
 		
 		# ダウン状態はタイルのメソッドで確認
 		var is_downed = tile.is_down() if tile.has_method("is_down") else false

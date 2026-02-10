@@ -26,8 +26,8 @@
 | **位置** | 画面左上 (28px, 28px～) |
 | **配列方向** | 縦積み（上から順に） |
 | **パネル間隔** | 14px |
-| **パネル幅** | 224px |
-| **パネル高さ** | 147px |
+| **パネル幅** | 260px |
+| **パネル高さ** | 190px |
 
 ```
 画面左上
@@ -73,6 +73,7 @@
 1 プレイヤー1
 EP: 1200
 TEP: 3000
+SG: N S E W
 ```
 
 #### ターン中（ハイライト表示）
@@ -81,9 +82,11 @@ TEP: 3000
 1 ● プレイヤー1
 EP: 1200
 TEP: 3000
+SG: N S E W
 ```
 
 ※ 先頭の数字は順位（TEP降順、同率は同順位）
+※ SG行: 取得済みシグナル=黄色、未取得=グレーで表示
 
 #### 呪いがある場合
 
@@ -91,6 +94,7 @@ TEP: 3000
 1 プレイヤー1
 EP: 1200
 TEP: 3000
+SG: N S E W
 呪: ダイス6
 ```
 
@@ -251,6 +255,8 @@ func _on_player_panel_clicked(player_id: int):
 | `update_all_panels()` | 全パネルを更新 |
 | `update_single_panel(player_id)` | 単一パネルを更新 |
 | `build_player_info_text(player, player_id)` | 表示テキストを構築 |
+| `_build_signal_text(player_id)` | 取得済みシグナルテキストを構築 |
+| `set_game_flow_manager(gfm)` | GFM参照設定、ターン・シグナルシグナル接続 |
 | `get_player_ranking(player_id)` | 順位を取得 |
 | `calculate_all_rankings()` | 全プレイヤーの順位を計算 |
 | `get_lands_by_element(player_id)` | 属性別土地数を取得 |
@@ -292,9 +298,9 @@ func _on_player_panel_clicked(player_id: int):
 
 ### パネル表示
 - [x] パネルが縦に並ぶ（左上から順に）
-- [x] パネルサイズが224×147px
+- [x] パネルサイズが260×190px
 - [x] フォントサイズが28px
-- [x] 表示項目が「順位」「プレイヤー名」「EP」「TEP」
+- [x] 表示項目が「順位」「プレイヤー名」「EP」「TEP」「シグナル取得状況」
 - [x] ターン中は黄色●マーク
 - [x] パネル枠線が GameConstants.PLAYER_COLORS 準拠
 - [x] クリックでダイアログ表示
@@ -340,3 +346,6 @@ func _on_player_panel_clicked(player_id: int):
 | 2025/01/20 | マップ情報（周回、ターン、破壊数）を追加 |
 | 2025/01/20 | 世界呪い表示を追加 |
 | 2025/01/20 | 閉じるボタンを削除 |
+| 2026/02/10 | パネルサイズを260×190pxに拡大 |
+| 2026/02/10 | 取得済みシグナル表示を追加（SG行、黄色/グレー） |
+| 2026/02/10 | GameFlowManager参照設定・シグナル取得時の即座更新を追加 |

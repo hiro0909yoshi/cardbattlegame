@@ -1013,7 +1013,6 @@
 		"target_type": "creature",
 		"target_info": {
 		  "owner_filter": "all",
-		  "has_no_curse": true,
 		  "has_no_mystic_arts": true
 		},
 		"effects": [

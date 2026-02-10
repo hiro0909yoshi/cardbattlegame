@@ -60,13 +60,32 @@ func get_spatial_neighbors(tile_index: int) -> Array:
 
 # すごろく的隣接（前後1マス）
 func get_sequential_neighbors(tile_index: int) -> Array:
+	if not tile_nodes.has(tile_index):
+		return []
+	
+	var tile = tile_nodes[tile_index]
+	
+	# connections がある場合はそれを使用（分岐・接続情報を正しく反映）
+	if tile.connections and not tile.connections.is_empty():
+		var neighbors: Array = []
+		for conn in tile.connections:
+			if conn >= 0 and not conn in neighbors:
+				neighbors.append(conn)
+		return neighbors
+	
+	# connections がない場合はフォールバック（前後のタイル）
 	var total = tile_nodes.size()
 	if total == 0:
 		return []
 	
+	var result: Array = []
 	var prev = (tile_index - 1 + total) % total
 	var next = (tile_index + 1) % total
-	return [prev, next]
+	if tile_nodes.has(prev):
+		result.append(prev)
+	if tile_nodes.has(next):
+		result.append(next)
+	return result
 
 # 隣接に指定プレイヤーのドミニオがあるかチェック
 func has_adjacent_ally_land(tile_index: int, player_id: int, board_system) -> bool:

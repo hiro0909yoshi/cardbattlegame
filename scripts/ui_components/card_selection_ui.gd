@@ -25,6 +25,7 @@ var selection_mode = ""        # "summon" or "battle"
 var current_selection_player_id: int = 0  # 現在選択中のプレイヤーID
 var current_selection_hand_data: Array = []  # 現在選択中のカードデータ配列
 var pending_card_index: int = -1  # クリーチャー情報パネル確認待ちのカードインデックス
+var predicted_destination_tiles: Array = []  # 到着予想タイルインデックス配列（方向/分岐選択時）
 var creature_info_panel_connected: bool = false  # シグナル接続済みフラグ
 var item_creature_panel_connected: bool = false  # アイテムフェーズ用シグナル接続済みフラグ
 
@@ -411,6 +412,32 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				add_card_highlight(card_node, card_data, 999999, true)  # 全て選択可能
 			else:
 				add_card_highlight(card_node, card_data, available_magic, is_selectable)
+
+# 到着予想タイルに基づいて制限表示のみ更新
+func update_restriction_for_destinations(destination_tiles: Array):
+	predicted_destination_tiles = destination_tiles
+	if not is_active or not ui_manager_ref:
+		return
+	
+	var player_id = current_selection_player_id
+	var hand_data = current_selection_hand_data
+	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
+	var filter_mode = ui_manager_ref.card_selection_filter
+	var available_magic = 0
+	if game_flow_manager_ref and game_flow_manager_ref.player_system:
+		var players = game_flow_manager_ref.player_system.players
+		if player_id >= 0 and player_id < players.size():
+			available_magic = players[player_id].magic_power
+	
+	for i in range(min(hand_nodes.size(), hand_data.size())):
+		var card_node = hand_nodes[i]
+		var card_data = hand_data[i]
+		if not card_node or not is_instance_valid(card_node):
+			continue
+		var card_type = card_data.get("type", "")
+		if card_node.has_method("set_restriction_reason"):
+			var reason = _get_restriction_reason(card_data, card_type, filter_mode, player_id, available_magic)
+			card_node.set_restriction_reason(reason)
 
 # カードにハイライトを追加
 func add_card_highlight(card_node: Node, card_data: Dictionary, available_magic: int, is_selectable: bool = true):
@@ -1318,6 +1345,17 @@ func _check_cannot_summon(card_data: Dictionary, player_id: int) -> bool:
 	if cannot_summon.is_empty():
 		return true  # 制限なし
 	
+	# 到着予想タイルが設定されている場合は複数タイルでチェック
+	# 1つでも配置不可なら不可とする
+	if not predicted_destination_tiles.is_empty():
+		var board = game_flow_manager_ref.board_system_3d if game_flow_manager_ref else null
+		if board:
+			for tile_index in predicted_destination_tiles:
+				var tile = board.tile_nodes.get(tile_index)
+				if tile and tile.tile_type in cannot_summon:
+					return false
+		return true
+	
 	# 現在のタイル属性を取得
 	var current_tile_element = _get_current_tile_element(player_id)
 	if current_tile_element.is_empty():
@@ -1336,6 +1374,15 @@ func _get_current_tile_element(player_id: int) -> String:
 		return ""
 	
 	var board = game_flow_manager_ref.board_system_3d
+	
+	# 交換モード時は交換対象タイルの属性を返す
+	if selection_mode == "swap" and game_flow_manager_ref.dominio_command_handler:
+		var dominio = game_flow_manager_ref.dominio_command_handler
+		if dominio._swap_tile_index >= 0 and board.tile_nodes.has(dominio._swap_tile_index):
+			var swap_tile = board.tile_nodes[dominio._swap_tile_index]
+			return swap_tile.tile_type if swap_tile else ""
+		return ""
+	
 	if not board.movement_controller:
 		return ""
 	

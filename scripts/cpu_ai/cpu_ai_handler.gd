@@ -330,15 +330,12 @@ func get_policy_based_battle_result(eval_result: Dictionary) -> Dictionary:
 	
 	match action:
 		CPUBattlePolicyScript.AttackAction.ALWAYS_BATTLE:
-			# 勝てるかどうかに関わらず戦闘する
-			var can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
-			return {"will_battle": true, "will_win": can_win}
+			# アイテムなしで戦うため、勝てない可能性が高い → 方向選択時は回避させる
+			return {"will_battle": true, "will_win": false}
 		
 		CPUBattlePolicyScript.AttackAction.BATTLE_IF_BOTH_NO_ITEM:
-			if eval_result.get("can_win_both_no_item", false):
-				return {"will_battle": true, "will_win": true}
-			else:
-				return {"will_battle": false, "will_win": false}
+			# 相手がアイテムを使う可能性があるため → 方向選択時は回避させる
+			return {"will_battle": true, "will_win": false}
 		
 		CPUBattlePolicyScript.AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM:
 			if eval_result.get("can_win_vs_enemy_item", false):
@@ -363,6 +360,15 @@ func decide_level_up(current_player, tile_info: Dictionary) -> void:
 		return
 	
 	var upgrade_cost = board_system.get_upgrade_cost(tile_info.get("index", 0))
+	
+	# 属性一致チェック（クリーチャーとタイルの属性が完全一致の場合のみレベルアップ）
+	var creature = tile_info.get("creature", {})
+	var creature_element = creature.get("element", "")
+	var tile_element = tile_info.get("element", "")
+	if creature_element != tile_element:
+		decision_attempts = 0
+		emit_signal("level_up_decided", false)
+		return
 	
 	# EPとレベルアップ確率で判断
 	if current_player.magic_power >= upgrade_cost and randf() < GameConstants.CPU_LEVELUP_RATE:
@@ -466,7 +472,11 @@ func decide_invasion_or_territory(current_player, tile_info: Dictionary) -> Dict
 	# ALWAYS_BATTLEまたはバトル可能な場合は戦闘を検討
 	if action != CPUBattlePolicyScript.AttackAction.NEVER_BATTLE:
 		# 戦闘を選択する場合でも、ドミニオコマンドの方が有利ならドミニオコマンドを選ぶ
-		var can_win = eval_result.get("can_win_both_no_item", false) or eval_result.get("can_win_vs_enemy_item", false)
+		# BATTLE_IF_WIN_VS_ENEMY_ITEMのみワーストケースで勝てると判定
+		var can_win = false
+		if action == CPUBattlePolicyScript.AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM:
+			can_win = eval_result.get("can_win_vs_enemy_item", false)
+		# ALWAYS_BATTLEとBATTLE_IF_BOTH_NO_ITEMは勝てない前提で処理
 		if can_win:
 			# 倒せる場合は侵略スコアとドミニオコマンドスコアを比較（下の処理へ）
 			pass

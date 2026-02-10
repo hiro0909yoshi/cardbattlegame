@@ -1,38 +1,38 @@
 {
   "id": "stage_2_3",
-  "name": "荒野の激闘",
-  "description": "厳しい環境での戦い。",
-  "map_id": "map_diamond_20",
+  "name": "分岐の迷宮",
+  "description": "分岐タイルが多い複雑なマップ。",
+  "map_id": "map_branch_2",
   "rule_preset": "quick",
   "max_turns": 50,
   "rule_overrides": {
-    "initial_magic": {
-      "player": 2500,
-      "cpu": 2500
-    },
-    "win_conditions": {
-      "mode": "all",
-      "conditions": [
-        {
-          "type": "magic",
-          "target": 5000,
-          "timing": "checkpoint"
-        }
-      ]
-    }
+	"initial_magic": {
+	  "player": 200,
+	  "cpu": 200
+	},
+	"win_conditions": {
+	  "mode": "all",
+	  "conditions": [
+		{
+		  "type": "magic",
+		  "target": 8000,
+		  "timing": "checkpoint"
+		}
+	  ]
+	}
   },
   "quest": {
-    "enemies": [
-      {
-        "character_id": "bowser",
-        "deck_id": "balance_easy",
-        "ai_level": 4,
-        "start_tile": 0
-      }
-    ]
+	"enemies": [
+	  {
+		"character_id": "fighter_1",
+		"deck_id": "cpu_deck_4",
+		"ai_level": 3,
+		"start_tile": 0
+	  }
+	]
   },
   "rewards": {
-    "gold": 1400,
-    "rank_bonus_preset": "default"
+	"gold": 1500,
+	"rank_bonus_preset": "default"
   }
 }

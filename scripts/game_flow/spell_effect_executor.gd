@@ -289,10 +289,10 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					"warp_to_nearest_vacant":
 						result = gfm.spell_player_move.warp_to_nearest_vacant(handler.current_player_id)
 					"warp_to_nearest_gate":
-						result = gfm.spell_player_move.warp_to_nearest_gate(handler.current_player_id)
+						result = await gfm.spell_player_move.warp_to_nearest_gate(handler.current_player_id)
 					"warp_to_target":
 						var tile_idx = target_data.get("tile_index", -1)
-						result = gfm.spell_player_move.warp_to_target(handler.current_player_id, tile_idx)
+						result = await gfm.spell_player_move.warp_to_target(handler.current_player_id, tile_idx)
 				print("[SpellEffectExecutor] %s" % result.get("message", ""))
 				if result.get("success", false):
 					handler.skip_dice_phase = true
@@ -305,7 +305,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		"gate_pass":
 			if gfm and gfm.spell_player_move:
-				var gate_key = target_data.get("gate_key", "")
+				var gate_key = target_data.get("gate_key", target_data.get("checkpoint", ""))
 				var result = gfm.spell_player_move.trigger_gate_pass(handler.current_player_id, gate_key)
 				print("[SpellEffectExecutor] %s" % result.get("message", ""))
 		

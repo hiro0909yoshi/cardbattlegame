@@ -207,14 +207,11 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	
 	# 全シグナル揃ったか確認（周回完了時はそちらでまとめて表示）
 	if _check_lap_complete(player_id):
-		# チュートリアルモードでは勝利判定をスキップ（lap_completedで終了処理）
-		var is_tutorial = _is_tutorial_mode()
-		if not is_tutorial:
-			# 勝利判定（周回完了前に確認）
-			if _check_win_condition(player_id):
-				checkpoint_processing_completed.emit()
-				return  # 勝利処理で終了
+		# 周回ボーナスを先に付与してから勝利判定
 		await complete_lap(player_id)
+		# チュートリアルモードでは勝利判定をスキップ（lap_completedで終了処理）
+		if not _is_tutorial_mode():
+			_check_win_condition(player_id)
 		checkpoint_processing_completed.emit()
 		return
 	

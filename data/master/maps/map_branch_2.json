@@ -1,6 +1,6 @@
 {
-  "id": "map_branch_1",
-  "name": "ブランチ１",
+  "id": "map_branch_2",
+  "name": "ブランチ２",
   "description": "",
   "tile_count": 34,
   "lap_bonus_preset": "standard",
@@ -34,13 +34,13 @@
 	{
 	  "x": 40,
 	  "z": 4,
-	  "type": "Neutral",
+	  "type": "Fire",
 	  "index": 4
 	},
 	{
 	  "x": 40,
 	  "z": 8,
-	  "type": "Neutral",
+	  "type": "Branch",
 	  "index": 5
 	},
 	{
@@ -82,13 +82,13 @@
 	{
 	  "x": 40,
 	  "z": 16,
-	  "type": "Neutral",
+	  "type": "Branch",
 	  "index": 12
 	},
 	{
 	  "x": 40,
 	  "z": 20,
-	  "type": "Neutral",
+	  "type": "Wind",
 	  "index": 13
 	},
 	{
@@ -137,13 +137,13 @@
 	{
 	  "x": 16,
 	  "z": 20,
-	  "type": "Neutral",
+	  "type": "Water",
 	  "index": 21
 	},
 	{
 	  "x": 16,
 	  "z": 16,
-	  "type": "Neutral",
+	  "type": "Branch",
 	  "index": 22
 	},
 	{
@@ -185,13 +185,13 @@
 	{
 	  "x": 16,
 	  "z": 8,
-	  "type": "Neutral",
+	  "type": "Branch",
 	  "index": 29
 	},
 	{
 	  "x": 16,
 	  "z": 4,
-	  "type": "Neutral",
+	  "type": "Earth",
 	  "index": 30
 	},
 	{

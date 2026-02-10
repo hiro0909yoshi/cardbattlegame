@@ -41,14 +41,14 @@ static func has_no_item_steal(creature_data: Dictionary) -> bool:
 ## @param defender 防御側参加者
 ## @param damage 与えたダメージ
 ## @param spell_magic SpellMagicインスタンス
-static func apply_damage_based_steal(attacker, defender, damage: int, spell_magic) -> void:
+static func apply_damage_based_steal(attacker, defender, damage: int, spell_magic) -> int:
 	if not spell_magic:
 		print("[EP奪取] spell_magic is null")
-		return
+		return 0
 	
 	if damage <= 0:
 		print("[EP奪取] damage <= 0: ", damage)
-		return
+		return 0
 	
 	var has_skill = has_damage_based_steal(attacker.creature_data)
 	print("[EP奪取] チェック: ", attacker.creature_data.get("name", "?"), " has_skill=", has_skill)
@@ -68,6 +68,9 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 		
 		print("【EP奪取】", attacker.creature_data.get("name", "?"), 
 			  " → ", actual_stolen, "EP奪取（ダメージ", damage, "×", multiplier, "）")
+		return actual_stolen
+	
+	return 0
 
 ## アイテム不使用時EP奪取を適用（バトル開始時チェック）
 ##
@@ -76,13 +79,13 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 ## @param turn_count 周回数
 ## @param spell_magic SpellMagicインスタンス
 ## @param enemy_participant 敵参加者
-static func apply_no_item_steal(participant, has_item: bool, turn_count: int, spell_magic, enemy_participant) -> void:
+static func apply_no_item_steal(participant, has_item: bool, turn_count: int, spell_magic, enemy_participant) -> int:
 	if not spell_magic:
-		return
+		return 0
 	
 	# アイテムを使用している場合は発動しない
 	if has_item:
-		return
+		return 0
 	
 	if has_no_item_steal(participant.creature_data):
 		var multiplier = _extract_turn_multiplier(participant.creature_data.get("ability_detail", ""), 30)
@@ -92,6 +95,9 @@ static func apply_no_item_steal(participant, has_item: bool, turn_count: int, sp
 		
 		print("【アイテム不使用時EP奪取】", participant.creature_data.get("name", "?"), 
 			  " → ", actual_stolen, "EP奪取（周回数", turn_count, "×", multiplier, "）")
+		return actual_stolen
+	
+	return 0
 
 ## ability_detailから倍率を抽出
 ##
@@ -108,6 +114,7 @@ static func _extract_multiplier(ability_detail: String, default_multiplier: int)
 		return int(result.get_string(1))
 	
 	return default_multiplier
+
 
 ## ability_detailから周回数倍率を抽出
 ##

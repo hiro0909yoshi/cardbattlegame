@@ -6,6 +6,13 @@
 	  "description": "冒険の始まり。基本を学ぼう。",
 	  "stages": ["stage_1_1", "stage_1_2"],
 	  "unlock_condition": null
+	},
+	{
+	  "id": "world_2",
+	  "name": "分岐の迷宮",
+	  "description": "複雑な分岐が待ち受ける。",
+	  "stages": ["stage_2_1", "stage_2_2", "stage_2_3", "stage_2_4"],
+	  "unlock_condition": "world_1_clear"
 	}
   ]
 }

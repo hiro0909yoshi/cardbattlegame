@@ -38,6 +38,7 @@ func get_tile_info(tile_index: int) -> Dictionary:
 	var tile = tile_nodes[tile_index]
 	return {
 		"index": tile_index,
+		"tile_type": tile.tile_type,
 		"element": tile.tile_type if TileHelper.has_land_effect_type(tile.tile_type) else "",
 		"owner": tile.owner_id,
 		"level": tile.level,

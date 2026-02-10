@@ -36,9 +36,9 @@ static func has_magic_legacy(creature_data: Dictionary) -> bool:
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
-static func apply_card_legacy(defeated, spell_draw) -> void:
+static func apply_card_legacy(defeated, spell_draw) -> bool:
 	if not spell_draw:
-		return
+		return false
 	
 	var has_legacy = has_card_legacy(defeated.creature_data)
 	
@@ -53,14 +53,17 @@ static func apply_card_legacy(defeated, spell_draw) -> void:
 		
 		if drawn_cards.size() > 0:
 			print("  引いたカード: ", drawn_cards.map(func(c): return c.get("name", "?")))
+			return true
+	
+	return false
 
 ## 遺産[EP]を適用
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
-static func apply_magic_legacy(defeated, spell_magic) -> void:
+static func apply_magic_legacy(defeated, spell_magic) -> bool:
 	if not spell_magic:
-		return
+		return false
 	
 	if has_magic_legacy(defeated.creature_data):
 		var amount = _extract_magic_amount(defeated.creature_data.get("ability_detail", ""), 100)
@@ -69,6 +72,9 @@ static func apply_magic_legacy(defeated, spell_magic) -> void:
 			  " → プレイヤー", defeated.player_id + 1, "が", amount, "EP獲得")
 		
 		spell_magic.add_magic(defeated.player_id, amount)
+		return true
+	
+	return false
 
 ## 死亡時遺産効果をまとめて適用
 ##
@@ -76,15 +82,22 @@ static func apply_magic_legacy(defeated, spell_magic) -> void:
 ## @param spell_draw SpellDrawインスタンス
 ## @param spell_magic SpellMagicインスタンス
 ## @param game_flow_manager GameFlowManagerインスタンス（周回数取得用、オプション）
-static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager = null) -> void:
-	# JSON形式の遺産効果（ability_parsed.effects）
-	apply_legacy_from_json(defeated, spell_magic, game_flow_manager)
+static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager = null) -> Dictionary:
+	var result = {"legacy_ep_activated": false, "legacy_card_activated": false}
+	
+	# JSON形式の遺産効果（マミー等）
+	if apply_legacy_from_json(defeated, spell_magic, game_flow_manager):
+		result["legacy_ep_activated"] = true
 	
 	# テキスト形式の遺産[カード]
-	apply_card_legacy(defeated, spell_draw)
+	if apply_card_legacy(defeated, spell_draw):
+		result["legacy_card_activated"] = true
 	
 	# テキスト形式の遺産[EP]
-	apply_magic_legacy(defeated, spell_magic)
+	if apply_magic_legacy(defeated, spell_magic):
+		result["legacy_ep_activated"] = true
+	
+	return result
 
 
 ## JSON形式の遺産効果を適用（マミー等）
@@ -92,9 +105,9 @@ static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager 
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
 ## @param game_flow_manager GameFlowManagerインスタンス
-static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> void:
+static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> bool:
 	if not spell_magic:
-		return
+		return false
 	
 	var ability_parsed = defeated.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -117,6 +130,9 @@ static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> 
 						defeated.player_id + 1,
 						amount
 					])
+					return true
+	
+	return false
 
 
 ## 遺産金額を計算

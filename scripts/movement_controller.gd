@@ -391,6 +391,16 @@ func _update_direction_selection_ui():
 			print("[DirCam] offset=%.1f, from=%s to=%s" % [cp.distance_to(offset_pos), cp, offset_pos])
 			if game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
 				game_flow_manager.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
+	
+	# 到着予想タイルに基づいて手札の配置制限表示を更新
+	if current_moving_player >= 0:
+		var ct = player_tiles[current_moving_player]
+		var first_tile = ct + selected_direction
+		if _current_remaining_steps > 1:
+			var destinations = predict_all_destinations(first_tile, _current_remaining_steps - 1, ct)
+			_update_hand_restriction_for_destinations(destinations)
+		else:
+			_update_hand_restriction_for_destinations([first_tile])
 
 # シンプルな方向選択（+1 か -1 を選ぶ）
 func _show_simple_direction_selection() -> int:
@@ -437,6 +447,7 @@ func _cycle_direction_selection():
 func _confirm_direction_selection():
 	if not is_direction_selection_active:
 		return
+	_update_hand_restriction_for_destinations([])  # 到着予想制限をクリア
 	direction_selected.emit(selected_direction)
 
 # 方向選択権（buffs）をチェック
@@ -724,6 +735,7 @@ func _cycle_branch_selection(delta: int):
 func _confirm_branch_selection():
 	if not is_branch_selection_active:
 		return
+	_update_hand_restriction_for_destinations([])  # 到着予想制限をクリア
 	var selected_tile = available_branches[selected_branch_index]
 	branch_selected.emit(selected_tile)
 
@@ -743,6 +755,16 @@ func _update_branch_selection_ui():
 	
 	# 到着予測ハイライトを更新
 	update_destination_highlight()
+	
+	# 到着予想タイルに基づいて手札の配置制限表示を更新
+	if is_branch_selection_active and not available_branches.is_empty():
+		var selected_tile = available_branches[selected_branch_index]
+		var steps_after_branch = _current_remaining_steps - 1
+		if steps_after_branch <= 0:
+			_update_hand_restriction_for_destinations([selected_tile])
+		else:
+			var destinations = predict_all_destinations(selected_tile, steps_after_branch, current_branch_tile)
+			_update_hand_restriction_for_destinations(destinations)
 	
 	# カメラを選択中の分岐方向にずらす
 	if not available_branches.is_empty() and current_branch_tile >= 0 and game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
@@ -1406,6 +1428,11 @@ func clear_destination_highlight():
 		if tile and tile.has_method("stop_destination_highlight"):
 			tile.stop_destination_highlight()
 	_highlighted_destination_tiles.clear()
+
+## 到着予想タイルに基づいて手札の配置制限表示を更新
+func _update_hand_restriction_for_destinations(destination_tiles: Array):
+	if game_flow_manager and game_flow_manager.ui_manager and game_flow_manager.ui_manager.card_selection_ui:
+		game_flow_manager.ui_manager.card_selection_ui.update_restriction_for_destinations(destination_tiles)
 
 ## ワープ先タイルを取得（到着予測用）
 func _get_warp_destination(tile_index: int) -> int:

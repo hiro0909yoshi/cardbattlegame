@@ -400,7 +400,7 @@ static func _calculate_skill_bonus(card: Dictionary) -> int:
 			# 無効化[巻物攻撃]は価値が低い
 			if keyword == "無効化":
 				var nullify_cond = keyword_conditions.get("無効化", {})
-				if nullify_cond.get("nullify_type", "") == "scroll_attack":
+				if nullify_cond is Dictionary and nullify_cond.get("nullify_type", "") == "scroll_attack":
 					keyword_bonus = 20  # 巻物攻撃無効化は低めに設定
 			bonus += keyword_bonus
 	

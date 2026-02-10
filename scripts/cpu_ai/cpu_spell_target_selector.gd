@@ -838,36 +838,34 @@ func get_farthest_unvisited_gate(context: Dictionary) -> Dictionary:
 		if dist > max_distance:
 			max_distance = dist
 			farthest_gate = gate
-	
 	return farthest_gate if farthest_gate else {}
 
-## チェックポイントのタイルインデックスを取得
+## チェックポイントのタイルインデックスを取得（N, S, E, W対応）
 func _get_checkpoint_tile_index(checkpoint_type: String) -> int:
 	if not board_system:
 		return -1
 	
-	var tiles = board_system.get_all_tiles()
-	for tile in tiles:
-		var tile_type = tile.get("tile_type", "")
-		if tile_type == checkpoint_type:
-			return tile.get("index", -1)
-		
-		# checkpoint_typeが"gate_N"形式の場合
-		var cp_type = _get_checkpoint_type_string(tile)
-		if cp_type == checkpoint_type:
-			return tile.get("index", -1)
+	var tiles = board_system.tile_nodes if "tile_nodes" in board_system else {}
+	for tile_index in tiles.keys():
+		var tile = tiles[tile_index]
+		if tile and tile.tile_type == "checkpoint":
+			var type_str = _get_checkpoint_type_string(tile)
+			if type_str == checkpoint_type:
+				return tile_index
 	
 	return -1
 
-## タイルからチェックポイントタイプ文字列を取得
+## タイルからチェックポイントタイプ文字列を取得（N, S, E, W対応）
 func _get_checkpoint_type_string(tile) -> String:
-	var tile_type = tile.get("tile_type", "")
-	if tile_type == "gate":
-		var gate_number = tile.get("gate_number", tile.get("checkpoint_number", 0))
-		return "gate_%d" % gate_number
-	elif tile_type.begins_with("gate_"):
-		return tile_type
-	return tile_type
+	if not tile:
+		return ""
+	var cp_type = tile.checkpoint_type if "checkpoint_type" in tile else 0
+	match cp_type:
+		0: return "N"
+		1: return "S"
+		2: return "E"
+		3: return "W"
+		_: return ""
 
 # =============================================================================
 # ヘルパー関数
@@ -965,9 +963,13 @@ func _calculate_forward_distance(from_tile: int, to_tile: int, player_id: int) -
 	if player_system and player_id < player_system.players.size():
 		direction = player_system.players[player_id].current_direction
 	
+	# プレイヤーの実際のcame_fromを取得
+	var came_from = -1
+	if player_system and player_id < player_system.players.size():
+		came_from = player_system.players[player_id].came_from
+	
 	# 進行方向のみで探索
 	var current = from_tile
-	var came_from = -1
 	var dist = 0
 	var max_steps = 100  # 無限ループ防止
 	
@@ -991,6 +993,46 @@ func _calculate_forward_distance(from_tile: int, to_tile: int, player_id: int) -
 func _get_next_tile_in_direction(current_tile: int, came_from: int, direction: int) -> int:
 	if not board_system:
 		return current_tile + direction
+	
+	# tile_neighbor_systemを使用
+	if "tile_neighbor_system" in board_system and board_system.tile_neighbor_system:
+		var neighbor_system = board_system.tile_neighbor_system
+		if neighbor_system.has_method("get_sequential_neighbors"):
+			var neighbors = neighbor_system.get_sequential_neighbors(current_tile)
+			var choices = []
+			for n in neighbors:
+				if n != came_from:
+					choices.append(n)
+			
+			if choices.is_empty():
+				return came_from if came_from >= 0 else current_tile + direction
+			if choices.size() == 1:
+				return choices[0]
+			
+			# came_from不明（スタート直後等）の場合、directionに基づいてインデックスで判定
+			if came_from < 0:
+				# direction > 0 ならインデックスが大きい方向、< 0 なら小さい方向
+				# ただしループ端（例: 0→33）を考慮し、current_tileとの差で判定
+				var best = choices[0]
+				for c in choices:
+					var diff_c = c - current_tile
+					var diff_best = best - current_tile
+					if direction > 0:
+						# 正方向: current+1方向を優先（差が小さい正の値）
+						if diff_c > 0 and (diff_best <= 0 or diff_c < diff_best):
+							best = c
+					else:
+						# 逆方向: current-1方向を優先（差が大きい負の値）
+						if diff_c < 0 and (diff_best >= 0 or diff_c > diff_best):
+							best = c
+				return best
+			
+			# came_fromがある場合、方向に基づいて選択
+			choices.sort()
+			if direction > 0:
+				return choices[-1]
+			else:
+				return choices[0]
 	
 	# tile_neighbor_systemを使用
 	if "tile_neighbor_system" in board_system and board_system.tile_neighbor_system:

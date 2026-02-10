@@ -1,6 +1,6 @@
 {
   "id": "map_new",
-  "name": "新しいマップ",
+  "name": "十字路",
   "description": "",
   "tile_count": 21,
   "lap_bonus_preset": "standard",

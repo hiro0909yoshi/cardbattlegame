@@ -248,7 +248,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 							await battle_screen_manager.show_skill_activation(defender_side, "呪い[%s]" % curse_nullify_info["name"], {})
 					
 					# magic_barrier呪いによる100EP移動チェック
-					_apply_ep_transfer_on_nullify(attacker_p, defender_p)
+					await _apply_ep_transfer_on_nullify(attacker_p, defender_p)
 					
 					continue  # ダメージ処理と即死判定をスキップ
 				else:
@@ -286,7 +286,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 					)
 					if spell_magic_ref:
 						# EP奪取（攻撃側）: 与えたダメージベース
-						apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
+						await apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt_reduced, spell_magic_ref)
 						# EP獲得（防御側）: 受けたダメージベース
 						SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt_reduced, spell_magic_ref)
 
@@ -463,7 +463,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 			)
 			if spell_magic_ref:
 				# EP奪取（攻撃側）: 与えたダメージベース
-				apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
+				await apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
 				# EP獲得（防御側）: 受けたダメージベース
 				SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt, spell_magic_ref)
 
@@ -694,18 +694,32 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 		# 攻撃側のスキルチェック（生存している場合）
 		if attacker_p.is_alive():
 			var attacker_has_item = attacker_p.creature_data.get("items", []).size() > 0
-			SkillMagicSteal.apply_no_item_steal(attacker_p, attacker_has_item, turn_count, spell_magic_ref, defender_p)
+			var stolen = SkillMagicSteal.apply_no_item_steal(attacker_p, attacker_has_item, turn_count, spell_magic_ref, defender_p)
+			if stolen > 0 and battle_screen_manager:
+				var side = "attacker" if attacker_p.is_attacker else "defender"
+				await battle_screen_manager.show_skill_activation(side, "%dEP奪取" % stolen, {})
 		
 		# 防御側のスキルチェック（生存している場合）
 		if defender_p.is_alive():
 			var defender_has_item = defender_p.creature_data.get("items", []).size() > 0
-			SkillMagicSteal.apply_no_item_steal(defender_p, defender_has_item, turn_count, spell_magic_ref, attacker_p)
+			var stolen = SkillMagicSteal.apply_no_item_steal(defender_p, defender_has_item, turn_count, spell_magic_ref, attacker_p)
+			if stolen > 0 and battle_screen_manager:
+				var side = "attacker" if defender_p.is_attacker else "defender"
+				await battle_screen_manager.show_skill_activation(side, "%dEP奪取" % stolen, {})
 	
 	# 🃏 生き残り時効果（カード獲得スキル）
 	if original_attacker.is_alive():
-		special_effects.check_on_survive_effects(original_attacker)
+		var survive_result = special_effects.check_on_survive_effects(original_attacker)
+		if survive_result.get("skill_activated", false) and battle_screen_manager:
+			var side = "attacker" if original_attacker.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name("card_draw")
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 	if original_defender.is_alive():
-		special_effects.check_on_survive_effects(original_defender)
+		var survive_result = special_effects.check_on_survive_effects(original_defender)
+		if survive_result.get("skill_activated", false) and battle_screen_manager:
+			var side = "attacker" if original_defender.is_attacker else "defender"
+			var skill_name = SkillDisplayConfig.get_skill_name("card_draw")
+			await battle_screen_manager.show_skill_activation(side, skill_name, {})
 	
 	# 🔄 戦闘終了時効果（ルナティックヘア、スキュラ、マイコロン等）
 	var battle_end_context = _build_battle_end_context(special_effects, tile_info)
@@ -776,7 +790,10 @@ func apply_damage_based_magic_steal(attacker: BattleParticipant, defender: Battl
 	if damage <= 0:
 		return
 	
-	SkillMagicSteal.apply_damage_based_steal(attacker, defender, damage, spell_magic)
+	var stolen = SkillMagicSteal.apply_damage_based_steal(attacker, defender, damage, spell_magic)
+	if stolen > 0 and battle_screen_manager:
+		var side = "attacker" if attacker.is_attacker else "defender"
+		await battle_screen_manager.show_skill_activation(side, "%dEP奪取" % stolen, {})
 
 ## 🔒 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
 ## 攻撃成功時の呪い付与
@@ -813,6 +830,9 @@ func _apply_ep_transfer_on_nullify(attacker: BattleParticipant, defender: Battle
 			if spell_magic:
 				spell_magic.steal_magic(defender_player_id, attacker_player_id, ep_amount)
 				print("【マジックバリア】攻撃無効化！ ", ep_amount, "EP を攻撃側へ移動")
+				if battle_screen_manager:
+					var side = "attacker" if attacker.is_attacker else "defender"
+					await battle_screen_manager.show_skill_activation(side, "%dEP移動" % ep_amount, {})
 			return
 
 
@@ -906,6 +926,16 @@ func _show_death_effects(death_effects: Dictionary, defeated: BattleParticipant)
 	# 死者復活（タイル復活）
 	if death_effects.get("revived", false):
 		var skill_name = SkillDisplayConfig.get_skill_name("revive")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
+	# 遺産EP
+	if death_effects.get("legacy_magic_activated", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("legacy_magic")
+		await battle_screen_manager.show_skill_activation(side, skill_name, {})
+	
+	# カード獲得（死亡時）
+	if death_effects.get("draw_cards_activated", false):
+		var skill_name = SkillDisplayConfig.get_skill_name("legacy_card")
 		await battle_screen_manager.show_skill_activation(side, skill_name, {})
 	
 	# 手札復活

@@ -924,7 +924,7 @@ func _calculate_toll(tile_index: int) -> int:
 ## 足止め判定
 func _check_forced_stop(tile_index: int, player_id: int) -> Dictionary:
 	if spell_movement and movement_controller:
-		return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, movement_controller.tile_nodes)
+		return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, movement_controller.tile_nodes, false)
 	return {"stopped": false}
 
 ## 侵略して勝てるか判定（性格を反映したバトル結果を使用）

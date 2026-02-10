@@ -269,11 +269,9 @@ func _update_right_panel():
 	
 	# スキル
 	if skill_container and skill_label:
-		var ability_parsed = data.get("ability_parsed", {})
-		var keywords = ability_parsed.get("keywords", [])
-		if not keywords.is_empty():
+		var ability_detail = data.get("ability_detail", data.get("ability", ""))
+		if not ability_detail.is_empty():
 			skill_container.visible = true
-			var ability_detail = data.get("ability_detail", data.get("ability", ""))
 			skill_label.text = ability_detail
 		else:
 			skill_container.visible = false

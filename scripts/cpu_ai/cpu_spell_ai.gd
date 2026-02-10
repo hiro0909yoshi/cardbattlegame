@@ -269,7 +269,9 @@ func _evaluate_condition(spell: Dictionary, context: Dictionary, base_score: flo
 	extended_context["spell"] = spell
 	
 	# 条件チェック
-	if not condition_checker.check_condition(condition, extended_context):
+	var condition_met = condition_checker.check_condition(condition, extended_context)
+	print("[CPUスペルAI] condition=%s, 結果=%s, スペル=%s" % [condition, condition_met, spell.get("name", "")])
+	if not condition_met:
 		return {"should_use": false, "score": 0.0, "target": null}
 	
 	# 条件を満たした場合、ターゲットを取得（スコア付き）

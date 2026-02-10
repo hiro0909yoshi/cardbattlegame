@@ -27,8 +27,8 @@ var panel_count = 2       # 表示するパネル数
 var current_turn_player = -1  # 現在のターンプレイヤー
 
 # パネルサイズ（固定値）※1.4倍
-var panel_width = 224
-var panel_height = 147
+var panel_width = 260
+var panel_height = 190
 var panel_spacing = 14
 var start_x = 28
 var start_y = 28
@@ -58,6 +58,10 @@ func set_game_flow_manager(gfm):
 	# ターン開始シグナルを接続（ターン開始時に即座に順番アイコンを更新）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.turn_started.connect(_on_turn_started)
+	
+	# シグナル取得時にパネルを即座更新
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		game_flow_manager_ref.lap_system.checkpoint_signal_obtained.connect(_on_signal_obtained)
 
 # パネルを作成
 func create_panels():
@@ -197,7 +201,10 @@ func build_player_info_text(player, player_id: int) -> String:
 	
 	text += "[b]" + player.name + "[/b]\n"
 	text += "EP: " + str(player.magic_power) + "EP\n"
-	text += "TEP: " + str(calculate_total_assets(player_id)) + "EP"
+	text += "TEP: " + str(calculate_total_assets(player_id)) + "EP\n"
+	
+	# 取得済みシグナル表示
+	text += _build_signal_text(player_id)
 	
 	# プレイヤー呪いがあれば別行で表示
 	if player.curse and not player.curse.is_empty():
@@ -205,6 +212,24 @@ func build_player_info_text(player, player_id: int) -> String:
 		text += "\n[color=red]呪: " + curse_name + "[/color]"
 	
 	return text
+
+# 取得済みシグナルテキストを構築
+func _build_signal_text(player_id: int) -> String:
+	if not game_flow_manager_ref or not game_flow_manager_ref.lap_system:
+		return ""
+	
+	var lap_system = game_flow_manager_ref.lap_system
+	var required = lap_system.required_checkpoints
+	var player_state = lap_system.player_lap_state.get(player_id, {})
+	
+	var parts = []
+	for cp in required:
+		if player_state.get(cp, false):
+			parts.append("[color=yellow]%s[/color]" % cp)
+		else:
+			parts.append("[color=gray]%s[/color]" % cp)
+	
+	return "SG: " + " ".join(parts)
 
 # 土地数を取得（3D対応版）
 func get_land_count(player_id: int) -> int:
@@ -326,6 +351,10 @@ func _on_magic_changed(player_id: int, _new_value: int):
 # ターン開始時コールバック（順番アイコン即座更新用）
 func _on_turn_started(player_id: int):
 	set_current_turn(player_id)
+
+# シグナル取得時の即座更新
+func _on_signal_obtained(_player_id: int, _checkpoint_type: String):
+	update_all_panels()
 
 # パネルの表示/非表示
 func set_visible(visible: bool):

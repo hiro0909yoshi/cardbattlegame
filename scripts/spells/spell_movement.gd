@@ -24,7 +24,7 @@ func setup(cm, bs):
 ## 足どめ判定を行う（tile_nodesを直接渡すバージョン）
 ## 戻り値: { "stopped": bool, "reason": String, "source_type": String }
 ## source_type: "curse" = 呪い, "skill" = スキル, "" = 足どめなし
-func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_nodes: Dictionary) -> Dictionary:
+func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_nodes: Dictionary, consume: bool = true) -> Dictionary:
 	var result = {"stopped": false, "reason": "", "source_type": ""}
 	
 	# タイルにクリーチャーがいるか確認
@@ -43,8 +43,9 @@ func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_n
 		result["stopped"] = true
 		result["reason"] = "強制停止の呪いで足どめされた！"
 		result["source_type"] = "curse"
-		# 1回で消滅
-		_consume_forced_stop_curse(creature)
+		# consume=trueの場合のみ呪いを消費（シミュレーション時はfalse）
+		if consume:
+			_consume_forced_stop_curse(creature)
 		return result
 	
 	# 2. スキル"足どめ"チェック（所有者は止まらない）

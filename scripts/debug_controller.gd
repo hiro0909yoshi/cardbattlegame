@@ -37,6 +37,7 @@ func _ready():
 		print("  8キー: 空き地へ移動")
 		print("  9キー: EP+1000")
 		print("  Hキー: カードID指定で手札追加")
+		print("  Jキー: カードID指定でCPUに手札追加")
 		print("  Uキー: 現在プレイヤーの全土地のダウン解除")
 		print("  Lキー: 現在のタイルをレベル4に")
 	
@@ -116,6 +117,8 @@ func _input(event):
 				add_debug_magic()
 			KEY_H:
 				show_card_input_dialog()
+			KEY_J:
+				show_card_input_dialog_for_cpu()
 			KEY_T:
 				show_all_tiles_info()
 			KEY_U:
@@ -256,6 +259,102 @@ func add_card_to_hand(card_id: int):
 		emit_signal("debug_action", "add_card", card_id)
 	else:
 		print("【エラー】プレイヤー", current_player.id, "の手札が見つかりません")
+
+# CPU用カードID入力ダイアログを表示
+func show_card_input_dialog_for_cpu():
+	if not card_input_dialog:
+		print("【エラー】ダイアログが初期化されていません")
+		return
+	
+	# CPUプレイヤーを取得
+	var cpu_id = _get_first_cpu_player_id()
+	if cpu_id < 0:
+		print("【デバッグ】CPUプレイヤーが見つかりません")
+		return
+	
+	card_id_input.text = ""
+	card_input_dialog.title = "CPU(P%d)に手札追加 - カードID入力" % (cpu_id + 1)
+	card_input_dialog.popup_centered()
+	card_id_input.grab_focus()
+	
+	# 一時的にコールバックを差し替え
+	if card_input_dialog.confirmed.is_connected(_on_card_id_confirmed):
+		card_input_dialog.confirmed.disconnect(_on_card_id_confirmed)
+	card_input_dialog.confirmed.connect(_on_cpu_card_id_confirmed, CONNECT_ONE_SHOT)
+	
+	if card_id_input.text_submitted.is_connected(_on_card_id_text_submitted):
+		card_id_input.text_submitted.disconnect(_on_card_id_text_submitted)
+	card_id_input.text_submitted.connect(func(_t): card_input_dialog.hide(); _on_cpu_card_id_confirmed(), CONNECT_ONE_SHOT)
+
+# CPU用カードID確定
+func _on_cpu_card_id_confirmed():
+	var input_text = card_id_input.text.strip_edges()
+	if input_text.is_empty():
+		_restore_card_dialog_signals()
+		return
+	
+	input_text = input_text.to_lower()
+	var card_id = 0
+	if input_text.begins_with("0x"):
+		card_id = input_text.hex_to_int()
+	elif input_text.is_valid_int():
+		card_id = input_text.to_int()
+	else:
+		card_id = input_text.hex_to_int()
+		if card_id == 0 and input_text != "0":
+			print("【デバッグ】無効な入力: ", input_text)
+			_restore_card_dialog_signals()
+			return
+	
+	if CardLoader:
+		var card_data = CardLoader.get_card_by_id(card_id)
+		if card_data.is_empty():
+			print("【デバッグ】カードID ", card_id, " は存在しません")
+			_restore_card_dialog_signals()
+			return
+	
+	add_card_to_cpu_hand(card_id)
+	_restore_card_dialog_signals()
+
+# CPUの手札にカードを追加
+func add_card_to_cpu_hand(card_id: int):
+	if not card_system or not player_system:
+		return
+	
+	var cpu_id = _get_first_cpu_player_id()
+	if cpu_id < 0:
+		print("【デバッグ】CPUプレイヤーが見つかりません")
+		return
+	
+	var card_data = card_system._load_card_data(card_id)
+	if card_data.is_empty():
+		print("【デバッグ】カードID ", card_id, " が見つかりません")
+		return
+	
+	if card_system.player_hands.has(cpu_id):
+		card_system.player_hands[cpu_id]["data"].append(card_data)
+		var cpu_name = player_system.players[cpu_id].name if cpu_id < player_system.players.size() else "CPU"
+		print("【デバッグ】カードID %d (%s) を %s(P%d) の手札に追加しました" % [card_id, card_data.get("name", "不明"), cpu_name, cpu_id + 1])
+		
+		if ui_manager and ui_manager.has_method("update_player_info_panels"):
+			ui_manager.update_player_info_panels()
+
+# 最初のCPUプレイヤーIDを取得
+func _get_first_cpu_player_id() -> int:
+	if not game_flow_manager:
+		return -1
+	var cpu_flags = game_flow_manager.player_is_cpu if "player_is_cpu" in game_flow_manager else []
+	for i in range(cpu_flags.size()):
+		if cpu_flags[i]:
+			return i
+	return -1
+
+# ダイアログのシグナルを元に戻す
+func _restore_card_dialog_signals():
+	if not card_input_dialog.confirmed.is_connected(_on_card_id_confirmed):
+		card_input_dialog.confirmed.connect(_on_card_id_confirmed)
+	if not card_id_input.text_submitted.is_connected(_on_card_id_text_submitted):
+		card_id_input.text_submitted.connect(_on_card_id_text_submitted)
 
 # サイコロ固定
 func set_debug_dice(value: int):

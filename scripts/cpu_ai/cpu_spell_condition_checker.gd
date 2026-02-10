@@ -494,14 +494,47 @@ func _check_nearest_checkpoint_unvisited(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
 	var current_tile = board_analyzer.get_player_current_tile(player_id)
 	
-	# 最寄りチェックポイントを探す
-	var nearest_checkpoint = board_analyzer.find_nearest_checkpoint(current_tile)
-	if nearest_checkpoint.tile_index < 0:
+	# 現在地がチェックポイントなら使用しない（既にシグナル取得済み）
+	var current_tile_node = board_system.tile_nodes.get(current_tile)
+	if current_tile_node and current_tile_node.tile_type == "checkpoint":
 		return false
 	
-	# そのチェックポイントが未訪問かチェック
-	var checkpoint_type = nearest_checkpoint.checkpoint_type
+	# BFSで最寄りチェックポイントを特定（warp_to_nearest_gateと同じ探索順序）
+	var neighbor_system = board_system.tile_neighbor_system
+	if not neighbor_system:
+		return false
+	
+	var visited = {}
+	var queue = [current_tile]
+	visited[current_tile] = true
+	var nearest_cp_tile = -1
+	
+	while not queue.is_empty():
+		var tile_idx = queue.pop_front()
+		var neighbors = neighbor_system.get_sequential_neighbors(tile_idx)
+		for neighbor in neighbors:
+			if not visited.has(neighbor):
+				visited[neighbor] = true
+				var tile = board_system.tile_nodes.get(neighbor)
+				if tile and tile.tile_type == "checkpoint":
+					nearest_cp_tile = neighbor
+					queue.clear()
+					break
+				queue.append(neighbor)
+	
+	if nearest_cp_tile < 0:
+		return false
+	
+	# ワープ先のチェックポイントが未訪問かチェック
+	var cp_tile = board_system.tile_nodes.get(nearest_cp_tile)
+	if not cp_tile:
+		return false
+	var checkpoint_type = cp_tile._get_checkpoint_type_string() if cp_tile.has_method("_get_checkpoint_type_string") else ""
+	if checkpoint_type.is_empty():
+		return false
 	var player_state = lap_system.player_lap_state.get(player_id, {})
 	var is_visited = player_state.get(checkpoint_type, false)
+	
+	print("[CPUスペル条件] フォームポータル判定: 現在地=%d, ワープ先CP=%d(%s), 訪問済み=%s" % [current_tile, nearest_cp_tile, checkpoint_type, is_visited])
 	
 	return not is_visited
