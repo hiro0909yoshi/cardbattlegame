@@ -108,7 +108,7 @@ static func show_multiple_markers(handler, tile_indices: Array):
 		var tile = handler.board_system.tile_nodes[tile_index]
 		
 		# マーカーを作成
-		var marker = _create_marker_mesh()
+		var marker = create_marker_mesh()
 		tile.add_child(marker)
 		marker.position = Vector3(0, 0.5, 0)
 		marker.set_meta("rotating", true)
@@ -146,7 +146,7 @@ static func rotate_confirmation_markers(handler, delta: float):
 
 
 ## マーカーメッシュを作成（内部用）
-static func _create_marker_mesh() -> MeshInstance3D:
+static func create_marker_mesh() -> MeshInstance3D:
 	var marker = MeshInstance3D.new()
 	
 	# トーラス（ドーナツ型）メッシュを作成

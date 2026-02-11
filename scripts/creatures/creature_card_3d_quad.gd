@@ -48,7 +48,7 @@ func _setup_card():
 	
 	# 子要素のレイアウトを新しいサイズに合わせる
 	if card_instance.has_method("_adjust_children_size"):
-		card_instance._adjust_children_size()
+		card_instance.adjust_children_size()
 	
 	# QuadMeshを作成
 	var quad_mesh = QuadMesh.new()

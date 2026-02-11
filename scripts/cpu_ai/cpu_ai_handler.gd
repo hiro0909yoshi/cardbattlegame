@@ -552,9 +552,9 @@ func _has_matching_creature(current_player, tile_element: String) -> bool:
 		var can_afford = hand_utils.can_afford_card(current_player, card_index)
 		
 		# 土地条件チェック（フラグで無効化可能）
-		var can_summon_lands = disable_lands or hand_utils._check_lands_required(card_data, current_player.id)
+		var can_summon_lands = disable_lands or hand_utils.check_lands_required(card_data, current_player.id)
 		# 配置制限チェック（フラグで無効化可能）
-		var can_summon_element = disable_cannot_summon or hand_utils._check_cannot_summon(card_data, tile_element)
+		var can_summon_element = disable_cannot_summon or hand_utils.check_cannot_summon(card_data, tile_element)
 		var can_summon = can_summon_lands and can_summon_element
 		
 		if creature_element == tile_element or tile_element == "neutral":

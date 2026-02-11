@@ -486,7 +486,7 @@ func _on_movement_started(_player_id: int):
 		ui_manager.phase_label.text = "移動中..."
 
 ## プレイヤーが操作可能なドミニオを所有しているかチェック（ダウン中は除外）
-func _has_owned_lands(player_id: int) -> bool:
+func has_owned_lands(player_id: int) -> bool:
 	for tile_index in tile_nodes.keys():
 		var tile = tile_nodes[tile_index]
 		if tile.owner_id == player_id:

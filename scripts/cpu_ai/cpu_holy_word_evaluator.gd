@@ -84,22 +84,22 @@ func _evaluate_offensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		if enemy_id == player_id:
 			continue
 		
-		var enemy_tile = _movement_evaluator._get_player_current_tile(enemy_id)
-		var enemy_direction = _movement_evaluator._get_player_direction(enemy_id)
+		var enemy_tile = _movement_evaluator.get_player_current_tile(enemy_id)
+		var enemy_direction = _movement_evaluator.get_player_direction(enemy_id)
 		
 		# 敵がdice_value歩進んだ先を計算
 		var sim_result = _movement_evaluator.simulate_path(enemy_tile, dice_value * enemy_direction, enemy_id)
 		var stop_tile = sim_result.stop_tile
 		
-		var tile_info = _movement_evaluator._get_tile_info(stop_tile)
+		var tile_info = _movement_evaluator.get_tile_info(stop_tile)
 		var owner = tile_info.get("owner", -1)
 		
 		# 自分の土地かチェック
 		if owner == player_id:
-			var toll = _movement_evaluator._calculate_toll(stop_tile)
+			var toll = _movement_evaluator.calculate_toll(stop_tile)
 			
 			# 侵略リスクをチェック
-			if not _movement_evaluator._can_enemy_invade(stop_tile, enemy_id):
+			if not _movement_evaluator.can_enemy_invade(stop_tile, enemy_id):
 				if toll > best_toll:
 					best_toll = toll
 					best_target = enemy_id
@@ -119,18 +119,18 @@ func _evaluate_defensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		"avoided_toll": 0
 	}
 	
-	var current_tile = _movement_evaluator._get_player_current_tile(player_id)
-	var my_direction = _movement_evaluator._get_player_direction(player_id)
+	var current_tile = _movement_evaluator.get_player_current_tile(player_id)
+	var my_direction = _movement_evaluator.get_player_direction(player_id)
 	
 	# dice_valueで止まる位置を計算
 	var target_sim = _movement_evaluator.simulate_path(current_tile, dice_value * my_direction, player_id)
 	var target_tile = target_sim.stop_tile
-	var target_info = _movement_evaluator._get_tile_info(target_tile)
+	var target_info = _movement_evaluator.get_tile_info(target_tile)
 	var target_owner = target_info.get("owner", -1)
 	
 	# このダイス目で敵の土地に止まるか？
 	if target_owner >= 0 and target_owner != player_id:
-		if not _movement_evaluator._can_invade_and_win(target_tile, player_id):
+		if not _movement_evaluator.can_invade_and_win(target_tile, player_id):
 			# 倒せない敵の土地 → このダイス目は使いたくない
 			return result
 	
@@ -142,12 +142,12 @@ func _evaluate_defensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		
 		var check_sim = _movement_evaluator.simulate_path(current_tile, check_dice * my_direction, player_id)
 		var check_tile = check_sim.stop_tile
-		var check_info = _movement_evaluator._get_tile_info(check_tile)
+		var check_info = _movement_evaluator.get_tile_info(check_tile)
 		var check_owner = check_info.get("owner", -1)
 		
 		if check_owner >= 0 and check_owner != player_id:
-			if not _movement_evaluator._can_invade_and_win(check_tile, player_id):
-				var toll = _movement_evaluator._calculate_toll(check_tile)
+			if not _movement_evaluator.can_invade_and_win(check_tile, player_id):
+				var toll = _movement_evaluator.calculate_toll(check_tile)
 				if toll > max_danger_toll:
 					max_danger_toll = toll
 	

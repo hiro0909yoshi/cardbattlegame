@@ -61,7 +61,7 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 		if is_dominio_order_active:
 			ui_manager.register_back_action(func():
 				ui_manager.creature_info_panel_ui.hide_panel(false)
-				gfm.dominio_command_handler._restore_navigation()
+				gfm.dominio_command_handler.restore_navigation()
 			, "閉じる")
 		elif is_spell_phase_active:
 			if not ui_manager._spell_phase_buttons_saved:
@@ -72,7 +72,7 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 				ui_manager._spell_phase_buttons_saved = true
 			ui_manager.register_back_action(func():
 				ui_manager.creature_info_panel_ui.hide_panel(false)
-				ui_manager._restore_spell_phase_buttons()
+				ui_manager.restore_spell_phase_buttons()
 			, "閉じる")
 
 
@@ -93,7 +93,7 @@ func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
 		var clear_buttons = not is_tutorial_active and not is_spell_phase_active
 		ui_manager.creature_info_panel_ui.hide_panel(clear_buttons)
 		if is_spell_phase_active:
-			ui_manager._restore_spell_phase_buttons()
+			ui_manager.restore_spell_phase_buttons()
 
 
 ## 空（タイル外）がタップされた時のハンドラ
@@ -105,15 +105,15 @@ func _on_empty_tapped():
 	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_panel_visible():
 		ui_manager.creature_info_panel_ui.hide_panel(false)
 		if ui_manager._spell_phase_buttons_saved:
-			ui_manager._restore_spell_phase_buttons()
+			ui_manager.restore_spell_phase_buttons()
 		print("[UITapHandler] 空タップでパネル閉じ")
 
 
 ## TapTargetManagerからターゲットが選択された時
-func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
+func on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 	print("[UITapHandler] タップターゲット選択: タイル%d" % tile_index)
 
 
 ## TapTargetManagerから選択がキャンセルされた時
-func _on_tap_target_cancelled():
+func on_tap_target_cancelled():
 	print("[UITapHandler] タップターゲット選択キャンセル")

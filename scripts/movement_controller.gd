@@ -242,7 +242,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 			chosen = await branch_selector.show_branch_tile_selection(choices)
 
 	var inferred_direction = _infer_direction_from_choice(current_tile, chosen, player_id)
-	_set_player_current_direction(player_id, inferred_direction)
+	set_player_current_direction(player_id, inferred_direction)
 
 	return chosen
 
@@ -268,7 +268,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 			var tutorial_manager = _get_tutorial_manager()
 			if tutorial_manager and tutorial_manager.is_active:
 				tutorial_manager.set_player_direction(selected_dir)
-		_set_player_current_direction(current_moving_player, selected_dir)
+		set_player_current_direction(current_moving_player, selected_dir)
 		return current_tile + selected_dir
 
 	var choices = []
@@ -304,7 +304,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 			chosen = await branch_selector.show_branch_tile_selection(choices)
 
 	var inferred_dir = _infer_direction_from_choice(current_tile, chosen)
-	_set_player_current_direction(current_moving_player, inferred_dir)
+	set_player_current_direction(current_moving_player, inferred_dir)
 
 	return chosen
 
@@ -508,7 +508,7 @@ func _get_player_current_direction(player_id: int) -> int:
 	return player_system.players[player_id].current_direction
 
 
-func _set_player_current_direction(player_id: int, direction: int) -> void:
+func set_player_current_direction(player_id: int, direction: int) -> void:
 	if not player_system:
 		return
 	if player_id < 0 or player_id >= player_system.players.size():
@@ -520,7 +520,7 @@ func _set_player_current_direction(player_id: int, direction: int) -> void:
 func reverse_player_direction(player_id: int) -> void:
 	var current_dir = _get_player_current_direction(player_id)
 	var new_dir = -current_dir if current_dir != 0 else -1
-	_set_player_current_direction(player_id, new_dir)
+	set_player_current_direction(player_id, new_dir)
 	print("[MovementController] プレイヤー%d の方向を反転: %d → %d" % [player_id + 1, current_dir, new_dir])
 
 

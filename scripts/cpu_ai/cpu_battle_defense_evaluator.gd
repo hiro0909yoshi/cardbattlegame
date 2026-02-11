@@ -58,7 +58,7 @@ func simulate_worst_case(
 	print("[CPU攻撃] 敵の対抗手段: アイテム%d個, 援護%d体" % [enemy_items.size(), enemy_assists.size()])
 	
 	# まず何もない場合のシミュレーション
-	var base_result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
+	var base_result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
 	
 	# 対抗手段がない場合はそのまま返す
 	if enemy_items.is_empty() and enemy_assists.is_empty():
@@ -79,15 +79,15 @@ func simulate_worst_case(
 			if not check_result.can_use:
 				continue
 		
-		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
-		if _is_worse_result(result, worst_result):
+		var result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, enemy_item, {})
+		if is_worse_result(result, worst_result):
 			worst_result = result
 			worst_option_name = "アイテム: " + enemy_item.get("name", "?")
 	
 	# 敵援護をすべて試す
 	for enemy_assist in enemy_assists:
-		var result = _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, enemy_assist)
-		if _is_worse_result(result, worst_result):
+		var result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, enemy_assist)
+		if is_worse_result(result, worst_result):
 			worst_result = result
 			worst_option_name = "援護: " + enemy_assist.get("name", "?")
 	
@@ -105,11 +105,11 @@ func _simulate_base(
 	attacker_player_id: int,
 	attacker_item: Dictionary
 ) -> Dictionary:
-	return _simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
+	return simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
 
 
 ## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
-func _simulate_with_defender_option(
+func simulate_with_defender_option(
 	attacker: Dictionary,
 	defender: Dictionary,
 	tile_info: Dictionary,
@@ -153,7 +153,7 @@ func _simulate_with_defender_option(
 
 
 ## 結果Aが結果Bより悪いか（攻撃側にとって）
-func _is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
+func is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
 	# 勝ち → 負け は悪化
 	if result_b.is_win and not result_a.is_win:
 		return true

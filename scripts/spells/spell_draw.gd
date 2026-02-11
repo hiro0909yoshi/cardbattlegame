@@ -302,4 +302,4 @@ func transform_cards_to_specific(target_player_id: int, selected_card_name: Stri
 
 func _move_caster_to_enemy_hand(tile_index: int, target_player_id: int) -> void:
 	if _steal_handler:
-		_steal_handler._move_caster_to_enemy_hand(tile_index, target_player_id)
+		_steal_handler.move_caster_to_enemy_hand(tile_index, target_player_id)

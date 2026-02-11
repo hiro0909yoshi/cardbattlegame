@@ -104,7 +104,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 			card_buy_ui.set_script(CardBuyUIScript)
 			_ui_manager.ui_layer.add_child(card_buy_ui)
 			if card_buy_ui.has_method("_setup_ui"):
-				card_buy_ui._setup_ui()
+				card_buy_ui.setup_ui()
 	
 	# プレイヤーのEPを取得
 	var player_magic = 0

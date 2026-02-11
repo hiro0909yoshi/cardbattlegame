@@ -404,7 +404,7 @@ func _execute_cpu_spell(decision: Dictionary):
 			var caster_name = "CPU"
 			if current_player_id >= 0 and current_player_id < player_system.players.size():
 				caster_name = player_system.players[current_player_id].name
-			await _show_spell_cast_notification(caster_name, target, spell_card, false)
+			await show_spell_cast_notification(caster_name, target, spell_card, false)
 		
 		await execute_spell_effect(spell_card, target_data)
 
@@ -428,7 +428,7 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 	# 発動通知表示
 	if spell_cast_notification_ui:
 		var caster_name = creature_info.get("creature_data", {}).get("name", "クリーチャー")
-		await _show_spell_cast_notification(caster_name, target, mystic_data, true)
+		await show_spell_cast_notification(caster_name, target, mystic_data, true)
 	
 	# アルカナアーツ効果を実行（コスト支払いはexecute_mystic_art内で行われる）
 	if spell_mystic_arts:
@@ -495,7 +495,7 @@ func use_spell(spell_card: Dictionary):
 			if game_flow_manager and game_flow_manager.has_method("unlock_input"):
 				game_flow_manager.unlock_input()
 			# スペル選択画面に戻る
-			_return_to_spell_selection()
+			return_to_spell_selection()
 			return
 	
 	selected_spell_card = spell_card
@@ -617,7 +617,7 @@ func use_spell(spell_card: Dictionary):
 			target_info["target_filter"] = target_filter
 		
 		# 対象選択UIを表示
-		var has_targets = await _show_target_selection_ui(target_type, target_info)
+		var has_targets = await show_target_selection_ui(target_type, target_info)
 		if not has_targets:
 			# 対象がいない場合
 			if is_external_spell_mode:
@@ -631,7 +631,7 @@ func use_spell(spell_card: Dictionary):
 
 ## 対象選択UIを表示（ドミニオコマンドと同じ方式）
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
-func _show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
+func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	# 有効な対象を取得（ヘルパー使用）
 	var targets = TargetSelectionHelper.get_valid_targets(self, target_type, target_info)
 	
@@ -832,10 +832,10 @@ func _cancel_target_selection():
 	if spell_mystic_arts and spell_mystic_arts.is_active():
 		# アルカナアーツキャンセル
 		spell_mystic_arts.clear_selection()
-		spell_mystic_arts._end_mystic_phase()
+		spell_mystic_arts.end_mystic_phase()
 		current_state = State.WAITING_FOR_INPUT
 		# スペル選択画面に戻る
-		_return_to_spell_selection()
+		return_to_spell_selection()
 	else:
 		# スペルキャンセル
 		cancel_spell()
@@ -885,7 +885,7 @@ func cancel_spell():
 	current_state = State.WAITING_FOR_INPUT
 	
 	# スペル選択UIを再表示
-	_return_to_spell_selection()
+	return_to_spell_selection()
 
 ## 対象選択フェーズを抜けるときの共通処理
 func _exit_target_selection_phase():
@@ -896,7 +896,7 @@ func _exit_target_selection_phase():
 	_clear_spell_navigation()
 	
 	# カメラをプレイヤーに戻す
-	_return_camera_to_player()
+	return_camera_to_player()
 	
 	# アクション指示パネルを閉じる
 	if ui_manager and ui_manager.phase_display:
@@ -907,7 +907,7 @@ func _exit_target_selection_phase():
 		ui_manager.update_player_info_panels()
 
 ## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
-func _return_to_spell_selection():
+func return_to_spell_selection():
 	# 対象選択フェーズを抜ける共通処理
 	_exit_target_selection_phase()
 	
@@ -937,7 +937,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 		await spell_effect_executor.execute_spell_effect(spell_card, target_data)
 
 ## 単一の効果を適用（SpellEffectExecutorに委譲）
-func _apply_single_effect(effect: Dictionary, target_data: Dictionary):
+func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	if spell_effect_executor:
 		await spell_effect_executor.apply_single_effect(effect, target_data)
 
@@ -1047,7 +1047,7 @@ func _cancel_confirmation():
 	cancel_spell()
 
 ## カメラを使用者に戻す
-func _return_camera_to_player():
+func return_camera_to_player():
 	if not player_system or not board_system:
 		return
 	
@@ -1229,7 +1229,7 @@ func _count_own_creatures(player_id: int) -> int:
 	return count
 
 ## プレイヤーの順位を取得（UIパネルから）
-func _get_player_ranking(player_id: int) -> int:
+func get_player_ranking(player_id: int) -> int:
 	if ui_manager and ui_manager.player_info_panel:
 		return ui_manager.player_info_panel.get_player_ranking(player_id)
 	# フォールバック: 常に1位を返す
@@ -1357,7 +1357,7 @@ func _on_mystic_art_used():
 ## アルカナアーツフェーズ完了時
 func _on_mystic_phase_completed():
 	current_state = State.WAITING_FOR_INPUT
-	_return_to_spell_selection()
+	return_to_spell_selection()
 
 
 ## アルカナアーツターゲット選択要求時
@@ -1429,7 +1429,7 @@ func _on_card_selection_completed():
 	complete_spell_phase()
 
 ## スペル/アルカナアーツ発動通知を表示（クリック待ち）
-func _show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false) -> void:
+func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false) -> void:
 	if not spell_cast_notification_ui:
 		return
 	

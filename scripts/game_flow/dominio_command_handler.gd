@@ -140,8 +140,8 @@ func open_dominio_order(player_id: int):
 		ui_manager.enable_navigation(
 			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
 			func(): cancel(),  # 戻る
-			func(): _on_arrow_up(),  # 上
-			func(): _on_arrow_down()  # 下
+			func(): on_arrow_up(),  # 上
+			func(): on_arrow_down()  # 下
 		)
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
@@ -321,7 +321,7 @@ func cancel():
 		current_state = State.SELECTING_ACTION
 		
 		# クリーチャー情報パネルを閉じる
-		LandActionHelper._hide_move_creature_info(self)
+		LandActionHelper.hide_move_creature_info(self)
 		
 		if move_source_tile >= 0:
 			TargetSelectionHelper.show_selection_marker(self, move_source_tile)
@@ -409,7 +409,7 @@ func _set_action_selection_navigation():
 		)
 
 ## 現在の状態に応じてナビゲーションを復元
-func _restore_navigation():
+func restore_navigation():
 	match current_state:
 		State.SELECTING_LAND:
 			_set_land_selection_navigation()
@@ -420,10 +420,10 @@ func _restore_navigation():
 			# 移動先選択用ナビゲーション
 			if ui_manager:
 				ui_manager.enable_navigation(
-					func(): LandActionHelper._confirm_move_selection(self),
+					func(): LandActionHelper.confirm_move_selection(self),
 					func(): cancel(),
-					func(): _on_arrow_up(),
-					func(): _on_arrow_down()
+					func(): on_arrow_up(),
+					func(): on_arrow_down()
 				)
 		State.SELECTING_LEVEL:
 			# レベル選択用ナビゲーション（LevelSelectionUIで管理されるのでキャンセルのみ）
@@ -431,17 +431,17 @@ func _restore_navigation():
 				ui_manager.enable_navigation(
 					Callable(),  # 決定はLevelSelectionUIで処理
 					func(): cancel(),
-					func(): _on_arrow_up(),
-					func(): _on_arrow_down()
+					func(): on_arrow_up(),
+					func(): on_arrow_down()
 				)
 		State.SELECTING_TERRAIN:
 			# 地形選択用ナビゲーション
 			if ui_manager:
 				ui_manager.enable_navigation(
-					func(): LandActionHelper._confirm_terrain_selection(self),
+					func(): LandActionHelper.confirm_terrain_selection(self),
 					func(): cancel(),
-					func(): _on_arrow_up(),
-					func(): _on_arrow_down()
+					func(): on_arrow_up(),
+					func(): on_arrow_down()
 				)
 		State.SELECTING_SWAP:
 			# 交換選択用ナビゲーション（カード選択UI側で管理）
@@ -459,12 +459,12 @@ func _set_land_selection_navigation():
 		ui_manager.enable_navigation(
 			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
 			func(): cancel(),  # 戻る
-			func(): _on_arrow_up(),  # 上
-			func(): _on_arrow_down()  # 下
+			func(): on_arrow_up(),  # 上
+			func(): on_arrow_down()  # 下
 		)
 
 ## 上下ボタンのコールバック（上）
-func _on_arrow_up():
+func on_arrow_up():
 	match current_state:
 		State.SELECTING_LAND:
 			# 前の土地を選択（ループ）
@@ -490,10 +490,10 @@ func _on_arrow_up():
 		
 		State.SELECTING_LEVEL:
 			# 前のレベルを選択（ループ）
-			_select_previous_level()
+			select_previous_level()
 
 ## 上下ボタンのコールバック（下）
-func _on_arrow_down():
+func on_arrow_down():
 	match current_state:
 		State.SELECTING_LAND:
 			# 次の土地を選択（ループ）
@@ -519,17 +519,17 @@ func _on_arrow_down():
 		
 		State.SELECTING_LEVEL:
 			# 次のレベルを選択（ループ）
-			_select_next_level()
+			select_next_level()
 
 ## レベル選択: 前のレベルを選択（ループ）
-func _select_previous_level():
+func select_previous_level():
 	if available_levels.is_empty():
 		return
 	current_level_selection_index = (current_level_selection_index - 1 + available_levels.size()) % available_levels.size()
 	_update_level_selection_highlight()
 
 ## レベル選択: 次のレベルを選択（ループ）
-func _select_next_level():
+func select_next_level():
 	if available_levels.is_empty():
 		return
 	current_level_selection_index = (current_level_selection_index + 1) % available_levels.size()
@@ -542,13 +542,13 @@ func _update_level_selection_highlight():
 		ui_manager.dominio_order_ui.highlight_level_button(selected_level)
 
 ## レベル選択: 確定
-func _confirm_level_selection():
+func confirm_level_selection():
 	if available_levels.is_empty():
 		return
 	var selected_level = available_levels[current_level_selection_index]
 	# DominioOrderUIのシグナル経由で処理
 	if ui_manager and ui_manager.dominio_order_ui:
-		ui_manager.dominio_order_ui._on_level_selected(selected_level)
+		ui_manager.dominio_order_ui.on_level_selected(selected_level)
 
 ## Phase 1-A: レベル選択シグナルハンドラ
 func _on_level_up_selected(target_level: int, cost: int):
@@ -1049,7 +1049,7 @@ func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
 
 
 ## 移動侵略シーケンス（カメラ移動→コメント→アイテムフェーズ）
-func _start_move_battle_sequence(dest_tile_index: int, attacker_player: int, creature_data: Dictionary):
+func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, creature_data: Dictionary):
 	# 1. カメラを移動先タイルにフォーカス
 	TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 	

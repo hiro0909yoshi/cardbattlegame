@@ -43,7 +43,7 @@ func show_branch_tile_selection(choices: Array) -> int:
 
 	_update_ui()
 	_update_indicator()
-	_setup_navigation()
+	setup_navigation()
 
 	var result = await branch_selected
 	is_active = false
@@ -112,7 +112,7 @@ func _update_ui():
 
 
 # ナビゲーションボタンを設定
-func _setup_navigation():
+func setup_navigation():
 	var gfm = controller.game_flow_manager
 	if gfm and gfm.ui_manager:
 		gfm.ui_manager.enable_navigation(
@@ -243,7 +243,7 @@ func check_and_handle_branch(current_tile: int, _came_from: int, path: Array, cu
 
 	# 方向を保存
 	if controller.current_moving_player >= 0:
-		controller._set_player_current_direction(controller.current_moving_player, new_direction)
+		controller.set_player_current_direction(controller.current_moving_player, new_direction)
 
 	# 残りの経路を再計算
 	var remaining_steps = path.size() - current_index - 1

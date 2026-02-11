@@ -18,9 +18,9 @@ var cancel_button: Button
 var card_panels: Array = []  # 3つのカードパネル
 
 func _ready():
-	_setup_ui()
+	setup_ui()
 
-func _setup_ui():
+func setup_ui():
 	# 既に初期化済みならスキップ
 	if panel != null:
 		return

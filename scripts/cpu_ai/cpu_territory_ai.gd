@@ -748,7 +748,7 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 				# tile_action_processorがない場合は簡易チェック
 				if check_player_id < 0:
 					return true  # player_idが不明な場合は一旦許可
-				if not _check_lands_required_simple(creature_data, check_player_id):
+				if not check_lands_required_simple(creature_data, check_player_id):
 					return false
 	
 	# cost_cards_sacrifice チェック
@@ -776,7 +776,7 @@ func _is_summon_condition_ignored(player_id: int = -1) -> bool:
 
 
 ## 簡易土地条件チェック（tile_action_processorがない場合のフォールバック）
-func _check_lands_required_simple(creature_data: Dictionary, player_id: int) -> bool:
+func check_lands_required_simple(creature_data: Dictionary, player_id: int) -> bool:
 	var required_lands = creature_data.get("cost_lands_required", [])
 	if required_lands.is_empty():
 		return true

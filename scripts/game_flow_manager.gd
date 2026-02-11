@@ -138,7 +138,7 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 	if lap_system:
 		lap_system.player_system = player_system
 		lap_system.ui_manager = ui_manager
-		lap_system._setup_ui()
+		lap_system.setup_ui()
 	
 	# GameResultHandlerを初期化
 	game_result_handler = GameResultHandler.new()

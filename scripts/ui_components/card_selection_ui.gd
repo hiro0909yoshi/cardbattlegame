@@ -857,12 +857,12 @@ func _on_spell_panel_cancelled():
 	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
 	if selection_mode in ["sacrifice", "discard"]:
 		restore_phase_comment()
-		_register_back_button_for_current_mode()
+		register_back_button_for_current_mode()
 		return
 	
 	# SpellPhaseHandler経由でスペル選択画面に戻る
 	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		game_flow_manager_ref.spell_phase_handler._return_to_spell_selection()
+		game_flow_manager_ref.spell_phase_handler.return_to_spell_selection()
 	else:
 		# フォールバック
 		_setup_spell_phase_back_button()
@@ -936,7 +936,7 @@ func _on_item_panel_cancelled():
 	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
 	if selection_mode in ["sacrifice", "discard"]:
 		restore_phase_comment()
-		_register_back_button_for_current_mode()
+		register_back_button_for_current_mode()
 		return
 	
 	# アイテム選択に戻る（ナビゲーション再設定）
@@ -1084,7 +1084,7 @@ func _on_creature_panel_cancelled():
 	restore_phase_comment()
 	
 	# グローバルボタンを再登録
-	_register_back_button_for_current_mode()
+	register_back_button_for_current_mode()
 	
 	# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
 	if selection_mode in ["summon", "battle"] and ui_manager_ref:
@@ -1092,7 +1092,7 @@ func _on_creature_panel_cancelled():
 
 
 # 現在のモードに応じたグローバル戻るボタンを登録
-func _register_back_button_for_current_mode():
+func register_back_button_for_current_mode():
 	if not ui_manager_ref:
 		return
 	
@@ -1212,7 +1212,7 @@ func _on_pass_button_pressed():
 		elif selection_mode == "item":
 			_setup_item_phase_back_button()
 		else:
-			_register_back_button_for_current_mode()
+			register_back_button_for_current_mode()
 		return
 	
 	if is_active:

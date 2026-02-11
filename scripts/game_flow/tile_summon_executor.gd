@@ -106,7 +106,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	var sacrifice_index = -1
 	var tile_element_for_sacrifice = tile.tile_type if tile and "tile_type" in tile else ""
 	if SummonConditionChecker.requires_card_sacrifice(card_data) and not DebugSettings.disable_card_sacrifice and not _is_summon_condition_ignored():
-		var sacrifice_result = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
+		var sacrifice_result = await process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		sacrifice_card = sacrifice_result.get("card", {})
 		sacrifice_index = sacrifice_result.get("index", -1)
 		if sacrifice_card.is_empty() and SummonConditionChecker.requires_card_sacrifice(card_data):
@@ -210,7 +210,7 @@ func execute_summon_for_cpu(card_index: int, complete_callback: Callable) -> boo
 
 
 ## カード犠牲処理（手札選択UI表示→カード破棄）
-func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_card: Dictionary = {}, tile_element: String = "") -> Dictionary:
+func process_card_sacrifice(player_id: int, summon_card_index: int, creature_card: Dictionary = {}, tile_element: String = "") -> Dictionary:
 	# CPUの場合は自動選択
 	if _is_cpu_player(player_id):
 		return _process_card_sacrifice_cpu(player_id, creature_card, tile_element)

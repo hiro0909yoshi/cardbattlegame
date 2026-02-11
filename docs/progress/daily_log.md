@@ -22,32 +22,13 @@
   - ui_manager.gd: 既に749行（別途メニュー切り出し済み）
 - ✅ スキルファイル作成（spell-system-map, battle-system-internals, gdscript-coding更新）
 
-### 次のステップ: シグナル設計の整理と signal_flow_map スキル作成
-
-#### 目的
-シグナル接続の規約違反を修正し、整理された状態で signal_flow_map スキルを作成する
-
-#### 作業計画
-1. **全シグナル接続の調査・分類**（253箇所）
-   - 正常: 子→親方向のシグナル接続
-   - 違反: privateメソッド外部接続（例: `tap_handler._on_tap_target_selected`）
-   - 違反: 親経由の兄弟チェーン参照（例: `game_flow_manager.item_phase_handler.item_phase_completed`）
-   - 不要: awaitで直接待てるのにシグナル経由にしている箇所
-   - 不要: コールバックをシグナル経由にする必要がないケース
-
-2. **優先度別に修正**
-   - P1: 不要なシグナル削除（awaitで代替可能な箇所）
-   - P2: privateメソッド外部接続の修正
-   - P3: チェーン参照の解消
-
-3. **signal_flow_map スキル作成**
-   - 整理後の主要シグナルの発火元→接続先マップ
-
-#### 既知の問題箇所
-- `ui_manager.gd`: tap_target_manager → tap_handler._on_tap_target_* (private接続)
-- `tile_battle_executor.gd`: game_flow_manager.item_phase_handler.item_phase_completed (チェーン参照×3箇所)
-- `dominio_command_handler.gd`: 同上パターン（×2箇所）
-- `cpu_turn_processor.gd`: board_system.battle_system.invasion_completed (チェーン参照)
+### 進行中: コーディング規約違反の修正
+- 詳細: `docs/progress/signal_cleanup_work.md`
+- ✅ 全違反の調査・分類完了（A〜H、8カテゴリ）
+- ✅ 修正B完了（privateメソッドpublic化 ~25箇所）
+- ✅ 修正C完了（privateシグナル接続）
+- ✅ バグ修正: battle_simulatorの呪い効果未反映
+- ⬜ 次: 修正A（シグナルチェーン参照）or 修正E〜G
 
 ### 完了済みシステム（参考）
 - ✅ 全システム実装完了（アイテム75種、スペル全種、スキル全種、アルカナアーツ全種、ダメージ、召喚制限、呪い全種）

@@ -513,8 +513,8 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 			continue
 		
 		# 敵の現在位置と進行方向を取得
-		var enemy_tile = cpu_movement_evaluator._get_player_current_tile(enemy_id)
-		var enemy_direction = cpu_movement_evaluator._get_player_direction(enemy_id)
+		var enemy_tile = cpu_movement_evaluator.get_player_current_tile(enemy_id)
+		var enemy_direction = cpu_movement_evaluator.get_player_direction(enemy_id)
 		
 		# 敵がdice_value歩進んだ先の停止位置を計算
 		var sim_result = cpu_movement_evaluator.simulate_path(
@@ -532,7 +532,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 			stop_tile = sim_result.stop_tile
 		
 		# 停止位置の情報を取得
-		var tile_info = cpu_movement_evaluator._get_tile_info(stop_tile)
+		var tile_info = cpu_movement_evaluator.get_tile_info(stop_tile)
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
@@ -543,11 +543,11 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 			continue
 		
 		# 敵が侵略して勝てるかチェック
-		if cpu_movement_evaluator._can_invade_and_win(stop_tile, enemy_id):
+		if cpu_movement_evaluator.can_invade_and_win(stop_tile, enemy_id):
 			continue  # 敵が勝てるなら使用しない
 		
 		# 通行料を計算
-		var toll = cpu_movement_evaluator._calculate_toll(stop_tile)
+		var toll = cpu_movement_evaluator.calculate_toll(stop_tile)
 		
 		if toll > best_toll:
 			best_toll = toll
@@ -560,7 +560,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 		result.target = { "type": "player", "player_id": best_target_id }
 		result.reason = "攻撃: 敵P%dをLv%d土地(タイル%d)に止まらせる（通行料: %dEP）" % [
 			best_target_id + 1,
-			cpu_movement_evaluator._get_tile_info(best_tile_index).get("level", 1),
+			cpu_movement_evaluator.get_tile_info(best_tile_index).get("level", 1),
 			best_tile_index,
 			best_toll
 		]
@@ -583,8 +583,8 @@ func _evaluate_holy_word_defensive(dice_value: int, player_id: int, _spell_cost:
 	if not cpu_movement_evaluator:
 		return result
 	
-	var my_tile = cpu_movement_evaluator._get_player_current_tile(player_id)
-	var my_direction = cpu_movement_evaluator._get_player_direction(player_id)
+	var my_tile = cpu_movement_evaluator.get_player_current_tile(player_id)
+	var my_direction = cpu_movement_evaluator.get_player_direction(player_id)
 	
 	# 経路上の危険な位置（敵Lv3以上ドミニオ）をリストアップ
 	# 距離とタイルインデックスのペアで記録
@@ -667,13 +667,13 @@ func _find_danger_positions_on_path(start_tile: int, direction: int, player_id: 
 			check_tile = sim_result.stop_tile
 		
 		# タイル情報を取得
-		var tile_info = cpu_movement_evaluator._get_tile_info(check_tile)
+		var tile_info = cpu_movement_evaluator.get_tile_info(check_tile)
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
 		# 敵のLv3以上のドミニオかチェック
 		if owner >= 0 and owner != player_id and level >= 3:
-			var toll = cpu_movement_evaluator._calculate_toll(check_tile)
+			var toll = cpu_movement_evaluator.calculate_toll(check_tile)
 			dangers.append({
 				"distance": distance,
 				"tile": check_tile,

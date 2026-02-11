@@ -25,7 +25,7 @@ func show_direction_selection(directions: Array) -> int:
 	selected_direction = directions[0]
 
 	_update_ui()
-	_setup_navigation()
+	setup_navigation()
 
 	var result = await direction_selected
 	is_active = false
@@ -41,7 +41,7 @@ func show_simple_direction_selection() -> int:
 	selected_direction = 1  # デフォルトは順方向
 
 	_update_ui()
-	_setup_navigation()
+	setup_navigation()
 
 	var result = await direction_selected
 	is_active = false
@@ -82,7 +82,7 @@ func _update_ui():
 
 
 # ナビゲーションボタンを設定
-func _setup_navigation():
+func setup_navigation():
 	var gfm = controller.game_flow_manager
 	if gfm and gfm.ui_manager:
 		gfm.ui_manager.enable_navigation(

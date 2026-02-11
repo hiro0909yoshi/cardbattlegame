@@ -246,7 +246,7 @@ func _create_tile(tile_data: Dictionary) -> Node3D:
 
 ## プレイヤー数を取得
 func get_player_count() -> int:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	return 1 + enemies.size()
 
 ## マップのループサイズを取得
@@ -256,7 +256,7 @@ func get_loop_size() -> int:
 ## player_is_cpu配列を生成
 func get_player_is_cpu() -> Array:
 	var result = [false]  # プレイヤー1は人間
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	for _enemy in enemies:
 		result.append(true)  # CPUとして追加
 	return result
@@ -283,7 +283,7 @@ func get_enemy_start_magic(enemy_index: int) -> int:
 	if initial_magic is Dictionary and initial_magic.has("cpu"):
 		return initial_magic.get("cpu", 1000)
 	# 旧形式: enemies[].start_magic
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index < enemies.size():
 		if enemies[enemy_index].has("start_magic"):
 			return enemies[enemy_index].get("start_magic", 1000)
@@ -316,7 +316,7 @@ func get_win_condition() -> Dictionary:
 	return GameConstants.get_win_conditions(rule_preset)
 
 ## 敵リストを取得（新旧形式対応）
-func _get_enemies() -> Array:
+func get_enemies() -> Array:
 	# 新形式: quest.enemies
 	var quest = current_stage_data.get("quest", {})
 	if quest.has("enemies"):
@@ -326,7 +326,7 @@ func _get_enemies() -> Array:
 
 ## 敵キャラクター情報を取得
 func get_enemy_character(enemy_index: int) -> Dictionary:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index >= enemies.size():
 		return {}
 	
@@ -336,7 +336,7 @@ func get_enemy_character(enemy_index: int) -> Dictionary:
 
 ## 敵のAIレベルを取得
 func get_enemy_ai_level(enemy_index: int) -> int:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index < enemies.size():
 		# 新形式: ai_level
 		if enemies[enemy_index].has("ai_level"):
@@ -352,14 +352,14 @@ func get_enemy_ai_level(enemy_index: int) -> int:
 
 ## 敵のAIプロファイルIDを取得（旧形式互換）
 func get_enemy_ai_profile_id(enemy_index: int) -> String:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index < enemies.size():
 		return enemies[enemy_index].get("ai_profile_id", "easy")
 	return "easy"
 
 ## 敵のバトルポリシーを取得（ステージ設定 > キャラクター設定 > デフォルト）
 func get_enemy_battle_policy(enemy_index: int) -> Dictionary:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index >= enemies.size():
 		return {}
 	
@@ -380,7 +380,7 @@ func get_enemy_battle_policy(enemy_index: int) -> Dictionary:
 
 ## 敵のデッキIDを取得
 func get_enemy_deck_id(enemy_index: int) -> String:
-	var enemies = _get_enemies()
+	var enemies = get_enemies()
 	if enemy_index < enemies.size():
 		return enemies[enemy_index].get("deck_id", "random")
 	return "random"

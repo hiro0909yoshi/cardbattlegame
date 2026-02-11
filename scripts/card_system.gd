@@ -25,12 +25,9 @@ var player_discards = {}  # player_id -> Array[int] (card_ids)
 var player_hands = {}  # player_id -> {"data": [card_data]}
 
 func _ready():
-	# 新システム初期化(プレイヤー数は後で動的に設定可能)
-	_initialize_decks(2)  # デフォルト: 2人プレイ
-	
-	# 下位互換: 旧変数に参照を設定
-	deck = player_decks[0]
-	discard = player_discards[0]
+	# デッキ初期化はgame_system_managerのPhase3で_initialize_decks(player_count)を呼ぶ
+	# _ready()では行わない（二重初期化防止）
+	pass
 
 func _initialize_deck():
 	# DEPRECATED - _initialize_decks() を使用してください
@@ -163,11 +160,11 @@ func draw_card_data_v2(player_id: int) -> Dictionary:
 		player_decks[player_id].shuffle()
 	
 	var card_id = player_decks[player_id].pop_front()
-	var card_data = _load_card_data(card_id)
+	var card_data = load_card_data(card_id)
 	print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, card_data.get("name", "?"), card_id])
 	return card_data
 
-func _load_card_data(card_id: int) -> Dictionary:
+func load_card_data(card_id: int) -> Dictionary:
 	if CardLoader:
 		var card_data = CardLoader.get_card_by_id(card_id)
 		if card_data.is_empty():
@@ -511,7 +508,7 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	
 	if synthesis_type == "transform":
 		# 変身型合成：変身後のカードをそのまま返す（バトル用フィールドのみ除去）
-		clean_card_data = _get_clean_card_data(card_id)
+		clean_card_data = get_clean_card_data(card_id)
 		if clean_card_data.is_empty():
 			clean_card_data = card_data.duplicate()
 		# バトル用フィールドを削除
@@ -520,7 +517,7 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	elif synthesis_type == "stat_boost":
 		# ステータスアップ型合成：元のカードをクリーンで返す
 		var original_id = card_data.get("original_card_id", card_id)
-		clean_card_data = _get_clean_card_data(original_id)
+		clean_card_data = get_clean_card_data(original_id)
 		if clean_card_data.is_empty():
 			clean_card_data = card_data.duplicate()
 			_clean_battle_fields(clean_card_data)
@@ -533,7 +530,7 @@ func return_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 		print("【カード復帰】", clean_card_data.get("name", "不明"), " が手札に戻りました(ステータス合成リセット)")
 	else:
 		# 通常：クリーンなカードデータを作成
-		clean_card_data = _get_clean_card_data(card_id)
+		clean_card_data = get_clean_card_data(card_id)
 		if clean_card_data.is_empty():
 			clean_card_data = card_data.duplicate()
 			_clean_battle_fields(clean_card_data)
@@ -557,7 +554,7 @@ func _clean_battle_fields(card_data: Dictionary) -> void:
 	card_data.erase("current_hp")
 
 ## カードIDから元のクリーンなデータを取得
-func _get_clean_card_data(card_id: int) -> Dictionary:
+func get_clean_card_data(card_id: int) -> Dictionary:
 	if CardLoader and CardLoader.has_method("get_card_by_id"):
 		return CardLoader.get_card_by_id(card_id)
 	return {}

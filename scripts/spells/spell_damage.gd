@@ -262,7 +262,7 @@ func apply_permanent_hp_to_all_creatures(handler: Node, target_info: Dictionary,
 			if board_system_ref.tile_nodes.has(tile_index):
 				var tile = board_system_ref.tile_nodes[tile_index]
 				if not tile.creature_data.is_empty():
-					_destroy_creature(tile)
+					destroy_creature(tile)
 					var destroy_text = "%s は倒された！" % creature_name
 					await _show_notification_and_wait(destroy_text)
 
@@ -324,7 +324,7 @@ func apply_damage(tile_index: int, value: int) -> Dictionary:
 	
 	# 撃破判定
 	if new_hp <= 0:
-		_destroy_creature(tile)
+		destroy_creature(tile)
 		result["destroyed"] = true
 	
 	return result
@@ -332,7 +332,7 @@ func apply_damage(tile_index: int, value: int) -> Dictionary:
 
 ## クリーチャー破壊（レベル維持）
 ## スペル破壊時の死亡効果（遺産、変身）もここで処理
-func _destroy_creature(tile: Node) -> void:
+func destroy_creature(tile: Node) -> void:
 	var creature_data = tile.creature_data.duplicate()
 	var creature_name = creature_data.get("name", "Unknown")
 	var owner_id = tile.owner_id
@@ -601,7 +601,7 @@ func apply_plague_damage(tile_index: int) -> Dictionary:
 	
 	# 撃破判定
 	if new_hp <= 0:
-		_destroy_creature(tile)
+		destroy_creature(tile)
 		result["destroyed"] = true
 		print("[SpellDamage] 衰弱により %s は倒された！" % result["creature_name"])
 	

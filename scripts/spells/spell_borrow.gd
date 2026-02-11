@@ -157,7 +157,7 @@ func _execute_borrowed_spell(effect_parsed: Dictionary, _caster_player_id: int) 
 	spell_phase_handler_ref.is_borrow_spell_mode = true
 	
 	# ターゲット選択UI表示（内部でターゲット取得も行われる）
-	spell_phase_handler_ref._show_target_selection_ui(target_type, target_info)
+	spell_phase_handler_ref.show_target_selection_ui(target_type, target_info)
 	
 	# ターゲット選択を待機
 	var target_data = await spell_phase_handler_ref.target_confirmed
@@ -168,7 +168,7 @@ func _execute_borrowed_spell(effect_parsed: Dictionary, _caster_player_id: int) 
 	
 	# 効果適用
 	for effect in effects:
-		await spell_phase_handler_ref._apply_single_effect(effect, target_data)
+		await spell_phase_handler_ref.apply_single_effect(effect, target_data)
 	
 	# ターゲット選択クリア
 	TargetSelectionHelper.clear_selection(spell_phase_handler_ref)
@@ -208,7 +208,7 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 		return {"success": false, "reason": "no_creature"}
 	
 	# アルカナアーツを取得（use_hand_spell は除外）
-	var all_mystic_arts = spell_mystic_arts._get_all_mystic_arts(creature_data)
+	var all_mystic_arts = spell_mystic_arts.get_all_mystic_arts(creature_data)
 	var mystic_arts = all_mystic_arts.filter(func(art):
 		var effects = art.get("effects", [])
 		for effect in effects:
@@ -252,7 +252,7 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 	else:
 		# ターゲット選択が必要
 		spell_phase_handler_ref.is_borrow_spell_mode = true
-		spell_phase_handler_ref._show_target_selection_ui(target_type, target_info)
+		spell_phase_handler_ref.show_target_selection_ui(target_type, target_info)
 		
 		var mystic_target_data = await spell_phase_handler_ref.target_confirmed
 		

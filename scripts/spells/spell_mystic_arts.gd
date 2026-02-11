@@ -72,7 +72,7 @@ func start_mystic_phase(player_id: int) -> void:
 	# ナチュラルワールドによるアルカナアーツ無効化チェック
 	if _is_mystic_arts_disabled():
 		ui_message_requested.emit("ナチュラルワールド発動中：アルカナアーツは使用できません")
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# アルカナアーツを持つクリーチャーを取得
@@ -80,7 +80,7 @@ func start_mystic_phase(player_id: int) -> void:
 	
 	if available_creatures.is_empty():
 		ui_message_requested.emit("アルカナアーツを持つクリーチャーがありません")
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# クリーチャー選択UIを表示
@@ -99,7 +99,7 @@ func clear_selection() -> void:
 
 
 ## アルカナアーツフェーズを終了
-func _end_mystic_phase() -> void:
+func end_mystic_phase() -> void:
 	is_mystic_phase_active = false
 	clear_selection()
 	current_mystic_player_id = -1
@@ -115,7 +115,7 @@ func _end_mystic_phase() -> void:
 func _select_creature(available_creatures: Array) -> void:
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 	if not ui_manager:
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# 使用者選択用の状態を保存
@@ -273,8 +273,8 @@ func _cancel_caster_selection() -> void:
 	
 	# スペルフェーズに戻る
 	if spell_phase_handler_ref:
-		spell_phase_handler_ref._return_to_spell_selection()
-	_end_mystic_phase()
+		spell_phase_handler_ref.return_to_spell_selection()
+	end_mystic_phase()
 
 
 ## 前の使用者へ
@@ -297,13 +297,13 @@ func _next_caster() -> void:
 func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void:
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 	if not ui_manager:
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	var mystic_arts = selected_creature.get("mystic_arts", [])
 	
 	if mystic_arts.is_empty():
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# アルカナアーツが1つだけなら自動選択
@@ -316,7 +316,7 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 	if not action_menu:
 		var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
 		if not ActionMenuUIClass:
-			_end_mystic_phase()
+			end_mystic_phase()
 			return
 		
 		action_menu = ActionMenuUIClass.new()
@@ -349,8 +349,8 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		action_menu.hide_menu()
 		# キャンセルされた場合、スペルフェーズに戻る
 		if spell_phase_handler_ref:
-			spell_phase_handler_ref._return_to_spell_selection()
-		_end_mystic_phase()
+			spell_phase_handler_ref.return_to_spell_selection()
+		end_mystic_phase()
 		return
 	
 	var mystic_art_selected = mystic_arts[selected_index]
@@ -432,7 +432,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 		if ui_mgr and ui_mgr.global_comment_ui:
 			await ui_mgr.global_comment_ui.show_and_wait("有効なターゲットがありません", current_mystic_player_id)
 		clear_selection()
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# SpellPhaseHandlerにターゲット選択を依頼
@@ -462,13 +462,13 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	if not can_cast_mystic_art(mystic_art, context):
 		ui_message_requested.emit("アルカナアーツ発動条件を満たしていません")
 		clear_selection()
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# 発動通知を表示
 	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
 	if spell_phase_handler_ref:
-		await spell_phase_handler_ref._show_spell_cast_notification(caster_name, target_data, mystic_art, true)
+		await spell_phase_handler_ref.show_spell_cast_notification(caster_name, target_data, mystic_art, true)
 	
 	# 非同期効果かどうかを事前判定
 	var is_async = _is_async_mystic_art(mystic_art)
@@ -504,7 +504,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	# 少し待機してからカメラを戻す
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
-		spell_phase_handler_ref._return_camera_to_player()
+		spell_phase_handler_ref.return_camera_to_player()
 	
 	# 非同期効果の場合はCardSelectionHandler完了後に終了
 	if is_async and spell_phase_handler_ref and spell_phase_handler_ref.card_selection_handler:
@@ -514,7 +514,7 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	# アルカナアーツフェーズ完了
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
-	_end_mystic_phase()
+	end_mystic_phase()
 	if spell_phase_handler_ref:
 		spell_phase_handler_ref.complete_spell_phase()
 
@@ -534,14 +534,14 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	if not can_cast_mystic_art(mystic_art, context):
 		ui_message_requested.emit("アルカナアーツ発動条件を満たしていません")
 		clear_selection()
-		_end_mystic_phase()
+		end_mystic_phase()
 		return
 	
 	# 発動通知を表示
 	var caster_name = creature.get("creature_data", {}).get("name", "クリーチャー")
 	var target_data_for_notification = {"type": "all"}
 	if spell_phase_handler_ref:
-		await spell_phase_handler_ref._show_spell_cast_notification(caster_name, target_data_for_notification, mystic_art, true)
+		await spell_phase_handler_ref.show_spell_cast_notification(caster_name, target_data_for_notification, mystic_art, true)
 	
 	# spell_idからeffectsを取得
 	var spell_id = mystic_art.get("spell_id", -1)
@@ -587,10 +587,10 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	# スペルフェーズ完了
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
-		spell_phase_handler_ref._return_camera_to_player()
+		spell_phase_handler_ref.return_camera_to_player()
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
 	
-	_end_mystic_phase()
+	end_mystic_phase()
 	if spell_phase_handler_ref:
 		spell_phase_handler_ref.complete_spell_phase()
 
@@ -698,12 +698,12 @@ func _cancel_mystic_confirmation() -> void:
 	
 	# アルカナアーツ選択をクリアしてアルカナアーツフェーズを終了
 	clear_selection()
-	_end_mystic_phase()
+	end_mystic_phase()
 	
 	# スペルフェーズに戻る（UI再表示 + ナビゲーション再設定）
 	if spell_phase_handler_ref:
 		spell_phase_handler_ref.current_state = spell_phase_handler_ref.State.WAITING_FOR_INPUT
-		spell_phase_handler_ref._return_to_spell_selection()
+		spell_phase_handler_ref.return_to_spell_selection()
 
 
 ## 非同期効果を含むアルカナアーツかどうかを判定
@@ -754,7 +754,7 @@ func get_available_creatures(player_id: int) -> Array:
 			continue
 		
 		# アルカナアーツを取得（元々のアルカナアーツ + 呪いからのアルカナアーツ）
-		var mystic_arts = _get_all_mystic_arts(tile.creature_data)
+		var mystic_arts = get_all_mystic_arts(tile.creature_data)
 		
 		# 使用可能なアルカナアーツのみフィルタリング
 		var usable_mystic_arts = _filter_usable_mystic_arts(mystic_arts, tile.creature_data, player_id)
@@ -806,11 +806,11 @@ func get_mystic_arts_for_creature(creature_data: Dictionary) -> Array:
 	if creature_data.is_empty():
 		return []
 	
-	return _get_all_mystic_arts(creature_data)
+	return get_all_mystic_arts(creature_data)
 
 
 ## 全アルカナアーツを取得（ability_parsed + 呪いの両方）
-func _get_all_mystic_arts(creature_data: Dictionary) -> Array:
+func get_all_mystic_arts(creature_data: Dictionary) -> Array:
 	var all_mystic_arts: Array = []
 	
 	# 1. 元々のアルカナアーツ（creature_data直下のmystic_arts）
@@ -952,7 +952,7 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 	var success = true
 	
 	for effect in effects:
-		var applied = await _apply_single_effect(effect, target_data, context)
+		var applied = await apply_single_effect(effect, target_data, context)
 		if not applied:
 			success = false
 	
@@ -982,12 +982,12 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 			for key in effect_override:
 				applied_effect[key] = effect_override[key]
 		
-		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
+		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("apply_single_effect"):
 			# アルカナアーツ発動者のタイルインデックスを追加（self_destroy等で必要）
 			var extended_target_data = target_data.duplicate()
 			if _context.has("tile_index"):
 				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
-			await spell_phase_handler_ref._apply_single_effect(applied_effect, extended_target_data)
+			await spell_phase_handler_ref.apply_single_effect(applied_effect, extended_target_data)
 		else:
 			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
 			return false
@@ -996,12 +996,12 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 
 
 ## 1つの効果を適用（SpellPhaseHandlerに委譲）
-func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
+func apply_single_effect(effect: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
 	if effect.is_empty():
 		return false
 	
 	# 全効果をSpellPhaseHandlerに委譲
-	if spell_phase_handler_ref and spell_phase_handler_ref.has_method("_apply_single_effect"):
+	if spell_phase_handler_ref and spell_phase_handler_ref.has_method("apply_single_effect"):
 		# target_dataにtile_indexがない場合のみcontextから追加
 		var extended_target_data = target_data.duplicate()
 		if not extended_target_data.has("tile_index") and context.has("tile_index"):
@@ -1009,7 +1009,7 @@ func _apply_single_effect(effect: Dictionary, target_data: Dictionary, context: 
 		# アルカナアーツ発動者のタイルインデックスも別キーで追加（self_destroy等で必要）
 		if context.has("tile_index"):
 			extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
-		await spell_phase_handler_ref._apply_single_effect(effect, extended_target_data)
+		await spell_phase_handler_ref.apply_single_effect(effect, extended_target_data)
 		return true
 	
 	push_error("[SpellMysticArts] spell_phase_handler_refが無効です")

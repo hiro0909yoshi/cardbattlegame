@@ -252,7 +252,7 @@ func _execute_swap_with_hand(tile_index: int, player_id: int, hand_creature: Dic
 	# 盤面のクリーチャーを手札に戻す（HPリセット）
 	if card_system_ref:
 		var card_id = board_creature.get("id", -1)
-		var clean_creature = card_system_ref._get_clean_card_data(card_id)
+		var clean_creature = card_system_ref.get_clean_card_data(card_id)
 		if clean_creature.is_empty():
 			# フォールバック: 元データが取得できない場合
 			clean_creature = board_creature.duplicate(true)

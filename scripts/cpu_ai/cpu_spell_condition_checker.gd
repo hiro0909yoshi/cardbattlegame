@@ -68,7 +68,7 @@ func set_battle_ai(ai: CPUBattleAI) -> void:
 	battle_ai = ai
 
 ## ワーストケースシミュレーション（敵がアイテム/援護を使った場合でも勝てるか）
-func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
+func check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
 	# battle_aiがあればそれを使用
 	if battle_ai != null:
 		var worst_case = battle_ai.simulate_worst_case_common(
@@ -93,11 +93,11 @@ func _check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info
 # =============================================================================
 
 ## 盤面上の自クリーチャーを取得（後方互換性）
-func _get_own_creatures_on_board(player_id: int) -> Array:
+func get_own_creatures_on_board(player_id: int) -> Array:
 	return board_analyzer.get_own_creatures_on_board(player_id)
 
 ## 到達可能な敵タイルを取得（後方互換性）
-func _get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact_steps: bool) -> Array:
+func get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact_steps: bool) -> Array:
 	return board_analyzer.get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 
 # =============================================================================
@@ -529,7 +529,7 @@ func _check_nearest_checkpoint_unvisited(context: Dictionary) -> bool:
 	var cp_tile = board_system.tile_nodes.get(nearest_cp_tile)
 	if not cp_tile:
 		return false
-	var checkpoint_type = cp_tile._get_checkpoint_type_string() if cp_tile.has_method("_get_checkpoint_type_string") else ""
+	var checkpoint_type = cp_tile.get_checkpoint_type_string() if cp_tile.has_method("get_checkpoint_type_string") else ""
 	if checkpoint_type.is_empty():
 		return false
 	var player_state = lap_system.player_lap_state.get(player_id, {})

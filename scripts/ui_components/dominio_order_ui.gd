@@ -352,8 +352,8 @@ func _get_tutorial_manager():
 func _on_cancel_dominio_order_button_pressed():
 	print("[DominioOrderUI] キャンセルボタン押下")
 	# UIManagerのキャンセル処理を呼び出す
-	if ui_manager_ref and ui_manager_ref.has_method("_on_cancel_dominio_order_button_pressed"):
-		ui_manager_ref._on_cancel_dominio_order_button_pressed()
+	if ui_manager_ref and ui_manager_ref.has_method("on_cancel_dominio_order_button_pressed"):
+		ui_manager_ref.on_cancel_dominio_order_button_pressed()
 
 ## クリーチャー情報パネルを閉じる（表示中の場合）
 func _close_creature_info_panel_if_open():
@@ -392,7 +392,7 @@ func _on_action_terrain_change_pressed():
 	event.pressed = true
 	Input.parse_input_event(event)
 
-func _on_level_selected(level: int):
+func on_level_selected(level: int):
 	# チュートリアルのレベル制限チェック
 	if not _check_tutorial_level_allowed(level):
 		print("[DominioOrderUI] チュートリアル制限: レベル%d は選択不可" % level)
@@ -530,7 +530,7 @@ func create_level_selection_panel(parent: Node):
 	
 	for level in [2, 3, 4, 5]:
 		var btn = _create_large_level_button(level, 0, Vector2(42, button_y), Vector2(button_width, button_height))
-		btn.pressed.connect(_on_level_selected.bind(level))
+		btn.pressed.connect(on_level_selected.bind(level))
 		level_selection_panel.add_child(btn)
 		level_selection_buttons[level] = btn
 		button_y += button_height + button_spacing

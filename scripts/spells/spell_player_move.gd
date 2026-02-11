@@ -216,7 +216,7 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 	
 	# 周回完了チェック（全シグナルが揃っているか）
 	var lap_completed = false
-	if game_flow_manager.lap_system._check_lap_complete(player_id):
+	if game_flow_manager.lap_system.check_lap_complete(player_id):
 		# 周回完了処理を呼び出し（EPボーナス付与）
 		game_flow_manager.lap_system.complete_lap(player_id)
 		lap_completed = true
@@ -452,8 +452,8 @@ func _release_all_creature_down() -> void:
 ## ゲートキーを取得（タイルインデックスから）
 func _get_gate_key(tile_index: int) -> String:
 	var tile = board_system.tile_nodes.get(tile_index)
-	if tile and tile.tile_type == "checkpoint" and tile.has_method("_get_checkpoint_type_string"):
-		return tile._get_checkpoint_type_string()
+	if tile and tile.tile_type == "checkpoint" and tile.has_method("get_checkpoint_type_string"):
+		return tile.get_checkpoint_type_string()
 	return ""
 
 ## ゲートキーからタイルインデックスを取得
@@ -461,7 +461,7 @@ func _get_tile_index_for_gate(gate_key: String) -> int:
 	for tile_index in board_system.tile_nodes.keys():
 		var tile = board_system.tile_nodes[tile_index]
 		if tile.tile_type == "checkpoint":
-			var type_str = tile._get_checkpoint_type_string() if tile.has_method("_get_checkpoint_type_string") else ""
+			var type_str = tile.get_checkpoint_type_string() if tile.has_method("get_checkpoint_type_string") else ""
 			if type_str == gate_key:
 				return tile_index
 	return -1

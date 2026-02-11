@@ -128,7 +128,7 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 			magic_stone_ui.set_script(MagicStoneUIScript)
 			_ui_manager.ui_layer.add_child(magic_stone_ui)
 			if magic_stone_ui.has_method("_setup_ui"):
-				magic_stone_ui._setup_ui()
+				magic_stone_ui.setup_ui()
 	
 	if not magic_stone_ui:
 		push_error("[MagicStoneTile] MagicStoneUIの作成に失敗")

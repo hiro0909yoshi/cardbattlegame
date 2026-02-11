@@ -9,7 +9,7 @@ const DoubleAttackSkill = preload("res://scripts/battle/skills/skill_double_atta
 func check_skill_grant_condition(_participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
 	# 既存のConditionCheckerを使用
 	var checker = ConditionChecker.new()
-	return checker._evaluate_single_condition(condition, context)
+	return checker.evaluate_single_condition(condition, context)
 
 ## パーティシパントにスキルを付与
 func grant_skill_to_participant(participant: BattleParticipant, skill_name: String, _skill_data: Dictionary) -> void:

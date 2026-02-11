@@ -178,12 +178,12 @@ static func handle_level_selection_input(handler, event):
 	
 	# ↑キー: 前のレベル
 	if event.keycode == KEY_UP:
-		handler._select_previous_level()
+		handler.select_previous_level()
 	
 	# ↓キー: 次のレベル
 	elif event.keycode == KEY_DOWN:
-		handler._select_next_level()
+		handler.select_next_level()
 	
 	# Enterキー: 決定
 	elif event.keycode == KEY_ENTER:
-		handler._confirm_level_selection()
+		handler.confirm_level_selection()

@@ -200,7 +200,7 @@ func add_card_to_hand(card_id: int):
 		return
 	
 	# カードデータを読み込んで手札に追加
-	var card_data = card_system._load_card_data(card_id)
+	var card_data = card_system.load_card_data(card_id)
 	if card_data.is_empty():
 		print("【デバッグ】カードID ", card_id, " が見つかりません")
 		return
@@ -326,7 +326,7 @@ func add_card_to_cpu_hand(card_id: int):
 		print("【デバッグ】CPUプレイヤーが見つかりません")
 		return
 	
-	var card_data = card_system._load_card_data(card_id)
+	var card_data = card_system.load_card_data(card_id)
 	if card_data.is_empty():
 		print("【デバッグ】カードID ", card_id, " が見つかりません")
 		return

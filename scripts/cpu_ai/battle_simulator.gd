@@ -265,6 +265,9 @@ func _create_participants(
 	attacker.base_up_ap = attacker_base_up_ap
 	attacker.current_hp = attacker_data.get("current_hp", attacker_base_hp + attacker_base_up_hp)
 	
+	# 呪い等のtemporary_effectsを反映
+	battle_preparation.apply_effect_arrays(attacker, attacker_creature_data)
+	
 	if attacker_base_up_hp > 0 or attacker_base_up_ap > 0:
 		_log("攻撃側: base_up_hp=%d, base_up_ap=%d" % [attacker_base_up_hp, attacker_base_up_ap])
 	
@@ -294,6 +297,9 @@ func _create_participants(
 	defender.base_up_hp = defender_base_up_hp
 	defender.base_up_ap = defender_base_up_ap
 	defender.current_hp = defender_data.get("current_hp", defender_base_hp + defender_base_up_hp)
+	
+	# 呪い等のtemporary_effectsを反映
+	battle_preparation.apply_effect_arrays(defender, defender_creature_data)
 	
 	if defender_base_up_hp > 0 or defender_base_up_ap > 0:
 		_log("防御側: base_up_hp=%d, base_up_ap=%d" % [defender_base_up_hp, defender_base_up_ap])

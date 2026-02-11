@@ -114,7 +114,7 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 			magic_tile_ui.set_script(MagicTileUIScript)
 			_ui_manager.ui_layer.add_child(magic_tile_ui)
 			if magic_tile_ui.has_method("_setup_ui"):
-				magic_tile_ui._setup_ui()
+				magic_tile_ui.setup_ui()
 	
 	# 選択ループ（キャンセル時は再度選択画面に戻る）
 	while true:

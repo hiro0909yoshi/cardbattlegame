@@ -487,4 +487,4 @@ func _on_back_action():
 		# ドミニオコマンド中はナビゲーションを再設定
 		if is_dominio_active and ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
 			var dominio = ui_manager_ref.game_flow_manager_ref.dominio_command_handler
-			dominio._restore_navigation()
+			dominio.restore_navigation()

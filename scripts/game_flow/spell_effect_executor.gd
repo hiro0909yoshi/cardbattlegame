@@ -21,7 +21,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var caster_name = "プレイヤー%d" % (handler.current_player_id + 1)
 	if handler.player_system and handler.current_player_id >= 0 and handler.current_player_id < handler.player_system.players.size():
 		caster_name = handler.player_system.players[handler.current_player_id].name
-	await handler._show_spell_cast_notification(caster_name, target_data, spell_card, false)
+	await handler.show_spell_cast_notification(caster_name, target_data, spell_card, false)
 	
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
@@ -64,7 +64,7 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	
 	# 少し待機してからカメラを戻す
 	await handler.get_tree().create_timer(0.5).timeout
-	handler._return_camera_to_player()
+	handler.return_camera_to_player()
 	
 	# さらに待機してからスペルフェーズ完了
 	await handler.get_tree().create_timer(0.5).timeout
@@ -84,7 +84,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"mhp_to_magic", "drain_magic_by_spell_count":
 			if gfm and gfm.spell_magic:
 				var context = {
-					"rank": handler._get_player_ranking(handler.current_player_id),
+					"rank": handler.get_player_ranking(handler.current_player_id),
 					"from_player_id": target_data.get("player_id", -1),
 					"tile_index": target_data.get("tile_index", -1),
 					"card_system": handler.card_system
@@ -163,7 +163,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"transform_to_card", "reset_deck", "destroy_deck_top":
 			if gfm and gfm.spell_draw:
 				var context = {
-					"rank": handler._get_player_ranking(handler.current_player_id),
+					"rank": handler.get_player_ranking(handler.current_player_id),
 					"target_player_id": target_data.get("player_id", handler.current_player_id),
 					"tile_index": target_data.get("tile_index", -1)
 				}
@@ -331,7 +331,7 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 		caster_name = handler.player_system.players[handler.current_player_id].name
 	
 	var target_data_for_notification = {"type": "all"}
-	await handler._show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
+	await handler.show_spell_cast_notification(caster_name, target_data_for_notification, spell_card, false)
 	
 	# スペル効果を取得
 	var parsed = spell_card.get("effect_parsed", {})
@@ -365,7 +365,7 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	
 	# 少し待機してからカメラを戻す
 	await handler.get_tree().create_timer(0.5).timeout
-	handler._return_camera_to_player()
+	handler.return_camera_to_player()
 	
 	await handler.get_tree().create_timer(0.5).timeout
 	handler.complete_spell_phase()

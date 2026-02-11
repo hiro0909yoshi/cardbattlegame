@@ -257,8 +257,8 @@ func create_ui(parent: Node):
 	tap_target_manager.name = "TapTargetManager"
 	add_child(tap_target_manager)
 	tap_target_manager.setup(board_system_ref, player_system_ref)
-	tap_target_manager.target_selected.connect(tap_handler._on_tap_target_selected)
-	tap_target_manager.selection_cancelled.connect(tap_handler._on_tap_target_cancelled)
+	tap_target_manager.target_selected.connect(tap_handler.on_tap_target_selected)
+	tap_target_manager.selection_cancelled.connect(tap_handler.on_tap_target_cancelled)
 	
 	# GlobalActionButtonsをUIレイヤーに移動（最前面に表示するため、最後に追加）
 	if global_action_buttons:
@@ -318,7 +318,7 @@ func hide_card_selection_ui():
 		card_selection_ui.hide_selection()
 
 # カードボタンが押された（card.gdから呼ばれる）
-func _on_card_button_pressed(card_index: int):
+func on_card_button_pressed(card_index: int):
 	# 入力ロックチェック
 	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
 		return
@@ -417,7 +417,7 @@ func _on_creature_info_panel_confirmed(card_data: Dictionary):
 func _on_creature_info_panel_cancelled():
 	emit_signal("pass_button_pressed")
 
-func _on_cancel_dominio_order_button_pressed():
+func on_cancel_dominio_order_button_pressed():
 	print("[UIManager] キャンセルボタンがクリックされました！")
 	# GameFlowManagerのdominio_command_handlerに通知
 	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
@@ -468,7 +468,7 @@ var _spell_phase_saved_down: Callable = Callable()
 var _spell_phase_buttons_saved: bool = false
 
 ## スペルフェーズ中のインフォパネル閉じ後にボタンを復元
-func _restore_spell_phase_buttons():
+func restore_spell_phase_buttons():
 	if _spell_phase_buttons_saved:
 		_compat_confirm_cb = _spell_phase_saved_confirm
 		_compat_back_cb = _spell_phase_saved_back
@@ -597,9 +597,9 @@ func _input(event):
 ## ドミニオコマンドボタンを表示（特殊ボタン使用）
 ## 操作可能な所有地（非ダウン）がない場合は表示しない
 func show_dominio_order_button():
-	if board_system_ref and board_system_ref.has_method("_has_owned_lands"):
+	if board_system_ref and board_system_ref.has_method("has_owned_lands"):
 		var player_id = board_system_ref.current_player_index
-		if not board_system_ref._has_owned_lands(player_id):
+		if not board_system_ref.has_owned_lands(player_id):
 			return
 	set_special_button("D", func(): _on_dominio_order_button_pressed())
 
@@ -740,10 +740,10 @@ func connect_camera_signals():
 	tap_handler.connect_camera_signals()
 	# TapTargetManagerのシグナルも接続
 	if tap_target_manager:
-		if not tap_target_manager.target_selected.is_connected(tap_handler._on_tap_target_selected):
-			tap_target_manager.target_selected.connect(tap_handler._on_tap_target_selected)
-		if not tap_target_manager.selection_cancelled.is_connected(tap_handler._on_tap_target_cancelled):
-			tap_target_manager.selection_cancelled.connect(tap_handler._on_tap_target_cancelled)
+		if not tap_target_manager.target_selected.is_connected(tap_handler.on_tap_target_selected):
+			tap_target_manager.target_selected.connect(tap_handler.on_tap_target_selected)
+		if not tap_target_manager.selection_cancelled.is_connected(tap_handler.on_tap_target_cancelled):
+			tap_target_manager.selection_cancelled.connect(tap_handler.on_tap_target_cancelled)
 
 
 # === ゲームメニュー（UIGameMenuHandlerに委譲） ===

@@ -45,18 +45,18 @@ func _ready():
 	
 	# サイズ変更時に子要素を調整
 	resized.connect(_on_resized)
-	_adjust_children_size()
+	adjust_children_size()
 	
 	# 制限理由ラベルを作成
 	_create_restriction_label()
 
 # サイズ変更時の処理
 func _on_resized():
-	_adjust_children_size()
+	adjust_children_size()
 
 # 子要素のサイズを親に合わせて調整（CardFrame.tscn対応）
 # 注：スケールはhand_display.gdで設定されるため、ここでは何もしない
-func _adjust_children_size():
+func adjust_children_size():
 	# フォントサイズはシーンファイルのデフォルト値を使用
 	# 必要に応じて将来的に調整可能
 	pass
@@ -150,7 +150,7 @@ func load_card_data(card_id):
 			update_label()
 			set_element_color()
 			load_creature_image(card_id)
-			_adjust_children_size()
+			adjust_children_size()
 			_update_card_type_symbol()  # 記号表示を追加
 		return
 	
@@ -167,7 +167,7 @@ func load_dynamic_creature_data(data: Dictionary):
 	# 表示を更新
 	update_dynamic_stats()
 	set_element_color()
-	_adjust_children_size()
+	adjust_children_size()
 
 # 基本ラベル更新（静的データ）
 func update_label():
@@ -580,8 +580,8 @@ func on_card_confirmed():
 		if not ui_manager:
 			ui_manager = find_ui_manager_recursive(get_tree().get_root())
 		
-		if ui_manager and ui_manager.has_method("_on_card_button_pressed"):
-			ui_manager._on_card_button_pressed(card_index)
+		if ui_manager and ui_manager.has_method("on_card_button_pressed"):
+			ui_manager.on_card_button_pressed(card_index)
 		else:
 			print("WARNING: UIManagerが見つかりません")
 
@@ -650,7 +650,7 @@ func _show_info_panel_only():
 	
 	# 特殊フェーズ中でない場合のみ、カード選択UIの状態を復元
 	if not is_special_phase_active and ui_manager.card_selection_ui:
-		ui_manager.card_selection_ui._register_back_button_for_current_mode()
+		ui_manager.card_selection_ui.register_back_button_for_current_mode()
 		ui_manager.card_selection_ui.restore_phase_comment()
 	
 	var card_type = card_data.get("type", "")
@@ -690,9 +690,9 @@ func _show_info_panel_only():
 				ui_manager.item_info_panel_ui.hide_panel(false)
 			# 分岐/方向選択のナビゲーションを復元
 			if mc.direction_selector.is_active:
-				mc.direction_selector._setup_navigation()
+				mc.direction_selector.setup_navigation()
 			elif mc.branch_selector.is_active:
-				mc.branch_selector._setup_navigation()
+				mc.branch_selector.setup_navigation()
 		, "閉じる")
 	
 	# 召喚/バトルフェーズ中はドミニオボタンを再表示
@@ -811,19 +811,19 @@ func _input(event):
 func set_card_data_with_owner(data: Dictionary, owner_id: int):
 	card_data = data
 	owner_player_id = owner_id
-	_update_secret_display()
+	update_secret_display()
 
 # 表示を見ているプレイヤーを設定
 func set_viewing_player(viewer_id: int):
 	viewing_player_id = viewer_id
-	_update_secret_display()
+	update_secret_display()
 
 # 表示を更新（密命判定）
-func _update_secret_display():
+func update_secret_display():
 	SkillSecret.apply_secret_display(self, card_data, viewing_player_id, owner_player_id)
 
 # 裏面表示に切り替え（真っ黒にする）
-func _show_secret_back():
+func show_secret_back():
 	if is_showing_secret_back:
 		return
 	
@@ -842,7 +842,7 @@ func _show_secret_back():
 	move_child(black_overlay, get_child_count() - 1)
 
 # 通常表示に切り替え
-func _show_card_front():
+func show_card_front():
 	if not is_showing_secret_back:
 		return
 	

@@ -357,7 +357,7 @@ func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: St
 	
 	# SpellDamageの_destroy_creatureに委譲（死亡効果・遺産・変身を含む）
 	if handler and handler.has("spell_damage") and handler.spell_damage:
-		handler.spell_damage._destroy_creature(tile)
+		handler.spell_damage.destroy_creature(tile)
 		print("[SpellCurseStat] MHP減少により %s を撃破（SpellDamage経由）" % creature_name)
 	else:
 		# フォールバック: SpellDamageが取得できない場合は直接破壊

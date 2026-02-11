@@ -19,7 +19,7 @@ static func get_move_destinations(
 	# 移動タイプの判定（オーバーライドがあればそれを優先）
 	var move_type = move_type_override
 	if move_type.is_empty():
-		move_type = _detect_move_type(creature_data)
+		move_type = detect_move_type(creature_data)
 	
 	
 	match move_type:
@@ -187,7 +187,7 @@ static func has_move_disable_curse(creature_data: Dictionary) -> bool:
 
 
 ## クリーチャーの移動タイプを判定
-static func _detect_move_type(creature_data: Dictionary) -> String:
+static func detect_move_type(creature_data: Dictionary) -> String:
 	if not creature_data:
 		return "adjacent"
 	

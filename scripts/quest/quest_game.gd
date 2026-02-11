@@ -119,7 +119,7 @@ func _create_player_characters(container: Node3D):
 		container.add_child(mario)
 	
 	# CPU敵（新旧形式両対応）
-	var enemies = stage_loader._get_enemies()
+	var enemies = stage_loader.get_enemies()
 	for i in range(enemies.size()):
 		var char_data = stage_loader.get_enemy_character(i)
 		var model_path = char_data.get("model_path", "res://scenes/Characters/Bowser.tscn")
@@ -160,7 +160,7 @@ func _apply_stage_settings():
 		system_manager.player_system.set_magic(0, player_magic)
 		
 		# CPU敵（新旧形式両対応）
-		var enemies = stage_loader._get_enemies()
+		var enemies = stage_loader.get_enemies()
 		for i in range(enemies.size()):
 			var enemy_magic = stage_loader.get_enemy_start_magic(i)
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
@@ -203,7 +203,7 @@ func _setup_all_decks():
 	_setup_player_deck()
 	
 	# CPU: ステージ設定から読み込み（新旧形式両対応）
-	var enemies = stage_loader._get_enemies()
+	var enemies = stage_loader.get_enemies()
 	for i in range(enemies.size()):
 		var deck_id = stage_loader.get_enemy_deck_id(i)
 		var player_id = i + 1
@@ -261,7 +261,7 @@ func _setup_cpu_battle_policies():
 		return
 	
 	# CPU敵のポリシーを設定
-	var enemies = stage_loader._get_enemies()
+	var enemies = stage_loader.get_enemies()
 	print("[QuestGame] 敵の数: %d" % enemies.size())
 	if enemies.is_empty():
 		return

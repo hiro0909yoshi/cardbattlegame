@@ -80,7 +80,7 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 				card_selection_handler.start_enemy_card_selection(target_player_id, "creature", func(_card_index: int):
 					pass
 				, true)
-				_move_caster_to_enemy_hand(caster_tile_index, target_player_id)
+				move_caster_to_enemy_hand(caster_tile_index, target_player_id)
 				result["async"] = true
 		
 		_:
@@ -180,7 +180,7 @@ func has_cards_matching_filter(target_player_id: int, filter_mode: String) -> bo
 
 
 ## キャスタークリーチャーを土地から敵手札へ移動（レムレース用）
-func _move_caster_to_enemy_hand(tile_index: int, target_player_id: int) -> void:
+func move_caster_to_enemy_hand(tile_index: int, target_player_id: int) -> void:
 	if not board_system_ref:
 		push_error("StealHandler: board_system_refが未設定")
 		return

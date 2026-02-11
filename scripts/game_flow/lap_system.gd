@@ -40,10 +40,10 @@ func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null):
 	board_system_3d = b_system
 	ui_manager = p_ui_manager
 	game_flow_manager = p_game_flow_manager
-	_setup_ui()
+	setup_ui()
 
 ## UIのセットアップ
-func _setup_ui():
+func setup_ui():
 	if not ui_manager:
 		return
 	
@@ -206,7 +206,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	checkpoint_signal_obtained.emit(player_id, checkpoint_type)
 	
 	# 全シグナル揃ったか確認（周回完了時はそちらでまとめて表示）
-	if _check_lap_complete(player_id):
+	if check_lap_complete(player_id):
 		# 周回ボーナスを先に付与してから勝利判定
 		await complete_lap(player_id)
 		# チュートリアルモードでは勝利判定をスキップ（lap_completedで終了処理）
@@ -233,7 +233,7 @@ func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	checkpoint_processing_completed.emit()
 
 ## 周回完了判定（全シグナルが揃っているか）
-func _check_lap_complete(player_id: int) -> bool:
+func check_lap_complete(player_id: int) -> bool:
 	for checkpoint in required_checkpoints:
 		if not player_lap_state[player_id].get(checkpoint, false):
 			return false
@@ -485,4 +485,4 @@ func get_required_checkpoint_count() -> int:
 
 ## 周回完了判定（全チェックポイント訪問済み）
 func is_lap_complete(player_id: int) -> bool:
-	return _check_lap_complete(player_id)
+	return check_lap_complete(player_id)

@@ -762,7 +762,7 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 						if tile and game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
 							var spell_damage = game_flow_manager_ref.spell_phase_handler.spell_damage
 							if spell_damage:
-								spell_damage._destroy_creature(tile)
+								spell_damage.destroy_creature(tile)
 							else:
 								# フォールバック
 								board_system_ref.remove_creature(tile_index)

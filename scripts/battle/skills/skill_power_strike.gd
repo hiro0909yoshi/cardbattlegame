@@ -70,7 +70,7 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 			if conditions.size() > 0:
 				var checker = load("res://scripts/skills/condition_checker.gd").new()
 				for condition in conditions:
-					if not checker._evaluate_single_condition(condition, context):
+					if not checker.evaluate_single_condition(condition, context):
 						all_conditions_met = false
 						break
 			

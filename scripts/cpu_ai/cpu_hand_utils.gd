@@ -148,12 +148,12 @@ func _filter_summonable_cards(player_id: int, card_indices: Array, tile_element:
 			continue
 		
 		# 土地条件チェック（フラグで無効化可能）
-		if not disable_lands and not _check_lands_required(card, player_id):
+		if not disable_lands and not check_lands_required(card, player_id):
 			print("[CPU HandUtils] 土地条件未達: %s" % card.get("name", "?"))
 			continue
 		
 		# 配置制限チェック（フラグで無効化可能）
-		if not disable_cannot_summon and not tile_element.is_empty() and not _check_cannot_summon(card, tile_element):
+		if not disable_cannot_summon and not tile_element.is_empty() and not check_cannot_summon(card, tile_element):
 			print("[CPU HandUtils] 配置制限: %s は%s属性の土地に配置不可" % [card.get("name", "?"), tile_element])
 			continue
 		
@@ -163,7 +163,7 @@ func _filter_summonable_cards(player_id: int, card_indices: Array, tile_element:
 
 
 ## 土地条件をチェック（召喚可能かどうか）
-func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
+func check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 	# cost_lands_required がなければOK
 	var cost = card_data.get("cost", {})
 	var lands_required = []
@@ -187,11 +187,11 @@ func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 		return result.passed
 	
 	# フォールバック: 簡易チェック
-	return _check_lands_required_simple(card_data, player_id)
+	return check_lands_required_simple(card_data, player_id)
 
 
 ## 簡易土地条件チェック（フォールバック用）
-func _check_lands_required_simple(card_data: Dictionary, player_id: int) -> bool:
+func check_lands_required_simple(card_data: Dictionary, player_id: int) -> bool:
 	var cost = card_data.get("cost", {})
 	var lands_required = []
 	
@@ -232,7 +232,7 @@ func _check_lands_required_simple(card_data: Dictionary, player_id: int) -> bool
 ## 配置制限チェック（cannot_summon）
 ## card_data: クリーチャーカード
 ## tile_element: 配置先タイルの属性
-func _check_cannot_summon(card_data: Dictionary, tile_element: String) -> bool:
+func check_cannot_summon(card_data: Dictionary, tile_element: String) -> bool:
 	var restrictions = card_data.get("restrictions", {})
 	var cannot_summon = restrictions.get("cannot_summon", [])
 	

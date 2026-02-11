@@ -225,8 +225,8 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 	card.viewing_player_id = 0
 	
 	# 密命カードの表示判定
-	if card.has_method("_update_secret_display"):
-		card._update_secret_display()
+	if card.has_method("update_secret_display"):
+		card.update_secret_display()
 	
 	# フィルターモードに応じて選択可能/不可を設定
 	card.is_selectable = is_selectable_card

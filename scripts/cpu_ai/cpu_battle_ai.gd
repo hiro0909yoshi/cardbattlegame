@@ -584,7 +584,7 @@ func simulate_worst_case(
 	return {"is_win": false, "sim_result": {}, "overkill": 0}
 
 ## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
-func _simulate_with_defender_option(
+func simulate_with_defender_option(
 	attacker: Dictionary,
 	defender: Dictionary,
 	tile_info: Dictionary,
@@ -594,13 +594,13 @@ func _simulate_with_defender_option(
 	assist_creature: Dictionary
 ) -> Dictionary:
 	if _defense_evaluator:
-		return _defense_evaluator._simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, defender_item, assist_creature)
+		return _defense_evaluator.simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, defender_item, assist_creature)
 	return {"is_win": false, "sim_result": {}, "overkill": 0}
 
 ## 結果Aが結果Bより悪いか（攻撃側にとって）
-func _is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
+func is_worse_result(result_a: Dictionary, result_b: Dictionary) -> bool:
 	if _defense_evaluator:
-		return _defense_evaluator._is_worse_result(result_a, result_b)
+		return _defense_evaluator.is_worse_result(result_a, result_b)
 	return false
 
 ## ワーストケースでも勝てるアイテムを探す

@@ -37,9 +37,9 @@ const ELEMENT_COLORS = {
 }
 
 func _ready():
-	_setup_ui()
+	setup_ui()
 
-func _setup_ui():
+func setup_ui():
 	if panel != null:
 		return
 	

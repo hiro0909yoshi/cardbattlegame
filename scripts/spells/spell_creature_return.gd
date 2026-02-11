@@ -100,7 +100,7 @@ func _execute_return_to_hand(tile_index: int) -> Dictionary:
 		
 		if synthesis_type == "transform":
 			# 変身型合成：変身後のカードをそのまま返す
-			clean_creature = card_system_ref._get_clean_card_data(card_id)
+			clean_creature = card_system_ref.get_clean_card_data(card_id)
 			if clean_creature.is_empty():
 				clean_creature = creature.duplicate(true)
 				_clean_creature_fields(clean_creature)
@@ -108,7 +108,7 @@ func _execute_return_to_hand(tile_index: int) -> Dictionary:
 		elif synthesis_type == "stat_boost":
 			# ステータスアップ型合成：元のカードをクリーンで返す
 			var original_id = creature.get("original_card_id", card_id)
-			clean_creature = card_system_ref._get_clean_card_data(original_id)
+			clean_creature = card_system_ref.get_clean_card_data(original_id)
 			if clean_creature.is_empty():
 				clean_creature = creature.duplicate(true)
 				_clean_creature_fields(clean_creature)
@@ -120,7 +120,7 @@ func _execute_return_to_hand(tile_index: int) -> Dictionary:
 			print("[SpellCreatureReturn] %s を プレイヤー%d の手札に戻す（ステータス合成リセット）" % [clean_creature.get("name", "?"), owner_id + 1])
 		else:
 			# 通常：クリーンなカードデータを取得
-			clean_creature = card_system_ref._get_clean_card_data(card_id)
+			clean_creature = card_system_ref.get_clean_card_data(card_id)
 			if clean_creature.is_empty():
 				clean_creature = creature.duplicate(true)
 				_clean_creature_fields(clean_creature)

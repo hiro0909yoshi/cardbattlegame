@@ -86,7 +86,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		if ui_manager:
 			ui_manager.hide_card_selection_ui()
 		if _summon_executor:
-			sacrifice_card = await _summon_executor._process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
+			sacrifice_card = await _summon_executor.process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.get("card", {}).is_empty() and SummonConditionChecker.requires_card_sacrifice(card_data):
 			if ui_manager and ui_manager.phase_display:
 				ui_manager.phase_display.show_toast("バトルをキャンセルしました")

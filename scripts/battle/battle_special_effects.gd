@@ -66,7 +66,7 @@ func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, con
 				if condition_type == "land_level_check":
 					print("    土地レベル: ", context.get("tile_level", 1), 
 						  " ", condition.get("operator", ">="), " ", condition.get("value", 1))
-				if not condition_checker._evaluate_single_condition(condition, context):
+				if not condition_checker.evaluate_single_condition(condition, context):
 					all_conditions_met = false
 					break
 			

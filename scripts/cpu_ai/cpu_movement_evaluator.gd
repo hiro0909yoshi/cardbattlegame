@@ -241,7 +241,7 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 		result.path.append(next_tile)
 		
 		# 足止め判定（自分のドミニオ以外）
-		var tile_info = _get_tile_info(next_tile)
+		var tile_info = get_tile_info(next_tile)
 		var tile_owner = tile_info.get("owner", -1)
 		
 		if tile_owner != player_id:
@@ -392,7 +392,7 @@ func _select_best_branch_choice(choices: Array, player_id: int, remaining_steps:
 
 ## 停止位置のスコアを計算
 func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: Array, is_forced_stop: bool) -> int:
-	var tile_info = _get_tile_info(tile_index)
+	var tile_info = get_tile_info(tile_index)
 	var owner_id = tile_info.get("owner", -1)
 	var tile_element = tile_info.get("element", "")
 	var is_special = tile_info.get("is_special", false)
@@ -409,8 +409,8 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 	
 	# 敵のドミニオ
 	if owner_id >= 0 and owner_id != player_id:
-		var toll = _calculate_toll(tile_index)
-		var can_win = _can_invade_and_win(tile_index, player_id)
+		var toll = calculate_toll(tile_index)
+		var can_win = can_invade_and_win(tile_index, player_id)
 		
 		var score: int
 		if can_win:
@@ -451,7 +451,7 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 	var checkpoint_already_counted = false  # 最初のCP通過のみカウント
 	
 	for tile_index in path:
-		var tile_info = _get_tile_info(tile_index)
+		var tile_info = get_tile_info(tile_index)
 		var owner_id = tile_info.get("owner", -1)
 		var tile_element = tile_info.get("element", "")
 		var tile_type = tile_info.get("tile_type", "")
@@ -469,7 +469,7 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 		
 		# 敵のドミニオ
 		if owner_id >= 0:
-			var toll = _calculate_toll(tile_index)
+			var toll = calculate_toll(tile_index)
 			score -= toll
 		# 空き地
 		elif owner_id == -1:
@@ -611,7 +611,7 @@ func decide_direction(player_id: int, available_directions: Array) -> int:
 	if available_directions.size() == 1:
 		return available_directions[0]
 	
-	var current_tile = _get_player_current_tile(player_id)
+	var current_tile = get_player_current_tile(player_id)
 	var current_magic = _get_player_magic(player_id)
 	
 	# チェックポイント距離計算を確認
@@ -715,7 +715,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 	if available_tiles.size() == 1:
 		return available_tiles[0]
 	
-	var current_tile = branch_tile if branch_tile >= 0 else _get_player_current_tile(player_id)
+	var current_tile = branch_tile if branch_tile >= 0 else get_player_current_tile(player_id)
 	_current_branch_tile = current_tile
 	
 	# 手持ちEPを取得（最短CP方向のボーナスとして使用）
@@ -732,7 +732,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		# 最初の1歩目（tile_index）の足止めをチェック
 		var first_step_forced = false
 		var first_step_toll = 0
-		var tile_info = _get_tile_info(tile_index)
+		var tile_info = get_tile_info(tile_index)
 		var tile_owner = tile_info.get("owner", -1)
 		
 		if tile_owner != player_id and tile_owner >= 0:
@@ -740,14 +740,14 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 			var forced_stop_result = _check_forced_stop(tile_index, player_id)
 			if forced_stop_result.stopped:
 				first_step_forced = true
-				first_step_toll = _calculate_toll(tile_index)
+				first_step_toll = calculate_toll(tile_index)
 		
 		var eval_result: Dictionary
 		var base_score: float
 		
 		if first_step_forced:
 			# 最初の1歩で足止め → そこで停止として評価
-			var can_win = _can_invade_and_win(tile_index, player_id)
+			var can_win = can_invade_and_win(tile_index, player_id)
 			if can_win:
 				base_score = first_step_toll * SCORE_STOP_ENEMY_CAN_WIN_MULTIPLIER + SCORE_FORCED_STOP_PENALTY
 			else:
@@ -860,12 +860,12 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		if stop_tile < 0:
 			print("  →方向%d: stop_tile未取得！ data=%s" % [tile_index, str(data)])
 			continue
-		var stop_tile_info = _get_tile_info(stop_tile)
+		var stop_tile_info = get_tile_info(stop_tile)
 		var stop_tile_owner = stop_tile_info.get("owner", -1)
 		var stop_creature = stop_tile_info.get("creature", {})
 		var stop_toll = 0
 		if stop_tile_owner != player_id and stop_tile_owner >= 0:
-			stop_toll = _calculate_toll(stop_tile)
+			stop_toll = calculate_toll(stop_tile)
 		
 		print("  →方向%d→着地%d: base=%.0f(owner=%d, toll=%d, creature=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
 			tile_index,
@@ -902,7 +902,7 @@ func evaluate_holy_word(spell: Dictionary, context: Dictionary) -> Dictionary:
 # =============================================================================
 
 ## タイル情報を取得
-func _get_tile_info(tile_index: int) -> Dictionary:
+func get_tile_info(tile_index: int) -> Dictionary:
 	if board_system and board_system.has_method("get_tile_info"):
 		var info = board_system.get_tile_info(tile_index)
 		if not info.is_empty():
@@ -916,7 +916,7 @@ func _get_tile_info(tile_index: int) -> Dictionary:
 	return {}
 
 ## 通行料を計算
-func _calculate_toll(tile_index: int) -> int:
+func calculate_toll(tile_index: int) -> int:
 	if board_system and board_system.has_method("calculate_toll"):
 		return board_system.calculate_toll(tile_index)
 	return 0
@@ -928,8 +928,8 @@ func _check_forced_stop(tile_index: int, player_id: int) -> Dictionary:
 	return {"stopped": false}
 
 ## 侵略して勝てるか判定（性格を反映したバトル結果を使用）
-func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
-	var tile_info = _get_tile_info(tile_index)
+func can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
+	var tile_info = get_tile_info(tile_index)
 	var defender = tile_info.get("creature", {})
 	
 	if defender.is_empty():
@@ -992,8 +992,8 @@ func _can_invade_and_win(tile_index: int, attacker_id: int) -> bool:
 	return false
 
 ## 敵が侵略して勝てるか判定
-func _can_enemy_invade(tile_index: int, enemy_id: int) -> bool:
-	return _can_invade_and_win(tile_index, enemy_id)
+func can_enemy_invade(tile_index: int, enemy_id: int) -> bool:
+	return can_invade_and_win(tile_index, enemy_id)
 
 ## 召喚可能なクリーチャーの属性リストを取得
 func _get_summonable_elements(player_id: int) -> Array:
@@ -1011,7 +1011,7 @@ func _get_summonable_elements(player_id: int) -> Array:
 	return elements
 
 ## プレイヤーの現在タイルを取得
-func _get_player_current_tile(player_id: int) -> int:
+func get_player_current_tile(player_id: int) -> int:
 	if movement_controller and player_id >= 0 and player_id < movement_controller.player_tiles.size():
 		return movement_controller.player_tiles[player_id]
 	return 0
@@ -1029,7 +1029,7 @@ func _get_player_came_from(player_id: int) -> int:
 	return -1
 
 ## プレイヤーの進行方向を取得
-func _get_player_direction(player_id: int) -> int:
+func get_player_direction(player_id: int) -> int:
 	if player_system and player_id >= 0 and player_id < player_system.players.size():
 		return player_system.players[player_id].current_direction
 	return 1
@@ -1056,7 +1056,7 @@ func _get_distance_to_unvisited_gate(start_tile: int, player_id: int, came_from:
 	
 	var distance = 0
 	for i in range(PATH_EVALUATION_DISTANCE * 2):  # ワープ考慮で余裕を持たせる
-		var tile_info = _get_tile_info(current)
+		var tile_info = get_tile_info(current)
 		var tile_type = tile_info.get("tile_type", "")
 		
 		if tile_type in ["gate", "checkpoint"]:

@@ -359,7 +359,7 @@ func find_nearest_checkpoint(from_tile: int) -> Dictionary:
 			if dist < nearest_distance:
 				nearest_distance = dist
 				nearest_tile = tile_index
-				nearest_type = tile._get_checkpoint_type_string() if tile.has_method("_get_checkpoint_type_string") else "N"
+				nearest_type = tile.get_checkpoint_type_string() if tile.has_method("get_checkpoint_type_string") else "N"
 	
 	return {"tile_index": nearest_tile, "checkpoint_type": nearest_type}
 

@@ -541,7 +541,7 @@ func _apply_grant_skill(participant: BattleParticipant, effect: Dictionary, cont
 ## スキル付与条件をチェック
 func _check_skill_grant_condition(_participant: BattleParticipant, condition: Dictionary, context: Dictionary) -> bool:
 	var checker = ConditionChecker.new()
-	return checker._evaluate_single_condition(condition, context)
+	return checker.evaluate_single_condition(condition, context)
 
 ## パーティシパントにスキルを付与
 func _grant_skill_to_participant(participant: BattleParticipant, skill_name: String, effect_data: Dictionary) -> void:

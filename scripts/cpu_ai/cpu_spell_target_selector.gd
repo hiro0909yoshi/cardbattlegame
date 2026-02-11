@@ -672,7 +672,7 @@ func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 			break
 	
 	# 自クリーチャーを取得（盤面上）
-	var own_creatures = condition_checker._get_own_creatures_on_board(player_id)
+	var own_creatures = condition_checker.get_own_creatures_on_board(player_id)
 	if own_creatures.is_empty():
 		return {}
 	
@@ -690,7 +690,7 @@ func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 			continue
 		
 		# 移動可能な敵ドミニオを取得
-		var reachable_enemies = condition_checker._get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
+		var reachable_enemies = condition_checker.get_reachable_enemy_tiles(from_tile, player_id, steps, exact_steps)
 		
 		for enemy_tile in reachable_enemies:
 			var defender = enemy_tile.get("creature", {})
@@ -720,7 +720,7 @@ func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 				continue  # 両方アイテムなしで勝てない → 候補外
 			
 			# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
-			var worst_case_win = condition_checker._check_worst_case_win(attacker, defender, sim_tile_info, player_id)
+			var worst_case_win = condition_checker.check_worst_case_win(attacker, defender, sim_tile_info, player_id)
 			
 			if worst_case_win:
 				# オーバーキル計算（低いほど効率的）
@@ -849,14 +849,14 @@ func _get_checkpoint_tile_index(checkpoint_type: String) -> int:
 	for tile_index in tiles.keys():
 		var tile = tiles[tile_index]
 		if tile and tile.tile_type == "checkpoint":
-			var type_str = _get_checkpoint_type_string(tile)
+			var type_str = get_checkpoint_type_string(tile)
 			if type_str == checkpoint_type:
 				return tile_index
 	
 	return -1
 
 ## タイルからチェックポイントタイプ文字列を取得（N, S, E, W対応）
-func _get_checkpoint_type_string(tile) -> String:
+func get_checkpoint_type_string(tile) -> String:
 	if not tile:
 		return ""
 	var cp_type = tile.checkpoint_type if "checkpoint_type" in tile else 0

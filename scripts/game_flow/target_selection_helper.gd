@@ -168,7 +168,7 @@ func _show_instance_marker(tile_index: int):
 	
 	# マーカーが未作成なら作成
 	if not selection_marker:
-		selection_marker = TargetMarkerSystem._create_marker_mesh()
+		selection_marker = TargetMarkerSystem.create_marker_mesh()
 	
 	# マーカーを土地の子として追加
 	if selection_marker.get_parent():

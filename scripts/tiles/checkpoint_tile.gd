@@ -15,11 +15,11 @@ func _ready():
 
 # チェックポイント通過を通知
 func on_player_passed(player_id: int):
-	var type_str = _get_checkpoint_type_string()
+	var type_str = get_checkpoint_type_string()
 	emit_signal("checkpoint_passed", player_id, type_str)
 
 # enumを文字列に変換
-func _get_checkpoint_type_string() -> String:
+func get_checkpoint_type_string() -> String:
 	match checkpoint_type:
 		CheckpointType.N:
 			return "N"

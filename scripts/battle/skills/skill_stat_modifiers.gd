@@ -287,7 +287,7 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				"condition_type": "on_element_land",
 				"element": required_element
 			}
-			var is_on_element = checker._evaluate_single_condition(element_condition, context)
+			var is_on_element = checker.evaluate_single_condition(element_condition, context)
 			
 			if is_on_element:
 				var tile_level = context.get("tile_level", 1)
@@ -400,7 +400,7 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 			# 既存のConditionCheckerを使用
 			var checker = ConditionChecker.new()
 			var condition = {"condition_type": "adjacent_ally_land"}
-			var has_adjacent_ally = checker._evaluate_single_condition(condition, context)
+			var has_adjacent_ally = checker.evaluate_single_condition(condition, context)
 			
 			if has_adjacent_ally:
 				var stat_changes = effect.get("stat_changes", {})

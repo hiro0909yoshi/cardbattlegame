@@ -33,17 +33,17 @@ static func _get_debug_disable_secret_cards(card: Node) -> bool:
 static func apply_secret_display(card: Node, card_data: Dictionary, viewer_id: int, owner_id: int):
 	# 密命キーワードがない場合は通常表示
 	if not card_data.get("keywords", []).has("密命"):
-		card._show_card_front()
+		card.show_card_front()
 		return
 	
 	# デバッグモード: 密命カードを無効化
 	if _get_debug_disable_secret_cards(card):
-		card._show_card_front()
+		card.show_card_front()
 		return
 	
 	# 所有者以外が見ている場合は密命表示
 	if viewer_id != owner_id and viewer_id != -1:
 		# 将来的にここで専用シーン（裏面デザイン）をロード可能
-		card._show_secret_back()
+		card.show_secret_back()
 	else:
-		card._show_card_front()
+		card.show_card_front()

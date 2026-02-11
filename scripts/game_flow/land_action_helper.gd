@@ -113,10 +113,10 @@ static func execute_level_up(handler) -> bool:
 	# ナビゲーションボタン設定（レベル選択用）
 	if handler.ui_manager:
 		handler.ui_manager.enable_navigation(
-			func(): handler._confirm_level_selection(),  # 決定
+			func(): handler.confirm_level_selection(),  # 決定
 			func(): handler.cancel(),  # 戻る
-			func(): handler._on_arrow_up(),  # 上
-			func(): handler._on_arrow_down()  # 下
+			func(): handler.on_arrow_up(),  # 上
+			func(): handler.on_arrow_down()  # 下
 		)
 	
 	return true
@@ -151,7 +151,7 @@ static func execute_move_creature(handler) -> bool:
 	
 	# 移動先が存在しない場合
 	if handler.move_destinations.is_empty():
-		var move_type = MovementHelper._detect_move_type(creature_data)
+		var move_type = MovementHelper.detect_move_type(creature_data)
 		var error_msg = ""
 		if move_type == "vacant_move":
 			error_msg = "移動可能な空き地がありません"
@@ -184,10 +184,10 @@ static func execute_move_creature(handler) -> bool:
 	# ナビゲーションボタン設定（移動先選択用）
 	if handler.ui_manager:
 		handler.ui_manager.enable_navigation(
-			func(): _confirm_move_selection(handler),  # 決定
+			func(): LandActionHelper.confirm_move_selection(handler),  # 決定
 			func(): handler.cancel(),  # 戻る
-			func(): handler._on_arrow_up(),  # 上
-			func(): handler._on_arrow_down()  # 下
+			func(): handler.on_arrow_up(),  # 上
+			func(): handler.on_arrow_down()  # 下
 		)
 	
 	return true
@@ -200,7 +200,7 @@ static func update_move_destination_ui(handler):
 	if handler.move_destinations.is_empty():
 		if handler.ui_manager.phase_display:
 			handler.ui_manager.phase_display.show_toast("移動可能なマスがありません")
-		_hide_move_creature_info(handler)
+		LandActionHelper.hide_move_creature_info(handler)
 		return
 	
 	var current_tile = handler.move_destinations[handler.current_destination_index]
@@ -314,7 +314,7 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 	return true
 
 ## 移動先選択を確定（決定ボタンから呼ばれる）
-static func _confirm_move_selection(handler):
+static func confirm_move_selection(handler):
 	if handler.move_destinations.is_empty():
 		return
 	var dest_tile_index = handler.move_destinations[handler.current_destination_index]
@@ -323,7 +323,7 @@ static func _confirm_move_selection(handler):
 ## 移動を確定
 static func confirm_move(handler, dest_tile_index: int):
 	# クリーチャー情報パネルを閉じる
-	_hide_move_creature_info(handler)
+	LandActionHelper.hide_move_creature_info(handler)
 	
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.move_source_tile) or not handler.board_system.tile_nodes.has(dest_tile_index):
 		handler.close_dominio_order()
@@ -484,7 +484,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.is_waiting_for_move_defender_item = false
 		
 		# 移動侵略シーケンスを開始（カメラ移動→コメント→アイテムフェーズ）
-		handler._start_move_battle_sequence(dest_tile_index, current_player_index, creature_data)
+		handler.start_move_battle_sequence(dest_tile_index, current_player_index, creature_data)
 
 ## 簡易移動バトル（カードシステム使用不可時）
 static func execute_simple_move_battle(handler, dest_index: int, attacker_data: Dictionary, attacker_player: int):
@@ -755,16 +755,16 @@ static func execute_terrain_change(handler) -> bool:
 	# ナビゲーションボタン設定（地形選択用）
 	if handler.ui_manager:
 		handler.ui_manager.enable_navigation(
-			func(): _confirm_terrain_selection(handler),  # 決定
+			func(): LandActionHelper.confirm_terrain_selection(handler),  # 決定
 			func(): _cancel_terrain_change(handler),  # 戻る
-			func(): handler._on_arrow_up(),  # 上
-			func(): handler._on_arrow_down()  # 下
+			func(): handler.on_arrow_up(),  # 上
+			func(): handler.on_arrow_down()  # 下
 		)
 	
 	return true
 
 ## 地形選択を確定（決定ボタンから呼ばれる）
-static func _confirm_terrain_selection(handler):
+static func confirm_terrain_selection(handler):
 	var selected_element = handler.terrain_options[handler.current_terrain_index]
 	execute_terrain_change_with_element(handler, selected_element)
 
@@ -814,12 +814,12 @@ static func update_terrain_selection_ui(handler):
 ## 移動先の情報パネルを表示（クリーチャーがいれば情報パネル、いなければ土地情報）
 static func _show_move_creature_info(handler, tile_index: int) -> void:
 	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
-		_hide_move_creature_info(handler)
+		LandActionHelper.hide_move_creature_info(handler)
 		return
 	
 	var tile = handler.board_system.tile_nodes[tile_index]
 	if not tile:
-		_hide_move_creature_info(handler)
+		LandActionHelper.hide_move_creature_info(handler)
 		return
 	
 	# クリーチャーがいる場合
@@ -840,7 +840,7 @@ static func _show_move_creature_info(handler, tile_index: int) -> void:
 
 
 ## クリーチャー情報パネルを非表示
-static func _hide_move_creature_info(handler) -> void:
+static func hide_move_creature_info(handler) -> void:
 	_hide_creature_info_panel(handler)
 	_hide_land_info_panel(handler)
 

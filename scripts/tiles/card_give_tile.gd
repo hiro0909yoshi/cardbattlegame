@@ -98,7 +98,7 @@ func _show_card_give_selection(player_id: int) -> Dictionary:
 			card_give_ui.set_script(CardGiveUIScript)
 			_ui_manager.ui_layer.add_child(card_give_ui)
 			if card_give_ui.has_method("_setup_ui"):
-				card_give_ui._setup_ui()
+				card_give_ui.setup_ui()
 	
 	# UIをセットアップして表示
 	card_give_ui.setup(_card_system, player_id)

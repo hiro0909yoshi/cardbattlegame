@@ -33,7 +33,7 @@ func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -
 	if "強打" in keywords:
 		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 		var keyword_cond_data = keyword_conditions.get("強打", {})
-		return _evaluate_single_condition(keyword_cond_data, battle_context)
+		return evaluate_single_condition(keyword_cond_data, battle_context)
 	
 	return false
 
@@ -47,13 +47,13 @@ func _evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) 
 	
 	# 全条件がtrueである必要がある（AND条件）
 	for condition in effect_conditions:
-		if not _evaluate_single_condition(condition, context):
+		if not evaluate_single_condition(condition, context):
 			return false
 	
 	return true
 
 # 単一条件の評価
-func _evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bool:
+func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bool:
 	var cond_type = condition.get("condition_type", "")
 	var cond_value = condition.get("value", 0)
 	
@@ -316,7 +316,7 @@ func check_any_condition(conditions: Array, context: Dictionary) -> bool:
 		return true
 	
 	for condition in conditions:
-		if _evaluate_single_condition(condition, context):
+		if evaluate_single_condition(condition, context):
 			return true
 	
 	return false
@@ -324,7 +324,7 @@ func check_any_condition(conditions: Array, context: Dictionary) -> bool:
 # 複数条件の組み合わせ評価（AND条件）
 func check_all_conditions(conditions: Array, context: Dictionary) -> bool:
 	for condition in conditions:
-		if not _evaluate_single_condition(condition, context):
+		if not evaluate_single_condition(condition, context):
 			return false
 	
 	return true
