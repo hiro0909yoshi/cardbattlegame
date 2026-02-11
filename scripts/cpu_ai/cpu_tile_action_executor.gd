@@ -284,10 +284,9 @@ func _is_condition_check_disabled(check_type: String) -> bool:
 	if not tile_action_processor:
 		return false
 	
-	# 召喚条件無視バフをチェック
-	if tile_action_processor.has_method("_is_summon_condition_ignored"):
-		if tile_action_processor._is_summon_condition_ignored():
-			return true
+	# 召喚条件無視バフをチェック（SummonConditionChecker経由）
+	if SummonConditionChecker.is_summon_condition_ignored(-1, game_flow_manager, board_system):
+		return true
 	
 	match check_type:
 		"card_sacrifice":

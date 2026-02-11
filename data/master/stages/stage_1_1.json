@@ -7,7 +7,7 @@
   "max_turns": 40,
   "rule_overrides": {
 	"initial_magic": {
-	  "player": 200,
+	  "player": 2000,
 	  "cpu": 200
 	},
 	"win_conditions": {

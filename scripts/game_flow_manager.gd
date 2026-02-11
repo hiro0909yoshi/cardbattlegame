@@ -139,6 +139,10 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 		lap_system.player_system = player_system
 		lap_system.ui_manager = ui_manager
 		lap_system._setup_ui()
+	
+	# GameResultHandlerを初期化
+	game_result_handler = GameResultHandler.new()
+	game_result_handler.initialize(self, player_system, ui_manager)
 
 ## バトル画面マネージャーを外部から設定
 func set_battle_screen_manager(manager: BattleScreenManager, overlay) -> void:
@@ -582,52 +586,23 @@ func move_camera_to_next_player():
 	else:
 		print("Warning: movement_controllerが存在しません")
 
-# ゲーム終了フラグ（勝敗判定の重複防止）
-var _game_ended: bool = false
+# ゲーム結果処理ハンドラー
+var game_result_handler: GameResultHandler = null
 
-# プレイヤー勝利処理
+# ゲーム終了フラグ（後方互換getter）
+var _game_ended: bool:
+	get: return game_result_handler.is_game_ended() if game_result_handler else false
+
+# プレイヤー勝利処理（GameResultHandlerに委譲）
 func on_player_won(player_id: int):
-	# 重複防止
-	if _game_ended:
-		print("[GameFlowManager] ゲームは既に終了しています")
-		return
-	_game_ended = true
-	
-	var _player = player_system.players[player_id]  # 将来の拡張用
-	change_phase(GamePhase.SETUP)
-	
-	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
-	
-	# プレイヤー0（人間）が勝利した場合のみリザルト処理
-	# call_deferredで次フレームに実行（シグナル経由のawait問題回避）
-	if player_id == 0:
-		_start_victory_result.call_deferred()
-	else:
-		# CPU勝利 = プレイヤー敗北
-		_start_defeat_result.call_deferred("cpu_win")
+	if game_result_handler:
+		game_result_handler.on_player_won(player_id)
 
 
-# 勝利リザルト開始（call_deferred用ラッパー）
-func _start_victory_result():
-	_process_victory_result()
-
-
-# 敗北リザルト開始（call_deferred用ラッパー）
-func _start_defeat_result(reason: String = ""):
-	_process_defeat_result(reason)
-
-
-# プレイヤー敗北処理（降参・ターン制限）
+# プレイヤー敗北処理（GameResultHandlerに委譲）
 func on_player_defeated(reason: String = ""):
-	# 重複防止
-	if _game_ended:
-		print("[GameFlowManager] ゲームは既に終了しています")
-		return
-	_game_ended = true
-	
-	change_phase(GamePhase.SETUP)
-	print("😢 プレイヤー敗北... (理由: %s)" % reason)
-	await _process_defeat_result(reason)
+	if game_result_handler:
+		await game_result_handler.on_player_defeated(reason)
 
 # UI更新
 func update_ui():
@@ -832,7 +807,7 @@ func _reinitialize_card_selection():
 		if current_player:
 			# TileActionProcessorのフラグを再設定（召喚フェーズに戻る）
 			if board_system_3d and board_system_3d.tile_action_processor:
-				board_system_3d.tile_action_processor.is_action_processing = true
+				board_system_3d.tile_action_processor.begin_action_processing()
 			
 			# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
 			ui_manager.hide_card_selection_ui()
@@ -970,171 +945,21 @@ func get_tutorial_manager():
 
 
 # ============================================================
-# ステージクリア・リザルト処理
+# ステージクリア・リザルト処理（GameResultHandlerに委譲）
 # ============================================================
 
-# リザルト画面への参照
-var result_screen: ResultScreen = null
-
-# 現在のステージデータ（クエストモード用）
-var current_stage_data: Dictionary = {}
-
-## ステージデータを設定（QuestGameから呼ばれる）
+## ステージデータを設定（GameResultHandlerに委譲）
 func set_stage_data(stage_data: Dictionary):
-	current_stage_data = stage_data
-	print("[GameFlowManager] ステージデータ設定: %s" % stage_data.get("id", "unknown"))
+	if game_result_handler:
+		game_result_handler.set_stage_data(stage_data)
 
-
-## リザルト画面を設定
+## リザルト画面を設定（GameResultHandlerに委譲）
 func set_result_screen(screen: ResultScreen):
-	result_screen = screen
-	if result_screen:
-		result_screen.result_confirmed.connect(_on_result_confirmed)
+	if game_result_handler:
+		game_result_handler.set_result_screen(screen)
 
-
-## 勝利時のリザルト処理
-func _process_victory_result():
-	var stage_id = current_stage_data.get("id", "")
-	
-	# クエストモードでない場合は簡易表示
-	if stage_id.is_empty():
-		if ui_manager:
-			ui_manager.show_win_screen(0)
-		return
-	
-	# ランク計算
-	var rank = RankCalculator.calculate_rank(current_turn_number)
-	
-	# 初回クリア判定
-	var is_first_clear = StageRecordManager.is_first_clear(stage_id)
-	
-	# 報酬計算
-	var rewards = RewardCalculator.calculate_rewards(current_stage_data, rank, is_first_clear)
-	print("[GameFlowManager] 報酬計算結果: %s" % rewards)
-	
-	# 記録更新
-	var record_result = StageRecordManager.update_record(stage_id, rank, current_turn_number)
-	
-	# ゴールド付与
-	if rewards.total > 0:
-		GameData.add_gold(rewards.total)
-		print("[GameFlowManager] ゴールド付与: %d" % rewards.total)
-	else:
-		print("[GameFlowManager] 報酬なし（total: %d）" % rewards.total)
-	
-	# リザルト画面表示
-	print("[GameFlowManager] リザルト画面: %s" % ("あり" if result_screen else "なし"))
-	
-	if result_screen:
-		var result_data = {
-			"stage_id": stage_id,
-			"stage_name": current_stage_data.get("name", ""),
-			"turn_count": current_turn_number,
-			"rank": rank,
-			"is_first_clear": is_first_clear,
-			"is_best_updated": record_result.is_best_updated,
-			"best_rank": record_result.best_rank,
-			"best_turn": record_result.best_turn,
-			"rewards": rewards
-		}
-		
-		# 勝利演出
-		if ui_manager:
-			await ui_manager.show_win_screen_async(0)
-		
-		print("[GameFlowManager] リザルト画面表示開始")
-		result_screen.show_victory(result_data)
-	else:
-		# リザルト画面がない場合は従来の勝利演出のみ
-		print("[GameFlowManager] リザルト画面なし、勝利演出のみ")
-		if ui_manager:
-			ui_manager.show_win_screen(0)
-		
-		# 一定時間後にステージセレクトへ
-		await get_tree().create_timer(3.0).timeout
-		_return_to_stage_select()
-
-
-## 敗北時のリザルト処理
-func _process_defeat_result(reason: String):
-	var stage_id = current_stage_data.get("id", "")
-	
-	# 報酬計算（敗北は0G）
-	var rewards = RewardCalculator.calculate_defeat_rewards()
-	
-	# リザルト画面表示
-	if result_screen:
-		var result_data = {
-			"stage_id": stage_id,
-			"stage_name": current_stage_data.get("name", ""),
-			"turn_count": current_turn_number,
-			"defeat_reason": reason,
-			"rewards": rewards
-		}
-		
-		# 敗北演出
-		if ui_manager:
-			await ui_manager.show_lose_screen_async(0)
-		
-		result_screen.show_defeat(result_data)
-	else:
-		# リザルト画面がない場合
-		print("[GameFlowManager] リザルト画面なし、タイトルへ戻る")
-		_return_to_stage_select()
-
-
-## リザルト確認後
-func _on_result_confirmed():
-	print("[GameFlowManager] リザルト確認完了、ステージセレクトへ")
-	_return_to_stage_select()
-
-
-## ステージセレクトへ戻る
-func _return_to_stage_select():
-	print("[GameFlowManager] _return_to_stage_select 開始")
-	
-	# チュートリアルはメインメニューへ
-	var stage_id = current_stage_data.get("id", "")
-	if stage_id == "stage_tutorial":
-		print("[GameFlowManager] チュートリアル終了、メインメニューへ遷移")
-		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
-	# クエストモードならクエストセレクトへ
-	elif not current_stage_data.is_empty():
-		print("[GameFlowManager] クエストセレクトへ遷移")
-		get_tree().change_scene_to_file("res://scenes/WorldStageSelect.tscn")
-	else:
-		# それ以外はメインメニューへ
-		print("[GameFlowManager] メインメニューへ遷移")
-		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
-
-
-## 規定ターン終了判定
+## 規定ターン終了判定（GameResultHandlerに委譲）
 func _check_turn_limit() -> bool:
-	var max_turns = current_stage_data.get("max_turns", 0)
-	if max_turns <= 0:
-		return false  # 制限なし
-	
-	if current_turn_number > max_turns:
-		print("[GameFlowManager] 規定ターン(%d)終了" % max_turns)
-		
-		# TEP比較で勝敗判定
-		var player_tep = player_system.calculate_total_assets(0)
-		var highest_cpu_tep = 0
-		
-		for i in range(1, player_system.players.size()):
-			var cpu_tep = player_system.calculate_total_assets(i)
-			if cpu_tep > highest_cpu_tep:
-				highest_cpu_tep = cpu_tep
-		
-		print("[GameFlowManager] プレイヤーTEP: %d, 最高CPU TEP: %d" % [player_tep, highest_cpu_tep])
-		
-		if player_tep > highest_cpu_tep:
-			# プレイヤー勝利
-			on_player_won(0)
-		else:
-			# プレイヤー敗北（同値も敗北）
-			on_player_defeated("turn_limit")
-		
-		return true
-	
+	if game_result_handler:
+		return game_result_handler.check_turn_limit()
 	return false

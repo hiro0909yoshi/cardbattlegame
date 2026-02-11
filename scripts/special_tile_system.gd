@@ -55,7 +55,7 @@ func _process_warp_landing(player_id: int) -> void:
 	
 	# 現在のアクション処理を完了（is_action_processingをリセット）
 	if b_system.tile_action_processor:
-		b_system.tile_action_processor.is_action_processing = false
+		b_system.tile_action_processor.reset_action_processing()
 	
 	# 着地先のタイルアクションを実行
 	if b_system.tile_action_processor:

@@ -242,7 +242,7 @@ func close_dominio_order():
 	
 	# TileActionProcessorのフラグをリセット
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.is_action_processing = false
+		board_system.tile_action_processor.reset_action_processing()
 	
 	# ナビゲーションボタンをクリア
 	if ui_manager:
@@ -307,7 +307,7 @@ func cancel():
 		current_terrain_index = 0
 		
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor.is_action_processing = false
+			board_system.tile_action_processor.reset_action_processing()
 		
 		# UIを先に更新
 		if ui_manager and ui_manager.dominio_order_ui:
@@ -361,7 +361,7 @@ func cancel():
 		_swap_tile_index = -1
 		
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor.is_action_processing = false
+			board_system.tile_action_processor.reset_action_processing()
 		
 		# カード選択UIを閉じる（先にクリア）
 		if ui_manager and ui_manager.card_selection_ui:
@@ -903,7 +903,7 @@ func _execute_swap_for_cpu(command: Dictionary) -> bool:
 	
 	# TileActionProcessorに交換モードを設定
 	if board_system.tile_action_processor:
-		board_system.tile_action_processor.is_action_processing = true
+		board_system.tile_action_processor.begin_action_processing()
 	
 	# 交換実行（既存のexecute_swapを使用）
 	_execute_swap_with_hand_index_for_cpu(hand_index)

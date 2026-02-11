@@ -14,40 +14,40 @@
 
 ## 2026年2月11日
 
-### 1. Serenaメモリー更新 ✅
-- `project_overview` の Core Systems セクションに全システム実装完了を明記
-- Claudeメモリーの古い「ダメージシステム実装中」を「全システム実装完了済」に更新
+### 完了タスク
+- ✅ 大規模ファイル リファクタリング（4ファイル全て完了）
+  - movement_controller.gd: 1442行→652行+5ファイル
+  - tile_action_processor.gd: 1215行→476行+2ファイル
+  - game_flow_manager.gd: 1140行→965行+1ファイル
+  - ui_manager.gd: 既に749行（別途メニュー切り出し済み）
+- ✅ スキルファイル作成（spell-system-map, battle-system-internals, gdscript-coding更新）
 
-### 2. 大規模ファイル リファクタリング
-対象4ファイルの分割計画を策定済み:
+### 次のステップ: シグナル設計の整理と signal_flow_map スキル作成
 
-| ファイル | 現行 | 目標 | 新ファイル数 |
-|---------|------|------|------------|
-| `movement_controller.gd` | 1442行 | ~870行 | 3（分岐選択/方向選択/経路予測） |
-| `tile_action_processor.gd` | 1200行 | ~550行 | 2（CPU処理/召喚処理） |
-| `game_flow_manager.gd` | 1140行 | ~940行 | 1（結果画面処理） |
-| `ui_manager.gd` | 1063行 | ~730行 | 3（勝敗演出/タップ処理/メニュー） |
+#### 目的
+シグナル接続の規約違反を修正し、整理された状態で signal_flow_map スキルを作成する
 
-着手順: movement_controller → ui_manager → tile_action_processor → game_flow_manager
+#### 作業計画
+1. **全シグナル接続の調査・分類**（253箇所）
+   - 正常: 子→親方向のシグナル接続
+   - 違反: privateメソッド外部接続（例: `tap_handler._on_tap_target_selected`）
+   - 違反: 親経由の兄弟チェーン参照（例: `game_flow_manager.item_phase_handler.item_phase_completed`）
+   - 不要: awaitで直接待てるのにシグナル経由にしている箇所
+   - 不要: コールバックをシグナル経由にする必要がないケース
 
-#### movement_controller.gd 分割完了 ✅
-- 1442行 → 652行（本体）+ 5ファイル
-- `movement_direction_selector.gd` (143行): 方向選択UI
-- `movement_branch_selector.gd` (278行): 分岐選択UI
-- `movement_destination_predictor.gd` (150行): 経路予測・ハイライト
-- `movement_warp_handler.gd` (107行): ワープ・通過イベント・足止め
-- `movement_special_handler.gd` (185行): チェックポイント・回復・ダイスバフ
-- 外部APIは委譲メソッドで維持。`card.gd` のサブシステム参照を修正
-- テスト: 周回ボーナス、バトル正常動作確認済み
+2. **優先度別に修正**
+   - P1: 不要なシグナル削除（awaitで代替可能な箇所）
+   - P2: privateメソッド外部接続の修正
+   - P3: チェーン参照の解消
 
-### 3. Serenaメモリー新規作成（予定）
-リファクタリング完了後に作成:
-1. **signal_flow_map** — 主要シグナルの発火元→接続先
-2. **spell_system_map** — スペルタイプ→処理ファイル対応表
-3. **battle_system_internals** — バトル処理ステップとスキル発動タイミング
+3. **signal_flow_map スキル作成**
+   - 整理後の主要シグナルの発火元→接続先マップ
 
-### 次のステップ
-- `movement_controller.gd` のリファクタリングから着手
+#### 既知の問題箇所
+- `ui_manager.gd`: tap_target_manager → tap_handler._on_tap_target_* (private接続)
+- `tile_battle_executor.gd`: game_flow_manager.item_phase_handler.item_phase_completed (チェーン参照×3箇所)
+- `dominio_command_handler.gd`: 同上パターン（×2箇所）
+- `cpu_turn_processor.gd`: board_system.battle_system.invasion_completed (チェーン参照)
 
 ### 完了済みシステム（参考）
 - ✅ 全システム実装完了（アイテム75種、スペル全種、スキル全種、アルカナアーツ全種、ダメージ、召喚制限、呪い全種）

@@ -1,14 +1,12 @@
 extends Node
 class_name TileActionProcessor
 
-# タイルアクション処理クラス
-# タイル到着時の各種アクション処理を管理
+## タイルアクション処理クラス
+## タイル到着時の各種アクション処理を管理
+## 召喚処理は TileSummonExecutor、バトル処理は TileBattleExecutor に委譲
 
 signal action_completed()
 signal invasion_completed(success: bool, tile_index: int)
-
-# 定数をpreload
-# TileHelper はグローバルclass_nameとして定義済み
 
 # システム参照
 var board_system: BoardSystem3D
@@ -17,34 +15,41 @@ var card_system: CardSystem
 var battle_system: BattleSystem
 var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
-var game_flow_manager = null  # GameFlowManagerへの参照
-var cpu_turn_processor  # CPUTurnProcessor型を一時的に削除
-var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
-var creature_synthesis: CreatureSynthesis = null  # クリーチャー合成システム
-var sacrifice_selector: CPUSacrificeSelector = null  # CPU用犠牲カード選択
-var cpu_tile_action_executor: CPUTileActionExecutor = null  # CPU実行処理
+var game_flow_manager = null
+var cpu_turn_processor = null
+var cpu_tile_action_executor: CPUTileActionExecutor = null
 
-# デバッグフラグ
-## 召喚条件デバッグフラグ（CPU側も参照）
-var debug_disable_card_sacrifice: bool = false   # false=カード犠牲を有効化
-var debug_disable_lands_required: bool = false   # false=土地条件（必要シンボル）を有効化
-var debug_disable_cannot_summon: bool = false    # false=配置制限を有効化
-var debug_disable_cannot_use: bool = false       # false=アイテム使用制限を有効化
+# サブシステム
+var summon_executor: TileSummonExecutor = null
+var battle_executor: TileBattleExecutor = null
+
+# デバッグフラグ（DebugSettingsに移行済み、後方互換プロパティ）
+var debug_disable_card_sacrifice: bool:
+	get: return DebugSettings.disable_card_sacrifice
+	set(v): DebugSettings.disable_card_sacrifice = v
+var debug_disable_lands_required: bool:
+	get: return DebugSettings.disable_lands_required
+	set(v): DebugSettings.disable_lands_required = v
+var debug_disable_cannot_summon: bool:
+	get: return DebugSettings.disable_cannot_summon
+	set(v): DebugSettings.disable_cannot_summon = v
+var debug_disable_cannot_use: bool:
+	get: return DebugSettings.disable_cannot_use
+	set(v): DebugSettings.disable_cannot_use = v
 
 # 状態管理
 var is_action_processing = false
-var is_sacrifice_selecting = false  # カード犠牲選択中フラグ
 
-# バトル情報の一時保存
-var pending_battle_card_index: int = -1
-var pending_battle_card_data: Dictionary = {}  # カードデータを保存
-var pending_battle_tile_info: Dictionary = {}
-var pending_attacker_item: Dictionary = {}
-var pending_defender_item: Dictionary = {}
-var is_waiting_for_defender_item: bool = false
+## アクション処理状態を開始
+func begin_action_processing():
+	is_action_processing = true
+
+## アクション処理状態をリセット
+func reset_action_processing():
+	is_action_processing = false
 
 # 遠隔配置モード（ベースタイル用）
-var remote_placement_tile: int = -1  # -1 = 通常モード、0以上 = 指定タイルに配置
+var remote_placement_tile: int = -1
 
 # コメント表示用
 var pending_comment: String = ""
@@ -74,12 +79,16 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	ui_manager = ui
 	game_flow_manager = gf_manager
 	
-	# クリーチャー合成システムを初期化
-	if CardLoader:
-		creature_synthesis = CreatureSynthesis.new(CardLoader)
+	# サブシステム初期化
+	summon_executor = TileSummonExecutor.new()
+	summon_executor.initialize(b_system, p_system, c_system, ui, gf_manager)
+	
+	battle_executor = TileBattleExecutor.new()
+	battle_executor.initialize(b_system, p_system, c_system, bt_system, ui, gf_manager, summon_executor)
+	battle_executor.invasion_completed.connect(func(success, tile_index): emit_signal("invasion_completed", success, tile_index))
 
 # CPUプロセッサーを設定
-func set_cpu_processor(cpu_processor):  # CPUTurnProcessor型を一時的に削除
+func set_cpu_processor(cpu_processor):
 	cpu_turn_processor = cpu_processor
 	if cpu_turn_processor:
 		cpu_turn_processor.cpu_action_completed.connect(_on_cpu_action_completed)
@@ -102,13 +111,12 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
 	
-	# 特殊マス処理（処理完了を待ってから次フェーズに進む）
+	# 特殊マス処理
 	if _is_special_tile(tile.tile_type):
 		if special_tile_system:
-			# 特殊タイル処理を実行し、完了を待つ
 			await special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
 	
-	# CPUかプレイヤーかで分岐（デバッグモードでは全て手動）
+	# CPUかプレイヤーかで分岐
 	var is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
 	if is_cpu_turn:
 		_process_cpu_tile(tile, tile_info, current_player_index)
@@ -122,43 +130,34 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		board_system.camera_controller.enable_manual_mode()
 		board_system.camera_controller.set_current_player(player_index)
 	
-	# 特殊タイルかチェック（特殊タイルのUI設定はspecial_tile_system側で完了済み）
-	# パスボタン押下で_complete_action()が呼ばれるため、ここではreturnのみ
+	# 特殊タイルかチェック
 	var is_special = _is_special_tile(tile.tile_type)
 	if is_special:
 		return
 	
 	if tile_info["owner"] == -1:
-		# 空き地 - 召喚UI表示
 		show_summon_ui()
 	elif tile_info["owner"] == player_index:
-		# 自分の土地 - 召喚不可（ドミニオコマンドで操作可能）
 		show_summon_ui_disabled()
 	else:
 		# 敵の土地
-		# peace呪いチェック
 		var spell_curse_toll = null
 		if board_system.has_meta("spell_curse_toll"):
 			spell_curse_toll = board_system.get_meta("spell_curse_toll")
 		
 		var current_tile_index = board_system.movement_controller.get_player_tile(player_index)
 		
-		# peace呪いがあれば戦闘UI表示するがグレーアウト
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(current_tile_index):
 			show_battle_ui_disabled()
-		# プレイヤー侵略不可呪い（バンフィズム）
 		elif spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(player_index):
 			show_battle_ui_disabled()
-		# マーシフルワールド（下位侵略不可）- SpellWorldCurseに委譲
 		elif game_flow_manager and game_flow_manager.spell_world_curse and game_flow_manager.spell_world_curse.check_invasion_blocked(player_index, tile_info.get("owner", -1), false):
 			show_battle_ui_disabled()
 		else:
-			# 通常の戦闘UI
 			show_battle_ui("battle")
 
 # CPUのタイル処理
 func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
-	# CPUはcpu_turn_processorで処理（特殊タイルでもドミニオコマンドを検討）
 	if cpu_turn_processor:
 		cpu_turn_processor.process_cpu_turn(tile, tile_info, player_index)
 	else:
@@ -167,66 +166,55 @@ func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int)
 
 # === UI表示 ===
 
-# 召喚UI表示
 func show_summon_ui():
 	if ui_manager:
-		# スペルカードは召喚フェーズでは使えないので、フィルターは空（スペル以外が選択可能）
 		ui_manager.card_selection_filter = ""
 		if ui_manager.phase_display:
 			ui_manager.phase_display.show_action_prompt("召喚するクリーチャーを選択")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
-# 召喚UI表示（グレーアウト）- 自分の土地に止まった場合
 func show_summon_ui_disabled():
 	if ui_manager:
 		if ui_manager.phase_display:
 			ui_manager.phase_display.show_action_prompt("自分の土地: 召喚不可（×でパス）")
-		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
-# レベルアップUI表示
 func show_level_up_ui(tile_info: Dictionary):
 	if ui_manager:
 		var current_player_index = board_system.current_player_index
 		var current_magic = player_system.get_magic(current_player_index)
 		ui_manager.show_level_up_ui(tile_info, current_magic)
 
-# バトルUI表示
 func show_battle_ui(_mode: String = "battle"):
 	if ui_manager:
-		# 防御型クリーチャーはバトルで使用不可
 		ui_manager.card_selection_filter = "battle"
 		if ui_manager.phase_display:
 			ui_manager.phase_display.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
-# バトルUI表示（グレーアウト）peace呪い用
 func show_battle_ui_disabled():
 	if ui_manager:
 		if ui_manager.phase_display:
 			ui_manager.phase_display.show_action_prompt("peace呪い: 侵略不可（×でパス）")
-		# フィルターを"disabled"に設定してすべてのカードをグレーアウト
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 # === アクション処理 ===
 
-# カード選択時の処理
 func on_card_selected(card_index: int):
 	if not is_action_processing:
 		return
 	
 	# カード犠牲選択中は通常のカード選択を無視
-	if is_sacrifice_selecting:
+	if summon_executor and summon_executor.is_sacrifice_selecting:
 		return
 	
 	var current_player_index = board_system.current_player_index
 	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
-	# 特殊タイル上ではカード選択を無視（UIは維持）
-	# ただし遠隔配置モードの場合は許可（ベースタイルから別タイルに配置）
+	# 特殊タイル上ではカード選択を無視（遠隔配置モード除く）
 	var tile = board_system.tile_nodes.get(current_tile)
 	if tile and _is_special_tile(tile.tile_type) and remote_placement_tile < 0:
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
@@ -237,530 +225,19 @@ func on_card_selected(card_index: int):
 	# 遠隔配置モードの場合は無条件で召喚処理
 	if remote_placement_tile >= 0:
 		print("[TileActionProcessor] 遠隔配置モードで召喚実行: card_index=%d" % card_index)
-		await execute_summon(card_index)
+		await summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 		return
 	elif tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
 		# 召喚処理
-		execute_summon(card_index)
+		summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 	else:
 		# バトル処理
-		execute_battle(card_index, tile_info)
+		battle_executor.execute_battle(card_index, tile_info, _complete_action, show_battle_ui)
 
-## アイテムフェーズ完了後のコールバック
-func _on_item_phase_completed():
-	if not is_waiting_for_defender_item:
-		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
-		print("[TileActionProcessor] 攻撃側アイテムフェーズ完了")
-		
-		# 合体が発生した場合、バトルカードデータを更新
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			if game_flow_manager.item_phase_handler.was_merged():
-				pending_battle_card_data = game_flow_manager.item_phase_handler.get_merged_creature()
-				print("[TileActionProcessor] 合体発生: %s" % pending_battle_card_data.get("name", "?"))
-		
-		# 攻撃側のアイテムを保存
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			pending_attacker_item = game_flow_manager.item_phase_handler.get_selected_item()
-		
-		# 防御側のアイテムフェーズを開始
-		var defender_owner = pending_battle_tile_info.get("owner", -1)
-		if defender_owner >= 0:
-			is_waiting_for_defender_item = true
-			
-			# 🎬 防御側を強調表示に切り替え
-			if game_flow_manager and game_flow_manager.battle_status_overlay:
-				game_flow_manager.battle_status_overlay.highlight_side("defender")
-			
-			# 防御側のアイテムフェーズ開始
-			if game_flow_manager and game_flow_manager.item_phase_handler:
-				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
-				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-				
-				print("[TileActionProcessor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
-				# 防御側クリーチャーのデータを取得して渡す
-				var defender_creature = pending_battle_tile_info.get("creature", {})
-				# 攻撃側クリーチャーデータを設定（無効化判定用）
-				game_flow_manager.item_phase_handler.set_opponent_creature(pending_battle_card_data)
-				# タイル情報を設定（シミュレーション用）
-				game_flow_manager.item_phase_handler.set_defense_tile_info(pending_battle_tile_info)
-				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
-			else:
-				# ItemPhaseHandlerがない場合は直接バトル
-				_execute_pending_battle()
-		else:
-			# 防御側がいない場合（ありえないが念のため）
-			_execute_pending_battle()
-	else:
-		# 防御側のアイテムフェーズ完了 → バトル開始
-		print("[TileActionProcessor] 防御側アイテムフェーズ完了、バトル開始")
-		
-		# 防御側の合体が発生した場合、tile_infoのcreatureを更新 + タイルも永続更新
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			if game_flow_manager.item_phase_handler.was_merged():
-				var merged_data = game_flow_manager.item_phase_handler.get_merged_creature()
-				pending_battle_tile_info["creature"] = merged_data
-				print("[TileActionProcessor] 防御側合体発生: %s" % merged_data.get("name", "?"))
-				
-				# タイルのクリーチャーデータも永続更新
-				var tile_index = pending_battle_tile_info.get("index", -1)
-				if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
-					var tile = board_system.tile_nodes[tile_index]
-					tile.creature_data = merged_data
-					print("[TileActionProcessor] タイル%d のクリーチャーデータを更新（永続化）" % tile_index)
-		
-		# 防御側のアイテムを保存
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			pending_defender_item = game_flow_manager.item_phase_handler.get_selected_item()
-		
-		is_waiting_for_defender_item = false
-		_execute_pending_battle()
-
-## 保留中のバトルを実行
-func _execute_pending_battle():
-	if pending_battle_card_index < 0 or pending_battle_card_data.is_empty():
-		print("[TileActionProcessor] エラー: バトル情報が保存されていません")
-		_complete_action()
-		return
-	
-	# 🎬 バトルステータスオーバーレイを非表示
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
-		game_flow_manager.battle_status_overlay.hide_battle_status()
-	
-	var current_player_index = board_system.current_player_index
-	
-	# バトルカードは既に on_card_selected() で消費済み
-	
-	# バトル完了シグナルに接続
-	var callable = Callable(self, "_on_battle_completed")
-	if not battle_system.invasion_completed.is_connected(callable):
-		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
-	
-	# バトル実行（カードデータとアイテム情報を渡す）
-	# card_indexには-1を渡して、BattleSystem内でカード使用処理をスキップさせる
-	await battle_system.execute_3d_battle_with_data(current_player_index, pending_battle_card_data, pending_battle_tile_info, pending_attacker_item, pending_defender_item)
-	
-	# バトル情報をクリア
-	pending_battle_card_index = -1
-	pending_battle_card_data = {}
-	pending_battle_tile_info = {}
-	pending_attacker_item = {}
-	pending_defender_item = {}
-	is_waiting_for_defender_item = false
-
-# 召喚実行
-func execute_summon(card_index: int):
-	print("[TileActionProcessor] execute_summon開始: card_index=%d, remote=%d" % [card_index, remote_placement_tile])
-	if card_index < 0:
-		_complete_action()
-		return
-	
-	var current_player_index = board_system.current_player_index
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
-	print("[TileActionProcessor] カード取得: %s" % card_data.get("name", "?"))
-	
-	if card_data.is_empty():
-		_complete_action()
-		return
-	
-	# 配置先タイルを決定（遠隔配置モードならremote_placement_tile、通常はcurrent_tile）
-	var target_tile: int
-	var is_remote_placement = remote_placement_tile >= 0
-	if is_remote_placement:
-		target_tile = remote_placement_tile
-		print("[TileActionProcessor] 遠隔配置モード: タイル%d に配置" % target_tile)
-	else:
-		target_tile = board_system.movement_controller.get_player_tile(current_player_index)
-	
-	var tile = board_system.tile_nodes.get(target_tile)
-	
-	# 配置可能タイルかチェック（タイル側のメソッドを使用）
-	if tile and not tile.can_place_creature():
-		print("[TileActionProcessor] このタイルには配置できません: %s" % tile.tile_type)
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("このタイルには配置できません")
-		_complete_action()
-		return
-	
-	# 防御型チェック: 空き地以外には召喚できない
-	var creature_type = card_data.get("creature_type", "normal")
-	if creature_type == "defensive":
-		var tile_info = board_system.get_tile_info(target_tile)
-		
-		# 空き地（owner = -1）でなければ召喚不可
-		if tile_info["owner"] != -1:
-			print("[TileActionProcessor] 防御型クリーチャーは空き地にのみ召喚できます")
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("防御型は空き地にのみ召喚可能です")
-			_complete_action()
-			return
-	
-	# 土地条件チェック（lands_required）
-	# ブライトワールド発動中は土地条件を無視
-	if not debug_disable_lands_required and not _is_summon_condition_ignored():
-		var check_result = check_lands_required(card_data, current_player_index)
-		if not check_result.passed:
-			print("[TileActionProcessor] 土地条件未達: %s" % check_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(check_result.message)
-			_complete_action()
-			return
-	
-	# 配置制限チェック（cannot_summon）
-	# ブライトワールド発動中は配置制限を無視
-	if not debug_disable_cannot_summon and not _is_summon_condition_ignored():
-		var tile_element_for_check = tile.tile_type if tile and "tile_type" in tile else ""
-		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
-		if not cannot_result.passed:
-			print("[TileActionProcessor] 配置制限: %s" % cannot_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(cannot_result.message)
-			_complete_action()
-			return
-	
-	# カード犠牲処理（クリーチャー合成用）
-	# ブライトワールド発動中はカード犠牲を無視
-	var sacrifice_card = {}
-	var sacrifice_index = -1
-	var tile_element_for_sacrifice = tile.tile_type if tile and "tile_type" in tile else ""
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		var sacrifice_result = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
-		sacrifice_card = sacrifice_result.get("card", {})
-		sacrifice_index = sacrifice_result.get("index", -1)
-		if sacrifice_card.is_empty() and _requires_card_sacrifice(card_data):
-			# キャンセル時は召喚UIを再表示
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("召喚をキャンセルしました")
-			show_summon_ui()
-			return
-		
-		# 犠牲カードが召喚カードより前のインデックスにあった場合、召喚カードのインデックスを調整
-		if sacrifice_index >= 0 and sacrifice_index < card_index:
-			card_index -= 1
-			print("[TileActionProcessor] 犠牲カード破棄によりcard_indexを調整: %d" % card_index)
-	
-	# クリーチャー合成処理
-	var is_synthesized = false
-	if not sacrifice_card.is_empty() and creature_synthesis:
-		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card)
-		if is_synthesized:
-			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card, true)
-			print("[TileActionProcessor] 合成成立: %s" % card_data.get("name", "?"))
-	
-	var cost_data = card_data.get("cost", 1)
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("ep", 0)
-	else:
-		cost = cost_data
-	
-	# ライフフォース呪いチェック（クリーチャーコスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
-	
-	var current_player = player_system.get_current_player()
-	
-	if current_player.magic_power >= cost:
-		# カード使用とEP消費
-		card_system.use_card_for_player(current_player_index, card_index)
-		player_system.add_magic(current_player_index, -cost)
-		
-		# 土地取得とクリーチャー配置（遠隔配置でも同様）
-		board_system.set_tile_owner(target_tile, current_player_index)
-		board_system.place_creature(target_tile, card_data)
-		
-		# Phase 1-A: 召喚後にダウン状態を設定（不屈チェック）
-		if tile and tile.has_method("set_down_state"):
-				# 不屈持ちでなければダウン状態にする
-				if not PlayerBuffSystem.has_unyielding(card_data):
-					tile.set_down_state(true)
-				else:
-					print("[TileActionProcessor] 不屈により召喚後もダウンしません: タイル", target_tile)
-		
-		if is_remote_placement:
-			print("遠隔召喚成功！タイル%dを取得しました" % target_tile)
-		else:
-			print("召喚成功！土地を取得しました")
-		
-		# UI更新
-		if ui_manager:
-			ui_manager.hide_card_selection_ui()
-			ui_manager.update_player_info_panels()
-		print("[TileActionProcessor] execute_summon完了、_complete_action呼び出し")
-		_complete_action()
-	else:
-		print("EP不足で召喚できません")
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
-		# 召喚UIを再表示（ターン終了せずに再選択可能にする）
-		show_summon_ui()
-
-
-# バトル（侵略）実行
-func execute_battle(card_index: int, tile_info: Dictionary):
-	if card_index < 0:
-		_complete_action()
-		return
-	
-	var current_player_index = board_system.current_player_index
-	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
-	
-	if card_data.is_empty():
-		_complete_action()
-		return
-	
-	# 土地条件チェック（lands_required）
-	# ブライトワールド発動中は土地条件を無視
-	if not debug_disable_lands_required and not _is_summon_condition_ignored():
-		var check_result = check_lands_required(card_data, current_player_index)
-		if not check_result.passed:
-			print("[TileActionProcessor] 土地条件未達（バトル）: %s" % check_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(check_result.message)
-			_complete_action()
-			return
-	
-	# 配置制限チェック（cannot_summon）
-	# ブライトワールド発動中は配置制限を無視
-	if not debug_disable_cannot_summon and not _is_summon_condition_ignored():
-		var tile_element_for_check = tile_info.get("element", "")
-		var cannot_result = check_cannot_summon(card_data, tile_element_for_check)
-		if not cannot_result.passed:
-			print("[TileActionProcessor] 配置制限（バトル）: %s" % cannot_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(cannot_result.message)
-			_complete_action()
-			return
-	
-	# カード犠牲処理（クリーチャー合成用）
-	# ブライトワールド発動中はカード犠牲を無視
-	var sacrifice_card = {}
-	var tile_element_for_sacrifice = tile_info.get("element", "")
-	if _requires_card_sacrifice(card_data) and not debug_disable_card_sacrifice and not _is_summon_condition_ignored():
-		# カード選択UIを一度閉じる
-		if ui_manager:
-			ui_manager.hide_card_selection_ui()
-		sacrifice_card = await _process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
-		if sacrifice_card.get("card", {}).is_empty() and _requires_card_sacrifice(card_data):
-			# キャンセル時はバトルUIを再表示
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("バトルをキャンセルしました")
-			show_battle_ui()
-			return
-	
-	# クリーチャー合成処理
-	var is_synthesized = false
-	var sacrifice_card_data = sacrifice_card.get("card", {})
-	if not sacrifice_card_data.is_empty() and creature_synthesis:
-		is_synthesized = creature_synthesis.check_condition(card_data, sacrifice_card_data)
-		if is_synthesized:
-			card_data = creature_synthesis.apply_synthesis(card_data, sacrifice_card_data, true)
-			print("[TileActionProcessor] 合成成立（バトル）: %s" % card_data.get("name", "?"))
-	
-	# バトル情報を保存
-	pending_battle_card_index = card_index
-	pending_battle_card_data = card_data  # 合成後のデータを使用
-	pending_battle_tile_info = tile_info
-	
-	# コスト計算
-	var cost_data = card_data.get("cost", 1)
-	var cost = 0
-	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("ep", 0)
-	else:
-		cost = cost_data
-	
-	# ライフフォース呪いチェック（クリーチャーコスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
-	
-	var current_player = player_system.get_current_player()
-	if current_player.magic_power < cost:
-		print("[TileActionProcessor] EP不足でバトルできません")
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
-		# バトルUIを再表示（ターン終了せずに再選択可能にする）
-		show_battle_ui()
-		return
-	
-	# カードを使用してEP消費
-	card_system.use_card_for_player(current_player_index, card_index)
-	player_system.add_magic(current_player_index, -cost)
-	print("[TileActionProcessor] バトルカード消費: ", pending_battle_card_data.get("name", "???"))
-	
-	# 🎬 バトルステータスオーバーレイ表示（アイテムフェーズ中）
-	var defender_creature = pending_battle_tile_info.get("creature", {})
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
-		# 土地ボーナスを計算（攻撃側=侵略なので0、防御側=自分の土地）
-		var attacker_display = pending_battle_card_data.duplicate()
-		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
-		
-		var defender_display = defender_creature.duplicate()
-		defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-		
-		game_flow_manager.battle_status_overlay.show_battle_status(
-			attacker_display, defender_display, "attacker")
-	
-	# CPU攻撃側の合体処理をチェック
-	if _is_cpu_player(current_player_index):
-		var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
-		if merge_executed:
-			# 合体後のデータでバトルオーバーレイを更新
-			if game_flow_manager and game_flow_manager.battle_status_overlay:
-				var attacker_display = pending_battle_card_data.duplicate()
-				attacker_display["land_bonus_hp"] = 0
-				var defender_display = defender_creature.duplicate()
-				defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-				game_flow_manager.battle_status_overlay.show_battle_status(
-					attacker_display, defender_display, "attacker")
-	
-	# GameFlowManagerのitem_phase_handlerを通じてアイテムフェーズ開始
-	if game_flow_manager and game_flow_manager.item_phase_handler:
-		# アイテムフェーズ完了シグナルに接続
-		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-		
-		# アイテムフェーズ開始（バトル参加クリーチャーのデータと防御側情報を渡す）
-		game_flow_manager.item_phase_handler.start_item_phase(
-			current_player_index, 
-			pending_battle_card_data,
-			pending_battle_tile_info  # 防御側タイル情報（事前選択用）
-		)
-	else:
-		# ItemPhaseHandlerがない場合は直接バトル
-		_execute_pending_battle()
-
-
-## カード犠牲が必要か判定
-## カード犠牲が必要か判定（SummonConditionCheckerに委譲）
-func _requires_card_sacrifice(card_data: Dictionary) -> bool:
-	return SummonConditionChecker.requires_card_sacrifice(card_data)
-
-
-## 土地条件チェック（SummonConditionCheckerに委譲）
-func check_lands_required(card_data: Dictionary, player_id: int) -> Dictionary:
-	return SummonConditionChecker.check_lands_required(card_data, player_id, board_system)
-
-
-## 配置制限チェック（SummonConditionCheckerに委譲）
-func check_cannot_summon(card_data: Dictionary, tile_element: String) -> Dictionary:
-	return SummonConditionChecker.check_cannot_summon(card_data, tile_element)
-
-
-## 召喚条件が解除されているか（SummonConditionCheckerに委譲）
-func _is_summon_condition_ignored(player_id: int = -1) -> bool:
-	return SummonConditionChecker.is_summon_condition_ignored(player_id, game_flow_manager, board_system)
-
-
-## カード犠牲処理（手札選択UI表示→カード破棄）
-## creature_card: 召喚するクリーチャーカード（CPU自動選択用）
-## tile_element: 配置先タイルの属性（イド等のクリーチャー合成用）
-func _process_card_sacrifice(player_id: int, summon_card_index: int, creature_card: Dictionary = {}, tile_element: String = "") -> Dictionary:
-	# CPUの場合は自動選択
-	if _is_cpu_player(player_id):
-		return _process_card_sacrifice_cpu(player_id, creature_card, tile_element)
-	
-	# CardSacrificeHelperを初期化
-	if not card_sacrifice_helper:
-		card_sacrifice_helper = CardSacrificeHelper.new(card_system, player_system, ui_manager)
-	
-	# 犠牲選択モードに入る
-	is_sacrifice_selecting = true
-	
-	# 手札選択UIを表示（召喚するカード以外を選択可能）
-	if ui_manager:
-		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("犠牲にするカードを選択")
-		ui_manager.card_selection_filter = ""
-		ui_manager.excluded_card_index = summon_card_index  # 召喚カードを除外
-		var player = player_system.players[player_id]
-		ui_manager.show_card_selection_ui_mode(player, "sacrifice")
-	
-	# カード選択を待つ
-	var selected_index = await ui_manager.card_selected
-	
-	# 犠牲選択モードを終了
-	is_sacrifice_selecting = false
-	
-	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-	
-	# 除外インデックスをリセット
-	if ui_manager:
-		ui_manager.excluded_card_index = -1
-	
-	# 選択されたカードを取得
-	if selected_index < 0:
-		return {"card": {}, "index": -1}
-	
-	# 召喚するカードと同じインデックスは選択不可
-	if selected_index == summon_card_index:
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("召喚するカードは犠牲にできません")
-		return {"card": {}, "index": -1}
-	
-	var hand = card_system.get_all_cards_for_player(player_id)
-	if selected_index >= hand.size():
-		return {"card": {}, "index": -1}
-	
-	var sacrifice_card = hand[selected_index]
-	
-	# カードを破棄
-	card_system.discard_card(player_id, selected_index, "sacrifice")
-	print("[TileActionProcessor] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
-	
-	return {"card": sacrifice_card, "index": selected_index}
-
-
-## CPU用カード犠牲処理（自動選択）
-func _process_card_sacrifice_cpu(player_id: int, creature_card: Dictionary, tile_element: String) -> Dictionary:
-	# CPUSacrificeSelectorを初期化
-	if not sacrifice_selector:
-		sacrifice_selector = CPUSacrificeSelector.new()
-		sacrifice_selector.initialize(card_system, board_system)
-		if creature_synthesis:
-			sacrifice_selector.creature_synthesis = creature_synthesis
-	
-	# 犠牲カードを選択
-	var result = sacrifice_selector.select_sacrifice_for_creature(creature_card, player_id, tile_element)
-	var sacrifice_card = result.get("card", {})
-	
-	if sacrifice_card.is_empty():
-		print("[TileActionProcessor] CPU: 犠牲カードが選択できませんでした")
-		return {"card": {}, "index": -1}
-	
-	# カードを破棄（インデックスを探して破棄）
-	var hand = card_system.get_all_cards_for_player(player_id)
-	var sacrifice_index = -1
-	for i in range(hand.size()):
-		if hand[i].get("id") == sacrifice_card.get("id"):
-			card_system.discard_card(player_id, i, "sacrifice")
-			sacrifice_index = i
-			print("[TileActionProcessor] CPU: %s を犠牲にしました" % sacrifice_card.get("name", "?"))
-			break
-	
-	return {"card": sacrifice_card, "index": sacrifice_index}
-
-
-## CPUプレイヤーかどうか判定
-func _is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-	
-	var cpu_settings = game_flow_manager.player_is_cpu
-	var debug_mode = game_flow_manager.debug_manual_control_all
-	
-	if debug_mode:
-		return false  # デバッグモードでは全員手動
-	
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
-
-# パス処理（通行料支払いはend_turn()で一本化）
+# パス処理
 func on_action_pass():
 	if not is_action_processing:
 		return
-	
-	# パス時は支払い処理なし（end_turn()内で敵地判定・支払いを実行）
 	print("[パス処理] タイルアクション完了")
 	_complete_action()
 
@@ -770,7 +247,6 @@ func on_level_up_selected(target_level: int, cost: int):
 		return
 	
 	if target_level == 0 or cost == 0:
-		# キャンセル
 		_complete_action()
 		return
 	
@@ -779,12 +255,10 @@ func on_level_up_selected(target_level: int, cost: int):
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power >= cost:
-		# レベルアップ実行
 		var tile = board_system.tile_nodes[current_tile]
 		tile.set_level(target_level)
 		player_system.add_magic(current_player_index, -cost)
 		
-		# 表示更新
 		if board_system.tile_info_display:
 			board_system.tile_info_display.update_display(current_tile, board_system.get_tile_info(current_tile))
 		
@@ -798,47 +272,19 @@ func on_level_up_selected(target_level: int, cost: int):
 
 # === コールバック ===
 
-# 特殊アクション完了時
-# バトル完了時
-func _on_battle_completed(success: bool, tile_index: int):
-	print("バトル結果受信: success=", success, " tile=", tile_index)
-	
-	# 衰弱（プレイグ）ダメージ処理
-	_apply_plague_damage_after_battle(tile_index)
-	
-	if ui_manager:
-		ui_manager.hide_card_selection_ui()
-		ui_manager.update_player_info_panels()
-	
-	emit_signal("invasion_completed", success, tile_index)
-	_complete_action()
-
-
-## バトル終了後の衰弱ダメージ処理
-## ※衰弱はSkillBattleEndEffectsで処理されるため、ここでは何もしない
-func _apply_plague_damage_after_battle(_tile_index: int) -> void:
-	# 衰弱ダメージはbattle_execution.gd内のSkillBattleEndEffects.process_allで処理
-	# ナチュラルワールド等による無効化チェックもそちらで行う
-	pass
-
-# CPUアクション完了時
 func _on_cpu_action_completed():
 	_complete_action()
 
 # === ヘルパー関数 ===
 
-# 特殊タイルかチェック（TileHelperに委譲）
-# 特殊タイルかチェック（TileHelperに委譲）
 func _is_special_tile(tile_type: String) -> bool:
 	return TileHelper.is_special_type(tile_type)
-
-
 
 # 外部からアクション完了を通知するための公開メソッド
 func complete_action():
 	_complete_action()
 
-# Phase 1-D: クリーチャー交換処理
+# クリーチャー交換処理
 func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictionary):
 	if not is_action_processing:
 		print("Warning: Not processing any action")
@@ -857,11 +303,10 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 		_complete_action()
 		return
 	
-	# 🔄 最新のタイルデータを再取得（死者復活などで変身している可能性があるため）
+	# 最新のタイルデータを再取得
 	var tile_info = board_system.get_tile_info(tile_index)
 	var actual_creature_data = tile_info.get("creature", {})
 	
-	# デバッグ: タイルデータの内容を確認
 	print("[デバッグ] タイルデータ再取得:")
 	print("  tile_info.has_creature: ", tile_info.get("has_creature", false))
 	print("  creature.name: ", actual_creature_data.get("name", "なし"))
@@ -876,11 +321,11 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
 	if typeof(cost_data) == TYPE_DICTIONARY:
-		cost = cost_data.get("ep", 0)  # 等倍
+		cost = cost_data.get("ep", 0)
 	else:
-		cost = cost_data  # 等倍
+		cost = cost_data
 	
-	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	# ライフフォース呪いチェック
 	if game_flow_manager and game_flow_manager.spell_cost_modifier:
 		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
@@ -896,107 +341,31 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	print("  元のクリーチャー: ", actual_creature_data.get("name", "不明"))
 	print("  新しいクリーチャー: ", card_data.get("name", "不明"))
 	
-	# 1. 元のクリーチャーを手札に戻す（最新のデータを使用）
 	card_system.return_card_to_hand(current_player_index, actual_creature_data)
-	
-	# 2. 選択したカードを使用（手札から削除）
 	card_system.use_card_for_player(current_player_index, card_index)
-	
-	# 3. EP消費
 	player_system.add_magic(current_player_index, -cost)
-	
-	# 4. 新しいクリーチャーを配置（土地レベル・属性は維持される）
 	board_system.place_creature(tile_index, card_data)
 	
-	# 5. ダウン状態を設定（不屈チェック）
+	# ダウン状態を設定（不屈チェック）
 	if board_system.tile_nodes.has(tile_index):
 		var tile = board_system.tile_nodes[tile_index]
 		if tile and tile.has_method("set_down_state"):
-			# 不屈持ちでなければダウン状態にする
 			if not PlayerBuffSystem.has_unyielding(card_data):
 				tile.set_down_state(true)
 			else:
 				print("[TileActionProcessor] 不屈により交換後もダウンしません: タイル", tile_index)
 	
-	# UI更新
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
 	
-	# ドミニオコマンド使用コメント表示
 	var player_name = _get_current_player_name()
 	set_pending_comment("%s がドミニオコマンド：交換" % player_name)
 	
 	print("[TileActionProcessor] クリーチャー交換完了")
 	_complete_action()
 
-## アイテムフェーズ表示用の土地ボーナス計算
-func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dictionary) -> int:
-	var creature_element = creature_data.get("element", "")
-	var tile_element = tile_info.get("element", "")
-	var tile_level = tile_info.get("level", 1)
-	
-	# 無属性タイルは全クリーチャーにボーナス
-	if tile_element == "neutral":
-		return tile_level * 10
-	
-	# 属性が一致すれば土地ボーナス
-	if creature_element != "" and creature_element == tile_element:
-		return tile_level * 10
-	
-	return 0
-
-## CPU攻撃側の合体処理をチェック・実行（SkillMerge.execute_merge()に委譲）
-func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
-	# cpu_ai_handlerから合体データを取得
-	if not board_system or not board_system.cpu_turn_processor:
-		return false
-	
-	var cpu_handler = board_system.cpu_turn_processor.cpu_ai_handler
-	if not cpu_handler:
-		return false
-	
-	if not cpu_handler.has_pending_merge():
-		return false
-	
-	var merge_data = cpu_handler.get_pending_merge_data()
-	print("[TileActionProcessor] CPU攻撃側合体実行: %s → %s" % [
-		pending_battle_card_data.get("name", "?"),
-		merge_data.get("result_name", "?")
-	])
-	
-	var partner_index = merge_data.get("partner_index", -1)
-	if partner_index < 0:
-		cpu_handler.clear_pending_merge_data()
-		return false
-	
-	# SkillMergeに委譲
-	var skill_merge_result = SkillMerge.execute_merge(
-		pending_battle_card_data,
-		partner_index,
-		player_index,
-		card_system,
-		player_system,
-		game_flow_manager
-	)
-	
-	if not skill_merge_result.get("success", false):
-		print("[TileActionProcessor] CPU合体失敗")
-		cpu_handler.clear_pending_merge_data()
-		return false
-	
-	# バトルカードデータを更新
-	pending_battle_card_data = skill_merge_result.get("result_creature", {})
-	
-	print("[TileActionProcessor] CPU合体完了: %s" % pending_battle_card_data.get("name", "?"))
-	
-	# 合体データをクリア
-	cpu_handler.clear_pending_merge_data()
-	
-	return true
-
 # コメントを設定（complete_action時に表示）
-## force_click_wait: trueの場合、CPUターンでもクリック待ちにする
 func set_pending_comment(message: String, player_id: int = -1, force_click_wait: bool = true):
 	pending_comment = message
 	pending_comment_player_id = player_id
@@ -1006,19 +375,17 @@ func set_pending_comment(message: String, player_id: int = -1, force_click_wait:
 func _complete_action():
 	print("[TileActionProcessor] _complete_action開始")
 	
-	# 既に処理中でなければ何もしない（二重呼び出し防止）
 	if not is_action_processing:
 		print("[TileActionProcessor] 既に完了済み、スキップ")
 		return
 	
-	# 先にフラグをリセット（await中の再呼び出し防止）
 	is_action_processing = false
 	
-	# コメント表示（設定されている場合）
+	# コメント表示
 	if not pending_comment.is_empty():
 		await _show_pending_comment()
 	
-	# カメラを追従モードに戻し、プレイヤー位置に復帰（人間プレイヤーのみ）
+	# カメラを追従モードに戻す（人間プレイヤーのみ）
 	var current_idx = board_system.current_player_index if board_system else 0
 	var cpu_flags = game_flow_manager.player_is_cpu if game_flow_manager else []
 	var is_cpu = cpu_flags[current_idx] if current_idx < cpu_flags.size() else false
@@ -1026,13 +393,11 @@ func _complete_action():
 		board_system.camera_controller.enable_follow_mode()
 		board_system.camera_controller.return_to_player()
 	
-	# 遠隔配置モードをクリア
 	remote_placement_tile = -1
 	
 	print("[TileActionProcessor] action_completedシグナル発火")
 	emit_signal("action_completed")
 
-# コメント表示処理
 func _show_pending_comment():
 	if pending_comment.is_empty():
 		return
@@ -1041,21 +406,16 @@ func _show_pending_comment():
 	if player_id < 0 and board_system:
 		player_id = board_system.current_player_index
 	
-	# GlobalCommentUIで表示
 	if ui_manager and ui_manager.global_comment_ui:
 		await ui_manager.global_comment_ui.show_and_wait(pending_comment, player_id, pending_comment_force_click)
 	
-	# クリア
 	pending_comment = ""
 	pending_comment_player_id = -1
 	pending_comment_force_click = true
 
-
-# 現在のプレイヤー名を取得（コメント表示用）
 func _get_current_player_name() -> String:
 	if not player_system or not board_system:
 		return "プレイヤー"
-	
 	var player_id = board_system.current_player_index
 	if player_id < player_system.players.size():
 		var player = player_system.players[player_id]
@@ -1064,137 +424,53 @@ func _get_current_player_name() -> String:
 	return "プレイヤー"
 
 # ============================================================
-# CPU用インターフェース
+# CPU用インターフェース（サブシステムに委譲）
 # ============================================================
 
 ## CPU用召喚実行
-## CPUTileActionExecutorに委譲
 func execute_summon_for_cpu(card_index: int) -> bool:
-	print("[TileActionProcessor] CPU召喚開始: card_index=%d" % card_index)
-	
-	# CPUTileActionExecutorを初期化
-	if not cpu_tile_action_executor:
-		cpu_tile_action_executor = CPUTileActionExecutor.new()
-		cpu_tile_action_executor.initialize(self)
-	
 	is_action_processing = true
-	var current_player_index = board_system.current_player_index
-	
-	# 準備処理（条件チェック、犠牲処理、合成処理）
-	var prep = cpu_tile_action_executor.prepare_summon(card_index, current_player_index)
-	if not prep.get("success", false):
-		var reason = prep.get("reason", "unknown")
-		print("[TileActionProcessor] CPU: 召喚準備失敗: %s" % reason)
-		is_action_processing = false
-		return false
-	
-	# 召喚実行
-	var success = cpu_tile_action_executor.execute_summon(prep, current_player_index)
+	var success = await summon_executor.execute_summon_for_cpu(card_index, _complete_action)
 	if not success:
 		is_action_processing = false
-		return false
-	
-	print("[TileActionProcessor] CPU召喚成功: %s" % prep.get("card_data", {}).get("name", "?"))
-	
-	# UI更新
-	if ui_manager:
-		ui_manager.hide_card_selection_ui()
-		ui_manager.update_player_info_panels()
-	
-	_complete_action()
-	return true
+	return success
 
 ## CPU用バトル実行
-## CPUTileActionExecutorに準備処理を委譲
-## item_index: CPUが使用するアイテムの手札インデックス（-1=使用しない）
 func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: int = -1) -> bool:
-	print("[TileActionProcessor] CPUバトル開始: card_index=%d, item_index=%d" % [card_index, item_index])
-	
-	# CPUTileActionExecutorを初期化
-	if not cpu_tile_action_executor:
-		cpu_tile_action_executor = CPUTileActionExecutor.new()
-		cpu_tile_action_executor.initialize(self)
-	
 	is_action_processing = true
-	var current_player_index = board_system.current_player_index
-	
-	# 準備処理（条件チェック、犠牲処理、合成処理）
-	var prep = cpu_tile_action_executor.prepare_battle(card_index, tile_info, item_index, current_player_index)
-	if not prep.get("success", false):
-		var reason = prep.get("reason", "unknown")
-		print("[TileActionProcessor] CPU: バトル準備失敗: %s" % reason)
+	var success = await battle_executor.execute_battle_for_cpu(card_index, tile_info, item_index, _complete_action)
+	if not success:
 		is_action_processing = false
-		return false
-	
-	var card_data = prep.get("card_data", {})
-	var cost = prep.get("cost", 0)
-	var item_data = prep.get("item_data", {})
-	
-	# バトル情報を保存
-	pending_battle_card_index = card_index
-	pending_battle_card_data = card_data
-	pending_battle_tile_info = tile_info
-	
-	# CPUが選択したアイテムを保存
-	pending_attacker_item = item_data
-	if not item_data.is_empty():
-		print("[TileActionProcessor] CPU: 攻撃側アイテム保存: %s (index=%d)" % [item_data.get("name", "?"), item_data.get("_hand_index", -1)])
-	
-	# カードを使用してEP消費
-	card_system.use_card_for_player(current_player_index, card_index)
-	player_system.add_magic(current_player_index, -cost)
-	print("[TileActionProcessor] CPU: バトルカード消費: %s" % pending_battle_card_data.get("name", "?"))
-	
-	# バトルステータスオーバーレイ表示
-	var defender_creature = pending_battle_tile_info.get("creature", {})
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
-		var attacker_display = pending_battle_card_data.duplicate()
-		attacker_display["land_bonus_hp"] = 0
-		
-		var defender_display = defender_creature.duplicate()
-		defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-		
-		game_flow_manager.battle_status_overlay.show_battle_status(
-			attacker_display, defender_display, "attacker")
-	
-	# CPU攻撃側の合体処理をチェック
-	var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
-	if merge_executed:
-		if game_flow_manager and game_flow_manager.battle_status_overlay:
-			var attacker_display = pending_battle_card_data.duplicate()
-			attacker_display["land_bonus_hp"] = 0
-			var defender_display = defender_creature.duplicate()
-			defender_display["land_bonus_hp"] = _calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-			game_flow_manager.battle_status_overlay.show_battle_status(
-				attacker_display, defender_display, "attacker")
-	
-	# アイテムフェーズ開始
-	if game_flow_manager and game_flow_manager.item_phase_handler:
-		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
-			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-		
-		# CPU攻撃側の事前選択アイテムを設定
-		if not pending_attacker_item.is_empty():
-			game_flow_manager.item_phase_handler.set_preselected_attacker_item(pending_attacker_item)
-		
-		# 攻撃側フェーズ開始時に防御側情報を渡す（防御側CPUの事前選択用）
-		game_flow_manager.item_phase_handler.start_item_phase(
-			current_player_index, 
-			pending_battle_card_data,
-			pending_battle_tile_info
-		)
-	else:
-		_execute_pending_battle()
-	
-	return true
+	return success
 
-## CPU用犠牲カード自動選択（CPUSacrificeSelector使用）
-## creature_card: 召喚するクリーチャーカード
-## tile_element: 配置先タイルの属性（イド等のクリーチャー合成用）
-func _auto_select_sacrifice_card_for_cpu(player_id: int, creature_card: Dictionary, tile_element: String = "") -> Dictionary:
-	# CPUTileActionExecutorに委譲
-	if not cpu_tile_action_executor:
-		cpu_tile_action_executor = CPUTileActionExecutor.new()
-		cpu_tile_action_executor.initialize(self)
-	
-	return cpu_tile_action_executor.select_sacrifice_card(player_id, creature_card, tile_element)
+# ============================================================
+# 後方互換（外部参照用の委譲メソッド）
+# ============================================================
+
+## 召喚実行（special_tile_systemから呼ばれる）
+func execute_summon(card_index: int):
+	await summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
+
+## 土地条件チェック（SummonConditionCheckerに委譲）
+func check_lands_required(card_data: Dictionary, player_id: int) -> Dictionary:
+	return SummonConditionChecker.check_lands_required(card_data, player_id, board_system)
+
+## 配置制限チェック（SummonConditionCheckerに委譲）
+func check_cannot_summon(card_data: Dictionary, tile_element: String) -> Dictionary:
+	return SummonConditionChecker.check_cannot_summon(card_data, tile_element)
+
+## 犠牲選択中フラグ（後方互換）
+var is_sacrifice_selecting: bool:
+	get: return summon_executor.is_sacrifice_selecting if summon_executor else false
+
+## creature_synthesis参照（後方互換）
+var creature_synthesis: CreatureSynthesis:
+	get: return summon_executor.creature_synthesis if summon_executor else null
+
+## sacrifice_selector参照（後方互換）
+var sacrifice_selector:
+	get: return summon_executor.sacrifice_selector if summon_executor else null
+
+## card_sacrifice_helper参照（後方互換）
+var card_sacrifice_helper:
+	get: return summon_executor.card_sacrifice_helper if summon_executor else null

@@ -771,9 +771,8 @@ func _can_place_creature(creature_data: Dictionary, _land: Dictionary, player_id
 
 ## ブライトワールド（召喚条件解除）が発動中か
 func _is_summon_condition_ignored(player_id: int = -1) -> bool:
-	if tile_action_processor and tile_action_processor.has_method("_is_summon_condition_ignored"):
-		return tile_action_processor._is_summon_condition_ignored(player_id)
-	return false
+	var gfm = tile_action_processor.game_flow_manager if tile_action_processor else null
+	return SummonConditionChecker.is_summon_condition_ignored(player_id, gfm, board_system)
 
 
 ## 簡易土地条件チェック（tile_action_processorがない場合のフォールバック）

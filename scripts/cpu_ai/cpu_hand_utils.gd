@@ -177,8 +177,8 @@ func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 		return true
 	
 	# ブライトワールド発動中は召喚条件を無視
-	if tile_action_processor and tile_action_processor.has_method("_is_summon_condition_ignored"):
-		if tile_action_processor._is_summon_condition_ignored():
+	if tile_action_processor:
+		if SummonConditionChecker.is_summon_condition_ignored(-1, tile_action_processor.game_flow_manager, tile_action_processor.board_system):
 			return true
 	
 	# TileActionProcessorがあればそれを使用

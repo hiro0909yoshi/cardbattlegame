@@ -1,4 +1,4 @@
-# Scripts Directory Structure (Updated: 2026-02-11, movement_controller refactored)
+# Scripts Directory Structure (Updated: 2026-02-11, game_flow_manager split)
 
 ## Root (`scripts/`)
 
@@ -10,7 +10,8 @@
 - `battle_system.gd` - Battle processing
 - `creature_manager.gd` - Centralized creature data
 - `ui_manager.gd` - UI orchestration
-- `tile_action_processor.gd` - Tile action processing
+- `tile_action_processor.gd` - Tile action processing (core, delegates to summon/battle executors)
+- `debug_settings.gd` - Debug settings (static flags)
 - `tile_data_manager.gd` - Tile info, toll calculation
 - `movement_controller.gd` - Player movement (core, delegates to 5 sub-systems)
 - `movement_direction_selector.gd` - Direction selection UI (+1/-1)
@@ -117,6 +118,9 @@
 - `bankruptcy_handler.gd` - Bankruptcy handling
 - `movement_helper.gd` - Movement processing
 - `debug_command_handler.gd` - Debug commands
+- `tile_summon_executor.gd` - Summon execution (split from tile_action_processor)
+- `tile_battle_executor.gd` - Battle execution (split from tile_action_processor)
+- `game_result_handler.gd` - Game result processing (split from game_flow_manager)
 
 ### Land Command
 - `dominio_command_handler.gd` - Dominio command management

@@ -190,7 +190,7 @@ func _on_territory_command_decided(command: Dictionary):
 func _on_cpu_summon_decided(card_index: int):
 	if card_index >= 0:
 		# TileActionProcessor経由で召喚（土地条件・合成処理含む）
-		var success = board_system.tile_action_processor.execute_summon_for_cpu(card_index)
+		var success = await board_system.tile_action_processor.execute_summon_for_cpu(card_index)
 		if not success:
 			print("[CPU] 召喚失敗 → パス")
 			_complete_action()
@@ -226,7 +226,7 @@ func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
 	
 	# TileActionProcessor経由でバトル（土地条件・合成処理含む）
 	# アイテムフェーズもTileActionProcessor内で処理される
-	var success = board_system.tile_action_processor.execute_battle_for_cpu(creature_index, tile_info, item_index)
+	var success = await board_system.tile_action_processor.execute_battle_for_cpu(creature_index, tile_info, item_index)
 	if not success:
 		print("[CPU] バトル実行失敗 → パス")
 		_complete_action()

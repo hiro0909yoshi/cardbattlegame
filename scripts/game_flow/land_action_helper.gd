@@ -258,7 +258,7 @@ static func execute_swap_creature(handler) -> bool:
 	# TileActionProcessorに交換モードを設定
 	if handler.board_system.tile_action_processor:
 		# is_action_processingをtrueに設定（通常のアクション処理と同じ）
-		handler.board_system.tile_action_processor.is_action_processing = true
+		handler.board_system.tile_action_processor.begin_action_processing()
 		
 		# 交換情報を保存
 		handler._swap_mode = true
@@ -633,7 +633,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	# TileActionProcessorに処理中フラグを設定
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.is_action_processing = true
+		handler.board_system.tile_action_processor.begin_action_processing()
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
@@ -782,7 +782,7 @@ static func _cancel_terrain_change(handler):
 	
 	# TileActionProcessorのフラグをリセット
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.is_action_processing = false
+		handler.board_system.tile_action_processor.reset_action_processing()
 	
 	# 地形選択パネルを閉じてアクションメニューに戻る
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:

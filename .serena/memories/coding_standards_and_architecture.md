@@ -1,6 +1,32 @@
 # Data Structures & Reference
 
 Coding conventions: see `/mnt/skills/user/gdscript-coding/SKILL.md`
+
+## 追加コーディング規約（SKILLファイル補足）
+
+### privateメソッドを外部から呼ばない
+`_` プレフィックスのメソッドは定義ファイル内でのみ呼ぶ。
+外部から必要な場合は public メソッドとして公開するか、適切なクラス（例: SummonConditionChecker）に移動する。
+
+### 状態フラグの外部直接setを禁止
+他クラスの状態フラグ（`is_xxx`）を外部から直接 `= true/false` しない。
+代わりに `begin_xxx()` / `reset_xxx()` 等の明示的メソッドを用意する。
+例: `tile_action_processor.begin_action_processing()` / `reset_action_processing()`
+
+### デバッグフラグは DebugSettings に集約
+召喚条件やアイテム制限のデバッグフラグは `DebugSettings` クラス（static変数）を使う。
+各システムに個別のデバッグフラグを持たせない。
+```gdscript
+# ✅ DebugSettings経由
+if DebugSettings.disable_lands_required: ...
+
+# ❌ 個別システムのフラグ
+if tile_action_processor.debug_disable_lands_required: ...
+```
+
+### 内部プロパティを外部から直接参照しない
+他クラスの内部プロパティ（`creature_synthesis`, `sacrifice_selector` 等）に直接アクセスしない。
+initialize時に引数として渡すか、getter メソッドを用意する。
 Initialization order: see `/mnt/skills/user/gdscript-initialization/SKILL.md`
 UI flow rules: see `/mnt/skills/user/gdscript-ui-flow/SKILL.md`
 
