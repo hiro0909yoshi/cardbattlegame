@@ -12,7 +12,7 @@ var connections: Dictionary = {}  # key: String -> connection_data: Dictionary
 var connection_count: Dictionary = {}  # signal_name -> count
 
 # デバッグモード
-var debug_mode: bool = true
+# NOTE: debug_modeはDebugSettings.signal_registry_debugに移行済み
 
 func _ready():
 	# シングルトン設定
@@ -41,7 +41,7 @@ static func connect_safe(
 	
 	# 既に接続されているかチェック
 	if instance.connections.has(key):
-		if instance.debug_mode:
+		if DebugSettings.signal_registry_debug:
 			print("⚠️ 既に接続済み: ", key)
 		return false
 	
@@ -65,7 +65,7 @@ static func connect_safe(
 		instance.connection_count[count_key] = 0
 	instance.connection_count[count_key] += 1
 	
-	if instance.debug_mode:
+	if DebugSettings.signal_registry_debug:
 		print("✅ シグナル接続: ", signal_name, " [", instance.connection_count[count_key], "個目]")
 	
 	return true
@@ -85,7 +85,7 @@ static func disconnect_safe(
 	var key = _generate_key(from_object, signal_name, to_object, method_name, unique_id)
 	
 	if not instance.connections.has(key):
-		if instance.debug_mode:
+		if DebugSettings.signal_registry_debug:
 			print("⚠️ 接続が見つかりません: ", key)
 		return false
 	
@@ -101,7 +101,7 @@ static func disconnect_safe(
 	if instance.connection_count.has(signal_name):
 		instance.connection_count[signal_name] -= 1
 	
-	if instance.debug_mode:
+	if DebugSettings.signal_registry_debug:
 		print("🔌 シグナル切断: ", signal_name)
 	
 	return true
@@ -142,7 +142,7 @@ static func clear_object_connections(object: Object):
 	for key in to_remove:
 		instance.connections.erase(key)
 	
-	if instance.debug_mode and to_remove.size() > 0:
+	if DebugSettings.signal_registry_debug and to_remove.size() > 0:
 		print("🧹 " + str(to_remove.size()) + "個の接続をクリア")
 
 	# デバッグ：接続状態を表示
@@ -199,5 +199,5 @@ static func _generate_key(from: Object, signal_name: String, to: Object, method:
 # デバッグモード切替
 static func set_debug_mode(enabled: bool):
 	if instance:
-		instance.debug_mode = enabled
+		DebugSettings.signal_registry_debug = enabled
 		print("📡 SignalRegistry: デバッグモード ", "ON" if enabled else "OFF")

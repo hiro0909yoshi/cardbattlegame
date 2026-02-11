@@ -87,8 +87,8 @@ func show_action_menu(tile_index: int):
 		var creature = tile.creature_data if tile else {}
 		
 		# クリーチャーがいる場合、情報パネルを表示（ボタン設定はスキップ）
-		if not creature.is_empty() and ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-			ui_manager_ref.creature_info_panel_ui.show_view_mode(creature, tile_index, false)
+		if not creature.is_empty() and ui_manager_ref:
+			ui_manager_ref.show_card_info(creature, tile_index, false)
 		
 		# 防御型チェック
 		var creature_type = creature.get("creature_type", "normal")
@@ -226,8 +226,8 @@ func hide_action_menu(clear_buttons: bool = true):
 	selected_tile_for_action = -1
 	
 	# クリーチャー情報パネルも閉じる（グローバルボタンのクリアは呼び出し側で制御）
-	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-		ui_manager_ref.creature_info_panel_ui.hide_panel(clear_buttons)
+	if ui_manager_ref:
+		ui_manager_ref.hide_all_info_panels(clear_buttons)
 
 ## レベル選択表示
 func show_level_selection(tile_index: int, current_level: int, player_magic: int):
@@ -357,9 +357,8 @@ func _on_cancel_dominio_order_button_pressed():
 
 ## クリーチャー情報パネルを閉じる（表示中の場合）
 func _close_creature_info_panel_if_open():
-	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-		if ui_manager_ref.creature_info_panel_ui.is_visible_panel:
-			ui_manager_ref.creature_info_panel_ui.hide_panel()
+	if ui_manager_ref:
+		ui_manager_ref.hide_all_info_panels()
 
 func _on_action_level_up_pressed():
 	_close_creature_info_panel_if_open()

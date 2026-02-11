@@ -52,28 +52,11 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	var is_tap_target_active = ui_manager.tap_target_manager and ui_manager.tap_target_manager.is_active
 	var is_tutorial_active = ui_manager.global_action_buttons and ui_manager.global_action_buttons.explanation_mode_active
 	var is_spell_phase_active = gfm and gfm.spell_phase_handler and gfm.spell_phase_handler.is_spell_phase_active()
-	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active
+	var is_card_selection_active = ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active
+	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active and not is_card_selection_active
 
-	if ui_manager.creature_info_panel_ui:
-		ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
-		print("[UITapHandler] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons])
-
-		if is_dominio_order_active:
-			ui_manager.register_back_action(func():
-				ui_manager.creature_info_panel_ui.hide_panel(false)
-				gfm.dominio_command_handler.restore_navigation()
-			, "閉じる")
-		elif is_spell_phase_active:
-			if not ui_manager._spell_phase_buttons_saved:
-				ui_manager._spell_phase_saved_confirm = ui_manager._compat_confirm_cb
-				ui_manager._spell_phase_saved_back = ui_manager._compat_back_cb
-				ui_manager._spell_phase_saved_up = ui_manager._compat_up_cb
-				ui_manager._spell_phase_saved_down = ui_manager._compat_down_cb
-				ui_manager._spell_phase_buttons_saved = true
-			ui_manager.register_back_action(func():
-				ui_manager.creature_info_panel_ui.hide_panel(false)
-				ui_manager.restore_spell_phase_buttons()
-			, "閉じる")
+	ui_manager.show_card_info(creature_data, tile_index, setup_buttons)
+	print("[UITapHandler] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons])
 
 
 ## タイルがタップされた時のハンドラ（クリーチャーがいない場合）
@@ -82,18 +65,11 @@ func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
 		if ui_manager.tap_target_manager.handle_tile_tap(tile_index, tile_data):
 			return
 
-		if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_panel_visible():
-			ui_manager.creature_info_panel_ui.hide_panel(false)
+		ui_manager.hide_all_info_panels(false)
 		return
 
-	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_panel_visible():
-		var is_tutorial_active = ui_manager.global_action_buttons and ui_manager.global_action_buttons.explanation_mode_active
-		var gfm = ui_manager.game_flow_manager_ref
-		var is_spell_phase_active = gfm and gfm.spell_phase_handler and gfm.spell_phase_handler.is_spell_phase_active()
-		var clear_buttons = not is_tutorial_active and not is_spell_phase_active
-		ui_manager.creature_info_panel_ui.hide_panel(clear_buttons)
-		if is_spell_phase_active:
-			ui_manager.restore_spell_phase_buttons()
+	if ui_manager.is_any_info_panel_visible():
+		_close_info_panel_and_restore()
 
 
 ## 空（タイル外）がタップされた時のハンドラ
@@ -102,11 +78,22 @@ func _on_empty_tapped():
 		if ui_manager.tap_target_manager.handle_empty_tap():
 			return
 
-	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_panel_visible():
-		ui_manager.creature_info_panel_ui.hide_panel(false)
-		if ui_manager._spell_phase_buttons_saved:
-			ui_manager.restore_spell_phase_buttons()
+	if ui_manager.is_any_info_panel_visible():
+		_close_info_panel_and_restore()
 		print("[UITapHandler] 空タップでパネル閉じ")
+
+
+## インフォパネルを閉じてフェーズ状態を復元する共通処理
+func _close_info_panel_and_restore():
+	ui_manager.hide_all_info_panels(true)
+	ui_manager.restore_navigation_state()
+	# フェーズコメント復元
+	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active:
+		ui_manager.card_selection_ui.restore_phase_comment()
+	# カードのホバー状態を解除
+	var card_script = load("res://scripts/card.gd")
+	if card_script.currently_selected_card:
+		card_script.currently_selected_card.deselect_card()
 
 
 ## TapTargetManagerからターゲットが選択された時

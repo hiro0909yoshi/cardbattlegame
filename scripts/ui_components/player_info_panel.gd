@@ -52,7 +52,7 @@ func initialize(parent: Node, player_system: PlayerSystem, board_system, count: 
 		player_system_ref.magic_changed.connect(_on_magic_changed)
 
 # GameFlowManager参照を設定（世界呪い表示用、ターン開始シグナル接続用）
-func set_game_flow_manager(gfm):
+func set_game_flow_manager(gfm, lap_system = null):
 	game_flow_manager_ref = gfm
 	
 	# ターン開始シグナルを接続（ターン開始時に即座に順番アイコンを更新）
@@ -60,8 +60,8 @@ func set_game_flow_manager(gfm):
 		game_flow_manager_ref.turn_started.connect(_on_turn_started)
 	
 	# シグナル取得時にパネルを即座更新
-	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
-		game_flow_manager_ref.lap_system.checkpoint_signal_obtained.connect(_on_signal_obtained)
+	if lap_system:
+		lap_system.checkpoint_signal_obtained.connect(_on_signal_obtained)
 
 # パネルを作成
 func create_panels():

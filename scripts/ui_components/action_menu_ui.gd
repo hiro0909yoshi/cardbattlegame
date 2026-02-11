@@ -313,7 +313,7 @@ func _create_button(item: Dictionary, pos: Vector2, btn_size: Vector2, index: in
 	btn.add_theme_stylebox_override("disabled", disabled_style)
 	
 	# クリックイベント
-	btn.pressed.connect(func(): _on_button_pressed(index))
+	btn.pressed.connect(_on_button_pressed.bind(index))
 	
 	return btn
 

@@ -379,7 +379,7 @@ func _show_land_selection_ui(player_id: int, lands: Array) -> int:
 
 ## タイルのクリーチャー情報を表示
 func _show_creature_info_for_tile(tile_index: int):
-	if not ui_manager or not ui_manager.creature_info_panel_ui:
+	if not ui_manager:
 		return
 	
 	if not board_system or not board_system.tile_nodes:
@@ -404,13 +404,13 @@ func _show_creature_info_for_tile(tile_index: int):
 	creature_data["_sell_value"] = land_value  # 一時的に追加
 	
 	# クリーチャー情報パネルを表示
-	ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+	ui_manager.show_card_info(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
 func _hide_creature_info_panel():
-	if ui_manager and ui_manager.creature_info_panel_ui:
-		ui_manager.creature_info_panel_ui.hide_panel(false)
+	if ui_manager:
+		ui_manager.hide_all_info_panels(false)
 
 
 ## CPU用破産処理（自動選択）

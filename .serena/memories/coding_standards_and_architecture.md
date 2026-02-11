@@ -24,6 +24,14 @@ if DebugSettings.disable_lands_required: ...
 if tile_action_processor.debug_disable_lands_required: ...
 ```
 
+### インフォパネルはui_managerの統合メソッド経由でアクセス
+3つのinfo_panel（creature/spell/item）の一括操作はui_managerの統合メソッドを使う。
+- `hide_all_info_panels(clear_buttons)`: 全パネル一括非表示
+- `is_any_info_panel_visible()`: いずれかが表示中か
+- `show_card_info(card_data, tile_index, setup_buttons)`: 種別自動判定で閲覧表示
+- `show_card_selection(card_data, hand_index, ...)`: 種別自動判定で選択表示
+creature固有の操作（タップ表示等）は直接アクセスOK。
+
 ### 内部プロパティを外部から直接参照しない
 他クラスの内部プロパティ（`creature_synthesis`, `sacrifice_selector` 等）に直接アクセスしない。
 initialize時に引数として渡すか、getter メソッドを用意する。

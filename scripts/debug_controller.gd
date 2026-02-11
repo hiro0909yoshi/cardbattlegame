@@ -432,7 +432,7 @@ func toggle_cpu_hand_display():
 		return
 	
 	ui_manager.toggle_debug_mode()
-	emit_signal("debug_action", "toggle_cpu_hand", ui_manager.debug_mode)
+	emit_signal("debug_action", "toggle_cpu_hand", DebugSettings.ui_debug_mode)
 
 # 全タイル情報表示
 func show_all_tiles_info():

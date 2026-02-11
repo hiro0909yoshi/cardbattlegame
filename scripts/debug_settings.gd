@@ -15,3 +15,15 @@ static var disable_cannot_summon: bool = false
 
 ## アイテム使用制限を無効化（false=有効）
 static var disable_cannot_use: bool = false
+
+## 秘密カードを無効化（false=有効：秘密カードは裏向きのまま）
+static var disable_secret_cards: bool = false
+
+## クリーチャーマネージャのデバッグログ表示
+static var creature_manager_debug: bool = false
+
+## UIマネージャのデバッグモード（CPU手札表示等）
+static var ui_debug_mode: bool = false
+
+## シグナルレジストリのデバッグログ表示
+static var signal_registry_debug: bool = true

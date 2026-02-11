@@ -59,8 +59,8 @@ signal external_spell_finished()  # 外部スペル実行完了
 ## true: 密命カードを通常カードとして扱う（失敗判定・復帰[ブック]をスキップ）
 ## false: 通常通り密命として動作
 ## 使い方: GameFlowManagerのセットアップ後に設定
-##   spell_phase_handler.debug_disable_secret_cards = true
-var debug_disable_secret_cards: bool = false
+##   DebugSettings.disable_secret_cards = true
+# NOTE: debug_disable_secret_cardsはDebugSettings.disable_secret_cardsに移行済み
 
 ## カード犠牲・土地条件のデバッグフラグはTileActionProcessorで一元管理
 ## 参照: board_system.tile_action_processor.debug_disable_card_sacrifice
@@ -76,6 +76,7 @@ var is_borrow_spell_mode: bool = false  # 借用スペル実行中（SpellBorrow
 
 ## 参照
 var ui_manager = null
+var hand_display = null  # hand_display参照
 var game_flow_manager = null
 var card_system = null
 var player_system = null
@@ -115,6 +116,8 @@ func _process(delta):
 func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
 	ui_manager = ui_mgr
 	game_flow_manager = flow_mgr
+	if ui_manager and ui_manager.get("hand_display"):
+		hand_display = ui_manager.hand_display
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
 	board_system = b_system if b_system else (flow_mgr.board_system_3d if flow_mgr else null)
@@ -185,9 +188,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	_initialize_spell_phase_ui()
 	
 	# hand_displayのシグナルに接続（カードドロー後のボタン位置更新用）
-	if ui_manager and ui_manager.hand_display:
-		if not ui_manager.hand_display.hand_updated.is_connected(_on_hand_updated_for_buttons):
-			ui_manager.hand_display.hand_updated.connect(_on_hand_updated_for_buttons)
+	if hand_display:
+		if not hand_display.hand_updated.is_connected(_on_hand_updated_for_buttons):
+			hand_display.hand_updated.connect(_on_hand_updated_for_buttons)
 	
 	# 発動通知UIを初期化
 	_initialize_spell_cast_notification_ui()
@@ -289,8 +292,8 @@ func _update_spell_phase_ui():
 		else:
 			ui_manager.card_selection_filter = "spell"
 		# 手札表示を更新してグレーアウトを適用
-		if ui_manager.hand_display:
-			ui_manager.hand_display.update_hand_display(current_player.id)
+		if hand_display:
+			hand_display.update_hand_display(current_player.id)
 	
 	# スペル選択UIを表示（人間プレイヤーのみ）
 	if not is_cpu_player(current_player.id):
@@ -303,21 +306,13 @@ func _show_spell_selection_ui(hand_data: Array, _available_magic: int):
 	if not ui_manager or not ui_manager.card_selection_ui:
 		return
 	
-	# スペルカードのみフィルター
-	var spell_cards = []
-	for card in hand_data:
-		if card.get("type", "") == "spell":
-			spell_cards.append(card)
-	
-	if spell_cards.is_empty():
-		return
-	
 	# 現在のプレイヤー情報を取得
 	var current_player = player_system.get_current_player() if player_system else null
 	if not current_player:
 		return
 	
 	# フィルターを設定してスペル選択UIを表示
+	# スペルカードがなくても表示する（全グレイアウトでもカード閲覧を可能にする）
 	ui_manager.card_selection_filter = "spell"
 	if ui_manager.card_selection_ui.has_method("show_selection"):
 		ui_manager.card_selection_ui.show_selection(current_player, "spell")
@@ -480,10 +475,8 @@ func use_spell(spell_card: Dictionary):
 			if ui_manager and ui_manager.phase_display:
 				ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % needed_cost)
 			# インフォパネルを閉じる
-			if ui_manager and ui_manager.creature_info_panel_ui:
-				ui_manager.creature_info_panel_ui.hide_panel()
-			if ui_manager and ui_manager.spell_info_panel_ui:
-				ui_manager.spell_info_panel_ui.hide_panel()
+			if ui_manager:
+				ui_manager.hide_all_info_panels()
 			# カードのホバー状態を解除
 			var card_script = load("res://scripts/card.gd")
 			if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
@@ -1175,10 +1168,10 @@ func complete_spell_phase():
 	if ui_manager:
 		ui_manager.card_selection_filter = ""
 		# 手札表示を更新してグレーアウトを解除
-		if ui_manager.hand_display and player_system:
+		if hand_display and player_system:
 			var current_player = player_system.get_current_player()
 			if current_player:
-				ui_manager.hand_display.update_hand_display(current_player.id)
+				hand_display.update_hand_display(current_player.id)
 	
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()

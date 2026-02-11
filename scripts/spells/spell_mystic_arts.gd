@@ -221,8 +221,8 @@ func _update_caster_selection() -> void:
 	# クリーチャー情報パネル表示
 	var creature_data = creature.get("creature_data", {})
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
-	if ui_manager and ui_manager.creature_info_panel_ui:
-		ui_manager.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+	if ui_manager:
+		ui_manager.show_card_info(creature_data, tile_index, false)
 	
 	# アクション指示パネルで表示
 	if ui_manager and ui_manager.phase_display:
@@ -1117,11 +1117,7 @@ func _show_creature_info_panel(creature_data: Dictionary, tile_index: int) -> vo
 		return
 	
 	var ui_manager = spell_phase_handler_ref.ui_manager
-	var info_panel = ui_manager.creature_info_panel_ui
-	
-	if info_panel and info_panel.has_method("show_view_mode"):
-		# setup_buttons=false でナビゲーションボタンを設定しない（ActionMenuUIが管理）
-		info_panel.show_view_mode(creature_data, tile_index, false)
+	ui_manager.show_card_info(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
@@ -1130,7 +1126,4 @@ func _hide_creature_info_panel() -> void:
 		return
 	
 	var ui_manager = spell_phase_handler_ref.ui_manager
-	var info_panel = ui_manager.creature_info_panel_ui
-	
-	if info_panel and info_panel.has_method("hide_panel"):
-		info_panel.hide_panel(false)  # clear_buttons=false
+	ui_manager.hide_all_info_panels(false)

@@ -907,13 +907,7 @@ func _request_card_confirmation(card_index: int, card_data: Dictionary, action_t
 func _is_any_info_panel_visible() -> bool:
 	if not ui_manager:
 		return false
-	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
-		return true
-	if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
-		return true
-	if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
-		return true
-	return false
+	return ui_manager.is_any_info_panel_visible()
 
 ## カードタイプに応じたインフォパネルを表示
 func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
@@ -935,26 +929,11 @@ func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
 		"transform": confirmation_text = "『%s』を変換" % card_name
 		_: confirmation_text = "『%s』を選択" % card_name
 	
-	match card_type:
-		"creature":
-			if ui_manager.creature_info_panel_ui:
-				ui_manager.creature_info_panel_ui.show_selection_mode(card_data, confirmation_text)
-			else:
-				_on_info_panel_confirmed({})
-		"spell":
-			if ui_manager.spell_info_panel_ui:
-				var prompt = "『%s』に使用しますか？" % card_name
-				ui_manager.spell_info_panel_ui.show_spell_info(card_data, card_index, "", "spell", prompt)
-			else:
-				_on_info_panel_confirmed({})
-		"item":
-			if ui_manager.item_info_panel_ui:
-				var prompt = "『%s』に使用しますか？" % card_name
-				ui_manager.item_info_panel_ui.show_item_info(card_data, card_index, "", "item", prompt)
-			else:
-				_on_info_panel_confirmed({})
-		_:
-			_on_info_panel_confirmed({})
+	if card_type in ["creature", "spell", "item"]:
+		var prompt = confirmation_text if card_type == "creature" else "『%s』に使用しますか？" % card_name
+		ui_manager.show_card_selection(card_data, card_index, prompt, "", card_type)
+	else:
+		_on_info_panel_confirmed({})
 
 ## インフォパネル確認時のコールバック
 func _on_info_panel_confirmed(_card_data: Dictionary):
@@ -988,13 +967,7 @@ func _on_info_panel_cancelled():
 func _hide_all_info_panels(clear_buttons: bool = true):
 	if not ui_manager:
 		return
-	
-	if ui_manager.creature_info_panel_ui:
-		ui_manager.creature_info_panel_ui.hide_panel(clear_buttons)
-	if ui_manager.spell_info_panel_ui:
-		ui_manager.spell_info_panel_ui.hide_panel(clear_buttons)
-	if ui_manager.item_info_panel_ui:
-		ui_manager.item_info_panel_ui.hide_panel(clear_buttons)
+	ui_manager.hide_all_info_panels(clear_buttons)
 
 ## カメラを現在のプレイヤーに戻す
 func _restore_camera_to_current_player():

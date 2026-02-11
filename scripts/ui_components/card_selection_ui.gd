@@ -26,8 +26,7 @@ var current_selection_player_id: int = 0  # 現在選択中のプレイヤーID
 var current_selection_hand_data: Array = []  # 現在選択中のカードデータ配列
 var pending_card_index: int = -1  # クリーチャー情報パネル確認待ちのカードインデックス
 var predicted_destination_tiles: Array = []  # 到着予想タイルインデックス配列（方向/分岐選択時）
-var creature_info_panel_connected: bool = false  # シグナル接続済みフラグ
-var item_creature_panel_connected: bool = false  # アイテムフェーズ用シグナル接続済みフラグ
+
 
 # システム参照
 var card_system_ref: CardSystem = null
@@ -729,6 +728,9 @@ func on_card_selected(card_index: int):
 
 # クリーチャー情報パネルを表示
 func _show_creature_info_panel(card_index: int, card_data: Dictionary):
+	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
+	if ui_manager_ref:
+		ui_manager_ref.save_navigation_state()
 	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
@@ -740,35 +742,19 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 		restriction_reason = _get_card_restriction_reason(card_index)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
-	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel and restriction_reason == "":
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
-		_on_creature_panel_confirmed(confirm_data)
+		_on_info_panel_confirmed(confirm_data)
 		return
 	
 	# 他のパネルを閉じる（ボタンはクリアしない）
-	if ui_manager_ref.creature_info_panel_ui.is_visible_panel:
-		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
-		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
-		ui_manager_ref.item_info_panel_ui.hide_panel(false)
+	ui_manager_ref.hide_all_info_panels(false)
 	
 	pending_card_index = card_index
 	
-	# アイテム用のシグナル接続を切断（重複呼び出し防止）
-	if item_creature_panel_connected:
-		if ui_manager_ref.creature_info_panel_ui.selection_confirmed.is_connected(_on_item_creature_panel_confirmed):
-			ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_item_creature_panel_confirmed)
-		if ui_manager_ref.creature_info_panel_ui.selection_cancelled.is_connected(_on_item_creature_panel_cancelled):
-			ui_manager_ref.creature_info_panel_ui.selection_cancelled.disconnect(_on_item_creature_panel_cancelled)
-		item_creature_panel_connected = false
-	
 	# シグナル接続（初回のみ）
-	if not creature_info_panel_connected:
-		ui_manager_ref.creature_info_panel_ui.selection_confirmed.connect(_on_creature_panel_confirmed)
-		ui_manager_ref.creature_info_panel_ui.selection_cancelled.connect(_on_creature_panel_cancelled)
-		creature_info_panel_connected = true
+	_connect_info_panel_signals(ui_manager_ref.creature_info_panel_ui)
 	
 	# カードデータにhand_indexを追加
 	var panel_data = card_data.duplicate()
@@ -794,15 +780,19 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 
 # スペル情報パネルを表示
 func _show_spell_info_panel(card_index: int, card_data: Dictionary):
+	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
+	if ui_manager_ref:
+		ui_manager_ref.save_navigation_state()
 	if not ui_manager_ref or not ui_manager_ref.spell_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
 	
 	# 他のパネルを閉じる
-	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+	# creature/itemパネルを閉じる
+	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
 		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_panel_visible():
 		ui_manager_ref.item_info_panel_ui.hide_panel()
 	
 	# カードノードから制限理由を取得
@@ -812,71 +802,31 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
-		_on_spell_panel_confirmed(confirm_data)
+		_on_info_panel_confirmed(confirm_data)
 		return
 	
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）
-	if not ui_manager_ref.spell_info_panel_ui.selection_confirmed.is_connected(_on_spell_panel_confirmed):
-		ui_manager_ref.spell_info_panel_ui.selection_confirmed.connect(_on_spell_panel_confirmed)
-		ui_manager_ref.spell_info_panel_ui.selection_cancelled.connect(_on_spell_panel_cancelled)
+	_connect_info_panel_signals(ui_manager_ref.spell_info_panel_ui)
 	
 	# スペル情報パネルを表示
 	ui_manager_ref.spell_info_panel_ui.show_spell_info(card_data, card_index, restriction_reason, selection_mode)
 
 
-# スペル情報パネルで確認された
-func _on_spell_panel_confirmed(card_data: Dictionary):
-	var card_index = card_data.get("hand_index", pending_card_index)
-	pending_card_index = -1
-	
-	# 情報パネルを閉じる（ダブルクリック時にも確実に閉じる）
-	if ui_manager_ref and ui_manager_ref.spell_info_panel_ui:
-		ui_manager_ref.spell_info_panel_ui.hide_panel()
-	
-	_confirm_card_selection(card_index)
-
-
-# スペル情報パネルでキャンセルされた
-func _on_spell_panel_cancelled():
-	# card_selection_handlerが選択中の場合はそちらに任せる
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
-		if handler and handler.is_selecting():
-			return
-	
-	pending_card_index = -1
-	# パネルを閉じるだけで選択UIは維持（再選択可能）
-	
-	# 選択中のカードのホバー状態を解除
-	var card_script = load("res://scripts/card.gd")
-	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
-		card_script.currently_selected_card.deselect_card()
-	
-	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
-	if selection_mode in ["sacrifice", "discard"]:
-		restore_phase_comment()
-		register_back_button_for_current_mode()
-		return
-	
-	# SpellPhaseHandler経由でスペル選択画面に戻る
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		game_flow_manager_ref.spell_phase_handler.return_to_spell_selection()
-	else:
-		# フォールバック
-		_setup_spell_phase_back_button()
-
 
 # アイテム情報パネルを表示
 func _show_item_info_panel(card_index: int, card_data: Dictionary):
+	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
+	if ui_manager_ref:
+		ui_manager_ref.save_navigation_state()
 	if not ui_manager_ref or not ui_manager_ref.item_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
 	
-	# 他のパネルを閉じる
-	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+	# creature/spellパネルを閉じる
+	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
 		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
 	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
 		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
@@ -885,18 +835,16 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 	var restriction_reason = _get_card_restriction_reason(card_index)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
-	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_visible_panel and restriction_reason == "":
+	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
-		_on_item_panel_confirmed(confirm_data)
+		_on_info_panel_confirmed(confirm_data)
 		return
 	
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）
-	if not ui_manager_ref.item_info_panel_ui.selection_confirmed.is_connected(_on_item_panel_confirmed):
-		ui_manager_ref.item_info_panel_ui.selection_confirmed.connect(_on_item_panel_confirmed)
-		ui_manager_ref.item_info_panel_ui.selection_cancelled.connect(_on_item_panel_cancelled)
+	_connect_info_panel_signals(ui_manager_ref.item_info_panel_ui)
 	
 	# アイテム情報パネルを表示
 	ui_manager_ref.item_info_panel_ui.show_item_info(card_data, card_index, restriction_reason, selection_mode)
@@ -905,77 +853,32 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 	emit_signal("card_info_shown", card_index)
 
 
-# アイテム情報パネルで確認された
-func _on_item_panel_confirmed(card_data: Dictionary):
-	var card_index = card_data.get("hand_index", pending_card_index)
-	pending_card_index = -1
-	
-	# 情報パネルを閉じる
-	if ui_manager_ref and ui_manager_ref.item_info_panel_ui:
-		ui_manager_ref.item_info_panel_ui.hide_panel()
-	
-	_confirm_card_selection(card_index)
-
-
-# アイテム情報パネルでキャンセルされた
-func _on_item_panel_cancelled():
-	# card_selection_handlerが選択中の場合はそちらに任せる
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
-		if handler and handler.is_selecting():
-			return
-	
-	pending_card_index = -1
-	# パネルを閉じるだけで選択UIは維持（再選択可能）
-	
-	# 選択中のカードのホバー状態を解除
-	var card_script = load("res://scripts/card.gd")
-	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
-		card_script.currently_selected_card.deselect_card()
-	
-	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
-	if selection_mode in ["sacrifice", "discard"]:
-		restore_phase_comment()
-		register_back_button_for_current_mode()
-		return
-	
-	# アイテム選択に戻る（ナビゲーション再設定）
-	_setup_item_phase_back_button()
-
 
 # アイテムフェーズでクリーチャー（アイテムクリーチャーまたは援護）の情報パネルを表示
 func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
+	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
+	if ui_manager_ref:
+		ui_manager_ref.save_navigation_state()
 	if not ui_manager_ref or not ui_manager_ref.creature_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
 	
 	# 他のパネルを閉じる
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
+	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_panel_visible():
 		ui_manager_ref.item_info_panel_ui.hide_panel(false)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
-	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
+	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
-		_on_item_creature_panel_confirmed(confirm_data)
+		_on_info_panel_confirmed(confirm_data)
 		return
 	
 	pending_card_index = card_index
 	
-	# 召喚用のシグナル接続を一時的に切断（重複呼び出し防止）
-	if creature_info_panel_connected:
-		if ui_manager_ref.creature_info_panel_ui.selection_confirmed.is_connected(_on_creature_panel_confirmed):
-			ui_manager_ref.creature_info_panel_ui.selection_confirmed.disconnect(_on_creature_panel_confirmed)
-		if ui_manager_ref.creature_info_panel_ui.selection_cancelled.is_connected(_on_creature_panel_cancelled):
-			ui_manager_ref.creature_info_panel_ui.selection_cancelled.disconnect(_on_creature_panel_cancelled)
-		creature_info_panel_connected = false
-	
-	# シグナル接続（初回のみ）- アイテムフェーズ用の専用ハンドラを使用
-	if not item_creature_panel_connected:
-		ui_manager_ref.creature_info_panel_ui.selection_confirmed.connect(_on_item_creature_panel_confirmed)
-		ui_manager_ref.creature_info_panel_ui.selection_cancelled.connect(_on_item_creature_panel_cancelled)
-		item_creature_panel_connected = true
+	# シグナル接続（初回のみ）
+	_connect_info_panel_signals(ui_manager_ref.creature_info_panel_ui)
 	
 	# カードデータにhand_indexを追加
 	var panel_data = card_data.duplicate()
@@ -991,20 +894,32 @@ func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
 
 
-# アイテムフェーズでクリーチャー情報パネルが確認された
-func _on_item_creature_panel_confirmed(card_data: Dictionary):
+
+# インフォパネルのシグナルを接続（3パネル共通）
+func _connect_info_panel_signals(panel) -> void:
+	if not panel:
+		return
+	if not panel.selection_confirmed.is_connected(_on_info_panel_confirmed):
+		panel.selection_confirmed.connect(_on_info_panel_confirmed)
+	if not panel.selection_cancelled.is_connected(_on_info_panel_cancelled):
+		panel.selection_cancelled.connect(_on_info_panel_cancelled)
+
+
+# インフォパネルで確認された（全パネル共通）
+func _on_info_panel_confirmed(card_data: Dictionary):
 	var card_index = card_data.get("hand_index", pending_card_index)
 	pending_card_index = -1
 	
-	# 情報パネルを閉じる
-	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-		ui_manager_ref.creature_info_panel_ui.hide_panel()
+	# 表示中のパネルを閉じる＆ナビゲーション保存状態をクリア
+	if ui_manager_ref:
+		ui_manager_ref.hide_all_info_panels()
+		ui_manager_ref.clear_navigation_saved_state()
 	
 	_confirm_card_selection(card_index)
 
 
-# アイテムフェーズでクリーチャー情報パネルがキャンセルされた
-func _on_item_creature_panel_cancelled():
+# インフォパネルでキャンセルされた（全パネル共通）
+func _on_info_panel_cancelled():
 	# card_selection_handlerが選択中の場合はそちらに任せる
 	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
 		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
@@ -1012,15 +927,40 @@ func _on_item_creature_panel_cancelled():
 			return
 	
 	pending_card_index = -1
-	# パネルを閉じるだけで選択UIは維持（再選択可能）
+	
+	# ナビゲーション保存状態をクリア（フェーズ固有の復元が行われるため）
+	if ui_manager_ref:
+		ui_manager_ref.clear_navigation_saved_state()
 	
 	# 選択中のカードのホバー状態を解除
 	var card_script = load("res://scripts/card.gd")
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
 	
-	# アイテム選択に戻る（ナビゲーション再設定）
-	_setup_item_phase_back_button()
+	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
+	if selection_mode in ["sacrifice", "discard"]:
+		restore_phase_comment()
+		register_back_button_for_current_mode()
+		return
+	
+	# selection_modeに応じた戻り先
+	match selection_mode:
+		"spell":
+			# SpellPhaseHandler経由でスペル選択画面に戻る
+			if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
+				game_flow_manager_ref.spell_phase_handler.return_to_spell_selection()
+			else:
+				_setup_spell_phase_back_button()
+		"item":
+			# アイテム選択に戻る
+			_setup_item_phase_back_button()
+		_:
+			# summon/battle等: フェーズコメント復元 + ボタン再登録
+			restore_phase_comment()
+			register_back_button_for_current_mode()
+			# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
+			if selection_mode in ["summon", "battle"] and ui_manager_ref:
+				ui_manager_ref.show_dominio_order_button()
 
 
 # アイテムフェーズの戻るボタン設定
@@ -1051,44 +991,6 @@ func _on_spell_phase_skip():
 	else:
 		emit_signal("selection_cancelled")
 
-
-# クリーチャー情報パネルで確認された
-func _on_creature_panel_confirmed(card_data: Dictionary):
-	var card_index = card_data.get("hand_index", pending_card_index)
-	pending_card_index = -1
-	
-	# 情報パネルを閉じる
-	if ui_manager_ref and ui_manager_ref.creature_info_panel_ui:
-		ui_manager_ref.creature_info_panel_ui.hide_panel()
-	
-	_confirm_card_selection(card_index)
-
-
-# クリーチャー情報パネルでキャンセルされた
-func _on_creature_panel_cancelled():
-	# card_selection_handlerが選択中の場合はそちらに任せる
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
-		if handler and handler.is_selecting():
-			return
-	
-	pending_card_index = -1
-	# パネルを閉じるだけで選択UIは維持（再選択可能）
-	
-	# 選択中のカードのホバー状態を解除
-	var card_script = load("res://scripts/card.gd")
-	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
-		card_script.currently_selected_card.deselect_card()
-	
-	# フェーズコメントを復元
-	restore_phase_comment()
-	
-	# グローバルボタンを再登録
-	register_back_button_for_current_mode()
-	
-	# 召喚/バトルフェーズの場合、ドミニオコマンドボタンを再表示
-	if selection_mode in ["summon", "battle"] and ui_manager_ref:
-		ui_manager_ref.show_dominio_order_button()
 
 
 # 現在のモードに応じたグローバル戻るボタンを登録
@@ -1177,15 +1079,8 @@ func _on_pass_button_pressed():
 	# 開いているインフォパネルがあれば閉じるだけ（パスしない）
 	var info_panel_was_open = false
 	if ui_manager_ref:
-		if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_visible_panel:
-			ui_manager_ref.creature_info_panel_ui.hide_panel(false)
-			info_panel_was_open = true
-		if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
-			ui_manager_ref.spell_info_panel_ui.hide_panel(false)
-			info_panel_was_open = true
-		if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_visible_panel:
-			ui_manager_ref.item_info_panel_ui.hide_panel(false)
-			info_panel_was_open = true
+		info_panel_was_open = ui_manager_ref.is_any_info_panel_visible()
+		ui_manager_ref.hide_all_info_panels(false)
 	
 	# インフォパネルが開いていた場合は閉じてナビゲーションを復元
 	if info_panel_was_open:
@@ -1240,6 +1135,10 @@ func _cancel_dominio_order_and_return_to_action_menu():
 # 選択中かチェック
 func is_selection_active() -> bool:
 	return is_active
+
+## 選択UIを無効化（状態フラグのみ変更）
+func deactivate():
+	is_active = false
 
 # 現在の選択モードを取得
 func get_selection_mode() -> String:

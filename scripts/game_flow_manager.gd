@@ -89,8 +89,10 @@ var game_stats: Dictionary = {}
 func set_lap_system(system: LapSystem) -> void:
 	lap_system = system
 	if lap_system:
-		lap_system.lap_completed.connect(func(player_id): lap_completed.emit(player_id))
+		lap_system.lap_completed.connect(_on_lap_completed)
 
+func _on_lap_completed(player_id: int):
+	lap_completed.emit(player_id)
 
 # 3Dモード設定
 func setup_3d_mode(board_3d, cpu_settings: Array):

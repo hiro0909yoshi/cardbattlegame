@@ -57,6 +57,15 @@ var pending_move_attacker_item: Dictionary = {}
 var pending_move_defender_item: Dictionary = {}
 var is_waiting_for_move_defender_item: bool = false
 
+## 移動バトル関連フラグをリセット
+func reset_move_battle_flags():
+	is_waiting_for_move_defender_item = false
+	is_boulder_eater_move = false
+
+## バウダーイーター移動フラグを設定
+func set_boulder_eater_move(enabled: bool):
+	is_boulder_eater_move = enabled
+
 # 移動先土地情報表示用
 var land_info_panel = null
 
@@ -65,6 +74,14 @@ var ui_manager = null
 var board_system = null
 var game_flow_manager = null
 var player_system = null
+var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
+var battle_system = null       # board_system.battle_system参照
+
+## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
+func _get_item_phase_handler():
+	if not _item_phase_handler and game_flow_manager and game_flow_manager.get("item_phase_handler"):
+		_item_phase_handler = game_flow_manager.item_phase_handler
+	return _item_phase_handler
 
 func _ready():
 	pass
@@ -83,6 +100,10 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# player_systemが渡されない場合はboard_systemから取得
 	if not player_system and board_system:
 		player_system = board_system.player_system
+	
+	# 子コンポーネント参照のキャッシュ
+	if board_system and board_system.get("battle_system"):
+		battle_system = board_system.battle_system
 	
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
@@ -110,7 +131,7 @@ func open_dominio_order(player_id: int):
 	
 	# カード選択UIを無効化（グローバルボタンもクリア）
 	if ui_manager and ui_manager.card_selection_ui:
-		ui_manager.card_selection_ui.is_active = false
+		ui_manager.card_selection_ui.deactivate()
 		ui_manager.clear_back_action()  # 「召喚しない」をクリア
 	
 	# 土地選択モードに移行
@@ -368,8 +389,8 @@ func cancel():
 			ui_manager.card_selection_ui.hide_selection()
 		
 		# クリーチャー情報パネルを閉じる
-		if ui_manager and ui_manager.creature_info_panel_ui:
-			ui_manager.creature_info_panel_ui.hide_panel(false)
+		if ui_manager:
+			ui_manager.hide_all_info_panels(false)
 		
 		# アクションメニューを表示
 		if ui_manager and ui_manager.has_method("show_action_menu"):
@@ -632,8 +653,8 @@ func _on_move_item_phase_completed():
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
 		
 		# 攻撃側のアイテムを保存
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			pending_move_attacker_item = game_flow_manager.item_phase_handler.get_selected_item()
+		if _get_item_phase_handler():
+			pending_move_attacker_item = _get_item_phase_handler().get_selected_item()
 		
 		# 防御側のアイテムフェーズを開始
 		var defender_owner = pending_move_battle_tile_info.get("owner", -1)
@@ -641,10 +662,10 @@ func _on_move_item_phase_completed():
 			is_waiting_for_move_defender_item = true
 			
 			# 防御側のアイテムフェーズ開始
-			if game_flow_manager and game_flow_manager.item_phase_handler:
+			if _get_item_phase_handler():
 				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
-				if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
-					game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+				if not _get_item_phase_handler().item_phase_completed.is_connected(_on_move_item_phase_completed):
+					_get_item_phase_handler().item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
 				
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
@@ -653,7 +674,7 @@ func _on_move_item_phase_completed():
 				if game_flow_manager.battle_status_overlay:
 					game_flow_manager.battle_status_overlay.highlight_side("defender")
 				
-				game_flow_manager.item_phase_handler.start_item_phase(defender_owner, defender_creature)
+				_get_item_phase_handler().start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
 				_execute_move_battle()
@@ -664,8 +685,8 @@ func _on_move_item_phase_completed():
 		# 防御側のアイテムフェーズ完了 → バトル開始
 		
 		# 防御側のアイテムを保存
-		if game_flow_manager and game_flow_manager.item_phase_handler:
-			pending_move_defender_item = game_flow_manager.item_phase_handler.get_selected_item()
+		if _get_item_phase_handler():
+			pending_move_defender_item = _get_item_phase_handler().get_selected_item()
 		
 		is_waiting_for_move_defender_item = false
 		_execute_move_battle()
@@ -685,11 +706,11 @@ func _execute_move_battle():
 	
 	# バトル完了シグナルに接続
 	var callable = Callable(self, "_on_move_battle_completed")
-	if not board_system.battle_system.invasion_completed.is_connected(callable):
-		board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+	if not battle_system.invasion_completed.is_connected(callable):
+		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
 	# バトル実行（移動元タイル情報も渡す）
-	await board_system.battle_system.execute_3d_battle_with_data(
+	await battle_system.execute_3d_battle_with_data(
 		current_player_index,
 		pending_move_battle_creature_data,
 		pending_move_battle_tile_info,
@@ -873,10 +894,10 @@ func _execute_move_for_cpu(command: Dictionary) -> bool:
 	var item_index = command.get("item_index", -1)
 	var item_data = command.get("item_data", {})
 	if item_index >= 0 and not item_data.is_empty():
-		if game_flow_manager and game_flow_manager.item_phase_handler:
+		if _get_item_phase_handler():
 			var item_with_index = item_data.duplicate()
 			item_with_index["_hand_index"] = item_index
-			game_flow_manager.item_phase_handler.set_preselected_attacker_item(item_with_index)
+			_get_item_phase_handler().set_preselected_attacker_item(item_with_index)
 			print("[DominioCommandHandler] CPU: 移動侵略アイテム事前設定: %s (index=%d)" % [item_data.get("name", "?"), item_index])
 	
 	# LandActionHelper.confirm_move を使用（空き地・敵ドミニオ両対応）
@@ -1069,14 +1090,14 @@ func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, crea
 			attacker_display, defender_display, "attacker")
 	
 	# 4. アイテムフェーズを開始（攻撃側）
-	if game_flow_manager and game_flow_manager.item_phase_handler:
+	if _get_item_phase_handler():
 		# アイテムフェーズ完了シグナルに接続
-		if not game_flow_manager.item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
-			game_flow_manager.item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+		if not _get_item_phase_handler().item_phase_completed.is_connected(_on_move_item_phase_completed):
+			_get_item_phase_handler().item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
 		
 		# 攻撃側のアイテムフェーズ開始（防御側情報を渡して事前選択）
 		var defender_tile_info = pending_move_battle_tile_info
-		game_flow_manager.item_phase_handler.start_item_phase(
+		_get_item_phase_handler().start_item_phase(
 			attacker_player,
 			creature_data,
 			defender_tile_info

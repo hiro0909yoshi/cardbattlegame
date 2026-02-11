@@ -44,13 +44,6 @@ var current_confirmation_text: String = ""
 # 参照
 var card_system = null
 
-# ナビゲーション保存用
-var _has_saved_navigation: bool = false
-var _saved_confirm_cb: Callable = Callable()
-var _saved_back_cb: Callable = Callable()
-var _saved_up_cb: Callable = Callable()
-var _saved_down_cb: Callable = Callable()
-
 
 func _ready():
 	# 初期状態は非表示
@@ -84,7 +77,7 @@ func show_view_mode(creature_data: Dictionary, tile_index: int = -1, setup_butto
 	# setup_buttons=falseの場合はスキップ（呼び出し側でナビゲーション管理）
 	if setup_buttons and ui_manager_ref:
 		# 現在のナビゲーションを保存（パネル閉じ後に復元）
-		_save_navigation()
+		ui_manager_ref.save_navigation_state()
 		ui_manager_ref.register_back_action(_on_back_action, "閉じる")
 
 
@@ -162,9 +155,9 @@ func hide_panel(clear_buttons: bool = true):
 		ui_manager_ref.phase_display.hide_action_prompt()
 	
 	if clear_buttons and ui_manager_ref:
-		# 閲覧モードの場合は元のナビゲーションを復元
-		if was_view_mode and _has_saved_navigation:
-			_restore_navigation()
+		# 保存されたナビゲーション状態があれば復元、なければクリア
+		if ui_manager_ref._nav_state_saved:
+			ui_manager_ref.restore_navigation_state()
 		else:
 			ui_manager_ref.clear_global_actions()
 	
@@ -315,23 +308,6 @@ func _get_element_short_name(element: String) -> String:
 		_: return element
 
 
-## 現在のナビゲーション状態を保存（既に保存済みなら上書きしない）
-func _save_navigation():
-	if ui_manager_ref and not _has_saved_navigation:
-		_saved_confirm_cb = ui_manager_ref._compat_confirm_cb
-		_saved_back_cb = ui_manager_ref._compat_back_cb
-		_saved_up_cb = ui_manager_ref._compat_up_cb
-		_saved_down_cb = ui_manager_ref._compat_down_cb
-		_has_saved_navigation = true
-
-
-## 保存したナビゲーション状態を復元
-func _restore_navigation():
-	if ui_manager_ref and _has_saved_navigation:
-		ui_manager_ref.enable_navigation(_saved_confirm_cb, _saved_back_cb, _saved_up_cb, _saved_down_cb)
-		_has_saved_navigation = false
-
-
 ## ランドボーナスラベルの表示更新
 func _update_land_bonus_label(land_bonus: int):
 	# HpApContainer（HBoxContainer）内にボーナスラベルを管理
@@ -466,25 +442,7 @@ func _on_back_action():
 		hide_panel()
 		selection_cancelled.emit()
 	else:
-		# 閲覧モードの場合、特殊フェーズ中はボタンをクリアしない
-		var is_dominio_active = false
-		var is_arcana_active = false
-		if ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
-			var gfm = ui_manager_ref.game_flow_manager_ref
-			# ドミニオコマンド中
-			if gfm.dominio_command_handler:
-				var dominio = gfm.dominio_command_handler
-				if dominio.current_state != dominio.State.CLOSED:
-					is_dominio_active = true
-			# アルカナアーツ中
-			if gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
-				if gfm.spell_phase_handler.spell_mystic_arts.is_active():
-					is_arcana_active = true
-		
-		var clear_buttons = not (is_dominio_active or is_arcana_active)
-		hide_panel(clear_buttons)
-		
-		# ドミニオコマンド中はナビゲーションを再設定
-		if is_dominio_active and ui_manager_ref and ui_manager_ref.game_flow_manager_ref:
-			var dominio = ui_manager_ref.game_flow_manager_ref.dominio_command_handler
-			dominio.restore_navigation()
+		# 閲覧モード: パネルを閉じてナビゲーションを復元
+		hide_panel(true)
+		if ui_manager_ref:
+			ui_manager_ref.restore_navigation_state()

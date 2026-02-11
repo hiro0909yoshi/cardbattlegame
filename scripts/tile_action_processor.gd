@@ -85,7 +85,7 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	
 	battle_executor = TileBattleExecutor.new()
 	battle_executor.initialize(b_system, p_system, c_system, bt_system, ui, gf_manager, summon_executor)
-	battle_executor.invasion_completed.connect(func(success, tile_index): emit_signal("invasion_completed", success, tile_index))
+	battle_executor.invasion_completed.connect(_on_invasion_completed)
 
 # CPUプロセッサーを設定
 func set_cpu_processor(cpu_processor):
@@ -274,6 +274,9 @@ func on_level_up_selected(target_level: int, cost: int):
 
 func _on_cpu_action_completed():
 	_complete_action()
+
+func _on_invasion_completed(success: bool, tile_index: int):
+	invasion_completed.emit(success, tile_index)
 
 # === ヘルパー関数 ===
 

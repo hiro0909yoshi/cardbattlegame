@@ -585,8 +585,7 @@ func on_card_confirmed():
 		else:
 			print("WARNING: UIManagerが見つかりません")
 
-# グレーアウト時のインフォパネル表示（使用不可）
-# グレーアウトカードのインフォパネル表示（閲覧専用）
+# グレーアウト時・特殊フェーズ中のインフォパネル表示（閲覧専用）
 func _show_info_panel_only():
 	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
 	if not ui_manager:
@@ -596,108 +595,18 @@ func _show_info_panel_only():
 	if ui_manager.player_status_dialog and ui_manager.player_status_dialog.is_dialog_visible():
 		ui_manager.player_status_dialog.hide_dialog()
 	
-	# ドミニオコマンド中またはアルカナアーツ中かどうか先に確認
-	var gfm = null
-	if "game_flow_manager_ref" in ui_manager:
-		gfm = ui_manager.game_flow_manager_ref
-	
-	var is_special_phase_active = false
-	var is_summon_or_battle_phase = false
-	if gfm:
-		# ドミニオコマンド中
-		if gfm.dominio_command_handler:
-			var dominio = gfm.dominio_command_handler
-			if dominio.current_state != dominio.State.CLOSED:
-				is_special_phase_active = true
-		# アルカナアーツ中
-		if gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
-			if gfm.spell_phase_handler.spell_mystic_arts.is_active():
-				is_special_phase_active = true
-		# 方向選択・分岐選択中
-		if gfm.board_system_3d and gfm.board_system_3d.movement_controller:
-			var mc = gfm.board_system_3d.movement_controller
-			if mc.direction_selector.is_active or mc.branch_selector.is_active:
-				is_special_phase_active = true
-
-	
-	# 召喚/バトルフェーズ中かどうか（ドミニオボタンを維持するため）
-	if ui_manager.card_selection_ui:
-		var mode = ui_manager.card_selection_ui.selection_mode
-		if mode in ["summon", "battle", "item"]:
-			is_summon_or_battle_phase = true
-	
-	# 他のインフォパネルを先に閉じる
-	# 特殊フェーズ中または召喚/バトルフェーズ中はボタンをクリアしない
-	var clear_buttons = not (is_special_phase_active or is_summon_or_battle_phase)
-	var any_panel_closed = false
-	if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
-		ui_manager.creature_info_panel_ui.hide_panel(clear_buttons)
-		any_panel_closed = true
-	if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
-		ui_manager.spell_info_panel_ui.hide_panel(clear_buttons)
-		any_panel_closed = true
-	if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
-		ui_manager.item_info_panel_ui.hide_panel(clear_buttons)
-		any_panel_closed = true
-	
-	# 特殊フェーズ中でなく、インフォパネルが開いていなかった場合、確認ボタンをクリア
-	if not is_special_phase_active and not any_panel_closed:
-		ui_manager.clear_confirm_action()
-	
 	# 選択中のカードがあれば選択解除
 	if currently_selected_card and currently_selected_card != self:
 		currently_selected_card.deselect_card()
 	
-	# 特殊フェーズ中でない場合のみ、カード選択UIの状態を復元
-	if not is_special_phase_active and ui_manager.card_selection_ui:
-		ui_manager.card_selection_ui.register_back_button_for_current_mode()
-		ui_manager.card_selection_ui.restore_phase_comment()
+	# 閲覧モードで表示（save/restore/×ボタンはshow_card_info内で自動処理）
+	ui_manager.show_card_info(card_data, -1, false)
 	
-	var card_type = card_data.get("type", "")
-	
-	# 方向/分岐選択中かどうか
-	var is_movement_selection = false
-	if gfm and gfm.board_system_3d and gfm.board_system_3d.movement_controller:
-		var mc = gfm.board_system_3d.movement_controller
-		if mc.direction_selector.is_active or mc.branch_selector.is_active:
-			is_movement_selection = true
-	
-	# 閲覧モードで表示
-	# 方向/分岐選択中はsetup_buttons=falseにして自前でナビゲーション管理
-	var setup_buttons = is_special_phase_active and not is_movement_selection
-	match card_type:
-		"creature":
-			if ui_manager.creature_info_panel_ui:
-				ui_manager.creature_info_panel_ui.show_view_mode(card_data, -1, setup_buttons)
-		"spell":
-			if ui_manager.spell_info_panel_ui:
-				ui_manager.spell_info_panel_ui.show_view_mode(card_data, setup_buttons)
-		"item":
-			if ui_manager.item_info_panel_ui:
-				ui_manager.item_info_panel_ui.show_view_mode(card_data, setup_buttons)
-	
-	# 方向/分岐選択中は×ボタンのみ設定し、閉じた時にナビゲーション復元
-	if is_movement_selection:
-		var mc = gfm.board_system_3d.movement_controller
-		# 既存のナビゲーション（決定/上下）をクリアして×ボタンだけにする
-		ui_manager.disable_navigation()
-		ui_manager.register_back_action(func():
-			if ui_manager.creature_info_panel_ui and ui_manager.creature_info_panel_ui.is_visible_panel:
-				ui_manager.creature_info_panel_ui.hide_panel(false)
-			if ui_manager.spell_info_panel_ui and ui_manager.spell_info_panel_ui.is_panel_visible():
-				ui_manager.spell_info_panel_ui.hide_panel(false)
-			if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
-				ui_manager.item_info_panel_ui.hide_panel(false)
-			# 分岐/方向選択のナビゲーションを復元
-			if mc.direction_selector.is_active:
-				mc.direction_selector.setup_navigation()
-			elif mc.branch_selector.is_active:
-				mc.branch_selector.setup_navigation()
-		, "閉じる")
-	
-	# 召喚/バトルフェーズ中はドミニオボタンを再表示
-	if is_summon_or_battle_phase:
-		ui_manager.show_dominio_order_button()
+	# 召喚/バトル/アイテムフェーズ中はドミニオボタンを再表示
+	if ui_manager.card_selection_ui:
+		var mode = ui_manager.card_selection_ui.selection_mode
+		if mode in ["summon", "battle", "item"]:
+			ui_manager.show_dominio_order_button()
 
 # UIManagerを再帰的に探す
 func find_ui_manager_recursive(node: Node) -> Node:

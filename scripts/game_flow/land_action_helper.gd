@@ -470,7 +470,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# 移動元情報を保存（敗北時に戻すため - バウダーイーター以外）
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
-		handler.is_boulder_eater_move = is_boulder_eater  # バウダーイーターフラグを保存
+		handler.set_boulder_eater_move(is_boulder_eater)  # バウダーイーターフラグを保存
 		
 		# 移動中フラグを設定（応援スキル計算から除外するため）
 		battle_creature_data["is_moving"] = true
@@ -481,7 +481,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.pending_move_battle_tile_info = handler.board_system.get_tile_info(dest_tile_index)
 		handler.pending_move_attacker_item = {}
 		handler.pending_move_defender_item = {}
-		handler.is_waiting_for_move_defender_item = false
+		handler.reset_move_battle_flags()
 		
 		# 移動侵略シーケンスを開始（カメラ移動→コメント→アイテムフェーズ）
 		handler.start_move_battle_sequence(dest_tile_index, current_player_index, creature_data)
@@ -535,13 +535,13 @@ static func _execute_move_battle(handler):
 	
 	# バトル完了シグナルに接続
 	var callable = Callable(handler, "_on_move_battle_completed")
-	if handler.board_system.battle_system and not handler.board_system.battle_system.invasion_completed.is_connected(callable):
-		handler.board_system.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
+	if handler.battle_system and not handler.battle_system.invasion_completed.is_connected(callable):
+		handler.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 	
 	# バトル実行（移動元タイルを渡す）
 	# バウダーイーターの場合は移動元を-1にする（敗北時に戻す必要がないため）
 	var from_tile = -1 if handler.is_boulder_eater_move else handler.move_source_tile
-	await handler.board_system.battle_system.execute_3d_battle_with_data(
+	await handler.battle_system.execute_3d_battle_with_data(
 		current_player_index,
 		handler.pending_move_battle_creature_data,
 		handler.pending_move_battle_tile_info,
@@ -555,8 +555,7 @@ static func _execute_move_battle(handler):
 	handler.pending_move_battle_tile_info = {}
 	handler.pending_move_attacker_item = {}
 	handler.pending_move_defender_item = {}
-	handler.is_waiting_for_move_defender_item = false
-	handler.is_boulder_eater_move = false
+	handler.reset_move_battle_flags()
 
 
 ## レベルアップ時の永続バフ更新
@@ -827,8 +826,8 @@ static func _show_move_creature_info(handler, tile_index: int) -> void:
 		# 土地情報パネルを閉じる
 		_hide_land_info_panel(handler)
 		
-		if handler.ui_manager and handler.ui_manager.creature_info_panel_ui:
-			handler.ui_manager.creature_info_panel_ui.show_view_mode(tile.creature_data, tile_index, false)
+		if handler.ui_manager:
+			handler.ui_manager.show_card_info(tile.creature_data, tile_index, false)
 	else:
 		# クリーチャーがいない場合は土地情報を表示
 		_hide_creature_info_panel(handler)
@@ -847,9 +846,9 @@ static func hide_move_creature_info(handler) -> void:
 
 ## クリーチャー情報パネルのみ非表示
 static func _hide_creature_info_panel(handler) -> void:
-	if not handler.ui_manager or not handler.ui_manager.creature_info_panel_ui:
+	if not handler.ui_manager:
 		return
-	handler.ui_manager.creature_info_panel_ui.hide_panel(false)
+	handler.ui_manager.hide_all_info_panels(false)
 
 
 ## 土地情報パネルを表示

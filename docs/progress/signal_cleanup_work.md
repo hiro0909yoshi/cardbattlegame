@@ -10,13 +10,17 @@
 | フェーズ | ステータス | 箇所数 |
 |---------|-----------|--------|
 | 1. 全接続・規約違反の調査 | ✅ 完了 | - |
-| 2. 修正A: シグナルチェーン参照 | ⬜ 未着手 | 10箇所 |
+| 2. 修正A-P1: シグナルチェーン参照 | ✅ 修正済み | 10箇所 |
+| 2b. info_panel構造改善 Step1+2 | ✅ 修正済み | 統合メソッド化 |
+| 2c. info_panel Step3: コールバック統合 | ✅ 修正済み | 8→2コールバック |
 | 3. 修正B: privateメソッド外部呼出し | ✅ 修正済み | ~25箇所 |
 | 4. 修正C: privateシグナル接続 | ✅ 修正済み | 4箇所 |
-| 5. 修正D: 内部プロパティ直接参照 | ⬜ 未着手 | 多数 |
-| 6. 修正E: 状態フラグ外部直接set | ⬜ 未着手 | 4箇所 |
-| 7. 修正F: デバッグフラグ未集約 | ⬜ 未着手 | 6箇所 |
-| 8. 修正G: ラムダ接続 | ⬜ 未着手 | 3箇所 |
+| 5a. 修正D-P3: handlerプロパティチェーン | ⬜ 未着手 | ~119箇所 |
+| 5b. 修正D-P4: board_system.gfm.spell | ⬜ 未着手 | 11箇所 |
+| 5c. 修正D-P5: ui_manager_ref.info_panel等 | ✅ 大幅改善 | 181→35箇所（残りは正当な直接参照） |
+| 6. 修正E: 状態フラグ外部直接set | ✅ 修正済み | 4箇所 |
+| 7. 修正F: デバッグフラグ未集約 | ✅ 修正済み | 5/6箇所 |
+| 8. 修正G: ラムダ接続 | ✅ 修正済み | 3箇所 |
 | 9. 修正H: UI座標ハードコード | ⬜ 後回し | ~17箇所 |
 | 10. signal_flow_mapスキル作成 | ⬜ 未着手 | - |
 
@@ -385,4 +389,34 @@ DebugSettingsに集約されていないデバッグフラグ。
   - _check_lap_complete (lap_system)
   - _show_card_front / _show_secret_back / _adjust_children_size (card)
 - ✅ バグ修正: battle_simulatorで呪いのtemporary_effectsが未反映（apply_effect_arrays追加）
-- ⬜ 次: 修正A（シグナルチェーン参照）or 修正E〜G
+### セッション4（2026-02-12）
+- ✅ 修正F完了（5/6箇所）: デバッグフラグをDebugSettingsに集約
+  - disable_secret_cards (spell_phase_handler → DebugSettings)
+  - creature_manager_debug (creature_manager → DebugSettings)
+  - ui_debug_mode (ui_manager → DebugSettings)
+  - signal_registry_debug (signal_registry → DebugSettings)
+  - debug_manual_control_allは影響範囲大のため保留
+- ✅ 修正E完了（4箇所）: 状態フラグ外部直接setをメソッド化
+  - card_selection_ui.is_active = false → deactivate()
+  - handler.is_waiting/is_boulder → reset_move_battle_flags() / set_boulder_eater_move()
+- ✅ 修正G完了（3箇所）: ラムダ接続を名前付きメソッドに変更
+  - tile_action_processor: invasion_completed中継 → _on_invasion_completed
+  - game_flow_manager: lap_completed中継 → _on_lap_completed
+  - action_menu_ui: func() → bind(index)
+- ✅ 修正A完了（P1: シグナルチェーン接続10箇所）
+  - A-1: gfm.item_phase_handler → dominio_command_handler, tile_battle_executorにiph参照キャッシュ
+  - A-2: board_system.battle_system → dominio_command_handler, cpu_turn_processorにbs参照キャッシュ
+  - A-3: gfm.lap_system.signal → player_info_panel.set_game_flow_managerにlap_system引数追加
+  - A-4: ui_manager.hand_display.signal → spell_phase_handlerにhand_display参照キャッシュ
+- ✅ info_panel構造改善 Step 1+2完了
+  - ui_managerに統合メソッド追加: hide_all_info_panels, is_any_info_panel_visible, show_card_info, show_card_selection
+  - 一括hide/種別分岐showを統合メソッドに置換（card.gd, card_selection_handler, spell_phase_handler, card_selection_ui）
+  - is_visible_panel → is_panel_visible() に統一
+- ✅ info_panel Step 3完了（コールバック統合）
+  - card_selection_uiの8コールバック → _on_info_panel_confirmed/_cancelled の2つに統合
+  - _connect_info_panel_signals(panel)ヘルパー追加（is_connectedガードで重複接続防止）
+  - 接続管理フラグ廃止（is_connectedチェックのみで十分）
+  - info_panel直接参照: 181箇所 → 35箇所に削減（146箇所、81%削減）
+  - 残り35箇所はcard_selection_ui(26)/card_selection_handler(9)のみ（選択モード制御で直接参照が必要）
+  - 外部ファイル（ui_tap_handler, dominio_order_ui, spell_mystic_arts等）からの直接参照は0に
+- ⬜ 次: D-P3（handlerチェーン~119箇所）

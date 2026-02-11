@@ -14,7 +14,7 @@ var visual_nodes: Dictionary = {}  # {tile_index: Node3D}
 var board_system: Node = null
 
 # テストモード（整合性チェックを有効化）
-var debug_mode: bool = false
+# NOTE: debug_modeはDebugSettings.creature_manager_debugに移行済み
 
 func _ready():
 	print("[CreatureManager] 初期化完了（参照方式）")
@@ -48,7 +48,7 @@ func set_data(tile_index: int, data: Dictionary):
 		_remove_creature_internal(tile_index)
 	else:
 		creatures[tile_index] = data.duplicate(true)
-		if debug_mode:
+		if DebugSettings.creature_manager_debug:
 			print("[CreatureManager] データ設定: tile=", tile_index, " name=", data.get("name", "???"))
 
 ## クリーチャーが存在するか確認
@@ -65,7 +65,7 @@ func clear_data(tile_index: int):
 ## 内部削除処理（3D表示も削除）
 func _remove_creature_internal(tile_index: int):
 	if creatures.has(tile_index):
-		if debug_mode:
+		if DebugSettings.creature_manager_debug:
 			var creature_name = creatures[tile_index].get("name", "???")
 			print("[CreatureManager] データ削除: tile=", tile_index, " name=", creature_name)
 		creatures.erase(tile_index)
@@ -81,7 +81,7 @@ func _remove_creature_internal(tile_index: int):
 ## @param node: 3D表示ノード
 func set_visual_node(tile_index: int, node: Node3D):
 	visual_nodes[tile_index] = node
-	if debug_mode:
+	if DebugSettings.creature_manager_debug:
 		print("[CreatureManager] 3D表示設定: tile=", tile_index)
 
 ## 3D表示ノードを取得
@@ -131,7 +131,7 @@ func debug_print():
 
 ## デバッグモードの切り替え
 func set_debug_mode(enabled: bool):
-	debug_mode = enabled
+	DebugSettings.creature_manager_debug = enabled
 	print("[CreatureManager] デバッグモード: ", "ON" if enabled else "OFF")
 
 ## 整合性チェック（テスト用）

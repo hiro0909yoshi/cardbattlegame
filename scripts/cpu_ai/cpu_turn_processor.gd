@@ -15,6 +15,7 @@ var cpu_ai_handler: CPUAIHandler
 var player_system: PlayerSystem
 var card_system: CardSystem
 var ui_manager: UIManager
+var battle_system: BattleSystem  # battle_system参照
 
 # バトル保留用変数（CPU攻撃 → 人間防御のアイテムフェーズ用）
 var pending_cpu_battle_creature_index: int = -1
@@ -37,6 +38,8 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 	player_system = p_system
 	card_system = c_system
 	ui_manager = ui
+	if board_system and board_system.get("battle_system"):
+		battle_system = board_system.battle_system
 
 # CPUターンを処理
 func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
@@ -263,10 +266,10 @@ func _execute_cpu_pending_battle():
 	var current_player_index = board_system.current_player_index
 	
 	# バトルシステムに処理を委譲
-	if not board_system.battle_system.invasion_completed.is_connected(_on_invasion_completed):
-		board_system.battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
+	if not battle_system.invasion_completed.is_connected(_on_invasion_completed):
+		battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
 	
-	await board_system.battle_system.execute_3d_battle_with_data(
+	await battle_system.execute_3d_battle_with_data(
 		current_player_index, 
 		pending_cpu_battle_card_data, 
 		pending_cpu_battle_tile_info, 

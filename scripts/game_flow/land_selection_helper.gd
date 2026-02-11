@@ -35,7 +35,7 @@ static func preview_land(handler, tile_index: int) -> bool:
 
 ## タイルのクリーチャー情報パネルを表示
 static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
-	if not handler.ui_manager or not handler.ui_manager.creature_info_panel_ui:
+	if not handler.ui_manager:
 		return
 	
 	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
@@ -45,7 +45,7 @@ static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
 	var creature = tile.creature_data if tile else {}
 	
 	if not creature.is_empty():
-		handler.ui_manager.creature_info_panel_ui.show_view_mode(creature, tile_index, false)
+		handler.ui_manager.show_card_info(creature, tile_index, false)
 
 ## 土地選択を確定してアクションメニューを表示
 ## 

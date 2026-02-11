@@ -41,7 +41,7 @@ var board_system_ref = null  # BoardSystem3Dも格納可能
 var game_flow_manager_ref = null  # GameFlowManagerの参照
 
 # デバッグモード
-var debug_mode = false
+# NOTE: debug_modeはDebugSettings.ui_debug_modeに移行済み
 
 # UIレイヤー参照
 var ui_layer: CanvasLayer = null
@@ -205,7 +205,8 @@ func create_ui(parent: Node):
 		player_info_panel.set("board_system_ref", board_system_ref)
 		# GameFlowManager参照を設定（シグナル表示用）
 		if game_flow_manager_ref:
-			player_info_panel.set_game_flow_manager(game_flow_manager_ref)
+			var lap_sys = game_flow_manager_ref.lap_system if game_flow_manager_ref.get("lap_system") else null
+			player_info_panel.set_game_flow_manager(game_flow_manager_ref, lap_sys)
 		# 初期化後にパネルの状態を確認
 		if player_info_panel.has_method("update_all_panels"):
 			player_info_panel.update_all_panels()
@@ -362,7 +363,7 @@ func toggle_debug_mode():
 	if debug_panel and debug_panel.has_method("toggle_visibility"):
 		debug_panel.toggle_visibility()
 		if debug_panel.has_method("is_debug_visible"):
-			debug_mode = debug_panel.is_debug_visible()
+			DebugSettings.ui_debug_mode = debug_panel.is_debug_visible()
 
 func update_cpu_hand_display(player_id: int):
 	if debug_panel and debug_panel.has_method("update_cpu_hand"):
@@ -403,7 +404,7 @@ func _on_level_up_cancelled():
 	emit_signal("level_up_selected", 0, 0)
 
 func _on_debug_mode_changed(enabled: bool):
-	debug_mode = enabled
+	DebugSettings.ui_debug_mode = enabled
 
 func _on_dominio_order_button_pressed():
 	emit_signal("dominio_order_button_pressed")
@@ -460,28 +461,45 @@ var _compat_back_cb: Callable = Callable()
 var _compat_up_cb: Callable = Callable()
 var _compat_down_cb: Callable = Callable()
 
-# スペルフェーズ中のインフォパネル表示用バックアップ
-var _spell_phase_saved_confirm: Callable = Callable()
-var _spell_phase_saved_back: Callable = Callable()
-var _spell_phase_saved_up: Callable = Callable()
-var _spell_phase_saved_down: Callable = Callable()
-var _spell_phase_buttons_saved: bool = false
+# インフォパネル閲覧モード中のナビゲーション保存/復元
+var _saved_nav_confirm: Callable = Callable()
+var _saved_nav_back: Callable = Callable()
+var _saved_nav_up: Callable = Callable()
+var _saved_nav_down: Callable = Callable()
+var _nav_state_saved: bool = false
 
-## スペルフェーズ中のインフォパネル閉じ後にボタンを復元
+## 現在のナビゲーション状態を保存（閲覧モード用）
+## 既に保存済みの場合は上書きしない（連続閲覧対応）
+func save_navigation_state():
+	if _nav_state_saved:
+		return
+	_saved_nav_confirm = _compat_confirm_cb
+	_saved_nav_back = _compat_back_cb
+	_saved_nav_up = _compat_up_cb
+	_saved_nav_down = _compat_down_cb
+	_nav_state_saved = true
+
+## 保存したナビゲーション状態を復元
+func restore_navigation_state():
+	if not _nav_state_saved:
+		return
+	_compat_confirm_cb = _saved_nav_confirm
+	_compat_back_cb = _saved_nav_back
+	_compat_up_cb = _saved_nav_up
+	_compat_down_cb = _saved_nav_down
+	_nav_state_saved = false
+	_update_compat_buttons()
+	# 入力ロックを解除（×ボタン押下時にlock_inputされるため）
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
+
+## ナビゲーション保存状態をクリア（フェーズ切り替え時等）
+func clear_navigation_saved_state():
+	_nav_state_saved = false
+
+## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
 func restore_spell_phase_buttons():
-	if _spell_phase_buttons_saved:
-		_compat_confirm_cb = _spell_phase_saved_confirm
-		_compat_back_cb = _spell_phase_saved_back
-		_compat_up_cb = _spell_phase_saved_up
-		_compat_down_cb = _spell_phase_saved_down
-		_spell_phase_buttons_saved = false
-		_update_compat_buttons()
-		# 入力ロックを解除（×ボタン押下時にlock_inputされるため）
-		if game_flow_manager_ref:
-			game_flow_manager_ref.unlock_input()
-		# ×ボタン押下時にlock_inputされるので解除する
-		if game_flow_manager_ref:
-			game_flow_manager_ref.unlock_input()
+	restore_navigation_state()
 
 func _update_compat_buttons():
 	if global_action_buttons:
@@ -575,12 +593,119 @@ func update_hand_display(player_id: int):
 
 ## 全てのインフォパネルを閉じる（フェーズ変更時に呼び出す）
 func close_all_info_panels():
-	if creature_info_panel_ui and creature_info_panel_ui.visible:
-		creature_info_panel_ui.hide_panel()
-	if spell_info_panel_ui and spell_info_panel_ui.visible:
-		spell_info_panel_ui.hide_panel()
-	if item_info_panel_ui and item_info_panel_ui.visible:
-		item_info_panel_ui.hide_panel()
+	hide_all_info_panels(true)
+	clear_navigation_saved_state()
+
+## 全てのインフォパネルを閉じてナビゲーションをクリア（saved stateは保持）
+## show_card_info内でのパネル切り替え時に使用
+func _hide_all_info_panels_raw():
+	# saved stateを一時退避
+	var was_saved = _nav_state_saved
+	var saved_confirm = _saved_nav_confirm
+	var saved_back = _saved_nav_back
+	var saved_up = _saved_nav_up
+	var saved_down = _saved_nav_down
+	
+	# パネルを閉じる（clear_buttons=false: hide_panel内でのボタン操作を防ぐ）
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel(false)
+	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
+		spell_info_panel_ui.hide_panel(false)
+	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
+		item_info_panel_ui.hide_panel(false)
+	
+	# ナビゲーションを全クリア（前のパネルの確認ボタン等を確実に消す）
+	disable_navigation()
+	
+	# saved stateを復元
+	_nav_state_saved = was_saved
+	_saved_nav_confirm = saved_confirm
+	_saved_nav_back = saved_back
+	_saved_nav_up = saved_up
+	_saved_nav_down = saved_down
+
+## 全てのインフォパネルを閉じる（clear_buttons指定可能）
+func hide_all_info_panels(clear_buttons: bool = true):
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel(clear_buttons)
+	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
+		spell_info_panel_ui.hide_panel(clear_buttons)
+	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
+		item_info_panel_ui.hide_panel(clear_buttons)
+
+## いずれかのインフォパネルが表示中か
+func is_any_info_panel_visible() -> bool:
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		return true
+	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
+		return true
+	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
+		return true
+	return false
+
+## カード種別に応じたインフォパネルを表示（閲覧モード）
+## ナビゲーション状態を自動保存し、パネルを閉じた時に復元する
+func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: bool = true):
+	var card_type = card_data.get("type", "")
+	
+	# ナビゲーション状態を保存（連続閲覧時は最初の1回のみ）
+	save_navigation_state()
+	
+	# 他のパネルを閉じる（ボタンはクリアしない：show_card_info内での切り替えなのでrestoreを走らせない）
+	_hide_all_info_panels_raw()
+	
+	# 閲覧モードで表示
+	var panel = null
+	match card_type:
+		"creature":
+			if creature_info_panel_ui:
+				creature_info_panel_ui.show_view_mode(card_data, tile_index, setup_buttons)
+				panel = creature_info_panel_ui
+		"spell":
+			if spell_info_panel_ui:
+				spell_info_panel_ui.show_view_mode(card_data, setup_buttons)
+				panel = spell_info_panel_ui
+		"item":
+			if item_info_panel_ui:
+				item_info_panel_ui.show_view_mode(card_data, setup_buttons)
+				panel = item_info_panel_ui
+	
+	# パネルが表示されたら、閉じた時の復元用に×ボタンを設定
+	if panel and not setup_buttons:
+		register_back_action(func():
+			_hide_all_info_panels_raw()
+			restore_navigation_state()
+			# フェーズコメントを復元
+			if card_selection_ui and card_selection_ui.is_active:
+				card_selection_ui.restore_phase_comment()
+			# カードのホバー状態を解除
+			var card_script = load("res://scripts/card.gd")
+			if card_script.currently_selected_card:
+				card_script.currently_selected_card.deselect_card()
+		, "閉じる")
+		
+		# 閲覧モード中のフェーズコメント表示
+		var card_name = card_data.get("name", "")
+		if phase_display and card_name != "":
+			phase_display.show_action_prompt("%s の情報を閲覧中" % card_name)
+
+## カード種別に応じたインフォパネルを表示（選択モード）
+func show_card_selection(card_data: Dictionary, hand_index: int = -1,
+		confirmation_text: String = "", restriction_reason: String = "",
+		selection_mode: String = ""):
+	var card_type = card_data.get("type", "")
+	# 他のパネルを閉じる
+	hide_all_info_panels(false)
+	match card_type:
+		"creature":
+			if creature_info_panel_ui:
+				creature_info_panel_ui.show_selection_mode(card_data, confirmation_text, restriction_reason)
+		"spell":
+			if spell_info_panel_ui:
+				spell_info_panel_ui.show_spell_info(card_data, hand_index, restriction_reason, selection_mode, confirmation_text)
+		"item":
+			if item_info_panel_ui:
+				item_info_panel_ui.show_item_info(card_data, hand_index, restriction_reason, selection_mode, confirmation_text)
 
 # デバッグ入力を処理
 func _input(event):

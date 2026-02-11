@@ -5,28 +5,9 @@ class_name SkillSecret
 ## キーワード: "密命"
 ## 効果: 敵プレイヤーから見ると真っ黒に表示される
 
-## デバッグフラグをSpellPhaseHandlerから取得
-static func _get_debug_disable_secret_cards(card: Node) -> bool:
-	if not card.get_tree():
-		return false
-	
-	var root = card.get_tree().root
-	if not root:
-		return false
-	
-	var main_scene = root.get_node_or_null("Main")
-	if not main_scene:
-		return false
-	
-	var game_flow_manager = main_scene.get_node_or_null("GameFlowManager")
-	if not game_flow_manager:
-		return false
-	
-	var spell_phase_handler = game_flow_manager.get_node_or_null("SpellPhaseHandler")
-	if not spell_phase_handler:
-		return false
-	
-	return spell_phase_handler.debug_disable_secret_cards
+## デバッグフラグを取得（DebugSettingsから参照）
+static func _get_debug_disable_secret_cards(_card: Node) -> bool:
+	return DebugSettings.disable_secret_cards
 
 ## 密命カードの表示を制御
 ## カードの表示状態を更新（所有者以外には真っ黒表示）

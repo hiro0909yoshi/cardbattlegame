@@ -182,21 +182,21 @@ static func show_creature_info_panel(handler, target_data: Dictionary) -> void:
 	# handlerからui_managerを取得
 	var ui_mgr = _get_ui_manager(handler)
 	
-	if not ui_mgr or not ui_mgr.creature_info_panel_ui:
+	if not ui_mgr:
 		return
 	
 	# setup_buttons=false でナビゲーションボタンを設定しない
-	ui_mgr.creature_info_panel_ui.show_view_mode(creature_data, tile_index, false)
+	ui_mgr.show_card_info(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
 static func hide_creature_info_panel(handler) -> void:
 	var ui_mgr = _get_ui_manager(handler)
 	
-	if not ui_mgr or not ui_mgr.creature_info_panel_ui:
+	if not ui_mgr:
 		return
 	
-	ui_mgr.creature_info_panel_ui.hide_panel(false)  # clear_buttons=false
+	ui_mgr.hide_all_info_panels(false)
 
 
 ## handlerからui_managerを取得
