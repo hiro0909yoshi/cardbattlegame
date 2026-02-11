@@ -51,9 +51,10 @@ var card_selection_filter: String = ""  # "spell"の時はスペルカードの�
 var assist_target_elements: Array = []  # 援護対象の属性リスト
 
 # ゲームメニュー関連
-var game_menu_button: GameMenuButton = null
-var game_menu: GameMenu = null
-var surrender_dialog: SurrenderDialog = null
+# サブシステム
+var win_screen_handler: UIWinScreen = null
+var tap_handler: UITapHandler = null
+var game_menu_handler: UIGameMenuHandler = null
 var blocked_item_types: Array = []  # ブロックするアイテムタイプ（例: ["防具"]）
 var excluded_card_index: int = -1  # 犠牲選択時に除外するカードインデックス（召喚するカード自身）
 var excluded_card_id: String = ""  # 犠牲選択時に除外するカードID（召喚するカード自身）
@@ -62,6 +63,11 @@ var excluded_card_id: String = ""  # 犠牲選択時に除外するカードID�
 # 以下の変数は削除予定
 
 func _ready():
+	# サブシステム初期化
+	win_screen_handler = UIWinScreen.new(self)
+	tap_handler = UITapHandler.new(self)
+	game_menu_handler = UIGameMenuHandler.new(self)
+
 	# UIコンポーネントを動的にロードして作成
 	var PlayerInfoPanelClass = load("res://scripts/ui_components/player_info_panel.gd")
 	var CardSelectionUIClass = load("res://scripts/ui_components/card_selection_ui.gd")
@@ -251,8 +257,8 @@ func create_ui(parent: Node):
 	tap_target_manager.name = "TapTargetManager"
 	add_child(tap_target_manager)
 	tap_target_manager.setup(board_system_ref, player_system_ref)
-	tap_target_manager.target_selected.connect(_on_tap_target_selected)
-	tap_target_manager.selection_cancelled.connect(_on_tap_target_cancelled)
+	tap_target_manager.target_selected.connect(tap_handler._on_tap_target_selected)
+	tap_target_manager.selection_cancelled.connect(tap_handler._on_tap_target_cancelled)
 	
 	# GlobalActionButtonsをUIレイヤーに移動（最前面に表示するため、最後に追加）
 	if global_action_buttons:
@@ -277,7 +283,7 @@ func create_ui(parent: Node):
 		global_comment_ui.game_flow_manager_ref = game_flow_manager_ref
 	
 	# ゲームメニュー初期化
-	_setup_game_menu()
+	game_menu_handler.setup_game_menu()
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
@@ -716,348 +722,29 @@ func _on_player_panel_clicked(player_id: int):
 	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
 		player_status_dialog.show_for_player(player_id)
 
-# ============================================
-# 勝利演出
-# ============================================
+# === 勝敗演出（UIWinScreenに委譲） ===
 
-## 勝利画面を表示
 func show_win_screen(player_id: int):
-	if not ui_layer:
-		return
-	
-	# フェーズラベルを更新
-	if phase_label:
-		phase_label.text = ""
-	
-	# 勝利演出パネルを作成
-	var win_panel = Panel.new()
-	win_panel.name = "WinScreen"
-	win_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	
-	# 半透明の黒背景
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.7)
-	win_panel.add_theme_stylebox_override("panel", style)
-	
-	# VBoxContainerで中央配置
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_CENTER)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	win_panel.add_child(vbox)
-	
-	# 「WIN」ラベル
-	var win_label = Label.new()
-	win_label.text = "WIN"
-	win_label.add_theme_font_size_override("font_size", 200)
-	win_label.add_theme_color_override("font_color", Color.GOLD)
-	win_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(win_label)
-	
-	# プレイヤー名ラベル
-	var player_name = "プレイヤー%d" % (player_id + 1)
-	if player_system_ref and player_id < player_system_ref.players.size():
-		player_name = player_system_ref.players[player_id].name
-	
-	var player_label = Label.new()
-	player_label.text = player_name + " の勝利！"
-	player_label.add_theme_font_size_override("font_size", 48)
-	player_label.add_theme_color_override("font_color", Color.WHITE)
-	player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(player_label)
-	
-	# VBoxの位置を中央に
-	vbox.position = Vector2(-200, -150)
-	vbox.custom_minimum_size = Vector2(400, 300)
-	
-	ui_layer.add_child(win_panel)
-	
-	# アニメーション（フェードイン + スケール）
-	win_panel.modulate.a = 0
-	win_label.scale = Vector2(0.5, 0.5)
-	win_label.pivot_offset = win_label.size / 2
-	
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(win_panel, "modulate:a", 1.0, 0.5)
-	tween.tween_property(win_label, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
-	
-	print("[UIManager] 勝利画面表示: プレイヤー", player_id + 1)
+	win_screen_handler.show_win_screen(player_id)
 
-
-## 勝利画面を表示（非同期版 - クリック待ち）
 func show_win_screen_async(player_id: int):
-	show_win_screen(player_id)
-	
-	# クリック待ち
-	await _wait_for_click()
-	
-	# 勝利画面を削除
-	var win_screen = ui_layer.get_node_or_null("WinScreen")
-	if win_screen:
-		win_screen.queue_free()
+	await win_screen_handler.show_win_screen_async(player_id)
 
-
-## 敗北画面を表示（非同期版 - クリック待ち）
 func show_lose_screen_async(player_id: int):
-	if not ui_layer:
-		return
-	
-	# フェーズラベルを更新
-	if phase_label:
-		phase_label.text = ""
-	
-	# 敗北演出パネルを作成
-	var lose_panel = Panel.new()
-	lose_panel.name = "LoseScreen"
-	lose_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	
-	# 半透明の黒背景
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.7)
-	lose_panel.add_theme_stylebox_override("panel", style)
-	
-	# VBoxContainerで中央配置
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_CENTER)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	lose_panel.add_child(vbox)
-	
-	# 「LOSE」ラベル
-	var lose_label = Label.new()
-	lose_label.text = "LOSE..."
-	lose_label.add_theme_font_size_override("font_size", 150)
-	lose_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-	lose_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(lose_label)
-	
-	# VBoxの位置を中央に
-	vbox.position = Vector2(-200, -100)
-	vbox.custom_minimum_size = Vector2(400, 200)
-	
-	ui_layer.add_child(lose_panel)
-	
-	# アニメーション（フェードイン）
-	lose_panel.modulate.a = 0
-	
-	var tween = create_tween()
-	tween.tween_property(lose_panel, "modulate:a", 1.0, 0.5)
-	
-	print("[UIManager] 敗北画面表示: プレイヤー", player_id + 1)
-	
-	# クリック待ち
-	await _wait_for_click()
-	
-	# 敗北画面を削除
-	lose_panel.queue_free()
+	await win_screen_handler.show_lose_screen_async(player_id)
 
 
-## クリック待ち
-func _wait_for_click():
-	print("[UIManager] クリック待ち開始")
-	# 単純にタイマーで待機
-	await get_tree().create_timer(2.0).timeout
-	print("[UIManager] クリック待ち完了")
+# === カメラタップ（UITapHandlerに委譲） ===
 
-
-# ============================================
-# カメラタップによるクリーチャー情報表示
-# ============================================
-
-## CameraControllerのシグナルを接続
 func connect_camera_signals():
-	print("[UIManager] connect_camera_signals 呼び出し")
-	
-	if not board_system_ref:
-		print("[UIManager] board_system_ref がない")
-		return
-	
-	if not board_system_ref.camera_controller:
-		print("[UIManager] camera_controller がない (board_system_ref: %s)" % board_system_ref)
-		print("[UIManager] board_system_ref の camera_controller: %s" % board_system_ref.get("camera_controller"))
-		return
-	
-	var cam_ctrl = board_system_ref.camera_controller
-	
-	# 既に接続されていたらスキップ
-	if cam_ctrl.creature_tapped.is_connected(_on_creature_tapped):
-		print("[UIManager] シグナル既に接続済み")
-		return
-	
-	cam_ctrl.creature_tapped.connect(_on_creature_tapped)
-	cam_ctrl.tile_tapped.connect(_on_tile_tapped)
-	cam_ctrl.empty_tapped.connect(_on_empty_tapped)
-	print("[UIManager] カメラタップシグナル接続完了")
+	tap_handler.connect_camera_signals()
+	# TapTargetManagerのシグナルも接続
+	if tap_target_manager:
+		if not tap_target_manager.target_selected.is_connected(tap_handler._on_tap_target_selected):
+			tap_target_manager.target_selected.connect(tap_handler._on_tap_target_selected)
+		if not tap_target_manager.selection_cancelled.is_connected(tap_handler._on_tap_target_cancelled):
+			tap_target_manager.selection_cancelled.connect(tap_handler._on_tap_target_cancelled)
 
 
-## クリーチャーがタップされた時のハンドラ
-func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
-	print("[UIManager] _on_creature_tapped 呼び出し: タイル%d" % tile_index)
-	
-	if creature_data.is_empty():
-		print("[UIManager] creature_data が空")
-		return
-	
-	# TapTargetManagerでターゲット選択中かチェック
-	if tap_target_manager and tap_target_manager.is_active:
-		if tap_target_manager.handle_creature_tap(tile_index, creature_data):
-			# ターゲットとして処理された
-			return
-	
-	# ターゲット選択されなかった場合はインフォパネル表示
-	# ターゲット選択中は setup_buttons=false でグローバルボタンを変更しない
-	# ドミニオコマンド選択中は専用の処理を行う
-	var is_dominio_order_active = game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler and game_flow_manager_ref.dominio_command_handler.current_state != game_flow_manager_ref.dominio_command_handler.State.CLOSED
-	var is_tap_target_active = tap_target_manager and tap_target_manager.is_active
-	# チュートリアルのExplanationModeがアクティブな時もボタンを変更しない
-	var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
-	# スペルフェーズ中もボタンを変更しない（チェックボタンが消える問題の防止）
-	var is_spell_phase_active = game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.is_spell_phase_active()
-	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active
-	
-	if creature_info_panel_ui:
-		creature_info_panel_ui.show_view_mode(creature_data, tile_index, setup_buttons)
-		print("[UIManager] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s, land_cmd=%s, spell=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons, is_dominio_order_active, is_spell_phase_active])
-		
-		# ドミニオコマンド中はパネルを閉じるだけの×ボタンを設定
-		if is_dominio_order_active:
-			register_back_action(func():
-				creature_info_panel_ui.hide_panel(false)
-				# ドミニオコマンドのナビゲーションを復元
-				game_flow_manager_ref.dominio_command_handler._restore_navigation()
-			, "閉じる")
-		# スペルフェーズ中もパネルを閉じるだけ（ボタンクリアしない）
-		# 元のコールバックをバックアップして復元する（パネル未表示時のみバックアップ）
-		elif is_spell_phase_active:
-			if not _spell_phase_buttons_saved:
-				_spell_phase_saved_confirm = _compat_confirm_cb
-				_spell_phase_saved_back = _compat_back_cb
-				_spell_phase_saved_up = _compat_up_cb
-				_spell_phase_saved_down = _compat_down_cb
-				_spell_phase_buttons_saved = true
-			register_back_action(func():
-				creature_info_panel_ui.hide_panel(false)
-				_restore_spell_phase_buttons()
-			, "閉じる")
-	else:
-		print("[UIManager] creature_info_panel_ui がない")
-
-
-## タイルがタップされた時のハンドラ（クリーチャーがいない場合）
-func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
-	# TapTargetManagerでターゲット選択中かチェック
-	if tap_target_manager and tap_target_manager.is_active:
-		if tap_target_manager.handle_tile_tap(tile_index, tile_data):
-			# ターゲットとして処理された
-			return
-		
-		# ターゲット選択中だが無効なタイル → インフォパネルだけ閉じる（ボタンはそのまま）
-		if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-			creature_info_panel_ui.hide_panel(false)  # clear_buttons=false
-		return
-	
-	# 通常時はインフォパネルを閉じる
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		# チュートリアル中・スペルフェーズ中はボタンをクリアしない
-		var is_tutorial_active = global_action_buttons and global_action_buttons.explanation_mode_active
-		var is_spell_phase_active = game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.is_spell_phase_active()
-		var clear_buttons = not is_tutorial_active and not is_spell_phase_active
-		creature_info_panel_ui.hide_panel(clear_buttons)
-		# スペルフェーズ中はボタンを復元
-		if is_spell_phase_active:
-			_restore_spell_phase_buttons()
-
-
-## 空（タイル外）がタップされた時のハンドラ
-func _on_empty_tapped():
-	# TapTargetManagerでターゲット選択中かチェック
-	if tap_target_manager and tap_target_manager.is_active:
-		if tap_target_manager.handle_empty_tap():
-			# 選択モード中は何もしない
-			return
-	
-	# 通常時はインフォパネルを閉じる
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel(false)  # ボタンはクリアしない（チュートリアル等の状態を維持）
-		# スペルフェーズ中はボタンを復元
-		if _spell_phase_buttons_saved:
-			_restore_spell_phase_buttons()
-		print("[UIManager] 空タップでパネル閉じ")
-
-
-## TapTargetManagerからターゲットが選択された時
-func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
-	print("[UIManager] タップターゲット選択: タイル%d" % tile_index)
-	# ドミニオコマンドハンドラなど、呼び出し元に通知（シグナルを中継）
-	# 具体的な処理は各ハンドラが tap_target_manager.target_selected に直接接続
-
-
-## TapTargetManagerから選択がキャンセルされた時
-func _on_tap_target_cancelled():
-	print("[UIManager] タップターゲット選択キャンセル")
-
-
-# ============================================
-# ゲームメニュー
-# ============================================
-
-## ゲームメニューをセットアップ
-func _setup_game_menu():
-	if not ui_layer:
-		print("[UIManager] ui_layerがないためゲームメニュー初期化スキップ")
-		return
-	
-	# メニューボタン
-	game_menu_button = GameMenuButton.new()
-	game_menu_button.name = "GameMenuButton"
-	game_menu_button.menu_pressed.connect(_on_game_menu_button_pressed)
-	ui_layer.add_child(game_menu_button)
-	
-	# メニュー
-	game_menu = GameMenu.new()
-	game_menu.name = "GameMenu"
-	game_menu.settings_selected.connect(_on_settings_selected)
-	game_menu.help_selected.connect(_on_help_selected)
-	game_menu.surrender_selected.connect(_on_surrender_selected)
-	ui_layer.add_child(game_menu)
-	
-	# 降参確認ダイアログ
-	surrender_dialog = SurrenderDialog.new()
-	surrender_dialog.name = "SurrenderDialog"
-	surrender_dialog.surrendered.connect(_on_surrender_confirmed)
-	ui_layer.add_child(surrender_dialog)
-	
-	print("[UIManager] ゲームメニュー初期化完了")
-
-
-## メニューボタン押下
-func _on_game_menu_button_pressed():
-	print("[UIManager] メニューボタン押下受信")
-	if game_menu:
-		game_menu.show_menu()
-	else:
-		print("[UIManager] game_menu が null")
-
-
-## 設定選択
-func _on_settings_selected():
-	print("[UIManager] 設定選択（未実装）")
-	# TODO: 設定画面を開く
-
-
-## ヘルプ選択
-func _on_help_selected():
-	print("[UIManager] ヘルプ選択（未実装）")
-	# TODO: ヘルプ画面を開く
-
-
-## 降参選択
-func _on_surrender_selected():
-	if surrender_dialog:
-		surrender_dialog.show_dialog()
-
-
-## 降参確認
-func _on_surrender_confirmed():
-	print("[UIManager] 降参確認")
-	if game_flow_manager_ref:
-		game_flow_manager_ref.on_player_defeated("surrender")
+# === ゲームメニュー（UIGameMenuHandlerに委譲） ===
+# game_menu_button, game_menu, surrender_dialog は game_menu_handler 内で管理
