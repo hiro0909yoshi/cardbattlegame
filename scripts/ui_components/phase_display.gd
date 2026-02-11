@@ -400,6 +400,12 @@ func hide_action_prompt():
 	if phase_label:
 		phase_label.modulate.a = 1.0
 
+## 現在のアクションプロンプトテキストを取得
+func get_current_action_prompt() -> String:
+	if action_prompt_label and action_prompt_panel and action_prompt_panel.visible:
+		return action_prompt_label.text
+	return ""
+
 # ========================================
 # エラー・警告トースト表示（パターン3）
 # ========================================

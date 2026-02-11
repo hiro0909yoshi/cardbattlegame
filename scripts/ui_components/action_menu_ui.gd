@@ -96,6 +96,16 @@ func hide_menu():
 		ui_manager_ref.disable_navigation()
 
 
+## ナビゲーションを再設定（閲覧モードからの復帰用）
+func restore_navigation():
+	if visible and ui_manager_ref:
+		ui_manager_ref.enable_navigation(
+			func(): _confirm_selection(),  # 決定
+			func(): _cancel_selection(),   # 戻る
+			func(): _select_previous(),    # 上
+			func(): _select_next()         # 下
+		)
+
 ## 土地情報を表示（クリーチャーがいない移動先用）
 func show_land_info(element: String, level: int):
 	_create_land_info_panel(element, level)

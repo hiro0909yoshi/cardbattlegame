@@ -105,6 +105,10 @@ func show_action_menu(tile_index: int):
 		action_menu_ui.set_position_left(false)  # 右側（上下ボタンの左）に配置
 		action_menu_ui.show_menu(menu_items, "アクション選択")
 	
+	# フェーズコメント表示
+	if ui_manager_ref and ui_manager_ref.phase_display:
+		ui_manager_ref.phase_display.show_action_prompt("アクションを選択してください")
+	
 	# 互換性のためaction_menu_panelのvisibleも設定
 	if action_menu_panel:
 		action_menu_panel.visible = false  # 旧パネルは使わない
@@ -359,6 +363,9 @@ func _on_cancel_dominio_order_button_pressed():
 func _close_creature_info_panel_if_open():
 	if ui_manager_ref:
 		ui_manager_ref.hide_all_info_panels()
+		# フェーズコメントもクリア（アクション選択中のコメントを消す）
+		if ui_manager_ref.phase_display:
+			ui_manager_ref.phase_display.hide_action_prompt()
 
 func _on_action_level_up_pressed():
 	_close_creature_info_panel_if_open()

@@ -466,6 +466,9 @@ var _saved_nav_confirm: Callable = Callable()
 var _saved_nav_back: Callable = Callable()
 var _saved_nav_up: Callable = Callable()
 var _saved_nav_down: Callable = Callable()
+var _saved_nav_special_cb: Callable = Callable()
+var _saved_nav_special_text: String = ""
+var _saved_nav_phase_comment: String = ""
 var _nav_state_saved: bool = false
 
 ## 現在のナビゲーション状態を保存（閲覧モード用）
@@ -477,6 +480,15 @@ func save_navigation_state():
 	_saved_nav_back = _compat_back_cb
 	_saved_nav_up = _compat_up_cb
 	_saved_nav_down = _compat_down_cb
+	# special_button状態を保存
+	if global_action_buttons:
+		_saved_nav_special_cb = global_action_buttons._special_callback
+		_saved_nav_special_text = global_action_buttons._special_text
+	# フェーズコメントを保存
+	if phase_display and phase_display.has_method("get_current_action_prompt"):
+		_saved_nav_phase_comment = phase_display.get_current_action_prompt()
+	else:
+		_saved_nav_phase_comment = ""
 	_nav_state_saved = true
 
 ## 保存したナビゲーション状態を復元
@@ -489,6 +501,15 @@ func restore_navigation_state():
 	_compat_down_cb = _saved_nav_down
 	_nav_state_saved = false
 	_update_compat_buttons()
+	# special_button状態を復元
+	if global_action_buttons:
+		if _saved_nav_special_cb.is_valid():
+			global_action_buttons.setup_special(_saved_nav_special_text, _saved_nav_special_cb)
+		else:
+			global_action_buttons.clear_special()
+	# フェーズコメントを復元
+	if _saved_nav_phase_comment != "" and phase_display:
+		phase_display.show_action_prompt(_saved_nav_phase_comment)
 	# 入力ロックを解除（×ボタン押下時にlock_inputされるため）
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
@@ -496,6 +517,47 @@ func restore_navigation_state():
 ## ナビゲーション保存状態をクリア（フェーズ切り替え時等）
 func clear_navigation_saved_state():
 	_nav_state_saved = false
+
+## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
+## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
+func _restore_current_phase():
+	var gfm = game_flow_manager_ref
+	
+	# ドミニオコマンドがアクティブ
+	if gfm and gfm.dominio_command_handler:
+		var dominio = gfm.dominio_command_handler
+		if dominio.current_state != dominio.State.CLOSED:
+			# アクション選択中はActionMenuUIのナビゲーションを復元
+			if dominio.current_state == dominio.State.SELECTING_ACTION:
+				if dominio_order_ui and dominio_order_ui.action_menu_ui:
+					dominio_order_ui.action_menu_ui.restore_navigation()
+				else:
+					dominio.restore_navigation()
+			else:
+				dominio.restore_navigation()
+			# ドミニオ中はDボタン非表示
+			hide_dominio_order_button()
+			# フェーズコメント復元（ドミニオ自身に依頼）
+			dominio.restore_phase_comment()
+			_nav_state_saved = false
+			return
+	
+	# カード選択UIがアクティブ（スペル/召喚/バトル/アイテム等）
+	if card_selection_ui and card_selection_ui.is_active:
+		card_selection_ui.register_back_button_for_current_mode()
+		card_selection_ui.restore_phase_comment()
+		# 召喚/バトル/アイテムフェーズ中はDボタン再表示
+		var mode = card_selection_ui.selection_mode
+		if mode in ["summon", "battle", "item"]:
+			show_dominio_order_button()
+		# アルカナアーツボタン
+		if gfm and gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
+			if gfm.spell_phase_handler.spell_mystic_arts.is_active():
+				pass  # アルカナアーツ中は別途管理
+		return
+	
+	# どのフェーズでもない（サイコロフェーズ等）→ save/restore フォールバック
+	restore_navigation_state()
 
 ## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
 func restore_spell_phase_buttons():
@@ -599,12 +661,15 @@ func close_all_info_panels():
 ## 全てのインフォパネルを閉じてナビゲーションをクリア（saved stateは保持）
 ## show_card_info内でのパネル切り替え時に使用
 func _hide_all_info_panels_raw():
-	# saved stateを一時退避
+	# saved stateを一時退避（disable_navigation→clear_allで消費されないように）
 	var was_saved = _nav_state_saved
 	var saved_confirm = _saved_nav_confirm
 	var saved_back = _saved_nav_back
 	var saved_up = _saved_nav_up
 	var saved_down = _saved_nav_down
+	var saved_special_cb = _saved_nav_special_cb
+	var saved_special_text = _saved_nav_special_text
+	var saved_phase_comment = _saved_nav_phase_comment
 	
 	# パネルを閉じる（clear_buttons=false: hide_panel内でのボタン操作を防ぐ）
 	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
@@ -616,13 +681,19 @@ func _hide_all_info_panels_raw():
 	
 	# ナビゲーションを全クリア（前のパネルの確認ボタン等を確実に消す）
 	disable_navigation()
+	# special_buttonも明示的にクリア（閲覧モード中は不要）
+	if global_action_buttons:
+		global_action_buttons.clear_special()
 	
-	# saved stateを復元
+	# saved stateを復元（disable/clearで消費された分を戻す）
 	_nav_state_saved = was_saved
 	_saved_nav_confirm = saved_confirm
 	_saved_nav_back = saved_back
 	_saved_nav_up = saved_up
 	_saved_nav_down = saved_down
+	_saved_nav_special_cb = saved_special_cb
+	_saved_nav_special_text = saved_special_text
+	_saved_nav_phase_comment = saved_phase_comment
 
 ## 全てのインフォパネルを閉じる（clear_buttons指定可能）
 func hide_all_info_panels(clear_buttons: bool = true):
@@ -674,10 +745,7 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	if panel and not setup_buttons:
 		register_back_action(func():
 			_hide_all_info_panels_raw()
-			restore_navigation_state()
-			# フェーズコメントを復元
-			if card_selection_ui and card_selection_ui.is_active:
-				card_selection_ui.restore_phase_comment()
+			_restore_current_phase()
 			# カードのホバー状態を解除
 			var card_script = load("res://scripts/card.gd")
 			if card_script.currently_selected_card:

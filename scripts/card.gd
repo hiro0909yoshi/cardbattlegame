@@ -603,7 +603,7 @@ func _show_info_panel_only():
 	ui_manager.show_card_info(card_data, -1, false)
 	
 	# 召喚/バトル/アイテムフェーズ中はドミニオボタンを再表示
-	if ui_manager.card_selection_ui:
+	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active:
 		var mode = ui_manager.card_selection_ui.selection_mode
 		if mode in ["summon", "battle", "item"]:
 			ui_manager.show_dominio_order_button()

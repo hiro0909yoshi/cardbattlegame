@@ -134,6 +134,10 @@ func open_dominio_order(player_id: int):
 		ui_manager.card_selection_ui.deactivate()
 		ui_manager.clear_back_action()  # 「召喚しない」をクリア
 	
+	# 前フェーズのナビゲーション保存状態をクリア
+	if ui_manager:
+		ui_manager.clear_navigation_saved_state()
+	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
 	current_land_selection_index = 0  # 最初の土地を選択
@@ -473,6 +477,27 @@ func restore_navigation():
 				)
 		_:
 			pass
+
+## 現在のステートに応じたフェーズコメントを復元
+func restore_phase_comment():
+	match current_state:
+		State.SELECTING_LAND:
+			LandSelectionHelper.update_land_selection_ui(self)
+		State.SELECTING_ACTION:
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("アクションを選択してください")
+		State.SELECTING_MOVE_DEST:
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("移動先を選択")
+		State.SELECTING_LEVEL:
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("レベルアップする土地を選択")
+		State.SELECTING_TERRAIN:
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("地形を選択")
+		_:
+			if ui_manager and ui_manager.phase_display:
+				ui_manager.phase_display.hide_action_prompt()
 
 ## 土地選択用ナビゲーション設定（全ボタン）
 func _set_land_selection_navigation():

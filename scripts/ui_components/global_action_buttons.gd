@@ -203,6 +203,7 @@ func _update_button_states():
 	confirm_button.disabled = not _confirm_callback.is_valid()
 	back_button.disabled = not _back_callback.is_valid()
 	special_button.disabled = not _special_callback.is_valid()
+	special_button.visible = _special_callback.is_valid()
 	special_button.text = _special_text if _special_callback.is_valid() else ""
 
 
