@@ -199,8 +199,30 @@ func _evaluate_spell(spell: Dictionary, context: Dictionary) -> Dictionary:
 	return result
 
 ## パターン: immediate（即座使用）
-func _evaluate_immediate(_spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
-	# 即座使用系は常に使用可能
+func _evaluate_immediate(spell: Dictionary, context: Dictionary, base_score: float) -> Dictionary:
+	var effect_parsed = spell.get("effect_parsed", {})
+	var target_type = effect_parsed.get("target_type", "")
+	var target_filter = effect_parsed.get("target_filter", "")
+	
+	# target_type が player かつ target_filter が enemy の場合、敵プレイヤーをターゲットにする
+	if target_type == "player" and target_filter == "enemy":
+		if player_system:
+			var enemies = []
+			var my_id = context.player_id
+			for i in range(player_system.players.size()):
+				if i != my_id:
+					enemies.append(i)
+			if not enemies.is_empty():
+				var target_id = enemies[randi() % enemies.size()]
+				return {
+					"should_use": true,
+					"score": base_score,
+					"target": {"type": "player", "player_id": target_id}
+				}
+		# 敵プレイヤーが見つからない場合は使用しない
+		return {"should_use": false, "score": 0.0, "target": null}
+	
+	# それ以外は従来通り自分をターゲット
 	return {
 		"should_use": true,
 		"score": base_score,

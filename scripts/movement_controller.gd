@@ -1050,8 +1050,11 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 		target_pos.y += MOVE_HEIGHT
 		player_node.global_position = target_pos
 		
-		# カメラも瞬間移動
+		# カメラも瞬間移動（方向選択Tweenが動作中なら先にキャンセル）
 		if camera and player_system and player_id == player_system.current_player_index:
+			var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager and game_flow_manager.board_system_3d else null
+			if cc and cc.has_method("cancel_direction_tween"):
+				cc.cancel_direction_tween()
 			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 			camera.global_position = cam_target
 	
@@ -1323,8 +1326,9 @@ func _predict_destinations_recursive(current_tile: int, remaining_steps: int, ca
 		# ワープ先を取得
 		var warp_dest = _get_warp_destination(current_tile)
 		if warp_dest >= 0 and warp_dest != current_tile:
-			# ワープ先から継続（歩数消費なし、just_warped=trueでワープ連鎖を防止）
-			_predict_destinations_recursive(warp_dest, remaining_steps, current_tile, results, visited, true)
+			# ワープ先から継続（ワープタイルを踏んだ1歩を返還 + ワープ先からは通常消費）
+			# 実際の移動では remaining-=1 → +=1 で歩数返還されるのと同等
+			_predict_destinations_recursive(warp_dest, remaining_steps + 1, current_tile, results, visited, true)
 			return
 	
 	# 残り歩数が0なら現在地が到着地点
@@ -1340,14 +1344,9 @@ func _predict_destinations_recursive(current_tile: int, remaining_steps: int, ca
 		results.append(current_tile)
 		return
 	
-	# 各選択肢について再帰的に探索
+	# 各選択肢について再帰的に探索（ワープ後も通常と同じく1歩消費）
 	for next_tile in choices:
-		if just_warped:
-			# ワープ先タイルから出る時は歩数消費なし
-			_predict_destinations_recursive(next_tile, remaining_steps, current_tile, results, visited.duplicate(), false)
-		else:
-			# 通常：1歩消費
-			_predict_destinations_recursive(next_tile, remaining_steps - 1, current_tile, results, visited.duplicate(), false)
+		_predict_destinations_recursive(next_tile, remaining_steps - 1, current_tile, results, visited.duplicate(), false)
 
 ## 次に進める選択肢を取得（came_fromを除外）
 func _get_next_tile_choices(current_tile: int, came_from: int) -> Array:

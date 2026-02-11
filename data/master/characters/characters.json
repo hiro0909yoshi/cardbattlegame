@@ -152,7 +152,11 @@
 			"threshold": 500,
 			"min_defense_items": 2
 		  }
-		}
+		},
+		"summon_rate_match": 0.8,
+		"summon_rate_mismatch": 0.3,
+		"spell_use_rate": 1.0,
+		"dominio_use_rate": 0.7
 	  }
 	},
 	"goblin": {
