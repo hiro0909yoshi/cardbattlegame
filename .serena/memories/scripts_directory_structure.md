@@ -1,4 +1,4 @@
-# Scripts Directory Structure (Updated: 2026-02-11)
+# Scripts Directory Structure (Updated: 2026-02-11, movement_controller refactored)
 
 ## Root (`scripts/`)
 
@@ -12,7 +12,12 @@
 - `ui_manager.gd` - UI orchestration
 - `tile_action_processor.gd` - Tile action processing
 - `tile_data_manager.gd` - Tile info, toll calculation
-- `movement_controller.gd` - Player movement
+- `movement_controller.gd` - Player movement (core, delegates to 5 sub-systems)
+- `movement_direction_selector.gd` - Direction selection UI (+1/-1)
+- `movement_branch_selector.gd` - Branch tile selection UI
+- `movement_destination_predictor.gd` - Destination prediction & highlight
+- `movement_warp_handler.gd` - Warp, pass-through events, forced stop
+- `movement_special_handler.gd` - Checkpoint, heal, down clear, dice buff, camera
 - `effect_manager.gd` - Effect management
 - `special_tile_system.gd` - Special tile processing
 - `player_buff_system.gd` - Player buff management

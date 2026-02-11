@@ -2,15 +2,14 @@ extends Node
 class_name MovementController3D
 
 # 3D移動制御システム
-# プレイヤーの3D移動、カメラ追従、ワープ処理を管理
+# プレイヤーの3D移動、カメラ追従を管理
+# サブシステム: 方向選択、分岐選択、経路予測、ワープ、特殊処理
 
 signal movement_started(player_id: int)
 signal movement_step_completed(player_id: int, tile_index: int)
 signal movement_completed(player_id: int, final_tile: int)
 signal warp_executed(player_id: int, from_tile: int, to_tile: int)
 signal start_passed(player_id: int)
-
-# 定数をpreload
 
 # 移動設定
 const MOVE_DURATION = 0.1  # 1マスの移動時間
@@ -30,28 +29,9 @@ var current_moving_player = -1
 # システム参照
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
-var game_flow_manager = null  # GameFlowManager参照（呪い削除用）
-var spell_movement: SpellMovement = null  # 足どめ判定用
-var spell_player_move = null  # 方向選択権判定用
-
-# 方向選択状態（タイプA: ゲームスタート/ワープ後）
-var is_direction_selection_active: bool = false
-var selected_direction: int = 1
-var available_directions: Array = []
-signal direction_selected(direction: int)
-
-# 分岐選択状態（タイプB: 移動中の分岐点）
-var is_branch_selection_active: bool = false
-var selected_branch_index: int = 0
-var available_branches: Array = []  # タイル番号のリスト
-signal branch_selected(tile_index: int)
-
-# 分岐選択インジケーター
-var branch_indicator: MeshInstance3D = null
-var current_branch_tile: int = -1  # 現在分岐選択中のタイル
-
-# インジケーター設定（BranchTileの定数を参照）
-const INDICATOR_HEIGHT = 0.4  # BranchTileと同じ高さ
+var game_flow_manager = null
+var spell_movement: SpellMovement = null
+var spell_player_move = null
 
 # CPU移動評価システム
 var cpu_movement_evaluator: CPUMovementEvaluator = null
@@ -59,31 +39,44 @@ var cpu_movement_evaluator: CPUMovementEvaluator = null
 # 移動中の残り歩数（CPU分岐選択用）
 var _current_remaining_steps: int = 0
 
+# サブシステム
+var direction_selector: MovementDirectionSelector = null
+var branch_selector: MovementBranchSelector = null
+var destination_predictor: MovementDestinationPredictor = null
+var warp_handler: MovementWarpHandler = null
+var special_handler: MovementSpecialHandler = null
+
 
 func _ready():
-	pass
+	# サブシステムを初期化
+	direction_selector = MovementDirectionSelector.new(self)
+	branch_selector = MovementBranchSelector.new(self)
+	destination_predictor = MovementDestinationPredictor.new(self)
+	warp_handler = MovementWarpHandler.new(self)
+	special_handler = MovementSpecialHandler.new(self)
+
 
 # 初期化
 func initialize(tiles: Dictionary, players: Array, cam: Camera3D = null):
 	tile_nodes = tiles
 	player_nodes = players
 	camera = cam
-	
-	# 初期位置配列を作成
+
 	player_tiles.clear()
 	for i in range(player_nodes.size()):
 		player_tiles.append(0)
 
+
 # システム参照を設定
 func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null, gf_manager = null):
 	player_system = p_system
-	
-	# SpellMovementを初期化
+
 	spell_movement = SpellMovement.new()
 	if gf_manager and gf_manager.creature_manager:
 		spell_movement.setup(gf_manager.creature_manager, null)
 	special_tile_system = st_system
 	game_flow_manager = gf_manager
+
 
 # プレイヤーの現在位置を取得
 func get_player_tile(player_id: int) -> int:
@@ -91,10 +84,12 @@ func get_player_tile(player_id: int) -> int:
 		return player_tiles[player_id]
 	return -1
 
+
 # プレイヤーの位置を設定
 func set_player_tile(player_id: int, tile_index: int):
 	if player_id >= 0 and player_id < player_tiles.size():
 		player_tiles[player_id] = tile_index
+
 
 # === メイン移動処理 ===
 
@@ -103,51 +98,46 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
 		print("[MovementController] move_player早期リターン: is_moving=%s, player_id=%d, player_nodes.size=%d" % [is_moving, player_id, player_nodes.size()])
 		return
-	
+
 	# ゲーム終了チェック
 	if game_flow_manager and game_flow_manager._game_ended:
 		print("[MovementController] ゲーム終了済み、移動スキップ")
 		return
-	
+
 	is_moving = true
 	current_moving_player = player_id
 	print("[MovementController] 移動開始: player=%d, steps=%d" % [player_id, steps])
 	emit_signal("movement_started", player_id)
-	
+
 	# ダイス条件バフをチェックして適用（移動前）
 	if dice_value > 0:
-		apply_dice_condition_buffs(player_id, dice_value)
-	
+		special_handler.apply_dice_condition_buffs(player_id, dice_value)
+
 	# 方向選択権チェック
 	var has_direction_choice = _check_direction_choice_pending(player_id)
 	print("[MovementController] direction_choice=%s, player=%d" % [has_direction_choice, player_id])
-	
+
 	if has_direction_choice:
-		# 現在位置の接続情報をチェック
 		var current_tile = player_tiles[player_id]
 		var came_from = _get_player_came_from(player_id)
-		# CPU分岐選択用に残り歩数を設定
 		_current_remaining_steps = steps
 		var first_tile = await _select_first_tile(current_tile, came_from)
-		
-		# came_fromを更新して方向選択権を消費
+
 		_set_player_came_from(player_id, current_tile)
 		_consume_direction_choice(player_id)
-		
-		# 移動実行（1歩ずつ、分岐があれば都度選択）
+
 		await _move_steps_with_branch(player_id, steps, first_tile)
 	else:
-		# 方向選択権がない場合は came_from ベースで自動進行
 		await _move_steps_with_branch(player_id, steps, -1)
-	
-	# 最終位置を取得
+
 	var final_tile = player_tiles[player_id]
-	
+
 	is_moving = false
 	current_moving_player = -1
-	
+
 	print("[MovementController] 移動完了: player=%d, final_tile=%d" % [player_id, final_tile])
 	emit_signal("movement_completed", player_id, final_tile)
+
 
 # 1歩ずつ移動（分岐があれば選択）
 func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -> void:
@@ -156,143 +146,114 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 	var came_from = _get_player_came_from(player_id)
 	var remaining_steps = steps
 	var is_first_step = true
-	
+
 	while remaining_steps > 0:
 		print("[MovementController] 移動ループ: remaining=%d, current=%d" % [remaining_steps, current_tile])
-		# ゲーム終了チェック
 		if game_flow_manager and game_flow_manager._game_ended:
 			print("[MovementController] ゲーム終了済み、移動中断")
 			break
-		# 残り歩数を更新（CPU分岐選択用）
 		_current_remaining_steps = remaining_steps
-		
+
 		var next_tile: int
-		
+
 		if is_first_step and first_tile >= 0:
-			# 最初の1歩は指定タイル
 			next_tile = first_tile
 			is_first_step = false
 		else:
-			# 次のタイルを決定
 			next_tile = await _get_next_tile_with_branch(current_tile, came_from, player_id)
 			is_first_step = false
-		
-		# 移動前のチェック
+
+		# スタート通過チェック
 		if next_tile == 0 and current_tile > next_tile:
-			handle_start_pass(player_id)
-		
-		# タイルへ移動
+			special_handler.handle_start_pass(player_id)
+
 		await move_to_tile(player_id, next_tile)
-		
-		# 移動後にチェックポイント通過処理（コメント表示のため移動完了後）
-		await check_and_handle_checkpoint(player_id, next_tile, current_tile)
-		
-		# 状態を更新
-		# 逆転時: came_fromは「次に進む方向」として維持（更新しない方式に変更）
-		# → 逆転時も通常と同じくcurrent_tileをcame_fromにする
-		#    ただし、_get_next_tile_with_branchで逆転処理を行う
+		await special_handler.check_and_handle_checkpoint(player_id, next_tile, current_tile)
+
 		came_from = current_tile
 		current_tile = next_tile
 		player_tiles[player_id] = next_tile
 		_set_player_came_from(player_id, came_from)
-		
-		# 歩数を消費
+
 		remaining_steps -= 1
-		
+
 		# ワープチェック
-		var warp_result = await check_and_handle_warp(player_id, next_tile)
+		var warp_result = await warp_handler.check_and_handle_warp(player_id, next_tile)
 		if warp_result.warped:
 			current_tile = warp_result.new_tile
 			player_tiles[player_id] = current_tile
-			came_from = next_tile  # ワープ元がcame_from
+			came_from = next_tile
 			_set_player_came_from(player_id, came_from)
-			# ワープタイルでは歩数を消費しない（通過型）
 			remaining_steps += 1
 			continue
-		
+
 		# 通過イベントチェック（最終歩でない場合）
 		if remaining_steps > 0:
-			await _check_pass_through_event(player_id, current_tile)
-		
+			await warp_handler.check_pass_through_event(player_id, current_tile)
+
 		# 足どめチェック
-		var stop_result = check_forced_stop_at_tile(current_tile, player_id)
+		var stop_result = warp_handler.check_forced_stop_at_tile(current_tile, player_id)
 		if stop_result["stopped"]:
 			print("[足どめ] ", stop_result["reason"])
 			emit_signal("movement_step_completed", player_id, current_tile)
 			break
-		
-		emit_signal("movement_step_completed", player_id, current_tile)
 
+		emit_signal("movement_step_completed", player_id, current_tile)
 
 
 # 次のタイルを取得（分岐があれば選択UI）
 func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: int) -> int:
 	var tile = tile_nodes.get(current_tile)
-	
-	# connectionsがなければ単純にindex+direction
+
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var direction = _get_player_current_direction(player_id)
 		return current_tile + direction
-	
-	# connectionsがある場合：came_fromを除外して進む方向を決定
+
 	var choices = []
 	for conn in tile.connections:
 		if conn != came_from:
 			choices.append(conn)
-	
-	# 選択肢がなければ来た方向に戻る（行き止まり）
+
 	if choices.is_empty():
 		return came_from
-	
+
 	var chosen: int
-	# BranchTileの場合は必ずBranchTileのロジックを使用
 	if tile is BranchTile:
 		var result = tile.get_next_tile_for_direction(came_from)
 		if result.tile >= 0:
-			# 自動選択
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			# CPUの場合は自動選択（残り歩数を渡す）
 			if _is_cpu_player(player_id) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, _current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
 			else:
-				# 選択UI表示
-				current_branch_tile = current_tile
-				chosen = await _show_branch_tile_selection(result.choices)
+				branch_selector.current_branch_tile = current_tile
+				chosen = await branch_selector.show_branch_tile_selection(result.choices)
 		else:
-			# フォールバック（来た方向に戻る）
 			chosen = came_from
-	# 通常タイル: 選択肢が1つなら自動選択
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		# 選択肢が2つ以上
-		# CPUの場合は自動選択（残り歩数を渡す）
 		if _is_cpu_player(player_id) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, _current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
 		else:
-			# 選択UI表示
-			current_branch_tile = current_tile
-			chosen = await _show_branch_tile_selection(choices)
-	
-	# 選んだタイルから方向を推測して設定
+			branch_selector.current_branch_tile = current_tile
+			chosen = await branch_selector.show_branch_tile_selection(choices)
+
 	var inferred_direction = _infer_direction_from_choice(current_tile, chosen, player_id)
 	_set_player_current_direction(player_id, inferred_direction)
-	
+
 	return chosen
+
 
 # 最初の1歩を選択（分岐点の場合）
 func _select_first_tile(current_tile: int, came_from: int) -> int:
 	var tile = tile_nodes.get(current_tile)
-	
-	# connectionsがなければ+1/-1選択
+
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var selected_dir: int
-		# CPUの場合は自動選択
 		if _is_cpu_player(current_moving_player):
-			# チュートリアルモードの場合はTutorialManagerから方向を取得
 			var tutorial_manager = _get_tutorial_manager()
 			if tutorial_manager and tutorial_manager.is_active:
 				selected_dir = tutorial_manager.get_cpu_direction()
@@ -301,156 +262,209 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 				selected_dir = cpu_movement_evaluator.decide_direction(current_moving_player, [1, -1])
 				print("[CPU方向選択] プレイヤー%d: 方向 %d を選択" % [current_moving_player + 1, selected_dir])
 			else:
-				selected_dir = 1  # フォールバック
+				selected_dir = 1
 		else:
-			selected_dir = await _show_simple_direction_selection()
-			# チュートリアルモードの場合はプレイヤーの選択方向を記録
+			selected_dir = await direction_selector.show_simple_direction_selection()
 			var tutorial_manager = _get_tutorial_manager()
 			if tutorial_manager and tutorial_manager.is_active:
 				tutorial_manager.set_player_direction(selected_dir)
 		_set_player_current_direction(current_moving_player, selected_dir)
 		return current_tile + selected_dir
-	
-	# connectionsがある場合：came_fromを除外して選択
+
 	var choices = []
 	for conn in tile.connections:
 		if conn != came_from:
 			choices.append(conn)
-	
-	# 選択肢がなければ来た方向
+
 	if choices.is_empty():
 		return came_from
-	
+
 	var chosen: int
-	# BranchTileの場合は必ずBranchTileのロジックを使用
 	if tile is BranchTile:
 		var result = tile.get_next_tile_for_direction(came_from)
 		if result.tile >= 0:
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			# CPUの場合は自動選択（残り歩数を渡す）
 			if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, _current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
 			else:
-				current_branch_tile = current_tile
-				chosen = await _show_branch_tile_selection(result.choices)
+				branch_selector.current_branch_tile = current_tile
+				chosen = await branch_selector.show_branch_tile_selection(result.choices)
 		else:
 			chosen = came_from
-	# 通常タイル: 選択肢が1つなら自動
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		# 選択肢が2つ以上
-		# CPUの場合は自動選択（残り歩数を渡す）
 		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, _current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
 		else:
-			current_branch_tile = current_tile  # インジケーター表示用
-			chosen = await _show_branch_tile_selection(choices)
-	
-	# 選んだタイルから方向を推測して設定
+			branch_selector.current_branch_tile = current_tile
+			chosen = await branch_selector.show_branch_tile_selection(choices)
+
 	var inferred_dir = _infer_direction_from_choice(current_tile, chosen)
 	_set_player_current_direction(current_moving_player, inferred_dir)
-	
+
 	return chosen
 
-# 方向選択UIを表示
-func _show_direction_selection(directions: Array) -> int:
-	is_direction_selection_active = true
-	available_directions = directions
-	selected_direction = directions[0]  # 初期選択
-	
-	_update_direction_selection_ui()
-	_setup_direction_selection_navigation()
-	
-	# 選択完了を待つ
-	var result = await direction_selected
-	is_direction_selection_active = false
-	_clear_direction_selection_navigation()
-	
-	
-	return result
 
-# 方向選択UIを更新
-func _update_direction_selection_ui():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
-		if game_flow_manager.ui_manager.phase_display:
-			game_flow_manager.ui_manager.phase_display.show_action_prompt("移動方向を選択: %s" % dir_text)
-	# カメラを選択方向に少しずらす
-	if current_moving_player >= 0:
-		var ct = player_tiles[current_moving_player]
-		var nt = ct + selected_direction
-		if tile_nodes.has(ct) and tile_nodes.has(nt):
-			var cp = tile_nodes[ct].global_position
-			var np = tile_nodes[nt].global_position
-			var dv = (np - cp).normalized()
-			var offset_pos = cp + dv * cp.distance_to(np) * 5.0
-			print("[DirCam] offset=%.1f, from=%s to=%s" % [cp.distance_to(offset_pos), cp, offset_pos])
-			if game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
-				game_flow_manager.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
-	
-	# 到着予想タイルに基づいて手札の配置制限表示を更新
-	if current_moving_player >= 0:
-		var ct = player_tiles[current_moving_player]
-		var first_tile = ct + selected_direction
-		if _current_remaining_steps > 1:
-			var destinations = predict_all_destinations(first_tile, _current_remaining_steps - 1, ct)
-			_update_hand_restriction_for_destinations(destinations)
-		else:
-			_update_hand_restriction_for_destinations([first_tile])
+# === 入力処理 ===
 
-# シンプルな方向選択（+1 か -1 を選ぶ）
-func _show_simple_direction_selection() -> int:
-	is_direction_selection_active = true
-	available_directions = [1, -1]
-	selected_direction = 1  # デフォルトは順方向
-	
-	_update_direction_selection_ui()
-	_setup_direction_selection_navigation()
-	
-	var result = await direction_selected
-	is_direction_selection_active = false
-	_clear_direction_selection_navigation()
-	
-	
-	return result
-
-# 方向選択用ナビゲーションボタンを設定
-func _setup_direction_selection_navigation():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		game_flow_manager.ui_manager.enable_navigation(
-			func(): _confirm_direction_selection(),  # 決定
-			Callable(),  # 戻るなし
-			func(): _cycle_direction_selection(),    # 上
-			func(): _cycle_direction_selection()     # 下
-		)
-
-# 方向選択用ナビゲーションボタンをクリア
-func _clear_direction_selection_navigation():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		game_flow_manager.ui_manager.disable_navigation()
-
-# 方向選択を切り替え（上下どちらでも同じ動作）
-func _cycle_direction_selection():
-	if not is_direction_selection_active:
+func _input(event):
+	# 方向選択
+	if direction_selector.is_active:
+		if direction_selector.handle_input(event):
+			get_viewport().set_input_as_handled()
 		return
-	if available_directions.size() > 1:
-		var current_idx = available_directions.find(selected_direction)
-		current_idx = (current_idx + 1) % available_directions.size()
-		selected_direction = available_directions[current_idx]
-		_update_direction_selection_ui()
 
-# 方向選択を確定
-func _confirm_direction_selection():
-	if not is_direction_selection_active:
+	# 分岐タイル選択
+	if branch_selector.is_active:
+		if branch_selector.handle_input(event):
+			get_viewport().set_input_as_handled()
 		return
-	_update_hand_restriction_for_destinations([])  # 到着予想制限をクリア
-	direction_selected.emit(selected_direction)
 
-# 方向選択権（buffs）をチェック
+
+# === 経路計算 ===
+
+func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
+	var path = []
+	var current_tile = player_tiles[player_id]
+
+	var final_direction = direction
+	if _has_movement_reverse_curse(player_id):
+		final_direction = -direction
+
+	for i in range(steps):
+		current_tile = current_tile + final_direction
+		path.append(current_tile)
+
+	return path
+
+
+func _get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
+	var tile = tile_nodes.get(current_tile)
+
+	if not tile:
+		return current_tile + direction
+
+	if tile.connections and not tile.connections.is_empty():
+		return _get_next_from_connections(tile.connections, came_from, direction)
+
+	return current_tile + direction
+
+
+func _get_next_from_connections(connections: Array, came_from: int, direction: int) -> int:
+	var choices = connections.filter(func(n): return n != came_from)
+
+	if choices.is_empty():
+		return came_from
+
+	if choices.size() == 1:
+		return choices[0]
+
+	choices.sort()
+	if direction > 0:
+		return choices[-1]
+	else:
+		return choices[0]
+
+
+# === 移動アニメーション ===
+
+# 経路に沿って移動
+func move_along_path(player_id: int, path: Array) -> void:
+	var previous_tile = player_tiles[player_id]
+	var i = 0
+
+	while i < path.size():
+		var tile_index = path[i]
+
+		if not tile_nodes.has(tile_index):
+			print("Warning: タイル", tile_index, "が見つかりません")
+			i += 1
+			continue
+
+		if tile_index == 0 and previous_tile > tile_index:
+			special_handler.handle_start_pass(player_id)
+
+		await move_to_tile(player_id, tile_index)
+		await special_handler.check_and_handle_checkpoint(player_id, tile_index, previous_tile)
+
+		player_tiles[player_id] = tile_index
+
+		# 通過イベントチェック
+		if i < path.size() - 1:
+			await warp_handler.check_pass_through_event(player_id, tile_index)
+
+		# 分岐チェック
+		if i < path.size() - 1:
+			var branch_result = await branch_selector.check_and_handle_branch(tile_index, previous_tile, path, i)
+			if branch_result.recalculated:
+				path = branch_result.new_path
+
+		# ワープチェック
+		var warp_result = await warp_handler.check_and_handle_warp(player_id, tile_index)
+		if warp_result.warped:
+			var warped_tile = warp_result.new_tile
+			player_tiles[player_id] = warped_tile
+
+			var new_path = [warped_tile]
+			var current = warped_tile
+			var came_from = tile_index
+			for j in range(i + 1, path.size()):
+				var next = _get_next_tile(current, 1, came_from)
+				came_from = current
+				current = next
+				new_path.append(current)
+
+			for j in range(new_path.size()):
+				if i + j + 1 < path.size():
+					path[i + j + 1] = new_path[j]
+				else:
+					path.append(new_path[j])
+
+			tile_index = warped_tile
+
+		# 足どめ判定
+		var stop_result = warp_handler.check_forced_stop_at_tile(tile_index, player_id)
+		if stop_result["stopped"]:
+			print("[足どめ] ", stop_result["reason"])
+			emit_signal("movement_step_completed", player_id, tile_index)
+			break
+
+		emit_signal("movement_step_completed", player_id, tile_index)
+		previous_tile = tile_index
+		i += 1
+
+
+# 単一タイルへの移動
+func move_to_tile(player_id: int, tile_index: int) -> void:
+	if not tile_nodes.has(tile_index):
+		print("[MovementController] move_to_tile: tile_nodes has no tile %d" % tile_index)
+		return
+
+	var player_node = player_nodes[player_id]
+	var target_pos = tile_nodes[tile_index].global_position
+	target_pos.y += MOVE_HEIGHT
+
+	var tween = get_tree().create_tween()
+	tween.set_parallel(true)
+
+	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
+
+	if camera and player_system and player_id == player_system.current_player_index:
+		var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager and game_flow_manager.board_system_3d else null
+		var skip_follow = cc and cc.has_method("is_direction_camera_active") and cc.is_direction_camera_active()
+		if not skip_follow:
+			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
+			tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
+
+	await tween.finished
+
+
+# === 方向・状態管理 ===
+
 func _check_direction_choice_pending(player_id: int) -> bool:
 	if not player_system:
 		return false
@@ -458,7 +472,7 @@ func _check_direction_choice_pending(player_id: int) -> bool:
 		return false
 	return player_system.players[player_id].buffs.get("direction_choice_pending", false)
 
-# 方向選択権を消費
+
 func _consume_direction_choice(player_id: int) -> void:
 	if not player_system:
 		return
@@ -466,28 +480,26 @@ func _consume_direction_choice(player_id: int) -> void:
 		return
 	player_system.players[player_id].buffs.erase("direction_choice_pending")
 
-# CPUプレイヤーかどうかを判定
+
 func _is_cpu_player(player_id: int) -> bool:
 	if not game_flow_manager:
 		return false
 	var player_is_cpu = game_flow_manager.player_is_cpu
 	if player_id < 0 or player_id >= player_is_cpu.size():
 		return false
-	# デバッグモードでは全員手動
 	if game_flow_manager.debug_manual_control_all:
 		return false
 	return player_is_cpu[player_id]
 
-# TutorialManagerを取得
+
 func _get_tutorial_manager():
-	# game_flow_managerの親（Game3D）からTutorialManagerを取得
 	if game_flow_manager and game_flow_manager.get_parent():
 		var game_3d = game_flow_manager.get_parent().get_parent()
 		if game_3d and game_3d.has_node("TutorialManager"):
 			return game_3d.get_node("TutorialManager")
 	return null
 
-# プレイヤーの現在の移動方向を取得
+
 func _get_player_current_direction(player_id: int) -> int:
 	if not player_system:
 		return 1
@@ -495,7 +507,7 @@ func _get_player_current_direction(player_id: int) -> int:
 		return 1
 	return player_system.players[player_id].current_direction
 
-# プレイヤーの移動方向を設定
+
 func _set_player_current_direction(player_id: int, direction: int) -> void:
 	if not player_system:
 		return
@@ -513,36 +525,30 @@ func reverse_player_direction(player_id: int) -> void:
 
 
 ## 歩行逆転用: came_fromを「次に進む予定だったタイル」に変更
-## これにより、came_fromを除外するロジックで逆方向に進むようになる
 func swap_came_from_for_reverse(player_id: int) -> void:
 	if player_id < 0 or player_id >= player_tiles.size():
 		return
-	
+
 	var current_tile = player_tiles[player_id]
 	var old_came_from = _get_player_came_from(player_id)
-	
-	# 現在のタイルのconnectionsを取得
+
 	var tile = tile_nodes.get(current_tile)
 	if not tile or not tile.connections or tile.connections.is_empty():
-		# connectionsがない場合はcurrent_directionベースで計算
 		var direction = _get_player_current_direction(player_id)
 		var next_tile = current_tile + direction
 		_set_player_came_from(player_id, next_tile)
 		print("[MovementController] プレイヤー%d came_from反転(no conn): %d → %d" % [player_id + 1, old_came_from, next_tile])
 		return
-	
-	# connectionsがある場合: old_came_from以外のタイルを「新しいcame_from」にする
-	# （複数ある場合は最初のものを選択）
+
 	for conn in tile.connections:
 		if conn != old_came_from:
 			_set_player_came_from(player_id, conn)
 			print("[MovementController] プレイヤー%d came_from反転: %d → %d" % [player_id + 1, old_came_from, conn])
 			return
-	
-	# 全てold_came_fromと同じ場合（通常ありえない）はそのまま
+
 	print("[MovementController] プレイヤー%d came_from反転失敗: connections=%s" % [player_id + 1, tile.connections])
 
-# プレイヤーのcame_from（前にいたタイル）を取得
+
 func _get_player_came_from(player_id: int) -> int:
 	if not player_system:
 		return -1
@@ -550,7 +556,7 @@ func _get_player_came_from(player_id: int) -> int:
 		return -1
 	return player_system.players[player_id].came_from
 
-# プレイヤーのcame_fromを設定
+
 func _set_player_came_from(player_id: int, tile: int) -> void:
 	if not player_system:
 		return
@@ -559,884 +565,88 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 	player_system.players[player_id].came_from = tile
 
 
-## 歩行逆転呪いが解除された時に呼ばれる: came_fromを元に戻す
+## 歩行逆転呪いが解除された時に呼ばれる
 func on_movement_reverse_curse_removed(player_id: int) -> void:
-	# came_fromを再度入れ替えて元に戻す
 	swap_came_from_for_reverse(player_id)
 	print("[MovementController] 歩行逆転呪い解除: プレイヤー%d came_fromを元に戻す" % [player_id + 1])
 
 
-# 選んだタイルから方向を推測
 func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int = -1) -> int:
 	var pid = player_id if player_id >= 0 else current_moving_player
-	
-	# 単純比較：chosen_tile > current_tile なら+方向
+
 	if chosen_tile == current_tile + 1:
 		return 1
 	elif chosen_tile == current_tile - 1:
 		return -1
 	else:
-		# 分岐先など：現在の方向を維持
 		return _get_player_current_direction(pid)
 
-# 入力処理（方向選択・分岐タイル選択用）
-# 注: 方向選択はGlobalActionButtonsでも処理されるが、キーボード直接入力も維持
-func _input(event):
-	# 方向選択（+1/-1）
-	if is_direction_selection_active:
-		if event is InputEventKey and event.pressed and not event.echo:
-			if event.keycode == KEY_UP or event.keycode == KEY_DOWN:
-				_cycle_direction_selection()
-				get_viewport().set_input_as_handled()
-			
-			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-				_confirm_direction_selection()
-				get_viewport().set_input_as_handled()
-		return
-	
-	# 分岐タイル選択（タイル番号から選ぶ）
-	if is_branch_selection_active:
-		if event is InputEventKey and event.pressed:
-			if event.keycode == KEY_LEFT or event.keycode == KEY_UP:
-				_cycle_branch_selection(-1)
-				get_viewport().set_input_as_handled()
-			
-			elif event.keycode == KEY_RIGHT or event.keycode == KEY_DOWN:
-				_cycle_branch_selection(1)
-				get_viewport().set_input_as_handled()
-			
-			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-				_confirm_branch_selection()
-				get_viewport().set_input_as_handled()
-		return
-	
 
-
-# 移動経路を計算（シンプル版：direction方向にsteps歩進む）
-func calculate_path(player_id: int, steps: int, direction: int = 1) -> Array:
-	var path = []
-	var current_tile = player_tiles[player_id]
-	
-	# 歩行逆転呪いをチェックして方向に反映
-	var final_direction = direction
-	if _has_movement_reverse_curse(player_id):
-		final_direction = -direction
-	
-	for i in range(steps):
-		# 単純に direction 方向に進む
-		current_tile = current_tile + final_direction
-		path.append(current_tile)
-	
-	return path
-
-# 次のタイルを取得（connectionsベース or 単純計算）
-func _get_next_tile(current_tile: int, direction: int, came_from: int) -> int:
-	var tile = tile_nodes.get(current_tile)
-	
-	if not tile:
-		# タイルがなければ単純計算
-		return current_tile + direction
-	
-	# connectionsが設定されていれば接続情報ベース
-	if tile.connections and not tile.connections.is_empty():
-		return _get_next_from_connections(tile.connections, came_from, direction)
-	
-	# 設定されていなければ単純計算
-	return current_tile + direction
-
-# 接続情報から次のタイルを取得（分岐選択UIあり）
-func _get_next_from_connections(connections: Array, came_from: int, direction: int) -> int:
-	# 来た方向を除外
-	var choices = connections.filter(func(n): return n != came_from)
-	
-	# 選択肢がなければ来た方向に戻る（行き止まり）
-	if choices.is_empty():
-		return came_from
-	
-	# 選択肢が1つなら自動選択
-	if choices.size() == 1:
-		return choices[0]
-	
-	# 複数の場合：方向に基づいてデフォルト選択（calculate_path用）
-	# move_along_path内では_show_branch_selectionを使う
-	choices.sort()
-	if direction > 0:
-		return choices[-1]  # 最大値
-	else:
-		return choices[0]   # 最小値
-
-# 分岐タイル選択UIを表示して選択を待つ
-func _show_branch_tile_selection(choices: Array) -> int:
-	is_branch_selection_active = true
-	available_branches = choices
-	
-	# 次のチェックポイントに近い方向をデフォルト選択
-	if cpu_movement_evaluator and current_branch_tile >= 0:
-		selected_branch_index = cpu_movement_evaluator.get_nearest_checkpoint_branch_index(current_moving_player, choices, current_branch_tile)
-	else:
-		selected_branch_index = 0
-	
-	# カメラを手動モードに切り替え（分岐先を確認できるように）
-	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
-		game_flow_manager.board_system_3d.camera_controller.enable_manual_mode()
-	
-	_update_branch_selection_ui()
-	_update_branch_indicator()
-	_setup_branch_selection_navigation()
-	
-	var result = await branch_selected
-	is_branch_selection_active = false
-	_clear_branch_selection_navigation()
-	_hide_branch_indicator()
-	
-	# 到着予測ハイライトをクリア
-	clear_destination_highlight()
-	
-	# 到着予測地点にカメラを移動（awaitしない＝移動と並行）
-	# direction_tweenが終わるとmove_to_tileの追従が再開する
-	if game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
-		var cc = game_flow_manager.board_system_3d.camera_controller
-		if _current_remaining_steps > 1:
-			var from_tile = player_tiles[current_moving_player] if current_moving_player >= 0 else -1
-			var destinations = predict_all_destinations(result, _current_remaining_steps - 1, from_tile)
-			if not destinations.is_empty() and tile_nodes.has(destinations[0]):
-				cc.focus_on_tile_slow(destinations[0], 1.2)
-		elif tile_nodes.has(result):
-			cc.focus_on_tile_slow(result, 0.8)
-		cc.enable_follow_mode()
-	
-	return result
-
-# 分岐タイル選択用ナビゲーションボタンを設定
-func _setup_branch_selection_navigation():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		game_flow_manager.ui_manager.enable_navigation(
-			func(): _confirm_branch_selection(),    # 決定
-			Callable(),                              # 戻るなし
-			func(): _cycle_branch_selection(-1),    # 上（左へ）
-			func(): _cycle_branch_selection(1)      # 下（右へ）
-		)
-
-# 分岐タイル選択用ナビゲーションボタンをクリア
-func _clear_branch_selection_navigation():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		game_flow_manager.ui_manager.disable_navigation()
-
-# 分岐選択を切り替え
-func _cycle_branch_selection(delta: int):
-	if not is_branch_selection_active:
-		return
-	if available_branches.size() > 1:
-		selected_branch_index = (selected_branch_index + delta + available_branches.size()) % available_branches.size()
-		_update_branch_selection_ui()
-		_update_branch_indicator()
-
-# 分岐選択を確定
-func _confirm_branch_selection():
-	if not is_branch_selection_active:
-		return
-	_update_hand_restriction_for_destinations([])  # 到着予想制限をクリア
-	var selected_tile = available_branches[selected_branch_index]
-	branch_selected.emit(selected_tile)
-
-# 分岐/方向選択UI更新（共用）
-func _update_branch_selection_ui():
-	if game_flow_manager and game_flow_manager.ui_manager:
-		var choices_text = ""
-		for i in range(available_branches.size()):
-			var tile_num = available_branches[i]
-			if i == selected_branch_index:
-				choices_text += "[→タイル%d←] " % tile_num
-			else:
-				choices_text += " タイル%d " % tile_num
-		var remaining_text = "（残り%dマス）" % _current_remaining_steps if _current_remaining_steps > 0 else ""
-		if game_flow_manager.ui_manager.phase_display:
-			game_flow_manager.ui_manager.phase_display.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
-	
-	# 到着予測ハイライトを更新
-	update_destination_highlight()
-	
-	# 到着予想タイルに基づいて手札の配置制限表示を更新
-	if is_branch_selection_active and not available_branches.is_empty():
-		var selected_tile = available_branches[selected_branch_index]
-		var steps_after_branch = _current_remaining_steps - 1
-		if steps_after_branch <= 0:
-			_update_hand_restriction_for_destinations([selected_tile])
-		else:
-			var destinations = predict_all_destinations(selected_tile, steps_after_branch, current_branch_tile)
-			_update_hand_restriction_for_destinations(destinations)
-	
-	# カメラを選択中の分岐方向にずらす
-	if not available_branches.is_empty() and current_branch_tile >= 0 and game_flow_manager and game_flow_manager.board_system_3d and game_flow_manager.board_system_3d.camera_controller:
-		var target_tile = available_branches[selected_branch_index]
-		if tile_nodes.has(current_branch_tile) and tile_nodes.has(target_tile):
-			var bp = tile_nodes[current_branch_tile].global_position
-			var tp = tile_nodes[target_tile].global_position
-			var dv = (tp - bp).normalized()
-			var offset_pos = bp + dv * bp.distance_to(tp) * 3.0
-			game_flow_manager.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
-
-# 分岐選択インジケーターを更新
-func _update_branch_indicator():
-	if current_branch_tile < 0 or available_branches.is_empty():
-		return
-	
-	var current_tile_node = tile_nodes.get(current_branch_tile)
-	var target_tile_index = available_branches[selected_branch_index]
-	var target_tile_node = tile_nodes.get(target_tile_index)
-	
-	if not current_tile_node or not target_tile_node:
-		return
-	
-	# 方向を計算
-	var current_pos = current_tile_node.global_position
-	var target_pos = target_tile_node.global_position
-	var diff = target_pos - current_pos
-	
-	# インジケーター生成（なければ）
-	if not branch_indicator:
-		branch_indicator = MeshInstance3D.new()
-		branch_indicator.name = "BranchIndicator"
-		
-		# マテリアル設定
-		var material = StandardMaterial3D.new()
-		material.albedo_color = Color(1, 1, 0, 1)
-		material.emission_enabled = true
-		material.emission = Color(1, 1, 0, 1)
-		material.emission_energy_multiplier = 0.5
-		branch_indicator.material_override = material
-		
-		# シーンに追加
-		get_tree().root.add_child(branch_indicator)
-	
-	# 方向に応じてメッシュサイズと位置を設定（BranchTileの定数を使用）
-	var offset = Vector3.ZERO
-	var mesh_size = BranchTile.DIRECTION_MESH_SIZE["right"]
-	
-	if abs(diff.x) > abs(diff.z):
-		# 水平方向（左右）
-		mesh_size = BranchTile.DIRECTION_MESH_SIZE["right"]
-		if diff.x > 0:
-			offset = Vector3(BranchTile.DIRECTION_OFFSET["right"].x, 0, 0)
-		else:
-			offset = Vector3(BranchTile.DIRECTION_OFFSET["left"].x, 0, 0)
-	else:
-		# 垂直方向（上下）
-		mesh_size = BranchTile.DIRECTION_MESH_SIZE["down"]
-		if diff.z > 0:
-			offset = Vector3(0, 0, BranchTile.DIRECTION_OFFSET["down"].z)
-		else:
-			offset = Vector3(0, 0, BranchTile.DIRECTION_OFFSET["up"].z)
-	
-	# メッシュ更新
-	var box_mesh = BoxMesh.new()
-	box_mesh.size = mesh_size
-	branch_indicator.mesh = box_mesh
-	
-	# 位置設定（BranchTileと同じ高さ0.4）
-	branch_indicator.global_position = current_pos + offset + Vector3(0, INDICATOR_HEIGHT, 0)
-	branch_indicator.visible = true
-
-# 分岐選択インジケーターを非表示
-func _hide_branch_indicator():
-	if branch_indicator:
-		branch_indicator.visible = false
-	current_branch_tile = -1
-
-# 分岐チェックと処理（Dictionary形式：{タイル番号: 方向}から選ぶ）
-func _check_and_handle_branch(current_tile: int, _came_from: int, path: Array, current_index: int) -> Dictionary:
-	var tile = tile_nodes.get(current_tile)
-	if not tile:
-		return {"recalculated": false}
-	
-	# connectionsが設定されていなければスキップ（分岐点ではない）
-	if not tile.connections or tile.connections.is_empty():
-		return {"recalculated": false}
-	
-	var choices = tile.connections.keys()  # 選択可能なタイル番号
-	var new_direction: int
-	var first_tile: int
-	
-	if choices.size() >= 2:
-		# 選択肢が2つ以上 → UIで選択
-		first_tile = await _show_branch_tile_selection(choices)
-		new_direction = tile.connections[first_tile]
-	else:
-		# 選択肢が1つ → 自動選択（行き止まり）
-		first_tile = choices[0]
-		new_direction = tile.connections[first_tile]
-	
-	# 方向を保存
-	if current_moving_player >= 0:
-		_set_player_current_direction(current_moving_player, new_direction)
-	
-	# 残りの経路を再計算（最初の1歩は選択したタイル、以降は方向で進む）
-	var remaining_steps = path.size() - current_index - 1
-	var new_path = path.slice(0, current_index + 1)  # 現在位置まで
-	
-	if remaining_steps > 0:
-		new_path.append(first_tile)  # 最初の1歩は選択したタイル
-		var current = first_tile
-		for j in range(remaining_steps - 1):
-			current = current + new_direction
-			new_path.append(current)
-	
-	return {"recalculated": true, "new_path": new_path}
-
-# 歩行逆転呪いを持っているかチェック
 func _has_movement_reverse_curse(player_id: int) -> bool:
 	if not player_system:
 		return false
 	if player_id < 0 or player_id >= player_system.players.size():
 		return false
-	
+
 	var curse = player_system.players[player_id].curse
 	return curse.get("curse_type", "") == "movement_reverse"
 
-# 経路に沿って移動
-func move_along_path(player_id: int, path: Array) -> void:
-	var previous_tile = player_tiles[player_id]
-	var i = 0
-	
-	
-	while i < path.size():
-		var tile_index = path[i]
-		
-		if not tile_nodes.has(tile_index):
-			print("Warning: タイル", tile_index, "が見つかりません")
-			i += 1
-			continue
-		
-		# スタート通過チェック
-		if tile_index == 0 and previous_tile > tile_index:
-			handle_start_pass(player_id)
-		
-		# タイルへ移動
-		await move_to_tile(player_id, tile_index)
-		
-		# 移動後にチェックポイント通過処理（コメント表示のため移動完了後）
-		await check_and_handle_checkpoint(player_id, tile_index, previous_tile)
-		
-		# 位置を更新
-		player_tiles[player_id] = tile_index
-		
-		# 通過イベントチェック（最終タイルでない場合）
-		if i < path.size() - 1:
-			await _check_pass_through_event(player_id, tile_index)
-		
-		# 分岐チェック（残り歩数がある場合のみ）
-		if i < path.size() - 1:
-			var branch_result = await _check_and_handle_branch(tile_index, previous_tile, path, i)
-			if branch_result.recalculated:
-				# 経路が再計算された
-				path = branch_result.new_path
-		
-		# 通過型ワープチェック（ビジュアルエフェクトのみ）
-		var warp_result = await check_and_handle_warp(player_id, tile_index)
-		if warp_result.warped:
-			# ワープ発生：経路を修正する
-			var warped_tile = warp_result.new_tile
-			player_tiles[player_id] = warped_tile
-			
-			# 経路の残りを再計算（ワープ先から続ける）
-			var new_path = [warped_tile]  # ワープ先
-			var current = warped_tile
-			var came_from = tile_index  # ワープ元
-			for j in range(i + 1, path.size()):
-				var next = _get_next_tile(current, 1, came_from)
-				came_from = current
-				current = next
-				new_path.append(current)
-			
-			# 経路を置き換え
-			for j in range(new_path.size()):
-				if i + j + 1 < path.size():
-					path[i + j + 1] = new_path[j]
-				else:
-					path.append(new_path[j])
-			
-			tile_index = warped_tile
-		
-		# 足どめ判定（呪い・スキル）
-		var stop_result = check_forced_stop_at_tile(tile_index, player_id)
-		if stop_result["stopped"]:
-			print("[足どめ] ", stop_result["reason"])
-			emit_signal("movement_step_completed", player_id, tile_index)
-			# 残りの移動をキャンセル
-			break
-		
-		emit_signal("movement_step_completed", player_id, tile_index)
-		previous_tile = tile_index
-		i += 1
 
-# 単一タイルへの移動
-func move_to_tile(player_id: int, tile_index: int) -> void:
-	if not tile_nodes.has(tile_index):
-		print("[MovementController] move_to_tile: tile_nodes has no tile %d" % tile_index)
-		return
-	
-	var player_node = player_nodes[player_id]
-	var target_pos = tile_nodes[tile_index].global_position
-	target_pos.y += MOVE_HEIGHT
-	
+# === 外部API（委譲） ===
 
-	
-	# Tweenで滑らかな移動
-	var tween = get_tree().create_tween()
-	tween.set_parallel(true)
-	
-	# プレイヤー駒を移動
-	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
-	
-	# カメラを追従（現在のプレイヤーのみ、方向選択カメラ動作中はスキップ）
-	if camera and player_system and player_id == player_system.current_player_index:
-		var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager and game_flow_manager.board_system_3d else null
-		var skip_follow = cc and cc.has_method("is_direction_camera_active") and cc.is_direction_camera_active()
-		if not skip_follow:
-			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-			tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)
-	
-	# Tweenの完了を待つ
-	await tween.finished
-
-# === ワープ処理 ===
-
-# ワープをチェックして処理（通過型のみ）
+# ワープ関連
 func check_and_handle_warp(player_id: int, tile_index: int) -> Dictionary:
-	if not special_tile_system:
-		return {"warped": false}
-	
-	# タイルタイプを確認（通過型warpのみ処理、warp_stopは停止時に処理）
-	if tile_nodes.has(tile_index):
-		var tile = tile_nodes[tile_index]
-		if tile.tile_type != "warp":
-			return {"warped": false}
-	
-	# 通過型ワープかチェック
-	if special_tile_system.is_warp_gate(tile_index):
-		var warp_pair = special_tile_system.get_warp_pair(tile_index)
-		if warp_pair != -1 and warp_pair != tile_index:
-			await execute_warp(player_id, tile_index, warp_pair)
-			return {"warped": true, "new_tile": warp_pair}
-	
-	return {"warped": false}
+	return await warp_handler.check_and_handle_warp(player_id, tile_index)
 
-# ワープを実行（3D版）
 func warp_player_3d(player_id: int, to_tile: int) -> void:
-	if player_id >= player_nodes.size() or not tile_nodes.has(to_tile):
-		return
-	
-	var from_tile = player_tiles[player_id]
-	await execute_warp(player_id, from_tile, to_tile)
-	player_tiles[player_id] = to_tile
+	await warp_handler.warp_player_3d(player_id, to_tile)
 
-# ワープアニメーション実行
 func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
-	
-	var player_node = player_nodes[player_id]
-	
-	# ワープエフェクト（簡易版：縮小して消える→移動→拡大して現れる）
-	# 注意: Vector3.ZEROだとTransform3D.invert()でエラーが出るため極小値を使用
-	const WARP_MIN_SCALE = Vector3(0.001, 0.001, 0.001)
-	var tween = get_tree().create_tween()
-	
-	# 縮小して消える（ほぼゼロまで）
-	tween.tween_property(player_node, "scale", WARP_MIN_SCALE, 0.2)
-	
-	# 瞬間移動
-	await tween.finished
-	if tile_nodes.has(to_tile):
-		var target_pos = tile_nodes[to_tile].global_position
-		target_pos.y += MOVE_HEIGHT
-		player_node.global_position = target_pos
-		
-		# カメラも瞬間移動（方向選択Tweenが動作中なら先にキャンセル）
-		if camera and player_system and player_id == player_system.current_player_index:
-			var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager and game_flow_manager.board_system_3d else null
-			if cc and cc.has_method("cancel_direction_tween"):
-				cc.cancel_direction_tween()
-			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
-			camera.global_position = cam_target
-	
-	# 拡大して現れる
-	var tween2 = get_tree().create_tween()
-	tween2.tween_property(player_node, "scale", Vector3.ONE, 0.2)
-	await tween2.finished
-	
-	emit_signal("warp_executed", player_id, from_tile, to_tile)
+	await warp_handler.execute_warp(player_id, from_tile, to_tile)
 
-# === 特殊処理 ===
-
-# スタート地点通過処理（特別な効果なし、周回完了ボーナスは_complete_lapで処理）
+# 特殊処理関連
 func handle_start_pass(player_id: int):
-	emit_signal("start_passed", player_id)
+	special_handler.handle_start_pass(player_id)
 
-# チェックポイント通過処理
 func check_and_handle_checkpoint(player_id: int, tile_index: int, previous_tile: int):
-	if not tile_nodes.has(tile_index):
-		return
-	
-	var tile = tile_nodes[tile_index]
-	
-	# CheckpointTileかチェック
-	if tile.has_signal("checkpoint_passed"):
-		# タイル0は2回目以降のみ通過扱い（previous_tile > tile_indexで判定）
-		if tile_index == 0 and previous_tile <= tile_index:
-			return
-		
-		# CheckpointTileのon_player_passedを呼ぶ
-		if tile.has_method("on_player_passed"):
-			tile.on_player_passed(player_id)
-			
-			# LapSystemの処理完了を待つ（コメント表示等）
-			var lap_system = _get_lap_system()
-			if lap_system:
-				await lap_system.checkpoint_processing_completed
+	await special_handler.check_and_handle_checkpoint(player_id, tile_index, previous_tile)
 
-# LapSystemを取得
-func _get_lap_system():
-	if game_flow_manager and "lap_system" in game_flow_manager:
-		return game_flow_manager.lap_system
-	return null
-
-# 特定タイルへ直接配置（初期配置用）
 func place_player_at_tile(player_id: int, tile_index: int) -> void:
-	if player_id >= player_nodes.size() or not tile_nodes.has(tile_index):
-		return
-	
-	var player_node = player_nodes[player_id]
-	var target_pos = tile_nodes[tile_index].global_position
-	target_pos.y += MOVE_HEIGHT
-	
-	# オフセットを追加（プレイヤーごとに少しずらす）
-	target_pos.x += player_id * 0.5
-	
-	player_node.global_position = target_pos
-	player_tiles[player_id] = tile_index
+	special_handler.place_player_at_tile(player_id, tile_index)
 
-# 全クリーチャーのHP回復
 func heal_all_creatures_for_player(player_id: int, heal_amount: int):
-	for tile_index in tile_nodes.keys():
-		var tile = tile_nodes[tile_index]
-		if tile.owner_id == player_id and tile.creature_data:
-			var creature = tile.creature_data
-			
-			# 周回回復不可チェック
-			var keywords = creature.get("ability_parsed", {}).get("keywords", [])
-			if "周回回復不可" in keywords:
-				print("[周回回復不可] ", creature.get("name", "?"), " は回復しない")
-				continue
-			
-			# MHP計算
-			var base_hp = creature.get("hp", 0)  # 元のHP（不変）
-			var base_up_hp = creature.get("base_up_hp", 0)  # 永続ボーナス
-			var max_hp = base_hp + base_up_hp
-			
-			# 現在HP取得（ない場合は満タン）
-			var current_hp = creature.get("current_hp", max_hp)
-			
-			# HP回復（MHPを超えない）
-			var new_hp = min(current_hp + heal_amount, max_hp)
-			creature["current_hp"] = new_hp
+	special_handler.heal_all_creatures_for_player(player_id, heal_amount)
 
-# Phase 1-A: プレイヤーの全土地のダウン状態をクリア
 func clear_all_down_states_for_player(player_id: int) -> int:
-	var cleared_count = 0
-	for tile_index in tile_nodes.keys():
-		var tile = tile_nodes[tile_index]
-		if tile.owner_id == player_id and tile.has_method("is_down") and tile.is_down():
-			tile.clear_down_state()
-			cleared_count += 1
-	return cleared_count
+	return special_handler.clear_all_down_states_for_player(player_id)
 
-# カメラをプレイヤーにフォーカス
 func focus_camera_on_player(player_id: int, smooth: bool = true) -> void:
-	if not camera or player_id >= player_nodes.size():
-		return
-	
-	var player_node = player_nodes[player_id]
-	if not player_node:
-		return
-	
-	var player_pos = player_node.global_position
-	var look_target = player_pos + Vector3(0, 1.0, 0)
-	var target_pos = look_target + GameConstants.CAMERA_OFFSET
-	
-	if smooth:
-		var tween = get_tree().create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(camera, "global_position", target_pos, 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-		# look_atはTweenできないので、移動完了後に設定
-		tween.set_parallel(false)
-		tween.tween_callback(func(): camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP))
-		await tween.finished
-	else:
-		camera.global_position = target_pos
-		camera.look_at(look_target + Vector3(0, GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
+	await special_handler.focus_camera_on_player(player_id, smooth)
 
-# === 通過イベント ===
-
-## 通過時に発動するタイルイベントをチェック
-func _check_pass_through_event(player_id: int, tile_index: int) -> void:
-	if not tile_nodes.has(tile_index):
-		return
-	
-	var tile = tile_nodes[tile_index]
-	var tile_type = tile.tile_type if "tile_type" in tile else ""
-	
-	# 通過発動するタイルタイプ
-	match tile_type:
-		"magic_stone":
-			await _handle_pass_through_magic_stone(player_id, tile)
-
-## 魔法石タイル通過処理
-func _handle_pass_through_magic_stone(player_id: int, tile) -> void:
-	if not special_tile_system:
-		return
-	
-	# special_tile_systemを経由して処理
-	if special_tile_system.has_method("handle_magic_stone_tile"):
-		await special_tile_system.handle_magic_stone_tile(player_id, tile)
-
-# === 足どめ判定 ===
-
-## タイルでの足どめ判定（SpellMovement経由）
 func check_forced_stop_at_tile(tile_index: int, player_id: int) -> Dictionary:
-	if not spell_movement:
-		return {"stopped": false, "reason": "", "source_type": ""}
-	
-	# tile_nodesを直接渡す
-	return spell_movement.check_forced_stop_with_tiles(tile_index, player_id, tile_nodes)
+	return warp_handler.check_forced_stop_at_tile(tile_index, player_id)
 
-# === ユーティリティ ===
+# ダイスバフ
+func apply_dice_condition_buffs(player_id: int, dice_value: int):
+	special_handler.apply_dice_condition_buffs(player_id, dice_value)
 
-# 移動中かチェック
+# 到着予測
+func predict_all_destinations(start_tile: int, steps: int, came_from: int) -> Array:
+	return destination_predictor.predict_all_destinations(start_tile, steps, came_from)
+
+func update_destination_highlight():
+	destination_predictor.update_destination_highlight_for_branch(
+		branch_selector.is_active, branch_selector.available_branches,
+		branch_selector.selected_branch_index, _current_remaining_steps,
+		branch_selector.current_branch_tile
+	)
+
+func clear_destination_highlight():
+	destination_predictor.clear_destination_highlight()
+
+# ユーティリティ
 func is_player_moving() -> bool:
 	return is_moving
 
-# 移動中のプレイヤーIDを取得
 func get_moving_player() -> int:
 	return current_moving_player
-
-# === ダイス条件バフ処理 ===
-
-# ダイス条件に基づく永続バフを適用
-func apply_dice_condition_buffs(player_id: int, dice_value: int):
-	if not tile_nodes:
-		return
-	
-	# プレイヤーの配置クリーチャーをチェック
-	for tile_index in tile_nodes.keys():
-		var tile = tile_nodes[tile_index]
-		if tile and tile.owner_id == player_id and tile.creature_data:
-			_check_and_apply_dice_buff(tile.creature_data, dice_value)
-
-# 個別クリーチャーのダイス条件バフをチェック・適用
-func _check_and_apply_dice_buff(creature_data: Dictionary, dice_value: int):
-	if not creature_data.has("ability_parsed"):
-		return
-	
-	var effects = creature_data.get("ability_parsed", {}).get("effects", [])
-	
-	for effect in effects:
-		if effect.get("effect_type") == "dice_condition_bonus":
-			_apply_dice_condition_effect(creature_data, effect, dice_value)
-
-# ダイス条件効果を適用
-func _apply_dice_condition_effect(creature_data: Dictionary, effect: Dictionary, dice_value: int):
-	var dice_check = effect.get("dice_check", {})
-	var operator = dice_check.get("operator", "<=")
-	var threshold = dice_check.get("value", 3)
-	
-	# 条件チェック
-	var condition_met = false
-	match operator:
-		"<=":
-			condition_met = dice_value <= threshold
-		">=":
-			condition_met = dice_value >= threshold
-		"==":
-			condition_met = dice_value == threshold
-		"<":
-			condition_met = dice_value < threshold
-		">":
-			condition_met = dice_value > threshold
-	
-	if not condition_met:
-		return
-	
-	# 永続バフを適用
-	var stat_changes = effect.get("stat_changes", {})
-	
-	if stat_changes.has("ap"):
-		if not creature_data.has("base_up_ap"):
-			creature_data["base_up_ap"] = 0
-		creature_data["base_up_ap"] += stat_changes["ap"]
-		print("[Dice Buff] ", creature_data.get("name", ""), " ST+", stat_changes["ap"], 
-			  " (ダイス: ", dice_value, ")")
-	
-	if stat_changes.has("max_hp"):
-		EffectManager.apply_max_hp_effect(creature_data, stat_changes["max_hp"])
-		print("[Dice Buff] ", creature_data.get("name", ""), " MHP+", stat_changes["max_hp"],
-			  " (ダイス: ", dice_value, ")")
-
-
-
-# ============================================
-# 方向確定後カメラ移動
-# ============================================
-
-
-
-# ============================================
-# 到着予測システム
-# ============================================
-
-# 現在ハイライト中のタイル
-var _highlighted_destination_tiles: Array = []
-
-## 全ての到着可能地点を取得（分岐を全探索）
-## start_tile: 開始タイル
-## steps: 残り歩数
-## came_from: 来た方向のタイル（-1なら不明）
-## 返り値: Array[int] - 到着可能なタイル番号の配列
-func predict_all_destinations(start_tile: int, steps: int, came_from: int) -> Array:
-	var results: Array = []
-	_predict_destinations_recursive(start_tile, steps, came_from, results)
-	# 重複を除去
-	var unique_results: Array = []
-	for tile in results:
-		if tile not in unique_results:
-			unique_results.append(tile)
-	return unique_results
-
-## 再帰的に到着地点を探索
-## visited: 訪問済みタイル（無限ループ防止）
-## just_warped: ワープ直後かどうか（ワープ先から出る時も歩数消費しない）
-func _predict_destinations_recursive(current_tile: int, remaining_steps: int, came_from: int, results: Array, visited: Array = [], just_warped: bool = false):
-	# 無限ループ防止（同じタイルを同じ歩数で再訪問した場合のみ）
-	var visit_key = "%d_%d" % [current_tile, remaining_steps]
-	if visit_key in visited:
-		return
-	visited.append(visit_key)
-	
-	# ワープタイル（通過型）の処理（ワープ直後でなければ）
-	var tile = tile_nodes.get(current_tile)
-	if tile and tile.tile_type == "warp" and not just_warped:
-		# ワープ先を取得
-		var warp_dest = _get_warp_destination(current_tile)
-		if warp_dest >= 0 and warp_dest != current_tile:
-			# ワープ先から継続（ワープタイルを踏んだ1歩を返還 + ワープ先からは通常消費）
-			# 実際の移動では remaining-=1 → +=1 で歩数返還されるのと同等
-			_predict_destinations_recursive(warp_dest, remaining_steps + 1, current_tile, results, visited, true)
-			return
-	
-	# 残り歩数が0なら現在地が到着地点
-	if remaining_steps <= 0:
-		results.append(current_tile)
-		return
-	
-	# 次に進める選択肢を取得
-	var choices = _get_next_tile_choices(current_tile, came_from)
-	
-	if choices.is_empty():
-		# 進めない場合は現在地が到着地点
-		results.append(current_tile)
-		return
-	
-	# 各選択肢について再帰的に探索（ワープ後も通常と同じく1歩消費）
-	for next_tile in choices:
-		_predict_destinations_recursive(next_tile, remaining_steps - 1, current_tile, results, visited.duplicate(), false)
-
-## 次に進める選択肢を取得（came_fromを除外）
-func _get_next_tile_choices(current_tile: int, came_from: int) -> Array:
-	var tile = tile_nodes.get(current_tile)
-	
-	# タイルが見つからない、またはconnectionsがない場合
-	if not tile or not tile.connections or tile.connections.is_empty():
-		# 単純に+1/-1の両方向（came_fromを除外）
-		var simple_choices = []
-		if came_from != current_tile + 1:
-			simple_choices.append(current_tile + 1)
-		if came_from != current_tile - 1:
-			simple_choices.append(current_tile - 1)
-		# came_fromが不明(-1)なら両方向
-		if came_from < 0:
-			return [current_tile + 1, current_tile - 1]
-		return simple_choices
-	
-	# BranchTileの場合
-	if tile is BranchTile:
-		var branch_result = tile.get_next_tile_for_direction(came_from)
-		if branch_result.tile >= 0:
-			# 自動選択（1つの選択肢のみ）
-			return [branch_result.tile]
-		elif not branch_result.choices.is_empty():
-			# 複数選択肢
-			return branch_result.choices
-	
-	# 通常タイル（connectionsあり）: came_fromを除外
-	var choices = []
-	for conn in tile.connections:
-		if conn != came_from:
-			choices.append(conn)
-	
-	if choices.is_empty() and came_from >= 0:
-		# 行き止まり：来た方向に戻る
-		return [came_from]
-	
-	return choices
-
-## 選択中の分岐方向に対する到着予測をハイライト表示
-func update_destination_highlight():
-	# 既存のハイライトをクリア
-	clear_destination_highlight()
-	
-	if not is_branch_selection_active or available_branches.is_empty():
-		return
-	
-	# 選択中の分岐先タイル
-	var selected_tile = available_branches[selected_branch_index]
-	
-	# 残り歩数（現在の分岐を選んだ後の歩数 = _current_remaining_steps - 1）
-	var steps_after_branch = _current_remaining_steps - 1
-	
-	if steps_after_branch <= 0:
-		# 分岐先が到着地点
-		_highlight_tile(selected_tile)
-		return
-	
-	# 到着予測を計算
-	var destinations = predict_all_destinations(selected_tile, steps_after_branch, current_branch_tile)
-	
-	# 各到着地点をハイライト
-	for dest_tile in destinations:
-		_highlight_tile(dest_tile)
-
-## タイルをハイライト
-func _highlight_tile(tile_index: int):
-	var tile = tile_nodes.get(tile_index)
-	if tile and tile.has_method("start_destination_highlight"):
-		tile.start_destination_highlight()
-		_highlighted_destination_tiles.append(tile_index)
-
-## 到着予測ハイライトをクリア
-func clear_destination_highlight():
-	for tile_index in _highlighted_destination_tiles:
-		var tile = tile_nodes.get(tile_index)
-		if tile and tile.has_method("stop_destination_highlight"):
-			tile.stop_destination_highlight()
-	_highlighted_destination_tiles.clear()
-
-## 到着予想タイルに基づいて手札の配置制限表示を更新
-func _update_hand_restriction_for_destinations(destination_tiles: Array):
-	if game_flow_manager and game_flow_manager.ui_manager and game_flow_manager.ui_manager.card_selection_ui:
-		game_flow_manager.ui_manager.card_selection_ui.update_restriction_for_destinations(destination_tiles)
-
-## ワープ先タイルを取得（到着予測用）
-func _get_warp_destination(tile_index: int) -> int:
-	if special_tile_system:
-		var warp_pair = special_tile_system.get_warp_pair(tile_index)
-		if warp_pair >= 0:
-			return warp_pair
-	return -1

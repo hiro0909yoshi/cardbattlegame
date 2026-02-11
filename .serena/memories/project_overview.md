@@ -4,15 +4,18 @@
 - Engine: Godot 4.4.1 (GDScript)
 - Type: Board game + card battle hybrid (Culdcept-style)
 
-## Core Systems
+## Core Systems (All Major Systems Implemented)
 - **GameSystemManager**: 6-phase init, system orchestration
 - **GameFlowManager**: Turn/phase control
 - **BoardSystem3D**: 20-tile diamond map, tile ownership
 - **CreatureManager**: Centralized creature data
 - **CardSystem**: Deck(max50), hand(max6), draw/discard
-- **BattleSystem**: First-strike combat, bonuses, skills
+- **BattleSystem**: First-strike combat, bonuses, skills — ALL skills implemented
 - **PlayerSystem**: 4 players, magic points, land tracking
 - **ItemSystem**: Battle prep, item effects (75/75 complete)
+- **SpellSystem**: ALL spells implemented (26+ files: damage, curse, draw, land, creature, player movement, etc.)
+- **SkillSystem**: ALL skills implemented (24 skill files in battle/skills/)
+- **Mystic Arts (Arcana Arts)**: ALL implemented (spell_id reference method)
 - **UIManager**: 8 components
 - **CPU AI**: 28 files (battle/spell/dominio/movement decisions)
 

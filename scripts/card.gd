@@ -539,7 +539,7 @@ func _is_movement_selection_active() -> bool:
 	if not gfm or not gfm.board_system_3d or not gfm.board_system_3d.movement_controller:
 		return false
 	var mc = gfm.board_system_3d.movement_controller
-	return mc.is_direction_selection_active or mc.is_branch_selection_active
+	return mc.direction_selector.is_active or mc.branch_selector.is_active
 
 
 # アルカナアーツ効果適用中のカード選択（ルーンアデプト等）は許可する
@@ -616,7 +616,7 @@ func _show_info_panel_only():
 		# 方向選択・分岐選択中
 		if gfm.board_system_3d and gfm.board_system_3d.movement_controller:
 			var mc = gfm.board_system_3d.movement_controller
-			if mc.is_direction_selection_active or mc.is_branch_selection_active:
+			if mc.direction_selector.is_active or mc.branch_selector.is_active:
 				is_special_phase_active = true
 
 	
@@ -659,7 +659,7 @@ func _show_info_panel_only():
 	var is_movement_selection = false
 	if gfm and gfm.board_system_3d and gfm.board_system_3d.movement_controller:
 		var mc = gfm.board_system_3d.movement_controller
-		if mc.is_direction_selection_active or mc.is_branch_selection_active:
+		if mc.direction_selector.is_active or mc.branch_selector.is_active:
 			is_movement_selection = true
 	
 	# 閲覧モードで表示
@@ -689,10 +689,10 @@ func _show_info_panel_only():
 			if ui_manager.item_info_panel_ui and ui_manager.item_info_panel_ui.is_visible_panel:
 				ui_manager.item_info_panel_ui.hide_panel(false)
 			# 分岐/方向選択のナビゲーションを復元
-			if mc.is_direction_selection_active:
-				mc._setup_direction_selection_navigation()
-			elif mc.is_branch_selection_active:
-				mc._setup_branch_selection_navigation()
+			if mc.direction_selector.is_active:
+				mc.direction_selector._setup_navigation()
+			elif mc.branch_selector.is_active:
+				mc.branch_selector._setup_navigation()
 		, "閉じる")
 	
 	# 召喚/バトルフェーズ中はドミニオボタンを再表示
