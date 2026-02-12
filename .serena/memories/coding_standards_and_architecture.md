@@ -47,6 +47,14 @@ creature固有の操作（タップ表示等）は直接アクセスOK。
 ### 内部プロパティを外部から直接参照しない
 他クラスの内部プロパティ（`creature_synthesis`, `sacrifice_selector` 等）に直接アクセスしない。
 initialize時に引数として渡すか、getter メソッドを用意する。
+
+### board_system_3dのサブシステムは委譲メソッド経由でアクセス
+`movement_controller`, `camera_controller`, `tile_action_processor` 等の内部サブシステムに外部から直接アクセスしない。board_system_3dの委譲メソッドを使う。
+- カメラ: `enable_manual_camera()`, `enable_follow_camera()`, `set_camera_player()`, `return_camera_to_player()`, `focus_camera_on_player_pos()`, `focus_camera_slow()`, `focus_camera_on_tile_slow()`
+- 移動: `get_player_tile()`, `set_player_tile()`, `place_player_at_tile()`, `is_movement_selection_active()`, `restore_movement_selector_navigation()`, `swap_came_from_for_reverse()`, `on_movement_reverse_curse_removed()`
+- 参照取得（初期化/シグナル接続用のみ）: `get_camera_controller_ref()`, `get_movement_controller_ref()`
+- setter: `set_camera_controller_ref()`, `set_movement_controller_gfm()`, `set_spell_player_move()`, `set_cpu_movement_evaluator()`, `get_cpu_movement_evaluator()`, `get_spell_movement()`
+- シグナル: `movement_completed` (movement_controllerから転送)
 Initialization order: see `/mnt/skills/user/gdscript-initialization/SKILL.md`
 UI flow rules: see `/mnt/skills/user/gdscript-ui-flow/SKILL.md`
 

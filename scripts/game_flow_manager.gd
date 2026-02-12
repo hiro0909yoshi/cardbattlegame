@@ -13,6 +13,25 @@ signal dice_rolled(value: int)
 # 定数をpreload
 const DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
 const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
+const PlayerSystemClass = preload("res://scripts/player_system.gd")
+const CardSystemClass = preload("res://scripts/card_system.gd")
+const PlayerBuffSystemClass = preload("res://scripts/player_buff_system.gd")
+const UIManagerClass = preload("res://scripts/ui_manager.gd")
+const BattleSystemClass = preload("res://scripts/battle_system.gd")
+const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
+const BattleScreenManagerClass = preload("res://scripts/battle_screen/battle_screen_manager.gd")
+const MagicStoneSystemClass = preload("res://scripts/tiles/magic_stone_system.gd")
+const SpellDrawClass = preload("res://scripts/spells/spell_draw.gd")
+const SpellMagicClass = preload("res://scripts/spells/spell_magic.gd")
+const SpellLandClass = preload("res://scripts/spells/spell_land_new.gd")
+const SpellCurseClass = preload("res://scripts/spells/spell_curse.gd")
+const SpellCurseTollClass = preload("res://scripts/spells/spell_curse_toll.gd")
+const SpellCostModifierClass = preload("res://scripts/spells/spell_cost_modifier.gd")
+const SpellDiceClass = preload("res://scripts/spells/spell_dice.gd")
+const SpellCurseStatClass = preload("res://scripts/spells/spell_curse_stat.gd")
+const SpellWorldCurseClass = preload("res://scripts/spells/spell_world_curse.gd")
+const SpellPlayerMoveClass = preload("res://scripts/spells/spell_player_move.gd")
+const LapSystemClass = preload("res://scripts/game_flow/lap_system.gd")
 
 # ゲーム状態
 enum GamePhase {
@@ -37,34 +56,34 @@ var player_is_cpu = []
 var is_tutorial_mode: bool = false
 
 # システム参照
-var player_system: PlayerSystem
-var card_system: CardSystem
-var player_buff_system: PlayerBuffSystem
-var ui_manager: UIManager
-var battle_system: BattleSystem
-var special_tile_system: SpecialTileSystem
-var battle_screen_manager: BattleScreenManager
+var player_system
+var card_system
+var player_buff_system
+var ui_manager
+var battle_system
+var special_tile_system
+var battle_screen_manager
 
 # アイテムフェーズ用バトルステータスオーバーレイ
 var battle_status_overlay = null
 
 # 魔法石システム
-var magic_stone_system: MagicStoneSystem
+var magic_stone_system
 
 # スペル効果システム
-var spell_draw: SpellDraw
-var spell_magic: SpellMagic
-var spell_land: SpellLand
-var spell_curse: SpellCurse
-var spell_curse_toll: SpellCurseToll
-var spell_cost_modifier: SpellCostModifier
-var spell_dice: SpellDice
-var spell_curse_stat: SpellCurseStat
-var spell_world_curse: SpellWorldCurse
-var spell_player_move: SpellPlayerMove
+var spell_draw
+var spell_magic
+var spell_land
+var spell_curse
+var spell_curse_toll
+var spell_cost_modifier
+var spell_dice
+var spell_curse_stat
+var spell_world_curse
+var spell_player_move
 
 # 破産処理ハンドラー
-var bankruptcy_handler: BankruptcyHandler = null
+var bankruptcy_handler = null
 
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
@@ -73,7 +92,7 @@ var is_ending_turn = false
 var _input_locked: bool = false
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
-var lap_system: LapSystem = null
+var lap_system = null
 signal lap_completed(player_id: int)
 
 # ターン（ラウンド）カウンター
@@ -86,7 +105,7 @@ var game_stats: Dictionary = {}
 # LapSystemはGameSystemManagerで作成され、set_lap_system()で設定される
 
 ## LapSystemを外部から設定
-func set_lap_system(system: LapSystem) -> void:
+func set_lap_system(system) -> void:
 	lap_system = system
 	if lap_system:
 		lap_system.lap_completed.connect(_on_lap_completed)
@@ -893,14 +912,6 @@ func _update_camera_mode(phase: GamePhase):
 			board_system_3d.enable_manual_camera()
 		_:
 			board_system_3d.enable_follow_camera()
-		return
-	
-	# ダイスロールとタイルアクションで手動モード
-	match phase:
-		GamePhase.DICE_ROLL, GamePhase.TILE_ACTION:
-			camera_ctrl.enable_manual_mode()
-		_:
-			camera_ctrl.enable_follow_mode()
 
 ## 現在のプレイヤーが人間かどうか
 func _is_current_player_human() -> bool:

@@ -259,8 +259,7 @@ func on_level_up_selected(target_level: int, cost: int):
 		tile.set_level(target_level)
 		player_system.add_magic(current_player_index, -cost)
 		
-		if board_system.tile_info_display:
-			board_system.tile_info_display.update_display(current_tile, board_system.get_tile_info(current_tile))
+		board_system.update_tile_display(current_tile, board_system.get_tile_info(current_tile))
 		
 		if ui_manager:
 			ui_manager.update_player_info_panels()

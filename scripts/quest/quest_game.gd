@@ -4,7 +4,9 @@ class_name QuestGame
 # クエストモード用ゲーム管理スクリプト
 # StageLoaderからデータを読み込み、動的にゲームを構築
 
-# システム参照
+# システム参照を preload
+const GameSystemManagerClass = preload("res://scripts/system_manager/game_system_manager.gd")
+
 var system_manager: GameSystemManager
 var stage_loader: StageLoader
 
@@ -44,10 +46,10 @@ func _ready():
 	_setup_3d_scene_before_init()
 	
 	# GameSystemManagerを作成・初期化
-	system_manager = GameSystemManager.new()
+	system_manager = GameSystemManagerClass.new()
 	add_child(system_manager)
 	
-	system_manager.initialize_all(
+	await system_manager.initialize_all(
 		self,
 		player_count,
 		player_is_cpu,

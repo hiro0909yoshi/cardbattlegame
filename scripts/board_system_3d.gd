@@ -927,3 +927,49 @@ func calculate_level_up_cost(tile_index: int, target_level: int) -> int:
 	if tile_data_manager:
 		return tile_data_manager.calculate_level_up_cost(tile_index, target_level)
 	return 0
+
+# ========================================
+# TileInfoDisplay 追加委譲メソッド（A-4用）
+# ========================================
+
+## タイルラベルを取得
+func get_tile_label(tile_index: int):
+	if tile_info_display and tile_info_display.tile_labels:
+		return tile_info_display.tile_labels.get(tile_index)
+	return null
+
+# ========================================
+# SpecialTileSystem 委譲メソッド（B用）
+# ========================================
+
+## ワープペア辞書を取得
+func get_warp_pairs() -> Dictionary:
+	if special_tile_system:
+		return special_tile_system.warp_pairs
+	return {}
+
+## 指定タイルのワープ先を取得
+func get_warp_pair(tile_index: int) -> int:
+	if special_tile_system:
+		return special_tile_system.get_warp_pair(tile_index)
+	return -1
+
+# ========================================
+# BattleSystem 委譲メソッド（C用）
+# ========================================
+
+## バトルスクリーンマネージャーを取得
+func get_battle_screen_manager():
+	if battle_system:
+		return battle_system.battle_screen_manager
+	return null
+
+# ========================================
+# TileDataManager 追加委譲メソッド（E用）
+# ========================================
+
+## 呪い込みの通行料を計算
+func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
+	if tile_data_manager and tile_data_manager.has_method("calculate_toll_with_curse"):
+		return tile_data_manager.calculate_toll_with_curse(tile_index, map_id)
+	return calculate_toll(tile_index, map_id)

@@ -399,11 +399,7 @@ func _highlight_tile_toll(target):
 	if tile_index < 0:
 		return
 	
-	var tile_info_display = _board_system_3d.tile_info_display
-	if not tile_info_display:
-		return
-	
-	var label = tile_info_display.tile_labels.get(tile_index)
+	var label = _board_system_3d.get_tile_label(tile_index)
 	if not label or not label.visible:
 		return
 	
@@ -468,10 +464,6 @@ func _highlight_all_player_creature_tiles(player_id: int):
 	if not _board_system_3d or not _overlay:
 		return
 	
-	var tile_info_display = _board_system_3d.tile_info_display
-	if not tile_info_display:
-		return
-	
 	var camera = _board_system_3d.camera
 	if not camera:
 		return
@@ -483,7 +475,7 @@ func _highlight_all_player_creature_tiles(player_id: int):
 	for tile_index in _board_system_3d.tile_nodes.keys():
 		var tile = _board_system_3d.tile_nodes[tile_index]
 		if tile and tile.owner_id == player_id and not tile.creature_data.is_empty():
-			var label = tile_info_display.tile_labels.get(tile_index)
+			var label = _board_system_3d.get_tile_label(tile_index)
 			if label and label.visible:
 				# 3D位置をスクリーン座標に変換して穴を追加
 				var screen_pos = camera.unproject_position(label.global_position)

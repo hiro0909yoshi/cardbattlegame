@@ -325,8 +325,7 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 			player_system.add_magic(current_player_index, -cost)
 			
 			# 表示更新
-			if board_system.tile_info_display:
-				board_system.update_all_tile_displays()
+			board_system.update_all_tile_displays()
 			if ui_manager:
 				ui_manager.update_player_info_panels()
 			

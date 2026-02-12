@@ -8,21 +8,30 @@ class_name GameSystemManager
 # 定数をpreload
 const SpellCurseTollClass = preload("res://scripts/spells/spell_curse_toll.gd")
 const SpellCostModifierClass = preload("res://scripts/spells/spell_cost_modifier.gd")
+const GameFlowManagerClass = preload("res://scripts/game_flow_manager.gd")
+const BoardSystem3DClass = preload("res://scripts/board_system_3d.gd")
+const PlayerSystemClass = preload("res://scripts/player_system.gd")
+const CardSystemClass = preload("res://scripts/card_system.gd")
+const BattleSystemClass = preload("res://scripts/battle_system.gd")
+const PlayerBuffSystemClass = preload("res://scripts/player_buff_system.gd")
+const DebugControllerClass = preload("res://scripts/debug_controller.gd")
+const UIManagerClass = preload("res://scripts/ui_manager.gd")
+const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
 
 # 個別参照（アクセス便宜用）
 var signal_registry: SignalRegistry
-var board_system_3d: BoardSystem3D
-var player_system: PlayerSystem
-var card_system: CardSystem
-var battle_system: BattleSystem
-var player_buff_system: PlayerBuffSystem
-var special_tile_system: SpecialTileSystem
-var ui_manager: UIManager
-var debug_controller: DebugController
-var game_flow_manager: GameFlowManager
+var board_system_3d
+var player_system
+var card_system
+var battle_system
+var player_buff_system
+var special_tile_system
+var ui_manager
+var debug_controller
+var game_flow_manager
 
 # === 設定 ===
 var player_count: int = 2
@@ -88,56 +97,55 @@ func phase_1_create_systems() -> void:
 	systems["SignalRegistry"] = signal_registry
 	
 	# BoardSystem3D
-	var BoardSystem3DClass = load("res://scripts/board_system_3d.gd")
 	board_system_3d = BoardSystem3DClass.new()
 	board_system_3d.name = "BoardSystem3D"
 	add_child(board_system_3d)
 	systems["BoardSystem3D"] = board_system_3d
 	
 	# PlayerSystem
-	player_system = PlayerSystem.new()
+	player_system = PlayerSystemClass.new()
 	player_system.name = "PlayerSystem"
 	add_child(player_system)
 	systems["PlayerSystem"] = player_system
 	
 	# CardSystem
-	card_system = CardSystem.new()
+	card_system = CardSystemClass.new()
 	card_system.name = "CardSystem"
 	add_child(card_system)
 	systems["CardSystem"] = card_system
 	
 	# BattleSystem
-	battle_system = BattleSystem.new()
+	battle_system = BattleSystemClass.new()
 	battle_system.name = "BattleSystem"
 	add_child(battle_system)
 	systems["BattleSystem"] = battle_system
 	
 	# PlayerBuffSystem
-	player_buff_system = PlayerBuffSystem.new()
+	player_buff_system = PlayerBuffSystemClass.new()
 	player_buff_system.name = "PlayerBuffSystem"
 	add_child(player_buff_system)
 	systems["PlayerBuffSystem"] = player_buff_system
 	
 	# SpecialTileSystem
-	special_tile_system = SpecialTileSystem.new()
+	special_tile_system = SpecialTileSystemClass.new()
 	special_tile_system.name = "SpecialTileSystem"
 	add_child(special_tile_system)
 	systems["SpecialTileSystem"] = special_tile_system
 	
 	# UIManager
-	ui_manager = UIManager.new()
+	ui_manager = UIManagerClass.new()
 	ui_manager.name = "UIManager"
 	add_child(ui_manager)
 	systems["UIManager"] = ui_manager
 	
 	# DebugController
-	debug_controller = DebugController.new()
+	debug_controller = DebugControllerClass.new()
 	debug_controller.name = "DebugController"
 	add_child(debug_controller)
 	systems["DebugController"] = debug_controller
 	
 	# GameFlowManager
-	game_flow_manager = GameFlowManager.new()
+	game_flow_manager = GameFlowManagerClass.new()
 	game_flow_manager.name = "GameFlowManager"
 	add_child(game_flow_manager)
 	systems["GameFlowManager"] = game_flow_manager

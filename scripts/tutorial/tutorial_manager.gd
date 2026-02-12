@@ -273,8 +273,8 @@ func _connect_action_signals():
 
 func _connect_battle_signals():
 	# BattleScreenManagerへの参照を取得
-	if board_system_3d and board_system_3d.battle_system:
-		var battle_screen_manager = board_system_3d.battle_system.battle_screen_manager
+	if board_system_3d:
+		var battle_screen_manager = board_system_3d.get_battle_screen_manager()
 		if battle_screen_manager:
 			if not battle_screen_manager.intro_completed.is_connected(_on_battle_intro_completed):
 				battle_screen_manager.intro_completed.connect(_on_battle_intro_completed)

@@ -114,8 +114,8 @@ func calculate_checkpoint_distances():
 	
 	# ワープペアを取得
 	var warp_pairs = {}
-	if board_system and board_system.special_tile_system:
-		warp_pairs = board_system.special_tile_system.warp_pairs
+	if board_system:
+		warp_pairs = board_system.get_warp_pairs()
 	
 	# 計算機を初期化
 	checkpoint_calculator = CheckpointDistanceCalculator.new()
@@ -917,10 +917,8 @@ func get_tile_info(tile_index: int) -> Dictionary:
 
 ## 通行料を計算（呪い補正込み）
 func calculate_toll(tile_index: int) -> int:
-	if board_system and board_system.tile_data_manager and board_system.tile_data_manager.has_method("calculate_toll_with_curse"):
-		return board_system.tile_data_manager.calculate_toll_with_curse(tile_index)
-	if board_system and board_system.has_method("calculate_toll"):
-		return board_system.calculate_toll(tile_index)
+	if board_system:
+		return board_system.calculate_toll_with_curse(tile_index)
 	return 0
 
 ## 足止め判定
@@ -1014,8 +1012,8 @@ func _get_summonable_elements(player_id: int) -> Array:
 
 ## プレイヤーの現在タイルを取得
 func get_player_current_tile(player_id: int) -> int:
-	if movement_controller and player_id >= 0 and player_id < movement_controller.player_tiles.size():
-		return movement_controller.player_tiles[player_id]
+	if board_system and player_id >= 0:
+		return board_system.get_player_tile(player_id)
 	return 0
 
 ## プレイヤーの手持ちEPを取得
@@ -1242,6 +1240,6 @@ func _get_next_tile_simple_with_direction(current_tile: int, came_from: int, dir
 
 ## ワープ先タイルを取得
 func _get_warp_destination(tile_index: int) -> int:
-	if board_system and board_system.special_tile_system:
-		return board_system.special_tile_system.get_warp_pair(tile_index)
+	if board_system:
+		return board_system.get_warp_pair(tile_index)
 	return -1

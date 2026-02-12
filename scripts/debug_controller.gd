@@ -562,19 +562,18 @@ func _toggle_tile_display():
 	if not board_system:
 		return
 	
-	if board_system.tile_info_display:
-		board_system.tile_info_display.switch_mode()
-		board_system.update_all_tile_displays()
-		var mode_name = board_system.tile_info_display.get_current_mode_name()
-		print("表示切替: ", mode_name)
-		
-		# UIに一時表示
+	board_system.switch_tile_display_mode()
+	board_system.update_all_tile_displays()
+	var mode_name = board_system.get_tile_display_mode_name()
+	print("表示切替: ", mode_name)
+	
+	# UIに一時表示
+	if ui_manager and ui_manager.phase_label:
+		var original_text = ui_manager.phase_label.text
+		ui_manager.phase_label.text = "表示: " + mode_name
+		await get_tree().create_timer(1.0).timeout
 		if ui_manager and ui_manager.phase_label:
-			var original_text = ui_manager.phase_label.text
-			ui_manager.phase_label.text = "表示: " + mode_name
-			await get_tree().create_timer(1.0).timeout
-			if ui_manager and ui_manager.phase_label:
-				ui_manager.phase_label.text = original_text
+			ui_manager.phase_label.text = original_text
 
 # Sキー: シグナル接続状態を表示
 func _show_signal_connections():
