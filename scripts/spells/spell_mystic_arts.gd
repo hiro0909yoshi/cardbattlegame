@@ -239,7 +239,7 @@ func _update_caster_selection() -> void:
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 	if ui_manager:
 		ui_manager.show_card_info(creature_data, tile_index, false)
-		# show_card_infoが×ボタンを_restore_current_phaseに上書きするため、
+		# show_card_infoが×ボタンをrestore_current_phaseに上書きするため、
 		# caster選択のナビゲーションを再設定して×=キャンセルを維持
 		_setup_caster_selection_navigation()
 	

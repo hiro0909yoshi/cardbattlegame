@@ -69,7 +69,7 @@ func show_message(message: String, pos_name: String = "top", offset_y: float = 0
 	label.text = "[center]" + message + "[/center]"
 	visible = true
 	waiting_for_click = false
-	_apply_position(pos_name, offset_y)
+	apply_position(pos_name, offset_y)
 
 ## メッセージを表示してクリック待ち
 func show_and_wait(message: String, pos_name: String = "top", offset_y: float = 0.0):
@@ -80,7 +80,7 @@ func show_and_wait(message: String, pos_name: String = "top", offset_y: float = 
 	label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
 	visible = true
 	waiting_for_click = true
-	_apply_position(pos_name, offset_y)
+	apply_position(pos_name, offset_y)
 	
 	# 自分のwait_idと一致するクリックが来るまで待機
 	while true:
@@ -90,7 +90,7 @@ func show_and_wait(message: String, pos_name: String = "top", offset_y: float = 
 		# 違うIDのクリックは無視して待ち続ける
 
 ## 位置を設定
-func _apply_position(pos_name: String, offset_y: float = 0.0):
+func apply_position(pos_name: String, offset_y: float = 0.0):
 	match pos_name:
 		"left":
 			_position_left()

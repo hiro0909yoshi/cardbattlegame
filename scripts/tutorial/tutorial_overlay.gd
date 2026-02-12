@@ -258,5 +258,5 @@ func _restore_button_states():
 		return
 	
 	# GlobalActionButtonsの通常の更新を呼び出す
-	if global_action_buttons.has_method("_update_button_states"):
-		global_action_buttons._update_button_states()
+	if global_action_buttons.has_method("update_button_states"):
+		global_action_buttons.update_button_states()

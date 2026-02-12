@@ -15,7 +15,7 @@ var _ui_manager = null
 var _board_system_3d = null
 
 # UI部品
-var _popup: Control = null
+var popup: Control = null
 var _overlay: Control = null
 
 # ボタンコールバックのバックアップ
@@ -49,10 +49,10 @@ func _create_ui():
 		popup_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(popup_layer)
 		
-		_popup = TutorialPopupClass.new()
-		_popup.name = "ExplanationPopup"
-		_popup.process_mode = Node.PROCESS_MODE_ALWAYS
-		popup_layer.add_child(_popup)
+		popup = TutorialPopupClass.new()
+		popup.name = "ExplanationPopup"
+		popup.process_mode = Node.PROCESS_MODE_ALWAYS
+		popup_layer.add_child(popup)
 	
 	# オーバーレイ
 	var TutorialOverlayClass = load("res://scripts/tutorial/tutorial_overlay.gd")
@@ -74,8 +74,8 @@ func _create_ui():
 ## シグナル接続
 func _connect_signals():
 	# ポップアップのクリック
-	if _popup and _popup.has_signal("clicked"):
-		_popup.clicked.connect(_on_popup_clicked)
+	if popup and popup.has_signal("clicked"):
+		popup.clicked.connect(_on_popup_clicked)
 	
 	# カード関連シグナル
 	if _ui_manager and _ui_manager.card_selection_ui:
@@ -128,18 +128,18 @@ func enter(config: Dictionary):
 	
 	# メッセージ表示
 	var message = config.get("message", "")
-	if message != "" and _popup:
+	if message != "" and popup:
 		var position = config.get("popup_position", "top")
 		var offset_y = config.get("popup_offset_y", 0.0)
 		
 		# クリック終了の場合は「タップで次へ」を表示してクリック待ちを有効化
 		if exit_trigger == "click":
-			_popup.label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
-			_popup.visible = true
-			_popup.waiting_for_click = true
-			_popup._apply_position(position, offset_y)
+			popup.label.text = "[center]" + message + "\n[color=gray][font_size=50]タップで次へ[/font_size][/color][/center]"
+			popup.visible = true
+			popup.waiting_for_click = true
+			popup.apply_position(position, offset_y)
 		else:
-			_popup.show_message(message, position, offset_y)
+			popup.show_message(message, position, offset_y)
 	
 	# ハイライト適用
 	_apply_highlights(config.get("highlights", []))
@@ -170,8 +170,8 @@ func exit():
 	get_tree().paused = false
 	
 	# UI非表示
-	if _popup:
-		_popup.hide()
+	if popup:
+		popup.hide()
 	
 	# ハイライト解除
 	_clear_highlights()
@@ -193,10 +193,10 @@ func _setup_button_callbacks(allowed_buttons: Array):
 	var gab = _ui_manager.global_action_buttons
 	
 	# 現在のコールバックをバックアップ
-	_saved_confirm_callback = gab._confirm_callback
-	_saved_back_callback = gab._back_callback
-	_saved_up_callback = gab._up_callback
-	_saved_down_callback = gab._down_callback
+	_saved_confirm_callback = gab.confirm_callback
+	_saved_back_callback = gab.back_callback
+	_saved_up_callback = gab.up_callback
+	_saved_down_callback = gab.down_callback
 	
 
 	

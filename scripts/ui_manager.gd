@@ -476,6 +476,10 @@ var _saved_nav_special_text: String = ""
 var _saved_nav_phase_comment: String = ""
 var _nav_state_saved: bool = false
 
+## ナビゲーション状態が保存されているか（info_panelから参照）
+func is_nav_state_saved() -> bool:
+	return _nav_state_saved
+
 ## 現在のナビゲーション状態を保存（閲覧モード用）
 ## 既に保存済みの場合は上書きしない（連続閲覧対応）
 func save_navigation_state():
@@ -487,8 +491,8 @@ func save_navigation_state():
 	_saved_nav_down = _compat_down_cb
 	# special_button状態を保存
 	if global_action_buttons:
-		_saved_nav_special_cb = global_action_buttons._special_callback
-		_saved_nav_special_text = global_action_buttons._special_text
+		_saved_nav_special_cb = global_action_buttons.special_callback
+		_saved_nav_special_text = global_action_buttons.special_text
 	# フェーズコメントを保存
 	if phase_display and phase_display.has_method("get_current_action_prompt"):
 		_saved_nav_phase_comment = phase_display.get_current_action_prompt()
@@ -527,7 +531,7 @@ func clear_navigation_saved_state():
 
 ## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
 ## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
-func _restore_current_phase():
+func restore_current_phase():
 	# 1. ドミニオコマンドがアクティブ → ドミニオに委譲
 	if dominio_command_handler_ref:
 		var dominio = dominio_command_handler_ref
@@ -823,7 +827,7 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	if panel and not setup_buttons:
 		register_back_action(func():
 			_hide_all_info_panels_raw()
-			_restore_current_phase()
+			restore_current_phase()
 			# カードのホバー状態を解除
 			var card_script = load("res://scripts/card.gd")
 			if card_script.currently_selected_card:

@@ -37,9 +37,9 @@ var move_destinations: Array = []  # 移動可能な隣接タイル
 var current_destination_index: int = 0  # 現在選択中の移動先インデックス
 
 # Phase 1-D: 交換モード
-var _swap_mode: bool = false  # 交換モード中フラグ
-var _swap_old_creature: Dictionary = {}  # 交換前のクリーチャーデータ
-var _swap_tile_index: int = -1  # 交換対象の土地インデックス
+var swap_mode: bool = false  # 交換モード中フラグ
+var swap_old_creature: Dictionary = {}  # 交換前のクリーチャーデータ
+var swap_tile_index: int = -1  # 交換対象の土地インデックス
 
 # 地形選択モード
 var terrain_change_tile_index: int = -1  # 地形変化対象のタイル
@@ -209,7 +209,7 @@ func execute_action(action_type: String) -> bool:
 	# 失敗時はアクション選択に戻す
 	if not success:
 		current_state = State.SELECTING_ACTION
-		_set_action_selection_navigation()
+		set_action_selection_navigation()
 		restore_phase_comment()
 	
 	return success
@@ -263,9 +263,9 @@ func close_dominio_order():
 	current_destination_index = 0
 	
 	# 交換関連のリセット
-	_swap_mode = false
-	_swap_old_creature = {}
-	_swap_tile_index = -1
+	swap_mode = false
+	swap_old_creature = {}
+	swap_tile_index = -1
 	
 	# 地形変化関連のリセット
 	terrain_change_tile_index = -1
@@ -391,9 +391,9 @@ func cancel():
 		# 交換クリーチャー選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
 		
-		_swap_mode = false
-		_swap_old_creature = {}
-		_swap_tile_index = -1
+		swap_mode = false
+		swap_old_creature = {}
+		swap_tile_index = -1
 		
 		if board_system and board_system.tile_action_processor:
 			board_system.reset_action_processing()
@@ -436,7 +436,7 @@ func cancel():
 		close_dominio_order()
 
 ## アクション選択用ナビゲーション設定（戻るのみ）
-func _set_action_selection_navigation():
+func set_action_selection_navigation():
 	if ui_manager:
 		ui_manager.enable_navigation(
 			Callable(),  # 決定なし
@@ -450,7 +450,7 @@ func restore_navigation():
 			_set_land_selection_navigation()
 		State.SELECTING_ACTION:
 			# ActionMenuUIがナビゲーションを設定するので、ここでは戻るボタンのみ
-			_set_action_selection_navigation()
+			set_action_selection_navigation()
 		State.SELECTING_MOVE_DEST:
 			# 移動先選択用ナビゲーション
 			if ui_manager:
@@ -614,7 +614,7 @@ func _on_level_up_selected(target_level: int, cost: int):
 		if ui_manager and ui_manager.dominio_order_ui:
 			ui_manager.dominio_order_ui.hide_level_selection()
 		current_state = State.SELECTING_ACTION
-		_set_action_selection_navigation()
+		set_action_selection_navigation()
 		if ui_manager and ui_manager.dominio_order_ui:
 			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
 		if ui_manager and ui_manager.phase_display:
@@ -622,18 +622,18 @@ func _on_level_up_selected(target_level: int, cost: int):
 
 ## カード選択時の処理（交換モード用）
 func on_card_selected_for_swap(card_index: int):
-	if not _swap_mode:
+	if not swap_mode:
 		return  # 交換モードでない場合は何もしない
 	
 	
 	# 交換処理用に変数を保存
-	var tile_index = _swap_tile_index
-	var old_creature = _swap_old_creature.duplicate()
+	var tile_index = swap_tile_index
+	var old_creature = swap_old_creature.duplicate()
 	
 	# 交換モードをリセット
-	_swap_mode = false
-	_swap_old_creature = {}
-	_swap_tile_index = -1
+	swap_mode = false
+	swap_old_creature = {}
+	swap_tile_index = -1
 	
 	# TileActionProcessorの交換処理を呼び出す
 	# 注: ドミニオコマンドはend_turn()で閉じられる
@@ -963,9 +963,9 @@ func _execute_swap_for_cpu(command: Dictionary) -> bool:
 	
 	# 交換情報を設定
 	var tile_info = board_system.get_tile_info(tile_index)
-	_swap_mode = true
-	_swap_old_creature = tile_info.get("creature", {}).duplicate()
-	_swap_tile_index = tile_index
+	swap_mode = true
+	swap_old_creature = tile_info.get("creature", {}).duplicate()
+	swap_tile_index = tile_index
 	
 	# TileActionProcessorに交換モードを設定
 	if board_system.tile_action_processor:
@@ -979,7 +979,7 @@ func _execute_swap_for_cpu(command: Dictionary) -> bool:
 ## CPU用交換実行（手札インデックス指定）
 func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 	var current_player_index = board_system.current_player_index
-	var tile = board_system.tile_nodes.get(_swap_tile_index)
+	var tile = board_system.tile_nodes.get(swap_tile_index)
 	
 	if not tile:
 		_complete_swap_for_cpu(false)
@@ -1015,9 +1015,9 @@ func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 
 ## CPU用交換完了処理
 func _complete_swap_for_cpu(_success: bool):
-	_swap_mode = false
-	_swap_old_creature = {}
-	_swap_tile_index = -1
+	swap_mode = false
+	swap_old_creature = {}
+	swap_tile_index = -1
 	selected_tile_index = -1
 	
 	# UI更新

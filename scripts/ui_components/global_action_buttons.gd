@@ -16,14 +16,14 @@ var back_button: Button
 var special_button: Button  # 左下の特殊ボタン（アルカナアーツ/ドミニオコマンド等）
 
 # コールバック
-var _confirm_callback: Callable = Callable()
-var _back_callback: Callable = Callable()
-var _up_callback: Callable = Callable()
-var _down_callback: Callable = Callable()
-var _special_callback: Callable = Callable()
+var confirm_callback: Callable = Callable()
+var back_callback: Callable = Callable()
+var up_callback: Callable = Callable()
+var down_callback: Callable = Callable()
+var special_callback: Callable = Callable()
 
 # 特殊ボタンのテキスト
-var _special_text: String = ""
+var special_text: String = ""
 
 # GameFlowManager参照（入力ロック用）
 var game_flow_manager_ref = null
@@ -41,7 +41,7 @@ const MARGIN_LEFT = 70
 
 func _ready():
 	_setup_ui()
-	_update_button_states()
+	update_button_states()
 
 
 func _setup_ui():
@@ -197,32 +197,32 @@ func _update_positions():
 
 
 ## ボタンの有効/無効状態を更新（常に表示、機能がない時はグレーアウト）
-func _update_button_states():
-	up_button.disabled = not _up_callback.is_valid()
-	down_button.disabled = not _down_callback.is_valid()
-	confirm_button.disabled = not _confirm_callback.is_valid()
-	back_button.disabled = not _back_callback.is_valid()
-	special_button.disabled = not _special_callback.is_valid()
-	special_button.visible = _special_callback.is_valid()
-	special_button.text = _special_text if _special_callback.is_valid() else ""
+func update_button_states():
+	up_button.disabled = not up_callback.is_valid()
+	down_button.disabled = not down_callback.is_valid()
+	confirm_button.disabled = not confirm_callback.is_valid()
+	back_button.disabled = not back_callback.is_valid()
+	special_button.disabled = not special_callback.is_valid()
+	special_button.visible = special_callback.is_valid()
+	special_button.text = special_text if special_callback.is_valid() else ""
 
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-			if _confirm_callback.is_valid():
+			if confirm_callback.is_valid():
 				_on_confirm_pressed()
 				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_ESCAPE:
-			if _back_callback.is_valid():
+			if back_callback.is_valid():
 				_on_back_pressed()
 				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_UP:
-			if _up_callback.is_valid():
+			if up_callback.is_valid():
 				_on_up_pressed()
 				get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_DOWN:
-			if _down_callback.is_valid():
+			if down_callback.is_valid():
 				_on_down_pressed()
 				get_viewport().set_input_as_handled()
 
@@ -242,8 +242,8 @@ func _on_confirm_pressed():
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
-	if _confirm_callback.is_valid():
-		_confirm_callback.call()
+	if confirm_callback.is_valid():
+		confirm_callback.call()
 
 
 func _on_back_pressed():
@@ -252,22 +252,22 @@ func _on_back_pressed():
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
-	if _back_callback.is_valid():
-		_back_callback.call()
+	if back_callback.is_valid():
+		back_callback.call()
 
 
 func _on_up_pressed():
 	if _is_input_locked():
 		return
-	if _up_callback.is_valid():
-		_up_callback.call()
+	if up_callback.is_valid():
+		up_callback.call()
 
 
 func _on_down_pressed():
 	if _is_input_locked():
 		return
-	if _down_callback.is_valid():
-		_down_callback.call()
+	if down_callback.is_valid():
+		down_callback.call()
 
 
 func _on_special_pressed():
@@ -278,8 +278,8 @@ func _on_special_pressed():
 		game_flow_manager_ref.lock_input()
 	# シグナル発火（チュートリアル用）
 	special_button_pressed.emit()
-	if _special_callback.is_valid():
-		_special_callback.call()
+	if special_callback.is_valid():
+		special_callback.call()
 
 
 # === 公開メソッド ===
@@ -287,33 +287,33 @@ func _on_special_pressed():
 ## ナビゲーションボタンを一括設定
 ## 有効なCallableを渡したボタンのみ有効になる
 func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
-	_confirm_callback = confirm_cb
-	_back_callback = back_cb
-	_up_callback = up_cb
-	_down_callback = down_cb
-	_update_button_states()
+	confirm_callback = confirm_cb
+	back_callback = back_cb
+	up_callback = up_cb
+	down_callback = down_cb
+	update_button_states()
 
 
 ## 特殊ボタンを設定（テキストとコールバック）
 func setup_special(text: String, callback: Callable):
-	_special_text = text
-	_special_callback = callback
-	_update_button_states()
+	special_text = text
+	special_callback = callback
+	update_button_states()
 
 
 ## 特殊ボタンをクリア
 func clear_special():
-	_special_text = ""
-	_special_callback = Callable()
-	_update_button_states()
+	special_text = ""
+	special_callback = Callable()
+	update_button_states()
 
 
 ## 全ボタンをクリア（全てグレーアウト）
 func clear_all():
-	_confirm_callback = Callable()
-	_back_callback = Callable()
-	_up_callback = Callable()
-	_down_callback = Callable()
-	_special_callback = Callable()
-	_special_text = ""
-	_update_button_states()
+	confirm_callback = Callable()
+	back_callback = Callable()
+	up_callback = Callable()
+	down_callback = Callable()
+	special_callback = Callable()
+	special_text = ""
+	update_button_states()

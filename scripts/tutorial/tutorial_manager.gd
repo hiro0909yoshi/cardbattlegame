@@ -954,8 +954,8 @@ func _show_step_with_explanation_mode(step: Dictionary):
 	# 空メッセージ、かつwait_for_clickでない場合はスキップ（シグナル待ち）
 	if message == "" and not wait_for_click:
 		# ポップアップを非表示
-		if explanation_mode._popup:
-			explanation_mode._popup.hide()
+		if explanation_mode.popup:
+			explanation_mode.popup.hide()
 		# フラグをリセット（シグナルハンドラからadvance_step可能にする）
 		_is_showing_step = false
 		# シグナルで次のステップへ進む

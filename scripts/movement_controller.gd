@@ -37,7 +37,7 @@ var spell_player_move = null
 var cpu_movement_evaluator: CPUMovementEvaluator = null
 
 # 移動中の残り歩数（CPU分岐選択用）
-var _current_remaining_steps: int = 0
+var current_remaining_steps: int = 0
 
 # サブシステム
 var direction_selector: MovementDirectionSelector = null
@@ -100,7 +100,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		return
 
 	# ゲーム終了チェック
-	if game_flow_manager and game_flow_manager._game_ended:
+	if game_flow_manager and game_flow_manager.is_game_ended:
 		print("[MovementController] ゲーム終了済み、移動スキップ")
 		return
 
@@ -120,7 +120,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if has_direction_choice:
 		var current_tile = player_tiles[player_id]
 		var came_from = _get_player_came_from(player_id)
-		_current_remaining_steps = steps
+		current_remaining_steps = steps
 		var first_tile = await _select_first_tile(current_tile, came_from)
 
 		_set_player_came_from(player_id, current_tile)
@@ -149,10 +149,10 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 
 	while remaining_steps > 0:
 		print("[MovementController] 移動ループ: remaining=%d, current=%d" % [remaining_steps, current_tile])
-		if game_flow_manager and game_flow_manager._game_ended:
+		if game_flow_manager and game_flow_manager.is_game_ended:
 			print("[MovementController] ゲーム終了済み、移動中断")
 			break
-		_current_remaining_steps = remaining_steps
+		current_remaining_steps = remaining_steps
 
 		var next_tile: int
 
@@ -224,8 +224,8 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 			chosen = result.tile
 		elif not result.choices.is_empty():
 			if _is_cpu_player(player_id) and cpu_movement_evaluator:
-				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, _current_remaining_steps, current_tile)
-				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
+				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, current_remaining_steps, current_tile)
+				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 			else:
 				branch_selector.current_branch_tile = current_tile
 				chosen = await branch_selector.show_branch_tile_selection(result.choices)
@@ -235,8 +235,8 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		chosen = choices[0]
 	else:
 		if _is_cpu_player(player_id) and cpu_movement_evaluator:
-			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, _current_remaining_steps, current_tile)
-			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, _current_remaining_steps])
+			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, current_remaining_steps, current_tile)
+			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 		else:
 			branch_selector.current_branch_tile = current_tile
 			chosen = await branch_selector.show_branch_tile_selection(choices)
@@ -286,8 +286,8 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 			chosen = result.tile
 		elif not result.choices.is_empty():
 			if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
-				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, _current_remaining_steps, current_tile)
-				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
+				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, current_remaining_steps, current_tile)
+				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 			else:
 				branch_selector.current_branch_tile = current_tile
 				chosen = await branch_selector.show_branch_tile_selection(result.choices)
@@ -297,8 +297,8 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		chosen = choices[0]
 	else:
 		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
-			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, _current_remaining_steps, current_tile)
-			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, _current_remaining_steps])
+			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, current_remaining_steps, current_tile)
+			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 		else:
 			branch_selector.current_branch_tile = current_tile
 			chosen = await branch_selector.show_branch_tile_selection(choices)
@@ -637,7 +637,7 @@ func predict_all_destinations(start_tile: int, steps: int, came_from: int) -> Ar
 func update_destination_highlight():
 	destination_predictor.update_destination_highlight_for_branch(
 		branch_selector.is_active, branch_selector.available_branches,
-		branch_selector.selected_branch_index, _current_remaining_steps,
+		branch_selector.selected_branch_index, current_remaining_steps,
 		branch_selector.current_branch_tile
 	)
 

@@ -21,7 +21,7 @@ var _card_container: Control
 var _card_instance: Control  # Card.tscnのインスタンス
 var _hp_ap_bar: HpApBar
 var _skill_label: SkillLabel
-var _original_position: Vector2
+var original_position: Vector2
 
 # カードシーン（プリロード）
 var _card_scene: PackedScene
@@ -69,7 +69,7 @@ func setup(data: Dictionary, attacker: bool = true, show_hp_bar: bool = true) ->
 	else:
 		_hp_ap_bar.visible = false
 	
-	_original_position = position
+	original_position = position
 
 
 ## Card.tscnをインスタンス化してデータを設定
@@ -182,13 +182,13 @@ func play_attack_animation():
 		attack_animation_completed.emit()
 		return
 	var direction = 1.0 if is_attacker else -1.0
-	var target_x = _original_position.x + (ATTACK_MOVE_DISTANCE * direction)
+	var target_x = original_position.x + (ATTACK_MOVE_DISTANCE * direction)
 	
 	var tween = create_tween()
 	# 前に移動
 	tween.tween_property(self, "position:x", target_x, 0.15).set_ease(Tween.EASE_OUT)
 	# 戻る
-	tween.tween_property(self, "position:x", _original_position.x, 0.15).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "position:x", original_position.x, 0.15).set_ease(Tween.EASE_IN)
 	
 	await tween.finished
 	attack_animation_completed.emit()
@@ -248,7 +248,7 @@ func slide_in(from_left: bool = true):
 	position.x = start_x
 	
 	var tween = create_tween()
-	tween.tween_property(self, "position:x", _original_position.x, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(self, "position:x", original_position.x, 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	await tween.finished
 
 

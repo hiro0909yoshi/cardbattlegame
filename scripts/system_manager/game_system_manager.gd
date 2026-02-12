@@ -179,8 +179,8 @@ func phase_3_setup_basic_config() -> void:
 		player_system.initialize_players(player_count)
 	
 	# CardSystemを正しいプレイヤー数で再初期化
-	if card_system and card_system.has_method("_initialize_decks"):
-		card_system._initialize_decks(player_count)
+	if card_system and card_system.has_method("initialize_decks"):
+		card_system.initialize_decks(player_count)
 	
 	# BoardSystem3D基本設定
 	if board_system_3d and camera_3d:

@@ -456,3 +456,36 @@ DebugSettingsに集約されていないデバッグフラグ。
   - skill_land_effects の board_system.game_flow_manager.spell_land チェーン4箇所解消
   - execute_swap_action の引数エラー修正
   - 非CPU系のboard_system内部チェーンは デバッグフラグ2箇所を除き0に
+
+### セッション6（2026-02-12 続き）
+- ✅ 規約7 privateメソッド外部呼出し修正（5箇所完了）
+  - tutorial_popup._apply_position → apply_position
+  - global_action_buttons._update_button_states → update_button_states
+  - card_system._initialize_decks → initialize_decks
+  - dominio_command_handler._set_action_selection_navigation → set_action_selection_navigation
+  - ui_manager._restore_current_phase → restore_current_phase
+- ✅ 規約7 privateプロパティpublic化（一部完了）
+  - movement_controller._current_remaining_steps → current_remaining_steps
+  - game_flow_manager._game_ended → is_game_ended（getterプロパティ名変更）
+  - ui_manager._nav_state_saved → is_nav_state_saved()メソッド追加
+- ⏳ 残りのprivateプロパティ修正（次セッション）
+  - _swap_mode / _swap_tile_index / _swap_old_creature（dominio_command_handler）→ public化
+  - _popup（tutorial_popup）→ getter追加
+  - gab._confirm/back/up/down_callback（global_action_buttons）→ getter追加
+  - _special_callback / _special_text（global_action_buttons → ui_manager）→ getter追加
+  - _original_position（battle_screen内）→ 親子関係確認、public化検討
+
+### セッション7（2026-02-12 続き）
+- ✅ 残りのprivateプロパティ修正 全件完了
+  - dominio_command_handler: _swap_mode/_swap_old_creature/_swap_tile_index → public化
+  - explanation_mode: _popup → popup（public化）
+  - global_action_buttons: _confirm/back/up/down_callback → public化
+  - global_action_buttons: _special_callback/_special_text → public化
+  - ui_manager: _nav_state_saved → is_nav_state_saved()メソッド追加
+  - battle_creature_display: _original_position → original_position
+  - movement_controller: _current_remaining_steps → current_remaining_steps
+  - game_flow_manager: _game_ended → is_game_ended
+
+**規約7（privateメソッド外部呼出し）: 違反0件** ✅
+**規約8（状態フラグ外部直接set）: 違反0件** ✅
+**規約9（内部プロパティ外部直接参照）: 違反0件** ✅

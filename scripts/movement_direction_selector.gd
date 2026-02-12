@@ -74,8 +74,8 @@ func _update_ui():
 	if player_id >= 0:
 		var ct = controller.player_tiles[player_id]
 		var first_tile = ct + selected_direction
-		if controller._current_remaining_steps > 1:
-			var destinations = controller.destination_predictor.predict_all_destinations(first_tile, controller._current_remaining_steps - 1, ct)
+		if controller.current_remaining_steps > 1:
+			var destinations = controller.destination_predictor.predict_all_destinations(first_tile, controller.current_remaining_steps - 1, ct)
 			controller.destination_predictor.update_hand_restriction_for_destinations(destinations)
 		else:
 			controller.destination_predictor.update_hand_restriction_for_destinations([first_tile])

@@ -138,7 +138,7 @@ func hide_panel(clear_buttons: bool = true):
 	current_hand_index = -1
 	
 	if clear_buttons and ui_manager_ref:
-		if ui_manager_ref._nav_state_saved:
+		if ui_manager_ref.is_nav_state_saved():
 			ui_manager_ref.restore_navigation_state()
 		else:
 			ui_manager_ref.disable_navigation()

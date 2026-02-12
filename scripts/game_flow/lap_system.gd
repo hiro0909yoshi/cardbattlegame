@@ -167,7 +167,7 @@ func connect_checkpoint_signals():
 ## チェックポイント通過イベント
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	# ゲーム終了判定
-	if game_flow_manager and game_flow_manager._game_ended:
+	if game_flow_manager and game_flow_manager.is_game_ended:
 		print("[LapSystem] ゲーム終了済み、チェックポイント処理スキップ")
 		checkpoint_processing_completed.emit()
 		return

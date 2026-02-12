@@ -25,12 +25,12 @@ var player_discards = {}  # player_id -> Array[int] (card_ids)
 var player_hands = {}  # player_id -> {"data": [card_data]}
 
 func _ready():
-	# デッキ初期化はgame_system_managerのPhase3で_initialize_decks(player_count)を呼ぶ
+	# デッキ初期化はgame_system_managerのPhase3でinitialize_decks(player_count)を呼ぶ
 	# _ready()では行わない（二重初期化防止）
 	pass
 
 func _initialize_deck():
-	# DEPRECATED - _initialize_decks() を使用してください
+	# DEPRECATED - initialize_decks() を使用してください
 	# 下位互換のため残しています
 	# GameDataから選択中のブックを取得
 	var deck_data = GameData.get_current_deck()["cards"]
@@ -53,7 +53,7 @@ func _initialize_deck():
 	print("デッキ初期化: ", deck.size(), "枚")
 
 # 新システム: 複数プレイヤーのデッキを初期化
-func _initialize_decks(player_count: int):
+func initialize_decks(player_count: int):
 	print("\n=== マルチデッキ初期化開始 ===")
 	print("プレイヤー数: ", player_count)
 	

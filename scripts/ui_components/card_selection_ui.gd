@@ -1273,8 +1273,8 @@ func _get_current_tile_element(player_id: int) -> String:
 	# 交換モード時は交換対象タイルの属性を返す
 	if selection_mode == "swap" and game_flow_manager_ref.dominio_command_handler:
 		var dominio = game_flow_manager_ref.dominio_command_handler
-		if dominio._swap_tile_index >= 0 and board.tile_nodes.has(dominio._swap_tile_index):
-			var swap_tile = board.tile_nodes[dominio._swap_tile_index]
+		if dominio.swap_tile_index >= 0 and board.tile_nodes.has(dominio.swap_tile_index):
+			var swap_tile = board.tile_nodes[dominio.swap_tile_index]
 			return swap_tile.tile_type if swap_tile else ""
 		return ""
 	

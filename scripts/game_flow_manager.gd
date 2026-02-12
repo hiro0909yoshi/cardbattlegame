@@ -451,7 +451,7 @@ func on_card_selected(card_index: int):
 		return
 	
 	# Phase 1-D: 交換モードチェック
-	if dominio_command_handler and dominio_command_handler._swap_mode:
+	if dominio_command_handler and dominio_command_handler.swap_mode:
 		dominio_command_handler.on_card_selected_for_swap(card_index)
 	elif board_system_3d:
 		board_system_3d.on_card_selected(card_index)
@@ -592,7 +592,7 @@ func move_camera_to_next_player():
 var game_result_handler: GameResultHandler = null
 
 # ゲーム終了フラグ（後方互換getter）
-var _game_ended: bool:
+var is_game_ended: bool:
 	get: return game_result_handler.is_game_ended() if game_result_handler else false
 
 # プレイヤー勝利処理（GameResultHandlerに委譲）

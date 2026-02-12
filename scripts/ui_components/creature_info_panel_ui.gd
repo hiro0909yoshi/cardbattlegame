@@ -156,7 +156,7 @@ func hide_panel(clear_buttons: bool = true):
 	
 	if clear_buttons and ui_manager_ref:
 		# 保存されたナビゲーション状態があれば復元、なければクリア
-		if ui_manager_ref._nav_state_saved:
+		if ui_manager_ref.is_nav_state_saved():
 			ui_manager_ref.restore_navigation_state()
 		else:
 			ui_manager_ref.clear_global_actions()

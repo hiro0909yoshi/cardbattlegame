@@ -261,9 +261,9 @@ static func execute_swap_creature(handler) -> bool:
 		handler.board_system.begin_action_processing()
 		
 		# 交換情報を保存
-		handler._swap_mode = true
-		handler._swap_old_creature = old_creature_data
-		handler._swap_tile_index = handler.selected_tile_index
+		handler.swap_mode = true
+		handler.swap_old_creature = old_creature_data
+		handler.swap_tile_index = handler.selected_tile_index
 	
 	# アクションメニューを閉じる
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
@@ -771,7 +771,7 @@ static func confirm_terrain_selection(handler):
 		if handler.ui_manager and handler.ui_manager.dominio_order_ui:
 			handler.ui_manager.dominio_order_ui.hide_terrain_selection()
 		handler.current_state = handler.State.SELECTING_ACTION
-		handler._set_action_selection_navigation()
+		handler.set_action_selection_navigation()
 		if handler.ui_manager and handler.ui_manager.dominio_order_ui:
 			handler.ui_manager.dominio_order_ui.show_action_menu(handler.selected_tile_index)
 

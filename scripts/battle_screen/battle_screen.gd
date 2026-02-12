@@ -126,12 +126,12 @@ func _layout_ui() -> void:
 	# 攻撃側（左）- カードの右端が中央から少し左
 	var attacker_x = center_x - card_spacing - card_width
 	_attacker_display.position = Vector2(attacker_x, center_y)
-	_attacker_display._original_position = _attacker_display.position
+	_attacker_display.original_position = _attacker_display.position
 	
 	# 防御側（右）- カードの左端が中央から少し右
 	var defender_x = center_x + card_spacing
 	_defender_display.position = Vector2(defender_x, center_y)
-	_defender_display._original_position = _defender_display.position
+	_defender_display.original_position = _defender_display.position
 	
 	# VS（中央）
 	_vs_label.position = Vector2(center_x - 30, center_y + card_height / 2 - 50)

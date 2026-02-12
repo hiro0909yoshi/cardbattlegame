@@ -56,9 +56,9 @@ func show_branch_tile_selection(choices: Array) -> int:
 	# 到着予測地点にカメラを移動（awaitしない＝移動と並行）
 	if gfm and gfm.board_system_3d and gfm.board_system_3d.camera_controller:
 		var cc = gfm.board_system_3d.camera_controller
-		if controller._current_remaining_steps > 1:
+		if controller.current_remaining_steps > 1:
 			var from_tile = controller.player_tiles[controller.current_moving_player] if controller.current_moving_player >= 0 else -1
-			var destinations = controller.destination_predictor.predict_all_destinations(result, controller._current_remaining_steps - 1, from_tile)
+			var destinations = controller.destination_predictor.predict_all_destinations(result, controller.current_remaining_steps - 1, from_tile)
 			if not destinations.is_empty() and controller.tile_nodes.has(destinations[0]):
 				cc.focus_on_tile_slow(destinations[0], 1.2)
 		elif controller.tile_nodes.has(result):
@@ -79,20 +79,20 @@ func _update_ui():
 				choices_text += "[→タイル%d←] " % tile_num
 			else:
 				choices_text += " タイル%d " % tile_num
-		var remaining_text = "（残り%dマス）" % controller._current_remaining_steps if controller._current_remaining_steps > 0 else ""
+		var remaining_text = "（残り%dマス）" % controller.current_remaining_steps if controller.current_remaining_steps > 0 else ""
 		if gfm.ui_manager.phase_display:
 			gfm.ui_manager.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
 
 	# 到着予測ハイライトを更新
 	controller.destination_predictor.update_destination_highlight_for_branch(
 		is_active, available_branches, selected_branch_index,
-		controller._current_remaining_steps, current_branch_tile
+		controller.current_remaining_steps, current_branch_tile
 	)
 
 	# 到着予想タイルに基づいて手札の配置制限表示を更新
 	if is_active and not available_branches.is_empty():
 		var selected_tile = available_branches[selected_branch_index]
-		var steps_after_branch = controller._current_remaining_steps - 1
+		var steps_after_branch = controller.current_remaining_steps - 1
 		if steps_after_branch <= 0:
 			controller.destination_predictor.update_hand_restriction_for_destinations([selected_tile])
 		else:
