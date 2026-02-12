@@ -340,6 +340,61 @@ if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
 
 ---
 
+## インフォパネル一元化リファクタリング（進行中）
+
+### 完了済み
+
+#### Step 1-4: 参照一元化
+- インフォパネル参照: 181箇所 → 35箇所（81%削減）
+- ui_managerに統合メソッド追加: `show_card_info`, `show_card_selection`, `hide_all_info_panels`
+
+#### ナビゲーション保存/復元
+- `save_navigation_state()` / `restore_navigation_state()` / `clear_navigation_saved_state()`
+- 保存対象: 4方向ナビゲーション + special_button + フェーズコメント
+- `_hide_all_info_panels_raw()`: saved stateを退避/復元しつつパネルを閉じる
+
+#### 閲覧モードの実装
+- カードタップ → `show_card_info(setup_buttons=false)` → ×ボタンで元の状態に復元
+- カード選択フェーズ中（スペル/召喚/バトル/アイテム）: 正常動作
+- グレイアウトカードの閲覧: `_show_info_panel_only()`経由で対応
+
+#### ドミニオコマンド中の閲覧モード
+- 土地選択中: ×で復元OK（`_restore_current_phase` → `dominio.restore_navigation()`）
+- アクション選択中: ×で復元OK（`action_menu_ui.restore_navigation()`）
+- レベルアップ/移動先/地形/交換: テスト済み
+
+### 未解決の設計課題
+
+#### show_card_info(setup_buttons=false)の二重用途
+- **閲覧モード**: ユーザーがカードタップ → ×ボタン/save/フェーズコメント変更が必要
+- **表示の一部**: ドミニオのアクション選択時にクリーチャー情報を表示 → 上記は不要
+- 現状: dominio_order_uiの`show_action_menu`内でshow_card_info後にフェーズコメントを上書きして対処
+- 理想: 「表示のみモード」をshow_card_infoに追加するか、直接パネルのshow_view_modeを呼ぶ
+
+#### 復元方式の混在
+- カード選択UI系: `_restore_current_phase` → `card_selection_ui.restore_phase_comment()`
+- ドミニオ: `_restore_current_phase` → `dominio.restore_navigation()` + `dominio.restore_phase_comment()`
+- サイコロフェーズ等: `restore_navigation_state()`（save/restoreフォールバック）
+- 理想: 全フェーズが統一インターフェース（restore_navigation + restore_phase_comment）で復元
+
+#### special_buttonのvisible制御
+- `_update_button_states()`で`visible = _special_callback.is_valid()`を追加
+- 以前はdisabledのみでvisibleは変更していなかったため、Dボタンが見えたまま残る問題があった
+
+### 関連する変更ファイル一覧
+- `scripts/ui_manager.gd`: show_card_info, _hide_all_info_panels_raw, save/restore, _restore_current_phase
+- `scripts/ui_components/card_selection_ui.gd`: save追加、キャンセル/確認時にclear
+- `scripts/ui_components/global_action_buttons.gd`: special_button.visible制御追加
+- `scripts/ui_components/action_menu_ui.gd`: restore_navigation()追加
+- `scripts/ui_components/dominio_order_ui.gd`: show_action_menuにフェーズコメント追加、_close_creature_info_panel_if_openでコメントクリア
+- `scripts/ui_tap_handler.gd`: _close_info_panel_and_restore, is_card_selection_active判定追加
+- `scripts/card.gd`: _show_info_panel_only簡素化、is_active判定追加
+- `scripts/game_flow/dominio_command_handler.gd`: restore_phase_comment追加、open時にclear_navigation_saved_state
+- `scripts/game_flow/spell_phase_handler.gd`: スペルカード0枚時もshow_selection呼び出し
+- `scripts/ui_components/phase_display.gd`: get_current_action_prompt()追加
+
+---
+
 ## 変更履歴
 
 | 日付 | バージョン | 変更内容 |
@@ -347,3 +402,4 @@ if is_creature_with_panel or is_spell_in_spell_phase or is_item_phase:
 | 2025/12/14 | 1.0 | 初版作成（アイテムインフォパネル追加に伴い整理） |
 | 2025/12/16 | 1.1 | 詳細設計へのリンク追加 |
 | 2025/12/17 | 1.2 | スペル使用後の手札選択時のインフォパネル表示を追加 |
+| 2026/02/12 | 2.0 | インフォパネル一元化リファクタリング進捗を追加 |

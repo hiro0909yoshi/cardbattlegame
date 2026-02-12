@@ -703,6 +703,9 @@ func _update_target_selection():
 	# 汎用ヘルパーを使用して視覚的に選択（クリーチャー情報パネルも自動表示）
 	TargetSelectionHelper.select_target_visually(self, target)
 	
+	# select_target_visually→show_card_info(false)がナビゲーションをクリアするため再設定
+	_setup_target_selection_navigation()
+	
 	# UI更新
 	_update_selection_ui()
 
@@ -1173,6 +1176,11 @@ func complete_spell_phase():
 			if current_player:
 				hand_display.update_hand_display(current_player.id)
 	
+	# カード選択UIを非アクティブ化
+	if ui_manager and ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active:
+		if ui_manager.card_selection_ui.selection_mode == "spell":
+			ui_manager.card_selection_ui.deactivate()
+	
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()
 	
@@ -1281,6 +1289,38 @@ func _setup_spell_selection_navigation():
 			func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
 			Callable()             # 戻るなし
 		)
+
+## 閲覧モード（グレーアウトカードタップ等）から戻る時のナビゲーション復元
+## state別にナビゲーション + 特殊ボタン + フェーズコメントを復元する
+func restore_navigation():
+	if not ui_manager:
+		return
+	# アルカナアーツがアクティブなら優先委譲
+	if spell_mystic_arts and spell_mystic_arts.is_active():
+		spell_mystic_arts.restore_navigation()
+		return
+	restore_navigation_for_state()
+
+## state別のナビゲーション復元（アルカナアーツ判定をスキップ）
+## spell_mystic_arts.restore_navigation()からの再帰呼び出し時に使用
+func restore_navigation_for_state():
+	if not ui_manager:
+		return
+	match current_state:
+		State.WAITING_FOR_INPUT:
+			_setup_spell_selection_navigation()
+			_show_spell_phase_buttons()
+			if ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+		State.SELECTING_TARGET:
+			_setup_target_selection_navigation()
+			if ui_manager.phase_display:
+				ui_manager.phase_display.show_action_prompt("対象を選択してください")
+		State.CONFIRMING_EFFECT:
+			ui_manager.enable_navigation(
+				func(): _confirm_spell_effect(),
+				func(): _cancel_confirmation()
+			)
 
 ## 対象選択時のナビゲーション設定
 func _setup_target_selection_navigation():

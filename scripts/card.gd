@@ -635,9 +635,11 @@ func _input(event):
 		#print("[Card] 入力ロック中のためスキップ")
 		return
 	
-	# アルカナアーツ選択フェーズ中は手札カード選択を無効化
-	if _is_mystic_selection_phase():
-		#print("[Card] アルカナアーツ選択フェーズ中のためスキップ")
+	# アルカナアーツ選択フェーズ中はインフォパネル表示のみ許可
+	if _is_mystic_selection_phase() and mouse_over and event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_show_info_panel_only()
+			get_viewport().set_input_as_handled()
 		return
 	
 	# ドミニオコマンド中はインフォパネル表示のみ許可

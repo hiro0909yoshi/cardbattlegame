@@ -641,6 +641,11 @@ func _initialize_phase1a_handlers() -> void:
 		item_phase_handler
 	)
 	
+	# UIManagerにハンドラー参照をキャッシュ（チェーンアクセス解消用）
+	if ui_manager:
+		ui_manager.spell_phase_handler_ref = spell_phase_handler
+		ui_manager.dominio_command_handler_ref = dominio_command_handler
+	
 	print("[Phase1A Handlers] 初期化完了")
 
 ## CPU移動評価システムの初期化

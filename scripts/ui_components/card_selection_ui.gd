@@ -993,6 +993,25 @@ func _on_spell_phase_skip():
 
 
 
+## 閲覧モードから戻る時のナビゲーション復元（全ボタン + 特殊ボタン + フェーズコメント）
+func restore_navigation():
+	if not ui_manager_ref:
+		return
+	match selection_mode:
+		"spell":
+			_setup_spell_phase_back_button()
+			# アルカナアーツボタンはspell_phase_handlerが管理するため、ここでは触れない
+		"item":
+			_setup_item_phase_back_button()
+		"summon":
+			register_back_button_for_current_mode()
+			ui_manager_ref.show_dominio_order_button()
+		"battle":
+			register_back_button_for_current_mode()
+		_:
+			register_back_button_for_current_mode()
+	restore_phase_comment()
+
 # 現在のモードに応じたグローバル戻るボタンを登録
 func register_back_button_for_current_mode():
 	if not ui_manager_ref:
@@ -1084,30 +1103,7 @@ func _on_pass_button_pressed():
 	
 	# インフォパネルが開いていた場合は閉じてナビゲーションを復元
 	if info_panel_was_open:
-		# ドミニオコマンド中またはアルカナアーツ中かどうか確認
-		var is_special_phase_active = false
-		if game_flow_manager_ref:
-			# ドミニオコマンド中
-			if game_flow_manager_ref.dominio_command_handler:
-				var dominio = game_flow_manager_ref.dominio_command_handler
-				if dominio.current_state != dominio.State.CLOSED:
-					is_special_phase_active = true
-			# アルカナアーツ中
-			if game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.spell_mystic_arts:
-				if game_flow_manager_ref.spell_phase_handler.spell_mystic_arts.is_active():
-					is_special_phase_active = true
-		
-		# 特殊フェーズ中は何もしない（各フェーズ側でナビゲーション管理）
-		if is_special_phase_active:
-			return
-		
-		# スペルフェーズとアイテムフェーズは専用のナビゲーション設定
-		if selection_mode == "spell":
-			_setup_spell_phase_back_button()
-		elif selection_mode == "item":
-			_setup_item_phase_back_button()
-		else:
-			register_back_button_for_current_mode()
+		restore_navigation()
 		return
 	
 	if is_active:

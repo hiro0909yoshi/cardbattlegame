@@ -150,6 +150,16 @@ func open_dominio_order(player_id: int):
 	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
 	# _start_tap_target_selection(player_id)
 	
+	# ナビゲーションボタン設定（土地選択用）※preview_landより先に設定する
+	# （preview_land→show_card_infoがsave_navigation_stateを呼ぶため）
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
+			func(): cancel(),  # 戻る
+			func(): on_arrow_up(),  # 上
+			func(): on_arrow_down()  # 下
+		)
+	
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
 		var first_tile = player_owned_lands[0]
@@ -160,14 +170,7 @@ func open_dominio_order(player_id: int):
 	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 		ui_manager.show_land_selection_mode(player_owned_lands)
 	
-	# ナビゲーションボタン設定（土地選択用）
-	if ui_manager:
-		ui_manager.enable_navigation(
-			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
-			func(): cancel(),  # 戻る
-			func(): on_arrow_up(),  # 上
-			func(): on_arrow_down()  # 下
-		)
+	
 
 ## 土地をプレビュー（ハイライトのみ、状態は変更しない）
 func preview_land(tile_index: int) -> bool:

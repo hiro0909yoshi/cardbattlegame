@@ -39,6 +39,8 @@ var card_system_ref = null
 var player_system_ref = null
 var board_system_ref = null  # BoardSystem3Dも格納可能
 var game_flow_manager_ref = null  # GameFlowManagerの参照
+var spell_phase_handler_ref = null  # SpellPhaseHandler参照（チェーンアクセス解消用）
+var dominio_command_handler_ref = null  # DominioCommandHandler参照（チェーンアクセス解消用）
 
 # デバッグモード
 # NOTE: debug_modeはDebugSettings.ui_debug_modeに移行済み
@@ -433,6 +435,9 @@ func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Ca
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
 	
+	# 新しいナビゲーション設定時は前の保存状態を無効化
+	_nav_state_saved = false
+	
 	# 後方互換変数も同期（register_xxx系との競合防止）
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
@@ -490,6 +495,8 @@ func save_navigation_state():
 	else:
 		_saved_nav_phase_comment = ""
 	_nav_state_saved = true
+	# 特殊ボタンをクリア（インフォパネル表示中は不要。復元時に再設定される）
+	clear_special_button()
 
 ## 保存したナビゲーション状態を復元
 func restore_navigation_state():
@@ -521,13 +528,10 @@ func clear_navigation_saved_state():
 ## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
 ## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
 func _restore_current_phase():
-	var gfm = game_flow_manager_ref
-	
-	# ドミニオコマンドがアクティブ
-	if gfm and gfm.dominio_command_handler:
-		var dominio = gfm.dominio_command_handler
+	# 1. ドミニオコマンドがアクティブ → ドミニオに委譲
+	if dominio_command_handler_ref:
+		var dominio = dominio_command_handler_ref
 		if dominio.current_state != dominio.State.CLOSED:
-			# アクション選択中はActionMenuUIのナビゲーションを復元
 			if dominio.current_state == dominio.State.SELECTING_ACTION:
 				if dominio_order_ui and dominio_order_ui.action_menu_ui:
 					dominio_order_ui.action_menu_ui.restore_navigation()
@@ -535,28 +539,36 @@ func _restore_current_phase():
 					dominio.restore_navigation()
 			else:
 				dominio.restore_navigation()
-			# ドミニオ中はDボタン非表示
 			hide_dominio_order_button()
-			# フェーズコメント復元（ドミニオ自身に依頼）
 			dominio.restore_phase_comment()
 			_nav_state_saved = false
 			return
 	
-	# カード選択UIがアクティブ（スペル/召喚/バトル/アイテム等）
-	if card_selection_ui and card_selection_ui.is_active:
-		card_selection_ui.register_back_button_for_current_mode()
-		card_selection_ui.restore_phase_comment()
-		# 召喚/バトル/アイテムフェーズ中はDボタン再表示
-		var mode = card_selection_ui.selection_mode
-		if mode in ["summon", "battle", "item"]:
-			show_dominio_order_button()
-		# アルカナアーツボタン
-		if gfm and gfm.spell_phase_handler and gfm.spell_phase_handler.spell_mystic_arts:
-			if gfm.spell_phase_handler.spell_mystic_arts.is_active():
-				pass  # アルカナアーツ中は別途管理
+	# 2. スペルフェーズがアクティブ（target選択/確認含む） → spell_phase_handlerに委譲
+	if spell_phase_handler_ref and spell_phase_handler_ref.is_spell_phase_active():
+		spell_phase_handler_ref.restore_navigation()
+		_nav_state_saved = false
 		return
 	
-	# どのフェーズでもない（サイコロフェーズ等）→ save/restore フォールバック
+	# 3. カード選択UIがアクティブ（召喚/バトル/アイテム等） → card_selection_uiに委譲
+	if card_selection_ui and card_selection_ui.is_active:
+		card_selection_ui.restore_navigation()
+		_nav_state_saved = false
+		return
+	
+	# 4. 方向選択・分岐選択がアクティブ → セレクターに委譲
+	if board_system_ref and board_system_ref.movement_controller:
+		var mc = board_system_ref.movement_controller
+		if mc.direction_selector and mc.direction_selector.is_active:
+			mc.direction_selector.restore_navigation()
+			_nav_state_saved = false
+			return
+		if mc.branch_selector and mc.branch_selector.is_active:
+			mc.branch_selector.restore_navigation()
+			_nav_state_saved = false
+			return
+	
+	# 5. どのフェーズでもない → save/restore フォールバック
 	restore_navigation_state()
 
 ## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
@@ -741,7 +753,10 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 				item_info_panel_ui.show_view_mode(card_data, setup_buttons)
 				panel = item_info_panel_ui
 	
-	# パネルが表示されたら、閉じた時の復元用に×ボタンを設定
+	# パネルが表示されたら、閲覧モードの×ボタン（閉じる）のみ設定
+	# _hide_all_info_panels_rawでdisable_navigation→_compat_*が全クリア済みなので
+	# 閲覧中は×ボタンだけ有効にする（✓▲▼は不要）
+	# 復元はフェーズ別restore_navigation()が担当する
 	if panel and not setup_buttons:
 		register_back_action(func():
 			_hide_all_info_panels_raw()

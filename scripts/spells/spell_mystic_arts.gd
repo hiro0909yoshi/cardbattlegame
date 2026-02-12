@@ -92,6 +92,22 @@ func is_active() -> bool:
 	return is_mystic_phase_active
 
 
+## 閲覧モードから戻る時のナビゲーション復元
+func restore_navigation():
+	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	if not ui_manager:
+		return
+	if _is_selecting_caster:
+		# 使用者選択中 → 使用者選択ナビゲーションを復元
+		_setup_caster_selection_navigation()
+		_update_caster_selection()
+		return
+	# ターゲット選択中 → spell_phase_handlerのstate別復元を直接呼ぶ
+	# （restore_navigationを呼ぶと無限ループになるため、state別の処理を直接実行）
+	if spell_phase_handler_ref:
+		spell_phase_handler_ref.restore_navigation_for_state()
+
+
 ## アルカナアーツ選択状態をクリア
 func clear_selection() -> void:
 	selected_mystic_art = {}
@@ -218,11 +234,14 @@ func _update_caster_selection() -> void:
 	if spell_phase_handler_ref:
 		TargetSelectionHelper.show_selection_marker(spell_phase_handler_ref, tile_index)
 	
-	# クリーチャー情報パネル表示
+	# クリーチャー情報パネル表示（setup_buttons=falseで表示後、ナビゲーションを再設定）
 	var creature_data = creature.get("creature_data", {})
 	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 	if ui_manager:
 		ui_manager.show_card_info(creature_data, tile_index, false)
+		# show_card_infoが×ボタンを_restore_current_phaseに上書きするため、
+		# caster選択のナビゲーションを再設定して×=キャンセルを維持
+		_setup_caster_selection_navigation()
 	
 	# アクション指示パネルで表示
 	if ui_manager and ui_manager.phase_display:

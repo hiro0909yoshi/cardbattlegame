@@ -123,6 +123,14 @@ func setup_navigation():
 		)
 
 
+# 閲覧モードから戻る時のナビゲーション復元
+func restore_navigation():
+	if not is_active:
+		return
+	setup_navigation()
+	_update_ui()
+
+
 # ナビゲーションボタンをクリア
 func _clear_navigation():
 	var gfm = controller.game_flow_manager
