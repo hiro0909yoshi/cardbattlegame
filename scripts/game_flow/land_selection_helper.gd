@@ -45,7 +45,7 @@ static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
 	var creature = tile.creature_data if tile else {}
 	
 	if not creature.is_empty():
-		handler.ui_manager.show_card_info(creature, tile_index, false)
+		handler.ui_manager.show_card_info_only(creature, tile_index)
 
 ## 土地選択を確定してアクションメニューを表示
 ## 

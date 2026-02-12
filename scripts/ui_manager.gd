@@ -726,6 +726,29 @@ func is_any_info_panel_visible() -> bool:
 		return true
 	return false
 
+## カード情報パネルを表示（ナビゲーションに触らない）
+## ドミニオの土地プレビュー等、表示の一部として使用する場合用
+func show_card_info_only(card_data: Dictionary, tile_index: int = -1):
+	var card_type = card_data.get("type", "")
+	# 既存パネルを閉じる（ナビゲーションに触らない）
+	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
+		creature_info_panel_ui.hide_panel(false)
+	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
+		spell_info_panel_ui.hide_panel(false)
+	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
+		item_info_panel_ui.hide_panel(false)
+	# パネル表示（setup_buttons=false、×ボタンも設定しない）
+	match card_type:
+		"creature":
+			if creature_info_panel_ui:
+				creature_info_panel_ui.show_view_mode(card_data, tile_index, false)
+		"spell":
+			if spell_info_panel_ui:
+				spell_info_panel_ui.show_view_mode(card_data, false)
+		"item":
+			if item_info_panel_ui:
+				item_info_panel_ui.show_view_mode(card_data, false)
+
 ## カード種別に応じたインフォパネルを表示（閲覧モード）
 ## ナビゲーション状態を自動保存し、パネルを閉じた時に復元する
 func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: bool = true):

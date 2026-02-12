@@ -630,13 +630,9 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	var tile_index = handler.selected_tile_index
 	
-	# TileActionProcessorに処理中フラグを設定
-	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.begin_action_processing()
-	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
-		if handler.ui_manager and handler.ui_manager.phase_label:
+		if handler.ui_manager and handler.ui_manager.phase_display:
 			handler.ui_manager.phase_display.show_toast("この土地は地形変化できません")
 		return false
 	
@@ -656,6 +652,10 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		if handler.ui_manager and handler.ui_manager.phase_display:
 			handler.ui_manager.phase_display.show_toast("EPが足りません (必要: %dEP)" % cost)
 		return false
+	
+	# TileActionProcessorに処理中フラグを設定（EPチェック通過後）
+	if handler.board_system and handler.board_system.tile_action_processor:
+		handler.board_system.tile_action_processor.begin_action_processing()
 	
 	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
@@ -765,7 +765,15 @@ static func execute_terrain_change(handler) -> bool:
 ## 地形選択を確定（決定ボタンから呼ばれる）
 static func confirm_terrain_selection(handler):
 	var selected_element = handler.terrain_options[handler.current_terrain_index]
-	execute_terrain_change_with_element(handler, selected_element)
+	var success = execute_terrain_change_with_element(handler, selected_element)
+	if not success:
+		# 地形選択パネルを閉じてアクション選択に戻す
+		if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+			handler.ui_manager.dominio_order_ui.hide_terrain_selection()
+		handler.current_state = handler.State.SELECTING_ACTION
+		handler._set_action_selection_navigation()
+		if handler.ui_manager and handler.ui_manager.dominio_order_ui:
+			handler.ui_manager.dominio_order_ui.show_action_menu(handler.selected_tile_index)
 
 ## 最初の選択可能な属性を取得
 static func _get_first_selectable_terrain(handler, current_element: String) -> String:
@@ -827,7 +835,7 @@ static func _show_move_creature_info(handler, tile_index: int) -> void:
 		_hide_land_info_panel(handler)
 		
 		if handler.ui_manager:
-			handler.ui_manager.show_card_info(tile.creature_data, tile_index, false)
+			handler.ui_manager.show_card_info_only(tile.creature_data, tile_index)
 	else:
 		# クリーチャーがいない場合は土地情報を表示
 		_hide_creature_info_panel(handler)

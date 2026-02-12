@@ -150,16 +150,6 @@ func open_dominio_order(player_id: int):
 	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
 	# _start_tap_target_selection(player_id)
 	
-	# ナビゲーションボタン設定（土地選択用）※preview_landより先に設定する
-	# （preview_land→show_card_infoがsave_navigation_stateを呼ぶため）
-	if ui_manager:
-		ui_manager.enable_navigation(
-			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
-			func(): cancel(),  # 戻る
-			func(): on_arrow_up(),  # 上
-			func(): on_arrow_down()  # 下
-		)
-	
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
 		var first_tile = player_owned_lands[0]
@@ -169,6 +159,16 @@ func open_dominio_order(player_id: int):
 	# UIに表示要請
 	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
 		ui_manager.show_land_selection_mode(player_owned_lands)
+	
+	# ナビゲーションボタン設定（土地選択用）※preview_landの後に設定する
+	# （preview_land→show_card_info(false)がナビゲーションをクリアするため）
+	if ui_manager:
+		ui_manager.enable_navigation(
+			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
+			func(): cancel(),  # 戻る
+			func(): on_arrow_up(),  # 上
+			func(): on_arrow_down()  # 下
+		)
 	
 	
 
@@ -195,17 +195,24 @@ func execute_action(action_type: String) -> bool:
 	# アクション選択シグナルを発火
 	action_selected.emit(action_type)
 	
+	var success = false
 	match action_type:
 		"level_up":
-			return LandActionHelper.execute_level_up(self)
+			success = LandActionHelper.execute_level_up(self)
 		"move_creature":
-			return LandActionHelper.execute_move_creature(self)
+			success = LandActionHelper.execute_move_creature(self)
 		"swap_creature":
-			return LandActionHelper.execute_swap_creature(self)
+			success = LandActionHelper.execute_swap_creature(self)
 		"terrain_change":
-			return execute_terrain_change()
-		_:
-			return false
+			success = execute_terrain_change()
+	
+	# 失敗時はアクション選択に戻す
+	if not success:
+		current_state = State.SELECTING_ACTION
+		_set_action_selection_navigation()
+		restore_phase_comment()
+	
+	return success
 
 ## レベルアップ実行（レベル選択後）
 func execute_level_up_with_level(target_level: int, cost: int) -> bool:
@@ -601,7 +608,17 @@ func confirm_level_selection():
 
 ## Phase 1-A: レベル選択シグナルハンドラ
 func _on_level_up_selected(target_level: int, cost: int):
-	LandActionHelper.execute_level_up_with_level(self, target_level, cost)
+	var success = LandActionHelper.execute_level_up_with_level(self, target_level, cost)
+	if not success:
+		# レベル選択UIを閉じてアクション選択に戻す
+		if ui_manager and ui_manager.dominio_order_ui:
+			ui_manager.dominio_order_ui.hide_level_selection()
+		current_state = State.SELECTING_ACTION
+		_set_action_selection_navigation()
+		if ui_manager and ui_manager.dominio_order_ui:
+			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
+		if ui_manager and ui_manager.phase_display:
+			ui_manager.phase_display.show_toast("EPが足りません")
 
 ## カード選択時の処理（交換モード用）
 func on_card_selected_for_swap(card_index: int):
