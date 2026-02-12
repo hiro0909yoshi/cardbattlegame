@@ -71,7 +71,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		if not check_result.passed:
 			print("[TileBattleExecutor] 土地条件未達（バトル）: %s" % check_result.message)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(check_result.message)
+				ui_manager.show_toast(check_result.message)
 			complete_callback.call()
 			return
 	
@@ -82,7 +82,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		if not cannot_result.passed:
 			print("[TileBattleExecutor] 配置制限（バトル）: %s" % cannot_result.message)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(cannot_result.message)
+				ui_manager.show_toast(cannot_result.message)
 			complete_callback.call()
 			return
 	
@@ -97,7 +97,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 			sacrifice_card = await _summon_executor.process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.get("card", {}).is_empty() and SummonConditionChecker.requires_card_sacrifice(card_data):
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("バトルをキャンセルしました")
+				ui_manager.show_toast("バトルをキャンセルしました")
 			show_battle_ui_callback.call()
 			return
 	
@@ -131,7 +131,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 	if current_player.magic_power < cost:
 		print("[TileBattleExecutor] EP不足でバトルできません")
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+			ui_manager.show_toast("EPが足りません（必要: %dEP）" % cost)
 		show_battle_ui_callback.call()
 		return
 	

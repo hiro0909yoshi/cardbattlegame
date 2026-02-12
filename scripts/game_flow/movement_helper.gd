@@ -31,7 +31,7 @@ static func get_move_destinations(
 			# 隣接タイルも追加（通常移動）
 			var adjacent_destinations = []
 			if board_system.tile_neighbor_system:
-				adjacent_destinations = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				adjacent_destinations = board_system.get_spatial_neighbors(from_tile_index)
 			
 			# 重複を避けて結合
 			var all_destinations = vacant_destinations.duplicate()
@@ -53,7 +53,7 @@ static func get_move_destinations(
 			# 隣接タイルも追加（通常移動）
 			var adjacent_destinations = []
 			if board_system.tile_neighbor_system:
-				adjacent_destinations = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				adjacent_destinations = board_system.get_spatial_neighbors(from_tile_index)
 			
 			# 重複を避けて結合
 			var all_destinations = enemy_destinations.duplicate()
@@ -69,7 +69,7 @@ static func get_move_destinations(
 		"adjacent":
 			# TileNeighborSystemを使用
 			if board_system.tile_neighbor_system:
-				var adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				var adjacent_tiles = board_system.get_spatial_neighbors(from_tile_index)
 				# フィルタリング適用
 				var current_player_id = board_system.current_player_index
 				adjacent_tiles = _filter_invalid_destinations(board_system, adjacent_tiles, current_player_id, creature_data)
@@ -88,7 +88,7 @@ static func get_move_destinations(
 			# 隣接タイルも追加（通常移動）
 			var adjacent_destinations = []
 			if board_system.tile_neighbor_system:
-				adjacent_destinations = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+				adjacent_destinations = board_system.get_spatial_neighbors(from_tile_index)
 			# 重複を避けて結合
 			for tile in adjacent_destinations:
 				if not tile in all_vacant:
@@ -119,7 +119,7 @@ static func _get_tiles_within_steps(board_system: Node, from_tile_index: int, ma
 		if current_distance >= max_steps:
 			continue
 		
-		var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(current)
+		var neighbors = board_system.get_spatial_neighbors(current)
 		for neighbor in neighbors:
 			if visited.has(neighbor):
 				continue
@@ -153,7 +153,7 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 	# 隣接タイルを取得
 	var adjacent_tiles: Array = []
 	if board_system.tile_neighbor_system:
-		adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(from_tile_index)
+		adjacent_tiles = board_system.get_spatial_neighbors(from_tile_index)
 	
 	# 敵ドミニオのみフィルタ
 	var current_player_id = board_system.current_player_index
@@ -348,7 +348,7 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		# 配置制限チェック（cannot_summon）
 		if not creature_data.is_empty() and board_system.tile_action_processor:
 			var tile_element = tile.tile_type
-			var cannot_summon_result = board_system.tile_action_processor.check_cannot_summon(creature_data, tile_element)
+			var cannot_summon_result = board_system.check_cannot_summon(creature_data, tile_element)
 			if not cannot_summon_result.get("passed", true):
 				continue  # 配置制限で移動不可
 		

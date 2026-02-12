@@ -56,7 +56,7 @@ func _update_ui():
 	if gfm and gfm.ui_manager:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
 		if gfm.ui_manager.phase_display:
-			gfm.ui_manager.phase_display.show_action_prompt("移動方向を選択: %s" % dir_text)
+			gfm.ui_manager.show_action_prompt("移動方向を選択: %s" % dir_text)
 	# カメラを選択方向に少しずらす
 	var player_id = controller.current_moving_player
 	if player_id >= 0:

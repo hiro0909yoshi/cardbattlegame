@@ -65,7 +65,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	if tile and not tile.can_place_creature():
 		print("[TileSummonExecutor] このタイルには配置できません: %s" % tile.tile_type)
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("このタイルには配置できません")
+			ui_manager.show_toast("このタイルには配置できません")
 		complete_callback.call()
 		return
 	
@@ -76,7 +76,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		if tile_info["owner"] != -1:
 			print("[TileSummonExecutor] 防御型クリーチャーは空き地にのみ召喚できます")
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("防御型は空き地にのみ召喚可能です")
+				ui_manager.show_toast("防御型は空き地にのみ召喚可能です")
 			complete_callback.call()
 			return
 	
@@ -86,7 +86,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		if not check_result.passed:
 			print("[TileSummonExecutor] 土地条件未達: %s" % check_result.message)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(check_result.message)
+				ui_manager.show_toast(check_result.message)
 			complete_callback.call()
 			return
 	
@@ -97,7 +97,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		if not cannot_result.passed:
 			print("[TileSummonExecutor] 配置制限: %s" % cannot_result.message)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast(cannot_result.message)
+				ui_manager.show_toast(cannot_result.message)
 			complete_callback.call()
 			return
 	
@@ -111,7 +111,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		sacrifice_index = sacrifice_result.get("index", -1)
 		if sacrifice_card.is_empty() and SummonConditionChecker.requires_card_sacrifice(card_data):
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("召喚をキャンセルしました")
+				ui_manager.show_toast("召喚をキャンセルしました")
 			show_summon_ui_callback.call()
 			return
 		
@@ -171,7 +171,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	else:
 		print("EP不足で召喚できません")
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % cost)
+			ui_manager.show_toast("EPが足りません（必要: %dEP）" % cost)
 		show_summon_ui_callback.call()
 
 
@@ -225,7 +225,7 @@ func process_card_sacrifice(player_id: int, summon_card_index: int, creature_car
 	# 手札選択UIを表示（召喚するカード以外を選択可能）
 	if ui_manager:
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("犠牲にするカードを選択")
+			ui_manager.show_action_prompt("犠牲にするカードを選択")
 		ui_manager.card_selection_filter = ""
 		ui_manager.excluded_card_index = summon_card_index
 		var player = player_system.players[player_id]
@@ -251,7 +251,7 @@ func process_card_sacrifice(player_id: int, summon_card_index: int, creature_car
 	# 召喚するカードと同じインデックスは選択不可
 	if selected_index == summon_card_index:
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("召喚するカードは犠牲にできません")
+			ui_manager.show_toast("召喚するカードは犠牲にできません")
 		return {"card": {}, "index": -1}
 	
 	var hand = card_system.get_all_cards_for_player(player_id)

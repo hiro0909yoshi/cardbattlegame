@@ -107,7 +107,7 @@ static func update_land_selection_ui(handler):
 	
 	if handler.player_owned_lands.is_empty():
 		if handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("所有している土地がありません")
+			handler.ui_manager.show_toast("所有している土地がありません")
 		return
 	
 	var text = "土地を選択: タイル%d (%d/%d)" % [
@@ -117,7 +117,7 @@ static func update_land_selection_ui(handler):
 	]
 	
 	if handler.ui_manager.phase_display:
-		handler.ui_manager.phase_display.show_action_prompt(text)
+		handler.ui_manager.show_action_prompt(text)
 
 
 ## チュートリアルのターゲット制限をチェック

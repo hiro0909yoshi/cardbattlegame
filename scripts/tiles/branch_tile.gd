@@ -248,7 +248,7 @@ func _show_direction_change_selection() -> Dictionary:
 	# 通知ポップアップで表示
 	if _ui_manager.global_comment_ui:
 		var message = "分岐タイル\n現在タイル%dが開\n\n[color=yellow]✓変更する / ✕変更しない[/color]" % open_branch
-		_ui_manager.global_comment_ui.show_message(message)
+		_ui_manager.show_comment_message(message)
 	
 	# グローバルボタンを設定
 	_ui_manager.enable_navigation(
@@ -266,7 +266,7 @@ func _show_direction_change_selection() -> Dictionary:
 	
 	# ポップアップを閉じる
 	if _ui_manager.global_comment_ui:
-		_ui_manager.global_comment_ui.hide_message()
+		_ui_manager.hide_comment_message()
 	
 	if changed:
 		toggle_branch_direction()

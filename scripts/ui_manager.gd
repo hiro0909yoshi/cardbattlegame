@@ -665,6 +665,46 @@ func update_hand_display(player_id: int):
 
 # rearrange_hand は HandDisplayに移行済みのため削除
 
+# ============ phase_display 委譲メソッド ============
+
+## トースト表示（短時間の通知メッセージ）
+func show_toast(message: String, duration: float = 2.0):
+	if phase_display:
+		phase_display.show_toast(message, duration)
+
+## アクション指示表示
+func show_action_prompt(message: String, position: String = "center"):
+	if phase_display:
+		phase_display.show_action_prompt(message, position)
+
+## アクション指示を非表示
+func hide_action_prompt():
+	if phase_display:
+		phase_display.hide_action_prompt()
+
+# ============ global_comment_ui 委譲メソッド ============
+
+## グローバルコメント表示（クリック待ち）
+func show_comment_and_wait(message: String, player_id: int = -1, force_click_wait: bool = false) -> void:
+	if global_comment_ui:
+		await global_comment_ui.show_and_wait(message, player_id, force_click_wait)
+
+## グローバルコメント表示（選択肢付き）
+func show_choice_and_wait(message: String, player_id: int = -1, yes_text: String = "はい", no_text: String = "いいえ") -> bool:
+	if global_comment_ui:
+		return await global_comment_ui.show_choice_and_wait(message, player_id, yes_text, no_text)
+	return false
+
+## グローバルコメント表示（メッセージのみ、クリック待ちなし）
+func show_comment_message(message: String) -> void:
+	if global_comment_ui:
+		global_comment_ui.show_message(message)
+
+## グローバルコメント非表示
+func hide_comment_message() -> void:
+	if global_comment_ui:
+		global_comment_ui.hide_message()
+
 ## 全てのインフォパネルを閉じる（フェーズ変更時に呼び出す）
 func close_all_info_panels():
 	hide_all_info_panels(true)

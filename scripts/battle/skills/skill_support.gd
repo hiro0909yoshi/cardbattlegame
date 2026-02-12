@@ -227,7 +227,7 @@ static func _count_adjacent_ally_lands(tile_index: int, player_id: int, board_sy
 	if board_system == null or tile_index < 0:
 		return 0
 	
-	var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
+	var neighbors = board_system.get_spatial_neighbors(tile_index)
 	var ally_count = 0
 	
 	for neighbor_index in neighbors:

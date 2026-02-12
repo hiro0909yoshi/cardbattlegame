@@ -84,7 +84,7 @@ func _show_special_tile_landing_ui(player_id: int):
 	
 	# フェーズ表示（show_card_selection_ui後に設定して上書きされないようにする）
 	if ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
+		ui_manager.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
 	
 	# 人間プレイヤーの場合、ドミニオコマンドボタンを再表示
 	if not _is_cpu_player(player_id):
@@ -303,7 +303,7 @@ func handle_base_tile(player_id: int, tile = null):
 		if selected_tile >= 0:
 			# 空き地が選択された → 遠隔配置モードで召喚フローへ
 			if board_system and board_system.tile_action_processor:
-				board_system.tile_action_processor.set_remote_placement(selected_tile)
+				board_system.set_remote_placement(selected_tile)
 			
 			# 1フレーム待って入力イベントをクリア（空き地選択の決定ボタンが伝播しないように）
 			await board_system.get_tree().process_frame
@@ -348,7 +348,7 @@ func _show_remote_summon_ui(player_id: int, target_tile: int):
 	
 	# フェーズラベル更新
 	if ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt("タイル%dに召喚するクリーチャーを選択" % target_tile)
+		ui_manager.show_action_prompt("タイル%dに召喚するクリーチャーを選択" % target_tile)
 	
 	# 手札UI表示
 	var current_player = null
@@ -441,11 +441,11 @@ func _cpu_remote_summon(player_id: int, target_tile: int):
 	
 	# tile_action_processorのexecute_summonを使用（遠隔配置モードは既に設定済み）
 	if board_system and board_system.tile_action_processor:
-		await board_system.tile_action_processor.execute_summon(best_creature_info.index)
+		await board_system.execute_summon_action(best_creature_info.index)
 	
 	# コメント表示
 	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.global_comment_ui.show_and_wait(
+		await ui_manager.show_comment_and_wait(
 			"%sを配置した！" % best_creature_info.card.get("name", "クリーチャー"), player_id, true
 		)
 	
@@ -454,4 +454,4 @@ func _cpu_remote_summon(player_id: int, target_tile: int):
 ## 遠隔配置モードをクリア
 func _clear_remote_placement():
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.clear_remote_placement()
+		board_system.clear_remote_placement()

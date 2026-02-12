@@ -648,3 +648,79 @@ func count_all_creatures_by_name(creature_name: String) -> int:
 			if tile_creature_name == creature_name:
 				count += 1
 	return count
+
+# ============ tile_neighbor_system 委譲メソッド ============
+
+## 隣接タイルを取得
+func get_spatial_neighbors(tile_index: int) -> Array:
+	if tile_neighbor_system:
+		return tile_neighbor_system.get_spatial_neighbors(tile_index)
+	return []
+
+## 隣接味方土地があるか判定
+func has_adjacent_ally_land(tile_index: int, player_id: int, elements: Array = []) -> bool:
+	if tile_neighbor_system:
+		return tile_neighbor_system.has_adjacent_ally_land(tile_index, player_id, elements)
+	return false
+
+# ============ tile_action_processor 委譲メソッド ============
+
+## アクション処理開始
+func begin_action_processing():
+	if tile_action_processor:
+		tile_action_processor.begin_action_processing()
+
+## アクション処理リセット
+func reset_action_processing():
+	if tile_action_processor:
+		tile_action_processor.reset_action_processing()
+
+## アクション完了通知
+func complete_action():
+	if tile_action_processor:
+		tile_action_processor.complete_action()
+
+## 保留コメント設定
+func set_pending_comment(comment: String):
+	if tile_action_processor:
+		tile_action_processor.set_pending_comment(comment)
+
+## 交換実行
+func execute_swap_action(tile_index: int, card_index: int, old_creature_data: Dictionary):
+	if tile_action_processor:
+		tile_action_processor.execute_swap(tile_index, card_index, old_creature_data)
+
+## 召喚実行（await必要）
+func execute_summon_action(card_index: int):
+	if tile_action_processor:
+		await tile_action_processor.execute_summon(card_index)
+
+## リモート配置設定
+func set_remote_placement(tile_index: int):
+	if tile_action_processor:
+		tile_action_processor.set_remote_placement(tile_index)
+
+## リモート配置解除
+func clear_remote_placement():
+	if tile_action_processor:
+		tile_action_processor.clear_remote_placement()
+
+## 召喚不可チェック
+func check_cannot_summon(creature_data: Dictionary, tile_element: String) -> Dictionary:
+	if tile_action_processor:
+		return tile_action_processor.check_cannot_summon(creature_data, tile_element)
+	return {}
+
+# ============ spell_land 委譲メソッド（game_flow_manager経由） ============
+
+## タイルの属性を変更
+func change_tile_element(tile_index: int, new_element: String) -> bool:
+	if game_flow_manager and game_flow_manager.spell_land:
+		return game_flow_manager.spell_land.change_element(tile_index, new_element)
+	return false
+
+## タイルのレベルを変更
+func change_tile_level(tile_index: int, amount: int) -> bool:
+	if game_flow_manager and game_flow_manager.spell_land:
+		return game_flow_manager.spell_land.change_level(tile_index, amount)
+	return false

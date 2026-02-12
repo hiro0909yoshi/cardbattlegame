@@ -89,7 +89,7 @@ func _show_comment_and_wait(message: String, player_id: int = -1):
 	is_showing_notification = true
 	if ui_manager and ui_manager.global_comment_ui:
 		# show_and_wait()内でclick_confirmedをawaitするので、ここでawaitするだけでOK
-		await ui_manager.global_comment_ui.show_and_wait(message, player_id, true)
+		await ui_manager.show_comment_and_wait(message, player_id, true)
 	else:
 		print("[LapSystem] WARNING: ui_manager or global_comment_ui is null")
 	is_showing_notification = false

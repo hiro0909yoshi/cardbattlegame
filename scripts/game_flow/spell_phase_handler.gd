@@ -264,7 +264,7 @@ func start_spell_phase(player_id: int):
 		
 		# 入力待ち
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+			ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
 
 ## スペルフェーズUIの更新
 func _update_spell_phase_ui():
@@ -288,7 +288,7 @@ func _update_spell_phase_ui():
 		if is_spell_disabled:
 			ui_manager.card_selection_filter = "spell_disabled"
 			if ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("スペル不可の呪いがかかっています")
+				ui_manager.show_toast("スペル不可の呪いがかかっています")
 		else:
 			ui_manager.card_selection_filter = "spell"
 		# 手札表示を更新してグレーアウトを適用
@@ -322,7 +322,7 @@ func start_mystic_arts_phase():
 	"""アルカナアーツ選択フェーズを開始"""
 	if not spell_mystic_arts:
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("アルカナアーツシステムが初期化されていません")
+			ui_manager.show_toast("アルカナアーツシステムが初期化されていません")
 		return
 	
 	if not player_system:
@@ -473,7 +473,7 @@ func use_spell(spell_card: Dictionary):
 			# EPが足りない場合はエラー表示して戻る
 			var needed_cost = _get_spell_cost(spell_card)
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_toast("EPが足りません（必要: %dEP）" % needed_cost)
+				ui_manager.show_toast("EPが足りません（必要: %dEP）" % needed_cost)
 			# インフォパネルを閉じる
 			if ui_manager:
 				ui_manager.hide_all_info_panels()
@@ -496,7 +496,7 @@ func use_spell(spell_card: Dictionary):
 	
 	# アクション指示パネルを閉じる
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.hide_action_prompt()
+		ui_manager.hide_action_prompt()
 	
 	# コストを支払う（常に実行）
 	var cost = _get_spell_cost(spell_card)
@@ -510,7 +510,7 @@ func use_spell(spell_card: Dictionary):
 		if nullify_result.get("nullified", false):
 			# スペルは無効化 → カードを捨て札へ
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt(nullify_result.get("message", "スペル無効化"))
+				ui_manager.show_action_prompt(nullify_result.get("message", "スペル無効化"))
 			# 手札からカードを除去（捨て札へ）
 			if player_system:
 				player_system.remove_card_from_hand(current_player_id, selected_spell_card)
@@ -579,7 +579,7 @@ func use_spell(spell_card: Dictionary):
 			var own_creature_count = _count_own_creatures(current_player_id)
 			if own_creature_count < 2:
 				if ui_manager and ui_manager.phase_display:
-					ui_manager.phase_display.show_toast("対象がいません")
+					ui_manager.show_toast("対象がいません")
 				await get_tree().create_timer(1.0).timeout
 				cancel_spell()
 				return
@@ -631,7 +631,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 	if targets.is_empty():
 		# 対象がいない場合はメッセージ表示
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("対象がいません")
+			ui_manager.show_toast("対象がいません")
 		await get_tree().create_timer(1.0).timeout
 		# キャンセル処理は呼び出し元に任せる
 		return false
@@ -722,7 +722,7 @@ func _update_selection_ui():
 	# ヘルパーを使用してテキスト生成
 	var text = TargetSelectionHelper.format_target_info(target, current_target_index + 1, available_targets.size())
 	if ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt(text)
+		ui_manager.show_action_prompt(text)
 
 
 
@@ -896,7 +896,7 @@ func _exit_target_selection_phase():
 	
 	# アクション指示パネルを閉じる
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.hide_action_prompt()
+		ui_manager.hide_action_prompt()
 	
 	# UI更新
 	if ui_manager and ui_manager.has_method("update_player_info_panels"):
@@ -913,7 +913,7 @@ func return_to_spell_selection():
 		
 		# アクション指示パネルで表示
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+			ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
 	
 	# グローバルナビゲーションをスペル選択用に再設定
 	_setup_spell_selection_navigation()
@@ -961,7 +961,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 	# 対象がいない場合（all_creaturesで防魔等で0体）
 	if target_type == "all_creatures" and target_count == 0:
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("対象となるクリーチャーがいません")
+			ui_manager.show_toast("対象となるクリーチャーがいません")
 		await get_tree().create_timer(1.0).timeout
 		cancel_spell()
 		return
@@ -976,7 +976,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 	# プレイヤーの場合：アクション指示パネルで確認テキストを表示
 	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt(confirmation_text)
+		ui_manager.show_action_prompt(confirmation_text)
 	
 	# ナビゲーションボタン設定（決定/戻る）
 	if ui_manager:
@@ -1165,7 +1165,7 @@ func complete_spell_phase():
 	
 	# アクション指示パネルを閉じる
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.hide_action_prompt()
+		ui_manager.hide_action_prompt()
 	
 	# スペルフェーズのフィルターをクリア
 	if ui_manager:
@@ -1311,11 +1311,11 @@ func restore_navigation_for_state():
 			_setup_spell_selection_navigation()
 			_show_spell_phase_buttons()
 			if ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+				ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
 		State.SELECTING_TARGET:
 			_setup_target_selection_navigation()
 			if ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("対象を選択してください")
+				ui_manager.show_action_prompt("対象を選択してください")
 		State.CONFIRMING_EFFECT:
 			ui_manager.enable_navigation(
 				func(): _confirm_spell_effect(),
@@ -1412,7 +1412,7 @@ func _on_mystic_target_selection_requested(targets: Array):
 ## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt(message)
+		ui_manager.show_action_prompt(message)
 
 
 # ============ 発動通知UI ============
@@ -1484,14 +1484,14 @@ func show_spell_cast_notification(caster_name: String, target_data: Dictionary, 
 ## カード犠牲が無効化されているか（TileActionProcessorから取得）
 func _is_card_sacrifice_disabled() -> bool:
 	if board_system and board_system.tile_action_processor:
-		return board_system.tile_action_processor.debug_disable_card_sacrifice
+		return board_system.tile_action_processor.debug_disable_card_sacrifice if board_system and board_system.tile_action_processor else false
 	return false
 
 
 ## 土地条件が無効化されているか（TileActionProcessorから取得）
 func _is_lands_required_disabled() -> bool:
 	if board_system and board_system.tile_action_processor:
-		return board_system.tile_action_processor.debug_disable_lands_required
+		return board_system.tile_action_processor.debug_disable_lands_required if board_system and board_system.tile_action_processor else false
 	return false
 
 

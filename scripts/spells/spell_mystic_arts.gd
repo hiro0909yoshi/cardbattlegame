@@ -249,7 +249,7 @@ func _update_caster_selection() -> void:
 		var message = "アルカナアーツを使うクリーチャー: %s (%d/%d)" % [
 			name_text, _current_caster_index + 1, _available_caster_creatures.size()
 		]
-		ui_manager.phase_display.show_action_prompt(message)
+		ui_manager.show_action_prompt(message)
 
 
 ## 使用者選択を確定

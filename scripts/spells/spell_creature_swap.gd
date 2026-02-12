@@ -457,7 +457,7 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	
 	# 手札選択UIを表示（犠牲モード）
 	if ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt("犠牲にするカードを選択")
+		ui_manager.show_action_prompt("犠牲にするカードを選択")
 	ui_manager.card_selection_filter = ""
 	ui_manager.excluded_card_id = summon_creature.get("id", "")  # 召喚カードを除外
 	var player = player_system_ref.players[player_id]
@@ -491,7 +491,7 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	# 召喚するクリーチャーと同じカードは犠牲にできない
 	if sacrifice_card.get("id") == summon_creature.get("id"):
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("召喚するカードは犠牲にできません")
+			ui_manager.show_toast("召喚するカードは犠牲にできません")
 		return {"cancelled": true, "sacrifice_card": {}}
 	
 	# カードを破棄

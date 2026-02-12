@@ -67,7 +67,7 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	
 	# メッセージ表示
 	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.show_action_prompt(message)
+		ui_manager.show_action_prompt(message)
 	
 	# ナビゲーション設定
 	_setup_tile_selection_navigation()
@@ -119,7 +119,7 @@ func _update_tile_selection_display():
 			current_tile_index + 1,
 			available_tile_indices.size()
 		]
-		ui_manager.phase_display.show_action_prompt(message)
+		ui_manager.show_action_prompt(message)
 	
 	# タイル切り替えシグナル発火
 	tile_selection_changed.emit(tile_index)

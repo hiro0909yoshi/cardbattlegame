@@ -237,7 +237,7 @@ func add_card_to_hand(card_id: int):
 			
 			# 手札表示を更新
 			if ui_manager.hand_display:
-				ui_manager.hand_display.update_hand_display(current_player.id)
+				ui_manager.update_hand_display(current_player.id)
 			
 			# カード選択UIを完全に再初期化
 			if ui_manager.has_method("hide_card_selection_ui"):

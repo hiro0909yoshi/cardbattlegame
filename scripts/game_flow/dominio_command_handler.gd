@@ -122,7 +122,7 @@ func open_dominio_order(player_id: int):
 	
 	if player_owned_lands.is_empty():
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("所有地がありません")
+			ui_manager.show_toast("所有地がありません")
 		return
 	
 	# ドミニオボタンを非表示（ドミニオコマンド中は表示しない）
@@ -277,7 +277,7 @@ func close_dominio_order():
 	
 	# TileActionProcessorのフラグをリセット
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.reset_action_processing()
+		board_system.reset_action_processing()
 	
 	# ナビゲーションボタンをクリア
 	if ui_manager:
@@ -342,7 +342,7 @@ func cancel():
 		current_terrain_index = 0
 		
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor.reset_action_processing()
+			board_system.reset_action_processing()
 		
 		# UIを先に更新
 		if ui_manager and ui_manager.dominio_order_ui:
@@ -396,7 +396,7 @@ func cancel():
 		_swap_tile_index = -1
 		
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor.reset_action_processing()
+			board_system.reset_action_processing()
 		
 		# カード選択UIを閉じる（先にクリア）
 		if ui_manager and ui_manager.card_selection_ui:
@@ -495,19 +495,19 @@ func restore_phase_comment():
 			LandSelectionHelper.update_land_selection_ui(self)
 		State.SELECTING_ACTION:
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("アクションを選択してください")
+				ui_manager.show_action_prompt("アクションを選択してください")
 		State.SELECTING_MOVE_DEST:
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("移動先を選択")
+				ui_manager.show_action_prompt("移動先を選択")
 		State.SELECTING_LEVEL:
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("レベルアップする土地を選択")
+				ui_manager.show_action_prompt("レベルアップする土地を選択")
 		State.SELECTING_TERRAIN:
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.show_action_prompt("地形を選択")
+				ui_manager.show_action_prompt("地形を選択")
 		_:
 			if ui_manager and ui_manager.phase_display:
-				ui_manager.phase_display.hide_action_prompt()
+				ui_manager.hide_action_prompt()
 
 ## 土地選択用ナビゲーション設定（全ボタン）
 func _set_land_selection_navigation():
@@ -618,7 +618,7 @@ func _on_level_up_selected(target_level: int, cost: int):
 		if ui_manager and ui_manager.dominio_order_ui:
 			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("EPが足りません")
+			ui_manager.show_toast("EPが足りません")
 
 ## カード選択時の処理（交換モード用）
 func on_card_selected_for_swap(card_index: int):
@@ -638,7 +638,7 @@ func on_card_selected_for_swap(card_index: int):
 	# TileActionProcessorの交換処理を呼び出す
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.execute_swap(
+		board_system.execute_swap_action(
 			tile_index,
 			card_index,
 			old_creature
@@ -740,7 +740,7 @@ func _on_move_item_phase_completed():
 func _execute_move_battle():
 	if pending_move_battle_creature_data.is_empty():
 		if board_system and board_system.tile_action_processor:
-			board_system.tile_action_processor.complete_action()
+			board_system.complete_action()
 		return
 	
 	# バトルステータスオーバーレイを非表示
@@ -794,7 +794,7 @@ func _on_move_battle_completed(success: bool, tile_index: int):
 	
 	# アクション完了を通知
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.complete_action()
+		board_system.complete_action()
 
 
 ## バトル終了後の衰弱ダメージ処理
@@ -969,7 +969,7 @@ func _execute_swap_for_cpu(command: Dictionary) -> bool:
 	
 	# TileActionProcessorに交換モードを設定
 	if board_system.tile_action_processor:
-		board_system.tile_action_processor.begin_action_processing()
+		board_system.begin_action_processing()
 	
 	# 交換実行（既存のexecute_swapを使用）
 	_execute_swap_with_hand_index_for_cpu(hand_index)
@@ -1026,7 +1026,7 @@ func _complete_swap_for_cpu(_success: bool):
 	
 	# アクション完了通知
 	if board_system and board_system.tile_action_processor:
-		board_system.tile_action_processor.complete_action()
+		board_system.complete_action()
 
 
 # ========================================
@@ -1165,7 +1165,7 @@ func _show_dominio_order_comment(action_name: String):
 			player_name = player.name
 	
 	var message = "%s がドミニオコマンド：%s" % [player_name, action_name]
-	await ui_manager.global_comment_ui.show_and_wait(message, player_id, true)
+	await ui_manager.show_comment_and_wait(message, player_id, true)
 
 
 ## 現在のプレイヤー名を取得（コメント表示用）

@@ -88,7 +88,7 @@ func can_recover_by_selling(player_id: int) -> bool:
 ## コメントを表示してクリック待ち
 func _show_message(message: String, player_id: int = -1):
 	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.global_comment_ui.show_and_wait(message, player_id, true)
+		await ui_manager.show_comment_and_wait(message, player_id, true)
 
 
 ## プレイヤー名を取得

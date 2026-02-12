@@ -657,7 +657,7 @@ func prompt_discard_card():
 	
 	# アクション指示を非表示
 	if ui_manager.phase_display:
-		ui_manager.phase_display.hide_action_prompt()
+		ui_manager.hide_action_prompt()
 
 # === 敵地判定・通行料支払い ===
 
@@ -718,7 +718,7 @@ func _show_toll_comment(payer_id: int, toll_amount: int):
 			player_name = player.name
 	
 	var message = "%s が %dEP 奪われた" % [player_name, toll_amount]
-	await ui_manager.global_comment_ui.show_and_wait(message, payer_id, true)
+	await ui_manager.show_comment_and_wait(message, payer_id, true)
 
 
 # === 破産処理 ===

@@ -81,7 +81,7 @@ func _update_ui():
 				choices_text += " タイル%d " % tile_num
 		var remaining_text = "（残り%dマス）" % controller._current_remaining_steps if controller._current_remaining_steps > 0 else ""
 		if gfm.ui_manager.phase_display:
-			gfm.ui_manager.phase_display.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
+			gfm.ui_manager.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
 
 	# 到着予測ハイライトを更新
 	controller.destination_predictor.update_destination_highlight_for_branch(

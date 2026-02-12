@@ -170,13 +170,13 @@ func show_summon_ui():
 	if ui_manager:
 		ui_manager.card_selection_filter = ""
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("召喚するクリーチャーを選択")
+			ui_manager.show_action_prompt("召喚するクリーチャーを選択")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 func show_summon_ui_disabled():
 	if ui_manager:
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("自分の土地: 召喚不可（×でパス）")
+			ui_manager.show_action_prompt("自分の土地: 召喚不可（×でパス）")
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
@@ -190,13 +190,13 @@ func show_battle_ui(_mode: String = "battle"):
 	if ui_manager:
 		ui_manager.card_selection_filter = "battle"
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
+			ui_manager.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
 func show_battle_ui_disabled():
 	if ui_manager:
 		if ui_manager.phase_display:
-			ui_manager.phase_display.show_action_prompt("peace呪い: 侵略不可（×でパス）")
+			ui_manager.show_action_prompt("peace呪い: 侵略不可（×でパス）")
 		ui_manager.card_selection_filter = "disabled"
 		ui_manager.show_card_selection_ui(player_system.get_current_player())
 
@@ -219,7 +219,7 @@ func on_card_selected(card_index: int):
 	if tile and _is_special_tile(tile.tile_type) and remote_placement_tile < 0:
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
 		if ui_manager and ui_manager.phase_display:
-			ui_manager.phase_display.show_toast("特殊タイル上では召喚できません")
+			ui_manager.show_toast("特殊タイル上では召喚できません")
 		return
 	
 	# 遠隔配置モードの場合は無条件で召喚処理
@@ -410,7 +410,7 @@ func _show_pending_comment():
 		player_id = board_system.current_player_index
 	
 	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.global_comment_ui.show_and_wait(pending_comment, player_id, pending_comment_force_click)
+		await ui_manager.show_comment_and_wait(pending_comment, player_id, pending_comment_force_click)
 	
 	pending_comment = ""
 	pending_comment_player_id = -1

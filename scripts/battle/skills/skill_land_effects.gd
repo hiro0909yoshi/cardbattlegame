@@ -133,8 +133,8 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 					continue
 				
 				# spell_land経由で属性変更
-				if board_system.game_flow_manager and board_system.game_flow_manager.spell_land:
-					var success = board_system.game_flow_manager.spell_land.change_element(tile_index, new_element)
+				if board_system:
+					var success = board_system.change_tile_element(tile_index, new_element)
 					if success:
 						result["changed_element"] = new_element
 						print("【土地変性】%s がタイル%dを%sに変性" % [
@@ -151,8 +151,8 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 					continue
 				
 				# spell_land経由でレベル変更
-				if board_system.game_flow_manager and board_system.game_flow_manager.spell_land:
-					var success = board_system.game_flow_manager.spell_land.change_level(tile_index, -amount)
+				if board_system:
+					var success = board_system.change_tile_level(tile_index, -amount)
 					if success:
 						result["level_reduced"] = true
 						print("【土地破壊】%s がタイル%dのレベルを-%d" % [

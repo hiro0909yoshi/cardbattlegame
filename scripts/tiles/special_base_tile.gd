@@ -70,14 +70,14 @@ func _handle_player_base_tile(player_id: int) -> Dictionary:
 	if empty_tiles.is_empty():
 		print("[SpecialBaseTile] 空き地なし")
 		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("配置できる空き地がありません", player_id, true)
+			await _ui_manager.show_comment_and_wait("配置できる空き地がありません", player_id, true)
 		return {"success": true, "selected_tile": -1}
 	
 	# 配置するかどうかの確認
 	print("[SpecialBaseTile] 確認ダイアログ表示")
 	print("[SpecialBaseTile] _ui_manager: %s, global_comment_ui: %s" % [_ui_manager != null, _ui_manager.global_comment_ui != null if _ui_manager else false])
 	if _ui_manager and _ui_manager.global_comment_ui:
-		var do_place = await _ui_manager.global_comment_ui.show_choice_and_wait(
+		var do_place = await _ui_manager.show_choice_and_wait(
 			"空き地にクリーチャーを配置しますか？",
 			player_id,
 			"配置する",

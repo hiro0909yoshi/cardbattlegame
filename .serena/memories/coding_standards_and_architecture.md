@@ -24,6 +24,18 @@ if DebugSettings.disable_lands_required: ...
 if tile_action_processor.debug_disable_lands_required: ...
 ```
 
+### UI表示はui_managerの委譲メソッド経由でアクセス
+phase_display, global_comment_ui, hand_displayへのチェーンアクセスは委譲メソッドを使う。
+- `ui_manager.show_toast(msg)` → `phase_display.show_toast()`
+- `ui_manager.show_action_prompt(msg)` → `phase_display.show_action_prompt()`
+- `ui_manager.hide_action_prompt()` → `phase_display.hide_action_prompt()`
+- `ui_manager.show_comment_and_wait(msg, pid, force)` → `global_comment_ui.show_and_wait()`
+- `ui_manager.show_choice_and_wait(msg, pid, yes, no)` → `global_comment_ui.show_choice_and_wait()`
+- `ui_manager.show_comment_message(msg)` → `global_comment_ui.show_message()`
+- `ui_manager.hide_comment_message()` → `global_comment_ui.hide_message()`
+- `ui_manager.update_hand_display(pid)` → `hand_display.update_hand_display()`
+- `ui_manager.show_card_info_only(data, tile)` → パネル直接表示（ナビゲーションに触らない）
+
 ### インフォパネルはui_managerの統合メソッド経由でアクセス
 3つのinfo_panel（creature/spell/item）の一括操作はui_managerの統合メソッドを使う。
 - `hide_all_info_panels(clear_buttons)`: 全パネル一括非表示

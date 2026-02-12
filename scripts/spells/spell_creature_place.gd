@@ -202,7 +202,7 @@ func place_creature_adjacent(
 	# 隣接タイル取得
 	var adjacent_tiles = []
 	if board_system.tile_neighbor_system:
-		adjacent_tiles = board_system.tile_neighbor_system.get_spatial_neighbors(target_tile)
+		adjacent_tiles = board_system.get_spatial_neighbors(target_tile)
 	
 	if adjacent_tiles.is_empty():
 		print("[配置] 隣接タイルがありません")

@@ -275,7 +275,7 @@ func _show_item_selection_ui():
 	
 	# 手札表示を更新（防御側のアイテムフェーズでは防御側の手札を表示）
 	if ui_manager and ui_manager.hand_display:
-		ui_manager.hand_display.update_hand_display(current_player_id)
+		ui_manager.update_hand_display(current_player_id)
 		# フレーム待機して手札が描画されるまで待つ
 		await ui_manager.get_tree().process_frame
 	
@@ -449,7 +449,7 @@ func complete_item_phase():
 		if ui_manager.hand_display and player_system:
 			var current_player = player_system.get_current_player()
 			if current_player:
-				ui_manager.hand_display.update_hand_display(current_player.id)
+				ui_manager.update_hand_display(current_player.id)
 	
 	item_phase_completed.emit()
 	

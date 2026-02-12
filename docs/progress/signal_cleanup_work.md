@@ -420,3 +420,39 @@ DebugSettingsに集約されていないデバッグフラグ。
   - 残り35箇所はcard_selection_ui(26)/card_selection_handler(9)のみ（選択モード制御で直接参照が必要）
   - 外部ファイル（ui_tap_handler, dominio_order_ui, spell_mystic_arts等）からの直接参照は0に
 - ⬜ 次: D-P3（handlerチェーン~119箇所）
+
+### セッション5（2026-02-12 続き）
+- ✅ D-P3 phase_display委譲完了: show_toast, show_action_prompt, hide_action_prompt
+  - ui_manager.gd に委譲メソッド追加
+  - 置換済みファイル: game_flow_manager, tile_action_processor, spell_phase_handler,
+	item_phase_handler, tile_battle_executor, tile_summon_executor, target_selection_helper,
+	bankruptcy_handler, lap_system, spell_effect_executor, dominio_command_handler,
+	land_selection_helper, land_action_helper, card_selection_handler, spell_creature_swap,
+	spell_mystic_arts, special_tile_system, debug_controller, movement_direction_selector,
+	movement_branch_selector
+- ✅ D-P3 global_comment_ui委譲完了: show_comment_and_wait, show_choice_and_wait, show_comment_message, hide_comment_message
+  - 置換済みファイル: game_flow_manager, tile_action_processor, dominio_command_handler,
+	bankruptcy_handler, lap_system, spell_effect_executor, spell_dice, special_tile_system,
+	card_selection_handler, special_base_tile, magic_tile, magic_stone_tile, card_buy_tile,
+	card_give_tile, branch_tile
+- ✅ D-P3 hand_display委譲完了: update_hand_display
+  - 置換済みファイル: item_phase_handler, card_selection_handler, debug_controller,
+	card_buy_tile, card_give_tile
+- ⏳ D-P4 board_system委譲 途中: tile_action_processor, tile_neighbor_system
+  - board_system_3d.gd に委譲メソッド追加済み
+  - 置換済み: dominio_command_handler, land_action_helper, movement_helper（一部）
+  - 未置換: skill_support(1), special_tile_system(3), spell_phase_handler(2+コメント),
+	movement_helper(1残), spell_creature_place(1), condition_checker(1)
+- ⬜ D-P3 残り: card_selection_ui, dominio_order_ui, hand_display状態設定, global_action_buttons
+  - これらはUI操作系で密結合のため委譲メソッド化が難しく、要検討
+- ⬜ D-P3 残り: game_flow_manager内のdice_result系4箇所（game_flow_managerのみ使用、後回し）
+- ⬜ D-P4 残り: board_system.game_flow_manager.*（逆方向参照7箇所）
+- ❌ エラー発生: 置換途中でビルドエラー → 次セッションで修正
+
+### セッション5続き
+- ✅ D-P4 board_system委譲 完了（tile_action_processor, tile_neighbor_system, spell_land）
+  - 残り置換完了: skill_support, special_tile_system, movement_helper, spell_creature_place, condition_checker
+  - board_system_3d にchange_tile_element/change_tile_level追加
+  - skill_land_effects の board_system.game_flow_manager.spell_land チェーン4箇所解消
+  - execute_swap_action の引数エラー修正
+  - 非CPU系のboard_system内部チェーンは デバッグフラグ2箇所を除き0に

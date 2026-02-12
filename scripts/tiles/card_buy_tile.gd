@@ -63,7 +63,7 @@ func _handle_cpu_card_buy(player_id: int) -> Dictionary:
 	
 	# コメント表示
 	if _ui_manager and _ui_manager.global_comment_ui:
-		await _ui_manager.global_comment_ui.show_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
+		await _ui_manager.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
 	
 	return {"success": true, "card_bought": true, "card_name": card_data.get("name", "")}
 
@@ -93,7 +93,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	if available_cards.is_empty():
 		print("[CardBuyTile] 購入可能なカードがありません")
 		if _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("購入可能なカードがありません", player_id, true)
+			await _ui_manager.show_comment_and_wait("購入可能なカードがありません", player_id, true)
 		return {"success": true, "card_bought": false}
 	
 	# UIがなければ作成
@@ -135,7 +135,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	if success:
 		# 購入完了メッセージ
 		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.global_comment_ui.show_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
+			await _ui_manager.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
 		return {"success": true, "card_bought": true, "card_name": card_data.get("name", "")}
 	else:
 		return {"success": true, "card_bought": false}
@@ -204,7 +204,7 @@ func _purchase_card(card_data: Dictionary, player_id: int, price: int) -> bool:
 		if _ui_manager.has_method("update_player_info_panels"):
 			_ui_manager.update_player_info_panels()
 		if _ui_manager.hand_display:
-			_ui_manager.hand_display.update_hand_display(player_id)
+			_ui_manager.update_hand_display(player_id)
 	
 	print("[CardBuyTile] プレイヤー%d: %dEP支払い、%sを手札に追加" % [player_id + 1, price, card_data.get("name", "?")])
 	return true

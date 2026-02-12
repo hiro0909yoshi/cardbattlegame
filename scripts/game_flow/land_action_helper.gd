@@ -59,14 +59,14 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
-		handler.board_system.tile_action_processor.set_pending_comment(
+		handler.board_system.set_pending_comment(
 			"%s がドミニオコマンド：レベルアップ" % player_name
 		)
 	
 	# アクション完了を通知（正しいターン終了フロー）
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.complete_action()
+		handler.board_system.complete_action()
 	
 	return true
 
@@ -84,13 +84,13 @@ static func execute_level_up(handler) -> bool:
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("ダウン中は使用できません")
+			handler.ui_manager.show_toast("ダウン中は使用できません")
 		return false
 	
 	# 最大レベルチェック
 	if tile.level >= 5:
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("既に最大レベルです")
+			handler.ui_manager.show_toast("既に最大レベルです")
 		return false
 	
 	# 状態をレベル選択中に変更
@@ -135,7 +135,7 @@ static func execute_move_creature(handler) -> bool:
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("ダウン中は使用できません")
+			handler.ui_manager.show_toast("ダウン中は使用できません")
 		return false
 	
 	# 移動先選択モードに移行
@@ -161,7 +161,7 @@ static func execute_move_creature(handler) -> bool:
 			error_msg = "移動可能なマスがありません"
 		
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast(error_msg)
+			handler.ui_manager.show_toast(error_msg)
 		# アクション選択に戻る
 		handler.current_state = handler.State.SELECTING_ACTION
 		return false
@@ -199,7 +199,7 @@ static func update_move_destination_ui(handler):
 	
 	if handler.move_destinations.is_empty():
 		if handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("移動可能なマスがありません")
+			handler.ui_manager.show_toast("移動可能なマスがありません")
 		LandActionHelper.hide_move_creature_info(handler)
 		return
 	
@@ -211,7 +211,7 @@ static func update_move_destination_ui(handler):
 	]
 	
 	if handler.ui_manager.phase_display:
-		handler.ui_manager.phase_display.show_action_prompt(text)
+		handler.ui_manager.show_action_prompt(text)
 	
 	# 移動先にクリーチャーがいる場合、情報パネルを表示
 	_show_move_creature_info(handler, current_tile)
@@ -230,7 +230,7 @@ static func execute_swap_creature(handler) -> bool:
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("ダウン中は使用できません")
+			handler.ui_manager.show_toast("ダウン中は使用できません")
 		return false
 	
 	var tile_info = handler.board_system.get_tile_info(handler.selected_tile_index)
@@ -258,7 +258,7 @@ static func execute_swap_creature(handler) -> bool:
 	# TileActionProcessorに交換モードを設定
 	if handler.board_system.tile_action_processor:
 		# is_action_processingをtrueに設定（通常のアクション処理と同じ）
-		handler.board_system.tile_action_processor.begin_action_processing()
+		handler.board_system.begin_action_processing()
 		
 		# 交換情報を保存
 		handler._swap_mode = true
@@ -279,7 +279,7 @@ static func execute_swap_creature(handler) -> bool:
 	# カード選択UIを表示（交換モード）
 	if handler.ui_manager:
 		if handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_action_prompt("交換する新しいクリーチャーを選択")
+			handler.ui_manager.show_action_prompt("交換する新しいクリーチャーを選択")
 		handler.ui_manager.card_selection_filter = ""  # disabledフィルターをクリア
 		handler.ui_manager.show_card_selection_ui_mode(handler.player_system.get_current_player(), "swap")
 	
@@ -308,7 +308,7 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 	
 	if not has_creature_card:
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("手札にクリーチャーカードがありません")
+			handler.ui_manager.show_toast("手札にクリーチャーカードがありません")
 		return false
 	
 	return true
@@ -393,14 +393,14 @@ static func confirm_move(handler, dest_tile_index: int):
 		# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 		if handler.board_system and handler.board_system.tile_action_processor:
 			var player_name = _get_player_name(handler)
-			handler.board_system.tile_action_processor.set_pending_comment(
+			handler.board_system.set_pending_comment(
 				"%s がドミニオコマンド：移動" % player_name
 			)
 		
 		# アクション完了を通知
 		# 注: ドミニオコマンドはend_turn()で閉じられる
 		if handler.board_system and handler.board_system.tile_action_processor:
-			handler.board_system.tile_action_processor.complete_action()
+			handler.board_system.complete_action()
 		
 	elif dest_owner == current_player_index:
 		# 自分の土地の場合: エラー（通常はありえない）
@@ -418,7 +418,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(dest_tile_index):
 			# peace呪いで移動・戦闘不可
 			if handler.ui_manager and handler.ui_manager.phase_display:
-				handler.ui_manager.phase_display.show_toast("peace呪い: このタイルへは侵略できません")
+				handler.ui_manager.show_toast("peace呪い: このタイルへは侵略できません")
 			# 移動元にクリーチャーを戻す
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
@@ -429,7 +429,7 @@ static func confirm_move(handler, dest_tile_index: int):
 			if spell_curse_toll.is_creature_invasion_immune(dest_tile.creature_data):
 				var defender_name = dest_tile.creature_data.get("name", "クリーチャー")
 				if handler.ui_manager and handler.ui_manager.phase_display:
-					handler.ui_manager.phase_display.show_toast("%s は移動侵略を受けません" % defender_name)
+					handler.ui_manager.show_toast("%s は移動侵略を受けません" % defender_name)
 				source_tile.place_creature(creature_data)
 				handler.close_dominio_order()
 				return
@@ -438,7 +438,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
 		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):
 			if handler.ui_manager and handler.ui_manager.phase_display:
-				handler.ui_manager.phase_display.show_toast("侵略不可呪い: 侵略できません")
+				handler.ui_manager.show_toast("侵略不可呪い: 侵略できません")
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
 			return
@@ -510,7 +510,7 @@ static func execute_simple_move_battle(handler, dest_index: int, attacker_data: 
 	
 	# アクション完了を通知
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.complete_action()
+		handler.board_system.complete_action()
 
 ## 隣接タイルを取得
 static func get_adjacent_tiles(handler, tile_index: int) -> Array:
@@ -521,14 +521,14 @@ static func get_adjacent_tiles(handler, tile_index: int) -> Array:
 	if not handler.board_system.tile_neighbor_system:
 		return []
 	
-	var neighbors = handler.board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
+	var neighbors = handler.board_system.get_spatial_neighbors(tile_index)
 	return neighbors
 
 ## 移動バトルを実行（アイテムフェーズ完了後）
 static func _execute_move_battle(handler):
 	if handler.pending_move_battle_creature_data.is_empty():
 		if handler.board_system and handler.board_system.tile_action_processor:
-			handler.board_system.tile_action_processor.complete_action()
+			handler.board_system.complete_action()
 		return
 	
 	var current_player_index = handler.board_system.current_player_index
@@ -633,7 +633,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("この土地は地形変化できません")
+			handler.ui_manager.show_toast("この土地は地形変化できません")
 		return false
 	
 	# コスト計算
@@ -650,12 +650,12 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	if current_player.magic_power < cost:
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("EPが足りません (必要: %dEP)" % cost)
+			handler.ui_manager.show_toast("EPが足りません (必要: %dEP)" % cost)
 		return false
 	
 	# TileActionProcessorに処理中フラグを設定（EPチェック通過後）
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.begin_action_processing()
+		handler.board_system.begin_action_processing()
 	
 	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
@@ -692,14 +692,14 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
-		handler.board_system.tile_action_processor.set_pending_comment(
+		handler.board_system.set_pending_comment(
 			"%s がドミニオコマンド：属性変更" % player_name
 		)
 	
 	# アクション完了を通知（レベルアップと同様）
 	# 注: ドミニオコマンドはend_turn()で閉じられる
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.complete_action()
+		handler.board_system.complete_action()
 	
 	return true
 
@@ -716,7 +716,7 @@ static func execute_terrain_change(handler) -> bool:
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.phase_display.show_toast("ダウン中は使用できません")
+			handler.ui_manager.show_toast("ダウン中は使用できません")
 		return false
 	
 	var tile_index = handler.selected_tile_index
@@ -729,7 +729,7 @@ static func execute_terrain_change(handler) -> bool:
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
 		if handler.ui_manager and handler.ui_manager.phase_label:
-			handler.ui_manager.phase_display.show_toast("この土地は地形変化できません")
+			handler.ui_manager.show_toast("この土地は地形変化できません")
 		return false
 	
 	# 地形選択モードに移行
@@ -789,7 +789,7 @@ static func _cancel_terrain_change(handler):
 	
 	# TileActionProcessorのフラグをリセット
 	if handler.board_system and handler.board_system.tile_action_processor:
-		handler.board_system.tile_action_processor.reset_action_processing()
+		handler.board_system.reset_action_processing()
 	
 	# 地形選択パネルを閉じてアクションメニューに戻る
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
