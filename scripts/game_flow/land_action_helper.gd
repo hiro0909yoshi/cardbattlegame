@@ -593,7 +593,7 @@ static func _show_command_growth_notification(handler, result: Dictionary) -> vo
 	# SpellCastNotificationUIを取得
 	var notification_ui = null
 	if handler.game_flow_manager and handler.game_flow_manager.spell_phase_handler:
-		notification_ui = handler.game_flow_manager.spell_phase_handler.spell_cast_notification_ui
+		notification_ui = handler.spell_cast_notification_ui
 	
 	if not notification_ui:
 		return

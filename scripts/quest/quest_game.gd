@@ -279,8 +279,8 @@ func _setup_cpu_battle_policies():
 		print("[QuestGame] CPUバトルポリシー: JSONから読み込み完了")
 	
 	# CPUMovementEvaluatorにもcpu_ai_handlerを設定（移動シミュレーション用）
-	if system_manager.game_flow_manager and system_manager.board_system_3d.movement_controller:
-		var cpu_movement_evaluator = system_manager.board_system_3d.movement_controller.cpu_movement_evaluator
+	if system_manager.game_flow_manager and system_manager.board_system_3d:
+		var cpu_movement_evaluator = system_manager.board_system_3d.get_cpu_movement_evaluator()
 		if cpu_movement_evaluator:
 			cpu_movement_evaluator.set_cpu_ai_handler(cpu_ai_handler)
 		else:

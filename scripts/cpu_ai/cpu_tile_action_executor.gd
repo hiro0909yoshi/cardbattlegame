@@ -59,7 +59,7 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 	if card_data.is_empty():
 		return {"success": false, "reason": "card_not_found"}
 	
-	var target_tile = board_system.movement_controller.get_player_tile(player_id)
+	var target_tile = board_system.get_player_tile(player_id)
 	var tile = board_system.tile_nodes.get(target_tile)
 	
 	# 配置可能タイルかチェック

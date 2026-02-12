@@ -106,8 +106,7 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		board_system_3d.debug_manual_control_all = debug_manual_control_all
 		
 		# MovementControllerにgame_flow_managerを設定
-		if board_system_3d.movement_controller:
-			board_system_3d.movement_controller.game_flow_manager = self
+		board_system_3d.set_movement_controller_gfm(self)
 		
 		# LapSystemにboard_system_3dを設定し、チェックポイントシグナルを接続
 		if lap_system:
@@ -239,7 +238,7 @@ func start_turn():
 		print("[GameFlowManager] ワープ使用によりサイコロフェーズをスキップ")
 		change_phase(GamePhase.TILE_ACTION)
 		# 現在のプレイヤー位置でタイルアクションを開始
-		var current_tile = board_system_3d.movement_controller.get_player_tile(current_player.id)
+		var current_tile = board_system_3d.get_player_tile(current_player.id)
 		board_system_3d.process_tile_landing(current_tile)
 		return
 	
@@ -255,8 +254,7 @@ func start_turn():
 		ui_manager.phase_label.text = "サイコロを振ってください"
 		
 		# カメラを手動モードに設定（マップ確認可能にする）
-		if board_system_3d and board_system_3d.camera_controller:
-			board_system_3d.camera_controller.enable_manual_mode()
+		board_system_3d.enable_manual_camera()
 		
 		# 決定ボタンでサイコロを振るナビゲーション設定
 		_setup_dice_phase_navigation()
@@ -289,8 +287,8 @@ func roll_dice():
 	_clear_dice_phase_navigation()
 	
 	# カメラをプレイヤー位置に戻す（即座に移動、向きも正しく設定）
-	if board_system_3d and board_system_3d.camera_controller:
-		board_system_3d.camera_controller.focus_on_player(player_system.current_player_index, false)
+	# カメラをプレイヤー位置に戻す（即座に移動）
+	board_system_3d.focus_camera_on_player_pos(player_system.current_player_index, false)
 	
 	change_phase(GamePhase.MOVING)
 	
@@ -560,8 +558,7 @@ func end_turn():
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		
 		# カメラの追従対象を次のプレイヤーに更新
-		if board_system_3d.camera_controller:
-			board_system_3d.camera_controller.set_current_player(player_system.current_player_index)
+		board_system_3d.set_camera_player(player_system.current_player_index)
 		
 		# カメラを次のプレイヤーに移動
 		await move_camera_to_next_player()
@@ -582,11 +579,8 @@ func move_camera_to_next_player():
 	
 	var current_index = board_system_3d.current_player_index
 	
-	if board_system_3d.movement_controller:
-		# MovementController3Dを使用してカメラフォーカス
-		await board_system_3d.movement_controller.focus_camera_on_player(current_index, true)
-	else:
-		print("Warning: movement_controllerが存在しません")
+	# 委譲メソッドを使用してカメラフォーカス
+	await board_system_3d.focus_camera_on_player_mc(current_index, true)
 
 # ゲーム結果処理ハンドラー
 var game_result_handler: GameResultHandler = null
@@ -665,10 +659,10 @@ func prompt_discard_card():
 func check_and_pay_toll_on_enemy_land():
 	# 現在のプレイヤーとタイル情報を取得
 	var current_player_index = player_system.current_player_index
-	if not board_system_3d or not board_system_3d.movement_controller:
+	if not board_system_3d:
 		return
 	
-	var current_tile_index = board_system_3d.movement_controller.get_player_tile(current_player_index)
+	var current_tile_index = board_system_3d.get_player_tile(current_player_index)
 	if current_tile_index < 0:
 		return
 	
@@ -780,6 +774,10 @@ func set_phase1a_handlers(
 		if spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
 			spell_curse_stat.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
 	
+	# dominio_command_handlerにspell_cast_notification_ui参照を渡す
+	if dominio_command_handler and spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
+		dominio_command_handler.spell_cast_notification_ui = spell_phase_handler.spell_cast_notification_ui
+	
 	# SpellMagicに通知UIを設定
 	if spell_magic and spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
 		spell_magic.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
@@ -796,8 +794,8 @@ func _on_dominio_command_closed():
 		return
 	
 	# カメラをプレイヤーに戻す
-	if board_system_3d and board_system_3d.camera_controller:
-		board_system_3d.camera_controller.return_to_player()
+	if board_system_3d:
+		board_system_3d.return_camera_to_player()
 	
 	# カード選択UIの再初期化を次のフレームで実行（awaitを避ける）
 	_reinitialize_card_selection.call_deferred()
@@ -847,8 +845,8 @@ func get_current_turn() -> int:
 ## CPU移動評価システムを外部から設定（初期化はGameSystemManagerが担当）
 func set_cpu_movement_evaluator(cpu_movement_evaluator: CPUMovementEvaluator) -> void:
 	# MovementControllerに参照を渡す
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.cpu_movement_evaluator = cpu_movement_evaluator
+	if board_system_3d:
+		board_system_3d.set_cpu_movement_evaluator(cpu_movement_evaluator)
 	
 	# SpellPhaseHandlerに参照を渡す
 	if spell_phase_handler:
@@ -858,16 +856,15 @@ func set_cpu_movement_evaluator(cpu_movement_evaluator: CPUMovementEvaluator) ->
 
 ## 全分岐タイルの方向を切り替え
 func _toggle_all_branch_tiles():
-	if not board_system_3d or not board_system_3d.movement_controller:
+	if not board_system_3d:
 		return
 	
-	var mc = board_system_3d.movement_controller
-	if not mc.tile_nodes:
+	if board_system_3d.tile_nodes.is_empty():
 		return
 	
 	var toggled_count = 0
-	for tile_index in mc.tile_nodes.keys():
-		var tile = mc.tile_nodes[tile_index]
+	for tile_index in board_system_3d.tile_nodes.keys():
+		var tile = board_system_3d.tile_nodes[tile_index]
 		if tile is BranchTile:
 			tile.toggle_branch_direction()
 			toggled_count += 1
@@ -881,14 +878,21 @@ func _toggle_all_branch_tiles():
 
 ## フェーズに応じてカメラモードを更新
 func _update_camera_mode(phase: GamePhase):
-	if not board_system_3d or not board_system_3d.camera_controller:
+	if not board_system_3d:
 		return
 	
-	var camera_ctrl = board_system_3d.camera_controller
 	var is_my_turn = _is_current_player_human()
 	
 	if not is_my_turn:
-		camera_ctrl.enable_follow_mode()
+		board_system_3d.enable_follow_camera()
+		return
+	
+	# ダイスロールとタイルアクションで手動モード
+	match phase:
+		GamePhase.DICE_ROLL, GamePhase.TILE_ACTION:
+			board_system_3d.enable_manual_camera()
+		_:
+			board_system_3d.enable_follow_camera()
 		return
 	
 	# ダイスロールとタイルアクションで手動モード

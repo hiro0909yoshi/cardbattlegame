@@ -132,7 +132,7 @@ func _process_special_tile(current_player, tile_info: Dictionary):
 
 # 空き地の処理
 func _process_empty_land(current_player):
-	var current_tile = board_system.movement_controller.get_player_tile(current_player.id)
+	var current_tile = board_system.get_player_tile(current_player.id)
 	var tile_info = board_system.get_tile_info(current_tile)
 	var tile_element = tile_info.get("element", "")
 	
@@ -209,7 +209,7 @@ func _try_territory_command_instead():
 		_complete_action()
 		return
 	
-	var current_tile = board_system.movement_controller.get_player_tile(current_player.id)
+	var current_tile = board_system.get_player_tile(current_player.id)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
 	# ドミニオコマンドを評価
@@ -224,7 +224,7 @@ func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
 		return
 	
 	var current_player_index = board_system.current_player_index
-	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var current_tile = board_system.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
 	# TileActionProcessor経由でバトル（土地条件・合成処理含む）
@@ -317,7 +317,7 @@ func _on_cpu_battle_decided(creature_index: int, item_index: int = -1):
 func _on_cpu_level_up_decided(do_upgrade: bool):
 	if do_upgrade:
 		var current_player_index = board_system.current_player_index
-		var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+		var current_tile = board_system.get_player_tile(current_player_index)
 		var cost = board_system.get_upgrade_cost(current_tile)
 		
 		if player_system.get_current_player().magic_power >= cost:

@@ -536,10 +536,9 @@ func _is_dominio_command_active() -> bool:
 # 移動中の方向選択・分岐選択中かどうか
 func _is_movement_selection_active() -> bool:
 	var gfm = _get_game_flow_manager()
-	if not gfm or not gfm.board_system_3d or not gfm.board_system_3d.movement_controller:
+	if not gfm or not gfm.board_system_3d:
 		return false
-	var mc = gfm.board_system_3d.movement_controller
-	return mc.direction_selector.is_active or mc.branch_selector.is_active
+	return gfm.board_system_3d.is_movement_selection_active()
 
 
 # アルカナアーツ効果適用中のカード選択（ルーンアデプト等）は許可する

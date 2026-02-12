@@ -1,359 +1,315 @@
 # 🔧 シグナル整理 + コーディング規約違反 作業ドキュメント
 
 **作成日**: 2026-02-11
+**最終更新**: 2026-02-12
 **目的**: シグナル接続の整理に加え、コーディング規約違反を包括的に調査・修正する
 
 ---
 
 ## ステータス
 
-| フェーズ | ステータス | 箇所数 |
-|---------|-----------|--------|
-| 1. 全接続・規約違反の調査 | ✅ 完了 | - |
-| 2. 修正A-P1: シグナルチェーン参照 | ✅ 修正済み | 10箇所 |
-| 2b. info_panel構造改善 Step1+2 | ✅ 修正済み | 統合メソッド化 |
-| 2c. info_panel Step3: コールバック統合 | ✅ 修正済み | 8→2コールバック |
-| 3. 修正B: privateメソッド外部呼出し | ✅ 修正済み | ~25箇所 |
-| 4. 修正C: privateシグナル接続 | ✅ 修正済み | 4箇所 |
-| 5a. 修正D-P3: handlerプロパティチェーン | ⬜ 未着手 | ~119箇所 |
-| 5b. 修正D-P4: board_system.gfm.spell | ⬜ 未着手 | 11箇所 |
-| 5c. 修正D-P5: ui_manager_ref.info_panel等 | ✅ 大幅改善 | 181→35箇所（残りは正当な直接参照） |
-| 6. 修正E: 状態フラグ外部直接set | ✅ 修正済み | 4箇所 |
-| 7. 修正F: デバッグフラグ未集約 | ✅ 修正済み | 5/6箇所 |
-| 8. 修正G: ラムダ接続 | ✅ 修正済み | 3箇所 |
-| 9. 修正H: UI座標ハードコード | ⬜ 後回し | ~17箇所 |
-| 10. signal_flow_mapスキル作成 | ⬜ 未着手 | - |
+| フェーズ | ステータス | 備考 |
+|---------|-----------|------|
+| A. シグナルチェーン参照 | ✅ 完了 | 10箇所修正 |
+| B. privateメソッド外部呼出し | ✅ 完了 | ~50箇所 public化 |
+| C. privateシグナル接続 | ✅ 完了 | 4箇所修正 |
+| D-P3. ui_manager委譲（phase_display/comment/hand） | ✅ 完了 | ~85箇所置換 |
+| D-P4. board_system委譲（tile_action/neighbor/spell_land） | ✅ 完了 | ~44箇所置換 |
+| D-P5. info_panel構造改善 | ✅ 完了 | 181→35箇所（81%削減） |
+| E. 状態フラグ外部直接set | ✅ 完了 | 4箇所メソッド化 |
+| F. デバッグフラグ集約 | ✅ 完了 | 5/6箇所集約済み |
+| G. ラムダ接続 | ✅ 完了 | 3箇所名前付きメソッド化 |
+| 規約7 privateプロパティ外部参照 | ✅ 完了 | 全件public化/getter追加 |
+| H. UI座標ハードコード | ⬜ 後回し | ~20箇所 |
+| signal_flow_mapスキル作成 | ⬜ 未着手 | — |
 
 ---
 
-## 違反カテゴリと優先度
+## 全規約の最終確認結果（2026-02-12時点）
 
-### 概要
-
-| カテゴリ | 規約 | 説明 | 深刻度 |
-|---------|------|------|--------|
-| A. シグナルチェーン参照 | 規約9 | `a.b.c.signal.connect()` | 🟠 中 |
-| B. privateメソッド外部呼出し | 規約7 | `obj._method()` を外部から呼ぶ | 🔴 高 |
-| C. privateシグナル接続 | 規約7 | `signal.connect(obj._method)` | 🔴 高 |
-| D. 内部プロパティ直接参照 | 規約9 | `a.b.method()` チェーンアクセス | 🟠 中 |
-| E. 状態フラグ外部直接set | 規約8 | `obj.is_xxx = value` 外部代入 | 🟠 中 |
-| F. デバッグフラグ未集約 | 規約10 | DebugSettings外にデバッグフラグ | 🟡 低 |
-| G. ラムダ接続 | シグナル規約 | 切断困難な永続ラムダ接続 | 🟡 低 |
-| H. UI座標ハードコード | 規約6 | `Vector2(固定値)` | 🟡 低 |
-
----
-
-## A. シグナルチェーン参照（10箇所）
-
-### A-1: game_flow_manager.item_phase_handler.item_phase_completed（5箇所）
-
-| # | ファイル | 行 | 接続先 |
-|---|---------|-----|--------|
-| 1 | dominio_command_handler.gd | 647 | `_on_move_item_phase_completed` (ONE_SHOT) |
-| 2 | dominio_command_handler.gd | 1075 | `_on_move_item_phase_completed` (ONE_SHOT) |
-| 3 | tile_battle_executor.gd | 160 | `_on_item_phase_completed` (ONE_SHOT) |
-| 4 | tile_battle_executor.gd | 236 | `_on_item_phase_completed` (ONE_SHOT) |
-| 5 | tile_battle_executor.gd | 281 | `_on_item_phase_completed` (ONE_SHOT) |
-
-**修正方針**: game_flow_managerにitem_phase_completedシグナルをバブルアップ、
-または各クラスにitem_phase_handler参照をinitialize時に渡す
-
-### A-2: board_system.battle_system.invasion_completed（3箇所）
-
-| # | ファイル | 行 | 接続先 |
-|---|---------|-----|--------|
-| 1 | cpu_turn_processor.gd | 267 | `_on_invasion_completed` (ONE_SHOT) |
-| 2 | dominio_command_handler.gd | 689 | callable (ONE_SHOT) |
-| 3 | land_action_helper.gd | 539 | callable (ONE_SHOT) |
-
-**修正方針**: board_systemにinvasion_completedをバブルアップ
-
-### A-3: game_flow_manager.lap_system.checkpoint_signal_obtained（2箇所）
-
-| # | ファイル | 行 | 接続先 |
-|---|---------|-----|--------|
-| 1 | player_info_panel.gd | 64 | `_on_signal_obtained` |
-| 2 | tutorial_manager.gd | 200 | `_on_checkpoint_passed` |
-
-**修正方針**: game_flow_managerにcheckpoint_signal_obtainedをバブルアップ
+| 規約 | 状態 | 詳細 |
+|------|------|------|
+| 1. Nodeにhas() | ✅ 違反なし | |
+| 2. TextureRectにcolor | ✅ 違反なし | |
+| 3. 予約語変数名 | ⚠️ 軽微5箇所 | ローカル変数name×3, position×1, size×1。実害なし |
+| 4. シャドウイング | ⚠️ 軽微3箇所 | battle系ローカルboard_system×3。意図的な可能性 |
+| 5. end_turn直接呼出し | ✅ 違反なし | game_flow_manager自身のみ（正常） |
+| 6. UI座標ハードコード | ❌ ~20箇所 | 後回し（大工事） |
+| 7. privateメソッド外部呼出し | ✅ 違反0件 | 全件public化済み |
+| 8. 状態フラグ外部直接set | ✅ 違反0件 | メソッド化済み |
+| 9. 内部プロパティ外部参照 | ✅ 違反0件 | public化/getter追加済み |
+| 10. デバッグフラグ未集約 | ⚠️ 1件残り | debug_manual_control_all（影響範囲大で保留） |
+| シグナル方向 | ✅ 違反なし | 親→子のシグナル接続0件 |
+| ラムダ接続 | ⚠️ 軽微 | global_comment_ui 2箇所（動的ボタン）、battle_test多数（テスト用） |
 
 ---
 
-## B. privateメソッド外部呼出し（~50箇所）
+## 残存する密結合パターン
 
-### B-1: 深刻 - ロジック系のprivateメソッド呼出し
+### 1. board_system内部チェーンアクセス（61箇所、25ファイル）
 
-#### spell_phase_handler._* を外部から呼ぶ（~10箇所）
-| ファイル | 行 | 呼出し |
-|---------|-----|--------|
-| spell_mystic_arts.gd | 276, 352, 706 | `spell_phase_handler_ref._return_to_spell_selection()` |
-| spell_mystic_arts.gd | 471, 544 | `spell_phase_handler_ref._show_spell_cast_notification()` |
-| spell_mystic_arts.gd | 507, 590 | `spell_phase_handler_ref._return_camera_to_player()` |
-| spell_mystic_arts.gd | 990, 1012 | `spell_phase_handler_ref._apply_single_effect()` |
-| spell_phase_handler.gd | 835 | `spell_mystic_arts._end_mystic_phase()` |
-| spell_borrow.gd | 160, 255 | `spell_phase_handler_ref._show_target_selection_ui()` |
-| spell_borrow.gd | 171 | `spell_phase_handler_ref._apply_single_effect()` |
-| card_selection_ui.gd | 865 | `game_flow_manager_ref.spell_phase_handler._return_to_spell_selection()` |
+#### A. movement_controller系（33箇所）
 
-**修正方針**: 呼ばれるメソッドをpublic化（`_`除去）
+| パターン | 箇所数 | 主な呼び出し元 |
+|---------|--------|---------------|
+| get_player_tile() | 15 | tile_action_processor(3), gfm(2), target_selection_helper(2), 他7ファイル各1 |
+| spell_movement.* 3段チェーン | 4 | spell_effect_executor |
+| clear_all_down_states_for_player() | 3 | special_tile_system, lap_system, spell_player_move |
+| place_player_at_tile() | 2 | bankruptcy_handler, spell_player_move |
+| player_tiles[id] = 直接代入 | 2 | special_tile_system, spell_player_move |
+| 初期化プロパティ代入 | 3 | game_flow_manager(1), game_system_manager(2) |
+| その他（execute_warp, heal, focus等） | 4 | 各1箇所 |
 
-#### spell_effect_executor.gd → spell_phase_handler._*（~5箇所）
-| ファイル | 行 | 呼出し |
-|---------|-----|--------|
-| spell_effect_executor.gd | 24 | `handler._show_spell_cast_notification()` |
-| spell_effect_executor.gd | 67 | `handler._return_camera_to_player()` |
-| spell_effect_executor.gd | 87, 166 | `handler._get_player_ranking()` |
-| spell_effect_executor.gd | 334 | `handler._show_spell_cast_notification()` |
-| spell_effect_executor.gd | 368 | `handler._return_camera_to_player()` |
+#### B. camera_controller系（14箇所、6ファイル）
 
-**修正方針**: 同上、public化
+| メソッド | 箇所数 | 呼び出し元 |
+|---------|--------|-----------|
+| enable_manual_mode() | 4 | gfm, tile_action_processor, spell_phase_handler, branch_selector |
+| set_current_player() | 3 | gfm, tile_action_processor, spell_phase_handler |
+| focus_on_position_slow() | 2 | direction_selector, branch_selector |
+| enable_follow_mode() | 2 | tile_action_processor, spell_phase_handler |
+| return_to_player() | 2 | gfm, tile_action_processor |
+| focus_on_player() | 1 | gfm |
 
-#### dominio_command_handler._* を外部から呼ぶ
-| ファイル | 行 | 呼出し |
-|---------|-----|--------|
-| land_action_helper.gd | 116,118,119 | `handler._confirm_level_selection()`, `_on_arrow_up/down()` |
-| land_action_helper.gd | 189,190,487 | 同上 + `_start_move_battle_sequence()` |
-| land_action_helper.gd | 760,761 | `handler._on_arrow_up/down()` |
-| land_input_helper.gd | 181,185,189 | `handler._select_previous/next_level()`, `_confirm_level_selection()` |
-| ui_tap_handler.gd | 64 | `gfm.dominio_command_handler._restore_navigation()` |
+#### C. tile_data_manager系（12箇所、7ファイル）
 
-**修正方針**: public化。land_action_helperとland_input_helperはdominio_command_handlerの
-分割ヘルパーなので、内部的に密結合は許容し得るが、`_`プレフィックスは外すべき
+| アクセス | 箇所数 | 呼び出し元 |
+|---------|--------|-----------|
+| tile_nodes直接参照 | 4 | skill_creature_spawn(3), battle_special_effects(1) |
+| update_all_displays() | 2 | spell_land_new |
+| calculate_land_value() + has_method | 2 | player_system |
+| set_tile_level() + has_method | 2 | skill_battle_end_effects |
+| get_tile_info() | 1 | skill_support |
+| calculate_level_up_cost() | 1 | dominio_order_ui |
 
-#### cpu_ai系 → cpu_movement_evaluator._*（~15箇所）
-| ファイル | 呼出し例 |
-|---------|---------|
-| cpu_spell_ai.gd | `_get_player_current_tile()`, `_get_player_direction()`, `_get_tile_info()`, `_can_invade_and_win()`, `_calculate_toll()` |
-| cpu_holy_word_evaluator.gd | 同上 + `_can_enemy_invade()` |
-| cpu_spell_condition_checker.gd | `_get_checkpoint_type_string()` |
+#### D. tile_info_display系（3箇所、2ファイル）
 
-**修正方針**: 全てpublic化（`_`除去）。AI系は内部ユーティリティとして広く参照されている
+| アクセス | 呼び出し元 |
+|---------|-----------|
+| switch_mode() / get_current_mode_name() | debug_controller |
+| update_display() | tile_action_processor |
 
-#### condition_checker._evaluate_single_condition を外部から呼ぶ（5箇所）
-| ファイル | 呼出し |
-|---------|--------|
-| battle_item_applier.gd | `checker._evaluate_single_condition()` |
-| battle_special_effects.gd | 同上 |
-| battle_skill_granter.gd | 同上 |
-| skill_power_strike.gd | 同上 |
-| skill_stat_modifiers.gd | 同上 (×2) |
+#### 作業計画
 
-**修正方針**: public化
+| 順 | 対象 | 置換数 | 難易度 |
+|----|------|--------|--------|
+| 1 | get_player_tile委譲 | 15 | 低 |
+| 2 | camera系6メソッド委譲 | 14 | 低 |
+| 3 | movement系その他委譲 | 8 | 低〜中 |
+| 4 | player_tiles直接代入→setter | 2 | 低 |
+| 5 | spell_movement 3段チェーン解消 | 4 | 中 |
+| 6 | tile_data_manager系 | 12 | 中 |
+| 7 | tile_info_display系 | 3 | 低 |
+| 8 | 初期化プロパティ代入→setter | 3 | 低 |
 
-#### その他のprivate呼出し
-| ファイル | 行 | 呼出し | 方針 |
-|---------|-----|--------|------|
-| card_system._load_card_data | debug_controller 203,329 | デバッグ用 | public化 |
-| card_system._get_clean_card_data | spell系 103,111,123,255 | public化 |
-| ui_manager._on_card_button_pressed | card.gd 584 | public化 or ラップ |
-| ui_manager._restore_spell_phase_buttons | ui_tap_handler 75,96,108 | public化 |
-| card_selection_ui._register_back_button | card.gd 653 | public化 |
-| dominio_order_ui._on_level_selected | dominio_command_handler 551 | public化 |
-| movement_controller._set_player_current_direction | branch_selector 246 | public化 |
-| lap_system._setup_ui | game_system_manager 468, game_flow_manager 141 | public化 |
-| lap_system._check_lap_complete | spell_player_move 219 | public化 |
-| global_action_buttons._update_button_states | tutorial_overlay 262 | public化 |
-| spell_damage._destroy_creature | spell_magic 765, spell_curse_stat 360 | public化 |
-| spell_mystic_arts._get_all_mystic_arts | spell_borrow 211 | public化 |
-| stage_loader._get_enemies | game_3d/quest_game 複数 | public化 |
-| card._show_card_front/_show_secret_back | skill_secret 36-49 | public化 |
-| card._update_secret_display | hand_display 229 | public化 |
-| card._adjust_children_size | creature_card_3d_quad 51 | public化 |
-| mc.direction_selector._setup_navigation | card.gd 693 | public化 |
-| mc.branch_selector._setup_navigation | card.gd 695 | public化 |
-| cpu_battle_ai → _defense_evaluator._simulate/is_worse | 597,603 | public化 |
-| cpu_ai_handler → hand_utils._check_lands_required | 555 | public化 |
-| cpu_spell_condition_checker → _get_own_creatures | 675 | public化 |
-| cpu_spell_condition_checker → _get_reachable_enemy | 693 | public化 |
-| cpu_spell_condition_checker → _check_worst_case_win | 723 | public化 |
-| tutorial_popup._apply_position | explanation_mode 140 | public化 |
-| target_marker_system._create_marker_mesh | target_selection_helper 171 | public化（static） |
-| spell_draw → steal_handler._move_caster | 305 | public化 |
+**優先度**: 高。改善効果大、大半は機械的置換。
 
-### B-2: 許容 - super._ready() / super._on_area_entered()
-tiles系のsuper呼び出しは継承パターンで正常。修正不要。
+### 2. game_flow_manager内部コンポーネントへの2段チェーン（~10箇所）
 
----
+| パターン | 箇所数 | 修正方針 |
+|---------|--------|---------|
+| `game_flow_manager.lap_system.*` | 4 | 委譲メソッドまたはinitialize時に直接渡す |
+| `game_flow_manager.spell_cost_modifier.*` | 2 | 委譲メソッド |
+| `game_flow_manager.spell_phase_handler.*` | 1 | 委譲メソッド |
+| `spell_phase_handler.cpu_hand_utils.*` / `cpu_spell_ai.*` | 2 | 内部利用のため許容 |
 
-## C. privateシグナル接続（4箇所）— ✅ 修正済み
+**優先度**: 低〜中。
 
-tap_handler のメソッドが `on_tap_target_selected` / `on_tap_target_cancelled` にpublic化済み。
+### 3. controller内部コンポーネントへの2段チェーン（~6箇所）
 
----|---------|-----|------|
-| 1 | ui_manager.gd | 260 | `tap_target_manager.target_selected` → `tap_handler._on_tap_target_selected` |
-| 2 | ui_manager.gd | 261 | `tap_target_manager.selection_cancelled` → `tap_handler._on_tap_target_cancelled` |
-| 3 | ui_manager.gd | 744 | 同上（再接続） |
-| 4 | ui_manager.gd | 746 | 同上（再接続） |
-
-**修正方針**: tap_handlerのメソッドをpublic化
-
----
-
-## D. 内部プロパティ直接参照（チェーンアクセス）
-
-### D-1: game_flow_manager.item_phase_handler.* メソッド呼出し
-dominio_command_handler.gd と tile_battle_executor.gd から大量にアクセス。
-
-| ファイル | アクセスされるメソッド |
-|---------|---------------------|
-| dominio_command_handler.gd | `get_selected_item()`, `start_item_phase()`, `set_preselected_attacker_item()` |
-| tile_battle_executor.gd | `start_item_phase()`, `set_preselected_attacker_item()`, `was_merged()`, `get_merged_creature()`, `get_selected_item()`, `set_opponent_creature()`, `set_defense_tile_info()` |
-
-**修正方針**: item_phase_handler参照をinitialize時に直接渡す
-
-### D-2: game_flow_manager.spell_phase_handler.* メソッド/プロパティ参照
-| ファイル | アクセス |
-|---------|---------|
-| debug_controller.gd | `update_mystic_button_visibility()` |
-| land_action_helper.gd | `spell_cast_notification_ui` |
-| spell_world_curse.gd | `spell_cast_notification_ui` |
-| spell_curse.gd | `is_magic_tile_mode` |
-
-### D-3: game_flow_manager.dominio_command_handler.* 参照
-| ファイル | アクセス |
-|---------|---------|
-| game_system_manager.gd (初期化) | `.board_system_3d`, `.player_system`, `.ui_manager` の代入 |
-| tutorial_manager.gd | `.open_dominio_order()` |
-
-### D-4: board_system.tile_neighbor_system.*
-| ファイル | アクセス |
-|---------|---------|
-| movement_helper.gd (×6) | `get_spatial_neighbors()` |
-| land_action_helper.gd | `get_spatial_neighbors()` |
-| spell_creature_place.gd | `get_spatial_neighbors()` |
-| condition_checker.gd | `has_adjacent_ally_land()` |
-| skill_support.gd | `get_spatial_neighbors()` |
-
-**修正方針**: board_systemに委譲メソッド（get_spatial_neighbors等）を追加
-
-### D-5: board_system.battle_system.* メソッド呼出し
-| ファイル | アクセス |
-|---------|---------|
-| dominio_command_handler.gd | `execute_3d_battle_with_data()` |
-| land_action_helper.gd | `execute_3d_battle_with_data()` |
-| cpu_turn_processor.gd | `execute_3d_battle_with_data()` |
-
-**修正方針**: board_systemに委譲メソッド追加
-
-### D-6: board_system.special_tile_system.*
-| ファイル | アクセス |
-|---------|---------|
-| cpu_movement_evaluator.gd | `warp_pairs`, `get_warp_pair()` |
-
-### D-7: ui_manager.*_ui.* / hand_display.* 大量チェーンアクセス
-多数のファイルからui_managerの子コンポーネントに直接アクセスしている。
-card.gd, card_selection_handler.gd, spell_phase_handler.gd, item_phase_handler.gd,
-dominio_command_handler.gd, land_action_helper.gd 等。
-
-**修正方針**: これは量が多く、ui_managerに全委譲メソッドを追加すると肥大化する。
-→ 現実的には以下の方針:
-1. `global_comment_ui.show_and_wait()` は `await ui_manager.show_comment()` に委譲
-2. `hand_display.update_hand_display()` は `ui_manager.update_hand()` に委譲
-3. info_panel系は使用頻度が高いので、initialize時に直接参照を渡すことを検討
-4. card_selection_ui は既にgame_flow_manager_refを持つなど密結合 → 段階的に整理
-
----
-
-## E. 状態フラグ外部直接set（規約8違反）
-
-外部から `is_xxx = value` で直接代入している箇所。
-`begin_xxx()` / `reset_xxx()` 等のメソッド経由にすべき。
-
-| # | ファイル | 行 | コード |
-|---|---------|-----|--------|
-| 1 | dominio_command_handler.gd | 113 | `ui_manager.card_selection_ui.is_active = false` |
-| 2 | land_action_helper.gd | 484 | `handler.is_waiting_for_move_defender_item = false` |
-| 3 | land_action_helper.gd | 558 | `handler.is_waiting_for_move_defender_item = false` |
-| 4 | land_action_helper.gd | 559 | `handler.is_boulder_eater_move = false` |
-
-**注記**: cpu_ai系の `result.is_xxx = true` はローカルDictionary/オブジェクト構築なので許容。
-card_selection_ui の `card_node.is_grayed_out` / hand_display の `card.is_selectable` は
-UIプロパティの設定であり、状態フラグとは異なるので許容。
-battle系の `participant.is_using_scroll` も戦闘専用の一時フラグで許容。
-
-**修正方針**: dominio_command_handlerとland_action_helperの4箇所のみ。
-メソッド化するか、フラグリセットをhandler側に委譲。
-
----
-
-## F. デバッグフラグ未集約（規約10違反）
-
-DebugSettingsに集約されていないデバッグフラグ。
-
-| # | ファイル | 変数 | 用途 |
-|---|---------|------|------|
-| 1 | spell_phase_handler.gd | `debug_disable_secret_cards` | 秘密カード無効化 |
-| 2 | game_3d.gd | `debug_manual_control_all` | 全プレイヤー手動操作 |
-| 3 | quest_game.gd | `debug_manual_control_all` | 同上（クエスト用） |
-| 4 | creature_manager.gd | `debug_mode` | デバッグ表示 |
-| 5 | ui_manager.gd | `debug_mode` | デバッグ表示 |
-| 6 | signal_registry.gd | `debug_mode` | シグナルデバッグ |
-
-**修正方針**: 全てDebugSettingsのstatic変数に移行。
-`debug_manual_control_all` は game_3d / quest_game で重複しており、統一必須。
-
----
-
-## G. ラムダ接続（切断困難）
-
-規約「ラムダ接続を多用しない（切断が困難になる）」に該当。
-永続接続のラムダは特に問題（切断不能）。ONE_SHOTや動的生成UIのラムダは許容寄り。
-
-### G-1: 永続接続ラムダ（要修正）
-
-| # | ファイル | 行 | 内容 |
-|---|---------|-----|------|
-| 1 | tile_action_processor.gd | 88 | `battle_executor.invasion_completed.connect(func(...): emit_signal(...))` |
-| 2 | game_flow_manager.gd | 92 | `lap_system.lap_completed.connect(func(player_id): lap_completed.emit(player_id))` |
-| 3 | action_menu_ui.gd | 316 | `btn.pressed.connect(func(): _on_button_pressed(index))` |
-
-**修正方針**: 
-- #1, #2: シグナル中継用。名前付きメソッドに変更するか、シグナルバブルアップに統一
-- #3: bind()で代替可能 → `btn.pressed.connect(_on_button_pressed.bind(index))`
-
-### G-2: 許容（ONE_SHOTまたは動的UI生成時）
-
-| ファイル | 行 | 備考 |
-|---------|-----|------|
-| global_comment_ui.gd | 353, 359 | 動的生成ボタン、ラムダで問題なし |
-| debug_controller.gd | 287 | ONE_SHOT |
-| quest/world_stage_select.gd | 583, 662, 667 | 動的UI生成 |
-| cpu_deck_editor.gd | 458 | ONE_SHOT |
-
----
-
-## H. UI座標ハードコード（規約6違反）
-
-`position = Vector2(固定値)` でビューポート相対になっていない箇所。
-量が多く影響範囲も大きいため、優先度は最低。
-
-### 主な該当ファイル
-| ファイル | 箇所数 | 内容 |
+| パターン | 箇所数 | 備考 |
 |---------|--------|------|
-| level_up_ui.gd | 5 | パネル・ラベル位置 |
-| dominio_order_ui.gd | 6 | レベル選択・地形選択パネル |
-| surrender_dialog.gd | 2 | ダイアログ内部レイアウト |
-| debug_panel.gd | 2 | デバッグパネル位置 |
-| battle_status_overlay.gd | 1 | セパレータ位置 |
-| card.gd | 1 | シンボルラベル位置 |
+| `controller.special_tile_system.*` | 4 | movement_warp_handler, destination_predictor |
+| `controller.spell_movement.*` | 1 | movement_warp_handler |
 
-**修正方針**: 全面的な修正は大工事。以下の段階で対応:
-1. 画面端に配置するUI（debug_panel等）→ viewport相対に修正
-2. パネル内部の相対配置 → VBoxContainer/HBoxContainer化を検討
-3. カード内部等の小さい固定値 → 後回し
+**優先度**: 低。分割ヘルパーからの参照であり許容寄り。
+
+### 4. ui_manager内部チェーン残り（~65箇所）
+
+#### 4a. card_selection_ui（~21箇所、7ファイル）
+| 呼び出し元 | 箇所数 | アクセス内容 |
+|-----------|--------|-------------|
+| card.gd | 4 | is_active, selection_mode参照 |
+| spell_phase_handler.gd | 5 | show_selection, deactivate, pending_card_index, is_active, selection_mode |
+| item_phase_handler.gd | 2 | show_selection |
+| dominio_command_handler.gd | 2 | deactivate, hide_selection |
+| card_selection_handler.gd | 4 | enable_card_selection |
+| ui_tap_handler.gd | 1 | is_active参照 |
+| movement_destination_predictor.gd | 1 | update_restriction_for_destinations |
+| tutorial_manager.gd | 1 | is_active参照 |
+| game_system_manager.gd | 1 | game_flow_manager_ref代入（初期化） |
+
+**分析**: show_selection / deactivate / is_active は委譲可能だが、selection_mode参照・enable_card_selectionなどの複雑なインタラクションは委譲しにくい。
+
+#### 4b. dominio_order_ui（~19箇所、2ファイル）
+| 呼び出し元 | 箇所数 | アクセス内容 |
+|-----------|--------|-------------|
+| dominio_command_handler.gd | 10 | show_action_menu, hide_level/terrain_selection, highlight_level_button, on_level_selected |
+| land_action_helper.gd | 9 | hide_action_menu, show/hide_terrain_selection, highlight_terrain_button, show_action_menu |
+
+**分析**: dominio_command_handler / land_action_helperからのみ参照。この2つはドミニオ操作専用のコンポーネントであり、dominio_order_uiとの密結合は機能的に不可避。
+
+#### 4c. phase_display（4箇所、1ファイル）
+| 呼び出し元 | アクセス内容 |
+|-----------|-------------|
+| game_flow_manager.gd | show_big_dice_result, show_dice_result_range/triple/double |
+
+**分析**: game_flow_managerのみ。委譲メソッド追加は容易だが効果薄。
+
+#### 4d. player_info_panel（3箇所、3ファイル）
+| 呼び出し元 | アクセス内容 |
+|-----------|-------------|
+| game_flow_manager.gd | set_current_turn |
+| spell_phase_handler.gd | get_player_ranking |
+| spell_world_curse.gd | update_all_panels |
+
+**分析**: 委譲メソッド追加は容易。
+
+#### 4e. info_panel系シグナル接続（9箇所、1ファイル）
+| 呼び出し元 | アクセス内容 |
+|-----------|-------------|
+| card_selection_handler.gd | creature/spell/item_info_panel_ui.selection_confirmed/cancelled.connect |
+
+**分析**: info_panel参照のinitialize時注入で解消可能だが、Step3で181→35に削減済みで効果薄い。
+
+#### 4f. spell_cast_notification_ui（1箇所）
+| 呼び出し元 | アクセス内容 |
+|-----------|-------------|
+| land_action_helper.gd | spell_phase_handler.spell_cast_notification_ui（3段チェーン） |
+
+**分析**: 3段チェーンで最も問題。initialize時に参照を渡すべき。
+
+**総合評価**: 4b（dominio系）は機能的に密結合が不可避。4a（card_selection_ui）は主要メソッドの委譲で改善可能だが効果は中程度。4f（3段チェーン1箇所）のみ明確な改善対象。
+
+**優先度**: 低。委譲メソッド化でui_managerが肥大化するリスクがあり、現状維持が妥当。4fのみ要修正。
+
+### 5. tile_data_manager → game_system_manager逆参照（1箇所）
+
+```
+tile_data_manager → game_system_manager.board_system_3d.spell_curse_toll
+```
+
+**優先度**: 低。1箇所のみだが設計的に良くない。spell_curse_tollの参照をinitialize時に渡すべき。
 
 ---
 
-## 修正の優先順位（推奨）
+---
 
-1. **B. privateメソッドpublic化** — 最も簡単で安全。`_`を外すだけ。リスク低（~50箇所）
-2. **C. privateシグナル接続** — Bと同時に修正可能（4箇所、修正済みの可能性あり）
-3. **A. シグナルチェーン参照** — バブルアップまたは参照注入。中程度の作業量（10箇所）
-4. **E. 状態フラグ外部直接set** — メソッド化（4箇所）
-5. **F. デバッグフラグ集約** — DebugSettingsに移行（6箇所）
-6. **G. ラムダ接続** — 名前付きメソッドに変更（3箇所）
-7. **D. 内部プロパティ参照** — 量が多い。段階的に対応。board_system委譲から開始
-8. **H. UI座標ハードコード** — 大規模。後回し
+## 依存方向の分析（2026-02-12時点）
+
+### 現状の参照関係
+
+```
+game_system_manager（最上位・初期化担当）
+  ↓ 参照を注入
+  ├── game_flow_manager ←→ board_system  ❌ 相互参照
+  │     ↓                    ↓
+  │     ├── spell_phase_handler   ├── tile_action_processor → game_flow_manager ❌
+  │     ├── dominio_cmd_handler → ui_manager, board_system
+  │     ├── item_phase_handler
+  │     └── lap_system
+  │
+  ├── ui_manager → player_system（表示用、OK）
+  │     ↓
+  │     ├── card_selection_ui → game_flow_manager ❌ 下位→上位の逆参照
+  │     └── player_info_panel → player_system（表示用、OK）
+  │
+  ├── player_system → board_system（資産計算用）
+  │
+  └── board_system
+		├── tile_data_manager → game_system_manager ❌ 最下位→最上位
+		└── tile_action_processor → game_flow_manager ❌
+```
+
+### 問題のある依存方向
+
+| # | from → to | 問題 | 深刻度 | 修正方針 |
+|---|-----------|------|--------|---------|
+| 1 | game_flow_manager ↔ board_system | 相互参照 | ⚠️ 中 | 設計上不可避に近い。Mediator化は大工事。現状許容 |
+| 2 | tile_data_manager → game_system_manager | 最下位→最上位。get_tree().root経由 | 🔴 高 | spell_curse_tollの参照をinitialize時に注入 |
+| 3 | tile_action_processor → game_flow_manager | 子→親の親への参照 | ⚠️ 中 | initialize時注入パターン。GDScriptでは一般的。実害低 |
+| 4 | card_selection_ui → game_flow_manager | UI→ロジック上位への逆参照 | ⚠️ 中 | 同上。debug_manual_control_allの参照が主因 |
+| 5 | player_system → board_system | 横方向参照（資産計算用） | 🟡 低 | 実用上問題なし。コールバック化も可能だが過剰 |
+
+### 3段チェーン（1箇所）
+
+```
+land_action_helper → handler.game_flow_manager.spell_phase_handler.spell_cast_notification_ui
+```
+
+**修正方針**: dominio_command_handlerのinitialize時にspell_cast_notification_uiの参照を渡す。
+
+### 循環参照の全一覧
+
+GDScriptはGC付きのためメモリリークにはならないが、設計の見通しに影響する。
+
+#### トップレベル相互参照（2件）
+
+| ペア | 方向 | 深刻度 | 備考 |
+|------|------|--------|------|
+| game_flow_manager ↔ board_system | 双方向 | ⚠️ 中 | gfm→bs:移動/タイル操作、bs→gfm:ターン制御。設計上不可避に近い |
+| game_flow_manager ↔ ui_manager | 双方向 | ⚠️ 中 | gfm→ui:表示更新、ui→gfm:入力伝達。UI分離の定番パターン |
+
+#### 親→子→親の逆参照（5件）
+
+| 親 | 子 | 子→親の参照 | 深刻度 | 備考 |
+|----|-----|-------------|--------|------|
+| board_system | tile_action_processor | → game_flow_manager | ⚠️ 中 | spell_cost_modifier, spell_world_curse参照のため |
+| board_system | tile_data_manager | → game_flow_manager | ⚠️ 中 | game_stats参照のため |
+| board_system | movement_controller | → game_flow_manager | 🟡 低 | is_game_ended参照のみ |
+| board_system | special_tile_system | → game_flow_manager | ⚠️ 中 | 特殊タイル処理で広く参照 |
+| ui_manager | card_selection_ui | → game_flow_manager | 🟡 低 | debug_manual_control_all参照が主因 |
+
+#### game_flow_manager子コンポーネントの外部参照
+
+game_flow_managerの子ハンドラ（spell_phase_handler, dominio_command_handler, item_phase_handler等）は
+全てgfm, board_system, ui_manager, player_system, card_systemの5つを参照。
+これはinitialize時に注入されるパターンで循環ではなく「ハブ型依存」。
+
+```
+game_flow_manager
+  └── spell_phase_handler ──→ board_system, ui_manager, player_system, card_system
+  └── dominio_cmd_handler ──→ board_system, ui_manager, player_system, card_system, battle_system
+  └── item_phase_handler  ──→ board_system, ui_manager, player_system, card_system, battle_system
+  └── tile_battle_executor──→ board_system, ui_manager, player_system, card_system, battle_system
+  └── tile_summon_executor──→ board_system, ui_manager, player_system, card_system
+  └── lap_system          ──→ board_system, ui_manager, player_system
+```
+
+これ自体は問題ないが、5つ全てに依存するコンポーネントが多い点は注意。
+将来的にContext/ServiceLocatorパターンで整理する余地あり。
+
+#### battle系の参照
+
+| コンポーネント | 参照先 | 備考 |
+|---------------|--------|------|
+| battle_system | board_system, player_system, card_system, game_flow_manager | gfm参照は通知用 |
+| battle_special_effects | board_system, card_system, game_flow_manager | lap_count/spell参照のため |
+
+battle_systemはboard_systemの子だが、game_flow_managerも参照している（親の親参照）。
+
+#### 横方向参照（1件）
+
+| from | to | 用途 |
+|------|----|------|
+| player_system → board_system | 資産計算（calculate_land_value） | 実害なし |
+
+#### 総合評価
+
+- **真の循環**: gfm ↔ board_system、gfm ↔ ui_manager の2ペアのみ
+- **逆参照**: board_system子 → gfm が5件（tile_action_processor, tile_data_manager, movement_controller, special_tile_system, battle_system）
+- **改善余地**: tile_data_manager/movement_controllerの逆参照は必要最小限の情報をinitialize時に渡すことで解消可能。完全解消にはMediator/EventBusが必要だが現規模では過剰
+
+---
+
+## 推奨する今後の作業順
+
+1. **tile_data_manager逆参照解消**（依存#2, 1箇所）— 最も深刻、小工事
+2. **3段チェーン解消**（land_action_helper, 1箇所）— 小工事
+3. **board_system委譲メソッド追加**（密結合#1, ~25箇所）— 効果大、機械的
+4. **game_flow_manager委譲**（密結合#2, ~10箇所）— 中程度
+5. **UI座標ハードコード**（規約6, ~20箇所）— 大工事、後回し
+6. **debug_manual_control_all集約**（規約10残り）— 影響範囲大
 
 ---
 
@@ -362,130 +318,45 @@ DebugSettingsに集約されていないデバッグフラグ。
 ### セッション1（2026-02-11）
 - ✅ 全.connect()呼び出しの調査完了（~250箇所）
 - ✅ privateメソッド外部呼出しの調査完了（~50箇所）
-- ✅ チェーンアクセスの調査完了（多数）
+- ✅ チェーンアクセスの調査完了
 - ✅ 分類・優先度設定完了
-- ✅ 修正C完了（privateシグナル接続 → tap_handler public化済み）
-- ⬜ 次: 修正B（privateメソッドpublic化）から着手
+- ✅ 修正C完了（privateシグナル接続 → tap_handler public化）
 
 ### セッション2（2026-02-11 続き）
-- ✅ 追加調査: 状態フラグ外部直接set（E）、デバッグフラグ未集約（F）、ラムダ接続（G）、UI座標ハードコード（H）
-- ✅ ドキュメント追記完了（E〜H セクション追加、ステータステーブル更新）
+- ✅ 追加調査: E（状態フラグ）、F（デバッグフラグ）、G（ラムダ）、H（UI座標）
+- ✅ ドキュメント追記完了
 
 ### セッション3（2026-02-11 続き）
-- ✅ 消失チャットで壊れたland_action_helper.gdのエラー修正（6箇所）
-- ✅ 消失チャットで壊れたstage_loader.gdのエラー修正（_get_enemies内部呼び出し8箇所）
-- ✅ 修正B完了: privateメソッド外部呼び出し全件public化（残り0件）
-  - _setup_navigation (direction_selector, branch_selector)
-  - _setup_ui (lap_system, magic_tile_ui, magic_stone_ui, card_buy_ui, card_give_ui)
-  - _set_player_current_direction (movement_controller)
-  - _on_cancel_dominio_order_button_pressed (ui_manager)
-  - _update_secret_display (card)
-  - _create_marker_mesh (target_marker_system)
-  - _detect_move_type (movement_helper)
-  - _process_card_sacrifice (tile_summon_executor)
-  - _has_owned_lands (board_system_3d)
-  - _destroy_creature (spell_damage)
-  - _move_caster_to_enemy_hand (steal_handler)
-  - _check_lap_complete (lap_system)
-  - _show_card_front / _show_secret_back / _adjust_children_size (card)
-- ✅ バグ修正: battle_simulatorで呪いのtemporary_effectsが未反映（apply_effect_arrays追加）
+- ✅ land_action_helper.gd / stage_loader.gd のエラー修正
+- ✅ 修正B完了: privateメソッド外部呼出し全件public化（~25箇所）
+- ✅ バグ修正: battle_simulatorで呪いのtemporary_effectsが未反映
+
 ### セッション4（2026-02-12）
-- ✅ 修正F完了（5/6箇所）: デバッグフラグをDebugSettingsに集約
-  - disable_secret_cards (spell_phase_handler → DebugSettings)
-  - creature_manager_debug (creature_manager → DebugSettings)
-  - ui_debug_mode (ui_manager → DebugSettings)
-  - signal_registry_debug (signal_registry → DebugSettings)
-  - debug_manual_control_allは影響範囲大のため保留
-- ✅ 修正E完了（4箇所）: 状態フラグ外部直接setをメソッド化
-  - card_selection_ui.is_active = false → deactivate()
-  - handler.is_waiting/is_boulder → reset_move_battle_flags() / set_boulder_eater_move()
-- ✅ 修正G完了（3箇所）: ラムダ接続を名前付きメソッドに変更
-  - tile_action_processor: invasion_completed中継 → _on_invasion_completed
-  - game_flow_manager: lap_completed中継 → _on_lap_completed
-  - action_menu_ui: func() → bind(index)
-- ✅ 修正A完了（P1: シグナルチェーン接続10箇所）
-  - A-1: gfm.item_phase_handler → dominio_command_handler, tile_battle_executorにiph参照キャッシュ
-  - A-2: board_system.battle_system → dominio_command_handler, cpu_turn_processorにbs参照キャッシュ
-  - A-3: gfm.lap_system.signal → player_info_panel.set_game_flow_managerにlap_system引数追加
-  - A-4: ui_manager.hand_display.signal → spell_phase_handlerにhand_display参照キャッシュ
-- ✅ info_panel構造改善 Step 1+2完了
-  - ui_managerに統合メソッド追加: hide_all_info_panels, is_any_info_panel_visible, show_card_info, show_card_selection
-  - 一括hide/種別分岐showを統合メソッドに置換（card.gd, card_selection_handler, spell_phase_handler, card_selection_ui）
-  - is_visible_panel → is_panel_visible() に統一
-- ✅ info_panel Step 3完了（コールバック統合）
-  - card_selection_uiの8コールバック → _on_info_panel_confirmed/_cancelled の2つに統合
-  - _connect_info_panel_signals(panel)ヘルパー追加（is_connectedガードで重複接続防止）
-  - 接続管理フラグ廃止（is_connectedチェックのみで十分）
-  - info_panel直接参照: 181箇所 → 35箇所に削減（146箇所、81%削減）
-  - 残り35箇所はcard_selection_ui(26)/card_selection_handler(9)のみ（選択モード制御で直接参照が必要）
-  - 外部ファイル（ui_tap_handler, dominio_order_ui, spell_mystic_arts等）からの直接参照は0に
-- ⬜ 次: D-P3（handlerチェーン~119箇所）
+- ✅ 修正F完了（5/6箇所）: DebugSettings集約
+- ✅ 修正E完了（4箇所）: 状態フラグメソッド化
+- ✅ 修正G完了（3箇所）: ラムダ→名前付きメソッド
+- ✅ 修正A完了（10箇所）: シグナルチェーン→参照キャッシュ/バブルアップ
+- ✅ info_panel構造改善完了: 統合メソッド化、コールバック8→2、外部参照181→35（81%削減）
 
 ### セッション5（2026-02-12 続き）
-- ✅ D-P3 phase_display委譲完了: show_toast, show_action_prompt, hide_action_prompt
-  - ui_manager.gd に委譲メソッド追加
-  - 置換済みファイル: game_flow_manager, tile_action_processor, spell_phase_handler,
-	item_phase_handler, tile_battle_executor, tile_summon_executor, target_selection_helper,
-	bankruptcy_handler, lap_system, spell_effect_executor, dominio_command_handler,
-	land_selection_helper, land_action_helper, card_selection_handler, spell_creature_swap,
-	spell_mystic_arts, special_tile_system, debug_controller, movement_direction_selector,
-	movement_branch_selector
-- ✅ D-P3 global_comment_ui委譲完了: show_comment_and_wait, show_choice_and_wait, show_comment_message, hide_comment_message
-  - 置換済みファイル: game_flow_manager, tile_action_processor, dominio_command_handler,
-	bankruptcy_handler, lap_system, spell_effect_executor, spell_dice, special_tile_system,
-	card_selection_handler, special_base_tile, magic_tile, magic_stone_tile, card_buy_tile,
-	card_give_tile, branch_tile
-- ✅ D-P3 hand_display委譲完了: update_hand_display
-  - 置換済みファイル: item_phase_handler, card_selection_handler, debug_controller,
-	card_buy_tile, card_give_tile
-- ⏳ D-P4 board_system委譲 途中: tile_action_processor, tile_neighbor_system
-  - board_system_3d.gd に委譲メソッド追加済み
-  - 置換済み: dominio_command_handler, land_action_helper, movement_helper（一部）
-  - 未置換: skill_support(1), special_tile_system(3), spell_phase_handler(2+コメント),
-	movement_helper(1残), spell_creature_place(1), condition_checker(1)
-- ⬜ D-P3 残り: card_selection_ui, dominio_order_ui, hand_display状態設定, global_action_buttons
-  - これらはUI操作系で密結合のため委譲メソッド化が難しく、要検討
-- ⬜ D-P3 残り: game_flow_manager内のdice_result系4箇所（game_flow_managerのみ使用、後回し）
-- ⬜ D-P4 残り: board_system.game_flow_manager.*（逆方向参照7箇所）
-- ❌ エラー発生: 置換途中でビルドエラー → 次セッションで修正
-
-### セッション5続き
-- ✅ D-P4 board_system委譲 完了（tile_action_processor, tile_neighbor_system, spell_land）
-  - 残り置換完了: skill_support, special_tile_system, movement_helper, spell_creature_place, condition_checker
-  - board_system_3d にchange_tile_element/change_tile_level追加
-  - skill_land_effects の board_system.game_flow_manager.spell_land チェーン4箇所解消
-  - execute_swap_action の引数エラー修正
-  - 非CPU系のboard_system内部チェーンは デバッグフラグ2箇所を除き0に
+- ✅ D-P3 ui_manager委譲完了: phase_display/global_comment_ui/hand_display（~85箇所置換）
+- ✅ D-P4 board_system委譲完了: tile_action_processor/tile_neighbor_system/spell_land（~44箇所置換）
+- ✅ execute_swap_action引数エラー修正
 
 ### セッション6（2026-02-12 続き）
-- ✅ 規約7 privateメソッド外部呼出し修正（5箇所完了）
-  - tutorial_popup._apply_position → apply_position
-  - global_action_buttons._update_button_states → update_button_states
-  - card_system._initialize_decks → initialize_decks
-  - dominio_command_handler._set_action_selection_navigation → set_action_selection_navigation
-  - ui_manager._restore_current_phase → restore_current_phase
-- ✅ 規約7 privateプロパティpublic化（一部完了）
-  - movement_controller._current_remaining_steps → current_remaining_steps
-  - game_flow_manager._game_ended → is_game_ended（getterプロパティ名変更）
-  - ui_manager._nav_state_saved → is_nav_state_saved()メソッド追加
-- ⏳ 残りのprivateプロパティ修正（次セッション）
-  - _swap_mode / _swap_tile_index / _swap_old_creature（dominio_command_handler）→ public化
-  - _popup（tutorial_popup）→ getter追加
-  - gab._confirm/back/up/down_callback（global_action_buttons）→ getter追加
-  - _special_callback / _special_text（global_action_buttons → ui_manager）→ getter追加
-  - _original_position（battle_screen内）→ 親子関係確認、public化検討
-
-### セッション7（2026-02-12 続き）
-- ✅ 残りのprivateプロパティ修正 全件完了
-  - dominio_command_handler: _swap_mode/_swap_old_creature/_swap_tile_index → public化
-  - explanation_mode: _popup → popup（public化）
-  - global_action_buttons: _confirm/back/up/down_callback → public化
-  - global_action_buttons: _special_callback/_special_text → public化
-  - ui_manager: _nav_state_saved → is_nav_state_saved()メソッド追加
-  - battle_creature_display: _original_position → original_position
-  - movement_controller: _current_remaining_steps → current_remaining_steps
-  - game_flow_manager: _game_ended → is_game_ended
-
-**規約7（privateメソッド外部呼出し）: 違反0件** ✅
-**規約8（状態フラグ外部直接set）: 違反0件** ✅
-**規約9（内部プロパティ外部直接参照）: 違反0件** ✅
+- ✅ 規約7 privateメソッド外部呼出し 残り5箇所修正
+  - tutorial_popup.apply_position, global_action_buttons.update_button_states,
+	card_system.initialize_decks, dominio_command_handler.set_action_selection_navigation,
+	ui_manager.restore_current_phase
+- ✅ 規約7+8+9 privateプロパティ外部参照 全件修正
+  - movement_controller.current_remaining_steps（public化）
+  - game_flow_manager.is_game_ended（getterプロパティ名変更）
+  - ui_manager.is_nav_state_saved()（getter追加）
+  - dominio_command_handler.swap_mode/swap_old_creature/swap_tile_index（public化）
+  - explanation_mode.popup（public化）
+  - global_action_buttons.confirm/back/up/down_callback（public化）
+  - global_action_buttons.special_callback/special_text（public化）
+  - battle_creature_display.original_position（public化）
+- ✅ 全規約の網羅的最終確認実施
+- ✅ シグナル方向の規約違反確認（306接続、違反0件）
+- ✅ 密結合パターンの残存調査完了（上記「残存する密結合パターン」参照）

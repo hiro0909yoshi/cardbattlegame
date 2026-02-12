@@ -464,9 +464,8 @@ func focus_on_player(player_id: int, smooth: bool = true):
 	if not camera or not board_system:
 		return
 	
-	if board_system.movement_controller:
-		var tile_index = board_system.movement_controller.get_player_tile(player_id)
-		focus_on_tile(tile_index, smooth)
+	var tile_index = board_system.get_player_tile(player_id)
+	focus_on_tile(tile_index, smooth)
 
 ## 指定タイルにフォーカス
 func focus_on_tile(tile_index: int, smooth: bool = true):

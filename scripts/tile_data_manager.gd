@@ -12,6 +12,7 @@ var tile_nodes = {}  # tile_index -> BaseTile
 # サブシステム参照
 var tile_info_display: TileInfoDisplay = null
 var game_flow_manager = null  # 世界呪い判定用
+var spell_curse_toll = null  # タイル呪い通行料補正用
 
 func _ready():
 	pass
@@ -202,18 +203,15 @@ func calculate_toll(tile_index: int, _map_id: String = "") -> int:
 	# 10の位で切り捨て
 	var final_toll = GameConstants.floor_toll(raw_toll)
 	
-	# ========================================
-	# ドミニオ呪い判定（toll_multiplier, peace）
-	# ========================================
-	
-	# クリーチャーの呪いをチェック
-	# GameSystemManager経由で spell_curse_toll にアクセス
-	if get_tree() and get_tree().root:
-		var game_system_manager = get_tree().root.get_node_or_null("GameSystemManager")
-		if game_system_manager and game_system_manager.board_system_3d and game_system_manager.board_system_3d.spell_curse_toll:
-			final_toll = game_system_manager.board_system_3d.spell_curse_toll.get_land_toll_modifier(tile_index, final_toll)
-	
 	return final_toll
+
+## 呪い補正込みの通行料を計算（表示・AI判断用）
+## player_id依存の呪い（toll_disable, toll_share等）は含まない
+func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
+	var base_toll = calculate_toll(tile_index, map_id)
+	if spell_curse_toll:
+		return spell_curse_toll.apply_tile_curse_to_toll(tile_index, base_toll)
+	return base_toll
 
 # レベルアップコストを計算（動的計算版）
 # 現在レベルから目標レベルへの差額コストを返す

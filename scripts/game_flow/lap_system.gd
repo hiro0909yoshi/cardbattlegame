@@ -334,16 +334,16 @@ func complete_lap(player_id: int):
 		print("[周回完了] プレイヤー%d 追加ボーナス+%d" % [player_id + 1, additional_bonus])
 	
 	# ダウン解除
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.clear_all_down_states_for_player(player_id)
+	if board_system_3d:
+		board_system_3d.clear_all_down_states_for_player(player_id)
 		print("[周回完了] プレイヤー%d ダウン解除" % [player_id + 1])
 		# ダウン解除によりドミニオコマンドが使用可能になった場合、ボタンを表示
 		if ui_manager and ui_manager.has_method("show_dominio_order_button"):
 			ui_manager.show_dominio_order_button()
 	
 	# HP回復+10
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.heal_all_creatures_for_player(player_id, 10)
+	if board_system_3d:
+		board_system_3d.heal_all_creatures_for_player(player_id, 10)
 		print("[周回完了] プレイヤー%d HP回復+10" % [player_id + 1])
 	
 	# UI表示: 3段階の通知ポップアップ

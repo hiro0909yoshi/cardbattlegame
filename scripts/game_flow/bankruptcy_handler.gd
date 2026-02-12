@@ -259,9 +259,9 @@ func force_sell_all_and_reset(player_id: int):
 
 ## プレイヤーをスタート地点に移動
 func _move_player_to_start(player_id: int):
-	if board_system and board_system.movement_controller:
+	if board_system:
 		# 3Dノードの位置も含めて移動
-		board_system.movement_controller.place_player_at_tile(player_id, START_TILE_INDEX)
+		board_system.place_player_at_tile(player_id, START_TILE_INDEX)
 	
 	if player_system:
 		player_system.set_player_position(player_id, START_TILE_INDEX)

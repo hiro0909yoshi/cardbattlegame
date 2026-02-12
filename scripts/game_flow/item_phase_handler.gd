@@ -668,7 +668,7 @@ func _get_defense_tile_info() -> Dictionary:
 	if game_flow_manager and game_flow_manager.board_system_3d:
 		var board = game_flow_manager.board_system_3d
 		if board.movement_controller:
-			var tile_index = board.movement_controller.get_player_tile(current_player_id)
+			var tile_index = board.get_player_tile(current_player_id)
 			if tile_index >= 0:
 				return board.get_tile_info(tile_index)
 	

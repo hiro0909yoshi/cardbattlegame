@@ -76,6 +76,7 @@ var game_flow_manager = null
 var player_system = null
 var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 var battle_system = null       # board_system.battle_system参照
+var spell_cast_notification_ui = null  # spell_phase_handler.spell_cast_notification_ui参照
 
 ## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
 func _get_item_phase_handler():
@@ -293,9 +294,9 @@ func close_dominio_order():
 	
 	# カメラを現在のプレイヤーに戻す
 	# MovementControllerからプレイヤーの実際の位置を取得
-	if board_system and player_system and board_system.movement_controller:
+	if board_system and player_system:
 		var player_id = player_system.current_player_index
-		var player_tile_index = board_system.movement_controller.get_player_tile(player_id)
+		var player_tile_index = board_system.get_player_tile(player_id)
 		
 		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = board_system.tile_nodes[player_tile_index].global_position

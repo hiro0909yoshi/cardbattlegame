@@ -200,11 +200,11 @@ static func focus_camera_on_tile(handler, tile_index: int):
 ## handler: board_system を持つオブジェクト
 ## player_id: フォーカスするプレイヤーのID
 static func focus_camera_on_player(handler, player_id: int):
-	if not handler.board_system or not handler.board_system.movement_controller:
+	if not handler.board_system:
 		return
 	
 	# プレイヤーの位置（タイル）を取得
-	var player_tile = handler.board_system.movement_controller.get_player_tile(player_id)
+	var player_tile = handler.board_system.get_player_tile(player_id)
 	
 	if player_tile >= 0:
 		# プレイヤーがいる土地にカメラをフォーカス

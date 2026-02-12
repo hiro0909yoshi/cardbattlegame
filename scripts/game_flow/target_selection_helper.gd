@@ -291,7 +291,7 @@ static func get_tile_index_from_target(target_data: Dictionary, board_sys) -> in
 		"player":
 			var player_id = target_data.get("player_id", -1)
 			if player_id >= 0 and board_sys and board_sys.movement_controller:
-				return board_sys.movement_controller.get_player_tile(player_id)
+				return board_sys.get_player_tile(player_id)
 			return -1
 		_:
 			return -1
@@ -324,8 +324,8 @@ static func show_confirmation_highlights(handler, target_type: String, target_in
 	
 	match target_type:
 		"self", "none":
-			if handler.board_system and handler.board_system.movement_controller:
-				var player_tile = handler.board_system.movement_controller.get_player_tile(handler.current_player_id)
+			if handler.board_system:
+				var player_tile = handler.board_system.get_player_tile(handler.current_player_id)
 				if player_tile >= 0:
 					TargetMarkerSystem.show_selection_marker(handler, player_tile)
 					TargetMarkerSystem.highlight_tile(handler, player_tile)
@@ -344,8 +344,8 @@ static func show_confirmation_highlights(handler, target_type: String, target_in
 			var targets = TargetFinder.get_valid_targets(handler, "player", target_info)
 			for target in targets:
 				var player_id = target.get("player_id", -1)
-				if player_id >= 0 and handler.board_system and handler.board_system.movement_controller:
-					var player_tile = handler.board_system.movement_controller.get_player_tile(player_id)
+				if player_id >= 0 and handler.board_system:
+					var player_tile = handler.board_system.get_player_tile(player_id)
 					if player_tile >= 0:
 						highlighted_tiles.append(player_tile)
 			TargetMarkerSystem.highlight_multiple_tiles(handler, highlighted_tiles)

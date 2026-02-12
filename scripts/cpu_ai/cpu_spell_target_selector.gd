@@ -943,8 +943,8 @@ func get_enemy_lands_by_level_sorted(player_id: int, min_level: int) -> Array:
 
 ## プレイヤーの現在位置を取得
 func _get_player_current_tile(player_id: int) -> int:
-	if board_system and "movement_controller" in board_system and board_system.movement_controller:
-		return board_system.movement_controller.get_player_tile(player_id)
+	if board_system and board_system.has_method("get_player_tile"):
+		return board_system.get_player_tile(player_id)
 	if player_system:
 		return player_system.get_player_position(player_id)
 	return 0

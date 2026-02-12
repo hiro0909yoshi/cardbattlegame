@@ -230,6 +230,20 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 		"bonus_receiver_id": -1
 	}
 
+## タイル呪いによる通行料補正を適用（表示用・player_id不要）
+## peace, creature_toll_disable → 0、toll_multiplier → 倍率適用
+func apply_tile_curse_to_toll(tile_index: int, base_toll: int) -> int:
+	if not spell_curse:
+		return base_toll
+	var land_curse = spell_curse.get_creature_curse(tile_index)
+	var curse_type = land_curse.get("curse_type", "")
+	if curse_type == "peace" or curse_type == "creature_toll_disable":
+		return 0
+	if curse_type == "toll_multiplier":
+		var multiplier = land_curse.get("params", {}).get("multiplier", 1.0)
+		return int(base_toll * multiplier)
+	return base_toll
+
 ## peace 呪いの有無を確認（移動除外判定用）
 func has_peace_curse(tile_index: int) -> bool:
 	var curse = spell_curse.get_creature_curse(tile_index)

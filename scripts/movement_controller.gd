@@ -454,8 +454,8 @@ func move_to_tile(player_id: int, tile_index: int) -> void:
 	tween.tween_property(player_node, "global_position", target_pos, MOVE_DURATION)
 
 	if camera and player_system and player_id == player_system.current_player_index:
-		var cc = game_flow_manager.board_system_3d.camera_controller if game_flow_manager and game_flow_manager.board_system_3d else null
-		var skip_follow = cc and cc.has_method("is_direction_camera_active") and cc.is_direction_camera_active()
+		var bs = game_flow_manager.board_system_3d if game_flow_manager else null
+		var skip_follow = bs and bs.is_direction_camera_active()
 		if not skip_follow:
 			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 			tween.tween_property(camera, "global_position", cam_target, MOVE_DURATION)

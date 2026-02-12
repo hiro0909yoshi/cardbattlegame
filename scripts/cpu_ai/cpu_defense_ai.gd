@@ -834,12 +834,12 @@ func _calculate_toll(tile_index: int) -> int:
 	if tile_index < 0 or not board_system:
 		return 0
 	
+	# 呪い補正込みの通行料を返す
+	if board_system.tile_data_manager and board_system.tile_data_manager.has_method("calculate_toll_with_curse"):
+		return board_system.tile_data_manager.calculate_toll_with_curse(tile_index)
+	
 	if board_system.has_method("calculate_toll"):
 		return board_system.calculate_toll(tile_index)
-	
-	# TileDataManagerがあれば使用
-	if board_system.tile_data_manager and board_system.tile_data_manager.has_method("calculate_toll"):
-		return board_system.tile_data_manager.calculate_toll(tile_index, "map_1")
 	
 	return 0
 

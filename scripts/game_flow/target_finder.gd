@@ -395,7 +395,7 @@ static func _find_land_targets(sys_board, sys_player, sys_flow, current_player_i
 			
 			var player_tile = -1
 			if sys_board and sys_board.movement_controller:
-				player_tile = sys_board.movement_controller.get_player_tile(current_player_id)
+				player_tile = sys_board.get_player_tile(current_player_id)
 			elif sys_player and current_player_id >= 0:
 				player_tile = sys_player.players[current_player_id].current_tile
 			

@@ -1281,7 +1281,7 @@ func _get_current_tile_element(player_id: int) -> String:
 	if not board.movement_controller:
 		return ""
 	
-	var tile_index = board.movement_controller.get_player_tile(player_id)
+	var tile_index = board.get_player_tile(player_id)
 	if tile_index < 0:
 		return ""
 	

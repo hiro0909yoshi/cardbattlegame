@@ -915,8 +915,10 @@ func get_tile_info(tile_index: int) -> Dictionary:
 			return info
 	return {}
 
-## 通行料を計算
+## 通行料を計算（呪い補正込み）
 func calculate_toll(tile_index: int) -> int:
+	if board_system and board_system.tile_data_manager and board_system.tile_data_manager.has_method("calculate_toll_with_curse"):
+		return board_system.tile_data_manager.calculate_toll_with_curse(tile_index)
 	if board_system and board_system.has_method("calculate_toll"):
 		return board_system.calculate_toll(tile_index)
 	return 0

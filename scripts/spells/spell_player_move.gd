@@ -189,14 +189,12 @@ func _reverse_player_direction(player_id: int) -> void:
 		player_system.players[player_id].buffs.erase("direction_choice_pending")
 		print("[SpellPlayerMove] プレイヤー%d の方向選択権を消費" % [player_id + 1])
 	
-	if not board_system or not "movement_controller" in board_system:
+	if not board_system:
 		return
-	var mc = board_system.movement_controller
 	
 	# came_fromを「次に進む予定だったタイル」に変更
 	# これにより、came_fromを除外するロジックで逆方向に進む
-	if mc.has_method("swap_came_from_for_reverse"):
-		mc.swap_came_from_for_reverse(player_id)
+	board_system.swap_came_from_for_reverse(player_id)
 
 ## ゲート通過効果を発動（リミッション 2123）
 ## 注意: リミッションは「通過したことにする」だけで、停止はしないのでダウン解除は発生しない
@@ -387,8 +385,8 @@ func find_nearest_tile(from_tile: int, condition: Callable) -> int:
 ## プレイヤーの現在位置を取得（MovementController優先）
 func _get_player_current_tile(player_id: int) -> int:
 	# MovementControllerから正確な位置を取得（優先）
-	if board_system and board_system.movement_controller:
-		return board_system.movement_controller.get_player_tile(player_id)
+	if board_system:
+		return board_system.get_player_tile(player_id)
 	# フォールバック: PlayerSystemから取得
 	return player_system.players[player_id].current_tile
 
@@ -400,10 +398,10 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 	player_system.players[player_id].current_tile = target_tile
 	
 	# 3Dモデルを移動（MovementController3D経由）
-	if board_system and board_system.movement_controller:
-		board_system.movement_controller.place_player_at_tile(player_id, target_tile)
+	if board_system:
+		board_system.place_player_at_tile(player_id, target_tile)
 		# MovementControllerの内部状態も更新
-		board_system.movement_controller.player_tiles[player_id] = target_tile
+		board_system.set_player_tile(player_id, target_tile)
 	
 	# 次ターンの方向選択権を付与（スペルワープ後）
 	player_system.players[player_id].buffs["direction_choice_pending"] = true
@@ -422,8 +420,8 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 				await game_flow_manager.lap_system.checkpoint_processing_completed
 		
 		# 2. ダウン解除（訪問済み・未訪問に関わらず常に実行）
-		if board_system and board_system.movement_controller:
-			board_system.movement_controller.clear_all_down_states_for_player(player_id)
+		if board_system:
+			board_system.clear_all_down_states_for_player(player_id)
 
 ## ゲート効果を発動（ゲートワープ時）
 func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) -> void:

@@ -19,11 +19,10 @@ func connect_camera_signals():
 		print("[UITapHandler] board_system_ref がない")
 		return
 
-	if not ui_manager.board_system_ref.camera_controller:
+	var cam_ctrl = ui_manager.board_system_ref.get_camera_controller_ref()
+	if not cam_ctrl:
 		print("[UITapHandler] camera_controller がない")
 		return
-
-	var cam_ctrl = ui_manager.board_system_ref.camera_controller
 
 	if cam_ctrl.creature_tapped.is_connected(_on_creature_tapped):
 		print("[UITapHandler] シグナル既に接続済み")

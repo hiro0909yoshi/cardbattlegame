@@ -217,11 +217,8 @@ func phase_3_setup_basic_config() -> void:
 		camera_controller.name = "CameraController"
 		parent_node.add_child(camera_controller)
 		camera_controller.setup(camera_3d, board_system_3d, player_system)
-		board_system_3d.camera_controller = camera_controller
-		
-		# MovementControllerにも参照を渡す（Tween競合防止用）
-		if board_system_3d.movement_controller:
-			board_system_3d.movement_controller.camera_controller = camera_controller
+		# BoardSystem3D本体 + MovementControllerの両方に参照を設定
+		board_system_3d.set_camera_controller_ref(camera_controller)
 	
 	print("[GameSystemManager] Phase 3: システム基本設定完了")
 
@@ -360,6 +357,9 @@ func phase_4_setup_system_interconnections() -> void:
 			# ★重要: board_system_3d にメタデータとして設定（MovementHelper から参照可能にする）
 			if board_system_3d:
 				board_system_3d.set_meta("spell_curse_toll", game_flow_manager.spell_curse_toll)
+				# tile_data_managerにも参照を渡す（表示用通行料のタイル呪い補正で使用）
+				if board_system_3d.tile_data_manager:
+					board_system_3d.tile_data_manager.spell_curse_toll = game_flow_manager.spell_curse_toll
 				print("[SpellCurseToll] BoardSystem3D のメタデータとして設定完了")
 			
 			# SpellCostModifier の初期化
@@ -541,8 +541,8 @@ func _setup_spell_systems() -> void:
 	# SpellPlayerMove
 	var spell_player_move = SpellPlayerMove.new()
 	spell_player_move.setup(board_system_3d, player_system, game_flow_manager, spell_curse)
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.spell_player_move = spell_player_move
+	if board_system_3d:
+		board_system_3d.set_spell_player_move(spell_player_move)
 	spell_systems["spell_player_move"] = spell_player_move
 	print("[SpellPlayerMove] 初期化完了")
 	
@@ -666,9 +666,7 @@ func _initialize_cpu_movement_evaluator() -> void:
 	)
 	
 	# SpellMovementを取得（MovementControllerから）
-	var spell_mov = null
-	if board_system_3d.movement_controller:
-		spell_mov = board_system_3d.movement_controller.spell_movement
+	var spell_mov = board_system_3d.get_spell_movement() if board_system_3d else null
 	
 	# CPUBattleAIを作成（コンテキスト経由）
 	var battle_ai = CPUBattleAI.new()
@@ -683,7 +681,7 @@ func _initialize_cpu_movement_evaluator() -> void:
 	var cpu_movement_evaluator = CPUMovementEvaluator.new()
 	cpu_movement_evaluator.setup_with_context(
 		cpu_context,
-		board_system_3d.movement_controller,
+		board_system_3d.get_movement_controller_ref(),
 		spell_mov,
 		battle_ai,
 		cpu_ai_handler

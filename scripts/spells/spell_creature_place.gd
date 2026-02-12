@@ -141,8 +141,8 @@ func place_creature_conditional(
 	
 	# 1. プレイヤーの現在位置を取得（board_system経由で正確な位置を取得）
 	var current_tile = -1
-	if board_system.movement_controller:
-		current_tile = board_system.movement_controller.get_player_tile(player_id)
+	if board_system:
+		current_tile = board_system.get_player_tile(player_id)
 	
 	# フォールバック: PlayerSystemから取得
 	if current_tile < 0:

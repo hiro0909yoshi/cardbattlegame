@@ -45,7 +45,7 @@ func _process_warp_landing(player_id: int) -> void:
 	# 現在のプレイヤー位置を取得
 	var current_tile = -1
 	if b_system.movement_controller:
-		current_tile = b_system.movement_controller.get_player_tile(player_id)
+		current_tile = b_system.get_player_tile(player_id)
 	
 	if current_tile < 0:
 		print("[SpecialTile] ワープ後の位置が不明 - 着地処理スキップ")
@@ -143,8 +143,8 @@ func handle_checkpoint_tile(player_id: int):
 	print("チェックポイント停止")
 	
 	# ダウン解除
-	if board_system and board_system.movement_controller:
-		var cleared_count = board_system.movement_controller.clear_all_down_states_for_player(player_id)
+	if board_system:
+		var cleared_count = board_system.clear_all_down_states_for_player(player_id)
 		if cleared_count > 0:
 			print("[チェックポイント] プレイヤー%d ダウン解除: %d体" % [player_id + 1, cleared_count])
 			# ダウン解除によりドミニオコマンドが使用可能になった場合、ボタンを表示
@@ -172,10 +172,10 @@ func handle_warp_stop_tile(tile_index: int, player_id: int):
 	print("停止型ワープ発動！ タイル%d → タイル%d" % [tile_index, warp_pair])
 	
 	# movement_controllerでワープ実行
-	if board_system and board_system.movement_controller:
-		await board_system.movement_controller.execute_warp(player_id, tile_index, warp_pair)
+	if board_system:
+		await board_system.execute_warp(player_id, tile_index, warp_pair)
 		# プレイヤー位置を更新
-		board_system.movement_controller.player_tiles[player_id] = warp_pair
+		board_system.set_player_tile(player_id, warp_pair)
 	
 	emit_signal("special_tile_activated", "warp_stop", player_id, warp_pair)
 	

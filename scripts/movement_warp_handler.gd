@@ -63,9 +63,8 @@ func execute_warp(player_id: int, from_tile: int, to_tile: int) -> void:
 		# カメラも瞬間移動
 		if controller.camera and controller.player_system and player_id == controller.player_system.current_player_index:
 			var gfm = controller.game_flow_manager
-			var cc = gfm.board_system_3d.camera_controller if gfm and gfm.board_system_3d else null
-			if cc and cc.has_method("cancel_direction_tween"):
-				cc.cancel_direction_tween()
+			if gfm and gfm.board_system_3d:
+				gfm.board_system_3d.cancel_direction_tween()
 			var cam_target = target_pos + GameConstants.CAMERA_OFFSET
 			controller.camera.global_position = cam_target
 

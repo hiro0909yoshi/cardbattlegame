@@ -126,9 +126,9 @@ func process_tile_landing(tile_index: int, current_player_index: int, player_is_
 # プレイヤーのタイル処理
 func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: int):
 	# カメラを手動モードに
-	if board_system and board_system.camera_controller:
-		board_system.camera_controller.enable_manual_mode()
-		board_system.camera_controller.set_current_player(player_index)
+	if board_system:
+		board_system.enable_manual_camera()
+		board_system.set_camera_player(player_index)
 	
 	# 特殊タイルかチェック
 	var is_special = _is_special_tile(tile.tile_type)
@@ -145,7 +145,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 		if board_system.has_meta("spell_curse_toll"):
 			spell_curse_toll = board_system.get_meta("spell_curse_toll")
 		
-		var current_tile_index = board_system.movement_controller.get_player_tile(player_index)
+		var current_tile_index = board_system.get_player_tile(player_index)
 		
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(current_tile_index):
 			show_battle_ui_disabled()
@@ -211,7 +211,7 @@ func on_card_selected(card_index: int):
 		return
 	
 	var current_player_index = board_system.current_player_index
-	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var current_tile = board_system.get_player_tile(current_player_index)
 	var tile_info = board_system.get_tile_info(current_tile)
 	
 	# 特殊タイル上ではカード選択を無視（遠隔配置モード除く）
@@ -251,7 +251,7 @@ func on_level_up_selected(target_level: int, cost: int):
 		return
 	
 	var current_player_index = board_system.current_player_index
-	var current_tile = board_system.movement_controller.get_player_tile(current_player_index)
+	var current_tile = board_system.get_player_tile(current_player_index)
 	var current_player = player_system.get_current_player()
 	
 	if current_player.magic_power >= cost:
@@ -392,9 +392,9 @@ func _complete_action():
 	var current_idx = board_system.current_player_index if board_system else 0
 	var cpu_flags = game_flow_manager.player_is_cpu if game_flow_manager else []
 	var is_cpu = cpu_flags[current_idx] if current_idx < cpu_flags.size() else false
-	if board_system and board_system.camera_controller and not is_cpu:
-		board_system.camera_controller.enable_follow_mode()
-		board_system.camera_controller.return_to_player()
+	if board_system and not is_cpu:
+		board_system.enable_follow_camera()
+		board_system.return_camera_to_player()
 	
 	remote_placement_tile = -1
 	

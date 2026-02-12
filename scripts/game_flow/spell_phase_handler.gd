@@ -255,9 +255,9 @@ func start_spell_phase(player_id: int):
 		_handle_cpu_spell_turn()
 	else:
 		# 人間プレイヤーの場合：カメラ手動モード有効化
-		if board_system and board_system.camera_controller:
-			board_system.camera_controller.enable_manual_mode()
-			board_system.camera_controller.set_current_player(player_id)
+		if board_system:
+			board_system.enable_manual_camera()
+			board_system.set_camera_player(player_id)
 		
 		# グローバルナビゲーション設定（戻るボタンのみ = スペルを使わない）
 		_setup_spell_selection_navigation()
@@ -1048,8 +1048,8 @@ func return_camera_to_player():
 		return
 	
 	# MovementControllerからプレイヤーの実際の位置を取得
-	if board_system.movement_controller:
-		var player_tile_index = board_system.movement_controller.get_player_tile(current_player_id)
+	if board_system:
+		var player_tile_index = board_system.get_player_tile(current_player_id)
 		
 		if board_system.camera and board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = board_system.tile_nodes[player_tile_index].global_position
@@ -1188,8 +1188,8 @@ func complete_spell_phase():
 	_clear_spell_navigation()
 	
 	# カメラを追従モードに戻す（位置は移動処理で自然に戻る）
-	if board_system and board_system.camera_controller:
-		board_system.camera_controller.enable_follow_mode()
+	if board_system:
+		board_system.enable_follow_camera()
 	
 	spell_phase_completed.emit()
 	

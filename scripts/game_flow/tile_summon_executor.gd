@@ -57,7 +57,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		target_tile = remote_placement_tile
 		print("[TileSummonExecutor] 遠隔配置モード: タイル%d に配置" % target_tile)
 	else:
-		target_tile = board_system.movement_controller.get_player_tile(current_player_index)
+		target_tile = board_system.get_player_tile(current_player_index)
 	
 	var tile = board_system.tile_nodes.get(target_tile)
 	

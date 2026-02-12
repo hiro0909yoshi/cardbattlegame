@@ -8,6 +8,7 @@ signal tile_action_completed()
 signal terrain_changed(tile_index: int, old_element: String, new_element: String)
 @warning_ignore("unused_signal")
 signal level_up_completed(tile_index: int, new_level: int)
+signal movement_completed(player_id: int, final_tile: int)
 
 # 定数をpreload
 
@@ -496,6 +497,9 @@ func has_owned_lands(player_id: int) -> bool:
 	return false
 
 func _on_movement_completed(_player_id: int, final_tile: int):
+	# シグナル転送（外部からmovement_completedを接続できるようにする）
+	movement_completed.emit(_player_id, final_tile)
+	
 	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
 	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
 		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
@@ -724,3 +728,202 @@ func change_tile_level(tile_index: int, amount: int) -> bool:
 	if game_flow_manager and game_flow_manager.spell_land:
 		return game_flow_manager.spell_land.change_level(tile_index, amount)
 	return false
+
+# ========================================
+# MovementController 委譲メソッド
+# ========================================
+
+## プレイヤーの現在タイルを取得
+func get_player_tile(player_id: int) -> int:
+	if movement_controller:
+		return movement_controller.get_player_tile(player_id)
+	return -1
+
+## プレイヤーをタイルに配置
+func place_player_at_tile(player_id: int, tile_index: int):
+	if movement_controller:
+		movement_controller.place_player_at_tile(player_id, tile_index)
+
+## プレイヤーの現在タイルを設定（移動処理用）
+func set_player_tile(player_id: int, tile_index: int):
+	if movement_controller:
+		movement_controller.player_tiles[player_id] = tile_index
+
+## 移動方向/分岐選択がアクティブか
+func is_movement_selection_active() -> bool:
+	if movement_controller:
+		return movement_controller.direction_selector.is_active or movement_controller.branch_selector.is_active
+	return false
+
+## 方向/分岐選択のナビゲーション復元（成功したらtrue）
+func restore_movement_selector_navigation() -> bool:
+	if movement_controller:
+		if movement_controller.direction_selector and movement_controller.direction_selector.is_active:
+			movement_controller.direction_selector.restore_navigation()
+			return true
+		if movement_controller.branch_selector and movement_controller.branch_selector.is_active:
+			movement_controller.branch_selector.restore_navigation()
+			return true
+	return false
+
+## 逆移動呪い解除時のcame_from復元
+func on_movement_reverse_curse_removed(player_id: int):
+	if movement_controller and movement_controller.has_method("on_movement_reverse_curse_removed"):
+		movement_controller.on_movement_reverse_curse_removed(player_id)
+
+## 逆移動時のcame_from入れ替え
+func swap_came_from_for_reverse(player_id: int):
+	if movement_controller and movement_controller.has_method("swap_came_from_for_reverse"):
+		movement_controller.swap_came_from_for_reverse(player_id)
+
+## 全ダウン状態をクリア
+func clear_all_down_states_for_player(player_id: int) -> int:
+	if movement_controller:
+		return movement_controller.clear_all_down_states_for_player(player_id)
+	return 0
+
+## ワープ実行
+func execute_warp(player_id: int, tile_index: int, warp_pair: int) -> void:
+	if movement_controller:
+		await movement_controller.execute_warp(player_id, tile_index, warp_pair)
+
+## 全クリーチャーを回復
+func heal_all_creatures_for_player(player_id: int, heal_amount: int):
+	if movement_controller:
+		movement_controller.heal_all_creatures_for_player(player_id, heal_amount)
+
+## カメラをプレイヤーにフォーカス（movement_controller経由）
+func focus_camera_on_player_mc(player_id: int, animate: bool = true):
+	if movement_controller:
+		await movement_controller.focus_camera_on_player(player_id, animate)
+
+## spell_movementのダウン状態をクリア
+func clear_down_state_for_player(player_id: int):
+	if movement_controller and movement_controller.spell_movement:
+		movement_controller.spell_movement.clear_down_state_for_player(player_id, tile_nodes)
+
+## spell_movementのダウン状態をセット
+func set_down_state_for_tile(tile_index: int):
+	if movement_controller and movement_controller.spell_movement:
+		movement_controller.spell_movement.set_down_state_for_tile(tile_index, tile_nodes)
+
+## MovementControllerの初期化用setter
+func set_camera_controller_ref(cam_controller):
+	camera_controller = cam_controller
+	if movement_controller:
+		movement_controller.camera_controller = cam_controller
+
+func set_spell_player_move(spm):
+	if movement_controller:
+		movement_controller.spell_player_move = spm
+
+func set_cpu_movement_evaluator(evaluator):
+	if movement_controller:
+		movement_controller.cpu_movement_evaluator = evaluator
+
+func get_cpu_movement_evaluator():
+	if movement_controller:
+		return movement_controller.cpu_movement_evaluator
+	return null
+
+func get_spell_movement():
+	if movement_controller:
+		return movement_controller.spell_movement
+	return null
+
+func set_movement_controller_gfm(gfm):
+	if movement_controller:
+		movement_controller.game_flow_manager = gfm
+
+# ========================================
+# CameraController 委譲メソッド
+# ========================================
+
+## CameraControllerの参照を取得（シグナル接続用）
+func get_camera_controller_ref() -> CameraController:
+	return camera_controller
+
+## MovementControllerの参照を取得（CPUMovementEvaluator初期化用）
+func get_movement_controller_ref() -> MovementController3D:
+	return movement_controller
+
+## カメラを手動モードに切替
+func enable_manual_camera():
+	if camera_controller:
+		camera_controller.enable_manual_mode()
+
+## カメラを追従モードに切替
+func enable_follow_camera():
+	if camera_controller:
+		camera_controller.enable_follow_mode()
+
+## カメラの対象プレイヤーを設定
+func set_camera_player(player_id: int):
+	if camera_controller:
+		camera_controller.set_current_player(player_id)
+
+## カメラをプレイヤーに戻す
+func return_camera_to_player():
+	if camera_controller:
+		camera_controller.return_to_player()
+
+## カメラをプレイヤー位置にフォーカス
+func focus_camera_on_player_pos(player_id: int, animate: bool = true):
+	if camera_controller:
+		camera_controller.focus_on_player(player_id, animate)
+
+## カメラをゆっくり位置にフォーカス
+func focus_camera_slow(position: Vector3, duration: float = 0.5):
+	if camera_controller:
+		camera_controller.focus_on_position_slow(position, duration)
+
+## カメラをタイル位置にゆっくりフォーカス
+func focus_camera_on_tile_slow(tile_index: int, duration: float = 1.2):
+	if camera_controller:
+		camera_controller.focus_on_tile_slow(tile_index, duration)
+
+## 方向選択カメラがアクティブか
+func is_direction_camera_active() -> bool:
+	if camera_controller and camera_controller.has_method("is_direction_camera_active"):
+		return camera_controller.is_direction_camera_active()
+	return false
+
+## 方向選択Tweenをキャンセル
+func cancel_direction_tween():
+	if camera_controller and camera_controller.has_method("cancel_direction_tween"):
+		camera_controller.cancel_direction_tween()
+
+# ========================================
+# TileInfoDisplay 委譲メソッド
+# ========================================
+
+## 表示モード切替
+func switch_tile_display_mode():
+	if tile_info_display:
+		tile_info_display.switch_mode()
+
+## 現在の表示モード名を取得
+func get_tile_display_mode_name() -> String:
+	if tile_info_display:
+		return tile_info_display.get_current_mode_name()
+	return ""
+
+## タイル表示を更新
+func update_tile_display(tile_index: int, tile_info: Dictionary):
+	if tile_info_display:
+		tile_info_display.update_display(tile_index, tile_info)
+
+# ========================================
+# TileDataManager 追加委譲メソッド
+# ========================================
+
+## タイルレベルを直接設定
+func set_tile_level(tile_index: int, new_level: int):
+	if tile_data_manager and tile_data_manager.has_method("set_tile_level"):
+		tile_data_manager.set_tile_level(tile_index, new_level)
+
+## レベルアップコストを計算
+func calculate_level_up_cost(tile_index: int, target_level: int) -> int:
+	if tile_data_manager:
+		return tile_data_manager.calculate_level_up_cost(tile_index, target_level)
+	return 0

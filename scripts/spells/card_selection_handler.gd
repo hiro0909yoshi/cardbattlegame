@@ -974,10 +974,8 @@ func _restore_camera_to_current_player():
 	if not ui_manager or not ui_manager.board_system_ref:
 		return
 	
-	var camera_ctrl = ui_manager.board_system_ref.camera_controller
-	if camera_ctrl:
-		camera_ctrl.enable_follow_mode()
-		camera_ctrl.return_to_player()
+	ui_manager.board_system_ref.enable_follow_camera()
+	ui_manager.board_system_ref.return_camera_to_player()
 
 
 # ============ CPU自動選択（追加） ============

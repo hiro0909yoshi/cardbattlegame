@@ -67,8 +67,8 @@ func _update_ui():
 			var np = controller.tile_nodes[nt].global_position
 			var dv = (np - cp).normalized()
 			var offset_pos = cp + dv * cp.distance_to(np) * 5.0
-			if gfm and gfm.board_system_3d and gfm.board_system_3d.camera_controller:
-				gfm.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
+			if gfm and gfm.board_system_3d:
+				gfm.board_system_3d.focus_camera_slow(offset_pos, 0.5)
 
 	# 到着予想タイルに基づいて手札の配置制限表示を更新
 	if player_id >= 0:

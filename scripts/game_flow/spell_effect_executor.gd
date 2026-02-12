@@ -189,13 +189,13 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		# === ダウン操作系 ===
 		"down_clear":
-			if handler.board_system and handler.board_system.movement_controller and handler.board_system.movement_controller.spell_movement:
-				handler.board_system.movement_controller.spell_movement.clear_down_state_for_player(handler.current_player_id, handler.board_system.tile_nodes)
+			if handler.board_system:
+				handler.board_system.clear_down_state_for_player(handler.current_player_id)
 		
 		"set_down":
 			var tile_index = target_data.get("tile_index", -1)
-			if tile_index >= 0 and handler.board_system and handler.board_system.movement_controller and handler.board_system.movement_controller.spell_movement:
-				handler.board_system.movement_controller.spell_movement.set_down_state_for_tile(tile_index, handler.board_system.tile_nodes)
+			if tile_index >= 0 and handler.board_system:
+				handler.board_system.set_down_state_for_tile(tile_index)
 		
 		# === クリーチャー移動系 ===
 		"move_to_adjacent_enemy", "move_steps", "move_self", "destroy_and_move":

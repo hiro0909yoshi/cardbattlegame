@@ -514,7 +514,5 @@ func _update_world_curse():
 
 # 歩行逆転呪い解除時の処理
 func _on_movement_reverse_curse_removed(player_id: int):
-	if board_system and board_system.movement_controller:
-		var mc = board_system.movement_controller
-		if mc.has_method("on_movement_reverse_curse_removed"):
-			mc.on_movement_reverse_curse_removed(player_id)
+	if board_system:
+		board_system.on_movement_reverse_curse_removed(player_id)

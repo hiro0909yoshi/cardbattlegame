@@ -38,8 +38,8 @@ func show_branch_tile_selection(choices: Array) -> int:
 
 	# カメラを手動モードに切り替え（分岐先を確認できるように）
 	var gfm = controller.game_flow_manager
-	if gfm and gfm.board_system_3d and gfm.board_system_3d.camera_controller:
-		gfm.board_system_3d.camera_controller.enable_manual_mode()
+	if gfm and gfm.board_system_3d:
+		gfm.board_system_3d.enable_manual_camera()
 
 	_update_ui()
 	_update_indicator()
@@ -54,16 +54,15 @@ func show_branch_tile_selection(choices: Array) -> int:
 	controller.destination_predictor.clear_destination_highlight()
 
 	# 到着予測地点にカメラを移動（awaitしない＝移動と並行）
-	if gfm and gfm.board_system_3d and gfm.board_system_3d.camera_controller:
-		var cc = gfm.board_system_3d.camera_controller
+	if gfm and gfm.board_system_3d:
 		if controller.current_remaining_steps > 1:
 			var from_tile = controller.player_tiles[controller.current_moving_player] if controller.current_moving_player >= 0 else -1
 			var destinations = controller.destination_predictor.predict_all_destinations(result, controller.current_remaining_steps - 1, from_tile)
 			if not destinations.is_empty() and controller.tile_nodes.has(destinations[0]):
-				cc.focus_on_tile_slow(destinations[0], 1.2)
+				gfm.board_system_3d.focus_camera_on_tile_slow(destinations[0], 1.2)
 		elif controller.tile_nodes.has(result):
-			cc.focus_on_tile_slow(result, 0.8)
-		cc.enable_follow_mode()
+			gfm.board_system_3d.focus_camera_on_tile_slow(result, 0.8)
+		gfm.board_system_3d.enable_follow_camera()
 
 	return result
 
@@ -101,14 +100,14 @@ func _update_ui():
 
 	# カメラを選択中の分岐方向にずらす
 	var gfm2 = controller.game_flow_manager
-	if not available_branches.is_empty() and current_branch_tile >= 0 and gfm2 and gfm2.board_system_3d and gfm2.board_system_3d.camera_controller:
+	if not available_branches.is_empty() and current_branch_tile >= 0 and gfm2 and gfm2.board_system_3d:
 		var target_tile = available_branches[selected_branch_index]
 		if controller.tile_nodes.has(current_branch_tile) and controller.tile_nodes.has(target_tile):
 			var bp = controller.tile_nodes[current_branch_tile].global_position
 			var tp = controller.tile_nodes[target_tile].global_position
 			var dv = (tp - bp).normalized()
 			var offset_pos = bp + dv * bp.distance_to(tp) * 3.0
-			gfm2.board_system_3d.camera_controller.focus_on_position_slow(offset_pos, 0.5)
+			gfm2.board_system_3d.focus_camera_slow(offset_pos, 0.5)
 
 
 # ナビゲーションボタンを設定

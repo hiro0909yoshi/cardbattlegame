@@ -191,9 +191,9 @@ func _connect_signals():
 		game_flow_manager.turn_started.connect(_on_turn_started)
 		game_flow_manager.dice_rolled.connect(_on_dice_rolled)
 	
-	# 移動完了
-	if board_system_3d and board_system_3d.movement_controller:
-		board_system_3d.movement_controller.movement_completed.connect(_on_movement_completed)
+	# 移動完了（BoardSystem3Dの転送シグナル経由）
+	if board_system_3d:
+		board_system_3d.movement_completed.connect(_on_movement_completed)
 	
 	# チェックポイント通過
 	if game_flow_manager and game_flow_manager.lap_system:
@@ -871,7 +871,7 @@ func _check_enemy_player_target(tile_index: int) -> bool:
 	# 敵プレイヤー（CPU）の位置を取得
 	for player in player_system.players:
 		if player.id != current_player_id:
-			var enemy_tile = board_system_3d.movement_controller.get_player_tile(player.id) if board_system_3d else -1
+			var enemy_tile = board_system_3d.get_player_tile(player.id) if board_system_3d else -1
 			if tile_index == enemy_tile:
 				return true
 	

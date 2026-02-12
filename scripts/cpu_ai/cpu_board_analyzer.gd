@@ -301,8 +301,8 @@ func has_cursed_creature(player_id: int) -> bool:
 
 ## プレイヤーの現在位置を取得
 func get_player_current_tile(player_id: int) -> int:
-	if board_system and "movement_controller" in board_system and board_system.movement_controller:
-		return board_system.movement_controller.get_player_tile(player_id)
+	if board_system and board_system.has_method("get_player_tile"):
+		return board_system.get_player_tile(player_id)
 	if player_system and player_system.has_method("get_player_position"):
 		return player_system.get_player_position(player_id)
 	return 0

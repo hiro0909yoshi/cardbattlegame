@@ -561,16 +561,9 @@ func restore_current_phase():
 		return
 	
 	# 4. 方向選択・分岐選択がアクティブ → セレクターに委譲
-	if board_system_ref and board_system_ref.movement_controller:
-		var mc = board_system_ref.movement_controller
-		if mc.direction_selector and mc.direction_selector.is_active:
-			mc.direction_selector.restore_navigation()
-			_nav_state_saved = false
-			return
-		if mc.branch_selector and mc.branch_selector.is_active:
-			mc.branch_selector.restore_navigation()
-			_nav_state_saved = false
-			return
+	if board_system_ref and board_system_ref.restore_movement_selector_navigation():
+		_nav_state_saved = false
+		return
 	
 	# 5. どのフェーズでもない → save/restore フォールバック
 	restore_navigation_state()
