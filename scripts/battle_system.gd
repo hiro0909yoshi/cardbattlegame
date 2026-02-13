@@ -19,10 +19,10 @@ enum BattleResult {
 }
 
 # システム参照
-var board_system_ref = null  # BoardSystem3D
+var board_system_ref: BoardSystem3D = null  # BoardSystem3D
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
-var game_flow_manager_ref = null  # GameFlowManager
+var game_flow_manager_ref: GameFlowManager = null  # GameFlowManager
 
 # サブシステム
 var battle_preparation: BattlePreparation
@@ -38,7 +38,7 @@ var spell_magic = null
 var battle_screen_manager: BattleScreenManager = null
 
 # === 直接参照（GFM経由を廃止） ===
-var lap_system = null  # LapSystem: 周回管理（破壊カウンター用）
+var lap_system: LapSystem = null  # LapSystem: 周回管理（破壊カウンター用）
 
 func _ready():
 	# サブシステムを初期化

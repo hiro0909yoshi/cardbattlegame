@@ -35,12 +35,12 @@ var phase_label: Label:
 # 以下の変数は削除予定（DominioOrderUIに移行済み）
 
 # システム参照（型指定なし - 3D対応のため）
-var card_system_ref = null
-var player_system_ref = null
-var board_system_ref = null  # BoardSystem3Dも格納可能
-var game_flow_manager_ref = null  # GameFlowManagerの参照
-var spell_phase_handler_ref = null  # SpellPhaseHandler参照（チェーンアクセス解消用）
-var dominio_command_handler_ref = null  # DominioCommandHandler参照（チェーンアクセス解消用）
+var card_system_ref: CardSystem = null
+var player_system_ref: PlayerSystem = null
+var board_system_ref: BoardSystem3D = null  # BoardSystem3Dも格納可能
+var game_flow_manager_ref: GameFlowManager = null  # GameFlowManagerの参照
+var spell_phase_handler_ref: SpellPhaseHandler = null  # SpellPhaseHandler参照（チェーンアクセス解消用）
+var dominio_command_handler_ref: DominioCommandHandler = null  # DominioCommandHandler参照（チェーンアクセス解消用）
 
 # デバッグモード
 # NOTE: debug_modeはDebugSettings.ui_debug_modeに移行済み

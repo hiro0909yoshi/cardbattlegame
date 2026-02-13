@@ -36,18 +36,18 @@ enum GamePhase {
 var current_phase = GamePhase.SETUP
 
 # 3D用変数
-var board_system_3d = null
+var board_system_3d: BoardSystem3D = null
 var player_is_cpu = []
 
 # チュートリアルモード（CPUは常にバトルを仕掛ける）
 var is_tutorial_mode: bool = false
 
 # システム参照
-var player_system
-var card_system
-var player_buff_system
-var ui_manager
-var battle_system
+var player_system: PlayerSystem = null
+var card_system: CardSystem = null
+var player_buff_system: PlayerBuffSystem = null
+var ui_manager: UIManager = null
+var battle_system: BattleSystem = null
 var special_tile_system
 var battle_screen_manager
 
@@ -79,7 +79,7 @@ var is_ending_turn = false
 var _input_locked: bool = false
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
-var lap_system = null
+var lap_system: LapSystem = null
 signal lap_completed(player_id: int)
 
 # ターン（ラウンド）カウンター

@@ -28,11 +28,11 @@ var skill_index: Dictionary = {
 }
 
 # サブシステム
-var movement_controller: MovementController3D
-var tile_info_display: TileInfoDisplay
-var tile_data_manager: TileDataManager
-var tile_neighbor_system: TileNeighborSystem
-var tile_action_processor: TileActionProcessor
+var movement_controller: MovementController3D = null
+var tile_info_display: TileInfoDisplay = null
+var tile_data_manager: TileDataManager = null
+var tile_neighbor_system: TileNeighborSystem = null
+var tile_action_processor: TileActionProcessor = null
 var cpu_turn_processor  # CPUTurnProcessor（型指定を一時的に削除）
 
 # ゲーム設定
@@ -56,10 +56,10 @@ var player_buff_system: PlayerBuffSystem
 var special_tile_system: SpecialTileSystem
 var ui_manager: UIManager
 var cpu_ai_handler: CPUAIHandler
-var game_flow_manager = null  # GameFlowManagerへの参照
+var game_flow_manager: GameFlowManager = null  # GameFlowManagerへの参照
 
 # === 直接参照（GFM経由を廃止） ===
-var spell_land = null  # SpellLand: 土地操作スペル
+var spell_land: SpellLand = null  # SpellLand: 土地操作スペル
 
 # === 初期化 ===
 

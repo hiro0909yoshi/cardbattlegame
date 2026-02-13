@@ -44,8 +44,8 @@ var is_moving = false
 var debug_controller: DebugController = null
 
 # 外部システム参照（TEP計算用）
-var board_system_ref = null
-var magic_stone_system_ref = null  # MagicStoneSystem（tiles/magic_stone_system.gd）
+var board_system_ref: BoardSystem3D = null
+var magic_stone_system_ref: MagicStoneSystem = null  # MagicStoneSystem（tiles/magic_stone_system.gd）
 
 func _ready():
 	pass
