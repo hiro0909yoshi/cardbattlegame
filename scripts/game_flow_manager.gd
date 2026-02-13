@@ -221,9 +221,12 @@ func start_turn():
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
 	if not _is_tutorial_mode():
-		var drawn = spell_container.spell_draw.draw_one(current_player.id)
-		if not drawn.is_empty() and current_player.id == 0:
-			await get_tree().create_timer(0.1).timeout
+		if spell_container and spell_container.spell_draw:
+			var drawn = spell_container.spell_draw.draw_one(current_player.id)
+			if not drawn.is_empty() and current_player.id == 0:
+				await get_tree().create_timer(0.1).timeout
+		else:
+			push_error("[GFM] spell_draw が初期化されていません")
 	
 	# 破産チェック（敵スペル等でEPマイナスの場合）
 	await check_and_handle_bankruptcy()
