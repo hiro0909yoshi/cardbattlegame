@@ -7,7 +7,10 @@ extends RefCounted
 
 var spell_curse = null
 var player_system: PlayerSystem = null
-var game_flow_manager = null  # 世界呪い取得用
+var game_flow_manager = null  # 後方互換用
+
+# === 直接参照（GFM経由を廃止） ===
+var spell_world_curse = null  # SpellWorldCurse: 世界呪い
 
 ## セットアップ
 func setup(p_spell_curse, p_player_system: PlayerSystem, p_game_flow_manager = null):
@@ -15,6 +18,10 @@ func setup(p_spell_curse, p_player_system: PlayerSystem, p_game_flow_manager = n
 	player_system = p_player_system
 	game_flow_manager = p_game_flow_manager
 	print("[SpellCostModifier] 初期化完了")
+
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_world_curse(world_curse) -> void:
+	spell_world_curse = world_curse
 
 
 # ========================================
@@ -84,8 +91,8 @@ func get_modified_cost(player_id: int, card: Dictionary) -> int:
 			return 0
 	
 	# ウェイストワールド（世界呪い）チェック - SpellWorldCurseに委譲
-	if game_flow_manager and game_flow_manager.spell_world_curse:
-		var multiplier = game_flow_manager.spell_world_curse.get_cost_multiplier_for_card(card)
+	if spell_world_curse:
+		var multiplier = spell_world_curse.get_cost_multiplier_for_card(card)
 		if multiplier != 1.0:
 			var modified_cost = int(ceil(original_cost * multiplier))
 			print("[ウェイストワールド] %s のコスト: %d → %d (x%.1f)" % [card.get("name", "?"), original_cost, modified_cost, multiplier])

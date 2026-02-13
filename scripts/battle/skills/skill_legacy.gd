@@ -81,12 +81,12 @@ static func apply_magic_legacy(defeated, spell_magic) -> bool:
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
 ## @param spell_magic SpellMagicインスタンス
-## @param game_flow_manager GameFlowManagerインスタンス（周回数取得用、オプション）
-static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager = null) -> Dictionary:
+## @param lap_system LapSystemインスタンス（周回数取得用、オプション）
+static func apply_on_death(defeated, spell_draw, spell_magic, lap_system = null) -> Dictionary:
 	var result = {"legacy_ep_activated": false, "legacy_card_activated": false}
-	
+
 	# JSON形式の遺産効果（マミー等）
-	if apply_legacy_from_json(defeated, spell_magic, game_flow_manager):
+	if apply_legacy_from_json(defeated, spell_magic, lap_system):
 		result["legacy_ep_activated"] = true
 	
 	# テキスト形式の遺産[カード]
@@ -104,25 +104,25 @@ static func apply_on_death(defeated, spell_draw, spell_magic, game_flow_manager 
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
-## @param game_flow_manager GameFlowManagerインスタンス
-static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> bool:
+## @param lap_system LapSystemインスタンス
+static func apply_legacy_from_json(defeated, spell_magic, lap_system) -> bool:
 	if not spell_magic:
 		return false
-	
+
 	var ability_parsed = defeated.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
-	
+
 	for effect in effects:
 		var trigger = effect.get("trigger", "")
 		if trigger != "on_death":
 			continue
-		
+
 		var effect_type = effect.get("effect_type", "")
-		
+
 		match effect_type:
 			"legacy_ep":
 				# 遺産[EP] - マミー等
-				var amount = _calculate_legacy_amount(effect, defeated, game_flow_manager)
+				var amount = _calculate_legacy_amount(effect, defeated, lap_system)
 				if amount > 0:
 					spell_magic.add_magic(defeated.player_id, amount)
 					print("【遺産発動】%s → プレイヤー%dが%dEP獲得" % [
@@ -139,17 +139,17 @@ static func apply_legacy_from_json(defeated, spell_magic, game_flow_manager) -> 
 ##
 ## @param effect 効果データ
 ## @param defeated 撃破されたクリーチャー
-## @param game_flow_manager GameFlowManagerインスタンス
+## @param lap_system LapSystemインスタンス
 ## @return 獲得金額
-static func _calculate_legacy_amount(effect: Dictionary, defeated, game_flow_manager) -> int:
+static func _calculate_legacy_amount(effect: Dictionary, defeated, lap_system) -> int:
 	var formula = effect.get("amount_formula", "")
-	
+
 	if formula.is_empty():
 		return effect.get("amount", 0)
-	
+
 	# "lap_count * 40" のような形式を解析
 	if "lap_count" in formula:
-		var lap_count = _get_lap_count(defeated.player_id, game_flow_manager)
+		var lap_count = _get_lap_count(defeated.player_id, lap_system)
 		# 式を評価（lap_count * N の形式）
 		var multiplier = 40  # デフォルト
 		var regex = RegEx.new()
@@ -165,12 +165,12 @@ static func _calculate_legacy_amount(effect: Dictionary, defeated, game_flow_man
 ## プレイヤーの周回数を取得
 ##
 ## @param player_id プレイヤーID
-## @param game_flow_manager GameFlowManagerインスタンス
+## @param lap_system LapSystemインスタンス
 ## @return 周回数
-static func _get_lap_count(player_id: int, game_flow_manager) -> int:
-	if not game_flow_manager or not game_flow_manager.lap_system:
+static func _get_lap_count(player_id: int, lap_system) -> int:
+	if not lap_system:
 		return 1
-	return game_flow_manager.lap_system.get_lap_count(player_id)
+	return lap_system.get_lap_count(player_id)
 
 ## ability_detailからカード枚数を抽出
 ##

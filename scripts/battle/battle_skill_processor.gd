@@ -27,12 +27,19 @@ var card_system_ref = null
 var battle_screen_manager = null
 var battle_preparation_ref = null
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理（破壊数効果用）
+
 func setup_systems(board_system, game_flow_manager = null, card_system = null, p_battle_screen_manager = null, battle_preparation = null):
 	board_system_ref = board_system
 	game_flow_manager_ref = game_flow_manager
 	card_system_ref = card_system
 	battle_screen_manager = p_battle_screen_manager
 	battle_preparation_ref = battle_preparation
+
+	# lap_systemの直接参照を設定
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		lap_system = game_flow_manager_ref.lap_system
 
 ## バトル前スキル適用（async対応・スキル毎にアニメーション）
 ## 戻り値: { transform_result: Dictionary }
@@ -917,7 +924,7 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 ## 破壊数カウント効果を適用（ソウルコレクター用）
 ## 委譲先: SkillStatModifiers.apply_destroy_count_effects
 func apply_destroy_count_effects(participant: BattleParticipant):
-	SkillStatModifiers.apply_destroy_count_effects(participant, game_flow_manager_ref)
+	SkillStatModifiers.apply_destroy_count_effects(participant, lap_system)
 
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）

@@ -20,6 +20,9 @@ var game_flow_manager = null
 var creature_synthesis: CreatureSynthesis = null
 var sacrifice_selector: CPUSacrificeSelector = null
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+
 
 # ============================================================
 # 初期化
@@ -34,13 +37,15 @@ func _sync_references() -> void:
 	"""親プロセッサーから参照を同期"""
 	if not tile_action_processor:
 		return
-	
+
 	board_system = tile_action_processor.board_system
 	player_system = tile_action_processor.player_system
 	card_system = tile_action_processor.card_system
 	game_flow_manager = tile_action_processor.game_flow_manager
 	creature_synthesis = tile_action_processor.creature_synthesis
 	sacrifice_selector = tile_action_processor.sacrifice_selector
+	# 直接参照も同期
+	spell_cost_modifier = tile_action_processor.spell_cost_modifier
 
 
 # ============================================================
@@ -273,8 +278,8 @@ func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 		cost = cost_data
 	
 	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, card_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 	
 	return cost
 

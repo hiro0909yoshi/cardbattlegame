@@ -274,9 +274,32 @@ enum State {
 
 **重要な設計原則**:
 - 各フェーズは`cancel()`メソッドで1つ前に戻る
-- `cancel()`は`dominio_order_handler.gd`で統一管理
+- `cancel()`は`dominio_command_handler.gd`で統一管理
 - 各選択UI（レベル選択、カード選択等）の戻るボタンは`cancel()`を呼ぶ
 - アクション実行後は`complete_action()`→`end_turn()`で統一的にターン終了
+
+### ナビゲーション設定メソッド
+
+各状態に応じたナビゲーションボタンの設定はメソッド化されている：
+
+```gdscript
+# 土地選択用ナビゲーション（全ボタン）
+func _set_land_selection_navigation()
+
+# アクション選択用ナビゲーション（戻るのみ）
+func set_action_selection_navigation()
+
+# 現在の状態に応じてナビゲーションを復元
+func restore_navigation()
+
+# 現在のステートに応じたフェーズコメントを復元
+func restore_phase_comment()
+```
+
+**使用タイミング**:
+- 状態遷移後にナビゲーションを設定
+- UIパネル表示後にナビゲーションを復元
+- InfoPanelが閉じられた後にナビゲーションを復元
 
 ### グローバルアクションボタン
 
@@ -495,8 +518,67 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 ```
 
 ### 実装クラス
-- `DominioOrderHandler.execute_swap_creature()`
+- `DominioCommandHandler.execute_swap_creature()`
 - `TileActionProcessor.execute_swap()`
+
+---
+
+## CPU用インターフェース
+
+CPUがドミニオコマンドを実行するための統合メソッド。
+
+### 統合メソッド
+```gdscript
+func execute_for_cpu(command: Dictionary) -> bool
+```
+
+### コマンド形式
+
+#### レベルアップ
+```gdscript
+{
+  "type": "level_up",
+  "tile_index": 5,
+  "target_level": 3,
+  "cost": 240
+}
+```
+
+#### 属性変更
+```gdscript
+{
+  "type": "element_change",
+  "tile_index": 5,
+  "new_element": "fire"
+}
+```
+
+#### 移動（空き地・敵ドミニオ）
+```gdscript
+{
+  "type": "move_invasion",
+  "from_tile_index": 5,
+  "to_tile_index": 6,
+  "item_index": 2,      # 使用アイテムの手札インデックス（任意）
+  "item_data": {...}    # アイテムデータ（任意）
+}
+```
+
+#### クリーチャー交換
+```gdscript
+{
+  "type": "creature_swap",
+  "tile_index": 5,
+  "hand_index": 2
+}
+```
+
+### 内部処理
+- `_select_tile_for_cpu()`: ダウンチェック・所有権チェック
+- `_execute_level_up_for_cpu()`: LandActionHelper経由でレベルアップ
+- `_execute_element_change_for_cpu()`: LandActionHelper経由で属性変更
+- `_execute_move_for_cpu()`: LandActionHelper.confirm_move経由で移動
+- `_execute_swap_for_cpu()`: 手札インデックス指定で交換
 
 ---
 
@@ -639,8 +721,9 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
 | 2025/12/13 | 1.5 | フェーズ管理（状態遷移）追加: SELECTING_LEVEL, SELECTING_SWAP状態、cancel()統一処理 |
 | 2025/12/16 | 1.6 | タイル到着時の動作を追加: 自分の土地・特殊タイルでの召喚不可動作を明記 |
 | 2026/01/26 | 1.7 | ダウン状態のビジュアル表示を追加: 枠の色による状態表示（点滅/常時点灯） |
+| 2026/02/12 | 1.8 | ナビゲーション設定メソッド追加、CPU用インターフェース追加、ファイル名修正（dominio_order_handler → dominio_command_handler） |
 
 ---
 
-**最終更新**: 2026年1月26日（v1.7 - ダウン状態ビジュアル表示追加）  
+**最終更新**: 2026年2月12日（v1.8 - ナビゲーション・CPU対応追加）  
 **関連ドキュメント**: [design.md](design.md) - プロジェクト設計書, [card_info_panels.md](card_info_panels.md) - カード情報パネル

@@ -1,6 +1,6 @@
 # 📚 cardbattlegame ドキュメント
 
-**最終更新**: 2025年12月16日
+**最終更新**: 2026年2月13日
 
 ---
 
@@ -22,6 +22,10 @@ docs/
 ├── design/                # 設計ドキュメント
 │   ├── skills/            # 個別スキル仕様書（29ファイル）
 │   └── spells/            # 個別スペル効果仕様書（20ファイル）
+├── implementation/        # 実装リファレンス
+│   ├── implementation_patterns.md   # 実装パターン
+│   ├── delegation_method_catalog.md # 委譲メソッドカタログ
+│   └── signal_catalog.md            # シグナルカタログ
 ├── progress/              # 進捗管理
 │   └── daily_log.md       # 日次作業ログ
 └── issues/                # 課題・タスク管理
@@ -115,6 +119,14 @@ docs/
 | [creatures_unimplemented.md](design/creatures_unimplemented.md) | 未実装クリーチャー |
 | [defensive_creature_design.md](design/defensive_creature_design.md) | 防御型クリーチャー設計 |
 | [spells_tasks.md](design/spells_tasks.md) | スペル実装タスク |
+
+### 実装リファレンス
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [implementation_patterns.md](implementation/implementation_patterns.md) | 実装パターン・テンプレート |
+| [delegation_method_catalog.md](implementation/delegation_method_catalog.md) | 委譲メソッドカタログ |
+| [signal_catalog.md](implementation/signal_catalog.md) | シグナルカタログ（192シグナル） |
 
 ---
 

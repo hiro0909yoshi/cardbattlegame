@@ -20,6 +20,9 @@ var card_system
 var ui_manager
 var game_flow_manager
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_phase_handler = null
+
 # カードID入力ダイアログ
 var card_input_dialog: ConfirmationDialog = null
 var card_id_input: LineEdit = null
@@ -516,8 +519,8 @@ func clear_current_player_down_states():
 	if cleared_count > 0:
 		print("【デバッグ】プレイヤー", player_id + 1, "の", cleared_count, "個の土地のダウン状態を解除しました")
 		# アルカナアーツボタンの表示を更新
-		if game_flow_manager and game_flow_manager.spell_phase_handler:
-			game_flow_manager.spell_phase_handler.update_mystic_button_visibility()
+		if spell_phase_handler:
+			spell_phase_handler.update_mystic_button_visibility()
 	else:
 		print("【デバッグ】ダウン状態の土地はありません")
 	
@@ -568,12 +571,12 @@ func _toggle_tile_display():
 	print("表示切替: ", mode_name)
 	
 	# UIに一時表示
-	if ui_manager and ui_manager.phase_label:
-		var original_text = ui_manager.phase_label.text
-		ui_manager.phase_label.text = "表示: " + mode_name
+	if ui_manager:
+		var original_text = ui_manager.get_phase_text()
+		ui_manager.set_phase_text("表示: " + mode_name)
 		await get_tree().create_timer(1.0).timeout
-		if ui_manager and ui_manager.phase_label:
-			ui_manager.phase_label.text = original_text
+		if ui_manager:
+			ui_manager.set_phase_text(original_text)
 
 # Sキー: シグナル接続状態を表示
 func _show_signal_connections():

@@ -257,7 +257,7 @@ static func apply_merge_effect(
 ## @param player_id プレイヤーID
 ## @param card_system CardSystem参照
 ## @param player_system PlayerSystem参照
-## @param game_flow_manager GameFlowManager参照（コスト修正用、オプション）
+## @param spell_cost_modifier SpellCostModifier参照（コスト修正用、オプション）
 ## @return Dictionary { success, result_creature, cost, partner_data }
 static func execute_merge(
 	creature_data: Dictionary,
@@ -265,7 +265,7 @@ static func execute_merge(
 	player_id: int,
 	card_system,
 	player_system,
-	game_flow_manager = null
+	spell_cost_modifier = null
 ) -> Dictionary:
 	var result = {
 		"success": false,
@@ -302,8 +302,8 @@ static func execute_merge(
 	var cost = get_merge_cost(hand, partner_index)
 	
 	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, partner_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(player_id, partner_data)
 	
 	# EPチェック
 	var player_magic = player_system.get_magic(player_id) if player_system else 0

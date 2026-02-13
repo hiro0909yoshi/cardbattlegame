@@ -52,6 +52,12 @@ var debug_controller = null
 var card_system = null
 var board_system_3d = null
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_phase_handler = null
+var lap_system = null  # LapSystem: 周回管理（シグナル接続用）
+var player_system = null  # PlayerSystem: プレイヤー情報
+var dominio_command_handler = null  # DominioCommandHandler: ドミニオコマンド
+
 # =============================================================================
 # チュートリアル専用UI
 # =============================================================================
@@ -134,13 +140,22 @@ func initialize_with_systems(system_manager):
 	if not system_manager:
 		print("[TutorialManager] ERROR: system_managerがnull")
 		return
-	
+
 	game_flow_manager = system_manager.game_flow_manager
 	ui_manager = system_manager.ui_manager
 	debug_controller = system_manager.debug_controller
 	card_system = system_manager.card_system
 	board_system_3d = system_manager.board_system_3d
-	
+
+	# 直接参照を設定（チェーンアクセス解消）
+	if game_flow_manager:
+		if game_flow_manager.lap_system:
+			lap_system = game_flow_manager.lap_system
+		if game_flow_manager.player_system:
+			player_system = game_flow_manager.player_system
+		if game_flow_manager.dominio_command_handler:
+			dominio_command_handler = game_flow_manager.dominio_command_handler
+
 	_setup_ui()
 	_setup_explanation_mode()
 	_connect_signals()
@@ -195,9 +210,9 @@ func _connect_signals():
 	if board_system_3d:
 		board_system_3d.movement_completed.connect(_on_movement_completed)
 	
-	# チェックポイント通過
-	if game_flow_manager and game_flow_manager.lap_system:
-		game_flow_manager.lap_system.checkpoint_signal_obtained.connect(_on_checkpoint_passed)
+	# チェックポイント通過（直接参照経由）
+	if lap_system:
+		lap_system.checkpoint_signal_obtained.connect(_on_checkpoint_passed)
 	
 	# バトル画面イントロ完了
 	call_deferred("_connect_battle_signals")
@@ -223,10 +238,9 @@ func _connect_action_signals():
 			tap.action_completed.connect(_on_action_completed)
 	
 	# スペルフェーズ完了シグナル
-	if game_flow_manager and game_flow_manager.spell_phase_handler:
-		var sph = game_flow_manager.spell_phase_handler
-		if not sph.spell_phase_completed.is_connected(_on_spell_phase_completed):
-			sph.spell_phase_completed.connect(_on_spell_phase_completed)
+	if spell_phase_handler:
+		if not spell_phase_handler.spell_phase_completed.is_connected(_on_spell_phase_completed):
+			spell_phase_handler.spell_phase_completed.connect(_on_spell_phase_completed)
 	
 	# アイテム使用シグナル（バトル時）
 	if game_flow_manager and game_flow_manager.item_phase_handler:
@@ -240,9 +254,9 @@ func _connect_action_signals():
 		if not bh.bankruptcy_completed.is_connected(_on_bankruptcy_completed):
 			bh.bankruptcy_completed.connect(_on_bankruptcy_completed)
 	
-	# ドミニオコマンド関連シグナル
-	if game_flow_manager and game_flow_manager.dominio_command_handler:
-		var dch = game_flow_manager.dominio_command_handler
+	# ドミニオコマンド関連シグナル（直接参照経由）
+	if dominio_command_handler:
+		var dch = dominio_command_handler
 		if not dch.land_selected.is_connected(_on_dominio_land_selected):
 			dch.land_selected.connect(_on_dominio_land_selected)
 		if not dch.dominio_command_opened.is_connected(_on_dominio_command_opened):
@@ -256,14 +270,12 @@ func _connect_action_signals():
 			ui_manager.level_up_selected.connect(_on_level_up_selected)
 	
 	# アルカナアーツ関連シグナル
-	if game_flow_manager and game_flow_manager.spell_phase_handler:
-		var sph = game_flow_manager.spell_phase_handler
-		if sph.spell_mystic_arts:
-			var sma = sph.spell_mystic_arts
-			if not sma.target_selection_requested.is_connected(_on_mystic_target_selection_requested):
-				sma.target_selection_requested.connect(_on_mystic_target_selection_requested)
-			if not sma.mystic_phase_completed.is_connected(_on_mystic_phase_completed):
-				sma.mystic_phase_completed.connect(_on_mystic_phase_completed)
+	if spell_phase_handler and spell_phase_handler.spell_mystic_arts:
+		var sma = spell_phase_handler.spell_mystic_arts
+		if not sma.target_selection_requested.is_connected(_on_mystic_target_selection_requested):
+			sma.target_selection_requested.connect(_on_mystic_target_selection_requested)
+		if not sma.mystic_phase_completed.is_connected(_on_mystic_phase_completed):
+			sma.mystic_phase_completed.connect(_on_mystic_phase_completed)
 	
 	# スペシャルボタン押下シグナル
 	if ui_manager and ui_manager.global_action_buttons:
@@ -745,11 +757,11 @@ func _exit_explanation_mode_if_active():
 
 ## ドミニオコマンドを開く
 func _open_dominio_command():
-	if game_flow_manager and game_flow_manager.dominio_command_handler:
-		var player_id = game_flow_manager.get("current_player_id")
+	if dominio_command_handler:
+		var player_id = game_flow_manager.get("current_player_id") if game_flow_manager else 0
 		if player_id == null:
 			player_id = 0
-		game_flow_manager.dominio_command_handler.open_dominio_order(player_id)
+		dominio_command_handler.open_dominio_order(player_id)
 
 ## ドミニオボタンを表示
 func _show_dominio_button():
@@ -861,20 +873,19 @@ func _check_mismatched_creature_on_tile(tile_info: Dictionary, creature_name: St
 
 ## 敵プレイヤーかどうかチェック（プレイヤー選択スペル用）
 func _check_enemy_player_target(tile_index: int) -> bool:
-	# プレイヤーの位置を取得
-	if not game_flow_manager or not game_flow_manager.player_system:
+	# プレイヤーの位置を取得（直接参照経由）
+	if not player_system:
 		return true
-	
-	var player_system = game_flow_manager.player_system
-	var current_player_id = game_flow_manager.current_player_index
-	
+
+	var current_player_id = game_flow_manager.current_player_index if game_flow_manager else 0
+
 	# 敵プレイヤー（CPU）の位置を取得
 	for player in player_system.players:
 		if player.id != current_player_id:
 			var enemy_tile = board_system_3d.get_player_tile(player.id) if board_system_3d else -1
 			if tile_index == enemy_tile:
 				return true
-	
+
 	return false
 
 ## 指定プレイヤーがターゲットとして選択可能かチェック（SpellPhaseHandlerから呼び出し）
@@ -882,10 +893,10 @@ func is_player_target_allowed(player_id: int) -> bool:
 	if allowed_target_tile_condition == "":
 		return true  # 制限なし
 	
-	# 現在のプレイヤーIDを取得
+	# 現在のプレイヤーIDを取得（直接参照経由）
 	var current_player_id = 0
-	if game_flow_manager and game_flow_manager.player_system:
-		current_player_id = game_flow_manager.player_system.current_player_index
+	if player_system:
+		current_player_id = player_system.current_player_index
 	
 	# "enemy_player" - 敵プレイヤーのみ
 	if allowed_target_tile_condition == "enemy_player":

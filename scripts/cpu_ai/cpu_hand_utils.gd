@@ -12,16 +12,22 @@ var player_system: PlayerSystem
 var player_buff_system: PlayerBuffSystem
 var tile_action_processor = null  # 土地条件チェック用
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+
 ## システム参照を設定
 func setup_systems(c_system: CardSystem, b_system, p_system: PlayerSystem, s_system: PlayerBuffSystem):
 	card_system = c_system
 	board_system = b_system
 	player_system = p_system
 	player_buff_system = s_system
-	
+
 	# TileActionProcessorを取得
 	if board_system and board_system.has_node("TileActionProcessor"):
 		tile_action_processor = board_system.get_node("TileActionProcessor")
+		# 直接参照を取得
+		if tile_action_processor:
+			spell_cost_modifier = tile_action_processor.spell_cost_modifier
 
 # ============================================================
 # コスト計算
@@ -37,8 +43,8 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
 	# ライフフォース呪いチェック（クリーチャー/アイテムコスト0化）
-	if board_system and board_system.game_flow_manager and board_system.game_flow_manager.spell_cost_modifier:
-		var modified_cost = board_system.game_flow_manager.spell_cost_modifier.get_modified_cost(player_id, card_data)
+	if spell_cost_modifier:
+		var modified_cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 		if modified_cost == 0:
 			return 0  # ライフフォースでコスト0化
 	

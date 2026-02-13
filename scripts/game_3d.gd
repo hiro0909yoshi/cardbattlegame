@@ -187,12 +187,10 @@ func _apply_stage_settings():
 	if system_manager.special_tile_system:
 		stage_loader.register_warp_pairs_to_system(system_manager.special_tile_system)
 	
-	# 周回システム設定を適用
-	if system_manager.game_flow_manager and system_manager.game_flow_manager.lap_system:
-		var map_data = stage_loader.get_map_data()
-		if not map_data.is_empty():
-			system_manager.game_flow_manager.lap_system.apply_map_settings(map_data)
-			print("[Game3D] 周回システム設定適用完了")
+	# 周回システム設定を適用（委譲メソッド経由）
+	var map_data = stage_loader.get_map_data()
+	if not map_data.is_empty():
+		system_manager.apply_map_settings_to_lap_system(map_data)
 	
 	# 初期EPを設定
 	if system_manager.player_system:

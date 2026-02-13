@@ -16,8 +16,7 @@ func show_win_screen(player_id: int):
 	if not ui_manager.ui_layer:
 		return
 
-	if ui_manager.phase_label:
-		ui_manager.phase_label.text = ""
+	ui_manager.set_phase_text("")
 
 	var win_panel = Panel.new()
 	win_panel.name = "WinScreen"
@@ -83,8 +82,7 @@ func show_lose_screen_async(player_id: int):
 	if not ui_manager.ui_layer:
 		return
 
-	if ui_manager.phase_label:
-		ui_manager.phase_label.text = ""
+	ui_manager.set_phase_text("")
 
 	var lose_panel = Panel.new()
 	lose_panel.name = "LoseScreen"

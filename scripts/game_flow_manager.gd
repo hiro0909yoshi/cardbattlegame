@@ -226,8 +226,8 @@ func start_turn():
 	emit_signal("turn_started", current_player.id)
 	
 	# UI更新：順番アイコンを設定
-	if ui_manager and ui_manager.player_info_panel:
-		ui_manager.player_info_panel.set_current_turn(current_player.id)
+	if ui_manager:
+		ui_manager.set_current_turn(current_player.id)
 	
 	# Phase 1-A: ターン開始時はドミニオコマンドボタンを隠す
 	if ui_manager:
@@ -264,13 +264,13 @@ func start_turn():
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
 	if is_cpu_turn:
-		ui_manager.phase_label.text = "CPUのターン..."
+		ui_manager.set_phase_text("CPUのターン...")
 		current_phase = GamePhase.DICE_ROLL
 		await get_tree().create_timer(1.0).timeout
 		roll_dice()
 	else:
 		current_phase = GamePhase.DICE_ROLL
-		ui_manager.phase_label.text = "サイコロを振ってください"
+		ui_manager.set_phase_text("サイコロを振ってください")
 		
 		# カメラを手動モードに設定（マップ確認可能にする）
 		board_system_3d.enable_manual_camera()
@@ -342,21 +342,21 @@ func roll_dice():
 	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
 	
 	# ダイス結果を大きく表示（1.5秒）
-	if ui_manager and ui_manager.phase_display:
-		ui_manager.phase_display.show_big_dice_result(modified_dice, 1.5)
-	
+	if ui_manager:
+		ui_manager.show_big_dice_result(modified_dice, 1.5)
+
 	# ダイス結果を詳細表示（上部）
-	if ui_manager and ui_manager.phase_display:
+	if ui_manager:
 		# ダイス範囲呪いがある場合は特殊表示
 		if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
 			var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
-			ui_manager.phase_display.show_dice_result_range(range_info.get("name", ""), modified_dice)
+			ui_manager.show_dice_result_range(range_info.get("name", ""), modified_dice)
 			print("[ダイス/%s] %d（範囲: %d〜%d）" % [range_info.get("name", ""), modified_dice, range_info.get("min", 1), range_info.get("max", 6)])
 		elif needs_third:
-			ui_manager.phase_display.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
+			ui_manager.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
 			print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
 		else:
-			ui_manager.phase_display.show_dice_result_double(dice1, dice2, modified_dice)
+			ui_manager.show_dice_result_double(dice1, dice2, modified_dice)
 			print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
 	
 	# ダイスロール後のEP付与（チャージステップなど）
@@ -372,7 +372,7 @@ func roll_dice():
 	
 	# 3D移動
 	if board_system_3d:
-		ui_manager.phase_label.text = "移動中..."
+		ui_manager.set_phase_text("移動中...")
 		print("[GameFlowManager] roll_dice: move_player_3d呼び出し (player=%d, dice=%d)" % [current_player.id, modified_dice])
 		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
 

@@ -57,6 +57,10 @@ var player_system = null
 var battle_system = null
 var tile_action_processor = null  # デバッグフラグ参照用
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+var board_system_3d = null  # BoardSystem3D: ボードシステム
+
 func _ready():
 	pass
 
@@ -70,10 +74,16 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	
 	# TileActionProcessor参照を取得（デバッグフラグ用）
 	if flow_mgr and flow_mgr.board_system_3d:
-		tile_action_processor = flow_mgr.board_system_3d.tile_action_processor
-	
+		board_system_3d = flow_mgr.board_system_3d
+		tile_action_processor = board_system_3d.tile_action_processor
+
 	# CPU AI共有コンテキストを初期化
 	_initialize_cpu_context(flow_mgr)
+
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_cost_modifier(cost_modifier) -> void:
+	spell_cost_modifier = cost_modifier
+	print("[ItemPhaseHandler] spell_cost_modifier 直接参照を設定")
 
 ## アイテムフェーズ開始
 ## defender_tile_info: 攻撃側フェーズ開始時に防御側情報を渡す（防御側CPUの事前選択用）
@@ -355,8 +365,8 @@ func use_item(item_card: Dictionary):
 		cost = cost_data
 	
 	# ライフフォース呪いチェック（アイテムコスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, item_card)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(current_player_id, item_card)
 	
 	if player_system:
 		player_system.add_magic(current_player_id, -cost)
@@ -398,7 +408,7 @@ func _execute_merge(partner_card: Dictionary):
 		current_player_id,
 		card_system,
 		player_system,
-		game_flow_manager
+		spell_cost_modifier
 	)
 	
 	if not merge_result.get("success", false):
@@ -472,8 +482,8 @@ func _can_afford_card(card_data: Dictionary) -> bool:
 		cost = cost_data
 	
 	# ライフフォース呪いチェック（アイテムコスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, card_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(current_player_id, card_data)
 	
 	return current_player.magic_power >= cost
 
@@ -552,8 +562,8 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 	
 	# 攻撃側プレイヤーID取得
 	var attacker_player_id = -1
-	if game_flow_manager and game_flow_manager.board_system_3d:
-		attacker_player_id = game_flow_manager.board_system_3d.current_player_index
+	if board_system_3d:
+		attacker_player_id = board_system_3d.current_player_index
 	
 	# コンテキスト構築
 	var context = {
@@ -629,8 +639,8 @@ func _cpu_decide_item():
 	# コンテキストを構築
 	var tile_info = _get_defense_tile_info()
 	var attacker_player_id = -1
-	if game_flow_manager and game_flow_manager.board_system_3d:
-		attacker_player_id = game_flow_manager.board_system_3d.current_player_index
+	if board_system_3d:
+		attacker_player_id = board_system_3d.current_player_index
 	
 	var context = {
 		"player_id": current_player_id,
@@ -665,8 +675,8 @@ func _get_defense_tile_info() -> Dictionary:
 		return defense_tile_info
 	
 	# フォールバック: 現在のプレイヤー位置から取得
-	if game_flow_manager and game_flow_manager.board_system_3d:
-		var board = game_flow_manager.board_system_3d
+	if board_system_3d:
+		var board = board_system_3d
 		if board.movement_controller:
 			var tile_index = board.get_player_tile(current_player_id)
 			if tile_index >= 0:
@@ -691,7 +701,7 @@ func _execute_merge_for_cpu(merge_result: Dictionary):
 		current_player_id,
 		card_system,
 		player_system,
-		game_flow_manager
+		spell_cost_modifier
 	)
 	
 	if not skill_merge_result.get("success", false):

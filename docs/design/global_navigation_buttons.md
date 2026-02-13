@@ -6,12 +6,23 @@
 
 ## ボタン構成
 
+### 右下ボタン群（縦並び）
 | ボタン | アイコン | 色 | キーボード | 用途 |
 |--------|----------|-----|------------|------|
-| 決定 | ✓ | 緑 | Enter | 選択確定、実行 |
-| 戻る | ✕ | 赤 | ESC | キャンセル、前の状態へ |
 | 上 | ▲ | 青 | ↑ | 選択肢を上へ移動 |
 | 下 | ▼ | 青 | ↓ | 選択肢を下へ移動 |
+| 決定 | ✓ | 緑 | Enter | 選択確定、実行 |
+| 戻る | ✕ | 赤 | ESC | キャンセル、前の状態へ |
+
+### 左下特殊ボタン
+| ボタン | 色 | 用途 |
+|--------|-----|------|
+| 特殊 | 紫（ゴールド縁） | アルカナアーツ / ドミニオコマンド |
+
+**特殊ボタンの特徴**:
+- テキストは動的に変更（「アルカナアーツ」「ドミニオコマンド」等）
+- コールバックが無効な場合は非表示
+- `setup_special(text, callback)` で設定、`clear_special()` でクリア
 
 ## アーキテクチャ
 
@@ -38,6 +49,10 @@ ui_manager.enable_navigation(
 
 # 全ボタン無効化
 ui_manager.disable_navigation()
+
+# 特殊ボタン設定（アルカナアーツ/ドミニオコマンド）
+ui_manager.setup_special_button("アルカナアーツ", func(): open_arcana_arts())
+ui_manager.clear_special_button()
 ```
 
 ### Callableの指定方法
@@ -121,6 +136,25 @@ func _update_navigation_for_state():
 				func(): execute(), func(): cancel()
 			)
 ```
+
+## 入力ロック機能
+
+ボタン連打防止のため、GameFlowManagerと連携した入力ロック機能を持つ。
+
+### 動作
+- 決定/戻る/特殊ボタン押下時に `game_flow_manager.lock_input()` を呼び出し
+- 入力ロック中は全ボタンが無効化
+- `game_flow_manager.unlock_input()` で解除
+
+### 説明モード対応
+チュートリアル等の説明モード中は入力ロックを無視する。
+
+```gdscript
+# 説明モード中はロックを無視
+global_action_buttons.explanation_mode_active = true
+```
+
+---
 
 ## 重要な注意点
 
@@ -262,5 +296,18 @@ await ui_manager.global_comment_ui.click_confirmed
 - `scripts/ui_components/global_action_buttons.gd` - ボタンUI実装
 - `scripts/ui_components/global_comment_ui.gd` - 通知ポップアップUI実装
 - `scripts/ui_manager.gd` - API提供（enable_navigation, global_comment_ui等）
-- `scripts/game_flow/dominio_order_handler.gd` - 使用例（ドミニオオーダー）
+- `scripts/game_flow/dominio_command_handler.gd` - 使用例（ドミニオコマンド）
 - `scripts/game_flow/lap_system.gd` - 使用例（周回完了通知）
+
+---
+
+## 変更履歴
+
+| 日付 | バージョン | 変更内容 |
+|------|-----------|---------|
+| 2025/12/12 | 1.0 | 初版作成 |
+| 2026/02/12 | 1.1 | 特殊ボタン追加、入力ロック機能追加、説明モード対応追加 |
+
+---
+
+**最終更新**: 2026年2月12日（v1.1）

@@ -23,6 +23,9 @@ var player_system_ref: Object
 var card_system_ref: Object
 var spell_phase_handler_ref: Object  # ターゲット取得用
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
+
 
 # ============ アルカナアーツフェーズ状態 ============
 
@@ -56,6 +59,11 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	player_system_ref = player_sys
 	card_system_ref = card_sys
 	spell_phase_handler_ref = spell_phase_handler
+
+	# spell_curse_statの直接参照を設定
+	if spell_phase_handler and spell_phase_handler.game_flow_manager:
+		if spell_phase_handler.game_flow_manager.spell_curse_stat:
+			spell_curse_stat = spell_phase_handler.game_flow_manager.spell_curse_stat
 
 
 # ============ アルカナアーツフェーズ管理 ============
@@ -581,9 +589,9 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 		for effect in effects:
 			var effect_type = effect.get("effect_type", "")
 			if effect_type in ["conditional_ap_change", "permanent_hp_change", "permanent_ap_change"]:
-				if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.spell_curse_stat:
+				if spell_curse_stat:
 					var target_data = {"type": "all_creatures", "caster_tile_index": creature.get("tile_index", -1)}
-					await spell_phase_handler_ref.game_flow_manager.spell_curse_stat.apply_effect(spell_phase_handler_ref, effect, target_data, player_id, mystic_art)
+					await spell_curse_stat.apply_effect(spell_phase_handler_ref, effect, target_data, player_id, mystic_art)
 	
 	# EP消費
 	var cost = mystic_art.get("cost", 0)

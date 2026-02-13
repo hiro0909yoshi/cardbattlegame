@@ -78,6 +78,16 @@ var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 var battle_system = null       # board_system.battle_system参照
 var spell_cast_notification_ui = null  # spell_phase_handler.spell_cast_notification_ui参照
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+var spell_land = null  # SpellLand: 土地操作
+var spell_curse = null  # SpellCurse: 呪い管理
+var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+
+func set_battle_status_overlay(overlay) -> void:
+	battle_status_overlay = overlay
+	print("[DominioCommandHandler] battle_status_overlay 直接参照を設定")
+
 ## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
 func _get_item_phase_handler():
 	if not _item_phase_handler and game_flow_manager and game_flow_manager.get("item_phase_handler"):
@@ -112,6 +122,13 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	
 	# 土地情報パネルを初期化
 	_setup_land_info_panel()
+
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_systems_direct(world_curse, land, curse) -> void:
+	spell_world_curse = world_curse
+	spell_land = land
+	spell_curse = curse
+	print("[DominioCommandHandler] spell_world_curse, spell_land, spell_curse 直接参照を設定")
 
 ## ドミニオコマンドを開く
 func open_dominio_order(player_id: int):
@@ -717,8 +734,8 @@ func _on_move_item_phase_completed():
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
 				
 				# バトルステータスオーバーレイを防御側に切り替え
-				if game_flow_manager.battle_status_overlay:
-					game_flow_manager.battle_status_overlay.highlight_side("defender")
+				if battle_status_overlay:
+					battle_status_overlay.highlight_side("defender")
 				
 				_get_item_phase_handler().start_item_phase(defender_owner, defender_creature)
 			else:
@@ -745,8 +762,8 @@ func _execute_move_battle():
 		return
 	
 	# バトルステータスオーバーレイを非表示
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
-		game_flow_manager.battle_status_overlay.hide_battle_status()
+	if battle_status_overlay:
+		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
 	
@@ -1124,7 +1141,7 @@ func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, crea
 	await _show_dominio_order_comment("移動侵略")
 	
 	# 3. バトルステータスオーバーレイ表示
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
+	if battle_status_overlay:
 		var attacker_display = creature_data.duplicate()
 		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
 		
@@ -1132,7 +1149,7 @@ func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, crea
 		var defender_display = defender_creature.duplicate()
 		defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, pending_move_battle_tile_info)
 		
-		game_flow_manager.battle_status_overlay.show_battle_status(
+		battle_status_overlay.show_battle_status(
 			attacker_display, defender_display, "attacker")
 	
 	# 4. アイテムフェーズを開始（攻撃側）

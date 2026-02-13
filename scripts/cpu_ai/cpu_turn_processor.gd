@@ -17,6 +17,13 @@ var card_system: CardSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem  # battle_system参照
 
+# === 直接参照（GFM経由を廃止） ===
+var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+
+func set_battle_status_overlay(overlay) -> void:
+	battle_status_overlay = overlay
+	print("[CPUTurnProcessor] battle_status_overlay 直接参照を設定")
+
 # バトル保留用変数（CPU攻撃 → 人間防御のアイテムフェーズ用）
 var pending_cpu_battle_creature_index: int = -1
 var pending_cpu_battle_card_data: Dictionary = {}
@@ -260,8 +267,8 @@ func _on_defender_item_phase_completed():
 ## 保留中のCPUバトルを実行
 func _execute_cpu_pending_battle():
 	# 🎬 バトルステータスオーバーレイを非表示
-	if board_system.game_flow_manager and board_system.game_flow_manager.battle_status_overlay:
-		board_system.game_flow_manager.battle_status_overlay.hide_battle_status()
+	if battle_status_overlay:
+		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
 	

@@ -15,6 +15,9 @@ var creature_synthesis: CreatureSynthesis = null
 var sacrifice_selector: CPUSacrificeSelector = null
 var cpu_tile_action_executor: CPUTileActionExecutor = null
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+
 # 犠牲選択中フラグ（TileActionProcessorから参照される）
 var is_sacrifice_selecting: bool = false
 
@@ -31,6 +34,9 @@ func initialize(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardS
 	if CardLoader:
 		creature_synthesis = CreatureSynthesis.new(CardLoader)
 
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_cost_modifier(cost_modifier) -> void:
+	spell_cost_modifier = cost_modifier
 
 ## 召喚実行
 func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui_callback: Callable):
@@ -136,8 +142,8 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		cost = cost_data
 	
 	# ライフフォース呪いチェック（クリーチャーコスト0化）
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
 	var current_player = player_system.get_current_player()
 	

@@ -8,6 +8,13 @@ var player_system_ref: Object
 var spell_phase_handler_ref: Object
 var game_flow_manager_ref: Object
 
+# === 直接参照（GFM経由を廃止） ===
+var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+
+func set_battle_status_overlay(overlay) -> void:
+	battle_status_overlay = overlay
+	print("[SpellCreatureMove] battle_status_overlay 直接参照を設定")
+
 # ============ バトル保留用変数 ============
 
 var pending_battle_result: Dictionary = {}
@@ -137,15 +144,15 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	attacker_creature["is_moving"] = true
 	
 	# バトルステータスオーバーレイ表示
-	if game_flow_manager_ref and game_flow_manager_ref.battle_status_overlay:
+	if battle_status_overlay:
 		var attacker_display = attacker_creature.duplicate()
 		attacker_display["land_bonus_hp"] = 0  # 侵略側は土地ボーナスなし
-		
+
 		var defender_creature = tile_info.get("creature", {})
 		var defender_display = defender_creature.duplicate()
 		defender_display["land_bonus_hp"] = _calculate_land_bonus(defender_creature, tile_info)
-		
-		game_flow_manager_ref.battle_status_overlay.show_battle_status(
+
+		battle_status_overlay.show_battle_status(
 			attacker_display, defender_display, "attacker")
 	
 	# アイテムフェーズを開始（攻撃側）
@@ -196,8 +203,8 @@ func _on_spell_move_item_phase_completed() -> void:
 				item_handler.set_defense_tile_info(pending_battle_tile_info)
 				
 				# バトルステータスオーバーレイを防御側に切り替え
-				if game_flow_manager_ref.battle_status_overlay:
-					game_flow_manager_ref.battle_status_overlay.highlight_side("defender")
+				if battle_status_overlay:
+					battle_status_overlay.highlight_side("defender")
 				
 				item_handler.start_item_phase(defender_owner, defender_creature)
 			else:
@@ -231,8 +238,8 @@ func _execute_spell_move_battle() -> void:
 		return
 	
 	# バトルステータスオーバーレイを非表示
-	if game_flow_manager_ref and game_flow_manager_ref.battle_status_overlay:
-		game_flow_manager_ref.battle_status_overlay.hide_battle_status()
+	if battle_status_overlay:
+		battle_status_overlay.hide_battle_status()
 	
 	var from_tile = pending_battle_result.get("from_tile", -1)
 	var attacker_creature = pending_battle_result.get("creature_data", {})

@@ -662,7 +662,51 @@ func update_hand_display(player_id: int):
 
 # rearrange_hand は HandDisplayに移行済みのため削除
 
+# ============ player_info_panel 委譲メソッド ============
+
+## 現在のターンプレイヤーを設定
+func set_current_turn(player_id: int):
+	if player_info_panel and player_info_panel.has_method("set_current_turn"):
+		player_info_panel.set_current_turn(player_id)
+
+## プレイヤーランキングを取得
+func get_player_ranking(player_id: int) -> int:
+	if player_info_panel and player_info_panel.has_method("get_player_ranking"):
+		return player_info_panel.get_player_ranking(player_id)
+	return 0
+
 # ============ phase_display 委譲メソッド ============
+
+## フェーズラベルのテキストを設定
+func set_phase_text(text: String):
+	if phase_display and phase_display.phase_label:
+		phase_display.phase_label.text = text
+
+## フェーズラベルのテキストを取得
+func get_phase_text() -> String:
+	if phase_display and phase_display.phase_label:
+		return phase_display.phase_label.text
+	return ""
+
+## ダイス結果を大きく表示
+func show_big_dice_result(value: int, duration: float = 1.5):
+	if phase_display and phase_display.has_method("show_big_dice_result"):
+		phase_display.show_big_dice_result(value, duration)
+
+## ダイス結果（2個）を表示
+func show_dice_result_double(dice1: int, dice2: int, total: int):
+	if phase_display and phase_display.has_method("show_dice_result_double"):
+		phase_display.show_dice_result_double(dice1, dice2, total)
+
+## ダイス結果（3個/フライ）を表示
+func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
+	if phase_display and phase_display.has_method("show_dice_result_triple"):
+		phase_display.show_dice_result_triple(dice1, dice2, dice3, total)
+
+## ダイス結果（範囲呪い）を表示
+func show_dice_result_range(curse_name: String, value: int):
+	if phase_display and phase_display.has_method("show_dice_result_range"):
+		phase_display.show_dice_result_range(curse_name, value)
 
 ## トースト表示（短時間の通知メッセージ）
 func show_toast(message: String, duration: float = 2.0):

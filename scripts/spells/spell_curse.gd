@@ -15,14 +15,21 @@ var creature_manager: CreatureManager
 var player_system: PlayerSystem
 var game_flow_manager: GameFlowManager
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_phase_handler = null  # SpellPhaseHandler: is_magic_tile_mode参照用
+
 # 初期化
 func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, flow: GameFlowManager):
 	board_system = board
 	creature_manager = creature
 	player_system = player
 	game_flow_manager = flow
-	
+
 	print("[SpellCurse] 初期化完了")
+
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_phase_handler(handler) -> void:
+	spell_phase_handler = handler
 
 # ========================================
 # 統合エントリポイント
@@ -446,8 +453,8 @@ func _get_current_turn() -> int:
 
 ## マジックタイルモードかチェック
 func _is_magic_tile_mode() -> bool:
-	if game_flow_manager and game_flow_manager.spell_phase_handler:
-		return game_flow_manager.spell_phase_handler.is_magic_tile_mode
+	if spell_phase_handler:
+		return spell_phase_handler.is_magic_tile_mode
 	return false
 
 # 全ての呪いのdurationを更新（デバッグ用）

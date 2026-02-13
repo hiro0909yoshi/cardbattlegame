@@ -11,6 +11,10 @@ class_name SpellWorldCurse
 var spell_curse: SpellCurse
 var game_flow_manager: GameFlowManager
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cast_notification_ui = null  # SpellCastNotificationUI: 通知表示
+var ui_manager = null  # UIManager: UI管理
+
 # ========================================
 # 初期化
 # ========================================
@@ -18,7 +22,16 @@ var game_flow_manager: GameFlowManager
 func setup(curse: SpellCurse, gfm: GameFlowManager):
 	spell_curse = curse
 	game_flow_manager = gfm
+
+	# ui_managerの直接参照を設定
+	if gfm and gfm.ui_manager:
+		ui_manager = gfm.ui_manager
+
 	print("[SpellWorldCurse] 初期化完了")
+
+## 直接参照を設定（GFM経由を廃止）
+func set_notification_ui(ui) -> void:
+	spell_cast_notification_ui = ui
 
 # ========================================
 # ポップアップ通知
@@ -26,16 +39,9 @@ func setup(curse: SpellCurse, gfm: GameFlowManager):
 
 ## 世界呪いブロック時のポップアップ表示
 func show_blocked_notification(message: String) -> void:
-	if not game_flow_manager:
-		return
-	
-	var notification_ui = null
-	if game_flow_manager.spell_phase_handler:
-		notification_ui = game_flow_manager.spell_phase_handler.spell_cast_notification_ui
-	
-	if notification_ui and notification_ui.has_method("show_notification_and_wait"):
-		notification_ui.show_notification_and_wait(message)
-	
+	if spell_cast_notification_ui and spell_cast_notification_ui.has_method("show_notification_and_wait"):
+		spell_cast_notification_ui.show_notification_and_wait(message)
+
 	print("[世界呪い] %s" % message)
 
 # ========================================
@@ -67,13 +73,12 @@ func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool
 	if world_curse.get("curse_type") != "invasion_restrict":
 		return false
 	
-	# 順位を取得
-	var panel = game_flow_manager.ui_manager.player_info_panel if game_flow_manager.ui_manager else null
-	if not panel:
+	# 順位を取得（直接参照経由）
+	if not ui_manager:
 		return false
-	
-	var attacker_rank = panel.get_player_ranking(attacker_id)
-	var defender_rank = panel.get_player_ranking(defender_id)
+
+	var attacker_rank = ui_manager.get_player_ranking(attacker_id)
+	var defender_rank = ui_manager.get_player_ranking(defender_id)
 	
 	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
 	if attacker_rank < defender_rank:
@@ -268,8 +273,7 @@ func on_round_start():
 
 ## プレイヤー情報パネルを更新（世界呪い表示用）
 func _update_ui():
-	if not game_flow_manager:
+	if not ui_manager:
 		return
-	
-	if game_flow_manager.ui_manager and game_flow_manager.ui_manager.player_info_panel:
-		game_flow_manager.ui_manager.player_info_panel.update_all_panels()
+
+	ui_manager.update_player_info_panels()

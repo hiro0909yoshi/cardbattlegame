@@ -1,7 +1,7 @@
 # 🔧 シグナル整理 + コーディング規約違反 作業ドキュメント
 
 **作成日**: 2026-02-11
-**最終更新**: 2026-02-12 15:30
+**最終更新**: 2026-02-13
 **目的**: シグナル接続の整理に加え、コーディング規約違反を包括的に調査・修正する
 
 ---
@@ -23,6 +23,7 @@
 | board_system委譲: mc/cc/tap系 | ✅ 完了 | 57箇所置換（タスク3） |
 | board_system委譲: サブシステム直接参照 | ✅ 完了 | 12箇所、委譲メソッド5つ追加（タスクA〜E） |
 | preload定数化（循環参照対策） | ✅ 完了 | gsm/gfm/quest_game |
+| gfm内部チェーン解消（直接参照パターン） | ✅ 完了 | lap_system, spell_cost_modifier, battle_status_overlay等 |
 | H. UI座標ハードコード | ⬜ 後回し | ~20箇所 |
 | debug_manual_control_all集約 | ⬜ 後回し | 影響範囲大 |
 | signal_flow_mapスキル作成 | ⬜ 未着手 | — |
@@ -69,16 +70,17 @@
 - battle_system初期化キャッシュ（2箇所）: initialize時の1回限り
 - MC内部ヘルパー（warp_handler, special_handler等）のcontroller.*参照: 内部分割のため許容
 
-### 2. game_flow_manager内部コンポーネントへの2段チェーン（49箇所）
+### 2. game_flow_manager内部コンポーネントへの2段チェーン — ✅ 完了
 
-| パターン | 箇所数 | 主な呼び出し元 | 修正方針 |
-|---------|--------|---------------|---------|
-| `gfm.lap_system.*` | 30 | spell_player_move(12), battle_system(4), spell_magic(5), UI系(3), battle_skills(3), tutorial(1), game_3d/quest(2) | 規模大。initialize時にlap_system参照を直接渡すか、gfmに委譲メソッド追加 |
-| `gfm.spell_cost_modifier.*` | 11 | spell_phase_handler(2), item_phase_handler(2), tile_battle/summon_executor(2), tile_action_processor(1), cpu系(2), skill_merge(1), gsm初期化(1) | gfmに`get_modified_cost()`/`check_spell_nullify()`委譲メソッド追加 |
-| `gfm.spell_phase_handler.*` | 8 | card_selection_ui(3), spell系(3), debug_controller(1), ui_manager(1) | 個別対応。一部はinitialize時注入で解消可能 |
-| `sph.cpu_hand_utils/cpu_spell_ai` | 2 | game_flow_manager内部利用 | 許容（内部利用） |
+直接参照パターンを導入してチェーンアクセスを解消。詳細は `docs/implementation/delegation_method_catalog.md` を参照。
 
-**優先度**: 低。tile_nodesと同様、参照数が多くコスト対効果が見合わない。lap_systemとspell_cost_modifierは事実上の公開サブシステム。
+| パターン | 対応内容 |
+|---------|---------|
+| `gfm.lap_system.*` | lap_systemを各クラスに直接注入（15+ファイル） |
+| `gfm.spell_cost_modifier.*` | spell_cost_modifierを各クラスに直接注入（6ファイル） |
+| `gfm.battle_status_overlay.*` | battle_status_overlayを各クラスに直接注入（5ファイル） |
+| `gfm.spell_phase_handler.*` | spell_phase_handlerを必要なクラスに直接注入（2ファイル） |
+| その他 | player_system, ui_manager, spell_curse_stat等も直接注入パターン適用 |
 
 ### 3. controller内部コンポーネントへの2段チェーン（~6箇所）
 
@@ -272,7 +274,7 @@ battle_systemはboard_systemの子だが、game_flow_managerも参照してい�
 ~~1. tile_data_manager逆参照解消（依存#2, 1箇所）~~ — ✅ 完了
 ~~2. 3段チェーン解消（land_action_helper, 1箇所）~~ — ✅ 完了
 ~~3. board_system委譲メソッド追加（密結合#1, ~69箇所）~~ — ✅ 完了（タスク3 + A〜E）
-4. **game_flow_manager委譲**（密結合#2, 49箇所）— 規模大、優先度低。lap_system/spell_cost_modifierは事実上の公開サブシステムとして許容寄り
+~~4. game_flow_manager委譲（密結合#2, 49箇所）~~ — ✅ 完了（直接参照パターン導入）
 5. **UI座標ハードコード**（規約6, ~20箇所）— 大工事、後回し
 6. **debug_manual_control_all集約**（規約10残り）— 影響範囲大
 7. **signal_flow_mapスキル作成** — 未着手
@@ -344,3 +346,15 @@ battle_systemはboard_systemの子だが、game_flow_managerも参照してい�
 - ✅ preload定数化: game_system_manager/game_flow_manager/quest_game（循環参照対策）
 - ✅ game_flow_manager _update_camera_mode重複コード削除
 - 🔧 debug_controller.gd インデントエラー修正（Haiku修正のフォローアップ）
+
+### セッション9（2026-02-13）
+- ✅ game_flow_manager内部チェーンアクセス解消 — 直接参照パターン導入
+  - **battle_status_overlay**: 5ファイル（TileBattleExecutor, DominioCommandHandler, CPUTurnProcessor, SpellPhaseHandler, SpellCreatureMove）
+  - **lap_system**: 15+ファイル（SpellPlayerMove, BattleSpecialEffects, SkillLegacy, BattleSystem, SpellMagic, PlayerStatusDialog, SkillStatModifiers, BattleSkillProcessor, DebugPanel, TutorialManager等）
+  - **spell_cost_modifier**: 6ファイル（SpellPhaseHandler, ItemPhaseHandler, TileActionProcessor, TileSummonExecutor, TileBattleExecutor, SpellCostModifier）
+  - **player_system**: 3ファイル（TutorialManager, ExplanationMode, SummonConditionChecker）
+  - **spell_phase_handler**: 2ファイル（SpellCurse, CPUSpecialTileAI）
+  - **その他**: board_system_3d, target_selection_helper, ui_manager, spell_curse_stat, dominio_command_handler
+- ✅ GameSystemManager委譲メソッド追加: apply_map_settings_to_lap_system()
+- ✅ docs/implementation/delegation_method_catalog.md 更新（全直接参照パターンを網羅）
+- ✅ docs/implementation/signal_catalog.md 作成（192シグナル/24カテゴリ）

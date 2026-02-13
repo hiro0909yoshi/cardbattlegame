@@ -15,6 +15,14 @@ var ui_manager: UIManager
 var game_flow_manager = null
 var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+
+func set_battle_status_overlay(overlay) -> void:
+	battle_status_overlay = overlay
+	print("[TileBattleExecutor] battle_status_overlay 直接参照を設定")
+
 ## item_phase_handlerの遅延取得
 func _get_item_phase_handler():
 	if not _item_phase_handler and game_flow_manager and game_flow_manager.get("item_phase_handler"):
@@ -47,7 +55,9 @@ func initialize(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardS
 	game_flow_manager = gf_manager
 	_summon_executor = summon_exec
 
-
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_cost_modifier(cost_modifier) -> void:
+	spell_cost_modifier = cost_modifier
 
 ## バトル（侵略）実行
 func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: Callable, show_battle_ui_callback: Callable):
@@ -124,8 +134,8 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		cost = cost_data
 	
 	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
 	
 	var current_player = player_system.get_current_player()
 	if current_player.magic_power < cost:
@@ -142,24 +152,24 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 	
 	# バトルステータスオーバーレイ表示
 	var defender_creature = pending_battle_tile_info.get("creature", {})
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
+	if battle_status_overlay:
 		var attacker_display = pending_battle_card_data.duplicate()
 		attacker_display["land_bonus_hp"] = 0
 		var defender_display = defender_creature.duplicate()
 		defender_display["land_bonus_hp"] = calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-		game_flow_manager.battle_status_overlay.show_battle_status(
+		battle_status_overlay.show_battle_status(
 			attacker_display, defender_display, "attacker")
 	
 	# CPU攻撃側の合体処理をチェック
 	if _is_cpu_player(current_player_index):
 		var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
 		if merge_executed:
-			if game_flow_manager and game_flow_manager.battle_status_overlay:
+			if battle_status_overlay:
 				var attacker_display = pending_battle_card_data.duplicate()
 				attacker_display["land_bonus_hp"] = 0
 				var defender_display = defender_creature.duplicate()
 				defender_display["land_bonus_hp"] = calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-				game_flow_manager.battle_status_overlay.show_battle_status(
+				battle_status_overlay.show_battle_status(
 					attacker_display, defender_display, "attacker")
 	
 	# アイテムフェーズ開始
@@ -219,23 +229,23 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: 
 	
 	# バトルステータスオーバーレイ表示
 	var defender_creature = pending_battle_tile_info.get("creature", {})
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
+	if battle_status_overlay:
 		var attacker_display = pending_battle_card_data.duplicate()
 		attacker_display["land_bonus_hp"] = 0
 		var defender_display = defender_creature.duplicate()
 		defender_display["land_bonus_hp"] = calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-		game_flow_manager.battle_status_overlay.show_battle_status(
+		battle_status_overlay.show_battle_status(
 			attacker_display, defender_display, "attacker")
 	
 	# CPU攻撃側の合体処理をチェック
 	var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
 	if merge_executed:
-		if game_flow_manager and game_flow_manager.battle_status_overlay:
+		if battle_status_overlay:
 			var attacker_display = pending_battle_card_data.duplicate()
 			attacker_display["land_bonus_hp"] = 0
 			var defender_display = defender_creature.duplicate()
 			defender_display["land_bonus_hp"] = calculate_land_bonus_for_display(defender_creature, pending_battle_tile_info)
-			game_flow_manager.battle_status_overlay.show_battle_status(
+			battle_status_overlay.show_battle_status(
 				attacker_display, defender_display, "attacker")
 	
 	# アイテムフェーズ開始
@@ -280,8 +290,8 @@ func _on_item_phase_completed():
 			is_waiting_for_defender_item = true
 			
 			# 防御側を強調表示に切り替え
-			if game_flow_manager and game_flow_manager.battle_status_overlay:
-				game_flow_manager.battle_status_overlay.highlight_side("defender")
+			if battle_status_overlay:
+				battle_status_overlay.highlight_side("defender")
 			
 			# 防御側のアイテムフェーズ開始
 			if _get_item_phase_handler():
@@ -331,8 +341,8 @@ func _execute_pending_battle():
 		return
 	
 	# バトルステータスオーバーレイを非表示
-	if game_flow_manager and game_flow_manager.battle_status_overlay:
-		game_flow_manager.battle_status_overlay.hide_battle_status()
+	if battle_status_overlay:
+		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
 	
@@ -411,7 +421,7 @@ func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
 		player_index,
 		card_system,
 		player_system,
-		game_flow_manager
+		spell_cost_modifier
 	)
 	
 	if not skill_merge_result.get("success", false):

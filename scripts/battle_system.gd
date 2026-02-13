@@ -37,6 +37,9 @@ var spell_magic = null
 # バトル画面マネージャー
 var battle_screen_manager: BattleScreenManager = null
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理（破壊カウンター用）
+
 func _ready():
 	# サブシステムを初期化
 	battle_preparation = BattlePreparation.new()
@@ -76,6 +79,11 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	battle_execution.setup_systems(card_system, battle_screen_manager)
 	battle_skill_processor.setup_systems(board_system, game_flow_manager_ref, card_system_ref, battle_screen_manager, battle_preparation)
 	battle_special_effects.setup_systems(board_system, spell_draw, spell_magic, card_system, battle_screen_manager)
+
+	# lap_systemの直接参照を設定（チェーンアクセス解消）
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		lap_system = game_flow_manager_ref.lap_system
+		battle_special_effects.set_lap_system(lap_system)
 	
 	# アイテム復帰スキルの初期化
 	_skill_item_return.setup_systems(card_system)
@@ -440,9 +448,9 @@ func _apply_post_battle_effects(
 【結果】侵略成功！土地を獲得")
 			
 			# 破壊カウンター更新
-			if game_flow_manager_ref:
-				game_flow_manager_ref.lap_system.on_creature_destroyed()
-			
+			if lap_system:
+				lap_system.on_creature_destroyed()
+
 			# バウンティハント（賞金首）報酬チェック - 防御側が敗者
 			await _check_and_apply_bounty_reward(defender, attacker)
 			
@@ -500,11 +508,11 @@ func _apply_post_battle_effects(
 		
 		BattleResult.DEFENDER_WIN:
 			print("【結果】防御成功！侵略側を撃破")
-			
+
 			# 破壊カウンター更新
-			if game_flow_manager_ref:
-				game_flow_manager_ref.lap_system.on_creature_destroyed()
-			
+			if lap_system:
+				lap_system.on_creature_destroyed()
+
 			# バウンティハント（賞金首）報酬チェック - 攻撃側が敗者
 			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
 			await _check_and_apply_bounty_reward(attacker, defender)
@@ -610,12 +618,12 @@ func _apply_post_battle_effects(
 		
 		BattleResult.BOTH_DEFEATED:
 			print("【結果】相打ち！土地は無所有になります")
-			
+
 			# 破壊カウンター更新（両方破壊）
-			if game_flow_manager_ref:
-				game_flow_manager_ref.lap_system.on_creature_destroyed()
-				game_flow_manager_ref.lap_system.on_creature_destroyed()
-			
+			if lap_system:
+				lap_system.on_creature_destroyed()
+				lap_system.on_creature_destroyed()
+
 			# バウンティハント: 相打ちの場合は報酬なし（勝者がいない）
 			
 			# バトル後の永続変化を適用（ロックタイタン等）

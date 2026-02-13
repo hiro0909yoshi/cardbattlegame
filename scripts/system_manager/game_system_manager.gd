@@ -516,6 +516,8 @@ func _setup_spell_systems() -> void:
 	var spell_land = SpellLand.new()
 	spell_land.setup(board_system_3d, creature_manager, player_system, card_system)
 	spell_land.set_game_flow_manager(game_flow_manager)
+	if board_system_3d:
+		board_system_3d.set_spell_land(spell_land)
 	spell_systems["spell_land"] = spell_land
 	print("[SpellLand] 初期化完了")
 	
@@ -563,7 +565,11 @@ func _setup_spell_systems() -> void:
 	
 	# GameFlowManagerに一括設定
 	game_flow_manager.set_spell_systems(spell_systems)
-	
+
+	# SpellCostModifierにSpellWorldCurse参照を設定
+	if game_flow_manager.spell_cost_modifier:
+		game_flow_manager.spell_cost_modifier.set_spell_world_curse(game_flow_manager.spell_world_curse)
+
 	# BattleSystemにspell_magic/spell_drawを設定（setup_systemsより後に初期化されるため）
 	if battle_system:
 		battle_system.spell_magic = spell_systems.get("spell_magic")
@@ -573,6 +579,13 @@ func _setup_spell_systems() -> void:
 			battle_system.battle_special_effects.spell_draw_ref = spell_systems.get("spell_draw")
 		if battle_system.battle_preparation:
 			battle_system.battle_preparation.spell_magic_ref = spell_systems.get("spell_magic")
+
+	# TileActionProcessorにspell参照を設定
+	if board_system_3d:
+		board_system_3d.set_tile_action_processor_spells(
+			game_flow_manager.spell_cost_modifier,
+			game_flow_manager.spell_world_curse
+		)
 
 ## BattleScreenManager初期化
 func _setup_battle_screen_manager() -> void:
@@ -625,13 +638,58 @@ func _initialize_phase1a_handlers() -> void:
 	var dominio_command_handler = DominioCommandHandlerClass.new()
 	game_flow_manager.add_child(dominio_command_handler)
 	dominio_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
-	
+	dominio_command_handler.set_spell_systems_direct(
+		game_flow_manager.spell_world_curse,
+		game_flow_manager.spell_land,
+		game_flow_manager.spell_curse
+	)
+
 	# SpellPhaseHandlerを作成
 	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")
 	var spell_phase_handler = SpellPhaseHandlerClass.new()
 	game_flow_manager.add_child(spell_phase_handler)
 	spell_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, board_system_3d)
-	
+
+	# SpellEffectExecutorにスペルシステム参照を直接設定（GFM経由を廃止）
+	var spell_systems_for_executor = {
+		"spell_magic": game_flow_manager.spell_magic,
+		"spell_dice": game_flow_manager.spell_dice,
+		"spell_curse_stat": game_flow_manager.spell_curse_stat,
+		"spell_curse": game_flow_manager.spell_curse,
+		"spell_curse_toll": game_flow_manager.spell_curse_toll,
+		"spell_cost_modifier": game_flow_manager.spell_cost_modifier,
+		"spell_draw": game_flow_manager.spell_draw,
+		"spell_land": game_flow_manager.spell_land,
+		"spell_player_move": game_flow_manager.spell_player_move,
+		"spell_world_curse": game_flow_manager.spell_world_curse
+	}
+	spell_phase_handler.set_spell_effect_executor_systems(spell_systems_for_executor)
+
+	# SpellPhaseHandler自身の直接参照を設定
+	spell_phase_handler.set_spell_systems_direct(
+		game_flow_manager.spell_cost_modifier,
+		game_flow_manager.spell_draw
+	)
+
+	# DebugControllerにspell_phase_handler参照を設定
+	if debug_controller:
+		debug_controller.spell_phase_handler = spell_phase_handler
+
+	# SpellCurseにspell_phase_handler参照を設定
+	if game_flow_manager.spell_curse:
+		game_flow_manager.spell_curse.set_spell_phase_handler(spell_phase_handler)
+
+	# SpellWorldCurseにspell_cast_notification_ui参照を設定
+	if game_flow_manager.spell_world_curse and spell_phase_handler.spell_cast_notification_ui:
+		game_flow_manager.spell_world_curse.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+
+	# CPUSpecialTileAIにspell_phase_handler参照を設定
+	if game_flow_manager.cpu_special_tile_ai:
+		game_flow_manager.cpu_special_tile_ai.spell_phase_handler = spell_phase_handler
+
+	# 注: TutorialManagerはgame_3d.gdに存在し、spell_phase_handlerから
+	# game_3d.tutorial_manager経由でアクセスするため、ここでの注入は不要
+
 	# デバッグ: 密命カードを一時的に無効化（テスト用）
 	DebugSettings.disable_secret_cards = true
 	
@@ -640,7 +698,8 @@ func _initialize_phase1a_handlers() -> void:
 	var item_phase_handler = ItemPhaseHandlerClass.new()
 	game_flow_manager.add_child(item_phase_handler)
 	item_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, battle_system)
-	
+	item_phase_handler.set_spell_cost_modifier(game_flow_manager.spell_cost_modifier)
+
 	# GameFlowManagerにハンドラーを設定
 	game_flow_manager.set_phase1a_handlers(
 		target_selection_helper,
@@ -653,7 +712,14 @@ func _initialize_phase1a_handlers() -> void:
 	if ui_manager:
 		ui_manager.spell_phase_handler_ref = spell_phase_handler
 		ui_manager.dominio_command_handler_ref = dominio_command_handler
-	
+
+	# battle_status_overlayの直接参照を設定（チェーンアクセス解消）
+	if game_flow_manager.battle_status_overlay:
+		dominio_command_handler.set_battle_status_overlay(game_flow_manager.battle_status_overlay)
+		spell_phase_handler.set_battle_status_overlay(game_flow_manager.battle_status_overlay)
+		if board_system_3d:
+			board_system_3d.set_tile_action_processor_battle_overlay(game_flow_manager.battle_status_overlay)
+
 	print("[Phase1A Handlers] 初期化完了")
 
 ## CPU移動評価システムの初期化
@@ -684,6 +750,9 @@ func _initialize_cpu_movement_evaluator() -> void:
 	var cpu_ai_handler = null
 	if board_system_3d.cpu_turn_processor:
 		cpu_ai_handler = board_system_3d.cpu_turn_processor.cpu_ai_handler
+		# battle_status_overlayの直接参照を設定
+		if game_flow_manager.battle_status_overlay:
+			board_system_3d.cpu_turn_processor.set_battle_status_overlay(game_flow_manager.battle_status_overlay)
 	
 	# CPUMovementEvaluatorを作成（コンテキスト経由）
 	var cpu_movement_evaluator = CPUMovementEvaluator.new()
@@ -697,5 +766,15 @@ func _initialize_cpu_movement_evaluator() -> void:
 	
 	# GameFlowManagerに設定
 	game_flow_manager.set_cpu_movement_evaluator(cpu_movement_evaluator)
-	
+
 	print("[CPUMovementEvaluator] 初期化完了（距離計算は遅延実行）")
+
+# =============================================================================
+# 委譲メソッド（チェーンアクセス解消用）
+# =============================================================================
+
+## lap_systemにマップ設定を適用（game_3d.gd, quest_game.gd用）
+func apply_map_settings_to_lap_system(map_data: Dictionary) -> void:
+	if game_flow_manager and game_flow_manager.lap_system:
+		game_flow_manager.lap_system.apply_map_settings(map_data)
+		print("[GameSystemManager] lap_system マップ設定適用完了")

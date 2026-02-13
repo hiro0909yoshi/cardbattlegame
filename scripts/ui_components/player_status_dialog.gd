@@ -19,6 +19,9 @@ var game_flow_manager_ref = null
 var card_system_ref = null
 var player_info_panel: PlayerInfoPanel = null
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理
+
 # 状態
 var current_player_id = -1
 
@@ -42,6 +45,10 @@ func initialize(_parent: Node, player_system, board_system, player_info_panel_re
 	player_info_panel = player_info_panel_ref
 	card_system_ref = card_system
 	game_flow_manager_ref = game_flow_manager
+
+	# lap_systemの直接参照を設定
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		lap_system = game_flow_manager_ref.lap_system
 
 # プレイヤーのステータスを表示
 func show_for_player(player_id: int):
@@ -97,9 +104,9 @@ func build_status_text(player_id: int) -> String:
 	if game_flow_manager_ref:
 		var lap_count = 0
 		var destroy_count = 0
-		if game_flow_manager_ref.lap_system:
-			lap_count = game_flow_manager_ref.lap_system.get_lap_count(player_id)
-			destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
+		if lap_system:
+			lap_count = lap_system.get_lap_count(player_id)
+			destroy_count = lap_system.get_destroy_count()
 		var current_turn = game_flow_manager_ref.get_current_turn()
 		text += "周回数: " + str(lap_count) + "\n"
 		text += "ターン数: " + str(current_turn) + "\n"

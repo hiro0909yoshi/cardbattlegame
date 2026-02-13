@@ -8,6 +8,9 @@ var player_system: PlayerSystem
 var board_system: Node
 var game_flow_manager: Node
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_phase_handler = null
+
 func setup(c_system: CardSystem, p_system: PlayerSystem, b_system: Node, gfm: Node) -> void:
 	card_system = c_system
 	player_system = p_system
@@ -308,10 +311,8 @@ func _get_tile_info(tile_index: int) -> Dictionary:
 	return {}
 
 func _get_cpu_spell_ai():
-	if game_flow_manager and "spell_phase_handler" in game_flow_manager:
-		var handler = game_flow_manager.spell_phase_handler
-		if handler and "cpu_spell_ai" in handler:
-			return handler.cpu_spell_ai
+	if spell_phase_handler and "cpu_spell_ai" in spell_phase_handler:
+		return spell_phase_handler.cpu_spell_ai
 	return null
 
 func _get_target_selection_helper():

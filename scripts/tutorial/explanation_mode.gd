@@ -14,6 +14,9 @@ var _config: Dictionary = {}
 var _ui_manager = null
 var _board_system_3d = null
 
+# === 直接参照（GFM経由を廃止） ===
+var _player_system = null  # PlayerSystem: プレイヤー情報
+
 # UI部品
 var popup: Control = null
 var _overlay: Control = null
@@ -35,6 +38,12 @@ func _ready():
 func setup(ui_manager, board_system_3d):
 	_ui_manager = ui_manager
 	_board_system_3d = board_system_3d
+
+	# player_systemの直接参照を設定
+	if _board_system_3d and _board_system_3d.game_flow_manager:
+		if _board_system_3d.game_flow_manager.player_system:
+			_player_system = _board_system_3d.game_flow_manager.player_system
+
 	_create_ui()
 	_connect_signals()
 
@@ -391,8 +400,8 @@ func _highlight_tile_toll(target):
 				_highlight_all_player_creature_tiles(0)
 				return
 			"player_position":
-				if _board_system_3d.game_flow_manager and _board_system_3d.game_flow_manager.player_system:
-					tile_index = _board_system_3d.game_flow_manager.player_system.get_player_position(0)
+				if _player_system:
+					tile_index = _player_system.get_player_position(0)
 	elif target is int:
 		tile_index = target
 	

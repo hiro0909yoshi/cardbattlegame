@@ -19,6 +19,10 @@ var game_flow_manager = null
 var cpu_turn_processor = null
 var cpu_tile_action_executor: CPUTileActionExecutor = null
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+
 # サブシステム
 var summon_executor: TileSummonExecutor = null
 var battle_executor: TileBattleExecutor = null
@@ -93,6 +97,22 @@ func set_cpu_processor(cpu_processor):
 	if cpu_turn_processor:
 		cpu_turn_processor.cpu_action_completed.connect(_on_cpu_action_completed)
 
+## 直接参照を設定（GFM経由を廃止）
+## executorにも伝播させる
+func set_spell_systems_direct(cost_modifier, world_curse) -> void:
+	spell_cost_modifier = cost_modifier
+	spell_world_curse = world_curse
+	if summon_executor:
+		summon_executor.set_spell_cost_modifier(cost_modifier)
+	if battle_executor:
+		battle_executor.set_spell_cost_modifier(cost_modifier)
+	print("[TileActionProcessor] spell_cost_modifier, spell_world_curse 直接参照を設定")
+
+func set_battle_status_overlay(overlay) -> void:
+	if battle_executor:
+		battle_executor.set_battle_status_overlay(overlay)
+	print("[TileActionProcessor] battle_status_overlay 直接参照を設定")
+
 # === タイル到着処理 ===
 
 # タイル到着時のメイン処理
@@ -151,7 +171,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 			show_battle_ui_disabled()
 		elif spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(player_index):
 			show_battle_ui_disabled()
-		elif game_flow_manager and game_flow_manager.spell_world_curse and game_flow_manager.spell_world_curse.check_invasion_blocked(player_index, tile_info.get("owner", -1), false):
+		elif spell_world_curse and spell_world_curse.check_invasion_blocked(player_index, tile_info.get("owner", -1), false):
 			show_battle_ui_disabled()
 		else:
 			show_battle_ui("battle")
@@ -328,8 +348,8 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 		cost = cost_data
 	
 	# ライフフォース呪いチェック
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		cost = game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_index, card_data)
+	if spell_cost_modifier:
+		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
 	var current_player = player_system.get_current_player()
 	

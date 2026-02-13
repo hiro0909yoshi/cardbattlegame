@@ -445,8 +445,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		
 		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 		var defender_id = dest_tile.owner_id if dest_tile else -1
-		if handler.game_flow_manager and handler.game_flow_manager.spell_world_curse:
-			if handler.game_flow_manager.spell_world_curse.check_invasion_blocked(current_player_id, defender_id, true):
+		if handler.spell_world_curse:
+			if handler.spell_world_curse.check_invasion_blocked(current_player_id, defender_id, true):
 				source_tile.place_creature(creature_data)
 				handler.close_dominio_order()
 				return
@@ -577,7 +577,7 @@ static func _trigger_command_growth(handler, tile_index: int) -> void:
 	if not handler.game_flow_manager:
 		return
 	
-	var spell_curse = handler.game_flow_manager.spell_curse
+	var spell_curse = handler.spell_curse
 	if not spell_curse:
 		return
 	
@@ -591,9 +591,7 @@ static func _trigger_command_growth(handler, tile_index: int) -> void:
 ## コマンド成長の通知を表示
 static func _show_command_growth_notification(handler, result: Dictionary) -> void:
 	# SpellCastNotificationUIを取得
-	var notification_ui = null
-	if handler.game_flow_manager and handler.game_flow_manager.spell_phase_handler:
-		notification_ui = handler.spell_cast_notification_ui
+	var notification_ui = handler.spell_cast_notification_ui
 	
 	if not notification_ui:
 		return
@@ -661,7 +659,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	handler.player_system.add_magic(current_player.id, -cost)
 	
 	# 地形変化実行（SpellLand経由でソリッドワールドチェックも行う）
-	var success = handler.game_flow_manager.spell_land.change_element(tile_index, new_element)
+	var success = handler.spell_land.change_element(tile_index, new_element)
 	if not success:
 		# EPを返却
 		handler.player_system.add_magic(current_player.id, cost)
@@ -722,8 +720,8 @@ static func execute_terrain_change(handler) -> bool:
 	var tile_index = handler.selected_tile_index
 	
 	# ソリッドワールド（土地変性無効）チェック - SpellWorldCurseに委譲
-	if handler.game_flow_manager and handler.game_flow_manager.spell_world_curse:
-		if handler.game_flow_manager.spell_world_curse.check_land_change_blocked(true):
+	if handler.spell_world_curse:
+		if handler.spell_world_curse.check_land_change_blocked(true):
 			return false
 	
 	# 地形変化可能かチェック

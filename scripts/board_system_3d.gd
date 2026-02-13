@@ -59,6 +59,9 @@ var ui_manager: UIManager
 var cpu_ai_handler: CPUAIHandler
 var game_flow_manager = null  # GameFlowManagerへの参照
 
+# === 直接参照（GFM経由を廃止） ===
+var spell_land = null  # SpellLand: 土地操作スペル
+
 # === 初期化 ===
 
 func _ready():
@@ -170,6 +173,22 @@ func setup_cpu_ai_handler():
 	# システム参照は毎回更新（battle_policyは保持される）
 	if cpu_ai_handler.has_method("setup_systems"):
 		cpu_ai_handler.setup_systems(card_system, self, player_system, battle_system, player_buff_system, game_flow_manager)
+
+# === 直接参照設定（GFM経由廃止用） ===
+
+func set_spell_land(system) -> void:
+	spell_land = system
+	print("[BoardSystem3D] spell_land直接参照を設定")
+
+func set_tile_action_processor_spells(cost_modifier, world_curse) -> void:
+	if tile_action_processor:
+		tile_action_processor.set_spell_systems_direct(cost_modifier, world_curse)
+	print("[BoardSystem3D] tile_action_processor spell参照を設定")
+
+func set_tile_action_processor_battle_overlay(overlay) -> void:
+	if tile_action_processor:
+		tile_action_processor.set_battle_status_overlay(overlay)
+	print("[BoardSystem3D] tile_action_processor battle_status_overlay参照を設定")
 
 # === 3Dノード収集 ===
 
@@ -468,8 +487,8 @@ func calculate_terrain_change_cost(tile_index: int) -> int:
 		return -1
 	
 	# spell_landに委譲（アーキミミック、無属性タイル対応）
-	if game_flow_manager and game_flow_manager.spell_land:
-		return game_flow_manager.spell_land.calculate_terrain_change_cost(tile_index)
+	if spell_land:
+		return spell_land.calculate_terrain_change_cost(tile_index)
 	
 	# フォールバック：従来の計算
 	var tile = tile_nodes[tile_index]
@@ -484,7 +503,7 @@ func move_player_3d(player_id: int, steps: int, dice_value: int = 0):
 
 func _on_movement_started(_player_id: int):
 	if ui_manager:
-		ui_manager.phase_label.text = "移動中..."
+		ui_manager.set_phase_text("移動中...")
 
 ## プレイヤーが操作可能なドミニオを所有しているかチェック（ダウン中は除外）
 func has_owned_lands(player_id: int) -> bool:
@@ -719,14 +738,14 @@ func check_cannot_summon(creature_data: Dictionary, tile_element: String) -> Dic
 
 ## タイルの属性を変更
 func change_tile_element(tile_index: int, new_element: String) -> bool:
-	if game_flow_manager and game_flow_manager.spell_land:
-		return game_flow_manager.spell_land.change_element(tile_index, new_element)
+	if spell_land:
+		return spell_land.change_element(tile_index, new_element)
 	return false
 
 ## タイルのレベルを変更
 func change_tile_level(tile_index: int, amount: int) -> bool:
-	if game_flow_manager and game_flow_manager.spell_land:
-		return game_flow_manager.spell_land.change_level(tile_index, amount)
+	if spell_land:
+		return spell_land.change_level(tile_index, amount)
 	return false
 
 # ========================================

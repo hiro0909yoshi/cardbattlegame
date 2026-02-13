@@ -91,6 +91,11 @@ Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
    - `CardLoader`: Global card database
    - `GameData`: Persistent game state
 
+6. **Direct Reference Pattern** (Spell Systems):
+   - `SpellEffectExecutor` holds direct references to spell systems (not via GFM)
+   - Eliminates chain access like `handler.game_flow_manager.spell_magic`
+   - References injected via `set_spell_systems()` during initialization
+
 ## Critical Implementation Details
 
 ### Down State System
@@ -122,6 +127,26 @@ Three types of effects:
 - Two-stage processing:
   1. `stat_bonus`: Applied during battle preparation
   2. `effects`: Processed during battle execution
+
+### Spell System Architecture
+10 spell subsystems managed by `GameFlowManager`:
+```
+spell_draw          # Card draw effects
+spell_magic         # EP manipulation, land curse
+spell_land          # Land element/level changes
+spell_curse         # Creature/player curses
+spell_curse_toll    # Toll modification curses
+spell_cost_modifier # Cost modification effects
+spell_dice          # Dice modification effects
+spell_curse_stat    # Stat modification curses
+spell_world_curse   # Global world curses
+spell_player_move   # Warp/movement effects
+```
+
+**Reference Pattern**:
+- `SpellEffectExecutor` uses direct references (not `gfm.spell_*`)
+- Other systems still access via `game_flow_manager.spell_*` (legacy)
+- Future: Migrate all consumers to direct injection
 
 ## File Organization
 
@@ -158,6 +183,7 @@ data/
 - `TileActionProcessor`: 1,284 lines → 5 files
 - `DominioOrderHandler`: 881 lines → 4 files
 - `UIManager`: Split into 7+ components
+- `SpellEffectExecutor`: Direct spell system references (GFM chain access eliminated)
 
 ## Development Workflow
 
@@ -277,4 +303,4 @@ var panel_y = (viewport_size.y - panel_height) / 2  # Centered
 
 ---
 
-**Last Updated**: 2025-10-24
+**Last Updated**: 2026-02-12

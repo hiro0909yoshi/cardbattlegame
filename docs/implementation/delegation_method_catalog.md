@@ -1,0 +1,282 @@
+# 委譲メソッドカタログ
+
+**目的**: チェーンアクセス禁止ルール（規約9）を守るための参照ガイド
+
+**最終更新**: 2026-02-13
+
+---
+
+## ui_manager 経由でアクセス
+
+### phase_display 委譲
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `set_phase_text(text)` | phase_display.phase_label | フェーズテキスト設定 |
+| `get_phase_text()` | phase_display.phase_label | フェーズテキスト取得 |
+| `show_toast(msg, duration)` | phase_display | トースト通知表示 |
+| `show_action_prompt(msg)` | phase_display | アクション指示表示 |
+| `hide_action_prompt()` | phase_display | アクション指示非表示 |
+| `show_big_dice_result(value, duration)` | phase_display | ダイス結果大表示 |
+| `show_dice_result_double(dice1, dice2, total)` | phase_display | 2ダイス結果表示 |
+| `show_dice_result_triple(dice1, dice2, dice3, total)` | phase_display | 3ダイス結果表示 |
+| `show_dice_result_range(curse_name, value)` | phase_display | ダイス範囲結果表示 |
+
+### player_info_panel 委譲
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `set_current_turn(player_id)` | player_info_panel | 現在ターンプレイヤー設定 |
+| `get_player_ranking(player_id)` | player_info_panel | プレイヤー順位取得 |
+
+### global_comment_ui 委譲
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `show_comment_and_wait(msg, pid, force)` | global_comment_ui | クリック待ちコメント |
+| `show_choice_and_wait(msg, pid, yes, no)` | global_comment_ui | Yes/No選択 |
+| `show_comment_message(msg)` | global_comment_ui | メッセージ表示 |
+| `hide_comment_message()` | global_comment_ui | メッセージ非表示 |
+
+### hand_display 委譲
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `update_hand_display(player_id)` | hand_display | 手札表示更新 |
+
+### info_panel 統合メソッド
+| メソッド | 用途 |
+|---------|------|
+| `hide_all_info_panels(clear_buttons)` | 全パネル一括非表示 |
+| `is_any_info_panel_visible()` | いずれかが表示中か |
+| `show_card_info(card_data, tile_index, setup_buttons)` | 種別自動判定で閲覧表示 |
+| `show_card_selection(card_data, hand_index, ...)` | 種別自動判定で選択表示 |
+
+### ナビゲーション
+| メソッド | 用途 |
+|---------|------|
+| `enable_navigation(confirm, back, up, down)` | グローバルボタン設定 |
+| `disable_navigation()` | グローバルボタン無効化 |
+| `clear_back_action()` | 戻るボタンクリア |
+
+---
+
+## board_system_3d 経由でアクセス
+
+### カメラ制御（camera_controller 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `enable_manual_camera()` | camera_controller | 手動カメラモード |
+| `enable_follow_camera()` | camera_controller | 追従カメラモード |
+| `set_camera_player(player_id)` | camera_controller | カメラ対象設定 |
+| `return_camera_to_player()` | camera_controller | プレイヤーにカメラ戻す |
+| `focus_camera_on_player_pos(player_id)` | camera_controller | プレイヤー位置にフォーカス |
+| `focus_camera_slow(target_pos)` | camera_controller | スローフォーカス |
+| `focus_camera_on_tile_slow(tile_index)` | camera_controller | タイルにスローフォーカス |
+| `is_direction_camera_active()` | camera_controller | 方向カメラ有効か |
+| `cancel_direction_tween()` | camera_controller | 方向Tweenキャンセル |
+
+### 移動制御（movement_controller 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `get_player_tile(player_id)` | movement_controller | プレイヤー位置取得 |
+| `set_player_tile(player_id, tile_index)` | movement_controller | プレイヤー位置設定 |
+| `place_player_at_tile(player_id, tile_index)` | movement_controller | プレイヤー配置 |
+| `clear_all_down_states_for_player(player_id)` | movement_controller | ダウン状態全解除 |
+| `clear_down_state_for_player(player_id)` | movement_controller | ダウン状態解除 |
+| `set_down_state_for_tile(tile_index, state)` | movement_controller | ダウン状態設定 |
+| `execute_warp(player_id, dest_tile)` | movement_controller | ワープ実行 |
+| `heal_all_creatures_for_player(player_id)` | movement_controller | 全クリーチャー回復 |
+| `is_movement_selection_active()` | movement_controller | 移動選択中か |
+| `restore_movement_selector_navigation()` | movement_controller | 移動選択ナビ復元 |
+| `swap_came_from_for_reverse()` | movement_controller | 逆走用came_from交換 |
+| `on_movement_reverse_curse_removed()` | movement_controller | 逆走呪い解除時 |
+
+### タイル表示（tile_info_display 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `switch_tile_display_mode()` | tile_info_display | 表示モード切替 |
+| `get_tile_display_mode_name()` | tile_info_display | 表示モード名取得 |
+| `update_tile_display()` | tile_info_display | タイル表示更新 |
+| `get_tile_label(tile_index)` | tile_info_display | タイルラベル取得 |
+
+### タイルデータ（tile_data_manager 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `set_tile_level(tile_index, level)` | tile_data_manager | レベル設定 |
+| `calculate_level_up_cost(current, target)` | tile_data_manager | レベルアップコスト計算 |
+| `calculate_toll_with_curse(tile_index)` | tile_data_manager | 呪い込み通行料計算 |
+
+### 特殊タイル（special_tile_system 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `get_warp_pairs()` | special_tile_system | ワープペア一覧 |
+| `get_warp_pair(tile_index)` | special_tile_system | ワープペア取得 |
+
+### バトル（battle_system 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `get_battle_screen_manager()` | battle_system | バトル画面マネージャ取得 |
+
+### アクション処理（tile_action_processor 委譲）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `begin_action_processing()` | tile_action_processor | アクション処理開始 |
+| `reset_action_processing()` | tile_action_processor | アクション処理リセット |
+| `complete_action()` | tile_action_processor | アクション完了 |
+| `execute_swap_action(tile, card_idx, old_creature)` | tile_action_processor | 交換実行 |
+
+### 参照取得・設定（initialize時のみ使用）
+| メソッド | 用途 |
+|---------|------|
+| `get_camera_controller_ref()` | カメラコントローラ参照取得 |
+| `get_movement_controller_ref()` | 移動コントローラ参照取得 |
+| `set_camera_controller_ref(ref)` | カメラコントローラ参照設定 |
+| `set_movement_controller_gfm(gfm)` | 移動コントローラにGFM設定 |
+| `set_spell_player_move(spm)` | スペル移動参照設定 |
+| `set_spell_land(system)` | spell_land直接参照設定 |
+| `set_cpu_movement_evaluator(eval)` | CPU移動評価設定 |
+| `get_cpu_movement_evaluator()` | CPU移動評価取得 |
+| `get_spell_movement()` | スペル移動取得 |
+
+---
+
+## 直接参照パターン（GFM経由廃止）
+
+スペルシステムなど、GameFlowManager経由でアクセスしていた参照を各クラスに直接注入するパターン。
+
+### SpellEffectExecutor
+```gdscript
+# setterメソッド
+func set_spell_systems(systems: Dictionary) -> void
+
+# 直接参照（10システム）
+var spell_magic, spell_dice, spell_curse_stat, spell_curse
+var spell_curse_toll, spell_cost_modifier, spell_draw
+var spell_land, spell_player_move, spell_world_curse
+```
+
+### BoardSystem3D
+```gdscript
+# setterメソッド
+func set_spell_land(system) -> void
+
+# 直接参照
+var spell_land  # 土地操作スペル
+```
+
+---
+
+## 直接アクセスが許容されるもの
+
+### 公開プロパティ（読み取り専用）
+| プロパティ | 所属 | 備考 |
+|-----------|------|------|
+| `tile_nodes` | board_system_3d | 200箇所+で使用、構造変更なし |
+| `camera` | board_system_3d | カメラ直接参照 |
+| `current_player_index` | board_system_3d | 現在プレイヤー |
+
+### 内部分割ヘルパー間
+MovementController内部のヘルパー（warp_handler, special_handler等）からの`controller.*`参照は許容。
+
+---
+
+## 直接参照パターン（GFM経由を廃止）
+
+チェーンアクセス解消のため、GameFlowManager経由ではなく各クラスに直接参照を注入する。
+
+### battle_status_overlay 直接参照
+| 設定先クラス | セッターメソッド | 注入元 |
+|-------------|-----------------|--------|
+| TileBattleExecutor | `set_battle_status_overlay(overlay)` | game_system_manager |
+| DominioCommandHandler | `set_battle_status_overlay(overlay)` | game_system_manager |
+| CPUTurnProcessor | `set_battle_status_overlay(overlay)` | game_system_manager |
+| SpellPhaseHandler | `set_battle_status_overlay(overlay)` | game_system_manager |
+| SpellCreatureMove | `set_battle_status_overlay(overlay)` | spell_phase_handler |
+
+### lap_system 直接参照
+| 設定先クラス | セッターメソッド | 注入元 |
+|-------------|-----------------|--------|
+| SpellPlayerMove | setup時に自動設定 | game_flow_manager |
+| BattleSpecialEffects | `set_lap_system(system)` | battle_system |
+| SkillLegacy | 関数パラメータで渡す | BattleSpecialEffects |
+| TutorialManager | initialize_with_systems時に設定 | game_flow_manager |
+| BattleSystem | setup_systems時に自動設定 | game_flow_manager |
+| SpellMagic | setup時に自動設定 | game_flow_manager |
+| PlayerStatusDialog | initialize時に自動設定 | game_flow_manager |
+| SkillStatModifiers | 関数パラメータで渡す | BattleSkillProcessor |
+| BattleSkillProcessor | setup_systems時に自動設定 | game_flow_manager |
+| DebugPanel | initialize時に自動設定 | game_flow_manager |
+
+### game_system_manager 委譲メソッド
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `apply_map_settings_to_lap_system(map_data)` | game_flow_manager.lap_system | マップ周回設定適用 |
+
+### spell_cost_modifier 直接参照
+| 設定先クラス | セッターメソッド | 注入元 |
+|-------------|-----------------|--------|
+| SpellPhaseHandler | `set_spell_systems_direct(cost_modifier, draw)` | game_system_manager |
+| ItemPhaseHandler | `set_spell_cost_modifier(cost_modifier)` | game_system_manager |
+| TileActionProcessor | `set_spell_systems_direct(cost_modifier, world_curse)` | board_system_3d |
+| TileSummonExecutor | `set_spell_cost_modifier(cost_modifier)` | tile_action_processor |
+| TileBattleExecutor | `set_spell_cost_modifier(cost_modifier)` | tile_action_processor |
+| SpellCostModifier | `set_spell_world_curse(world_curse)` | game_system_manager |
+
+### spell_phase_handler 直接参照
+| 設定先クラス | プロパティ名 | 注入元 |
+|-------------|-------------|--------|
+| SpellCurse | `spell_phase_handler` | game_system_manager |
+| CPUSpecialTileAI | `spell_phase_handler` | game_system_manager |
+
+### player_system 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| TutorialManager | initialize_with_systems時に設定 | game_flow_manager |
+| ExplanationMode | setup時に設定 | board_system_3d.game_flow_manager |
+
+### dominio_command_handler 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| TutorialManager | initialize_with_systems時に設定 | game_flow_manager |
+
+### board_system_3d 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| ItemPhaseHandler | initialize時に設定 | game_flow_manager |
+
+### target_selection_helper 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| SpellPhaseHandler | initialize時に設定 | game_flow_manager |
+
+### ui_manager 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| SpellWorldCurse | setup時に設定 | game_flow_manager |
+
+### spell_curse_stat 直接参照
+| 設定先クラス | 設定方法 | 注入元 |
+|-------------|---------|--------|
+| SpellMysticArts | _init時に設定 | spell_phase_handler.game_flow_manager |
+
+---
+
+## 使用例
+
+```gdscript
+# ❌ チェーンアクセス（禁止）
+ui_manager.phase_display.show_toast("メッセージ")
+board_system.tile_action_processor.complete_action()
+game_flow_manager.battle_status_overlay.show_battle_status(...)
+
+# ✅ 委譲メソッド経由（推奨）
+ui_manager.show_toast("メッセージ")
+board_system.complete_action()
+
+# ✅ 直接参照経由（推奨）
+battle_status_overlay.show_battle_status(...)  # 注入された参照を使用
+```
+
+---
+
+## 更新ルール
+
+- 新しい委譲メソッドを追加したら、このカタログも更新する
+- 外部から3箇所以上呼ばれるメソッドは委譲メソッド化を検討

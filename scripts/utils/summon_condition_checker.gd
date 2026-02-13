@@ -119,27 +119,30 @@ static func check_cannot_summon(card_data: Dictionary, tile_element: String) -> 
 ## @param player_id プレイヤーID
 ## @param game_flow_manager GameFlowManager参照
 ## @param board_system BoardSystem3D参照（player_id未指定時のフォールバック）
+## @param player_system PlayerSystem参照（オプション、GFM経由を避けるため）
 ## @return 召喚条件が解除されているか
-static func is_summon_condition_ignored(player_id: int, game_flow_manager, board_system = null) -> bool:
+static func is_summon_condition_ignored(player_id: int, game_flow_manager, board_system = null, player_system = null) -> bool:
 	if not game_flow_manager:
 		return false
-	
+
 	# ブライトワールド（世界呪い）チェック
 	var game_stats = game_flow_manager.game_stats
 	if SpellWorldCurse.is_summon_condition_ignored(game_stats):
 		return true
-	
+
 	# リリース呪い（プレイヤー呪い）チェック
 	var check_player_id = player_id
 	if check_player_id < 0 and board_system:
 		check_player_id = board_system.current_player_index
-	
-	if not game_flow_manager.player_system:
+
+	# player_systemを取得（直接参照優先）
+	var ps = player_system if player_system else (game_flow_manager.player_system if game_flow_manager else null)
+	if not ps:
 		return false
-	if check_player_id < 0 or check_player_id >= game_flow_manager.player_system.players.size():
+	if check_player_id < 0 or check_player_id >= ps.players.size():
 		return false
-	
-	var player = game_flow_manager.player_system.players[check_player_id]
+
+	var player = ps.players[check_player_id]
 	var player_dict = {"curse": player.curse}
 	return SpellRestriction.is_summon_condition_released(player_dict)
 

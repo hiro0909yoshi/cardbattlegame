@@ -97,6 +97,13 @@ var spell_synthesis: SpellSynthesis = null  # スペル合成
 var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理（旧・バトル用）
 var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離クラス）
+
+# === 直接参照（GFM経由を廃止） ===
+var spell_cost_modifier = null  # SpellCostModifier: コスト計算
+var spell_draw = null  # SpellDraw: ドロー処理
+var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
+
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI
 var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ
@@ -125,7 +132,11 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# CreatureManagerを取得
 	if board_system:
 		creature_manager = board_system.get_node_or_null("CreatureManager")
-	
+
+	# target_selection_helperの直接参照を設定
+	if game_flow_manager and game_flow_manager.target_selection_helper:
+		target_selection_helper = game_flow_manager.target_selection_helper
+
 	# SpellMysticArts を初期化
 	if not spell_mystic_arts and board_system and player_system and card_system:
 		spell_mystic_arts = SpellMysticArts.new(
@@ -147,6 +158,8 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreatureMove を初期化
 	if not spell_creature_move and board_system and player_system:
 		spell_creature_move = SpellCreatureMove.new(board_system, player_system, self)
+		if battle_status_overlay:
+			spell_creature_move.set_battle_status_overlay(battle_status_overlay)
 	
 	# SpellCreatureSwap を初期化
 	if not spell_creature_swap and board_system and player_system and card_system:
@@ -161,8 +174,8 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		spell_creature_place = SpellCreaturePlace.new()
 	
 	# SpellDrawにSpellCreaturePlace参照を設定
-	if game_flow_manager and game_flow_manager.spell_draw and spell_creature_place:
-		game_flow_manager.spell_draw.set_spell_creature_place(spell_creature_place)
+	if spell_draw and spell_creature_place:
+		spell_draw.set_spell_creature_place(spell_creature_place)
 	
 	# SpellBorrow を初期化
 	if not spell_borrow and board_system and player_system and card_system:
@@ -231,6 +244,23 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:
 		spell_effect_executor = SpellEffectExecutor.new(self)
+
+## SpellEffectExecutorにスペルシステム参照を設定（GFM経由を廃止）
+func set_spell_effect_executor_systems(systems: Dictionary) -> void:
+	if spell_effect_executor:
+		spell_effect_executor.set_spell_systems(systems)
+
+## 直接参照を設定（GFM経由を廃止）
+func set_spell_systems_direct(cost_modifier, draw) -> void:
+	spell_cost_modifier = cost_modifier
+	spell_draw = draw
+	print("[SpellPhaseHandler] spell_cost_modifier, spell_draw 直接参照を設定")
+
+func set_battle_status_overlay(overlay) -> void:
+	battle_status_overlay = overlay
+	if spell_creature_move:
+		spell_creature_move.set_battle_status_overlay(overlay)
+	print("[SpellPhaseHandler] battle_status_overlay 直接参照を設定")
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -454,8 +484,8 @@ func _get_spell_cost(spell_card: Dictionary) -> int:
 		base_cost = cost_data.get("ep", 0)
 	
 	# ウェイストワールド（世界呪い）でコスト倍率を適用
-	if game_flow_manager and game_flow_manager.spell_cost_modifier:
-		return game_flow_manager.spell_cost_modifier.get_modified_cost(current_player_id, spell_card)
+	if spell_cost_modifier:
+		return spell_cost_modifier.get_modified_cost(current_player_id, spell_card)
 	
 	return base_cost
 
@@ -505,8 +535,8 @@ func use_spell(spell_card: Dictionary):
 		player_system.add_magic(current_player_id, -cost)
 	
 	# ライフフォース呪いチェック（スペル無効化）
-	if game_flow_manager.spell_cost_modifier:
-		var nullify_result = game_flow_manager.spell_cost_modifier.check_spell_nullify(current_player_id)
+	if spell_cost_modifier:
+		var nullify_result = spell_cost_modifier.check_spell_nullify(current_player_id)
 		if nullify_result.get("nullified", false):
 			# スペルは無効化 → カードを捨て札へ
 			if ui_manager and ui_manager.phase_display:
@@ -1080,9 +1110,9 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	if is_cpu_player(current_player_id):
 		return tile_indices[0]
 	
-	# TargetSelectionHelperを取得して委譲
-	if game_flow_manager and game_flow_manager.target_selection_helper:
-		return await game_flow_manager.target_selection_helper.select_tile_from_list(tile_indices, message)
+	# TargetSelectionHelper経由で選択（直接参照）
+	if target_selection_helper:
+		return await target_selection_helper.select_tile_from_list(tile_indices, message)
 	
 	# フォールバック：TargetSelectionHelperがない場合は最初のタイルを返す
 	print("[SpellPhaseHandler] WARNING: TargetSelectionHelperが見つかりません、最初のタイルを選択")
@@ -1229,10 +1259,10 @@ func _count_own_creatures(player_id: int) -> int:
 			count += 1
 	return count
 
-## プレイヤーの順位を取得（UIパネルから）
+## プレイヤーの順位を取得（委譲メソッド経由）
 func get_player_ranking(player_id: int) -> int:
-	if ui_manager and ui_manager.player_info_panel:
-		return ui_manager.player_info_panel.get_player_ranking(player_id)
+	if ui_manager:
+		return ui_manager.get_player_ranking(player_id)
 	# フォールバック: 常に1位を返す
 	return 1
 
@@ -1445,13 +1475,13 @@ func _initialize_card_selection_handler():
 		ui_manager,
 		player_system,
 		card_system,
-		game_flow_manager.spell_draw if game_flow_manager else null,
+		spell_draw,
 		spell_phase_ui_manager
 	)
-	
+
 	# SpellDrawにもcard_selection_handlerを設定
-	if game_flow_manager and game_flow_manager.spell_draw:
-		game_flow_manager.spell_draw.set_card_selection_handler(card_selection_handler)
+	if spell_draw:
+		spell_draw.set_card_selection_handler(card_selection_handler)
 	
 	# 選択完了シグナルを接続（重複接続防止）
 	if not card_selection_handler.selection_completed.is_connected(_on_card_selection_completed):

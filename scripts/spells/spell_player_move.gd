@@ -12,16 +12,23 @@ var game_flow_manager: GameFlowManager
 var spell_curse: SpellCurse
 var tile_neighbor_system: TileNeighborSystem
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理
+
 # 初期化
 func setup(board: BoardSystem3D, player: PlayerSystem, flow: GameFlowManager, curse: SpellCurse):
 	board_system = board
 	player_system = player
 	game_flow_manager = flow
 	spell_curse = curse
-	
+
 	if board_system:
 		tile_neighbor_system = board_system.tile_neighbor_system
-	
+
+	# lap_systemの直接参照を設定
+	if game_flow_manager and game_flow_manager.lap_system:
+		lap_system = game_flow_manager.lap_system
+
 	print("[SpellPlayerMove] 初期化完了")
 
 # ========================================
@@ -200,7 +207,7 @@ func _reverse_player_direction(player_id: int) -> void:
 ## 注意: リミッションは「通過したことにする」だけで、停止はしないのでダウン解除は発生しない
 ## @return Dictionary: {success: bool, gate_key: String, lap_completed: bool, message: String}
 func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
-	if not game_flow_manager.lap_system.player_lap_state.has(player_id):
+	if not lap_system.player_lap_state.has(player_id):
 		return {
 			"success": false,
 			"gate_key": gate_key,
@@ -209,14 +216,14 @@ func trigger_gate_pass(player_id: int, gate_key: String) -> Dictionary:
 		}
 	
 	# ゲートフラグを更新
-	game_flow_manager.lap_system.player_lap_state[player_id][gate_key] = true
+	lap_system.player_lap_state[player_id][gate_key] = true
 	print("[SpellPlayerMove] ゲート通過: プレイヤー%d → %s" % [player_id, gate_key])
 	
 	# 周回完了チェック（全シグナルが揃っているか）
 	var lap_completed = false
-	if game_flow_manager.lap_system.check_lap_complete(player_id):
+	if lap_system.check_lap_complete(player_id):
 		# 周回完了処理を呼び出し（EPボーナス付与）
-		game_flow_manager.lap_system.complete_lap(player_id)
+		lap_system.complete_lap(player_id)
 		lap_completed = true
 	
 	return {
@@ -242,10 +249,10 @@ func grant_direction_choice(player_id: int, _duration: int = 1) -> void:
 ## 選択可能なゲートを取得（リミッション用）
 ## 未通過かつ1周完了を引き起こさないゲートのみ返す
 func get_selectable_gates(player_id: int) -> Array:
-	if not game_flow_manager.lap_system.player_lap_state.has(player_id):
+	if not lap_system.player_lap_state.has(player_id):
 		return []
 	
-	var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
+	var lap_state = lap_system.player_lap_state[player_id]
 	var selectable = []
 	
 	# 未通過ゲートを列挙
@@ -417,7 +424,7 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 			tile.on_player_passed(player_id)
 			# lap_systemのチェックポイント処理完了を待つ
 			if game_flow_manager and game_flow_manager.lap_system:
-				await game_flow_manager.lap_system.checkpoint_processing_completed
+				await lap_system.checkpoint_processing_completed
 		
 		# 2. ダウン解除（訪問済み・未訪問に関わらず常に実行）
 		if board_system:
@@ -426,15 +433,15 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 ## ゲート効果を発動（ゲートワープ時）
 func _trigger_gate_effect(player_id: int, _tile_index: int, gate_key: String) -> void:
 	# 1. ゲート通過扱い（周回フラグ更新）
-	if game_flow_manager.lap_system.player_lap_state.has(player_id):
-		game_flow_manager.lap_system.player_lap_state[player_id][gate_key] = true
+	if lap_system.player_lap_state.has(player_id):
+		lap_system.player_lap_state[player_id][gate_key] = true
 		print("[SpellPlayerMove] ゲート通過: %s" % gate_key)
 		
 		# 周回完了チェック
-		var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
+		var lap_state = lap_system.player_lap_state[player_id]
 		if lap_state.get("N", false) and lap_state.get("S", false):
 			# 周回完了処理をlap_systemに委譲
-			game_flow_manager.lap_system.complete_lap(player_id)
+			lap_system.complete_lap(player_id)
 	
 	# 2. ダウン解除（全クリーチャー）
 	_release_all_creature_down()
@@ -466,7 +473,7 @@ func _get_tile_index_for_gate(gate_key: String) -> int:
 
 ## このゲートを通過すると1周完了になるか判定
 func _would_complete_lap(player_id: int, gate_key: String) -> bool:
-	var lap_state = game_flow_manager.lap_system.player_lap_state[player_id]
+	var lap_state = lap_system.player_lap_state[player_id]
 	
 	# 仮にこのゲートを通過した場合をシミュレート
 	for key in ["N", "S"]:

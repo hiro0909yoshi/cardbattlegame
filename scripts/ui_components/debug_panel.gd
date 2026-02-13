@@ -23,6 +23,9 @@ var board_system_ref= null
 var player_system_ref: PlayerSystem = null
 var game_flow_manager_ref = null
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理
+
 func _ready():
 	pass
 
@@ -33,7 +36,11 @@ func initialize(parent: Node, card_system: CardSystem, board_system, player_syst
 	board_system_ref = board_system
 	player_system_ref = player_system
 	game_flow_manager_ref = game_flow_manager
-	
+
+	# lap_systemの直接参照を設定
+	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
+		lap_system = game_flow_manager_ref.lap_system
+
 	create_debug_panel()
 
 # デバッグパネルを作成
@@ -212,8 +219,8 @@ func display_game_stats():
 	var text = "[b]━━━ ゲーム統計 ━━━[/b]\n\n"
 	
 	# 破壊カウンター表示
-	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
-		var destroy_count = game_flow_manager_ref.lap_system.get_destroy_count()
+	if lap_system:
+		var destroy_count = lap_system.get_destroy_count()
 		text += "[color=yellow]累計破壊数: " + str(destroy_count) + "[/color]\n\n"
 	
 	for i in range(player_system_ref.players.size()):

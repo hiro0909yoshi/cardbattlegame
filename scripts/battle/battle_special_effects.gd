@@ -13,12 +13,19 @@ var spell_magic_ref: SpellMagic = null
 var card_system_ref = null
 var battle_screen_manager = null
 
+# === 直接参照（GFM経由を廃止） ===
+var lap_system = null  # LapSystem: 周回管理
+
 func setup_systems(board_system, spell_draw = null, spell_magic = null, card_system = null, p_battle_screen_manager = null):
 	board_system_ref = board_system
 	spell_draw_ref = spell_draw
 	spell_magic_ref = spell_magic
 	card_system_ref = card_system
 	battle_screen_manager = p_battle_screen_manager
+
+func set_lap_system(system) -> void:
+	lap_system = system
+	print("[BattleSpecialEffects] lap_system 直接参照を設定")
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -588,8 +595,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	result.merge(creature_on_death_result, true)
 	
 	# 💰 クリーチャースキル: 遺産（フェイト、コーンフォーク、マミー等）
-	var game_flow_manager = _get_game_flow_manager()
-	var legacy_result = _skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, game_flow_manager)
+	var legacy_result = _skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, lap_system)
 	# キー名を統一して結果にマージ
 	if legacy_result.get("legacy_ep_activated", false):
 		result["legacy_magic_activated"] = true
@@ -1011,10 +1017,9 @@ func _calculate_on_death_amount(effect: Dictionary, defeated: BattleParticipant)
 
 ## プレイヤーの周回数を取得
 func _get_lap_count(player_id: int) -> int:
-	var game_flow_manager = _get_game_flow_manager()
-	if not game_flow_manager or not game_flow_manager.lap_system:
+	if not lap_system:
 		return 1
-	return game_flow_manager.lap_system.get_lap_count(player_id)
+	return lap_system.get_lap_count(player_id)
 
 
 ## PlayerSystemへの参照を取得
