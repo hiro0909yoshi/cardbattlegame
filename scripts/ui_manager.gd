@@ -130,7 +130,8 @@ func _ready():
 		dominio_order_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
 		add_child(dominio_order_ui)
 		# シグナル接続（dominio_order_button_pressedは特殊ボタンに移行済み）
-		dominio_order_ui.level_up_selected.connect(_on_level_ui_selected)
+		if not dominio_order_ui.level_up_selected.is_connected(_on_level_ui_selected):
+			dominio_order_ui.level_up_selected.connect(_on_level_ui_selected)
 	
 	# HandDisplay初期化
 	if HandDisplayClass:
@@ -157,25 +158,32 @@ func _ready():
 func connect_ui_signals():
 	# カード選択UI
 	if card_selection_ui:
-		card_selection_ui.card_selected.connect(_on_card_ui_selected)
-		card_selection_ui.selection_cancelled.connect(_on_selection_cancelled)
-	
+		if not card_selection_ui.card_selected.is_connected(_on_card_ui_selected):
+			card_selection_ui.card_selected.connect(_on_card_ui_selected)
+		if not card_selection_ui.selection_cancelled.is_connected(_on_selection_cancelled):
+			card_selection_ui.selection_cancelled.connect(_on_selection_cancelled)
+
 	# レベルアップUI
 	if level_up_ui:
-		level_up_ui.level_selected.connect(_on_level_ui_selected)
-		level_up_ui.selection_cancelled.connect(_on_level_up_cancelled)
-	
+		if not level_up_ui.level_selected.is_connected(_on_level_ui_selected):
+			level_up_ui.level_selected.connect(_on_level_ui_selected)
+		if not level_up_ui.selection_cancelled.is_connected(_on_level_up_cancelled):
+			level_up_ui.selection_cancelled.connect(_on_level_up_cancelled)
+
 	# デバッグパネル
 	if debug_panel:
-		debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
-	
+		if not debug_panel.debug_mode_changed.is_connected(_on_debug_mode_changed):
+			debug_panel.debug_mode_changed.connect(_on_debug_mode_changed)
+
 	# PlayerInfoPanel
 	if player_info_panel:
-		player_info_panel.player_panel_clicked.connect(_on_player_panel_clicked)
-	
+		if not player_info_panel.player_panel_clicked.is_connected(_on_player_panel_clicked):
+			player_info_panel.player_panel_clicked.connect(_on_player_panel_clicked)
+
 	# CreatureInfoPanelUI
 	if creature_info_panel_ui:
-		creature_info_panel_ui.selection_confirmed.connect(_on_creature_info_panel_confirmed)
+		if not creature_info_panel_ui.selection_confirmed.is_connected(_on_creature_info_panel_confirmed):
+			creature_info_panel_ui.selection_confirmed.connect(_on_creature_info_panel_confirmed)
 		# selection_cancelledはcard_selection_ui側で処理（選択UIに戻る）
 	
 	# GlobalActionButtonsはシグナルなし（直接コールバック呼び出し）
