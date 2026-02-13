@@ -120,6 +120,13 @@ docs/
 | [defensive_creature_design.md](design/defensive_creature_design.md) | 防御型クリーチャー設計 |
 | [spells_tasks.md](design/spells_tasks.md) | スペル実装タスク |
 
+### リファクタリング設計
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [game_system_manager_design.md](design/refactoring/game_system_manager_design.md) | GameSystemManager設計 |
+| [initialization_consolidation_plan.md](design/refactoring/initialization_consolidation_plan.md) | 初期化統合計画（Phase 1-3） |
+
 ### 実装リファレンス
 
 | ドキュメント | 内容 |

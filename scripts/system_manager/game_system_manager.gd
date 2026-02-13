@@ -683,9 +683,8 @@ func _initialize_phase1a_handlers() -> void:
 	spell_phase_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	spell_phase_handler.set_game_stats(game_flow_manager.game_stats)  # === game_stats直接参照を設定 ===
 
-	# SpellEffectExecutorにスペルシステム参照を直接設定（コンテナから辞書変換）
-	var spell_systems_for_executor = game_flow_manager.spell_container.to_dictionary()
-	spell_phase_handler.set_spell_effect_executor_systems(spell_systems_for_executor)
+	# SpellEffectExecutorにスペルコンテナを直接設定（辞書展開廃止）
+	spell_phase_handler.set_spell_effect_executor_container(game_flow_manager.spell_container)
 
 	# SpellPhaseHandler自身の直接参照を設定
 	spell_phase_handler.set_spell_systems_direct(

@@ -452,7 +452,7 @@ func _get_current_player_name() -> String:
 ## CPU用召喚実行
 func execute_summon_for_cpu(card_index: int) -> bool:
 	is_action_processing = true
-	var success = await summon_executor.execute_summon_for_cpu(card_index, _complete_action)
+	var success = summon_executor.execute_summon_for_cpu(card_index, _complete_action)
 	if not success:
 		is_action_processing = false
 	return success
@@ -460,7 +460,7 @@ func execute_summon_for_cpu(card_index: int) -> bool:
 ## CPU用バトル実行
 func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: int = -1) -> bool:
 	is_action_processing = true
-	var success = await battle_executor.execute_battle_for_cpu(card_index, tile_info, item_index, _complete_action)
+	var success = battle_executor.execute_battle_for_cpu(card_index, tile_info, item_index, _complete_action)
 	if not success:
 		is_action_processing = false
 	return success

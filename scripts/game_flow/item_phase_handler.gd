@@ -552,8 +552,6 @@ func try_handle_card_selection(card_index: int) -> bool:
 	else:
 		return true
 
-	return false
-
 ## 相手クリーチャーデータを設定（防御側アイテムフェーズ用）
 func set_opponent_creature(creature_data: Dictionary):
 	opponent_creature_data = creature_data

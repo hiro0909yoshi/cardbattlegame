@@ -263,10 +263,10 @@ func set_game_stats(p_game_stats) -> void:
 	if not spell_effect_executor:
 		spell_effect_executor = SpellEffectExecutor.new(self)
 
-## SpellEffectExecutorにスペルシステム参照を設定（GFM経由を廃止）
-func set_spell_effect_executor_systems(systems: Dictionary) -> void:
+## SpellEffectExecutorにスペルコンテナを設定（辞書展開廃止）
+func set_spell_effect_executor_container(container: SpellSystemContainer) -> void:
 	if spell_effect_executor:
-		spell_effect_executor.set_spell_systems(systems)
+		spell_effect_executor.set_spell_container(container)
 
 ## game_3d参照を設定（TutorialManager取得用）
 func set_game_3d_ref(p_game_3d) -> void:

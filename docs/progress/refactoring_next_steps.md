@@ -7,7 +7,7 @@
 
 ## 現在のフェーズ
 
-**フェーズ3-D: SpellSystemContainer導入**（ステップ1-5完了、ステップ6はオプション）
+**フェーズ3-D: SpellSystemContainer導入**（完了：ステップ1-6すべて完了）
 
 ### Context（背景・目的）
 
@@ -118,18 +118,26 @@ GFM内部で`self.spell_draw`等を使っている箇所を`spell_container.spel
 - 後方互換性喪失（意図通り）
 - コード削減: 約30行削減（変数宣言10行 + メソッド18行 + preload定数10行 - Node追加処理2行）
 
-#### ⏳ ステップ6（オプション）: SpellEffectExecutorのコンテナ直接参照化
+#### ✅ ステップ6（オプション）: SpellEffectExecutorのコンテナ直接参照化（完了）
 
-**修正ファイル**: `scripts/game_flow/spell_effect_executor.gd`
+**修正ファイル**:
+1. `scripts/game_flow/spell_effect_executor.gd`
+2. `scripts/game_flow/spell_phase_handler.gd`
+3. `scripts/system_manager/game_system_manager.gd`
 
 **変更内容**:
-- [ ] `set_spell_systems(dict)` → `set_spell_container(container)` に変更
-- [ ] 内部の個別変数をcontainer経由に置換
-- [ ] GSMの呼び出し側も変更（container.to_dictionary()ではなく、containerを直接渡す）
+- ✅ `set_spell_systems(dict)` → `set_spell_container(container)` に変更
+- ✅ 内部の個別変数10個（spell_magic, spell_dice等）を削除
+- ✅ `var spell_container: SpellSystemContainer` を追加
+- ✅ 全メソッド内の個別変数参照を `spell_container.spell_xxx` に置換（15箇所以上）
+- ✅ SpellPhaseHandlerの `set_spell_effect_executor_systems(dict)` → `set_spell_effect_executor_container(container)` に変更
+- ✅ GSMの `spell_container.to_dictionary()` 呼び出しを削除、containerを直接渡すように変更
 
-**メリット**: 辞書展開処理が完全に不要になる
+**メリット**: 辞書展開処理が完全に不要になり、最後の変換チェーンを解消
 
-**影響**: SpellPhaseHandlerの初期化処理を変更する必要あり
+**検証結果**:
+- ✅ grep確認: `set_spell_systems()` / `to_dictionary()` の呼び出しゼロ
+- ✅ コード削減: SpellEffectExecutor約12行削減（個別変数10個 + set_spell_systemsメソッド）
 
 ---
 

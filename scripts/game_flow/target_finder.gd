@@ -319,7 +319,7 @@ static func _find_player_targets(sys_player, current_player_id: int, target_info
 
 
 ## 土地ターゲット検索
-static func _find_land_targets(sys_board, sys_player, sys_flow, spell_player_move, current_player_id: int, target_type: String, target_info: Dictionary) -> Array:
+static func _find_land_targets(sys_board, sys_player, _sys_flow, spell_player_move, current_player_id: int, target_type: String, target_info: Dictionary) -> Array:
 	var targets = []
 	
 	if not sys_board:

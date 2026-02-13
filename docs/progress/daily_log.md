@@ -108,18 +108,108 @@
   - grep確認: 個別変数への外部参照ゼロ
   - Godotコンパイルチェック: エラー/警告なし
 
+**ステップ6完了: SpellEffectExecutorのコンテナ直接参照化**
+- ✅ `spell_effect_executor.gd`: 個別変数10個を削除、`var spell_container: SpellSystemContainer` に統一
+- ✅ 全メソッド内の個別変数参照を `spell_container.spell_xxx` に置換（15箇所以上）
+- ✅ `set_spell_systems(dict)` → `set_spell_container(container)` に変更（辞書展開廃止）
+- ✅ `spell_phase_handler.gd`: `set_spell_effect_executor_systems(dict)` → `set_spell_effect_executor_container(container)` に変更
+- ✅ `game_system_manager.gd`: `spell_container.to_dictionary()` 呼び出しを削除、containerを直接渡すように変更
+- ✅ 検証完了
+  - grep確認: `set_spell_systems()` / `to_dictionary()` の呼び出しゼロ
+  - コード削減: 約12行（SpellEffectExecutor個別変数10個 + メソッド2行）
+
 **成果**:
-- **辞書⇔個別変数の変換チェーン完全解消**（GSM→GFM→各ハンドラーの3段変換を1段に圧縮）
-- **コード削減**: 約30行（変数宣言 + メソッド + preload定数）
-- **保守性向上**: SpellSystemContainerによる一元管理、型安全性向上
-- **フェーズ3-D完了**: SpellSystemContainer導入プロジェクト完了（ステップ6はオプション）
+- **辞書⇔個別変数の変換チェーン完全解消**（GSM→GFM→SpellPhaseHandler→SpellEffectExecutorの4段変換をゼロに）
+- **コード削減**: 合計約42行（GFM 30行 + SpellEffectExecutor 12行）
+- **保守性向上**: SpellSystemContainerによる一元管理、型安全性向上、to_dictionary()不要に
+- **フェーズ3-D完全完了**: SpellSystemContainer導入プロジェクト全6ステップ完了
 
-### 次のステップ
-- **オプション**: 3-D ステップ6 - SpellEffectExecutorのコンテナ直接参照化（辞書展開を完全廃止）
-- **後回し**: 3-C UI座標ハードコード（28+箇所、大工事）
-- **フェーズ3主要作業完了**: 3-A, 3-B, 3-D完了により、GFMの神オブジェクト化解消プロジェクトの主要部分が完了
+### セッション5: ステップ6完了 + 警告修正 + ミラーワールドUI改善
 
-**⚠️ 残りトークン数**: 136,030 / 200,000
+**ステップ6完了: SpellEffectExecutorのコンテナ直接参照化**
+- ✅ `spell_effect_executor.gd`: 個別変数10個削除、`spell_container` に統一
+- ✅ `set_spell_systems(dict)` → `set_spell_container(container)` に変更
+- ✅ `spell_phase_handler.gd`: メソッド名変更
+- ✅ `game_system_manager.gd`: `to_dictionary()` 削除、container直接渡し
+- ✅ コード削減: 約12行（個別変数10個 + メソッド2行）
+
+**警告修正（9箇所）**
+- ✅ 未使用パラメータ: `target_finder.gd` - `sys_flow` → `_sys_flow`
+- ✅ 変数シャドーイング: `board_system_3d.gd` - `ui_manager` → `ui_mgr`
+- ✅ 到達不能なコード: `item_phase_handler.gd` - 不要な return 削除
+- ✅ 未使用シグナル: `movement_controller.gd` - `@warning_ignore` 追加
+- ✅ 不要な await 削除（5箇所）:
+  - `spell_effect_executor.gd`: spell_curse_stat.apply_effect()
+  - `spell_player_move.gd`: _warp_player() × 2箇所
+  - `tile_action_processor.gd`: execute_summon/battle_for_cpu × 2箇所
+  - `cpu_turn_processor.gd`: 同上 × 2箇所
+
+**ミラーワールドUI改善**
+- ✅ `battle_system.gd`: グローバルコメント追加
+  - 「【ミラーワールド】攻撃側/防御側 破壊！」表示
+  - 「【ミラーワールド】両者相殺！」表示
+- ✅ エラー修正: await 追加、ui_manager 参照修正
+
+**成果**:
+- **フェーズ3-D完全完了**: 全6ステップ完了、辞書展開処理完全廃止
+- **全警告解消**: Godotエディタの警告ゼロ
+- **UX改善**: ミラーワールド発動が視覚的に分かりやすく
+
+### セッション6: 初期化統合計画策定（完了）
+
+**詳細ドキュメント**:
+- リファクタリング計画: `docs/design/refactoring/initialization_consolidation_plan.md`
+
+**背景**:
+- GameFlowManagerの健全性確認中に初期化メソッド散在問題を発見
+- GFM: 9個、BoardSystem3D: 11個の初期化メソッドが存在
+- 全システム調査の結果、7システムで合計35個の初期化メソッドが散在
+
+**調査結果**:
+- ✅ 全システム初期化メソッド調査完了（7システム × 35個）
+  - GameFlowManager: 9個（setup×2 + set×7）- 95行～694行に散在
+  - BoardSystem3D: 11個（setup×2 + set×7 + create×2）
+  - BattleSystem: 3個
+  - UIManager: 3個
+  - PlayerSystem: 4個
+  - CardSystem: 3個
+  - SpecialTileSystem: 2個
+- ✅ 問題点分析
+  - 初期化順序依存の複雑さ（null参照リスク）
+  - 初期化要件の可視性が低い
+  - 新規開発者の混乱要因
+
+**計画策定**:
+- ✅ 3段階リファクタリング計画作成
+  - **Phase 1**: GameFlowManager集約（9個→1個）- 最優先
+  - **Phase 2**: BoardSystem3D集約（11個→1個）
+  - **Phase 3**: 他システム集約（16個→5個）
+- ✅ 設計パターン定義
+  - InitializationConfig構造体による型安全な初期化
+  - `initialize_from_manager(config)` 統合メソッド
+  - 3段階初期化（Phase 1: create、Phase 2: setup、Phase 3: connect）
+- ✅ 具体的な実装例作成
+  - GameFlowManager統合初期化の完全なコード例
+  - GameSystemManager変更例
+  - リスク分析と対策
+
+**成果物**:
+- ✅ `docs/design/refactoring/initialization_consolidation_plan.md` 作成（包括的リファクタリング計画書）
+  - 現状分析（35個の初期化メソッド詳細）
+  - 設計方針（InitializationConfigパターン）
+  - 実装計画（Phase 1-3の詳細ステップ）
+  - コード実装例（GFM、GSM）
+  - リスク分析・成功基準
+- ✅ `docs/README.md` 更新（リファクタリング設計セクション追加）
+
+**次のステップ**:
+- Phase 1実装開始（GameFlowManager統合初期化）
+  - GameFlowManagerInitConfig作成
+  - initialize_from_manager()メソッド実装
+  - GameSystemManager Phase 4簡素化
+  - 全モードテスト
+
+**⚠️ 残りトークン数**: 129,506 / 200,000
 
 ---
 

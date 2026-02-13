@@ -163,7 +163,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	var tile_index = tile_info.get("index", -1)
 	
 	# ミラーワールドチェック: 同名クリーチャーなら戦闘前に両者破壊
-	if _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
+	if await _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
 		return  # 相殺で戦闘終了
 	
 	# バトルタイルのインデックスを取得
@@ -305,8 +305,21 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 		return false
 	
 	print("【ミラーワールド】同名クリーチャー複数配置チェック")
+
+	# グローバルコメントでミラーワールド発動を通知
+	var message = "【ミラーワールド】"
+	if attacker_has_duplicate and defender_has_duplicate:
+		message += "両者相殺！"
+	elif attacker_has_duplicate:
+		message += "攻撃側 %s 破壊！" % attacker_name
+	else:
+		message += "防御側 %s 破壊！" % defender_name
+
+	if game_flow_manager_ref and game_flow_manager_ref.ui_manager:
+		await game_flow_manager_ref.ui_manager.show_comment_and_wait(message)
+
 	var destroy_count = 0
-	
+
 	# 攻撃側が条件を満たす場合 → 攻撃側破壊
 	if attacker_has_duplicate:
 		print("  攻撃側 ", attacker_name, " を破壊（同名クリーチャーが既に配置済み）")

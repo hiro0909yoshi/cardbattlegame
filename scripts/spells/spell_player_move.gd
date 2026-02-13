@@ -118,7 +118,7 @@ func warp_to_nearest_gate(player_id: int) -> Dictionary:
 		}
 	
 	# プレイヤーをワープ（チェックポイント処理・ダウン解除は_warp_player内で実行）
-	await _warp_player(player_id, nearest)
+	_warp_player(player_id, nearest)
 	
 	var gate_key = _get_gate_key(nearest)
 	return {
@@ -146,7 +146,7 @@ func warp_to_target(player_id: int, target_tile: int) -> Dictionary:
 		}
 	
 	# プレイヤーをワープ（チェックポイント処理は_warp_player内で実行）
-	await _warp_player(player_id, target_tile)
+	_warp_player(player_id, target_tile)
 	
 	return {
 		"success": true,

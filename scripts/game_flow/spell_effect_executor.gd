@@ -6,33 +6,15 @@ class_name SpellEffectExecutor
 
 var spell_phase_handler = null  # 親への参照
 
-# === 直接参照（GFM経由を廃止） ===
-var spell_magic = null
-var spell_dice = null
-var spell_curse_stat = null
-var spell_curse = null
-var spell_curse_toll = null
-var spell_cost_modifier = null
-var spell_draw = null
-var spell_land = null
-var spell_player_move = null
-var spell_world_curse = null
+# === コンテナ直接参照（辞書展開廃止） ===
+var spell_container: SpellSystemContainer = null
 
 func _init(handler):
 	spell_phase_handler = handler
 
-## スペルシステム参照を設定（GFM経由を廃止）
-func set_spell_systems(systems: Dictionary) -> void:
-	spell_magic = systems.get("spell_magic")
-	spell_dice = systems.get("spell_dice")
-	spell_curse_stat = systems.get("spell_curse_stat")
-	spell_curse = systems.get("spell_curse")
-	spell_curse_toll = systems.get("spell_curse_toll")
-	spell_cost_modifier = systems.get("spell_cost_modifier")
-	spell_draw = systems.get("spell_draw")
-	spell_land = systems.get("spell_land")
-	spell_player_move = systems.get("spell_player_move")
-	spell_world_curse = systems.get("spell_world_curse")
+## スペルシステムコンテナを設定（辞書展開廃止）
+func set_spell_container(container: SpellSystemContainer) -> void:
+	spell_container = container
 
 ## スペル効果を実行
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
@@ -55,8 +37,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 復帰[ブック]判定（常にデッキに戻す場合）
 	var return_to_deck = parsed.get("return_to_deck", false)
 	if return_to_deck:
-		if spell_land:
-			if spell_land.return_spell_to_deck(handler.current_player_id, spell_card):
+		if spell_container and spell_container.spell_land:
+			if spell_container.spell_land.return_spell_to_deck(handler.current_player_id, spell_card):
 				handler.spell_failed = true
 	
 	# 復帰[手札]判定（スペルカードを手札に戻す - ゴブリンズレア等）
@@ -106,29 +88,29 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"gain_magic", "gain_magic_by_rank", "gain_magic_by_lap", "gain_magic_from_destroyed_count", \
 		"gain_magic_from_spell_cost", "balance_all_magic", "gain_magic_from_land_chain", \
 		"mhp_to_magic", "drain_magic_by_spell_count":
-			if spell_magic:
+			if spell_container and spell_container.spell_magic:
 				var context = {
 					"rank": handler.get_player_ranking(handler.current_player_id),
 					"from_player_id": target_data.get("player_id", -1),
 					"tile_index": target_data.get("tile_index", -1),
 					"card_system": handler.card_system
 				}
-				var result = await spell_magic.apply_effect(effect, handler.current_player_id, context)
+				var result = await spell_container.spell_magic.apply_effect(effect, handler.current_player_id, context)
 				if result.has("next_effect") and not result["next_effect"].is_empty():
 					await apply_single_effect(result["next_effect"], target_data)
 		
 		# === ダイス系 ===
 		"dice_fixed", "dice_range", "dice_multi", "dice_range_magic":
-			if spell_dice:
-				spell_dice.apply_effect_from_parsed(effect, target_data, handler.current_player_id)
+			if spell_container and spell_container.spell_dice:
+				spell_container.spell_dice.apply_effect_from_parsed(effect, target_data, handler.current_player_id)
 		
 		# === ステータス呪い系 ===
 		"stat_boost":
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
-				if spell_curse_stat:
-					spell_curse_stat.apply_curse_from_effect(effect, tile_index)
+				if spell_container and spell_container.spell_curse_stat:
+					spell_container.spell_curse_stat.apply_curse_from_effect(effect, tile_index)
 		
 		# === クリーチャー呪い系 ===
 		"skill_nullify", "battle_disable", "ap_nullify", "stat_reduce", "random_stat_curse", \
@@ -138,19 +120,19 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			var target_type = target_data.get("type", "")
 			if target_type == "land" or target_type == "creature":
 				var tile_index = target_data.get("tile_index", -1)
-				if spell_curse:
-					spell_curse.apply_effect(effect, tile_index)
+				if spell_container and spell_container.spell_curse:
+					spell_container.spell_curse.apply_effect(effect, tile_index)
 		
 		# === 通行料呪い系 ===
 		"toll_share", "toll_disable", "toll_fixed", "toll_multiplier", "peace", "curse_toll_half":
-			if spell_curse_toll:
+			if spell_container and spell_container.spell_curse_toll:
 				var tile_index = target_data.get("tile_index", -1)
 				var target_player_id = target_data.get("player_id", -1)
-				spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, handler.current_player_id)
+				spell_container.spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, handler.current_player_id)
 		
 		# === プレイヤー呪い系 ===
 		"player_curse":
-			if spell_curse:
+			if spell_container and spell_container.spell_curse:
 				var curse_type = effect.get("curse_type", "")
 				var duration = effect.get("duration", -1)
 				var params = {
@@ -161,21 +143,21 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				for key in ["ignore_item_restriction", "ignore_summon_condition", "spell_protection"]:
 					if effect.has(key):
 						params[key] = effect.get(key)
-				
+
 				# all_playersの場合は全プレイヤーに呪いをかける
 				if effect.get("all_players", false) or target_data.get("type") == "all_players":
 					var player_count = handler.player_system.players.size() if handler.player_system else 2
 					for pid in range(player_count):
-						spell_curse.curse_player(pid, curse_type, duration, params, handler.current_player_id)
+						spell_container.spell_curse.curse_player(pid, curse_type, duration, params, handler.current_player_id)
 				else:
 					var target_player_id = target_data.get("player_id", handler.current_player_id)
-					spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
+					spell_container.spell_curse.curse_player(target_player_id, curse_type, duration, params, handler.current_player_id)
 		
 		# === コスト修飾系 ===
 		"life_force_curse":
 			var target_player_id = target_data.get("player_id", handler.current_player_id)
-			if spell_cost_modifier:
-				spell_cost_modifier.apply_life_force(target_player_id)
+			if spell_container and spell_container.spell_cost_modifier:
+				spell_container.spell_cost_modifier.apply_life_force(target_player_id)
 		
 		# === ドロー・手札操作系 ===
 		"draw", "draw_cards", "draw_by_rank", "draw_by_type", "discard_and_draw_plus", \
@@ -185,13 +167,13 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"draw_from_deck_selection", "steal_item_conditional", \
 		"add_specific_card", "destroy_and_draw", "swap_creature", \
 		"transform_to_card", "reset_deck", "destroy_deck_top":
-			if spell_draw:
+			if spell_container and spell_container.spell_draw:
 				var context = {
 					"rank": handler.get_player_ranking(handler.current_player_id),
 					"target_player_id": target_data.get("player_id", handler.current_player_id),
 					"tile_index": target_data.get("tile_index", -1)
 				}
-				var result = spell_draw.apply_effect(effect, handler.current_player_id, context)
+				var result = spell_container.spell_draw.apply_effect(effect, handler.current_player_id, context)
 				if result.has("next_effect") and not result["next_effect"].is_empty():
 					apply_single_effect(result["next_effect"], target_data)
 		
@@ -200,10 +182,10 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		"change_element_bidirectional", "change_element_to_dominant", \
 		"find_and_change_highest_level", "conditional_level_change", \
 		"align_mismatched_lands", "self_destruct", "change_caster_tile_element":
-			if spell_land:
-				var success = spell_land.apply_land_effect(effect, target_data, handler.current_player_id)
+			if spell_container and spell_container.spell_land:
+				var success = spell_container.spell_land.apply_land_effect(effect, target_data, handler.current_player_id)
 				if not success and effect.get("return_to_deck_on_fail", false):
-					if spell_land.return_spell_to_deck(handler.current_player_id, handler.selected_spell_card):
+					if spell_container.spell_land.return_spell_to_deck(handler.current_player_id, handler.selected_spell_card):
 						handler.spell_failed = true
 		
 		# === ダメージ・回復系 ===
@@ -236,16 +218,16 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 					print("[SpellEffectExecutor] クリーチャー配置失敗")
 		
 		"draw_and_place":
-			if spell_draw:
-				spell_draw.apply_effect(effect, handler.current_player_id, {})
+			if spell_container and spell_container.spell_draw:
+				spell_container.spell_draw.apply_effect(effect, handler.current_player_id, {})
 		
 		# === クリーチャー交換系 ===
 		"swap_with_hand", "swap_board_creatures":
 			if handler.spell_creature_swap:
 				var result = await handler.spell_creature_swap.apply_effect(effect, target_data, handler.current_player_id)
 				if not result.get("success", false) and result.get("return_to_deck", false):
-					if spell_land:
-						if spell_land.return_spell_to_deck(handler.current_player_id, handler.selected_spell_card):
+					if spell_container and spell_container.spell_land:
+						if spell_container.spell_land.return_spell_to_deck(handler.current_player_id, handler.selected_spell_card):
 							handler.spell_failed = true
 		
 		# === スペル借用系 ===
@@ -295,54 +277,54 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 		
 		# === ステータス増減スペル ===
 		"permanent_hp_change", "permanent_ap_change", "conditional_ap_change", "secret_tiny_army":
-			if spell_curse_stat:
-				await spell_curse_stat.apply_effect(handler, effect, target_data, handler.current_player_id, handler.selected_spell_card)
+			if spell_container and spell_container.spell_curse_stat:
+				spell_container.spell_curse_stat.apply_effect(handler, effect, target_data, handler.current_player_id, handler.selected_spell_card)
 		
 		# === 自壊効果 ===
 		"self_destroy":
 			var tile_index = target_data.get("caster_tile_index", target_data.get("tile_index", -1))
 			var clear_land = effect.get("clear_land", true)
-			if spell_magic:
-				spell_magic.apply_self_destroy(tile_index, clear_land)
+			if spell_container and spell_container.spell_magic:
+				spell_container.spell_magic.apply_self_destroy(tile_index, clear_land)
 		
 		# === ワープ系 ===
 		"warp_to_nearest_vacant", "warp_to_nearest_gate", "warp_to_target":
-			if spell_player_move:
+			if spell_container and spell_container.spell_player_move:
 				var result: Dictionary
 				match effect_type:
 					"warp_to_nearest_vacant":
-						result = spell_player_move.warp_to_nearest_vacant(handler.current_player_id)
+						result = spell_container.spell_player_move.warp_to_nearest_vacant(handler.current_player_id)
 					"warp_to_nearest_gate":
-						result = await spell_player_move.warp_to_nearest_gate(handler.current_player_id)
+						result = spell_container.spell_player_move.warp_to_nearest_gate(handler.current_player_id)
 					"warp_to_target":
 						var tile_idx = target_data.get("tile_index", -1)
-						result = await spell_player_move.warp_to_target(handler.current_player_id, tile_idx)
+						result = spell_container.spell_player_move.warp_to_target(handler.current_player_id, tile_idx)
 				print("[SpellEffectExecutor] %s" % result.get("message", ""))
 				if result.get("success", false):
 					handler.skip_dice_phase = true
-		
+
 		# === 移動呪い系 ===
 		"curse_movement_reverse":
-			if spell_player_move:
+			if spell_container and spell_container.spell_player_move:
 				var duration = effect.get("duration", 1)
-				spell_player_move.apply_movement_reverse_curse(duration)
-		
+				spell_container.spell_player_move.apply_movement_reverse_curse(duration)
+
 		"gate_pass":
-			if spell_player_move:
+			if spell_container and spell_container.spell_player_move:
 				var gate_key = target_data.get("gate_key", target_data.get("checkpoint", ""))
-				var result = spell_player_move.trigger_gate_pass(handler.current_player_id, gate_key)
+				var result = spell_container.spell_player_move.trigger_gate_pass(handler.current_player_id, gate_key)
 				print("[SpellEffectExecutor] %s" % result.get("message", ""))
-		
+
 		"grant_direction_choice":
-			if spell_player_move:
+			if spell_container and spell_container.spell_player_move:
 				var target_player_id = target_data.get("player_id", handler.current_player_id)
 				var duration = effect.get("duration", 1)
-				spell_player_move.grant_direction_choice(target_player_id, duration)
+				spell_container.spell_player_move.grant_direction_choice(target_player_id, duration)
 		
 		# === 世界呪い ===
 		"world_curse":
-			if spell_world_curse:
-				spell_world_curse.apply(effect)
+			if spell_container and spell_container.spell_world_curse:
+				spell_container.spell_world_curse.apply(effect)
 
 ## 全クリーチャー対象スペルを実行
 func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
