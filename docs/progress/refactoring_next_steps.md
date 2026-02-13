@@ -5,20 +5,79 @@
 
 ---
 
-## 🔴 最優先フェーズ（P2）
+## ✅ 完了したフェーズ（最新）
 
-### フェーズ5-B: Object Pool パターン導入（Task 7）
+### ✅ フェーズ5-B: Object Pool パターン導入（Task 7）- 完了
 
-**優先度**: P2（最優先）
-**見積時間**: 2-3時間
+**完了日**: 2026-02-13
+**見積時間**: 2-3時間（実績: 約1時間）
 **難易度**: 中
-**タスク**: Task #7
 
-Task 7 の詳細は下記を参照してください。
+**実装結果**:
+- ObjectPool 汎用クラス作成（101行）
+- BattleScreen に reset() メソッド追加（23行）
+- BattleScreenManager に Object Pool 統合（+15行修正）
+- プール初期サイズ: 3（バトル画面3つまで同時保有）
+- UIボタン処理への影響: なし（外部インターフェース保持）
+
+**実装詳細**:
+- `scripts/system/object_pool.gd`: 新規作成（汎用プール実装）
+- `scripts/battle_screen/battle_screen.gd`: reset() メソッド追加
+- `scripts/battle_screen/battle_screen_manager.gd`:
+  - _ready() で ObjectPool を初期化
+  - start_battle() で get_instance() を使用
+  - close_battle_screen() で return_instance() を使用
+  - force_close() も Object Pool対応
+
+**テスト確認**:
+- 構文エラーなし
+- BattleScreenManager の外部インターフェースは変更なし
+- reset() メソッドは自動的に呼び出され、UI状態をクリア
+
+---
+
+## 🔴 次のフェーズ（P2）
+
+### フェーズ5-C: BattleParticipant のコンポーネント化（Task 8）
+
+**優先度**: P2
+**見積時間**: 8-10時間
+**難易度**: 高
+**タスク**: Task #8
 
 ---
 
 ## 完了したフェーズ（参考）
+
+### ✅ フェーズ5-B: Object Pool パターン導入（Task 7）- 完了
+
+**完了日**: 2026-02-13
+**見積時間**: 2-3時間（実績: 約1時間）
+
+**実装内容**:
+1. ObjectPool クラス作成（`scripts/system/object_pool.gd`）
+   - get_instance(): プールからオブジェクト取得
+   - return_instance(): オブジェクト返却（自動リセット）
+   - get_stats(): デバッグ用統計情報
+   - プール枯渇時は動的に新規作成（警告ログ出力）
+
+2. BattleScreen.reset() メソッド追加
+   - データをクリア
+   - UI状態をリセット
+   - 実行中のツイーンをキャンセル
+   - エフェクトレイヤーをクリア
+
+3. BattleScreenManager Object Pool統合
+   - _ready() で ObjectPool を初期化（初期サイズ3）
+   - start_battle() で get_instance() を使用
+   - close_battle_screen()、force_close() で return_instance() を使用
+
+**成果**:
+- GC圧力削減（バトル画面再利用）
+- UIボタン処理への影響なし（後方互換性完全保持）
+- メモリ割り当て/解放頻度を削減
+
+---
 
 ### ✅ フェーズ5-A: State Machine クラス化（Task 6）- 完了
 

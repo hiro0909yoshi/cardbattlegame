@@ -334,3 +334,29 @@ func show_heal_popup(side: String, amount: int) -> void:
 func show_buff_popup(side: String, text: String) -> void:
 	var display = _attacker_display if side == "attacker" else _defender_display
 	display.show_buff_popup(text)
+
+
+## Object Pool用のリセット処理
+func reset() -> void:
+	# データをクリア
+	_attacker_data = {}
+	_defender_data = {}
+
+	# UI状態をリセット
+	_waiting_for_click = false
+	_click_area.visible = false
+
+	# 表示をリセット
+	if _vs_label:
+		_vs_label.modulate.a = 0.0
+		_vs_label.scale = Vector2.ONE
+
+	# ツイーンをキャンセル
+	var tweens = get_all_tweens()
+	for tween in tweens:
+		tween.kill()
+
+	# エフェクトレイヤーをクリア
+	if _effect_layer:
+		for child in _effect_layer.get_children():
+			child.queue_free()

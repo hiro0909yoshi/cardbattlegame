@@ -16,11 +16,17 @@ var _battle_screen: BattleScreen
 var _transition_layer: TransitionLayer
 var _is_battle_active := false
 
+# Object Pool
+var _battle_screen_pool: ObjectPool
+
 
 func _ready() -> void:
 	# トランジションレイヤーを作成
 	_transition_layer = TransitionLayer.new()
 	add_child(_transition_layer)
+
+	# BattleScreen の Object Pool を初期化
+	_battle_screen_pool = ObjectPool.new(BattleScreen, 3)
 
 
 ## バトルを開始
@@ -30,12 +36,17 @@ func start_battle(attacker_data: Dictionary, defender_data: Dictionary, _item_da
 		return
 	
 	_is_battle_active = true
-	
+
 	# トランジション（フェードアウト）
 	await _transition_layer.fade_out(true)
-	
-	# バトル画面を作成
-	_battle_screen = BattleScreen.new()
+
+	# Object Pool からバトル画面を取得
+	_battle_screen = _battle_screen_pool.get_instance()
+	if not _battle_screen:
+		push_error("[BattleScreenManager] BattleScreen インスタンスが取得できません")
+		_is_battle_active = false
+		return
+
 	add_child(_battle_screen)
 	_battle_screen.initialize(attacker_data, defender_data)
 	
@@ -139,11 +150,13 @@ func close_battle_screen():
 	
 	# トランジション（フェードアウト）
 	await _transition_layer.quick_fade_out()
-	
-	# バトル画面を削除
-	_battle_screen.queue_free()
+
+	# バトル画面を Object Pool に返却
+	remove_child(_battle_screen)
+	if _battle_screen_pool:
+		_battle_screen_pool.return_instance(_battle_screen)
 	_battle_screen = null
-	
+
 	# トランジション（フェードイン）
 	await _transition_layer.quick_fade_in()
 	
@@ -159,9 +172,11 @@ func is_battle_active() -> bool:
 ## 強制終了（エラー時など）
 func force_close() -> void:
 	if _battle_screen:
-		_battle_screen.queue_free()
+		remove_child(_battle_screen)
+		if _battle_screen_pool:
+			_battle_screen_pool.return_instance(_battle_screen)
 		_battle_screen = null
-	
+
 	_transition_layer.quick_fade_in()
 	_is_battle_active = false
 	battle_screen_closed.emit()
