@@ -18,6 +18,9 @@ var lap_system: Node = null
 var target_resolver: CPUTargetResolver = null
 var game_flow_manager: Node = null
 
+# === 直接参照（GFM経由を廃止） ===
+var game_stats  # GameFlowManager.game_stats への直接参照
+
 
 
 ## 優先度の数値変換
@@ -39,16 +42,20 @@ func initialize(ctx: CPUAIContextScript) -> void:
 		creature_manager = _context.creature_manager
 		lap_system = _context.lap_system
 		game_flow_manager = _context.game_flow_manager
-	
+
 	# 条件チェッカー初期化（contextを共有）
 	condition_checker = CPUSpellConditionChecker.new()
 	condition_checker.initialize(_context)
-	
+
 	# CPUTargetResolverの初期化
 	target_resolver = CPUTargetResolver.new()
 	var board_analyzer = CPUBoardAnalyzer.new()
 	board_analyzer.initialize(board_system, player_system, card_system, creature_manager, lap_system, game_flow_manager)
 	target_resolver.initialize(board_analyzer, board_system, player_system, card_system, game_flow_manager)
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 	
 ## 手札ユーティリティを設定
 func set_hand_utils(utils: CPUHandUtils) -> void:
@@ -772,6 +779,11 @@ func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Ar
 ## 世界呪いコンテキストを構築
 func _build_world_curse_context() -> Dictionary:
 	var context = {}
+	# 直接参照を優先
+	if game_stats and game_stats is Dictionary:
+		context["world_curse"] = game_stats.get("world_curse", {})
+		return context
+	# フォールバック
 	if game_flow_manager and "game_stats" in game_flow_manager:
 		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
 	return context

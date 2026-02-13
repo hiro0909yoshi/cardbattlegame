@@ -122,17 +122,16 @@ static func update_land_selection_ui(handler):
 
 ## チュートリアルのターゲット制限をチェック
 static func _check_tutorial_target_allowed(handler, tile_index: int) -> bool:
-	# TutorialManagerを取得（handler.game_flow_manager → system_manager → game_3d）
-	if not handler.game_flow_manager:
+	# TutorialManagerを取得（game_3d参照経由）
+	if not handler or not handler.get("game_3d_ref"):
 		return true
-	var system_manager = handler.game_flow_manager.get_parent()
-	var game_3d = system_manager.get_parent() if system_manager else null
+	var game_3d = handler.game_3d_ref
 	if not game_3d or not "tutorial_manager" in game_3d:
 		return true  # チュートリアルなし = 制限なし
-	
+
 	var tutorial_manager = game_3d.tutorial_manager
 	if not tutorial_manager or not tutorial_manager.is_active:
 		return true  # チュートリアル非アクティブ = 制限なし
-	
+
 	return tutorial_manager.is_target_tile_allowed(tile_index)
 

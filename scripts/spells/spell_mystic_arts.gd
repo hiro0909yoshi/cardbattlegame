@@ -24,6 +24,7 @@ var card_system_ref: Object
 var spell_phase_handler_ref: Object  # ターゲット取得用
 
 # === 直接参照（GFM経由を廃止） ===
+var game_flow_manager_ref: GameFlowManager = null
 var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
 
 
@@ -60,10 +61,11 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	card_system_ref = card_sys
 	spell_phase_handler_ref = spell_phase_handler
 
-	# spell_curse_statの直接参照を設定
+	# game_flow_manager の直接参照を設定
 	if spell_phase_handler and spell_phase_handler.game_flow_manager:
-		if spell_phase_handler.game_flow_manager.spell_curse_stat:
-			spell_curse_stat = spell_phase_handler.game_flow_manager.spell_curse_stat
+		game_flow_manager_ref = spell_phase_handler.game_flow_manager
+		if game_flow_manager_ref.spell_curse_stat:
+			spell_curse_stat = game_flow_manager_ref.spell_curse_stat
 
 
 # ============ アルカナアーツフェーズ管理 ============
@@ -72,10 +74,10 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 func start_mystic_phase(player_id: int) -> void:
 	is_mystic_phase_active = true
 	current_mystic_player_id = player_id
-	
+
 	# アルカナアーツフェーズ中は入力をロック（手札カード選択を防止）
-	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
-		spell_phase_handler_ref.game_flow_manager.lock_input()
+	if game_flow_manager_ref:
+		game_flow_manager_ref.lock_input()
 	
 	# ナチュラルワールドによるアルカナアーツ無効化チェック
 	if _is_mystic_arts_disabled():
@@ -127,11 +129,11 @@ func end_mystic_phase() -> void:
 	is_mystic_phase_active = false
 	clear_selection()
 	current_mystic_player_id = -1
-	
+
 	# 入力ロック解除
-	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
-		spell_phase_handler_ref.game_flow_manager.unlock_input()
-	
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
+
 	mystic_phase_completed.emit()
 
 
@@ -632,10 +634,10 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 	confirmation_target_type = target_type
 	confirmation_target_info = target_info
 	confirmation_target_data = target_data
-	
+
 	# 確認中は入力をロック（手札カード選択を防止）
-	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
-		spell_phase_handler_ref.game_flow_manager.lock_input()
+	if game_flow_manager_ref:
+		game_flow_manager_ref.lock_input()
 	
 	# 対象をハイライト表示
 	var target_count = 0
@@ -664,12 +666,12 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 func _confirm_mystic_effect() -> void:
 	if not is_confirming:
 		return
-	
+
 	is_confirming = false
-	
+
 	# 入力ロック解除
-	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
-		spell_phase_handler_ref.game_flow_manager.unlock_input()
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
@@ -705,10 +707,10 @@ func _confirm_mystic_effect() -> void:
 ## 確認フェーズ: キャンセル
 func _cancel_mystic_confirmation() -> void:
 	is_confirming = false
-	
+
 	# 入力ロック解除
-	if spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager:
-		spell_phase_handler_ref.game_flow_manager.unlock_input()
+	if game_flow_manager_ref:
+		game_flow_manager_ref.unlock_input()
 	
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
@@ -1095,11 +1097,9 @@ func _is_mystic_arts_disabled() -> bool:
 
 ## game_statsを取得
 func _get_game_stats() -> Dictionary:
-	if not spell_phase_handler_ref:
+	if not game_flow_manager_ref:
 		return {}
-	if not spell_phase_handler_ref.game_flow_manager:
-		return {}
-	return spell_phase_handler_ref.game_flow_manager.game_stats
+	return game_flow_manager_ref.game_stats
 
 
 # ============ カメラフォーカス ============

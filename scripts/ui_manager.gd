@@ -293,11 +293,11 @@ func create_basic_ui(parent: Node):
 	# PhaseDisplayを初期化
 	if phase_display:
 		phase_display.initialize(parent)
-	
+
 	# Phase 1-A: ドミニオコマンドUI初期化（DominioOrderUIに委譲）
 	# 注: ドミニオコマンドボタンはグローバル特殊ボタンに移行済み
 	if dominio_order_ui:
-		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self)
+		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self, dominio_command_handler_ref)
 		dominio_order_ui.create_action_menu_panel(parent)
 		dominio_order_ui.create_level_selection_panel(parent)
 

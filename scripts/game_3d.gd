@@ -21,23 +21,23 @@ var tutorial_manager = null
 var player_count: int = 2
 var player_is_cpu: Array = [false, true]
 
-# 🔧 デバッグ設定: trueにするとCPUも手動操作できる
-var debug_manual_control_all: bool = true
-
 func _ready():
+	# 🔧 デバッグ設定: trueにするとCPUも手動操作できる
+	DebugSettings.manual_control_all = true
+
 	# 外部から指定されたステージIDがあれば使用
 	if GameData.has_meta("stage_id"):
 		stage_id = GameData.get_meta("stage_id")
 		GameData.remove_meta("stage_id")
-	
+
 	# チュートリアルモード確認
 	if GameData.has_meta("is_tutorial_mode"):
 		is_tutorial_mode = GameData.get_meta("is_tutorial_mode")
 		GameData.remove_meta("is_tutorial_mode")
-		
+
 		# チュートリアルモードではCPUを自動操作にする
 		if is_tutorial_mode:
-			debug_manual_control_all = false
+			DebugSettings.manual_control_all = false
 			print("[Game3D] チュートリアルモード: CPUは自動操作")
 	
 	# StageLoaderを作成
@@ -68,7 +68,7 @@ func _ready():
 		self,
 		player_count,
 		player_is_cpu,
-		debug_manual_control_all
+		DebugSettings.manual_control_all
 	)
 	
 	# ステージ固有の設定を適用

@@ -17,43 +17,43 @@ var stage_id: String = "stage_1_1"
 var player_count: int = 2
 var player_is_cpu: Array = [false, true]
 
-# クエストモードでは常にCPUはAI任せ
-var debug_manual_control_all: bool = false
-
 func _ready():
+	# クエストモードでは常にCPUはAI任せ
+	DebugSettings.manual_control_all = false
+
 	# GameDataからステージIDを取得
 	if GameData.selected_stage_id != "":
 		stage_id = GameData.selected_stage_id
-	
+
 	# StageLoaderを作成
 	stage_loader = StageLoader.new()
 	stage_loader.name = "StageLoader"
 	add_child(stage_loader)
-	
+
 	# ステージを読み込み
 	var stage_data = stage_loader.load_stage(stage_id)
 	if stage_data.is_empty():
 		push_error("[QuestGame] ステージ読み込み失敗: " + stage_id)
 		return
-	
+
 	# 設定を取得
 	player_count = stage_loader.get_player_count()
 	player_is_cpu = stage_loader.get_player_is_cpu()
-	
+
 	print("[QuestGame] ステージ: %s, プレイヤー数: %d" % [stage_id, player_count])
-	
+
 	# 3Dシーンを事前に構築（GameSystemManager が収集できるように）
 	_setup_3d_scene_before_init()
-	
+
 	# GameSystemManagerを作成・初期化
 	system_manager = GameSystemManagerClass.new()
 	add_child(system_manager)
-	
+
 	await system_manager.initialize_all(
 		self,
 		player_count,
 		player_is_cpu,
-		debug_manual_control_all
+		DebugSettings.manual_control_all
 	)
 	
 	# ステージ固有の設定を適用
@@ -133,16 +133,15 @@ func _create_player_characters(container: Node3D):
 
 ## ステージ固有の設定を適用
 func _apply_stage_settings():
-	# ステージデータをGameFlowManagerに渡す（リザルト処理用）
-	if system_manager.game_flow_manager:
-		var stage_data = stage_loader.get_stage_data()
-		system_manager.game_flow_manager.set_stage_data(stage_data)
-		
-		# リザルト画面を作成・設定
-		var result_screen = ResultScreen.new()
-		result_screen.name = "ResultScreen"
-		add_child(result_screen)
-		system_manager.game_flow_manager.set_result_screen(result_screen)
+	# ステージデータをGameSystemManagerに委譲（チェーンアクセス解消）
+	var stage_data = stage_loader.get_stage_data()
+	system_manager.set_stage_data(stage_data)
+
+	# リザルト画面を作成・設定
+	var result_screen = ResultScreen.new()
+	result_screen.name = "ResultScreen"
+	add_child(result_screen)
+	system_manager.set_result_screen(result_screen)
 	
 	# ワープペアを登録
 	if system_manager.special_tile_system:

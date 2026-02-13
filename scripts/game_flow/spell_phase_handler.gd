@@ -78,6 +78,7 @@ var is_borrow_spell_mode: bool = false  # 借用スペル実行中（SpellBorrow
 var ui_manager = null
 var hand_display = null  # hand_display参照
 var game_flow_manager = null
+var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var card_system = null
 var player_system = null
 var board_system = null
@@ -97,6 +98,9 @@ var spell_synthesis: SpellSynthesis = null  # スペル合成
 var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
 var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理（旧・バトル用）
 var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離クラス）
+
+# === 直接参照（GFM経由を廃止） ===
+var game_stats  # GameFlowManager.game_stats への直接参照
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
@@ -126,8 +130,13 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	if ui_manager and ui_manager.get("hand_display"):
 		hand_display = ui_manager.hand_display
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
+	# game_3d参照は別途set_game_3d_ref()で設定される
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
 	board_system = b_system if b_system else (flow_mgr.board_system_3d if flow_mgr else null)
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 	
 	# CreatureManagerを取得
 	if board_system:
@@ -158,6 +167,9 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 	# SpellCreatureMove を初期化
 	if not spell_creature_move and board_system and player_system:
 		spell_creature_move = SpellCreatureMove.new(board_system, player_system, self)
+		# game_flow_manager を直接設定（3段チェーン廃止）
+		if game_flow_manager:
+			spell_creature_move.set_game_flow_manager(game_flow_manager)
 		if battle_status_overlay:
 			spell_creature_move.set_battle_status_overlay(battle_status_overlay)
 	
@@ -234,12 +246,18 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 		# CPUMovementEvaluatorを設定（ホーリーワード判断用）
 		if cpu_movement_evaluator:
 			cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
+		# === game_stats直接参照を設定（チェーンアクセス解消） ===
+		if game_flow_manager and game_flow_manager.has_method("get"):
+			cpu_spell_ai.set_game_stats(game_flow_manager.game_stats)
 	
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
 		cpu_mystic_arts_ai.initialize(_cpu_context)
 		cpu_mystic_arts_ai.set_hand_utils(cpu_hand_utils)
 		cpu_mystic_arts_ai.set_battle_ai(_cpu_battle_ai)
+		# === game_stats直接参照を設定（チェーンアクセス解消） ===
+		if game_flow_manager and game_flow_manager.has_method("get"):
+			cpu_mystic_arts_ai.set_game_stats(game_flow_manager.game_stats)
 	
 	# SpellEffectExecutor を初期化
 	if not spell_effect_executor:
@@ -249,6 +267,10 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 func set_spell_effect_executor_systems(systems: Dictionary) -> void:
 	if spell_effect_executor:
 		spell_effect_executor.set_spell_systems(systems)
+
+## game_3d参照を設定（TutorialManager取得用）
+func set_game_3d_ref(p_game_3d) -> void:
+	game_3d_ref = p_game_3d
 
 ## 直接参照を設定（GFM経由を廃止）
 func set_spell_systems_direct(cost_modifier, draw) -> void:
@@ -1229,13 +1251,12 @@ func complete_spell_phase():
 func is_cpu_player(player_id: int) -> bool:
 	if not game_flow_manager:
 		return false
-	
+
 	var cpu_settings = game_flow_manager.player_is_cpu
-	var debug_mode = game_flow_manager.debug_manual_control_all
-	
-	if debug_mode:
+
+	if DebugSettings.manual_control_all:
 		return false  # デバッグモードでは全員手動
-	
+
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## スペル関連のコンテキストを構築（世界呪い等）
@@ -1269,6 +1290,41 @@ func get_player_ranking(player_id: int) -> int:
 ## アクティブか
 func is_spell_phase_active() -> bool:
 	return current_state != State.INACTIVE
+
+## カード選択を処理（GFMのルーティング用）
+## 戻り値: true=処理済み, false=処理不要
+func try_handle_card_selection(card_index: int) -> bool:
+	# カード選択ハンドラーが選択中の場合
+	if card_selection_handler:
+		if card_selection_handler.is_selecting_enemy_card():
+			card_selection_handler.on_enemy_card_selected(card_index)
+			return true
+		if card_selection_handler.is_selecting_deck_card():
+			card_selection_handler.on_deck_card_selected(card_index)
+			return true
+		if card_selection_handler.is_selecting_transform_card():
+			card_selection_handler.on_transform_card_selected(card_index)
+			return true
+
+	# スペルフェーズ中かチェック（アイテムフェーズがアクティブでない場合）
+	if is_spell_phase_active():
+		# スペルカードのみ使用可能
+		var hand = card_system.get_all_cards_for_player(current_player_id) if card_system else []
+		if card_index >= hand.size():
+			return true  # インデックスが範囲外なので処理終了
+
+		var card = hand[card_index]
+		var card_type = card.get("type", "")
+
+		if card_type == "spell":
+			use_spell(card)
+			return true
+		else:
+			# スペルカード以外は使用不可
+			return true
+
+	# スペルフェーズがアクティブでない場合
+	return false
 
 # ============ アルカナアーツシステム対応（新規追加）============
 
@@ -1621,29 +1677,29 @@ func _end_spell_tap_target_selection():
 
 ## チュートリアルのターゲット制限をチェック
 func _check_tutorial_target_allowed(tile_index: int) -> bool:
-	# TutorialManagerを取得（game_flow_manager → system_manager → game_3d）
-	var system_manager = game_flow_manager.get_parent() if game_flow_manager else null
-	var game_3d = system_manager.get_parent() if system_manager else null
-	if not game_3d or not "tutorial_manager" in game_3d:
+	# TutorialManagerを取得（game_3d参照経由）
+	if not game_3d_ref:
+		return true
+	if not "tutorial_manager" in game_3d_ref:
 		return true  # チュートリアルなし = 制限なし
-	
-	var tutorial_manager = game_3d.tutorial_manager
+
+	var tutorial_manager = game_3d_ref.tutorial_manager
 	if not tutorial_manager or not tutorial_manager.is_active:
 		return true  # チュートリアル非アクティブ = 制限なし
-	
+
 	return tutorial_manager.is_target_tile_allowed(tile_index)
 
 func _check_tutorial_player_target_allowed(player_id: int) -> bool:
-	# TutorialManagerを取得
-	var system_manager = game_flow_manager.get_parent() if game_flow_manager else null
-	var game_3d = system_manager.get_parent() if system_manager else null
-	if not game_3d or not "tutorial_manager" in game_3d:
+	# TutorialManagerを取得（game_3d参照経由）
+	if not game_3d_ref:
+		return true
+	if not "tutorial_manager" in game_3d_ref:
 		return true  # チュートリアルなし = 制限なし
-	
-	var tutorial_manager = game_3d.tutorial_manager
+
+	var tutorial_manager = game_3d_ref.tutorial_manager
 	if not tutorial_manager or not tutorial_manager.is_active:
 		return true  # チュートリアル非アクティブ = 制限なし
-	
+
 	return tutorial_manager.is_player_target_allowed(player_id)
 
 

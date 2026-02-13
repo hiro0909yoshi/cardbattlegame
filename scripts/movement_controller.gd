@@ -30,8 +30,10 @@ var current_moving_player = -1
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
 var game_flow_manager = null
+var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var spell_movement: SpellMovement = null
 var spell_player_move = null
+var ui_manager = null
 
 # CPU移動評価システム
 var cpu_movement_evaluator: CPUMovementEvaluator = null
@@ -76,6 +78,26 @@ func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null, 
 		spell_movement.setup(gf_manager.creature_manager, null)
 	special_tile_system = st_system
 	game_flow_manager = gf_manager
+
+
+# CardSelectionUIを設定（destination_predictorに直接参照を渡す）
+func set_card_selection_ui(ui: CardSelectionUI) -> void:
+	if destination_predictor:
+		destination_predictor.set_card_selection_ui(ui)
+
+
+# UIManager参照を設定（セレクターに直接参照を渡す）
+func set_ui_manager(p_ui_manager) -> void:
+	ui_manager = p_ui_manager
+	if direction_selector:
+		direction_selector.set_ui_manager(p_ui_manager)
+	if branch_selector:
+		branch_selector.set_ui_manager(p_ui_manager)
+
+
+# game_3d参照を設定（TutorialManager取得用）
+func set_game_3d_ref(p_game_3d) -> void:
+	game_3d_ref = p_game_3d
 
 
 # プレイヤーの現在位置を取得
@@ -487,16 +509,15 @@ func _is_cpu_player(player_id: int) -> bool:
 	var player_is_cpu = game_flow_manager.player_is_cpu
 	if player_id < 0 or player_id >= player_is_cpu.size():
 		return false
-	if game_flow_manager.debug_manual_control_all:
+	if DebugSettings.manual_control_all:
 		return false
 	return player_is_cpu[player_id]
 
 
 func _get_tutorial_manager():
-	if game_flow_manager and game_flow_manager.get_parent():
-		var game_3d = game_flow_manager.get_parent().get_parent()
-		if game_3d and game_3d.has_node("TutorialManager"):
-			return game_3d.get_node("TutorialManager")
+	if game_3d_ref:
+		if game_3d_ref.has_node("TutorialManager"):
+			return game_3d_ref.get_node("TutorialManager")
 	return null
 
 

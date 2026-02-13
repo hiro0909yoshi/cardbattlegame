@@ -67,6 +67,11 @@ func set_hand_utils(utils: CPUHandUtils) -> void:
 func set_battle_ai(ai: CPUBattleAI) -> void:
 	battle_ai = ai
 
+## game_statsを設定（GFM経由を廃止） - 内部コンポーネントにも伝播
+func set_game_stats(p_game_stats) -> void:
+	if target_resolver:
+		target_resolver.set_game_stats(p_game_stats)
+
 ## ワーストケースシミュレーション（敵がアイテム/援護を使った場合でも勝てるか）
 func check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
 	# battle_aiがあればそれを使用

@@ -19,10 +19,16 @@ const INDICATOR_HEIGHT = 0.4
 
 # 参照
 var controller: MovementController3D = null
+var ui_manager = null
 
 
 func _init(p_controller: MovementController3D) -> void:
 	controller = p_controller
+
+
+# UIManager参照を設定
+func set_ui_manager(p_ui_manager) -> void:
+	ui_manager = p_ui_manager
 
 
 # 分岐タイル選択UIを表示して選択を待つ
@@ -69,8 +75,7 @@ func show_branch_tile_selection(choices: Array) -> int:
 
 # 分岐選択UI更新
 func _update_ui():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
+	if ui_manager:
 		var choices_text = ""
 		for i in range(available_branches.size()):
 			var tile_num = available_branches[i]
@@ -79,8 +84,8 @@ func _update_ui():
 			else:
 				choices_text += " タイル%d " % tile_num
 		var remaining_text = "（残り%dマス）" % controller.current_remaining_steps if controller.current_remaining_steps > 0 else ""
-		if gfm.ui_manager.phase_display:
-			gfm.ui_manager.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
+		if ui_manager.phase_display:
+			ui_manager.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
 
 	# 到着予測ハイライトを更新
 	controller.destination_predictor.update_destination_highlight_for_branch(
@@ -112,9 +117,8 @@ func _update_ui():
 
 # ナビゲーションボタンを設定
 func setup_navigation():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
-		gfm.ui_manager.enable_navigation(
+	if ui_manager:
+		ui_manager.enable_navigation(
 			func(): _confirm_selection(),    # 決定
 			Callable(),                       # 戻るなし
 			func(): _cycle_selection(-1),    # 上（左へ）
@@ -132,9 +136,8 @@ func restore_navigation():
 
 # ナビゲーションボタンをクリア
 func _clear_navigation():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
-		gfm.ui_manager.disable_navigation()
+	if ui_manager:
+		ui_manager.disable_navigation()
 
 
 # 分岐選択を切り替え

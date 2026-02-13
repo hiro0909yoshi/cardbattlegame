@@ -123,21 +123,27 @@ static func is_target_protected(target_data: Dictionary, handler) -> bool:
 
 
 ## コンテキストを構築（世界呪い等）
+## 直接参照を優先し、フォールバックで game_flow_manager を使用
 static func _build_context(handler) -> Dictionary:
 	var context = {}
-	
+
 	# 世界呪いを取得
 	# handlerはNode（SpellPhaseHandler等）なのでプロパティに直接アクセス
 	if handler == null:
 		return context
-	
-	# game_flow_managerプロパティが存在するか確認
+
+	# 直接参照 game_stats を優先
+	if "game_stats" in handler and handler.game_stats is Dictionary:
+		context["world_curse"] = handler.game_stats.get("world_curse", {})
+		return context
+
+	# フォールバック: game_flow_manager 経由
 	if "game_flow_manager" in handler and handler.game_flow_manager:
 		var gfm = handler.game_flow_manager
 		# game_statsプロパティが存在するか確認
 		if "game_stats" in gfm and gfm.game_stats is Dictionary:
 			context["world_curse"] = gfm.game_stats.get("world_curse", {})
-	
+
 	return context
 
 

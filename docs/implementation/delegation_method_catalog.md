@@ -181,6 +181,21 @@ MovementController内部のヘルパー（warp_handler, special_handler等）か
 
 チェーンアクセス解消のため、GameFlowManager経由ではなく各クラスに直接参照を注入する。
 
+### GameSystemManager 委譲メソッド
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `set_stage_data(stage_data)` | game_flow_manager → quest_game | ステージデータ設定 |
+| `set_result_screen(result_screen)` | game_flow_manager → quest_game | リザルト画面設定 |
+| `apply_map_settings_to_lap_system(map_data)` | game_flow_manager.lap_system | マップ周回設定適用 |
+
+### BoardSystem3D 委譲メソッド（新規）
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `set_movement_controller_game_3d_ref(game_3d_ref)` | movement_controller | game_3d参照注入 |
+| `set_movement_controller_card_selection_ui(ui)` | movement_controller | CardSelectionUI参照注入 |
+| `set_movement_controller_ui_manager(ui_manager)` | movement_controller | UIManager参照注入 |
+| `toggle_all_branch_tiles(enabled)` | tile_data_manager | 分岐タイル切替 |
+
 ### battle_status_overlay 直接参照
 | 設定先クラス | セッターメソッド | 注入元 |
 |-------------|-----------------|--------|
@@ -256,6 +271,43 @@ MovementController内部のヘルパー（warp_handler, special_handler等）か
 |-------------|---------|--------|
 | SpellMysticArts | _init時に設定 | spell_phase_handler.game_flow_manager |
 
+### game_3d_ref 直接参照（新規パターン）
+| 設定先クラス | セッターメソッド | 注入元 | 用途 |
+|-------------|-----------------|--------|------|
+| MovementController | set_movement_controller_game_3d_ref | board_system_3d | UI表示制御 |
+| TileActionProcessor | set_game_3d_ref | board_system_3d | アクション後の表示更新 |
+| CPUTurnProcessor | set_game_3d_ref | game_system_manager | CPU処理制御 |
+| LandSelectionHelper | set_game_3d_ref | game_system_manager | 土地選択UI制御 |
+
+### card_selection_ui 直接参照（新規パターン）
+| 設定先クラス | セッターメソッド | 注入元 | 用途 |
+|-------------|-----------------|--------|------|
+| MovementDestinationPredictor | set_card_selection_ui | board_system_3d | カード選択状態確認 |
+| MovementController | set_movement_controller_card_selection_ui | board_system_3d | 移動選択制御 |
+
+### ui_manager 直接参照（新規拡張）
+| 設定先クラス | セッターメソッド | 注入元 | 用途 |
+|-------------|-----------------|--------|------|
+| MovementBranchSelector | set_ui_manager | board_system_3d | UI操作 |
+| MovementDirectionSelector | set_ui_manager | board_system_3d | UI操作 |
+| TileActionProcessor | set_ui_manager | board_system_3d | アクションUI |
+| BattleSpecialEffects | set_ui_manager | battle_system | バトルUI更新 |
+| CPUTurnProcessor | set_ui_manager | game_system_manager | ターンUI更新 |
+
+### spell系 直接参照（新規パターン）
+| 設定先クラス | セッターメソッド | 注入元 | 参照先 |
+|-------------|-----------------|--------|------|
+| SpellMysticArts | set_game_flow_manager_ref | spell_phase_handler | game_flow_manager |
+| SpellCreatureMove | set_game_flow_manager_ref | spell_phase_handler | game_flow_manager |
+| MovementBranchSelector | set_spell_systems | board_system_3d | game_flow_manager.spell系 |
+
+### item_phase_handler / dominio_command_handler 直接参照（新規パターン）
+| 設定先クラス | セッターメソッド | 注入元 | 用途 |
+|-------------|-----------------|--------|------|
+| CPUTurnProcessor | set_item_phase_handler | game_system_manager | アイテムフェーズ制御 |
+| CPUTurnProcessor | set_dominio_command_handler | game_system_manager | ドミニオコマンド制御 |
+| BattleSpecialEffects | set_handlers | battle_system | 戦闘後処理 |
+
 ---
 
 ## 使用例
@@ -280,3 +332,40 @@ battle_status_overlay.show_battle_status(...)  # 注入された参照を使用
 
 - 新しい委譲メソッドを追加したら、このカタログも更新する
 - 外部から3箇所以上呼ばれるメソッドは委譲メソッド化を検討
+
+---
+
+## オートロード（Autoload）パターン
+
+### DebugSettings オートロード
+
+**目的**: デバッグ設定のグローバル管理
+
+**ファイル**: scripts/autoload/debug_settings.gd
+
+**登録**: project.godot の [autoload] セクション
+```ini
+DebugSettings="*res://scripts/autoload/debug_settings.gd"
+```
+
+**提供するプロパティ**:
+- manual_control_all: bool - 全プレイヤーを手動操作にするフラグ
+
+**使用例**:
+```gdscript
+# どこからでもアクセス可能
+if DebugSettings.manual_control_all:
+    # 全プレイヤー手動操作モード
+    pass
+
+# 初期化時に設定
+func _ready():
+    DebugSettings.manual_control_all = true
+```
+
+**メリット**:
+- グローバルアクセス可能（パラメータチェーン不要）
+- シングルソースオブトゥルース
+- 将来的な拡張が容易
+
+**適用箇所**: 14ファイル（game_flow_manager, board_system_3d, tile_action_processor, discard_handler, game_3d, quest_game, game_system_manager, movement_controller, special_tile_system, tile_summon_executor, card_selection_ui, tile_battle_executor, item_phase_handler, spell_phase_handler）

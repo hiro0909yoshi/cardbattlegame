@@ -27,6 +27,7 @@ var current_is_defensive: bool = false
 var player_system_ref = null
 var board_system_ref = null
 var ui_manager_ref = null  # UIManagerへの参照
+var dominio_command_handler: DominioCommandHandler = null  # DominioCommandHandler直接参照（チェーンアクセス解消）
 
 # 親UIレイヤー
 var ui_layer: Node = null
@@ -35,11 +36,12 @@ func _ready():
 	pass
 
 ## 初期化
-func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null):
+func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null, dominio_handler = null):
 	ui_layer = ui_parent
 	player_system_ref = player_sys
 	board_system_ref = board_sys
 	ui_manager_ref = ui_manager
+	dominio_command_handler = dominio_handler
 
 ## ドミニオコマンドボタン表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
 func show_dominio_order_button():
@@ -424,8 +426,8 @@ func on_level_selected(level: int):
 func _on_level_cancel_pressed():
 	print("[DominioOrderUI] レベル選択キャンセル")
 	# dominio_command_handlerのcancel()を呼ぶ（状態管理を統一）
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_command_handler:
-		ui_manager_ref.game_flow_manager_ref.dominio_command_handler.cancel()
+	if dominio_command_handler:
+		dominio_command_handler.cancel()
 	else:
 		# フォールバック
 		hide_level_selection()
@@ -772,15 +774,14 @@ func _reset_terrain_button_style(button: Button, element: String):
 ## 地形選択ハンドラ
 func _on_terrain_selected(element: String):
 	# DominioCommandHandlerに通知
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_command_handler:
-		var handler = ui_manager_ref.game_flow_manager_ref.dominio_command_handler
-		handler.current_terrain_index = handler.terrain_options.find(element)
-		LandActionHelper.execute_terrain_change_with_element(handler, element)
+	if dominio_command_handler:
+		dominio_command_handler.current_terrain_index = dominio_command_handler.terrain_options.find(element)
+		LandActionHelper.execute_terrain_change_with_element(dominio_command_handler, element)
 
 ## 地形選択キャンセル
 func _on_terrain_cancel_pressed():
-	if ui_manager_ref and ui_manager_ref.game_flow_manager_ref and ui_manager_ref.game_flow_manager_ref.dominio_command_handler:
-		ui_manager_ref.game_flow_manager_ref.dominio_command_handler.cancel()
+	if dominio_command_handler:
+		dominio_command_handler.cancel()
 
 ## 大きめレベルボタン作成ヘルパー
 func _create_large_level_button(level: int, cost: int, pos: Vector2, btn_size: Vector2) -> Button:

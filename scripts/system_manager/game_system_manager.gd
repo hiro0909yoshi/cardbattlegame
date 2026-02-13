@@ -17,6 +17,7 @@ const PlayerBuffSystemClass = preload("res://scripts/player_buff_system.gd")
 const DebugControllerClass = preload("res://scripts/debug_controller.gd")
 const UIManagerClass = preload("res://scripts/ui_manager.gd")
 const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
+const TollPaymentHandlerClass = preload("res://scripts/game_flow/toll_payment_handler.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -36,7 +37,6 @@ var game_flow_manager
 # === 設定 ===
 var player_count: int = 2
 var player_is_cpu: Array = [false, true]
-var debug_manual_control_all: bool = true
 
 # === 3D シーンノード ===
 var tiles_container: Node
@@ -61,7 +61,7 @@ func initialize_all(p_node: Node, p_count: int, p_is_cpu: Array, debug_mode: boo
 	parent_node = p_node
 	player_count = p_count
 	player_is_cpu = p_is_cpu
-	debug_manual_control_all = debug_mode
+	DebugSettings.manual_control_all = debug_mode
 	
 	print("[GameSystemManager] 初期化開始（6フェーズ）")
 	
@@ -285,7 +285,11 @@ func phase_4_setup_system_interconnections() -> void:
 		ui_manager.player_system_ref = player_system
 		ui_manager.card_system_ref = card_system
 		ui_manager.game_flow_manager_ref = game_flow_manager
-	
+
+	# Step 5.5: MovementController に game_3d_ref を設定（get_parent()廃止）
+	if board_system_3d and parent_node:
+		board_system_3d.set_movement_controller_game_3d_ref(parent_node)
+
 	# Step 10: UIManager.create_ui() 実行（全参照設定後）
 	if ui_manager and parent_node:
 		ui_manager.create_ui(parent_node)
@@ -304,7 +308,6 @@ func phase_4_setup_system_interconnections() -> void:
 	
 	# Step 9: GameFlowManager の 3D 設定
 	if game_flow_manager:
-		game_flow_manager.debug_manual_control_all = debug_manual_control_all
 		game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
 	
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
@@ -368,6 +371,8 @@ func phase_4_setup_system_interconnections() -> void:
 				# tile_data_managerにも参照を渡す（表示用通行料のタイル呪い補正で使用）
 				if board_system_3d.tile_data_manager:
 					board_system_3d.tile_data_manager.spell_curse_toll = game_flow_manager.spell_curse_toll
+					# === game_stats直接参照も設定（チェーンアクセス解消） ===
+					board_system_3d.tile_data_manager.set_game_stats(game_flow_manager.game_stats)
 				print("[SpellCurseToll] BoardSystem3D のメタデータとして設定完了")
 			
 			# SpellCostModifier の初期化
@@ -468,18 +473,19 @@ func _setup_lap_system() -> void:
 	lap_system.name = "LapSystem"
 	game_flow_manager.add_child(lap_system)
 	game_flow_manager.set_lap_system(lap_system)
-	
+
 	# システム参照を設定
 	lap_system.player_system = player_system
 	lap_system.ui_manager = ui_manager
 	lap_system.game_flow_manager = game_flow_manager  # ゲーム終了判定用
+	lap_system.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	lap_system.setup_ui()
-	
+
 	# board_system_3dを設定してシグナル接続
 	if board_system_3d:
 		lap_system.board_system_3d = board_system_3d
 		lap_system.connect_checkpoint_signals()
-	
+
 	# 周回状態を初期化
 	lap_system.initialize_lap_state(player_is_cpu.size())
 	print("[LapSystem] 初期化完了")
@@ -570,6 +576,12 @@ func _setup_spell_systems() -> void:
 	if game_flow_manager.spell_cost_modifier:
 		game_flow_manager.spell_cost_modifier.set_spell_world_curse(game_flow_manager.spell_world_curse)
 
+	# === game_stats直接参照を各システムに設定（チェーンアクセス解消） ===
+	if game_flow_manager.spell_curse:
+		game_flow_manager.spell_curse.set_game_stats(game_flow_manager.game_stats)
+	if game_flow_manager.spell_world_curse:
+		game_flow_manager.spell_world_curse.set_game_stats(game_flow_manager.game_stats)
+
 	# BattleSystemにspell_magic/spell_drawを設定（setup_systemsより後に初期化されるため）
 	if battle_system:
 		battle_system.spell_magic = spell_systems.get("spell_magic")
@@ -577,6 +589,9 @@ func _setup_spell_systems() -> void:
 		if battle_system.battle_special_effects:
 			battle_system.battle_special_effects.spell_magic_ref = spell_systems.get("spell_magic")
 			battle_system.battle_special_effects.spell_draw_ref = spell_systems.get("spell_draw")
+			# === 直接参照を設定（チェーンアクセス解消） ===
+			battle_system.battle_special_effects.set_game_stats(game_flow_manager.game_stats)
+			battle_system.battle_special_effects.set_player_system(player_system)
 		if battle_system.battle_preparation:
 			battle_system.battle_preparation.spell_magic_ref = spell_systems.get("spell_magic")
 
@@ -638,6 +653,7 @@ func _initialize_phase1a_handlers() -> void:
 	var dominio_command_handler = DominioCommandHandlerClass.new()
 	game_flow_manager.add_child(dominio_command_handler)
 	dominio_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
+	dominio_command_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	dominio_command_handler.set_spell_systems_direct(
 		game_flow_manager.spell_world_curse,
 		game_flow_manager.spell_land,
@@ -649,6 +665,8 @@ func _initialize_phase1a_handlers() -> void:
 	var spell_phase_handler = SpellPhaseHandlerClass.new()
 	game_flow_manager.add_child(spell_phase_handler)
 	spell_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, board_system_3d)
+	spell_phase_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
+	spell_phase_handler.set_game_stats(game_flow_manager.game_stats)  # === game_stats直接参照を設定 ===
 
 	# SpellEffectExecutorにスペルシステム参照を直接設定（GFM経由を廃止）
 	var spell_systems_for_executor = {
@@ -700,6 +718,26 @@ func _initialize_phase1a_handlers() -> void:
 	item_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, battle_system)
 	item_phase_handler.set_spell_cost_modifier(game_flow_manager.spell_cost_modifier)
 
+	# DicePhaseHandlerを作成
+	var DicePhaseHandlerClass = preload("res://scripts/game_flow/dice_phase_handler.gd")
+	var dice_phase_handler = DicePhaseHandlerClass.new()
+	game_flow_manager.add_child(dice_phase_handler)
+	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_dice, ui_manager, board_system_3d, game_flow_manager)
+	game_flow_manager.dice_phase_handler = dice_phase_handler
+
+	# TollPaymentHandlerを作成
+	var toll_payment_handler = TollPaymentHandlerClass.new()
+	game_flow_manager.add_child(toll_payment_handler)
+	toll_payment_handler.setup(player_system, board_system_3d, game_flow_manager.spell_curse_toll, ui_manager)
+	game_flow_manager.toll_payment_handler = toll_payment_handler
+
+	# DiscardHandlerを作成
+	var DiscardHandlerClass = preload("res://scripts/game_flow/discard_handler.gd")
+	var discard_handler = DiscardHandlerClass.new()
+	game_flow_manager.add_child(discard_handler)
+	discard_handler.setup(player_system, card_system, spell_phase_handler, ui_manager, player_is_cpu)
+	game_flow_manager.discard_handler = discard_handler
+
 	# GameFlowManagerにハンドラーを設定
 	game_flow_manager.set_phase1a_handlers(
 		target_selection_helper,
@@ -750,9 +788,13 @@ func _initialize_cpu_movement_evaluator() -> void:
 	var cpu_ai_handler = null
 	if board_system_3d.cpu_turn_processor:
 		cpu_ai_handler = board_system_3d.cpu_turn_processor.cpu_ai_handler
-		# battle_status_overlayの直接参照を設定
+		# === 直接参照を設定（チェーンアクセス解消） ===
 		if game_flow_manager.battle_status_overlay:
 			board_system_3d.cpu_turn_processor.set_battle_status_overlay(game_flow_manager.battle_status_overlay)
+		if game_flow_manager.item_phase_handler:
+			board_system_3d.cpu_turn_processor.set_item_phase_handler(game_flow_manager.item_phase_handler)
+		if game_flow_manager.dominio_command_handler:
+			board_system_3d.cpu_turn_processor.set_dominio_command_handler(game_flow_manager.dominio_command_handler)
 	
 	# CPUMovementEvaluatorを作成（コンテキスト経由）
 	var cpu_movement_evaluator = CPUMovementEvaluator.new()
@@ -778,3 +820,15 @@ func apply_map_settings_to_lap_system(map_data: Dictionary) -> void:
 	if game_flow_manager and game_flow_manager.lap_system:
 		game_flow_manager.lap_system.apply_map_settings(map_data)
 		print("[GameSystemManager] lap_system マップ設定適用完了")
+
+## GameFlowManagerにステージデータを設定（quest_game.gd用）
+func set_stage_data(stage_data: Dictionary) -> void:
+	if game_flow_manager:
+		game_flow_manager.set_stage_data(stage_data)
+		print("[GameSystemManager] ステージデータ設定完了")
+
+## GameFlowManagerにリザルト画面を設定（quest_game.gd用）
+func set_result_screen(result_screen) -> void:
+	if game_flow_manager:
+		game_flow_manager.set_result_screen(result_screen)
+		print("[GameSystemManager] リザルト画面設定完了")

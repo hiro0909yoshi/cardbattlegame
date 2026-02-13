@@ -499,18 +499,60 @@ func was_item_used() -> bool:
 func is_cpu_player(player_id: int) -> bool:
 	if not game_flow_manager:
 		return false
-	
+
 	var cpu_settings = game_flow_manager.player_is_cpu
-	var debug_mode = game_flow_manager.debug_manual_control_all
-	
-	if debug_mode:
+
+	if DebugSettings.manual_control_all:
 		return false  # デバッグモードでは全員手動
-	
+
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## アクティブか
 func is_item_phase_active() -> bool:
 	return current_state != State.INACTIVE
+
+## カード選択を処理（GFMのルーティング用）
+## 戻り値: true=処理済み, false=処理不要
+func try_handle_card_selection(card_index: int) -> bool:
+	# アイテムフェーズがアクティブでない場合は処理しない
+	if not is_item_phase_active():
+		return false
+
+	# 手札を取得
+	if not card_system:
+		return true
+
+	var hand = card_system.get_all_cards_for_player(current_player_id)
+
+	if card_index >= hand.size():
+		return true
+
+	var card = hand[card_index]
+	var card_type = card.get("type", "")
+
+	# アイテムカードまたは援護対象クリーチャーが使用可能
+	if card_type == "item":
+		use_item(card)
+		return true
+	elif card_type == "creature":
+		# アイテムクリーチャー判定
+		var keywords = card.get("ability_parsed", {}).get("keywords", [])
+		if "アイテムクリーチャー" in keywords:
+			use_item(card)
+			return true
+		# 援護スキルがある場合のみクリーチャーを使用可能
+		elif has_assist_skill():
+			var assist_elements = get_assist_target_elements()
+			var card_element = card.get("element", "")
+			# 対象属性かチェック
+			if "all" in assist_elements or card_element in assist_elements:
+				use_item(card)
+				return true
+		return true
+	else:
+		return true
+
+	return false
 
 ## 相手クリーチャーデータを設定（防御側アイテムフェーズ用）
 func set_opponent_creature(creature_data: Dictionary):

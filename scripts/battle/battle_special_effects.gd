@@ -15,6 +15,8 @@ var battle_screen_manager = null
 
 # === 直接参照（GFM経由を廃止） ===
 var lap_system = null  # LapSystem: 周回管理
+var game_stats: Dictionary = {}  # GameStats: ゲーム統計
+var player_system = null  # PlayerSystem: プレイヤー管理
 
 func setup_systems(board_system, spell_draw = null, spell_magic = null, card_system = null, p_battle_screen_manager = null):
 	board_system_ref = board_system
@@ -26,6 +28,14 @@ func setup_systems(board_system, spell_draw = null, spell_magic = null, card_sys
 func set_lap_system(system) -> void:
 	lap_system = system
 	print("[BattleSpecialEffects] lap_system 直接参照を設定")
+
+func set_game_stats(stats: Dictionary) -> void:
+	game_stats = stats
+	print("[BattleSpecialEffects] game_stats 直接参照を設定")
+
+func set_player_system(p_system) -> void:
+	player_system = p_system
+	print("[BattleSpecialEffects] player_system 直接参照を設定")
 
 ## 無効化判定を行う
 func check_nullify(attacker: BattleParticipant, defender: BattleParticipant, context: Dictionary) -> Dictionary:
@@ -913,17 +923,7 @@ func check_on_survive_effects(survivor: BattleParticipant) -> Dictionary:
 
 ## ナチュラルワールドで死亡時効果が無効化されているか
 func _is_on_death_disabled() -> bool:
-	var game_stats = _get_game_stats()
 	return SpellWorldCurse.is_trigger_disabled("on_death", game_stats)
-
-
-## game_statsを取得
-func _get_game_stats() -> Dictionary:
-	if not board_system_ref:
-		return {}
-	if not board_system_ref.game_flow_manager:
-		return {}
-	return board_system_ref.game_flow_manager.game_stats
 
 
 ## クリーチャースキルのon_death効果を処理
@@ -1022,20 +1022,6 @@ func _get_lap_count(player_id: int) -> int:
 	return lap_system.get_lap_count(player_id)
 
 
-## PlayerSystemへの参照を取得
-func _get_player_system():
-	if not board_system_ref:
-		return null
-	if not board_system_ref.game_flow_manager:
-		return null
-	return board_system_ref.game_flow_manager.player_system
-
-
-## GameFlowManagerへの参照を取得
-func _get_game_flow_manager():
-	if not board_system_ref:
-		return null
-	return board_system_ref.game_flow_manager
 
 
 # =============================================================================

@@ -19,10 +19,20 @@ var battle_system: BattleSystem  # battle_system参照
 
 # === 直接参照（GFM経由を廃止） ===
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
+var item_phase_handler = null  # ItemPhaseHandler: アイテムフェーズ処理
+var dominio_command_handler = null  # DominioCommandHandler: ドミニオコマンド処理
 
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	print("[CPUTurnProcessor] battle_status_overlay 直接参照を設定")
+
+func set_item_phase_handler(handler) -> void:
+	item_phase_handler = handler
+	print("[CPUTurnProcessor] item_phase_handler 直接参照を設定")
+
+func set_dominio_command_handler(handler) -> void:
+	dominio_command_handler = handler
+	print("[CPUTurnProcessor] dominio_command_handler 直接参照を設定")
 
 # バトル保留用変数（CPU攻撃 → 人間防御のアイテムフェーズ用）
 var pending_cpu_battle_creature_index: int = -1
@@ -244,24 +254,23 @@ func _on_cpu_invasion_decided(creature_index: int, item_index: int = -1):
 ## 防御側アイテムフェーズ完了時のコールバック
 func _on_defender_item_phase_completed():
 	print("[CPUTurnProcessor] 防御側アイテムフェーズ完了、バトル開始")
-	
+
 	# 防御側のアイテムを保存
-	if board_system.game_flow_manager and board_system.game_flow_manager.item_phase_handler:
-		var item_handler = board_system.game_flow_manager.item_phase_handler
-		pending_cpu_defender_item = item_handler.get_selected_item()
-		
+	if item_phase_handler:
+		pending_cpu_defender_item = item_phase_handler.get_selected_item()
+
 		# 合体が発生した場合、tile_infoのcreatureを更新
-		if item_handler.was_merged():
-			var merged_data = item_handler.get_merged_creature()
+		if item_phase_handler.was_merged():
+			var merged_data = item_phase_handler.get_merged_creature()
 			pending_cpu_battle_tile_info["creature"] = merged_data
 			print("[CPUTurnProcessor] 防御側合体発生: %s" % merged_data.get("name", "?"))
-			
+
 			# タイルのクリーチャーデータも永続更新
 			var tile_index = pending_cpu_battle_tile_info.get("index", -1)
 			if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
 				var tile = board_system.tile_nodes[tile_index]
 				tile.creature_data = merged_data
-	
+
 	await _execute_cpu_pending_battle()
 
 ## 保留中のCPUバトルを実行
@@ -433,16 +442,10 @@ func _can_afford_spell(spell_card: Dictionary, player_id: int) -> bool:
 # ドミニオコマンド実行
 # ============================================================
 
-## DominioCommandHandlerを取得
-func _get_dominio_command_handler():
-	if board_system and board_system.game_flow_manager:
-		return board_system.game_flow_manager.dominio_command_handler
-	return null
-
 ## ドミニオコマンドを実行（DominioCommandHandler経由）
 func _execute_territory_command(_current_player, command: Dictionary):
 	var command_type = command.get("type", "")
-	
+
 	# 通常の侵略は別処理
 	if command_type == "invasion":
 		var tile_index = command.get("tile_index", -1)
@@ -450,16 +453,15 @@ func _execute_territory_command(_current_player, command: Dictionary):
 		cpu_ai_handler.battle_decided.connect(_on_cpu_battle_decided, CONNECT_ONE_SHOT)
 		cpu_ai_handler.decide_battle(_current_player, tile_info)
 		return
-	
-	# DominioCommandHandlerを取得
-	var land_handler = _get_dominio_command_handler()
-	if land_handler == null:
+
+	# DominioCommandHandlerを使用
+	if dominio_command_handler == null:
 		print("[CPU] DominioCommandHandler取得失敗")
 		_complete_action()
 		return
-	
+
 	# Handler経由で実行
-	var success = land_handler.execute_for_cpu(command)
+	var success = dominio_command_handler.execute_for_cpu(command)
 	
 	if success:
 		print("[CPU] ドミニオコマンド実行成功: %s" % command_type)

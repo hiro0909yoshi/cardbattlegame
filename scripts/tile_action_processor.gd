@@ -116,28 +116,28 @@ func set_battle_status_overlay(overlay) -> void:
 # === タイル到着処理 ===
 
 # タイル到着時のメイン処理
-func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array, debug_manual_control_all: bool = false):
+func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array):
 	print("[TileActionProcessor] process_tile_landing: tile=%d, is_action_processing=%s" % [tile_index, is_action_processing])
 	if is_action_processing:
 		print("Warning: Already processing tile action")
 		return
-	
+
 	if not board_system.tile_nodes.has(tile_index):
 		emit_signal("action_completed")
 		return
-	
+
 	is_action_processing = true
-	
+
 	var tile = board_system.tile_nodes[tile_index]
 	var tile_info = board_system.get_tile_info(tile_index)
-	
+
 	# 特殊マス処理
 	if _is_special_tile(tile.tile_type):
 		if special_tile_system:
 			await special_tile_system.process_special_tile_3d(tile.tile_type, tile_index, current_player_index)
-	
+
 	# CPUかプレイヤーかで分岐
-	var is_cpu_turn = player_is_cpu[current_player_index] and not debug_manual_control_all
+	var is_cpu_turn = player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
 	if is_cpu_turn:
 		_process_cpu_tile(tile, tile_info, current_player_index)
 	else:

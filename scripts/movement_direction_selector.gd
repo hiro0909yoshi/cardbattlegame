@@ -12,10 +12,16 @@ signal direction_selected(direction: int)
 
 # 参照
 var controller: MovementController3D = null
+var ui_manager = null
 
 
 func _init(p_controller: MovementController3D) -> void:
 	controller = p_controller
+
+
+# UIManager参照を設定
+func set_ui_manager(p_ui_manager) -> void:
+	ui_manager = p_ui_manager
 
 
 # 方向選択UIを表示して結果を返す
@@ -52,11 +58,10 @@ func show_simple_direction_selection() -> int:
 
 # 方向選択UIを更新
 func _update_ui():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
+	if ui_manager:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
-		if gfm.ui_manager.phase_display:
-			gfm.ui_manager.show_action_prompt("移動方向を選択: %s" % dir_text)
+		if ui_manager.phase_display:
+			ui_manager.show_action_prompt("移動方向を選択: %s" % dir_text)
 	# カメラを選択方向に少しずらす
 	var player_id = controller.current_moving_player
 	if player_id >= 0:
@@ -67,6 +72,7 @@ func _update_ui():
 			var np = controller.tile_nodes[nt].global_position
 			var dv = (np - cp).normalized()
 			var offset_pos = cp + dv * cp.distance_to(np) * 5.0
+			var gfm = controller.game_flow_manager
 			if gfm and gfm.board_system_3d:
 				gfm.board_system_3d.focus_camera_slow(offset_pos, 0.5)
 
@@ -83,9 +89,8 @@ func _update_ui():
 
 # ナビゲーションボタンを設定
 func setup_navigation():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
-		gfm.ui_manager.enable_navigation(
+	if ui_manager:
+		ui_manager.enable_navigation(
 			func(): _confirm_selection(),  # 決定
 			Callable(),  # 戻るなし
 			func(): _cycle_selection(),    # 上
@@ -103,9 +108,8 @@ func restore_navigation():
 
 # ナビゲーションボタンをクリア
 func _clear_navigation():
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager:
-		gfm.ui_manager.disable_navigation()
+	if ui_manager:
+		ui_manager.disable_navigation()
 
 
 # 方向選択を切り替え（上下どちらでも同じ動作）

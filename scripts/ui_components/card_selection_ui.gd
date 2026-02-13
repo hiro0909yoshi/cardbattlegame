@@ -73,7 +73,7 @@ func show_selection(current_player, mode: String = "summon"):
 	update_phase_label(current_player, mode)
 	
 	# デバッグモード（全員手動）またはプレイヤー1の場合、カード選択・パスボタン有効
-	var allow_manual = (current_player.id == 0) or (game_flow_manager_ref and game_flow_manager_ref.debug_manual_control_all)
+	var allow_manual = (current_player.id == 0) or DebugSettings.manual_control_all
 	
 	# カード選択状態の更新（グレーアウト含む）- CPU/プレイヤー共通
 	enable_card_selection(hand_data, current_player.magic_power, current_player.id)

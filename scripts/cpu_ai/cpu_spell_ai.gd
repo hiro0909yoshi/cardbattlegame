@@ -74,6 +74,13 @@ func initialize(context) -> void:
 func set_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
 	cpu_movement_evaluator = evaluator
 
+## game_statsを設定（GFM経由を廃止） - 内部コンポーネントにも伝播
+func set_game_stats(p_game_stats) -> void:
+	if target_selector:
+		target_selector.set_game_stats(p_game_stats)
+	if condition_checker:
+		condition_checker.set_game_stats(p_game_stats)
+
 ## スペル使用判断のメインエントリ
 ## 戻り値: {use: bool, spell: Dictionary, target: Dictionary, sacrifice_card: Dictionary, should_synthesize: bool}
 func decide_spell(player_id: int) -> Dictionary:

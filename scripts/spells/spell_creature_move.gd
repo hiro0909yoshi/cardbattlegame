@@ -11,6 +11,10 @@ var game_flow_manager_ref: Object
 # === 直接参照（GFM経由を廃止） ===
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 
+func set_game_flow_manager(gfm: Object) -> void:
+	game_flow_manager_ref = gfm
+	print("[SpellCreatureMove] game_flow_manager_ref 直接参照を設定")
+
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	print("[SpellCreatureMove] battle_status_overlay 直接参照を設定")
@@ -34,9 +38,7 @@ func _init(board_sys: Object, player_sys: Object, spell_phase_handler: Object = 
 	board_system_ref = board_sys
 	player_system_ref = player_sys
 	spell_phase_handler_ref = spell_phase_handler
-	# game_flow_managerはspell_phase_handler経由で取得
-	if spell_phase_handler and spell_phase_handler.game_flow_manager:
-		game_flow_manager_ref = spell_phase_handler.game_flow_manager
+	# game_flow_manager_ref は spell_phase_handler.initialize() 内で set_game_flow_manager() で設定される
 
 
 # ============ メイン効果適用 ============

@@ -17,6 +17,7 @@ var game_flow_manager: GameFlowManager
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_phase_handler = null  # SpellPhaseHandler: is_magic_tile_mode参照用
+var game_stats  # GameFlowManager.game_stats への直接参照
 
 # 初期化
 func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, flow: GameFlowManager):
@@ -30,6 +31,10 @@ func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 ## 直接参照を設定（GFM経由を廃止）
 func set_spell_phase_handler(handler) -> void:
 	spell_phase_handler = handler
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 
 # ========================================
 # 統合エントリポイント
@@ -378,12 +383,12 @@ func remove_curse_from_player(player_id: int):
 # 世界呪を付与
 func curse_world(curse_type: String, duration: int = 6, params: Dictionary = {}):
 	# 既存の世界呪があれば上書き通知
-	if game_flow_manager.game_stats.has("world_curse"):
-		var old_curse = game_flow_manager.game_stats["world_curse"]
+	if game_stats.has("world_curse"):
+		var old_curse = game_stats["world_curse"]
 		print("[呪い上書き] ", old_curse.get("name", "不明"), " → ", params.get("name", "不明"))
 	
 	# 新しい世界呪を付与（上書き）
-	game_flow_manager.game_stats["world_curse"] = {
+	game_stats["world_curse"] = {
 		"curse_type": curse_type,
 		"name": params.get("name", ""),
 		"duration": duration,
@@ -395,13 +400,13 @@ func curse_world(curse_type: String, duration: int = 6, params: Dictionary = {})
 
 # 世界呪を取得
 func get_world_curse() -> Dictionary:
-	return game_flow_manager.game_stats.get("world_curse", {})
+	return game_stats.get("world_curse", {})
 
 # 世界呪を削除
 func remove_world_curse():
-	if game_flow_manager.game_stats.has("world_curse"):
-		var curse_name = game_flow_manager.game_stats["world_curse"].get("name", "不明")
-		game_flow_manager.game_stats.erase("world_curse")
+	if game_stats.has("world_curse"):
+		var curse_name = game_stats["world_curse"].get("name", "不明")
+		game_stats.erase("world_curse")
 		print("[呪い消滅] ", curse_name, " (削除)")
 
 # ========================================
@@ -505,8 +510,8 @@ func _update_player_curses():
 
 # 世界呪のduration更新
 func _update_world_curse():
-	if game_flow_manager.game_stats.has("world_curse"):
-		var curse = game_flow_manager.game_stats["world_curse"]
+	if game_stats.has("world_curse"):
+		var curse = game_stats["world_curse"]
 		var duration = curse.get("duration", -1)
 		
 		# duration > 0 の場合のみカウントダウン
@@ -516,7 +521,7 @@ func _update_world_curse():
 			# duration が 0 になったら削除
 			if curse["duration"] == 0:
 				var curse_name = curse.get("name", "不明")
-				game_flow_manager.game_stats.erase("world_curse")
+				game_stats.erase("world_curse")
 				print("[呪い消滅] ", curse_name, " (duration=0)")
 
 # 歩行逆転呪い解除時の処理

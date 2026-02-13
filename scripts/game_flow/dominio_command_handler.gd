@@ -73,6 +73,7 @@ var land_info_panel = null
 var ui_manager = null
 var board_system = null
 var game_flow_manager = null
+var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var player_system = null
 var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 var battle_system = null       # board_system.battle_system参照
@@ -122,6 +123,10 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	
 	# 土地情報パネルを初期化
 	_setup_land_info_panel()
+
+## game_3d参照を設定（TutorialManager取得用）
+func set_game_3d_ref(p_game_3d) -> void:
+	game_3d_ref = p_game_3d
 
 ## 直接参照を設定（GFM経由を廃止）
 func set_spell_systems_direct(world_curse, land, curse) -> void:
@@ -661,6 +666,16 @@ func on_card_selected_for_swap(card_index: int):
 			card_index,
 			old_creature
 		)
+
+## カード選択を処理（GFMのルーティング用）
+## 戻り値: true=処理済み, false=処理不要
+func try_handle_card_selection(card_index: int) -> bool:
+	# 交換モードチェック
+	if swap_mode:
+		on_card_selected_for_swap(card_index)
+		return true
+
+	return false
 
 ## 隣接タイルを取得
 func get_adjacent_tiles(tile_index: int) -> Array:

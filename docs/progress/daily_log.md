@@ -14,7 +14,7 @@
 
 ## 2026年2月13日
 
-### 完了タスク
+### セッション1: GFM内部チェーン解消（完了）
 - ✅ チェーンアクセス解消（規約9準拠）- 大規模対応完了
   - **battle_status_overlay 直接参照**: 5ファイル（TileBattleExecutor, DominioCommandHandler, CPUTurnProcessor, SpellPhaseHandler, SpellCreatureMove）
   - **lap_system 直接参照**: 15+ファイル（SpellPlayerMove, BattleSpecialEffects, SkillLegacy, BattleSystem, SpellMagic, PlayerStatusDialog, SkillStatModifiers, BattleSkillProcessor, DebugPanel, TutorialManager等）
@@ -24,13 +24,75 @@
 - ✅ `docs/implementation/delegation_method_catalog.md` 更新（全直接参照パターンを網羅）
 - ✅ シグナルカタログ作成: `docs/implementation/signal_catalog.md`（192シグナル/24カテゴリ）
 
-### 残チェーンアクセス（許容パターン）
-- シグナル接続時の一時的なチェーン（接続後は使用しない）
-- Dictionary/Array要素アクセス
-- 初期化コード内のチェーン（参照取得目的）
+### セッション2: 残存チェーンアクセス解消 + GFM巨大メソッド分離（完了）
+
+**詳細ドキュメント**:
+- 作業詳細: `docs/progress/signal_cleanup_work.md` セッション10
+- 委譲メソッド詳細: `docs/implementation/delegation_method_catalog.md`
+- 全体設計: `docs/design/refactoring/game_system_manager_design.md`
+
+**フェーズ1: 残存チェーンアクセス解消（32箇所）**
+- ✅ 4段チェーン解消（3箇所）
+  - dominio_order_ui.gd (2箇所): gfm.spell_phase_handler.spell_cast_notification_ui → dominio_commandhandlerのinitialize時注入で解消
+  - movement_destination_predictor.gd (1箇所): ui_manager.card_selection_ui → card_selection_uiの直接参照注入
+- ✅ 3段チェーン spell系解消（8箇所）
+  - spell_mystic_arts.gd (7箇所): gfm.spell_curse_stat → setterメソッドで直接参照化
+  - spell_creature_move.gd (1箇所): gfm.spell_curse_stat → setterメソッドで直接参照化
+- ✅ 3段チェーン movement系解消（7箇所）
+  - movement_branch_selector.gd (4箇所): gfm.spell_* → setterメソッドで直接参照化
+  - movement_direction_selector.gd (3箇所): ui_manager系 → setterメソッドで直接参照化
+- ✅ get_parent()逆走解消（5箇所）
+  - movement_controller.gd (2箇所): get_parent()→board_system_3d参照をsetterで注入
+  - land_selection_helper.gd (1箇所): get_parent()→board_system_3d参照をsetterで注入
+  - spell_phase_handler.gd (1箇所): get_parent()→game_flow_manager参照をgetterで廃止
+  - lap_system.gd (1箇所): get_parent()→game_flow_manager参照をgetterで廃止
+- ✅ その他チェーン解消（12箇所）
+  - land_action_helper.gd (4箇所): gfm系3段チェーン → 参照注入
+  - battle_special_effects.gd (3箇所): game_stats系 → player_systemを直接参照に変更
+  - cpu_turn_processor.gd (3箇所): game_stats系 → player_systemを直接参照に変更
+  - quest_game.gd (2箇所): gfm逆参照 → game_system_managerを直接参照に変更
+- **修正ファイル総数**: 23ファイル
+
+**フェーズ2: GFM巨大メソッド分離（258行削減）**
+- ✅ DicePhaseHandler 新規作成
+  - roll_dice メソッド: 82行→3行に圧縮（ダイス判定・複数ダイス・呪い範囲処理を分岐）
+- ✅ TollPaymentHandler 新規作成
+  - 通行料支払い処理: 58行削除（計算・支払い・呪い反映を統合）
+- ✅ DiscardHandler 新規作成
+  - 手札調整処理: 44行削除（超過時廃棄処理を統合）
+- ✅ toggle_all_branch_tiles委譲
+  - 17行削除（tile_data_managerの責務に適切化）
+- ✅ on_card_selected()リファクタリング
+  - 78行→18行に圧縮（スペル/アイテム/クリーチャー選択後処理を3つのハンドラに分岐）
+- **GameFlowManager行数削減**: 982行→約724行（258行削減、約26%削減）
+
+### セッション3: フェーズ3構造的改善（3-A, 3-B完了）
+
+**詳細ドキュメント**:
+- 作業詳細: `docs/progress/signal_cleanup_work.md` セッション11
+- 委譲メソッド・オートロード: `docs/implementation/delegation_method_catalog.md`
+
+**フェーズ3-A: game_stats分離（10ファイル、28箇所）**
+- ✅ game_statsチェーンアクセス解消完了
+  - spell系: spell_curse.gd, spell_purify.gd, spell_world_curse.gd, spell_protection.gd (4ファイル)
+  - CPU AI系: cpu_mystic_arts_ai.gd, cpu_spell_target_selector.gd, cpu_target_resolver.gd (3ファイル)
+  - その他: spell_phase_handler.gd, summon_condition_checker.gd, tile_data_manager.gd (3ファイル)
+- ✅ 各ファイルに `var game_stats` + `set_game_stats()` 追加（直接参照パターン）
+- ✅ GameSystemManagerで5箇所の注入ポイント実装
+- ✅ 後方互換性のためフォールバック機構実装
+
+**フェーズ3-B: debug_manual_control_all集約（14ファイル）**
+- ✅ DebugSettingsオートロード作成: `scripts/autoload/debug_settings.gd`
+- ✅ project.godotに登録完了
+- ✅ 6個のローカル変数定義を削除
+- ✅ 11箇所の参照を `DebugSettings.manual_control_all` に統一
+- ✅ 関数パラメータチェーン3箇所廃止
+- **修正ファイル**: game_flow_manager.gd, board_system_3d.gd, tile_action_processor.gd, discard_handler.gd, game_3d.gd, quest_game.gd, game_system_manager.gd, movement_controller.gd, special_tile_system.gd, tile_summon_executor.gd, card_selection_ui.gd, tile_battle_executor.gd, item_phase_handler.gd, spell_phase_handler.gd
 
 ### 次のステップ
-- D-P3（handlerチェーン~119箇所）の継続検討
+- **後回し**: 3-C UI座標ハードコード（28+箇所、大工事）
+- **検討中**: 3-D SpellSystemContainer（389箇所参照で大規模）
+- **フェーズ3主要作業完了**: 3-A, 3-B完了により、GFMの神オブジェクト化解消プロジェクトの主要部分が完了
 
 ---
 

@@ -13,6 +13,9 @@ var player_system: PlayerSystem
 var game_flow_manager: GameFlowManager
 var creature_manager: CreatureManager
 
+# === 直接参照（GFM経由を廃止） ===
+var game_stats  # GameFlowManager.game_stats への直接参照
+
 # 初期化
 func _init(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, flow: GameFlowManager):
 	board_system = board
@@ -20,6 +23,10 @@ func _init(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 	player_system = player
 	game_flow_manager = flow
 	print("[SpellPurify] 初期化完了")
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 
 # ========================================
 # 2073: ピュアリファイ
@@ -98,14 +105,14 @@ func _remove_all_player_curses() -> Array:
 
 ## 世界呪いを除去し、呪いタイプを返す（空文字列なら呪いなし）
 func _remove_world_curse_internal() -> String:
-	if not game_flow_manager.game_stats.has("world_curse"):
+	if not game_stats.has("world_curse"):
 		return ""
 	
-	var curse = game_flow_manager.game_stats["world_curse"]
+	var curse = game_stats["world_curse"]
 	var curse_type = curse.get("curse_type", "unknown")
 	var curse_name = curse.get("name", "不明")
 	
-	game_flow_manager.game_stats.erase("world_curse")
+	game_stats.erase("world_curse")
 	print("[呪い除去] 世界呪い「%s」を消した" % curse_name)
 	
 	return curse_type
@@ -139,12 +146,12 @@ func remove_creature_curse(tile_index: int) -> bool:
 ## 世界呪いを除去
 ## @return bool: 呪いを除去できたかどうか
 func remove_world_curse() -> bool:
-	if not game_flow_manager.game_stats.has("world_curse"):
+	if not game_stats.has("world_curse"):
 		print("[SpellPurify] 世界呪いがありません")
 		return false
 	
-	var curse_name = game_flow_manager.game_stats["world_curse"].get("name", "不明")
-	game_flow_manager.game_stats.erase("world_curse")
+	var curse_name = game_stats["world_curse"].get("name", "不明")
+	game_stats.erase("world_curse")
 	print("[アルカナアーツ:世界呪い除去] 世界呪い「%s」を消した" % curse_name)
 	return true
 

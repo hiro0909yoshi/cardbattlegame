@@ -13,6 +13,9 @@ var player_system: Node = null
 var card_system: Node = null
 var game_flow_manager: Node = null
 
+# === 直接参照（GFM経由を廃止） ===
+var game_stats  # GameFlowManager.game_stats への直接参照
+
 ## 初期化
 func initialize(analyzer: CPUBoardAnalyzer, b_system: Node, p_system: Node, c_system: Node, gf_manager: Node = null) -> void:
 	board_analyzer = analyzer
@@ -20,6 +23,10 @@ func initialize(analyzer: CPUBoardAnalyzer, b_system: Node, p_system: Node, c_sy
 	player_system = p_system
 	card_system = c_system
 	game_flow_manager = gf_manager
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 
 # =============================================================================
 # メインターゲット条件チェック
@@ -38,7 +45,11 @@ func check_target_condition(target_condition: String, context: Dictionary) -> Ar
 func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 	var filtered = []
 	var world_curse = {}
-	if game_flow_manager and "game_stats" in game_flow_manager:
+	# 直接参照を優先
+	if game_stats and game_stats is Dictionary:
+		world_curse = game_stats.get("world_curse", {})
+	# フォールバック
+	elif game_flow_manager and "game_stats" in game_flow_manager:
 		world_curse = game_flow_manager.game_stats.get("world_curse", {})
 	var protection_context = {"world_curse": world_curse}
 	

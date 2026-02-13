@@ -60,10 +60,9 @@ func _process_warp_landing(player_id: int) -> void:
 	# 着地先のタイルアクションを実行
 	if b_system.tile_action_processor:
 		await b_system.tile_action_processor.process_tile_landing(
-			current_tile, 
-			player_id, 
-			b_system.player_is_cpu, 
-			b_system.debug_manual_control_all
+			current_tile,
+			player_id,
+			b_system.player_is_cpu
 		)
 
 ## 特殊タイル停止後の共通UI状態を設定

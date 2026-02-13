@@ -9,10 +9,16 @@ var _highlighted_destination_tiles: Array = []
 
 # 参照
 var controller: MovementController3D = null
+var card_selection_ui: CardSelectionUI = null
 
 
 func _init(p_controller: MovementController3D) -> void:
 	controller = p_controller
+
+
+## CardSelectionUIを設定
+func set_card_selection_ui(ui: CardSelectionUI) -> void:
+	card_selection_ui = ui
 
 
 ## 全ての到着可能地点を取得（分岐を全探索）
@@ -136,9 +142,8 @@ func clear_destination_highlight():
 
 ## 到着予想タイルに基づいて手札の配置制限表示を更新
 func update_hand_restriction_for_destinations(destination_tiles: Array):
-	var gfm = controller.game_flow_manager
-	if gfm and gfm.ui_manager and gfm.ui_manager.card_selection_ui:
-		gfm.ui_manager.card_selection_ui.update_restriction_for_destinations(destination_tiles)
+	if card_selection_ui:
+		card_selection_ui.update_restriction_for_destinations(destination_tiles)
 
 
 ## ワープ先タイルを取得（到着予測用）

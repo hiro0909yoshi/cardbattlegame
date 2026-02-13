@@ -5,20 +5,20 @@ class_name LandActionHelper
 static func execute_level_up_with_level(handler, target_level: int, cost: int) -> bool:
 	if not handler.board_system or handler.selected_tile_index == -1:
 		return false
-	
+
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
 		return false
-	
+
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
-	
+
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
 		print("[LandActionHelper] レベルアップ失敗: タイル%d はダウン中" % handler.selected_tile_index)
 		return false
-	
-	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+
+	var p_system = handler.player_system
 	var current_player = p_system.get_current_player() if p_system else null
-	
+
 	if not current_player:
 		return false
 	
@@ -104,7 +104,7 @@ static func execute_level_up(handler) -> bool:
 	
 	#　 Phase 1-A: レベル選択UIを表示
 	if handler.ui_manager and handler.ui_manager.has_method("show_level_selection"):
-		var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+		var p_system = handler.player_system
 		var current_player = p_system.get_current_player() if p_system else null
 		var player_magic = current_player.magic_power if current_player else 0
 		
@@ -640,12 +640,12 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		return false
 	
 	# EPチェック
-	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+	var p_system = handler.player_system
 	var current_player = p_system.get_current_player() if p_system else null
-	
+
 	if not current_player:
 		return false
-	
+
 	if current_player.magic_power < cost:
 		if handler.ui_manager and handler.ui_manager.phase_display:
 			handler.ui_manager.show_toast("EPが足りません (必要: %dEP)" % cost)
@@ -737,7 +737,7 @@ static func execute_terrain_change(handler) -> bool:
 	
 	# 地形選択パネルを表示
 	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
-	var p_system = handler.game_flow_manager.player_system if handler.game_flow_manager else null
+	var p_system = handler.player_system
 	var current_player = p_system.get_current_player() if p_system else null
 	var player_magic = current_player.magic_power if current_player else 0
 	

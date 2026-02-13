@@ -14,6 +14,7 @@ var game_flow_manager: GameFlowManager
 # === 直接参照（GFM経由を廃止） ===
 var spell_cast_notification_ui = null  # SpellCastNotificationUI: 通知表示
 var ui_manager = null  # UIManager: UI管理
+var game_stats  # GameFlowManager.game_stats への直接参照
 
 # ========================================
 # 初期化
@@ -32,6 +33,10 @@ func setup(curse: SpellCurse, gfm: GameFlowManager):
 ## 直接参照を設定（GFM経由を廃止）
 func set_notification_ui(ui) -> void:
 	spell_cast_notification_ui = ui
+
+## game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats) -> void:
+	game_stats = p_game_stats
 
 # ========================================
 # ポップアップ通知
@@ -52,7 +57,7 @@ func show_blocked_notification(message: String) -> void:
 func _get_game_stats() -> Dictionary:
 	if not game_flow_manager:
 		return {}
-	return game_flow_manager.game_stats
+	return game_stats
 
 ## ソリッドワールド: 土地変性がブロックされるか（ポップアップ付き）
 func check_land_change_blocked(show_popup: bool = true) -> bool:
@@ -249,7 +254,7 @@ func on_round_start():
 	if not game_flow_manager:
 		return
 	
-	var world_curse = game_flow_manager.game_stats.get("world_curse", {})
+	var world_curse = game_stats.get("world_curse", {})
 	if world_curse.is_empty():
 		return
 	
@@ -261,7 +266,7 @@ func on_round_start():
 		
 		if world_curse["duration"] == 0:
 			var expired_name = world_curse.get("name", "不明")
-			game_flow_manager.game_stats.erase("world_curse")
+			game_stats.erase("world_curse")
 			print("[世界呪い消滅] %s" % expired_name)
 		
 		# UIを更新

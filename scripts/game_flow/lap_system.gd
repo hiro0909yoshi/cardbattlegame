@@ -22,6 +22,7 @@ var player_system = null
 var board_system_3d = null
 var ui_manager = null
 var game_flow_manager = null  # ゲーム終了判定用
+var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 
 ## マップ設定（動的に変更可能）
 var base_bonus: int = 120  # 周回ボーナス（デフォルト: standard）
@@ -35,18 +36,23 @@ var signal_display_label: Label = null
 var is_showing_notification: bool = false
 
 ## 初期化
-func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null):
+func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null, p_game_3d_ref = null):
 	player_system = p_system
 	board_system_3d = b_system
 	ui_manager = p_ui_manager
 	game_flow_manager = p_game_flow_manager
+	game_3d_ref = p_game_3d_ref
 	setup_ui()
+
+## game_3d参照を設定（チュートリアルモード判定用）
+func set_game_3d_ref(p_game_3d) -> void:
+	game_3d_ref = p_game_3d
 
 ## UIのセットアップ
 func setup_ui():
 	if not ui_manager:
 		return
-	
+
 	# 既に作成済みならスキップ
 	if signal_display_label != null:
 		return
@@ -276,11 +282,10 @@ func _get_player_creature_count(player_id: int) -> int:
 
 ## チュートリアルモード判定
 func _is_tutorial_mode() -> bool:
-	if not game_flow_manager:
+	if not game_3d_ref:
 		return false
-	var game_3d = game_flow_manager.get_parent()
-	if game_3d and "is_tutorial_mode" in game_3d:
-		return game_3d.is_tutorial_mode
+	if "is_tutorial_mode" in game_3d_ref:
+		return game_3d_ref.is_tutorial_mode
 	return false
 
 

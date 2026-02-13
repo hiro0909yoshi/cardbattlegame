@@ -14,6 +14,9 @@ var tile_info_display: TileInfoDisplay = null
 var game_flow_manager = null  # 世界呪い判定用
 var spell_curse_toll = null  # タイル呪い通行料補正用
 
+# === 直接参照（GFM経由を廃止） ===
+var game_stats  # GameFlowManager.game_stats への直接参照
+
 func _ready():
 	pass
 
@@ -28,6 +31,10 @@ func set_display_system(display: TileInfoDisplay):
 # GameFlowManager参照を設定（世界呪い判定用）
 func set_game_flow_manager(gfm):
 	game_flow_manager = gfm
+
+# game_statsを設定（GFM経由を廃止）
+func set_game_stats(p_game_stats):
+	game_stats = p_game_stats
 
 # === タイル情報取得 ===
 

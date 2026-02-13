@@ -445,8 +445,7 @@ func _is_cpu_player(player_id: int) -> bool:
 	if not game_flow_manager:
 		return false
 	var cpu_settings = game_flow_manager.player_is_cpu
-	var debug_mode = game_flow_manager.debug_manual_control_all
-	if debug_mode:
+	if DebugSettings.manual_control_all:
 		return false
 	return player_id < cpu_settings.size() and cpu_settings[player_id]
 

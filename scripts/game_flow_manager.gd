@@ -49,9 +49,6 @@ var current_phase = GamePhase.SETUP
 var board_system_3d = null
 var player_is_cpu = []
 
-# デバッグ用: 全プレイヤーを手動操作にする（trueで有効）
-@export var debug_manual_control_all: bool = false
-
 # チュートリアルモード（CPUは常にバトルを仕掛ける）
 var is_tutorial_mode: bool = false
 
@@ -85,6 +82,15 @@ var spell_player_move
 # 破産処理ハンドラー
 var bankruptcy_handler = null
 
+# 通行料支払いハンドラー
+var toll_payment_handler = null
+
+# ダイスフェーズハンドラー
+var dice_phase_handler = null
+
+# 手札調整ハンドラー
+var discard_handler = null
+
 # ターン終了制御用フラグ（BUG-000対策）
 var is_ending_turn = false
 
@@ -117,21 +123,27 @@ func _on_lap_completed(player_id: int):
 func setup_3d_mode(board_3d, cpu_settings: Array):
 	board_system_3d = board_3d
 	player_is_cpu = cpu_settings
-	
+
 	# 3Dボードのシグナル接続
 	if board_system_3d:
 		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
-		# デバッグフラグを転送
-		board_system_3d.debug_manual_control_all = debug_manual_control_all
-		
+
 		# MovementControllerにgame_flow_managerを設定
 		board_system_3d.set_movement_controller_gfm(self)
-		
+
+		# MovementControllerにCardSelectionUIを設定（destination_predictor向け）
+		if ui_manager and ui_manager.card_selection_ui:
+			board_system_3d.set_movement_controller_card_selection_ui(ui_manager.card_selection_ui)
+
+		# MovementControllerにUIManagerを設定（セレクター向け）
+		if ui_manager:
+			board_system_3d.set_movement_controller_ui_manager(ui_manager)
+
 		# LapSystemにboard_system_3dを設定し、チェックポイントシグナルを接続
 		if lap_system:
 			lap_system.board_system_3d = board_system_3d
 			lap_system.connect_checkpoint_signals()
-	
+
 	# 周回状態を初期化
 	if lap_system:
 		lap_system.initialize_lap_state(cpu_settings.size())
@@ -262,7 +274,7 @@ func start_turn():
 		return
 	
 	# CPUターンの場合（デバッグモードでは無効化可能）
-	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
+	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not DebugSettings.manual_control_all
 	if is_cpu_turn:
 		ui_manager.set_phase_text("CPUのターン...")
 		current_phase = GamePhase.DICE_ROLL
@@ -287,94 +299,10 @@ func _setup_dice_phase_navigation():
 			Callable()            # 戻るなし
 		)
 
-## ダイスフェーズのナビゲーションをクリア
-func _clear_dice_phase_navigation():
-	if ui_manager:
-		ui_manager.disable_navigation()
-
 # サイコロを振る
 func roll_dice():
-	# スペルフェーズ中の場合は、スペルを使わずにダイスロールに進む
-	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-		spell_phase_handler.pass_spell(false)  # auto_roll=false（ここで既にroll_dice中なので）
-		# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
-	
-	if current_phase != GamePhase.DICE_ROLL:
-		return
-	
-	# ナビゲーションをクリア（連打防止）
-	_clear_dice_phase_navigation()
-	
-	# カメラをプレイヤー位置に戻す（即座に移動、向きも正しく設定）
-	# カメラをプレイヤー位置に戻す（即座に移動）
-	board_system_3d.focus_camera_on_player_pos(player_system.current_player_index, false)
-	
-	change_phase(GamePhase.MOVING)
-	
-	# フライ効果（3個ダイス）の判定
-	var needs_third = spell_dice and spell_dice.needs_third_dice(player_system.current_player_index)
-	
-	var dice1: int
-	var dice2: int
-	var dice3: int = 0
-	var total_dice: int
-	
-	if needs_third:
-		# 3個ダイスを振る（フライ効果）
-		var dice_result = player_system.roll_dice_triple()
-		dice1 = dice_result.dice1
-		dice2 = dice_result.dice2
-		dice3 = dice_result.dice3
-		total_dice = dice_result.total
-		print("[ダイス/フライ] %d + %d + %d = %d" % [dice1, dice2, dice3, total_dice])
-	else:
-		# 2個ダイスを振る（通常）
-		var dice_result = player_system.roll_dice_double()
-		dice1 = dice_result.dice1
-		dice2 = dice_result.dice2
-		total_dice = dice_result.total
-	
-	# 呪いによるダイス変更を適用（dice_multi以外）
-	if spell_dice and not needs_third:
-		total_dice = spell_dice.get_modified_dice_value(player_system.current_player_index, total_dice)
-	
-	# バフによるダイス変更を適用
-	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
-	
-	# ダイス結果を大きく表示（1.5秒）
-	if ui_manager:
-		ui_manager.show_big_dice_result(modified_dice, 1.5)
-
-	# ダイス結果を詳細表示（上部）
-	if ui_manager:
-		# ダイス範囲呪いがある場合は特殊表示
-		if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
-			var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
-			ui_manager.show_dice_result_range(range_info.get("name", ""), modified_dice)
-			print("[ダイス/%s] %d（範囲: %d〜%d）" % [range_info.get("name", ""), modified_dice, range_info.get("min", 1), range_info.get("max", 6)])
-		elif needs_third:
-			ui_manager.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
-			print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
-		else:
-			ui_manager.show_dice_result_double(dice1, dice2, modified_dice)
-			print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
-	
-	# ダイスロール後のEP付与（チャージステップなど）
-	if spell_dice:
-		await spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
-	
-	# 表示待ち
-	await get_tree().create_timer(1.0).timeout
-	
-	print("[GameFlowManager] roll_dice: await完了、移動開始 (phase=%s)" % current_phase)
-	
-	var current_player = player_system.get_current_player()
-	
-	# 3D移動
-	if board_system_3d:
-		ui_manager.set_phase_text("移動中...")
-		print("[GameFlowManager] roll_dice: move_player_3d呼び出し (player=%d, dice=%d)" % [current_player.id, modified_dice])
-		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
+	if dice_phase_handler:
+		await dice_phase_handler.roll_dice(current_phase, spell_phase_handler)
 
 # === 3Dモード用イベント ===
 
@@ -395,82 +323,22 @@ func _on_tile_action_completed_3d():
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):
+	# 優先順位順にハンドラーに処理を委譲
 
-	# カード選択ハンドラーが選択中の場合
-	if spell_phase_handler and spell_phase_handler.card_selection_handler:
-		var handler = spell_phase_handler.card_selection_handler
-		if handler.is_selecting_enemy_card():
-			handler.on_enemy_card_selected(card_index)
-			return
-		if handler.is_selecting_deck_card():
-			handler.on_deck_card_selected(card_index)
-			return
-		if handler.is_selecting_transform_card():
-			handler.on_transform_card_selected(card_index)
-			return
-	
-	# アイテムフェーズ中は、ItemPhaseHandlerのcurrent_player_idを使用
-	var target_player_id = player_system.get_current_player().id
-	if item_phase_handler and item_phase_handler.is_item_phase_active():
-		target_player_id = item_phase_handler.current_player_id
-	
-	var hand = card_system.get_all_cards_for_player(target_player_id)
-	
+	# 1. スペルフェーズハンドラー（カード選択ハンドラー + スペル処理）
+	if spell_phase_handler and spell_phase_handler.try_handle_card_selection(card_index):
+		return
 
-	
-	if card_index >= hand.size():
+	# 2. アイテムフェーズハンドラー
+	if item_phase_handler and item_phase_handler.try_handle_card_selection(card_index):
 		return
-	
-	var card = hand[card_index]
-	var card_type = card.get("type", "")
 
-	
-	# アイテムフェーズ中かチェック（スペルフェーズより優先）
-	# ※スペル移動による侵略時、スペルフェーズがアクティブなままアイテムフェーズが開始されるため
-	if item_phase_handler and item_phase_handler.is_item_phase_active():
-		# アイテムカードまたは援護対象クリーチャーが使用可能
-		if card_type == "item":
-			item_phase_handler.use_item(card)
-			return
-		elif card_type == "creature":
-			# アイテムクリーチャー判定
-			var keywords = card.get("ability_parsed", {}).get("keywords", [])
-			if "アイテムクリーチャー" in keywords:
-				item_phase_handler.use_item(card)
-				return
-			# 援護スキルがある場合のみクリーチャーを使用可能
-			elif item_phase_handler.has_assist_skill():
-				var assist_elements = item_phase_handler.get_assist_target_elements()
-				var card_element = card.get("element", "")
-				# 対象属性かチェック
-				if "all" in assist_elements or card_element in assist_elements:
-					item_phase_handler.use_item(card)
-					return
-			return
-		else:
-			return
-	
-	# スペルフェーズ中かチェック（アイテムフェーズがアクティブでない場合）
-	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-		# スペルカードのみ使用可能
-		if card_type == "spell":
-			spell_phase_handler.use_spell(card)
-			return
-		else:
-			return
-	
-	# スペルフェーズ以外でスペルカードが選択された場合
-	if card_type == "spell":
+	# 3. ドミニオコマンドハンドラー（交換モード）
+	if dominio_command_handler and dominio_command_handler.try_handle_card_selection(card_index):
 		return
-	
-	# アイテムフェーズ以外でアイテムカードが選択された場合
-	if card_type == "item":
-		return
-	
-	# Phase 1-D: 交換モードチェック
-	if dominio_command_handler and dominio_command_handler.swap_mode:
-		dominio_command_handler.on_card_selected_for_swap(card_index)
-	elif board_system_3d:
+
+	# 4. 通常のカード選択（召喚）
+	if board_system_3d:
 		board_system_3d.on_card_selected(card_index)
 
 func on_pass_button_pressed():
@@ -534,10 +402,12 @@ func end_turn():
 	print("ターン終了: プレイヤー", current_player.id + 1)
 	
 	# 手札調整が必要かチェック
-	await check_and_discard_excess_cards()
+	if discard_handler:
+		await discard_handler.check_and_discard_excess_cards(current_player.id)
 	
 	# 敵地判定・通行料支払い実行
-	await check_and_pay_toll_on_enemy_land()
+	if toll_payment_handler:
+		await toll_payment_handler.check_and_pay_toll_on_enemy_land()
 	
 	# 破産チェック（通行料支払い後）
 	await check_and_handle_bankruptcy()
@@ -568,7 +438,8 @@ func end_turn():
 			
 			# 4ターンごとに分岐タイルを切り替え
 			if current_turn_number % 4 == 0:
-				_toggle_all_branch_tiles()
+				if board_system_3d:
+					board_system_3d.toggle_all_branch_tiles()
 			
 			# 世界呪いのduration更新
 			if spell_world_curse:
@@ -624,114 +495,10 @@ func update_ui():
 	var current_player = player_system.get_current_player()
 	ui_manager.update_ui(current_player, current_phase)
 
-# 手札調整処理（ターン終了時）
-func check_and_discard_excess_cards():
-	var current_player = player_system.get_current_player()
-	var hand_size = card_system.get_hand_size_for_player(current_player.id)
-	
-	if hand_size <= GameConstants.MAX_HAND_SIZE:
-		return  # 調整不要
-	
-	var cards_to_discard = hand_size - GameConstants.MAX_HAND_SIZE
-	print("手札調整が必要: ", hand_size, "枚 → 6枚（", cards_to_discard, "枚捨てる）")
-	
-	# CPUの場合はレートの低いカードから捨てる（デバッグモードでは無効化）
-	var is_cpu = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not debug_manual_control_all
-	if is_cpu:
-		if spell_phase_handler and spell_phase_handler.cpu_hand_utils:
-			spell_phase_handler.cpu_hand_utils.discard_excess_cards_by_rate(current_player.id, GameConstants.MAX_HAND_SIZE)
-		else:
-			# フォールバック: 従来の方法
-			card_system.discard_excess_cards_auto(current_player.id, GameConstants.MAX_HAND_SIZE)
-		return
-	
-	# 人間プレイヤーの場合は手動で選択
-	for i in range(cards_to_discard):
-		await prompt_discard_card()
-
-# カード捨て札をプロンプト
-func prompt_discard_card():
-	var current_player = player_system.get_current_player()
-	
-	# フィルターをリセット（グレーアウト解除）
-	ui_manager.card_selection_filter = ""
-	
-	# カード選択UIを表示（discardモード）
-	ui_manager.show_card_selection_ui_mode(current_player, "discard")
-	
-	# カード選択を待つ
-	var card_index = await ui_manager.card_selected
-	
-	# カードを捨てる（理由: discard）
-	card_system.discard_card(current_player.id, card_index, "discard")
-	
-	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-	
-	# アクション指示を非表示
-	if ui_manager.phase_display:
-		ui_manager.hide_action_prompt()
 
 # === 敵地判定・通行料支払い ===
 
 # 敵地判定・通行料支払い処理（end_turn()内で実行）
-func check_and_pay_toll_on_enemy_land():
-	# 現在のプレイヤーとタイル情報を取得
-	var current_player_index = player_system.current_player_index
-	if not board_system_3d:
-		return
-	
-	var current_tile_index = board_system_3d.get_player_tile(current_player_index)
-	if current_tile_index < 0:
-		return
-	
-	var tile_info = board_system_3d.get_tile_info(current_tile_index)
-	
-	# 敵地判定：タイルの所有者が現在のプレイヤーではない場合
-	if tile_info.get("owner", -1) == -1 or tile_info.get("owner", -1) == current_player_index:
-		# 自分の土地または無所有タイル → 支払いなし
-		return
-	
-	# 敵地にいる場合：通行料を計算・支払い
-	var receiver_id = tile_info.get("owner", -1)
-	var toll = board_system_3d.calculate_toll(current_tile_index)
-	var toll_info = {"main_toll": toll, "bonus_toll": 0, "bonus_receiver_id": -1}
-	
-	# 通行料呪いがある場合、呪いシステムに全ての計算を委譲
-	if spell_curse_toll:
-		toll_info = spell_curse_toll.calculate_final_toll(current_tile_index, current_player_index, receiver_id, toll)
-	
-	var main_toll = toll_info.get("main_toll", 0)
-	var bonus_toll = toll_info.get("bonus_toll", 0)
-	var bonus_receiver_id = toll_info.get("bonus_receiver_id", -1)
-	
-	# 主通行料の支払い実行
-	if receiver_id >= 0 and receiver_id < player_system.players.size():
-		player_system.pay_toll(current_player_index, receiver_id, main_toll)
-		print("[敵地支払い] 通行料 ", main_toll, "EP を支払いました (受取: プレイヤー", receiver_id + 1, ")")
-		
-		# 通行料支払いコメント表示
-		if main_toll > 0:
-			await _show_toll_comment(current_player_index, main_toll)
-	
-	# 副収入の支払い実行
-	if bonus_toll > 0 and bonus_receiver_id >= 0 and bonus_receiver_id < player_system.players.size():
-		player_system.pay_toll(current_player_index, bonus_receiver_id, bonus_toll)
-		print("[副収入] 通行料 ", bonus_toll, "EP を支払いました (受取: プレイヤー", bonus_receiver_id + 1, ")")
-
-## 通行料支払いコメント表示
-func _show_toll_comment(payer_id: int, toll_amount: int):
-	if not ui_manager or not ui_manager.global_comment_ui:
-		return
-	
-	var player_name = "プレイヤー"
-	if payer_id < player_system.players.size():
-		var player = player_system.players[payer_id]
-		if player:
-			player_name = player.name
-	
-	var message = "%s が %dEP 奪われた" % [player_name, toll_amount]
-	await ui_manager.show_comment_and_wait(message, payer_id, true)
 
 
 # === 破産処理 ===
@@ -872,24 +639,6 @@ func set_cpu_movement_evaluator(cpu_movement_evaluator: CPUMovementEvaluator) ->
 		spell_phase_handler.cpu_movement_evaluator = cpu_movement_evaluator
 		if spell_phase_handler.cpu_spell_ai:
 			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
-
-## 全分岐タイルの方向を切り替え
-func _toggle_all_branch_tiles():
-	if not board_system_3d:
-		return
-	
-	if board_system_3d.tile_nodes.is_empty():
-		return
-	
-	var toggled_count = 0
-	for tile_index in board_system_3d.tile_nodes.keys():
-		var tile = board_system_3d.tile_nodes[tile_index]
-		if tile is BranchTile:
-			tile.toggle_branch_direction()
-			toggled_count += 1
-	
-	if toggled_count > 0:
-		print("[GameFlowManager] 分岐タイル切替: %d 個" % toggled_count)
 
 # ============================================
 # カメラ制御

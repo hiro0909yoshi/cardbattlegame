@@ -39,7 +39,6 @@ var cpu_turn_processor  # CPUTurnProcessor（型指定を一時的に削除）
 var player_count = 2
 var player_is_cpu = [false, true]
 var current_player_index = 0
-var debug_manual_control_all: bool = false  # GameFlowManagerから設定される
 
 # 状態管理は TileActionProcessor に統一
 
@@ -524,7 +523,7 @@ func _on_movement_completed(_player_id: int, final_tile: int):
 		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
 	
 	# 移動完了後、ドミニオコマンドボタンを表示（人間プレイヤーのみ）
-	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not debug_manual_control_all
+	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
 	if not is_cpu and ui_manager:
 		ui_manager.show_dominio_order_button()
 	elif ui_manager:
@@ -535,7 +534,7 @@ func _on_movement_completed(_player_id: int, final_tile: int):
 # === タイルアクション処理（TileActionProcessorに委譲） ===
 
 func process_tile_landing(tile_index: int):
-	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu, debug_manual_control_all)
+	tile_action_processor.process_tile_landing(tile_index, current_player_index, player_is_cpu)
 
 func on_card_selected(card_index: int):
 	tile_action_processor.on_card_selected(card_index)
@@ -854,6 +853,21 @@ func set_movement_controller_gfm(gfm):
 	if movement_controller:
 		movement_controller.game_flow_manager = gfm
 
+# CardSelectionUIを設定（destination_predictorに直接参照を渡す）
+func set_movement_controller_card_selection_ui(ui: CardSelectionUI) -> void:
+	if movement_controller:
+		movement_controller.set_card_selection_ui(ui)
+
+# UIManagerを設定（セレクターに直接参照を渡す）
+func set_movement_controller_ui_manager(ui_manager) -> void:
+	if movement_controller:
+		movement_controller.set_ui_manager(ui_manager)
+
+# game_3d参照を設定（TutorialManager取得用）
+func set_movement_controller_game_3d_ref(game_3d_ref) -> void:
+	if movement_controller:
+		movement_controller.set_game_3d_ref(game_3d_ref)
+
 # ========================================
 # CameraController 委譲メソッド
 # ========================================
@@ -992,3 +1006,22 @@ func calculate_toll_with_curse(tile_index: int, map_id: String = "") -> int:
 	if tile_data_manager and tile_data_manager.has_method("calculate_toll_with_curse"):
 		return tile_data_manager.calculate_toll_with_curse(tile_index, map_id)
 	return calculate_toll(tile_index, map_id)
+
+# ========================================
+# 分岐タイル管理
+# ========================================
+
+## 全ての分岐タイルの方向を切り替え（逆走呪い解除時）
+func toggle_all_branch_tiles() -> void:
+	if tile_nodes.is_empty():
+		return
+
+	var toggled_count = 0
+	for tile_index in tile_nodes.keys():
+		var tile = tile_nodes[tile_index]
+		if tile is BranchTile:
+			tile.toggle_branch_direction()
+			toggled_count += 1
+
+	if toggled_count > 0:
+		print("[BoardSystem3D] 分岐タイル切替: %d 個" % toggled_count)
