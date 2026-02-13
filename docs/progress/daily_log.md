@@ -14,6 +14,18 @@
 
 ## 2026年2月13日
 
+### セッション4: P2 タスク開始 - Task 6 完了
+- ✅ **Task #6 完了**: State Machine クラス化（3-4時間見積、実績約3時間）
+  - GameFlowStateMachine クラス新規作成（114行）
+  - GameFlowManager に統合（+30行）
+  - フェーズ遷移の一元管理、無効な遷移の検出
+  - 遷移テーブルを実際のゲームフローに合わせて調整
+- **Opus**: Task 6-8 の詳細実装計画を立案（refactoring_next_steps.md 更新）
+- **Haiku**: Task 6 の実装（State Machine クラス作成、GameFlowManager 統合）
+- **コミット**: 0b3d302 (Task 6 完了)
+- **テスト結果**: ゲーム正常動作、フェーズ遷移エラーなし
+- **次のステップ**: Task 7（Object Pool パターン導入、2-3時間見積）
+
 ### セッション3: GDScript パターン監査 P0/P1 タスク完了
 - ✅ **P0タスク完了**（合計3タスク、4-6時間見積）
   - Task #1: 型指定なし配列の修正（3ファイル・8箇所）

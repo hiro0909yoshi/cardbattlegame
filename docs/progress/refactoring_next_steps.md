@@ -7,14 +7,48 @@
 
 ## 🔴 最優先フェーズ（P2）
 
-### フェーズ5-A: State Machine クラス化（Task 6）
+### フェーズ5-B: Object Pool パターン導入（Task 7）
 
-**優先度**: P2
-**見積時間**: 3-4時間
+**優先度**: P2（最優先）
+**見積時間**: 2-3時間
 **難易度**: 中
-**タスク**: Task #6
+**タスク**: Task #7
 
-#### Context（背景・目的）
+Task 7 の詳細は下記を参照してください。
+
+---
+
+## 完了したフェーズ（参考）
+
+### ✅ フェーズ5-A: State Machine クラス化（Task 6）- 完了
+
+**完了日**: 2026-02-13
+**コミット**: 0b3d302
+**見積時間**: 3-4時間（実績: 約3時間）
+**難易度**: 中
+
+**実装結果**:
+- GameFlowStateMachine クラス作成（114行）
+- GameFlowManager に統合（+30行）
+- 全6箇所のフェーズ遷移を State Machine 経由に変更
+- 遷移ホワイトリスト管理で無効な遷移を検出
+- UIボタン処理への影響なし（後方互換性保持）
+
+**遷移テーブル（実装版）**:
+```
+SETUP      → DICE_ROLL, SETUP
+DICE_ROLL  → MOVING, TILE_ACTION, DICE_ROLL
+MOVING     → TILE_ACTION, END_TURN, SETUP, DICE_ROLL, MOVING
+TILE_ACTION → BATTLE, TILE_ACTION, END_TURN
+BATTLE     → TILE_ACTION, BATTLE, END_TURN
+END_TURN   → SETUP, END_TURN
+```
+
+**テスト結果**: ゲーム正常動作、フェーズ遷移エラーなし
+
+---
+
+#### Context（背景・目的）（参考）
 
 GameFlowManagerの現在のフェーズ管理は、enum + 直接代入モデルで実装されており、以下の課題がある：
 
@@ -326,6 +360,47 @@ BattleParticipant は現在、単一のクラスで複数の責務を持つ mono
 ---
 
 ## 完了したフェーズ（参考）
+
+### ✅ フェーズ5-A: State Machine クラス化（完了：2026-02-13）
+
+**タスク**: Task #6
+
+**実装内容**:
+1. GameFlowStateMachine クラスを新規作成
+   - ファイル: `scripts/game_flow/game_flow_state_machine.gd`
+   - 状態遷移ホワイトリスト管理（SETUP→DICE_ROLL→MOVING→TILE_ACTION→BATTLE→END_TURN）
+   - transition_to() メソッド（妥当性チェック付き）
+   - state_changed シグナル
+   - デバッグログ機能
+
+2. GameFlowManager に State Machine を統合
+   - _state_machine 変数追加
+   - _init_state_machine() メソッド追加
+   - _on_state_changed() シグナルハンドラー追加
+   - change_phase() メソッドを State Machine 経由に変更
+   - ゲーム開始時に State Machine を初期化
+
+3. 既存フェーズ遷移を State Machine 経由に置換
+   - line 202: start_game() の DICE_ROLL 遷移
+   - line 228: start_game() 内での change_phase() 呼び出し
+   - line 271: start_turn() のワープフェーズスキップ
+   - line 281: start_turn() の CPU ターン
+   - line 285: start_turn() の人間ターン
+   - line 424: end_turn() の END_TURN フェーズ
+   - line 467: end_turn() の SETUP フェーズ
+
+4. State Machine シグナルの UI 層への接続
+   - state_changed シグナルを phase_changed に橋渡し
+   - 既存シグナルとの互換性を完全保持
+
+**成果**:
+- 全フェーズ遷移が State Machine 経由に一元化
+- 無効な遷移がコンパイル時・実行時に検出可能
+- UI ボタン処理への影響なし
+- 後方互換性完全保持（current_phase 変数、phase_changed シグナル）
+- デバッグ・テスト容易性向上
+
+---
 
 ### ✅ GDScript パターン監査 P0/P1 タスク（完了：2026-02-13）
 
