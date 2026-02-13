@@ -31,7 +31,8 @@ var current_moving_player = -1
 # システム参照
 var player_system: PlayerSystem = null
 var special_tile_system: SpecialTileSystem = null
-var game_flow_manager = null
+var game_flow_manager = null  # カメラ制御・CPU判定用（is_game_ended は Callable 化済み）
+var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var spell_movement: SpellMovement = null
 var spell_player_move = null
@@ -82,6 +83,11 @@ func setup_systems(p_system: PlayerSystem, st_system: SpecialTileSystem = null, 
 	game_flow_manager = gf_manager
 
 
+# is_game_ended チェック用の Callable を設定
+func set_game_ended_checker(checker: Callable) -> void:
+	is_game_ended_checker = checker
+
+
 # CardSelectionUIを設定（destination_predictorに直接参照を渡す）
 func set_card_selection_ui(ui: CardSelectionUI) -> void:
 	if destination_predictor:
@@ -124,7 +130,7 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 		return
 
 	# ゲーム終了チェック
-	if game_flow_manager and game_flow_manager.is_game_ended:
+	if is_game_ended_checker.call():
 		print("[MovementController] ゲーム終了済み、移動スキップ")
 		return
 
@@ -173,7 +179,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 
 	while remaining_steps > 0:
 		print("[MovementController] 移動ループ: remaining=%d, current=%d" % [remaining_steps, current_tile])
-		if game_flow_manager and game_flow_manager.is_game_ended:
+		if is_game_ended_checker.call():
 			print("[MovementController] ゲーム終了済み、移動中断")
 			break
 		current_remaining_steps = remaining_steps

@@ -145,10 +145,13 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	if movement_controller:
 		# game_flow_managerは後で設定される
 		movement_controller.setup_systems(player_system, special_tile_system)
+		movement_controller.set_game_ended_checker(
+			func() -> bool: return game_flow_manager.is_game_ended if game_flow_manager else false
+		)
 	
 	# TileDataManagerに参照を設定
 	tile_data_manager.set_display_system(tile_info_display)
-	tile_data_manager.set_game_flow_manager(game_flow_manager)
+	# game_flow_manager参照は不要（game_stats直接参照に統一）
 	
 	# ui_managerが設定されてからサブシステムを初期化
 	await get_tree().process_frame

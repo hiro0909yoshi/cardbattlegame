@@ -11,7 +11,6 @@ var tile_nodes = {}  # tile_index -> BaseTile
 
 # サブシステム参照
 var tile_info_display: TileInfoDisplay = null
-var game_flow_manager = null  # 世界呪い判定用
 var spell_curse_toll = null  # タイル呪い通行料補正用
 
 # === 直接参照（GFM経由を廃止） ===
@@ -27,10 +26,6 @@ func set_tile_nodes(nodes: Dictionary):
 # タイル情報表示システムを設定
 func set_display_system(display: TileInfoDisplay):
 	tile_info_display = display
-
-# GameFlowManager参照を設定（世界呪い判定用）
-func set_game_flow_manager(gfm):
-	game_flow_manager = gfm
 
 # game_statsを設定（GFM経由を廃止）
 func set_game_stats(p_game_stats):
@@ -271,18 +266,17 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	
 	var target_element = tile_nodes[tile_index].tile_type
 	var chain_count = 0
-	
-	# game_statsを取得（世界呪い判定用）
-	var stats = {}
-	if game_flow_manager:
-		stats = game_flow_manager.game_stats
+
+	# game_statsを直接参照（world_curseチェック用）
+	if not game_stats:
+		game_stats = {}
 
 	# 同じ所有者・同じ連鎖グループのタイルを数える
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
 			# ジョイントワールド対応: 同属性または連鎖ペアならカウント
-			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, stats):
+			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
 				chain_count += 1
 	
 	return min(chain_count, 5)  # 最大5個まで

@@ -21,7 +21,7 @@ var destroy_count: int = 0
 var player_system = null
 var board_system_3d = null
 var ui_manager = null
-var game_flow_manager = null  # ゲーム終了判定用
+var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 
 ## マップ設定（動的に変更可能）
@@ -40,9 +40,13 @@ func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null, 
 	player_system = p_system
 	board_system_3d = b_system
 	ui_manager = p_ui_manager
-	game_flow_manager = p_game_flow_manager
 	game_3d_ref = p_game_3d_ref
 	setup_ui()
+
+## is_game_ended チェック用の Callable を設定
+func set_game_ended_checker(checker: Callable) -> void:
+	is_game_ended_checker = checker
+
 
 ## game_3d参照を設定（チュートリアルモード判定用）
 func set_game_3d_ref(p_game_3d) -> void:
@@ -173,7 +177,7 @@ func connect_checkpoint_signals():
 ## チェックポイント通過イベント
 func _on_checkpoint_passed(player_id: int, checkpoint_type: String):
 	# ゲーム終了判定
-	if game_flow_manager and game_flow_manager.is_game_ended:
+	if is_game_ended_checker.call():
 		print("[LapSystem] ゲーム終了済み、チェックポイント処理スキップ")
 		checkpoint_processing_completed.emit()
 		return

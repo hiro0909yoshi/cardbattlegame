@@ -484,7 +484,7 @@ func _setup_lap_system() -> void:
 	# システム参照を設定
 	lap_system.player_system = player_system
 	lap_system.ui_manager = ui_manager
-	lap_system.game_flow_manager = game_flow_manager  # ゲーム終了判定用
+	# game_flow_manager 参照削除（Callable注入に変更済み）
 	lap_system.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	lap_system.setup_ui()
 

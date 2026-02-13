@@ -59,7 +59,7 @@ var p_system = ...
 正しいシグナルチェーン:
 TileActionProcessor → emit "action_completed"
   → BoardSystem3D → emit "tile_action_completed"
-    → GameFlowManager._on_tile_action_completed_3d() → end_turn()
+	→ GameFlowManager._on_tile_action_completed_3d() → end_turn()
 ```
 
 ### 6. UI座標をハードコードしない
@@ -70,8 +70,8 @@ panel.position = Vector2(1200, 100)
 # ✅ ビューポート相対
 var viewport_size = get_viewport().get_visible_rect().size
 panel.position = Vector2(
-    viewport_size.x - panel_width - 20,
-    (viewport_size.y - panel_height) / 2
+	viewport_size.x - panel_width - 20,
+	(viewport_size.y - panel_height) / 2
 )
 ```
 
@@ -139,9 +139,9 @@ if DebugSettings.disable_lands_required: ...
 正しい依存方向（上から下へ）:
 
   GameSystemManager（最上位・初期化のみ）
-    ↓ initialize時に参照を注入
+	↓ initialize時に参照を注入
   GameFlowManager / BoardSystem / UIManager / PlayerSystem
-    ↓
+	↓
   子ハンドラ / 子コンポーネント
 ```
 
@@ -161,7 +161,7 @@ var gsm = get_tree().root.get_node_or_null("GameSystemManager")
 
 # ✅ initialize時に必要な参照を渡す
 func initialize(spell_curse_toll: SpellCurseToll):
-    self.spell_curse_toll = spell_curse_toll
+	self.spell_curse_toll = spell_curse_toll
 ```
 
 ### 新しい参照を追加する前のチェック
@@ -177,13 +177,13 @@ func initialize(spell_curse_toll: SpellCurseToll):
 ```gdscript
 # ❌ 「動けばいい」で安易に参照を追加
 func initialize(game_flow_manager):
-    self.gfm = game_flow_manager
-    # → gfmを知っていれば何でもできてしまう
+	self.gfm = game_flow_manager
+	# → gfmを知っていれば何でもできてしまう
 
 # ✅ 必要最小限の参照だけ渡す
 func initialize(spell_cost_modifier, lap_system):
-    self.spell_cost_modifier = spell_cost_modifier
-    self.lap_system = lap_system
+	self.spell_cost_modifier = spell_cost_modifier
+	self.lap_system = lap_system
 ```
 
 ### UI/ロジック境界
@@ -212,10 +212,10 @@ card_selection_ui.emit_signal("battle_requested")
 ```gdscript
 # 親クラス（ui_manager.gd）に委譲メソッドを追加
 func show_toast(message: String, duration: float = 2.0):
-    phase_display.show_toast(message, duration)
+	phase_display.show_toast(message, duration)
 
 func show_comment_and_wait(message: String, player_id: int = -1) -> void:
-    await global_comment_ui.show_and_wait(message, player_id)
+	await global_comment_ui.show_and_wait(message, player_id)
 
 # 呼び出し側は親のメソッドを使う
 ui_manager.show_toast("メッセージ")  # ✅
@@ -342,13 +342,13 @@ signal.connect(callback, CONNECT_ONE_SHOT)
 
 # 多重接続防止
 if not signal.is_connected(callback):
-    signal.connect(callback)
+	signal.connect(callback)
 ```
 
 ### ノード有効性チェック
 ```gdscript
 if card_node and is_instance_valid(card_node):
-    card_node.queue_free()
+	card_node.queue_free()
 ```
 
 ---
@@ -361,8 +361,8 @@ if card_node and is_instance_valid(card_node):
 ```
 ✅ 正しい方向（子が発行、親がリッスン）:
   TileActionProcessor → emit "action_completed"
-    → BoardSystem3D がリッスン → emit "tile_action_completed"
-      → GameFlowManager がリッスン → end_turn()
+	→ BoardSystem3D がリッスン → emit "tile_action_completed"
+	  → GameFlowManager がリッスン → end_turn()
 
 ✅ UI→ロジック方向（ユーザー操作の伝達）:
   UIManager.card_selected → GameFlowManager.on_card_selected
@@ -421,11 +421,11 @@ CardSelectionUI.card_selected → UIManager → GameFlowManager
 ```gdscript
 # ✅ 本体に薄い委譲メソッドを残す（後方互換）
 func execute_summon(card_index: int):
-    await summon_executor.execute_summon(card_index)
+	await summon_executor.execute_summon(card_index)
 
 # ✅ 外部参照が多い場合はプロパティで後方互換を維持
 var creature_synthesis: CreatureSynthesis:
-    get: return summon_executor.creature_synthesis if summon_executor else null
+	get: return summon_executor.creature_synthesis if summon_executor else null
 ```
 
 ### 分割時の外部参照ルール
@@ -441,11 +441,11 @@ GameFlowManagerは**二段チェック**でターン終了の重複を防ぐ。
 ```gdscript
 # 1. フラグチェック（最速ガード）
 if is_ending_turn:
-    return
+	return
 
 # 2. フェーズチェック（状態ガード）
 if current_phase == GamePhase.END_TURN:
-    return
+	return
 
 # ★重要: フラグを最優先で立てる
 is_ending_turn = true
