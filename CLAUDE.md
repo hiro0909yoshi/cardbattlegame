@@ -2,24 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🚨 最優先作業（起動後必ず確認）
+## ✅ 最近完了した作業（2026-02-13）
 
-**GDScript パターン監査 P0タスク実施中**
+**GDScript パターン監査 P0/P1 タスク完了**
 
-起動後、以下を必ず確認してください：
-
-1. **タスクリストを確認**: `/tasks` コマンドでタスク #1, #2, #3 の状態を確認
-2. **作業中タスクがあれば継続**: `in_progress` のタスクを優先的に完了させる
-3. **次のタスクを開始**: `pending` のタスクを TaskUpdate で `in_progress` に変更してから作業開始
-
-**P0タスク（合計4-6時間、必須）**:
-- Task #1: 型指定なし配列の修正（1-2時間）
-- Task #2: spell_container の null チェック完全化（1時間）
-- Task #3: Optional型注釈を追加（2-3時間）
-
-**詳細ドキュメント**: `docs/analysis/action_items.md`
-
-**完了条件**: 全P0タスクが `completed` になったら、この最優先作業セクションを削除する。
+- ✅ P0タスク（3個）: 型指定なし配列修正、spell_container null チェック、Optional型注釈追加
+- ✅ P1タスク（2個）: プライベート変数命名規則統一、Signal 接続重複チェック完全化
+- **コミット**: 5個作成（Task #1-5）
+- **詳細**: `docs/analysis/action_items.md`, `docs/progress/daily_log.md`
 
 ---
 
