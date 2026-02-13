@@ -73,7 +73,7 @@ var dice_phase_handler = null
 var discard_handler = null
 
 # ターン終了制御用フラグ（BUG-000対策）
-var is_ending_turn = false
+var _is_ending_turn = false
 
 # 入力ロック機能（連打防止・フェーズ遷移中の入力ガード）
 var _input_locked: bool = false
@@ -288,7 +288,7 @@ func _on_tile_action_completed_3d():
 		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
 		return
 	
-	if is_ending_turn:
+	if _is_ending_turn:
 		print("Warning: tile_action_completed ignored (already ending turn)")
 		return
 	
@@ -355,7 +355,7 @@ func change_phase(new_phase: GamePhase):
 # ターン終了
 func end_turn():
 	# 修正: 二重実行防止を強化（BUG-000対策）
-	if is_ending_turn:
+	if _is_ending_turn:
 		print("Warning: Already ending turn (flag check)")
 		return
 	
@@ -364,7 +364,7 @@ func end_turn():
 		return
 	
 	# ★重要: フラグを最優先で立てる
-	is_ending_turn = true
+	_is_ending_turn = true
 	
 	# Phase 1-A: ドミニオコマンドを閉じる、カード選択UIとボタンを隠す
 	if dominio_command_handler and dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
@@ -434,7 +434,7 @@ func end_turn():
 	
 	# フェーズをリセットしてから次のターン開始
 	current_phase = GamePhase.SETUP
-	is_ending_turn = false  # フラグをリセット
+	_is_ending_turn = false  # フラグをリセット
 	start_turn()
 
 # カメラ移動関数
@@ -553,7 +553,7 @@ func set_phase1a_handlers(
 func _on_dominio_command_closed():
 	
 	# ターンエンド中またはターンエンドフェーズの場合は処理しない
-	if is_ending_turn or current_phase == GamePhase.END_TURN:
+	if _is_ending_turn or current_phase == GamePhase.END_TURN:
 		return
 	
 	# カメラをプレイヤーに戻す
