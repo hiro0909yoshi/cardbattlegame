@@ -60,6 +60,9 @@ var magic_stone_system
 # スペル効果システム（コンテナ方式）
 var spell_container: SpellSystemContainer = null
 
+# State Machine for phase transitions
+var _state_machine: GameFlowStateMachine = null
+
 # 破産処理ハンドラー
 var bankruptcy_handler = null
 
@@ -187,20 +190,42 @@ func set_spell_container(container: SpellSystemContainer) -> void:
 	if container.spell_world_curse and not container.spell_world_curse.get_parent():
 		add_child(container.spell_world_curse)
 
+## State Machineを初期化
+func _init_state_machine() -> void:
+	if _state_machine:
+		return  # Already initialized
+
+	_state_machine = GameFlowStateMachine.new()
+	_state_machine.initialize(GamePhase)
+
+	# State MachineのシグナルをUIのphase_changedシグナルに橋渡し
+	if not _state_machine.state_changed.is_connected(_on_state_changed):
+		_state_machine.state_changed.connect(_on_state_changed)
+
+	print("[GFM] State Machine initialized")
+
+## State Machineのstate_changedシグナルハンドラー
+func _on_state_changed(new_phase: int) -> void:
+	# 既存の互換性のためphase_changedシグナルをemit
+	emit_signal("phase_changed", new_phase)
+	update_ui()
+
 # ゲーム開始
 func start_game():
 	print("=== ゲーム開始 ===")
-	
+
+	# State Machineの初期化（ゲーム開始時に実施）
+	_init_state_machine()
+
 	# ゲーム統計の初期化
 	game_stats["total_creatures_destroyed"] = 0
-	
+
 	# 全プレイヤーに方向選択権を付与（ゲームスタート時）
 	for player in player_system.players:
 		player.buffs["direction_choice_pending"] = true
 		print("[GameFlowManager] プレイヤー%d: スタート時方向選択権付与" % (player.id + 1))
-	
-	current_phase = GamePhase.DICE_ROLL
-	update_ui()
+
+	change_phase(GamePhase.DICE_ROLL)
 	start_turn()
 
 # ターン開始
@@ -253,11 +278,11 @@ func start_turn():
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not DebugSettings.manual_control_all
 	if is_cpu_turn:
 		ui_manager.set_phase_text("CPUのターン...")
-		current_phase = GamePhase.DICE_ROLL
+		change_phase(GamePhase.DICE_ROLL)
 		await get_tree().create_timer(1.0).timeout
 		roll_dice()
 	else:
-		current_phase = GamePhase.DICE_ROLL
+		change_phase(GamePhase.DICE_ROLL)
 		ui_manager.set_phase_text("サイコロを振ってください")
 		
 		# カメラを手動モードに設定（マップ確認可能にする）
@@ -341,14 +366,20 @@ func on_level_up_selected(target_level: int, cost: int):
 
 # フェーズ変更
 func change_phase(new_phase: GamePhase):
-	current_phase = new_phase
-	emit_signal("phase_changed", current_phase)
-	update_ui()
-	
+	# State Machine経由でフェーズを変更
+	if _state_machine:
+		_state_machine.transition_to(new_phase)
+		current_phase = _state_machine.current_state  # 状態を同期
+	else:
+		# フォールバック（State Machine未初期化の場合）
+		current_phase = new_phase
+		emit_signal("phase_changed", current_phase)
+		update_ui()
+
 	# 全てのインフォパネルを閉じる
 	if ui_manager:
 		ui_manager.close_all_info_panels()
-	
+
 	# カメラモード切り替え
 	_update_camera_mode(new_phase)
 
@@ -431,9 +462,9 @@ func end_turn():
 	
 	# 次のターン開始前に少し待機
 	await get_tree().create_timer(GameConstants.TURN_END_DELAY).timeout
-	
+
 	# フェーズをリセットしてから次のターン開始
-	current_phase = GamePhase.SETUP
+	change_phase(GamePhase.SETUP)
 	_is_ending_turn = false  # フラグをリセット
 	start_turn()
 
