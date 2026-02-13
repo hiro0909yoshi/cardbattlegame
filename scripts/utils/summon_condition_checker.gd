@@ -120,14 +120,14 @@ static func check_cannot_summon(card_data: Dictionary, tile_element: String) -> 
 ## @param game_flow_manager GameFlowManager参照
 ## @param board_system BoardSystem3D参照（player_id未指定時のフォールバック）
 ## @param player_system PlayerSystem参照（オプション、直接参照優先）
-## @param game_stats 直接参照（GFM経由を避けるため）
+## @param stats 直接参照（GFM経由を避けるため）
 ## @return 召喚条件が解除されているか
-static func is_summon_condition_ignored(player_id: int, game_flow_manager, board_system = null, player_system = null, game_stats = null) -> bool:
+static func is_summon_condition_ignored(player_id: int, game_flow_manager, board_system = null, player_system = null, stats = null) -> bool:
 	if not game_flow_manager:
 		return false
 
 	# ブライトワールド（世界呪い）チェック - 直接参照を優先
-	var gs = game_stats if game_stats else game_flow_manager.game_stats
+	var gs = stats if stats else game_flow_manager.game_stats
 	if SpellWorldCurse.is_summon_condition_ignored(gs):
 		return true
 

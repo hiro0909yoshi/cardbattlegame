@@ -89,10 +89,37 @@
 - ✅ 関数パラメータチェーン3箇所廃止
 - **修正ファイル**: game_flow_manager.gd, board_system_3d.gd, tile_action_processor.gd, discard_handler.gd, game_3d.gd, quest_game.gd, game_system_manager.gd, movement_controller.gd, special_tile_system.gd, tile_summon_executor.gd, card_selection_ui.gd, tile_battle_executor.gd, item_phase_handler.gd, spell_phase_handler.gd
 
+### セッション4: SpellSystemContainer導入完了（フェーズ3-D）
+
+**詳細ドキュメント**:
+- 作業詳細: `docs/progress/refactoring_next_steps.md` フェーズ3-D
+
+**ステップ4-5完了: GFM個別変数削除とcontainer統一**
+- ✅ ステップ4: 外部からのGFM個別spell変数アクセスをcontainer経由に変更
+  - `game_system_manager.gd`: 全箇所をcontainer経由に変更（_setup_spell_systems, _initialize_phase1a_handlers）
+  - `battle_system.gd`: setup_systems()でcontainer経由に変更
+  - 各ハンドラー（DicePhaseHandler, DominioCommandHandler, etc.）: setup()でcontainer経由の参照を受け取り
+- ✅ ステップ5: GFMの個別spell変数削除（約30行削減）
+  - 個別変数10個削除（spell_draw, spell_magic, spell_land, spell_curse, spell_dice, spell_curse_stat, spell_world_curse, spell_player_move, spell_curse_toll, spell_cost_modifier）
+  - `set_spell_systems()` メソッド削除
+  - 後方互換ブリッジ削除
+  - Spell系preload定数10個削除
+- ✅ 検証完了
+  - grep確認: 個別変数への外部参照ゼロ
+  - Godotコンパイルチェック: エラー/警告なし
+
+**成果**:
+- **辞書⇔個別変数の変換チェーン完全解消**（GSM→GFM→各ハンドラーの3段変換を1段に圧縮）
+- **コード削減**: 約30行（変数宣言 + メソッド + preload定数）
+- **保守性向上**: SpellSystemContainerによる一元管理、型安全性向上
+- **フェーズ3-D完了**: SpellSystemContainer導入プロジェクト完了（ステップ6はオプション）
+
 ### 次のステップ
+- **オプション**: 3-D ステップ6 - SpellEffectExecutorのコンテナ直接参照化（辞書展開を完全廃止）
 - **後回し**: 3-C UI座標ハードコード（28+箇所、大工事）
-- **検討中**: 3-D SpellSystemContainer（389箇所参照で大規模）
-- **フェーズ3主要作業完了**: 3-A, 3-B完了により、GFMの神オブジェクト化解消プロジェクトの主要部分が完了
+- **フェーズ3主要作業完了**: 3-A, 3-B, 3-D完了により、GFMの神オブジェクト化解消プロジェクトの主要部分が完了
+
+**⚠️ 残りトークン数**: 136,030 / 200,000
 
 ---
 

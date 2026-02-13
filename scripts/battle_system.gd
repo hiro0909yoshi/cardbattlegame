@@ -65,14 +65,15 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 	player_system_ref = player_system
 	
 	# SpellDraw/SpellMagicの参照を先に取得
-	if game_flow_manager_ref:
-		if game_flow_manager_ref.spell_draw:
-			spell_draw = game_flow_manager_ref.spell_draw
-		if game_flow_manager_ref.spell_magic:
-			spell_magic = game_flow_manager_ref.spell_magic
-		# バトル画面マネージャーの参照を取得
-		if game_flow_manager_ref.battle_screen_manager:
-			battle_screen_manager = game_flow_manager_ref.battle_screen_manager
+	if game_flow_manager_ref and game_flow_manager_ref.spell_container:
+		if game_flow_manager_ref.spell_container.spell_draw:
+			spell_draw = game_flow_manager_ref.spell_container.spell_draw
+		if game_flow_manager_ref.spell_container.spell_magic:
+			spell_magic = game_flow_manager_ref.spell_container.spell_magic
+
+	# バトル画面マネージャーの参照を取得
+	if game_flow_manager_ref and game_flow_manager_ref.battle_screen_manager:
+		battle_screen_manager = game_flow_manager_ref.battle_screen_manager
 	
 	# サブシステムにも参照を設定
 	battle_preparation.setup_systems(board_system, card_system, player_system, spell_magic)
@@ -91,13 +92,15 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 # バトル実行（3D版メイン処理）
 func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}):
 	# spell_magic/spell_drawの再取得（setup_systems時にnullだった場合の対策）
-	if not spell_magic and game_flow_manager_ref and game_flow_manager_ref.spell_magic:
-		spell_magic = game_flow_manager_ref.spell_magic
-		battle_special_effects.spell_magic_ref = spell_magic
-		battle_preparation.spell_magic_ref = spell_magic
-	if not spell_draw and game_flow_manager_ref and game_flow_manager_ref.spell_draw:
-		spell_draw = game_flow_manager_ref.spell_draw
-		battle_special_effects.spell_draw_ref = spell_draw
+	if not spell_magic and game_flow_manager_ref and game_flow_manager_ref.spell_container:
+		if game_flow_manager_ref.spell_container.spell_magic:
+			spell_magic = game_flow_manager_ref.spell_container.spell_magic
+			battle_special_effects.spell_magic_ref = spell_magic
+			battle_preparation.spell_magic_ref = spell_magic
+	if not spell_draw and game_flow_manager_ref and game_flow_manager_ref.spell_container:
+		if game_flow_manager_ref.spell_container.spell_draw:
+			spell_draw = game_flow_manager_ref.spell_container.spell_draw
+			battle_special_effects.spell_draw_ref = spell_draw
 	
 	if not validate_systems():
 		print("Error: システム参照が設定されていません")
@@ -273,10 +276,10 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 # ミラーワールド: 同名クリーチャー複数配置禁止チェック
 # 戦闘時、自フィールドに同名クリーチャーがいる側が破壊される
 func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, attacker_index: int, tile_index: int, from_tile_index: int) -> bool:
-	if not game_flow_manager_ref or not game_flow_manager_ref.spell_world_curse:
+	if not game_flow_manager_ref or not game_flow_manager_ref.spell_container or not game_flow_manager_ref.spell_container.spell_world_curse:
 		return false
-	
-	var spell_world_curse = game_flow_manager_ref.spell_world_curse
+
+	var spell_world_curse = game_flow_manager_ref.spell_container.spell_world_curse
 	
 	# ミラーワールドが有効かチェック
 	if not spell_world_curse.is_mirror_world_active():

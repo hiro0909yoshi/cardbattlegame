@@ -49,7 +49,7 @@ func _ready():
 	system_manager = GameSystemManagerClass.new()
 	add_child(system_manager)
 
-	await system_manager.initialize_all(
+	system_manager.initialize_all(
 		self,
 		player_count,
 		player_is_cpu,

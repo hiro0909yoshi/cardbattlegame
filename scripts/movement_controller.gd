@@ -8,8 +8,8 @@ class_name MovementController3D
 signal movement_started(player_id: int)
 signal movement_step_completed(player_id: int, tile_index: int)
 signal movement_completed(player_id: int, final_tile: int)
-signal warp_executed(player_id: int, from_tile: int, to_tile: int)
-signal start_passed(player_id: int)
+signal warp_executed(player_id: int, from_tile: int, to_tile: int)  # ワープ実行時に発火（movement_warp_handlerで使用）
+signal start_passed(player_id: int)  # スタート地点通過時に発火（movement_special_handlerで使用）
 
 # 移動設定
 const MOVE_DURATION = 0.1  # 1マスの移動時間

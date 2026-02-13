@@ -52,16 +52,16 @@ func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 	elif game_flow_manager and "game_stats" in game_flow_manager:
 		world_curse = game_flow_manager.game_stats.get("world_curse", {})
 	var protection_context = {"world_curse": world_curse}
-	
+
 	# スペルがHP効果を持つか確認
 	var spell = context.get("spell", {})
 	var effect_parsed = spell.get("effect_parsed", {})
 	var affects_hp = effect_parsed.get("affects_hp", false)
-	
+
 	for target in targets:
 		var target_type = target.get("type", "")
 		var should_skip = false
-		
+
 		if target_type == "creature" or target.has("creature"):
 			var creature = target.get("creature", {})
 			if not creature.is_empty():
@@ -76,10 +76,10 @@ func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 			if player_id >= 0 and player_system and player_id < player_system.players.size():
 				if SpellProtection.is_player_protected(player_system.players[player_id], protection_context):
 					should_skip = true
-		
+
 		if not should_skip:
 			filtered.append(target)
-	
+
 	return filtered
 
 ## 内部ターゲット条件チェック

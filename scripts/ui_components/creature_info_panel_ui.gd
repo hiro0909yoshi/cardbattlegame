@@ -142,8 +142,8 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 
 ## パネルを閉じる
 func hide_panel(clear_buttons: bool = true):
-	var was_view_mode = not is_selection_mode
-	
+	# var _was_view_mode = not is_selection_mode  # 未使用のため削除
+
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット

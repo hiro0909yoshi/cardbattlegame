@@ -344,44 +344,51 @@ func phase_4_setup_system_interconnections() -> void:
 			game_flow_manager.item_phase_handler.ui_manager = ui_manager
 		
 		# SpellCurseToll の初期化
-		if game_flow_manager.spell_curse:
+		if game_flow_manager.spell_container and game_flow_manager.spell_container.spell_curse:
 			# SkillTollChange の作成
 			var skill_toll_change = preload("res://scripts/skills/skill_toll_change.gd").new()
-			
+
 			# CreatureManager の取得（BoardSystem3D 配下から動的に取得）
 			var creature_manager = null
 			if board_system_3d:
 				# board_system_3d の子ノードから CreatureManager を検索
 				creature_manager = board_system_3d.get_node_or_null("CreatureManager")
-			
+
 			# SpellCurseToll の初期化
-			game_flow_manager.spell_curse_toll = SpellCurseTollClass.new()
-			game_flow_manager.spell_curse_toll.setup(
-				game_flow_manager.spell_curse,
+			var spell_curse_toll = SpellCurseTollClass.new()
+			spell_curse_toll.setup(
+				game_flow_manager.spell_container.spell_curse,
 				skill_toll_change,
 				creature_manager
 			)
-			game_flow_manager.spell_curse_toll.name = "SpellCurseToll"
-			game_flow_manager.add_child(game_flow_manager.spell_curse_toll)
+			spell_curse_toll.name = "SpellCurseToll"
+			game_flow_manager.add_child(spell_curse_toll)
+
+			# コンテナに設定
+			game_flow_manager.spell_container.set_spell_curse_toll(spell_curse_toll)
 			print("[SpellCurseToll] 初期化完了（SkillTollChange と CreatureManager 参照設定済み）")
-			
+
 			# ★重要: board_system_3d にメタデータとして設定（MovementHelper から参照可能にする）
 			if board_system_3d:
-				board_system_3d.set_meta("spell_curse_toll", game_flow_manager.spell_curse_toll)
+				board_system_3d.set_meta("spell_curse_toll", spell_curse_toll)
+				board_system_3d.set_meta("spell_world_curse", game_flow_manager.spell_container.spell_world_curse)
 				# tile_data_managerにも参照を渡す（表示用通行料のタイル呪い補正で使用）
 				if board_system_3d.tile_data_manager:
-					board_system_3d.tile_data_manager.spell_curse_toll = game_flow_manager.spell_curse_toll
+					board_system_3d.tile_data_manager.spell_curse_toll = spell_curse_toll
 					# === game_stats直接参照も設定（チェーンアクセス解消） ===
 					board_system_3d.tile_data_manager.set_game_stats(game_flow_manager.game_stats)
-				print("[SpellCurseToll] BoardSystem3D のメタデータとして設定完了")
-			
+				print("[SpellCurseToll/SpellWorldCurse] BoardSystem3D のメタデータとして設定完了")
+
 			# SpellCostModifier の初期化
-			game_flow_manager.spell_cost_modifier = SpellCostModifierClass.new()
-			game_flow_manager.spell_cost_modifier.setup(
-				game_flow_manager.spell_curse,
+			var spell_cost_modifier = SpellCostModifierClass.new()
+			spell_cost_modifier.setup(
+				game_flow_manager.spell_container.spell_curse,
 				player_system,
 				game_flow_manager
 			)
+
+			# コンテナに設定
+			game_flow_manager.spell_container.set_spell_cost_modifier(spell_cost_modifier)
 			print("[SpellCostModifier] 初期化完了")
 		
 		# CPUAIHandler の初期化は initialize_phase1a_systems() で行われる
@@ -495,111 +502,119 @@ func _setup_spell_systems() -> void:
 	if not card_system or not player_system:
 		push_error("[GameSystemManager] CardSystem/PlayerSystemが初期化されていません")
 		return
-	
-	var spell_systems: Dictionary = {}
-	
+
+	# SpellSystemContainerを作成
+	var spell_container = SpellSystemContainer.new()
+
 	# SpellDraw
 	var spell_draw = SpellDraw.new()
 	spell_draw.setup(card_system, player_system)
 	spell_draw.set_board_system(board_system_3d)
-	spell_systems["spell_draw"] = spell_draw
 	print("[SpellDraw] 初期化完了")
-	
+
 	# SpellMagic
 	var spell_magic = SpellMagic.new()
 	spell_magic.setup(player_system, board_system_3d, game_flow_manager, null)
-	spell_systems["spell_magic"] = spell_magic
 	print("[SpellMagic] 初期化完了")
-	
+
 	# CreatureManager取得
 	var creature_manager = board_system_3d.get_node_or_null("CreatureManager") if board_system_3d else null
 	if not creature_manager:
 		push_error("[GameSystemManager] CreatureManagerが見つかりません")
-		game_flow_manager.set_spell_systems(spell_systems)
 		return
-	
+
 	# SpellLand
 	var spell_land = SpellLand.new()
 	spell_land.setup(board_system_3d, creature_manager, player_system, card_system)
 	spell_land.set_game_flow_manager(game_flow_manager)
 	if board_system_3d:
 		board_system_3d.set_spell_land(spell_land)
-	spell_systems["spell_land"] = spell_land
 	print("[SpellLand] 初期化完了")
-	
+
 	# SpellCurse
 	var spell_curse = SpellCurse.new()
 	spell_curse.setup(board_system_3d, creature_manager, player_system, game_flow_manager)
-	spell_systems["spell_curse"] = spell_curse
 	print("[SpellCurse] 初期化完了")
-	
+
 	# SpellMagicにSpellCurse参照を追加
 	spell_magic.spell_curse_ref = spell_curse
-	
+
 	# SpellDice
 	var spell_dice = SpellDice.new()
 	spell_dice.setup(player_system, spell_curse)
-	spell_systems["spell_dice"] = spell_dice
 	print("[SpellDice] 初期化完了")
-	
+
 	# SpellCurseStat
 	var spell_curse_stat = SpellCurseStat.new()
 	spell_curse_stat.setup(spell_curse, creature_manager)
-	spell_systems["spell_curse_stat"] = spell_curse_stat
 	print("[SpellCurseStat] 初期化完了")
-	
+
 	# SpellWorldCurse
 	var spell_world_curse = SpellWorldCurse.new()
 	spell_world_curse.setup(spell_curse, game_flow_manager)
-	spell_systems["spell_world_curse"] = spell_world_curse
 	print("[SpellWorldCurse] 初期化完了")
-	
+
 	# SpellPlayerMove
 	var spell_player_move = SpellPlayerMove.new()
 	spell_player_move.setup(board_system_3d, player_system, game_flow_manager, spell_curse)
 	if board_system_3d:
 		board_system_3d.set_spell_player_move(spell_player_move)
-	spell_systems["spell_player_move"] = spell_player_move
 	print("[SpellPlayerMove] 初期化完了")
-	
-	# BankruptcyHandler
+
+	# コンテナにコアシステム（8個）を設定
+	spell_container.setup(
+		spell_draw,
+		spell_magic,
+		spell_land,
+		spell_curse,
+		spell_dice,
+		spell_curse_stat,
+		spell_world_curse,
+		spell_player_move
+	)
+
+	# BankruptcyHandlerは別途GameFlowManagerに設定（コンテナ外）
 	var BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 	var bankruptcy_handler = BankruptcyHandlerClass.new()
 	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse, ui_manager, null)
-	spell_systems["bankruptcy_handler"] = bankruptcy_handler
 	print("[BankruptcyHandler] 初期化完了")
-	
-	# GameFlowManagerに一括設定
-	game_flow_manager.set_spell_systems(spell_systems)
+
+	# GameFlowManagerにコンテナを設定
+	game_flow_manager.set_spell_container(spell_container)
+
+	# BankruptcyHandlerもGameFlowManagerに設定（add_child）
+	game_flow_manager.bankruptcy_handler = bankruptcy_handler
+	if not bankruptcy_handler.get_parent():
+		game_flow_manager.add_child(bankruptcy_handler)
 
 	# SpellCostModifierにSpellWorldCurse参照を設定
-	if game_flow_manager.spell_cost_modifier:
-		game_flow_manager.spell_cost_modifier.set_spell_world_curse(game_flow_manager.spell_world_curse)
+	if spell_container.spell_cost_modifier:
+		spell_container.spell_cost_modifier.set_spell_world_curse(spell_container.spell_world_curse)
 
 	# === game_stats直接参照を各システムに設定（チェーンアクセス解消） ===
-	if game_flow_manager.spell_curse:
-		game_flow_manager.spell_curse.set_game_stats(game_flow_manager.game_stats)
-	if game_flow_manager.spell_world_curse:
-		game_flow_manager.spell_world_curse.set_game_stats(game_flow_manager.game_stats)
+	if spell_container.spell_curse:
+		spell_container.spell_curse.set_game_stats(game_flow_manager.game_stats)
+	if spell_container.spell_world_curse:
+		spell_container.spell_world_curse.set_game_stats(game_flow_manager.game_stats)
 
 	# BattleSystemにspell_magic/spell_drawを設定（setup_systemsより後に初期化されるため）
 	if battle_system:
-		battle_system.spell_magic = spell_systems.get("spell_magic")
-		battle_system.spell_draw = spell_systems.get("spell_draw")
+		battle_system.spell_magic = spell_magic
+		battle_system.spell_draw = spell_draw
 		if battle_system.battle_special_effects:
-			battle_system.battle_special_effects.spell_magic_ref = spell_systems.get("spell_magic")
-			battle_system.battle_special_effects.spell_draw_ref = spell_systems.get("spell_draw")
+			battle_system.battle_special_effects.spell_magic_ref = spell_magic
+			battle_system.battle_special_effects.spell_draw_ref = spell_draw
 			# === 直接参照を設定（チェーンアクセス解消） ===
 			battle_system.battle_special_effects.set_game_stats(game_flow_manager.game_stats)
 			battle_system.battle_special_effects.set_player_system(player_system)
 		if battle_system.battle_preparation:
-			battle_system.battle_preparation.spell_magic_ref = spell_systems.get("spell_magic")
+			battle_system.battle_preparation.spell_magic_ref = spell_magic
 
 	# TileActionProcessorにspell参照を設定
 	if board_system_3d:
 		board_system_3d.set_tile_action_processor_spells(
-			game_flow_manager.spell_cost_modifier,
-			game_flow_manager.spell_world_curse
+			spell_container.spell_cost_modifier,
+			spell_container.spell_world_curse
 		)
 
 ## BattleScreenManager初期化
@@ -655,9 +670,9 @@ func _initialize_phase1a_handlers() -> void:
 	dominio_command_handler.initialize(ui_manager, board_system_3d, game_flow_manager, player_system)
 	dominio_command_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	dominio_command_handler.set_spell_systems_direct(
-		game_flow_manager.spell_world_curse,
-		game_flow_manager.spell_land,
-		game_flow_manager.spell_curse
+		game_flow_manager.spell_container.spell_world_curse,
+		game_flow_manager.spell_container.spell_land,
+		game_flow_manager.spell_container.spell_curse
 	)
 
 	# SpellPhaseHandlerを作成
@@ -668,25 +683,14 @@ func _initialize_phase1a_handlers() -> void:
 	spell_phase_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	spell_phase_handler.set_game_stats(game_flow_manager.game_stats)  # === game_stats直接参照を設定 ===
 
-	# SpellEffectExecutorにスペルシステム参照を直接設定（GFM経由を廃止）
-	var spell_systems_for_executor = {
-		"spell_magic": game_flow_manager.spell_magic,
-		"spell_dice": game_flow_manager.spell_dice,
-		"spell_curse_stat": game_flow_manager.spell_curse_stat,
-		"spell_curse": game_flow_manager.spell_curse,
-		"spell_curse_toll": game_flow_manager.spell_curse_toll,
-		"spell_cost_modifier": game_flow_manager.spell_cost_modifier,
-		"spell_draw": game_flow_manager.spell_draw,
-		"spell_land": game_flow_manager.spell_land,
-		"spell_player_move": game_flow_manager.spell_player_move,
-		"spell_world_curse": game_flow_manager.spell_world_curse
-	}
+	# SpellEffectExecutorにスペルシステム参照を直接設定（コンテナから辞書変換）
+	var spell_systems_for_executor = game_flow_manager.spell_container.to_dictionary()
 	spell_phase_handler.set_spell_effect_executor_systems(spell_systems_for_executor)
 
 	# SpellPhaseHandler自身の直接参照を設定
 	spell_phase_handler.set_spell_systems_direct(
-		game_flow_manager.spell_cost_modifier,
-		game_flow_manager.spell_draw
+		game_flow_manager.spell_container.spell_cost_modifier,
+		game_flow_manager.spell_container.spell_draw
 	)
 
 	# DebugControllerにspell_phase_handler参照を設定
@@ -694,12 +698,12 @@ func _initialize_phase1a_handlers() -> void:
 		debug_controller.spell_phase_handler = spell_phase_handler
 
 	# SpellCurseにspell_phase_handler参照を設定
-	if game_flow_manager.spell_curse:
-		game_flow_manager.spell_curse.set_spell_phase_handler(spell_phase_handler)
+	if game_flow_manager.spell_container.spell_curse:
+		game_flow_manager.spell_container.spell_curse.set_spell_phase_handler(spell_phase_handler)
 
 	# SpellWorldCurseにspell_cast_notification_ui参照を設定
-	if game_flow_manager.spell_world_curse and spell_phase_handler.spell_cast_notification_ui:
-		game_flow_manager.spell_world_curse.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+	if game_flow_manager.spell_container.spell_world_curse and spell_phase_handler.spell_cast_notification_ui:
+		game_flow_manager.spell_container.spell_world_curse.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
 
 	# CPUSpecialTileAIにspell_phase_handler参照を設定
 	if game_flow_manager.cpu_special_tile_ai:
@@ -716,19 +720,19 @@ func _initialize_phase1a_handlers() -> void:
 	var item_phase_handler = ItemPhaseHandlerClass.new()
 	game_flow_manager.add_child(item_phase_handler)
 	item_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, battle_system)
-	item_phase_handler.set_spell_cost_modifier(game_flow_manager.spell_cost_modifier)
+	item_phase_handler.set_spell_cost_modifier(game_flow_manager.spell_container.spell_cost_modifier)
 
 	# DicePhaseHandlerを作成
 	var DicePhaseHandlerClass = preload("res://scripts/game_flow/dice_phase_handler.gd")
 	var dice_phase_handler = DicePhaseHandlerClass.new()
 	game_flow_manager.add_child(dice_phase_handler)
-	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_dice, ui_manager, board_system_3d, game_flow_manager)
+	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, ui_manager, board_system_3d, game_flow_manager)
 	game_flow_manager.dice_phase_handler = dice_phase_handler
 
 	# TollPaymentHandlerを作成
 	var toll_payment_handler = TollPaymentHandlerClass.new()
 	game_flow_manager.add_child(toll_payment_handler)
-	toll_payment_handler.setup(player_system, board_system_3d, game_flow_manager.spell_curse_toll, ui_manager)
+	toll_payment_handler.setup(player_system, board_system_3d, game_flow_manager.spell_container.spell_curse_toll, ui_manager)
 	game_flow_manager.toll_payment_handler = toll_payment_handler
 
 	# DiscardHandlerを作成

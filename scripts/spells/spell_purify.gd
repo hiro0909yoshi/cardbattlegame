@@ -37,30 +37,30 @@ func set_game_stats(p_game_stats) -> void:
 ## @return Dictionary: {removed_types: Array, ep_gained: int}
 func purify_all(caster_id: int) -> Dictionary:
 	var removed_curse_types: Array = []
-	
+
 	# 1. クリーチャー呪いを収集・除去
 	var creature_types = _remove_all_creature_curses()
 	for curse_type in creature_types:
 		if curse_type not in removed_curse_types:
 			removed_curse_types.append(curse_type)
-	
+
 	# 2. プレイヤー呪いを収集・除去
 	var player_types = _remove_all_player_curses()
 	for curse_type in player_types:
 		if curse_type not in removed_curse_types:
 			removed_curse_types.append(curse_type)
-	
+
 	# 3. 世界呪いを収集・除去
 	var world_type = _remove_world_curse_internal()
 	if world_type != "" and world_type not in removed_curse_types:
 		removed_curse_types.append(world_type)
-	
+
 	# 4. EP獲得（種類×50EP）
 	var ep_gained = removed_curse_types.size() * 50
 	if ep_gained > 0 and caster_id >= 0 and caster_id < player_system.players.size():
 		player_system.players[caster_id].magic_power += ep_gained
 		print("[ピュアリファイ] プレイヤー%d: %d種類の呪いを消し、%dEPを得た" % [caster_id, removed_curse_types.size(), ep_gained])
-	
+
 	return {
 		"removed_types": removed_curse_types,
 		"ep_gained": ep_gained

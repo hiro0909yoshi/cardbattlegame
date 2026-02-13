@@ -82,8 +82,8 @@ func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	
 	# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 	if tile and tile.owner_id >= 0 and tile.owner_id != player_id:
-		if game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
-			if game_flow_manager_ref.spell_world_curse.check_invasion_blocked(player_id, tile.owner_id, false):
+		if game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
+			if game_flow_manager_ref.spell_container.spell_world_curse.check_invasion_blocked(player_id, tile.owner_id, false):
 				return false
 	
 	return true

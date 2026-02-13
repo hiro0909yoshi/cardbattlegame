@@ -273,16 +273,16 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	var chain_count = 0
 	
 	# game_statsを取得（世界呪い判定用）
-	var game_stats = {}
+	var stats = {}
 	if game_flow_manager:
-		game_stats = game_flow_manager.game_stats
-	
+		stats = game_flow_manager.game_stats
+
 	# 同じ所有者・同じ連鎖グループのタイルを数える
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
 		if tile.owner_id == owner_id:
 			# ジョイントワールド対応: 同属性または連鎖ペアならカウント
-			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
+			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, stats):
 				chain_count += 1
 	
 	return min(chain_count, 5)  # 最大5個まで

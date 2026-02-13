@@ -75,17 +75,19 @@ static func get_all_creatures(board_sys, condition: Dictionary = {}) -> Array:
 ## 戻り値: ターゲット情報の配列
 static func get_valid_targets(handler, target_type: String, target_info: Dictionary) -> Array:
 	# ハンドラーから必要な情報を抽出してコア関数を呼び出す
+	var gfm = handler.game_flow_manager if handler and "game_flow_manager" in handler else null
 	var systems = {
 		"board_system": handler.board_system if handler else null,
 		"player_system": handler.player_system if handler else null,
 		"current_player_id": handler.current_player_id if handler else 0,
-		"game_flow_manager": handler.game_flow_manager if handler and "game_flow_manager" in handler else null
+		"game_flow_manager": gfm,
+		"spell_player_move": gfm.spell_container.spell_player_move if (gfm and gfm.spell_container) else null
 	}
 	return get_valid_targets_core(systems, target_type, target_info)
 
 
 ## CPU等からhandlerなしで呼び出せるコア関数
-## systems: { board_system, player_system, current_player_id, game_flow_manager }
+## systems: { board_system, player_system, current_player_id, game_flow_manager, spell_player_move }
 ## target_type: "land", "creature", "player" など
 ## target_info: フィルター条件
 ## 戻り値: ターゲット情報の配列
@@ -94,6 +96,7 @@ static func get_valid_targets_core(systems: Dictionary, target_type: String, tar
 	var sys_player = systems.get("player_system")
 	var current_player_id = systems.get("current_player_id", 0)
 	var sys_flow = systems.get("game_flow_manager")
+	var spell_player_move = systems.get("spell_player_move")
 	var targets = []
 	
 	match target_type:
@@ -104,10 +107,10 @@ static func get_valid_targets_core(systems: Dictionary, target_type: String, tar
 			targets = _find_player_targets(sys_player, current_player_id, target_info)
 		
 		"land", "own_land", "enemy_land":
-			targets = _find_land_targets(sys_board, sys_player, sys_flow, current_player_id, target_type, target_info)
+			targets = _find_land_targets(sys_board, sys_player, sys_flow, spell_player_move, current_player_id, target_type, target_info)
 		
 		"unvisited_gate":
-			targets = _find_gate_targets(sys_flow, current_player_id)
+			targets = _find_gate_targets(spell_player_move, current_player_id)
 	
 	# most_common_element 後処理（クリーチャーターゲットのみ）
 	if target_info.get("most_common_element", false) and not targets.is_empty():
@@ -316,7 +319,7 @@ static func _find_player_targets(sys_player, current_player_id: int, target_info
 
 
 ## 土地ターゲット検索
-static func _find_land_targets(sys_board, sys_player, sys_flow, current_player_id: int, target_type: String, target_info: Dictionary) -> Array:
+static func _find_land_targets(sys_board, sys_player, sys_flow, spell_player_move, current_player_id: int, target_type: String, target_info: Dictionary) -> Array:
 	var targets = []
 	
 	if not sys_board:
@@ -399,8 +402,8 @@ static func _find_land_targets(sys_board, sys_player, sys_flow, current_player_i
 			elif sys_player and current_player_id >= 0:
 				player_tile = sys_player.players[current_player_id].current_tile
 			
-			if player_tile >= 0 and sys_flow and sys_flow.spell_player_move:
-				var dist = sys_flow.spell_player_move.calculate_tile_distance(player_tile, tile_index)
+			if player_tile >= 0 and spell_player_move:
+				var dist = spell_player_move.calculate_tile_distance(player_tile, tile_index)
 				if distance_min > 0 and dist < distance_min:
 					continue
 				if distance_max > 0 and dist > distance_max:
@@ -438,11 +441,11 @@ static func _find_land_targets(sys_board, sys_player, sys_flow, current_player_i
 
 
 ## ゲートターゲット検索
-static func _find_gate_targets(sys_flow, current_player_id: int) -> Array:
+static func _find_gate_targets(spell_player_move, current_player_id: int) -> Array:
 	var targets = []
-	
-	if sys_flow and sys_flow.spell_player_move:
-		var gate_tiles = sys_flow.spell_player_move.get_selectable_gate_tiles(current_player_id)
+
+	if spell_player_move:
+		var gate_tiles = spell_player_move.get_selectable_gate_tiles(current_player_id)
 		for gate_info in gate_tiles:
 			targets.append({
 				"type": "gate",

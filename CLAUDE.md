@@ -129,7 +129,7 @@ Three types of effects:
   2. `effects`: Processed during battle execution
 
 ### Spell System Architecture
-10 spell subsystems managed by `GameFlowManager`:
+10 spell subsystems managed via `SpellSystemContainer`:
 ```
 spell_draw          # Card draw effects
 spell_magic         # EP manipulation, land curse
@@ -143,10 +143,14 @@ spell_world_curse   # Global world curses
 spell_player_move   # Warp/movement effects
 ```
 
-**Reference Pattern**:
-- `SpellEffectExecutor` uses direct references (not `gfm.spell_*`)
-- Other systems still access via `game_flow_manager.spell_*` (legacy)
-- Future: Migrate all consumers to direct injection
+**Container Pattern** (Implemented 2026-02-13):
+- All spell systems centralized in `SpellSystemContainer` (RefCounted)
+- `GameFlowManager` holds `spell_container` reference
+- All access via `game_flow_manager.spell_container.spell_*`
+- Individual spell variables in GFM removed (no backward compatibility)
+- Node-type systems (spell_curse_stat, spell_world_curse) managed by GFM's add_child()
+- Eliminates dictionary ⇔ individual variable conversion chains
+- Pattern based on `CPUAIContext` design
 
 ## File Organization
 
@@ -193,11 +197,34 @@ data/
 3. Check relevant design documents in `docs/design/`
 4. Consult `docs/implementation/implementation_patterns.md` for templates
 
+### Coding Standards
+- **GDScript規約**: All GDScript code must follow the `gdscript-coding` skill rules
+- **詳細**: `docs/development/coding_standards.md` (also available as `~/.claude/skills/gdscript-coding/SKILL.md`)
+- **適用範囲**: GDScriptファイルの作成・編集・リファクタリング全般
+
 ### Documentation Rules
 - **DO NOT** modify `docs/design/` without explicit user request (design specs are sacred)
 - **DO** update `docs/issues/issues.md` when fixing bugs or adding features
 - **DO** update `docs/progress/daily_log.md` after completing work
 - **DO** use implementation patterns from `docs/implementation/implementation_patterns.md`
+
+### Mandatory Update Rules (重要)
+
+**作業計画・リファクタリング**:
+- 作業計画を詰めた場合は **必ず** `docs/progress/refactoring_next_steps.md` に記録すること
+- 計画変更時も即座に更新（追記ではなく上書き更新）
+- セッション終了前に必ず現状を記録
+
+**コード変更時のドキュメント更新**:
+- シグナル追加・変更時 → `docs/implementation/signal_catalog.md` を更新
+- 委譲メソッド追加時 → `docs/implementation/delegation_method_catalog.md` を更新
+- スペル・スキル・アルカナの内容変更時 → 関連設計ドキュメント（`docs/design/skills_design.md` など）を更新
+- **原則**: 関連ドキュメントがある場合は随時更新すること
+
+**新規ドキュメント作成**:
+- 新しいドキュメントを作成する前に **必ず計画を立案してユーザーに確認** すること
+- 既存ドキュメント構造との整合性を確認
+- 作成後は `docs/README.md` にリンクを追加
 
 ### Common Tasks
 
@@ -303,4 +330,4 @@ var panel_y = (viewport_size.y - panel_height) / 2  # Centered
 
 ---
 
-**Last Updated**: 2026-02-12
+**Last Updated**: 2026-02-13

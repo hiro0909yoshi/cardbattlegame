@@ -33,9 +33,9 @@ func set_game_flow_manager(gfm) -> void:
 ## ソリッドワールド（土地変性無効）チェック（公開メソッド）
 ## SpellWorldCurseに委譲
 func is_land_change_blocked() -> bool:
-	if not game_flow_manager_ref or not game_flow_manager_ref.spell_world_curse:
+	if not game_flow_manager_ref or not game_flow_manager_ref.spell_container or not game_flow_manager_ref.spell_container.spell_world_curse:
 		return false
-	return game_flow_manager_ref.spell_world_curse.check_land_change_blocked(false)
+	return game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(false)
 
 ## 土地の属性を変更
 func change_element(tile_index: int, new_element: String) -> bool:
@@ -45,8 +45,8 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		return false
 	
 	# ソリッドワールドチェック（ポップアップ付き）
-	if game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
-		if game_flow_manager_ref.spell_world_curse.check_land_change_blocked(true):
+	if game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
+		if game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(true):
 			return false
 	
 	# バロン等の土地破壊・変性無効チェック
@@ -97,8 +97,8 @@ func change_level(tile_index: int, delta: int) -> bool:
 		return false
 	
 	# ソリッドワールドチェック（レベルダウンのみブロック、ポップアップ付き）
-	if delta < 0 and game_flow_manager_ref and game_flow_manager_ref.spell_world_curse:
-		if game_flow_manager_ref.spell_world_curse.check_land_change_blocked(true):
+	if delta < 0 and game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
+		if game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(true):
 			return false
 	
 	# バロン等の土地破壊・変性無効チェック（レベルダウンのみ）

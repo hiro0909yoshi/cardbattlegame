@@ -64,8 +64,8 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	# game_flow_manager の直接参照を設定
 	if spell_phase_handler and spell_phase_handler.game_flow_manager:
 		game_flow_manager_ref = spell_phase_handler.game_flow_manager
-		if game_flow_manager_ref.spell_curse_stat:
-			spell_curse_stat = game_flow_manager_ref.spell_curse_stat
+		if game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_curse_stat:
+			spell_curse_stat = game_flow_manager_ref.spell_container.spell_curse_stat
 
 
 # ============ アルカナアーツフェーズ管理 ============
@@ -1091,8 +1091,8 @@ func _has_unyielding(creature_data: Dictionary) -> bool:
 
 ## ナチュラルワールドでアルカナアーツが無効化されているか
 func _is_mystic_arts_disabled() -> bool:
-	var game_stats = _get_game_stats()
-	return SpellWorldCurse.is_trigger_disabled("mystic_arts", game_stats)
+	var stats = _get_game_stats()
+	return SpellWorldCurse.is_trigger_disabled("mystic_arts", stats)
 
 
 ## game_statsを取得

@@ -373,9 +373,9 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		
 		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
-			var gfm = board_system.game_flow_manager if "game_flow_manager" in board_system else null
-			if gfm and gfm.spell_world_curse:
-				if gfm.spell_world_curse.check_invasion_blocked(current_player_id, tile.owner_id, false):
+			var spell_world_curse = board_system.get_meta("spell_world_curse") if board_system else null
+			if spell_world_curse:
+				if spell_world_curse.check_invasion_blocked(current_player_id, tile.owner_id, false):
 					continue  # 下位への侵略不可
 		
 		valid_tiles.append(tile_index)

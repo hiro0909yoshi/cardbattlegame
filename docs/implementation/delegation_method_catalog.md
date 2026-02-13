@@ -355,12 +355,12 @@ DebugSettings="*res://scripts/autoload/debug_settings.gd"
 ```gdscript
 # どこからでもアクセス可能
 if DebugSettings.manual_control_all:
-    # 全プレイヤー手動操作モード
-    pass
+	# 全プレイヤー手動操作モード
+	pass
 
 # 初期化時に設定
 func _ready():
-    DebugSettings.manual_control_all = true
+	DebugSettings.manual_control_all = true
 ```
 
 **メリット**:

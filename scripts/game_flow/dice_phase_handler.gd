@@ -35,7 +35,7 @@ func setup(p_player_system, p_player_buff_system, p_spell_dice, p_ui_manager, p_
 # spell_phase_handler: SpellPhaseHandler型（スペルフェーズ処理用）
 func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	# フェーズ情報を更新
-	current_phase = p_current_phase
+	current_phase = p_current_phase as GamePhase
 
 	# スペルフェーズ中の場合は、スペルを使わずにダイスロールに進む
 	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():

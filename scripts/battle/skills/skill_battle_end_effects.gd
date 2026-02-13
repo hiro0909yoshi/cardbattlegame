@@ -402,8 +402,8 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 # =============================================================================
 
 ## ナチュラルワールドによる無効化チェック
-static func _is_battle_end_nullified(game_stats: Dictionary) -> bool:
-	return SpellWorldCurse.is_trigger_disabled("on_battle_end", game_stats)
+static func _is_battle_end_nullified(stats: Dictionary) -> bool:
+	return SpellWorldCurse.is_trigger_disabled("on_battle_end", stats)
 
 
 # =============================================================================

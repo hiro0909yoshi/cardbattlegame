@@ -21,16 +21,6 @@ const BattleSystemClass = preload("res://scripts/battle_system.gd")
 const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
 const BattleScreenManagerClass = preload("res://scripts/battle_screen/battle_screen_manager.gd")
 const MagicStoneSystemClass = preload("res://scripts/tiles/magic_stone_system.gd")
-const SpellDrawClass = preload("res://scripts/spells/spell_draw.gd")
-const SpellMagicClass = preload("res://scripts/spells/spell_magic.gd")
-const SpellLandClass = preload("res://scripts/spells/spell_land_new.gd")
-const SpellCurseClass = preload("res://scripts/spells/spell_curse.gd")
-const SpellCurseTollClass = preload("res://scripts/spells/spell_curse_toll.gd")
-const SpellCostModifierClass = preload("res://scripts/spells/spell_cost_modifier.gd")
-const SpellDiceClass = preload("res://scripts/spells/spell_dice.gd")
-const SpellCurseStatClass = preload("res://scripts/spells/spell_curse_stat.gd")
-const SpellWorldCurseClass = preload("res://scripts/spells/spell_world_curse.gd")
-const SpellPlayerMoveClass = preload("res://scripts/spells/spell_player_move.gd")
 const LapSystemClass = preload("res://scripts/game_flow/lap_system.gd")
 
 # ゲーム状態
@@ -67,17 +57,8 @@ var battle_status_overlay = null
 # 魔法石システム
 var magic_stone_system
 
-# スペル効果システム
-var spell_draw
-var spell_magic
-var spell_land
-var spell_curse
-var spell_curse_toll
-var spell_cost_modifier
-var spell_dice
-var spell_curse_stat
-var spell_world_curse
-var spell_player_move
+# スペル効果システム（コンテナ方式）
+var spell_container: SpellSystemContainer = null
 
 # 破産処理ハンドラー
 var bankruptcy_handler = null
@@ -194,25 +175,15 @@ var cpu_special_tile_ai: CPUSpecialTileAI = null
 func set_cpu_special_tile_ai(ai: CPUSpecialTileAI) -> void:
 	cpu_special_tile_ai = ai
 
-## スペル効果システムを外部から設定（一括）
-func set_spell_systems(systems_dict: Dictionary) -> void:
-	spell_draw = systems_dict.get("spell_draw")
-	spell_magic = systems_dict.get("spell_magic")
-	spell_land = systems_dict.get("spell_land")
-	spell_curse = systems_dict.get("spell_curse")
-	spell_dice = systems_dict.get("spell_dice")
-	spell_curse_stat = systems_dict.get("spell_curse_stat")
-	spell_world_curse = systems_dict.get("spell_world_curse")
-	spell_player_move = systems_dict.get("spell_player_move")
-	bankruptcy_handler = systems_dict.get("bankruptcy_handler")
-	
-	# 子ノードとして追加（ノードタイプの場合）
-	if spell_curse_stat and not spell_curse_stat.get_parent():
-		add_child(spell_curse_stat)
-	if spell_world_curse and not spell_world_curse.get_parent():
-		add_child(spell_world_curse)
-	if bankruptcy_handler and not bankruptcy_handler.get_parent():
-		add_child(bankruptcy_handler)
+## SpellSystemContainerを設定（コンテナ方式）
+func set_spell_container(container: SpellSystemContainer) -> void:
+	spell_container = container
+
+	# Node型システムのadd_child()はGFMで継続
+	if container.spell_curse_stat and not container.spell_curse_stat.get_parent():
+		add_child(container.spell_curse_stat)
+	if container.spell_world_curse and not container.spell_world_curse.get_parent():
+		add_child(container.spell_world_curse)
 
 # ゲーム開始
 func start_game():
@@ -248,7 +219,7 @@ func start_turn():
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
 	if not _is_tutorial_mode():
-		var drawn = spell_draw.draw_one(current_player.id)
+		var drawn = spell_container.spell_draw.draw_one(current_player.id)
 		if not drawn.is_empty() and current_player.id == 0:
 			await get_tree().create_timer(0.1).timeout
 	
@@ -418,8 +389,8 @@ func end_turn():
 	player_buff_system.end_turn_cleanup()
 	
 	# 現在のプレイヤーの呪いのduration更新
-	if spell_curse:
-		spell_curse.update_player_curse(player_system.current_player_index)
+	if spell_container.spell_curse:
+		spell_container.spell_curse.update_player_curse(player_system.current_player_index)
 	
 	# プレイヤー切り替え処理（3D専用）
 	if board_system_3d:
@@ -442,8 +413,8 @@ func end_turn():
 					board_system_3d.toggle_all_branch_tiles()
 			
 			# 世界呪いのduration更新
-			if spell_world_curse:
-				spell_world_curse.on_round_start()
+			if spell_container.spell_world_curse:
+				spell_container.spell_world_curse.on_round_start()
 		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		
@@ -525,8 +496,8 @@ func check_and_handle_bankruptcy():
 ## 土地呪い発動（移動完了時に呼ばれる公開メソッド）
 ## 実処理はSpellMagicに委譲
 func trigger_land_curse_on_stop(tile_index: int, stopped_player_id: int):
-	if spell_magic:
-		spell_magic.trigger_land_curse(tile_index, stopped_player_id)
+	if spell_container.spell_magic:
+		spell_container.spell_magic.trigger_land_curse(tile_index, stopped_player_id)
 
 # ============================================
 # Phase 1-A: 新システム統合
@@ -555,18 +526,18 @@ func set_phase1a_handlers(
 		dominio_command_handler.dominio_command_closed.connect(_on_dominio_command_closed)
 	
 	# SpellCurseStatにシステム参照と通知UIを設定
-	if spell_curse_stat:
-		spell_curse_stat.set_systems(board_system_3d, player_system, card_system)
+	if spell_container.spell_curse_stat:
+		spell_container.spell_curse_stat.set_systems(board_system_3d, player_system, card_system)
 		if spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
-			spell_curse_stat.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+			spell_container.spell_curse_stat.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
 	
 	# dominio_command_handlerにspell_cast_notification_ui参照を渡す
 	if dominio_command_handler and spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
 		dominio_command_handler.spell_cast_notification_ui = spell_phase_handler.spell_cast_notification_ui
 	
 	# SpellMagicに通知UIを設定
-	if spell_magic and spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
-		spell_magic.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
+	if spell_container.spell_magic and spell_phase_handler and spell_phase_handler.spell_cast_notification_ui:
+		spell_container.spell_magic.set_notification_ui(spell_phase_handler.spell_cast_notification_ui)
 	
 	# BankruptcyHandlerにTargetSelectionHelper参照を設定
 	if bankruptcy_handler and target_selection_helper:

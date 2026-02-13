@@ -1144,8 +1144,8 @@ func get_selection_mode() -> String:
 func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 	# ブライトワールド（召喚条件解除）が発動中ならOK
 	if game_flow_manager_ref:
-		var game_stats = game_flow_manager_ref.game_stats
-		if SpellWorldCurse.is_summon_condition_ignored(game_stats):
+		var stats = game_flow_manager_ref.game_stats
+		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
 	# リリース呪い（制限解除）が発動中ならOK
@@ -1215,8 +1215,8 @@ func _get_lands_required_array(card_data: Dictionary) -> Array:
 func _check_cannot_summon(card_data: Dictionary, player_id: int) -> bool:
 	# ブライトワールド（召喚条件解除）が発動中ならOK
 	if game_flow_manager_ref:
-		var game_stats = game_flow_manager_ref.game_stats
-		if SpellWorldCurse.is_summon_condition_ignored(game_stats):
+		var stats = game_flow_manager_ref.game_stats
+		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
 	# リリース呪い（制限解除）が発動中ならOK

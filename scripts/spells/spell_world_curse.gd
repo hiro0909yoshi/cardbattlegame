@@ -61,8 +61,8 @@ func _get_game_stats() -> Dictionary:
 
 ## ソリッドワールド: 土地変性がブロックされるか（ポップアップ付き）
 func check_land_change_blocked(show_popup: bool = true) -> bool:
-	var game_stats = _get_game_stats()
-	if is_land_change_blocked(game_stats):
+	var stats = _get_game_stats()
+	if is_land_change_blocked(stats):
 		if show_popup:
 			show_blocked_notification("土地変性無効: ソリッドワールド発動中")
 		return true
@@ -73,8 +73,8 @@ func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool
 	if defender_id < 0:
 		return false
 	
-	var game_stats = _get_game_stats()
-	var world_curse = game_stats.get("world_curse", {})
+	var stats = _get_game_stats()
+	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "invasion_restrict":
 		return false
 	
@@ -95,8 +95,8 @@ func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool
 ## ミラーワールド: 同名クリーチャーのバトル時相殺チェック
 ## ミラーワールドが有効かどうかをチェック
 func is_mirror_world_active() -> bool:
-	var game_stats = _get_game_stats()
-	return is_same_creature_destroy_active(game_stats)
+	var stats = _get_game_stats()
+	return is_same_creature_destroy_active(stats)
 
 ## プレイヤーのフィールドに同名クリーチャーがいるかチェック
 ## board_system: ボードシステムの参照
@@ -128,8 +128,8 @@ func check_has_same_name_creature(board_system, player_id: int, creature_name: S
 
 ## ウェイストワールド: コスト倍率を取得
 func get_cost_multiplier_for_card(card: Dictionary) -> float:
-	var game_stats = _get_game_stats()
-	return get_cost_multiplier(card, game_stats)
+	var stats = _get_game_stats()
+	return get_cost_multiplier(card, stats)
 
 # ========================================
 # 呪い付与（エントリポイント）
@@ -154,25 +154,25 @@ func apply(effect: Dictionary) -> void:
 # ========================================
 
 ## ダークワールド: 呪い付きクリーチャーが防魔を得るか
-static func is_cursed_creature_protected(game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_cursed_creature_protected(stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "cursed_protection"
 
 ## ミスティワールド: 全セプターがスペル対象不可か
-static func is_all_players_spell_immune(game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_all_players_spell_immune(stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "world_spell_protection"
 
 ## ソリッドワールド: 土地変性が無効か
-static func is_land_change_blocked(game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_land_change_blocked(stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "land_protect"
 
 ## マーシフルワールド: 下位侵略が制限されているか
 ## attacker_rank: 攻撃者の順位（1が1位）
 ## defender_rank: 防御者の順位
-static func is_invasion_restricted(attacker_rank: int, defender_rank: int, game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_invasion_restricted(attacker_rank: int, defender_rank: int, stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "invasion_restrict":
 		return false
 	# 攻撃者が上位（数値が小さい）なら下位への侵略は制限
@@ -184,30 +184,30 @@ static func is_invasion_restricted(attacker_rank: int, defender_rank: int, game_
 ##   R = crown_bag_multiplier (2.0)
 ##   S = bag_multiplier (1.5)
 ##   N, C = 1.0（倍率なし）
-static func get_cost_multiplier(card: Dictionary, game_stats: Dictionary) -> float:
-	var world_curse = game_stats.get("world_curse", {})
+static func get_cost_multiplier(card: Dictionary, stats: Dictionary) -> float:
+	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "cost_increase":
 		return 1.0
 	var params = world_curse.get("params", {})
 	var rarity = card.get("rarity", "N")
-	
+
 	if rarity == "R":
 		return params.get("crown_bag_multiplier", 2.0)
 	elif rarity == "S":
 		return params.get("bag_multiplier", 1.5)
-	
+
 	# N, C は倍率なし
 	return 1.0
 
 ## ブライトワールド: 召喚条件が無視されるか
-static func is_summon_condition_ignored(game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_summon_condition_ignored(stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "summon_cost_free"
 
 ## ナチュラルワールド: 特定トリガーが無効か
 ## trigger_type: "mystic_arts", "on_self_destroy", "on_battle_end"
-static func is_trigger_disabled(trigger_type: String, game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_trigger_disabled(trigger_type: String, stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "skill_disable":
 		return false
 	var params = world_curse.get("params", {})
@@ -216,8 +216,8 @@ static func is_trigger_disabled(trigger_type: String, game_stats: Dictionary) ->
 
 ## ジョイントワールド: 連鎖ペアを取得
 ## 戻り値: [["fire", "earth"], ["water", "wind"]] 形式
-static func get_chain_pairs(game_stats: Dictionary) -> Array:
-	var world_curse = game_stats.get("world_curse", {})
+static func get_chain_pairs(stats: Dictionary) -> Array:
+	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "element_chain":
 		return []
 	var params = world_curse.get("params", {})
@@ -226,22 +226,22 @@ static func get_chain_pairs(game_stats: Dictionary) -> Array:
 ## ジョイントワールド: 2つの属性が同じ連鎖グループか判定
 ## 通常: 同属性のみ連鎖
 ## ジョイントワールド発動中: 火⇔地、水⇔風 も連鎖
-static func is_same_chain_group(elem1: String, elem2: String, game_stats: Dictionary) -> bool:
+static func is_same_chain_group(elem1: String, elem2: String, stats: Dictionary) -> bool:
 	# 同属性なら常にtrue
 	if elem1 == elem2:
 		return true
-	
+
 	# ジョイントワールド発動中のペアチェック
-	var pairs = get_chain_pairs(game_stats)
+	var pairs = get_chain_pairs(stats)
 	for pair in pairs:
 		if elem1 in pair and elem2 in pair:
 			return true
-	
+
 	return false
 
 ## ミラーワールド: 同種相殺が有効か
-static func is_same_creature_destroy_active(game_stats: Dictionary) -> bool:
-	var world_curse = game_stats.get("world_curse", {})
+static func is_same_creature_destroy_active(stats: Dictionary) -> bool:
+	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "same_creature_destroy"
 
 # ========================================
