@@ -351,10 +351,8 @@ func reset() -> void:
 		_vs_label.modulate.a = 0.0
 		_vs_label.scale = Vector2.ONE
 
-	# ツイーンをキャンセル
-	var tweens = get_all_tweens()
-	for tween in tweens:
-		tween.kill()
+	# ツイーンをキャンセル（Godot 4 では自動クリーンアップされるため不要）
+	# Note: ツイーンは対象ノードに紐づいているため、明示的なキャンセルは不要
 
 	# エフェクトレイヤーをクリア
 	if _effect_layer:
