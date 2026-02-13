@@ -3,9 +3,9 @@
 ## 概要
 ターン終了処理（`end_turn()`）の呼び出し経路と実装状況
 
-**バージョン**: 2.0  
-**最終更新**: 2025年12月16日  
-**ステータス**: 実装完了（BUG-000対策済み）
+**バージョン**: 3.0
+**最終更新**: 2026年2月13日
+**ステータス**: 実装完了（BUG-000完全解決）
 
 ---
 
@@ -170,6 +170,30 @@ func end_turn():
 
 **三重の防御機構により、重複実行は完全に防止されています。**
 
+### 4. シグナル接続の重複防止（2026-02-13追加）
+```gdscript
+# 全てのシグナル接続時に is_connected() チェックを実施
+if not signal.is_connected(callback):
+    signal.connect(callback)
+```
+
+**対象箇所（7ファイル、16箇所）**:
+- GameFlowManager: lap_completed, tile_action_completed, dominio_command_closed
+- DominioCommandHandler: level_up_selected
+- HandDisplay: card_drawn, card_used, hand_updated
+- BattleLogUI: log_added, battle_started, battle_ended
+- TileActionProcessor: invasion_completed, cpu_action_completed
+- BoardSystem3D: movement_started, movement_completed, action_completed (×2)
+- LapSystem: checkpoint_passed (既に実装済み)
+
+**効果**:
+- ゲーム再開時やシーン再読み込み時の多重接続を防止
+- イベントハンドラーの2重・3重実行を防止
+- メモリリーク（シグナル参照が解放されない）を防止
+
+**CPUTurnProcessorのベストプラクティス**:
+CPUTurnProcessorでは `CONNECT_ONE_SHOT` フラグを積極的に使用しており、接続が1回実行された後に自動切断される設計になっています。これは重複接続防止の優れた実装例です。
+
 ---
 
 ## ✅ 採用された修正
@@ -221,6 +245,15 @@ is_ending_turnフラグで十分なため、デバウンス処理は不採用。
 - [x] 2D版コード完全削除
 - [x] シグナル経路の一本化
 - [x] 三重防御機構の実装
+- [x] **シグナル接続の重複防止** (2026-02-13追加)
+  - [x] GameFlowManager (3箇所)
+  - [x] DominioCommandHandler (1箇所)
+  - [x] HandDisplay (3箇所)
+  - [x] BattleLogUI (3箇所)
+  - [x] TileActionProcessor (2箇所)
+  - [x] BoardSystem3D (4箇所)
+  - [x] LapSystem (既に実装済み)
+  - 合計: **7ファイル、16箇所**に `is_connected()` チェック追加
 
 ### 今後の検討事項
 - [ ] ターン管理の専用クラス作成（TurnManager）- 現状で問題ないため優先度低

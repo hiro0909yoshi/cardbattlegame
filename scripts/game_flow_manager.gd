@@ -95,7 +95,8 @@ var game_stats: Dictionary = {}
 func set_lap_system(system) -> void:
 	lap_system = system
 	if lap_system:
-		lap_system.lap_completed.connect(_on_lap_completed)
+		if not lap_system.lap_completed.is_connected(_on_lap_completed):
+			lap_system.lap_completed.connect(_on_lap_completed)
 
 func _on_lap_completed(player_id: int):
 	lap_completed.emit(player_id)
@@ -107,7 +108,8 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 
 	# 3Dボードのシグナル接続
 	if board_system_3d:
-		board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
+		if not board_system_3d.tile_action_completed.is_connected(_on_tile_action_completed_3d):
+			board_system_3d.tile_action_completed.connect(_on_tile_action_completed_3d)
 
 		# MovementControllerにgame_flow_managerを設定
 		board_system_3d.set_movement_controller_gfm(self)
@@ -523,7 +525,8 @@ func set_phase1a_handlers(
 	
 	# dominio_command_closedシグナルを接続
 	if dominio_command_handler and dominio_command_handler.has_signal("dominio_command_closed"):
-		dominio_command_handler.dominio_command_closed.connect(_on_dominio_command_closed)
+		if not dominio_command_handler.dominio_command_closed.is_connected(_on_dominio_command_closed):
+			dominio_command_handler.dominio_command_closed.connect(_on_dominio_command_closed)
 	
 	# SpellCurseStatにシステム参照と通知UIを設定
 	if spell_container.spell_curse_stat:

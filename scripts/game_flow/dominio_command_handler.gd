@@ -119,7 +119,8 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
-		ui_manager.level_up_selected.connect(_on_level_up_selected)
+		if not ui_manager.level_up_selected.is_connected(_on_level_up_selected):
+			ui_manager.level_up_selected.connect(_on_level_up_selected)
 	
 	# 土地情報パネルを初期化
 	_setup_land_info_panel()

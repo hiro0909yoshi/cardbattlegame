@@ -213,6 +213,41 @@
 
 ---
 
+### セッション7: BUG-000完全解決 + リスク分析（完了）
+
+**詳細ドキュメント**:
+- 作業詳細: `docs/design/turn_end_flow.md` v3.0
+- 次の作業: `docs/progress/refactoring_next_steps.md` フェーズ4-B, 4-C追加
+
+**フェーズ4-A完了: シグナル接続の重複排除（BUG-000完全解決）**
+- ✅ プロジェクト全体リスク分析実施
+  - 🔴 Critical: 4項目（null参照、シグナル重複、配列境界、無限ループ）
+  - 🟠 High: 4項目（HP管理、キャッシング、アイテム処理、検証不完全）
+  - 🟡 Medium: 7項目（巨大メソッド、デバッグフラグ、バフ管理等）
+- ✅ シグナル接続重複防止（7ファイル、16箇所）
+  - GameFlowManager (3箇所): lap_completed, tile_action_completed, dominio_command_closed
+  - DominioCommandHandler (1箇所): level_up_selected
+  - HandDisplay (3箇所): card_drawn, card_used, hand_updated
+  - BattleLogUI (3箇所): log_added, battle_started, battle_ended
+  - TileActionProcessor (2箇所): invasion_completed, cpu_action_completed
+  - BoardSystem3D (4箇所): movement_started, movement_completed, action_completed (×2)
+  - LapSystem: 既に実装済み
+- ✅ turn_end_flow.md 更新（v2.0 → v3.0）
+  - シグナル接続重複防止セクション追加
+  - CPUTurnProcessorのベストプラクティス記載（CONNECT_ONE_SHOT）
+- ✅ refactoring_next_steps.md 更新
+  - フェーズ4-B: 防御的プログラミング層追加（P0）
+  - フェーズ4-C: BattleParticipantのHP管理リファクタリング（P1）
+
+**成果**:
+- **BUG-000の根本原因を完全解決**: シグナル接続の重複による多重実行を防止
+- **実質的な価値の高いリファクタリング**: 初期化統合（過度なエンジニアリング）をスキップし、実際のリスク対策を実施
+- **次の優先作業を明確化**: P0（防御的プログラミング）、P1（HP管理リファクタリング）
+
+**⚠️ 残りトークン数**: 122,959 / 200,000
+
+---
+
 ## 2026年2月11日
 
 ### 完了タスク

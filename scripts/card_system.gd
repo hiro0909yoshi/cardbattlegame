@@ -20,9 +20,9 @@ var deck = []  # DEPRECATED - player_decks[0] を参照
 var discard = []  # DEPRECATED - player_discards[0] を参照
 
 # 新システム(マルチデッキ対応)
-var player_decks = {}  # player_id -> Array[int] (card_ids)
-var player_discards = {}  # player_id -> Array[int] (card_ids)
-var player_hands = {}  # player_id -> {"data": [card_data]}
+var player_decks: Dictionary = {}  # player_id -> Array[int] (card_ids)
+var player_discards: Dictionary = {}  # player_id -> Array[int] (card_ids)
+var player_hands: Dictionary = {}  # player_id -> {"data": [card_data]}
 
 func _ready():
 	# デッキ初期化はgame_system_managerのPhase3でinitialize_decks(player_count)を呼ぶ

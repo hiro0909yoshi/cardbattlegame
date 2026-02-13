@@ -33,9 +33,9 @@ class PlayerData:
 	var destroyed_count: int = 0  # バトルで破壊されたクリーチャー数
 
 # プレイヤー管理
-var players = []
+var players: Array[PlayerData] = []
 var current_player_index = 0
-var player_pieces = []  # 3D駒ノード配列
+var player_pieces: Array[Node] = []  # 3D駒ノード配列
 
 # 移動関連
 var is_moving = false

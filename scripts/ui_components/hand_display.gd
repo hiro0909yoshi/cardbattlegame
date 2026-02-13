@@ -45,13 +45,16 @@ func initialize(ui_parent: Node, card_sys, player_sys):
 func connect_card_system_signals():
 	if not card_system_ref:
 		return
-	
+
 	if card_system_ref.has_signal("card_drawn"):
-		card_system_ref.card_drawn.connect(_on_card_drawn)
+		if not card_system_ref.card_drawn.is_connected(_on_card_drawn):
+			card_system_ref.card_drawn.connect(_on_card_drawn)
 	if card_system_ref.has_signal("card_used"):
-		card_system_ref.card_used.connect(_on_card_used)
+		if not card_system_ref.card_used.is_connected(_on_card_used):
+			card_system_ref.card_used.connect(_on_card_used)
 	if card_system_ref.has_signal("hand_updated"):
-		card_system_ref.hand_updated.connect(_on_hand_updated)
+		if not card_system_ref.hand_updated.is_connected(_on_hand_updated):
+			card_system_ref.hand_updated.connect(_on_hand_updated)
 
 ## 手札表示を更新
 func update_hand_display(player_id: int):

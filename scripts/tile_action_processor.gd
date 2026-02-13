@@ -89,13 +89,15 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	
 	battle_executor = TileBattleExecutor.new()
 	battle_executor.initialize(b_system, p_system, c_system, bt_system, ui, gf_manager, summon_executor)
-	battle_executor.invasion_completed.connect(_on_invasion_completed)
+	if not battle_executor.invasion_completed.is_connected(_on_invasion_completed):
+		battle_executor.invasion_completed.connect(_on_invasion_completed)
 
 # CPUプロセッサーを設定
 func set_cpu_processor(cpu_processor):
 	cpu_turn_processor = cpu_processor
 	if cpu_turn_processor:
-		cpu_turn_processor.cpu_action_completed.connect(_on_cpu_action_completed)
+		if not cpu_turn_processor.cpu_action_completed.is_connected(_on_cpu_action_completed):
+			cpu_turn_processor.cpu_action_completed.connect(_on_cpu_action_completed)
 
 ## 直接参照を設定（GFM経由を廃止）
 ## executorにも伝播させる

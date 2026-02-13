@@ -5,9 +5,143 @@
 
 ---
 
-## 現在のフェーズ
+## 🔴 最優先フェーズ（P0）
 
-**フェーズ3-D: SpellSystemContainer導入**（完了：ステップ1-6すべて完了）
+### ✅ フェーズ4-A: BUG-000完全解決（完了：2026-02-13）
+
+**作業内容**: シグナル接続の重複排除（`is_connected()` チェック追加）
+
+**完了内容**:
+- 7ファイル、16箇所のシグナル接続に `is_connected()` チェック追加
+- GameFlowManager, DominioCommandHandler, HandDisplay, BattleLogUI, TileActionProcessor, BoardSystem3D
+- turn_end_flow.md 更新（v3.0）
+
+**成果**:
+- BUG-000（ターンスキップ）の根本原因を解決
+- イベントハンドラーの多重実行を防止
+- メモリリーク防止
+
+---
+
+### フェーズ4-B: 防御的プログラミング層の追加（P0）
+
+**背景**: プロジェクト全体のリスク分析で、**null参照チェックの全面欠如**が発見された。10+箇所でシステムクラッシュの可能性がある。
+
+**問題箇所**:
+```gdscript
+// 現状（問題あり）
+var drawn = spell_container.spell_draw.draw_one(current_player_id)
+// ↑ spell_container or spell_draw が null ならクラッシュ
+
+// 修正後
+if spell_container and spell_container.spell_draw:
+	var drawn = spell_container.spell_draw.draw_one(current_player_id)
+else:
+	push_error("[GFM] spell_draw が初期化されていません")
+	return
+```
+
+**対象ファイル**:
+1. **GameFlowManager** (最優先)
+   - line 222-225: spell_container.spell_draw.draw_one()
+   - line 277: spell_container.spell_draw.draw_one()
+   - line 447-448: spell_cursor.update_player_curse()
+
+2. **BattleSystem**
+   - line 95-98: spell_magic と spell_draw の再取得
+
+3. **SpellPhaseHandler**
+   - line 145-147: board_system から creature_manager 取得
+
+4. **BattlePreparation**
+   - line 72: defender_creature が空の場合の処理
+
+5. **CardLoader**
+   - line 95-107: IDの型変換で例外処理なし
+
+**作業内容**:
+- 主要な null 参照ポイントに防御チェック追加
+- 高頻度実行パス（GameFlowManager, BattleSystem, SpellPhaseHandler）を優先
+- push_error() でエラーログを強化
+
+**期待効果**:
+- システムクラッシュの大幅削減
+- セーブデータの部分的破損を防止
+- デバッグ時のエラー特定が容易に
+
+**作業時間**: 2～3セッション
+**リスク**: 中
+**優先度**: P0（最優先）
+
+---
+
+### フェーズ4-C: BattleParticipantのHP管理リファクタリング（P1）
+
+**背景**: BattleParticipantで**8種類のHP値**を同時管理しており、バグの温床となっている。
+
+**問題点**:
+```gdscript
+// BattleParticipant
+var current_hp: int
+var base_hp: int
+var base_up_hp: int
+var resonance_bonus_hp: int
+var temporary_bonus_hp: int
+var spell_bonus_hp: int
+var item_bonus_hp: int
+var land_bonus_hp: int
+
+// どれが「現在値」でどれが「ボーナス」か不明確
+// ダメージ計算時にどの値を使うか混乱
+```
+
+**影響範囲**:
+- BattleParticipant（全体）
+- BattleExecution（line 44-63: _update_hp_bar_after_damage）
+- BattlePreparation（line 62-107: 初期化時のHP値設定）
+- BattleSkillProcessor（全スキルのHP計算）
+
+**リファクタリング案**:
+```gdscript
+// 修正後（統一的な管理）
+class BattleParticipant:
+	var base_stats: Dictionary = {
+		"hp": 0,
+		"ap": 0
+	}
+	var bonus_stats: Dictionary = {
+		"resonance_hp": 0,
+		"item_hp": 0,
+		"spell_hp": 0,
+		"land_hp": 0,
+		"temporary_hp": 0
+	}
+	var current_hp: int
+
+	func get_max_hp() -> int:
+		var total = base_stats.hp
+		for bonus in bonus_stats.values():
+			total += bonus
+		return total
+
+	func apply_damage(amount: int):
+		current_hp = max(0, current_hp - amount)
+```
+
+**期待効果**:
+- HP計算の一元化
+- バトル結果の整合性向上
+- レベルアップ時のボーナス適用漏れを防止
+
+**作業時間**: 2～3セッション
+**リスク**: 高（バトルシステム全体に影響）
+**優先度**: P1（高）
+
+---
+
+## 完了したフェーズ（参考）
+
+### ✅ フェーズ3-D: SpellSystemContainer導入（完了：ステップ1-6すべて完了）
 
 ### Context（背景・目的）
 

@@ -34,9 +34,12 @@ func _ready():
 		get_tree().root.add_child(skill_log_system)
 	
 	# シグナル接続
-	skill_log_system.log_added.connect(_on_log_added)
-	skill_log_system.battle_started.connect(_on_battle_started)
-	skill_log_system.battle_ended.connect(_on_battle_ended)
+	if not skill_log_system.log_added.is_connected(_on_log_added):
+		skill_log_system.log_added.connect(_on_log_added)
+	if not skill_log_system.battle_started.is_connected(_on_battle_started):
+		skill_log_system.battle_started.connect(_on_battle_started)
+	if not skill_log_system.battle_ended.is_connected(_on_battle_ended):
+		skill_log_system.battle_ended.connect(_on_battle_ended)
 	
 	# UI初期化
 	_setup_ui()

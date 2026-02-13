@@ -2,11 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🚨 最優先作業（起動後必ず確認）
+
+**GDScript パターン監査 P0タスク実施中**
+
+起動後、以下を必ず確認してください：
+
+1. **タスクリストを確認**: `/tasks` コマンドでタスク #1, #2, #3 の状態を確認
+2. **作業中タスクがあれば継続**: `in_progress` のタスクを優先的に完了させる
+3. **次のタスクを開始**: `pending` のタスクを TaskUpdate で `in_progress` に変更してから作業開始
+
+**P0タスク（合計4-6時間、必須）**:
+- Task #1: 型指定なし配列の修正（1-2時間）
+- Task #2: spell_container の null チェック完全化（1時間）
+- Task #3: Optional型注釈を追加（2-3時間）
+
+**詳細ドキュメント**: `docs/analysis/action_items.md`
+
+**完了条件**: 全P0タスクが `completed` になったら、この最優先作業セクションを削除する。
+
+---
+
 ## Project Overview
 
-**カルドセプト風カードバトルゲーム** - A 3D tactical card battle game inspired by Culdcept, built with Godot 4.4.1.
+**カルドセプト風カードバトルゲーム** - A 3D tactical card battle game inspired by Culdcept, built with Godot 4.5.
 
-- **Engine**: Godot 4.4.1 (3D, Forward+ rendering)
+- **Engine**: Godot 4.5 (3D, Forward+ rendering)
 - **Language**: GDScript exclusively
 - **Platform**: macOS (M4 MacBook Air), cross-platform design
 - **Genre**: Hybrid board game + card game + strategy RPG
@@ -53,13 +74,42 @@ GameFlowManager (Central state machine)
 │   ├── BattleSkillProcessor (skill effects)
 │   └── ConditionChecker (condition validation)
 ├── PlayerSystem (player state and resources)
+├── PlayerBuffSystem (player-level buffs and curses)
 ├── SkillSystem (skill effect management)
-└── UIManager (UI coordination)
-	├── CardSelectionUI
-	├── HandDisplay
-	├── PhaseDisplay
-	└── 7+ other UI components
+├── SpecialTileSystem (warp tiles, magic stones)
+├── LapSystem (lap counting and checkpoint bonuses)
+├── UIManager (UI coordination)
+│   ├── CardSelectionUI
+│   ├── HandDisplay
+│   ├── PhaseDisplay
+│   └── 15+ other UI components
+├── BattleScreenManager (battle animations and visual effects)
+└── Spell Systems (via SpellSystemContainer)
+	├── DicePhaseHandler (dice roll management)
+	├── TollPaymentHandler (toll payment processing)
+	├── DiscardHandler (hand size management)
+	└── BankruptcyHandler (bankruptcy processing)
 ```
+
+### Initialization System
+
+**GameSystemManager** (`scripts/system_manager/game_system_manager.gd`):
+- Central initialization coordinator created by game_3d.gd
+- Creates all subsystems in proper dependency order
+- Injects references between systems
+- Manages the 3-phase initialization process:
+  1. **Phase 0**: Core system creation (GFM, BoardSystem3D, CardSystem, etc.)
+  2. **Phase 1**: Handler and spell system setup (SpellSystemContainer, handlers)
+  3. **Phase 2**: Final UI and reference injection
+
+Critical initialization sequence in game_3d.gd `_ready()`:
+1. Create GameSystemManager
+2. Set UIManager references
+3. Initialize hand container
+4. Set `debug_manual_control_all` flag (before `setup_systems()`)
+5. Call `GameSystemManager.setup_systems()`
+6. Call `GameFlowManager.setup_3d_mode()`
+7. Re-set CardSelectionUI references (required due to timing)
 
 ### Game Flow
 
@@ -76,9 +126,11 @@ Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
    - `tile_action_completed` → triggers turn end
    - `hand_updated` → refreshes UI
    - `phase_changed` → coordinates game flow
+   - **CRITICAL**: All signal connections use `is_connected()` checks to prevent duplicates
 
 2. **Subsystem Delegation**: Major systems delegate to specialized subsystems
    - Example: `BoardSystem3D` delegates to `TileNeighborSystem`, `MovementController3D`, etc.
+   - Example: `GameFlowManager` delegates to `DicePhaseHandler`, `TollPaymentHandler`, etc.
 
 3. **Data-Driven Design**: All game content in JSON files with parsed ability systems
    - Creatures: 5 elements × 2 files each (fire_1.json, fire_2.json, etc.)
@@ -88,13 +140,21 @@ Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
 4. **BattleParticipant Pattern**: Wraps creature data for battle, tracking temporary modifications separately from base stats
 
 5. **Autoload Singletons**:
+   - `DebugSettings`: Global debug flag management (debug_manual_control_all, etc.)
    - `CardLoader`: Global card database
-   - `GameData`: Persistent game state
+   - `UserCardDB`: User-owned card collection and gacha system
+   - `GameData`: Persistent game state (gold, quest progress, etc.)
+   - `CpuDeckData`: CPU player deck configurations
 
 6. **Direct Reference Pattern** (Spell Systems):
    - `SpellEffectExecutor` holds direct references to spell systems (not via GFM)
    - Eliminates chain access like `handler.game_flow_manager.spell_magic`
-   - References injected via `set_spell_systems()` during initialization
+   - References injected via `set_spell_container()` during initialization
+
+7. **Container Pattern** (SpellSystemContainer):
+   - All spell systems centralized in a single RefCounted container
+   - Eliminates dictionary ⇔ individual variable conversion chains
+   - Pattern based on `CPUAIContext` design
 
 ## Critical Implementation Details
 
@@ -121,7 +181,7 @@ Three types of effects:
 2. **Temporary**: Spells (HP+10) - removed on movement
 3. **Permanent**: Mass Growth effects - persist until swap
 
-### Item Skill System (NEW)
+### Item Skill System
 - Items can now have combat-triggered skills (not just stat bonuses)
 - Uses `effect_parsed` (different from creatures' `ability_parsed`)
 - Two-stage processing:
@@ -129,18 +189,25 @@ Three types of effects:
   2. `effects`: Processed during battle execution
 
 ### Spell System Architecture
-10 spell subsystems managed via `SpellSystemContainer`:
+
+**8 core + 2 derived = 10 spell subsystems** managed via `SpellSystemContainer`:
+
+**Core Systems (8)**:
 ```
 spell_draw          # Card draw effects
 spell_magic         # EP manipulation, land curse
 spell_land          # Land element/level changes
 spell_curse         # Creature/player curses
-spell_curse_toll    # Toll modification curses
-spell_cost_modifier # Cost modification effects
 spell_dice          # Dice modification effects
 spell_curse_stat    # Stat modification curses
 spell_world_curse   # Global world curses
 spell_player_move   # Warp/movement effects
+```
+
+**Derived Systems (2)**:
+```
+spell_curse_toll    # Toll modification curses
+spell_cost_modifier # Cost modification effects
 ```
 
 **Container Pattern** (Implemented 2026-02-13):
@@ -157,21 +224,42 @@ spell_player_move   # Warp/movement effects
 ### Key Directories
 ```
 scripts/
-├── game_flow/              # Game flow management
+├── autoload/                # Autoload singletons
+│   └── debug_settings.gd
+├── system_manager/          # Initialization coordinator
+│   └── game_system_manager.gd
+├── game_flow/               # Game flow management
 │   ├── game_flow_manager.gd
-│   ├── dominio_order_handler.gd
+│   ├── dominio_command_handler.gd
 │   ├── spell_phase_handler.gd
-│   └── item_phase_handler.gd
-├── battle/                 # Battle system
+│   ├── item_phase_handler.gd
+│   ├── dice_phase_handler.gd
+│   ├── toll_payment_handler.gd
+│   ├── discard_handler.gd
+│   └── bankruptcy_handler.gd
+├── battle/                  # Battle system
 │   ├── battle_system.gd
 │   ├── battle_preparation.gd
 │   ├── battle_execution.gd
 │   ├── battle_skill_processor.gd
 │   └── condition_checker.gd
-├── skills/                 # Skill implementations
+├── skills/                  # Skill implementations
 │   └── effect_combat.gd
-├── ui_components/          # UI components (7+ files)
-└── tiles/                  # Tile-related scripts
+├── spells/                  # Spell systems (25+ files)
+│   ├── spell_system_container.gd
+│   └── spell_draw/          # Card draw subsystems
+├── ui_components/           # UI components (15+ files)
+├── cpu_ai/                  # CPU AI logic (10+ files)
+├── battle_test/             # Battle testing framework
+├── battle_screen/           # Battle animations
+├── tiles/                   # Tile-related scripts
+├── creatures/               # Creature-specific logic
+├── quest/                   # Quest system
+├── tutorial/                # Tutorial system
+├── helpers/                 # Utility helpers
+├── utils/                   # Utility functions
+├── save_data/               # Save/load system
+└── network/                 # Network functionality
 
 data/
 ├── fire_1.json, fire_2.json    # Fire creatures
@@ -186,10 +274,86 @@ data/
 ### Recent Major Refactorings
 - `TileActionProcessor`: 1,284 lines → 5 files
 - `DominioOrderHandler`: 881 lines → 4 files
-- `UIManager`: Split into 7+ components
-- `SpellEffectExecutor`: Direct spell system references (GFM chain access eliminated)
+- `UIManager`: Split into 15+ components
+- `GameFlowManager`: 982 → 724 lines (258 lines removed via handler extraction)
+- `SpellSystemContainer`: Unified 10+2 spell systems (eliminated 3 conversion chains)
+- `DebugSettings` Autoload: Centralized debug flag management
+- Signal Connection Safety: Added `is_connected()` checks project-wide (BUG-000 fix)
 
 ## Development Workflow
+
+### Agent Workflow (CRITICAL - ALWAYS FOLLOW)
+
+**エージェント役割分担**: 作業の性質に応じて、適切なモデルを自動的に使い分ける
+
+#### 1. 受け答え・調整 → **Sonnet（私）**
+- ユーザーとの対話
+- 質問への回答
+- 作業結果の報告
+- ドキュメント更新
+
+#### 2. 企画・計画立案 → **Opus（Plan agent）**
+- 複雑な設計の立案
+- リファクタリング計画の策定
+- アーキテクチャ設計
+- リスク分析
+
+**使用方法**:
+```python
+Task(
+  subagent_type="Plan",
+  model="opus",
+  prompt="詳細な実装計画を策定してください..."
+)
+```
+
+#### 3. 実装・コード記述 → **Haiku（Task tool）**
+- 実際のコード修正
+- null参照チェック追加
+- シグナル接続修正
+- テストコード記述
+
+**使用方法**:
+```python
+Task(
+  subagent_type="general-purpose",
+  model="haiku",  # 環境変数 CLAUDE_CODE_SUBAGENT_MODEL でデフォルト設定済み
+  prompt="""
+## タスク: null参照チェック追加
+
+### 対象ファイル
+1. scripts/game_flow_manager.gd
+   - Line 222: spell_container.spell_draw.draw_one()
+
+### 修正パターン
+\`\`\`gdscript
+if spell_container and spell_container.spell_draw:
+    var drawn = spell_container.spell_draw.draw_one(player_id)
+else:
+    push_error("[GFM] spell_draw が初期化されていません")
+    return
+\`\`\`
+"""
+)
+```
+
+#### 自動判断基準
+
+**Opusを使用する場合**:
+- リファクタリング計画が必要
+- 複雑な設計判断が必要
+- 複数の実装アプローチを比較検討する必要がある
+
+**Haikuを使用する場合**:
+- 明確な修正パターンがある
+- コード記述が主な作業
+- 繰り返し作業（複数ファイルの同じパターン修正）
+
+**Sonnet（私）を使用する場合**:
+- ユーザーとの対話
+- 簡単な質問への回答
+- ドキュメント更新
+- 作業結果の統合・報告
 
 ### Before Making Changes
 1. **ALWAYS check `docs/README.md` first** - This is the project's central documentation index
@@ -250,9 +414,14 @@ data/
 ## Known Issues and Constraints
 
 ### Critical Bugs
-- **BUG-000**: Turn skipping due to duplicate signal emissions (partially mitigated)
-  - Related to `tile_action_completed` signal chain
-  - Multiple guards in place to prevent duplicate `end_turn()` calls
+- **BUG-000**: Turn skipping due to duplicate signal emissions (✅ **RESOLVED** 2026-02-13)
+  - Fixed with `is_connected()` checks in all signal connections
+  - 16 locations across 7 files now protected against duplicate handlers
+
+### Active Priorities
+- **P0**: Defensive programming layer - add null reference checks to prevent crashes
+  - 10+ high-risk locations identified in GameFlowManager, BattleSystem, SpellPhaseHandler
+  - See `docs/progress/refactoring_next_steps.md` for details
 
 ### Deprecated Systems
 - **Attribute affinity system** (fire→wind→earth→water cycle) - marked for removal
@@ -268,19 +437,9 @@ data/
 
 ### Debug Features
 - **Debug Panel**: Right side of screen (toggle with specific key)
-- **Manual Control All**: `debug_manual_control_all` flag in GameFlowManager makes all CPU players manually controllable
+- **Manual Control All**: `DebugSettings.debug_manual_control_all` flag makes all CPU players manually controllable
 - **Battle Test Tool**: Comprehensive testing framework for skill validation (docs/design/battle_test_tool_design.md)
 - **U Key**: Instantly clears down state for all player's lands (development only)
-
-### Initialization Order
-Critical initialization sequence in game_3d.gd `_ready()`:
-1. Create systems
-2. Set UIManager references
-3. Initialize hand container
-4. Set `debug_manual_control_all` flag (before `setup_systems()`)
-5. Call `GameFlowManager.setup_systems()`
-6. Call `GameFlowManager.setup_3d_mode()`
-7. Re-set CardSelectionUI references (required due to timing)
 
 ## Important Notes
 
@@ -301,6 +460,18 @@ var panel_y = (viewport_size.y - panel_height) / 2  # Centered
 - Avoid reserved words: `owner` → `tile_owner`
 - Return type declarations must allow null if function can return null
 - TextureRect doesn't have `color` property, use `modulate` instead
+
+### Signal Connection Safety
+**CRITICAL**: Always check for existing connections before connecting signals to prevent duplicate handlers:
+```gdscript
+if not signal_name.is_connected(handler_method):
+	signal_name.connect(handler_method)
+```
+
+This prevents:
+- Turn skipping (BUG-000)
+- Memory leaks
+- Multiple event handler executions
 
 ## Future Plans
 
@@ -323,6 +494,7 @@ var panel_y = (viewport_size.y - panel_height) / 2  # Centered
 - `docs/progress/daily_log.md` - Recent work history
 - `docs/progress/skill_implementation_status.md` - Skill completion status
 - `docs/progress/refactoring_progress.md` - Code refactoring history
+- `docs/progress/refactoring_next_steps.md` - Current and planned refactoring work
 
 ### Issue Management
 - `docs/issues/issues.md` - Active bugs and tasks

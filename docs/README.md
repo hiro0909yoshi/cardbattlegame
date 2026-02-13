@@ -135,6 +135,15 @@ docs/
 | [delegation_method_catalog.md](implementation/delegation_method_catalog.md) | 委譲メソッドカタログ |
 | [signal_catalog.md](implementation/signal_catalog.md) | シグナルカタログ（192シグナル） |
 
+### コード品質分析
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [analysis/README.md](analysis/README.md) | GDScript パターン監査ドキュメントインデックス |
+| [analysis/quick_reference.md](analysis/quick_reference.md) | 1ページ要約（5分で読了） |
+| [analysis/action_items.md](analysis/action_items.md) | 実装タスク一覧（優先度別） |
+| [analysis/godot_patterns_audit.md](analysis/godot_patterns_audit.md) | 完全な監査レポート（詳細分析） |
+
 ---
 
 ## 📂 個別スキル仕様書（29ファイル）

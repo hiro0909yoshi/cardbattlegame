@@ -43,9 +43,9 @@ var current_player_index = 0
 # 状態管理は TileActionProcessor に統一
 
 # 3Dノード参照
-var tile_nodes = {}        # tile_index -> BaseTile
-var player_nodes = []      # 3D駒のノード配列
-var camera = null
+var tile_nodes: Dictionary = {}        # tile_index -> BaseTile
+var player_nodes: Array[Node] = []      # 3D駒のノード配列
+var camera: Camera3D = null
 var camera_controller: CameraController = null
 
 # システム参照
@@ -116,10 +116,14 @@ func create_subsystems():
 		print("ERROR: CPUTurnProcessorクラスが読み込めません")
 	
 	# シグナル接続
-	movement_controller.movement_started.connect(_on_movement_started)
-	movement_controller.movement_completed.connect(_on_movement_completed)
-	tile_action_processor.action_completed.connect(_on_action_completed)
-	cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
+	if not movement_controller.movement_started.is_connected(_on_movement_started):
+		movement_controller.movement_started.connect(_on_movement_started)
+	if not movement_controller.movement_completed.is_connected(_on_movement_completed):
+		movement_controller.movement_completed.connect(_on_movement_completed)
+	if not tile_action_processor.action_completed.is_connected(_on_action_completed):
+		tile_action_processor.action_completed.connect(_on_action_completed)
+	if not cpu_turn_processor.cpu_action_completed.is_connected(_on_action_completed):
+		cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
 
 func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BattleSystem, 
 				   s_system: PlayerBuffSystem, st_system: SpecialTileSystem = null, gf_manager = null):
