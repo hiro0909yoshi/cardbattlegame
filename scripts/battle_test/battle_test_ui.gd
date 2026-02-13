@@ -67,6 +67,18 @@ var last_focused_type: String = "creature"  # "creature" or "item"
 @onready var execute_button: Button = $MainSplitContainer/MainContainer/ExecuteButton
 @onready var result_label: Label = $MainSplitContainer/MainContainer/ResultLabel
 
+## ========== 新規追加: ビジュアルモード設定 ==========
+## ビジュアルモードUI（動的に作成）
+var visual_mode_check: CheckBox = null
+var auto_advance_check: CheckBox = null
+
+## ========== 新規追加: 呪いスペル選択UI ==========
+var attacker_curse_option: OptionButton = null
+var defender_curse_option: OptionButton = null
+
+## ========== 新規追加: BattleScreenManager参照 ==========
+var _battle_screen_manager: BattleScreenManager = null
+
 ## 結果表示
 @onready var statistics_label: RichTextLabel = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/StatisticsTab/StatisticsLabel
 @onready var detail_table: ItemList = $MainSplitContainer/ResultPanel/ResultContainer/ResultTabs/DetailTable
@@ -80,13 +92,140 @@ func _ready():
 	await get_tree().process_frame
 	_setup_ui()
 
+	# ========== 新規追加: BattleScreenManager作成 ==========
+	_battle_screen_manager = BattleScreenManager.new()
+	_battle_screen_manager.name = "BattleScreenManager_Test"
+	add_child(_battle_screen_manager)
+	print("[BattleTestUI] BattleScreenManager作成完了")
+
 ## UI初期化
 func _setup_ui():
 	# カード一覧ボタンを動的に追加
 	_add_card_list_button()
-	
+
 	# 入力フィールドのフォーカスイベントを設定
 	_setup_focus_tracking()
+
+	# ========== 新規追加: 呪いスペル選択UI ==========
+	_setup_curse_ui()
+
+	# ========== 新規追加: ビジュアルモード設定UI ==========
+	_setup_visual_mode_ui()
+
+## ========== 新規追加: ビジュアルモード設定UI作成 ==========
+func _setup_visual_mode_ui():
+	# 実行ボタンの親コンテナを取得
+	var execute_button_parent = execute_button.get_parent()
+	if not execute_button_parent:
+		push_error("[BattleTestUI] execute_button の親コンテナが見つかりません")
+		return
+
+	# ビジュアルモード設定コンテナ
+	var visual_mode_container = HBoxContainer.new()
+	visual_mode_container.name = "VisualModeContainer"
+
+	# ビジュアルモードチェックボックス
+	visual_mode_check = CheckBox.new()
+	visual_mode_check.text = "ビジュアルモード（BattleScreen表示）"
+	visual_mode_check.tooltip_text = "バトル画面を表示してエフェクトを確認"
+	visual_mode_container.add_child(visual_mode_check)
+
+	# 自動進行チェックボックス
+	auto_advance_check = CheckBox.new()
+	auto_advance_check.text = "自動進行"
+	auto_advance_check.tooltip_text = "クリック待ちなしで連続実行"
+	visual_mode_container.add_child(auto_advance_check)
+
+	# 実行ボタンの前に挿入
+	var button_index = execute_button.get_index()
+	execute_button_parent.add_child(visual_mode_container)
+	execute_button_parent.move_child(visual_mode_container, button_index)
+
+	print("[BattleTestUI] ビジュアルモード設定UI作成完了")
+
+## ========== 新規追加: 呪いスペル選択UI作成 ==========
+func _setup_curse_ui():
+	# アイテムリストの親コンテナを取得
+	var item_list_parent = attacker_item_list.get_parent()
+	if not item_list_parent:
+		push_error("[BattleTestUI] アイテムリストの親コンテナが見つかりません")
+		return
+
+	# 攻撃側呪いスペル選択コンテナ
+	var attacker_curse_container = VBoxContainer.new()
+	attacker_curse_container.name = "AttackerCurseContainer"
+
+	var attacker_curse_label = Label.new()
+	attacker_curse_label.text = "攻撃側呪いスペル:"
+	attacker_curse_container.add_child(attacker_curse_label)
+
+	attacker_curse_option = OptionButton.new()
+	attacker_curse_option.name = "AttackerCurseOption"
+	_populate_curse_options(attacker_curse_option)
+	attacker_curse_option.item_selected.connect(_on_attacker_curse_selected)
+	attacker_curse_container.add_child(attacker_curse_option)
+
+	# アイテムリストの後ろに挿入
+	item_list_parent.add_child(attacker_curse_container)
+
+	# 防御側呪いスペル選択コンテナ
+	var defender_item_list_parent = defender_item_list.get_parent()
+	if not defender_item_list_parent:
+		push_error("[BattleTestUI] 防御側アイテムリストの親コンテナが見つかりません")
+		return
+
+	var defender_curse_container = VBoxContainer.new()
+	defender_curse_container.name = "DefenderCurseContainer"
+
+	var defender_curse_label = Label.new()
+	defender_curse_label.text = "防御側呪いスペル:"
+	defender_curse_container.add_child(defender_curse_label)
+
+	defender_curse_option = OptionButton.new()
+	defender_curse_option.name = "DefenderCurseOption"
+	_populate_curse_options(defender_curse_option)
+	defender_curse_option.item_selected.connect(_on_defender_curse_selected)
+	defender_curse_container.add_child(defender_curse_option)
+
+	# アイテムリストの後ろに挿入
+	defender_item_list_parent.add_child(defender_curse_container)
+
+	print("[BattleTestUI] 呪いスペル選択UI作成完了")
+
+## 呪いスペル選択肢を追加
+func _populate_curse_options(option_button: OptionButton):
+	option_button.add_item("なし", 0)
+	option_button.add_item("ディジーズ (AP&HP-20)", 2054)
+	option_button.add_item("バインドミスト (戦闘不可)", 2068)
+	option_button.add_item("プレイグ (戦闘後HP減)", 2087)
+	option_button.add_item("ナチュラルワールド (スキル無効)", 2064)
+	option_button.add_item("ボーテックス (スキル無効)", 2094)
+	option_button.add_item("バイタリティ (AP&HP+20)", 2066)
+	option_button.add_item("エネルギーフィールド (攻撃無効)", 2015)
+	option_button.add_item("リキッドフォーム (ランダム)", 2120)
+	option_button.add_item("メタルフォーム (攻撃無効)", 2114)
+	option_button.add_item("マジックシェルター (防魔)", 2105)
+	option_button.add_item("シニリティ (戦闘後破壊)", 2032)
+	option_button.add_item("ディスエレメント (地形無効)", 2055)
+	option_button.add_item("ディラニー (MHP30以下不可)", 2057)
+	option_button.add_item("ダークワールド (呪い防魔)", 2048)
+	option_button.add_item("ミラーワールド (同種破壊)", 2111)
+	option_button.add_item("ハイパーアクティブ (不屈)", 2067)
+	option_button.add_item("マスファンタズム (HP効果無効)", 2108)
+	option_button.add_item("ブラストトラップ (爆発罠)", 2083)
+	option_button.selected = 0  # デフォルト: なし
+
+## 攻撃側呪いスペル選択ハンドラー
+func _on_attacker_curse_selected(index: int):
+	var spell_id = attacker_curse_option.get_item_id(index)
+	config.attacker_curse_spell_id = spell_id
+	print("[BattleTestUI] 攻撃側呪いスペル選択: ID=", spell_id)
+
+## 防御側呪いスペル選択ハンドラー
+func _on_defender_curse_selected(index: int):
+	var spell_id = defender_curse_option.get_item_id(index)
+	config.defender_curse_spell_id = spell_id
+	print("[BattleTestUI] 防御側呪いスペル選択: ID=", spell_id)
 
 ## フォーカストラッキングを設定
 func _setup_focus_tracking():
@@ -565,32 +704,49 @@ func _swap_land_settings():
 
 func _on_execute_button_pressed():
 	print("[BattleTestUI] テスト実行開始")
-	
+
 	if not config.validate():
 		push_error("設定が不正です")
 		result_label.text = "エラー: クリーチャーが未登録です"
 		return
-	
+
+	# ビジュアルモード設定を反映
+	if visual_mode_check:
+		config.visual_mode = visual_mode_check.button_pressed
+		config.auto_advance = auto_advance_check.button_pressed
+
 	# ボタンを無効化
 	execute_button.disabled = true
-	result_label.text = "実行中..."
-	
-	# 次フレームでバトル実行（UIをブロックしないため）
-	await get_tree().process_frame
-	
-	# バトル実行
-	results = BattleTestExecutor.execute_all_battles(config)
-	
-	# 統計計算
-	statistics = BattleTestStatistics.calculate(results)
-	
-	# 結果表示
-	_display_results()
-	
+
+	# 実行モード分岐
+	if config.visual_mode:
+		print("[BattleTestUI] ビジュアルモード実行開始")
+		result_label.text = "ビジュアルモード実行中..."
+		await _execute_visual_mode()
+	else:
+		print("[BattleTestUI] ロジックモード実行開始")
+		result_label.text = "実行中..."
+		_execute_logic_mode()
+
 	# ボタンを有効化
 	execute_button.disabled = false
-	
+
 	print("[BattleTestUI] テスト実行完了")
+
+## ロジックモード実行（既存の処理）
+func _execute_logic_mode():
+	# 次フレームでバトル実行（UIをブロックしないため）
+	await get_tree().process_frame
+
+	# バトル実行
+	results = BattleTestExecutor.execute_all_battles(config)
+
+	# 統計計算
+	statistics = BattleTestStatistics.calculate(results)
+
+	# 結果表示
+	_display_results()
+	print("[BattleTestUI] ロジックモード実行完了")
 
 ## 結果表示
 func _display_results():
@@ -1033,3 +1189,239 @@ func _auto_fill_card_id(card_id: int):
 			print("[BattleTestUI] スペルID: ", card_id, " - 自動入力未実装")
 	
 	print("[BattleTestUI] カードID ", card_id, " を", last_focused_side, "に自動入力しました")
+
+## ========== ビジュアルモード実装 ==========
+
+## ビジュアルモード実行
+func _execute_visual_mode():
+	# テストケース生成
+	var test_cases = _generate_test_cases()
+
+	if test_cases.is_empty():
+		push_error("[ビジュアルモード] テストケースが生成できません")
+		return
+
+	print("[ビジュアルモード] ", test_cases.size(), "バトル実行開始")
+
+	for i in range(test_cases.size()):
+		var test_case = test_cases[i]
+
+		# プログレス表示
+		result_label.text = "バトル %d / %d 実行中..." % [i + 1, test_cases.size()]
+
+		# バトル実行
+		await _execute_single_visual_battle(test_case, i + 1, test_cases.size())
+
+		# 自動進行がOFFなら、ユーザーのクリック待ち
+		if not config.auto_advance:
+			result_label.text = "クリックして次のバトルへ... (%d / %d)" % [i + 1, test_cases.size()]
+			await _wait_for_user_click()
+
+	result_label.text = "ビジュアルモード完了: %d バトル実行" % test_cases.size()
+	print("[ビジュアルモード] 完了")
+
+## テストケース生成
+func _generate_test_cases() -> Array:
+	var cases = []
+
+	# 攻撃側×防御側×アイテムの組み合わせ
+	for att_creature_id in config.attacker_creatures:
+		for def_creature_id in config.defender_creatures:
+			# アイテムなしも含める
+			var att_items = config.attacker_items if config.attacker_items.size() > 0 else [-1]
+			for att_item_id in att_items:
+				var def_items = config.defender_items if config.defender_items.size() > 0 else [-1]
+				for def_item_id in def_items:
+					cases.append({
+						"attacker_creature_id": att_creature_id,
+						"attacker_item_id": att_item_id,
+						"defender_creature_id": def_creature_id,
+						"defender_item_id": def_item_id
+					})
+
+	return cases
+
+## 単一バトルを視覚的に実行
+func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total_battles: int):
+	# クリーチャーデータ準備
+	var attacker_card = CardLoader.get_card_by_id(test_case.attacker_creature_id)
+	var defender_card = CardLoader.get_card_by_id(test_case.defender_creature_id)
+
+	if not attacker_card or not defender_card:
+		push_error("[ビジュアルモード] カードデータ取得失敗")
+		return
+
+	# データ複製（duplicate(true)で深いコピー）
+	var attacker_data = attacker_card.duplicate(true)
+	var defender_data = defender_card.duplicate(true)
+
+	# アイテム追加
+	if test_case.attacker_item_id > 0:
+		var item = CardLoader.get_card_by_id(test_case.attacker_item_id)
+		if item:
+			attacker_data["items"] = [item]
+
+	if test_case.defender_item_id > 0:
+		var item = CardLoader.get_card_by_id(test_case.defender_item_id)
+		if item:
+			defender_data["items"] = [item]
+
+	# 土地ボーナス計算（防御側のみ）
+	var land_bonus = 0
+	if defender_data.get("element", "") == config.defender_battle_land:
+		land_bonus = config.defender_battle_land_level * 10
+
+	# current_hp設定
+	attacker_data["current_hp"] = attacker_data.get("hp", 0)
+	defender_data["current_hp"] = defender_data.get("hp", 0) + land_bonus
+
+	# current_ap設定
+	attacker_data["current_ap"] = attacker_data.get("ap", 0)
+	defender_data["current_ap"] = defender_data.get("ap", 0)
+
+	print("[ビジュアルモード] バトル%d/%d: %s vs %s" % [
+		battle_num, total_battles,
+		attacker_data.get("name", "?"),
+		defender_data.get("name", "?")
+	])
+
+	# BattleScreenManagerが存在するか確認
+	if not _battle_screen_manager:
+		push_error("[ビジュアルモード] BattleScreenManager が初期化されていません")
+		return
+
+	# バトル画面を開く
+	await _battle_screen_manager.start_battle(attacker_data, defender_data)
+
+	# start_battle()内でイントロ完了済み（await不要）
+
+	# バトル実行（BattleSystemを使用）
+	var battle_system = BattleSystem.new()
+	battle_system._ready()
+
+	# 実際のBoardSystem3Dを使用（テスト環境用に最小限の初期化）
+	var mock_board = BoardSystem3D.new()
+	mock_board.name = "BoardSystem3D_Test"
+	battle_system.add_child(mock_board)
+
+	# skill_indexを初期化（BattleSystemの応援スキル処理で必須）
+	mock_board.skill_index = {
+		"support": {},
+		"world_spell": {}
+	}
+
+	# TileDataManagerを作成（get_player_lands_by_elementで必須）
+	var tile_data_mgr = TileDataManager.new()
+	tile_data_mgr.name = "TileDataManager"
+	mock_board.add_child(tile_data_mgr)
+	mock_board.tile_data_manager = tile_data_mgr
+
+	# テスト用のダミータイルノード辞書を設定
+	tile_data_mgr.tile_nodes = {}
+
+	var mock_card = BattleTestExecutor.MockCardSystem.new()
+	var mock_player = BattleTestExecutor.MockPlayerSystem.new()
+
+	# SpellMagicとSpellDrawのモックを作成
+	var spell_magic = SpellMagic.new()
+	spell_magic.setup(mock_player)
+
+	var spell_draw = SpellDraw.new()
+	spell_draw.setup(mock_card)
+
+	battle_system.setup_systems(mock_board, mock_card, mock_player)
+
+	# BattleSystemにSpellMagic/SpellDrawを手動で設定
+	battle_system.spell_magic = spell_magic
+	battle_system.spell_draw = spell_draw
+	battle_system.battle_special_effects.setup_systems(mock_board, spell_draw, spell_magic, mock_card)
+	battle_system.battle_preparation.setup_systems(mock_board, mock_card, mock_player, spell_magic)
+
+	# BattleParticipant作成
+	var attacker = BattleParticipant.new(
+		attacker_data,
+		attacker_data.get("hp", 0),
+		0,
+		attacker_data.get("ap", 0),
+		true,
+		0
+	)
+	attacker.current_hp = attacker_data.get("current_hp", attacker_data.get("hp", 0))
+	attacker.spell_magic_ref = spell_magic
+
+	var defender = BattleParticipant.new(
+		defender_data,
+		defender_data.get("hp", 0),
+		land_bonus,
+		defender_data.get("ap", 0),
+		false,
+		1
+	)
+	defender.current_hp = defender_data.get("current_hp", defender_data.get("hp", 0))
+	defender.spell_magic_ref = spell_magic
+
+	# ========== 新規追加: 呪いスペル適用 ==========
+	if config.attacker_curse_spell_id > 0:
+		_apply_curse_spell_visual(attacker, config.attacker_curse_spell_id)
+	if config.defender_curse_spell_id > 0:
+		_apply_curse_spell_visual(defender, config.defender_curse_spell_id)
+
+	# ダメージ計算（簡易版）
+	var attacker_damage = attacker.current_ap
+	var defender_damage = defender.current_ap
+
+	# 攻撃表示
+	await _battle_screen_manager.show_attack("attacker", attacker_damage)
+
+	# HP更新
+	defender.current_hp -= attacker_damage
+	var defender_hp_data = {
+		"current_hp": defender.current_hp,
+		"base_hp": defender.base_hp
+	}
+	await _battle_screen_manager.update_hp("defender", defender_hp_data)
+
+	# 防御側が生きていれば反撃
+	if defender.current_hp > 0:
+		await _battle_screen_manager.show_attack("defender", defender_damage)
+		attacker.current_hp -= defender_damage
+		var attacker_hp_data = {
+			"current_hp": attacker.current_hp,
+			"base_hp": attacker.base_hp
+		}
+		await _battle_screen_manager.update_hp("attacker", attacker_hp_data)
+
+	# 勝者判定
+	var result = BattleSystem.BattleResult.ATTACKER_WIN
+	if attacker.current_hp <= 0 and defender.current_hp <= 0:
+		result = BattleSystem.BattleResult.BOTH_DEFEATED
+	elif attacker.current_hp <= 0:
+		result = BattleSystem.BattleResult.DEFENDER_WIN
+	elif defender.current_hp > 0:
+		result = BattleSystem.BattleResult.ATTACKER_SURVIVED
+
+	# 結果表示
+	await _battle_screen_manager.show_battle_result(result)
+
+	# バトル画面を閉じる
+	await _battle_screen_manager.close_battle_screen()
+
+	print("[ビジュアルモード] バトル%d完了" % battle_num)
+
+## ========== 新規追加: 呪いスペル適用（ビジュアルモード用） ==========
+func _apply_curse_spell_visual(participant: BattleParticipant, spell_id: int):
+	var spell_data = CardLoader.get_card_by_id(spell_id)
+	if not spell_data:
+		push_error("[BattleTestUI] 呪いスペルID ", spell_id, " が見つかりません")
+		return
+
+	if not participant.creature_data.has("curse"):
+		participant.creature_data["curse"] = []
+
+	participant.creature_data["curse"].append(spell_data.duplicate(true))
+	print("[ビジュアルモード] ", participant.creature_data.get("name", "?"), " に呪いスペル適用: ", spell_data.get("name", "?"))
+
+## ユーザークリック待ち
+func _wait_for_user_click():
+	# 簡易実装: 1秒待つ（本来はInputEventを待つ）
+	await get_tree().create_timer(1.0).timeout

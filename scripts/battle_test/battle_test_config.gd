@@ -76,3 +76,49 @@ func swap_attacker_defender():
 	var temp_adjacent = attacker_has_adjacent
 	attacker_has_adjacent = defender_has_adjacent
 	defender_has_adjacent = temp_adjacent
+
+	# ========== 新規追加: 呪いスペル入れ替え ==========
+	var temp_curse_spell = attacker_curse_spell_id
+	attacker_curse_spell_id = defender_curse_spell_id
+	defender_curse_spell_id = temp_curse_spell
+
+## ========== 新規追加: 呪いスペル設定 ==========
+
+## 呪いスペルID（0 = 呪いなし）
+var attacker_curse_spell_id: int = 0
+var defender_curse_spell_id: int = 0
+
+## ========== 新規追加: バフ設定 ==========
+
+## 攻撃側バフ設定
+var attacker_buff_config: Dictionary = {
+	"base_up_hp": 0,
+	"base_up_ap": 0,
+	"item_bonus_hp": 0,
+	"item_bonus_ap": 0,
+	"spell_bonus_hp": 0,
+	"permanent_effects": [],
+	"temporary_effects": []
+}
+
+## 防御側バフ設定
+var defender_buff_config: Dictionary = {
+	"base_up_hp": 0,
+	"base_up_ap": 0,
+	"item_bonus_hp": 0,
+	"item_bonus_ap": 0,
+	"spell_bonus_hp": 0,
+	"permanent_effects": [],
+	"temporary_effects": []
+}
+
+## ========== 新規追加: ビジュアルモード設定 ==========
+
+## ビジュアルモード（BattleScreen表示）
+var visual_mode: bool = false
+
+## 自動進行（クリック待ちなし）
+var auto_advance: bool = false
+
+## バトル速度（1.0 = 通常速度）
+var battle_speed: float = 1.0
