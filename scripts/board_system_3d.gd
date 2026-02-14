@@ -608,12 +608,12 @@ func _on_warp_executed(player_id: int, from_tile: int, to_tile: int):
 ## creature_changed: タイルのクリーチャーデータが変更された
 func _on_creature_changed(tile_index: int, old_data: Dictionary, new_data: Dictionary) -> void:
 	# ステップ1: tile_index 妥当性チェック
-	if tile_index < 0 or tile_index >= tiles.size():
+	if not tile_nodes.has(tile_index):
 		push_error("[BoardSystem3D] Invalid tile_index: %d" % tile_index)
 		return
 
 	# ステップ2: タイル取得
-	var tile = tiles[tile_index]
+	var tile = tile_nodes[tile_index]
 	if not tile:
 		push_error("[BoardSystem3D] Tile not found: %d" % tile_index)
 		return
