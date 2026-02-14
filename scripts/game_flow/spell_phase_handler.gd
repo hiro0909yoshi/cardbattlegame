@@ -281,6 +281,11 @@ func set_spell_systems_direct(cost_modifier, draw) -> void:
 	spell_draw = draw
 	print("[SpellPhaseHandler] spell_cost_modifier, spell_draw 直接参照を設定")
 
+	# card_selection_handlerが既に初期化されている場合、spell_drawに設定
+	if spell_draw and card_selection_handler:
+		spell_draw.set_card_selection_handler(card_selection_handler)
+		print("[SpellPhaseHandler] spell_draw に card_selection_handler を設定")
+
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	if spell_creature_move:
@@ -1690,12 +1695,6 @@ func _initialize_cpu_context(flow_mgr) -> void:
 ## スペルターゲット選択用のタップ選択を開始
 func _start_spell_tap_target_selection(targets: Array, target_type: String):
 	if not ui_manager or not ui_manager.tap_target_manager:
-		return
-
-	# target_type: "player" の場合はタップターゲット選択をスキップ
-	# （後続のeffect処理で手札選択UIが表示される）
-	if target_type == "player":
-		print("[SpellPhaseHandler] タップターゲット選択スキップ (type: player - 手札選択UI使用)")
 		return
 
 	var ttm = ui_manager.tap_target_manager

@@ -71,9 +71,6 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 		
 		"destroy_selected_card":
 			var target_player_id = context.get("target_player_id", -1)
-			print("[DestroyHandler] destroy_selected_card 実行開始")
-			print("  target_player_id: %d" % target_player_id)
-			print("  card_selection_handler: %s" % ("有効" if card_selection_handler else "null"))
 			if target_player_id >= 0 and card_selection_handler:
 				var filter_mode = effect.get("filter_mode", "destroy_any")
 				var magic_bonus = effect.get("magic_bonus", 0)
