@@ -4,6 +4,7 @@ class_name SpellPhaseHandler
 
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
+const SpellStrategyFactory = preload("res://scripts/spells/strategies/spell_strategy_factory.gd")
 
 # 共有コンテキスト（CPU AI用）
 var _cpu_context: CPUAIContextScript = null
@@ -983,14 +984,22 @@ func return_to_spell_selection():
 	# アルカナアーツボタンを再表示
 	_show_spell_phase_buttons()
 
-## スペル効果を実行（SpellEffectExecutorに委譲）
+## スペル効果を実行（Strategy パターンで試行、フォールバック対応）
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# 犠牲カードを消費（スペル実行確定時）
 	if not pending_sacrifice_card.is_empty() and card_sacrifice_helper:
 		card_sacrifice_helper.consume_card(current_player_id, pending_sacrifice_card)
 		print("[SpellPhaseHandler] 犠牲カード消費: %s" % pending_sacrifice_card.get("name", "?"))
 		pending_sacrifice_card = {}
-	
+
+	# Strategy パターンで実行を試行（Day 1-2 試験的実装）
+	var strategy_executed = await _try_execute_spell_with_strategy(spell_card, target_data)
+
+	if strategy_executed:
+		# Strategy により実行完了
+		return
+
+	# フォールバック: 従来のロジックで実行
 	if spell_effect_executor:
 		await spell_effect_executor.execute_spell_effect(spell_card, target_data)
 
@@ -1004,6 +1013,49 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
 	if spell_effect_executor:
 		await spell_effect_executor.execute_spell_on_all_creatures(spell_card, target_info)
+
+## ================================================================================
+## Strategy パターン対応（Phase 3-A: Day 1-2）
+## ================================================================================
+
+## スペル戦略実行用のコンテキストを構築
+func _build_spell_context(spell_card: Dictionary = {}, target_data: Dictionary = {}) -> Dictionary:
+	return {
+		"spell_card": spell_card if not spell_card.is_empty() else selected_spell_card,
+		"spell_id": spell_card.get("id", selected_spell_card.get("id", -1)),
+		"spell_phase_handler": self,
+		"target_data": target_data,
+		"current_player_id": current_player_id,
+		"board_system": board_system,
+		"player_system": player_system,
+		"card_system": card_system,
+		"ui_manager": ui_manager,
+		"spell_container": game_flow_manager.spell_container if game_flow_manager else null,
+		"spell_effect_executor": spell_effect_executor,
+	}
+
+## スペルを Strategy パターンで実行（試験的実装 - Day 1-2）
+## 対応している Strategy がある場合は Strategy を使用
+## 対応していない場合は従来のロジックにフォールバック
+func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dictionary) -> bool:
+	var spell_id = spell_card.get("id", -1)
+	var strategy = SpellStrategyFactory.create_strategy(spell_id)
+
+	# Strategy が未実装の場合は false を返す（フォールバック用）
+	if not strategy:
+		return false
+
+	# Strategy が実装されている場合
+	var context = _build_spell_context(spell_card, target_data)
+
+	# バリデーション
+	if not strategy.validate(context):
+		print("[SpellPhaseHandler] Strategy validate() failed for spell_id: %d" % spell_id)
+		return false
+
+	# 効果実行
+	await strategy.execute(context)
+	return true
 
 
 # ============================================
