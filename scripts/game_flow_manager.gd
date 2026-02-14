@@ -60,6 +60,9 @@ var magic_stone_system
 # スペル効果システム（コンテナ方式）
 var spell_container: SpellSystemContainer = null
 
+# スペルシステムマネージャー (Phase 1 で導入)
+var spell_system_manager: SpellSystemManager = null
+
 # State Machine for phase transitions
 var _state_machine: GameFlowStateMachine = null
 
@@ -260,7 +263,10 @@ func start_turn():
 	await check_and_handle_bankruptcy()
 	
 	# UI更新
-	ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.has_method("update_player_info_panels"):
+		ui_manager.update_player_info_panels()
+	else:
+		push_error("[GFM] update_player_info_panels が利用不可")
 	
 	# スペルフェーズを開始
 	if spell_phase_handler:
@@ -305,8 +311,15 @@ func _setup_dice_phase_navigation():
 
 # サイコロを振る
 func roll_dice():
-	if dice_phase_handler:
-		await dice_phase_handler.roll_dice(current_phase, spell_phase_handler)
+	if not dice_phase_handler:
+		push_error("[GFM] dice_phase_handler が初期化されていません")
+		return
+
+	if not spell_phase_handler:
+		push_error("[GFM] spell_phase_handler が初期化されていません")
+		return
+
+	await dice_phase_handler.roll_dice(current_phase, spell_phase_handler)
 
 # === 3Dモード用イベント ===
 
@@ -410,15 +423,19 @@ func end_turn():
 	
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)
-	
+
 	# 手札調整が必要かチェック
-	if discard_handler:
+	if discard_handler and discard_handler.has_method("check_and_discard_excess_cards"):
 		await discard_handler.check_and_discard_excess_cards(current_player.id)
-	
+	elif discard_handler:
+		push_error("[GFM] discard_handler.check_and_discard_excess_cards が利用不可")
+
 	# 敵地判定・通行料支払い実行
-	if toll_payment_handler:
+	if toll_payment_handler and toll_payment_handler.has_method("check_and_pay_toll_on_enemy_land"):
 		await toll_payment_handler.check_and_pay_toll_on_enemy_land()
-	
+	elif toll_payment_handler:
+		push_error("[GFM] toll_payment_handler.check_and_pay_toll_on_enemy_land が利用不可")
+
 	# 破産チェック（通行料支払い後）
 	await check_and_handle_bankruptcy()
 	
@@ -428,8 +445,10 @@ func end_turn():
 	player_buff_system.end_turn_cleanup()
 	
 	# 現在のプレイヤーの呪いのduration更新
-	if spell_container.spell_curse:
+	if spell_container and spell_container.spell_curse:
 		spell_container.spell_curse.update_player_curse(player_system.current_player_index)
+	else:
+		push_error("[GFM] spell_curse が初期化されていません")
 	
 	# プレイヤー切り替え処理（3D専用）
 	if board_system_3d:
@@ -452,8 +471,10 @@ func end_turn():
 					board_system_3d.toggle_all_branch_tiles()
 			
 			# 世界呪いのduration更新
-			if spell_container.spell_world_curse:
+			if spell_container and spell_container.spell_world_curse:
 				spell_container.spell_world_curse.on_round_start()
+			else:
+				push_error("[GFM] spell_world_curse が初期化されていません")
 		
 		print("次のプレイヤー: ", player_system.current_player_index + 1)
 		
