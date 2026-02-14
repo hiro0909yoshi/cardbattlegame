@@ -503,7 +503,14 @@ func _setup_spell_systems() -> void:
 		push_error("[GameSystemManager] CardSystem/PlayerSystemが初期化されていません")
 		return
 
-	# SpellSystemContainerを作成
+	# === Step 1: SpellSystemManager を作成 ===
+	var spell_system_manager = SpellSystemManager.new()
+	spell_system_manager.name = "SpellSystemManager"
+
+	# GameFlowManager の子として追加
+	game_flow_manager.add_child(spell_system_manager)
+
+	# === Step 2: SpellSystemContainer を作成 ===
 	var spell_container = SpellSystemContainer.new()
 
 	# SpellDraw
@@ -561,7 +568,7 @@ func _setup_spell_systems() -> void:
 		board_system_3d.set_spell_player_move(spell_player_move)
 	print("[SpellPlayerMove] 初期化完了")
 
-	# コンテナにコアシステム（8個）を設定
+	# === Step 3: コンテナにコアシステム（8個）を設定 ===
 	spell_container.setup(
 		spell_draw,
 		spell_magic,
@@ -573,14 +580,21 @@ func _setup_spell_systems() -> void:
 		spell_player_move
 	)
 
+	# === Step 4: SpellSystemManager にセットアップ ===
+	spell_system_manager.setup(spell_container)
+
 	# BankruptcyHandlerは別途GameFlowManagerに設定（コンテナ外）
 	var BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 	var bankruptcy_handler = BankruptcyHandlerClass.new()
 	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse, ui_manager, null)
 	print("[BankruptcyHandler] 初期化完了")
 
-	# GameFlowManagerにコンテナを設定
+	# === Step 5: GameFlowManager に参照を設定（後方互換性 + 新規） ===
+	# 後方互換性のため既存の set_spell_container() を維持
 	game_flow_manager.set_spell_container(spell_container)
+
+	# 新規: SpellSystemManager への参照を追加
+	game_flow_manager.spell_system_manager = spell_system_manager
 
 	# BankruptcyHandlerもGameFlowManagerに設定（add_child）
 	game_flow_manager.bankruptcy_handler = bankruptcy_handler

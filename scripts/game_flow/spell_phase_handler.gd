@@ -141,6 +141,8 @@ func set_game_stats(p_game_stats) -> void:
 	# CreatureManagerを取得
 	if board_system:
 		creature_manager = board_system.get_node_or_null("CreatureManager")
+		if not creature_manager:
+			push_error("[SPH] CreatureManager が見つかりません")
 
 	# target_selection_helperの直接参照を設定
 	if game_flow_manager and game_flow_manager.target_selection_helper:
@@ -307,10 +309,13 @@ func start_spell_phase(player_id: int):
 		_handle_cpu_spell_turn()
 	else:
 		# 人間プレイヤーの場合：カメラ手動モード有効化
-		if board_system:
+		if board_system and board_system.has_method("enable_manual_camera"):
 			board_system.enable_manual_camera()
-			board_system.set_camera_player(player_id)
-		
+			if board_system.has_method("set_camera_player"):
+				board_system.set_camera_player(player_id)
+		else:
+			push_error("[SPH] board_system のカメラメソッドが利用不可")
+
 		# グローバルナビゲーション設定（戻るボタンのみ = スペルを使わない）
 		_setup_spell_selection_navigation()
 		
@@ -322,10 +327,12 @@ func start_spell_phase(player_id: int):
 func _update_spell_phase_ui():
 	# 手札のスペルカード以外をグレーアウト
 	if not ui_manager or not card_system:
+		push_error("[SPH] ui_manager または card_system が初期化されていません")
 		return
-	
+
 	var current_player = player_system.get_current_player() if player_system else null
 	if not current_player:
+		push_error("[SPH] current_player が取得できません")
 		return
 	
 	# 手札を取得
@@ -336,16 +343,19 @@ func _update_spell_phase_ui():
 	var is_spell_disabled = SpellProtection.is_player_spell_disabled(current_player, context)
 	
 	# フィルターモードを設定
-	if ui_manager:
-		if is_spell_disabled:
-			ui_manager.card_selection_filter = "spell_disabled"
-			if ui_manager.phase_display:
-				ui_manager.show_toast("スペル不可の呪いがかかっています")
-		else:
-			ui_manager.card_selection_filter = "spell"
-		# 手札表示を更新してグレーアウトを適用
-		if hand_display:
-			hand_display.update_hand_display(current_player.id)
+	if not ui_manager:
+		push_error("[SPH] ui_manager が初期化されていません")
+		return
+
+	if is_spell_disabled:
+		ui_manager.card_selection_filter = "spell_disabled"
+		if ui_manager.phase_display and ui_manager.phase_display.has_method("show_toast"):
+			ui_manager.phase_display.show_toast("スペル不可の呪いがかかっています")
+	else:
+		ui_manager.card_selection_filter = "spell"
+	# 手札表示を更新してグレーアウトを適用
+	if hand_display:
+		hand_display.update_hand_display(current_player.id)
 	
 	# スペル選択UIを表示（人間プレイヤーのみ）
 	if not is_cpu_player(current_player.id):

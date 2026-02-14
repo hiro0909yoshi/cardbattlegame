@@ -2,14 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ✅ 最近完了した作業（2026-02-13）
+## ✅ 最近完了した作業（2026-02-14）
 
-**GDScript パターン監査 P0/P1 タスク完了**
+**Phase 0: ツリー構造定義完了**
 
-- ✅ P0タスク（3個）: 型指定なし配列修正、spell_container null チェック、Optional型注釈追加
-- ✅ P1タスク（2個）: プライベート変数命名規則統一、Signal 接続重複チェック完全化
-- **コミット**: 5個作成（Task #1-5）
-- **詳細**: `docs/analysis/action_items.md`, `docs/progress/daily_log.md`
+- ✅ 理想的なツリー構造設計（3階層: Core Game Systems / Game Flow Control / Presentation）
+- ✅ システム依存関係マップ作成（問題のある依存12箇所を特定）
+- ✅ Phase 1-4 の段階的移行計画策定（12-13日）
+- **成果物**: `TREE_STRUCTURE.md`, `dependency_map.md`, `architecture_migration_plan.md`
+- **次**: Phase 1（SpellSystemManager 導入、2日）
+
+---
+
+## 🎯 アーキテクチャ改善方針（2026-02-14 追加）
+
+**最優先事項**: ツリー構造の確立
+
+現在、Phase 0-4 のアーキテクチャ移行を進行中です。
+
+### 原則
+
+1. **ツリー構造の遵守**
+   - 各システムは1つの親を持つ
+   - シグナルは子→親の方向のみ
+   - 横断的な依存・接続を避ける
+
+2. **新機能追加時の確認事項**
+   - 適切な配置場所を `TREE_STRUCTURE.md` で確認
+   - 親システムへの参照は注入（Dependency Injection）
+   - シグナル接続時は `is_connected()` チェック必須
+
+3. **段階的移行**
+   - Phase 1: SpellSystemManager 導入（スペルシステムの階層化）
+   - Phase 2: シグナルリレー整備（横断接続の解消）
+   - Phase 3: UIManager 責務分離（神オブジェクトの解消）
+
+### 参照ドキュメント
+
+- `docs/design/TREE_STRUCTURE.md` - 理想的なツリー構造
+- `docs/design/dependency_map.md` - 現在の依存関係マップ
+- `docs/progress/architecture_migration_plan.md` - 移行計画詳細
 
 ---
 

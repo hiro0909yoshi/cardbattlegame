@@ -38,8 +38,62 @@
 	 - special_tile_system: context パターンで正しく実装
 	 - card_selection_ui: DebugSettings 移行済み
 	 - player_info_panel: 既に setter パターン
-- **次のステップ**: Phase 1-B（nullチェック強化）または Phase 2-A（シグナルリレー整備）
-- **残りトークン**: 110,291 / 200,000
+- ✅ **Phase 1-B 完了**（3.25時間）
+  - **nullチェック強化**: game_flow_manager (5箇所), spell_phase_handler (5箇所), battle_system (2箇所)
+  - 統一パターン: push_error() + has_method() チェック
+  - 防御的プログラミングの確立
+- **次のステップ**: Phase 2-A（シグナルリレー整備）または Phase 2-B（Callable注入拡大）
+- **残りトークン**: 80,480 / 200,000
+
+---
+
+### セッション8: Phase 2-A 計画 → Phase 0 への方針転換
+
+**Phase 2-A 実装準備中にアーキテクチャ問題発覚**
+
+- ✅ **Phase 2-A 計画開始**: invasion_completed シグナルリレー化を計画
+  - Haiku に質問セッション実施 → 既存シグナルフロー確認
+  - 重大な発見: BattleSystem と BoardSystem3D は兄弟関係（親子ではない）
+  - 横断的シグナル接続（12箇所）が存在
+
+- ✅ **根本的な問題の特定**:
+  - 問題1: 横断的シグナル接続（12箇所）- BattleSystem → DominioCommandHandler 等
+  - 問題2: スペルシステムの階層が浅い - GameFlowManager が直接保持
+  - 問題3: 神オブジェクト（3ファイル）- SpellPhaseHandler (1,764行), UIManager (1,069行), BoardSystem3D (1,031行)
+  - 問題4: 逆参照の残存（5箇所、一部改善済み）
+
+- ✅ **Opus による理想的なツリー構造設計**:
+  - BattleSystem の適切な配置を決定: 独立した Core Game System として維持（現状が正しい）
+  - 3階層の明確化: Core Game Systems / Game Flow Control / Presentation
+  - シグナルフローの原則: 子→親の方向のみ、横断的な接続を避ける
+  - 段階的移行計画: Phase 0-4（12-13日）
+
+- ✅ **Phase 0 完了: ツリー構造定義**（1日）:
+  - `docs/design/TREE_STRUCTURE.md` 作成: 理想的なツリー構造（3階層）、シグナルフロー原則
+  - `docs/design/dependency_map.md` 作成: 現在の依存関係の可視化、問題のある依存12箇所の特定
+  - `docs/progress/architecture_migration_plan.md` 作成: Phase 1-4 の詳細計画（12-13日）
+
+**方針転換の理由**:
+- Phase 2-A（シグナルリレー）だけでは不十分
+- 根本的なアーキテクチャ改善が必要（ツリー構造の確立）
+- 段階的な移行計画により、リスクを最小化しながら改善
+
+**確立したワークフロー**（Phase 1-4 で継続）:
+```
+1. Opus: Phase 計画立案 → refactoring_next_steps.md に記載
+2. Haiku: 計画を読んで質問セッション
+3. Sonnet: 質問に回答
+4. Haiku: 実装
+5. Sonnet: ドキュメント更新・完了報告
+6. 次の Phase へ（繰り返し）
+```
+
+**次のステップ**: Phase 1（SpellSystemManager 導入、2日）
+- 工数: 2日
+- リスク: 中（後方互換性を維持）
+- 担当: Opus（計画）→ Haiku（質問・実装）→ Sonnet（報告）
+
+**残りトークン**: 98,061 / 200,000
 
 ### セッション6: リファクタリング完了 + バトルテストツール拡張
 - ✅ **Task #8**: BattleParticipant コンポーネント化 → スキップ決定（現設計が適切、リスク高）

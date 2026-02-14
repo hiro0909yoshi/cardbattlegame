@@ -530,8 +530,8 @@ interface SpellStrategy:
 
 class FireballStrategy implements SpellStrategy:
   func execute(context):
-    # Fire spell logic
-    return true
+	# Fire spell logic
+	return true
 
 # Handler: strategy dispatcher
 var strategies = {
@@ -690,4 +690,3 @@ func execute_action(action_type: String):
 ```
 
 **合計**: 87,631行中 20,569行（23%）が500行以上のファイル
-

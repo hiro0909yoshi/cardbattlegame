@@ -106,7 +106,18 @@ func execute_3d_battle(attacker_index: int, card_index: int, tile_info: Dictiona
 		print("Error: システム参照が設定されていません")
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
 		return
-	
+
+	# 追加の検証（spell_draw, spell_magic）
+	if not spell_draw:
+		push_error("[BS] spell_draw が初期化されていません")
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
+		return
+
+	if not spell_magic:
+		push_error("[BS] spell_magic が初期化されていません")
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
+		return
+
 	# カードインデックスが-1の場合は支払い処理なし（end_turn()で一本化）
 	if card_index < 0:
 		emit_signal("invasion_completed", false, tile_info.get("index", 0))
@@ -262,15 +273,20 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 # 侵略処理（防御クリーチャーなし）
 func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: Dictionary):
 	print("侵略成功！土地を奪取")
-	
+
+	if not board_system_ref:
+		push_error("[BS] board_system_ref が初期化されていません")
+		emit_signal("invasion_completed", false, tile_info.get("index", 0))
+		return
+
 	# 土地を奪取
 	board_system_ref.set_tile_owner(tile_info["index"], attacker_index)
 	board_system_ref.place_creature(tile_info["index"], card_data)
-	
+
 	# UI更新
-	if board_system_ref.has_method("update_all_tile_displays"):
+	if board_system_ref and board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
-	
+
 	emit_signal("invasion_completed", true, tile_info["index"])
 
 # ミラーワールド: 同名クリーチャー複数配置禁止チェック
