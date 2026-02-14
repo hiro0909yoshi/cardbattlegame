@@ -12,6 +12,36 @@
 
 ---
 
+## 2026年2月15日（Session 24）
+
+### Phase 3-A Day 18: SpellNavigationController 抽出 ✅
+
+**目的**: SpellPhaseHandler のナビゲーション・UI管理ロジック（9個メソッド）を独立クラス化
+
+**実装内容**:
+1. **SpellNavigationController 新規作成**（154行）
+   - restore_navigation() / restore_navigation_for_state() - ナビゲーション状態復元（2個）
+   - _setup_spell_selection_navigation() - スペル選択ナビゲーション（1個）
+   - _setup_target_selection_navigation() - ターゲット選択ナビゲーション（1個）
+   - _clear_spell_navigation() - ナビゲーション設定解除（1個）
+   - _initialize_spell_phase_ui() / _show_spell_phase_buttons() / _hide_spell_phase_buttons() - UI管理（3個）
+   - ナビゲーション入力ハンドラー（_on_target_confirm等 4個）
+
+2. **SpellPhaseHandler 統合**
+   - spell_navigation_controller 変数追加
+   - _initialize_spell_state_and_flow() で初期化（line 847-855）
+   - 9個のメソッドを委譲ラッパーに変更
+   - 全メソッドで null チェック実装
+
+**結果**: ✅ ナビゲーション管理完全分離完了
+- 新規ファイル: SpellNavigationController 154行
+- 責務分離: ナビゲーション状態管理 → 独立コントローラー
+- エラー処理: 全メソッドで null チェック実装
+
+**次**: Day 19 - テスト実施 + refactoring_next_steps.md 更新
+
+---
+
 ## 2026年2月15日（Session 22-23）
 
 ### Phase 3-A Day 17: CPU処理完全分離 ✅

@@ -762,59 +762,26 @@ if spell_effect_executor:
 
 ---
 
-### ⚪ Day 17-18: ナビゲーション・UI 管理ハンドラー抽出（4-5時間）
+### ✅ Day 18: ナビゲーション・UI 管理ハンドラー抽出（完了）
 
-**目的**: 87行のナビゲーション・UI 管理（Lines 633-743）を独立クラス化
+**実装内容**:
+- SpellNavigationController 新規作成（154行）
+  - restore_navigation() / restore_navigation_for_state() - 2個
+  - _setup_spell_selection_navigation() / _setup_target_selection_navigation() / _clear_spell_navigation() - 3個
+  - _initialize_spell_phase_ui() / _show_spell_phase_buttons() / _hide_spell_phase_buttons() - 3個
+  - ナビゲーション入力ハンドラー（_on_target_confirm等 4個）
 
-**ファイル**: `scripts/game_flow/spell_navigation_controller.gd`（約80-100行）
+- SpellPhaseHandler 統合
+  - spell_navigation_controller 変数追加
+  - _initialize_spell_state_and_flow() で初期化
+  - 9個のメソッドを委譲ラッパーに変更
+  - 全メソッドで null チェック実装
 
-**抽出対象（7個のメソッド）**:
-```gdscript
-- _initialize_spell_phase_ui()
-- _show_spell_phase_buttons()
-- _hide_spell_phase_buttons()
-- _setup_spell_selection_navigation()
-- _setup_target_selection_navigation()
-- _clear_spell_navigation()
-- restore_navigation_for_state()
-+ ナビゲーション入力ハンドラー（_on_target_confirm 等 4個）
-```
-
-**実装パターン**:
-```gdscript
-class_name SpellNavigationController
-extends RefCounted
-
-var _spell_phase_handler
-var _ui_manager
-var _spell_ui_controller
-var _spell_target_selection_handler
-var _spell_state
-
-func setup(sph, ui_mgr, spell_ui_ctrl, target_sel_handler, spell_state) -> void:
-	_spell_phase_handler = sph
-	_ui_manager = ui_mgr
-	# ...
-
-func initialize_spell_phase_ui() -> void:
-	# _initialize_spell_phase_ui() の実装
-```
-
-**実装手順**:
-1. **SpellNavigationController 作成**（2時間）
-   - 基底クラス定義
-   - setup() メソッド
-   - 7個のメソッド移行
-
-2. **SpellPhaseHandler 統合**（1時間）
-   - `_spell_navigation_controller` 変数 追加
-   - 呼び出し元を委譲に変更
-
-3. **テスト**（1時間）
-   - 各フェーズでのナビゲーション状態
-   - ボタン表示/非表示の切り替え
-
-**削減効果**: **87行削除**
+**成果**:
+- 新規ファイル: SpellNavigationController 154行
+- 責務分離: ナビゲーション状態管理 → 独立コントローラー
+- 削減効果: SpellPhaseHandler のナビゲーション責務を完全分離
+- コミット: 38b2d08
 
 ---
 
