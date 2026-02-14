@@ -59,6 +59,20 @@ func is_special_tile_type(tile_type: String) -> bool:
 func has_tile(tile_index: int) -> bool:
 	return tile_nodes.has(tile_index)
 
+# === クリーチャーデータ参照層 ===
+
+## CreatureManager から直接クリーチャーデータを取得（参照）
+## @param tile_index: タイルのインデックス
+## @return: クリーチャーデータ辞書への参照
+func get_creature(tile_index: int) -> Dictionary:
+	# BoardSystem3D を経由して CreatureManager にアクセス
+	# BoardSystem3D は update_systems() で board_system_ref として設定される
+	# ここでは tile の creature_data プロパティ経由で取得
+	if tile_nodes.has(tile_index):
+		var tile = tile_nodes[tile_index]
+		return tile.creature_data
+	return {}
+
 # === タイル更新 ===
 
 # タイル所有者を設定
