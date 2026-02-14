@@ -9,6 +9,7 @@ signal terrain_changed(tile_index: int, old_element: String, new_element: String
 @warning_ignore("unused_signal")
 signal level_up_completed(tile_index: int, new_level: int)
 signal movement_completed(player_id: int, final_tile: int)
+signal invasion_completed(success: bool, tile_index: int)
 
 # 定数をpreload
 
@@ -555,6 +556,13 @@ func on_level_up_selected(target_level: int, cost: int):
 func _on_action_completed():
 	# TileActionProcessorから通知を受けたらシグナルを転送
 	emit_signal("tile_action_completed")
+
+func _on_invasion_completed(success: bool, tile_index: int):
+	# デバッグログ（Phase 2 テスト期間中のみ）
+	print("[BoardSystem3D] invasion_completed 受信: success=%s, tile=%d" % [success, tile_index])
+
+	# リレー emit
+	invasion_completed.emit(success, tile_index)
 
 # === スキルインデックス管理 ===
 

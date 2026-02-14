@@ -265,7 +265,14 @@ func phase_4_setup_system_interconnections() -> void:
 			special_tile_system, game_flow_manager
 		)
 		board_system_3d.ui_manager = ui_manager
-	
+
+		# === Phase 2: invasion_completed リレーチェーン接続 ===
+		# TileActionProcessor → BoardSystem3D の接続
+		if board_system_3d.tile_action_processor:
+			if not board_system_3d.tile_action_processor.invasion_completed.is_connected(board_system_3d._on_invasion_completed):
+				board_system_3d.tile_action_processor.invasion_completed.connect(board_system_3d._on_invasion_completed)
+				print("[GameSystemManager] TileActionProcessor → BoardSystem3D invasion_completed 接続完了")
+
 	# Step 3: SpecialTileSystem に必要なシステムを設定
 	if special_tile_system:
 		special_tile_system.setup_systems(
@@ -309,7 +316,13 @@ func phase_4_setup_system_interconnections() -> void:
 	# Step 9: GameFlowManager の 3D 設定
 	if game_flow_manager:
 		game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
-	
+
+	# Step 9.5: BoardSystem3D → GameFlowManager invasion_completed 接続
+	if board_system_3d and game_flow_manager:
+		if not board_system_3d.invasion_completed.is_connected(game_flow_manager._on_invasion_completed_from_board):
+			board_system_3d.invasion_completed.connect(game_flow_manager._on_invasion_completed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager invasion_completed 接続完了")
+
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
 	
 	# ===== 4-2: GameFlowManager 子システム初期化 =====

@@ -328,13 +328,24 @@ func _on_tile_action_completed_3d():
 	if current_phase == GamePhase.END_TURN or current_phase == GamePhase.SETUP:
 		print("Warning: tile_action_completed ignored (phase:", current_phase, ")")
 		return
-	
+
 	if _is_ending_turn:
 		print("Warning: tile_action_completed ignored (already ending turn)")
 		return
-	
+
 	end_turn()
 
+func _on_invasion_completed_from_board(success: bool, tile_index: int):
+	# デバッグログ
+	print("[GameFlowManager] invasion_completed 受信: success=%s, tile=%d" % [success, tile_index])
+
+	# 各ハンドラーへ順番に通知（順序重要: DominioCommandHandler → CPUTurnProcessor）
+	if dominio_command_handler:
+		dominio_command_handler._on_invasion_completed(success, tile_index)
+
+	# CPUTurnProcessor へ通知（存在する場合）
+	if board_system_3d and board_system_3d.cpu_turn_processor:
+		board_system_3d.cpu_turn_processor._on_invasion_completed(success, tile_index)
 
 
 # === UIコールバック ===
