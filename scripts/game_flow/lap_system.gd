@@ -158,16 +158,13 @@ func _reinitialize_player_states():
 			state[checkpoint] = false
 		player_lap_state[player_id] = state
 
-## スタート地点通過（新周開始時）
+## スタート地点通過（シグナルリレー受信のみ）
+## 注意: チェックポイント状態のリセットは complete_lap() で既に実施済み
+## ここでリセットすると、周回完了後のチェックポイント状態が失われ、
+## CPU の方向選択ロジックが誤動作する原因となる
 func on_start_passed(player_id: int):
-	# デバッグログ
-	print("[LapSystem] start_passed 受信: player_id=%d" % player_id)
-
-	# チェックポイント状態をリセット（新周に向けて）
-	if player_lap_state.has(player_id):
-		for checkpoint in required_checkpoints:
-			player_lap_state[player_id][checkpoint] = false
-		print("[LapSystem] プレイヤー%d: スタート地点を通過、チェックポイント状態をリセット" % [player_id + 1])
+	# デバッグログのみ
+	print("[LapSystem] start_passed 受信: player_id=%d（リセット処理は complete_lap()で実行済み）" % player_id)
 
 ## CheckpointTileのシグナルを接続
 func connect_checkpoint_signals():
