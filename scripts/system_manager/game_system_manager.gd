@@ -317,11 +317,27 @@ func phase_4_setup_system_interconnections() -> void:
 	if game_flow_manager:
 		game_flow_manager.setup_3d_mode(board_system_3d, player_is_cpu)
 
-	# Step 9.5: BoardSystem3D → GameFlowManager invasion_completed 接続
+	# Step 9.5: BoardSystem3D → GameFlowManager シグナル接続（Phase 2 リレー）
 	if board_system_3d and game_flow_manager:
+		# invasion_completed
 		if not board_system_3d.invasion_completed.is_connected(game_flow_manager._on_invasion_completed_from_board):
 			board_system_3d.invasion_completed.connect(game_flow_manager._on_invasion_completed_from_board)
 			print("[GameSystemManager] BoardSystem3D → GameFlowManager invasion_completed 接続完了")
+
+		# movement_completed
+		if not board_system_3d.movement_completed.is_connected(game_flow_manager._on_movement_completed_from_board):
+			board_system_3d.movement_completed.connect(game_flow_manager._on_movement_completed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager movement_completed 接続完了")
+
+		# level_up_completed
+		if not board_system_3d.level_up_completed.is_connected(game_flow_manager._on_level_up_completed_from_board):
+			board_system_3d.level_up_completed.connect(game_flow_manager._on_level_up_completed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager level_up_completed 接続完了")
+
+		# terrain_changed
+		if not board_system_3d.terrain_changed.is_connected(game_flow_manager._on_terrain_changed_from_board):
+			board_system_3d.terrain_changed.connect(game_flow_manager._on_terrain_changed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager terrain_changed 接続完了")
 
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
 	

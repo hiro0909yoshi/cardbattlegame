@@ -564,6 +564,27 @@ func _on_invasion_completed(success: bool, tile_index: int):
 	# リレー emit
 	invasion_completed.emit(success, tile_index)
 
+func _on_movement_completed(player_id: int, final_tile: int):
+	# デバッグログ
+	print("[BoardSystem3D] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
+
+	# リレー emit
+	movement_completed.emit(player_id, final_tile)
+
+func _on_level_up_completed(tile_index: int, new_level: int):
+	# デバッグログ
+	print("[BoardSystem3D] level_up_completed 受信: tile=%d, level=%d" % [tile_index, new_level])
+
+	# リレー emit
+	level_up_completed.emit(tile_index, new_level)
+
+func _on_terrain_changed(tile_index: int, old_element: String, new_element: String):
+	# デバッグログ
+	print("[BoardSystem3D] terrain_changed 受信: tile=%d, %s → %s" % [tile_index, old_element, new_element])
+
+	# リレー emit
+	terrain_changed.emit(tile_index, old_element, new_element)
+
 # === スキルインデックス管理 ===
 
 ## スキルインデックス更新（配置時）

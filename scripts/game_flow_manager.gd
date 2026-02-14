@@ -347,6 +347,34 @@ func _on_invasion_completed_from_board(success: bool, tile_index: int):
 	if board_system_3d and board_system_3d.cpu_turn_processor:
 		board_system_3d.cpu_turn_processor._on_invasion_completed(success, tile_index)
 
+func _on_movement_completed_from_board(player_id: int, final_tile: int):
+	# デバッグログ
+	print("[GameFlowManager] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
+
+	# 各ハンドラーへ通知
+	if dominio_command_handler:
+		dominio_command_handler._on_movement_completed(player_id, final_tile)
+
+func _on_level_up_completed_from_board(tile_index: int, new_level: int):
+	# デバッグログ
+	print("[GameFlowManager] level_up_completed 受信: tile=%d, level=%d" % [tile_index, new_level])
+
+	# 各ハンドラーへ通知
+	if dominio_command_handler:
+		dominio_command_handler._on_level_up_completed(tile_index, new_level)
+
+	# UI更新
+	if ui_manager:
+		ui_manager.update_player_info_panels()
+
+func _on_terrain_changed_from_board(tile_index: int, old_element: String, new_element: String):
+	# デバッグログ
+	print("[GameFlowManager] terrain_changed 受信: tile=%d, %s → %s" % [tile_index, old_element, new_element])
+
+	# UI更新やスペルハンドラーへの通知が必要な場合はここに追加
+	if ui_manager:
+		ui_manager.update_player_info_panels()
+
 
 # === UIコールバック ===
 

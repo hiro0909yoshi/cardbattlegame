@@ -782,12 +782,7 @@ func _execute_move_battle():
 		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
-	
-	# バトル完了シグナルに接続
-	var callable = Callable(self, "_on_move_battle_completed")
-	if not battle_system.invasion_completed.is_connected(callable):
-		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
-	
+
 	# バトル実行（移動元タイル情報も渡す）
 	await battle_system.execute_3d_battle_with_data(
 		current_player_index,
@@ -806,29 +801,41 @@ func _execute_move_battle():
 	is_waiting_for_move_defender_item = false
 
 ## 移動バトル完了時のコールバック
-func _on_move_battle_completed(success: bool, tile_index: int):
-	
+func _on_invasion_completed(success: bool, tile_index: int):
+	# デバッグログ（Phase 2 テスト期間中）
+	print("[DominioCommandHandler] invasion_completed 受信: success=%s, tile=%d" % [success, tile_index])
+
 	# 衰弱（プレイグ）ダメージ処理
 	_apply_plague_damage_after_battle(tile_index)
-	
+
 	if success:
 		# 勝利時: battle_systemが既に土地獲得とクリーチャー配置を完了している
 		# ここでは何もしない
-		
+
 		# 移動元情報をクリア
 		move_source_tile = -1
 	else:
 		# 敗北時: battle_systemが既に移動元に戻している
 		# ここでは何もしない
-		
+
 		# 移動元情報をクリア
 		move_source_tile = -1
-	
+
 	# コメントはバトル前に表示済みのため、ここでは表示しない
-	
-	# アクション完了を通知
-	if board_system and board_system.tile_action_processor:
-		board_system.complete_action()
+
+	# ← ここで complete_action() を呼ばない（invasion_completed 自体がアクション完了を意味する）
+
+func _on_movement_completed(player_id: int, final_tile: int):
+	# デバッグログ
+	print("[DominioCommandHandler] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
+
+	# 移動完了時の処理が必要な場合はここに追加
+
+func _on_level_up_completed(tile_index: int, new_level: int):
+	# デバッグログ
+	print("[DominioCommandHandler] level_up_completed 受信: tile=%d, level=%d" % [tile_index, new_level])
+
+	# レベルアップ完了時の処理が必要な場合はここに追加
 
 
 ## バトル終了後の衰弱ダメージ処理
