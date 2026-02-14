@@ -84,8 +84,9 @@ var spell_ui_controller = null  # SpellUIController - UI制御（Phase 7-1、循
 var mystic_arts_handler = null  # MysticArtsHandler - アルカナアーツ処理（Phase 8-1、循環参照回避のため型アノテーションなし）
 
 ## ===== ハンドラー参照（Phase 3-A Day 9-12） =====
-var spell_state: SpellStateHandler = null  # 状態管理（Day 9）
-var spell_flow: SpellFlowHandler = null    # フロー制御（Day 10-11）
+var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
+var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
+var spell_navigation_controller: SpellNavigationController = null  # ナビゲーション管理（Day 18）
 
 func _ready():
 	pass
@@ -480,94 +481,94 @@ func has_spell_mystic_arts() -> bool:
 # ============ UIボタン管理 ============
 
 ## UIボタン管理（内部）
+## UI初期化 - 委譲メソッド
 func _initialize_spell_phase_ui():
-	if spell_ui_controller:
-		spell_ui_controller.initialize_spell_phase_ui()
+	if spell_navigation_controller:
+		spell_navigation_controller._initialize_spell_phase_ui()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## スペルフェーズボタン表示 - 委譲メソッド
 func _show_spell_phase_buttons():
-	if spell_ui_controller:
-		spell_ui_controller.show_spell_phase_buttons()
+	if spell_navigation_controller:
+		spell_navigation_controller._show_spell_phase_buttons()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## スペルフェーズボタン非表示 - 委譲メソッド
 func _hide_spell_phase_buttons():
-	if spell_ui_controller:
-		spell_ui_controller.hide_spell_phase_buttons()
+	if spell_navigation_controller:
+		spell_navigation_controller._hide_spell_phase_buttons()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
 
 # ============ グローバルナビゲーション設定 ============
 
-## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
+## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）- 委譲メソッド
 func _setup_spell_selection_navigation():
-	if ui_manager:
-		ui_manager.enable_navigation(
-			func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
-			Callable()             # 戻るなし
-		)
+	if spell_navigation_controller:
+		spell_navigation_controller._setup_spell_selection_navigation()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
 ## 閲覧モード（グレーアウトカードタップ等）から戻る時のナビゲーション復元
 ## state別にナビゲーション + 特殊ボタン + フェーズコメントを復元する
 func restore_navigation():
-	if not ui_manager:
-		return
-	# アルカナアーツがアクティブなら優先委譲
-	if spell_mystic_arts and spell_mystic_arts.is_active():
-		spell_mystic_arts.restore_navigation()
-		return
-	restore_navigation_for_state()
+	if spell_navigation_controller:
+		spell_navigation_controller.restore_navigation()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
 ## state別のナビゲーション復元（アルカナアーツ判定をスキップ）
 ## spell_mystic_arts.restore_navigation()からの再帰呼び出し時に使用
 func restore_navigation_for_state():
-	if not ui_manager or not spell_state:
-		return
-	match spell_state.current_state:
-		SpellStateHandler.State.WAITING_FOR_INPUT:
-			_setup_spell_selection_navigation()
-			_show_spell_phase_buttons()
-			if ui_manager.phase_display:
-				ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
-		SpellStateHandler.State.SELECTING_TARGET:
-			_setup_target_selection_navigation()
-			if ui_manager.phase_display:
-				ui_manager.show_action_prompt("対象を選択してください")
-		SpellStateHandler.State.CONFIRMING_EFFECT:
-			ui_manager.enable_navigation(
-				func(): _confirm_spell_effect(),
-				func(): _cancel_confirmation()
-			)
+	if spell_navigation_controller:
+		spell_navigation_controller.restore_navigation_for_state()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
-## ナビゲーション設定（内部）
+## ナビゲーション設定（ターゲット選択）- 委譲メソッド
 func _setup_target_selection_navigation() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._setup_target_selection_navigation()
-	elif ui_manager:
-		ui_manager.enable_navigation(
-			func(): _on_target_confirm(),
-			func(): _on_target_cancel(),
-			func(): _on_target_prev(),
-			func(): _on_target_next()
-		)
+	if spell_navigation_controller:
+		spell_navigation_controller._setup_target_selection_navigation()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## ナビゲーション設定解除 - 委譲メソッド
 func _clear_spell_navigation() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._clear_spell_navigation()
-	elif ui_manager:
-		ui_manager.disable_navigation()
+	if spell_navigation_controller:
+		spell_navigation_controller._clear_spell_navigation()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## ターゲット確認 - 委譲メソッド
 func _on_target_confirm() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._on_target_confirm()
+	if spell_navigation_controller:
+		spell_navigation_controller._on_target_confirm()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## ターゲット選択キャンセル - 委譲メソッド
 func _on_target_cancel() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._on_target_cancel()
+	if spell_navigation_controller:
+		spell_navigation_controller._on_target_cancel()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## ターゲット選択前へ - 委譲メソッド
 func _on_target_prev() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._on_target_prev()
+	if spell_navigation_controller:
+		spell_navigation_controller._on_target_prev()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
+## ターゲット選択次へ - 委譲メソッド
 func _on_target_next() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._on_target_next()
+	if spell_navigation_controller:
+		spell_navigation_controller._on_target_next()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
 
 ## アルカナアーツ関連（内部）
@@ -839,5 +840,16 @@ func _initialize_spell_state_and_flow() -> void:
 		spell_target_selection_handler,
 		target_selection_helper
 	)
+
+	# SpellNavigationController を初期化（Day 18）
+	if not spell_navigation_controller:
+		spell_navigation_controller = SpellNavigationController.new()
+		spell_navigation_controller.setup(
+			self,
+			ui_manager,
+			spell_ui_controller,
+			spell_target_selection_handler,
+			spell_state
+		)
 
 	print("[SPH] SpellStateHandler と SpellFlowHandler を初期化完了")
