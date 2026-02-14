@@ -169,6 +169,15 @@ func is_panel_visible() -> bool:
 	return is_visible_panel
 
 
+## クリーチャーデータを更新（パネルが表示中の場合のみ）
+func update_display(creature_data: Dictionary):
+	if not is_visible_panel:
+		return
+
+	current_creature_data = creature_data
+	_update_display()
+
+
 # === 内部メソッド ===
 
 func _update_display():
