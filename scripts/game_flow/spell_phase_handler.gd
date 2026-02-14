@@ -51,18 +51,14 @@ var creature_manager = null
 var spell_mystic_arts = null  # アルカナアーツシステム
 var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
-var spell_damage: SpellDamage = null  # ダメージ・回復処理
-var spell_creature_move: SpellCreatureMove = null  # クリーチャー移動
-var spell_creature_swap: SpellCreatureSwap = null  # クリーチャー交換
-var spell_creature_return: SpellCreatureReturn = null  # クリーチャー手札戻し
-var spell_creature_place: SpellCreaturePlace = null  # クリーチャー配置
-var spell_borrow: SpellBorrow = null  # スペル借用
-var spell_transform: SpellTransform = null  # クリーチャー変身
-var spell_purify: SpellPurify = null  # 呪い除去
-var spell_synthesis: SpellSynthesis = null  # スペル合成
-var card_sacrifice_helper: CardSacrificeHelper = null  # カード犠牲システム
-var cpu_turn_processor: CPUTurnProcessor = null  # CPU処理（旧・バトル用）
-var spell_effect_executor: SpellEffectExecutor = null  # 効果実行（分離クラス）
+
+## === Phase 3-A Day 18: SpellSubsystemContainer 導入 ===
+## 11個のSpell**** クラスと関連参照を集約するコンテナ
+## （削減対象: 11個の個別参照）
+var spell_systems: SpellSubsystemContainer = null
+
+## 効果実行（分離クラス）
+var spell_effect_executor: SpellEffectExecutor = null
 
 # === 直接参照（GFM経由を廃止） ===
 var game_stats  # GameFlowManager.game_stats への直接参照
@@ -142,8 +138,8 @@ func set_spell_systems_direct(cost_modifier, draw) -> void:
 
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
-	if spell_creature_move:
-		spell_creature_move.set_battle_status_overlay(overlay)
+	if spell_systems and spell_systems.spell_creature_move:
+		spell_systems.spell_creature_move.set_battle_status_overlay(overlay)
 	print("[SpellPhaseHandler] battle_status_overlay 直接参照を設定")
 
 ## スペルフェーズ開始
@@ -729,8 +725,8 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 
 ## 現在のCPUのバトルポリシーを取得
 func _get_cpu_battle_policy():
-	if cpu_turn_processor and cpu_turn_processor.cpu_ai_handler:
-		return cpu_turn_processor.cpu_ai_handler.battle_policy
+	if spell_systems and spell_systems.cpu_turn_processor and spell_systems.cpu_turn_processor.cpu_ai_handler:
+		return spell_systems.cpu_turn_processor.cpu_ai_handler.battle_policy
 	return null
 
 ## SpellTargetSelectionHandler を初期化（Phase 6-1）
@@ -834,8 +830,8 @@ func _initialize_spell_state_and_flow() -> void:
 		card_system,
 		game_3d_ref,
 		spell_cost_modifier,     # オプショナル参照
-		spell_synthesis,
-		card_sacrifice_helper,
+		spell_systems.spell_synthesis if spell_systems else null,
+		spell_systems.card_sacrifice_helper if spell_systems else null,
 		spell_effect_executor,
 		spell_target_selection_handler,
 		target_selection_helper

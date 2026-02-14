@@ -45,55 +45,59 @@ func _setup_base_references(sph, game_stats: Dictionary) -> void:
 		sph.target_selection_helper = sph.game_flow_manager.target_selection_helper
 
 
-## Step 2: 11個のSpell**** クラスを初期化
+## Step 2: 11個のSpell**** クラスを初期化（SpellSubsystemContainer 経由）
 func _initialize_spell_systems(sph, game_stats: Dictionary) -> void:
+	# === Phase 3-A Day 18: SpellSubsystemContainer 初期化 ===
+	if not sph.spell_systems:
+		sph.spell_systems = SpellSubsystemContainer.new()
+
 	# SpellDamage を初期化
-	if not sph.spell_damage and sph.board_system:
-		sph.spell_damage = SpellDamage.new(sph.board_system)
+	if not sph.spell_systems.spell_damage and sph.board_system:
+		sph.spell_systems.spell_damage = SpellDamage.new(sph.board_system)
 
 	# SpellCreatureMove を初期化
-	if not sph.spell_creature_move and sph.board_system and sph.player_system:
-		sph.spell_creature_move = SpellCreatureMove.new(sph.board_system, sph.player_system, sph)
+	if not sph.spell_systems.spell_creature_move and sph.board_system and sph.player_system:
+		sph.spell_systems.spell_creature_move = SpellCreatureMove.new(sph.board_system, sph.player_system, sph)
 		if sph.game_flow_manager:
-			sph.spell_creature_move.set_game_flow_manager(sph.game_flow_manager)
+			sph.spell_systems.spell_creature_move.set_game_flow_manager(sph.game_flow_manager)
 		if sph.battle_status_overlay:
-			sph.spell_creature_move.set_battle_status_overlay(sph.battle_status_overlay)
+			sph.spell_systems.spell_creature_move.set_battle_status_overlay(sph.battle_status_overlay)
 
 	# SpellCreatureSwap を初期化
-	if not sph.spell_creature_swap and sph.board_system and sph.player_system and sph.card_system:
-		sph.spell_creature_swap = SpellCreatureSwap.new(sph.board_system, sph.player_system, sph.card_system, sph)
+	if not sph.spell_systems.spell_creature_swap and sph.board_system and sph.player_system and sph.card_system:
+		sph.spell_systems.spell_creature_swap = SpellCreatureSwap.new(sph.board_system, sph.player_system, sph.card_system, sph)
 
 	# SpellCreatureReturn を初期化
-	if not sph.spell_creature_return and sph.board_system and sph.player_system and sph.card_system:
-		sph.spell_creature_return = SpellCreatureReturn.new(sph.board_system, sph.player_system, sph.card_system, sph)
+	if not sph.spell_systems.spell_creature_return and sph.board_system and sph.player_system and sph.card_system:
+		sph.spell_systems.spell_creature_return = SpellCreatureReturn.new(sph.board_system, sph.player_system, sph.card_system, sph)
 
 	# SpellCreaturePlace を初期化
-	if not sph.spell_creature_place:
-		sph.spell_creature_place = SpellCreaturePlace.new()
+	if not sph.spell_systems.spell_creature_place:
+		sph.spell_systems.spell_creature_place = SpellCreaturePlace.new()
 
 	# SpellDrawにSpellCreaturePlace参照を設定
-	if sph.spell_draw and sph.spell_creature_place:
-		sph.spell_draw.set_spell_creature_place(sph.spell_creature_place)
+	if sph.spell_draw and sph.spell_systems.spell_creature_place:
+		sph.spell_draw.set_spell_creature_place(sph.spell_systems.spell_creature_place)
 
 	# SpellBorrow を初期化
-	if not sph.spell_borrow and sph.board_system and sph.player_system and sph.card_system:
-		sph.spell_borrow = SpellBorrow.new(sph.board_system, sph.player_system, sph.card_system, sph)
+	if not sph.spell_systems.spell_borrow and sph.board_system and sph.player_system and sph.card_system:
+		sph.spell_systems.spell_borrow = SpellBorrow.new(sph.board_system, sph.player_system, sph.card_system, sph)
 
 	# SpellTransform を初期化
-	if not sph.spell_transform and sph.board_system and sph.player_system and sph.card_system:
-		sph.spell_transform = SpellTransform.new(sph.board_system, sph.player_system, sph.card_system, sph)
+	if not sph.spell_systems.spell_transform and sph.board_system and sph.player_system and sph.card_system:
+		sph.spell_systems.spell_transform = SpellTransform.new(sph.board_system, sph.player_system, sph.card_system, sph)
 
 	# SpellPurify を初期化
-	if not sph.spell_purify and sph.board_system and sph.creature_manager and sph.player_system and sph.game_flow_manager:
-		sph.spell_purify = SpellPurify.new(sph.board_system, sph.creature_manager, sph.player_system, sph.game_flow_manager)
+	if not sph.spell_systems.spell_purify and sph.board_system and sph.creature_manager and sph.player_system and sph.game_flow_manager:
+		sph.spell_systems.spell_purify = SpellPurify.new(sph.board_system, sph.creature_manager, sph.player_system, sph.game_flow_manager)
 
 	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
-	if not sph.card_sacrifice_helper and sph.card_system and sph.player_system:
-		sph.card_sacrifice_helper = CardSacrificeHelper.new(sph.card_system, sph.player_system, sph.ui_manager)
+	if not sph.spell_systems.card_sacrifice_helper and sph.card_system and sph.player_system:
+		sph.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(sph.card_system, sph.player_system, sph.ui_manager)
 
 	# SpellSynthesis を初期化
-	if not sph.spell_synthesis and sph.card_sacrifice_helper:
-		sph.spell_synthesis = SpellSynthesis.new(sph.card_sacrifice_helper)
+	if not sph.spell_systems.spell_synthesis and sph.spell_systems.card_sacrifice_helper:
+		sph.spell_systems.spell_synthesis = SpellSynthesis.new(sph.spell_systems.card_sacrifice_helper)
 
 	# SpellPhaseUIManager を初期化（手札更新時のボタン位置更新用）
 	_initialize_spell_phase_ui(sph)
@@ -107,15 +111,15 @@ func _initialize_spell_systems(sph, game_stats: Dictionary) -> void:
 	_initialize_spell_cast_notification_ui(sph)
 
 	# SpellDamageに通知UIを設定
-	if sph.spell_damage and sph.spell_cast_notification_ui:
-		sph.spell_damage.set_notification_ui(sph.spell_cast_notification_ui)
+	if sph.spell_systems and sph.spell_systems.spell_damage and sph.spell_cast_notification_ui:
+		sph.spell_systems.spell_damage.set_notification_ui(sph.spell_cast_notification_ui)
 
 	# カード選択ハンドラーを初期化
 	_initialize_card_selection_handler(sph)
 
 	# CPUTurnProcessorを取得（BoardSystem3Dの子ノードから）
-	if sph.board_system and not sph.cpu_turn_processor:
-		sph.cpu_turn_processor = sph.board_system.get_node_or_null("CPUTurnProcessor")
+	if sph.board_system and not sph.spell_systems.cpu_turn_processor:
+		sph.spell_systems.cpu_turn_processor = sph.board_system.get_node_or_null("CPUTurnProcessor")
 
 
 ## Step 3: 6個のハンドラーを初期化
@@ -148,8 +152,8 @@ func _initialize_cpu_ai(sph, game_stats: Dictionary) -> void:
 		sph.cpu_spell_ai.set_hand_utils(sph.cpu_hand_utils)
 		sph.cpu_spell_ai.set_battle_ai(sph._cpu_battle_ai)
 		# SpellSynthesisを設定（犠牲カード選択用）
-		if sph.spell_synthesis:
-			sph.cpu_spell_ai.set_spell_synthesis(sph.spell_synthesis)
+		if sph.spell_systems and sph.spell_systems.spell_synthesis:
+			sph.cpu_spell_ai.set_spell_synthesis(sph.spell_systems.spell_synthesis)
 		# CPUMovementEvaluatorを設定（ホーリーワード判断用）
 		if sph.cpu_movement_evaluator:
 			sph.cpu_spell_ai.set_movement_evaluator(sph.cpu_movement_evaluator)

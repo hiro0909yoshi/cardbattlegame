@@ -8,7 +8,7 @@ func validate(context: Dictionary) -> bool:
 		return false
 
 	var spell_phase_handler = context.get("spell_phase_handler")
-	if not spell_phase_handler or not spell_phase_handler.spell_purify:
+	if not spell_phase_handler or not (spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_purify):
 		_log_error("spell_purify が初期化されていません")
 		return false
 
@@ -32,16 +32,17 @@ func execute(context: Dictionary) -> void:
 	var effect_type = effect.get("effect_type", "")
 	var current_player_id = context.get("current_player_id", 0)
 
-	if not handler or not handler.spell_purify:
+	if not handler or not (handler.spell_systems and handler.spell_systems.spell_purify):
 		_log_error("spell_purify が初期化されていません")
 		return
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
 	# effect_type に応じて処理を分岐（元のロジックを再現）
+	var spell_purify = handler.spell_systems.spell_purify
 	match effect_type:
 		"purify_all":
-			var result = handler.spell_purify.purify_all(current_player_id)
+			var result = spell_purify.purify_all(current_player_id)
 			# UI メッセージ表示（await）
 			if handler.ui_manager and handler.ui_manager.global_comment_ui:
 				var type_count = result.removed_types.size()
@@ -50,12 +51,12 @@ func execute(context: Dictionary) -> void:
 
 		"remove_creature_curse":
 			var tile_index = target_data.get("tile_index", -1)
-			handler.spell_purify.remove_creature_curse(tile_index)
+			spell_purify.remove_creature_curse(tile_index)
 
 		"remove_world_curse":
-			handler.spell_purify.remove_world_curse()
+			spell_purify.remove_world_curse()
 
 		"remove_all_player_curses":
-			handler.spell_purify.remove_all_player_curses()
+			spell_purify.remove_all_player_curses()
 
 	_log("効果実行完了")

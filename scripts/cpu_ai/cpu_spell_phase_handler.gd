@@ -36,13 +36,14 @@ func _sync_references() -> void:
 	"""親ハンドラーから参照を同期"""
 	if not spell_phase_handler:
 		return
-	
+
 	player_system = spell_phase_handler.player_system
 	board_system = spell_phase_handler.board_system
 	card_system = spell_phase_handler.card_system
-	spell_synthesis = spell_phase_handler.spell_synthesis
+	if spell_phase_handler.spell_systems:
+		spell_synthesis = spell_phase_handler.spell_systems.spell_synthesis
+		card_sacrifice_helper = spell_phase_handler.spell_systems.card_sacrifice_helper
 	spell_mystic_arts = spell_phase_handler.spell_mystic_arts
-	card_sacrifice_helper = spell_phase_handler.card_sacrifice_helper
 	cpu_spell_ai = spell_phase_handler.cpu_spell_ai
 	cpu_mystic_arts_ai = spell_phase_handler.cpu_mystic_arts_ai
 

@@ -768,7 +768,9 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 					if new_hp <= 0:
 						var tile = board_system_ref.tile_nodes.get(tile_index)
 						if tile and game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-							var spell_damage = game_flow_manager_ref.spell_phase_handler.spell_damage
+							var spell_damage = null
+							if game_flow_manager_ref.spell_phase_handler.spell_systems:
+								spell_damage = game_flow_manager_ref.spell_phase_handler.spell_systems.spell_damage
 							if spell_damage:
 								spell_damage.destroy_creature(tile)
 							else:
