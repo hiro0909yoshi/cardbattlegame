@@ -1018,8 +1018,8 @@ func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictio
 ## Strategy パターン対応（Phase 3-A: Day 1-2）
 ## ================================================================================
 
-## スペル戦略実行用のコンテキストを構築
-func _build_spell_context(spell_card: Dictionary = {}, target_data: Dictionary = {}) -> Dictionary:
+## スペル戦略実行用のコンテキストを構築（Strategy パターン用）
+func _build_strategy_context(spell_card: Dictionary = {}, target_data: Dictionary = {}) -> Dictionary:
 	return {
 		"spell_card": spell_card if not spell_card.is_empty() else selected_spell_card,
 		"spell_id": spell_card.get("id", selected_spell_card.get("id", -1)),
@@ -1046,7 +1046,7 @@ func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dicti
 		return false
 
 	# Strategy が実装されている場合
-	var context = _build_spell_context(spell_card, target_data)
+	var context = _build_strategy_context(spell_card, target_data)
 
 	# バリデーション
 	if not strategy.validate(context):
