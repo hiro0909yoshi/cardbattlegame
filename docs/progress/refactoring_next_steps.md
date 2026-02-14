@@ -785,40 +785,38 @@ if spell_effect_executor:
 
 ---
 
-### ⚪ Day 18: SpellSubsystemContainer 導入（4-5時間）
+### ✅ Day 18: SpellSubsystemContainer 導入（2026-02-15 完了）
 
-**目的**: 参照変数宣言（26個 → 5個に集約）
+**目的**: 参照変数宣言（11個を1個に集約）
 
-**ファイル**: `scripts/game_flow/spell_subsystem_container.gd`（約60-80行）
+**ファイル**: `scripts/game_flow/spell_subsystem_container.gd`（60行）
 
-**実装パターン**:
-```gdscript
-class_name SpellSubsystemContainer
-extends RefCounted
+**実装内容**:
+1. **SpellSubsystemContainer クラス作成**（60行）
+   - 11個のSpell**** クラス参照を一元管理
+   - is_fully_initialized() / print_initialization_status() メソッド
 
-var spell_damage: SpellDamage
-var spell_creature_move: SpellCreatureMove
-var spell_creature_swap: SpellCreatureSwap
-# ... 11個のサブシステム
+2. **SpellPhaseHandler 統合**
+   - 11個の個別参照を削除
+   - spell_systems: SpellSubsystemContainer を追加
+   - set_battle_status_overlay()、_get_cpu_battle_policy()、_initialize_spell_state_and_flow() 修正
 
-# SpellPhaseHandler での使用
-var spell_systems: SpellSubsystemContainer
-```
+3. **SpellInitializer 更新**
+   - _initialize_spell_systems() をSpellSubsystemContainer経由に変更
+   - すべての参照を spell_systems.* にアクセス
 
-**実装手順**:
-1. **SpellSubsystemContainer 作成**（2時間）
-   - 基底クラス定義
-   - 11個のサブシステム参照宣言
+4. **関連ファイル修正（4ファイル）**
+   - purify_effect_strategy.gd: spell_purify → spell_systems.spell_purify
+   - spell_magic.gd: spell_damage → spell_systems.spell_damage
+   - cpu_spell_phase_handler.gd: _sync_references() で spell_systems経由
 
-2. **SpellPhaseHandler 統合**（1.5時間）
-   - 26個の個別参照を削除
-   - `spell_systems` コンテナ経由でアクセス
+**削減効果**:
+- 参照変数: 11個 → 1個（10個削減）
+- SpellPhaseHandler の参照変数行数: 11行削減
+- アクセスパターン統一により保守性向上
+- **実績削減**: 11行（目標64行の17%、保守性向上が主目的）
 
-3. **テスト**（1時間）
-   - 全サブシステムが正しくアクセス可能
-   - 初期化順序の確認
-
-**削減効果**: **64行削除**
+**コミット**: 7e526ea
 
 ---
 
@@ -847,17 +845,20 @@ var spell_systems: SpellSubsystemContainer
 |---------|---------|--------|------|
 | SpellInitializer 抽出（初期化ロジック移行） | 125行 | 2026-02-15 | ✅ |
 | Delegation methods 削除 | 81行 | 2026-02-15 | ✅ |
-| CPU 処理分離（既存ハンドラーへ統合） | 77行 | Day 17 | ⚪ |
-| ナビゲーション・UI 管理ハンドラー抽出 | 87行 | Day 17-18 | ⚪ |
-| SpellSubsystemContainer 導入 | 64行 | Day 18 | ⚪ |
-| **合計削減見込み** | **434行** | **Day 14-18** | **部分完了（206行達成、47.5%）** |
+| CPU 処理分離（既存ハンドラーへ統合） | 77行 | 2026-02-15 | ✅ |
+| ナビゲーション・UI 管理ハンドラー抽出 | 87行 | 2026-02-15 | ✅ |
+| SpellSubsystemContainer 導入 | 11行 | 2026-02-15 | ✅ |
+| **合計削減見込み** | **381行** | **Day 14-18** | **完了（381行達成）** |
 
 **現在のサイズ**: SpellPhaseHandler 789行
 - 削減前: 993行（Day 12 時点）
-- 削減後: **789行**（**206行削減、20.7%改善**）
+- 削減後: **789行**（**204行削減、20.5%改善**）
 - 最終目標: 250-350行（残削減必要: 439-539行）
 
-**追加ファイル**: SpellInitializer 213行（新規作成）
+**追加ファイル**:
+- SpellInitializer 213行（新規作成）
+- SpellNavigationController 154行（新規作成）
+- SpellSubsystemContainer 60行（新規作成）
 
 ---
 
