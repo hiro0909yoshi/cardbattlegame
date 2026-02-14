@@ -5,18 +5,18 @@ extends SpellStrategy
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
 	# Level 1: 必須キーの存在確認
-	var required = ["effect", "target_data", "spell_phase_handler"]
+	var required = ["effect", "target_data", "spell_damage"]
 	if not _validate_context_keys(context, required):
 		return false
 
 	# Level 2: 参照実体のnull確認
-	var refs = ["spell_phase_handler"]
+	var refs = ["spell_damage"]
 	if not _validate_references(context, refs):
 		return false
 
-	# Level 3: spell_damage の存在確認
-	var handler = context.get("spell_phase_handler")
-	if not handler or not handler.spell_damage:
+	# Level 3: spell_damage の実体確認（直接参照）
+	var spell_damage = context.get("spell_damage")
+	if not spell_damage:
 		_log_error("spell_damage が初期化されていません")
 		return false
 
@@ -41,19 +41,20 @@ func validate(context: Dictionary) -> bool:
 
 ## 実行（スペル効果の適用）
 func execute(context: Dictionary) -> void:
+	var spell_damage = context.get("spell_damage")
 	var handler = context.get("spell_phase_handler")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
 	var value = effect.get("value", 0)
 
-	# null チェック
-	if not handler or not handler.spell_damage:
+	# null チェック（直接参照）
+	if not spell_damage:
 		_log_error("spell_damage が初期化されていません")
 		return
 
 	_log("効果実行開始 (tile_index: %d, value: %d)" % [target_data.get("tile_index", -1), value])
 
 	# SpellDamage に委譲
-	await handler.spell_damage.apply_damage_effect(handler, target_data.get("tile_index", -1), value)
+	await spell_damage.apply_damage_effect(handler, target_data.get("tile_index", -1), value)
 
 	_log("効果実行完了")

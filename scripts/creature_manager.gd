@@ -60,6 +60,12 @@ func set_creature(tile_index: int, data: Dictionary) -> void:
 	# ステップ3: 変更後のデータを取得
 	var new_data = creatures.get(tile_index, {})
 
+	# ステップ4: 変更がない場合はシグナルを emit しない（無駄なシグナルを防ぐ）
+	if old_data.is_empty() and new_data.is_empty():
+		if DebugSettings.creature_manager_debug:
+			print("[CreatureManager] 変更なし（空→空）: tile=%d, シグナル emit スキップ" % tile_index)
+		return
+
 	if DebugSettings.creature_manager_debug:
 		print("[CreatureManager] emit 直前: tile=%d, old=%s, new=%s" % [
 			tile_index,
@@ -67,7 +73,7 @@ func set_creature(tile_index: int, data: Dictionary) -> void:
 			"empty" if new_data.is_empty() else "exists"
 		])
 
-	# ステップ4: シグナルを emit
+	# ステップ5: シグナルを emit
 	creature_changed.emit(tile_index, old_data, new_data)
 
 	if DebugSettings.creature_manager_debug:

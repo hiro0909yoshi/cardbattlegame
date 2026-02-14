@@ -91,7 +91,7 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	if SpellStrategyFactory.has_effect_strategy(effect_type):
 		var strategy = SpellStrategyFactory.create_effect_strategy(effect_type)
 		if strategy:
-			# Strategy のコンテキストを構築
+			# Strategy のコンテキストを構築（直接参照を含める）
 			var context = {
 				"effect": effect,
 				"target_data": target_data,
@@ -100,6 +100,20 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 				"spell_card": handler.selected_spell_card,
 				"board_system": handler.board_system,
 				"spell_container": spell_container,
+				# === 直接参照（2段チェーンアクセス廃止） ===
+				"spell_draw": spell_container.spell_draw if spell_container else null,
+				"spell_dice": spell_container.spell_dice if spell_container else null,
+				"spell_land": spell_container.spell_land if spell_container else null,
+				"spell_magic": spell_container.spell_magic if spell_container else null,
+				"spell_curse": spell_container.spell_curse if spell_container else null,
+				"spell_curse_stat": spell_container.spell_curse_stat if spell_container else null,
+				"spell_curse_toll": spell_container.spell_curse_toll if spell_container else null,
+				"spell_cost_modifier": spell_container.spell_cost_modifier if spell_container else null,
+				"spell_player_move": spell_container.spell_player_move if spell_container else null,
+				"spell_creature_move": handler.spell_creature_move if handler else null,
+				"spell_damage": handler.spell_damage if handler else null,
+				"card_system": handler.card_system if handler else null,
+				"player_system": handler.player_system if handler else null,
 			}
 
 			# バリデーション

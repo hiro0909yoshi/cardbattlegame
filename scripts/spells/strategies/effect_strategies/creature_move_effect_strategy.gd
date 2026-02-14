@@ -5,18 +5,18 @@ extends SpellStrategy
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
 	# Level 1: 必須キーの存在確認
-	var required = ["effect", "target_data", "spell_phase_handler", "current_player_id"]
+	var required = ["effect", "target_data", "spell_creature_move", "current_player_id"]
 	if not _validate_context_keys(context, required):
 		return false
 
 	# Level 2: 参照実体のnull確認
-	var refs = ["spell_phase_handler"]
+	var refs = ["spell_creature_move"]
 	if not _validate_references(context, refs):
 		return false
 
-	# Level 3: spell_creature_move の存在確認
-	var handler = context.get("spell_phase_handler")
-	if not handler or not handler.spell_creature_move:
+	# Level 3: spell_creature_move の実体確認（直接参照）
+	var spell_creature_move = context.get("spell_creature_move")
+	if not spell_creature_move:
 		_log_error("spell_creature_move が初期化されていません")
 		return false
 
@@ -43,13 +43,13 @@ func validate(context: Dictionary) -> bool:
 
 ## 実行（スペル効果の適用）
 func execute(context: Dictionary) -> void:
-	var handler = context.get("spell_phase_handler")
+	var spell_creature_move = context.get("spell_creature_move")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
 	var current_player_id = context.get("current_player_id", -1)
 
-	# null チェック
-	if not handler or not handler.spell_creature_move:
+	# null チェック（直接参照）
+	if not spell_creature_move:
 		_log_error("spell_creature_move が初期化されていません")
 		return
 
@@ -57,7 +57,7 @@ func execute(context: Dictionary) -> void:
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
 	# SpellCreatureMove に委譲
-	var result = await handler.spell_creature_move.apply_effect(effect, target_data, current_player_id)
+	var result = await spell_creature_move.apply_effect(effect, target_data, current_player_id)
 
 	if result.get("success", false):
 		_log("効果実行完了 (成功)")

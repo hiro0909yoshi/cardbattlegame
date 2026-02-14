@@ -348,9 +348,10 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 			var attacker_participant = BattleParticipant.new(card_data, attacker_hp, 0, attacker_ap, true, attacker_index)
 			var dummy_opponent = BattleParticipant.new({}, 0, 0, 0, false, -1)
 			battle_special_effects.check_on_death_effects(attacker_participant, dummy_opponent, CardLoader)
-			
-			board_system_ref.remove_creature(from_tile_index)
-			board_system_ref.set_tile_owner(from_tile_index, -1)
+
+			# NOTE: 移動元タイルは移動コマンド時に既に削除済み（land_action_helper.gd:349）
+			# board_system_ref.remove_creature(from_tile_index)
+			# board_system_ref.set_tile_owner(from_tile_index, -1)
 		else:
 			# 手札からの侵略の場合、破壊時効果を処理（カード自体は手札から既に消費済み）
 			var attacker_hp = card_data.get("hp", 0) + card_data.get("base_up_hp", 0)
@@ -428,17 +429,23 @@ func validate_systems() -> bool:
 func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
 	if not participant or not participant.creature_data:
 		return
+
+	# アイテム配列をクリア（バトル専用効果）
+	if participant.creature_data.has("items"):
+		participant.creature_data.erase("items")
+		print("[BattleSystem] バトル終了: アイテム配列をクリア")
+
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 	if keyword_conditions.is_empty():
 		return
-	
+
 	# 巻物攻撃設定を削除（バトル中のみ使用）
 	if keyword_conditions.has("巻物攻撃"):
 		keyword_conditions.erase("巻物攻撃")
 	if keyword_conditions.has("巻物強打"):
 		keyword_conditions.erase("巻物強打")
-	
+
 	# 無効化がArrayに変換されていた場合、元のDictionary形式に復元
 	if keyword_conditions.has("無効化") and keyword_conditions["無効化"] is Array:
 		var original_card = CardLoader.get_card_by_id(participant.creature_data.get("id", -1))
@@ -521,22 +528,29 @@ func _apply_post_battle_effects(
 			place_creature_data.erase("is_moving")
 			board_system_ref.place_creature(tile_index, place_creature_data)
 			
+			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
 			# 移動侵略の場合、移動元のクリーチャーを削除して空き地にする（配置の後に行う）
-			if from_tile_index >= 0:
-				board_system_ref.remove_creature(from_tile_index)
-				board_system_ref.set_tile_owner(from_tile_index, -1)
-				print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除・空き地化" % from_tile_index)
+			# if from_tile_index >= 0:
+			# 	board_system_ref.remove_creature(from_tile_index)
+			# 	board_system_ref.set_tile_owner(from_tile_index, -1)
+			# 	print("[移動侵略成功] 移動元タイル%d のクリーチャーを削除・空き地化" % from_tile_index)
 			
 			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
 			# 🌍 戦闘勝利時の土地効果（土地変性・土地破壊）
+			print("[DEBUG] 土地効果チェック開始")
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
+			print("[DEBUG] 土地効果通知表示")
 			await _show_land_effect_notification(attacker.creature_data, land_effect_result)
-			
+			print("[DEBUG] 土地効果通知完了")
+
 			# 💀 抹消効果（アネイマブル）
+			print("[DEBUG] 抹消効果チェック")
 			battle_special_effects.check_and_apply_annihilate(attacker, defender)
-			
+
+			print("[DEBUG] invasion_completed シグナル emit 直前: tile=%d" % tile_index)
 			emit_signal("invasion_completed", true, tile_index)
+			print("[DEBUG] invasion_completed シグナル emit 完了")
 		
 		BattleResult.DEFENDER_WIN:
 			print("【結果】防御成功！侵略側を撃破")
@@ -575,14 +589,17 @@ func _apply_post_battle_effects(
 			
 			# 💀 抹消効果（アネイマブル）
 			battle_special_effects.check_and_apply_annihilate(defender, attacker)
-			
-			# 移動侵略の場合、移動元のクリーチャーも削除
-			if from_tile_index >= 0:
-				board_system_ref.remove_creature(from_tile_index)
-				board_system_ref.set_tile_owner(from_tile_index, -1)
-				print("[移動侵略失敗] 移動元タイル%d のクリーチャーを削除・空き地化（破壊）" % from_tile_index)
-			else:
-				print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
+
+			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
+			# 移動侵略の場合、移動元タイルに戻していないので削除不要
+			# if from_tile_index >= 0:
+			# 	board_system_ref.remove_creature(from_tile_index)
+			# 	board_system_ref.set_tile_owner(from_tile_index, -1)
+			# 	print("[移動侵略失敗] 移動元タイル%d のクリーチャーを削除・空き地化（破壊）" % from_tile_index)
+			# else:
+			# 	print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
+
+			print("[侵略失敗] 攻撃側クリーチャーは破壊されました")
 			
 			emit_signal("invasion_completed", false, tile_index)
 		
@@ -675,11 +692,12 @@ func _apply_post_battle_effects(
 			board_system_ref.set_tile_owner(tile_index, -1)  # 無所有
 			board_system_ref.remove_creature(tile_index)
 			
-			# 移動侵略の場合、移動元のクリーチャーも削除して空き地にする
-			if from_tile_index >= 0:
-				board_system_ref.remove_creature(from_tile_index)
-				board_system_ref.set_tile_owner(from_tile_index, -1)
-				print("[相打ち] 移動元タイル%d のクリーチャーも削除・空き地化" % from_tile_index)
+			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
+			# 移動侵略の場合、移動元タイルに戻していないので削除不要
+			# if from_tile_index >= 0:
+			# 	board_system_ref.remove_creature(from_tile_index)
+			# 	board_system_ref.set_tile_owner(from_tile_index, -1)
+			# 	print("[相打ち] 移動元タイル%d のクリーチャーも削除・空き地化" % from_tile_index)
 			
 			# 攻撃側カードは破壊される（手札に戻らない）
 			print("[相打ち] 両方のクリーチャーが破壊されました")

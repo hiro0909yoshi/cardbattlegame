@@ -5,18 +5,18 @@ extends SpellStrategy
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
 	# Level 1: 必須キーの存在確認
-	var required = ["effect", "target_data", "spell_phase_handler"]
+	var required = ["effect", "target_data", "spell_damage"]
 	if not _validate_context_keys(context, required):
 		return false
 
 	# Level 2: 参照実体のnull確認
-	var refs = ["spell_phase_handler"]
+	var refs = ["spell_damage"]
 	if not _validate_references(context, refs):
 		return false
 
-	# Level 3: spell_damage の存在確認
-	var handler = context.get("spell_phase_handler")
-	if not handler or not handler.spell_damage:
+	# Level 3: spell_damage の実体確認（直接参照）
+	var spell_damage = context.get("spell_damage")
+	if not spell_damage:
 		_log_error("spell_damage が初期化されていません")
 		return false
 
@@ -51,14 +51,15 @@ func validate(context: Dictionary) -> bool:
 
 ## 実行（スペル効果の適用）
 func execute(context: Dictionary) -> void:
+	var spell_damage = context.get("spell_damage")
 	var handler = context.get("spell_phase_handler")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
 	var effect_type = effect.get("effect_type", "")
 	var tile_index = target_data.get("tile_index", -1)
 
-	# null チェック
-	if not handler or not handler.spell_damage:
+	# null チェック（直接参照）
+	if not spell_damage:
 		_log_error("spell_damage が初期化されていません")
 		return
 
@@ -67,9 +68,9 @@ func execute(context: Dictionary) -> void:
 	match effect_type:
 		"heal":
 			var value = effect.get("value", 0)
-			await handler.spell_damage.apply_heal_effect(handler, tile_index, value)
+			await spell_damage.apply_heal_effect(handler, tile_index, value)
 		"full_heal":
-			await handler.spell_damage.apply_full_heal_effect(handler, tile_index)
+			await spell_damage.apply_full_heal_effect(handler, tile_index)
 		_:
 			_log_error("未対応の effect_type: %s" % effect_type)
 			return

@@ -116,7 +116,13 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# 子コンポーネント参照のキャッシュ
 	if board_system and board_system.get("battle_system"):
 		battle_system = board_system.battle_system
-	
+
+		# BattleSystem の invasion_completed シグナルに接続
+		if battle_system and battle_system.has_signal("invasion_completed"):
+			if not battle_system.invasion_completed.is_connected(_on_invasion_completed):
+				battle_system.invasion_completed.connect(_on_invasion_completed)
+				print("[DominioCommandHandler] BattleSystem.invasion_completed シグナル接続完了")
+
 	# Phase 1-A: UIManagerのシグナルを接続
 	if ui_manager and ui_manager.has_signal("level_up_selected"):
 		if not ui_manager.level_up_selected.is_connected(_on_level_up_selected):
@@ -823,7 +829,10 @@ func _on_invasion_completed(success: bool, tile_index: int):
 
 	# コメントはバトル前に表示済みのため、ここでは表示しない
 
-	# ← ここで complete_action() を呼ばない（invasion_completed 自体がアクション完了を意味する）
+	# アクション完了を通知（ターンを進める）
+	print("[DominioCommandHandler] complete_action() を呼び出します")
+	if board_system and board_system.tile_action_processor:
+		board_system.complete_action()
 
 func _on_movement_completed(player_id: int, final_tile: int):
 	# デバッグログ

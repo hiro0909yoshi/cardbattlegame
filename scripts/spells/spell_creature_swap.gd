@@ -450,16 +450,22 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	var ui_manager = null
 	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
 		ui_manager = spell_phase_handler_ref.ui_manager
-	
+
 	if not ui_manager:
 		print("[SpellCreatureSwap] UIManager未設定、カード犠牲スキップ")
 		return {"cancelled": false, "sacrifice_card": {}}
-	
+
+	# デバッグ: ui_manager の型を確認
+	print("[DEBUG] ui_manager type: %s, has excluded_card_id: %s" % [ui_manager.get_class(), "excluded_card_id" in ui_manager])
+
 	# 手札選択UIを表示（犠牲モード）
 	if ui_manager.phase_display:
 		ui_manager.show_action_prompt("犠牲にするカードを選択")
 	ui_manager.card_selection_filter = ""
-	ui_manager.excluded_card_id = summon_creature.get("id", "")  # 召喚カードを除外
+
+	# 召喚カードを除外（型を String に統一）
+	var card_id = summon_creature.get("id", -1)
+	ui_manager.excluded_card_id = str(card_id) if card_id != -1 else ""
 	var player = player_system_ref.players[player_id]
 	ui_manager.show_card_selection_ui_mode(player, "sacrifice")
 	

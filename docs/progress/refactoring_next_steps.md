@@ -1,6 +1,6 @@
 # 📋 次のリファクタリング作業
 
-**最終更新**: 2026-02-14
+**最終更新**: 2026-02-15
 **目的**: セッション間で作業計画が失われないよう、次にやることを明確に記録
 
 **確立したワークフロー**:
@@ -333,5 +333,175 @@ mkdir -p scripts/spells/strategies/effect_strategies
 
 ---
 
-**最終更新**: 2026-02-14
-**次のアクション**: Haiku に Phase 3-A-1 実装を依頼
+## ✅ Phase 3-A-2: DrawEffectStrategy 実装（2026-02-15 完了）
+
+**実装内容**: draw系 effect_type の Strategy 化
+
+**対象 effect_type（6個）**:
+- draw（基本ドロー）
+- draw_cards（指定枚数ドロー）
+- draw_by_rank（ランク別ドロー）
+- draw_by_type（属性別ドロー）
+- draw_from_deck_selection（デッキから選択ドロー）
+- draw_and_place（ドロー&配置）
+
+**成果**:
+- DrawEffectStrategy 作成（`scripts/spells/strategies/effect_strategies/draw_effect_strategy.gd`）
+- SpellStrategyFactory に 6つの draw 系 effect_type をマッピング
+- validate() / execute() 実装（spell_draw への委譲パターン）
+- 登録済み Strategy: 24→30（+6個）
+
+**実装パターン**:
+```gdscript
+# validate()
+- spell_container と spell_draw の存在確認
+- effect_type が draw系のいずれかであることを確認
+
+# execute()
+- spell_draw.apply_effect() に context を構築して委譲
+- rank, target_player_id, tile_index を context に含める
+```
+
+**次のアクション**: CurseEffectStrategy（creature_curse系 3個）実装予定
+
+---
+
+## ✅ Phase 3-A-3: DiceEffectStrategy バグ修正（2026-02-15 完了）
+
+**問題**: DiceEffectStrategy の validate() で tile_index < 0 をエラーとしていた
+**原因**: dice 系スペルはターゲット不要（自分のダイスロールを操作）だが、validate() が厳格すぎた
+**修正**: tile_index チェックを削除（dice_fixed, dice_range, dice_multi, dice_range_magic は tile_index = -1 が正常）
+
+**成果**: dice 系スペル（4個）が正常動作
+
+---
+
+## 🎯 次のアクション: Phase 3-A-4 - 呪い系 Strategy 実装
+
+**優先度**: P1（高頻度使用、19個の effect_type）
+
+**実装対象**:
+1. **CreatureCurseEffectStrategy**（19個）- 最優先
+   - skill_nullify, battle_disable, ap_nullify, stat_reduce, random_stat_curse
+   - command_growth_curse, plague_curse, creature_curse, forced_stop, indomitable
+   - land_effect_disable, land_effect_grant, metal_form, magic_barrier, destroy_after_battle
+   - bounty_curse, grant_mystic_arts, land_curse, apply_curse
+
+2. **PlayerCurseEffectStrategy**（1個）
+   - player_curse
+
+3. **WorldCurseEffectStrategy**（1個）
+   - world_curse
+
+4. **TollCurseEffectStrategy**（6個）
+   - toll_share, toll_disable, toll_fixed, toll_multiplier, peace, curse_toll_half
+
+5. **StatBoostEffectStrategy**（1個）
+   - stat_boost
+
+**委譲先サブシステム**:
+- spell_container.spell_curse（クリーチャー・プレイヤー呪い）
+- spell_container.spell_world_curse（世界呪い）
+- spell_container.spell_curse_toll（通行料呪い）
+- spell_container.spell_curse_stat（ステータス呪い）
+
+**実装パターン**（CreatureCurseEffectStrategy の例）:
+```gdscript
+class_name CreatureCurseEffectStrategy
+extends SpellStrategy
+
+func validate(context: Dictionary) -> bool:
+	var required = ["effect", "spell_curse"]
+	if not _validate_context_keys(context, required):
+		return false
+
+	var refs = ["spell_curse"]
+	if not _validate_references(context, refs):
+		return false
+
+	var effect_type = context.get("effect", {}).get("effect_type", "")
+	var valid_types = ["skill_nullify", "battle_disable", ...] # 19個
+	if effect_type not in valid_types:
+		return false
+
+	return true
+
+func execute(context: Dictionary) -> void:
+	var spell_curse = context.get("spell_curse")
+	var effect = context.get("effect", {})
+	var target_data = context.get("target_data", {})
+	var tile_index = target_data.get("tile_index", -1)
+
+	spell_curse.apply_effect(effect, tile_index)
+```
+
+**担当**: Haiku（実装）
+
+---
+
+## ✅ Phase 3-A-4: CreatureCurseEffectStrategy 実装（2026-02-15 完了）
+
+**実装内容**: クリーチャー呪い系 19個の effect_type を Strategy 化
+
+**対象 effect_type（19個）**:
+- skill_nullify, battle_disable, ap_nullify, stat_reduce, random_stat_curse
+- command_growth_curse, plague_curse, creature_curse, forced_stop, indomitable
+- land_effect_disable, land_effect_grant, metal_form, magic_barrier, destroy_after_battle
+- bounty_curse, grant_mystic_arts, land_curse, apply_curse
+
+**成果**:
+- CreatureCurseEffectStrategy 作成（67行、2.6KB）
+- SpellStrategyFactory に 19個のマッピング追加
+- 登録済み effect_type: 29→48（+19個）
+- target_type チェック実装（land/creature のみ対応）
+- null チェック強化、2段チェーンアクセス廃止
+
+---
+
+## ✅ Phase 3-A-5～8: 残りの呪い系 Strategy 実装（2026-02-15 完了）
+
+**実装内容**: プレイヤー呪い、世界呪い、通行料呪い、ステータス呪い系の Strategy 化
+
+**対象 effect_type（4つの Strategy、合計9個）**:
+- player_curse（1個）
+- world_curse（1個）
+- toll_share, toll_disable, toll_fixed, toll_multiplier, peace, curse_toll_half（6個）
+- stat_boost（1個）
+
+**成果**:
+- 4つの Strategy ファイル作成（player_curse_effect_strategy.gd, world_curse_effect_strategy.gd, toll_curse_effect_strategy.gd, stat_boost_effect_strategy.gd）
+- SpellStrategyFactory に 9個のマッピング追加（48個 → 57個）
+- 各 Strategy で validate() / execute() 実装（null チェック強化）
+- 元の spell_effect_executor.gd のロジックを正確に移行
+
+**実装パターン**:
+```gdscript
+# 全 Strategy で統一されたパターン
+- Level 1: 必須キーの存在確認（_validate_context_keys）
+- Level 2: 参照実体のnull確認（_validate_references）
+- Level 3: 直接参照による null チェック
+- 実行時: spell_container の各サブシステムに委譲
+```
+
+**登録済み effect_type（SpellStrategyFactory）**: 48 → 57（+9個）
+
+---
+
+## 🎯 次のアクション: Phase 3-A-9～ - EP/Magic 系 Strategy 実装
+
+**優先度**: P1（高頻度使用）
+
+**実装対象**（最大2つの Strategy、約13個の effect_type）:
+
+### 1. MagicEffectStrategy（13個の EP/Magic 操作系）
+- **effect_type**: drain_magic, drain_magic_conditional, drain_magic_by_land_count, drain_magic_by_lap_diff, gain_magic, gain_magic_by_rank, gain_magic_by_lap, gain_magic_from_destroyed_count, gain_magic_from_spell_cost, balance_all_magic, gain_magic_from_land_chain, mhp_to_magic, drain_magic_by_spell_count
+- **委譲先**: spell_container.spell_magic
+
+**参考**: spell_effect_executor.gd Line 135-150
+
+**担当**: Haiku（実装）
+
+---
+
+**最終更新**: 2026-02-15
+**進捗**: Phase 3-A-5～8 完了（4つの Strategy + 9個の effect_type 実装済み）、総 57個 effect_type が Strategy パターン対応

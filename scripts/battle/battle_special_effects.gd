@@ -426,18 +426,19 @@ func _create_hp_data(participant: BattleParticipant) -> Dictionary:
 ## 防御側クリーチャーのHPを更新
 func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> void:
 	var tile_index = tile_info["index"]
-	var creature_data = tile_info.get("creature", {}).duplicate()
-	
+	# クリーンアップ済みの defender.creature_data を使用（アイテムが削除されている）
+	var creature_data = defender.creature_data.duplicate()
+
 	# 元のHPは触らない（不変）
 	# creature_data["hp"] = そのまま
-	
+
 	# BattleParticipantのプロパティから永続バフを反映
 	print("[update_defender_hp] 防御側の永続バフを反映:")
 	print("  元のbase_up_hp: ", tile_info.get("creature", {}).get("base_up_hp", 0), " → ", defender.base_up_hp)
 	print("  元のbase_up_ap: ", tile_info.get("creature", {}).get("base_up_ap", 0), " → ", defender.base_up_ap)
 	creature_data["base_up_hp"] = defender.base_up_hp
 	creature_data["base_up_ap"] = defender.base_up_ap
-	
+
 	# 現在HPを保存（新方式：状態値）
 	# ただし、戦闘中の計算HP（レッドキャップ、アンダイン等）が元のMHPより高い場合は制限
 	var original_mhp = creature_data.get("hp", 0) + defender.base_up_hp
@@ -446,9 +447,10 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 		print("  current_hp制限: ", final_hp, " → ", original_mhp, " (元のMHP)")
 		final_hp = original_mhp
 	creature_data["current_hp"] = final_hp
-	
+
 	# タイルのクリーチャーデータを更新
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
+	print("[update_defender_hp] アイテムクリーンアップ確認: items存在=%s" % creature_data.has("items"))
 
 ## 死亡時効果のチェック（道連れ、雪辱、死者復活など）
 func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant, card_loader = null) -> Dictionary:
