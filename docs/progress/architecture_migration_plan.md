@@ -129,11 +129,11 @@ Phase 5: 統合テスト            [⚪ 未着手] 2-3日
 
 ---
 
-## Phase 3-A: SpellPhaseHandler Strategy パターン化（4-5日）🔵 進行中
+## Phase 3-A: SpellPhaseHandler Strategy パターン化（4-5日）🔵 進行中 → Phase 3-A Day 14-18 追加実施中
 
 **開始日**: 2026-02-14（Day 1-2 完了）
 **優先度**: P1（最優先）
-**進捗**: Day 1-2 完了 ✅、Day 3-5 未着手
+**進捗**: Day 1-12 完了 ✅、Day 14-18 進行中 🔵
 
 ### 目的
 - SpellPhaseHandler (1,764行) を Strategy パターンで分割
@@ -173,11 +173,11 @@ Phase 5: 統合テスト            [⚪ 未着手] 2-3日
 ### Day 3-5: effect_type Strategies 実装完了（2026-02-15）✅
 
 **実装内容**:
-- 22つの Strategy ファイル作成（109 effect_types 対応）
+- 23つの Strategy ファイル作成（109 effect_types 対応）
 - SpellStrategyFactory に 111個の effect_type マッピング登録
 - SpellEffectExecutor フォールバック削減（244行削減、434行 → 190行、56%削減）
 
-**実装 Strategies（22個）**:
+**実装 Strategies（23個）**:
 1. DamageEffectStrategy（2個）
 2. HealEffectStrategy（4個）
 3. CreatureMoveEffectStrategy（4個）
@@ -214,13 +214,59 @@ Phase 5: 統合テスト            [⚪ 未着手] 2-3日
 - ✅ テスト容易性向上（各 Strategy を独立してテスト可能）
 - ✅ コード構造明確化（effect_type ごとに独立ファイル）
 
-### 期待効果（達成）
-- ✅ コード削減: SpellEffectExecutor 56%削減（434行 → 190行）
-- ✅ 新スペル追加時間: Strategy クラス追加のみ（50%削減達成見込み）
-- ✅ テスト容易性向上: 各 Strategy を独立してテスト可能
+### Day 6-8: SpellPhaseHandler ハンドラー分割完了（2026-02-15）✅
+
+**実装内容**:
+- SpellTargetSelectionHandler 抽出（556行）
+- SpellConfirmationHandler 抽出（80行）
+- SpellUIController 抽出（159行）
+- MysticArtsHandler 抽出（200行）
+- SpellPhaseHandler: 1,836行 → 1,665行（9.3%削減）
+
+**成果**:
+- ✅ ターゲット選択ロジックの分離
+- ✅ UI制御ロジックの分離
+- ✅ アルカナアーツロジックの分離
+- ✅ 循環参照問題の解決（type annotation 削除）
+
+### Day 9-12: SpellStateHandler/SpellFlowHandler 抽出完了（2026-02-15）✅
+
+**実装内容**:
+- Day 9: SpellStateHandler 作成（241行）- 状態管理の一元化
+- Day 10-11: SpellFlowHandler 作成（685行）- フロー制御の分離
+- Day 12: SpellPhaseHandler 統合（1,665行 → 993行、40%削減）
+
+**成果**:
+- ✅ 状態管理の完全分離（55個の状態変数を SpellStateHandler に集約）
+- ✅ フロー制御の分離（use_spell() 等のメインロジック移行）
+- ✅ 削減行数: 672行（40%削減達成）
+- ⚠️ 目標未達: 250-350行（77-80%削減）まで残り643-743行
+
+**課題**:
+- 初期化ロジック: 740行（74.5%）が残存
+- Delegation methods: 120行（12%）が残存
+- CPU処理: 77行が残存
+- ナビゲーション管理: 87行が残存
+
+### Day 14-18: 神オブジェクト完全解消（追加削減）🔵 進行中
+
+**目的**: 残存993行を532行まで削減（46%削減達成、合計71%削減）
+
+**実施内容**:
+- ✅ Day 14-15: SpellInitializer 抽出（137行削減）
+- ⚪ Day 16: Delegation methods 削除（96行削減）
+- ⚪ Day 17: CPU処理完全分離（77行削減）
+- ⚪ Day 17-18: SpellNavigationController 抽出（87行削減）
+- ⚪ Day 18: SpellSubsystemContainer 導入（64行削減）
+
+**期待効果**:
+- 合計削減: 461行
+- 最終サイズ: 532行（目標350行まで残り182行）
+- 神オブジェクト特性の大幅改善
 
 ### ステータス
-**Phase 3-A 完了** ✅（企画4-5日 → 実装2日で完了）
+**Phase 3-A Day 1-13**: 完了 ✅
+**Phase 3-A Day 14-18**: 進行中 🔵（Day 14-15 完了、Day 16-18 未着手）
 
 **詳細は `refactoring_next_steps.md` および `daily_log.md` を参照**
 

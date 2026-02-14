@@ -39,8 +39,11 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 
 	# スペルフェーズ中の場合は、スペルを使わずにダイスロールに進む
 	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():
-		spell_phase_handler.pass_spell(false)  # auto_roll=false（ここで既にroll_dice中なので）
-		# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
+		if spell_phase_handler.spell_flow:
+			spell_phase_handler.spell_flow.pass_spell(false)  # auto_roll=false（ここで既にroll_dice中なので）
+			# フェーズ完了を待つ必要はない（pass_spellが即座に完了する）
+		else:
+			push_error("[DicePhaseHandler] spell_flow が初期化されていません")
 
 	if current_phase != GamePhase.DICE_ROLL:
 		return

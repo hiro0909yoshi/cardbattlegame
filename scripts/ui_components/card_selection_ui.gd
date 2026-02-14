@@ -946,9 +946,9 @@ func _on_info_panel_cancelled():
 	# selection_modeに応じた戻り先
 	match selection_mode:
 		"spell":
-			# SpellPhaseHandler経由でスペル選択画面に戻る
-			if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-				game_flow_manager_ref.spell_phase_handler.return_to_spell_selection()
+			# SpellFlowHandler経由でスペル選択画面に戻る
+			if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.spell_flow:
+				game_flow_manager_ref.spell_phase_handler.spell_flow.return_to_spell_selection()
 			else:
 				_setup_spell_phase_back_button()
 		"item":
@@ -984,10 +984,10 @@ func _setup_spell_phase_back_button():
 # スペルフェーズをスキップ（スペルを使わない）
 func _on_spell_phase_skip():
 	hide_selection()
-	
-	# SpellPhaseHandlerのpass_spell()を直接呼ぶ
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		game_flow_manager_ref.spell_phase_handler.pass_spell()
+
+	# SpellFlowHandler経由でpass_spell()を呼ぶ
+	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler and game_flow_manager_ref.spell_phase_handler.spell_flow:
+		game_flow_manager_ref.spell_phase_handler.spell_flow.pass_spell()
 	else:
 		emit_signal("selection_cancelled")
 

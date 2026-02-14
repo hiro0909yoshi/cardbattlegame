@@ -15,6 +15,16 @@ extends RefCounted
 class_name TargetUIHelper
 
 # ============================================
+# 内部ヘルパー
+# ============================================
+
+## ハンドラーの実際の所有者を取得（SpellPhaseHandlerの場合はspell_target_selection_handlerを返す）
+static func _get_actual_handler(handler):
+	if handler and "spell_target_selection_handler" in handler and handler.spell_target_selection_handler:
+		return handler.spell_target_selection_handler
+	return handler
+
+# ============================================
 # テキストフォーマット
 # ============================================
 
@@ -125,35 +135,47 @@ static func get_number_from_key(keycode: int) -> int:
 # ============================================
 
 ## ターゲットインデックスを次へ移動
-## 
+##
 ## handler: available_targets, current_target_index を持つオブジェクト
 ## 戻り値: インデックスが変更されたか
 static func move_target_next(handler) -> bool:
-	if handler.current_target_index < handler.available_targets.size() - 1:
-		handler.current_target_index += 1
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return false
+
+	if actual_handler.current_target_index < actual_handler.available_targets.size() - 1:
+		actual_handler.current_target_index += 1
 		return true
 	return false
 
 
 ## ターゲットインデックスを前へ移動
-## 
+##
 ## handler: available_targets, current_target_index を持つオブジェクト
 ## 戻り値: インデックスが変更されたか
 static func move_target_previous(handler) -> bool:
-	if handler.current_target_index > 0:
-		handler.current_target_index -= 1
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return false
+
+	if actual_handler.current_target_index > 0:
+		actual_handler.current_target_index -= 1
 		return true
 	return false
 
 
 ## ターゲットを数字で直接選択
-## 
+##
 ## handler: available_targets, current_target_index を持つオブジェクト
 ## index: 選択するインデックス
 ## 戻り値: 選択が成功したか
 static func select_target_by_index(handler, index: int) -> bool:
-	if index < handler.available_targets.size():
-		handler.current_target_index = index
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return false
+
+	if index < actual_handler.available_targets.size():
+		actual_handler.current_target_index = index
 		return true
 	return false
 

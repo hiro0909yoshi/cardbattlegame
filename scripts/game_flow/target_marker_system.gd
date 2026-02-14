@@ -15,132 +15,170 @@ class_name TargetMarkerSystem
 # 選択マーカー管理
 # ============================================
 
+## ハンドラーの実際の所有者を取得（SpellPhaseHandlerの場合はspell_target_selection_handlerを返す）
+static func _get_actual_handler(handler):
+	if handler and "spell_target_selection_handler" in handler and handler.spell_target_selection_handler:
+		return handler.spell_target_selection_handler
+	return handler
+
 ## 選択マーカーを作成
-## 
+##
 ## handler: 選択マーカーを保持するオブジェクト（DominioCommandHandler、SpellPhaseHandlerなど）
 ##          handler.selection_marker プロパティが必要
 static func create_selection_marker(handler):
-	if handler.selection_marker:
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return
+
+	if actual_handler.selection_marker:
 		return  # 既に存在する場合は何もしない
-	
+
 	# シンプルなリング形状のマーカーを作成
-	handler.selection_marker = MeshInstance3D.new()
-	
+	actual_handler.selection_marker = MeshInstance3D.new()
+
 	# トーラス（ドーナツ型）メッシュを作成
 	var torus = TorusMesh.new()
 	torus.inner_radius = 0.8
 	torus.outer_radius = 1.0
 	torus.rings = 32
 	torus.ring_segments = 16
-	
-	handler.selection_marker.mesh = torus
-	
+
+	actual_handler.selection_marker.mesh = torus
+
 	# マテリアル設定（黄色で発光）
 	var material = StandardMaterial3D.new()
 	material.albedo_color = Color(1.0, 1.0, 0.0, 1.0)  # 黄色
 	material.emission_enabled = true
 	material.emission = Color(1.0, 1.0, 0.0)
 	material.emission_energy_multiplier = 2.0
-	handler.selection_marker.material_override = material
+	actual_handler.selection_marker.material_override = material
 
 
 ## 選択マーカーを表示
-## 
+##
 ## handler: 選択マーカーを保持するオブジェクト
 ##          handler.selection_marker と handler.board_system が必要
 ## tile_index: マーカーを表示する土地のインデックス
 static func show_selection_marker(handler, tile_index: int):
-	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
 		return
-	
-	var tile = handler.board_system.tile_nodes[tile_index]
-	
+
+	# board_system は handler から取得（actual_handler ではなく）
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys or not board_sys.tile_nodes.has(tile_index):
+		return
+
+	var tile = board_sys.tile_nodes[tile_index]
+
 	# マーカーが未作成なら作成
-	if not handler.selection_marker:
+	if not actual_handler.selection_marker:
 		create_selection_marker(handler)
-	
+
 	# マーカーを土地の子として追加
-	if handler.selection_marker.get_parent():
-		handler.selection_marker.get_parent().remove_child(handler.selection_marker)
-	
-	tile.add_child(handler.selection_marker)
-	
+	if actual_handler.selection_marker.get_parent():
+		actual_handler.selection_marker.get_parent().remove_child(actual_handler.selection_marker)
+
+	tile.add_child(actual_handler.selection_marker)
+
 	# 位置を土地の少し上に設定
-	handler.selection_marker.position = Vector3(0, 0.5, 0)
-	
+	actual_handler.selection_marker.position = Vector3(0, 0.5, 0)
+
 	# 回転アニメーションを追加
-	if not handler.selection_marker.has_meta("rotating"):
-		handler.selection_marker.set_meta("rotating", true)
+	if not actual_handler.selection_marker.has_meta("rotating"):
+		actual_handler.selection_marker.set_meta("rotating", true)
 
 
 ## 選択マーカーを非表示
-## 
+##
 ## handler: 選択マーカーを保持するオブジェクト
 static func hide_selection_marker(handler):
-	if handler.selection_marker and handler.selection_marker.get_parent():
-		handler.selection_marker.get_parent().remove_child(handler.selection_marker)
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return
+
+	if actual_handler.selection_marker and actual_handler.selection_marker.get_parent():
+		actual_handler.selection_marker.get_parent().remove_child(actual_handler.selection_marker)
 
 
 ## 選択マーカーを回転（_process内で呼ぶ）
-## 
+##
 ## handler: 選択マーカーを保持するオブジェクト
 ## delta: フレーム間の経過時間
 static func rotate_selection_marker(handler, delta: float):
-	if handler.selection_marker and handler.selection_marker.has_meta("rotating"):
-		handler.selection_marker.rotate_y(delta * 2.0)  # 1秒で約114度回転
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return
+
+	if actual_handler.selection_marker and actual_handler.selection_marker.has_meta("rotating"):
+		actual_handler.selection_marker.rotate_y(delta * 2.0)  # 1秒で約114度回転
 
 
 ## 複数マーカーを表示（確認フェーズ用）
-## 
+##
 ## handler: confirmation_markers配列とboard_systemを持つオブジェクト
 ## tile_indices: マーカーを表示するタイルインデックスの配列
 static func show_multiple_markers(handler, tile_indices: Array):
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
+		return
+
 	# 既存のマーカーをクリア
 	clear_confirmation_markers(handler)
-	
-	if not handler.board_system:
+
+	# board_system は handler から取得（actual_handler ではなく）
+	var board_sys = handler.board_system if "board_system" in handler else null
+	if not board_sys:
 		return
-	
+
 	for tile_index in tile_indices:
-		if not handler.board_system.tile_nodes.has(tile_index):
+		if not board_sys.tile_nodes.has(tile_index):
 			continue
-		
-		var tile = handler.board_system.tile_nodes[tile_index]
-		
+
+		var tile = board_sys.tile_nodes[tile_index]
+
 		# マーカーを作成
 		var marker = create_marker_mesh()
 		tile.add_child(marker)
 		marker.position = Vector3(0, 0.5, 0)
 		marker.set_meta("rotating", true)
-		
-		handler.confirmation_markers.append(marker)
+
+		actual_handler.confirmation_markers.append(marker)
 
 
 ## 確認フェーズ用マーカーをすべてクリア
-## 
+##
 ## handler: confirmation_markers配列を持つオブジェクト
 static func clear_confirmation_markers(handler):
-	if not "confirmation_markers" in handler:
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
 		return
-	
-	for marker in handler.confirmation_markers:
+
+	if not "confirmation_markers" in actual_handler:
+		return
+
+	for marker in actual_handler.confirmation_markers:
 		if marker and is_instance_valid(marker):
 			if marker.get_parent():
 				marker.get_parent().remove_child(marker)
 			marker.queue_free()
-	
-	handler.confirmation_markers.clear()
+
+	actual_handler.confirmation_markers.clear()
 
 
 ## 確認フェーズ用マーカーを回転（_process内で呼ぶ）
-## 
+##
 ## handler: confirmation_markers配列を持つオブジェクト
 ## delta: フレーム間の経過時間
 static func rotate_confirmation_markers(handler, delta: float):
-	if not "confirmation_markers" in handler:
+	var actual_handler = _get_actual_handler(handler)
+	if not actual_handler:
 		return
-	
-	for marker in handler.confirmation_markers:
+
+	if not "confirmation_markers" in actual_handler:
+		return
+
+	for marker in actual_handler.confirmation_markers:
 		if marker and is_instance_valid(marker) and marker.has_meta("rotating"):
 			marker.rotate_y(delta * 2.0)
 

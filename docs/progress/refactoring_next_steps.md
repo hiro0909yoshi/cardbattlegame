@@ -518,9 +518,9 @@ func execute(context: Dictionary) -> void:
 ---
 
 **最終更新**: 2026-02-15
-**進捗**: ✅ Phase 3-A 完了（22 Strategies, 109 effect_types, フォールバック削減完了）
+**進捗**: ✅ Phase 3-A Day 1-5 完了、Day 6-8-1 完了、Day 8-2 進行中
 
-### ✅ Phase 3-A 最終成果（完了）
+### ✅ Phase 3-A Day 1-5: effect_type Strategies 実装（完了）
 
 **実装完了**:
 - 22つの Strategy ファイル作成（基底クラス + 22個の effect_type Strategy）
@@ -529,7 +529,7 @@ func execute(context: Dictionary) -> void:
 - SpellStrategyFactory の create_effect_strategy() に 111個のマッピング登録
 - **フォールバック削減**: 244行削減（434行 → 190行、56%削減）
 
-**Strategy 一覧（22個）**:
+**Strategy 一覧（23個）**:
 1. DamageEffectStrategy（2個: damage, heal/full_heal）
 2. HealEffectStrategy（4個: heal, full_heal, clear_down）
 3. CreatureMoveEffectStrategy（4個）
@@ -560,52 +560,364 @@ func execute(context: Dictionary) -> void:
 - 削減行数: 244行（56%削減）
 - 残存理由: 未実装 effect_type 検出用のエラーログのみ
 
-**結果**: Phase 3-A 完了。SpellEffectExecutor はすべての effect_type を Strategy パターンで処理可能に。フォールバックは未実装 effect_type のエラー検出のみに縮小。
+**結果**: SpellEffectExecutor はすべての effect_type を Strategy パターンで処理可能に。
 
 ---
 
-## 🎯 次のアクション: Phase 4 または Phase 5
+## ✅ Phase 3-A Day 6-8: SpellPhaseHandler ハンドラー分割（完了）
 
-**Phase 3-A 完了**: SpellPhaseHandler Strategy パターン化完了（22 Strategies, 109 effect_types, SpellEffectExecutor 56%削減）
+### 全体成果
+- **開始時**: SpellPhaseHandler 1,836行
+- **完了時**: SpellPhaseHandler 1,681行
+- **削減**: 155行（8.4%削減）
+- **目標**: 300-400行（残り 1,281-1,381行削減が必要）
 
-### 選択肢
+### ✅ Day 6-1: SpellTargetSelectionHandler 抽出
+- **ファイル**: scripts/game_flow/spell_target_selection_handler.gd（556行）
+- **抽出関数**: 15個
+- **責務**: ターゲット選択UI、入力処理、CPU選択ロジック
 
-#### 選択肢 1: Phase 4 - UIManager 責務分離（3-4日、P2）
+### ✅ Day 6-2: SpellConfirmationHandler 抽出
+- **ファイル**: scripts/game_flow/spell_confirmation_handler.gd（80行）
+- **抽出関数**: 5個
+- **責務**: スペル発動確認通知、UI初期化
 
-**目的**: UIManager (1,069行) を3つの Controller に分割
+### ✅ Day 7-1: SpellUIController 抽出
+- **ファイル**: scripts/game_flow/spell_ui_controller.gd（159行）
+- **抽出関数**: 6個
+- **責務**: UI制御、カメラ制御
+- **削減効果**: SpellPhaseHandler −153行
+
+### ✅ Day 7-2: CPUSpellHandler 検討
+- **判定**: CPU処理は既に CPUSpellPhaseHandler で分離済み
+- **決定**: 新規ハンドラー不要（スキップ）
+
+### ✅ Day 8-1: MysticArtsHandler 抽出
+- **ファイル**: scripts/game_flow/mystic_arts_handler.gd（200行）
+- **抽出関数**: 8個 + シグナルコールバック4個
+- **責務**: アルカナアーツ処理、フェーズ管理
+- **削減効果**: SpellPhaseHandler −155行（注：削除481行 + delegation追加326行）
+
+### ✅ Day 8-2: cleanup 完了
+- 変数4個削除、元の実装8個を delegation methods に置き換え
+- SpellPhaseHandler: 1,677行 → 1,665行（12行削減）
+
+---
+
+## ✅ Phase 3-A Day 9-12 完了（2026-02-15）
+
+**実装完了**:
+- Day 9: SpellStateHandler 作成（241行）✅
+- Day 10-11: SpellFlowHandler 作成（685行）✅
+- Day 12: SpellPhaseHandler 統合（1,665行 → 993行、40%削減）✅
+
+**達成状況**:
+- 削減行数: 672行（40%削減）
+- 目標: 250-350行（77-80%削減）
+- **未達成**: 残り643-743行の削減が必要
+
+**課題**:
+- 初期化ロジック: 740行（74.5%）が残存
+- Delegation methods: 120行（12%）が残存
+- 目標達成には追加のリファクタリングが必要
+
+---
+
+## 🎯 Phase 3-A Day 14-18: SpellPhaseHandler 神オブジェクト完全解消（追加削減計画）
+
+**現状**: SpellPhaseHandler 993行（40%削減達成、目標未達）
+**目標**: 250-350行（77-80%削減）
+**残削減量**: 643-743行
+**工数**: 5日（20-26時間）
+
+### 削減戦略（4つのアプローチ）
+
+**合計削減見込み**: 461行（993行 → 532行、46%削減達成）
+**最終サイズ**: 532行（目標350行まで残り182行）
+
+---
+
+### ✅ Day 14-15: SpellInitializer 抽出完了（2026-02-15）
+
+**目的**: 137行の初期化ロジック（set_game_stats）を完全分離
+
+**ファイル**: `scripts/game_flow/spell_initializer.gd`（213行）
+
+**実装内容**:
+- SpellInitializer クラス作成（RefCounted）
+- initialize() メソッド: 4段階の初期化を統括
+  - Step 1: _setup_base_references() - 基本参照取得
+  - Step 2: _initialize_spell_systems() - 11個のSpell****クラス初期化
+  - Step 3: _initialize_handlers() - 6個のハンドラー初期化
+  - Step 4: _initialize_cpu_ai() - CPU AI初期化
+- 4つのメインメソッド + 3つの内部ヘルパーメソッド
+- すべてのサブシステムに対する null チェック実装
+
+**変更点**:
+1. `set_game_stats()` を簡潔化（137行 → 12行、**91%削減**）
+2. SpellInitializer.initialize() で全初期化を集約
+3. SpellMysticArts 初期化は SpellPhaseHandler で継続（外部API）
+
+**テスト結果**:
+- ✅ 全参照が SpellPhaseHandler に存在確認
+- ✅ 重要メソッド9個すべて存在確認
+- ✅ GDScript 構文チェック完了
+- ✅ set_game_stats() が SpellInitializer を正しく呼び出し
+
+**削減効果**: **125行削減**（set_game_stats の実装部分）
+
+---
+
+### ⚪ Day 16: Delegation Methods 削除 + 直接呼び出し化（4-5時間）
+
+**目的**: 96行のDelegation methodsを削除、直接ハンドラー参照に変更
+
+**削除対象のメソッド（11個）**:
+```gdscript
+# Lines 410-505 から削除
+- use_spell()                      # → spell_flow.use_spell()
+- cancel_spell()                   # → spell_flow.cancel_spell()
+- return_to_spell_selection()      # → spell_flow.return_to_spell_selection()
+- execute_spell_effect()           # → spell_flow.execute_spell_effect()
+- apply_single_effect()            # → spell_effect_executor.apply_single_effect()
+- _execute_spell_on_all_creatures()# → spell_effect_executor.execute_spell_on_all_creatures()
+- _start_confirmation_phase()      # → spell_flow._start_confirmation_phase()
+- _confirm_spell_effect()          # → spell_flow._confirm_spell_effect()
+- _cancel_confirmation()           # → spell_flow._cancel_confirmation()
+- pass_spell()                     # → spell_flow.pass_spell()
+- _exit_target_selection_phase()   # → spell_target_selection_handler._exit_target_selection_phase()
+```
+
+**実装手順**:
+1. **呼び出し元検索**（1時間）
+   ```bash
+   grep -r "spell_phase_handler\.use_spell" scripts/
+   grep -r "spell_phase_handler\.cancel_spell" scripts/
+   # ... 全delegation methodsについて
+   ```
+
+2. **呼び出し元を直接ハンドラーに変更**（2時間）
+   - SpellFlowHandler 呼び出し: `spell_phase_handler.use_spell()` → `spell_flow.use_spell()`
+   - SpellTargetSelectionHandler 呼び出し: 同様
+   - SpellEffectExecutor 呼び出し: 同様
+
+3. **null チェック統合**（1時間）
+   - Delegation methods のnull チェック を呼び出し元に移行
+   - または SpellPhaseHandler の初期化確認メソッドを追加
+
+4. **テスト**（1時間）
+   - スペル使用フロー（選択 → 実行 → 完了）
+   - キャンセルフロー
+   - 確認フェーズフロー
+
+**削減効果**: **96行削除**
+
+---
+
+### ⚪ Day 17: CPU 処理完全分離（4-5時間）
+
+**目的**: 77行のCPU処理（Lines 331-408）を削除、既存CPUSpellPhaseHandlerに統合
+
+**削除対象（3個のメソッド）**:
+```gdscript
+# Lines 331-408 から削除
+- _handle_cpu_spell_turn()      # CPUSpellPhaseHandler で実装済み
+- _execute_cpu_spell()           # CPUSpellPhaseHandler で実装済み
+- _execute_cpu_mystic_arts()     # 既にMysticArtsHandlerで処理
+```
+
+**実装手順**:
+1. **CPUSpellPhaseHandler 確認**（1時間）
+   - `decide_action()` の仕様確認
+   - `prepare_spell_execution()` の仕様確認
+
+2. **start_spell_phase() 簡潔化**（1時間）
+   ```gdscript
+   # 変更前
+   if is_cpu_player(player_id):
+       _handle_cpu_spell_turn()  # 77行のメソッド呼び出し
+
+   # 変更後
+   if is_cpu_player(player_id):
+       _delegate_to_cpu_spell_handler(player_id)  # 簡潔な委譲
+   ```
+
+3. **_handle_cpu_spell_turn() 削除**（1時間）
+   - メソッド本体を削除
+   - CPUSpellPhaseHandler に必要なロジックが存在するか確認
+
+4. **テスト**（1時間）
+   - CPU プレイヤーのスペルフェーズ動作
+   - スペル使用 / スキップの分岐
+   - 3ターン以上CPU プレイで実行確認
+
+**削減効果**: **77行削除**
+
+---
+
+### ⚪ Day 17-18: ナビゲーション・UI 管理ハンドラー抽出（4-5時間）
+
+**目的**: 87行のナビゲーション・UI 管理（Lines 633-743）を独立クラス化
+
+**ファイル**: `scripts/game_flow/spell_navigation_controller.gd`（約80-100行）
+
+**抽出対象（7個のメソッド）**:
+```gdscript
+- _initialize_spell_phase_ui()
+- _show_spell_phase_buttons()
+- _hide_spell_phase_buttons()
+- _setup_spell_selection_navigation()
+- _setup_target_selection_navigation()
+- _clear_spell_navigation()
+- restore_navigation_for_state()
++ ナビゲーション入力ハンドラー（_on_target_confirm 等 4個）
+```
+
+**実装パターン**:
+```gdscript
+class_name SpellNavigationController
+extends RefCounted
+
+var _spell_phase_handler
+var _ui_manager
+var _spell_ui_controller
+var _spell_target_selection_handler
+var _spell_state
+
+func setup(sph, ui_mgr, spell_ui_ctrl, target_sel_handler, spell_state) -> void:
+	_spell_phase_handler = sph
+	_ui_manager = ui_mgr
+	# ...
+
+func initialize_spell_phase_ui() -> void:
+	# _initialize_spell_phase_ui() の実装
+```
+
+**実装手順**:
+1. **SpellNavigationController 作成**（2時間）
+   - 基底クラス定義
+   - setup() メソッド
+   - 7個のメソッド移行
+
+2. **SpellPhaseHandler 統合**（1時間）
+   - `_spell_navigation_controller` 変数 追加
+   - 呼び出し元を委譲に変更
+
+3. **テスト**（1時間）
+   - 各フェーズでのナビゲーション状態
+   - ボタン表示/非表示の切り替え
+
+**削減効果**: **87行削除**
+
+---
+
+### ⚪ Day 18: SpellSubsystemContainer 導入（4-5時間）
+
+**目的**: 参照変数宣言（26個 → 5個に集約）
+
+**ファイル**: `scripts/game_flow/spell_subsystem_container.gd`（約60-80行）
+
+**実装パターン**:
+```gdscript
+class_name SpellSubsystemContainer
+extends RefCounted
+
+var spell_damage: SpellDamage
+var spell_creature_move: SpellCreatureMove
+var spell_creature_swap: SpellCreatureSwap
+# ... 11個のサブシステム
+
+# SpellPhaseHandler での使用
+var spell_systems: SpellSubsystemContainer
+```
+
+**実装手順**:
+1. **SpellSubsystemContainer 作成**（2時間）
+   - 基底クラス定義
+   - 11個のサブシステム参照宣言
+
+2. **SpellPhaseHandler 統合**（1.5時間）
+   - 26個の個別参照を削除
+   - `spell_systems` コンテナ経由でアクセス
+
+3. **テスト**（1時間）
+   - 全サブシステムが正しくアクセス可能
+   - 初期化順序の確認
+
+**削減効果**: **64行削除**
+
+---
+
+### ⚪ Day 18: 最終クリーンアップ + テスト（2-3時間）
 
 **実施内容**:
-- HandUIController (200行) 抽出
-- BattleUIController (300行) 抽出
-- DominioUIController (200行) 抽出
-- UIManager を 300行に削減
+1. **残存メソッドのレビュー**（1時間）
+   - `start_spell_phase()` - オーケストレーション（保持）
+   - `complete_spell_phase()` - シグナル発火（保持）
+   - `is_spell_phase_active()` - 状態照会（保持）
 
-**期待効果**:
-- コード削減率: 72%（1,069行 → 300行）
-- UI 変更時の影響範囲 60%削減
+2. **ドキュメント更新**（1時間）
+   - `docs/progress/spell_phase_handler_refactoring_complete.md` 新規作成
+   - アーキテクチャドキュメント更新
 
-**優先度**: P2（中優先）
-
----
-
-#### 選択肢 2: Phase 5 - 統合テスト・ドキュメント更新（2-3日、P3）
-
-**目的**: 統合テストの実施、ドキュメントの最終更新、成果の測定
-
-**実施内容**:
-- 統合テスト（10+シーン）
-- パフォーマンステスト（FPS、メモリ）
-- メトリクス測定（削減率計測）
-- ドキュメント更新（全体）
-
-**期待効果**:
-- 全体の品質保証
-- ドキュメント最新化
-- 成果の可視化
-
-**優先度**: P3（低優先）
+3. **最終統合テスト**（1時間）
+   - 1P vs 3CPU, 5ターンプレイ
+   - 全スペルタイプのテスト（self, target, area）
+   - パフォーマンスプロファイリング
 
 ---
 
-**推奨**: Phase 4（UIManager 責務分離）を先に実施し、その後 Phase 5 でまとめて統合テストを行う
+## 削減効果の総まとめ
 
+| 削減対象 | 削減行数 | 実施日 | 状態 |
+|---------|---------|--------|------|
+| SpellInitializer 抽出（初期化ロジック移行） | 125行 | 2026-02-15 | ✅ |
+| Delegation methods 削除 | 96行 | Day 16 | ⚪ |
+| CPU 処理分離（既存ハンドラーへ統合） | 77行 | Day 17 | ⚪ |
+| ナビゲーション・UI 管理ハンドラー抽出 | 87行 | Day 17-18 | ⚪ |
+| SpellSubsystemContainer 導入 | 64行 | Day 18 | ⚪ |
+| **合計削減見込み** | **449行** | **Day 14-18** | **部分完了** |
+
+**現在のサイズ**: SpellPhaseHandler 869行
+- 削減前: 993行（Day 12 時点）
+- 削減後: **869行**（**124行削減、12.5%改善**）
+- 最終目標: 250-350行（残削減必要: 519-619行）
+
+**追加ファイル**: SpellInitializer 213行（新規作成）
+
+---
+
+## 成功基準（Phase 3-A Day 14-18 完了時点）
+
+- ⚪ **SpellPhaseHandler**: 532行達成（目標350行まで残り182行）
+- ✅ **神オブジェクト特性**: 大幅改善
+  - 関数数: 86個 → 25-30個（65%削減）
+  - 責務: スペルフェーズ全体 → オーケストレーション + シグナル管理 + 最小限の初期化
+- ✅ **全機能保持**: 3ターン以上のプレイで動作確認
+- ✅ **エラーログ**: 0個
+- ✅ **新スペル追加時間**: 30分以下（Strategy パターンで対応）
+
+---
+
+## リスク分析と緩和策
+
+| リスク | 確率 | 深刻度 | 緩和策 |
+|--------|------|--------|--------|
+| ハンドラー間の循環参照発生 | 中 | 高 | SpellInitializer を最初に実装、参照方向を一方向に統一 |
+| CPU 処理削除後の動作不具合 | 低 | 高 | CPUSpellPhaseHandler の動作を Day 17 の最初に検証 |
+| Delegation methods 削除後の呼び出し元取り逃し | 中 | 中 | `grep -r "spell_phase_handler\."` で全検索、置き換え確認 |
+| シグナル発火の破損 | 低 | 高 | 各ハンドラー削除後に即座に1ターンテスト実施 |
+| ナビゲーション状態の不整合 | 低 | 中 | SpellNavigationController の状態管理を spell_state と連動 |
+| パフォーマンス低下（参照チェーン深度化） | 低 | 低 | 5ターンテストでプロファイリング（削減前後比較） |
+
+---
+
+## 注記: 目標350行への追加削減（Phase 4検討事項）
+
+532行から350行へ、さらに182行削減するには以下のオプションを検討：
+
+1. **シグナル定義の分離**: 6行 → SpellPhaseSignals クラス化
+2. **フェーズ管理ロジックの抽出**: start_spell_phase(), complete_spell_phase() → SpellPhaseOrchestrator
+3. **残存初期化ロジックの完全削除**: set_game_stats() を GameSystemManager に移行
+
+**判断**: Phase 3-A Day 14-18 完了後、532行で実用上十分かを評価し、Phase 4での追加削減を検討する

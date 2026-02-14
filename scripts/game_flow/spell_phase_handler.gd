@@ -110,139 +110,15 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 ## game_statsを設定（GFM経由を廃止）
 func set_game_stats(p_game_stats) -> void:
 	game_stats = p_game_stats
-	
-	# CreatureManagerを取得
-	if board_system:
-		creature_manager = board_system.get_node_or_null("CreatureManager")
-		if not creature_manager:
-			push_error("[SPH] CreatureManager が見つかりません")
 
-	# target_selection_helperの直接参照を設定
-	if game_flow_manager and game_flow_manager.target_selection_helper:
-		target_selection_helper = game_flow_manager.target_selection_helper
+	# SpellInitializer で全サブシステムを初期化
+	var initializer = SpellInitializer.new()
+	initializer.initialize(self, game_stats)
 
 	# SpellMysticArts を MysticArtsHandler経由で初期化
 	if mystic_arts_handler:
 		mystic_arts_handler.initialize_spell_mystic_arts()
 		spell_mystic_arts = mystic_arts_handler.get_spell_mystic_arts()
-	
-	# SpellDamage を初期化
-	if not spell_damage and board_system:
-		spell_damage = SpellDamage.new(board_system)
-	
-	# SpellCreatureMove を初期化
-	if not spell_creature_move and board_system and player_system:
-		spell_creature_move = SpellCreatureMove.new(board_system, player_system, self)
-		# game_flow_manager を直接設定（3段チェーン廃止）
-		if game_flow_manager:
-			spell_creature_move.set_game_flow_manager(game_flow_manager)
-		if battle_status_overlay:
-			spell_creature_move.set_battle_status_overlay(battle_status_overlay)
-	
-	# SpellCreatureSwap を初期化
-	if not spell_creature_swap and board_system and player_system and card_system:
-		spell_creature_swap = SpellCreatureSwap.new(board_system, player_system, card_system, self)
-	
-	# SpellCreatureReturn を初期化
-	if not spell_creature_return and board_system and player_system and card_system:
-		spell_creature_return = SpellCreatureReturn.new(board_system, player_system, card_system, self)
-	
-	# SpellCreaturePlace を初期化
-	if not spell_creature_place:
-		spell_creature_place = SpellCreaturePlace.new()
-	
-	# SpellDrawにSpellCreaturePlace参照を設定
-	if spell_draw and spell_creature_place:
-		spell_draw.set_spell_creature_place(spell_creature_place)
-	
-	# SpellBorrow を初期化
-	if not spell_borrow and board_system and player_system and card_system:
-		spell_borrow = SpellBorrow.new(board_system, player_system, card_system, self)
-	
-	# SpellTransform を初期化
-	if not spell_transform and board_system and player_system and card_system:
-		spell_transform = SpellTransform.new(board_system, player_system, card_system, self)
-	
-	# SpellPurify を初期化
-	if not spell_purify and board_system and creature_manager and player_system and game_flow_manager:
-		spell_purify = SpellPurify.new(board_system, creature_manager, player_system, game_flow_manager)
-	
-	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
-	if not card_sacrifice_helper and card_system and player_system:
-		card_sacrifice_helper = CardSacrificeHelper.new(card_system, player_system, ui_manager)
-	
-	# SpellSynthesis を初期化
-	if not spell_synthesis and card_sacrifice_helper:
-		spell_synthesis = SpellSynthesis.new(card_sacrifice_helper)
-	
-	# SpellPhaseUIManager を初期化
-	_initialize_spell_phase_ui()
-	
-	# hand_displayのシグナルに接続（カードドロー後のボタン位置更新用）
-	if hand_display:
-		if not hand_display.hand_updated.is_connected(_on_hand_updated_for_buttons):
-			hand_display.hand_updated.connect(_on_hand_updated_for_buttons)
-	
-	# 発動通知UIを初期化
-	_initialize_spell_cast_notification_ui()
-	
-	# SpellDamageに通知UIを設定
-	if spell_damage and spell_cast_notification_ui:
-		spell_damage.set_notification_ui(spell_cast_notification_ui)
-	
-	# カード選択ハンドラーを初期化
-	_initialize_card_selection_handler()
-	
-	# CPUTurnProcessorを取得（BoardSystem3Dの子ノードから）
-	if board_system and not cpu_turn_processor:
-		cpu_turn_processor = board_system.get_node_or_null("CPUTurnProcessor")
-	
-	# CPU AI共有コンテキストを初期化
-	_initialize_cpu_context(game_flow_manager)
-	
-	# CPU スペル/アルカナアーツ AI を初期化
-	if not cpu_spell_ai:
-		cpu_spell_ai = CPUSpellAI.new()
-		cpu_spell_ai.initialize(_cpu_context)
-		cpu_spell_ai.set_hand_utils(cpu_hand_utils)
-		cpu_spell_ai.set_battle_ai(_cpu_battle_ai)
-		# SpellSynthesisを設定（犠牲カード選択用）
-		if spell_synthesis:
-			cpu_spell_ai.set_spell_synthesis(spell_synthesis)
-		# CPUMovementEvaluatorを設定（ホーリーワード判断用）
-		if cpu_movement_evaluator:
-			cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
-		# === game_stats直接参照を設定（チェーンアクセス解消） ===
-		if game_flow_manager and game_flow_manager.has_method("get"):
-			cpu_spell_ai.set_game_stats(game_flow_manager.game_stats)
-	
-	if not cpu_mystic_arts_ai:
-		cpu_mystic_arts_ai = CPUMysticArtsAI.new()
-		cpu_mystic_arts_ai.initialize(_cpu_context)
-		cpu_mystic_arts_ai.set_hand_utils(cpu_hand_utils)
-		cpu_mystic_arts_ai.set_battle_ai(_cpu_battle_ai)
-		# === game_stats直接参照を設定（チェーンアクセス解消） ===
-		if game_flow_manager and game_flow_manager.has_method("get"):
-			cpu_mystic_arts_ai.set_game_stats(game_flow_manager.game_stats)
-	
-	# SpellEffectExecutor を初期化
-	if not spell_effect_executor:
-		spell_effect_executor = SpellEffectExecutor.new(self)
-
-	# SpellTargetSelectionHandler を初期化（Phase 6-1）
-	_initialize_spell_target_selection_handler()
-
-	# SpellConfirmationHandler を初期化（Phase 6-2）
-	_initialize_spell_confirmation_handler()
-
-	# SpellUIController を初期化（Phase 7-1）
-	_initialize_spell_ui_controller()
-
-	# MysticArtsHandler を初期化（Phase 8-1）
-	_initialize_mystic_arts_handler()
-
-	# SpellStateHandler と SpellFlowHandler を初期化（Phase 3-A Day 9-12）
-	_initialize_spell_state_and_flow()
 
 ## SpellEffectExecutorにスペルコンテナを設定（辞書展開廃止）
 func set_spell_effect_executor_container(container: SpellSystemContainer) -> void:
@@ -406,14 +282,6 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 	else:
 		pass_spell(false)
 
-## スペルを使用（SpellFlowHandler に委譲）
-func use_spell(spell_card: Dictionary):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	await spell_flow.use_spell(spell_card)
-
 ## 対象選択UIを表示（内部インターフェース）
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	if not spell_target_selection_handler:
@@ -427,82 +295,10 @@ func _input(event: InputEvent) -> void:
 	if spell_target_selection_handler:
 		spell_target_selection_handler._input(event)
 
-## スペルをキャンセル（SpellFlowHandler に委譲）
-func cancel_spell():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow.cancel_spell()
-
-## 対象選択フェーズを抜けるときの共通処理（内部）
-func _exit_target_selection_phase():
-	if spell_target_selection_handler:
-		spell_target_selection_handler._exit_target_selection_phase()
-
-## スペル選択画面に戻る（SpellFlowHandler に委譲）
-func return_to_spell_selection():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow.return_to_spell_selection()
-
-## スペル効果を実行（SpellFlowHandler に委譲）
-func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	await spell_flow.execute_spell_effect(spell_card, target_data)
-
-## 単一の効果を適用（SpellEffectExecutorに委譲）
-func apply_single_effect(effect: Dictionary, target_data: Dictionary):
-	if spell_effect_executor:
-		await spell_effect_executor.apply_single_effect(effect, target_data)
-
-## 全クリーチャー対象スペルを実行（SpellEffectExecutorに委譲）
-func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
-	if spell_effect_executor:
-		await spell_effect_executor.execute_spell_on_all_creatures(spell_card, target_info)
-
-
-## 確認フェーズを開始（SpellFlowHandler に委譲）
-func _start_confirmation_phase(target_type: String, target_info: Dictionary, target_data: Dictionary):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow._start_confirmation_phase(target_type, target_info, target_data)
-
-## 確認フェーズ: 効果発動を確定（SpellFlowHandler に委譲）
-func _confirm_spell_effect():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow._confirm_spell_effect()
-
-## 確認フェーズ: キャンセル（SpellFlowHandler に委譲）
-func _cancel_confirmation():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow._cancel_confirmation()
-
 ## カメラを使用者に戻す（内部）
 func return_camera_to_player():
 	if spell_ui_controller:
 		spell_ui_controller.return_camera_to_player()
-
-## スペルをパス（SpellFlowHandler に委譲）
-func pass_spell(auto_roll: bool = true):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	spell_flow.pass_spell(auto_roll)
 
 ## タイルリストから選択（SpellCreatureMove用など）
 ## TargetSelectionHelperに委譲

@@ -12,6 +12,35 @@
 
 ---
 
+## 2026年2月15日（Session 22）
+
+### Phase 3-A Day 14-15: SpellInitializer 抽出完了
+
+**目的**: SpellPhaseHandler の初期化ロジック（137行）を独立クラスに分離
+
+**実装内容**:
+1. **SpellInitializer 新規作成**（213行、scripts/game_flow/spell_initializer.gd）
+   - initialize(spell_phase_handler, game_stats) メソッド: 4段階の初期化を統括
+   - _setup_base_references(): 基本参照取得（2個）
+   - _initialize_spell_systems(): 11個のSpell****クラス初期化
+   - _initialize_handlers(): 6個のハンドラー初期化（既存メソッド呼び出し）
+   - _initialize_cpu_ai(): CPU AI初期化
+   - 3つのヘルパーメソッド（内部UI・カード選択初期化）
+
+2. **SpellPhaseHandler 修正**
+   - set_game_stats(): 137行 → 12行（**91%削減**）
+   - SpellInitializer 呼び出しに置き換え
+   - SpellMysticArts 初期化は外部API として保持
+
+**結果**: ✅ 初期化ロジック分離完了
+- SpellPhaseHandler: 993行 → 869行（−124行、**12.5%削減**）
+- 新規ファイル: SpellInitializer 213行
+- 責務分離: 初期化とフェーズ制御を完全分離
+
+**次**: Day 16 - Delegation Methods 削除（参照: refactoring_next_steps.md）
+
+---
+
 ## 2026年2月15日（Session 20）
 
 ### Phase 3-A-11: 最終 Strategy 実装（11個の effect_type、7つの Strategy）
