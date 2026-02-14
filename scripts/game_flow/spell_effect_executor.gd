@@ -9,6 +9,9 @@ var spell_phase_handler = null  # 親への参照
 # === コンテナ直接参照（辞書展開廃止） ===
 var spell_container: SpellSystemContainer = null
 
+# === Strategy パターン対応 ===
+const SpellStrategyFactory = preload("res://scripts/spells/strategies/spell_strategy_factory.gd")
+
 func _init(handler):
 	spell_phase_handler = handler
 
@@ -82,6 +85,38 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var handler = spell_phase_handler
 	var effect_type = effect.get("effect_type", "")
 
+	# ========================================
+	# Strategy パターン試行（Phase 3-A-1）
+	# ========================================
+	if SpellStrategyFactory.has_effect_strategy(effect_type):
+		var strategy = SpellStrategyFactory.create_effect_strategy(effect_type)
+		if strategy:
+			# Strategy のコンテキストを構築
+			var context = {
+				"effect": effect,
+				"target_data": target_data,
+				"spell_phase_handler": handler,
+				"current_player_id": handler.current_player_id,
+				"spell_card": handler.selected_spell_card,
+				"board_system": handler.board_system,
+				"spell_container": spell_container,
+			}
+
+			# バリデーション
+			if strategy.validate(context):
+				# 実行（既存ロジックはスキップ）
+				await strategy.execute(context)
+				return
+			else:
+				# バリデーション失敗 → フォールバック
+				push_warning("[SpellEffectExecutor] Strategy バリデーション失敗 (effect_type: %s)" % effect_type)
+		else:
+			# Strategy 作成失敗 → フォールバック
+			push_warning("[SpellEffectExecutor] Strategy 作成失敗 (effect_type: %s)" % effect_type)
+
+	# ========================================
+	# フォールバック: 既存の match ロジック
+	# ========================================
 	match effect_type:
 		# === EP操作系 ===
 		"drain_magic", "drain_magic_conditional", "drain_magic_by_land_count", "drain_magic_by_lap_diff", \
