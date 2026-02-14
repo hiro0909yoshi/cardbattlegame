@@ -487,21 +487,125 @@ func execute(context: Dictionary) -> void:
 
 ---
 
-## 🎯 次のアクション: Phase 3-A-9～ - EP/Magic 系 Strategy 実装
+## ✅ Phase 3-A-9: MagicEffectStrategy 実装（2026-02-15 完了）
 
-**優先度**: P1（高頻度使用）
+**実装内容**: EP/Magic 操作系 13個の effect_type を Strategy 化
 
-**実装対象**（最大2つの Strategy、約13個の effect_type）:
+**対象 effect_type（13個）**:
+- drain_magic, drain_magic_conditional, drain_magic_by_land_count, drain_magic_by_lap_diff
+- gain_magic, gain_magic_by_rank, gain_magic_by_lap, gain_magic_from_destroyed_count
+- gain_magic_from_spell_cost, balance_all_magic, gain_magic_from_land_chain
+- mhp_to_magic, drain_magic_by_spell_count
 
-### 1. MagicEffectStrategy（13個の EP/Magic 操作系）
-- **effect_type**: drain_magic, drain_magic_conditional, drain_magic_by_land_count, drain_magic_by_lap_diff, gain_magic, gain_magic_by_rank, gain_magic_by_lap, gain_magic_from_destroyed_count, gain_magic_from_spell_cost, balance_all_magic, gain_magic_from_land_chain, mhp_to_magic, drain_magic_by_spell_count
-- **委譲先**: spell_container.spell_magic
+**成果**:
+- MagicEffectStrategy 作成（`scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd`）
+- SpellStrategyFactory に 13個のマッピング追加
+- SpellEffectExecutor context に spell_effect_executor を追加（next_effect 処理用）
+- 登録済み effect_type: 57→70（+13個）
 
-**参考**: spell_effect_executor.gd Line 135-150
+**実装パターン**:
+```gdscript
+# validate()
+- 3段階バリデーション（キー確認、参照確認、effect_type確認）
+- spell_magic の実体確認
 
-**担当**: Haiku（実装）
+# execute()
+- spell_magic.apply_effect() に context を構築して委譲
+- await による非同期処理対応
+- next_effect 検出時は spell_effect_executor で再帰的に処理
+```
 
 ---
 
 **最終更新**: 2026-02-15
-**進捗**: Phase 3-A-5～8 完了（4つの Strategy + 9個の effect_type 実装済み）、総 57個 effect_type が Strategy パターン対応
+**進捗**: ✅ Phase 3-A 完了（22 Strategies, 109 effect_types, フォールバック削減完了）
+
+### ✅ Phase 3-A 最終成果（完了）
+
+**実装完了**:
+- 22つの Strategy ファイル作成（基底クラス + 22個の effect_type Strategy）
+- 109個の effect_type が Strategy パターン対応
+- SpellEffectExecutor context に 5つの新規参照を追加（spell_creature_place, spell_creature_swap, spell_borrow, spell_transform, spell_creature_return）
+- SpellStrategyFactory の create_effect_strategy() に 111個のマッピング登録
+- **フォールバック削減**: 244行削減（434行 → 190行、56%削減）
+
+**Strategy 一覧（22個）**:
+1. DamageEffectStrategy（2個: damage, heal/full_heal）
+2. HealEffectStrategy（4個: heal, full_heal, clear_down）
+3. CreatureMoveEffectStrategy（4個）
+4. LandChangeEffectStrategy（13個）
+5. DrawEffectStrategy（6個）
+6. DiceEffectStrategy（4個）
+7. CreatureCurseEffectStrategy（19個）
+8. PlayerCurseEffectStrategy（1個）
+9. WorldCurseEffectStrategy（1個）
+10. TollCurseEffectStrategy（6個）
+11. StatBoostEffectStrategy（1個）
+12. MagicEffectStrategy（13個）
+13. HandManipulationEffectStrategy（14個）
+14. PlayerMoveEffectStrategy（6個）
+15. StatChangeEffectStrategy（4個）
+16. PurifyEffectStrategy（4個）
+17. DownStateEffectStrategy（2個）
+18. CreaturePlaceEffectStrategy（1個）
+19. CreatureSwapEffectStrategy（2個）
+20. SpellBorrowEffectStrategy（2個）
+21. TransformEffectStrategy（2個）
+22. CreatureReturnEffectStrategy（1個）
+23. SelfDestroyEffectStrategy（1個）
+
+**フォールバック削減詳細**:
+- 削減前: Lines 141-384（244行）の match 文
+- 削減後: Lines 138-143（6行）の簡潔なエラーログ
+- 削減行数: 244行（56%削減）
+- 残存理由: 未実装 effect_type 検出用のエラーログのみ
+
+**結果**: Phase 3-A 完了。SpellEffectExecutor はすべての effect_type を Strategy パターンで処理可能に。フォールバックは未実装 effect_type のエラー検出のみに縮小。
+
+---
+
+## 🎯 次のアクション: Phase 4 または Phase 5
+
+**Phase 3-A 完了**: SpellPhaseHandler Strategy パターン化完了（22 Strategies, 109 effect_types, SpellEffectExecutor 56%削減）
+
+### 選択肢
+
+#### 選択肢 1: Phase 4 - UIManager 責務分離（3-4日、P2）
+
+**目的**: UIManager (1,069行) を3つの Controller に分割
+
+**実施内容**:
+- HandUIController (200行) 抽出
+- BattleUIController (300行) 抽出
+- DominioUIController (200行) 抽出
+- UIManager を 300行に削減
+
+**期待効果**:
+- コード削減率: 72%（1,069行 → 300行）
+- UI 変更時の影響範囲 60%削減
+
+**優先度**: P2（中優先）
+
+---
+
+#### 選択肢 2: Phase 5 - 統合テスト・ドキュメント更新（2-3日、P3）
+
+**目的**: 統合テストの実施、ドキュメントの最終更新、成果の測定
+
+**実施内容**:
+- 統合テスト（10+シーン）
+- パフォーマンステスト（FPS、メモリ）
+- メトリクス測定（削減率計測）
+- ドキュメント更新（全体）
+
+**期待効果**:
+- 全体の品質保証
+- ドキュメント最新化
+- 成果の可視化
+
+**優先度**: P3（低優先）
+
+---
+
+**推奨**: Phase 4（UIManager 責務分離）を先に実施し、その後 Phase 5 でまとめて統合テストを行う
+

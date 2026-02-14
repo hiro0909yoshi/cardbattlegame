@@ -103,6 +103,72 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"curse_toll_half": preload("res://scripts/spells/strategies/effect_strategies/toll_curse_effect_strategy.gd"),
 		# === ステータス呪い系（1個）===
 		"stat_boost": preload("res://scripts/spells/strategies/effect_strategies/stat_boost_effect_strategy.gd"),
+		# === EP/Magic 操作系（13個）===
+		"drain_magic": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"drain_magic_conditional": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"drain_magic_by_land_count": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"drain_magic_by_lap_diff": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic_by_rank": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic_by_lap": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic_from_destroyed_count": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic_from_spell_cost": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"balance_all_magic": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"gain_magic_from_land_chain": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"mhp_to_magic": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		"drain_magic_by_spell_count": preload("res://scripts/spells/strategies/effect_strategies/magic_effect_strategy.gd"),
+		# === 手札操作系（14個） ===
+		"discard_and_draw_plus": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"check_hand_elements": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"check_hand_synthesis": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_curse_cards": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_expensive_cards": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_duplicate_cards": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_selected_card": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"steal_selected_card": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_from_deck_selection": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"steal_item_conditional": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"add_specific_card": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_and_draw": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"swap_creature": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"transform_to_card": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"reset_deck": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		"destroy_deck_top": preload("res://scripts/spells/strategies/effect_strategies/hand_manipulation_effect_strategy.gd"),
+		# === プレイヤー移動系（6個） ===
+		"warp_to_nearest_vacant": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		"warp_to_nearest_gate": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		"warp_to_target": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		"curse_movement_reverse": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		"gate_pass": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		"grant_direction_choice": preload("res://scripts/spells/strategies/effect_strategies/player_move_effect_strategy.gd"),
+		# === ステータス増減系（4個） ===
+		"permanent_hp_change": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
+		"permanent_ap_change": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
+		"conditional_ap_change": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
+		"secret_tiny_army": preload("res://scripts/spells/strategies/effect_strategies/stat_change_effect_strategy.gd"),
+		# === 呪い除去系（4個） ===
+		"purify_all": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
+		"remove_creature_curse": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
+		"remove_world_curse": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
+		"remove_all_player_curses": preload("res://scripts/spells/strategies/effect_strategies/purify_effect_strategy.gd"),
+		# === ダウン操作系（2個） ===
+		"down_clear": preload("res://scripts/spells/strategies/effect_strategies/down_state_effect_strategy.gd"),
+		"set_down": preload("res://scripts/spells/strategies/effect_strategies/down_state_effect_strategy.gd"),
+		# === クリーチャー配置系（1個） ===
+		"place_creature": preload("res://scripts/spells/strategies/effect_strategies/creature_place_effect_strategy.gd"),
+		# === クリーチャー交換系（2個） ===
+		"swap_with_hand": preload("res://scripts/spells/strategies/effect_strategies/creature_swap_effect_strategy.gd"),
+		"swap_board_creatures": preload("res://scripts/spells/strategies/effect_strategies/creature_swap_effect_strategy.gd"),
+		# === スペル借用系（2個） ===
+		"use_hand_spell": preload("res://scripts/spells/strategies/effect_strategies/spell_borrow_effect_strategy.gd"),
+		"use_target_mystic_art": preload("res://scripts/spells/strategies/effect_strategies/spell_borrow_effect_strategy.gd"),
+		# === クリーチャー変身系（2個） ===
+		"transform": preload("res://scripts/spells/strategies/effect_strategies/transform_effect_strategy.gd"),
+		"discord_transform": preload("res://scripts/spells/strategies/effect_strategies/transform_effect_strategy.gd"),
+		# === クリーチャー手札戻し系（1個） ===
+		"return_to_hand": preload("res://scripts/spells/strategies/effect_strategies/creature_return_effect_strategy.gd"),
+		# === 自壊効果（1個） ===
+		"self_destroy": preload("res://scripts/spells/strategies/effect_strategies/self_destroy_effect_strategy.gd"),
 	}
 
 	if effect_type in effect_strategies:
@@ -177,6 +243,72 @@ static func get_registered_effect_types() -> Array:
 		"curse_toll_half",
 		# === ステータス呪い系（1個）===
 		"stat_boost",
+		# === EP/Magic 操作系（13個）===
+		"drain_magic",
+		"drain_magic_conditional",
+		"drain_magic_by_land_count",
+		"drain_magic_by_lap_diff",
+		"gain_magic",
+		"gain_magic_by_rank",
+		"gain_magic_by_lap",
+		"gain_magic_from_destroyed_count",
+		"gain_magic_from_spell_cost",
+		"balance_all_magic",
+		"gain_magic_from_land_chain",
+		"mhp_to_magic",
+		"drain_magic_by_spell_count",
+		# === 手札操作系（14個） ===
+		"discard_and_draw_plus",
+		"check_hand_elements",
+		"check_hand_synthesis",
+		"destroy_curse_cards",
+		"destroy_expensive_cards",
+		"destroy_duplicate_cards",
+		"destroy_selected_card",
+		"steal_selected_card",
+		"destroy_from_deck_selection",
+		"steal_item_conditional",
+		"add_specific_card",
+		"destroy_and_draw",
+		"swap_creature",
+		"transform_to_card",
+		"reset_deck",
+		"destroy_deck_top",
+		# === プレイヤー移動系（6個） ===
+		"warp_to_nearest_vacant",
+		"warp_to_nearest_gate",
+		"warp_to_target",
+		"curse_movement_reverse",
+		"gate_pass",
+		"grant_direction_choice",
+		# === ステータス増減系（4個） ===
+		"permanent_hp_change",
+		"permanent_ap_change",
+		"conditional_ap_change",
+		"secret_tiny_army",
+		# === 呪い除去系（4個） ===
+		"purify_all",
+		"remove_creature_curse",
+		"remove_world_curse",
+		"remove_all_player_curses",
+		# === ダウン操作系（2個） ===
+		"down_clear",
+		"set_down",
+		# === クリーチャー配置系（1個） ===
+		"place_creature",
+		# === クリーチャー交換系（2個） ===
+		"swap_with_hand",
+		"swap_board_creatures",
+		# === スペル借用系（2個） ===
+		"use_hand_spell",
+		"use_target_mystic_art",
+		# === クリーチャー変身系（2個） ===
+		"transform",
+		"discord_transform",
+		# === クリーチャー手札戻し系（1個） ===
+		"return_to_hand",
+		# === 自壊効果（1個） ===
+		"self_destroy",
 	]
 
 ## デバッグ: 指定 effect_type が Strategy 実装済みか確認
@@ -244,4 +376,70 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"curse_toll_half",
 		# === ステータス呪い系（1個）===
 		"stat_boost",
+		# === EP/Magic 操作系（13個）===
+		"drain_magic",
+		"drain_magic_conditional",
+		"drain_magic_by_land_count",
+		"drain_magic_by_lap_diff",
+		"gain_magic",
+		"gain_magic_by_rank",
+		"gain_magic_by_lap",
+		"gain_magic_from_destroyed_count",
+		"gain_magic_from_spell_cost",
+		"balance_all_magic",
+		"gain_magic_from_land_chain",
+		"mhp_to_magic",
+		"drain_magic_by_spell_count",
+		# === 手札操作系（14個） ===
+		"discard_and_draw_plus",
+		"check_hand_elements",
+		"check_hand_synthesis",
+		"destroy_curse_cards",
+		"destroy_expensive_cards",
+		"destroy_duplicate_cards",
+		"destroy_selected_card",
+		"steal_selected_card",
+		"destroy_from_deck_selection",
+		"steal_item_conditional",
+		"add_specific_card",
+		"destroy_and_draw",
+		"swap_creature",
+		"transform_to_card",
+		"reset_deck",
+		"destroy_deck_top",
+		# === プレイヤー移動系（6個） ===
+		"warp_to_nearest_vacant",
+		"warp_to_nearest_gate",
+		"warp_to_target",
+		"curse_movement_reverse",
+		"gate_pass",
+		"grant_direction_choice",
+		# === ステータス増減系（4個） ===
+		"permanent_hp_change",
+		"permanent_ap_change",
+		"conditional_ap_change",
+		"secret_tiny_army",
+		# === 呪い除去系（4個） ===
+		"purify_all",
+		"remove_creature_curse",
+		"remove_world_curse",
+		"remove_all_player_curses",
+		# === ダウン操作系（2個） ===
+		"down_clear",
+		"set_down",
+		# === クリーチャー配置系（1個） ===
+		"place_creature",
+		# === クリーチャー交換系（2個） ===
+		"swap_with_hand",
+		"swap_board_creatures",
+		# === スペル借用系（2個） ===
+		"use_hand_spell",
+		"use_target_mystic_art",
+		# === クリーチャー変身系（2個） ===
+		"transform",
+		"discord_transform",
+		# === クリーチャー手札戻し系（1個） ===
+		"return_to_hand",
+		# === 自壊効果（1個） ===
+		"self_destroy",
 	]

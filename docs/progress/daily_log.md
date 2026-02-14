@@ -12,6 +12,38 @@
 
 ---
 
+## 2026年2月15日（Session 20）
+
+### Phase 3-A-11: 最終 Strategy 実装（11個の effect_type、7つの Strategy）
+
+**目的**: Phase 3-A を完了させるため、残りの 11個の effect_type を 7つの Strategy で実装
+
+**実装内容**:
+1. **7つの Strategy ファイル作成**（合計13KB）
+   - DownStateEffectStrategy（2個: down_clear, set_down）
+   - CreaturePlaceEffectStrategy（1個: place_creature）
+   - CreatureSwapEffectStrategy（2個: swap_with_hand, swap_board_creatures）
+   - SpellBorrowEffectStrategy（2個: use_hand_spell, use_target_mystic_art）
+   - TransformEffectStrategy（2個: transform, discord_transform）
+   - CreatureReturnEffectStrategy（1個: return_to_hand）
+   - SelfDestroyEffectStrategy（1個: self_destroy）
+
+2. **SpellEffectExecutor context 拡張**
+   - 5つの新規参照を追加（spell_creature_place, spell_creature_swap, spell_borrow, spell_transform, spell_creature_return）
+
+3. **SpellStrategyFactory 更新**
+   - 11個の effect_type をマッピング
+   - 総登録数: 98 → 111（+11個、実効: 98 + 11 = 109個 effect_type）
+
+**結果**: ✅ Phase 3-A 完了
+- 22個の Strategy ファイル実装完了
+- 109個の effect_type が Strategy パターン対応
+- SpellEffectExecutor のすべての effect_type が Strategy で処理可能に
+
+**詳細**: `docs/progress/refactoring_next_steps.md` を参照
+
+---
+
 ## 2026年2月14日（Session 19）
 
 ### セッション19: 周回システムバグ修正 - on_start_passed() 二重リセット問題
@@ -979,5 +1011,102 @@ BattleSystem.invasion_completed
 
 **次のステップ**: Phase 3-A Day 3-4（既存11スペルの Strategy 移行、別セッション）
 **残りトークン**: 約 85,000 / 200,000
+
+---
+
+## 2026-02-15 (土) - Phase 3-A 完了: effect_type Strategies 実装 + フォールバック削減
+
+### Phase 3-A Day 3-5: effect_type Strategies 実装完了
+
+**目的**: SpellEffectExecutor (434行) を effect_type ベースの Strategy に分割し、フォールバックを削減
+
+**背景**:
+- SpellEffectExecutor.apply_single_effect() が 109個の effect_type を match で処理
+- 全てのスペルは effect_type で汎用処理されている
+- Strategy パターンで分割し、各 effect_type を独立クラス化
+
+**実装内容**（22つの Strategy、109 effect_types）:
+
+#### Phase 3-A-1: 基本 effect_type Strategies（6個）
+1. **DamageEffectStrategy**（2個: damage, heal/full_heal）
+2. **HealEffectStrategy**（4個: heal, full_heal, clear_down）
+3. **CreatureMoveEffectStrategy**（4個: move_to_adjacent_enemy, move_steps, move_self, destroy_and_move）
+4. **LandChangeEffectStrategy**（13個: change_element, change_level, set_level, etc.）
+5. **DrawEffectStrategy**（6個: draw, draw_cards, draw_by_rank, draw_by_type, draw_from_deck_selection, draw_and_place）
+6. **DiceEffectStrategy**（4個: dice_fixed, dice_range, dice_multi, dice_range_magic）
+
+#### Phase 3-A-2~8: 呪い系 Strategies（5個、28 effect_types）
+7. **CreatureCurseEffectStrategy**（19個）
+8. **PlayerCurseEffectStrategy**（1個）
+9. **WorldCurseEffectStrategy**（1個）
+10. **TollCurseEffectStrategy**（6個）
+11. **StatBoostEffectStrategy**（1個）
+
+#### Phase 3-A-9: Magic/EP 操作系
+12. **MagicEffectStrategy**（13個: drain_magic, gain_magic 系）
+
+#### Phase 3-A-10: 高頻度使用 Strategies（4個、28 effect_types）
+13. **HandManipulationEffectStrategy**（14個: discard_and_draw_plus, destroy_curse_cards, etc.）
+14. **PlayerMoveEffectStrategy**（6個: warp_to_nearest_vacant, warp_to_nearest_gate, etc.）
+15. **StatChangeEffectStrategy**（4個: permanent_hp_change, permanent_ap_change, etc.）
+16. **PurifyEffectStrategy**（4個: purify_all, remove_creature_curse, etc.）
+
+#### Phase 3-A-11: 最終 Strategies（7個、11 effect_types）
+17. **DownStateEffectStrategy**（2個: down_clear, set_down）
+18. **CreaturePlaceEffectStrategy**（1個: place_creature）
+19. **CreatureSwapEffectStrategy**（2個: swap_with_hand, swap_board_creatures）
+20. **SpellBorrowEffectStrategy**（2個: use_hand_spell, use_target_mystic_art）
+21. **TransformEffectStrategy**（2個: transform, discord_transform）
+22. **CreatureReturnEffectStrategy**（1個: return_to_hand）
+23. **SelfDestroyEffectStrategy**（1個: self_destroy）
+
+**SpellStrategyFactory 拡張**:
+- `create_effect_strategy()` メソッド実装
+- 111個の effect_type → Strategy マッピング登録
+- preload() による事前ロード（型安全性向上）
+
+**SpellEffectExecutor 修正**:
+- context 構築時に 5つの新規参照を追加
+  - spell_creature_place, spell_creature_swap, spell_borrow, spell_transform, spell_creature_return
+- Strategy パターン試行 → フォールバック機構実装
+- バリデーション失敗時の警告ログ
+
+**フォールバック削減**:
+- 削減前: Lines 141-384（244行）の match 文
+- 削減後: Lines 138-143（6行）の簡潔なエラーログ
+- **削減行数**: 244行（56%削減、434行 → 190行）
+- 残存理由: 未実装 effect_type 検出用のエラーログのみ
+
+**バグ修正**:
+1. **EP gain 二重実行バグ**
+   - 問題: battle_execution.gd Line 468 で SkillMagicGain.apply_damage_magic_gain() が重複呼び出し
+   - 原因: defender_p.take_damage() 内で既に _trigger_magic_from_damage() が実行済み
+   - 修正: Line 468 削除（コメントで理由説明）
+
+2. **Signal 重複接続バグ**
+   - 問題: debug_controller.gd Line 286 で is_connected() チェック漏れ
+   - 修正: if not card_input_dialog.confirmed.is_connected(_on_cpu_card_id_confirmed): 追加
+   - パターン: BUG-000 防止（シグナル重複接続の全プロジェクト対策）
+
+3. **DiceEffectStrategy バリデーション過剰**
+   - 問題: tile_index < 0 をエラーとしていたが、dice 系は tile_index = -1 が正常
+   - 修正: tile_index チェック削除（dice 系はターゲット不要）
+
+**テスト**:
+- 各 Strategy カテゴリから代表スペルをテスト
+- 全スペル動作確認（エラーなし）
+
+**成果**:
+- ✅ 22つの Strategy ファイル作成
+- ✅ 109個の effect_type が Strategy パターン対応
+- ✅ SpellEffectExecutor 244行削減（56%削減）
+- ✅ 拡張性向上（新 effect_type は Strategy クラス追加のみ）
+- ✅ テスト容易性向上（各 Strategy を独立してテスト可能）
+- ✅ コード構造明確化（effect_type ごとに独立ファイル）
+- ✅ null 参照安全性向上（3段階バリデーション統一）
+
+**Phase 3-A 完了**: SpellPhaseHandler Strategy パターン化完了（企画4-5日 → 実装2日で完了）
+
+**次のステップ**: Phase 4（UIManager 責務分離）または Phase 5（統合テスト・ドキュメント更新）
 
 ---

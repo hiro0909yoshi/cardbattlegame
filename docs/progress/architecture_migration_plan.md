@@ -170,7 +170,59 @@ Phase 5: 統合テスト            [⚪ 未着手] 2-3日
 ### コミット
 - 8b3f19f: Day 1-2 基盤実装
 
-**詳細は `refactoring_next_steps.md` を参照**
+### Day 3-5: effect_type Strategies 実装完了（2026-02-15）✅
+
+**実装内容**:
+- 22つの Strategy ファイル作成（109 effect_types 対応）
+- SpellStrategyFactory に 111個の effect_type マッピング登録
+- SpellEffectExecutor フォールバック削減（244行削減、434行 → 190行、56%削減）
+
+**実装 Strategies（22個）**:
+1. DamageEffectStrategy（2個）
+2. HealEffectStrategy（4個）
+3. CreatureMoveEffectStrategy（4個）
+4. LandChangeEffectStrategy（13個）
+5. DrawEffectStrategy（6個）
+6. DiceEffectStrategy（4個）
+7. CreatureCurseEffectStrategy（19個）
+8. PlayerCurseEffectStrategy（1個）
+9. WorldCurseEffectStrategy（1個）
+10. TollCurseEffectStrategy（6個）
+11. StatBoostEffectStrategy（1個）
+12. MagicEffectStrategy（13個）
+13. HandManipulationEffectStrategy（14個）
+14. PlayerMoveEffectStrategy（6個）
+15. StatChangeEffectStrategy（4個）
+16. PurifyEffectStrategy（4個）
+17. DownStateEffectStrategy（2個）
+18. CreaturePlaceEffectStrategy（1個）
+19. CreatureSwapEffectStrategy（2個）
+20. SpellBorrowEffectStrategy（2個）
+21. TransformEffectStrategy（2個）
+22. CreatureReturnEffectStrategy（1個）
+23. SelfDestroyEffectStrategy（1個）
+
+**バグ修正**:
+- EP gain 二重実行バグ修正（battle_execution.gd Line 468 削除）
+- Signal 重複接続バグ修正（debug_controller.gd is_connected() チェック追加）
+- DiceEffectStrategy バリデーション過剰修正（tile_index チェック削除）
+
+**成果**:
+- ✅ 全 109 effect_type が Strategy パターン対応
+- ✅ SpellEffectExecutor 244行削減（56%削減）
+- ✅ 拡張性向上（新 effect_type は Strategy クラス追加のみ）
+- ✅ テスト容易性向上（各 Strategy を独立してテスト可能）
+- ✅ コード構造明確化（effect_type ごとに独立ファイル）
+
+### 期待効果（達成）
+- ✅ コード削減: SpellEffectExecutor 56%削減（434行 → 190行）
+- ✅ 新スペル追加時間: Strategy クラス追加のみ（50%削減達成見込み）
+- ✅ テスト容易性向上: 各 Strategy を独立してテスト可能
+
+### ステータス
+**Phase 3-A 完了** ✅（企画4-5日 → 実装2日で完了）
+
+**詳細は `refactoring_next_steps.md` および `daily_log.md` を参照**
 
 ---
 
@@ -224,7 +276,8 @@ Phase 5: 統合テスト            [⚪ 未着手] 2-3日
 |-----------|--------|--------------|-----------|
 | 横断的シグナル接続 | 12箇所 | 0箇所 | **2箇所（83%削減）** ✅ |
 | 逆参照（子→親） | 5箇所 | 0箇所 | 調査中 |
-| 最大ファイル行数 | 1,764行 | 400行 | 1,764行（未着手） |
+| 最大ファイル行数 | 1,836行 | 400行 | **1,836行（未着手）** |
+| SpellEffectExecutor 削減 | 434行 | 200行 | **190行（56%削減）** ✅ |
 | 神オブジェクト数 | 3個 | 0個 | 3個（未着手） |
 | ツリー階層 | 2階層 | 3-4階層 | **3階層確立** ✅ |
 

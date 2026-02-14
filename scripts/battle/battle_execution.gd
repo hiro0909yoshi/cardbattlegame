@@ -465,7 +465,7 @@ func execute_attack_sequence(attack_order: Array, tile_info: Dictionary, special
 				# EP奪取（攻撃側）: 与えたダメージベース
 				await apply_damage_based_magic_steal(attacker_p, defender_p, actual_damage_dealt, spell_magic_ref)
 				# EP獲得（防御側）: 受けたダメージベース
-				SkillMagicGain.apply_damage_magic_gain(defender_p, actual_damage_dealt, spell_magic_ref)
+				# ※ 既に take_damage() 内で _trigger_magic_from_damage() が実行済みのため不要
 
 			
 			print("  ダメージ処理:")

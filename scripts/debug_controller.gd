@@ -283,7 +283,9 @@ func show_card_input_dialog_for_cpu():
 	# 一時的にコールバックを差し替え
 	if card_input_dialog.confirmed.is_connected(_on_card_id_confirmed):
 		card_input_dialog.confirmed.disconnect(_on_card_id_confirmed)
-	card_input_dialog.confirmed.connect(_on_cpu_card_id_confirmed, CONNECT_ONE_SHOT)
+	# 重複接続を防ぐ
+	if not card_input_dialog.confirmed.is_connected(_on_cpu_card_id_confirmed):
+		card_input_dialog.confirmed.connect(_on_cpu_card_id_confirmed, CONNECT_ONE_SHOT)
 	
 	if card_id_input.text_submitted.is_connected(_on_card_id_text_submitted):
 		card_id_input.text_submitted.disconnect(_on_card_id_text_submitted)
