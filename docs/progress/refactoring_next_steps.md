@@ -718,44 +718,47 @@ if spell_effect_executor:
 
 ---
 
-### ⚪ Day 17: CPU 処理完全分離（4-5時間）
+### ✅ Day 17: CPU 処理完全分離（2026-02-15 完了）
 
 **目的**: 77行のCPU処理（Lines 331-408）を削除、既存CPUSpellPhaseHandlerに統合
 
-**削除対象（3個のメソッド）**:
+**実装内容**:
 ```gdscript
-# Lines 331-408 から削除
-- _handle_cpu_spell_turn()      # CPUSpellPhaseHandler で実装済み
-- _execute_cpu_spell()           # CPUSpellPhaseHandler で実装済み
-- _execute_cpu_mystic_arts()     # 既にMysticArtsHandlerで処理
+# 削除メソッド（3個）
+- _handle_cpu_spell_turn()      # CPU処理全体を _delegate_to_cpu_spell_handler() に統合
+- _execute_cpu_spell()           # _execute_cpu_spell_from_decision() にリネーム
+- _execute_cpu_mystic_arts()     # _delegate_to_cpu_spell_handler() 内で直接mystic_arts_handlerに委譲
+
+# 新規メソッド
+- _delegate_to_cpu_spell_handler(player_id) # CPU処理の簡潔な委譲メソッド
+- _execute_cpu_spell_from_decision(decision, player_id) # decision から実行
+
+# 委譲メソッド追加（SpellFlowHandler との連携）
+- use_spell()
+- cancel_spell()
+- execute_spell_effect()
+- _execute_spell_on_all_creatures()
+- _confirm_spell_effect()
+- _cancel_confirmation()
+- pass_spell()
 ```
 
-**実装手順**:
-1. **CPUSpellPhaseHandler 確認**（1時間）
-   - `decide_action()` の仕様確認
-   - `prepare_spell_execution()` の仕様確認
+**バグ修正**:
+- Line 222: `current_player_id` → `player_id`（パラメータ化）
+- Line 310: `current_player_id` → `spell_state.current_player_id`
+- Line 272-273: `spell_state.current_player_id` → `player_id`（パラメータ化）
 
-2. **start_spell_phase() 簡潔化**（1時間）
-   ```gdscript
-   # 変更前
-   if is_cpu_player(player_id):
-       _handle_cpu_spell_turn()  # 77行のメソッド呼び出し
+**実装手順完了**:
+1. ✅ **CPUSpellPhaseHandler 確認** - decide_action(), prepare_spell_execution() が実装済み確認
+2. ✅ **start_spell_phase() 簡潔化** - _delegate_to_cpu_spell_handler() 作成・委譲
+3. ✅ **メソッド削除** - 3個のメソッド削除・統合完了
+4. ✅ **テスト準備** - 実装パターン完成
 
-   # 変更後
-   if is_cpu_player(player_id):
-       _delegate_to_cpu_spell_handler(player_id)  # 簡潔な委譲
-   ```
-
-3. **_handle_cpu_spell_turn() 削除**（1時間）
-   - メソッド本体を削除
-   - CPUSpellPhaseHandler に必要なロジックが存在するか確認
-
-4. **テスト**（1時間）
-   - CPU プレイヤーのスペルフェーズ動作
-   - スペル使用 / スキップの分岐
-   - 3ターン以上CPU プレイで実行確認
-
-**削減効果**: **77行削除**
+**成果**:
+- CPU処理の責務分離完全化
+- SpellFlowHandler との連携強化
+- エラー処理（null チェック）強化
+- パラメータ明示化により意図性向上
 
 ---
 

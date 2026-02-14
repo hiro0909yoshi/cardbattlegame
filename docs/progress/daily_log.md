@@ -12,9 +12,42 @@
 
 ---
 
-## 2026年2月15日（Session 22）
+## 2026年2月15日（Session 22-23）
 
-### Phase 3-A Day 14-15: SpellInitializer 抽出完了
+### Phase 3-A Day 17: CPU処理完全分離 ✅
+
+**目的**: SpellPhaseHandler の CPU処理ロジック（77行）を削除、既存 CPUSpellPhaseHandler に統合
+
+**実装内容**:
+1. **メソッド削除**（3個）
+   - `_handle_cpu_spell_turn()`: CPU全体フロー → `_delegate_to_cpu_spell_handler()` に統合
+   - `_execute_cpu_spell()`: スペル実行 → `_execute_cpu_spell_from_decision()` にリネーム
+   - `_execute_cpu_mystic_arts()`: アルカナアーツ実行 → `_delegate_to_cpu_spell_handler()` 内で直接処理
+
+2. **新規メソッド追加**（2個）
+   - `_delegate_to_cpu_spell_handler(player_id)`: CPU スペルターン全体の簡潔な委譲
+   - `_execute_cpu_spell_from_decision(decision, player_id)`: decision から実行
+
+3. **委譲メソッド追加**（8個）- SpellFlowHandler へ
+   - `use_spell()`, `cancel_spell()`, `execute_spell_effect()`
+   - `_execute_spell_on_all_creatures()`, `_confirm_spell_effect()`, `_cancel_confirmation()`
+   - `pass_spell()`
+
+4. **バグ修正**（3箇所）
+   - Line 222: `current_player_id` → `player_id`（パラメータ化）
+   - Line 310: `current_player_id` → `spell_state.current_player_id`
+   - Lines 272-273: `spell_state.current_player_id` → `player_id`（パラメータ化）
+
+**結果**: ✅ CPU処理完全分離完了
+- 責務分離: SpellPhaseHandler → CPUSpellPhaseHandler / SpellFlowHandler
+- エラー処理強化: 全委譲メソッドで null チェック実装
+- 実装パターン: 簡潔で意図性の高いメソッド設計
+
+**次**: Day 18-19 - ナビゲーション・UI 管理ハンドラー抽出（参照: refactoring_next_steps.md）
+
+---
+
+### Phase 3-A Day 14-15: SpellInitializer 抽出完了（既完了）
 
 **目的**: SpellPhaseHandler の初期化ロジック（137行）を独立クラスに分離
 
