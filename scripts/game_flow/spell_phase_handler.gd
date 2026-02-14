@@ -162,15 +162,15 @@ func start_spell_phase(player_id: int):
 	spell_state.clear_spell_card()
 
 	spell_phase_started.emit()
-	
+
 	# UIを更新（スペルカードのみ選択可能にする）
 	if ui_manager:
 		_update_spell_phase_ui()
 		_show_spell_phase_buttons()
-	
-	# CPUの場合は簡易AI
+
+	# CPUの場合は簡潔に委譲
 	if is_cpu_player(player_id):
-		_handle_cpu_spell_turn()
+		await _delegate_to_cpu_spell_handler(player_id)
 	else:
 		# 人間プレイヤーの場合：カメラ手動モード有効化
 		if board_system and board_system.has_method("enable_manual_camera"):
@@ -182,7 +182,7 @@ func start_spell_phase(player_id: int):
 
 		# グローバルナビゲーション設定（戻るボタンのみ = スペルを使わない）
 		_setup_spell_selection_navigation()
-		
+
 		# 入力待ち
 		if ui_manager and ui_manager.phase_display:
 			ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
@@ -204,42 +204,52 @@ func start_mystic_arts_phase():
 
 
 ## CPUのスペル使用判定（新AI使用）
-func _handle_cpu_spell_turn():
+## CPUSpellPhaseHandlerへの簡潔な委譲
+func _delegate_to_cpu_spell_handler(player_id: int) -> void:
+	"""CPU スペルフェーズの処理を CPUSpellPhaseHandler に完全委譲"""
 	await get_tree().create_timer(0.5).timeout  # 思考時間
-	
+
 	# スペル使用確率判定（キャラクターポリシー）
 	var battle_policy = _get_cpu_battle_policy()
 	if battle_policy and not battle_policy.should_use_spell():
 		print("[CPU SpellPhase] スペル使用スキップ（確率判定: %.0f%%）" % (battle_policy.get_spell_use_rate() * 100))
 		pass_spell(false)
 		return
-	
+
 	# CPUSpellPhaseHandlerで判断
 	if not cpu_spell_phase_handler:
 		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
 		cpu_spell_phase_handler.initialize(self)
-	
-	var action_result = cpu_spell_phase_handler.decide_action(current_player_id)
+
+	var action_result = cpu_spell_phase_handler.decide_action(player_id)
 	var action = action_result.get("action", "pass")
 	var decision = action_result.get("decision", {})
-	
+
 	match action:
 		"spell":
-			await _execute_cpu_spell(decision)
+			await _execute_cpu_spell_from_decision(decision, player_id)
 		"mystic":
-			await _execute_cpu_mystic_arts(decision)
+			if mystic_arts_handler:
+				await mystic_arts_handler._execute_cpu_mystic_arts(decision)
+			else:
+				pass_spell(false)
 		_:
 			pass_spell(false)
 
-## CPUがスペルを実行
-func _execute_cpu_spell(decision: Dictionary):
+## CPUがスペルを実行（decision から実行）
+func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> void:
 	if not spell_state:
 		push_error("[SPH] spell_state が初期化されていません")
 		pass_spell(false)
 		return
 
+	if not cpu_spell_phase_handler:
+		push_error("[SPH] cpu_spell_phase_handler が初期化されていません")
+		pass_spell(false)
+		return
+
 	# CPUSpellPhaseHandlerで準備処理
-	var prep = cpu_spell_phase_handler.prepare_spell_execution(decision, spell_state.current_player_id)
+	var prep = cpu_spell_phase_handler.prepare_spell_execution(decision, player_id)
 	if not prep.get("success", false):
 		pass_spell(false)
 		return
@@ -251,7 +261,7 @@ func _execute_cpu_spell(decision: Dictionary):
 
 	# コストを支払う
 	if player_system:
-		player_system.add_magic(spell_state.current_player_id, -cost)
+		player_system.add_magic(player_id, -cost)
 
 	spell_state.set_spell_card(spell_card)
 	spell_state.set_spell_used_this_turn(true)
@@ -269,18 +279,11 @@ func _execute_cpu_spell(decision: Dictionary):
 		# 発動通知表示
 		if spell_cast_notification_ui and player_system:
 			var caster_name = "CPU"
-			if spell_state.current_player_id >= 0 and spell_state.current_player_id < player_system.players.size():
-				caster_name = player_system.players[spell_state.current_player_id].name
+			if player_id >= 0 and player_id < player_system.players.size():
+				caster_name = player_system.players[player_id].name
 			await show_spell_cast_notification(caster_name, target, spell_card, false)
 
 		await execute_spell_effect(spell_card, target_data)
-
-## CPUがアルカナアーツを実行
-func _execute_cpu_mystic_arts(decision: Dictionary):
-	if mystic_arts_handler:
-		await mystic_arts_handler._execute_cpu_mystic_arts(decision)
-	else:
-		pass_spell(false)
 
 ## 対象選択UIを表示（内部インターフェース）
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
@@ -305,15 +308,15 @@ func return_camera_to_player():
 func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	if tile_indices.is_empty():
 		return -1
-	
+
 	# CPUの場合は自動選択（最初の候補を使用）
-	if is_cpu_player(current_player_id):
+	if spell_state and is_cpu_player(spell_state.current_player_id):
 		return tile_indices[0]
-	
+
 	# TargetSelectionHelper経由で選択（直接参照）
 	if target_selection_helper:
 		return await target_selection_helper.select_tile_from_list(tile_indices, message)
-	
+
 	# フォールバック：TargetSelectionHelperがない場合は最初のタイルを返す
 	print("[SpellPhaseHandler] WARNING: TargetSelectionHelperが見つかりません、最初のタイルを選択")
 	return tile_indices[0]
@@ -335,6 +338,57 @@ func complete_spell_phase():
 		return
 
 	spell_flow.complete_spell_phase()
+
+## ============ Delegation Methods to SpellFlowHandler ============
+
+## スペルを使用（SpellFlowHandler に委譲）
+func use_spell(spell_card: Dictionary):
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	await spell_flow.use_spell(spell_card)
+
+## スペルをキャンセル（SpellFlowHandler に委譲）
+func cancel_spell():
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	spell_flow.cancel_spell()
+
+## スペル効果を実行（SpellFlowHandler に委譲）
+func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	await spell_flow.execute_spell_effect(spell_card, target_data)
+
+## 全クリーチャー対象スペルを実行（SpellFlowHandler に委譲）
+func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	await spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
+
+## スペル効果を確認（SpellFlowHandler に委譲）
+func _confirm_spell_effect():
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	spell_flow._confirm_spell_effect()
+
+## スペル確認をキャンセル（SpellFlowHandler に委譲）
+func _cancel_confirmation():
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	spell_flow._cancel_confirmation()
+
+## スペルをパス（SpellFlowHandler に委譲）
+func pass_spell(auto_roll: bool = true):
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
+	spell_flow.pass_spell(auto_roll)
 
 ## CPUプレイヤーかどうか
 func is_cpu_player(player_id: int) -> bool:
