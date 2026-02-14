@@ -51,16 +51,16 @@ var _info_panel_signals_connected: bool = false
 var ui_manager = null
 var player_system = null
 var card_system = null
-var spell_draw = null
+var spell_phase_handler = null  # 親参照を追加（spell_draw の代わり）
 var spell_phase_ui_manager = null
 var current_player_id: int = -1
 
 ## セットアップ
-func setup(p_ui_manager, p_player_system, p_card_system, p_spell_draw, p_spell_phase_ui_manager):
+func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler, p_spell_phase_ui_manager):
 	ui_manager = p_ui_manager
 	player_system = p_player_system
 	card_system = p_card_system
-	spell_draw = p_spell_draw
+	spell_phase_handler = p_spell_phase_handler  # 親参照を保存
 	spell_phase_ui_manager = p_spell_phase_ui_manager
 	_connect_info_panel_signals()
 
@@ -108,11 +108,11 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
-	if not spell_draw:
+	if not spell_phase_handler or not spell_phase_handler.spell_draw:
 		_cancel_enemy_card_selection("システムエラー")
 		return
-	
-	var has_valid_cards = spell_draw.has_cards_matching_filter(target_player_id, filter_mode)
+
+	var has_valid_cards = spell_phase_handler.spell_draw.has_cards_matching_filter(target_player_id, filter_mode)
 	
 	if not has_valid_cards:
 		# 条件に合うカードがない場合
@@ -324,10 +324,10 @@ func _on_enemy_selection_cancelled():
 
 ## 敵手札アクションを実行（破壊 or 奪取）
 func _execute_enemy_card_action(card_index: int):
-	if spell_draw:
+	if spell_phase_handler and spell_phase_handler.spell_draw:
 		if enemy_card_selection_is_steal:
 			# 奪取モード（セフト）
-			var result = spell_draw.steal_card_at_index(
+			var result = spell_phase_handler.spell_draw.steal_card_at_index(
 				enemy_card_selection_target_id, current_player_id, card_index
 			)
 			if result.get("stolen", false):
@@ -335,10 +335,13 @@ func _execute_enemy_card_action(card_index: int):
 					await ui_manager.show_comment_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード（シャッター、スクイーズ）
-			var result = spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
+			var result = spell_phase_handler.spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
+			print("[DEBUG] destroy結果: destroyed=%s, card_name=%s" % [result.get("destroyed"), result.get("card_name")])
 			if result.get("destroyed", false):
+				var card_name_for_ui = result.get("card_name", "?")
+				print("[DEBUG] UI表示直前: card_name=%s" % card_name_for_ui)
 				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
+					await ui_manager.show_comment_and_wait("『%s』を破壊しました" % card_name_for_ui)
 	
 	# コールバックを呼び出し
 	if enemy_card_selection_callback:
@@ -407,11 +410,11 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
-	if not spell_draw:
+	if not spell_phase_handler or not spell_phase_handler.spell_draw:
 		_cancel_deck_card_selection("システムエラー")
 		return
-	
-	deck_card_selection_cards = spell_draw.get_top_cards_from_deck(target_player_id, look_count)
+
+	deck_card_selection_cards = spell_phase_handler.spell_draw.get_top_cards_from_deck(target_player_id, look_count)
 	
 	if deck_card_selection_cards.is_empty():
 		# デッキが空の場合
@@ -482,12 +485,12 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
-	if not spell_draw:
+	if not spell_phase_handler or not spell_phase_handler.spell_draw:
 		_cancel_deck_card_selection("システムエラー")
 		return
-	
-	deck_card_selection_cards = spell_draw.get_top_cards_from_deck(player_id, look_count)
-	
+
+	deck_card_selection_cards = spell_phase_handler.spell_draw.get_top_cards_from_deck(player_id, look_count)
+
 	if deck_card_selection_cards.is_empty():
 		if ui_manager and ui_manager.phase_display:
 			ui_manager.show_toast("デッキにカードがありません")
@@ -604,16 +607,16 @@ func _on_deck_selection_cancelled():
 
 ## デッキカードアクションを実行（ドロー or 破壊）
 func _execute_deck_card_action(card_index: int):
-	if spell_draw:
+	if spell_phase_handler and spell_phase_handler.spell_draw:
 		if deck_card_selection_is_draw:
 			# ドローモード：選んだカードを手札に加える
-			var result = spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
+			var result = spell_phase_handler.spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
 			if result.get("drawn", false):
 				if ui_manager and ui_manager.global_comment_ui:
 					await ui_manager.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード
-			var result = spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
+			var result = spell_phase_handler.spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
 				if ui_manager and ui_manager.global_comment_ui:
 					await ui_manager.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
@@ -694,11 +697,11 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
-	if not spell_draw:
+	if not spell_phase_handler or not spell_phase_handler.spell_draw:
 		_cancel_transform_card_selection("システムエラー")
 		return
-	
-	var has_valid_cards = spell_draw.has_item_or_spell_in_hand(target_player_id)
+
+	var has_valid_cards = spell_phase_handler.spell_draw.has_item_or_spell_in_hand(target_player_id)
 	
 	if not has_valid_cards:
 		if ui_manager and ui_manager.phase_display:
@@ -798,15 +801,15 @@ func _on_transform_selection_cancelled():
 
 ## カード変換アクションを実行
 func _execute_transform_card_action(card_index: int):
-	if card_system and spell_draw:
+	if card_system and spell_phase_handler and spell_phase_handler.spell_draw:
 		var hand = card_system.get_all_cards_for_player(transform_target_player_id)
 		if card_index >= 0 and card_index < hand.size():
 			var selected_card = hand[card_index]
 			var selected_name = selected_card.get("name", "")
 			var selected_id = selected_card.get("id", -1)
-			
+
 			# 同名カードを全て変換（手札＋デッキ）
-			var result = spell_draw.transform_cards_to_specific(
+			var result = spell_phase_handler.spell_draw.transform_cards_to_specific(
 				transform_target_player_id,
 				selected_name,
 				selected_id,
@@ -1007,8 +1010,8 @@ func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
 	print("[CPU自動選択] %sのデッキから: %s を破壊 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
 	
 	# デッキからカードを破壊
-	if spell_draw:
-		spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
+	if spell_phase_handler and spell_phase_handler.spell_draw:
+		spell_phase_handler.spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
 	
 	if ui_manager and ui_manager.global_comment_ui:
 		await ui_manager.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
@@ -1056,10 +1059,10 @@ func _cpu_auto_select_transform_card(target_player_id: int, filter_mode: String)
 	print("[CPU自動選択] %sの手札から: %s を変換 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
 	
 	# 同名カードを全て変換
-	if spell_draw:
+	if spell_phase_handler and spell_phase_handler.spell_draw:
 		var card_name_str = card_data.get("name", "")
 		var card_id = card_data.get("id", -1)
-		var result = spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
+		var result = spell_phase_handler.spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
 		if result.get("transformed_count", 0) > 0 and ui_manager and ui_manager.global_comment_ui:
 			await ui_manager.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
 				result.get("original_name", "?"),
