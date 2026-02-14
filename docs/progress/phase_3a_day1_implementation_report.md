@@ -56,8 +56,8 @@
   1. Level 1: 必須キー確認 (spell_card, current_player_id, board_system, spell_phase_handler)
   2. Level 2: 参照実体確認 (null チェック)
   3. Level 3: スペル固有条件
-     - ターゲット tile_index の有効性
-     - ターゲットが自分のドミニオか確認
+	 - ターゲット tile_index の有効性
+	 - ターゲットが自分のドミニオか確認
 - execute() メソッド
   - SpellEffectExecutor に委譲
   - await パターンで効果実行完了を待機
@@ -81,19 +81,19 @@
 2. `_build_spell_context()` メソッド追加
    - スペル実行に必要なすべての参照を Dictionary に集約
    - 含まれるキー:
-     - spell_card, spell_id, spell_phase_handler
-     - target_data, current_player_id
-     - board_system, player_system, card_system
-     - ui_manager, spell_container, spell_effect_executor
+	 - spell_card, spell_id, spell_phase_handler
+	 - target_data, current_player_id
+	 - board_system, player_system, card_system
+	 - ui_manager, spell_container, spell_effect_executor
 
 3. `_try_execute_spell_with_strategy()` メソッド追加
    - Strategy を試行的に実行
    - 成功時: true を返す（Strategy が効果を処理）
    - 失敗時: false を返す（フォールバック用）
    - Flow:
-     1. Factory から Strategy を取得
-     2. validate() で条件をチェック
-     3. execute() で効果を適用
+	 1. Factory から Strategy を取得
+	 2. validate() で条件をチェック
+	 3. execute() で効果を適用
 
 4. `execute_spell_effect()` メソッドを Strategy 対応に修正
    - Strategy パターンを優先的に試行

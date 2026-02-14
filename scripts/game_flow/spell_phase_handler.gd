@@ -1691,34 +1691,40 @@ func _initialize_cpu_context(flow_mgr) -> void:
 func _start_spell_tap_target_selection(targets: Array, target_type: String):
 	if not ui_manager or not ui_manager.tap_target_manager:
 		return
-	
+
+	# target_type: "player" の場合はタップターゲット選択をスキップ
+	# （後続のeffect処理で手札選択UIが表示される）
+	if target_type == "player":
+		print("[SpellPhaseHandler] タップターゲット選択スキップ (type: player - 手札選択UI使用)")
+		return
+
 	var ttm = ui_manager.tap_target_manager
 	ttm.set_current_player(current_player_id)
-	
+
 	# シグナル接続（重複防止）
 	if not ttm.target_selected.is_connected(_on_spell_tap_target_selected):
 		ttm.target_selected.connect(_on_spell_tap_target_selected)
-	
+
 	# ターゲットからタイルインデックスを抽出
 	var valid_tile_indices: Array = []
 	for target in targets:
 		var tile_index = target.get("tile_index", -1)
 		if tile_index >= 0 and tile_index not in valid_tile_indices:
 			valid_tile_indices.append(tile_index)
-	
+
 	# 選択タイプを決定
 	var selection_type = TapTargetManager.SelectionType.CREATURE
 	if target_type == "land" or target_type == "empty_land":
 		selection_type = TapTargetManager.SelectionType.TILE
 	elif target_type == "creature_or_land":
 		selection_type = TapTargetManager.SelectionType.CREATURE_OR_TILE
-	
+
 	ttm.start_selection(
 		valid_tile_indices,
 		selection_type,
 		"SpellPhaseHandler"
 	)
-	
+
 	print("[SpellPhaseHandler] タップターゲット選択開始: %d件 (type: %s)" % [valid_tile_indices.size(), target_type])
 
 

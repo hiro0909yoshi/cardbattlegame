@@ -12,6 +12,117 @@
 
 ---
 
+## 2026年2月14日（Session 19）
+
+### セッション19: 周回システムバグ修正 - on_start_passed() 二重リセット問題
+
+**目的**: Phase 2 Day 3 で発生した周回システムのバグを修正
+
+**問題の発見**:
+- ユーザー報告: 「チェックポイントシグナルがちゃんと取れていない」「新しいシグナルを取得すると前の門が消えてしまう」「CPU の方向選択がおかしい」
+
+**調査結果**（Explore エージェント）:
+
+✅ **根本原因の特定**:
+- `LapSystem.on_start_passed()` が `complete_lap()` で既に実施されたチェックポイントフラグリセットを重複実行
+- Phase 2 Day 3 で `start_passed` シグナルリレー実装時に追加されたメソッドが設計ミス
+- スタート地点通過時に全チェックポイントフラグが `false` にリセットされる
+
+**問題の影響**:
+1. チェックポイント状態の消失（取得済みシグナルが「未取得」扱い）
+2. CPU の方向選択ロジックが誤動作（`_get_visited_checkpoints()` が空配列を返す）
+3. CPU が既訪問のシグナルを目指す方向を選択
+
+**フロー分析**:
+```
+周回完了時:
+1. complete_lap() → チェックポイントフラグリセット ✅ 正しい
+2. スタート地点通過 → on_start_passed() → 再度リセット ❌ 不要な二重リセット
+```
+
+**修正内容**:
+- `scripts/game_flow/lap_system.gd` (Line 161-168)
+- `on_start_passed()` を空メソッドに変更（デバッグログのみ出力）
+- コメントで設計意図を明記（将来の開発者への注意喚起）
+- シグナルリレーチェーンは維持（他システムへの影響なし）
+
+**コミット**: 750b0f1 - "Fix: LapSystem.on_start_passed() の二重リセット問題を修正"
+
+**テスト結果**:
+- ✅ チェックポイント状態が正しく保持される
+- ✅ CPU の方向選択が正常化
+- ✅ 周回システムの整合性が回復
+- ✅ 挙動確認: 問題なし
+
+**成果**:
+- Phase 2 Day 3 実装の潜在的なバグを発見・修正
+- 周回システムの設計意図を明確化
+- CPU AI の動作を正常化
+
+**次のステップ**: Phase 3-A 開始準備（Phase 3-B 完了を受けて）
+**残りトークン**: 約 91,000 / 200,000
+
+---
+
+## 2026年2月14日（Session 18）
+
+### セッション18: Phase 3-B Day 3 完了 - シグナルチェーン構築と統合テスト
+
+**目的**: Phase 3-B 最終日、creature_updated シグナルリレーチェーン構築と統合テスト
+
+**実施内容**:
+
+✅ **エラー修正**: CreatureInfoPanelUI に update_display() メソッド追加
+- **問題**: ui_manager.on_creature_updated() から呼ばれる update_display() メソッドが存在しなかった
+- **修正**: CreatureInfoPanelUI.update_display() 追加（Line 172-178）
+  - パネル表示中のみ更新を実行（is_visible_panel チェック）
+  - current_creature_data 更新 + _update_display() 呼び出し
+- **コミット**: c37d5b6
+
+✅ **統合テスト完了**:
+- ゲーム起動: エラーなし
+- クリーチャー配置: シグナルチェーン正常動作
+  ```
+  [BoardSystem3D] creature_changed: 新規配置 tile=10
+  [GameFlowManager] creature_updated 受信: tile=10
+  [UIManager] creature_updated 受信: tile=10
+  ```
+- 3ターン以上プレイ: 正常動作、エラーなし
+- UI 自動更新: 正常動作
+
+**Phase 3-B 全体総括**:
+
+**Day 1**: CreatureManager SSoT 化
+- creature_changed シグナル + set_creature() メソッド実装
+- 後方互換性維持（set_data() ラッパー）
+
+**Day 2**: BaseTile/TileDataManager リファクタリング
+- TileDataManager.get_creature() メソッド追加
+- 既存コード722箇所の互換性確認（100%）
+
+**Day 3**: シグナルチェーン構築と統合テスト
+- creature_updated リレーチェーン実装
+- UI 自動更新の実現
+- 統合テスト完了
+
+**達成した成果**:
+- ✅ SSoT パターン確立（CreatureManager が唯一のデータソース）
+- ✅ シグナルリレーチェーン完全動作（4層: CreatureManager → BoardSystem3D → GameFlowManager → UIManager）
+- ✅ UI 自動更新の実現
+- ✅ コーディング規約100%準拠（is_connected チェック、委譲メソッド、null チェック）
+- ✅ 既存コード互換性100%（722箇所アクセス維持）
+
+**コミット**:
+- a6f9849: Day 1 シグナル基盤実装
+- 6c4f902: Day 1 tile_nodes 修正
+- f401950: Day 3 シグナルチェーン構築
+- c37d5b6: Day 3 CreatureInfoPanelUI 修正
+
+**次のステップ**: Phase 3-A（SpellPhaseHandler Strategy パターン化、4-5日）
+**残りトークン**: 約 116,000 / 200,000
+
+---
+
 ## 2026年2月14日（Session 16）
 
 ### セッション16: Phase 3-B Day 2 - BaseTile/TileDataManager リファクタリング
@@ -789,5 +900,84 @@ BattleSystem.invasion_completed
 
 ### 完了済みシステム（参考）
 - ✅ 全システム実装完了（アイテム75種、スペル全種、スキル全種、アルカナアーツ全種、ダメージ、召喚制限、呪い全種）
+
+---
+
+## 2026年2月14日（Session 20）
+
+### セッション20: Phase 3-A Day 1-2 完了 - Strategy パターン基盤実装
+
+**目的**: SpellPhaseHandler の Strategy パターン化（Day 1-2: 基盤実装）
+
+**ワークフロー確立**:
+```
+1. Opus: 詳細計画策定 → phase_3a_implementation_plan.md 作成
+2. Haiku: 計画を読んで質問（13個の質問作成）
+3. Opus: 質問に回答（13個すべてに詳細回答）
+4. Haiku: コーディング規約チェック
+5. Haiku: 実装（Day 1-2 基盤実装）
+6. Sonnet: ドキュメント更新・完了報告
+```
+
+**実施内容**:
+
+✅ **Opus: Phase 3-A 詳細計画策定**
+- `docs/progress/phase_3a_implementation_plan.md` 作成
+- 現状分析（SpellPhaseHandler 1,774行、80関数）
+- Strategy パターン設計（基底クラス、Factory、各 Strategy）
+- 実装手順（Day 1-5、32時間）
+- リスク分析（6項目）
+- テストチェックポイント
+
+✅ **Haiku: 質問セッション**
+- 13個の質問作成（カテゴリA-E）
+  - A: 設計に関する質問（4個）
+  - B: 実装に関する質問（4個）
+  - C: テストに関する質問（2個）
+  - D: リスク・緩和策に関する質問（3個）
+
+✅ **Opus: 質問回答**
+- 13個すべてに詳細回答
+- Context 構造定義（A1）
+- Factory パターン設計（A2）
+- spell_id マッピング（A3: 数値型使用）
+- null 参照チェック（B2: Level 1-3 体系）
+- SpellEffectExecutor との責務分担（D1）
+
+✅ **Haiku: コーディング規約チェック**
+- Opus の回答が gdscript-coding スキルに準拠しているか確認
+- 主要項目すべて準拠確認
+  - ✅ 直接参照パターン（context 経由）
+  - ✅ null 参照チェック（Level 1-3）
+  - ✅ プライベート変数命名（`_` プレフィックス）
+
+✅ **Haiku: 実装（Day 1-2）**
+- **Task 1-1**: SpellStrategy 基底クラス作成（50行）
+  - `scripts/spells/strategies/spell_strategy.gd`
+  - validate(), execute() インターフェース
+  - _validate_context_keys(), _validate_references() ヘルパー
+- **Task 1-2**: SpellStrategyFactory 実装（35行）
+  - `scripts/spells/strategies/spell_strategy_factory.gd`
+  - spell_id → Strategy クラスのマッピング
+  - create_strategy() static メソッド
+- **Task 1-3**: EarthShiftStrategy サンプル実装（60行）
+  - `scripts/spells/strategies/spell_strategies/earth_shift_strategy.gd`
+  - 3段階 validation（Level 1-3）
+  - SpellEffectExecutor への委譲
+- **Task 1-4**: SpellPhaseHandler 統合
+  - `scripts/game_flow/spell_phase_handler.gd` 修正
+  - _build_spell_context() メソッド追加
+  - execute_spell_effect() に Strategy パターン試行 + フォールバック
+
+**成果**:
+- ✅ Strategy パターン基盤完成（基底クラス + Factory + サンプル実装）
+- ✅ 後方互換性維持（既存スペルはフォールバックで動作）
+- ✅ 拡張性向上（新スペルは Factory 登録 + Strategy クラスのみ）
+- ✅ テスト容易性向上（各 Strategy を独立してテスト可能）
+
+**コミット**: 8b3f19f - "Phase 3-A Day 1-2: Strategy pattern base implementation"
+
+**次のステップ**: Phase 3-A Day 3-4（既存11スペルの Strategy 移行、別セッション）
+**残りトークン**: 約 85,000 / 200,000
 
 ---

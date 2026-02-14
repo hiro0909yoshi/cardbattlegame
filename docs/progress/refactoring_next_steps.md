@@ -181,17 +181,17 @@ SpellPhaseHandler: 400行（77%削減）
 ```gdscript
 # 追加メソッド
 static func create_effect_strategy(effect_type: String) -> SpellStrategy:
-    """effect_type から Strategy を生成"""
-    var strategy_map = {
-        "damage": preload("res://scripts/spells/strategies/effect_strategies/damage_effect_strategy.gd"),
-        "heal": preload("res://scripts/spells/strategies/effect_strategies/heal_effect_strategy.gd"),
-        "creature_move": preload("res://scripts/spells/strategies/effect_strategies/creature_move_effect_strategy.gd"),
-        # 他の effect_type は後で追加
-    }
+	"""effect_type から Strategy を生成"""
+	var strategy_map = {
+		"damage": preload("res://scripts/spells/strategies/effect_strategies/damage_effect_strategy.gd"),
+		"heal": preload("res://scripts/spells/strategies/effect_strategies/heal_effect_strategy.gd"),
+		"creature_move": preload("res://scripts/spells/strategies/effect_strategies/creature_move_effect_strategy.gd"),
+		# 他の effect_type は後で追加
+	}
 
-    if effect_type in strategy_map:
-        return strategy_map[effect_type].new()
-    return null
+	if effect_type in strategy_map:
+		return strategy_map[effect_type].new()
+	return null
 ```
 
 #### 3. DamageEffectStrategy 実装
@@ -204,22 +204,22 @@ class_name DamageEffectStrategy
 extends SpellStrategy
 
 func validate(context: Dictionary) -> bool:
-    # 必須キーチェック
-    if not context.has("target_data"):
-        return false
-    if not context.has("effect"):
-        return false
-    return true
+	# 必須キーチェック
+	if not context.has("target_data"):
+		return false
+	if not context.has("effect"):
+		return false
+	return true
 
 func execute(context: Dictionary) -> void:
-    var effect = context["effect"]
-    var target_data = context["target_data"]
-    var value = effect.get("value", 0)
+	var effect = context["effect"]
+	var target_data = context["target_data"]
+	var value = effect.get("value", 0)
 
-    # spell_damage への委譲（既存ロジック再利用）
-    var spell_damage = context.get("spell_damage")
-    if spell_damage:
-        await spell_damage.apply_damage(target_data, value)
+	# spell_damage への委譲（既存ロジック再利用）
+	var spell_damage = context.get("spell_damage")
+	if spell_damage:
+		await spell_damage.apply_damage(target_data, value)
 ```
 
 **移行対象コード**（SpellEffectExecutor より）:
