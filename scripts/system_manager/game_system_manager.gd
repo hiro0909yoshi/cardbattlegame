@@ -528,10 +528,11 @@ func _on_phase_changed(_new_phase) -> void:
 # 初期化ヘルパー関数（GameFlowManagerから移動）
 # ============================================
 
-## Phase 4: CreatureManager シグナル接続（Day 1）
+## Phase 4: CreatureManager シグナル接続（Day 1, Day 3 拡張）
 func _setup_phase_4_creature_signals() -> void:
-	print("[GameSystemManager] creature_changed シグナル接続開始")
+	print("[GameSystemManager] creature シグナル接続開始")
 
+	# Day 1: CreatureManager → BoardSystem3D
 	if board_system_3d and board_system_3d.creature_manager:
 		var creature_manager = board_system_3d.creature_manager
 
@@ -542,6 +543,26 @@ func _setup_phase_4_creature_signals() -> void:
 			push_warning("[GameSystemManager] creature_changed は既に接続済み")
 	else:
 		push_error("[GameSystemManager] creature_manager または board_system_3d が null")
+
+	# Day 3 追加: BoardSystem3D → GameFlowManager
+	if board_system_3d and game_flow_manager:
+		if not board_system_3d.creature_updated.is_connected(game_flow_manager._on_creature_updated_from_board):
+			board_system_3d.creature_updated.connect(game_flow_manager._on_creature_updated_from_board)
+			print("[GameSystemManager] creature_updated → GFM 接続完了")
+		else:
+			push_warning("[GameSystemManager] creature_updated → GFM は既に接続済み")
+	else:
+		push_error("[GameSystemManager] board_system_3d または game_flow_manager が null")
+
+	# Day 3 追加: GameFlowManager → UIManager
+	if game_flow_manager and ui_manager:
+		if not game_flow_manager.creature_updated_relay.is_connected(ui_manager.on_creature_updated):
+			game_flow_manager.creature_updated_relay.connect(ui_manager.on_creature_updated)
+			print("[GameSystemManager] creature_updated_relay → UI 接続完了")
+		else:
+			push_warning("[GameSystemManager] creature_updated_relay → UI は既に接続済み")
+	else:
+		push_error("[GameSystemManager] game_flow_manager または ui_manager が null")
 
 ## LapSystem初期化
 func _setup_lap_system() -> void:

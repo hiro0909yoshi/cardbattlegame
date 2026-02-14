@@ -1068,3 +1068,24 @@ func connect_camera_signals():
 
 # === ゲームメニュー（UIGameMenuHandlerに委譲） ===
 # game_menu_button, game_menu, surrender_dialog は game_menu_handler 内で管理
+
+# === Day 3 追加: クリーチャー更新ハンドラー ===
+
+func on_creature_updated(tile_index: int, creature_data: Dictionary):
+	print("[UIManager] creature_updated 受信: tile=%d" % tile_index)
+
+	# null チェック
+	if not board_system_ref:
+		push_error("[UIManager] board_system_ref が null")
+		return
+
+	# UI の creature 関連要素を自動更新
+	if creature_info_panel_ui and not creature_data.is_empty():
+		creature_info_panel_ui.update_display(creature_data)
+
+	# 3D表示更新（tile_info_display）
+	if board_system_ref.tile_info_display:
+		# 委譲メソッド使用（2段チェーンアクセス禁止）
+		var tile_info = board_system_ref.get_tile_info(tile_index)
+		if not tile_info.is_empty():
+			board_system_ref.tile_info_display.update_display(tile_index, tile_info)

@@ -131,9 +131,9 @@ class BaseTile:
   var creature_manager: CreatureManager
 
   var creature_data: Dictionary:
-    get: return creature_manager.get_creature(tile_index)  // Read-only
-    set(value):
-      creature_manager.set_creature(tile_index, value)
+	get: return creature_manager.get_creature(tile_index)  // Read-only
+	set(value):
+	  creature_manager.set_creature(tile_index, value)
 
 // 変更通知をシグナル化
 func _on_creature_changed(tile_index, new_data):
@@ -180,13 +180,13 @@ class SwapCommand:
 
 class DominioCommandHandler:
   var commands = {
-    "level_up": LevelUpCommand.new(),
-    "move": MoveCommand.new(),
-    "swap": SwapCommand.new()
+	"level_up": LevelUpCommand.new(),
+	"move": MoveCommand.new(),
+	"swap": SwapCommand.new()
   }
 
   func execute_action(action_type):
-    return commands[action_type].execute(board_state)
+	return commands[action_type].execute(board_state)
 ```
 
 **期待効果**:
@@ -221,7 +221,7 @@ class GameFlowManager:
 
   # 委譲メソッドで簡潔化
   func on_level_up_selected(target_level, cost):
-    tile_action_processor.process_level_up(target_level, cost)
+	tile_action_processor.process_level_up(target_level, cost)
 ```
 
 **期待効果**:
@@ -237,34 +237,34 @@ class GameFlowManager:
 ### Before: 神オブジェクト構造
 ```
 [User Code]
-    ↓
+	↓
 [GameFlowManager] ← central hub (80 依存元)
-    ├─→ [UIManager] (93メソッド)
-    ├─→ [BoardSystem3D] (111メソッド)
-    ├─→ [SpellPhaseHandler] (80メソッド)
-    ├─→ [DominioCommandHandler] (73メソッド)
-    └─→ ...
+	├─→ [UIManager] (93メソッド)
+	├─→ [BoardSystem3D] (111メソッド)
+	├─→ [SpellPhaseHandler] (80メソッド)
+	├─→ [DominioCommandHandler] (73メソッド)
+	└─→ ...
 ```
 
 ### After: 責務分離構造
 ```
 [User Code]
-    ├─→ [UIState Controller]
-    │   ├─→ [HandUIController]
-    │   ├─→ [BattleUIController]
-    │   └─→ [DominioUIController]
-    │
-    ├─→ [SpellExecutor]
-    │   ├─→ [FireballStrategy]
-    │   ├─→ [FreezeStrategy]
-    │   └─→ [SpellStrategyFactory]
-    │
-    ├─→ [GameBoard]
-    │   ├─→ [TileGrid]
-    │   ├─→ [CreatureLayer]
-    │   └─→ [MovementSystem]
-    │
-    └─→ [GameFlowManager] (simplified)
+	├─→ [UIState Controller]
+	│   ├─→ [HandUIController]
+	│   ├─→ [BattleUIController]
+	│   └─→ [DominioUIController]
+	│
+	├─→ [SpellExecutor]
+	│   ├─→ [FireballStrategy]
+	│   ├─→ [FreezeStrategy]
+	│   └─→ [SpellStrategyFactory]
+	│
+	├─→ [GameBoard]
+	│   ├─→ [TileGrid]
+	│   ├─→ [CreatureLayer]
+	│   └─→ [MovementSystem]
+	│
+	└─→ [GameFlowManager] (simplified)
 ```
 
 ---
@@ -344,4 +344,3 @@ Mon-Fri:  全体統合テスト・微調整
    - テスト改善
 
 **総工期**: 1-2週間で大幅改善が可能
-

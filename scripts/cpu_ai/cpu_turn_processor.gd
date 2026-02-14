@@ -280,11 +280,7 @@ func _execute_cpu_pending_battle():
 		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
-	
-	# バトルシステムに処理を委譲
-	if not battle_system.invasion_completed.is_connected(_on_invasion_completed):
-		battle_system.invasion_completed.connect(_on_invasion_completed, CONNECT_ONE_SHOT)
-	
+
 	await battle_system.execute_3d_battle_with_data(
 		current_player_index, 
 		pending_cpu_battle_card_data, 
@@ -351,6 +347,9 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 
 # 侵略完了後の処理
 func _on_invasion_completed(_success: bool, _tile_index: int):
+	# デバッグログ（Phase 2 テスト期間中）
+	print("[CPUTurnProcessor] invasion_completed 受信: success=%s, tile=%d" % [_success, _tile_index])
+
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()

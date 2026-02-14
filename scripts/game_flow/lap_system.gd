@@ -158,15 +158,26 @@ func _reinitialize_player_states():
 			state[checkpoint] = false
 		player_lap_state[player_id] = state
 
+## スタート地点通過（新周開始時）
+func on_start_passed(player_id: int):
+	# デバッグログ
+	print("[LapSystem] start_passed 受信: player_id=%d" % player_id)
+
+	# チェックポイント状態をリセット（新周に向けて）
+	if player_lap_state.has(player_id):
+		for checkpoint in required_checkpoints:
+			player_lap_state[player_id][checkpoint] = false
+		print("[LapSystem] プレイヤー%d: スタート地点を通過、チェックポイント状態をリセット" % [player_id + 1])
+
 ## CheckpointTileのシグナルを接続
 func connect_checkpoint_signals():
 	if not board_system_3d or not board_system_3d.tile_nodes:
 		return
-	
+
 	# 少し待ってからシグナル接続（CheckpointTileの_ready()を待つ）
 	await get_tree().process_frame
 	await get_tree().process_frame
-	
+
 	for tile_index in board_system_3d.tile_nodes.keys():
 		var tile = board_system_3d.tile_nodes[tile_index]
 		if tile and is_instance_valid(tile):

@@ -210,8 +210,8 @@ func execute_summon_for_cpu(card_index: int, complete_callback: Callable) -> boo
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
-	
-	complete_callback.call()
+
+	complete_callback.call()  # ← 召喚時は relay chain がないため必須
 	return true
 
 

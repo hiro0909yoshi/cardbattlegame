@@ -9,6 +9,7 @@ signal turn_started(player_id: int)
 signal turn_ended(player_id: int)
 @warning_ignore("unused_signal")  # 旧版ダイス用、互換性のため残す
 signal dice_rolled(value: int)
+signal creature_updated_relay(tile_index: int, creature_data: Dictionary)
 
 # 定数をpreload
 const DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
@@ -374,6 +375,37 @@ func _on_terrain_changed_from_board(tile_index: int, old_element: String, new_el
 	# UI更新やスペルハンドラーへの通知が必要な場合はここに追加
 	if ui_manager:
 		ui_manager.update_player_info_panels()
+
+func _on_start_passed_from_board(player_id: int):
+	# デバッグログ
+	print("[GameFlowManager] start_passed 受信: player_id=%d" % player_id)
+
+	# LapSystem へ通知
+	if lap_system:
+		lap_system.on_start_passed(player_id)
+
+func _on_warp_executed_from_board(player_id: int, from_tile: int, to_tile: int):
+	# デバッグログ
+	print("[GameFlowManager] warp_executed 受信: player=%d, from=%d, to=%d" % [player_id, from_tile, to_tile])
+
+	# ワープ処理は既に完了しているため、ログのみ
+	# 必要に応じてスペルハンドラーなどに通知
+
+func _on_spell_used(spell_card: Dictionary):
+	# デバッグログ
+	print("[GameFlowManager] spell_used 受信: spell=%s" % spell_card.get("name", ""))
+
+	# UIManager へリレー（必要に応じて）
+	if ui_manager and ui_manager.has_method("on_spell_used"):
+		ui_manager.on_spell_used(spell_card)
+
+func _on_item_used(item_card: Dictionary):
+	# デバッグログ
+	print("[GameFlowManager] item_used 受信: item=%s" % item_card.get("name", ""))
+
+	# UIManager へリレー（必要に応じて）
+	if ui_manager and ui_manager.has_method("on_item_used"):
+		ui_manager.on_item_used(item_card)
 
 
 # === UIコールバック ===
@@ -800,3 +832,9 @@ func _check_turn_limit() -> bool:
 	if game_result_handler:
 		return game_result_handler.check_turn_limit()
 	return false
+
+## Day 3 追加: BoardSystem3D からの creature_updated を受信・リレー
+func _on_creature_updated_from_board(tile_index: int, creature_data: Dictionary):
+	print("[GameFlowManager] creature_updated 受信: tile=%d" % tile_index)
+	# シグナルリレー（UIManager はこのシグナルを受信）
+	creature_updated_relay.emit(tile_index, creature_data)

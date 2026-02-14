@@ -37,7 +37,7 @@
 # 各スペルを独立したクラスに
 class FireballStrategy:
   func execute(context: SpellContext) -> bool:
-    # Fireball logic only
+	# Fireball logic only
 
 # Handler はディスパッチャーに簡略化
 func execute_spell(spell_data):
@@ -217,4 +217,3 @@ Week 4: 統合テスト・ドキュメント
 - 詳細分析: `/docs/analysis/god_object_analysis.md`
 - アーキテクチャ: `/docs/design/design.md`
 - 実装パターン: `/docs/implementation/implementation_patterns.md`
-

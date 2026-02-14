@@ -30,6 +30,7 @@
 | `terrain_changed` | `tile_index: int, old_element: String, new_element: String` | 地形変更通知 |
 | `level_up_completed` | `tile_index: int, new_level: int` | レベルアップ完了 |
 | `movement_completed` | `player_id: int, final_tile: int` | 移動完了通知 |
+| `invasion_completed` | `success: bool, tile_index: int` | 侵略完了通知（Phase 2 リレーチェーン） |
 
 ### BattleSystem
 ファイル: `scripts/battle_system.gd`
@@ -144,7 +145,7 @@
 | シグナル | 引数 | 用途 |
 |---------|------|------|
 | `action_completed` | なし | アクション完了 |
-| `invasion_completed` | `success: bool, tile_index: int` | 侵略完了 |
+| `invasion_completed` | `success: bool, tile_index: int` | 侵略完了（Phase 2: BoardSystem3Dへリレー） |
 
 ---
 
@@ -421,7 +422,7 @@ BoardSystem3D.tile_action_completed
 GameFlowManager.turn_ended(player_id)
 ```
 
-### バトルフロー
+### バトルフロー（Phase 2: invasion_completed relay chain）
 ```
 (侵略開始)
     ↓
@@ -438,7 +439,28 @@ BattleScreen.battle_ended(result)
 BattleScreenManager.battle_screen_closed
     ↓
 BattleSystem.invasion_completed(success, tile_index)
+    ↓
+TileBattleExecutor._on_battle_completed(success, tile_index)
+    ↓
+TileBattleExecutor.invasion_completed.emit(success, tile_index)
+    ↓
+TileActionProcessor._on_invasion_completed(success, tile_index)
+    ↓
+TileActionProcessor.invasion_completed.emit(success, tile_index)  [Phase 2]
+    ↓
+BoardSystem3D._on_invasion_completed(success, tile_index)  [Phase 2]
+    ↓
+BoardSystem3D.invasion_completed.emit(success, tile_index)  [Phase 2]
+    ↓
+GameFlowManager._on_invasion_completed_from_board(success, tile_index)  [Phase 2]
+    ├→ DominioCommandHandler._on_invasion_completed(success, tile_index)
+    └→ CPUTurnProcessor._on_invasion_completed(success, tile_index)
 ```
+
+**Phase 2 改善点**:
+- 横断的シグナル接続を解消（BattleSystem → Handler 直接接続を廃止）
+- 子→親方向のリレーチェーンに統一
+- デバッグ容易性の向上（各段階でログ出力）
 
 ### スペルフロー
 ```

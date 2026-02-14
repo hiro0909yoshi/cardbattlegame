@@ -92,9 +92,9 @@ git checkout scripts/game_flow_manager.gd
 
 - [ ] **タスク2-2**: ハンドラー接続先を変更（2-3h）
   - ファイル:
-    - `scripts/game_flow/dominio_command_handler.gd`
-    - `scripts/game_flow/land_action_helper.gd`
-    - `scripts/cpu_ai/cpu_turn_processor.gd`
+	- `scripts/game_flow/dominio_command_handler.gd`
+	- `scripts/game_flow/land_action_helper.gd`
+	- `scripts/cpu_ai/cpu_turn_processor.gd`
   - 変更: `BattleSystem.invasion_completed` → `BoardSystem3D.invasion_completed`
 
 - [ ] **タスク2-3**: テスト・検証（4-6h）

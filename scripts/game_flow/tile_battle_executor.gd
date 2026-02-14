@@ -366,13 +366,13 @@ func _execute_pending_battle():
 ## バトル完了時
 func _on_battle_completed(success: bool, tile_index: int):
 	print("バトル結果受信: success=", success, " tile=", tile_index)
-	
+
 	if ui_manager:
 		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
-	
+
 	emit_signal("invasion_completed", success, tile_index)
-	_complete_callback.call()
+	# _complete_callback.call()  ← Phase 2: invasion_completed relay chain で完了処理されるため不要
 
 
 ## アイテムフェーズ表示用の土地ボーナス計算

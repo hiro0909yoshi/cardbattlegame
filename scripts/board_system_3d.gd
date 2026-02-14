@@ -12,6 +12,7 @@ signal movement_completed(player_id: int, final_tile: int)
 signal invasion_completed(success: bool, tile_index: int)
 signal start_passed(player_id: int)
 signal warp_executed(player_id: int, from_tile: int, to_tile: int)
+signal creature_updated(tile_index: int, creature_data: Dictionary)
 
 # 定数をpreload
 
@@ -627,6 +628,9 @@ func _on_creature_changed(tile_index: int, old_data: Dictionary, new_data: Dicti
 		print("[BoardSystem3D] creature_changed: クリーチャー更新 tile=%d" % tile_index)
 	else:
 		push_error("[BoardSystem3D] 矛盾したデータ: tile=%d" % tile_index)
+
+	# Day 3 追加: creature_updated シグナルをリレー
+	creature_updated.emit(tile_index, new_data)
 
 # === スキルインデックス管理 ===
 

@@ -3,355 +3,272 @@
 **最終更新**: 2026-02-14
 **目的**: セッション間で作業計画が失われないよう、次にやることを明確に記録
 
-**確立したワークフロー**（Phase 1-4 で継続）:
+**確立したワークフロー**:
 ```
 1. Opus: Phase 計画立案 → refactoring_next_steps.md に記載
-2. Haiku: 計画を読んで質問セッション
-3. Sonnet: 質問に回答
-4. Haiku: 実装
-5. Sonnet: ドキュメント更新・完了報告
-6. 次の Phase へ（繰り返し）
+2. Haiku: 計画を読んで実装
+3. Sonnet: ドキュメント更新・完了報告
+4. 次の Phase へ（繰り返し）
 ```
 
 ---
 
-## ✅ 完了: Phase 0 - ツリー構造定義（2026-02-14）
+## ✅ 完了済みフェーズ
 
-**優先度**: P0（最重要）
-**実装時間**: 1日
+### Phase 0: ツリー構造定義（2026-02-14）✅
 
-### 実施内容
-- `docs/design/TREE_STRUCTURE.md` 作成: 理想的なツリー構造（3階層）
-- `docs/design/dependency_map.md` 作成: 現在の依存関係マップ、問題12箇所特定
-- `docs/progress/architecture_migration_plan.md` 作成: Phase 1-4 の詳細計画
+**実施内容**:
+- `TREE_STRUCTURE.md`: 理想的なツリー構造（3階層）
+- `dependency_map.md`: 現在の依存関係マップ、問題12箇所特定
+- `architecture_migration_plan.md`: Phase 1-4 の詳細計画
 
-### 効果
-- ツリー構造が視覚的に理解できる
-- 問題のある依存が12箇所特定されている
-- Phase 1-4 の作業内容が明確
+**効果**: ツリー構造が明確化、問題箇所の特定完了
 
 ---
 
-## 🔵 Phase 1: SpellSystemManager 導入（実装予定）
+### Phase 1: SpellSystemManager 導入（2026-02-13）✅
 
-**優先度**: P0
-**実装時間**: 2日（16時間）
+**実施内容**:
+- SpellSystemContainer パターン導入（RefCounted コンテナ）
+- 10+2個のスペルシステムを一元管理
+- 辞書⇔個別変数の変換チェーン解消
+
+**効果**: コード削減約42行、保守性向上
+
+---
+
+### Phase 2: シグナルリレー整備（2026-02-14）✅
+
+**実施内容**:
+- 8種類のシグナルリレーチェーン実装
+  - invasion_completed, movement_completed, level_up_completed, terrain_changed
+  - start_passed, warp_executed, spell_used, item_used
+- GameSystemManager でシグナル接続設定（is_connected() チェック）
+- BUG-000 再発防止策完全実装
+
+**効果**:
+- 横断的シグナル接続: 12箇所 → 2箇所（83%削減）
+- デバッグ容易性向上（各層でログ出力）
+- ツリー構造の確立（子→親方向のみ）
+
+---
+
+## 🎯 次のフェーズ候補（優先度順）
+
+### 🔴 最優先（P0）: Phase 3-B - BoardSystem3D SSoT 化
+
+**優先度**: P0（データ整合性の問題を解決）
+**実装時間**: 2-3日
 **担当**: Haiku
-**目的**: スペルシステムの階層化、GameFlowManager の責務明確化
 
-### 背景
+#### なぜ最優先か？
+
+1. **データ整合性の問題**: 現在、クリーチャーデータが複数箇所に重複参照されており、不整合バグのリスク
+2. **Phase 2 との相性**: シグナルリレーパターンと相性が良い（creature_changed シグナル）
+3. **工数が少ない**: 2-3日で完了可能
+4. **他タスクへの影響**: データ基盤を先に固めることで、後続タスクが安定
+
+#### 実施内容
 
 **現状の問題**:
 ```gdscript
-GameFlowManager
-└── spell_container: SpellSystemContainer (直接保持)
-	├── spell_draw
-	├── spell_magic
-	... (10+個)
+# クリーチャーデータが複数箇所に散在
+BaseTile.creature_data = {...}  # タイルが保持
+TileDataManager.tile_info["creature"] = {...}  # 別で管理
+CreatureManager にも参照がある
 ```
 
-- SpellContainer が GameFlowManager に直接ぶら下がっている
-- 階層が浅く、責務が不明確
-- 新しいスペルシステム追加時に GameFlowManager を修正
+**理想形（SSoT パターン）**:
+```gdscript
+# CreatureManager が唯一のデータソース（Single Source of Truth）
+CreatureManager.creatures = {
+	tile_index: creature_data
+}
+
+# 他のシステムは参照のみ
+BaseTile.get_creature_data() -> CreatureManager.creatures[tile_index]
+TileDataManager.get_creature(tile_index) -> CreatureManager.creatures[tile_index]
+
+# データ変更時は creature_changed シグナルを emit
+CreatureManager.creature_changed.emit(tile_index, creature_data)
+```
+
+#### タスク一覧
+
+1. **CreatureManager を SSoT に統一**（1日）
+   - creatures Dictionary を唯一のデータソースに
+   - set_creature(), get_creature() メソッド実装
+   - creature_changed シグナル定義
+
+2. **BaseTile と TileDataManager を参照に変更**（1日）
+   - creature_data を直接保持せず、CreatureManager から取得
+   - get_creature_data() メソッド実装
+
+3. **シグナルチェーン構築**（0.5-1日）
+   - creature_changed → BoardSystem3D → GameFlowManager → UIManager
+   - UI 自動更新の実現
+
+4. **テスト・検証**（0.5-1日）
+   - データ整合性確認
+   - UI 自動更新確認
+   - 3ターン以上正常動作
+
+#### 期待効果
+
+- ✅ クリーチャーデータが1箇所に統一
+- ✅ データ不整合バグの防止
+- ✅ UI 自動更新の実現
+- ✅ デバッグ時間の短縮
+
+---
+
+### 🟡 高優先（P1）: Phase 3-A - SpellPhaseHandler Strategy パターン化
+
+**優先度**: P1（コード可読性・拡張性向上）
+**実装時間**: 4-5日
+**担当**: Haiku
+
+#### なぜ P1 か？
+
+1. **神オブジェクト解消**: 最大の神オブジェクト（1,764行）を分割
+2. **新スペル追加が容易**: Strategy パターンで拡張性向上
+3. **Phase 3-B と並行可能**: 独立したタスク
+
+#### 実施内容
+
+**現状の問題**:
+```gdscript
+SpellPhaseHandler: 1,764行
+- 全スペルのロジックが1ファイルに集約
+- 新スペル追加時に SpellPhaseHandler を修正
+```
+
+**理想形（Strategy パターン）**:
+```gdscript
+SpellPhaseHandler: 400行（77%削減）
+├── SpellStrategyFactory
+└── 各 Strategy（独立したファイル）
+	├── FireballStrategy
+	├── FreezeStrategy
+	├── HealStrategy
+	└── ...
+```
+
+#### タスク一覧
+
+1. **Strategy パターン基盤実装**（2日）
+   - SpellStrategy 基底クラス作成
+   - SpellStrategyFactory 実装
+   - validate(), execute() インターフェース定義
+
+2. **既存スペルの Strategy 移行**（2-3日）
+   - 11個のスペルを Strategy に変換
+   - FireballStrategy, FreezeStrategy 等
+
+3. **SpellPhaseHandler 簡潔化**（1-2日）
+   - 1,764行 → 400行に削減
+   - Strategy 呼び出しに統一
+
+4. **テスト・検証**（1-2日）
+   - 全スペルが動作確認
+   - 3ターン以上正常動作
+
+---
+
+### 🟢 中優先（P2）: Phase 4 - UIManager 責務分離
+
+**優先度**: P2（UI 変更の影響範囲限定）
+**実装時間**: 3-4日
+**担当**: Haiku
+
+#### なぜ P2 か？
+
+1. **Phase 3-A, 3-B 完了後が望ましい**: データ基盤・スペル基盤を先に固める
+2. **工数がやや大きい**: 3-4日
+
+#### 実施内容
+
+**現状の問題**:
+```
+UIManager: 1,069行
+- 全 UI 要素が1ファイルに集約
+```
 
 **理想形**:
-```gdscript
-GameFlowManager
-└── SpellSystemManager (新規、Node型)
-	└── SpellSystemContainer
-		├── spell_draw
-		├── spell_magic
-		... (10+個)
+```
+UIManager: 300行（72%削減）
+├── HandUIController（200行）
+├── BattleUIController（300行）
+└── DominioUIController（200行）
 ```
 
 ---
 
-### タスク一覧
+### ⚪ 低優先（P3）: Phase 5 - 統合テスト・ドキュメント更新
 
-#### タスク1-1: SpellSystemManager クラス作成（4-5時間）
+**優先度**: P3（全タスク完了後）
+**実装時間**: 2-3日
 
-**新規ファイル**: `scripts/game_flow/spell_system_manager.gd`
+#### 実施内容
 
-**実装内容**:
-```gdscript
-extends Node
-class_name SpellSystemManager
-
-## スペルシステム統括管理者
-## GameFlowManager の子として配置され、全スペルシステムを管理
-
-# コアスペルシステムコンテナ
-var spell_container: SpellSystemContainer = null
-
-# Node型のスペルシステム（今後の拡張用）
-var spell_curse_toll: SpellCurseToll = null
-var spell_cost_modifier = null
-
-func _ready():
-	print("[SpellSystemManager] 初期化完了")
-
-## セットアップ
-func setup(container: SpellSystemContainer) -> void:
-	if not container:
-		push_error("[SpellSystemManager] SpellSystemContainer が null です")
-		return
-
-	spell_container = container
-	print("[SpellSystemManager] setup 完了")
-
-## スペルシステムへのアクセサ（後方互換性）
-func get_spell_draw():
-	return spell_container.spell_draw if spell_container else null
-
-func get_spell_magic():
-	return spell_container.spell_magic if spell_container else null
-
-# ... 他のスペルシステムも同様
-```
-
-**チェックポイント**:
-- [ ] SpellSystemManager クラス定義完成
-- [ ] spell_container 参照保持確認
-- [ ] setup() メソッド実装完了
-- [ ] すべてのアクセサメソッド実装完了
-- [ ] GDScript 構文エラーなし
+- 統合テスト（10+シーン）
+- パフォーマンステスト（FPS、メモリ）
+- メトリクス測定（削減率計測）
+- ドキュメント更新（全体）
 
 ---
 
-#### タスク1-2: GameSystemManager の初期化を更新（2-3時間）
+## 🚀 推奨実施計画
 
-**対象ファイル**: `scripts/system_manager/game_system_manager.gd`
-
-**変更箇所**: `_setup_spell_systems()` メソッド（行 501-618）
-
-**変更内容**:
-```gdscript
-func _setup_spell_systems() -> void:
-	if not card_system or not player_system:
-		push_error("[GameSystemManager] CardSystem/PlayerSystemが初期化されていません")
-		return
-
-	# === Step 1: SpellSystemManager を作成 ===
-	var spell_system_manager = SpellSystemManager.new()
-	spell_system_manager.name = "SpellSystemManager"
-
-	# GameFlowManager の子として追加
-	game_flow_manager.add_child(spell_system_manager)
-
-	# === Step 2: SpellSystemContainer を作成 ===
-	var spell_container = SpellSystemContainer.new()
-
-	# === Step 3: 各スペルシステムの初期化（既存コード維持）===
-	var spell_draw = SpellDraw.new()
-	spell_draw.setup(card_system, player_system)
-	# ... 他のスペルシステム初期化 ...
-
-	# === Step 4: SpellSystemManager にセットアップ ===
-	spell_system_manager.setup(spell_container)
-
-	# === Step 5: GameFlowManager に参照を設定（後方互換性） ===
-	game_flow_manager.set_spell_container(spell_container)
-	game_flow_manager.spell_system_manager = spell_system_manager
-
-	# === Step 6: SpellCurseToll 等の派生システム初期化（既存コード維持）===
-	# ... 既存の SpellCurseToll 初期化コード ...
-
-	print("[SpellSystemManager] 全初期化完了")
-```
-
-**重要なポイント**:
-1. 順序が重要: SpellSystemManager を先に作成・add_child
-2. 後方互換性: `game_flow_manager.spell_container` は維持
-3. 新規参照: `game_flow_manager.spell_system_manager` を追加
-
-**チェックポイント**:
-- [ ] SpellSystemManager 作成（new()）
-- [ ] GameFlowManager.add_child() で子として追加
-- [ ] spell_container 設定
-- [ ] setup() メソッド呼び出し確認
-- [ ] 既存の set_spell_container() 呼び出し維持
-- [ ] spell_system_manager 変数設定確認
-
----
-
-#### タスク1-3: GameFlowManager に参照追加（1時間）
-
-**対象ファイル**: `scripts/game_flow_manager.gd`
-
-**変更箇所**: クラス変数宣言部（行 39-50）
-
-**変更内容**:
-```gdscript
-# === Phase 1 で追加: SpellSystemManager への参照 ===
-var spell_system_manager: SpellSystemManager = null
-
-# === 既存の spell_container は互換性のため維持 ===
-var spell_container: SpellSystemContainer = null
-```
-
-**チェックポイント**:
-- [ ] spell_system_manager 変数追加
-- [ ] 既存の spell_container は維持
-- [ ] 型アノテーション（: SpellSystemManager）付き
-
----
-
-#### タスク1-4: 参照設定の確認（1-2時間）
-
-**対象**: すべてのシステムで `gfm.spell_container` を参照している箇所
-
-**検索方法**:
-```bash
-grep -rn "spell_container\." scripts/ --include="*.gd"
-```
-
-**方針**: Phase 1 では既存参照を維持し、後方互換性を優先
-
-**チェックポイント**:
-- [ ] spell_container 参照箇所が 20+箇所確認
-- [ ] 全参照が動作することを確認
-- [ ] spell_system_manager への移行は Phase 2 に延期
-
----
-
-#### タスク1-5: テスト・検証（2-3時間）
-
-**テスト項目**:
+### パターンA: Task #4 → Task #3 → Task #5 → Task #6（推奨）
 
 ```
-□ コンパイル: GDScript 構文エラーなし
-□ ゲーム起動: MainScene → game_3d 初期化
-  - [SpellSystemManager] 初期化完了
-  - [GameSystemManager] 初期化完了
-□ スペルフェーズ動作
-  - UI表示: スペルカード選択可能
-  - スペル実行: SpellDraw, SpellMagic が動作
-□ スペル実行確認（各種）
-  - SpellDraw: カードドロー正常
-  - SpellMagic: EP操作正常
-  - SpellLand: 土地属性変更正常
-  - SpellCurse: クリーチャー呪い正常
-□ ターン進行
-  - Spell → Dice → Movement → Action → End
-  - フェーズ遷移が正常
-□ 複数ターン動作
-  - 3ターン以上正常動作
-  - CPU vs CPU で 3ターン以上動作
-□ エラーログ確認
-  - push_error() なし（正常時）
-  - null 参照エラーなし
+Week 1: Phase 3-B (BoardSystem3D SSoT 化) - 2-3日
+Week 2: Phase 3-A (SpellPhaseHandler Strategy) - 4-5日
+Week 3: Phase 4 (UIManager 責務分離) - 3-4日
+Week 4: Phase 5 (統合テスト) - 2-3日
+
+合計: 11-15日
 ```
 
-**検証コマンド（デバッグコンソール）**:
-```gdscript
-print("GFM spell_system_manager:", game_flow_manager.spell_system_manager)
-print("GFM spell_container:", game_flow_manager.spell_container)
-print("SpellDraw access:", game_flow_manager.spell_container.spell_draw)
+**メリット**: データ基盤を先に固めてから、上位層を整理
+
+---
+
+### パターンB: Task #3 + Task #4 並行 → Task #5 → Task #6
+
+```
+Week 1-2: Phase 3-A & 3-B 並行（2チーム） - 4-5日
+Week 3: Phase 4 (UIManager 責務分離) - 3-4日
+Week 4: Phase 5 (統合テスト) - 2-3日
+
+合計: 9-12日
 ```
 
----
-
-### 成功指標
-
-- [ ] SpellSystemManager クラス作成完了
-- [ ] GameSystemManager の初期化更新完了
-- [ ] GameFlowManager に spell_system_manager 変数追加完了
-- [ ] すべてのテスト項目をクリア
-- [ ] 既存機能に影響なし（後方互換性維持）
-- [ ] ツリー構造が1段階深くなる
-
-### リスク評価
-
-| リスク | 深刻度 | 発生確率 | 緩和策 |
-|--------|--------|---------|--------|
-| 既存スペル処理が動作しなくなる | 🔴 高 | 低 | 後方互換性を維持 |
-| 初期化順序の問題 | 🟡 中 | 中 | _setup_spell_systems() で段階的に初期化 |
-| 参照の更新漏れ | 🟡 中 | 低 | grep で全箇所検索 |
-| シグナル接続の重複 | 🟢 低 | 低 | is_connected() チェック |
-
-### ロールバック計画
-
-**Phase 1 失敗時**（所要時間: 30分）:
-1. SpellSystemManager.gd ファイル削除
-2. GameSystemManager の _setup_spell_systems() を元に戻す
-3. GameFlowManager の spell_system_manager 変数削除
+**メリット**: 並行実施で工数短縮、リスクはやや高い
 
 ---
 
-### 実装の流れ（推奨順序）
+## 📋 次のアクション
 
-**Day 1（8時間）**:
-1. タスク1-1: SpellSystemManager クラス作成（4-5時間）
-2. タスク1-2: GameSystemManager 更新（2-3時間）
-3. タスク1-3: GameFlowManager に参照追加（1時間）
+**推奨**: パターンA で Phase 3-B から開始
 
-**Day 2（8時間）**:
-4. タスク1-4: 参照設定確認（1-2時間）
-5. タスク1-5: テスト・検証（2-3時間）
-6. ドキュメント更新（2時間）
+1. **Phase 3-B 詳細計画策定**（Opus使用）
+   - タスク分解
+   - リスク分析
+   - テストチェックポイント
 
----
+2. **Phase 3-B 実装開始**（Haiku使用）
+   - Day 1: CreatureManager SSoT 化
+   - Day 2: BaseTile/TileDataManager 更新
+   - Day 3: シグナルチェーン + テスト
 
-### 実装後のドキュメント更新
-
-完了後に以下のドキュメントを更新：
-
-- [ ] `docs/design/TREE_STRUCTURE.md` - SpellSystemManager を追加
-- [ ] `docs/progress/daily_log.md` - Phase 1 完了を記録
-- [ ] `docs/progress/refactoring_next_steps.md` - Phase 2 開始予定を記録
-- [ ] `CLAUDE.md` - Architecture Overview セクションを更新
-
----
-
-### 重要なポイント
-
-**後方互換性について**:
-
-Phase 1 の最重要原則は**後方互換性の維持**です：
-
-```gdscript
-# ===== 既存コードが動作し続ける =====
-game_flow_manager.spell_container.spell_draw  # OK（変更不要）
-game_flow_manager.spell_container.spell_magic  # OK（変更不要）
-
-# ===== Phase 1 後も両方のアクセス方法が利用可能 =====
-# 既存パターン
-game_flow_manager.spell_container.spell_draw
-
-# 新規パターン（Phase 2以降で推奨）
-game_flow_manager.spell_system_manager.spell_container.spell_draw
-```
-
-このため、20+ のファイルの参照を更新する必要がありません。
-
----
-
-### 関連ドキュメント
-
-- `docs/design/TREE_STRUCTURE.md` - 理想的なツリー構造
-- `docs/design/dependency_map.md` - システム依存関係マップ
-- `docs/progress/architecture_migration_plan.md` - 移行計画詳細
-
----
-
-## 📋 アーカイブ: 過去のリファクタリング
-
-<details>
-<summary>Phase 1-A, 1-B の詳細（クリックして展開）</summary>
-
-### Phase 1-A: 逆参照解消（2日）
-- TileDataManager: game_flow_manager 変数削除
-- MovementController, LapSystem: Callable注入パターン
-
-### Phase 1-B: nullチェック強化（3.25時間）
-- game_flow_manager: 5箇所
-- spell_phase_handler: 5箇所
-- battle_system: 2箇所
-- 統一パターン: push_error() + has_method()
-
-</details>
+3. **ドキュメント更新**（Sonnet）
+   - daily_log.md
+   - architecture_migration_plan.md
+   - TREE_STRUCTURE.md
 
 ---
 
 **最終更新**: 2026-02-14
-**次のアクション**: Haiku に Phase 1 の実装を依頼（質問セッション → 回答 → 実装）
+**次のアクション**: Phase 3-B 詳細計画を Opus に作成依頼

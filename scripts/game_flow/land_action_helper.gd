@@ -532,12 +532,7 @@ static func _execute_move_battle(handler):
 		return
 	
 	var current_player_index = handler.board_system.current_player_index
-	
-	# バトル完了シグナルに接続
-	var callable = Callable(handler, "_on_move_battle_completed")
-	if handler.battle_system and not handler.battle_system.invasion_completed.is_connected(callable):
-		handler.battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
-	
+
 	# バトル実行（移動元タイルを渡す）
 	# バウダーイーターの場合は移動元を-1にする（敗北時に戻す必要がないため）
 	var from_tile = -1 if handler.is_boulder_eater_move else handler.move_source_tile

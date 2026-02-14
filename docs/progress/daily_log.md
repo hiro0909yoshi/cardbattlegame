@@ -32,10 +32,10 @@
 - **メソッド追加**:
   ```gdscript
   func get_creature(tile_index: int) -> Dictionary:
-      if tile_nodes.has(tile_index):
-          var tile = tile_nodes[tile_index]
-          return tile.creature_data
-      return {}
+	  if tile_nodes.has(tile_index):
+		  var tile = tile_nodes[tile_index]
+		  return tile.creature_data
+	  return {}
   ```
 - **動作**: タイルから creature_data を取得し、CreatureManager 経由で参照を返す
 
