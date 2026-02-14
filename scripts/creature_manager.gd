@@ -4,6 +4,9 @@ class_name CreatureManager
 ## タイルから独立してクリーチャーデータを一元管理
 ## tile.creature_dataへのアクセスを透過的にリダイレクト
 
+# シグナル: クリーチャーデータが変更された時に emit
+signal creature_changed(tile_index: int, old_data: Dictionary, new_data: Dictionary)
+
 # すべてのクリーチャーデータを一元管理
 var creatures: Dictionary = {}  # {tile_index: creature_data辞書}
 
@@ -39,17 +42,42 @@ func get_data_ref(tile_index: int) -> Dictionary:
 	
 	return data
 
-## データ全体を設定
+## クリーチャーデータを設定（シグナル emit 付き）
+## @param tile_index: タイルのインデックス
+## @param data: 設定するクリーチャーデータ
+func set_creature(tile_index: int, data: Dictionary) -> void:
+	# ステップ1: 変更前のデータを保存
+	var old_data = creatures.get(tile_index, {})
+
+	# ステップ2: データ設定
+	if data.is_empty():
+		# 空の辞書 = 削除
+		creatures.erase(tile_index)
+	else:
+		# 常に duplicate(true) を使用（外部からの変更を防ぐ）
+		creatures[tile_index] = data.duplicate(true)
+
+	# ステップ3: 変更後のデータを取得
+	var new_data = creatures.get(tile_index, {})
+
+	if DebugSettings.creature_manager_debug:
+		print("[CreatureManager] emit 直前: tile=%d, old=%s, new=%s" % [
+			tile_index,
+			"empty" if old_data.is_empty() else "exists",
+			"empty" if new_data.is_empty() else "exists"
+		])
+
+	# ステップ4: シグナルを emit
+	creature_changed.emit(tile_index, old_data, new_data)
+
+	if DebugSettings.creature_manager_debug:
+		print("[CreatureManager] emit 完了: tile=%d" % tile_index)
+
+## 後方互換性ラッパー
 ## @param tile_index: タイルのインデックス
 ## @param data: 設定するクリーチャーデータ
 func set_data(tile_index: int, data: Dictionary):
-	if data.is_empty():
-		# 空の辞書 = 削除
-		_remove_creature_internal(tile_index)
-	else:
-		creatures[tile_index] = data.duplicate(true)
-		if DebugSettings.creature_manager_debug:
-			print("[CreatureManager] データ設定: tile=", tile_index, " name=", data.get("name", "???"))
+	set_creature(tile_index, data)
 
 ## クリーチャーが存在するか確認
 ## @param tile_index: タイルのインデックス

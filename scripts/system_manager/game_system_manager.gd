@@ -339,6 +339,31 @@ func phase_4_setup_system_interconnections() -> void:
 			board_system_3d.terrain_changed.connect(game_flow_manager._on_terrain_changed_from_board)
 			print("[GameSystemManager] BoardSystem3D → GameFlowManager terrain_changed 接続完了")
 
+		# start_passed (Day 3)
+		if not board_system_3d.start_passed.is_connected(game_flow_manager._on_start_passed_from_board):
+			board_system_3d.start_passed.connect(game_flow_manager._on_start_passed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager start_passed 接続完了")
+
+		# warp_executed (Day 3)
+		if not board_system_3d.warp_executed.is_connected(game_flow_manager._on_warp_executed_from_board):
+			board_system_3d.warp_executed.connect(game_flow_manager._on_warp_executed_from_board)
+			print("[GameSystemManager] BoardSystem3D → GameFlowManager warp_executed 接続完了")
+
+	# MovementController3D → BoardSystem3D シグナル接続（Day 3）
+	if board_system_3d and board_system_3d.movement_controller:
+		# start_passed
+		if not board_system_3d.movement_controller.start_passed.is_connected(board_system_3d._on_start_passed):
+			board_system_3d.movement_controller.start_passed.connect(board_system_3d._on_start_passed)
+			print("[GameSystemManager] MovementController3D → BoardSystem3D start_passed 接続完了")
+
+		# warp_executed
+		if not board_system_3d.movement_controller.warp_executed.is_connected(board_system_3d._on_warp_executed):
+			board_system_3d.movement_controller.warp_executed.connect(board_system_3d._on_warp_executed)
+			print("[GameSystemManager] MovementController3D → BoardSystem3D warp_executed 接続完了")
+
+	# === Phase 4: CreatureManager シグナル接続（Day 1） ===
+	_setup_phase_4_creature_signals()
+
 	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
 	
 	# ===== 4-2: GameFlowManager 子システム初期化 =====
@@ -502,6 +527,21 @@ func _on_phase_changed(_new_phase) -> void:
 # ============================================
 # 初期化ヘルパー関数（GameFlowManagerから移動）
 # ============================================
+
+## Phase 4: CreatureManager シグナル接続（Day 1）
+func _setup_phase_4_creature_signals() -> void:
+	print("[GameSystemManager] creature_changed シグナル接続開始")
+
+	if board_system_3d and board_system_3d.creature_manager:
+		var creature_manager = board_system_3d.creature_manager
+
+		if not creature_manager.creature_changed.is_connected(board_system_3d._on_creature_changed):
+			creature_manager.creature_changed.connect(board_system_3d._on_creature_changed)
+			print("[GameSystemManager] creature_changed 接続完了")
+		else:
+			push_warning("[GameSystemManager] creature_changed は既に接続済み")
+	else:
+		push_error("[GameSystemManager] creature_manager または board_system_3d が null")
 
 ## LapSystem初期化
 func _setup_lap_system() -> void:
@@ -791,7 +831,16 @@ func _initialize_phase1a_handlers() -> void:
 		spell_phase_handler,
 		item_phase_handler
 	)
-	
+
+	# Day 3: spell_used と item_used シグナルをGameFlowManagerに接続
+	if spell_phase_handler and not spell_phase_handler.spell_used.is_connected(game_flow_manager._on_spell_used):
+		spell_phase_handler.spell_used.connect(game_flow_manager._on_spell_used)
+		print("[GameSystemManager] SpellPhaseHandler → GameFlowManager spell_used 接続完了")
+
+	if item_phase_handler and not item_phase_handler.item_used.is_connected(game_flow_manager._on_item_used):
+		item_phase_handler.item_used.connect(game_flow_manager._on_item_used)
+		print("[GameSystemManager] ItemPhaseHandler → GameFlowManager item_used 接続完了")
+
 	# UIManagerにハンドラー参照をキャッシュ（チェーンアクセス解消用）
 	if ui_manager:
 		ui_manager.spell_phase_handler_ref = spell_phase_handler

@@ -10,6 +10,8 @@ signal terrain_changed(tile_index: int, old_element: String, new_element: String
 signal level_up_completed(tile_index: int, new_level: int)
 signal movement_completed(player_id: int, final_tile: int)
 signal invasion_completed(success: bool, tile_index: int)
+signal start_passed(player_id: int)
+signal warp_executed(player_id: int, from_tile: int, to_tile: int)
 
 # 定数をpreload
 
@@ -29,6 +31,7 @@ var skill_index: Dictionary = {
 }
 
 # サブシステム
+var creature_manager: CreatureManager = null  # クリーチャー管理システム
 var movement_controller: MovementController3D = null
 var tile_info_display: TileInfoDisplay = null
 var tile_data_manager: TileDataManager = null
@@ -75,10 +78,13 @@ func create_creature_manager():
 	cm.name = "CreatureManager"
 	cm.board_system = self
 	add_child(cm)
-	
+
+	# 参照を保存
+	creature_manager = cm
+
 	# BaseTileの静的参照を設定
 	BaseTile.creature_manager = cm
-	
+
 	print("[BoardSystem3D] CreatureManager統合完了")
 
 func create_subsystems():
@@ -522,22 +528,7 @@ func has_owned_lands(player_id: int) -> bool:
 			return true
 	return false
 
-func _on_movement_completed(_player_id: int, final_tile: int):
-	# シグナル転送（外部からmovement_completedを接続できるようにする）
-	movement_completed.emit(_player_id, final_tile)
-	
-	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
-	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
-		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
-	
-	# 移動完了後、ドミニオコマンドボタンを表示（人間プレイヤーのみ）
-	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
-	if not is_cpu and ui_manager:
-		ui_manager.show_dominio_order_button()
-	elif ui_manager:
-		ui_manager.hide_dominio_order_button()
-	
-	process_tile_landing(final_tile)
+# 削除: 古い _on_movement_completed ハンドラー（Phase 2 で新しいハンドラーに統合）
 
 # === タイルアクション処理（TileActionProcessorに委譲） ===
 
@@ -568,8 +559,22 @@ func _on_movement_completed(player_id: int, final_tile: int):
 	# デバッグログ
 	print("[BoardSystem3D] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
 
-	# リレー emit
+	# リレー emit（Phase 2: GameFlowManager へ通知）
 	movement_completed.emit(player_id, final_tile)
+
+	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
+	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
+		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
+
+	# 移動完了後、ドミニオコマンドボタンを表示（人間プレイヤーのみ）
+	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
+	if not is_cpu and ui_manager:
+		ui_manager.show_dominio_order_button()
+	elif ui_manager:
+		ui_manager.hide_dominio_order_button()
+
+	# タイル着地処理
+	process_tile_landing(final_tile)
 
 func _on_level_up_completed(tile_index: int, new_level: int):
 	# デバッグログ
@@ -584,6 +589,44 @@ func _on_terrain_changed(tile_index: int, old_element: String, new_element: Stri
 
 	# リレー emit
 	terrain_changed.emit(tile_index, old_element, new_element)
+
+func _on_start_passed(player_id: int):
+	# デバッグログ
+	print("[BoardSystem3D] start_passed 受信: player_id=%d" % player_id)
+
+	# リレー emit
+	start_passed.emit(player_id)
+
+func _on_warp_executed(player_id: int, from_tile: int, to_tile: int):
+	# デバッグログ
+	print("[BoardSystem3D] warp_executed 受信: player=%d, from=%d, to=%d" % [player_id, from_tile, to_tile])
+
+	# リレー emit
+	warp_executed.emit(player_id, from_tile, to_tile)
+
+## CreatureManager からのシグナルハンドラー
+## creature_changed: タイルのクリーチャーデータが変更された
+func _on_creature_changed(tile_index: int, old_data: Dictionary, new_data: Dictionary) -> void:
+	# ステップ1: tile_index 妥当性チェック
+	if tile_index < 0 or tile_index >= tiles.size():
+		push_error("[BoardSystem3D] Invalid tile_index: %d" % tile_index)
+		return
+
+	# ステップ2: タイル取得
+	var tile = tiles[tile_index]
+	if not tile:
+		push_error("[BoardSystem3D] Tile not found: %d" % tile_index)
+		return
+
+	# ステップ3: 状態判定
+	if old_data.is_empty() and not new_data.is_empty():
+		print("[BoardSystem3D] creature_changed: 新規配置 tile=%d" % tile_index)
+	elif not old_data.is_empty() and new_data.is_empty():
+		print("[BoardSystem3D] creature_changed: クリーチャー削除 tile=%d" % tile_index)
+	elif not old_data.is_empty() and not new_data.is_empty():
+		print("[BoardSystem3D] creature_changed: クリーチャー更新 tile=%d" % tile_index)
+	else:
+		push_error("[BoardSystem3D] 矛盾したデータ: tile=%d" % tile_index)
 
 # === スキルインデックス管理 ===
 
