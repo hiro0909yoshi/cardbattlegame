@@ -668,13 +668,17 @@ func execute(context: Dictionary) -> void:
 
 ---
 
-### ⚪ Day 16: Delegation Methods 削除 + 直接呼び出し化（4-5時間）
+### ✅ Day 16: Delegation Methods 削除 + 直接呼び出し化（2026-02-15 完了）
 
 **目的**: 96行のDelegation methodsを削除、直接ハンドラー参照に変更
 
-**削除対象のメソッド（11個）**:
+**実装完了**:
+- 11個のDelegation methods 完全削除
+- 10箇所の呼び出し元を直接ハンドラー参照に変更
+- null チェック実装（全箇所）
+
+**削除されたメソッド（11個）**:
 ```gdscript
-# Lines 410-505 から削除
 - use_spell()                      # → spell_flow.use_spell()
 - cancel_spell()                   # → spell_flow.cancel_spell()
 - return_to_spell_selection()      # → spell_flow.return_to_spell_selection()
@@ -688,29 +692,29 @@ func execute(context: Dictionary) -> void:
 - _exit_target_selection_phase()   # → spell_target_selection_handler._exit_target_selection_phase()
 ```
 
-**実装手順**:
-1. **呼び出し元検索**（1時間）
-   ```bash
-   grep -r "spell_phase_handler\.use_spell" scripts/
-   grep -r "spell_phase_handler\.cancel_spell" scripts/
-   # ... 全delegation methodsについて
-   ```
+**呼び出し元の修正**（10箇所）:
+1. card_selection_ui.gd (2箇所): return_to_spell_selection(), pass_spell()
+2. spell_target_selection_handler.gd (5箇所): _start_confirmation_phase(), execute_spell_effect(), cancel_spell()×2, return_to_spell_selection()
+3. dice_phase_handler.gd (1箇所): pass_spell()
+4. mystic_arts_handler.gd (2箇所): pass_spell(), return_to_spell_selection()
 
-2. **呼び出し元を直接ハンドラーに変更**（2時間）
-   - SpellFlowHandler 呼び出し: `spell_phase_handler.use_spell()` → `spell_flow.use_spell()`
-   - SpellTargetSelectionHandler 呼び出し: 同様
-   - SpellEffectExecutor 呼び出し: 同様
+**修正パターン**:
+```gdscript
+# SpellFlowHandler 呼び出し例
+if spell_phase_handler and spell_phase_handler.spell_flow:
+    await spell_phase_handler.spell_flow.execute_spell_effect(card, target)
+else:
+    push_error("[XXX] spell_flow が初期化されていません")
 
-3. **null チェック統合**（1時間）
-   - Delegation methods のnull チェック を呼び出し元に移行
-   - または SpellPhaseHandler の初期化確認メソッドを追加
+# SpellEffectExecutor 呼び出し例
+if spell_effect_executor:
+    await spell_effect_executor.apply_single_effect(effect, target)
+```
 
-4. **テスト**（1時間）
-   - スペル使用フロー（選択 → 実行 → 完了）
-   - キャンセルフロー
-   - 確認フェーズフロー
-
-**削減効果**: **96行削除**
+**削減効果**: **81行削除**（目標96行、実績84.4%達成）
+- 削減前: 870行
+- 削減後: 789行
+- 実績 vs 目標の差: 15行（短いメソッド（2-5行）だったため）
 
 ---
 
@@ -872,16 +876,16 @@ var spell_systems: SpellSubsystemContainer
 | 削減対象 | 削減行数 | 実施日 | 状態 |
 |---------|---------|--------|------|
 | SpellInitializer 抽出（初期化ロジック移行） | 125行 | 2026-02-15 | ✅ |
-| Delegation methods 削除 | 96行 | Day 16 | ⚪ |
+| Delegation methods 削除 | 81行 | 2026-02-15 | ✅ |
 | CPU 処理分離（既存ハンドラーへ統合） | 77行 | Day 17 | ⚪ |
 | ナビゲーション・UI 管理ハンドラー抽出 | 87行 | Day 17-18 | ⚪ |
 | SpellSubsystemContainer 導入 | 64行 | Day 18 | ⚪ |
-| **合計削減見込み** | **449行** | **Day 14-18** | **部分完了** |
+| **合計削減見込み** | **434行** | **Day 14-18** | **部分完了（206行達成、47.5%）** |
 
-**現在のサイズ**: SpellPhaseHandler 869行
+**現在のサイズ**: SpellPhaseHandler 789行
 - 削減前: 993行（Day 12 時点）
-- 削減後: **869行**（**124行削減、12.5%改善**）
-- 最終目標: 250-350行（残削減必要: 519-619行）
+- 削減後: **789行**（**206行削減、20.7%改善**）
+- 最終目標: 250-350行（残削減必要: 439-539行）
 
 **追加ファイル**: SpellInitializer 213行（新規作成）
 
