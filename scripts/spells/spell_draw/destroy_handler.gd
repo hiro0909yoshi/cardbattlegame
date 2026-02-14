@@ -71,18 +71,23 @@ func apply_effect(effect: Dictionary, player_id: int, context: Dictionary = {}) 
 		
 		"destroy_selected_card":
 			var target_player_id = context.get("target_player_id", -1)
+			print("[DestroyHandler] destroy_selected_card: target_player_id=%d, card_selection_handler=%s, context=%s" % [target_player_id, str(card_selection_handler), str(context)])
 			if target_player_id >= 0 and card_selection_handler:
 				var filter_mode = effect.get("filter_mode", "destroy_any")
 				var magic_bonus = effect.get("magic_bonus", 0)
+				print("[DestroyHandler] start_enemy_card_selection 呼び出し: target_player_id=%d, filter_mode=%s" % [target_player_id, filter_mode])
 				card_selection_handler.set_current_player(player_id)
 				card_selection_handler.start_enemy_card_selection(target_player_id, filter_mode, func(card_index: int):
+					print("[DestroyHandler] コールバック実行: card_index=%d" % card_index)
 					if card_index >= 0 and magic_bonus > 0:
 						if player_system_ref and target_player_id < player_system_ref.players.size():
 							player_system_ref.players[target_player_id].magic_power += magic_bonus
 							print("[スクイーズ] プレイヤー%d: G%d を獲得" % [target_player_id + 1, magic_bonus])
 				)
 				result["async"] = true
-		
+			else:
+				push_error("[DestroyHandler] destroy_selected_card: 条件不成立 - target_player_id=%d, card_selection_handler=%s" % [target_player_id, str(card_selection_handler)])
+
 		"destroy_and_draw":
 			var target_player_id = context.get("target_player_id", -1)
 			if target_player_id >= 0 and card_selection_handler:
