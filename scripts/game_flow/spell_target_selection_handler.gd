@@ -460,10 +460,7 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) 
 			_update_target_selection()
 			# 確認フェーズへ（即座に確定しない）
 			# ユーザーがグローバルボタンの「決定」で確定する
-			print("[STSH] ターゲット選択: タイル%d - 決定ボタンで確定してください" % tile_index)
 			return
-
-	print("[STSH] タップしたタイルは有効なターゲットではない: %d" % tile_index)
 
 ## アルカナアーツターゲット選択用のタップ選択を開始
 func _start_mystic_tap_target_selection(targets: Array) -> void:
@@ -494,25 +491,17 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 		"SpellMysticArts"
 	)
 
-	print("[STSH] アルカナアーツタップターゲット選択開始: %d件" % valid_tile_indices.size())
-
 ## 対象選択時のナビゲーション設定
 func _setup_target_selection_navigation() -> void:
-	print("[STSH-Flow] _setup_target_selection_navigation() 開始")
-	print("[STSH-Flow] _ui_manager=%s" % ("valid" if _ui_manager else "NULL"))
-
 	if not _ui_manager:
 		return
 
-	print("[STSH-Flow] enable_navigation() 呼び出し開始")
 	_ui_manager.enable_navigation(
 		func(): _on_target_confirm(),   # 決定
 		func(): _on_target_cancel(),    # 戻る
 		func(): _on_target_prev(),      # 上
 		func(): _on_target_next()       # 下
 	)
-	print("[STSH-Flow] enable_navigation() 完了")
-	print("[STSH-Flow] グローバルボタンハンドラ登録完了")
 
 ## ナビゲーションをクリア
 func _clear_spell_navigation() -> void:

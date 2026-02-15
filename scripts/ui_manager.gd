@@ -429,7 +429,6 @@ func _on_creature_info_panel_cancelled():
 	emit_signal("pass_button_pressed")
 
 func on_cancel_dominio_order_button_pressed():
-	print("[UIManager] キャンセルボタンがクリックされました！")
 	# GameFlowManagerのdominio_command_handlerに通知
 	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
 		game_flow_manager_ref.dominio_command_handler.cancel()
@@ -439,12 +438,6 @@ func on_cancel_dominio_order_button_pressed():
 ## ナビゲーションボタンを設定（推奨）
 ## 有効なCallableを渡したボタンのみ表示される
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
-	print("[UIManager] enable_navigation() 呼び出し")
-	print("[UIManager] on_confirm Callable設定: %s" % ("valid" if confirm_cb != Callable() else "NULL"))
-	print("[UIManager] on_cancel Callable設定: %s" % ("valid" if back_cb != Callable() else "NULL"))
-	print("[UIManager] on_prev Callable設定: %s" % ("valid" if up_cb != Callable() else "NULL"))
-	print("[UIManager] on_next Callable設定: %s" % ("valid" if down_cb != Callable() else "NULL"))
-
 	# 入力待ち状態になったのでロック解除
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
@@ -458,28 +451,10 @@ func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Ca
 	_compat_up_cb = up_cb
 	_compat_down_cb = down_cb
 	if global_action_buttons:
-		print("[UIManager-Nav-DEBUG] enable_navigation() 実行前: ハンドラ状態確認")
-		print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
-		print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
-		print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
-		print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
 		global_action_buttons.setup(confirm_cb, back_cb, up_cb, down_cb)
-		print("[UIManager-Nav-DEBUG] enable_navigation() 実行後: ハンドラ設定確認")
-		print("  on_confirm: %s" % ("✓" if confirm_cb != Callable() else "✗"))
-		print("  on_cancel: %s" % ("✓" if back_cb != Callable() else "✗"))
-		print("  on_prev: %s" % ("✓" if up_cb != Callable() else "✗"))
-		print("  on_next: %s" % ("✓" if down_cb != Callable() else "✗"))
-	else:
-		print("[UIManager] ERROR: global_action_buttons is null!")
 
 ## ナビゲーションボタンを全てクリア
 func disable_navigation():
-	print("[UIManager-Nav-DEBUG] disable_navigation() 呼び出し前:")
-	print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
-	print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
-	print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
-	print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
-
 	# 後方互換変数もクリア
 	_compat_confirm_cb = Callable()
 	_compat_back_cb = Callable()
@@ -487,12 +462,6 @@ func disable_navigation():
 	_compat_down_cb = Callable()
 	if global_action_buttons:
 		global_action_buttons.clear_all()
-
-	print("[UIManager-Nav-DEBUG] disable_navigation() 呼び出し後:")
-	print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
-	print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
-	print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
-	print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
 
 # === 後方互換API（他コンポーネント用） ===
 # 注: 新規実装ではenable_navigation()を使用してください
@@ -1008,7 +977,6 @@ func show_land_selection_mode(_owned_lands: Array):
 
 # アクション選択UIを表示
 func show_action_selection_ui(tile_index: int):
-	print("[UIManager] アクション選択UI表示: tile ", tile_index)
 	# Phase 1-A: 新しいUIパネルを使用
 	show_action_menu(tile_index)
 
@@ -1100,8 +1068,6 @@ func connect_camera_signals():
 # === Day 3 追加: クリーチャー更新ハンドラー ===
 
 func on_creature_updated(tile_index: int, creature_data: Dictionary):
-	print("[UIManager] creature_updated 受信: tile=%d" % tile_index)
-
 	# null チェック
 	if not board_system_ref:
 		push_error("[UIManager] board_system_ref が null")
