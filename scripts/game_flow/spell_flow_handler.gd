@@ -401,6 +401,7 @@ func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dicti
 
 	print("[SpellFlowHandler] Strategy.validate() 成功、execute() 実行開始")
 	# 効果実行
+	@warning_ignore("redundant_await")  # Strategy.execute() は内部で await を含むため必須
 	await strategy.execute(context)
 	print("[SpellFlowHandler] Strategy.execute() 完了")
 	return true
@@ -550,7 +551,11 @@ func complete_spell_phase():
 	print("[SpellFlowHandler] complete_spell_phase() 開始, current_state=%s" % _spell_state.current_state)
 
 	if _spell_state.current_state == SpellStateHandler.State.INACTIVE:
-		print("[SpellFlowHandler] already INACTIVE, returning")
+		print("[SpellFlowHandler] フェーズ既に完了（state=INACTIVE）")
+		# 既に INACTIVE でもシグナルは emit する（GameFlowManager が await している）
+		if _spell_phase_handler:
+			print("[SpellFlowHandler] INACTIVE でも signal_phase_completed を emit")
+			_spell_phase_handler.spell_phase_completed.emit()
 		return
 
 	# 外部スペルモードの場合（マジックタイル等から呼ばれた場合）

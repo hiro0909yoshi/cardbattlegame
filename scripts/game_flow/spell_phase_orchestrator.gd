@@ -33,6 +33,10 @@ func start_spell_phase(player_id: int) -> void:
 	spell_state.reset_turn_state()
 	spell_state.set_current_player_id(player_id)
 
+	# スペルフェーズの初期状態に遷移（reset_turn_state() は INACTIVE に設定するため）
+	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+	print("[SpellPhaseOrchestrator] フェーズ状態: %s に遷移" % SpellStateHandler.State.WAITING_FOR_INPUT)
+
 	# CPU / 人間プレイヤーで分岐
 	var is_cpu = is_cpu_player(player_id)
 	print("[SpellPhaseOrchestrator] CPU判定結果 player_id=%d, is_cpu=%s" % [player_id, is_cpu])
@@ -97,8 +101,8 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	# SpellPhaseHandler の既存メソッドを直接呼び出し
 	await spell_phase_handler._delegate_to_cpu_spell_handler(player_id)
 
-	# CPU スペル処理完了後、フェーズを完了
-	complete_spell_phase()
+	# SpellEffectExecutor が既に complete_spell_phase() を呼んでいるため、ここでは呼ばない
+	print("[SpellPhaseOrchestrator] CPU スペル処理完了")
 
 func _wait_for_human_spell_decision() -> void:
 	"""人間プレイヤーのスペル決定を待機"""
