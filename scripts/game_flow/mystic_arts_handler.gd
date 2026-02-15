@@ -183,6 +183,9 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	if not _spell_phase_handler or not _ui_manager:
 		return
 
+	# ★ NEW: 前のナビゲーション状態をクリア
+	_ui_manager.disable_navigation()
+
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.SELECTING_TARGET)
 
 	# SpellTargetSelectionHandlerに状態を同期

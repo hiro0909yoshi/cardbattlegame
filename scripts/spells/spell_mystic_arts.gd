@@ -434,6 +434,11 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	
 	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":
+		# ★ NEW: 前のナビゲーション設定をクリア
+		var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+		if ui_manager:
+			ui_manager.disable_navigation()
+
 		var target_data = {
 			"type": target_type,
 			"tile_index": selected_creature.get("tile_index", -1),
