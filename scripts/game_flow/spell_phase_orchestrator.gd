@@ -36,7 +36,6 @@ func start_spell_phase(player_id: int) -> void:
 
 	# CPU / 人間プレイヤーで分岐
 	var is_cpu = is_cpu_player(player_id)
-	print("[SpellPhaseOrchestrator] CPU判定結果 player_id=%d, is_cpu=%s" % [player_id, is_cpu])
 
 	if is_cpu:
 		# CPU スペル処理に委譲
@@ -72,19 +71,15 @@ func complete_spell_phase() -> void:
 func is_cpu_player(player_id: int) -> bool:
 	"""プレイヤーが CPU かどうかを判定"""
 	if not spell_phase_handler:
-		print("[Orch-CPU] spell_phase_handler is null")
 		return false
 
 	# game_flow_manager から player_is_cpu 設定を取得
 	if spell_phase_handler.game_flow_manager:
 		var cpu_settings = spell_phase_handler.game_flow_manager.player_is_cpu
-		print("[Orch-CPU] cpu_settings: %s, player_id: %d" % [cpu_settings, player_id])
 
 		var is_cpu = player_id < cpu_settings.size() and cpu_settings[player_id]
-		print("[Orch-CPU] Player %d is_cpu = %s" % [player_id, is_cpu])
 		return is_cpu
 	else:
-		print("[Orch-CPU] game_flow_manager is null")
 		return false 
 
 func _delegate_to_cpu_spell_handler(player_id: int) -> void:

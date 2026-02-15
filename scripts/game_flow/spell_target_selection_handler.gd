@@ -73,30 +73,9 @@ func setup(
 ## 対象選択UIを表示
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
-	print("[STSH-DEBUG] show_target_selection_ui() 開始: target_type=%s" % target_type)
-
-	# disable_navigation() 呼び出し直前
-	print("[STSH-DEBUG] disable_navigation() 呼び出し直前:")
-	if _ui_manager:
-		print("  ui_manager: ✓")
-		print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
-		print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
-		print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
-		print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
-	else:
-		print("  ui_manager: ✗")
-
 	# ★ NEW: 前のナビゲーション設定をクリア
 	if _ui_manager:
-		print("[STSH-DEBUG] disable_navigation() 呼び出し実行")
 		_ui_manager.disable_navigation()
-		print("[STSH-DEBUG] disable_navigation() 呼び出し直後:")
-		print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
-		print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
-		print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
-		print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
-	else:
-		print("[STSH-DEBUG] ⚠️ _ui_manager が NULL")
 
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
@@ -104,11 +83,9 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 
 	# 有効な対象を取得（ヘルパー使用）
 	var targets: Array = TargetSelectionHelper.get_valid_targets(_spell_phase_handler, target_type, target_info)
-	print("[STSH-Flow] get_valid_targets() 完了: %d個の対象を取得" % targets.size())
 
 	if targets.is_empty():
 		# 対象がいない場合はメッセージ表示
-		print("[STSH-Flow] 対象なし - ユーザーメッセージ表示")
 		if _ui_manager and _ui_manager.phase_display:
 			_ui_manager.show_toast("対象がいません")
 		await get_tree().create_timer(1.0).timeout
@@ -116,32 +93,22 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 
 	# CPUの場合は自動で対象選択
 	if _is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
-		print("[STSH-Flow] CPU プレイヤー - 自動対象選択開始")
 		return _cpu_select_target(targets, target_type, target_info)
 
 	# プレイヤーの場合：ドミニオコマンドと同じ方式で選択開始
-	print("[STSH-Flow] プレイヤー対象選択開始")
 	_available_targets = targets
 	_current_target_index = 0
 	_is_selecting = true
-	print("[STSH-Flow] _available_targets設定: %d個" % _available_targets.size())
-	print("[STSH-Flow] _current_target_index = 0")
-	print("[STSH-Flow] _is_selecting = true")
 
 	# TapTargetManagerでタップ選択を開始
 	if _ui_manager and _ui_manager.tap_target_manager:
-		print("[STSH-Flow] TapTargetManager 設定開始")
 		_start_spell_tap_target_selection(targets, target_type)
-		print("[STSH-Flow] TapTargetManager 設定完了")
 
 	# グローバルナビゲーション設定（対象選択用）
-	print("[STSH-Flow] _setup_target_selection_navigation() 呼び出し開始")
 	_setup_target_selection_navigation()
-	print("[STSH-Flow] _setup_target_selection_navigation() 完了")
 
 	# 最初の対象を表示
 	_update_target_selection()
-	print("[STSH-Flow] show_target_selection_ui() 完了 - 入力待機開始")
 	return true
 
 ## CPU用対象選択（自動）
@@ -241,36 +208,28 @@ func _input(event: InputEvent) -> void:
 	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 
-	# キー入力時にログ出力
-	if event is InputEventKey:
-		print("[STSH-Flow] _input() 呼び出し: keycode=%d, pressed=%s" % [event.keycode, event.pressed])
-
 	if event is InputEventKey and event.pressed:
 
 		# ↑キーまたは←キー: 前の対象
 		if event.keycode == KEY_UP or event.keycode == KEY_LEFT:
-			print("[STSH-Flow] UP キー検出 → _on_target_prev() 呼び出し")
 			if TargetSelectionHelper.move_target_previous(_spell_phase_handler):
 				_update_target_selection()
 			get_viewport().set_input_as_handled()
 
 		# ↓キーまたは→キー: 次の対象
 		elif event.keycode == KEY_DOWN or event.keycode == KEY_RIGHT:
-			print("[STSH-Flow] DOWN キー検出 → _on_target_next() 呼び出し")
 			if TargetSelectionHelper.move_target_next(_spell_phase_handler):
 				_update_target_selection()
 			get_viewport().set_input_as_handled()
 
 		# Enterキー: 確定
 		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-			print("[STSH-Flow] ENTER キー検出 → _confirm_target_selection() 呼び出し")
 			_confirm_target_selection()
 			get_viewport().set_input_as_handled()
 
 		# 数字キー1-9, 0: 直接選択して即確定
 		elif TargetSelectionHelper.is_number_key(event.keycode):
 			var index: int = TargetSelectionHelper.get_number_from_key(event.keycode)
-			print("[STSH-Flow] 数字キー%d 検出 → インデックス%dで選択確定" % [index, index])
 			if TargetSelectionHelper.select_target_by_index(_spell_phase_handler, index):
 				_update_target_selection()
 				# 数字キーの場合は即座に確定
@@ -279,7 +238,6 @@ func _input(event: InputEvent) -> void:
 
 		# Cキーまたはエスケープ: キャンセル
 		elif event.keycode == KEY_C or event.keycode == KEY_ESCAPE:
-			print("[STSH-Flow] C/ESC キー検出 → _cancel_target_selection() 呼び出し")
 			_cancel_target_selection()
 			get_viewport().set_input_as_handled()
 
@@ -299,11 +257,9 @@ func _confirm_target_selection() -> void:
 	if target_type == "player":
 		var player_id: int = selected_target.get("player_id", -1)
 		if not _check_tutorial_player_target_allowed(player_id):
-			print("[STSH] チュートリアル制限: プレイヤー%d は選択不可" % player_id)
 			return
 	else:
 		if not _check_tutorial_target_allowed(selected_target.get("tile_index", -1)):
-			print("[STSH] チュートリアル制限: タイル%d は選択不可" % selected_target.get("tile_index", -1))
 			return
 
 	# TapTargetManagerの選択を終了
@@ -412,7 +368,6 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 
 	# target_type: "player" の場合はタップターゲット選択をスキップ
 	if target_type == "player":
-		print("[STSH] タップターゲット選択スキップ (type: player - 手札選択UI使用)")
 		return
 
 	var ttm = _ui_manager.tap_target_manager
@@ -446,8 +401,6 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 		"SpellPhaseHandler"
 	)
 
-	print("[STSH] タップターゲット選択開始: %d件 (type: %s)" % [valid_tile_indices.size(), target_type])
-
 ## スペルターゲット選択を終了
 func _end_spell_tap_target_selection() -> void:
 	if not _ui_manager or not _ui_manager.tap_target_manager:
@@ -460,7 +413,6 @@ func _end_spell_tap_target_selection() -> void:
 		ttm.target_selected.disconnect(_on_spell_tap_target_selected)
 
 	ttm.end_selection()
-	print("[STSH] タップターゲット選択終了")
 
 ## チュートリアルのターゲット制限をチェック
 func _check_tutorial_target_allowed(tile_index: int) -> bool:
@@ -496,8 +448,6 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) 
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
 		return
 
-	print("[STSH] タップでタイル選択: %d" % tile_index)
-
 	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 
@@ -510,10 +460,7 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) 
 			_update_target_selection()
 			# 確認フェーズへ（即座に確定しない）
 			# ユーザーがグローバルボタンの「決定」で確定する
-			print("[STSH] ターゲット選択: タイル%d - 決定ボタンで確定してください" % tile_index)
 			return
-
-	print("[STSH] タップしたタイルは有効なターゲットではない: %d" % tile_index)
 
 ## アルカナアーツターゲット選択用のタップ選択を開始
 func _start_mystic_tap_target_selection(targets: Array) -> void:
@@ -544,25 +491,17 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 		"SpellMysticArts"
 	)
 
-	print("[STSH] アルカナアーツタップターゲット選択開始: %d件" % valid_tile_indices.size())
-
 ## 対象選択時のナビゲーション設定
 func _setup_target_selection_navigation() -> void:
-	print("[STSH-Flow] _setup_target_selection_navigation() 開始")
-	print("[STSH-Flow] _ui_manager=%s" % ("valid" if _ui_manager else "NULL"))
-
 	if not _ui_manager:
 		return
 
-	print("[STSH-Flow] enable_navigation() 呼び出し開始")
 	_ui_manager.enable_navigation(
 		func(): _on_target_confirm(),   # 決定
 		func(): _on_target_cancel(),    # 戻る
 		func(): _on_target_prev(),      # 上
 		func(): _on_target_next()       # 下
 	)
-	print("[STSH-Flow] enable_navigation() 完了")
-	print("[STSH-Flow] グローバルボタンハンドラ登録完了")
 
 ## ナビゲーションをクリア
 func _clear_spell_navigation() -> void:
