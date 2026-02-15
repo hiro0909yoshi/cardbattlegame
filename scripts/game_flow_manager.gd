@@ -835,7 +835,7 @@ func _check_turn_limit() -> bool:
 
 ## CPUプレイヤーかどうかを判定（統一メソッド）
 func is_cpu_player(player_id: int) -> bool:
-	if DebugSettings.debug_manual_control_all:
+	if DebugSettings.manual_control_all:
 		return false  # デバッグモードでは全員手動
 
 	return player_id < player_is_cpu.size() and player_is_cpu[player_id]
