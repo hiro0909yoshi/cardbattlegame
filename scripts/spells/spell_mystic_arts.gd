@@ -473,9 +473,13 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 
 ## ターゲット確定時に呼ばれる（SpellPhaseHandlerから）
 func on_target_confirmed(target_data: Dictionary) -> void:
+	print("[SpellMysticArts-Flow] on_target_confirmed() 呼び出し: target_data=%s" % target_data)
+
 	if selected_mystic_art.is_empty() or selected_mystic_creature.is_empty():
+		print("[SpellMysticArts-Flow] 選択状態が無効: art.empty=%s, creature.empty=%s" % [selected_mystic_art.is_empty(), selected_mystic_creature.is_empty()])
 		return
-	
+
+	print("[SpellMysticArts-Flow] execute_mystic_art() 呼び出し開始")
 	await execute_mystic_art(selected_mystic_creature, selected_mystic_art, target_data)
 
 
@@ -483,6 +487,7 @@ func on_target_confirmed(target_data: Dictionary) -> void:
 func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary) -> void:
 	var player_id = current_mystic_player_id
 	print("[SpellMysticArts] execute_mystic_art: player_id=%d, mystic_art=%s, spell_phase_handler_ref=%s" % [player_id, mystic_art.get("name", "?"), "valid" if spell_phase_handler_ref else "NULL"])
+	print("[SpellMysticArts-Flow] execute_mystic_art() 実行開始: target_data=%s" % target_data)
 
 	# 発動判定
 	var context = {

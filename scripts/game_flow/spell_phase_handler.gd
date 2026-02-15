@@ -292,7 +292,13 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 
 ## 入力処理（内部インターフェース）
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		print("[SPH-Input] _input() 呼び出し: keycode=%d, pressed=%s" % [event.keycode, event.pressed])
+		print("[SPH-Input] spell_target_selection_handler=%s" % ("valid" if spell_target_selection_handler else "NULL"))
+
 	if spell_target_selection_handler:
+		if event is InputEventKey:
+			print("[SPH-Input] spell_target_selection_handler._input() に委譲")
 		spell_target_selection_handler._input(event)
 
 ## カメラを使用者に戻す（内部）

@@ -439,13 +439,19 @@ func on_cancel_dominio_order_button_pressed():
 ## ナビゲーションボタンを設定（推奨）
 ## 有効なCallableを渡したボタンのみ表示される
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
+	print("[UIManager] enable_navigation() 呼び出し")
+	print("[UIManager] on_confirm Callable設定: %s" % ("valid" if confirm_cb != Callable() else "NULL"))
+	print("[UIManager] on_cancel Callable設定: %s" % ("valid" if back_cb != Callable() else "NULL"))
+	print("[UIManager] on_prev Callable設定: %s" % ("valid" if up_cb != Callable() else "NULL"))
+	print("[UIManager] on_next Callable設定: %s" % ("valid" if down_cb != Callable() else "NULL"))
+
 	# 入力待ち状態になったのでロック解除
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
-	
+
 	# 新しいナビゲーション設定時は前の保存状態を無効化
 	_nav_state_saved = false
-	
+
 	# 後方互換変数も同期（register_xxx系との競合防止）
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
