@@ -479,12 +479,13 @@ func on_target_confirmed(target_data: Dictionary) -> void:
 ## アルカナアーツ実行
 func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_data: Dictionary) -> void:
 	var player_id = current_mystic_player_id
-	
+	print("[SpellMysticArts] execute_mystic_art: player_id=%d, mystic_art=%s, spell_phase_handler_ref=%s" % [player_id, mystic_art.get("name", "?"), "valid" if spell_phase_handler_ref else "NULL"])
+
 	# 発動判定
 	var context = {
 		"player_id": player_id,
 		"player_magic": player_system_ref.get_magic(player_id) if player_system_ref else 0,
-		"spell_used_this_turn": spell_phase_handler_ref.spell_used_this_turn if spell_phase_handler_ref else false,
+		"spell_used_this_turn": spell_phase_handler_ref.spell_state.is_spell_used_this_turn() if (spell_phase_handler_ref and spell_phase_handler_ref.spell_state) else false,
 		"tile_index": creature.get("tile_index", -1)
 	}
 	
@@ -510,14 +511,16 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 		var cost = mystic_art.get("cost", 0)
 		if player_system_ref:
 			player_system_ref.add_magic(player_id, -cost)
-		if spell_phase_handler_ref:
-			spell_phase_handler_ref.spell_used_this_turn = true
-		
+
+		# spell_state経由で安全に設定
+		if spell_phase_handler_ref and spell_phase_handler_ref.spell_state:
+			spell_phase_handler_ref.spell_state.set_spell_used_this_turn(true)
+
 		# キャスターをダウン状態に設定
 		_set_caster_down_state(creature.get("tile_index", -1), board_system_ref)
-		
+
 		ui_message_requested.emit("『%s』を発動しました！" % mystic_art.get("name", "Unknown"))
-		
+
 		# 排他制御
 		mystic_art_used.emit()
 	else:
@@ -556,7 +559,7 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	var context = {
 		"player_id": player_id,
 		"player_magic": player_system_ref.get_magic(player_id) if player_system_ref else 0,
-		"spell_used_this_turn": spell_phase_handler_ref.spell_used_this_turn if spell_phase_handler_ref else false,
+		"spell_used_this_turn": spell_phase_handler_ref.spell_state.is_spell_used_this_turn() if (spell_phase_handler_ref and spell_phase_handler_ref.spell_state) else false,
 		"tile_index": creature.get("tile_index", -1)
 	}
 	
@@ -599,14 +602,16 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	var cost = mystic_art.get("cost", 0)
 	if player_system_ref:
 		player_system_ref.add_magic(player_id, -cost)
-	if spell_phase_handler_ref:
-		spell_phase_handler_ref.spell_used_this_turn = true
-	
+
+	# spell_state経由で安全に設定
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_state:
+		spell_phase_handler_ref.spell_state.set_spell_used_this_turn(true)
+
 	# キャスターをダウン状態に設定
 	_set_caster_down_state(creature.get("tile_index", -1), board_system_ref)
-	
+
 	ui_message_requested.emit("『%s』を発動しました！" % mystic_art.get("name", "Unknown"))
-	
+
 	# 排他制御
 	mystic_art_used.emit()
 	
@@ -898,32 +903,43 @@ func can_cast_mystic_art(mystic_art: Dictionary, context: Dictionary) -> bool:
 	# EP確認
 	var cost = mystic_art.get("cost", 0)
 	var player_magic = context.get("player_magic", 0)
-	
+	print("[SpellMysticArts] EP check: cost=%d, player_magic=%d, pass=%s" % [cost, player_magic, player_magic >= cost])
+
 	if player_magic < cost:
+		print("[SpellMysticArts] 発動失敗: EP不足 (cost=%d, player_magic=%d)" % [cost, player_magic])
 		return false
-	
+
 	# スペル未使用確認
+	print("[SpellMysticArts] spell_used check: spell_used_this_turn=%s" % context.get("spell_used_this_turn", false))
 	if context.get("spell_used_this_turn", false):
+		print("[SpellMysticArts] 発動失敗: このターン既にスペル使用済み")
 		return false
-	
+
 	# クリーチャーが行動可能か確認（ダウン状態チェック）
 	var caster_tile_index = context.get("tile_index", -1)
 	if caster_tile_index != -1:
 		var caster_tile = board_system_ref.tile_nodes.get(caster_tile_index)
+		print("[SpellMysticArts] down_state check: tile_index=%d, is_down=%s" % [caster_tile_index, caster_tile.is_down() if caster_tile else "N/A"])
 		if caster_tile and caster_tile.is_down():
+			print("[SpellMysticArts] 発動失敗: クリーチャーがダウン状態 (tile_index=%d)" % caster_tile_index)
 			return false  # ダウン状態のクリーチャーはアルカナアーツ使用不可
-	
+
 	# ターゲット有無確認
-	if not _has_valid_target(mystic_art, context):
+	var has_target = _has_valid_target(mystic_art, context)
+	print("[SpellMysticArts] target check: has_valid_target=%s" % has_target)
+	if not has_target:
+		print("[SpellMysticArts] 発動失敗: 有効なターゲットがない (mystic_art=%s)" % mystic_art.get("name", "?"))
 		return false
-	
+
 	return true
 
 
 ## 有効なターゲットが存在するか確認
 func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
+	print("[SpellMysticArts] _has_valid_target: mystic_art=%s" % mystic_art.get("name", "?"))
 	var target_type = mystic_art.get("target_type", "")
 	var target_info = {}
+	print("[SpellMysticArts]   target_type=%s (from effect_parsed)" % target_type)
 	
 	# spell_idがある場合はスペルデータからターゲット情報を取得
 	var spell_id = mystic_art.get("spell_id", -1)
@@ -966,6 +982,7 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 
 ## アルカナアーツ効果を適用（メインエンジン）
 func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
+	print("[SpellMysticArts] apply_mystic_art_effect: mystic_art=%s, target_data=%s" % [mystic_art.get("name", "?"), target_data])
 	if mystic_art.is_empty():
 		return false
 	
@@ -990,6 +1007,7 @@ func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, co
 
 ## スペル効果を適用（spell_id参照方式）
 func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dictionary, effect_override: Dictionary = {}) -> bool:
+	print("[SpellMysticArts] _apply_spell_effect: spell_phase_handler_ref=%s" % ("valid" if spell_phase_handler_ref else "NULL"))
 	# CardLoaderからスペルデータを取得
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if spell_data.is_empty():
@@ -1014,8 +1032,8 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("apply_single_effect"):
 			# アルカナアーツ発動者のタイルインデックスを追加（self_destroy等で必要）
 			var extended_target_data = target_data.duplicate()
-			if _context.has("tile_index"):
-				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
+			if context.has("tile_index"):
+				extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
 			await spell_phase_handler_ref.apply_single_effect(applied_effect, extended_target_data)
 		else:
 			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
