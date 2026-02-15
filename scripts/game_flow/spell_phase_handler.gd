@@ -90,8 +90,6 @@ var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
 var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
 var spell_navigation_controller: SpellNavigationController = null  # ナビゲーション管理（Day 18）
 
-## スペル決定待機用フラグ（Lambda重複接続防止用）
-var _waiting_for_spell_decision = false
 
 func _ready():
 	pass
@@ -632,29 +630,15 @@ func _get_cpu_battle_policy():
 	return null
 
 
-## 待機中のspell_used シグナル処理（メンバー関数）
-func _on_spell_used_while_waiting(_spell_card: Dictionary) -> void:
-	"""待機中のspell_used シグナル処理"""
-	_waiting_for_spell_decision = false
-
-## 待機中のspell_passed シグナル処理（メンバー関数）
-func _on_spell_passed_while_waiting() -> void:
-	"""待機中のspell_passed シグナル処理"""
-	_waiting_for_spell_decision = false
-
-## 人間プレイヤーのスペル決定を待機
-func _wait_for_human_spell_decision() -> void:
+## 人間プレイヤー向けスペルフェーズUI初期化
+func _initialize_human_player_ui() -> void:
 	"""
-	人間プレイヤーがスペルを使用または通過するまで待機
+	人間プレイヤー向けスペルフェーズのUI初期化
 
-	メンバー関数を使用してシグナル接続を管理し、
-	lambda による重複接続問題を解決
+	待機ロジック削除に伴い、UI初期化ロジックを分離
+	シグナル駆動で自動的にフェーズが進行する
 	"""
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-
-	# 初期UI表示
+	# UI初期化
 	if spell_navigation_controller:
 		spell_navigation_controller._initialize_spell_phase_ui()
 		spell_navigation_controller._show_spell_phase_buttons()
@@ -662,7 +646,7 @@ func _wait_for_human_spell_decision() -> void:
 	else:
 		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
-	# CardSelectionUI を表示（is_active = true に設定）
+	# CardSelectionUI を表示
 	if spell_ui_controller and spell_state:
 		var hand_data = card_system.get_all_cards_for_player(spell_state.current_player_id) if card_system else []
 		var magic_power = 0
@@ -671,28 +655,5 @@ func _wait_for_human_spell_decision() -> void:
 			if player:
 				magic_power = player.magic_power
 		spell_ui_controller.show_spell_selection_ui(hand_data, magic_power)
-
-	# 待機フラグを設定
-	_waiting_for_spell_decision = true
-
-	# 古い接続があれば切断（安全のため）
-	if spell_used.is_connected(_on_spell_used_while_waiting):
-		spell_used.disconnect(_on_spell_used_while_waiting)
-
-	if spell_passed.is_connected(_on_spell_passed_while_waiting):
-		spell_passed.disconnect(_on_spell_passed_while_waiting)
-
-	# シグナルを接続（メンバー関数なので is_connected() が正しく機能）
-	spell_used.connect(_on_spell_used_while_waiting)
-	spell_passed.connect(_on_spell_passed_while_waiting)
-
-	# spell_used または spell_passed が発行されるまで待機
-	while _waiting_for_spell_decision:
-		await get_tree().process_frame
-
-	# シグナルを切断（確実に）
-	if spell_used.is_connected(_on_spell_used_while_waiting):
-		spell_used.disconnect(_on_spell_used_while_waiting)
-
-	if spell_passed.is_connected(_on_spell_passed_while_waiting):
-		spell_passed.disconnect(_on_spell_passed_while_waiting)
+	else:
+		push_error("[SPH] spell_ui_controller または spell_state が初期化されていません")

@@ -41,8 +41,9 @@ func start_spell_phase(player_id: int) -> void:
 		# CPU スペル処理に委譲
 		await _delegate_to_cpu_spell_handler(player_id)
 	else:
-		# 人間プレイヤー向け処理
-		await spell_phase_handler._wait_for_human_spell_decision()
+		# 人間プレイヤー向け: UI初期化のみ
+		# シグナル駆動で自動的にフェーズが進行（spell_flow.use_spell() or pass_spell()）
+		spell_phase_handler._initialize_human_player_ui()
 
 ## ========================================
 ## フェーズ完了処理
@@ -92,11 +93,3 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	await spell_phase_handler._delegate_to_cpu_spell_handler(player_id)
 
 	# SpellEffectExecutor が既に complete_spell_phase() を呼んでいるため、ここでは呼ばない
-
-func _wait_for_human_spell_decision() -> void:
-	"""人間プレイヤーのスペル決定を待機"""
-	if not spell_phase_handler:
-		return
-
-	# SpellPhaseHandler の既存メソッドを呼び出し
-	await spell_phase_handler._wait_for_human_spell_decision()
