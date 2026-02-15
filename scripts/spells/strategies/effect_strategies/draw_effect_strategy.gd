@@ -24,16 +24,6 @@ func validate(context: Dictionary) -> bool:
 	var spell_draw = context.get("spell_draw")
 	if not spell_draw:
 		_log_error("spell_draw が初期化されていません（context を確認）")
-		# ★ NEW: コンテキスト内容をダンプ
-		print("[DrawEffectStrategy] === context contents ===")
-		for key in context.keys():
-			var val = context[key]
-			if val == null:
-				print("  - %s: null ⚠️" % key)
-			elif val is Object and not (val is Dictionary):
-				print("  - %s: %s (object)" % [key, val.get_class()])
-			else:
-				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})

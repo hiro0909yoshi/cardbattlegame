@@ -32,16 +32,6 @@ func validate(context: Dictionary) -> bool:
 	var spell_dice = context.get("spell_dice")
 	if not spell_dice:
 		_log_error("spell_dice が初期化されていません（context を確認）")
-		# ★ NEW: コンテキスト内容をダンプ
-		print("[DiceEffectStrategy] === context contents ===")
-		for key in context.keys():
-			var val = context[key]
-			if val == null:
-				print("  - %s: null ⚠️" % key)
-			elif val is Object and not (val is Dictionary):
-				print("  - %s: %s (object)" % [key, val.get_class()])
-			else:
-				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})

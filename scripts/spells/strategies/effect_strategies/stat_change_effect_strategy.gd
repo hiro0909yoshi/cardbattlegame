@@ -19,16 +19,6 @@ func validate(context: Dictionary) -> bool:
 	var spell_curse_stat = context.get("spell_curse_stat")
 	if not spell_curse_stat:
 		_log_error("spell_curse_stat が初期化されていません（context を確認）")
-		# ★ NEW: コンテキスト内容をダンプ
-		print("[StatChangeEffectStrategy] === context contents ===")
-		for key in context.keys():
-			var val = context[key]
-			if val == null:
-				print("  - %s: null ⚠️" % key)
-			elif val is Object and not (val is Dictionary):
-				print("  - %s: %s (object)" % [key, val.get_class()])
-			else:
-				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})

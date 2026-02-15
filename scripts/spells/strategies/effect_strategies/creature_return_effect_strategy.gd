@@ -24,17 +24,6 @@ func validate(context: Dictionary) -> bool:
 	if not spell_creature_return:
 		_log_error("spell_creature_return が初期化されていません（context を確認）")
 		return false
-		# ★ NEW: コンテキスト内容をダンプ
-		print("[CreatureReturnEffectStrategy] === context contents ===")
-		for key in context.keys():
-			var val = context[key]
-			if val == null:
-				print("  - %s: null ⚠️" % key)
-			elif val is Object and not (val is Dictionary):
-				print("  - %s: %s (object)" % [key, val.get_class()])
-			else:
-				print("  - %s: %s" % [key, typeof(val)])
-		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")

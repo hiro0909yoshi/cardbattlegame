@@ -15,16 +15,6 @@ func validate(context: Dictionary) -> bool:
 	var spell_phase_handler = context.get("spell_phase_handler")
 	if not spell_phase_handler or not (spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_purify):
 		_log_error("spell_purify が初期化されていません（context を確認）")
-		# ★ NEW: コンテキスト内容をダンプ
-		print("[PurifyEffectStrategy] === context contents ===")
-		for key in context.keys():
-			var val = context[key]
-			if val == null:
-				print("  - %s: null ⚠️" % key)
-			elif val is Object and not (val is Dictionary):
-				print("  - %s: %s (object)" % [key, val.get_class()])
-			else:
-				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
