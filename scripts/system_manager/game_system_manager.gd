@@ -19,6 +19,12 @@ const UIManagerClass = preload("res://scripts/ui_manager.gd")
 const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
 const TollPaymentHandlerClass = preload("res://scripts/game_flow/toll_payment_handler.gd")
 const SpellEffectExecutorClass = preload("res://scripts/game_flow/spell_effect_executor.gd")
+const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
+const CPUSpellAIScript = preload("res://scripts/cpu_ai/cpu_spell_ai.gd")
+const CPUMysticArtsAIScript = preload("res://scripts/cpu_ai/cpu_mystic_arts_ai.gd")
+const CPUBattleAIScript = preload("res://scripts/cpu_ai/cpu_battle_ai.gd")
+const CPUDefenseAIScript = preload("res://scripts/cpu_ai/cpu_defense_ai.gd")
+const CPUMovementEvaluatorScript = preload("res://scripts/cpu_ai/cpu_movement_evaluator.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -34,6 +40,15 @@ var special_tile_system
 var ui_manager
 var debug_controller
 var game_flow_manager
+
+# === CPU AI コンテキスト管理（P0統一） ===
+var cpu_ai_context: CPUAIContextScript = null
+var cpu_spell_ai: CPUSpellAI = null
+var cpu_mystic_arts_ai: CPUMysticArtsAI = null
+var cpu_hand_utils: CPUHandUtils = null
+var cpu_battle_ai: CPUBattleAI = null
+var cpu_defense_ai: CPUDefenseAI = null
+var cpu_movement_evaluator: CPUMovementEvaluator = null
 
 # === 設定 ===
 var player_count: int = 2
@@ -1152,29 +1167,18 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		print("[GameSystemManager] SpellStateHandler と SpellFlowHandler を初期化完了")
 
 
-	# Step 4: CPU AI を初期化
-	spell_phase_handler._initialize_cpu_context(game_flow_manager)
+	# Step 4: CPU AI を初期化（GameSystemManagerから参照を取得）
+	if not cpu_ai_context:
+		_initialize_cpu_ai_systems()
 
-	# CPU スペル/アルカナアーツ AI を初期化
-	if not spell_phase_handler.cpu_spell_ai:
-		spell_phase_handler.cpu_spell_ai = CPUSpellAI.new()
-		spell_phase_handler.cpu_spell_ai.initialize(spell_phase_handler._cpu_context)
-		spell_phase_handler.cpu_spell_ai.set_hand_utils(spell_phase_handler.cpu_hand_utils)
-		spell_phase_handler.cpu_spell_ai.set_battle_ai(spell_phase_handler._cpu_battle_ai)
-		if spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
-			spell_phase_handler.cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
-		if spell_phase_handler.cpu_movement_evaluator:
-			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(spell_phase_handler.cpu_movement_evaluator)
-		if p_game_flow_manager and p_game_flow_manager.has_method("get"):
-			spell_phase_handler.cpu_spell_ai.set_game_stats(p_game_flow_manager.game_stats)
-
-	if not spell_phase_handler.cpu_mystic_arts_ai:
-		spell_phase_handler.cpu_mystic_arts_ai = CPUMysticArtsAI.new()
-		spell_phase_handler.cpu_mystic_arts_ai.initialize(spell_phase_handler._cpu_context)
-		spell_phase_handler.cpu_mystic_arts_ai.set_hand_utils(spell_phase_handler.cpu_hand_utils)
-		spell_phase_handler.cpu_mystic_arts_ai.set_battle_ai(spell_phase_handler._cpu_battle_ai)
-		if p_game_flow_manager and p_game_flow_manager.has_method("get"):
-			spell_phase_handler.cpu_mystic_arts_ai.set_game_stats(p_game_flow_manager.game_stats)
+	# SpellPhaseHandler に CPU AI 参照を設定
+	spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
+	spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
+	spell_phase_handler.set_cpu_hand_utils(cpu_hand_utils)
+	if cpu_spell_ai and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
+		cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
+	if cpu_movement_evaluator and cpu_spell_ai:
+		cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
 	# MysticArtsHandler の初期化（spell_mystic_arts を設定）
 	if spell_phase_handler.mystic_arts_handler:
@@ -1266,3 +1270,71 @@ func set_result_screen(result_screen) -> void:
 	if game_flow_manager:
 		game_flow_manager.set_result_screen(result_screen)
 		print("[GameSystemManager] リザルト画面設定完了")
+
+## CPU AI 全体初期化（GameSystemManagerで一元管理）
+func _initialize_cpu_ai_systems() -> void:
+	print("[GameSystemManager] CPU AI 初期化開始")
+
+	if not cpu_ai_context:
+		# === Step 1: CPU AI共有コンテキスト作成 ===
+		cpu_ai_context = CPUAIContextScript.new()
+		cpu_ai_context.setup(board_system_3d, player_system, card_system)
+		cpu_ai_context.setup_optional(
+			BaseTile.creature_manager if BaseTile.creature_manager else null,
+			game_flow_manager.lap_system if game_flow_manager else null,
+			game_flow_manager,
+			battle_system,
+			player_buff_system
+		)
+		print("[GameSystemManager] CPU AI コンテキスト作成完了")
+
+	# === Step 2: CPU AI インスタンス作成（SpellPhaseHandler用） ===
+	if not cpu_battle_ai:
+		cpu_battle_ai = CPUBattleAIScript.new()
+		cpu_battle_ai.setup_with_context(cpu_ai_context)
+
+	if not cpu_spell_ai:
+		cpu_spell_ai = CPUSpellAIScript.new()
+		cpu_spell_ai.initialize(cpu_ai_context)
+		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
+		if game_flow_manager and game_flow_manager.has_method("get"):
+			cpu_spell_ai.set_game_stats(game_flow_manager.game_stats)
+
+	if not cpu_mystic_arts_ai:
+		cpu_mystic_arts_ai = CPUMysticArtsAIScript.new()
+		cpu_mystic_arts_ai.initialize(cpu_ai_context)
+		cpu_mystic_arts_ai.set_battle_ai(cpu_battle_ai)
+		if game_flow_manager and game_flow_manager.has_method("get"):
+			cpu_mystic_arts_ai.set_game_stats(game_flow_manager.game_stats)
+
+	# === Step 3: CPU AI インスタンス作成（ItemPhaseHandler用） ===
+	if not cpu_defense_ai:
+		cpu_defense_ai = CPUDefenseAIScript.new()
+		cpu_defense_ai.setup_with_context(cpu_ai_context)
+		var battle_policy = _get_cpu_battle_policy()
+		if battle_policy:
+			cpu_defense_ai.set_battle_policy(battle_policy)
+
+	# === Step 4: ユーティリティ取得 ===
+	cpu_hand_utils = cpu_ai_context.get_hand_utils()
+
+	print("[GameSystemManager] CPU AI 初期化完了")
+
+## CPU バトルポリシー取得
+func _get_cpu_battle_policy():
+	if not game_flow_manager or not game_flow_manager.board_system_3d:
+		const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
+		return CPUBattlePolicyScript.create_balanced_policy()
+
+	var board_system = game_flow_manager.board_system_3d
+	var cpu_ai_handler = board_system.cpu_ai_handler if board_system else null
+	if not cpu_ai_handler:
+		const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
+		return CPUBattlePolicyScript.create_balanced_policy()
+
+	var policy = cpu_ai_handler.battle_policy
+	if not policy:
+		const CPUBattlePolicyScript = preload("res://scripts/cpu_ai/cpu_battle_policy.gd")
+		policy = CPUBattlePolicyScript.create_balanced_policy()
+		cpu_ai_handler.battle_policy = policy
+	return policy

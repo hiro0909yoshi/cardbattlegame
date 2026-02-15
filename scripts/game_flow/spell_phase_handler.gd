@@ -2,11 +2,7 @@
 extends Node
 class_name SpellPhaseHandler
 
-const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
-
-# 共有コンテキスト（CPU AI用）
-var _cpu_context: CPUAIContextScript = null
 
 ## シグナル
 @warning_ignore("unused_signal")  # GameFlowManager で await されている（game_flow_manager.gd:276）
@@ -75,10 +71,10 @@ var battle_status_overlay = null  # BattleStatusOverlay: バトルステータ�
 var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
 var spell_orchestrator = null  # SpellPhaseOrchestrator: フェーズ管理オーケストレーター
 
-var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
-var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI
-var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ
-var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（ホーリーワード判断用）
+var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI（GameSystemManagerから設定）
+var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI（GameSystemManagerから設定）
+var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ（GameSystemManagerから設定）
+var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（GameSystemManagerから設定）
 var cpu_spell_phase_handler = null  # CPUスペルフェーズ処理
 var spell_target_selection_handler = null  # SpellTargetSelectionHandler - 対象選択ハンドラー（Phase 6-1、循環参照回避のため型アノテーションなし）
 var spell_confirmation_handler = null  # SpellConfirmationHandler - スペル発動確認ハンドラー（循環参照回避のため型アノテーションなし）
@@ -481,35 +477,21 @@ func _on_hand_updated_for_buttons():
 # CPU AI コンテキスト初期化
 # =============================================================================
 
-# CPUBattleAI（ローカル）
-var _cpu_battle_ai: CPUBattleAI = null
+## CPU AI用の共有コンテキストを初期化（GameSystemManagerで管理されているため削除）
+## 代わりに setter メソッドを使用：set_cpu_spell_ai(), set_cpu_mystic_arts_ai(), set_cpu_hand_utils()
 
-## CPU AI用の共有コンテキストを初期化
-func _initialize_cpu_context(flow_mgr) -> void:
-	if _cpu_context:
-		return  # 既に初期化済み
-	
-	var player_buff_system = flow_mgr.player_buff_system if flow_mgr else null
-	
-	# コンテキストを作成
-	_cpu_context = CPUAIContextScript.new()
-	_cpu_context.setup(board_system, player_system, card_system)
-	_cpu_context.setup_optional(
-		creature_manager,
-		flow_mgr.lap_system if flow_mgr else null,
-		flow_mgr,
-		null,  # battle_system
-		player_buff_system
-	)
-	
-	# CPUBattleAIを初期化（共通バトル評価用）
-	if not _cpu_battle_ai:
-		_cpu_battle_ai = CPUBattleAI.new()
-		_cpu_battle_ai.setup_with_context(_cpu_context)
-	
-	# cpu_hand_utilsはcontextから取得
-	cpu_hand_utils = _cpu_context.get_hand_utils()
+## GameSystemManager から CPU AI 参照を設定（P0統一）
+func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
+	cpu_spell_ai = ai
 
+func set_cpu_mystic_arts_ai(ai: CPUMysticArtsAI) -> void:
+	cpu_mystic_arts_ai = ai
+
+func set_cpu_hand_utils(utils: CPUHandUtils) -> void:
+	cpu_hand_utils = utils
+
+func set_cpu_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
+	cpu_movement_evaluator = evaluator
 
 # =============================================================================
 # TapTargetManager連携（スペルターゲット選択）
