@@ -73,17 +73,30 @@ func setup(
 ## 対象選択UIを表示
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
-	print("[STSH-Flow] show_target_selection_ui() 開始: target_type=%s" % target_type)
+	print("[STSH-DEBUG] show_target_selection_ui() 開始: target_type=%s" % target_type)
 
-	# ★ 検証ログ: disable_navigation() 呼び出しを確認
-	print("[STSH-Flow] show_target_selection_ui: disable_navigation() 呼び出し準備")
+	# disable_navigation() 呼び出し直前
+	print("[STSH-DEBUG] disable_navigation() 呼び出し直前:")
+	if _ui_manager:
+		print("  ui_manager: ✓")
+		print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
+		print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
+		print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
+		print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
+	else:
+		print("  ui_manager: ✗")
 
 	# ★ NEW: 前のナビゲーション設定をクリア
 	if _ui_manager:
-		print("[STSH-Flow] disable_navigation() 呼び出し実行")
+		print("[STSH-DEBUG] disable_navigation() 呼び出し実行")
 		_ui_manager.disable_navigation()
+		print("[STSH-DEBUG] disable_navigation() 呼び出し直後:")
+		print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
+		print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
+		print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
+		print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
 	else:
-		print("[STSH-Flow] ⚠️ _ui_manager が NULL")
+		print("[STSH-DEBUG] ⚠️ _ui_manager が NULL")
 
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")

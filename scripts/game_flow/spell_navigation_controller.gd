@@ -78,15 +78,26 @@ func _setup_spell_selection_navigation() -> void:
 
 ## ナビゲーション設定（ターゲット選択）
 func _setup_target_selection_navigation() -> void:
+	print("[SpellNav-DEBUG] _setup_target_selection_navigation() 開始")
+
 	if _spell_target_selection_handler:
 		_spell_target_selection_handler._setup_target_selection_navigation()
 	elif _ui_manager:
+		print("[SpellNav-DEBUG] enable_navigation() 呼び出し直前:")
+		print("  ui_manager: %s" % ("✓" if _ui_manager else "✗"))
 		_ui_manager.enable_navigation(
 			func(): _on_target_confirm(),
 			func(): _on_target_cancel(),
 			func(): _on_target_prev(),
 			func(): _on_target_next()
 		)
+		print("[SpellNav-DEBUG] enable_navigation() 呼び出し後:")
+		print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
+		print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
+		print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
+		print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
+
+	print("[SpellNav-DEBUG] _setup_target_selection_navigation() 完了")
 
 ## ナビゲーション設定解除
 func _clear_spell_navigation() -> void:

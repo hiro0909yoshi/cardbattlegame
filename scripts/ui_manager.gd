@@ -458,12 +458,28 @@ func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Ca
 	_compat_up_cb = up_cb
 	_compat_down_cb = down_cb
 	if global_action_buttons:
+		print("[UIManager-Nav-DEBUG] enable_navigation() 実行前: ハンドラ状態確認")
+		print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
+		print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
+		print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
+		print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
 		global_action_buttons.setup(confirm_cb, back_cb, up_cb, down_cb)
+		print("[UIManager-Nav-DEBUG] enable_navigation() 実行後: ハンドラ設定確認")
+		print("  on_confirm: %s" % ("✓" if confirm_cb != Callable() else "✗"))
+		print("  on_cancel: %s" % ("✓" if back_cb != Callable() else "✗"))
+		print("  on_prev: %s" % ("✓" if up_cb != Callable() else "✗"))
+		print("  on_next: %s" % ("✓" if down_cb != Callable() else "✗"))
 	else:
 		print("[UIManager] ERROR: global_action_buttons is null!")
 
 ## ナビゲーションボタンを全てクリア
 func disable_navigation():
+	print("[UIManager-Nav-DEBUG] disable_navigation() 呼び出し前:")
+	print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
+	print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
+	print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
+	print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
+
 	# 後方互換変数もクリア
 	_compat_confirm_cb = Callable()
 	_compat_back_cb = Callable()
@@ -471,6 +487,12 @@ func disable_navigation():
 	_compat_down_cb = Callable()
 	if global_action_buttons:
 		global_action_buttons.clear_all()
+
+	print("[UIManager-Nav-DEBUG] disable_navigation() 呼び出し後:")
+	print("  on_confirm: %s" % ("✓" if _compat_confirm_cb.is_valid() else "✗"))
+	print("  on_cancel: %s" % ("✓" if _compat_back_cb.is_valid() else "✗"))
+	print("  on_prev: %s" % ("✓" if _compat_up_cb.is_valid() else "✗"))
+	print("  on_next: %s" % ("✓" if _compat_down_cb.is_valid() else "✗"))
 
 # === 後方互換API（他コンポーネント用） ===
 # 注: 新規実装ではenable_navigation()を使用してください

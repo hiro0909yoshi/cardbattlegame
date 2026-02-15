@@ -434,16 +434,25 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	
 	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":
-		# ★ 検証ログ: disable_navigation() 呼び出しを確認
-		print("[SpellMysticArts-Flow] _select_target: target_type=%s, target_filter=%s, disable_navigation() 呼び出し準備" % [target_type, target_filter])
+		print("[SpellMysticArts-DEBUG] _select_target: セルフターゲット/ターゲット不要")
+		print("  target_type=%s, target_filter=%s" % [target_type, target_filter])
 
 		# ★ NEW: 前のナビゲーション設定をクリア
 		var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 		if ui_manager:
-			print("[SpellMysticArts-Flow] disable_navigation() 呼び出し実行")
+			print("[SpellMysticArts-DEBUG] disable_navigation() 呼び出し直前:")
+			print("  on_confirm: %s" % ("✓" if ui_manager._compat_confirm_cb.is_valid() else "✗"))
+			print("  on_cancel: %s" % ("✓" if ui_manager._compat_back_cb.is_valid() else "✗"))
+			print("  on_prev: %s" % ("✓" if ui_manager._compat_up_cb.is_valid() else "✗"))
+			print("  on_next: %s" % ("✓" if ui_manager._compat_down_cb.is_valid() else "✗"))
 			ui_manager.disable_navigation()
+			print("[SpellMysticArts-DEBUG] disable_navigation() 呼び出し直後:")
+			print("  on_confirm: %s" % ("✓" if ui_manager._compat_confirm_cb.is_valid() else "✗"))
+			print("  on_cancel: %s" % ("✓" if ui_manager._compat_back_cb.is_valid() else "✗"))
+			print("  on_prev: %s" % ("✓" if ui_manager._compat_up_cb.is_valid() else "✗"))
+			print("  on_next: %s" % ("✓" if ui_manager._compat_down_cb.is_valid() else "✗"))
 		else:
-			print("[SpellMysticArts-Flow] ⚠️ ui_manager が NULL - disable_navigation() 呼び出せません")
+			print("[SpellMysticArts-DEBUG] ⚠️ ui_manager が NULL - disable_navigation() 呼び出せません")
 
 		var target_data = {
 			"type": target_type,
@@ -484,14 +493,17 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 
 ## ターゲット確定時に呼ばれる（SpellPhaseHandlerから）
 func on_target_confirmed(target_data: Dictionary) -> void:
-	print("[SpellMysticArts-Flow] on_target_confirmed() 呼び出し: target_data=%s" % target_data)
+	print("[SpellMysticArts-DEBUG] on_target_confirmed() 呼び出し")
+	print("  target_data: %s" % target_data)
 
 	if selected_mystic_art.is_empty() or selected_mystic_creature.is_empty():
 		print("[SpellMysticArts-Flow] 選択状態が無効: art.empty=%s, creature.empty=%s" % [selected_mystic_art.is_empty(), selected_mystic_creature.is_empty()])
 		return
 
-	print("[SpellMysticArts-Flow] execute_mystic_art() 呼び出し開始")
+	print("[SpellMysticArts-DEBUG] execute_mystic_art() 呼び出し前")
+	print("  spell_phase_handler: %s" % ("✓" if spell_phase_handler else "✗"))
 	await execute_mystic_art(selected_mystic_creature, selected_mystic_art, target_data)
+	print("[SpellMysticArts-DEBUG] execute_mystic_art() 呼び出し後")
 
 
 ## アルカナアーツ実行
