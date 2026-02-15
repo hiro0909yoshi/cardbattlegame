@@ -181,26 +181,8 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	if not _spell_phase_handler or not _ui_manager:
 		return
 
-	print("[MAH-DEBUG] _on_mystic_target_selection_requested() 呼び出し")
-	print("  targets: %d件" % targets.size())
-
-	# disable_navigation() 呼び出し直前
-	print("[MAH-DEBUG] disable_navigation() 呼び出し直前:")
-	print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
-	print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
-	print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
-	print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
-
 	# ★ NEW: 前のナビゲーション状態をクリア
 	_ui_manager.disable_navigation()
-
-	print("[MAH-DEBUG] disable_navigation() 呼び出し直後:")
-	print("  on_confirm: %s" % ("✓" if _ui_manager._compat_confirm_cb.is_valid() else "✗"))
-	print("  on_cancel: %s" % ("✓" if _ui_manager._compat_back_cb.is_valid() else "✗"))
-	print("  on_prev: %s" % ("✓" if _ui_manager._compat_up_cb.is_valid() else "✗"))
-	print("  on_next: %s" % ("✓" if _ui_manager._compat_down_cb.is_valid() else "✗"))
-
-	print("[MAH-DEBUG] _on_mystic_target_selection_requested() 完了")
 
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.SELECTING_TARGET)
 

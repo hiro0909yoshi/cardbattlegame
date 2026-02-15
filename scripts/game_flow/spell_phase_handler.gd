@@ -128,14 +128,12 @@ func set_spell_effect_executor_container(container: SpellSystemContainer) -> voi
 		push_error("[SPH] set_spell_effect_executor_container: spell_effect_executor が null です")
 		return
 
-	print("[SPH] spell_effect_executor.set_spell_container() 呼び出し")
 	spell_effect_executor.set_spell_container(container)
 
 	# ★ NEW: 設定確認
 	if spell_effect_executor.spell_container:
-		print("[SPH] spell_effect_executor.spell_container 設定完了")
 		if spell_effect_executor.spell_container.is_valid():
-			print("[SPH] spell_effect_executor.spell_container は有効です（8個のコアシステム設定済み）")
+			pass
 		else:
 			push_warning("[SPH] spell_effect_executor.spell_container は不完全です")
 			spell_effect_executor.spell_container.debug_print_status()
@@ -152,7 +150,6 @@ func set_spell_systems_direct(cost_modifier, draw, magic, curse_stat) -> void:
 	spell_draw = draw
 	spell_magic = magic              # 新規追加
 	spell_curse_stat = curse_stat    # 新規追加
-	print("[SpellPhaseHandler] spell_cost_modifier, spell_draw, spell_magic, spell_curse_stat 直接参照を設定")
 
 	# card_selection_handlerが既に初期化されている場合、spell_drawを設定
 	if spell_draw and card_selection_handler:
@@ -162,7 +159,6 @@ func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	if spell_systems and spell_systems.spell_creature_move:
 		spell_systems.spell_creature_move.set_battle_status_overlay(overlay)
-	print("[SpellPhaseHandler] battle_status_overlay 直接参照を設定")
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
@@ -198,7 +194,6 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	# スペル使用確率判定（キャラクターポリシー）
 	var battle_policy = _get_cpu_battle_policy()
 	if battle_policy and not battle_policy.should_use_spell():
-		print("[CPU SpellPhase] スペル使用スキップ（確率判定: %.0f%%）" % (battle_policy.get_spell_use_rate() * 100))
 		pass_spell(false)
 		return
 
@@ -229,8 +224,6 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 
 ## CPUがスペルを実行（decision から実行）
 func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> void:
-	print("[SPH] _execute_cpu_spell_from_decision 開始: player_id=%d" % player_id)
-
 	if not spell_state:
 		push_error("[SPH] spell_state が初期化されていません")
 		pass_spell(false)
@@ -264,13 +257,11 @@ func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> v
 	var target_type = parsed.get("target_type", "")
 
 	if target_type == "all_creatures":
-		print("[SPH] 全クリーチャー対象スペル実行: %s" % spell_card.get("name", "?"))
 		# 全クリーチャー対象スペル（スウォーム等）は専用ルートで実行
 		# 通知・カード捨て札・フェーズ完了は_execute_spell_on_all_creatures内で処理
 		var target_info = parsed.get("target_info", {})
 		await _execute_spell_on_all_creatures(spell_card, target_info)
 	else:
-		print("[SPH] 通常スペル実行: %s (target_type=%s)" % [spell_card.get("name", "?"), target_type])
 		# 発動通知表示
 		if spell_cast_notification_ui and player_system:
 			var caster_name = "CPU"
@@ -279,8 +270,6 @@ func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> v
 			await show_spell_cast_notification(caster_name, target, spell_card, false)
 
 		await execute_spell_effect(spell_card, target_data)
-
-	print("[SPH] _execute_cpu_spell_from_decision 完了: %s" % spell_card.get("name", "?"))
 
 ## 対象選択UIを表示（内部インターフェース）
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
@@ -292,13 +281,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 
 ## 入力処理（内部インターフェース）
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey:
-		print("[SPH-Input] _input() 呼び出し: keycode=%d, pressed=%s" % [event.keycode, event.pressed])
-		print("[SPH-Input] spell_target_selection_handler=%s" % ("valid" if spell_target_selection_handler else "NULL"))
-
 	if spell_target_selection_handler:
-		if event is InputEventKey:
-			print("[SPH-Input] spell_target_selection_handler._input() に委譲")
 		spell_target_selection_handler._input(event)
 
 ## カメラを使用者に戻す（内部）
@@ -321,7 +304,6 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 		return await target_selection_helper.select_tile_from_list(tile_indices, message)
 
 	# フォールバック：TargetSelectionHelperがない場合は最初のタイルを返す
-	print("[SpellPhaseHandler] WARNING: TargetSelectionHelperが見つかりません、最初のタイルを選択")
 	return tile_indices[0]
 
 
@@ -653,17 +635,12 @@ func _get_cpu_battle_policy():
 ## 待機中のspell_used シグナル処理（メンバー関数）
 func _on_spell_used_while_waiting(_spell_card: Dictionary) -> void:
 	"""待機中のspell_used シグナル処理"""
-	print("[SPH-SIGNAL] 🔴 _on_spell_used_while_waiting() 呼ばれました！")
-	print("[SPH-SIGNAL] spell_card: ", _spell_card.get("name", "unknown"))
 	_waiting_for_spell_decision = false
-	print("[SPH-SIGNAL] _waiting_for_spell_decision = false に設定")
 
 ## 待機中のspell_passed シグナル処理（メンバー関数）
 func _on_spell_passed_while_waiting() -> void:
 	"""待機中のspell_passed シグナル処理"""
-	print("[SPH-SIGNAL] 🔴 _on_spell_passed_while_waiting() 呼ばれました！")
 	_waiting_for_spell_decision = false
-	print("[SPH-SIGNAL] _waiting_for_spell_decision = false に設定")
 
 ## 人間プレイヤーのスペル決定を待機
 func _wait_for_human_spell_decision() -> void:
@@ -676,8 +653,6 @@ func _wait_for_human_spell_decision() -> void:
 	if not spell_flow:
 		push_error("[SPH] spell_flow が初期化されていません")
 		return
-
-	print("[SPH] 人間プレイヤー用スペル決定待機を開始")
 
 	# 初期UI表示
 	if spell_navigation_controller:
@@ -708,24 +683,16 @@ func _wait_for_human_spell_decision() -> void:
 		spell_passed.disconnect(_on_spell_passed_while_waiting)
 
 	# シグナルを接続（メンバー関数なので is_connected() が正しく機能）
-	print("[SPH-SIGNAL] spell_used.connect() 実行")
 	spell_used.connect(_on_spell_used_while_waiting)
-	print("[SPH-SIGNAL] spell_passed.connect() 実行")
 	spell_passed.connect(_on_spell_passed_while_waiting)
 
 	# spell_used または spell_passed が発行されるまで待機
-	print("[SPH-SIGNAL] while ループ開始: _waiting_for_spell_decision = ", _waiting_for_spell_decision)
 	while _waiting_for_spell_decision:
 		await get_tree().process_frame
 
 	# シグナルを切断（確実に）
-	print("[SPH-SIGNAL] シグナル切断開始")
 	if spell_used.is_connected(_on_spell_used_while_waiting):
 		spell_used.disconnect(_on_spell_used_while_waiting)
-		print("[SPH-SIGNAL] spell_used 切断完了")
 
 	if spell_passed.is_connected(_on_spell_passed_while_waiting):
 		spell_passed.disconnect(_on_spell_passed_while_waiting)
-		print("[SPH-SIGNAL] spell_passed 切断完了")
-
-	print("[SPH] 人間プレイヤー用スペル決定待機を終了 ✅")

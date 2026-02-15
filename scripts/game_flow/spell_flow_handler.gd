@@ -204,9 +204,8 @@ func use_spell(spell_card: Dictionary):
 			# 合成条件判定
 			is_synthesized = _spell_synthesis.check_condition(spell_card, sacrifice_card)
 			if is_synthesized:
-
-			# カードを一時保存（スペル実行確定時に消費）
-			_spell_state.set_pending_sacrifice_card(sacrifice_card)
+				# カードを一時保存（スペル実行確定時に消費）
+				_spell_state.set_pending_sacrifice_card(sacrifice_card)
 
 	# 合成成立時はeffect_parsedを書き換え
 	var parsed = spell_card.get("effect_parsed", {})
@@ -346,24 +345,18 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 
 	# Strategy パターンで実行を試行（Day 1-2 試験的実装）
 	var strategy_executed = await _try_execute_spell_with_strategy(spell_card, target_data)
-	print("[SpellFlowHandler] strategy_executed = %s" % strategy_executed)
 
 	if strategy_executed:
 		# Strategy により実行完了 → 背景処理完了を待機してからフェーズ完了
-		print("[SpellFlowHandler] Strategy 成功、0.5秒待機後に complete_spell_phase() 呼び出し")
 		await _get_tree_ref().create_timer(0.5).timeout
 		complete_spell_phase()
-		print("[SpellFlowHandler] complete_spell_phase() 呼び出し完了")
 		return
 
 	# フォールバック: 従来のロジックで実行
-	print("[SpellFlowHandler] Strategy 失敗、フォールバック開始")
 	if _spell_effect_executor:
 		# SpellEffectExecutor は内部で complete_spell_phase() を呼ぶ
 		# → フォールバック完了時には既に complete_spell_phase() が呼ばれている
 		await _spell_effect_executor.execute_spell_effect(spell_card, target_data)
-	else:
-		print("[SpellFlowHandler] ERROR: _spell_effect_executor が未設定")
 
 	# NOTE: 戻ったときには complete_spell_phase() は既に呼び出し済み
 	# ここで重複呼び出しを防ぐため、何もしない
@@ -376,7 +369,6 @@ func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dicti
 
 	# Strategy が未実装の場合は false を返す（フォールバック用）
 	if not strategy:
-		print("[SpellFlowHandler] Strategy が実装されていません (spell_id: %d)" % spell_id)
 		return false
 
 
@@ -384,12 +376,9 @@ func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dicti
 	var context = _build_strategy_context(spell_card, target_data)
 
 	# バリデーション
-	print("[SpellFlowHandler] Strategy.validate() 実行開始")
 	if not strategy.validate(context):
-		print("[SpellFlowHandler] Strategy validate() failed for spell_id: %d" % spell_id)
 		return false
 
-	print("[SpellFlowHandler] Strategy.validate() 成功、execute() 実行開始")
 	# 効果実行
 	@warning_ignore("redundant_await")  # Strategy.execute() は内部で await を含むため必須
 	await strategy.execute(context)
@@ -452,7 +441,6 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 
 	# CPUの場合は自動で確定
 	if _is_cpu_player(_spell_state.current_player_id):
-		print("[SpellFlowHandler] CPU: 確認フェーズ自動確定")
 		await _get_tree_ref().create_timer(0.3).timeout  # 少し待つ
 		_confirm_spell_effect()
 		return
@@ -537,19 +525,14 @@ func pass_spell(auto_roll: bool = true):
 
 ## スペルフェーズ完了
 func complete_spell_phase():
-	print("[SpellFlowHandler] complete_spell_phase() 開始, current_state=%s" % _spell_state.current_state)
-
 	if _spell_state.current_state == SpellStateHandler.State.INACTIVE:
-		print("[SpellFlowHandler] フェーズ既に完了（state=INACTIVE）")
 		# 既に INACTIVE でもシグナルは emit する（GameFlowManager が await している）
 		if _spell_phase_handler:
-			print("[SpellFlowHandler] INACTIVE でも signal_phase_completed を emit")
 			_spell_phase_handler.spell_phase_completed.emit()
 		return
 
 	# 外部スペルモードの場合（マジックタイル等から呼ばれた場合）
 	if _spell_state.is_in_external_spell_mode():
-		print("[SpellFlowHandler] 外部スペルモード、状態をINACTIVEに遷移")
 		_spell_state.transition_to(SpellStateHandler.State.INACTIVE)
 		# スペル用のナビゲーションのみクリア（ドミニオボタン等の特殊ボタンは維持）
 		# _hide_spell_phase_buttons()は呼ばない（外部モードではミスティックボタン未設定、
@@ -559,12 +542,10 @@ func complete_spell_phase():
 			_ui_manager.clear_back_action()
 			_ui_manager.clear_arrow_actions()
 		if _spell_phase_handler:
-			print("[SpellFlowHandler] external_spell_finished emit")
 			_spell_phase_handler.external_spell_finished.emit()
 		return
 
 	_spell_state.transition_to(SpellStateHandler.State.INACTIVE)
-	print("[SpellFlowHandler] 状態をINACTIVEに遷移")
 	_spell_state.clear_spell_card()
 
 	# アクション指示パネルを閉じる
@@ -595,13 +576,8 @@ func complete_spell_phase():
 	if _board_system:
 		_board_system.enable_follow_camera()
 
-	print("[SpellFlowHandler] spell_phase_completed emit 準備中")
 	if _spell_phase_handler:
-		print("[SpellFlowHandler] spell_phase_completed emit実行")
 		_spell_phase_handler.spell_phase_completed.emit()
-		print("[SpellFlowHandler] spell_phase_completed emit完了")
-	else:
-		print("[SpellFlowHandler] ERROR: _spell_phase_handler が未設定")
 
 	# 次のフェーズ（ダイスフェーズ）への遷移は GameFlowManager が行う
 
