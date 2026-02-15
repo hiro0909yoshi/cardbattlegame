@@ -201,7 +201,7 @@ func _input(event: InputEvent) -> void:
 	if not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 
 	if event is InputEventKey and event.pressed:
@@ -267,9 +267,9 @@ func _confirm_target_selection() -> void:
 	TargetSelectionHelper.clear_selection(_spell_phase_handler)
 
 	# 借用スペル実行中の場合（SpellBorrow用）
-	if _spell_phase_handler.is_borrow_spell_mode:
+	if _spell_phase_handler.spell_state.is_in_borrow_spell_mode():
 		_spell_phase_handler.target_confirmed.emit(selected_target)
-		_spell_phase_handler.is_borrow_spell_mode = false
+		_spell_phase_handler.spell_state.set_borrow_spell_mode(false)
 		_is_selecting = false
 		return
 
@@ -299,14 +299,14 @@ func _cancel_target_selection() -> void:
 	TargetSelectionHelper.clear_selection(_spell_phase_handler)
 
 	# 借用スペル実行中の場合（SpellBorrow用）
-	if _spell_phase_handler.is_borrow_spell_mode:
+	if _spell_phase_handler.spell_state.is_in_borrow_spell_mode():
 		_spell_phase_handler.target_confirmed.emit({"cancelled": true})
-		_spell_phase_handler.is_borrow_spell_mode = false
+		_spell_phase_handler.spell_state.set_borrow_spell_mode(false)
 		_is_selecting = false
 		return
 
 	# 外部スペルモードの場合（魔法タイル等）
-	if _spell_phase_handler.is_external_spell_mode:
+	if _spell_phase_handler.spell_state.is_in_external_spell_mode():
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.cancel_spell()
 		else:
@@ -319,7 +319,7 @@ func _cancel_target_selection() -> void:
 		# アルカナアーツキャンセル
 		_spell_phase_handler.spell_mystic_arts.clear_selection()
 		_spell_phase_handler.spell_mystic_arts.end_mystic_phase()
-		_spell_phase_handler.current_state = _spell_phase_handler.State.WAITING_FOR_INPUT
+		_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
 		# スペル選択画面に戻る
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.return_to_spell_selection()
@@ -452,7 +452,7 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) 
 
 	print("[STSH] タップでタイル選択: %d" % tile_index)
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 
 	# available_targetsから該当するターゲットを探す
@@ -524,7 +524,7 @@ func _on_target_confirm() -> void:
 	if not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 	_confirm_target_selection()
 
@@ -533,7 +533,7 @@ func _on_target_cancel() -> void:
 	if not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 	_cancel_target_selection()
 
@@ -542,7 +542,7 @@ func _on_target_prev() -> void:
 	if not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 	if _available_targets.size() <= 1:
 		return
@@ -555,7 +555,7 @@ func _on_target_next() -> void:
 	if not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state != _spell_phase_handler.State.SELECTING_TARGET:
+	if _spell_phase_handler.spell_state.current_state != SpellStateHandler.State.SELECTING_TARGET:
 		return
 	if _available_targets.size() <= 1:
 		return

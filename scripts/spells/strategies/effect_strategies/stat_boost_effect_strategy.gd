@@ -5,6 +5,11 @@ extends SpellStrategy
 
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_curse_stat"]
 	if not _validate_context_keys(context, required):
@@ -18,11 +23,28 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_curse_stat の実体確認（直接参照）
 	var spell_curse_stat = context.get("spell_curse_stat")
 	if not spell_curse_stat:
-		_log_error("spell_curse_stat が初期化されていません")
+		_log_error("spell_curse_stat が初期化されていません（context を確認）")
+		return false
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[StatBoostEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
+
 
 	if effect_type != "stat_boost":
 		_log_error("無効な effect_type: %s（stat_boost のみ対応）" % effect_type)
@@ -32,7 +54,7 @@ func validate(context: Dictionary) -> bool:
 	return true
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_curse_stat = context.get("spell_curse_stat")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
@@ -40,7 +62,7 @@ func execute(context: Dictionary) -> void:
 	# null チェック（直接参照）
 	if not spell_curse_stat:
 		_log_error("spell_curse_stat が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	_log("効果実行開始 (effect_type: stat_boost)")
 
@@ -52,4 +74,12 @@ func execute(context: Dictionary) -> void:
 	else:
 		_log("ターゲットタイプが land/creature ではありません (type: %s)" % target_type)
 
+	# ★ NEW: effect_message を構築
+	var effect_message = "ステータスを強化"
+
 	_log("効果実行完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": true
+	}

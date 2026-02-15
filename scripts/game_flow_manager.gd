@@ -276,7 +276,7 @@ func start_turn():
 		await spell_phase_handler.spell_phase_completed
 	
 	# ワープ系スペル使用時はサイコロフェーズをスキップしてタイルアクションへ
-	if spell_phase_handler and spell_phase_handler.spell_state and spell_phase_handler.spell_state.skip_dice_phase:
+	if spell_phase_handler and spell_phase_handler.spell_state and spell_phase_handler.spell_state.should_skip_dice_phase():
 		print("[GameFlowManager] ワープ使用によりサイコロフェーズをスキップ")
 		change_phase(GamePhase.TILE_ACTION)
 		# 現在のプレイヤー位置でタイルアクションを開始

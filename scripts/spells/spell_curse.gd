@@ -458,8 +458,8 @@ func _get_current_turn() -> int:
 
 ## マジックタイルモードかチェック
 func _is_magic_tile_mode() -> bool:
-	if spell_phase_handler:
-		return spell_phase_handler.is_magic_tile_mode
+	if spell_phase_handler and spell_phase_handler.spell_state:
+		return spell_phase_handler.spell_state.is_in_magic_tile_mode()
 	return false
 
 # 全ての呪いのdurationを更新（デバッグ用）

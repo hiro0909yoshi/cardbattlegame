@@ -5,6 +5,11 @@ extends SpellStrategy
 
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_curse"]
 	if not _validate_context_keys(context, required):
@@ -18,11 +23,28 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_curse の実体確認（直接参照）
 	var spell_curse = context.get("spell_curse")
 	if not spell_curse:
-		_log_error("spell_curse が初期化されていません")
+		_log_error("spell_curse が初期化されていません（context を確認）")
+		return false
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[PlayerCurseEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
+
 
 	if effect_type != "player_curse":
 		_log_error("無効な effect_type: %s（player_curse のみ対応）" % effect_type)
@@ -32,7 +54,7 @@ func validate(context: Dictionary) -> bool:
 	return true
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_curse = context.get("spell_curse")
 	var handler = context.get("spell_phase_handler")
 	var effect = context.get("effect", {})
@@ -41,15 +63,16 @@ func execute(context: Dictionary) -> void:
 	# null チェック（直接参照）
 	if not spell_curse:
 		_log_error("spell_curse が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	_log("効果実行開始 (effect_type: player_curse)")
 
 	# 元のロジック (spell_effect_executor.gd Line 182-203) を再現
 	var curse_type = effect.get("curse_type", "")
 	var duration = effect.get("duration", -1)
+	var curse_name = effect.get("name", "呪い")
 	var params = {
-		"name": effect.get("name", ""),
+		"name": curse_name,
 		"description": effect.get("description", "")
 	}
 
@@ -69,4 +92,12 @@ func execute(context: Dictionary) -> void:
 		var target_player_id = target_data.get("player_id", current_player_id)
 		spell_curse.curse_player(target_player_id, curse_type, duration, params, current_player_id)
 
+	# ★ NEW: effect_message を構築
+	var effect_message = "%sをプレイヤーにかけた" % curse_name
+
 	_log("効果実行完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": true
+	}

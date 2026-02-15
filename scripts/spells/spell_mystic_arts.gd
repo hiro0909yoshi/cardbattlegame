@@ -1051,6 +1051,8 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 		if spell_executor and spell_executor.has_method("apply_single_effect"):
 			# アルカナアーツ発動者のタイルインデックスを追加（self_destroy等で必要）
 			var extended_target_data = target_data.duplicate()
+			if not extended_target_data.has("tile_index") and _context.has("tile_index"):
+				extended_target_data["tile_index"] = _context.get("tile_index", -1)
 			if _context.has("tile_index"):
 				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
 			print("[SpellMysticArts] _apply_spell_effect: spell_executor.apply_single_effect() 呼び出し")

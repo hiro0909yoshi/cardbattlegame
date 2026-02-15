@@ -45,14 +45,14 @@ func validate(context: Dictionary) -> bool:
 	return true
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_phase_handler = context.get("spell_phase_handler")
 	var spell_effect_executor = spell_phase_handler.spell_effect_executor if spell_phase_handler else null
 
 	# null チェック
 	if not spell_effect_executor:
 		_log_error("spell_effect_executor が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	var spell_card = context.get("spell_card", {})
 	var target_data = context.get("target_data", {})
@@ -63,3 +63,10 @@ func execute(context: Dictionary) -> void:
 	await spell_effect_executor.execute_spell_effect(spell_card, target_data)
 
 	_log("効果実行完了")
+
+	# ★ P1修正: effect_message を返す
+	var effect_message = "土地シフト発動"
+	return {
+		"effect_message": effect_message,
+		"success": true
+	}

@@ -154,7 +154,7 @@ func _execute_borrowed_spell(effect_parsed: Dictionary, _caster_player_id: int) 
 	var effects = effect_parsed.get("effects", [])
 	
 	# 借用スペルモードを有効化
-	spell_phase_handler_ref.is_borrow_spell_mode = true
+	spell_phase_handler_ref.spell_state.set_borrow_spell_mode(true)
 	
 	# ターゲット選択UI表示（内部でターゲット取得も行われる）
 	spell_phase_handler_ref.show_target_selection_ui(target_type, target_info)
@@ -251,7 +251,7 @@ func apply_use_target_mystic_art(target_data: Dictionary, caster_player_id: int)
 		await spell_mystic_arts.execute_mystic_art(selected_creature, selected_mystic_art, mystic_target_data)
 	else:
 		# ターゲット選択が必要
-		spell_phase_handler_ref.is_borrow_spell_mode = true
+		spell_phase_handler_ref.spell_state.set_borrow_spell_mode(true)
 		spell_phase_handler_ref.show_target_selection_ui(target_type, target_info)
 		
 		var mystic_target_data = await spell_phase_handler_ref.target_confirmed

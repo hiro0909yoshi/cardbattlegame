@@ -4,6 +4,11 @@ class_name CreatureReturnEffectStrategy
 extends SpellStrategy
 
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_creature_return"]
 	if not _validate_context_keys(context, required):
@@ -17,11 +22,28 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_creature_return の実体確認（直接参照）
 	var spell_creature_return = context.get("spell_creature_return")
 	if not spell_creature_return:
-		_log_error("spell_creature_return が初期化されていません")
+		_log_error("spell_creature_return が初期化されていません（context を確認）")
+		return false
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[CreatureReturnEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# effect_type の有効性確認
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
 
 	# effect_type の有効性確認（1個）
 	if effect_type != "return_to_hand":
@@ -31,7 +53,7 @@ func validate(context: Dictionary) -> bool:
 	_log("バリデーション成功 (effect_type: %s)" % effect_type)
 	return true
 
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_creature_return = context.get("spell_creature_return")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
@@ -40,11 +62,19 @@ func execute(context: Dictionary) -> void:
 	# null チェック（直接参照）
 	if not spell_creature_return:
 		_log_error("spell_creature_return が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	_log("効果実行開始 (effect_type: return_to_hand)")
 
 	# spell_creature_return に委譲（元のロジックを再現）
 	spell_creature_return.apply_effect(effect, target_data, current_player_id)
 
+	# ★ NEW: effect_message を構築
+	var effect_message = "クリーチャーを手札に戻す"
+
 	_log("効果実行完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": true
+	}

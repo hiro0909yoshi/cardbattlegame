@@ -709,13 +709,8 @@ func _wait_for_human_spell_decision() -> void:
 
 	# spell_used または spell_passed が発行されるまで待機
 	print("[SPH-SIGNAL] while ループ開始: _waiting_for_spell_decision = ", _waiting_for_spell_decision)
-	var loop_count = 0
 	while _waiting_for_spell_decision:
-		loop_count += 1
-		if loop_count % 60 == 0:  # 約1秒ごと（60フレーム）
-			print("[SPH-SIGNAL] 待機中... フレーム: ", loop_count, " | _waiting_for_spell_decision: ", _waiting_for_spell_decision)
 		await get_tree().process_frame
-	print("[SPH-SIGNAL] ✅ while ループ終了: フレーム数: ", loop_count)
 
 	# シグナルを切断（確実に）
 	print("[SPH-SIGNAL] シグナル切断開始")

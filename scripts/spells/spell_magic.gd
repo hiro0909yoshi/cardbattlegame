@@ -570,7 +570,7 @@ func balance_all_magic() -> Dictionary:
 		total_magic += player.magic_power
 	
 	# 平均を計算（端数切り捨て）
-	var average = int(total_magic) / int(player_count)
+	var average = int(float(total_magic) / float(player_count))
 	
 	# 各プレイヤーに平均値を設定
 	var changes = []

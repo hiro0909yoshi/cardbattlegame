@@ -8,6 +8,11 @@ extends SpellStrategy
 
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_phase_handler", "spell_magic"]
 	if not _validate_context_keys(context, required):
@@ -21,11 +26,26 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_magic の実体確認（直接参照）
 	var spell_magic = context.get("spell_magic")
 	if not spell_magic:
-		_log_error("spell_magic が初期化されていません")
+		_log_error("spell_magic が初期化されていません（context を確認）")
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[MagicEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
 
 	# effect_type の有効性確認（13個）
 	var valid_types = [
@@ -42,7 +62,7 @@ func validate(context: Dictionary) -> bool:
 	return true
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_magic = context.get("spell_magic")
 	var handler = context.get("spell_phase_handler")
 	var effect = context.get("effect", {})
@@ -53,11 +73,11 @@ func execute(context: Dictionary) -> void:
 	# null チェック（直接参照）
 	if not spell_magic:
 		_log_error("spell_magic が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	if not handler:
 		_log_error("spell_phase_handler が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 	print("[MagicEffectStrategy] execute(): effect_type=%s, player_id=%d" % [effect_type, current_player_id])
@@ -75,6 +95,38 @@ func execute(context: Dictionary) -> void:
 	var result = await spell_magic.apply_effect(effect, current_player_id, magic_context)
 	print("[MagicEffectStrategy] spell_magic.apply_effect() 完了")
 
+	# ★ NEW: effect_message を構築
+	var effect_message = ""
+	match effect_type:
+		"drain_magic":
+			effect_message = "EP%d獲得！" % effect.get("amount", 0)
+		"drain_magic_conditional":
+			effect_message = "条件付きドレイン発動"
+		"drain_magic_by_land_count":
+			effect_message = "土地数でドレイン"
+		"drain_magic_by_lap_diff":
+			effect_message = "周回差でドレイン"
+		"gain_magic":
+			effect_message = "EP%d獲得！" % effect.get("amount", 0)
+		"gain_magic_by_rank":
+			effect_message = "順位でEP獲得"
+		"gain_magic_by_lap":
+			effect_message = "周回ボーナスEP獲得"
+		"gain_magic_from_destroyed_count":
+			effect_message = "破壊数でEP獲得"
+		"gain_magic_from_spell_cost":
+			effect_message = "スペルコストでEP獲得"
+		"balance_all_magic":
+			effect_message = "EP平均化発動"
+		"gain_magic_from_land_chain":
+			effect_message = "土地チェーンでEP獲得"
+		"mhp_to_magic":
+			effect_message = "最大HPからEP獲得"
+		"drain_magic_by_spell_count":
+			effect_message = "スペル数でドレイン"
+		_:
+			effect_message = "魔法効果実行"
+
 	# next_effect がある場合は処理（spell_magic は内部で next_effect を返す場合がある）
 	if result.has("next_effect") and not result.get("next_effect", {}).is_empty():
 		# フォールバック: SpellEffectExecutor に再帰的に処理を依頼する必要がある
@@ -87,3 +139,8 @@ func execute(context: Dictionary) -> void:
 
 	_log("効果実行完了")
 	print("[MagicEffectStrategy] execute() 完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": result.get("success", true)
+	}

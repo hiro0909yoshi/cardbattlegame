@@ -7,7 +7,7 @@ extends RefCounted
 ## 責務:
 ## - 11個のSpell**** クラスの参照を一元管理
 ## - SpellPhaseHandler の参照変数を削減（26個 → 5個に集約）
-## - SpellInitializer による初期化
+## - GameSystemManager による初期化
 ##
 ## 利点:
 ## - アクセスパターンが明確: spell_systems.spell_damage.xxx() など

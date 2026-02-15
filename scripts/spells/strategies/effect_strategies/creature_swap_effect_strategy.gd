@@ -4,6 +4,11 @@ class_name CreatureSwapEffectStrategy
 extends SpellStrategy
 
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_creature_swap"]
 	if not _validate_context_keys(context, required):
@@ -17,11 +22,28 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_creature_swap の実体確認（直接参照）
 	var spell_creature_swap = context.get("spell_creature_swap")
 	if not spell_creature_swap:
-		_log_error("spell_creature_swap が初期化されていません")
+		_log_error("spell_creature_swap が初期化されていません（context を確認）")
+		return false
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[CreatureSwapEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# effect_type の有効性確認
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
 
 	# effect_type の有効性確認（2個）
 	if effect_type not in ["swap_with_hand", "swap_board_creatures"]:
@@ -31,23 +53,34 @@ func validate(context: Dictionary) -> bool:
 	_log("バリデーション成功 (effect_type: %s)" % effect_type)
 	return true
 
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_creature_swap = context.get("spell_creature_swap")
 	var handler = context.get("spell_phase_handler")
 	var spell_land = context.get("spell_land")
 	var effect = context.get("effect", {})
 	var target_data = context.get("target_data", {})
+	var effect_type = effect.get("effect_type", "")
 	var current_player_id = context.get("current_player_id", 0)
 
 	# null チェック（直接参照）
 	if not spell_creature_swap:
 		_log_error("spell_creature_swap が初期化されていません")
-		return
+		return { "effect_message": "" }
 
-	_log("効果実行開始 (effect_type: %s)" % effect.get("effect_type", ""))
+	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
 	# spell_creature_swap に委譲（await - 元のロジックを再現）
 	var result = await spell_creature_swap.apply_effect(effect, target_data, current_player_id)
+
+	# ★ NEW: effect_message を構築
+	var effect_message = ""
+	match effect_type:
+		"swap_with_hand":
+			effect_message = "手札とクリーチャーを交換"
+		"swap_board_creatures":
+			effect_message = "盤上のクリーチャーを交換"
+		_:
+			effect_message = "クリーチャー交換"
 
 	# 失敗時に return_to_deck 処理
 	if not result.get("success", false) and result.get("return_to_deck", false):
@@ -57,3 +90,8 @@ func execute(context: Dictionary) -> void:
 				handler.spell_failed = true
 
 	_log("効果実行完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": result.get("success", false)
+	}

@@ -10,7 +10,7 @@ var spell_phase_handler = null  # 親への参照
 var spell_container: SpellSystemContainer = null
 
 # === Strategy パターン対応 ===
-const SpellStrategyFactory = preload("res://scripts/spells/strategies/spell_strategy_factory.gd")
+# SpellStrategyFactory は class_name で定義されているため、直接参照可能
 
 func _init(handler):
 	spell_phase_handler = handler
@@ -115,64 +115,119 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 	var handler = spell_phase_handler
 	var effect_type = effect.get("effect_type", "")
 
+	# ★ NEW: spell_container のバリデーション
+	if not spell_container:
+		push_error("[SpellEffectExecutor] spell_container が初期化されていません")
+		return
+
+	if not spell_container.is_valid():
+		push_error("[SpellEffectExecutor] spell_container が完全に初期化されていません")
+		spell_container.debug_print_status()
+		return
+
 	# ========================================
 	# Strategy パターン試行（Phase 3-A-1）
 	# ========================================
 	if SpellStrategyFactory.has_effect_strategy(effect_type):
 		var strategy = SpellStrategyFactory.create_effect_strategy(effect_type)
-		if strategy:
-			# Strategy のコンテキストを構築（直接参照を含める）
-			var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
-			var selected_spell_card = handler.spell_state.selected_spell_card if (handler and handler.spell_state) else {}
-			var context = {
-				"effect": effect,
-				"target_data": target_data,
-				"spell_phase_handler": handler,
-				"current_player_id": current_player_id,
-				"spell_card": selected_spell_card,
-				"board_system": handler.board_system,
-				"spell_container": spell_container,
-				"spell_effect_executor": self,
-				# === 直接参照（2段チェーンアクセス廃止） ===
-				"spell_draw": spell_container.spell_draw if spell_container else null,
-				"spell_dice": spell_container.spell_dice if spell_container else null,
-				"spell_land": spell_container.spell_land if spell_container else null,
-				"spell_magic": spell_container.spell_magic if spell_container else null,
-				"spell_curse": spell_container.spell_curse if spell_container else null,
-				"spell_curse_stat": spell_container.spell_curse_stat if spell_container else null,
-				"spell_curse_toll": spell_container.spell_curse_toll if spell_container else null,
-				"spell_cost_modifier": spell_container.spell_cost_modifier if spell_container else null,
-				"spell_player_move": spell_container.spell_player_move if spell_container else null,
-				"spell_creature_move": handler.spell_systems.spell_creature_move if (handler and handler.spell_systems) else null,
-				"spell_damage": handler.spell_systems.spell_damage if (handler and handler.spell_systems) else null,
-				"spell_purify": handler.spell_systems.spell_purify if (handler and handler.spell_systems) else null,
-				"spell_creature_place": handler.spell_systems.spell_creature_place if (handler and handler.spell_systems) else null,
-				"spell_creature_swap": handler.spell_systems.spell_creature_swap if (handler and handler.spell_systems) else null,
-				"spell_borrow": handler.spell_systems.spell_borrow if (handler and handler.spell_systems) else null,
-				"spell_transform": handler.spell_systems.spell_transform if (handler and handler.spell_systems) else null,
-				"spell_creature_return": handler.spell_systems.spell_creature_return if (handler and handler.spell_systems) else null,
-				"card_system": handler.card_system if handler else null,
-				"player_system": handler.player_system if handler else null,
-			}
 
-			# バリデーション
-			if strategy.validate(context):
-				# 実行（既存ロジックはスキップ）
-				await strategy.execute(context)
-				return
-			else:
-				# バリデーション失敗 → フォールバック
-				push_warning("[SpellEffectExecutor] Strategy バリデーション失敗 (effect_type: %s)" % effect_type)
+		# ★ NEW: strategy 作成失敗の詳細ログ
+		if not strategy:
+			push_error("[SpellEffectExecutor] Strategy インスタンス作成失敗: effect_type=%s" % effect_type)
+			return
+
+		# Strategy のコンテキストを構築（直接参照を含める）
+		var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
+		var selected_spell_card = handler.spell_state.selected_spell_card if (handler and handler.spell_state) else {}
+
+		# ★ NEW: コンテキスト構築前に spell_container の各システムをチェック
+		var validation_errors = []
+		if not spell_container.spell_draw:
+			validation_errors.append("spell_draw is null")
+		if not spell_container.spell_magic:
+			validation_errors.append("spell_magic is null")
+		if not spell_container.spell_curse_stat:
+			validation_errors.append("spell_curse_stat is null")
+
+		if validation_errors.size() > 0:
+			push_error("[SpellEffectExecutor] spell_container システム初期化不完全: %s" % validation_errors)
+			return
+
+		var context = {
+			"effect": effect,
+			"target_data": target_data,
+			"spell_phase_handler": handler,
+			"current_player_id": current_player_id,
+			"spell_card": selected_spell_card,
+			"board_system": handler.board_system,
+			"spell_container": spell_container,
+			"spell_effect_executor": self,
+			# === 直接参照（2段チェーンアクセス廃止） ===
+			"spell_draw": spell_container.spell_draw if spell_container else null,
+			"spell_dice": spell_container.spell_dice if spell_container else null,
+			"spell_land": spell_container.spell_land if spell_container else null,
+			"spell_magic": spell_container.spell_magic if spell_container else null,
+			"spell_curse": spell_container.spell_curse if spell_container else null,
+			"spell_curse_stat": spell_container.spell_curse_stat if spell_container else null,
+			"spell_curse_toll": spell_container.spell_curse_toll if spell_container else null,
+			"spell_cost_modifier": spell_container.spell_cost_modifier if spell_container else null,
+			"spell_player_move": spell_container.spell_player_move if spell_container else null,
+			"spell_creature_move": handler.spell_systems.spell_creature_move if (handler and handler.spell_systems) else null,
+			"spell_damage": handler.spell_systems.spell_damage if (handler and handler.spell_systems) else null,
+			"spell_purify": handler.spell_systems.spell_purify if (handler and handler.spell_systems) else null,
+			"spell_creature_place": handler.spell_systems.spell_creature_place if (handler and handler.spell_systems) else null,
+			"spell_creature_swap": handler.spell_systems.spell_creature_swap if (handler and handler.spell_systems) else null,
+			"spell_borrow": handler.spell_systems.spell_borrow if (handler and handler.spell_systems) else null,
+			"spell_transform": handler.spell_systems.spell_transform if (handler and handler.spell_systems) else null,
+			"spell_creature_return": handler.spell_systems.spell_creature_return if (handler and handler.spell_systems) else null,
+			"card_system": handler.card_system if handler else null,
+			"player_system": handler.player_system if handler else null,
+			# ★ P0修正: card_selection_handler を context に追加
+			"card_selection_handler": handler.card_selection_handler if handler else null,
+		}
+
+		# ★ NEW: コンテキスト内の null 参照をログ
+		var context_errors = []
+		if not context.get("spell_phase_handler"):
+			context_errors.append("spell_phase_handler is null")
+		if not context.get("spell_magic"):
+			context_errors.append("spell_magic is null")
+		if not context.get("board_system"):
+			context_errors.append("board_system is null")
+
+		if context_errors.size() > 0:
+			push_error("[SpellEffectExecutor] context 初期化不完全（effect_type=%s）: %s" % [effect_type, context_errors])
+			return
+
+		# バリデーション
+		if strategy.validate(context):
+			# 実行（既存ロジックはスキップ）
+			@warning_ignore("redundant_await")
+			var result = await strategy.execute(context)
+
+			# ★ NEW: グローバルコメント表示（以前と同じUI）
+			if result and result.has("effect_message") and result["effect_message"] != "":
+				if handler and handler.ui_manager and handler.ui_manager.has_method("show_comment_and_wait"):
+					await handler.ui_manager.show_comment_and_wait(result["effect_message"])
+
+			return
 		else:
-			# Strategy 作成失敗 → フォールバック
-			push_warning("[SpellEffectExecutor] Strategy 作成失敗 (effect_type: %s)" % effect_type)
-
-	# ========================================
-	# フォールバック: 未実装の effect_type
-	# ========================================
-	# 全ての effect_type は Strategy で実装済み
-	# ここに到達した場合は未知の effect_type
-	push_error("[SpellEffectExecutor] 未実装の effect_type: %s" % effect_type)
+			# ★ MODIFIED: バリデーション失敗時の詳細ログ
+			push_error("[SpellEffectExecutor] Strategy バリデーション失敗（effect_type=%s）: %s" % [effect_type, context.keys()])
+			# Context の内容をダンプ（デバッグ用）
+			for key in context.keys():
+				var val = context[key]
+				if val == null:
+					print("  [CONTEXT] %s: NULL ⚠️" % key)
+				elif val is Object and not (val is Dictionary):
+					print("  [CONTEXT] %s: %s (object)" % [key, val.get_class()])
+				else:
+					print("  [CONTEXT] %s: %s" % [key, typeof(val)])
+	else:
+		# ========================================
+		# フォールバック: 未実装の effect_type
+		# ========================================
+		push_error("[SpellEffectExecutor] 未実装の effect_type: %s" % effect_type)
 
 ## 全クリーチャー対象スペルを実行
 func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):

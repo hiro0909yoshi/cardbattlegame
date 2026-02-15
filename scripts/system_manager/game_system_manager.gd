@@ -1059,7 +1059,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_target_selection_handler.setup(
 			spell_phase_handler,
-			p_ui_manager,
+			ui_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.game_3d_ref
@@ -1073,7 +1073,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_confirmation_handler.setup(
 			spell_phase_handler,
-			p_ui_manager,
+			ui_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.game_3d_ref
@@ -1089,7 +1089,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_ui_controller.setup(
 			spell_phase_handler,
-			p_ui_manager,
+			ui_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.game_3d_ref,
@@ -1106,7 +1106,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.mystic_arts_handler.setup(
 			spell_phase_handler,
-			p_ui_manager,
+			ui_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.card_system,
@@ -1121,8 +1121,8 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_flow.setup(
 			spell_phase_handler,
-			p_ui_manager,
-			p_game_flow_manager,
+			ui_manager,
+			game_flow_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.card_system,
@@ -1139,7 +1139,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.spell_navigation_controller = SpellNavigationController.new()
 			spell_phase_handler.spell_navigation_controller.setup(
 				spell_phase_handler,
-				p_ui_manager,
+				ui_manager,
 				spell_phase_handler.spell_ui_controller,
 				spell_phase_handler.spell_target_selection_handler,
 				spell_phase_handler.spell_state
@@ -1149,7 +1149,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 
 	# Step 4: CPU AI を初期化
-	spell_phase_handler._initialize_cpu_context(p_game_flow_manager)
+	spell_phase_handler._initialize_cpu_context(game_flow_manager)
 
 	# CPU スペル/アルカナアーツ AI を初期化
 	if not spell_phase_handler.cpu_spell_ai:

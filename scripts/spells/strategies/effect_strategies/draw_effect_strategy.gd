@@ -5,6 +5,11 @@ extends SpellStrategy
 
 ## バリデーション（実行前の条件チェック）
 func validate(context: Dictionary) -> bool:
+	# ★ 第0段階: null チェック
+	if not context:
+		_log_error("context が null です")
+		return false
+
 	# Level 1: 必須キーの存在確認
 	var required = ["effect", "spell_phase_handler", "spell_draw"]
 	if not _validate_context_keys(context, required):
@@ -18,11 +23,26 @@ func validate(context: Dictionary) -> bool:
 	# Level 3: spell_draw の実体確認（直接参照）
 	var spell_draw = context.get("spell_draw")
 	if not spell_draw:
-		_log_error("spell_draw が初期化されていません")
+		_log_error("spell_draw が初期化されていません（context を確認）")
+		# ★ NEW: コンテキスト内容をダンプ
+		print("[DrawEffectStrategy] === context contents ===")
+		for key in context.keys():
+			var val = context[key]
+			if val == null:
+				print("  - %s: null ⚠️" % key)
+			elif val is Object and not (val is Dictionary):
+				print("  - %s: %s (object)" % [key, val.get_class()])
+			else:
+				print("  - %s: %s" % [key, typeof(val)])
 		return false
 
 	var effect = context.get("effect", {})
 	var effect_type = effect.get("effect_type", "")
+
+	# ★ ENHANCED: effect_type チェック
+	if effect_type.is_empty():
+		_log_error("effect_type が空です")
+		return false
 
 	# effect_type の有効性確認（draw 系）
 	var valid_types = ["draw", "draw_cards", "draw_by_rank", "draw_by_type", "draw_from_deck_selection", "draw_and_place"]
@@ -34,7 +54,7 @@ func validate(context: Dictionary) -> bool:
 	return true
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(context: Dictionary) -> Dictionary:
 	var spell_draw = context.get("spell_draw")
 	var spell_phase_handler = context.get("spell_phase_handler")
 	var effect = context.get("effect", {})
@@ -44,7 +64,7 @@ func execute(context: Dictionary) -> void:
 	# null チェック（直接参照）
 	if not spell_draw:
 		_log_error("spell_draw が初期化されていません")
-		return
+		return { "effect_message": "" }
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 	print("[DrawEffectStrategy] execute(): effect_type=%s, player_id=%d" % [effect_type, current_player_id])
@@ -60,6 +80,25 @@ func execute(context: Dictionary) -> void:
 	var result = spell_draw.apply_effect(effect, current_player_id, context_for_draw)
 	print("[DrawEffectStrategy] spell_draw.apply_effect() 完了")
 
+	# ★ NEW: effect_message を構築
+	var effect_message = ""
+	match effect_type:
+		"draw":
+			effect_message = "カードをドロー"
+		"draw_cards":
+			var count = effect.get("count", 1)
+			effect_message = "%d枚ドロー" % count
+		"draw_by_rank":
+			effect_message = "順位でカードドロー"
+		"draw_by_type":
+			effect_message = "属性でカードドロー"
+		"draw_from_deck_selection":
+			effect_message = "デッキから選択ドロー"
+		"draw_and_place":
+			effect_message = "ドロー後配置"
+		_:
+			effect_message = "カードをドロー"
+
 	# next_effect がある場合は処理（spell_draw は内部で next_effect を返す場合がある）
 	if result.has("next_effect") and not result.get("next_effect", {}).is_empty():
 		# フォールバックスペルエフェクトエグゼキューターに委譲する必要がある場合
@@ -68,3 +107,8 @@ func execute(context: Dictionary) -> void:
 
 	_log("効果実行完了")
 	print("[DrawEffectStrategy] execute() 完了")
+
+	return {
+		"effect_message": effect_message,
+		"success": result.get("success", true)
+	}

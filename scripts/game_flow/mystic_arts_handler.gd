@@ -168,7 +168,11 @@ func _on_mystic_phase_completed():
 	if not _spell_phase_handler:
 		return
 
+	# spell_stateを完全にリセット（spell_used_this_turn を false に）
+	_spell_phase_handler.spell_state.reset_turn_state()
+	_spell_phase_handler.spell_state.set_current_player_id(_spell_phase_handler.spell_state.current_player_id)
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+
 	if _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow.return_to_spell_selection()
 	else:
