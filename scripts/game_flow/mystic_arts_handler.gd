@@ -221,6 +221,10 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	else:
 		push_error("[MAH] spell_navigation_controller が初期化されていません")
 
+	# ターゲット選択画面を表示（削除前の処理を復活）
+	if _spell_phase_handler and _spell_phase_handler.spell_target_selection_handler:
+		_spell_phase_handler.spell_target_selection_handler._update_target_selection()
+
 ## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
 	if _ui_manager and _ui_manager.phase_display:

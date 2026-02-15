@@ -12,42 +12,64 @@
 
 ---
 
-## 2026年2月16日（Session 28）
+## 2026年2月16日（Session 28-29）
 
-### Phase 3-A-Final完了 + SpellStateHandler修正（Opus分析） ⚠️ 進行中
+### ✅ Phase 3-A-Final実装完了 - アルカナアーツとスペルフェーズ全修正
 
-**目的**: Phase 3-A-Final（SpellPhaseHandler 32メソッド削除）の実装 + 副作用修正（spell_used_this_turnフラグ管理）
+**目的**: Phase 3-A-Final（SpellPhaseHandler 32メソッド削除）の完全実装と副作用の全修正
 
-**実施内容**:
-1. **Phase 3-A-Final実装完了**: 32メソッド削除（206行削減）
+**完了した実装**（コミット d41f97b ～ 8463b2b）:
+
+1. **✅ 神オブジェクト化解決**: 32メソッド削除（206行削減）
+   - SpellPhaseHandler: 936行 → 730行
    - GameSystemManager へ初期化ロジック inline化
-   - 直接参照パターン確立（SpellPhaseHandler → 各Handler）
-   - 呼び出し側の修正（3ファイル、9箇所）
-   - ✅ SpellPhaseHandler: 936行 → 730行
+   - 直接参照パターン確立（SpellPhaseHandler → SpellNavigationController等）
 
-2. **Opusバグ分析・修正（スペルフェーズ状態管理）**:
-   - 問題: spell_used_this_turn フラグがアルカナアーツ完了後にリセットされない
-   - 修正1: mystic_arts_handler.gd - reset_turn_state() 追加（Line 171）
-   - 修正2: spell_mystic_arts.gd - 直接プロパティアクセス廃止 → spell_state.set_spell_used_this_turn()（Line 514, 603）
-   - 修正3: GameSystemManager - 変数名エラー修正（p_ui_manager → ui_manager）（6箇所）
+2. **✅ 状態管理修正**: spell_used_this_turn フラグ管理の正常化
+   - mystic_arts_handler.gd: reset_turn_state() 追加（Line 172）
+   - spell_mystic_arts.gd: 直接プロパティアクセス廃止 → spell_state 経由に統一
+   - GameSystemManager: 変数名エラー修正（p_ui_manager → ui_manager、6箇所）
 
-3. **ログ最適化**:
-   - フレームカウントログ削除（SPH-SIGNAL のノイズ削減）
-   - can_cast_mystic_art() に詳細デバッグログ追加
+3. **✅ RefCounted対策**: GC削除防止のため Node ツリー参照を追加
+   - spell_mystic_arts.gd Line 25: `var spell_phase_handler = null  # Node参照`
+   - 初期化時に参照を保持（await 中の削除防止）
 
-**成果**:
-- ✅ SpellPhaseHandler: 936行 → 730行（206行削減）
-- ✅ 神オブジェクト化パターン完全解決
-- ✅ SpellStateHandler を SSoT として機能
-- ✅ ドキュメント作成（refactoring_next_steps.md）
+4. **✅ メソッド委譲修正**: apply_single_effect() の正しい委譲先設定
+   - spell_mystic_arts.gd Line 1066-1075: spell_executor に委譲に修正
+   - コミット: 85cd66d
 
-**残課題**（まだ終わっていない）:
-- ⚠️ **アルカナアーツ発動判定**: _has_valid_target() で失敗中 → 詳細デバッグログで原因追跡中
-- ⚠️ **GDScript警告**: validate() "Unreachable code" 警告（複数ファイル、実行支障なし）
-- 🔴 **テスト未確認**: 修正後のゲーム起動・複数ラウンド実行未検証
+5. **✅ ターゲット選択フロー修正**: tile_index の context 統一
+   - spell_phase_handler.gd Line 1054-1057: extended_target_data に tile_index 追加
+   - Path A（spell_id なし）と Path B（spell_id あり）で統一フロー実現
+   - コミット: 66fdcdb
 
-**次**:
-- アルカナアーツ完全修正（デバッグログ確認 → 原因特定 → 修正 → テスト）
+6. **✅ グローバルボタン ナビゲーション修正**: 状態遷移時の破損を解決
+   - spell_mystic_arts.gd Line 440-446: _select_target() で disable_navigation()
+   - mystic_arts_handler.gd Line 189-191: _on_mystic_target_selection_requested() で disable_navigation()
+   - spell_target_selection_handler.gd Line 81-86: show_target_selection_ui() で disable_navigation()
+   - コミット: 899e50d（修正）、8463b2b（検証ログ）
+
+7. **✅ ログ最適化**:
+   - フレームカウントログ削除（SPH-SIGNAL スッキリ）
+   - ターゲット選択フロー全体の詳細デバッグログ追加
+
+**実装状態**:
+- ✅ すべてのコード修正が完了し、コミット済み
+- ✅ 21個のコミットが feature/refactoring ブランチに積み重なっている
+- ✅ ターゲット不要なアルカナアーツ（ゴールドトーテム等）の動作確認済み
+- ✅ ターゲット必要なアルカナアーツ（バーアル召喚等）の動作確認済み
+- ✅ グローバルボタン（↑↓キー）ナビゲーション の正常化確認済み
+
+**テスト状況**:
+- 🔄 **包括テスト必要**: CPU vs CPU複数ラウンド → 全アルカナアーツ動作確認
+- 🔄 **スペルフェーズ安定性**: 複数ラウンド実行での安定性確認
+- ⚠️ **GDScript警告**: validate() "Unreachable code"（実行支障なし）
+
+**次ステップ**（テスト・検証フェーズ）:
+1. 🔄 ゲーム起動 → CPU vs CPU 複数ラウンド実行
+2. 🔄 全アルカナアーツの実行確認（ターゲット必要/不要両方）
+3. 🔄 グローバルボタン（↑↓キー）の全ケースでの機能確認
+4. 完了後に「Phase 3-A-Final 完了」を最終記録
 - Phase 4（UIManager責務分離）計画開始
 
 ---
