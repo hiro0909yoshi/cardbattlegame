@@ -22,6 +22,7 @@ var board_system_ref: Object
 var player_system_ref: Object
 var card_system_ref: Object
 var spell_phase_handler_ref: Object  # ターゲット取得用
+var spell_phase_handler = null  # Node ツリーの参照（GC対象外）
 
 # === 直接参照（GFM経由を廃止） ===
 var game_flow_manager_ref: GameFlowManager = null
@@ -55,11 +56,13 @@ var _current_caster_index: int = 0
 
 # ============ 初期化 ============
 
-func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_handler: Object) -> void:
+func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_handler_param: Object) -> void:
 	board_system_ref = board_sys
 	player_system_ref = player_sys
 	card_system_ref = card_sys
-	spell_phase_handler_ref = spell_phase_handler
+	spell_phase_handler_ref = spell_phase_handler_param
+	# Node ツリーの参照を保持（削除されない）
+	spell_phase_handler = spell_phase_handler_param
 
 	# game_flow_manager の直接参照を設定
 	if spell_phase_handler and spell_phase_handler.game_flow_manager:
@@ -982,63 +985,80 @@ func _has_valid_target(mystic_art: Dictionary, _context: Dictionary) -> bool:
 
 ## アルカナアーツ効果を適用（メインエンジン）
 func apply_mystic_art_effect(mystic_art: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
-	print("[SpellMysticArts] apply_mystic_art_effect: mystic_art=%s, target_data=%s" % [mystic_art.get("name", "?"), target_data])
+	# 開始時に参照確認
+	print("[SpellMysticArts] apply_mystic_art_effect: spell_phase_handler=%s, mystic_art=%s" % ["valid" if spell_phase_handler else "NULL", mystic_art.get("name", "?")])
+
+	if not spell_phase_handler:
+		push_error("[SpellMysticArts] apply_mystic_art_effect: spell_phase_handler が null です")
+		return false
+
 	if mystic_art.is_empty():
 		return false
-	
+
 	# spell_idがある場合は既存スペルの効果を使用
 	var spell_id = mystic_art.get("spell_id", -1)
 	if spell_id > 0:
 		# effect_overrideがあればcontextに追加
 		var effect_override = mystic_art.get("effect_override", {})
 		return await _apply_spell_effect(spell_id, target_data, context, effect_override)
-	
+
 	# spell_idがない場合はアルカナアーツ独自のeffectsを使用（従来方式）
 	var effects = mystic_art.get("effects", [])
 	var success = true
-	
+
 	for effect in effects:
+		print("[SpellMysticArts] apply_mystic_art_effect: effect 処理開始 (%s)" % effect.get("effect_type", "?"))
 		var applied = await apply_single_effect(effect, target_data, context)
+		print("[SpellMysticArts] apply_mystic_art_effect: effect 処理完了 (success=%s)" % applied)
 		if not applied:
 			success = false
-	
+
 	return success
 
 
 ## スペル効果を適用（spell_id参照方式）
 func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dictionary, effect_override: Dictionary = {}) -> bool:
-	print("[SpellMysticArts] _apply_spell_effect: spell_phase_handler_ref=%s" % ("valid" if spell_phase_handler_ref else "NULL"))
+	# 開始時に参照確認
+	print("[SpellMysticArts] _apply_spell_effect: spell_phase_handler=%s" % ("valid" if spell_phase_handler else "NULL"))
+
+	if not spell_phase_handler:
+		push_error("[SpellMysticArts] _apply_spell_effect: spell_phase_handler が null です")
+		return false
+
 	# CardLoaderからスペルデータを取得
 	var spell_data = CardLoader.get_card_by_id(spell_id)
 	if spell_data.is_empty():
 		push_error("[SpellMysticArts] spell_id=%d のスペルが見つかりません" % spell_id)
 		return false
-	
+
 	var effect_parsed = spell_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
-	
+
 	if effects.is_empty():
 		push_error("[SpellMysticArts] spell_id=%d のeffectsが空です" % spell_id)
 		return false
-	
-	# spell_phase_handlerに効果適用を委譲
+
+	# spell_phase_handler に効果適用を委譲
 	for effect in effects:
 		# effect_overrideがあれば効果パラメータを上書き
 		var applied_effect = effect.duplicate()
 		if not effect_override.is_empty():
 			for key in effect_override:
 				applied_effect[key] = effect_override[key]
-		
-		if spell_phase_handler_ref and spell_phase_handler_ref.has_method("apply_single_effect"):
+
+		# ★ 修正: spell_executor に委譲（apply_single_effect() メソッドで既に実装されているパターン）
+		var spell_executor = spell_phase_handler.spell_effect_executor if spell_phase_handler else null
+		if spell_executor and spell_executor.has_method("apply_single_effect"):
 			# アルカナアーツ発動者のタイルインデックスを追加（self_destroy等で必要）
 			var extended_target_data = target_data.duplicate()
-			if context.has("tile_index"):
-				extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
-			await spell_phase_handler_ref.apply_single_effect(applied_effect, extended_target_data)
+			if _context.has("tile_index"):
+				extended_target_data["caster_tile_index"] = _context.get("tile_index", -1)
+			print("[SpellMysticArts] _apply_spell_effect: spell_executor.apply_single_effect() 呼び出し")
+			await spell_executor.apply_single_effect(applied_effect, extended_target_data)
 		else:
-			push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
+			push_error("[SpellMysticArts] spell_executor が無効です (has_method check failed)")
 			return false
-	
+
 	return true
 
 
@@ -1046,21 +1066,34 @@ func _apply_spell_effect(spell_id: int, target_data: Dictionary, _context: Dicti
 func apply_single_effect(effect: Dictionary, target_data: Dictionary, context: Dictionary) -> bool:
 	if effect.is_empty():
 		return false
-	
-	# 全効果をSpellPhaseHandlerに委譲
-	if spell_phase_handler_ref and spell_phase_handler_ref.has_method("apply_single_effect"):
-		# target_dataにtile_indexがない場合のみcontextから追加
-		var extended_target_data = target_data.duplicate()
-		if not extended_target_data.has("tile_index") and context.has("tile_index"):
-			extended_target_data["tile_index"] = context.get("tile_index", -1)
-		# アルカナアーツ発動者のタイルインデックスも別キーで追加（self_destroy等で必要）
-		if context.has("tile_index"):
-			extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
-		await spell_phase_handler_ref.apply_single_effect(effect, extended_target_data)
-		return true
-	
-	push_error("[SpellMysticArts] spell_phase_handler_refが無効です")
-	return false
+
+	# spell_phase_handler（Node ツリー参照）を確認
+	if not spell_phase_handler:
+		print("[SpellMysticArts] apply_single_effect: spell_phase_handler が null です")
+		push_error("[SpellMysticArts] spell_phase_handler が初期化されていません")
+		return false
+
+	# spell_effect_executor への直接参照化
+	var spell_effect_executor = spell_phase_handler.spell_effect_executor if spell_phase_handler else null
+	if not spell_effect_executor:
+		print("[SpellMysticArts] apply_single_effect: spell_effect_executor が null です")
+		push_error("[SpellMysticArts] spell_effect_executor が初期化されていません")
+		return false
+
+	# target_dataにtile_indexがない場合のみcontextから追加
+	var extended_target_data = target_data.duplicate()
+	if not extended_target_data.has("tile_index") and context.has("tile_index"):
+		extended_target_data["tile_index"] = context.get("tile_index", -1)
+	# アルカナアーツ発動者のタイルインデックスも別キーで追加（self_destroy等で必要）
+	if context.has("tile_index"):
+		extended_target_data["caster_tile_index"] = context.get("tile_index", -1)
+
+	# デバッグログ
+	print("[SpellMysticArts] apply_single_effect: spell_phase_handler=valid, spell_effect_executor=valid")
+
+	# SpellEffectExecutor に委譲
+	await spell_effect_executor.apply_single_effect(effect, extended_target_data)
+	return true
 
 
 # ============ ダウン状態管理 ============
