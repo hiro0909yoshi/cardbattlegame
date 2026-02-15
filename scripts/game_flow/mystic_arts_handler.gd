@@ -102,7 +102,7 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 		_cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
 		_cpu_spell_phase_handler.initialize(_spell_phase_handler)
 
-	var prep = _cpu_spell_phase_handler.prepare_mystic_execution(decision, _spell_phase_handler.current_player_id)
+	var prep = _cpu_spell_phase_handler.prepare_mystic_execution(decision, _spell_phase_handler.spell_state.current_player_id)
 	if not prep.get("success", false):
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
 			_spell_phase_handler.spell_flow.pass_spell(false)
@@ -126,7 +126,7 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 
 	# アルカナアーツ効果を実行（コスト支払いはexecute_mystic_art内で行われる）
 	if _spell_mystic_arts:
-		_spell_mystic_arts.current_mystic_player_id = _spell_phase_handler.current_player_id
+		_spell_mystic_arts.current_mystic_player_id = _spell_phase_handler.spell_state.current_player_id
 		await _spell_mystic_arts.execute_mystic_art(creature_info, mystic, target_data)
 		return
 
@@ -152,7 +152,7 @@ func update_mystic_button_visibility():
 	if _spell_phase_handler.current_state == _spell_phase_handler.State.INACTIVE:
 		return
 
-	if has_available_mystic_arts(_spell_phase_handler.current_player_id):
+	if has_available_mystic_arts(_spell_phase_handler.spell_state.current_player_id):
 		_ui_manager.show_mystic_button(func(): start_mystic_arts_phase())
 	else:
 		_ui_manager.hide_mystic_button()

@@ -36,7 +36,7 @@ var signal_display_label: Label = null
 var is_showing_notification: bool = false
 
 ## 初期化
-func setup(p_system, b_system, p_ui_manager = null, p_game_flow_manager = null, p_game_3d_ref = null):
+func setup(p_system, b_system, p_ui_manager = null, _p_game_flow_manager = null, p_game_3d_ref = null):
 	player_system = p_system
 	board_system_3d = b_system
 	ui_manager = p_ui_manager

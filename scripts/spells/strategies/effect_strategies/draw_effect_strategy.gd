@@ -47,6 +47,7 @@ func execute(context: Dictionary) -> void:
 		return
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
+	print("[DrawEffectStrategy] execute(): effect_type=%s, player_id=%d" % [effect_type, current_player_id])
 
 	# SpellDraw に委譲（context 構築）
 	var context_for_draw = {
@@ -55,7 +56,9 @@ func execute(context: Dictionary) -> void:
 		"tile_index": context.get("target_data", {}).get("tile_index", -1)
 	}
 
+	print("[DrawEffectStrategy] spell_draw.apply_effect() 呼び出し")
 	var result = spell_draw.apply_effect(effect, current_player_id, context_for_draw)
+	print("[DrawEffectStrategy] spell_draw.apply_effect() 完了")
 
 	# next_effect がある場合は処理（spell_draw は内部で next_effect を返す場合がある）
 	if result.has("next_effect") and not result.get("next_effect", {}).is_empty():
@@ -64,3 +67,4 @@ func execute(context: Dictionary) -> void:
 		_log("next_effect を検出 (内部で処理済み)")
 
 	_log("効果実行完了")
+	print("[DrawEffectStrategy] execute() 完了")

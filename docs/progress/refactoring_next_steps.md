@@ -702,13 +702,13 @@ func execute(context: Dictionary) -> void:
 ```gdscript
 # SpellFlowHandler 呼び出し例
 if spell_phase_handler and spell_phase_handler.spell_flow:
-    await spell_phase_handler.spell_flow.execute_spell_effect(card, target)
+	await spell_phase_handler.spell_flow.execute_spell_effect(card, target)
 else:
-    push_error("[XXX] spell_flow が初期化されていません")
+	push_error("[XXX] spell_flow が初期化されていません")
 
 # SpellEffectExecutor 呼び出し例
 if spell_effect_executor:
-    await spell_effect_executor.apply_single_effect(effect, target)
+	await spell_effect_executor.apply_single_effect(effect, target)
 ```
 
 **削減効果**: **81行削除**（目標96行、実績84.4%達成）

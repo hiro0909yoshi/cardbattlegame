@@ -75,7 +75,7 @@ func update_spell_phase_ui() -> void:
 	# ダイスボタンのテキストはそのまま「ダイスを振る」
 
 ## スペル選択UIを表示
-func show_spell_selection_ui(hand_data: Array, _available_magic: int) -> void:
+func show_spell_selection_ui(_hand_data: Array, _available_magic: int) -> void:
 	if not _ui_manager or not _ui_manager.card_selection_ui:
 		return
 
@@ -95,12 +95,12 @@ func return_camera_to_player() -> void:
 	if not _player_system or not _board_system:
 		return
 
-	if not _spell_phase_handler:
+	if not _spell_phase_handler or not _spell_phase_handler.spell_state:
 		return
 
 	# MovementControllerからプレイヤーの実際の位置を取得
 	if _board_system:
-		var player_tile_index = _board_system.get_player_tile(_spell_phase_handler.current_player_id)
+		var player_tile_index = _board_system.get_player_tile(_spell_phase_handler.spell_state.current_player_id)
 
 		if _board_system.camera and _board_system.tile_nodes.has(player_tile_index):
 			var tile_pos = _board_system.tile_nodes[player_tile_index].global_position
@@ -127,8 +127,10 @@ func show_spell_phase_buttons() -> void:
 		return
 
 	# アルカナアーツボタンは使用可能なクリーチャーがいる場合のみ表示（特殊ボタン使用）
-	if _ui_manager and _spell_phase_handler.has_available_mystic_arts(_spell_phase_handler.current_player_id):
-		_ui_manager.show_mystic_button(func(): _spell_phase_handler.start_mystic_arts_phase())
+	if _ui_manager and _spell_phase_handler and _spell_phase_handler.spell_state:
+		var current_player_id = _spell_phase_handler.spell_state.current_player_id
+		if _spell_phase_handler.has_available_mystic_arts(current_player_id):
+			_ui_manager.show_mystic_button(func(): _spell_phase_handler.start_mystic_arts_phase())
 	# 「スペルを使わない」ボタンは✓ボタンに置き換えたため表示しない
 
 ## スペルフェーズ終了時にボタンを非表示

@@ -60,6 +60,7 @@ func execute(context: Dictionary) -> void:
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
 
 	# spell_dice に委譲
-	spell_dice.apply_effect_from_parsed(effect, target_data, handler.current_player_id if handler else 0)
+	var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
+	spell_dice.apply_effect_from_parsed(effect, target_data, current_player_id)
 
 	_log("効果実行完了")

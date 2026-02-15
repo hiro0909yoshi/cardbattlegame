@@ -48,6 +48,7 @@ func execute(context: Dictionary) -> void:
 
 	# spell_curse_stat に委譲（元のロジックを再現）
 	# 注意: spell_curse_stat.apply_effect() には handler, effect, target_data, current_player_id, selected_spell_card を渡す
-	spell_curse_stat.apply_effect(handler, effect, target_data, current_player_id, handler.selected_spell_card)
+	var selected_spell_card = handler.spell_state.selected_spell_card if (handler and handler.spell_state) else {}
+	spell_curse_stat.apply_effect(handler, effect, target_data, current_player_id, selected_spell_card)
 
 	_log("効果実行完了")

@@ -50,7 +50,7 @@ func execute(context: Dictionary) -> void:
 	# 元のロジック (spell_effect_executor.gd Line 176-180) を再現
 	var tile_index = target_data.get("tile_index", -1)
 	var target_player_id = target_data.get("player_id", -1)
-	var current_player_id = handler.current_player_id if handler else 0
+	var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
 	spell_curse_toll.apply_curse_from_effect(effect, tile_index, target_player_id, current_player_id)
 
 	_log("効果実行完了")

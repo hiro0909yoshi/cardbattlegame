@@ -51,8 +51,9 @@ func execute(context: Dictionary) -> void:
 
 	# 失敗時に return_to_deck 処理
 	if not result.get("success", false) and result.get("return_to_deck", false):
-		if spell_land and handler:
-			if spell_land.return_spell_to_deck(current_player_id, handler.selected_spell_card):
+		if spell_land and handler and handler.spell_state:
+			var selected_spell_card = handler.spell_state.selected_spell_card if handler.spell_state else {}
+			if spell_land.return_spell_to_deck(current_player_id, selected_spell_card):
 				handler.spell_failed = true
 
 	_log("効果実行完了")

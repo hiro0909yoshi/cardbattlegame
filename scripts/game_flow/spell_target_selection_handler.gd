@@ -88,7 +88,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 		return false
 
 	# CPUの場合は自動で対象選択
-	if _is_cpu_player(_spell_phase_handler.current_player_id):
+	if _is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
 		return _cpu_select_target(targets, target_type, target_info)
 
 	# プレイヤーの場合：ドミニオコマンドと同じ方式で選択開始
@@ -126,14 +126,14 @@ func _cpu_select_target(targets: Array, _target_type: String, _target_info: Dict
 
 	var best_target: Dictionary = cpu_spell_phase_handler.select_best_target(
 		targets,
-		_spell_phase_handler.selected_spell_card,
-		_spell_phase_handler.current_player_id
+		_spell_phase_handler.spell_state.selected_spell_card,
+		_spell_phase_handler.spell_state.current_player_id
 	)
 	if best_target.is_empty():
 		best_target = targets[0]
 
 	# 選択した対象で確認フェーズへ
-	var parsed: Dictionary = _spell_phase_handler.selected_spell_card.get("effect_parsed", {})
+	var parsed: Dictionary = _spell_phase_handler.spell_state.selected_spell_card.get("effect_parsed", {})
 	var target_info_for_confirm: Dictionary = parsed.get("target_info", {})
 	if _spell_phase_handler and _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow._start_confirmation_phase(best_target.get("type", ""), target_info_for_confirm, best_target)
@@ -280,7 +280,7 @@ func _confirm_target_selection() -> void:
 	else:
 		# スペル実行（SpellFlowHandler経由）
 		if _spell_phase_handler and _spell_phase_handler.spell_flow:
-			await _spell_phase_handler.spell_flow.execute_spell_effect(_spell_phase_handler.selected_spell_card, selected_target)
+			await _spell_phase_handler.spell_flow.execute_spell_effect(_spell_phase_handler.spell_state.selected_spell_card, selected_target)
 		else:
 			push_error("[STSH] spell_flow が初期化されていません")
 
@@ -374,7 +374,7 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
 		return
 
-	ttm.set_current_player(_spell_phase_handler.current_player_id)
+	ttm.set_current_player(_spell_phase_handler.spell_state.current_player_id)
 
 	# シグナル接続（重複防止）
 	if not ttm.target_selected.is_connected(_on_spell_tap_target_selected):
@@ -479,7 +479,7 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 		return
 
 	var ttm = _ui_manager.tap_target_manager
-	ttm.set_current_player(_spell_phase_handler.current_player_id)
+	ttm.set_current_player(_spell_phase_handler.spell_state.current_player_id)
 
 	# シグナル接続（重複防止）- スペルと同じハンドラを使用
 	if not ttm.target_selected.is_connected(_on_spell_tap_target_selected):

@@ -61,12 +61,12 @@ func execute(context: Dictionary) -> void:
 	# all_players の場合は全プレイヤーに呪いをかける
 	if effect.get("all_players", false) or target_data.get("type") == "all_players":
 		var player_count = handler.player_system.players.size() if handler and handler.player_system else 2
+		var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
 		for pid in range(player_count):
-			var current_player_id = handler.current_player_id if handler else 0
 			spell_curse.curse_player(pid, curse_type, duration, params, current_player_id)
 	else:
-		var target_player_id = target_data.get("player_id", handler.current_player_id if handler else 0)
-		var current_player_id = handler.current_player_id if handler else 0
+		var current_player_id = handler.spell_state.current_player_id if (handler and handler.spell_state) else 0
+		var target_player_id = target_data.get("player_id", current_player_id)
 		spell_curse.curse_player(target_player_id, curse_type, duration, params, current_player_id)
 
 	_log("効果実行完了")

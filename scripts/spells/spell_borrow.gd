@@ -94,7 +94,7 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 		ui_manager.set_message(message)
 	
 	# カード選択UIを表示（単体対象スペルのみハイライト）
-	var current_player_id = spell_phase_handler_ref.current_player_id
+	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
 		ui_manager.card_selection_filter = "single_target_spell"
@@ -133,8 +133,8 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 func _find_hand_index(spell: Dictionary) -> int:
 	if not card_system_ref or not spell_phase_handler_ref:
 		return -1
-	
-	var player_id = spell_phase_handler_ref.current_player_id
+
+	var player_id = spell_phase_handler_ref.spell_state.current_player_id
 	var hand = card_system_ref.get_all_cards_for_player(player_id)
 	
 	for i in range(hand.size()):

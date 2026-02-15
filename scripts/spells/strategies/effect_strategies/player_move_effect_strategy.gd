@@ -49,21 +49,21 @@ func execute(context: Dictionary) -> void:
 		"warp_to_nearest_vacant":
 			var result = spell_player_move.warp_to_nearest_vacant(current_player_id)
 			print("[PlayerMoveEffectStrategy] %s" % result.get("message", ""))
-			if result.get("success", false) and handler:
-				handler.skip_dice_phase = true
+			if result.get("success", false) and handler and handler.spell_state:
+				handler.spell_state.skip_dice_phase = true
 
 		"warp_to_nearest_gate":
 			var result = spell_player_move.warp_to_nearest_gate(current_player_id)
 			print("[PlayerMoveEffectStrategy] %s" % result.get("message", ""))
-			if result.get("success", false) and handler:
-				handler.skip_dice_phase = true
+			if result.get("success", false) and handler and handler.spell_state:
+				handler.spell_state.skip_dice_phase = true
 
 		"warp_to_target":
 			var tile_idx = target_data.get("tile_index", -1)
 			var result = spell_player_move.warp_to_target(current_player_id, tile_idx)
 			print("[PlayerMoveEffectStrategy] %s" % result.get("message", ""))
-			if result.get("success", false) and handler:
-				handler.skip_dice_phase = true
+			if result.get("success", false) and handler and handler.spell_state:
+				handler.spell_state.skip_dice_phase = true
 
 		"curse_movement_reverse":
 			var duration = effect.get("duration", 1)

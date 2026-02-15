@@ -60,6 +60,7 @@ func execute(context: Dictionary) -> void:
 		return
 
 	_log("効果実行開始 (effect_type: %s)" % effect_type)
+	print("[MagicEffectStrategy] execute(): effect_type=%s, player_id=%d" % [effect_type, current_player_id])
 
 	# context 構築（元のロジックを再現）
 	var magic_context = {
@@ -70,7 +71,9 @@ func execute(context: Dictionary) -> void:
 	}
 
 	# spell_magic に委譲（await 必須）
+	print("[MagicEffectStrategy] spell_magic.apply_effect() 呼び出し")
 	var result = await spell_magic.apply_effect(effect, current_player_id, magic_context)
+	print("[MagicEffectStrategy] spell_magic.apply_effect() 完了")
 
 	# next_effect がある場合は処理（spell_magic は内部で next_effect を返す場合がある）
 	if result.has("next_effect") and not result.get("next_effect", {}).is_empty():
@@ -83,3 +86,4 @@ func execute(context: Dictionary) -> void:
 			_log("next_effect を検出したが spell_effect_executor が未設定")
 
 	_log("効果実行完了")
+	print("[MagicEffectStrategy] execute() 完了")

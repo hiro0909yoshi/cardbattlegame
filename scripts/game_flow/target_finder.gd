@@ -79,7 +79,7 @@ static func get_valid_targets(handler, target_type: String, target_info: Diction
 	var systems = {
 		"board_system": handler.board_system if handler else null,
 		"player_system": handler.player_system if handler else null,
-		"current_player_id": handler.current_player_id if handler else 0,
+		"current_player_id": handler.spell_state.current_player_id if (handler and handler.spell_state) else 0,
 		"game_flow_manager": gfm,
 		"spell_player_move": gfm.spell_container.spell_player_move if (gfm and gfm.spell_container) else null
 	}

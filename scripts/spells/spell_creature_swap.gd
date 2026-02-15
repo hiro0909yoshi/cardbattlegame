@@ -384,7 +384,7 @@ func _select_hand_creature(creatures: Array, message: String) -> int:
 		ui_manager.set_message(message)
 	
 	# カード選択UIを表示
-	var current_player_id = spell_phase_handler_ref.current_player_id
+	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
 		ui_manager.show_card_selection_ui_mode(player, "summon")

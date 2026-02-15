@@ -7,12 +7,12 @@ extends RefCounted
 
 ## バリデーション（実行前の条件チェック）
 ## 戻り値: true = 実行可能、false = 実行不可
-func validate(context: Dictionary) -> bool:
+func validate(_context: Dictionary) -> bool:
 	push_error("[SpellStrategy] validate() を実装してください")
 	return false
 
 ## 実行（スペル効果の適用）
-func execute(context: Dictionary) -> void:
+func execute(_context: Dictionary) -> void:
 	push_error("[SpellStrategy] execute() を実装してください")
 
 ## ================================================================================

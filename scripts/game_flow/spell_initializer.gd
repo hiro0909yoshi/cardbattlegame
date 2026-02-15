@@ -33,7 +33,7 @@ func initialize(spell_phase_handler, game_stats: Dictionary) -> void:
 
 
 ## Step 1: 基本参照の取得
-func _setup_base_references(sph, game_stats: Dictionary) -> void:
+func _setup_base_references(sph, _game_stats: Dictionary) -> void:
 	# CreatureManager を取得
 	if sph.board_system:
 		sph.creature_manager = sph.board_system.get_node_or_null("CreatureManager")
@@ -46,7 +46,7 @@ func _setup_base_references(sph, game_stats: Dictionary) -> void:
 
 
 ## Step 2: 11個のSpell**** クラスを初期化（SpellSubsystemContainer 経由）
-func _initialize_spell_systems(sph, game_stats: Dictionary) -> void:
+func _initialize_spell_systems(sph, _game_stats: Dictionary) -> void:
 	# === Phase 3-A Day 18: SpellSubsystemContainer 初期化 ===
 	if not sph.spell_systems:
 		sph.spell_systems = SpellSubsystemContainer.new()
