@@ -218,7 +218,7 @@ func execute_summon_for_cpu(card_index: int, complete_callback: Callable) -> boo
 ## カード犠牲処理（手札選択UI表示→カード破棄）
 func process_card_sacrifice(player_id: int, summon_card_index: int, creature_card: Dictionary = {}, tile_element: String = "") -> Dictionary:
 	# CPUの場合は自動選択
-	if _is_cpu_player(player_id):
+	if game_flow_manager and game_flow_manager.is_cpu_player(player_id):
 		return _process_card_sacrifice_cpu(player_id, creature_card, tile_element)
 	
 	# CardSacrificeHelperを初期化
@@ -315,16 +315,6 @@ func select_sacrifice_card_for_cpu(player_id: int, creature_card: Dictionary, ti
 ## 召喚条件が解除されているか
 func _is_summon_condition_ignored(player_id: int = -1) -> bool:
 	return SummonConditionChecker.is_summon_condition_ignored(player_id, game_flow_manager, board_system)
-
-
-## CPUプレイヤーかどうか判定
-func _is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-	var cpu_settings = game_flow_manager.player_is_cpu
-	if DebugSettings.manual_control_all:
-		return false
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 
 ## TileActionProcessorへの参照を取得

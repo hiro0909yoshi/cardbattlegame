@@ -253,7 +253,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		if result.tile >= 0:
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			if _is_cpu_player(player_id) and cpu_movement_evaluator:
+			if game_flow_manager and game_flow_manager.is_cpu_player(player_id) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 			else:
@@ -264,7 +264,7 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		if _is_cpu_player(player_id) and cpu_movement_evaluator:
+		if game_flow_manager and game_flow_manager.is_cpu_player(player_id) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 		else:
@@ -283,7 +283,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 
 	if not tile or not tile.connections or tile.connections.is_empty():
 		var selected_dir: int
-		if _is_cpu_player(current_moving_player):
+		if game_flow_manager and game_flow_manager.is_cpu_player(current_moving_player):
 			var tutorial_manager = _get_tutorial_manager()
 			if tutorial_manager and tutorial_manager.is_active:
 				selected_dir = tutorial_manager.get_cpu_direction()
@@ -315,7 +315,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		if result.tile >= 0:
 			chosen = result.tile
 		elif not result.choices.is_empty():
-			if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
+			if game_flow_manager and game_flow_manager.is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, current_remaining_steps, current_tile)
 				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 			else:
@@ -326,7 +326,7 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	elif choices.size() == 1:
 		chosen = choices[0]
 	else:
-		if _is_cpu_player(current_moving_player) and cpu_movement_evaluator:
+		if game_flow_manager and game_flow_manager.is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, current_remaining_steps, current_tile)
 			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 		else:
@@ -509,17 +509,6 @@ func _consume_direction_choice(player_id: int) -> void:
 	if player_id < 0 or player_id >= player_system.players.size():
 		return
 	player_system.players[player_id].buffs.erase("direction_choice_pending")
-
-
-func _is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-	var player_is_cpu = game_flow_manager.player_is_cpu
-	if player_id < 0 or player_id >= player_is_cpu.size():
-		return false
-	if DebugSettings.manual_control_all:
-		return false
-	return player_is_cpu[player_id]
 
 
 func _get_tutorial_manager():

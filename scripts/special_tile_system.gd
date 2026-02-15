@@ -86,7 +86,7 @@ func _show_special_tile_landing_ui(player_id: int):
 		ui_manager.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
 	
 	# 人間プレイヤーの場合、ドミニオコマンドボタンを再表示
-	if not _is_cpu_player(player_id):
+	if board_system and board_system.game_flow_manager and not board_system.game_flow_manager.is_cpu_player(player_id):
 		ui_manager.show_dominio_order_button()
 
 # 3Dタイル処理（BoardSystem3Dから呼び出される）
@@ -228,9 +228,9 @@ func handle_magic_stone_tile(player_id: int, tile = null):
 		print("[SpecialTile] 魔法石マス処理完了: %s" % result)
 	else:
 		# フォールバック: CPUの場合はスキップ
-		if _is_cpu_player(player_id):
+		if board_system and board_system.game_flow_manager and board_system.game_flow_manager.is_cpu_player(player_id):
 			print("[SpecialTile] CPU - 魔法石マススキップ")
-	
+
 	emit_signal("special_tile_activated", "magic_stone", player_id, -1)
 	
 	# 共通UI設定
@@ -250,7 +250,7 @@ func handle_magic_tile(player_id: int, tile = null):
 		was_warped = result.get("warped", false)
 	else:
 		# フォールバック: CPUの場合はスキップ
-		if _is_cpu_player(player_id):
+		if board_system and board_system.game_flow_manager and board_system.game_flow_manager.is_cpu_player(player_id):
 			print("[SpecialTile] CPU - 魔法マススキップ")
 	
 	emit_signal("special_tile_activated", "magic", player_id, -1)
@@ -308,7 +308,7 @@ func handle_base_tile(player_id: int, tile = null):
 			await board_system.get_tree().process_frame
 			
 			# CPUの場合は自動召喚処理
-			if _is_cpu_player(player_id):
+			if board_system and board_system.game_flow_manager and board_system.game_flow_manager.is_cpu_player(player_id):
 				await _cpu_remote_summon(player_id, selected_tile)
 				emit_signal("special_tile_activated", "base", player_id, selected_tile)
 				return {"wait_for_summon": false}  # CPU処理完了
@@ -381,14 +381,6 @@ func is_special_tile_3d(tile_type: String) -> bool:
 # 無属性マスかチェック（連鎖計算用）
 func is_neutral_tile(tile_type: String) -> bool:
 	return tile_type == "neutral"
-
-# CPUプレイヤーかチェック
-func _is_cpu_player(player_id: int) -> bool:
-	if board_system and "player_is_cpu" in board_system:
-		var cpu_flags = board_system.player_is_cpu
-		if player_id < cpu_flags.size():
-			return cpu_flags[player_id]
-	return false
 
 ## CPU用遠隔召喚処理
 ## tile_action_processorの既存処理を使用

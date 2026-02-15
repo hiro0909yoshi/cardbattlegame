@@ -161,7 +161,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 			attacker_display, defender_display, "attacker")
 	
 	# CPU攻撃側の合体処理をチェック
-	if _is_cpu_player(current_player_index):
+	if game_flow_manager and game_flow_manager.is_cpu_player(current_player_index):
 		var merge_executed = _check_and_execute_cpu_attacker_merge(current_player_index)
 		if merge_executed:
 			if battle_status_overlay:
@@ -438,16 +438,6 @@ func _check_and_execute_cpu_attacker_merge(player_index: int) -> bool:
 ## 召喚条件が解除されているか
 func _is_summon_condition_ignored(player_id: int = -1) -> bool:
 	return SummonConditionChecker.is_summon_condition_ignored(player_id, game_flow_manager, board_system)
-
-
-## CPUプレイヤーかどうか判定
-func _is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-	var cpu_settings = game_flow_manager.player_is_cpu
-	if DebugSettings.manual_control_all:
-		return false
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 
 ## TileActionProcessorへの参照を取得

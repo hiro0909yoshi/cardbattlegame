@@ -214,7 +214,7 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 		return -1
 
 	# CPUの場合は自動選択（最初の候補を使用）
-	if spell_state and is_cpu_player(spell_state.current_player_id):
+	if spell_state and game_flow_manager and game_flow_manager.is_cpu_player(spell_state.current_player_id):
 		return tile_indices[0]
 
 	# TargetSelectionHelper経由で選択（直接参照）
@@ -292,18 +292,6 @@ func pass_spell(auto_roll: bool = true):
 		push_error("[SPH] spell_flow が初期化されていません")
 		return
 	spell_flow.pass_spell(auto_roll)
-
-## CPUプレイヤーかどうか
-func is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-
-	var cpu_settings = game_flow_manager.player_is_cpu
-
-	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
-
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## スペル関連のコンテキストを構築（世界呪い等）
 func _build_spell_context() -> Dictionary:

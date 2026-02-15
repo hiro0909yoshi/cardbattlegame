@@ -69,7 +69,7 @@ func update_spell_phase_ui() -> void:
 		_spell_phase_handler.hand_display.update_hand_display(current_player.id)
 
 	# スペル選択UIを表示（人間プレイヤーのみ）
-	if not _is_cpu_player(current_player.id):
+	if not (_spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(current_player.id)):
 		show_spell_selection_ui(hand_data, current_player.magic_power)
 
 	# ダイスボタンのテキストはそのまま「ダイスを振る」
@@ -138,18 +138,6 @@ func hide_spell_phase_buttons() -> void:
 	# 特殊ボタンをクリア
 	if _ui_manager:
 		_ui_manager.hide_mystic_button()
-
-## CPUプレイヤーかどうか
-func _is_cpu_player(player_id: int) -> bool:
-	if not _spell_phase_handler or not _spell_phase_handler.game_flow_manager:
-		return false
-
-	var cpu_settings = _spell_phase_handler.game_flow_manager.player_is_cpu
-
-	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
-
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## スペル関連のコンテキストを構築（世界呪い等）
 func _build_spell_context() -> Dictionary:

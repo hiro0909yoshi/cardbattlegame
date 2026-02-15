@@ -115,7 +115,7 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 		clear_preselected_defender_item()
 		
 		var defender_owner = defender_tile_info.get("owner", -1)
-		if defender_owner >= 0 and is_cpu_player(defender_owner):
+		if defender_owner >= 0 and game_flow_manager and game_flow_manager.is_cpu_player(defender_owner):
 			var defender_creature = defender_tile_info.get("creature", {})
 			preselect_defender_item(
 				defender_owner,
@@ -141,7 +141,7 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	item_phase_started.emit()
 	
 	# CPUの場合のアイテム判断
-	if is_cpu_player(player_id):
+	if game_flow_manager and game_flow_manager.is_cpu_player(player_id):
 		if _is_current_phase_attacker:
 			# 攻撃側CPU
 			if not _preselected_attacker_item.is_empty():
@@ -509,18 +509,6 @@ func get_selected_item() -> Dictionary:
 ## アイテムが使用されたか
 func was_item_used() -> bool:
 	return item_used_this_battle
-
-## CPUプレイヤーかどうか
-func is_cpu_player(player_id: int) -> bool:
-	if not game_flow_manager:
-		return false
-
-	var cpu_settings = game_flow_manager.player_is_cpu
-
-	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
-
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## アクティブか
 func is_item_phase_active() -> bool:

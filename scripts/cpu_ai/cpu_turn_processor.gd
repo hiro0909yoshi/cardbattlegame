@@ -296,14 +296,6 @@ func _execute_cpu_pending_battle():
 	pending_cpu_attacker_item = {}
 	pending_cpu_defender_item = {}
 
-## プレイヤーがCPUかどうか判定
-func _is_cpu_player(player_index: int) -> bool:
-	if board_system and "player_is_cpu" in board_system:
-		var cpu_flags = board_system.player_is_cpu
-		if player_index >= 0 and player_index < cpu_flags.size():
-			return cpu_flags[player_index]
-	return false
-
 ## アイテムフェーズ表示用の土地ボーナス計算
 func _calculate_land_bonus_for_display(creature_data: Dictionary, tile_info: Dictionary) -> int:
 	var creature_element = creature_data.get("element", "")

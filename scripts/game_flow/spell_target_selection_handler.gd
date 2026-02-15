@@ -92,7 +92,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 		return false
 
 	# CPUの場合は自動で対象選択
-	if _is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
+	if _spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
 		return _cpu_select_target(targets, target_type, target_info)
 
 	# プレイヤーの場合：ドミニオコマンドと同じ方式で選択開始
@@ -553,18 +553,6 @@ func _on_target_next() -> void:
 
 	_current_target_index = (_current_target_index + 1) % _available_targets.size()
 	_update_target_selection()
-
-## CPUプレイヤーかどうか
-func _is_cpu_player(player_id: int) -> bool:
-	if not _spell_phase_handler or not _spell_phase_handler.game_flow_manager:
-		return false
-
-	var cpu_settings: Array = _spell_phase_handler.game_flow_manager.player_is_cpu
-
-	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
-
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
 
 ## 選択マーカーを取得（外部アクセス用）
 func get_selection_marker() -> MeshInstance3D:

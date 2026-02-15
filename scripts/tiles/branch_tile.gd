@@ -221,20 +221,12 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 		return {"success": true, "changed": false}
 	
 	# CPUの場合はスキップ
-	if _is_cpu_player(player_id):
+	if _board_system and _board_system.game_flow_manager and _board_system.game_flow_manager.is_cpu_player(player_id):
 		return {"success": true, "changed": false}
 	
 	# プレイヤーの場合はUI表示
 	var result = await _show_direction_change_selection()
 	return result
-
-## CPU判定
-func _is_cpu_player(player_id: int) -> bool:
-	if _board_system and "player_is_cpu" in _board_system:
-		var cpu_flags = _board_system.player_is_cpu
-		if player_id < cpu_flags.size():
-			return cpu_flags[player_id]
-	return player_id != 0
 
 ## 方向変更選択UI表示
 func _show_direction_change_selection() -> Dictionary:

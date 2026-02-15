@@ -29,7 +29,7 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_board_system = context.get("board_system")
 	
 	# CPUの場合はAI判断
-	if _is_cpu_player(player_id):
+	if _game_flow_manager and _game_flow_manager.is_cpu_player(player_id):
 		return await _handle_cpu_magic_stone(player_id)
 	
 	# プレイヤーの場合はUI表示
@@ -94,14 +94,6 @@ func _get_element_name(element: String) -> String:
 		"earth": return "土"
 		"wind": return "風"
 		_: return element
-
-## CPU判定
-func _is_cpu_player(player_id: int) -> bool:
-	if _game_flow_manager and "player_is_cpu" in _game_flow_manager:
-		var cpu_flags = _game_flow_manager.player_is_cpu
-		if player_id < cpu_flags.size():
-			return cpu_flags[player_id]
-	return player_id != 0
 
 ## 魔法石ショップUI表示
 func _show_magic_stone_shop(player_id: int) -> Dictionary:

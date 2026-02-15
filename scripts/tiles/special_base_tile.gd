@@ -27,7 +27,7 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_board_system = context.get("board_system")
 	
 	# CPUの場合はAI判断
-	if _is_cpu_player(player_id):
+	if _board_system and _board_system.game_flow_manager and _board_system.game_flow_manager.is_cpu_player(player_id):
 		return _handle_cpu_base_tile(player_id)
 	
 	# プレイヤーの場合は空き地選択UI
@@ -111,14 +111,6 @@ func _get_cpu_special_tile_ai():
 	if _game_flow_manager and "cpu_special_tile_ai" in _game_flow_manager:
 		return _game_flow_manager.cpu_special_tile_ai
 	return null
-
-## CPU判定
-func _is_cpu_player(player_id: int) -> bool:
-	if _board_system and "player_is_cpu" in _board_system:
-		var cpu_flags = _board_system.player_is_cpu
-		if player_id < cpu_flags.size():
-			return cpu_flags[player_id]
-	return player_id != 0
 
 ## SpellCreaturePlaceを取得
 func _get_spell_creature_place():

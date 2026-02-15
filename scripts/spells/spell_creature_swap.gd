@@ -59,7 +59,7 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 		return {"success": false, "reason": "no_hand_creature", "return_to_deck": true}
 	
 	var hand_creature: Dictionary
-	var is_cpu = _is_cpu_player(caster_player_id)
+	var is_cpu = spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.is_cpu_player(caster_player_id)
 	
 	if is_cpu:
 		# CPU: 自動で最適なクリーチャーを選択（属性一致 + HP/APの合計が高いもの）
@@ -95,10 +95,6 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 		"hand_creature": hand_creature.get("name", "クリーチャー")
 	}
 
-## CPUプレイヤー判定
-func _is_cpu_player(player_id: int) -> bool:
-	return player_id > 0
-
 ## CPU用：最適なクリーチャーを選択（タイルの属性と一致 + HP+APが高いもの）
 func _cpu_select_best_creature(hand_creatures: Array, _current_creature: Dictionary, tile_element: String = "") -> Dictionary:
 	var best = hand_creatures[0]
@@ -129,7 +125,7 @@ func _get_creature_score_with_element(creature: Dictionary, tile_element: String
 func _apply_swap_board_creatures(target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	var tile_index_1 = target_data.get("tile_index", -1)
 	var tile_index_2 = target_data.get("tile_index_2", -1)
-	var is_cpu = _is_cpu_player(caster_player_id)
+	var is_cpu = spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.is_cpu_player(caster_player_id)
 	
 	# CPUの場合は自動で最適なペアを選択
 	if is_cpu:

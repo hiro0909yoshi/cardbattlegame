@@ -125,7 +125,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		return
 	
 	# CPUの場合は自動選択
-	if _is_cpu_player(current_player_id):
+	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
 		# 自分に使う場合（スクイーズ等）は低レートを選択
 		var is_self_target = (target_player_id == current_player_id)
 		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal, is_self_target)
@@ -170,11 +170,6 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 			Callable(),  # 決定なし
 			func(): _cancel_enemy_card_selection("キャンセルしました")
 		)
-
-## CPUプレイヤーかどうか判定
-func _is_cpu_player(player_id: int) -> bool:
-	# プレイヤー0は人間、1以降はCPU
-	return player_id > 0
 
 ## CPU用: 手札から自動でカードを選択
 func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, callback: Callable, is_steal: bool, is_self_target: bool = false):
@@ -426,7 +421,7 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		return
 	
 	# CPUの場合は自動選択
-	if _is_cpu_player(current_player_id):
+	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
 		await _cpu_auto_select_deck_card(target_player_id, callback)
 		return
 	
@@ -711,7 +706,7 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		return
 	
 	# CPUの場合は自動選択
-	if _is_cpu_player(current_player_id):
+	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
 		await _cpu_auto_select_transform_card(target_player_id, filter_mode)
 		return
 	

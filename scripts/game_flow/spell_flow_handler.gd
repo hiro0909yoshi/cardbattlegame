@@ -97,18 +97,6 @@ func _count_own_creatures(player_id: int) -> int:
 			count += 1
 	return count
 
-## CPUプレイヤーかどうか
-func _is_cpu_player(player_id: int) -> bool:
-	if not _game_flow_manager:
-		return false
-
-	var cpu_settings = _game_flow_manager.player_is_cpu
-
-	if DebugSettings.manual_control_all:
-		return false  # デバッグモードでは全員手動
-
-	return player_id < cpu_settings.size() and cpu_settings[player_id]
-
 ## ===== メインフローロジック =====
 
 ## スペルを使用（166行のメインロジック）
@@ -440,7 +428,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 		return
 
 	# CPUの場合は自動で確定
-	if _is_cpu_player(_spell_state.current_player_id):
+	if _game_flow_manager and _game_flow_manager.is_cpu_player(_spell_state.current_player_id):
 		await _get_tree_ref().create_timer(0.3).timeout  # 少し待つ
 		_confirm_spell_effect()
 		return

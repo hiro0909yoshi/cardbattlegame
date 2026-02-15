@@ -833,6 +833,13 @@ func _check_turn_limit() -> bool:
 		return game_result_handler.check_turn_limit()
 	return false
 
+## CPUプレイヤーかどうかを判定（統一メソッド）
+func is_cpu_player(player_id: int) -> bool:
+	if DebugSettings.debug_manual_control_all:
+		return false  # デバッグモードでは全員手動
+
+	return player_id < player_is_cpu.size() and player_is_cpu[player_id]
+
 ## Day 3 追加: BoardSystem3D からの creature_updated を受信・リレー
 func _on_creature_updated_from_board(tile_index: int, creature_data: Dictionary):
 	print("[GameFlowManager] creature_updated 受信: tile=%d" % tile_index)
