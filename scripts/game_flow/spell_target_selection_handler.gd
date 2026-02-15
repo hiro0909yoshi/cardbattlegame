@@ -123,10 +123,8 @@ func _cpu_select_target(targets: Array, _target_type: String, _target_info: Dict
 	# CPUSpellPhaseHandlerで最適な対象を選択
 	var cpu_spell_phase_handler = _spell_phase_handler.cpu_spell_phase_handler
 	if not cpu_spell_phase_handler:
-		const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
-		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
-		cpu_spell_phase_handler.initialize(_spell_phase_handler)
-		_spell_phase_handler.cpu_spell_phase_handler = cpu_spell_phase_handler
+		push_error("[STSH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+		return false
 
 	var best_target: Dictionary = cpu_spell_phase_handler.select_best_target(
 		targets,

@@ -25,6 +25,7 @@ const CPUMysticArtsAIScript = preload("res://scripts/cpu_ai/cpu_mystic_arts_ai.g
 const CPUBattleAIScript = preload("res://scripts/cpu_ai/cpu_battle_ai.gd")
 const CPUDefenseAIScript = preload("res://scripts/cpu_ai/cpu_defense_ai.gd")
 const CPUMovementEvaluatorScript = preload("res://scripts/cpu_ai/cpu_movement_evaluator.gd")
+const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -49,6 +50,9 @@ var cpu_hand_utils: CPUHandUtils = null
 var cpu_battle_ai: CPUBattleAI = null
 var cpu_defense_ai: CPUDefenseAI = null
 var cpu_movement_evaluator: CPUMovementEvaluator = null
+
+# === CPU Spell Phase Handler ===
+var cpu_spell_phase_handler: CPUSpellPhaseHandler = null
 
 # === 設定 ===
 var player_count: int = 2
@@ -1175,6 +1179,9 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
 	spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
 	spell_phase_handler.set_cpu_hand_utils(cpu_hand_utils)
+
+	# Step 4.5: CPUSpellPhaseHandler を初期化（spell_phase_handlerの初期化後）
+	_initialize_cpu_spell_phase_handler(spell_phase_handler)
 	if cpu_spell_ai and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
 		cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
 	if cpu_movement_evaluator and cpu_spell_ai:
@@ -1197,6 +1204,20 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		push_error("[GameSystemManager] SpellPhaseOrchestrator 初期化失敗: 必要な参照が null")
 
 	print("[GameSystemManager] _initialize_spell_phase_subsystems 完了")
+
+## CPUSpellPhaseHandler 初期化
+func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
+	if not spell_phase_handler:
+		push_error("[GameSystemManager] spell_phase_handler が null です")
+		return
+
+	if not cpu_spell_phase_handler:
+		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
+		cpu_spell_phase_handler.initialize(spell_phase_handler)
+		print("[CPUSpellPhaseHandler] 初期化完了")
+
+	# SpellPhaseHandler に参照を設定
+	spell_phase_handler.cpu_spell_phase_handler = cpu_spell_phase_handler
 
 ## CPU移動評価システムの初期化
 func _initialize_cpu_movement_evaluator() -> void:

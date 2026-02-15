@@ -94,11 +94,12 @@ func _execute_cpu_mystic_arts(decision: Dictionary):
 		push_error("[MAH] SpellPhaseHandler が初期化されていません")
 		return
 
-	# CPUSpellPhaseHandlerで準備処理（ダウンチェック含む）
+	# cpu_spell_phase_handler は GameSystemManager で初期化済み
 	if not _cpu_spell_phase_handler:
-		const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
-		_cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
-		_cpu_spell_phase_handler.initialize(_spell_phase_handler)
+		_cpu_spell_phase_handler = _spell_phase_handler.cpu_spell_phase_handler
+		if not _cpu_spell_phase_handler:
+			push_error("[MAH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+			return
 
 	var prep = _cpu_spell_phase_handler.prepare_mystic_execution(decision, _spell_phase_handler.spell_state.current_player_id)
 	if not prep.get("success", false):

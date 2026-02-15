@@ -2,8 +2,6 @@
 extends Node
 class_name SpellPhaseHandler
 
-const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
-
 ## シグナル
 @warning_ignore("unused_signal")  # GameFlowManager で await されている（game_flow_manager.gd:276）
 signal spell_phase_completed()
@@ -184,8 +182,8 @@ func start_mystic_arts_phase():
 func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	"""CPU スペルターンを委譲（CPU固有ロジック削除）"""
 	if not cpu_spell_phase_handler:
-		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
-		cpu_spell_phase_handler.initialize(self)
+		push_error("[SPH] cpu_spell_phase_handler が初期化されていません（GameSystemManager で初期化してください）")
+		return
 
 	await cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 
