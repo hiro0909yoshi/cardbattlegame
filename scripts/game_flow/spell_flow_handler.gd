@@ -367,9 +367,14 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	# フォールバック: 従来のロジックで実行
 	print("[SpellFlowHandler] Strategy 失敗、フォールバック開始")
 	if _spell_effect_executor:
+		# SpellEffectExecutor は内部で complete_spell_phase() を呼ぶ
+		# → フォールバック完了時には既に complete_spell_phase() が呼ばれている
 		await _spell_effect_executor.execute_spell_effect(spell_card, target_data)
 	else:
 		print("[SpellFlowHandler] ERROR: _spell_effect_executor が未設定")
+
+	# NOTE: 戻ったときには complete_spell_phase() は既に呼び出し済み
+	# ここで重複呼び出しを防ぐため、何もしない
 
 ## Strategy パターンで実行を試行
 func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dictionary) -> bool:

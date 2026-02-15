@@ -224,9 +224,14 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	match action:
 		"spell":
 			await _execute_cpu_spell_from_decision(decision, player_id)
+			# NOTE: 完了シグナル(spell_phase_completed)は以下のフローで既に発火済み
+			# _execute_cpu_spell_from_decision() → execute_spell_effect()
+			# → spell_effect_executor.execute_spell_effect() → handler.complete_spell_phase()
+			# ここで重複呼び出しを防ぐため、コメント表示のみ
 		"mystic":
 			if mystic_arts_handler:
 				await mystic_arts_handler._execute_cpu_mystic_arts(decision)
+				# NOTE: 完了シグナルは mystic_arts_handler 内で発火済み
 			else:
 				pass_spell(false)
 		_:
@@ -234,6 +239,8 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 
 ## CPUがスペルを実行（decision から実行）
 func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> void:
+	print("[SPH] _execute_cpu_spell_from_decision 開始: player_id=%d" % player_id)
+
 	if not spell_state:
 		push_error("[SPH] spell_state が初期化されていません")
 		pass_spell(false)
@@ -267,11 +274,13 @@ func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> v
 	var target_type = parsed.get("target_type", "")
 
 	if target_type == "all_creatures":
+		print("[SPH] 全クリーチャー対象スペル実行: %s" % spell_card.get("name", "?"))
 		# 全クリーチャー対象スペル（スウォーム等）は専用ルートで実行
 		# 通知・カード捨て札・フェーズ完了は_execute_spell_on_all_creatures内で処理
 		var target_info = parsed.get("target_info", {})
 		await _execute_spell_on_all_creatures(spell_card, target_info)
 	else:
+		print("[SPH] 通常スペル実行: %s (target_type=%s)" % [spell_card.get("name", "?"), target_type])
 		# 発動通知表示
 		if spell_cast_notification_ui and player_system:
 			var caster_name = "CPU"
@@ -280,6 +289,8 @@ func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> v
 			await show_spell_cast_notification(caster_name, target, spell_card, false)
 
 		await execute_spell_effect(spell_card, target_data)
+
+	print("[SPH] _execute_cpu_spell_from_decision 完了: %s" % spell_card.get("name", "?"))
 
 ## 対象選択UIを表示（内部インターフェース）
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
@@ -628,8 +639,11 @@ func _on_card_selection_completed():
 
 ## スペル/アルカナアーツ発動通知を表示（内部）
 func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
-	if spell_confirmation_handler:
-		await spell_confirmation_handler.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
+	if not spell_confirmation_handler:
+		push_error("[SPH] spell_confirmation_handler が初期化されていません")
+		return
+
+	await spell_confirmation_handler.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
 
 
 ## カード犠牲が無効化されているか（TileActionProcessorから取得）
