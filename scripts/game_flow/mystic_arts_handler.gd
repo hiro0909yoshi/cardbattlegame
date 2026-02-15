@@ -66,8 +66,6 @@ func initialize_spell_mystic_arts() -> void:
 	if not _spell_mystic_arts.ui_message_requested.is_connected(_on_mystic_ui_message_requested):
 		_spell_mystic_arts.ui_message_requested.connect(_on_mystic_ui_message_requested)
 
-	print("[MAH] SpellMysticArts を初期化しました")
-
 ## SpellMysticArtsシステムを取得
 func get_spell_mystic_arts():
 	return _spell_mystic_arts

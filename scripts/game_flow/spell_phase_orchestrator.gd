@@ -23,8 +23,6 @@ func _init(handler, state: SpellStateHandler) -> void:
 
 func start_spell_phase(player_id: int) -> void:
 	"""スペルフェーズを開始"""
-	print("[SpellPhaseOrchestrator] start_spell_phase called with player_id: %d" % player_id)
-
 	if not spell_phase_handler or not spell_state:
 		push_error("[SpellPhaseOrchestrator] 初期化が不完全")
 		return
@@ -35,7 +33,6 @@ func start_spell_phase(player_id: int) -> void:
 
 	# スペルフェーズの初期状態に遷移（reset_turn_state() は INACTIVE に設定するため）
 	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
-	print("[SpellPhaseOrchestrator] フェーズ状態: %s に遷移" % SpellStateHandler.State.WAITING_FOR_INPUT)
 
 	# CPU / 人間プレイヤーで分岐
 	var is_cpu = is_cpu_player(player_id)
@@ -64,11 +61,9 @@ func complete_spell_phase() -> void:
 	# SpellPhaseHandler のシグナルを発行（GameFlowManager が待っている）
 	if spell_phase_handler and spell_phase_handler.spell_phase_completed:
 		spell_phase_handler.spell_phase_completed.emit()
-		print("[SpellPhaseOrchestrator] spell_phase_handler.spell_phase_completed emit")
 
 	# Orchestrator 自身のシグナルも発行（内部使用）
 	spell_phase_completed.emit()
-	print("[SpellPhaseOrchestrator] spell_phase_completed emit")
 
 ## ========================================
 ## ヘルパーメソッド
@@ -102,7 +97,6 @@ func _delegate_to_cpu_spell_handler(player_id: int) -> void:
 	await spell_phase_handler._delegate_to_cpu_spell_handler(player_id)
 
 	# SpellEffectExecutor が既に complete_spell_phase() を呼んでいるため、ここでは呼ばない
-	print("[SpellPhaseOrchestrator] CPU スペル処理完了")
 
 func _wait_for_human_spell_decision() -> void:
 	"""人間プレイヤーのスペル決定を待機"""
