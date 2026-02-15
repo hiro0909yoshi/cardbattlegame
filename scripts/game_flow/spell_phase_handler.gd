@@ -4,7 +4,6 @@ class_name SpellPhaseHandler
 
 const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
-const SpellStrategyFactory = preload("res://scripts/spells/strategies/spell_strategy_factory.gd")
 
 # 共有コンテキスト（CPU AI用）
 var _cpu_context: CPUAIContextScript = null

@@ -75,7 +75,7 @@ func update_spell_phase_ui() -> void:
 	# ダイスボタンのテキストはそのまま「ダイスを振る」
 
 ## スペル選択UIを表示
-func show_spell_selection_ui(hand_data: Array, available_magic: int) -> void:
+func show_spell_selection_ui(hand_data: Array, _available_magic: int) -> void:
 	if not _ui_manager or not _ui_manager.card_selection_ui:
 		return
 
