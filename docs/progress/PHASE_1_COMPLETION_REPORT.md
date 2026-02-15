@@ -24,16 +24,16 @@
 - **実装内容**:
   - Step 1: 基本参照設定（CreatureManager, TargetSelectionHelper）
   - Step 2: 11個の Spell システム初期化（SpellSubsystemContainer 経由）
-    - SpellDamage, SpellCreatureMove, SpellCreatureSwap, SpellCreatureReturn
-    - SpellCreaturePlace, SpellBorrow, SpellTransform, SpellPurify
-    - CardSacrificeHelper, SpellSynthesis, CPUTurnProcessor
+	- SpellDamage, SpellCreatureMove, SpellCreatureSwap, SpellCreatureReturn
+	- SpellCreaturePlace, SpellBorrow, SpellTransform, SpellPurify
+	- CardSacrificeHelper, SpellSynthesis, CPUTurnProcessor
   - Step 2.5: SpellEffectExecutor 初期化
   - Step 3: 6個のハンドラー初期化（呼び出し形式）
-    - SpellTargetSelectionHandler
-    - SpellConfirmationHandler
-    - SpellUIController
-    - MysticArtsHandler
-    - SpellStateHandler, SpellFlowHandler, SpellNavigationController
+	- SpellTargetSelectionHandler
+	- SpellConfirmationHandler
+	- SpellUIController
+	- MysticArtsHandler
+	- SpellStateHandler, SpellFlowHandler, SpellNavigationController
   - Step 4: CPU AI コンテキスト初期化（CPUSpellAI, CPUMysticArtsAI）
 
 #### Task 1.2: SpellPhaseHandler.set_game_stats() 修正 ✅
@@ -43,14 +43,14 @@
   ```gdscript
   # 修正前:
   func set_game_stats(p_game_stats) -> void:
-      game_stats = p_game_stats
-      var initializer = SpellInitializer.new()
-      initializer.initialize(self, game_stats)
+	  game_stats = p_game_stats
+	  var initializer = SpellInitializer.new()
+	  initializer.initialize(self, game_stats)
 
   # 修正後:
   func set_game_stats(p_game_stats) -> void:
-      game_stats = p_game_stats
-      # GameSystemManager で初期化処理を行うため、ここは削除
+	  game_stats = p_game_stats
+	  # GameSystemManager で初期化処理を行うため、ここは削除
   ```
 
 #### Task 1.3: SpellInitializer ファイル削除 ✅
@@ -64,8 +64,8 @@
   ```gdscript
   # Phase 1-A ハンドラーの初期化（GameFlowManagerの子として作成）
   _initialize_phase1a_handlers()
-    └─ SpellPhaseHandler 作成 (行 782-787)
-       └─ _initialize_spell_phase_subsystems() 呼び出し (行 800)
+	└─ SpellPhaseHandler 作成 (行 782-787)
+	   └─ _initialize_spell_phase_subsystems() 呼び出し (行 800)
   ```
 
 ---
@@ -75,19 +75,19 @@
 ```
 GameSystemManager.phase_4_setup_system_interconnections()
   └─ Phase 4-4: 特別な初期化 (行 457-471)
-     └─ _initialize_phase1a_handlers() (行 760-880)
-        ├─ TargetSelectionHelper 作成
-        ├─ DominioCommandHandler 作成
-        ├─ SpellPhaseHandler 作成 (行 782-797)
-        │  └─ set_game_stats() 呼び出し (行 788)
-        │     → SpellInitializer は呼ばない（削除済み）
-        │
-        └─ _initialize_spell_phase_subsystems() 呼び出し (行 800)
-           ├─ Step 1: 基本参照設定
-           ├─ Step 2: 11個の Spell システム初期化
-           ├─ Step 2.5: SpellEffectExecutor 初期化
-           ├─ Step 3: 6個のハンドラー初期化
-           └─ Step 4: CPU AI 初期化
+	 └─ _initialize_phase1a_handlers() (行 760-880)
+		├─ TargetSelectionHelper 作成
+		├─ DominioCommandHandler 作成
+		├─ SpellPhaseHandler 作成 (行 782-797)
+		│  └─ set_game_stats() 呼び出し (行 788)
+		│     → SpellInitializer は呼ばない（削除済み）
+		│
+		└─ _initialize_spell_phase_subsystems() 呼び出し (行 800)
+		   ├─ Step 1: 基本参照設定
+		   ├─ Step 2: 11個の Spell システム初期化
+		   ├─ Step 2.5: SpellEffectExecutor 初期化
+		   ├─ Step 3: 6個のハンドラー初期化
+		   └─ Step 4: CPU AI 初期化
 ```
 
 ---
@@ -160,19 +160,19 @@ GameSystemManager.phase_4_setup_system_interconnections()
 ```
 GameSystemManager (Phase 4 ハンドラー作成)
   └─ SpellPhaseHandler._initialize()
-     └─ set_game_stats()
-        └─ SpellInitializer.new() + initialize()  ← 分散
+	 └─ set_game_stats()
+		└─ SpellInitializer.new() + initialize()  ← 分散
 ```
 
 **修正後**:
 ```
 GameSystemManager (Phase 4-4)
   └─ _initialize_spell_phase_subsystems()  ← 一元化
-     ├─ 基本参照設定
-     ├─ 11個の Spell システム初期化
-     ├─ SpellEffectExecutor 初期化
-     ├─ 6個のハンドラー初期化
-     └─ CPU AI 初期化
+	 ├─ 基本参照設定
+	 ├─ 11個の Spell システム初期化
+	 ├─ SpellEffectExecutor 初期化
+	 ├─ 6個のハンドラー初期化
+	 └─ CPU AI 初期化
 ```
 
 ### 利点
