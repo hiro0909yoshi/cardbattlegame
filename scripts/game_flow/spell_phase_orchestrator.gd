@@ -1,0 +1,109 @@
+# SpellPhaseOrchestrator - スペルフェーズのオーケストレーションを担当
+extends RefCounted
+class_name SpellPhaseOrchestrator
+
+## スペルフェーズのオーケストレーションを担当
+## start_spell_phase() と complete_spell_phase() のロジックを集約
+
+var spell_phase_handler = null
+var spell_state: SpellStateHandler = null
+var cpu_spell_phase_handler = null
+
+signal spell_phase_completed()
+
+func _init(handler, state: SpellStateHandler) -> void:
+	"""初期化"""
+	spell_phase_handler = handler
+	spell_state = state
+	# cpu_spell_phase_handler は SpellPhaseHandler の遅延初期化を使用
+
+## ========================================
+## フェーズ開始処理
+## ========================================
+
+func start_spell_phase(player_id: int) -> void:
+	"""スペルフェーズを開始"""
+	print("[SpellPhaseOrchestrator] start_spell_phase called with player_id: %d" % player_id)
+
+	if not spell_phase_handler or not spell_state:
+		push_error("[SpellPhaseOrchestrator] 初期化が不完全")
+		return
+
+	# フェーズ状態をリセット
+	spell_state.reset_turn_state()
+	spell_state.set_current_player_id(player_id)
+
+	# CPU / 人間プレイヤーで分岐
+	var is_cpu = is_cpu_player(player_id)
+	print("[SpellPhaseOrchestrator] CPU判定結果 player_id=%d, is_cpu=%s" % [player_id, is_cpu])
+
+	if is_cpu:
+		# CPU スペル処理に委譲
+		await _delegate_to_cpu_spell_handler(player_id)
+	else:
+		# 人間プレイヤー向け処理
+		await spell_phase_handler._wait_for_human_spell_decision()
+
+## ========================================
+## フェーズ完了処理
+## ========================================
+
+func complete_spell_phase() -> void:
+	"""スペルフェーズを完了"""
+	if not spell_state:
+		push_error("[SpellPhaseOrchestrator] spell_state が見つかりません")
+		return
+
+	# フェーズ状態を INACTIVE に遷移
+	spell_state.transition_to(SpellStateHandler.State.INACTIVE)
+
+	# SpellPhaseHandler のシグナルを発行（GameFlowManager が待っている）
+	if spell_phase_handler and spell_phase_handler.spell_phase_completed:
+		spell_phase_handler.spell_phase_completed.emit()
+		print("[SpellPhaseOrchestrator] spell_phase_handler.spell_phase_completed emit")
+
+	# Orchestrator 自身のシグナルも発行（内部使用）
+	spell_phase_completed.emit()
+	print("[SpellPhaseOrchestrator] spell_phase_completed emit")
+
+## ========================================
+## ヘルパーメソッド
+## ========================================
+
+func is_cpu_player(player_id: int) -> bool:
+	"""プレイヤーが CPU かどうかを判定"""
+	if not spell_phase_handler:
+		print("[Orch-CPU] spell_phase_handler is null")
+		return false
+
+	# game_flow_manager から player_is_cpu 設定を取得
+	if spell_phase_handler.game_flow_manager:
+		var cpu_settings = spell_phase_handler.game_flow_manager.player_is_cpu
+		print("[Orch-CPU] cpu_settings: %s, player_id: %d" % [cpu_settings, player_id])
+
+		var is_cpu = player_id < cpu_settings.size() and cpu_settings[player_id]
+		print("[Orch-CPU] Player %d is_cpu = %s" % [player_id, is_cpu])
+		return is_cpu
+	else:
+		print("[Orch-CPU] game_flow_manager is null")
+		return false 
+
+func _delegate_to_cpu_spell_handler(player_id: int) -> void:
+	"""CPU スペル処理に委譲"""
+	if not spell_phase_handler:
+		push_error("[SpellPhaseOrchestrator] spell_phase_handler が見つかりません")
+		return
+
+	# SpellPhaseHandler の既存メソッドを直接呼び出し
+	await spell_phase_handler._delegate_to_cpu_spell_handler(player_id)
+
+	# CPU スペル処理完了後、フェーズを完了
+	complete_spell_phase()
+
+func _wait_for_human_spell_decision() -> void:
+	"""人間プレイヤーのスペル決定を待機"""
+	if not spell_phase_handler:
+		return
+
+	# SpellPhaseHandler の既存メソッドを呼び出し
+	await spell_phase_handler._wait_for_human_spell_decision()
