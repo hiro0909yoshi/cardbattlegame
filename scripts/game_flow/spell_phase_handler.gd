@@ -9,12 +9,15 @@ const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase
 var _cpu_context: CPUAIContextScript = null
 
 ## シグナル
-signal spell_phase_started()
+@warning_ignore("unused_signal")  # GameFlowManager で await されている（game_flow_manager.gd:276）
 signal spell_phase_completed()
+@warning_ignore("unused_signal")  # SpellFlowHandler で emit されている（spell_flow_handler.gd:540）
 signal spell_passed()
 @warning_ignore("unused_signal")  # spell_effect_executorでemitされる（将来の拡張用）
 signal spell_used(spell_card: Dictionary)
+@warning_ignore("unused_signal")  # SpellFlowHandler で emit されている（spell_flow_handler.gd:259）
 signal target_selection_required(spell_card: Dictionary, target_type: String)
+@warning_ignore("unused_signal")  # SpellTargetSelectionHandler で emit されている（spell_target_selection_handler.gd:271,303）
 signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了時
 
 ## 参照
@@ -36,6 +39,7 @@ signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了�
 var card_selection_handler: CardSelectionHandler = null
 
 ## 外部スペル実行完了シグナル
+@warning_ignore("unused_signal")  # SpellFlowHandler で await/emit されている（spell_flow_handler.gd:569,633, spell_effect_executor.gd:231）
 signal external_spell_finished()  # 外部スペル実行完了
 
 ## 参照
@@ -65,8 +69,11 @@ var game_stats  # GameFlowManager.game_stats への直接参照
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
 var spell_draw = null  # SpellDraw: ドロー処理
+var spell_magic = null  # SpellMagic: EP操作（新規追加）
+var spell_curse_stat = null  # SpellCurseStat: ステータス変更（新規追加）
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
+var spell_orchestrator = null  # SpellPhaseOrchestrator: フェーズ管理オーケストレーター
 
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI
@@ -82,6 +89,9 @@ var mystic_arts_handler = null  # MysticArtsHandler - アルカナアーツ処�
 var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
 var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
 var spell_navigation_controller: SpellNavigationController = null  # ナビゲーション管理（Day 18）
+
+## スペル決定待機用フラグ（Lambda重複接続防止用）
+var _waiting_for_spell_decision = false
 
 func _ready():
 	pass
@@ -107,29 +117,42 @@ func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = n
 func set_game_stats(p_game_stats) -> void:
 	game_stats = p_game_stats
 
-	# SpellInitializer で全サブシステムを初期化
-	var initializer = SpellInitializer.new()
-	initializer.initialize(self, game_stats)
-
-	# SpellMysticArts を MysticArtsHandler経由で初期化
-	if mystic_arts_handler:
-		mystic_arts_handler.initialize_spell_mystic_arts()
-		spell_mystic_arts = mystic_arts_handler.get_spell_mystic_arts()
-
 ## SpellEffectExecutorにスペルコンテナを設定（辞書展開廃止）
 func set_spell_effect_executor_container(container: SpellSystemContainer) -> void:
-	if spell_effect_executor:
-		spell_effect_executor.set_spell_container(container)
+	# ★ NEW: null チェック
+	if not container:
+		push_error("[SPH] set_spell_effect_executor_container: container が null です")
+		return
+
+	if not spell_effect_executor:
+		push_error("[SPH] set_spell_effect_executor_container: spell_effect_executor が null です")
+		return
+
+	print("[SPH] spell_effect_executor.set_spell_container() 呼び出し")
+	spell_effect_executor.set_spell_container(container)
+
+	# ★ NEW: 設定確認
+	if spell_effect_executor.spell_container:
+		print("[SPH] spell_effect_executor.spell_container 設定完了")
+		if spell_effect_executor.spell_container.is_valid():
+			print("[SPH] spell_effect_executor.spell_container は有効です（8個のコアシステム設定済み）")
+		else:
+			push_warning("[SPH] spell_effect_executor.spell_container は不完全です")
+			spell_effect_executor.spell_container.debug_print_status()
+	else:
+		push_error("[SPH] spell_effect_executor.spell_container が null のままです")
 
 ## game_3d参照を設定（TutorialManager取得用）
 func set_game_3d_ref(p_game_3d) -> void:
 	game_3d_ref = p_game_3d
 
 ## 直接参照を設定（GFM経由を廃止）
-func set_spell_systems_direct(cost_modifier, draw) -> void:
+func set_spell_systems_direct(cost_modifier, draw, magic, curse_stat) -> void:
 	spell_cost_modifier = cost_modifier
 	spell_draw = draw
-	print("[SpellPhaseHandler] spell_cost_modifier, spell_draw 直接参照を設定")
+	spell_magic = magic              # 新規追加
+	spell_curse_stat = curse_stat    # 新規追加
+	print("[SpellPhaseHandler] spell_cost_modifier, spell_draw, spell_magic, spell_curse_stat 直接参照を設定")
 
 	# card_selection_handlerが既に初期化されている場合、spell_drawを設定
 	if spell_draw and card_selection_handler:
@@ -143,45 +166,12 @@ func set_battle_status_overlay(overlay) -> void:
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
-	if not spell_state:
-		push_error("[SPH] spell_state が初期化されていません")
+	if not spell_orchestrator:
+		push_error("[SPH] spell_orchestrator が見つかりません")
 		return
 
-	if spell_state.current_state != SpellStateHandler.State.INACTIVE:
-		return
-
-	# SpellStateHandler で状態を初期化
-	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
-	spell_state.set_current_player_id(player_id)
-	spell_state.set_spell_used_this_turn(false)
-	spell_state.set_skip_dice_phase(false)
-	spell_state.clear_spell_card()
-
-	spell_phase_started.emit()
-
-	# UIを更新（スペルカードのみ選択可能にする）
-	if ui_manager:
-		_update_spell_phase_ui()
-		_show_spell_phase_buttons()
-
-	# CPUの場合は簡潔に委譲
-	if is_cpu_player(player_id):
-		await _delegate_to_cpu_spell_handler(player_id)
-	else:
-		# 人間プレイヤーの場合：カメラ手動モード有効化
-		if board_system and board_system.has_method("enable_manual_camera"):
-			board_system.enable_manual_camera()
-			if board_system.has_method("set_camera_player"):
-				board_system.set_camera_player(player_id)
-		else:
-			push_error("[SPH] board_system のカメラメソッドが利用不可")
-
-		# グローバルナビゲーション設定（戻るボタンのみ = スペルを使わない）
-		_setup_spell_selection_navigation()
-
-		# 入力待ち
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+	# フェーズ開始をオーケストレーターに委譲
+	await spell_orchestrator.start_spell_phase(player_id)
 
 ## UIメソッド（内部使用のため簡潔実装）
 func _update_spell_phase_ui():
@@ -338,13 +328,13 @@ func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_t
 
 	return await spell_flow.execute_external_spell(spell_card, player_id, from_magic_tile)
 
-## スペルフェーズ完了（SpellFlowHandler に委譲）
+## スペルフェーズ完了（SpellPhaseOrchestrator に委譲）
 func complete_spell_phase():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
+	if not spell_orchestrator:
+		push_error("[SPH] spell_orchestrator が見つかりません")
 		return
 
-	spell_flow.complete_spell_phase()
+	spell_orchestrator.complete_spell_phase()
 
 ## ============ Delegation Methods to SpellFlowHandler ============
 
@@ -486,95 +476,6 @@ func has_spell_mystic_arts() -> bool:
 
 # ============ UIボタン管理 ============
 
-## UIボタン管理（内部）
-## UI初期化 - 委譲メソッド
-func _initialize_spell_phase_ui():
-	if spell_navigation_controller:
-		spell_navigation_controller._initialize_spell_phase_ui()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## スペルフェーズボタン表示 - 委譲メソッド
-func _show_spell_phase_buttons():
-	if spell_navigation_controller:
-		spell_navigation_controller._show_spell_phase_buttons()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## スペルフェーズボタン非表示 - 委譲メソッド
-func _hide_spell_phase_buttons():
-	if spell_navigation_controller:
-		spell_navigation_controller._hide_spell_phase_buttons()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-
-# ============ グローバルナビゲーション設定 ============
-
-## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）- 委譲メソッド
-func _setup_spell_selection_navigation():
-	if spell_navigation_controller:
-		spell_navigation_controller._setup_spell_selection_navigation()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## 閲覧モード（グレーアウトカードタップ等）から戻る時のナビゲーション復元
-## state別にナビゲーション + 特殊ボタン + フェーズコメントを復元する
-func restore_navigation():
-	if spell_navigation_controller:
-		spell_navigation_controller.restore_navigation()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## state別のナビゲーション復元（アルカナアーツ判定をスキップ）
-## spell_mystic_arts.restore_navigation()からの再帰呼び出し時に使用
-func restore_navigation_for_state():
-	if spell_navigation_controller:
-		spell_navigation_controller.restore_navigation_for_state()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ナビゲーション設定（ターゲット選択）- 委譲メソッド
-func _setup_target_selection_navigation() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._setup_target_selection_navigation()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ナビゲーション設定解除 - 委譲メソッド
-func _clear_spell_navigation() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._clear_spell_navigation()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ターゲット確認 - 委譲メソッド
-func _on_target_confirm() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._on_target_confirm()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ターゲット選択キャンセル - 委譲メソッド
-func _on_target_cancel() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._on_target_cancel()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ターゲット選択前へ - 委譲メソッド
-func _on_target_prev() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._on_target_prev()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
-
-## ターゲット選択次へ - 委譲メソッド
-func _on_target_next() -> void:
-	if spell_navigation_controller:
-		spell_navigation_controller._on_target_next()
-	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
 
 ## アルカナアーツ関連（内部）
@@ -742,123 +643,88 @@ func _get_cpu_battle_policy():
 		return spell_systems.cpu_turn_processor.cpu_ai_handler.battle_policy
 	return null
 
-## SpellTargetSelectionHandler を初期化（Phase 6-1）
-func _initialize_spell_target_selection_handler() -> void:
-	if spell_target_selection_handler:
-		return  # 既に初期化済み
 
-	spell_target_selection_handler = SpellTargetSelectionHandler.new()
-	spell_target_selection_handler.name = "SpellTargetSelectionHandler"
-	add_child(spell_target_selection_handler)
+## 待機中のspell_used シグナル処理（メンバー関数）
+func _on_spell_used_while_waiting(_spell_card: Dictionary) -> void:
+	"""待機中のspell_used シグナル処理"""
+	print("[SPH-SIGNAL] 🔴 _on_spell_used_while_waiting() 呼ばれました！")
+	print("[SPH-SIGNAL] spell_card: ", _spell_card.get("name", "unknown"))
+	_waiting_for_spell_decision = false
+	print("[SPH-SIGNAL] _waiting_for_spell_decision = false に設定")
 
-	# 参照を設定（setup() 時に注入）
-	spell_target_selection_handler.setup(
-		self,
-		ui_manager,
-		board_system,
-		player_system,
-		game_3d_ref
-	)
+## 待機中のspell_passed シグナル処理（メンバー関数）
+func _on_spell_passed_while_waiting() -> void:
+	"""待機中のspell_passed シグナル処理"""
+	print("[SPH-SIGNAL] 🔴 _on_spell_passed_while_waiting() 呼ばれました！")
+	_waiting_for_spell_decision = false
+	print("[SPH-SIGNAL] _waiting_for_spell_decision = false に設定")
 
-## SpellConfirmationHandler を初期化（Phase 6-2）
-func _initialize_spell_confirmation_handler() -> void:
-	if spell_confirmation_handler:
-		return  # 既に初期化済み
+## 人間プレイヤーのスペル決定を待機
+func _wait_for_human_spell_decision() -> void:
+	"""
+	人間プレイヤーがスペルを使用または通過するまで待機
 
-	spell_confirmation_handler = SpellConfirmationHandler.new()
-	spell_confirmation_handler.name = "SpellConfirmationHandler"
-	add_child(spell_confirmation_handler)
+	メンバー関数を使用してシグナル接続を管理し、
+	lambda による重複接続問題を解決
+	"""
+	if not spell_flow:
+		push_error("[SPH] spell_flow が初期化されていません")
+		return
 
-	# 参照を設定（setup() 時に注入）
-	spell_confirmation_handler.setup(
-		self,
-		ui_manager,
-		board_system,
-		player_system,
-		game_3d_ref
-	)
+	print("[SPH] 人間プレイヤー用スペル決定待機を開始")
 
-	# 発動通知UIを初期化
-	spell_confirmation_handler.initialize_spell_cast_notification_ui()
+	# 初期UI表示
+	if spell_navigation_controller:
+		spell_navigation_controller._initialize_spell_phase_ui()
+		spell_navigation_controller._show_spell_phase_buttons()
+		spell_navigation_controller._setup_spell_selection_navigation()
+	else:
+		push_error("[SPH] spell_navigation_controller が初期化されていません")
 
-## SpellUIController を初期化（Phase 7-1）
-func _initialize_spell_ui_controller() -> void:
-	if spell_ui_controller:
-		return  # 既に初期化済み
+	# CardSelectionUI を表示（is_active = true に設定）
+	if spell_ui_controller and spell_state:
+		var hand_data = card_system.get_all_cards_for_player(spell_state.current_player_id) if card_system else []
+		var magic_power = 0
+		if player_system and spell_state:
+			var player = player_system.players[spell_state.current_player_id] if spell_state.current_player_id >= 0 and spell_state.current_player_id < player_system.players.size() else null
+			if player:
+				magic_power = player.magic_power
+		spell_ui_controller.show_spell_selection_ui(hand_data, magic_power)
 
-	spell_ui_controller = SpellUIController.new()
-	spell_ui_controller.name = "SpellUIController"
-	add_child(spell_ui_controller)
+	# 待機フラグを設定
+	_waiting_for_spell_decision = true
 
-	# 参照を設定（setup() 時に注入）
-	spell_ui_controller.setup(
-		self,
-		ui_manager,
-		board_system,
-		player_system,
-		game_3d_ref,
-		card_system
-	)
+	# 古い接続があれば切断（安全のため）
+	if spell_used.is_connected(_on_spell_used_while_waiting):
+		spell_used.disconnect(_on_spell_used_while_waiting)
 
-	# SpellPhaseUIManager を初期化
-	spell_ui_controller.initialize_spell_phase_ui()
+	if spell_passed.is_connected(_on_spell_passed_while_waiting):
+		spell_passed.disconnect(_on_spell_passed_while_waiting)
 
-## MysticArtsHandler を初期化（Phase 8-1）
-func _initialize_mystic_arts_handler() -> void:
-	if mystic_arts_handler:
-		return  # 既に初期化済み
+	# シグナルを接続（メンバー関数なので is_connected() が正しく機能）
+	print("[SPH-SIGNAL] spell_used.connect() 実行")
+	spell_used.connect(_on_spell_used_while_waiting)
+	print("[SPH-SIGNAL] spell_passed.connect() 実行")
+	spell_passed.connect(_on_spell_passed_while_waiting)
 
-	mystic_arts_handler = MysticArtsHandler.new()
-	mystic_arts_handler.name = "MysticArtsHandler"
-	add_child(mystic_arts_handler)
+	# spell_used または spell_passed が発行されるまで待機
+	print("[SPH-SIGNAL] while ループ開始: _waiting_for_spell_decision = ", _waiting_for_spell_decision)
+	var loop_count = 0
+	while _waiting_for_spell_decision:
+		loop_count += 1
+		if loop_count % 60 == 0:  # 約1秒ごと（60フレーム）
+			print("[SPH-SIGNAL] 待機中... フレーム: ", loop_count, " | _waiting_for_spell_decision: ", _waiting_for_spell_decision)
+		await get_tree().process_frame
+	print("[SPH-SIGNAL] ✅ while ループ終了: フレーム数: ", loop_count)
 
-	# 参照を設定（setup() 時に注入）
-	mystic_arts_handler.setup(
-		self,
-		ui_manager,
-		board_system,
-		player_system,
-		card_system,
-		game_3d_ref
-	)
+	# シグナルを切断（確実に）
+	print("[SPH-SIGNAL] シグナル切断開始")
+	if spell_used.is_connected(_on_spell_used_while_waiting):
+		spell_used.disconnect(_on_spell_used_while_waiting)
+		print("[SPH-SIGNAL] spell_used 切断完了")
 
-## SpellStateHandler と SpellFlowHandler を初期化（Phase 3-A Day 9-12）
-func _initialize_spell_state_and_flow() -> void:
-	if spell_state:
-		return  # 既に初期化済み
+	if spell_passed.is_connected(_on_spell_passed_while_waiting):
+		spell_passed.disconnect(_on_spell_passed_while_waiting)
+		print("[SPH-SIGNAL] spell_passed 切断完了")
 
-	# SpellStateHandler 作成
-	spell_state = SpellStateHandler.new()
-
-	# SpellFlowHandler 作成
-	spell_flow = SpellFlowHandler.new(spell_state)
-
-	# SpellFlowHandler に参照を注入
-	spell_flow.setup(
-		self,                    # spell_phase_handler
-		ui_manager,
-		game_flow_manager,
-		board_system,
-		player_system,
-		card_system,
-		game_3d_ref,
-		spell_cost_modifier,     # オプショナル参照
-		spell_systems.spell_synthesis if spell_systems else null,
-		spell_systems.card_sacrifice_helper if spell_systems else null,
-		spell_effect_executor,
-		spell_target_selection_handler,
-		target_selection_helper
-	)
-
-	# SpellNavigationController を初期化（Day 18）
-	if not spell_navigation_controller:
-		spell_navigation_controller = SpellNavigationController.new()
-		spell_navigation_controller.setup(
-			self,
-			ui_manager,
-			spell_ui_controller,
-			spell_target_selection_handler,
-			spell_state
-		)
-
-	print("[SPH] SpellStateHandler と SpellFlowHandler を初期化完了")
+	print("[SPH] 人間プレイヤー用スペル決定待機を終了 ✅")

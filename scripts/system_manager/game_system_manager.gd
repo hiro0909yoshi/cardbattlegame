@@ -18,6 +18,7 @@ const DebugControllerClass = preload("res://scripts/debug_controller.gd")
 const UIManagerClass = preload("res://scripts/ui_manager.gd")
 const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
 const TollPaymentHandlerClass = preload("res://scripts/game_flow/toll_payment_handler.gd")
+const SpellEffectExecutorClass = preload("res://scripts/game_flow/spell_effect_executor.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -670,6 +671,15 @@ func _setup_spell_systems() -> void:
 		spell_player_move
 	)
 
+	# ★ NEW: 初期化検証
+	if not spell_container.is_valid():
+		push_error("[GameSystemManager] spell_container が完全に初期化されていません")
+		spell_container.debug_print_status()
+		return
+	else:
+		print("[GameSystemManager] spell_container 初期化確認: 8個のコアシステムが設定済み")
+		# spell_container.debug_print_status()  # 詳細ログが不要な場合はコメントアウト
+
 	# === Step 4: SpellSystemManager にセットアップ ===
 	spell_system_manager.setup(spell_container)
 
@@ -787,14 +797,30 @@ func _initialize_phase1a_handlers() -> void:
 	spell_phase_handler.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
 	spell_phase_handler.set_game_stats(game_flow_manager.game_stats)  # === game_stats直接参照を設定 ===
 
+	# === 新規: SpellPhaseHandler のサブシステム初期化（先に実行：spell_effect_executor作成） ===
+	_initialize_spell_phase_subsystems(spell_phase_handler, game_flow_manager)
+
 	# SpellEffectExecutorにスペルコンテナを直接設定（辞書展開廃止）
+	# 注: _initialize_spell_phase_subsystems() で spell_effect_executor が作成済みになった
 	spell_phase_handler.set_spell_effect_executor_container(game_flow_manager.spell_container)
 
 	# SpellPhaseHandler自身の直接参照を設定
 	spell_phase_handler.set_spell_systems_direct(
 		game_flow_manager.spell_container.spell_cost_modifier,
-		game_flow_manager.spell_container.spell_draw
+		game_flow_manager.spell_container.spell_draw,
+		game_flow_manager.spell_container.spell_magic,        # 新規追加
+		game_flow_manager.spell_container.spell_curse_stat    # 新規追加
 	)
+
+	# ★ P0修正: card_selection_handler を初期化（シャッター実行失敗の修正）
+	if spell_phase_handler:
+		spell_phase_handler._initialize_card_selection_handler()
+		print("[GSM] card_selection_handler 初期化完了")
+
+		# SpellDraw に card_selection_handler を設定（初期化後）
+		if game_flow_manager.spell_container and game_flow_manager.spell_container.spell_draw and spell_phase_handler.card_selection_handler:
+			game_flow_manager.spell_container.spell_draw.set_card_selection_handler(spell_phase_handler.card_selection_handler)
+			print("[GSM] SpellDraw に card_selection_handler を設定完了")
 
 	# DebugControllerにspell_phase_handler参照を設定
 	if debug_controller:
@@ -875,6 +901,294 @@ func _initialize_phase1a_handlers() -> void:
 			board_system_3d.set_tile_action_processor_battle_overlay(game_flow_manager.battle_status_overlay)
 
 	print("[Phase1A Handlers] 初期化完了")
+
+	# ★ NEW: スペルシステム初期化検証
+	print("[GameSystemManager] === スペルシステム初期化検証開始 ===")
+
+	if not game_flow_manager:
+		push_error("[GameSystemManager] game_flow_manager が null です")
+		return
+
+	if not game_flow_manager.spell_container:
+		push_error("[GameSystemManager] game_flow_manager.spell_container が null です")
+		return
+
+	# spell_container の検証
+	if game_flow_manager.spell_container.is_valid():
+		print("[GameSystemManager] spell_container: 8個のコアシステムが設定済み ✓")
+	else:
+		push_error("[GameSystemManager] spell_container: コアシステムが不完全です")
+		game_flow_manager.spell_container.debug_print_status()
+		return
+
+	if game_flow_manager.spell_container.is_fully_valid():
+		print("[GameSystemManager] spell_container: 10個の全システムが設定済み ✓")
+	else:
+		push_warning("[GameSystemManager] spell_container: 派生システムが未設定（後で設定される予定）")
+
+	# spell_effect_executor の検証
+	if spell_phase_handler and spell_phase_handler.spell_effect_executor:
+		print("[GameSystemManager] spell_phase_handler.spell_effect_executor: 作成済み ✓")
+
+		if spell_phase_handler.spell_effect_executor.spell_container:
+			print("[GameSystemManager] spell_effect_executor.spell_container: 設定済み ✓")
+			if spell_phase_handler.spell_effect_executor.spell_container.is_valid():
+				print("[GameSystemManager] spell_effect_executor.spell_container: 有効 ✓")
+			else:
+				push_error("[GameSystemManager] spell_effect_executor.spell_container: 無効です")
+				return
+		else:
+			push_error("[GameSystemManager] spell_effect_executor.spell_container: null です")
+			return
+	else:
+		push_error("[GameSystemManager] spell_phase_handler.spell_effect_executor: 未設定です")
+		return
+
+	# spell_magic の直接参照検証
+	if spell_phase_handler.spell_magic:
+		print("[GameSystemManager] spell_phase_handler.spell_magic: 設定済み ✓")
+	else:
+		push_warning("[GameSystemManager] spell_phase_handler.spell_magic: 未設定（set_spell_systems_direct で設定予定）")
+
+	print("[GameSystemManager] === スペルシステム初期化検証完了 ===")
+
+## SpellPhaseHandler の全初期化
+func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager) -> void:
+	"""
+	SpellPhaseHandler の全初期化をGameSystemManagerで一元管理する。
+
+	初期化内容:
+	- Base references (CreatureManager, TargetSelectionHelper)
+	- SpellSubsystemContainer (11 spell subsystems)
+	- SpellEffectExecutor
+	- 6 Handlers (SpellTargetSelectionHandler, SpellConfirmationHandler, etc.)
+	- CPU AI context
+	"""
+	if not spell_phase_handler or not p_game_flow_manager:
+		push_error("[GameSystemManager] spell_phase_handler または p_game_flow_manager が null です")
+		return
+
+	if not board_system_3d:
+		push_error("[GameSystemManager] board_system_3d が null です")
+		return
+
+	# === SpellPhaseHandler 子システムを直接初期化 ===
+	# 以下の初期化内容を実行:
+	# - Base references (CreatureManager, target_selection_helper)
+	# - SpellSubsystemContainer の 11 spell subsystems
+	# - SpellEffectExecutor
+	# - 6 Handlers (SpellTargetSelectionHandler, SpellConfirmationHandler, etc.)
+	# - CPU AI context
+
+	# Step 1: 基本参照の取得
+	if spell_phase_handler.board_system:
+		spell_phase_handler.creature_manager = spell_phase_handler.board_system.get_node_or_null("CreatureManager")
+		if not spell_phase_handler.creature_manager:
+			push_error("[GameSystemManager] CreatureManager が見つかりません")
+
+	if p_game_flow_manager and p_game_flow_manager.target_selection_helper:
+		spell_phase_handler.target_selection_helper = p_game_flow_manager.target_selection_helper
+
+	# Step 2: 11個のSpell**** クラスを初期化（SpellSubsystemContainer 経由）
+	if not spell_phase_handler.spell_systems:
+		spell_phase_handler.spell_systems = SpellSubsystemContainer.new()
+
+	# SpellDamage を初期化
+	if not spell_phase_handler.spell_systems.spell_damage and spell_phase_handler.board_system:
+		spell_phase_handler.spell_systems.spell_damage = SpellDamage.new(spell_phase_handler.board_system)
+
+	# SpellCreatureMove を初期化
+	if not spell_phase_handler.spell_systems.spell_creature_move and spell_phase_handler.board_system and spell_phase_handler.player_system:
+		spell_phase_handler.spell_systems.spell_creature_move = SpellCreatureMove.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler)
+		if p_game_flow_manager:
+			spell_phase_handler.spell_systems.spell_creature_move.set_game_flow_manager(p_game_flow_manager)
+		if spell_phase_handler.battle_status_overlay:
+			spell_phase_handler.spell_systems.spell_creature_move.set_battle_status_overlay(spell_phase_handler.battle_status_overlay)
+
+	# SpellCreatureSwap を初期化
+	if not spell_phase_handler.spell_systems.spell_creature_swap and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
+		spell_phase_handler.spell_systems.spell_creature_swap = SpellCreatureSwap.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+
+	# SpellCreatureReturn を初期化
+	if not spell_phase_handler.spell_systems.spell_creature_return and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
+		spell_phase_handler.spell_systems.spell_creature_return = SpellCreatureReturn.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+
+	# SpellCreaturePlace を初期化
+	if not spell_phase_handler.spell_systems.spell_creature_place:
+		spell_phase_handler.spell_systems.spell_creature_place = SpellCreaturePlace.new()
+
+	# SpellDrawにSpellCreaturePlace参照を設定
+	if spell_phase_handler.spell_draw and spell_phase_handler.spell_systems.spell_creature_place:
+		spell_phase_handler.spell_draw.set_spell_creature_place(spell_phase_handler.spell_systems.spell_creature_place)
+
+	# SpellBorrow を初期化
+	if not spell_phase_handler.spell_systems.spell_borrow and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
+		spell_phase_handler.spell_systems.spell_borrow = SpellBorrow.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+
+	# SpellTransform を初期化
+	if not spell_phase_handler.spell_systems.spell_transform and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
+		spell_phase_handler.spell_systems.spell_transform = SpellTransform.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+
+	# SpellPurify を初期化
+	if not spell_phase_handler.spell_systems.spell_purify and spell_phase_handler.board_system and spell_phase_handler.creature_manager and spell_phase_handler.player_system and p_game_flow_manager:
+		spell_phase_handler.spell_systems.spell_purify = SpellPurify.new(spell_phase_handler.board_system, spell_phase_handler.creature_manager, spell_phase_handler.player_system, p_game_flow_manager)
+
+	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
+	if not spell_phase_handler.spell_systems.card_sacrifice_helper and spell_phase_handler.card_system and spell_phase_handler.player_system:
+		spell_phase_handler.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(spell_phase_handler.card_system, spell_phase_handler.player_system, spell_phase_handler.ui_manager)
+
+	# SpellSynthesis を初期化
+	if not spell_phase_handler.spell_systems.spell_synthesis and spell_phase_handler.spell_systems.card_sacrifice_helper:
+		spell_phase_handler.spell_systems.spell_synthesis = SpellSynthesis.new(spell_phase_handler.spell_systems.card_sacrifice_helper)
+
+	# CPUTurnProcessorを取得（BoardSystem3Dの子ノードから）
+	if spell_phase_handler.board_system and not spell_phase_handler.spell_systems.cpu_turn_processor:
+		spell_phase_handler.spell_systems.cpu_turn_processor = spell_phase_handler.board_system.get_node_or_null("CPUTurnProcessor")
+
+	# Step 2.5: SpellEffectExecutor を初期化（ハンドラー初期化の前に必須）
+	if not spell_phase_handler.spell_effect_executor:
+		spell_phase_handler.spell_effect_executor = SpellEffectExecutorClass.new(spell_phase_handler)
+
+	# Step 3: 6個のハンドラーを初期化（inline化）
+
+	# SpellTargetSelectionHandler を初期化（Phase 6-1）
+	if not spell_phase_handler.spell_target_selection_handler:
+		spell_phase_handler.spell_target_selection_handler = SpellTargetSelectionHandler.new()
+		spell_phase_handler.spell_target_selection_handler.name = "SpellTargetSelectionHandler"
+		spell_phase_handler.add_child(spell_phase_handler.spell_target_selection_handler)
+
+		spell_phase_handler.spell_target_selection_handler.setup(
+			spell_phase_handler,
+			p_ui_manager,
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.game_3d_ref
+		)
+
+	# SpellConfirmationHandler を初期化（Phase 6-2）
+	if not spell_phase_handler.spell_confirmation_handler:
+		spell_phase_handler.spell_confirmation_handler = SpellConfirmationHandler.new()
+		spell_phase_handler.spell_confirmation_handler.name = "SpellConfirmationHandler"
+		spell_phase_handler.add_child(spell_phase_handler.spell_confirmation_handler)
+
+		spell_phase_handler.spell_confirmation_handler.setup(
+			spell_phase_handler,
+			p_ui_manager,
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.game_3d_ref
+		)
+
+		spell_phase_handler.spell_confirmation_handler.initialize_spell_cast_notification_ui()
+
+	# SpellUIController を初期化（Phase 7-1）
+	if not spell_phase_handler.spell_ui_controller:
+		spell_phase_handler.spell_ui_controller = SpellUIController.new()
+		spell_phase_handler.spell_ui_controller.name = "SpellUIController"
+		spell_phase_handler.add_child(spell_phase_handler.spell_ui_controller)
+
+		spell_phase_handler.spell_ui_controller.setup(
+			spell_phase_handler,
+			p_ui_manager,
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.game_3d_ref,
+			spell_phase_handler.card_system
+		)
+
+		spell_phase_handler.spell_ui_controller.initialize_spell_phase_ui()
+
+	# MysticArtsHandler を初期化（Phase 8-1）
+	if not spell_phase_handler.mystic_arts_handler:
+		spell_phase_handler.mystic_arts_handler = MysticArtsHandler.new()
+		spell_phase_handler.mystic_arts_handler.name = "MysticArtsHandler"
+		spell_phase_handler.add_child(spell_phase_handler.mystic_arts_handler)
+
+		spell_phase_handler.mystic_arts_handler.setup(
+			spell_phase_handler,
+			p_ui_manager,
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.card_system,
+			spell_phase_handler.game_3d_ref
+		)
+
+	# SpellStateHandler と SpellFlowHandler を初期化（Phase 3-A Day 9-12）
+	if not spell_phase_handler.spell_state:
+		spell_phase_handler.spell_state = SpellStateHandler.new()
+
+		spell_phase_handler.spell_flow = SpellFlowHandler.new(spell_phase_handler.spell_state)
+
+		spell_phase_handler.spell_flow.setup(
+			spell_phase_handler,
+			p_ui_manager,
+			p_game_flow_manager,
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.card_system,
+			spell_phase_handler.game_3d_ref,
+			spell_phase_handler.spell_cost_modifier,
+			spell_phase_handler.spell_systems.spell_synthesis if spell_phase_handler.spell_systems else null,
+			spell_phase_handler.spell_systems.card_sacrifice_helper if spell_phase_handler.spell_systems else null,
+			spell_phase_handler.spell_effect_executor,
+			spell_phase_handler.spell_target_selection_handler,
+			spell_phase_handler.target_selection_helper
+		)
+
+		if not spell_phase_handler.spell_navigation_controller:
+			spell_phase_handler.spell_navigation_controller = SpellNavigationController.new()
+			spell_phase_handler.spell_navigation_controller.setup(
+				spell_phase_handler,
+				p_ui_manager,
+				spell_phase_handler.spell_ui_controller,
+				spell_phase_handler.spell_target_selection_handler,
+				spell_phase_handler.spell_state
+			)
+
+		print("[GameSystemManager] SpellStateHandler と SpellFlowHandler を初期化完了")
+
+
+	# Step 4: CPU AI を初期化
+	spell_phase_handler._initialize_cpu_context(p_game_flow_manager)
+
+	# CPU スペル/アルカナアーツ AI を初期化
+	if not spell_phase_handler.cpu_spell_ai:
+		spell_phase_handler.cpu_spell_ai = CPUSpellAI.new()
+		spell_phase_handler.cpu_spell_ai.initialize(spell_phase_handler._cpu_context)
+		spell_phase_handler.cpu_spell_ai.set_hand_utils(spell_phase_handler.cpu_hand_utils)
+		spell_phase_handler.cpu_spell_ai.set_battle_ai(spell_phase_handler._cpu_battle_ai)
+		if spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
+			spell_phase_handler.cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
+		if spell_phase_handler.cpu_movement_evaluator:
+			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(spell_phase_handler.cpu_movement_evaluator)
+		if p_game_flow_manager and p_game_flow_manager.has_method("get"):
+			spell_phase_handler.cpu_spell_ai.set_game_stats(p_game_flow_manager.game_stats)
+
+	if not spell_phase_handler.cpu_mystic_arts_ai:
+		spell_phase_handler.cpu_mystic_arts_ai = CPUMysticArtsAI.new()
+		spell_phase_handler.cpu_mystic_arts_ai.initialize(spell_phase_handler._cpu_context)
+		spell_phase_handler.cpu_mystic_arts_ai.set_hand_utils(spell_phase_handler.cpu_hand_utils)
+		spell_phase_handler.cpu_mystic_arts_ai.set_battle_ai(spell_phase_handler._cpu_battle_ai)
+		if p_game_flow_manager and p_game_flow_manager.has_method("get"):
+			spell_phase_handler.cpu_mystic_arts_ai.set_game_stats(p_game_flow_manager.game_stats)
+
+	# MysticArtsHandler の初期化（spell_mystic_arts を設定）
+	if spell_phase_handler.mystic_arts_handler:
+		spell_phase_handler.mystic_arts_handler.initialize_spell_mystic_arts()
+		spell_phase_handler.spell_mystic_arts = spell_phase_handler.mystic_arts_handler.get_spell_mystic_arts()
+
+	# SpellPhaseOrchestrator の初期化
+	if p_game_flow_manager and spell_phase_handler and spell_phase_handler.spell_state:
+		var spell_orchestrator = SpellPhaseOrchestrator.new(
+			spell_phase_handler,
+			spell_phase_handler.spell_state
+		)
+		spell_phase_handler.spell_orchestrator = spell_orchestrator
+		print("[GameSystemManager] SpellPhaseOrchestrator 初期化完了")
+	else:
+		push_error("[GameSystemManager] SpellPhaseOrchestrator 初期化失敗: 必要な参照が null")
+
+	print("[GameSystemManager] _initialize_spell_phase_subsystems 完了")
 
 ## CPU移動評価システムの初期化
 func _initialize_cpu_movement_evaluator() -> void:

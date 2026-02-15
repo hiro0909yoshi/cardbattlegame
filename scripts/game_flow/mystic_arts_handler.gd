@@ -149,7 +149,7 @@ func update_mystic_button_visibility():
 	if not _ui_manager or not _spell_phase_handler:
 		return
 
-	if _spell_phase_handler.current_state == _spell_phase_handler.State.INACTIVE:
+	if _spell_phase_handler.spell_state.current_state == SpellStateHandler.State.INACTIVE:
 		return
 
 	if has_available_mystic_arts(_spell_phase_handler.spell_state.current_player_id):
@@ -168,7 +168,7 @@ func _on_mystic_phase_completed():
 	if not _spell_phase_handler:
 		return
 
-	_spell_phase_handler.current_state = _spell_phase_handler.State.WAITING_FOR_INPUT
+	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
 	if _spell_phase_handler.spell_flow:
 		_spell_phase_handler.spell_flow.return_to_spell_selection()
 	else:
@@ -179,7 +179,7 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	if not _spell_phase_handler or not _ui_manager:
 		return
 
-	_spell_phase_handler.current_state = _spell_phase_handler.State.SELECTING_TARGET
+	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.SELECTING_TARGET)
 
 	# SpellTargetSelectionHandlerに状態を同期
 	if _spell_phase_handler.spell_target_selection_handler and not targets.is_empty():
@@ -191,9 +191,10 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 		_spell_phase_handler._start_mystic_tap_target_selection(targets)
 
 	# グローバルナビゲーション設定（対象選択用 - アルカナアーツでも戻るボタンを表示）
-	_spell_phase_handler._setup_target_selection_navigation()
-
-	_spell_phase_handler._update_target_selection()
+	if _spell_phase_handler and _spell_phase_handler.spell_navigation_controller:
+		_spell_phase_handler.spell_navigation_controller._setup_target_selection_navigation()
+	else:
+		push_error("[MAH] spell_navigation_controller が初期化されていません")
 
 ## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
