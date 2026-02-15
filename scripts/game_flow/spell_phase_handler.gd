@@ -186,88 +186,12 @@ func start_mystic_arts_phase():
 ## CPUのスペル使用判定（新AI使用）
 ## CPUSpellPhaseHandlerへの簡潔な委譲
 func _delegate_to_cpu_spell_handler(player_id: int) -> void:
-	"""CPU スペルフェーズの処理を CPUSpellPhaseHandler に完全委譲"""
-	await get_tree().create_timer(0.5).timeout  # 思考時間
-
-	# スペル使用確率判定（キャラクターポリシー）
-	var battle_policy = _get_cpu_battle_policy()
-	if battle_policy and not battle_policy.should_use_spell():
-		pass_spell(false)
-		return
-
-	# CPUSpellPhaseHandlerで判断
+	"""CPU スペルターンを委譲（CPU固有ロジック削除）"""
 	if not cpu_spell_phase_handler:
 		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
 		cpu_spell_phase_handler.initialize(self)
 
-	var action_result = cpu_spell_phase_handler.decide_action(player_id)
-	var action = action_result.get("action", "pass")
-	var decision = action_result.get("decision", {})
-
-	match action:
-		"spell":
-			await _execute_cpu_spell_from_decision(decision, player_id)
-			# NOTE: 完了シグナル(spell_phase_completed)は以下のフローで既に発火済み
-			# _execute_cpu_spell_from_decision() → execute_spell_effect()
-			# → spell_effect_executor.execute_spell_effect() → handler.complete_spell_phase()
-			# ここで重複呼び出しを防ぐため、コメント表示のみ
-		"mystic":
-			if mystic_arts_handler:
-				await mystic_arts_handler._execute_cpu_mystic_arts(decision)
-				# NOTE: 完了シグナルは mystic_arts_handler 内で発火済み
-			else:
-				pass_spell(false)
-		_:
-			pass_spell(false)
-
-## CPUがスペルを実行（decision から実行）
-func _execute_cpu_spell_from_decision(decision: Dictionary, player_id: int) -> void:
-	if not spell_state:
-		push_error("[SPH] spell_state が初期化されていません")
-		pass_spell(false)
-		return
-
-	if not cpu_spell_phase_handler:
-		push_error("[SPH] cpu_spell_phase_handler が初期化されていません")
-		pass_spell(false)
-		return
-
-	# CPUSpellPhaseHandlerで準備処理
-	var prep = cpu_spell_phase_handler.prepare_spell_execution(decision, player_id)
-	if not prep.get("success", false):
-		pass_spell(false)
-		return
-
-	var spell_card = prep.get("spell_card", {})
-	var target_data = prep.get("target_data", {})
-	var cost = prep.get("cost", 0)
-	var target = prep.get("target", {})
-
-	# コストを支払う
-	if player_system:
-		player_system.add_magic(player_id, -cost)
-
-	spell_state.set_spell_card(spell_card)
-	spell_state.set_spell_used_this_turn(true)
-
-	# 効果実行（target_typeに応じて分岐）
-	var parsed = spell_card.get("effect_parsed", {})
-	var target_type = parsed.get("target_type", "")
-
-	if target_type == "all_creatures":
-		# 全クリーチャー対象スペル（スウォーム等）は専用ルートで実行
-		# 通知・カード捨て札・フェーズ完了は_execute_spell_on_all_creatures内で処理
-		var target_info = parsed.get("target_info", {})
-		await _execute_spell_on_all_creatures(spell_card, target_info)
-	else:
-		# 発動通知表示
-		if spell_cast_notification_ui and player_system:
-			var caster_name = "CPU"
-			if player_id >= 0 and player_id < player_system.players.size():
-				caster_name = player_system.players[player_id].name
-			await show_spell_cast_notification(caster_name, target, spell_card, false)
-
-		await execute_spell_effect(spell_card, target_data)
+	await cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 
 ## 対象選択UIを表示（内部インターフェース）
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
