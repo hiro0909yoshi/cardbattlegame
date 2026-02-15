@@ -183,8 +183,12 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	if not _spell_phase_handler or not _ui_manager:
 		return
 
+	# ★ 検証ログ: disable_navigation() 呼び出しを確認
+	print("[MAH-Flow] _on_mystic_target_selection_requested: targets=%d, disable_navigation() 実行開始" % targets.size())
+
 	# ★ NEW: 前のナビゲーション状態をクリア
 	_ui_manager.disable_navigation()
+	print("[MAH-Flow] disable_navigation() 呼び出し完了")
 
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.SELECTING_TARGET)
 

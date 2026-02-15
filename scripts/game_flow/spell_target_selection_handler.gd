@@ -75,9 +75,15 @@ func setup(
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	print("[STSH-Flow] show_target_selection_ui() 開始: target_type=%s" % target_type)
 
+	# ★ 検証ログ: disable_navigation() 呼び出しを確認
+	print("[STSH-Flow] show_target_selection_ui: disable_navigation() 呼び出し準備")
+
 	# ★ NEW: 前のナビゲーション設定をクリア
 	if _ui_manager:
+		print("[STSH-Flow] disable_navigation() 呼び出し実行")
 		_ui_manager.disable_navigation()
+	else:
+		print("[STSH-Flow] ⚠️ _ui_manager が NULL")
 
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")

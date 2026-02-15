@@ -434,10 +434,16 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	
 	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":
+		# ★ 検証ログ: disable_navigation() 呼び出しを確認
+		print("[SpellMysticArts-Flow] _select_target: target_type=%s, target_filter=%s, disable_navigation() 呼び出し準備" % [target_type, target_filter])
+
 		# ★ NEW: 前のナビゲーション設定をクリア
 		var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
 		if ui_manager:
+			print("[SpellMysticArts-Flow] disable_navigation() 呼び出し実行")
 			ui_manager.disable_navigation()
+		else:
+			print("[SpellMysticArts-Flow] ⚠️ ui_manager が NULL - disable_navigation() 呼び出せません")
 
 		var target_data = {
 			"type": target_type,
