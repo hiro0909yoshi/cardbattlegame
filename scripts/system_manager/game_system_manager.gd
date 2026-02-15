@@ -880,14 +880,8 @@ func _initialize_phase1a_handlers() -> void:
 	)
 
 	# target_selection_helper を設定（move_self など複数タイル選択時に必要）
-	print("[GSM] target_selection_helper 設定確認:")
-	print("  game_flow_manager: %s" % ("valid" if game_flow_manager else "NULL"))
-	print("  game_flow_manager.target_selection_helper: %s" % ("valid" if (game_flow_manager and game_flow_manager.target_selection_helper) else "NULL"))
 	if game_flow_manager and game_flow_manager.target_selection_helper:
 		spell_phase_handler.target_selection_helper = game_flow_manager.target_selection_helper
-		print("[GSM] spell_phase_handler.target_selection_helper 設定完了")
-	else:
-		print("[GSM] ⚠️ target_selection_helper が NULL - 移動選択UIが機能しません")
 
 	# Day 3: spell_used と item_used シグナルをGameFlowManagerに接続
 	if spell_phase_handler and not spell_phase_handler.spell_used.is_connected(game_flow_manager._on_spell_used):
