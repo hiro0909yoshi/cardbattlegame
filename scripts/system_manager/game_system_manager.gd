@@ -1065,6 +1065,10 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.game_3d_ref
 		)
 
+	# target_selection_helper を設定（move_self など複数タイル選択時に必要）
+	if game_flow_manager and game_flow_manager.target_selection_helper:
+		spell_phase_handler.target_selection_helper = game_flow_manager.target_selection_helper
+
 	# SpellConfirmationHandler を初期化（Phase 6-2）
 	if not spell_phase_handler.spell_confirmation_handler:
 		spell_phase_handler.spell_confirmation_handler = SpellConfirmationHandler.new()
