@@ -12,12 +12,19 @@ signal bankruptcy_completed(player_id: int, was_reset: bool)  # 破産処理完�
 signal land_sold(player_id: int, tile_index: int, value: int)  # 土地売却
 # signal land_selection_requested(player_id: int, available_lands: Array)  # 土地選択UI要求（未使用）
 
+## === UI Signal 定義（Phase 6-C: UI層分離） ===
+signal bankruptcy_ui_comment_and_wait_requested(message: String, player_id: int)
+signal bankruptcy_ui_comment_and_wait_completed()
+signal bankruptcy_ui_player_info_updated()
+signal bankruptcy_ui_card_info_shown(creature_data: Dictionary, tile_index: int)
+signal bankruptcy_ui_info_panels_hidden()
+
 # 参照
 var player_system: Node = null
 var board_system: Node = null
 var creature_manager: Node = null
 var spell_curse: Node = null  # プレイヤー呪いクリア用
-var ui_manager: Node = null   # コメント表示用
+var ui_manager: Node = null   # ※ パネル生成用のみ（UI操作はSignal経由）
 var target_selection_helper: Node = null  # 土地選択用
 
 # 状態
@@ -87,8 +94,8 @@ func can_recover_by_selling(player_id: int) -> bool:
 
 ## コメントを表示してクリック待ち
 func _show_message(message: String, player_id: int = -1):
-	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.show_comment_and_wait(message, player_id, true)
+	bankruptcy_ui_comment_and_wait_requested.emit(message, player_id)
+	await bankruptcy_ui_comment_and_wait_completed
 
 
 ## プレイヤー名を取得
@@ -100,8 +107,7 @@ func _get_player_name(player_id: int) -> String:
 
 ## UIを更新
 func _update_ui():
-	if ui_manager and ui_manager.has_method("update_player_info_panels"):
-		ui_manager.update_player_info_panels()
+	bankruptcy_ui_player_info_updated.emit()
 
 
 # ===========================================
@@ -379,38 +385,34 @@ func _show_land_selection_ui(player_id: int, lands: Array) -> int:
 
 ## タイルのクリーチャー情報を表示
 func _show_creature_info_for_tile(tile_index: int):
-	if not ui_manager:
-		return
-	
 	if not board_system or not board_system.tile_nodes:
 		return
-	
+
 	var tile = board_system.tile_nodes.get(tile_index)
 	if not tile:
 		return
-	
+
 	# クリーチャーデータを取得
 	var creature_data = {}
 	if creature_manager and creature_manager.has_creature(tile_index):
 		creature_data = creature_manager.get_data_ref(tile_index).duplicate()
-	
+
 	if creature_data.is_empty():
 		# クリーチャーがいない場合は土地情報のみ
 		_hide_creature_info_panel()
 		return
-	
+
 	# 土地の売却価値を追加表示
 	var land_value = get_land_value(tile_index)
 	creature_data["_sell_value"] = land_value  # 一時的に追加
-	
+
 	# クリーチャー情報パネルを表示
-	ui_manager.show_card_info(creature_data, tile_index, false)
+	bankruptcy_ui_card_info_shown.emit(creature_data, tile_index)
 
 
 ## クリーチャー情報パネルを非表示
 func _hide_creature_info_panel():
-	if ui_manager:
-		ui_manager.hide_all_info_panels(false)
+	bankruptcy_ui_info_panels_hidden.emit()
 
 
 ## CPU用破産処理（自動選択）

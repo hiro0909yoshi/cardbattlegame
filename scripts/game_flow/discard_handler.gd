@@ -1,6 +1,10 @@
 extends Node
 class_name DiscardHandler
 
+## === UI Signal 定義（Phase 6-C: UI層分離） ===
+signal discard_ui_prompt_requested(player_id: int)
+signal discard_ui_prompt_completed(card_index: int)
+
 # 手札調整ハンドラー
 # ターン終了時の手札サイズ超過チェック・調整機能を担当
 
@@ -8,17 +12,15 @@ class_name DiscardHandler
 var player_system = null
 var card_system = null
 var spell_phase_handler = null
-var ui_manager = null
 
 # CPU判定用
 var player_is_cpu = []
 
 ## セットアップメソッド
-func setup(p_player_system, p_card_system, p_spell_phase_handler, p_ui_manager, p_player_is_cpu: Array = []):
+func setup(p_player_system, p_card_system, p_spell_phase_handler, p_player_is_cpu: Array = []):
 	player_system = p_player_system
 	card_system = p_card_system
 	spell_phase_handler = p_spell_phase_handler
-	ui_manager = p_ui_manager
 	player_is_cpu = p_player_is_cpu
 
 ## 手札調整処理（ターン終了時）
@@ -65,28 +67,13 @@ func prompt_discard_card(player_id: int = -1):
 			return
 		player_id = player_system.get_current_player().id
 
-	if not player_system or not card_system or not ui_manager:
+	if not player_system or not card_system:
 		return
 
-	var current_player = player_system.get_player_by_id(player_id) if player_system.has_method("get_player_by_id") else player_system.get_current_player()
-	if not current_player:
-		return
-
-	# フィルターをリセット（グレーアウト解除）
-	ui_manager.card_selection_filter = ""
-
-	# カード選択UIを表示（discardモード）
-	ui_manager.show_card_selection_ui_mode(current_player, "discard")
-
-	# カード選択を待つ
-	var card_index = await ui_manager.card_selected
+	# UI にカード選択を要求し、選択結果を待つ
+	discard_ui_prompt_requested.emit(player_id)
+	var result = await discard_ui_prompt_completed
+	var card_index = result
 
 	# カードを捨てる（理由: discard）
 	card_system.discard_card(player_id, card_index, "discard")
-
-	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-
-	# アクション指示を非表示
-	if ui_manager.phase_display:
-		ui_manager.hide_action_prompt()

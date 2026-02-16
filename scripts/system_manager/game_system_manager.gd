@@ -724,6 +724,9 @@ func _setup_spell_systems() -> void:
 	if not bankruptcy_handler.get_parent():
 		game_flow_manager.add_child(bankruptcy_handler)
 
+	# Phase 6-C: BankruptcyHandler UI Signal接続
+	_connect_bankruptcy_signals(bankruptcy_handler, ui_manager)
+
 	# SpellCostModifierにSpellWorldCurse参照を設定
 	if spell_container.spell_cost_modifier:
 		spell_container.spell_cost_modifier.set_spell_world_curse(spell_container.spell_world_curse)
@@ -876,15 +879,21 @@ func _initialize_phase1a_handlers() -> void:
 	# TollPaymentHandlerを作成
 	var toll_payment_handler = TollPaymentHandlerClass.new()
 	game_flow_manager.add_child(toll_payment_handler)
-	toll_payment_handler.setup(player_system, board_system_3d, game_flow_manager.spell_container.spell_curse_toll, ui_manager)
+	toll_payment_handler.setup(player_system, board_system_3d, game_flow_manager.spell_container.spell_curse_toll)
 	game_flow_manager.toll_payment_handler = toll_payment_handler
+
+	# Phase 6-C: TollPaymentHandler UI Signal接続
+	_connect_toll_payment_signals(toll_payment_handler, ui_manager)
 
 	# DiscardHandlerを作成
 	var DiscardHandlerClass = preload("res://scripts/game_flow/discard_handler.gd")
 	var discard_handler = DiscardHandlerClass.new()
 	game_flow_manager.add_child(discard_handler)
-	discard_handler.setup(player_system, card_system, spell_phase_handler, ui_manager, player_is_cpu)
+	discard_handler.setup(player_system, card_system, spell_phase_handler, player_is_cpu)
 	game_flow_manager.discard_handler = discard_handler
+
+	# Phase 6-C: DiscardHandler UI Signal接続
+	_connect_discard_signals(discard_handler, ui_manager, player_system)
 
 	# GameFlowManagerにハンドラーを設定
 	game_flow_manager.set_phase1a_handlers(
@@ -1398,3 +1407,63 @@ func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 			dice_handler.dice_ui_comment_and_wait_completed.emit()
 	)
 	print("[GSM] DicePhaseHandler UI Signal接続完了（7シグナル）")
+
+## Phase 6-C: TollPaymentHandler UI Signal接続
+func _connect_toll_payment_signals(toll_handler, p_ui_manager) -> void:
+	if not toll_handler or not p_ui_manager:
+		push_error("[GSM] TollPaymentHandler または UIManager が null です")
+		return
+
+	toll_handler.toll_ui_comment_and_wait_requested.connect(
+		func(message: String, player_id: int):
+			if p_ui_manager and p_ui_manager.global_comment_ui:
+				await p_ui_manager.show_comment_and_wait(message, player_id, true)
+			toll_handler.toll_ui_comment_and_wait_completed.emit()
+	)
+	print("[GSM] TollPaymentHandler UI Signal接続完了（1シグナル）")
+
+## Phase 6-C: DiscardHandler UI Signal接続
+func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) -> void:
+	if not discard_handler or not p_ui_manager:
+		push_error("[GSM] DiscardHandler または UIManager が null です")
+		return
+
+	discard_handler.discard_ui_prompt_requested.connect(
+		func(player_id: int):
+			var current_player = p_player_system.get_player_by_id(player_id) if p_player_system.has_method("get_player_by_id") else p_player_system.get_current_player()
+			if not current_player:
+				discard_handler.discard_ui_prompt_completed.emit(-1)
+				return
+			p_ui_manager.card_selection_filter = ""
+			p_ui_manager.show_card_selection_ui_mode(current_player, "discard")
+			var card_index = await p_ui_manager.card_selected
+			p_ui_manager.hide_card_selection_ui()
+			if p_ui_manager.phase_display:
+				p_ui_manager.hide_action_prompt()
+			discard_handler.discard_ui_prompt_completed.emit(card_index)
+	)
+	print("[GSM] DiscardHandler UI Signal接続完了（1シグナル）")
+
+## Phase 6-C: BankruptcyHandler UI Signal接続
+func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
+	if not bankruptcy_handler_ref or not p_ui_manager:
+		push_error("[GSM] BankruptcyHandler または UIManager が null です")
+		return
+
+	bankruptcy_handler_ref.bankruptcy_ui_comment_and_wait_requested.connect(
+		func(message: String, player_id: int):
+			if p_ui_manager and p_ui_manager.global_comment_ui:
+				await p_ui_manager.show_comment_and_wait(message, player_id, true)
+			bankruptcy_handler_ref.bankruptcy_ui_comment_and_wait_completed.emit()
+	)
+	if not bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.is_connected(p_ui_manager.update_player_info_panels):
+		bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.connect(p_ui_manager.update_player_info_panels)
+	bankruptcy_handler_ref.bankruptcy_ui_card_info_shown.connect(
+		func(creature_data: Dictionary, tile_index: int):
+			p_ui_manager.show_card_info(creature_data, tile_index, false)
+	)
+	bankruptcy_handler_ref.bankruptcy_ui_info_panels_hidden.connect(
+		func():
+			p_ui_manager.hide_all_info_panels(false)
+	)
+	print("[GSM] BankruptcyHandler UI Signal接続完了（4シグナル）")

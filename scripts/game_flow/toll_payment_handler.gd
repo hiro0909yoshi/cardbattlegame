@@ -3,18 +3,20 @@
 class_name TollPaymentHandler
 extends Node
 
+## === UI Signal 定義（Phase 6-C: UI層分離） ===
+signal toll_ui_comment_and_wait_requested(message: String, player_id: int)
+signal toll_ui_comment_and_wait_completed()
+
 # 依存システム
 var player_system: Node = null
 var board_system_3d: Node = null
 var spell_curse_toll: Node = null
-var ui_manager: Node = null
 
 ## セットアップ
-func setup(p_player_system: Node, p_board_system_3d: Node, p_spell_curse_toll: Node, p_ui_manager: Node) -> void:
+func setup(p_player_system: Node, p_board_system_3d: Node, p_spell_curse_toll: Node) -> void:
 	player_system = p_player_system
 	board_system_3d = p_board_system_3d
 	spell_curse_toll = p_spell_curse_toll
-	ui_manager = p_ui_manager
 
 ## 敵地での通行料支払い処理
 ## 現在のプレイヤーが敵地にいる場合、通行料を計算して支払う
@@ -64,9 +66,6 @@ func check_and_pay_toll_on_enemy_land() -> void:
 
 ## 通行料支払いコメント表示
 func _show_toll_comment(payer_id: int, toll_amount: int) -> void:
-	if not ui_manager or not ui_manager.global_comment_ui:
-		return
-
 	var player_name = "プレイヤー"
 	if payer_id < player_system.players.size():
 		var player = player_system.players[payer_id]
@@ -74,4 +73,5 @@ func _show_toll_comment(payer_id: int, toll_amount: int) -> void:
 			player_name = player.name
 
 	var message = "%s が %dEP 奪われた" % [player_name, toll_amount]
-	await ui_manager.show_comment_and_wait(message, payer_id, true)
+	toll_ui_comment_and_wait_requested.emit(message, payer_id)
+	await toll_ui_comment_and_wait_completed
