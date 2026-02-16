@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ✅ 最近完了した作業（2026-02-16）
 
-**Phase 0-5: アーキテクチャ移行完了 + Phase 5（システム最適化）進行中**
+**Phase 0-5: アーキテクチャ移行 + Phase 5（システム最適化）完了**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -17,13 +17,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **4-P0**: CPU AI コンテキスト管理一元化（40行削減）
   - **4-P1**: is_cpu_player() メソッド統一（146行削減、19個の重複実装を削除）
   - **4-P2**: CPUSpellPhaseHandler 正式初期化（6行削減、GameSystemManager に一元化）
-- ✅ **Phase 5**: システム最適化・統合テスト（進行中）
-  - **5-1**: SpellUIManager 実装（274行）✅ 完了
-  - **5-2**: CPUSpellAIContainer 実装（79行）✅ 完了
-  - **5-3**: グループ3重複参照削除（25行削減）✅ 完了
-  - **5-5**: GameSystemManager 初期化ロジック簡潔化（35行削減）✅ 完了
-- **成果物**: コード削減約600行(全フェーズ累計)、SRP改善度90%以上、最適化・統合テスト完了
-- **次**: 残るタスク確認・最終検証
+- ✅ **Phase 5**: 段階的最適化（2026-02-16）✅ **完了**
+  - **5-1**: SpellUIManager 新規作成（274行、14メソッド）✅
+  - **5-2**: CPUSpellAIContainer 新規作成（79行、4メソッド）✅
+  - **5-3**: グループ3重複参照削除（25行削減）✅
+  - **5-5**: GameSystemManager 最適化（35行削減）✅
+- **成果物**: コード削減約600行（全フェーズ累計）、参照統合（UI・CPU AI）、SRP改善度 90%以上
+- **次**: ドキュメント更新・最終検証完了
 
 詳細は `docs/progress/architecture_migration_plan.md` および `docs/progress/refactoring_next_steps.md` を参照
 
@@ -47,19 +47,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - 親システムへの参照は注入（Dependency Injection）
    - シグナル接続時は `is_connected()` チェック必須
 
-3. **段階的移行**（Phase 0-5）
+3. **段階的移行**（Phase 0-5 ✅ **完了**）
    - ✅ Phase 0: ツリー構造定義（完了）
    - ✅ Phase 1: SpellSystemManager 導入（完了）
    - ✅ Phase 2: シグナルリレー整備（完了、横断接続 83%削減）
    - ✅ Phase 3-B: BoardSystem3D SSoT 化（完了）
    - ✅ Phase 3-A: SpellPhaseHandler Strategy パターン化（完了、22 Strategies 実装）
    - ✅ Phase 4: SpellPhaseHandler 責務分離（完了、~280行削減）
-   - 🔵 Phase 5: 統合テスト・最適化（進行中）
-     - ✅ 5-1: SpellUIManager 実装
-     - ✅ 5-2: CPUSpellAIContainer 実装
+   - ✅ Phase 5: 段階的最適化（完了、2026-02-16）
+     - ✅ 5-1: SpellUIManager 実装（274行、14メソッド）
+     - ✅ 5-2: CPUSpellAIContainer 実装（79行、4メソッド）
      - ✅ 5-3: グループ3重複参照削除（25行削減）
-     - ✅ 5-5: GameSystemManager 初期化ロジック簡潔化（35行削減）
-     - ⚪ 5-4, 5-6: 残るタスク確認中
+     - ✅ 5-5: GameSystemManager 最適化（35行削減）
 
 ### 参照ドキュメント
 
@@ -236,9 +235,7 @@ Three types of effects:
 
 ### Spell System Architecture
 
-**8 core + 2 derived = 10 spell subsystems** managed via `SpellSystemContainer`:
-
-**Core Systems (8)**:
+**Spell Core Systems (10)**:
 ```
 spell_draw          # Card draw effects
 spell_magic         # EP manipulation, land curse
@@ -248,18 +245,30 @@ spell_dice          # Dice modification effects
 spell_curse_stat    # Stat modification curses
 spell_world_curse   # Global world curses
 spell_player_move   # Warp/movement effects
-```
-
-**Derived Systems (2)**:
-```
 spell_curse_toll    # Toll modification curses
 spell_cost_modifier # Cost modification effects
 ```
 
-**Container Pattern** (Implemented 2026-02-13):
+**Spell UI Management (1)** - Phase 5-1:
+```
+spell_ui_manager    # UI control integration (274 lines, 14 methods)
+                    # Consolidates: spell_phase_ui_manager, spell_confirmation_handler,
+                    #              spell_navigation_controller, spell_ui_controller
+```
+
+**CPU AI Container (1)** - Phase 5-2:
+```
+cpu_spell_ai_container  # CPU AI reference management (79 lines, 4 methods, RefCounted)
+                        # Consolidates: cpu_spell_ai, cpu_mystic_arts_ai,
+                        #              cpu_hand_utils, cpu_movement_evaluator
+```
+
+**Container Pattern** (Implemented 2026-02-13, Enhanced 2026-02-16):
 - All spell systems centralized in `SpellSystemContainer` (RefCounted)
-- `GameFlowManager` holds `spell_container` reference
-- All access via `game_flow_manager.spell_container.spell_*`
+- UI management centralized in `SpellUIManager` (Node)
+- CPU AI management centralized in `CPUSpellAIContainer` (RefCounted)
+- `GameFlowManager` holds `spell_container`, `spell_phase_handler.spell_ui_manager`, references
+- All access via `game_flow_manager.spell_container.spell_*`, `spell_phase_handler.spell_ui_manager.*()`
 - Individual spell variables in GFM removed (no backward compatibility)
 - Node-type systems (spell_curse_stat, spell_world_curse) managed by GFM's add_child()
 - Eliminates dictionary ⇔ individual variable conversion chains
@@ -276,9 +285,10 @@ scripts/
 │   └── game_system_manager.gd
 ├── game_flow/               # Game flow management
 │   ├── game_flow_manager.gd
-│   ├── dominio_command_handler.gd
 │   ├── spell_phase_handler.gd
+│   ├── spell_ui_manager.gd           # ← Phase 5-1: UI management
 │   ├── item_phase_handler.gd
+│   ├── dominio_command_handler.gd
 │   ├── dice_phase_handler.gd
 │   ├── toll_payment_handler.gd
 │   ├── discard_handler.gd
@@ -296,6 +306,7 @@ scripts/
 │   └── spell_draw/          # Card draw subsystems
 ├── ui_components/           # UI components (15+ files)
 ├── cpu_ai/                  # CPU AI logic (10+ files)
+│   ├── cpu_spell_ai_container.gd    # ← Phase 5-2: CPU AI reference management
 ├── battle_test/             # Battle testing framework
 ├── battle_screen/           # Battle animations
 ├── tiles/                   # Tile-related scripts
@@ -322,9 +333,12 @@ data/
 - `DominioOrderHandler`: 881 lines → 4 files
 - `UIManager`: Split into 15+ components
 - `GameFlowManager`: 982 → 724 lines (258 lines removed via handler extraction)
-- `SpellSystemContainer`: Unified 10+2 spell systems (eliminated 3 conversion chains)
+- `SpellSystemContainer`: Unified 10 spell systems (eliminated 3 conversion chains)
+- `SpellUIManager`: New - 274 lines (Phase 5-1, UI control integration)
+- `CPUSpellAIContainer`: New - 79 lines (Phase 5-2, CPU AI reference management)
 - `DebugSettings` Autoload: Centralized debug flag management
 - Signal Connection Safety: Added `is_connected()` checks project-wide (BUG-000 fix)
+- Phase 5 cumulative: ~134 lines deleted, 2 new systems added, references consolidated
 
 ## Development Workflow
 

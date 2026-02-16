@@ -2,9 +2,9 @@
 
 **目的**: プロジェクト内のシグナル定義と接続パターンの一覧
 
-**最終更新**: 2026-02-13
+**最終更新**: 2026-02-16 (Phase 5-1, 5-2 追加)
 
-**総シグナル数**: 192
+**総シグナル数**: 192 + 管理システム参照（SpellUIManager, CPUSpellAIContainer）
 
 ---
 
@@ -92,6 +92,50 @@
 | `target_selection_required` | `spell_card: Dictionary, target_type: String` | ターゲット選択要求 |
 | `target_confirmed` | `target_data: Dictionary` | ターゲット確定 |
 | `external_spell_finished` | なし | 外部スペル完了 |
+
+### SpellUIManager - Phase 5-1
+ファイル: `scripts/game_flow/spell_ui_manager.gd` (274 lines, 14 methods)
+
+**責務**: スペルフェーズのUI制御統合管理（Phase 5-1で新規作成）
+
+**統合する5つのシステム**:
+- `spell_phase_ui_manager`: スペル選択UI
+- `spell_confirmation_handler`: スペル発動確認
+- `spell_navigation_controller`: ナビゲーション制御
+- `spell_ui_controller`: UI制御基本
+- `spell_phase_handler`: 親ハンドラー参照
+
+**メソッド** (14):
+| メソッド | 用途 | パラメータ |
+|---------|------|----------|
+| `setup()` | 5つの統合参照を初期化 | spell_phase_handler, ui_manager, spell_navigation_controller, spell_confirmation_handler, spell_ui_controller |
+| `initialize_spell_phase_ui()` | スペルフェーズUI初期化 | なし |
+| `initialize_spell_cast_notification_ui()` | スペル発動通知UI初期化 | なし |
+| `show_spell_selection_ui()` | スペル選択UI表示 | hand_data: Array, magic_power: int |
+| `hide_spell_selection_ui()` | スペル選択UI非表示 | なし |
+| `update_spell_phase_ui()` | UI更新 | なし |
+| `return_camera_to_player()` | カメラをプレイヤーに戻す | なし |
+| `show_spell_phase_buttons()` | スペルフェーズボタン表示 | なし |
+| `hide_spell_phase_buttons()` | スペルフェーズボタン非表示 | なし |
+| `restore_navigation()` | ナビゲーション復帰 | なし |
+| `update_navigation_ui()` | ナビゲーションUI更新 | なし |
+| `show_spell_confirmation()` | スペル発動確認表示 | caster_name, target_data, spell_or_mystic, is_mystic |
+| `hide_spell_confirmation()` | スペル発動確認非表示 | なし |
+| `is_valid()` | 初期化状態確認 | 戻り値: bool |
+
+**初期化パターン**:
+```gdscript
+# GameSystemManager._initialize_spell_phase_subsystems()
+var spell_ui_manager = SpellUIManager.new()
+spell_ui_manager.setup(
+    spell_phase_handler,
+    ui_manager,
+    spell_navigation_controller,
+    spell_confirmation_handler,
+    spell_ui_controller
+)
+spell_phase_handler.spell_ui_manager = spell_ui_manager
+```
 
 ### ItemPhaseHandler
 ファイル: `scripts/game_flow/item_phase_handler.gd`
@@ -339,6 +383,44 @@
 |---------|------|------|
 | `cpu_action_completed` | なし | CPUアクション完了 |
 | `cpu_spell_completed` | `used_spell: bool` | CPUスペル完了 |
+
+### CPUSpellAIContainer - Phase 5-2
+ファイル: `scripts/cpu_ai/cpu_spell_ai_container.gd` (79 lines, RefCounted)
+
+**責務**: CPU AI参照の統合管理（Phase 5-2で新規作成、SpellSystemContainerパターンを踏襲）
+
+**統合する4つのシステム**:
+- `cpu_spell_ai`: スペル選択AI
+- `cpu_mystic_arts_ai`: 秘術選択AI
+- `cpu_hand_utils`: 手札ユーティリティ
+- `cpu_movement_evaluator`: 移動評価エンジン
+
+**メソッド** (4):
+| メソッド | 用途 | パラメータ |
+|---------|------|----------|
+| `setup()` | 4つのCPU AI参照を初期化 | spell_ai, mystic_arts_ai, hand_utils, movement_evaluator |
+| `is_valid()` | 初期化状態確認 | 戻り値: bool |
+| `debug_print_status()` | デバッグ情報出力 | なし |
+
+**初期化パターン**:
+```gdscript
+# GameSystemManager._initialize_cpu_spell_ai_container()
+var cpu_ai_container = CPUSpellAIContainer.new()
+cpu_ai_container.setup(
+    cpu_spell_ai,
+    cpu_mystic_arts_ai,
+    cpu_hand_utils,
+    cpu_movement_evaluator
+)
+spell_phase_handler.cpu_spell_ai_container = cpu_ai_container
+```
+
+**参照アクセス例**:
+```gdscript
+# SpellPhaseHandler でCPU AI を使用
+if spell_phase_handler.cpu_spell_ai_container and spell_phase_handler.cpu_spell_ai_container.is_valid():
+    spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
+```
 
 ---
 

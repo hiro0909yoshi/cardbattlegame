@@ -1,6 +1,6 @@
 # システムツリー構造定義
 
-**最終更新**: 2026-02-14
+**最終更新**: 2026-02-16 (Phase 5-1, 5-2 追加)
 **目的**: ゲームシステムの理想的な階層構造を定義し、保守性・拡張性・テスタビリティを向上させる
 
 ---
@@ -43,6 +43,8 @@ GameSystemManager (Root: ライフサイクル管理)
 │      │
 │      ├── [Game Flow Handlers]
 │      │   ├── SpellPhaseHandler
+│      │   │   ├── SpellUIManager (Phase 5-1) ← UI統合管理
+│      │   │   └── CPUSpellAIContainer (Phase 5-2) ← CPU AI参照統合
 │      │   ├── ItemPhaseHandler
 │      │   ├── DominioCommandHandler
 │      │   ├── DicePhaseHandler

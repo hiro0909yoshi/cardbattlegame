@@ -2,7 +2,7 @@
 
 **目的**: チェーンアクセス禁止ルール（規約9）を守るための参照ガイド
 
-**最終更新**: 2026-02-13
+**最終更新**: 2026-02-16 (Phase 5-1, 5-2 追加)
 
 ---
 
@@ -307,6 +307,70 @@ MovementController内部のヘルパー（warp_handler, special_handler等）か
 | CPUTurnProcessor | set_item_phase_handler | game_system_manager | アイテムフェーズ制御 |
 | CPUTurnProcessor | set_dominio_command_handler | game_system_manager | ドミニオコマンド制御 |
 | BattleSpecialEffects | set_handlers | battle_system | 戦闘後処理 |
+
+### spell_phase_handler.spell_ui_manager 参照 (Phase 5-1)
+| 設定先クラス | メソッド | 注入元 | 責務 |
+|-------------|---------|--------|------|
+| SpellPhaseHandler | `spell_ui_manager` | game_system_manager | UI統合制御 |
+
+**統合参照**:
+```gdscript
+# SpellUIManager が統合するシステム
+var spell_phase_handler: SpellPhaseHandler
+var ui_manager: UIManager
+var spell_navigation_controller: SpellNavigationController
+var spell_confirmation_handler: SpellConfirmationHandler
+var spell_ui_controller: SpellUIController
+```
+
+**メソッド一覧** (14):
+- setup() - 初期化
+- initialize_spell_phase_ui()
+- initialize_spell_cast_notification_ui()
+- show_spell_selection_ui(hand_data, magic_power)
+- hide_spell_selection_ui()
+- update_spell_phase_ui()
+- return_camera_to_player()
+- show_spell_phase_buttons()
+- hide_spell_phase_buttons()
+- restore_navigation()
+- update_navigation_ui()
+- show_spell_confirmation(caster_name, target_data, spell_or_mystic, is_mystic)
+- hide_spell_confirmation()
+- is_valid()
+
+**使用例**:
+```gdscript
+# SpellPhaseHandler 内で
+if spell_ui_manager and spell_ui_manager.is_valid():
+    spell_ui_manager.show_spell_selection_ui(player_hand, magic_power)
+```
+
+### spell_phase_handler.cpu_spell_ai_container 参照 (Phase 5-2)
+| 設定先クラス | メソッド | 注入元 | 責務 |
+|-------------|---------|--------|------|
+| SpellPhaseHandler | `cpu_spell_ai_container` | game_system_manager | CPU AI参照統合 |
+
+**統合参照**:
+```gdscript
+# CPUSpellAIContainer が管理する参照
+var cpu_spell_ai: CPUSpellAI
+var cpu_mystic_arts_ai: CPUMysticArtsAI
+var cpu_hand_utils: CPUHandUtils
+var cpu_movement_evaluator: CPUMovementEvaluator
+```
+
+**メソッド一覧** (4):
+- setup(spell_ai, mystic_arts_ai, hand_utils, movement_evaluator)
+- is_valid()
+- debug_print_status()
+
+**使用例**:
+```gdscript
+# SpellPhaseHandler 内で
+if spell_phase_handler.cpu_spell_ai_container and spell_phase_handler.cpu_spell_ai_container.is_valid():
+    var decided_spell = spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
+```
 
 ---
 
