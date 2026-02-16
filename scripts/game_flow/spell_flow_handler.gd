@@ -308,7 +308,6 @@ func cancel_spell():
 
 ## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
 func return_to_spell_selection():
-	print("[SFH-DEBUG] return_to_spell_selection() 開始")
 	# 対象選択フェーズを抜ける共通処理
 	_exit_target_selection_phase()
 
@@ -316,16 +315,13 @@ func return_to_spell_selection():
 	_update_spell_phase_ui()
 
 	# アクション指示パネルで表示
-	print("[SFH-DEBUG] spell_ui_action_prompt_shown 発行")
 	spell_ui_action_prompt_shown.emit("スペルを使用するか、ダイスを振ってください")
 
 	# グローバルナビゲーションをスペル選択用に再設定
-	print("[SFH-DEBUG] _setup_spell_selection_navigation() 呼び出し")
 	_setup_spell_selection_navigation()
 
 	# アルカナアーツボタンを再表示
 	_show_spell_phase_buttons()
-	print("[SFH-DEBUG] return_to_spell_selection() 完了")
 
 ## ===== スペル効果実行 =====
 
@@ -514,7 +510,6 @@ func pass_spell(auto_roll: bool = true):
 
 ## スペルフェーズ完了
 func complete_spell_phase():
-	print("[SFH-DEBUG] complete_spell_phase() 開始, state=%s" % _spell_state.current_state)
 	if _spell_state.current_state == SpellStateHandler.State.INACTIVE:
 		# 既に INACTIVE でもシグナルは emit する（GameFlowManager が await している）
 		if _spell_phase_handler:
@@ -559,7 +554,6 @@ func complete_spell_phase():
 	if _board_system:
 		_board_system.enable_follow_camera()
 
-	print("[SFH-DEBUG] spell_phase_completed.emit() 発行")
 	if _spell_phase_handler:
 		_spell_phase_handler.spell_phase_completed.emit()
 
@@ -661,7 +655,6 @@ func _hide_spell_phase_buttons():
 
 ## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
 func _setup_spell_selection_navigation():
-	print("[SFH-DEBUG] _setup_spell_selection_navigation() → spell_ui_navigation_enabled 発行")
 	spell_ui_navigation_enabled.emit(
 		func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
 		Callable()             # 戻るなし

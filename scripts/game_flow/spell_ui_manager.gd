@@ -333,7 +333,6 @@ func _on_spell_ui_card_pending_cleared() -> void:
 		_ui_manager.card_selection_ui.pending_card_index = -1
 
 func _on_spell_ui_navigation_enabled(confirm_cb: Callable, back_cb: Callable) -> void:
-	print("[SUM-DEBUG] _on_spell_ui_navigation_enabled() 受信, _ui_manager=%s" % ("valid" if _ui_manager else "NULL"))
 	if _ui_manager:
 		_ui_manager.enable_navigation(confirm_cb, back_cb)
 

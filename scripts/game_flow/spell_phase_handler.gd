@@ -227,7 +227,6 @@ func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_t
 
 ## スペルフェーズ完了
 func complete_spell_phase():
-	print("[SPH-DEBUG] complete_spell_phase() 開始, state=%s" % (spell_state.current_state if spell_state else "NULL"))
 	if not spell_state:
 		push_error("[SPH] spell_state が見つかりません")
 		return
@@ -236,7 +235,6 @@ func complete_spell_phase():
 	spell_state.transition_to(SpellStateHandler.State.INACTIVE)
 
 	# スペルフェーズ完了シグナルを発行（GameFlowManager が待っている）
-	print("[SPH-DEBUG] spell_phase_completed.emit() 発行")
 	spell_phase_completed.emit()
 
 ## ============ Delegation Methods to SpellFlowHandler ============

@@ -166,24 +166,18 @@ func _on_mystic_art_used():
 
 ## アルカナアーツフェーズ完了時
 func _on_mystic_phase_completed():
-	print("[MAH-DEBUG] _on_mystic_phase_completed() 開始")
 	if not _spell_phase_handler:
-		print("[MAH-DEBUG] ⚠️ _spell_phase_handler が null")
 		return
 
 	# spell_stateを完全にリセット（spell_used_this_turn を false に）
 	_spell_phase_handler.spell_state.reset_turn_state()
 	_spell_phase_handler.spell_state.set_current_player_id(_spell_phase_handler.spell_state.current_player_id)
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
-	print("[MAH-DEBUG] spell_state リセット完了 → WAITING_FOR_INPUT")
 
 	if _spell_phase_handler.spell_flow:
-		print("[MAH-DEBUG] spell_flow.return_to_spell_selection() 呼び出し")
 		_spell_phase_handler.spell_flow.return_to_spell_selection()
-		print("[MAH-DEBUG] spell_flow.return_to_spell_selection() 完了")
 	else:
 		push_error("[MysticArtsHandler] spell_flow が初期化されていません")
-	print("[MAH-DEBUG] _on_mystic_phase_completed() 完了")
 
 ## アルカナアーツターゲット選択要求時
 func _on_mystic_target_selection_requested(targets: Array) -> void:
