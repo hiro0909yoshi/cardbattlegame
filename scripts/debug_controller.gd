@@ -521,8 +521,8 @@ func clear_current_player_down_states():
 	if cleared_count > 0:
 		print("【デバッグ】プレイヤー", player_id + 1, "の", cleared_count, "個の土地のダウン状態を解除しました")
 		# アルカナアーツボタンの表示を更新
-		if spell_phase_handler:
-			spell_phase_handler.update_mystic_button_visibility()
+		if spell_phase_handler and spell_phase_handler.mystic_arts_handler:
+			spell_phase_handler.mystic_arts_handler.update_mystic_button_visibility()
 	else:
 		print("【デバッグ】ダウン状態の土地はありません")
 	

@@ -77,7 +77,7 @@ func decide_action(player_id: int) -> Dictionary:
 	
 	# アルカナアーツ判断
 	var mystic_decision = {"use": false}
-	if cpu_mystic_arts_ai and spell_phase_handler and spell_phase_handler.has_available_mystic_arts(player_id):
+	if cpu_mystic_arts_ai and spell_phase_handler and spell_phase_handler.mystic_arts_handler and spell_phase_handler.mystic_arts_handler.has_available_mystic_arts(player_id):
 		mystic_decision = cpu_mystic_arts_ai.decide_mystic_arts(player_id)
 	
 	# どちらも使わない場合

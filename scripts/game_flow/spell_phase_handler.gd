@@ -170,13 +170,6 @@ func _show_spell_selection_ui(_hand_data: Array, _available_magic: int):
 	if spell_ui_controller:
 		spell_ui_controller.show_spell_selection_ui(_hand_data, _available_magic)
 
-## アルカナアーツフェーズ開始（外部APIとして保持）
-func start_mystic_arts_phase():
-	"""アルカナアーツ選択フェーズを開始"""
-	if mystic_arts_handler:
-		await mystic_arts_handler.start_mystic_arts_phase()
-
-
 ## CPUのスペル使用判定（新AI使用）
 ## CPUSpellPhaseHandlerへの簡潔な委譲
 func _delegate_to_cpu_spell_handler(player_id: int) -> void:
@@ -358,43 +351,7 @@ func try_handle_card_selection(card_index: int) -> bool:
 
 # ============ アルカナアーツシステム対応（新規追加）============
 
-## アルカナアーツが利用可能か確認（外部API）
-func has_available_mystic_arts(player_id: int) -> bool:
-	if mystic_arts_handler:
-		return mystic_arts_handler.has_available_mystic_arts(player_id)
-	return false
-
-## SpellMysticArtsクラスが存在するか（外部API）
-func has_spell_mystic_arts() -> bool:
-	if mystic_arts_handler:
-		return mystic_arts_handler._has_spell_mystic_arts()
-	return spell_mystic_arts != null and spell_mystic_arts is SpellMysticArts
-
 # ============ UIボタン管理 ============
-
-
-
-## アルカナアーツ関連（内部）
-func update_mystic_button_visibility():
-	if mystic_arts_handler:
-		mystic_arts_handler.update_mystic_button_visibility()
-
-func _on_mystic_art_used():
-	if mystic_arts_handler:
-		mystic_arts_handler._on_mystic_art_used()
-
-func _on_mystic_phase_completed():
-	if mystic_arts_handler:
-		mystic_arts_handler._on_mystic_phase_completed()
-
-func _on_mystic_target_selection_requested(targets: Array) -> void:
-	if mystic_arts_handler:
-		mystic_arts_handler._on_mystic_target_selection_requested(targets)
-
-func _on_mystic_ui_message_requested(message: String):
-	if mystic_arts_handler:
-		mystic_arts_handler._on_mystic_ui_message_requested(message)
-
 
 # ============ 発動通知UI ============
 

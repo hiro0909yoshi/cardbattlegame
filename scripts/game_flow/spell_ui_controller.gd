@@ -129,8 +129,8 @@ func show_spell_phase_buttons() -> void:
 	# アルカナアーツボタンは使用可能なクリーチャーがいる場合のみ表示（特殊ボタン使用）
 	if _ui_manager and _spell_phase_handler and _spell_phase_handler.spell_state:
 		var current_player_id = _spell_phase_handler.spell_state.current_player_id
-		if _spell_phase_handler.has_available_mystic_arts(current_player_id):
-			_ui_manager.show_mystic_button(func(): _spell_phase_handler.start_mystic_arts_phase())
+		if _spell_phase_handler.mystic_arts_handler and _spell_phase_handler.mystic_arts_handler.has_available_mystic_arts(current_player_id):
+			_ui_manager.show_mystic_button(func(): _spell_phase_handler.mystic_arts_handler.start_mystic_arts_phase())
 	# 「スペルを使わない」ボタンは✓ボタンに置き換えたため表示しない
 
 ## スペルフェーズ終了時にボタンを非表示

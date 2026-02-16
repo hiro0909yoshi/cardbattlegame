@@ -2,7 +2,7 @@
 
 **目的**: チェーンアクセス禁止ルール（規約9）を守るための参照ガイド
 
-**最終更新**: 2026-02-16 (Phase 5-1, 5-2 追加)
+**最終更新**: 2026-02-17 (Phase 8-2: MysticArts 委譲削除)
 
 ---
 
@@ -343,7 +343,7 @@ var spell_ui_controller: SpellUIController
 ```gdscript
 # SpellPhaseHandler 内で
 if spell_ui_manager and spell_ui_manager.is_valid():
-    spell_ui_manager.show_spell_selection_ui(player_hand, magic_power)
+	spell_ui_manager.show_spell_selection_ui(player_hand, magic_power)
 ```
 
 ### spell_phase_handler.cpu_spell_ai_container 参照 (Phase 5-2)
@@ -369,7 +369,7 @@ var cpu_movement_evaluator: CPUMovementEvaluator
 ```gdscript
 # SpellPhaseHandler 内で
 if spell_phase_handler.cpu_spell_ai_container and spell_phase_handler.cpu_spell_ai_container.is_valid():
-    var decided_spell = spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
+	var decided_spell = spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
 ```
 
 ---
@@ -433,3 +433,30 @@ func _ready():
 - 将来的な拡張が容易
 
 **適用箇所**: 14ファイル（game_flow_manager, board_system_3d, tile_action_processor, discard_handler, game_3d, quest_game, game_system_manager, movement_controller, special_tile_system, tile_summon_executor, card_selection_ui, tile_battle_executor, item_phase_handler, spell_phase_handler）
+
+---
+
+## Phase 8-2: MysticArts 委譲メソッド削除（2026-02-17）
+
+**削除された SpellPhaseHandler の委譲メソッド**（8個）:
+
+| メソッド | 削除理由 | 代替方法 |
+|---------|--------|--------|
+| `start_mystic_arts_phase()` | MysticArtsHandler が直接シグナル接続済み | `spell_phase_handler.mystic_arts_handler.start_mystic_arts_phase()` |
+| `has_available_mystic_arts(player_id)` | MysticArtsHandler に統一 | `spell_phase_handler.mystic_arts_handler.has_available_mystic_arts(player_id)` |
+| `has_spell_mystic_arts()` | 呼び出し箇所なし | `spell_phase_handler.mystic_arts_handler._has_spell_mystic_arts()` |
+| `update_mystic_button_visibility()` | MysticArtsHandler に統一 | `spell_phase_handler.mystic_arts_handler.update_mystic_button_visibility()` |
+| `_on_mystic_art_used()` | デッドコード（内部シグナルハンドラ） | - |
+| `_on_mystic_phase_completed()` | デッドコード（内部シグナルハンドラ） | - |
+| `_on_mystic_target_selection_requested()` | デッドコード（内部シグナルハンドラ） | - |
+| `_on_mystic_ui_message_requested()` | デッドコード（内部シグナルハンドラ） | - |
+
+**変更したファイル** (3):
+1. `scripts/game_flow/spell_ui_controller.gd` - Line 132-133
+2. `scripts/cpu_ai/cpu_spell_phase_handler.gd` - Line 80
+3. `scripts/debug_controller.gd` - Line 525
+
+**改善効果**:
+- 責務の明確化: MysticArts 処理は MysticArtsHandler に完全統一
+- 参照の直進化: GFM→SPH→MAH チェーン廃止
+- コード削減: 46行削減
