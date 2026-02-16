@@ -870,6 +870,9 @@ func _initialize_phase1a_handlers() -> void:
 	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, ui_manager, board_system_3d, game_flow_manager)
 	game_flow_manager.dice_phase_handler = dice_phase_handler
 
+	# Phase 6-B: DicePhaseHandler UI Signal接続
+	_connect_dice_phase_signals(dice_phase_handler, ui_manager)
+
 	# TollPaymentHandlerを作成
 	var toll_payment_handler = TollPaymentHandlerClass.new()
 	game_flow_manager.add_child(toll_payment_handler)
@@ -1367,3 +1370,23 @@ func _get_cpu_battle_policy():
 		policy = CPUBattlePolicyScript.create_balanced_policy()
 		cpu_ai_handler.battle_policy = policy
 	return policy
+
+## Phase 6-B: DicePhaseHandler UI Signal接続
+func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
+	if not dice_handler or not p_ui_manager:
+		push_error("[GSM] DicePhaseHandler または UIManager が null です")
+		return
+
+	if not dice_handler.dice_ui_big_result_requested.is_connected(p_ui_manager.show_big_dice_result):
+		dice_handler.dice_ui_big_result_requested.connect(p_ui_manager.show_big_dice_result)
+	if not dice_handler.dice_ui_double_result_shown.is_connected(p_ui_manager.show_dice_result_double):
+		dice_handler.dice_ui_double_result_shown.connect(p_ui_manager.show_dice_result_double)
+	if not dice_handler.dice_ui_triple_result_shown.is_connected(p_ui_manager.show_dice_result_triple):
+		dice_handler.dice_ui_triple_result_shown.connect(p_ui_manager.show_dice_result_triple)
+	if not dice_handler.dice_ui_range_result_shown.is_connected(p_ui_manager.show_dice_result_range):
+		dice_handler.dice_ui_range_result_shown.connect(p_ui_manager.show_dice_result_range)
+	if not dice_handler.dice_ui_phase_text_requested.is_connected(p_ui_manager.set_phase_text):
+		dice_handler.dice_ui_phase_text_requested.connect(p_ui_manager.set_phase_text)
+	if not dice_handler.dice_ui_navigation_disabled.is_connected(p_ui_manager.disable_navigation):
+		dice_handler.dice_ui_navigation_disabled.connect(p_ui_manager.disable_navigation)
+	print("[GSM] DicePhaseHandler UI Signal接続完了（6シグナル）")

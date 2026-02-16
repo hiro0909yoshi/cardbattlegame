@@ -2,11 +2,19 @@
 extends Node
 class_name DicePhaseHandler
 
+# === UI Signal 定義（Phase 6-B: UI層分離） ===
+signal dice_ui_big_result_requested(value: int, duration: float)
+signal dice_ui_double_result_shown(d1: int, d2: int, total: int)
+signal dice_ui_triple_result_shown(d1: int, d2: int, d3: int, total: int)
+signal dice_ui_range_result_shown(curse_name: String, value: int)
+signal dice_ui_phase_text_requested(text: String)
+signal dice_ui_navigation_disabled()
+
 # 依存システム
 var player_system
 var player_buff_system
 var spell_dice
-var ui_manager
+var ui_manager  # ※ process_magic_grant パススルー用（直接UI操作はSignal経由）
 var board_system_3d
 var game_flow_manager  # change_phase()呼び出し用
 
@@ -90,22 +98,20 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	var modified_dice = player_buff_system.modify_dice_roll(total_dice, player_system.current_player_index)
 
 	# ダイス結果を大きく表示（1.5秒）
-	if ui_manager:
-		ui_manager.show_big_dice_result(modified_dice, 1.5)
+	dice_ui_big_result_requested.emit(modified_dice, 1.5)
 
 	# ダイス結果を詳細表示（上部）
-	if ui_manager:
-		# ダイス範囲呪いがある場合は特殊表示
-		if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
-			var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
-			ui_manager.show_dice_result_range(range_info.get("name", ""), modified_dice)
-			print("[ダイス/%s] %d（範囲: %d〜%d）" % [range_info.get("name", ""), modified_dice, range_info.get("min", 1), range_info.get("max", 6)])
-		elif needs_third:
-			ui_manager.show_dice_result_triple(dice1, dice2, dice3, modified_dice)
-			print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
-		else:
-			ui_manager.show_dice_result_double(dice1, dice2, modified_dice)
-			print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
+	# ダイス範囲呪いがある場合は特殊表示
+	if spell_dice and spell_dice.has_dice_range_curse(player_system.current_player_index):
+		var range_info = spell_dice.get_dice_range_info(player_system.current_player_index)
+		dice_ui_range_result_shown.emit(range_info.get("name", ""), modified_dice)
+		print("[ダイス/%s] %d（範囲: %d〜%d）" % [range_info.get("name", ""), modified_dice, range_info.get("min", 1), range_info.get("max", 6)])
+	elif needs_third:
+		dice_ui_triple_result_shown.emit(dice1, dice2, dice3, modified_dice)
+		print("[ダイス] %d + %d + %d = %d (修正後: %d)" % [dice1, dice2, dice3, total_dice, modified_dice])
+	else:
+		dice_ui_double_result_shown.emit(dice1, dice2, modified_dice)
+		print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
 
 	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:
@@ -120,12 +126,10 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 
 	# 3D移動
 	if board_system_3d:
-		if ui_manager:
-			ui_manager.set_phase_text("移動中...")
+		dice_ui_phase_text_requested.emit("移動中...")
 		print("[DicePhaseHandler] roll_dice: move_player_3d呼び出し (player=%d, dice=%d)" % [current_player.id, modified_dice])
 		board_system_3d.move_player_3d(current_player.id, modified_dice, modified_dice)
 
 # ナビゲーションボタンのクリア（GameFlowManagerの_clear_dice_phase_navigation()から移動）
 func _clear_dice_phase_navigation() -> void:
-	if ui_manager:
-		ui_manager.disable_navigation()
+	dice_ui_navigation_disabled.emit()
