@@ -79,6 +79,9 @@ var spell_confirmation_handler = null  # SpellConfirmationHandler - スペル発
 var spell_ui_controller = null  # SpellUIController - UI制御（Phase 7-1、循環参照回避のため型アノテーションなし）
 var mystic_arts_handler = null  # MysticArtsHandler - アルカナアーツ処理（Phase 8-1、循環参照回避のため型アノテーションなし）
 
+## === Phase 5-1: SpellUIManager 統合 ===
+var spell_ui_manager = null  # SpellUIManager - UI管理システム（Phase 5-1、循環参照回避のため型アノテーションなし）
+
 ## ===== ハンドラー参照（Phase 3-A Day 9-12） =====
 var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
 var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
