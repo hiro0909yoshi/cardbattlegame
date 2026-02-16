@@ -37,7 +37,6 @@ var card_selection_handler: CardSelectionHandler = null
 signal external_spell_finished()  # 外部スペル実行完了
 
 ## 参照
-var ui_manager = null
 var game_flow_manager = null
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var card_system = null
@@ -45,7 +44,6 @@ var player_system = null
 var board_system = null
 var creature_manager = null
 var spell_mystic_arts = null  # アルカナアーツシステム
-var spell_phase_ui_manager = null  # UIボタン管理
 var spell_cast_notification_ui = null  # 発動通知UI
 
 ## === Phase 3-A Day 18: SpellSubsystemContainer 導入 ===
@@ -93,7 +91,6 @@ func _process(delta):
 
 ## 初期化
 func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
-	ui_manager = ui_mgr
 	game_flow_manager = flow_mgr
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	# game_3d参照は別途set_game_3d_ref()で設定される
@@ -359,21 +356,20 @@ func _initialize_spell_cast_notification_ui():
 		spell_cast_notification_ui = spell_confirmation_handler.get_spell_cast_notification_ui()
 
 ## カード選択ハンドラーを初期化
-func _initialize_card_selection_handler():
+func _initialize_card_selection_handler(ui_mgr = null):
 	if card_selection_handler:
 		return
-	
+
 	card_selection_handler = CardSelectionHandler.new()
 	card_selection_handler.name = "CardSelectionHandler"
 	add_child(card_selection_handler)
-	
+
 	# 参照を設定
 	card_selection_handler.setup(
-		ui_manager,
+		ui_mgr,
 		player_system,
 		card_system,
-		self,
-		spell_phase_ui_manager
+		self
 	)
 
 	# SpellDrawにもcard_selection_handlerを設定

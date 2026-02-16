@@ -824,7 +824,7 @@ func _initialize_phase1a_handlers() -> void:
 	spell_phase_handler.set_game_stats(game_flow_manager.game_stats)  # === game_stats直接参照を設定 ===
 
 	# === 新規: SpellPhaseHandler のサブシステム初期化（先に実行：spell_effect_executor作成） ===
-	_initialize_spell_phase_subsystems(spell_phase_handler, game_flow_manager)
+	_initialize_spell_phase_subsystems(spell_phase_handler, game_flow_manager, ui_manager)
 
 	# SpellEffectExecutorにスペルコンテナを直接設定（辞書展開廃止）
 	# 注: _initialize_spell_phase_subsystems() で spell_effect_executor が作成済みになった
@@ -832,7 +832,7 @@ func _initialize_phase1a_handlers() -> void:
 
 	# ★ P0修正: card_selection_handler を初期化（シャッター実行失敗の修正）
 	if spell_phase_handler and game_flow_manager and game_flow_manager.spell_container:
-		spell_phase_handler._initialize_card_selection_handler()
+		spell_phase_handler._initialize_card_selection_handler(ui_manager)
 		if spell_phase_handler.card_selection_handler and game_flow_manager.spell_container.spell_draw:
 			game_flow_manager.spell_container.spell_draw.set_card_selection_handler(spell_phase_handler.card_selection_handler)
 			print("[GSM] card_selection_handler 初期化・設定完了")
@@ -954,7 +954,7 @@ func _initialize_phase1a_handlers() -> void:
 	print("[GameSystemManager] スペルシステム初期化検証完了 ✓")
 
 ## SpellPhaseHandler の全初期化
-func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager) -> void:
+func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager, p_ui_manager = null) -> void:
 	"""
 	SpellPhaseHandler の全初期化をGameSystemManagerで一元管理する。
 
@@ -1036,7 +1036,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
 	if not spell_phase_handler.spell_systems.card_sacrifice_helper and spell_phase_handler.card_system and spell_phase_handler.player_system:
-		spell_phase_handler.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(spell_phase_handler.card_system, spell_phase_handler.player_system, spell_phase_handler.ui_manager)
+		spell_phase_handler.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(spell_phase_handler.card_system, spell_phase_handler.player_system, p_ui_manager)
 
 	# SpellSynthesis を初期化
 	if not spell_phase_handler.spell_systems.spell_synthesis and spell_phase_handler.spell_systems.card_sacrifice_helper:

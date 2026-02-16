@@ -52,16 +52,14 @@ var ui_manager = null
 var player_system = null
 var card_system = null
 var spell_phase_handler = null  # 親参照を追加（spell_draw の代わり）
-var spell_phase_ui_manager = null
 var current_player_id: int = -1
 
 ## セットアップ
-func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler, p_spell_phase_ui_manager):
+func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
 	ui_manager = p_ui_manager
 	player_system = p_player_system
 	card_system = p_card_system
 	spell_phase_handler = p_spell_phase_handler  # 親参照を保存
-	spell_phase_ui_manager = p_spell_phase_ui_manager
 	_connect_info_panel_signals()
 
 ## 現在のプレイヤーIDを設定
