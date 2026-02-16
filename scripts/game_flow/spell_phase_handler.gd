@@ -61,10 +61,6 @@ var spell_effect_executor: SpellEffectExecutor = null
 var game_stats  # GameFlowManager.game_stats への直接参照
 
 # === 直接参照（GFM経由を廃止） ===
-var spell_cost_modifier = null  # SpellCostModifier: コスト計算
-var spell_draw = null  # SpellDraw: ドロー処理
-var spell_magic = null  # SpellMagic: EP操作（新規追加）
-var spell_curse_stat = null  # SpellCurseStat: ステータス変更（新規追加）
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
 var spell_orchestrator = null  # SpellPhaseOrchestrator: フェーズ管理オーケストレーター
@@ -139,16 +135,6 @@ func set_spell_effect_executor_container(container: SpellSystemContainer) -> voi
 func set_game_3d_ref(p_game_3d) -> void:
 	game_3d_ref = p_game_3d
 
-## 直接参照を設定（GFM経由を廃止）
-func set_spell_systems_direct(cost_modifier, draw, magic, curse_stat) -> void:
-	spell_cost_modifier = cost_modifier
-	spell_draw = draw
-	spell_magic = magic              # 新規追加
-	spell_curse_stat = curse_stat    # 新規追加
-
-	# card_selection_handlerが既に初期化されている場合、spell_drawを設定
-	if spell_draw and card_selection_handler:
-		spell_draw.set_card_selection_handler(card_selection_handler)
 
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
@@ -422,8 +408,8 @@ func _initialize_card_selection_handler():
 	)
 
 	# SpellDrawにもcard_selection_handlerを設定
-	if spell_draw:
-		spell_draw.set_card_selection_handler(card_selection_handler)
+	if game_flow_manager and game_flow_manager.spell_container and game_flow_manager.spell_container.spell_draw:
+		game_flow_manager.spell_container.spell_draw.set_card_selection_handler(card_selection_handler)
 	
 	# 選択完了シグナルを接続（重複接続防止）
 	if not card_selection_handler.selection_completed.is_connected(_on_card_selection_completed):

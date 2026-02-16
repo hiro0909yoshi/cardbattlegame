@@ -56,7 +56,7 @@ var cpu_movement_evaluator: CPUMovementEvaluator = null
 var cpu_spell_phase_handler: CPUSpellPhaseHandler = null
 
 # === CPU Spell AI Container ===
-var cpu_spell_ai_container: CPUSpellAIContainer = null
+var cpu_spell_ai_container: CPUSpellAIContainerScript = null
 
 # === 設定 ===
 var player_count: int = 2
@@ -827,14 +827,6 @@ func _initialize_phase1a_handlers() -> void:
 	# 注: _initialize_spell_phase_subsystems() で spell_effect_executor が作成済みになった
 	spell_phase_handler.set_spell_effect_executor_container(game_flow_manager.spell_container)
 
-	# SpellPhaseHandler自身の直接参照を設定
-	spell_phase_handler.set_spell_systems_direct(
-		game_flow_manager.spell_container.spell_cost_modifier,
-		game_flow_manager.spell_container.spell_draw,
-		game_flow_manager.spell_container.spell_magic,        # 新規追加
-		game_flow_manager.spell_container.spell_curse_stat    # 新規追加
-	)
-
 	# ★ P0修正: card_selection_handler を初期化（シャッター実行失敗の修正）
 	if spell_phase_handler:
 		spell_phase_handler._initialize_card_selection_handler()
@@ -971,12 +963,6 @@ func _initialize_phase1a_handlers() -> void:
 		push_error("[GameSystemManager] spell_phase_handler.spell_effect_executor: 未設定です")
 		return
 
-	# spell_magic の直接参照検証
-	if spell_phase_handler.spell_magic:
-		print("[GameSystemManager] spell_phase_handler.spell_magic: 設定済み ✓")
-	else:
-		push_warning("[GameSystemManager] spell_phase_handler.spell_magic: 未設定（set_spell_systems_direct で設定予定）")
-
 	print("[GameSystemManager] === スペルシステム初期化検証完了 ===")
 
 ## SpellPhaseHandler の全初期化
@@ -1045,8 +1031,8 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		spell_phase_handler.spell_systems.spell_creature_place = SpellCreaturePlace.new()
 
 	# SpellDrawにSpellCreaturePlace参照を設定
-	if spell_phase_handler.spell_draw and spell_phase_handler.spell_systems.spell_creature_place:
-		spell_phase_handler.spell_draw.set_spell_creature_place(spell_phase_handler.spell_systems.spell_creature_place)
+	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_draw and spell_phase_handler.spell_systems.spell_creature_place:
+		p_game_flow_manager.spell_container.spell_draw.set_spell_creature_place(spell_phase_handler.spell_systems.spell_creature_place)
 
 	# SpellBorrow を初期化
 	if not spell_phase_handler.spell_systems.spell_borrow and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
@@ -1154,7 +1140,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.player_system,
 			spell_phase_handler.card_system,
 			spell_phase_handler.game_3d_ref,
-			spell_phase_handler.spell_cost_modifier,
+			p_game_flow_manager.spell_container.spell_cost_modifier if p_game_flow_manager and p_game_flow_manager.spell_container else null,
 			spell_phase_handler.spell_systems.spell_synthesis if spell_phase_handler.spell_systems else null,
 			spell_phase_handler.spell_systems.card_sacrifice_helper if spell_phase_handler.spell_systems else null,
 			spell_phase_handler.spell_effect_executor,
@@ -1246,9 +1232,8 @@ func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
 func _initialize_cpu_movement_evaluator() -> void:
 	if not game_flow_manager or not board_system_3d:
 		return
-	
+
 	# CPU AI共有コンテキストを作成
-	const CPUAIContextScript = preload("res://scripts/cpu_ai/cpu_ai_context.gd")
 	var cpu_context = CPUAIContextScript.new()
 	cpu_context.setup(board_system_3d, player_system, card_system)
 	cpu_context.setup_optional(
@@ -1258,14 +1243,14 @@ func _initialize_cpu_movement_evaluator() -> void:
 		null,  # battle_system
 		player_buff_system
 	)
-	
+
 	# SpellMovementを取得（MovementControllerから）
 	var spell_mov = board_system_3d.get_spell_movement() if board_system_3d else null
-	
+
 	# CPUBattleAIを作成（コンテキスト経由）
 	var battle_ai = CPUBattleAI.new()
 	battle_ai.setup_with_context(cpu_context)
-	
+
 	# CPUAIHandlerを取得（CPUTurnProcessorから）
 	var cpu_ai_handler = null
 	if board_system_3d.cpu_turn_processor:
@@ -1277,9 +1262,9 @@ func _initialize_cpu_movement_evaluator() -> void:
 			board_system_3d.cpu_turn_processor.set_item_phase_handler(game_flow_manager.item_phase_handler)
 		if game_flow_manager.dominio_command_handler:
 			board_system_3d.cpu_turn_processor.set_dominio_command_handler(game_flow_manager.dominio_command_handler)
-	
+
 	# CPUMovementEvaluatorを作成（コンテキスト経由）
-	var cpu_movement_evaluator = CPUMovementEvaluator.new()
+	cpu_movement_evaluator = CPUMovementEvaluator.new()
 	cpu_movement_evaluator.setup_with_context(
 		cpu_context,
 		board_system_3d.get_movement_controller_ref(),
@@ -1287,7 +1272,7 @@ func _initialize_cpu_movement_evaluator() -> void:
 		battle_ai,
 		cpu_ai_handler
 	)
-	
+
 	# GameFlowManagerに設定
 	game_flow_manager.set_cpu_movement_evaluator(cpu_movement_evaluator)
 
@@ -1369,6 +1354,10 @@ func _initialize_cpu_spell_ai_container() -> void:
 	# CPU AI が先に初期化されていることを確認
 	if not cpu_ai_context:
 		_initialize_cpu_ai_systems()
+
+	# === 追加: CPU Movement Evaluator の初期化を確認 ===
+	if not cpu_movement_evaluator:
+		_initialize_cpu_movement_evaluator()
 
 	if not cpu_spell_ai_container:
 		cpu_spell_ai_container = CPUSpellAIContainerScript.new()
