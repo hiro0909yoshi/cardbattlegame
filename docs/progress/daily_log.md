@@ -12,6 +12,51 @@
 
 ---
 
+## 2026年2月16日（Session 36: Phase 5-5 完了）
+
+### ✅ Phase 5-5 実装完了 - GameSystemManager 初期化ロジック簡潔化
+
+**目的**: GameSystemManager の初期化ロジックを最適化し、35行削減。安全性を重視しながら、ログ出力・null チェックを簡潔化
+
+**実施内容**:
+
+#### Step 1: _initialize_phase1a_handlers 検証ログ簡潔化（25行削減）
+- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 921-942)
+- **修正内容**: 43行の詳細なログ出力を18行に集約
+  - 成功時: 単一メッセージ「スペルシステム初期化検証完了 ✓」
+  - エラー時: 詳細ログ + debug_print_status() 呼び出し
+  - 安全性: is_valid() チェックはすべて保持
+
+#### Step 2: card_selection_handler のnullチェック統一（4行削減）
+- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 831-835)
+- **修正内容**: 分散していた null チェックを統一
+  - 前提条件: `spell_phase_handler and game_flow_manager and game_flow_manager.spell_container`
+  - ログメッセージを「初期化・設定完了」に統一
+  - 分支構造の明確化
+
+#### Step 3: _initialize_cpu_ai_systems の重複チェック削減（6行削減）
+- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 1297-1315)
+- **修正内容**: has_game_stats 変数で has_method() チェックを一度だけ実施
+  - 変数: `var has_game_stats = game_flow_manager and game_flow_manager.has_method("get")`
+  - 2箇所での重複チェック削減（cpu_spell_ai, cpu_mystic_arts_ai）
+  - メモリ効率向上
+
+**削減効果**:
+- **総削減行数**: ~35行（43行削減 + 12行新規追加 - 20行 = 35行削減）
+- **安全性**: 検証ロジック・エラーチェック完全保持
+- **可読性**: ログ出力の簡潔化により意図が明確化
+
+**コミット**: `e735d18 refactor: GameSystemManager 初期化ロジック簡潔化（Phase 5-5）`
+
+**テスト計画**:
+- [ ] ゲーム起動（エラーなし）
+- [ ] スペルシステム検証ログ確認（1メッセージのみ）
+- [ ] card_selection_handler ログ確認（統一メッセージ）
+- [ ] CPU vs CPU 複数ラウンド実行（3-5ラウンド）
+- [ ] フリーズ、クラッシュなし
+
+---
+
 ## 2026年2月16日（Session 35: Phase 5-3 完了）
 
 ### ✅ Phase 5-3 実装完了 - グループ3重複参照削除
