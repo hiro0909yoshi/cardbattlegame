@@ -582,7 +582,9 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	end_mystic_phase()
 	print("[SMA-DEBUG] end_mystic_phase() 完了")
 	print("[SMA-DEBUG] spell_phase_handler_ref.complete_spell_phase() 呼び出し前")
-	if spell_phase_handler_ref:
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
+		spell_phase_handler_ref.spell_flow.complete_spell_phase()
+	elif spell_phase_handler_ref:
 		spell_phase_handler_ref.complete_spell_phase()
 	print("[SMA-DEBUG] complete_spell_phase() 完了 → フェーズ移行するはず")
 

@@ -1095,7 +1095,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.mystic_arts_handler.setup(
 			spell_phase_handler,
-			ui_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.card_system,
@@ -1110,7 +1109,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_flow.setup(
 			spell_phase_handler,
-			ui_manager,
 			game_flow_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
@@ -1153,6 +1151,11 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		print("[SpellUIManager] 初期化完了")
 
+		# === Phase 6-A: SpellFlowHandler の UI Signal を接続（SpellUIManager 初期化後）
+		if spell_phase_handler.spell_flow:
+			spell_phase_handler.spell_ui_manager.connect_spell_flow_signals(spell_phase_handler.spell_flow)
+			print("[GameSystemManager] SpellFlowHandler UI Signal 接続完了")
+
 	# Step 4: CPU AI を初期化（GameSystemManagerから参照を取得）
 	if not cpu_ai_context:
 		_initialize_cpu_ai_systems()
@@ -1176,6 +1179,11 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if spell_phase_handler.mystic_arts_handler:
 		spell_phase_handler.mystic_arts_handler.initialize_spell_mystic_arts()
 		spell_phase_handler.spell_mystic_arts = spell_phase_handler.mystic_arts_handler.get_spell_mystic_arts()
+
+	# === Phase 6-A: MysticArtsHandler の UI Signal を接続
+	if spell_phase_handler.spell_ui_manager and spell_phase_handler.mystic_arts_handler:
+		spell_phase_handler.spell_ui_manager.connect_mystic_arts_signals(spell_phase_handler.mystic_arts_handler)
+		print("[GameSystemManager] MysticArtsHandler UI Signal 接続完了")
 
 	print("[GameSystemManager] _initialize_spell_phase_subsystems 完了")
 
