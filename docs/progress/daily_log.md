@@ -108,10 +108,10 @@
 - **ファイル**: `/scripts/game_flow/spell_phase_handler.gd`
 - **削除対象**:
   1. **4つの var 宣言を削除** (line 64-67周辺)
-     - var spell_draw = null
-     - var spell_cost_modifier = null
-     - var spell_magic = null
-     - var spell_curse_stat = null
+	 - var spell_draw = null
+	 - var spell_cost_modifier = null
+	 - var spell_magic = null
+	 - var spell_curse_stat = null
   2. **set_spell_systems_direct() メソッドを完全削除** (line 143-152周辺)
   3. **_initialize_card_selection_handler() 内の spell_draw 参照を修正** (line 411-412)
 

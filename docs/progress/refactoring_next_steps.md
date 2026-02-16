@@ -1,35 +1,91 @@
-# 📋 リファクタリング次ステップ
+# 📋 次実装フェーズ - 完全UI層分離
 
-**最終更新**: 2026-02-16
-**目的**: 次に実装するフェーズと対応方針を記録
+**最終更新**: 2026-02-17
+**目的**: 完全UI層分離アーキテクチャの実装計画
 
-**ワークフロー**:
+**ワークフロー（Haiku専用）**:
 ```
-1. Opus: Phase 計画立案 → このファイルに記載
-2. Haiku: 計画を読んで実装
-3. Sonnet: ドキュメント更新・完了報告
-4. 完了したら削除して次へ（サイクル継続）
+1. 計画読み込み: complete-ui-system-separation-design.md
+2. Haiku: 計画に基づいて実装
+3. 完了後このファイルを更新・次フェーズへ
 ```
 
-**完了フェーズ参照**: `daily_log.md`, `architecture_migration_plan.md`
-- b8244c6: Phase 5-2 CPUSpellAIContainer 実装
-- 264ec4c: Phase 5-3 グループ3重複参照削除
-- e735d18: Phase 5-5 GameSystemManager 最適化
-- f122532: ドキュメント更新完了
+**関連ドキュメント**:
+- `complete-ui-system-separation-design.md` - 完全計画書（このフェーズの詳細）
+- `daily_log.md` - 日次作業ログ
+- `architecture_migration_plan.md` - 過去フェーズ参照
 
 ---
 
-## 🎯 次のフェーズ（計画中）
+## 🎯 Phase 6: 完全UI層分離（進行中）
 
-現在、次のステップを検討中：
+**目的**: すべてのゲームシステムのハンドラーから UI操作を排除し、完全な層分離を実現
 
-- **Phase 6**: 防御的プログラミング層追加（null チェック強化、エラーハンドリング）
-- **Phase 7**: パフォーマンス最適化（メモリプロファイリング）
-- **Phase 8**: UI完全テスト・ドキュメント整備
+**基本原則**（4つ）:
+1. ツリー構造遵守（各システムは1つの親）
+2. Signal駆動（子→親のみ、リレーチェーン）
+3. Dependency Injection（参照注入）
+4. 単一責務（各システムは1つの理由でのみ変更）
+
+### ✅ Phase 6-A: SpellPhaseHandler UI Signal 分離（2026-02-17 完了）
+
+**実装内容**:
+- SpellFlowHandler: `_ui_manager` 削除、11個の UI Signal 定義、~18箇所を signal emit に置換
+- MysticArtsHandler: `_ui_manager` 削除、5個の UI Signal 定義、~8箇所を signal emit に置換
+- SpellUIManager: 16個の Signal listener 追加、`connect_spell_flow_signals()` + `connect_mystic_arts_signals()` 追加
+- GameSystemManager: Signal 接続呼び出し追加（SpellUIManager初期化後に配置）
+- MysticArts委譲メソッド8個削除（SPH 555→512行）
+- orphanファイル4個削除（Phase 6-8残骸）
+
+**修正したバグ**:
+- シグナル接続順序バグ: SpellUIManager作成前にSpellFlowHandler接続を試行→失敗（修正済）
+- アルカナアーツ完了フロー: SPH版`complete_spell_phase()`→SFH版に変更（UIクリーンアップ付き）
+- purify_effect_strategy: 存在しないメソッド呼び出し修正（`spell_ui_manager`→`ui_manager`）
+
+**SpellFlowHandler Signals（11個）**:
+```
+spell_ui_toast_requested(message)
+spell_ui_action_prompt_shown(text)
+spell_ui_action_prompt_hidden()
+spell_ui_info_panels_hidden()
+spell_ui_card_pending_cleared()
+spell_ui_navigation_enabled(confirm_cb, back_cb)
+spell_ui_navigation_disabled()
+spell_ui_actions_cleared()
+spell_ui_card_filter_set(filter)
+spell_ui_hand_updated(player_id)
+spell_ui_card_selection_deactivated()
+```
+
+**MysticArtsHandler Signals（5個）**:
+```
+mystic_ui_toast_requested(message)
+mystic_ui_button_shown(callback)
+mystic_ui_button_hidden()
+mystic_ui_navigation_disabled()
+mystic_ui_action_prompt_shown(message)
+```
+
+### 次: Phase 6-B 以降
+
+**実装順序**:
+1. ~~Phase 6-A: SpellPhaseHandler UI Signal 分離~~ ✅ 完了
+2. Phase 6-B: DicePhaseHandler UI分離（~12 UI操作）
+3. Phase 6-C: Toll + Discard + Bankruptcy UI分離（~19 UI操作）
+4. Phase 6-D: 統合テスト・デバッグ
 
 ---
 
-**前回参考**: `architecture_migration_plan.md` で過去フェーズ（0-4）の詳細を確認できます
+## 📝 ロールバック履歴
+
+**2026-02-17**: Phase 5 (b81ffd0) へロールバック
+- 原因：Phase 6-8 で「修正に修正を重ねた」複雑な実装
+- 判断：最初から正しく設計して実装する方が効率的
+- 決定：完全UI層分離アーキテクチャ設計を完成させてから開始
+
+---
+
+**参考**: `architecture_migration_plan.md` で Phase 0-5 の履歴を確認できます
 	spell_ui_manager.show_spell_phase_buttons()
 else:
 	push_error("[SPH] spell_ui_manager が初期化されていません")
@@ -297,11 +353,11 @@ SpellPhaseHandler (オーケストレーター)
 ├── SpellFlowHandler (フロー制御)
 ├── SpellPhaseOrchestrator (オーケストレーション)
 └── 5つの専門ハンドラー（責務分割）
-    ├── SpellSelectionHandler (新規)
-    ├── SpellTargetSelectionHandler (改良)
-    ├── SpellConfirmationHandler (改良)
-    ├── SpellExecutionHandler (新規)
-    └── MysticArtsHandler (改良)
+	├── SpellSelectionHandler (新規)
+	├── SpellTargetSelectionHandler (改良)
+	├── SpellConfirmationHandler (改良)
+	├── SpellExecutionHandler (新規)
+	└── MysticArtsHandler (改良)
 ```
 
 **削減目標**:
@@ -424,19 +480,19 @@ var _player_system = null
 
 ## 初期化
 func setup(spell_phase_handler, spell_state, spell_flow, ui_manager, player_system):
-    _spell_phase_handler = spell_phase_handler
-    _spell_state = spell_state
-    _spell_flow = spell_flow
-    _ui_manager = ui_manager
-    _player_system = player_system
+	_spell_phase_handler = spell_phase_handler
+	_spell_state = spell_state
+	_spell_flow = spell_flow
+	_ui_manager = ui_manager
+	_player_system = player_system
 
 ## メイン処理
 func use_spell(spell_card: Dictionary):
-    # 1. 妥当性チェック
-    # 2. コスト支払い
-    # 3. ターゲット選択 or 確認フェーズへ
-    # 4. signal: spell_selected() emit
-    await spell_selected
+	# 1. 妥当性チェック
+	# 2. コスト支払い
+	# 3. ターゲット選択 or 確認フェーズへ
+	# 4. signal: spell_selected() emit
+	await spell_selected
 ```
 
 ---

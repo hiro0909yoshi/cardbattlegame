@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ✅ 最近完了した作業（2026-02-16）
+## ✅ 最近完了した作業（2026-02-17）
 
-**Phase 0-5: アーキテクチャ移行 + Phase 5（システム最適化）完了**
+**Phase 0-6-A: アーキテクチャ移行 + UI Signal 分離**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -22,8 +22,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **5-2**: CPUSpellAIContainer 新規作成（79行、4メソッド）✅
   - **5-3**: グループ3重複参照削除（25行削減）✅
   - **5-5**: GameSystemManager 最適化（35行削減）✅
+- ✅ **Phase 6-A**: SpellPhaseHandler UI Signal 分離（2026-02-17）
+  - SpellFlowHandler: 11 UI Signals、`_ui_manager` 削除
+  - MysticArtsHandler: 5 UI Signals、`_ui_manager` 削除
+  - SpellUIManager: 16 Signal listeners 追加
+  - MysticArts委譲メソッド8個削除（SPH 555→512行）
+  - シグナル接続順序バグ修正、アルカナアーツ完了フロー修正
 - **成果物**: コード削減約600行（全フェーズ累計）、参照統合（UI・CPU AI）、SRP改善度 90%以上
-- **次**: ドキュメント更新・最終検証完了
+- **次**: Phase 6-B（DicePhaseHandler UI分離）
 
 詳細は `docs/progress/architecture_migration_plan.md` および `docs/progress/refactoring_next_steps.md` を参照
 
@@ -59,6 +65,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
      - ✅ 5-2: CPUSpellAIContainer 実装（79行、4メソッド）
      - ✅ 5-3: グループ3重複参照削除（25行削減）
      - ✅ 5-5: GameSystemManager 最適化（35行削減）
+   - 🔄 Phase 6: 完全UI層分離（進行中）
+     - ✅ 6-A: SpellPhaseHandler UI Signal分離（11+5 Signals、委譲メソッド8個削除）
+     - ⬜ 6-B: DicePhaseHandler UI分離
+     - ⬜ 6-C: Toll + Discard + Bankruptcy UI分離
+     - ⬜ 6-D: 統合テスト
 
 ### 参照ドキュメント
 
@@ -344,40 +355,28 @@ data/
 
 ### Agent Workflow (CRITICAL - ALWAYS FOLLOW)
 
-**エージェント役割分担**: 作業の性質に応じて、適切なモデルを自動的に使い分ける
+**エージェント役割分担**: Opus メイン + Haiku 実装専門
 
-#### 1. 受け答え・調整 → **Sonnet（私）**
-- ユーザーとの対話
-- 質問への回答
-- 作業結果の報告
-- ドキュメント更新
-
-#### 2. 企画・計画立案 → **Opus（Plan agent）**
-- 複雑な設計の立案
+#### 1. 受け答え・企画・計画立案 → **Opus（主要）**
+- ユーザーとの対話・質問への回答
+- 企画・計画立案
+- 複雑な設計判断
 - リファクタリング計画の策定
 - アーキテクチャ設計
 - リスク分析
+- 作業結果の報告
 
-**使用方法**:
-```python
-Task(
-  subagent_type="Plan",
-  model="opus",
-  prompt="詳細な実装計画を策定してください..."
-)
-```
-
-#### 3. 実装・コード記述 → **Haiku（Task tool）**
-- 実際のコード修正
+#### 2. 実装・コード記述 → **Haiku（Task tool・subagent）**
+- 実際のコード修正（確実な実装）
 - null参照チェック追加
 - シグナル接続修正
 - テストコード記述
 
-**使用方法**:
+**使用方法**（Haiku に実装を依頼）:
 ```python
 Task(
   subagent_type="general-purpose",
-  model="haiku",  # 環境変数 CLAUDE_CODE_SUBAGENT_MODEL でデフォルト設定済み
+  model="haiku",  # subagent_model が haiku に設定済み
   prompt="""
 ## タスク: null参照チェック追加
 
@@ -397,23 +396,8 @@ else:
 )
 ```
 
-#### 自動判断基準
-
-**Opusを使用する場合**:
-- リファクタリング計画が必要
-- 複雑な設計判断が必要
-- 複数の実装アプローチを比較検討する必要がある
-
-**Haikuを使用する場合**:
-- 明確な修正パターンがある
-- コード記述が主な作業
-- 繰り返し作業（複数ファイルの同じパターン修正）
-
-**Sonnet（私）を使用する場合**:
-- ユーザーとの対話
-- 簡単な質問への回答
-- ドキュメント更新
-- 作業結果の統合・報告
+#### 廃止されたモデル
+- **Sonnet**: 一切使用しない（判断品質への不満により廃止 - 2026-02-17）
 
 ### Before Making Changes
 1. **ALWAYS check `docs/README.md` first** - This is the project's central documentation index
@@ -562,4 +546,61 @@ This prevents:
 
 ---
 
-**Last Updated**: 2026-02-16
+---
+
+## 🤖 エージェント行動ガイドライン（2026-02-17 追加）
+
+### ⚠️ CRITICAL: エージェントモデル指定
+
+**Haiku 専用化（ユーザー明示的要望）**:
+- ✅ **Haiku のみ**: 全ての対話・実装・計画・報告
+- ❌ **Sonnet 廃止**: 一切使用しない（判断品質への不満により廃止）
+- ⚠️ **Opus のみ例外**: 複雑な設計分析が必要な時のみ EnterPlanMode で使用
+
+**設定確認**:
+```json
+~/.claude/settings.json: {"model": "claude-haiku-4-5-20251001"}
+```
+
+### ユーザー判断信頼方針
+
+**エージェント判断で実行可能な操作を明記（確認省略）**
+
+### 確認不要（エージェント判断で直接実行）
+
+**ローカル操作**:
+- ✅ `git reset --hard` / `git revert` - コミット済みコードのロールバック
+- ✅ `git clean -fd` / `rm` - ローカルファイル削除（コミット済みのみ）
+- ✅ ファイル作成・編集・削除 - Edit, Write, Glob, Grep による操作
+- ✅ ゲーム起動・テスト実行 - Godot エディタでの動作確認
+
+**ドキュメント操作**:
+- ✅ CLAUDE.md, refactoring_next_steps.md, daily_log.md の更新
+- ✅ docs/ 配下のドキュメント作成・修正
+
+**開発フロー**:
+- ✅ コード実装・リファクタリング
+- ✅ 段階的なコミット作成（git commit）
+
+### 確認必須（ユーザー許可後に実行）
+
+- ❌ `git push` / `git push --force` - リモートリポジトリへの反映
+- ❌ GitHub PR/Issue 操作 - 公開範囲への変更
+- ❌ セーブデータ削除 - ユーザーの永続データへの影響
+
+### この方針の背景
+
+- ユーザーが複数の Phase で「修正に修正を重ね」てきた経験から、**エージェント判断を信頼** いただく
+- 最悪の場合、`git reset --hard` でいつでも戻可能（ローカル操作のため）
+- Opus による事前分析で方向性を確認済みのため、**実装フェーズでの確認は不要**
+
+### Phase 6 リスタート（2026-02-17）
+
+**ロールバック実施**: b81ffd0（Phase 5 案D 完了時点）
+- ❌ 削除: Phase 6～8 の失敗した Handler 実装（20個以上のファイル）
+- ✅ 保持: SpellUIManager, CPUSpellAIContainer（正しい設計）
+- 🔄 再実装: SpellPhaseLogicHandler（ビジネスロジック層）、層の分離
+
+---
+
+**Last Updated**: 2026-02-17（Phase ロールバック実施） | Haiku + Opus

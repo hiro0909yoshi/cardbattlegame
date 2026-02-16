@@ -128,11 +128,11 @@
 # GameSystemManager._initialize_spell_phase_subsystems()
 var spell_ui_manager = SpellUIManager.new()
 spell_ui_manager.setup(
-    spell_phase_handler,
-    ui_manager,
-    spell_navigation_controller,
-    spell_confirmation_handler,
-    spell_ui_controller
+	spell_phase_handler,
+	ui_manager,
+	spell_navigation_controller,
+	spell_confirmation_handler,
+	spell_ui_controller
 )
 spell_phase_handler.spell_ui_manager = spell_ui_manager
 ```
@@ -407,10 +407,10 @@ spell_phase_handler.spell_ui_manager = spell_ui_manager
 # GameSystemManager._initialize_cpu_spell_ai_container()
 var cpu_ai_container = CPUSpellAIContainer.new()
 cpu_ai_container.setup(
-    cpu_spell_ai,
-    cpu_mystic_arts_ai,
-    cpu_hand_utils,
-    cpu_movement_evaluator
+	cpu_spell_ai,
+	cpu_mystic_arts_ai,
+	cpu_hand_utils,
+	cpu_movement_evaluator
 )
 spell_phase_handler.cpu_spell_ai_container = cpu_ai_container
 ```
@@ -419,7 +419,7 @@ spell_phase_handler.cpu_spell_ai_container = cpu_ai_container
 ```gdscript
 # SpellPhaseHandler でCPU AI を使用
 if spell_phase_handler.cpu_spell_ai_container and spell_phase_handler.cpu_spell_ai_container.is_valid():
-    spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
+	spell_phase_handler.cpu_spell_ai_container.cpu_spell_ai.decide_spell(...)
 ```
 
 ---
@@ -484,59 +484,59 @@ if spell_phase_handler.cpu_spell_ai_container and spell_phase_handler.cpu_spell_
 ### ターン進行フロー
 ```
 GameFlowManager.turn_started(player_id)
-    ↓
+	↓
 SpellPhaseHandler.spell_phase_started
-    ↓
+	↓
 SpellPhaseHandler.spell_phase_completed
-    ↓
+	↓
 (ダイスロール・移動)
-    ↓
+	↓
 MovementController.movement_completed(player_id, final_tile)
-    ↓
+	↓
 BoardSystem3D.movement_completed(player_id, final_tile)
-    ↓
+	↓
 (タイルアクション)
-    ↓
+	↓
 TileActionProcessor.action_completed
-    ↓
+	↓
 BoardSystem3D.tile_action_completed
-    ↓
+	↓
 GameFlowManager.turn_ended(player_id)
 ```
 
 ### バトルフロー（Phase 2: invasion_completed relay chain）
 ```
 (侵略開始)
-    ↓
+	↓
 BattleScreenManager.battle_screen_opened
-    ↓
+	↓
 BattleScreenManager.intro_completed
-    ↓
+	↓
 BattleScreenManager.skill_animation_completed
-    ↓
+	↓
 BattleScreenManager.attack_animation_completed
-    ↓
+	↓
 BattleScreen.battle_ended(result)
-    ↓
+	↓
 BattleScreenManager.battle_screen_closed
-    ↓
+	↓
 BattleSystem.invasion_completed(success, tile_index)
-    ↓
+	↓
 TileBattleExecutor._on_battle_completed(success, tile_index)
-    ↓
+	↓
 TileBattleExecutor.invasion_completed.emit(success, tile_index)
-    ↓
+	↓
 TileActionProcessor._on_invasion_completed(success, tile_index)
-    ↓
+	↓
 TileActionProcessor.invasion_completed.emit(success, tile_index)  [Phase 2]
-    ↓
+	↓
 BoardSystem3D._on_invasion_completed(success, tile_index)  [Phase 2]
-    ↓
+	↓
 BoardSystem3D.invasion_completed.emit(success, tile_index)  [Phase 2]
-    ↓
+	↓
 GameFlowManager._on_invasion_completed_from_board(success, tile_index)  [Phase 2]
-    ├→ DominioCommandHandler._on_invasion_completed(success, tile_index)
-    └→ CPUTurnProcessor._on_invasion_completed(success, tile_index)
+	├→ DominioCommandHandler._on_invasion_completed(success, tile_index)
+	└→ CPUTurnProcessor._on_invasion_completed(success, tile_index)
 ```
 
 **Phase 2 改善点**:
@@ -547,19 +547,59 @@ GameFlowManager._on_invasion_completed_from_board(success, tile_index)  [Phase 2
 ### スペルフロー
 ```
 SpellPhaseHandler.spell_phase_started
-    ↓
+	↓
 (スペル選択)
-    ↓
+	↓
 SpellPhaseHandler.target_selection_required(spell_card, target_type)
-    ↓
+	↓
 TargetSelectionHelper.tile_selection_completed(tile_index)
-    ↓
+	↓
 SpellPhaseHandler.target_confirmed(target_data)
-    ↓
+	↓
 SpellPhaseHandler.spell_used(spell_card)
-    ↓
+	↓
 SpellPhaseHandler.spell_phase_completed
 ```
+
+---
+
+---
+
+## Phase 6-A: UI Signal 定義（2026-02-17 追加）
+
+### SpellFlowHandler UI Signals
+ファイル: `scripts/game_flow/spell_flow_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `spell_ui_toast_requested` | `message: String` | トースト表示要求 |
+| `spell_ui_action_prompt_shown` | `text: String` | アクション指示パネル表示 |
+| `spell_ui_action_prompt_hidden` | なし | アクション指示パネル非表示 |
+| `spell_ui_info_panels_hidden` | なし | 情報パネル全非表示 |
+| `spell_ui_card_pending_cleared` | なし | ペンディングカードクリア |
+| `spell_ui_navigation_enabled` | `confirm_cb: Callable, back_cb: Callable` | ナビゲーション有効化 |
+| `spell_ui_navigation_disabled` | なし | ナビゲーション無効化 |
+| `spell_ui_actions_cleared` | なし | アクション全クリア |
+| `spell_ui_card_filter_set` | `filter: String` | カードフィルター設定 |
+| `spell_ui_hand_updated` | `player_id: int` | 手札表示更新 |
+| `spell_ui_card_selection_deactivated` | なし | カード選択UI非アクティブ化 |
+
+**接続先**: SpellUIManager.connect_spell_flow_signals()
+**接続タイミング**: GameSystemManager._initialize_spell_phase_subsystems() (SpellUIManager初期化後)
+
+### MysticArtsHandler UI Signals
+ファイル: `scripts/game_flow/mystic_arts_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `mystic_ui_toast_requested` | `message: String` | トースト表示要求 |
+| `mystic_ui_button_shown` | `callback: Callable` | アルカナアーツボタン表示 |
+| `mystic_ui_button_hidden` | なし | アルカナアーツボタン非表示 |
+| `mystic_ui_navigation_disabled` | なし | ナビゲーション無効化 |
+| `mystic_ui_action_prompt_shown` | `message: String` | アクション指示パネル表示 |
+
+**接続先**: SpellUIManager.connect_mystic_arts_signals()
+**接続タイミング**: GameSystemManager._initialize_spell_phase_subsystems() (MysticArtsHandler初期化後)
 
 ---
 
