@@ -603,6 +603,68 @@ SpellPhaseHandler.spell_phase_completed
 
 ---
 
+## Phase 6-B: DicePhaseHandler UI Signal 定義（2026-02-17 追加）
+
+### DicePhaseHandler UI Signals
+ファイル: `scripts/game_flow/dice_phase_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `dice_ui_big_result_requested` | `value: int, duration: float` | ダイス結果大表示 |
+| `dice_ui_double_result_shown` | `d1: int, d2: int, total: int` | 2Dダイス結果表示 |
+| `dice_ui_triple_result_shown` | `d1: int, d2: int, d3: int, total: int` | 3Dダイス結果表示 |
+| `dice_ui_range_result_shown` | `curse_name: String, value: int` | ダイス範囲呪い表示 |
+| `dice_ui_phase_text_requested` | `text: String` | フェーズテキスト表示 |
+| `dice_ui_navigation_disabled` | なし | ナビゲーション無効化 |
+| `dice_ui_comment_and_wait_requested` | `message: String, player_id: int` | コメント表示要求 |
+| `dice_ui_comment_and_wait_completed` | なし | コメント表示完了 |
+
+**接続先**: UIManager (GameSystemManager経由)
+**接続タイミング**: GameSystemManager._initialize_game_flow_handlers() (DicePhaseHandler初期化後)
+
+---
+
+## Phase 6-C: Toll + Discard + Bankruptcy UI Signal 定義（2026-02-17 追加）
+
+### TollPaymentHandler UI Signals
+ファイル: `scripts/game_flow/toll_payment_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `toll_ui_comment_and_wait_requested` | `message: String, player_id: int` | 通行料コメント表示要求 |
+| `toll_ui_comment_and_wait_completed` | なし | 通行料コメント表示完了 |
+
+**接続先**: UIManager (GameSystemManager経由)
+**接続タイミング**: GameSystemManager._initialize_game_flow_handlers() (TollPaymentHandler初期化後)
+
+### DiscardHandler UI Signals
+ファイル: `scripts/game_flow/discard_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `discard_ui_prompt_requested` | `player_id: int` | カード捨て選択UI要求 |
+| `discard_ui_prompt_completed` | `card_index: int` | カード捨て選択完了 |
+
+**接続先**: UIManager (GameSystemManager経由)
+**接続タイミング**: GameSystemManager._initialize_game_flow_handlers() (DiscardHandler初期化後)
+
+### BankruptcyHandler UI Signals
+ファイル: `scripts/game_flow/bankruptcy_handler.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `bankruptcy_ui_comment_and_wait_requested` | `message: String, player_id: int` | 破産コメント表示要求 |
+| `bankruptcy_ui_comment_and_wait_completed` | なし | 破産コメント表示完了 |
+| `bankruptcy_ui_player_info_updated` | なし | プレイヤー情報パネル更新 |
+| `bankruptcy_ui_card_info_shown` | `creature_data: Dictionary, tile_index: int` | クリーチャー情報表示 |
+| `bankruptcy_ui_info_panels_hidden` | なし | 情報パネル非表示 |
+
+**接続先**: UIManager (GameSystemManager経由)
+**接続タイミング**: GameSystemManager._initialize_game_flow_handlers() (BankruptcyHandler初期化後)
+**特記**: パネル生成処理（パネル作成のみ）は BankruptcyHandler に直接実装（Signal駆動ではなく直接参照）
+
+---
+
 ## 更新ルール
 
 - 新しいシグナルを追加したら、このカタログも更新する

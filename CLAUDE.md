@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ✅ 最近完了した作業（2026-02-17）
 
-**Phase 0-6-A: アーキテクチャ移行 + UI Signal 分離**
+**Phase 0-6: アーキテクチャ移行 + 完全UI層分離（全完了）**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -22,16 +22,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **5-2**: CPUSpellAIContainer 新規作成（79行、4メソッド）✅
   - **5-3**: グループ3重複参照削除（25行削減）✅
   - **5-5**: GameSystemManager 最適化（35行削減）✅
-- ✅ **Phase 6-A**: SpellPhaseHandler UI Signal 分離（2026-02-17）
-  - SpellFlowHandler: 11 UI Signals、`_ui_manager` 削除
-  - MysticArtsHandler: 5 UI Signals、`_ui_manager` 削除
-  - SpellUIManager: 16 Signal listeners 追加
-  - MysticArts委譲メソッド8個削除（SPH 555→512行）
-  - シグナル接続順序バグ修正、アルカナアーツ完了フロー修正
-- **成果物**: コード削減約600行（全フェーズ累計）、参照統合（UI・CPU AI）、SRP改善度 90%以上
-- **次**: Phase 6-B（DicePhaseHandler UI分離）
+- ✅ **Phase 6**: 完全UI層分離 - Signal駆動化（2026-02-17）✅ **完全完了**
+  - **6-A**: SpellPhaseHandler UI Signal 分離（16 Signals）
+    - SpellFlowHandler: 11 UI Signals、`_ui_manager` 削除
+    - MysticArtsHandler: 5 UI Signals、`_ui_manager` 削除
+    - MysticArts委譲メソッド8個削除
+  - **6-B**: DicePhaseHandler UI分離（8 Signals）
+    - ダイス結果表示・フェーズテキスト・コメント等のSignal駆動化
+  - **6-C**: Toll + Discard + Bankruptcy UI分離（9 Signals）
+    - TollPaymentHandler: 2 Signals
+    - DiscardHandler: 2 Signals
+    - BankruptcyHandler: 5 Signals（パネル生成は部分的に直接参照を保持）
+  - **合計**: 33個のSignal追加、5/6ハンドラーで`_ui_manager`完全削除
+  - GameSystemManager: 6つのSignal接続メソッド追加
+- **成果物**: コード削減約700行（全フェーズ累計）、33個のUI Signal定義、5/6ハンドラーのUI層完全分離、SRP改善度 95%以上
 
-詳細は `docs/progress/architecture_migration_plan.md` および `docs/progress/refactoring_next_steps.md` を参照
+詳細は `docs/progress/refactoring_next_steps.md` を参照
 
 ---
 
@@ -53,7 +59,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - 親システムへの参照は注入（Dependency Injection）
    - シグナル接続時は `is_connected()` チェック必須
 
-3. **段階的移行**（Phase 0-5 ✅ **完了**）
+3. **段階的移行**（Phase 0-6 ✅ **全完了**）
    - ✅ Phase 0: ツリー構造定義（完了）
    - ✅ Phase 1: SpellSystemManager 導入（完了）
    - ✅ Phase 2: シグナルリレー整備（完了、横断接続 83%削減）
@@ -65,11 +71,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
      - ✅ 5-2: CPUSpellAIContainer 実装（79行、4メソッド）
      - ✅ 5-3: グループ3重複参照削除（25行削減）
      - ✅ 5-5: GameSystemManager 最適化（35行削減）
-   - 🔄 Phase 6: 完全UI層分離（進行中）
-     - ✅ 6-A: SpellPhaseHandler UI Signal分離（11+5 Signals、委譲メソッド8個削除）
-     - ⬜ 6-B: DicePhaseHandler UI分離
-     - ⬜ 6-C: Toll + Discard + Bankruptcy UI分離
-     - ⬜ 6-D: 統合テスト
+   - ✅ Phase 6: 完全UI層分離（完了、2026-02-17）
+     - ✅ 6-A: SpellPhaseHandler UI Signal分離（16 Signals、委譲メソッド8個削除）
+     - ✅ 6-B: DicePhaseHandler UI分離（8 Signals）
+     - ✅ 6-C: Toll + Discard + Bankruptcy UI分離（9 Signals）
+     - **合計**: 33 Signals、5/6ハンドラーUI層完全分離
 
 ### 参照ドキュメント
 

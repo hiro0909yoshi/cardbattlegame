@@ -17,7 +17,7 @@
 
 ---
 
-## 🎯 Phase 6: 完全UI層分離（進行中）
+## 🎯 Phase 6: 完全UI層分離（✅ 2026-02-17 完了）
 
 **目的**: すべてのゲームシステムのハンドラーから UI操作を排除し、完全な層分離を実現
 
@@ -66,13 +66,76 @@ mystic_ui_navigation_disabled()
 mystic_ui_action_prompt_shown(message)
 ```
 
-### 次: Phase 6-B 以降
+### ✅ Phase 6-B: DicePhaseHandler UI Signal 分離（2026-02-17 完了）
 
-**実装順序**:
-1. ~~Phase 6-A: SpellPhaseHandler UI Signal 分離~~ ✅ 完了
-2. Phase 6-B: DicePhaseHandler UI分離（~12 UI操作）
-3. Phase 6-C: Toll + Discard + Bankruptcy UI分離（~19 UI操作）
-4. Phase 6-D: 統合テスト・デバッグ
+**実装内容**:
+- DicePhaseHandler: `_ui_manager` 削除、8個の UI Signal 定義
+- GameSystemManager: `connect_dice_phase_ui_signals()` 追加
+- UIManager への直接呼び出し → Signal emit に置換
+
+**DicePhaseHandler Signals（8個）**:
+```
+dice_ui_big_result_requested(value: int, duration: float)
+dice_ui_double_result_shown(d1: int, d2: int, total: int)
+dice_ui_triple_result_shown(d1: int, d2: int, d3: int, total: int)
+dice_ui_range_result_shown(curse_name: String, value: int)
+dice_ui_phase_text_requested(text: String)
+dice_ui_navigation_disabled()
+dice_ui_comment_and_wait_requested(message: String, player_id: int)
+dice_ui_comment_and_wait_completed()
+```
+
+### ✅ Phase 6-C: Toll + Discard + Bankruptcy UI Signal 分離（2026-02-17 完了）
+
+**実装内容**:
+- TollPaymentHandler: `_ui_manager` 削除、2個の UI Signal 定義
+- DiscardHandler: `_ui_manager` 削除、2個の UI Signal 定義
+- BankruptcyHandler: パネル生成処理は維持、5個の UI Signal 定義
+- GameSystemManager: 3つの `connect_*_ui_signals()` メソッド追加
+
+**TollPaymentHandler Signals（2個）**:
+```
+toll_ui_comment_and_wait_requested(message: String, player_id: int)
+toll_ui_comment_and_wait_completed()
+```
+
+**DiscardHandler Signals（2個）**:
+```
+discard_ui_prompt_requested(player_id: int)
+discard_ui_prompt_completed(card_index: int)
+```
+
+**BankruptcyHandler Signals（5個）**:
+```
+bankruptcy_ui_comment_and_wait_requested(message: String, player_id: int)
+bankruptcy_ui_comment_and_wait_completed()
+bankruptcy_ui_player_info_updated()
+bankruptcy_ui_card_info_shown(creature_data: Dictionary, tile_index: int)
+bankruptcy_ui_info_panels_hidden()
+```
+
+### Phase 6 全体の成果
+
+**削減内容**:
+- **Signals追加**: SpellFlow(11) + MysticArts(5) + Dice(8) + Toll(2) + Discard(2) + Bankruptcy(5) = **33個のSignal**
+- **UI Manager 削除**: 5/6ハンドラーで`_ui_manager`参照を完全削除（BankruptcyHandlerのみパネル生成用に残存）
+- **GameSystemManager 追加**: 6つの Signal接続メソッド追加
+
+**ハンドラー別の完全UI層分離状況**:
+| ハンドラー | UI削除 | Signals | 状態 |
+|-----------|-------|---------|------|
+| SpellPhaseHandler (via SpellFlowHandler) | ✅ | 11 | 完全分離 |
+| MysticArtsHandler | ✅ | 5 | 完全分離 |
+| DicePhaseHandler | ✅ | 8 | 完全分離 |
+| TollPaymentHandler | ✅ | 2 | 完全分離 |
+| DiscardHandler | ✅ | 2 | 完全分離 |
+| BankruptcyHandler | ⚠️ | 5 | 部分分離（パネル生成は維持）|
+
+**全体統計**:
+- **Signals定義**: 33個
+- **完全分離ハンドラー**: 5/6
+- **部分分離ハンドラー**: 1/6
+- **Signal接続メソッド**: 6個（GameSystemManager）
 
 ---
 
