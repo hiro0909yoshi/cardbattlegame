@@ -57,7 +57,7 @@ func execute(context: Dictionary) -> Dictionary:
 		"purify_all":
 			var result = spell_purify.purify_all(current_player_id)
 			# UI メッセージ表示（await）
-			if handler.ui_manager and handler.ui_manager.global_comment_ui:
+			if handler.ui_manager and handler.ui_manager.has_method("show_comment_and_wait"):
 				var type_count = result.removed_types.size()
 				var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
 				await handler.ui_manager.show_comment_and_wait(message)

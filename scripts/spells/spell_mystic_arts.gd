@@ -634,7 +634,9 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
 	
 	end_mystic_phase()
-	if spell_phase_handler_ref:
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
+		spell_phase_handler_ref.spell_flow.complete_spell_phase()
+	elif spell_phase_handler_ref:
 		spell_phase_handler_ref.complete_spell_phase()
 
 
