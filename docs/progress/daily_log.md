@@ -12,41 +12,71 @@
 
 ---
 
-## 2026年2月16日（Session 36: Phase 5-5 完了）
+## 2026年2月16日（Session 37: Phase 5 完了・Phase 6 計画策定）
 
-### ✅ Phase 5-5 実装完了 - GameSystemManager 初期化ロジック簡潔化
+### ✅ Phase 5 全体完了 - コンテナ化実装完了
 
-**目的**: GameSystemManager の初期化ロジックを最適化し、35行削減。安全性を重視しながら、ログ出力・null チェックを簡潔化
+**期間**: Session 35-36 で実装（4つのサブフェーズ）
 
 **実施内容**:
+- Phase 5-1: SpellUIManager 新規作成（274行）- UI管理責務分離
+- Phase 5-2: CPUSpellAIContainer 新規作成（79行）- CPU AI参照コンテナ化
+- Phase 5-3: グループ3重複参照削除
+- Phase 5-4: GameSystemManager 初期化ロジック簡潔化（35行削減）
 
-#### Step 1: _initialize_phase1a_handlers 検証ログ簡潔化（25行削減）
-- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 921-942)
-- **修正内容**: 43行の詳細なログ出力を18行に集約
-  - 成功時: 単一メッセージ「スペルシステム初期化検証完了 ✓」
-  - エラー時: 詳細ログ + debug_print_status() 呼び出し
-  - 安全性: is_valid() チェックはすべて保持
+**成果**:
+- **削減**: コード ~50行、参照 8個削減（30+→22個）
+- **新ファイル**: 2個（SpellUIManager, CPUSpellAIContainer）
+- **テスト**: ゲーム起動確認 ✅
 
-#### Step 2: card_selection_handler のnullチェック統一（4行削減）
-- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 831-835)
-- **修正内容**: 分散していた null チェックを統一
-  - 前提条件: `spell_phase_handler and game_flow_manager and game_flow_manager.spell_container`
-  - ログメッセージを「初期化・設定完了」に統一
-  - 分支構造の明確化
+**⚠️ 重要な発見（ユーザー指摘）**:
+- コンテナ化は「参照のグループ化」であり、真の「責務分離」ではない
+- SpellPhaseHandler が依然30+個の参照を保有
+- MysticArts（友愛）、ターゲット選択などの責務がまだ混在
+- **結論**: Phase 6 で本格的な責務分離が必須
 
-#### Step 3: _initialize_cpu_ai_systems の重複チェック削減（6行削減）
-- **ファイル**: `scripts/system_manager/game_system_manager.gd` (line 1297-1315)
-- **修正内容**: has_game_stats 変数で has_method() チェックを一度だけ実施
-  - 変数: `var has_game_stats = game_flow_manager and game_flow_manager.has_method("get")`
-  - 2箇所での重複チェック削減（cpu_spell_ai, cpu_mystic_arts_ai）
-  - メモリ効率向上
+---
 
-**削減効果**:
-- **総削減行数**: ~35行（43行削減 + 12行新規追加 - 20行 = 35行削減）
-- **安全性**: 検証ロジック・エラーチェック完全保持
-- **可読性**: ログ出力の簡潔化により意図が明確化
+### 📋 Phase 6 計画策定 - SpellPhaseHandler 真の責務分離
 
-**コミット**: `e735d18 refactor: GameSystemManager 初期化ロジック簡潔化（Phase 5-5）`
+**戦略**: Strategy Pattern + Handler Pattern + Orchestrator Pattern の組み合わせ
+
+**Phase 6 の目標**:
+- SpellPhaseHandler: 541行 → 200行以下（60%削減）
+- 参照数: 30+ → 6-8個（75%削減）
+- 新ハンドラー: 5個作成（MysticArts, Selection, TargetSelection, Confirmation, Execution）
+
+**3段階の実装計画**:
+
+#### **Phase 6-1（最優先）**: MysticArts + TargetSelection
+- MysticArtsHandler 完全実装（~60行削減、参照 2個削減）
+- SpellTargetSelectionHandler 完全化（~30行削減、参照 1個削減）
+- **小計**: 90行削減、参照 3個削減
+
+#### **Phase 6-2（次優先）**: Selection + Confirmation
+- SpellSelectionHandler 新規作成（~100行削減、参照 3個削減）
+- SpellConfirmationHandler 完全化（~50行削減、参照 2個削減）
+- **小計**: 150行削減、参照 5個削減
+
+#### **Phase 6-3（最終化）**: Execution + Integration
+- SpellExecutionHandler 新規作成（~80行削減、参照 4個削減）
+- 全体統合・テスト・ドキュメント更新
+- **小計**: 100行削減、参照 5個削減
+
+**総削減見積もり**: ~340行、参照 13個削減
+
+**実装スケジュール**: 11-17時間見積もり
+
+**次のステップ**: Phase 6-1 実装開始（Haiku タスク）
+
+---
+
+### 📚 ドキュメント更新
+
+- ✅ `refactoring_next_steps.md`: Phase 5 完了記載 + Phase 6 詳細計画追加
+- ⏳ `CLAUDE.md`: Phase 6 情報追加予定
+- ⏳ `TREE_STRUCTURE.md`: Phase 6 新ツリー図追加予定
+- ⏳ `signal_catalog.md`: 新シグナル定義追加予定
 
 **テスト計画**:
 - [ ] ゲーム起動（エラーなし）

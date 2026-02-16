@@ -63,7 +63,6 @@ var game_stats  # GameFlowManager.game_stats への直接参照
 # === 直接参照（GFM経由を廃止） ===
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
-var spell_orchestrator = null  # SpellPhaseOrchestrator: フェーズ管理オーケストレーター
 
 var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI（GameSystemManagerから設定）
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI（GameSystemManagerから設定）
@@ -143,12 +142,24 @@ func set_battle_status_overlay(overlay) -> void:
 
 ## スペルフェーズ開始
 func start_spell_phase(player_id: int):
-	if not spell_orchestrator:
-		push_error("[SPH] spell_orchestrator が見つかりません")
+	if not spell_state:
+		push_error("[SPH] spell_state が見つかりません")
 		return
 
-	# フェーズ開始をオーケストレーターに委譲
-	await spell_orchestrator.start_spell_phase(player_id)
+	# フェーズ状態をリセット
+	spell_state.reset_turn_state()
+	spell_state.set_current_player_id(player_id)
+
+	# スペルフェーズの初期状態に遷移（reset_turn_state() は INACTIVE に設定するため）
+	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+
+	# CPU / 人間プレイヤーで分岐
+	if game_flow_manager and game_flow_manager.is_cpu_player(player_id):
+		await _delegate_to_cpu_spell_handler(player_id)
+	else:
+		# 人間プレイヤー向け: UI初期化のみ
+		# シグナル駆動で自動的にフェーズが進行（spell_flow.use_spell() or pass_spell()）
+		_initialize_human_player_ui()
 
 ## UIメソッド（内部使用のため簡潔実装）
 func _update_spell_phase_ui():
@@ -221,13 +232,17 @@ func execute_external_spell(spell_card: Dictionary, player_id: int, from_magic_t
 
 	return await spell_flow.execute_external_spell(spell_card, player_id, from_magic_tile)
 
-## スペルフェーズ完了（SpellPhaseOrchestrator に委譲）
+## スペルフェーズ完了
 func complete_spell_phase():
-	if not spell_orchestrator:
-		push_error("[SPH] spell_orchestrator が見つかりません")
+	if not spell_state:
+		push_error("[SPH] spell_state が見つかりません")
 		return
 
-	spell_orchestrator.complete_spell_phase()
+	# フェーズ状態を INACTIVE に遷移
+	spell_state.transition_to(SpellStateHandler.State.INACTIVE)
+
+	# スペルフェーズ完了シグナルを発行（GameFlowManager が待っている）
+	spell_phase_completed.emit()
 
 ## ============ Delegation Methods to SpellFlowHandler ============
 

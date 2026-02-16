@@ -1177,17 +1177,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		spell_phase_handler.mystic_arts_handler.initialize_spell_mystic_arts()
 		spell_phase_handler.spell_mystic_arts = spell_phase_handler.mystic_arts_handler.get_spell_mystic_arts()
 
-	# SpellPhaseOrchestrator の初期化
-	if p_game_flow_manager and spell_phase_handler and spell_phase_handler.spell_state:
-		var spell_orchestrator = SpellPhaseOrchestrator.new(
-			spell_phase_handler,
-			spell_phase_handler.spell_state
-		)
-		spell_phase_handler.spell_orchestrator = spell_orchestrator
-		print("[GameSystemManager] SpellPhaseOrchestrator 初期化完了")
-	else:
-		push_error("[GameSystemManager] SpellPhaseOrchestrator 初期化失敗: 必要な参照が null")
-
 	print("[GameSystemManager] _initialize_spell_phase_subsystems 完了")
 
 ## CPUSpellPhaseHandler 初期化

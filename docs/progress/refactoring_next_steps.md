@@ -1,53 +1,17 @@
 # 📋 リファクタリング次ステップ
 
-**最終更新**: 2026-02-16 (Phase 5 実装ガイドライン追加)
-**目的**: セッション間で作業計画が失われないよう、次にやることを明確に記録
+**最終更新**: 2026-02-16
+**目的**: 次に実装するフェーズと対応方針を記録
 
-**確立したワークフロー**:
+**ワークフロー**:
 ```
-1. Opus: Phase 計画立案 → refactoring_next_steps.md に記載
+1. Opus: Phase 計画立案 → このファイルに記載
 2. Haiku: 計画を読んで実装
 3. Sonnet: ドキュメント更新・完了報告
-4. 次の Phase へ（繰り返し）
+4. 完了したら削除して次へ（サイクル継続）
 ```
 
----
-
-## ✅ 完了済みフェーズ
-
-詳細は `daily_log.md` および `architecture_migration_plan.md` を参照
-
-### フェーズ 0-4 概要
-- **Phase 0**: ツリー構造定義（2026-02-14）✅
-- **Phase 1**: SpellSystemManager 導入（2026-02-13）✅
-- **Phase 2**: シグナルリレー整備（2026-02-14）✅（横断接続 83%削減）
-- **Phase 3-B**: BoardSystem3D SSoT 化（2026-02-14）✅
-- **Phase 3-A**: SpellPhaseHandler Strategy パターン化（2026-02-15）✅
-- **Phase 3-A-Final**: 神オブジェクト化解決（2026-02-16）✅
-- **Phase 4**: SpellPhaseHandler 責務分離（2026-02-16）✅（~280行削減）
-
-### ✅ Phase 5: 段階的最適化（2026-02-16 **完了**）
-
-**目的**: SpellPhaseHandler の参照数削減 + 参照統合 + 初期化最適化
-
-**完了実績**:
-- ✅ **Day 2**: Phase 5-1, 5-2 並行実装（実績: 2.5時間）
-  - ✅ Phase 5-1: SpellUIManager 新規作成（274行、14メソッド）
-  - ✅ Phase 5-2: CPUSpellAIContainer 新規作成（79行、4メソッド）
-
-- ✅ **Day 3**: Phase 5-3 グループ3削除（実績: 0.5時間、25行削減）
-  - spell_draw, spell_magic, spell_curse_stat, spell_cost_modifier 参照削除
-
-- ✅ **Day 4**: Phase 5-5 GameSystemManager 最適化（35行削減）
-
-**総成果**:
-- コード削減: **~134行**（Phase 5 内）
-- 新規システム: 2個（SpellUIManager, CPUSpellAIContainer）
-- 参照統合完了: UI制御、CPU AI管理
-- SRP改善度: 90%以上
-
-**主要コミット**:
-- dfab98a: Phase 5-1 SpellUIManager 実装
+**完了フェーズ参照**: `daily_log.md`, `architecture_migration_plan.md`
 - b8244c6: Phase 5-2 CPUSpellAIContainer 実装
 - 264ec4c: Phase 5-3 グループ3重複参照削除
 - e735d18: Phase 5-5 GameSystemManager 最適化
@@ -55,285 +19,17 @@
 
 ---
 
-## 🎯 Phase 6 計画（次のステップ）
+## 🎯 次のフェーズ（計画中）
 
-**未実装項目**:
-- 統合テスト完全版（手動・CPU複数ラウンド）
-- パフォーマンス最適化（メモリプロファイリング）
-- 追加の null チェック防御層
+現在、次のステップを検討中：
 
-**検討中**:
-- Phase 6-1: 防御的プログラミング層追加（P0優先度）
-- Phase 6-2: パフォーマンス最適化
-- Phase 6-3: ドキュメント完全版作成
-**ドキュメント更新**:
-- CLAUDE.md: Phase 5 完了記録
-- refactoring_next_steps.md: 本計画をこのセクションから「完了」へ移行
-- daily_log.md: 実装時間・成果物記録
+- **Phase 6**: 防御的プログラミング層追加（null チェック強化、エラーハンドリング）
+- **Phase 7**: パフォーマンス最適化（メモリプロファイリング）
+- **Phase 8**: UI完全テスト・ドキュメント整備
 
 ---
 
-### 重要な改善点（前回計画から）
-
-| 項目 | 前回計画 | 改善版 | 効果 |
-|------|---------|--------|------|
-| **総時間** | 12-15h | 6-8h | 40-50%削減 |
-| **テスト項目** | 全109スペル | 3-5スペル | テスト70%削減 |
-| **Phase 5-3** | 3-4h | 1.5-2h | 50%削減 |
-| **Phase 5-0** | 2-3h | 0.5h | 75%削減 |
-| **Phase 5-4** | 2-3h | **削除** | リスク排除 |
-| **Phase 5-1, 5-2** | 順次 | **並行** | 1日短縮 |
-
-### 削除した理由
-
-**Phase 5-4（遅延参照化）削除の根拠**:
-- target_selection_helper, creature_manager の遅延初期化は不要
-- 初期化タイミングが想定外になる可能性（リスク > メリット）
-- 削除による削減行数（10-20行）vs リスク（null参照エラーの可能性）
-
-### テスト項目の最小化
-
-**各ステップでのテスト**:
-- 基本: ゲーム起動 + CPU vs CPU 1ラウンド
-- フェーズ5-3後: スペル3種類実行確認
-- 最終: CPU vs CPU 複数ラウンド（3-5ラウンド）
-
-**テストの嵐を避ける秘訣**:
-- ✅ 各ステップで「小さな破壊」を即座に検出（ゲーム起動確認）
-- ✅ 「全スペル実行」は最終テストのみ（個別テストはPhase 3-A Strategy化で実施済み）
-- ✅ UI パターンは「基本3種」のみ（手動選択・CPU・複数ターゲット）
-
-### 実装上の注意
-
-1. **Grep で呼び出し元を完全把握**（Phase 5-3）
-2. **各 commit 前にゲーム起動確認**（破壊的変更時）
-3. **git revert で即巻き戻し可能**（テスト失敗時）
-
----
-
-## ⚪ Phase 5 実装ガイドライン（詳細 Q&A・2026-02-16）
-
-**目的**: Haiku が実装時に「どうするか不明」という状況を避けるため、8つの重要な実装詳細を確認・記録
-
-### Q1: SpellUIManager のインターフェース定義
-
-**推奨アプローチ**: 既存の SpellUIController を拡張し、統合型へ
-
-**責務**:
-- UI表示/非表示管理（show_spell_selection_ui, update_spell_phase_ui等）
-- ボタン管理（show_spell_phase_buttons, hide_spell_phase_buttons）
-- ナビゲーション連携（SpellNavigationController との協調）
-- 通知UI委譲（SpellCastNotificationUI）
-
-**実装**:
-```gdscript
-class_name SpellUIManager
-extends Node
-
-var _spell_phase_handler = null
-var _ui_manager = null
-var _spell_navigation_controller = null
-var _spell_confirmation_handler = null
-
-func setup(...) -> void:
-	# 初期化
-
-func show_spell_selection_ui(hand_data: Array, magic_power: int) -> void:
-	# UI表示
-
-func show_spell_phase_buttons() -> void:
-	# ボタン管理
-```
-
-**Haiku への指示**:
-1. SpellUIController の内容を引き継ぎ
-2. null チェック必須（if not obj:）
-3. 循環参照回避のため型アノテーションなし
-
----
-
-### Q2: CPUSpellAIContainer の実装パターン
-
-**推奨アプローチ**: RefCounted で実装（SpellSystemContainer パターンを踏襲）
-
-**統合対象**: cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator
-
-**実装**:
-```gdscript
-class_name CPUSpellAIContainer
-extends RefCounted
-
-var cpu_spell_ai: CPUSpellAI = null
-var cpu_mystic_arts_ai: CPUMysticArtsAI = null
-var cpu_hand_utils: CPUHandUtils = null
-var cpu_movement_evaluator: CPUMovementEvaluator = null
-
-func setup(...) -> void:
-	# 初期化
-
-func is_valid() -> bool:
-	return (cpu_spell_ai != null and cpu_mystic_arts_ai != null
-			and cpu_hand_utils != null and cpu_movement_evaluator != null)
-
-func debug_print_status() -> void:
-	# デバッグ出力
-```
-
-**Haiku への指示**:
-1. RefCounted で実装（パターン一貫性）
-2. 型アノテーション完全（参照安全性）
-3. setup() で全て設定完了
-
----
-
-### Q3: グループ3削除の具体的な修正パターン
-
-**推奨アプローチ**: パターンC（ヘルパーメソッド化）+ GameFlowManager 経由
-
-**対象参照**: spell_draw, spell_magic, spell_curse_stat, spell_cost_modifier
-
-**修正方法**:
-
-SpellFlow に委譲メソッド追加:
-```gdscript
-# SpellFlowHandler へ追加
-
-func draw_one(player_id: int):
-	if _game_flow_manager and _game_flow_manager.spell_container:
-		return _game_flow_manager.spell_container.spell_draw.draw_one(player_id)
-	return null
-
-func add_magic(player_id: int, amount: int) -> void:
-	if _game_flow_manager and _game_flow_manager.spell_container:
-		_game_flow_manager.spell_container.spell_magic.add_magic(player_id, amount)
-```
-
-**Haiku への指示**:
-1. Grep で呼び出し元を全検索（spell_phase_handler.spell_draw, spell_magic等）
-2. SpellFlow 経由に統一
-3. null チェック: `if spell_flow and spell_flow.method_name():`
-4. 各ファイルごと小分割 commit
-
----
-
-### Q4: GameSystemManager の初期化順序
-
-**推奨アプローチ**: _initialize_spell_phase_subsystems() 内で新規コンテナ作成
-
-**実装**:
-```gdscript
-func _initialize_spell_phase_subsystems(...) -> void:
-	# ... 既存コード ...
-
-	# ★ NEW: SpellUIManager 作成
-	var spell_ui_manager = SpellUIManager.new()
-	spell_ui_manager.name = "SpellUIManager"
-	game_flow_manager.add_child(spell_ui_manager)
-	spell_phase_handler.spell_ui_manager = spell_ui_manager
-
-# ★ NEW: CPU AI コンテナ初期化メソッド
-func _initialize_cpu_spell_ai_container() -> void:
-	_initialize_cpu_ai_systems()  # 先に CPU AI を初期化
-
-	var cpu_spell_ai_container = CPUSpellAIContainer.new()
-	cpu_spell_ai_container.setup(
-		cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator
-	)
-
-	if cpu_spell_ai_container.is_valid():
-		print("[CPUSpellAIContainer] 初期化完了 ✓")
-		systems["CPUSpellAIContainer"] = cpu_spell_ai_container
-	else:
-		push_error("[CPUSpellAIContainer] 初期化失敗")
-```
-
-**呼び出し順序**: Phase 4-4 → _initialize_phase1a_handlers() → _initialize_spell_phase_subsystems() → _initialize_cpu_spell_ai_container()
-
----
-
-### Q5: 各ステップのテスト確認項目の詳細
-
-**Phase 5-1 テスト** (15分):
-- [ ] ゲーム起動（エラーなし）
-- [ ] スペル選択UI表示
-- [ ] ボタンクリック可能
-- [ ] CPU vs CPU 1ラウンド
-
-**Phase 5-2 テスト** (10分):
-- [ ] ゲーム起動（参照エラーなし）
-- [ ] container.is_valid() == true
-- [ ] CPU スペル判定可能
-- [ ] CPU vs CPU 1ラウンド
-
-**Phase 5-3 テスト** (30分):
-- [ ] ゲーム起動
-- [ ] スペル3種類実行（火・水・呪い）
-- [ ] CPU vs CPU 1ラウンド
-
-**Phase 5-5 テスト** (15分):
-- [ ] ゲーム起動
-- [ ] CPU vs CPU 3ラウンド
-
-**最終統合テスト** (1時間):
-- [ ] 5ラウンド実行（フリーズなし）
-- [ ] UI全機能動作
-- [ ] 複数スペル実行
-- [ ] エラーログなし
-
----
-
-### Q6: ロールバック（git revert）の実装方針
-
-**Commit 分割**:
-```
-Phase 5-1:
-  - Commit 1: SpellUIManager.gd 作成
-  - Commit 2: SpellPhaseHandler に参照準備
-  - Commit 3: GameSystemManager 初期化追加
-
-Phase 5-2:
-  - Commit 1: CPUSpellAIContainer.gd 作成
-  - Commit 2: GameSystemManager で初期化
-  - Commit 3: CPU AI 参照セット
-
-Phase 5-3:
-  - Commit 1: SpellFlow に委譲メソッド追加
-  - Commit 2: 呼び出し元修正（ファイルごと）
-  - Commit 3: 直接参照削除
-```
-
-**メッセージ形式**: `feat: [内容]`, `refactor: [内容]`
-
-**テスト失敗時**: `git revert HEAD --no-edit` で巻き戻し
-
----
-
-### Q7: 既存コード（SpellUIController等）の扱い
-
-**統合対象**:
-- SpellUIController → SpellUIManager へ統合（内容移行）
-- SpellPhaseUIManager → SpellUIManager へ統合（参照保持のみなので統合簡単）
-
-**独立継続**:
-- SpellNavigationController → 独立継続（ナビゲーション専門）
-
-**修正パターン**:
-```gdscript
-# 修正前
-spell_ui_controller.show_spell_phase_buttons()
-
-# 修正後
-spell_ui_manager.show_spell_phase_buttons()
-```
-
----
-
-### Q8: 参照のキャスト・型チェック
-
-**推奨パターン**:
-```gdscript
-# ✅ 推奨（双方対応）
-if spell_ui_manager and spell_ui_manager.is_valid():
+**前回参考**: `architecture_migration_plan.md` で過去フェーズ（0-4）の詳細を確認できます
 	spell_ui_manager.show_spell_phase_buttons()
 else:
 	push_error("[SPH] spell_ui_manager が初期化されていません")
@@ -538,54 +234,290 @@ spell_ui_manager.show_spell_phase_buttons()
 
 ---
 
-## 🟢 次フェーズ計画
+## 🟢 完了: Phase 5 - SpellUIManager + CPUSpellAIContainer 導入（2026-02-16）
 
-### Phase 5: 統合テスト・ドキュメント更新（次のタスク）
+**タイトル**: SpellPhaseHandler のコンテナ化 + UI管理責務分離（第1段階）
 
-**目的**: 全フェーズ修正の検証 + ドキュメント最新化
+**実装完了した内容**:
 
-**対象**:
-- [ ] CPU vs CPU: 複数ラウンド（フリーズなし）確認
-- [ ] スペル: 全effect_type（109種類）の実行確認
-- [ ] アルカナアーツ: 発動・効果適用確認
-- [ ] ドキュメント更新（CLAUDE.md, 設計ドキュメント）
+### 1. **Phase 5-1**: SpellUIManager 新規作成✅
+   - UI管理責務を SpellPhaseHandler から分離
+   - 参照削減: 4個（spell_ui_manager, spell_confirmation_handler, spell_ui_controller, spell_phase_ui_manager）
+   - 行数削減: ~20行
 
-**実装時期**: Phase 4完了後（テストフェーズ）
+### 2. **Phase 5-2**: CPUSpellAIContainer 新規作成✅
+   - CPU AI参照をコンテナ化（RefCounted パターン）
+   - 参照削減: 4個（cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator）
+   - 行数削減: ~15行
+
+### 3. **Phase 5-3**: グループ3重複参照削除✅
+   - spell_ui_manager, cpu_spell_ai_container 配置による自動削減
+   - 行数削減: ~5行
+
+### 4. **Phase 5-4**: GameSystemManager 最適化✅
+   - ハンドラー初期化一元化
+   - 重複定義修正（cpu_movement_evaluator）
+   - 行数削減: ~10行
+
+**成果物**:
+- SpellUIManager: 274行（新規）
+- CPUSpellAIContainer: 79行（新規）
+- SpellPhaseHandler: 541行（参照: 30+個）
+- **総削減**: ~50行、参照削減: 8個（30+→22個まで）
+
+**⚠️ 重要な発見**: コンテナ化は「参照のグループ化」であり、真の「責務分離」ではない
+- SpellPhaseHandler が依然30+個の参照を保有
+- MysticArts（友愛）、ターゲット選択などの責務がまだ混在
+- Phase 6 で本格的な責務分離が必須
+
+**テスト状況**:
+- ✅ ゲーム起動確認済み
+- ✅ スペルフェーズ基本動作確認済み
+- 🔄 CPU vs CPU複数ラウンド確認（待機中）
 
 ---
 
-### Phase 6: UIManager 責務分離（将来計画）
+## 🎯 次フェーズ計画
 
-**目的**: UIManager（現在890行）の責務分離による複雑度削減
+### Phase 6: SpellPhaseHandler 責務分離（次のタスク）
 
-**対象システム**:
-- CardSelectionUI（既存コンポーネント化されているが、参照が複雑）
-- HandDisplay（スクロール機能含む）
-- PhaseDisplay（フェーズ通知UI）
-- TileActionUI（タイル上の操作UI）
-- その他15+コンポーネント
+**タイトル**: SpellPhaseHandler の真の責務分離 - 5つの独立ハンドラーへの分割
 
-**削減予想**: 890行 → 600行程度（290行削減）
+**目的**: SpellPhaseHandler を「フローオーケストレーター」に絞り込み、神オブジェクト化を完全解消
 
-**実装時期**: Phase 5テスト完了後
+**現状**:
+- SpellPhaseHandler: 541行、30+個の参照、9つの責務が混在
+- Phase 5 のコンテナ化では根本解決に至らず
+
+**Phase 6 の全体構成**:
+
+```
+SpellPhaseHandler (オーケストレーター)
+├── SpellStateHandler (状態管理)
+├── SpellFlowHandler (フロー制御)
+├── SpellPhaseOrchestrator (オーケストレーション)
+└── 5つの専門ハンドラー（責務分割）
+    ├── SpellSelectionHandler (新規)
+    ├── SpellTargetSelectionHandler (改良)
+    ├── SpellConfirmationHandler (改良)
+    ├── SpellExecutionHandler (新規)
+    └── MysticArtsHandler (改良)
+```
+
+**削減目標**:
+- SpellPhaseHandler: 541行 → 200行以下（60%削減）
+- 参照数: 30+ → 6-8個（75%削減）
+- 総コード削減: ~340行
+
+---
+
+### 実装計画（3段階）
+
+#### **Phase 6-1: 最優先（MysticArts + TargetSelection）**
+
+**目標**: 最も複雑な2つのフェーズを完全分離
+
+**1. MysticArtsHandler 完全実装**
+- 現在の実装: SpellPhaseHandler に混在（~60行）
+- 移行責務:
+  - start_mystic_arts_phase()
+  - has_available_mystic_arts()
+  - has_spell_mystic_arts()
+  - update_mystic_button_visibility()
+  - _on_mystic_art_used()
+  - _on_mystic_phase_completed()
+  - _on_mystic_target_selection_requested()
+  - _on_mystic_ui_message_requested()
+- Signal 定義: mystic_phase_completed
+- 削減: ~60行、参照 2個削減
+
+**2. SpellTargetSelectionHandler 完全化**
+- 現在の実装: SpellPhaseHandler で一部委譲中（~30行）
+- 完全移行責務:
+  - show_target_selection_ui()
+  - _input() 処理
+  - _start_spell_tap_target_selection()
+  - _end_spell_tap_target_selection()
+  - _check_tutorial_target_allowed()
+  - _on_spell_tap_target_selected()
+  - _start_mystic_tap_target_selection()
+- Signal 定義: target_selection_completed
+- 削減: ~30行、参照 1個削減
+
+**小計**: 90行削減、参照 3個削減
+
+---
+
+#### **Phase 6-2: 次優先（Selection + Confirmation）**
+
+**3. SpellSelectionHandler 新規作成**
+- 責務: スペル選択、妥当性チェック、コスト支払い、カード犠牲処理
+- 現在の実装: use_spell() メソッド（~170行）
+- Signal 定義: spell_selected, spell_cancelled
+- 削減: ~100行、参照 3個削減
+
+**4. SpellConfirmationHandler 完全化**
+- 現在の実装: SpellPhaseHandler で一部委譲中（~50行）
+- 完全移行責務:
+  - _start_confirmation_phase()
+  - _confirm_spell_effect()
+  - _cancel_confirmation()
+  - show_spell_cast_notification()
+  - _initialize_spell_cast_notification_ui()
+- Signal 定義: confirmation_completed
+- 削減: ~50行、参照 2個削減
+
+**小計**: 150行削減、参照 5個削減
+
+---
+
+#### **Phase 6-3: 最終化（Execution + Flow整理）**
+
+**5. SpellExecutionHandler 新規作成**
+- 責務: Strategy パターンでのスペル実行、フォールバック処理
+- 現在の実装: SpellFlowHandler 内（~80行、移行予定）
+- Signal 定義: execution_completed
+- 削減: ~80行、参照 4個削減
+
+**6. 最終統合・テスト**
+- SpellPhaseHandler コード削減
+- Signal flow 検証
+- 循環参照チェック
+- 統合テスト実行
+
+**小計**: 100行削減、参照 5個削減
+
+---
+
+### 総削減見積もり
+
+| 段階 | ハンドラー | 削減行数 | 参照削減 |
+|-----|----------|--------|--------|
+| **6-1** | MysticArts + TargetSelection | 90行 | 3個 |
+| **6-2** | Selection + Confirmation | 150行 | 5個 |
+| **6-3** | Execution + Integration | 100行 | 5個 |
+| **合計** | 5つの新ハンドラー | **~340行** | **13個** |
+
+**最終形態**:
+- SpellPhaseHandler: 541行 → 200行以下
+- 参照数: 30+ → 6-8個（75%削減）
+- 新ハンドラー: 5個（MysticArts, Selection, TargetSelection, Confirmation, Execution）
+
+---
+
+### 実装ハンドラー基本形（テンプレート）
+
+```gdscript
+extends RefCounted
+class_name SpellSelectionHandler
+
+## シグナル
+signal spell_selected()
+signal spell_cancelled()
+
+## 参照（最小限）
+var _spell_phase_handler = null
+var _spell_state: SpellStateHandler = null
+var _spell_flow: SpellFlowHandler = null
+var _ui_manager = null
+var _player_system = null
+
+## 初期化
+func setup(spell_phase_handler, spell_state, spell_flow, ui_manager, player_system):
+    _spell_phase_handler = spell_phase_handler
+    _spell_state = spell_state
+    _spell_flow = spell_flow
+    _ui_manager = ui_manager
+    _player_system = player_system
+
+## メイン処理
+func use_spell(spell_card: Dictionary):
+    # 1. 妥当性チェック
+    # 2. コスト支払い
+    # 3. ターゲット選択 or 確認フェーズへ
+    # 4. signal: spell_selected() emit
+    await spell_selected
+```
+
+---
+
+### リスク対策
+
+**高リスク項目**:
+1. **循環参照**: Signal-driven パターン（emit/await）で回避
+2. **状態管理複雑化**: SpellStateHandler が単一参照元
+3. **初期化順序**: GameSystemManager で明示的順序定義
+
+**テスト計画**:
+- [ ] 各ハンドラーを単独テスト（Mock対応）
+- [ ] Signal flow 検証（ログ出力）
+- [ ] CPU vs CPU複数ラウンド確認
+- [ ] 全スペル・アルカナアーツ動作確認
+
+---
+
+### 実装スケジュール
+
+| 工程 | 予想工数 | 優先度 |
+|------|--------|--------|
+| Phase 6-1A: MysticArtsHandler | 2-3時間 | ⭐⭐⭐ |
+| Phase 6-1B: TargetSelectionHandler | 1-2時間 | ⭐⭐⭐ |
+| Phase 6-2A: SelectionHandler | 3-4時間 | ⭐⭐ |
+| Phase 6-2B: ConfirmationHandler | 1-2時間 | ⭐⭐ |
+| Phase 6-3A: ExecutionHandler | 2-3時間 | ⭐ |
+| Phase 6-3B: 全体統合・テスト | 2-3時間 | ⭐ |
+| **合計** | **11-17時間** | - |
+
+---
+
+### 成功指標
+
+**定量的**:
+- ✅ SpellPhaseHandler: 541行 → 200行以下
+- ✅ 参照数: 30+ → 6-8個
+- ✅ 新ハンドラー: 5個作成
+
+**定性的**:
+- ✅ 各ハンドラーの責務が1行で説明可能
+- ✅ 新機能追加時に「どこに追加すべきか」が自明
+- ✅ Signal flow が簡潔で理解しやすい
+
+---
+
+### 関連ドキュメント更新予定
+
+- `TREE_STRUCTURE.md`: Phase 6 後の新ツリー図追加
+- `signal_catalog.md`: 新シグナル定義追加
+- `implementation_patterns.md`: ハンドラー作成パターン追加
+- `daily_log.md`: 日次進捗記録
+- `CLAUDE.md`: Phase 6 完了記載
+
+**実装時期**: Phase 5テスト確認後（即座に開始予定）
 
 ---
 
 ## 📊 アーキテクチャ改善の進捗
 
-| フェーズ | 内容 | 状態 | 削減行数 |
-|---------|------|------|---------|
-| Phase 0 | ツリー構造定義 | ✅ 完了 | - |
-| Phase 1 | SpellSystemManager導入 | ✅ 完了 | - |
-| Phase 2 | シグナルリレー整備 | ✅ 完了 | 83%削減 |
-| Phase 3-A | SpellPhaseHandler Strategy化 | ✅ 完了 | 206行 |
-| Phase 3-B | BoardSystem3D SSoT化 | ✅ 完了 | - |
-| Phase 3-A-Final | 神オブジェクト化解決 | ✅ 完了 | 206行 |
-| Phase 4 | SpellPhaseHandler責務分離 | ✅ 完了 | 280行 |
-| Phase 5 | 統合テスト・文書化 | ⚪ 計画中 | - |
-| Phase 6 | UIManager責務分離 | ⚪ 計画中 | ~290行 |
+| フェーズ | 内容 | 状態 | 削減行数 | 参照削減 |
+|---------|------|------|--------|--------|
+| Phase 0 | ツリー構造定義 | ✅ 完了 | - | - |
+| Phase 1 | SpellSystemManager導入 | ✅ 完了 | - | 10個集約 |
+| Phase 2 | シグナルリレー整備 | ✅ 完了 | - | 83%削減 |
+| Phase 3-A | SpellPhaseHandler Strategy化 | ✅ 完了 | 206行 | - |
+| Phase 3-B | BoardSystem3D SSoT化 | ✅ 完了 | - | - |
+| Phase 3-A-Final | 神オブジェクト化解決 | ✅ 完了 | 206行 | 32削除 |
+| Phase 4 | SpellPhaseHandler責務分離 | ✅ 完了 | 280行 | - |
+| Phase 5 | SpellUIManager + コンテナ化 | ✅ 完了 | 50行 | 8個削減 |
+| Phase 6 | SpellPhaseHandler真の責務分離 | ⚪ 計画中 | ~340行 | ~13個削減 |
 
-**総削減**: 286行 (Phase 3-A) + 206行 (Phase 3-A-Final) + 280行 (Phase 4) + 290行予定 (Phase 6) = **1,062行削減実績・予定**
+**総削減**:
+- **コード**: 286 (3-A) + 206 (3-A-Final) + 280 (4) + 50 (5) + 340予定 (6) = **1,162行削減実績・予定**
+- **参照**: 83%削減 (2) + 8 (5) + 13予定 (6) + 主要システム集約
+
+**アーキテクチャスコア**:
+- Phase 0-4完了時: ツリー構造 95/100、SRP 90%以上
+- Phase 5完了時: コンテナ化で見た目改善（参照8個削減）だが本質的解決なし
+- Phase 6完了予定: 真の責務分離で SRP 95%以上、神オブジェクト化完全解消
 
 ---
 
