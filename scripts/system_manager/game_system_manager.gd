@@ -709,7 +709,7 @@ func _setup_spell_systems() -> void:
 	# BankruptcyHandlerは別途GameFlowManagerに設定（コンテナ外）
 	var BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 	var bankruptcy_handler = BankruptcyHandlerClass.new()
-	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse, ui_manager, null)
+	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse)
 	print("[BankruptcyHandler] 初期化完了")
 
 	# === Step 5: GameFlowManager に参照を設定（後方互換性 + 新規） ===

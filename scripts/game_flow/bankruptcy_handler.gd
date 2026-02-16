@@ -24,7 +24,6 @@ var player_system: Node = null
 var board_system: Node = null
 var creature_manager: Node = null
 var spell_curse: Node = null  # プレイヤー呪いクリア用
-var ui_manager: Node = null   # ※ パネル生成用のみ（UI操作はSignal経由）
 var target_selection_helper: Node = null  # 土地選択用
 
 # 状態
@@ -35,12 +34,11 @@ var current_player_id: int = -1
 var bankruptcy_info_panel: Panel = null
 
 ## セットアップ
-func setup(p_player_system: Node, p_board_system: Node, p_creature_manager: Node, p_spell_curse: Node = null, p_ui_manager: Node = null, p_target_selection_helper: Node = null):
+func setup(p_player_system: Node, p_board_system: Node, p_creature_manager: Node, p_spell_curse: Node = null, p_target_selection_helper: Node = null):
 	player_system = p_player_system
 	board_system = p_board_system
 	creature_manager = p_creature_manager
 	spell_curse = p_spell_curse
-	ui_manager = p_ui_manager
 	target_selection_helper = p_target_selection_helper
 
 
@@ -117,14 +115,11 @@ func _update_ui():
 ## 破産情報パネルを表示
 func _show_bankruptcy_info_panel(current_magic: int, land_value: int):
 	_hide_bankruptcy_info_panel()
-	
-	if not ui_manager:
-		return
-	
+
 	bankruptcy_info_panel = Panel.new()
 	bankruptcy_info_panel.name = "BankruptcyInfoPanel"
-	
-	var viewport_size = ui_manager.get_viewport().get_visible_rect().size
+
+	var viewport_size = get_viewport().get_visible_rect().size
 	
 	# サイズと位置
 	var panel_width = 280 * 4
@@ -173,8 +168,8 @@ func _show_bankruptcy_info_panel(current_magic: int, land_value: int):
 	else:
 		after_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))  # まだマイナスは黄色
 	bankruptcy_info_panel.add_child(after_label)
-	
-	ui_manager.add_child(bankruptcy_info_panel)
+
+	add_child(bankruptcy_info_panel)
 
 
 ## 破産情報パネルを非表示
