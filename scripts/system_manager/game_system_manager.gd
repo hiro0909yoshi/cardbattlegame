@@ -26,6 +26,7 @@ const CPUBattleAIScript = preload("res://scripts/cpu_ai/cpu_battle_ai.gd")
 const CPUDefenseAIScript = preload("res://scripts/cpu_ai/cpu_defense_ai.gd")
 const CPUMovementEvaluatorScript = preload("res://scripts/cpu_ai/cpu_movement_evaluator.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
+const CPUSpellAIContainerScript = preload("res://scripts/cpu_ai/cpu_spell_ai_container.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -53,6 +54,9 @@ var cpu_movement_evaluator: CPUMovementEvaluator = null
 
 # === CPU Spell Phase Handler ===
 var cpu_spell_phase_handler: CPUSpellPhaseHandler = null
+
+# === CPU Spell AI Container ===
+var cpu_spell_ai_container: CPUSpellAIContainer = null
 
 # === 設定 ===
 var player_count: int = 2
@@ -1203,6 +1207,9 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if cpu_movement_evaluator and cpu_spell_ai:
 		cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
+	# Step 4.6: CPUSpellAIContainer を初期化（Phase 5-2）
+	_initialize_cpu_spell_ai_container()
+
 	# MysticArtsHandler の初期化（spell_mystic_arts を設定）
 	if spell_phase_handler.mystic_arts_handler:
 		spell_phase_handler.mystic_arts_handler.initialize_spell_mystic_arts()
@@ -1356,6 +1363,27 @@ func _initialize_cpu_ai_systems() -> void:
 	cpu_hand_utils = cpu_ai_context.get_hand_utils()
 
 	print("[GameSystemManager] CPU AI 初期化完了")
+
+## CPUSpellAIContainer 初期化（Phase 5-2）
+func _initialize_cpu_spell_ai_container() -> void:
+	# CPU AI が先に初期化されていることを確認
+	if not cpu_ai_context:
+		_initialize_cpu_ai_systems()
+
+	if not cpu_spell_ai_container:
+		cpu_spell_ai_container = CPUSpellAIContainerScript.new()
+		cpu_spell_ai_container.setup(
+			cpu_spell_ai,
+			cpu_mystic_arts_ai,
+			cpu_hand_utils,
+			cpu_movement_evaluator
+		)
+
+		if cpu_spell_ai_container.is_valid():
+			print("[CPUSpellAIContainer] 初期化完了 ✓")
+			systems["CPUSpellAIContainer"] = cpu_spell_ai_container
+		else:
+			push_error("[CPUSpellAIContainer] 初期化失敗")
 
 ## CPU バトルポリシー取得
 func _get_cpu_battle_policy():
