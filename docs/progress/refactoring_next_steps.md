@@ -1,6 +1,6 @@
 # 📋 リファクタリング次ステップ
 
-**最終更新**: 2026-02-16
+**最終更新**: 2026-02-16 (Phase 5 実装ガイドライン追加)
 **目的**: セッション間で作業計画が失われないよう、次にやることを明確に記録
 
 **確立したワークフロー**:
@@ -24,6 +24,397 @@
 - **Phase 3-A**: SpellPhaseHandler Strategy パターン化（2026-02-15）✅
 - **Phase 3-A-Final**: 神オブジェクト化解決（2026-02-16）✅
 - **Phase 4**: SpellPhaseHandler 責務分離（2026-02-16）✅（~280行削減）
+
+---
+
+## ⚪ Phase 5: 段階的最適化計画（改善版・2026-02-16 確定）
+
+**目的**: SpellPhaseHandler の参照数削減（33個 → 17個）+ 初期化最適化
+
+**戦略**: 小分割・日単位の段階的実装（テストの嵐を回避）
+
+**総所要時間**: 約 6-8時間（改善前 12-15時間から 40-50% 削減）
+
+### 実装順序（改善版）
+
+#### **Day 1: Phase 5-0 準備（0.5時間）**
+- [x] 基準状態ゲーム起動確認（CPU vs CPU 1ラウンド）
+- [x] Grep で spell_draw/spell_magic の呼び出し元特定（Phase 5-3 向け）
+
+**テスト**: ゲーム起動のみ
+
+---
+
+#### **Day 2: Phase 5-1, 5-2 並行実装（2時間）**
+
+##### Phase 5-1: SpellUIManager 新規作成（1-1.5時間）
+**対象ファイル**:
+- 新規: `scripts/game_flow/spell_ui_manager.gd` (150-200行)
+- 修正: `spell_phase_handler.gd` (UI参照準備)
+- 修正: `game_system_manager.gd` (初期化追加)
+
+**責務**: UI制御統合（spell_phase_ui_manager, spell_confirmation_handler, spell_navigation_controller）
+
+**テスト**:
+- [ ] ゲーム起動確認
+- [ ] スペル選択UI表示確認
+- [ ] CPU vs CPU 1ラウンド確認
+
+##### Phase 5-2: CPUSpellAIContainer 新規作成（0.5-1時間）
+**対象ファイル**:
+- 新規: `scripts/cpu_ai/cpu_spell_ai_container.gd` (50-80行)
+- 修正: `spell_phase_handler.gd` (CPU AI参照準備)
+- 修正: `game_system_manager.gd` (初期化追加)
+
+**責務**: CPU AI参照統合（cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator）
+
+**テスト**:
+- [ ] ゲーム起動確認
+- [ ] CPU vs CPU スペル実行確認
+
+---
+
+#### **Day 3: Phase 5-3 グループ3削除（1.5-2時間）**
+
+**対象**: spell_draw, spell_magic, spell_curse_stat, spell_cost_modifier の重複参照削除
+
+**修正パターン**（単純・検索置換可能）:
+```gdscript
+# 修正前: SpellPhaseHandler の直接参照
+spell_phase_handler.spell_draw.draw_one()
+
+# 修正後: SpellFlow / GameFlowManager 経由
+spell_flow.draw_one()  または game_flow_manager.spell_container.spell_draw.draw_one()
+```
+
+**呼び出し元**: 約 10-15ファイル（Grep で特定）
+
+**テスト**:
+- [ ] ゲーム起動確認
+- [ ] スペル3種類（火・水・土地呪い）実行確認
+- [ ] CPU vs CPU 1ラウンド確認
+
+**破壊的変更**: あり（git revert 可能）
+
+---
+
+#### **Day 4: Phase 5-5 GameSystemManager 最適化（1-1.5時間）**
+
+**対象**: 初期化コード削減
+
+**修正内容**:
+- SpellUIManager, CPUSpellAIContainer セットアップ追加
+- 遅延初期化不要な参照（target_selection_helper, creature_manager）は削除不要（安全性重視）
+- 初期化ロジック簡潔化（～30行削減）
+
+**テスト**:
+- [ ] ゲーム起動確認
+- [ ] CPU vs CPU 複数ラウンド確認（3ラウンド）
+
+---
+
+#### **Day 5: 最終テスト・ドキュメント（2-3時間）**
+
+**統合テスト**:
+- [ ] ゲーム起動（エラーなし）
+- [ ] スペルフェーズ: 手動選択 + CPU選択（各5種類程度）
+- [ ] UI: ターゲット選択フロー（1体・複数・全体）
+- [ ] グローバルボタン（↑↓）ナビゲーション正常動作
+- [ ] CPU vs CPU 複数ラウンド（3-5ラウンド、フリーズなし）
+
+**ドキュメント更新**:
+- CLAUDE.md: Phase 5 完了記録
+- refactoring_next_steps.md: 本計画をこのセクションから「完了」へ移行
+- daily_log.md: 実装時間・成果物記録
+
+---
+
+### 重要な改善点（前回計画から）
+
+| 項目 | 前回計画 | 改善版 | 効果 |
+|------|---------|--------|------|
+| **総時間** | 12-15h | 6-8h | 40-50%削減 |
+| **テスト項目** | 全109スペル | 3-5スペル | テスト70%削減 |
+| **Phase 5-3** | 3-4h | 1.5-2h | 50%削減 |
+| **Phase 5-0** | 2-3h | 0.5h | 75%削減 |
+| **Phase 5-4** | 2-3h | **削除** | リスク排除 |
+| **Phase 5-1, 5-2** | 順次 | **並行** | 1日短縮 |
+
+### 削除した理由
+
+**Phase 5-4（遅延参照化）削除の根拠**:
+- target_selection_helper, creature_manager の遅延初期化は不要
+- 初期化タイミングが想定外になる可能性（リスク > メリット）
+- 削除による削減行数（10-20行）vs リスク（null参照エラーの可能性）
+
+### テスト項目の最小化
+
+**各ステップでのテスト**:
+- 基本: ゲーム起動 + CPU vs CPU 1ラウンド
+- フェーズ5-3後: スペル3種類実行確認
+- 最終: CPU vs CPU 複数ラウンド（3-5ラウンド）
+
+**テストの嵐を避ける秘訣**:
+- ✅ 各ステップで「小さな破壊」を即座に検出（ゲーム起動確認）
+- ✅ 「全スペル実行」は最終テストのみ（個別テストはPhase 3-A Strategy化で実施済み）
+- ✅ UI パターンは「基本3種」のみ（手動選択・CPU・複数ターゲット）
+
+### 実装上の注意
+
+1. **Grep で呼び出し元を完全把握**（Phase 5-3）
+2. **各 commit 前にゲーム起動確認**（破壊的変更時）
+3. **git revert で即巻き戻し可能**（テスト失敗時）
+
+---
+
+## ⚪ Phase 5 実装ガイドライン（詳細 Q&A・2026-02-16）
+
+**目的**: Haiku が実装時に「どうするか不明」という状況を避けるため、8つの重要な実装詳細を確認・記録
+
+### Q1: SpellUIManager のインターフェース定義
+
+**推奨アプローチ**: 既存の SpellUIController を拡張し、統合型へ
+
+**責務**:
+- UI表示/非表示管理（show_spell_selection_ui, update_spell_phase_ui等）
+- ボタン管理（show_spell_phase_buttons, hide_spell_phase_buttons）
+- ナビゲーション連携（SpellNavigationController との協調）
+- 通知UI委譲（SpellCastNotificationUI）
+
+**実装**:
+```gdscript
+class_name SpellUIManager
+extends Node
+
+var _spell_phase_handler = null
+var _ui_manager = null
+var _spell_navigation_controller = null
+var _spell_confirmation_handler = null
+
+func setup(...) -> void:
+    # 初期化
+
+func show_spell_selection_ui(hand_data: Array, magic_power: int) -> void:
+    # UI表示
+
+func show_spell_phase_buttons() -> void:
+    # ボタン管理
+```
+
+**Haiku への指示**:
+1. SpellUIController の内容を引き継ぎ
+2. null チェック必須（if not obj:）
+3. 循環参照回避のため型アノテーションなし
+
+---
+
+### Q2: CPUSpellAIContainer の実装パターン
+
+**推奨アプローチ**: RefCounted で実装（SpellSystemContainer パターンを踏襲）
+
+**統合対象**: cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator
+
+**実装**:
+```gdscript
+class_name CPUSpellAIContainer
+extends RefCounted
+
+var cpu_spell_ai: CPUSpellAI = null
+var cpu_mystic_arts_ai: CPUMysticArtsAI = null
+var cpu_hand_utils: CPUHandUtils = null
+var cpu_movement_evaluator: CPUMovementEvaluator = null
+
+func setup(...) -> void:
+    # 初期化
+
+func is_valid() -> bool:
+    return (cpu_spell_ai != null and cpu_mystic_arts_ai != null
+            and cpu_hand_utils != null and cpu_movement_evaluator != null)
+
+func debug_print_status() -> void:
+    # デバッグ出力
+```
+
+**Haiku への指示**:
+1. RefCounted で実装（パターン一貫性）
+2. 型アノテーション完全（参照安全性）
+3. setup() で全て設定完了
+
+---
+
+### Q3: グループ3削除の具体的な修正パターン
+
+**推奨アプローチ**: パターンC（ヘルパーメソッド化）+ GameFlowManager 経由
+
+**対象参照**: spell_draw, spell_magic, spell_curse_stat, spell_cost_modifier
+
+**修正方法**:
+
+SpellFlow に委譲メソッド追加:
+```gdscript
+# SpellFlowHandler へ追加
+
+func draw_one(player_id: int):
+    if _game_flow_manager and _game_flow_manager.spell_container:
+        return _game_flow_manager.spell_container.spell_draw.draw_one(player_id)
+    return null
+
+func add_magic(player_id: int, amount: int) -> void:
+    if _game_flow_manager and _game_flow_manager.spell_container:
+        _game_flow_manager.spell_container.spell_magic.add_magic(player_id, amount)
+```
+
+**Haiku への指示**:
+1. Grep で呼び出し元を全検索（spell_phase_handler.spell_draw, spell_magic等）
+2. SpellFlow 経由に統一
+3. null チェック: `if spell_flow and spell_flow.method_name():`
+4. 各ファイルごと小分割 commit
+
+---
+
+### Q4: GameSystemManager の初期化順序
+
+**推奨アプローチ**: _initialize_spell_phase_subsystems() 内で新規コンテナ作成
+
+**実装**:
+```gdscript
+func _initialize_spell_phase_subsystems(...) -> void:
+    # ... 既存コード ...
+
+    # ★ NEW: SpellUIManager 作成
+    var spell_ui_manager = SpellUIManager.new()
+    spell_ui_manager.name = "SpellUIManager"
+    game_flow_manager.add_child(spell_ui_manager)
+    spell_phase_handler.spell_ui_manager = spell_ui_manager
+
+# ★ NEW: CPU AI コンテナ初期化メソッド
+func _initialize_cpu_spell_ai_container() -> void:
+    _initialize_cpu_ai_systems()  # 先に CPU AI を初期化
+
+    var cpu_spell_ai_container = CPUSpellAIContainer.new()
+    cpu_spell_ai_container.setup(
+        cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator
+    )
+
+    if cpu_spell_ai_container.is_valid():
+        print("[CPUSpellAIContainer] 初期化完了 ✓")
+        systems["CPUSpellAIContainer"] = cpu_spell_ai_container
+    else:
+        push_error("[CPUSpellAIContainer] 初期化失敗")
+```
+
+**呼び出し順序**: Phase 4-4 → _initialize_phase1a_handlers() → _initialize_spell_phase_subsystems() → _initialize_cpu_spell_ai_container()
+
+---
+
+### Q5: 各ステップのテスト確認項目の詳細
+
+**Phase 5-1 テスト** (15分):
+- [ ] ゲーム起動（エラーなし）
+- [ ] スペル選択UI表示
+- [ ] ボタンクリック可能
+- [ ] CPU vs CPU 1ラウンド
+
+**Phase 5-2 テスト** (10分):
+- [ ] ゲーム起動（参照エラーなし）
+- [ ] container.is_valid() == true
+- [ ] CPU スペル判定可能
+- [ ] CPU vs CPU 1ラウンド
+
+**Phase 5-3 テスト** (30分):
+- [ ] ゲーム起動
+- [ ] スペル3種類実行（火・水・呪い）
+- [ ] CPU vs CPU 1ラウンド
+
+**Phase 5-5 テスト** (15分):
+- [ ] ゲーム起動
+- [ ] CPU vs CPU 3ラウンド
+
+**最終統合テスト** (1時間):
+- [ ] 5ラウンド実行（フリーズなし）
+- [ ] UI全機能動作
+- [ ] 複数スペル実行
+- [ ] エラーログなし
+
+---
+
+### Q6: ロールバック（git revert）の実装方針
+
+**Commit 分割**:
+```
+Phase 5-1:
+  - Commit 1: SpellUIManager.gd 作成
+  - Commit 2: SpellPhaseHandler に参照準備
+  - Commit 3: GameSystemManager 初期化追加
+
+Phase 5-2:
+  - Commit 1: CPUSpellAIContainer.gd 作成
+  - Commit 2: GameSystemManager で初期化
+  - Commit 3: CPU AI 参照セット
+
+Phase 5-3:
+  - Commit 1: SpellFlow に委譲メソッド追加
+  - Commit 2: 呼び出し元修正（ファイルごと）
+  - Commit 3: 直接参照削除
+```
+
+**メッセージ形式**: `feat: [内容]`, `refactor: [内容]`
+
+**テスト失敗時**: `git revert HEAD --no-edit` で巻き戻し
+
+---
+
+### Q7: 既存コード（SpellUIController等）の扱い
+
+**統合対象**:
+- SpellUIController → SpellUIManager へ統合（内容移行）
+- SpellPhaseUIManager → SpellUIManager へ統合（参照保持のみなので統合簡単）
+
+**独立継続**:
+- SpellNavigationController → 独立継続（ナビゲーション専門）
+
+**修正パターン**:
+```gdscript
+# 修正前
+spell_ui_controller.show_spell_phase_buttons()
+
+# 修正後
+spell_ui_manager.show_spell_phase_buttons()
+```
+
+---
+
+### Q8: 参照のキャスト・型チェック
+
+**推奨パターン**:
+```gdscript
+# ✅ 推奨（双方対応）
+if spell_ui_manager and spell_ui_manager.is_valid():
+    spell_ui_manager.show_spell_phase_buttons()
+else:
+    push_error("[SPH] spell_ui_manager が初期化されていません")
+
+# ✅ RefCounted 専用
+if cpu_spell_ai_container and cpu_spell_ai_container.is_valid():
+    var ai = cpu_spell_ai_container.cpu_spell_ai
+    if ai:
+        ai.decide_spell(player_id)
+
+# ❌ 非推奨（null チェックなし）
+spell_ui_manager.show_spell_phase_buttons()
+```
+
+**アサーション**: 初期化時のみ使用（実行時は if チェック必須）
+
+---
+
+### 実装時の重要チェックリスト
+
+- [ ] Grep で呼び出し元を完全把握（Phase 5-3）
+- [ ] 各 commit 前にゲーム起動確認（破壊的変更時）
+- [ ] git revert で即巻き戻し可能か確認
+- [ ] null チェック必須（is_valid() 使用）
+- [ ] 型アノテーション: SpellUIManager → なし, CPUSpellAIContainer → あり
 
 ---
 
@@ -58,11 +449,11 @@
    - 19個の重複実装（全ファイルから）削除
    - 20ファイルで呼び出し変更
    - **削減内容**:
-     - SpecialTileSystem: 1実装削除
-     - 5つのGameFlow関連ファイル: 各1実装削除
-     - 6つのタイル関連ファイル: 各1実装削除
-     - 5つのその他ファイル: 各1実装削除
-     - SpellPhaseHandler, ItemPhaseHandler: setter メソッド化
+	 - SpecialTileSystem: 1実装削除
+	 - 5つのGameFlow関連ファイル: 各1実装削除
+	 - 6つのタイル関連ファイル: 各1実装削除
+	 - 5つのその他ファイル: 各1実装削除
+	 - SpellPhaseHandler, ItemPhaseHandler: setter メソッド化
 
 #### 5. **Phase 4-P2**: CPUSpellPhaseHandler 正式初期化（6行削減）✅
    - GameSystemManager で一元インスタンス化
