@@ -210,19 +210,19 @@ func get_magic_grant_amount(player_id: int) -> int:
 		return curse.get("params", {}).get("magic", 0)
 	return 0
 
-# ダイスロール後のEP付与処理（GameFlowManagerから呼ばれる）
-func process_magic_grant(player_id: int, ui_manager) -> void:
+# ダイスロール後のEP付与処理（DicePhaseHandlerから呼ばれる）
+func process_magic_grant(player_id: int) -> Dictionary:
 	if not should_grant_magic(player_id):
-		return
-	
+		return {}
+
 	var curse = spell_curse.get_player_curse(player_id)
 	var curse_name = curse.get("name", "")
 	var magic_amount = get_magic_grant_amount(player_id)
 	if magic_amount > 0:
 		player_system.add_magic(player_id, magic_amount)
 		print("[", curse_name, "] EP獲得 +", magic_amount, "EP")
-		if ui_manager and ui_manager.global_comment_ui:
-			await ui_manager.show_comment_and_wait("EP +" + str(magic_amount) + "EP 獲得！", player_id)
+		return {"message": "EP +" + str(magic_amount) + "EP 獲得！", "player_id": player_id}
+	return {}
 
 # ダイスロール時に呪いを適用
 # 通常のダイスシステムから呼ばれる

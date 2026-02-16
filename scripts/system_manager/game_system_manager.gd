@@ -867,7 +867,7 @@ func _initialize_phase1a_handlers() -> void:
 	var DicePhaseHandlerClass = preload("res://scripts/game_flow/dice_phase_handler.gd")
 	var dice_phase_handler = DicePhaseHandlerClass.new()
 	game_flow_manager.add_child(dice_phase_handler)
-	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, ui_manager, board_system_3d, game_flow_manager)
+	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, board_system_3d, game_flow_manager)
 	game_flow_manager.dice_phase_handler = dice_phase_handler
 
 	# Phase 6-B: DicePhaseHandler UI Signal接続
@@ -1389,4 +1389,12 @@ func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 		dice_handler.dice_ui_phase_text_requested.connect(p_ui_manager.set_phase_text)
 	if not dice_handler.dice_ui_navigation_disabled.is_connected(p_ui_manager.disable_navigation):
 		dice_handler.dice_ui_navigation_disabled.connect(p_ui_manager.disable_navigation)
-	print("[GSM] DicePhaseHandler UI Signal接続完了（6シグナル）")
+
+	# Comment & Wait（ラムダ接続 - 初回のみ接続されるため is_connected 不要）
+	dice_handler.dice_ui_comment_and_wait_requested.connect(
+		func(message: String, player_id: int):
+			if p_ui_manager and p_ui_manager.global_comment_ui:
+				await p_ui_manager.show_comment_and_wait(message, player_id)
+			dice_handler.dice_ui_comment_and_wait_completed.emit()
+	)
+	print("[GSM] DicePhaseHandler UI Signal接続完了（7シグナル）")

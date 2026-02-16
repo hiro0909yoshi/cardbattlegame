@@ -9,12 +9,13 @@ signal dice_ui_triple_result_shown(d1: int, d2: int, d3: int, total: int)
 signal dice_ui_range_result_shown(curse_name: String, value: int)
 signal dice_ui_phase_text_requested(text: String)
 signal dice_ui_navigation_disabled()
+signal dice_ui_comment_and_wait_requested(message: String, player_id: int)
+signal dice_ui_comment_and_wait_completed()
 
 # 依存システム
 var player_system
 var player_buff_system
 var spell_dice
-var ui_manager  # ※ process_magic_grant パススルー用（直接UI操作はSignal経由）
 var board_system_3d
 var game_flow_manager  # change_phase()呼び出し用
 
@@ -31,11 +32,10 @@ enum GamePhase {
 var current_phase = GamePhase.SETUP
 
 # セットアップメソッド
-func setup(p_player_system, p_player_buff_system, p_spell_dice, p_ui_manager, p_board_system_3d, p_game_flow_manager):
+func setup(p_player_system, p_player_buff_system, p_spell_dice, p_board_system_3d, p_game_flow_manager):
 	player_system = p_player_system
 	player_buff_system = p_player_buff_system
 	spell_dice = p_spell_dice
-	ui_manager = p_ui_manager
 	board_system_3d = p_board_system_3d
 	game_flow_manager = p_game_flow_manager
 
@@ -115,7 +115,10 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 
 	# ダイスロール後のEP付与（チャージステップなど）
 	if spell_dice:
-		await spell_dice.process_magic_grant(player_system.current_player_index, ui_manager)
+		var grant_result = spell_dice.process_magic_grant(player_system.current_player_index)
+		if not grant_result.is_empty():
+			dice_ui_comment_and_wait_requested.emit(grant_result.message, grant_result.player_id)
+			await dice_ui_comment_and_wait_completed
 
 	# 表示待ち
 	await get_tree().create_timer(1.0).timeout
