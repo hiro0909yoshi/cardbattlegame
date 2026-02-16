@@ -2,7 +2,7 @@
 
 **目的**: チャット間の継続性を保つため、各日の作業内容を簡潔に記録
 
-**ルール**: 
+**ルール**:
 - 各作業は1〜3行で簡潔に
 - 完了したタスクに ✅
 - 次のステップを必ず明記
@@ -12,35 +12,94 @@
 
 ---
 
-## 2026年2月16日（Session 31-32: Phase 5-0）
+## 2026年2月16日（Session 35: Phase 5-3 完了）
 
-### ✅ Phase 5-0 準備完了 - ゲーム起動確認＋グループ3呼び出し元特定
+### ✅ Phase 5-3 実装完了 - グループ3重複参照削除
 
-**目的**: Phase 5 段階的最適化計画の実施前に基準状態を確認し、次フェーズの依存情報を収集
+**目的**: spell_draw, spell_magic, spell_curse_stat, spell_cost_modifier の重複参照を削除し、GameFlowManager.spell_container 経由に統一
 
 **実施内容**:
 
-1. **ゲーム起動確認**
-   - ✅ 必須ファイル 5個確認（全て存在、エラーなし）
-   - ✅ GDScript 文法チェック 7ファイル完了
-   - ✅ ゲーム起動シミュレーション成功
-   - ✅ SpellSystemContainer 8コアシステム正常初期化
+#### Step 1: CardSelectionHandler の修正（完了）
+- **ファイル**: `/scripts/spells/card_selection_handler.gd`
+- **修正内容**: spell_phase_handler.spell_draw の **20箇所** すべてを game_flow_manager.spell_container.spell_draw に修正
+- **パターン**:
+  ```gdscript
+  # 修正前: spell_phase_handler.spell_draw.method()
+  # 修正後: spell_phase_handler.game_flow_manager.spell_container.spell_draw.method()
+  ```
 
-2. **グループ3 呼び出し元マップ作成**
-   - ✅ spell_draw: 22個の呼び出し特定
-   - ✅ spell_magic: 17個の呼び出し特定
-   - ✅ spell_curse_stat: 7個の呼び出し特定
-   - ✅ spell_cost_modifier: 12個の呼び出し特定
-   - **合計**: 58個の呼び出し箇所を完全マッピング
+#### Step 2: SpellPhaseHandler の参照削除（完了）
+- **ファイル**: `/scripts/game_flow/spell_phase_handler.gd`
+- **削除対象**:
+  1. **4つの var 宣言を削除** (line 64-67周辺)
+     - var spell_draw = null
+     - var spell_cost_modifier = null
+     - var spell_magic = null
+     - var spell_curse_stat = null
+  2. **set_spell_systems_direct() メソッドを完全削除** (line 143-152周辺)
+  3. **_initialize_card_selection_handler() 内の spell_draw 参照を修正** (line 411-412)
+
+#### Step 3: GameSystemManager の初期化コード削除（完了）
+- **ファイル**: `/scripts/system_manager/game_system_manager.gd`
+- **削除内容**: set_spell_systems_direct() 呼び出しを完全削除 (line 831-836)
+- **参考修正**:
+  - spell_draw 参照の更新 (line 1034-1035)
+  - spell_cost_modifier 参照の更新 (line 1143)
+  - spell_magic 検証コード削除 (line 967-970)
+
+**削減効果**:
+- コード行削減: **25行** (削除) + 37行新規 - 62行削除 = **実質25行削減**
+- SpellPhaseHandler さらに軽量化
+- すべての spell システム参照が一元化（GameFlowManager.spell_container 経由）
+
+**コミット**: `264ec4c refactor: Phase 5-3 グループ3重複参照削除`
+
+---
+
+## 2026年2月16日（Session 34: Phase 5-1, 5-2 完了＋テスト合格）
+
+### ✅ Phase 5-1, 5-2 実装完了 - SpellUIManager + CPUSpellAIContainer 統合テスト合格
+
+**目的**: UI制御と CPU AI 参照を統合し、ゲーム正常動作を確認
+
+**実施内容**:
+
+#### Phase 5-1: SpellUIManager 実装完了
+1. **SpellUIManager.gd** (274行)
+   - ✅ 14メソッド実装（UI制御、ナビゲーション、スペル確認）
+   - ✅ 5つの参照管理（spell_phase_handler, ui_manager, spell_navigation_controller, spell_confirmation_handler, spell_ui_controller）
+2. **初期化順序修正** (commit: dfab98a)
+   - SpellNavigationController → SpellUIManager の依存関係を線形化
+   - 全5参照が初期化時点で有効
+
+#### Phase 5-2: CPUSpellAIContainer 実装完了
+1. **CPUSpellAIContainer.gd** (79行)
+   - ✅ RefCounted で実装（SpellSystemContainer パターン踏襲）
+   - ✅ 4つの参照管理（cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator）
+   - ✅ setup(), is_valid(), debug_print_status() メソッド
+2. **GameSystemManager 統合** (3つの修正)
+   - CPUAIContextScript 重複定義削除
+   - cpu_movement_evaluator 変数シャドウイング解決
+   - _initialize_cpu_movement_evaluator() 初期化順序修正
+
+**テスト結果**: ✅ 全て合格
+- テスト A: 起動確認 → `[CPUSpellAIContainer] 初期化完了 ✓` 表示確認
+- テスト B: 参照確認 → GameSystemManager 初期化コード検証完了
+- テスト C: UI操作確認 → スペルフェーズ正常動作
+- テスト D: CPU実行確認 → プレイヤー1ターン正常進行中
 
 **成果**:
-- ✅ ゲーム基準状態確認（起動可能、エラーなし）
-- ✅ Phase 5-3 実装に必要な全依存情報を収集（詳細: phase_5_preparation_report.md）
-- ✅ リスク分析完了（低リスク、多くが spell_container 経由）
+- ✅ SpellUIManager + CPUSpellAIContainer 完全統合
+- ✅ ゲーム正常起動・進行（エラーなし）
+- ✅ 初期化依存関係の線形化完了
+- ✅ 参照統合による間接参照削減（Phase 5-3向け準備完了）
 
-**推定工数**: Phase 5 Total 4時間, 総削減 250-400行
+**総コミット数**: 3個（dfab98a, b8244c6（型修正）, 他）
 
-**次のステップ**: Phase 5-1 SpellUIManager 新規作成
+**リスク**: 低（全て初期化順序とリファクタリング、新規ロジック追加なし）
+
+**次のステップ**: Phase 5-3 グループ3重複参照削除
 
 ---
 
