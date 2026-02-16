@@ -38,7 +38,6 @@ signal external_spell_finished()  # 外部スペル実行完了
 
 ## 参照
 var ui_manager = null
-var hand_display = null  # hand_display参照
 var game_flow_manager = null
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var card_system = null
@@ -96,8 +95,6 @@ func _process(delta):
 func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
 	ui_manager = ui_mgr
 	game_flow_manager = flow_mgr
-	if ui_manager and ui_manager.get("hand_display"):
-		hand_display = ui_manager.hand_display
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	# game_3d参照は別途set_game_3d_ref()で設定される
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
@@ -348,6 +345,7 @@ func try_handle_card_selection(card_index: int) -> bool:
 
 	# スペルフェーズがアクティブでない場合
 	return false
+	
 
 # ============ アルカナアーツシステム対応（新規追加）============
 

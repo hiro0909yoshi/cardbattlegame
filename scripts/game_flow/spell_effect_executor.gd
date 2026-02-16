@@ -4,6 +4,10 @@ class_name SpellEffectExecutor
 ## スペル効果の実行を担当
 ## spell_phase_handler.gd から効果実行ロジックを分離
 
+## === UI Signal 定義（Phase 6: UI層分離） ===
+signal effect_ui_comment_and_wait_requested(message: String)
+signal effect_ui_comment_and_wait_completed()
+
 var spell_phase_handler = null  # 親への参照
 
 # === コンテナ直接参照（辞書展開廃止） ===
@@ -205,10 +209,10 @@ func apply_single_effect(effect: Dictionary, target_data: Dictionary):
 			@warning_ignore("redundant_await")
 			var result = await strategy.execute(context)
 
-			# ★ NEW: グローバルコメント表示（以前と同じUI）
+			# ★ グローバルコメント表示（Signal経由）
 			if result and result.has("effect_message") and result["effect_message"] != "":
-				if handler and handler.ui_manager and handler.ui_manager.has_method("show_comment_and_wait"):
-					await handler.ui_manager.show_comment_and_wait(result["effect_message"])
+				effect_ui_comment_and_wait_requested.emit(result["effect_message"])
+				await effect_ui_comment_and_wait_completed
 
 			return
 		else:

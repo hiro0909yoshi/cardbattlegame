@@ -65,8 +65,8 @@ func update_spell_phase_ui() -> void:
 	else:
 		_ui_manager.card_selection_filter = "spell"
 	# 手札表示を更新してグレーアウトを適用
-	if _spell_phase_handler and _spell_phase_handler.hand_display:
-		_spell_phase_handler.hand_display.update_hand_display(current_player.id)
+	if _ui_manager and _ui_manager.hand_display:
+		_ui_manager.hand_display.update_hand_display(current_player.id)
 
 	# スペル選択UIを表示（人間プレイヤーのみ）
 	if not (_spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(current_player.id)):

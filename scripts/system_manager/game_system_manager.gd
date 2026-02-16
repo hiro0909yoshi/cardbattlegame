@@ -1050,6 +1050,16 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if not spell_phase_handler.spell_effect_executor:
 		spell_phase_handler.spell_effect_executor = SpellEffectExecutorClass.new(spell_phase_handler)
 
+	# Phase 6: SpellEffectExecutor UI Signal接続
+	if spell_phase_handler.spell_effect_executor:
+		spell_phase_handler.spell_effect_executor.effect_ui_comment_and_wait_requested.connect(
+			func(message: String):
+				if ui_manager and ui_manager.has_method("show_comment_and_wait"):
+					await ui_manager.show_comment_and_wait(message)
+				spell_phase_handler.spell_effect_executor.effect_ui_comment_and_wait_completed.emit()
+		)
+		print("[GSM] SpellEffectExecutor UI Signal接続完了")
+
 	# Step 3: 6個のハンドラーを初期化（inline化）
 
 	# SpellTargetSelectionHandler を初期化（Phase 6-1）
