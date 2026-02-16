@@ -294,11 +294,46 @@ func _calculate_land_value(player_id: int) -> int:
 func _calculate_stone_value(player_id: int) -> int:
 	if player_id < 0 or player_id >= players.size():
 		return 0
-	
+
 	# MagicStoneSystemが設定されていれば委譲
 	if magic_stone_system_ref and magic_stone_system_ref.has_method("calculate_player_stone_value"):
 		return magic_stone_system_ref.calculate_player_stone_value(player_id)
-	
+
+	return 0
+
+## 全プレイヤーの順位を計算（TEP降順、1位=1）
+func calculate_all_rankings() -> Array:
+	# 各プレイヤーのTEPを取得
+	var player_assets: Array[Dictionary] = []
+	for i in range(players.size()):
+		player_assets.append({
+			"player_id": i,
+			"total": calculate_total_assets(i)
+		})
+
+	# TEP降順でソート
+	player_assets.sort_custom(func(a, b): return a["total"] > b["total"])
+
+	# 順位を割り当て（同率は同順位）
+	var rankings: Array[int] = []
+	rankings.resize(players.size())
+
+	var current_rank = 1
+	var prev_total = -1
+	for i in range(player_assets.size()):
+		var entry = player_assets[i]
+		if entry["total"] != prev_total:
+			current_rank = i + 1
+		rankings[entry["player_id"]] = current_rank
+		prev_total = entry["total"]
+
+	return rankings
+
+## 特定プレイヤーの順位を取得
+func get_player_ranking(player_id: int) -> int:
+	var rankings = calculate_all_rankings()
+	if player_id >= 0 and player_id < rankings.size():
+		return rankings[player_id]
 	return 0
 
 ## 外部システム参照を設定

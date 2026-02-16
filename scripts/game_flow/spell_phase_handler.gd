@@ -295,11 +295,10 @@ func _build_spell_context() -> Dictionary:
 	return context
 
 
-## プレイヤーの順位を取得（委譲メソッド経由）
+## プレイヤーの順位を取得（PlayerSystem経由）
 func get_player_ranking(player_id: int) -> int:
-	if ui_manager:
-		return ui_manager.get_player_ranking(player_id)
-	# フォールバック: 常に1位を返す
+	if player_system:
+		return player_system.get_player_ranking(player_id)
 	return 1
 
 ## アクティブか

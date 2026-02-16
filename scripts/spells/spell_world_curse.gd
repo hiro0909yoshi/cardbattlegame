@@ -72,19 +72,19 @@ func check_land_change_blocked(show_popup: bool = true) -> bool:
 func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool = true) -> bool:
 	if defender_id < 0:
 		return false
-	
+
 	var stats = _get_game_stats()
 	var world_curse = stats.get("world_curse", {})
 	if world_curse.get("curse_type") != "invasion_restrict":
 		return false
-	
-	# 順位を取得（直接参照経由）
-	if not ui_manager:
+
+	# 順位を取得（PlayerSystem経由）
+	if not game_flow_manager or not game_flow_manager.player_system:
 		return false
 
-	var attacker_rank = ui_manager.get_player_ranking(attacker_id)
-	var defender_rank = ui_manager.get_player_ranking(defender_id)
-	
+	var attacker_rank = game_flow_manager.player_system.get_player_ranking(attacker_id)
+	var defender_rank = game_flow_manager.player_system.get_player_ranking(defender_id)
+
 	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
 	if attacker_rank < defender_rank:
 		if show_popup:
