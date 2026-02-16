@@ -5,8 +5,14 @@ class_name MysticArtsHandler
 ## 親ハンドラー（SpellPhaseHandler）への参照
 var _spell_phase_handler = null  # SpellPhaseHandler（循環参照回避）
 
+## === UI Signal 定義（Phase 6-A: UI層分離） ===
+signal mystic_ui_toast_requested(message: String)
+signal mystic_ui_button_shown(callback: Callable)
+signal mystic_ui_button_hidden()
+signal mystic_ui_navigation_disabled()
+signal mystic_ui_action_prompt_shown(message: String)
+
 ## システム参照
-var _ui_manager = null
 var _board_system = null
 var _player_system = null
 var _card_system = null
@@ -24,14 +30,12 @@ func _ready() -> void:
 ## 初期化（setup() 時に呼ぶ）
 func setup(
 	spell_phase_handler,  # 型アノテーションなし（循環参照回避）
-	ui_manager,
 	board_system,
 	player_system,
 	card_system,
 	game_3d_ref
 ) -> void:
 	_spell_phase_handler = spell_phase_handler
-	_ui_manager = ui_manager
 	_board_system = board_system
 	_player_system = player_system
 	_card_system = card_system
@@ -74,8 +78,7 @@ func get_spell_mystic_arts():
 func start_mystic_arts_phase():
 	"""アルカナアーツ選択フェーズを開始"""
 	if not _spell_mystic_arts:
-		if _ui_manager and _ui_manager.phase_display:
-			_ui_manager.show_toast("アルカナアーツシステムが初期化されていません")
+		mystic_ui_toast_requested.emit("アルカナアーツシステムが初期化されていません")
 		return
 
 	if not _player_system:
@@ -145,45 +148,50 @@ func _has_spell_mystic_arts() -> bool:
 
 ## アルカナアーツボタンの表示状態を更新（外部から呼び出し可能）
 func update_mystic_button_visibility():
-	if not _ui_manager or not _spell_phase_handler:
+	if not _spell_phase_handler:
 		return
 
 	if _spell_phase_handler.spell_state.current_state == SpellStateHandler.State.INACTIVE:
 		return
 
 	if has_available_mystic_arts(_spell_phase_handler.spell_state.current_player_id):
-		_ui_manager.show_mystic_button(func(): start_mystic_arts_phase())
+		mystic_ui_button_shown.emit(func(): start_mystic_arts_phase())
 	else:
-		_ui_manager.hide_mystic_button()
+		mystic_ui_button_hidden.emit()
 
 ## アルカナアーツ使用時にボタンを隠す
 func _on_mystic_art_used():
 	# アルカナアーツ使用時はアルカナアーツボタンを非表示
-	if _ui_manager:
-		_ui_manager.hide_mystic_button()
+	mystic_ui_button_hidden.emit()
 
 ## アルカナアーツフェーズ完了時
 func _on_mystic_phase_completed():
+	print("[MAH-DEBUG] _on_mystic_phase_completed() 開始")
 	if not _spell_phase_handler:
+		print("[MAH-DEBUG] ⚠️ _spell_phase_handler が null")
 		return
 
 	# spell_stateを完全にリセット（spell_used_this_turn を false に）
 	_spell_phase_handler.spell_state.reset_turn_state()
 	_spell_phase_handler.spell_state.set_current_player_id(_spell_phase_handler.spell_state.current_player_id)
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+	print("[MAH-DEBUG] spell_state リセット完了 → WAITING_FOR_INPUT")
 
 	if _spell_phase_handler.spell_flow:
+		print("[MAH-DEBUG] spell_flow.return_to_spell_selection() 呼び出し")
 		_spell_phase_handler.spell_flow.return_to_spell_selection()
+		print("[MAH-DEBUG] spell_flow.return_to_spell_selection() 完了")
 	else:
 		push_error("[MysticArtsHandler] spell_flow が初期化されていません")
+	print("[MAH-DEBUG] _on_mystic_phase_completed() 完了")
 
 ## アルカナアーツターゲット選択要求時
 func _on_mystic_target_selection_requested(targets: Array) -> void:
-	if not _spell_phase_handler or not _ui_manager:
+	if not _spell_phase_handler:
 		return
 
 	# ★ NEW: 前のナビゲーション状態をクリア
-	_ui_manager.disable_navigation()
+	mystic_ui_navigation_disabled.emit()
 
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.SELECTING_TARGET)
 
@@ -193,8 +201,7 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 		_spell_phase_handler.spell_target_selection_handler.set_current_target_index(0)
 
 	# TapTargetManagerでタップ選択を開始（アルカナアーツ用）
-	if _ui_manager.tap_target_manager:
-		_spell_phase_handler._start_mystic_tap_target_selection(targets)
+	_spell_phase_handler._start_mystic_tap_target_selection(targets)
 
 	# グローバルナビゲーション設定（対象選択用 - アルカナアーツでも戻るボタンを表示）
 	if _spell_phase_handler and _spell_phase_handler.spell_navigation_controller:
@@ -208,8 +215,7 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 
 ## アルカナアーツUIメッセージ表示要求時
 func _on_mystic_ui_message_requested(message: String):
-	if _ui_manager and _ui_manager.phase_display:
-		_ui_manager.show_action_prompt(message)
+	mystic_ui_action_prompt_shown.emit(message)
 
 ## CPUスペル/アルカナアーツターンハンドラーを実行
 func execute_cpu_mystic_turn(decision: Dictionary):

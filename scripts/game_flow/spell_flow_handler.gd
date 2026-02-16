@@ -2,12 +2,24 @@
 extends RefCounted
 class_name SpellFlowHandler
 
+## === UI Signal 定義（Phase 6-A: UI層分離） ===
+signal spell_ui_toast_requested(message: String)
+signal spell_ui_action_prompt_shown(text: String)
+signal spell_ui_action_prompt_hidden()
+signal spell_ui_info_panels_hidden()
+signal spell_ui_card_pending_cleared()
+signal spell_ui_navigation_enabled(confirm_cb: Callable, back_cb: Callable)
+signal spell_ui_navigation_disabled()
+signal spell_ui_actions_cleared()
+signal spell_ui_card_filter_set(filter: String)
+signal spell_ui_hand_updated(player_id: int)
+signal spell_ui_card_selection_deactivated()
+
 ## ===== 依存関係 =====
 var _spell_state: SpellStateHandler = null  # 状態管理（必須）
 var _spell_phase_handler = null  # 親ハンドラー（シグナル発火、他ハンドラー参照用）
 
 ## ===== システム参照 =====
-var _ui_manager = null
 var _game_flow_manager = null
 var _board_system = null
 var _player_system = null
@@ -30,7 +42,6 @@ func _init(spell_state: SpellStateHandler) -> void:
 ## 参照を設定（SpellPhaseHandlerから注入）
 func setup(
 	spell_phase_handler,
-	ui_manager,
 	game_flow_manager,
 	board_system,
 	player_system,
@@ -44,7 +55,6 @@ func setup(
 	target_selection_helper = null
 ) -> void:
 	_spell_phase_handler = spell_phase_handler
-	_ui_manager = ui_manager
 	_game_flow_manager = game_flow_manager
 	_board_system = board_system
 	_player_system = player_system
@@ -112,18 +122,15 @@ func use_spell(spell_card: Dictionary):
 		if not _can_afford_spell(spell_card):
 			# EPが足りない場合はエラー表示して戻る
 			var needed_cost = _get_spell_cost(spell_card)
-			if _ui_manager and _ui_manager.phase_display:
-				_ui_manager.show_toast("EPが足りません（必要: %dEP）" % needed_cost)
+			spell_ui_toast_requested.emit("EPが足りません（必要: %dEP）" % needed_cost)
 			# インフォパネルを閉じる
-			if _ui_manager:
-				_ui_manager.hide_all_info_panels()
+			spell_ui_info_panels_hidden.emit()
 			# カードのホバー状態を解除
 			var card_script = load("res://scripts/card.gd")
 			if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 				card_script.currently_selected_card.deselect_card()
 			# カード選択状態をリセット
-			if _ui_manager and _ui_manager.card_selection_ui:
-				_ui_manager.card_selection_ui.pending_card_index = -1
+			spell_ui_card_pending_cleared.emit()
 			# 入力ロックを解除
 			if _game_flow_manager and _game_flow_manager.has_method("unlock_input"):
 				_game_flow_manager.unlock_input()
@@ -135,8 +142,7 @@ func use_spell(spell_card: Dictionary):
 	_spell_state.set_spell_used_this_turn(true)
 
 	# アクション指示パネルを閉じる
-	if _ui_manager and _ui_manager.phase_display:
-		_ui_manager.hide_action_prompt()
+	spell_ui_action_prompt_hidden.emit()
 
 	# コストを支払う（常に実行）
 	var cost = _get_spell_cost(spell_card)
@@ -149,8 +155,7 @@ func use_spell(spell_card: Dictionary):
 		var nullify_result = _spell_cost_modifier.check_spell_nullify(_spell_state.current_player_id)
 		if nullify_result.get("nullified", false):
 			# スペルは無効化 → カードを捨て札へ
-			if _ui_manager and _ui_manager.phase_display:
-				_ui_manager.show_action_prompt(nullify_result.get("message", "スペル無効化"))
+			spell_ui_action_prompt_shown.emit(nullify_result.get("message", "スペル無効化"))
 			# 手札からカードを除去（捨て札へ）
 			if _player_system:
 				_player_system.remove_card_from_hand(_spell_state.current_player_id, _spell_state.get_spell_card())
@@ -215,8 +220,7 @@ func use_spell(spell_card: Dictionary):
 		if effect.get("effect_type") == "swap_board_creatures":
 			var own_creature_count = _count_own_creatures(_spell_state.current_player_id)
 			if own_creature_count < 2:
-				if _ui_manager and _ui_manager.phase_display:
-					_ui_manager.show_toast("対象がいません")
+				spell_ui_toast_requested.emit("対象がいません")
 				await _get_tree_ref().create_timer(1.0).timeout
 				cancel_spell()
 				return
@@ -304,22 +308,24 @@ func cancel_spell():
 
 ## スペル選択画面に戻る（UI再表示 + ナビゲーション再設定）
 func return_to_spell_selection():
+	print("[SFH-DEBUG] return_to_spell_selection() 開始")
 	# 対象選択フェーズを抜ける共通処理
 	_exit_target_selection_phase()
 
 	# UIを更新してスペル選択モードに戻す
-	if _ui_manager:
-		_update_spell_phase_ui()
+	_update_spell_phase_ui()
 
-		# アクション指示パネルで表示
-		if _ui_manager.phase_display:
-			_ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+	# アクション指示パネルで表示
+	print("[SFH-DEBUG] spell_ui_action_prompt_shown 発行")
+	spell_ui_action_prompt_shown.emit("スペルを使用するか、ダイスを振ってください")
 
 	# グローバルナビゲーションをスペル選択用に再設定
+	print("[SFH-DEBUG] _setup_spell_selection_navigation() 呼び出し")
 	_setup_spell_selection_navigation()
 
 	# アルカナアーツボタンを再表示
 	_show_spell_phase_buttons()
+	print("[SFH-DEBUG] return_to_spell_selection() 完了")
 
 ## ===== スペル効果実行 =====
 
@@ -386,7 +392,6 @@ func _build_strategy_context(spell_card: Dictionary = {}, target_data: Dictionar
 		"board_system": _board_system,
 		"player_system": _player_system,
 		"card_system": _card_system,
-		"ui_manager": _ui_manager,
 		"spell_container": spell_container,
 		"spell_effect_executor": _spell_effect_executor,
 		# === 直接参照（SpellEffectExecutor と同様） ===
@@ -421,8 +426,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 
 	# 対象がいない場合（all_creaturesで防魔等で0体）
 	if target_type == "all_creatures" and target_count == 0:
-		if _ui_manager and _ui_manager.phase_display:
-			_ui_manager.show_toast("対象となるクリーチャーがいません")
+		spell_ui_toast_requested.emit("対象となるクリーチャーがいません")
 		await _get_tree_ref().create_timer(1.0).timeout
 		cancel_spell()
 		return
@@ -435,15 +439,13 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 
 	# プレイヤーの場合：アクション指示パネルで確認テキストを表示
 	var confirmation_text = TargetSelectionHelper.get_confirmation_text(target_type, target_count)
-	if _ui_manager and _ui_manager.phase_display:
-		_ui_manager.show_action_prompt(confirmation_text)
+	spell_ui_action_prompt_shown.emit(confirmation_text)
 
 	# ナビゲーションボタン設定（決定/戻る）
-	if _ui_manager:
-		_ui_manager.enable_navigation(
-			func(): _confirm_spell_effect(),  # 決定
-			func(): _cancel_confirmation()    # 戻る
-		)
+	spell_ui_navigation_enabled.emit(
+		func(): _confirm_spell_effect(),  # 決定
+		func(): _cancel_confirmation()    # 戻る
+	)
 
 ## 確認フェーズ: 効果発動を確定
 func _confirm_spell_effect():
@@ -456,8 +458,7 @@ func _confirm_spell_effect():
 	TargetSelectionHelper.clear_confirmation_markers(_spell_phase_handler)
 
 	# ナビゲーションを無効化
-	if _ui_manager:
-		_ui_manager.disable_navigation()
+	spell_ui_navigation_disabled.emit()
 
 	# 効果を実行
 	var confirmation_state = _spell_state.get_confirmation_state()
@@ -513,6 +514,7 @@ func pass_spell(auto_roll: bool = true):
 
 ## スペルフェーズ完了
 func complete_spell_phase():
+	print("[SFH-DEBUG] complete_spell_phase() 開始, state=%s" % _spell_state.current_state)
 	if _spell_state.current_state == SpellStateHandler.State.INACTIVE:
 		# 既に INACTIVE でもシグナルは emit する（GameFlowManager が await している）
 		if _spell_phase_handler:
@@ -525,10 +527,7 @@ func complete_spell_phase():
 		# スペル用のナビゲーションのみクリア（ドミニオボタン等の特殊ボタンは維持）
 		# _hide_spell_phase_buttons()は呼ばない（外部モードではミスティックボタン未設定、
 		# 代わりにドミニオボタンが表示されており消してはいけない）
-		if _ui_manager:
-			_ui_manager.clear_confirm_action()
-			_ui_manager.clear_back_action()
-			_ui_manager.clear_arrow_actions()
+		spell_ui_actions_cleared.emit()
 		if _spell_phase_handler:
 			_spell_phase_handler.external_spell_finished.emit()
 		return
@@ -537,22 +536,18 @@ func complete_spell_phase():
 	_spell_state.clear_spell_card()
 
 	# アクション指示パネルを閉じる
-	if _ui_manager and _ui_manager.phase_display:
-		_ui_manager.hide_action_prompt()
+	spell_ui_action_prompt_hidden.emit()
 
 	# スペルフェーズのフィルターをクリア
-	if _ui_manager:
-		_ui_manager.card_selection_filter = ""
-		# 手札表示を更新してグレーアウトを解除
-		if _ui_manager.hand_display and _player_system:
-			var current_player = _player_system.get_current_player()
-			if current_player:
-				_ui_manager.hand_display.update_hand_display(current_player.id)
+	spell_ui_card_filter_set.emit("")
+	# 手札表示を更新してグレーアウトを解除
+	if _player_system:
+		var current_player = _player_system.get_current_player()
+		if current_player:
+			spell_ui_hand_updated.emit(current_player.id)
 
 	# カード選択UIを非アクティブ化
-	if _ui_manager and _ui_manager.card_selection_ui and _ui_manager.card_selection_ui.is_active:
-		if _ui_manager.card_selection_ui.selection_mode == "spell":
-			_ui_manager.card_selection_ui.deactivate()
+	spell_ui_card_selection_deactivated.emit()
 
 	# スペルフェーズボタンを非表示
 	_hide_spell_phase_buttons()
@@ -564,6 +559,7 @@ func complete_spell_phase():
 	if _board_system:
 		_board_system.enable_follow_camera()
 
+	print("[SFH-DEBUG] spell_phase_completed.emit() 発行")
 	if _spell_phase_handler:
 		_spell_phase_handler.spell_phase_completed.emit()
 
@@ -665,18 +661,18 @@ func _hide_spell_phase_buttons():
 
 ## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
 func _setup_spell_selection_navigation():
-	if _ui_manager:
-		_ui_manager.enable_navigation(
-			func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
-			Callable()             # 戻るなし
-		)
+	print("[SFH-DEBUG] _setup_spell_selection_navigation() → spell_ui_navigation_enabled 発行")
+	spell_ui_navigation_enabled.emit(
+		func(): pass_spell(),  # 決定 = スペルを使わない → サイコロを振る
+		Callable()             # 戻るなし
+	)
 
 ## ナビゲーションをクリア
 func _clear_spell_navigation() -> void:
 	if _spell_target_selection_handler:
 		_spell_target_selection_handler._clear_spell_navigation()
-	elif _ui_manager:
-		_ui_manager.disable_navigation()
+	else:
+		spell_ui_navigation_disabled.emit()
 
 ## 全クリーチャー対象スペルを実行（SpellEffectExecutorに委譲）
 func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):

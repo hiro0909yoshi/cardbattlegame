@@ -258,6 +258,130 @@ func _get_current_player_id() -> int:
 	return -1
 
 
+# === Signal接続（Phase 6-A: UI層分離） ===
+
+## SpellFlowHandler と MysticArtsHandler の UI Signal を接続
+func connect_spell_flow_signals(spell_flow_handler) -> void:
+	"""SpellFlowHandler の UI Signal を接続"""
+	if not spell_flow_handler:
+		push_error("[SpellUIManager] spell_flow_handler が null です")
+		return
+
+	var sfh = spell_flow_handler
+	if not sfh.spell_ui_toast_requested.is_connected(_on_spell_ui_toast_requested):
+		sfh.spell_ui_toast_requested.connect(_on_spell_ui_toast_requested)
+	if not sfh.spell_ui_action_prompt_shown.is_connected(_on_spell_ui_action_prompt_shown):
+		sfh.spell_ui_action_prompt_shown.connect(_on_spell_ui_action_prompt_shown)
+	if not sfh.spell_ui_action_prompt_hidden.is_connected(_on_spell_ui_action_prompt_hidden):
+		sfh.spell_ui_action_prompt_hidden.connect(_on_spell_ui_action_prompt_hidden)
+	if not sfh.spell_ui_info_panels_hidden.is_connected(_on_spell_ui_info_panels_hidden):
+		sfh.spell_ui_info_panels_hidden.connect(_on_spell_ui_info_panels_hidden)
+	if not sfh.spell_ui_card_pending_cleared.is_connected(_on_spell_ui_card_pending_cleared):
+		sfh.spell_ui_card_pending_cleared.connect(_on_spell_ui_card_pending_cleared)
+	if not sfh.spell_ui_navigation_enabled.is_connected(_on_spell_ui_navigation_enabled):
+		sfh.spell_ui_navigation_enabled.connect(_on_spell_ui_navigation_enabled)
+	if not sfh.spell_ui_navigation_disabled.is_connected(_on_spell_ui_navigation_disabled):
+		sfh.spell_ui_navigation_disabled.connect(_on_spell_ui_navigation_disabled)
+	if not sfh.spell_ui_actions_cleared.is_connected(_on_spell_ui_actions_cleared):
+		sfh.spell_ui_actions_cleared.connect(_on_spell_ui_actions_cleared)
+	if not sfh.spell_ui_card_filter_set.is_connected(_on_spell_ui_card_filter_set):
+		sfh.spell_ui_card_filter_set.connect(_on_spell_ui_card_filter_set)
+	if not sfh.spell_ui_hand_updated.is_connected(_on_spell_ui_hand_updated):
+		sfh.spell_ui_hand_updated.connect(_on_spell_ui_hand_updated)
+	if not sfh.spell_ui_card_selection_deactivated.is_connected(_on_spell_ui_card_selection_deactivated):
+		sfh.spell_ui_card_selection_deactivated.connect(_on_spell_ui_card_selection_deactivated)
+
+
+func connect_mystic_arts_signals(mystic_arts_handler) -> void:
+	"""MysticArtsHandler の UI Signal を接続"""
+	if not mystic_arts_handler:
+		push_error("[SpellUIManager] mystic_arts_handler が null です")
+		return
+
+	var mah = mystic_arts_handler
+	if not mah.mystic_ui_toast_requested.is_connected(_on_mystic_ui_toast_requested):
+		mah.mystic_ui_toast_requested.connect(_on_mystic_ui_toast_requested)
+	if not mah.mystic_ui_button_shown.is_connected(_on_mystic_ui_button_shown):
+		mah.mystic_ui_button_shown.connect(_on_mystic_ui_button_shown)
+	if not mah.mystic_ui_button_hidden.is_connected(_on_mystic_ui_button_hidden):
+		mah.mystic_ui_button_hidden.connect(_on_mystic_ui_button_hidden)
+	if not mah.mystic_ui_navigation_disabled.is_connected(_on_mystic_ui_navigation_disabled):
+		mah.mystic_ui_navigation_disabled.connect(_on_mystic_ui_navigation_disabled)
+	if not mah.mystic_ui_action_prompt_shown.is_connected(_on_mystic_ui_action_prompt_shown):
+		mah.mystic_ui_action_prompt_shown.connect(_on_mystic_ui_action_prompt_shown)
+
+# === SpellFlowHandler Signal Listeners ===
+
+func _on_spell_ui_toast_requested(message: String) -> void:
+	if _ui_manager and _ui_manager.phase_display:
+		_ui_manager.show_toast(message)
+
+func _on_spell_ui_action_prompt_shown(text: String) -> void:
+	if _ui_manager and _ui_manager.phase_display:
+		_ui_manager.show_action_prompt(text)
+
+func _on_spell_ui_action_prompt_hidden() -> void:
+	if _ui_manager and _ui_manager.phase_display:
+		_ui_manager.hide_action_prompt()
+
+func _on_spell_ui_info_panels_hidden() -> void:
+	if _ui_manager:
+		_ui_manager.hide_all_info_panels()
+
+func _on_spell_ui_card_pending_cleared() -> void:
+	if _ui_manager and _ui_manager.card_selection_ui:
+		_ui_manager.card_selection_ui.pending_card_index = -1
+
+func _on_spell_ui_navigation_enabled(confirm_cb: Callable, back_cb: Callable) -> void:
+	print("[SUM-DEBUG] _on_spell_ui_navigation_enabled() 受信, _ui_manager=%s" % ("valid" if _ui_manager else "NULL"))
+	if _ui_manager:
+		_ui_manager.enable_navigation(confirm_cb, back_cb)
+
+func _on_spell_ui_navigation_disabled() -> void:
+	if _ui_manager:
+		_ui_manager.disable_navigation()
+
+func _on_spell_ui_actions_cleared() -> void:
+	if _ui_manager:
+		_ui_manager.clear_confirm_action()
+		_ui_manager.clear_back_action()
+		_ui_manager.clear_arrow_actions()
+
+func _on_spell_ui_card_filter_set(filter: String) -> void:
+	if _ui_manager:
+		_ui_manager.card_selection_filter = filter
+
+func _on_spell_ui_hand_updated(player_id: int) -> void:
+	if _ui_manager and _ui_manager.hand_display:
+		_ui_manager.hand_display.update_hand_display(player_id)
+
+func _on_spell_ui_card_selection_deactivated() -> void:
+	if _ui_manager and _ui_manager.card_selection_ui and _ui_manager.card_selection_ui.is_active:
+		if _ui_manager.card_selection_ui.selection_mode == "spell":
+			_ui_manager.card_selection_ui.deactivate()
+
+# === MysticArtsHandler Signal Listeners ===
+
+func _on_mystic_ui_toast_requested(message: String) -> void:
+	if _ui_manager and _ui_manager.phase_display:
+		_ui_manager.show_toast(message)
+
+func _on_mystic_ui_button_shown(callback: Callable) -> void:
+	if _ui_manager:
+		_ui_manager.show_mystic_button(callback)
+
+func _on_mystic_ui_button_hidden() -> void:
+	if _ui_manager:
+		_ui_manager.hide_mystic_button()
+
+func _on_mystic_ui_navigation_disabled() -> void:
+	if _ui_manager:
+		_ui_manager.disable_navigation()
+
+func _on_mystic_ui_action_prompt_shown(message: String) -> void:
+	if _ui_manager and _ui_manager.phase_display:
+		_ui_manager.show_action_prompt(message)
+
 # === デバッグメソッド ===
 
 func debug_print_status() -> void:
