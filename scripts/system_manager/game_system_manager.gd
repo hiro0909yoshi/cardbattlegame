@@ -828,14 +828,11 @@ func _initialize_phase1a_handlers() -> void:
 	spell_phase_handler.set_spell_effect_executor_container(game_flow_manager.spell_container)
 
 	# ★ P0修正: card_selection_handler を初期化（シャッター実行失敗の修正）
-	if spell_phase_handler:
+	if spell_phase_handler and game_flow_manager and game_flow_manager.spell_container:
 		spell_phase_handler._initialize_card_selection_handler()
-		print("[GSM] card_selection_handler 初期化完了")
-
-		# SpellDraw に card_selection_handler を設定（初期化後）
-		if game_flow_manager.spell_container and game_flow_manager.spell_container.spell_draw and spell_phase_handler.card_selection_handler:
+		if spell_phase_handler.card_selection_handler and game_flow_manager.spell_container.spell_draw:
 			game_flow_manager.spell_container.spell_draw.set_card_selection_handler(spell_phase_handler.card_selection_handler)
-			print("[GSM] SpellDraw に card_selection_handler を設定完了")
+			print("[GSM] card_selection_handler 初期化・設定完了")
 
 	# DebugControllerにspell_phase_handler参照を設定
 	if debug_controller:
@@ -922,48 +919,27 @@ func _initialize_phase1a_handlers() -> void:
 	print("[Phase1A Handlers] 初期化完了")
 
 	# ★ NEW: スペルシステム初期化検証
-	print("[GameSystemManager] === スペルシステム初期化検証開始 ===")
-
-	if not game_flow_manager:
-		push_error("[GameSystemManager] game_flow_manager が null です")
+	if not game_flow_manager or not game_flow_manager.spell_container:
+		push_error("[GameSystemManager] game_flow_manager または spell_container が null です")
 		return
-
-	if not game_flow_manager.spell_container:
-		push_error("[GameSystemManager] game_flow_manager.spell_container が null です")
-		return
-
-	# spell_container の検証
-	if game_flow_manager.spell_container.is_valid():
-		print("[GameSystemManager] spell_container: 8個のコアシステムが設定済み ✓")
-	else:
+	if not game_flow_manager.spell_container.is_valid():
 		push_error("[GameSystemManager] spell_container: コアシステムが不完全です")
 		game_flow_manager.spell_container.debug_print_status()
 		return
 
-	if game_flow_manager.spell_container.is_fully_valid():
-		print("[GameSystemManager] spell_container: 10個の全システムが設定済み ✓")
-	else:
-		push_warning("[GameSystemManager] spell_container: 派生システムが未設定（後で設定される予定）")
-
-	# spell_effect_executor の検証
-	if spell_phase_handler and spell_phase_handler.spell_effect_executor:
-		print("[GameSystemManager] spell_phase_handler.spell_effect_executor: 作成済み ✓")
-
-		if spell_phase_handler.spell_effect_executor.spell_container:
-			print("[GameSystemManager] spell_effect_executor.spell_container: 設定済み ✓")
-			if spell_phase_handler.spell_effect_executor.spell_container.is_valid():
-				print("[GameSystemManager] spell_effect_executor.spell_container: 有効 ✓")
-			else:
-				push_error("[GameSystemManager] spell_effect_executor.spell_container: 無効です")
-				return
-		else:
-			push_error("[GameSystemManager] spell_effect_executor.spell_container: null です")
-			return
-	else:
-		push_error("[GameSystemManager] spell_phase_handler.spell_effect_executor: 未設定です")
+	if not spell_phase_handler or not spell_phase_handler.spell_effect_executor:
+		push_error("[GameSystemManager] spell_phase_handler.spell_effect_executor が未設定です")
 		return
 
-	print("[GameSystemManager] === スペルシステム初期化検証完了 ===")
+	if not spell_phase_handler.spell_effect_executor.spell_container:
+		push_error("[GameSystemManager] spell_effect_executor.spell_container が null です")
+		return
+
+	if not spell_phase_handler.spell_effect_executor.spell_container.is_valid():
+		push_error("[GameSystemManager] spell_effect_executor.spell_container: 無効です")
+		return
+
+	print("[GameSystemManager] スペルシステム初期化検証完了 ✓")
 
 ## SpellPhaseHandler の全初期化
 func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager) -> void:
@@ -1318,6 +1294,8 @@ func _initialize_cpu_ai_systems() -> void:
 		print("[GameSystemManager] CPU AI コンテキスト作成完了")
 
 	# === Step 2: CPU AI インスタンス作成（SpellPhaseHandler用） ===
+	var has_game_stats = game_flow_manager and game_flow_manager.has_method("get")
+
 	if not cpu_battle_ai:
 		cpu_battle_ai = CPUBattleAIScript.new()
 		cpu_battle_ai.setup_with_context(cpu_ai_context)
@@ -1326,14 +1304,14 @@ func _initialize_cpu_ai_systems() -> void:
 		cpu_spell_ai = CPUSpellAIScript.new()
 		cpu_spell_ai.initialize(cpu_ai_context)
 		cpu_spell_ai.set_battle_ai(cpu_battle_ai)
-		if game_flow_manager and game_flow_manager.has_method("get"):
+		if has_game_stats:
 			cpu_spell_ai.set_game_stats(game_flow_manager.game_stats)
 
 	if not cpu_mystic_arts_ai:
 		cpu_mystic_arts_ai = CPUMysticArtsAIScript.new()
 		cpu_mystic_arts_ai.initialize(cpu_ai_context)
 		cpu_mystic_arts_ai.set_battle_ai(cpu_battle_ai)
-		if game_flow_manager and game_flow_manager.has_method("get"):
+		if has_game_stats:
 			cpu_mystic_arts_ai.set_game_stats(game_flow_manager.game_stats)
 
 	# === Step 3: CPU AI インスタンス作成（ItemPhaseHandler用） ===
