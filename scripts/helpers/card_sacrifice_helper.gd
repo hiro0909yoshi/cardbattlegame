@@ -8,6 +8,7 @@ class_name CardSacrificeHelper
 var card_system_ref: Object
 var player_system_ref: Object
 var ui_manager_ref: Object
+var _card_selection_service_ref: Object
 
 
 # ============ 状態 ============
@@ -22,10 +23,19 @@ func _init(card_sys: Object, player_sys: Object, ui_manager: Object = null) -> v
 	card_system_ref = card_sys
 	player_system_ref = player_sys
 	ui_manager_ref = ui_manager
+	_resolve_services()
 
 
 func set_ui_manager(ui_manager: Object) -> void:
 	ui_manager_ref = ui_manager
+	_resolve_services()
+
+
+func _resolve_services() -> void:
+	if ui_manager_ref and ui_manager_ref.get("card_selection_service"):
+		_card_selection_service_ref = ui_manager_ref.card_selection_service
+	else:
+		_card_selection_service_ref = null
 
 
 # ============ 手札選択 ============
@@ -46,7 +56,7 @@ func show_hand_selection(player_id: int, filter: String = "", message: String = 
 		return {}
 	
 	# UIManagerがない場合はフォールバック
-	if not ui_manager_ref:
+	if not ui_manager_ref or not _card_selection_service_ref:
 		print("[CardSacrificeHelper] UIManager未設定、最初のカードを使用")
 		return _fallback_selection(hand, filter)
 	
@@ -58,15 +68,15 @@ func show_hand_selection(player_id: int, filter: String = "", message: String = 
 	if player_system_ref:
 		var player = player_system_ref.players[player_id]
 		# フィルターをクリア（全カード選択可能にする）
-		ui_manager_ref.card_selection_filter = ""
+		_card_selection_service_ref.card_selection_filter = ""
 		# sacrifice モードで表示
-		ui_manager_ref.show_card_selection_ui_mode(player, "sacrifice")
+		_card_selection_service_ref.show_card_selection_ui_mode(player, "sacrifice")
 	
 	# カード選択を待つ
-	var selected_index = await ui_manager_ref.card_selected
-	
+	var selected_index = await _card_selection_service_ref.card_selected
+
 	# UIを閉じる
-	ui_manager_ref.hide_card_selection_ui()
+	_card_selection_service_ref.hide_card_selection_ui()
 	
 	# 選択されたカードを取得
 	if selected_index >= 0 and selected_index < hand.size():
