@@ -339,8 +339,8 @@ func execute_cpu_spell_turn(player_id: int) -> void:
 	# 戦闘ポリシー判定
 	var battle_policy = _get_cpu_battle_policy()
 	if battle_policy and not battle_policy.should_use_spell():
-		if spell_phase_handler:
-			spell_phase_handler.pass_spell(false)
+		if spell_phase_handler and spell_phase_handler.spell_flow:
+			spell_phase_handler.spell_flow.pass_spell(false)
 		return
 
 	# アクション判定
@@ -354,8 +354,8 @@ func execute_cpu_spell_turn(player_id: int) -> void:
 		"mystic":
 			await _execute_cpu_mystic(decision, player_id)
 		_:
-			if spell_phase_handler:
-				spell_phase_handler.pass_spell(false)
+			if spell_phase_handler and spell_phase_handler.spell_flow:
+				spell_phase_handler.spell_flow.pass_spell(false)
 
 ## CPU スペル実行
 func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
@@ -366,7 +366,8 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 	# 準備処理
 	var prep = prepare_spell_execution(decision, player_id)
 	if not prep or not prep.get("success", false):
-		spell_phase_handler.pass_spell(false)
+		if spell_phase_handler and spell_phase_handler.spell_flow:
+			spell_phase_handler.spell_flow.pass_spell(false)
 		return
 
 	var spell_card = prep.get("spell_card", {})
@@ -388,7 +389,7 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 
 	if target_type == "all_creatures":
 		var target_info = parsed.get("target_info", {})
-		await spell_phase_handler._execute_spell_on_all_creatures(spell_card, target_info)
+		await spell_phase_handler.spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
 	else:
 		# 発動通知
 		if spell_phase_handler.spell_cast_notification_ui and spell_phase_handler.player_system:
@@ -397,7 +398,7 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 				caster_name = spell_phase_handler.player_system.players[player_id].name
 			await spell_phase_handler.show_spell_cast_notification(caster_name, target, spell_card, false)
 
-		await spell_phase_handler.execute_spell_effect(spell_card, target_data)
+		await spell_phase_handler.spell_flow.execute_spell_effect(spell_card, target_data)
 
 ## CPU アルカナアーツ実行
 func _execute_cpu_mystic(decision: Dictionary, player_id: int) -> void:

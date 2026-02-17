@@ -347,7 +347,10 @@ func _exit_target_selection_phase() -> void:
 	_clear_spell_navigation()
 
 	# カメラをプレイヤーに戻す
-	_spell_phase_handler.return_camera_to_player()
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_controller:
+		_spell_phase_handler.spell_ui_controller.return_camera_to_player()
+	else:
+		push_error("[STSH] spell_ui_controller が初期化されていません")
 
 	# アクション指示パネルを閉じる
 	if _ui_manager and _ui_manager.phase_display:
