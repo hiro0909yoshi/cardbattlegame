@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ✅ 最近完了した作業（2026-02-17）
+## ✅ 最近完了した作業（2026-02-18）
 
-**Phase 0-7A: アーキテクチャ移行 + 完全UI層分離 + CPU AI直接注入化（全完了）**
+**Phase 0-8A: アーキテクチャ移行 + UI層分離 + UIManager依存正規化（進行中）**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -35,11 +35,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - BankruptcyHandler: 5 Signals（パネル生成は部分的に直接参照を保持）
   - **合計**: 33個のSignal追加、5/6ハンドラーで`_ui_manager`完全削除
   - GameSystemManager: 6つのSignal接続メソッド追加
-- **成果物**: コード削減約700行（全フェーズ累計）、33個のUI Signal定義、5/6ハンドラーのUI層完全分離、SRP改善度 95%以上
+- **成果物**: コード削減約700行（全フェーズ累計）、37個のUI Signal定義、7/8ハンドラーのUI層完全分離、4 UIサービス新規作成
 - ✅ **Phase 7-A**: CPU AI パススルー除去（2026-02-17）✅ **完了**
   - SPH からの CPU AI 参照設定を廃止、CPUSpellPhaseHandler/CPUSpecialTileAI/DiscardHandler へ直接注入
   - チェーンアクセス（GFM→SPH→CPU AI）を直接参照に統一
   - 初期化フロー明確化、null参照チェック強化（5ファイル修正）
+- ✅ **Phase 7-B**: SPH UI依存逆転（2026-02-17）✅ **完了**
+  - Signal駆動化によりspell_ui_manager直接呼び出しゼロ
+- ✅ **Phase 8（進行中）**: UIManager 依存方向の正規化（2026-02-18〜）
+  - **8-F**: UIManager 内部4サービス分割（NavigationService, MessageService, CardSelectionService, InfoPanelService）✅
+  - **8-G**: ヘルパーファイル サービス直接注入（target_selection_helper完全移行、tile_summon/battle_executor部分移行）✅
+  - **8-A**: ItemPhaseHandler Signal化（4 Signals、ui_manager完全削除）✅
+  - **合計**: 37個のUI Signal、7/8ハンドラーUI完全分離
 
 詳細は `docs/progress/refactoring_next_steps.md` を参照
 
@@ -63,7 +70,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - 親システムへの参照は注入（Dependency Injection）
    - シグナル接続時は `is_connected()` チェック必須
 
-3. **段階的移行**（Phase 0-6 ✅ **全完了**）
+3. **段階的移行**（Phase 0-8 進行中）
    - ✅ Phase 0: ツリー構造定義（完了）
    - ✅ Phase 1: SpellSystemManager 導入（完了）
    - ✅ Phase 2: シグナルリレー整備（完了、横断接続 83%削減）
@@ -80,6 +87,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
      - ✅ 6-B: DicePhaseHandler UI分離（8 Signals）
      - ✅ 6-C: Toll + Discard + Bankruptcy UI分離（9 Signals）
      - **合計**: 33 Signals、5/6ハンドラーUI層完全分離
+   - ✅ Phase 7-A: CPU AI パススルー除去（完了、2026-02-17）
+   - ✅ Phase 7-B: SPH UI依存逆転（完了、2026-02-17）
+   - 🔄 Phase 8: UIManager依存方向の正規化（進行中、2026-02-18〜）
+     - ✅ 8-F: UIManager内部4サービス分割
+     - ✅ 8-G: ヘルパーファイル部分移行（3/6ファイル完了）
+     - ✅ 8-A: ItemPhaseHandler Signal化（4 Signals）
 
 ### 参照ドキュメント
 
@@ -631,4 +644,4 @@ This prevents:
 
 ---
 
-**Last Updated**: 2026-02-17（Phase ロールバック実施） | Haiku + Opus
+**Last Updated**: 2026-02-18（Phase 8-F/G/A 完了） | Haiku + Opus

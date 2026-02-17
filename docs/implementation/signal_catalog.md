@@ -2,9 +2,9 @@
 
 **目的**: プロジェクト内のシグナル定義と接続パターンの一覧
 
-**最終更新**: 2026-02-17 (Phase 6-A/B/C UI Signal 追加、ファイル統合反映)
+**最終更新**: 2026-02-18 (Phase 8-A ItemPhaseHandler UI Signal 追加)
 
-**総シグナル数**: 225（Phase 6 で +33 UI Signals 追加）
+**総シグナル数**: 229（Phase 6 で +33、Phase 8-A で +4 UI Signals 追加）
 
 ---
 
@@ -138,6 +138,10 @@ spell_ui_manager.connect_mystic_arts_signals(mystic_arts_handler)
 | `item_passed` | なし | アイテムパス |
 | `item_used` | `item_card: Dictionary` | アイテム使用 |
 | `creature_merged` | `merged_data: Dictionary` | クリーチャー合成 |
+| `item_filter_configured` | `config: Dictionary` | アイテムフィルター設定（Phase 8-A UI Signal） |
+| `item_filter_cleared` | なし | アイテムフィルタークリア（Phase 8-A UI Signal） |
+| `item_hand_display_update_requested` | `player_id: int` | 手札表示更新リクエスト（Phase 8-A UI Signal） |
+| `item_selection_ui_show_requested` | `player, mode: String` | カード選択UI表示リクエスト（Phase 8-A UI Signal） |
 
 ### DominioCommandHandler
 ファイル: `scripts/game_flow/dominio_command_handler.gd`
@@ -653,6 +657,23 @@ SpellPhaseHandler.spell_phase_completed
 **接続先**: UIManager (GameSystemManager経由)
 **接続タイミング**: GameSystemManager._initialize_game_flow_handlers() (BankruptcyHandler初期化後)
 **特記**: パネル生成処理（パネル作成のみ）は BankruptcyHandler に直接実装（Signal駆動ではなく直接参照）
+
+---
+
+## Phase 8-A: ItemPhaseHandler UI Signal 定義（2026-02-18 追加）
+
+ファイル: `scripts/game_flow/item_phase_handler.gd`
+
+| シグナル | 引数 | 発行元メソッド | 用途 |
+|---------|------|-------------|------|
+| `item_filter_configured` | `config: Dictionary` | `_show_item_selection_ui()` | フィルター設定をUIに通知 |
+| `item_filter_cleared` | なし | `complete_item_phase()` | フィルターをリセット |
+| `item_hand_display_update_requested` | `player_id: int` | `_show_item_selection_ui()`, `complete_item_phase()` | 手札表示更新リクエスト |
+| `item_selection_ui_show_requested` | `player, mode: String` | `_show_item_selection_ui()` | カード選択UI表示リクエスト |
+
+**接続先**: UIManager (GameSystemManager._connect_item_phase_signals() 経由)
+**接続タイミング**: GameSystemManager._initialize_phase1a_handlers() (ItemPhaseHandler初期化後)
+**特記**: ItemPhaseHandler から ui_manager 参照を完全削除。initialize() のパラメータからも除去。
 
 ---
 
