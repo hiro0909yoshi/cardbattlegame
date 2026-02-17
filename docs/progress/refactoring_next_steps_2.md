@@ -155,6 +155,10 @@ card_selected の emission chain 変更は非同期 await のタイミングバ�
 
 **共通の壁**: `await ui_manager.card_selected` — UIManager のシグナルを直接 await している。
 
+**制約 1 適用**: Group B で CardSelectionService に移すのは「UI操作の委譲」のみ。
+各ファイルの「何を選択するか」「どのモードで表示するか」の判定は呼び出し元に残す。
+CardSelectionService は `show_card_selection_ui_mode(player, mode)` を受け取って表示するだけ。
+
 **前提作業（Phase 8-M）**: CardSelectionService の `card_selected` emission chain 統一
 - 現在: card_selection_ui.gd → UIManager.card_selected を emit
 - 目標: card_selection_ui.gd → CardSelectionService.card_selected を emit
@@ -236,9 +240,9 @@ card_selected の emission chain 変更は非同期 await のタイミングバ�
 | `game_flow_manager_ref` | GFM 経由の game 状態取得 |
 
 **解決策候補**:
-- A) Card に CardSelectionService を注入（Hand表示時に set）
-- B) Card からの UIManager 呼び出しを Signal 化（card_pressed signal → 上位でハンドル）
-- C) CardSelectionService に is_spell_mode() 等の判定メソッド追加
+- A) Card に CardSelectionService を注入（Hand表示時に set）— card_selection_filter の読み取りのみ
+- B) Card からの UIManager 呼び出しを Signal 化（card_pressed signal → 上位でハンドル）— **推奨**
+- ~~C) CardSelectionService に is_spell_mode() 等の判定メソッド追加~~ — **制約 1 違反**: 判定ロジックは CardSelectionService に持たせない
 
 **見積り**: 高（アーキテクチャ変更が必要）
 
@@ -308,13 +312,13 @@ tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_m
 
 ### Phase 8-M → 8-P: 1ファイルずつ移行（制約 3）
 
-| 順序 | サブフェーズ | 対象 | refs | 作業量 |
-|------|-----------|------|------|--------|
-| 6 | **8-P** | spell_borrow | 13 | 低 |
-| 7 | **8-P** | card_sacrifice_helper | 12 | 低 |
-| 8 | **8-P** | tile_summon_executor | 13 | 低 |
-| 9 | **8-P** | spell_creature_swap | 30 | 中 |
-| | | **Group B 合計** | **68** | |
+| 順序 | サブフェーズ | 対象 | refs | 作業量 | 移行後の動作確認 |
+|------|-----------|------|------|--------|----------------|
+| 6 | **8-P** | spell_borrow | 13 | 低 | スペル借用でカード選択 → 決定/キャンセル |
+| 7 | **8-P** | card_sacrifice_helper | 12 | 低 | 犠牲召喚でカード選択 → 決定/キャンセル |
+| 8 | **8-P** | tile_summon_executor | 13 | 低 | 通常召喚 + 犠牲召喚フロー |
+| 9 | **8-P** | spell_creature_swap | 30 | 中 | クリーチャー交換: 召喚カード選択 + 犠牲カード選択の両パス |
+| | | **Group B 合計** | **68** | | |
 
 ### Phase 8 区切りライン
 
