@@ -13,6 +13,13 @@ var card_system_ref: Object
 var spell_phase_handler_ref: Object
 
 
+## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
+func _get_ui_manager():
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
+		return spell_phase_handler_ref.spell_ui_manager._ui_manager
+	return null
+
+
 # ============ 初期化 ============
 
 func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_handler: Object = null) -> void:
@@ -79,10 +86,8 @@ func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 
 ## 手札スペル選択UI
 func _select_hand_spell(spells: Array, message: String) -> Dictionary:
-	var ui_manager = null
-	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
-		ui_manager = spell_phase_handler_ref.ui_manager
-	
+	var ui_manager = _get_ui_manager()
+
 	if not ui_manager:
 		# UIなしの場合は最初のスペルを選択
 		if spells.size() > 0:

@@ -10,6 +10,13 @@ var spell_phase_handler_ref: Object
 var creature_synthesis: CreatureSynthesis = null
 
 
+## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
+func _get_ui_manager():
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
+		return spell_phase_handler_ref.spell_ui_manager._ui_manager
+	return null
+
+
 # ============ 初期化 ============
 
 func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_handler: Object = null) -> void:
@@ -364,10 +371,8 @@ func _select_tile(tile_indices: Array, message: String) -> int:
 ## 手札クリーチャー選択UI
 func _select_hand_creature(creatures: Array, message: String) -> int:
 	# UI参照取得
-	var ui_manager = null
-	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
-		ui_manager = spell_phase_handler_ref.ui_manager
-	
+	var ui_manager = _get_ui_manager()
+
 	if not ui_manager:
 		print("[SpellCreatureSwap] UIManager未設定、最初の候補を使用")
 		return 0 if creatures.size() > 0 else -1
@@ -443,9 +448,7 @@ func _requires_card_sacrifice(card_data: Dictionary) -> bool:
 ## カード犠牲処理（手札選択UI表示→カード破棄）
 func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dictionary:
 	# UI参照取得
-	var ui_manager = null
-	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
-		ui_manager = spell_phase_handler_ref.ui_manager
+	var ui_manager = _get_ui_manager()
 
 	if not ui_manager:
 		print("[SpellCreatureSwap] UIManager未設定、カード犠牲スキップ")
