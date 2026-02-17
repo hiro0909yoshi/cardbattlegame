@@ -17,6 +17,30 @@ func _get_ui_manager():
 	return null
 
 
+## CardSelectionServiceへの参照を取得
+func _get_card_selection_service():
+	var ui_mgr = _get_ui_manager()
+	if ui_mgr and ui_mgr.get("card_selection_service"):
+		return ui_mgr.card_selection_service
+	return null
+
+
+## MessageServiceへの参照を取得
+func _get_message_service():
+	var ui_mgr = _get_ui_manager()
+	if ui_mgr and ui_mgr.get("message_service"):
+		return ui_mgr.message_service
+	return null
+
+
+## NavigationServiceへの参照を取得
+func _get_navigation_service():
+	var ui_mgr = _get_ui_manager()
+	if ui_mgr and ui_mgr.get("navigation_service"):
+		return ui_mgr.navigation_service
+	return null
+
+
 # ============ 初期化 ============
 
 func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_handler: Object = null) -> void:
@@ -372,36 +396,39 @@ func _select_tile(tile_indices: Array, message: String) -> int:
 func _select_hand_creature(creatures: Array, message: String) -> int:
 	# UI参照取得
 	var ui_manager = _get_ui_manager()
+	var css = _get_card_selection_service()
 
-	if not ui_manager:
+	if not ui_manager or not css:
 		print("[SpellCreatureSwap] UIManager未設定、最初の候補を使用")
 		return 0 if creatures.size() > 0 else -1
-	
+
 	# フィルターをクリーチャーのみに設定（スペル/アイテムはグレーアウト）
-	ui_manager.card_selection_filter = ""
-	
+	css.card_selection_filter = ""
+
 	# メッセージ表示
 	if ui_manager.has_method("set_message"):
 		ui_manager.set_message(message)
-	
+
 	# カード選択UIを表示
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
-		ui_manager.show_card_selection_ui_mode(player, "summon")
-	
+		css.show_card_selection_ui_mode(player, "summon")
+
 	# 戻るボタンを登録（キャンセル可能に）
-	ui_manager.enable_navigation(
-		Callable(),  # 決定なし
-		func(): ui_manager.emit_signal("card_selected", -1)
-	)
-	
+	var nav = _get_navigation_service()
+	if nav:
+		nav.enable_navigation(
+			Callable(),  # 決定なし
+			func(): css.card_selected.emit(-1)
+		)
+
 	# カード選択を待つ
-	var selected_index = await ui_manager.card_selected
-	
+	var selected_index = await css.card_selected
+
 	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-	
+	css.hide_card_selection_ui()
+
 	# 選択されたカードがクリーチャーか確認
 	if selected_index >= 0:
 		var hand = card_system_ref.get_all_cards_for_player(current_player_id)
@@ -412,7 +439,7 @@ func _select_hand_creature(creatures: Array, message: String) -> int:
 				for i in range(creatures.size()):
 					if creatures[i].get("id") == selected_card.get("id"):
 						return i
-	
+
 	return -1
 
 
@@ -449,58 +476,59 @@ func _requires_card_sacrifice(card_data: Dictionary) -> bool:
 func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dictionary:
 	# UI参照取得
 	var ui_manager = _get_ui_manager()
+	var css = _get_card_selection_service()
+	var msg = _get_message_service()
 
-	if not ui_manager:
+	if not ui_manager or not css:
 		print("[SpellCreatureSwap] UIManager未設定、カード犠牲スキップ")
 		return {"cancelled": false, "sacrifice_card": {}}
 
-	# デバッグ: ui_manager の型を確認
-	print("[DEBUG] ui_manager type: %s, has excluded_card_id: %s" % [ui_manager.get_class(), "excluded_card_id" in ui_manager])
-
 	# 手札選択UIを表示（犠牲モード）
-	if ui_manager.phase_display:
-		ui_manager.show_action_prompt("犠牲にするカードを選択")
-	ui_manager.card_selection_filter = ""
+	if msg:
+		msg.show_action_prompt("犠牲にするカードを選択")
+	css.card_selection_filter = ""
 
 	# 召喚カードを除外（型を String に統一）
 	var card_id = summon_creature.get("id", -1)
-	ui_manager.excluded_card_id = str(card_id) if card_id != -1 else ""
+	css.excluded_card_id = str(card_id) if card_id != -1 else ""
 	var player = player_system_ref.players[player_id]
-	ui_manager.show_card_selection_ui_mode(player, "sacrifice")
-	
+	css.show_card_selection_ui_mode(player, "sacrifice")
+
 	# 戻るボタンを登録（キャンセル可能に）
-	ui_manager.enable_navigation(
-		Callable(),  # 決定なし
-		func(): ui_manager.emit_signal("card_selected", -1)
-	)
-	
+	var nav = _get_navigation_service()
+	if nav:
+		nav.enable_navigation(
+			Callable(),  # 決定なし
+			func(): css.card_selected.emit(-1)
+		)
+
 	# カード選択を待つ
-	var selected_index = await ui_manager.card_selected
-	
+	var selected_index = await css.card_selected
+
 	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-	
+	css.hide_card_selection_ui()
+
 	# 除外IDをリセット
-	ui_manager.excluded_card_id = ""
-	
+	css.excluded_card_id = ""
+
 	# 選択されたカードを取得
 	if selected_index < 0:
 		return {"cancelled": true, "sacrifice_card": {}}
-	
+
 	var hand = card_system_ref.get_all_cards_for_player(player_id)
 	if selected_index >= hand.size():
 		return {"cancelled": true, "sacrifice_card": {}}
-	
+
 	var sacrifice_card = hand[selected_index]
-	
+
 	# 召喚するクリーチャーと同じカードは犠牲にできない
 	if sacrifice_card.get("id") == summon_creature.get("id"):
-		if ui_manager.phase_display:
-			ui_manager.show_toast("召喚するカードは犠牲にできません")
+		if msg:
+			msg.show_toast("召喚するカードは犠牲にできません")
 		return {"cancelled": true, "sacrifice_card": {}}
-	
+
 	# カードを破棄
 	card_system_ref.discard_card(player_id, selected_index, "sacrifice")
 	print("[SpellCreatureSwap] %s を犠牲にしました" % sacrifice_card.get("name", "?"))
-	
+
 	return {"cancelled": false, "sacrifice_card": sacrifice_card}

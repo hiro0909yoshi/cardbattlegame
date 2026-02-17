@@ -237,15 +237,15 @@ func process_card_sacrifice(player_id: int, summon_card_index: int, creature_car
 	# 手札選択UIを表示（召喚するカード以外を選択可能）
 	if _message_service:
 		_message_service.show_action_prompt("犠牲にするカードを選択")
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		ui_manager.excluded_card_index = summon_card_index
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+		_card_selection_service.excluded_card_index = summon_card_index
 	if _card_selection_service:
 		var player = player_system.players[player_id]
 		_card_selection_service.show_card_selection_ui_mode(player, "sacrifice")
 	
 	# カード選択を待つ
-	var selected_index = await ui_manager.card_selected
+	var selected_index = await _card_selection_service.card_selected
 
 	# 犠牲選択モードを終了
 	is_sacrifice_selecting = false
@@ -255,8 +255,8 @@ func process_card_sacrifice(player_id: int, summon_card_index: int, creature_car
 		_card_selection_service.hide_card_selection_ui()
 	
 	# 除外インデックスをリセット
-	if ui_manager:
-		ui_manager.excluded_card_index = -1
+	if _card_selection_service:
+		_card_selection_service.excluded_card_index = -1
 	
 	# 選択されたカードを取得
 	if selected_index < 0:
