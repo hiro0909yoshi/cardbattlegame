@@ -20,6 +20,10 @@ var card_system
 var ui_manager
 var game_flow_manager
 
+# サービス参照
+var _message_service = null
+var _card_selection_service = null
+
 # === 直接参照（GFM経由を廃止） ===
 var spell_phase_handler = null
 
@@ -54,6 +58,11 @@ func setup_systems(p_system: PlayerSystem, b_system, c_system: CardSystem, ui_sy
 	card_system = c_system
 	ui_manager = ui_system
 	game_flow_manager = gf_manager
+
+	# サービス解決
+	if ui_system:
+		_message_service = ui_system.message_service if ui_system.get("message_service") else null
+		_card_selection_service = ui_system.card_selection_service if ui_system.get("card_selection_service") else null
 
 # カードID入力ダイアログを作成
 func create_card_input_dialog():
@@ -220,7 +229,7 @@ func add_card_to_hand(card_id: int):
 				ui_manager.update_player_info_panels()
 			
 			# 現在のフィルター状態を確認
-			var current_filter = ui_manager.card_selection_filter
+			var current_filter = _card_selection_service.card_selection_filter if _card_selection_service else ""
 			print("【デバッグ】現在のフィルター: ", current_filter)
 			
 			# スペルフェーズかどうかは、フィルターが"spell"かで判定
@@ -230,34 +239,34 @@ func add_card_to_hand(card_id: int):
 			if is_spell_phase:
 				# スペルフェーズの場合: フィルターを"spell"に設定（念のため再設定）
 				print("【デバッグ】スペルフェーズ中 - スペルフィルターを適用")
-				ui_manager.card_selection_filter = "spell"
-				print("【デバッグ】フィルター設定後: ", ui_manager.card_selection_filter)
+				if _card_selection_service:
+					_card_selection_service.card_selection_filter = "spell"
+					print("【デバッグ】フィルター設定後: ", _card_selection_service.card_selection_filter)
 			else:
 				# 通常フェーズの場合: フィルターをクリア
 				print("【デバッグ】通常フェーズ - フィルタークリア")
-				if ui_manager.has_method("clear_card_selection_filter"):
-					ui_manager.clear_card_selection_filter()
+				if _card_selection_service:
+					_card_selection_service.clear_card_selection_filter()
 			
 			# 手札表示を更新
-			if ui_manager.hand_display:
-				ui_manager.update_hand_display(current_player.id)
+			if _card_selection_service:
+				_card_selection_service.update_hand_display(current_player.id)
 			
 			# カード選択UIを完全に再初期化
-			if ui_manager.has_method("hide_card_selection_ui"):
-				ui_manager.hide_card_selection_ui()
+			if _card_selection_service:
+				_card_selection_service.hide_card_selection_ui()
 			
 			# 次のフレームで再表示（確実に初期化）
 			await get_tree().process_frame
 			
 			# スペルフェーズならmode="spell"、それ以外はmode="summon"
-			if is_spell_phase and ui_manager.has_method("show_card_selection_ui_mode"):
-				print("【デバッグ】show_card_selection_ui_mode(spell)呼び出し")
-				print("【デバッグ】呼び出し直前のフィルター: ", ui_manager.card_selection_filter)
-				ui_manager.show_card_selection_ui_mode(current_player, "spell")
-				print("【デバッグ】呼び出し直後のフィルター: ", ui_manager.card_selection_filter)
-			elif ui_manager.has_method("show_card_selection_ui"):
-				print("【デバッグ】show_card_selection_ui(summon)呼び出し")
-				ui_manager.show_card_selection_ui(current_player)
+			if _card_selection_service:
+				if is_spell_phase:
+					print("【デバッグ】呼び出し直前のフィルター: ", _card_selection_service.card_selection_filter)
+					_card_selection_service.show_card_selection_ui_mode(current_player, "spell")
+					print("【デバッグ】呼び出し直後のフィルター: ", _card_selection_service.card_selection_filter)
+				else:
+					_card_selection_service.show_card_selection_ui(current_player)
 		
 		emit_signal("debug_action", "add_card", card_id)
 	else:
@@ -573,12 +582,12 @@ func _toggle_tile_display():
 	print("表示切替: ", mode_name)
 	
 	# UIに一時表示
-	if ui_manager:
-		var original_text = ui_manager.get_phase_text()
-		ui_manager.set_phase_text("表示: " + mode_name)
+	if _message_service:
+		var original_text = _message_service.get_phase_text()
+		_message_service.set_phase_text("表示: " + mode_name)
 		await get_tree().create_timer(1.0).timeout
-		if ui_manager:
-			ui_manager.set_phase_text(original_text)
+		if _message_service:
+			_message_service.set_phase_text(original_text)
 
 # Sキー: シグナル接続状態を表示
 func _show_signal_connections():
