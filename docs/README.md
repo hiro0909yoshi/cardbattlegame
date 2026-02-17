@@ -126,6 +126,7 @@ docs/
 |-------------|------|
 | [game_system_manager_design.md](design/refactoring/game_system_manager_design.md) | GameSystemManager設計 |
 | [initialization_consolidation_plan.md](design/refactoring/initialization_consolidation_plan.md) | 初期化統合計画（Phase 1-3） |
+| [refactoring_next_steps_2.md](progress/refactoring_next_steps_2.md) | Phase 8 残作業 & Phase 9 計画 |
 
 ### 実装リファレンス
 
