@@ -313,8 +313,8 @@ func _cancel_caster_selection() -> void:
 		ui_manager.disable_navigation()
 	
 	# スペルフェーズに戻る
-	if spell_phase_handler_ref:
-		spell_phase_handler_ref.return_to_spell_selection()
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
+		spell_phase_handler_ref.spell_flow.return_to_spell_selection()
 	end_mystic_phase()
 
 
@@ -389,8 +389,8 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 	if selected_index < 0 or selected_index >= mystic_arts.size():
 		action_menu.hide_menu()
 		# キャンセルされた場合、スペルフェーズに戻る
-		if spell_phase_handler_ref:
-			spell_phase_handler_ref.return_to_spell_selection()
+		if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
+			spell_phase_handler_ref.spell_flow.return_to_spell_selection()
 		end_mystic_phase()
 		return
 	
@@ -764,8 +764,10 @@ func _cancel_mystic_confirmation() -> void:
 	
 	# スペルフェーズに戻る（UI再表示 + ナビゲーション再設定）
 	if spell_phase_handler_ref:
-		spell_phase_handler_ref.current_state = spell_phase_handler_ref.State.WAITING_FOR_INPUT
-		spell_phase_handler_ref.return_to_spell_selection()
+		if spell_phase_handler_ref.spell_state:
+			spell_phase_handler_ref.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
+		if spell_phase_handler_ref.spell_flow:
+			spell_phase_handler_ref.spell_flow.return_to_spell_selection()
 
 
 ## 非同期効果を含むアルカナアーツかどうかを判定
