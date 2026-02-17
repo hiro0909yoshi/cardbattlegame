@@ -39,16 +39,21 @@ UI Component Layer (GlobalActionButtons, GlobalCommentUI, CardSelectionUI, InfoP
 
 ### アンチパターン
 
-**🔴 ServiceLocator化の禁止**:
+**🔴 ServiceLocator化 / バンドルオブジェクト配布の禁止**:
 
 ```gdscript
-# ❌ UIManager が全サービスのファサードになる = 神オブジェクトの第二形態
+# ❌ UIManager が全サービスのファサード = 神オブジェクトの第二形態
 ui_manager.message_service.show_toast()
 
-# ✅ UIContext は依存の束（ロジックゼロ）、必要なサービスだけ注入
-ui_context.message.show_toast()   # 複数サービスが必要な場合
-message_service.show_toast()       # 1つだけ必要な場合（推奨）
+# ❌ UIContext バンドルを広く配る = 疑似ServiceLocator（内部構造が外に露出）
+ui_context.message.show_toast()
+
+# ✅ 必要なサービスだけ個別注入（依存が明示的）
+message_service.show_toast()
 ```
+
+**UIContext クラスは作らない**。各ファイルの `setup()` に必要なサービスだけ渡す。
+引数が4つになっても「このクラスは4つのUI操作に依存している」という事実の見える化。
 
 **🔴 サービス間横断の禁止**:
 
@@ -107,35 +112,19 @@ func _on_card_selection_requested():
 
 ### ターゲットアーキテクチャ
 
-#### UIContext パターン
+#### 個別サービス注入パターン（UIContext 不使用）
 
-```gdscript
-## UIContext — 依存の束（ロジックゼロ）
-class_name UIContext
-extends RefCounted
-
-var navigation: NavigationService
-var message: MessageService
-var card_selection: CardSelectionService
-var info_panel: InfoPanelService
-var player_info: PlayerInfoService
-var ui_layer: CanvasLayer  # UIノード追加用
-```
-
-#### UIManager の最終形
+**原則**: 各ファイルには必要なサービスだけを `setup()` で渡す。バンドルオブジェクトは作らない。
 
 ```
 UIManager（~200行、コーディネーターのみ）
-├─ _ready(): サービス生成 + UIContext 組み立て
+├─ _ready(): サービス生成
 ├─ create_ui(): UIコンポーネントのライフサイクル管理
-└─ get_ui_context(): UIContext を返す
+├─ get_*_service(): 個別サービスのgetter（GSMが配布に使用）
+└─ UIレイヤー管理
 
-UIContext（~20行、RefCounted、ロジックゼロ）
-├─ navigation: NavigationService
-├─ message: MessageService
-├─ card_selection: CardSelectionService
-├─ info_panel: InfoPanelService
-└─ player_info: PlayerInfoService
+GameSystemManager（配布元）
+└─ 各ファイルの setup() に必要なサービスだけ注入
 ```
 
 #### 外部ファイルの参照パターン（最終形）
@@ -144,19 +133,23 @@ UIContext（~20行、RefCounted、ロジックゼロ）
 # ハンドラー → Signal のみ（UIを直接参照しない）
 signal item_filter_configured(filter_config)
 
-# ヘルパー → 必要なサービスだけ注入
+# ヘルパー → 必要なサービスだけ個別注入
 func setup(card_selection: CardSelectionService, navigation: NavigationService):
     _card_selection = card_selection
     _navigation = navigation
 
 # タイル → context に必要なサービスだけ入れる
 func handle_special_action(context: Dictionary):
-    var message = context.get("message_service")
+    var message: MessageService = context.get("message_service")
     await message.show_comment_and_wait("魔法石を獲得！")
 
 # UIコンポーネント → 親サービスへの正当な参照
 func set_navigation_service(nav: NavigationService):
     _navigation = nav
+
+# GFM → コーディネーターとしてサービス個別保持（正当）
+var _message_service: MessageService
+var _navigation_service: NavigationService
 ```
 
 ---
@@ -167,7 +160,7 @@ func set_navigation_service(nav: NavigationService):
 
 | 順番 | Phase | 内容 | 対象ファイル数 | 難易度 |
 |-----|-------|------|-------------|--------|
-| 1 | **8-F** | UIManager 内部分割（4サービス + UIContext） | 1 + 4新規 | **高** |
+| 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** |
 | 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 |
 | 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 |
 | 4 | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 |
@@ -183,11 +176,12 @@ func set_navigation_service(nav: NavigationService):
 
 ---
 
-### 8-F: UIManager 内部分割（4サービス + UIContext）
+### 8-F: UIManager 内部分割（4サービス、個別注入）
 
-**目的**: UIManager を4つの独立サービスに分割し、UIContext で束ねる
+**目的**: UIManager を4つの独立サービスに分割し、GSM が各ファイルに必要なサービスだけ注入
 **リスク**: 高（UIManager の全メソッドを再配置）
-**成果物**: UIManager 1,094行 → UIManager ~200行 + 4サービス + UIContext
+**成果物**: UIManager 1,094行 → UIManager ~200行 + 4サービス
+**注意**: UIContext クラスは作らない。サービスは GSM が個別に注入する。
 
 #### 抽出するサービス
 
@@ -263,10 +257,10 @@ func set_navigation_service(nav: NavigationService):
 
 #### UIManager に残る責務（~200行）
 
-- `_ready()`: サービス生成、UIContext 組み立て
+- `_ready()`: サービス生成
 - `create_ui()`: UIレイヤー作成、コンポーネント初期化
 - `connect_ui_signals()`: コンポーネント間シグナル接続
-- `get_ui_context()`: UIContext を返す
+- `get_navigation_service()`, `get_message_service()` 等: 個別サービスgetter（GSM用）
 - PlayerInfoPanel 管理（`update_player_info_panels()`, `set_current_turn()`）
 - UIレイヤー管理（`ui_layer`）
 - DominioOrderUI 管理（8-B 完了後に Signal 化）
@@ -279,8 +273,7 @@ func set_navigation_service(nav: NavigationService):
 - `scripts/ui_services/message_service.gd` — **新規**
 - `scripts/ui_services/card_selection_service.gd` — **新規**
 - `scripts/ui_services/info_panel_service.gd` — **新規**
-- `scripts/ui_services/ui_context.gd` — **新規**
-- `scripts/system_manager/game_system_manager.gd` — UIContext 配布追加
+- `scripts/system_manager/game_system_manager.gd` — 個別サービス注入追加
 
 ---
 
@@ -520,14 +513,14 @@ await _message.show_comment_and_wait("魔法石を獲得！", player_id, true)
 
 | ファイル | 問題 | 修正方針 |
 |---------|------|---------|
-| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更 |
-| **debug_controller.gd** | UIManager 直接参照 | UIContext 注入（デバッグ用途なので許容可） |
-| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | UIContext 注入 |
-| **explanation_mode.gd** | 同上 | UIContext 注入 |
+| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更（CardSelectionService） |
+| **debug_controller.gd** | UIManager 直接参照 | 必要なサービスを個別注入（MessageService, CardSelectionService 等） |
+| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | NavigationService + CardSelectionService 個別注入 |
+| **explanation_mode.gd** | 同上 | NavigationService + CardSelectionService 個別注入 |
 | **cpu_turn_processor.gd** | 3参照 | MessageService + PlayerInfoService 注入 |
 | **lap_system.gd** | 4参照 | MessageService 注入 |
-| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理）|
-| **game_flow_manager.gd** | 20+ | UIContext 経由 + 一部は正当なコーディネーター操作 |
+| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理） |
+| **game_flow_manager.gd** | 20+ | 各サービスを個別保持（コーディネーターとして正当） |
 | **target_ui_helper.gd** | 2 | InfoPanelService 注入 |
 
 ---
