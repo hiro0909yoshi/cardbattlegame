@@ -733,12 +733,6 @@ func set_cpu_movement_evaluator(cpu_movement_evaluator: CPUMovementEvaluator) ->
 	# MovementControllerに参照を渡す
 	if board_system_3d:
 		board_system_3d.set_cpu_movement_evaluator(cpu_movement_evaluator)
-	
-	# SpellPhaseHandlerに参照を渡す
-	if spell_phase_handler:
-		spell_phase_handler.cpu_movement_evaluator = cpu_movement_evaluator
-		if spell_phase_handler.cpu_spell_ai:
-			spell_phase_handler.cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
 # ============================================
 # カメラ制御

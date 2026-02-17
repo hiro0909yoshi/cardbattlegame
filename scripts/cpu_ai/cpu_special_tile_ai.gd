@@ -10,6 +10,7 @@ var game_flow_manager: Node
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_phase_handler = null
+var cpu_spell_ai = null  # CPUSpellAI直接参照（SPHパススルー廃止）
 
 func setup(c_system: CardSystem, p_system: PlayerSystem, b_system: Node, gfm: Node) -> void:
 	card_system = c_system
@@ -311,9 +312,7 @@ func _get_tile_info(tile_index: int) -> Dictionary:
 	return {}
 
 func _get_cpu_spell_ai():
-	if spell_phase_handler and "cpu_spell_ai" in spell_phase_handler:
-		return spell_phase_handler.cpu_spell_ai
-	return null
+	return cpu_spell_ai
 
 func _get_target_selection_helper():
 	if game_flow_manager and "target_selection_helper" in game_flow_manager:

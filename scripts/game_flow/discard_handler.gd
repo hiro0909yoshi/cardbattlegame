@@ -12,6 +12,7 @@ signal discard_ui_prompt_completed(card_index: int)
 var player_system = null
 var card_system = null
 var spell_phase_handler = null
+var cpu_hand_utils = null  # CPU手札ユーティリティ（直接注入）
 
 # CPU判定用
 var player_is_cpu = []
@@ -48,8 +49,8 @@ func check_and_discard_excess_cards(player_id: int = -1):
 	# CPUの場合はレートの低いカードから捨てる（デバッグモードでは無効化）
 	var is_cpu = player_id < player_is_cpu.size() and player_is_cpu[player_id] and not DebugSettings.manual_control_all
 	if is_cpu:
-		if spell_phase_handler and spell_phase_handler.cpu_hand_utils:
-			spell_phase_handler.cpu_hand_utils.discard_excess_cards_by_rate(player_id, GameConstants.MAX_HAND_SIZE)
+		if cpu_hand_utils:
+			cpu_hand_utils.discard_excess_cards_by_rate(player_id, GameConstants.MAX_HAND_SIZE)
 		else:
 			# フォールバック: 従来の方法
 			card_system.discard_excess_cards_auto(player_id, GameConstants.MAX_HAND_SIZE)

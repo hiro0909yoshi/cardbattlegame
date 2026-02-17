@@ -45,11 +45,6 @@ func _sync_references() -> void:
 		card_sacrifice_helper = spell_phase_handler.spell_systems.card_sacrifice_helper
 	spell_mystic_arts = spell_phase_handler.spell_mystic_arts
 
-	# ★ NEW: GameSystemManager の参照ではなく SpellPhaseHandler の参照を使用
-	# （SpellPhaseHandler が GameSystemManager から set_cpu_spell_ai() で設定）
-	cpu_spell_ai = spell_phase_handler.cpu_spell_ai
-	cpu_mystic_arts_ai = spell_phase_handler.cpu_mystic_arts_ai
-
 
 func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
 	cpu_spell_ai = ai

@@ -838,6 +838,7 @@ func _initialize_phase1a_handlers() -> void:
 	# CPUSpecialTileAIにspell_phase_handler参照を設定
 	if game_flow_manager.cpu_special_tile_ai:
 		game_flow_manager.cpu_special_tile_ai.spell_phase_handler = spell_phase_handler
+		game_flow_manager.cpu_special_tile_ai.cpu_spell_ai = cpu_spell_ai
 
 	# 注: TutorialManagerはgame_3d.gdに存在し、spell_phase_handlerから
 	# game_3d.tutorial_manager経由でアクセスするため、ここでの注入は不要
@@ -876,6 +877,7 @@ func _initialize_phase1a_handlers() -> void:
 	var discard_handler = DiscardHandlerClass.new()
 	game_flow_manager.add_child(discard_handler)
 	discard_handler.setup(player_system, card_system, spell_phase_handler, player_is_cpu)
+	discard_handler.cpu_hand_utils = cpu_hand_utils  # CPU手札ユーティリティ直接注入（SPHパススルー廃止）
 	game_flow_manager.discard_handler = discard_handler
 
 	# Phase 6-C: DiscardHandler UI Signal接続
@@ -1129,17 +1131,16 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if not cpu_ai_context:
 		_initialize_cpu_ai_systems()
 
-	# SpellPhaseHandler に CPU AI 参照を設定
-	spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
-	spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
-	spell_phase_handler.set_cpu_hand_utils(cpu_hand_utils)
-
 	# Step 4.5: CPUSpellPhaseHandler を初期化（spell_phase_handlerの初期化後）
 	_initialize_cpu_spell_phase_handler(spell_phase_handler)
+
+	# CPU AI 参照を CPUSpellPhaseHandler に直接注入（SPH パススルー廃止）
+	if cpu_spell_phase_handler:
+		cpu_spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
+		cpu_spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
+
 	if cpu_spell_ai and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
 		cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
-	if cpu_movement_evaluator and cpu_spell_ai:
-		cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
 	# Step 4.6: CPUSpellAIContainer を初期化（Phase 5-2）
 	_initialize_cpu_spell_ai_container()
@@ -1215,8 +1216,12 @@ func _initialize_cpu_movement_evaluator() -> void:
 		cpu_ai_handler
 	)
 
-	# GameFlowManagerに設定
+	# GameFlowManagerに設定（board_system_3d へのパス）
 	game_flow_manager.set_cpu_movement_evaluator(cpu_movement_evaluator)
+
+	# cpu_spell_ai に直接注入（SPHパススルー廃止）
+	if cpu_spell_ai:
+		cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
 	print("[CPUMovementEvaluator] 初期化完了（距離計算は遅延実行）")
 
