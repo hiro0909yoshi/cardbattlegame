@@ -223,8 +223,9 @@ static func hide_creature_info_panel(handler) -> void:
 
 ## handlerからui_managerを取得
 static func _get_ui_manager(handler):
-	if handler.has_method("get") and handler.get("ui_manager"):
+	if "ui_manager" in handler and handler.ui_manager:
 		return handler.ui_manager
-	elif "ui_manager" in handler:
-		return handler.ui_manager
+	# Phase 6: SpellPhaseHandler は spell_ui_manager 経由でアクセス
+	if "spell_ui_manager" in handler and handler.spell_ui_manager:
+		return handler.spell_ui_manager._ui_manager
 	return null
