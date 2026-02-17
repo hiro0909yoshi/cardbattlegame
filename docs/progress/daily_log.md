@@ -34,17 +34,38 @@
 - GameSystemManager に `_connect_item_phase_signals()` 接続メソッド追加
 - **結果**: 7/8ハンドラーがUI完全分離、累計37 UI Signals
 
+### ✅ Phase 8-I: タイル系 ui_manager → サービス移行
+
+- `special_tile_system.gd`: `_create_tile_context()` にサービス4種（message_service, navigation_service, card_selection_service, ui_layer）追加
+- タイル6ファイル移行:
+  - `special_base_tile.gd`: _ui_manager → _message_service **完全移行**
+  - `magic_tile.gd`: _ui_manager → _message_service + _ui_layer **完全移行**
+  - `magic_stone_tile.gd`: _message_service + _ui_layer 追加（update_player_info_panels 2箇所は _ui_manager 暫定残し）
+  - `card_buy_tile.gd`: _message_service + _ui_layer + _card_selection_service 追加（update_player_info_panels 1箇所は暫定残し）
+  - `card_give_tile.gd`: _ui_manager → 3サービス **完全移行**
+  - `branch_tile.gd`: _ui_manager → _message_service + _navigation_service **完全移行**
+
+### ✅ Phase 8-K: 移動系 ui_manager → サービス移行
+
+- `movement_direction_selector.gd`: ui_manager → _message_service + _navigation_service **完全移行**
+- `movement_branch_selector.gd`: 同パターン **完全移行**
+- `movement_controller.gd`: `var ui_manager = null` 完全削除、`set_services()` に変更
+- `board_system_3d.gd`: `set_movement_controller_ui_manager()` → `set_movement_controller_services()` に変更
+- `game_flow_manager.gd`: 呼び出し元を`ui_manager.message_service, ui_manager.navigation_service` に変更
+
 ### 📊 本日の成果
 
 | 指標 | 値 |
 |------|-----|
-| コミット数 | 5 |
+| コミット数 | 7 |
 | 新規 Signal | 4（累計 37） |
 | ハンドラー UI分離 | 7/8 完了 |
-| 新規サービスファイル | 4（ui_services/） |
+| タイル系ファイル移行 | 6/6 完了 |
+| 移動系ファイル移行 | 3/3 完了 |
+| UIManager完全削除 | 9/54ファイル |
 
 ### 📋 次のステップ
 
-- Phase 8-H: UIコンポーネント逆参照除去（hand_display, dominio_order_ui 等）
-- Phase 8-B: DominioCommandHandler Signal化（最重量級、50+箇所）
+- Phase 8-G（残り）: card_selection_handler, land_action_helper, card_sacrifice_helper の複雑な移行
+- Phase 8-B: DominioCommandHandler Signal化（最重量級、90+ 参照）
 - Phase 8-C: BankruptcyHandler パネル直接生成の分離

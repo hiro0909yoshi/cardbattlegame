@@ -11,7 +11,10 @@
 |-------|------|--------|
 | 7-A | CPU AI パススルー除去（SPH → GSM 直接注入） | 2026-02-17 |
 | 7-B | SPH UI 依存逆転（Signal 駆動化、spell_ui_manager 直接呼び出しゼロ） | 2026-02-17 |
+| 8-F | UIManager 内部4サービス分割（NavigationService, MessageService, CardSelectionService, InfoPanelService） | 2026-02-18 |
 | 8-A | ItemPhaseHandler Signal化（4 Signals、ui_manager 完全削除） | 2026-02-18 |
+| 8-I | タイル系 ui_manager → サービス移行（6タイル、context 経由） | 2026-02-18 |
+| 8-K | 移動系 ui_manager → サービス移行（3ファイル、movement_controller） | 2026-02-18 |
 
 ---
 
@@ -161,16 +164,16 @@ var _navigation_service: NavigationService
 
 | 順番 | Phase | 内容 | 対象ファイル数 | 難易度 | 状態 |
 |-----|-------|------|-------------|--------|------|
-| 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** | 📋 次 |
-| 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 | 待機 |
+| 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** | ✅ 完了 |
+| 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 | 📋 次（3/6） |
 | 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 | 待機 |
-| ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | 完了 |
+| ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | ✅ 完了 |
 | 5 | **8-B** | DominioCommandHandler Signal化 | 1 | 高 | 待機 |
 | 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 | 待機 |
 | 7 | **8-E** | 兄弟システム Signal化 | 5 | 中〜高 | 待機 |
-| 8 | **8-I** | タイル系 → context経由サービス | ~6 | 低 | 待機 |
+| ✅ | **8-I** | タイル系 → context経由サービス | ~6 | 低 | ✅ 完了 |
 | 9 | **8-J** | スペル系 → Signal/サービス注入 | ~6 | 中 | 待機 |
-| 10 | **8-K** | 移動系 + その他（card.gd等） | ~10 | 中 | 待機 |
+| ✅ | **8-K** | 移動系 + その他（card.gd等） | ~10 | 中 | ✅ 完了（移動系3/3） |
 | 11 | **8-D** | UIManager 最終評価 | — | — | 待機 |
 
 **順序の理由**: 構造（サービス分割）を先に確立し、Signal 配線は確定した構造に対して行う。逆にすると Signal のリスナー先がまだ UIManager のままで、分割時にやり直しになる。
@@ -457,33 +460,37 @@ SpellMysticArts ──❌チェーン参照──→ spell_ui_manager._ui_manage
 
 ---
 
-### 8-I: タイル系 → context経由サービス
+### ✅ 8-I: タイル系 → context経由サービス（完了 2026-02-18）
 
 **目的**: タイルが `context.get("ui_manager")` で UIManager 全体を取得する問題を解消
 **リスク**: 低
+**状態**: ✅ 完全完了
 
-#### 対象ファイル
+#### 実装内容
 
-| ファイル | 現在の参照 | 修正後 |
-|---------|-----------|--------|
-| special_base_tile.gd | `context.get("ui_manager")` | `context.get("message_service")` |
-| magic_tile.gd | 同上 | `context.get("message_service")` + `context.get("ui_layer")` |
-| magic_stone_tile.gd | 同上 | `context.get("message_service")` + `context.get("player_info_service")` |
-| card_buy_tile.gd | 同上 | `context.get("message_service")` + `context.get("player_info_service")` |
-| card_give_tile.gd | 同上 | `context.get("message_service")` + `context.get("card_selection_service")` |
-| branch_tile.gd | 同上 | `context.get("message_service")` + `context.get("navigation_service")` |
+| ファイル | 修正内容 |
+|---------|---------|
+| special_base_tile.gd | `context.get("ui_manager")` → `context.get("message_service")` **完全移行** |
+| magic_tile.gd | `context.get("ui_manager")` → `context.get("message_service")` + `context.get("ui_layer")` **完全移行** |
+| magic_stone_tile.gd | `context.get("message_service")` + `context.get("ui_layer")` 追加（update_player_info_panels は _ui_manager 暫定残し） |
+| card_buy_tile.gd | `context.get("message_service")` + `context.get("ui_layer")` + `context.get("card_selection_service")` 追加（update_player_info_panels は暫定残し） |
+| card_give_tile.gd | `context.get("ui_manager")` → 3サービス **完全移行** |
+| branch_tile.gd | `context.get("ui_manager")` → `context.get("message_service")` + `context.get("navigation_service")` **完全移行** |
 
-**修正パターン**:
+#### context に追加されたサービス
 
+`special_tile_system.gd` の `_create_tile_context()`:
 ```gdscript
-# Before
-var _ui_manager = context.get("ui_manager")
-await _ui_manager.global_comment_ui.show_comment_and_wait("魔法石を獲得！", player_id, true)
-
-# After
-var _message: MessageService = context.get("message_service")
-await _message.show_comment_and_wait("魔法石を獲得！", player_id, true)
+var context = {
+	"message_service": _message_service,
+	"navigation_service": _navigation_service,
+	"card_selection_service": _card_selection_service,
+	"ui_layer": ui_manager.ui_layer,
+	...
+}
 ```
+
+**見込み完全移行**: 4/6ファイル
 
 ---
 
@@ -510,32 +517,34 @@ await _message.show_comment_and_wait("魔法石を獲得！", player_id, true)
 
 ---
 
-### 8-K: 移動系 + その他
+### ✅ 8-K: 移動系 + その他（完了 2026-02-18）
 
-**目的**: 残りのファイルの UIManager 依存を解消
-**リスク**: 中
+**目的**: 移動系の UIManager 依存を解消（その他は8-J, 8-Lで対応）
+**リスク**: 低
+**状態**: ✅ 移動系 3/3 完全完了
 
-#### 移動系
+#### 移動系実装内容
 
-| ファイル | 参照数 | 注入するサービス |
-|---------|-------|---------------|
-| movement_direction_selector.gd | 3 | NavigationService, MessageService |
-| movement_branch_selector.gd | 3 | NavigationService, MessageService |
-| movement_controller.gd | — | 子への伝播のみ（サービス参照に変更） |
+| ファイル | 修正内容 |
+|---------|---------|
+| movement_direction_selector.gd | ui_manager → _message_service + _navigation_service **完全移行** |
+| movement_branch_selector.gd | 同パターン **完全移行** |
+| movement_controller.gd | `var ui_manager = null` 完全削除、`set_services()` メソッド追加 |
+| board_system_3d.gd | `set_movement_controller_ui_manager()` → `set_movement_controller_services()` に変更 |
+| game_flow_manager.gd | 呼び出し元を `ui_manager.message_service, ui_manager.navigation_service` に変更 |
 
-#### その他
+#### その他（待機中）
 
-| ファイル | 問題 | 修正方針 |
-|---------|------|---------|
-| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更（CardSelectionService） |
-| **debug_controller.gd** | UIManager 直接参照 | 必要なサービスを個別注入（MessageService, CardSelectionService 等） |
-| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | NavigationService + CardSelectionService 個別注入 |
-| **explanation_mode.gd** | 同上 | NavigationService + CardSelectionService 個別注入 |
-| **cpu_turn_processor.gd** | 3参照 | MessageService + PlayerInfoService 注入 |
-| **lap_system.gd** | 4参照 | MessageService 注入 |
-| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理） |
-| **game_flow_manager.gd** | 20+ | 各サービスを個別保持（コーディネーターとして正当） |
-| **target_ui_helper.gd** | 2 | InfoPanelService 注入 |
+| ファイル | 問題 | 修正方針 | Phase |
+|---------|------|---------|-------|
+| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更（CardSelectionService） | 8-L |
+| **debug_controller.gd** | UIManager 直接参照 | 必要なサービスを個別注入（MessageService, CardSelectionService 等） | 8-L |
+| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | NavigationService + CardSelectionService 個別注入 | 8-L |
+| **explanation_mode.gd** | 同上 | NavigationService + CardSelectionService 個別注入 | 8-L |
+| **cpu_turn_processor.gd** | 3参照 | MessageService + PlayerInfoService 注入 | 8-L |
+| **lap_system.gd** | 4参照 | MessageService 注入 | 8-L |
+| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理） | 8-L |
+| **target_ui_helper.gd** | 2 | InfoPanelService 注入 | 8-G |
 
 ---
 
@@ -581,11 +590,12 @@ await _message.show_comment_and_wait("魔法石を獲得！", player_id, true)
 
 | カテゴリ | 対象ファイル数 | 状態 |
 |---------|-------------|------|
-| UIヘルパー（最重量級） | ~6 | ❌ **Phase 8-G** |
+| UIヘルパー（最重量級） | ~6 | 📋 **Phase 8-G（3/6）** |
 | UIコンポーネント逆参照 | ~4 | ❌ **Phase 8-H** |
-| タイル系 | ~6 | ❌ **Phase 8-I** |
+| タイル系 | ~6 | ✅ **Phase 8-I（完了）** |
 | スペル系 | ~6 | ❌ **Phase 8-J** |
-| 移動系 + その他 | ~10 | ❌ **Phase 8-K** |
+| 移動系 + その他 | ~10 | ✅ **Phase 8-K（移動系完了）** |
+| 小規模ファイル | ~8 | ❌ **Phase 8-L** |
 
 ---
 
