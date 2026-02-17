@@ -329,6 +329,27 @@ func _build_spell_context() -> Dictionary:
 # Signal接続（Phase 6-A: UI層分離）
 # =============================================================================
 
+# === SpellPhaseHandler Signal Listeners ===
+
+func _on_human_spell_phase_started(_player_id: int, hand_data: Array, magic_power: int) -> void:
+	initialize_spell_phase_ui()
+	show_spell_phase_buttons()
+	_setup_spell_selection_navigation()
+	show_spell_selection_ui(hand_data, magic_power)
+
+
+# === SpellFlowHandler Signal接続 ===
+
+## SpellPhaseHandler の UI Signal を接続
+func connect_spell_phase_handler_signals(sph) -> void:
+	if not sph:
+		push_error("[SpellUIManager] spell_phase_handler が null です")
+		return
+
+	if not sph.human_spell_phase_started.is_connected(_on_human_spell_phase_started):
+		sph.human_spell_phase_started.connect(_on_human_spell_phase_started)
+
+
 ## SpellFlowHandler の UI Signal を接続
 func connect_spell_flow_signals(spell_flow_handler) -> void:
 	if not spell_flow_handler:

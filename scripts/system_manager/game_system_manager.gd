@@ -1122,6 +1122,13 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		print("[SpellUIManager] 初期化完了")
 
+		# === Phase 7-B: SpellPhaseHandler の UI Signal を接続
+		spell_phase_handler.spell_ui_manager.connect_spell_phase_handler_signals(spell_phase_handler)
+		print("[GameSystemManager] SpellPhaseHandler UI Signal 接続完了")
+
+		# spell_cast_notification_ui を SPH に設定（外部システムが参照するため）
+		spell_phase_handler.spell_cast_notification_ui = spell_phase_handler.spell_ui_manager.get_spell_cast_notification_ui()
+
 		# === Phase 6-A: SpellFlowHandler の UI Signal を接続（SpellUIManager 初期化後）
 		if spell_phase_handler.spell_flow:
 			spell_phase_handler.spell_ui_manager.connect_spell_flow_signals(spell_phase_handler.spell_flow)

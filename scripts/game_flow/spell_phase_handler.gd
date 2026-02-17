@@ -13,6 +13,8 @@ signal spell_used(spell_card: Dictionary)
 signal target_selection_required(spell_card: Dictionary, target_type: String)
 @warning_ignore("unused_signal")  # SpellTargetSelectionHandler で emit されている（spell_target_selection_handler.gd:271,303）
 signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了時
+@warning_ignore("unused_signal")  # SpellUIManager で listen される
+signal human_spell_phase_started(player_id: int, hand_data: Array, magic_power: int)
 
 ## 参照
 ## （状態変数は SpellStateHandler に移行済み - Phase 3-A Day 9）
@@ -282,18 +284,6 @@ func try_handle_card_selection(card_index: int) -> bool:
 	return false
 	
 
-# ============ アルカナアーツシステム対応（新規追加）============
-
-# ============ UIボタン管理 ============
-
-# ============ 発動通知UI ============
-
-## 発動通知UIを初期化（内部）
-func _initialize_spell_cast_notification_ui():
-	if spell_ui_manager:
-		spell_ui_manager.initialize_spell_cast_notification_ui()
-		spell_cast_notification_ui = spell_ui_manager.get_spell_cast_notification_ui()
-
 ## カード選択ハンドラーを初期化
 func _initialize_card_selection_handler(ui_mgr = null):
 	if card_selection_handler:
@@ -346,12 +336,6 @@ func _is_lands_required_disabled() -> bool:
 	return false
 
 
-## 手札更新時にボタン位置を再計算（グローバルボタンは自動配置のため空実装）
-func _on_hand_updated_for_buttons():
-	# グローバルボタンに移行したため、手動での位置更新は不要
-	pass
-
-
 # =============================================================================
 # CPUバトルポリシー取得
 # =============================================================================
@@ -363,30 +347,18 @@ func _get_cpu_battle_policy():
 	return null
 
 
-## 人間プレイヤー向けスペルフェーズUI初期化
+## 人間プレイヤー向けスペルフェーズUI初期化（Signal駆動）
 func _initialize_human_player_ui() -> void:
-	"""
-	人間プレイヤー向けスペルフェーズのUI初期化
+	if not spell_state:
+		push_error("[SPH] spell_state が見つかりません")
+		return
 
-	待機ロジック削除に伴い、UI初期化ロジックを分離
-	シグナル駆動で自動的にフェーズが進行する
-	"""
-	# UI初期化
-	if spell_ui_manager:
-		spell_ui_manager.initialize_spell_phase_ui()
-		spell_ui_manager.show_spell_phase_buttons()
-		spell_ui_manager._setup_spell_selection_navigation()
-	else:
-		push_error("[SPH] spell_ui_manager が初期化されていません")
+	var player_id = spell_state.current_player_id
+	var hand_data = card_system.get_all_cards_for_player(player_id) if card_system else []
+	var magic_power = 0
+	if player_system:
+		var player = player_system.players[player_id] if player_id >= 0 and player_id < player_system.players.size() else null
+		if player:
+			magic_power = player.magic_power
 
-	# CardSelectionUI を表示
-	if spell_ui_manager and spell_state:
-		var hand_data = card_system.get_all_cards_for_player(spell_state.current_player_id) if card_system else []
-		var magic_power = 0
-		if player_system and spell_state:
-			var player = player_system.players[spell_state.current_player_id] if spell_state.current_player_id >= 0 and spell_state.current_player_id < player_system.players.size() else null
-			if player:
-				magic_power = player.magic_power
-		spell_ui_manager.show_spell_selection_ui(hand_data, magic_power)
-	else:
-		push_error("[SPH] spell_ui_manager または spell_state が初期化されていません")
+	human_spell_phase_started.emit(player_id, hand_data, magic_power)
