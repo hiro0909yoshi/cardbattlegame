@@ -353,6 +353,10 @@ func _initialize_human_player_ui() -> void:
 		push_error("[SPH] spell_state が見つかりません")
 		return
 
+	# カメラを手動モードに設定（ドラッグ移動・タップ選択を有効化）
+	if board_system:
+		board_system.enable_manual_camera()
+
 	var player_id = spell_state.current_player_id
 	var hand_data = card_system.get_all_cards_for_player(player_id) if card_system else []
 	var magic_power = 0
