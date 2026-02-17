@@ -1,169 +1,181 @@
 # リファクタリング次ステップ
 
-**最終更新**: 2026-02-17
-**現在のフェーズ**: Phase 7-A/7-B 完了 → 次は Phase 8 へ
+**最終更新**: 2026-02-18
+**現在のフェーズ**: Phase 8 — UIManager 神オブジェクト解消
 
 ---
 
-## ✅ Phase 7-A: CPU AI パススルー除去（SPH） — 完了
+## ✅ 完了済み Phase（サマリー）
 
-**実施日**: 2026-02-17
-**目的**: SpellPhaseHandler が CPU AI の内部構造を知らない状態にする
-
-**実装内容**:
-1. ✅ GSM の `_initialize_spell_phase_subsystems()` から SPH 経由の CPU AI 設定を削除
-2. ✅ CPUSpellPhaseHandler へ直接注入（`set_cpu_spell_ai()`, `set_cpu_mystic_arts_ai()` 使用）
-3. ✅ CPUSpecialTileAI へ `cpu_spell_ai` 直接注入（`spell_phase_handler.cpu_spell_ai` アクセス廃止）
-4. ✅ DiscardHandler へ `cpu_hand_utils` 直接注入（`spell_phase_handler.cpu_hand_utils` アクセス廃止）
-5. ✅ GSM の `_initialize_cpu_movement_evaluator()` で `cpu_spell_ai.set_movement_evaluator()` 直接呼び出し
-6. ✅ GFM の `set_cpu_movement_evaluator()` から SPH 経由の設定を削除
-
-**修正ファイル** (5ファイル):
-- ✅ `scripts/system_manager/game_system_manager.gd` — 注入先変更（直接注入化）
-- ✅ `scripts/game_flow_manager.gd` — `set_cpu_movement_evaluator()` 簡素化
-- ✅ `scripts/cpu_ai/cpu_spell_phase_handler.gd` — `_sync_references()` から SPH 参照削除
-- ✅ `scripts/cpu_ai/cpu_special_tile_ai.gd` — `cpu_spell_ai` 直接参照、`_get_cpu_spell_ai()` 簡素化
-- ✅ `scripts/game_flow/discard_handler.gd` — `cpu_hand_utils` 直接参照
-
-**変更前**:
-```
-GSM → SPH(保持) → CPUSpellPhaseHandler(読み取り)
-```
-
-**変更後** ✅:
-```
-GSM → CPUSpellPhaseHandler(直接保持)
-GSM → CPUSpecialTileAI/DiscardHandler(直接保持)
-SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
-```
-
-**成果**:
-- チェーンアクセス完全廃止
-- 初期化フロー明確化
-- null参照チェック強化
-
----
-
-## ✅ Phase 7-B: SPH UI 依存逆転 — 完了
-
-**実施日**: 2026-02-17
-**目的**: SPH → SpellUIManager の直接呼び出しを Signal 駆動に変更
-
-**実装内容**:
-1. ✅ SPH に `human_spell_phase_started` Signal 追加
-2. ✅ `_initialize_human_player_ui()` を Signal emit に変更（直接呼び出し廃止）
-3. ✅ SpellUIManager に `_on_human_spell_phase_started()` リスナー追加
-4. ✅ SpellUIManager に `connect_spell_phase_handler_signals()` 接続メソッド追加
-5. ✅ GSM で Signal 接続 + `spell_cast_notification_ui` null バグ修正
-6. ✅ デッドコード削除: `_initialize_spell_cast_notification_ui()`, `_on_hand_updated_for_buttons()`
-
-**修正ファイル** (3ファイル):
-- ✅ `scripts/game_flow/spell_phase_handler.gd` — Signal追加、emit化、デッドコード削除
-- ✅ `scripts/game_flow/spell_ui_manager.gd` — リスナー追加、接続メソッド追加
-- ✅ `scripts/system_manager/game_system_manager.gd` — Signal接続、null バグ修正
-
-**設計判断**:
-- `show_spell_cast_notification()` は委譲メソッドとして残置（5+箇所の外部 await 呼び出しのため Signal 変換は過剰）
-- `spell_ui_manager` 変数は残置（25+箇所の外部参照のため除去不可）
+| Phase | 内容 | 実施日 |
+|-------|------|--------|
+| 7-A | CPU AI パススルー除去（SPH → GSM 直接注入） | 2026-02-17 |
+| 7-B | SPH UI 依存逆転（Signal 駆動化、spell_ui_manager 直接呼び出しゼロ） | 2026-02-17 |
 
 ---
 
 ## Phase 8: UIManager 神オブジェクト解消
 
-### 概要
+### 現状分析
 
-**目的**: UIManager を分割し、各 UI コンポーネントの責務を明確化。同時に未 Signal 化のハンドラーを Signal 駆動に移行。
+**UIManager**: 1,093行、28個のUIコンポーネント管理、63ファイルが参照する神オブジェクト
 
-**現状の UIManager**:
-- 神オブジェクト化（大量のメソッド・プロパティ）
-- 複数のハンドラーが直接参照・直接操作
+| 未対応ハンドラー | 行数 | ui_manager 呼び出し数 | 難易度 |
+|----------------|------|---------------------|--------|
+| ItemPhaseHandler | 769行 | ~11箇所 | **低** |
+| DominioCommandHandler | 1,243行 | **50箇所以上** | **高** |
+| BankruptcyHandler | 488行 | 0箇所（Signal済み）、Panel直接生成3箇所 | **低** |
+
+---
 
 ### 8-A: ItemPhaseHandler Signal 駆動化
 
-**現状**: `ui_manager` を直接参照し、手札表示・カードフィルター・カード選択UIを直接操作
-**目標**: DicePhaseHandler/TollPaymentHandler と同様の Signal 駆動パターンに移行
+**目的**: ItemPhaseHandler から `ui_manager` 直接参照を削除し、Signal 駆動に移行
+**リスク**: 低（呼び出し箇所が少なく、パターンが明確）
+
+#### ui_manager 呼び出し一覧と変換方針
+
+| 分類 | 箇所 | 現在の呼び出し | Signal 変換方針 |
+|------|------|---------------|----------------|
+| フィルター設定 | L267-299 | `ui_manager.blocked_item_types = ...` | Signal: `item_filter_configured(filter_config)` |
+| | | `ui_manager.card_selection_filter = ...` | （上記 Signal にまとめる） |
+| | | `ui_manager.assist_target_elements = ...` | （上記 Signal にまとめる） |
+| 手札表示更新 | L302-305 | `ui_manager.hand_display.refresh()` | Signal: `item_hand_display_requested(player_id)` |
+| | | `ui_manager.update_hand_display(player_id)` | （上記にまとめる） |
+| カード選択UI | L308-310 | `ui_manager.card_selection_ui.show_selection(...)` | Signal: `item_selection_ui_shown(hand_data, config)` |
+| フィルタークリア | L470-477 | `ui_manager.card_selection_filter = ""` 等 | Signal: `item_filter_cleared()` |
+| | | `ui_manager.blocked_item_types = []` | （上記にまとめる） |
+| | | `ui_manager.update_hand_display(player_id)` | （上記にまとめる） |
+
+**追加修正**:
+- `start_item_phase()` に `board_system.enable_manual_camera()` 追加（カメラ漏れ修正）
+
+**見込み Signal 数**: ~4個
+**対象ファイル**:
+- `scripts/game_flow/item_phase_handler.gd` — Signal 追加、ui_manager 呼び出し除去
+- `scripts/ui_manager.gd` — Signal リスナー追加
+- `scripts/system_manager/game_system_manager.gd` — Signal 接続
+
+---
 
 ### 8-B: DominioCommandHandler Signal 駆動化
 
-**現状**: `ui_manager` を直接参照し、ナビゲーション・土地選択・アクションメニューを直接操作
-**目標**: Signal 駆動パターンに移行（最大規模の UI 直接参照）
+**目的**: DominioCommandHandler から `ui_manager` 直接参照を削除
+**リスク**: 高（50箇所以上、状態遷移が複雑）
+
+#### 呼び出し分類と段階的対応
+
+DominioCommandHandler の ui_manager 呼び出しは以下の5グループに分類できる。
+グループ単位で段階的に Signal 化する。
+
+**8-B1: ナビゲーション操作（13箇所）**
+
+| 箇所 | 現在の呼び出し | Signal |
+|------|---------------|--------|
+| L169 | `ui_manager.clear_navigation_saved_state()` | `dominio_navigation_cleared()` |
+| L196-201 | `ui_manager.enable_navigation(confirm, back)` | `dominio_navigation_configured(config)` |
+| L314 | `ui_manager.disable_navigation()` | `dominio_navigation_disabled()` |
+| L471,487,496,505,514 | `ui_manager.enable_navigation(...)` ×5 | （上記 configured を再利用） |
+
+**Signal数**: ~3個
+
+**8-B2: DominioOrderUI 操作（15箇所以上）**
+
+| 箇所 | 現在の呼び出し | Signal |
+|------|---------------|--------|
+| L190-191 | `ui_manager.show_land_selection_mode(...)` | `dominio_land_selection_shown(lands)` |
+| L317-319 | `ui_manager.dominio_order_ui.hide_level_selection()` 等 | `dominio_ui_state_changed(state)` |
+| L340-344 | `ui_manager.hide_dominio_order_ui()` | `dominio_ui_closed()` |
+| L378-380 | 地形選択→アクション選択切り替え | `dominio_ui_state_changed(state)` |
+| L400-441 | `ui_manager.show_action_menu()` 等 | （上記にまとめる） |
+| L626-651 | レベルボタンハイライト、選択確定 | `dominio_level_ui_updated(level_data)` |
+
+**Signal数**: ~4個
+
+**8-B3: その他 UI 操作（10箇所以上）**
+
+| 箇所 | 現在の呼び出し | Signal |
+|------|---------------|--------|
+| L154-155 | `ui_manager.phase_display.show_toast(...)` | `dominio_toast_shown(msg)` |
+| L159-165 | ドミニオ開始時 UI 無効化 | `dominio_opened()` |
+| L432-433 | `ui_manager.card_selection_ui.hide_selection()` | `dominio_card_selection_hidden()` |
+| L437 | `ui_manager.hide_all_info_panels()` | `dominio_info_panels_hidden()` |
+| L527-540 | `phase_display.show_action_prompt()` 等 | `dominio_action_prompt_shown(msg)` |
+| L1075 | `ui_manager.update_player_info_panels()` | `dominio_player_info_updated()` |
+| L1088-1115 | `ui_manager.tap_target_manager` | 直接参照注入に変更 |
+| L1207-1218 | `ui_manager.show_comment_and_wait()` | request/completed Signal ペア |
+
+**Signal数**: ~7個
+
+**追加修正**:
+- `open_dominio_order()` に `board_system.enable_manual_camera()` 追加（カメラ漏れ修正）
+
+**見込み Signal 総数**: ~14個
+**対象ファイル**:
+- `scripts/game_flow/dominio_command_handler.gd` — Signal 追加、ui_manager 呼び出し除去
+- `scripts/ui_manager.gd` — Signal リスナー追加
+- `scripts/system_manager/game_system_manager.gd` — Signal 接続
+
+---
 
 ### 8-C: BankruptcyHandler パネル直接生成の分離
 
-**現状**: 破産情報パネルをハンドラー内で直接生成（Panel.new()、Label.new()等）
-**目標**: パネル生成を UI コンポーネント側に移動
+**目的**: `Panel.new()`, `Label.new()` の直接生成をUIコンポーネント側に移動
+**リスク**: 低（Signal 駆動は Phase 6-C で完了済み、パネル生成のみ）
 
-### 8-D: UIManager 分割
+#### 直接生成箇所
 
-**現状の UIManager を分割する候補**:
-- PhaseDisplayManager（フェーズテキスト・トースト・アクションプロンプト）
-- CardSelectionManager（カード選択UI・フィルター・情報パネル）
-- NavigationManager（グローバルボタン・ナビゲーション状態）
-- InfoPanelManager（クリーチャー/スペル/アイテム情報パネル）
+| 行番号 | 生成コード | 用途 |
+|--------|-----------|------|
+| L119 | `Panel.new()` | 破産情報パネル |
+| L150 | `Label.new()` | 現在のEPラベル |
+| L162 | `Label.new()` | 売却後のEPラベル |
 
-**注意**: 8-A/B/C の Signal 駆動化と同時に進行するのが最も効率的
+**方針**:
+1. `BankruptcyInfoPanel` UIコンポーネント（新規）を作成
+2. パネル構築ロジックを移動
+3. BankruptcyHandler は Signal で表示/更新を依頼
 
----
-
-## UI層分離の全体状況
-
-| ハンドラー | Signal駆動 | 状態 | 対象Phase |
-|-----------|-----------|------|----------|
-| SpellFlowHandler | ✅ 11 Signals | 完了（Phase 6-A） | — |
-| MysticArtsHandler | ✅ 5 Signals | 完了（Phase 6-A） | — |
-| DicePhaseHandler | ✅ 8 Signals | 完了（Phase 6-B） | — |
-| TollPaymentHandler | ✅ 2 Signals | 完了（Phase 6-C） | — |
-| DiscardHandler | ✅ 2 Signals | 完了（Phase 6-C） | — |
-| SpellPhaseHandler | ✅ 1 Signal | 完了（Phase 7-B）、show_spell_cast_notification は委譲残置 | — |
-| BankruptcyHandler | ⚠️ 部分的 | パネル直接生成 | Phase 8-C |
-| ItemPhaseHandler | ❌ なし | ui_manager 直接操作多数 | Phase 8-A |
-| DominioCommandHandler | ❌ 最小限 | ui_manager 直接操作多数 | Phase 8-B |
+**対象ファイル**:
+- `scripts/ui_components/bankruptcy_info_panel.gd` — 新規作成
+- `scripts/game_flow/bankruptcy_handler.gd` — パネル生成コード除去、Signal 追加
+- `scripts/system_manager/game_system_manager.gd` — 初期化追加
 
 ---
 
-## CPU AI 参照の全体状況
+### 8-D: UIManager 整理（8-A/B/C 完了後に評価）
 
-| ハンドラー | CPU参照数 | 方式 | 対象Phase |
-|-----------|----------|------|----------|
-| SpellPhaseHandler | 0個 | 直接注入化済み | ✅ 完了（Phase 7-A） |
-| ItemPhaseHandler | 3個 | GSM直接注入済み | 対処済み |
-| MysticArtsHandler | 1個 | SPH経由 | Phase 7-A で連動 |
-| DiscardHandler | 0個 | 直接注入化済み | ✅ 完了（Phase 7-A） |
-| その他 | 0個 | — | 対処不要 |
+**目的**: 8-A/B/C 完了後に UIManager の残存責務を評価し、必要なら分割
+
+**8-A/B/C 完了後の UIManager の役割**:
+- UI コンポーネントのライフサイクル管理（create_ui, 初期化）
+- Signal リスナーのハブ（各ハンドラー → UIManager → 子コンポーネント）
+- グローバル UI 操作（show_card_info, hide_all_info_panels 等）
+
+**判断基準**: 8-A/B/C で UIManager の行数が十分減少すれば分割不要。
+まだ大きい場合は以下の分割候補を検討:
+- `NavigationManager` — ボタン・ナビゲーション状態
+- `InfoPanelManager` — 情報パネル表示・非表示
+- `CardSelectionManager` — カード選択UI・フィルター
+
+**注意**: 分割は 8-A/B/C の成果を見てから判断する（過剰設計を避ける）
 
 ---
 
 ## 実施順序
 
-| 順番 | Phase | 内容 | リスク |
-|-----|-------|------|-------|
-| 1 | ~~7-A~~ | ✅ CPU AI パススルー除去（SPH） | 完了 |
-| 2 | ~~7-B~~ | ✅ SPH UI 依存逆転 | 完了 |
-| 3 | **8-A/B** | ItemPhaseHandler / DominioCommandHandler Signal 駆動化 | 中 |
-| 4 | **8-C/D** | BankruptcyHandler パネル分離 + UIManager 分割 | 高 |
+| 順番 | Phase | 内容 | 難易度 | 見込みSignal数 |
+|-----|-------|------|--------|---------------|
+| 1 | **8-A** | ItemPhaseHandler Signal 駆動化 | 低 | ~4 |
+| 2 | **8-B1** | DominioCommandHandler ナビゲーション | 中 | ~3 |
+| 3 | **8-B2** | DominioCommandHandler DominioOrderUI | 中 | ~4 |
+| 4 | **8-B3** | DominioCommandHandler その他UI | 中 | ~7 |
+| 5 | **8-C** | BankruptcyHandler パネル分離 | 低 | ~2 |
+| 6 | **8-D** | UIManager 整理（評価後） | — | — |
 
 ---
 
-## 既知のアーキテクチャ違反リスト（2026-02-18 調査）
-
-Phase 8 での対処を計画する際の参考情報。
-
-### カメラモード設定漏れ
-
-| ファイル | 箇所 | 問題 | 対処 |
-|---------|------|------|------|
-| `item_phase_handler.gd` | `start_item_phase()` / `_show_item_selection_ui()` | `enable_manual_camera()` なし | Phase 8-A で追加 |
-| `dominio_command_handler.gd` | `open_dominio_order()` | `enable_manual_camera()` なし | Phase 8-B で追加 |
-
-### UI 直接操作（Signal 未対応）
-
-| ファイル | 参照 | 問題 | 対処 |
-|---------|------|------|------|
-| `item_phase_handler.gd` | `ui_manager` 多数 | Phase 6 未適用 | Phase 8-A で Signal 駆動化 |
-| `dominio_command_handler.gd` | `ui_manager` 多数 | Phase 6 未適用 | Phase 8-B で Signal 駆動化 |
-| `bankruptcy_handler.gd` | Panel 直接生成 | `Panel.new()`, `Label.new()` 等 | Phase 8-C で UI コンポーネント化 |
-
-### Signal 駆動化の完了状況
+## Signal 駆動化の全体状況
 
 | ハンドラー | Signal数 | UI直接操作 | 状態 |
 |-----------|---------|-----------|------|
@@ -173,6 +185,15 @@ Phase 8 での対処を計画する際の参考情報。
 | DicePhaseHandler | 8 Signals | ✅ ゼロ | **完全分離** |
 | TollPaymentHandler | 2 Signals | ✅ ゼロ | **完全分離** |
 | DiscardHandler | 2 Signals | ✅ ゼロ | **完全分離** |
-| BankruptcyHandler | 5 Signals | ⚠️ パネル直接生成 | 部分的 |
-| ItemPhaseHandler | 0 Signals | ❌ ui_manager 多数 | **未着手** |
-| DominioCommandHandler | 0 Signals | ❌ ui_manager 多数 | **未着手** |
+| BankruptcyHandler | 5 Signals | ⚠️ Panel直接生成 | 部分的 → **Phase 8-C** |
+| ItemPhaseHandler | 0 Signals | ❌ 11箇所 | **Phase 8-A** |
+| DominioCommandHandler | 0 Signals | ❌ 50箇所以上 | **Phase 8-B** |
+
+---
+
+## カメラモード設定漏れ（Phase 8 で同時修正）
+
+| ファイル | 箇所 | 修正Phase |
+|---------|------|----------|
+| `item_phase_handler.gd` | `start_item_phase()` | 8-A |
+| `dominio_command_handler.gd` | `open_dominio_order()` | 8-B1 |
