@@ -2,7 +2,7 @@
 
 **目的**: チェーンアクセス禁止ルール（規約9）を守るための参照ガイド
 
-**最終更新**: 2026-02-17 (Phase 8-2: MysticArts 委譲削除)
+**最終更新**: 2026-02-17 (Phase 6 完了、SpellUIManager 統合、MysticArts 委譲削除)
 
 ---
 
@@ -308,41 +308,36 @@ MovementController内部のヘルパー（warp_handler, special_handler等）か
 | CPUTurnProcessor | set_dominio_command_handler | game_system_manager | ドミニオコマンド制御 |
 | BattleSpecialEffects | set_handlers | battle_system | 戦闘後処理 |
 
-### spell_phase_handler.spell_ui_manager 参照 (Phase 5-1)
+### spell_phase_handler.spell_ui_manager 参照（統合済み）
 | 設定先クラス | メソッド | 注入元 | 責務 |
 |-------------|---------|--------|------|
 | SpellPhaseHandler | `spell_ui_manager` | game_system_manager | UI統合制御 |
 
-**統合参照**:
+**統合参照**（3ファイル吸収済み — spell_navigation_controller, spell_ui_controller, spell_confirmation_handler は削除）:
 ```gdscript
-# SpellUIManager が統合するシステム
-var spell_phase_handler: SpellPhaseHandler
-var ui_manager: UIManager
-var spell_navigation_controller: SpellNavigationController
-var spell_confirmation_handler: SpellConfirmationHandler
-var spell_ui_controller: SpellUIController
+# SpellUIManager の主要参照
+var _spell_phase_handler  # SpellPhaseHandler
+var _ui_manager           # UIManager
+var _board_system         # BoardSystem3D
+var _player_system        # PlayerSystem
+var _game_3d_ref          # Game3D
+var _card_system          # CardSystem
 ```
 
-**メソッド一覧** (14):
-- setup() - 初期化
-- initialize_spell_phase_ui()
-- initialize_spell_cast_notification_ui()
+**主要メソッド**:
+- setup(spell_phase_handler, ui_manager, board_system, player_system, game_3d_ref, card_system)
+- initialize_spell_phase_ui() / initialize_spell_cast_notification_ui()
 - show_spell_selection_ui(hand_data, magic_power)
-- hide_spell_selection_ui()
-- update_spell_phase_ui()
 - return_camera_to_player()
-- show_spell_phase_buttons()
-- hide_spell_phase_buttons()
-- restore_navigation()
-- update_navigation_ui()
-- show_spell_confirmation(caster_name, target_data, spell_or_mystic, is_mystic)
-- hide_spell_confirmation()
-- is_valid()
+- show_spell_phase_buttons() / hide_spell_phase_buttons()
+- restore_navigation() / restore_navigation_for_state()
+- show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic) — await
+- connect_spell_flow_signals(spell_flow) / connect_mystic_arts_signals(mystic_arts_handler)
 
 **使用例**:
 ```gdscript
 # SpellPhaseHandler 内で
-if spell_ui_manager and spell_ui_manager.is_valid():
+if spell_ui_manager:
 	spell_ui_manager.show_spell_selection_ui(player_hand, magic_power)
 ```
 
@@ -436,9 +431,9 @@ func _ready():
 
 ---
 
-## Phase 8-2: MysticArts 委譲メソッド削除（2026-02-17）
+## Phase 6-A: MysticArts 委譲メソッド削除 + デッドコード削除（2026-02-17）
 
-**削除された SpellPhaseHandler の委譲メソッド**（8個）:
+### MysticArts 委譲メソッド削除（8個）
 
 | メソッド | 削除理由 | 代替方法 |
 |---------|--------|--------|
@@ -451,12 +446,43 @@ func _ready():
 | `_on_mystic_target_selection_requested()` | デッドコード（内部シグナルハンドラ） | - |
 | `_on_mystic_ui_message_requested()` | デッドコード（内部シグナルハンドラ） | - |
 
-**変更したファイル** (3):
-1. `scripts/game_flow/spell_ui_controller.gd` - Line 132-133
-2. `scripts/cpu_ai/cpu_spell_phase_handler.gd` - Line 80
-3. `scripts/debug_controller.gd` - Line 525
+### SPH デッドコード削除（10個）
+| メソッド | 削除理由 |
+|---------|--------|
+| `cancel_spell()` | 呼び出し元ゼロ（直接参照に移行済み） |
+| `_confirm_spell_effect()` | 呼び出し元ゼロ |
+| `_cancel_confirmation()` | 呼び出し元ゼロ |
+| `_update_spell_phase_ui()` | 呼び出し元ゼロ |
+| `_show_spell_selection_ui()` | 呼び出し元ゼロ |
+| `_start_spell_tap_target_selection()` | 呼び出し元ゼロ |
+| `_end_spell_tap_target_selection()` | 呼び出し元ゼロ |
+| `_on_spell_tap_target_selected()` | 呼び出し元ゼロ |
+| `_check_tutorial_target_allowed()` | 呼び出し元ゼロ |
+| `_check_tutorial_player_target_allowed()` | 呼び出し元ゼロ |
+
+### SPH 直接参照化（5個 — 呼び出し元を直接参照に変更して SPH から削除）
+| メソッド | 呼び出し元の変更 |
+|---------|-------------|
+| `pass_spell()` | → `spell_phase_handler.spell_flow.pass_spell()` |
+| `execute_spell_effect()` | → `spell_phase_handler.spell_flow.execute_spell_effect()` |
+| `_execute_spell_on_all_creatures()` | → `spell_phase_handler.spell_flow._execute_spell_on_all_creatures()` |
+| `return_camera_to_player()` | → `spell_phase_handler.spell_ui_manager.return_camera_to_player()` |
+| `_start_mystic_tap_target_selection()` | → `spell_phase_handler.spell_target_selection_handler._start_mystic_tap_target_selection()` |
+
+### ファイル統合（3ファイル削除）
+| 削除ファイル | 統合先 |
+|------------|--------|
+| `spell_navigation_controller.gd` (166行) | SpellUIManager に吸収 |
+| `spell_ui_controller.gd` (150行) | SpellUIManager に吸収 |
+| `spell_confirmation_handler.gd` (81行) | SpellUIManager に吸収 |
+
+### 廃止ファイル削除
+| 削除ファイル | 理由 |
+|------------|------|
+| `spell_system_manager.gd` (86行) | 全アクセサ呼び出しゼロ（デッドコード） |
+| `spell_hp_immune.gd` (72行) | SpellProtection に統合 |
 
 **改善効果**:
 - 責務の明確化: MysticArts 処理は MysticArtsHandler に完全統一
-- 参照の直進化: GFM→SPH→MAH チェーン廃止
-- コード削減: 46行削減
+- SPH 行数削減: 505行 → 417行（~88行削減）
+- ファイル数: 5ファイル削除（合計 ~555行）
