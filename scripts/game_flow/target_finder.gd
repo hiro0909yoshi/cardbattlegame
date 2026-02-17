@@ -270,7 +270,7 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 		
 		# HP効果無効チェック
 		if target_info.get("affects_hp", false):
-			if SpellHpImmune.has_hp_effect_immune(creature):
+			if SpellProtection.has_hp_effect_immune(creature):
 				continue
 		
 		# 全条件を満たしたターゲットを追加

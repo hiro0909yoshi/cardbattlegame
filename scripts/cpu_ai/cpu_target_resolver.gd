@@ -69,7 +69,7 @@ func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 				if SpellProtection.is_creature_protected(creature, protection_context):
 					should_skip = true
 				# HP効果無効チェック
-				elif affects_hp and SpellHpImmune.has_hp_effect_immune(creature):
+				elif affects_hp and SpellProtection.has_hp_effect_immune(creature):
 					should_skip = true
 		elif target_type == "player":
 			var player_id = target.get("player_id", -1)

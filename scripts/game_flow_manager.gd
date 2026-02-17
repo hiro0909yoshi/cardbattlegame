@@ -61,9 +61,6 @@ var magic_stone_system
 # スペル効果システム（コンテナ方式）
 var spell_container: SpellSystemContainer = null
 
-# スペルシステムマネージャー (Phase 1 で導入)
-var spell_system_manager: SpellSystemManager = null
-
 # State Machine for phase transitions
 var _state_machine: GameFlowStateMachine = null
 

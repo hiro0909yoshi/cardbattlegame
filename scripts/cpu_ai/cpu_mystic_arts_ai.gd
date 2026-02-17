@@ -767,9 +767,9 @@ func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Ar
 		# 防魔チェック（SpellProtection使用）
 		if SpellProtection.is_creature_protected(creature, context):
 			continue
-		
-		# HP効果無効チェック（SpellHpImmune使用）
-		if SpellHpImmune.should_skip_hp_effect(creature, effect_parsed):
+
+		# HP効果無効チェック
+		if SpellProtection.should_skip_hp_effect(creature, effect_parsed):
 			continue
 		
 		filtered.append(target)

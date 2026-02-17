@@ -272,14 +272,14 @@ static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
 
 
 ## 全プレイヤーにスペル不可呪いを付与
-## 
+##
 ## player_system: PlayerSystemの参照
 ## duration: 呪いの持続ターン数
 ## curse_name: 呪いの表示名
 static func apply_spell_disable_to_all_players(player_system, duration: int = 1, curse_name: String = "スペル不可"):
 	if player_system == null:
 		return
-	
+
 	for player in player_system.players:
 		# 既存の呪いがあっても上書き
 		player.curse = {
@@ -288,3 +288,62 @@ static func apply_spell_disable_to_all_players(player_system, duration: int = 1,
 			"duration": duration
 		}
 		print("[呪い付与] %s → %s (duration=%d)" % [curse_name, player.name, duration])
+
+
+# ============================================
+# HP効果無効判定（旧SpellHpImmune統合）
+# ============================================
+
+## クリーチャーがHP効果無効を持っているか判定
+static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
+	if creature_data.is_empty():
+		return false
+
+	var creature_name = creature_data.get("name", "?")
+
+	# 1. クリーチャー固有能力チェック（keywords）
+	var ability_parsed = creature_data.get("ability_parsed", {})
+	var keywords = ability_parsed.get("keywords", [])
+	if "HP効果無効" in keywords:
+		print("[SpellProtection] %s はHP効果無効キーワードを持つため対象外" % creature_name)
+		return true
+
+	# 2. 呪いチェック（マスファンタズム等で付与）
+	var curse = creature_data.get("curse", {})
+	if curse.get("curse_type") == "hp_effect_immune":
+		print("[SpellProtection] %s はHP効果無効呪いを持つため対象外" % creature_name)
+		return true
+
+	return false
+
+
+## スペル/アルカナアーツがHP変更効果を持つか判定
+static func affects_hp(effect_parsed: Dictionary) -> bool:
+	return effect_parsed.get("affects_hp", false)
+
+
+## HP効果無効によりスキップすべきか判定（全体スペル用）
+static func should_skip_hp_effect(creature_data: Dictionary, effect_parsed: Dictionary) -> bool:
+	if not affects_hp(effect_parsed):
+		return false
+
+	if has_hp_effect_immune(creature_data):
+		print("[HP効果無効] %s はHP変更効果を無効化" % creature_data.get("name", "?"))
+		return true
+
+	return false
+
+
+## ターゲット選択時にHP効果無効を持つクリーチャーを除外するフィルタ
+static func filter_hp_immune_targets(creatures: Array, effect_parsed: Dictionary) -> Array:
+	if not affects_hp(effect_parsed):
+		return creatures
+
+	var filtered = []
+	for creature in creatures:
+		if not has_hp_effect_immune(creature):
+			filtered.append(creature)
+		else:
+			print("[HP効果無効] %s は対象から除外" % creature.get("name", "?"))
+
+	return filtered
