@@ -99,9 +99,22 @@
 | 移動系ファイル移行 | 3/3 完了 |
 | UIManager完全削除 | 9/54ファイル |
 
+### ✅ Phase 8-N: STSH + LSH サービス注入（完了）
+
+- spell_target_selection_handler: 28→18 refs (36%削減) - _message_service, _navigation_service
+- land_selection_helper: 9→2 refs (78%削減) - handler._message_service, handler._info_panel_service
+
+### ✅ Phase 8-O: spell_mystic_arts + debug_controller サービス注入（完了）
+
+- spell_mystic_arts: 46→29 refs (37%削減) - _get_message_service(), _get_navigation_service(), _get_info_panel_service() ヘルパー
+- debug_controller: 31→11 refs (65%削減) - _message_service, _card_selection_service
+
+### バグ修正
+
+- purify_effect_strategy: spell_ui_manager._message_service → spell_ui_manager._ui_manager.message_service（存在しないプロパティ参照を修正）
+
 ### 📋 次のステップ
 
-- Phase 8-E: 兄弟システム Signal化（BoardSystem3D, BattleSystem, TileActionProcessor, SpecialTileSystem）
-- Phase 8-J: スペル系 → Signal/サービス注入（spell_borrow, spell_creature_swap等 6ファイル）
-- Phase 8-L: 小規模ファイル群（cpu_turn_processor, lap_system, game_result_handler等）
+- Phase 8-M: card_selected emission chain 統一（CardSelectionService に統一）
+- Phase 8-P: Group B サービス注入（spell_borrow, card_sacrifice_helper, tile_summon_executor, spell_creature_swap）
 - Phase 8-H: UIコンポーネント逆参照除去（hand_display, dominio_order_ui等 4ファイル）

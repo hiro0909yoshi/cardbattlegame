@@ -82,72 +82,72 @@ card_selected の emission chain 変更は非同期 await のタイミングバ�
 
 既存のサービス注入パターンで移行可能。最もコスパが良い。
 
-#### 1. spell_mystic_arts.gd（46 refs → 推定 ~20 残存）
+#### 1. spell_mystic_arts.gd（✅ 完了: 46→29 refs, 37%削減）
 
-| 操作 | 箇所 | 移行先 | 難易度 |
-|------|------|--------|--------|
-| `show_action_prompt(message)` | 2 | MessageService | 低 |
-| `show_toast(...)` | (phase_display ガード) | MessageService | 低 |
-| `show_card_info(creature_data, tile_index, false)` | 2 | InfoPanelService.show_card_info_only | 低 |
-| `hide_all_info_panels(false)` | 1 | InfoPanelService | 低 |
-| `enable_navigation(...)` | 1 | NavigationService | 低 |
-| `disable_navigation()` | 1 | NavigationService | 低 |
-| `tap_target_manager` | 4 | **UIManager 固有** — 残す | — |
-| `add_child(action_menu)` | 1 | **UIManager 固有** — 残す | — |
-| `_get_ui_manager()` 定義 + ガード | ~10 | 変換不要（ヘルパー関数内） | — |
-| spell_ui_manager 参照 | ~4 | 移行対象外 | — |
+| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
+|------|------|--------|--------|------|
+| `show_action_prompt(message)` | 2 | MessageService | 低 | ✅ |
+| `show_toast(...)` | (phase_display ガード) | MessageService | 低 | ✅ |
+| `show_card_info(creature_data, tile_index, false)` | 2 | InfoPanelService.show_card_info_only | 低 | ✅ |
+| `hide_all_info_panels(false)` | 1 | InfoPanelService | 低 | ✅ |
+| `enable_navigation(...)` | 1 | NavigationService | 低 | ✅ |
+| `disable_navigation()` | 1 | NavigationService | 低 | ✅ |
+| `tap_target_manager` | 4 | **UIManager 固有** — 残す | — | — |
+| `add_child(action_menu)` | 1 | **UIManager 固有** — 残す | — | — |
+| `_get_message_service()`, `_get_navigation_service()`, `_get_info_panel_service()` ヘルパー | ~10 | 実装完了 | — | ✅ |
+| spell_ui_manager 参照 | ~4 | 移行対象外 | — | — |
 
-**作業方法**: `_get_ui_manager()` に加えて `_get_message_service()`, `_get_navigation_service()`, `_get_info_panel_service()` ヘルパーを追加。各メソッド内でローカル変数に解決後使用。
+**実装内容**: `_get_message_service()`, `_get_navigation_service()`, `_get_info_panel_service()` ヘルパーを追加。各メソッド内でローカル変数に解決後使用。
 
-**見積り**: 中（ヘルパー関数追加 + 10箇所の機械的置換）
+**結果**: ✅ 完了 - 46→29 refs (37%削減)
 
-#### 2. spell_target_selection_handler.gd（28 refs → 推定 ~10 残存）
+#### 2. spell_target_selection_handler.gd（✅ 完了: 28→18 refs, 36%削減）
 
-| 操作 | 箇所 | 移行先 | 難易度 |
-|------|------|--------|--------|
-| `disable_navigation()` | 1 | NavigationService | 低 |
-| `show_toast(...)` | 1 | MessageService | 低 |
-| `show_action_prompt(text)` | 2 | MessageService | 低 |
-| `tap_target_manager` | 1 | **UIManager 固有** — 残す | — |
-| `phase_label` / `phase_display` ガード | ~5 | MessageService チェックに変換 | 低 |
-| 変数宣言 / initialize | ~3 | 構造保持 | — |
+| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
+|------|------|--------|--------|------|
+| `disable_navigation()` | 1 | NavigationService | 低 | ✅ |
+| `show_toast(...)` | 1 | MessageService | 低 | ✅ |
+| `show_action_prompt(text)` | 2 | MessageService | 低 | ✅ |
+| `tap_target_manager` | 1 | **UIManager 固有** — 残す | — | — |
+| `phase_label` / `phase_display` ガード | ~5 | MessageService チェックに変換 | 低 | ✅ |
+| 変数宣言 / initialize | ~3 | 構造保持 | — | — |
 
-**作業方法**: `initialize()` でサービス解決。`_ui_manager` と並行して `_message_service`, `_navigation_service` 追加。
+**実装内容**: `initialize()` でサービス解決。`_ui_manager` と並行して `_message_service`, `_navigation_service` 追加。
 
-**見積り**: 低（機械的置換）
+**結果**: ✅ 完了 - 28→18 refs (36%削減)
 
-#### 3. debug_controller.gd（31 refs → 推定 ~10 残存）
+#### 3. debug_controller.gd（✅ 完了: 31→11 refs, 65%削減）
 
-| 操作 | 箇所 | 移行先 | 難易度 |
-|------|------|--------|--------|
-| `card_selection_filter` 読み書き | 3 | CardSelectionService | 低 |
-| `clear_card_selection_filter()` | 1 | CardSelectionService | 低 |
-| `update_hand_display()` | 1 | CardSelectionService | 低 |
-| `hide_card_selection_ui()` | 1 | CardSelectionService | 低 |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService | 低 |
-| `show_card_selection_ui()` | 1 | CardSelectionService | 低 |
-| `set_phase_text()` / `get_phase_text()` | 2 | MessageService | 低 |
-| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す | — |
-| `toggle_debug_mode()` | 2 | **UIManager 固有** — 残す | — |
-| `hand_display` 直接参照 | 1 | **UIManager 固有** — 残す | — |
+| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
+|------|------|--------|--------|------|
+| `card_selection_filter` 読み書き | 3 | CardSelectionService | 低 | ✅ |
+| `clear_card_selection_filter()` | 1 | CardSelectionService | 低 | ✅ |
+| `update_hand_display()` | 1 | CardSelectionService | 低 | ✅ |
+| `hide_card_selection_ui()` | 1 | CardSelectionService | 低 | ✅ |
+| `show_card_selection_ui_mode()` | 1 | CardSelectionService | 低 | ✅ |
+| `show_card_selection_ui()` | 1 | CardSelectionService | 低 | ✅ |
+| `set_phase_text()` / `get_phase_text()` | 2 | MessageService | 低 | ✅ |
+| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す | — | — |
+| `toggle_debug_mode()` | 2 | **UIManager 固有** — 残す | — | — |
+| `hand_display` 直接参照 | 1 | **UIManager 固有** — 残す | — | — |
 
-**作業方法**: `setup()` でサービス解決。CardSelectionService が主な移行先。
+**実装内容**: `setup()` でサービス解決。CardSelectionService が主な移行先。
 
-**見積り**: 低（機械的置換）
+**結果**: ✅ 完了 - 31→11 refs (65%削減)
 
-#### 4. land_selection_helper.gd（9 refs → 推定 ~3 残存）
+#### 4. land_selection_helper.gd（✅ 完了: 9→2 refs, 78%削減）
 
-| 操作 | 箇所 | 移行先 | 難易度 |
-|------|------|--------|--------|
-| `show_card_info_only(creature, tile_index)` | 1 | InfoPanelService | 低 |
-| `show_toast(...)` | 1 | MessageService | 低 |
-| `show_action_prompt(text)` | 1 | MessageService | 低 |
-| `show_action_menu()` | 1 | **UIManager 固有** — 残す | — |
-| null チェック / ガード | 4 | サービスチェックに変換 | 低 |
+| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
+|------|------|--------|--------|------|
+| `show_card_info_only(creature, tile_index)` | 1 | InfoPanelService | 低 | ✅ |
+| `show_toast(...)` | 1 | MessageService | 低 | ✅ |
+| `show_action_prompt(text)` | 1 | MessageService | 低 | ✅ |
+| `show_action_menu()` | 1 | **UIManager 固有** — 残す | — | — |
+| null チェック / ガード | 4 | サービスチェックに変換 | 低 | ✅ |
 
-**作業方法**: handler._message_service / handler._info_panel_service パターン（DCH の land_action_helper と同じ）。
+**実装内容**: handler._message_service / handler._info_panel_service パターン（DCH の land_action_helper と同じ）。
 
-**見積り**: 低（6箇所の機械的置換）
+**結果**: ✅ 完了 - 9→2 refs (78%削減)
 
 ---
 
@@ -283,15 +283,15 @@ tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_m
 
 ## 推奨実行順序
 
-### Phase 8 継続（サービス注入パターン）
+### Phase 8 継続（サービス注入パターン）— ✅ Group A 完了
 
-| 順序 | サブフェーズ | 対象 | refs | 作業量 | 前提 |
-|------|-----------|------|------|--------|------|
-| 1 | **8-N** | spell_target_selection_handler | 28 | 低 | なし |
-| 2 | **8-N** | land_selection_helper | 9 | 低 | なし |
-| 3 | **8-O** | spell_mystic_arts | 46 | 中 | なし |
-| 4 | **8-O** | debug_controller | 31 | 低 | なし |
-| | | **Group A 合計** | **114** | | |
+| 順序 | サブフェーズ | 対象 | refs | 結果 | 完了日 |
+|------|-----------|------|------|--------|--------|
+| ✅ 1 | **8-N** | spell_target_selection_handler | 28 → 18 | 36%削減 | 2026-02-18 |
+| ✅ 2 | **8-N** | land_selection_helper | 9 → 2 | 78%削減 | 2026-02-18 |
+| ✅ 3 | **8-O** | spell_mystic_arts | 46 → 29 | 37%削減 | 2026-02-18 |
+| ✅ 4 | **8-O** | debug_controller | 31 → 11 | 65%削減 | 2026-02-18 |
+| | | **Group A 合計** | **114 → 60** | **47%削減** | ✅ **完了** |
 
 ### Phase 8-M: card_selected emission chain 統一（前提作業）
 

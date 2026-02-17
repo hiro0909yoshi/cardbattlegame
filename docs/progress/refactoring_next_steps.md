@@ -19,6 +19,8 @@
 | 8-J | Spell系ファイル サービス注入（purify_effect_strategy, basic_draw_handler, condition_handler） | 2026-02-18 |
 | 8-K | 移動系 ui_manager → サービス移行（3ファイル、movement_controller） | 2026-02-18 |
 | 8-L | 小規模ファイル サービス注入（lap_system, cpu_turn_processor, target_ui_helper） | 2026-02-18 |
+| 8-N | STSH + LSH サービス注入（28→18 refs, 9→2 refs） | 2026-02-18 |
+| 8-O | spell_mystic_arts + debug_controller サービス注入（46→29 refs, 31→11 refs） | 2026-02-18 |
 
 ---
 
