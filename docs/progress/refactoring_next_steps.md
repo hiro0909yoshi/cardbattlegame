@@ -11,6 +11,7 @@
 |-------|------|--------|
 | 7-A | CPU AI パススルー除去（SPH → GSM 直接注入） | 2026-02-17 |
 | 7-B | SPH UI 依存逆転（Signal 駆動化、spell_ui_manager 直接呼び出しゼロ） | 2026-02-17 |
+| 8-A | ItemPhaseHandler Signal化（4 Signals、ui_manager 完全削除） | 2026-02-18 |
 
 ---
 
@@ -158,19 +159,19 @@ var _navigation_service: NavigationService
 
 ### 実施順序（構造が先、配線が後）
 
-| 順番 | Phase | 内容 | 対象ファイル数 | 難易度 |
-|-----|-------|------|-------------|--------|
-| 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** |
-| 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 |
-| 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 |
-| 4 | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 |
-| 5 | **8-B** | DominioCommandHandler Signal化 | 1 | 高 |
-| 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 |
-| 7 | **8-E** | 兄弟システム Signal化 | 5 | 中〜高 |
-| 8 | **8-I** | タイル系 → context経由サービス | ~6 | 低 |
-| 9 | **8-J** | スペル系 → Signal/サービス注入 | ~6 | 中 |
-| 10 | **8-K** | 移動系 + その他（card.gd等） | ~10 | 中 |
-| 11 | **8-D** | UIManager 最終評価 | — | — |
+| 順番 | Phase | 内容 | 対象ファイル数 | 難易度 | 状態 |
+|-----|-------|------|-------------|--------|------|
+| 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** | 📋 次 |
+| 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 | 待機 |
+| 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 | 待機 |
+| ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | 完了 |
+| 5 | **8-B** | DominioCommandHandler Signal化 | 1 | 高 | 待機 |
+| 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 | 待機 |
+| 7 | **8-E** | 兄弟システム Signal化 | 5 | 中〜高 | 待機 |
+| 8 | **8-I** | タイル系 → context経由サービス | ~6 | 低 | 待機 |
+| 9 | **8-J** | スペル系 → Signal/サービス注入 | ~6 | 中 | 待機 |
+| 10 | **8-K** | 移動系 + その他（card.gd等） | ~10 | 中 | 待機 |
+| 11 | **8-D** | UIManager 最終評価 | — | — | 待機 |
 
 **順序の理由**: 構造（サービス分割）を先に確立し、Signal 配線は確定した構造に対して行う。逆にすると Signal のリスナー先がまだ UIManager のままで、分割時にやり直しになる。
 
@@ -330,26 +331,39 @@ func setup(card_selection: CardSelectionService, navigation: NavigationService, 
 
 ---
 
-### 8-A: ItemPhaseHandler Signal化
+### ✅ 8-A: ItemPhaseHandler Signal化（完了 2026-02-18）
 
 **目的**: ItemPhaseHandler から `ui_manager` 直接参照を削除し、Signal 駆動に移行
-**リスク**: 低
+**リスク**: 低（完了）
 **前提**: 8-F 完了後、Signal リスナーは **CardSelectionService** と **MessageService** に接続
 
-#### ui_manager 呼び出し一覧と変換方針
+#### 実装内容
 
-| 分類 | 現在の呼び出し | Signal |
-|------|---------------|--------|
-| フィルター設定 | `ui_manager.blocked_item_types = ...` 等 | `item_filter_configured(filter_config)` |
-| 手札表示更新 | `ui_manager.update_hand_display(player_id)` | `item_hand_display_requested(player_id)` |
-| カード選択UI | `ui_manager.card_selection_ui.show_selection(...)` | `item_selection_ui_shown(hand_data, config)` |
-| フィルタークリア | `ui_manager.card_selection_filter = ""` 等 | `item_filter_cleared()` |
+**追加 Signal（4個）**:
 
-**追加修正**:
-- `start_item_phase()` に `board_system.enable_manual_camera()` 追加
+| Signal | 発行元 | 役割 |
+|--------|--------|------|
+| `item_filter_configured(config)` | ItemPhaseHandler._show_item_selection_ui() | フィルター設定をUIに通知 |
+| `item_filter_cleared()` | ItemPhaseHandler.complete_item_phase() | フィルターをリセット |
+| `item_hand_display_update_requested(player_id)` | ItemPhaseHandler._show_item_selection_ui() と complete_item_phase() | 手札表示更新リクエスト |
+| `item_selection_ui_show_requested(player, mode)` | ItemPhaseHandler._show_item_selection_ui() | カード選択UI表示リクエスト |
 
-**見込み Signal 数**: ~4個
-**Signal リスナー**: CardSelectionService（8-F で作成済み）
+**コード変更**:
+
+1. ItemPhaseHandler:
+   - `var ui_manager = null` 削除
+   - `initialize()` の `ui_mgr` パラメータ削除
+   - `_show_item_selection_ui()` を Signal駆動に変更
+   - `complete_item_phase()` でフィルタークリアを Signal 経由に
+
+2. GameSystemManager:
+   - `item_phase_handler.initialize(game_flow_manager, ...)` に変更（ui_manager 削除）
+   - `_connect_item_phase_signals()` メソッド追加（4シグナル接続）
+   - phase_4 で `_connect_item_phase_signals()` 呼び出し追加
+   - `game_flow_manager.item_phase_handler.ui_manager = ui_manager` 削除
+
+**見込み Signal 数**: 4個（完了）
+**Signal リスナー**: GameSystemManager._connect_item_phase_signals() で直接接続
 
 ---
 
