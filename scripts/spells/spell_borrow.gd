@@ -110,7 +110,6 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
-		var ui_manager = _get_ui_manager()
 		if ui_manager:
 			ui_manager.card_selection_filter = "single_target_spell"
 		css.show_card_selection_ui_mode(player, "spell_borrow")
@@ -120,7 +119,6 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 
 	# UIを閉じる
 	css.hide_card_selection_ui()
-	var ui_manager = _get_ui_manager()
 	if ui_manager:
 		ui_manager.card_selection_filter = ""
 	
