@@ -20,12 +20,19 @@
 - UIManager 内部で49メソッドをサービス委譲に変換（1,094行 → 998行）
 - 14個のナビゲーション状態変数を NavigationService に移動
 
-### ✅ Phase 8-G: ヘルパーファイル サービス直接注入（3/6ファイル完了）
+### ✅ Phase 8-G: ヘルパーファイル サービス直接注入（5/6ファイル完了）
 
-- `target_selection_helper.gd`: ui_manager → MessageService + NavigationService **完全移行**
-- `tile_summon_executor.gd`: show_toast/hide_card_selection_ui等 → MessageService + CardSelectionService **部分移行**（10/17参照）
-- `tile_battle_executor.gd`: show_toast/hide_card_selection_ui → MessageService + CardSelectionService **部分移行**（6/8参照）
-- 残り3ファイル（card_selection_handler, land_action_helper, card_sacrifice_helper）は複雑で延期
+- `target_selection_helper.gd`: ui_manager → MessageService + NavigationService **完全移行** (前セッション)
+- `tile_summon_executor.gd`: show_toast/hide_card_selection_ui等 → MessageService + CardSelectionService **部分移行**（10/17参照、前セッション）
+- `tile_battle_executor.gd`: show_toast/hide_card_selection_ui → MessageService + CardSelectionService **部分移行**（6/8参照、前セッション）
+- `card_selection_handler.gd`: 4サービス注入（MessageService, NavigationService, CardSelectionService, InfoPanelService）
+  - MessageService 23箇所、NavigationService 7箇所、CardSelectionService 12箇所、InfoPanelService 5箇所移行
+  - _connect_info_panel_signals: InfoPanelService経由 + is_connected()チェック追加
+  - **結果**: ~143参照 → 53参照（63%削減）
+- `land_action_helper.gd`: handler._message_service等経由（DCH Phase 8-B変数活用）
+  - MessageService 16箇所、NavigationService 5箇所、CardSelectionService 2箇所、InfoPanelService 2箇所移行
+  - **結果**: ~75参照 → 25参照（67%削減）
+- `card_sacrifice_helper.gd`: signal awaitパターンのため保留（12参照、移行リスク高）
 
 ### ✅ Phase 8-A: ItemPhaseHandler Signal化（完全完了）
 
@@ -65,7 +72,7 @@
 
 | 指標 | 値 |
 |------|-----|
-| コミット数 | 8 |
+| コミット数 | 9 |
 | 新規 Signal | 4（累計 37） |
 | ハンドラー UI分離 | 8/8 完了 |
 | タイル系ファイル移行 | 6/6 完了 |
@@ -74,5 +81,7 @@
 
 ### 📋 次のステップ
 
-- Phase 8-G（残り）: card_selection_handler, land_action_helper, card_sacrifice_helper の複雑な移行
-- Phase 8-C: BankruptcyHandler パネル直接生成の分離
+- Phase 8-E: 兄弟システム Signal化（BoardSystem3D, BattleSystem, TileActionProcessor, SpecialTileSystem）
+- Phase 8-J: スペル系 → Signal/サービス注入（spell_borrow, spell_creature_swap等 6ファイル）
+- Phase 8-L: 小規模ファイル群（cpu_turn_processor, lap_system, game_result_handler等）
+- Phase 8-H: UIコンポーネント逆参照除去（hand_display, dominio_order_ui等 4ファイル）
