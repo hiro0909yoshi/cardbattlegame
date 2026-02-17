@@ -962,7 +962,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	- Base references (CreatureManager, TargetSelectionHelper)
 	- SpellSubsystemContainer (11 spell subsystems)
 	- SpellEffectExecutor
-	- 6 Handlers (SpellTargetSelectionHandler, SpellConfirmationHandler, etc.)
+	- 4 Handlers (SpellTargetSelectionHandler, SpellUIManager, MysticArtsHandler, etc.)
 	- CPU AI context
 	"""
 	if not spell_phase_handler or not p_game_flow_manager:
@@ -978,7 +978,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# - Base references (CreatureManager, target_selection_helper)
 	# - SpellSubsystemContainer の 11 spell subsystems
 	# - SpellEffectExecutor
-	# - 6 Handlers (SpellTargetSelectionHandler, SpellConfirmationHandler, etc.)
+	# - 4 Handlers (SpellTargetSelectionHandler, SpellUIManager, MysticArtsHandler, etc.)
 	# - CPU AI context
 
 	# Step 1: 基本参照の取得
