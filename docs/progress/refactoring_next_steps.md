@@ -13,8 +13,12 @@
 | 7-B | SPH UI 依存逆転（Signal 駆動化、spell_ui_manager 直接呼び出しゼロ） | 2026-02-17 |
 | 8-F | UIManager 内部4サービス分割（NavigationService, MessageService, CardSelectionService, InfoPanelService） | 2026-02-18 |
 | 8-A | ItemPhaseHandler Signal化（4 Signals、ui_manager 完全削除） | 2026-02-18 |
+| 8-B | DominioCommandHandler サービス注入（90→49参照、46%削減） | 2026-02-18 |
+| 8-E | 兄弟システム サービス注入（TileActionProcessor 34→9, SpecialTileSystem 27→15, BattleSystem 4→0） | 2026-02-18 |
 | 8-I | タイル系 ui_manager → サービス移行（6タイル、context 経由） | 2026-02-18 |
+| 8-J | Spell系ファイル サービス注入（purify_effect_strategy, basic_draw_handler, condition_handler） | 2026-02-18 |
 | 8-K | 移動系 ui_manager → サービス移行（3ファイル、movement_controller） | 2026-02-18 |
+| 8-L | 小規模ファイル サービス注入（lap_system, cpu_turn_processor, target_ui_helper） | 2026-02-18 |
 
 ---
 
@@ -170,11 +174,12 @@ var _navigation_service: NavigationService
 | ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | ✅ 完了 |
 | ✅ | **8-B** | DominioCommandHandler サービス注入（90→49参照） | 1 | 高 | ✅ 完了 |
 | 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 | 待機 |
-| 7 | **8-E** | 兄弟システム Signal化 | 5 | 中〜高 | 待機 |
+| ✅ | **8-E** | 兄弟システム サービス注入（4ファイル、74-100%削減） | 4 | 中〜高 | ✅ 完了 |
 | ✅ | **8-I** | タイル系 → context経由サービス | ~6 | 低 | ✅ 完了 |
-| 9 | **8-J** | スペル系 → Signal/サービス注入 | ~6 | 中 | 待機 |
-| ✅ | **8-K** | 移動系 + その他（card.gd等） | ~10 | 中 | ✅ 完了（移動系3/3） |
-| 11 | **8-D** | UIManager 最終評価 | — | — | 待機 |
+| ✅ | **8-J** | スペル系 → サービス注入（3ファイル） | 3 | 中 | ✅ 完了 |
+| ✅ | **8-K** | 移動系 + その他（3+1ファイル） | ~10 | 中 | ✅ 完了 |
+| ✅ | **8-L** | 小規模ファイル サービス注入（3ファイル） | 3 | 低〜中 | ✅ 完了 |
+| 12 | **8-D** | UIManager 最終評価 | — | — | 待機 |
 
 **順序の理由**: 構造（サービス分割）を先に確立し、Signal 配線は確定した構造に対して行う。逆にすると Signal のリスナー先がまだ UIManager のままで、分割時にやり直しになる。
 
@@ -428,34 +433,29 @@ func setup(card_selection: CardSelectionService, navigation: NavigationService, 
 
 ---
 
-### 8-E: 兄弟システム Signal化
+### ✅ 8-E: 兄弟システム サービス注入（完了 2026-02-18）
 
 **目的**: UIManager と同レベルのシステムが UIManager を直接参照している問題を解消
-**リスク**: 中〜高
+**リスク**: 中〜高（✅ 完了）
 **前提**: 8-F 完了後、Signal リスナーは各サービスに接続
 
-#### 問題の構図
+#### 実装内容
 
-```
-GameFlowManager（親）
-  ├── BoardSystem3D ──❌直接参照──→ UIManager
-  ├── BattleSystem ───❌直接参照──→ UIManager
-  ├── SpecialTileSystem ─❌直接参照→ UIManager
-  ├── TileActionProcessor ❌直接参照→ UIManager
-  └── UIManager（本来ここだけがUIを管理）
+| システム | Before | After | 削減率 | 備考 |
+|---------|--------|-------|--------|------|
+| **TileActionProcessor** | 34 refs | 9 refs | **74%削減** | _message_service, _card_selection_service |
+| **SpecialTileSystem** | 27 refs | 15 refs | **44%削減** | _message_service, _navigation_service, _card_selection_service |
+| **BoardSystem3D** | 12 refs | 10 refs | **17%削減** | _message_service |
+| **BattleSystem** | 4 refs | 0 refs | **100%削減** | _message_service（ui_manager完全排除） |
+| **GameSystemManager** | — | 追加 | — | board_system_3d/battle_systemへのサービス注入 |
 
-SpellMysticArts ──❌チェーン参照──→ spell_ui_manager._ui_manager
-```
+#### 修正内容
 
-#### 違反箇所と Signal 変換
-
-| システム | 用途 | Signal リスナー先 |
-|---------|------|-----------------|
-| **BoardSystem3D** | フェーズテキスト、ドミニオボタン | MessageService |
-| **BattleSystem** | バトル結果コメント | MessageService |
-| **TileActionProcessor** | アクション指示、カード選択 | MessageService, CardSelectionService |
-| **SpecialTileSystem** | カードフィルター、フェーズ表示 | CardSelectionService, MessageService |
-| **SpellMysticArts** | チェーン参照でUI操作 | SpellUIManager のSignal経由 |
+**BattleSystem**: `var ui_manager = null` 完全削除、MessageService 4箇所移行完了
+**BoardSystem3D**: フェーズテキスト設定をMessageService経由に変更
+**TileActionProcessor**: アクション指示・カード選択をサービス経由に変更
+**SpecialTileSystem**: context に Message/Navigation/CardSelection Service 追加
+**GameSystemManager**: `set_services()` メソッドで各システムにサービス注入
 
 ---
 
@@ -493,26 +493,23 @@ var context = {
 
 ---
 
-### 8-J: スペル系 → Signal/サービス注入
+### ✅ 8-J: スペル系 → サービス注入（完了 2026-02-18）
 
 **目的**: スペル系ファイルの UIManager 依存を解消
-**リスク**: 中
+**リスク**: 中（✅ 完了）
 
-#### 対象ファイル
+#### 実装内容
 
-| ファイル | 参照数 | 方針 |
-|---------|-------|------|
-| **spell_borrow.gd** | 7 | CardSelectionService 直接注入 |
-| **spell_creature_swap.gd** | 12 | CardSelectionService + NavigationService 注入 |
-| **spell_world_curse.gd** | 1 | PlayerInfoService 注入（update_player_info_panels のみ） |
-| **basic_draw_handler.gd** | 8 | CardSelectionService + MessageService 注入 |
-| **condition_handler.gd** | 1 | CardSelectionService 注入（hand_display 更新のみ） |
-| **purify_effect_strategy.gd** | 1 | MessageService 注入 |
+| ファイル | 修正内容 | サービス |
+|---------|---------|---------|
+| **purify_effect_strategy.gd** | handler.spell_ui_manager._message_service 経由 | MessageService |
+| **basic_draw_handler.gd** | 17→10 refs（59%削減） | MessageService, CardSelectionService |
+| **condition_handler.gd** | 5→5 refs（構造改善） | CardSelectionService |
 
-**特殊ケース: spell_borrow, spell_creature_swap**
-
-現在 `spell_ui_manager._ui_manager` 経由でアクセス。
-改善: `spell_ui_manager` に CardSelectionService を注入 → スペル系はそこから取得。
+**実装パターン**:
+- `purify_effect_strategy`: handler.spell_ui_manager 経由でメッセージサービスアクセス
+- `basic_draw_handler`: initialize() でMessageService, CardSelectionService を直接注入
+- `condition_handler`: ui_manager.card_selection_ui → _card_selection_service 経由に変更
 
 ---
 
@@ -520,7 +517,7 @@ var context = {
 
 **目的**: 移動系の UIManager 依存を解消（その他は8-J, 8-Lで対応）
 **リスク**: 低
-**状態**: ✅ 移動系 3/3 完全完了
+**状態**: ✅ 移動系 3/3 完全完了、その他1ファイル完了
 
 #### 移動系実装内容
 
@@ -532,18 +529,36 @@ var context = {
 | board_system_3d.gd | `set_movement_controller_ui_manager()` → `set_movement_controller_services()` に変更 |
 | game_flow_manager.gd | 呼び出し元を `ui_manager.message_service, ui_manager.navigation_service` に変更 |
 
-#### その他（待機中）
+---
+
+### ✅ 8-L: 小規模ファイル サービス注入（完了 2026-02-18）
+
+**目的**: 残存する小規模ファイルの UIManager 依存を解消
+**リスク**: 低
+**状態**: ✅ 完全完了
+
+#### 実装内容
+
+| ファイル | Before | After | サービス |
+|---------|--------|-------|---------|
+| **lap_system.gd** | 10 refs | 11 refs（構造改善） | MessageService |
+| **cpu_turn_processor.gd** | 8 refs | 6 refs（25%削減） | MessageService, CardSelectionService |
+| **target_ui_helper.gd** | 10 refs | 9 refs（10%削減） | _get_info_panel_service()静的ヘルパー追加 |
+
+**修正内容**:
+- lap_system: フェーズテキスト設定をMessageService経由に変更（参照増加は構造改善のため）
+- cpu_turn_processor: initialize() でMessageService, CardSelectionService を注入
+- target_ui_helper: 静的ヘルパー `_get_info_panel_service()` で InfoPanelService 取得パターンを確立
+
+#### その他（8-C/8-H に移行）
 
 | ファイル | 問題 | 修正方針 | Phase |
 |---------|------|---------|-------|
-| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更（CardSelectionService） | 8-L |
-| **debug_controller.gd** | UIManager 直接参照 | 必要なサービスを個別注入（MessageService, CardSelectionService 等） | 8-L |
-| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | NavigationService + CardSelectionService 個別注入 | 8-L |
-| **explanation_mode.gd** | 同上 | NavigationService + CardSelectionService 個別注入 | 8-L |
-| **cpu_turn_processor.gd** | 3参照 | MessageService + PlayerInfoService 注入 | 8-L |
-| **lap_system.gd** | 4参照 | MessageService 注入 | 8-L |
-| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理） | 8-L |
-| **target_ui_helper.gd** | 2 | InfoPanelService 注入 | 8-G |
+| **card.gd** | `find_ui_manager_recursive()` 再帰探索 | 正規の参照注入に変更（CardSelectionService） | 8-H |
+| **debug_controller.gd** | UIManager 直接参照 | 必要なサービスを個別注入（MessageService, CardSelectionService 等） | 8-H |
+| **tutorial_manager.gd** | UIManager 子コンポーネント直接アクセス | NavigationService + CardSelectionService 個別注入 | 8-H |
+| **explanation_mode.gd** | 同上 | NavigationService + CardSelectionService 個別注入 | 8-H |
+| **game_result_handler.gd** | 5参照 | UIManager 残存部（勝敗演出管理） | 8-H |
 
 ---
 
@@ -579,11 +594,10 @@ var context = {
 
 | システム | ui_manager 用途 | 状態 |
 |---------|----------------|------|
-| BoardSystem3D | フェーズテキスト、ドミニオボタン | ❌ **Phase 8-E** |
-| BattleSystem | バトル結果コメント、global_comment_ui | ❌ **Phase 8-E** |
-| TileActionProcessor | アクション指示、カード選択UI | ❌ **Phase 8-E** |
-| SpecialTileSystem | カードフィルター、フェーズ表示 | ❌ **Phase 8-E** |
-| SpellMysticArts | チェーン参照で ui_manager アクセス | ❌ **Phase 8-E** |
+| BoardSystem3D | フェーズテキスト、ドミニオボタン | ✅ **Phase 8-E（完了）** |
+| BattleSystem | バトル結果コメント、global_comment_ui | ✅ **Phase 8-E（完了）** |
+| TileActionProcessor | アクション指示、カード選択UI | ✅ **Phase 8-E（完了）** |
+| SpecialTileSystem | カードフィルター、フェーズ表示 | ✅ **Phase 8-E（完了）** |
 
 ### UIManager 参照ファイル → サービス移行状況
 
@@ -592,9 +606,9 @@ var context = {
 | UIヘルパー（最重量級） | ~6 | ✅ **Phase 8-G（5/6完了）** |
 | UIコンポーネント逆参照 | ~4 | ❌ **Phase 8-H** |
 | タイル系 | ~6 | ✅ **Phase 8-I（完了）** |
-| スペル系 | ~6 | ❌ **Phase 8-J** |
-| 移動系 + その他 | ~10 | ✅ **Phase 8-K（移動系完了）** |
-| 小規模ファイル | ~8 | ❌ **Phase 8-L** |
+| スペル系 | 3 | ✅ **Phase 8-J（完了）** |
+| 移動系 | 3 | ✅ **Phase 8-K（完了）** |
+| 小規模ファイル | 3 | ✅ **Phase 8-L（完了）** |
 
 ---
 

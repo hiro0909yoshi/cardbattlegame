@@ -68,6 +68,26 @@
 - CardSelectionService移行: hide_card_selection_ui×2、InfoPanelService移行: hide_all_info_panels×1
 - **結果**: 90参照 → 49参照（46%削減）、8/8ハンドラー移行完了
 
+### ✅ Phase 8-E: 兄弟システム サービス注入（完了）
+
+- tile_action_processor: 34→9 refs (74%削減) - _message_service, _card_selection_service
+- special_tile_system: 27→15 refs (44%削減) - _message_service, _navigation_service, _card_selection_service
+- board_system_3d: 12→10 refs (17%削減) - _message_service
+- battle_system: 4→0 refs (100%削減) - _message_service（ui_manager完全排除）
+- GSM: board_system_3d/battle_systemへのサービス注入追加
+
+### ✅ Phase 8-J: Spell系ファイル サービス注入（完了）
+
+- purify_effect_strategy: handler.spell_ui_manager._message_service経由
+- basic_draw_handler: 17→10 refs - _message_service, _card_selection_service
+- condition_handler: 5→5 refs（構造改善）- _card_selection_service
+
+### ✅ Phase 8-L: 小規模ファイル サービス注入（完了）
+
+- lap_system: 10→11 refs（構造改善）- _message_service
+- cpu_turn_processor: 8→6 refs - _message_service, _card_selection_service
+- target_ui_helper: 10→9 refs - _get_info_panel_service()静的ヘルパー追加
+
 ### 📊 本日の成果
 
 | 指標 | 値 |
