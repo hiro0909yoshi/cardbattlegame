@@ -127,7 +127,7 @@ func restore_navigation():
 	# ターゲット選択中 → spell_phase_handlerのstate別復元を直接呼ぶ
 	# （restore_navigationを呼ぶと無限ループになるため、state別の処理を直接実行）
 	if spell_phase_handler_ref:
-		spell_phase_handler_ref.restore_navigation_for_state()
+		spell_phase_handler_ref.spell_ui_manager.update_navigation_ui()
 
 
 ## アルカナアーツ選択状態をクリア
@@ -299,22 +299,17 @@ func _confirm_caster_selection() -> void:
 func _cancel_caster_selection() -> void:
 	_is_selecting_caster = false
 	_end_caster_tap_selection()
-	
+
 	# クリーチャー情報パネルを閉じる
 	_hide_creature_info_panel()
-	
+
 	# 選択マーカーを非表示
 	if spell_phase_handler_ref:
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
-	
-	# ナビゲーションを無効化
-	var ui_manager = _get_ui_manager()
-	if ui_manager:
-		ui_manager.disable_navigation()
-	
-	# スペルフェーズに戻る
-	if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
-		spell_phase_handler_ref.spell_flow.return_to_spell_selection()
+
+	# アルカナアーツフェーズを終了
+	# end_mystic_phase() → mystic_phase_completed シグナル → _on_mystic_phase_completed()
+	# で return_to_spell_selection() が呼ばれるため、ここでは重複呼び出ししない
 	end_mystic_phase()
 
 
@@ -385,12 +380,11 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 	
 	# アルカナアーツ選択を待機
 	var selected_index = await action_menu.item_selected
-	
+
 	if selected_index < 0 or selected_index >= mystic_arts.size():
 		action_menu.hide_menu()
-		# キャンセルされた場合、スペルフェーズに戻る
-		if spell_phase_handler_ref and spell_phase_handler_ref.spell_flow:
-			spell_phase_handler_ref.spell_flow.return_to_spell_selection()
+		# キャンセルされた場合、アルカナアーツフェーズを終了
+		# end_mystic_phase() → _on_mystic_phase_completed() で return_to_spell_selection() が呼ばれる
 		end_mystic_phase()
 		return
 	
@@ -744,30 +738,25 @@ func _cancel_mystic_confirmation() -> void:
 	# 入力ロック解除
 	if game_flow_manager_ref:
 		game_flow_manager_ref.unlock_input()
-	
+
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
 		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
 		TargetSelectionHelper.clear_confirmation_markers(spell_phase_handler_ref)
-	
+
 	# 確認フェーズ変数をクリア
 	confirmation_creature = {}
 	confirmation_mystic_art = {}
 	confirmation_target_type = ""
 	confirmation_target_info = {}
 	confirmation_target_data = {}
-	
+
 	# アルカナアーツ選択をクリアしてアルカナアーツフェーズを終了
+	# end_mystic_phase() → mystic_phase_completed シグナル → _on_mystic_phase_completed()
+	# で return_to_spell_selection() が呼ばれるため、ここでは重複呼び出ししない
 	clear_selection()
 	end_mystic_phase()
-	
-	# スペルフェーズに戻る（UI再表示 + ナビゲーション再設定）
-	if spell_phase_handler_ref:
-		if spell_phase_handler_ref.spell_state:
-			spell_phase_handler_ref.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
-		if spell_phase_handler_ref.spell_flow:
-			spell_phase_handler_ref.spell_flow.return_to_spell_selection()
 
 
 ## 非同期効果を含むアルカナアーツかどうかを判定

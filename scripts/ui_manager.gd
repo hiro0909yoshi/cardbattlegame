@@ -555,7 +555,7 @@ func restore_current_phase():
 	
 	# 2. スペルフェーズがアクティブ（target選択/確認含む） → spell_phase_handlerに委譲
 	if spell_phase_handler_ref and spell_phase_handler_ref.is_spell_phase_active():
-		spell_phase_handler_ref.restore_navigation()
+		spell_phase_handler_ref.spell_ui_manager.restore_navigation()
 		_nav_state_saved = false
 		return
 	

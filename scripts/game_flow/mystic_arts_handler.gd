@@ -169,9 +169,12 @@ func _on_mystic_phase_completed():
 	if not _spell_phase_handler:
 		return
 
+	# current_player_id を保存（reset_turn_state で -1 にリセットされるため）
+	var saved_player_id = _spell_phase_handler.spell_state.current_player_id
+
 	# spell_stateを完全にリセット（spell_used_this_turn を false に）
 	_spell_phase_handler.spell_state.reset_turn_state()
-	_spell_phase_handler.spell_state.set_current_player_id(_spell_phase_handler.spell_state.current_player_id)
+	_spell_phase_handler.spell_state.set_current_player_id(saved_player_id)
 	_spell_phase_handler.spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
 
 	if _spell_phase_handler.spell_flow:
