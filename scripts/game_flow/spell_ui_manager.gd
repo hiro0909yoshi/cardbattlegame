@@ -1,10 +1,7 @@
-## SpellUIManager - スペルフェーズUI管理システム
+## SpellUIManager - スペルフェーズUI統合管理システム
 ##
-## Phase 5-1: UI制御を集約し、SpellPhaseHandler からUI参照削除の準備
-## 責務: スペル選択UI、ナビゲーション、カメラ制御、ボタン管理を統一管理
-##
-## 初期化パターン: GameSystemManager._initialize_spell_phase_subsystems() で作成
-## 削減効果: SpellPhaseHandler から UI相関メソッド 5-6個削減準備
+## 責務: ナビゲーション状態管理、UI表示制御、スペル発動確認、Signal接続
+## 統合元: SpellNavigationController, SpellUIController, SpellConfirmationHandler
 
 extends Node
 class_name SpellUIManager
@@ -12,257 +9,328 @@ class_name SpellUIManager
 # === 参照 ===
 var _spell_phase_handler = null
 var _ui_manager = null
-var _spell_navigation_controller = null
-var _spell_confirmation_handler = null
-var _spell_ui_controller = null
+var _board_system = null
+var _player_system = null
+var _game_3d_ref = null
+var _card_system = null
+
+# === UI状態 ===
+var _spell_phase_ui_manager = null
+var _spell_cast_notification_ui: SpellCastNotificationUI = null
+var _waiting_for_notification_click: bool = false
 
 # === 初期化 ===
 func setup(
 	spell_phase_handler,
 	ui_manager,
-	spell_navigation_controller,
-	spell_confirmation_handler,
-	spell_ui_controller
+	board_system,
+	player_system,
+	game_3d_ref,
+	card_system
 ) -> void:
-	"""UI管理システムを初期化
-
-	Args:
-		spell_phase_handler: SpellPhaseHandler への参照
-		ui_manager: UIManager への参照
-		spell_navigation_controller: ナビゲーションコントローラー
-		spell_confirmation_handler: 確認ハンドラー
-		spell_ui_controller: UI制御ハンドラー
-	"""
 	_spell_phase_handler = spell_phase_handler
 	_ui_manager = ui_manager
-	_spell_navigation_controller = spell_navigation_controller
-	_spell_confirmation_handler = spell_confirmation_handler
-	_spell_ui_controller = spell_ui_controller
+	_board_system = board_system
+	_player_system = player_system
+	_game_3d_ref = game_3d_ref
+	_card_system = card_system
 
-	# 初期化検証
 	if not _spell_phase_handler:
 		push_error("[SpellUIManager] spell_phase_handler が null です")
 	if not _ui_manager:
 		push_error("[SpellUIManager] ui_manager が null です")
-	if not _spell_navigation_controller:
-		push_error("[SpellUIManager] spell_navigation_controller が null です")
-	if not _spell_confirmation_handler:
-		push_error("[SpellUIManager] spell_confirmation_handler が null です")
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が null です")
 
 
-# === UI初期化 ===
+# =============================================================================
+# ナビゲーション復元
+# =============================================================================
 
-func initialize_spell_phase_ui() -> void:
-	"""スペルフェーズUIを初期化（SpellPhaseUIManager作成）"""
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が初期化されていません")
-		return
-
-	if not _spell_ui_controller.has_method("initialize_spell_phase_ui"):
-		push_error("[SpellUIManager] spell_ui_controller に initialize_spell_phase_ui メソッドがありません")
-		return
-
-	_spell_ui_controller.initialize_spell_phase_ui()
-
-
-func initialize_spell_cast_notification_ui() -> void:
-	"""スペル発動通知UIを初期化"""
-	if not _spell_confirmation_handler:
-		push_error("[SpellUIManager] spell_confirmation_handler が初期化されていません")
-		return
-
-	if not _spell_confirmation_handler.has_method("initialize_spell_cast_notification_ui"):
-		push_error("[SpellUIManager] spell_confirmation_handler に initialize_spell_cast_notification_ui メソッドがありません")
-		return
-
-	_spell_confirmation_handler.initialize_spell_cast_notification_ui()
-
-# === UI表示制御 ===
-
-func show_spell_selection_ui(hand_data: Array, magic_power: int) -> void:
-	"""スペル選択UIを表示"""
+## ナビゲーション復元（アルカナアーツ判定を含む）
+func restore_navigation() -> void:
 	if not _ui_manager:
-		push_error("[SpellUIManager] ui_manager が見つかりません")
 		return
 
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が見つかりません")
+	# アルカナアーツがアクティブなら優先委譲
+	if _spell_phase_handler and _spell_phase_handler.spell_mystic_arts and _spell_phase_handler.spell_mystic_arts.is_active():
+		_spell_phase_handler.spell_mystic_arts.restore_navigation()
 		return
 
-	_spell_ui_controller.show_spell_selection_ui(hand_data, magic_power)
+	restore_navigation_for_state()
+
+## state別のナビゲーション復元（アルカナアーツ判定をスキップ）
+## spell_mystic_arts.restore_navigation()からの再帰呼び出し時に使用
+func restore_navigation_for_state() -> void:
+	var spell_state = _spell_phase_handler.spell_state if _spell_phase_handler else null
+	if not _ui_manager or not spell_state:
+		return
+
+	match spell_state.current_state:
+		SpellStateHandler.State.WAITING_FOR_INPUT:
+			_setup_spell_selection_navigation()
+			show_spell_phase_buttons()
+			if _ui_manager.phase_display:
+				_ui_manager.show_action_prompt("スペルを使用するか、ダイスを振ってください")
+
+		SpellStateHandler.State.SELECTING_TARGET:
+			_setup_target_selection_navigation()
+			if _ui_manager.phase_display:
+				_ui_manager.show_action_prompt("対象を選択してください")
+
+		SpellStateHandler.State.CONFIRMING_EFFECT:
+			_ui_manager.enable_navigation(
+				func(): _confirm_spell_effect(),
+				func(): _cancel_confirmation()
+			)
+
+## 外部からの状態別ナビゲーション復元用エイリアス
+func update_navigation_ui() -> void:
+	restore_navigation_for_state()
 
 
+# =============================================================================
+# ナビゲーション設定
+# =============================================================================
+
+## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
+func _setup_spell_selection_navigation() -> void:
+	if _ui_manager:
+		_ui_manager.enable_navigation(
+			func(): _pass_spell(),
+			Callable()
+		)
+
+## ナビゲーション設定（ターゲット選択）
+func _setup_target_selection_navigation() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._setup_target_selection_navigation()
+	elif _ui_manager:
+		_ui_manager.enable_navigation(
+			func(): _on_target_confirm(),
+			func(): _on_target_cancel(),
+			func(): _on_target_prev(),
+			func(): _on_target_next()
+		)
+
+## ナビゲーション設定解除
+func _clear_spell_navigation() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._clear_spell_navigation()
+	elif _ui_manager:
+		_ui_manager.disable_navigation()
+
+
+# =============================================================================
+# ナビゲーション入力ハンドラー
+# =============================================================================
+
+## スペル使用スキップ（ダイス移動へ）
+func _pass_spell() -> void:
+	if _spell_phase_handler and _spell_phase_handler.spell_flow:
+		_spell_phase_handler.spell_flow.pass_spell()
+
+## ターゲット確認
+func _on_target_confirm() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._on_target_confirm()
+
+## ターゲット選択キャンセル
+func _on_target_cancel() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._on_target_cancel()
+
+## ターゲット選択前へ
+func _on_target_prev() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._on_target_prev()
+
+## ターゲット選択次へ
+func _on_target_next() -> void:
+	var target_handler = _spell_phase_handler.spell_target_selection_handler if _spell_phase_handler else null
+	if target_handler:
+		target_handler._on_target_next()
+
+## スペル効果確認
+func _confirm_spell_effect() -> void:
+	if _spell_phase_handler and _spell_phase_handler.spell_flow:
+		_spell_phase_handler.spell_flow._confirm_spell_effect()
+
+## スペル確認キャンセル
+func _cancel_confirmation() -> void:
+	if _spell_phase_handler and _spell_phase_handler.spell_flow:
+		_spell_phase_handler.spell_flow._cancel_confirmation()
+
+
+# =============================================================================
+# UI表示制御
+# =============================================================================
+
+## SpellPhaseUIManager を初期化
+func initialize_spell_phase_ui() -> void:
+	if not _spell_phase_ui_manager:
+		_spell_phase_ui_manager = SpellPhaseUIManager.new()
+		if _spell_phase_handler:
+			_spell_phase_handler.add_child(_spell_phase_ui_manager)
+
+		if _spell_phase_ui_manager:
+			_spell_phase_ui_manager.spell_phase_handler_ref = _spell_phase_handler
+
+## スペルフェーズUIの更新
+func update_spell_phase_ui() -> void:
+	if not _ui_manager or not _card_system:
+		push_error("[SpellUIManager] ui_manager または card_system が初期化されていません")
+		return
+
+	var current_player = _player_system.get_current_player() if _player_system else null
+	if not current_player:
+		push_error("[SpellUIManager] current_player が取得できません")
+		return
+
+	var hand_data = _card_system.get_all_cards_for_player(current_player.id)
+
+	# スペル不可呪いチェック
+	var context = _build_spell_context()
+	var is_spell_disabled = SpellProtection.is_player_spell_disabled(current_player, context)
+
+	if is_spell_disabled:
+		_ui_manager.card_selection_filter = "spell_disabled"
+		if _ui_manager.phase_display and _ui_manager.phase_display.has_method("show_toast"):
+			_ui_manager.phase_display.show_toast("スペル不可の呪いがかかっています")
+	else:
+		_ui_manager.card_selection_filter = "spell"
+
+	if _ui_manager and _ui_manager.hand_display:
+		_ui_manager.hand_display.update_hand_display(current_player.id)
+
+	# スペル選択UIを表示（人間プレイヤーのみ）
+	if not (_spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(current_player.id)):
+		show_spell_selection_ui(hand_data, current_player.magic_power)
+
+## スペル選択UIを表示
+func show_spell_selection_ui(_hand_data: Array, _available_magic: int) -> void:
+	if not _ui_manager or not _ui_manager.card_selection_ui:
+		return
+
+	var current_player = _player_system.get_current_player() if _player_system else null
+	if not current_player:
+		return
+
+	_ui_manager.card_selection_filter = "spell"
+	if _ui_manager.card_selection_ui.has_method("show_selection"):
+		_ui_manager.card_selection_ui.show_selection(current_player, "spell")
+
+## スペル選択UIを非表示
 func hide_spell_selection_ui() -> void:
-	"""スペル選択UIを非表示"""
 	if not _ui_manager or not _ui_manager.card_selection_ui:
 		return
 
 	if _ui_manager.card_selection_ui.has_method("hide_selection"):
 		_ui_manager.card_selection_ui.hide_selection()
 
-
-func update_spell_phase_ui() -> void:
-	"""スペルフェーズUIを更新"""
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が初期化されていません")
-		return
-
-	if not _spell_ui_controller.has_method("update_spell_phase_ui"):
-		return
-
-	_spell_ui_controller.update_spell_phase_ui()
-
-
+## カメラを使用者に戻す
 func return_camera_to_player() -> void:
-	"""カメラをプレイヤーに戻す"""
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が初期化されていません")
+	if not _player_system or not _board_system:
 		return
 
-	if not _spell_ui_controller.has_method("return_camera_to_player"):
+	if not _spell_phase_handler or not _spell_phase_handler.spell_state:
 		return
 
-	_spell_ui_controller.return_camera_to_player()
+	if _board_system:
+		var player_tile_index = _board_system.get_player_tile(_spell_phase_handler.spell_state.current_player_id)
+
+		if _board_system.camera and _board_system.tile_nodes.has(player_tile_index):
+			var tile_pos = _board_system.tile_nodes[player_tile_index].global_position
+
+			var new_camera_pos = tile_pos + Vector3(0, 1.0, 0) + GameConstants.CAMERA_OFFSET
+
+			_board_system.camera.position = new_camera_pos
+			_board_system.camera.look_at(tile_pos + Vector3(0, 1.0 + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 
 
-# === ボタン管理 ===
+# =============================================================================
+# ボタン管理
+# =============================================================================
 
+## スペルフェーズ開始時にボタンを表示
 func show_spell_phase_buttons() -> void:
-	"""スペルフェーズボタンを表示
-
-	アルカナアーツなどの選択肢を表示
-	"""
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が初期化されていません")
-		return
-
-	if not _spell_ui_controller.has_method("show_spell_phase_buttons"):
-		return
-
-	_spell_ui_controller.show_spell_phase_buttons()
-
-
-func hide_spell_phase_buttons() -> void:
-	"""スペルフェーズボタンを非表示"""
-	if not _spell_ui_controller:
-		push_error("[SpellUIManager] spell_ui_controller が初期化されていません")
-		return
-
-	if not _spell_ui_controller.has_method("hide_spell_phase_buttons"):
-		return
-
-	_spell_ui_controller.hide_spell_phase_buttons()
-
-
-# === ナビゲーション連携 ===
-
-func restore_navigation() -> void:
-	"""ナビゲーション状態を復帰"""
-	if not _spell_navigation_controller:
-		push_error("[SpellUIManager] spell_navigation_controller が初期化されていません")
-		return
-
-	if not _spell_navigation_controller.has_method("restore_navigation"):
-		push_error("[SpellUIManager] spell_navigation_controller に restore_navigation メソッドがありません")
-		return
-
-	_spell_navigation_controller.restore_navigation()
-
-
-func update_navigation_ui() -> void:
-	"""ナビゲーションUIを更新"""
-	if not _spell_navigation_controller:
-		push_error("[SpellUIManager] spell_navigation_controller が初期化されていません")
-		return
-
-	if not _spell_navigation_controller.has_method("restore_navigation_for_state"):
-		return
-
-	_spell_navigation_controller.restore_navigation_for_state()
-
-
-# === スペル確認ハンドラー連携 ===
-
-func show_spell_confirmation(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
-	"""スペル発動確認を表示（クリック待ち）"""
-	if not _spell_confirmation_handler:
-		push_error("[SpellUIManager] spell_confirmation_handler が初期化されていません")
-		return
-
-	if not _spell_confirmation_handler.has_method("show_spell_cast_notification"):
-		push_error("[SpellUIManager] spell_confirmation_handler に show_spell_cast_notification メソッドがありません")
-		return
-
-	await _spell_confirmation_handler.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
-
-
-func hide_spell_confirmation() -> void:
-	"""スペル発動確認を非表示"""
-	if not _spell_confirmation_handler:
-		push_error("[SpellUIManager] spell_confirmation_handler が初期化されていません")
-		return
-
-	if not _spell_confirmation_handler.has_method("clear_spell_cast_notification"):
-		return
-
-	_spell_confirmation_handler.clear_spell_cast_notification()
-
-
-# === 検証メソッド ===
-
-func is_valid() -> bool:
-	"""初期化状態を確認
-
-	Returns:
-		すべての参照が正常に初期化されている場合は true
-	"""
-	return (
-		_spell_phase_handler != null and
-		_ui_manager != null and
-		_spell_navigation_controller != null and
-		_spell_confirmation_handler != null and
-		_spell_ui_controller != null
-	)
-
-# === ヘルパーメソッド ===
-
-func _get_current_player_id() -> int:
-	"""現在のプレイヤーIDを取得
-
-	Returns:
-		現在のプレイヤーID、取得失敗時は -1
-	"""
 	if not _spell_phase_handler:
-		return -1
+		return
 
-	# SpellPhaseHandler の spell_state を経由して取得
-	if _spell_phase_handler.has_method("get_current_player_id"):
-		return _spell_phase_handler.get_current_player_id()
+	if _ui_manager and _spell_phase_handler and _spell_phase_handler.spell_state:
+		var current_player_id = _spell_phase_handler.spell_state.current_player_id
+		if _spell_phase_handler.mystic_arts_handler and _spell_phase_handler.mystic_arts_handler.has_available_mystic_arts(current_player_id):
+			_ui_manager.show_mystic_button(func(): _spell_phase_handler.mystic_arts_handler.start_mystic_arts_phase())
 
-	# spell_state から直接取得
-	if _spell_phase_handler.get("spell_state"):
-		var spell_state = _spell_phase_handler.spell_state
-		if spell_state and spell_state.has_method("get_current_player_id"):
-			return spell_state.get_current_player_id()
-		if spell_state and spell_state.get("current_player_id"):
-			return spell_state.current_player_id
-
-	# GameFlowManager 経由で取得
-	if _spell_phase_handler.get("game_flow_manager"):
-		var gfm = _spell_phase_handler.game_flow_manager
-		if gfm and gfm.has_method("get_current_player_id"):
-			return gfm.get_current_player_id()
-
-	return -1
+## スペルフェーズ終了時にボタンを非表示
+func hide_spell_phase_buttons() -> void:
+	if _ui_manager:
+		_ui_manager.hide_mystic_button()
 
 
-# === Signal接続（Phase 6-A: UI層分離） ===
+# =============================================================================
+# スペル発動確認
+# =============================================================================
 
-## SpellFlowHandler と MysticArtsHandler の UI Signal を接続
+## 発動通知UIを初期化
+func initialize_spell_cast_notification_ui() -> void:
+	if _spell_cast_notification_ui:
+		return
+
+	_spell_cast_notification_ui = SpellCastNotificationUI.new()
+	_spell_cast_notification_ui.name = "SpellCastNotificationUI"
+
+	if _ui_manager:
+		_ui_manager.add_child(_spell_cast_notification_ui)
+	else:
+		if _spell_phase_handler:
+			_spell_phase_handler.add_child(_spell_cast_notification_ui)
+
+## スペル/アルカナアーツ発動通知を表示（クリック待ち）
+func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
+	if not _spell_cast_notification_ui:
+		return
+
+	var effect_name: String
+	if is_mystic:
+		effect_name = SpellCastNotificationUI.get_mystic_art_display_name(spell_or_mystic)
+	else:
+		effect_name = SpellCastNotificationUI.get_effect_display_name(spell_or_mystic)
+
+	var target_name = SpellCastNotificationUI.get_target_display_name(target_data, _board_system, _player_system)
+
+	_spell_cast_notification_ui.show_spell_cast_and_wait(caster_name, target_name, effect_name)
+	await _spell_cast_notification_ui.click_confirmed
+
+## 発動通知UIを取得
+func get_spell_cast_notification_ui() -> SpellCastNotificationUI:
+	return _spell_cast_notification_ui
+
+## 発動通知UIをクリア
+func clear_spell_cast_notification() -> void:
+	if _spell_cast_notification_ui and _spell_cast_notification_ui.is_visible():
+		_spell_cast_notification_ui.hide()
+		_waiting_for_notification_click = false
+
+## スペル関連のコンテキストを構築（世界呪い等）
+func _build_spell_context() -> Dictionary:
+	var context = {}
+
+	if _spell_phase_handler and _spell_phase_handler.game_flow_manager and "game_stats" in _spell_phase_handler.game_flow_manager:
+		context["world_curse"] = _spell_phase_handler.game_flow_manager.game_stats.get("world_curse", {})
+
+	return context
+
+
+# =============================================================================
+# Signal接続（Phase 6-A: UI層分離）
+# =============================================================================
+
+## SpellFlowHandler の UI Signal を接続
 func connect_spell_flow_signals(spell_flow_handler) -> void:
-	"""SpellFlowHandler の UI Signal を接続"""
 	if not spell_flow_handler:
 		push_error("[SpellUIManager] spell_flow_handler が null です")
 		return
@@ -293,7 +361,6 @@ func connect_spell_flow_signals(spell_flow_handler) -> void:
 
 
 func connect_mystic_arts_signals(mystic_arts_handler) -> void:
-	"""MysticArtsHandler の UI Signal を接続"""
 	if not mystic_arts_handler:
 		push_error("[SpellUIManager] mystic_arts_handler が null です")
 		return
@@ -381,16 +448,26 @@ func _on_mystic_ui_action_prompt_shown(message: String) -> void:
 	if _ui_manager and _ui_manager.phase_display:
 		_ui_manager.show_action_prompt(message)
 
-# === デバッグメソッド ===
+
+# =============================================================================
+# 検証・デバッグ
+# =============================================================================
+
+func is_valid() -> bool:
+	return (
+		_spell_phase_handler != null and
+		_ui_manager != null
+	)
 
 func debug_print_status() -> void:
-	"""デバッグ情報を出力"""
 	var status = "[SpellUIManager] Status:\n"
 	status += "  - spell_phase_handler: %s\n" % ("OK" if _spell_phase_handler else "NULL")
 	status += "  - ui_manager: %s\n" % ("OK" if _ui_manager else "NULL")
-	status += "  - spell_navigation_controller: %s\n" % ("OK" if _spell_navigation_controller else "NULL")
-	status += "  - spell_confirmation_handler: %s\n" % ("OK" if _spell_confirmation_handler else "NULL")
-	status += "  - spell_ui_controller: %s\n" % ("OK" if _spell_ui_controller else "NULL")
-	status += "  - is_valid(): %s" % ("✓ 初期化完了" if is_valid() else "✗ 未初期化")
+	status += "  - board_system: %s\n" % ("OK" if _board_system else "NULL")
+	status += "  - player_system: %s\n" % ("OK" if _player_system else "NULL")
+	status += "  - card_system: %s\n" % ("OK" if _card_system else "NULL")
+	status += "  - spell_cast_notification_ui: %s\n" % ("OK" if _spell_cast_notification_ui else "NULL")
+	status += "  - spell_phase_ui_manager: %s\n" % ("OK" if _spell_phase_ui_manager else "NULL")
+	status += "  - is_valid(): %s" % ("OK" if is_valid() else "NG")
 
 	print(status)

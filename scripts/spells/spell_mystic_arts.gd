@@ -546,10 +546,10 @@ func execute_mystic_art(creature: Dictionary, mystic_art: Dictionary, target_dat
 	# 少し待機してからカメラを戻す
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
-		if spell_phase_handler_ref.spell_ui_controller:
-			spell_phase_handler_ref.spell_ui_controller.return_camera_to_player()
+		if spell_phase_handler_ref.spell_ui_manager:
+			spell_phase_handler_ref.spell_ui_manager.return_camera_to_player()
 		else:
-			push_error("[SpellMysticArts] spell_ui_controller が初期化されていません")
+			push_error("[SpellMysticArts] spell_ui_manager が初期化されていません")
 	
 	# 非同期効果の場合はCardSelectionHandler完了後に終了
 	if is_async and spell_phase_handler_ref and spell_phase_handler_ref.card_selection_handler:
@@ -636,10 +636,10 @@ func _execute_all_creatures(creature: Dictionary, mystic_art: Dictionary, target
 	# スペルフェーズ完了
 	if spell_phase_handler_ref:
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
-		if spell_phase_handler_ref.spell_ui_controller:
-			spell_phase_handler_ref.spell_ui_controller.return_camera_to_player()
+		if spell_phase_handler_ref.spell_ui_manager:
+			spell_phase_handler_ref.spell_ui_manager.return_camera_to_player()
 		else:
-			push_error("[SpellMysticArts] spell_ui_controller が初期化されていません")
+			push_error("[SpellMysticArts] spell_ui_manager が初期化されていません")
 		await spell_phase_handler_ref.get_tree().create_timer(0.5).timeout
 	
 	end_mystic_phase()

@@ -1076,39 +1076,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.game_3d_ref
 		)
 
-	# SpellConfirmationHandler を初期化（Phase 6-2）
-	if not spell_phase_handler.spell_confirmation_handler:
-		spell_phase_handler.spell_confirmation_handler = SpellConfirmationHandler.new()
-		spell_phase_handler.spell_confirmation_handler.name = "SpellConfirmationHandler"
-		spell_phase_handler.add_child(spell_phase_handler.spell_confirmation_handler)
-
-		spell_phase_handler.spell_confirmation_handler.setup(
-			spell_phase_handler,
-			ui_manager,
-			spell_phase_handler.board_system,
-			spell_phase_handler.player_system,
-			spell_phase_handler.game_3d_ref
-		)
-
-		spell_phase_handler.spell_confirmation_handler.initialize_spell_cast_notification_ui()
-
-	# SpellUIController を初期化（Phase 7-1）
-	if not spell_phase_handler.spell_ui_controller:
-		spell_phase_handler.spell_ui_controller = SpellUIController.new()
-		spell_phase_handler.spell_ui_controller.name = "SpellUIController"
-		spell_phase_handler.add_child(spell_phase_handler.spell_ui_controller)
-
-		spell_phase_handler.spell_ui_controller.setup(
-			spell_phase_handler,
-			ui_manager,
-			spell_phase_handler.board_system,
-			spell_phase_handler.player_system,
-			spell_phase_handler.game_3d_ref,
-			spell_phase_handler.card_system
-		)
-
-		spell_phase_handler.spell_ui_controller.initialize_spell_phase_ui()
-
 	# MysticArtsHandler を初期化（Phase 8-1）
 	if not spell_phase_handler.mystic_arts_handler:
 		spell_phase_handler.mystic_arts_handler = MysticArtsHandler.new()
@@ -1146,18 +1113,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		print("[GameSystemManager] SpellStateHandler と SpellFlowHandler を初期化完了")
 
-	# SpellNavigationController を初期化（Phase 5-1 で SpellUIManager が参照するため）
-	if not spell_phase_handler.spell_navigation_controller:
-		spell_phase_handler.spell_navigation_controller = SpellNavigationController.new()
-		spell_phase_handler.spell_navigation_controller.setup(
-			spell_phase_handler,
-			ui_manager,
-			spell_phase_handler.spell_ui_controller,
-			spell_phase_handler.spell_target_selection_handler,
-			spell_phase_handler.spell_state
-		)
-
-	# ★ NEW Phase 5-1: SpellUIManager 初期化
+	# SpellUIManager 初期化（統合版: ナビゲーション + UI制御 + 発動確認）
 	if not spell_phase_handler.spell_ui_manager:
 		spell_phase_handler.spell_ui_manager = SpellUIManager.new()
 		spell_phase_handler.spell_ui_manager.name = "SpellUIManager"
@@ -1166,10 +1122,15 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		spell_phase_handler.spell_ui_manager.setup(
 			spell_phase_handler,
 			ui_manager,
-			spell_phase_handler.spell_navigation_controller,
-			spell_phase_handler.spell_confirmation_handler,
-			spell_phase_handler.spell_ui_controller
+			spell_phase_handler.board_system,
+			spell_phase_handler.player_system,
+			spell_phase_handler.game_3d_ref,
+			spell_phase_handler.card_system
 		)
+
+		# 統合された初期化処理
+		spell_phase_handler.spell_ui_manager.initialize_spell_phase_ui()
+		spell_phase_handler.spell_ui_manager.initialize_spell_cast_notification_ui()
 
 		print("[SpellUIManager] 初期化完了")
 

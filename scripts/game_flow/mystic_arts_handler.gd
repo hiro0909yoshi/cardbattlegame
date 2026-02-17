@@ -201,10 +201,10 @@ func _on_mystic_target_selection_requested(targets: Array) -> void:
 	_spell_phase_handler.spell_target_selection_handler._start_mystic_tap_target_selection(targets)
 
 	# グローバルナビゲーション設定（対象選択用 - アルカナアーツでも戻るボタンを表示）
-	if _spell_phase_handler and _spell_phase_handler.spell_navigation_controller:
-		_spell_phase_handler.spell_navigation_controller._setup_target_selection_navigation()
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
+		_spell_phase_handler.spell_ui_manager._setup_target_selection_navigation()
 	else:
-		push_error("[MAH] spell_navigation_controller が初期化されていません")
+		push_error("[MAH] spell_ui_manager が初期化されていません")
 
 	# ターゲット選択画面を表示（削除前の処理を復活）
 	if _spell_phase_handler and _spell_phase_handler.spell_target_selection_handler:

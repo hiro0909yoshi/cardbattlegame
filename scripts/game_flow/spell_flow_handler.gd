@@ -627,31 +627,31 @@ func _exit_target_selection_phase():
 
 ## スペルフェーズUIを更新
 func _update_spell_phase_ui():
-	if _spell_phase_handler and _spell_phase_handler.spell_ui_controller:
-		_spell_phase_handler.spell_ui_controller.update_spell_phase_ui()
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
+		_spell_phase_handler.spell_ui_manager.update_spell_phase_ui()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_controller が初期化されていません")
+		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
 
 ## スペル選択UIを表示
 func _show_spell_selection_ui(_hand_data: Array, _available_magic: int):
-	if _spell_phase_handler and _spell_phase_handler.spell_ui_controller:
-		_spell_phase_handler.spell_ui_controller.show_spell_selection_ui(_hand_data, _available_magic)
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
+		_spell_phase_handler.spell_ui_manager.show_spell_selection_ui(_hand_data, _available_magic)
 	else:
-		push_error("[SpellFlowHandler] spell_ui_controller が初期化されていません")
+		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
 
 ## スペルフェーズ開始時にボタンを表示
 func _show_spell_phase_buttons():
-	if _spell_phase_handler and _spell_phase_handler.spell_ui_controller:
-		_spell_phase_handler.spell_ui_controller.show_spell_phase_buttons()
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
+		_spell_phase_handler.spell_ui_manager.show_spell_phase_buttons()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_controller が初期化されていません")
+		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
 
 ## スペルフェーズ終了時にボタンを非表示
 func _hide_spell_phase_buttons():
-	if _spell_phase_handler and _spell_phase_handler.spell_ui_controller:
-		_spell_phase_handler.spell_ui_controller.hide_spell_phase_buttons()
+	if _spell_phase_handler and _spell_phase_handler.spell_ui_manager:
+		_spell_phase_handler.spell_ui_manager.hide_spell_phase_buttons()
 	else:
-		push_error("[SpellFlowHandler] spell_ui_controller が初期化されていません")
+		push_error("[SpellFlowHandler] spell_ui_manager が初期化されていません")
 
 ## スペル選択時のナビゲーション設定（決定 = スペルを使わない → サイコロ）
 func _setup_spell_selection_navigation():

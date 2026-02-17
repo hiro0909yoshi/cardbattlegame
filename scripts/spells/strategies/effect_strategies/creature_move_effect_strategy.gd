@@ -87,6 +87,8 @@ func execute(context: Dictionary) -> Dictionary:
 
 	if result.get("success", false):
 		_log("効果実行完了 (成功)")
+	elif result.get("reason", "") == "cancelled":
+		_log("効果キャンセル（ユーザー操作）")
 	else:
 		_log_error("効果実行失敗 (reason: %s)" % result.get("reason", "unknown"))
 

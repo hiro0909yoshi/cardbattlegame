@@ -67,8 +67,6 @@ var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ（Game
 var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（GameSystemManagerから設定）
 var cpu_spell_phase_handler = null  # CPUスペルフェーズ処理
 var spell_target_selection_handler = null  # SpellTargetSelectionHandler - 対象選択ハンドラー（Phase 6-1、循環参照回避のため型アノテーションなし）
-var spell_confirmation_handler = null  # SpellConfirmationHandler - スペル発動確認ハンドラー（循環参照回避のため型アノテーションなし）
-var spell_ui_controller = null  # SpellUIController - UI制御（Phase 7-1、循環参照回避のため型アノテーションなし）
 var mystic_arts_handler = null  # MysticArtsHandler - アルカナアーツ処理（Phase 8-1、循環参照回避のため型アノテーションなし）
 
 ## === Phase 5-1: SpellUIManager 統合 ===
@@ -77,7 +75,6 @@ var spell_ui_manager = null  # SpellUIManager - UI管理システム（Phase 5-1
 ## ===== ハンドラー参照（Phase 3-A Day 9-12） =====
 var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
 var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
-var spell_navigation_controller: SpellNavigationController = null  # ナビゲーション管理（Day 18）
 
 
 func _ready():
@@ -297,9 +294,9 @@ func try_handle_card_selection(card_index: int) -> bool:
 
 ## 発動通知UIを初期化（内部）
 func _initialize_spell_cast_notification_ui():
-	if spell_confirmation_handler:
-		spell_confirmation_handler.initialize_spell_cast_notification_ui()
-		spell_cast_notification_ui = spell_confirmation_handler.get_spell_cast_notification_ui()
+	if spell_ui_manager:
+		spell_ui_manager.initialize_spell_cast_notification_ui()
+		spell_cast_notification_ui = spell_ui_manager.get_spell_cast_notification_ui()
 
 ## カード選択ハンドラーを初期化
 func _initialize_card_selection_handler(ui_mgr = null):
@@ -332,11 +329,11 @@ func _on_card_selection_completed():
 
 ## スペル/アルカナアーツ発動通知を表示（内部）
 func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
-	if not spell_confirmation_handler:
-		push_error("[SPH] spell_confirmation_handler が初期化されていません")
+	if not spell_ui_manager:
+		push_error("[SPH] spell_ui_manager が初期化されていません")
 		return
 
-	await spell_confirmation_handler.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
+	await spell_ui_manager.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
 
 
 ## カード犠牲が無効化されているか（TileActionProcessorから取得）
@@ -399,21 +396,21 @@ func _initialize_human_player_ui() -> void:
 	シグナル駆動で自動的にフェーズが進行する
 	"""
 	# UI初期化
-	if spell_navigation_controller:
-		spell_navigation_controller._initialize_spell_phase_ui()
-		spell_navigation_controller._show_spell_phase_buttons()
-		spell_navigation_controller._setup_spell_selection_navigation()
+	if spell_ui_manager:
+		spell_ui_manager.initialize_spell_phase_ui()
+		spell_ui_manager.show_spell_phase_buttons()
+		spell_ui_manager._setup_spell_selection_navigation()
 	else:
-		push_error("[SPH] spell_navigation_controller が初期化されていません")
+		push_error("[SPH] spell_ui_manager が初期化されていません")
 
 	# CardSelectionUI を表示
-	if spell_ui_controller and spell_state:
+	if spell_ui_manager and spell_state:
 		var hand_data = card_system.get_all_cards_for_player(spell_state.current_player_id) if card_system else []
 		var magic_power = 0
 		if player_system and spell_state:
 			var player = player_system.players[spell_state.current_player_id] if spell_state.current_player_id >= 0 and spell_state.current_player_id < player_system.players.size() else null
 			if player:
 				magic_power = player.magic_power
-		spell_ui_controller.show_spell_selection_ui(hand_data, magic_power)
+		spell_ui_manager.show_spell_selection_ui(hand_data, magic_power)
 	else:
-		push_error("[SPH] spell_ui_controller または spell_state が初期化されていません")
+		push_error("[SPH] spell_ui_manager または spell_state が初期化されていません")
