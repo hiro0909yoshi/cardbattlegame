@@ -98,6 +98,10 @@ func set_battle_status_overlay(overlay) -> void:
 
 func set_dominio_order_ui(dou) -> void:
 	_dominio_order_ui = dou
+	# level_up_selected シグナル接続
+	if _dominio_order_ui and _dominio_order_ui.has_signal("level_up_selected"):
+		if not _dominio_order_ui.level_up_selected.is_connected(_on_level_up_selected):
+			_dominio_order_ui.level_up_selected.connect(_on_level_up_selected)
 
 ## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
 func _get_item_phase_handler():
