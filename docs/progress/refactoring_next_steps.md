@@ -1,7 +1,7 @@
 # リファクタリング次ステップ
 
 **最終更新**: 2026-02-17
-**現在のフェーズ**: Phase 7-A 完了 → 次は Phase 7-B へ
+**現在のフェーズ**: Phase 7-A/7-B 完了 → 次は Phase 8 へ
 
 ---
 
@@ -44,61 +44,27 @@ SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 
 ---
 
-## Phase 7: 構造改善（CPU抽象化 + UI依存逆転） — 継続
+## ✅ Phase 7-B: SPH UI 依存逆転 — 完了
 
-### 7-B: SPH UI 依存逆転（残り3箇所）
-
+**実施日**: 2026-02-17
 **目的**: SPH → SpellUIManager の直接呼び出しを Signal 駆動に変更
 
-**現状の問題**:
-- SPH が SpellUIManager のメソッドを直接呼び出している（依存方向が逆）
-- SpellFlowHandler / MysticArtsHandler は Signal 駆動化済み（Phase 6-A）だが、SPH 自身は未対応
+**実装内容**:
+1. ✅ SPH に `human_spell_phase_started` Signal 追加
+2. ✅ `_initialize_human_player_ui()` を Signal emit に変更（直接呼び出し廃止）
+3. ✅ SpellUIManager に `_on_human_spell_phase_started()` リスナー追加
+4. ✅ SpellUIManager に `connect_spell_phase_handler_signals()` 接続メソッド追加
+5. ✅ GSM で Signal 接続 + `spell_cast_notification_ui` null バグ修正
+6. ✅ デッドコード削除: `_initialize_spell_cast_notification_ui()`, `_on_hand_updated_for_buttons()`
 
-**残存する直接呼び出し**:
-1. `_initialize_human_player_ui()` — spell_ui_manager.initialize_spell_phase_ui() 等を直接呼び出し
-2. `show_spell_cast_notification()` — spell_ui_manager.show_spell_cast_notification() を await で直接呼び出し
-3. `_initialize_spell_cast_notification_ui()` — spell_ui_manager の初期化を直接呼び出し
+**修正ファイル** (3ファイル):
+- ✅ `scripts/game_flow/spell_phase_handler.gd` — Signal追加、emit化、デッドコード削除
+- ✅ `scripts/game_flow/spell_ui_manager.gd` — リスナー追加、接続メソッド追加
+- ✅ `scripts/system_manager/game_system_manager.gd` — Signal接続、null バグ修正
 
-**修正計画**:
-1. SPH に Signal 追加: `human_spell_phase_started(player_id, hand_data, magic_power)`
-2. SpellUIManager が Signal を listen して自分で UI 初期化
-3. `show_spell_cast_notification` は request/completed Signal パターンに変更
-4. 初期化系は GSM 側で直接呼び出し（SPH を経由しない）
-
-**対象ファイル**:
-- `scripts/game_flow/spell_phase_handler.gd` — Signal 追加、直接呼び出し除去
-- `scripts/game_flow/spell_ui_manager.gd` — Signal listener 追加
-- `scripts/system_manager/game_system_manager.gd` — 初期化の接続変更
-
-**リスク**: 中（await パターンの Signal 変換は設計が必要）
-
----
-
-### 7-B: SPH UI 依存逆転（残り3箇所）
-
-**目的**: SPH → SpellUIManager の直接呼び出しを Signal 駆動に変更
-
-**現状の問題**:
-- SPH が SpellUIManager のメソッドを直接呼び出している（依存方向が逆）
-- SpellFlowHandler / MysticArtsHandler は Signal 駆動化済み（Phase 6-A）だが、SPH 自身は未対応
-
-**残存する直接呼び出し**:
-1. `_initialize_human_player_ui()` — spell_ui_manager.initialize_spell_phase_ui() 等を直接呼び出し
-2. `show_spell_cast_notification()` — spell_ui_manager.show_spell_cast_notification() を await で直接呼び出し
-3. `_initialize_spell_cast_notification_ui()` — spell_ui_manager の初期化を直接呼び出し
-
-**修正計画**:
-1. SPH に Signal 追加: `human_spell_phase_started(player_id, hand_data, magic_power)`
-2. SpellUIManager が Signal を listen して自分で UI 初期化
-3. `show_spell_cast_notification` は request/completed Signal パターンに変更
-4. 初期化系は GSM 側で直接呼び出し（SPH を経由しない）
-
-**対象ファイル**:
-- `scripts/game_flow/spell_phase_handler.gd` — Signal 追加、直接呼び出し除去
-- `scripts/game_flow/spell_ui_manager.gd` — Signal listener 追加
-- `scripts/system_manager/game_system_manager.gd` — 初期化の接続変更
-
-**リスク**: 中（await パターンの Signal 変換は設計が必要）
+**設計判断**:
+- `show_spell_cast_notification()` は委譲メソッドとして残置（5+箇所の外部 await 呼び出しのため Signal 変換は過剰）
+- `spell_ui_manager` 変数は残置（25+箇所の外部参照のため除去不可）
 
 ---
 
@@ -148,7 +114,7 @@ SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 | DicePhaseHandler | ✅ 8 Signals | 完了（Phase 6-B） | — |
 | TollPaymentHandler | ✅ 2 Signals | 完了（Phase 6-C） | — |
 | DiscardHandler | ✅ 2 Signals | 完了（Phase 6-C） | — |
-| SpellPhaseHandler | ⚠️ 部分的 | spell_ui_manager 直接呼び出し残存 | **Phase 7-B** |
+| SpellPhaseHandler | ✅ 1 Signal | 完了（Phase 7-B）、show_spell_cast_notification は委譲残置 | — |
 | BankruptcyHandler | ⚠️ 部分的 | パネル直接生成 | Phase 8-C |
 | ItemPhaseHandler | ❌ なし | ui_manager 直接操作多数 | Phase 8-A |
 | DominioCommandHandler | ❌ 最小限 | ui_manager 直接操作多数 | Phase 8-B |
@@ -159,10 +125,10 @@ SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 
 | ハンドラー | CPU参照数 | 方式 | 対象Phase |
 |-----------|----------|------|----------|
-| SpellPhaseHandler | 5個 | パススルー保持 | **Phase 7-A** |
+| SpellPhaseHandler | 0個 | 直接注入化済み | ✅ 完了（Phase 7-A） |
 | ItemPhaseHandler | 3個 | GSM直接注入済み | 対処済み |
 | MysticArtsHandler | 1個 | SPH経由 | Phase 7-A で連動 |
-| DiscardHandler | 1個 | SPH経由 | Phase 7-A で連動 |
+| DiscardHandler | 0個 | 直接注入化済み | ✅ 完了（Phase 7-A） |
 | その他 | 0個 | — | 対処不要 |
 
 ---
@@ -171,7 +137,7 @@ SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 
 | 順番 | Phase | 内容 | リスク |
 |-----|-------|------|-------|
-| 1 | **7-A** | CPU AI パススルー除去（SPH） | 低 |
-| 2 | **7-B** | SPH UI 依存逆転 | 中 |
+| 1 | ~~7-A~~ | ✅ CPU AI パススルー除去（SPH） | 完了 |
+| 2 | ~~7-B~~ | ✅ SPH UI 依存逆転 | 完了 |
 | 3 | **8-A/B** | ItemPhaseHandler / DominioCommandHandler Signal 駆動化 | 中 |
 | 4 | **8-C/D** | BankruptcyHandler パネル分離 + UIManager 分割 | 高 |
