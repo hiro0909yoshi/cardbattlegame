@@ -337,6 +337,11 @@ func _on_human_spell_phase_started(_player_id: int, hand_data: Array, magic_powe
 	_setup_spell_selection_navigation()
 	show_spell_selection_ui(hand_data, magic_power)
 
+func _on_spell_cast_notification_requested(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool) -> void:
+	await show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
+	if _spell_phase_handler:
+		_spell_phase_handler.spell_cast_notification_completed.emit()
+
 
 # === SpellFlowHandler Signal接続 ===
 
@@ -348,6 +353,9 @@ func connect_spell_phase_handler_signals(sph) -> void:
 
 	if not sph.human_spell_phase_started.is_connected(_on_human_spell_phase_started):
 		sph.human_spell_phase_started.connect(_on_human_spell_phase_started)
+
+	if not sph.spell_cast_notification_requested.is_connected(_on_spell_cast_notification_requested):
+		sph.spell_cast_notification_requested.connect(_on_spell_cast_notification_requested)
 
 
 ## SpellFlowHandler の UI Signal を接続

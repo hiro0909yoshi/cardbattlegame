@@ -15,6 +15,10 @@ signal target_selection_required(spell_card: Dictionary, target_type: String)
 signal target_confirmed(target_data: Dictionary)  # ターゲット選択完了時
 @warning_ignore("unused_signal")  # SpellUIManager で listen される
 signal human_spell_phase_started(player_id: int, hand_data: Array, magic_power: int)
+@warning_ignore("unused_signal")  # SpellUIManager で listen される
+signal spell_cast_notification_requested(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool)
+@warning_ignore("unused_signal")  # SpellUIManager で emit される
+signal spell_cast_notification_completed()
 
 ## 参照
 ## （状態変数は SpellStateHandler に移行済み - Phase 3-A Day 9）
@@ -313,13 +317,10 @@ func _initialize_card_selection_handler(ui_mgr = null):
 func _on_card_selection_completed():
 	complete_spell_phase()
 
-## スペル/アルカナアーツ発動通知を表示（内部）
+## スペル/アルカナアーツ発動通知を表示（Signal駆動）
 func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):
-	if not spell_ui_manager:
-		push_error("[SPH] spell_ui_manager が初期化されていません")
-		return
-
-	await spell_ui_manager.show_spell_cast_notification(caster_name, target_data, spell_or_mystic, is_mystic)
+	spell_cast_notification_requested.emit(caster_name, target_data, spell_or_mystic, is_mystic)
+	await spell_cast_notification_completed
 
 
 ## カード犠牲が無効化されているか（TileActionProcessorから取得）
