@@ -29,6 +29,15 @@ var game_flow_manager_ref: GameFlowManager = null
 var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
 
 
+# ============ ヘルパーメソッド ============
+
+## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
+func _get_ui_manager():
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
+		return spell_phase_handler_ref.spell_ui_manager._ui_manager
+	return null
+
+
 # ============ アルカナアーツフェーズ状態 ============
 
 var is_mystic_phase_active: bool = false
@@ -107,7 +116,7 @@ func is_active() -> bool:
 
 ## 閲覧モードから戻る時のナビゲーション復元
 func restore_navigation():
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager:
 		return
 	if _is_selecting_caster:
@@ -142,7 +151,7 @@ func end_mystic_phase() -> void:
 
 ## クリーチャー選択
 func _select_creature(available_creatures: Array) -> void:
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager:
 		end_mystic_phase()
 		return
@@ -164,7 +173,7 @@ func _select_creature(available_creatures: Array) -> void:
 
 ## 使用者選択用のタップ選択を開始
 func _start_caster_tap_selection(available_creatures: Array) -> void:
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager or not ui_manager.tap_target_manager:
 		return
 	
@@ -191,7 +200,7 @@ func _start_caster_tap_selection(available_creatures: Array) -> void:
 
 ## 使用者タップ選択を終了
 func _end_caster_tap_selection() -> void:
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager or not ui_manager.tap_target_manager:
 		return
 	
@@ -220,7 +229,7 @@ func _on_caster_tap_selected(tile_index: int, _creature_data: Dictionary) -> voi
 
 ## 使用者選択のナビゲーション設定
 func _setup_caster_selection_navigation() -> void:
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager:
 		return
 	
@@ -249,7 +258,7 @@ func _update_caster_selection() -> void:
 	
 	# クリーチャー情報パネル表示（setup_buttons=falseで表示後、ナビゲーションを再設定）
 	var creature_data = creature.get("creature_data", {})
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if ui_manager:
 		ui_manager.show_card_info(creature_data, tile_index, false)
 		# show_card_infoが×ボタンをrestore_current_phaseに上書きするため、
@@ -299,7 +308,7 @@ func _cancel_caster_selection() -> void:
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
 	
 	# ナビゲーションを無効化
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if ui_manager:
 		ui_manager.disable_navigation()
 	
@@ -327,7 +336,7 @@ func _next_caster() -> void:
 
 ## アルカナアーツ選択（タップ対応版） - ActionMenuUIを使用
 func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void:
-	var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+	var ui_manager = _get_ui_manager()
 	if not ui_manager:
 		end_mystic_phase()
 		return
@@ -435,7 +444,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	# ターゲット不要（none）またはセルフターゲット時 → 確認フェーズへ
 	if target_type == "none" or target_type == "self" or target_filter == "self":
 		# ★ NEW: 前のナビゲーション設定をクリア
-		var ui_manager = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+		var ui_manager = _get_ui_manager()
 		if ui_manager:
 			ui_manager.disable_navigation()
 
@@ -465,7 +474,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 	
 	if targets.is_empty():
 		# コメントで通知してからフェーズ終了
-		var ui_mgr = spell_phase_handler_ref.ui_manager if spell_phase_handler_ref else null
+		var ui_mgr = _get_ui_manager()
 		if ui_mgr and ui_mgr.global_comment_ui:
 			await ui_mgr.global_comment_ui.show_and_wait("有効なターゲットがありません", current_mystic_player_id)
 		clear_selection()
@@ -671,8 +680,9 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 	ui_message_requested.emit(confirmation_text)
 	
 	# ナビゲーションボタン設定（決定/戻る）
-	if spell_phase_handler_ref and spell_phase_handler_ref.ui_manager:
-		spell_phase_handler_ref.ui_manager.enable_navigation(
+	var _um = _get_ui_manager()
+	if _um:
+		_um.enable_navigation(
 			func(): _confirm_mystic_effect(),  # 決定
 			func(): _cancel_mystic_confirmation()  # 戻る
 		)
@@ -694,10 +704,11 @@ func _confirm_mystic_effect() -> void:
 		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
 		TargetSelectionHelper.hide_selection_marker(spell_phase_handler_ref)
 		TargetSelectionHelper.clear_confirmation_markers(spell_phase_handler_ref)
-		
+
 		# ナビゲーションを無効化
-		if spell_phase_handler_ref.ui_manager:
-			spell_phase_handler_ref.ui_manager.disable_navigation()
+		var _um2 = _get_ui_manager()
+		if _um2:
+			_um2.disable_navigation()
 	
 	# 保存した情報を取得
 	var creature = confirmation_creature
@@ -1201,17 +1212,17 @@ func _focus_camera_on_creature(creature_info: Dictionary) -> void:
 
 ## クリーチャー情報パネルを表示
 func _show_creature_info_panel(creature_data: Dictionary, tile_index: int) -> void:
-	if not spell_phase_handler_ref or not spell_phase_handler_ref.ui_manager:
+	var ui_manager = _get_ui_manager()
+	if not ui_manager:
 		return
-	
-	var ui_manager = spell_phase_handler_ref.ui_manager
+
 	ui_manager.show_card_info(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
 func _hide_creature_info_panel() -> void:
-	if not spell_phase_handler_ref or not spell_phase_handler_ref.ui_manager:
+	var ui_manager = _get_ui_manager()
+	if not ui_manager:
 		return
-	
-	var ui_manager = spell_phase_handler_ref.ui_manager
+
 	ui_manager.hide_all_info_panels(false)
