@@ -168,7 +168,7 @@ var _navigation_service: NavigationService
 | 2 | **8-G** | 最重量級ヘルパー → サービス直接注入 | ~6 | 高 | 📋 次（3/6） |
 | 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 | 待機 |
 | ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | ✅ 完了 |
-| 5 | **8-B** | DominioCommandHandler Signal化 | 1 | 高 | 待機 |
+| ✅ | **8-B** | DominioCommandHandler サービス注入（90→49参照） | 1 | 高 | ✅ 完了 |
 | 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 | 待機 |
 | 7 | **8-E** | 兄弟システム Signal化 | 5 | 中〜高 | 待機 |
 | ✅ | **8-I** | タイル系 → context経由サービス | ~6 | 低 | ✅ 完了 |
@@ -370,44 +370,30 @@ func setup(card_selection: CardSelectionService, navigation: NavigationService, 
 
 ---
 
-### 8-B: DominioCommandHandler Signal化
+### ✅ 8-B: DominioCommandHandler サービス注入（完了 2026-02-18）
 
-**目的**: DominioCommandHandler から `ui_manager` 直接参照を削除
-**リスク**: 高（50箇所以上、状態遷移が複雑）
-**前提**: 8-F 完了後、Signal リスナーは各サービスに接続
+**目的**: DominioCommandHandler から ui_manager 依存を部分削減（サービス注入パターン）
+**リスク**: 高（完了）
+**戦略**: Signal化ではなくサービス注入。DCH はインタラクティブ（UI ↔ ロジック往復が多い）ため Signal 化は非実用的
 
-#### 段階的対応
+#### 実装内容
 
-**8-B1: ナビゲーション操作（~13箇所）→ NavigationService**
+**initialize() でサービス解決**:
+- `_message_service`, `_navigation_service`, `_card_selection_service`, `_info_panel_service` を ui_mgr から解決
 
-| 現在の呼び出し | Signal |
-|---------------|--------|
-| `ui_manager.clear_navigation_saved_state()` | `dominio_navigation_cleared()` |
-| `ui_manager.enable_navigation(confirm, back)` ×6 | `dominio_navigation_configured(config)` |
-| `ui_manager.disable_navigation()` | `dominio_navigation_disabled()` |
+**移行結果**:
 
-**8-B2: DominioOrderUI 操作（~15箇所）→ UIManager残存部（DominioOrderUI管理）**
+| サービス | 移行内容 | 箇所数 |
+|---------|---------|-------|
+| MessageService | show_toast, show_action_prompt, hide_action_prompt, show_comment_and_wait | 9 |
+| NavigationService | enable_navigation, disable_navigation, clear_navigation_saved_state, clear_back_action | 10 |
+| CardSelectionService | hide_card_selection_ui | 2 |
+| InfoPanelService | hide_all_info_panels | 1 |
+| **合計** | | **22** |
 
-| 現在の呼び出し | Signal |
-|---------------|--------|
-| `ui_manager.show_land_selection_mode(...)` | `dominio_land_selection_shown(lands)` |
-| `ui_manager.dominio_order_ui.hide_level_selection()` 等 | `dominio_ui_state_changed(state)` |
-| `ui_manager.hide_dominio_order_ui()` | `dominio_ui_closed()` |
-| `ui_manager.show_action_menu()` 等 | `dominio_ui_state_changed(state)` |
+**ui_manager 残存（49参照）**: dominio_order_ui（9）、show_action_menu/show_land_selection_mode（6）、tap_target_manager（4）、level_up_selected signal（3）、card_selection_ui.deactivate（1）、update_player_info_panels（1）、add_child（1）、null チェック・ガード（24+）
 
-**8-B3: その他 UI 操作（~10箇所）→ MessageService, InfoPanelService 等**
-
-| 現在の呼び出し | Signal |
-|---------------|--------|
-| `ui_manager.phase_display.show_toast(...)` | `dominio_toast_shown(msg)` |
-| `ui_manager.hide_all_info_panels()` | `dominio_info_panels_hidden()` |
-| `ui_manager.update_player_info_panels()` | `dominio_player_info_updated()` |
-| `ui_manager.show_comment_and_wait()` | request/completed Signal ペア |
-
-**追加修正**:
-- `open_dominio_order()` に `board_system.enable_manual_camera()` 追加
-
-**見込み Signal 総数**: ~14個
+**将来**: dominio_order_ui 直接注入で追加削減可能（Phase 8-B2）
 
 ---
 
@@ -573,8 +559,8 @@ var context = {
 | TollPaymentHandler | 2 Signals | ✅ ゼロ | **完全分離** |
 | DiscardHandler | 2 Signals | ✅ ゼロ | **完全分離** |
 | BankruptcyHandler | 5 Signals | ⚠️ Panel直接生成 | **Phase 8-C** |
-| ItemPhaseHandler | 0 Signals | ❌ 11箇所 | **Phase 8-A** |
-| DominioCommandHandler | 0 Signals | ❌ 50箇所以上 | **Phase 8-B** |
+| ItemPhaseHandler | 4 Signals | ✅ ゼロ | **✅ 完全分離** |
+| DominioCommandHandler | — | ⚠️ 49参照残存（サービス注入） | ✅ **Phase 8-B 完了** |
 
 ### 兄弟システム → UIManager 直接参照
 

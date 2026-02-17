@@ -53,13 +53,21 @@
 - `board_system_3d.gd`: `set_movement_controller_ui_manager()` → `set_movement_controller_services()` に変更
 - `game_flow_manager.gd`: 呼び出し元を`ui_manager.message_service, ui_manager.navigation_service` に変更
 
+### ✅ Phase 8-B: DominioCommandHandler サービス注入（完全完了）
+
+- initialize()で4サービス解決（MessageService, NavigationService, CardSelectionService, InfoPanelService）
+- MessageService移行: show_toast×2, show_action_prompt×5, hide_action_prompt×1, show_comment_and_wait×1
+- NavigationService移行: enable_navigation×7, disable_navigation×1, clear_navigation_saved_state×1, clear_back_action×1
+- CardSelectionService移行: hide_card_selection_ui×2、InfoPanelService移行: hide_all_info_panels×1
+- **結果**: 90参照 → 49参照（46%削減）、8/8ハンドラー移行完了
+
 ### 📊 本日の成果
 
 | 指標 | 値 |
 |------|-----|
-| コミット数 | 7 |
+| コミット数 | 8 |
 | 新規 Signal | 4（累計 37） |
-| ハンドラー UI分離 | 7/8 完了 |
+| ハンドラー UI分離 | 8/8 完了 |
 | タイル系ファイル移行 | 6/6 完了 |
 | 移動系ファイル移行 | 3/3 完了 |
 | UIManager完全削除 | 9/54ファイル |
@@ -67,5 +75,4 @@
 ### 📋 次のステップ
 
 - Phase 8-G（残り）: card_selection_handler, land_action_helper, card_sacrifice_helper の複雑な移行
-- Phase 8-B: DominioCommandHandler Signal化（最重量級、90+ 参照）
 - Phase 8-C: BankruptcyHandler パネル直接生成の分離
