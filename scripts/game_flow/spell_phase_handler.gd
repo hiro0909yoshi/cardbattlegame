@@ -155,14 +155,6 @@ func start_spell_phase(player_id: int):
 		# シグナル駆動で自動的にフェーズが進行（spell_flow.use_spell() or pass_spell()）
 		_initialize_human_player_ui()
 
-## UIメソッド（内部使用のため簡潔実装）
-func _update_spell_phase_ui():
-	if spell_ui_controller:
-		spell_ui_controller.update_spell_phase_ui()
-
-func _show_spell_selection_ui(_hand_data: Array, _available_magic: int):
-	if spell_ui_controller:
-		spell_ui_controller.show_spell_selection_ui(_hand_data, _available_magic)
 
 ## CPUのスペル使用判定（新AI使用）
 ## CPUSpellPhaseHandlerへの簡潔な委譲
@@ -187,10 +179,6 @@ func _input(event: InputEvent) -> void:
 	if spell_target_selection_handler:
 		spell_target_selection_handler._input(event)
 
-## カメラを使用者に戻す（内部）
-func return_camera_to_player():
-	if spell_ui_controller:
-		spell_ui_controller.return_camera_to_player()
 
 ## タイルリストから選択（SpellCreatureMove用など）
 ## TargetSelectionHelperに委譲
@@ -239,48 +227,6 @@ func use_spell(spell_card: Dictionary):
 		push_error("[SPH] spell_flow が初期化されていません")
 		return
 	await spell_flow.use_spell(spell_card)
-
-## スペルをキャンセル（SpellFlowHandler に委譲）
-func cancel_spell():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	spell_flow.cancel_spell()
-
-## スペル効果を実行（SpellFlowHandler に委譲）
-func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	await spell_flow.execute_spell_effect(spell_card, target_data)
-
-## 全クリーチャー対象スペルを実行（SpellFlowHandler に委譲）
-func _execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Dictionary):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	await spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
-
-## スペル効果を確認（SpellFlowHandler に委譲）
-func _confirm_spell_effect():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	spell_flow._confirm_spell_effect()
-
-## スペル確認をキャンセル（SpellFlowHandler に委譲）
-func _cancel_confirmation():
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	spell_flow._cancel_confirmation()
-
-## スペルをパス（SpellFlowHandler に委譲）
-func pass_spell(auto_roll: bool = true):
-	if not spell_flow:
-		push_error("[SPH] spell_flow が初期化されていません")
-		return
-	spell_flow.pass_spell(auto_roll)
 
 ## スペル関連のコンテキストを構築（世界呪い等）
 func _build_spell_context() -> Dictionary:
@@ -432,38 +378,6 @@ func set_cpu_hand_utils(utils: CPUHandUtils) -> void:
 
 func set_cpu_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
 	cpu_movement_evaluator = evaluator
-
-# =============================================================================
-# TapTargetManager連携（スペルターゲット選択）
-# =============================================================================
-
-## Tap Target Manager 関連（内部）
-func _start_spell_tap_target_selection(targets: Array, target_type: String) -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._start_spell_tap_target_selection(targets, target_type)
-
-func _end_spell_tap_target_selection() -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._end_spell_tap_target_selection()
-
-func _check_tutorial_target_allowed(tile_index: int) -> bool:
-	if spell_target_selection_handler:
-		return spell_target_selection_handler._check_tutorial_target_allowed(tile_index)
-	return true
-
-func _check_tutorial_player_target_allowed(player_id: int) -> bool:
-	if spell_target_selection_handler:
-		return spell_target_selection_handler._check_tutorial_player_target_allowed(player_id)
-	return true
-
-func _on_spell_tap_target_selected(tile_index: int, creature_data: Dictionary) -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._on_spell_tap_target_selected(tile_index, creature_data)
-
-func _start_mystic_tap_target_selection(targets: Array) -> void:
-	if spell_target_selection_handler:
-		spell_target_selection_handler._start_mystic_tap_target_selection(targets)
-
 
 # =============================================================================
 # CPUバトルポリシー取得
