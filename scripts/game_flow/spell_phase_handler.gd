@@ -61,10 +61,6 @@ var game_stats  # GameFlowManager.game_stats への直接参照
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 var target_selection_helper = null  # TargetSelectionHelper: ターゲット選択
 
-var cpu_spell_ai: CPUSpellAI = null  # CPUスペル判断AI（GameSystemManagerから設定）
-var cpu_mystic_arts_ai: CPUMysticArtsAI = null  # CPUアルカナアーツ判断AI（GameSystemManagerから設定）
-var cpu_hand_utils: CPUHandUtils = null  # CPU手札ユーティリティ（GameSystemManagerから設定）
-var cpu_movement_evaluator: CPUMovementEvaluator = null  # CPU移動評価（GameSystemManagerから設定）
 var cpu_spell_phase_handler = null  # CPUスペルフェーズ処理
 var spell_target_selection_handler = null  # SpellTargetSelectionHandler - 対象選択ハンドラー（Phase 6-1、循環参照回避のため型アノテーションなし）
 var mystic_arts_handler = null  # MysticArtsHandler - アルカナアーツ処理（Phase 8-1、循環参照回避のため型アノテーションなし）
@@ -355,26 +351,6 @@ func _on_hand_updated_for_buttons():
 	# グローバルボタンに移行したため、手動での位置更新は不要
 	pass
 
-
-# =============================================================================
-# CPU AI コンテキスト初期化
-# =============================================================================
-
-## CPU AI用の共有コンテキストを初期化（GameSystemManagerで管理されているため削除）
-## 代わりに setter メソッドを使用：set_cpu_spell_ai(), set_cpu_mystic_arts_ai(), set_cpu_hand_utils()
-
-## GameSystemManager から CPU AI 参照を設定（P0統一）
-func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
-	cpu_spell_ai = ai
-
-func set_cpu_mystic_arts_ai(ai: CPUMysticArtsAI) -> void:
-	cpu_mystic_arts_ai = ai
-
-func set_cpu_hand_utils(utils: CPUHandUtils) -> void:
-	cpu_hand_utils = utils
-
-func set_cpu_movement_evaluator(evaluator: CPUMovementEvaluator) -> void:
-	cpu_movement_evaluator = evaluator
 
 # =============================================================================
 # CPUバトルポリシー取得
