@@ -143,22 +143,89 @@ DominioCommandHandler の ui_manager 呼び出しは以下の5グループに分
 
 ---
 
-### 8-D: UIManager 整理（8-A/B/C 完了後に評価）
+### 8-E: 兄弟システム → UIManager 直接参照の解消
 
-**目的**: 8-A/B/C 完了後に UIManager の残存責務を評価し、必要なら分割
+**目的**: UIManager と同レベル（兄弟関係）のシステムが UIManager を直接参照している問題を解消
+**リスク**: 中〜高（広範囲に影響、各システムの用途が異なる）
 
-**8-A/B/C 完了後の UIManager の役割**:
+#### 問題の構図
+
+```
+GameFlowManager（親）
+  ├── BoardSystem3D ──❌直接参照──→ UIManager
+  ├── BattleSystem ───❌直接参照──→ UIManager
+  ├── SpecialTileSystem ─❌直接参照→ UIManager
+  ├── TileActionProcessor ❌直接参照→ UIManager
+  └── UIManager（本来ここだけがUIを管理）
+
+SpellMysticArts ──❌チェーン参照──→ spell_ui_manager._ui_manager
+```
+
+正しい構造: 兄弟システムは Signal を emit → GFM または UIManager がリスニング
+
+#### 違反箇所の詳細
+
+**1. BoardSystem3D** — フェーズテキスト・ドミニオボタン操作
+
+| 用途 | 現在の呼び出し | Signal 変換 |
+|------|---------------|-------------|
+| 移動通知 | `ui_manager.set_phase_text("移動中...")` | `board_phase_text_requested(text)` |
+| ドミニオボタン | `ui_manager.show_dominio_order_button()` | `dominio_button_visibility_changed(visible)` |
+
+**2. BattleSystem** — バトル結果通知
+
+| 用途 | 現在の呼び出し | Signal 変換 |
+|------|---------------|-------------|
+| 結果コメント | `ui_manager.show_comment_and_wait(msg)` | request/completed Signal ペア |
+| グローバルコメント | `global_comment_ui` 直接参照 | Signal 経由に変更 |
+
+**3. TileActionProcessor** — タイルアクション UI
+
+| 用途 | 現在の呼び出し | Signal 変換 |
+|------|---------------|-------------|
+| アクション指示 | `ui_manager.show_action_prompt(msg)` | `tile_action_prompt_requested(msg)` |
+| カード選択UI | `ui_manager.show_card_selection_ui()` | `tile_card_selection_requested(config)` |
+
+**4. SpecialTileSystem** — 特殊タイル UI
+
+| 用途 | 現在の呼び出し | Signal 変換 |
+|------|---------------|-------------|
+| カードフィルター | `ui_manager.card_selection_filter = ...` | Signal 経由 |
+| フェーズ表示 | `ui_manager.set_phase_text(...)` | Signal 経由 |
+
+**5. SpellMysticArts** — アルカナアーツ UI チェーン参照
+
+| 用途 | 現在の呼び出し | Signal 変換 |
+|------|---------------|-------------|
+| UI操作 | `spell_phase_handler.spell_ui_manager._ui_manager` | SpellUIManager の Signal 経由 |
+
+**対象ファイル** (5+):
+- `scripts/board_system_3d.gd`
+- `scripts/battle_system.gd`
+- `scripts/tile_action_processor.gd`
+- `scripts/special_tile_system.gd`
+- `scripts/spells/spell_mystic_arts.gd`
+- `scripts/ui_manager.gd` — Signal リスナー追加
+- `scripts/system_manager/game_system_manager.gd` — Signal 接続
+
+---
+
+### 8-D: UIManager 整理（8-A〜E 完了後に評価）
+
+**目的**: 8-A〜E 完了後に UIManager の残存責務を評価し、必要なら分割
+
+**8-A〜E 完了後の UIManager の役割**:
 - UI コンポーネントのライフサイクル管理（create_ui, 初期化）
-- Signal リスナーのハブ（各ハンドラー → UIManager → 子コンポーネント）
+- Signal リスナーのハブ（各システム → UIManager → 子コンポーネント）
 - グローバル UI 操作（show_card_info, hide_all_info_panels 等）
 
-**判断基準**: 8-A/B/C で UIManager の行数が十分減少すれば分割不要。
+**判断基準**: 8-A〜E で UIManager への直接呼び出しが十分減少すれば分割不要。
 まだ大きい場合は以下の分割候補を検討:
 - `NavigationManager` — ボタン・ナビゲーション状態
 - `InfoPanelManager` — 情報パネル表示・非表示
 - `CardSelectionManager` — カード選択UI・フィルター
 
-**注意**: 分割は 8-A/B/C の成果を見てから判断する（過剰設計を避ける）
+**注意**: 分割は 8-A〜E の成果を見てから判断する（過剰設計を避ける）
 
 ---
 
@@ -171,7 +238,8 @@ DominioCommandHandler の ui_manager 呼び出しは以下の5グループに分
 | 3 | **8-B2** | DominioCommandHandler DominioOrderUI | 中 | ~4 |
 | 4 | **8-B3** | DominioCommandHandler その他UI | 中 | ~7 |
 | 5 | **8-C** | BankruptcyHandler パネル分離 | 低 | ~2 |
-| 6 | **8-D** | UIManager 整理（評価後） | — | — |
+| 6 | **8-E** | 兄弟システム UIManager 直接参照解消 | 中〜高 | ~10 |
+| 7 | **8-D** | UIManager 整理（全完了後に評価） | — | — |
 
 ---
 
@@ -188,6 +256,16 @@ DominioCommandHandler の ui_manager 呼び出しは以下の5グループに分
 | BankruptcyHandler | 5 Signals | ⚠️ Panel直接生成 | 部分的 → **Phase 8-C** |
 | ItemPhaseHandler | 0 Signals | ❌ 11箇所 | **Phase 8-A** |
 | DominioCommandHandler | 0 Signals | ❌ 50箇所以上 | **Phase 8-B** |
+
+### 兄弟システム → UIManager 直接参照
+
+| システム | ui_manager 用途 | 状態 |
+|---------|----------------|------|
+| BoardSystem3D | フェーズテキスト、ドミニオボタン | ❌ **Phase 8-E** |
+| BattleSystem | バトル結果コメント、global_comment_ui | ❌ **Phase 8-E** |
+| TileActionProcessor | アクション指示、カード選択UI | ❌ **Phase 8-E** |
+| SpecialTileSystem | カードフィルター、フェーズ表示 | ❌ **Phase 8-E** |
+| SpellMysticArts | チェーン参照で ui_manager アクセス | ❌ **Phase 8-E** |
 
 ---
 
