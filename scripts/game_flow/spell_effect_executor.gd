@@ -105,7 +105,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	print("[SpellEffectExecutor] 0.5秒待機（カメラ準備）")
 	await handler.get_tree().create_timer(0.5).timeout
 	print("[SpellEffectExecutor] return_camera_to_player() 呼び出し")
-	handler.return_camera_to_player()
+	if handler.spell_ui_controller:
+		handler.spell_ui_controller.return_camera_to_player()
 
 	# さらに待機してからスペルフェーズ完了
 	print("[SpellEffectExecutor] 0.5秒待機（フェーズ完了準備）")
@@ -292,7 +293,8 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 	
 	# 少し待機してからカメラを戻す
 	await handler.get_tree().create_timer(0.5).timeout
-	handler.return_camera_to_player()
-	
+	if handler.spell_ui_controller:
+		handler.spell_ui_controller.return_camera_to_player()
+
 	await handler.get_tree().create_timer(0.5).timeout
 	handler.complete_spell_phase()
