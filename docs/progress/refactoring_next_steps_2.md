@@ -39,6 +39,43 @@ signal card_selected(card_index: int)
 
 ---
 
+## 設計制約（CRITICAL — 全作業で遵守）
+
+### 制約 1: CardSelectionService の責務肥大化防止
+
+card_selected 統一後、CardSelectionService に「選択・フィルタ・モード管理・emit制御」が全て集まる。
+**CardSelectionService が「小さな UIManager」になってはならない。**
+
+**ガードレール**:
+- CardSelectionService は「カード選択 UI の操作代行」に限定
+- フィルタ判定ロジック（「このカードは選択可能か？」）はビジネスロジック側に残す
+- モード管理（sacrifice/discard/spell/item）の判定責任は呼び出し元が持つ
+- CardSelectionService は「言われたモードで表示する」だけ
+- 新メソッド追加時は「これは UI 操作か？ロジック判定か？」を必ず問う
+
+### 制約 2: PlayerInfoService は描画更新のみ
+
+`update_player_info_panels()` は UIManager の「横断的責務」。
+単純にサービス化すると PlayerInfoService が新たな中心点になる。
+
+**ガードレール**:
+- PlayerInfoService は **描画更新（render）だけ** に限定
+- ゲームロジック判定（「誰が勝っているか」「EPは足りるか」等）は **絶対に持たせない**
+- 「データを受け取って描画する」のみ。データの生成・加工はビジネスロジック層の責務
+- 将来の機能追加時に「PlayerInfoService に判定を足した方が楽」という誘惑に負けない
+
+### 制約 3: Phase 8-M（Signal 統一）は1ファイルずつ動作確認
+
+card_selected の emission chain 変更は非同期 await のタイミングバグを生みやすい。
+
+**作業ルール**:
+- **一括置換禁止** — 1ファイルずつ移行 + 動作確認
+- 移行順序: spell_borrow（最小）→ card_sacrifice_helper → tile_summon_executor → spell_creature_swap（最大）
+- 各ファイル移行後に「カード選択 → 決定」「カード選択 → キャンセル(-1)」の両パスを確認
+- emission chain 変更（card_selection_ui.gd）は Group B の最初のファイル移行前に行い、**UIManager リレーで後方互換を保証してから**着手
+
+---
+
 ## Phase 8 残作業: グループ分類
 
 ### Group A: サービス注入で大幅削減（パターン確立済み）
@@ -254,13 +291,22 @@ tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_m
 
 ### Phase 8-M: card_selected emission chain 統一（前提作業）
 
-| 順序 | 内容 | 作業量 |
-|------|------|--------|
-| 5 | CardSelectionService.card_selected への emission 統一 | 中 |
-| | card_selection_ui.gd の emit 先変更 | |
-| | UIManager.card_selected は CardSelectionService からリレー | |
+**制約 3 適用**: 一括置換禁止。1ファイルずつ動作確認。
 
-### Phase 8-M 完了後
+| 順序 | 内容 | 作業量 | 検証 |
+|------|------|--------|------|
+| 5a | card_selection_ui.gd: emit 先を CardSelectionService に変更 | 中 | カード選択基本動作 |
+| 5b | UIManager.card_selected を CardSelectionService からリレー（後方互換） | 低 | 既存の await が壊れないことを確認 |
+| 5c | UIManager.on_card_button_pressed の emit 先変更 | 低 | カードボタン押下動作 |
+
+**検証チェックリスト（5a-5c 完了後）**:
+- [ ] スペルフェーズでカード選択 → 決定
+- [ ] スペルフェーズでカード選択 → キャンセル
+- [ ] 召喚時のカード選択
+- [ ] 犠牲カード選択
+- [ ] ドミニオコマンドのレベルアップ
+
+### Phase 8-M → 8-P: 1ファイルずつ移行（制約 3）
 
 | 順序 | サブフェーズ | 対象 | refs | 作業量 |
 |------|-----------|------|------|--------|
@@ -285,7 +331,7 @@ tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_m
 
 | サービス候補 | カバー範囲 | 影響ファイル | 優先度 |
 |------------|----------|------------|--------|
-| **PlayerInfoService** | update_player_info_panels | spell_world_curse, tile_battle_executor, tile_summon_executor, debug_controller, land_action_helper, card_selection_handler, dominio_command_handler, cpu_turn_processor | 高（最頻出の残存参照） |
+| **PlayerInfoService** | update_player_info_panels | spell_world_curse, tile_battle_executor, tile_summon_executor, debug_controller, land_action_helper, card_selection_handler, dominio_command_handler, cpu_turn_processor | 高（最頻出の残存参照）**制約 2 適用: 描画更新のみ、ロジック判定禁止** |
 | **TapTargetService** | tap_target_manager 操作 | spell_mystic_arts, spell_target_selection_handler | 中 |
 | **GameResultService** | show_win/lose_screen | game_result_handler | 低（1ファイルのみ） |
 
