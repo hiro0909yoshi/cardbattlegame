@@ -11,6 +11,10 @@ var _board_system = null
 var _player_system = null
 var _game_3d_ref = null
 
+## サービス参照（UIManager から注入）
+var _message_service = null
+var _navigation_service = null
+
 ## 対象選択用の状態
 var _available_targets: Array = []
 var _current_target_index: int = 0
@@ -70,12 +74,17 @@ func setup(
 	_player_system = player_system
 	_game_3d_ref = game_3d_ref
 
+	# サービス解決
+	if ui_manager:
+		_message_service = ui_manager.message_service if ui_manager.get("message_service") else null
+		_navigation_service = ui_manager.navigation_service if ui_manager.get("navigation_service") else null
+
 ## 対象選択UIを表示
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
 	# ★ NEW: 前のナビゲーション設定をクリア
-	if _ui_manager:
-		_ui_manager.disable_navigation()
+	if _navigation_service:
+		_navigation_service.disable_navigation()
 
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
@@ -86,8 +95,8 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 
 	if targets.is_empty():
 		# 対象がいない場合はメッセージ表示
-		if _ui_manager and _ui_manager.phase_display:
-			_ui_manager.show_toast("対象がいません")
+		if _message_service:
+			_message_service.show_toast("対象がいません")
 		await get_tree().create_timer(1.0).timeout
 		return false
 
@@ -182,7 +191,7 @@ func _update_target_selection() -> void:
 
 ## 選択UIを更新
 func _update_selection_ui() -> void:
-	if not _ui_manager or not _ui_manager.phase_label:
+	if not _message_service:
 		return
 
 	if _available_targets.is_empty():
@@ -192,8 +201,7 @@ func _update_selection_ui() -> void:
 
 	# ヘルパーを使用してテキスト生成
 	var text: String = TargetSelectionHelper.format_target_info(target, _current_target_index + 1, _available_targets.size())
-	if _ui_manager.phase_display:
-		_ui_manager.show_action_prompt(text)
+	_message_service.show_action_prompt(text)
 
 ## 入力処理（_input イベント）
 func _input(event: InputEvent) -> void:
@@ -353,8 +361,8 @@ func _exit_target_selection_phase() -> void:
 		push_error("[STSH] spell_ui_manager が初期化されていません")
 
 	# アクション指示パネルを閉じる
-	if _ui_manager and _ui_manager.phase_display:
-		_ui_manager.hide_action_prompt()
+	if _message_service:
+		_message_service.hide_action_prompt()
 
 	# UI更新
 	if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
@@ -494,10 +502,10 @@ func _start_mystic_tap_target_selection(targets: Array) -> void:
 
 ## 対象選択時のナビゲーション設定
 func _setup_target_selection_navigation() -> void:
-	if not _ui_manager:
+	if not _navigation_service:
 		return
 
-	_ui_manager.enable_navigation(
+	_navigation_service.enable_navigation(
 		func(): _on_target_confirm(),   # 決定
 		func(): _on_target_cancel(),    # 戻る
 		func(): _on_target_prev(),      # 上
@@ -506,10 +514,10 @@ func _setup_target_selection_navigation() -> void:
 
 ## ナビゲーションをクリア
 func _clear_spell_navigation() -> void:
-	if not _ui_manager:
+	if not _navigation_service:
 		return
 
-	_ui_manager.disable_navigation()
+	_navigation_service.disable_navigation()
 
 ## 対象選択：決定
 func _on_target_confirm() -> void:
