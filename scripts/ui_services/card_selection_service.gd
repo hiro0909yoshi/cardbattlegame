@@ -1,0 +1,99 @@
+extends Node
+class_name CardSelectionService
+
+## シグナル
+signal card_selected(card_index: int)
+signal pass_button_pressed()
+
+## コンポーネント参照
+var _card_selection_ui = null  # CardSelectionUI（循環参照回避のため型なし）
+var _hand_display: HandDisplay = null
+
+## システム参照（HandDisplay 更新用）
+var _card_system_ref: CardSystem = null
+var _player_system_ref: PlayerSystem = null
+
+## フィルター状態
+var card_selection_filter: String = ""
+var assist_target_elements: Array = []
+var blocked_item_types: Array = []
+var excluded_card_index: int = -1
+var excluded_card_id: String = ""
+
+
+## 初期化
+func setup(card_selection_ui, hand_display: HandDisplay, card_system: CardSystem = null, player_system: PlayerSystem = null) -> void:
+	_card_selection_ui = card_selection_ui
+	_hand_display = hand_display
+	_card_system_ref = card_system
+	_player_system_ref = player_system
+
+
+## ============================================================================
+## CardSelectionUI 委譲メソッド
+## ============================================================================
+
+## カード選択UIを表示
+func show_card_selection_ui(current_player) -> void:
+	if _card_selection_ui and _card_selection_ui.has_method("show_selection"):
+		_card_selection_ui.show_selection(current_player, "summon")
+
+
+## モード指定でカード選択UIを表示
+func show_card_selection_ui_mode(current_player, mode: String) -> void:
+	if _card_selection_ui and _card_selection_ui.has_method("show_selection"):
+		_card_selection_ui.show_selection(current_player, mode)
+
+
+## カード選択UIを非表示
+func hide_card_selection_ui() -> void:
+	if _card_selection_ui and _card_selection_ui.has_method("hide_selection"):
+		_card_selection_ui.hide_selection()
+
+
+## ============================================================================
+## フィルター管理
+## ============================================================================
+
+## カード選択フィルターを設定
+func set_card_selection_filter(filter_type: String) -> void:
+	card_selection_filter = filter_type
+	# 既に表示されている手札を更新
+	if _hand_display:
+		var current_player = _player_system_ref.get_current_player() if _player_system_ref else null
+		if current_player:
+			_hand_display.update_hand_display(current_player.id)
+
+
+## フィルターをクリア
+func clear_card_selection_filter() -> void:
+	card_selection_filter = ""
+
+
+## ============================================================================
+## HandDisplay 委譲メソッド
+## ============================================================================
+
+## 手札コンテナを初期化
+func initialize_hand_container(container_layer: Node) -> void:
+	if _hand_display:
+		_hand_display.initialize(container_layer, _card_system_ref, _player_system_ref)
+
+
+## CardSystemのシグナルに接続
+func connect_card_system_signals() -> void:
+	if _hand_display:
+		_hand_display.connect_card_system_signals()
+
+
+## 手札表示を更新
+func update_hand_display(player_id: int) -> void:
+	if _hand_display:
+		_hand_display.update_hand_display(player_id)
+
+
+## 手札カードノードを取得
+func get_player_card_nodes(player_id: int) -> Array:
+	if _hand_display:
+		return _hand_display.get_player_card_nodes(player_id)
+	return []

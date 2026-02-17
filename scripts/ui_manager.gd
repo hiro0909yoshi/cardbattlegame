@@ -26,6 +26,22 @@ var item_info_panel_ui: ItemInfoPanelUI = null
 var global_comment_ui: GlobalCommentUI = null
 var tap_target_manager: TapTargetManager = null
 
+## UIサービス（Phase 8-F: 内部委譲レイヤー）
+var _message_service: MessageService = null
+var _navigation_service: NavigationService = null
+var _card_selection_service: CardSelectionService = null
+var _info_panel_service: InfoPanelService = null
+
+## UIサービス公開アクセサ（Phase 8-G+ 外部ファイル直接参照移行用）
+var message_service: MessageService:
+	get: return _message_service
+var navigation_service: NavigationService:
+	get: return _navigation_service
+var card_selection_service: CardSelectionService:
+	get: return _card_selection_service
+var info_panel_service: InfoPanelService:
+	get: return _info_panel_service
+
 # 基本UI要素
 # フェーズ表示（PhaseDisplayに移行済み）
 var phase_label: Label:
@@ -69,6 +85,23 @@ func _ready():
 	win_screen_handler = UIWinScreen.new(self)
 	tap_handler = UITapHandler.new(self)
 	game_menu_handler = UIGameMenuHandler.new(self)
+
+	# UIサービス初期化（Phase 8-F）
+	_message_service = MessageService.new()
+	_message_service.name = "MessageService"
+	add_child(_message_service)
+
+	_navigation_service = NavigationService.new()
+	_navigation_service.name = "NavigationService"
+	add_child(_navigation_service)
+
+	_card_selection_service = CardSelectionService.new()
+	_card_selection_service.name = "CardSelectionService"
+	add_child(_card_selection_service)
+
+	_info_panel_service = InfoPanelService.new()
+	_info_panel_service.name = "InfoPanelService"
+	add_child(_info_panel_service)
 
 	# UIコンポーネントを動的にロードして作成
 	var PlayerInfoPanelClass = load("res://scripts/ui_components/player_info_panel.gd")
@@ -296,6 +329,19 @@ func create_ui(parent: Node):
 	# ゲームメニュー初期化
 	game_menu_handler.setup_game_menu()
 
+	# UIサービスセットアップ（Phase 8-F）
+	if _message_service:
+		_message_service.setup(global_comment_ui, phase_display)
+	if _navigation_service:
+		var unlock_cb = Callable()
+		if game_flow_manager_ref:
+			unlock_cb = game_flow_manager_ref.unlock_input
+		_navigation_service.setup(global_action_buttons, unlock_cb)
+	if _card_selection_service:
+		_card_selection_service.setup(card_selection_ui, hand_display, card_system_ref, player_system_ref)
+	if _info_panel_service:
+		_info_panel_service.setup(creature_info_panel_ui, spell_info_panel_ui, item_info_panel_ui)
+
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
 	# PhaseDisplayを初期化
@@ -316,48 +362,42 @@ func update_player_info_panels():
 
 # === カード選択UI関連 ===
 func show_card_selection_ui(current_player):
-	if card_selection_ui and card_selection_ui.has_method("show_selection"):
-		card_selection_ui.show_selection(current_player, "summon")
+	if _card_selection_service:
+		_card_selection_service.show_card_selection_ui(current_player)
 
 # モード指定でカード選択UIを表示
 func show_card_selection_ui_mode(current_player, mode: String):
-	if card_selection_ui and card_selection_ui.has_method("show_selection"):
-		card_selection_ui.show_selection(current_player, mode)
+	if _card_selection_service:
+		_card_selection_service.show_card_selection_ui_mode(current_player, mode)
 
 func hide_card_selection_ui():
-	if card_selection_ui and card_selection_ui.has_method("hide_selection"):
-		card_selection_ui.hide_selection()
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
 
 # カードボタンが押された（card.gdから呼ばれる）
 func on_card_button_pressed(card_index: int):
 	# 入力ロックチェック
 	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
 		return
-	
+
 	# 通知ポップアップがクリック待ち中なら無視
 	if is_notification_popup_active():
 		return
-	
+
 	# 犠牲選択中はcard_selection_uiで処理（card_selection_handlerをバイパス）
 	if card_selection_ui and card_selection_ui.selection_mode == "sacrifice":
 		card_selection_ui.on_card_selected(card_index)
 		return
-	
+
 	# カード選択ハンドラーが選択中の場合はGameFlowManager経由で処理
 	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
 		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
 		if handler and handler.is_selecting():
 			game_flow_manager_ref.on_card_selected(card_index)
 			return
-	
+
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
-
-## 通知ポップアップがアクティブ（クリック待ち中）かどうか
-func is_notification_popup_active() -> bool:
-	if global_comment_ui and global_comment_ui.waiting_for_click:
-		return true
-	return false
 
 # === レベルアップUI関連 ===
 func show_level_up_ui(tile_info: Dictionary, current_magic: int):
@@ -387,15 +427,21 @@ func update_ui(_current_player, current_phase):
 	# フェーズ表示を更新
 	update_phase_display(current_phase)
 
-# フェーズ表示を更新（PhaseDisplayに委譲）
+# フェーズ表示を更新
 func update_phase_display(phase):
-	if phase_display:
-		phase_display.update_phase_display(phase)
+	if _message_service:
+		_message_service.update_phase_display(phase)
 
-# ダイス結果を表示（PhaseDisplayに委譲）
+# ダイス結果を表示
 func show_dice_result(value: int, _parent: Node = null):
-	if phase_display:
-		phase_display.show_dice_result(value)
+	if _message_service:
+		_message_service.show_dice_result(value)
+
+## 通知ポップアップがアクティブ（クリック待ち中）かどうか
+func is_notification_popup_active() -> bool:
+	if _message_service:
+		return _message_service.is_notification_popup_active()
+	return false
 
 # === イベントハンドラ ===
 func _on_pass_button_pressed():
@@ -438,101 +484,47 @@ func on_cancel_dominio_order_button_pressed():
 ## ナビゲーションボタンを設定（推奨）
 ## 有効なCallableを渡したボタンのみ表示される
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()):
-	# 入力待ち状態になったのでロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-
-	# 新しいナビゲーション設定時は前の保存状態を無効化
-	_nav_state_saved = false
-
-	# 後方互換変数も同期（register_xxx系との競合防止）
-	_compat_confirm_cb = confirm_cb
-	_compat_back_cb = back_cb
-	_compat_up_cb = up_cb
-	_compat_down_cb = down_cb
-	if global_action_buttons:
-		global_action_buttons.setup(confirm_cb, back_cb, up_cb, down_cb)
+	if _navigation_service:
+		_navigation_service.enable_navigation(confirm_cb, back_cb, up_cb, down_cb)
 
 ## ナビゲーションボタンを全てクリア
 func disable_navigation():
-	# 後方互換変数もクリア
-	_compat_confirm_cb = Callable()
-	_compat_back_cb = Callable()
-	_compat_up_cb = Callable()
-	_compat_down_cb = Callable()
-	if global_action_buttons:
-		global_action_buttons.clear_all()
+	if _navigation_service:
+		_navigation_service.disable_navigation()
 
-# === 後方互換API（他コンポーネント用） ===
-# 注: 新規実装ではenable_navigation()を使用してください
-
-var _compat_confirm_cb: Callable = Callable()
-var _compat_back_cb: Callable = Callable()
-var _compat_up_cb: Callable = Callable()
-var _compat_down_cb: Callable = Callable()
-
-# インフォパネル閲覧モード中のナビゲーション保存/復元
-var _saved_nav_confirm: Callable = Callable()
-var _saved_nav_back: Callable = Callable()
-var _saved_nav_up: Callable = Callable()
-var _saved_nav_down: Callable = Callable()
-var _saved_nav_special_cb: Callable = Callable()
-var _saved_nav_special_text: String = ""
-var _saved_nav_phase_comment: String = ""
-var _nav_state_saved: bool = false
 
 ## ナビゲーション状態が保存されているか（info_panelから参照）
 func is_nav_state_saved() -> bool:
-	return _nav_state_saved
+	if _navigation_service:
+		return _navigation_service.is_nav_state_saved()
+	return false
 
 ## 現在のナビゲーション状態を保存（閲覧モード用）
 ## 既に保存済みの場合は上書きしない（連続閲覧対応）
 func save_navigation_state():
-	if _nav_state_saved:
+	if not _navigation_service or _navigation_service.is_nav_state_saved():
 		return
-	_saved_nav_confirm = _compat_confirm_cb
-	_saved_nav_back = _compat_back_cb
-	_saved_nav_up = _compat_up_cb
-	_saved_nav_down = _compat_down_cb
-	# special_button状態を保存
-	if global_action_buttons:
-		_saved_nav_special_cb = global_action_buttons.special_callback
-		_saved_nav_special_text = global_action_buttons.special_text
-	# フェーズコメントを保存
+	# phase_commentを取得してNavigationServiceに設定
+	var phase_comment = ""
 	if phase_display and phase_display.has_method("get_current_action_prompt"):
-		_saved_nav_phase_comment = phase_display.get_current_action_prompt()
-	else:
-		_saved_nav_phase_comment = ""
-	_nav_state_saved = true
-	# 特殊ボタンをクリア（インフォパネル表示中は不要。復元時に再設定される）
-	clear_special_button()
+		phase_comment = phase_display.get_current_action_prompt()
+	_navigation_service.set_saved_phase_comment(phase_comment)
+	_navigation_service.save_navigation_state()
 
 ## 保存したナビゲーション状態を復元
 func restore_navigation_state():
-	if not _nav_state_saved:
+	if not _navigation_service or not _navigation_service.is_nav_state_saved():
 		return
-	_compat_confirm_cb = _saved_nav_confirm
-	_compat_back_cb = _saved_nav_back
-	_compat_up_cb = _saved_nav_up
-	_compat_down_cb = _saved_nav_down
-	_nav_state_saved = false
-	_update_compat_buttons()
-	# special_button状態を復元
-	if global_action_buttons:
-		if _saved_nav_special_cb.is_valid():
-			global_action_buttons.setup_special(_saved_nav_special_text, _saved_nav_special_cb)
-		else:
-			global_action_buttons.clear_special()
-	# フェーズコメントを復元
-	if _saved_nav_phase_comment != "" and phase_display:
-		phase_display.show_action_prompt(_saved_nav_phase_comment)
-	# 入力ロックを解除（×ボタン押下時にlock_inputされるため）
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
+	var phase_comment = _navigation_service.get_saved_phase_comment()
+	_navigation_service.restore_navigation_state()
+	# phase_commentを復元
+	if phase_comment != "" and phase_display:
+		phase_display.show_action_prompt(phase_comment)
 
 ## ナビゲーション保存状態をクリア（フェーズ切り替え時等）
 func clear_navigation_saved_state():
-	_nav_state_saved = false
+	if _navigation_service:
+		_navigation_service.clear_navigation_saved_state()
 
 ## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
 ## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
@@ -540,7 +532,7 @@ func restore_current_phase():
 	# 保存済みナビゲーション状態があれば直接復元（最も正確な復元方法）
 	# show_card_info()でsave_navigation_state()された状態を復元する
 	# フェーズ別の再構築より正確（SpellCreatureSwap等のカスタムコールバックを保持）
-	if _nav_state_saved:
+	if _navigation_service and _navigation_service.is_nav_state_saved():
 		restore_navigation_state()
 		return
 
@@ -558,26 +550,30 @@ func restore_current_phase():
 				dominio.restore_navigation()
 			hide_dominio_order_button()
 			dominio.restore_phase_comment()
-			_nav_state_saved = false
+			if _navigation_service:
+				_navigation_service.clear_navigation_saved_state()
 			return
-	
+
 	# 2. スペルフェーズがアクティブ（target選択/確認含む） → spell_phase_handlerに委譲
 	if spell_phase_handler_ref and spell_phase_handler_ref.is_spell_phase_active():
 		spell_phase_handler_ref.spell_ui_manager.restore_navigation()
-		_nav_state_saved = false
+		if _navigation_service:
+			_navigation_service.clear_navigation_saved_state()
 		return
-	
+
 	# 3. カード選択UIがアクティブ（召喚/バトル/アイテム等） → card_selection_uiに委譲
 	if card_selection_ui and card_selection_ui.is_active:
 		card_selection_ui.restore_navigation()
-		_nav_state_saved = false
+		if _navigation_service:
+			_navigation_service.clear_navigation_saved_state()
 		return
-	
+
 	# 4. 方向選択・分岐選択がアクティブ → セレクターに委譲
 	if board_system_ref and board_system_ref.restore_movement_selector_navigation():
-		_nav_state_saved = false
+		if _navigation_service:
+			_navigation_service.clear_navigation_saved_state()
 		return
-	
+
 	# 5. どのフェーズでもない → save/restore フォールバック
 	restore_navigation_state()
 
@@ -585,91 +581,68 @@ func restore_current_phase():
 func restore_spell_phase_buttons():
 	restore_navigation_state()
 
-func _update_compat_buttons():
-	if global_action_buttons:
-		global_action_buttons.setup(_compat_confirm_cb, _compat_back_cb, _compat_up_cb, _compat_down_cb)
-
 func register_confirm_action(callback: Callable, _text: String = ""):
-	# 入力待ち状態になったのでロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-	_compat_confirm_cb = callback
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.register_confirm_action(callback, _text)
 
 func register_back_action(callback: Callable, _text: String = ""):
-	# 入力待ち状態になったのでロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-	_compat_back_cb = callback
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.register_back_action(callback, _text)
 
 func register_arrow_actions(up_callback: Callable, down_callback: Callable):
-	# 入力待ち状態になったのでロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-	_compat_up_cb = up_callback
-	_compat_down_cb = down_callback
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.register_arrow_actions(up_callback, down_callback)
 
 func clear_confirm_action():
-	_compat_confirm_cb = Callable()
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.clear_confirm_action()
 
 func clear_back_action():
-	_compat_back_cb = Callable()
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.clear_back_action()
 
 func clear_arrow_actions():
-	_compat_up_cb = Callable()
-	_compat_down_cb = Callable()
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.clear_arrow_actions()
 
 func clear_global_actions():
-	_compat_confirm_cb = Callable()
-	_compat_back_cb = Callable()
-	_compat_up_cb = Callable()
-	_compat_down_cb = Callable()
-	if global_action_buttons:
-		global_action_buttons.clear_all()
+	if _navigation_service:
+		_navigation_service.clear_global_actions()
 
 # === 特殊ボタン（左下）API ===
 
 ## 特殊ボタンを設定（アルカナアーツ/ドミニオコマンド等）
 func set_special_button(text: String, callback: Callable):
-	if global_action_buttons:
-		global_action_buttons.setup_special(text, callback)
+	if _navigation_service:
+		_navigation_service.set_special_button(text, callback)
 
 ## 特殊ボタンをクリア
 func clear_special_button():
-	if global_action_buttons:
-		global_action_buttons.clear_special()
+	if _navigation_service:
+		_navigation_service.clear_special_button()
 
 func register_global_actions(confirm_callback: Callable, back_callback: Callable, _confirm_text: String = "", _back_text: String = ""):
-	# 入力待ち状態になったのでロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-	_compat_confirm_cb = confirm_callback
-	_compat_back_cb = back_callback
-	_update_compat_buttons()
+	if _navigation_service:
+		_navigation_service.register_global_actions(confirm_callback, back_callback, _confirm_text, _back_text)
 
 # === 手札UI管理 ===
 
-# 手札コンテナを初期化（HandDisplayに委譲）
+# 手札コンテナを初期化
 func initialize_hand_container(container_layer: Node):
-	if hand_display:
-		hand_display.initialize(container_layer, card_system_ref, player_system_ref)
+	if _card_selection_service:
+		_card_selection_service.initialize_hand_container(container_layer)
 
-# CardSystemのシグナルに接続（HandDisplayに委譲）
+# CardSystemのシグナルに接続
 func connect_card_system_signals():
-	if hand_display:
-		hand_display.connect_card_system_signals()
+	if _card_selection_service:
+		_card_selection_service.connect_card_system_signals()
 
 # カード関連のシグナルハンドラ（HandDisplayに移行済み）
 
-# 手札表示を更新（HandDisplayに委譲）
+# 手札表示を更新
 func update_hand_display(player_id: int):
-	if hand_display:
-		hand_display.update_hand_display(player_id)
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(player_id)
 
 # create_card_node は HandDisplayに移行済みのため削除
 
@@ -692,168 +665,117 @@ func get_player_ranking(player_id: int) -> int:
 
 ## フェーズラベルのテキストを設定
 func set_phase_text(text: String):
-	if phase_display and phase_display.phase_label:
-		phase_display.phase_label.text = text
+	if _message_service:
+		_message_service.set_phase_text(text)
 
 ## フェーズラベルのテキストを取得
 func get_phase_text() -> String:
-	if phase_display and phase_display.phase_label:
-		return phase_display.phase_label.text
+	if _message_service:
+		return _message_service.get_phase_text()
 	return ""
 
 ## ダイス結果を大きく表示
 func show_big_dice_result(value: int, duration: float = 1.5):
-	if phase_display and phase_display.has_method("show_big_dice_result"):
-		phase_display.show_big_dice_result(value, duration)
+	if _message_service:
+		_message_service.show_big_dice_result(value, duration)
 
 ## ダイス結果（2個）を表示
 func show_dice_result_double(dice1: int, dice2: int, total: int):
-	if phase_display and phase_display.has_method("show_dice_result_double"):
-		phase_display.show_dice_result_double(dice1, dice2, total)
+	if _message_service:
+		_message_service.show_dice_result_double(dice1, dice2, total)
 
 ## ダイス結果（3個/フライ）を表示
 func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
-	if phase_display and phase_display.has_method("show_dice_result_triple"):
-		phase_display.show_dice_result_triple(dice1, dice2, dice3, total)
+	if _message_service:
+		_message_service.show_dice_result_triple(dice1, dice2, dice3, total)
 
 ## ダイス結果（範囲呪い）を表示
 func show_dice_result_range(curse_name: String, value: int):
-	if phase_display and phase_display.has_method("show_dice_result_range"):
-		phase_display.show_dice_result_range(curse_name, value)
+	if _message_service:
+		_message_service.show_dice_result_range(curse_name, value)
 
 ## トースト表示（短時間の通知メッセージ）
 func show_toast(message: String, duration: float = 2.0):
-	if phase_display:
-		phase_display.show_toast(message, duration)
+	if _message_service:
+		_message_service.show_toast(message, duration)
 
 ## アクション指示表示
 func show_action_prompt(message: String, position: String = "center"):
-	if phase_display:
-		phase_display.show_action_prompt(message, position)
+	if _message_service:
+		_message_service.show_action_prompt(message, position)
 
 ## アクション指示を非表示
 func hide_action_prompt():
-	if phase_display:
-		phase_display.hide_action_prompt()
+	if _message_service:
+		_message_service.hide_action_prompt()
 
 # ============ global_comment_ui 委譲メソッド ============
 
 ## グローバルコメント表示（クリック待ち）
 func show_comment_and_wait(message: String, player_id: int = -1, force_click_wait: bool = false) -> void:
-	if global_comment_ui:
-		await global_comment_ui.show_and_wait(message, player_id, force_click_wait)
+	if _message_service:
+		await _message_service.show_comment_and_wait(message, player_id, force_click_wait)
 
 ## グローバルコメント表示（選択肢付き）
 func show_choice_and_wait(message: String, player_id: int = -1, yes_text: String = "はい", no_text: String = "いいえ") -> bool:
-	if global_comment_ui:
-		return await global_comment_ui.show_choice_and_wait(message, player_id, yes_text, no_text)
+	if _message_service:
+		return await _message_service.show_choice_and_wait(message, player_id, yes_text, no_text)
 	return false
 
 ## グローバルコメント表示（メッセージのみ、クリック待ちなし）
 func show_comment_message(message: String) -> void:
-	if global_comment_ui:
-		global_comment_ui.show_message(message)
+	if _message_service:
+		_message_service.show_comment_message(message)
 
 ## グローバルコメント非表示
 func hide_comment_message() -> void:
-	if global_comment_ui:
-		global_comment_ui.hide_message()
+	if _message_service:
+		_message_service.hide_comment_message()
 
 ## 全てのインフォパネルを閉じる（フェーズ変更時に呼び出す）
 func close_all_info_panels():
-	hide_all_info_panels(true)
+	if _info_panel_service:
+		_info_panel_service.hide_all_info_panels(true)
 	clear_navigation_saved_state()
 
 ## 全てのインフォパネルを閉じてナビゲーションをクリア（saved stateは保持）
 ## show_card_info内でのパネル切り替え時に使用
 func _hide_all_info_panels_raw():
-	# saved stateを一時退避（disable_navigation→clear_allで消費されないように）
-	var was_saved = _nav_state_saved
-	var saved_confirm = _saved_nav_confirm
-	var saved_back = _saved_nav_back
-	var saved_up = _saved_nav_up
-	var saved_down = _saved_nav_down
-	var saved_special_cb = _saved_nav_special_cb
-	var saved_special_text = _saved_nav_special_text
-	var saved_phase_comment = _saved_nav_phase_comment
-	
 	# パネルを閉じる（clear_buttons=false: hide_panel内でのボタン操作を防ぐ）
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel(false)
-	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
-		spell_info_panel_ui.hide_panel(false)
-	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
-		item_info_panel_ui.hide_panel(false)
-	
-	# ナビゲーションを全クリア（前のパネルの確認ボタン等を確実に消す）
+	if _info_panel_service:
+		_info_panel_service.hide_all_info_panels(false)
+	# ナビゲーションを全クリア（NavigationService内のsaved stateは影響されない）
 	disable_navigation()
-	# special_buttonも明示的にクリア（閲覧モード中は不要）
-	if global_action_buttons:
-		global_action_buttons.clear_special()
-	
-	# saved stateを復元（disable/clearで消費された分を戻す）
-	_nav_state_saved = was_saved
-	_saved_nav_confirm = saved_confirm
-	_saved_nav_back = saved_back
-	_saved_nav_up = saved_up
-	_saved_nav_down = saved_down
-	_saved_nav_special_cb = saved_special_cb
-	_saved_nav_special_text = saved_special_text
-	_saved_nav_phase_comment = saved_phase_comment
+	clear_special_button()
 
 ## 全てのインフォパネルを閉じる（clear_buttons指定可能）
 func hide_all_info_panels(clear_buttons: bool = true):
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel(clear_buttons)
-	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
-		spell_info_panel_ui.hide_panel(clear_buttons)
-	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
-		item_info_panel_ui.hide_panel(clear_buttons)
+	if _info_panel_service:
+		_info_panel_service.hide_all_info_panels(clear_buttons)
 
 ## いずれかのインフォパネルが表示中か
 func is_any_info_panel_visible() -> bool:
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		return true
-	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
-		return true
-	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
-		return true
+	if _info_panel_service:
+		return _info_panel_service.is_any_info_panel_visible()
 	return false
 
 ## カード情報パネルを表示（ナビゲーションに触らない）
 ## ドミニオの土地プレビュー等、表示の一部として使用する場合用
 func show_card_info_only(card_data: Dictionary, tile_index: int = -1):
-	var card_type = card_data.get("type", "")
-	# 既存パネルを閉じる（ナビゲーションに触らない）
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel(false)
-	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
-		spell_info_panel_ui.hide_panel(false)
-	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
-		item_info_panel_ui.hide_panel(false)
-	# パネル表示（setup_buttons=false、×ボタンも設定しない）
-	match card_type:
-		"creature":
-			if creature_info_panel_ui:
-				creature_info_panel_ui.show_view_mode(card_data, tile_index, false)
-		"spell":
-			if spell_info_panel_ui:
-				spell_info_panel_ui.show_view_mode(card_data, false)
-		"item":
-			if item_info_panel_ui:
-				item_info_panel_ui.show_view_mode(card_data, false)
+	if _info_panel_service:
+		_info_panel_service.show_card_info_only(card_data, tile_index)
 
 ## カード種別に応じたインフォパネルを表示（閲覧モード）
 ## ナビゲーション状態を自動保存し、パネルを閉じた時に復元する
 func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: bool = true):
 	var card_type = card_data.get("type", "")
-	
+
 	# ナビゲーション状態を保存（連続閲覧時は最初の1回のみ）
 	save_navigation_state()
-	
+
 	# 他のパネルを閉じる（ボタンはクリアしない：show_card_info内での切り替えなのでrestoreを走らせない）
 	_hide_all_info_panels_raw()
-	
+
 	# 閲覧モードで表示
 	var panel = null
 	match card_type:
@@ -869,11 +791,8 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 			if item_info_panel_ui:
 				item_info_panel_ui.show_view_mode(card_data, setup_buttons)
 				panel = item_info_panel_ui
-	
+
 	# パネルが表示されたら、閲覧モードの×ボタン（閉じる）のみ設定
-	# _hide_all_info_panels_rawでdisable_navigation→_compat_*が全クリア済みなので
-	# 閲覧中は×ボタンだけ有効にする（✓▲▼は不要）
-	# 復元はフェーズ別restore_navigation()が担当する
 	if panel and not setup_buttons:
 		register_back_action(func():
 			_hide_all_info_panels_raw()
@@ -883,29 +802,18 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 			if card_script.currently_selected_card:
 				card_script.currently_selected_card.deselect_card()
 		, "閉じる")
-		
+
 		# 閲覧モード中のフェーズコメント表示
 		var card_name = card_data.get("name", "")
-		if phase_display and card_name != "":
-			phase_display.show_action_prompt("%s の情報を閲覧中" % card_name)
+		if _message_service and card_name != "":
+			_message_service.show_action_prompt("%s の情報を閲覧中" % card_name)
 
 ## カード種別に応じたインフォパネルを表示（選択モード）
 func show_card_selection(card_data: Dictionary, hand_index: int = -1,
 		confirmation_text: String = "", restriction_reason: String = "",
 		selection_mode: String = ""):
-	var card_type = card_data.get("type", "")
-	# 他のパネルを閉じる
-	hide_all_info_panels(false)
-	match card_type:
-		"creature":
-			if creature_info_panel_ui:
-				creature_info_panel_ui.show_selection_mode(card_data, confirmation_text, restriction_reason)
-		"spell":
-			if spell_info_panel_ui:
-				spell_info_panel_ui.show_spell_info(card_data, hand_index, restriction_reason, selection_mode, confirmation_text)
-		"item":
-			if item_info_panel_ui:
-				item_info_panel_ui.show_item_info(card_data, hand_index, restriction_reason, selection_mode, confirmation_text)
+	if _info_panel_service:
+		_info_panel_service.show_card_selection(card_data, hand_index, confirmation_text, restriction_reason, selection_mode)
 
 # デバッグ入力を処理
 func _input(event):
@@ -977,9 +885,9 @@ func show_land_selection_mode(_owned_lands: Array):
 	var land_list = ""
 	for i in range(_owned_lands.size()):
 		land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
-	if phase_display:
-		phase_display.show_action_prompt("土地を選択（数字キー） " + land_list)
-	
+	if _message_service:
+		_message_service.show_action_prompt("土地を選択（数字キー） " + land_list)
+
 	# キャンセルボタンはdominio_command_handler側で登録するためここでは呼ばない
 	# show_cancel_button()
 
@@ -1027,8 +935,8 @@ func hide_level_selection():
 
 # === 手札UI関連（HandDisplayへのアクセサ） ===
 func get_player_card_nodes(player_id: int) -> Array:
-	if hand_display:
-		return hand_display.get_player_card_nodes(player_id)
+	if _card_selection_service:
+		return _card_selection_service.get_player_card_nodes(player_id)
 	return []
 
 # === プレイヤーパネル関連 ===
@@ -1036,13 +944,9 @@ func get_player_card_nodes(player_id: int) -> Array:
 # プレイヤー情報パネルがクリックされたときのハンドラ
 func _on_player_panel_clicked(player_id: int):
 	# 他のインフォパネルが開いていたら閉じる
-	if creature_info_panel_ui and creature_info_panel_ui.is_panel_visible():
-		creature_info_panel_ui.hide_panel()
-	if spell_info_panel_ui and spell_info_panel_ui.is_panel_visible():
-		spell_info_panel_ui.hide_panel()
-	if item_info_panel_ui and item_info_panel_ui.is_panel_visible():
-		item_info_panel_ui.hide_panel()
-	
+	if _info_panel_service:
+		_info_panel_service.hide_all_info_panels(true)
+
 	if player_status_dialog and player_status_dialog.has_method("show_for_player"):
 		player_status_dialog.show_for_player(player_id)
 
@@ -1082,8 +986,8 @@ func on_creature_updated(tile_index: int, creature_data: Dictionary):
 		return
 
 	# UI の creature 関連要素を自動更新
-	if creature_info_panel_ui and not creature_data.is_empty():
-		creature_info_panel_ui.update_display(creature_data)
+	if _info_panel_service and not creature_data.is_empty():
+		_info_panel_service.update_display(creature_data)
 
 	# 3D表示更新（tile_info_display）
 	if board_system_ref.tile_info_display:
