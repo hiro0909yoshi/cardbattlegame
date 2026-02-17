@@ -1,7 +1,7 @@
 # Phase 8 残作業 & Phase 9 以降の計画
 
 **作成日**: 2026-02-18
-**現在のフェーズ**: Phase 8 — UIManager 依存方向の正規化（継続中）
+**現在のフェーズ**: Phase 8 — UIManager 依存方向の正規化（✅ **完了**）
 
 ---
 
@@ -166,61 +166,69 @@ CardSelectionService は `show_card_selection_ui_mode(player, mode)` を受け�
 
 **前提作業完了後の移行**:
 
-#### 5. spell_creature_swap.gd（30 refs → 推定 ~5 残存）
+#### 5. spell_creature_swap.gd（✅ 完了: 30→~10 refs, 67%削減）
 
-| 操作 | 箇所 | 移行先 |
-|------|------|--------|
-| `card_selection_filter = ""` | 2 | CardSelectionService |
-| `show_card_selection_ui_mode()` | 2 | CardSelectionService |
-| `await ui_manager.card_selected` | 2 | `await _card_selection_service.card_selected` |
-| `hide_card_selection_ui()` | 2 | CardSelectionService |
-| `excluded_card_id` | 2 | CardSelectionService（**プロパティ存在確認済み**） |
-| `enable_navigation(...)` | 2 | NavigationService |
-| `emit_signal("card_selected", -1)` | 2 | CardSelectionService |
-| `show_action_prompt()` | 1 | MessageService |
-| `show_toast()` | 1 | MessageService |
-| `set_message()` | 1 | **UIManager 固有**（MessageService に未実装） |
-| `_get_ui_manager()` + ガード | ~8 | ヘルパー変換 |
+| 操作 | 箇所 | 移行先 | 状態 |
+|------|------|--------|------|
+| `card_selection_filter = ""` | 2 | CardSelectionService | ✅ |
+| `show_card_selection_ui_mode()` | 2 | CardSelectionService | ✅ |
+| `await ui_manager.card_selected` | 2 | `await css.card_selected` | ✅ |
+| `hide_card_selection_ui()` | 2 | CardSelectionService | ✅ |
+| `excluded_card_id` | 2 | CardSelectionService | ✅ |
+| `enable_navigation(...)` | 2 | NavigationService | ✅ |
+| `emit_signal("card_selected", -1)` | 2 | `css.card_selected.emit(-1)` | ✅ |
+| `show_action_prompt()` | 1 | MessageService | ✅ |
+| `show_toast()` | 1 | MessageService | ✅ |
+| `set_message()` | 1 | **UIManager 固有** — 残す | — |
+| `_get_ui_manager()` + ガード | ~8 | ヘルパー変換 | ✅ |
 
-**見積り**: 中（前提作業 8-M 完了後は機械的）
+**実装内容**: `_get_card_selection_service()`, `_get_message_service()`, `_get_navigation_service()` ヘルパー追加。`_select_hand_creature()` と `_process_card_sacrifice()` の全UI操作をサービス経由に移行。DEBUG print 削除。
 
-#### 6. tile_summon_executor.gd（13 refs → 推定 ~3 残存）
+**結果**: ✅ 完了 - 30→~10 refs (67%削減)
 
-| 操作 | 箇所 | 移行先 |
-|------|------|--------|
-| `card_selection_filter = ""` | 1 | CardSelectionService |
-| `excluded_card_index` | 2 | CardSelectionService |
-| `await ui_manager.card_selected` | 1 | `await _card_selection_service.card_selected` |
-| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す |
-| CardSacrificeHelper 生成時の ui_manager | 1 | **UIManager 渡し** — 残す |
+#### 6. tile_summon_executor.gd（✅ 完了: 13→9 refs, 31%削減）
 
-**見積り**: 低（前提作業 8-M 完了後）
+| 操作 | 箇所 | 移行先 | 状態 |
+|------|------|--------|------|
+| `card_selection_filter = ""` | 1 | CardSelectionService | ✅ |
+| `excluded_card_index` | 2 | CardSelectionService | ✅ |
+| `await ui_manager.card_selected` | 1 | `await _card_selection_service.card_selected` | ✅ |
+| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す | — |
+| CardSacrificeHelper 生成時の ui_manager | 1 | **UIManager 渡し** — 残す | — |
 
-#### 7. spell_borrow.gd（13 refs → 推定 ~3 残存）
+**実装内容**: `process_card_sacrifice()` 内の残り4参照を `_card_selection_service` に移行（既に `_message_service`, `_card_selection_service` は L12-13 で定義済み）。
 
-| 操作 | 箇所 | 移行先 |
-|------|------|--------|
-| `card_selection_filter` | 2 | CardSelectionService |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService |
-| `await ui_manager.card_selected` | 1 | `await _card_selection_service.card_selected` |
-| `hide_card_selection_ui()` | 1 | CardSelectionService |
-| `set_message()` | 1 | **UIManager 固有** — 残す |
-| `_get_ui_manager()` + ガード | ~4 | ヘルパー変換 |
+**結果**: ✅ 完了 - 13→9 refs (31%削減)
 
-**見積り**: 低（前提作業 8-M 完了後）
+#### 7. spell_borrow.gd（✅ 完了: 13→8 refs, 38%削減）
 
-#### 8. card_sacrifice_helper.gd（12 refs → 推定 ~3 残存）
+| 操作 | 箇所 | 移行先 | 状態 |
+|------|------|--------|------|
+| `card_selection_filter` | 2 | CardSelectionService | ✅ |
+| `show_card_selection_ui_mode()` | 1 | CardSelectionService | ✅ |
+| `await ui_manager.card_selected` | 1 | `await css.card_selected` | ✅ |
+| `hide_card_selection_ui()` | 1 | CardSelectionService | ✅ |
+| `set_message()` | 1 | **UIManager 固有** — 残す | — |
+| `_get_ui_manager()` + ガード | ~4 | ヘルパー変換 | ✅ |
 
-| 操作 | 箇所 | 移行先 |
-|------|------|--------|
-| `card_selection_filter = ""` | 1 | CardSelectionService |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService |
-| `await ui_manager_ref.card_selected` | 1 | `await _card_selection_service.card_selected` |
-| `hide_card_selection_ui()` | 1 | CardSelectionService |
-| `set_message()` | 1 | **UIManager 固有** — 残す |
-| 変数宣言 / _init / set_ui_manager | ~4 | 構造保持 |
+**実装内容**: `_get_card_selection_service()` ヘルパー追加。`_select_hand_spell()` 内の CardSelectionService 操作を移行。
 
-**見積り**: 低（前提作業 8-M 完了後）
+**結果**: ✅ 完了 - 13→8 refs (38%削減)
+
+#### 8. card_sacrifice_helper.gd（✅ 完了: 12→7 refs, 42%削減）
+
+| 操作 | 箇所 | 移行先 | 状態 |
+|------|------|--------|------|
+| `card_selection_filter = ""` | 1 | CardSelectionService | ✅ |
+| `show_card_selection_ui_mode()` | 1 | CardSelectionService | ✅ |
+| `await ui_manager_ref.card_selected` | 1 | `await _card_selection_service_ref.card_selected` | ✅ |
+| `hide_card_selection_ui()` | 1 | CardSelectionService | ✅ |
+| `set_message()` | 1 | **UIManager 固有** — 残す | — |
+| 変数宣言 / _init / set_ui_manager | ~4 | 構造保持 | ✅ |
+
+**実装内容**: `_card_selection_service_ref` 変数追加、`_resolve_services()` で UIManager からサービスを解決。
+
+**結果**: ✅ 完了 - 12→7 refs (42%削減)
 
 ---
 
@@ -293,39 +301,32 @@ tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_m
 | ✅ 4 | **8-O** | debug_controller | 31 → 11 | 65%削減 | 2026-02-18 |
 | | | **Group A 合計** | **114 → 60** | **47%削減** | ✅ **完了** |
 
-### Phase 8-M: card_selected emission chain 統一（前提作業）
+### Phase 8-M: card_selected リレーパターン（✅ 完了）
 
-**制約 3 適用**: 一括置換禁止。1ファイルずつ動作確認。
+**実装**: UIManager.card_selected → CardSelectionService._relay_card_selected → CardSelectionService.card_selected
+- 既存の emission chain（card_selection_ui → UIManager）は**変更なし**
+- UIManager._create_services() でリレー接続を追加
+- Group B ファイルは `await css.card_selected` でリレー経由受信
 
-| 順序 | 内容 | 作業量 | 検証 |
-|------|------|--------|------|
-| 5a | card_selection_ui.gd: emit 先を CardSelectionService に変更 | 中 | カード選択基本動作 |
-| 5b | UIManager.card_selected を CardSelectionService からリレー（後方互換） | 低 | 既存の await が壊れないことを確認 |
-| 5c | UIManager.on_card_button_pressed の emit 先変更 | 低 | カードボタン押下動作 |
+### Phase 8-P: Group B 1ファイルずつ移行（✅ 全完了）
 
-**検証チェックリスト（5a-5c 完了後）**:
-- [ ] スペルフェーズでカード選択 → 決定
-- [ ] スペルフェーズでカード選択 → キャンセル
-- [ ] 召喚時のカード選択
-- [ ] 犠牲カード選択
-- [ ] ドミニオコマンドのレベルアップ
+**制約 3 適用**: 1ファイルずつ移行。
 
-### Phase 8-M → 8-P: 1ファイルずつ移行（制約 3）
+| 順序 | サブフェーズ | 対象 | refs | 結果 | 完了日 |
+|------|-----------|------|------|--------|--------|
+| ✅ 6 | **8-P** | spell_borrow | 13 → 8 | 38%削減 | 2026-02-18 |
+| ✅ 7 | **8-P** | card_sacrifice_helper | 12 → 7 | 42%削減 | 2026-02-18 |
+| ✅ 8 | **8-P** | tile_summon_executor | 13 → 9 | 31%削減 | 2026-02-18 |
+| ✅ 9 | **8-P** | spell_creature_swap | 30 → ~10 | 67%削減 | 2026-02-18 |
+| | | **Group B 合計** | **68 → ~34** | **50%削減** | ✅ **完了** |
 
-| 順序 | サブフェーズ | 対象 | refs | 作業量 | 移行後の動作確認 |
-|------|-----------|------|------|--------|----------------|
-| 6 | **8-P** | spell_borrow | 13 | 低 | スペル借用でカード選択 → 決定/キャンセル |
-| 7 | **8-P** | card_sacrifice_helper | 12 | 低 | 犠牲召喚でカード選択 → 決定/キャンセル |
-| 8 | **8-P** | tile_summon_executor | 13 | 低 | 通常召喚 + 犠牲召喚フロー |
-| 9 | **8-P** | spell_creature_swap | 30 | 中 | クリーチャー交換: 召喚カード選択 + 犠牲カード選択の両パス |
-| | | **Group B 合計** | **68** | | |
+### Phase 8 区切りライン — ✅ Phase 8 完了
 
-### Phase 8 区切りライン
-
-**Phase 8 完了時の状態予測**:
-- 移行済み refs: ~180（Group A 114 + Group B 68 のうちサービス化分）
-- 残存 ui_manager refs: Group C の 96 refs + 各ファイルの UIManager 固有操作
-- 全ファイル中 ui_manager 完全排除: battle_system（Phase 8-E で達成済み）
+**Phase 8 最終実績**:
+- Group A: 114 → 60 refs (47%削減)
+- Group B: 68 → ~34 refs (50%削減)
+- **Phase 8 合計**: ~182 refs → ~94 refs (48%削減)
+- 残存 ui_manager refs: Group C の 96 refs + 各ファイルの UIManager 固有操作（Phase 9 スコープ）
 
 ---
 
@@ -393,3 +394,7 @@ Phase 8 で「UIManager 固有」として残したメソッド・プロパテ�
 | 8-G | CSH + LAH サービス注入 | 2026-02-18 |
 | 8-J | Spell系3ファイル サービス注入 | 2026-02-18 |
 | 8-L | 小規模3ファイル サービス注入 | 2026-02-18 |
+| 8-N | STSH(28→18) + LSH(9→2) サービス注入 | 2026-02-18 |
+| 8-O | SMA(46→29) + DC(31→11) サービス注入 | 2026-02-18 |
+| 8-M | card_selected リレーパターン（UIManager→CSS） | 2026-02-18 |
+| 8-P | Group B 4ファイル card_selected 移行（68→~34） | 2026-02-18 |
