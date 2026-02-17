@@ -84,6 +84,7 @@ var _message_service = null
 var _navigation_service = null
 var _card_selection_service = null
 var _info_panel_service = null
+var _dominio_order_ui = null
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_world_curse = null  # SpellWorldCurse: 世界呪い
@@ -94,6 +95,9 @@ var battle_status_overlay = null  # BattleStatusOverlay: バトルステータ�
 func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	print("[DominioCommandHandler] battle_status_overlay 直接参照を設定")
+
+func set_dominio_order_ui(dou) -> void:
+	_dominio_order_ui = dou
 
 ## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
 func _get_item_phase_handler():
@@ -137,10 +141,8 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 				battle_system.invasion_completed.connect(_on_invasion_completed)
 				print("[DominioCommandHandler] BattleSystem.invasion_completed シグナル接続完了")
 
-	# Phase 1-A: UIManagerのシグナルを接続
-	if ui_manager and ui_manager.has_signal("level_up_selected"):
-		if not ui_manager.level_up_selected.is_connected(_on_level_up_selected):
-			ui_manager.level_up_selected.connect(_on_level_up_selected)
+	# Phase 1-A: dominio_order_ui のシグナルを接続（遅延取得）
+	# _dominio_order_ui は open_dominio_order() 時に利用可能になる
 	
 	# 土地情報パネルを初期化
 	_setup_land_info_panel()
@@ -174,8 +176,8 @@ func open_dominio_order(player_id: int):
 		ui_manager.hide_dominio_order_button()
 	
 	# カード選択UIを無効化
-	if ui_manager and ui_manager.card_selection_ui:
-		ui_manager.card_selection_ui.deactivate()
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
 	# 「召喚しない」をクリア
 	if _navigation_service:
 		_navigation_service.clear_back_action()
@@ -192,19 +194,12 @@ func open_dominio_order(player_id: int):
 	# 入力ロックを解除（土地選択待ち状態になった）
 	if game_flow_manager:
 		game_flow_manager.unlock_input()
-	
-	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
-	# _start_tap_target_selection(player_id)
-	
+
 	# 最初の土地を自動プレビュー
 	if player_owned_lands.size() > 0:
 		var first_tile = player_owned_lands[0]
 		LandSelectionHelper.preview_land(self, first_tile)
 		LandSelectionHelper.update_land_selection_ui(self)
-	
-	# UIに表示要請
-	if ui_manager and ui_manager.has_method("show_land_selection_mode"):
-		ui_manager.show_land_selection_mode(player_owned_lands)
 	
 	# ナビゲーションボタン設定（土地選択用）※preview_landの後に設定する
 	# （preview_land→show_card_info(false)がナビゲーションをクリアするため）
@@ -292,10 +287,7 @@ func _check_swap_conditions(player_id: int) -> bool:
 func close_dominio_order():
 	# マーカーを非表示
 	TargetSelectionHelper.hide_selection_marker(self)
-	
-	# ドミニオコマンドはグローバルキーで選択するため、TapTargetManagerは使用しない
-	# _end_tap_target_selection()
-	
+
 	# すべての状態をリセット
 	current_state = State.CLOSED
 	selected_tile_index = -1
@@ -330,9 +322,9 @@ func close_dominio_order():
 		_navigation_service.disable_navigation()
 	
 	# パネルを閉じる
-	if ui_manager and ui_manager.dominio_order_ui:
-		ui_manager.dominio_order_ui.hide_level_selection()
-		ui_manager.dominio_order_ui.hide_terrain_selection()
+	if _dominio_order_ui:
+		_dominio_order_ui.hide_level_selection()
+		_dominio_order_ui.hide_terrain_selection()
 	
 	dominio_command_closed.emit()
 	
@@ -352,10 +344,10 @@ func close_dominio_order():
 			board_system.camera.look_at(tile_pos + Vector3(0, 1.0 + GameConstants.CAMERA_LOOK_OFFSET_Y, 0), Vector3.UP)
 	
 	# UIを非表示
-	if ui_manager:
-		if ui_manager.has_method("hide_dominio_order_ui"):
-			ui_manager.hide_dominio_order_ui()
-	# カード選択UIも非表示にする
+	if _dominio_order_ui:
+		_dominio_order_ui.hide_action_menu()
+		_dominio_order_ui.hide_level_selection()
+		_dominio_order_ui.hide_cancel_button()
 	if _card_selection_service:
 		_card_selection_service.hide_card_selection_ui()
 
@@ -391,9 +383,9 @@ func cancel():
 			board_system.reset_action_processing()
 		
 		# UIを先に更新
-		if ui_manager and ui_manager.dominio_order_ui:
-			ui_manager.dominio_order_ui.hide_terrain_selection()
-			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
+		if _dominio_order_ui:
+			_dominio_order_ui.hide_terrain_selection()
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		
 		# ナビゲーションはActionMenuUI内で設定される
 	
@@ -413,8 +405,8 @@ func cancel():
 		current_destination_index = 0
 		
 		# UIを先に更新
-		if ui_manager and ui_manager.has_method("show_action_menu"):
-			ui_manager.show_action_menu(selected_tile_index)
+		if _dominio_order_ui:
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		
 		# ナビゲーションはActionMenuUI内で設定される
 	
@@ -425,11 +417,11 @@ func cancel():
 		current_level_selection_index = 0
 		
 		# UIを先に更新
-		if ui_manager and ui_manager.dominio_order_ui:
-			ui_manager.dominio_order_ui.hide_level_selection()
-		
-		if ui_manager and ui_manager.has_method("show_action_menu"):
-			ui_manager.show_action_menu(selected_tile_index)
+		if _dominio_order_ui:
+			_dominio_order_ui.hide_level_selection()
+
+		if _dominio_order_ui:
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		
 		# ナビゲーションはActionMenuUI内で設定される
 	
@@ -453,15 +445,15 @@ func cancel():
 			_info_panel_service.hide_all_info_panels(false)
 		
 		# アクションメニューを表示
-		if ui_manager and ui_manager.has_method("show_action_menu"):
-			ui_manager.show_action_menu(selected_tile_index)
+		if _dominio_order_ui:
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		
 		# ナビゲーションはActionMenuUI内で設定される
 		
 	elif current_state == State.SELECTING_ACTION:
 		# アクション選択中なら土地選択に戻る
-		if ui_manager and ui_manager.dominio_order_ui:
-			ui_manager.dominio_order_ui.hide_action_menu(false)  # ボタンクリアしない
+		if _dominio_order_ui:
+			_dominio_order_ui.hide_action_menu(false)  # ボタンクリアしない
 		
 		current_state = State.SELECTING_LAND
 		
@@ -470,10 +462,7 @@ func cancel():
 			var tile_index = player_owned_lands[current_land_selection_index]
 			LandSelectionHelper.preview_land(self, tile_index)
 			LandSelectionHelper.update_land_selection_ui(self)
-		
-		if ui_manager and ui_manager.has_method("show_land_selection_mode"):
-			ui_manager.show_land_selection_mode(player_owned_lands)
-		
+
 		# 土地選択用ナビゲーション（全ボタン）
 		_set_land_selection_navigation()
 	
@@ -639,9 +628,9 @@ func select_next_level():
 
 ## レベル選択: ハイライト更新
 func _update_level_selection_highlight():
-	if ui_manager and ui_manager.dominio_order_ui:
+	if _dominio_order_ui:
 		var selected_level = available_levels[current_level_selection_index]
-		ui_manager.dominio_order_ui.highlight_level_button(selected_level)
+		_dominio_order_ui.highlight_level_button(selected_level)
 
 ## レベル選択: 確定
 func confirm_level_selection():
@@ -649,20 +638,20 @@ func confirm_level_selection():
 		return
 	var selected_level = available_levels[current_level_selection_index]
 	# DominioOrderUIのシグナル経由で処理
-	if ui_manager and ui_manager.dominio_order_ui:
-		ui_manager.dominio_order_ui.on_level_selected(selected_level)
+	if _dominio_order_ui:
+		_dominio_order_ui.on_level_selected(selected_level)
 
 ## Phase 1-A: レベル選択シグナルハンドラ
 func _on_level_up_selected(target_level: int, cost: int):
 	var success = LandActionHelper.execute_level_up_with_level(self, target_level, cost)
 	if not success:
 		# レベル選択UIを閉じてアクション選択に戻す
-		if ui_manager and ui_manager.dominio_order_ui:
-			ui_manager.dominio_order_ui.hide_level_selection()
+		if _dominio_order_ui:
+			_dominio_order_ui.hide_level_selection()
 		current_state = State.SELECTING_ACTION
 		set_action_selection_navigation()
-		if ui_manager and ui_manager.dominio_order_ui:
-			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
+		if _dominio_order_ui:
+			_dominio_order_ui.show_action_menu(selected_tile_index)
 		if _message_service:
 			_message_service.show_toast("EPが足りません")
 
@@ -1093,92 +1082,6 @@ func _complete_swap_for_cpu(_success: bool):
 	# アクション完了通知
 	if board_system and board_system.tile_action_processor:
 		board_system.complete_action()
-
-
-# ========================================
-# TapTargetManager連携
-# ========================================
-
-## タップターゲット選択を開始
-func _start_tap_target_selection(player_id: int):
-	if not ui_manager or not ui_manager.tap_target_manager:
-		return
-	
-	var ttm = ui_manager.tap_target_manager
-	ttm.set_current_player(player_id)
-	
-	# シグナル接続（重複防止）
-	if not ttm.target_selected.is_connected(_on_tap_target_selected):
-		ttm.target_selected.connect(_on_tap_target_selected)
-	
-	# 有効なターゲット：自分の非ダウンクリーチャーがいるタイル
-	var valid_targets = ttm.get_own_active_creature_tiles()
-	
-	ttm.start_selection(
-		valid_targets,
-		TapTargetManager.SelectionType.CREATURE,
-		"DominioCommandHandler"
-	)
-	
-	print("[DominioCommandHandler] タップターゲット選択開始: %d件" % valid_targets.size())
-
-
-## タップターゲット選択を終了
-func _end_tap_target_selection():
-	if not ui_manager or not ui_manager.tap_target_manager:
-		return
-	
-	var ttm = ui_manager.tap_target_manager
-	
-	# シグナル切断
-	if ttm.target_selected.is_connected(_on_tap_target_selected):
-		ttm.target_selected.disconnect(_on_tap_target_selected)
-	
-	ttm.end_selection()
-	print("[DominioCommandHandler] タップターゲット選択終了")
-
-
-## タップでターゲットが選択された時
-func _on_tap_target_selected(tile_index: int, _creature_data: Dictionary):
-	print("[DominioCommandHandler] タップでタイル選択: %d (状態: %s)" % [tile_index, State.keys()[current_state]])
-	
-	match current_state:
-		State.SELECTING_LAND:
-			# 土地選択中 → そのタイルを選択
-			if tile_index in player_owned_lands:
-				# インデックスを更新
-				current_land_selection_index = player_owned_lands.find(tile_index)
-				LandSelectionHelper.preview_land(self, tile_index)
-				LandSelectionHelper.update_land_selection_ui(self)
-				# 自動で確定
-				LandSelectionHelper.confirm_land_selection(self)
-		
-		State.SELECTING_ACTION:
-			# アクション選択中 → 別のタイルに切り替え
-			if tile_index in player_owned_lands and tile_index != selected_tile_index:
-				# 一旦土地選択に戻してから新しいタイルを選択
-				current_state = State.SELECTING_LAND
-				current_land_selection_index = player_owned_lands.find(tile_index)
-				LandSelectionHelper.preview_land(self, tile_index)
-				LandSelectionHelper.update_land_selection_ui(self)
-				LandSelectionHelper.confirm_land_selection(self)
-		
-		State.SELECTING_MOVE_DEST:
-			# 移動先選択中 → 移動先を選択（確認待ち）
-			if tile_index in move_destinations:
-				current_destination_index = move_destinations.find(tile_index)
-				# マーカーを移動先に表示
-				TargetSelectionHelper.show_selection_marker(self, tile_index)
-				TargetSelectionHelper.focus_camera_on_tile(self, tile_index)
-				# UI更新
-				LandActionHelper.update_move_destination_ui(self)
-				# 確認フェーズへ（即座に移動しない）
-				print("[DominioCommandHandler] 移動先選択: タイル%d - 決定ボタンで確定してください" % tile_index)
-		
-		_:
-			# その他の状態では何もしない
-			pass
-
 
 ## 移動侵略シーケンス（カメラ移動→コメント→アイテムフェーズ）
 func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, creature_data: Dictionary):

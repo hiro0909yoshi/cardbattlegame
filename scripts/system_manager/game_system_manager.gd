@@ -809,6 +809,10 @@ func _initialize_phase1a_handlers() -> void:
 		game_flow_manager.spell_container.spell_curse
 	)
 
+	# === Phase 8-B2: dominio_order_ui を直接注入 ===
+	if ui_manager and ui_manager.dominio_order_ui:
+		dominio_command_handler.set_dominio_order_ui(ui_manager.dominio_order_ui)
+
 	# SpellPhaseHandlerを作成
 	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")
 	var spell_phase_handler = SpellPhaseHandlerClass.new()
