@@ -17,6 +17,10 @@ var card_system: CardSystem
 var ui_manager: UIManager
 var battle_system: BattleSystem  # battle_system参照
 
+# === サービス参照（注入用） ===
+var _message_service = null
+var _card_selection_service = null
+
 # === 直接参照（GFM経由を廃止） ===
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
 var item_phase_handler = null  # ItemPhaseHandler: アイテムフェーズ処理
@@ -48,7 +52,7 @@ func _ready():
 	pass
 
 # 初期化
-func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler, 
+func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 		   p_system: PlayerSystem, c_system: CardSystem, ui: UIManager):
 	board_system = b_system
 	cpu_ai_handler = ai_handler
@@ -57,6 +61,17 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 	ui_manager = ui
 	if board_system and board_system.get("battle_system"):
 		battle_system = board_system.battle_system
+
+	# サービス注入
+	if ui and ui.has_meta("message_service"):
+		_message_service = ui.get_meta("message_service")
+	elif ui and "message_service" in ui:
+		_message_service = ui.message_service
+
+	if ui and ui.has_meta("card_selection_service"):
+		_card_selection_service = ui.get_meta("card_selection_service")
+	elif ui and "card_selection_service" in ui:
+		_card_selection_service = ui.card_selection_service
 
 # CPUターンを処理
 func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
@@ -99,29 +114,26 @@ func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
 func _wait_for_notifications():
 	if not board_system:
 		return
-	
+
 	# GameFlowManagerからLapSystemを取得
 	var gfm = board_system.game_flow_manager
 	var lap_system = gfm.lap_system if gfm else null
-	
-	# GlobalCommentUIを取得
-	var global_comment = ui_manager.global_comment_ui if ui_manager else null
-	
+
 	# 通知処理が完了するまで待機
 	while true:
 		var is_busy = false
-		
+
 		# LapSystemの処理中チェック
 		if lap_system and lap_system.is_showing_notification:
 			is_busy = true
-		
-		# GlobalCommentUIのクリック待ちチェック
-		if global_comment and global_comment.waiting_for_click:
+
+		# MessageService のクリック待ちチェック
+		if _message_service and _message_service.is_notification_popup_active():
 			is_busy = true
-		
+
 		if not is_busy:
 			break
-		
+
 		await board_system.get_tree().process_frame
 
 # タイル状況を分析
@@ -327,12 +339,12 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 		if player_system.get_current_player().magic_power >= cost:
 			board_system.upgrade_tile_level(current_tile)
 			player_system.add_magic(current_player_index, -cost)
-			
-			# 表示更新
+
+			# 表示更新（UIManager固有の操作）
 			board_system.update_all_tile_displays()
 			if ui_manager:
 				ui_manager.update_player_info_panels()
-			
+
 			print("CPU: 土地をレベルアップ！")
 	
 	_complete_action()
@@ -342,10 +354,14 @@ func _on_invasion_completed(_success: bool, _tile_index: int):
 	# デバッグログ（Phase 2 テスト期間中）
 	print("[CPUTurnProcessor] invasion_completed 受信: success=%s, tile=%d" % [_success, _tile_index])
 
+	# CardSelectionService でカード選択UIを隠す
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
+
+	# UIManager で情報パネルを更新（UIツリー操作）
 	if ui_manager:
-		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
-	
+
 	_complete_action()
 
 # === ヘルパー関数 ===

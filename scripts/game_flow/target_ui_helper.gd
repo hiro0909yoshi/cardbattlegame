@@ -188,40 +188,55 @@ static func select_target_by_index(handler, index: int) -> bool:
 static func show_creature_info_panel(handler, target_data: Dictionary) -> void:
 	var target_type = target_data.get("type", "")
 	var tile_index = target_data.get("tile_index", -1)
-	
+
 	# クリーチャー対象でない場合はパネルを閉じる
 	if target_type != "creature":
 		hide_creature_info_panel(handler)
 		return
-	
+
 	var creature_data = target_data.get("creature", {})
-	
+
 	# クリーチャーデータがない場合はパネルを閉じる
 	if creature_data.is_empty():
 		hide_creature_info_panel(handler)
 		return
-	
-	# handlerからui_managerを取得
-	var ui_mgr = _get_ui_manager(handler)
-	
-	if not ui_mgr:
+
+	# handlerから InfoPanelService を取得
+	var info_panel_service = _get_info_panel_service(handler)
+
+	if not info_panel_service:
 		return
-	
+
 	# setup_buttons=false でナビゲーションボタンを設定しない
-	ui_mgr.show_card_info(creature_data, tile_index, false)
+	info_panel_service.show_card_info(creature_data, tile_index, false)
 
 
 ## クリーチャー情報パネルを非表示
 static func hide_creature_info_panel(handler) -> void:
-	var ui_mgr = _get_ui_manager(handler)
-	
-	if not ui_mgr:
+	var info_panel_service = _get_info_panel_service(handler)
+
+	if not info_panel_service:
 		return
-	
-	ui_mgr.hide_all_info_panels(false)
+
+	info_panel_service.hide_all_info_panels(false)
 
 
-## handlerからui_managerを取得
+## handlerから InfoPanelService を取得
+static func _get_info_panel_service(handler):
+	# handler直接に _info_panel_service がある場合
+	if "_info_panel_service" in handler and handler._info_panel_service:
+		return handler._info_panel_service
+
+	# ui_manager 経由で取得
+	var ui_mgr = _get_ui_manager(handler)
+	if ui_mgr and ui_mgr.has_meta("info_panel_service"):
+		return ui_mgr.get_meta("info_panel_service")
+	elif ui_mgr and "info_panel_service" in ui_mgr:
+		return ui_mgr.info_panel_service
+
+	return null
+
+## handlerからui_managerを取得（後方互換性）
 static func _get_ui_manager(handler):
 	if "ui_manager" in handler and handler.ui_manager:
 		return handler.ui_manager

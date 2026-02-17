@@ -57,10 +57,13 @@ func execute(context: Dictionary) -> Dictionary:
 		"purify_all":
 			var result = spell_purify.purify_all(current_player_id)
 			# UI メッセージ表示（await）
-			if handler.ui_manager and handler.ui_manager.has_method("show_comment_and_wait"):
+			var message_service = null
+			if handler.spell_ui_manager:
+				message_service = handler.spell_ui_manager._message_service
+			if message_service:
 				var type_count = result.removed_types.size()
 				var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
-				await handler.ui_manager.show_comment_and_wait(message)
+				await message_service.show_comment_and_wait(message)
 				effect_message = message
 			else:
 				effect_message = "全ての呪いを消去"

@@ -21,6 +21,8 @@ var player_system_ref: PlayerSystem = null
 var ui_manager_ref = null
 var spell_creature_place_ref = null
 var board_system_ref = null
+var _message_service = null
+var _card_selection_service = null
 
 
 # ============================================================
@@ -34,6 +36,9 @@ func setup(card_system: CardSystem, player_system = null) -> void:
 
 func set_ui_manager(ui_manager) -> void:
 	ui_manager_ref = ui_manager
+	if ui_manager:
+		_message_service = ui_manager.message_service if ui_manager.get("message_service") else null
+		_card_selection_service = ui_manager.card_selection_service if ui_manager.get("card_selection_service") else null
 
 
 func set_board_system(board_system) -> void:
@@ -247,9 +252,9 @@ func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
 	var card_name = card_data.get("name", "?")
 	print("[カード生成] プレイヤー%d: 『%s』を手札に追加" % [player_id + 1, card_name])
 	
-	if ui_manager_ref and ui_manager_ref.hand_display:
-		ui_manager_ref.hand_display.update_hand_display(player_id)
-	
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(player_id)
+
 	return {"success": true, "card_name": card_name}
 
 
@@ -273,8 +278,8 @@ func _start_type_selection_draw(player_id: int) -> void:
 		spell_and_mystic_ui.set_ui_manager(ui_manager_ref)
 		ui_manager_ref.add_child(spell_and_mystic_ui)
 	
-	if ui_manager_ref.phase_display:
-		ui_manager_ref.phase_display.show_action_prompt("引くカードのタイプを選択してください")
+	if _message_service:
+		_message_service.show_action_prompt("引くカードのタイプを選択してください")
 	
 	spell_and_mystic_ui.show_type_selection()
 	
@@ -290,14 +295,14 @@ func _on_type_selected(selected_type: String, player_id: int, spell_ui: Node) ->
 	var result = draw_card_by_type(player_id, selected_type)
 	
 	if result.get("drawn", false):
-		if ui_manager_ref and ui_manager_ref.global_comment_ui:
-			await ui_manager_ref.global_comment_ui.show_and_wait("『%s』を引きました" % result.get("card_name", "?"))
+		if _message_service:
+			await _message_service.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 	else:
-		if ui_manager_ref and ui_manager_ref.phase_display:
-			ui_manager_ref.phase_display.show_toast("デッキに該当タイプがありません")
+		if _message_service:
+			_message_service.show_toast("デッキに該当タイプがありません")
 	
-	if ui_manager_ref and ui_manager_ref.hand_display:
-		ui_manager_ref.hand_display.update_hand_display(player_id)
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(player_id)
 
 
 # ============================================================
