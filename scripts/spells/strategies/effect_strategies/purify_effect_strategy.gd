@@ -58,8 +58,9 @@ func execute(context: Dictionary) -> Dictionary:
 			var result = spell_purify.purify_all(current_player_id)
 			# UI メッセージ表示（await）
 			var message_service = null
-			if handler.spell_ui_manager:
-				message_service = handler.spell_ui_manager._message_service
+			if handler.spell_ui_manager and handler.spell_ui_manager._ui_manager:
+				var ui_mgr = handler.spell_ui_manager._ui_manager
+				message_service = ui_mgr.message_service if ui_mgr.get("message_service") else null
 			if message_service:
 				var type_count = result.removed_types.size()
 				var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
