@@ -12,16 +12,18 @@ signal direction_selected(direction: int)
 
 # 参照
 var controller: MovementController3D = null
-var ui_manager = null
+var _message_service = null
+var _navigation_service = null
 
 
 func _init(p_controller: MovementController3D) -> void:
 	controller = p_controller
 
 
-# UIManager参照を設定
-func set_ui_manager(p_ui_manager) -> void:
-	ui_manager = p_ui_manager
+# サービスを設定
+func set_services(p_message_service, p_navigation_service) -> void:
+	_message_service = p_message_service
+	_navigation_service = p_navigation_service
 
 
 # 方向選択UIを表示して結果を返す
@@ -58,10 +60,9 @@ func show_simple_direction_selection() -> int:
 
 # 方向選択UIを更新
 func _update_ui():
-	if ui_manager:
+	if _message_service:
 		var dir_text = "順方向 →" if selected_direction == 1 else "← 逆方向"
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("移動方向を選択: %s" % dir_text)
+		_message_service.show_action_prompt("移動方向を選択: %s" % dir_text)
 	# カメラを選択方向に少しずらす
 	var player_id = controller.current_moving_player
 	if player_id >= 0:
@@ -89,8 +90,8 @@ func _update_ui():
 
 # ナビゲーションボタンを設定
 func setup_navigation():
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			func(): _confirm_selection(),  # 決定
 			Callable(),  # 戻るなし
 			func(): _cycle_selection(),    # 上
@@ -108,8 +109,8 @@ func restore_navigation():
 
 # ナビゲーションボタンをクリア
 func _clear_navigation():
-	if ui_manager:
-		ui_manager.disable_navigation()
+	if _navigation_service:
+		_navigation_service.disable_navigation()
 
 
 # 方向選択を切り替え（上下どちらでも同じ動作）

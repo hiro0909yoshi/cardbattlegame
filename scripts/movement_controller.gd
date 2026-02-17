@@ -36,7 +36,6 @@ var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var spell_movement: SpellMovement = null
 var spell_player_move = null
-var ui_manager = null
 
 # CPU移動評価システム
 var cpu_movement_evaluator: CPUMovementEvaluator = null
@@ -94,13 +93,12 @@ func set_card_selection_ui(ui: CardSelectionUI) -> void:
 		destination_predictor.set_card_selection_ui(ui)
 
 
-# UIManager参照を設定（セレクターに直接参照を渡す）
-func set_ui_manager(p_ui_manager) -> void:
-	ui_manager = p_ui_manager
+# サービスを設定（セレクターに直接参照を渡す）
+func set_services(p_message_service, p_navigation_service) -> void:
 	if direction_selector:
-		direction_selector.set_ui_manager(p_ui_manager)
+		direction_selector.set_services(p_message_service, p_navigation_service)
 	if branch_selector:
-		branch_selector.set_ui_manager(p_ui_manager)
+		branch_selector.set_services(p_message_service, p_navigation_service)
 
 
 # game_3d参照を設定（TutorialManager取得用）

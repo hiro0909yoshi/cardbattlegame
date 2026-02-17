@@ -8,7 +8,7 @@ extends BaseTile
 # システム参照（handle_special_actionで渡される）
 var _player_system = null
 var _card_system = null
-var _ui_manager = null
+var _message_service = null
 var _game_flow_manager = null
 var _board_system = null
 
@@ -22,7 +22,7 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	# コンテキストからシステム参照を取得
 	_player_system = context.get("player_system")
 	_card_system = context.get("card_system")
-	_ui_manager = context.get("ui_manager")
+	_message_service = context.get("message_service")
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
@@ -69,15 +69,15 @@ func _handle_player_base_tile(player_id: int) -> Dictionary:
 	print("[SpecialBaseTile] empty_tiles: %d個" % empty_tiles.size())
 	if empty_tiles.is_empty():
 		print("[SpecialBaseTile] 空き地なし")
-		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.show_comment_and_wait("配置できる空き地がありません", player_id, true)
+		if _message_service:
+			await _message_service.show_comment_and_wait("配置できる空き地がありません", player_id, true)
 		return {"success": true, "selected_tile": -1}
 	
 	# 配置するかどうかの確認
 	print("[SpecialBaseTile] 確認ダイアログ表示")
-	print("[SpecialBaseTile] _ui_manager: %s, global_comment_ui: %s" % [_ui_manager != null, _ui_manager.global_comment_ui != null if _ui_manager else false])
-	if _ui_manager and _ui_manager.global_comment_ui:
-		var do_place = await _ui_manager.show_choice_and_wait(
+	print("[SpecialBaseTile] _message_service: %s" % (_message_service != null))
+	if _message_service:
+		var do_place = await _message_service.show_choice_and_wait(
 			"空き地にクリーチャーを配置しますか？",
 			player_id,
 			"配置する",

@@ -122,9 +122,9 @@ func setup_3d_mode(board_3d, cpu_settings: Array):
 		if ui_manager and ui_manager.card_selection_ui:
 			board_system_3d.set_movement_controller_card_selection_ui(ui_manager.card_selection_ui)
 
-		# MovementControllerにUIManagerを設定（セレクター向け）
+		# MovementControllerにサービスを設定（セレクター向け）
 		if ui_manager:
-			board_system_3d.set_movement_controller_ui_manager(ui_manager)
+			board_system_3d.set_movement_controller_services(ui_manager.message_service, ui_manager.navigation_service)
 
 		# LapSystemにboard_system_3dを設定し、チェックポイントシグナルを接続
 		if lap_system:

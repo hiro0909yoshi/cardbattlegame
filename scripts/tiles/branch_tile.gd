@@ -204,7 +204,8 @@ func set_branch_direction(direction: int):
 # 停止時の特殊アクション
 # ============================================
 
-var _ui_manager = null
+var _message_service = null
+var _navigation_service = null
 var _board_system = null
 
 signal direction_change_selected(change: bool)
@@ -212,7 +213,8 @@ signal direction_change_selected(change: bool)
 ## 特殊タイルアクション実行（special_tile_systemから呼び出される）
 func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	# コンテキストからシステム参照を取得
-	_ui_manager = context.get("ui_manager")
+	_message_service = context.get("message_service")
+	_navigation_service = context.get("navigation_service")
 	_board_system = context.get("board_system")
 	
 	# 分岐が1つしかない場合はスキップ
@@ -230,35 +232,37 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 
 ## 方向変更選択UI表示
 func _show_direction_change_selection() -> Dictionary:
-	if not _ui_manager:
-		push_error("[BranchTile] UIManagerがありません")
+	if not _message_service and not _navigation_service:
+		push_error("[BranchTile] サービスがありません")
 		return {"success": false, "changed": false}
 	
 	# 現在の方向を表示
 	var open_branch = _get_open_branch()
 	
 	# 通知ポップアップで表示
-	if _ui_manager.global_comment_ui:
+	if _message_service:
 		var message = "分岐タイル\n現在タイル%dが開\n\n[color=yellow]✓変更する / ✕変更しない[/color]" % open_branch
-		_ui_manager.show_comment_message(message)
+		_message_service.show_comment_message(message)
 	
 	# グローバルボタンを設定
-	_ui_manager.enable_navigation(
-		func(): _on_change_selected(true),   # 決定 → 変更する
-		func(): _on_change_selected(false),  # 戻る → 変更しない
-		Callable(),  # 上
-		Callable()   # 下
-	)
+	if _navigation_service:
+		_navigation_service.enable_navigation(
+			func(): _on_change_selected(true),   # 決定 → 変更する
+			func(): _on_change_selected(false),  # 戻る → 変更しない
+			Callable(),  # 上
+			Callable()   # 下
+		)
 	
 	# 選択を待つ
 	var changed = await direction_change_selected
-	
+
 	# ボタンをクリア
-	_ui_manager.disable_navigation()
-	
+	if _navigation_service:
+		_navigation_service.disable_navigation()
+
 	# ポップアップを閉じる
-	if _ui_manager.global_comment_ui:
-		_ui_manager.hide_comment_message()
+	if _message_service:
+		_message_service.hide_comment_message()
 	
 	if changed:
 		toggle_branch_direction()

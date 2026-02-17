@@ -282,6 +282,10 @@ func _create_tile_context() -> Dictionary:
 	return {
 		"player_system": player_system,
 		"card_system": card_system,
+		"message_service": ui_manager.message_service if ui_manager else null,
+		"navigation_service": ui_manager.navigation_service if ui_manager else null,
+		"card_selection_service": ui_manager.card_selection_service if ui_manager else null,
+		"ui_layer": ui_manager.ui_layer if ui_manager else null,
 		"ui_manager": ui_manager,
 		"game_flow_manager": game_flow_manager,
 		"board_system": board_system

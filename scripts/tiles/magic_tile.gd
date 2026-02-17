@@ -11,7 +11,8 @@ var magic_tile_ui = null
 # システム参照（handle_special_actionで渡される）
 var _player_system = null
 var _card_system = null
-var _ui_manager = null
+var _message_service = null
+var _ui_layer = null
 var _game_flow_manager = null
 var _board_system = null
 
@@ -22,11 +23,12 @@ func _ready():
 ## 特殊タイルアクション実行（special_tile_systemから呼び出される）
 func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	print("[MagicTile] 魔法タイル処理開始 - Player%d" % (player_id + 1))
-	
+
 	# コンテキストからシステム参照を取得
 	_player_system = context.get("player_system")
 	_card_system = context.get("card_system")
-	_ui_manager = context.get("ui_manager")
+	_message_service = context.get("message_service")
+	_ui_layer = context.get("ui_layer")
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
@@ -85,17 +87,17 @@ func _get_cpu_special_tile_ai():
 
 ## スペル選択UI表示
 func _show_magic_selection(player_id: int) -> Dictionary:
-	if not _ui_manager or not _ui_manager.ui_layer:
-		push_error("[MagicTile] UIManagerまたはui_layerがありません")
+	if not _message_service or not _ui_layer:
+		push_error("[MagicTile] MessageServiceまたはui_layerがありません")
 		return {"success": false, "spell_used": false}
 	
 	# 全スペルからランダム3枚を取得（選択ループ中は同じカードを使い続ける）
 	var available_spells = _get_random_spells(3)
-	
+
 	if available_spells.is_empty():
 		print("[MagicTile] 使用可能なスペルがありません")
-		if _ui_manager.global_comment_ui:
-			await _ui_manager.show_comment_and_wait("使用可能なスペルがありません", player_id, true)
+		if _message_service:
+			await _message_service.show_comment_and_wait("使用可能なスペルがありません", player_id, true)
 		return {"success": true, "spell_used": false}
 	
 	# UIがなければ作成
@@ -104,7 +106,7 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 		if MagicTileUIScript:
 			magic_tile_ui = Control.new()
 			magic_tile_ui.set_script(MagicTileUIScript)
-			_ui_manager.ui_layer.add_child(magic_tile_ui)
+			_ui_layer.add_child(magic_tile_ui)
 			if magic_tile_ui.has_method("_setup_ui"):
 				magic_tile_ui.setup_ui()
 	
@@ -114,30 +116,30 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 		var player_magic = 0
 		if _player_system and player_id < _player_system.players.size():
 			player_magic = _player_system.players[player_id].magic_power
-		
+
 		# UIをセットアップして表示
 		magic_tile_ui.setup(player_id, player_magic)
 		magic_tile_ui.show_selection(available_spells)
-		
+
 		# UIからの応答を待つ
 		var selection_result = await _wait_for_selection()
-		
+
 		if selection_result.is_empty():
 			# 「使わない」ボタンでキャンセル
 			print("[MagicTile] 魔法使用キャンセル")
 			return {"success": true, "spell_used": false}
-		
+
 		# スペル使用
 		var spell_data = selection_result.get("spell", {})
-		
+
 		print("[MagicTile] 魔法使用: %s" % spell_data.get("name", "?"))
-		
+
 		# SpellPhaseHandlerを使ってスペル実行（コスト支払いも含む）
 		var spell_result = await _execute_spell(spell_data, player_id)
-		
+
 		var result_status = spell_result.get("status", "cancelled")
 		var was_warped = spell_result.get("warped", false)
-		
+
 		match result_status:
 			"success":
 				# 使用成功 → ループ終了（発動通知はSpellEffectExecutorで表示済み）
@@ -155,7 +157,7 @@ func _show_magic_selection(player_id: int) -> Dictionary:
 				# 手動キャンセル → 再度選択画面に戻る（ループ継続）
 				print("[MagicTile] スペルキャンセル - 選択画面に戻る")
 				continue
-	
+
 	# ここには到達しないはず
 	return {"success": true, "spell_used": false, "warped": false}
 

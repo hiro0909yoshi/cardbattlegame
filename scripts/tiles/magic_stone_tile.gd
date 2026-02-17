@@ -10,6 +10,8 @@ var magic_stone_ui = null
 var _player_system = null
 var _card_system = null
 var _ui_manager = null
+var _message_service = null
+var _ui_layer = null
 var _game_flow_manager = null
 var _board_system = null
 
@@ -20,11 +22,13 @@ func _ready():
 ## 特殊タイルアクション実行（special_tile_systemから呼び出される）
 func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	print("[MagicStoneTile] 魔法石タイル処理開始 - Player%d" % (player_id + 1))
-	
+
 	# コンテキストからシステム参照を取得
 	_player_system = context.get("player_system")
 	_card_system = context.get("card_system")
 	_ui_manager = context.get("ui_manager")
+	_message_service = context.get("message_service")
+	_ui_layer = context.get("ui_layer")
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
 	
@@ -60,18 +64,18 @@ func _handle_cpu_magic_stone(player_id: int) -> Dictionary:
 	var success = result.get("success", false)
 	if success:
 		print("[MagicStoneTile] CPU: %sの石を%d個購入" % [element, count])
-		
+
 		# コメント表示
-		if _ui_manager and _ui_manager.global_comment_ui:
+		if _message_service:
 			var element_name = _get_element_name(element)
-			await _ui_manager.show_comment_and_wait("%sの石を購入した！" % element_name, player_id, true)
-		
+			await _message_service.show_comment_and_wait("%sの石を購入した！" % element_name, player_id, true)
+
 		# UI更新
 		if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
 			_ui_manager.update_player_info_panels()
-		
+
 		return {"success": true, "transaction_done": true}
-	
+
 	return {"success": true, "transaction_done": false}
 
 ## CPUSpecialTileAIを取得
@@ -97,8 +101,8 @@ func _get_element_name(element: String) -> String:
 
 ## 魔法石ショップUI表示
 func _show_magic_stone_shop(player_id: int) -> Dictionary:
-	if not _ui_manager or not _ui_manager.ui_layer:
-		push_error("[MagicStoneTile] UIManagerまたはui_layerがありません")
+	if not _message_service or not _ui_layer:
+		push_error("[MagicStoneTile] MessageServiceまたはui_layerがありません")
 		return {"success": false, "transaction_done": false}
 	
 	# MagicStoneSystemを取得
@@ -108,8 +112,8 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 	
 	if not stone_system:
 		push_error("[MagicStoneTile] MagicStoneSystemが初期化されていません")
-		if _ui_manager.global_comment_ui:
-			await _ui_manager.show_comment_and_wait("魔法石ショップは準備中です", player_id, true)
+		if _message_service:
+			await _message_service.show_comment_and_wait("魔法石ショップは準備中です", player_id, true)
 		return {"success": true, "transaction_done": false}
 	
 	# UIがなければ作成
@@ -118,7 +122,7 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 		if MagicStoneUIScript:
 			magic_stone_ui = Control.new()
 			magic_stone_ui.set_script(MagicStoneUIScript)
-			_ui_manager.ui_layer.add_child(magic_stone_ui)
+			_ui_layer.add_child(magic_stone_ui)
 			if magic_stone_ui.has_method("_setup_ui"):
 				magic_stone_ui.setup_ui()
 	

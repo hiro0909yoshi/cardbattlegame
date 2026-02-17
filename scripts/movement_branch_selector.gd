@@ -19,16 +19,18 @@ const INDICATOR_HEIGHT = 0.4
 
 # 参照
 var controller: MovementController3D = null
-var ui_manager = null
+var _message_service = null
+var _navigation_service = null
 
 
 func _init(p_controller: MovementController3D) -> void:
 	controller = p_controller
 
 
-# UIManager参照を設定
-func set_ui_manager(p_ui_manager) -> void:
-	ui_manager = p_ui_manager
+# サービスを設定
+func set_services(p_message_service, p_navigation_service) -> void:
+	_message_service = p_message_service
+	_navigation_service = p_navigation_service
 
 
 # 分岐タイル選択UIを表示して選択を待つ
@@ -75,7 +77,7 @@ func show_branch_tile_selection(choices: Array) -> int:
 
 # 分岐選択UI更新
 func _update_ui():
-	if ui_manager:
+	if _message_service:
 		var choices_text = ""
 		for i in range(available_branches.size()):
 			var tile_num = available_branches[i]
@@ -84,8 +86,7 @@ func _update_ui():
 			else:
 				choices_text += " タイル%d " % tile_num
 		var remaining_text = "（残り%dマス）" % controller.current_remaining_steps if controller.current_remaining_steps > 0 else ""
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
+		_message_service.show_action_prompt("進む方向を選択: %s %s" % [choices_text, remaining_text])
 
 	# 到着予測ハイライトを更新
 	controller.destination_predictor.update_destination_highlight_for_branch(
@@ -117,8 +118,8 @@ func _update_ui():
 
 # ナビゲーションボタンを設定
 func setup_navigation():
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			func(): _confirm_selection(),    # 決定
 			Callable(),                       # 戻るなし
 			func(): _cycle_selection(-1),    # 上（左へ）
@@ -136,8 +137,8 @@ func restore_navigation():
 
 # ナビゲーションボタンをクリア
 func _clear_navigation():
-	if ui_manager:
-		ui_manager.disable_navigation()
+	if _navigation_service:
+		_navigation_service.disable_navigation()
 
 
 # 分岐選択を切り替え

@@ -941,10 +941,10 @@ func set_movement_controller_card_selection_ui(ui: CardSelectionUI) -> void:
 	if movement_controller:
 		movement_controller.set_card_selection_ui(ui)
 
-# UIManagerを設定（セレクターに直接参照を渡す）
-func set_movement_controller_ui_manager(ui_mgr) -> void:
+# サービスを設定（セレクターに直接参照を渡す）
+func set_movement_controller_services(p_message_service, p_navigation_service) -> void:
 	if movement_controller:
-		movement_controller.set_ui_manager(ui_mgr)
+		movement_controller.set_services(p_message_service, p_navigation_service)
 
 # game_3d参照を設定（TutorialManager取得用）
 func set_movement_controller_game_3d_ref(game_3d_ref) -> void:

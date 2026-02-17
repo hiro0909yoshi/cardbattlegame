@@ -14,6 +14,9 @@ var _card_system = null
 var _ui_manager = null
 var _game_flow_manager = null
 var _board_system = null
+var _message_service = null
+var _ui_layer = null
+var _card_selection_service = null
 
 func _ready():
 	tile_type = "card_buy"
@@ -29,6 +32,9 @@ func handle_special_action(player_id: int, context: Dictionary) -> Dictionary:
 	_ui_manager = context.get("ui_manager")
 	_game_flow_manager = context.get("game_flow_manager")
 	_board_system = context.get("board_system")
+	_message_service = context.get("message_service")
+	_ui_layer = context.get("ui_layer")
+	_card_selection_service = context.get("card_selection_service")
 	
 	# CPUの場合はAI判断
 	if _board_system and _board_system.game_flow_manager and _board_system.game_flow_manager.is_cpu_player(player_id):
@@ -62,8 +68,8 @@ func _handle_cpu_card_buy(player_id: int) -> Dictionary:
 	_purchase_card(card_data, player_id, price)
 	
 	# コメント表示
-	if _ui_manager and _ui_manager.global_comment_ui:
-		await _ui_manager.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
+	if _message_service:
+		await _message_service.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
 	
 	return {"success": true, "card_bought": true, "card_name": card_data.get("name", "")}
 
@@ -75,8 +81,8 @@ func _get_cpu_special_tile_ai():
 
 ## カード購入UI表示
 func _show_card_buy_selection(player_id: int) -> Dictionary:
-	if not _ui_manager or not _ui_manager.ui_layer:
-		push_error("[CardBuyTile] UIManagerまたはui_layerがありません")
+	if not _message_service or not _ui_layer:
+		push_error("[CardBuyTile] MessageServiceまたはui_layerがありません")
 		return {"success": false, "card_bought": false}
 	
 	# スペル・アイテムからランダム3枚を取得
@@ -84,8 +90,8 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	
 	if available_cards.is_empty():
 		print("[CardBuyTile] 購入可能なカードがありません")
-		if _ui_manager.global_comment_ui:
-			await _ui_manager.show_comment_and_wait("購入可能なカードがありません", player_id, true)
+		if _message_service:
+			await _message_service.show_comment_and_wait("購入可能なカードがありません", player_id, true)
 		return {"success": true, "card_bought": false}
 	
 	# UIがなければ作成
@@ -94,7 +100,7 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 		if CardBuyUIScript:
 			card_buy_ui = Control.new()
 			card_buy_ui.set_script(CardBuyUIScript)
-			_ui_manager.ui_layer.add_child(card_buy_ui)
+			_ui_layer.add_child(card_buy_ui)
 			if card_buy_ui.has_method("_setup_ui"):
 				card_buy_ui.setup_ui()
 	
@@ -126,8 +132,8 @@ func _show_card_buy_selection(player_id: int) -> Dictionary:
 	
 	if success:
 		# 購入完了メッセージ
-		if _ui_manager and _ui_manager.global_comment_ui:
-			await _ui_manager.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
+		if _message_service:
+			await _message_service.show_comment_and_wait("%sを購入した！" % card_data.get("name", "カード"), player_id)
 		return {"success": true, "card_bought": true, "card_name": card_data.get("name", "")}
 	else:
 		return {"success": true, "card_bought": false}
@@ -195,8 +201,8 @@ func _purchase_card(card_data: Dictionary, player_id: int, price: int) -> bool:
 	if _ui_manager:
 		if _ui_manager.has_method("update_player_info_panels"):
 			_ui_manager.update_player_info_panels()
-		if _ui_manager.hand_display:
-			_ui_manager.update_hand_display(player_id)
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(player_id)
 	
 	print("[CardBuyTile] プレイヤー%d: %dEP支払い、%sを手札に追加" % [player_id + 1, price, card_data.get("name", "?")])
 	return true
