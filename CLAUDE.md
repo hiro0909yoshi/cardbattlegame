@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ✅ 最近完了した作業（2026-02-17）
 
-**Phase 0-6: アーキテクチャ移行 + 完全UI層分離（全完了）**
+**Phase 0-7A: アーキテクチャ移行 + 完全UI層分離 + CPU AI直接注入化（全完了）**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -36,6 +36,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **合計**: 33個のSignal追加、5/6ハンドラーで`_ui_manager`完全削除
   - GameSystemManager: 6つのSignal接続メソッド追加
 - **成果物**: コード削減約700行（全フェーズ累計）、33個のUI Signal定義、5/6ハンドラーのUI層完全分離、SRP改善度 95%以上
+- ✅ **Phase 7-A**: CPU AI パススルー除去（2026-02-17）✅ **完了**
+  - SPH からの CPU AI 参照設定を廃止、CPUSpellPhaseHandler/CPUSpecialTileAI/DiscardHandler へ直接注入
+  - チェーンアクセス（GFM→SPH→CPU AI）を直接参照に統一
+  - 初期化フロー明確化、null参照チェック強化（5ファイル修正）
 
 詳細は `docs/progress/refactoring_next_steps.md` を参照
 

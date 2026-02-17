@@ -1,46 +1,76 @@
 # リファクタリング次ステップ
 
 **最終更新**: 2026-02-17
-**現在のフェーズ**: Phase 6 完了 → 構造改善フェーズへ
+**現在のフェーズ**: Phase 7-A 完了 → 次は Phase 7-B へ
 
 ---
 
-## Phase 7: 構造改善（CPU抽象化 + UI依存逆転）
+## ✅ Phase 7-A: CPU AI パススルー除去（SPH） — 完了
 
-### 7-A: CPU AI パススルー除去（SPH）
-
+**実施日**: 2026-02-17
 **目的**: SpellPhaseHandler が CPU AI の内部構造を知らない状態にする
 
-**現状の問題**:
-- SPH が 4つの CPU AI 変数を保持（cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator）
-- SPH 自身はこれらを使わず、CPUSpellPhaseHandler に読ませるためだけに保持
-- SPH が「AI の内部構造」を知っている（抽象度の問題）
+**実装内容**:
+1. ✅ GSM の `_initialize_spell_phase_subsystems()` から SPH 経由の CPU AI 設定を削除
+2. ✅ CPUSpellPhaseHandler へ直接注入（`set_cpu_spell_ai()`, `set_cpu_mystic_arts_ai()` 使用）
+3. ✅ CPUSpecialTileAI へ `cpu_spell_ai` 直接注入（`spell_phase_handler.cpu_spell_ai` アクセス廃止）
+4. ✅ DiscardHandler へ `cpu_hand_utils` 直接注入（`spell_phase_handler.cpu_hand_utils` アクセス廃止）
+5. ✅ GSM の `_initialize_cpu_movement_evaluator()` で `cpu_spell_ai.set_movement_evaluator()` 直接呼び出し
+6. ✅ GFM の `set_cpu_movement_evaluator()` から SPH 経由の設定を削除
 
-**修正計画**:
-1. CPUSpellPhaseHandler が CPUSpellAIContainer を直接保持するように変更
-2. GSM が CPUSpellAIContainer を CPUSpellPhaseHandler に直接注入
-3. SPH から 4 CPU AI 変数 + 4 setter メソッドを削除
-4. MysticArtsHandler・DiscardHandler の CPU 参照も CPUSpellPhaseHandler 経由に統一
+**修正ファイル** (5ファイル):
+- ✅ `scripts/system_manager/game_system_manager.gd` — 注入先変更（直接注入化）
+- ✅ `scripts/game_flow_manager.gd` — `set_cpu_movement_evaluator()` 簡素化
+- ✅ `scripts/cpu_ai/cpu_spell_phase_handler.gd` — `_sync_references()` から SPH 参照削除
+- ✅ `scripts/cpu_ai/cpu_special_tile_ai.gd` — `cpu_spell_ai` 直接参照、`_get_cpu_spell_ai()` 簡素化
+- ✅ `scripts/game_flow/discard_handler.gd` — `cpu_hand_utils` 直接参照
 
 **変更前**:
 ```
 GSM → SPH(保持) → CPUSpellPhaseHandler(読み取り)
 ```
 
-**変更後**:
+**変更後** ✅:
 ```
 GSM → CPUSpellPhaseHandler(直接保持)
+GSM → CPUSpecialTileAI/DiscardHandler(直接保持)
 SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 ```
 
-**対象ファイル**:
-- `scripts/game_flow/spell_phase_handler.gd` — 4変数 + 4 setter 削除
-- `scripts/cpu_ai/cpu_spell_phase_handler.gd` — CPUSpellAIContainer 直接保持
-- `scripts/system_manager/game_system_manager.gd` — 注入先変更
-- `scripts/game_flow/mystic_arts_handler.gd` — CPU参照の取得元変更
-- `scripts/game_flow/discard_handler.gd` — cpu_hand_utils の取得元変更
+**成果**:
+- チェーンアクセス完全廃止
+- 初期化フロー明確化
+- null参照チェック強化
 
-**リスク**: 低（参照の付け替えのみ）
+---
+
+## Phase 7: 構造改善（CPU抽象化 + UI依存逆転） — 継続
+
+### 7-B: SPH UI 依存逆転（残り3箇所）
+
+**目的**: SPH → SpellUIManager の直接呼び出しを Signal 駆動に変更
+
+**現状の問題**:
+- SPH が SpellUIManager のメソッドを直接呼び出している（依存方向が逆）
+- SpellFlowHandler / MysticArtsHandler は Signal 駆動化済み（Phase 6-A）だが、SPH 自身は未対応
+
+**残存する直接呼び出し**:
+1. `_initialize_human_player_ui()` — spell_ui_manager.initialize_spell_phase_ui() 等を直接呼び出し
+2. `show_spell_cast_notification()` — spell_ui_manager.show_spell_cast_notification() を await で直接呼び出し
+3. `_initialize_spell_cast_notification_ui()` — spell_ui_manager の初期化を直接呼び出し
+
+**修正計画**:
+1. SPH に Signal 追加: `human_spell_phase_started(player_id, hand_data, magic_power)`
+2. SpellUIManager が Signal を listen して自分で UI 初期化
+3. `show_spell_cast_notification` は request/completed Signal パターンに変更
+4. 初期化系は GSM 側で直接呼び出し（SPH を経由しない）
+
+**対象ファイル**:
+- `scripts/game_flow/spell_phase_handler.gd` — Signal 追加、直接呼び出し除去
+- `scripts/game_flow/spell_ui_manager.gd` — Signal listener 追加
+- `scripts/system_manager/game_system_manager.gd` — 初期化の接続変更
+
+**リスク**: 中（await パターンの Signal 変換は設計が必要）
 
 ---
 
