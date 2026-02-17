@@ -19,6 +19,13 @@ func _get_ui_manager():
 		return spell_phase_handler_ref.spell_ui_manager._ui_manager
 	return null
 
+## CardSelectionServiceへの参照を取得
+func _get_card_selection_service():
+	var ui_mgr = _get_ui_manager()
+	if ui_mgr and ui_mgr.get("card_selection_service"):
+		return ui_mgr.card_selection_service
+	return null
+
 
 # ============ 初期化 ============
 
@@ -86,31 +93,32 @@ func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 
 ## 手札スペル選択UI
 func _select_hand_spell(spells: Array, message: String) -> Dictionary:
-	var ui_manager = _get_ui_manager()
+	var css = _get_card_selection_service()
 
-	if not ui_manager:
+	if not css:
 		# UIなしの場合は最初のスペルを選択
 		if spells.size() > 0:
 			return {"spell": spells[0], "hand_index": _find_hand_index(spells[0]), "cancelled": false}
 		return {"cancelled": true}
-	
-	# メッセージ表示
-	if ui_manager.has_method("set_message"):
+
+	# メッセージ表示（UIManager固有 — set_message はサービス未実装）
+	var ui_manager = _get_ui_manager()
+	if ui_manager and ui_manager.has_method("set_message"):
 		ui_manager.set_message(message)
-	
+
 	# カード選択UIを表示（単体対象スペルのみハイライト）
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
-		ui_manager.card_selection_filter = "single_target_spell"
-		ui_manager.show_card_selection_ui_mode(player, "spell_borrow")
-	
-	# カード選択を待つ
-	var selected_index = await ui_manager.card_selected
-	
+		css.card_selection_filter = "single_target_spell"
+		css.show_card_selection_ui_mode(player, "spell_borrow")
+
+	# カード選択を待つ（CardSelectionService 経由）
+	var selected_index = await css.card_selected
+
 	# UIを閉じる
-	ui_manager.hide_card_selection_ui()
-	ui_manager.card_selection_filter = ""
+	css.hide_card_selection_ui()
+	css.card_selection_filter = ""
 	
 	# キャンセル判定
 	if selected_index < 0:
