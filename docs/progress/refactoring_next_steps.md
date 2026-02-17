@@ -141,3 +141,38 @@ SPH → cpu_spell_phase_handler.execute_cpu_spell_turn(player_id)
 | 2 | ~~7-B~~ | ✅ SPH UI 依存逆転 | 完了 |
 | 3 | **8-A/B** | ItemPhaseHandler / DominioCommandHandler Signal 駆動化 | 中 |
 | 4 | **8-C/D** | BankruptcyHandler パネル分離 + UIManager 分割 | 高 |
+
+---
+
+## 既知のアーキテクチャ違反リスト（2026-02-18 調査）
+
+Phase 8 での対処を計画する際の参考情報。
+
+### カメラモード設定漏れ
+
+| ファイル | 箇所 | 問題 | 対処 |
+|---------|------|------|------|
+| `item_phase_handler.gd` | `start_item_phase()` / `_show_item_selection_ui()` | `enable_manual_camera()` なし | Phase 8-A で追加 |
+| `dominio_command_handler.gd` | `open_dominio_order()` | `enable_manual_camera()` なし | Phase 8-B で追加 |
+
+### UI 直接操作（Signal 未対応）
+
+| ファイル | 参照 | 問題 | 対処 |
+|---------|------|------|------|
+| `item_phase_handler.gd` | `ui_manager` 多数 | Phase 6 未適用 | Phase 8-A で Signal 駆動化 |
+| `dominio_command_handler.gd` | `ui_manager` 多数 | Phase 6 未適用 | Phase 8-B で Signal 駆動化 |
+| `bankruptcy_handler.gd` | Panel 直接生成 | `Panel.new()`, `Label.new()` 等 | Phase 8-C で UI コンポーネント化 |
+
+### Signal 駆動化の完了状況
+
+| ハンドラー | Signal数 | UI直接操作 | 状態 |
+|-----------|---------|-----------|------|
+| SpellPhaseHandler | 3 Signals | ✅ ゼロ | **完全分離** |
+| SpellFlowHandler | 11 Signals | ✅ ゼロ | **完全分離** |
+| MysticArtsHandler | 5 Signals | ✅ ゼロ | **完全分離** |
+| DicePhaseHandler | 8 Signals | ✅ ゼロ | **完全分離** |
+| TollPaymentHandler | 2 Signals | ✅ ゼロ | **完全分離** |
+| DiscardHandler | 2 Signals | ✅ ゼロ | **完全分離** |
+| BankruptcyHandler | 5 Signals | ⚠️ パネル直接生成 | 部分的 |
+| ItemPhaseHandler | 0 Signals | ❌ ui_manager 多数 | **未着手** |
+| DominioCommandHandler | 0 Signals | ❌ ui_manager 多数 | **未着手** |

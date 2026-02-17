@@ -87,6 +87,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docs/design/dependency_map.md` - 現在の依存関係マップ
 - `docs/progress/architecture_migration_plan.md` - 移行計画詳細
 
+### アンチパターン防止チェック（Phase 6-7 教訓）
+
+コード修正・新機能追加時に以下を確認すること:
+
+**UI層分離チェック**:
+- `scripts/game_flow/` 配下のハンドラーで `ui_manager.` や `spell_ui_manager.` を直接呼んでいないか？
+- UI操作は Signal emit → UI層リスニングパターンを使用しているか？
+- await が必要なUI操作はリクエスト/完了 Signal ペアを使用しているか？
+
+**カメラモードチェック**:
+- プレイヤーが操作するフェーズ（スペル、アイテム、ドミニオコマンド等）で `board_system.enable_manual_camera()` を呼んでいるか？
+- フェーズ終了時に `enable_follow_camera()` で復帰しているか？
+
+**リファクタリング安全チェック**:
+- メソッド削除前に `grep -r` で呼び出し元ゼロを確認したか？
+- 削除するメソッド内の暗黙の副作用（カメラモード変更、フラグリセット等）を他で代替しているか？
+- マージコンフリクトが残っていないか？（`grep -r '<<<<<<' scripts/`）
+
 ---
 
 ## Project Overview
