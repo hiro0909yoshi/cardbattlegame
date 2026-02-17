@@ -663,7 +663,9 @@ func _execute_move(from_tile: int, to_tile: int) -> void:
 	
 	# 移動元のクリーチャーを削除
 	board_system_ref.remove_creature(from_tile)
-	
+	# 移動元の所有権をクリア（クリーチャーがいなくなったため）
+	board_system_ref.set_tile_owner(from_tile, -1)
+
 	# 移動先にクリーチャーを配置
 	board_system_ref.set_tile_owner(to_tile, owner_id)
 	board_system_ref.place_creature(to_tile, creature_data)
