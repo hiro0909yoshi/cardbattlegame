@@ -35,17 +35,17 @@ static func preview_land(handler, tile_index: int) -> bool:
 
 ## タイルのクリーチャー情報パネルを表示
 static func _show_creature_info_for_tile(handler, tile_index: int) -> void:
-	if not handler.ui_manager:
+	if not handler._info_panel_service:
 		return
-	
+
 	if not handler.board_system or not handler.board_system.tile_nodes.has(tile_index):
 		return
-	
+
 	var tile = handler.board_system.tile_nodes[tile_index]
 	var creature = tile.creature_data if tile else {}
-	
+
 	if not creature.is_empty():
-		handler.ui_manager.show_card_info_only(creature, tile_index)
+		handler._info_panel_service.show_card_info_only(creature, tile_index)
 
 ## 土地選択を確定してアクションメニューを表示
 ## 
@@ -99,25 +99,23 @@ static func get_player_owned_lands(board_system, player_id: int) -> Array:
 	return owned_lands
 
 ## 土地選択UIを更新
-## 
+##
 ## ドミニオコマンド専用：ドミニオコマンド固有のUI表示
 static func update_land_selection_ui(handler):
-	if not handler.ui_manager or not handler.ui_manager.phase_label:
+	if not handler._message_service:
 		return
-	
+
 	if handler.player_owned_lands.is_empty():
-		if handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("所有している土地がありません")
+		handler._message_service.show_toast("所有している土地がありません")
 		return
-	
+
 	var text = "土地を選択: タイル%d (%d/%d)" % [
 		handler.selected_tile_index,
 		handler.current_land_selection_index + 1,
 		handler.player_owned_lands.size()
 	]
-	
-	if handler.ui_manager.phase_display:
-		handler.ui_manager.show_action_prompt(text)
+
+	handler._message_service.show_action_prompt(text)
 
 
 ## チュートリアルのターゲット制限をチェック
