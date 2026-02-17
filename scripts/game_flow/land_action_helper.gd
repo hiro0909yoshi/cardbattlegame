@@ -74,23 +74,23 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 static func execute_level_up(handler) -> bool:
 	if not handler.board_system:
 		return false
-	
+
 	# Phase 1-A修正: board_system.get_tile()ではなくtile_nodesを使用
 	if not handler.board_system.tile_nodes.has(handler.selected_tile_index):
 		return false
-	
+
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
-	
+
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("ダウン中は使用できません")
+		if handler._message_service:
+			handler._message_service.show_toast("ダウン中は使用できません")
 		return false
-	
+
 	# 最大レベルチェック
 	if tile.level >= 5:
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("既に最大レベルです")
+		if handler._message_service:
+			handler._message_service.show_toast("既に最大レベルです")
 		return false
 	
 	# 状態をレベル選択中に変更
@@ -107,12 +107,12 @@ static func execute_level_up(handler) -> bool:
 		var p_system = handler.player_system
 		var current_player = p_system.get_current_player() if p_system else null
 		var player_magic = current_player.magic_power if current_player else 0
-		
+
 		handler.ui_manager.show_level_selection(handler.selected_tile_index, tile.level, player_magic)
-	
+
 	# ナビゲーションボタン設定（レベル選択用）
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
+	if handler._navigation_service:
+		handler._navigation_service.enable_navigation(
 			func(): handler.confirm_level_selection(),  # 決定
 			func(): handler.cancel(),  # 戻る
 			func(): handler.on_arrow_up(),  # 上
@@ -131,13 +131,13 @@ static func execute_move_creature(handler) -> bool:
 	
 	# 移動可能なマスを取得（空地移動対応）
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
-	
+
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("ダウン中は使用できません")
+		if handler._message_service:
+			handler._message_service.show_toast("ダウン中は使用できません")
 		return false
-	
+
 	# 移動先選択モードに移行
 	handler.current_state = handler.State.SELECTING_MOVE_DEST
 	var creature_data = tile.creature_data
@@ -159,9 +159,9 @@ static func execute_move_creature(handler) -> bool:
 			error_msg = "移動可能な敵地がありません"
 		else:
 			error_msg = "移動可能なマスがありません"
-		
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast(error_msg)
+
+		if handler._message_service:
+			handler._message_service.show_toast(error_msg)
 		# アクション選択に戻る
 		handler.current_state = handler.State.SELECTING_ACTION
 		return false
@@ -180,39 +180,37 @@ static func execute_move_creature(handler) -> bool:
 	
 	# UIを更新（移動先選択画面を表示）
 	update_move_destination_ui(handler)
-	
+
 	# ナビゲーションボタン設定（移動先選択用）
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
+	if handler._navigation_service:
+		handler._navigation_service.enable_navigation(
 			func(): LandActionHelper.confirm_move_selection(handler),  # 決定
 			func(): handler.cancel(),  # 戻る
 			func(): handler.on_arrow_up(),  # 上
 			func(): handler.on_arrow_down()  # 下
 		)
-	
+
 	return true
 
 ## 移動先選択UIを更新
 static func update_move_destination_ui(handler):
-	if not handler.ui_manager or not handler.ui_manager.phase_label:
+	if not handler._message_service:
 		return
-	
+
 	if handler.move_destinations.is_empty():
-		if handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("移動可能なマスがありません")
+		handler._message_service.show_toast("移動可能なマスがありません")
 		LandActionHelper.hide_move_creature_info(handler)
 		return
-	
+
 	var current_tile = handler.move_destinations[handler.current_destination_index]
 	var text = "移動先を選択: タイル%d (%d/%d)" % [
 		current_tile,
 		handler.current_destination_index + 1,
 		handler.move_destinations.size()
 	]
-	
-	if handler.ui_manager.phase_display:
-		handler.ui_manager.show_action_prompt(text)
-	
+
+	handler._message_service.show_action_prompt(text)
+
 	# 移動先にクリーチャーがいる場合、情報パネルを表示
 	_show_move_creature_info(handler, current_tile)
 
@@ -226,13 +224,13 @@ static func execute_swap_creature(handler) -> bool:
 		return false
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
-	
+
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("ダウン中は使用できません")
+		if handler._message_service:
+			handler._message_service.show_toast("ダウン中は使用できません")
 		return false
-	
+
 	var tile_info = handler.board_system.get_tile_info(handler.selected_tile_index)
 	
 	# クリーチャーがいるかチェック
@@ -270,19 +268,19 @@ static func execute_swap_creature(handler) -> bool:
 		handler.ui_manager.dominio_order_ui.hide_action_menu(false)  # グローバルボタンはクリアしない
 	
 	# ナビゲーション設定（交換選択用：戻るのみ）
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
+	if handler._navigation_service:
+		handler._navigation_service.enable_navigation(
 			Callable(),  # 決定なし（カード選択で決定）
 			func(): handler.cancel()  # 戻る
 		)
-	
+
 	# カード選択UIを表示（交換モード）
-	if handler.ui_manager:
-		if handler.ui_manager.phase_display:
-			handler.ui_manager.show_action_prompt("交換する新しいクリーチャーを選択")
-		handler.ui_manager.card_selection_filter = ""  # disabledフィルターをクリア
-		handler.ui_manager.show_card_selection_ui_mode(handler.player_system.get_current_player(), "swap")
-	
+	if handler._message_service:
+		handler._message_service.show_action_prompt("交換する新しいクリーチャーを選択")
+	if handler._card_selection_service:
+		handler._card_selection_service.card_selection_filter = ""  # disabledフィルターをクリア
+		handler._card_selection_service.show_card_selection_ui_mode(handler.player_system.get_current_player(), "swap")
+
 	handler.action_selected.emit("swap_creature")
 	return true
 
@@ -307,10 +305,10 @@ static func check_swap_conditions(handler, player_id: int) -> bool:
 			break
 	
 	if not has_creature_card:
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("手札にクリーチャーカードがありません")
+		if handler._message_service:
+			handler._message_service.show_toast("手札にクリーチャーカードがありません")
 		return false
-	
+
 	return true
 
 ## 移動先選択を確定（決定ボタンから呼ばれる）
@@ -417,8 +415,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		# peace呪いがあれば移動・戦闘不可
 		if spell_curse_toll and spell_curse_toll.has_peace_curse(dest_tile_index):
 			# peace呪いで移動・戦闘不可
-			if handler.ui_manager and handler.ui_manager.phase_display:
-				handler.ui_manager.show_toast("peace呪い: このタイルへは侵略できません")
+			if handler._message_service:
+				handler._message_service.show_toast("peace呪い: このタイルへは侵略できません")
 			# 移動元にクリーチャーを戻す
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
@@ -428,8 +426,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		if spell_curse_toll and dest_tile and not dest_tile.creature_data.is_empty():
 			if spell_curse_toll.is_creature_invasion_immune(dest_tile.creature_data):
 				var defender_name = dest_tile.creature_data.get("name", "クリーチャー")
-				if handler.ui_manager and handler.ui_manager.phase_display:
-					handler.ui_manager.show_toast("%s は移動侵略を受けません" % defender_name)
+				if handler._message_service:
+					handler._message_service.show_toast("%s は移動侵略を受けません" % defender_name)
 				source_tile.place_creature(creature_data)
 				handler.close_dominio_order()
 				return
@@ -437,8 +435,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		# プレイヤー侵略不可呪いチェック（バンフィズム）
 		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
 		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):
-			if handler.ui_manager and handler.ui_manager.phase_display:
-				handler.ui_manager.show_toast("侵略不可呪い: 侵略できません")
+			if handler._message_service:
+				handler._message_service.show_toast("侵略不可呪い: 侵略できません")
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
 			return
@@ -625,10 +623,10 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("この土地は地形変化できません")
+		if handler._message_service:
+			handler._message_service.show_toast("この土地は地形変化できません")
 		return false
-	
+
 	# コスト計算
 	var cost = handler.board_system.calculate_terrain_change_cost(tile_index)
 	if cost < 0:
@@ -642,10 +640,10 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 		return false
 
 	if current_player.magic_power < cost:
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("EPが足りません (必要: %dEP)" % cost)
+		if handler._message_service:
+			handler._message_service.show_toast("EPが足りません (必要: %dEP)" % cost)
 		return false
-	
+
 	# TileActionProcessorに処理中フラグを設定（EPチェック通過後）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.begin_action_processing()
@@ -705,15 +703,15 @@ static func execute_terrain_change(handler) -> bool:
 		return false
 	
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
-	
+
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
 	if tile.has_method("is_down") and tile.is_down():
-		if handler.ui_manager and handler.ui_manager.phase_display:
-			handler.ui_manager.show_toast("ダウン中は使用できません")
+		if handler._message_service:
+			handler._message_service.show_toast("ダウン中は使用できません")
 		return false
-	
+
 	var tile_index = handler.selected_tile_index
-	
+
 	# ソリッドワールド（土地変性無効）チェック - SpellWorldCurseに委譲
 	if handler.spell_world_curse:
 		if handler.spell_world_curse.check_land_change_blocked(true):
@@ -721,10 +719,10 @@ static func execute_terrain_change(handler) -> bool:
 	
 	# 地形変化可能かチェック
 	if not handler.board_system.can_change_terrain(tile_index):
-		if handler.ui_manager and handler.ui_manager.phase_label:
-			handler.ui_manager.show_toast("この土地は地形変化できません")
+		if handler._message_service:
+			handler._message_service.show_toast("この土地は地形変化できません")
 		return false
-	
+
 	# 地形選択モードに移行
 	handler.terrain_change_tile_index = tile_index
 	handler.current_state = handler.State.SELECTING_TERRAIN
@@ -745,14 +743,14 @@ static func execute_terrain_change(handler) -> bool:
 			handler.ui_manager.dominio_order_ui.highlight_terrain_button(first_selectable)
 	
 	# ナビゲーションボタン設定（地形選択用）
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
+	if handler._navigation_service:
+		handler._navigation_service.enable_navigation(
 			func(): LandActionHelper.confirm_terrain_selection(handler),  # 決定
 			func(): _cancel_terrain_change(handler),  # 戻る
 			func(): handler.on_arrow_up(),  # 上
 			func(): handler.on_arrow_down()  # 下
 		)
-	
+
 	return true
 
 ## 地形選択を確定（決定ボタンから呼ばれる）
@@ -788,10 +786,10 @@ static func _cancel_terrain_change(handler):
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
 		handler.ui_manager.dominio_order_ui.hide_terrain_selection()
 		handler.ui_manager.dominio_order_ui.show_action_menu(handler.selected_tile_index)
-	
+
 	# アクション選択用ナビゲーション（戻るのみ）- 最後に設定
-	if handler.ui_manager:
-		handler.ui_manager.enable_navigation(
+	if handler._navigation_service:
+		handler._navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): handler.cancel()  # 戻る
 		)
@@ -826,9 +824,9 @@ static func _show_move_creature_info(handler, tile_index: int) -> void:
 	if not tile.creature_data.is_empty():
 		# 土地情報パネルを閉じる
 		_hide_land_info_panel(handler)
-		
-		if handler.ui_manager:
-			handler.ui_manager.show_card_info_only(tile.creature_data, tile_index)
+
+		if handler._info_panel_service:
+			handler._info_panel_service.show_card_info_only(tile.creature_data, tile_index)
 	else:
 		# クリーチャーがいない場合は土地情報を表示
 		_hide_creature_info_panel(handler)
@@ -847,9 +845,9 @@ static func hide_move_creature_info(handler) -> void:
 
 ## クリーチャー情報パネルのみ非表示
 static func _hide_creature_info_panel(handler) -> void:
-	if not handler.ui_manager:
+	if not handler._info_panel_service:
 		return
-	handler.ui_manager.hide_all_info_panels(false)
+	handler._info_panel_service.hide_all_info_panels(false)
 
 
 ## 土地情報パネルを表示

@@ -54,9 +54,21 @@ var card_system = null
 var spell_phase_handler = null  # 親参照を追加（spell_draw の代わり）
 var current_player_id: int = -1
 
+## サービス変数
+var _message_service = null
+var _navigation_service = null
+var _card_selection_service = null
+var _info_panel_service = null
+
 ## セットアップ
 func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
 	ui_manager = p_ui_manager
+	# サービス解決
+	if p_ui_manager:
+		_message_service = p_ui_manager.message_service if p_ui_manager.get("message_service") else null
+		_navigation_service = p_ui_manager.navigation_service if p_ui_manager.get("navigation_service") else null
+		_card_selection_service = p_ui_manager.card_selection_service if p_ui_manager.get("card_selection_service") else null
+		_info_panel_service = p_ui_manager.info_panel_service if p_ui_manager.get("info_panel_service") else null
 	player_system = p_player_system
 	card_system = p_card_system
 	spell_phase_handler = p_spell_phase_handler  # 親参照を保存
@@ -114,8 +126,8 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	
 	if not has_valid_cards:
 		# 条件に合うカードがない場合
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("破壊できるカードがありません")
+		if _message_service:
+			_message_service.show_toast("破壊できるカードがありません")
 		# コールバックを呼び出して処理を続行（ペナルティとしてEPは消費済み）
 		await get_tree().create_timer(1.0).timeout
 		callback.call(-1)
@@ -130,14 +142,15 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		return
 	
 	# フィルターモードを設定
-	if ui_manager:
-		ui_manager.card_selection_filter = filter_mode
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = filter_mode
+
 	# 対象プレイヤーの手札を表示
 	if ui_manager and ui_manager.hand_display:
 		# 自動更新を無効化
 		ui_manager.hand_display.is_enemy_card_selection_active = true
-		ui_manager.update_hand_display(target_player_id)
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(target_player_id)
 	
 	# 選択UIを有効化
 	if ui_manager and ui_manager.card_selection_ui and card_system:
@@ -154,17 +167,17 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 	if player_system and target_player_id < player_system.players.size():
 		player_name = player_system.players[target_player_id].name
 	
-	if ui_manager and ui_manager.phase_display:
+	if _message_service:
 		var message = ""
 		if enemy_card_selection_is_steal:
 			message = "%sの手札から奪うカードを選択" % player_name
 		else:
 			message = "%sの手札から破壊するカードを選択" % player_name
-		ui_manager.show_action_prompt(message)
+		_message_service.show_action_prompt(message)
 	
 	# 戻るボタンを登録（キャンセル可能に）
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_enemy_card_selection("キャンセルしました")
 		)
@@ -231,14 +244,14 @@ func _cpu_auto_select_enemy_card(target_player_id: int, filter_mode: String, cal
 		card_system.discard_card(target_player_id, best_index, "steal")
 		card_system.add_card_to_hand(current_player_id, card_data)
 		print("[手札奪取] プレイヤー%d: %s を奪取" % [current_player_id + 1, card_data.get("name", "?")])
-		if ui_manager and ui_manager.global_comment_ui:
-			await ui_manager.show_comment_and_wait("『%s』を奪いました" % card_data.get("name", "?"))
+		if _message_service:
+			await _message_service.show_comment_and_wait("『%s』を奪いました" % card_data.get("name", "?"))
 	else:
 		# 破壊
 		card_system.discard_card(target_player_id, best_index, "destroy")
 		print("[手札破壊] プレイヤー%d: %s を破壊" % [target_player_id + 1, card_data.get("name", "?")])
-		if ui_manager and ui_manager.global_comment_ui:
-			await ui_manager.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
+		if _message_service:
+			await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
 	
 	callback.call(best_index)
 	_finish_enemy_card_selection()
@@ -296,21 +309,21 @@ func _get_enemy_card_data(card_index: int) -> Dictionary:
 ## 敵手札選択キャンセル時（選択画面に戻る）
 func _on_enemy_selection_cancelled():
 	# 選択画面に戻る
-	if ui_manager and ui_manager.phase_display:
+	if _message_service:
 		var player_name = "プレイヤー%d" % (enemy_card_selection_target_id + 1)
 		if player_system and enemy_card_selection_target_id < player_system.players.size():
 			player_name = player_system.players[enemy_card_selection_target_id].name
-		
+
 		var message = ""
 		if enemy_card_selection_is_steal:
 			message = "%sの手札から奪うカードを選択" % player_name
 		else:
 			message = "%sの手札から破壊するカードを選択" % player_name
-		ui_manager.show_action_prompt(message)
+		_message_service.show_action_prompt(message)
 	
 	# 戻るボタンを再登録
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_enemy_card_selection("キャンセルしました")
 		)
@@ -324,8 +337,8 @@ func _execute_enemy_card_action(card_index: int):
 				enemy_card_selection_target_id, current_player_id, card_index
 			)
 			if result.get("stolen", false):
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
+				if _message_service:
+					await _message_service.show_comment_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード（シャッター、スクイーズ）
 			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
@@ -333,8 +346,8 @@ func _execute_enemy_card_action(card_index: int):
 			if result.get("destroyed", false):
 				var card_name_for_ui = result.get("card_name", "?")
 				print("[DEBUG] UI表示直前: card_name=%s" % card_name_for_ui)
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』を破壊しました" % card_name_for_ui)
+				if _message_service:
+					await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_name_for_ui)
 	
 	# コールバックを呼び出し
 	if enemy_card_selection_callback:
@@ -345,8 +358,8 @@ func _execute_enemy_card_action(card_index: int):
 
 ## 敵手札選択をキャンセル
 func _cancel_enemy_card_selection(message: String = ""):
-	if message != "" and ui_manager and ui_manager.phase_display:
-		ui_manager.show_toast(message)
+	if message != "" and _message_service:
+		_message_service.show_toast(message)
 	
 	# コールバックを呼び出し（-1 = 選択なし）
 	if enemy_card_selection_callback:
@@ -365,15 +378,15 @@ func _finish_enemy_card_selection():
 	_restore_camera_to_current_player()
 	
 	# 元の手札表示に戻す
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		if ui_manager.hand_display and player_system:
-			# 自動更新を再有効化
-			ui_manager.hand_display.is_enemy_card_selection_active = false
-			
-			var current_player = player_system.get_current_player()
-			if current_player:
-				ui_manager.update_hand_display(current_player.id)
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+	if ui_manager and ui_manager.hand_display and player_system:
+		# 自動更新を再有効化
+		ui_manager.hand_display.is_enemy_card_selection_active = false
+	if _card_selection_service and player_system:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			_card_selection_service.update_hand_display(current_player.id)
 	
 	current_state = State.INACTIVE
 	
@@ -411,8 +424,8 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	
 	if deck_card_selection_cards.is_empty():
 		# デッキが空の場合
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("デッキにカードがありません")
+		if _message_service:
+			_message_service.show_toast("デッキにカードがありません")
 		await get_tree().create_timer(1.0).timeout
 		callback.call(-1)
 		_finish_deck_card_selection()
@@ -422,10 +435,10 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
 		await _cpu_auto_select_deck_card(target_player_id, callback)
 		return
-	
+
 	# フィルターモードを設定（全カード選択可）
-	if ui_manager:
-		ui_manager.card_selection_filter = "destroy_any"
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "destroy_any"
 	
 	# デッキカードを一時的に画面下部に表示
 	if ui_manager and ui_manager.hand_display:
@@ -447,12 +460,12 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 	if player_system and target_player_id < player_system.players.size():
 		player_name = player_system.players[target_player_id].name
 	
-	if ui_manager and ui_manager.phase_display:
-		ui_manager.show_action_prompt("%sのデッキから破壊するカードを選択" % player_name)
+	if _message_service:
+		_message_service.show_action_prompt("%sのデッキから破壊するカードを選択" % player_name)
 	
 	# 戻るボタンを登録（キャンセル可能に）
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_deck_card_selection("キャンセルしました")
 		)
@@ -485,22 +498,22 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 	deck_card_selection_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.get_top_cards_from_deck(player_id, look_count)
 
 	if deck_card_selection_cards.is_empty():
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("デッキにカードがありません")
+		if _message_service:
+			_message_service.show_toast("デッキにカードがありません")
 		await get_tree().create_timer(1.0).timeout
 		callback.call(-1)
 		_finish_deck_card_selection()
 		return
 	
 	# フィルターモードを設定（全カード選択可）
-	if ui_manager:
-		ui_manager.card_selection_filter = "destroy_any"
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "destroy_any"
+
 	# デッキカードを一時的に画面下部に表示
 	if ui_manager and ui_manager.hand_display:
 		ui_manager.hand_display.is_enemy_card_selection_active = true
 		_display_deck_cards_as_hand(deck_card_selection_cards, player_id)
-	
+
 	# 選択UIを有効化
 	if ui_manager and ui_manager.card_selection_ui:
 		var magic = 999999
@@ -511,12 +524,12 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		ui_manager.game_flow_manager_ref.unlock_input()
 	
 	# ガイド表示
-	if ui_manager and ui_manager.phase_display:
-		ui_manager.show_action_prompt("デッキから引くカードを選択")
+	if _message_service:
+		_message_service.show_action_prompt("デッキから引くカードを選択")
 	
 	# 戻るボタンを登録（キャンセル可能に）
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_deck_card_selection("キャンセルしました")
 		)
@@ -580,7 +593,7 @@ func on_deck_card_selected(card_index: int):
 ## デッキカード選択キャンセル時（選択画面に戻る）
 func _on_deck_selection_cancelled():
 	# 選択画面に戻る（何もせずそのまま再選択可能）
-	if ui_manager and ui_manager.phase_display:
+	if _message_service:
 		var message = ""
 		if deck_card_selection_is_draw:
 			message = "デッキから引くカードを選択"
@@ -589,11 +602,11 @@ func _on_deck_selection_cancelled():
 			if player_system and deck_card_selection_target_id < player_system.players.size():
 				player_name = player_system.players[deck_card_selection_target_id].name
 			message = "%sのデッキから破壊するカードを選択" % player_name
-		ui_manager.show_action_prompt(message)
+		_message_service.show_action_prompt(message)
 	
 	# 戻るボタンを再登録
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_deck_card_selection("キャンセルしました")
 		)
@@ -605,14 +618,14 @@ func _execute_deck_card_action(card_index: int):
 			# ドローモード：選んだカードを手札に加える
 			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
 			if result.get("drawn", false):
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
+				if _message_service:
+					await _message_service.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
 		else:
 			# 破壊モード
 			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
 			if result.get("destroyed", false):
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
+				if _message_service:
+					await _message_service.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
 	
 	# コールバックを呼び出し
 	if deck_card_selection_callback:
@@ -623,8 +636,8 @@ func _execute_deck_card_action(card_index: int):
 
 ## デッキカード選択をキャンセル
 func _cancel_deck_card_selection(message: String = ""):
-	if message != "" and ui_manager and ui_manager.phase_display:
-		ui_manager.show_toast(message)
+	if message != "" and _message_service:
+		_message_service.show_toast(message)
 	
 	# コールバックを呼び出し（-1 = 選択なし）
 	if deck_card_selection_callback:
@@ -651,19 +664,20 @@ func _finish_deck_card_selection():
 					card_node.queue_free()
 			hand_display.player_card_nodes[-1].clear()
 			hand_display.player_card_nodes.erase(-1)
-	
+
 	# 元の手札表示に戻す
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		if ui_manager.hand_display and player_system:
-			ui_manager.hand_display.is_enemy_card_selection_active = false
-			
-			var current_player = player_system.get_current_player()
-			if current_player:
-				ui_manager.update_hand_display(current_player.id)
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+	if ui_manager and ui_manager.hand_display and player_system:
+		ui_manager.hand_display.is_enemy_card_selection_active = false
+
+	if _card_selection_service and player_system:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			_card_selection_service.update_hand_display(current_player.id)
+
 	current_state = State.INACTIVE
-	
+
 	# 少し待機してから完了シグナル発火
 	await get_tree().create_timer(0.5).timeout
 	selection_completed.emit()
@@ -697,8 +711,8 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 	var has_valid_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.has_item_or_spell_in_hand(target_player_id)
 	
 	if not has_valid_cards:
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("変換できるカードがありません")
+		if _message_service:
+			_message_service.show_toast("変換できるカードがありません")
 		await get_tree().create_timer(1.0).timeout
 		_finish_transform_card_selection()
 		return
@@ -709,14 +723,15 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		return
 	
 	# フィルターモードを設定
-	if ui_manager:
-		ui_manager.card_selection_filter = filter_mode
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = filter_mode
+
 	# 対象プレイヤーの手札を表示
 	if ui_manager and ui_manager.hand_display:
 		ui_manager.hand_display.is_enemy_card_selection_active = true
-		ui_manager.update_hand_display(target_player_id)
-	
+	if _card_selection_service:
+		_card_selection_service.update_hand_display(target_player_id)
+
 	# 選択UIを有効化
 	if ui_manager and ui_manager.card_selection_ui and card_system:
 		var hand_data = card_system.get_all_cards_for_player(target_player_id)
@@ -732,12 +747,12 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 	if player_system and target_player_id < player_system.players.size():
 		player_name = player_system.players[target_player_id].name
 	
-	if ui_manager and ui_manager.phase_display:
-		ui_manager.show_action_prompt("%sの手札から変換するアイテムかスペルを選択" % player_name)
+	if _message_service:
+		_message_service.show_action_prompt("%sの手札から変換するアイテムかスペルを選択" % player_name)
 	
 	# 戻るボタンを登録（キャンセル可能に）
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_transform_card_selection("キャンセルしました")
 		)
@@ -779,15 +794,15 @@ func _get_transform_card_data(card_index: int) -> Dictionary:
 ## カード変換選択キャンセル時（選択画面に戻る）
 func _on_transform_selection_cancelled():
 	# 選択画面に戻る
-	if ui_manager and ui_manager.phase_display:
+	if _message_service:
 		var player_name = "プレイヤー%d" % (transform_target_player_id + 1)
 		if player_system and transform_target_player_id < player_system.players.size():
 			player_name = player_system.players[transform_target_player_id].name
-		ui_manager.show_action_prompt("%sの手札から変換するカードを選択" % player_name)
+		_message_service.show_action_prompt("%sの手札から変換するカードを選択" % player_name)
 	
 	# 戻るボタンを再登録
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): _cancel_transform_card_selection("キャンセルしました")
 		)
@@ -810,8 +825,8 @@ func _execute_transform_card_action(card_index: int):
 			)
 			
 			if result.get("transformed_count", 0) > 0:
-				if ui_manager and ui_manager.global_comment_ui:
-					await ui_manager.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
+				if _message_service:
+					await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
 						result.get("original_name", "?"),
 						result.get("transformed_count", 0),
 						result.get("new_name", "?")
@@ -822,8 +837,8 @@ func _execute_transform_card_action(card_index: int):
 
 ## カード変換選択をキャンセル
 func _cancel_transform_card_selection(message: String = ""):
-	if message != "" and ui_manager and ui_manager.phase_display:
-		ui_manager.show_toast(message)
+	if message != "" and _message_service:
+		_message_service.show_toast(message)
 	
 	_finish_transform_card_selection()
 
@@ -838,17 +853,18 @@ func _finish_transform_card_selection():
 	_restore_camera_to_current_player()
 	
 	# 元の手札表示に戻す
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		if ui_manager.hand_display and player_system:
-			ui_manager.hand_display.is_enemy_card_selection_active = false
-			
-			var current_player = player_system.get_current_player()
-			if current_player:
-				ui_manager.update_hand_display(current_player.id)
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+	if ui_manager and ui_manager.hand_display and player_system:
+		ui_manager.hand_display.is_enemy_card_selection_active = false
+
+	if _card_selection_service and player_system:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			_card_selection_service.update_hand_display(current_player.id)
+
 	current_state = State.INACTIVE
-	
+
 	# 少し待機してから完了シグナル発火
 	await get_tree().create_timer(0.5).timeout
 	selection_completed.emit()
@@ -858,19 +874,30 @@ func _finish_transform_card_selection():
 
 ## インフォパネルのシグナルを接続（setup時に1回だけ）
 func _connect_info_panel_signals():
-	if _info_panel_signals_connected or not ui_manager:
+	if _info_panel_signals_connected:
 		return
-	
-	if ui_manager.creature_info_panel_ui:
-		ui_manager.creature_info_panel_ui.selection_confirmed.connect(_on_info_panel_confirmed)
-		ui_manager.creature_info_panel_ui.selection_cancelled.connect(_on_info_panel_cancelled)
-	if ui_manager.spell_info_panel_ui:
-		ui_manager.spell_info_panel_ui.selection_confirmed.connect(_on_info_panel_confirmed)
-		ui_manager.spell_info_panel_ui.selection_cancelled.connect(_on_info_panel_cancelled)
-	if ui_manager.item_info_panel_ui:
-		ui_manager.item_info_panel_ui.selection_confirmed.connect(_on_info_panel_confirmed)
-		ui_manager.item_info_panel_ui.selection_cancelled.connect(_on_info_panel_cancelled)
-	
+	if not _info_panel_service:
+		return
+
+	var creature_panel = _info_panel_service.get_creature_info_panel()
+	if creature_panel:
+		if not creature_panel.selection_confirmed.is_connected(_on_info_panel_confirmed):
+			creature_panel.selection_confirmed.connect(_on_info_panel_confirmed)
+		if not creature_panel.selection_cancelled.is_connected(_on_info_panel_cancelled):
+			creature_panel.selection_cancelled.connect(_on_info_panel_cancelled)
+	var spell_panel = _info_panel_service.get_spell_info_panel()
+	if spell_panel:
+		if not spell_panel.selection_confirmed.is_connected(_on_info_panel_confirmed):
+			spell_panel.selection_confirmed.connect(_on_info_panel_confirmed)
+		if not spell_panel.selection_cancelled.is_connected(_on_info_panel_cancelled):
+			spell_panel.selection_cancelled.connect(_on_info_panel_cancelled)
+	var item_panel = _info_panel_service.get_item_info_panel()
+	if item_panel:
+		if not item_panel.selection_confirmed.is_connected(_on_info_panel_confirmed):
+			item_panel.selection_confirmed.connect(_on_info_panel_confirmed)
+		if not item_panel.selection_cancelled.is_connected(_on_info_panel_cancelled):
+			item_panel.selection_cancelled.connect(_on_info_panel_cancelled)
+
 	_info_panel_signals_connected = true
 
 ## カード選択後、インフォパネルで確認を要求
@@ -901,20 +928,20 @@ func _request_card_confirmation(card_index: int, card_data: Dictionary, action_t
 
 ## いずれかのインフォパネルが表示中か確認
 func _is_any_info_panel_visible() -> bool:
-	if not ui_manager:
+	if not _info_panel_service:
 		return false
-	return ui_manager.is_any_info_panel_visible()
+	return _info_panel_service.is_any_info_panel_visible()
 
 ## カードタイプに応じたインフォパネルを表示
 func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
-	if not ui_manager:
+	if not _info_panel_service:
 		_on_info_panel_confirmed({})
 		return
-	
+
 	var card_type = card_data.get("type", "")
 	var card_index = pending_confirmation.get("card_index", -1)
 	var card_name = card_data.get("name", "?")
-	
+
 	# アクションタイプに応じた確認テキスト
 	var confirmation_text = ""
 	match action_type:
@@ -924,10 +951,10 @@ func _show_info_panel_for_card(card_data: Dictionary, action_type: String):
 		"draw": confirmation_text = "『%s』を引く" % card_name
 		"transform": confirmation_text = "『%s』を変換" % card_name
 		_: confirmation_text = "『%s』を選択" % card_name
-	
+
 	if card_type in ["creature", "spell", "item"]:
 		var prompt = confirmation_text if card_type == "creature" else "『%s』に使用しますか？" % card_name
-		ui_manager.show_card_selection(card_data, card_index, prompt, "", card_type)
+		_info_panel_service.show_card_selection(card_data, card_index, prompt, "", card_type)
 	else:
 		_on_info_panel_confirmed({})
 
@@ -961,9 +988,9 @@ func _on_info_panel_cancelled():
 
 ## 全インフォパネルを非表示
 func _hide_all_info_panels(clear_buttons: bool = true):
-	if not ui_manager:
+	if not _info_panel_service:
 		return
-	ui_manager.hide_all_info_panels(clear_buttons)
+	_info_panel_service.hide_all_info_panels(clear_buttons)
 
 ## カメラを現在のプレイヤーに戻す
 func _restore_camera_to_current_player():
@@ -1006,9 +1033,9 @@ func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
 	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
 		spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
 	
-	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
-	
+	if _message_service:
+		await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
+
 	callback.call(best_index)
 	_finish_deck_card_selection()
 
@@ -1056,8 +1083,8 @@ func _cpu_auto_select_transform_card(target_player_id: int, filter_mode: String)
 		var card_name_str = card_data.get("name", "")
 		var card_id = card_data.get("id", -1)
 		var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
-		if result.get("transformed_count", 0) > 0 and ui_manager and ui_manager.global_comment_ui:
-			await ui_manager.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
+		if result.get("transformed_count", 0) > 0 and _message_service:
+			await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
 				result.get("original_name", "?"),
 				result.get("transformed_count", 0),
 				result.get("new_name", "?")
