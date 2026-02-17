@@ -537,6 +537,14 @@ func clear_navigation_saved_state():
 ## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
 ## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
 func restore_current_phase():
+	# 保存済みナビゲーション状態があれば直接復元（最も正確な復元方法）
+	# show_card_info()でsave_navigation_state()された状態を復元する
+	# フェーズ別の再構築より正確（SpellCreatureSwap等のカスタムコールバックを保持）
+	if _nav_state_saved:
+		restore_navigation_state()
+		return
+
+	# 以下: 保存されていない場合のフォールバック（フェーズ別復元）
 	# 1. ドミニオコマンドがアクティブ → ドミニオに委譲
 	if dominio_command_handler_ref:
 		var dominio = dominio_command_handler_ref

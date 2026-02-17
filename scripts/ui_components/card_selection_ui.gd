@@ -172,7 +172,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				if ui_manager_ref and ui_manager_ref.excluded_card_index == i:
 					is_excluded = true
 				# IDで除外
-				if ui_manager_ref and ui_manager_ref.excluded_card_id != "" and card_data.get("id", "") == ui_manager_ref.excluded_card_id:
+				if ui_manager_ref and ui_manager_ref.excluded_card_id != "" and str(card_data.get("id", "")) == ui_manager_ref.excluded_card_id:
 					is_excluded = true
 				is_selectable = not is_excluded
 			elif filter_mode == "spell":
@@ -925,24 +925,27 @@ func _on_info_panel_cancelled():
 		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
 		if handler and handler.is_selecting():
 			return
-	
+
 	pending_card_index = -1
-	
-	# ナビゲーション保存状態をクリア（フェーズ固有の復元が行われるため）
-	if ui_manager_ref:
-		ui_manager_ref.clear_navigation_saved_state()
-	
+
 	# 選択中のカードのホバー状態を解除
 	var card_script = load("res://scripts/card.gd")
 	if card_script.currently_selected_card and card_script.currently_selected_card.has_method("deselect_card"):
 		card_script.currently_selected_card.deselect_card()
-	
+
+	# 保存済みナビゲーション状態があれば直接復元（カスタムコールバック保持）
+	# SpellCreatureSwap等がenable_navigationで設定したコールバックを正確に復元する
+	if ui_manager_ref and ui_manager_ref.is_nav_state_saved():
+		ui_manager_ref.restore_navigation_state()
+		return
+
+	# 以下: 保存なしの場合のフォールバック（フェーズ別復元）
 	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
 	if selection_mode in ["sacrifice", "discard"]:
 		restore_phase_comment()
 		register_back_button_for_current_mode()
 		return
-	
+
 	# selection_modeに応じた戻り先
 	match selection_mode:
 		"spell":
