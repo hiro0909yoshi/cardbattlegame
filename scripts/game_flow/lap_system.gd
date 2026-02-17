@@ -105,10 +105,11 @@ func _show_comment_and_wait(message: String, player_id: int = -1):
 	print("[LapSystem] _show_comment_and_wait: ", message, " (player_id: %d)" % player_id)
 	is_showing_notification = true
 	if _message_service:
-		# MessageService 経由で表示
 		await _message_service.show_comment_and_wait(message, player_id, true)
+	elif ui_manager and ui_manager.has_method("show_comment_and_wait"):
+		await ui_manager.show_comment_and_wait(message, player_id, true)
 	else:
-		print("[LapSystem] WARNING: _message_service is null")
+		print("[LapSystem] WARNING: _message_service is null, ui_manager fallback unavailable")
 	is_showing_notification = false
 
 ## 周回状態を初期化

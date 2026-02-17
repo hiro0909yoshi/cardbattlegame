@@ -68,7 +68,8 @@ func show_hand_selection(player_id: int, filter: String = "", message: String = 
 	if player_system_ref:
 		var player = player_system_ref.players[player_id]
 		# フィルターをクリア（全カード選択可能にする）
-		_card_selection_service_ref.card_selection_filter = ""
+		if ui_manager_ref:
+			ui_manager_ref.card_selection_filter = ""
 		# sacrifice モードで表示
 		_card_selection_service_ref.show_card_selection_ui_mode(player, "sacrifice")
 	

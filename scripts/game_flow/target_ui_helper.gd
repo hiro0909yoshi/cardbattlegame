@@ -208,7 +208,7 @@ static func show_creature_info_panel(handler, target_data: Dictionary) -> void:
 		return
 
 	# setup_buttons=false でナビゲーションボタンを設定しない
-	info_panel_service.show_card_info(creature_data, tile_index, false)
+	info_panel_service.show_card_info_only(creature_data, tile_index)
 
 
 ## クリーチャー情報パネルを非表示

@@ -403,7 +403,8 @@ func _select_hand_creature(creatures: Array, message: String) -> int:
 		return 0 if creatures.size() > 0 else -1
 
 	# フィルターをクリーチャーのみに設定（スペル/アイテムはグレーアウト）
-	css.card_selection_filter = ""
+	if ui_manager:
+		ui_manager.card_selection_filter = ""
 
 	# メッセージ表示
 	if ui_manager.has_method("set_message"):
@@ -486,11 +487,13 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	# 手札選択UIを表示（犠牲モード）
 	if msg:
 		msg.show_action_prompt("犠牲にするカードを選択")
-	css.card_selection_filter = ""
+	if ui_manager:
+		ui_manager.card_selection_filter = ""
 
 	# 召喚カードを除外（型を String に統一）
 	var card_id = summon_creature.get("id", -1)
-	css.excluded_card_id = str(card_id) if card_id != -1 else ""
+	if ui_manager:
+		ui_manager.excluded_card_id = str(card_id) if card_id != -1 else ""
 	var player = player_system_ref.players[player_id]
 	css.show_card_selection_ui_mode(player, "sacrifice")
 
@@ -509,7 +512,8 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	css.hide_card_selection_ui()
 
 	# 除外IDをリセット
-	css.excluded_card_id = ""
+	if ui_manager:
+		ui_manager.excluded_card_id = ""
 
 	# 選択されたカードを取得
 	if selected_index < 0:
