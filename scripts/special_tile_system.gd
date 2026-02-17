@@ -20,6 +20,11 @@ var player_system: PlayerSystem
 var ui_manager: UIManager = null
 var game_flow_manager = null  # GameFlowManager参照（魔法タイル用）
 
+# サービス参照
+var _message_service = null
+var _navigation_service = null
+var _card_selection_service = null
+
 func _ready():
 	pass
 
@@ -30,6 +35,12 @@ func setup_systems(b_system, c_system: CardSystem, p_system: PlayerSystem, ui_sy
 	player_system = p_system
 	ui_manager = ui_system
 	game_flow_manager = gfm
+
+	# サービス解決
+	if ui_system:
+		_message_service = ui_system.message_service if ui_system.get("message_service") else null
+		_navigation_service = ui_system.navigation_service if ui_system.get("navigation_service") else null
+		_card_selection_service = ui_system.card_selection_service if ui_system.get("card_selection_service") else null
 
 # ============================================
 # 特殊タイル停止後の共通UI設定
@@ -70,21 +81,23 @@ func _process_warp_landing(player_id: int) -> void:
 func _show_special_tile_landing_ui(player_id: int):
 	if not ui_manager:
 		return
-	
+
 	# カードをグレーアウト（召喚不可）
-	ui_manager.card_selection_filter = "disabled"
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "disabled"
+
 	# 手札UI表示
 	var current_player = null
 	if player_system and player_id < player_system.players.size():
 		current_player = player_system.players[player_id]
 	if current_player:
-		ui_manager.show_card_selection_ui(current_player)
-	
+		if _card_selection_service:
+			_card_selection_service.show_card_selection_ui(current_player)
+
 	# フェーズ表示（show_card_selection_ui後に設定して上書きされないようにする）
-	if ui_manager.phase_display:
-		ui_manager.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
-	
+	if _message_service:
+		_message_service.show_action_prompt("特殊タイル: 召喚不可（×でパス）")
+
 	# 人間プレイヤーの場合、ドミニオコマンドボタンを再表示
 	if board_system and board_system.game_flow_manager and not board_system.game_flow_manager.is_cpu_player(player_id):
 		ui_manager.show_dominio_order_button()
@@ -336,29 +349,32 @@ func handle_base_tile(player_id: int, tile = null):
 
 ## 遠隔召喚UI表示（ベースタイル用）
 func _show_remote_summon_ui(player_id: int, target_tile: int):
-	if not ui_manager:
+	if not _navigation_service and not _card_selection_service and not _message_service:
 		return
-	
+
 	# グローバルナビゲーションを一度クリア（空き地選択の入力が伝播しないように）
-	ui_manager.disable_navigation()
-	
+	if _navigation_service:
+		_navigation_service.disable_navigation()
+
 	# 入力ロックを解除（特殊タイル処理中にロックされている可能性がある）
 	if game_flow_manager and game_flow_manager.has_method("unlock_input"):
 		game_flow_manager.unlock_input()
-	
+
 	# 通常の召喚フィルター（スペル以外が選択可能）
-	ui_manager.card_selection_filter = ""
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+
 	# フェーズラベル更新
-	if ui_manager.phase_display:
-		ui_manager.show_action_prompt("タイル%dに召喚するクリーチャーを選択" % target_tile)
-	
+	if _message_service:
+		_message_service.show_action_prompt("タイル%dに召喚するクリーチャーを選択" % target_tile)
+
 	# 手札UI表示
 	var current_player = null
 	if player_system and player_id < player_system.players.size():
 		current_player = player_system.players[player_id]
 	if current_player:
-		ui_manager.show_card_selection_ui(current_player)
+		if _card_selection_service:
+			_card_selection_service.show_card_selection_ui(current_player)
 
 # ワープペア定義（マップデータから動的に設定）
 var warp_pairs = {}
@@ -439,8 +455,8 @@ func _cpu_remote_summon(player_id: int, target_tile: int):
 		await board_system.execute_summon_action(best_creature_info.index)
 	
 	# コメント表示
-	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.show_comment_and_wait(
+	if _message_service:
+		await _message_service.show_comment_and_wait(
 			"%sを配置した！" % best_creature_info.card.get("name", "クリーチャー"), player_id, true
 		)
 	

@@ -65,6 +65,7 @@ var game_flow_manager: GameFlowManager = null  # GameFlowManagerへの参照
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_land: SpellLand = null  # SpellLand: 土地操作スペル
+var _message_service = null
 
 # === 初期化 ===
 
@@ -516,8 +517,8 @@ func move_player_3d(player_id: int, steps: int, dice_value: int = 0):
 		movement_controller.move_player(player_id, steps, dice_value)
 
 func _on_movement_started(_player_id: int):
-	if ui_manager:
-		ui_manager.set_phase_text("移動中...")
+	if _message_service:
+		_message_service.set_phase_text("移動中...")
 
 ## プレイヤーが操作可能なドミニオを所有しているかチェック（ダウン中は除外）
 func has_owned_lands(player_id: int) -> bool:

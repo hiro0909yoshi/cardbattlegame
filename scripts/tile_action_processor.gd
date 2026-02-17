@@ -19,6 +19,10 @@ var game_flow_manager = null
 var cpu_turn_processor = null
 var cpu_tile_action_executor: CPUTileActionExecutor = null
 
+# サービス参照
+var _message_service = null
+var _card_selection_service = null
+
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
 var spell_world_curse = null  # SpellWorldCurse: 世界呪い
@@ -82,7 +86,12 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	special_tile_system = st_system
 	ui_manager = ui
 	game_flow_manager = gf_manager
-	
+
+	# サービス解決
+	if ui:
+		_message_service = ui.message_service if ui.get("message_service") else null
+		_card_selection_service = ui.card_selection_service if ui.get("card_selection_service") else null
+
 	# サブシステム初期化
 	summon_executor = TileSummonExecutor.new()
 	summon_executor.initialize(b_system, p_system, c_system, ui, gf_manager)
@@ -189,18 +198,18 @@ func _process_cpu_tile(tile: BaseTile, tile_info: Dictionary, player_index: int)
 # === UI表示 ===
 
 func show_summon_ui():
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("召喚するクリーチャーを選択")
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
+	if _message_service:
+		_message_service.show_action_prompt("召喚するクリーチャーを選択")
 
 func show_summon_ui_disabled():
-	if ui_manager:
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("自分の土地: 召喚不可（×でパス）")
-		ui_manager.card_selection_filter = "disabled"
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
+	if _message_service:
+		_message_service.show_action_prompt("自分の土地: 召喚不可（×でパス）")
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "disabled"
+		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
 
 func show_level_up_ui(tile_info: Dictionary):
 	if ui_manager:
@@ -209,18 +218,18 @@ func show_level_up_ui(tile_info: Dictionary):
 		ui_manager.show_level_up_ui(tile_info, current_magic)
 
 func show_battle_ui(_mode: String = "battle"):
-	if ui_manager:
-		ui_manager.card_selection_filter = "battle"
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "battle"
+		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
+	if _message_service:
+		_message_service.show_action_prompt("バトルするクリーチャーを選択、または×でパス")
 
 func show_battle_ui_disabled():
-	if ui_manager:
-		if ui_manager.phase_display:
-			ui_manager.show_action_prompt("peace呪い: 侵略不可（×でパス）")
-		ui_manager.card_selection_filter = "disabled"
-		ui_manager.show_card_selection_ui(player_system.get_current_player())
+	if _message_service:
+		_message_service.show_action_prompt("peace呪い: 侵略不可（×でパス）")
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = "disabled"
+		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
 
 # === アクション処理 ===
 
@@ -240,8 +249,8 @@ func on_card_selected(card_index: int):
 	var tile = board_system.tile_nodes.get(current_tile)
 	if tile and _is_special_tile(tile.tile_type) and remote_placement_tile < 0:
 		print("[TileActionProcessor] 特殊タイル上ではカードを使用できません")
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("特殊タイル上では召喚できません")
+		if _message_service:
+			_message_service.show_toast("特殊タイル上では召喚できません")
 		return
 	
 	# 遠隔配置モードの場合は無条件で召喚処理
@@ -379,8 +388,9 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 			else:
 				print("[TileActionProcessor] 不屈により交換後もダウンしません: タイル", tile_index)
 	
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
 	if ui_manager:
-		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
 	
 	var player_name = _get_current_player_name()
@@ -425,14 +435,14 @@ func _complete_action():
 func _show_pending_comment():
 	if pending_comment.is_empty():
 		return
-	
+
 	var player_id = pending_comment_player_id
 	if player_id < 0 and board_system:
 		player_id = board_system.current_player_index
-	
-	if ui_manager and ui_manager.global_comment_ui:
-		await ui_manager.show_comment_and_wait(pending_comment, player_id, pending_comment_force_click)
-	
+
+	if _message_service:
+		await _message_service.show_comment_and_wait(pending_comment, player_id, pending_comment_force_click)
+
 	pending_comment = ""
 	pending_comment_player_id = -1
 	pending_comment_force_click = true

@@ -290,6 +290,10 @@ func phase_4_setup_system_interconnections() -> void:
 		)
 		board_system_3d.ui_manager = ui_manager
 
+		# === サービス注入: message_service ===
+		if ui_manager and ui_manager.get("message_service"):
+			board_system_3d._message_service = ui_manager.message_service
+
 		# === Phase 2: invasion_completed リレーチェーン接続 ===
 		# TileActionProcessor → BoardSystem3D の接続
 		if board_system_3d.tile_action_processor:
@@ -336,6 +340,10 @@ func phase_4_setup_system_interconnections() -> void:
 	# Step 8: BattleSystem に設定
 	if battle_system:
 		battle_system.game_flow_manager_ref = game_flow_manager
+
+		# === サービス注入: message_service ===
+		if ui_manager and ui_manager.get("message_service"):
+			battle_system._message_service = ui_manager.message_service
 	
 	# Step 9: GameFlowManager の 3D 設定
 	if game_flow_manager:

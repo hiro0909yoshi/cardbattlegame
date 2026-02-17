@@ -23,6 +23,7 @@ var board_system_ref: BoardSystem3D = null  # BoardSystem3D
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
 var game_flow_manager_ref: GameFlowManager = null  # GameFlowManager
+var _message_service = null
 
 # サブシステム
 var battle_preparation: BattlePreparation
@@ -331,8 +332,8 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 	else:
 		message += "防御側 %s 破壊！" % defender_name
 
-	if game_flow_manager_ref and game_flow_manager_ref.ui_manager:
-		await game_flow_manager_ref.ui_manager.show_comment_and_wait(message)
+	if _message_service:
+		await _message_service.show_comment_and_wait(message)
 
 	var destroy_count = 0
 
@@ -767,33 +768,30 @@ func _apply_post_battle_effects(
 func _show_land_effect_notification(creature_data: Dictionary, land_effect_result: Dictionary) -> void:
 	if land_effect_result.is_empty():
 		return
-	
+
 	var creature_name = creature_data.get("name", "?")
 	var changed_element = land_effect_result.get("changed_element", "")
 	var level_reduced = land_effect_result.get("level_reduced", false)
-	
+
 	# 何も発動していなければ終了
 	if changed_element == "" and not level_reduced:
 		return
-	
-	# 通知UIを取得（game_flow_manager経由）
-	if not game_flow_manager_ref or not game_flow_manager_ref.ui_manager:
+
+	# 通知UIを取得
+	if not _message_service:
 		return
-	var comment_ui = game_flow_manager_ref.ui_manager.global_comment_ui
-	if not comment_ui:
-		return
-	
+
 	# 土地変性の通知
 	if changed_element != "":
 		var element_names = {"water": "水", "fire": "火", "wind": "風", "earth": "地", "neutral": "無"}
 		var element_jp = element_names.get(changed_element, changed_element)
 		var text = "%s の土地変性！→ %s属性" % [creature_name, element_jp]
-		await comment_ui.show_and_wait(text, -1, true)
-	
+		await _message_service.show_comment_and_wait(text, -1, true)
+
 	# 土地破壊の通知
 	if level_reduced:
 		var text = "%s の土地破壊！レベル-1" % creature_name
-		await comment_ui.show_and_wait(text, -1, true)
+		await _message_service.show_comment_and_wait(text, -1, true)
 
 
 # バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲
