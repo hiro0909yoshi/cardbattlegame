@@ -79,6 +79,12 @@ var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 var battle_system = null       # board_system.battle_system参照
 var spell_cast_notification_ui = null  # spell_phase_handler.spell_cast_notification_ui参照
 
+## サービス参照（DI パターン）
+var _message_service = null
+var _navigation_service = null
+var _card_selection_service = null
+var _info_panel_service = null
+
 # === 直接参照（GFM経由を廃止） ===
 var spell_world_curse = null  # SpellWorldCurse: 世界呪い
 var spell_land = null  # SpellLand: 土地操作
@@ -105,10 +111,18 @@ func _process(delta):
 ## 初期化
 func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	ui_manager = ui_mgr
+
+	# サービス解決
+	if ui_mgr:
+		_message_service = ui_mgr.message_service if ui_mgr.get("message_service") else null
+		_navigation_service = ui_mgr.navigation_service if ui_mgr.get("navigation_service") else null
+		_card_selection_service = ui_mgr.card_selection_service if ui_mgr.get("card_selection_service") else null
+		_info_panel_service = ui_mgr.info_panel_service if ui_mgr.get("info_panel_service") else null
+
 	board_system = board_sys
 	game_flow_manager = flow_mgr
 	player_system = player_sys
-	
+
 	# player_systemが渡されない場合はboard_systemから取得
 	if not player_system and board_system:
 		player_system = board_system.player_system
@@ -151,22 +165,24 @@ func open_dominio_order(player_id: int):
 	player_owned_lands = LandSelectionHelper.get_player_owned_lands(board_system, player_id)
 	
 	if player_owned_lands.is_empty():
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("所有地がありません")
+		if _message_service:
+			_message_service.show_toast("所有地がありません")
 		return
 	
 	# ドミニオボタンを非表示（ドミニオコマンド中は表示しない）
 	if ui_manager and ui_manager.has_method("hide_dominio_order_button"):
 		ui_manager.hide_dominio_order_button()
 	
-	# カード選択UIを無効化（グローバルボタンもクリア）
+	# カード選択UIを無効化
 	if ui_manager and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.deactivate()
-		ui_manager.clear_back_action()  # 「召喚しない」をクリア
-	
+	# 「召喚しない」をクリア
+	if _navigation_service:
+		_navigation_service.clear_back_action()
+
 	# 前フェーズのナビゲーション保存状態をクリア
-	if ui_manager:
-		ui_manager.clear_navigation_saved_state()
+	if _navigation_service:
+		_navigation_service.clear_navigation_saved_state()
 	
 	# 土地選択モードに移行
 	current_state = State.SELECTING_LAND
@@ -192,8 +208,8 @@ func open_dominio_order(player_id: int):
 	
 	# ナビゲーションボタン設定（土地選択用）※preview_landの後に設定する
 	# （preview_land→show_card_info(false)がナビゲーションをクリアするため）
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
 			func(): cancel(),  # 戻る
 			func(): on_arrow_up(),  # 上
@@ -310,8 +326,8 @@ func close_dominio_order():
 		board_system.reset_action_processing()
 	
 	# ナビゲーションボタンをクリア
-	if ui_manager:
-		ui_manager.disable_navigation()
+	if _navigation_service:
+		_navigation_service.disable_navigation()
 	
 	# パネルを閉じる
 	if ui_manager and ui_manager.dominio_order_ui:
@@ -339,9 +355,9 @@ func close_dominio_order():
 	if ui_manager:
 		if ui_manager.has_method("hide_dominio_order_ui"):
 			ui_manager.hide_dominio_order_ui()
-		# カード選択UIも非表示にする
-		if ui_manager.has_method("hide_card_selection_ui"):
-			ui_manager.hide_card_selection_ui()
+	# カード選択UIも非表示にする
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
 
 # ============================================
 # Phase 1-A: 選択マーカーシステム
@@ -420,21 +436,21 @@ func cancel():
 	elif current_state == State.SELECTING_SWAP:
 		# 交換クリーチャー選択中ならアクション選択に戻る
 		current_state = State.SELECTING_ACTION
-		
+
 		swap_mode = false
 		swap_old_creature = {}
 		swap_tile_index = -1
-		
+
 		if board_system and board_system.tile_action_processor:
 			board_system.reset_action_processing()
-		
-		# カード選択UIを閉じる（先にクリア）
-		if ui_manager and ui_manager.card_selection_ui:
-			ui_manager.card_selection_ui.hide_selection()
-		
+
+		# カード選択UIを閉じる
+		if _card_selection_service:
+			_card_selection_service.hide_card_selection_ui()
+
 		# クリーチャー情報パネルを閉じる
-		if ui_manager:
-			ui_manager.hide_all_info_panels(false)
+		if _info_panel_service:
+			_info_panel_service.hide_all_info_panels(false)
 		
 		# アクションメニューを表示
 		if ui_manager and ui_manager.has_method("show_action_menu"):
@@ -467,8 +483,8 @@ func cancel():
 
 ## アクション選択用ナビゲーション設定（戻るのみ）
 func set_action_selection_navigation():
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			Callable(),  # 決定なし
 			func(): cancel()  # 戻る
 		)
@@ -483,8 +499,8 @@ func restore_navigation():
 			set_action_selection_navigation()
 		State.SELECTING_MOVE_DEST:
 			# 移動先選択用ナビゲーション
-			if ui_manager:
-				ui_manager.enable_navigation(
+			if _navigation_service:
+				_navigation_service.enable_navigation(
 					func(): LandActionHelper.confirm_move_selection(self),
 					func(): cancel(),
 					func(): on_arrow_up(),
@@ -492,8 +508,8 @@ func restore_navigation():
 				)
 		State.SELECTING_LEVEL:
 			# レベル選択用ナビゲーション（LevelSelectionUIで管理されるのでキャンセルのみ）
-			if ui_manager:
-				ui_manager.enable_navigation(
+			if _navigation_service:
+				_navigation_service.enable_navigation(
 					Callable(),  # 決定はLevelSelectionUIで処理
 					func(): cancel(),
 					func(): on_arrow_up(),
@@ -501,8 +517,8 @@ func restore_navigation():
 				)
 		State.SELECTING_TERRAIN:
 			# 地形選択用ナビゲーション
-			if ui_manager:
-				ui_manager.enable_navigation(
+			if _navigation_service:
+				_navigation_service.enable_navigation(
 					func(): LandActionHelper.confirm_terrain_selection(self),
 					func(): cancel(),
 					func(): on_arrow_up(),
@@ -510,8 +526,8 @@ func restore_navigation():
 				)
 		State.SELECTING_SWAP:
 			# 交換選択用ナビゲーション（カード選択UI側で管理）
-			if ui_manager:
-				ui_manager.enable_navigation(
+			if _navigation_service:
+				_navigation_service.enable_navigation(
 					Callable(),  # 決定はカード選択で処理
 					func(): cancel()
 				)
@@ -524,25 +540,25 @@ func restore_phase_comment():
 		State.SELECTING_LAND:
 			LandSelectionHelper.update_land_selection_ui(self)
 		State.SELECTING_ACTION:
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_action_prompt("アクションを選択してください")
+			if _message_service:
+				_message_service.show_action_prompt("アクションを選択してください")
 		State.SELECTING_MOVE_DEST:
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_action_prompt("移動先を選択")
+			if _message_service:
+				_message_service.show_action_prompt("移動先を選択")
 		State.SELECTING_LEVEL:
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_action_prompt("レベルアップする土地を選択")
+			if _message_service:
+				_message_service.show_action_prompt("レベルアップする土地を選択")
 		State.SELECTING_TERRAIN:
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_action_prompt("地形を選択")
+			if _message_service:
+				_message_service.show_action_prompt("地形を選択")
 		_:
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.hide_action_prompt()
+			if _message_service:
+				_message_service.hide_action_prompt()
 
 ## 土地選択用ナビゲーション設定（全ボタン）
 func _set_land_selection_navigation():
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _navigation_service:
+		_navigation_service.enable_navigation(
 			func(): LandSelectionHelper.confirm_land_selection(self),  # 決定
 			func(): cancel(),  # 戻る
 			func(): on_arrow_up(),  # 上
@@ -647,8 +663,8 @@ func _on_level_up_selected(target_level: int, cost: int):
 		set_action_selection_navigation()
 		if ui_manager and ui_manager.dominio_order_ui:
 			ui_manager.dominio_order_ui.show_action_menu(selected_tile_index)
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("EPが足りません")
+		if _message_service:
+			_message_service.show_toast("EPが足りません")
 
 ## カード選択時の処理（交換モード用）
 func on_card_selected_for_swap(card_index: int):
@@ -1204,18 +1220,18 @@ func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, crea
 
 ## ドミニオコマンド使用コメントを表示（アクション確定時）
 func _show_dominio_order_comment(action_name: String):
-	if not ui_manager or not ui_manager.global_comment_ui:
+	if not _message_service:
 		return
-	
+
 	var player_id = board_system.current_player_index if board_system else 0
 	var player_name = "プレイヤー"
 	if player_system and player_id < player_system.players.size():
 		var player = player_system.players[player_id]
 		if player:
 			player_name = player.name
-	
+
 	var message = "%s がドミニオコマンド：%s" % [player_name, action_name]
-	await ui_manager.show_comment_and_wait(message, player_id, true)
+	await _message_service.show_comment_and_wait(message, player_id, true)
 
 
 ## 現在のプレイヤー名を取得（コメント表示用）
