@@ -97,3 +97,13 @@ func get_player_card_nodes(player_id: int) -> Array:
 	if _hand_display:
 		return _hand_display.get_player_card_nodes(player_id)
 	return []
+
+
+## ============================================================================
+## card_selected リレー（UIManager → CardSelectionService）
+## ============================================================================
+
+## UIManager.card_selected からのリレー
+## ビジネスロジック層は CardSelectionService.card_selected を await する
+func _relay_card_selected(card_index: int) -> void:
+	card_selected.emit(card_index)

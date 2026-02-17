@@ -98,6 +98,9 @@ func _ready():
 	_card_selection_service = CardSelectionService.new()
 	_card_selection_service.name = "CardSelectionService"
 	add_child(_card_selection_service)
+	# card_selected リレー: UIManager → CardSelectionService
+	if not card_selected.is_connected(_card_selection_service._relay_card_selected):
+		card_selected.connect(_card_selection_service._relay_card_selected)
 
 	_info_panel_service = InfoPanelService.new()
 	_info_panel_service.name = "InfoPanelService"
