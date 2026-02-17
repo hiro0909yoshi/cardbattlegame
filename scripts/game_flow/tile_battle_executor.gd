@@ -12,6 +12,8 @@ var player_system: PlayerSystem
 var card_system: CardSystem
 var battle_system: BattleSystem
 var ui_manager: UIManager
+var _message_service: MessageService = null
+var _card_selection_service: CardSelectionService = null
 var game_flow_manager = null
 var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
 
@@ -52,6 +54,8 @@ func initialize(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardS
 	card_system = c_system
 	battle_system = bt_system
 	ui_manager = ui
+	_message_service = ui.message_service if ui else null
+	_card_selection_service = ui.card_selection_service if ui else null
 	game_flow_manager = gf_manager
 	_summon_executor = summon_exec
 
@@ -80,8 +84,8 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		var check_result = SummonConditionChecker.check_lands_required(card_data, current_player_index, board_system)
 		if not check_result.passed:
 			print("[TileBattleExecutor] 土地条件未達（バトル）: %s" % check_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_toast(check_result.message)
+			if _message_service:
+				_message_service.show_toast(check_result.message)
 			complete_callback.call()
 			return
 	
@@ -91,8 +95,8 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 		var cannot_result = SummonConditionChecker.check_cannot_summon(card_data, tile_element_for_check)
 		if not cannot_result.passed:
 			print("[TileBattleExecutor] 配置制限（バトル）: %s" % cannot_result.message)
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_toast(cannot_result.message)
+			if _message_service:
+				_message_service.show_toast(cannot_result.message)
 			complete_callback.call()
 			return
 	
@@ -101,13 +105,13 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 	var tile_element_for_sacrifice = tile_info.get("element", "")
 	if SummonConditionChecker.requires_card_sacrifice(card_data) and not DebugSettings.disable_card_sacrifice and not _is_summon_condition_ignored():
 		# カード選択UIを一度閉じる
-		if ui_manager:
-			ui_manager.hide_card_selection_ui()
+		if _card_selection_service:
+			_card_selection_service.hide_card_selection_ui()
 		if _summon_executor:
 			sacrifice_card = await _summon_executor.process_card_sacrifice(current_player_index, card_index, card_data, tile_element_for_sacrifice)
 		if sacrifice_card.get("card", {}).is_empty() and SummonConditionChecker.requires_card_sacrifice(card_data):
-			if ui_manager and ui_manager.phase_display:
-				ui_manager.show_toast("バトルをキャンセルしました")
+			if _message_service:
+				_message_service.show_toast("バトルをキャンセルしました")
 			show_battle_ui_callback.call()
 			return
 	
@@ -140,8 +144,8 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 	var current_player = player_system.get_current_player()
 	if current_player.magic_power < cost:
 		print("[TileBattleExecutor] EP不足でバトルできません")
-		if ui_manager and ui_manager.phase_display:
-			ui_manager.show_toast("EPが足りません（必要: %dEP）" % cost)
+		if _message_service:
+			_message_service.show_toast("EPが足りません（必要: %dEP）" % cost)
 		show_battle_ui_callback.call()
 		return
 	
@@ -367,8 +371,9 @@ func _execute_pending_battle():
 func _on_battle_completed(success: bool, tile_index: int):
 	print("バトル結果受信: success=", success, " tile=", tile_index)
 
+	if _card_selection_service:
+		_card_selection_service.hide_card_selection_ui()
 	if ui_manager:
-		ui_manager.hide_card_selection_ui()
 		ui_manager.update_player_info_panels()
 
 	emit_signal("invasion_completed", success, tile_index)
