@@ -23,7 +23,8 @@ signal tile_selection_changed(tile_index: int)  # タイル切り替え時に発
 # インスタンス変数（タイル選択モード用）
 # ============================================
 var board_system = null
-var ui_manager = null
+var _message_service: MessageService = null
+var _navigation_service: NavigationService = null
 var game_flow_manager = null
 
 # タイル選択状態
@@ -37,9 +38,10 @@ var selection_marker: MeshInstance3D = null
 # ============================================
 
 ## インスタンス初期化（GameFlowManagerから呼ばれる）
-func initialize(board_sys, ui_mgr, flow_mgr):
+func initialize(board_sys, message_svc: MessageService, nav_svc: NavigationService, flow_mgr):
 	board_system = board_sys
-	ui_manager = ui_mgr
+	_message_service = message_svc
+	_navigation_service = nav_svc
 	game_flow_manager = flow_mgr
 
 ## マーカー回転処理（_processから呼ばれる）
@@ -66,8 +68,8 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 	current_tile_index = 0
 	
 	# メッセージ表示
-	if ui_manager and ui_manager.phase_display:
-		ui_manager.show_action_prompt(message)
+	if _message_service:
+		_message_service.show_action_prompt(message)
 	
 	# ナビゲーション設定
 	_setup_tile_selection_navigation()
@@ -89,10 +91,10 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 
 ## タイル選択のナビゲーション設定
 func _setup_tile_selection_navigation():
-	if not ui_manager:
+	if not _navigation_service:
 		return
-	
-	ui_manager.enable_navigation(
+
+	_navigation_service.enable_navigation(
 		func(): _confirm_tile_selection(),  # 決定
 		func(): _cancel_tile_selection(),   # キャンセル
 		func(): _select_previous_tile(),    # 上（前へ）
@@ -113,13 +115,13 @@ func _update_tile_selection_display():
 	_focus_camera(tile_index)
 	
 	# アクション指示パネル更新
-	if ui_manager and ui_manager.phase_display:
+	if _message_service:
 		var message = "タイル%d を選択中 (%d/%d) [←→で切替]" % [
 			tile_index,
 			current_tile_index + 1,
 			available_tile_indices.size()
 		]
-		ui_manager.show_action_prompt(message)
+		_message_service.show_action_prompt(message)
 	
 	# タイル切り替えシグナル発火
 	tile_selection_changed.emit(tile_index)

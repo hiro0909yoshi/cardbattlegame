@@ -787,7 +787,7 @@ func _initialize_phase1a_handlers() -> void:
 	var TargetSelectionHelperClass = preload("res://scripts/game_flow/target_selection_helper.gd")
 	var target_selection_helper = TargetSelectionHelperClass.new()
 	game_flow_manager.add_child(target_selection_helper)
-	target_selection_helper.initialize(board_system_3d, ui_manager, game_flow_manager)
+	target_selection_helper.initialize(board_system_3d, ui_manager.message_service, ui_manager.navigation_service, game_flow_manager)
 	
 	# DominioCommandHandlerを作成
 	var DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
