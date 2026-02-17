@@ -9,6 +9,16 @@ signal item_passed()  # アイテム未使用
 signal item_used(item_card: Dictionary)
 signal creature_merged(merged_data: Dictionary)  # 合体発生時
 
+## Phase 8-A: UI Signal（ui_manager 直接参照を排除）
+@warning_ignore("unused_signal")  # GameSystemManager で接続
+signal item_filter_configured(config: Dictionary)
+@warning_ignore("unused_signal")  # GameSystemManager で接続
+signal item_filter_cleared()
+@warning_ignore("unused_signal")  # GameSystemManager で接続
+signal item_hand_display_update_requested(player_id: int)
+@warning_ignore("unused_signal")  # GameSystemManager で接続
+signal item_selection_ui_show_requested(player, mode: String)
+
 ## 状態
 enum State {
 	INACTIVE,
@@ -46,7 +56,6 @@ var cpu_battle_ai: CPUBattleAI = null
 var cpu_defense_ai: CPUDefenseAI = null
 
 ## 参照
-var ui_manager = null
 var game_flow_manager = null
 var card_system = null
 var player_system = null
@@ -61,8 +70,7 @@ func _ready():
 	pass
 
 ## 初期化
-func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
-	ui_manager = ui_mgr
+func initialize(flow_mgr, c_system = null, p_system = null, b_system = null):
 	game_flow_manager = flow_mgr
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
@@ -204,44 +212,44 @@ func get_merged_creature() -> Dictionary:
 
 ## アイテム選択UIを表示
 func _show_item_selection_ui():
-	if not ui_manager or not card_system or not player_system:
+	if not card_system or not player_system:
 		complete_item_phase()
 		return
-	
+
 	# current_player_idを使用（防御側のアイテムフェーズでは防御側のプレイヤー情報が必要）
 	if current_player_id < 0 or current_player_id >= player_system.players.size():
 		complete_item_phase()
 		return
-	
+
 	var current_player = player_system.players[current_player_id]
 	if not current_player:
 		complete_item_phase()
 		return
-	
+
 	# 手札を取得
 	var hand_data = card_system.get_all_cards_for_player(current_player_id)
-	
+
 	# アイテムカードと援護対象/合体相手クリーチャーカードを収集
 	var selectable_cards = []
 	var has_assist = has_assist_skill()
 	var assist_elements = get_assist_target_elements()
 	var has_merge = has_merge_skill()
 	var merge_partner_id = get_merge_partner_id()
-	
+
 	# metal_form呪いがある場合、防具使用不可
 	var has_metal_form = SpellCurseBattle.has_metal_form(battle_creature_data)
 	if has_metal_form:
 		print("【メタルフォーム】", battle_creature_data.get("name", "?"), " は防具使用不可")
-	
+
 	for card in hand_data:
 		var card_type = card.get("type", "")
-		
+
 		# アイテムカードは常に選択可能（metal_formの場合は防具がUIでグレーアウトされる）
 		if card_type == "item":
 			selectable_cards.append(card)
 		elif card_type == "creature":
 			var card_id = card.get("id", -1)
-			
+
 			# アイテムクリーチャー判定
 			var keywords = card.get("ability_parsed", {}).get("keywords", [])
 			if "アイテムクリーチャー" in keywords:
@@ -258,58 +266,50 @@ func _show_item_selection_ui():
 				# 特定属性のみ対象
 				elif card_element in assist_elements:
 					selectable_cards.append(card)
-	
+
 	if selectable_cards.is_empty():
 		complete_item_phase()
 		return
-	
-	# フィルター設定（アイテム + 援護対象クリーチャー）
-	if ui_manager:
-		var blocked_types = []
-		
-		# metal_form呪いがある場合、防具をブロック
-		if has_metal_form:
-			blocked_types.append("防具")
-		
-		# cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
-		var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
-		# リリース呪いチェック
-		if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
-			var player = player_system.players[current_player_id]
-			var player_dict = {"curse": player.curse}
-			if SpellRestriction.is_item_restriction_released(player_dict):
-				disable_cannot_use = true
-				print("【リリース呪い】アイテム制限を無視")
-		if not disable_cannot_use:
-			var cannot_use_list = ItemUseRestriction.get_cannot_use_list(battle_creature_data)
-			if not cannot_use_list.is_empty():
-				print("【アイテム使用制限】", battle_creature_data.get("name", "?"), " は使用不可: ", cannot_use_list)
-				for item_type in cannot_use_list:
-					if item_type not in blocked_types:
-						blocked_types.append(item_type)
-		
-		ui_manager.blocked_item_types = blocked_types
-		
-		if has_assist:
-			# 援護スキルがある場合は特別なフィルターモード
-			ui_manager.card_selection_filter = "item_or_assist"
-			# 援護対象属性を保存（UI側で使用）
-			ui_manager.assist_target_elements = assist_elements
-		else:
-			ui_manager.card_selection_filter = "item"
-	
-	# 手札表示を更新（防御側のアイテムフェーズでは防御側の手札を表示）
-	if ui_manager and ui_manager.hand_display:
-		ui_manager.update_hand_display(current_player_id)
-		# フレーム待機して手札が描画されるまで待つ
-		await ui_manager.get_tree().process_frame
-	
-	# CardSelectionUIを使用してアイテム選択
-	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.has_method("show_selection"):
 
-		ui_manager.card_selection_ui.show_selection(current_player, "item")
-	else:
-		print("[ItemPhaseHandler] CardSelectionUIが利用不可")
+	# フィルター設定（Signal駆動）
+	var blocked_types: Array = []
+
+	# metal_form呪いがある場合、防具をブロック
+	if has_metal_form:
+		blocked_types.append("防具")
+
+	# cannot_use制限をチェック（デバッグフラグまたはリリース呪いで無効化可能）
+	var disable_cannot_use = tile_action_processor and tile_action_processor.debug_disable_cannot_use
+	# リリース呪いチェック
+	if not disable_cannot_use and player_system and current_player_id < player_system.players.size():
+		var player = player_system.players[current_player_id]
+		var player_dict = {"curse": player.curse}
+		if SpellRestriction.is_item_restriction_released(player_dict):
+			disable_cannot_use = true
+			print("【リリース呪い】アイテム制限を無視")
+	if not disable_cannot_use:
+		var cannot_use_list = ItemUseRestriction.get_cannot_use_list(battle_creature_data)
+		if not cannot_use_list.is_empty():
+			print("【アイテム使用制限】", battle_creature_data.get("name", "?"), " は使用不可: ", cannot_use_list)
+			for item_type in cannot_use_list:
+				if item_type not in blocked_types:
+					blocked_types.append(item_type)
+
+	var filter_config = {
+		"blocked_item_types": blocked_types,
+		"card_selection_filter": "item_or_assist" if has_assist else "item",
+		"assist_target_elements": assist_elements if has_assist else []
+	}
+	item_filter_configured.emit(filter_config)
+
+	# 手札表示を更新（Signal駆動）
+	item_hand_display_update_requested.emit(current_player_id)
+
+	# フレーム待機して手札が描画されるまで待つ
+	await get_tree().process_frame
+
+	# カード選択UI表示（Signal駆動）
+	item_selection_ui_show_requested.emit(current_player, "item")
 
 ## アイテムまたは援護/合体クリーチャーを使用
 func use_item(item_card: Dictionary):
@@ -464,18 +464,15 @@ func complete_item_phase():
 	# 攻撃側の事前選択アイテムをクリア（次のバトルに引き継がないため）
 	# ※使用後は既にuse_item内でクリアされるが、パスした場合などに備えてここでもクリア
 	clear_preselected_attacker_item()
-	
-	# フィルターをクリア
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-		ui_manager.assist_target_elements = []  # 援護対象属性もクリア
-		ui_manager.blocked_item_types = []  # ブロックされたアイテムタイプもクリア
-		# 手札表示を更新してグレーアウトを解除
-		if ui_manager.hand_display and player_system:
-			var current_player = player_system.get_current_player()
-			if current_player:
-				ui_manager.update_hand_display(current_player.id)
-	
+
+	# フィルターをクリア（Signal駆動）
+	item_filter_cleared.emit()
+	# 手札表示を更新してグレーアウトを解除
+	if player_system:
+		var current_player = player_system.get_current_player()
+		if current_player:
+			item_hand_display_update_requested.emit(current_player.id)
+
 	item_phase_completed.emit()
 	
 

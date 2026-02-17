@@ -22,9 +22,9 @@
 
 ```
 Business Logic Layer (GFM, Handlers, Systems)
-    ↓ Signal ONLY
+	↓ Signal ONLY
 UI Service Layer (NavigationService, MessageService, CardSelectionService, InfoPanelService)
-    ↓ Direct call（親→子）
+	↓ Direct call（親→子）
 UI Component Layer (GlobalActionButtons, GlobalCommentUI, CardSelectionUI, InfoPanels...)
 ```
 
@@ -60,13 +60,13 @@ message_service.show_toast()
 ```gdscript
 # ❌ CardSelectionService が NavigationService を呼ぶ
 func show_selection():
-    navigation_service.save_state()  # 横断依存！
-    _show_ui()
+	navigation_service.save_state()  # 横断依存！
+	_show_ui()
 
 # ✅ 呼び出し元（Handler/GFM）が両方を順番に操作
 func _on_card_selection_requested():
-    navigation_service.save_state()
-    card_selection_service.show_ui(config)
+	navigation_service.save_state()
+	card_selection_service.show_ui(config)
 ```
 
 ---
@@ -135,17 +135,17 @@ signal item_filter_configured(filter_config)
 
 # ヘルパー → 必要なサービスだけ個別注入
 func setup(card_selection: CardSelectionService, navigation: NavigationService):
-    _card_selection = card_selection
-    _navigation = navigation
+	_card_selection = card_selection
+	_navigation = navigation
 
 # タイル → context に必要なサービスだけ入れる
 func handle_special_action(context: Dictionary):
-    var message: MessageService = context.get("message_service")
-    await message.show_comment_and_wait("魔法石を獲得！")
+	var message: MessageService = context.get("message_service")
+	await message.show_comment_and_wait("魔法石を獲得！")
 
 # UIコンポーネント → 親サービスへの正当な参照
 func set_navigation_service(nav: NavigationService):
-    _navigation = nav
+	_navigation = nav
 
 # GFM → コーディネーターとしてサービス個別保持（正当）
 var _message_service: MessageService
@@ -204,8 +204,8 @@ var _navigation_service: NavigationService
 ```
 現在: UIManager が5フェーズの状態を判定して復元
 改善: 各ハンドラーが自身の restore_navigation() を持つ
-      NavigationService は save/restore の汎用機構のみ提供
-      GFM が現在のフェーズに応じて適切なハンドラーの restore を呼ぶ
+	  NavigationService は save/restore の汎用機構のみ提供
+	  GFM が現在のフェーズに応じて適切なハンドラーの restore を呼ぶ
 ```
 
 **2. MessageService（~80行）**
@@ -298,12 +298,12 @@ var _navigation_service: NavigationService
 ```gdscript
 # Before: ui_manager を丸ごと注入
 func setup(ui_manager, player_system, card_system):
-    self.ui_manager = ui_manager
+	self.ui_manager = ui_manager
 
 # After: 必要なサービスだけ注入
 func setup(card_selection: CardSelectionService, navigation: NavigationService, ...):
-    _card_selection = card_selection
-    _navigation = navigation
+	_card_selection = card_selection
+	_navigation = navigation
 ```
 
 **注意**: card_selection_handler.gd は最重量（70+参照）。段階的に移行する:

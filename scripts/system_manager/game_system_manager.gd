@@ -419,7 +419,6 @@ func phase_4_setup_system_interconnections() -> void:
 		if game_flow_manager.item_phase_handler:
 			game_flow_manager.item_phase_handler.board_system_3d = board_system_3d
 			game_flow_manager.item_phase_handler.player_system = player_system
-			game_flow_manager.item_phase_handler.ui_manager = ui_manager
 		
 		# SpellCurseToll の初期化
 		if game_flow_manager.spell_container and game_flow_manager.spell_container.spell_curse:
@@ -850,8 +849,11 @@ func _initialize_phase1a_handlers() -> void:
 	var ItemPhaseHandlerClass = preload("res://scripts/game_flow/item_phase_handler.gd")
 	var item_phase_handler = ItemPhaseHandlerClass.new()
 	game_flow_manager.add_child(item_phase_handler)
-	item_phase_handler.initialize(ui_manager, game_flow_manager, card_system, player_system, battle_system)
+	item_phase_handler.initialize(game_flow_manager, card_system, player_system, battle_system)
 	item_phase_handler.set_spell_cost_modifier(game_flow_manager.spell_container.spell_cost_modifier)
+
+	# Phase 8-A: ItemPhaseHandler UI Signal接続
+	_connect_item_phase_signals(item_phase_handler, ui_manager)
 
 	# DicePhaseHandlerを作成
 	var DicePhaseHandlerClass = preload("res://scripts/game_flow/dice_phase_handler.gd")
@@ -1436,3 +1438,43 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 			p_ui_manager.hide_all_info_panels(false)
 	)
 	print("[GSM] BankruptcyHandler UI Signal接続完了（4シグナル）")
+
+## Phase 8-A: ItemPhaseHandler UI Signal接続
+func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
+	if not item_handler or not p_ui_manager:
+		push_error("[GSM] ItemPhaseHandler または UIManager が null です")
+		return
+
+	# フィルター設定 → UIManager のフィルター変数を設定
+	item_handler.item_filter_configured.connect(
+		func(config: Dictionary):
+			if p_ui_manager:
+				p_ui_manager.blocked_item_types = config.get("blocked_item_types", [])
+				p_ui_manager.card_selection_filter = config.get("card_selection_filter", "")
+				p_ui_manager.assist_target_elements = config.get("assist_target_elements", [])
+	)
+
+	# フィルタークリア → UIManager のフィルター変数をリセット
+	item_handler.item_filter_cleared.connect(
+		func():
+			if p_ui_manager:
+				p_ui_manager.card_selection_filter = ""
+				p_ui_manager.assist_target_elements = []
+				p_ui_manager.blocked_item_types = []
+	)
+
+	# 手札表示更新 → UIManager の update_hand_display を呼び出し
+	item_handler.item_hand_display_update_requested.connect(
+		func(player_id: int):
+			if p_ui_manager:
+				p_ui_manager.update_hand_display(player_id)
+	)
+
+	# カード選択UI表示 → UIManager の CardSelectionUI を操作
+	item_handler.item_selection_ui_show_requested.connect(
+		func(player, mode: String):
+			if p_ui_manager and p_ui_manager.card_selection_ui and p_ui_manager.card_selection_ui.has_method("show_selection"):
+				p_ui_manager.card_selection_ui.show_selection(player, mode)
+	)
+
+	print("[GSM] ItemPhaseHandler UI Signal接続完了（4シグナル）")
