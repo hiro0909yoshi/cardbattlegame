@@ -31,6 +31,7 @@ var _message_service: MessageService = null
 var _navigation_service: NavigationService = null
 var _card_selection_service: CardSelectionService = null
 var _info_panel_service: InfoPanelService = null
+var _player_info_service: PlayerInfoService = null
 
 ## UIサービス公開アクセサ（Phase 8-G+ 外部ファイル直接参照移行用）
 var message_service: MessageService:
@@ -41,6 +42,8 @@ var card_selection_service: CardSelectionService:
 	get: return _card_selection_service
 var info_panel_service: InfoPanelService:
 	get: return _info_panel_service
+var player_info_service: PlayerInfoService:
+	get: return _player_info_service
 
 # 基本UI要素
 # フェーズ表示（PhaseDisplayに移行済み）
@@ -125,6 +128,10 @@ func _ready():
 	_info_panel_service = InfoPanelService.new()
 	_info_panel_service.name = "InfoPanelService"
 	add_child(_info_panel_service)
+
+	_player_info_service = PlayerInfoService.new()
+	_player_info_service.name = "PlayerInfoService"
+	add_child(_player_info_service)
 
 	# UIコンポーネントを動的にロードして作成
 	var PlayerInfoPanelClass = load("res://scripts/ui_components/player_info_panel.gd")
@@ -367,6 +374,8 @@ func create_ui(parent: Node):
 		_card_selection_service.setup(card_selection_ui, hand_display, card_system_ref, player_system_ref)
 	if _info_panel_service:
 		_info_panel_service.setup(creature_info_panel_ui, spell_info_panel_ui, item_info_panel_ui)
+	if _player_info_service:
+		_player_info_service.setup(player_info_panel)
 
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
