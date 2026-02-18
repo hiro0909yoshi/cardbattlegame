@@ -4,6 +4,10 @@ const GC = preload("res://scripts/game_constants.gd")
 # 更新日: 2025-11-07
 
 
+# Phase 10-B: Signal（アクション通知）
+signal card_button_pressed(card_index: int)
+signal card_info_requested(card_data: Dictionary)
+
 # 静的変数：現在選択中のカード
 static var currently_selected_card: Node = null
 
@@ -21,6 +25,11 @@ var original_position: Vector2
 var original_size: Vector2
 var original_scale: Vector2 = Vector2(1.0, 1.0)
 
+# Phase 10-B: 参照（読み取り専用、hand_display から注入）
+var _card_selection_service_ref = null
+var _card_selection_ui_ref = null
+var _game_flow_manager_ref = null
+
 # 密命カード用の変数
 var owner_player_id: int = -1      # このカードの所有者
 var viewing_player_id: int = -1    # 現在表示を見ているプレイヤー
@@ -31,6 +40,12 @@ const CARDFRAME_WIDTH = 220.0   # CardFrame.tscnの設計サイズ
 const CARDFRAME_HEIGHT = 293.0
 const GAME_CARD_WIDTH = 290.0   # ゲーム内表示サイズ
 const GAME_CARD_HEIGHT = 390.0
+
+## 参照を設定（hand_display から呼ばれる）
+func set_references(css, csui, gfm) -> void:
+	_card_selection_service_ref = css
+	_card_selection_ui_ref = csui
+	_game_flow_manager_ref = gfm
 
 func _ready():
 	# 元のサイズを記録
@@ -486,150 +501,106 @@ func deselect_card():
 
 # スペルフェーズがアクティブかどうかを判定
 func _is_spell_phase_active() -> bool:
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if ui_manager and ui_manager.card_selection_filter == "spell":
+	if _card_selection_service_ref and _card_selection_service_ref.card_selection_filter == "spell":
 		return true
 	return false
 
 # アイテムフェーズがアクティブかどうかを判定
 func _is_item_phase_active() -> bool:
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if ui_manager and ui_manager.card_selection_filter in ["item", "item_or_assist"]:
+	if _card_selection_service_ref and _card_selection_service_ref.card_selection_filter in ["item", "item_or_assist"]:
 		return true
 	return false
 
 # 犠牲選択モードまたは捨て札モードがアクティブかどうかを判定
 func _is_sacrifice_mode_active() -> bool:
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if ui_manager and ui_manager.card_selection_ui:
-		return ui_manager.card_selection_ui.selection_mode in ["sacrifice", "discard"]
+	if _card_selection_ui_ref:
+		return _card_selection_ui_ref.selection_mode in ["sacrifice", "discard"]
 	return false
 
 # カード選択ハンドラーによる手札選択がアクティブかどうかを判定
 # （敵手札選択、デッキカード選択、カード変換選択など）
 func _is_handler_card_selection_active() -> bool:
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if not ui_manager:
+	if not _card_selection_service_ref:
 		return false
-	var filter = ui_manager.card_selection_filter
+	var filter = _card_selection_service_ref.card_selection_filter
 	# destroy_*, item_or_spell など card_selection_handler が使うフィルターをチェック
 	if filter.begins_with("destroy_") or filter == "item_or_spell":
 		return true
 	return false
 
-# アルカナアーツ選択フェーズ中かどうかを判定
 # ドミニオコマンド中かどうか
 func _is_dominio_command_active() -> bool:
-	var gfm = _get_game_flow_manager()
-	if not gfm or not gfm.dominio_command_handler:
+	if not _game_flow_manager_ref or not _game_flow_manager_ref.dominio_command_handler:
 		return false
-	var dominio = gfm.dominio_command_handler
+	var dominio = _game_flow_manager_ref.dominio_command_handler
 	# 交換モード中はカード選択UIが表示されるため、通常のカード操作を許可する
 	if dominio.current_state == dominio.State.SELECTING_SWAP:
 		return false
 	# アイテムフェーズ中は通常のカード操作を許可する（移動侵略時のアイテム選択）
-	if gfm.item_phase_handler and gfm.item_phase_handler.is_item_phase_active():
+	if _game_flow_manager_ref.item_phase_handler and _game_flow_manager_ref.item_phase_handler.is_item_phase_active():
 		return false
 	return dominio.current_state != dominio.State.CLOSED
 
 
 # 移動中の方向選択・分岐選択中かどうか
 func _is_movement_selection_active() -> bool:
-	var gfm = _get_game_flow_manager()
-	if not gfm or not gfm.board_system_3d:
+	if not _game_flow_manager_ref or not _game_flow_manager_ref.board_system_3d:
 		return false
-	return gfm.board_system_3d.is_movement_selection_active()
+	return _game_flow_manager_ref.board_system_3d.is_movement_selection_active()
 
 
 # アルカナアーツ効果適用中のカード選択（ルーンアデプト等）は許可する
 func _is_mystic_selection_phase() -> bool:
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if not ui_manager or not ui_manager.game_flow_manager_ref:
+	if not _game_flow_manager_ref:
 		return false
-	
-	var gfm = ui_manager.game_flow_manager_ref
-	if not gfm.spell_phase_handler or not gfm.spell_phase_handler.spell_mystic_arts:
+
+	if not _game_flow_manager_ref.spell_phase_handler or not _game_flow_manager_ref.spell_phase_handler.spell_mystic_arts:
 		return false
-	
-	var mystic_arts = gfm.spell_phase_handler.spell_mystic_arts
-	
+
+	var mystic_arts = _game_flow_manager_ref.spell_phase_handler.spell_mystic_arts
+
 	# アルカナアーツフェーズがアクティブでない場合は通常処理
 	if not mystic_arts.is_active():
 		return false
-	
+
 	# アルカナアーツ効果適用中のカード選択は許可（filter が special な値の場合）
-	var filter = ui_manager.card_selection_filter
+	var filter = ""
+	if _card_selection_service_ref:
+		filter = _card_selection_service_ref.card_selection_filter
 	if filter in ["single_target_spell", "spell_borrow"]:
 		return false  # 効果適用中のカード選択は許可
-	
+
 	# CardSelectionHandlerがアクティブなら許可
-	var handler = gfm.spell_phase_handler.card_selection_handler
+	var handler = _game_flow_manager_ref.spell_phase_handler.card_selection_handler
 	if handler and handler.is_selecting():
 		return false
-	
+
 	# アルカナアーツ選択フェーズ中（クリーチャー/アルカナアーツ選択中）
 	return true
 
 # カードが決定された時の処理（2段階目）
 func on_card_confirmed():
 	if is_selectable and is_selected and card_index >= 0:
-		# UIManagerに通知 - 複数のパスを試す
-		var ui_manager = null
-		# 再帰的に探す
-		if not ui_manager:
-			ui_manager = find_ui_manager_recursive(get_tree().get_root())
-		
-		if ui_manager and ui_manager.has_method("on_card_button_pressed"):
-			ui_manager.on_card_button_pressed(card_index)
-		else:
-			print("WARNING: UIManagerが見つかりません")
+		card_button_pressed.emit(card_index)
 
 # グレーアウト時・特殊フェーズ中のインフォパネル表示（閲覧専用）
 func _show_info_panel_only():
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if not ui_manager:
-		return
-	
-	# プレイヤーステータスダイアログが開いていたら閉じる
-	if ui_manager.player_status_dialog and ui_manager.player_status_dialog.is_dialog_visible():
-		ui_manager.player_status_dialog.hide_dialog()
-	
 	# 選択中のカードがあれば選択解除
 	if currently_selected_card and currently_selected_card != self:
 		currently_selected_card.deselect_card()
-	
-	# 閲覧モードで表示（save/restore/×ボタンはshow_card_info内で自動処理）
-	ui_manager.show_card_info(card_data, -1, false)
-	
-	# 召喚/バトル/アイテムフェーズ中はドミニオボタンを再表示
-	if ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active:
-		var mode = ui_manager.card_selection_ui.selection_mode
-		if mode in ["summon", "battle", "item"]:
-			ui_manager.show_dominio_order_button()
-
-# UIManagerを再帰的に探す
-func find_ui_manager_recursive(node: Node) -> Node:
-	if node.name == "UIManager":
-		return node
-	for child in node.get_children():
-		var result = find_ui_manager_recursive(child)
-		if result:
-			return result
-	return null
+	# Signal で通知（UIManager が処理）
+	card_info_requested.emit(card_data)
 
 # GameFlowManagerを取得
 func _get_game_flow_manager():
-	var ui_manager = find_ui_manager_recursive(get_tree().get_root())
-	if ui_manager and "game_flow_manager_ref" in ui_manager:
-		return ui_manager.game_flow_manager_ref
-	return null
+	return _game_flow_manager_ref
 	
 # 通常の入力処理とカード選択処理
 func _input(event):
 
-	
+
 	# 入力ロック中は無視
-	var game_flow_manager = _get_game_flow_manager()
+	var game_flow_manager = _game_flow_manager_ref
 	if game_flow_manager and game_flow_manager.is_input_locked():
 		#print("[Card] 入力ロック中のためスキップ")
 		return

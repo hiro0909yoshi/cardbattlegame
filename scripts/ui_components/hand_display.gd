@@ -22,6 +22,10 @@ const CARD_SPACING = 30
 var card_system_ref = null
 var player_system_ref = null
 var _card_selection_service = null  # CardSelectionService参照（フィルター取得用、Phase 8-M）
+var _card_selection_ui_ref = null  # CardSelectionUI参照（カード参照注入用）
+var _game_flow_manager_ref = null  # GameFlowManager参照（カード参照注入用）
+var _on_card_button_pressed_cb: Callable  # カード確定時コールバック
+var _on_card_info_requested_cb: Callable  # カード情報表示リクエストコールバック
 
 func _ready():
 	pass
@@ -30,17 +34,22 @@ func _ready():
 func initialize(ui_parent: Node, card_sys, player_sys):
 	card_system_ref = card_sys
 	player_system_ref = player_sys
-	
+
 	# 手札コンテナを作成
 	hand_container = Control.new()
 	hand_container.name = "Hand"
 	hand_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hand_container.mouse_filter = Control.MOUSE_FILTER_IGNORE  # マウス入力を透過させる
 	ui_parent.add_child(hand_container)
-	
+
 	# プレイヤーごとのカードノード配列を初期化
 	for i in range(4):
 		player_card_nodes[i] = []
+
+## カードコールバックを設定（UIManagerから呼ばれる）
+func set_card_callbacks(on_confirmed: Callable, on_info: Callable) -> void:
+	_on_card_button_pressed_cb = on_confirmed
+	_on_card_info_requested_cb = on_info
 
 ## CardSystemのシグナルに接続
 func connect_card_system_signals():
@@ -233,7 +242,16 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 	
 	# フィルターモードに応じて選択可能/不可を設定
 	card.is_selectable = is_selectable_card
-	
+
+	# Phase 10-B: 参照注入 + Signal接続（card.gd UIManager不要化）
+	card.set_references(_card_selection_service, _card_selection_ui_ref, _game_flow_manager_ref)
+	if _on_card_button_pressed_cb.is_valid():
+		if not card.card_button_pressed.is_connected(_on_card_button_pressed_cb):
+			card.card_button_pressed.connect(_on_card_button_pressed_cb)
+	if _on_card_info_requested_cb.is_valid():
+		if not card.card_info_requested.is_connected(_on_card_info_requested_cb):
+			card.card_info_requested.connect(_on_card_info_requested_cb)
+
 	return card
 
 ## 手札を再配置（動的スケール対応）

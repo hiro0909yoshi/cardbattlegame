@@ -377,6 +377,12 @@ func create_ui(parent: Node):
 	if _player_info_service:
 		_player_info_service.setup(player_info_panel)
 
+	# Phase 10-B: hand_display にカードコールバックと参照を設定
+	if hand_display:
+		hand_display.set_card_callbacks(on_card_button_pressed, _on_card_info_from_hand)
+		hand_display._card_selection_ui_ref = card_selection_ui
+		hand_display._game_flow_manager_ref = game_flow_manager_ref
+
 # 基本UI要素を作成（PhaseDisplayに委譲）
 func create_basic_ui(parent: Node):
 	# PhaseDisplayを初期化
@@ -428,6 +434,18 @@ func on_card_button_pressed(card_index: int):
 
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
+
+## カードの情報表示リクエスト処理（card.gd の card_info_requested Signal から）
+func _on_card_info_from_hand(card_data: Dictionary) -> void:
+	# プレイヤーステータスダイアログが開いていたら閉じる
+	if player_status_dialog and player_status_dialog.is_dialog_visible():
+		player_status_dialog.hide_dialog()
+	# 閲覧モードで表示
+	show_card_info(card_data, -1, false)
+	# 召喚/バトル/アイテムフェーズ中はドミニオボタンを再表示
+	if card_selection_ui and card_selection_ui.is_active:
+		if card_selection_ui.selection_mode in ["summon", "battle", "item"]:
+			show_dominio_order_button()
 
 # === レベルアップUI関連 ===
 func show_level_up_ui(tile_info: Dictionary, current_magic: int):
