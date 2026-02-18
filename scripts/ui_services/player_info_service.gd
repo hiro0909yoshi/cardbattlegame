@@ -3,10 +3,10 @@
 extends Node
 class_name PlayerInfoService
 
-var _player_info_panel: PlayerInfoPanel = null
+var _player_info_panel = null
 
 
-func setup(player_info_panel: PlayerInfoPanel) -> void:
+func setup(player_info_panel) -> void:
 	_player_info_panel = player_info_panel
 
 

@@ -31,7 +31,7 @@ var _message_service: MessageService = null
 var _navigation_service: NavigationService = null
 var _card_selection_service: CardSelectionService = null
 var _info_panel_service: InfoPanelService = null
-var _player_info_service: PlayerInfoService = null
+var _player_info_service = null
 
 ## UIサービス公開アクセサ（Phase 8-G+ 外部ファイル直接参照移行用）
 var message_service: MessageService:
@@ -42,7 +42,7 @@ var card_selection_service: CardSelectionService:
 	get: return _card_selection_service
 var info_panel_service: InfoPanelService:
 	get: return _info_panel_service
-var player_info_service: PlayerInfoService:
+var player_info_service:
 	get: return _player_info_service
 
 # 基本UI要素
