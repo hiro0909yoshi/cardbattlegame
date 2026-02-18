@@ -164,9 +164,9 @@ func handle_checkpoint_tile(player_id: int):
 				ui_manager.show_dominio_order_button()
 	
 	# UI更新
-	if ui_manager and ui_manager.has_method("update_player_info_panels"):
-		ui_manager.update_player_info_panels()
-	
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
+
 	emit_signal("special_tile_activated", "checkpoint", player_id, 5)
 	
 	# 共通UI設定

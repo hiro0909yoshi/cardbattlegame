@@ -1460,8 +1460,9 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 				await p_ui_manager.show_comment_and_wait(message, player_id, true)
 			bankruptcy_handler_ref.bankruptcy_ui_comment_and_wait_completed.emit()
 	)
-	if not bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.is_connected(p_ui_manager.update_player_info_panels):
-		bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.connect(p_ui_manager.update_player_info_panels)
+	if p_ui_manager and p_ui_manager.player_info_service:
+		if not bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.is_connected(p_ui_manager.player_info_service.update_panels):
+			bankruptcy_handler_ref.bankruptcy_ui_player_info_updated.connect(p_ui_manager.player_info_service.update_panels)
 	bankruptcy_handler_ref.bankruptcy_ui_card_info_shown.connect(
 		func(creature_data: Dictionary, tile_index: int):
 			p_ui_manager.show_card_info(creature_data, tile_index, false)

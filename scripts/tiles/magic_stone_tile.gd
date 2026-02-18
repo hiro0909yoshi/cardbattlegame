@@ -71,8 +71,8 @@ func _handle_cpu_magic_stone(player_id: int) -> Dictionary:
 			await _message_service.show_comment_and_wait("%sの石を購入した！" % element_name, player_id, true)
 
 		# UI更新
-		if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
-			_ui_manager.update_player_info_panels()
+		if _ui_manager and _ui_manager.player_info_service:
+			_ui_manager.player_info_service.update_panels()
 
 		return {"success": true, "transaction_done": true}
 
@@ -148,10 +148,9 @@ func _show_magic_stone_shop(player_id: int) -> Dictionary:
 	var shop_result = await _wait_for_shop_close()
 	
 	# UI更新
-	if _ui_manager:
-		if _ui_manager.has_method("update_player_info_panels"):
-			_ui_manager.update_player_info_panels()
-	
+	if _ui_manager and _ui_manager.player_info_service:
+		_ui_manager.player_info_service.update_panels()
+
 	return {"success": true, "transaction_done": shop_result.get("transaction_done", false)}
 
 ## ショップ終了を待つ

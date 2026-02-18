@@ -278,7 +278,7 @@ func on_round_start():
 
 ## プレイヤー情報パネルを更新（世界呪い表示用）
 func _update_ui():
-	if not ui_manager:
+	if not ui_manager or not ui_manager.player_info_service:
 		return
 
-	ui_manager.update_player_info_panels()
+	ui_manager.player_info_service.update_panels()

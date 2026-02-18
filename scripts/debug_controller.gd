@@ -225,9 +225,9 @@ func add_card_to_hand(card_id: int):
 		# 🔧 重要: 現在のフェーズに応じてカード選択UIを再初期化
 		if ui_manager:
 			# プレイヤー情報パネルを更新
-			if ui_manager.has_method("update_player_info_panels"):
-				ui_manager.update_player_info_panels()
-			
+			if ui_manager.player_info_service:
+				ui_manager.player_info_service.update_panels()
+
 			# 現在のフィルター状態を確認
 			var current_filter = _card_selection_service.card_selection_filter if _card_selection_service else ""
 			print("【デバッグ】現在のフィルター: ", current_filter)
@@ -350,8 +350,8 @@ func add_card_to_cpu_hand(card_id: int):
 		var cpu_name = player_system.players[cpu_id].name if cpu_id < player_system.players.size() else "CPU"
 		print("【デバッグ】カードID %d (%s) を %s(P%d) の手札に追加しました" % [card_id, card_data.get("name", "不明"), cpu_name, cpu_id + 1])
 		
-		if ui_manager and ui_manager.has_method("update_player_info_panels"):
-			ui_manager.update_player_info_panels()
+		if ui_manager and ui_manager.player_info_service:
+			ui_manager.player_info_service.update_panels()
 
 # 最初のCPUプレイヤーIDを取得
 func _get_first_cpu_player_id() -> int:

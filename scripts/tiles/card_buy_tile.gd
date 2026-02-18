@@ -198,9 +198,8 @@ func _purchase_card(card_data: Dictionary, player_id: int, price: int) -> bool:
 		_card_system.add_card_to_hand(player_id, card_data)
 	
 	# UI更新
-	if _ui_manager:
-		if _ui_manager.has_method("update_player_info_panels"):
-			_ui_manager.update_player_info_panels()
+	if _ui_manager and _ui_manager.player_info_service:
+		_ui_manager.player_info_service.update_panels()
 	if _card_selection_service:
 		_card_selection_service.update_hand_display(player_id)
 	
