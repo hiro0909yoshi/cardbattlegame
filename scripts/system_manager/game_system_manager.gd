@@ -493,7 +493,14 @@ func phase_4_setup_system_interconnections() -> void:
 	
 	# CPU移動評価システムの初期化
 	_initialize_cpu_movement_evaluator()
-	
+
+	# PlayerInfoService セットアップ（Phase 8-H）
+	if ui_manager and ui_manager.get("player_info_service"):
+		var pis = ui_manager.player_info_service
+		if pis and pis.has_method("setup") and ui_manager.player_info_panel:
+			pis.setup(ui_manager.player_info_panel)
+			print("[GameSystemManager] PlayerInfoService セットアップ完了")
+
 	# 手札UIを初期化
 	if ui_manager and ui_layer:
 		ui_manager.initialize_hand_container(ui_layer)
