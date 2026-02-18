@@ -53,9 +53,9 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
-	if handler.ui_manager:
-		handler.ui_manager.update_player_info_panels()
-	
+	if handler.ui_manager and handler.ui_manager.player_info_service:
+		handler.ui_manager.player_info_service.update_panels()
+
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
@@ -673,9 +673,9 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
-	if handler.ui_manager:
-		handler.ui_manager.update_player_info_panels()
-	
+	if handler.ui_manager and handler.ui_manager.player_info_service:
+		handler.ui_manager.player_info_service.update_panels()
+
 	# 地形選択パネルを閉じる
 	if handler.ui_manager and handler.ui_manager.dominio_order_ui:
 		handler.ui_manager.dominio_order_ui.hide_terrain_selection()

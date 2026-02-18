@@ -1080,9 +1080,9 @@ func _complete_swap_for_cpu(_success: bool):
 	selected_tile_index = -1
 	
 	# UI更新
-	if ui_manager:
-		ui_manager.update_player_info_panels()
-	
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
+
 	# アクション完了通知
 	if board_system and board_system.tile_action_processor:
 		board_system.complete_action()

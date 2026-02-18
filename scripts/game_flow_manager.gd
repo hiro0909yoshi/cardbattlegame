@@ -261,10 +261,10 @@ func start_turn():
 	await check_and_handle_bankruptcy()
 	
 	# UI更新
-	if ui_manager and ui_manager.has_method("update_player_info_panels"):
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 	else:
-		push_error("[GFM] update_player_info_panels が利用不可")
+		push_error("[GFM] player_info_service が利用不可")
 	
 	# スペルフェーズを開始
 	if spell_phase_handler:
@@ -362,16 +362,16 @@ func _on_level_up_completed_from_board(tile_index: int, new_level: int):
 		dominio_command_handler._on_level_up_completed(tile_index, new_level)
 
 	# UI更新
-	if ui_manager:
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 
 func _on_terrain_changed_from_board(tile_index: int, old_element: String, new_element: String):
 	# デバッグログ
 	print("[GameFlowManager] terrain_changed 受信: tile=%d, %s → %s" % [tile_index, old_element, new_element])
 
 	# UI更新やスペルハンドラーへの通知が必要な場合はここに追加
-	if ui_manager:
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 
 func _on_start_passed_from_board(player_id: int):
 	# デバッグログ
