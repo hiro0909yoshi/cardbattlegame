@@ -31,35 +31,33 @@ var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
 
 # ============ ヘルパーメソッド ============
 
-## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
-func _get_ui_manager():
-	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
-		return spell_phase_handler_ref.spell_ui_manager._ui_manager
-	return null
+# ============ サービスアクセサ ============
 
+## SpellUIManager への参照を取得
+func _get_spell_ui_manager():
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
+		return spell_phase_handler_ref.spell_ui_manager
+	return null
 
 ## MessageServiceへの参照を取得
 func _get_message_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("message_service"):
-		return ui_mgr.message_service
-	return null
-
+	var sum = _get_spell_ui_manager()
+	return sum.message_service if sum else null
 
 ## NavigationServiceへの参照を取得
 func _get_navigation_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("navigation_service"):
-		return ui_mgr.navigation_service
-	return null
-
+	var sum = _get_spell_ui_manager()
+	return sum.navigation_service if sum else null
 
 ## InfoPanelServiceへの参照を取得
 func _get_info_panel_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("info_panel_service"):
-		return ui_mgr.info_panel_service
-	return null
+	var sum = _get_spell_ui_manager()
+	return sum.info_panel_service if sum else null
+
+## TapTargetManagerへの参照を取得
+func _get_tap_target_manager():
+	var sum = _get_spell_ui_manager()
+	return sum.tap_target_manager if sum else null
 
 
 # ============ アルカナアーツフェーズ状態 ============
@@ -140,9 +138,6 @@ func is_active() -> bool:
 
 ## 閲覧モードから戻る時のナビゲーション復元
 func restore_navigation():
-	var ui_manager = _get_ui_manager()
-	if not ui_manager:
-		return
 	if _is_selecting_caster:
 		# 使用者選択中 → 使用者選択ナビゲーションを復元
 		_setup_caster_selection_navigation()
@@ -175,11 +170,6 @@ func end_mystic_phase() -> void:
 
 ## クリーチャー選択
 func _select_creature(available_creatures: Array) -> void:
-	var ui_manager = _get_ui_manager()
-	if not ui_manager:
-		end_mystic_phase()
-		return
-	
 	# 使用者選択用の状態を保存
 	_available_caster_creatures = available_creatures
 	_current_caster_index = 0
@@ -197,11 +187,9 @@ func _select_creature(available_creatures: Array) -> void:
 
 ## 使用者選択用のタップ選択を開始
 func _start_caster_tap_selection(available_creatures: Array) -> void:
-	var ui_manager = _get_ui_manager()
-	if not ui_manager or not ui_manager.tap_target_manager:
+	var ttm = _get_tap_target_manager()
+	if not ttm:
 		return
-	
-	var ttm = ui_manager.tap_target_manager
 	ttm.set_current_player(current_mystic_player_id)
 	
 	# シグナル接続（重複防止）
@@ -224,11 +212,9 @@ func _start_caster_tap_selection(available_creatures: Array) -> void:
 
 ## 使用者タップ選択を終了
 func _end_caster_tap_selection() -> void:
-	var ui_manager = _get_ui_manager()
-	if not ui_manager or not ui_manager.tap_target_manager:
+	var ttm = _get_tap_target_manager()
+	if not ttm:
 		return
-	
-	var ttm = ui_manager.tap_target_manager
 	
 	# シグナル切断
 	if ttm.target_selected.is_connected(_on_caster_tap_selected):
@@ -356,22 +342,28 @@ func _next_caster() -> void:
 
 ## アルカナアーツ選択（タップ対応版） - ActionMenuUIを使用
 func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void:
-	var ui_manager = _get_ui_manager()
+	var sum = _get_spell_ui_manager()
+	if not sum:
+		end_mystic_phase()
+		return
+
+	# UIManager への参照を取得（Phase 8-D2: public getter）
+	var ui_manager = sum.ui_manager
 	if not ui_manager:
 		end_mystic_phase()
 		return
-	
+
 	var mystic_arts = selected_creature.get("mystic_arts", [])
-	
+
 	if mystic_arts.is_empty():
 		end_mystic_phase()
 		return
-	
+
 	# アルカナアーツが1つだけなら自動選択
 	if mystic_arts.size() == 1:
 		_select_target(selected_creature, mystic_arts[0])
 		return
-	
+
 	# 複数のアルカナアーツがある場合はActionMenuUIで選択
 	var action_menu = ui_manager.get_node_or_null("MysticActionMenu")
 	if not action_menu:

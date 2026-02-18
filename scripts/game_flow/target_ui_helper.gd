@@ -227,12 +227,17 @@ static func _get_info_panel_service(handler):
 	if "_info_panel_service" in handler and handler._info_panel_service:
 		return handler._info_panel_service
 
-	# ui_manager 経由で取得
-	var ui_mgr = _get_ui_manager(handler)
-	if ui_mgr and ui_mgr.has_meta("info_panel_service"):
-		return ui_mgr.get_meta("info_panel_service")
-	elif ui_mgr and "info_panel_service" in ui_mgr:
-		return ui_mgr.info_panel_service
+	# spell_ui_manager 経由で取得（Phase 8-D2: public getter）
+	if "spell_ui_manager" in handler and handler.spell_ui_manager:
+		var sum = handler.spell_ui_manager
+		if sum and "info_panel_service" in sum:
+			return sum.info_panel_service
+
+	# ui_manager 経由で取得（フォールバック）
+	if "ui_manager" in handler and handler.ui_manager:
+		var ui_mgr = handler.ui_manager
+		if ui_mgr and "info_panel_service" in ui_mgr:
+			return ui_mgr.info_panel_service
 
 	return null
 
@@ -240,7 +245,7 @@ static func _get_info_panel_service(handler):
 static func _get_ui_manager(handler):
 	if "ui_manager" in handler and handler.ui_manager:
 		return handler.ui_manager
-	# Phase 6: SpellPhaseHandler は spell_ui_manager 経由でアクセス
+	# Phase 8-D2: SpellPhaseHandler は spell_ui_manager 経由でアクセス
 	if "spell_ui_manager" in handler and handler.spell_ui_manager:
-		return handler.spell_ui_manager._ui_manager
+		return handler.spell_ui_manager
 	return null
