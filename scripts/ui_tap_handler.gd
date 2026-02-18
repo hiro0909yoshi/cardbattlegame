@@ -54,12 +54,7 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 	var is_card_selection_active = ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active
 	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active and not is_card_selection_active
 
-	if setup_buttons:
-		# 通常フェーズ: ナビゲーション保存/復元 + ×ボタン付き
-		ui_manager.show_card_info(creature_data, tile_index, true)
-	else:
-		# 特殊フェーズ中: ナビゲーションに干渉せず表示のみ（タップで閉じる）
-		ui_manager.show_card_info_only(creature_data, tile_index)
+	ui_manager.show_card_info(creature_data, tile_index, setup_buttons)
 	print("[UITapHandler] クリーチャー情報パネル表示: タイル%d - %s (setup_buttons=%s)" % [tile_index, creature_data.get("name", "不明"), setup_buttons])
 
 
