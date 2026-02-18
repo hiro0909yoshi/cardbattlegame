@@ -109,12 +109,52 @@
 - spell_mystic_arts: 46→29 refs (37%削減) - _get_message_service(), _get_navigation_service(), _get_info_panel_service() ヘルパー
 - debug_controller: 31→11 refs (65%削減) - _message_service, _card_selection_service
 
-### バグ修正
+### ✅ Phase 8-M: CardSelectionService SSoT化（完了）
 
-- purify_effect_strategy: spell_ui_manager._message_service → spell_ui_manager._ui_manager.message_service（存在しないプロパティ参照を修正）
+- CardSelectionUI → CardSelectionService 直接参照に切替（~25箇所）
+- hand_display.gd の get_parent() アンチパターン解消
+- card_selected シグナルチェーン統一（CardSelectionUI → CardSelectionService 直接接続）
+- UIManager の5プロパティを getter/setter 委譲に変換（card_selection_filter, excluded_card_index, excluded_card_id, assist_target_elements, blocked_item_types）
+- game_system_manager.gd の card_selected 接続先を CardSelectionService に変更
+
+### ✅ Phase 8-P: Spell系 3段チェーン解消（完了）
+
+- spell_borrow.gd: getter チェーン廃止、set_services() 直接注入
+- spell_creature_swap.gd: 4 getter 廃止、set_services() 直接注入
+- card_sacrifice_helper.gd: _init を CardSelectionService 受取に変更、_resolve_services() 削除
+- tile_summon_executor.gd: ui_manager.card_selection_filter → _card_selection_service
+- set_message() バグ呼び出し3箇所を削除（存在しないメソッド）
+- **結果**: +73/-116行（43行純減）
+
+### ✅ Phase 8-D2: spell_ui_manager._ui_manager private アクセス解消（完了）
+
+- spell_ui_manager.gd: 5つの public getter 追加（message_service, navigation_service, info_panel_service, tap_target_manager, ui_manager）
+- spell_mystic_arts.gd: _get_ui_manager() 廃止 → _get_spell_ui_manager() + 4サービス getter に置換
+- target_ui_helper.gd: handler.spell_ui_manager._ui_manager → spell_ui_manager public getter 経由に修正
+- purify_effect_strategy.gd: handler.spell_ui_manager._ui_manager → handler.spell_ui_manager.message_service に修正
+- **結果**: _ui_manager への外部 private アクセス 0件
+
+### コーディング規約更新
+
+- チェーンアクセス: 2段まで許容（3段以上禁止）に緩和
+- 兄弟参照: 表示系・読取り専用は許容（循環・相互依存は禁止）
+- ドメイン機能群: battle/dominio の密結合許容（UI操作は分離必須）
+
+### 📊 本日の成果
+
+| 指標 | 値 |
+|------|-----|
+| コミット数 | 13 |
+| 新規 Signal | 4（累計 37） |
+| ハンドラー UI分離 | 8/8 完了 |
+| タイル系ファイル移行 | 6/6 完了 |
+| 移動系ファイル移行 | 3/3 完了 |
+| UIManager完全削除 | 9/54ファイル |
+| CardSelectionService SSoT化 | ✅ 完了（プロパティ重複解消） |
+| _ui_manager 外部 private アクセス | 0件（完全解消） |
 
 ### 📋 次のステップ
 
-- Phase 8-M: card_selected emission chain 統一（CardSelectionService に統一）
-- Phase 8-P: Group B サービス注入（spell_borrow, card_sacrifice_helper, tile_summon_executor, spell_creature_swap）
-- Phase 8-H: UIコンポーネント逆参照除去（hand_display, dominio_order_ui等 4ファイル）
+- Phase 8 完了。UIManager 依存方向の正規化は実用レベルで達成
+- 延期中: ui_tap_handler, global_comment_ui の UI→Logic 境界違反（影響小、機能問題なし）
+- 延期中: BankruptcyHandler パネル分離（56行のみ、優先度低）

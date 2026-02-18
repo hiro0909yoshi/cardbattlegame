@@ -21,6 +21,9 @@
 | 8-L | 小規模ファイル サービス注入（lap_system, cpu_turn_processor, target_ui_helper） | 2026-02-18 |
 | 8-N | STSH + LSH サービス注入（28→18 refs, 9→2 refs） | 2026-02-18 |
 | 8-O | spell_mystic_arts + debug_controller サービス注入（46→29 refs, 31→11 refs） | 2026-02-18 |
+| 8-M | CardSelectionService SSoT化（プロパティ重複解消、card_selected 統一） | 2026-02-18 |
+| 8-P | Spell系 3段チェーン解消（spell_borrow, spell_creature_swap, card_sacrifice_helper, tile_summon_executor） | 2026-02-18 |
+| 8-D2 | spell_ui_manager._ui_manager private アクセス解消（3ファイル4箇所） | 2026-02-18 |
 
 ---
 
@@ -172,16 +175,20 @@ var _navigation_service: NavigationService
 |-----|-------|------|-------------|--------|------|
 | 1 | **8-F** | UIManager 内部分割（4サービス、個別注入） | 1 + 4新規 | **高** | ✅ 完了 |
 | ✅ | **8-G** | ヘルパー → サービス直接注入（5/6、CSH 63%減・LAH 67%減） | ~6 | 高 | ✅ 完了 |
-| 3 | **8-H** | UIコンポーネント逆参照除去 | ~4 | 低〜中 | 待機 |
+| 延期 | **8-H** | UIコンポーネント逆参照除去（新規約で大部分不要、hand_displayは8-Mで解決） | ~4 | 低〜中 | 延期 |
 | ✅ | **8-A** | ItemPhaseHandler Signal化 | 1 | 低 | ✅ 完了 |
 | ✅ | **8-B** | DominioCommandHandler サービス注入（90→49参照） | 1 | 高 | ✅ 完了 |
-| 6 | **8-C** | BankruptcyHandler パネル分離 | 2 | 低 | 待機 |
+| 延期 | **8-C** | BankruptcyHandler パネル分離（56行のみ） | 2 | 低 | 延期 |
 | ✅ | **8-E** | 兄弟システム サービス注入（4ファイル、74-100%削減） | 4 | 中〜高 | ✅ 完了 |
 | ✅ | **8-I** | タイル系 → context経由サービス | ~6 | 低 | ✅ 完了 |
 | ✅ | **8-J** | スペル系 → サービス注入（3ファイル） | 3 | 中 | ✅ 完了 |
 | ✅ | **8-K** | 移動系 + その他（3+1ファイル） | ~10 | 中 | ✅ 完了 |
 | ✅ | **8-L** | 小規模ファイル サービス注入（3ファイル） | 3 | 低〜中 | ✅ 完了 |
-| 12 | **8-D** | UIManager 最終評価 | — | — | 待機 |
+| ✅ | **8-N** | STSH + LSH サービス注入（28→18 refs, 9→2 refs） | 2 | 中 | ✅ 完了 |
+| ✅ | **8-O** | spell_mystic_arts + debug_controller サービス注入（46→29 refs, 31→11 refs） | 2 | 中 | ✅ 完了 |
+| ✅ | **8-M** | CardSelectionService SSoT化 | 4 | 高 | ✅ 完了 |
+| ✅ | **8-P** | Spell系 3段チェーン解消 | 5 | 高 | ✅ 完了 |
+| ✅ | **8-D** | UIManager 最終評価 + 8-D2: private アクセス解消 | 4 | 中 | ✅ 完了 |
 
 **順序の理由**: 構造（サービス分割）を先に確立し、Signal 配線は確定した構造に対して行う。逆にすると Signal のリスナー先がまだ UIManager のままで、分割時にやり直しになる。
 
