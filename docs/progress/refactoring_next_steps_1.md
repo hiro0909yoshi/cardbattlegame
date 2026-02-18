@@ -110,6 +110,15 @@ UI Component Layer (GlobalActionButtons, GlobalCommentUI, CardSelectionUI, InfoP
 | 9-A | ui_tap_handler is_nav_state_saved() ガード追加 | フォールバック到達ゼロ確認 |
 | 9-B | restore_current_phase フォールバック削除 | 58行→1行、spell_phase_handler_ref完全削除 |
 
+### Phase 10-A: PlayerInfoService サービス化（2026-02-19）
+
+| 内容 | 成果 |
+|------|------|
+| PlayerInfoService 新規作成 | scripts/ui_services/player_info_service.gd（描画更新のみ） |
+| UIManager 統合 | 5番目のサービスとして追加、Facadeメソッド削除 |
+| 呼び出し元変更 | 16ファイル・23箇所を player_info_service.update_panels() に変更 |
+| BankruptcyHandler Signal | PlayerInfoService 経由に変更 |
+
 ---
 
 ## 延期・取り下げた項目と理由

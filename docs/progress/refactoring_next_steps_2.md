@@ -17,39 +17,28 @@
 
 ### 残存する問題
 
-| 問題 | 規模 | 影響 |
-|------|------|------|
-| `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 |
-| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン |
-| Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 |
-| 双方向参照 | GFM, BoardSystem | 依存方向の違反 |
+| 問題 | 規模 | 影響 | 状態 |
+|------|------|------|------|
+| `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 | ✅ 解消（PlayerInfoService化） |
+| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン | 🔄 Phase 10-B（未着手） |
+| Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 | 🔄 Phase 10-D で再評価予定 |
+| 双方向参照 | GFM, BoardSystem | 依存方向の違反 | 🔄 Phase 10-C（未着手） |
 
 ---
 
 ## 改善提案（優先順位順）
 
-### Phase 10-A: update_player_info_panels のサービス化
+### Phase 10-A: update_player_info_panels のサービス化 ✅ 完了
 
-**難易度**: 低〜中
-**効果**: 大（UIManagerを経由する最大理由が消える）
+**完了日**: 2026-02-19
+**成果**: PlayerInfoService 新規作成、16ファイル・23箇所変更、UIManager Facadeメソッド削除
 
-**現状**: 16ファイル、26箇所から `ui_manager.update_player_info_panels()` が呼ばれている。
-
-| カテゴリ | ファイル | 箇所数 |
-|---------|---------|--------|
-| ハンドラー系 | DCH, land_action_helper, tile_summon/battle_executor | 6 |
-| GFM | game_flow_manager | 3 |
-| タイル系 | magic_stone_tile, card_buy_tile | 3 |
-| スペル系 | spell_world_curse, spell_target_selection_handler | 2 |
-| その他 | GSM, debug_controller, cpu_turn_processor, tile_action_processor | 7 |
-| UIManager内部 | set_current_turn | 1 |
-| Signal経由 | BankruptcyHandler signal接続 | 1 |
-
-**方針**:
-1. `PlayerInfoService` を新規作成（描画更新のみ、ロジック判定禁止）
-2. UIManager から `update_player_info_panels()` を PlayerInfoService に移動
-3. GSM が各ファイルに PlayerInfoService を注入
-4. 各呼び出し元を `_player_info_service.update_panels()` に変更
+**実装内容**:
+- `PlayerInfoService` 新規作成（scripts/ui_services/player_info_service.gd）
+- 描画更新のみの責務でサービス化
+- 16ファイルから呼び出し元を `_player_info_service.update_panels()` に統一
+- BankruptcyHandler Signal 受信を PlayerInfoService 経由に変更
+- UIManager の `update_player_info_panels()` Facade メソッド削除
 
 **設計制約**: PlayerInfoService は**描画更新（render）だけ**に限定。「誰が勝っているか」「EPは足りるか」等の判定は絶対に持たせない。
 
