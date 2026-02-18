@@ -46,7 +46,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **8-F**: UIManager 内部4サービス分割（NavigationService, MessageService, CardSelectionService, InfoPanelService）✅
   - **8-G**: ヘルパーファイル サービス直接注入（target_selection_helper完全移行、tile_summon/battle_executor部分移行）✅
   - **8-A**: ItemPhaseHandler Signal化（4 Signals、ui_manager完全削除）✅
-  - **合計**: 37個のUI Signal、7/8ハンドラーUI完全分離
+  - **8-H**: PlayerInfoService 新規作成 + 呼び出し全変更（2026-02-19）✅
+    - PlayerInfoService 新規作成（描画更新一元管理）
+    - UIManager: player_info_service 変数・アクセサ追加、create_ui() でセットアップ
+    - GSM: Phase 4-4 でサービス初期化コード追加
+    - Step 4 Batch A-C: 全呼び出し元を service に変更（3+4+6=13ファイル、26箇所）
+    - Step 5: UIManager ファサードメソッド削除
+    - UIManager.update_player_info_panels() 完全削除、PlayerInfoService 一元化
+  - **合計**: 37個のUI Signal、8/8ハンドラーUI完全分離、PlayerInfoService一元管理
 
 詳細は `docs/progress/refactoring_next_steps.md` を参照
 
