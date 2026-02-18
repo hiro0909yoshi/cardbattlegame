@@ -518,7 +518,10 @@ func phase_5_connect_signals() -> void:
 	
 	# UIManager のシグナル
 	if ui_manager and game_flow_manager:
-		ui_manager.card_selected.connect(game_flow_manager.on_card_selected)
+		# CardSelectionService のシグナルを直接接続（Phase 8-M）
+		var css = ui_manager.card_selection_service
+		if css and not css.card_selected.is_connected(game_flow_manager.on_card_selected):
+			css.card_selected.connect(game_flow_manager.on_card_selected)
 		ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 		ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
 		ui_manager.dominio_order_button_pressed.connect(game_flow_manager.open_dominio_order)
@@ -1012,6 +1015,11 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# SpellCreatureSwap を初期化
 	if not spell_phase_handler.spell_systems.spell_creature_swap and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
 		spell_phase_handler.spell_systems.spell_creature_swap = SpellCreatureSwap.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+		# Phase 8-P: サービス直接注入
+		var _css2 = p_ui_manager.card_selection_service if p_ui_manager else null
+		var _msg2 = p_ui_manager.message_service if p_ui_manager else null
+		var _nav2 = p_ui_manager.navigation_service if p_ui_manager else null
+		spell_phase_handler.spell_systems.spell_creature_swap.set_services(_css2, _msg2, _nav2)
 
 	# SpellCreatureReturn を初期化
 	if not spell_phase_handler.spell_systems.spell_creature_return and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
@@ -1028,6 +1036,10 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# SpellBorrow を初期化
 	if not spell_phase_handler.spell_systems.spell_borrow and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
 		spell_phase_handler.spell_systems.spell_borrow = SpellBorrow.new(spell_phase_handler.board_system, spell_phase_handler.player_system, spell_phase_handler.card_system, spell_phase_handler)
+		# Phase 8-P: サービス直接注入
+		var _css = p_ui_manager.card_selection_service if p_ui_manager else null
+		var _msg = p_ui_manager.message_service if p_ui_manager else null
+		spell_phase_handler.spell_systems.spell_borrow.set_services(_css, _msg)
 
 	# SpellTransform を初期化
 	if not spell_phase_handler.spell_systems.spell_transform and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
@@ -1039,7 +1051,8 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
 	if not spell_phase_handler.spell_systems.card_sacrifice_helper and spell_phase_handler.card_system and spell_phase_handler.player_system:
-		spell_phase_handler.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(spell_phase_handler.card_system, spell_phase_handler.player_system, p_ui_manager)
+		var _css3 = p_ui_manager.card_selection_service if p_ui_manager else null
+		spell_phase_handler.spell_systems.card_sacrifice_helper = CardSacrificeHelper.new(spell_phase_handler.card_system, spell_phase_handler.player_system, _css3)
 
 	# SpellSynthesis を初期化
 	if not spell_phase_handler.spell_systems.spell_synthesis and spell_phase_handler.spell_systems.card_sacrifice_helper:

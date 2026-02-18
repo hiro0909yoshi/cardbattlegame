@@ -11,20 +11,14 @@ var board_system_ref: Object
 var player_system_ref: Object
 var card_system_ref: Object
 var spell_phase_handler_ref: Object
+var _card_selection_service: Object = null
+var _message_service: Object = null
 
 
-## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
-func _get_ui_manager():
-	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
-		return spell_phase_handler_ref.spell_ui_manager._ui_manager
-	return null
-
-## CardSelectionServiceへの参照を取得
-func _get_card_selection_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("card_selection_service"):
-		return ui_mgr.card_selection_service
-	return null
+## サービス直接注入（Phase 8-P: 3段チェーン解消）
+func set_services(css: Object, msg_service: Object) -> void:
+	_card_selection_service = css
+	_message_service = msg_service
 
 
 # ============ 初期化 ============
@@ -93,7 +87,7 @@ func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 
 ## 手札スペル選択UI
 func _select_hand_spell(spells: Array, message: String) -> Dictionary:
-	var css = _get_card_selection_service()
+	var css = _card_selection_service
 
 	if not css:
 		# UIなしの場合は最初のスペルを選択
@@ -101,17 +95,12 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 			return {"spell": spells[0], "hand_index": _find_hand_index(spells[0]), "cancelled": false}
 		return {"cancelled": true}
 
-	# メッセージ表示（UIManager固有 — set_message はサービス未実装）
-	var ui_manager = _get_ui_manager()
-	if ui_manager and ui_manager.has_method("set_message"):
-		ui_manager.set_message(message)
-
 	# カード選択UIを表示（単体対象スペルのみハイライト）
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
 	if player_system_ref:
 		var player = player_system_ref.players[current_player_id]
-		if ui_manager:
-			ui_manager.card_selection_filter = "single_target_spell"
+		if _card_selection_service:
+			_card_selection_service.card_selection_filter = "single_target_spell"
 		css.show_card_selection_ui_mode(player, "spell_borrow")
 
 	# カード選択を待つ（CardSelectionService 経由）
@@ -119,24 +108,24 @@ func _select_hand_spell(spells: Array, message: String) -> Dictionary:
 
 	# UIを閉じる
 	css.hide_card_selection_ui()
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-	
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
+
 	# キャンセル判定
 	if selected_index < 0:
 		return {"cancelled": true}
-	
+
 	# 選択されたカードを取得
 	var hand = card_system_ref.get_all_cards_for_player(current_player_id)
 	if selected_index >= hand.size():
 		return {"cancelled": true}
-	
+
 	var selected_card = hand[selected_index]
-	
+
 	# 単体対象スペルかチェック
 	if selected_card.get("type") != "spell" or selected_card.get("spell_type") != "単体対象":
 		return {"cancelled": true}
-	
+
 	return {
 		"spell": selected_card,
 		"hand_index": selected_index,

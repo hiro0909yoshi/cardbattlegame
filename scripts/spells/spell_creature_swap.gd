@@ -8,37 +8,16 @@ var player_system_ref: Object
 var card_system_ref: Object
 var spell_phase_handler_ref: Object
 var creature_synthesis: CreatureSynthesis = null
+var _card_selection_service: Object = null
+var _message_service: Object = null
+var _navigation_service: Object = null
 
 
-## UIManagerへの参照を取得（Phase 6: ui_manager は spell_ui_manager 経由でアクセス）
-func _get_ui_manager():
-	if spell_phase_handler_ref and spell_phase_handler_ref.spell_ui_manager:
-		return spell_phase_handler_ref.spell_ui_manager._ui_manager
-	return null
-
-
-## CardSelectionServiceへの参照を取得
-func _get_card_selection_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("card_selection_service"):
-		return ui_mgr.card_selection_service
-	return null
-
-
-## MessageServiceへの参照を取得
-func _get_message_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("message_service"):
-		return ui_mgr.message_service
-	return null
-
-
-## NavigationServiceへの参照を取得
-func _get_navigation_service():
-	var ui_mgr = _get_ui_manager()
-	if ui_mgr and ui_mgr.get("navigation_service"):
-		return ui_mgr.navigation_service
-	return null
+## サービス直接注入（Phase 8-P: 3段チェーン解消）
+func set_services(css: Object, msg_service: Object, nav_service: Object) -> void:
+	_card_selection_service = css
+	_message_service = msg_service
+	_navigation_service = nav_service
 
 
 # ============ 初期化 ============
@@ -395,20 +374,15 @@ func _select_tile(tile_indices: Array, message: String) -> int:
 ## 手札クリーチャー選択UI
 func _select_hand_creature(creatures: Array, message: String) -> int:
 	# UI参照取得
-	var ui_manager = _get_ui_manager()
-	var css = _get_card_selection_service()
+	var css = _card_selection_service
 
-	if not ui_manager or not css:
+	if not css:
 		print("[SpellCreatureSwap] UIManager未設定、最初の候補を使用")
 		return 0 if creatures.size() > 0 else -1
 
 	# フィルターをクリーチャーのみに設定（スペル/アイテムはグレーアウト）
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
-
-	# メッセージ表示
-	if ui_manager.has_method("set_message"):
-		ui_manager.set_message(message)
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
 
 	# カード選択UIを表示
 	var current_player_id = spell_phase_handler_ref.spell_state.current_player_id
@@ -417,7 +391,7 @@ func _select_hand_creature(creatures: Array, message: String) -> int:
 		css.show_card_selection_ui_mode(player, "summon")
 
 	# 戻るボタンを登録（キャンセル可能に）
-	var nav = _get_navigation_service()
+	var nav = _navigation_service
 	if nav:
 		nav.enable_navigation(
 			Callable(),  # 決定なし
@@ -476,29 +450,28 @@ func _requires_card_sacrifice(card_data: Dictionary) -> bool:
 ## カード犠牲処理（手札選択UI表示→カード破棄）
 func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dictionary:
 	# UI参照取得
-	var ui_manager = _get_ui_manager()
-	var css = _get_card_selection_service()
-	var msg = _get_message_service()
+	var css = _card_selection_service
+	var msg = _message_service
 
-	if not ui_manager or not css:
+	if not css:
 		print("[SpellCreatureSwap] UIManager未設定、カード犠牲スキップ")
 		return {"cancelled": false, "sacrifice_card": {}}
 
 	# 手札選択UIを表示（犠牲モード）
 	if msg:
 		msg.show_action_prompt("犠牲にするカードを選択")
-	if ui_manager:
-		ui_manager.card_selection_filter = ""
+	if _card_selection_service:
+		_card_selection_service.card_selection_filter = ""
 
 	# 召喚カードを除外（型を String に統一）
 	var card_id = summon_creature.get("id", -1)
-	if ui_manager:
-		ui_manager.excluded_card_id = str(card_id) if card_id != -1 else ""
+	if _card_selection_service:
+		_card_selection_service.excluded_card_id = str(card_id) if card_id != -1 else ""
 	var player = player_system_ref.players[player_id]
 	css.show_card_selection_ui_mode(player, "sacrifice")
 
 	# 戻るボタンを登録（キャンセル可能に）
-	var nav = _get_navigation_service()
+	var nav = _navigation_service
 	if nav:
 		nav.enable_navigation(
 			Callable(),  # 決定なし
@@ -512,8 +485,8 @@ func _process_card_sacrifice(player_id: int, summon_creature: Dictionary) -> Dic
 	css.hide_card_selection_ui()
 
 	# 除外IDをリセット
-	if ui_manager:
-		ui_manager.excluded_card_id = ""
+	if _card_selection_service:
+		_card_selection_service.excluded_card_id = ""
 
 	# 選択されたカードを取得
 	if selected_index < 0:
