@@ -564,10 +564,14 @@ func restore_current_phase():
 		return
 
 	# 以下: 保存されていない場合のフォールバック（フェーズ別復元）
+	# [計測ログ] nav_state未保存でフォールバック到達
+	print("[FALLBACK] restore_current_phase: nav_state未保存でフォールバック到達")
+
 	# 1. ドミニオコマンドがアクティブ → ドミニオに委譲
 	if dominio_command_handler_ref:
 		var dominio = dominio_command_handler_ref
 		if dominio.current_state != dominio.State.CLOSED:
+			print("[FALLBACK] → 分岐1: ドミニオ (state=%s)" % str(dominio.current_state))
 			if dominio.current_state == dominio.State.SELECTING_ACTION:
 				if dominio_order_ui and dominio_order_ui.action_menu_ui:
 					dominio_order_ui.action_menu_ui.restore_navigation()
@@ -583,6 +587,7 @@ func restore_current_phase():
 
 	# 2. スペルフェーズがアクティブ（target選択/確認含む） → spell_phase_handlerに委譲
 	if spell_phase_handler_ref and spell_phase_handler_ref.is_spell_phase_active():
+		print("[FALLBACK] → 分岐2: スペルフェーズ")
 		spell_phase_handler_ref.spell_ui_manager.restore_navigation()
 		if _navigation_service:
 			_navigation_service.clear_navigation_saved_state()
@@ -590,6 +595,7 @@ func restore_current_phase():
 
 	# 3. カード選択UIがアクティブ（召喚/バトル/アイテム等） → card_selection_uiに委譲
 	if card_selection_ui and card_selection_ui.is_active:
+		print("[FALLBACK] → 分岐3: カード選択UI")
 		card_selection_ui.restore_navigation()
 		if _navigation_service:
 			_navigation_service.clear_navigation_saved_state()
@@ -597,11 +603,13 @@ func restore_current_phase():
 
 	# 4. 方向選択・分岐選択がアクティブ → セレクターに委譲
 	if board_system_ref and board_system_ref.restore_movement_selector_navigation():
+		print("[FALLBACK] → 分岐4: 方向/分岐選択")
 		if _navigation_service:
 			_navigation_service.clear_navigation_saved_state()
 		return
 
 	# 5. どのフェーズでもない → save/restore フォールバック
+	print("[FALLBACK] → 分岐5: どのフェーズにも該当せず")
 	restore_navigation_state()
 
 ## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
