@@ -318,9 +318,6 @@ func _end_touch(position: Vector2):
 	# 移動量が閾値以下ならタップとして処理
 	if _is_potential_tap and _total_drag_distance < tap_threshold:
 		_handle_tap(position)
-		# タップ処理後にイベントを消費
-		# show_card_info等で新しく登録されたUIボタンが同じイベントで発火するのを防止
-		get_viewport().set_input_as_handled()
 
 	_is_potential_tap = false
 
