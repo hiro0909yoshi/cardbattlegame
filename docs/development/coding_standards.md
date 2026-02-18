@@ -98,22 +98,26 @@ tile_action_processor.begin_action_processing()
 tile_action_processor.reset_action_processing()
 ```
 
-### 9. 内部プロパティを外部から直接参照しない（チェーンアクセス禁止）
+### 9. チェーンアクセスは2段まで（3段以上禁止）
 ```gdscript
-# ❌ 2段以上のチェーンアクセス
-ui_manager.phase_display.show_toast("メッセージ")
-board_system.tile_action_processor.complete_action()
+# ✅ 許容: 公開サービス経由の2段チェーン
+ui_manager.message_service.show_toast("メッセージ")
+board_system.tile_data_manager.get_tile_info(idx)
 
-# ✅ 親クラスに委譲メソッドを用意
-ui_manager.show_toast("メッセージ")
-board_system.complete_action()
+# ✅ より良い: 直接注入済みなら1段
+_message_service.show_toast("メッセージ")
 
-# ❌ 3段チェーンは絶対禁止
-handler.game_flow_manager.spell_phase_handler.spell_cast_notification_ui
+# ❌ 禁止: 内部コンポーネントへの侵入（2段目が private）
+ui_manager.phase_display._internal_label.text = "..."
 
-# ✅ initialize時に必要な参照を直接渡す
-handler.spell_cast_notification_ui  # initialize時にセット済み
+# ❌ 禁止: 3段以上のチェーン
+handler.game_flow_manager.spell_container.spell_draw.draw_one()
+
+# ✅ 3段が必要な場合は initialize 時に直接参照を渡す
+handler.spell_draw.draw_one()  # initialize時にセット済み
 ```
+
+**判断基準**: 2段目が `_` プレフィックスなしの公開プロパティ/サービスなら許容。内部実装への侵入は1段でも禁止。
 
 ### 10. デバッグフラグは DebugSettings に集約
 ```gdscript
@@ -164,6 +168,34 @@ func initialize(spell_curse_toll: SpellCurseToll):
 	self.spell_curse_toll = spell_curse_toll
 ```
 
+### 兄弟参照の許容範囲
+
+同レベルのシステム間（兄弟関係）での参照ルール。相互参照は禁止だが、片方向の参照は用途に応じて許容する。
+
+```gdscript
+# ✅ 許容: 表示系の片方向参照（表示依頼・読み取り）
+# BoardSystem3D → MessageService
+_message_service.show_toast("移動完了")
+
+# ✅ 許容: 読み取り専用の参照
+# BattleSystem → PlayerSystem
+var data = player_system.get_player_data(player_id)
+
+# ❌ 禁止: 相互参照（循環依存）
+# A → B かつ B → A の経路が存在する
+
+# ❌ 禁止: 兄弟のロジック状態を変更
+# BoardSystem3D が PlayerSystem の状態を直接書き換える
+player_system.set_magic(player_id, 100)  # → 上位（GFM）経由で行う
+```
+
+| パターン | 許容 | 例 |
+|---------|:---:|-----|
+| 表示系の片方向参照 | ✅ | System → MessageService, NavigationService |
+| 読み取り専用の参照 | ✅ | System → PlayerSystem.get_*() |
+| 相互参照（循環） | ❌ | A → B かつ B → A |
+| 兄弟の状態変更 | ❌ | System → OtherSystem.set_*() |
+
 ### 新しい参照を追加する前のチェック
 
 **参照を追加するたびに以下を確認する:**
@@ -172,7 +204,7 @@ func initialize(spell_curse_toll: SpellCurseToll):
 2. **最小限か？** システム全体でなく、必要なコンポーネントだけ渡しているか
 3. **循環しないか？** A→B→A の経路ができないか
 4. **チェーンにならないか？** `a.b.c()` のようなアクセスが発生しないか
-5. **5つ以上のシステムに依存しないか？** 依存過多は設計を見直すサイン
+5. **5つ以上のシステムに依存しないか？** 依存過多は設計を見直すサイン。ただし依存の**方向**も重要。同レイヤー依存5つは許容範囲だが、UI依存3 + ロジック依存2のようにレイヤーをまたぐ依存が混在する場合は危険信号
 
 ```gdscript
 # ❌ 「動けばいい」で安易に参照を追加
@@ -230,6 +262,44 @@ ui_manager.phase_display.show_toast("メッセージ")  # ❌
 | 1〜2ファイルからのみ | initialize時に直接参照を渡すか、委譲メソッドを作る |
 | 親が肥大化しすぎる | 直接参照をinitialize時に渡す |
 | 機能的に密結合（dominio系等） | 直接参照を許容。ただしチェーンは2段まで |
+
+### ドメイン機能群の密結合許容
+
+同じドメイン機能群に属するクラス間では、密結合を許容する。
+ただし**UI操作の分離**と**他ドメインへの参照制限**は維持すること。
+
+#### 判断基準
+
+```
+「同じドメイン機能群か？」
+  ├── YES → 密結合を許容（ただしUI操作は分離）
+  │         例: battle内部, dominio内部
+  └── NO  → 疎結合を維持
+			例: battle ↔ spell, dominio ↔ UI
+```
+
+#### 許容されるドメイン機能群
+
+| ドメイン | 構成クラス | 許容される密結合 |
+|---------|-----------|---------------|
+| **battle系** | BattleSystem, BattlePreparation, BattleExecution, BattleSkillProcessor, ConditionChecker | 直接参照、共有データ（BattleParticipant, context）、`_ref`サフィックス命名 |
+| **dominio系** | DominioCommandHandler, DominioOrderHandler（4分割）, LandActionHelper, LandSelectionHelper, CreatureSynthesis | 直接参照、インタラクティブフロー内の密な連携 |
+
+#### 密結合でも切り離すべきもの
+
+| 切り離す対象 | 理由 | 例 |
+|-------------|------|-----|
+| **UI操作** | 表示ロジックとビジネスロジックは変更理由が違う | battle → BattleScreenManager は Signal 経由 |
+| **他ドメインへの参照** | ドメイン境界をまたぐ参照は上位（GFM）経由 | battle → spell は GFM が調停 |
+| **兄弟の状態変更** | 循環依存の温床 | dominio → PlayerSystem.set_*() は GFM 経由 |
+
+#### その他の例外
+
+| 領域 | 許容内容 | 理由 |
+|------|---------|------|
+| 表示更新Signal | 上位→UI方向のシグナル接続 | 表示更新のみに限定。状態変更ロジックは絶対禁止 |
+
+**原則**: 例外は「なぜ許容するか」の理由が明確な場合のみ。曖昧なら規約に従う。
 
 ### 委譲メソッドクイックリファレンス
 
@@ -369,7 +439,8 @@ if card_node and is_instance_valid(card_node):
 
 ⚠️ 許容: 表示更新用オブザーバー（上位→UIへの通知）:
   player_system.magic_changed → player_info_panel._on_magic_changed
-  ※ 表示更新目的に限り許容。ロジック処理は禁止。
+  ※ 表示更新（UI反映）は許容。状態変更（ロジック処理）は絶対禁止。
+  判断基準: シグナルハンドラ内で他システムのプロパティを変更していたらNG。
 
 ❌ 禁止: 子が親のシグナルに接続してロジックを実行
 ```
