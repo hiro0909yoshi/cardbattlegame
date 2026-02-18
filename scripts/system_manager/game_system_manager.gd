@@ -1048,6 +1048,7 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# SpellPurify を初期化
 	if not spell_phase_handler.spell_systems.spell_purify and spell_phase_handler.board_system and spell_phase_handler.creature_manager and spell_phase_handler.player_system and p_game_flow_manager:
 		spell_phase_handler.spell_systems.spell_purify = SpellPurify.new(spell_phase_handler.board_system, spell_phase_handler.creature_manager, spell_phase_handler.player_system, p_game_flow_manager)
+		spell_phase_handler.spell_systems.spell_purify.set_game_stats(p_game_flow_manager.game_stats)
 
 	# CardSacrificeHelper を初期化（スペル合成・クリーチャー合成共通）
 	if not spell_phase_handler.spell_systems.card_sacrifice_helper and spell_phase_handler.card_system and spell_phase_handler.player_system:
