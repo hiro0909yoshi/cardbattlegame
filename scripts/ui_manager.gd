@@ -390,11 +390,6 @@ func create_basic_ui(parent: Node):
 		dominio_order_ui.create_action_menu_panel(parent)
 		dominio_order_ui.create_level_selection_panel(parent)
 
-# === プレイヤー情報パネル関連 ===
-func update_player_info_panels():
-	if player_info_panel and player_info_panel.has_method("update_all_panels"):
-		player_info_panel.update_all_panels()
-
 # === カード選択UI関連 ===
 func show_card_selection_ui(current_player):
 	if _card_selection_service:
