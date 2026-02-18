@@ -64,18 +64,42 @@ var dominio_command_handler_ref: DominioCommandHandler = null  # DominioCommandH
 # UIレイヤー参照
 var ui_layer: CanvasLayer = null
 
-# スペルフェーズ用のフィルター設定
-var card_selection_filter: String = ""  # "spell"の時はスペルカードのみ選択可能、"item"の時はアイテムのみ、"item_or_assist"の時はアイテム+援護対象クリーチャー
-var assist_target_elements: Array = []  # 援護対象の属性リスト
+# スペルフェーズ用のフィルター設定（Phase 8-M: CardSelectionServiceに委譲）
+var card_selection_filter: String:
+	get: return _card_selection_service.card_selection_filter if _card_selection_service else ""
+	set(value):
+		if _card_selection_service:
+			_card_selection_service.card_selection_filter = value
+
+var assist_target_elements: Array:
+	get: return _card_selection_service.assist_target_elements if _card_selection_service else []
+	set(value):
+		if _card_selection_service:
+			_card_selection_service.assist_target_elements = value
 
 # ゲームメニュー関連
 # サブシステム
 var win_screen_handler: UIWinScreen = null
 var tap_handler: UITapHandler = null
 var game_menu_handler: UIGameMenuHandler = null
-var blocked_item_types: Array = []  # ブロックするアイテムタイプ（例: ["防具"]）
-var excluded_card_index: int = -1  # 犠牲選択時に除外するカードインデックス（召喚するカード自身）
-var excluded_card_id: String = ""  # 犠牲選択時に除外するカードID（召喚するカード自身）
+
+var blocked_item_types: Array:
+	get: return _card_selection_service.blocked_item_types if _card_selection_service else []
+	set(value):
+		if _card_selection_service:
+			_card_selection_service.blocked_item_types = value
+
+var excluded_card_index: int:
+	get: return _card_selection_service.excluded_card_index if _card_selection_service else -1
+	set(value):
+		if _card_selection_service:
+			_card_selection_service.excluded_card_index = value
+
+var excluded_card_id: String:
+	get: return _card_selection_service.excluded_card_id if _card_selection_service else ""
+	set(value):
+		if _card_selection_service:
+			_card_selection_service.excluded_card_id = value
 
 # 手札UI管理（HandDisplayに移行済み）
 # 以下の変数は削除予定
@@ -98,9 +122,6 @@ func _ready():
 	_card_selection_service = CardSelectionService.new()
 	_card_selection_service.name = "CardSelectionService"
 	add_child(_card_selection_service)
-	# card_selected リレー: UIManager → CardSelectionService
-	if not card_selected.is_connected(_card_selection_service._relay_card_selected):
-		card_selected.connect(_card_selection_service._relay_card_selected)
 
 	_info_panel_service = InfoPanelService.new()
 	_info_panel_service.name = "InfoPanelService"
@@ -165,10 +186,7 @@ func _ready():
 		dominio_order_ui.name = "DominioOrderUI"
 		dominio_order_ui.ui_manager_ref = self  # グローバルボタン用に参照設定
 		add_child(dominio_order_ui)
-		# シグナル接続（dominio_order_button_pressedは特殊ボタンに移行済み）
-		if not dominio_order_ui.level_up_selected.is_connected(_on_level_ui_selected):
-			dominio_order_ui.level_up_selected.connect(_on_level_ui_selected)
-	
+
 	# HandDisplay初期化
 	if HandDisplayClass:
 		hand_display = HandDisplayClass.new()
@@ -221,7 +239,13 @@ func connect_ui_signals():
 		if not creature_info_panel_ui.selection_confirmed.is_connected(_on_creature_info_panel_confirmed):
 			creature_info_panel_ui.selection_confirmed.connect(_on_creature_info_panel_confirmed)
 		# selection_cancelledはcard_selection_ui側で処理（選択UIに戻る）
-	
+
+	# CardSelectionService を CardSelectionUI と HandDisplay に注入（Phase 8-M）
+	if card_selection_ui and _card_selection_service:
+		card_selection_ui.set_card_selection_service(_card_selection_service)
+	if hand_display and _card_selection_service:
+		hand_display._card_selection_service = _card_selection_service
+
 	# GlobalActionButtonsはシグナルなし（直接コールバック呼び出し）
 
 # UIを作成

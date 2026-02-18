@@ -32,9 +32,14 @@ var predicted_destination_tiles: Array = []  # 到着予想タイルインデッ
 var card_system_ref: CardSystem = null
 var ui_manager_ref = null  # UIManager参照を追加
 var game_flow_manager_ref = null  # GameFlowManager参照
+var _card_selection_service = null  # CardSelectionService参照（Phase 8-M）
 
 func _ready():
 	pass
+
+# CardSelectionServiceを設定（Phase 8-M）
+func set_card_selection_service(css) -> void:
+	_card_selection_service = css
 
 # 初期化
 func initialize(parent: Node, card_system: CardSystem, phase_label: Label, ui_manager = null):
@@ -101,7 +106,7 @@ func update_phase_label(current_player, mode: String):
 		"spell":
 			message = "スペルを選択してください"
 		"item":
-			if ui_manager_ref and ui_manager_ref.card_selection_filter == "item_or_assist":
+			if _card_selection_service and _card_selection_service.card_selection_filter == "item_or_assist":
 				message = "アイテムまたは援護クリーチャーを選択"
 			else:
 				message = "アイテムを選択、または×でバトル開始"
@@ -129,11 +134,11 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 	current_selection_hand_data = hand_data
 	current_selection_player_id = player_id
 	
-	# UIManagerのフィルター設定を確認
-	var filter_mode = ui_manager_ref.card_selection_filter
-	
+	# CardSelectionServiceのフィルター設定を確認（Phase 8-M）
+	var filter_mode = _card_selection_service.card_selection_filter if _card_selection_service else ""
+
 	# UIManagerから手札ノードを取得（指定されたプレイヤーの手札）
-	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
+	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id) if ui_manager_ref else []
 	
 	# 最初に全カードのmodulateをリセット（前の状態をクリア）
 	for card_node in hand_nodes:
@@ -169,10 +174,10 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			elif selection_mode == "sacrifice":
 				var is_excluded = false
 				# インデックスで除外
-				if ui_manager_ref and ui_manager_ref.excluded_card_index == i:
+				if _card_selection_service and _card_selection_service.excluded_card_index == i:
 					is_excluded = true
 				# IDで除外
-				if ui_manager_ref and ui_manager_ref.excluded_card_id != "" and str(card_data.get("id", "")) == ui_manager_ref.excluded_card_id:
+				if _card_selection_service and _card_selection_service.excluded_card_id != "" and str(card_data.get("id", "")) == _card_selection_service.excluded_card_id:
 					is_excluded = true
 				is_selectable = not is_excluded
 			elif filter_mode == "spell":
@@ -189,9 +194,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					is_selectable = false
 				# ブロックされたアイテムタイプをチェック
-				if is_selectable and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+				if is_selectable and _card_selection_service and _card_selection_service.blocked_item_types.size() > 0:
 					var item_type = card_data.get("item_type", "")
-					if item_type in ui_manager_ref.blocked_item_types:
+					if item_type in _card_selection_service.blocked_item_types:
 						is_selectable = false
 			elif filter_mode == "item_or_assist":
 				# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャーが選択可能
@@ -210,9 +215,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					else:
 						# 援護対象判定
 						var assist_elements = []
-						if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
-							assist_elements = ui_manager_ref.assist_target_elements
-						
+						if _card_selection_service:
+							assist_elements = _card_selection_service.assist_target_elements
+
 						var card_element = card_data.get("element", "")
 						# 全属性対象、または属性が一致する場合
 						is_selectable = ("all" in assist_elements) or (card_element in assist_elements)
@@ -262,9 +267,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 			if selection_mode == "sacrifice" or selection_mode == "discard":
 				var is_excluded = false
 				if selection_mode == "sacrifice" and ui_manager_ref:
-					if ui_manager_ref.excluded_card_index == i:
+					if _card_selection_service.excluded_card_index == i:
 						is_excluded = true
-					if ui_manager_ref.excluded_card_id != "" and card_data.get("id", "") == ui_manager_ref.excluded_card_id:
+					if _card_selection_service.excluded_card_id != "" and card_data.get("id", "") == _card_selection_service.excluded_card_id:
 						is_excluded = true
 				
 				# 除外カード以外は全て選択可能
@@ -326,9 +331,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
 						if "アイテムクリーチャー" in keywords:
 							should_gray = false
-					if not should_gray and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+					if not should_gray and _card_selection_service and _card_selection_service.blocked_item_types.size() > 0:
 						var item_type = card_data.get("item_type", "")
-						if item_type in ui_manager_ref.blocked_item_types:
+						if item_type in _card_selection_service.blocked_item_types:
 							should_gray = true
 					if should_gray:
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
@@ -339,9 +344,9 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					var should_gray_out = true
 					if card_type == "item":
 						should_gray_out = false
-						if ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+						if _card_selection_service and _card_selection_service.blocked_item_types.size() > 0:
 							var item_type = card_data.get("item_type", "")
-							if item_type in ui_manager_ref.blocked_item_types:
+							if item_type in _card_selection_service.blocked_item_types:
 								should_gray_out = true
 					elif card_type == "creature":
 						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
@@ -349,8 +354,8 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 							should_gray_out = false
 						else:
 							var assist_elements = []
-							if ui_manager_ref and "assist_target_elements" in ui_manager_ref:
-								assist_elements = ui_manager_ref.assist_target_elements
+							if _card_selection_service:
+								assist_elements = _card_selection_service.assist_target_elements
 							var card_element = card_data.get("element", "")
 							if ("all" in assist_elements) or (card_element in assist_elements):
 								should_gray_out = false
@@ -420,8 +425,8 @@ func update_restriction_for_destinations(destination_tiles: Array):
 	
 	var player_id = current_selection_player_id
 	var hand_data = current_selection_hand_data
-	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id)
-	var filter_mode = ui_manager_ref.card_selection_filter
+	var hand_nodes = ui_manager_ref.get_player_card_nodes(player_id) if ui_manager_ref else []
+	var filter_mode = _card_selection_service.card_selection_filter if _card_selection_service else ""
 	var available_magic = 0
 	if game_flow_manager_ref and game_flow_manager_ref.player_system:
 		var players = game_flow_manager_ref.player_system.players
@@ -534,9 +539,9 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 		return "restriction"
 	
 	# ブロックされたアイテムタイプ
-	if card_type == "item" and ui_manager_ref and "blocked_item_types" in ui_manager_ref:
+	if card_type == "item" and _card_selection_service and _card_selection_service.blocked_item_types.size() > 0:
 		var item_type = card_data.get("item_type", "")
-		if item_type in ui_manager_ref.blocked_item_types:
+		if item_type in _card_selection_service.blocked_item_types:
 			return "restriction"
 	
 	return ""
@@ -1062,7 +1067,7 @@ func restore_phase_comment():
 		"spell":
 			message = "スペルを使用するか、ダイスを振ってください"
 		"item":
-			if ui_manager_ref.card_selection_filter == "item_or_assist":
+			if _card_selection_service and _card_selection_service.card_selection_filter == "item_or_assist":
 				message = "アイテムまたは援護クリーチャーを選択"
 			else:
 				message = "アイテムを選択、または×でバトル開始"
@@ -1116,8 +1121,8 @@ func _on_pass_button_pressed():
 		elif selection_mode == "sacrifice":
 			# 犠牲モードの場合はcard_selectedに-1を送って召喚をキャンセル
 			hide_selection()
-			if ui_manager_ref:
-				ui_manager_ref.emit_signal("card_selected", -1)
+			if _card_selection_service:
+				_card_selection_service.card_selected.emit(-1)
 		else:
 			hide_selection()
 			emit_signal("selection_cancelled")

@@ -21,6 +21,7 @@ const CARD_SPACING = 30
 # システム参照
 var card_system_ref = null
 var player_system_ref = null
+var _card_selection_service = null  # CardSelectionService参照（フィルター取得用、Phase 8-M）
 
 func _ready():
 	pass
@@ -115,11 +116,10 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 	card.size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 	card.custom_minimum_size = Vector2(CARD_WIDTH, CARD_HEIGHT)
 	
-	# カードフィルター適用
-	var ui_manager = get_parent() if get_parent() else null
+	# カードフィルター適用（Phase 8-M: CardSelectionServiceから取得）
 	var filter_mode = ""
-	if ui_manager and "card_selection_filter" in ui_manager:
-		filter_mode = ui_manager.card_selection_filter
+	if _card_selection_service:
+		filter_mode = _card_selection_service.card_selection_filter
 	
 	var card_type = card_data.get("type", "")
 	var is_spell_card = card_type == "spell"
@@ -169,8 +169,8 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			else:
 				# 援護対象判定
 				var assist_elements = []
-				if ui_manager and "assist_target_elements" in ui_manager:
-					assist_elements = ui_manager.assist_target_elements
+				if _card_selection_service:
+					assist_elements = _card_selection_service.assist_target_elements
 				
 				var card_element = card_data.get("element", "")
 				# 全属性対象、または属性が一致する場合

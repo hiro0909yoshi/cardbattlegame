@@ -28,6 +28,11 @@ func setup(card_selection_ui, hand_display: HandDisplay, card_system: CardSystem
 	_card_system_ref = card_system
 	_player_system_ref = player_system
 
+	# CardSelectionUI の card_selected を直接リレー（Phase 8-M）
+	if _card_selection_ui and _card_selection_ui.has_signal("card_selected"):
+		if not _card_selection_ui.card_selected.is_connected(_relay_card_selected):
+			_card_selection_ui.card_selected.connect(_relay_card_selected)
+
 
 ## ============================================================================
 ## CardSelectionUI 委譲メソッド
@@ -100,10 +105,10 @@ func get_player_card_nodes(player_id: int) -> Array:
 
 
 ## ============================================================================
-## card_selected リレー（UIManager → CardSelectionService）
+## card_selected リレー（CardSelectionUI → CardSelectionService、Phase 8-M）
 ## ============================================================================
 
-## UIManager.card_selected からのリレー
-## ビジネスロジック層は CardSelectionService.card_selected を await する
+## CardSelectionUI.card_selected からのリレー
+## ビジネスロジック層（GameFlowManager）は CardSelectionService.card_selected を subscribe する
 func _relay_card_selected(card_index: int) -> void:
 	card_selected.emit(card_index)
