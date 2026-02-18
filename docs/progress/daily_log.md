@@ -12,7 +12,7 @@
 
 ---
 
-## 2026年2月19日（Session: Phase 9 + Phase 10-A）
+## 2026年2月19日（Session: Phase 9 + Phase 10-A + Phase 10-B）
 
 ### ✅ Phase 9-A: ui_tap_handler is_nav_state_saved() ガード追加
 
@@ -35,6 +35,16 @@
 - BankruptcyHandler Signal接続も PlayerInfoService 経由に変更
 - UIManager の `update_player_info_panels()` Facade メソッド削除
 - **成果**: UIManagerを経由する最大理由が解消
+
+### ✅ Phase 10-B: card.gd 再帰的親探索廃止
+
+- `find_ui_manager_recursive()` を完全削除（毎マウスイベントでツリー全体を再帰探索するアンチパターン解消）
+- Signal 2追加: `card_button_pressed(card_index)`, `card_info_requested(card_data)`
+- 3参照変数注入: CardSelectionService, CardSelectionUI, GFM（hand_display が作成時に注入）
+- 全13箇所の UIManager 参照を直接参照/Signal emit に置換
+- hand_display: Callable コールバックパターンで UIManager を知らないまま Signal 接続
+- ui_manager: `_on_card_info_from_hand()` 新メソッド（dialog hide + info panel + dominio button）
+- **成果**: card.gd は UIManager を一切知らない最終形を実現
 
 ---
 
@@ -181,6 +191,5 @@
 
 ### 📋 次のステップ
 
-- Phase 8 完了。UIManager 依存方向の正規化は実用レベルで達成
-- 延期中: ui_tap_handler, global_comment_ui の UI→Logic 境界違反（影響小、機能問題なし）
-- 延期中: BankruptcyHandler パネル分離（56行のみ、優先度低）
+- Phase 10-C: 双方向参照の削減（10-Bの副産物として部分的に解消済み、再評価予定）
+- Phase 10-D: 純粋Facade化（保留、10-A/B完了後に残存ファサードを再評価）

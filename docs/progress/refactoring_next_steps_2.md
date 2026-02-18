@@ -20,7 +20,7 @@
 | 問題 | 規模 | 影響 | 状態 |
 |------|------|------|------|
 | `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 | ✅ 解消（PlayerInfoService化） |
-| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン | 🔄 Phase 10-B（未着手） |
+| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン | ✅ 解消（Signal駆動化） |
 | Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 | 🔄 Phase 10-D で再評価予定 |
 | 双方向参照 | GFM, BoardSystem | 依存方向の違反 | 🔄 Phase 10-C（未着手） |
 
@@ -44,10 +44,10 @@
 
 ---
 
-### Phase 10-B: card.gd の再帰的親探索廃止
+### Phase 10-B: card.gd の再帰的親探索廃止 ✅ 完了
 
-**難易度**: 中〜高
-**効果**: 高（構造的アンチパターンの解消）
+**完了日**: 2026-02-19
+**成果**: find_ui_manager_recursive 完全削除、Signal 2追加、3参照変数注入、card.gd UIManager 依存ゼロ
 
 **現状**: `find_ui_manager_recursive(get_tree().get_root())` でシーンツリー全体を毎回再帰探索。card.gd から UIManager を13箇所で参照。
 
@@ -109,8 +109,8 @@
 
 | 順番 | Phase | 内容 | 理由 |
 |------|-------|------|------|
-| 1 | **10-A** | update_player_info_panels サービス化 | 効果大・難易度低、即座に着手可能 |
-| 2 | **10-B** | card.gd 再帰探索廃止 | 構造的価値高、10-A完了後に着手 |
+| 1 | **10-A** ✅ | update_player_info_panels サービス化 | 効果大・難易度低、即座に着手可能 |
+| 2 | **10-B** ✅ | card.gd 再帰探索廃止 | Signal駆動化で完了 |
 | 3 | **10-C** | 双方向参照の削減 | 10-Bの副産物として部分的に解消 |
 | 保留 | **10-D** | 純粋Facade化 | 10-A/B完了後に残存ファサードを再評価してから判断 |
 

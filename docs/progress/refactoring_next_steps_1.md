@@ -119,6 +119,17 @@ UI Component Layer (GlobalActionButtons, GlobalCommentUI, CardSelectionUI, InfoP
 | 呼び出し元変更 | 16ファイル・23箇所を player_info_service.update_panels() に変更 |
 | BankruptcyHandler Signal | PlayerInfoService 経由に変更 |
 
+### Phase 10-B: card.gd 再帰的親探索廃止（2026-02-19）
+
+| 内容 | 成果 |
+|------|------|
+| find_ui_manager_recursive 完全削除 | 毎マウスイベントのツリー全体再帰探索を解消 |
+| Signal 2追加 | card_button_pressed, card_info_requested |
+| 3参照変数注入 | CardSelectionService, CardSelectionUI, GFM |
+| hand_display Callable パターン | UIManager を知らずに Signal 接続 |
+| ui_manager 新メソッド | _on_card_info_from_hand() |
+| 変更ファイル | card.gd, hand_display.gd, ui_manager.gd（3ファイル） |
+
 ---
 
 ## 延期・取り下げた項目と理由
