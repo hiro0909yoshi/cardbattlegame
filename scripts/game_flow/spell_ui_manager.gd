@@ -20,11 +20,21 @@ var _spell_cast_notification_ui: SpellCastNotificationUI = null
 var _waiting_for_notification_click: bool = false
 
 # === 公開サービスアクセサ（_ui_manager private アクセス解消用） ===
-var message_service: get: return _ui_manager.message_service if _ui_manager else null
-var navigation_service: get: return _ui_manager.navigation_service if _ui_manager else null
-var info_panel_service: get: return _ui_manager.info_panel_service if _ui_manager else null
-var tap_target_manager: get: return _ui_manager.tap_target_manager if _ui_manager else null
-var ui_manager: get: return _ui_manager  # UIManager への参照を取得（特殊な場合のみ）
+var message_service:
+	get:
+		return _ui_manager.message_service if _ui_manager else null
+var navigation_service:
+	get:
+		return _ui_manager.navigation_service if _ui_manager else null
+var info_panel_service:
+	get:
+		return _ui_manager.info_panel_service if _ui_manager else null
+var tap_target_manager:
+	get:
+		return _ui_manager.tap_target_manager if _ui_manager else null
+var ui_manager:
+	get:
+		return _ui_manager
 
 # === 初期化 ===
 func setup(
