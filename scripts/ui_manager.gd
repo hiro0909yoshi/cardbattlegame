@@ -452,7 +452,8 @@ func update_cpu_hand_display(player_id: int):
 # === 基本UI操作 ===
 func update_ui(_current_player, current_phase):
 	# プレイヤー情報パネルを更新
-	update_player_info_panels()
+	if _player_info_service:
+		_player_info_service.update_panels()
 	
 	# フェーズ表示を更新
 	update_phase_display(current_phase)

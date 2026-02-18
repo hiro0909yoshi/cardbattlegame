@@ -544,9 +544,9 @@ func phase_6_prepare_game_start() -> void:
 		card_system.deal_initial_hands_all_players(player_count)
 	
 	# UI更新
-	if ui_manager:
+	if ui_manager and ui_manager.player_info_service:
 		await get_tree().create_timer(0.1).timeout
-		ui_manager.update_player_info_panels()
+		ui_manager.player_info_service.update_panels()
 	
 	print("[GameSystemManager] Phase 6: ゲーム開始準備完了")
 

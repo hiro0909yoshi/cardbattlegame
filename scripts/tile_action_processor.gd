@@ -292,8 +292,9 @@ func on_level_up_selected(target_level: int, cost: int):
 		
 		board_system.update_tile_display(current_tile, board_system.get_tile_info(current_tile))
 		
+		if ui_manager and ui_manager.player_info_service:
+			ui_manager.player_info_service.update_panels()
 		if ui_manager:
-			ui_manager.update_player_info_panels()
 			ui_manager.hide_level_up_ui()
 		
 		print("土地をレベル", target_level, "にアップグレード！（コスト: ", cost, "EP）")
@@ -390,9 +391,9 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	
 	if _card_selection_service:
 		_card_selection_service.hide_card_selection_ui()
-	if ui_manager:
-		ui_manager.update_player_info_panels()
-	
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
+
 	var player_name = _get_current_player_name()
 	set_pending_comment("%s がドミニオコマンド：交換" % player_name)
 	
