@@ -1,400 +1,138 @@
-# Phase 8 残作業 & Phase 9 以降の計画
+# リファクタリング今後の作業計画
 
-**作成日**: 2026-02-18
-**現在のフェーズ**: Phase 8 — UIManager 依存方向の正規化（✅ **完了**）
+**最終更新**: 2026-02-19
+**前提**: Phase 0〜9 完了済み（詳細は `refactoring_next_steps_1.md`）
 
 ---
 
 ## 現状サマリー
 
-### プロジェクト全体の ui_manager 参照
+### UIManager の状態（Phase 9 後）
 
-| カテゴリ | ファイル数 | 参照数 | 説明 |
-|---------|----------|-------|------|
-| UIManager 内部 / UI層 | 10 | ~336 | 移行不要（UI層は UIManager を参照して正当） |
-| インフラ（GSM） | 1 | 125 | 移行不要（システム初期化コーディネーター） |
-| Phase 8 完了済み | 15 | ~167 | 残存参照は UIManager 固有操作のため保持 |
-| spell_ui_manager 経由 | 3 | 19 | 移行不要（Phase 6 Signal化で ui_manager 直接参照なし） |
-| パススルー | 1 | 5 | spell_draw.gd（子ハンドラーへの中継のみ） |
-| **Phase 8 残作業対象** | **14** | **~258** | **本ドキュメントのスコープ** |
-| **Phase 9 以降** | **6** | **~96** | **UIManager 自体の改修が前提** |
+- **行数**: ~970行、93メソッド
+- **4サービス分割済み**: NavigationService, MessageService, CardSelectionService, InfoPanelService（計551行）
+- **状態ルーター**: ✅ 解体済み（Phase 9）
+- **後方参照**: 5件（GFM, BoardSystem, DCH, CardSystem, PlayerSystem）
+- **委譲メソッド**: 47個（Facade残存）
 
-### 利用可能な UIService API
+### 残存する問題
 
-| サービス | 主要メソッド |
-|---------|------------|
-| **MessageService** | show_comment_and_wait, show_toast, show_action_prompt, hide_action_prompt, set_phase_text |
-| **CardSelectionService** | show/hide_card_selection_ui, show_card_selection_ui_mode, card_selection_filter, excluded_card_id, update_hand_display, **signal card_selected** |
-| **InfoPanelService** | show_card_info_only, show_card_selection, hide_all_info_panels, get_creature/spell/item_info_panel |
-| **NavigationService** | enable/disable_navigation, save/restore_navigation_state, register_confirm/back_action |
-
-### 重要発見: CardSelectionService に card_selected シグナルが存在
-
-```gdscript
-# scripts/ui_services/card_selection_service.gd
-signal card_selected(card_index: int)
-```
-
-現在 `await ui_manager.card_selected` は UIManager のシグナルを待機しているが、CardSelectionService にも同名シグナルが定義済み。**emission chain を統一すれば Group B の全ファイルが移行可能**。
+| 問題 | 規模 | 影響 |
+|------|------|------|
+| `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 |
+| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン |
+| Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 |
+| 双方向参照 | GFM, BoardSystem | 依存方向の違反 |
 
 ---
 
-## 設計制約（CRITICAL — 全作業で遵守）
+## 改善提案（優先順位順）
 
-### 制約 1: CardSelectionService の責務肥大化防止
+### Phase 10-A: update_player_info_panels のサービス化
 
-card_selected 統一後、CardSelectionService に「選択・フィルタ・モード管理・emit制御」が全て集まる。
-**CardSelectionService が「小さな UIManager」になってはならない。**
+**難易度**: 低〜中
+**効果**: 大（UIManagerを経由する最大理由が消える）
 
-**ガードレール**:
-- CardSelectionService は「カード選択 UI の操作代行」に限定
-- フィルタ判定ロジック（「このカードは選択可能か？」）はビジネスロジック側に残す
-- モード管理（sacrifice/discard/spell/item）の判定責任は呼び出し元が持つ
-- CardSelectionService は「言われたモードで表示する」だけ
-- 新メソッド追加時は「これは UI 操作か？ロジック判定か？」を必ず問う
+**現状**: 16ファイル、26箇所から `ui_manager.update_player_info_panels()` が呼ばれている。
 
-### 制約 2: PlayerInfoService は描画更新のみ
+| カテゴリ | ファイル | 箇所数 |
+|---------|---------|--------|
+| ハンドラー系 | DCH, land_action_helper, tile_summon/battle_executor | 6 |
+| GFM | game_flow_manager | 3 |
+| タイル系 | magic_stone_tile, card_buy_tile | 3 |
+| スペル系 | spell_world_curse, spell_target_selection_handler | 2 |
+| その他 | GSM, debug_controller, cpu_turn_processor, tile_action_processor | 7 |
+| UIManager内部 | set_current_turn | 1 |
+| Signal経由 | BankruptcyHandler signal接続 | 1 |
 
-`update_player_info_panels()` は UIManager の「横断的責務」。
-単純にサービス化すると PlayerInfoService が新たな中心点になる。
+**方針**:
+1. `PlayerInfoService` を新規作成（描画更新のみ、ロジック判定禁止）
+2. UIManager から `update_player_info_panels()` を PlayerInfoService に移動
+3. GSM が各ファイルに PlayerInfoService を注入
+4. 各呼び出し元を `_player_info_service.update_panels()` に変更
 
-**ガードレール**:
-- PlayerInfoService は **描画更新（render）だけ** に限定
-- ゲームロジック判定（「誰が勝っているか」「EPは足りるか」等）は **絶対に持たせない**
-- 「データを受け取って描画する」のみ。データの生成・加工はビジネスロジック層の責務
-- 将来の機能追加時に「PlayerInfoService に判定を足した方が楽」という誘惑に負けない
-
-### 制約 3: Phase 8-M（Signal 統一）は1ファイルずつ動作確認
-
-card_selected の emission chain 変更は非同期 await のタイミングバグを生みやすい。
-
-**作業ルール**:
-- **一括置換禁止** — 1ファイルずつ移行 + 動作確認
-- 移行順序: spell_borrow（最小）→ card_sacrifice_helper → tile_summon_executor → spell_creature_swap（最大）
-- 各ファイル移行後に「カード選択 → 決定」「カード選択 → キャンセル(-1)」の両パスを確認
-- emission chain 変更（card_selection_ui.gd）は Group B の最初のファイル移行前に行い、**UIManager リレーで後方互換を保証してから**着手
+**設計制約**: PlayerInfoService は**描画更新（render）だけ**に限定。「誰が勝っているか」「EPは足りるか」等の判定は絶対に持たせない。
 
 ---
 
-## Phase 8 残作業: グループ分類
+### Phase 10-B: card.gd の再帰的親探索廃止
 
-### Group A: サービス注入で大幅削減（パターン確立済み）
+**難易度**: 中〜高
+**効果**: 高（構造的アンチパターンの解消）
 
-既存のサービス注入パターンで移行可能。最もコスパが良い。
+**現状**: `find_ui_manager_recursive(get_tree().get_root())` でシーンツリー全体を毎回再帰探索。card.gd から UIManager を13箇所で参照。
 
-#### 1. spell_mystic_arts.gd（✅ 完了: 46→29 refs, 37%削減）
+| 用途 | 箇所数 | 参照先 |
+|------|--------|--------|
+| card_selection_filter 判定 | 4 | UIManager → CardSelectionService |
+| on_card_button_pressed() 呼び出し | 1 | UIManager → 入力ディスパッチャー |
+| game_flow_manager_ref 取得 | 2 | UIManager → GFM |
+| show_card_info() | 1 | UIManager → InfoPanelService |
+| card_selection_ui 参照 | 2 | UIManager → CardSelectionUI |
+| player_status_dialog | 1 | UIManager → PlayerStatusDialog |
+| show_dominio_order_button | 1 | UIManager |
 
-| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
-|------|------|--------|--------|------|
-| `show_action_prompt(message)` | 2 | MessageService | 低 | ✅ |
-| `show_toast(...)` | (phase_display ガード) | MessageService | 低 | ✅ |
-| `show_card_info(creature_data, tile_index, false)` | 2 | InfoPanelService.show_card_info_only | 低 | ✅ |
-| `hide_all_info_panels(false)` | 1 | InfoPanelService | 低 | ✅ |
-| `enable_navigation(...)` | 1 | NavigationService | 低 | ✅ |
-| `disable_navigation()` | 1 | NavigationService | 低 | ✅ |
-| `tap_target_manager` | 4 | **UIManager 固有** — 残す | — | — |
-| `add_child(action_menu)` | 1 | **UIManager 固有** — 残す | — | — |
-| `_get_message_service()`, `_get_navigation_service()`, `_get_info_panel_service()` ヘルパー | ~10 | 実装完了 | — | ✅ |
-| spell_ui_manager 参照 | ~4 | 移行対象外 | — | — |
+**方針候補**:
+- **A) Signal 駆動化（推奨）**: card.gd は `card_confirmed(card_index)` Signal を emit するだけ。CardSelectionService がリスニング
+- **B) CardSelectionService 注入**: Hand表示時に各カードに CardSelectionService を set
 
-**実装内容**: `_get_message_service()`, `_get_navigation_service()`, `_get_info_panel_service()` ヘルパーを追加。各メソッド内でローカル変数に解決後使用。
+**注意**: card.gd はシーンからインスタンス化されるため、通常の `setup()` 注入にタイミング問題がある。Signal 駆動が最もクリーン。
 
-**結果**: ✅ 完了 - 46→29 refs (37%削減)
-
-#### 2. spell_target_selection_handler.gd（✅ 完了: 28→18 refs, 36%削減）
-
-| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
-|------|------|--------|--------|------|
-| `disable_navigation()` | 1 | NavigationService | 低 | ✅ |
-| `show_toast(...)` | 1 | MessageService | 低 | ✅ |
-| `show_action_prompt(text)` | 2 | MessageService | 低 | ✅ |
-| `tap_target_manager` | 1 | **UIManager 固有** — 残す | — | — |
-| `phase_label` / `phase_display` ガード | ~5 | MessageService チェックに変換 | 低 | ✅ |
-| 変数宣言 / initialize | ~3 | 構造保持 | — | — |
-
-**実装内容**: `initialize()` でサービス解決。`_ui_manager` と並行して `_message_service`, `_navigation_service` 追加。
-
-**結果**: ✅ 完了 - 28→18 refs (36%削減)
-
-#### 3. debug_controller.gd（✅ 完了: 31→11 refs, 65%削減）
-
-| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
-|------|------|--------|--------|------|
-| `card_selection_filter` 読み書き | 3 | CardSelectionService | 低 | ✅ |
-| `clear_card_selection_filter()` | 1 | CardSelectionService | 低 | ✅ |
-| `update_hand_display()` | 1 | CardSelectionService | 低 | ✅ |
-| `hide_card_selection_ui()` | 1 | CardSelectionService | 低 | ✅ |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService | 低 | ✅ |
-| `show_card_selection_ui()` | 1 | CardSelectionService | 低 | ✅ |
-| `set_phase_text()` / `get_phase_text()` | 2 | MessageService | 低 | ✅ |
-| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す | — | — |
-| `toggle_debug_mode()` | 2 | **UIManager 固有** — 残す | — | — |
-| `hand_display` 直接参照 | 1 | **UIManager 固有** — 残す | — | — |
-
-**実装内容**: `setup()` でサービス解決。CardSelectionService が主な移行先。
-
-**結果**: ✅ 完了 - 31→11 refs (65%削減)
-
-#### 4. land_selection_helper.gd（✅ 完了: 9→2 refs, 78%削減）
-
-| 操作 | 箇所 | 移行先 | 難易度 | 状態 |
-|------|------|--------|--------|------|
-| `show_card_info_only(creature, tile_index)` | 1 | InfoPanelService | 低 | ✅ |
-| `show_toast(...)` | 1 | MessageService | 低 | ✅ |
-| `show_action_prompt(text)` | 1 | MessageService | 低 | ✅ |
-| `show_action_menu()` | 1 | **UIManager 固有** — 残す | — | — |
-| null チェック / ガード | 4 | サービスチェックに変換 | 低 | ✅ |
-
-**実装内容**: handler._message_service / handler._info_panel_service パターン（DCH の land_action_helper と同じ）。
-
-**結果**: ✅ 完了 - 9→2 refs (78%削減)
+**前提**: Phase 10-A が先に完了していること（参照先の整理が必要）
 
 ---
 
-### Group B: card_selected signal await パターン
+### Phase 10-C: 双方向参照の削減
 
-**共通の壁**: `await ui_manager.card_selected` — UIManager のシグナルを直接 await している。
+**難易度**: 中
+**効果**: 中（依存方向の正規化）
 
-**制約 1 適用**: Group B で CardSelectionService に移すのは「UI操作の委譲」のみ。
-各ファイルの「何を選択するか」「どのモードで表示するか」の判定は呼び出し元に残す。
-CardSelectionService は `show_card_selection_ui_mode(player, mode)` を受け取って表示するだけ。
+**現状の双方向参照（2件）**:
 
-**前提作業（Phase 8-M）**: CardSelectionService の `card_selected` emission chain 統一
-- 現在: card_selection_ui.gd → UIManager.card_selected を emit
-- 目標: card_selection_ui.gd → CardSelectionService.card_selected を emit
-- UIManager.card_selected は CardSelectionService からリレー（後方互換性）
+| 参照 | UIManager側の用途 | 排除方針 |
+|------|-----------------|---------|
+| game_flow_manager_ref | on_card_button_pressed の入力ロック、UIコンポーネント初期化 | card.gd Signal化（10-B）で入力ロック不要に。初期化は初期化時のみなので許容 |
+| board_system_ref | UIコンポーネント初期化（6箇所以上） | 初期化時参照は許容。ランタイム参照の有無を確認 |
 
-**前提作業完了後の移行**:
+**dominio_command_handler_ref**: dominio_order_ui 初期化のみ。初期化時に引数渡しに変更可能（低難易度）
 
-#### 5. spell_creature_swap.gd（✅ 完了: 30→~10 refs, 67%削減）
-
-| 操作 | 箇所 | 移行先 | 状態 |
-|------|------|--------|------|
-| `card_selection_filter = ""` | 2 | CardSelectionService | ✅ |
-| `show_card_selection_ui_mode()` | 2 | CardSelectionService | ✅ |
-| `await ui_manager.card_selected` | 2 | `await css.card_selected` | ✅ |
-| `hide_card_selection_ui()` | 2 | CardSelectionService | ✅ |
-| `excluded_card_id` | 2 | CardSelectionService | ✅ |
-| `enable_navigation(...)` | 2 | NavigationService | ✅ |
-| `emit_signal("card_selected", -1)` | 2 | `css.card_selected.emit(-1)` | ✅ |
-| `show_action_prompt()` | 1 | MessageService | ✅ |
-| `show_toast()` | 1 | MessageService | ✅ |
-| `set_message()` | 1 | **UIManager 固有** — 残す | — |
-| `_get_ui_manager()` + ガード | ~8 | ヘルパー変換 | ✅ |
-
-**実装内容**: `_get_card_selection_service()`, `_get_message_service()`, `_get_navigation_service()` ヘルパー追加。`_select_hand_creature()` と `_process_card_sacrifice()` の全UI操作をサービス経由に移行。DEBUG print 削除。
-
-**結果**: ✅ 完了 - 30→~10 refs (67%削減)
-
-#### 6. tile_summon_executor.gd（✅ 完了: 13→9 refs, 31%削減）
-
-| 操作 | 箇所 | 移行先 | 状態 |
-|------|------|--------|------|
-| `card_selection_filter = ""` | 1 | CardSelectionService | ✅ |
-| `excluded_card_index` | 2 | CardSelectionService | ✅ |
-| `await ui_manager.card_selected` | 1 | `await _card_selection_service.card_selected` | ✅ |
-| `update_player_info_panels()` | 2 | **UIManager 固有** — 残す | — |
-| CardSacrificeHelper 生成時の ui_manager | 1 | **UIManager 渡し** — 残す | — |
-
-**実装内容**: `process_card_sacrifice()` 内の残り4参照を `_card_selection_service` に移行（既に `_message_service`, `_card_selection_service` は L12-13 で定義済み）。
-
-**結果**: ✅ 完了 - 13→9 refs (31%削減)
-
-#### 7. spell_borrow.gd（✅ 完了: 13→8 refs, 38%削減）
-
-| 操作 | 箇所 | 移行先 | 状態 |
-|------|------|--------|------|
-| `card_selection_filter` | 2 | CardSelectionService | ✅ |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService | ✅ |
-| `await ui_manager.card_selected` | 1 | `await css.card_selected` | ✅ |
-| `hide_card_selection_ui()` | 1 | CardSelectionService | ✅ |
-| `set_message()` | 1 | **UIManager 固有** — 残す | — |
-| `_get_ui_manager()` + ガード | ~4 | ヘルパー変換 | ✅ |
-
-**実装内容**: `_get_card_selection_service()` ヘルパー追加。`_select_hand_spell()` 内の CardSelectionService 操作を移行。
-
-**結果**: ✅ 完了 - 13→8 refs (38%削減)
-
-#### 8. card_sacrifice_helper.gd（✅ 完了: 12→7 refs, 42%削減）
-
-| 操作 | 箇所 | 移行先 | 状態 |
-|------|------|--------|------|
-| `card_selection_filter = ""` | 1 | CardSelectionService | ✅ |
-| `show_card_selection_ui_mode()` | 1 | CardSelectionService | ✅ |
-| `await ui_manager_ref.card_selected` | 1 | `await _card_selection_service_ref.card_selected` | ✅ |
-| `hide_card_selection_ui()` | 1 | CardSelectionService | ✅ |
-| `set_message()` | 1 | **UIManager 固有** — 残す | — |
-| 変数宣言 / _init / set_ui_manager | ~4 | 構造保持 | ✅ |
-
-**実装内容**: `_card_selection_service_ref` 変数追加、`_resolve_services()` で UIManager からサービスを解決。
-
-**結果**: ✅ 完了 - 12→7 refs (42%削減)
+**タイミング**: Phase 10-B（card.gd Signal化）の副産物として game_flow_manager_ref のランタイム参照が消える可能性が高い。10-B 完了後に再評価。
 
 ---
 
-### Group C: UIManager 固有操作のみ（Phase 8 スコープ外）
+### Phase 10-D: UIManager 純粋Facade化（保留）
 
-これらのファイルはサービスに存在しないメソッドを使用しており、**新しいサービスの作成**が前提。
+**難易度**: 高（47ファイル変更）
+**効果**: 中（UIManager 行数削減、構造的クリーンアップ）
 
-#### 9. card.gd（32 refs）— Phase 9 対象
+**現状**: 47委譲メソッドが残存。外部から `ui_manager.show_toast()` を呼ぶコードが多数。
 
-**問題**: `find_ui_manager_recursive(get_tree().get_root())` でツリー探索。Node として UIManager のツリー外に存在するため、直接参照注入が困難。
+**方針**: Phase 10-A, 10-B 完了後に残存ファサードを再評価。本当に使われているメソッドだけを洗い出し、コスト対効果で判断する。
 
-| 操作 | 使用目的 |
-|------|---------|
-| `card_selection_filter` | カード表示の切り替え判定（spell/item/sacrifice/discard） |
-| `card_selection_ui.selection_mode` | 犠牲/捨て札モード判定 |
-| `on_card_button_pressed()` | カードボタン押下ハンドラー |
-| `game_flow_manager_ref` | GFM 経由の game 状態取得 |
-
-**解決策候補**:
-- A) Card に CardSelectionService を注入（Hand表示時に set）— card_selection_filter の読み取りのみ
-- B) Card からの UIManager 呼び出しを Signal 化（card_pressed signal → 上位でハンドル）— **推奨**
-- ~~C) CardSelectionService に is_spell_mode() 等の判定メソッド追加~~ — **制約 1 違反**: 判定ロジックは CardSelectionService に持たせない
-
-**見積り**: 高（アーキテクチャ変更が必要）
-
-#### 10. tutorial_manager.gd（22 refs）— Phase 9 対象
-
-| 操作 | 使用目的 |
-|------|---------|
-| `global_action_buttons` 直接参照 | チュートリアルオーバーレイ設定 |
-| `card_selection_ui` 直接参照 | カード選択監視 |
-| `level_up_selected` signal | レベルアップ監視 |
-| `show_dominio_order_button()` | ドミニオボタン表示 |
-
-**解決策候補**: TutorialService を新設、または UIManager にチュートリアル用 API を追加。
-
-#### 11. explanation_mode.gd（22 refs）— Phase 9 対象
-
-tutorial_manager.gd と同じパターン。`global_action_buttons.explanation_mode_active` の直接操作が中心。
-
-#### 12. game_result_handler.gd（10 refs）— Phase 9 対象
-
-| 操作 | 使用目的 |
-|------|---------|
-| `show_win_screen()` | 勝利画面表示 |
-| `show_win_screen_async()` | 勝利画面表示（await） |
-| `show_lose_screen_async()` | 敗北画面表示（await） |
-
-**解決策候補**: GameResultService を新設、または Signal 化。
-
-#### 13. spell_world_curse.gd（6 refs）— Phase 9 対象
-
-`update_player_info_panels()` 1回のみ。PlayerInfoService 新設後に移行。
-
-#### 14. tile_battle_executor.gd（4 refs）— Phase 9 対象
-
-`update_player_info_panels()` 1回のみ。spell_world_curse と同じ。
+**今すぐやらない理由**:
+- 47ファイル変更のリグレッションリスク
+- 効果は「関数呼び出しが1段減るだけ」
+- 10-A, 10-B で自然に減る部分がある
 
 ---
 
 ## 推奨実行順序
 
-### Phase 8 継続（サービス注入パターン）— ✅ Group A 完了
-
-| 順序 | サブフェーズ | 対象 | refs | 結果 | 完了日 |
-|------|-----------|------|------|--------|--------|
-| ✅ 1 | **8-N** | spell_target_selection_handler | 28 → 18 | 36%削減 | 2026-02-18 |
-| ✅ 2 | **8-N** | land_selection_helper | 9 → 2 | 78%削減 | 2026-02-18 |
-| ✅ 3 | **8-O** | spell_mystic_arts | 46 → 29 | 37%削減 | 2026-02-18 |
-| ✅ 4 | **8-O** | debug_controller | 31 → 11 | 65%削減 | 2026-02-18 |
-| | | **Group A 合計** | **114 → 60** | **47%削減** | ✅ **完了** |
-
-### Phase 8-M: card_selected リレーパターン（✅ 完了）
-
-**実装**: UIManager.card_selected → CardSelectionService._relay_card_selected → CardSelectionService.card_selected
-- 既存の emission chain（card_selection_ui → UIManager）は**変更なし**
-- UIManager._create_services() でリレー接続を追加
-- Group B ファイルは `await css.card_selected` でリレー経由受信
-
-### Phase 8-P: Group B 1ファイルずつ移行（✅ 全完了）
-
-**制約 3 適用**: 1ファイルずつ移行。
-
-| 順序 | サブフェーズ | 対象 | refs | 結果 | 完了日 |
-|------|-----------|------|------|--------|--------|
-| ✅ 6 | **8-P** | spell_borrow | 13 → 8 | 38%削減 | 2026-02-18 |
-| ✅ 7 | **8-P** | card_sacrifice_helper | 12 → 7 | 42%削減 | 2026-02-18 |
-| ✅ 8 | **8-P** | tile_summon_executor | 13 → 9 | 31%削減 | 2026-02-18 |
-| ✅ 9 | **8-P** | spell_creature_swap | 30 → ~10 | 67%削減 | 2026-02-18 |
-| | | **Group B 合計** | **68 → ~34** | **50%削減** | ✅ **完了** |
-
-### Phase 8 区切りライン — ✅ Phase 8 完了
-
-**Phase 8 最終実績**:
-- Group A: 114 → 60 refs (47%削減)
-- Group B: 68 → ~34 refs (50%削減)
-- **Phase 8 合計**: ~182 refs → ~94 refs (48%削減)
-- 残存 ui_manager refs: Group C の 96 refs + 各ファイルの UIManager 固有操作（Phase 9 スコープ）
+| 順番 | Phase | 内容 | 理由 |
+|------|-------|------|------|
+| 1 | **10-A** | update_player_info_panels サービス化 | 効果大・難易度低、即座に着手可能 |
+| 2 | **10-B** | card.gd 再帰探索廃止 | 構造的価値高、10-A完了後に着手 |
+| 3 | **10-C** | 双方向参照の削減 | 10-Bの副産物として部分的に解消 |
+| 保留 | **10-D** | 純粋Facade化 | 10-A/B完了後に残存ファサードを再評価してから判断 |
 
 ---
 
-## Phase 9: UIManager 自体の改修（将来計画）
+## 未対応の技術的負債（優先度低）
 
-### 新サービス作成が必要なもの
-
-| サービス候補 | カバー範囲 | 影響ファイル | 優先度 |
-|------------|----------|------------|--------|
-| **PlayerInfoService** | update_player_info_panels | spell_world_curse, tile_battle_executor, tile_summon_executor, debug_controller, land_action_helper, card_selection_handler, dominio_command_handler, cpu_turn_processor | 高（最頻出の残存参照）**制約 2 適用: 描画更新のみ、ロジック判定禁止** |
-| **TapTargetService** | tap_target_manager 操作 | spell_mystic_arts, spell_target_selection_handler | 中 |
-| **GameResultService** | show_win/lose_screen | game_result_handler | 低（1ファイルのみ） |
-
-### アーキテクチャ変更が必要なもの
-
-| 課題 | 対象 | 解決策候補 |
-|------|------|----------|
-| card.gd の find_ui_manager_recursive | card.gd (32 refs) | Card → Signal 化、CardSelectionService 注入 |
-| tutorial/explanation の UIコンポーネント直接参照 | tutorial_manager, explanation_mode (44 refs) | TutorialService 新設 or UIManager API 追加 |
-| UIManager.set_message() | spell_borrow, card_sacrifice_helper, spell_creature_swap | MessageService に追加 or 廃止 |
-| toggle_debug_mode() | debug_controller | DebugService 新設 or 現状維持 |
-
----
-
-## UIManager 未サービス化メソッド一覧
-
-Phase 8 で「UIManager 固有」として残したメソッド・プロパティの全量:
-
-| メソッド/プロパティ | 使用ファイル数 | サービス化候補 |
-|-------------------|-------------|--------------|
-| `update_player_info_panels()` | 8+ | PlayerInfoService |
-| `tap_target_manager` | 2 | TapTargetService |
-| `show_win_screen()` / `show_win_screen_async()` | 1 | GameResultService |
-| `show_lose_screen_async()` | 1 | GameResultService |
-| `toggle_debug_mode()` | 1 | DebugService |
-| `set_message()` | 3 | MessageService 拡張 |
-| `show_action_menu()` | 1 | DominioService |
-| `show_dominio_order_button()` / `hide_*` | 3 | DominioService |
-| `dominio_order_ui` 直接参照 | 1 (DCH) | DominioService |
-| `card_selection_ui.deactivate()` | 1 | CardSelectionService 拡張 |
-| `card_selection_ui.selection_mode` | 1 (card.gd) | CardSelectionService |
-| `card_selection_ui.enable_card_selection()` | 1 | CardSelectionService 拡張 |
-| `on_card_button_pressed()` | 1 (card.gd) | Signal 化 |
-| `hand_display` 直接参照 | 2 | CardSelectionService 拡張 |
-| `global_action_buttons` 直接参照 | 2 (tutorial) | NavigationService 拡張 or TutorialService |
-| `level_up_selected` signal | 1 (tutorial) | Signal リレー |
-| `show_level_up_ui()` / `hide_level_up_ui()` | 1 (TAP) | LevelUpService |
-| `show_level_selection()` | 1 (LAH) | LevelUpService |
-| `ui_layer.add_child()` | 1 (game_menu) | UIManager 内部 |
-| `add_child()` (misc) | 2 | UIManager 内部 |
-| `game_flow_manager_ref` | 1 (card.gd) | 設計変更 |
-
----
-
-## Phase 8 完了済みサブフェーズ（参考）
-
-| サブフェーズ | 内容 | 実施日 |
-|------------|------|--------|
-| 8-F | UIManager 内部4サービス分割 | 2026-02-18 |
-| 8-A | ItemPhaseHandler Signal化（ui_manager完全削除） | 2026-02-18 |
-| 8-B | DominioCommandHandler サービス注入（90→49） | 2026-02-18 |
-| 8-I | タイル系6ファイル context経由サービス注入 | 2026-02-18 |
-| 8-K | 移動系3ファイル サービス注入 | 2026-02-18 |
-| 8-E | 兄弟システム4ファイル サービス注入 | 2026-02-18 |
-| 8-G | CSH + LAH サービス注入 | 2026-02-18 |
-| 8-J | Spell系3ファイル サービス注入 | 2026-02-18 |
-| 8-L | 小規模3ファイル サービス注入 | 2026-02-18 |
-| 8-N | STSH(28→18) + LSH(9→2) サービス注入 | 2026-02-18 |
-| 8-O | SMA(46→29) + DC(31→11) サービス注入 | 2026-02-18 |
-| 8-M | card_selected リレーパターン（UIManager→CSS） | 2026-02-18 |
-| 8-P | Group B 4ファイル card_selected 移行（68→~34） | 2026-02-18 |
+| 項目 | 内容 | 備考 |
+|------|------|------|
+| 8-H | UIコンポーネント逆参照除去 | 規約変更で大部分不要 |
+| 8-C | BankruptcyHandler パネル分離 | 56行、機能問題なし |
+| tutorial系 | tutorial_manager, explanation_mode の UIManager 直接参照 | チュートリアル再設計が前提 |
+| set_message() | spell_borrow, card_sacrifice_helper, spell_creature_swap で使用 | MessageService 拡張で対応可能 |
+| tap_target_manager | spell_mystic_arts, spell_target_selection_handler で参照 | TapTargetService 新設候補 |
