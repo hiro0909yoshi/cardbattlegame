@@ -373,8 +373,8 @@ func _on_battle_completed(success: bool, tile_index: int):
 
 	if _card_selection_service:
 		_card_selection_service.hide_card_selection_ui()
-	if ui_manager:
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 
 	emit_signal("invasion_completed", success, tile_index)
 	# _complete_callback.call()  ← Phase 2: invasion_completed relay chain で完了処理されるため不要

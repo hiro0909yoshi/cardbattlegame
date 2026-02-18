@@ -175,8 +175,8 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		# UI更新
 		if _card_selection_service:
 			_card_selection_service.hide_card_selection_ui()
-		if ui_manager:
-			ui_manager.update_player_info_panels()
+		if ui_manager and ui_manager.player_info_service:
+			ui_manager.player_info_service.update_panels()
 		print("[TileSummonExecutor] execute_summon完了")
 		complete_callback.call()
 	else:
@@ -214,8 +214,8 @@ func execute_summon_for_cpu(card_index: int, complete_callback: Callable) -> boo
 	# UI更新
 	if _card_selection_service:
 		_card_selection_service.hide_card_selection_ui()
-	if ui_manager:
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 
 	complete_callback.call()  # ← 召喚時は relay chain がないため必須
 	return true

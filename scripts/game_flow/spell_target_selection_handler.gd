@@ -365,8 +365,8 @@ func _exit_target_selection_phase() -> void:
 		_message_service.hide_action_prompt()
 
 	# UI更新
-	if _ui_manager and _ui_manager.has_method("update_player_info_panels"):
-		_ui_manager.update_player_info_panels()
+	if _ui_manager and _ui_manager.player_info_service:
+		_ui_manager.player_info_service.update_panels()
 
 	_is_selecting = false
 

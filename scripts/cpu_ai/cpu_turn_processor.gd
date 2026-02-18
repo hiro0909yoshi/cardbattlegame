@@ -342,8 +342,8 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 
 			# 表示更新（UIManager固有の操作）
 			board_system.update_all_tile_displays()
-			if ui_manager:
-				ui_manager.update_player_info_panels()
+			if ui_manager and ui_manager.player_info_service:
+				ui_manager.player_info_service.update_panels()
 
 			print("CPU: 土地をレベルアップ！")
 	
@@ -359,8 +359,8 @@ func _on_invasion_completed(_success: bool, _tile_index: int):
 		_card_selection_service.hide_card_selection_ui()
 
 	# UIManager で情報パネルを更新（UIツリー操作）
-	if ui_manager:
-		ui_manager.update_player_info_panels()
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
 
 	_complete_action()
 
