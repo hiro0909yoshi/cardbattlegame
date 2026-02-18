@@ -26,6 +26,9 @@ var _saved_nav_special_text: String = ""
 var _saved_nav_phase_comment: String = ""
 var _nav_state_saved: bool = false
 
+## インフォパネルの×ボタンロック状態（enable_navigation/disable_navigationの上書きを防止）
+var _info_panel_back_locked: bool = false
+
 
 ## 初期化
 ## global_action_buttons: GlobalActionButtons コンポーネント
@@ -35,12 +38,24 @@ func setup(global_action_buttons: GlobalActionButtons, unlock_input_callback: Ca
 	_unlock_input_callback = unlock_input_callback
 
 
+## インフォパネルの×ボタンを保護（enable_navigation等による上書きを防止）
+func lock_info_panel_back() -> void:
+	_info_panel_back_locked = true
+
+
+## インフォパネルの×ボタン保護を解除
+func unlock_info_panel_back() -> void:
+	_info_panel_back_locked = false
+
+
 ## ナビゲーションボタンを設定
 ## 入力待ち状態になったのでロック解除
 ## 新しいナビゲーション設定時は前の保存状態を無効化
 func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up_cb: Callable = Callable(), down_cb: Callable = Callable()) -> void:
 	if _unlock_input_callback.is_valid():
 		_unlock_input_callback.call()
+	if _info_panel_back_locked:
+		return
 	_nav_state_saved = false
 	_compat_confirm_cb = confirm_cb
 	_compat_back_cb = back_cb
@@ -52,6 +67,8 @@ func enable_navigation(confirm_cb: Callable = Callable(), back_cb: Callable = Ca
 
 ## ナビゲーションボタンを全てクリア
 func disable_navigation() -> void:
+	if _info_panel_back_locked:
+		return
 	_compat_confirm_cb = Callable()
 	_compat_back_cb = Callable()
 	_compat_up_cb = Callable()
@@ -67,8 +84,14 @@ func is_nav_state_saved() -> bool:
 
 ## 現在のナビゲーション状態を保存（閲覧モード用）
 ## 既に保存済みの場合は上書きしない（連続閲覧対応）
+## コールバックが全て空の場合は保存しない（restore_current_phase のフォールバックを使う）
 func save_navigation_state() -> void:
 	if _nav_state_saved:
+		return
+	# tile_tapped → creature_tapped 連続処理時、tile_tapped でコールバックがクリアされた
+	# 空の状態を保存すると restore 時にボタンが全消滅するため、保存をスキップ
+	if not _compat_confirm_cb.is_valid() and not _compat_back_cb.is_valid() \
+		and not _compat_up_cb.is_valid() and not _compat_down_cb.is_valid():
 		return
 	_saved_nav_confirm = _compat_confirm_cb
 	_saved_nav_back = _compat_back_cb
@@ -102,6 +125,7 @@ func restore_navigation_state() -> void:
 	_compat_up_cb = _saved_nav_up
 	_compat_down_cb = _saved_nav_down
 	_nav_state_saved = false
+	_info_panel_back_locked = false
 	_update_compat_buttons()
 	# special_button状態を復元
 	if _global_action_buttons:
@@ -117,6 +141,7 @@ func restore_navigation_state() -> void:
 ## ナビゲーション保存状態をクリア
 func clear_navigation_saved_state() -> void:
 	_nav_state_saved = false
+	_info_panel_back_locked = false
 
 
 ## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元

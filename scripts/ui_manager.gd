@@ -576,9 +576,16 @@ func clear_navigation_saved_state():
 		_navigation_service.clear_navigation_saved_state()
 
 ## 現在アクティブなフェーズのナビゲーション・フェーズコメントを復元
-## 閲覧モードから戻る時に使用（save/restoreではなくフェーズに直接依頼）
+## 閲覧モードから戻る時に使用
+## Primary: 保存されたナビ状態があれば復元
+## Fallback: 保存がない場合、card_selection_ui にフェーズ固有の復元を依頼
 func restore_current_phase():
-	restore_navigation_state()
+	if _navigation_service and _navigation_service.is_nav_state_saved():
+		restore_navigation_state()
+		return
+	# Fallback: save が無効化されている場合、フェーズ固有の復元
+	if card_selection_ui and card_selection_ui.is_active:
+		card_selection_ui.restore_navigation()
 
 ## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
 func restore_spell_phase_buttons():
@@ -747,12 +754,16 @@ func _hide_all_info_panels_raw():
 	# パネルを閉じる（clear_buttons=false: hide_panel内でのボタン操作を防ぐ）
 	if _info_panel_service:
 		_info_panel_service.hide_all_info_panels(false)
-	# ナビゲーションを全クリア（NavigationService内のsaved stateは影響されない）
+	# インフォパネルのロックを解除してからナビをクリア
+	if _navigation_service:
+		_navigation_service.unlock_info_panel_back()
 	disable_navigation()
 	clear_special_button()
 
 ## 全てのインフォパネルを閉じる（clear_buttons指定可能）
 func hide_all_info_panels(clear_buttons: bool = true):
+	if _navigation_service:
+		_navigation_service.unlock_info_panel_back()
 	if _info_panel_service:
 		_info_panel_service.hide_all_info_panels(clear_buttons)
 
@@ -805,6 +816,9 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 			if card_script.currently_selected_card:
 				card_script.currently_selected_card.deselect_card()
 		, "閉じる")
+		# インフォパネル表示中は×ボタンを保護
+		if _navigation_service:
+			_navigation_service.lock_info_panel_back()
 
 		# 閲覧モード中のフェーズコメント表示
 		var card_name = card_data.get("name", "")

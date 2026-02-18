@@ -24,6 +24,21 @@ if DebugSettings.disable_lands_required: ...
 if tile_action_processor.debug_disable_lands_required: ...
 ```
 
+### シグナル例外の明確なルール
+表示更新（UI反映）目的のシグナルは上位→UI方向でも許容。
+ただし状態変更（ロジック処理）は絶対禁止。
+判断基準: シグナルハンドラ内で他システムのプロパティを変更していたらNG。
+
+### 依存カウントはレイヤー方向も考慮
+5つ以上の依存は見直しサインだが、依存の種類も重要。
+- 同レイヤー依存5つ → 許容範囲
+- UI依存3 + ロジック依存2（レイヤーまたぎ混在） → 危険信号
+
+### 規約の例外ケース
+| dominio系 | 関連ハンドラ間の直接参照・密結合を許容（ドメイン的に1機能群）|
+| battle系 | `_ref`サフィックスの命名維持（既存一貫性）|
+| 表示更新Signal | 上位→UI方向を許容（状態変更は絶対禁止）|
+
 ### UI表示はui_managerの委譲メソッド経由でアクセス
 phase_display, global_comment_ui, hand_displayへのチェーンアクセスは委譲メソッドを使う。
 - `ui_manager.show_toast(msg)` → `phase_display.show_toast()`

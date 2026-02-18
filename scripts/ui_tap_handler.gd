@@ -60,6 +60,7 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 
 ## タイルがタップされた時のハンドラ（クリーチャーがいない場合）
 func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
+	print("[UITapHandler] _on_tile_tapped: タイル%d" % tile_index)
 	if ui_manager.tap_target_manager and ui_manager.tap_target_manager.is_active:
 		if ui_manager.tap_target_manager.handle_tile_tap(tile_index, tile_data):
 			return
@@ -73,6 +74,7 @@ func _on_tile_tapped(tile_index: int, tile_data: Dictionary):
 
 ## 空（タイル外）がタップされた時のハンドラ
 func _on_empty_tapped():
+	print("[UITapHandler] _on_empty_tapped")
 	if ui_manager.tap_target_manager and ui_manager.tap_target_manager.is_active:
 		if ui_manager.tap_target_manager.handle_empty_tap():
 			return

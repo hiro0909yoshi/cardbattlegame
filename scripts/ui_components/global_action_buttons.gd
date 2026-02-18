@@ -31,9 +31,6 @@ var game_flow_manager_ref = null
 # 説明モード中フラグ（trueの場合、入力ロックを無視）
 var explanation_mode_active: bool = false
 
-## コールバック変更フレーム（同一フレーム内の誤発火防止）
-var _callback_set_frame: int = -1
-
 # 定数
 const BUTTON_SIZE = 280
 const BUTTON_SPACING = 42
@@ -50,32 +47,32 @@ func _ready():
 func _setup_ui():
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 1000
-	
+
 	# 上ボタン（▲）
 	up_button = _create_button("▲", Color(0.3, 0.4, 0.6), 100)
 	up_button.pressed.connect(_on_up_pressed)
 	add_child(up_button)
-	
+
 	# 下ボタン（▼）
 	down_button = _create_button("▼", Color(0.3, 0.4, 0.6), 100)
 	down_button.pressed.connect(_on_down_pressed)
 	add_child(down_button)
-	
+
 	# 決定ボタン（✓）
 	confirm_button = _create_button("✓", Color(0.2, 0.6, 0.3), 120)
 	confirm_button.pressed.connect(_on_confirm_pressed)
 	add_child(confirm_button)
-	
+
 	# 戻るボタン（✕）
 	back_button = _create_button("✕", Color(0.6, 0.3, 0.3), 100)
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
-	
+
 	# 特殊ボタン（左下、テキストは動的）
 	special_button = _create_special_button("", Color(0.4, 0.2, 0.6))  # 紫色、専用スタイル
 	special_button.pressed.connect(_on_special_pressed)
 	add_child(special_button)
-	
+
 	_update_positions()
 	get_tree().root.size_changed.connect(_update_positions)
 
@@ -87,7 +84,7 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	button.size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
 	button.focus_mode = Control.FOCUS_NONE
 	button.visible = true  # 常に表示
-	
+
 	var style = StyleBoxFlat.new()
 	style.bg_color = color
 	var corner_radius := int(BUTTON_SIZE / 2.0)
@@ -101,24 +98,24 @@ func _create_button(text: String, color: Color, font_size: int) -> Button:
 	style.border_width_right = 3
 	style.border_color = Color(1, 1, 1, 0.5)
 	button.add_theme_stylebox_override("normal", style)
-	
+
 	var hover_style = style.duplicate()
 	hover_style.bg_color = color.lightened(0.2)
 	button.add_theme_stylebox_override("hover", hover_style)
-	
+
 	var pressed_style = style.duplicate()
 	pressed_style.bg_color = color.darkened(0.2)
 	button.add_theme_stylebox_override("pressed", pressed_style)
-	
+
 	var disabled_style = style.duplicate()
 	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
 	disabled_style.border_color = Color(0.5, 0.5, 0.5, 0.3)
 	button.add_theme_stylebox_override("disabled", disabled_style)
-	
+
 	button.add_theme_font_size_override("font_size", font_size)
 	button.add_theme_color_override("font_color", Color.WHITE)
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
-	
+
 	return button
 
 
@@ -130,7 +127,7 @@ func _create_special_button(text: String, _color: Color) -> Button:
 	button.size = Vector2(BUTTON_SIZE, BUTTON_SIZE)
 	button.focus_mode = Control.FOCUS_NONE
 	button.visible = true
-	
+
 	# グラデーション風の背景スタイル
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.5, 0.15, 0.7)  # 鮮やかな紫
@@ -148,31 +145,31 @@ func _create_special_button(text: String, _color: Color) -> Button:
 	style.shadow_size = 8
 	style.shadow_offset = Vector2(4, 4)
 	button.add_theme_stylebox_override("normal", style)
-	
+
 	var hover_style = style.duplicate()
 	hover_style.bg_color = Color(0.6, 0.2, 0.8)  # 明るい紫
 	hover_style.border_color = Color(1, 0.95, 0.6, 1)  # 明るいゴールド
 	button.add_theme_stylebox_override("hover", hover_style)
-	
+
 	var pressed_style = style.duplicate()
 	pressed_style.bg_color = Color(0.35, 0.1, 0.5)  # 暗い紫
 	pressed_style.shadow_size = 2
 	pressed_style.shadow_offset = Vector2(1, 1)
 	button.add_theme_stylebox_override("pressed", pressed_style)
-	
+
 	var disabled_style = style.duplicate()
 	disabled_style.bg_color = Color(0.3, 0.3, 0.3, 0.5)
 	disabled_style.border_color = Color(0.5, 0.5, 0.5, 0.3)
 	disabled_style.shadow_size = 0
 	button.add_theme_stylebox_override("disabled", disabled_style)
-	
+
 	# 大きなフォントサイズ
 	button.add_theme_font_size_override("font_size", GC.FONT_SIZE_ICON)
 	button.add_theme_color_override("font_color", Color(1, 0.95, 0.7))  # クリーム色
 	button.add_theme_color_override("font_disabled_color", Color(0.5, 0.5, 0.5))
 	button.add_theme_color_override("font_outline_color", Color(0.1, 0.0, 0.15))
 	button.add_theme_constant_override("outline_size", 4)  # 文字のアウトライン
-	
+
 	return button
 
 
@@ -181,20 +178,20 @@ func _update_positions():
 	if not viewport:
 		return
 	var viewport_size = viewport.get_visible_rect().size
-	
+
 	# 右下のボタン群
 	var base_x = viewport_size.x - MARGIN_RIGHT - BUTTON_SIZE
 	var back_y = viewport_size.y - MARGIN_BOTTOM - BUTTON_SIZE
-	
+
 	var confirm_y = back_y - BUTTON_SIZE - BUTTON_SPACING
 	var down_y = confirm_y - BUTTON_SIZE - BUTTON_SPACING
 	var up_y = down_y - BUTTON_SIZE - BUTTON_SPACING
-	
+
 	up_button.position = Vector2(base_x, up_y)
 	down_button.position = Vector2(base_x, down_y)
 	confirm_button.position = Vector2(base_x, confirm_y)
 	back_button.position = Vector2(base_x, back_y)
-	
+
 	# 左下の特殊ボタン（×ボタンと同じ高さ）
 	special_button.position = Vector2(MARGIN_LEFT, back_y)
 
@@ -242,10 +239,6 @@ func _is_input_locked() -> bool:
 func _on_confirm_pressed():
 	if _is_input_locked():
 		return
-	# コールバックが同一フレームで変更された場合はスキップ
-	if _callback_set_frame == Engine.get_process_frames():
-		print("[GlobalActionButtons] confirm_pressed SKIPPED (same frame as callback change)")
-		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
@@ -255,10 +248,6 @@ func _on_confirm_pressed():
 
 func _on_back_pressed():
 	if _is_input_locked():
-		return
-	# コールバックが同一フレームで変更された場合はスキップ（マウスDOWN→UP間のコールバック変更対策）
-	if _callback_set_frame == Engine.get_process_frames():
-		print("[GlobalActionButtons] back_pressed SKIPPED (same frame as callback change)")
 		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
@@ -302,7 +291,6 @@ func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up
 	back_callback = back_cb
 	up_callback = up_cb
 	down_callback = down_cb
-	_callback_set_frame = Engine.get_process_frames()
 	update_button_states()
 
 
