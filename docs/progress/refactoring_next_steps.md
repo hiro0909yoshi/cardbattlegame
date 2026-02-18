@@ -189,6 +189,8 @@ var _navigation_service: NavigationService
 | ✅ | **8-M** | CardSelectionService SSoT化 | 4 | 高 | ✅ 完了 |
 | ✅ | **8-P** | Spell系 3段チェーン解消 | 5 | 高 | ✅ 完了 |
 | ✅ | **8-D** | UIManager 最終評価 + 8-D2: private アクセス解消 | 4 | 中 | ✅ 完了 |
+| ✅ | **9-A** | ui_tap_handler に is_nav_state_saved() ガード追加 | 1 | 低 | ✅ 完了 |
+| ✅ | **9-B** | restore_current_phase フォールバック5分岐削除（58行→1行、SPH後方参照解消） | 2 | 低 | ✅ 完了 |
 
 **順序の理由**: 構造（サービス分割）を先に確立し、Signal 配線は確定した構造に対して行う。逆にすると Signal のリスナー先がまだ UIManager のままで、分割時にやり直しになる。
 

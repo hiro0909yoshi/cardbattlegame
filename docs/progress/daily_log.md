@@ -12,6 +12,23 @@
 
 ---
 
+## 2026年2月19日（Session: Phase 9 状態ルーター解体）
+
+### ✅ Phase 9-A: ui_tap_handler is_nav_state_saved() ガード追加
+
+- `_close_info_panel_and_restore()` に `is_nav_state_saved()` チェック追加
+- `show_card_info_only()` 経由のパネル閉じ時に `restore_current_phase()` をスキップ
+- フォールバック到達ゼロを確認
+
+### ✅ Phase 9-B: restore_current_phase フォールバック5分岐削除
+
+- `restore_current_phase()` を58行→1行に簡素化（`restore_navigation_state()` のみ）
+- `spell_phase_handler_ref` を UIManager から完全削除（後方参照1件解消）
+- `game_system_manager.gd` の設定行も削除
+- **成果**: UIManager から「状態ルーター」責務が消滅、57行削減
+
+---
+
 ## 2026年2月18日（Session: Phase 8 UIManager依存正規化）
 
 ### ✅ Phase 8-F: UIManager 内部4サービス分割（前セッション完了分）
