@@ -85,7 +85,11 @@ func _on_empty_tapped():
 ## インフォパネルを閉じてフェーズ状態を復元する共通処理
 func _close_info_panel_and_restore():
 	ui_manager.hide_all_info_panels(true)
-	ui_manager.restore_current_phase()
+	if ui_manager.is_nav_state_saved():
+		# show_card_info() で開かれたパネル → 保存されたナビを復元
+		ui_manager.restore_current_phase()
+	# else: show_card_info_only() で開かれたパネル
+	# ナビは変更されていないので復元不要
 	# カードのホバー状態を解除
 	var card_script = load("res://scripts/card.gd")
 	if card_script.currently_selected_card:
