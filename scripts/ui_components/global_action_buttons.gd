@@ -31,6 +31,9 @@ var game_flow_manager_ref = null
 # 説明モード中フラグ（trueの場合、入力ロックを無視）
 var explanation_mode_active: bool = false
 
+## コールバック変更フレーム（同一フレーム内の誤発火防止）
+var _callback_set_frame: int = -1
+
 # 定数
 const BUTTON_SIZE = 280
 const BUTTON_SPACING = 42
@@ -239,6 +242,10 @@ func _is_input_locked() -> bool:
 func _on_confirm_pressed():
 	if _is_input_locked():
 		return
+	# コールバックが同一フレームで変更された場合はスキップ
+	if _callback_set_frame == Engine.get_process_frames():
+		print("[GlobalActionButtons] confirm_pressed SKIPPED (same frame as callback change)")
+		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
@@ -248,6 +255,10 @@ func _on_confirm_pressed():
 
 func _on_back_pressed():
 	if _is_input_locked():
+		return
+	# コールバックが同一フレームで変更された場合はスキップ（マウスDOWN→UP間のコールバック変更対策）
+	if _callback_set_frame == Engine.get_process_frames():
+		print("[GlobalActionButtons] back_pressed SKIPPED (same frame as callback change)")
 		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
@@ -291,6 +302,7 @@ func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up
 	back_callback = back_cb
 	up_callback = up_cb
 	down_callback = down_cb
+	_callback_set_frame = Engine.get_process_frames()
 	update_button_states()
 
 
