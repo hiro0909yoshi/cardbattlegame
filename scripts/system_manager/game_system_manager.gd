@@ -924,7 +924,6 @@ func _initialize_phase1a_handlers() -> void:
 
 	# UIManagerにハンドラー参照をキャッシュ（チェーンアクセス解消用）
 	if ui_manager:
-		ui_manager.spell_phase_handler_ref = spell_phase_handler
 		ui_manager.dominio_command_handler_ref = dominio_command_handler
 
 	# battle_status_overlayの直接参照を設定（チェーンアクセス解消）
