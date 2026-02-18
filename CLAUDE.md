@@ -46,16 +46,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **8-F**: UIManager 内部4サービス分割（NavigationService, MessageService, CardSelectionService, InfoPanelService）✅
   - **8-G**: ヘルパーファイル サービス直接注入（target_selection_helper完全移行、tile_summon/battle_executor部分移行）✅
   - **8-A**: ItemPhaseHandler Signal化（4 Signals、ui_manager完全削除）✅
-  - **8-H**: PlayerInfoService 新規作成 + 呼び出し全変更（2026-02-19）✅
-    - PlayerInfoService 新規作成（描画更新一元管理）
-    - UIManager: player_info_service 変数・アクセサ追加、create_ui() でセットアップ
-    - GSM: Phase 4-4 でサービス初期化コード追加
-    - Step 4 Batch A-C: 全呼び出し元を service に変更（3+4+6=13ファイル、26箇所）
-    - Step 5: UIManager ファサードメソッド削除
-    - UIManager.update_player_info_panels() 完全削除、PlayerInfoService 一元化
-  - **合計**: 37個のUI Signal、8/8ハンドラーUI完全分離、PlayerInfoService一元管理
+  - **合計**: 37個のUI Signal、7/8ハンドラーUI完全分離
+- ✅ **Phase 9**: 状態ルーター解体（2026-02-19）✅ **完了**
+  - restore_current_phase フォールバック5分岐削除（58行→1行）
+  - spell_phase_handler_ref 完全削除（後方参照1件解消）
+- ✅ **Phase 10-A**: PlayerInfoService サービス化（2026-02-19）✅ **完了**
+  - PlayerInfoService 新規作成（描画更新のみ）
+  - 16ファイル・23箇所の update_player_info_panels() を player_info_service.update_panels() に変更
+  - UIManager の5番目のサービスとして統合
 
-詳細は `docs/progress/refactoring_next_steps.md` を参照
+詳細は `docs/progress/refactoring_next_steps_2.md` を参照
 
 ---
 
@@ -96,10 +96,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
      - **合計**: 33 Signals、5/6ハンドラーUI層完全分離
    - ✅ Phase 7-A: CPU AI パススルー除去（完了、2026-02-17）
    - ✅ Phase 7-B: SPH UI依存逆転（完了、2026-02-17）
-   - 🔄 Phase 8: UIManager依存方向の正規化（進行中、2026-02-18〜）
+   - ✅ Phase 8: UIManager依存方向の正規化（完了、2026-02-18）
      - ✅ 8-F: UIManager内部4サービス分割
-     - ✅ 8-G: ヘルパーファイル部分移行（3/6ファイル完了）
+     - ✅ 8-G: ヘルパーファイル部分移行
      - ✅ 8-A: ItemPhaseHandler Signal化（4 Signals）
+   - ✅ Phase 9: 状態ルーター解体（完了、2026-02-19）
+   - ✅ Phase 10-A: PlayerInfoService サービス化（完了、2026-02-19）
 
 ### 参照ドキュメント
 
@@ -467,7 +469,7 @@ else:
 ### Mandatory Update Rules (重要)
 
 **作業計画・リファクタリング**:
-- 作業計画を詰めた場合は **必ず** `docs/progress/refactoring_next_steps.md` に記録すること
+- 作業計画を詰めた場合は **必ず** `docs/progress/refactoring_next_steps_2.md` に記録すること
 - 計画変更時も即座に更新（追記ではなく上書き更新）
 - セッション終了前に必ず現状を記録
 
@@ -513,7 +515,7 @@ else:
 ### Active Priorities
 - **P0**: Defensive programming layer - add null reference checks to prevent crashes
   - 10+ high-risk locations identified in GameFlowManager, BattleSystem, SpellPhaseHandler
-  - See `docs/progress/refactoring_next_steps.md` for details
+  - See `docs/progress/refactoring_next_steps_2.md` for details
 
 ### Deprecated Systems
 - **Attribute affinity system** (fire→wind→earth→water cycle) - marked for removal
@@ -586,7 +588,7 @@ This prevents:
 - `docs/progress/daily_log.md` - Recent work history
 - `docs/progress/skill_implementation_status.md` - Skill completion status
 - `docs/progress/refactoring_progress.md` - Code refactoring history
-- `docs/progress/refactoring_next_steps.md` - Current and planned refactoring work
+- `docs/progress/refactoring_next_steps_2.md` - Current and planned refactoring work
 
 ### Issue Management
 - `docs/issues/issues.md` - Active bugs and tasks

@@ -12,7 +12,7 @@
 
 ---
 
-## 2026年2月19日（Session: Phase 9 状態ルーター解体）
+## 2026年2月19日（Session: Phase 9 + Phase 10-A）
 
 ### ✅ Phase 9-A: ui_tap_handler is_nav_state_saved() ガード追加
 
@@ -26,6 +26,15 @@
 - `spell_phase_handler_ref` を UIManager から完全削除（後方参照1件解消）
 - `game_system_manager.gd` の設定行も削除
 - **成果**: UIManager から「状態ルーター」責務が消滅、57行削減
+
+### ✅ Phase 10-A: PlayerInfoService サービス化
+
+- `scripts/ui_services/player_info_service.gd` 新規作成（描画更新のみ）
+- UIManager に5番目のサービスとして統合（変数・アクセサ・_ready・create_ui）
+- 16ファイル・23箇所の `update_player_info_panels()` を `player_info_service.update_panels()` に変更
+- BankruptcyHandler Signal接続も PlayerInfoService 経由に変更
+- UIManager の `update_player_info_panels()` Facade メソッド削除
+- **成果**: UIManagerを経由する最大理由が解消
 
 ---
 
