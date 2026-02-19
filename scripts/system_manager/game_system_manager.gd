@@ -928,6 +928,14 @@ func _initialize_phase1a_handlers() -> void:
 		item_phase_handler
 	)
 
+	# Phase A-1: ItemPhaseHandler 直接注入
+	if item_phase_handler:
+		if dominio_command_handler:
+			dominio_command_handler._item_phase_handler = item_phase_handler
+		if board_system_3d and board_system_3d.tile_action_processor and board_system_3d.tile_action_processor.battle_executor:
+			board_system_3d.tile_action_processor.battle_executor._item_phase_handler = item_phase_handler
+		print("[GameSystemManager] ItemPhaseHandler 直接注入完了（DCH, TBE）")
+
 	# target_selection_helper を設定（move_self など複数タイル選択時に必要）
 	if game_flow_manager and game_flow_manager.target_selection_helper:
 		spell_phase_handler.target_selection_helper = game_flow_manager.target_selection_helper

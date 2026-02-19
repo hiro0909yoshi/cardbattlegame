@@ -75,7 +75,7 @@ var board_system = null
 var game_flow_manager = null
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 var player_system = null
-var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
+var _item_phase_handler = null  # GSM直接注入
 var battle_system = null       # board_system.battle_system参照
 var spell_cast_notification_ui = null  # spell_phase_handler.spell_cast_notification_ui参照
 
@@ -103,11 +103,6 @@ func set_dominio_order_ui(dou) -> void:
 		if not _dominio_order_ui.level_up_selected.is_connected(_on_level_up_selected):
 			_dominio_order_ui.level_up_selected.connect(_on_level_up_selected)
 
-## item_phase_handlerの遅延取得（初期化順序の都合でinitialize時にはまだ存在しない場合がある）
-func _get_item_phase_handler():
-	if not _item_phase_handler and game_flow_manager and game_flow_manager.get("item_phase_handler"):
-		_item_phase_handler = game_flow_manager.item_phase_handler
-	return _item_phase_handler
 
 func _ready():
 	pass
@@ -744,8 +739,8 @@ func _on_move_item_phase_completed():
 		# 攻撃側のアイテムフェーズ完了 → 防御側のアイテムフェーズ開始
 		
 		# 攻撃側のアイテムを保存
-		if _get_item_phase_handler():
-			pending_move_attacker_item = _get_item_phase_handler().get_selected_item()
+		if _item_phase_handler:
+			pending_move_attacker_item = _item_phase_handler.get_selected_item()
 		
 		# 防御側のアイテムフェーズを開始
 		var defender_owner = pending_move_battle_tile_info.get("owner", -1)
@@ -753,10 +748,10 @@ func _on_move_item_phase_completed():
 			is_waiting_for_move_defender_item = true
 			
 			# 防御側のアイテムフェーズ開始
-			if _get_item_phase_handler():
+			if _item_phase_handler:
 				# 再度シグナルに接続（ONE_SHOTなので再接続が必要）
-				if not _get_item_phase_handler().item_phase_completed.is_connected(_on_move_item_phase_completed):
-					_get_item_phase_handler().item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+				if not _item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
+					_item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
 				
 				# 防御側クリーチャーのデータを取得して渡す
 				var defender_creature = pending_move_battle_tile_info.get("creature", {})
@@ -765,7 +760,7 @@ func _on_move_item_phase_completed():
 				if battle_status_overlay:
 					battle_status_overlay.highlight_side("defender")
 				
-				_get_item_phase_handler().start_item_phase(defender_owner, defender_creature)
+				_item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				# ItemPhaseHandlerがない場合は直接バトル
 				_execute_move_battle()
@@ -776,8 +771,8 @@ func _on_move_item_phase_completed():
 		# 防御側のアイテムフェーズ完了 → バトル開始
 		
 		# 防御側のアイテムを保存
-		if _get_item_phase_handler():
-			pending_move_defender_item = _get_item_phase_handler().get_selected_item()
+		if _item_phase_handler:
+			pending_move_defender_item = _item_phase_handler.get_selected_item()
 		
 		is_waiting_for_move_defender_item = false
 		_execute_move_battle()
@@ -1000,10 +995,10 @@ func _execute_move_for_cpu(command: Dictionary) -> bool:
 	var item_index = command.get("item_index", -1)
 	var item_data = command.get("item_data", {})
 	if item_index >= 0 and not item_data.is_empty():
-		if _get_item_phase_handler():
+		if _item_phase_handler:
 			var item_with_index = item_data.duplicate()
 			item_with_index["_hand_index"] = item_index
-			_get_item_phase_handler().set_preselected_attacker_item(item_with_index)
+			_item_phase_handler.set_preselected_attacker_item(item_with_index)
 			print("[DominioCommandHandler] CPU: 移動侵略アイテム事前設定: %s (index=%d)" % [item_data.get("name", "?"), item_index])
 	
 	# LandActionHelper.confirm_move を使用（空き地・敵ドミニオ両対応）
@@ -1110,14 +1105,14 @@ func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, crea
 			attacker_display, defender_display, "attacker")
 	
 	# 4. アイテムフェーズを開始（攻撃側）
-	if _get_item_phase_handler():
+	if _item_phase_handler:
 		# アイテムフェーズ完了シグナルに接続
-		if not _get_item_phase_handler().item_phase_completed.is_connected(_on_move_item_phase_completed):
-			_get_item_phase_handler().item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
+		if not _item_phase_handler.item_phase_completed.is_connected(_on_move_item_phase_completed):
+			_item_phase_handler.item_phase_completed.connect(_on_move_item_phase_completed, CONNECT_ONE_SHOT)
 		
 		# 攻撃側のアイテムフェーズ開始（防御側情報を渡して事前選択）
 		var defender_tile_info = pending_move_battle_tile_info
-		_get_item_phase_handler().start_item_phase(
+		_item_phase_handler.start_item_phase(
 			attacker_player,
 			creature_data,
 			defender_tile_info

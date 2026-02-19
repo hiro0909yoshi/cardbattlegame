@@ -15,7 +15,7 @@ var ui_manager: UIManager
 var _message_service: MessageService = null
 var _card_selection_service: CardSelectionService = null
 var game_flow_manager = null
-var _item_phase_handler = null  # gfm.item_phase_handler参照（遅延取得）
+var _item_phase_handler = null  # GSM直接注入
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
@@ -25,11 +25,6 @@ func set_battle_status_overlay(overlay) -> void:
 	battle_status_overlay = overlay
 	print("[TileBattleExecutor] battle_status_overlay 直接参照を設定")
 
-## item_phase_handlerの遅延取得
-func _get_item_phase_handler():
-	if not _item_phase_handler and game_flow_manager and game_flow_manager.get("item_phase_handler"):
-		_item_phase_handler = game_flow_manager.item_phase_handler
-	return _item_phase_handler
 
 # バトル情報の一時保存
 var pending_battle_card_index: int = -1
@@ -177,10 +172,10 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 					attacker_display, defender_display, "attacker")
 	
 	# アイテムフェーズ開始
-	if _get_item_phase_handler():
-		if not _get_item_phase_handler().item_phase_completed.is_connected(_on_item_phase_completed):
-			_get_item_phase_handler().item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
-		_get_item_phase_handler().start_item_phase(
+	if _item_phase_handler:
+		if not _item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+			_item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+		_item_phase_handler.start_item_phase(
 			current_player_index,
 			pending_battle_card_data,
 			pending_battle_tile_info
@@ -253,15 +248,15 @@ func execute_battle_for_cpu(card_index: int, tile_info: Dictionary, item_index: 
 				attacker_display, defender_display, "attacker")
 	
 	# アイテムフェーズ開始
-	if _get_item_phase_handler():
-		if not _get_item_phase_handler().item_phase_completed.is_connected(_on_item_phase_completed):
-			_get_item_phase_handler().item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+	if _item_phase_handler:
+		if not _item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+			_item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 		
 		# CPU攻撃側の事前選択アイテムを設定
 		if not pending_attacker_item.is_empty():
-			_get_item_phase_handler().set_preselected_attacker_item(pending_attacker_item)
+			_item_phase_handler.set_preselected_attacker_item(pending_attacker_item)
 		
-		_get_item_phase_handler().start_item_phase(
+		_item_phase_handler.start_item_phase(
 			current_player_index,
 			pending_battle_card_data,
 			pending_battle_tile_info
@@ -279,14 +274,14 @@ func _on_item_phase_completed():
 		print("[TileBattleExecutor] 攻撃側アイテムフェーズ完了")
 		
 		# 合体が発生した場合、バトルカードデータを更新
-		if _get_item_phase_handler():
-			if _get_item_phase_handler().was_merged():
-				pending_battle_card_data = _get_item_phase_handler().get_merged_creature()
+		if _item_phase_handler:
+			if _item_phase_handler.was_merged():
+				pending_battle_card_data = _item_phase_handler.get_merged_creature()
 				print("[TileBattleExecutor] 合体発生: %s" % pending_battle_card_data.get("name", "?"))
 		
 		# 攻撃側のアイテムを保存
-		if _get_item_phase_handler():
-			pending_attacker_item = _get_item_phase_handler().get_selected_item()
+		if _item_phase_handler:
+			pending_attacker_item = _item_phase_handler.get_selected_item()
 		
 		# 防御側のアイテムフェーズを開始
 		var defender_owner = pending_battle_tile_info.get("owner", -1)
@@ -298,15 +293,15 @@ func _on_item_phase_completed():
 				battle_status_overlay.highlight_side("defender")
 			
 			# 防御側のアイテムフェーズ開始
-			if _get_item_phase_handler():
-				if not _get_item_phase_handler().item_phase_completed.is_connected(_on_item_phase_completed):
-					_get_item_phase_handler().item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
+			if _item_phase_handler:
+				if not _item_phase_handler.item_phase_completed.is_connected(_on_item_phase_completed):
+					_item_phase_handler.item_phase_completed.connect(_on_item_phase_completed, CONNECT_ONE_SHOT)
 				
 				print("[TileBattleExecutor] 防御側アイテムフェーズ開始: プレイヤー ", defender_owner + 1)
 				var defender_creature = pending_battle_tile_info.get("creature", {})
-				_get_item_phase_handler().set_opponent_creature(pending_battle_card_data)
-				_get_item_phase_handler().set_defense_tile_info(pending_battle_tile_info)
-				_get_item_phase_handler().start_item_phase(defender_owner, defender_creature)
+				_item_phase_handler.set_opponent_creature(pending_battle_card_data)
+				_item_phase_handler.set_defense_tile_info(pending_battle_tile_info)
+				_item_phase_handler.start_item_phase(defender_owner, defender_creature)
 			else:
 				_execute_pending_battle()
 		else:
@@ -316,9 +311,9 @@ func _on_item_phase_completed():
 		print("[TileBattleExecutor] 防御側アイテムフェーズ完了、バトル開始")
 		
 		# 防御側の合体が発生した場合
-		if _get_item_phase_handler():
-			if _get_item_phase_handler().was_merged():
-				var merged_data = _get_item_phase_handler().get_merged_creature()
+		if _item_phase_handler:
+			if _item_phase_handler.was_merged():
+				var merged_data = _item_phase_handler.get_merged_creature()
 				pending_battle_tile_info["creature"] = merged_data
 				print("[TileBattleExecutor] 防御側合体発生: %s" % merged_data.get("name", "?"))
 				
@@ -330,8 +325,8 @@ func _on_item_phase_completed():
 					print("[TileBattleExecutor] タイル%d のクリーチャーデータを更新（永続化）" % tile_index)
 		
 		# 防御側のアイテムを保存
-		if _get_item_phase_handler():
-			pending_defender_item = _get_item_phase_handler().get_selected_item()
+		if _item_phase_handler:
+			pending_defender_item = _item_phase_handler.get_selected_item()
 		
 		is_waiting_for_defender_item = false
 		_execute_pending_battle()
