@@ -793,12 +793,8 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# 他のパネルを閉じる
-	# creature/itemパネルを閉じる
-	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
-		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_panel_visible():
-		ui_manager_ref.item_info_panel_ui.hide_panel()
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
 	
 	# カードノードから制限理由を取得
 	var restriction_reason = _get_card_restriction_reason(card_index)
@@ -830,11 +826,8 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# creature/spellパネルを閉じる
-	if ui_manager_ref.creature_info_panel_ui and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
-		ui_manager_ref.creature_info_panel_ui.hide_panel(false)
-	if ui_manager_ref.spell_info_panel_ui and ui_manager_ref.spell_info_panel_ui.is_panel_visible():
-		ui_manager_ref.spell_info_panel_ui.hide_panel(false)
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
 	
 	# カードノードから制限理由を取得
 	var restriction_reason = _get_card_restriction_reason(card_index)
@@ -869,9 +862,8 @@ func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 		_confirm_card_selection(card_index)
 		return
 	
-	# 他のパネルを閉じる
-	if ui_manager_ref.item_info_panel_ui and ui_manager_ref.item_info_panel_ui.is_panel_visible():
-		ui_manager_ref.item_info_panel_ui.hide_panel(false)
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
 	
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
