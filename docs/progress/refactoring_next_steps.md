@@ -166,7 +166,10 @@ Spell システムが game_flow_manager / ui_manager を直接参照している
 **ステータス**: ✅ 完了（`5c57845`）
 
 ### C-4: spell_draw 系 → ui_manager
-**現状維持**: Node操作（add_child）には親参照が必須。設計上正当。
+**方針**: `ui_manager_ref` 完全除去。SpellAndMysticUI を GSM で作成・ui_layer に追加。
+`_navigation_service` 直接注入 + `inject_services()` でサービス一括注入。
+潜在バグ修正: `set_ui_manager()` がどこからも呼ばれていなかった問題を解消。
+**ステータス**: ✅ 完了（`05f1c94`）
 
 ### C-5: spell_land → game_flow_manager (3段チェーン)
 **方針**: `_spell_world_curse` 直接注入
@@ -235,3 +238,8 @@ Phase 0〜12 の詳細は `docs/progress/daily_log.md` を参照。
 | UIEventHub | UI→ロジック間イベント駆動化 | 2026-02-20 |
 | 12 | BankruptcyHandler パネル分離 + TapTargetManager 直接注入 | 2026-02-20 |
 | バグ修正 | ナビ状態・ボタン消失・GDScript警告等（7件） | 2026-02-20 |
+| A-1〜A-3 | 相互参照の解消（CRITICAL 4組） | 2026-02-20 |
+| B-0〜B-3 | UIManager残存参照の削減（DCH/LapSystem/GRH） | 2026-02-20 |
+| C-1〜C-8 | Spell系の逆参照削減（8ファイル） | 2026-02-20 |
+| D-1〜D-2 | GFMチェーンアクセス解消（Phase A-3で解決済み） | 2026-02-20 |
+| バグ修正 | TBE _item_phase_handler null参照（初期化順序） | 2026-02-20 |
