@@ -93,61 +93,59 @@ iph.start_item_selection(...)
 game_flow/ 配下でまだ `ui_manager` を直接参照しているファイル。
 Phase 8 で開始したサービス直接注入を完遂する。
 
-### B-1: DominioCommandHandler（73行 → 目標: 0）
+### B-0: GameResultHandler（ui_manager 未使用変数削除）
 
-**最大の課題**。6種以上のサービスを直接使用。
-
-**現在の参照内訳（推定）**:
-- MessageService 系: ~20行
-- NavigationService 系: ~15行
-- CardSelectionService 系: ~10行
-- InfoPanelService 系: ~5行
-- hand_display / dominio_order_ui: ~15行
-- その他（ui_layer, player_info_service）: ~8行
-
-**方針**: Phase 8-B で一部移行済み。残りのサービス参照を全て直接注入に置換。
-
-**ステータス**: 未着手
+**方針**: ui_manager 変数削除 + ランタイム参照4箇所を Callable 注入
+**ステータス**: ✅ 完了（`8f0a1bd`）
 
 ---
 
-### B-2: LapSystem（23行 → 目標: 0）
+### B-1+B-3: DominioCommandHandler + helpers（ui_manager 完全除去）
 
-**方針**: MessageService 直接注入 + ui_layer 注入で完全分離
+**対象**: DCH本体3箇所 + land_action_helper 15箇所 + land_selection_helper 1箇所
 
-**ステータス**: 未着手
+**方針**:
+- `var ui_manager` 変数を完全削除
+- `_player_info_service`, `_ui_layer` 直接参照を追加
+- `inject_ui_callbacks()` で7つのUI Callable を一括注入
+- helpers の `handler.ui_manager.*` チェーンアクセスを全て Callable/Service に置換
 
----
-
-### B-3: TileBattleExecutor / TileSummonExecutor（14行+11行 → 目標: 0）
-
-**方針**: Phase 8 で部分移行済み。残りを完遂。
-
-**ステータス**: 未着手
+**ステータス**: ✅ 完了（`e3bd268`）
 
 ---
 
-### B-4: SpellTargetSelectionHandler（12行 → 目標: 0）
+### B-2: LapSystem（ui_manager 完全削除）
 
-**方針**: NavigationService 直接注入で `_ui_manager` 削除
-
-**ステータス**: 未着手
-
----
-
-### B-5: CardSelectionHandler（10行 → 目標: 0）
-
-**方針**: hand_display 等の残存参照をサービス経由に
-
-**ステータス**: 未着手
+**方針**: `_ui_layer` 直接参照 + `_show_dominio_order_button_cb` Callable + フォールバック削除
+**ステータス**: ✅ 完了（`8f0a1bd`）
 
 ---
 
-### B-6: SpellUIManager（28行 → 目標: 0）
+### B-3: TileBattleExecutor / TileSummonExecutor（Service化済み）
 
-**方針**: UI層なので UIManager 参照は許容度が高いが、可能な限りサービス直接注入に
+**現状**: setup時のサービス解決のみで `ui_manager` 保持。ランタイムは Service 経由のみ。
+**ステータス**: 低優先（Service化済みのため実害なし）
 
-**ステータス**: 未着手
+---
+
+### B-4: SpellTargetSelectionHandler（Service化済み）
+
+**現状**: setup時のサービス解決のみで `ui_manager` 保持。ランタイムは Service 経由のみ。
+**ステータス**: 低優先（Service化済みのため実害なし）
+
+---
+
+### B-5: CardSelectionHandler（Service化済み）
+
+**現状**: setup時のサービス解決のみで `ui_manager` 保持。ランタイムは Service 経由のみ。
+**ステータス**: 低優先（Service化済みのため実害なし）
+
+---
+
+### B-6: SpellUIManager（設計上の UIManager 橋渡し層）
+
+**方針**: UI Signal リスナーとして UIManager 参照は設計上必要。現状維持。
+**ステータス**: 現状維持（26箇所、全て設計上正当）
 
 ---
 
