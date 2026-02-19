@@ -568,15 +568,6 @@ func on_player_defeated(reason: String = ""):
 	if game_result_handler:
 		await game_result_handler.on_player_defeated(reason)
 
-# UI更新
-func update_ui():
-	# メインの update_ui は GSM の _on_phase_changed で Signal 駆動
-	# このメソッドは外部からの直接呼び出し用に残す
-	if ui_manager:
-		var current_player = player_system.get_current_player()
-		ui_manager.update_ui(current_player, current_phase)
-
-
 # === 敵地判定・通行料支払い ===
 
 # 敵地判定・通行料支払い処理（end_turn()内で実行）
