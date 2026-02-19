@@ -88,7 +88,8 @@ func _create_ui_elements():
 	# フォントサイズを大きく
 	creature_list.add_theme_font_size_override("font_size", 28)
 	add_child(creature_list)
-	
+	creature_list.visible = false
+
 	# アルカナアーツリスト（大きめ）
 	mystic_art_list = ItemList.new()
 	mystic_art_list.name = "MysticArtList"
