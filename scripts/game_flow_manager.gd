@@ -73,16 +73,13 @@ var _input_locked: bool = false
 var _get_tutorial_manager_cb: Callable = Callable()
 
 # UI操作用Callable（GSMから注入）
-var _ui_set_current_turn_cb: Callable = Callable()
 var _ui_set_phase_text_cb: Callable = Callable()
 var _ui_update_panels_cb: Callable = Callable()
-var _ui_close_all_panels_cb: Callable = Callable()
 var _ui_show_dominio_btn_cb: Callable = Callable()
 var _ui_hide_dominio_btn_cb: Callable = Callable()
 var _ui_show_card_selection_cb: Callable = Callable()
 var _ui_hide_card_selection_cb: Callable = Callable()
 var _ui_enable_navigation_cb: Callable = Callable()
-var _ui_update_ui_cb: Callable = Callable()
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
@@ -225,7 +222,6 @@ func _init_state_machine() -> void:
 func _on_state_changed(new_phase: int) -> void:
 	# 既存の互換性のためphase_changedシグナルをemit
 	emit_signal("phase_changed", new_phase)
-	update_ui()
 
 # ゲーム開始
 func start_game():
@@ -248,17 +244,9 @@ func start_game():
 # ターン開始
 func start_turn():
 	var current_player = player_system.get_current_player()
-	
+
 	# ターン開始時に順番アイコンを即座に更新（最初に呼ぶ）
 	emit_signal("turn_started", current_player.id)
-	
-	# UI更新：順番アイコンを設定
-	if _ui_set_current_turn_cb.is_valid():
-		_ui_set_current_turn_cb.call(current_player.id)
-	
-	# Phase 1-A: ターン開始時はドミニオコマンドボタンを隠す
-	if _ui_hide_dominio_btn_cb.is_valid():
-		_ui_hide_dominio_btn_cb.call()
 	
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
@@ -452,11 +440,7 @@ func change_phase(new_phase: GamePhase):
 		# フォールバック（State Machine未初期化の場合）
 		current_phase = new_phase
 		emit_signal("phase_changed", current_phase)
-		update_ui()
-
-	# 全てのインフォパネルを閉じる
-	if _ui_close_all_panels_cb.is_valid():
-		_ui_close_all_panels_cb.call()
+		# update_ui() はGSMの_on_phase_changedシグナルハンドラーで処理
 
 	# カメラモード切り替え
 	_update_camera_mode(new_phase)
@@ -586,9 +570,11 @@ func on_player_defeated(reason: String = ""):
 
 # UI更新
 func update_ui():
-	if _ui_update_ui_cb.is_valid():
+	# メインの update_ui は GSM の _on_phase_changed で Signal 駆動
+	# このメソッドは外部からの直接呼び出し用に残す
+	if ui_manager:
 		var current_player = player_system.get_current_player()
-		_ui_update_ui_cb.call(current_player, current_phase)
+		ui_manager.update_ui(current_player, current_phase)
 
 
 # === 敵地判定・通行料支払い ===
@@ -786,16 +772,13 @@ func set_tutorial_manager_getter(getter: Callable) -> void:
 
 ## UI操作Callableを一括注入（GSMから呼ばれる）
 func inject_ui_callbacks(callbacks: Dictionary) -> void:
-	_ui_set_current_turn_cb = callbacks.get("set_current_turn", Callable())
 	_ui_set_phase_text_cb = callbacks.get("set_phase_text", Callable())
 	_ui_update_panels_cb = callbacks.get("update_panels", Callable())
-	_ui_close_all_panels_cb = callbacks.get("close_all_panels", Callable())
 	_ui_show_dominio_btn_cb = callbacks.get("show_dominio_btn", Callable())
 	_ui_hide_dominio_btn_cb = callbacks.get("hide_dominio_btn", Callable())
 	_ui_show_card_selection_cb = callbacks.get("show_card_selection", Callable())
 	_ui_hide_card_selection_cb = callbacks.get("hide_card_selection", Callable())
 	_ui_enable_navigation_cb = callbacks.get("enable_navigation", Callable())
-	_ui_update_ui_cb = callbacks.get("update_ui", Callable())
 
 # ============================================================
 # チュートリアルモード判定

@@ -571,11 +571,21 @@ func _on_dice_rolled(value: int) -> void:
 func _on_turn_started(player_id: int) -> void:
 	print("\n=== プレイヤー", player_id + 1, "のターン ===")
 
+	# Signal駆動: ターン開始時のUI更新
+	if ui_manager:
+		ui_manager.set_current_turn(player_id)
+		ui_manager.hide_dominio_order_button()
+
 func _on_turn_ended(_player_id: int) -> void:
 	pass  # 必要に応じて処理追加
 
 func _on_phase_changed(_new_phase) -> void:
-	pass  # 必要に応じて処理追加
+	# Signal駆動: フェーズ変更時のUI更新
+	if ui_manager:
+		ui_manager.close_all_info_panels()
+		var current_player = game_flow_manager.player_system.get_current_player() if game_flow_manager and game_flow_manager.player_system else null
+		if current_player:
+			ui_manager.update_ui(current_player, _new_phase)
 
 # ============================================
 # 初期化ヘルパー関数（GameFlowManagerから移動）
@@ -1702,18 +1712,15 @@ func _setup_ui_callbacks(
 	# === Item 4: GFM → UI Callable 注入 ===
 	if p_game_flow_manager and p_ui_manager:
 		p_game_flow_manager.inject_ui_callbacks({
-			"set_current_turn": func(id): p_ui_manager.set_current_turn(id),
 			"set_phase_text": func(text): p_ui_manager.set_phase_text(text),
 			"update_panels": func():
 				if p_ui_manager.player_info_service:
 					p_ui_manager.player_info_service.update_panels(),
-			"close_all_panels": func(): p_ui_manager.close_all_info_panels(),
 			"show_dominio_btn": func(): p_ui_manager.show_dominio_order_button(),
 			"hide_dominio_btn": func(): p_ui_manager.hide_dominio_order_button(),
 			"show_card_selection": func(player): p_ui_manager.show_card_selection_ui(player),
 			"hide_card_selection": func(): p_ui_manager.hide_card_selection_ui(),
 			"enable_navigation": func(confirm, back): p_ui_manager.enable_navigation(confirm, back),
-			"update_ui": func(player, phase): p_ui_manager.update_ui(player, phase),
 		})
 
 	# === UIManager Callable 注入 ===
