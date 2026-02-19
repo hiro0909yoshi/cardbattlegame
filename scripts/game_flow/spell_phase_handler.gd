@@ -78,6 +78,9 @@ var spell_ui_manager = null  # SpellUIManager - UI管理システム（Phase 5-1
 var spell_state: SpellStateHandler = null          # 状態管理（Day 9）
 var spell_flow: SpellFlowHandler = null            # フロー制御（Day 10-11）
 
+## === Phase A-3a: is_cpu_player Callable 化 ===
+var _is_cpu_player_cb: Callable = Callable()
+
 
 func _ready():
 	pass
@@ -95,6 +98,12 @@ func initialize(_ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = 
 	# game_3d参照は別途set_game_3d_ref()で設定される
 	player_system = p_system if p_system else (flow_mgr.player_system if flow_mgr else null)
 	board_system = b_system if b_system else (flow_mgr.board_system_3d if flow_mgr else null)
+
+## GFM依存のCallable一括注入（Phase A-3a）
+func inject_callbacks(
+	is_cpu_player_cb: Callable,
+) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
 
 ## game_statsを設定（GFM経由を廃止）
 func set_game_stats(p_game_stats) -> void:
@@ -147,7 +156,7 @@ func start_spell_phase(player_id: int):
 	spell_state.transition_to(SpellStateHandler.State.WAITING_FOR_INPUT)
 
 	# CPU / 人間プレイヤーで分岐
-	if game_flow_manager and game_flow_manager.is_cpu_player(player_id):
+	if _is_cpu_player(player_id):
 		await _delegate_to_cpu_spell_handler(player_id)
 	else:
 		# 人間プレイヤー向け: UI初期化のみ
@@ -186,7 +195,7 @@ func select_tile_from_list(tile_indices: Array, message: String) -> int:
 		return -1
 
 	# CPUの場合は自動選択（最初の候補を使用）
-	if spell_state and game_flow_manager and game_flow_manager.is_cpu_player(spell_state.current_player_id):
+	if spell_state and _is_cpu_player(spell_state.current_player_id):
 		return tile_indices[0]
 
 	# TargetSelectionHelper経由で選択（直接参照）
@@ -217,6 +226,12 @@ func complete_spell_phase():
 
 	# スペルフェーズ完了シグナルを発行（GameFlowManager が待っている）
 	spell_phase_completed.emit()
+
+## === ヘルパーメソッド ===
+
+## CPU判定ヘルパー（Phase A-3a）
+func _is_cpu_player(player_id: int) -> bool:
+	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
 
 ## ============ Delegation Methods to SpellFlowHandler ============
 

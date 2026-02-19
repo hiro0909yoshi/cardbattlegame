@@ -5,6 +5,9 @@ class_name SpellTargetSelectionHandler
 ## 親ハンドラー（SpellPhaseHandler）への参照
 var _spell_phase_handler: SpellPhaseHandler = null
 
+## === Phase A-3a: is_cpu_player Callable 化 ===
+var _is_cpu_player_cb: Callable = Callable()
+
 ## システム参照
 var _ui_manager = null
 var _board_system = null
@@ -53,6 +56,10 @@ var current_target_index: int:
 		if value >= 0 and value < _available_targets.size():
 			_current_target_index = value
 
+## CPU判定ヘルパー（Phase A-3a）
+func _is_cpu_player(player_id: int) -> bool:
+	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
+
 func _ready() -> void:
 	pass
 
@@ -82,6 +89,12 @@ func setup(
 		_message_service = ui_manager.message_service if ui_manager.get("message_service") else null
 		_navigation_service = ui_manager.navigation_service if ui_manager.get("navigation_service") else null
 
+## GFM依存のCallable一括注入（Phase A-3a）
+func inject_callbacks(
+	is_cpu_player_cb: Callable,
+) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
+
 ## 対象選択UIを表示
 ## 戻り値: true=対象選択開始, false=対象なしでキャンセル
 func show_target_selection_ui(target_type: String, target_info: Dictionary) -> bool:
@@ -104,7 +117,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 		return false
 
 	# CPUの場合は自動で対象選択
-	if _spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
+	if _spell_phase_handler and _is_cpu_player(_spell_phase_handler.spell_state.current_player_id):
 		return _cpu_select_target(targets, target_type, target_info)
 
 	# プレイヤーの場合：ドミニオコマンドと同じ方式で選択開始

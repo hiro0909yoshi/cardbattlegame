@@ -21,6 +21,9 @@ var _spell_phase_handler = null  # 親ハンドラー（シグナル発火、他
 
 ## ===== システム参照 =====
 var _game_flow_manager = null
+
+## === Phase A-3a: is_cpu_player Callable 化 ===
+var _is_cpu_player_cb: Callable = Callable()
 var _board_system = null
 var _player_system = null
 var _card_system = null
@@ -67,7 +70,17 @@ func setup(
 	_spell_target_selection_handler = spell_target_selection_handler
 	_target_selection_helper = target_selection_helper
 
+## GFM依存のCallable一括注入（Phase A-3a）
+func inject_callbacks(
+	is_cpu_player_cb: Callable,
+) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
+
 ## ===== ヘルパーメソッド =====
+
+## CPU判定ヘルパー（Phase A-3a）
+func _is_cpu_player(player_id: int) -> bool:
+	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
 
 ## スペルコストを支払えるか
 func _can_afford_spell(spell_card: Dictionary) -> bool:
@@ -428,7 +441,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 		return
 
 	# CPUの場合は自動で確定
-	if _game_flow_manager and _game_flow_manager.is_cpu_player(_spell_state.current_player_id):
+	if _is_cpu_player(_spell_state.current_player_id):
 		await _get_tree_ref().create_timer(0.3).timeout  # 少し待つ
 		_confirm_spell_effect()
 		return

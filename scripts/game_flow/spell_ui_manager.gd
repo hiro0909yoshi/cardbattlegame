@@ -14,6 +14,9 @@ var _player_system = null
 var _game_3d_ref = null
 var _card_system = null
 
+# === Phase A-3a: is_cpu_player Callable 化 ===
+var _is_cpu_player_cb: Callable = Callable()
+
 # === UI状態 ===
 var _spell_phase_ui_manager = null
 var _spell_cast_notification_ui: SpellCastNotificationUI = null
@@ -54,6 +57,18 @@ func setup(
 	if not _ui_manager:
 		push_error("[SpellUIManager] ui_manager が null です")
 
+## GFM依存のCallable一括注入（Phase A-3a）
+func inject_callbacks(
+	is_cpu_player_cb: Callable,
+) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
+
+
+# === ヘルパーメソッド ===
+
+## CPU判定ヘルパー（Phase A-3a）
+func _is_cpu_player(player_id: int) -> bool:
+	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
 
 # =============================================================================
 # ナビゲーション復元
@@ -221,7 +236,7 @@ func update_spell_phase_ui() -> void:
 		_ui_manager.hand_display.update_hand_display(current_player.id)
 
 	# スペル選択UIを表示（人間プレイヤーのみ）
-	if not (_spell_phase_handler and _spell_phase_handler.game_flow_manager and _spell_phase_handler.game_flow_manager.is_cpu_player(current_player.id)):
+	if not _is_cpu_player(current_player.id):
 		show_spell_selection_ui(hand_data, current_player.magic_power)
 
 ## スペル選択UIを表示

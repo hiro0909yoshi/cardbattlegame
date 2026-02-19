@@ -1187,6 +1187,9 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.spell_ui_manager.connect_spell_flow_signals(spell_phase_handler.spell_flow)
 			print("[GameSystemManager] SpellFlowHandler UI Signal 接続完了")
 
+		# === Phase A-3a: is_cpu_player Callable 注入
+		_setup_spell_phase_callbacks(spell_phase_handler, game_flow_manager)
+
 	# Step 4: CPU AI を初期化（GameSystemManagerから参照を取得）
 	if not cpu_ai_context:
 		_initialize_cpu_ai_systems()
@@ -1230,6 +1233,36 @@ func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
 
 	# SpellPhaseHandler に参照を設定
 	spell_phase_handler.cpu_spell_phase_handler = cpu_spell_phase_handler
+
+## Phase A-3a: is_cpu_player Callable 注入
+func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
+	if not spell_phase_handler or not gfm:
+		return
+
+	# is_cpu_player Callable を作成
+	var is_cpu_cb = func(id: int) -> bool: return gfm.is_cpu_player(id)
+
+	# SpellPhaseHandler に注入
+	if spell_phase_handler:
+		spell_phase_handler.inject_callbacks(is_cpu_cb)
+
+	# SpellFlowHandler に注入
+	if spell_phase_handler.spell_flow:
+		spell_phase_handler.spell_flow.inject_callbacks(is_cpu_cb)
+
+	# SpellTargetSelectionHandler に注入
+	if spell_phase_handler.spell_target_selection_handler:
+		spell_phase_handler.spell_target_selection_handler.inject_callbacks(is_cpu_cb)
+
+	# SpellUIManager に注入
+	if spell_phase_handler.spell_ui_manager:
+		spell_phase_handler.spell_ui_manager.inject_callbacks(is_cpu_cb)
+
+	# CardSelectionHandler に注入
+	if spell_phase_handler.card_selection_handler:
+		spell_phase_handler.card_selection_handler.inject_callbacks(is_cpu_cb)
+
+	print("[GameSystemManager] Phase A-3a: is_cpu_player Callable 注入完了")
 
 ## CPU移動評価システムの初期化
 func _initialize_cpu_movement_evaluator() -> void:

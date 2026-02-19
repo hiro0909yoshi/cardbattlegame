@@ -60,6 +60,9 @@ var _navigation_service = null
 var _card_selection_service = null
 var _info_panel_service = null
 
+## === Phase A-3a: is_cpu_player Callable 化 ===
+var _is_cpu_player_cb: Callable = Callable()
+
 ## Callable注入（Phase 10-C: UIManagerチェーンアクセス除去）
 var _unlock_input_cb: Callable = Callable()
 var _restore_camera_cb: Callable = Callable()
@@ -77,6 +80,16 @@ func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
 	card_system = p_card_system
 	spell_phase_handler = p_spell_phase_handler  # 親参照を保存
 	_connect_info_panel_signals()
+
+## GFM依存のCallable一括注入（Phase A-3a）
+func inject_callbacks(
+	is_cpu_player_cb: Callable,
+) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
+
+## CPU判定ヘルパー（Phase A-3a）
+func _is_cpu_player(player_id: int) -> bool:
+	return _is_cpu_player_cb.call(player_id) if _is_cpu_player_cb.is_valid() else false
 
 ## 現在のプレイヤーIDを設定
 func set_current_player(player_id: int):
@@ -127,7 +140,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		return
 
 	var has_valid_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.has_cards_matching_filter(target_player_id, filter_mode)
-	
+
 	if not has_valid_cards:
 		# 条件に合うカードがない場合
 		if _message_service:
@@ -137,9 +150,9 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		callback.call(-1)
 		_finish_enemy_card_selection()
 		return
-	
+
 	# CPUの場合は自動選択
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
+	if _is_cpu_player(current_player_id):
 		# 自分に使う場合（スクイーズ等）は低レートを選択
 		var is_self_target = (target_player_id == current_player_id)
 		await _cpu_auto_select_enemy_card(target_player_id, filter_mode, callback, is_steal, is_self_target)
@@ -434,9 +447,9 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		callback.call(-1)
 		_finish_deck_card_selection()
 		return
-	
+
 	# CPUの場合は自動選択
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
+	if _is_cpu_player(current_player_id):
 		await _cpu_auto_select_deck_card(target_player_id, callback)
 		return
 
@@ -720,9 +733,9 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		await get_tree().create_timer(1.0).timeout
 		_finish_transform_card_selection()
 		return
-	
+
 	# CPUの場合は自動選択
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.is_cpu_player(current_player_id):
+	if _is_cpu_player(current_player_id):
 		await _cpu_auto_select_transform_card(target_player_id, filter_mode)
 		return
 	
