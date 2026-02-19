@@ -8,7 +8,6 @@ class_name SpellPlayerMove
 # 参照
 var board_system: BoardSystem3D
 var player_system: PlayerSystem
-var game_flow_manager: GameFlowManager
 var spell_curse: SpellCurse
 var tile_neighbor_system: TileNeighborSystem
 
@@ -19,15 +18,10 @@ var lap_system = null  # LapSystem: 周回管理
 func setup(board: BoardSystem3D, player: PlayerSystem, flow: GameFlowManager, curse: SpellCurse):
 	board_system = board
 	player_system = player
-	game_flow_manager = flow
 	spell_curse = curse
 
 	if board_system:
 		tile_neighbor_system = board_system.tile_neighbor_system
-
-	# lap_systemの直接参照を設定
-	if game_flow_manager and game_flow_manager.lap_system:
-		lap_system = game_flow_manager.lap_system
 
 	print("[SpellPlayerMove] 初期化完了")
 
@@ -423,7 +417,7 @@ func _warp_player(player_id: int, target_tile: int) -> void:
 		if tile.has_method("on_player_passed"):
 			tile.on_player_passed(player_id)
 			# lap_systemのチェックポイント処理完了を待つ
-			if game_flow_manager and game_flow_manager.lap_system:
+			if lap_system:
 				await lap_system.checkpoint_processing_completed
 		
 		# 2. ダウン解除（訪問済み・未訪問に関わらず常に実行）

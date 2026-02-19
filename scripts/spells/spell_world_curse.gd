@@ -13,7 +13,7 @@ var game_flow_manager: GameFlowManager
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_cast_notification_ui = null  # SpellCastNotificationUI: 通知表示
-var ui_manager = null  # UIManager: UI管理
+var _player_info_service = null  # PlayerInfoService: プレイヤー情報UI更新
 var game_stats  # GameFlowManager.game_stats への直接参照
 
 # ========================================
@@ -23,10 +23,6 @@ var game_stats  # GameFlowManager.game_stats への直接参照
 func setup(curse: SpellCurse, gfm: GameFlowManager):
 	spell_curse = curse
 	game_flow_manager = gfm
-
-	# ui_managerの直接参照を設定
-	if gfm and gfm.ui_manager:
-		ui_manager = gfm.ui_manager
 
 	print("[SpellWorldCurse] 初期化完了")
 
@@ -278,7 +274,7 @@ func on_round_start():
 
 ## プレイヤー情報パネルを更新（世界呪い表示用）
 func _update_ui():
-	if not ui_manager or not ui_manager.player_info_service:
+	if not _player_info_service:
 		return
 
-	ui_manager.player_info_service.update_panels()
+	_player_info_service.update_panels()

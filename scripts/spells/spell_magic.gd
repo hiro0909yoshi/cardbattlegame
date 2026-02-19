@@ -7,22 +7,17 @@ class_name SpellMagic
 
 var player_system_ref: PlayerSystem = null
 var board_system_ref = null  # BoardSystem3D
-var game_flow_manager_ref = null  # GameFlowManager
 var spell_curse_ref = null  # SpellCurse（呪い連携用）
 var spell_cast_notification_ui = null  # 通知UI
 
 # === 直接参照（GFM経由を廃止） ===
 var lap_system = null  # LapSystem: 周回管理
+var _spell_damage = null  # SpellDamage: クリーチャー破壊処理
 
-func setup(player_system: PlayerSystem, board_system = null, game_flow_manager = null, spell_curse = null):
+func setup(player_system: PlayerSystem, board_system = null, _game_flow_manager = null, spell_curse = null):
 	player_system_ref = player_system
 	board_system_ref = board_system
-	game_flow_manager_ref = game_flow_manager
 	spell_curse_ref = spell_curse
-
-	# lap_systemの直接参照を設定
-	if game_flow_manager_ref and game_flow_manager_ref.lap_system:
-		lap_system = game_flow_manager_ref.lap_system
 
 	print("SpellMagic: セットアップ完了")
 
@@ -388,14 +383,14 @@ func drain_magic_conditional(effect: Dictionary, from_player_id: int, to_player_
 
 ## マナ: 周回数×50EP獲得
 func gain_magic_by_lap(player_id: int, effect: Dictionary) -> Dictionary:
-	if not game_flow_manager_ref:
-		print("[マナ] GameFlowManagerが設定されていません")
+	if not lap_system:
+		print("[マナ] LapSystemが設定されていません")
 		return {"success": false, "amount": 0}
 	
 	var multiplier = effect.get("multiplier", 50)
 	var lap_count = 0
 	
-	if game_flow_manager_ref.lap_system:
+	if lap_system:
 		lap_count = lap_system.get_lap_count(player_id)
 	
 	var amount = lap_count * multiplier
@@ -407,14 +402,14 @@ func gain_magic_by_lap(player_id: int, effect: Dictionary) -> Dictionary:
 
 ## インシネレート: 破壊数×20EP獲得
 func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dictionary:
-	if not game_flow_manager_ref:
-		print("[インシネレート] GameFlowManagerが設定されていません")
+	if not lap_system:
+		print("[インシネレート] LapSystemが設定されていません")
 		return {"success": false, "amount": 0}
 	
 	var multiplier = effect.get("multiplier", 20)
 	var destroy_count = 0
 	
-	if game_flow_manager_ref.lap_system:
+	if lap_system:
 		destroy_count = lap_system.get_destroy_count()
 	
 	var amount = destroy_count * multiplier
@@ -425,7 +420,7 @@ func gain_magic_from_destroyed_count(player_id: int, effect: Dictionary) -> Dict
 	
 	# reset_count: trueの場合、破壊数を0にリセット
 	if effect.get("reset_count", false):
-		if game_flow_manager_ref.lap_system:
+		if lap_system:
 			lap_system.reset_destroy_count()
 			print("[インシネレート] 破壊数をリセット")
 	
@@ -464,7 +459,7 @@ func gain_magic_from_spell_cost(player_id: int, effect: Dictionary, target_playe
 
 ## スピードペナルティ: 対象の周回数と術者の周回数の差×100EP奪取
 func drain_magic_by_lap_diff(effect: Dictionary, from_player_id: int, to_player_id: int) -> Dictionary:
-	if not game_flow_manager_ref or not player_system_ref:
+	if not lap_system or not player_system_ref:
 		print("[スピードペナルティ] システム参照が設定されていません")
 		return {"success": false, "amount": 0}
 	
@@ -767,17 +762,10 @@ func _apply_land_curse_effect(effect: Dictionary, tile_index: int, stopped_playe
 					# HP0で破壊（SpellDamage経由で死亡効果を処理）
 					if new_hp <= 0:
 						var tile = board_system_ref.tile_nodes.get(tile_index)
-						if tile and game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-							var spell_damage = null
-							if game_flow_manager_ref.spell_phase_handler.spell_systems:
-								spell_damage = game_flow_manager_ref.spell_phase_handler.spell_systems.spell_damage
-							if spell_damage:
-								spell_damage.destroy_creature(tile)
-							else:
-								# フォールバック
-								board_system_ref.remove_creature(tile_index)
-								board_system_ref.set_tile_owner(tile_index, -1)
+						if tile and _spell_damage:
+							_spell_damage.destroy_creature(tile)
 						else:
+							# フォールバック
 							board_system_ref.remove_creature(tile_index)
 							board_system_ref.set_tile_owner(tile_index, -1)
 						print("[土地呪い効果] %s は破壊されました" % creature.get("name", "?"))

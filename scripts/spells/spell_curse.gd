@@ -13,18 +13,17 @@ class_name SpellCurse
 var board_system: BoardSystem3D
 var creature_manager: CreatureManager
 var player_system: PlayerSystem
-var game_flow_manager: GameFlowManager
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_phase_handler = null  # SpellPhaseHandler: is_magic_tile_mode参照用
 var game_stats  # GameFlowManager.game_stats への直接参照
+var _get_current_turn_cb: Callable = Callable()
 
 # 初期化
 func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, flow: GameFlowManager):
 	board_system = board
 	creature_manager = creature
 	player_system = player
-	game_flow_manager = flow
 
 	print("[SpellCurse] 初期化完了")
 
@@ -452,8 +451,8 @@ func update_player_curse(player_id: int):
 
 ## 現在のターン番号を取得
 func _get_current_turn() -> int:
-	if game_flow_manager:
-		return game_flow_manager.current_turn_number
+	if _get_current_turn_cb.is_valid():
+		return _get_current_turn_cb.call()
 	return -1
 
 ## マジックタイルモードかチェック

@@ -25,8 +25,12 @@ var spell_phase_handler_ref: Object  # ターゲット取得用
 var spell_phase_handler = null  # Node ツリーの参照（GC対象外）
 
 # === 直接参照（GFM経由を廃止） ===
-var game_flow_manager_ref: GameFlowManager = null
-var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
+# Phase C-8: GFM逆参照解消
+var _lock_input_cb: Callable = Callable()
+var _unlock_input_cb: Callable = Callable()
+var _spell_curse_stat = null  # SpellCurseStat: ステータス呪い
+var _game_stats = null  # game_stats 辞書
+var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果（互換性用）
 
 # === TapTargetManager直接注入（Phase 11-B: UIManager経由アクセス除去） ===
 var _tap_target_manager: TapTargetManager = null
@@ -93,11 +97,21 @@ func _init(board_sys: Object, player_sys: Object, card_sys: Object, spell_phase_
 	# Node ツリーの参照を保持（削除されない）
 	spell_phase_handler = spell_phase_handler_param
 
-	# game_flow_manager の直接参照を設定
-	if spell_phase_handler and spell_phase_handler.game_flow_manager:
-		game_flow_manager_ref = spell_phase_handler.game_flow_manager
-		if game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_curse_stat:
-			spell_curse_stat = game_flow_manager_ref.spell_container.spell_curse_stat
+
+## Phase C-8: GFM依存の Callable/直接参照 一括注入
+func inject_dependencies(
+	lock_input_cb: Callable,
+	unlock_input_cb: Callable,
+	spell_curse_stat_ref = null,
+	game_stats_ref = null,
+) -> void:
+	_lock_input_cb = lock_input_cb
+	_unlock_input_cb = unlock_input_cb
+	if spell_curse_stat_ref:
+		_spell_curse_stat = spell_curse_stat_ref
+		spell_curse_stat = spell_curse_stat_ref  # 互換性用
+	if game_stats_ref:
+		_game_stats = game_stats_ref
 
 
 # ============ アルカナアーツフェーズ管理 ============
@@ -108,8 +122,8 @@ func start_mystic_phase(player_id: int) -> void:
 	current_mystic_player_id = player_id
 
 	# アルカナアーツフェーズ中は入力をロック（手札カード選択を防止）
-	if game_flow_manager_ref:
-		game_flow_manager_ref.lock_input()
+	if _lock_input_cb.is_valid():
+		_lock_input_cb.call()
 	
 	# ナチュラルワールドによるアルカナアーツ無効化チェック
 	if _is_mystic_arts_disabled():
@@ -160,8 +174,8 @@ func end_mystic_phase() -> void:
 	current_mystic_player_id = -1
 
 	# 入力ロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 
 	mystic_phase_completed.emit()
 
@@ -677,8 +691,8 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 	confirmation_target_data = target_data
 
 	# 確認中は入力をロック（手札カード選択を防止）
-	if game_flow_manager_ref:
-		game_flow_manager_ref.lock_input()
+	if _lock_input_cb.is_valid():
+		_lock_input_cb.call()
 	
 	# 対象をハイライト表示
 	var target_count = 0
@@ -712,9 +726,9 @@ func _confirm_mystic_effect() -> void:
 	is_confirming = false
 
 	# 入力ロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
-	
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
+
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
 		TargetSelectionHelper.clear_all_highlights(spell_phase_handler_ref)
@@ -752,8 +766,8 @@ func _cancel_mystic_confirmation() -> void:
 	is_confirming = false
 
 	# 入力ロック解除
-	if game_flow_manager_ref:
-		game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 
 	# ハイライトとマーカーをクリア
 	if spell_phase_handler_ref:
@@ -1182,9 +1196,7 @@ func _is_mystic_arts_disabled() -> bool:
 
 ## game_statsを取得
 func _get_game_stats() -> Dictionary:
-	if not game_flow_manager_ref:
-		return {}
-	return game_flow_manager_ref.game_stats
+	return _game_stats if _game_stats else {}
 
 
 # ============ カメラフォーカス ============

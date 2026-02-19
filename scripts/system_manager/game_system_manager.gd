@@ -659,6 +659,9 @@ func _setup_spell_systems() -> void:
 	# SpellMagic
 	var spell_magic = SpellMagic.new()
 	spell_magic.setup(player_system, board_system_3d, game_flow_manager, null)
+	# Phase C-6: lap_system 直接注入
+	if game_flow_manager and game_flow_manager.lap_system:
+		spell_magic.lap_system = game_flow_manager.lap_system
 	print("[SpellMagic] 初期化完了")
 
 	# CreatureManager取得
@@ -670,7 +673,6 @@ func _setup_spell_systems() -> void:
 	# SpellLand
 	var spell_land = SpellLand.new()
 	spell_land.setup(board_system_3d, creature_manager, player_system, card_system)
-	spell_land.set_game_flow_manager(game_flow_manager)
 	if board_system_3d:
 		board_system_3d.set_spell_land(spell_land)
 	print("[SpellLand] 初期化完了")
@@ -678,6 +680,7 @@ func _setup_spell_systems() -> void:
 	# SpellCurse
 	var spell_curse = SpellCurse.new()
 	spell_curse.setup(board_system_3d, creature_manager, player_system, game_flow_manager)
+	spell_curse._get_current_turn_cb = func() -> int: return game_flow_manager.current_turn_number
 	print("[SpellCurse] 初期化完了")
 
 	# SpellMagicにSpellCurse参照を追加
@@ -696,11 +699,19 @@ func _setup_spell_systems() -> void:
 	# SpellWorldCurse
 	var spell_world_curse = SpellWorldCurse.new()
 	spell_world_curse.setup(spell_curse, game_flow_manager)
+	if ui_manager and ui_manager.get("player_info_service"):
+		spell_world_curse._player_info_service = ui_manager.player_info_service
 	print("[SpellWorldCurse] 初期化完了")
+
+	# SpellLandにSpellWorldCurse参照を設定
+	if spell_world_curse:
+		spell_land.set_spell_world_curse(spell_world_curse)
 
 	# SpellPlayerMove
 	var spell_player_move = SpellPlayerMove.new()
 	spell_player_move.setup(board_system_3d, player_system, game_flow_manager, spell_curse)
+	if game_flow_manager and game_flow_manager.lap_system:
+		spell_player_move.lap_system = game_flow_manager.lap_system
 	if board_system_3d:
 		board_system_3d.set_spell_player_move(spell_player_move)
 	print("[SpellPlayerMove] 初期化完了")
@@ -1066,6 +1077,9 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		var _msg2 = p_ui_manager.message_service if p_ui_manager else null
 		var _nav2 = p_ui_manager.navigation_service if p_ui_manager else null
 		spell_phase_handler.spell_systems.spell_creature_swap.set_services(_css2, _msg2, _nav2)
+		# Phase C-7: is_cpu_player Callable 注入
+		var is_cpu_cb_for_swap = func(id: int) -> bool: return p_game_flow_manager.is_cpu_player(id) if p_game_flow_manager else false
+		spell_phase_handler.spell_systems.spell_creature_swap.inject_callbacks(is_cpu_cb_for_swap)
 
 	# SpellCreatureReturn を初期化
 	if not spell_phase_handler.spell_systems.spell_creature_return and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
@@ -1078,6 +1092,10 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# SpellDrawにSpellCreaturePlace参照を設定
 	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_draw and spell_phase_handler.spell_systems.spell_creature_place:
 		p_game_flow_manager.spell_container.spell_draw.set_spell_creature_place(spell_phase_handler.spell_systems.spell_creature_place)
+
+	# Phase C-6: spell_magic に spell_damage 直接注入
+	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_magic and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_damage:
+		p_game_flow_manager.spell_container.spell_magic._spell_damage = spell_phase_handler.spell_systems.spell_damage
 
 	# SpellBorrow を初期化
 	if not spell_phase_handler.spell_systems.spell_borrow and spell_phase_handler.board_system and spell_phase_handler.player_system and spell_phase_handler.card_system:
@@ -1233,6 +1251,14 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if spell_phase_handler.mystic_arts_handler:
 		spell_phase_handler.mystic_arts_handler.initialize_spell_mystic_arts()
 		spell_phase_handler.spell_mystic_arts = spell_phase_handler.mystic_arts_handler.get_spell_mystic_arts()
+
+		# Phase C-8: spell_mystic_arts に GFM 依存を注入
+		if spell_phase_handler.spell_mystic_arts:
+			var lock_cb = Callable(p_game_flow_manager, "lock_input") if p_game_flow_manager else Callable()
+			var unlock_cb = Callable(p_game_flow_manager, "unlock_input") if p_game_flow_manager else Callable()
+			var scs = p_game_flow_manager.spell_container.spell_curse_stat if p_game_flow_manager and p_game_flow_manager.spell_container else null
+			var gs = p_game_flow_manager.game_stats if p_game_flow_manager else null
+			spell_phase_handler.spell_mystic_arts.inject_dependencies(lock_cb, unlock_cb, scs, gs)
 
 	# === Phase 6-A: MysticArtsHandler の UI Signal を接続
 	if spell_phase_handler.spell_ui_manager and spell_phase_handler.mystic_arts_handler:

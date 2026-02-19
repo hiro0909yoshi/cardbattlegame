@@ -11,6 +11,7 @@ var creature_synthesis: CreatureSynthesis = null
 var _card_selection_service: Object = null
 var _message_service: Object = null
 var _navigation_service: Object = null
+var _is_cpu_player_cb: Callable = Callable()
 
 
 ## サービス直接注入（Phase 8-P: 3段チェーン解消）
@@ -18,6 +19,11 @@ func set_services(css: Object, msg_service: Object, nav_service: Object) -> void
 	_card_selection_service = css
 	_message_service = msg_service
 	_navigation_service = nav_service
+
+
+## Phase C-7: is_cpu_player Callable 注入
+func inject_callbacks(is_cpu_player_cb: Callable) -> void:
+	_is_cpu_player_cb = is_cpu_player_cb
 
 
 # ============ 初期化 ============
@@ -69,7 +75,7 @@ func _apply_swap_with_hand(target_data: Dictionary, caster_player_id: int) -> Di
 		return {"success": false, "reason": "no_hand_creature", "return_to_deck": true}
 	
 	var hand_creature: Dictionary
-	var is_cpu = spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.is_cpu_player(caster_player_id)
+	var is_cpu = _is_cpu_player_cb.is_valid() and _is_cpu_player_cb.call(caster_player_id)
 	
 	if is_cpu:
 		# CPU: 自動で最適なクリーチャーを選択（属性一致 + HP/APの合計が高いもの）
@@ -135,7 +141,7 @@ func _get_creature_score_with_element(creature: Dictionary, tile_element: String
 func _apply_swap_board_creatures(target_data: Dictionary, caster_player_id: int) -> Dictionary:
 	var tile_index_1 = target_data.get("tile_index", -1)
 	var tile_index_2 = target_data.get("tile_index_2", -1)
-	var is_cpu = spell_phase_handler_ref and spell_phase_handler_ref.game_flow_manager and spell_phase_handler_ref.game_flow_manager.is_cpu_player(caster_player_id)
+	var is_cpu = _is_cpu_player_cb.is_valid() and _is_cpu_player_cb.call(caster_player_id)
 	
 	# CPUの場合は自動で最適なペアを選択
 	if is_cpu:

@@ -10,7 +10,7 @@ var board_system_ref: BoardSystem3D
 var creature_manager_ref: CreatureManager
 var player_system_ref: PlayerSystem
 var card_system_ref: CardSystem
-var game_flow_manager_ref = null  # ソリッドワールド判定用
+var _spell_world_curse = null  # ソリッドワールド判定用
 
 ## 初期化
 func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, player_system: PlayerSystem, card_system: CardSystem = null) -> void:
@@ -26,16 +26,16 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 	if not player_system_ref:
 		push_error("SpellLand: PlayerSystemが設定されていません")
 
-## game_flow_manager参照を設定
-func set_game_flow_manager(gfm) -> void:
-	game_flow_manager_ref = gfm
+## spell_world_curse参照を設定
+func set_spell_world_curse(swc) -> void:
+	_spell_world_curse = swc
 
 ## ソリッドワールド（土地変性無効）チェック（公開メソッド）
 ## SpellWorldCurseに委譲
 func is_land_change_blocked() -> bool:
-	if not game_flow_manager_ref or not game_flow_manager_ref.spell_container or not game_flow_manager_ref.spell_container.spell_world_curse:
+	if not _spell_world_curse:
 		return false
-	return game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(false)
+	return _spell_world_curse.check_land_change_blocked(false)
 
 ## 土地の属性を変更
 func change_element(tile_index: int, new_element: String) -> bool:
@@ -45,8 +45,8 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		return false
 	
 	# ソリッドワールドチェック（ポップアップ付き）
-	if game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
-		if game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(true):
+	if _spell_world_curse:
+		if _spell_world_curse.check_land_change_blocked(true):
 			return false
 	
 	# バロン等の土地破壊・変性無効チェック
@@ -97,8 +97,8 @@ func change_level(tile_index: int, delta: int) -> bool:
 		return false
 	
 	# ソリッドワールドチェック（レベルダウンのみブロック、ポップアップ付き）
-	if delta < 0 and game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
-		if game_flow_manager_ref.spell_container.spell_world_curse.check_land_change_blocked(true):
+	if delta < 0 and _spell_world_curse:
+		if _spell_world_curse.check_land_change_blocked(true):
 			return false
 	
 	# バロン等の土地破壊・変性無効チェック（レベルダウンのみ）
