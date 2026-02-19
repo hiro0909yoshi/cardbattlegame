@@ -61,7 +61,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - GSM `_setup_ui_callbacks()` メソッド新設
   - 潜在バグ修正: DominioOrderUI DCH null参照
 
-詳細は `docs/progress/refactoring_next_steps_2.md` を参照
+詳細は `docs/progress/refactoring_next_steps.md` を参照
 
 ---
 
@@ -476,7 +476,7 @@ else:
 ### Mandatory Update Rules (重要)
 
 **作業計画・リファクタリング**:
-- 作業計画を詰めた場合は **必ず** `docs/progress/refactoring_next_steps_2.md` に記録すること
+- 作業計画を詰めた場合は **必ず** `docs/progress/refactoring_next_steps.md` に記録すること
 - 計画変更時も即座に更新（追記ではなく上書き更新）
 - セッション終了前に必ず現状を記録
 
@@ -522,7 +522,7 @@ else:
 ### Active Priorities
 - **P0**: Defensive programming layer - add null reference checks to prevent crashes
   - 10+ high-risk locations identified in GameFlowManager, BattleSystem, SpellPhaseHandler
-  - See `docs/progress/refactoring_next_steps_2.md` for details
+  - See `docs/progress/refactoring_next_steps.md` for details
 
 ### Deprecated Systems
 - **Attribute affinity system** (fire→wind→earth→water cycle) - marked for removal
@@ -595,7 +595,7 @@ This prevents:
 - `docs/progress/daily_log.md` - Recent work history
 - `docs/progress/skill_implementation_status.md` - Skill completion status
 - `docs/progress/refactoring_progress.md` - Code refactoring history
-- `docs/progress/refactoring_next_steps_2.md` - Current and planned refactoring work
+- `docs/progress/refactoring_next_steps.md` - Current and planned refactoring work
 
 ### Issue Management
 - `docs/issues/issues.md` - Active bugs and tasks
