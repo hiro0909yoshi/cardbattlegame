@@ -43,7 +43,7 @@ iph.start_item_selection(...)
 - `scripts/game_flow/dominio_command_handler.gd`
 - `scripts/game_flow/tile_battle_executor.gd`
 
-**ステータス**: 未着手
+**ステータス**: ✅ 完了（`6decb4b`）
 
 ---
 
@@ -56,7 +56,7 @@ iph.start_item_selection(...)
 **対象ファイル**:
 - `scripts/game_flow/game_result_handler.gd`
 
-**ステータス**: 未着手
+**ステータス**: ✅ 完了（`8235a7e` + `43d27a3` inject_callbacks統一）
 
 ---
 
@@ -72,12 +72,19 @@ iph.start_item_selection(...)
 - `change_phase` → Callable 注入
 - `spell_container` → 直接参照注入（SPH初期化時に渡す）
 
+**サブフェーズ**:
+- A-3a: is_cpu_player() Callable化 → ✅ 完了（`5480027`）
+- A-3b: spell_draw/spell_container 直接注入 → ✅ 完了（`43d27a3`）
+- A-3c: unlock_input / roll_dice Callable化 → 未着手
+- A-3d: change_phase / game_stats Callable化 → 未着手
+
 **対象ファイル**:
 - `scripts/game_flow/spell_phase_handler.gd`
-- `scripts/game_flow/spell_flow_handler.gd`（`_game_flow_manager` 23行）
-- `scripts/game_flow/dice_phase_handler.gd`（`game_flow_manager` 20行）
+- `scripts/game_flow/spell_flow_handler.gd`（`_game_flow_manager` 残: unlock_input, roll_dice）
+- `scripts/game_flow/dice_phase_handler.gd`（`game_flow_manager` 残: change_phase）
+- `scripts/game_flow/spell_ui_manager.gd`（game_stats 残: 1箇所）
 
-**ステータス**: 未着手
+**ステータス**: A-3a/A-3b 完了、A-3c/A-3d 未着手
 
 ---
 

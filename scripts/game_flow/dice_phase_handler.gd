@@ -17,7 +17,9 @@ var player_system
 var player_buff_system
 var spell_dice
 var board_system_3d
-var game_flow_manager  # change_phase()呼び出し用
+
+# === Phase A-3d: change_phase Callable 化 ===
+var _change_phase_cb: Callable = Callable()
 
 # ゲームフェーズ定数（GameFlowManagerと同期）
 enum GamePhase {
@@ -32,12 +34,18 @@ enum GamePhase {
 var current_phase = GamePhase.SETUP
 
 # セットアップメソッド
-func setup(p_player_system, p_player_buff_system, p_spell_dice, p_board_system_3d, p_game_flow_manager):
+func setup(p_player_system, p_player_buff_system, p_spell_dice, p_board_system_3d):
 	player_system = p_player_system
 	player_buff_system = p_player_buff_system
 	spell_dice = p_spell_dice
 	board_system_3d = p_board_system_3d
-	game_flow_manager = p_game_flow_manager
+
+## GFM依存のCallable一括注入（Phase A-3d）
+func inject_callbacks(
+	change_phase_cb: Callable,
+) -> void:
+	_change_phase_cb = change_phase_cb
+	assert(_change_phase_cb.is_valid(), "[DPH] change_phase_cb must be valid")
 
 # メインメソッド（GFMのroll_dice()の中身をそのまま移動）
 # spell_phase_handler: SpellPhaseHandler型（スペルフェーズ処理用）
@@ -63,9 +71,9 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 	if board_system_3d:
 		board_system_3d.focus_camera_on_player_pos(player_system.current_player_index, false)
 
-	# GameFlowManagerのchange_phase()経由でフェーズ遷移
-	if game_flow_manager:
-		game_flow_manager.change_phase(GamePhase.MOVING)
+	# フェーズ遷移（Callable経由）
+	if _change_phase_cb.is_valid():
+		_change_phase_cb.call(GamePhase.MOVING)
 
 	# フライ効果（3個ダイス）の判定
 	var needs_third = spell_dice and spell_dice.needs_third_dice(player_system.current_player_index)

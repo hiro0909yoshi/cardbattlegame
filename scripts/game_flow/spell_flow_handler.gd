@@ -20,11 +20,13 @@ var _spell_state: SpellStateHandler = null  # 状態管理（必須）
 var _spell_phase_handler = null  # 親ハンドラー（シグナル発火、他ハンドラー参照用）
 
 ## ===== システム参照 =====
-var _game_flow_manager = null
 var _spell_container: SpellSystemContainer = null
 
 ## === Phase A-3a: is_cpu_player Callable 化 ===
 var _is_cpu_player_cb: Callable = Callable()
+## === Phase A-3c: unlock_input/roll_dice Callable 化 ===
+var _unlock_input_cb: Callable = Callable()
+var _roll_dice_cb: Callable = Callable()
 var _board_system = null
 var _player_system = null
 var _card_system = null
@@ -46,7 +48,6 @@ func _init(spell_state: SpellStateHandler) -> void:
 ## 参照を設定（SpellPhaseHandlerから注入）
 func setup(
 	spell_phase_handler,
-	game_flow_manager,
 	board_system,
 	player_system,
 	card_system,
@@ -59,7 +60,6 @@ func setup(
 	target_selection_helper = null
 ) -> void:
 	_spell_phase_handler = spell_phase_handler
-	_game_flow_manager = game_flow_manager
 	_board_system = board_system
 	_player_system = player_system
 	_card_system = card_system
@@ -71,11 +71,15 @@ func setup(
 	_spell_target_selection_handler = spell_target_selection_handler
 	_target_selection_helper = target_selection_helper
 
-## GFM依存のCallable一括注入（Phase A-3a）
+## GFM依存のCallable一括注入（Phase A-3a, 3c）
 func inject_callbacks(
 	is_cpu_player_cb: Callable,
+	unlock_input_cb: Callable,
+	roll_dice_cb: Callable,
 ) -> void:
 	_is_cpu_player_cb = is_cpu_player_cb
+	_unlock_input_cb = unlock_input_cb
+	_roll_dice_cb = roll_dice_cb
 
 ## 直接参照の一括注入（Phase A-3b: spell_container直接注入）
 func inject_dependencies(spell_container: SpellSystemContainer) -> void:
@@ -151,8 +155,8 @@ func use_spell(spell_card: Dictionary):
 			# カード選択状態をリセット
 			spell_ui_card_pending_cleared.emit()
 			# 入力ロックを解除
-			if _game_flow_manager and _game_flow_manager.has_method("unlock_input"):
-				_game_flow_manager.unlock_input()
+			if _unlock_input_cb.is_valid():
+				_unlock_input_cb.call()
 			# スペル選択画面に戻る
 			return_to_spell_selection()
 			return
@@ -523,9 +527,9 @@ func pass_spell(auto_roll: bool = true):
 	complete_spell_phase()
 
 	# サイコロを自動で振る（×ボタン押下時）
-	if auto_roll and _game_flow_manager:
+	if auto_roll and _roll_dice_cb.is_valid():
 		# フェーズ遷移後に呼ぶ必要があるためcall_deferred使用
-		_game_flow_manager.roll_dice.call_deferred()
+		_roll_dice_cb.call_deferred()
 
 ## スペルフェーズ完了
 func complete_spell_phase():

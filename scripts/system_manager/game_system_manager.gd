@@ -897,7 +897,7 @@ func _initialize_phase1a_handlers() -> void:
 	var DicePhaseHandlerClass = preload("res://scripts/game_flow/dice_phase_handler.gd")
 	var dice_phase_handler = DicePhaseHandlerClass.new()
 	game_flow_manager.add_child(dice_phase_handler)
-	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, board_system_3d, game_flow_manager)
+	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, board_system_3d)
 	game_flow_manager.dice_phase_handler = dice_phase_handler
 
 	# Phase 6-B: DicePhaseHandler UI Signal接続
@@ -1142,7 +1142,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 
 		spell_phase_handler.spell_flow.setup(
 			spell_phase_handler,
-			game_flow_manager,
 			spell_phase_handler.board_system,
 			spell_phase_handler.player_system,
 			spell_phase_handler.card_system,
@@ -1237,19 +1236,21 @@ func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
 	# SpellPhaseHandler に参照を設定
 	spell_phase_handler.cpu_spell_phase_handler = cpu_spell_phase_handler
 
-## Phase A-3a/A-3b: Callable + 直接参照の注入
+## Phase A-3a/A-3b/A-3d: Callable + 直接参照の注入
 func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
 	if not spell_phase_handler or not gfm:
 		return
 
 	# === Phase A-3a: is_cpu_player Callable 注入 ===
 	var is_cpu_cb = func(id: int) -> bool: return gfm.is_cpu_player(id)
+	var unlock_input_cb = Callable(gfm, "unlock_input") if gfm else Callable()
+	var roll_dice_cb = Callable(gfm, "roll_dice") if gfm else Callable()
 
 	if spell_phase_handler:
 		spell_phase_handler.inject_callbacks(is_cpu_cb)
 
 	if spell_phase_handler.spell_flow:
-		spell_phase_handler.spell_flow.inject_callbacks(is_cpu_cb)
+		spell_phase_handler.spell_flow.inject_callbacks(is_cpu_cb, unlock_input_cb, roll_dice_cb)
 
 	if spell_phase_handler.spell_target_selection_handler:
 		spell_phase_handler.spell_target_selection_handler.inject_callbacks(is_cpu_cb)
@@ -1265,7 +1266,16 @@ func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
 	if spell_container and spell_phase_handler.spell_flow:
 		spell_phase_handler.spell_flow.inject_dependencies(spell_container)
 
-	print("[GameSystemManager] Phase A-3a/A-3b: Callable + 直接参照注入完了")
+	# === Phase A-3d: DicePhaseHandler change_phase Callable 注入 ===
+	if gfm.dice_phase_handler:
+		var change_phase_cb = func(phase: int) -> void: gfm.change_phase(phase)
+		gfm.dice_phase_handler.inject_callbacks(change_phase_cb)
+
+	# === Phase A-3d: SpellUIManager game_stats 直接参照注入 ===
+	if spell_phase_handler.spell_ui_manager:
+		spell_phase_handler.spell_ui_manager.inject_dependencies(gfm.game_stats)
+
+	print("[GameSystemManager] Phase A-3a/A-3b/A-3d: Callable + 直接参照注入完了")
 
 ## CPU移動評価システムの初期化
 func _initialize_cpu_movement_evaluator() -> void:

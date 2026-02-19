@@ -17,6 +17,9 @@ var _card_system = null
 # === Phase A-3a: is_cpu_player Callable 化 ===
 var _is_cpu_player_cb: Callable = Callable()
 
+# === Phase A-3d: game_stats 直接参照 ===
+var _game_stats = null
+
 # === UI状態 ===
 var _spell_phase_ui_manager = null
 var _spell_cast_notification_ui: SpellCastNotificationUI = null
@@ -62,6 +65,10 @@ func inject_callbacks(
 	is_cpu_player_cb: Callable,
 ) -> void:
 	_is_cpu_player_cb = is_cpu_player_cb
+
+## 直接参照の一括注入（Phase A-3d）
+func inject_dependencies(game_stats) -> void:
+	_game_stats = game_stats
 
 
 # === ヘルパーメソッド ===
@@ -347,8 +354,8 @@ func clear_spell_cast_notification() -> void:
 func _build_spell_context() -> Dictionary:
 	var context = {}
 
-	if _spell_phase_handler and _spell_phase_handler.game_flow_manager and "game_stats" in _spell_phase_handler.game_flow_manager:
-		context["world_curse"] = _spell_phase_handler.game_flow_manager.game_stats.get("world_curse", {})
+	if _game_stats:
+		context["world_curse"] = _game_stats.get("world_curse", {})
 
 	return context
 
