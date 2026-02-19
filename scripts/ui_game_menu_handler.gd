@@ -6,6 +6,9 @@ class_name UIGameMenuHandler
 
 var ui_manager: UIManager = null
 
+## Callable注入（Phase 10-C: UIManagerチェーンアクセス除去）
+var _on_player_defeated_cb: Callable = Callable()
+
 var game_menu_button: GameMenuButton = null
 var game_menu: GameMenu = null
 var surrender_dialog: SurrenderDialog = null
@@ -69,5 +72,5 @@ func _on_surrender_selected():
 ## 降参確認
 func _on_surrender_confirmed():
 	print("[UIGameMenu] 降参確認")
-	if ui_manager.game_flow_manager_ref:
-		ui_manager.game_flow_manager_ref.on_player_defeated("surrender")
+	if _on_player_defeated_cb.is_valid():
+		_on_player_defeated_cb.call("surrender")

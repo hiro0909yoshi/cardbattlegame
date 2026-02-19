@@ -2,9 +2,9 @@
 
 **目的**: プロジェクト内のシグナル定義と接続パターンの一覧
 
-**最終更新**: 2026-02-18 (Phase 8-A ItemPhaseHandler UI Signal 追加)
+**最終更新**: 2026-02-19 (Phase 10-B card.gd Signal駆動化)
 
-**総シグナル数**: 229（Phase 6 で +33、Phase 8-A で +4 UI Signals 追加）
+**総シグナル数**: 233（Phase 6 で +33、Phase 8-A で +4、Phase 10-B で +4 Signal追加）
 
 ---
 
@@ -285,6 +285,28 @@ spell_ui_manager.connect_mystic_arts_signals(mystic_arts_handler)
 | `card_drawn` | `card_data: Dictionary` | カードドロー |
 | `card_used` | `card_data: Dictionary` | カード使用 |
 | `hand_updated` | なし | 手札更新 |
+
+### Card
+ファイル: `scripts/card.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `card_button_pressed` | `card_index: int` | カード確定通知（Phase 10-B） |
+| `card_info_requested` | `card_data: Dictionary` | カード情報表示要求（Phase 10-B） |
+
+**接続先**: UIManager（hand_display 経由で Callable コールバック接続）
+**接続タイミング**: hand_display がカード生成時に `set_card_callbacks()` で渡された Callable を接続
+
+### CardSelectionService
+ファイル: `scripts/ui_services/card_selection_service.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `card_selected` | `card_index: int` | カード選択通知（CardSelectionUI からリレー、Phase 8-M SSoT化） |
+| `pass_button_pressed` | なし | パスボタン押下 |
+
+**接続先**: GameSystemManager（card_selected → GFM._on_card_selected）
+**接続タイミング**: GameSystemManager._connect_ui_signals()
 
 ### LevelUpUI
 ファイル: `scripts/ui_components/level_up_ui.gd`
@@ -674,6 +696,33 @@ SpellPhaseHandler.spell_phase_completed
 **接続先**: UIManager (GameSystemManager._connect_item_phase_signals() 経由)
 **接続タイミング**: GameSystemManager._initialize_phase1a_handlers() (ItemPhaseHandler初期化後)
 **特記**: ItemPhaseHandler から ui_manager 参照を完全削除。initialize() のパラメータからも除去。
+
+---
+
+## Phase 10-B: card.gd Signal駆動化（2026-02-19 追加）
+
+### card.gd Signals
+ファイル: `scripts/card.gd`
+
+| シグナル | 引数 | 発行元メソッド | 用途 |
+|---------|------|-------------|------|
+| `card_button_pressed` | `card_index: int` | `on_card_confirmed()` | カード確定 → UIManager.on_card_button_pressed() |
+| `card_info_requested` | `card_data: Dictionary` | `_show_info_panel_only()` | カード情報表示 → UIManager._on_card_info_from_hand() |
+
+**接続パターン**: hand_display が Callable コールバック経由で接続（UIManager を card.gd が知らない設計）
+**接続タイミング**: UIManager._on_hand_display_ready() → hand_display.set_card_callbacks(on_card_button_pressed, _on_card_info_from_hand)
+**特記**: find_ui_manager_recursive() 完全削除。card.gd は UIManager を一切参照しない。
+
+### CardSelectionService Signals（Phase 8-M SSoT化）
+ファイル: `scripts/ui_services/card_selection_service.gd`
+
+| シグナル | 引数 | 用途 |
+|---------|------|------|
+| `card_selected` | `card_index: int` | CardSelectionUI → CardSelectionService → GFM リレー |
+| `pass_button_pressed` | なし | パスボタン押下リレー |
+
+**接続先**: GameSystemManager
+**特記**: CardSelectionUI → UIManager の直接接続を廃止し、CardSelectionService を SSoT として一元化
 
 ---
 

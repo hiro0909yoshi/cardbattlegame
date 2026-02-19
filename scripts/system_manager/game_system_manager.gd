@@ -929,9 +929,10 @@ func _initialize_phase1a_handlers() -> void:
 		item_phase_handler.item_used.connect(game_flow_manager._on_item_used)
 		print("[GameSystemManager] ItemPhaseHandler → GameFlowManager item_used 接続完了")
 
-	# UIManagerにハンドラー参照をキャッシュ（チェーンアクセス解消用）
-	if ui_manager:
-		ui_manager.dominio_command_handler_ref = dominio_command_handler
+	# Phase 10-C: DominioOrderUI に DCH を直接注入（初期化順序バグ修正）
+	if ui_manager and ui_manager.dominio_order_ui:
+		ui_manager.dominio_order_ui.dominio_command_handler = dominio_command_handler
+		print("[GameSystemManager] DominioOrderUI → DCH 直接参照を設定")
 
 	# battle_status_overlayの直接参照を設定（チェーンアクセス解消）
 	if game_flow_manager.battle_status_overlay:
@@ -941,6 +942,9 @@ func _initialize_phase1a_handlers() -> void:
 			board_system_3d.set_tile_action_processor_battle_overlay(game_flow_manager.battle_status_overlay)
 
 	print("[Phase1A Handlers] 初期化完了")
+
+	# Phase 10-C: UI Callable/Signal 注入
+	_setup_ui_callbacks(ui_manager, game_flow_manager, board_system_3d, dominio_command_handler, spell_phase_handler)
 
 	# ★ NEW: スペルシステム初期化検証
 	if not game_flow_manager or not game_flow_manager.spell_container:
@@ -1508,7 +1512,78 @@ func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
 	item_handler.item_selection_ui_show_requested.connect(
 		func(player, mode: String):
 			if p_ui_manager and p_ui_manager.card_selection_ui and p_ui_manager.card_selection_ui.has_method("show_selection"):
+				# アイテムフェーズではドミニオコマンドボタンを非表示
+				p_ui_manager.clear_special_button()
 				p_ui_manager.card_selection_ui.show_selection(player, mode)
 	)
 
 	print("[GSM] ItemPhaseHandler UI Signal接続完了（4シグナル）")
+
+## Phase 10-C: UIManager/外部ハンドラーへのCallable/Signal注入
+func _setup_ui_callbacks(
+	p_ui_manager: UIManager,
+	p_game_flow_manager: GameFlowManager,
+	p_board_system_3d: BoardSystem3D,
+	p_dominio_command_handler,
+	p_spell_phase_handler
+) -> void:
+	if not p_ui_manager:
+		return
+
+	# === UIManager Callable 注入 ===
+	if p_game_flow_manager:
+		p_ui_manager._is_input_locked_cb = Callable(p_game_flow_manager, "is_input_locked")
+		p_ui_manager._on_card_selected_cb = Callable(p_game_flow_manager, "on_card_selected")
+
+	if p_spell_phase_handler and p_spell_phase_handler.card_selection_handler:
+		p_ui_manager._spell_card_selecting_cb = Callable(
+			p_spell_phase_handler.card_selection_handler, "is_selecting"
+		)
+
+	if p_board_system_3d:
+		p_ui_manager._has_owned_lands_cb = func() -> bool:
+			return p_board_system_3d.has_owned_lands(p_board_system_3d.current_player_index)
+
+		p_ui_manager._update_tile_display_cb = func(tile_idx: int) -> void:
+			if p_board_system_3d.tile_info_display:
+				var tile_info = p_board_system_3d.get_tile_info(tile_idx)
+				if not tile_info.is_empty():
+					p_board_system_3d.tile_info_display.update_display(tile_idx, tile_info)
+
+	# === UIManager Signal 接続 ===
+	if p_dominio_command_handler:
+		if not p_ui_manager.dominio_cancel_requested.is_connected(p_dominio_command_handler.cancel):
+			p_ui_manager.dominio_cancel_requested.connect(p_dominio_command_handler.cancel)
+
+	# === CardSelectionHandler Callable 注入 ===
+	if p_spell_phase_handler and p_spell_phase_handler.card_selection_handler:
+		var csh = p_spell_phase_handler.card_selection_handler
+		if p_game_flow_manager:
+			csh._unlock_input_cb = Callable(p_game_flow_manager, "unlock_input")
+		if p_board_system_3d:
+			csh._restore_camera_cb = func() -> void:
+				p_board_system_3d.enable_follow_camera()
+				p_board_system_3d.return_camera_to_player()
+
+	# === UIGameMenuHandler Callable 注入 ===
+	if p_ui_manager.game_menu_handler and p_game_flow_manager:
+		p_ui_manager.game_menu_handler._on_player_defeated_cb = Callable(
+			p_game_flow_manager, "on_player_defeated"
+		)
+
+	# === UITapHandler Callable 注入 ===
+	if p_ui_manager.tap_handler:
+		if p_board_system_3d:
+			p_ui_manager.tap_handler._get_camera_controller_cb = Callable(
+				p_board_system_3d, "get_camera_controller_ref"
+			)
+		if p_dominio_command_handler:
+			var dch = p_dominio_command_handler
+			p_ui_manager.tap_handler._is_dominio_active_cb = func() -> bool:
+				return dch.current_state != dch.State.CLOSED
+		if p_spell_phase_handler:
+			p_ui_manager.tap_handler._is_spell_phase_active_cb = Callable(
+				p_spell_phase_handler, "is_spell_phase_active"
+			)
+
+	print("[GameSystemManager] Phase 10-C: UI Callable/Signal 注入完了")

@@ -2,7 +2,7 @@
 
 **目的**: チェーンアクセス禁止ルール（規約9）を守るための参照ガイド
 
-**最終更新**: 2026-02-17 (Phase 6 完了、SpellUIManager 統合、MysticArts 委譲削除)
+**最終更新**: 2026-02-19 (Phase 10-B card.gd Signal駆動化、Phase 8 UIサービス分割反映)
 
 ---
 
@@ -54,6 +54,18 @@
 | `enable_navigation(confirm, back, up, down)` | グローバルボタン設定 |
 | `disable_navigation()` | グローバルボタン無効化 |
 | `clear_back_action()` | 戻るボタンクリア |
+
+### UIサービス参照（Phase 8-F 追加）
+
+UIManager は5つのサービスを公開プロパティとして提供:
+
+| プロパティ | 型 | 用途 |
+|-----------|------|------|
+| `message_service` | MessageService | トースト・コメント・フェーズ表示 |
+| `navigation_service` | NavigationService | グローバルボタン制御・状態保存復元 |
+| `card_selection_service` | CardSelectionService | カード選択UI・フィルター・手札表示 |
+| `info_panel_service` | InfoPanelService | クリーチャー/スペル/アイテム情報パネル |
+| `player_info_service` | PlayerInfoService | プレイヤー情報パネル更新（Phase 10-A） |
 
 ---
 
@@ -129,11 +141,76 @@
 | `get_movement_controller_ref()` | 移動コントローラ参照取得 |
 | `set_camera_controller_ref(ref)` | カメラコントローラ参照設定 |
 | `set_movement_controller_gfm(gfm)` | 移動コントローラにGFM設定 |
+| `set_movement_controller_services(msg_svc, nav_svc)` | 移動コントローラにサービス注入（Phase 8-K） |
 | `set_spell_player_move(spm)` | スペル移動参照設定 |
 | `set_spell_land(system)` | spell_land直接参照設定 |
 | `set_cpu_movement_evaluator(eval)` | CPU移動評価設定 |
 | `get_cpu_movement_evaluator()` | CPU移動評価取得 |
 | `get_spell_movement()` | スペル移動取得 |
+
+---
+
+## UIサービス委譲メソッド（Phase 8-F〜10-A 追加）
+
+### MessageService
+ファイル: `scripts/ui_services/message_service.gd`
+
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `show_toast(message, duration)` | phase_display | トースト表示 |
+| `show_action_prompt(message, position)` | phase_display | アクション指示表示 |
+| `hide_action_prompt()` | phase_display | アクション指示非表示 |
+| `set_phase_text(text)` | phase_display | フェーズテキスト設定 |
+| `show_comment_and_wait(message, pid, force)` | global_comment_ui | クリック待ちコメント |
+| `show_choice_and_wait(message, pid, yes, no)` | global_comment_ui | Yes/No選択 |
+| `show_big_dice_result(value, duration)` | phase_display | ダイス結果大表示 |
+
+### NavigationService
+ファイル: `scripts/ui_services/navigation_service.gd`
+
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `enable_navigation(confirm, back, up, down)` | global_action_buttons | ナビゲーション有効化 |
+| `disable_navigation()` | global_action_buttons | ナビゲーション無効化 |
+| `save_navigation_state()` | 内部状態保存 | ボタン状態保存 |
+| `restore_navigation_state()` | global_action_buttons | ボタン状態復元 |
+| `register_confirm_action(callback, text)` | global_action_buttons | 決定ボタン登録 |
+| `register_back_action(callback, text)` | global_action_buttons | 戻るボタン登録 |
+| `clear_back_action()` | global_action_buttons | 戻るボタンクリア |
+| `set_special_button(text, callback)` | global_action_buttons | 特殊ボタン設定 |
+| `clear_special_button()` | global_action_buttons | 特殊ボタンクリア |
+
+### CardSelectionService
+ファイル: `scripts/ui_services/card_selection_service.gd`
+
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `show_card_selection_ui(player)` | card_selection_ui | カード選択UI表示 |
+| `show_card_selection_ui_mode(player, mode)` | card_selection_ui | モード指定カード選択UI表示 |
+| `hide_card_selection_ui()` | card_selection_ui | カード選択UI非表示 |
+| `set_card_selection_filter(filter)` | 内部プロパティ | フィルター設定 |
+| `clear_card_selection_filter()` | 内部プロパティ | フィルタークリア |
+| `update_hand_display(player_id)` | hand_display | 手札表示更新 |
+| `initialize_hand_container(container)` | hand_display | 手札コンテナ初期化 |
+| `connect_card_system_signals()` | card_system | カードシステムSignal接続 |
+
+### InfoPanelService
+ファイル: `scripts/ui_services/info_panel_service.gd`
+
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `show_card_info_only(card_data, tile_index)` | 各パネル | 閲覧モードカード情報表示 |
+| `show_card_selection(card_data, hand_index, ...)` | 各パネル | 選択モードカード情報表示 |
+| `hide_all_info_panels(clear_buttons)` | 各パネル | 全パネル非表示 |
+| `is_any_info_panel_visible()` | 各パネル | パネル表示状態確認 |
+| `update_display(creature_data)` | creature_panel | クリーチャー表示更新 |
+
+### PlayerInfoService
+ファイル: `scripts/ui_services/player_info_service.gd`
+
+| メソッド | 委譲先 | 用途 |
+|---------|--------|------|
+| `update_panels()` | player_info_panel | プレイヤー情報パネル全更新（Phase 10-A） |
 
 ---
 
@@ -285,11 +362,26 @@ MovementController内部のヘルパー（warp_handler, special_handler等）か
 | MovementDestinationPredictor | set_card_selection_ui | board_system_3d | カード選択状態確認 |
 | MovementController | set_movement_controller_card_selection_ui | board_system_3d | 移動選択制御 |
 
+### 移動系 サービス直接注入（Phase 8-K）
+| 設定先クラス | セッターメソッド | 注入元 | 参照先 |
+|-------------|-----------------|--------|--------|
+| MovementController | `set_services(msg_svc, nav_svc)` | board_system_3d | MessageService, NavigationService |
+| MovementDirectionSelector | `set_services(msg_svc, nav_svc)` | movement_controller | MessageService, NavigationService |
+| MovementBranchSelector | `set_services(msg_svc, nav_svc)` | movement_controller | MessageService, NavigationService |
+
+### card.gd 直接参照（Phase 10-B、UIManager 依存排除）
+| 設定先クラス | セッターメソッド | 注入元 | 参照先 |
+|-------------|-----------------|--------|--------|
+| card.gd | `set_references(css, csui, gfm)` | hand_display | CardSelectionService, CardSelectionUI, GameFlowManager |
+
+### hand_display Callable コールバック（Phase 10-B）
+| 設定先クラス | セッターメソッド | 注入元 | 用途 |
+|-------------|-----------------|--------|------|
+| hand_display | `set_card_callbacks(on_confirmed, on_info)` | UIManager | card.gd Signal → UIManager ハンドラー接続 |
+
 ### ui_manager 直接参照（新規拡張）
 | 設定先クラス | セッターメソッド | 注入元 | 用途 |
 |-------------|-----------------|--------|------|
-| MovementBranchSelector | set_ui_manager | board_system_3d | UI操作 |
-| MovementDirectionSelector | set_ui_manager | board_system_3d | UI操作 |
 | TileActionProcessor | set_ui_manager | board_system_3d | アクションUI |
 | BattleSpecialEffects | set_ui_manager | battle_system | バトルUI更新 |
 | CPUTurnProcessor | set_ui_manager | game_system_manager | ターンUI更新 |

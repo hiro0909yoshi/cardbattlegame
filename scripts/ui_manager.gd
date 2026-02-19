@@ -7,6 +7,7 @@ signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
 signal dominio_order_button_pressed()  # Phase 1-A: ドミニオコマンドボタン
+signal dominio_cancel_requested()  # Phase 10-C: ドミニオキャンセル要求（Signal駆動化）
 
 # UIコンポーネント（分割されたサブシステム）
 var dominio_order_ui: DominioOrderUI = null
@@ -58,7 +59,13 @@ var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
 var board_system_ref: BoardSystem3D = null  # BoardSystem3Dも格納可能
 var game_flow_manager_ref: GameFlowManager = null  # GameFlowManagerの参照
-var dominio_command_handler_ref: DominioCommandHandler = null  # DominioCommandHandler参照（チェーンアクセス解消用）
+
+# === Callable 注入変数（Phase 10-C: 双方向参照削減） ===
+var _is_input_locked_cb: Callable = Callable()
+var _spell_card_selecting_cb: Callable = Callable()
+var _on_card_selected_cb: Callable = Callable()
+var _has_owned_lands_cb: Callable = Callable()
+var _update_tile_display_cb: Callable = Callable()
 
 # デバッグモード
 # NOTE: debug_modeはDebugSettings.ui_debug_modeに移行済み
@@ -392,7 +399,7 @@ func create_basic_ui(parent: Node):
 	# Phase 1-A: ドミニオコマンドUI初期化（DominioOrderUIに委譲）
 	# 注: ドミニオコマンドボタンはグローバル特殊ボタンに移行済み
 	if dominio_order_ui:
-		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self, dominio_command_handler_ref)
+		dominio_order_ui.initialize(parent, player_system_ref, board_system_ref, self)
 		dominio_order_ui.create_action_menu_panel(parent)
 		dominio_order_ui.create_level_selection_panel(parent)
 
@@ -412,8 +419,8 @@ func hide_card_selection_ui():
 
 # カードボタンが押された（card.gdから呼ばれる）
 func on_card_button_pressed(card_index: int):
-	# 入力ロックチェック
-	if game_flow_manager_ref and game_flow_manager_ref.is_input_locked():
+	# 入力ロックチェック（Callable注入: Phase 10-C）
+	if _is_input_locked_cb.is_valid() and _is_input_locked_cb.call():
 		return
 
 	# 通知ポップアップがクリック待ち中なら無視
@@ -425,12 +432,11 @@ func on_card_button_pressed(card_index: int):
 		card_selection_ui.on_card_selected(card_index)
 		return
 
-	# カード選択ハンドラーが選択中の場合はGameFlowManager経由で処理
-	if game_flow_manager_ref and game_flow_manager_ref.spell_phase_handler:
-		var handler = game_flow_manager_ref.spell_phase_handler.card_selection_handler
-		if handler and handler.is_selecting():
-			game_flow_manager_ref.on_card_selected(card_index)
-			return
+	# スペルカード選択中はGFM経由で処理（Callable注入: Phase 10-C）
+	if _spell_card_selecting_cb.is_valid() and _spell_card_selecting_cb.call():
+		if _on_card_selected_cb.is_valid():
+			_on_card_selected_cb.call(card_index)
+		return
 
 	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
 		card_selection_ui.on_card_selected(card_index)
@@ -442,9 +448,9 @@ func _on_card_info_from_hand(card_data: Dictionary) -> void:
 		player_status_dialog.hide_dialog()
 	# 閲覧モードで表示
 	show_card_info(card_data, -1, false)
-	# 召喚/バトル/アイテムフェーズ中はドミニオボタンを再表示
+	# 召喚/バトルフェーズ中はドミニオボタンを再表示（アイテムフェーズでは不要）
 	if card_selection_ui and card_selection_ui.is_active:
-		if card_selection_ui.selection_mode in ["summon", "battle", "item"]:
+		if card_selection_ui.selection_mode in ["summon", "battle"]:
 			show_dominio_order_button()
 
 # === レベルアップUI関連 ===
@@ -524,9 +530,8 @@ func _on_creature_info_panel_cancelled():
 	emit_signal("pass_button_pressed")
 
 func on_cancel_dominio_order_button_pressed():
-	# GameFlowManagerのdominio_command_handlerに通知
-	if game_flow_manager_ref and game_flow_manager_ref.dominio_command_handler:
-		game_flow_manager_ref.dominio_command_handler.cancel()
+	# Signal駆動化（Phase 10-C: DCHがリスニング）
+	dominio_cancel_requested.emit()
 
 # === グローバルアクションボタン管理 ===
 
@@ -847,10 +852,9 @@ func _input(event):
 ## ドミニオコマンドボタンを表示（特殊ボタン使用）
 ## 操作可能な所有地（非ダウン）がない場合は表示しない
 func show_dominio_order_button():
-	if board_system_ref and board_system_ref.has_method("has_owned_lands"):
-		var player_id = board_system_ref.current_player_index
-		if not board_system_ref.has_owned_lands(player_id):
-			return
+	# Callable注入（Phase 10-C: board_system_refランタイム参照除去）
+	if _has_owned_lands_cb.is_valid() and not _has_owned_lands_cb.call():
+		return
 	set_special_button("D", func(): _on_dominio_order_button_pressed())
 
 ## ドミニオコマンドボタンを非表示（特殊ボタンクリア）
@@ -1006,9 +1010,6 @@ func on_creature_updated(tile_index: int, creature_data: Dictionary):
 	if _info_panel_service and not creature_data.is_empty():
 		_info_panel_service.update_display(creature_data)
 
-	# 3D表示更新（tile_info_display）
-	if board_system_ref.tile_info_display:
-		# 委譲メソッド使用（2段チェーンアクセス禁止）
-		var tile_info = board_system_ref.get_tile_info(tile_index)
-		if not tile_info.is_empty():
-			board_system_ref.tile_info_display.update_display(tile_index, tile_info)
+	# 3D表示更新（Callable注入: Phase 10-C）
+	if _update_tile_display_cb.is_valid():
+		_update_tile_display_cb.call(tile_index)

@@ -85,7 +85,7 @@ func initialize(flow_mgr, c_system = null, p_system = null, b_system = null):
 	# game_flow_manager は GameSystemManager の子なので、親を取得
 	if flow_mgr and flow_mgr.get_parent():
 		var game_system_manager = flow_mgr.get_parent()
-		if game_system_manager.is_class("GameSystemManager"):
+		if game_system_manager is GameSystemManager:
 			set_cpu_context_references(game_system_manager)
 
 ## GameSystemManager から CPU AI 参照を設定（P0統一）

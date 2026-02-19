@@ -131,8 +131,9 @@ func create_subsystems():
 		movement_controller.movement_completed.connect(_on_movement_completed)
 	if not tile_action_processor.action_completed.is_connected(_on_action_completed):
 		tile_action_processor.action_completed.connect(_on_action_completed)
-	if not cpu_turn_processor.cpu_action_completed.is_connected(_on_action_completed):
-		cpu_turn_processor.cpu_action_completed.connect(_on_action_completed)
+	# NOTE: cpu_action_completed → BoardSystem3D 直接接続は不要
+	# TileActionProcessor._on_cpu_action_completed → action_completed → BoardSystem3D の正規パスが存在するため
+	# 直接接続は二重発火（tile_action_completed が2回 GFM に届く）の原因だった
 
 func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: BattleSystem, 
 				   s_system: PlayerBuffSystem, st_system: SpecialTileSystem = null, gf_manager = null):

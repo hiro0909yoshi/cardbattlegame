@@ -337,13 +337,11 @@ func _on_invasion_completed_from_board(success: bool, tile_index: int):
 	# デバッグログ
 	print("[GameFlowManager] invasion_completed 受信: success=%s, tile=%d" % [success, tile_index])
 
-	# 各ハンドラーへ順番に通知（順序重要: DominioCommandHandler → CPUTurnProcessor）
+	# DominioCommandHandler へ通知（完了処理を一元管理）
+	# NOTE: CPUTurnProcessor への通知は不要（DCH.complete_action() がターン終了を処理）
+	# CPUTurnProcessor._on_invasion_completed は冗長なUI操作 + _complete_action() で二重発火を起こしていた
 	if dominio_command_handler:
 		dominio_command_handler._on_invasion_completed(success, tile_index)
-
-	# CPUTurnProcessor へ通知（存在する場合）
-	if board_system_3d and board_system_3d.cpu_turn_processor:
-		board_system_3d.cpu_turn_processor._on_invasion_completed(success, tile_index)
 
 func _on_movement_completed_from_board(player_id: int, final_tile: int):
 	# デバッグログ

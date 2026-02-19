@@ -60,6 +60,10 @@ var _navigation_service = null
 var _card_selection_service = null
 var _info_panel_service = null
 
+## Callable注入（Phase 10-C: UIManagerチェーンアクセス除去）
+var _unlock_input_cb: Callable = Callable()
+var _restore_camera_cb: Callable = Callable()
+
 ## セットアップ
 func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
 	ui_manager = p_ui_manager
@@ -159,8 +163,8 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
 	
 	# 入力ロックを解除（グローバルボタン対応）
-	if ui_manager and ui_manager.game_flow_manager_ref:
-		ui_manager.game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 	
 	# ガイド表示
 	var player_name = "プレイヤー%d" % (target_player_id + 1)
@@ -452,8 +456,8 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
 	
 	# 入力ロックを解除（グローバルボタン対応）
-	if ui_manager and ui_manager.game_flow_manager_ref:
-		ui_manager.game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 	
 	# ガイド表示
 	var player_name = "プレイヤー%d" % (target_player_id + 1)
@@ -520,8 +524,8 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
 	
 	# 入力ロックを解除（グローバルボタン対応）
-	if ui_manager and ui_manager.game_flow_manager_ref:
-		ui_manager.game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 	
 	# ガイド表示
 	if _message_service:
@@ -739,8 +743,8 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
 	
 	# 入力ロックを解除（グローバルボタン対応）
-	if ui_manager and ui_manager.game_flow_manager_ref:
-		ui_manager.game_flow_manager_ref.unlock_input()
+	if _unlock_input_cb.is_valid():
+		_unlock_input_cb.call()
 	
 	# ガイド表示
 	var player_name = "プレイヤー%d" % (target_player_id + 1)
@@ -994,11 +998,8 @@ func _hide_all_info_panels(clear_buttons: bool = true):
 
 ## カメラを現在のプレイヤーに戻す
 func _restore_camera_to_current_player():
-	if not ui_manager or not ui_manager.board_system_ref:
-		return
-	
-	ui_manager.board_system_ref.enable_follow_camera()
-	ui_manager.board_system_ref.return_camera_to_player()
+	if _restore_camera_cb.is_valid():
+		_restore_camera_cb.call()
 
 
 # ============ CPU自動選択（追加） ============

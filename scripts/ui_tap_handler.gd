@@ -6,6 +6,10 @@ class_name UITapHandler
 
 var ui_manager: UIManager = null
 
+## Callable注入（Phase 10-C: UIManagerチェーンアクセス除去）
+var _get_camera_controller_cb: Callable = Callable()
+var _is_dominio_active_cb: Callable = Callable()
+var _is_spell_phase_active_cb: Callable = Callable()
 
 func _init(p_ui_manager: UIManager) -> void:
 	ui_manager = p_ui_manager
@@ -15,11 +19,11 @@ func _init(p_ui_manager: UIManager) -> void:
 func connect_camera_signals():
 	print("[UITapHandler] connect_camera_signals 呼び出し")
 
-	if not ui_manager.board_system_ref:
-		print("[UITapHandler] board_system_ref がない")
+	if not _get_camera_controller_cb.is_valid():
+		print("[UITapHandler] _get_camera_controller_cb が未設定")
 		return
 
-	var cam_ctrl = ui_manager.board_system_ref.get_camera_controller_ref()
+	var cam_ctrl = _get_camera_controller_cb.call()
 	if not cam_ctrl:
 		print("[UITapHandler] camera_controller がない")
 		return
@@ -46,11 +50,10 @@ func _on_creature_tapped(tile_index: int, creature_data: Dictionary):
 		if ui_manager.tap_target_manager.handle_creature_tap(tile_index, creature_data):
 			return
 
-	var gfm = ui_manager.game_flow_manager_ref
-	var is_dominio_order_active = gfm and gfm.dominio_command_handler and gfm.dominio_command_handler.current_state != gfm.dominio_command_handler.State.CLOSED
+	var is_dominio_order_active = _is_dominio_active_cb.is_valid() and _is_dominio_active_cb.call()
 	var is_tap_target_active = ui_manager.tap_target_manager and ui_manager.tap_target_manager.is_active
 	var is_tutorial_active = ui_manager.global_action_buttons and ui_manager.global_action_buttons.explanation_mode_active
-	var is_spell_phase_active = gfm and gfm.spell_phase_handler and gfm.spell_phase_handler.is_spell_phase_active()
+	var is_spell_phase_active = _is_spell_phase_active_cb.is_valid() and _is_spell_phase_active_cb.call()
 	var is_card_selection_active = ui_manager.card_selection_ui and ui_manager.card_selection_ui.is_active
 	var setup_buttons = not is_tap_target_active and not is_dominio_order_active and not is_tutorial_active and not is_spell_phase_active and not is_card_selection_active
 

@@ -14,6 +14,15 @@
 
 ## 2026年2月19日（Session: Phase 9 + Phase 10-A + Phase 10-B）
 
+### ✅ バグ修正: ナビゲーションボタン消失 + ドミニオボタンアイテムフェーズ表示
+
+- **ナビゲーションボタン消失バグ**: スペル/アイテムフェーズ中、3Dマップ上のクリーチャータップ後に×ボタンでボタン全消滅
+  - 原因: CameraController が tile_tapped → creature_tapped を連続発火、tile_tapped でコールバックがクリアされた空の状態を save_navigation_state() が保存
+  - 修正: `navigation_service.gd` の `save_navigation_state()` で全コールバックが空の場合は保存をスキップ
+- **ドミニオコマンドボタン誤表示**: アイテムフェーズ開始時に前フェーズのドミニオボタンが残存
+  - 修正: `game_system_manager.gd` の `item_selection_ui_show_requested` ハンドラーで `clear_special_button()` を呼び出し
+- デバッグログ全削除（navigation_service, global_action_buttons, ui_manager, camera_controller）
+
 ### ✅ Phase 9-A: ui_tap_handler is_nav_state_saved() ガード追加
 
 - `_close_info_panel_and_restore()` に `is_nav_state_saved()` チェック追加

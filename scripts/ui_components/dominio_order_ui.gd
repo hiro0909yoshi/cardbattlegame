@@ -36,12 +36,12 @@ func _ready():
 	pass
 
 ## 初期化
-func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null, dominio_handler = null):
+func initialize(ui_parent: Node, player_sys, board_sys, ui_manager = null):
 	ui_layer = ui_parent
 	player_system_ref = player_sys
 	board_system_ref = board_sys
 	ui_manager_ref = ui_manager
-	dominio_command_handler = dominio_handler
+	# NOTE: dominio_command_handler は GameSystemManager から直接注入される（Phase 10-C）
 
 ## ドミニオコマンドボタン表示（後方互換 - GlobalActionButtonsに移行済み、空実装）
 func show_dominio_order_button():

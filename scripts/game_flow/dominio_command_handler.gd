@@ -138,12 +138,9 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# 子コンポーネント参照のキャッシュ
 	if board_system and board_system.get("battle_system"):
 		battle_system = board_system.battle_system
-
-		# BattleSystem の invasion_completed シグナルに接続
-		if battle_system and battle_system.has_signal("invasion_completed"):
-			if not battle_system.invasion_completed.is_connected(_on_invasion_completed):
-				battle_system.invasion_completed.connect(_on_invasion_completed)
-				print("[DominioCommandHandler] BattleSystem.invasion_completed シグナル接続完了")
+	# Note: invasion_completed は Phase 2 リレーチェーン経由で
+	# GameFlowManager._on_invasion_completed_from_board → DCH._on_invasion_completed で到達する
+	# 直接接続すると二重発火するため廃止（BUG fix 2026-02-19）
 
 	# Phase 1-A: dominio_order_ui のシグナルを接続（遅延取得）
 	# _dominio_order_ui は open_dominio_order() 時に利用可能になる
@@ -797,6 +794,11 @@ func _execute_move_battle():
 		battle_status_overlay.hide_battle_status()
 	
 	var current_player_index = board_system.current_player_index
+
+	# バトル完了シグナルに ONE_SHOT 接続（移動侵略バトル用）
+	var callable = Callable(self, "_on_invasion_completed")
+	if not battle_system.invasion_completed.is_connected(callable):
+		battle_system.invasion_completed.connect(callable, CONNECT_ONE_SHOT)
 
 	# バトル実行（移動元タイル情報も渡す）
 	await battle_system.execute_3d_battle_with_data(
