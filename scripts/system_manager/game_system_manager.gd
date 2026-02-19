@@ -860,6 +860,10 @@ func _initialize_phase1a_handlers() -> void:
 			spell_draw.set_card_selection_handler(spell_phase_handler.card_selection_handler)
 			print("[GSM] card_selection_handler 初期化・spell_draw注入完了")
 
+		# Phase A-3a: CSH is_cpu_player Callable 注入（CSH作成直後に実行、初期化順序の制約）
+		var is_cpu_cb_for_csh = func(id: int) -> bool: return game_flow_manager.is_cpu_player(id)
+		spell_phase_handler.card_selection_handler.inject_callbacks(is_cpu_cb_for_csh)
+
 	# DebugControllerにspell_phase_handler参照を設定
 	if debug_controller:
 		debug_controller.spell_phase_handler = spell_phase_handler
@@ -1262,8 +1266,9 @@ func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
 	if spell_phase_handler.spell_ui_manager:
 		spell_phase_handler.spell_ui_manager.inject_callbacks(is_cpu_cb)
 
-	if spell_phase_handler.card_selection_handler:
-		spell_phase_handler.card_selection_handler.inject_callbacks(is_cpu_cb)
+	# NOTE: CardSelectionHandler inject_callbacks は CSH 作成直後に実行済み（初期化順序の制約）
+	# if spell_phase_handler.card_selection_handler:
+	#	spell_phase_handler.card_selection_handler.inject_callbacks(is_cpu_cb)
 
 	# === Phase A-3b: spell_container/spell_draw 直接参照注入 ===
 	var spell_container = gfm.spell_container
