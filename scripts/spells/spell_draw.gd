@@ -31,7 +31,6 @@ const ConditionHandlerScript = preload("res://scripts/spells/spell_draw/conditio
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
 var card_selection_handler: CardSelectionHandler = null
-var ui_manager_ref = null
 var board_system_ref = null
 var spell_creature_place_ref = null
 
@@ -80,12 +79,11 @@ func set_board_system(board_system) -> void:
 		_steal_handler.set_board_system(board_system)
 
 
-func set_ui_manager(ui_manager) -> void:
-	ui_manager_ref = ui_manager
+func inject_services(message_service, card_selection_service, spell_and_mystic_ui = null) -> void:
 	if _basic_draw_handler:
-		_basic_draw_handler.set_ui_manager(ui_manager)
+		_basic_draw_handler.inject_services(message_service, card_selection_service, spell_and_mystic_ui)
 	if _condition_handler:
-		_condition_handler.set_ui_manager(ui_manager)
+		_condition_handler.inject_services(card_selection_service)
 
 
 func set_card_selection_handler(handler: CardSelectionHandler) -> void:

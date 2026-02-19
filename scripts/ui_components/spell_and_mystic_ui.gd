@@ -13,7 +13,7 @@ var mystic_art_list: ItemList
 var type_list: ItemList
 
 # システム参照
-var ui_manager_ref = null
+var _navigation_service = null
 
 # タイプ選択用
 var type_options: Array = []
@@ -123,9 +123,9 @@ func _setup_signals():
 	"""シグナルハンドラーを設定"""
 	pass
 
-## UIManager参照を設定
-func set_ui_manager(manager) -> void:
-	ui_manager_ref = manager
+## NavigationService参照を設定
+func set_navigation_service(nav_service) -> void:
+	_navigation_service = nav_service
 
 
 func _update_positions():
@@ -152,90 +152,90 @@ func show_creature_selection(creatures: Array):
 	"""クリーチャー選択を表示"""
 	available_creatures = creatures
 	creature_list.clear()
-	
+
 	for creature in creatures:
 		var creature_data = creature.get("creature_data", {})
 		var name_text = creature_data.get("name", "Unknown")
 		creature_list.add_item(name_text)
-	
+
 	# 位置を再計算
 	_update_positions()
-	
+
 	creature_list.visible = true
 	mystic_art_list.visible = false
 	type_list.visible = false
-	
+
 	# 最初の項目を選択状態に
 	if creature_list.item_count > 0:
 		creature_list.select(0)
-	
+
 	# グローバルボタンに登録
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
+	if _navigation_service:
+		_navigation_service.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func show_mystic_art_selection(mystic_arts: Array):
 	"""アルカナアーツ選択を表示"""
 	mystic_art_list.clear()
-	
+
 	for mystic_art in mystic_arts:
 		var name_text = "%s [%dEP]" % [
 			mystic_art.get("name", "Unknown"),
 			mystic_art.get("cost", 0)
 		]
 		mystic_art_list.add_item(name_text)
-	
+
 	creature_list.visible = false
 	mystic_art_list.visible = true
 	type_list.visible = false
-	
+
 	# 最初の項目を選択状態に
 	if mystic_art_list.item_count > 0:
 		mystic_art_list.select(0)
-	
+
 	# グローバルボタンに登録
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
+	if _navigation_service:
+		_navigation_service.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func show_type_selection(types: Array = ["creature", "item", "spell"]):
 	"""カードタイプ選択を表示"""
 	type_options = types
 	type_list.clear()
-	
+
 	# 日本語表示名
 	var type_names = {
 		"creature": "クリーチャー",
 		"item": "アイテム",
 		"spell": "スペル"
 	}
-	
+
 	for type_key in types:
 		var display_name = type_names.get(type_key, type_key)
 		type_list.add_item(display_name)
-	
+
 	# 位置を再計算
 	_update_positions()
-	
+
 	creature_list.visible = false
 	mystic_art_list.visible = false
 	type_list.visible = true
-	
+
 	# 最初の項目を選択状態に
 	if type_list.item_count > 0:
 		type_list.select(0)
-	
+
 	# グローバルボタンに登録
-	if ui_manager_ref:
-		ui_manager_ref.register_back_action(_on_cancel_button_pressed, "やめる")
+	if _navigation_service:
+		_navigation_service.register_back_action(_on_cancel_button_pressed, "やめる")
 
 func hide_all():
 	"""全UI非表示"""
 	creature_list.visible = false
 	mystic_art_list.visible = false
 	type_list.visible = false
-	
+
 	# グローバルボタンをクリア
-	if ui_manager_ref:
-		ui_manager_ref.clear_back_action()
+	if _navigation_service:
+		_navigation_service.clear_back_action()
 
 func _on_creature_selected(index: int):
 	"""クリーチャーが選択された（item_selectedシグナル）"""

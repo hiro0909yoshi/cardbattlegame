@@ -27,6 +27,7 @@ const CPUDefenseAIScript = preload("res://scripts/cpu_ai/cpu_defense_ai.gd")
 const CPUMovementEvaluatorScript = preload("res://scripts/cpu_ai/cpu_movement_evaluator.gd")
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
 const CPUSpellAIContainerScript = preload("res://scripts/cpu_ai/cpu_spell_ai_container.gd")
+const SpellAndMysticUIScript = preload("res://scripts/ui_components/spell_and_mystic_ui.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -1092,6 +1093,23 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# SpellDrawにSpellCreaturePlace参照を設定
 	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_draw and spell_phase_handler.spell_systems.spell_creature_place:
 		p_game_flow_manager.spell_container.spell_draw.set_spell_creature_place(spell_phase_handler.spell_systems.spell_creature_place)
+
+	# Phase C-4: SpellAndMysticUI 作成 + spell_draw サービス直接注入
+	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_draw and p_ui_manager:
+		var _msg_svc = p_ui_manager.message_service if p_ui_manager.get("message_service") else null
+		var _css_svc = p_ui_manager.card_selection_service if p_ui_manager.get("card_selection_service") else null
+		var _nav_svc = p_ui_manager.navigation_service if p_ui_manager.get("navigation_service") else null
+		var spell_and_mystic_ui_node: Control = null
+		if ui_layer:
+			spell_and_mystic_ui_node = ui_layer.get_node_or_null("SpellAndMysticUI")
+			if not spell_and_mystic_ui_node:
+				spell_and_mystic_ui_node = SpellAndMysticUIScript.new()
+				spell_and_mystic_ui_node.name = "SpellAndMysticUI"
+				ui_layer.add_child(spell_and_mystic_ui_node)
+			if _nav_svc:
+				spell_and_mystic_ui_node.set_navigation_service(_nav_svc)
+		p_game_flow_manager.spell_container.spell_draw.inject_services(_msg_svc, _css_svc, spell_and_mystic_ui_node)
+		print("[GSM] spell_draw サービス注入完了（SpellAndMysticUI + message + card_selection）")
 
 	# Phase C-6: spell_magic に spell_damage 直接注入
 	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_magic and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_damage:

@@ -18,11 +18,11 @@ extends RefCounted
 
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
-var ui_manager_ref = null
 var spell_creature_place_ref = null
 var board_system_ref = null
 var _message_service = null
 var _card_selection_service = null
+var _spell_and_mystic_ui = null
 
 
 # ============================================================
@@ -34,11 +34,10 @@ func setup(card_system: CardSystem, player_system = null) -> void:
 	player_system_ref = player_system
 
 
-func set_ui_manager(ui_manager) -> void:
-	ui_manager_ref = ui_manager
-	if ui_manager:
-		_message_service = ui_manager.message_service if ui_manager.get("message_service") else null
-		_card_selection_service = ui_manager.card_selection_service if ui_manager.get("card_selection_service") else null
+func inject_services(message_service, card_selection_service, spell_and_mystic_ui = null) -> void:
+	_message_service = message_service
+	_card_selection_service = card_selection_service
+	_spell_and_mystic_ui = spell_and_mystic_ui
 
 
 func set_board_system(board_system) -> void:
@@ -264,28 +263,18 @@ func add_specific_card_to_hand(player_id: int, card_id: int) -> Dictionary:
 
 ## タイプ選択ドロー開始（callback方式・プロフェシー用）
 func _start_type_selection_draw(player_id: int) -> void:
-	if not ui_manager_ref:
-		push_error("BasicDrawHandler: UIManagerが設定されていません")
+	if not _spell_and_mystic_ui:
+		push_error("BasicDrawHandler: SpellAndMysticUIが設定されていません")
 		return
-	
-	var spell_and_mystic_ui = ui_manager_ref.get_node_or_null("SpellAndMysticUI")
-	if not spell_and_mystic_ui:
-		var SpellAndMysticUIClass = load("res://scripts/ui_components/spell_and_mystic_ui.gd")
-		if not SpellAndMysticUIClass:
-			return
-		spell_and_mystic_ui = SpellAndMysticUIClass.new()
-		spell_and_mystic_ui.name = "SpellAndMysticUI"
-		spell_and_mystic_ui.set_ui_manager(ui_manager_ref)
-		ui_manager_ref.add_child(spell_and_mystic_ui)
-	
+
 	if _message_service:
 		_message_service.show_action_prompt("引くカードのタイプを選択してください")
-	
-	spell_and_mystic_ui.show_type_selection()
-	
-	if spell_and_mystic_ui.is_connected("type_selected", _on_type_selected):
-		spell_and_mystic_ui.disconnect("type_selected", _on_type_selected)
-	spell_and_mystic_ui.type_selected.connect(_on_type_selected.bind(player_id, spell_and_mystic_ui), CONNECT_ONE_SHOT)
+
+	_spell_and_mystic_ui.show_type_selection()
+
+	if _spell_and_mystic_ui.is_connected("type_selected", _on_type_selected):
+		_spell_and_mystic_ui.disconnect("type_selected", _on_type_selected)
+	_spell_and_mystic_ui.type_selected.connect(_on_type_selected.bind(player_id, _spell_and_mystic_ui), CONNECT_ONE_SHOT)
 
 
 ## タイプ選択完了時のコールバック

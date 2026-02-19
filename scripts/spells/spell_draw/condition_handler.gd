@@ -14,7 +14,6 @@ extends RefCounted
 
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
-var ui_manager_ref = null
 var card_selection_handler = null
 var _card_selection_service = null
 
@@ -28,10 +27,8 @@ func setup(card_system: CardSystem, player_system = null) -> void:
 	player_system_ref = player_system
 
 
-func set_ui_manager(ui_manager) -> void:
-	ui_manager_ref = ui_manager
-	if ui_manager:
-		_card_selection_service = ui_manager.card_selection_service if ui_manager.get("card_selection_service") else null
+func inject_services(card_selection_service) -> void:
+	_card_selection_service = card_selection_service
 
 
 func set_card_selection_handler(handler) -> void:
