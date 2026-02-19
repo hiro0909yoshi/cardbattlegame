@@ -25,7 +25,7 @@ var spell_flow = null
 var spell_state = null
 var spell_cast_notification_ui = null
 var mystic_arts_handler = null
-var _battle_policy = null  # GSMから直接注入
+var _get_battle_policy_cb: Callable  # GSMからCallable注入（遅延評価）
 
 
 # ============================================================
@@ -63,8 +63,8 @@ func set_cpu_mystic_arts_ai(ai: CPUMysticArtsAI) -> void:
 	cpu_mystic_arts_ai = ai
 
 
-func set_battle_policy(policy) -> void:
-	_battle_policy = policy
+func set_battle_policy_getter(getter: Callable) -> void:
+	_get_battle_policy_cb = getter
 
 
 # ============================================================
@@ -422,4 +422,6 @@ func _execute_cpu_mystic(decision: Dictionary, _player_id: int) -> void:
 ## CPU 戦闘ポリシーを取得
 func _get_cpu_battle_policy():
 	"""現在のCPUのバトルポリシーを取得"""
-	return _battle_policy
+	if _get_battle_policy_cb.is_valid():
+		return _get_battle_policy_cb.call()
+	return null

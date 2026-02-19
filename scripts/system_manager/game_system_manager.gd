@@ -1264,10 +1264,10 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if cpu_spell_phase_handler:
 		cpu_spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
 		cpu_spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
-		# battle_policy を直接注入
-		var battle_policy = _get_cpu_battle_policy()
-		if battle_policy:
-			cpu_spell_phase_handler.set_battle_policy(battle_policy)
+		# battle_policy Callable注入（遅延評価 - QuestGameでの設定後に取得可能）
+		var _ai_handler = board_system_3d.cpu_turn_processor.cpu_ai_handler if board_system_3d and board_system_3d.cpu_turn_processor else null
+		if _ai_handler:
+			cpu_spell_phase_handler.set_battle_policy_getter(func(): return _ai_handler.battle_policy)
 
 	if cpu_spell_ai and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
 		cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)
