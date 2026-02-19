@@ -51,7 +51,7 @@ var _info_panel_signals_connected: bool = false
 var ui_manager = null
 var player_system = null
 var card_system = null
-var spell_phase_handler = null  # 親参照を追加（spell_draw の代わり）
+var _spell_draw: SpellDraw = null
 var current_player_id: int = -1
 
 ## サービス変数
@@ -68,7 +68,7 @@ var _unlock_input_cb: Callable = Callable()
 var _restore_camera_cb: Callable = Callable()
 
 ## セットアップ
-func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
+func setup(p_ui_manager, p_player_system, p_card_system):
 	ui_manager = p_ui_manager
 	# サービス解決
 	if p_ui_manager:
@@ -78,7 +78,6 @@ func setup(p_ui_manager, p_player_system, p_card_system, p_spell_phase_handler):
 		_info_panel_service = p_ui_manager.info_panel_service if p_ui_manager.get("info_panel_service") else null
 	player_system = p_player_system
 	card_system = p_card_system
-	spell_phase_handler = p_spell_phase_handler  # 親参照を保存
 	_connect_info_panel_signals()
 
 ## GFM依存のCallable一括注入（Phase A-3a）
@@ -86,6 +85,11 @@ func inject_callbacks(
 	is_cpu_player_cb: Callable,
 ) -> void:
 	_is_cpu_player_cb = is_cpu_player_cb
+
+## 直接参照の一括注入（Phase A-3b: spell_draw直接注入）
+func inject_dependencies(spell_draw: SpellDraw) -> void:
+	_spell_draw = spell_draw
+	assert(_spell_draw != null, "[CSH] spell_draw must not be null")
 
 ## CPU判定ヘルパー（Phase A-3a）
 func _is_cpu_player(player_id: int) -> bool:
@@ -135,11 +139,7 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
-	if not spell_phase_handler or not spell_phase_handler.game_flow_manager or not spell_phase_handler.game_flow_manager.spell_container or not spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		_cancel_enemy_card_selection("システムエラー")
-		return
-
-	var has_valid_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.has_cards_matching_filter(target_player_id, filter_mode)
+	var has_valid_cards = _spell_draw.has_cards_matching_filter(target_player_id, filter_mode)
 
 	if not has_valid_cards:
 		# 条件に合うカードがない場合
@@ -347,29 +347,28 @@ func _on_enemy_selection_cancelled():
 
 ## 敵手札アクションを実行（破壊 or 奪取）
 func _execute_enemy_card_action(card_index: int):
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		if enemy_card_selection_is_steal:
-			# 奪取モード（セフト）
-			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.steal_card_at_index(
-				enemy_card_selection_target_id, current_player_id, card_index
-			)
-			if result.get("stolen", false):
-				if _message_service:
-					await _message_service.show_comment_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
-		else:
-			# 破壊モード（シャッター、スクイーズ）
-			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
-			print("[DEBUG] destroy結果: destroyed=%s, card_name=%s" % [result.get("destroyed"), result.get("card_name")])
-			if result.get("destroyed", false):
-				var card_name_for_ui = result.get("card_name", "?")
-				print("[DEBUG] UI表示直前: card_name=%s" % card_name_for_ui)
-				if _message_service:
-					await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_name_for_ui)
-	
+	if enemy_card_selection_is_steal:
+		# 奪取モード（セフト）
+		var result = _spell_draw.steal_card_at_index(
+			enemy_card_selection_target_id, current_player_id, card_index
+		)
+		if result.get("stolen", false):
+			if _message_service:
+				await _message_service.show_comment_and_wait("『%s』を奪いました" % result.get("card_name", "?"))
+	else:
+		# 破壊モード（シャッター、スクイーズ）
+		var result = _spell_draw.destroy_card_at_index(enemy_card_selection_target_id, card_index)
+		print("[DEBUG] destroy結果: destroyed=%s, card_name=%s" % [result.get("destroyed"), result.get("card_name")])
+		if result.get("destroyed", false):
+			var card_name_for_ui = result.get("card_name", "?")
+			print("[DEBUG] UI表示直前: card_name=%s" % card_name_for_ui)
+			if _message_service:
+				await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_name_for_ui)
+
 	# コールバックを呼び出し
 	if enemy_card_selection_callback:
 		enemy_card_selection_callback.call(card_index)
-	
+
 	# 選択終了
 	_finish_enemy_card_selection()
 
@@ -433,11 +432,7 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
-	if not spell_phase_handler or not spell_phase_handler.game_flow_manager or not spell_phase_handler.game_flow_manager.spell_container or not spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		_cancel_deck_card_selection("システムエラー")
-		return
-
-	deck_card_selection_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.get_top_cards_from_deck(target_player_id, look_count)
+	deck_card_selection_cards = _spell_draw.get_top_cards_from_deck(target_player_id, look_count)
 	
 	if deck_card_selection_cards.is_empty():
 		# デッキが空の場合
@@ -508,11 +503,7 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		ui_manager.hide_mystic_button()
 	
 	# デッキ上部のカードを取得
-	if not spell_phase_handler or not spell_phase_handler.game_flow_manager or not spell_phase_handler.game_flow_manager.spell_container or not spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		_cancel_deck_card_selection("システムエラー")
-		return
-
-	deck_card_selection_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.get_top_cards_from_deck(player_id, look_count)
+	deck_card_selection_cards = _spell_draw.get_top_cards_from_deck(player_id, look_count)
 
 	if deck_card_selection_cards.is_empty():
 		if _message_service:
@@ -630,24 +621,23 @@ func _on_deck_selection_cancelled():
 
 ## デッキカードアクションを実行（ドロー or 破壊）
 func _execute_deck_card_action(card_index: int):
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		if deck_card_selection_is_draw:
-			# ドローモード：選んだカードを手札に加える
-			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
-			if result.get("drawn", false):
-				if _message_service:
-					await _message_service.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
-		else:
-			# 破壊モード
-			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
-			if result.get("destroyed", false):
-				if _message_service:
-					await _message_service.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
-	
+	if deck_card_selection_is_draw:
+		# ドローモード：選んだカードを手札に加える
+		var result = _spell_draw.draw_from_deck_at_index(deck_card_selection_target_id, card_index)
+		if result.get("drawn", false):
+			if _message_service:
+				await _message_service.show_comment_and_wait("『%s』を引きました" % result.get("card_name", "?"))
+	else:
+		# 破壊モード
+		var result = _spell_draw.destroy_deck_card_at_index(deck_card_selection_target_id, card_index)
+		if result.get("destroyed", false):
+			if _message_service:
+				await _message_service.show_comment_and_wait("『%s』を破壊しました" % result.get("card_name", "?"))
+
 	# コールバックを呼び出し
 	if deck_card_selection_callback:
 		deck_card_selection_callback.call(card_index)
-	
+
 	# 選択終了
 	_finish_deck_card_selection()
 
@@ -721,11 +711,7 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		ui_manager.hide_mystic_button()
 	
 	# 対象の手札を確認
-	if not spell_phase_handler or not spell_phase_handler.game_flow_manager or not spell_phase_handler.game_flow_manager.spell_container or not spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		_cancel_transform_card_selection("システムエラー")
-		return
-
-	var has_valid_cards = spell_phase_handler.game_flow_manager.spell_container.spell_draw.has_item_or_spell_in_hand(target_player_id)
+	var has_valid_cards = _spell_draw.has_item_or_spell_in_hand(target_player_id)
 	
 	if not has_valid_cards:
 		if _message_service:
@@ -826,29 +812,32 @@ func _on_transform_selection_cancelled():
 
 ## カード変換アクションを実行
 func _execute_transform_card_action(card_index: int):
-	if card_system and spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		var hand = card_system.get_all_cards_for_player(transform_target_player_id)
-		if card_index >= 0 and card_index < hand.size():
-			var selected_card = hand[card_index]
-			var selected_name = selected_card.get("name", "")
-			var selected_id = selected_card.get("id", -1)
+	if not card_system:
+		_finish_transform_card_selection()
+		return
 
-			# 同名カードを全て変換（手札＋デッキ）
-			var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.transform_cards_to_specific(
-				transform_target_player_id,
-				selected_name,
-				selected_id,
-				transform_to_card_id
-			)
-			
-			if result.get("transformed_count", 0) > 0:
-				if _message_service:
-					await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
-						result.get("original_name", "?"),
-						result.get("transformed_count", 0),
-						result.get("new_name", "?")
-					])
-	
+	var hand = card_system.get_all_cards_for_player(transform_target_player_id)
+	if card_index >= 0 and card_index < hand.size():
+		var selected_card = hand[card_index]
+		var selected_name = selected_card.get("name", "")
+		var selected_id = selected_card.get("id", -1)
+
+		# 同名カードを全て変換（手札＋デッキ）
+		var result = _spell_draw.transform_cards_to_specific(
+			transform_target_player_id,
+			selected_name,
+			selected_id,
+			transform_to_card_id
+		)
+
+		if result.get("transformed_count", 0) > 0:
+			if _message_service:
+				await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
+					result.get("original_name", "?"),
+					result.get("transformed_count", 0),
+					result.get("new_name", "?")
+				])
+
 	# 選択終了
 	_finish_transform_card_selection()
 
@@ -1042,11 +1031,10 @@ func _cpu_auto_select_deck_card(target_player_id: int, callback: Callable):
 	if player_system and target_player_id < player_system.players.size():
 		target_name = player_system.players[target_player_id].name
 	print("[CPU自動選択] %sのデッキから: %s を破壊 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
-	
+
 	# デッキからカードを破壊
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		spell_phase_handler.game_flow_manager.spell_container.spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
-	
+	_spell_draw.destroy_deck_card_at_index(target_player_id, best_index)
+
 	if _message_service:
 		await _message_service.show_comment_and_wait("『%s』を破壊しました" % card_data.get("name", "?"))
 
@@ -1091,17 +1079,16 @@ func _cpu_auto_select_transform_card(target_player_id: int, filter_mode: String)
 	if player_system and target_player_id < player_system.players.size():
 		target_name = player_system.players[target_player_id].name
 	print("[CPU自動選択] %sの手札から: %s を変換 (レート: %d)" % [target_name, card_data.get("name", "?"), best_rate])
-	
+
 	# 同名カードを全て変換
-	if spell_phase_handler and spell_phase_handler.game_flow_manager and spell_phase_handler.game_flow_manager.spell_container and spell_phase_handler.game_flow_manager.spell_container.spell_draw:
-		var card_name_str = card_data.get("name", "")
-		var card_id = card_data.get("id", -1)
-		var result = spell_phase_handler.game_flow_manager.spell_container.spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
-		if result.get("transformed_count", 0) > 0 and _message_service:
-			await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
-				result.get("original_name", "?"),
-				result.get("transformed_count", 0),
-				result.get("new_name", "?")
-			])
-	
+	var card_name_str = card_data.get("name", "")
+	var card_id = card_data.get("id", -1)
+	var result = _spell_draw.transform_cards_to_specific(target_player_id, card_name_str, card_id, transform_to_card_id)
+	if result.get("transformed_count", 0) > 0 and _message_service:
+		await _message_service.show_comment_and_wait("『%s』%d枚を『%s』に変換" % [
+			result.get("original_name", "?"),
+			result.get("transformed_count", 0),
+			result.get("new_name", "?")
+		])
+
 	_finish_transform_card_selection()

@@ -316,14 +316,11 @@ func _initialize_card_selection_handler(ui_mgr = null):
 	card_selection_handler.setup(
 		ui_mgr,
 		player_system,
-		card_system,
-		self
+		card_system
 	)
 
-	# SpellDrawにもcard_selection_handlerを設定
-	if game_flow_manager and game_flow_manager.spell_container and game_flow_manager.spell_container.spell_draw:
-		game_flow_manager.spell_container.spell_draw.set_card_selection_handler(card_selection_handler)
-	
+	# NOTE: inject_dependencies() と set_card_selection_handler() は GSM から実行
+
 	# 選択完了シグナルを接続（重複接続防止）
 	if not card_selection_handler.selection_completed.is_connected(_on_card_selection_completed):
 		card_selection_handler.selection_completed.connect(_on_card_selection_completed)

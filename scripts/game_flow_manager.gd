@@ -166,10 +166,12 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 	game_result_handler = GameResultHandler.new()
 	game_result_handler.initialize(player_system, ui_manager)
 
-	# Phase A-2: Callable注入
-	game_result_handler._end_game_cb = func(): change_phase(GamePhase.SETUP)
-	game_result_handler._get_current_turn_cb = func() -> int: return current_turn_number
-	game_result_handler._get_scene_tree_cb = func() -> SceneTree: return get_tree()
+	# Phase A-2: Callable一括注入
+	game_result_handler.inject_callbacks(
+		func(): change_phase(GamePhase.SETUP),
+		func() -> int: return current_turn_number,
+		func() -> SceneTree: return get_tree(),
+	)
 
 ## バトル画面マネージャーを外部から設定
 func set_battle_screen_manager(manager: BattleScreenManager, overlay) -> void:

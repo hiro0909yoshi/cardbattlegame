@@ -29,6 +29,17 @@ func initialize(p_system: PlayerSystem, ui: UIManager) -> void:
 	ui_manager = ui
 
 
+## GFM依存のCallable一括注入
+func inject_callbacks(
+	end_game_cb: Callable,
+	get_current_turn_cb: Callable,
+	get_scene_tree_cb: Callable,
+) -> void:
+	_end_game_cb = end_game_cb
+	_get_current_turn_cb = get_current_turn_cb
+	_get_scene_tree_cb = get_scene_tree_cb
+
+
 ## ゲーム終了済みかどうか
 func is_game_ended() -> bool:
 	return _game_ended

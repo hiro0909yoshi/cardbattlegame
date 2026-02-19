@@ -21,6 +21,7 @@ var _spell_phase_handler = null  # 親ハンドラー（シグナル発火、他
 
 ## ===== システム参照 =====
 var _game_flow_manager = null
+var _spell_container: SpellSystemContainer = null
 
 ## === Phase A-3a: is_cpu_player Callable 化 ===
 var _is_cpu_player_cb: Callable = Callable()
@@ -75,6 +76,11 @@ func inject_callbacks(
 	is_cpu_player_cb: Callable,
 ) -> void:
 	_is_cpu_player_cb = is_cpu_player_cb
+
+## 直接参照の一括注入（Phase A-3b: spell_container直接注入）
+func inject_dependencies(spell_container: SpellSystemContainer) -> void:
+	_spell_container = spell_container
+	assert(_spell_container != null, "[SpellFlowHandler] spell_container must not be null")
 
 ## ===== ヘルパーメソッド =====
 
@@ -389,7 +395,7 @@ func _try_execute_spell_with_strategy(spell_card: Dictionary, target_data: Dicti
 
 ## スペル戦略実行用のコンテキストを構築（Strategy パターン用）
 func _build_strategy_context(spell_card: Dictionary = {}, target_data: Dictionary = {}) -> Dictionary:
-	var spell_container = _game_flow_manager.spell_container if _game_flow_manager else null
+	var spell_container = _spell_container
 	var spell_systems = _spell_phase_handler.spell_systems if _spell_phase_handler else null
 
 	return {
