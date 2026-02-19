@@ -26,6 +26,7 @@ var _card_selection_service = null
 # === 直接参照（GFM経由を廃止） ===
 var spell_cost_modifier = null  # SpellCostModifier: コスト計算
 var spell_world_curse = null  # SpellWorldCurse: 世界呪い
+var _item_phase_handler = null  # ItemPhaseHandler: GSMから注入、setup時にbattle_executorへ伝播
 
 # サブシステム
 var summon_executor: TileSummonExecutor = null
@@ -98,6 +99,11 @@ func setup(b_system: BoardSystem3D, p_system: PlayerSystem, c_system: CardSystem
 	
 	battle_executor = TileBattleExecutor.new()
 	battle_executor.initialize(b_system, p_system, c_system, bt_system, ui, gf_manager, summon_executor)
+
+	# _item_phase_handler が既に注入されていれば battle_executor に伝播
+	if _item_phase_handler:
+		battle_executor._item_phase_handler = _item_phase_handler
+
 	if not battle_executor.invasion_completed.is_connected(_on_invasion_completed):
 		battle_executor.invasion_completed.connect(_on_invasion_completed)
 
@@ -123,6 +129,12 @@ func set_battle_status_overlay(overlay) -> void:
 	if battle_executor:
 		battle_executor.set_battle_status_overlay(overlay)
 	print("[TileActionProcessor] battle_status_overlay 直接参照を設定")
+
+func set_item_phase_handler(handler) -> void:
+	_item_phase_handler = handler
+	if battle_executor:
+		battle_executor._item_phase_handler = handler
+	print("[TileActionProcessor] _item_phase_handler 設定完了")
 
 # === タイル到着処理 ===
 
