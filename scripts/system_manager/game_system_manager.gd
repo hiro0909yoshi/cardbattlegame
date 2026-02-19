@@ -900,6 +900,10 @@ func _initialize_phase1a_handlers() -> void:
 	dice_phase_handler.setup(player_system, player_buff_system, game_flow_manager.spell_container.spell_dice, board_system_3d)
 	game_flow_manager.dice_phase_handler = dice_phase_handler
 
+	# Phase A-3d: DicePhaseHandler change_phase Callable 注入（DPH作成直後に実行）
+	var change_phase_cb = func(phase: int) -> void: game_flow_manager.change_phase(phase)
+	dice_phase_handler.inject_callbacks(change_phase_cb)
+
 	# Phase 6-B: DicePhaseHandler UI Signal接続
 	_connect_dice_phase_signals(dice_phase_handler, ui_manager)
 
@@ -1266,10 +1270,7 @@ func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
 	if spell_container and spell_phase_handler.spell_flow:
 		spell_phase_handler.spell_flow.inject_dependencies(spell_container)
 
-	# === Phase A-3d: DicePhaseHandler change_phase Callable 注入 ===
-	if gfm.dice_phase_handler:
-		var change_phase_cb = func(phase: int) -> void: gfm.change_phase(phase)
-		gfm.dice_phase_handler.inject_callbacks(change_phase_cb)
+	# NOTE: DicePhaseHandler inject_callbacks は DPH 作成直後に実行済み（初期化順序の制約）
 
 	# === Phase A-3d: SpellUIManager game_stats 直接参照注入 ===
 	if spell_phase_handler.spell_ui_manager:
