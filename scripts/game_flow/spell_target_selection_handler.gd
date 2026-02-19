@@ -15,6 +15,9 @@ var _game_3d_ref = null
 var _message_service = null
 var _navigation_service = null
 
+## TapTargetManager直接注入（Phase 11-B: UIManager経由アクセス除去）
+var _tap_target_manager: TapTargetManager = null
+
 ## 対象選択用の状態
 var _available_targets: Array = []
 var _current_target_index: int = 0
@@ -110,7 +113,7 @@ func show_target_selection_ui(target_type: String, target_info: Dictionary) -> b
 	_is_selecting = true
 
 	# TapTargetManagerでタップ選択を開始
-	if _ui_manager and _ui_manager.tap_target_manager:
+	if _tap_target_manager:
 		_start_spell_tap_target_selection(targets, target_type)
 
 	# グローバルナビゲーション設定（対象選択用）
@@ -372,14 +375,14 @@ func _exit_target_selection_phase() -> void:
 
 ## スペルターゲット選択用のタップ選択を開始
 func _start_spell_tap_target_selection(targets: Array, target_type: String) -> void:
-	if not _ui_manager or not _ui_manager.tap_target_manager:
+	if not _tap_target_manager:
 		return
 
 	# target_type: "player" の場合はタップターゲット選択をスキップ
 	if target_type == "player":
 		return
 
-	var ttm = _ui_manager.tap_target_manager
+	var ttm = _tap_target_manager
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
 		return
@@ -412,10 +415,10 @@ func _start_spell_tap_target_selection(targets: Array, target_type: String) -> v
 
 ## スペルターゲット選択を終了
 func _end_spell_tap_target_selection() -> void:
-	if not _ui_manager or not _ui_manager.tap_target_manager:
+	if not _tap_target_manager:
 		return
 
-	var ttm = _ui_manager.tap_target_manager
+	var ttm = _tap_target_manager
 
 	# シグナル切断
 	if ttm.target_selected.is_connected(_on_spell_tap_target_selected):
@@ -473,14 +476,14 @@ func _on_spell_tap_target_selected(tile_index: int, _creature_data: Dictionary) 
 
 ## アルカナアーツターゲット選択用のタップ選択を開始
 func _start_mystic_tap_target_selection(targets: Array) -> void:
-	if not _ui_manager or not _ui_manager.tap_target_manager:
+	if not _tap_target_manager:
 		return
 
 	if not _spell_phase_handler:
 		push_error("[STSH] SpellPhaseHandler が初期化されていません")
 		return
 
-	var ttm = _ui_manager.tap_target_manager
+	var ttm = _tap_target_manager
 	ttm.set_current_player(_spell_phase_handler.spell_state.current_player_id)
 
 	# シグナル接続（重複防止）- スペルと同じハンドラを使用

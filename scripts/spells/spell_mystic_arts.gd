@@ -28,6 +28,9 @@ var spell_phase_handler = null  # Node ツリーの参照（GC対象外）
 var game_flow_manager_ref: GameFlowManager = null
 var spell_curse_stat = null  # SpellCurseStat: 呪いステータス効果
 
+# === TapTargetManager直接注入（Phase 11-B: UIManager経由アクセス除去） ===
+var _tap_target_manager: TapTargetManager = null
+
 
 # ============ ヘルパーメソッド ============
 
@@ -53,11 +56,6 @@ func _get_navigation_service():
 func _get_info_panel_service():
 	var sum = _get_spell_ui_manager()
 	return sum.info_panel_service if sum else null
-
-## TapTargetManagerへの参照を取得
-func _get_tap_target_manager():
-	var sum = _get_spell_ui_manager()
-	return sum.tap_target_manager if sum else null
 
 
 # ============ アルカナアーツフェーズ状態 ============
@@ -187,7 +185,7 @@ func _select_creature(available_creatures: Array) -> void:
 
 ## 使用者選択用のタップ選択を開始
 func _start_caster_tap_selection(available_creatures: Array) -> void:
-	var ttm = _get_tap_target_manager()
+	var ttm = _tap_target_manager
 	if not ttm:
 		return
 	ttm.set_current_player(current_mystic_player_id)
@@ -212,7 +210,7 @@ func _start_caster_tap_selection(available_creatures: Array) -> void:
 
 ## 使用者タップ選択を終了
 func _end_caster_tap_selection() -> void:
-	var ttm = _get_tap_target_manager()
+	var ttm = _tap_target_manager
 	if not ttm:
 		return
 	

@@ -29,9 +29,6 @@ var navigation_service:
 var info_panel_service:
 	get:
 		return _ui_manager.info_panel_service if _ui_manager else null
-var tap_target_manager:
-	get:
-		return _ui_manager.tap_target_manager if _ui_manager else null
 var ui_manager:
 	get:
 		return _ui_manager

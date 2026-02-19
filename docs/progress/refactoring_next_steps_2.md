@@ -1,7 +1,7 @@
 # リファクタリング今後の作業計画
 
 **最終更新**: 2026-02-20
-**前提**: Phase 0〜11 全完了 + UIEventHub 導入済み
+**前提**: Phase 0〜12 全完了 + UIEventHub 導入済み + BankruptcyHandler パネル分離済み
 
 ---
 
@@ -32,7 +32,7 @@ UIEventHub（scripts/application/ui_event_hub.gd）
 
 ---
 
-## Phase 11: UIManager 適正化（残作業）
+## Phase 11: UIManager 適正化 ✅ 完了
 
 ### Phase 11-A: サブコンポーネント直接アクセスのファサード化 ✅ 完了
 
@@ -47,6 +47,21 @@ UIEventHub（scripts/application/ui_event_hub.gd）
 - **コミット**: `effba0c`
 - **成果**: Callable直接注入 → EventHub Signal駆動に移行（3イベント）
 - GSM `_setup_ui_events()` + `_on_hand_card_tapped()` 追加
+
+## Phase 12: BankruptcyHandler パネル分離 ✅ 完了
+
+### Phase 12-A: BankruptcyHandler UI層分離
+
+- **完了日**: 2026-02-20
+- **コミット**: `ac60efe`
+- **対象**: BankruptcyHandler の 56行 UI構築コード
+- **成果物**:
+  - 新規クラス: BankruptcyInfoPanelUI (84行, RefCounted)
+  - Signal 2個追加 (show_requested, hide_requested)
+  - BankruptcyHandler 削減: 56行 → 2行 (Signal emit)
+  - GSM `_connect_bankruptcy_signals()` 拡張（2Signal接続）
+- **パターン**: Phase 6 UI層分離に従う（TollPaymentHandler等と同じ）
+- **検証**: Signal接続 `is_connected()` チェック済み、null参照チェック済み
 
 ### バグ修正（Phase 11-A/UIEventHub 後）✅ 完了
 
