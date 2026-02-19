@@ -131,7 +131,6 @@ func set_navigation_service(nav_service) -> void:
 
 func _update_positions():
 	"""UI要素の位置を更新（左側に配置）"""
-	var viewport_size = get_viewport().get_visible_rect().size
 	var margin = 30
 	var list_width = 400
 	var list_height = 500

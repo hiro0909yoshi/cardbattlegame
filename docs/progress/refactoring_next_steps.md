@@ -222,7 +222,7 @@ Spell システムが game_flow_manager / ui_manager を直接参照している
 | 項目 | 理由 |
 |------|------|
 | tutorial_manager の UIManager 直接参照 | チュートリアル再設計が前提 |
-| CPU AI 層の GFM 参照 | CPUAIContext パターンで既に整理済み、実害低 |
+| CPU AI 層の GFM 参照 | ✅ チェーンアクセス6箇所解消 + ui_manager除去（`0dc441b`） |
 
 ---
 

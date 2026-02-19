@@ -15,7 +15,7 @@ var tile_neighbor_system: TileNeighborSystem
 var lap_system = null  # LapSystem: 周回管理
 
 # 初期化
-func setup(board: BoardSystem3D, player: PlayerSystem, flow: GameFlowManager, curse: SpellCurse):
+func setup(board: BoardSystem3D, player: PlayerSystem, _flow: GameFlowManager, curse: SpellCurse):
 	board_system = board
 	player_system = player
 	spell_curse = curse

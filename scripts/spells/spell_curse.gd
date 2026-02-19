@@ -20,7 +20,7 @@ var game_stats  # GameFlowManager.game_stats への直接参照
 var _get_current_turn_cb: Callable = Callable()
 
 # 初期化
-func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, flow: GameFlowManager):
+func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem, _flow: GameFlowManager):
 	board_system = board
 	creature_manager = creature
 	player_system = player

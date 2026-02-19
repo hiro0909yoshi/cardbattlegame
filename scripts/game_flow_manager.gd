@@ -166,13 +166,19 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 	game_result_handler.initialize(player_system)
 
 	# Phase A-2: Callable一括注入
+	var _show_win_cb = func(delay):
+		if ui_manager: ui_manager.show_win_screen(delay)
+	var _show_win_async_cb = func(delay):
+		if ui_manager: await ui_manager.show_win_screen_async(delay)
+	var _show_lose_async_cb = func(delay):
+		if ui_manager: await ui_manager.show_lose_screen_async(delay)
 	game_result_handler.inject_callbacks(
 		func(): change_phase(GamePhase.SETUP),
 		func() -> int: return current_turn_number,
 		func() -> SceneTree: return get_tree(),
-		func(delay): ui_manager.show_win_screen(delay) if ui_manager else null,
-		func(delay): await ui_manager.show_win_screen_async(delay) if ui_manager else null,
-		func(delay): await ui_manager.show_lose_screen_async(delay) if ui_manager else null,
+		_show_win_cb,
+		_show_win_async_cb,
+		_show_lose_async_cb,
 	)
 
 ## バトル画面マネージャーを外部から設定

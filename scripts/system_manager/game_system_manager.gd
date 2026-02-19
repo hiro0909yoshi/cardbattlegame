@@ -631,7 +631,9 @@ func _setup_lap_system() -> void:
 	# ui_layer をセットアップ（setup()内で使用）
 	lap_system.setup(player_system, board_system_3d, ui_manager, null, parent_node)
 	# ドミニオボタン表示用 Callable を注入（Phase B-2）
-	lap_system.set_show_dominio_order_button_cb(func(): ui_manager.show_dominio_order_button() if ui_manager else null)
+	var _show_dominio_btn_cb = func():
+		if ui_manager: ui_manager.show_dominio_order_button()
+	lap_system.set_show_dominio_order_button_cb(_show_dominio_btn_cb)
 
 	# board_system_3dを設定してシグナル接続
 	if board_system_3d:
@@ -848,14 +850,28 @@ func _initialize_phase1a_handlers() -> void:
 		dominio_command_handler.set_dominio_order_ui(ui_manager.dominio_order_ui)
 
 	# Phase B: DCH UI Callable 注入
+	var _hide_dominio_btn = func():
+		if ui_manager: ui_manager.hide_dominio_order_button()
+	var _show_level_sel = func(tile_idx, level, magic):
+		if ui_manager: ui_manager.show_level_selection(tile_idx, level, magic)
+	var _hide_action_menu = func():
+		if ui_manager: ui_manager.hide_action_menu_keep_buttons()
+	var _show_terrain_sel = func(tile_idx, type_name, cost, magic):
+		if ui_manager: ui_manager.show_terrain_selection(tile_idx, type_name, cost, magic)
+	var _hide_terrain_sel = func():
+		if ui_manager: ui_manager.hide_terrain_selection()
+	var _show_action_menu = func(tile_idx):
+		if ui_manager: ui_manager.show_action_menu(tile_idx)
+	var _highlight_terrain = func(element):
+		if ui_manager: ui_manager.highlight_terrain_button(element)
 	dominio_command_handler.inject_ui_callbacks(
-		func(): ui_manager.hide_dominio_order_button() if ui_manager else null,
-		func(tile_idx, level, magic): ui_manager.show_level_selection(tile_idx, level, magic) if ui_manager else null,
-		func(): ui_manager.hide_action_menu_keep_buttons() if ui_manager else null,
-		func(tile_idx, type, cost, magic): ui_manager.show_terrain_selection(tile_idx, type, cost, magic) if ui_manager else null,
-		func(): ui_manager.hide_terrain_selection() if ui_manager else null,
-		func(tile_idx): ui_manager.show_action_menu(tile_idx) if ui_manager else null,
-		func(element): ui_manager.highlight_terrain_button(element) if ui_manager else null,
+		_hide_dominio_btn,
+		_show_level_sel,
+		_hide_action_menu,
+		_show_terrain_sel,
+		_hide_terrain_sel,
+		_show_action_menu,
+		_highlight_terrain,
 	)
 
 	# SpellPhaseHandlerを作成
