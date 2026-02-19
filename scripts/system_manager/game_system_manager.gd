@@ -1264,6 +1264,10 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	if cpu_spell_phase_handler:
 		cpu_spell_phase_handler.set_cpu_spell_ai(cpu_spell_ai)
 		cpu_spell_phase_handler.set_cpu_mystic_arts_ai(cpu_mystic_arts_ai)
+		# battle_policy を直接注入
+		var battle_policy = _get_cpu_battle_policy()
+		if battle_policy:
+			cpu_spell_phase_handler.set_battle_policy(battle_policy)
 
 	if cpu_spell_ai and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_synthesis:
 		cpu_spell_ai.set_spell_synthesis(spell_phase_handler.spell_systems.spell_synthesis)

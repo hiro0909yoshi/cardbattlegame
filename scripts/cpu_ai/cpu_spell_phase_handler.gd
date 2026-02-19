@@ -21,6 +21,11 @@ var spell_mystic_arts = null
 var card_sacrifice_helper = null
 var cpu_spell_ai: CPUSpellAI = null
 var cpu_mystic_arts_ai: CPUMysticArtsAI = null
+var spell_flow = null
+var spell_state = null
+var spell_cast_notification_ui = null
+var mystic_arts_handler = null
+var _battle_policy = null  # GSMから直接注入
 
 
 # ============================================================
@@ -44,6 +49,10 @@ func _sync_references() -> void:
 		spell_synthesis = spell_phase_handler.spell_systems.spell_synthesis
 		card_sacrifice_helper = spell_phase_handler.spell_systems.card_sacrifice_helper
 	spell_mystic_arts = spell_phase_handler.spell_mystic_arts
+	spell_flow = spell_phase_handler.spell_flow if spell_phase_handler.get("spell_flow") else null
+	spell_state = spell_phase_handler.spell_state if spell_phase_handler.get("spell_state") else null
+	spell_cast_notification_ui = spell_phase_handler.spell_cast_notification_ui if spell_phase_handler.get("spell_cast_notification_ui") else null
+	mystic_arts_handler = spell_phase_handler.mystic_arts_handler if spell_phase_handler.get("mystic_arts_handler") else null
 
 
 func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
@@ -52,6 +61,10 @@ func set_cpu_spell_ai(ai: CPUSpellAI) -> void:
 
 func set_cpu_mystic_arts_ai(ai: CPUMysticArtsAI) -> void:
 	cpu_mystic_arts_ai = ai
+
+
+func set_battle_policy(policy) -> void:
+	_battle_policy = policy
 
 
 # ============================================================
@@ -72,7 +85,7 @@ func decide_action(player_id: int) -> Dictionary:
 	
 	# アルカナアーツ判断
 	var mystic_decision = {"use": false}
-	if cpu_mystic_arts_ai and spell_phase_handler and spell_phase_handler.mystic_arts_handler and spell_phase_handler.mystic_arts_handler.has_available_mystic_arts(player_id):
+	if cpu_mystic_arts_ai and mystic_arts_handler and mystic_arts_handler.has_available_mystic_arts(player_id):
 		mystic_decision = cpu_mystic_arts_ai.decide_mystic_arts(player_id)
 	
 	# どちらも使わない場合
@@ -334,8 +347,8 @@ func execute_cpu_spell_turn(player_id: int) -> void:
 	# 戦闘ポリシー判定
 	var battle_policy = _get_cpu_battle_policy()
 	if battle_policy and not battle_policy.should_use_spell():
-		if spell_phase_handler and spell_phase_handler.spell_flow:
-			spell_phase_handler.spell_flow.pass_spell(false)
+		if spell_flow:
+			spell_flow.pass_spell(false)
 		return
 
 	# アクション判定
@@ -349,20 +362,20 @@ func execute_cpu_spell_turn(player_id: int) -> void:
 		"mystic":
 			await _execute_cpu_mystic(decision, player_id)
 		_:
-			if spell_phase_handler and spell_phase_handler.spell_flow:
-				spell_phase_handler.spell_flow.pass_spell(false)
+			if spell_flow:
+				spell_flow.pass_spell(false)
 
 ## CPU スペル実行
 func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 	"""CPU スペル実行（完全実装）"""
-	if not spell_phase_handler or not spell_phase_handler.spell_state:
+	if not spell_phase_handler or not spell_state:
 		return
 
 	# 準備処理
 	var prep = prepare_spell_execution(decision, player_id)
 	if not prep or not prep.get("success", false):
-		if spell_phase_handler and spell_phase_handler.spell_flow:
-			spell_phase_handler.spell_flow.pass_spell(false)
+		if spell_flow:
+			spell_flow.pass_spell(false)
 		return
 
 	var spell_card = prep.get("spell_card", {})
@@ -371,12 +384,13 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 	var target = prep.get("target", {})
 
 	# コスト支払い
-	if spell_phase_handler.player_system:
-		spell_phase_handler.player_system.add_magic(player_id, -cost)
+	if player_system:
+		player_system.add_magic(player_id, -cost)
 
 	# 状態更新
-	spell_phase_handler.spell_state.set_spell_card(spell_card)
-	spell_phase_handler.spell_state.set_spell_used_this_turn(true)
+	if spell_state:
+		spell_state.set_spell_card(spell_card)
+		spell_state.set_spell_used_this_turn(true)
 
 	# 効果実行（target_type で分岐）
 	var parsed = spell_card.get("effect_parsed", {})
@@ -384,32 +398,28 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 
 	if target_type == "all_creatures":
 		var target_info = parsed.get("target_info", {})
-		await spell_phase_handler.spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
+		if spell_flow:
+			await spell_flow._execute_spell_on_all_creatures(spell_card, target_info)
 	else:
 		# 発動通知
-		if spell_phase_handler.spell_cast_notification_ui and spell_phase_handler.player_system:
+		if spell_cast_notification_ui and player_system:
 			var caster_name = "CPU"
-			if player_id >= 0 and player_id < spell_phase_handler.player_system.players.size():
-				caster_name = spell_phase_handler.player_system.players[player_id].name
+			if player_id >= 0 and player_id < player_system.players.size():
+				caster_name = player_system.players[player_id].name
 			await spell_phase_handler.show_spell_cast_notification(caster_name, target, spell_card, false)
 
-		await spell_phase_handler.spell_flow.execute_spell_effect(spell_card, target_data)
+		if spell_flow:
+			await spell_flow.execute_spell_effect(spell_card, target_data)
 
 ## CPU アルカナアーツ実行
 func _execute_cpu_mystic(decision: Dictionary, _player_id: int) -> void:
 	"""CPU アルカナアーツ実行"""
-	if not spell_phase_handler or not spell_phase_handler.mystic_arts_handler:
+	if not spell_phase_handler or not mystic_arts_handler:
 		return
 
-	await spell_phase_handler.mystic_arts_handler._execute_cpu_mystic_arts(decision)
+	await mystic_arts_handler._execute_cpu_mystic_arts(decision)
 
 ## CPU 戦闘ポリシーを取得
 func _get_cpu_battle_policy():
 	"""現在のCPUのバトルポリシーを取得"""
-	if not spell_phase_handler:
-		return null
-
-	if spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.cpu_turn_processor and spell_phase_handler.spell_systems.cpu_turn_processor.cpu_ai_handler:
-		return spell_phase_handler.spell_systems.cpu_turn_processor.cpu_ai_handler.battle_policy
-
-	return null
+	return _battle_policy
