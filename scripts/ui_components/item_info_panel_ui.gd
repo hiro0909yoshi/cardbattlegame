@@ -104,10 +104,9 @@ func show_item_info(item_data: Dictionary, hand_index: int = -1, restriction_rea
 				ui_manager_ref.register_confirm_action(func(): _on_confirm_action(), confirm_text)
 				ui_manager_ref.register_back_action(func(): _on_back_action(), "閉じる")
 			else:
-				ui_manager_ref.register_global_actions(
+				ui_manager_ref.enable_navigation(
 					func(): _on_confirm_action(),  # 決定: 使用/犠牲
-					func(): _on_back_action(),      # 戻る: キャンセル
-					confirm_text, "戻る"
+					func(): _on_back_action()      # 戻る: キャンセル
 				)
 
 

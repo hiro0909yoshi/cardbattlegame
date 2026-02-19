@@ -328,7 +328,6 @@ func _create_action_prompt_ui():
 ## アクション指示を表示
 ## position: "center"（デフォルト）または "right"
 func show_action_prompt(message: String, position: String = "center"):
-	print("[PhaseDisplay] show_action_prompt: '%s'" % message)
 	_create_action_prompt_ui()
 
 	# パネルサイズをリセット（前のメッセージのサイズが残らないように）

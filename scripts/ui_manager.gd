@@ -788,13 +788,6 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	# 他のパネルを閉じる（ボタンはクリアしない：show_card_info内での切り替えなのでrestoreを走らせない）
 	_hide_all_info_panels_raw()
 
-	# 手札カードの選択状態を解除（全フェーズ共通）
-	var card_scr = load("res://scripts/card.gd")
-	if card_scr.currently_selected_card:
-		card_scr.currently_selected_card.deselect_card()
-	if card_selection_ui:
-		card_selection_ui.pending_card_index = -1
-
 	# 閲覧モードで表示
 	var panel = null
 	match card_type:

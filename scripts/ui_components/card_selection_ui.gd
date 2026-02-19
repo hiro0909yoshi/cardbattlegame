@@ -665,29 +665,22 @@ func _confirm_card_selection(card_index: int):
 
 # カードが選択された（外部から呼ばれる）
 func on_card_selected(card_index: int):
-	print("[CardSelectionUI] on_card_selected called: index=%d, is_active=%s, selection_mode=%s" % [card_index, is_active, selection_mode])
-	
 	# プレイヤーステータスダイアログが開いていたら閉じるだけで処理終了
 	if ui_manager_ref and ui_manager_ref.player_status_dialog and ui_manager_ref.player_status_dialog.is_dialog_visible():
 		ui_manager_ref.player_status_dialog.hide_dialog()
 		return
-	
+
 	if not is_active:
-		print("[CardSelectionUI] not active, returning")
 		return
-	
+
 	var card_data = _get_card_data_for_index(card_index)
 	if not card_data:
-		print("[CardSelectionUI] no card_data for index %d" % card_index)
 		return
-	
+
 	# チュートリアル制限チェック（タップ時に弾く）
 	var card_id = card_data.get("id", -1)
 	if not _check_tutorial_card_allowed(card_id):
-		print("[CardSelectionUI] card %d blocked by tutorial restriction" % card_id)
 		return
-	
-	print("[CardSelectionUI] card_type=%s, card_name=%s" % [card_data.get("type", "?"), card_data.get("name", "?")])
 	
 	# スペルフェーズでスペルカードの場合 → スペル情報パネル表示
 	if selection_mode == "spell" and card_data.get("type") == "spell":
@@ -711,11 +704,10 @@ func on_card_selected(card_index: int):
 	# 召喚/交換/犠牲モードでクリーチャーカードの場合
 	if GameSettings.use_creature_info_panel and selection_mode in ["summon", "swap", "sacrifice", "discard"]:
 		if card_data.get("type") == "creature":
-			print("[CardSelectionUI] showing creature_info_panel for sacrifice/summon/swap/discard")
 			_show_creature_info_panel(card_index, card_data)
 			emit_signal("card_info_shown", card_index)
 			return
-	
+
 	# 犠牲/捨て札モードでスペル/アイテムカードの場合も確認パネル表示
 	if selection_mode in ["sacrifice", "discard"]:
 		var card_type = card_data.get("type", "")
@@ -725,8 +717,7 @@ func on_card_selected(card_index: int):
 		elif card_type == "item":
 			_show_item_info_panel(card_index, card_data)
 			return
-	
-	print("[CardSelectionUI] fallback to _confirm_card_selection")
+
 	# 既存の動作
 	_confirm_card_selection(card_index)
 
@@ -785,9 +776,8 @@ func _show_creature_info_panel(card_index: int, card_data: Dictionary):
 
 # スペル情報パネルを表示
 func _show_spell_info_panel(card_index: int, card_data: Dictionary):
-	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
-	if ui_manager_ref:
-		ui_manager_ref.save_navigation_state()
+	# save_navigation_stateは呼ばない（enable_navigationが_nav_state_savedをクリアするため
+	# 2枚目タップ時に1枚目の状態を誤保存する。×戻りはフォールバックで正しく復元される）
 	if not ui_manager_ref or not ui_manager_ref.spell_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
@@ -818,9 +808,7 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 
 # アイテム情報パネルを表示
 func _show_item_info_panel(card_index: int, card_data: Dictionary):
-	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
-	if ui_manager_ref:
-		ui_manager_ref.save_navigation_state()
+	# save_navigation_stateは呼ばない（spell同様、enable_navigationとの競合防止）
 	if not ui_manager_ref or not ui_manager_ref.item_info_panel_ui:
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
