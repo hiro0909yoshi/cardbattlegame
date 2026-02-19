@@ -25,6 +25,9 @@ var special_callback: Callable = Callable()
 # 特殊ボタンのテキスト
 var special_text: String = ""
 
+# フレームガード: setup直後の同フレーム発火を防止
+var _setup_frame: int = -1
+
 # GameFlowManager参照（入力ロック用）
 var game_flow_manager_ref = null
 
@@ -239,6 +242,8 @@ func _is_input_locked() -> bool:
 func _on_confirm_pressed():
 	if _is_input_locked():
 		return
+	if Engine.get_process_frames() == _setup_frame:
+		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
 		game_flow_manager_ref.lock_input()
@@ -248,6 +253,8 @@ func _on_confirm_pressed():
 
 func _on_back_pressed():
 	if _is_input_locked():
+		return
+	if Engine.get_process_frames() == _setup_frame:
 		return
 	# 入力をロック（連打防止）
 	if game_flow_manager_ref and game_flow_manager_ref.has_method("lock_input"):
@@ -291,6 +298,7 @@ func setup(confirm_cb: Callable = Callable(), back_cb: Callable = Callable(), up
 	back_callback = back_cb
 	up_callback = up_cb
 	down_callback = down_cb
+	_setup_frame = Engine.get_process_frames()
 	update_button_states()
 
 
