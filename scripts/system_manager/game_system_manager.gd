@@ -43,6 +43,9 @@ var ui_manager
 var debug_controller
 var game_flow_manager
 
+# === UIEventHub（EventHub駆動化） ===
+var ui_event_hub: UIEventHub = null
+
 # === CPU AI コンテキスト管理（P0統一） ===
 var cpu_ai_context: CPUAIContextScript = null
 var cpu_spell_ai: CPUSpellAI = null
@@ -161,7 +164,13 @@ func phase_1_create_systems() -> void:
 	ui_manager.name = "UIManager"
 	add_child(ui_manager)
 	systems["UIManager"] = ui_manager
-	
+
+	# UIEventHub（UIManager直後に作成）
+	ui_event_hub = UIEventHub.new()
+	ui_event_hub.name = "UIEventHub"
+	add_child(ui_event_hub)
+	systems["UIEventHub"] = ui_event_hub
+
 	# DebugController
 	debug_controller = DebugControllerClass.new()
 	debug_controller.name = "DebugController"
@@ -946,6 +955,9 @@ func _initialize_phase1a_handlers() -> void:
 	# Phase 10-C: UI Callable/Signal 注入
 	_setup_ui_callbacks(ui_manager, game_flow_manager, board_system_3d, dominio_command_handler, spell_phase_handler)
 
+	# Phase 11: UIEventHub イベント配線
+	_setup_ui_events()
+
 	# ★ NEW: スペルシステム初期化検証
 	if not game_flow_manager or not game_flow_manager.spell_container:
 		push_error("[GameSystemManager] game_flow_manager または spell_container が null です")
@@ -1533,12 +1545,7 @@ func _setup_ui_callbacks(
 	# === UIManager Callable 注入 ===
 	if p_game_flow_manager:
 		p_ui_manager._is_input_locked_cb = Callable(p_game_flow_manager, "is_input_locked")
-		p_ui_manager._on_card_selected_cb = Callable(p_game_flow_manager, "on_card_selected")
-
-	if p_spell_phase_handler and p_spell_phase_handler.card_selection_handler:
-		p_ui_manager._spell_card_selecting_cb = Callable(
-			p_spell_phase_handler.card_selection_handler, "is_selecting"
-		)
+		# NOTE: _on_card_selected_cb, _spell_card_selecting_cb は EventHub 移行済み（Phase 11）
 
 	if p_board_system_3d:
 		p_ui_manager._has_owned_lands_cb = func() -> bool:
@@ -1550,10 +1557,7 @@ func _setup_ui_callbacks(
 				if not tile_info.is_empty():
 					p_board_system_3d.tile_info_display.update_display(tile_idx, tile_info)
 
-	# === UIManager Signal 接続 ===
-	if p_dominio_command_handler:
-		if not p_ui_manager.dominio_cancel_requested.is_connected(p_dominio_command_handler.cancel):
-			p_ui_manager.dominio_cancel_requested.connect(p_dominio_command_handler.cancel)
+	# NOTE: dominio_cancel_requested は EventHub 移行済み（Phase 11）
 
 	# === CardSelectionHandler Callable 注入 ===
 	if p_spell_phase_handler and p_spell_phase_handler.card_selection_handler:
@@ -1564,12 +1568,6 @@ func _setup_ui_callbacks(
 			csh._restore_camera_cb = func() -> void:
 				p_board_system_3d.enable_follow_camera()
 				p_board_system_3d.return_camera_to_player()
-
-	# === UIGameMenuHandler Callable 注入 ===
-	if p_ui_manager.game_menu_handler and p_game_flow_manager:
-		p_ui_manager.game_menu_handler._on_player_defeated_cb = Callable(
-			p_game_flow_manager, "on_player_defeated"
-		)
 
 	# === UITapHandler Callable 注入 ===
 	if p_ui_manager.tap_handler:
@@ -1587,3 +1585,43 @@ func _setup_ui_callbacks(
 			)
 
 	print("[GameSystemManager] Phase 10-C: UI Callable/Signal 注入完了")
+
+## Phase 11: UIEventHub のイベント配線（GSMが配線責任者）
+func _setup_ui_events() -> void:
+	if not ui_event_hub:
+		return
+
+	# EventHub参照を注入
+	if ui_manager:
+		ui_manager._ui_event_hub = ui_event_hub
+	if ui_manager and ui_manager.game_menu_handler:
+		ui_manager.game_menu_handler._ui_event_hub = ui_event_hub
+
+	# hand_card_tapped: ルーティングハンドラー
+	if not ui_event_hub.hand_card_tapped.is_connected(_on_hand_card_tapped):
+		ui_event_hub.hand_card_tapped.connect(_on_hand_card_tapped)
+
+	# dominio_cancel: DCHに接続
+	if game_flow_manager and game_flow_manager.dominio_command_handler:
+		if not ui_event_hub.dominio_cancel_requested.is_connected(game_flow_manager.dominio_command_handler.cancel):
+			ui_event_hub.dominio_cancel_requested.connect(game_flow_manager.dominio_command_handler.cancel)
+
+	# surrender: GFMに接続
+	if game_flow_manager:
+		var surrender_cb = func(): game_flow_manager.on_player_defeated("surrender")
+		ui_event_hub.surrender_requested.connect(surrender_cb)
+
+	print("[GameSystemManager] UIEventHub イベント配線完了")
+
+
+## 手札カードタップのルーティング（GSMが判断）
+func _on_hand_card_tapped(card_index: int) -> void:
+	# スペルフェーズ中: GFMが直接処理
+	var sph = game_flow_manager.spell_phase_handler if game_flow_manager else null
+	if sph and sph.card_selection_handler and sph.card_selection_handler.is_selecting():
+		game_flow_manager.on_card_selected(card_index)
+		return
+
+	# その他: card_selection_ui が処理
+	if ui_manager and ui_manager.card_selection_ui and ui_manager.card_selection_ui.has_method("on_card_selected"):
+		ui_manager.card_selection_ui.on_card_selected(card_index)

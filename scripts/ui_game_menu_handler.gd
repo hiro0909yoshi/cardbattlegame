@@ -6,8 +6,8 @@ class_name UIGameMenuHandler
 
 var ui_manager: UIManager = null
 
-## Callable注入（Phase 10-C: UIManagerチェーンアクセス除去）
-var _on_player_defeated_cb: Callable = Callable()
+## UIEventHub参照（EventHub駆動化）
+var _ui_event_hub: UIEventHub = null
 
 var game_menu_button: GameMenuButton = null
 var game_menu: GameMenu = null
@@ -72,5 +72,5 @@ func _on_surrender_selected():
 ## 降参確認
 func _on_surrender_confirmed():
 	print("[UIGameMenu] 降参確認")
-	if _on_player_defeated_cb.is_valid():
-		_on_player_defeated_cb.call("surrender")
+	if _ui_event_hub:
+		_ui_event_hub.surrender_requested.emit()

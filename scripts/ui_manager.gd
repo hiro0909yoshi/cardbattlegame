@@ -7,7 +7,6 @@ signal pass_button_pressed()
 signal card_selected(card_index: int)
 signal level_up_selected(target_level: int, cost: int)
 signal dominio_order_button_pressed()  # Phase 1-A: ドミニオコマンドボタン
-signal dominio_cancel_requested()  # Phase 10-C: ドミニオキャンセル要求（Signal駆動化）
 
 # UIコンポーネント（分割されたサブシステム）
 var dominio_order_ui: DominioOrderUI = null
@@ -62,10 +61,11 @@ var game_flow_manager_ref: GameFlowManager = null  # GameFlowManagerの参照
 
 # === Callable 注入変数（Phase 10-C: 双方向参照削減） ===
 var _is_input_locked_cb: Callable = Callable()
-var _spell_card_selecting_cb: Callable = Callable()
-var _on_card_selected_cb: Callable = Callable()
 var _has_owned_lands_cb: Callable = Callable()
 var _update_tile_display_cb: Callable = Callable()
+
+# === UIEventHub 参照（Phase 11-A） ===
+var _ui_event_hub: UIEventHub = null
 
 # デバッグモード
 # NOTE: debug_modeはDebugSettings.ui_debug_modeに移行済み
@@ -427,19 +427,9 @@ func on_card_button_pressed(card_index: int):
 	if is_notification_popup_active():
 		return
 
-	# 犠牲選択中はcard_selection_uiで処理（card_selection_handlerをバイパス）
-	if card_selection_ui and card_selection_ui.selection_mode == "sacrifice":
-		card_selection_ui.on_card_selected(card_index)
-		return
-
-	# スペルカード選択中はGFM経由で処理（Callable注入: Phase 10-C）
-	if _spell_card_selecting_cb.is_valid() and _spell_card_selecting_cb.call():
-		if _on_card_selected_cb.is_valid():
-			_on_card_selected_cb.call(card_index)
-		return
-
-	if card_selection_ui and card_selection_ui.has_method("on_card_selected"):
-		card_selection_ui.on_card_selected(card_index)
+	# EventHub経由で発火（ルーティングはGSMが担当）
+	if _ui_event_hub:
+		_ui_event_hub.hand_card_tapped.emit(card_index)
 
 ## カードの情報表示リクエスト処理（card.gd の card_info_requested Signal から）
 func _on_card_info_from_hand(card_data: Dictionary) -> void:
@@ -526,8 +516,9 @@ func _on_creature_info_panel_cancelled():
 	emit_signal("pass_button_pressed")
 
 func on_cancel_dominio_order_button_pressed():
-	# Signal駆動化（Phase 10-C: DCHがリスニング）
-	dominio_cancel_requested.emit()
+	# EventHub経由で発火（GSMがDCHに接続）
+	if _ui_event_hub:
+		_ui_event_hub.dominio_cancel_requested.emit()
 
 # === グローバルアクションボタン管理 ===
 
