@@ -926,8 +926,13 @@ func _initialize_phase1a_handlers() -> void:
 		if game_flow_manager.magic_stone_system:
 			game_flow_manager.cpu_special_tile_ai._magic_stone_system = game_flow_manager.magic_stone_system
 
-	# 注: TutorialManagerはgame_3d.gdに存在し、spell_phase_handlerから
-	# game_3d.tutorial_manager経由でアクセスするため、ここでの注入は不要
+	# TutorialManager取得Callable注入（get_parent()チェーン廃止）
+	game_flow_manager.set_tutorial_manager_getter(
+		func():
+			if parent_node and "tutorial_manager" in parent_node:
+				return parent_node.tutorial_manager
+			return null
+	)
 
 	# デバッグ: 密命カードを一時的に無効化（テスト用）
 	DebugSettings.disable_secret_cards = true

@@ -11,19 +11,6 @@ signal turn_ended(player_id: int)
 signal dice_rolled(value: int)
 signal creature_updated_relay(tile_index: int, creature_data: Dictionary)
 
-# 定数をpreload
-const DominioCommandHandlerClass = preload("res://scripts/game_flow/dominio_command_handler.gd")
-const BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
-const PlayerSystemClass = preload("res://scripts/player_system.gd")
-const CardSystemClass = preload("res://scripts/card_system.gd")
-const PlayerBuffSystemClass = preload("res://scripts/player_buff_system.gd")
-const UIManagerClass = preload("res://scripts/ui_manager.gd")
-const BattleSystemClass = preload("res://scripts/battle_system.gd")
-const SpecialTileSystemClass = preload("res://scripts/special_tile_system.gd")
-const BattleScreenManagerClass = preload("res://scripts/battle_screen/battle_screen_manager.gd")
-const MagicStoneSystemClass = preload("res://scripts/tiles/magic_stone_system.gd")
-const LapSystemClass = preload("res://scripts/game_flow/lap_system.gd")
-
 # ゲーム状態
 enum GamePhase {
 	SETUP,
@@ -81,6 +68,9 @@ var _is_ending_turn = false
 
 # 入力ロック機能（連打防止・フェーズ遷移中の入力ガード）
 var _input_locked: bool = false
+
+# TutorialManager取得用Callable（外部から注入）
+var _get_tutorial_manager_cb: Callable = Callable()
 
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
@@ -778,6 +768,10 @@ func unlock_input():
 func is_input_locked() -> bool:
 	return _input_locked
 
+## TutorialManager取得Callableを外部から設定
+func set_tutorial_manager_getter(getter: Callable) -> void:
+	_get_tutorial_manager_cb = getter
+
 # ============================================================
 # チュートリアルモード判定
 # ============================================================
@@ -794,9 +788,8 @@ func _is_tutorial_mode() -> bool:
 
 ## TutorialManagerを取得
 func get_tutorial_manager():
-	var game_3d = get_parent().get_parent() if get_parent() else null
-	if game_3d and "tutorial_manager" in game_3d:
-		return game_3d.tutorial_manager
+	if _get_tutorial_manager_cb.is_valid():
+		return _get_tutorial_manager_cb.call()
 	return null
 
 
