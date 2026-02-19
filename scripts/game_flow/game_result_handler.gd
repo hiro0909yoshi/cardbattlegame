@@ -6,12 +6,14 @@ class_name GameResultHandler
 
 # システム参照
 var player_system: PlayerSystem
-var ui_manager: UIManager
 
 # Callable注入（Phase A-2: GFM逆参照解消）
 var _end_game_cb: Callable = Callable()           # change_phase(SETUP) の代替
 var _get_current_turn_cb: Callable = Callable()    # current_turn_number の代替
 var _get_scene_tree_cb: Callable = Callable()      # get_tree() の代替
+var _show_win_screen_cb: Callable = Callable()       # ui_manager.show_win_screen の代替
+var _show_win_screen_async_cb: Callable = Callable()  # ui_manager.show_win_screen_async の代替
+var _show_lose_screen_async_cb: Callable = Callable()  # ui_manager.show_lose_screen_async の代替
 
 # リザルト画面への参照
 var result_screen: ResultScreen = null
@@ -24,9 +26,8 @@ var _game_ended: bool = false
 
 
 ## 初期化
-func initialize(p_system: PlayerSystem, ui: UIManager) -> void:
+func initialize(p_system: PlayerSystem) -> void:
 	player_system = p_system
-	ui_manager = ui
 
 
 ## GFM依存のCallable一括注入
@@ -34,10 +35,16 @@ func inject_callbacks(
 	end_game_cb: Callable,
 	get_current_turn_cb: Callable,
 	get_scene_tree_cb: Callable,
+	show_win_screen_cb: Callable = Callable(),
+	show_win_screen_async_cb: Callable = Callable(),
+	show_lose_screen_async_cb: Callable = Callable(),
 ) -> void:
 	_end_game_cb = end_game_cb
 	_get_current_turn_cb = get_current_turn_cb
 	_get_scene_tree_cb = get_scene_tree_cb
+	_show_win_screen_cb = show_win_screen_cb
+	_show_win_screen_async_cb = show_win_screen_async_cb
+	_show_lose_screen_async_cb = show_lose_screen_async_cb
 
 
 ## ゲーム終了済みかどうか
@@ -155,8 +162,8 @@ func _process_victory_result():
 
 	# クエストモードでない場合は簡易表示
 	if stage_id.is_empty():
-		if ui_manager:
-			ui_manager.show_win_screen(0)
+		if _show_win_screen_cb.is_valid():
+			_show_win_screen_cb.call(0)
 		return
 
 	# ランク計算
@@ -196,16 +203,16 @@ func _process_victory_result():
 		}
 
 		# 勝利演出
-		if ui_manager:
-			await ui_manager.show_win_screen_async(0)
+		if _show_win_screen_async_cb.is_valid():
+			await _show_win_screen_async_cb.call(0)
 
 		print("[GameResultHandler] リザルト画面表示開始")
 		result_screen.show_victory(result_data)
 	else:
 		# リザルト画面がない場合は従来の勝利演出のみ
 		print("[GameResultHandler] リザルト画面なし、勝利演出のみ")
-		if ui_manager:
-			ui_manager.show_win_screen(0)
+		if _show_win_screen_cb.is_valid():
+			_show_win_screen_cb.call(0)
 
 		# 一定時間後にステージセレクトへ
 		var tree = _get_tree_ref()
@@ -232,8 +239,8 @@ func _process_defeat_result(reason: String):
 		}
 
 		# 敗北演出
-		if ui_manager:
-			await ui_manager.show_lose_screen_async(0)
+		if _show_lose_screen_async_cb.is_valid():
+			await _show_lose_screen_async_cb.call(0)
 
 		result_screen.show_defeat(result_data)
 	else:

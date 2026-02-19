@@ -154,23 +154,25 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 		battle_system.game_flow_manager_ref = self
 	
 	# LapSystemに参照を設定（lap_systemはset_lap_system()で事前設定済み）
+	# Phase B-2: ui_manager 直接参照を削除、初期化は GameSystemManager で完了
 	if lap_system:
 		lap_system.player_system = player_system
-		lap_system.ui_manager = ui_manager
 		lap_system.set_game_ended_checker(
 			func() -> bool: return is_game_ended
 		)
-		lap_system.setup_ui()
 	
 	# GameResultHandlerを初期化（Phase A-2: GFM逆参照解消）
 	game_result_handler = GameResultHandler.new()
-	game_result_handler.initialize(player_system, ui_manager)
+	game_result_handler.initialize(player_system)
 
 	# Phase A-2: Callable一括注入
 	game_result_handler.inject_callbacks(
 		func(): change_phase(GamePhase.SETUP),
 		func() -> int: return current_turn_number,
 		func() -> SceneTree: return get_tree(),
+		func(delay): ui_manager.show_win_screen(delay) if ui_manager else null,
+		func(delay): await ui_manager.show_win_screen_async(delay) if ui_manager else null,
+		func(delay): await ui_manager.show_lose_screen_async(delay) if ui_manager else null,
 	)
 
 ## バトル画面マネージャーを外部から設定

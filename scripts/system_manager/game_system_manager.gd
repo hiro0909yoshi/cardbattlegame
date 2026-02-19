@@ -626,11 +626,12 @@ func _setup_lap_system() -> void:
 
 	# システム参照を設定
 	lap_system.player_system = player_system
-	lap_system.ui_manager = ui_manager
+	# Phase B-2: ui_manager 直接参照を削除、ui_layer + サービス直接注入に変更
 	lap_system._message_service = ui_manager.message_service if ui_manager else null
-	# game_flow_manager 参照削除（Callable注入に変更済み）
-	lap_system.set_game_3d_ref(parent_node)  # game_3d参照を直接注入（get_parent()廃止）
-	lap_system.setup_ui()
+	# ui_layer をセットアップ（setup()内で使用）
+	lap_system.setup(player_system, board_system_3d, ui_manager, null, parent_node)
+	# ドミニオボタン表示用 Callable を注入（Phase B-2）
+	lap_system.set_show_dominio_order_button_cb(func(): ui_manager.show_dominio_order_button() if ui_manager else null)
 
 	# board_system_3dを設定してシグナル接続
 	if board_system_3d:

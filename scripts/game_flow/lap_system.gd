@@ -20,8 +20,9 @@ var destroy_count: int = 0
 ## 外部参照（初期化時に設定）
 var player_system = null
 var board_system_3d = null
-var ui_manager = null
+var _ui_layer = null  # Phase B-2: ui_manager 依存解消、ui_layer 直接参照
 var _message_service = null  # サービス注入用
+var _show_dominio_order_button_cb: Callable = Callable()  # Phase B-2: ドミニオボタン表示 Callable
 var is_game_ended_checker: Callable = func() -> bool: return false
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
 
@@ -40,19 +41,24 @@ var is_showing_notification: bool = false
 func setup(p_system, b_system, p_ui_manager = null, _p_game_flow_manager = null, p_game_3d_ref = null):
 	player_system = p_system
 	board_system_3d = b_system
-	ui_manager = p_ui_manager
 	game_3d_ref = p_game_3d_ref
 	# サービス注入
 	if p_ui_manager and p_ui_manager.has_meta("message_service"):
 		_message_service = p_ui_manager.get_meta("message_service")
 	elif p_ui_manager and "message_service" in p_ui_manager:
 		_message_service = p_ui_manager.message_service
+	# ui_layer 直接参照（Phase B-2: ui_manager 依存解消）
+	if p_ui_manager and "ui_layer" in p_ui_manager:
+		_ui_layer = p_ui_manager.ui_layer
 	setup_ui()
 
 ## is_game_ended チェック用の Callable を設定
 func set_game_ended_checker(checker: Callable) -> void:
 	is_game_ended_checker = checker
 
+## ドミニオコマンドボタン表示用の Callable を設定（Phase B-2）
+func set_show_dominio_order_button_cb(cb: Callable) -> void:
+	_show_dominio_order_button_cb = cb
 
 ## game_3d参照を設定（チュートリアルモード判定用）
 func set_game_3d_ref(p_game_3d) -> void:
@@ -60,7 +66,7 @@ func set_game_3d_ref(p_game_3d) -> void:
 
 ## UIのセットアップ
 func setup_ui():
-	if not ui_manager:
+	if not _ui_layer:
 		return
 
 	# 既に作成済みならスキップ
@@ -81,9 +87,9 @@ func setup_ui():
 	signal_display_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	signal_display_label.visible = false
 	signal_display_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# UIツリー操作は ui_layer 経由
-	if ui_manager.ui_layer:
-		ui_manager.ui_layer.add_child(signal_display_label)
+	# UIツリー操作は _ui_layer 経由（Phase B-2）
+	if _ui_layer:
+		_ui_layer.add_child(signal_display_label)
 
 ## シグナル/周回数を画面中央に大きく表示
 func _show_signal_display(signal_type: String):
@@ -107,10 +113,8 @@ func _show_comment_and_wait(message: String, player_id: int = -1):
 	is_showing_notification = true
 	if _message_service:
 		await _message_service.show_comment_and_wait(message, player_id, true)
-	elif ui_manager and ui_manager.has_method("show_comment_and_wait"):
-		await ui_manager.show_comment_and_wait(message, player_id, true)
 	else:
-		print("[LapSystem] WARNING: _message_service is null, ui_manager fallback unavailable")
+		print("[LapSystem] WARNING: _message_service is null")
 	is_showing_notification = false
 
 ## 周回状態を初期化
@@ -363,10 +367,9 @@ func complete_lap(player_id: int):
 	if board_system_3d:
 		board_system_3d.clear_all_down_states_for_player(player_id)
 		print("[周回完了] プレイヤー%d ダウン解除" % [player_id + 1])
-		# ダウン解除によりドミニオコマンドが使用可能になった場合、ボタンを表示
-		# show_dominio_order_button は UIManager 固有の UI ツリー操作
-		if ui_manager and ui_manager.has_method("show_dominio_order_button"):
-			ui_manager.show_dominio_order_button()
+		# ダウン解除によりドミニオコマンドが使用可能になった場合、ボタンを表示（Phase B-2: Callable駆動化）
+		if _show_dominio_order_button_cb.is_valid():
+			_show_dominio_order_button_cb.call()
 	
 	# HP回復+10
 	if board_system_3d:
