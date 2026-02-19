@@ -2,9 +2,9 @@
 
 **目的**: プロジェクト内のシグナル定義と接続パターンの一覧
 
-**最終更新**: 2026-02-19 (Phase 10-B card.gd Signal駆動化)
+**最終更新**: 2026-02-19 (Phase 10-C UIManager双方向参照削減)
 
-**総シグナル数**: 233（Phase 6 で +33、Phase 8-A で +4、Phase 10-B で +4 Signal追加）
+**総シグナル数**: 234（Phase 6 で +33、Phase 8-A で +4、Phase 10-B で +4、Phase 10-C で +1 Signal追加）
 
 ---
 
@@ -48,6 +48,7 @@
 | `card_selected` | `card_index: int` | カード選択通知 |
 | `level_up_selected` | `target_level: int, cost: int` | レベルアップ選択 |
 | `dominio_order_button_pressed` | なし | ドミニオコマンドボタン押下 |
+| `dominio_cancel_requested` | なし | ドミニオキャンセル要求（Phase 10-C: DCH.cancel() に接続） |
 
 ### PlayerSystem
 ファイル: `scripts/player_system.gd`

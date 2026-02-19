@@ -22,7 +22,7 @@
 | `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 | ✅ 解消（PlayerInfoService化） |
 | card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン | ✅ 解消（Signal駆動化） |
 | Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 | 🔄 Phase 10-D で再評価予定 |
-| 双方向参照 | GFM, BoardSystem | 依存方向の違反 | 🔄 Phase 10-C（未着手） |
+| 双方向参照 | GFM, BoardSystem | 依存方向の違反 | ✅ 解消（Callable注入、初期化時のみ許容） |
 
 ---
 
@@ -71,37 +71,46 @@
 
 ---
 
-### Phase 10-C: 双方向参照の削減
+### Phase 10-C: 双方向参照の削減 ✅ 完了
 
-**難易度**: 中
-**効果**: 中（依存方向の正規化）
+**完了日**: 2026-02-19
+**成果**: UIManagerランタイム双方向参照ゼロ、外部チェーンアクセス13箇所→0箇所、Signal 1追加、Callable 11追加
 
-**現状の双方向参照（2件）**:
+**実装内容**:
+- `dominio_command_handler_ref` 完全削除
+- `game_flow_manager_ref` ランタイム3箇所 → Callable注入（is_input_locked, spell_card_selecting, on_card_selected）
+- `board_system_ref` ランタイム3箇所 → Callable注入（has_owned_lands, update_tile_display）
+- 外部チェーンアクセス13箇所を Callable 直接注入で除去（CardSelectionHandler, UIGameMenuHandler, UITapHandler）
+- Signal `dominio_cancel_requested` → DCH.cancel() 接続
+- GSM `_setup_ui_callbacks()` メソッド新設（一括注入管理）
+- **潜在バグ修正**: DominioOrderUI DCH null参照（初期化順序問題）
 
-| 参照 | UIManager側の用途 | 排除方針 |
-|------|-----------------|---------|
-| game_flow_manager_ref | on_card_button_pressed の入力ロック、UIコンポーネント初期化 | card.gd Signal化（10-B）で入力ロック不要に。初期化は初期化時のみなので許容 |
-| board_system_ref | UIコンポーネント初期化（6箇所以上） | 初期化時参照は許容。ランタイム参照の有無を確認 |
-
-**dominio_command_handler_ref**: dominio_order_ui 初期化のみ。初期化時に引数渡しに変更可能（低難易度）
-
-**タイミング**: Phase 10-B（card.gd Signal化）の副産物として game_flow_manager_ref のランタイム参照が消える可能性が高い。10-B 完了後に再評価。
+**設計判断**: `game_flow_manager_ref` と `board_system_ref` は初期化時参照として残留（ランタイム使用ゼロ）
 
 ---
 
-### Phase 10-D: UIManager 純粋Facade化（保留）
+### Phase 10-D: UIManager デッドコード削除 ✅ 完了
 
-**難易度**: 高（47ファイル変更）
-**効果**: 中（UIManager 行数削減、構造的クリーンアップ）
+**完了日**: 2026-02-19
+**成果**: 12メソッド削除、65行削減、UIManager: 1030行 → 965行
 
-**現状**: 47委譲メソッドが残存。外部から `ui_manager.show_toast()` を呼ぶコードが多数。
+**実装内容**:
 
-**方針**: Phase 10-A, 10-B 完了後に残存ファサードを再評価。本当に使われているメソッドだけを洗い出し、コスト対効果で判断する。
+UIManager 削除メソッド（7個）:
+1. `update_cpu_hand_display()` — 呼び出し元ゼロ
+2. `restore_spell_phase_buttons()` — 呼び出し元ゼロ（ラッパー）
+3. `set_card_selection_filter()` — 呼び出し元ゼロ（プロパティ直接設定に移行済み）
+4. `clear_card_selection_filter()` — 呼び出し元ゼロ（debug_controllerはサービス版を使用）
+5. `show_land_selection_mode()` — 呼び出し元ゼロ
+6. `show_action_selection_ui()` — 呼び出し元ゼロ（`show_action_menu`ラッパー）
+7. `hide_dominio_order_ui()` — 呼び出し元ゼロ
 
-**今すぐやらない理由**:
-- 47ファイル変更のリグレッションリスク
-- 効果は「関数呼び出しが1段減るだけ」
-- 10-A, 10-B で自然に減る部分がある
+連鎖デッドコード 削除（5個）:
+8. `dominio_order_ui.show_land_selection_mode()`
+9. `dominio_order_ui.show_action_selection_ui()`
+10. `dominio_order_ui.hide_dominio_order_ui()`
+11. `navigation_service.restore_spell_phase_buttons()`
+12. `card_selection_service.set_card_selection_filter()`
 
 ---
 
@@ -111,8 +120,8 @@
 |------|-------|------|------|
 | 1 | **10-A** ✅ | update_player_info_panels サービス化 | 効果大・難易度低、即座に着手可能 |
 | 2 | **10-B** ✅ | card.gd 再帰探索廃止 | Signal駆動化で完了 |
-| 3 | **10-C** | 双方向参照の削減 | 10-Bの副産物として部分的に解消 |
-| 保留 | **10-D** | 純粋Facade化 | 10-A/B完了後に残存ファサードを再評価してから判断 |
+| 3 | **10-C** ✅ | 双方向参照の削減 | Callable注入で完了 |
+| 4 | **10-D** ✅ | UIManager デッドコード削除 | 12メソッド削除、65行削減 |
 
 ---
 

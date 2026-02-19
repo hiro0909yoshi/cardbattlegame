@@ -469,10 +469,6 @@ func toggle_debug_mode():
 		if debug_panel.has_method("is_debug_visible"):
 			DebugSettings.ui_debug_mode = debug_panel.is_debug_visible()
 
-func update_cpu_hand_display(player_id: int):
-	if debug_panel and debug_panel.has_method("update_cpu_hand"):
-		debug_panel.update_cpu_hand(player_id)
-
 # === 基本UI操作 ===
 func update_ui(_current_player, current_phase):
 	# プレイヤー情報パネルを更新
@@ -591,10 +587,6 @@ func restore_current_phase():
 	# Fallback: save が無効化されている場合、フェーズ固有の復元
 	if card_selection_ui and card_selection_ui.is_active:
 		card_selection_ui.restore_navigation()
-
-## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
-func restore_spell_phase_buttons():
-	restore_navigation_state()
 
 func register_confirm_action(callback: Callable, _text: String = ""):
 	if _navigation_service:
@@ -887,48 +879,6 @@ func show_cancel_button():
 func hide_cancel_button():
 	if dominio_order_ui:
 		dominio_order_ui.hide_cancel_button()
-
-# スペルカードフィルターを設定（スペルフェーズ用）
-func set_card_selection_filter(filter_type: String):
-	card_selection_filter = filter_type
-	# 既に表示されている手札を更新
-	if hand_display:
-		var current_player = player_system_ref.get_current_player() if player_system_ref else null
-		if current_player:
-			hand_display.update_hand_display(current_player.id)
-
-# フィルターをクリア
-func clear_card_selection_filter():
-	card_selection_filter = ""
-
-# 土地選択モードを表示
-func show_land_selection_mode(_owned_lands: Array):
-	var land_list = ""
-	for i in range(_owned_lands.size()):
-		land_list += str(i + 1) + ":" + str(_owned_lands[i]) + " "
-	if _message_service:
-		_message_service.show_action_prompt("土地を選択（数字キー） " + land_list)
-
-	# キャンセルボタンはdominio_command_handler側で登録するためここでは呼ばない
-	# show_cancel_button()
-
-# アクション選択UIを表示
-func show_action_selection_ui(tile_index: int):
-	# Phase 1-A: 新しいUIパネルを使用
-	show_action_menu(tile_index)
-
-# ドミニオコマンドUIを非表示
-func hide_dominio_order_ui():
-	# Phase 1-A: 新UIパネルを非表示
-	hide_action_menu()
-	hide_level_selection()
-	
-	# CardSelectionUIも非表示にする
-	if card_selection_ui and card_selection_ui.has_method("hide_selection"):
-		card_selection_ui.hide_selection()
-	
-	# キャンセルボタンを非表示
-	hide_cancel_button()
 
 # ==== Phase 1-A: アクションメニュー表示/非表示（DominioOrderUIに委譲） ====
 

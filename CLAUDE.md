@@ -35,7 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - BankruptcyHandler: 5 Signals（パネル生成は部分的に直接参照を保持）
   - **合計**: 33個のSignal追加、5/6ハンドラーで`_ui_manager`完全削除
   - GameSystemManager: 6つのSignal接続メソッド追加
-- **成果物**: コード削減約700行（全フェーズ累計）、37個のUI Signal定義、7/8ハンドラーのUI層完全分離、4 UIサービス新規作成
+- **成果物**: コード削減約700行（全フェーズ累計）、38個のUI Signal定義、7/8ハンドラーのUI層完全分離、4 UIサービス新規作成、UIManagerランタイム双方向参照ゼロ
 - ✅ **Phase 7-A**: CPU AI パススルー除去（2026-02-17）✅ **完了**
   - SPH からの CPU AI 参照設定を廃止、CPUSpellPhaseHandler/CPUSpecialTileAI/DiscardHandler へ直接注入
   - チェーンアクセス（GFM→SPH→CPU AI）を直接参照に統一
@@ -54,6 +54,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - PlayerInfoService 新規作成（描画更新のみ）
   - 16ファイル・23箇所の update_player_info_panels() を player_info_service.update_panels() に変更
   - UIManager の5番目のサービスとして統合
+- ✅ **Phase 10-C**: UIManager双方向参照の削減（2026-02-19）✅ **完了**
+  - dominio_command_handler_ref 完全削除、game_flow_manager_ref/board_system_ref ランタイム使用ゼロ
+  - 外部チェーンアクセス13箇所 → Callable直接注入で0箇所に
+  - Signal 1追加（dominio_cancel_requested）、Callable 11追加
+  - GSM `_setup_ui_callbacks()` メソッド新設
+  - 潜在バグ修正: DominioOrderUI DCH null参照
 
 詳細は `docs/progress/refactoring_next_steps_2.md` を参照
 
@@ -102,6 +108,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
      - ✅ 8-A: ItemPhaseHandler Signal化（4 Signals）
    - ✅ Phase 9: 状態ルーター解体（完了、2026-02-19）
    - ✅ Phase 10-A: PlayerInfoService サービス化（完了、2026-02-19）
+   - ✅ Phase 10-C: UIManager双方向参照の削減（完了、2026-02-19）
 
 ### 参照ドキュメント
 
@@ -653,4 +660,4 @@ This prevents:
 
 ---
 
-**Last Updated**: 2026-02-18（Phase 8-F/G/A 完了） | Haiku + Opus
+**Last Updated**: 2026-02-19（Phase 10-C 完了） | Haiku + Opus

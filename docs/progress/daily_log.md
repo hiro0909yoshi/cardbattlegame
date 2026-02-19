@@ -12,7 +12,7 @@
 
 ---
 
-## 2026年2月19日（Session: Phase 9 + Phase 10-A + Phase 10-B）
+## 2026年2月19日（Session: Phase 9 + Phase 10-A/B/C + バグ修正）
 
 ### ✅ バグ修正: ナビゲーションボタン消失 + ドミニオボタンアイテムフェーズ表示
 
@@ -54,6 +54,29 @@
 - hand_display: Callable コールバックパターンで UIManager を知らないまま Signal 接続
 - ui_manager: `_on_card_info_from_hand()` 新メソッド（dialog hide + info panel + dominio button）
 - **成果**: card.gd は UIManager を一切知らない最終形を実現
+
+### ✅ バグ修正: cpu_defense_ai 初期化不良 + invasion_completed / action_completed 二重発火
+
+- **cpu_defense_ai null**: `item_phase_handler.gd` の `is_class("GameSystemManager")` → `is GameSystemManager` に修正（Godot 4 の is_class() は GDScript class_name 非対応）
+- **invasion_completed 二重発火（2件）**:
+  - DCH 永続接続削除 → `_execute_move_battle()` で ONE_SHOT 接続に変更
+  - GFM `_on_invasion_completed_from_board` から CPUTurnProcessor 通知を削除（DCH が完了処理を一元管理）
+- **cpu_action_completed 二重発火**: BoardSystem3D の cpu_action_completed 直接接続を削除（TileActionProcessor 経由の正規パスのみに統一）
+- **成果**: `Warning: tile_action_completed ignored` 完全解消
+
+### ✅ Phase 10-C: UIManager 双方向参照の削減
+
+- `dominio_command_handler_ref` 完全削除（UIManager からゲームロジック参照を1つ除去）
+- `game_flow_manager_ref` ランタイム使用3箇所 → Callable注入で0箇所に（初期化のみ許容）
+- `board_system_ref` ランタイム使用3箇所 → Callable注入で0箇所に（初期化のみ許容）
+- 外部チェーンアクセス13箇所 → Callable直接注入で0箇所に
+  - CardSelectionHandler: unlock_input×4 + camera×1
+  - UIGameMenuHandler: surrender×1
+  - UITapHandler: GFM状態チェック×2 + camera×1
+- Signal 1追加（`dominio_cancel_requested`）、Callable 11追加
+- GSM に `_setup_ui_callbacks()` メソッド新設（一括注入管理）
+- **潜在バグ修正**: DominioOrderUI の DCH 参照が初期化順序の問題で null だったのを修正
+- **成果**: UIManager のランタイム双方向参照ゼロ、外部チェーンアクセスゼロ達成
 
 ---
 
@@ -202,3 +225,33 @@
 
 - Phase 10-C: 双方向参照の削減（10-Bの副産物として部分的に解消済み、再評価予定）
 - Phase 10-D: 純粋Facade化（保留、10-A/B完了後に残存ファサードを再評価）
+
+---
+
+## 2026年2月19日（Session 2: Phase 10-D）
+
+### ✅ Phase 10-D: UIManager デッドコード削除
+
+**削除メソッド（12個、約115行削減）**:
+
+UIManager（7メソッド）:
+1. `update_cpu_hand_display()` — 呼び出し元ゼロ
+2. `restore_spell_phase_buttons()` — 呼び出し元ゼロ（ラッパー）
+3. `set_card_selection_filter()` — 呼び出し元ゼロ（プロパティ直接設定に移行済み）
+4. `clear_card_selection_filter()` — 呼び出し元ゼロ（debug_controllerはサービス版を使用）
+5. `show_land_selection_mode()` — 呼び出し元ゼロ
+6. `show_action_selection_ui()` — 呼び出し元ゼロ（`show_action_menu`ラッパー）
+7. `hide_dominio_order_ui()` — 呼び出し元ゼロ
+
+連鎖デッドコード（5メソッド）:
+8. `dominio_order_ui.show_land_selection_mode()`
+9. `dominio_order_ui.show_action_selection_ui()`
+10. `dominio_order_ui.hide_dominio_order_ui()`
+11. `navigation_service.restore_spell_phase_buttons()`
+12. `card_selection_service.set_card_selection_filter()`
+
+**成果**: UIManager: 1030行 → 965行（65行削減）
+
+### 📋 次のステップ
+
+- Phase 10-E: その他デッドコード調査（小規模メソッド、未使用Signal）

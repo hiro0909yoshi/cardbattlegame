@@ -61,23 +61,6 @@ func hide_cancel_button():
 	# ナビゲーションはDominioCommandHandlerで設定済み
 	pass
 
-## 土地選択モード表示
-func show_land_selection_mode(_owned_lands: Array):
-	# 実装は既存のUIManager参照
-	# TODO: owned_landsを使った表示実装
-	pass
-
-## アクション選択UI表示
-func show_action_selection_ui(tile_index: int):
-	show_action_menu(tile_index)
-
-## ドミニオコマンドUI非表示
-func hide_dominio_order_ui():
-	hide_action_menu()
-	hide_level_selection()
-	hide_cancel_button()
-	hide_dominio_order_button()
-
 ## アクションメニュー表示
 func show_action_menu(tile_index: int):
 	selected_tile_for_action = tile_index

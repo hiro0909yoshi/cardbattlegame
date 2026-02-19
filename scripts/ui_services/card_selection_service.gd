@@ -60,16 +60,6 @@ func hide_card_selection_ui() -> void:
 ## フィルター管理
 ## ============================================================================
 
-## カード選択フィルターを設定
-func set_card_selection_filter(filter_type: String) -> void:
-	card_selection_filter = filter_type
-	# 既に表示されている手札を更新
-	if _hand_display:
-		var current_player = _player_system_ref.get_current_player() if _player_system_ref else null
-		if current_player:
-			_hand_display.update_hand_display(current_player.id)
-
-
 ## フィルターをクリア
 func clear_card_selection_filter() -> void:
 	card_selection_filter = ""

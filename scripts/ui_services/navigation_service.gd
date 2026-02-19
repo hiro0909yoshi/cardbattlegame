@@ -144,11 +144,6 @@ func clear_navigation_saved_state() -> void:
 	_info_panel_back_locked = false
 
 
-## [後方互換] スペルフェーズ中のインフォパネル閉じ後にボタンを復元
-func restore_spell_phase_buttons() -> void:
-	restore_navigation_state()
-
-
 func _update_compat_buttons() -> void:
 	if _global_action_buttons:
 		_global_action_buttons.setup(_compat_confirm_cb, _compat_back_cb, _compat_up_cb, _compat_down_cb)
