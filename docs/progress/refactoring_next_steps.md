@@ -75,16 +75,16 @@ iph.start_item_selection(...)
 **サブフェーズ**:
 - A-3a: is_cpu_player() Callable化 → ✅ 完了（`5480027`）
 - A-3b: spell_draw/spell_container 直接注入 → ✅ 完了（`43d27a3`）
-- A-3c: unlock_input / roll_dice Callable化 → 未着手
-- A-3d: change_phase / game_stats Callable化 → 未着手
+- A-3c: unlock_input / roll_dice Callable化 → ✅ 完了（`25bde52`）
+- A-3d: change_phase / game_stats Callable化 → ✅ 完了（`25bde52`）
 
-**対象ファイル**:
-- `scripts/game_flow/spell_phase_handler.gd`
-- `scripts/game_flow/spell_flow_handler.gd`（`_game_flow_manager` 残: unlock_input, roll_dice）
-- `scripts/game_flow/dice_phase_handler.gd`（`game_flow_manager` 残: change_phase）
-- `scripts/game_flow/spell_ui_manager.gd`（game_stats 残: 1箇所）
+**成果**:
+- SpellFlowHandler: `_game_flow_manager` 完全削除
+- DicePhaseHandler: `game_flow_manager` 完全削除
+- SpellUIManager: GFMチェーンアクセス解消
+- CSH: `spell_phase_handler` 完全削除
 
-**ステータス**: A-3a/A-3b 完了、A-3c/A-3d 未着手
+**ステータス**: ✅ Phase A-3 全完了
 
 ---
 
