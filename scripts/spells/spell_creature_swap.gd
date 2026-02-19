@@ -372,7 +372,7 @@ func _select_tile(tile_indices: Array, message: String) -> int:
 
 
 ## 手札クリーチャー選択UI
-func _select_hand_creature(creatures: Array, message: String) -> int:
+func _select_hand_creature(creatures: Array, _message: String) -> int:
 	# UI参照取得
 	var css = _card_selection_service
 

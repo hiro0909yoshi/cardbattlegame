@@ -32,7 +32,7 @@ func set_card_selection_service(css: Object) -> void:
 
 ## 手札選択UIを表示し、選択されたカードを返す
 ## filter: "creature", "spell", "item", "" (全て)
-func show_hand_selection(player_id: int, filter: String = "", message: String = "犠牲にするカードを選択") -> Dictionary:
+func show_hand_selection(player_id: int, filter: String = "", _message: String = "犠牲にするカードを選択") -> Dictionary:
 	_selected_card = {}
 	_selected_index = -1
 

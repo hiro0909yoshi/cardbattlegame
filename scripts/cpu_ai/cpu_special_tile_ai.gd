@@ -113,23 +113,23 @@ func decide_card_buy(player_id: int, available_cards: Array) -> Dictionary:
 ## 戻り値: 使用するスペルのDictionary、または {} (スキップ)
 func decide_magic_tile_spell(player_id: int, available_spells: Array) -> Dictionary:
 	# CPUSpellAIを取得して評価に使用
-	var cpu_spell_ai = _get_cpu_spell_ai()
-	
+	var local_cpu_spell_ai = _get_cpu_spell_ai()
+
 	# EP取得
 	var magic = _get_magic(player_id)
-	
+
 	# 各スペルを評価（CPUSpellAIがあればスコア評価、なければ対象チェックのみ）
 	var best_spell = {}
 	var best_score = 0.0
-	
+
 	for spell in available_spells:
 		var cost = _get_spell_cost(spell)
 		if cost > magic:
 			continue
-		
+
 		# CPUSpellAIで評価
-		if cpu_spell_ai and cpu_spell_ai.has_method("evaluate_spell_for_magic_tile"):
-			var eval_result = cpu_spell_ai.evaluate_spell_for_magic_tile(spell, player_id)
+		if local_cpu_spell_ai and local_cpu_spell_ai.has_method("evaluate_spell_for_magic_tile"):
+			var eval_result = local_cpu_spell_ai.evaluate_spell_for_magic_tile(spell, player_id)
 			if eval_result.get("should_use", false) and eval_result.get("score", 0) > best_score:
 				best_score = eval_result.get("score", 0)
 				best_spell = spell
@@ -138,11 +138,11 @@ func decide_magic_tile_spell(player_id: int, available_spells: Array) -> Diction
 			if _spell_has_valid_target(spell, player_id):
 				print("[CPUSpecialTileAI] 魔法タイル: %s を使用（対象あり）" % spell.get("name", "?"))
 				return spell
-	
+
 	if not best_spell.is_empty():
 		print("[CPUSpecialTileAI] 魔法タイル: %s を使用（スコア: %.1f）" % [best_spell.get("name", "?"), best_score])
 		return best_spell
-	
+
 	print("[CPUSpecialTileAI] 魔法タイル: 有効な対象なし - スキップ")
 	return {}
 

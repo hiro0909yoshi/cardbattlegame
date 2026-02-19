@@ -39,14 +39,14 @@ var ui_manager:
 # === 初期化 ===
 func setup(
 	spell_phase_handler,
-	ui_manager,
+	p_ui_manager,
 	board_system,
 	player_system,
 	game_3d_ref,
 	card_system
 ) -> void:
 	_spell_phase_handler = spell_phase_handler
-	_ui_manager = ui_manager
+	_ui_manager = p_ui_manager
 	_board_system = board_system
 	_player_system = player_system
 	_game_3d_ref = game_3d_ref

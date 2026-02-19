@@ -89,7 +89,7 @@ func _process(delta):
 	TargetSelectionHelper.rotate_confirmation_markers(self, delta)
 
 ## 初期化
-func initialize(ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
+func initialize(_ui_mgr, flow_mgr, c_system = null, p_system = null, b_system = null):
 	game_flow_manager = flow_mgr
 	card_system = c_system if c_system else (flow_mgr.card_system if flow_mgr else null)
 	# game_3d参照は別途set_game_3d_ref()で設定される

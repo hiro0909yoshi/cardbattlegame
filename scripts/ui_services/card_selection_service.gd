@@ -3,7 +3,6 @@ class_name CardSelectionService
 
 ## シグナル
 signal card_selected(card_index: int)
-signal pass_button_pressed()
 
 ## コンポーネント参照
 var _card_selection_ui = null  # CardSelectionUI（循環参照回避のため型なし）

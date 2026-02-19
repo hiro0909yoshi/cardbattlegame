@@ -5,10 +5,13 @@ class_name UIEventHub
 ## UIはイベントを発行するだけ。ロジックを一切知らない。
 
 ## 手札カードがタップされた
+@warning_ignore("unused_signal")
 signal hand_card_tapped(card_index: int)
 
 ## ドミニオコマンドのキャンセルが要求された
+@warning_ignore("unused_signal")
 signal dominio_cancel_requested()
 
 ## 降参が要求された
+@warning_ignore("unused_signal")
 signal surrender_requested()

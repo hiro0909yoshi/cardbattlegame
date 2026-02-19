@@ -86,7 +86,7 @@ func apply_use_hand_spell(caster_player_id: int) -> Dictionary:
 
 
 ## 手札スペル選択UI
-func _select_hand_spell(spells: Array, message: String) -> Dictionary:
+func _select_hand_spell(spells: Array, _message: String) -> Dictionary:
 	var css = _card_selection_service
 
 	if not css:

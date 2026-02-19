@@ -396,7 +396,7 @@ func _execute_cpu_spell(decision: Dictionary, player_id: int) -> void:
 		await spell_phase_handler.spell_flow.execute_spell_effect(spell_card, target_data)
 
 ## CPU アルカナアーツ実行
-func _execute_cpu_mystic(decision: Dictionary, player_id: int) -> void:
+func _execute_cpu_mystic(decision: Dictionary, _player_id: int) -> void:
 	"""CPU アルカナアーツ実行"""
 	if not spell_phase_handler or not spell_phase_handler.mystic_arts_handler:
 		return
