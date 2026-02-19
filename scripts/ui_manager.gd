@@ -655,6 +655,16 @@ func update_hand_display(player_id: int):
 
 # rearrange_hand は HandDisplayに移行済みのため削除
 
+## 敵カード選択モードの有効/無効切り替え
+func set_enemy_card_selection_active(active: bool):
+	if hand_display:
+		hand_display.is_enemy_card_selection_active = active
+
+## カード選択UIを有効化（手札データ指定）
+func enable_card_selection(hand_data: Array, available_magic: int, player_id: int = 0):
+	if card_selection_ui:
+		card_selection_ui.enable_card_selection(hand_data, available_magic, player_id)
+
 # ============ player_info_panel 委譲メソッド ============
 
 ## 現在のターンプレイヤーを設定
@@ -889,6 +899,26 @@ func show_action_menu(tile_index: int):
 func hide_action_menu():
 	if dominio_order_ui:
 		dominio_order_ui.hide_action_menu()
+
+## アクションメニュー非表示（グローバルボタンクリア制御付き）
+func hide_action_menu_keep_buttons():
+	if dominio_order_ui:
+		dominio_order_ui.hide_action_menu(false)
+
+## 地形選択パネル表示
+func show_terrain_selection(tile_index: int, current_element: String, cost: int, player_magic: int):
+	if dominio_order_ui:
+		dominio_order_ui.show_terrain_selection(tile_index, current_element, cost, player_magic)
+
+## 地形選択パネル非表示
+func hide_terrain_selection():
+	if dominio_order_ui:
+		dominio_order_ui.hide_terrain_selection()
+
+## 地形ボタンのハイライト（上下キー選択用）
+func highlight_terrain_button(selected_element: String):
+	if dominio_order_ui:
+		dominio_order_ui.highlight_terrain_button(selected_element)
 
 # ==== Phase 1-A: レベル選択パネル表示/非表示（DominioOrderUIに委譲） ====
 

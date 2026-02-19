@@ -150,17 +150,17 @@ func start_enemy_card_selection(target_player_id: int, filter_mode: String, call
 		_card_selection_service.card_selection_filter = filter_mode
 
 	# 対象プレイヤーの手札を表示
-	if ui_manager and ui_manager.hand_display:
+	if ui_manager:
 		# 自動更新を無効化
-		ui_manager.hand_display.is_enemy_card_selection_active = true
+		ui_manager.set_enemy_card_selection_active(true)
 	if _card_selection_service:
 		_card_selection_service.update_hand_display(target_player_id)
 	
 	# 選択UIを有効化
-	if ui_manager and ui_manager.card_selection_ui and card_system:
+	if ui_manager and card_system:
 		var hand_data = card_system.get_all_cards_for_player(target_player_id)
 		var magic = 999999  # EPチェック不要
-		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
+		ui_manager.enable_card_selection(hand_data, magic, target_player_id)
 	
 	# 入力ロックを解除（グローバルボタン対応）
 	if _unlock_input_cb.is_valid():
@@ -384,9 +384,9 @@ func _finish_enemy_card_selection():
 	# 元の手札表示に戻す
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = ""
-	if ui_manager and ui_manager.hand_display and player_system:
+	if ui_manager and player_system:
 		# 自動更新を再有効化
-		ui_manager.hand_display.is_enemy_card_selection_active = false
+		ui_manager.set_enemy_card_selection_active(false)
 	if _card_selection_service and player_system:
 		var current_player = player_system.get_current_player()
 		if current_player:
@@ -445,15 +445,15 @@ func start_deck_card_selection(target_player_id: int, look_count: int, callback:
 		_card_selection_service.card_selection_filter = "destroy_any"
 	
 	# デッキカードを一時的に画面下部に表示
-	if ui_manager and ui_manager.hand_display:
-		ui_manager.hand_display.is_enemy_card_selection_active = true
+	if ui_manager:
+		ui_manager.set_enemy_card_selection_active(true)
 		# デッキカードを一時的な手札として表示
 		_display_deck_cards_as_hand(deck_card_selection_cards, target_player_id)
 	
 	# 選択UIを有効化（player_id = -1 はデッキカード表示用）
-	if ui_manager and ui_manager.card_selection_ui:
+	if ui_manager:
 		var magic = 999999  # EPチェック不要
-		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
+		ui_manager.enable_card_selection(deck_card_selection_cards, magic, -1)
 	
 	# 入力ロックを解除（グローバルボタン対応）
 	if _unlock_input_cb.is_valid():
@@ -514,14 +514,14 @@ func start_deck_draw_selection(player_id: int, look_count: int, callback: Callab
 		_card_selection_service.card_selection_filter = "destroy_any"
 
 	# デッキカードを一時的に画面下部に表示
-	if ui_manager and ui_manager.hand_display:
-		ui_manager.hand_display.is_enemy_card_selection_active = true
+	if ui_manager:
+		ui_manager.set_enemy_card_selection_active(true)
 		_display_deck_cards_as_hand(deck_card_selection_cards, player_id)
 
 	# 選択UIを有効化
-	if ui_manager and ui_manager.card_selection_ui:
+	if ui_manager:
 		var magic = 999999
-		ui_manager.card_selection_ui.enable_card_selection(deck_card_selection_cards, magic, -1)
+		ui_manager.enable_card_selection(deck_card_selection_cards, magic, -1)
 	
 	# 入力ロックを解除（グローバルボタン対応）
 	if _unlock_input_cb.is_valid():
@@ -672,8 +672,8 @@ func _finish_deck_card_selection():
 	# 元の手札表示に戻す
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = ""
-	if ui_manager and ui_manager.hand_display and player_system:
-		ui_manager.hand_display.is_enemy_card_selection_active = false
+	if ui_manager and player_system:
+		ui_manager.set_enemy_card_selection_active(false)
 
 	if _card_selection_service and player_system:
 		var current_player = player_system.get_current_player()
@@ -731,16 +731,16 @@ func start_transform_card_selection(target_player_id: int, filter_mode: String, 
 		_card_selection_service.card_selection_filter = filter_mode
 
 	# 対象プレイヤーの手札を表示
-	if ui_manager and ui_manager.hand_display:
-		ui_manager.hand_display.is_enemy_card_selection_active = true
+	if ui_manager:
+		ui_manager.set_enemy_card_selection_active(true)
 	if _card_selection_service:
 		_card_selection_service.update_hand_display(target_player_id)
 
 	# 選択UIを有効化
-	if ui_manager and ui_manager.card_selection_ui and card_system:
+	if ui_manager and card_system:
 		var hand_data = card_system.get_all_cards_for_player(target_player_id)
 		var magic = 999999
-		ui_manager.card_selection_ui.enable_card_selection(hand_data, magic, target_player_id)
+		ui_manager.enable_card_selection(hand_data, magic, target_player_id)
 	
 	# 入力ロックを解除（グローバルボタン対応）
 	if _unlock_input_cb.is_valid():
@@ -859,8 +859,8 @@ func _finish_transform_card_selection():
 	# 元の手札表示に戻す
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = ""
-	if ui_manager and ui_manager.hand_display and player_system:
-		ui_manager.hand_display.is_enemy_card_selection_active = false
+	if ui_manager and player_system:
+		ui_manager.set_enemy_card_selection_active(false)
 
 	if _card_selection_service and player_system:
 		var current_player = player_system.get_current_player()

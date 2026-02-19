@@ -1,127 +1,124 @@
 # リファクタリング今後の作業計画
 
 **最終更新**: 2026-02-19
-**前提**: Phase 0〜9 完了済み（詳細は `refactoring_next_steps_1.md`）
+**前提**: Phase 0〜10 完了済み
 
 ---
 
 ## 現状サマリー
 
-### UIManager の状態（Phase 9 後）
+### UIManager の状態（Phase 10 完了後）
 
-- **行数**: ~970行、93メソッド
-- **4サービス分割済み**: NavigationService, MessageService, CardSelectionService, InfoPanelService（計551行）
-- **状態ルーター**: ✅ 解体済み（Phase 9）
-- **後方参照**: 5件（GFM, BoardSystem, DCH, CardSystem, PlayerSystem）
-- **委譲メソッド**: 47個（Facade残存）
+- **行数**: 965行
+- **5サービス分割済み**: NavigationService, MessageService, CardSelectionService, InfoPanelService, PlayerInfoService
+- **後方参照**: ランタイム使用ゼロ（Callable注入済み）。初期化時参照のみ残存
+- **デッドコード**: 12メソッド削除済み
 
-### 残存する問題
+### 適正運用分析（2026-02-19実施）
 
-| 問題 | 規模 | 影響 | 状態 |
-|------|------|------|------|
-| `update_player_info_panels()` がUIManager経由 | 16ファイル、26箇所 | UIManagerを経由する最大理由 | ✅ 解消（PlayerInfoService化） |
-| card.gd の再帰的親探索 | 13箇所、find_ui_manager_recursive | 構造的アンチパターン | ✅ 解消（Signal駆動化） |
-| Facade 47委譲メソッド | 47メソッド | UIManager肥大の主因 | 🔄 Phase 10-D で再評価予定 |
-| 双方向参照 | GFM, BoardSystem | 依存方向の違反 | ✅ 解消（Callable注入、初期化時のみ許容） |
+UIManager の外部参照401箇所を総点検した結果、以下の問題を特定：
 
----
-
-## 改善提案（優先順位順）
-
-### Phase 10-A: update_player_info_panels のサービス化 ✅ 完了
-
-**完了日**: 2026-02-19
-**成果**: PlayerInfoService 新規作成、16ファイル・23箇所変更、UIManager Facadeメソッド削除
-
-**実装内容**:
-- `PlayerInfoService` 新規作成（scripts/ui_services/player_info_service.gd）
-- 描画更新のみの責務でサービス化
-- 16ファイルから呼び出し元を `_player_info_service.update_panels()` に統一
-- BankruptcyHandler Signal 受信を PlayerInfoService 経由に変更
-- UIManager の `update_player_info_panels()` Facade メソッド削除
-
-**設計制約**: PlayerInfoService は**描画更新（render）だけ**に限定。「誰が勝っているか」「EPは足りるか」等の判定は絶対に持たせない。
+| 問題分類 | 件数 | 重要度 |
+|---------|------|--------|
+| サブコンポーネント直接アクセス（ファサード未経由） | ~97箇所 | MEDIUM |
+| Null チェック不整合 | ~10箇所 | MEDIUM |
+| Node メソッド直接利用（create_tween, add_child等） | 3箇所 | LOW |
+| 未使用メソッド候補 | 2箇所 | LOW |
 
 ---
 
-### Phase 10-B: card.gd の再帰的親探索廃止 ✅ 完了
+## Phase 11: UIManager 適正化
 
-**完了日**: 2026-02-19
-**成果**: find_ui_manager_recursive 完全削除、Signal 2追加、3参照変数注入、card.gd UIManager 依存ゼロ
+### Phase 11-A: サブコンポーネント直接アクセスのファサード化
 
-**現状**: `find_ui_manager_recursive(get_tree().get_root())` でシーンツリー全体を毎回再帰探索。card.gd から UIManager を13箇所で参照。
+**目的**: `ui_manager.dominio_order_ui.method()` 等の3層チェーンアクセスを `ui_manager.method()` ファサードに統一
 
-| 用途 | 箇所数 | 参照先 |
-|------|--------|--------|
-| card_selection_filter 判定 | 4 | UIManager → CardSelectionService |
-| on_card_button_pressed() 呼び出し | 1 | UIManager → 入力ディスパッチャー |
-| game_flow_manager_ref 取得 | 2 | UIManager → GFM |
-| show_card_info() | 1 | UIManager → InfoPanelService |
-| card_selection_ui 参照 | 2 | UIManager → CardSelectionUI |
-| player_status_dialog | 1 | UIManager → PlayerStatusDialog |
-| show_dominio_order_button | 1 | UIManager |
+**対象**:
 
-**方針候補**:
-- **A) Signal 駆動化（推奨）**: card.gd は `card_confirmed(card_index)` Signal を emit するだけ。CardSelectionService がリスニング
-- **B) CardSelectionService 注入**: Hand表示時に各カードに CardSelectionService を set
+| コンポーネント | 直接アクセス箇所 | 主な呼び出し元 |
+|--------------|----------------|---------------|
+| dominio_order_ui | 12箇所 | land_action_helper.gd |
+| card_selection_ui | 5箇所 | card_selection_handler.gd |
+| hand_display | 6箇所 | card_selection_handler.gd |
+| global_action_buttons | 4箇所 | tutorial_manager.gd 等 |
 
-**注意**: card.gd はシーンからインスタンス化されるため、通常の `setup()` 注入にタイミング問題がある。Signal 駆動が最もクリーン。
+**具体的な修正パターン**:
 
-**前提**: Phase 10-A が先に完了していること（参照先の整理が必要）
+```gdscript
+# Before（3層チェーンアクセス）
+handler.ui_manager.dominio_order_ui.hide_action_menu(false)
+handler.ui_manager.dominio_order_ui.show_terrain_selection(...)
+ui_manager.hand_display.is_enemy_card_selection_active = true
+ui_manager.card_selection_ui.enable_card_selection(...)
 
----
+# After（ファサード経由）
+handler.ui_manager.hide_action_menu(false)
+handler.ui_manager.show_terrain_selection(...)
+ui_manager.set_enemy_card_selection_active(true)
+ui_manager.enable_card_selection(...)
+```
 
-### Phase 10-C: 双方向参照の削減 ✅ 完了
-
-**完了日**: 2026-02-19
-**成果**: UIManagerランタイム双方向参照ゼロ、外部チェーンアクセス13箇所→0箇所、Signal 1追加、Callable 11追加
-
-**実装内容**:
-- `dominio_command_handler_ref` 完全削除
-- `game_flow_manager_ref` ランタイム3箇所 → Callable注入（is_input_locked, spell_card_selecting, on_card_selected）
-- `board_system_ref` ランタイム3箇所 → Callable注入（has_owned_lands, update_tile_display）
-- 外部チェーンアクセス13箇所を Callable 直接注入で除去（CardSelectionHandler, UIGameMenuHandler, UITapHandler）
-- Signal `dominio_cancel_requested` → DCH.cancel() 接続
-- GSM `_setup_ui_callbacks()` メソッド新設（一括注入管理）
-- **潜在バグ修正**: DominioOrderUI DCH null参照（初期化順序問題）
-
-**設計判断**: `game_flow_manager_ref` と `board_system_ref` は初期化時参照として残留（ランタイム使用ゼロ）
+**ステータス**: 保留
 
 ---
 
-### Phase 10-D: UIManager デッドコード削除 ✅ 完了
+### Phase 11-B: Node メソッド直接利用の整理
 
-**完了日**: 2026-02-19
-**成果**: 12メソッド削除、65行削減、UIManager: 1030行 → 965行
+**目的**: UIManager の Godot Node メソッド（create_tween, get_tree, add_child）の直接利用を整理
 
-**実装内容**:
+**対象（3箇所）**:
 
-UIManager 削除メソッド（7個）:
-1. `update_cpu_hand_display()` — 呼び出し元ゼロ
-2. `restore_spell_phase_buttons()` — 呼び出し元ゼロ（ラッパー）
-3. `set_card_selection_filter()` — 呼び出し元ゼロ（プロパティ直接設定に移行済み）
-4. `clear_card_selection_filter()` — 呼び出し元ゼロ（debug_controllerはサービス版を使用）
-5. `show_land_selection_mode()` — 呼び出し元ゼロ
-6. `show_action_selection_ui()` — 呼び出し元ゼロ（`show_action_menu`ラッパー）
-7. `hide_dominio_order_ui()` — 呼び出し元ゼロ
+| ファイル | コード | 問題 |
+|---------|-------|------|
+| ui_win_screen.gd:61 | `ui_manager.create_tween()` | UIManager を tween 親として利用 |
+| ui_win_screen.gd:75 | `ui_manager.get_tree().create_timer(2.0)` | SceneTree 取得のためだけに参照 |
+| dominio_command_handler.gd:217 | `ui_manager.add_child(panel)` | UIManager に子ノード追加 |
 
-連鎖デッドコード 削除（5個）:
-8. `dominio_order_ui.show_land_selection_mode()`
-9. `dominio_order_ui.show_action_selection_ui()`
-10. `dominio_order_ui.hide_dominio_order_ui()`
-11. `navigation_service.restore_spell_phase_buttons()`
-12. `card_selection_service.set_card_selection_filter()`
+**方針**: 各呼び出し元で自身の `create_tween()` / `get_tree()` を使用するか、ui_layer への add_child に変更
+
+**ステータス**: 保留
+
+---
+
+### Phase 11-C: Null チェック統一
+
+**目的**: サービスアクセス時の null チェックパターンを統一
+
+**対象（~10箇所）**:
+
+```gdscript
+# Before（外側チェックなし）
+ui_manager.player_info_service.update_panels()
+
+# After
+if ui_manager and ui_manager.player_info_service:
+	ui_manager.player_info_service.update_panels()
+```
+
+**ステータス**: 保留
+
+---
+
+### Phase 11-D: 未使用メソッド削除（残存分）
+
+**目的**: Phase 10-D で見つけられなかった追加デッドコードの調査・削除
+
+**候補**:
+- `on_spell_used()` / `on_item_used()` — GFM から `has_method()` ガード付きで呼ばれているが UIManager に定義なし（呼び出し自体がデッド）
+- その他の残存ファサードメソッドの再評価
+
+**ステータス**: 保留
 
 ---
 
 ## 推奨実行順序
 
-| 順番 | Phase | 内容 | 理由 |
-|------|-------|------|------|
-| 1 | **10-A** ✅ | update_player_info_panels サービス化 | 効果大・難易度低、即座に着手可能 |
-| 2 | **10-B** ✅ | card.gd 再帰探索廃止 | Signal駆動化で完了 |
-| 3 | **10-C** ✅ | 双方向参照の削減 | Callable注入で完了 |
-| 4 | **10-D** ✅ | UIManager デッドコード削除 | 12メソッド削除、65行削減 |
+| 順番 | Phase | 内容 | 効果 | 規模 |
+|------|-------|------|------|------|
+| 1 | **11-A** | サブコンポーネント直接アクセスのファサード化 | チェーンアクセス97箇所削減 | 中 |
+| 2 | **11-B** | Node メソッド直接利用の整理 | 構造的問題3箇所修正 | 小 |
+| 3 | **11-C** | Null チェック統一 | 安定性向上 | 小 |
+| 4 | **11-D** | 未使用メソッド削除（残存分） | コード削減 | 小 |
 
 ---
 
@@ -129,8 +126,18 @@ UIManager 削除メソッド（7個）:
 
 | 項目 | 内容 | 備考 |
 |------|------|------|
-| 8-H | UIコンポーネント逆参照除去 | 規約変更で大部分不要 |
 | 8-C | BankruptcyHandler パネル分離 | 56行、機能問題なし |
-| tutorial系 | tutorial_manager, explanation_mode の UIManager 直接参照 | チュートリアル再設計が前提 |
-| set_message() | spell_borrow, card_sacrifice_helper, spell_creature_swap で使用 | MessageService 拡張で対応可能 |
-| tap_target_manager | spell_mystic_arts, spell_target_selection_handler で参照 | TapTargetService 新設候補 |
+| tutorial系 | tutorial_manager の UIManager 直接参照 | チュートリアル再設計が前提 |
+| tap_target_manager | spell系ファイルから UIManager 経由参照 | TapTargetService 新設候補 |
+
+---
+
+## 完了済み Phase 一覧
+
+| Phase | 内容 | 完了日 |
+|-------|------|--------|
+| 0〜9 | アーキテクチャ移行・UI層分離・状態ルーター解体 | 〜2026-02-19 |
+| 10-A | PlayerInfoService サービス化 | 2026-02-19 |
+| 10-B | card.gd 再帰的親探索廃止 | 2026-02-19 |
+| 10-C | 双方向参照の削減（Callable注入） | 2026-02-19 |
+| 10-D | UIManager デッドコード削除（12メソッド） | 2026-02-19 |
