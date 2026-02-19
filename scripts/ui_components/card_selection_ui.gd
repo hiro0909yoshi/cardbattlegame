@@ -941,6 +941,7 @@ func _on_info_panel_cancelled():
 				_setup_spell_phase_back_button()
 		"item":
 			# アイテム選択に戻る
+			restore_phase_comment()
 			_setup_item_phase_back_button()
 		_:
 			# summon/battle等: フェーズコメント復元 + ボタン再登録

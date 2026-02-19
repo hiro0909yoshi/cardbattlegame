@@ -131,19 +131,19 @@ func hide_panel(clear_buttons: bool = true):
 	# 使用確認モードの場合はアクション指示を消す
 	if not is_info_only_mode and ui_manager_ref and ui_manager_ref.phase_display:
 		ui_manager_ref.phase_display.hide_action_prompt()
-	
+
 	visible = false
 	is_visible_panel = false
 	is_info_only_mode = false  # フラグをリセット
 	current_spell_data = {}
 	current_hand_index = -1
-	
+
 	if clear_buttons and ui_manager_ref:
 		if ui_manager_ref.is_nav_state_saved():
 			ui_manager_ref.restore_navigation_state()
 		else:
 			ui_manager_ref.disable_navigation()
-	
+
 	panel_closed.emit()
 
 

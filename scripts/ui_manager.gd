@@ -783,7 +783,11 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	var card_type = card_data.get("type", "")
 
 	# ナビゲーション状態を保存（連続閲覧時は最初の1回のみ）
-	save_navigation_state()
+	# 選択モードのパネルが表示中（pending_card_index >= 0）の場合は保存しない
+	# → スペル/アイテムパネルの「使用しますか？」コールバックを誤保存しないため
+	# → ×で閉じた時は fallback (card_selection_ui.restore_navigation) でフェーズ選択に戻る
+	if not (card_selection_ui and card_selection_ui.pending_card_index >= 0):
+		save_navigation_state()
 
 	# 他のパネルを閉じる（ボタンはクリアしない：show_card_info内での切り替えなのでrestoreを走らせない）
 	_hide_all_info_panels_raw()
@@ -808,6 +812,12 @@ func show_card_info(card_data: Dictionary, tile_index: int = -1, setup_buttons: 
 	if panel and not setup_buttons:
 		register_back_action(func():
 			_hide_all_info_panels_raw()
+			# 選択モードのパネルが開いていた場合（「使用しますか？」等）、
+			# 保存状態をクリアしてフェーズ選択画面に戻す
+			# （パネルなしで「使用しますか？」テキストだけ残る半端な状態を防止）
+			if card_selection_ui and card_selection_ui.pending_card_index >= 0:
+				card_selection_ui.pending_card_index = -1
+				clear_navigation_saved_state()
 			restore_current_phase()
 			# カードのホバー状態を解除
 			var card_script = load("res://scripts/card.gd")
