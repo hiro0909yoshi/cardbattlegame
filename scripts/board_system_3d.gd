@@ -67,6 +67,17 @@ var game_flow_manager: GameFlowManager = null  # GameFlowManagerへの参照
 var spell_land: SpellLand = null  # SpellLand: 土地操作スペル
 var _message_service = null
 
+# === Item 1: UI Callable（dominio_order_button 制御） ===
+var _show_dominio_btn_cb: Callable = Callable()
+var _hide_dominio_btn_cb: Callable = Callable()
+
+# === Item 2: BattleScreenManager 直接参照 ===
+var _battle_screen_manager_ref = null
+
+# === Item 3: GFM Callable（land_curse + game_ended） ===
+var _trigger_land_curse_cb: Callable = Callable()
+var _is_game_ended_cb: Callable = Callable()
+
 # === 初期化 ===
 
 func _ready():
@@ -155,9 +166,9 @@ func setup_systems(p_system: PlayerSystem, c_system: CardSystem, b_system: Battl
 	if movement_controller:
 		# game_flow_managerは後で設定される
 		movement_controller.setup_systems(player_system, special_tile_system)
-		movement_controller.set_game_ended_checker(
-			func() -> bool: return game_flow_manager.is_game_ended if game_flow_manager else false
-		)
+		# Item 3: Callable駆動化（_is_game_ended_cbが設定された後に呼び出す）
+		if _is_game_ended_cb.is_valid():
+			movement_controller.set_game_ended_checker(_is_game_ended_cb)
 	
 	# TileDataManagerに参照を設定
 	tile_data_manager.set_display_system(tile_info_display)
@@ -195,6 +206,26 @@ func setup_cpu_ai_handler():
 func set_spell_land(system) -> void:
 	spell_land = system
 	print("[BoardSystem3D] spell_land直接参照を設定")
+
+# === Item 1: UI Callable setter ===
+func set_ui_callbacks(show_btn: Callable, hide_btn: Callable) -> void:
+	_show_dominio_btn_cb = show_btn
+	_hide_dominio_btn_cb = hide_btn
+	print("[BoardSystem3D] UI Callable（dominio_order_button）を設定")
+
+# === Item 2: BattleScreenManager 直接参照 setter ===
+func set_battle_screen_manager_ref(manager) -> void:
+	_battle_screen_manager_ref = manager
+	print("[BoardSystem3D] BattleScreenManager直接参照を設定")
+
+# === Item 3: GFM Callable setter ===
+func set_game_flow_callbacks(land_curse_cb: Callable, game_ended_cb: Callable) -> void:
+	_trigger_land_curse_cb = land_curse_cb
+	_is_game_ended_cb = game_ended_cb
+	# setup_systems() より後に呼ばれるため、ここで movement_controller に設定
+	if movement_controller and _is_game_ended_cb.is_valid():
+		movement_controller.set_game_ended_checker(_is_game_ended_cb)
+	print("[BoardSystem3D] GFM Callable（land_curse + game_ended）を設定")
 
 func set_tile_action_processor_spells(cost_modifier, world_curse) -> void:
 	if tile_action_processor:
@@ -566,15 +597,17 @@ func _on_movement_completed(player_id: int, final_tile: int):
 	movement_completed.emit(player_id, final_tile)
 
 	# 土地呪いチェック（ブラストトラップ等）- 移動完了時に即発動
-	if game_flow_manager and game_flow_manager.has_method("trigger_land_curse_on_stop"):
-		game_flow_manager.trigger_land_curse_on_stop(final_tile, current_player_index)
+	# Item 3: Callable駆動化
+	if _trigger_land_curse_cb.is_valid():
+		_trigger_land_curse_cb.call(final_tile, current_player_index)
 
 	# 移動完了後、ドミニオコマンドボタンを表示（人間プレイヤーのみ）
+	# Item 1: Callable駆動化
 	var is_cpu = current_player_index < player_is_cpu.size() and player_is_cpu[current_player_index] and not DebugSettings.manual_control_all
-	if not is_cpu and ui_manager:
-		ui_manager.show_dominio_order_button()
-	elif ui_manager:
-		ui_manager.hide_dominio_order_button()
+	if not is_cpu and _show_dominio_btn_cb.is_valid():
+		_show_dominio_btn_cb.call()
+	elif _hide_dominio_btn_cb.is_valid():
+		_hide_dominio_btn_cb.call()
 
 	# タイル着地処理
 	process_tile_landing(final_tile)
@@ -1077,10 +1110,9 @@ func get_warp_pair(tile_index: int) -> int:
 # ========================================
 
 ## バトルスクリーンマネージャーを取得
+# Item 2: 直接参照から取得に変更
 func get_battle_screen_manager():
-	if battle_system:
-		return battle_system.battle_screen_manager
-	return null
+	return _battle_screen_manager_ref
 
 # ========================================
 # TileDataManager 追加委譲メソッド（E用）

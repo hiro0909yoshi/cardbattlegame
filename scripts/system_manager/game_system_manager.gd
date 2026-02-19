@@ -800,6 +800,11 @@ func _setup_battle_screen_manager() -> void:
 	game_flow_manager.add_child(battle_status_overlay)
 	
 	game_flow_manager.set_battle_screen_manager(battle_screen_manager, battle_status_overlay)
+
+	# === Item 2: Board → BattleScreenManager 直接参照注入 ===
+	if board_system_3d:
+		board_system_3d.set_battle_screen_manager_ref(battle_screen_manager)
+
 	print("[BattleScreenManager] 初期化完了")
 
 ## MagicStoneSystem初期化
@@ -1735,6 +1740,20 @@ func _setup_ui_callbacks(
 			p_ui_manager.tap_handler._is_spell_phase_active_cb = Callable(
 				p_spell_phase_handler, "is_spell_phase_active"
 			)
+
+	# === Item 1: Board → UI Callable 注入（dominio_order_button） ===
+	if p_board_system_3d:
+		p_board_system_3d.set_ui_callbacks(
+			func(): if p_ui_manager: p_ui_manager.show_dominio_order_button(),
+			func(): if p_ui_manager: p_ui_manager.hide_dominio_order_button()
+		)
+
+	# === Item 3: Board → GFM Callable 注入（land_curse + game_ended） ===
+	if p_board_system_3d:
+		p_board_system_3d.set_game_flow_callbacks(
+			func(tile_index, player_id): if p_game_flow_manager: p_game_flow_manager.trigger_land_curse_on_stop(tile_index, player_id),
+			func() -> bool: return p_game_flow_manager.is_game_ended if p_game_flow_manager else false
+		)
 
 	print("[GameSystemManager] Phase 10-C: UI Callable/Signal 注入完了")
 
