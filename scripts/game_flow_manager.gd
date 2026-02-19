@@ -162,9 +162,14 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 		)
 		lap_system.setup_ui()
 	
-	# GameResultHandlerを初期化
+	# GameResultHandlerを初期化（Phase A-2: GFM逆参照解消）
 	game_result_handler = GameResultHandler.new()
-	game_result_handler.initialize(self, player_system, ui_manager)
+	game_result_handler.initialize(player_system, ui_manager)
+
+	# Phase A-2: Callable注入
+	game_result_handler._end_game_cb = func(): change_phase(GamePhase.SETUP)
+	game_result_handler._get_current_turn_cb = func() -> int: return current_turn_number
+	game_result_handler._get_scene_tree_cb = func() -> SceneTree: return get_tree()
 
 ## バトル画面マネージャーを外部から設定
 func set_battle_screen_manager(manager: BattleScreenManager, overlay) -> void:

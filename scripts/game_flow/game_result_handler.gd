@@ -5,9 +5,13 @@ class_name GameResultHandler
 ## 勝敗判定、リザルト画面表示、シーン遷移を管理
 
 # システム参照
-var game_flow_manager  # GameFlowManager
 var player_system: PlayerSystem
 var ui_manager: UIManager
+
+# Callable注入（Phase A-2: GFM逆参照解消）
+var _end_game_cb: Callable = Callable()           # change_phase(SETUP) の代替
+var _get_current_turn_cb: Callable = Callable()    # current_turn_number の代替
+var _get_scene_tree_cb: Callable = Callable()      # get_tree() の代替
 
 # リザルト画面への参照
 var result_screen: ResultScreen = null
@@ -20,8 +24,7 @@ var _game_ended: bool = false
 
 
 ## 初期化
-func initialize(gfm, p_system: PlayerSystem, ui: UIManager) -> void:
-	game_flow_manager = gfm
+func initialize(p_system: PlayerSystem, ui: UIManager) -> void:
 	player_system = p_system
 	ui_manager = ui
 
@@ -29,6 +32,15 @@ func initialize(gfm, p_system: PlayerSystem, ui: UIManager) -> void:
 ## ゲーム終了済みかどうか
 func is_game_ended() -> bool:
 	return _game_ended
+
+
+## Callable注入用ヘルパーメソッド
+func _get_current_turn() -> int:
+	return _get_current_turn_cb.call() if _get_current_turn_cb.is_valid() else 0
+
+
+func _get_tree_ref() -> SceneTree:
+	return _get_scene_tree_cb.call() if _get_scene_tree_cb.is_valid() else null
 
 
 ## ステージデータを設定（QuestGameから呼ばれる）
@@ -53,7 +65,8 @@ func on_player_won(player_id: int):
 	_game_ended = true
 
 	var _player = player_system.players[player_id]  # 将来の拡張用
-	game_flow_manager.change_phase(game_flow_manager.GamePhase.SETUP)
+	if _end_game_cb.is_valid():
+		_end_game_cb.call()
 
 	print("🎉 プレイヤー", player_id + 1, "の勝利！ 🎉")
 
@@ -74,7 +87,8 @@ func on_player_defeated(reason: String = ""):
 		return
 	_game_ended = true
 
-	game_flow_manager.change_phase(game_flow_manager.GamePhase.SETUP)
+	if _end_game_cb.is_valid():
+		_end_game_cb.call()
 	print("😢 プレイヤー敗北... (理由: %s)" % reason)
 	await _process_defeat_result(reason)
 
@@ -85,7 +99,7 @@ func check_turn_limit() -> bool:
 	if max_turns <= 0:
 		return false  # 制限なし
 
-	var current_turn = game_flow_manager.current_turn_number
+	var current_turn = _get_current_turn()
 	if current_turn > max_turns:
 		print("[GameResultHandler] 規定ターン(%d)終了" % max_turns)
 
@@ -135,7 +149,7 @@ func _process_victory_result():
 		return
 
 	# ランク計算
-	var rank = RankCalculator.calculate_rank(game_flow_manager.current_turn_number)
+	var rank = RankCalculator.calculate_rank(_get_current_turn())
 
 	# 初回クリア判定
 	var is_first_clear = StageRecordManager.is_first_clear(stage_id)
@@ -145,7 +159,7 @@ func _process_victory_result():
 	print("[GameResultHandler] 報酬計算結果: %s" % rewards)
 
 	# 記録更新
-	var record_result = StageRecordManager.update_record(stage_id, rank, game_flow_manager.current_turn_number)
+	var record_result = StageRecordManager.update_record(stage_id, rank, _get_current_turn())
 
 	# ゴールド付与
 	if rewards.total > 0:
@@ -161,7 +175,7 @@ func _process_victory_result():
 		var result_data = {
 			"stage_id": stage_id,
 			"stage_name": current_stage_data.get("name", ""),
-			"turn_count": game_flow_manager.current_turn_number,
+			"turn_count": _get_current_turn(),
 			"rank": rank,
 			"is_first_clear": is_first_clear,
 			"is_best_updated": record_result.is_best_updated,
@@ -183,8 +197,10 @@ func _process_victory_result():
 			ui_manager.show_win_screen(0)
 
 		# 一定時間後にステージセレクトへ
-		await game_flow_manager.get_tree().create_timer(3.0).timeout
-		_return_to_stage_select()
+		var tree = _get_tree_ref()
+		if tree:
+			await tree.create_timer(3.0).timeout
+			_return_to_stage_select()
 
 
 ## 敗北時のリザルト処理
@@ -199,7 +215,7 @@ func _process_defeat_result(reason: String):
 		var result_data = {
 			"stage_id": stage_id,
 			"stage_name": current_stage_data.get("name", ""),
-			"turn_count": game_flow_manager.current_turn_number,
+			"turn_count": _get_current_turn(),
 			"defeat_reason": reason,
 			"rewards": rewards
 		}
@@ -225,16 +241,21 @@ func _on_result_confirmed():
 func _return_to_stage_select():
 	print("[GameResultHandler] _return_to_stage_select 開始")
 
+	var tree = _get_tree_ref()
+	if not tree:
+		push_error("[GameResultHandler] SceneTree が取得できません")
+		return
+
 	# チュートリアルはメインメニューへ
 	var stage_id = current_stage_data.get("id", "")
 	if stage_id == "stage_tutorial":
 		print("[GameResultHandler] チュートリアル終了、メインメニューへ遷移")
-		game_flow_manager.get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+		tree.change_scene_to_file("res://scenes/MainMenu.tscn")
 	# クエストモードならクエストセレクトへ
 	elif not current_stage_data.is_empty():
 		print("[GameResultHandler] クエストセレクトへ遷移")
-		game_flow_manager.get_tree().change_scene_to_file("res://scenes/WorldStageSelect.tscn")
+		tree.change_scene_to_file("res://scenes/WorldStageSelect.tscn")
 	else:
 		# それ以外はメインメニューへ
 		print("[GameResultHandler] メインメニューへ遷移")
-		game_flow_manager.get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+		tree.change_scene_to_file("res://scenes/MainMenu.tscn")
