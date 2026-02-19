@@ -18,6 +18,9 @@ signal bankruptcy_ui_comment_and_wait_completed()
 signal bankruptcy_ui_player_info_updated()
 signal bankruptcy_ui_card_info_shown(creature_data: Dictionary, tile_index: int)
 signal bankruptcy_ui_info_panels_hidden()
+# Phase 8-C: パネル分離 UI Signal
+signal bankruptcy_info_panel_show_requested(current_magic: int, land_value: int)
+signal bankruptcy_info_panel_hide_requested()
 
 # 参照
 var player_system: Node = null
@@ -29,9 +32,6 @@ var target_selection_helper: Node = null  # 土地選択用
 # 状態
 var _is_processing: bool = false
 var current_player_id: int = -1
-
-# 破産情報パネル
-var bankruptcy_info_panel: Panel = null
 
 ## セットアップ
 func setup(p_player_system: Node, p_board_system: Node, p_creature_manager: Node, p_spell_curse: Node = null, p_target_selection_helper: Node = null):
@@ -112,71 +112,15 @@ func _update_ui():
 # 破産情報パネル
 # ===========================================
 
-## 破産情報パネルを表示
+## 破産情報パネルを表示（Signal駆動化）
 func _show_bankruptcy_info_panel(current_magic: int, land_value: int):
-	_hide_bankruptcy_info_panel()
-
-	bankruptcy_info_panel = Panel.new()
-	bankruptcy_info_panel.name = "BankruptcyInfoPanel"
-
-	var viewport_size = get_viewport().get_visible_rect().size
-	
-	# サイズと位置
-	var panel_width = 280 * 4
-	var panel_height = 120 * 3  # 高さ調整（項目減）
-	var margin = 30
-	var panel_x = viewport_size.x - panel_width - margin - 200 - 600 + 200 + 100  # 右に300移動
-	var panel_y = (viewport_size.y - panel_height) / 2 - 50 - 500  # 上に500移動
-	
-	bankruptcy_info_panel.position = Vector2(panel_x, panel_y)
-	bankruptcy_info_panel.size = Vector2(panel_width, panel_height)
-	bankruptcy_info_panel.z_index = 1000
-	
-	# パネルスタイル
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.2, 0.1, 0.1, 0.95)  # 赤みがかった背景
-	style.border_width_top = 3
-	style.border_width_bottom = 3
-	style.border_width_left = 3
-	style.border_width_right = 3
-	style.border_color = Color(0.8, 0.2, 0.2, 1.0)  # 赤い枠
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	bankruptcy_info_panel.add_theme_stylebox_override("panel", style)
-	
-	# 現在のEP
-	var current_label = Label.new()
-	current_label.text = "現在のEP: %dEP" % current_magic
-	current_label.position = Vector2(60, 60)
-	current_label.add_theme_font_size_override("font_size", 80)
-	if current_magic < 0:
-		current_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))  # マイナスは赤
-	else:
-		current_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-	bankruptcy_info_panel.add_child(current_label)
-	
-	# 売却後のEP
-	var after_magic = current_magic + land_value
-	var after_label = Label.new()
-	after_label.text = "売却後: %dEP (+%dEP)" % [after_magic, land_value]
-	after_label.position = Vector2(60, 180)
-	after_label.add_theme_font_size_override("font_size", 80)
-	if after_magic >= 0:
-		after_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))  # プラスは緑
-	else:
-		after_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))  # まだマイナスは黄色
-	bankruptcy_info_panel.add_child(after_label)
-
-	add_child(bankruptcy_info_panel)
+	bankruptcy_info_panel_hide_requested.emit()
+	bankruptcy_info_panel_show_requested.emit(current_magic, land_value)
 
 
-## 破産情報パネルを非表示
+## 破産情報パネルを非表示（Signal駆動化）
 func _hide_bankruptcy_info_panel():
-	if bankruptcy_info_panel:
-		bankruptcy_info_panel.queue_free()
-		bankruptcy_info_panel = null
+	bankruptcy_info_panel_hide_requested.emit()
 
 
 # ===========================================

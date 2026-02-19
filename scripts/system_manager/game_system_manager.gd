@@ -341,7 +341,10 @@ func phase_4_setup_system_interconnections() -> void:
 		ui_layer = parent_node.get_node_or_null("UILayer")
 		# カメラタップシグナルを接続（Phase 3のawait完了後に実行）
 		_connect_camera_signals_deferred()
-	
+
+	# === Phase 11-B: TapTargetManager直接注入（UIManager経由アクセス除去） ===
+	_inject_tap_target_manager()
+
 	# Step 7: CardSelectionUI に設定
 	if ui_manager and ui_manager.card_selection_ui:
 		ui_manager.card_selection_ui.game_flow_manager_ref = game_flow_manager
@@ -1455,7 +1458,7 @@ func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) ->
 	)
 	print("[GSM] DiscardHandler UI Signal接続完了（1シグナル）")
 
-## Phase 6-C: BankruptcyHandler UI Signal接続
+## Phase 6-C: BankruptcyHandler UI Signal接続 + Phase 8-C: パネル分離
 func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 	if not bankruptcy_handler_ref or not p_ui_manager:
 		push_error("[GSM] BankruptcyHandler または UIManager が null です")
@@ -1478,7 +1481,19 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 		func():
 			p_ui_manager.hide_all_info_panels(false)
 	)
-	print("[GSM] BankruptcyHandler UI Signal接続完了（4シグナル）")
+
+	# Phase 8-C: BankruptcyInfoPanelUI を作成して接続
+	if ui_layer:
+		var bankruptcy_info_panel_ui = BankruptcyInfoPanelUI.new(ui_layer)
+		if not bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.is_connected(bankruptcy_info_panel_ui.show_panel):
+			bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.connect(bankruptcy_info_panel_ui.show_panel)
+		if not bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.is_connected(bankruptcy_info_panel_ui.hide_panel):
+			bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.connect(bankruptcy_info_panel_ui.hide_panel)
+		print("[GSM] BankruptcyInfoPanelUI Signal接続完了（2シグナル）")
+	else:
+		push_warning("[GSM] ui_layer が利用できません - BankruptcyInfoPanelUI を作成できません")
+
+	print("[GSM] BankruptcyHandler UI Signal接続完了（6シグナル）")
 
 ## Phase 8-A: ItemPhaseHandler UI Signal接続
 func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
@@ -1616,3 +1631,29 @@ func _on_hand_card_tapped(card_index: int) -> void:
 	# その他: card_selection_ui が処理
 	if ui_manager and ui_manager.card_selection_ui and ui_manager.card_selection_ui.has_method("on_card_selected"):
 		ui_manager.card_selection_ui.on_card_selected(card_index)
+
+
+## === Phase 11-B: TapTargetManager直接注入 ===
+## UIManager経由アクセスを除去し、各消費者に直接参照を注入
+func _inject_tap_target_manager() -> void:
+	if not ui_manager or not ui_manager.tap_target_manager:
+		push_warning("[GameSystemManager] TapTargetManager が初期化されていません")
+		return
+
+	var ttm = ui_manager.tap_target_manager
+
+	# UITapHandler に注入
+	if ui_manager and ui_manager.tap_handler:
+		ui_manager.tap_handler._tap_target_manager = ttm
+		print("[GameSystemManager] TapTargetManager → UITapHandler 注入完了")
+
+	# SpellTargetSelectionHandler に注入
+	var spell_phase_handler_ref = game_flow_manager.spell_phase_handler if game_flow_manager else null
+	if spell_phase_handler_ref and spell_phase_handler_ref.spell_target_selection_handler:
+		spell_phase_handler_ref.spell_target_selection_handler._tap_target_manager = ttm
+		print("[GameSystemManager] TapTargetManager → SpellTargetSelectionHandler 注入完了")
+
+	# SpellMysticArts に注入
+	if game_flow_manager and game_flow_manager.spell_container and game_flow_manager.spell_container.spell_mystic_arts:
+		game_flow_manager.spell_container.spell_mystic_arts._tap_target_manager = ttm
+		print("[GameSystemManager] TapTargetManager → SpellMysticArts 注入完了")
