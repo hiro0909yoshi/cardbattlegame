@@ -101,15 +101,17 @@ func show_selection_mode(creature_data: Dictionary, confirmation_text: String = 
 		# EP不足/土地条件
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：EP不足または土地条件未達" % creature_name, "right")
-		# 戻るボタンのみ
+		# 戻るボタンのみ（前パネルの✓を確実にクリア）
 		if ui_manager_ref:
+			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(_on_back_action, "戻る")
 	elif restriction_reason == "restriction":
 		# 配置制限等
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % creature_name, "right")
-		# 戻るボタンのみ
+		# 戻るボタンのみ（前パネルの✓を確実にクリア）
 		if ui_manager_ref:
+			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(_on_back_action, "戻る")
 	else:
 		# 制限なし - 通常の確認

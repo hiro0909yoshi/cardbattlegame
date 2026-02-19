@@ -63,15 +63,17 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 		# EP不足
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：EP不足" % spell_name, "right")
-		# 戻るボタンのみ
+		# 戻るボタンのみ（前パネルの✓を確実にクリア）
 		if ui_manager_ref:
+			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	elif restriction_reason == "restriction":
 		# スペル不可呪い等
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % spell_name, "right")
-		# 戻るボタンのみ
+		# 戻るボタンのみ（前パネルの✓を確実にクリア）
 		if ui_manager_ref:
+			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	else:
 		# 制限なし - 通常の確認
@@ -101,9 +103,10 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 				ui_manager_ref.register_confirm_action(func(): _on_confirm_action(), confirm_text)
 				ui_manager_ref.register_back_action(func(): _on_back_action(), "閉じる")
 			else:
-				ui_manager_ref.enable_navigation(
+				ui_manager_ref.register_global_actions(
 					func(): _on_confirm_action(),  # 決定: 使用/犠牲
-					func(): _on_back_action()      # 戻る: キャンセル
+					func(): _on_back_action(),      # 戻る: キャンセル
+					confirm_text, "戻る"
 				)
 
 
