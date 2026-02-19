@@ -154,51 +154,45 @@ Phase 8 で開始したサービス直接注入を完遂する。
 Spell システムが game_flow_manager / ui_manager を直接参照している問題。
 
 ### C-1: spell_curse → game_flow_manager
-
-**用途**: ゲーム統計参照、magic_tile_mode 判定
-**方針**: 必要な情報を Context または Callable で注入
-
----
+**方針**: `_get_current_turn_cb` Callable 注入
+**ステータス**: ✅ 完了（`5c57845`）
 
 ### C-2: spell_world_curse → ui_manager
-
-**用途**: player_info_service.update_panels()
-**方針**: Signal emit に変更
-
----
+**方針**: `_player_info_service` 直接注入
+**ステータス**: ✅ 完了（`5c57845`）
 
 ### C-3: spell_player_move → game_flow_manager
-
-**用途**: lap_system 参照
-**方針**: lap_system を直接注入
-
----
+**方針**: `lap_system` GSM直接注入
+**ステータス**: ✅ 完了（`5c57845`）
 
 ### C-4: spell_draw 系 → ui_manager
+**現状維持**: Node操作（add_child）には親参照が必須。設計上正当。
 
-**用途**: SpellAndMysticUI 参照
-**方針**: 必要なサービスを直接注入
+### C-5: spell_land → game_flow_manager (3段チェーン)
+**方針**: `_spell_world_curse` 直接注入
+**ステータス**: ✅ 完了（`5c57845`）
+
+### C-6: spell_magic → game_flow_manager
+**方針**: `lap_system` 活用 + `_spell_damage` 直接注入（4段チェーン解消）
+**ステータス**: ✅ 完了（`5c57845`）
+
+### C-7: spell_creature_swap → SPH→GFM (3段チェーン)
+**方針**: `_is_cpu_player_cb` Callable 注入
+**ステータス**: ✅ 完了（`5c57845`）
+
+### C-8: spell_mystic_arts → game_flow_manager
+**方針**: `_lock_input_cb`/`_unlock_input_cb` Callable + `_spell_curse_stat`/`_game_stats` 直接注入
+**ステータス**: ✅ 完了（`5c57845`）
 
 ---
 
 ## Phase D: GFM チェーンアクセスの解消（MEDIUM）
 
-`spell_phase_handler.game_flow_manager.xxx` のような多段チェーンアクセス。
-
 ### D-1: CardSelectionHandler のチェーンアクセス
-
-```gdscript
-# 現在
-spell_phase_handler.game_flow_manager.spell_container.spell_draw.xxx
-```
-
-**方針**: spell_container を直接注入
-
----
+**ステータス**: ✅ Phase A-3b で解決済み（`spell_draw` 直接注入）
 
 ### D-2: SpellFlowHandler の多段参照
-
-**方針**: `_game_flow_manager` の各用途を Callable / 直接参照に分解
+**ステータス**: ✅ Phase A-3c で解決済み（Callable化 + `spell_container` 直接注入）
 
 ---
 
