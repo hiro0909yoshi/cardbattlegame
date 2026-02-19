@@ -106,10 +106,6 @@ func _build_world_curse_context() -> Dictionary:
 	# 直接参照を優先
 	if game_stats and game_stats is Dictionary:
 		context["world_curse"] = game_stats.get("world_curse", {})
-		return context
-	# フォールバック
-	if game_flow_manager and "game_stats" in game_flow_manager:
-		context["world_curse"] = game_flow_manager.game_stats.get("world_curse", {})
 	return context
 
 ## 最適なターゲット選択（スコア付き）

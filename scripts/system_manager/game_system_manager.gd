@@ -904,6 +904,12 @@ func _initialize_phase1a_handlers() -> void:
 		game_flow_manager.cpu_special_tile_ai.spell_phase_handler = spell_phase_handler
 		game_flow_manager.cpu_special_tile_ai.cpu_spell_ai = cpu_spell_ai
 
+		# チェーンアクセス解消: 直接参照注入
+		if game_flow_manager.target_selection_helper:
+			game_flow_manager.cpu_special_tile_ai._target_selection_helper = game_flow_manager.target_selection_helper
+		if game_flow_manager.magic_stone_system:
+			game_flow_manager.cpu_special_tile_ai._magic_stone_system = game_flow_manager.magic_stone_system
+
 	# 注: TutorialManagerはgame_3d.gdに存在し、spell_phase_handlerから
 	# game_3d.tutorial_manager経由でアクセスするため、ここでの注入は不要
 

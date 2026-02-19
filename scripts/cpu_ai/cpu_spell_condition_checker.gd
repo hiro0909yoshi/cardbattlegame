@@ -310,15 +310,10 @@ func _check_has_any_curse(context: Dictionary) -> bool:
 
 ## 世界呪いがあるか
 func _check_has_world_curse(_ctx: Dictionary) -> bool:
-	if not game_flow_manager:
-		return false
-	
-	# WorldCurseManagerを参照
-	var world_curse_manager = game_flow_manager.get("world_curse_manager")
-	if world_curse_manager and world_curse_manager.has_method("get_active_curses"):
-		var active_curses = world_curse_manager.get_active_curses()
-		return active_curses.size() > 0
-	
+	# target_resolver から game_stats 経由で世界呪いをチェック
+	if target_resolver and target_resolver.game_stats:
+		var world_curse = target_resolver.game_stats.get("world_curse", {})
+		return not world_curse.is_empty()
 	return false
 
 ## プレイヤー呪いがあるか

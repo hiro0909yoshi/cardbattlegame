@@ -48,9 +48,6 @@ func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 	# 直接参照を優先
 	if game_stats and game_stats is Dictionary:
 		world_curse = game_stats.get("world_curse", {})
-	# フォールバック
-	elif game_flow_manager and "game_stats" in game_flow_manager:
-		world_curse = game_flow_manager.game_stats.get("world_curse", {})
 	var protection_context = {"world_curse": world_curse}
 
 	# スペルがHP効果を持つか確認

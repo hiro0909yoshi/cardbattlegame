@@ -14,12 +14,12 @@ var board_system: BoardSystem3D
 var cpu_ai_handler: CPUAIHandler
 var player_system: PlayerSystem
 var card_system: CardSystem
-var ui_manager: UIManager
 var battle_system: BattleSystem  # battle_system参照
 
 # === サービス参照（注入用） ===
 var _message_service = null
 var _card_selection_service = null
+var _player_info_service = null
 
 # === 直接参照（GFM経由を廃止） ===
 var battle_status_overlay = null  # BattleStatusOverlay: バトルステータス表示
@@ -37,6 +37,9 @@ func set_item_phase_handler(handler) -> void:
 func set_dominio_command_handler(handler) -> void:
 	dominio_command_handler = handler
 	print("[CPUTurnProcessor] dominio_command_handler 直接参照を設定")
+
+func set_player_info_service(service) -> void:
+	_player_info_service = service
 
 # バトル保留用変数（CPU攻撃 → 人間防御のアイテムフェーズ用）
 var pending_cpu_battle_creature_index: int = -1
@@ -58,7 +61,6 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 	cpu_ai_handler = ai_handler
 	player_system = p_system
 	card_system = c_system
-	ui_manager = ui
 	if board_system and board_system.get("battle_system"):
 		battle_system = board_system.battle_system
 
@@ -72,6 +74,8 @@ func setup(b_system: BoardSystem3D, ai_handler: CPUAIHandler,
 		_card_selection_service = ui.get_meta("card_selection_service")
 	elif ui and "card_selection_service" in ui:
 		_card_selection_service = ui.card_selection_service
+	if ui and "player_info_service" in ui:
+		_player_info_service = ui.player_info_service
 
 # CPUターンを処理
 func process_cpu_turn(tile: BaseTile, tile_info: Dictionary, player_index: int):
@@ -342,8 +346,8 @@ func _on_cpu_level_up_decided(do_upgrade: bool):
 
 			# 表示更新（UIManager固有の操作）
 			board_system.update_all_tile_displays()
-			if ui_manager and ui_manager.player_info_service:
-				ui_manager.player_info_service.update_panels()
+			if _player_info_service:
+				_player_info_service.update_panels()
 
 			print("CPU: 土地をレベルアップ！")
 	
@@ -359,8 +363,8 @@ func _on_invasion_completed(_success: bool, _tile_index: int):
 		_card_selection_service.hide_card_selection_ui()
 
 	# UIManager で情報パネルを更新（UIツリー操作）
-	if ui_manager and ui_manager.player_info_service:
-		ui_manager.player_info_service.update_panels()
+	if _player_info_service:
+		_player_info_service.update_panels()
 
 	_complete_action()
 
