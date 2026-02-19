@@ -925,6 +925,10 @@ func _on_info_panel_cancelled():
 		return
 
 	# 以下: 保存なしの場合のフォールバック（フェーズ別復元）
+	# info panelの✓コールバックが残らないようにクリア
+	if ui_manager_ref:
+		ui_manager_ref.clear_confirm_action()
+
 	# 犠牲/捨て札モードの場合はフェーズコメントとボタンを復元
 	if selection_mode in ["sacrifice", "discard"]:
 		restore_phase_comment()
@@ -986,6 +990,8 @@ func _on_spell_phase_skip():
 func restore_navigation():
 	if not ui_manager_ref:
 		return
+	# info panelの✓コールバックが残らないようにクリア
+	ui_manager_ref.clear_confirm_action()
 	match selection_mode:
 		"spell":
 			_setup_spell_phase_back_button()
