@@ -433,7 +433,6 @@ func phase_4_setup_system_interconnections() -> void:
 		if game_flow_manager.dominio_command_handler:
 			game_flow_manager.dominio_command_handler.board_system_3d = board_system_3d
 			game_flow_manager.dominio_command_handler.player_system = player_system
-			game_flow_manager.dominio_command_handler.ui_manager = ui_manager
 		
 		# ItemPhaseHandler の初期化
 		if game_flow_manager.item_phase_handler:
@@ -835,6 +834,17 @@ func _initialize_phase1a_handlers() -> void:
 	# === Phase 8-B2: dominio_order_ui を直接注入 ===
 	if ui_manager and ui_manager.dominio_order_ui:
 		dominio_command_handler.set_dominio_order_ui(ui_manager.dominio_order_ui)
+
+	# Phase B: DCH UI Callable 注入
+	dominio_command_handler.inject_ui_callbacks(
+		func(): ui_manager.hide_dominio_order_button() if ui_manager else null,
+		func(tile_idx, level, magic): ui_manager.show_level_selection(tile_idx, level, magic) if ui_manager else null,
+		func(): ui_manager.hide_action_menu_keep_buttons() if ui_manager else null,
+		func(tile_idx, type, cost, magic): ui_manager.show_terrain_selection(tile_idx, type, cost, magic) if ui_manager else null,
+		func(): ui_manager.hide_terrain_selection() if ui_manager else null,
+		func(tile_idx): ui_manager.show_action_menu(tile_idx) if ui_manager else null,
+		func(element): ui_manager.highlight_terrain_button(element) if ui_manager else null,
+	)
 
 	# SpellPhaseHandlerを作成
 	var SpellPhaseHandlerClass = preload("res://scripts/game_flow/spell_phase_handler.gd")

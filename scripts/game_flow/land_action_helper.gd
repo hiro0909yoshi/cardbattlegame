@@ -53,8 +53,8 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
-	if handler.ui_manager and handler.ui_manager.player_info_service:
-		handler.ui_manager.player_info_service.update_panels()
+	if handler._player_info_service:
+		handler._player_info_service.update_panels()
 
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
@@ -103,12 +103,12 @@ static func execute_level_up(handler) -> bool:
 	handler.current_level_selection_index = 0
 	
 	#　 Phase 1-A: レベル選択UIを表示
-	if handler.ui_manager and handler.ui_manager.has_method("show_level_selection"):
+	if handler._show_level_selection_cb.is_valid():
 		var p_system = handler.player_system
 		var current_player = p_system.get_current_player() if p_system else null
 		var player_magic = current_player.magic_power if current_player else 0
 
-		handler.ui_manager.show_level_selection(handler.selected_tile_index, tile.level, player_magic)
+		handler._show_level_selection_cb.call(handler.selected_tile_index, tile.level, player_magic)
 
 	# ナビゲーションボタン設定（レベル選択用）
 	if handler._navigation_service:
@@ -171,8 +171,8 @@ static func execute_move_creature(handler) -> bool:
 	var first_dest = handler.move_destinations[handler.current_destination_index]
 
 	# アクションメニューを閉じる
-	if handler.ui_manager:
-		handler.ui_manager.hide_action_menu_keep_buttons()
+	if handler._hide_action_menu_keep_buttons_cb.is_valid():
+		handler._hide_action_menu_keep_buttons_cb.call()
 	
 	# マーカーを最初の移動先に表示
 	TargetSelectionHelper.show_selection_marker(handler, first_dest)
@@ -264,8 +264,8 @@ static func execute_swap_creature(handler) -> bool:
 		handler.swap_tile_index = handler.selected_tile_index
 	
 	# アクションメニューを閉じる
-	if handler.ui_manager:
-		handler.ui_manager.hide_action_menu_keep_buttons()  # グローバルボタンはクリアしない
+	if handler._hide_action_menu_keep_buttons_cb.is_valid():
+		handler._hide_action_menu_keep_buttons_cb.call()  # グローバルボタンはクリアしない
 	
 	# ナビゲーション設定（交換選択用：戻るのみ）
 	if handler._navigation_service:
@@ -673,13 +673,13 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 			pass  # 不屈スキル保持のためダウンしない
 	
 	# UI更新
-	if handler.ui_manager and handler.ui_manager.player_info_service:
-		handler.ui_manager.player_info_service.update_panels()
+	if handler._player_info_service:
+		handler._player_info_service.update_panels()
 
 	# 地形選択パネルを閉じる
-	if handler.ui_manager:
-		handler.ui_manager.hide_terrain_selection()
-	
+	if handler._hide_terrain_selection_cb.is_valid():
+		handler._hide_terrain_selection_cb.call()
+
 	# ドミニオコマンド使用コメント表示（TileActionProcessorに委譲）
 	if handler.board_system and handler.board_system.tile_action_processor:
 		var player_name = _get_player_name(handler)
@@ -734,13 +734,14 @@ static func execute_terrain_change(handler) -> bool:
 	var current_player = p_system.get_current_player() if p_system else null
 	var player_magic = current_player.magic_power if current_player else 0
 	
-	if handler.ui_manager:
-		handler.ui_manager.show_terrain_selection(tile_index, tile.tile_type, cost, player_magic)
+	if handler._show_terrain_selection_cb.is_valid():
+		handler._show_terrain_selection_cb.call(tile_index, tile.tile_type, cost, player_magic)
 		# 最初の選択可能な属性をハイライト
 		var first_selectable = _get_first_selectable_terrain(handler, tile.tile_type)
 		if first_selectable != "":
 			handler.current_terrain_index = handler.terrain_options.find(first_selectable)
-			handler.ui_manager.highlight_terrain_button(first_selectable)
+			if handler._highlight_terrain_button_cb.is_valid():
+				handler._highlight_terrain_button_cb.call(first_selectable)
 	
 	# ナビゲーションボタン設定（地形選択用）
 	if handler._navigation_service:
@@ -759,12 +760,12 @@ static func confirm_terrain_selection(handler):
 	var success = execute_terrain_change_with_element(handler, selected_element)
 	if not success:
 		# 地形選択パネルを閉じてアクション選択に戻す
-		if handler.ui_manager:
-			handler.ui_manager.hide_terrain_selection()
+		if handler._hide_terrain_selection_cb.is_valid():
+			handler._hide_terrain_selection_cb.call()
 		handler.current_state = handler.State.SELECTING_ACTION
 		handler.set_action_selection_navigation()
-		if handler.ui_manager:
-			handler.ui_manager.show_action_menu(handler.selected_tile_index)
+		if handler._show_action_menu_cb.is_valid():
+			handler._show_action_menu_cb.call(handler.selected_tile_index)
 
 ## 最初の選択可能な属性を取得
 static func _get_first_selectable_terrain(handler, current_element: String) -> String:
@@ -777,15 +778,16 @@ static func _get_first_selectable_terrain(handler, current_element: String) -> S
 static func _cancel_terrain_change(handler):
 	handler.terrain_change_tile_index = -1
 	handler.current_state = handler.State.SELECTING_ACTION
-	
+
 	# TileActionProcessorのフラグをリセット
 	if handler.board_system and handler.board_system.tile_action_processor:
 		handler.board_system.reset_action_processing()
-	
+
 	# 地形選択パネルを閉じてアクションメニューに戻る
-	if handler.ui_manager:
-		handler.ui_manager.hide_terrain_selection()
-		handler.ui_manager.show_action_menu(handler.selected_tile_index)
+	if handler._hide_terrain_selection_cb.is_valid():
+		handler._hide_terrain_selection_cb.call()
+	if handler._show_action_menu_cb.is_valid():
+		handler._show_action_menu_cb.call(handler.selected_tile_index)
 
 	# アクション選択用ナビゲーション（戻るのみ）- 最後に設定
 	if handler._navigation_service:
@@ -793,17 +795,17 @@ static func _cancel_terrain_change(handler):
 			Callable(),  # 決定なし
 			func(): handler.cancel()  # 戻る
 		)
-	if handler.ui_manager:
-		handler.ui_manager.show_action_menu(handler.selected_tile_index)
+	if handler._show_action_menu_cb.is_valid():
+		handler._show_action_menu_cb.call(handler.selected_tile_index)
 
 ## 地形選択UIを更新
 static func update_terrain_selection_ui(handler):
-	if not handler.ui_manager:
+	if not handler._highlight_terrain_button_cb.is_valid():
 		return
 
 	# 現在選択中の属性をハイライト
 	var current_element = handler.terrain_options[handler.current_terrain_index]
-	handler.ui_manager.highlight_terrain_button(current_element)
+	handler._highlight_terrain_button_cb.call(current_element)
 
 
 # ============================================

@@ -70,7 +70,6 @@ func set_boulder_eater_move(enabled: bool):
 var land_info_panel = null
 
 ## 参照
-var ui_manager = null
 var board_system = null
 var game_flow_manager = null
 var game_3d_ref = null  # game_3d直接参照（get_parent()チェーン廃止用）
@@ -85,6 +84,17 @@ var _navigation_service = null
 var _card_selection_service = null
 var _info_panel_service = null
 var _dominio_order_ui = null
+var _player_info_service = null
+var _ui_layer = null  # Phase B: ui_layer 直接参照
+
+# Phase B: UI Callable 注入（ui_manager 直接参照の解消）
+var _hide_dominio_button_cb: Callable = Callable()
+var _show_level_selection_cb: Callable = Callable()
+var _hide_action_menu_keep_buttons_cb: Callable = Callable()
+var _show_terrain_selection_cb: Callable = Callable()
+var _hide_terrain_selection_cb: Callable = Callable()
+var _show_action_menu_cb: Callable = Callable()
+var _highlight_terrain_button_cb: Callable = Callable()
 
 # === 直接参照（GFM経由を廃止） ===
 var spell_world_curse = null  # SpellWorldCurse: 世界呪い
@@ -103,6 +113,24 @@ func set_dominio_order_ui(dou) -> void:
 		if not _dominio_order_ui.level_up_selected.is_connected(_on_level_up_selected):
 			_dominio_order_ui.level_up_selected.connect(_on_level_up_selected)
 
+## Phase B: UI Callable 一括注入
+func inject_ui_callbacks(
+	hide_dominio_button_cb: Callable,
+	show_level_selection_cb: Callable,
+	hide_action_menu_keep_buttons_cb: Callable,
+	show_terrain_selection_cb: Callable,
+	hide_terrain_selection_cb: Callable,
+	show_action_menu_cb: Callable,
+	highlight_terrain_button_cb: Callable,
+) -> void:
+	_hide_dominio_button_cb = hide_dominio_button_cb
+	_show_level_selection_cb = show_level_selection_cb
+	_hide_action_menu_keep_buttons_cb = hide_action_menu_keep_buttons_cb
+	_show_terrain_selection_cb = show_terrain_selection_cb
+	_hide_terrain_selection_cb = hide_terrain_selection_cb
+	_show_action_menu_cb = show_action_menu_cb
+	_highlight_terrain_button_cb = highlight_terrain_button_cb
+
 
 func _ready():
 	pass
@@ -113,14 +141,14 @@ func _process(delta):
 
 ## 初期化
 func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
-	ui_manager = ui_mgr
-
-	# サービス解決
+	# サービス解決（Phase B: ui_manager 変数を保持せず、サービスのみ解決）
 	if ui_mgr:
 		_message_service = ui_mgr.message_service if ui_mgr.get("message_service") else null
 		_navigation_service = ui_mgr.navigation_service if ui_mgr.get("navigation_service") else null
 		_card_selection_service = ui_mgr.card_selection_service if ui_mgr.get("card_selection_service") else null
 		_info_panel_service = ui_mgr.info_panel_service if ui_mgr.get("info_panel_service") else null
+		_player_info_service = ui_mgr.player_info_service if ui_mgr.get("player_info_service") else null
+		_ui_layer = ui_mgr.ui_layer if ui_mgr.get("ui_layer") else null
 
 	board_system = board_sys
 	game_flow_manager = flow_mgr
@@ -129,7 +157,7 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 	# player_systemが渡されない場合はboard_systemから取得
 	if not player_system and board_system:
 		player_system = board_system.player_system
-	
+
 	# 子コンポーネント参照のキャッシュ
 	if board_system and board_system.get("battle_system"):
 		battle_system = board_system.battle_system
@@ -139,9 +167,9 @@ func initialize(ui_mgr, board_sys, flow_mgr, player_sys = null):
 
 	# Phase 1-A: dominio_order_ui のシグナルを接続（遅延取得）
 	# _dominio_order_ui は open_dominio_order() 時に利用可能になる
-	
+
 	# 土地情報パネルを初期化
-	_setup_land_info_panel()
+	_setup_land_info_panel(ui_mgr)
 
 ## game_3d参照を設定（TutorialManager取得用）
 func set_game_3d_ref(p_game_3d) -> void:
@@ -168,8 +196,8 @@ func open_dominio_order(player_id: int):
 		return
 	
 	# ドミニオボタンを非表示（ドミニオコマンド中は表示しない）
-	if ui_manager and ui_manager.has_method("hide_dominio_order_button"):
-		ui_manager.hide_dominio_order_button()
+	if _hide_dominio_button_cb.is_valid():
+		_hide_dominio_button_cb.call()
 	
 	# カード選択UIを無効化
 	if _card_selection_service:
@@ -870,21 +898,22 @@ func execute_terrain_change() -> bool:
 
 
 ## 土地情報パネルの初期化
-func _setup_land_info_panel():
+func _setup_land_info_panel(ui_mgr = null):
 	if land_info_panel:
 		return
-	
+
 	var ActionMenuUIClass = load("res://scripts/ui_components/action_menu_ui.gd")
 	if not ActionMenuUIClass:
 		return
-	
+
 	land_info_panel = ActionMenuUIClass.new()
 	land_info_panel.name = "LandInfoPanel"
 	land_info_panel.set_position_left(false)  # 右側（上下ボタンの左）に配置
-	
-	if ui_manager:
-		land_info_panel.set_ui_manager(ui_manager)
-		ui_manager.ui_layer.add_child(land_info_panel)
+
+	if ui_mgr:
+		land_info_panel.set_ui_manager(ui_mgr)
+	if _ui_layer:
+		_ui_layer.add_child(land_info_panel)
 
 # ============================================================
 # CPU用インターフェース
@@ -1077,8 +1106,8 @@ func _complete_swap_for_cpu(_success: bool):
 	selected_tile_index = -1
 	
 	# UI更新
-	if ui_manager and ui_manager.player_info_service:
-		ui_manager.player_info_service.update_panels()
+	if _player_info_service:
+		_player_info_service.update_panels()
 
 	# アクション完了通知
 	if board_system and board_system.tile_action_processor:

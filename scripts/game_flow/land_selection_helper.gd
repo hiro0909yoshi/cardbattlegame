@@ -66,8 +66,8 @@ static func confirm_land_selection(handler) -> bool:
 	handler.land_selected.emit(handler.selected_tile_index)
 	
 	# アクション選択UIを表示（ナビゲーションはActionMenuUI内で設定される）
-	if handler.ui_manager and handler.ui_manager.has_method("show_action_menu"):
-		handler.ui_manager.show_action_menu(handler.selected_tile_index)
+	if handler._show_action_menu_cb.is_valid():
+		handler._show_action_menu_cb.call(handler.selected_tile_index)
 	
 	return true
 
