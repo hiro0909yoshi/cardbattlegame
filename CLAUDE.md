@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ✅ 最近完了した作業（2026-02-18）
+## ✅ 最近完了した作業（2026-02-20）
 
-**Phase 0-8A: アーキテクチャ移行 + UI層分離 + UIManager依存正規化（進行中）**
+**Phase 0-10D: アーキテクチャ移行 + UI層分離 + UIManager依存正規化（完了）**
 
 - ✅ **Phase 0**: ツリー構造定義（TREE_STRUCTURE.md, dependency_map.md 作成）
 - ✅ **Phase 1**: SpellSystemManager 導入（10+2個のスペルシステムを一元管理）
@@ -60,6 +60,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Signal 1追加（dominio_cancel_requested）、Callable 11追加
   - GSM `_setup_ui_callbacks()` メソッド新設
   - 潜在バグ修正: DominioOrderUI DCH null参照
+- ✅ **Phase 10-D**: GFM → UI 呼び出しを Callable 化（2026-02-20）✅ **完了**
+  - GFM 内の全15箇所の ui_manager 直接呼び出しを Callable に変更
+  - 10個の UI操作 Callable 変数追加（_ui_set_current_turn_cb 等）
+  - GSM の inject_ui_callbacks() で Callable 一括注入
+  - back-ref 設定を GFM から GSM に移動（初期化フロー明確化）
+  - GFM の ui_manager 直接参照を完全に除去（setup時のみ参照）
 
 詳細は `docs/progress/refactoring_next_steps.md` を参照
 
