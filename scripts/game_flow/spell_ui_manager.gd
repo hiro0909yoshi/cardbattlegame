@@ -300,11 +300,10 @@ func initialize_spell_cast_notification_ui() -> void:
 	_spell_cast_notification_ui = SpellCastNotificationUI.new()
 	_spell_cast_notification_ui.name = "SpellCastNotificationUI"
 
-	if _ui_manager:
-		_ui_manager.add_child(_spell_cast_notification_ui)
-	else:
-		if _spell_phase_handler:
-			_spell_phase_handler.add_child(_spell_cast_notification_ui)
+	if _ui_manager and _ui_manager.ui_layer:
+		_ui_manager.ui_layer.add_child(_spell_cast_notification_ui)
+	elif _spell_phase_handler:
+		_spell_phase_handler.add_child(_spell_cast_notification_ui)
 
 ## スペル/アルカナアーツ発動通知を表示（クリック待ち）
 func show_spell_cast_notification(caster_name: String, target_data: Dictionary, spell_or_mystic: Dictionary, is_mystic: bool = false):

@@ -929,15 +929,6 @@ func _initialize_phase1a_handlers() -> void:
 	if game_flow_manager and game_flow_manager.target_selection_helper:
 		spell_phase_handler.target_selection_helper = game_flow_manager.target_selection_helper
 
-	# Day 3: spell_used と item_used シグナルをGameFlowManagerに接続
-	if spell_phase_handler and not spell_phase_handler.spell_used.is_connected(game_flow_manager._on_spell_used):
-		spell_phase_handler.spell_used.connect(game_flow_manager._on_spell_used)
-		print("[GameSystemManager] SpellPhaseHandler → GameFlowManager spell_used 接続完了")
-
-	if item_phase_handler and not item_phase_handler.item_used.is_connected(game_flow_manager._on_item_used):
-		item_phase_handler.item_used.connect(game_flow_manager._on_item_used)
-		print("[GameSystemManager] ItemPhaseHandler → GameFlowManager item_used 接続完了")
-
 	# Phase 10-C: DominioOrderUI に DCH を直接注入（初期化順序バグ修正）
 	if ui_manager and ui_manager.dominio_order_ui:
 		ui_manager.dominio_order_ui.dominio_command_handler = dominio_command_handler

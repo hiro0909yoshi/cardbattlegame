@@ -889,7 +889,7 @@ func _setup_land_info_panel():
 	
 	if ui_manager:
 		land_info_panel.set_ui_manager(ui_manager)
-		ui_manager.add_child(land_info_panel)
+		ui_manager.ui_layer.add_child(land_info_panel)
 
 # ============================================================
 # CPU用インターフェース

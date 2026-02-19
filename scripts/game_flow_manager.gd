@@ -386,23 +386,6 @@ func _on_warp_executed_from_board(player_id: int, from_tile: int, to_tile: int):
 	# ワープ処理は既に完了しているため、ログのみ
 	# 必要に応じてスペルハンドラーなどに通知
 
-func _on_spell_used(spell_card: Dictionary):
-	# デバッグログ
-	print("[GameFlowManager] spell_used 受信: spell=%s" % spell_card.get("name", ""))
-
-	# UIManager へリレー（必要に応じて）
-	if ui_manager and ui_manager.has_method("on_spell_used"):
-		ui_manager.on_spell_used(spell_card)
-
-func _on_item_used(item_card: Dictionary):
-	# デバッグログ
-	print("[GameFlowManager] item_used 受信: item=%s" % item_card.get("name", ""))
-
-	# UIManager へリレー（必要に応じて）
-	if ui_manager and ui_manager.has_method("on_item_used"):
-		ui_manager.on_item_used(item_card)
-
-
 # === UIコールバック ===
 
 func on_card_selected(card_index: int):

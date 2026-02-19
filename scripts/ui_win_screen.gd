@@ -58,7 +58,7 @@ func show_win_screen(player_id: int):
 	win_label.scale = Vector2(0.5, 0.5)
 	win_label.pivot_offset = win_label.size / 2
 
-	var tween = ui_manager.create_tween()
+	var tween = win_panel.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(win_panel, "modulate:a", 1.0, 0.5)
 	tween.tween_property(win_label, "scale", Vector2(1.0, 1.0), 0.5).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
@@ -111,7 +111,7 @@ func show_lose_screen_async(player_id: int):
 
 	lose_panel.modulate.a = 0
 
-	var tween = ui_manager.create_tween()
+	var tween = lose_panel.create_tween()
 	tween.tween_property(lose_panel, "modulate:a", 1.0, 0.5)
 
 	print("[UIManager] 敗北画面表示: プレイヤー", player_id + 1)
@@ -124,5 +124,5 @@ func show_lose_screen_async(player_id: int):
 ## クリック待ち
 func _wait_for_click():
 	print("[UIManager] クリック待ち開始")
-	await ui_manager.get_tree().create_timer(2.0).timeout
+	await ui_manager.ui_layer.get_tree().create_timer(2.0).timeout
 	print("[UIManager] クリック待ち完了")

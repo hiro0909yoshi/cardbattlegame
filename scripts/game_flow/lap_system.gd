@@ -81,8 +81,9 @@ func setup_ui():
 	signal_display_label.grow_vertical = Control.GROW_DIRECTION_BOTH
 	signal_display_label.visible = false
 	signal_display_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# UIツリー操作は UIManager 経由
-	ui_manager.add_child(signal_display_label)
+	# UIツリー操作は ui_layer 経由
+	if ui_manager.ui_layer:
+		ui_manager.ui_layer.add_child(signal_display_label)
 
 ## シグナル/周回数を画面中央に大きく表示
 func _show_signal_display(signal_type: String):

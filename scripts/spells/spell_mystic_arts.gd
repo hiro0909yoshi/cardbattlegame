@@ -377,7 +377,8 @@ func _select_mystic_art_from_creature_tap(selected_creature: Dictionary) -> void
 		action_menu.set_ui_manager(ui_manager)
 		action_menu.set_menu_size(650, 850, 130, 44, 40)
 		action_menu.set_position_left(false)
-		ui_manager.add_child(action_menu)
+		if ui_manager.ui_layer:
+			ui_manager.ui_layer.add_child(action_menu)
 	
 	# アルカナアーツメニュー項目を作成
 	var menu_items: Array = []
