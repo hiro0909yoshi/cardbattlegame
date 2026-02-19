@@ -72,6 +72,18 @@ var _input_locked: bool = false
 # TutorialManager取得用Callable（外部から注入）
 var _get_tutorial_manager_cb: Callable = Callable()
 
+# UI操作用Callable（GSMから注入）
+var _ui_set_current_turn_cb: Callable = Callable()
+var _ui_set_phase_text_cb: Callable = Callable()
+var _ui_update_panels_cb: Callable = Callable()
+var _ui_close_all_panels_cb: Callable = Callable()
+var _ui_show_dominio_btn_cb: Callable = Callable()
+var _ui_hide_dominio_btn_cb: Callable = Callable()
+var _ui_show_card_selection_cb: Callable = Callable()
+var _ui_hide_card_selection_cb: Callable = Callable()
+var _ui_enable_navigation_cb: Callable = Callable()
+var _ui_update_ui_cb: Callable = Callable()
+
 # 周回管理システム（ファサード方式: lap_systemに直接アクセス）
 var lap_system: LapSystem = null
 signal lap_completed(player_id: int)
@@ -134,11 +146,7 @@ func setup_systems(p_system, c_system, _b_system, s_system, ui_system,
 	ui_manager = ui_system
 	battle_system = bt_system
 	special_tile_system = st_system
-	
-	# UIManagerに自身の参照を渡す
-	if ui_manager:
-		ui_manager.game_flow_manager_ref = self
-	
+
 	# BattleSystemに自身の参照を渡す
 	if battle_system:
 		battle_system.game_flow_manager_ref = self
@@ -245,12 +253,12 @@ func start_turn():
 	emit_signal("turn_started", current_player.id)
 	
 	# UI更新：順番アイコンを設定
-	if ui_manager:
-		ui_manager.set_current_turn(current_player.id)
+	if _ui_set_current_turn_cb.is_valid():
+		_ui_set_current_turn_cb.call(current_player.id)
 	
 	# Phase 1-A: ターン開始時はドミニオコマンドボタンを隠す
-	if ui_manager:
-		ui_manager.hide_dominio_order_button()
+	if _ui_hide_dominio_btn_cb.is_valid():
+		_ui_hide_dominio_btn_cb.call()
 	
 	# カードドロー処理（常に1枚引く）
 	# チュートリアルモードではドローをスキップ
@@ -266,10 +274,8 @@ func start_turn():
 	await check_and_handle_bankruptcy()
 	
 	# UI更新
-	if ui_manager and ui_manager.player_info_service:
-		ui_manager.player_info_service.update_panels()
-	else:
-		push_error("[GFM] player_info_service が利用不可")
+	if _ui_update_panels_cb.is_valid():
+		_ui_update_panels_cb.call()
 	
 	# スペルフェーズを開始
 	if spell_phase_handler:
@@ -289,13 +295,15 @@ func start_turn():
 	# CPUターンの場合（デバッグモードでは無効化可能）
 	var is_cpu_turn = current_player.id < player_is_cpu.size() and player_is_cpu[current_player.id] and not DebugSettings.manual_control_all
 	if is_cpu_turn:
-		ui_manager.set_phase_text("CPUのターン...")
+		if _ui_set_phase_text_cb.is_valid():
+			_ui_set_phase_text_cb.call("CPUのターン...")
 		change_phase(GamePhase.DICE_ROLL)
 		await get_tree().create_timer(1.0).timeout
 		roll_dice()
 	else:
 		change_phase(GamePhase.DICE_ROLL)
-		ui_manager.set_phase_text("サイコロを振ってください")
+		if _ui_set_phase_text_cb.is_valid():
+			_ui_set_phase_text_cb.call("サイコロを振ってください")
 		
 		# カメラを手動モードに設定（マップ確認可能にする）
 		board_system_3d.enable_manual_camera()
@@ -306,8 +314,8 @@ func start_turn():
 ## ダイスフェーズ用ナビゲーション設定（決定ボタンでサイコロを振る）
 func _setup_dice_phase_navigation():
 	print("[GameFlowManager] _setup_dice_phase_navigation called")
-	if ui_manager:
-		ui_manager.enable_navigation(
+	if _ui_enable_navigation_cb.is_valid():
+		_ui_enable_navigation_cb.call(
 			func(): roll_dice(),  # 決定 = サイコロを振る
 			Callable()            # 戻るなし
 		)
@@ -365,16 +373,16 @@ func _on_level_up_completed_from_board(tile_index: int, new_level: int):
 		dominio_command_handler._on_level_up_completed(tile_index, new_level)
 
 	# UI更新
-	if ui_manager and ui_manager.player_info_service:
-		ui_manager.player_info_service.update_panels()
+	if _ui_update_panels_cb.is_valid():
+		_ui_update_panels_cb.call()
 
 func _on_terrain_changed_from_board(tile_index: int, old_element: String, new_element: String):
 	# デバッグログ
 	print("[GameFlowManager] terrain_changed 受信: tile=%d, %s → %s" % [tile_index, old_element, new_element])
 
 	# UI更新やスペルハンドラーへの通知が必要な場合はここに追加
-	if ui_manager and ui_manager.player_info_service:
-		ui_manager.player_info_service.update_panels()
+	if _ui_update_panels_cb.is_valid():
+		_ui_update_panels_cb.call()
 
 func _on_start_passed_from_board(player_id: int):
 	# デバッグログ
@@ -447,8 +455,8 @@ func change_phase(new_phase: GamePhase):
 		update_ui()
 
 	# 全てのインフォパネルを閉じる
-	if ui_manager:
-		ui_manager.close_all_info_panels()
+	if _ui_close_all_panels_cb.is_valid():
+		_ui_close_all_panels_cb.call()
 
 	# カメラモード切り替え
 	_update_camera_mode(new_phase)
@@ -471,9 +479,10 @@ func end_turn():
 	if dominio_command_handler and dominio_command_handler.current_state != dominio_command_handler.State.CLOSED:
 		dominio_command_handler.close_dominio_order()
 	
-	if ui_manager:
-		ui_manager.hide_dominio_order_button()
-		ui_manager.hide_card_selection_ui()
+	if _ui_hide_dominio_btn_cb.is_valid():
+		_ui_hide_dominio_btn_cb.call()
+	if _ui_hide_card_selection_cb.is_valid():
+		_ui_hide_card_selection_cb.call()
 	
 	var current_player = player_system.get_current_player()
 	print("ターン終了: プレイヤー", current_player.id + 1)
@@ -577,8 +586,9 @@ func on_player_defeated(reason: String = ""):
 
 # UI更新
 func update_ui():
-	var current_player = player_system.get_current_player()
-	ui_manager.update_ui(current_player, current_phase)
+	if _ui_update_ui_cb.is_valid():
+		var current_player = player_system.get_current_player()
+		_ui_update_ui_cb.call(current_player, current_phase)
 
 
 # === 敵地判定・通行料支払い ===
@@ -674,19 +684,21 @@ func _on_dominio_command_closed():
 
 # カード選択UIを再初期化（遅延実行用）
 func _reinitialize_card_selection():
-	if ui_manager:
-		var current_player = player_system.get_current_player()
-		if current_player:
-			# TileActionProcessorのフラグを再設定（召喚フェーズに戻る）
-			if board_system_3d and board_system_3d.tile_action_processor:
-				board_system_3d.tile_action_processor.begin_action_processing()
-			
-			# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
-			ui_manager.hide_card_selection_ui()
-			ui_manager.show_card_selection_ui(current_player)
-			
-			# ドミニオコマンドボタンも再表示
-			ui_manager.show_dominio_order_button()
+	var current_player = player_system.get_current_player()
+	if current_player:
+		# TileActionProcessorのフラグを再設定（召喚フェーズに戻る）
+		if board_system_3d and board_system_3d.tile_action_processor:
+			board_system_3d.tile_action_processor.begin_action_processing()
+
+		# カード選択UIを完全に再初期化（一度非表示にしてから再表示）
+		if _ui_hide_card_selection_cb.is_valid():
+			_ui_hide_card_selection_cb.call()
+		if _ui_show_card_selection_cb.is_valid():
+			_ui_show_card_selection_cb.call(current_player)
+
+		# ドミニオコマンドボタンも再表示
+		if _ui_show_dominio_btn_cb.is_valid():
+			_ui_show_dominio_btn_cb.call()
 			
 
 # Phase 1-A: ドミニオコマンドを開く
@@ -771,6 +783,19 @@ func is_input_locked() -> bool:
 ## TutorialManager取得Callableを外部から設定
 func set_tutorial_manager_getter(getter: Callable) -> void:
 	_get_tutorial_manager_cb = getter
+
+## UI操作Callableを一括注入（GSMから呼ばれる）
+func inject_ui_callbacks(callbacks: Dictionary) -> void:
+	_ui_set_current_turn_cb = callbacks.get("set_current_turn", Callable())
+	_ui_set_phase_text_cb = callbacks.get("set_phase_text", Callable())
+	_ui_update_panels_cb = callbacks.get("update_panels", Callable())
+	_ui_close_all_panels_cb = callbacks.get("close_all_panels", Callable())
+	_ui_show_dominio_btn_cb = callbacks.get("show_dominio_btn", Callable())
+	_ui_hide_dominio_btn_cb = callbacks.get("hide_dominio_btn", Callable())
+	_ui_show_card_selection_cb = callbacks.get("show_card_selection", Callable())
+	_ui_hide_card_selection_cb = callbacks.get("hide_card_selection", Callable())
+	_ui_enable_navigation_cb = callbacks.get("enable_navigation", Callable())
+	_ui_update_ui_cb = callbacks.get("update_ui", Callable())
 
 # ============================================================
 # チュートリアルモード判定

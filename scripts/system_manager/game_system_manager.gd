@@ -1699,10 +1699,31 @@ func _setup_ui_callbacks(
 	if not p_ui_manager:
 		return
 
+	# === Item 4: GFM → UI Callable 注入 ===
+	if p_game_flow_manager and p_ui_manager:
+		p_game_flow_manager.inject_ui_callbacks({
+			"set_current_turn": func(id): p_ui_manager.set_current_turn(id),
+			"set_phase_text": func(text): p_ui_manager.set_phase_text(text),
+			"update_panels": func():
+				if p_ui_manager.player_info_service:
+					p_ui_manager.player_info_service.update_panels(),
+			"close_all_panels": func(): p_ui_manager.close_all_info_panels(),
+			"show_dominio_btn": func(): p_ui_manager.show_dominio_order_button(),
+			"hide_dominio_btn": func(): p_ui_manager.hide_dominio_order_button(),
+			"show_card_selection": func(player): p_ui_manager.show_card_selection_ui(player),
+			"hide_card_selection": func(): p_ui_manager.hide_card_selection_ui(),
+			"enable_navigation": func(confirm, back): p_ui_manager.enable_navigation(confirm, back),
+			"update_ui": func(player, phase): p_ui_manager.update_ui(player, phase),
+		})
+
 	# === UIManager Callable 注入 ===
 	if p_game_flow_manager:
 		p_ui_manager._is_input_locked_cb = Callable(p_game_flow_manager, "is_input_locked")
 		# NOTE: _on_card_selected_cb, _spell_card_selecting_cb は EventHub 移行済み（Phase 11）
+
+	# GFM→UIManager back-ref: GSMで設定に移動
+	if p_game_flow_manager:
+		p_ui_manager.game_flow_manager_ref = p_game_flow_manager
 
 	if p_board_system_3d:
 		p_ui_manager._has_owned_lands_cb = func() -> bool:
