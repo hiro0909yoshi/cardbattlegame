@@ -44,7 +44,6 @@ func set_spell_cost_modifier(cost_modifier) -> void:
 
 ## 召喚実行
 func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui_callback: Callable):
-	print("[TileSummonExecutor] execute_summon開始: card_index=%d" % card_index)
 	var tap = _get_tile_action_processor()
 	var remote_placement_tile = tap.remote_placement_tile if tap else -1
 	
@@ -54,7 +53,6 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	
 	var current_player_index = board_system.current_player_index
 	var card_data = card_system.get_card_data_for_player(current_player_index, card_index)
-	print("[TileSummonExecutor] カード取得: %s" % card_data.get("name", "?"))
 	
 	if card_data.is_empty():
 		complete_callback.call()
@@ -177,7 +175,6 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 			_card_selection_service.hide_card_selection_ui()
 		if ui_manager and ui_manager.player_info_service:
 			ui_manager.player_info_service.update_panels()
-		print("[TileSummonExecutor] execute_summon完了")
 		complete_callback.call()
 	else:
 		print("EP不足で召喚できません")

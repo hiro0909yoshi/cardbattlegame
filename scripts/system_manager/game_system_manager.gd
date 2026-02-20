@@ -387,7 +387,6 @@ func phase_4_setup_system_interconnections() -> void:
 		# start_passed (Day 3)
 		if not board_system_3d.start_passed.is_connected(game_flow_manager._on_start_passed_from_board):
 			board_system_3d.start_passed.connect(game_flow_manager._on_start_passed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager start_passed 接続完了")
 
 		# warp_executed (Day 3)
 		if not board_system_3d.warp_executed.is_connected(game_flow_manager._on_warp_executed_from_board):
@@ -399,7 +398,6 @@ func phase_4_setup_system_interconnections() -> void:
 		# start_passed
 		if not board_system_3d.movement_controller.start_passed.is_connected(board_system_3d._on_start_passed):
 			board_system_3d.movement_controller.start_passed.connect(board_system_3d._on_start_passed)
-			print("[GameSystemManager] MovementController3D → BoardSystem3D start_passed 接続完了")
 
 		# warp_executed
 		if not board_system_3d.movement_controller.warp_executed.is_connected(board_system_3d._on_warp_executed):
@@ -611,7 +609,6 @@ func _setup_phase_4_creature_signals() -> void:
 	if board_system_3d and game_flow_manager:
 		if not board_system_3d.creature_updated.is_connected(game_flow_manager._on_creature_updated_from_board):
 			board_system_3d.creature_updated.connect(game_flow_manager._on_creature_updated_from_board)
-			print("[GameSystemManager] creature_updated → GFM 接続完了")
 		else:
 			push_warning("[GameSystemManager] creature_updated → GFM は既に接続済み")
 	else:
@@ -621,7 +618,6 @@ func _setup_phase_4_creature_signals() -> void:
 	if game_flow_manager and ui_manager:
 		if not game_flow_manager.creature_updated_relay.is_connected(ui_manager.on_creature_updated):
 			game_flow_manager.creature_updated_relay.connect(ui_manager.on_creature_updated)
-			print("[GameSystemManager] creature_updated_relay → UI 接続完了")
 		else:
 			push_warning("[GameSystemManager] creature_updated_relay → UI は既に接続済み")
 	else:

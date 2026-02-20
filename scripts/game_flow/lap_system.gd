@@ -109,7 +109,6 @@ func _show_signal_display(signal_type: String):
 ## コメントを表示してクリック待ち（MessageServiceに委譲）
 ## player_id: 明示的にプレイヤーIDを指定（CPU判定に使用）
 func _show_comment_and_wait(message: String, player_id: int = -1):
-	print("[LapSystem] _show_comment_and_wait: ", message, " (player_id: %d)" % player_id)
 	is_showing_notification = true
 	if _message_service:
 		await _message_service.show_comment_and_wait(message, player_id, true)
@@ -177,7 +176,7 @@ func _reinitialize_player_states():
 ## CPU の方向選択ロジックが誤動作する原因となる
 func on_start_passed(player_id: int):
 	# デバッグログのみ
-	print("[LapSystem] start_passed 受信: player_id=%d（リセット処理は complete_lap()で実行済み）" % player_id)
+	pass
 
 ## CheckpointTileのシグナルを接続
 func connect_checkpoint_signals():
