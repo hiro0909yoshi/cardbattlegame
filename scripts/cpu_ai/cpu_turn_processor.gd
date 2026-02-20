@@ -145,10 +145,10 @@ func _analyze_tile_situation(tile_info: Dictionary, player_index: int) -> String
 	# 特殊タイル（チェックポイント、ワープ等）は召喚不可
 	if tile_info.get("is_special", false):
 		return "special_tile"
-	
+
 	if tile_info["owner"] == -1:
 		return "empty_land"
-	elif tile_info["owner"] == player_index:
+	elif tile_info["owner"] == player_index or player_system.is_same_team(player_index, tile_info["owner"]):
 		return "own_land"
 	elif tile_info.get("creature", {}).is_empty():
 		return "enemy_land_empty"

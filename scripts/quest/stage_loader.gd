@@ -424,3 +424,7 @@ func get_map_data() -> Dictionary:
 ## ステージデータを取得（リザルト処理等で使用）
 func get_stage_data() -> Dictionary:
 	return current_stage_data
+
+## チーム配列を取得（未設定時は空配列を返す）
+func get_teams() -> Array:
+	return current_stage_data.get("teams", [])

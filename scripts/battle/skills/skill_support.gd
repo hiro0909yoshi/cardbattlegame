@@ -97,8 +97,8 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 					if applied_support[i].has(supporter_id):
 						continue  # このクリーチャーIDは既に適用済み
 				
-				if _check_support_target(participant, target, supporter_player_id):
-					_apply_support_bonus(participant, bonus, supporter_creature.get("name", "?"), 
+				if _check_support_target(participant, target, supporter_player_id, board_system):
+					_apply_support_bonus(participant, bonus, supporter_creature.get("name", "?"),
 										battle_tile_index, participant.player_id, board_system)
 					
 					# 適用済みとしてマーク
@@ -114,8 +114,9 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 ## @param participant: バトル参加者
 ## @param target: 対象条件の辞書
 ## @param supporter_player_id: 応援者のプレイヤーID
+## @param board_system: BoardSystemへの参照（team_system チェック用）
 ## @return bool: 対象になる場合はtrue
-static func _check_support_target(participant: BattleParticipant, target: Dictionary, supporter_player_id: int) -> bool:
+static func _check_support_target(participant: BattleParticipant, target: Dictionary, supporter_player_id: int, board_system) -> bool:
 	var scope = target.get("scope", "")
 	var conditions = target.get("conditions", [])
 	
@@ -163,11 +164,14 @@ static func _check_support_target(participant: BattleParticipant, target: Dictio
 			if creature_race != required_race:
 				return false
 		
-		# 所有者一致条件（自クリーチャー）
+		# 所有者一致条件（自クリーチャー/チーム対応）
 		elif condition_type == "owner_match":
-			# 応援者と対象が同じプレイヤーIDか判定
-			if participant.player_id != supporter_player_id:
+			# チームシステムを使用した判定（FFA時は自分自身のみマッチ）
+			var _ps = board_system.get_meta("player_system") if board_system and board_system.has_meta("player_system") else null
+			if _ps and not _ps.is_same_team(participant.player_id, supporter_player_id):
 				return false
+			elif not _ps and participant.player_id != supporter_player_id:
+				return false  # フォールバック（player_system 未設定時）
 	
 	return true
 

@@ -206,8 +206,8 @@ func _evaluate_invasion(context: Dictionary) -> Array:
 	if tile == null:
 		return options
 	
-	# 敵ドミニオでない場合はスキップ
-	if tile.owner_id == -1 or tile.owner_id == player_id:
+	# 敵ドミニオでない場合はスキップ（同盟も除外）
+	if tile.owner_id == -1 or tile.owner_id == player_id or (_context and _context.player_system and _context.player_system.is_same_team(player_id, tile.owner_id)):
 		return options
 	
 	# クリーチャーがいない場合はスキップ
@@ -284,15 +284,15 @@ func _evaluate_move_invasion(context: Dictionary) -> Array:
 func _evaluate_move_destination(context: Dictionary, from_land: Dictionary, dest_tile) -> Dictionary:
 	var player_id = context.get("player_id", -1)
 	var creature_element = from_land.creature_data.get("element", "")
-	
+
 	# 空き地の場合
 	if dest_tile.owner_id == -1:
 		return _evaluate_move_to_vacant(from_land, dest_tile, player_id, creature_element)
-	
-	# 敵ドミニオの場合
-	if dest_tile.owner_id != player_id:
+
+	# 敵ドミニオの場合（同盟を除外）
+	if dest_tile.owner_id != player_id and not (_context and _context.player_system and _context.player_system.is_same_team(player_id, dest_tile.owner_id)):
 		return _evaluate_move_to_enemy(context, from_land, dest_tile, creature_element)
-	
+
 	return {}
 
 

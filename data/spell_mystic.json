@@ -231,13 +231,13 @@
 	},
 	{
 	  "id": 9010,
-	  "name": "MHP増加（敵味方問わず）",
+	  "name": "MHP増加（自クリーチャー）",
 	  "rarity": "N",
 	  "type": "mystic",
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "own"
 		},
 		"effects": [
 		  {
@@ -720,7 +720,7 @@
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "own"
 		},
 		"effects": [
 		  {
@@ -742,7 +742,7 @@
 	  "effect_parsed": {
 		"target_type": "creature",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "own"
 		},
 		"effects": [
 		  {
@@ -888,7 +888,7 @@
 	  "effect_parsed": {
 		"target_type": "player",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "enemy"
 		},
 		"effects": [
 		  {
@@ -950,7 +950,7 @@
 	  "effect_parsed": {
 		"target_type": "land",
 		"target_info": {
-		  "owner_filter": "any"
+		  "owner_filter": "enemy"
 		},
 		"effects": [
 		  {

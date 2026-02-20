@@ -190,52 +190,52 @@ func _check_target_condition_internal(target_condition: String, context: Diction
 func _get_creatures_by_elements(elements: Array, owner_filter: String, context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature:
 			continue
-		
+
 		var creature_element = creature.get("element", "")
 		if creature_element not in elements:
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_filter == "enemy" and owner_id == player_id:
+		if owner_filter == "enemy" and player_system.is_same_team(player_id, owner_id):
 			continue
-		if owner_filter == "own" and owner_id != player_id:
+		if owner_filter == "own" and not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## 所有者でクリーチャーをフィルタ
 func _get_creatures_by_owner(owner_filter: String, context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_filter == "enemy" and (owner_id == player_id or owner_id == -1):
+		if owner_filter == "enemy" and (player_system.is_same_team(player_id, owner_id) or owner_id == -1):
 			continue
-		if owner_filter == "own" and owner_id != player_id:
+		if owner_filter == "own" and not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		results.append({"type": "creature", "tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 # =============================================================================
@@ -267,26 +267,26 @@ func _get_element_mismatch_creatures(_context: Dictionary) -> Array:
 func _get_element_mismatch_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
-		
+
 		if tile_element != creature_element and tile_element != "neutral" and creature_element != "neutral":
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## 呪い付きクリーチャーを取得
@@ -308,20 +308,20 @@ func _get_cursed_creatures(_context: Dictionary) -> Array:
 func _get_cursed_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if creature and board_analyzer.has_curse(creature):
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## HP減少中のクリーチャーを取得
@@ -348,25 +348,25 @@ func _get_hp_reduced_creatures(_context: Dictionary) -> Array:
 func _get_hp_reduced_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var current_hp = creature.get("current_hp", creature.get("hp", 0))
 		var max_hp = creature.get("max_hp", creature.get("hp", 0))
 		if current_hp < max_hp:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## MHP30以下のクリーチャーを取得
@@ -392,24 +392,24 @@ func _get_low_mhp_creatures(_context: Dictionary) -> Array:
 func _get_low_mhp_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var max_hp = creature.get("max_hp", creature.get("hp", 0))
 		if max_hp <= 30:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## ダウン中かつMHP50以上のクリーチャーを取得
@@ -466,19 +466,19 @@ func _get_duplicate_creatures(_context: Dictionary) -> Array:
 func _get_duplicate_enemy_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var creature_counts = {}
 	var creature_tiles = {}
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if creature and not creature.is_empty():
 			var creature_id = creature.get("id", 0)
@@ -486,11 +486,11 @@ func _get_duplicate_enemy_creatures(context: Dictionary) -> Array:
 			if not creature_tiles.has(creature_id):
 				creature_tiles[creature_id] = []
 			creature_tiles[creature_id].append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	for creature_id in creature_counts:
 		if creature_counts[creature_id] >= 2:
 			results.append_array(creature_tiles[creature_id])
-	
+
 	return results
 
 # =============================================================================
@@ -503,31 +503,31 @@ func _get_killable_targets(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var killable = []
 	var all_enemies = []
-	
+
 	if not board_system:
 		return []
-	
+
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		
+
 		# 敵クリーチャーのみ対象
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var current_hp = creature.get("current_hp", creature.get("hp", 0))
 		var target_data = {"type": "creature", "tile_index": tile.get("index", -1), "creature": creature}
-		
+
 		all_enemies.append(target_data)
-		
+
 		if current_hp > 0 and current_hp <= damage:
 			killable.append(target_data)
-	
+
 	# 倒せるターゲットがいればそれを優先、なければ敵クリーチャー全体
 	if not killable.is_empty():
 		return killable
@@ -540,31 +540,31 @@ func _get_killable_targets_with_damage(context: Dictionary, damage: int) -> Arra
 	var player_id = context.get("player_id", 0)
 	var killable = []
 	var all_enemies = []
-	
+
 	if not board_system:
 		return []
-	
+
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		
+
 		# 敵クリーチャーのみ対象
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var current_hp = creature.get("current_hp", creature.get("hp", 0))
 		var target_data = {"type": "creature", "tile_index": tile.get("index", -1), "creature": creature}
-		
+
 		all_enemies.append(target_data)
-		
+
 		if current_hp > 0 and current_hp <= damage:
 			killable.append(target_data)
-	
+
 	# 倒せるターゲットがいればそれを優先、なければ敵クリーチャー全体
 	if not killable.is_empty():
 		return killable
@@ -601,23 +601,23 @@ func _get_most_common_element_creatures(context: Dictionary) -> Array:
 func _get_creatures_with_summon_condition(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature:
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id:
+		if player_system.is_same_team(player_id, owner_id):
 			continue  # 敵のみ
-		
+
 		if creature.get("summon_condition"):
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## 呪いもアルカナアーツも持たないクリーチャーを取得
@@ -660,23 +660,23 @@ func _get_creatures_with_mystic_arts(_context: Dictionary) -> Array:
 func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
 	const HIGH_RATE_THRESHOLD = 50  # 高レートの閾値
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		# アルカナアーツ持ちチェック
 		var has_mystic = creature.get("mystic_arts") != null
 		if not has_mystic:
@@ -687,14 +687,14 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 				if not has_mystic:
 					var keywords = ability_parsed.get("keywords", [])
 					has_mystic = "アルカナアーツ" in keywords
-		
+
 		# レートチェック
 		var rate = CardRateEvaluator.get_rate(creature)
 		var is_high_value = rate >= HIGH_RATE_THRESHOLD
-		
+
 		if has_mystic or is_high_value:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 # =============================================================================
@@ -802,7 +802,7 @@ func _get_enemy_players_with_creatures(context: Dictionary) -> Array:
 func _player_has_creatures(player_id: int) -> bool:
 	if not board_system:
 		return false
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))

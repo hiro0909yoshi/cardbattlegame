@@ -32,9 +32,10 @@ func check_and_pay_toll_on_enemy_land() -> void:
 
 	var tile_info = board_system_3d.get_tile_info(current_tile_index)
 
-	# 敵地判定：タイルの所有者が現在のプレイヤーではない場合
-	if tile_info.get("owner", -1) == -1 or tile_info.get("owner", -1) == current_player_index:
-		# 自分の土地または無所有タイル → 支払いなし
+	# 敵地判定：タイルの所有者が現在のプレイヤーではなく、かつ同盟でない場合
+	var tile_owner = tile_info.get("owner", -1)
+	if tile_owner == -1 or tile_owner == current_player_index or player_system.is_same_team(current_player_index, tile_owner):
+		# 自分の土地または同盟の土地または無所有タイル → 支払いなし
 		return
 
 	# 敵地にいる場合：通行料を計算・支払い

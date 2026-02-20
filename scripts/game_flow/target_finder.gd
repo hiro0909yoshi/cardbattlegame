@@ -134,31 +134,45 @@ static func get_valid_targets_core(systems: Dictionary, target_type: String, tar
 ## クリーチャーターゲット検索
 static func _find_creature_targets(sys_board, current_player_id: int, target_info: Dictionary) -> Array:
 	var targets = []
-	
+
 	if not sys_board:
 		return targets
-	
+
 	# タイル番号順にソート
 	var tile_indices = sys_board.tile_nodes.keys()
 	tile_indices.sort()
-	
+
 	for tile_index in tile_indices:
 		var tile_info = sys_board.get_tile_info(tile_index)
 		var creature = tile_info.get("creature", {})
 		if creature.is_empty():
 			continue
-		
+
 		var tile_owner = tile_info.get("owner", -1)
 		var tile_element = tile_info.get("element", "")
 		var tile = sys_board.tile_nodes[tile_index]
-		
+
 		# owner_filter チェック
 		var owner_filter = target_info.get("owner_filter", "enemy")
-		if owner_filter == "own" and tile_owner != current_player_id:
-			continue
-		if owner_filter == "enemy" and (tile_owner == current_player_id or tile_owner < 0):
-			continue
-		if owner_filter == "any" and tile_owner < 0:
+		if owner_filter == "own":
+			# チーム対応: is_same_team() を使用（FFA時は a == b）
+			if tile_owner >= 0 and sys_board.player_system:
+				if not sys_board.player_system.is_same_team(current_player_id, tile_owner):
+					continue
+			else:
+				if tile_owner != current_player_id:
+					continue
+		elif owner_filter == "enemy":
+			# チーム対応: 敵チームメンバーのみターゲット
+			if tile_owner < 0:
+				continue
+			if sys_board.player_system:
+				if sys_board.player_system.is_same_team(current_player_id, tile_owner):
+					continue
+			else:
+				if tile_owner == current_player_id:
+					continue
+		elif owner_filter == "any" and tile_owner < 0:
 			continue
 		
 		# creature_elements チェック（クリーチャー属性制限）
@@ -287,23 +301,25 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 ## プレイヤーターゲット検索
 static func _find_player_targets(sys_player, current_player_id: int, target_info: Dictionary) -> Array:
 	var targets = []
-	
+
 	if not sys_player:
 		return targets
-	
+
 	var target_filter = target_info.get("target_filter", "any")
-	
+
 	for player in sys_player.players:
 		var is_current = (player.id == current_player_id)
-		
+
 		var matches = false
 		if target_filter == "own":
-			matches = is_current
+			# チーム対応: is_same_team() を使用（FFA時は a == b）
+			matches = sys_player.is_same_team(current_player_id, player.id)
 		elif target_filter == "enemy":
-			matches = not is_current
+			# チーム対応: 敵チームメンバーのみターゲット
+			matches = not sys_player.is_same_team(current_player_id, player.id)
 		elif target_filter == "any":
 			matches = true
-		
+
 		if matches:
 			targets.append({
 				"type": "player",
@@ -314,7 +330,7 @@ static func _find_player_targets(sys_player, current_player_id: int, target_info
 					"id": player.id
 				}
 			})
-	
+
 	return targets
 
 
@@ -356,15 +372,25 @@ static func _find_land_targets(sys_board, sys_player, _sys_flow, spell_player_mo
 		elif has_distance_filter:
 			pass  # 距離制限がある場合は所有者チェックをスキップ
 		else:
-			# 所有者フィルター
+			# 所有者フィルター（チーム対応）
 			var matches_owner = false
 			if owner_filter == "own":
-				matches_owner = (tile_owner == current_player_id)
+				# チーム対応: is_same_team() を使用
+				if tile_owner >= 0 and sys_player:
+					matches_owner = sys_player.is_same_team(current_player_id, tile_owner)
+				else:
+					matches_owner = (tile_owner == current_player_id)
 			elif owner_filter == "enemy":
-				matches_owner = (tile_owner >= 0 and tile_owner != current_player_id)
+				# チーム対応: 敵チームメンバーのみターゲット
+				if tile_owner < 0:
+					matches_owner = false
+				elif sys_player:
+					matches_owner = not sys_player.is_same_team(current_player_id, tile_owner)
+				else:
+					matches_owner = (tile_owner != current_player_id)
 			else:
 				matches_owner = (tile_owner >= 0)
-			
+
 			if not matches_owner:
 				continue
 		

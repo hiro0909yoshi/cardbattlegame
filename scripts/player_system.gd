@@ -46,6 +46,7 @@ var debug_controller: DebugController = null
 # 外部システム参照（TEP計算用）
 var board_system_ref: BoardSystem3D = null
 var magic_stone_system_ref: MagicStoneSystem = null  # MagicStoneSystem（tiles/magic_stone_system.gd）
+var team_system = null  # TeamSystem参照（チーム判定委譲用）
 
 func _ready():
 	pass
@@ -341,6 +342,28 @@ func set_board_system(board_system) -> void:
 
 func set_magic_stone_system(stone_system) -> void:
 	magic_stone_system_ref = stone_system
+
+## TeamSystem参照を設定
+func set_team_system(ts) -> void:
+	team_system = ts
+
+# ============================================
+# チーム判定（TeamSystemへの委譲）
+# ============================================
+
+## 2人のプレイヤーが同じチームか（TeamSystemへの委譲）
+## 25+箇所の既存アクセスパターンを維持するための便宜メソッド
+## Source of Truth は TeamSystem — このメソッドは委譲するだけ
+func is_same_team(player_id_a: int, player_id_b: int) -> bool:
+	if not team_system or not team_system.has_teams():
+		return player_id_a == player_id_b  # FFA: 自分自身のみ味方
+	return team_system.are_allies(player_id_a, player_id_b)
+
+## プレイヤーが生存しているか（破産・脱落判定）
+func is_alive(player_id: int) -> bool:
+	if player_id < 0 or player_id >= players.size():
+		return false
+	return players[player_id].magic_power >= 0
 
 # ============================================
 # 魔法石操作

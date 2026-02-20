@@ -44,24 +44,24 @@ func get_own_creatures_on_board(player_id: int) -> Array:
 	var results = []
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if creature.is_empty():
 			continue
-		
+
 		results.append({
 			"tile_index": tile.get("index", -1),
 			"creature": creature,
 			"element": tile.get("element", ""),
 			"level": tile.get("level", 1)
 		})
-	
+
 	return results
 
 # =============================================================================
@@ -73,17 +73,17 @@ func get_enemy_creature_tiles(player_id: int) -> Array:
 	var results = []
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if creature.is_empty():
 			continue
-		
+
 		results.append({
 			"tile_index": tile.get("index", -1),
 			"creature": creature,
@@ -91,7 +91,7 @@ func get_enemy_creature_tiles(player_id: int) -> Array:
 			"level": tile.get("level", 1),
 			"owner": owner_id
 		})
-	
+
 	return results
 
 # =============================================================================
@@ -125,20 +125,20 @@ func get_mismatched_own_lands(player_id: int) -> Array:
 ## 指定レベル以上の敵土地を取得
 func get_enemy_lands_by_level(player_id: int, min_level: int) -> Array:
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var level = tile.get("level", 1)
 		if level >= min_level:
 			results.append(tile)
-	
+
 	return results
 
 ## 指定レベルの自ドミニオを取得
@@ -198,49 +198,49 @@ func get_empty_lands() -> Array:
 ## 地形ボーナスを持つ敵クリーチャーを取得
 func get_enemies_with_land_bonus(player_id: int) -> Array:
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature:
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id:
+		if player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
 		if tile_element == creature_element:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 ## 地形ボーナスを持たない自クリーチャーを取得
 func get_own_without_land_bonus(player_id: int) -> Array:
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
 		if tile_element != creature_element:
 			results.append({"tile_index": tile.get("index", -1), "creature": creature})
-	
+
 	return results
 
 # =============================================================================
@@ -258,17 +258,17 @@ func has_curse(creature: Dictionary) -> bool:
 func has_downed_creature(player_id: int) -> bool:
 	if not board_system:
 		return false
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile_info in tiles:
 		var owner_id = tile_info.get("owner", -1)
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var creature = tile_info.get("creature", {})
 		if creature.is_empty():
 			continue
-		
+
 		# タイルノードから直接down状態を確認
 		var tile_index = tile_info.get("index", -1)
 		if tile_index >= 0 and board_system.tile_nodes.has(tile_index):
@@ -382,7 +382,7 @@ func get_reachable_enemy_tiles(from_tile: int, player_id: int, steps: int, exact
 		
 		# 敵の土地かチェック
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
 		
 		# クリーチャーがいるかチェック

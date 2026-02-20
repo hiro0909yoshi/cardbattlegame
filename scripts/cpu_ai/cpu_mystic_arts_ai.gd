@@ -416,25 +416,26 @@ func _select_best_target_with_score(targets: Array, mystic_data: Dictionary, con
 ## ターゲットスコアを計算
 func _calculate_target_score(target: Dictionary, player_id: int, damage_value: int, is_damage_spell: bool, curse_info: Dictionary = {}, mystic_data: Dictionary = {}) -> float:
 	var score = 0.0
-	
+
 	var tile_index = target.get("tile_index", -1)
 	var creature = target.get("creature", {})
 	var tile_data = {}
-	
+
 	if tile_index >= 0 and board_system:
 		tile_data = board_system.get_tile_data(tile_index)
 		if tile_data and creature.is_empty():
 			creature = tile_data.get("creature", tile_data.get("placed_creature", {}))
-	
+
 	if creature.is_empty():
 		# 空き土地の場合は専用スコア計算
 		return _calculate_empty_land_score_for_mystic(target, tile_data, mystic_data)
-	
+
 	# 敵クリーチャーかどうか
 	var owner_id = -1
 	if tile_data:
 		owner_id = tile_data.get("owner", tile_data.get("owner_id", -1))
-	var is_enemy = owner_id != player_id and owner_id >= 0
+	var player_sys = _context.player_system if _context else null
+	var is_enemy = (not player_sys.is_same_team(player_id, owner_id)) and owner_id >= 0 if player_sys else (owner_id != player_id and owner_id >= 0)
 	
 	if is_enemy:
 		score += 1.0
@@ -518,8 +519,9 @@ func _analyze_curse_mystic(mystic_data: Dictionary) -> Dictionary:
 ## 呪い上書きスコアを計算
 func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, _spell_is_beneficial: bool) -> float:
 	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
-	
-	var is_own = (owner_id == player_id)
+
+	var player_sys = _context.player_system if _context else null
+	var is_own = player_sys.is_same_team(player_id, owner_id) if player_sys else (owner_id == player_id)
 	var score = 0.0
 	
 	if curse_benefit != 0:
@@ -557,11 +559,14 @@ func _get_condition_target_with_score(mystic_data: Dictionary, context: Dictiona
 		var mismatched = condition_checker.check_target_condition("element_mismatch_creatures", context)
 		# 自クリーチャーのみフィルタ（防御型・防魔を除外）
 		var own_mismatched = []
+		var player_sys = _context.player_system if _context else null
 		for target in mismatched:
 			var tile_index = target.get("tile_index", -1)
 			if tile_index >= 0 and board_system:
 				var tile = board_system.get_tile_data(tile_index)
-				if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
+				var owner_id = tile.get("owner", tile.get("owner_id", -1)) if tile else -1
+				var is_own = player_sys.is_same_team(context.player_id, owner_id) if player_sys else (owner_id == context.player_id)
+				if tile and is_own:
 					var creature = target.get("creature", {})
 					# 防御型クリーチャーは移動できないので除外
 					if _is_defensive_creature(creature):
@@ -597,11 +602,14 @@ func _get_condition_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 				var mismatched = condition_checker.check_target_condition("element_mismatch_creatures", context)
 				# 自クリーチャーのみフィルタ（防御型を除外）
 				var own_mismatched = []
+				var player_sys = _context.player_system if _context else null
 				for target in mismatched:
 					var tile_index = target.get("tile_index", -1)
 					if tile_index >= 0 and board_system:
 						var tile = board_system.get_tile_data(tile_index)
-						if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
+						var owner_id = tile.get("owner", tile.get("owner_id", -1)) if tile else -1
+						var is_own = player_sys.is_same_team(context.player_id, owner_id) if player_sys else (owner_id == context.player_id)
+						if tile and is_own:
 							var creature = target.get("creature", {})
 							# 防御型クリーチャーは移動できないので除外
 							if not _is_defensive_creature(creature):
@@ -622,15 +630,15 @@ func _get_condition_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 func _get_enemy_players(context: Dictionary) -> Array:
 	var player_id = context.player_id
 	var results = []
-	
+
 	if not player_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			results.append({"type": "player", "player_id": i})
-	
+
 	return results
 
 ## 利益計算
@@ -661,34 +669,34 @@ func _calculate_profit(formula: String, context: Dictionary) -> int:
 func _get_max_enemy_magic(context: Dictionary) -> int:
 	if not player_system:
 		return 0
-	
+
 	var player_id = context.player_id
 	var max_magic = 0
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			var magic = player_system.get_magic(i)
 			max_magic = max(max_magic, magic)
-	
+
 	return max_magic
 
 ## 敵スペル数取得
 func _get_enemy_spell_count(context: Dictionary) -> int:
 	if not card_system or not player_system:
 		return 0
-	
+
 	var player_id = context.player_id
 	var total = 0
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			var hand = card_system.get_all_cards_for_player(i)
 			for card in hand:
 				if card.get("type") == "spell":
 					total += 1
-	
+
 	return total
 
 ## profit_calc用ターゲット取得

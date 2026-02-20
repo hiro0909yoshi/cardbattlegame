@@ -55,10 +55,15 @@ func check_bankruptcy(player_id: int) -> bool:
 
 
 ## プレイヤーの所有土地一覧を取得（タイルインデックスの配列）
+## 同盟プレイヤーの土地も含む
 func get_player_lands(player_id: int) -> Array:
 	if not board_system:
 		return []
-	return board_system.get_player_owned_tiles(player_id)
+	# 自分の土地
+	var own_lands = board_system.get_player_owned_tiles(player_id)
+	# 同盟の土地を追加
+	var allied_lands = _get_allied_lands(player_id)
+	return own_lands + allied_lands
 
 
 ## 土地の価値を取得（土地価値 = 売却価格）
@@ -66,6 +71,19 @@ func get_land_value(tile_index: int) -> int:
 	if not board_system:
 		return 0
 	return board_system.calculate_land_value(tile_index)
+
+
+## 同盟の土地を取得（破産時の売却候補用）
+func _get_allied_lands(player_id: int) -> Array:
+	if not player_system or not board_system:
+		return []
+	var lands: Array = []
+	for tile_index in board_system.tile_nodes:
+		var tile = board_system.tile_nodes[tile_index]
+		if tile.owner_id >= 0 and tile.owner_id != player_id:
+			if player_system.is_same_team(player_id, tile.owner_id):
+				lands.append(tile_index)
+	return lands
 
 
 ## 全土地の売却額合計を取得
@@ -128,39 +146,42 @@ func _hide_bankruptcy_info_panel():
 # ===========================================
 
 ## 土地を売却
+## @param tile_index 売却するタイルインデックス
+## @param ep_recipient_id EP受取人プレイヤーID（-1の場合は土地所有者）
 ## @return 売却額
-func sell_land(tile_index: int) -> int:
+func sell_land(tile_index: int, ep_recipient_id: int = -1) -> int:
 	if not board_system:
 		return 0
-	
+
 	var tile = board_system.tile_nodes.get(tile_index)
 	if not tile:
 		return 0
-	
+
 	var owner_id = tile.owner_id
 	if owner_id < 0:
 		return 0
-	
+
 	# 売却価格を取得（売却前に計算）
 	var value = get_land_value(tile_index)
-	
+
 	# クリーチャーを消滅（UI含む）
 	if creature_manager and creature_manager.has_creature(tile_index):
 		creature_manager.set_data(tile_index, {})
 	tile.remove_creature()  # 3Dカード表示も削除
-	
+
 	# 土地の所有権を解除
 	tile.owner_id = -1
 	tile.level = 1
 	tile.update_visual()
-	
+
 	# 連鎖が変わるので全タイルの通行料表示を更新
 	if board_system and board_system.has_method("update_all_tile_displays"):
 		board_system.update_all_tile_displays()
-	
-	# EPを加算
+
+	# EPを加算（受取人IDを指定可能）
 	if player_system:
-		player_system.add_magic(owner_id, value)
+		var recipient = ep_recipient_id if ep_recipient_id >= 0 else owner_id
+		player_system.add_magic(recipient, value)
 	
 	# UIを更新
 	_update_ui()
@@ -355,24 +376,41 @@ func _hide_creature_info_panel():
 
 
 ## CPU用破産処理（自動選択）
+## 優先順位: 1. 自分の土地を売却、2. 同盟の土地を売却
 func process_cpu_bankruptcy(player_id: int):
 	print("[破産処理] CPU%d: 自動売却開始" % (player_id + 1))
-	
+
 	while check_bankruptcy(player_id):
-		var lands = get_player_lands(player_id)
-		if lands.is_empty():
-			break
-		
-		# 最も価値の低い土地を選択（簡易版）
-		var best_tile = _select_land_to_sell_cpu(player_id, lands)
+		# まず自分の土地を取得
+		var own_lands = board_system.get_player_owned_tiles(player_id)
+		var best_tile = -1
+
+		# 1. 自分の土地から選択
+		if not own_lands.is_empty():
+			best_tile = _select_land_to_sell_cpu(player_id, own_lands)
+
+		# 2. 自分の土地がない場合は同盟の土地から選択
+		if best_tile < 0:
+			var allied_lands = _get_allied_lands(player_id)
+			if not allied_lands.is_empty():
+				best_tile = _select_land_to_sell_cpu(player_id, allied_lands)
+				# 同盟の土地を売却する場合、EP受取人を破産者に設定
+				if best_tile >= 0:
+					var value = sell_land(best_tile, player_id)
+					# 少し待機（演出用）
+					await get_tree().create_timer(0.5).timeout
+					print("[破産処理] CPU%d: 同盟の土地(タイル%d)を売却して%dEP獲得" % [player_id + 1, best_tile, value])
+					print("[破産処理] CPU%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
+					continue
+
 		if best_tile < 0:
 			break
-		
+
 		sell_land(best_tile)
-		
+
 		# 少し待機（演出用）
 		await get_tree().create_timer(0.5).timeout
-		
+
 		print("[破産処理] CPU%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
 
 

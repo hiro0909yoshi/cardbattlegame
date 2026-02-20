@@ -154,7 +154,7 @@ func _calculate_target_score(target: Dictionary, player_id: int, damage_value: i
 	var owner_id = -1
 	if tile_data:
 		owner_id = tile_data.get("owner", tile_data.get("owner_id", -1))
-	var is_enemy = owner_id != player_id and owner_id >= 0
+	var is_enemy = not player_system.is_same_team(player_id, owner_id) and owner_id >= 0
 	
 	if is_enemy:
 		score += 1.0
@@ -270,7 +270,7 @@ func _get_creature_element_by_id(creature_id: int) -> String:
 ## 敵の不利な呪いを消す / 自分の有利な呪いを消す → -300
 func _calculate_curse_overwrite_score(creature: Dictionary, player_id: int, owner_id: int, _spell_is_beneficial: bool) -> float:
 	var curse_benefit = CpuCurseEvaluator.get_creature_curse_benefit(creature)
-	var is_own = (owner_id == player_id)
+	var is_own = player_system.is_same_team(player_id, owner_id)
 	var score = 0.0
 	
 	if curse_benefit != 0:
@@ -601,16 +601,16 @@ func get_best_exchange_target(context: Dictionary) -> Dictionary:
 	# 自クリーチャーを取得
 	var tiles = board_system.get_all_tiles()
 	var candidates = []
-	
+
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var creature = tile.get("creature", {})
 		if creature.is_empty():
 			continue
-		
+
 		# アルカナアーツ持ちは交換対象外
 		if _has_mystic_arts(creature):
 			continue
@@ -782,23 +782,23 @@ func get_best_element_shift_target(spell: Dictionary, context: Dictionary) -> Di
 	
 	var player_id = context.get("player_id", 0)
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if not creature or creature.is_empty():
 			continue
-		
+
 		var tile_element = tile.get("element", "")
 		var creature_element = creature.get("element", "")
-		
+
 		# クリーチャーの属性が変更先属性と一致し、土地属性が不一致の場合
 		if creature_element == target_element and tile_element != target_element:
 			return {"type": "land", "tile_index": tile.get("index", -1)}
-	
+
 	# 見つからなければ空を返す（使用しない方がいい）
 	return {}
 
@@ -912,34 +912,34 @@ func get_land_targets(owner_filter: String, context: Dictionary) -> Array:
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		
+
 		match owner_filter:
 			"own":
-				if owner_id != player_id:
+				if not player_system.is_same_team(player_id, owner_id):
 					continue
 			"enemy":
-				if owner_id == player_id or owner_id == -1:
+				if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 					continue
 			"any":
 				pass
-		
+
 		results.append({"type": "land", "tile_index": tile.get("index", -1)})
-	
+
 	return results
 
 ## 指定レベル以上の敵土地をレベル降順でソートして取得
 func get_enemy_lands_by_level_sorted(player_id: int, min_level: int) -> Array:
 	var results = []
-	
+
 	if not board_system:
 		return results
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var level = tile.get("level", 1)
 		if level >= min_level:
 			results.append(tile)

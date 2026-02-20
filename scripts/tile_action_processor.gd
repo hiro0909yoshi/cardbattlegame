@@ -178,7 +178,7 @@ func _process_player_tile(tile: BaseTile, tile_info: Dictionary, player_index: i
 	
 	if tile_info["owner"] == -1:
 		show_summon_ui()
-	elif tile_info["owner"] == player_index:
+	elif tile_info["owner"] == player_index or player_system.is_same_team(player_index, tile_info["owner"]):
 		show_summon_ui_disabled()
 	else:
 		# 敵の土地
@@ -268,7 +268,7 @@ func on_card_selected(card_index: int):
 		print("[TileActionProcessor] 遠隔配置モードで召喚実行: card_index=%d" % card_index)
 		await summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 		return
-	elif tile_info["owner"] == -1 or tile_info["owner"] == current_player_index:
+	elif tile_info["owner"] == -1 or tile_info["owner"] == current_player_index or player_system.is_same_team(current_player_index, tile_info["owner"]):
 		# 召喚処理
 		summon_executor.execute_summon(card_index, _complete_action, show_summon_ui)
 	else:

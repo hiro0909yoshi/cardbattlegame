@@ -155,13 +155,13 @@ func get_enemy_land_count(context: Dictionary) -> int:
 	
 	var player_id = context.player_id
 	var count = 0
-	
+
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id and owner_id != -1:
+		if not context.player_system.is_same_team(player_id, owner_id) and owner_id != -1:
 			count += 1
-	
+
 	return count
 
 # =============================================================================

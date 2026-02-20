@@ -6,6 +6,7 @@ class_name GameResultHandler
 
 # システム参照
 var player_system: PlayerSystem
+var team_system = null  # Phase 4: チーム合算TEP用
 
 # Callable注入（Phase A-2: GFM逆参照解消）
 var _end_game_cb: Callable = Callable()           # change_phase(SETUP) の代替
@@ -120,14 +121,24 @@ func check_turn_limit() -> bool:
 	if current_turn > max_turns:
 		print("[GameResultHandler] 規定ターン(%d)終了" % max_turns)
 
-		# TEP比較で勝敗判定
-		var player_tep = player_system.calculate_total_assets(0)
+		# TEP比較で勝敗判定（チーム合算TEPに変更）
+		var player_tep = 0
 		var highest_cpu_tep = 0
 
-		for i in range(1, player_system.players.size()):
-			var cpu_tep = player_system.calculate_total_assets(i)
-			if cpu_tep > highest_cpu_tep:
-				highest_cpu_tep = cpu_tep
+		if team_system:
+			# チーム合算TEP
+			player_tep = team_system.get_team_total_assets(0)
+			for i in range(1, player_system.players.size()):
+				var cpu_tep = team_system.get_team_total_assets(i)
+				if cpu_tep > highest_cpu_tep:
+					highest_cpu_tep = cpu_tep
+		else:
+			# フォールバック: 個人TEP
+			player_tep = player_system.calculate_total_assets(0)
+			for i in range(1, player_system.players.size()):
+				var cpu_tep = player_system.calculate_total_assets(i)
+				if cpu_tep > highest_cpu_tep:
+					highest_cpu_tep = cpu_tep
 
 		print("[GameResultHandler] プレイヤーTEP: %d, 最高CPU TEP: %d" % [player_tep, highest_cpu_tep])
 

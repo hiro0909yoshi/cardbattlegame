@@ -28,6 +28,7 @@ const CPUMovementEvaluatorScript = preload("res://scripts/cpu_ai/cpu_movement_ev
 const CPUSpellPhaseHandlerScript = preload("res://scripts/cpu_ai/cpu_spell_phase_handler.gd")
 const CPUSpellAIContainerScript = preload("res://scripts/cpu_ai/cpu_spell_ai_container.gd")
 const SpellAndMysticUIScript = preload("res://scripts/ui_components/spell_and_mystic_ui.gd")
+const TeamSystemClass = preload("res://scripts/team_system.gd")
 
 # === システム参照 ===
 var systems: Dictionary = {}
@@ -43,6 +44,7 @@ var special_tile_system
 var ui_manager
 var debug_controller
 var game_flow_manager
+var team_system: TeamSystem = null
 
 # === UIEventHub（EventHub駆動化） ===
 var ui_event_hub: UIEventHub = null
@@ -190,6 +192,12 @@ func phase_1_create_systems() -> void:
 	add_child(game_flow_manager)
 	systems["GameFlowManager"] = game_flow_manager
 
+	# TeamSystem
+	team_system = TeamSystemClass.new()
+	team_system.name = "TeamSystem"
+	add_child(team_system)
+	systems["TeamSystem"] = team_system
+
 # Phase 2: 3D ノード収集
 func phase_2_collect_3d_nodes() -> void:
 	if not parent_node:
@@ -286,6 +294,9 @@ func phase_4_setup_system_interconnections() -> void:
 			player_system, card_system, board_system_3d, player_buff_system,
 			ui_manager, battle_system, special_tile_system
 		)
+		# Phase 4: team_system を game_result_handler に注入
+		if game_flow_manager.game_result_handler and team_system:
+			game_flow_manager.game_result_handler.team_system = team_system
 	
 	# Step 2: BoardSystem3D に全システムを設定
 	if board_system_3d:
@@ -310,7 +321,11 @@ func phase_4_setup_system_interconnections() -> void:
 		special_tile_system.setup_systems(
 			board_system_3d, card_system, player_system, ui_manager, game_flow_manager
 		)
-	
+
+	# Step 3.5: TeamSystem参照をPlayerSystemに注入
+	if player_system and team_system:
+		player_system.set_team_system(team_system)
+
 	# Step 4: DebugController に設定
 	if debug_controller:
 		debug_controller.setup_systems(
@@ -452,6 +467,9 @@ func phase_4_setup_system_interconnections() -> void:
 			if board_system_3d:
 				board_system_3d.set_meta("spell_curse_toll", spell_curse_toll)
 				board_system_3d.set_meta("spell_world_curse", game_flow_manager.spell_container.spell_world_curse)
+				# player_systemをmetaに設定（同盟判定用、LandSelectionHelper/MovementHelper で使用）
+				if player_system:
+					board_system_3d.set_meta("player_system", player_system)
 				# tile_data_managerにも参照を渡す（表示用通行料のタイル呪い補正で使用）
 				if board_system_3d.tile_data_manager:
 					board_system_3d.tile_data_manager.spell_curse_toll = spell_curse_toll
@@ -619,6 +637,10 @@ func _setup_lap_system() -> void:
 
 	# 周回状態を初期化
 	lap_system.initialize_lap_state(player_is_cpu.size())
+
+	# Phase 4: team_system を注入
+	if team_system:
+		lap_system.team_system = team_system
 
 ## スペルシステム初期化
 func _setup_spell_systems() -> void:

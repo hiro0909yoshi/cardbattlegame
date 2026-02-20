@@ -174,6 +174,12 @@ func _apply_stage_settings():
 			if i + 1 < system_manager.player_system.players.size():
 				system_manager.player_system.players[i + 1].name = cpu_name
 
+	# チーム割り当て
+	var teams = stage_loader.get_teams()
+	if not teams.is_empty() and system_manager.team_system:
+		system_manager.team_system.setup_teams(teams, system_manager.player_system)
+		print("[QuestGame] チーム設定完了: %s" % str(teams))
+
 	# 勝利条件を設定
 	var win_conditions = stage_loader.get_win_condition()
 	var target = 8000  # デフォルト値

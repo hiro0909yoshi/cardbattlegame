@@ -1,7 +1,7 @@
 {
   "id": "stage_2_7",
   "name": "迷路のクレリック",
-  "description": "迷路マップで4人対戦。クレリック、ファイター、シーフが登場。",
+  "description": "迷路マップでファイターとシーフが登場。",
   "map_id": "map_1_6",
   "rule_preset": "quick",
   "max_turns": 50,
@@ -23,12 +23,6 @@
   },
   "quest": {
 	"enemies": [
-	  {
-		"character_id": "cleric",
-		"deck_id": "cpu_deck_5",
-		"ai_level": 3,
-		"start_tile": 0
-	  },
 	  {
 		"character_id": "fighter_1",
 		"deck_id": "cpu_deck_4",

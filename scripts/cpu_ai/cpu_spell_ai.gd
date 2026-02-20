@@ -712,43 +712,43 @@ func _get_own_high_level_lands(context: Dictionary) -> Array:
 	var results = []
 	if not board_system:
 		return results
-	
+
 	var player_id = context.get("player_id", 0)
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id:
+		if not player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		var level = tile.get("level", 1)
 		if level >= 3:
 			results.append(tile)
-	
+
 	return results
 
 ## 敵の高額通行料土地の近くにいるかチェック
 func _check_near_enemy_high_toll(context: Dictionary) -> bool:
 	if not player_system or not board_system:
 		return false
-	
+
 	var player_id = context.get("player_id", 0)
 	var player_pos = player_system.get_player_position(player_id)
-	
+
 	# 前方8マス以内に敵の高レベル土地があるか
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var level = tile.get("level", 1)
 		if level >= 3:
 			var tile_index = tile.get("index", -1)
 			var distance = abs(tile_index - player_pos)
 			if distance <= 8 and distance > 0:
 				return true
-	
+
 	return false
 
 ## 敵の高レベル土地を取得
@@ -756,19 +756,19 @@ func _get_enemy_high_level_lands(context: Dictionary) -> Array:
 	var results = []
 	if not board_system:
 		return results
-	
+
 	var player_id = context.get("player_id", 0)
 	var tiles = board_system.get_all_tiles()
-	
+
 	for tile in tiles:
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id == player_id or owner_id == -1:
+		if player_system.is_same_team(player_id, owner_id) or owner_id == -1:
 			continue
-		
+
 		var level = tile.get("level", 1)
 		if level >= 3:
 			results.append(tile)
-	
+
 	return results
 
 ## 最寄りチェックポイントに近い土地をワープターゲットとして取得（マジカルリープ用）
@@ -891,21 +891,21 @@ func _should_synthesize_debility(context: Dictionary) -> bool:
 ## 敵クリーチャーがいる場合のみ合成（自クリーチャーのみに効果を限定）
 func _should_synthesize_mass_growth(context: Dictionary) -> bool:
 	var player_id = context.get("player_id", 0)
-	
+
 	if not board_system:
 		return false
-	
+
 	# 敵クリーチャーがいるかチェック
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
 		var creature = tile.get("creature", tile.get("placed_creature", {}))
 		if creature.is_empty():
 			continue
-		
+
 		var owner_id = tile.get("owner", tile.get("owner_id", -1))
-		if owner_id != player_id and owner_id != -1:
+		if not player_system.is_same_team(player_id, owner_id) and owner_id != -1:
 			return true  # 敵クリーチャーがいれば合成する
-	
+
 	return false
 
 # =============================================================================

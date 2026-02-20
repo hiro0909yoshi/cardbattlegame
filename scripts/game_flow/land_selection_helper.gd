@@ -76,26 +76,30 @@ static func select_land(handler, tile_index: int) -> bool:
 	return preview_land(handler, tile_index)
 
 ## プレイヤーの所有地を取得（ダウン状態を除外）
-## 
+##
 ## ドミニオコマンド専用：ダウン状態の土地を自動的に除外する
 static func get_player_owned_lands(board_system, player_id: int) -> Array:
 	if not board_system:
 		return []
-	
+
 	var owned_lands = []
-	
+
 	# BoardSystem3Dのtile_nodesから所有地を取得
 	if not board_system.tile_nodes:
 		return []
-	
+
+	# player_systemをmetaから取得（同盟判定用）
+	var _ps = board_system.get_meta("player_system") if board_system and board_system.has_meta("player_system") else null
+
 	for tile_index in board_system.tile_nodes.keys():
 		var tile = board_system.tile_nodes[tile_index]
-		if tile.owner_id == player_id:
+		# 所有地 or 同盟の土地
+		if tile.owner_id == player_id or (_ps and _ps.is_same_team(player_id, tile.owner_id)):
 			# ダウン状態の土地は除外
 			if tile.has_method("is_down") and tile.is_down():
 				continue
 			owned_lands.append(tile.tile_index)
-	
+
 	return owned_lands
 
 ## 土地選択UIを更新

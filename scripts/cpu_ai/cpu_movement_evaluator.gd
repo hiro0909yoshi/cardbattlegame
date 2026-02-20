@@ -399,11 +399,11 @@ func _evaluate_stop_tile(tile_index: int, player_id: int, summonable_elements: A
 		return SCORE_STOP_SPECIAL_TILE
 	
 	# 自分のドミニオ
-	if owner_id == player_id:
+	if player_system.is_same_team(player_id, owner_id):
 		return SCORE_STOP_OWN_LAND
-	
+
 	# 敵のドミニオ
-	if owner_id >= 0 and owner_id != player_id:
+	if owner_id >= 0 and not player_system.is_same_team(player_id, owner_id):
 		var toll = calculate_toll(tile_index)
 		var can_win = can_invade_and_win(tile_index, player_id)
 		
@@ -459,9 +459,9 @@ func _evaluate_path_score_with_checkpoint(path: Array, player_id: int, summonabl
 				checkpoint_already_counted = true
 		
 		# 自分のドミニオはスキップ
-		if owner_id == player_id:
+		if player_system.is_same_team(player_id, owner_id):
 			continue
-		
+
 		# 敵のドミニオ
 		if owner_id >= 0:
 			var toll = calculate_toll(tile_index)

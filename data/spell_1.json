@@ -1722,7 +1722,7 @@
 	  },
 	  "cpu_rule": {
 		"pattern": "has_target",
-		"target_condition": "own_creature",
+		"target_condition": "enemy_creature",
 		"priority": "medium"
 	  }
 	},

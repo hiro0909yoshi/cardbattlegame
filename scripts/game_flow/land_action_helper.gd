@@ -400,8 +400,8 @@ static func confirm_move(handler, dest_tile_index: int):
 		if handler.board_system and handler.board_system.tile_action_processor:
 			handler.board_system.complete_action()
 		
-	elif dest_owner == current_player_index:
-		# 自分の土地の場合: エラー（通常はありえない）
+	elif dest_owner == current_player_index or (handler.player_system and handler.player_system.is_same_team(current_player_index, dest_owner)):
+		# 自分 or 同盟の土地の場合: エラー（通常はありえない）
 		# クリーチャーを元に戻す
 		source_tile.place_creature(creature_data)
 		handler.close_dominio_order()

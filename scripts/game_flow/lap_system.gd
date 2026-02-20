@@ -20,6 +20,7 @@ var destroy_count: int = 0
 ## 外部参照（初期化時に設定）
 var player_system = null
 var board_system_3d = null
+var team_system = null  # Phase 4: チーム合算TEP用
 var _ui_layer = null  # Phase B-2: ui_manager 依存解消、ui_layer 直接参照
 var _message_service = null  # サービス注入用
 var _show_dominio_order_button_cb: Callable = Callable()  # Phase B-2: ドミニオボタン表示 Callable
@@ -329,8 +330,10 @@ func _check_win_condition(player_id: int) -> bool:
 	
 	return false
 
-## TEPを計算（PlayerSystemに委譲）
+## TEPを計算（チーム合算TEPに変更）
 func calculate_total_assets(player_id: int) -> int:
+	if team_system:
+		return team_system.get_team_total_assets(player_id)
 	if not player_system:
 		return 0
 	return player_system.calculate_total_assets(player_id)

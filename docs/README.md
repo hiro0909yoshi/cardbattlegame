@@ -110,6 +110,7 @@ docs/
 | [cpu_spell_ai_spec.md](specs/cpu_spell_ai_spec.md) | CPU スペル/アルカナアーツAI仕様 |
 | [cpu_battle_ai_spec.md](specs/cpu_battle_ai_spec.md) | CPU バトル判断仕様 |
 | [quest_system_design.md](design/quest_system_design.md) | クエストシステム設計 |
+| [team_system_design.md](design/team_system_design.md) | チーム/同盟システム設計 |
 
 ### クリーチャー管理
 
