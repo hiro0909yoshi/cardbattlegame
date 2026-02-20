@@ -205,7 +205,21 @@ func _apply_stage_settings():
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
 		
 		print("[Game3D] 初期EP設定完了")
-	
+
+		# プレイヤー名を設定
+		# プレイヤー0: GameDataの名前を使用
+		system_manager.player_system.players[0].name = GameData.player_data.profile.name
+
+		# CPU敵: キャラクター名を使用
+		var enemies_for_name = stage_loader.get_enemies()
+		for i in range(enemies_for_name.size()):
+			var char_data = stage_loader.get_enemy_character(i)
+			var cpu_name = char_data.get("name", "CPU " + str(i + 1))
+			if i + 1 < system_manager.player_system.players.size():
+				system_manager.player_system.players[i + 1].name = cpu_name
+
+		print("[Game3D] プレイヤー名設定完了")
+
 	# 勝利条件を設定
 	var win_condition = stage_loader.get_win_condition()
 	if win_condition.has("target") and system_manager.player_system:
