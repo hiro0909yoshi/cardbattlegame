@@ -224,7 +224,7 @@ func _evaluate_immediate(spell: Dictionary, context: Dictionary, base_score: flo
 			var enemies = []
 			var my_id = context.player_id
 			for i in range(player_system.players.size()):
-				if i != my_id:
+				if not player_system.is_same_team(my_id, i):
 					enemies.append(i)
 			if not enemies.is_empty():
 				var target_id = enemies[randi() % enemies.size()]
@@ -550,8 +550,8 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 		var owner = tile_info.get("owner", -1)
 		var level = tile_info.get("level", 1)
 		
-		# 自分のLv3以上のドミニオかチェック
-		if owner != player_id:
+		# 自分（チーム）のLv3以上のドミニオかチェック
+		if not player_system.is_same_team(player_id, owner):
 			continue
 		if level < 3:
 			continue
@@ -686,7 +686,7 @@ func _find_danger_positions_on_path(start_tile: int, direction: int, player_id: 
 		var level = tile_info.get("level", 1)
 		
 		# 敵のLv3以上のドミニオかチェック
-		if owner >= 0 and owner != player_id and level >= 3:
+		if owner >= 0 and not player_system.is_same_team(player_id, owner) and level >= 3:
 			var toll = cpu_movement_evaluator.calculate_toll(check_tile)
 			dangers.append({
 				"distance": distance,

@@ -292,14 +292,18 @@ func set_tile_owner(tile_index: int, owner_id: int):
 func place_creature(tile_index: int, creature_data: Dictionary, player_id: int = -1):
 	"""クリーチャーを配置し、スキルインデックスを更新"""
 	tile_data_manager.place_creature(tile_index, creature_data)
-	
+
 	# player_idが指定されていない場合、タイルの所有者から取得
 	if player_id == -1:
 		var tile_info = get_tile_info(tile_index)
 		player_id = tile_info.get("owner", -1)
-	
+
 	# スキルインデックスを更新
 	_update_skill_index_on_place(tile_index, creature_data, player_id)
+
+	# 連鎖ボーナスが変わるため全タイル表示を更新
+	if tile_info_display:
+		tile_info_display.refresh_all_displays()
 
 func update_tile_creature(tile_index: int, new_creature_data: Dictionary):
 	"""タイルのクリーチャーデータを更新（変身用）"""
@@ -344,10 +348,13 @@ func remove_creature(tile_index: int):
 	var tile = tile_nodes[tile_index]
 	
 	# BaseTileのremove_creature()を呼び出して3Dカードも削除
-	# BaseTileのremove_creature()を呼び出して3Dカードも削除
 	tile.remove_creature()
-	
+
 	print("[BoardSystem3D] クリーチャー除去: タイル%d" % tile_index)
+
+	# 連鎖ボーナスが変わるため全タイル表示を更新
+	if tile_info_display:
+		tile_info_display.refresh_all_displays()
 
 func upgrade_tile_level(tile_index: int) -> bool:
 	return tile_data_manager.upgrade_tile_level(tile_index)

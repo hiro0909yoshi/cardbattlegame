@@ -889,7 +889,7 @@ func get_enemy_players(context: Dictionary) -> Array:
 	
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			results.append({"type": "player", "player_id": i})
 	
 	# EP（魔力）が多い順にソート

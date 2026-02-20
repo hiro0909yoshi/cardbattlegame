@@ -31,7 +31,8 @@ func setup_teams(teams_array: Array, player_system) -> void:
 	for team_index in range(teams_array.size()):
 		var team = TeamData.new()
 		team.team_id = team_index
-		for player_id in teams_array[team_index]:
+		for raw_id in teams_array[team_index]:
+			var player_id: int = int(raw_id)  # JSONのfloat→int変換
 			if player_id >= 0 and _player_system and player_id < _player_system.players.size():
 				team.members.append(player_id)
 				_player_team_map[player_id] = team
