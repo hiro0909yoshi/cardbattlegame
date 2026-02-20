@@ -705,13 +705,13 @@ func _get_high_value_or_mystic_enemy(context: Dictionary) -> Array:
 func _get_enemies_with_items(min_count: int, context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not card_system or not player_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)
@@ -729,13 +729,13 @@ func _get_enemies_with_items(min_count: int, context: Dictionary) -> Array:
 func _get_enemies_with_high_toll(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not board_system or not player_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		# 敵のレベル3以上の土地をチェック
@@ -749,15 +749,15 @@ func _get_enemies_with_high_toll(context: Dictionary) -> Array:
 func _get_enemies_with_more_magic(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system:
 		return results
-	
+
 	var my_magic = player_system.get_magic(player_id)
 	var player_count = player_system.players.size()
-	
+
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var other_magic = player_system.get_magic(i)
@@ -770,13 +770,13 @@ func _get_enemies_with_more_magic(context: Dictionary) -> Array:
 func _get_enemy_players(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			results.append({"type": "player", "player_id": i})
 	
 	return results
@@ -785,13 +785,13 @@ func _get_enemy_players(context: Dictionary) -> Array:
 func _get_enemy_players_with_creatures(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not board_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			# このプレイヤーがクリーチャーを持っているかチェック
 			if _player_has_creatures(i):
 				results.append({"type": "player", "player_id": i})
@@ -828,13 +828,13 @@ func _get_self_player(context: Dictionary) -> Array:
 func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not card_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)
@@ -854,13 +854,13 @@ func _get_enemies_with_item_or_spell(context: Dictionary) -> Array:
 func _get_enemies_with_spell(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not card_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)
@@ -879,13 +879,13 @@ func _get_enemies_with_spell(context: Dictionary) -> Array:
 func _get_enemies_with_duplicate_cards(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not card_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)
@@ -907,13 +907,13 @@ func _get_enemies_with_duplicate_cards(context: Dictionary) -> Array:
 func _get_enemies_with_expensive_cards(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not card_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)
@@ -934,13 +934,13 @@ func _get_enemies_with_expensive_cards(context: Dictionary) -> Array:
 func _get_enemies_with_cards(context: Dictionary) -> Array:
 	var player_id = context.get("player_id", 0)
 	var results = []
-	
+
 	if not player_system or not card_system:
 		return results
-	
+
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i == player_id:
+		if player_system.is_same_team(player_id, i):
 			continue
 		
 		var hand = card_system.get_all_cards_for_player(i)

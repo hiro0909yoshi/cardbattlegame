@@ -81,7 +81,7 @@ func _evaluate_offensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 	var best_target = -1
 	
 	for enemy_id in range(player_system.players.size()):
-		if enemy_id == player_id:
+		if player_system.is_same_team(player_id, enemy_id):
 			continue
 		
 		var enemy_tile = _movement_evaluator.get_player_current_tile(enemy_id)
@@ -93,9 +93,9 @@ func _evaluate_offensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		
 		var tile_info = _movement_evaluator.get_tile_info(stop_tile)
 		var owner = tile_info.get("owner", -1)
-		
+
 		# 自分の土地かチェック
-		if owner == player_id:
+		if player_system.is_same_team(player_id, owner):
 			var toll = _movement_evaluator.calculate_toll(stop_tile)
 			
 			# 侵略リスクをチェック
@@ -129,7 +129,7 @@ func _evaluate_defensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 	var target_owner = target_info.get("owner", -1)
 	
 	# このダイス目で敵の土地に止まるか？
-	if target_owner >= 0 and target_owner != player_id:
+	if target_owner >= 0 and not player_system.is_same_team(player_id, target_owner):
 		if not _movement_evaluator.can_invade_and_win(target_tile, player_id):
 			# 倒せない敵の土地 → このダイス目は使いたくない
 			return result
@@ -144,8 +144,8 @@ func _evaluate_defensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		var check_tile = check_sim.stop_tile
 		var check_info = _movement_evaluator.get_tile_info(check_tile)
 		var check_owner = check_info.get("owner", -1)
-		
-		if check_owner >= 0 and check_owner != player_id:
+
+		if check_owner >= 0 and not player_system.is_same_team(player_id, check_owner):
 			if not _movement_evaluator.can_invade_and_win(check_tile, player_id):
 				var toll = _movement_evaluator.calculate_toll(check_tile)
 				if toll > max_danger_toll:

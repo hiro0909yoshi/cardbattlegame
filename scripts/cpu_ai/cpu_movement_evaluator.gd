@@ -239,7 +239,7 @@ func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int =
 		var tile_info = get_tile_info(next_tile)
 		var tile_owner = tile_info.get("owner", -1)
 		
-		if tile_owner != player_id:
+		if not player_system.is_same_team(player_id, tile_owner):
 			var forced_stop_result = _check_forced_stop(next_tile, player_id)
 			if forced_stop_result.stopped:
 				result.stop_tile = next_tile
@@ -730,7 +730,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var tile_info = get_tile_info(tile_index)
 		var tile_owner = tile_info.get("owner", -1)
 		
-		if tile_owner != player_id and tile_owner >= 0:
+		if not player_system.is_same_team(player_id, tile_owner) and tile_owner >= 0:
 			# 敵ドミニオの場合、足止めチェック
 			var forced_stop_result = _check_forced_stop(tile_index, player_id)
 			if forced_stop_result.stopped:
@@ -859,7 +859,7 @@ func decide_branch_choice(player_id: int, available_tiles: Array, remaining_step
 		var stop_tile_owner = stop_tile_info.get("owner", -1)
 		var stop_creature = stop_tile_info.get("creature", {})
 		var stop_toll = 0
-		if stop_tile_owner != player_id and stop_tile_owner >= 0:
+		if not player_system.is_same_team(player_id, stop_tile_owner) and stop_tile_owner >= 0:
 			stop_toll = calculate_toll(stop_tile)
 		
 		print("  →方向%d→着地%d: base=%.0f(owner=%d, toll=%d, creature=%s) + cp=%d + magic=%d = final=%.0f (cp_dist=%d)%s" % [
