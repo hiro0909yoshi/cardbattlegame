@@ -61,10 +61,14 @@ func set_game_flow_manager(gf_manager) -> void:
 		_context.set_game_flow_manager(gf_manager)
 
 
-## BattleSimulatorのログ出力を切り替え
-func set_simulator_log_enabled(enabled: bool) -> void:
+## BattleSimulatorのログレベルを設定
+func set_simulator_log_level(level: int) -> void:
 	if _context:
-		_context.set_simulator_log_enabled(enabled)
+		_context.set_simulator_log_level(level)
+
+## 互換用
+func set_simulator_log_enabled(enabled: bool) -> void:
+	set_simulator_log_level(2 if enabled else 0)
 
 # ============================================================
 # バトル評価

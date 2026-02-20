@@ -104,10 +104,14 @@ func get_hand_utils() -> CPUHandUtils:
 	return _hand_utils
 
 
-## BattleSimulatorのログ出力を切り替え
-func set_simulator_log_enabled(enabled: bool) -> void:
+## BattleSimulatorのログレベルを設定（0=silent, 1=summary, 2=full）
+func set_simulator_log_level(level: int) -> void:
 	if _battle_simulator:
-		_battle_simulator.enable_log = enabled
+		_battle_simulator.log_level = level
+
+## 互換用（非推奨）
+func set_simulator_log_enabled(enabled: bool) -> void:
+	set_simulator_log_level(2 if enabled else 0)
 
 # ============================================================
 # バリデーション

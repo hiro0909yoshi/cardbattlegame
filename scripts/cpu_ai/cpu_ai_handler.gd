@@ -598,12 +598,16 @@ func debug_print_decision(action: String, params: Dictionary):
 	for key in params:
 		print("  ", key, ": ", params[key])
 
-# BattleSimulatorのログ出力を切り替え
-func set_simulator_log_enabled(enabled: bool) -> void:
+# BattleSimulatorのログレベルを設定
+func set_simulator_log_level(level: int) -> void:
 	if context:
-		context.set_simulator_log_enabled(enabled)
+		context.set_simulator_log_level(level)
 	if battle_ai:
-		battle_ai.set_simulator_log_enabled(enabled)
+		battle_ai.set_simulator_log_level(level)
+
+# 互換用
+func set_simulator_log_enabled(enabled: bool) -> void:
+	set_simulator_log_level(2 if enabled else 0)
 
 # ============================================================
 # 合体データアクセサ（互換性のため委譲）

@@ -34,8 +34,8 @@ var battle_preparation: BattlePreparationScript = null
 var skill_processor: BattleSkillProcessorScript = null
 var special_effects: BattleSpecialEffectsScript = null
 
-# ログ出力フラグ
-var enable_log: bool = false
+# ログレベル（0=silent, 1=summary, 2=full）
+var log_level: int = 1
 
 func _init():
 	battle_preparation = BattlePreparationScript.new()
@@ -74,7 +74,11 @@ func simulate_battle(
 	attacker_item: Dictionary = {},
 	defender_item: Dictionary = {}
 ) -> Dictionary:
-	
+
+	# ログレベルに応じてsilentモード切替
+	battle_preparation.set_silent(log_level < 2)
+	skill_processor.silent = (log_level < 2)
+
 	_log("=== シミュレーション開始 ===")
 	_log("攻撃側: %s (基礎AP:%d, 基礎HP:%d)" % [
 		attacker_data.get("name", "?"),
@@ -122,35 +126,43 @@ func simulate_battle(
 		_log("")
 		_log("▼▼▼ 無効化判定 ▼▼▼")
 		_log("  → 【無効化】攻撃が無効化される！侵略不可")
-		
+
 		# 無効化成功でも、防御側が攻撃側を倒すので死亡時効果を考慮
 		var defender_final_hp_nullify = _calculate_total_hp(defender)
 		var _defender_final_ap_nullify = defender.current_ap  # 将来の拡張用
 		var attacker_data_for_death = attacker.creature_data
-		
+
 		# 攻撃側の死亡時ダメージを確認
 		var death_damage = _get_attacker_death_damage(attacker_data_for_death)
 		var final_result = BattleResult.DEFENDER_WIN
 		var final_defender_survives = true
-		
+
 		if death_damage > 0:
 			# 防御側が攻撃側を倒した後の残りHPを計算
 			# 無効化成功時、攻撃側の攻撃は無効なので防御側はダメージを受けない
 			# 防御側が攻撃 → 攻撃側死亡 → 死亡時効果発動
 			var remaining_hp = defender_final_hp_nullify - death_damage
-			
+
 			_log("--- 死亡時効果判定（無効化後） ---")
 			_log("攻撃側死亡時ダメージ: %d" % death_damage)
 			_log("防御側HP: %d" % defender_final_hp_nullify)
-			
+
 			if remaining_hp <= 0:
 				_log("  → 死亡時効果で防御側も撃破！相打ちに変更")
 				final_result = BattleResult.BOTH_DEFEATED
 				final_defender_survives = false
 			else:
 				_log("  → 防御側生存（残りHP: %d）" % remaining_hp)
-		
+
 		_log("")
+
+		# レベル1: コンパクトサマリー（無効化）
+		if log_level >= 1:
+			print("[BattleSim] %s vs %s → 無効化" % [
+				attacker_data.get("name", "?"),
+				defender_data.get("name", "?")
+			])
+
 		return {
 			"result": final_result,
 			"attacker_ap": attacker.current_ap,
@@ -219,7 +231,17 @@ func simulate_battle(
 	_log(_get_result_header(result))
 	_log("  → %s" % _result_to_string(result))
 	_log("")
-	
+
+	# レベル1: コンパクトサマリー
+	if log_level >= 1:
+		var order_str = "先攻" if attack_order == "attacker_first" else "後攻"
+		var result_str = _result_to_short_string(result)
+		print("[BattleSim] %s(%d/%d) vs %s(%d/%d) [%s] → %s" % [
+			attacker_data.get("name", "?"), attacker_final_ap, attacker_final_hp,
+			defender_data.get("name", "?"), defender_final_ap, defender_final_hp,
+			order_str, result_str
+		])
+
 	return {
 		"result": result,
 		"attacker_ap": attacker_final_ap,
@@ -582,7 +604,21 @@ func _get_attacker_death_damage(attacker_data: Dictionary) -> int:
 	
 	return 0
 
-## ログ出力
+## ログ出力（レベル2以上で詳細ログを出力）
 func _log(message: String) -> void:
-	if enable_log:
+	if log_level >= 2:
 		print("[BattleSimulator] " + message)
+
+## 結果を短い文字列に変換（レベル1用）
+func _result_to_short_string(result: int) -> String:
+	match result:
+		BattleResult.ATTACKER_WIN:
+			return "勝利"
+		BattleResult.DEFENDER_WIN:
+			return "敗北"
+		BattleResult.ATTACKER_SURVIVED:
+			return "引分"
+		BattleResult.BOTH_DEFEATED:
+			return "相打"
+		_:
+			return "不明"
