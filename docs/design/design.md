@@ -6,8 +6,8 @@
 - 新システム詳細仕様（種族、効果システム）
 - 開発・テストツール
 
-> **注**: 基本的なシステムアーキテクチャ、コーディング規約、バトルフローなどは`.serena/memories/`のメモリファイルを参照してください。  
-> **重要な実装ルール**: `.serena/memories/coding_standards_and_architecture.md`を必ず参照してください。
+> **注**: 基本的なシステムアーキテクチャ、コーディング規約、バトルフローなどは `CLAUDE.md` および `docs/development/coding_standards.md` を参照してください。
+> **重要な実装ルール**: `docs/development/coding_standards.md` を参照してください。
 
 ---
 
@@ -85,6 +85,6 @@
 
 ---
 
-**最終更新**: 2025年10月25日  
+**最終更新**: 2026-02-20
 **完全な目次・関連ドキュメント**: [README.md](../README.md)を参照
-**重要な実装ルール**: `.serena/memories/coding_standards_and_architecture.md`を参照
+**重要な実装ルール**: `docs/development/coding_standards.md` を参照
