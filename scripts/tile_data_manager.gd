@@ -12,6 +12,7 @@ var tile_nodes = {}  # tile_index -> BaseTile
 # サブシステム参照
 var tile_info_display: TileInfoDisplay = null
 var spell_curse_toll = null  # タイル呪い通行料補正用
+var player_system = null  # PlayerSystem 参照（連鎖計算のチーム判定用）
 
 # === 直接参照（GFM経由を廃止） ===
 var game_stats  # GameFlowManager.game_stats への直接参照
@@ -20,8 +21,10 @@ func _ready():
 	pass
 
 # タイルノードを設定
-func set_tile_nodes(nodes: Dictionary):
+func set_tile_nodes(nodes: Dictionary, p_player_system = null):
 	tile_nodes = nodes
+	if p_player_system:
+		player_system = p_player_system
 
 # タイル情報表示システムを設定
 func set_display_system(display: TileInfoDisplay):
@@ -277,7 +280,7 @@ func calculate_chain_bonus(tile_index: int, owner_id: int) -> float:
 func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	if not tile_nodes.has(tile_index):
 		return 0
-	
+
 	var target_element = tile_nodes[tile_index].tile_type
 	var chain_count = 0
 
@@ -285,14 +288,23 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 	if not game_stats:
 		game_stats = {}
 
-	# 同じ所有者・同じ連鎖グループのタイルを数える
+	# 同じチーム・同じ連鎖グループのタイルを数える
 	for i in tile_nodes:
 		var tile = tile_nodes[i]
-		if tile.owner_id == owner_id:
-			# ジョイントワールド対応: 同属性または連鎖ペアならカウント
-			if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
-				chain_count += 1
-	
+		if tile.owner_id != -1:
+			# player_system が存在する場合はチーム判定を使用（チーム合算）
+			# 存在しない場合は direct owner comparison（後方互換）
+			var is_same_team_result = false
+			if player_system:
+				is_same_team_result = player_system.is_same_team(owner_id, tile.owner_id)
+			else:
+				is_same_team_result = (tile.owner_id == owner_id)
+
+			if is_same_team_result:
+				# ジョイントワールド対応: 同属性または連鎖ペアならカウント
+				if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
+					chain_count += 1
+
 	return min(chain_count, 5)  # 最大5個まで
 
 # === 統計情報 ===

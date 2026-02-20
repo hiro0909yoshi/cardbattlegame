@@ -241,9 +241,9 @@ func collect_tiles(tiles_container: Node):
 	for child in tiles_container.get_children():
 		if child is BaseTile:
 			tile_nodes[child.tile_index] = child
-	
+
 	# サブシステムに渡す
-	tile_data_manager.set_tile_nodes(tile_nodes)
+	tile_data_manager.set_tile_nodes(tile_nodes, player_system)
 	movement_controller.tile_nodes = tile_nodes
 	
 	if tile_info_display:
@@ -474,7 +474,7 @@ func change_tile_terrain(tile_index: int, new_element: String) -> bool:
 	
 	# TileDataManagerに通知
 	if tile_data_manager:
-		tile_data_manager.set_tile_nodes(tile_nodes)
+		tile_data_manager.set_tile_nodes(tile_nodes, player_system)
 	
 	# クリーチャーがいる場合、3Dモデルを再生成
 	if not old_creature.is_empty():
