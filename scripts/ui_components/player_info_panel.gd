@@ -242,10 +242,13 @@ func get_land_count(player_id: int) -> int:
 	
 	return 0
 
-# TEPを計算（PlayerSystemに委譲）
+# TEPを計算（チーム合算対応）
 func calculate_total_assets(player_id: int) -> int:
 	if not player_system_ref:
 		return 0
+	# チームがある場合はチーム合算TEPを返す
+	if player_system_ref.team_system and player_system_ref.team_system.has_teams():
+		return player_system_ref.team_system.get_team_total_assets(player_id)
 	return player_system_ref.calculate_total_assets(player_id)
 
 # 全プレイヤーの順位を計算（PlayerSystemに委譲）
