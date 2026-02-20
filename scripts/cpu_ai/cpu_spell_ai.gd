@@ -426,7 +426,7 @@ func _get_highest_own_land_value(context: Dictionary) -> int:
 	
 	var tiles = board_system.get_all_tiles()
 	for tile in tiles:
-		if tile.get("owner", tile.get("owner_id", -1)) == player_id:
+		if player_system.is_same_team(player_id, tile.get("owner", tile.get("owner_id", -1))):
 			var level = tile.get("level", 1)
 			var base_value = tile.get("base_value", 100)
 			var value = base_value * level
@@ -523,7 +523,7 @@ func _evaluate_holy_word_spell(spell: Dictionary, context: Dictionary) -> Dictio
 	var best_tile_index = -1
 	
 	for enemy_id in range(player_system.players.size()):
-		if enemy_id == player_id:
+		if player_system.is_same_team(player_id, enemy_id):
 			continue
 		
 		# 敵の現在位置と進行方向を取得
