@@ -279,10 +279,12 @@ CPUAIContext（共通コンテキスト）
 │   ├── CPUInstantDeathEvaluator（即死スキル判断）
 │   └── CPUMergeEvaluator（合体評価）
 ├── CPUDefenseAI（防御判断）
-├── CPUMovementEvaluator（移動評価）
-│   └── CPUHolyWordEvaluator（ホーリーワード判断）
-├── CPUSpellAI（スペル判断）
-├── CPUMysticArtsAI（アルカナアーツ判断）
+├── CPUSpellAIContainer（Phase 5-2: スペル AI 参照統合コンテナ）
+│   ├── CPUSpellAI（スペル判断）
+│   ├── CPUMysticArtsAI（アルカナアーツ判断）
+│   ├── CPUHandUtils（手札ユーティリティ）
+│   └── CPUMovementEvaluator（移動評価）
+│       └── CPUHolyWordEvaluator（ホーリーワード判断）
 ├── CPUTerritoryAI（ドミニオオーダー判断）
 └── CPUSpellPhaseHandler（スペルフェーズ処理）
 ```

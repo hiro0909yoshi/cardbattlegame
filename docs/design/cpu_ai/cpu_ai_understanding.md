@@ -173,9 +173,11 @@ IDとAI評価だけを定義し、CPUクラスから参照する。
 scripts/cpu_ai/
 ├── cpu_ai_handler.gd          # エントリーポイント、各AIクラスの初期化・呼び出し
 ├── cpu_turn_processor.gd      # CPUターン処理フロー制御
+├── cpu_ai_context.gd          # 共有コンテキスト（システム参照を一元管理）
 ├── cpu_battle_ai.gd           # バトル評価、アイテム選択、ワーストケース判定
 ├── cpu_merge_evaluator.gd     # 合体判断ロジック
 ├── battle_simulator.gd        # バトル結果シミュレーター
+├── cpu_spell_ai_container.gd  # CPU スペル AI 参照統合コンテナ (Phase 5-2)
 ├── cpu_spell_ai.gd            # スペル使用判断
 ├── cpu_mystic_arts_ai.gd      # アルカナアーツ使用判断
 ├── cpu_spell_condition_checker.gd  # スペル使用条件判定
@@ -183,7 +185,8 @@ scripts/cpu_ai/
 ├── cpu_spell_target_selector.gd    # 最適ターゲット選択
 ├── cpu_spell_utils.gd         # 距離・利益計算ユーティリティ
 ├── cpu_board_analyzer.gd      # 盤面分析ヘルパー
-└── cpu_hand_utils.gd          # 手札アクセスユーティリティ
+├── cpu_hand_utils.gd          # 手札アクセスユーティリティ
+└── cpu_movement_evaluator.gd  # 移動経路評価、方向決定
 ```
 
 ### 実装済み機能
@@ -197,11 +200,13 @@ scripts/cpu_ai/
 - 無効化+即死優先判断
 - アイテム破壊/盗みスキル対策
 
-**スペル/アルカナアーツ判断（cpu_spell_ai.gd, cpu_mystic_arts_ai.gd）**
+**スペル/アルカナアーツ判断（CPUSpellAIContainer経由）**
+- CPUSpellAIContainer (Phase 5-2): cpu_spell_ai, cpu_mystic_arts_ai, cpu_hand_utils, cpu_movement_evaluator の統合参照管理
 - cpu_ruleフィールドによるパターン別評価
 - ターゲット条件による自動ターゲット選択
 - 損益計算（profit_calc）
 - 戦略的判断（strategic）
+- 移動経路評価、ホーリーワード判断
 
 **防御側判断（item_phase_handler.gd）**
 - 無効化スキルで勝てるならパス
@@ -710,3 +715,4 @@ effect_typeで識別する：
 | 2026/01 | セクション8「現状の実装状況」を実装済み内容に更新 |
 | 2026/01 | セクション9「今後作るもの」を残タスクに整理 |
 | 2026/01 | セクション15「condition」一覧を実装済みのみに更新（未使用削除反映） |
+| 2026/02/20 | CPUSpellAIContainer (Phase 5-2) を反映、実装ファイル構成更新、実装済み機能セクション追記 |

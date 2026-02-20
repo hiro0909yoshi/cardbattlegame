@@ -28,6 +28,7 @@
 
 | ファイル | 役割 |
 |---------|------|
+| `cpu_spell_ai_container.gd` | CPU スペル AI 参照統合コンテナ (Phase 5-2) |
 | `cpu_spell_ai.gd` | スペル使用**判断**（どのスペルを使うか） |
 | `cpu_spell_phase_handler.gd` | スペルフェーズ**処理**（実行準備、ターゲット構築） |
 | `cpu_spell_target_selector.gd` | ターゲット選択 |

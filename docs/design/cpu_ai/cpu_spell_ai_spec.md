@@ -26,6 +26,15 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
 					  │ 判断委譲
 					  ▼
 ┌────────────────────────────────────────────────────────┐
+│ CPUSpellAIContainer (Phase 5-2, cpu_spell_ai_container.gd) │
+│   CPU スペル AI 参照統合コンテナ (RefCounted)          │
+│   ├── CPUSpellAI                                        │
+│   ├── CPUMysticArtsAI                                   │
+│   ├── CPUHandUtils                                      │
+│   └── CPUMovementEvaluator                              │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
 │ CPUSpellAI (cpu_spell_ai.gd)                           │
 │   - decide_spell(): どのスペルをどのターゲットに       │
 │   - _evaluate_xxx(): 各パターンの評価                  │
@@ -58,6 +67,7 @@ CPUのスペルフェーズでのスペル/アルカナアーツ使用判断。
 
 | ファイル | 役割 |
 |---------|------|
+| `cpu_spell_ai_container.gd` | CPU スペル AI 参照統合コンテナ (Phase 5-2, RefCounted) |
 | `cpu_spell_ai.gd` | スペル使用判断 |
 | `cpu_spell_phase_handler.gd` | CPUスペルフェーズ処理（実行準備） |
 | `cpu_mystic_arts_ai.gd` | アルカナアーツ判断 |
