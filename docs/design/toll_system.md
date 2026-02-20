@@ -169,4 +169,19 @@ SpellCurseTollは本来「通行料」システムだが、以下の理由で**�
 
 ---
 
+---
+
+## Note: Phase 1 での統合（2026-02-20追加）
+
+SpellCurseToll は Phase 1 で SpellSystemContainer に統合されました。
+アクセス方法:
+```gdscript
+game_flow_manager.spell_container.spell_curse_toll
+```
+
+詳細は `docs/progress/refactoring_next_steps.md` の Phase 1 セクションを参照。
+
+---
+
 **最終更新**: 2025年12月16日（v1.1 - レベル係数修正、メソッド追記）
+**統合完了**: 2026年2月20日（Phase 1 - SpellSystemContainer化）

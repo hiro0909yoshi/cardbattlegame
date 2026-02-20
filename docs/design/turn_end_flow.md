@@ -275,7 +275,9 @@ end_turn()
   │
   ├─ UIを隠す
   │   ├─ ui_manager.hide_dominio_order_button()
+  │   │   ※ Phase 10-D で Callable 化済み（_ui_hide_dominio_btn_cb）
   │   └─ ui_manager.hide_card_selection_ui()
+  │       ※ Phase 10-D で Callable 化済み（_ui_hide_card_selection_cb）
   │
   ├─ 手札調整チェック
   │   └─ await check_and_discard_excess_cards()

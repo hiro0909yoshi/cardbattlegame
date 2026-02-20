@@ -1,8 +1,8 @@
 # 🎮 スペルシステム設計書
 
-**プロジェクト**: カルドセプト風カードバトルゲーム  
-**バージョン**: 3.0  
-**最終更新**: 2025年12月16日
+**プロジェクト**: カルドセプト風カードバトルゲーム
+**バージョン**: 3.0
+**最終更新**: 2026-02-20
 
 ---
 
@@ -31,12 +31,25 @@
 
 ```
 GameFlowManager
-  ├─ spell_draw: SpellDraw          # カードドロー ✅
-  ├─ spell_magic: SpellMagic        # EP増減 ✅
-  ├─ spell_land: SpellLand          # 土地操作 ✅
-  ├─ spell_dice: SpellDice          # ダイス操作 ✅
-  ├─ spell_curse: SpellCurse        # 呪い管理 ⏳
-  └─ spell_hand: SpellHand          # 手札操作（未実装）
+  └─ spell_container: SpellSystemContainer (RefCounted, Phase 1)
+      ├─ spell_draw: SpellDraw          # カードドロー ✅
+      ├─ spell_magic: SpellMagic        # EP増減 ✅
+      ├─ spell_land: SpellLand          # 土地操作 ✅
+      ├─ spell_dice: SpellDice          # ダイス操作 ✅
+      ├─ spell_curse: SpellCurse        # 呪い管理 ✅
+      ├─ spell_curse_stat: SpellCurseStat (Node)  # ステータス呪い ✅
+      ├─ spell_world_curse: SpellWorldCurse (Node) # 世界呪い ✅
+      ├─ spell_player_move: SpellPlayerMove  # プレイヤー移動 ✅
+      ├─ spell_curse_toll: SpellCurseToll    # 通行料呪い ✅
+      └─ spell_cost_modifier: SpellCostModifier  # コスト修正 ✅
+
+SpellPhaseHandler
+  ├─ spell_ui_manager: SpellUIManager (Phase 5-1, UI統合)
+  ├─ cpu_spell_phase_handler: CPUSpellPhaseHandler (CPU AI)
+  ├─ spell_flow: SpellFlowHandler
+  ├─ spell_state: SpellStateHandler
+  ├─ mystic_arts_handler: MysticArtsHandler
+  └─ spell_effect_executor: SpellEffectExecutor
 ```
 
 ### 初期化の依存関係
@@ -47,8 +60,12 @@ GameFlowManager
 | SpellMagic | PlayerSystem | ✅ |
 | SpellLand | BoardSystem3D, CreatureManager, PlayerSystem | ✅ |
 | SpellDice | PlayerSystem, SpellCurse | ✅ |
-| SpellCurse | BoardSystem3D, CreatureManager, PlayerSystem, GameFlowManager | ⏳ |
-| SpellHand | CardSystem, PlayerSystem | ⏳ |
+| SpellCurse | BoardSystem3D, CreatureManager, PlayerSystem, GameFlowManager | ✅ |
+| SpellCurseStat | SpellCurse, CreatureManager | ✅ |
+| SpellWorldCurse | SpellCurse, GameFlowManager | ✅ |
+| SpellPlayerMove | BoardSystem3D, PlayerSystem, GameFlowManager, SpellCurse | ✅ |
+| SpellCurseToll | SpellCurse, skill_toll_change, CreatureManager | ✅ |
+| SpellCostModifier | SpellCurse, PlayerSystem, GameFlowManager | ✅ |
 
 **初期化順序**:
 1. 基本システム（PlayerSystem, CardSystem, BoardSystem3D）を先に初期化
@@ -58,19 +75,25 @@ GameFlowManager
 
 ```
 scripts/spells/              # スペル効果モジュール
+  ├── spell_system_container.gd  # コンテナ（Phase 1） ✅
   ├── spell_draw.gd         # ドロー処理 ✅
   ├── spell_magic.gd        # EP増減 ✅
   ├── spell_land_new.gd     # 土地操作 ✅
   ├── spell_dice.gd         # ダイス操作 ✅
-  └── spell_curse.gd        # 呪い管理 ⏳
+  ├── spell_curse.gd        # 呪い管理 ✅
+  ├── spell_curse_stat.gd        # ステータス呪い ✅
+  ├── spell_world_curse.gd       # 世界呪い ✅
+  ├── spell_player_move.gd       # プレイヤー移動 ✅
+  ├── spell_curse_toll.gd        # 通行料呪い ✅
+  └── spell_cost_modifier.gd     # コスト修正 ✅
 
 docs/design/spells/          # 個別スペル効果のドキュメント
   ├── カードドロー.md       # ドロー処理の詳細 ✅
   ├── EP増減.md          # EP増減の詳細 ✅
   ├── ドミニオ変更.md          # 土地操作の詳細 ✅
   ├── ダイス操作.md        # ダイス操作の詳細 ✅
-  ├── ステータス増減.md    # ステータス増減の詳細 ⏳
-  └── 呪い効果.md          # 呪いシステム全体の詳細 ⏳
+  ├── ステータス増減.md    # ステータス増減の詳細 ✅
+  └── 呪い効果.md          # 呪いシステム全体の詳細 ✅
 ```
 
 ---
@@ -87,11 +110,15 @@ docs/design/spells/          # 個別スペル効果のドキュメント
 | **ダイス操作** | [spell_dice.gd](../../scripts/spells/spell_dice.gd) | 7個 | [ダイス操作.md](./spells/ダイス操作.md) |
 | **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | 1個 | [密命カード.md](../skills/密命カード.md) |
 
-### 🔶 実装中
+### 🔹 完全実装済み（続き）
 
 | 効果名 | モジュールファイル | 対応スペル数 | 詳細ドキュメント |
 |-------|-----------------|------------|----------------|
-| **ステータス増減** | [spell_curse.gd](../../scripts/spells/spell_curse.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |
+| **ステータス増減** | [spell_curse_stat.gd](../../scripts/spells/spell_curse_stat.gd) | 2個 | [ステータス増減.md](./spells/ステータス増減.md) |
+| **世界呪い** | [spell_world_curse.gd](../../scripts/spells/spell_world_curse.gd) | 5個 | [呪い効果.md](./spells/呪い効果.md) |
+| **プレイヤー移動** | [spell_player_move.gd](../../scripts/spells/spell_player_move.gd) | 3個 | [呪い効果.md](./spells/呪い効果.md) |
+| **通行料呪い** | [spell_curse_toll.gd](../../scripts/spells/spell_curse_toll.gd) | 4個 | [呪い効果.md](./spells/呪い効果.md) |
+| **コスト修正** | [spell_cost_modifier.gd](../../scripts/spells/spell_cost_modifier.gd) | 3個 | [呪い効果.md](./spells/呪い効果.md) |
 
 ---
 
@@ -183,7 +210,7 @@ Card.gd (scripts/)
 
 **実装方式**: `ability_parsed`に直接追加し、既存のSkillSystemを活用
 
-**実装ファイル**: `scripts/spell_effect_system.gd`（未実装）
+**実装ファイル**: 各スペルシステム（spell_curse.gd, spell_curse_stat.gd, spell_world_curse.gd 等）で分散実装済み ✅
 
 ---
 
@@ -497,7 +524,8 @@ if hand_count >= required_count:
 | 2025/11/11 | 2.5 | 開発者向け拡張ルール追加 |
 | 2025/11/12 | 2.7 | 密命システム修正完了 |
 | 2025/12/16 | 3.0 | ドキュメント修復、ボタン関連記述更新（GlobalActionButtons統合） |
+| 2026/02/20 | 3.1 | アーキテクチャ更新（Phase E 完了）：SpellSystemContainer統合、全10スペルシステム実装完了 |
 
 ---
 
-**最終更新**: 2025年12月16日（v3.0）
+**最終更新**: 2026-02-20（v3.1）

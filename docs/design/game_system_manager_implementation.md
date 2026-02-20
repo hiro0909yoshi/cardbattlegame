@@ -320,15 +320,61 @@ func _connect_camera_signals_deferred():
 
 ---
 
+## Phase 5〜E で追加された初期化（2026-02-16〜2026-02-20）
+
+### SpellUIManager 初期化（Phase 5-1）
+SpellPhaseHandler の初期化時に SpellUIManager を内部で作成。UI統合管理（274行、14メソッド）。
+
+### CPUSpellAIContainer 初期化（Phase 5-2）
+GSM が CPUSpellAIContainer (RefCounted) を作成し、以下4つの参照を集約:
+- CPUSpellAI
+- CPUMysticArtsAI
+- CPUHandUtils
+- CPUMovementEvaluator
+
+### UIEventHub 初期化（Phase UIEventHub）
+GSM が UIEventHub を作成し、UIManager と各UIコンポーネントに注入:
+```gdscript
+ui_event_hub = UIEventHub.new()
+add_child(ui_event_hub)
+```
+
+### UI Callable 注入（Phase 10-D）
+GSM の `inject_ui_callbacks()` で GFM に UI 操作 Callable を一括注入:
+- `_ui_set_phase_text_cb` → UIManager.phase_display
+- `_ui_update_panels_cb` → UIManager.player_info_service
+- `_ui_show_dominio_btn_cb` / `_ui_hide_dominio_btn_cb`
+- `_ui_show_card_selection_cb` / `_ui_hide_card_selection_cb`
+- `_ui_enable_navigation_cb` → UIManager.navigation_service
+
+### UIManager 5サービス初期化（Phase 8-F）
+UIManager.create_ui() 内で5つの内部サービスを作成:
+- MessageService
+- NavigationService
+- CardSelectionService
+- InfoPanelService
+- PlayerInfoService
+
+### Handler UI Signal 接続（Phase 6）
+GSM がハンドラーの UI Signal をリスニングし、UIManager のサービスに伝達:
+- SpellPhaseHandler: 9 UI Signals
+- DicePhaseHandler: 8 UI Signals
+- TollPaymentHandler: 2 UI Signals
+- DiscardHandler: 2 UI Signals
+- BankruptcyHandler: 7 UI Signals
+- ItemPhaseHandler: 4 UI Signals
+- **合計**: 32+ UI Signals
+
+---
+
 ## 関連ファイル
 
 - `scripts/system_manager/game_system_manager.gd` - 実装コード
 - `scripts/game_3d.gd` - 呼び出し元
 - `scripts/game_constants.gd` - 定数定義（CAMERA_OFFSET 等）
-- `docs/design/refactoring/game_system_manager_design.md` - 元の設計書
 
 ---
 
 **作成日**: 2025-11-22
-**最終更新**: 2026-02-11
+**最終更新**: 2026-02-20
 **ステータス**: 実装完了・ドキュメント更新済み
