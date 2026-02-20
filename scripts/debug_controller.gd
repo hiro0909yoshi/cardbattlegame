@@ -13,9 +13,6 @@ var enabled = true  # falseにすればデバッグ機能を完全無効化
 var debug_dice_mode = false
 var fixed_dice_value = 0
 
-# 巡回テレポート用のインデックス
-var _tp_cycle_index: int = -1
-
 # システム参照
 var player_system
 var board_system
@@ -36,7 +33,7 @@ var card_id_input: LineEdit = null
 
 func _ready():
 	if enabled and OS.is_debug_build():
-		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4 | E:巡回TP")
+		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4")
 
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
@@ -123,8 +120,6 @@ func _input(event):
 				clear_current_player_down_states()
 			KEY_L:
 				set_current_tile_level_4()
-			KEY_E:
-				cycle_teleport()
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():
@@ -405,18 +400,6 @@ func show_all_tiles_info():
 	print("[DebugController] 全タイル情報表示（未実装）")
 	emit_signal("debug_action", "show_tiles", null)
 
-# 特定のタイルへ直接移動
-func teleport_to_tile(tile_index: int):
-	if not player_system or not board_system:
-		return
-	
-	var current_player = player_system.get_current_player()
-	if current_player and board_system.tile_nodes.has(tile_index):
-		print("【デバッグ】マス", tile_index, "へテレポート")
-		player_system.place_player_at_tile(current_player.id, tile_index, board_system)
-		player_system.emit_signal("movement_completed", tile_index)
-		emit_signal("debug_action", "teleport", tile_index)
-
 # 手札を最大まで補充
 func fill_hand():
 	if not card_system or not player_system:
@@ -535,51 +518,3 @@ func _toggle_tile_display():
 		await get_tree().create_timer(1.0).timeout
 		if _message_service:
 			_message_service.set_phase_text(original_text)
-
-# ============================================
-# 巡回テレポート
-# ============================================
-
-## Eキー: 全タイルを巡回テレポート（押すたびに次のタイルへ）
-func cycle_teleport():
-	if not player_system or not board_system:
-		print("【デバッグ】システム参照がありません")
-		return
-
-	var current_player = player_system.get_current_player()
-	if not current_player:
-		print("【デバッグ】現在のプレイヤーが見つかりません")
-		return
-
-	# 全タイル一覧を収集
-	var all_tiles: Array[int] = []
-	for tile_index in board_system.tile_nodes.keys():
-		all_tiles.append(tile_index)
-
-	if all_tiles.is_empty():
-		print("【デバッグ】タイルがありません")
-		return
-
-	all_tiles.sort()
-
-	# 巡回インデックスを進める
-	_tp_cycle_index += 1
-	if _tp_cycle_index >= all_tiles.size():
-		_tp_cycle_index = 0
-
-	var target_tile = all_tiles[_tp_cycle_index]
-	var tile = board_system.tile_nodes[target_tile]
-
-	# タイル情報を表示
-	var info = "空き地"
-	if tile.owner_id >= 0:
-		var creature_name = "空"
-		var level = tile.level
-		if tile.creature_data and not tile.creature_data.is_empty():
-			creature_name = tile.creature_data.get("name", "不明")
-		var owner_name = player_system.players[tile.owner_id].name if tile.owner_id < player_system.players.size() else "P%d" % (tile.owner_id + 1)
-		info = "%s Lv%d [%s]" % [creature_name, level, owner_name]
-
-	# テレポート実行
-	teleport_to_tile(target_tile)
-	print("【デバッグ】巡回TP (%d/%d): タイル%d %s" % [_tp_cycle_index + 1, all_tiles.size(), target_tile, info])
