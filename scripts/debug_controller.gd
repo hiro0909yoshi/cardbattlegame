@@ -13,8 +13,8 @@ var enabled = true  # falseにすればデバッグ機能を完全無効化
 var debug_dice_mode = false
 var fixed_dice_value = 0
 
-# 敵地巡回テレポート用のインデックス
-var _enemy_tp_index: int = -1
+# 巡回テレポート用のインデックス
+var _tp_cycle_index: int = -1
 
 # システム参照
 var player_system
@@ -36,7 +36,7 @@ var card_id_input: LineEdit = null
 
 func _ready():
 	if enabled and OS.is_debug_build():
-		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4 | E:敵地TP")
+		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4 | E:巡回TP")
 
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
@@ -124,7 +124,7 @@ func _input(event):
 			KEY_L:
 				set_current_tile_level_4()
 			KEY_E:
-				show_enemy_tile_teleport()
+				cycle_teleport()
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():
@@ -286,7 +286,13 @@ func show_card_input_dialog_for_cpu():
 	
 	if card_id_input.text_submitted.is_connected(_on_card_id_text_submitted):
 		card_id_input.text_submitted.disconnect(_on_card_id_text_submitted)
-	card_id_input.text_submitted.connect(func(_t): card_input_dialog.hide(); _on_cpu_card_id_confirmed(), CONNECT_ONE_SHOT)
+	if not card_id_input.text_submitted.is_connected(_on_cpu_card_id_text_submitted):
+		card_id_input.text_submitted.connect(_on_cpu_card_id_text_submitted, CONNECT_ONE_SHOT)
+
+## CPU用 Enterキー押下時の処理
+func _on_cpu_card_id_text_submitted(_new_text: String):
+	card_input_dialog.hide()
+	_on_cpu_card_id_confirmed()
 
 # CPU用カードID確定
 func _on_cpu_card_id_confirmed():
@@ -345,7 +351,7 @@ func add_card_to_cpu_hand(card_id: int):
 func _get_first_cpu_player_id() -> int:
 	if not game_flow_manager:
 		return -1
-	var cpu_flags = game_flow_manager.player_is_cpu if "player_is_cpu" in game_flow_manager else []
+	var cpu_flags = game_flow_manager.player_is_cpu
 	for i in range(cpu_flags.size()):
 		if cpu_flags[i]:
 			return i
@@ -378,45 +384,6 @@ func get_fixed_dice() -> int:
 		return fixed_dice_value
 	return 0
 
-# 敵の土地に移動
-func move_to_enemy_land():
-	if not player_system or not board_system:
-		return
-	
-	var current_player = player_system.get_current_player()
-	if not current_player:
-		return
-	
-	for i in range(board_system.total_tiles):
-		var tile_owner = board_system.tile_owners[i]
-		if tile_owner >= 0 and tile_owner != current_player.id:
-			print("【デバッグ】敵の土地（マス", i, "）へテレポート")
-			player_system.place_player_at_tile(current_player.id, i, board_system)
-			player_system.emit_signal("movement_completed", i)
-			emit_signal("debug_action", "teleport", i)
-			return
-	
-	print("【デバッグ】敵の土地が見つかりません")
-
-# 空き地に移動
-func move_to_empty_land():
-	if not player_system or not board_system:
-		return
-	
-	var current_player = player_system.get_current_player()
-	if not current_player:
-		return
-	
-	for i in range(board_system.total_tiles):
-		if board_system.tile_owners[i] == -1:
-			print("【デバッグ】空き地（マス", i, "）へテレポート")
-			player_system.place_player_at_tile(current_player.id, i, board_system)
-			player_system.emit_signal("movement_completed", i)
-			emit_signal("debug_action", "teleport", i)
-			return
-	
-	print("【デバッグ】空き地が見つかりません")
-
 # デバッグ: EP追加
 func add_debug_magic():
 	if not player_system:
@@ -427,14 +394,6 @@ func add_debug_magic():
 		player_system.add_magic(current_player.id, 1000)
 		print("【デバッグ】EP+1000")
 		emit_signal("debug_action", "add_magic", 1000)
-
-# CPU手札表示切替
-func toggle_cpu_hand_display():
-	if not ui_manager:
-		return
-	
-	ui_manager.toggle_debug_mode()
-	emit_signal("debug_action", "toggle_cpu_hand", DebugSettings.ui_debug_mode)
 
 # 全タイル情報表示
 func show_all_tiles_info():
@@ -452,7 +411,7 @@ func teleport_to_tile(tile_index: int):
 		return
 	
 	var current_player = player_system.get_current_player()
-	if current_player and tile_index >= 0 and tile_index < board_system.total_tiles:
+	if current_player and board_system.tile_nodes.has(tile_index):
 		print("【デバッグ】マス", tile_index, "へテレポート")
 		player_system.place_player_at_tile(current_player.id, tile_index, board_system)
 		player_system.emit_signal("movement_completed", tile_index)
@@ -577,23 +536,12 @@ func _toggle_tile_display():
 		if _message_service:
 			_message_service.set_phase_text(original_text)
 
-# Sキー: シグナル接続状態を表示
-func _show_signal_connections():
-	SignalRegistry.debug_print_connections()
-	var stats = SignalRegistry.get_stats()
-	print("総接続数: ", stats.get("total_connections", 0))
-
-# Dキー: デバッグモード切替
-func _toggle_debug_mode():
-	if ui_manager:
-		ui_manager.toggle_debug_mode()
-
 # ============================================
-# 敵地巡回テレポート
+# 巡回テレポート
 # ============================================
 
-## Eキー: 敵の土地を巡回テレポート（押すたびに次の敵地へ）
-func show_enemy_tile_teleport():
+## Eキー: 全タイルを巡回テレポート（押すたびに次のタイルへ）
+func cycle_teleport():
 	if not player_system or not board_system:
 		print("【デバッグ】システム参照がありません")
 		return
@@ -603,34 +551,35 @@ func show_enemy_tile_teleport():
 		print("【デバッグ】現在のプレイヤーが見つかりません")
 		return
 
-	# 敵の土地一覧を収集
-	var enemy_tiles: Array[int] = []
+	# 全タイル一覧を収集
+	var all_tiles: Array[int] = []
 	for tile_index in board_system.tile_nodes.keys():
-		var tile = board_system.tile_nodes[tile_index]
-		if tile.owner_id >= 0 and tile.owner_id != current_player.id:
-			enemy_tiles.append(tile_index)
+		all_tiles.append(tile_index)
 
-	if enemy_tiles.is_empty():
-		print("【デバッグ】敵の土地がありません")
+	if all_tiles.is_empty():
+		print("【デバッグ】タイルがありません")
 		return
 
-	enemy_tiles.sort()
+	all_tiles.sort()
 
 	# 巡回インデックスを進める
-	_enemy_tp_index += 1
-	if _enemy_tp_index >= enemy_tiles.size():
-		_enemy_tp_index = 0
+	_tp_cycle_index += 1
+	if _tp_cycle_index >= all_tiles.size():
+		_tp_cycle_index = 0
 
-	var target_tile = enemy_tiles[_enemy_tp_index]
+	var target_tile = all_tiles[_tp_cycle_index]
 	var tile = board_system.tile_nodes[target_tile]
 
 	# タイル情報を表示
-	var creature_name = "空"
-	var level = tile.level if "level" in tile else 0
-	if tile.creature_data and not tile.creature_data.is_empty():
-		creature_name = tile.creature_data.get("name", "不明")
-	var owner_name = player_system.players[tile.owner_id].name if tile.owner_id < player_system.players.size() else "P%d" % (tile.owner_id + 1)
+	var info = "空き地"
+	if tile.owner_id >= 0:
+		var creature_name = "空"
+		var level = tile.level
+		if tile.creature_data and not tile.creature_data.is_empty():
+			creature_name = tile.creature_data.get("name", "不明")
+		var owner_name = player_system.players[tile.owner_id].name if tile.owner_id < player_system.players.size() else "P%d" % (tile.owner_id + 1)
+		info = "%s Lv%d [%s]" % [creature_name, level, owner_name]
 
 	# テレポート実行
 	teleport_to_tile(target_tile)
-	print("【デバッグ】敵地TP (%d/%d): タイル%d %s Lv%d [%s]" % [_enemy_tp_index + 1, enemy_tiles.size(), target_tile, creature_name, level, owner_name])
+	print("【デバッグ】巡回TP (%d/%d): タイル%d %s" % [_tp_cycle_index + 1, all_tiles.size(), target_tile, info])
