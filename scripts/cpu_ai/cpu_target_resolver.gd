@@ -991,11 +991,11 @@ func filter_curse_spell_targets(curse_is_beneficial: bool, targets: Array, conte
 		
 		if curse_is_beneficial:
 			# 有利な呪いを付ける場合
-			if CpuCurseEvaluator.is_valid_beneficial_curse_target(player_id, owner_id, creature):
+			if CpuCurseEvaluator.is_valid_beneficial_curse_target(player_id, owner_id, creature, player_system):
 				filtered.append(target)
 		else:
 			# 不利な呪いを付ける場合
-			if CpuCurseEvaluator.is_valid_harmful_curse_target(player_id, owner_id, creature):
+			if CpuCurseEvaluator.is_valid_harmful_curse_target(player_id, owner_id, creature, player_system):
 				filtered.append(target)
 	
 	return filtered

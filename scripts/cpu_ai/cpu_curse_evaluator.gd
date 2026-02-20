@@ -9,7 +9,7 @@ extends RefCounted
 # =============================================================================
 
 ## クリーチャーにとって有利な呪い（所有者視点）
-const BENEFICIAL_CREATURE_CURSES = [
+const BENEFICIAL_CREATURE_CURSES: Array[String] = [
 	"stat_boost",           # 能力値+20
 	"mystic_grant",         # アルカナアーツ付与
 	"command_growth",       # コマンド成長
@@ -28,7 +28,7 @@ const BENEFICIAL_CREATURE_CURSES = [
 ]
 
 ## クリーチャーにとって不利な呪い（所有者視点）
-const HARMFUL_CREATURE_CURSES = [
+const HARMFUL_CREATURE_CURSES: Array[String] = [
 	"curse_toll_half",      # 通行料半減
 	"stat_reduce",          # 能力値-20
 	"skill_nullify",        # 戦闘能力不可
@@ -44,7 +44,7 @@ const HARMFUL_CREATURE_CURSES = [
 ]
 
 ## プレイヤーにとって有利な呪い
-const BENEFICIAL_PLAYER_CURSES = [
+const BENEFICIAL_PLAYER_CURSES: Array[String] = [
 	"dice_fixed",           # ダイス固定
 	"dice_range",           # ダイス範囲
 	"protection",           # 防魔
@@ -53,7 +53,7 @@ const BENEFICIAL_PLAYER_CURSES = [
 ]
 
 ## プレイヤーにとって不利な呪い
-const HARMFUL_PLAYER_CURSES = [
+const HARMFUL_PLAYER_CURSES: Array[String] = [
 	"dice_range_magic",     # 範囲+EP（制限付き）
 	"toll_disable",         # 通行料無効
 	"toll_fixed",           # 通行料固定
@@ -83,76 +83,38 @@ static func get_creature_curse_benefit(creature: Dictionary) -> int:
 
 
 ## CPUから見てクリーチャーの呪い状態が望ましいかどうか判定
-## cpu_id: CPUのプレイヤーID
-## creature_owner_id: クリーチャーの所有者ID
-## creature: クリーチャーデータ
-## is_ally: チームメイト（デフォルト: false）
 ## 戻り値: true=望ましい状態（上書きすべきでない）, false=上書きしてよい
-static func is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int, creature: Dictionary, is_ally: bool = false) -> bool:
+static func is_curse_state_desirable_for_cpu(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
 	var benefit = get_creature_curse_benefit(creature)
-
 	if benefit == 0:
-		return false  # 呪いなしまたは不明 → 上書きしてよい
+		return false
 
-	var is_own_creature = (creature_owner_id == cpu_id) or is_ally
-
-	# 自クリーチャーに有利な呪い → 望ましい（上書きしない）
-	# 敵クリーチャーに不利な呪い → 望ましい（上書きしない）
+	var is_own_creature = _is_ally(cpu_id, creature_owner_id, player_system)
 	if is_own_creature:
 		return benefit > 0
 	else:
 		return benefit < 0
 
 
-## 呪いスペルのターゲットとして適切かどうか判定
-## 不利な呪いを付けるスペルの場合のターゲット判定
-## cpu_id: CPUのプレイヤーID
-## creature_owner_id: クリーチャーの所有者ID
-## creature: クリーチャーデータ
-## is_ally: チームメイト（デフォルト: false）
+## 不利な呪いのターゲットとして適切か判定
 ## 戻り値: true=ターゲットとして適切
-static func is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, is_ally: bool = false) -> bool:
-	var is_own_creature = (creature_owner_id == cpu_id) or is_ally
-
-	# 自クリーチャーには不利な呪いを付けない
-	if is_own_creature:
+static func is_valid_harmful_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
+	if _is_ally(cpu_id, creature_owner_id, player_system):
 		return false
-
-	# 敵クリーチャーの現在の呪い状態をチェック
 	var benefit = get_creature_curse_benefit(creature)
-
-	# 敵に既に不利な呪いがついている → ターゲットとして不適切（上書きしない）
 	if benefit < 0:
 		return false
-
-	# 敵に有利な呪いがついている → ターゲットとして適切（上書きして消す）
-	# 敵に呪いがない → ターゲットとして適切
 	return true
 
 
-## 呪いスペルのターゲットとして適切かどうか判定
-## 有利な呪いを付けるスペルの場合のターゲット判定
-## cpu_id: CPUのプレイヤーID
-## creature_owner_id: クリーチャーの所有者ID
-## creature: クリーチャーデータ
-## is_ally: チームメイト（デフォルト: false）
+## 有利な呪いのターゲットとして適切か判定
 ## 戻り値: true=ターゲットとして適切
-static func is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, is_ally: bool = false) -> bool:
-	var is_own_creature = (creature_owner_id == cpu_id) or is_ally
-
-	# 敵クリーチャーには有利な呪いを付けない
-	if not is_own_creature:
+static func is_valid_beneficial_curse_target(cpu_id: int, creature_owner_id: int, creature: Dictionary, player_system = null) -> bool:
+	if not _is_ally(cpu_id, creature_owner_id, player_system):
 		return false
-
-	# 自クリーチャーの現在の呪い状態をチェック
 	var benefit = get_creature_curse_benefit(creature)
-
-	# 自分に既に有利な呪いがついている → ターゲットとして不適切（上書きしない）
 	if benefit > 0:
 		return false
-
-	# 自分に不利な呪いがついている → ターゲットとして適切（上書きして消す）
-	# 自分に呪いがない → ターゲットとして適切
 	return true
 
 # =============================================================================
@@ -179,17 +141,17 @@ static func get_player_curse_benefit(player_curse: Dictionary) -> int:
 ## cpu_id: CPUのプレイヤーID
 ## target_player_id: ターゲットプレイヤーID
 ## player_curse: プレイヤー呪いデータ
-## is_ally: チームメイト（デフォルト: false）
-static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int, player_curse: Dictionary, is_ally: bool = false) -> bool:
+## player_system: PlayerSystemオブジェクト（チーム判定用、デフォルト: null）
+static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int, player_curse: Dictionary, player_system = null) -> bool:
 	var benefit = get_player_curse_benefit(player_curse)
 
 	if benefit == 0:
 		return false
 
-	var is_self = (target_player_id == cpu_id) or is_ally
+	var is_self = _is_ally(cpu_id, target_player_id, player_system)
 
 	if is_self:
-		return benefit > 0  # 自分に有利な呪い → 望ましい
+		return benefit > 0  # 自分/同盟に有利な呪い → 望ましい
 	else:
 		return benefit < 0  # 敵に不利な呪い → 望ましい
 
@@ -201,7 +163,7 @@ static func is_player_curse_desirable_for_cpu(cpu_id: int, target_player_id: int
 ## cpu_id: CPUのプレイヤーID
 ## creatures: クリーチャー情報の配列
 ## player_system: PlayerSystemオブジェクト（チーム判定用、デフォルト: null）
-static func has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array, player_system = null) -> bool:
+static func has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array[Dictionary], player_system = null) -> bool:
 	for creature_info in creatures:
 		var owner_id = creature_info.get("owner_id", -1)
 		var is_own = false
@@ -225,3 +187,14 @@ static func has_harmful_curse_on_own_creatures(cpu_id: int, creatures: Array, pl
 ## CPUプレイヤー自身に不利な呪いがあるかチェック
 static func has_harmful_curse_on_self(player_curse: Dictionary) -> bool:
 	return get_player_curse_benefit(player_curse) < 0
+
+
+# =============================================================================
+# 内部ヘルパー
+# =============================================================================
+
+## チーム判定ヘルパー（player_systemがあればis_same_team、なければID一致）
+static func _is_ally(cpu_id: int, other_id: int, player_system = null) -> bool:
+	if player_system and player_system.has_method("is_same_team"):
+		return player_system.is_same_team(cpu_id, other_id)
+	return cpu_id == other_id
