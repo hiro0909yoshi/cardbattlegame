@@ -35,11 +35,13 @@ var skill_processor: BattleSkillProcessorScript = null
 var special_effects: BattleSpecialEffectsScript = null
 
 # ログ出力フラグ
-var enable_log: bool = true
+var enable_log: bool = false
 
 func _init():
 	battle_preparation = BattlePreparationScript.new()
+	battle_preparation.silent = true
 	skill_processor = BattleSkillProcessorScript.new()
+	skill_processor.silent = true
 	special_effects = BattleSpecialEffectsScript.new()
 
 ## システム参照を設定

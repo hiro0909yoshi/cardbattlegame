@@ -23,14 +23,23 @@ var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
 var spell_magic_ref = null  # SpellMagicの参照（EP獲得系アイテム用）
 
+# ログ出力フラグ
+var silent: bool = false
+
 func setup_systems(board_system, card_system: CardSystem, player_system: PlayerSystem, spell_magic = null):
 	board_system_ref = board_system
 	card_system_ref = card_system
 	player_system_ref = player_system
 	spell_magic_ref = spell_magic
-	
+
 	# サブシステムにsystem参照を設定
 	item_applier.setup_systems(board_system, card_system, spell_magic)
+	item_applier.silent = silent
+
+## silent プロパティをセット（item_applier に伝播）
+func set_silent(value: bool) -> void:
+	silent = value
+	item_applier.silent = value
 
 ## 両者のBattleParticipantを準備
 func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info: Dictionary, attacker_item: Dictionary = {}, defender_item: Dictionary = {}, _battle_tile_index: int = -1) -> Dictionary:
@@ -261,9 +270,10 @@ func apply_remaining_item_effects(attacker: BattleParticipant, defender: BattleP
 			mode_str = "（スキルのみ）"
 		else:
 			mode_str = "（破壊後）"
-		print("[アイテム効果適用%s] " % mode_str, attacker.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		if not silent:
+			print("[アイテム効果適用%s] " % mode_str, attacker.creature_data.get("name", "?"), " → ", item.get("name", "?"))
 		item_applier.apply_item_effects(attacker, item, defender, battle_tile_index, stat_bonus_only, skip_stat_bonus)
-	
+
 	# 防御側のアイテム効果を適用
 	var defender_items = defender.creature_data.get("items", [])
 	if not defender_items.is_empty():
@@ -275,5 +285,6 @@ func apply_remaining_item_effects(attacker: BattleParticipant, defender: BattleP
 			mode_str = "（スキルのみ）"
 		else:
 			mode_str = "（破壊後）"
-		print("[アイテム効果適用%s] " % mode_str, defender.creature_data.get("name", "?"), " → ", item.get("name", "?"))
+		if not silent:
+			print("[アイテム効果適用%s] " % mode_str, defender.creature_data.get("name", "?"), " → ", item.get("name", "?"))
 		item_applier.apply_item_effects(defender, item, attacker, battle_tile_index, stat_bonus_only, skip_stat_bonus)

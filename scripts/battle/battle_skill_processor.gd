@@ -30,6 +30,9 @@ var battle_preparation_ref = null
 # === 直接参照（GFM経由を廃止） ===
 var lap_system = null  # LapSystem: 周回管理（破壊数効果用）
 
+# ログ出力フラグ
+var silent: bool = false
+
 func setup_systems(board_system, game_flow_manager = null, card_system = null, p_battle_screen_manager = null, battle_preparation = null):
 	board_system_ref = board_system
 	game_flow_manager_ref = game_flow_manager
