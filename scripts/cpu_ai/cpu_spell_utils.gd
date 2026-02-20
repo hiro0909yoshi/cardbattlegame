@@ -125,7 +125,7 @@ func calculate_lap_diff(context: Dictionary) -> int:
 	
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			var enemy_lap = lap_system.get_lap_count(i)
 			max_enemy_lap = max(max_enemy_lap, enemy_lap)
 	
@@ -142,7 +142,7 @@ func get_max_enemy_magic(context: Dictionary) -> int:
 	
 	var player_count = player_system.players.size()
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			var magic = player_system.get_magic(i)
 			max_magic = max(max_magic, magic)
 	
@@ -203,9 +203,9 @@ func get_enemy_players(context: Dictionary) -> Array:
 	var player_count = player_system.players.size()
 	
 	for i in range(player_count):
-		if i != player_id:
+		if not player_system.is_same_team(player_id, i):
 			results.append({"type": "player", "player_id": i})
-	
+
 	return results
 
 # =============================================================================
