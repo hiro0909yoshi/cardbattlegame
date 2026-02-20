@@ -140,9 +140,7 @@ func set_item_phase_handler(handler) -> void:
 
 # タイル到着時のメイン処理
 func process_tile_landing(tile_index: int, current_player_index: int, player_is_cpu: Array):
-	print("[TileActionProcessor] process_tile_landing: tile=%d, is_action_processing=%s" % [tile_index, is_action_processing])
 	if is_action_processing:
-		print("Warning: Already processing tile action")
 		return
 
 	if not board_system.tile_nodes.has(tile_index):
@@ -420,8 +418,6 @@ func set_pending_comment(message: String, player_id: int = -1, force_click_wait:
 
 # アクション完了（内部用）
 func _complete_action():
-	print("[TileActionProcessor] _complete_action開始")
-	
 	if not is_action_processing:
 		print("[TileActionProcessor] 既に完了済み、スキップ")
 		return
@@ -441,8 +437,7 @@ func _complete_action():
 		board_system.return_camera_to_player()
 	
 	remote_placement_tile = -1
-	
-	print("[TileActionProcessor] action_completedシグナル発火")
+
 	emit_signal("action_completed")
 
 func _show_pending_comment():

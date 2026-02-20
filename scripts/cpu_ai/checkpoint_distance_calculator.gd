@@ -38,18 +38,9 @@ func calculate_all_distances():
 	
 	# 1. チェックポイントを検出
 	_find_all_checkpoints()
-	
-	print("[CP距離] _find_all_checkpoints完了: %d個, tile_nodes数: %d" % [checkpoints.size(), tile_nodes.size()])
+
 	if checkpoints.is_empty():
-		# タイルタイプをサンプル出力
-		var count = 0
-		for ti in tile_nodes:
-			var t = tile_nodes[ti]
-			if t and count < 5:
-				var tt = t.tile_type if "tile_type" in t else "NO_PROP"
-				print("[CP距離]   tile%d: tile_type='%s'" % [ti, tt])
-				count += 1
-		print("[CP距離] チェックポイント未検出 - 距離計算スキップ")
+		push_warning("[CPUMovement] チェックポイント未検出 - 距離計算スキップ")
 		return
 	
 	# 2. 分岐タイルを検出
@@ -68,25 +59,9 @@ func calculate_all_distances():
 	
 	# 4. 方向別距離を計算
 	_calculate_directional_distances()
-	
-	# デバッグ: 距離テーブル出力
-	print("[CP距離] チェックポイント: %s" % str(checkpoints))
-	print("[CP距離] 分岐タイル: %s" % str(branch_tiles))
-	for cp_id in distances:
-		var dist_table = distances[cp_id]
-		var cp_tiles = checkpoints.get(cp_id, [])
-		# タイル0周辺の距離を出力
-		var nearby = [0, 1, 2, 19, 18, 20, 21, 38, 37]
-		var dist_str = ""
-		for t in nearby:
-			if dist_table.has(t):
-				dist_str += "tile%d=%d " % [t, dist_table[t]]
-		print("[CP距離] CP '%s'(tiles%s): %s" % [cp_id, str(cp_tiles), dist_str])
-	# 方向別距離
-	for branch in directional_distances:
-		print("[CP距離] 分岐タイル%d の方向別距離:" % branch)
-		for next_tile in directional_distances[branch]:
-			print("[CP距離]   →%d: %s" % [next_tile, str(directional_distances[branch][next_tile])])
+
+	# デバッグ: 計算完了サマリー
+	print("[CPUMovement] CP距離計算完了: %dCP %s, 分岐%d, タイル%d" % [checkpoints.size(), str(checkpoints.keys()), branch_tiles.size(), tile_nodes.size()])
 
 
 ## 特定タイルから特定チェックポイントへの距離を取得

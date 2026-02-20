@@ -782,20 +782,20 @@ func _show_spell_info_panel(card_index: int, card_data: Dictionary):
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
-	
-	# 他のパネルを閉じる（ロック解除含む）
-	ui_manager_ref.hide_all_info_panels(false)
-	
+
 	# カードノードから制限理由を取得
 	var restriction_reason = _get_card_restriction_reason(card_index)
-	
+
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
 	if pending_card_index == card_index and ui_manager_ref.spell_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_info_panel_confirmed(confirm_data)
 		return
-	
+
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
+
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）
@@ -813,20 +813,20 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
-	
-	# 他のパネルを閉じる（ロック解除含む）
-	ui_manager_ref.hide_all_info_panels(false)
-	
+
 	# カードノードから制限理由を取得
 	var restriction_reason = _get_card_restriction_reason(card_index)
-	
+
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定（制限がない場合のみ）
 	if pending_card_index == card_index and ui_manager_ref.item_info_panel_ui.is_panel_visible() and restriction_reason == "":
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_info_panel_confirmed(confirm_data)
 		return
-	
+
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
+
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）
@@ -849,17 +849,17 @@ func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 		# フォールバック：既存の動作
 		_confirm_card_selection(card_index)
 		return
-	
-	# 他のパネルを閉じる（ロック解除含む）
-	ui_manager_ref.hide_all_info_panels(false)
-	
+
 	# ダブルクリック検出：同じカードを再度クリックした場合は即確定
 	if pending_card_index == card_index and ui_manager_ref.creature_info_panel_ui.is_panel_visible():
 		var confirm_data = card_data.duplicate()
 		confirm_data["hand_index"] = card_index
 		_on_info_panel_confirmed(confirm_data)
 		return
-	
+
+	# 他のパネルを閉じる（ロック解除含む）
+	ui_manager_ref.hide_all_info_panels(false)
+
 	pending_card_index = card_index
 	
 	# シグナル接続（初回のみ）

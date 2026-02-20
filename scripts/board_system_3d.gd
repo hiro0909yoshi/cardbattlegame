@@ -98,8 +98,6 @@ func create_creature_manager():
 	# BaseTileの静的参照を設定
 	BaseTile.creature_manager = cm
 
-	print("[BoardSystem3D] CreatureManager統合完了")
-
 func create_subsystems():
 	# 既存のサブシステム
 	tile_info_display = TileInfoDisplay.new()
@@ -590,9 +588,6 @@ func _on_invasion_completed(success: bool, tile_index: int):
 	invasion_completed.emit(success, tile_index)
 
 func _on_movement_completed(player_id: int, final_tile: int):
-	# デバッグログ
-	print("[BoardSystem3D] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
-
 	# リレー emit（Phase 2: GameFlowManager へ通知）
 	movement_completed.emit(player_id, final_tile)
 
@@ -627,9 +622,6 @@ func _on_terrain_changed(tile_index: int, old_element: String, new_element: Stri
 	terrain_changed.emit(tile_index, old_element, new_element)
 
 func _on_start_passed(player_id: int):
-	# デバッグログ
-	print("[BoardSystem3D] start_passed 受信: player_id=%d" % player_id)
-
 	# リレー emit
 	start_passed.emit(player_id)
 
@@ -654,14 +646,8 @@ func _on_creature_changed(tile_index: int, old_data: Dictionary, new_data: Dicti
 		push_error("[BoardSystem3D] Tile not found: %d" % tile_index)
 		return
 
-	# ステップ3: 状態判定
-	if old_data.is_empty() and not new_data.is_empty():
-		print("[BoardSystem3D] creature_changed: 新規配置 tile=%d" % tile_index)
-	elif not old_data.is_empty() and new_data.is_empty():
-		print("[BoardSystem3D] creature_changed: クリーチャー削除 tile=%d" % tile_index)
-	elif not old_data.is_empty() and not new_data.is_empty():
-		print("[BoardSystem3D] creature_changed: クリーチャー更新 tile=%d" % tile_index)
-	else:
+	# ステップ3: 状態判定（push_error のみ残す）
+	if old_data.is_empty() and new_data.is_empty():
 		push_error("[BoardSystem3D] 矛盾したデータ: tile=%d" % tile_index)
 
 	# Day 3 追加: creature_updated シグナルをリレー

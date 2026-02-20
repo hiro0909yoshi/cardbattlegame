@@ -23,8 +23,6 @@ func setup(board: BoardSystem3D, player: PlayerSystem, _flow: GameFlowManager, c
 	if board_system:
 		tile_neighbor_system = board_system.tile_neighbor_system
 
-	print("[SpellPlayerMove] 初期化完了")
-
 # ========================================
 # ワープ系
 # ========================================

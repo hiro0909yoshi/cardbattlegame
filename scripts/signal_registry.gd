@@ -18,7 +18,6 @@ func _ready():
 	# シングルトン設定
 	if instance == null:
 		instance = self
-		print("📡 SignalRegistry: 初期化完了")
 	else:
 		queue_free()
 

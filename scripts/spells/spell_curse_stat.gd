@@ -14,7 +14,6 @@ var spell_cast_notification_ui: Node = null
 func setup(curse: SpellCurse, creature_mgr: CreatureManager):
 	spell_curse = curse
 	creature_manager = creature_mgr
-	print("[SpellCurseStat] 初期化完了")
 
 ## システム参照を設定
 func set_systems(board: Node, player: Node, card: Node = null) -> void:

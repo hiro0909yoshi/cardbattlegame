@@ -92,8 +92,6 @@ func save_to_file() -> bool:
 const DEFAULT_SAVE_PATH = "res://data/default_save.json"
 
 func load_from_file():
-	print("[GameData] load_from_file() 開始")
-	
 	# まずuser://を試す
 	var loaded_from_user = false
 	if FileAccess.file_exists(SAVE_FILE_PATH):
@@ -108,7 +106,6 @@ func load_from_file():
 				if _has_valid_deck(data):
 					player_data = data
 					loaded_from_user = true
-					print("[GameData] user://から読み込み成功（有効なデッキあり）")
 				else:
 					print("[GameData] user://のデッキが空、default_save.jsonを試行")
 	
@@ -193,7 +190,7 @@ func _convert_collection_keys():
 				var int_value = int(value) if typeof(value) == TYPE_FLOAT else value
 				new_cards[int_key] = int_value
 			deck["cards"] = new_cards
-	
+
 	# profileのgold, level, expも整数に変換
 	if player_data.has("profile"):
 		if player_data.profile.has("gold"):
@@ -202,8 +199,6 @@ func _convert_collection_keys():
 			player_data.profile.level = int(player_data.profile.level)
 		if player_data.profile.has("exp"):
 			player_data.profile.exp = int(player_data.profile.exp)
-	
-	print("✅ 型変換完了")
 
 func _validate_save_data():
 	# 古いバージョンとの互換性チェック
@@ -262,9 +257,7 @@ func _validate_decks():
 	
 	if modified:
 		save_to_file()
-		print("[GameData] デッキ検証完了：修正あり")
-	else:
-		print("[GameData] デッキ検証完了：問題なし")
+		push_warning("[GameData] デッキ検証完了：修正あり")
 
 ## カードが全デッキで使用されている合計枚数を取得
 func get_card_usage_in_decks(card_id: int) -> int:

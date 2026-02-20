@@ -20,25 +20,21 @@ func _init(p_ui_manager: UIManager) -> void:
 
 ## CameraControllerのシグナルを接続
 func connect_camera_signals():
-	print("[UITapHandler] connect_camera_signals 呼び出し")
-
 	if not _get_camera_controller_cb.is_valid():
-		print("[UITapHandler] _get_camera_controller_cb が未設定")
+		push_warning("[UITapHandler] _get_camera_controller_cb が未設定")
 		return
 
 	var cam_ctrl = _get_camera_controller_cb.call()
 	if not cam_ctrl:
-		print("[UITapHandler] camera_controller がない")
+		push_warning("[UITapHandler] camera_controller がない")
 		return
 
 	if cam_ctrl.creature_tapped.is_connected(_on_creature_tapped):
-		print("[UITapHandler] シグナル既に接続済み")
 		return
 
 	cam_ctrl.creature_tapped.connect(_on_creature_tapped)
 	cam_ctrl.tile_tapped.connect(_on_tile_tapped)
 	cam_ctrl.empty_tapped.connect(_on_empty_tapped)
-	print("[UITapHandler] カメラタップシグナル接続完了")
 
 
 ## クリーチャーがタップされた時のハンドラ

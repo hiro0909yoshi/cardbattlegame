@@ -101,16 +101,11 @@ func set_game_flow_manager(gf_manager) -> void:
 ## バトルポリシーを設定
 func set_battle_policy(policy: CPUBattlePolicyScript) -> void:
 	battle_policy = policy
-	if policy:
-		print("[CPU AI] バトルポリシーを設定")
-		policy.print_weights()
 
 ## JSONデータからバトルポリシーを読み込んで設定
 func load_battle_policy_from_json(policy_data: Dictionary) -> void:
 	battle_policy = CPUBattlePolicyScript.new()
 	battle_policy.load_from_json(policy_data)
-	print("[CPU AI] JSONからバトルポリシーを読み込み")
-	battle_policy.print_weights()
 	# コンテキストにも反映
 	if context:
 		context.battle_policy = battle_policy

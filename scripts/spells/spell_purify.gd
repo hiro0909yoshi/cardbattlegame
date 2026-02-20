@@ -22,7 +22,6 @@ func _init(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 	creature_manager = creature
 	player_system = player
 	game_flow_manager = flow
-	print("[SpellPurify] 初期化完了")
 
 ## game_statsを設定（GFM経由を廃止）
 func set_game_stats(p_game_stats) -> void:

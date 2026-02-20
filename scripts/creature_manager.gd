@@ -20,7 +20,7 @@ var board_system: Node = null
 # NOTE: debug_modeはDebugSettings.creature_manager_debugに移行済み
 
 func _ready():
-	print("[CreatureManager] 初期化完了（参照方式）")
+	pass
 
 ## BoardSystemを設定
 func set_board_system(p_board_system: Node):

@@ -64,7 +64,6 @@ func _get_tree_ref() -> SceneTree:
 ## ステージデータを設定（QuestGameから呼ばれる）
 func set_stage_data(stage_data: Dictionary):
 	current_stage_data = stage_data
-	print("[GameResultHandler] ステージデータ設定: %s" % stage_data.get("id", "unknown"))
 
 
 ## リザルト画面を設定

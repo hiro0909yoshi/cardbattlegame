@@ -33,21 +33,8 @@ var card_id_input: LineEdit = null
 
 func _ready():
 	if enabled and OS.is_debug_build():
-		print("【デバッグコマンド】")
-		print("  SPACEキー: サイコロを振る")
-		print("  Vキー: 通行料/HP/ST表示切替")
-		print("  Sキー: シグナル接続状態を表示")
-		print("  Dキー: CPU手札表示切替")
-		print("  数字キー1-6: サイコロ固定")
-		print("  0キー: サイコロ固定解除")
-		print("  7キー: 敵の土地へ移動")
-		print("  8キー: 空き地へ移動")
-		print("  9キー: EP+1000")
-		print("  Hキー: カードID指定で手札追加")
-		print("  Jキー: カードID指定でCPUに手札追加")
-		print("  Uキー: 現在プレイヤーの全土地のダウン解除")
-		print("  Lキー: 現在のタイルをレベル4に")
-	
+		print("【デバッグコマンド】 SPACE:ダイス振る | V:表示切替 | 0-8:ダイス固定(0=解除) | 9:EP+1000 | H/J:手札追加 | U:ダウン解除 | L:Lv4 | E:敵地TP | C:CP全通過")
+
 	# カード追加ダイアログを作成
 	create_card_input_dialog()
 
@@ -103,10 +90,6 @@ func _input(event):
 				_roll_dice()
 			KEY_V:
 				_toggle_tile_display()
-			KEY_S:
-				_show_signal_connections()
-			KEY_D:
-				_toggle_debug_mode()
 			KEY_1:
 				set_debug_dice(1)
 			KEY_2:
@@ -122,9 +105,9 @@ func _input(event):
 			KEY_0:
 				clear_debug_dice()
 			KEY_7:
-				move_to_enemy_land()
+				set_debug_dice(7)
 			KEY_8:
-				move_to_empty_land()
+				set_debug_dice(8)
 			KEY_9:
 				add_debug_magic()
 			KEY_H:
@@ -137,6 +120,10 @@ func _input(event):
 				clear_current_player_down_states()
 			KEY_L:
 				set_current_tile_level_4()
+			KEY_E:
+				show_enemy_tile_teleport()
+			KEY_C:
+				complete_all_checkpoints()
 
 # カードID入力ダイアログを表示
 func show_card_input_dialog():
@@ -599,3 +586,97 @@ func _show_signal_connections():
 func _toggle_debug_mode():
 	if ui_manager:
 		ui_manager.toggle_debug_mode()
+
+# ============================================
+# Phase 10-E: 敵地テレポート + CP全通過
+# ============================================
+
+# Eキー: 敵の土地にテレポート（タイル番号入力）
+func show_enemy_tile_teleport():
+	if not player_system or not board_system:
+		print("【デバッグ】システム参照がありません")
+		return
+
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("【デバッグ】現在のプレイヤーが見つかりません")
+		return
+
+	# 敵の土地一覧を表示
+	print("【敵の土地一覧】")
+	var enemy_tiles = []
+	for tile_index in board_system.tile_nodes.keys():
+		var tile = board_system.tile_nodes[tile_index]
+		if tile.owner_id >= 0 and tile.owner_id != current_player.id:
+			var creature_name = "なし"
+			var element = ""
+			var level = tile.level if "level" in tile else 0
+			if tile.creature_data and not tile.creature_data.is_empty():
+				creature_name = tile.creature_data.get("name", "不明")
+				element = tile.creature_data.get("element", "")
+			var owner_name = player_system.players[tile.owner_id].name if tile.owner_id < player_system.players.size() else "P%d" % (tile.owner_id + 1)
+			print("  タイル%d: %s Lv%d (%s) [%s]" % [tile_index, creature_name, level, element, owner_name])
+			enemy_tiles.append(tile_index)
+
+	if enemy_tiles.is_empty():
+		print("  敵の土地がありません")
+		return
+
+	# ダイアログを表示（タイル番号入力用）
+	card_id_input.text = ""
+	card_input_dialog.title = "テレポート先タイル番号を入力"
+	card_input_dialog.popup_centered()
+	card_id_input.grab_focus()
+
+	# コールバックを差し替え
+	if card_input_dialog.confirmed.is_connected(_on_card_id_confirmed):
+		card_input_dialog.confirmed.disconnect(_on_card_id_confirmed)
+	if not card_input_dialog.confirmed.is_connected(_on_teleport_confirmed):
+		card_input_dialog.confirmed.connect(_on_teleport_confirmed, CONNECT_ONE_SHOT)
+
+	if card_id_input.text_submitted.is_connected(_on_card_id_text_submitted):
+		card_id_input.text_submitted.disconnect(_on_card_id_text_submitted)
+	card_id_input.text_submitted.connect(func(_t): card_input_dialog.hide(); _on_teleport_confirmed(), CONNECT_ONE_SHOT)
+
+# テレポート確定処理
+func _on_teleport_confirmed():
+	var input_text = card_id_input.text.strip_edges()
+	if input_text.is_empty() or not input_text.is_valid_int():
+		print("【デバッグ】無効な入力")
+		_restore_card_dialog_signals()
+		return
+
+	var tile_index = input_text.to_int()
+	teleport_to_tile(tile_index)
+	_restore_card_dialog_signals()
+
+# Cキー: 全チェックポイント通過
+func complete_all_checkpoints():
+	if not game_flow_manager or not game_flow_manager.lap_system:
+		print("【デバッグ】lap_system がありません")
+		return
+
+	var current_player = player_system.get_current_player()
+	if not current_player:
+		print("【デバッグ】現在のプレイヤーが見つかりません")
+		return
+
+	var lap_system = game_flow_manager.lap_system
+	var player_id = current_player.id
+
+	# player_lap_state にプレイヤーのエントリがなければ作成
+	if not lap_system.player_lap_state.has(player_id):
+		lap_system.player_lap_state[player_id] = {}
+
+	# required_checkpoints の全てを true に設定
+	var checkpoints = lap_system.required_checkpoints if "required_checkpoints" in lap_system else []
+	for cp_id in checkpoints:
+		lap_system.player_lap_state[player_id][cp_id] = true
+
+	print("【デバッグ】プレイヤー%d: 全チェックポイント通過済みに設定 %s" % [player_id + 1, str(checkpoints)])
+
+	# UIの更新（player_info_serviceがあれば）
+	if ui_manager and ui_manager.player_info_service:
+		ui_manager.player_info_service.update_panels()
+
+	emit_signal("debug_action", "complete_checkpoints", player_id)

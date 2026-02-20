@@ -187,7 +187,6 @@ func set_magic(player_id: int, amount: int):
 	if player_id < 0 or player_id >= players.size():
 		return
 	players[player_id].magic_power = max(0, amount)
-	print(players[player_id].name, ": EPを", amount, "EPに設定")
 	
 	# EP変更をシグナル発行（UI即座更新用）
 	emit_signal("magic_changed", player_id, players[player_id].magic_power)

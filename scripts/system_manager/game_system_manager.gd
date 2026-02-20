@@ -80,7 +80,7 @@ var parent_node: Node
 var is_initialized: bool = false
 
 func _ready():
-	print("[GameSystemManager] 作成完了")
+	pass
 
 # === 公開インターフェース ===
 
@@ -92,14 +92,20 @@ func initialize_all(p_node: Node, p_count: int, p_is_cpu: Array, debug_mode: boo
 	DebugSettings.manual_control_all = debug_mode
 	
 	print("[GameSystemManager] 初期化開始（6フェーズ）")
-	
+
 	phase_1_create_systems()
+	print("[GameSystemManager] Phase 1 完了: システム作成")
 	phase_2_collect_3d_nodes()
+	print("[GameSystemManager] Phase 2 完了: 3Dノード収集")
 	phase_3_setup_basic_config()
+	print("[GameSystemManager] Phase 3 完了: 基本設定")
 	phase_4_setup_system_interconnections()
+	print("[GameSystemManager] Phase 4 完了: システム間連携")
 	phase_5_connect_signals()
+	print("[GameSystemManager] Phase 5 完了: シグナル接続")
 	phase_6_prepare_game_start()
-	
+	print("[GameSystemManager] Phase 6 完了: ゲーム開始準備")
+
 	is_initialized = true
 	print("[GameSystemManager] 初期化完了")
 
@@ -116,7 +122,7 @@ func start_game() -> void:
 
 # Phase 1: システム作成
 func phase_1_create_systems() -> void:
-	print("[GameSystemManager] Phase 1: システム作成開始")
+	pass
 	
 	# SignalRegistry（最初に作成：他が参照する可能性）
 	signal_registry = SignalRegistry.new()
@@ -183,13 +189,9 @@ func phase_1_create_systems() -> void:
 	game_flow_manager.name = "GameFlowManager"
 	add_child(game_flow_manager)
 	systems["GameFlowManager"] = game_flow_manager
-	
-	print("[GameSystemManager] Phase 1: システム作成完了（11個）")
 
 # Phase 2: 3D ノード収集
 func phase_2_collect_3d_nodes() -> void:
-	print("[GameSystemManager] Phase 2: 3D ノード収集")
-	
 	if not parent_node:
 		push_error("[GameSystemManager] parent_node が設定されていません")
 		return
@@ -202,20 +204,18 @@ func phase_2_collect_3d_nodes() -> void:
 	var all_found = tiles_container and players_container and camera_3d
 	
 	if all_found:
-		print("[GameSystemManager] Phase 2: 3D ノード収集完了")
+		pass
 	else:
 		push_warning("[GameSystemManager] WARNING: 一部の3Dノードが見つかりません")
 		if not tiles_container:
-			print("  - Tiles が見つかりません")
+			push_error("[GameSystemManager] Tiles が見つかりません")
 		if not players_container:
-			print("  - Players が見つかりません")
+			push_error("[GameSystemManager] Players が見つかりません")
 		if not camera_3d:
-			print("  - Camera3D が見つかりません")
+			push_error("[GameSystemManager] Camera3D が見つかりません")
 
 # Phase 3: システム基本設定
 func phase_3_setup_basic_config() -> void:
-	print("[GameSystemManager] Phase 3: システム基本設定")
-	
 	# PlayerSystem初期化
 	if player_system:
 		player_system.initialize_players(player_count)
@@ -261,8 +261,6 @@ func phase_3_setup_basic_config() -> void:
 		camera_controller.setup(camera_3d, board_system_3d, player_system)
 		# BoardSystem3D本体 + MovementControllerの両方に参照を設定
 		board_system_3d.set_camera_controller_ref(camera_controller)
-	
-	print("[GameSystemManager] Phase 3: システム基本設定完了")
 
 ## カメラシグナル接続を遅延実行（Phase 3のawait完了後）
 func _connect_camera_signals_deferred():
@@ -273,17 +271,14 @@ func _connect_camera_signals_deferred():
 	if ui_manager and board_system_3d:
 		ui_manager.board_system_ref = board_system_3d
 		ui_manager.connect_camera_signals()
-		print("[GameSystemManager] カメラシグナル遅延接続完了")
 
 # Phase 4: システム間連携設定
 func phase_4_setup_system_interconnections() -> void:
-	print("[GameSystemManager] Phase 4: システム間連携設定開始")
-	
 	# BattleScreenManager を先に初期化（battle_system.setup_systems()より前に必要）
 	_setup_battle_screen_manager()
 	
 	# ===== 4-1: 基本システム参照設定 =====
-	print("[GameSystemManager] Phase 4-1: 基本システム参照設定")
+	pass
 	
 	# Step 1: GameFlowManager に全システムを設定
 	if game_flow_manager:
@@ -309,7 +304,6 @@ func phase_4_setup_system_interconnections() -> void:
 		if board_system_3d.tile_action_processor:
 			if not board_system_3d.tile_action_processor.invasion_completed.is_connected(board_system_3d._on_invasion_completed):
 				board_system_3d.tile_action_processor.invasion_completed.connect(board_system_3d._on_invasion_completed)
-				print("[GameSystemManager] TileActionProcessor → BoardSystem3D invasion_completed 接続完了")
 
 	# Step 3: SpecialTileSystem に必要なシステムを設定
 	if special_tile_system:
@@ -367,22 +361,18 @@ func phase_4_setup_system_interconnections() -> void:
 		# invasion_completed
 		if not board_system_3d.invasion_completed.is_connected(game_flow_manager._on_invasion_completed_from_board):
 			board_system_3d.invasion_completed.connect(game_flow_manager._on_invasion_completed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager invasion_completed 接続完了")
 
 		# movement_completed
 		if not board_system_3d.movement_completed.is_connected(game_flow_manager._on_movement_completed_from_board):
 			board_system_3d.movement_completed.connect(game_flow_manager._on_movement_completed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager movement_completed 接続完了")
 
 		# level_up_completed
 		if not board_system_3d.level_up_completed.is_connected(game_flow_manager._on_level_up_completed_from_board):
 			board_system_3d.level_up_completed.connect(game_flow_manager._on_level_up_completed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager level_up_completed 接続完了")
 
 		# terrain_changed
 		if not board_system_3d.terrain_changed.is_connected(game_flow_manager._on_terrain_changed_from_board):
 			board_system_3d.terrain_changed.connect(game_flow_manager._on_terrain_changed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager terrain_changed 接続完了")
 
 		# start_passed (Day 3)
 		if not board_system_3d.start_passed.is_connected(game_flow_manager._on_start_passed_from_board):
@@ -391,7 +381,6 @@ func phase_4_setup_system_interconnections() -> void:
 		# warp_executed (Day 3)
 		if not board_system_3d.warp_executed.is_connected(game_flow_manager._on_warp_executed_from_board):
 			board_system_3d.warp_executed.connect(game_flow_manager._on_warp_executed_from_board)
-			print("[GameSystemManager] BoardSystem3D → GameFlowManager warp_executed 接続完了")
 
 	# MovementController3D → BoardSystem3D シグナル接続（Day 3）
 	if board_system_3d and board_system_3d.movement_controller:
@@ -402,16 +391,13 @@ func phase_4_setup_system_interconnections() -> void:
 		# warp_executed
 		if not board_system_3d.movement_controller.warp_executed.is_connected(board_system_3d._on_warp_executed):
 			board_system_3d.movement_controller.warp_executed.connect(board_system_3d._on_warp_executed)
-			print("[GameSystemManager] MovementController3D → BoardSystem3D warp_executed 接続完了")
 
 	# === Phase 4: CreatureManager シグナル接続（Day 1） ===
 	_setup_phase_4_creature_signals()
-
-	print("[GameSystemManager] Phase 4-1: 基本システム参照設定完了")
 	
 	# ===== 4-2: GameFlowManager 子システム初期化 =====
 	# 全初期化ロジックをGameSystemManagerが担当
-	print("[GameSystemManager] Phase 4-2: GameFlowManager 子システム初期化")
+	pass
 	
 	# LapSystem 初期化
 	_setup_lap_system()
@@ -461,7 +447,6 @@ func phase_4_setup_system_interconnections() -> void:
 
 			# コンテナに設定
 			game_flow_manager.spell_container.set_spell_curse_toll(spell_curse_toll)
-			print("[SpellCurseToll] 初期化完了（SkillTollChange と CreatureManager 参照設定済み）")
 
 			# ★重要: board_system_3d にメタデータとして設定（MovementHelper から参照可能にする）
 			if board_system_3d:
@@ -472,8 +457,7 @@ func phase_4_setup_system_interconnections() -> void:
 					board_system_3d.tile_data_manager.spell_curse_toll = spell_curse_toll
 					# === game_stats直接参照も設定（チェーンアクセス解消） ===
 					board_system_3d.tile_data_manager.set_game_stats(game_flow_manager.game_stats)
-				print("[SpellCurseToll/SpellWorldCurse] BoardSystem3D のメタデータとして設定完了")
-
+	
 			# SpellCostModifier の初期化
 			var spell_cost_modifier = SpellCostModifierClass.new()
 			spell_cost_modifier.setup(
@@ -484,19 +468,16 @@ func phase_4_setup_system_interconnections() -> void:
 
 			# コンテナに設定
 			game_flow_manager.spell_container.set_spell_cost_modifier(spell_cost_modifier)
-			print("[SpellCostModifier] 初期化完了")
 		
 		# CPUAIHandler の初期化は initialize_phase1a_systems() で行われる
 	
-	print("[GameSystemManager] Phase 4-2: GameFlowManager 子システム初期化完了")
 	
 	# ===== 4-3: BoardSystem3D 子システム初期化 =====
 	# 注記: BoardSystem3D._ready() で既に全子システムが作成・初期化済みのため、
 	# GameSystemManager では参照設定は不要
-	print("[GameSystemManager] Phase 4-3: BoardSystem3D 子システム初期化完了（既に初期化済み）")
 	
 	# ===== 4-4: 特別な初期化 =====
-	print("[GameSystemManager] Phase 4-4: 特別な初期化")
+	pass
 	
 	# Phase 1-A ハンドラーの初期化（GameFlowManagerの子として作成）
 	_initialize_phase1a_handlers()
@@ -509,19 +490,15 @@ func phase_4_setup_system_interconnections() -> void:
 		var pis = ui_manager.player_info_service
 		if pis and pis.has_method("setup") and ui_manager.player_info_panel:
 			pis.setup(ui_manager.player_info_panel)
-			print("[GameSystemManager] PlayerInfoService セットアップ完了")
 
 	# 手札UIを初期化
 	if ui_manager and ui_layer:
 		ui_manager.initialize_hand_container(ui_layer)
 		ui_manager.connect_card_system_signals()
 	
-	print("[GameSystemManager] Phase 4: システム間連携設定完了")
 
 # Phase 5: シグナル接続
 func phase_5_connect_signals() -> void:
-	print("[GameSystemManager] Phase 5: シグナル接続")
-	
 	# GameFlowManager のシグナル
 	if game_flow_manager:
 		game_flow_manager.dice_rolled.connect(_on_dice_rolled)
@@ -542,13 +519,9 @@ func phase_5_connect_signals() -> void:
 		ui_manager.pass_button_pressed.connect(game_flow_manager.on_pass_button_pressed)
 		ui_manager.level_up_selected.connect(game_flow_manager.on_level_up_selected)
 		ui_manager.dominio_order_button_pressed.connect(game_flow_manager.open_dominio_order)
-	
-	print("[GameSystemManager] Phase 5: シグナル接続完了")
 
 # Phase 6: ゲーム開始準備
 func phase_6_prepare_game_start() -> void:
-	print("[GameSystemManager] Phase 6: ゲーム開始準備")
-	
 	# 初期手札配布
 	if card_system:
 		card_system.deal_initial_hands_all_players(player_count)
@@ -558,7 +531,6 @@ func phase_6_prepare_game_start() -> void:
 		await get_tree().create_timer(0.1).timeout
 		ui_manager.player_info_service.update_panels()
 	
-	print("[GameSystemManager] Phase 6: ゲーム開始準備完了")
 
 # === イベントハンドラ ===
 
@@ -591,7 +563,7 @@ func _on_phase_changed(_new_phase) -> void:
 
 ## Phase 4: CreatureManager シグナル接続（Day 1, Day 3 拡張）
 func _setup_phase_4_creature_signals() -> void:
-	print("[GameSystemManager] creature シグナル接続開始")
+	pass
 
 	# Day 1: CreatureManager → BoardSystem3D
 	if board_system_3d and board_system_3d.creature_manager:
@@ -599,7 +571,6 @@ func _setup_phase_4_creature_signals() -> void:
 
 		if not creature_manager.creature_changed.is_connected(board_system_3d._on_creature_changed):
 			creature_manager.creature_changed.connect(board_system_3d._on_creature_changed)
-			print("[GameSystemManager] creature_changed 接続完了")
 		else:
 			push_warning("[GameSystemManager] creature_changed は既に接続済み")
 	else:
@@ -648,7 +619,6 @@ func _setup_lap_system() -> void:
 
 	# 周回状態を初期化
 	lap_system.initialize_lap_state(player_is_cpu.size())
-	print("[LapSystem] 初期化完了")
 
 ## スペルシステム初期化
 func _setup_spell_systems() -> void:
@@ -663,7 +633,6 @@ func _setup_spell_systems() -> void:
 	var spell_draw = SpellDraw.new()
 	spell_draw.setup(card_system, player_system)
 	spell_draw.set_board_system(board_system_3d)
-	print("[SpellDraw] 初期化完了")
 
 	# SpellMagic
 	var spell_magic = SpellMagic.new()
@@ -671,7 +640,6 @@ func _setup_spell_systems() -> void:
 	# Phase C-6: lap_system 直接注入
 	if game_flow_manager and game_flow_manager.lap_system:
 		spell_magic.lap_system = game_flow_manager.lap_system
-	print("[SpellMagic] 初期化完了")
 
 	# CreatureManager取得
 	var creature_manager = board_system_3d.get_node_or_null("CreatureManager") if board_system_3d else null
@@ -684,13 +652,11 @@ func _setup_spell_systems() -> void:
 	spell_land.setup(board_system_3d, creature_manager, player_system, card_system)
 	if board_system_3d:
 		board_system_3d.set_spell_land(spell_land)
-	print("[SpellLand] 初期化完了")
 
 	# SpellCurse
 	var spell_curse = SpellCurse.new()
 	spell_curse.setup(board_system_3d, creature_manager, player_system, game_flow_manager)
 	spell_curse._get_current_turn_cb = func() -> int: return game_flow_manager.current_turn_number
-	print("[SpellCurse] 初期化完了")
 
 	# SpellMagicにSpellCurse参照を追加
 	spell_magic.spell_curse_ref = spell_curse
@@ -698,19 +664,16 @@ func _setup_spell_systems() -> void:
 	# SpellDice
 	var spell_dice = SpellDice.new()
 	spell_dice.setup(player_system, spell_curse)
-	print("[SpellDice] 初期化完了")
 
 	# SpellCurseStat
 	var spell_curse_stat = SpellCurseStat.new()
 	spell_curse_stat.setup(spell_curse, creature_manager)
-	print("[SpellCurseStat] 初期化完了")
 
 	# SpellWorldCurse
 	var spell_world_curse = SpellWorldCurse.new()
 	spell_world_curse.setup(spell_curse, game_flow_manager)
 	if ui_manager and ui_manager.get("player_info_service"):
 		spell_world_curse._player_info_service = ui_manager.player_info_service
-	print("[SpellWorldCurse] 初期化完了")
 
 	# SpellLandにSpellWorldCurse参照を設定
 	if spell_world_curse:
@@ -723,7 +686,6 @@ func _setup_spell_systems() -> void:
 		spell_player_move.lap_system = game_flow_manager.lap_system
 	if board_system_3d:
 		board_system_3d.set_spell_player_move(spell_player_move)
-	print("[SpellPlayerMove] 初期化完了")
 
 	# === Step 3: コンテナにコアシステム（8個）を設定 ===
 	spell_container.setup(
@@ -744,13 +706,11 @@ func _setup_spell_systems() -> void:
 		return
 	else:
 		print("[GameSystemManager] spell_container 初期化確認: 8個のコアシステムが設定済み")
-		# spell_container.debug_print_status()  # 詳細ログが不要な場合はコメントアウト
 
 	# === Step 4: BankruptcyHandlerは別途GameFlowManagerに設定（コンテナ外）===
 	var BankruptcyHandlerClass = preload("res://scripts/game_flow/bankruptcy_handler.gd")
 	var bankruptcy_handler = BankruptcyHandlerClass.new()
 	bankruptcy_handler.setup(player_system, board_system_3d, creature_manager, spell_curse)
-	print("[BankruptcyHandler] 初期化完了")
 
 	# === Step 5: GameFlowManager に参照を設定 ===
 	game_flow_manager.set_spell_container(spell_container)
@@ -811,8 +771,6 @@ func _setup_battle_screen_manager() -> void:
 	if board_system_3d:
 		board_system_3d.set_battle_screen_manager_ref(battle_screen_manager)
 
-	print("[BattleScreenManager] 初期化完了")
-
 ## MagicStoneSystem初期化
 func _setup_magic_stone_system() -> void:
 	var magic_stone_system = MagicStoneSystem.new()
@@ -824,14 +782,12 @@ func _setup_magic_stone_system() -> void:
 		player_system.set_magic_stone_system(magic_stone_system)
 	
 	game_flow_manager.set_magic_stone_system(magic_stone_system)
-	print("[MagicStoneSystem] 初期化完了")
 
 ## CPUSpecialTileAI初期化
 func _setup_cpu_special_tile_ai() -> void:
 	var cpu_special_tile_ai = CPUSpecialTileAI.new()
 	cpu_special_tile_ai.setup(card_system, player_system, board_system_3d, game_flow_manager)
 	game_flow_manager.set_cpu_special_tile_ai(cpu_special_tile_ai)
-	print("[CPUSpecialTileAI] 初期化完了")
 
 ## Phase 1-A ハンドラーの初期化
 func _initialize_phase1a_handlers() -> void:
@@ -908,7 +864,6 @@ func _initialize_phase1a_handlers() -> void:
 			# Phase A-3b: spell_draw 直接注入 + 相互参照設定
 			spell_phase_handler.card_selection_handler.inject_dependencies(spell_draw)
 			spell_draw.set_card_selection_handler(spell_phase_handler.card_selection_handler)
-			print("[GSM] card_selection_handler 初期化・spell_draw注入完了")
 
 		# Phase A-3a: CSH is_cpu_player Callable 注入（CSH作成直後に実行、初期化順序の制約）
 		var is_cpu_cb_for_csh = func(id: int) -> bool: return game_flow_manager.is_cpu_player(id)
@@ -1006,7 +961,6 @@ func _initialize_phase1a_handlers() -> void:
 			dominio_command_handler._item_phase_handler = item_phase_handler
 		if board_system_3d and board_system_3d.tile_action_processor:
 			board_system_3d.tile_action_processor.set_item_phase_handler(item_phase_handler)
-		print("[GameSystemManager] ItemPhaseHandler 直接注入完了（DCH, TAP）")
 
 	# target_selection_helper を設定（move_self など複数タイル選択時に必要）
 	if game_flow_manager and game_flow_manager.target_selection_helper:
@@ -1015,7 +969,6 @@ func _initialize_phase1a_handlers() -> void:
 	# Phase 10-C: DominioOrderUI に DCH を直接注入（初期化順序バグ修正）
 	if ui_manager and ui_manager.dominio_order_ui:
 		ui_manager.dominio_order_ui.dominio_command_handler = dominio_command_handler
-		print("[GameSystemManager] DominioOrderUI → DCH 直接参照を設定")
 
 	# battle_status_overlayの直接参照を設定（チェーンアクセス解消）
 	if game_flow_manager.battle_status_overlay:
@@ -1023,8 +976,6 @@ func _initialize_phase1a_handlers() -> void:
 		spell_phase_handler.set_battle_status_overlay(game_flow_manager.battle_status_overlay)
 		if board_system_3d:
 			board_system_3d.set_tile_action_processor_battle_overlay(game_flow_manager.battle_status_overlay)
-
-	print("[Phase1A Handlers] 初期化完了")
 
 	# Phase 10-C: UI Callable/Signal 注入
 	_setup_ui_callbacks(ui_manager, game_flow_manager, board_system_3d, dominio_command_handler, spell_phase_handler)
@@ -1053,7 +1004,6 @@ func _initialize_phase1a_handlers() -> void:
 		push_error("[GameSystemManager] spell_effect_executor.spell_container: 無効です")
 		return
 
-	print("[GameSystemManager] スペルシステム初期化検証完了 ✓")
 
 ## SpellPhaseHandler の全初期化
 func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager, p_ui_manager = null) -> void:
@@ -1147,7 +1097,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			if _nav_svc:
 				spell_and_mystic_ui_node.set_navigation_service(_nav_svc)
 		p_game_flow_manager.spell_container.spell_draw.inject_services(_msg_svc, _css_svc, spell_and_mystic_ui_node)
-		print("[GSM] spell_draw サービス注入完了（SpellAndMysticUI + message + card_selection）")
 
 	# Phase C-6: spell_magic に spell_damage 直接注入
 	if p_game_flow_manager and p_game_flow_manager.spell_container and p_game_flow_manager.spell_container.spell_magic and spell_phase_handler.spell_systems and spell_phase_handler.spell_systems.spell_damage:
@@ -1195,7 +1144,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 					await ui_manager.show_comment_and_wait(message)
 				spell_phase_handler.spell_effect_executor.effect_ui_comment_and_wait_completed.emit()
 		)
-		print("[GSM] SpellEffectExecutor UI Signal接続完了")
 
 	# Step 3: 6個のハンドラーを初期化（inline化）
 
@@ -1247,8 +1195,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 			spell_phase_handler.target_selection_helper
 		)
 
-		print("[GameSystemManager] SpellStateHandler と SpellFlowHandler を初期化完了")
-
 	# SpellUIManager 初期化（統合版: ナビゲーション + UI制御 + 発動確認）
 	if not spell_phase_handler.spell_ui_manager:
 		spell_phase_handler.spell_ui_manager = SpellUIManager.new()
@@ -1268,11 +1214,8 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		spell_phase_handler.spell_ui_manager.initialize_spell_phase_ui()
 		spell_phase_handler.spell_ui_manager.initialize_spell_cast_notification_ui()
 
-		print("[SpellUIManager] 初期化完了")
-
 		# === Phase 7-B: SpellPhaseHandler の UI Signal を接続
 		spell_phase_handler.spell_ui_manager.connect_spell_phase_handler_signals(spell_phase_handler)
-		print("[GameSystemManager] SpellPhaseHandler UI Signal 接続完了")
 
 		# spell_cast_notification_ui を SPH に設定（外部システムが参照するため）
 		spell_phase_handler.spell_cast_notification_ui = spell_phase_handler.spell_ui_manager.get_spell_cast_notification_ui()
@@ -1280,7 +1223,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 		# === Phase 6-A: SpellFlowHandler の UI Signal を接続（SpellUIManager 初期化後）
 		if spell_phase_handler.spell_flow:
 			spell_phase_handler.spell_ui_manager.connect_spell_flow_signals(spell_phase_handler.spell_flow)
-			print("[GameSystemManager] SpellFlowHandler UI Signal 接続完了")
 
 		# === Phase A-3a: is_cpu_player Callable 注入
 		_setup_spell_phase_callbacks(spell_phase_handler, game_flow_manager)
@@ -1323,9 +1265,6 @@ func _initialize_spell_phase_subsystems(spell_phase_handler, p_game_flow_manager
 	# === Phase 6-A: MysticArtsHandler の UI Signal を接続
 	if spell_phase_handler.spell_ui_manager and spell_phase_handler.mystic_arts_handler:
 		spell_phase_handler.spell_ui_manager.connect_mystic_arts_signals(spell_phase_handler.mystic_arts_handler)
-		print("[GameSystemManager] MysticArtsHandler UI Signal 接続完了")
-
-	print("[GameSystemManager] _initialize_spell_phase_subsystems 完了")
 
 ## CPUSpellPhaseHandler 初期化
 func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
@@ -1336,7 +1275,6 @@ func _initialize_cpu_spell_phase_handler(spell_phase_handler) -> void:
 	if not cpu_spell_phase_handler:
 		cpu_spell_phase_handler = CPUSpellPhaseHandlerScript.new()
 		cpu_spell_phase_handler.initialize(spell_phase_handler)
-		print("[CPUSpellPhaseHandler] 初期化完了")
 
 	# SpellPhaseHandler に参照を設定
 	spell_phase_handler.cpu_spell_phase_handler = cpu_spell_phase_handler
@@ -1377,8 +1315,6 @@ func _setup_spell_phase_callbacks(spell_phase_handler, gfm) -> void:
 	# === Phase A-3d: SpellUIManager game_stats 直接参照注入 ===
 	if spell_phase_handler.spell_ui_manager:
 		spell_phase_handler.spell_ui_manager.inject_dependencies(gfm.game_stats)
-
-	print("[GameSystemManager] Phase A-3a/A-3b/A-3d: Callable + 直接参照注入完了")
 
 ## CPU移動評価システムの初期化
 func _initialize_cpu_movement_evaluator() -> void:
@@ -1432,8 +1368,6 @@ func _initialize_cpu_movement_evaluator() -> void:
 	if cpu_spell_ai:
 		cpu_spell_ai.set_movement_evaluator(cpu_movement_evaluator)
 
-	print("[CPUMovementEvaluator] 初期化完了（距離計算は遅延実行）")
-
 # =============================================================================
 # 委譲メソッド（チェーンアクセス解消用）
 # =============================================================================
@@ -1442,23 +1376,20 @@ func _initialize_cpu_movement_evaluator() -> void:
 func apply_map_settings_to_lap_system(map_data: Dictionary) -> void:
 	if game_flow_manager and game_flow_manager.lap_system:
 		game_flow_manager.lap_system.apply_map_settings(map_data)
-		print("[GameSystemManager] lap_system マップ設定適用完了")
 
 ## GameFlowManagerにステージデータを設定（quest_game.gd用）
 func set_stage_data(stage_data: Dictionary) -> void:
 	if game_flow_manager:
 		game_flow_manager.set_stage_data(stage_data)
-		print("[GameSystemManager] ステージデータ設定完了")
 
 ## GameFlowManagerにリザルト画面を設定（quest_game.gd用）
 func set_result_screen(result_screen) -> void:
 	if game_flow_manager:
 		game_flow_manager.set_result_screen(result_screen)
-		print("[GameSystemManager] リザルト画面設定完了")
 
 ## CPU AI 全体初期化（GameSystemManagerで一元管理）
 func _initialize_cpu_ai_systems() -> void:
-	print("[GameSystemManager] CPU AI 初期化開始")
+	pass
 
 	if not cpu_ai_context:
 		# === Step 1: CPU AI共有コンテキスト作成 ===
@@ -1471,7 +1402,6 @@ func _initialize_cpu_ai_systems() -> void:
 			battle_system,
 			player_buff_system
 		)
-		print("[GameSystemManager] CPU AI コンテキスト作成完了")
 
 	# === Step 2: CPU AI インスタンス作成（SpellPhaseHandler用） ===
 	var has_game_stats = game_flow_manager and game_flow_manager.has_method("get")
@@ -1527,7 +1457,6 @@ func _initialize_cpu_spell_ai_container() -> void:
 		)
 
 		if cpu_spell_ai_container.is_valid():
-			print("[CPUSpellAIContainer] 初期化完了 ✓")
 			systems["CPUSpellAIContainer"] = cpu_spell_ai_container
 		else:
 			push_error("[CPUSpellAIContainer] 初期化失敗")
@@ -1577,7 +1506,6 @@ func _connect_dice_phase_signals(dice_handler, p_ui_manager) -> void:
 				await p_ui_manager.show_comment_and_wait(message, player_id)
 			dice_handler.dice_ui_comment_and_wait_completed.emit()
 	)
-	print("[GSM] DicePhaseHandler UI Signal接続完了（7シグナル）")
 
 ## Phase 6-C: TollPaymentHandler UI Signal接続
 func _connect_toll_payment_signals(toll_handler, p_ui_manager) -> void:
@@ -1591,7 +1519,6 @@ func _connect_toll_payment_signals(toll_handler, p_ui_manager) -> void:
 				await p_ui_manager.show_comment_and_wait(message, player_id, true)
 			toll_handler.toll_ui_comment_and_wait_completed.emit()
 	)
-	print("[GSM] TollPaymentHandler UI Signal接続完了（1シグナル）")
 
 ## Phase 6-C: DiscardHandler UI Signal接続
 func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) -> void:
@@ -1613,7 +1540,6 @@ func _connect_discard_signals(discard_handler, p_ui_manager, p_player_system) ->
 				p_ui_manager.hide_action_prompt()
 			discard_handler.discard_ui_prompt_completed.emit(card_index)
 	)
-	print("[GSM] DiscardHandler UI Signal接続完了（1シグナル）")
 
 ## Phase 6-C: BankruptcyHandler UI Signal接続 + Phase 8-C: パネル分離
 func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
@@ -1646,11 +1572,8 @@ func _connect_bankruptcy_signals(bankruptcy_handler_ref, p_ui_manager) -> void:
 			bankruptcy_handler_ref.bankruptcy_info_panel_show_requested.connect(bankruptcy_info_panel_ui.show_panel)
 		if not bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.is_connected(bankruptcy_info_panel_ui.hide_panel):
 			bankruptcy_handler_ref.bankruptcy_info_panel_hide_requested.connect(bankruptcy_info_panel_ui.hide_panel)
-		print("[GSM] BankruptcyInfoPanelUI Signal接続完了（2シグナル）")
 	else:
 		push_warning("[GSM] ui_layer が利用できません - BankruptcyInfoPanelUI を作成できません")
-
-	print("[GSM] BankruptcyHandler UI Signal接続完了（6シグナル）")
 
 ## Phase 8-A: ItemPhaseHandler UI Signal接続
 func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
@@ -1691,8 +1614,6 @@ func _connect_item_phase_signals(item_handler, p_ui_manager) -> void:
 				p_ui_manager.clear_special_button()
 				p_ui_manager.card_selection_ui.show_selection(player, mode)
 	)
-
-	print("[GSM] ItemPhaseHandler UI Signal接続完了（4シグナル）")
 
 ## Phase 10-C: UIManager/外部ハンドラーへのCallable/Signal注入
 func _setup_ui_callbacks(
@@ -1779,8 +1700,6 @@ func _setup_ui_callbacks(
 			func() -> bool: return p_game_flow_manager.is_game_ended if p_game_flow_manager else false
 		)
 
-	print("[GameSystemManager] Phase 10-C: UI Callable/Signal 注入完了")
-
 ## Phase 11: UIEventHub のイベント配線（GSMが配線責任者）
 func _setup_ui_events() -> void:
 	if not ui_event_hub:
@@ -1805,8 +1724,6 @@ func _setup_ui_events() -> void:
 	if game_flow_manager:
 		var surrender_cb = func(): game_flow_manager.on_player_defeated("surrender")
 		ui_event_hub.surrender_requested.connect(surrender_cb)
-
-	print("[GameSystemManager] UIEventHub イベント配線完了")
 
 
 ## 手札カードタップのルーティング（GSMが判断）
@@ -1834,15 +1751,12 @@ func _inject_tap_target_manager() -> void:
 	# UITapHandler に注入
 	if ui_manager and ui_manager.tap_handler:
 		ui_manager.tap_handler._tap_target_manager = ttm
-		print("[GameSystemManager] TapTargetManager → UITapHandler 注入完了")
 
 	# SpellTargetSelectionHandler に注入
 	var spell_phase_handler_ref = game_flow_manager.spell_phase_handler if game_flow_manager else null
 	if spell_phase_handler_ref and spell_phase_handler_ref.spell_target_selection_handler:
 		spell_phase_handler_ref.spell_target_selection_handler._tap_target_manager = ttm
-		print("[GameSystemManager] TapTargetManager → SpellTargetSelectionHandler 注入完了")
 
 	# SpellMysticArts に注入
 	if game_flow_manager and game_flow_manager.spell_container and game_flow_manager.spell_container.spell_mystic_arts:
 		game_flow_manager.spell_container.spell_mystic_arts._tap_target_manager = ttm
-		print("[GameSystemManager] TapTargetManager → SpellMysticArts 注入完了")

@@ -69,7 +69,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		or _has_nullify_creature_ability(attacker) or _has_nullify_creature_ability(defender)
 	
 	if has_nullify:
-		print("【能力無効化発動】以降のスキル・変身・応援をスキップして基礎ステータスでバトル")
+		if not silent:
+			print("【能力無効化発動】以降のスキル・変身・応援をスキップして基礎ステータスでバトル")
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
 		
@@ -292,7 +293,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		var penetration_name = SkillDisplayConfig.get_skill_name("penetration")
 		await _show_skill_change_if_any(defender, defender_before, penetration_name, attacker)
 	else:
-		print("【スクイドマントル】貫通を無効化")
+		if not silent:
+			print("【スクイドマントル】貫通を無効化")
 	
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		# 巻物強打か巻物攻撃かを判定
@@ -301,7 +303,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		var is_scroll_power_strike = "巻物強打" in attacker_keywords
 		var scroll_skill_key = "scroll_power_strike" if is_scroll_power_strike else "scroll_attack"
 		var scroll_skill_name = "巻物強打" if is_scroll_power_strike else "巻物攻撃"
-		print("【%s】防御側の土地ボーナス %d を無効化" % [scroll_skill_name, defender.land_bonus_hp])
+		if not silent:
+			print("【%s】防御側の土地ボーナス %d を無効化" % [scroll_skill_name, defender.land_bonus_hp])
 		defender_before = _snapshot_stats(defender)
 		defender.land_bonus_hp = 0
 		# 敵対象スキル: attackerがスキル所持者、defenderが効果対象
@@ -317,7 +320,8 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 ## ツインスパイク用：変身後のスキル再計算
 ## 変身したクリーチャーのスキルを再適用する
 func recalculate_skills_after_transform(participant: BattleParticipant, context: Dictionary) -> void:
-	print("[スキル再計算] ", participant.creature_data.get("name", "?"), " のスキルを再適用")
+	if not silent:
+		print("[スキル再計算] ", participant.creature_data.get("name", "?"), " のスキルを再適用")
 	
 	# スキルによるボーナスをリセット（変身後の素のステータスから再計算）
 	participant.resonance_bonus_hp = 0
@@ -327,7 +331,8 @@ func recalculate_skills_after_transform(participant: BattleParticipant, context:
 	# 全スキルを再適用
 	await _apply_skills_with_animation(participant, context)
 	
-	print("[スキル再計算完了] AP:", participant.current_ap, " HP:", participant.current_hp)
+	if not silent:
+		print("[スキル再計算完了] AP:", participant.current_ap, " HP:", participant.current_hp)
 
 
 ## スキルを順番に適用（アニメーション付き）
@@ -407,7 +412,7 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
 	# 4. 先制・後手スキル（HP/AP変化なし、表示のみ）
-	var strike_skills = FirstStrikeSkill.apply(participant)
+	var strike_skills = FirstStrikeSkill.apply(participant, false)  # Real battle output enabled
 	for skill_type in strike_skills:
 		await _show_skill_no_stat_change(participant, skill_type)
 	
@@ -417,7 +422,7 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	await _show_skill_change_if_any(participant, before, power_strike_name)
 	
 	# 6. 巻物攻撃判定
-	ScrollAttackSkill.apply(participant, context)
+	ScrollAttackSkill.apply(participant, context, silent)
 	
 	# 7. 2回攻撃スキル
 	check_double_attack(participant, context)
@@ -446,7 +451,8 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 	
 	# 巻物強打の場合は SkillScrollAttack.apply() で処理済みなので何もしない
 	if "巻物強打" in keywords:
-		print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
+		if not silent:
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
 		return
 	
 	# 巻物攻撃のみの場合
@@ -457,11 +463,13 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 		"fixed_ap":
 			var value = scroll_config.get("value", 0)
 			participant.current_ap = value
-			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP:", value)
+			if not silent:
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP:", value)
 		"base_ap":
 			var base_ap = participant.creature_data.get("ap", 0)
 			participant.current_ap = base_ap
-			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=基本AP:", base_ap)
+			if not silent:
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=基本AP:", base_ap)
 		"land_count":
 			var elements = scroll_config.get("elements", [])
 			var multiplier = scroll_config.get("multiplier", 1)
@@ -472,7 +480,8 @@ func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -
 					total_count += board_system_ref.count_creatures_by_element(scroll_player_id, element)
 			var calculated_ap = total_count * multiplier
 			participant.current_ap = calculated_ap
-			print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
+			if not silent:
+				print("【AP最終固定】", participant.creature_data.get("name", "?"), " AP=", elements, "土地数", total_count, "×", multiplier, "=", calculated_ap)
 
 
 ## ステータスのスナップショットを取得
@@ -769,6 +778,7 @@ func _show_skill_change_owner_target(skill_owner: BattleParticipant, target: Bat
 
 
 ## スキル適用（従来版・内部用）
+## シミュレーション時は silent=true で出力を抑制
 func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
@@ -815,13 +825,13 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	apply_phase_3c_effects(participant, context)
 	
 	# 4. 先制・後手スキルを適用
-	FirstStrikeSkill.apply(participant)
+	FirstStrikeSkill.apply(participant, silent)
 	
 	# 5. 強打スキルを適用（巻物強打を含む）
 	apply_power_strike_skills(participant, context)
 	
 	# 6. 巻物攻撃判定
-	ScrollAttackSkill.apply(participant, context)
+	ScrollAttackSkill.apply(participant, context, silent)
 	
 	# 7. 2回攻撃スキルを判定
 	check_double_attack(participant, context)
@@ -871,27 +881,30 @@ func check_double_attack(participant: BattleParticipant, context: Dictionary) ->
 	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は2回攻撃無効化
 	var opponent = context.get("opponent")
 	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
-		print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の2回攻撃を無効化")
+		if not silent:
+			print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の2回攻撃を無効化")
 		return
 	
-	DoubleAttackSkill.apply(participant)
+	DoubleAttackSkill.apply(participant, silent)
 
 ## 強打スキル適用（巻物強打を含む）
 func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強打無効化
 	var opponent = context.get("opponent")
 	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
-		print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強打を無効化")
+		if not silent:
+			print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強打を無効化")
 		return
 	
-	PowerStrikeSkill.apply(participant, context)
-	print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+	PowerStrikeSkill.apply(participant, context, silent)
+	if not silent:
+		print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 
 
 ## 土地数比例効果を適用（Phase 3追加）
 ## 委譲先: SkillStatModifiers.apply_land_count_effects
 func apply_land_count_effects(participant: BattleParticipant, context: Dictionary) -> void:
-	SkillStatModifiers.apply_land_count_effects(participant, context)
+	SkillStatModifiers.apply_land_count_effects(participant, context, silent)
 
 
 ## アイテム破壊・盗み処理（戦闘開始前）
@@ -918,7 +931,7 @@ func apply_item_manipulation(first: BattleParticipant, second: BattleParticipant
 ## 委譲先: SkillStatModifiers.apply_turn_number_bonus
 func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary) -> void:
 	var game_flow_manager = context.get("game_flow_manager", game_flow_manager_ref)
-	SkillStatModifiers.apply_turn_number_bonus(participant, context, game_flow_manager)
+	SkillStatModifiers.apply_turn_number_bonus(participant, context, game_flow_manager, silent)
 
 # ========================================
 # 破壊数カウント効果
@@ -927,18 +940,18 @@ func apply_turn_number_bonus(participant: BattleParticipant, context: Dictionary
 ## 破壊数カウント効果を適用（ソウルコレクター用）
 ## 委譲先: SkillStatModifiers.apply_destroy_count_effects
 func apply_destroy_count_effects(participant: BattleParticipant):
-	SkillStatModifiers.apply_destroy_count_effects(participant, lap_system)
+	SkillStatModifiers.apply_destroy_count_effects(participant, lap_system, silent)
 
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
 ## 委譲先: SkillStatModifiers.apply_phase_3c_effects
 func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary):
-	SkillStatModifiers.apply_phase_3c_effects(participant, context, board_system_ref)
+	SkillStatModifiers.apply_phase_3c_effects(participant, context, board_system_ref, silent)
 
 ## Phase 3-B効果を適用（中程度の条件効果）
 ## 委譲先: SkillStatModifiers.apply_phase_3b_effects
 func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary):
-	SkillStatModifiers.apply_phase_3b_effects(participant, context, board_system_ref)
+	SkillStatModifiers.apply_phase_3b_effects(participant, context, board_system_ref, silent)
 
 ## 💰 バトル開始時のEP獲得スキルを適用
 func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: BattleParticipant) -> void:
@@ -966,17 +979,17 @@ func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: Bat
 ## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
 ## 委譲先: SkillStatModifiers.apply_battle_condition_effects
 func apply_battle_condition_effects(participant: BattleParticipant, context: Dictionary):
-	SkillStatModifiers.apply_battle_condition_effects(participant, context)
+	SkillStatModifiers.apply_battle_condition_effects(participant, context, silent)
 
 ## 常時補正効果を適用（アイスウォール、トルネード用）
 ## 委譲先: SkillStatModifiers.apply_constant_stat_bonus
 func apply_constant_stat_bonus(participant: BattleParticipant):
-	SkillStatModifiers.apply_constant_stat_bonus(participant)
+	SkillStatModifiers.apply_constant_stat_bonus(participant, silent)
 
 ## 手札数効果を適用（リリス用）
 ## 委譲先: SkillStatModifiers.apply_hand_count_effects
 func apply_hand_count_effects(participant: BattleParticipant, player_id: int, card_system):
-	SkillStatModifiers.apply_hand_count_effects(participant, player_id, card_system)
+	SkillStatModifiers.apply_hand_count_effects(participant, player_id, card_system, silent)
 
 ## ウォーロックディスクチェック
 ##

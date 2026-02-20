@@ -49,7 +49,7 @@ func simulate_worst_case(
 		# 敵情報がない場合は通常シミュレーション
 		return _simulate_base(attacker, defender, tile_info, attacker_player_id, attacker_item)
 	
-	print("[CPU攻撃] ワーストケース分析開始")
+	print("**** [CPU攻撃] ワーストケース分析開始 ****")
 	
 	# 敵の対抗手段を収集
 	var enemy_items = _hand_utils.get_enemy_items(defender_owner)

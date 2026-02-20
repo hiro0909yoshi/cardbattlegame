@@ -156,12 +156,20 @@ func simulate_battle(
 
 		_log("")
 
-		# レベル1: コンパクトサマリー（無効化）
+		# レベル1: 無効化サマリー
 		if log_level >= 1:
-			print("[BattleSim] %s vs %s → 無効化" % [
-				attacker_data.get("name", "?"),
-				defender_data.get("name", "?")
-			])
+			var atk_name_n = attacker_data.get("name", "?")
+			var def_name_n = defender_data.get("name", "?")
+			var atk_base_n = "%s(%d/%d)" % [atk_name_n, attacker_data.get("ap", 0), attacker_data.get("hp", 0)]
+			var def_base_n = "%s(%d/%d)" % [def_name_n, defender_data.get("ap", 0), defender_data.get("hp", 0)]
+
+			if not attacker_item.is_empty():
+				atk_base_n = "[%s] %s" % [attacker_item.get("name", "?"), atk_base_n]
+			if not defender_item.is_empty():
+				def_base_n = "[%s] %s" % [defender_item.get("name", "?"), def_base_n]
+
+			print("[BattleSim] %s vs %s" % [atk_base_n, def_base_n])
+			print("  → 無効化")
 
 		return {
 			"result": final_result,
@@ -232,13 +240,34 @@ func simulate_battle(
 	_log("  → %s" % _result_to_string(result))
 	_log("")
 
-	# レベル1: コンパクトサマリー
+	# レベル1: 3行サマリー
 	if log_level >= 1:
 		var order_str = "先攻" if attack_order == "attacker_first" else "後攻"
 		var result_str = _result_to_short_string(result)
-		print("[BattleSim] %s(%d/%d) vs %s(%d/%d) [%s] → %s" % [
-			attacker_data.get("name", "?"), attacker_final_ap, attacker_final_hp,
-			defender_data.get("name", "?"), defender_final_ap, defender_final_hp,
+
+		# Line 1: アイテム + 基礎ステータス
+		var atk_name = attacker_data.get("name", "?")
+		var def_name = defender_data.get("name", "?")
+		var atk_base = "%s(%d/%d)" % [atk_name, attacker_data.get("ap", 0), attacker_data.get("hp", 0)]
+		var def_base = "%s(%d/%d)" % [def_name, defender_data.get("ap", 0), defender_data.get("hp", 0)]
+
+		if not attacker_item.is_empty():
+			atk_base = "[%s] %s" % [attacker_item.get("name", "?"), atk_base]
+		if not defender_item.is_empty():
+			def_base = "[%s] %s" % [defender_item.get("name", "?"), def_base]
+
+		print("[BattleSim] %s vs %s" % [atk_base, def_base])
+
+		# Line 2: スキル・呪い（効果がある場合のみ）
+		var atk_effects = _get_effects_summary(attacker)
+		var def_effects = _get_effects_summary(defender)
+		if atk_effects != "なし" or def_effects != "なし":
+			print("  攻: %s | 防: %s" % [atk_effects, def_effects])
+
+		# Line 3: 最終ステータス + 結果
+		print("  → %s(AP%d/HP%d) vs %s(AP%d/HP%d) [%s] → %s" % [
+			atk_name, attacker_final_ap, attacker_final_hp,
+			def_name, defender_final_ap, defender_final_hp,
 			order_str, result_str
 		])
 
@@ -603,6 +632,44 @@ func _get_attacker_death_damage(attacker_data: Dictionary) -> int:
 				return effect.get("damage", 0)
 	
 	return 0
+
+## パーティシパントのスキル・呪い情報を収集（レベル1用）
+func _get_effects_summary(participant) -> String:
+	var parts: Array[String] = []
+
+	# ability_parsed の keywords からスキル名を収集
+	var ability = participant.creature_data.get("ability_parsed", {})
+	var keywords = ability.get("keywords", [])
+	for kw in keywords:
+		parts.append(str(kw))
+
+	# BattleParticipant のフラグからアイテム付与スキルを収集
+	if participant.has_item_first_strike:
+		if "先制" not in parts:
+			parts.append("先制(アイテム)")
+	if participant.attack_count > 1 and "2回攻撃" not in parts:
+		parts.append("2回攻撃")
+	if participant.has_squid_mantle:
+		parts.append("特殊攻撃無効")
+
+	# temporary_effects から呪い効果を収集
+	var temp_effects = participant.creature_data.get("temporary_effects", [])
+	for eff in temp_effects:
+		var eff_name = eff.get("name", "")
+		if eff_name == "":
+			# nameがなければeffect_typeを使う
+			eff_name = eff.get("effect_type", "効果")
+		parts.append("呪:" + str(eff_name))
+
+	# curse（プレイヤー呪い由来の効果）もチェック
+	var curse_effects = participant.creature_data.get("curse_effects", [])
+	for eff in curse_effects:
+		var eff_name = eff.get("name", eff.get("effect_type", "呪い"))
+		parts.append("呪:" + str(eff_name))
+
+	if parts.is_empty():
+		return "なし"
+	return ", ".join(parts)
 
 ## ログ出力（レベル2以上で詳細ログを出力）
 func _log(message: String) -> void:

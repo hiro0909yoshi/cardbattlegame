@@ -100,7 +100,8 @@
 		"summon_rate_mismatch": 0.4,
 		"spell_use_rate": 0.6,
 		"dominio_use_rate": 0.5
-	  },
+	  }
+	},
 	"fighter_1": {
 	  "name": "ファイター1",
 	  "model_path": "res://scenes/Characters/Bowser.tscn",
@@ -189,5 +190,4 @@
 	  }
 	}
   }
-}
 }

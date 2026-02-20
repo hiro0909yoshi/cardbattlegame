@@ -182,6 +182,7 @@ func load_dynamic_creature_data(data: Dictionary):
 	# 表示を更新
 	update_dynamic_stats()
 	set_element_color()
+	load_creature_image(data.get("id", 0))
 	adjust_children_size()
 
 # 基本ラベル更新（静的データ）

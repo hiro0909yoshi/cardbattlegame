@@ -102,8 +102,7 @@ func _on_quest_pressed():
 	if not check.valid:
 		_show_invalid_deck_warning(check.invalid_cards)
 		return
-	
-	print("クエスト選択 → ステージ選択画面へ")
+
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/WorldStageSelect.tscn")
 
 func _on_solo_battle_pressed():

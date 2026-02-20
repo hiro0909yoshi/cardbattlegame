@@ -47,34 +47,26 @@ func _initialize_deck():
 			var count = deck_data[card_id]
 			for i in range(count):
 				deck.append(card_id)
-		print("ブック", GameData.selected_deck_index + 1, "のデッキを読み込み")
-	
 	deck.shuffle()
-	print("デッキ初期化: ", deck.size(), "枚")
 
 # 新システム: 複数プレイヤーのデッキを初期化
 func initialize_decks(player_count: int):
-	print("\n=== マルチデッキ初期化開始 ===")
-	print("プレイヤー数: ", player_count)
-	
 	# 全プレイヤーのデータ構造を初期化
 	for player_id in range(player_count):
 		player_decks[player_id] = []
 		player_discards[player_id] = []
 		player_hands[player_id] = {"data": []}
-	
+
 	# プレイヤー0: GameDataから読み込み
 	_load_deck_from_game_data(0)
-	
+
 	# プレイヤー1: 手動操作CPU用(暫定: プレイヤー0と同じデッキ)
 	if player_count >= 2:
 		_load_manual_cpu_deck(1)
-	
+
 	# プレイヤー2-3: デフォルトデッキ(将来のCPU用)
 	for player_id in range(2, player_count):
 		_load_default_deck(player_id)
-	
-	print("=== マルチデッキ初期化完了 ===\n")
 
 func _initialize_player_hands():
 	for i in range(MAX_PLAYERS):
@@ -85,29 +77,27 @@ func _initialize_player_hands():
 # Phase 4: プレイヤー0用 - GameDataからデッキ読み込み
 func _load_deck_from_game_data(player_id: int):
 	var deck_data = GameData.get_current_deck()["cards"]
-	
+
 	# 辞書 {card_id: count} を配列に変換
 	for card_id in deck_data.keys():
 		var count = deck_data[card_id]
 		for i in range(count):
 			player_decks[player_id].append(card_id)
-	
+
 	player_decks[player_id].shuffle()
-	print("Player 0: ブック", GameData.selected_deck_index + 1, "読み込み (", player_decks[player_id].size(), "枚)")
 
 # Phase 4: プレイヤー1用 - 手動操作CPU用デッキ
 func _load_manual_cpu_deck(player_id: int):
 	# 暫定: プレイヤー0と同じデッキを使用
 	# TODO: 将来的には専用のCPUデッキファイルから読み込む
 	var deck_data = GameData.get_current_deck()["cards"]
-	
+
 	for card_id in deck_data.keys():
 		var count = deck_data[card_id]
 		for i in range(count):
 			player_decks[player_id].append(card_id)
-	
+
 	player_decks[player_id].shuffle()
-	print("Player 1: 手動操作CPU用デッキ読み込み (", player_decks[player_id].size(), "枚)")
 
 # Phase 4: デフォルトデッキ(プレイヤー2-3用)
 func _load_default_deck(player_id: int):
@@ -115,9 +105,8 @@ func _load_default_deck(player_id: int):
 	for card_id in range(1, 13):
 		for j in range(3):
 			player_decks[player_id].append(card_id)
-	
+
 	player_decks[player_id].shuffle()
-	print("Player ", player_id, ": デフォルトデッキ読み込み (", player_decks[player_id].size(), "枚)")
 
 func draw_card_data() -> Dictionary:
 	# DEPRECATED - draw_card_data_v2(player_id) を使用してください
@@ -140,7 +129,6 @@ func draw_card_data_v2(player_id: int) -> Dictionary:
 				return {}
 		
 		var pool_card = player_deck_pools[player_id].pop_front()
-		print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, pool_card.get("name", "?"), pool_card.get("id", 0)])
 		return pool_card
 	
 	# 通常モード: player_decks/player_discards を使用
@@ -161,7 +149,6 @@ func draw_card_data_v2(player_id: int) -> Dictionary:
 	
 	var card_id = player_decks[player_id].pop_front()
 	var card_data = load_card_data(card_id)
-	print("[ドロー] プレイヤー%d: %s (ID: %d) をデッキから引きました" % [player_id + 1, card_data.get("name", "?"), card_id])
 	return card_data
 
 func load_card_data(card_id: int) -> Dictionary:
@@ -657,16 +644,16 @@ func draw_random_card_by_type(player_id: int, card_type: String) -> Dictionary:
 func add_card_to_hand(player_id: int, card_data: Dictionary) -> bool:
 	if not player_hands.has(player_id):
 		return false
-	
+
 	if card_data.is_empty():
 		return false
-	
+
 	# カードデータをコピーして追加
 	var clean_card = card_data.duplicate()
 	_clean_battle_fields(clean_card)
-	
+
 	player_hands[player_id]["data"].append(clean_card)
-	
+
 	emit_signal("hand_updated")
 	print("[CardSystem] カード追加: Player%d が %s を手札に追加" % [player_id + 1, card_data.get("name", "?")])
 	return true

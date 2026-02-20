@@ -25,8 +25,6 @@ func set_spell_container(container: SpellSystemContainer) -> void:
 
 ## スペル効果を実行
 func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
-	print("[SpellEffectExecutor] execute_spell_effect 開始: spell=%s" % spell_card.get("name", "?"))
-
 	var handler = spell_phase_handler
 	if not handler:
 		push_error("[SpellEffectExecutor] handler が未設定")
@@ -48,13 +46,11 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 	var caster_name = "プレイヤー%d" % (current_player_id + 1)
 	if handler.player_system and current_player_id >= 0 and current_player_id < handler.player_system.players.size():
 		caster_name = handler.player_system.players[current_player_id].name
-	print("[SpellEffectExecutor] 発動通知表示: %s" % caster_name)
 	await handler.show_spell_cast_notification(caster_name, target_data, spell_card, false)
 
 	# スペル効果を実行
 	var parsed = spell_card.get("effect_parsed", {})
 	var effects = parsed.get("effects", [])
-	print("[SpellEffectExecutor] effects count = %d" % effects.size())
 
 	# 復帰[ブック]判定（常にデッキに戻す場合）
 	var return_to_deck = parsed.get("return_to_deck", false)
@@ -71,10 +67,8 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 			handler.spell_state.set_spell_failed(true)
 
 	# 効果を適用
-	print("[SpellEffectExecutor] 効果適用開始")
 	for effect in effects:
 		await apply_single_effect(effect, target_data)
-	print("[SpellEffectExecutor] 効果適用完了")
 
 	# spell_failed フラグを取得（spell_state経由）
 	var spell_failed = handler.spell_state.is_spell_failed() if handler.spell_state else false
@@ -88,32 +82,25 @@ func execute_spell_effect(spell_card: Dictionary, target_data: Dictionary):
 				handler.card_system.discard_card(current_player_id, i, "use")
 				break
 	elif spell_failed and return_to_hand:
-		print("[復帰[手札]] %s は手札に残ります" % spell_card.get("name", "?"))
+		pass
 	elif is_external_mode:
-		print("[外部スペル] %s は消滅" % spell_card.get("name", "?"))
+		pass
 
 	# 効果発動完了
-	print("[SpellEffectExecutor] spell_used emit")
 	handler.spell_used.emit(spell_card)
 
 	# カード選択中の場合は完了後に処理
 	if handler.card_selection_handler and handler.card_selection_handler.is_selecting():
-		print("[SpellEffectExecutor] カード選択中、リターン")
 		return
 
 	# 少し待機してからカメラを戻す
-	print("[SpellEffectExecutor] 0.5秒待機（カメラ準備）")
 	await handler.get_tree().create_timer(0.5).timeout
-	print("[SpellEffectExecutor] return_camera_to_player() 呼び出し")
 	if handler.spell_ui_manager:
 		handler.spell_ui_manager.return_camera_to_player()
 
 	# さらに待機してからスペルフェーズ完了
-	print("[SpellEffectExecutor] 0.5秒待機（フェーズ完了準備）")
 	await handler.get_tree().create_timer(0.5).timeout
-	print("[SpellEffectExecutor] complete_spell_phase() 呼び出し")
 	handler.complete_spell_phase()
-	print("[SpellEffectExecutor] execute_spell_effect 完了")
 
 ## 単一の効果を適用
 func apply_single_effect(effect: Dictionary, target_data: Dictionary):
@@ -281,7 +268,7 @@ func execute_spell_on_all_creatures(spell_card: Dictionary, target_info: Diction
 				handler.card_system.discard_card(current_player_id, i, "use")
 				break
 	elif is_external_mode:
-		print("[外部スペル] %s は消滅" % spell_card.get("name", "?"))
+		pass
 
 	# 効果発動完了
 	handler.spell_used.emit(spell_card)

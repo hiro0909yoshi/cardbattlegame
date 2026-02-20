@@ -86,8 +86,7 @@ func setup_with_context(ctx: CPUAIContextScript, p_movement_controller = null,
 ## cpu_ai_handlerを後から設定（ポリシー設定後に呼び出し）
 func set_cpu_ai_handler(handler) -> void:
 	cpu_ai_handler = handler
-	print("[CPUMovementEvaluator] cpu_ai_handler設定完了")
-	
+
 	# ホーリーワード評価をセットアップ
 	_holy_word_evaluator = CPUHolyWordEvaluator.new()
 	_holy_word_evaluator.setup(self)
@@ -101,15 +100,11 @@ func _ensure_checkpoint_distances_calculated():
 	if _checkpoint_distances_calculated:
 		return
 	calculate_checkpoint_distances()
-	# デバッグ: 初回計算時のログ
-	print("[CPUMovementEvaluator] チェックポイント距離計算完了")
 
 ## チェックポイント距離を計算（マップロード後に呼び出し）
 func calculate_checkpoint_distances():
-	var tile_nodes_info = str(movement_controller.tile_nodes != null) if movement_controller else "N/A"
-	print("[CPUMovementEvaluator] calculate_checkpoint_distances呼び出し mc=%s, tile_nodes=%s" % [movement_controller != null, tile_nodes_info])
 	if not movement_controller or not movement_controller.tile_nodes:
-		print("[CPUMovementEvaluator] movement_controller未設定 - スキップ")
+		push_warning("[CPUMovement] movement_controller未設定 - CP距離計算スキップ")
 		return
 	
 	# ワープペアを取得

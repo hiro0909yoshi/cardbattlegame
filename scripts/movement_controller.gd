@@ -124,17 +124,14 @@ func set_player_tile(player_id: int, tile_index: int):
 # プレイヤーを移動（外部から呼ばれるメイン関数）
 func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	if is_moving or player_id >= player_nodes.size():
-		print("[MovementController] move_player早期リターン: is_moving=%s, player_id=%d, player_nodes.size=%d" % [is_moving, player_id, player_nodes.size()])
 		return
 
 	# ゲーム終了チェック
 	if is_game_ended_checker.call():
-		print("[MovementController] ゲーム終了済み、移動スキップ")
 		return
 
 	is_moving = true
 	current_moving_player = player_id
-	print("[MovementController] 移動開始: player=%d, steps=%d" % [player_id, steps])
 	emit_signal("movement_started", player_id)
 
 	# ダイス条件バフをチェックして適用（移動前）
@@ -143,7 +140,6 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 
 	# 方向選択権チェック
 	var has_direction_choice = _check_direction_choice_pending(player_id)
-	print("[MovementController] direction_choice=%s, player=%d" % [has_direction_choice, player_id])
 
 	if has_direction_choice:
 		var current_tile = player_tiles[player_id]
@@ -163,22 +159,18 @@ func move_player(player_id: int, steps: int, dice_value: int = 0) -> void:
 	is_moving = false
 	current_moving_player = -1
 
-	print("[MovementController] 移動完了: player=%d, final_tile=%d" % [player_id, final_tile])
 	emit_signal("movement_completed", player_id, final_tile)
 
 
 # 1歩ずつ移動（分岐があれば選択）
 func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -> void:
-	print("[MovementController] _move_steps_with_branch開始: steps=%d, first_tile=%d" % [steps, first_tile])
 	var current_tile = player_tiles[player_id]
 	var came_from = _get_player_came_from(player_id)
 	var remaining_steps = steps
 	var is_first_step = true
 
 	while remaining_steps > 0:
-		print("[MovementController] 移動ループ: remaining=%d, current=%d" % [remaining_steps, current_tile])
 		if is_game_ended_checker.call():
-			print("[MovementController] ゲーム終了済み、移動中断")
 			break
 		current_remaining_steps = remaining_steps
 
@@ -222,7 +214,6 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 		# 足どめチェック
 		var stop_result = warp_handler.check_forced_stop_at_tile(current_tile, player_id)
 		if stop_result["stopped"]:
-			print("[足どめ] ", stop_result["reason"])
 			emit_signal("movement_step_completed", player_id, current_tile)
 			break
 
@@ -253,7 +244,6 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 		elif not result.choices.is_empty():
 			if game_flow_manager and game_flow_manager.is_cpu_player(player_id) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(player_id, result.choices, current_remaining_steps, current_tile)
-				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 			else:
 				branch_selector.current_branch_tile = current_tile
 				chosen = await branch_selector.show_branch_tile_selection(result.choices)
@@ -264,7 +254,6 @@ func _get_next_tile_with_branch(current_tile: int, came_from: int, player_id: in
 	else:
 		if game_flow_manager and game_flow_manager.is_cpu_player(player_id) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(player_id, choices, current_remaining_steps, current_tile)
-			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [player_id + 1, chosen, current_remaining_steps])
 		else:
 			branch_selector.current_branch_tile = current_tile
 			chosen = await branch_selector.show_branch_tile_selection(choices)
@@ -285,10 +274,8 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 			var tutorial_manager = _get_tutorial_manager()
 			if tutorial_manager and tutorial_manager.is_active:
 				selected_dir = tutorial_manager.get_cpu_direction()
-				print("[CPU方向選択] チュートリアル: プレイヤー%d: 方向 %d" % [current_moving_player + 1, selected_dir])
 			elif cpu_movement_evaluator:
 				selected_dir = cpu_movement_evaluator.decide_direction(current_moving_player, [1, -1])
-				print("[CPU方向選択] プレイヤー%d: 方向 %d を選択" % [current_moving_player + 1, selected_dir])
 			else:
 				selected_dir = 1
 		else:
@@ -315,7 +302,6 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 		elif not result.choices.is_empty():
 			if game_flow_manager and game_flow_manager.is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 				chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, result.choices, current_remaining_steps, current_tile)
-				print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 			else:
 				branch_selector.current_branch_tile = current_tile
 				chosen = await branch_selector.show_branch_tile_selection(result.choices)
@@ -326,7 +312,6 @@ func _select_first_tile(current_tile: int, came_from: int) -> int:
 	else:
 		if game_flow_manager and game_flow_manager.is_cpu_player(current_moving_player) and cpu_movement_evaluator:
 			chosen = cpu_movement_evaluator.decide_branch_choice(current_moving_player, choices, current_remaining_steps, current_tile)
-			print("[CPU分岐選択] プレイヤー%d: タイル %d を選択 (残り%d歩)" % [current_moving_player + 1, chosen, current_remaining_steps])
 		else:
 			branch_selector.current_branch_tile = current_tile
 			chosen = await branch_selector.show_branch_tile_selection(choices)
@@ -409,7 +394,6 @@ func move_along_path(player_id: int, path: Array) -> void:
 		var tile_index = path[i]
 
 		if not tile_nodes.has(tile_index):
-			print("Warning: タイル", tile_index, "が見つかりません")
 			i += 1
 			continue
 
@@ -457,7 +441,6 @@ func move_along_path(player_id: int, path: Array) -> void:
 		# 足どめ判定
 		var stop_result = warp_handler.check_forced_stop_at_tile(tile_index, player_id)
 		if stop_result["stopped"]:
-			print("[足どめ] ", stop_result["reason"])
 			emit_signal("movement_step_completed", player_id, tile_index)
 			break
 
@@ -469,7 +452,6 @@ func move_along_path(player_id: int, path: Array) -> void:
 # 単一タイルへの移動
 func move_to_tile(player_id: int, tile_index: int) -> void:
 	if not tile_nodes.has(tile_index):
-		print("[MovementController] move_to_tile: tile_nodes has no tile %d" % tile_index)
 		return
 
 	var player_node = player_nodes[player_id]
@@ -537,7 +519,6 @@ func reverse_player_direction(player_id: int) -> void:
 	var current_dir = _get_player_current_direction(player_id)
 	var new_dir = -current_dir if current_dir != 0 else -1
 	set_player_current_direction(player_id, new_dir)
-	print("[MovementController] プレイヤー%d の方向を反転: %d → %d" % [player_id + 1, current_dir, new_dir])
 
 
 ## 歩行逆転用: came_fromを「次に進む予定だったタイル」に変更
@@ -553,16 +534,12 @@ func swap_came_from_for_reverse(player_id: int) -> void:
 		var direction = _get_player_current_direction(player_id)
 		var next_tile = current_tile + direction
 		_set_player_came_from(player_id, next_tile)
-		print("[MovementController] プレイヤー%d came_from反転(no conn): %d → %d" % [player_id + 1, old_came_from, next_tile])
 		return
 
 	for conn in tile.connections:
 		if conn != old_came_from:
 			_set_player_came_from(player_id, conn)
-			print("[MovementController] プレイヤー%d came_from反転: %d → %d" % [player_id + 1, old_came_from, conn])
 			return
-
-	print("[MovementController] プレイヤー%d came_from反転失敗: connections=%s" % [player_id + 1, tile.connections])
 
 
 func _get_player_came_from(player_id: int) -> int:
@@ -584,7 +561,6 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 ## 歩行逆転呪いが解除された時に呼ばれる
 func on_movement_reverse_curse_removed(player_id: int) -> void:
 	swap_came_from_for_reverse(player_id)
-	print("[MovementController] 歩行逆転呪い解除: プレイヤー%d came_fromを元に戻す" % [player_id + 1])
 
 
 func _infer_direction_from_choice(current_tile: int, chosen_tile: int, player_id: int = -1) -> int:

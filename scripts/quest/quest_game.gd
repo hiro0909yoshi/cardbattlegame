@@ -105,8 +105,6 @@ func _setup_3d_scene_before_init():
 	
 	# プレイヤーキャラクター作成
 	_create_player_characters(players_container)
-	
-	print("[QuestGame] 3Dシーン事前構築完了")
 
 ## プレイヤーキャラクター作成
 func _create_player_characters(container: Node3D):
@@ -163,8 +161,6 @@ func _apply_stage_settings():
 		for i in range(enemies.size()):
 			var enemy_magic = stage_loader.get_enemy_start_magic(i)
 			system_manager.player_system.set_magic(i + 1, enemy_magic)
-		
-		print("[QuestGame] 初期EP設定完了")
 
 		# プレイヤー名を設定
 		# プレイヤー0: GameDataの名前を使用
@@ -177,8 +173,6 @@ func _apply_stage_settings():
 			var cpu_name = char_data.get("name", "CPU " + str(i + 1))
 			if i + 1 < system_manager.player_system.players.size():
 				system_manager.player_system.players[i + 1].name = cpu_name
-
-		print("[QuestGame] プレイヤー名設定完了")
 
 	# 勝利条件を設定
 	var win_conditions = stage_loader.get_win_condition()
@@ -200,16 +194,14 @@ func _apply_stage_settings():
 		for player in system_manager.player_system.players:
 			player.target_magic = target
 		print("[QuestGame] 勝利条件: TEP %dEP以上でチェックポイント通過" % target)
-	
+
 	# 全プレイヤーのデッキを設定
-	print("[QuestGame] calling _setup_all_decks...")
 	_setup_all_decks()
 
 ## 全プレイヤーのデッキを設定（プレイヤー0 + CPU）
 func _setup_all_decks():
-	print("[QuestGame] _setup_all_decks called")
 	if not system_manager.card_system:
-		print("[QuestGame] card_system is null, returning")
+		push_error("[QuestGame] card_system is null, returning")
 		return
 	
 	# プレイヤー0: GameDataから選択中のブックを設定
@@ -236,15 +228,9 @@ func _setup_all_decks():
 
 ## プレイヤー0のデッキを設定（GameDataから）
 func _setup_player_deck():
-	print("[QuestGame] _setup_player_deck called")
-	print("[QuestGame] selected_deck_index: %d" % GameData.selected_deck_index)
-	
 	var deck_info = GameData.get_current_deck()
-	print("[QuestGame] deck_info: %s" % str(deck_info))
-	
 	var cards_dict = deck_info.get("cards", {})
-	print("[QuestGame] cards_dict size: %d" % cards_dict.size())
-	
+
 	if cards_dict.is_empty():
 		print("[QuestGame] Player 0: デッキが空のためランダム使用")
 		return
@@ -257,39 +243,32 @@ func _setup_player_deck():
 	
 	system_manager.card_system.set_deck_for_player(0, deck_data)
 	system_manager.card_system.deal_initial_hand_for_player(0)
-	print("[QuestGame] Player 0: ブック%d 設定完了 (%d種類)" % [GameData.selected_deck_index + 1, cards_dict.size()])
 
 ## CPUのバトルポリシーを設定
 func _setup_cpu_battle_policies():
-	print("[QuestGame] _setup_cpu_battle_policies 開始")
-	
 	if not system_manager or not system_manager.board_system_3d:
-		print("[QuestGame] system_manager または board_system_3d が null")
+		push_error("[QuestGame] system_manager または board_system_3d が null")
 		return
-	
+
 	# board_system_3d.cpu_ai_handler を直接参照（確実に存在する）
 	var cpu_ai_handler = system_manager.board_system_3d.cpu_ai_handler
 	if not cpu_ai_handler:
-		print("[QuestGame] board_system_3d.cpu_ai_handler が見つかりません")
+		push_error("[QuestGame] board_system_3d.cpu_ai_handler が見つかりません")
 		return
-	
+
 	# CPU敵のポリシーを設定
 	var enemies = stage_loader.get_enemies()
-	print("[QuestGame] 敵の数: %d" % enemies.size())
 	if enemies.is_empty():
 		return
-	
+
 	# 最初の敵のポリシーを取得して設定
 	var policy_data = stage_loader.get_enemy_battle_policy(0)
-	print("[QuestGame] policy_data: %s" % policy_data)
-	
+
 	if policy_data.is_empty():
 		# デフォルトポリシーを設定
 		cpu_ai_handler.set_battle_policy_preset("balanced")
-		print("[QuestGame] CPUバトルポリシー: デフォルト (balanced)")
 	else:
 		cpu_ai_handler.load_battle_policy_from_json(policy_data)
-		print("[QuestGame] CPUバトルポリシー: JSONから読み込み完了")
 	
 	# CPUMovementEvaluatorにもcpu_ai_handlerを設定（移動シミュレーション用）
 	if system_manager.game_flow_manager and system_manager.board_system_3d:

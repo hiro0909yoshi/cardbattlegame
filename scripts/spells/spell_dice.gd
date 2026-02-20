@@ -13,8 +13,6 @@ var spell_curse: SpellCurse
 func setup(p_system: PlayerSystem, curse: SpellCurse):
 	player_system = p_system
 	spell_curse = curse
-	
-	print("[SpellDice] 初期化完了")
 
 # ========================================
 # スペル効果適用（SpellPhaseHandlerから呼ばれる）

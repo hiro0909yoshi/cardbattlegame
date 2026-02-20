@@ -326,14 +326,10 @@ func _on_start_pressed():
 		# ブック選択モード → クエスト開始
 		GameData.selected_stage_id = selected_stage_id
 		GameData.selected_deck_index = _selected_deck_index
-		
-		print("[WorldStageSelect] クエスト開始: ステージ=%s, デッキ=%d" % [selected_stage_id, _selected_deck_index + 1])
 		get_tree().call_deferred("change_scene_to_file", "res://scenes/Quest.tscn")
 	else:
 		# ステージ選択モード → ブック選択に切り替え
 		GameData.selected_stage_id = selected_stage_id
-		
-		print("[WorldStageSelect] ブック選択へ切り替え: ", selected_stage_id)
 		_show_book_selection()
 
 func _on_back_pressed():
@@ -782,7 +778,6 @@ func _hide_book_selection():
 
 ## ブック選択時
 func _on_book_selected(index: int):
-	print("[WorldStageSelect] ブック選択: ブック", index + 1)
 	_selected_deck_index = index
 	_update_book_button_states()
 

@@ -19,8 +19,6 @@ func setup(player_system: PlayerSystem, board_system = null, _game_flow_manager 
 	board_system_ref = board_system
 	spell_curse_ref = spell_curse
 
-	print("SpellMagic: セットアップ完了")
-
 ## 通知UIを設定
 func set_notification_ui(notification_ui) -> void:
 	spell_cast_notification_ui = notification_ui

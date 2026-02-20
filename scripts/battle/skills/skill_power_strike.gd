@@ -38,25 +38,25 @@ static func has_power_strike(creature_data: Dictionary) -> bool:
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
 ## @param effect_combat エフェクトコンバットシステム（非推奨・互換性用）
-static func apply(participant, context: Dictionary, effect_combat = null) -> void:
+static func apply(participant, context: Dictionary, silent: bool = false, effect_combat = null) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
 	# 巻物強打判定（最優先）
 	if "巻物強打" in keywords and participant.is_using_scroll:
-		apply_scroll_power_strike(participant, context)
+		apply_scroll_power_strike(participant, context, silent)
 		return
 	
 	# 通常の強打判定
 	if "強打" in keywords:
-		apply_normal_power_strike(participant, context, effect_combat)
+		apply_normal_power_strike(participant, context, silent, effect_combat)
 
 ## 巻物強打を適用
 ##
 ## 無条件でAP×1.5
 ##
 ## @param participant バトル参加者
-static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> bool:
+static func apply_scroll_power_strike(participant, context: Dictionary = {}, silent: bool = false) -> bool:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
@@ -79,18 +79,21 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 				var before_ap = participant.current_ap
 				var multiplier = effect.get("multiplier", 1.5)
 				participant.current_ap = int(participant.current_ap * multiplier)
-				print("【巻物強打発動】", participant.creature_data.get("name", "?"), 
-					  " AP: ", before_ap, " → ", participant.current_ap, " (×", multiplier, ")")
+				if not silent:
+					print("【巻物強打発動】", participant.creature_data.get("name", "?"),
+						  " AP: ", before_ap, " → ", participant.current_ap, " (×", multiplier, ")")
 				return true
 			else:
-				print("【巻物強打不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の巻物攻撃")
+				if not silent:
+					print("【巻物強打不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の巻物攻撃")
 				return false
-	
+
 	# 巻物強打効果が見つからない場合（無条件の巻物強打）
 	var original_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * 1.5)
-	print("【巻物強打発動】", participant.creature_data.get("name", "?"), 
-		  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
+	if not silent:
+		print("【巻物強打発動】", participant.creature_data.get("name", "?"),
+			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
 	return true
 
 ## 通常の強打を適用
@@ -100,7 +103,7 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}) -> 
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
 ## @param _effect_combat エフェクトコンバットシステム
-static func apply_normal_power_strike(participant, context: Dictionary, _effect_combat) -> void:
+static func apply_normal_power_strike(participant, context: Dictionary, silent: bool = false, _effect_combat = null) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
 	
@@ -117,4 +120,5 @@ static func apply_normal_power_strike(participant, context: Dictionary, _effect_
 				break
 		
 		participant.current_ap = int(base_ap * multiplier)
-		print("【強打発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")
+		if not silent:
+			print("【強打発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")

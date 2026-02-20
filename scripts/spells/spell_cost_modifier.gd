@@ -17,7 +17,6 @@ func setup(p_spell_curse, p_player_system: PlayerSystem, p_game_flow_manager = n
 	spell_curse = p_spell_curse
 	player_system = p_player_system
 	game_flow_manager = p_game_flow_manager
-	print("[SpellCostModifier] 初期化完了")
 
 ## 直接参照を設定（GFM経由を廃止）
 func set_spell_world_curse(world_curse) -> void:

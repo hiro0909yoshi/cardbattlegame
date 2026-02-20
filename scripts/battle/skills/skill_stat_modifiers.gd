@@ -21,7 +21,7 @@ class_name SkillStatModifiers
 
 
 ## 土地数効果を適用（アームドパラディン等）
-static func apply_land_count_effects(participant, context: Dictionary) -> void:
+static func apply_land_count_effects(participant, context: Dictionary, silent: bool = false) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
@@ -53,9 +53,12 @@ static func apply_land_count_effects(participant, context: Dictionary) -> void:
 					participant.current_ap = bonus
 				else:
 					participant.current_ap += bonus
-				print("【土地数比例】", participant.creature_data.get("name", "?"))
-				print("  対象属性:", target_elements, " 合計土地数:", total_count)
-				print("  AP: ", old_ap, " → ", participant.current_ap, " (", operation, " ", bonus, ")")
+				if not silent:
+					print("【土地数比例】", participant.creature_data.get("name", "?"))
+				if not silent:
+					print("  対象属性:", target_elements, " 合計土地数:", total_count)
+				if not silent:
+					print("  AP: ", old_ap, " → ", participant.current_ap, " (", operation, " ", bonus, ")")
 			
 			if stat == "hp" or stat == "both":
 				var old_hp = participant.current_hp
@@ -66,13 +69,16 @@ static func apply_land_count_effects(participant, context: Dictionary) -> void:
 					participant.current_hp = bonus
 				else:
 					participant.temporary_bonus_hp += bonus
-				print("【土地数比例】", participant.creature_data.get("name", "?"))
-				print("  対象属性:", target_elements, " 合計土地数:", total_count)
-				print("  HP: ", old_hp, " → ", participant.current_hp, " (", operation, " ", bonus, ")")
+				if not silent:
+					print("【土地数比例】", participant.creature_data.get("name", "?"))
+				if not silent:
+					print("  対象属性:", target_elements, " 合計土地数:", total_count)
+				if not silent:
+					print("  HP: ", old_hp, " → ", participant.current_hp, " (", operation, " ", bonus, ")")
 
 
 ## ターン数ボーナスを適用（ラーバキン用）
-static func apply_turn_number_bonus(participant, _context: Dictionary, game_flow_manager_ref: Node) -> void:
+static func apply_turn_number_bonus(participant, _context: Dictionary, game_flow_manager_ref: Node, silent: bool = false) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
@@ -92,35 +98,40 @@ static func apply_turn_number_bonus(participant, _context: Dictionary, game_flow
 			if ap_mode == "subtract":
 				# STから現ターン数を引く
 				participant.current_ap = max(0, participant.current_ap - current_turn)
-				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " ST減算: ", old_ap, " → ", participant.current_ap, " (-", current_turn, ")")
 			elif ap_mode == "add":
 				participant.current_ap += current_turn
-				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " ST+", current_turn, " (ターン", current_turn, ")")
 			elif ap_mode == "override":
 				# STを現ターン数で上書き
 				participant.current_ap = current_turn
-				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " ST上書き: ", old_ap, " → ", current_turn, " (ターン", current_turn, ")")
 			
 			# HP処理
 			if hp_mode == "add":
 				# temporary_bonus_hpに現ターン数を加算
 				participant.temporary_bonus_hp += current_turn
-				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " HP+", current_turn, " (ターン", current_turn, ")")
 			elif hp_mode == "subtract":
 				# temporary_bonus_hpから現ターン数を引く
 				participant.temporary_bonus_hp -= current_turn
-				print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【ターン数ボーナス】", participant.creature_data.get("name", "?"), 
 					  " HP-", current_turn, " (ターン", current_turn, ")")
 			
 			return
 
 
 ## 破壊数カウント効果を適用（ソウルコレクター用）
-static func apply_destroy_count_effects(participant, lap_system = null) -> void:
+static func apply_destroy_count_effects(participant, lap_system = null, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 
@@ -141,16 +152,18 @@ static func apply_destroy_count_effects(participant, lap_system = null) -> void:
 			if stat == "ap":
 				participant.temporary_bonus_ap += bonus_value
 				participant.current_ap += bonus_value
-				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【破壊数効果】", participant.creature_data.get("name", "?"), 
 					  " ST+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus_value
-				print("【破壊数効果】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【破壊数効果】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus_value, " (破壊数:", destroy_count, " × ", multiplier, ")")
 
 
 ## 常時補正効果を適用（アイスウォール、トルネード用）
-static func apply_constant_stat_bonus(participant) -> void:
+static func apply_constant_stat_bonus(participant, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
@@ -164,16 +177,18 @@ static func apply_constant_stat_bonus(participant) -> void:
 			if stat == "ap":
 				participant.temporary_bonus_ap += value
 				participant.current_ap += value
-				print("【常時補正】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【常時補正】", participant.creature_data.get("name", "?"), 
 					  " ST", ("+" if value >= 0 else ""), value)
 			elif stat == "hp":
 				participant.temporary_bonus_hp += value
-				print("【常時補正】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【常時補正】", participant.creature_data.get("name", "?"), 
 					  " HP", ("+" if value >= 0 else ""), value)
 
 
 ## 手札数効果を適用（リリス用）
-static func apply_hand_count_effects(participant, player_id: int, card_system) -> void:
+static func apply_hand_count_effects(participant, player_id: int, card_system, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
@@ -194,16 +209,18 @@ static func apply_hand_count_effects(participant, player_id: int, card_system) -
 			if stat == "ap":
 				participant.temporary_bonus_ap += bonus_value
 				participant.current_ap += bonus_value
-				print("【手札数効果】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【手札数効果】", participant.creature_data.get("name", "?"), 
 					  " ST+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus_value
-				print("【手札数効果】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【手札数効果】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus_value, " (手札数:", hand_count, " × ", multiplier, ")")
 
 
 ## 戦闘地条件効果を適用（アンフィビアン、カクタスウォール用）
-static func apply_battle_condition_effects(participant, context: Dictionary) -> void:
+static func apply_battle_condition_effects(participant, context: Dictionary, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
@@ -227,11 +244,13 @@ static func apply_battle_condition_effects(participant, context: Dictionary) -> 
 				if stat == "ap":
 					participant.temporary_bonus_ap += value
 					participant.current_ap += value
-					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
 						  " 戦闘地:", battle_land_element, " → ST+", value)
 				elif stat == "hp":
 					participant.temporary_bonus_hp += value
-					print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【戦闘地条件】", participant.creature_data.get("name", "?"), 
 						  " 戦闘地:", battle_land_element, " → HP+", value)
 		
 		# 敵の属性条件
@@ -249,16 +268,18 @@ static func apply_battle_condition_effects(participant, context: Dictionary) -> 
 				if stat == "ap":
 					participant.temporary_bonus_ap += value
 					participant.current_ap += value
-					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【敵属性条件】", participant.creature_data.get("name", "?"), 
 						  " 敵:", enemy_element, " → ST+", value)
 				elif stat == "hp":
 					participant.temporary_bonus_hp += value
-					print("【敵属性条件】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【敵属性条件】", participant.creature_data.get("name", "?"), 
 						  " 敵:", enemy_element, " → HP+", value)
 
 
 ## Phase 3-B効果を適用（中程度の条件効果）
-static func apply_phase_3b_effects(participant, context: Dictionary, board_system_ref: Node) -> void:
+static func apply_phase_3b_effects(participant, context: Dictionary, board_system_ref: Node, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
@@ -273,7 +294,8 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 			if not is_attacker:  # 防御側のみ
 				var fixed_ap = effect.get("value", 50)
 				participant.current_ap = fixed_ap
-				print("【防御時固定ST】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【防御時固定ST】", participant.creature_data.get("name", "?"), 
 					  " ST=", fixed_ap)
 		
 		# 2. 戦闘地レベル効果（ネッシー）
@@ -297,7 +319,8 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				var stat = effect.get("stat", "hp")
 				if stat == "hp":
 					participant.temporary_bonus_hp += bonus
-					print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【戦闘地レベル効果】", participant.creature_data.get("name", "?"), 
 						  " HP+", bonus, " (レベル:", tile_level, " × ", multiplier, ")")
 		
 		# 3. 自ドミニオ数閾値効果（バーンタイタン）
@@ -323,13 +346,15 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				if ap_change != 0:
 					participant.temporary_bonus_ap += ap_change
 					participant.current_ap += ap_change
-					print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
 						  " ST", ("+" if ap_change >= 0 else ""), ap_change, 
 						  " (自ドミニオ:", owned_land_count, ")")
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【自ドミニオ数閾値】", participant.creature_data.get("name", "?"), 
 						  " HP", ("+" if hp_change >= 0 else ""), hp_change, 
 						  " (自ドミニオ:", owned_land_count, ")")
 		
@@ -367,7 +392,8 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 			if affects_hp:
 				participant.temporary_bonus_hp += bonus
 			
-			print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
+			if not silent:
+				print("【特定クリーチャーカウント】", participant.creature_data.get("name", "?"), 
 				  " ST&HP+", bonus, " (", target_name, ":", creature_count, " × ", multiplier, ")")
 		
 		# 4.5. 種族配置数でステータス決定（レッドキャップ）
@@ -388,7 +414,8 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 			participant.current_ap = stat_value
 			participant.current_hp = stat_value
 			
-			print("【種族配置数ステータス】", participant.creature_data.get("name", "?"),
+			if not silent:
+				print("【種族配置数ステータス】", participant.creature_data.get("name", "?"),
 				  " AP&HP=", stat_value, " (", target_race, ":", race_count, " × ", multiplier, ")")
 		
 		# 5. 他属性カウント（リビングクローブ）- SkillItemCreatureで処理済みのためスキップ
@@ -410,17 +437,19 @@ static func apply_phase_3b_effects(participant, context: Dictionary, board_syste
 				if ap_change != 0:
 					participant.temporary_bonus_ap += ap_change
 					participant.current_ap += ap_change
-					print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
 						  " ST+", ap_change)
 				
 				if hp_change != 0:
 					participant.temporary_bonus_hp += hp_change
-					print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
+					if not silent:
+						print("【隣接自ドミニオ】", participant.creature_data.get("name", "?"), 
 						  " HP+", hp_change)
 
 
 ## Phase 3-C効果を適用（ローンビースト、ジェネラルカン）
-static func apply_phase_3c_effects(participant, context: Dictionary, board_system_ref: Node) -> void:
+static func apply_phase_3c_effects(participant, context: Dictionary, board_system_ref: Node, silent: bool = false) -> void:
 	if not participant or not participant.creature_data:
 		return
 	
@@ -436,7 +465,8 @@ static func apply_phase_3c_effects(participant, context: Dictionary, board_syste
 			var total_base_ap = base_ap + base_up_ap
 			
 			participant.temporary_bonus_hp += total_base_ap
-			print("【基礎AP→HP】", participant.creature_data.get("name", "?"), 
+			if not silent:
+				print("【基礎AP→HP】", participant.creature_data.get("name", "?"), 
 				  " HP+", total_base_ap, " (基礎AP: ", base_ap, "+", base_up_ap, ")")
 		
 		# 2. 条件付き配置数カウント（ジェネラルカン）
@@ -471,9 +501,11 @@ static func apply_phase_3c_effects(participant, context: Dictionary, board_syste
 			if stat == "ap":
 				participant.temporary_bonus_ap += bonus
 				participant.current_ap += bonus
-				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
 					  " ST+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")
 			elif stat == "hp":
 				participant.temporary_bonus_hp += bonus
-				print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
+				if not silent:
+					print("【条件付き配置数】", participant.creature_data.get("name", "?"), 
 					  " HP+", bonus, " (MHP50以上: ", qualified_count, " × ", multiplier, ")")

@@ -869,10 +869,8 @@ func _on_invasion_completed(success: bool, tile_index: int):
 		board_system.complete_action()
 
 func _on_movement_completed(player_id: int, final_tile: int):
-	# デバッグログ
-	print("[DominioCommandHandler] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
-
 	# 移動完了時の処理が必要な場合はここに追加
+	pass
 
 func _on_level_up_completed(tile_index: int, new_level: int):
 	# デバッグログ

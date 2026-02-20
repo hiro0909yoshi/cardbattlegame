@@ -36,20 +36,23 @@ static func has_last_strike(creature_data: Dictionary) -> bool:
 ## 先制・後手スキルを適用
 ##
 ## @param participant バトル参加者
+## @param silent 出力を抑制するか（シミュレーション時 true）
 ## @return 発動したスキルのリスト ["first_strike"] or ["last_strike"] or []
-static func apply(participant) -> Array:
+static func apply(participant, silent: bool = false) -> Array:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	var activated: Array = []
 	
 	if "先制" in keywords:
 		participant.has_first_strike = true
-		print("【先制】", participant.creature_data.get("name", "?"), " 先制攻撃権獲得")
+		if not silent:
+			print("【先制】", participant.creature_data.get("name", "?"), " 先制攻撃権獲得")
 		activated.append("first_strike")
 	
 	if "後手" in keywords:
 		participant.has_last_strike = true
-		print("【後手】", participant.creature_data.get("name", "?"), " 後手攻撃")
+		if not silent:
+			print("【後手】", participant.creature_data.get("name", "?"), " 後手攻撃")
 		activated.append("last_strike")
 	
 	return activated
@@ -58,11 +61,13 @@ static func apply(participant) -> Array:
 ##
 ## @param participant バトル参加者
 ## @param skill_name スキル名（"先制"または"後手"）
-static func grant_skill(participant, skill_name: String) -> void:
+static func grant_skill(participant, skill_name: String, silent: bool = false) -> void:
 	match skill_name:
 		"先制":
 			participant.has_first_strike = true
-			print("【先制付与】", participant.creature_data.get("name", "?"), " アイテムによる先制")
+			if not silent:
+				print("【先制付与】", participant.creature_data.get("name", "?"), " アイテムによる先制")
 		"後手":
 			participant.has_last_strike = true
-			print("【後手付与】", participant.creature_data.get("name", "?"), " アイテムによる後手")
+			if not silent:
+				print("【後手付与】", participant.creature_data.get("name", "?"), " アイテムによる後手")

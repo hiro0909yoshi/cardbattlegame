@@ -216,7 +216,6 @@ func _init_state_machine() -> void:
 	if not _state_machine.state_changed.is_connected(_on_state_changed):
 		_state_machine.state_changed.connect(_on_state_changed)
 
-	print("[GFM] State Machine initialized")
 
 ## State Machineのstate_changedシグナルハンドラー
 func _on_state_changed(new_phase: int) -> void:
@@ -301,7 +300,6 @@ func start_turn():
 
 ## ダイスフェーズ用ナビゲーション設定（決定ボタンでサイコロを振る）
 func _setup_dice_phase_navigation():
-	print("[GameFlowManager] _setup_dice_phase_navigation called")
 	if _ui_enable_navigation_cb.is_valid():
 		_ui_enable_navigation_cb.call(
 			func(): roll_dice(),  # 決定 = サイコロを振る
@@ -345,9 +343,6 @@ func _on_invasion_completed_from_board(success: bool, tile_index: int):
 		dominio_command_handler._on_invasion_completed(success, tile_index)
 
 func _on_movement_completed_from_board(player_id: int, final_tile: int):
-	# デバッグログ
-	print("[GameFlowManager] movement_completed 受信: player_id=%d, tile=%d" % [player_id, final_tile])
-
 	# 各ハンドラーへ通知
 	if dominio_command_handler:
 		dominio_command_handler._on_movement_completed(player_id, final_tile)
@@ -373,9 +368,6 @@ func _on_terrain_changed_from_board(tile_index: int, old_element: String, new_el
 		_ui_update_panels_cb.call()
 
 func _on_start_passed_from_board(player_id: int):
-	# デバッグログ
-	print("[GameFlowManager] start_passed 受信: player_id=%d" % player_id)
-
 	# LapSystem へ通知
 	if lap_system:
 		lap_system.on_start_passed(player_id)
@@ -821,6 +813,5 @@ func is_cpu_player(player_id: int) -> bool:
 
 ## Day 3 追加: BoardSystem3D からの creature_updated を受信・リレー
 func _on_creature_updated_from_board(tile_index: int, creature_data: Dictionary):
-	print("[GameFlowManager] creature_updated 受信: tile=%d" % tile_index)
 	# シグナルリレー（UIManager はこのシグナルを受信）
 	creature_updated_relay.emit(tile_index, creature_data)

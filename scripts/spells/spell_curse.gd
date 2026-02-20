@@ -25,8 +25,6 @@ func setup(board: BoardSystem3D, creature: CreatureManager, player: PlayerSystem
 	creature_manager = creature
 	player_system = player
 
-	print("[SpellCurse] 初期化完了")
-
 ## 直接参照を設定（GFM経由を廃止）
 func set_spell_phase_handler(handler) -> void:
 	spell_phase_handler = handler

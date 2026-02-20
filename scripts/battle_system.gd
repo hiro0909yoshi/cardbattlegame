@@ -284,6 +284,14 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 	board_system_ref.set_tile_owner(tile_info["index"], attacker_index)
 	board_system_ref.place_creature(tile_info["index"], card_data)
 
+	# ダウン状態を設定（不屈チェック）
+	var inv_tile_index = tile_info["index"]
+	if board_system_ref.tile_nodes.has(inv_tile_index):
+		var tile = board_system_ref.tile_nodes[inv_tile_index]
+		if tile and tile.has_method("set_down_state"):
+			if not PlayerBuffSystem.has_unyielding(card_data):
+				tile.set_down_state(true)
+
 	# UI更新
 	if board_system_ref and board_system_ref.has_method("update_all_tile_displays"):
 		board_system_ref.update_all_tile_displays()
@@ -401,7 +409,14 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 		else:
 			# 移動侵略の場合、移動元から移動
 			board_system_ref.place_creature(tile_index, card_data, attacker_index)
-	
+
+		# ダウン状態を設定（不屈チェック）
+		if board_system_ref.tile_nodes.has(tile_index):
+			var mw_tile = board_system_ref.tile_nodes[tile_index]
+			if mw_tile and mw_tile.has_method("set_down_state"):
+				if not PlayerBuffSystem.has_unyielding(card_data):
+					mw_tile.set_down_state(true)
+
 	emit_signal("invasion_completed", invasion_success, tile_index)
 	
 	return true
@@ -528,7 +543,14 @@ func _apply_post_battle_effects(
 			# 移動中フラグを削除（応援スキル用）
 			place_creature_data.erase("is_moving")
 			board_system_ref.place_creature(tile_index, place_creature_data)
-			
+
+			# ダウン状態を設定（不屈チェック）
+			if board_system_ref.tile_nodes.has(tile_index):
+				var placed_tile = board_system_ref.tile_nodes[tile_index]
+				if placed_tile and placed_tile.has_method("set_down_state"):
+					if not PlayerBuffSystem.has_unyielding(place_creature_data):
+						placed_tile.set_down_state(true)
+
 			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
 			# 移動侵略の場合、移動元のクリーチャーを削除して空き地にする（配置の後に行う）
 			# if from_tile_index >= 0:

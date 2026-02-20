@@ -24,8 +24,6 @@ func setup(curse: SpellCurse, gfm: GameFlowManager):
 	spell_curse = curse
 	game_flow_manager = gfm
 
-	print("[SpellWorldCurse] 初期化完了")
-
 ## 直接参照を設定（GFM経由を廃止）
 func set_notification_ui(ui) -> void:
 	spell_cast_notification_ui = ui

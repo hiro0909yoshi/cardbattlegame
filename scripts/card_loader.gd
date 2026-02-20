@@ -4,13 +4,10 @@ var all_cards = []
 var mystic_arts_data = []  # アルカナアーツ専用データ（カードではない）
 
 func _ready():
-	print("=== CardLoader起動 ===")
 	load_all_cards()
 	load_mystic_arts_data()
-	print("=== 読み込み終了 ===")
 
 func load_all_cards():
-	print("ファイル読み込み開始")
 	var files = [
 		"res://data/neutral_1.json",
 		"res://data/neutral_2.json",
@@ -27,52 +24,19 @@ func load_all_cards():
 		"res://data/spell_2.json"
 		# spell_mystic.jsonはアルカナアーツ専用（all_cardsには含めない）
 	]
-	
+
 	for file_path in files:
-		print("読み込み中: ", file_path)
 		var cards = load_json_file(file_path)
-		print("  取得枚数: ", cards.size())
 		if cards.size() > 0:
 			all_cards.append_array(cards)
-	
-	print("カード読み込み完了: ", all_cards.size(), "枚")
-	
-	# 🔍 属性別カード数をデバッグ出力
-	var element_counts = {
-		"fire": 0,
-		"water": 0,
-		"earth": 0,
-		"wind": 0,
-		"neutral": 0,
-		"item": 0,
-		"spell": 0
-	}
-	
-	for card in all_cards:
-		if card.has("type") and card.type == "item":
-			element_counts["item"] += 1
-		elif card.has("type") and card.type == "spell":
-			element_counts["spell"] += 1
-		elif card.has("element"):
-			var elem = card.element
-			if element_counts.has(elem):
-				element_counts[elem] += 1
-	
-	print("📊 属性別カード数:")
-	print("  🔥 火: ", element_counts["fire"])
-	print("  💧 水: ", element_counts["water"])
-	print("  🪨 地: ", element_counts["earth"])
-	print("  🌪️ 風: ", element_counts["wind"])
-	print("  ⚪ 無: ", element_counts["neutral"])
-	print("  📦 アイテム: ", element_counts["item"])
-	print("  📜 スペル: ", element_counts["spell"])
+
+	print("[CardLoader] カード読み込み完了: %d枚 (%dファイル)" % [all_cards.size(), files.size()])
 
 ## アルカナアーツ専用データを読み込む（カードではない）
 func load_mystic_arts_data():
 	var path = "res://data/spell_mystic.json"
-	print("アルカナアーツデータ読み込み中: ", path)
 	mystic_arts_data = load_json_file(path)
-	print("アルカナアーツデータ読み込み完了: ", mystic_arts_data.size(), "件")
+	print("[CardLoader] アルカナアーツ読み込み完了: %d件" % mystic_arts_data.size())
 	
 func load_json_file(path: String) -> Array:
 	var file = FileAccess.open(path, FileAccess.READ)

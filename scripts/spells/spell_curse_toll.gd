@@ -16,7 +16,6 @@ func setup(curse_system: SpellCurse, toll_skill: SkillTollChange = null, creatur
 	spell_curse = curse_system
 	skill_toll_change = toll_skill
 	creature_manager = creature_mgr
-	print("[SpellCurseToll] 初期化完了")
 
 # ========================================
 # セプター呪い付与

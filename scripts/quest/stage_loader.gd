@@ -66,7 +66,6 @@ func _load_characters():
 		var parsed = JSON.parse_string(json_text)
 		if parsed:
 			characters_data = parsed.get("characters", {})
-			print("[StageLoader] キャラクター読み込み完了: ", characters_data.keys())
 
 ## ステージデータを読み込み
 func load_stage(stage_id: String) -> Dictionary:
@@ -174,7 +173,6 @@ func generate_map() -> Dictionary:
 			tile.connections.clear()
 			for conn in map_connections[tile_index_str]:
 				tile.connections.append(int(conn))
-			print("[StageLoader] タイル%d connections設定: %s" % [tile_index, str(tile.connections)])
 	
 	# BranchTileのインジケーターを初期化（座標から方向を自動計算）
 	for tile_index in generated_tiles.keys():

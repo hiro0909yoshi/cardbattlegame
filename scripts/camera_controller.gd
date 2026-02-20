@@ -109,7 +109,6 @@ func _calculate_boundary_hull():
 	_boundary_center /= _boundary_hull.size()
 	
 	_boundary_initialized = true
-	print("[CameraController] 境界凸包計算完了: %d頂点" % _boundary_hull.size())
 
 
 func _compute_convex_hull(points: PackedVector2Array) -> PackedVector2Array:

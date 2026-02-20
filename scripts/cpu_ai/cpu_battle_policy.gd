@@ -339,22 +339,7 @@ static func create_balanced_policy() -> CPUBattlePolicy:
 # =============================================================================
 
 func print_weights() -> void:
-	print("[CPUBattlePolicy] 侵略時の重み:")
-	print("  ALWAYS_BATTLE: %.1f" % attack_weights[AttackAction.ALWAYS_BATTLE])
-	print("  BATTLE_IF_BOTH_NO_ITEM: %.1f" % attack_weights[AttackAction.BATTLE_IF_BOTH_NO_ITEM])
-	print("  BATTLE_IF_WIN_VS_ENEMY_ITEM: %.1f" % attack_weights[AttackAction.BATTLE_IF_WIN_VS_ENEMY_ITEM])
-	print("  NEVER_BATTLE: %.1f" % attack_weights[AttackAction.NEVER_BATTLE])
-	print("[CPUBattlePolicy] 防衛時の重み:")
-	print("  NO_ITEM: %.1f" % defense_weights[DefenseAction.NO_ITEM])
-	print("  ALWAYS_PROTECT: %.1f" % defense_weights[DefenseAction.ALWAYS_PROTECT])
-	print("[CPUBattlePolicy] 優先保護設定:")
-	print("  protect_mystic_arts: %s" % protect_mystic_arts)
-	print("  protect_element_match: %s" % protect_element_match)
-	print("  protect_by_value: enabled=%s, threshold=%d, min_items=%d" % [
-		protect_by_value_enabled, protect_by_value_threshold, protect_by_value_min_items
-	])
-	if summon_rate >= 0:
-		print("[CPUBattlePolicy] 召喚確率: %.1f" % summon_rate)
+	print("[CPUBattlePolicy] ポリシー読み込み完了")
 
 ## 召喚確率を取得（旧版、互換性のため残す）
 func get_summon_rate() -> float:
