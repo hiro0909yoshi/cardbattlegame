@@ -436,7 +436,7 @@ static func _find_land_targets(sys_board, sys_player, _sys_flow, spell_player_mo
 					continue
 		
 		# クリーチャー存在チェック
-		if target_filter == "creature":
+		if target_filter in ["creature", "has_creature"] or target_info.get("has_creature", false):
 			if creature.is_empty():
 				continue
 			
