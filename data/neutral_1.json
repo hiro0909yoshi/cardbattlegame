@@ -1,714 +1,811 @@
 {
   "cards": [
-	{
-	  "id": 402,
-	  "name": "アーキミミック",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 40
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "無効化・地形変化コスト変化",
-	  "ability_detail": "無効化[巻物]；地形変化コスト変化[EP50]"
-	,
-	  "ability_parsed": {
-		"keywords": ["無効化"],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "terrain_change_cost_modifier",
-			"cost": 50
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 403,
-	  "name": "アーキビショップ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 50
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "アルカナアーツ・アイテム破壊無効・不屈",
-	  "ability_detail": "アルカナアーツ[EP30・対象ドミニオの呪いを消す]；アイテム破壊・盗み無効；不屈",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ", "不屈"],
-		"item_immunity": ["destroy", "steal"],
-		"mystic_arts": [
-		  {
-			"name": "呪い除去",
-			"cost": 30,
-			"spell_id": 9024
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 404,
-	  "name": "アーマードラゴン",
-	  "race": "ドラゴン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 100
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 60,
-	  "ability": "先制・アルカナアーツ",
-	  "ability_detail": "先制；アルカナアーツ[EP80・対象無のHP-30]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "アルカナアーツ"
-		],
-		"mystic_arts": [
-		  {
-			"name": "ニュートラルブラスト",
-			"description": "対象敵無属性クリーチャーのHP-30",
-			"spell_id": 9007,
-			"cost": 80
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 405,
-	  "name": "アイアンモンガー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 10
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・アイテムカードを1枚引く]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "アイテムドロー",
-			"cost": 50,
-			"spell_id": 9043
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 406,
-	  "name": "アンドロギア",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 250,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "先制・無効化・援護・合体",
-	  "ability_detail": "先制；無効化[巻物]；援護[無]；合体[ビーストギア]",
-	  "ability_parsed": {
-		"keywords": ["援護", "先制", "無効化", "合体"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["neutral"]
-		  },
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  },
-		  "合体": {
-			"partner_id": 434,
-			"result_id": 408
-		  }
-		},
-		"effects": []
-	  }
-	},
-	{
-	  "id": 407,
-	  "name": "オーガロード",
-	  "race": "オーガ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 70
-	  },
-	  "ap": 40,
-	  "hp": 50,
-	  "ability": "オーガ配置時能力値上昇・巻物強打",
-	  "ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；巻物強打",
-	  "ability_parsed": {
-		"keywords": ["巻物強打"],
-		"keyword_conditions": {
-		  "巻物強打": {
-			"scroll_type": "base_ap"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "tribe_placement_bonus",
-			"tribe": "オーガ",
-			"conditions": [
-			  {
-				"elements": ["fire", "wind"],
-				"stat_changes": {"ap": 20}
-			  },
-			  {
-				"elements": ["water", "earth"],
-				"stat_changes": {"hp": 20}
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 408,
-	  "name": "ギアリオン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 300,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 80,
-	  "hp": 80,
-	  "ability": "先制・防魔・無効化",
-	  "ability_detail": "先制；防魔；無効化[巻物]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "無効化",
-		  "防魔"
-		],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  }
-		},
-		"effects": []
-	  }
-	},
-	{
-	  "id": 409,
-	  "name": "グランギア",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "援護・合体・無効化",
-	  "ability_detail": "援護；合体[スカイギア]；無効化[巻物]",
-	  "ability_parsed": {
-		"keywords": ["援護", "無効化", "合体"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["all"]
-		  },
-		  "無効化": {
-			"nullify_type": "scroll_attack"
-		  },
-		  "合体": {
-			"partner_id": 419,
-			"result_id": 406
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 410,
-	  "name": "クリーピングコイン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 20
-	  },
-	  "ap": 10,
-	  "hp": 30,
-	  "ability": "EP獲得・破壊時EP遺産",
-	  "ability_detail": "EP獲得[EP100]；戦闘やスペルで破壊時、遺産[EP100]",
-	  "ability_parsed": {
-		"keywords": ["EP獲得", "遺産"],
-		"effects": [
-		  {
-			"effect_type": "magic_gain_on_battle_start",
-			"amount": 100
-		  },
-		  {
-			"effect_type": "legacy_magic",
-			"trigger": "on_death",
-			"amount": 100
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 411,
-	  "name": "グレートフォシル",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 30,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器",
-		  "巻物"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "防御型・通行料変化・死者復活",
-	  "ability_detail": "防御型；通行料変化[EP0]；死者復活[ティラノサウルス]",
-	  "ability_parsed": {
-		"keywords": ["防御型", "通行料変化", "死者復活"],
-		"effects": [
-		  {
-			"effect_type": "defensive"
-		  },
-		  {
-			"effect_type": "toll_change",
-			"value": 0,
-			"description": "通行料変化[EP0]"
-		  },
-		  {
-			"effect_type": "revive",
-			"trigger": "on_death",
-			"revive_type": "forced",
-			"creature_id": 425
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 412,
-	  "name": "クロックアウル",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 10
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP40・次R、対象セプターは選んだ方向に進める]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "方向選択権付与",
-			"description": "次R、対象セプターは選んだ方向に進める",
-			"spell_id": 9021,
-			"cost": 40
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 413,
-	  "name": "ゴールドトーテム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 0
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器",
-		  "巻物"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 0,
-	  "hp": 30,
-	  "ability": "防御型・アルカナアーツ",
-	  "ability_detail": "防御型；アルカナアーツ[EP0・使用者にEP200を与え、自壊]",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "defensive",
-			"description": "防御型"
-		  }
-		],
-		"mystic_art": {
-		  "name": "黄金献身",
-		  "cost": 0,
-		  "spell_id": 9015
-		}
-	  }
-	},
-	{
-	  "id": 414,
-	  "name": "ゴブリン",
-	  "race": "ゴブリン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 0
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 415,
-	  "name": "サムライ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 50
-	  },
-	  "ap": 50,
-	  "hp": 30,
-	  "ability": "即死",
-	  "ability_detail": "即死[AP40以上・70%]",
-	  "ability_parsed": {
-		"keywords": ["即死"],
-		"keyword_conditions": {
-		  "即死": {
-			"condition_type": "defender_ap_check",
-			"operator": ">=",
-			"value": 40,
-			"probability": 70
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 416,
-	  "name": "シーフ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 30
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "アイテム盗み",
-	  "ability_detail": "アイテム盗み",
-	  "ability_parsed": {
-		"keywords": ["アイテム盗み"],
-		"effects": [
-		  {
-			"effect_type": "steal_item",
-			"triggers": ["before_battle"],
-			"conditions": [
-			  {
-				"condition_type": "self_no_item"
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 417,
-	  "name": "シェイプシフター",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 30
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP70・対象と同じクリーチャーに変身]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "対象と同じクリーチャーに変身",
-			"cost": 70,
-			"spell_id": 9057
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 418,
-	  "name": "シャドウガイスト",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 60
-	  },
-	  "ap": 40,
-	  "hp": 30,
-	  "ability": "先制・APドレイン・不屈",
-	  "ability_detail": "先制；APドレイン；不屈",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "不屈"
-		],
-		"effects": [
-		  {
-			"effect_type": "ap_drain",
-			"trigger": "on_attack_success",
-			"target": "enemy"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 419,
-	  "name": "スカイギア",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 40
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 20,
-	  "ability": "援護・合体・先制",
-	  "ability_detail": "援護；合体[グランギア]；先制",
-	  "ability_parsed": {
-		"keywords": ["援護", "先制", "合体"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["all"]
-		  },
-		  "合体": {
-			"partner_id": 409,
-			"result_id": 406
-		  }
-		},
-		"effects": []
-	  }
-	},
-	{
-	  "id": 420,
-	  "name": "スケルトン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 30
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "再生",
-	  "ability_detail": "再生",
-	  "ability_parsed": {
-		"keywords": [
-		  "再生"
-		]
-	  }
-	},
-	{
-	  "id": 421,
-	  "name": "スタチュー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 10
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "武器",
-		  "巻物"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 0,
-	  "hp": 50,
-	  "ability": "防御型・周回回復不可",
-	  "ability_detail": "防御型；周回回復不可",
-	  "ability_parsed": {
-		"keywords": ["周回回復不可"]
-	  }
-	},
-	{
-	  "id": 422,
-	  "name": "スチームギア",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 50,
-	  "ability": "通行料変化",
-	  "ability_detail": "通行料変化[1/2]",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "toll_change",
-			"multiplier": 0.5,
-			"description": "通行料変化[1/2]"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 423,
-	  "name": "ストーンジゾウ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "武器"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 10,
-	  "hp": 30,
-	  "ability": "防御型・防魔・アルカナアーツ",
-	  "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象ドミニオを無に変え、自壊]",
-	  "ability_parsed": {
-		"keywords": ["防御型", "防魔", "アルカナアーツ"]
-	  },
-	  "mystic_arts": {
-		"cost": 100,
-		"spell_id": 9041
-	  }
-	},
-	{
-	  "id": 424,
-	  "name": "セイント",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 50
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "無効化・即死",
-	  "ability_detail": "無効化[無]；即死[無・100%]",
-	  "ability_parsed": {
-		"keywords": ["無効化", "即死"],
-		"keyword_conditions": {
-		  "無効化": {
-			"nullify_type": "element",
-			"element": "neutral"
-		  },
-		  "即死": {
-			"condition_type": "enemy_is_element",
-			"elements": "neutral",
-			"probability": 100
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 425,
-	  "name": "ティラノサウルス",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 75
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "巻物"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 60,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 426,
-	  "name": "デコイ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "neutral",
-	  "cost": {
-		"ep": 50,
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "武器",
-		  "巻物"
-		]
-	  },
-	  "ap": 0,
-	  "hp": 10,
-	  "ability": "反射",
-	  "ability_detail": "反射[通常攻撃]",
-	  "ability_parsed": {
-		"keywords": ["反射"],
-		"effects": [
-		  {
-			"effect_type": "reflect_damage",
-			"reflect_ratio": 1.0,
-			"self_damage_ratio": 0.0,
-			"attack_types": ["normal"],
-			"triggers": ["on_damaged"]
-		  }
-		]
-	  }
-	}
+    {
+      "id": 402,
+      "name": "アーキミミック",
+      "dev_name": "アーキミミック",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 40
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "無効化・地形変化コスト変化",
+      "ability_detail": "無効化[巻物]；地形変化コスト変化[EP50]",
+      "ability_parsed": {
+        "keywords": [
+          "無効化"
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "terrain_change_cost_modifier",
+            "cost": 50
+          }
+        ]
+      }
+    },
+    {
+      "id": 403,
+      "name": "アーキビショップ",
+      "dev_name": "アーキビショップ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 50
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "アルカナアーツ・アイテム破壊無効・不屈",
+      "ability_detail": "アルカナアーツ[EP30・対象ドミニオの呪いを消す]；アイテム破壊・盗み無効；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ",
+          "不屈"
+        ],
+        "item_immunity": [
+          "destroy",
+          "steal"
+        ],
+        "mystic_arts": [
+          {
+            "name": "呪い除去",
+            "cost": 30,
+            "spell_id": 9024
+          }
+        ]
+      }
+    },
+    {
+      "id": 404,
+      "name": "アーマードラゴン",
+      "dev_name": "アーマードラゴン",
+      "race": "ドラゴン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 100
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "先制・アルカナアーツ",
+      "ability_detail": "先制；アルカナアーツ[EP80・対象無のHP-30]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "ニュートラルブラスト",
+            "description": "対象敵無属性クリーチャーのHP-30",
+            "spell_id": 9007,
+            "cost": 80
+          }
+        ]
+      }
+    },
+    {
+      "id": 405,
+      "name": "アイアンモンガー",
+      "dev_name": "アイアンモンガー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 10
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・アイテムカードを1枚引く]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "アイテムドロー",
+            "cost": 50,
+            "spell_id": 9043
+          }
+        ]
+      }
+    },
+    {
+      "id": 406,
+      "name": "アンドロギア",
+      "dev_name": "アンドロギア",
+      "rarity": "R",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 250,
+        "cards_sacrifice": 1
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "先制・無効化・援護・合体",
+      "ability_detail": "先制；無効化[巻物]；援護[無]；合体[ビーストギア]",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "先制",
+          "無効化",
+          "合体"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "neutral"
+            ]
+          },
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          },
+          "合体": {
+            "partner_id": 434,
+            "result_id": 408
+          }
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": 407,
+      "name": "オーガロード",
+      "dev_name": "オーガロード",
+      "race": "オーガ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 70
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "オーガ配置時能力値上昇・巻物強打",
+      "ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；巻物強打",
+      "ability_parsed": {
+        "keywords": [
+          "巻物強打"
+        ],
+        "keyword_conditions": {
+          "巻物強打": {
+            "scroll_type": "base_ap"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "tribe_placement_bonus",
+            "tribe": "オーガ",
+            "conditions": [
+              {
+                "elements": [
+                  "fire",
+                  "wind"
+                ],
+                "stat_changes": {
+                  "ap": 20
+                }
+              },
+              {
+                "elements": [
+                  "water",
+                  "earth"
+                ],
+                "stat_changes": {
+                  "hp": 20
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 408,
+      "name": "ギアリオン",
+      "dev_name": "ギアリオン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 300,
+        "cards_sacrifice": 1
+      },
+      "ap": 80,
+      "hp": 80,
+      "ability": "先制・防魔・無効化",
+      "ability_detail": "先制；防魔；無効化[巻物]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "無効化",
+          "防魔"
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          }
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": 409,
+      "name": "グランギア",
+      "dev_name": "グランギア",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "援護・合体・無効化",
+      "ability_detail": "援護；合体[スカイギア]；無効化[巻物]",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "無効化",
+          "合体"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "all"
+            ]
+          },
+          "無効化": {
+            "nullify_type": "scroll_attack"
+          },
+          "合体": {
+            "partner_id": 419,
+            "result_id": 406
+          }
+        }
+      }
+    },
+    {
+      "id": 410,
+      "name": "クリーピングコイン",
+      "dev_name": "クリーピングコイン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 20
+      },
+      "ap": 10,
+      "hp": 30,
+      "ability": "EP獲得・破壊時EP遺産",
+      "ability_detail": "EP獲得[EP100]；戦闘やスペルで破壊時、遺産[EP100]",
+      "ability_parsed": {
+        "keywords": [
+          "EP獲得",
+          "遺産"
+        ],
+        "effects": [
+          {
+            "effect_type": "magic_gain_on_battle_start",
+            "amount": 100
+          },
+          {
+            "effect_type": "legacy_magic",
+            "trigger": "on_death",
+            "amount": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": 411,
+      "name": "グレートフォシル",
+      "dev_name": "グレートフォシル",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 30,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器",
+          "巻物"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 0,
+      "hp": 30,
+      "ability": "防御型・通行料変化・死者復活",
+      "ability_detail": "防御型；通行料変化[EP0]；死者復活[ティラノサウルス]",
+      "ability_parsed": {
+        "keywords": [
+          "防御型",
+          "通行料変化",
+          "死者復活"
+        ],
+        "effects": [
+          {
+            "effect_type": "defensive"
+          },
+          {
+            "effect_type": "toll_change",
+            "value": 0,
+            "description": "通行料変化[EP0]"
+          },
+          {
+            "effect_type": "revive",
+            "trigger": "on_death",
+            "revive_type": "forced",
+            "creature_id": 425
+          }
+        ]
+      }
+    },
+    {
+      "id": 412,
+      "name": "クロックアウル",
+      "dev_name": "クロックアウル",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 10
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器"
+        ]
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP40・次R、対象セプターは選んだ方向に進める]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "方向選択権付与",
+            "description": "次R、対象セプターは選んだ方向に進める",
+            "spell_id": 9021,
+            "cost": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": 413,
+      "name": "ゴールドトーテム",
+      "dev_name": "ゴールドトーテム",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 0
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器",
+          "巻物"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 0,
+      "hp": 30,
+      "ability": "防御型・アルカナアーツ",
+      "ability_detail": "防御型；アルカナアーツ[EP0・使用者にEP200を与え、自壊]",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "defensive",
+            "description": "防御型"
+          }
+        ],
+        "mystic_art": {
+          "name": "黄金献身",
+          "cost": 0,
+          "spell_id": 9015
+        }
+      }
+    },
+    {
+      "id": 414,
+      "name": "ゴブリン",
+      "dev_name": "ゴブリン",
+      "race": "ゴブリン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 0
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 415,
+      "name": "サムライ",
+      "dev_name": "サムライ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 50
+      },
+      "ap": 50,
+      "hp": 30,
+      "ability": "即死",
+      "ability_detail": "即死[AP40以上・70%]",
+      "ability_parsed": {
+        "keywords": [
+          "即死"
+        ],
+        "keyword_conditions": {
+          "即死": {
+            "condition_type": "defender_ap_check",
+            "operator": ">=",
+            "value": 40,
+            "probability": 70
+          }
+        }
+      }
+    },
+    {
+      "id": 416,
+      "name": "シーフ",
+      "dev_name": "シーフ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 30
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "アイテム盗み",
+      "ability_detail": "アイテム盗み",
+      "ability_parsed": {
+        "keywords": [
+          "アイテム盗み"
+        ],
+        "effects": [
+          {
+            "effect_type": "steal_item",
+            "triggers": [
+              "before_battle"
+            ],
+            "conditions": [
+              {
+                "condition_type": "self_no_item"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 417,
+      "name": "シェイプシフター",
+      "dev_name": "シェイプシフター",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 30
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP70・対象と同じクリーチャーに変身]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "対象と同じクリーチャーに変身",
+            "cost": 70,
+            "spell_id": 9057
+          }
+        ]
+      }
+    },
+    {
+      "id": 418,
+      "name": "シャドウガイスト",
+      "dev_name": "シャドウガイスト",
+      "rarity": "R",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 60
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "先制・APドレイン・不屈",
+      "ability_detail": "先制；APドレイン；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "不屈"
+        ],
+        "effects": [
+          {
+            "effect_type": "ap_drain",
+            "trigger": "on_attack_success",
+            "target": "enemy"
+          }
+        ]
+      }
+    },
+    {
+      "id": 419,
+      "name": "スカイギア",
+      "dev_name": "スカイギア",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 40
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 40,
+      "hp": 20,
+      "ability": "援護・合体・先制",
+      "ability_detail": "援護；合体[グランギア]；先制",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "先制",
+          "合体"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "all"
+            ]
+          },
+          "合体": {
+            "partner_id": 409,
+            "result_id": 406
+          }
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": 420,
+      "name": "スケルトン",
+      "dev_name": "スケルトン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 30
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "再生",
+      "ability_detail": "再生",
+      "ability_parsed": {
+        "keywords": [
+          "再生"
+        ]
+      }
+    },
+    {
+      "id": 421,
+      "name": "スタチュー",
+      "dev_name": "スタチュー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 10
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "武器",
+          "巻物"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 0,
+      "hp": 50,
+      "ability": "防御型・周回回復不可",
+      "ability_detail": "防御型；周回回復不可",
+      "ability_parsed": {
+        "keywords": [
+          "周回回復不可"
+        ]
+      }
+    },
+    {
+      "id": 422,
+      "name": "スチームギア",
+      "dev_name": "スチームギア",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "通行料変化",
+      "ability_detail": "通行料変化[1/2]",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "toll_change",
+            "multiplier": 0.5,
+            "description": "通行料変化[1/2]"
+          }
+        ]
+      }
+    },
+    {
+      "id": 423,
+      "name": "ストーンジゾウ",
+      "dev_name": "ストーンジゾウ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "武器"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 10,
+      "hp": 30,
+      "ability": "防御型・防魔・アルカナアーツ",
+      "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象ドミニオを無に変え、自壊]",
+      "ability_parsed": {
+        "keywords": [
+          "防御型",
+          "防魔",
+          "アルカナアーツ"
+        ]
+      },
+      "mystic_arts": {
+        "cost": 100,
+        "spell_id": 9041
+      }
+    },
+    {
+      "id": 424,
+      "name": "セイント",
+      "dev_name": "セイント",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 50
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "無効化・即死",
+      "ability_detail": "無効化[無]；即死[無・100%]",
+      "ability_parsed": {
+        "keywords": [
+          "無効化",
+          "即死"
+        ],
+        "keyword_conditions": {
+          "無効化": {
+            "nullify_type": "element",
+            "element": "neutral"
+          },
+          "即死": {
+            "condition_type": "enemy_is_element",
+            "elements": "neutral",
+            "probability": 100
+          }
+        }
+      }
+    },
+    {
+      "id": 425,
+      "name": "ティラノサウルス",
+      "dev_name": "ティラノサウルス",
+      "rarity": "N",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 75
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 426,
+      "name": "デコイ",
+      "dev_name": "デコイ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "neutral",
+      "cost": {
+        "ep": 50,
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "武器",
+          "巻物"
+        ]
+      },
+      "ap": 0,
+      "hp": 10,
+      "ability": "反射",
+      "ability_detail": "反射[通常攻撃]",
+      "ability_parsed": {
+        "keywords": [
+          "反射"
+        ],
+        "effects": [
+          {
+            "effect_type": "reflect_damage",
+            "reflect_ratio": 1.0,
+            "self_damage_ratio": 0.0,
+            "attack_types": [
+              "normal"
+            ],
+            "triggers": [
+              "on_damaged"
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

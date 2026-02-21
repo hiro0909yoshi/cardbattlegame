@@ -1,771 +1,850 @@
 {
   "cards": [
-	{
-	  "id": 225,
-	  "name": "セージ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 80
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "援護・アイテム破壊無効・巻物強打",
-	  "ability_detail": "援護；アイテム破壊・盗み無効；巻物強打",
-	  "ability_parsed": {
-		"keywords": ["援護", "巻物強打"],
-		"effects": [
-		  {
-			"effect_type": "nullify_item_manipulation",
-			"triggers": ["before_battle"]
-		  }
-		],
-		"keyword_conditions": {
-		  "援護": {
-		  "target_elements": ["all"]
-		},
-		"巻物強打": {
-			"scroll_type": "base_ap"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 226,
-	  "name": "タイガーヴェタ",
-	  "rate": 63,
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "隣接ドミニオ条件",
-	  "ability_detail": "隣接ドミニオが自ドミニオの場合、AP&HP+20",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "adjacent_owned_land",
-			"stat_changes": {
-			  "ap": 20,
-			  "hp": 20
-			},
-			"description": "隣接ドミニオが自ドミニオの場合、AP&HP+20"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 227,
-	  "name": "ダスクドウェラー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 70,
-		"lands_required": [
-		  "earth"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "先制・敵破壊時",
-	  "ability_detail": "先制；敵破壊時、AP&MHP+10",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "on_enemy_destroy_permanent",
-			"stat_changes": {"ap": 10, "max_hp": 10},
-			"description": "敵破壊時、AP+10・MHP+10（永続）"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 228,
-	  "name": "ドラゴンゾンビ",
-	  "race": "ドラゴン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 85
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		],
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 60,
-	  "ability": "",
-	  "ability_detail": ""
-	},
-	{
-	  "id": 229,
-	  "name": "ドリアード",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 55
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		],
-		"cannot_use": [
-		  "武器"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "援護・空地移動",
-	  "ability_detail": "援護[無火地]；空地移動[地]",
-	  "ability_parsed": {
-		"keywords": ["援護", "空地移動"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["neutral", "fire", "earth"]
-		  },
-		  "空地移動": {
-			"target_elements": ["earth"]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 230,
-	  "name": "ドワーフマイナー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 70,
-		"lands_required": [
-		  "earth"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 50,
-	  "ability": "通行料変化・アルカナアーツ",
-	  "ability_detail": "通行料変化[1.5倍]；アルカナアーツ[EP0・周回数×30EPを得る]",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "toll_change",
-			"multiplier": 1.5,
-			"description": "通行料変化[1.5倍]"
-		  }
-		],
-		"mystic_art": {
-		  "cost": 0,
-		  "spell_id": 2109,
-		  "effect_override": {
-			"multiplier": 30
-		  },
-		  "name": "EP採掘",
-		  "description": "周回数×30EPを得る"
-		}
-	  }
-	},
-	{
-	  "id": 231,
-	  "name": "ハードロックドラゴン",
-	  "race": "ドラゴン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "earth",
-		  "earth"
-		]
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		],
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 50,
-	  "ability": "先制・アルカナアーツ",
-	  "ability_detail": "先制；アルカナアーツ[EP60・対象敵火風のHP-20]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "アルカナアーツ"
-		],
-		"mystic_arts": [
-		  {
-			"name": "ロックブラスト",
-			"description": "対象敵火風クリーチャーのHP-20",
-			"spell_id": 9005,
-			"cost": 60
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 232,
-	  "name": "バロン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60,
-		"lands_required": [
-		  "earth"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "復活・土地破壊無効",
-	  "ability_detail": "復活；土地破壊・変性無効",
-	  "ability_parsed": {
-		"keywords": [
-		  "復活",
-		  "土地破壊・変性無効"
-		]
-	  }
-	},
-	{
-	  "id": 233,
-	  "name": "ヒーラー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 80
-	  },
-	  "ap": 10,
-	  "hp": 40,
-	  "ability": "再生・アルカナアーツ・不屈",
-	  "ability_detail": "再生；アルカナアーツ[EP10・対象自クリーチャーのHPを30回復]；不屈",
-	  "ability_parsed": {
-		"keywords": [
-		  "再生",
-		  "アルカナアーツ",
-		  "不屈"
-		],
-		"mystic_arts": [
-		  {
-			"name": "ヒール",
-			"description": "対象自クリーチャーのHPを30回復",
-			"spell_id": 9009,
-			"cost": 10
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 234,
-	  "name": "ピクシー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "援護・不屈",
-	  "ability_detail": "援護[火地]；不屈",
-	  "ability_parsed": {
-		"keywords": ["援護"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["fire", "earth"]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 235,
-	  "name": "ブラックナイト",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 90
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強打・無効化",
-	  "ability_detail": "強打[AP30以下]；敵の攻撃成功時能力を無効化",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_ap_check",
-			"operator": "<=",
-			"value": 30
-		  }
-		},
-		"nullify_triggers": [
-		  "on_attack_success"
-		],
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_ap_check",
-				"operator": "<=",
-				"value": 30
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 236,
-	  "name": "ブランチアーミー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "earth"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "AP計算・アルカナアーツ",
-	  "ability_detail": "AP+🌱配置数×5；アルカナアーツ[EP50・マッドマンに変身]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"effects": [
-		  {
-			"effect_type": "land_count_multiplier",
-			"stat": "ap",
-			"elements": ["earth"],
-			"multiplier": 5,
-			"operation": "add",
-			"description": "AP+地配置数×5"
-		  }
-		],
-		"mystic_arts": [
-		  {
-			"name": "マッドマンに変身",
-			"cost": 50,
-			"spell_id": 9052
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 237,
-	  "name": "プロンディーデス",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "earth",
-		  "earth"
-		],
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "water"
-		],
-		"cannot_use": [
-		  "アクセサリ"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "援護・応援",
-	  "ability_detail": "援護[火地]；応援[火地・HP+10]",
-	  "ability_parsed": {
-		"keywords": ["援護", "応援"],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["fire", "earth"]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "element",
-				  "elements": ["fire", "earth"]
-				}
-			  ]
-			},
-			"bonus": {
-			  "hp": 10
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 238,
-	  "name": "マッドマン",
-	  "rate": 67,
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 55
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		],
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "HP計算",
-	  "ability_detail": "HP+地配置数×5",
-	  "ability_parsed": {
-		"keywords": [],
-		"effects": [
-		  {
-			"effect_type": "land_count_multiplier",
-			"stat": "hp",
-			"elements": ["earth"],
-			"multiplier": 5,
-			"operation": "add",
-			"description": "HP+地配置数×5"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 239,
-	  "name": "マミー",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 45
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "武器"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 20,
-	  "hp": 50,
-	  "ability": "防御型・遺産",
-	  "ability_detail": "防御型；遺産[周回数×40EP]",
-	  "ability_parsed": {
-		"keywords": ["遺産"],
-		"effects": [
-		  {
-			"effect_type": "legacy_magic",
-			"trigger": "on_death",
-			"amount_formula": "lap_count * 40"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 240,
-	  "name": "モスタイタン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 65
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "巻物"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 30,
-	  "ability": "MHP変動",
-	  "ability_detail": "周回ごとにMHP+10；MHP80以上ならMHP=30",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "per_lap_permanent_bonus",
-			"stat": "max_hp",
-			"value": 10,
-			"reset_condition": {
-			  "max_hp_check": {
-				"operator": ">=",
-				"value": 80,
-				"reset_to": 30
-			  }
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 241,
-	  "name": "モルモ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "water"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "援護・感応・巻物強打",
-	  "ability_detail": "援護[無火地]；感応[火・AP+30]；巻物強打",
-	  "ability_parsed": {
-		"keywords": [
-		  "援護",
-		  "感応",
-		  "巻物強打"
-		],
-		"keyword_conditions": {
-		  "援護": {
-			"target_elements": ["neutral", "fire", "earth"]
-		  },
-		  "感応": {
-			"element": "fire",
-			"stat_bonus": {
-			  "ap": 30,
-			  "hp": 0
-			}
-		  },
-		  "巻物強打": {
-			"scroll_type": "base_ap"
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 242,
-	  "name": "ヨルムンガンド",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 110,
-		"lands_required": [
-		  "earth",
-		  "earth"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "先制・土地変性・再生",
-	  "ability_detail": "先制；土地変性[🌱]；再生",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "再生"
-		],
-		"effects": [
-		  {
-			"trigger": "on_battle_won",
-			"effect_type": "change_tile_element",
-			"element": "earth"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 243,
-	  "name": "ランドアーチン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 20,
-	  "hp": 50,
-	  "ability": "防御型・移動侵略無効",
-	  "ability_detail": "防御型；移動侵略を受けない",
-	  "ability_parsed": {
-		"keywords": ["移動侵略無効"]
-	  }
-	},
-	{
-	  "id": 244,
-	  "name": "リチェノイド",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP30・対象クリーチャーのMHP+10]",
-	  "ability_parsed": {
-		"keywords": [],
-		"mystic_arts": [
-		  {
-			"name": "MHP増加",
-			"cost": 30,
-			"spell_id": 9010
-		  }
-		],
-		"effects": []
-	  }
-	},
-	{
-	  "id": 245,
-	  "name": "レーシィ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 40
-	  },
-	  "creature_type": "defensive",
-	  "ap": 30,
-	  "hp": 40,
-	  "ability": "防御型・戦闘後効果",
-	  "ability_detail": "防御型；戦闘後、戦闘地レベルを1上げる",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "level_up_battle_land",
-			"trigger": "on_battle_end",
-			"value": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 246,
-	  "name": "ロックシェル",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 30,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・これに呪い\"平和\"]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "平和",
-			"cost": 50,
-			"spell_id": 9027
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 247,
-	  "name": "ロックトロル",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 90
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "wind"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 50,
-	  "ability": "再生",
-	  "ability_detail": "再生",
-	  "ability_parsed": {
-		"keywords": [
-		  "再生"
-		]
-	  }
-	},
-	{
-	  "id": 248,
-	  "name": "ワーベア",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 40,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "合成・不屈",
-	  "ability_detail": "合成[地・AP+30、MHP+10]；不屈",
-	  "ability_parsed": {
-		"keywords": ["不屈"]
-	  },
-	  "synthesis": {
-		"type": "element",
-		"condition": "earth",
-		"effect_type": "stat_boost",
-		"effect": { "ap": 30, "mhp": 10 }
-	  }
-	},
-	{
-	  "id": 250,
-	  "name": "グリーンコボルト",
-	  "race": "コボルト",
-	  "rarity": "C",
-	  "type": "creature",
-	  "element": "earth",
-	  "cost": {
-		"ep": 20
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "",
-	  "ability_detail": ""
-	},
+    {
+      "id": 225,
+      "name": "セージ",
+      "dev_name": "セージ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 80
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "援護・アイテム破壊無効・巻物強打",
+      "ability_detail": "援護；アイテム破壊・盗み無効；巻物強打",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "巻物強打"
+        ],
+        "effects": [
+          {
+            "effect_type": "nullify_item_manipulation",
+            "triggers": [
+              "before_battle"
+            ]
+          }
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "all"
+            ]
+          },
+          "巻物強打": {
+            "scroll_type": "base_ap"
+          }
+        }
+      }
+    },
+    {
+      "id": 226,
+      "name": "タイガーヴェタ",
+      "dev_name": "タイガーヴェタ",
+      "rate": 63,
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "隣接ドミニオ条件",
+      "ability_detail": "隣接ドミニオが自ドミニオの場合、AP&HP+20",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "adjacent_owned_land",
+            "stat_changes": {
+              "ap": 20,
+              "hp": 20
+            },
+            "description": "隣接ドミニオが自ドミニオの場合、AP&HP+20"
+          }
+        ]
+      }
+    },
+    {
+      "id": 227,
+      "name": "ダスクドウェラー",
+      "dev_name": "ダスクドウェラー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 70,
+        "lands_required": [
+          "earth"
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "先制・敵破壊時",
+      "ability_detail": "先制；敵破壊時、AP&MHP+10",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": [
+          {
+            "effect_type": "on_enemy_destroy_permanent",
+            "stat_changes": {
+              "ap": 10,
+              "max_hp": 10
+            },
+            "description": "敵破壊時、AP+10・MHP+10（永続）"
+          }
+        ]
+      }
+    },
+    {
+      "id": 228,
+      "name": "ドラゴンゾンビ",
+      "dev_name": "ドラゴンゾンビ",
+      "race": "ドラゴン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 85
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "wind"
+        ],
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 60,
+      "ability": "",
+      "ability_detail": ""
+    },
+    {
+      "id": 229,
+      "name": "ドリアード",
+      "dev_name": "ドリアード",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 55
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "wind"
+        ],
+        "cannot_use": [
+          "武器"
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "援護・空地移動",
+      "ability_detail": "援護[無火地]；空地移動[地]",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "空地移動"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "neutral",
+              "fire",
+              "earth"
+            ]
+          },
+          "空地移動": {
+            "target_elements": [
+              "earth"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 230,
+      "name": "ドワーフマイナー",
+      "dev_name": "ドワーフマイナー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 70,
+        "lands_required": [
+          "earth"
+        ]
+      },
+      "ap": 30,
+      "hp": 50,
+      "ability": "通行料変化・アルカナアーツ",
+      "ability_detail": "通行料変化[1.5倍]；アルカナアーツ[EP0・周回数×30EPを得る]",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "toll_change",
+            "multiplier": 1.5,
+            "description": "通行料変化[1.5倍]"
+          }
+        ],
+        "mystic_art": {
+          "cost": 0,
+          "spell_id": 2109,
+          "effect_override": {
+            "multiplier": 30
+          },
+          "name": "EP採掘",
+          "description": "周回数×30EPを得る"
+        }
+      }
+    },
+    {
+      "id": 231,
+      "name": "ハードロックドラゴン",
+      "dev_name": "ハードロックドラゴン",
+      "race": "ドラゴン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "earth",
+          "earth"
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "wind"
+        ],
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "先制・アルカナアーツ",
+      "ability_detail": "先制；アルカナアーツ[EP60・対象敵火風のHP-20]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "ロックブラスト",
+            "description": "対象敵火風クリーチャーのHP-20",
+            "spell_id": 9005,
+            "cost": 60
+          }
+        ]
+      }
+    },
+    {
+      "id": 232,
+      "name": "バロン",
+      "dev_name": "バロン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60,
+        "lands_required": [
+          "earth"
+        ]
+      },
+      "ap": 30,
+      "hp": 40,
+      "ability": "復活・土地破壊無効",
+      "ability_detail": "復活；土地破壊・変性無効",
+      "ability_parsed": {
+        "keywords": [
+          "復活",
+          "土地破壊・変性無効"
+        ]
+      }
+    },
+    {
+      "id": 233,
+      "name": "ヒーラー",
+      "dev_name": "ヒーラー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 80
+      },
+      "ap": 10,
+      "hp": 40,
+      "ability": "再生・アルカナアーツ・不屈",
+      "ability_detail": "再生；アルカナアーツ[EP10・対象自クリーチャーのHPを30回復]；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "再生",
+          "アルカナアーツ",
+          "不屈"
+        ],
+        "mystic_arts": [
+          {
+            "name": "ヒール",
+            "description": "対象自クリーチャーのHPを30回復",
+            "spell_id": 9009,
+            "cost": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": 234,
+      "name": "ピクシー",
+      "dev_name": "ピクシー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "援護・不屈",
+      "ability_detail": "援護[火地]；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "援護"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "fire",
+              "earth"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 235,
+      "name": "ブラックナイト",
+      "dev_name": "ブラックナイト",
+      "rarity": "R",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 90
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "強打・無効化",
+      "ability_detail": "強打[AP30以下]；敵の攻撃成功時能力を無効化",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "enemy_ap_check",
+            "operator": "<=",
+            "value": 30
+          }
+        },
+        "nullify_triggers": [
+          "on_attack_success"
+        ],
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_ap_check",
+                "operator": "<=",
+                "value": 30
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 236,
+      "name": "ブランチアーミー",
+      "dev_name": "ブランチアーミー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "earth"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "AP計算・アルカナアーツ",
+      "ability_detail": "AP+🌱配置数×5；アルカナアーツ[EP50・マッドマンに変身]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "effects": [
+          {
+            "effect_type": "land_count_multiplier",
+            "stat": "ap",
+            "elements": [
+              "earth"
+            ],
+            "multiplier": 5,
+            "operation": "add",
+            "description": "AP+地配置数×5"
+          }
+        ],
+        "mystic_arts": [
+          {
+            "name": "マッドマンに変身",
+            "cost": 50,
+            "spell_id": 9052
+          }
+        ]
+      }
+    },
+    {
+      "id": 237,
+      "name": "プロンディーデス",
+      "dev_name": "プロンディーデス",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "earth",
+          "earth"
+        ],
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "water"
+        ],
+        "cannot_use": [
+          "アクセサリ"
+        ]
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "援護・応援",
+      "ability_detail": "援護[火地]；応援[火地・HP+10]",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "応援"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "fire",
+              "earth"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "support",
+            "target": {
+              "scope": "all_creatures",
+              "conditions": [
+                {
+                  "condition_type": "element",
+                  "elements": [
+                    "fire",
+                    "earth"
+                  ]
+                }
+              ]
+            },
+            "bonus": {
+              "hp": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 238,
+      "name": "マッドマン",
+      "dev_name": "マッドマン",
+      "rate": 67,
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 55
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "wind"
+        ],
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "HP計算",
+      "ability_detail": "HP+地配置数×5",
+      "ability_parsed": {
+        "keywords": [],
+        "effects": [
+          {
+            "effect_type": "land_count_multiplier",
+            "stat": "hp",
+            "elements": [
+              "earth"
+            ],
+            "multiplier": 5,
+            "operation": "add",
+            "description": "HP+地配置数×5"
+          }
+        ]
+      }
+    },
+    {
+      "id": 239,
+      "name": "マミー",
+      "dev_name": "マミー",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 45
+      },
+      "restrictions": {
+        "cannot_use": [
+          "武器"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 20,
+      "hp": 50,
+      "ability": "防御型・遺産",
+      "ability_detail": "防御型；遺産[周回数×40EP]",
+      "ability_parsed": {
+        "keywords": [
+          "遺産"
+        ],
+        "effects": [
+          {
+            "effect_type": "legacy_magic",
+            "trigger": "on_death",
+            "amount_formula": "lap_count * 40"
+          }
+        ]
+      }
+    },
+    {
+      "id": 240,
+      "name": "モスタイタン",
+      "dev_name": "モスタイタン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 65
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "ap": 50,
+      "hp": 30,
+      "ability": "MHP変動",
+      "ability_detail": "周回ごとにMHP+10；MHP80以上ならMHP=30",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "per_lap_permanent_bonus",
+            "stat": "max_hp",
+            "value": 10,
+            "reset_condition": {
+              "max_hp_check": {
+                "operator": ">=",
+                "value": 80,
+                "reset_to": 30
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 241,
+      "name": "モルモ",
+      "dev_name": "モルモ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "water"
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "援護・感応・巻物強打",
+      "ability_detail": "援護[無火地]；感応[火・AP+30]；巻物強打",
+      "ability_parsed": {
+        "keywords": [
+          "援護",
+          "感応",
+          "巻物強打"
+        ],
+        "keyword_conditions": {
+          "援護": {
+            "target_elements": [
+              "neutral",
+              "fire",
+              "earth"
+            ]
+          },
+          "感応": {
+            "element": "fire",
+            "stat_bonus": {
+              "ap": 30,
+              "hp": 0
+            }
+          },
+          "巻物強打": {
+            "scroll_type": "base_ap"
+          }
+        }
+      }
+    },
+    {
+      "id": 242,
+      "name": "ヨルムンガンド",
+      "dev_name": "ヨルムンガンド",
+      "rarity": "R",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 110,
+        "lands_required": [
+          "earth",
+          "earth"
+        ]
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "先制・土地変性・再生",
+      "ability_detail": "先制；土地変性[🌱]；再生",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "再生"
+        ],
+        "effects": [
+          {
+            "trigger": "on_battle_won",
+            "effect_type": "change_tile_element",
+            "element": "earth"
+          }
+        ]
+      }
+    },
+    {
+      "id": 243,
+      "name": "ランドアーチン",
+      "dev_name": "ランドアーチン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 20,
+      "hp": 50,
+      "ability": "防御型・移動侵略無効",
+      "ability_detail": "防御型；移動侵略を受けない",
+      "ability_parsed": {
+        "keywords": [
+          "移動侵略無効"
+        ]
+      }
+    },
+    {
+      "id": 244,
+      "name": "リチェノイド",
+      "dev_name": "リチェノイド",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP30・対象クリーチャーのMHP+10]",
+      "ability_parsed": {
+        "keywords": [],
+        "mystic_arts": [
+          {
+            "name": "MHP増加",
+            "cost": 30,
+            "spell_id": 9010
+          }
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 245,
+      "name": "レーシィ",
+      "dev_name": "レーシィ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 40
+      },
+      "creature_type": "defensive",
+      "ap": 30,
+      "hp": 40,
+      "ability": "防御型・戦闘後効果",
+      "ability_detail": "防御型；戦闘後、戦闘地レベルを1上げる",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "level_up_battle_land",
+            "trigger": "on_battle_end",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 246,
+      "name": "ロックシェル",
+      "dev_name": "ロックシェル",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 40,
+      "hp": 30,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・これに呪い\"平和\"]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "平和",
+            "cost": 50,
+            "spell_id": 9027
+          }
+        ]
+      }
+    },
+    {
+      "id": 247,
+      "name": "ロックトロル",
+      "dev_name": "ロックトロル",
+      "rarity": "N",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 90
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "wind"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "再生",
+      "ability_detail": "再生",
+      "ability_parsed": {
+        "keywords": [
+          "再生"
+        ]
+      }
+    },
+    {
+      "id": 248,
+      "name": "ワーベア",
+      "dev_name": "ワーベア",
+      "rarity": "S",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 40,
+        "cards_sacrifice": 1
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "合成・不屈",
+      "ability_detail": "合成[地・AP+30、MHP+10]；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "不屈"
+        ]
+      },
+      "synthesis": {
+        "type": "element",
+        "condition": "earth",
+        "effect_type": "stat_boost",
+        "effect": {
+          "ap": 30,
+          "mhp": 10
+        }
+      }
+    },
+    {
+      "id": 250,
+      "name": "グリーンコボルト",
+      "dev_name": "グリーンコボルト",
+      "race": "コボルト",
+      "rarity": "C",
+      "type": "creature",
+      "element": "earth",
+      "cost": {
+        "ep": 20
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "",
+      "ability_detail": ""
+    }
   ]
 }

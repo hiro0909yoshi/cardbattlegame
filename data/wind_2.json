@@ -1,778 +1,833 @@
 {
   "cards": [
-	{
-	  "id": 326,
-	  "name": "テトラーム",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 50,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "2回攻撃",
-	  "ability_detail": "2回攻撃",
-	  "ability_parsed": {
-		"keywords": [
-		  "2回攻撃"
-		]
-	  }
-	},
-	{
-	  "id": 327,
-	  "name": "デバステイター",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 40,
-	  "ability": "侵略時土地破壊",
-	  "ability_detail": "侵略時、土地破壊",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"trigger": "on_battle_won",
-			"effect_type": "reduce_tile_level",
-			"amount": 1
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 328,
-	  "name": "デュータイタン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 75
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 60,
-	  "ability": "配置ドミニオでレベルアップまたは地形変化時",
-	  "ability_detail": "配置ドミニオでレベルアップまたは地形変化時、MHP-10"
-	},
-	{
-	  "id": 329,
-	  "name": "テュポーン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 110,
-		"lands_required": [
-		  "wind",
-		  "wind"
-		]
-	  },
-	  "ap": 60,
-	  "hp": 60,
-	  "ability": "先制・強打・土地変性",
-	  "ability_detail": "先制；強打[火地]；土地変性[地]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_is_element",
-			"elements": [
-			  "fire",
-			  "earth"
-			]
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": [
-				  "water",
-				  "earth"
-				]
-			  }
-			]
-		  },
-		  {
-			"trigger": "on_battle_won",
-			"effect_type": "change_tile_element",
-			"element": "wind"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 330,
-	  "name": "トルネード",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 55
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具",
-		  "巻物"
-		]
-	  },
-	  "creature_type": "defensive",
-	  "ap": 20,
-	  "hp": 50,
-	  "ability": "防御型・先制",
-	  "ability_detail": "防御型；先制；AP+20、HP-10",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "constant_stat_bonus",
-			"stat": "ap",
-			"value": 20,
-			"description": "AP+20"
-		  },
-		  {
-			"effect_type": "constant_stat_bonus",
-			"stat": "hp",
-			"value": -10,
-			"description": "HP-10"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 331,
-	  "name": "トレジャーレイダー",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 90
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "侵略時EP獲得・不屈",
-	  "ability_detail": "侵略時、EP獲得[EP100]；不屈",
-	  "ability_parsed": {
-		"keywords": ["不屈"],
-		"effects": [
-		  {
-			"effect_type": "magic_gain_on_invasion",
-			"amount": 100
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 332,
-	  "name": "ナイキー",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 40,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "先制・攻撃成功時",
-	  "ability_detail": "先制；攻撃成功時、敵に呪い\"戦闘行動不可\"",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": [
-		  {
-			"effect_type": "apply_curse",
-			"trigger": "on_attack_success",
-			"curse_type": "battle_disable",
-			"name": "戦闘行動不可"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 333,
-	  "name": "ナイト",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 90
-	  },
-	  "ap": 50,
-	  "hp": 40,
-	  "ability": "強打",
-	  "ability_detail": "強打[MHP50以上]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_max_hp_check",
-			"operator": ">=",
-			"value": 50
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_max_hp_check",
-				"operator": ">=",
-				"value": 50
-			  }
-			]
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 334,
-	  "name": "ナイトメア",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 40,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 30,
-	  "ability": "貫通",
-	  "ability_detail": "貫通",
-	  "ability_parsed": {
-		"keywords": [
-		  "貫通"
-		]
-	  }
-	},
-	{
-	  "id": 335,
-	  "name": "バウダーイーター",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 10
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 1,
-	  "hp": 1,
-	  "ability": "移動時配置",
-	  "ability_detail": "移動時、元のドミニオと移動先の両方に配置される",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "split_on_move",
-			"trigger": "on_territory_command_move",
-			"description": "ドミニオコマンド移動時、元の支配地に自分を残す"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 336,
-	  "name": "パトロナス",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 30,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 20,
-	  "ability": "防魔・アルカナアーツ",
-	  "ability_detail": "防魔；アルカナアーツ[EP50・対象セプターに呪い\"防魔\"]",
-	  "ability_parsed": {
-		"keywords": ["防魔", "アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"id": "patronus_mystic_001",
-			"name": "防魔付与",
-			"description": "対象セプターに防魔を付与",
-			"spell_id": 9023,
-			"cost": 50
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 337,
-	  "name": "ブリーズスピリット",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "fire"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "空地移動",
-	  "ability_detail": "空地移動[風水]",
-	  "ability_parsed": {
-		"keywords": ["空地移動"],
-		"keyword_conditions": {
-		  "空地移動": {
-			"target_elements": ["wind", "water"]
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 338,
-	  "name": "ブリッツレイブン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 30
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 30,
-	  "hp": 20,
-	  "ability": "先制",
-	  "ability_detail": "先制",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": []
-	  }
-	},
-	{
-	  "id": 339,
-	  "name": "ブルガサリ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 90
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "アイテム使用時・MHP変動",
-	  "ability_detail": "アイテム使用時、AP+20；敵アイテム使用の戦闘後、MHP+10",
-	  "ability_parsed": {
-		"effects": [
-		  {
-			"effect_type": "on_item_use_bonus",
-			"trigger": "self_item_use",
-			"stat_changes": {
-			  "ap": 20
-			},
-			"description": "自分がアイテム使用時AP+|AP-|AP=20（一時）"
-		  },
-		  {
-			"effect_type": "permanent_stat_change",
-			"trigger": "on_battle_end",
-			"condition": "enemy_item_used",
-			"target": "self",
-			"stat_changes": {
-			  "max_hp": 10
-			},
-			"description": "敵がアイテム使用の戦闘後MHP+10（永続）"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 340,
-	  "name": "ホーリーラマ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 60
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・使用者に呪い\"ダイス6\"]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "ダイス6",
-			"cost": 50,
-			"spell_id": 9016
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 341,
-	  "name": "マーシャルモンク",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 70,
-		"cards_sacrifice": 1
-	  },
-	  "ap": 20,
-	  "hp": 50,
-	  "ability": "合成・先制・不屈",
-	  "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；不屈",
-	  "synthesis": {
-		"type": "item",
-		"effect_type": "stat_boost",
-		"effect": { "ap": 40, "mhp": -10 }
-	  },
-	  "ability_parsed": {
-		"keywords": [
-		  "先制"
-		],
-		"effects": []
-	  }
-	},
-	{
-	  "id": 342,
-	  "name": "マッドハーレクイン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 50
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "earth"
-		],
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 40,
-	  "ability": "応援・不屈",
-	  "ability_detail": "応援[自クリーチャー・AP&HP+隣接自ドミニオ数×20]；不屈",
-	  "ability_parsed": {
-		"keywords": ["応援", "不屈"],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "owner_match"
-				}
-			  ]
-			},
-			"bonus": {
-			  "ap_per_adjacent_land": 20,
-			  "hp_per_adjacent_land": 20
-			}
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 343,
-	  "name": "ヨーウィ",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 70
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "強打・通行料変化",
-	  "ability_detail": "強打[火]；通行料変化[1/2~2.5倍]",
-	  "ability_parsed": {
-		"keywords": [
-		  "強打"
-		],
-		"keyword_conditions": {
-		  "強打": {
-			"condition_type": "enemy_is_element",
-			"elements": "fire"
-		  }
-		},
-		"effects": [
-		  {
-			"effect_type": "power_strike",
-			"multiplier": 1.5,
-			"conditions": [
-			  {
-				"condition_type": "enemy_is_element",
-				"elements": "fire"
-			  }
-			]
-		  },
-		  {
-			"effect_type": "toll_change",
-			"multiplier_type": "variable",
-			"min_multiplier": 0.5,
-			"max_multiplier": 2.5,
-			"description": "通行料変化[1/2~2.5倍]"
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 344,
-	  "name": "ライトニングドラゴン",
-	  "race": "ドラゴン",
-	  "rarity": "R",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "wind",
-		  "wind"
-		]
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "earth"
-		],
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 50,
-	  "hp": 50,
-	  "ability": "先制・アルカナアーツ",
-	  "ability_detail": "先制；アルカナアーツ[EP60・対象敵水地のHP-20]",
-	  "ability_parsed": {
-		"keywords": [
-		  "先制",
-		  "アルカナアーツ"
-		],
-		"mystic_arts": [
-		  {
-			"name": "サンダーボルト",
-			"description": "対象敵水地クリーチャーのHP-20",
-			"spell_id": 9006,
-			"cost": 60
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 345,
-	  "name": "ルフ",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 60,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "restrictions": {
-		"cannot_use": [
-		  "巻物"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 50,
-	  "ability": "感応",
-	  "ability_detail": "感応[水・AP+30]",
-	  "ability_parsed": {
-		"keywords": [
-		  "感応"
-		],
-		"keyword_conditions": {
-		  "感応": {
-			"element": "water",
-			"stat_bonus": {
-			  "ap": 30,
-			  "hp": 0
-			}
-		  }
-		}
-	  }
-	},
-	{
-	  "id": 346,
-	  "name": "レムレース",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 30,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "ap": 20,
-	  "hp": 30,
-	  "ability": "アルカナアーツ",
-	  "ability_detail": "アルカナアーツ[EP50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
-	  "ability_parsed": {
-		"keywords": ["アルカナアーツ"],
-		"mystic_arts": [
-		  {
-			"name": "クリーチャー交換",
-			"cost": 50,
-			"spell_id": 9059
-		  }
-		]
-	  }
-	},
-	{
-	  "id": 347,
-	  "name": "ロードオブペイン",
-	  "rarity": "S",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 80,
-		"lands_required": [
-		  "wind",
-		  "wind"
-		],
-		"cards_sacrifice": 1
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "fire"
-		],
-		"cannot_use": [
-		  "アクセサリ"
-		]
-	  },
-	  "ap": 70,
-	  "hp": 60,
-	  "ability": "応援・アルカナアーツ",
-	  "ability_detail": "応援[風水・AP+10]；アルカナアーツ[EP60・AP30以下をAP+20、AP50以上をAP-20]",
-	  "ability_parsed": {
-		"keywords": ["応援", "アルカナアーツ"],
-		"effects": [
-		  {
-			"effect_type": "support",
-			"target": {
-			  "scope": "all_creatures",
-			  "conditions": [
-				{
-				  "condition_type": "element",
-				  "elements": ["wind", "water"]
-				}
-			  ]
-			},
-			"bonus": {
-			  "ap": 10
-			}
-		  }
-		]
-	  },
-	  "mystic_arts": {
-		"cost": 60,
-		"spell_id": 9033
-	  }
-	},
-	{
-	  "id": 348,
-	  "name": "ワイバーン",
-	  "rarity": "N",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 60,
-		"lands_required": [
-		  "wind"
-		]
-	  },
-	  "restrictions": {
-		"cannot_summon": [
-		  "earth"
-		],
-		"cannot_use": [
-		  "防具"
-		]
-	  },
-	  "ap": 40,
-	  "hp": 40,
-	  "ability": "先制・空地移動",
-	  "ability_detail": "先制；空地移動[風]",
-	  "ability_parsed": {
-		"keywords": ["先制", "空地移動"],
-		"keyword_conditions": {
-		  "空地移動": {
-			"target_elements": ["wind"]
-		  }
-		},
-		"effects": []
-	  }
-	},
-	{
-	  "id": 350,
-	  "name": "イエローコボルト",
-	  "race": "コボルト",
-	  "rarity": "C",
-	  "type": "creature",
-	  "element": "wind",
-	  "cost": {
-		"ep": 20
-	  },
-	  "ap": 20,
-	  "hp": 20,
-	  "ability": "",
-	  "ability_detail": ""
-	},
+    {
+      "id": 326,
+      "name": "テトラーム",
+      "dev_name": "テトラーム",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 50,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "2回攻撃",
+      "ability_detail": "2回攻撃",
+      "ability_parsed": {
+        "keywords": [
+          "2回攻撃"
+        ]
+      }
+    },
+    {
+      "id": 327,
+      "name": "デバステイター",
+      "dev_name": "デバステイター",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "ap": 50,
+      "hp": 40,
+      "ability": "侵略時土地破壊",
+      "ability_detail": "侵略時、土地破壊",
+      "ability_parsed": {
+        "effects": [
+          {
+            "trigger": "on_battle_won",
+            "effect_type": "reduce_tile_level",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 328,
+      "name": "デュータイタン",
+      "dev_name": "デュータイタン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 75
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 60,
+      "ability": "配置ドミニオでレベルアップまたは地形変化時",
+      "ability_detail": "配置ドミニオでレベルアップまたは地形変化時、MHP-10"
+    },
+    {
+      "id": 329,
+      "name": "テュポーン",
+      "dev_name": "テュポーン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 110,
+        "lands_required": [
+          "wind",
+          "wind"
+        ]
+      },
+      "ap": 60,
+      "hp": 60,
+      "ability": "先制・強打・土地変性",
+      "ability_detail": "先制；強打[火地]；土地変性[地]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "enemy_is_element",
+            "elements": [
+              "fire",
+              "earth"
+            ]
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": [
+                  "water",
+                  "earth"
+                ]
+              }
+            ]
+          },
+          {
+            "trigger": "on_battle_won",
+            "effect_type": "change_tile_element",
+            "element": "wind"
+          }
+        ]
+      }
+    },
+    {
+      "id": 330,
+      "name": "トルネード",
+      "dev_name": "トルネード",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 55
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具",
+          "巻物"
+        ]
+      },
+      "creature_type": "defensive",
+      "ap": 20,
+      "hp": 50,
+      "ability": "防御型・先制",
+      "ability_detail": "防御型；先制；AP+20、HP-10",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": [
+          {
+            "effect_type": "constant_stat_bonus",
+            "stat": "ap",
+            "value": 20,
+            "description": "AP+20"
+          },
+          {
+            "effect_type": "constant_stat_bonus",
+            "stat": "hp",
+            "value": -10,
+            "description": "HP-10"
+          }
+        ]
+      }
+    },
+    {
+      "id": 331,
+      "name": "トレジャーレイダー",
+      "dev_name": "トレジャーレイダー",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 90
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "侵略時EP獲得・不屈",
+      "ability_detail": "侵略時、EP獲得[EP100]；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "不屈"
+        ],
+        "effects": [
+          {
+            "effect_type": "magic_gain_on_invasion",
+            "amount": 100
+          }
+        ]
+      }
+    },
+    {
+      "id": 332,
+      "name": "ナイキー",
+      "dev_name": "ナイキー",
+      "rarity": "R",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 40,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "先制・攻撃成功時",
+      "ability_detail": "先制；攻撃成功時、敵に呪い\"戦闘行動不可\"",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": [
+          {
+            "effect_type": "apply_curse",
+            "trigger": "on_attack_success",
+            "curse_type": "battle_disable",
+            "name": "戦闘行動不可"
+          }
+        ]
+      }
+    },
+    {
+      "id": 333,
+      "name": "ナイト",
+      "dev_name": "ナイト",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 90
+      },
+      "ap": 50,
+      "hp": 40,
+      "ability": "強打",
+      "ability_detail": "強打[MHP50以上]",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "enemy_max_hp_check",
+            "operator": ">=",
+            "value": 50
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_max_hp_check",
+                "operator": ">=",
+                "value": 50
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 334,
+      "name": "ナイトメア",
+      "dev_name": "ナイトメア",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 40,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "ap": 30,
+      "hp": 30,
+      "ability": "貫通",
+      "ability_detail": "貫通",
+      "ability_parsed": {
+        "keywords": [
+          "貫通"
+        ]
+      }
+    },
+    {
+      "id": 335,
+      "name": "バウダーイーター",
+      "dev_name": "バウダーイーター",
+      "rarity": "R",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 10
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 1,
+      "hp": 1,
+      "ability": "移動時配置",
+      "ability_detail": "移動時、元のドミニオと移動先の両方に配置される",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "split_on_move",
+            "trigger": "on_territory_command_move",
+            "description": "ドミニオコマンド移動時、元の支配地に自分を残す"
+          }
+        ]
+      }
+    },
+    {
+      "id": 336,
+      "name": "パトロナス",
+      "dev_name": "パトロナス",
+      "rarity": "R",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 30,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "ap": 30,
+      "hp": 20,
+      "ability": "防魔・アルカナアーツ",
+      "ability_detail": "防魔；アルカナアーツ[EP50・対象セプターに呪い\"防魔\"]",
+      "ability_parsed": {
+        "keywords": [
+          "防魔",
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "id": "patronus_mystic_001",
+            "name": "防魔付与",
+            "description": "対象セプターに防魔を付与",
+            "spell_id": 9023,
+            "cost": 50
+          }
+        ]
+      }
+    },
+    {
+      "id": 337,
+      "name": "ブリーズスピリット",
+      "dev_name": "ブリーズスピリット",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "fire"
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "空地移動",
+      "ability_detail": "空地移動[風水]",
+      "ability_parsed": {
+        "keywords": [
+          "空地移動"
+        ],
+        "keyword_conditions": {
+          "空地移動": {
+            "target_elements": [
+              "wind",
+              "water"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 338,
+      "name": "ブリッツレイブン",
+      "dev_name": "ブリッツレイブン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 30
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 30,
+      "hp": 20,
+      "ability": "先制",
+      "ability_detail": "先制",
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 339,
+      "name": "ブルガサリ",
+      "dev_name": "ブルガサリ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 90
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "アイテム使用時・MHP変動",
+      "ability_detail": "アイテム使用時、AP+20；敵アイテム使用の戦闘後、MHP+10",
+      "ability_parsed": {
+        "effects": [
+          {
+            "effect_type": "on_item_use_bonus",
+            "trigger": "self_item_use",
+            "stat_changes": {
+              "ap": 20
+            },
+            "description": "自分がアイテム使用時AP+|AP-|AP=20（一時）"
+          },
+          {
+            "effect_type": "permanent_stat_change",
+            "trigger": "on_battle_end",
+            "condition": "enemy_item_used",
+            "target": "self",
+            "stat_changes": {
+              "max_hp": 10
+            },
+            "description": "敵がアイテム使用の戦闘後MHP+10（永続）"
+          }
+        ]
+      }
+    },
+    {
+      "id": 340,
+      "name": "ホーリーラマ",
+      "dev_name": "ホーリーラマ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 60
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・使用者に呪い\"ダイス6\"]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "ダイス6",
+            "cost": 50,
+            "spell_id": 9016
+          }
+        ]
+      }
+    },
+    {
+      "id": 341,
+      "name": "マーシャルモンク",
+      "dev_name": "マーシャルモンク",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 70,
+        "cards_sacrifice": 1
+      },
+      "ap": 20,
+      "hp": 50,
+      "ability": "合成・先制・不屈",
+      "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；不屈",
+      "synthesis": {
+        "type": "item",
+        "effect_type": "stat_boost",
+        "effect": {
+          "ap": 40,
+          "mhp": -10
+        }
+      },
+      "ability_parsed": {
+        "keywords": [
+          "先制"
+        ],
+        "effects": []
+      }
+    },
+    {
+      "id": 342,
+      "name": "マッドハーレクイン",
+      "dev_name": "マッドハーレクイン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 50
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "earth"
+        ],
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 20,
+      "hp": 40,
+      "ability": "応援・不屈",
+      "ability_detail": "応援[自クリーチャー・AP&HP+隣接自ドミニオ数×20]；不屈",
+      "ability_parsed": {
+        "keywords": [
+          "応援",
+          "不屈"
+        ],
+        "effects": [
+          {
+            "effect_type": "support",
+            "target": {
+              "scope": "all_creatures",
+              "conditions": [
+                {
+                  "condition_type": "owner_match"
+                }
+              ]
+            },
+            "bonus": {
+              "ap_per_adjacent_land": 20,
+              "hp_per_adjacent_land": 20
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 343,
+      "name": "ヨーウィ",
+      "dev_name": "ヨーウィ",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 70
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "強打・通行料変化",
+      "ability_detail": "強打[火]；通行料変化[1/2~2.5倍]",
+      "ability_parsed": {
+        "keywords": [
+          "強打"
+        ],
+        "keyword_conditions": {
+          "強打": {
+            "condition_type": "enemy_is_element",
+            "elements": "fire"
+          }
+        },
+        "effects": [
+          {
+            "effect_type": "power_strike",
+            "multiplier": 1.5,
+            "conditions": [
+              {
+                "condition_type": "enemy_is_element",
+                "elements": "fire"
+              }
+            ]
+          },
+          {
+            "effect_type": "toll_change",
+            "multiplier_type": "variable",
+            "min_multiplier": 0.5,
+            "max_multiplier": 2.5,
+            "description": "通行料変化[1/2~2.5倍]"
+          }
+        ]
+      }
+    },
+    {
+      "id": 344,
+      "name": "ライトニングドラゴン",
+      "dev_name": "ライトニングドラゴン",
+      "race": "ドラゴン",
+      "rarity": "R",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "wind",
+          "wind"
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "earth"
+        ],
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 50,
+      "hp": 50,
+      "ability": "先制・アルカナアーツ",
+      "ability_detail": "先制；アルカナアーツ[EP60・対象敵水地のHP-20]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "サンダーボルト",
+            "description": "対象敵水地クリーチャーのHP-20",
+            "spell_id": 9006,
+            "cost": 60
+          }
+        ]
+      }
+    },
+    {
+      "id": 345,
+      "name": "ルフ",
+      "dev_name": "ルフ",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 60,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "restrictions": {
+        "cannot_use": [
+          "巻物"
+        ]
+      },
+      "ap": 40,
+      "hp": 50,
+      "ability": "感応",
+      "ability_detail": "感応[水・AP+30]",
+      "ability_parsed": {
+        "keywords": [
+          "感応"
+        ],
+        "keyword_conditions": {
+          "感応": {
+            "element": "water",
+            "stat_bonus": {
+              "ap": 30,
+              "hp": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 346,
+      "name": "レムレース",
+      "dev_name": "レムレース",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 30,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "ap": 20,
+      "hp": 30,
+      "ability": "アルカナアーツ",
+      "ability_detail": "アルカナアーツ[EP50・対象敵手札のクリーチャーを1枚奪い、これが対象の手札に移動]",
+      "ability_parsed": {
+        "keywords": [
+          "アルカナアーツ"
+        ],
+        "mystic_arts": [
+          {
+            "name": "クリーチャー交換",
+            "cost": 50,
+            "spell_id": 9059
+          }
+        ]
+      }
+    },
+    {
+      "id": 347,
+      "name": "ロードオブペイン",
+      "dev_name": "ロードオブペイン",
+      "rarity": "S",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 80,
+        "lands_required": [
+          "wind",
+          "wind"
+        ],
+        "cards_sacrifice": 1
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "fire"
+        ],
+        "cannot_use": [
+          "アクセサリ"
+        ]
+      },
+      "ap": 70,
+      "hp": 60,
+      "ability": "応援・アルカナアーツ",
+      "ability_detail": "応援[風水・AP+10]；アルカナアーツ[EP60・AP30以下をAP+20、AP50以上をAP-20]",
+      "ability_parsed": {
+        "keywords": [
+          "応援",
+          "アルカナアーツ"
+        ],
+        "effects": [
+          {
+            "effect_type": "support",
+            "target": {
+              "scope": "all_creatures",
+              "conditions": [
+                {
+                  "condition_type": "element",
+                  "elements": [
+                    "wind",
+                    "water"
+                  ]
+                }
+              ]
+            },
+            "bonus": {
+              "ap": 10
+            }
+          }
+        ]
+      },
+      "mystic_arts": {
+        "cost": 60,
+        "spell_id": 9033
+      }
+    },
+    {
+      "id": 348,
+      "name": "ワイバーン",
+      "dev_name": "ワイバーン",
+      "rarity": "N",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 60,
+        "lands_required": [
+          "wind"
+        ]
+      },
+      "restrictions": {
+        "cannot_summon": [
+          "earth"
+        ],
+        "cannot_use": [
+          "防具"
+        ]
+      },
+      "ap": 40,
+      "hp": 40,
+      "ability": "先制・空地移動",
+      "ability_detail": "先制；空地移動[風]",
+      "ability_parsed": {
+        "keywords": [
+          "先制",
+          "空地移動"
+        ],
+        "keyword_conditions": {
+          "空地移動": {
+            "target_elements": [
+              "wind"
+            ]
+          }
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": 350,
+      "name": "イエローコボルト",
+      "dev_name": "イエローコボルト",
+      "race": "コボルト",
+      "rarity": "C",
+      "type": "creature",
+      "element": "wind",
+      "cost": {
+        "ep": 20
+      },
+      "ap": 20,
+      "hp": 20,
+      "ability": "",
+      "ability_detail": ""
+    }
   ]
 }
