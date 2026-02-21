@@ -2,7 +2,7 @@
   "cards": [
     {
       "id": 402,
-      "name": "アーキミミック",
+      "name": "メイジスライム",
       "dev_name": "アーキミミック",
       "rarity": "N",
       "type": "creature",
@@ -33,7 +33,7 @@
     },
     {
       "id": 403,
-      "name": "アーキビショップ",
+      "name": "クレリック",
       "dev_name": "アーキビショップ",
       "rarity": "S",
       "type": "creature",
@@ -65,7 +65,7 @@
     },
     {
       "id": 404,
-      "name": "アーマードラゴン",
+      "name": "スティールドラゴン",
       "dev_name": "アーマードラゴン",
       "race": "ドラゴン",
       "rarity": "S",
@@ -100,7 +100,7 @@
     },
     {
       "id": 405,
-      "name": "アイアンモンガー",
+      "name": "ドワーフ",
       "dev_name": "アイアンモンガー",
       "rarity": "S",
       "type": "creature",
@@ -127,7 +127,7 @@
     },
     {
       "id": 406,
-      "name": "アンドロギア",
+      "name": "トール",
       "dev_name": "アンドロギア",
       "rarity": "R",
       "type": "creature",
@@ -218,7 +218,7 @@
     },
     {
       "id": 408,
-      "name": "ギアリオン",
+      "name": "オーディン",
       "dev_name": "ギアリオン",
       "rarity": "R",
       "type": "creature",
@@ -247,7 +247,7 @@
     },
     {
       "id": 409,
-      "name": "グランギア",
+      "name": "ヤタガラス",
       "dev_name": "グランギア",
       "rarity": "S",
       "type": "creature",
@@ -288,7 +288,7 @@
     },
     {
       "id": 410,
-      "name": "クリーピングコイン",
+      "name": "グリード",
       "dev_name": "クリーピングコイン",
       "rarity": "N",
       "type": "creature",
@@ -320,7 +320,7 @@
     },
     {
       "id": 411,
-      "name": "グレートフォシル",
+      "name": "アンシェントボーン",
       "dev_name": "グレートフォシル",
       "rarity": "S",
       "type": "creature",
@@ -366,7 +366,7 @@
     },
     {
       "id": 412,
-      "name": "クロックアウル",
+      "name": "ナビゲーター",
       "dev_name": "クロックアウル",
       "rarity": "N",
       "type": "creature",
@@ -399,7 +399,7 @@
     },
     {
       "id": 413,
-      "name": "ゴールドトーテム",
+      "name": "ゴールドアイドル",
       "dev_name": "ゴールドトーテム",
       "rarity": "N",
       "type": "creature",
@@ -511,7 +511,7 @@
     },
     {
       "id": 417,
-      "name": "シェイプシフター",
+      "name": "ドッペルゲンガー",
       "dev_name": "シェイプシフター",
       "rarity": "S",
       "type": "creature",
@@ -538,7 +538,7 @@
     },
     {
       "id": 418,
-      "name": "シャドウガイスト",
+      "name": "シャドウレイス",
       "dev_name": "シャドウガイスト",
       "rarity": "R",
       "type": "creature",
@@ -566,7 +566,7 @@
     },
     {
       "id": 419,
-      "name": "スカイギア",
+      "name": "ドラグーン",
       "dev_name": "スカイギア",
       "rarity": "S",
       "type": "creature",
@@ -625,7 +625,7 @@
     },
     {
       "id": 421,
-      "name": "スタチュー",
+      "name": "ストーンゴーレム",
       "dev_name": "スタチュー",
       "rarity": "N",
       "type": "creature",
@@ -653,7 +653,7 @@
     },
     {
       "id": 422,
-      "name": "スチームギア",
+      "name": "メカノイド",
       "dev_name": "スチームギア",
       "rarity": "N",
       "type": "creature",
@@ -682,7 +682,7 @@
     },
     {
       "id": 423,
-      "name": "ストーンジゾウ",
+      "name": "セイクリッドストーン",
       "dev_name": "ストーンジゾウ",
       "rarity": "N",
       "type": "creature",
@@ -715,7 +715,7 @@
     },
     {
       "id": 424,
-      "name": "セイント",
+      "name": "パラディン",
       "dev_name": "セイント",
       "rarity": "S",
       "type": "creature",
@@ -768,7 +768,7 @@
     },
     {
       "id": 426,
-      "name": "デコイ",
+      "name": "ミラー",
       "dev_name": "デコイ",
       "rarity": "S",
       "type": "creature",
