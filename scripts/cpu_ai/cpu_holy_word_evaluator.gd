@@ -118,7 +118,11 @@ func _evaluate_defensive(dice_value: int, player_id: int, spell_cost: int) -> Di
 		"should_use": false,
 		"avoided_toll": 0
 	}
-	
+
+	var player_system = _movement_evaluator.player_system
+	if not player_system:
+		return result
+
 	var current_tile = _movement_evaluator.get_player_current_tile(player_id)
 	var my_direction = _movement_evaluator.get_player_direction(player_id)
 	
