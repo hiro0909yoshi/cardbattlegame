@@ -212,6 +212,10 @@ func get_merged_creature() -> Dictionary:
 
 ## アイテム選択UIを表示
 func _show_item_selection_ui():
+	# カメラを手動モードに設定（マップ確認可能にする）
+	if board_system_3d:
+		board_system_3d.enable_manual_camera()
+
 	if not card_system or not player_system:
 		complete_item_phase()
 		return
