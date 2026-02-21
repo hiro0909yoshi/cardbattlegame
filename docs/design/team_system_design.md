@@ -264,7 +264,7 @@ var team_id: int = -1
 var members: Array[int] = []  # 固定配列（ゲーム中に変更しない）
 
 func has_member(player_id: int) -> bool:
-    return player_id in members
+	return player_id in members
 ```
 
 TeamData はデータと基本判定のみ。計算・生存判定ロジックは TeamSystem に置く。
@@ -285,69 +285,69 @@ var _player_system: PlayerSystem = null
 ## チームをセットアップ
 ## teams_array: [[0, 2], [1]] 形式
 func setup_teams(teams_array: Array, player_system: PlayerSystem) -> void:
-    _player_system = player_system
-    _teams.clear()
-    _player_team_map.clear()
+	_player_system = player_system
+	_teams.clear()
+	_player_team_map.clear()
 
-    for team_index in range(teams_array.size()):
-        var team = TeamData.new()
-        team.team_id = team_index
-        for player_id in teams_array[team_index]:
-            if player_id >= 0 and player_id < player_system.players.size():
-                team.members.append(player_id)
-                _player_team_map[player_id] = team
-                # ※ PlayerData.team_id は持たない — _player_team_map が唯一の真実
-        _teams.append(team)
+	for team_index in range(teams_array.size()):
+		var team = TeamData.new()
+		team.team_id = team_index
+		for player_id in teams_array[team_index]:
+			if player_id >= 0 and player_id < player_system.players.size():
+				team.members.append(player_id)
+				_player_team_map[player_id] = team
+				# ※ PlayerData.team_id は持たない — _player_team_map が唯一の真実
+		_teams.append(team)
 
 ## チームが存在するか
 func has_teams() -> bool:
-    return not _teams.is_empty()
+	return not _teams.is_empty()
 
 ## 2人のプレイヤーが同盟か
 func are_allies(player_id_a: int, player_id_b: int) -> bool:
-    if player_id_a == player_id_b:
-        return true  # 自分自身は常に味方
-    if not _player_team_map.has(player_id_a) or not _player_team_map.has(player_id_b):
-        return false  # チーム未割り当て = 味方ではない
-    return _player_team_map[player_id_a] == _player_team_map[player_id_b]
+	if player_id_a == player_id_b:
+		return true  # 自分自身は常に味方
+	if not _player_team_map.has(player_id_a) or not _player_team_map.has(player_id_b):
+		return false  # チーム未割り当て = 味方ではない
+	return _player_team_map[player_id_a] == _player_team_map[player_id_b]
 
 ## プレイヤーのチームを取得
 func get_team_for_player(player_id: int) -> TeamData:
-    return _player_team_map.get(player_id, null)
+	return _player_team_map.get(player_id, null)
 
 ## プレイヤーの同チームメンバーを取得（自分含む）
 func get_team_members(player_id: int) -> Array[int]:
-    var team = get_team_for_player(player_id)
-    if team:
-        return team.members
-    return [player_id]  # チームなし = 自分だけ
+	var team = get_team_for_player(player_id)
+	if team:
+		return team.members
+	return [player_id]  # チームなし = 自分だけ
 
 ## チーム合算TEPを計算
 func get_team_total_assets(player_id: int) -> int:
-    if not _player_system:
-        return 0
-    var team = get_team_for_player(player_id)
-    if not team:
-        return _player_system.calculate_total_assets(player_id)
-    var total: int = 0
-    for member_id in team.members:
-        total += _player_system.calculate_total_assets(member_id)
-    return total
+	if not _player_system:
+		return 0
+	var team = get_team_for_player(player_id)
+	if not team:
+		return _player_system.calculate_total_assets(player_id)
+	var total: int = 0
+	for member_id in team.members:
+		total += _player_system.calculate_total_assets(member_id)
+	return total
 
 ## 生存チーム一覧（生存プレイヤーが1人以上いるチーム）
 ## members は固定配列のため、player_system.is_alive() で実際の生存を確認する
 func get_surviving_teams() -> Array[TeamData]:
-    var surviving: Array[TeamData] = []
-    for team in _teams:
-        for member_id in team.members:
-            if _player_system and _player_system.is_alive(member_id):
-                surviving.append(team)
-                break  # 1人でも生存していればチーム生存
-    return surviving
+	var surviving: Array[TeamData] = []
+	for team in _teams:
+		for member_id in team.members:
+			if _player_system and _player_system.is_alive(member_id):
+				surviving.append(team)
+				break  # 1人でも生存していればチーム生存
+	return surviving
 
 ## ゲーム終了判定（生存チームが1つ以下）
 func is_game_over() -> bool:
-    return get_surviving_teams().size() <= 1
+	return get_surviving_teams().size() <= 1
 ```
 
 ### 4.3 PlayerData
@@ -369,16 +369,16 @@ var team_system: TeamSystem = null
 ## 2人のプレイヤーが同じチームか（TeamSystemへの委譲）
 ## 25+箇所の既存アクセスパターンを維持するための便宜メソッド
 func is_same_team(player_id_a: int, player_id_b: int) -> bool:
-    if not team_system or not team_system.has_teams():
-        return player_id_a == player_id_b  # FFA: 自分自身のみ味方
-    return team_system.are_allies(player_id_a, player_id_b)
+	if not team_system or not team_system.has_teams():
+		return player_id_a == player_id_b  # FFA: 自分自身のみ味方
+	return team_system.are_allies(player_id_a, player_id_b)
 
 ## プレイヤーが生存しているか（破産・脱落判定）
 func is_alive(player_id: int) -> bool:
-    if player_id < 0 or player_id >= players.size():
-        return false
-    return players[player_id].magic_power >= 0
-    # 将来: 脱落フラグ（ネット対戦切断等）も考慮する
+	if player_id < 0 or player_id >= players.size():
+		return false
+	return players[player_id].magic_power >= 0
+	# 将来: 脱落フラグ（ネット対戦切断等）も考慮する
 ```
 
 **設計原則**:
@@ -396,7 +396,7 @@ func is_alive(player_id: int) -> bool:
   "name": "迷路のクレリック",
   "teams": [[0, 2], [1]],
   "quest": {
-    "enemies": [...]
+	"enemies": [...]
   }
 }
 ```
@@ -424,7 +424,7 @@ GSM.setup_systems()
 quest_game._apply_stage_settings()
   ├── var teams = stage_loader.get_teams()
   └── if not teams.is_empty():
-        team_system.setup_teams(teams, player_system)
+		team_system.setup_teams(teams, player_system)
 ```
 
 ### 変更一覧
@@ -465,10 +465,10 @@ if owner_filter == "enemy" and (tile_owner == current_player_id or tile_owner < 
 # 変更後
 var _ps = systems.get("player_system")
 if owner_filter == "own" and tile_owner != current_player_id:
-    if not (_ps and _ps.is_same_team(current_player_id, tile_owner)):
-        continue
+	if not (_ps and _ps.is_same_team(current_player_id, tile_owner)):
+		continue
 if owner_filter == "enemy" and (tile_owner < 0 or tile_owner == current_player_id or (_ps and _ps.is_same_team(current_player_id, tile_owner))):
-    continue
+	continue
 ```
 
 #### 土地ターゲット（L361-364）、プレイヤーターゲット（L300-303）も同様のパターン。
@@ -481,27 +481,27 @@ if owner_filter == "enemy" and (tile_owner < 0 or tile_owner == current_player_i
 ```gdscript
 # sell_land() の EP加算先を変更可能にする
 func sell_land(tile_index: int, ep_recipient_id: int = -1) -> int:
-    # ...
-    var recipient = ep_recipient_id if ep_recipient_id >= 0 else owner_id
-    player_system.add_magic(recipient, value)
+	# ...
+	var recipient = ep_recipient_id if ep_recipient_id >= 0 else owner_id
+	player_system.add_magic(recipient, value)
 
 # CPU破産：自分の土地を優先、不足時に同盟の土地を売却
 func process_cpu_bankruptcy(player_id: int):
-    # 1. まず自分の土地を売却
-    while check_bankruptcy(player_id):
-        var own_lands = board_system.get_player_owned_tiles(player_id)
-        if own_lands.is_empty():
-            break
-        var best = _select_land_to_sell_cpu(player_id, own_lands)
-        sell_land(best, player_id)
+	# 1. まず自分の土地を売却
+	while check_bankruptcy(player_id):
+		var own_lands = board_system.get_player_owned_tiles(player_id)
+		if own_lands.is_empty():
+			break
+		var best = _select_land_to_sell_cpu(player_id, own_lands)
+		sell_land(best, player_id)
 
-    # 2. まだ破産なら同盟の土地を売却
-    while check_bankruptcy(player_id):
-        var allied_lands = _get_allied_lands(player_id)
-        if allied_lands.is_empty():
-            break
-        var best = _select_land_to_sell_cpu(player_id, allied_lands)
-        sell_land(best, player_id)
+	# 2. まだ破産なら同盟の土地を売却
+	while check_bankruptcy(player_id):
+		var allied_lands = _get_allied_lands(player_id)
+		if allied_lands.is_empty():
+			break
+		var best = _select_land_to_sell_cpu(player_id, allied_lands)
+		sell_land(best, player_id)
 ```
 
 ### ドミニオコマンドの詳細
@@ -511,11 +511,11 @@ func process_cpu_bankruptcy(player_id: int):
 ```gdscript
 # 変更前
 elif tile_info["owner"] == player_index:
-    show_summon_ui_disabled()
+	show_summon_ui_disabled()
 
 # 変更後
 elif tile_info["owner"] == player_index or player_system.is_same_team(player_index, tile_info["owner"]):
-    show_summon_ui_disabled()
+	show_summon_ui_disabled()
 ```
 
 #### movement_helper.gd（移動先候補の敵判定、3箇所）
@@ -533,11 +533,11 @@ _filter_invalid_destinations()    L356  owner_id == current_player_id（自分sk
 ```gdscript
 # 変更前
 elif dest_owner == current_player_index:
-    # 自分の土地 → エラー
+	# 自分の土地 → エラー
 
 # 変更後
 elif dest_owner == current_player_index or player_system.is_same_team(current_player_index, dest_owner):
-    # 自分 or 同盟の土地 → エラー（移動先候補から除外済みなので通常到達しない）
+	# 自分 or 同盟の土地 → エラー（移動先候補から除外済みなので通常到達しない）
 ```
 
 #### land_selection_helper.gd（プレイヤーのドミニオ土地選択）
@@ -602,10 +602,10 @@ TeamSystem 経由で true を返すため、自分自身の判定も正しく動
 ```gdscript
 # 有害な全体スペルは敵が対象にいる場合のみ使用
 if target_type in ["all_creatures", "all_lands"]:
-    if _is_harmful_spell(spell_data):
-        if not _has_enemy_in_targets(player_id):
-            return {"should_use": false, "score": 0.0, "target": null}
-    return {"should_use": true, "score": base_score, "target": null}
+	if _is_harmful_spell(spell_data):
+		if not _has_enemy_in_targets(player_id):
+			return {"should_use": false, "score": 0.0, "target": null}
+	return {"should_use": true, "score": base_score, "target": null}
 ```
 
 ### ミスティックアーツ CPU AI（独立検証）
@@ -639,8 +639,8 @@ L126（`owner != player_id`）は自分のクリーチャーのアルカナア�
 ```gdscript
 # クライアント側（ネット対戦時）
 func setup_multiplayer_game(stage_data: Dictionary) -> void:
-    if stage_data.has("teams"):
-        team_system.setup_teams(stage_data["teams"], player_system)
+	if stage_data.has("teams"):
+		team_system.setup_teams(stage_data["teams"], player_system)
 ```
 
 ### クライアント間の同期不要箇所
@@ -670,7 +670,7 @@ TeamSystem がチーム構造を一元管理しているため:
 # quest_game.gd
 var teams = stage_loader.get_teams()
 if not teams.is_empty():
-    team_system.setup_teams(teams, player_system)
+	team_system.setup_teams(teams, player_system)
 # teams が未指定 → setup_teams() を呼び出さない
 # → TeamSystem._teams は空、has_teams() == false
 # → player_system.is_same_team(a, b) は player_id_a == player_id_b を返す
@@ -746,14 +746,14 @@ team_system.get_team_total_assets(player_id)
 var team_system: TeamSystem = null
 
 func is_same_team(player_id_a: int, player_id_b: int) -> bool:
-    if not team_system or not team_system.has_teams():
-        return player_id_a == player_id_b  # FFA: 自分自身のみ味方
-    return team_system.are_allies(player_id_a, player_id_b)
+	if not team_system or not team_system.has_teams():
+		return player_id_a == player_id_b  # FFA: 自分自身のみ味方
+	return team_system.are_allies(player_id_a, player_id_b)
 
 func is_alive(player_id: int) -> bool:
-    if player_id < 0 or player_id >= players.size():
-        return false
-    return players[player_id].magic_power >= 0
+	if player_id < 0 or player_id >= players.size():
+		return false
+	return players[player_id].magic_power >= 0
 ```
 
 **game_system_manager.gd**:
@@ -770,14 +770,14 @@ player_system.team_system = team_system
 **stage_loader.gd**:
 ```gdscript
 func get_teams() -> Array:
-    return _stage_data.get("teams", [])
+	return _stage_data.get("teams", [])
 ```
 
 **quest_game.gd**:
 ```gdscript
 var teams = stage_loader.get_teams()
 if not teams.is_empty():
-    team_system.setup_teams(teams, player_system)
+	team_system.setup_teams(teams, player_system)
 ```
 
 **規約チェック**:
@@ -799,22 +799,22 @@ if not teams.is_empty():
 ```gdscript
 # 変更前
 if tile_owner != current_player_id:
-    # 通行料発生
+	# 通行料発生
 
 # 変更後
 if tile_owner != current_player_id and not player_system.is_same_team(current_player_id, tile_owner):
-    # 通行料発生
+	# 通行料発生
 ```
 
 **tile_action_processor.gd** L179-183:
 ```gdscript
 # 変更前
 elif tile_info["owner"] == player_index:
-    show_summon_ui_disabled()
+	show_summon_ui_disabled()
 
 # 変更後
 elif tile_info["owner"] == player_index or player_system.is_same_team(player_index, tile_info["owner"]):
-    show_summon_ui_disabled()
+	show_summon_ui_disabled()
 ```
 
 **規約チェック**:
@@ -835,8 +835,8 @@ elif tile_info["owner"] == player_index or player_system.is_same_team(player_ind
 var player_system = null
 
 func setup(p_tile_nodes, p_player_system = null):
-    tile_nodes = p_tile_nodes
-    player_system = p_player_system
+	tile_nodes = p_tile_nodes
+	player_system = p_player_system
 ```
 
 **get_element_chain_count()** L291:
@@ -938,16 +938,16 @@ var total_assets = team_system.get_team_total_assets(player_id) if team_system e
 ```gdscript
 # 変更前
 elif condition_type == "owner_match":
-    if participant.player_id != supporter_player_id:
-        return false
+	if participant.player_id != supporter_player_id:
+		return false
 
 # 変更後（is_same_team は FFA 時に自分自身 true を返すため、既存動作を維持）
 elif condition_type == "owner_match":
-    var _ps = board_system_ref.get_meta("player_system") if board_system_ref and board_system_ref.has_meta("player_system") else null
-    if _ps and not _ps.is_same_team(participant.player_id, supporter_player_id):
-        return false
-    elif not _ps and participant.player_id != supporter_player_id:
-        return false  # フォールバック（player_system 未設定時）
+	var _ps = board_system_ref.get_meta("player_system") if board_system_ref and board_system_ref.has_meta("player_system") else null
+	if _ps and not _ps.is_same_team(participant.player_id, supporter_player_id):
+		return false
+	elif not _ps and participant.player_id != supporter_player_id:
+		return false  # フォールバック（player_system 未設定時）
 ```
 
 テスト: 同盟クリーチャーの応援が有効になる
@@ -961,15 +961,15 @@ TeamSystem を使ってチームメンバーに同一カラーを割り当て:
 
 ```gdscript
 func _assign_team_colors():
-    if not team_system or not team_system.has_teams():
-        return
-    # チームごとに最初のメンバーの色を全員に適用
-    for team in team_system._teams:
-        if team.members.is_empty():
-            continue
-        var team_color = _get_player_color(team.members[0])
-        for member_id in team.members:
-            _set_player_color(member_id, team_color)
+	if not team_system or not team_system.has_teams():
+		return
+	# チームごとに最初のメンバーの色を全員に適用
+	for team in team_system._teams:
+		if team.members.is_empty():
+			continue
+		var team_color = _get_player_color(team.members[0])
+		for member_id in team.members:
+			_set_player_color(member_id, team_color)
 ```
 
 テスト: ボード上で同盟の土地が同色、駒が区別可能
