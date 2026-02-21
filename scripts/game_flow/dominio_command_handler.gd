@@ -1113,6 +1113,17 @@ func _complete_swap_for_cpu(_success: bool):
 
 ## 移動侵略シーケンス（カメラ移動→コメント→アイテムフェーズ）
 func start_move_battle_sequence(dest_tile_index: int, attacker_player: int, creature_data: Dictionary):
+	# 移動先選択のナビゲーションをクリア（アイテムフェーズへの引き継ぎ防止）
+	if _navigation_service:
+		_navigation_service.disable_navigation()
+
+	# 移動先選択状態をリセット（move_source_tileはバトル結果で使うため保持）
+	move_destinations.clear()
+	current_destination_index = 0
+
+	# マーカーを非表示
+	TargetSelectionHelper.hide_selection_marker(self)
+
 	# 1. カメラを移動先タイルにフォーカス
 	TargetSelectionHelper.focus_camera_on_tile(self, dest_tile_index)
 	
