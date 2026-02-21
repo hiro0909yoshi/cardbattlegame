@@ -1,7 +1,7 @@
 {
   "id": "stage_2_7",
-  "name": "迷路のクレリック",
-  "description": "迷路マップでファイターとシーフが登場。",
+  "name": "ファイターとの決闘",
+  "description": "ファイターと1対1で戦う。",
   "map_id": "map_1_6",
   "rule_preset": "quick",
   "max_turns": 50,
@@ -28,16 +28,9 @@
 		"deck_id": "cpu_deck_4",
 		"ai_level": 3,
 		"start_tile": 0
-	  },
-	  {
-		"character_id": "thief",
-		"deck_id": "cpu_deck_6",
-		"ai_level": 3,
-		"start_tile": 0
 	  }
 	]
   },
-  "teams": [[0], [1, 2]],
   "rewards": {
 	"gold": 1500,
 	"rank_bonus_preset": "default"

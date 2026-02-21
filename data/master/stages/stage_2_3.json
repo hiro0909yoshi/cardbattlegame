@@ -24,8 +24,8 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "fighter_1",
-		"deck_id": "cpu_deck_4",
+		"character_id": "thief",
+		"deck_id": "cpu_deck_6",
 		"ai_level": 3,
 		"start_tile": 0
 	  }

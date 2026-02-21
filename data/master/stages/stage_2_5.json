@@ -1,7 +1,7 @@
 {
   "id": "stage_2_5",
-  "name": "シーフの迷宮",
-  "description": "新キャラクター「シーフ」が登場する分岐マップ。",
+  "name": "クレリックとの共闘",
+  "description": "クレリックと同盟を組んでファイターに挑む。",
   "map_id": "map_branch_1",
   "rule_preset": "quick",
   "max_turns": 50,
@@ -24,13 +24,20 @@
   "quest": {
 	"enemies": [
 	  {
-		"character_id": "thief",
-		"deck_id": "cpu_deck_6",
+		"character_id": "cleric",
+		"deck_id": "cpu_deck_5",
+		"ai_level": 3,
+		"start_tile": 0
+	  },
+	  {
+		"character_id": "fighter_1",
+		"deck_id": "cpu_deck_4",
 		"ai_level": 3,
 		"start_tile": 0
 	  }
 	]
   },
+  "teams": [[0, 1], [2]],
   "rewards": {
 	"gold": 1500,
 	"rank_bonus_preset": "default"

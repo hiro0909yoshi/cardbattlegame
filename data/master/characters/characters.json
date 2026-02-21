@@ -217,6 +217,35 @@
 		"spell_use_rate": 0.9,
 		"dominio_use_rate": 0.8
 	  }
+	},
+	"orc": {
+	  "name": "オーク",
+	  "model_path": "res://scenes/Characters/Bowser.tscn",
+	  "portrait_path": "",
+	  "description": "ワールド2-8から登場する好戦的な敵",
+	  "battle_policy": {
+		"attack": {
+		  "always_battle": 0.0,
+		  "both_no_item": 0.2,
+		  "vs_enemy_item": 0.8,
+		  "never_battle": 0.0
+		},
+		"defense": {
+		  "no_item": 0.1,
+		  "always_protect": 0.9,
+		  "protect_mystic_arts": false,
+		  "protect_element_match": true,
+		  "protect_by_value": {
+			"enabled": true,
+			"threshold": 300,
+			"min_defense_items": 1
+		  }
+		},
+		"summon_rate_match": 1.0,
+		"summon_rate_mismatch": 0.6,
+		"spell_use_rate": 0.9,
+		"dominio_use_rate": 0.9
+	  }
 	}
   }
 }
