@@ -12,12 +12,12 @@
 			},
 			"ap": 20,
 			"hp": 30,
-			"ability": "加勢・アイテム破壊無効・術強化",
-			"ability_detail": "加勢；アイテム破壊・盗み無効；術強化",
+			"ability": "加勢・アイテム破壊無効・強化術",
+			"ability_detail": "加勢；アイテム破壊・盗み無効；強化術",
 			"ability_parsed": {
 				"keywords": [
 					"加勢",
-					"術強化"
+					"強化術"
 				],
 				"effects": [
 					{
@@ -33,7 +33,7 @@
 							"all"
 						]
 					},
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}
@@ -605,13 +605,13 @@
 			},
 			"ap": 20,
 			"hp": 30,
-			"ability": "加勢・共鳴・術強化",
-			"ability_detail": "加勢[無火地]；共鳴[火・AP+30]；術強化",
+			"ability": "加勢・共鳴・強化術",
+			"ability_detail": "加勢[無火地]；共鳴[火・AP+30]；強化術",
 			"ability_parsed": {
 				"keywords": [
 					"加勢",
 					"共鳴",
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
 					"加勢": {
@@ -628,7 +628,7 @@
 							"hp": 0
 						}
 					},
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}

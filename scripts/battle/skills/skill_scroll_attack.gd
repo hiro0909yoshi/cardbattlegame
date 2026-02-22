@@ -6,7 +6,7 @@
 ## - バフ未使用時のみ発動（base_up_ap以外のバフがある場合は通常攻撃）
 ## - APの固定値設定 or 基本ST使用
 ## - 防御側の土地ボーナスHP無効化
-## - 術強化との併用（APを1.5倍）
+## - 強化術との併用（APを1.5倍）
 ##
 ## 【発動条件】
 ## - 巻物アイテムを装備している
@@ -17,13 +17,13 @@
 ## - AP基本AP使用（scroll_type: "base_ap"）
 ## - 土地数比例（scroll_type: "land_count"）
 ## - 防御側の土地ボーナスHP無効化
-## - 術強化: 上記AP × 1.5
+## - 強化術: 上記AP × 1.5
 ##
 ## 【実装済みクリーチャー例】
 ## - Phantom (ID: 315) - 術攻撃（基本ST）
 ## - Valkyrie (ID: 318) - 術攻撃（基本ST）
 ## - Armed Paladin (ID: 338) - 術攻撃（固定30）
-## - ウィッチ - 術強化（基本ST×1.5）
+## - ウィッチ - 強化術（基本ST×1.5）
 ## - 他多数
 ##
 ## @version 1.1
@@ -37,7 +37,7 @@ const ParticipantClass = preload("res://scripts/battle/battle_participant.gd")
 ##
 ## バフ未使用時のみ術攻撃が発動する
 ## 術攻撃フラグを立て、APを設定する
-## 術強化の場合はAPを1.5倍にする
+## 強化術の場合はAPを1.5倍にする
 ##
 ## @param participant: バトル参加者
 ## @param context: 戦闘コンテキスト
@@ -47,8 +47,8 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 術攻撃 or 術強化を持つか
-	if not ("術攻撃" in keywords or "術強化" in keywords):
+	# 術攻撃 or 強化術を持つか
+	if not ("術攻撃" in keywords or "強化術" in keywords):
 		return false
 	
 	# バフチェック: base_up_ap以外のバフが入っていたら発動しない
@@ -65,17 +65,17 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 	# 術攻撃フラグを立てる
 	participant.is_using_scroll = true
 	
-	# AP設定を取得（術強化優先）
+	# AP設定を取得（強化術優先）
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 	var scroll_config = {}
-	var is_power_strike = "術強化" in keywords
+	var is_power_strike = "強化術" in keywords
 	
-	# 術攻撃の設定を優先（術強化でもscroll_type等は術攻撃から取得する場合がある）
+	# 術攻撃の設定を優先（強化術でもscroll_type等は術攻撃から取得する場合がある）
 	if "術攻撃" in keywords:
 		scroll_config = keyword_conditions.get("術攻撃", {})
-	if is_power_strike and keyword_conditions.has("術強化"):
-		# 術強化の設定があればマージ（術強化の設定を優先）
-		var power_strike_config = keyword_conditions.get("術強化", {})
+	if is_power_strike and keyword_conditions.has("強化術"):
+		# 強化術の設定があればマージ（強化術の設定を優先）
+		var power_strike_config = keyword_conditions.get("強化術", {})
 		for key in power_strike_config:
 			scroll_config[key] = power_strike_config[key]
 	
@@ -114,12 +114,12 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 			if not silent:
 				print("【術攻撃】", participant.creature_data.get("name", "?"), " AP=基本AP:", calculated_ap)
 	
-	# 術強化の場合、APを1.5倍にする
+	# 強化術の場合、APを1.5倍にする
 	if is_power_strike:
 		var original_ap = calculated_ap
 		calculated_ap = int(calculated_ap * 1.5)
 		if not silent:
-			print("【術強化発動】", participant.creature_data.get("name", "?"),
+			print("【強化術発動】", participant.creature_data.get("name", "?"),
 				  " AP:", original_ap, " → ", calculated_ap, "（×1.5）")
 	
 	participant.current_ap = calculated_ap
@@ -127,20 +127,20 @@ static func apply(participant: BattleParticipant, context: Dictionary, silent: b
 
 ## 術攻撃スキルを持つかチェック
 ##
-## クリーチャーが術攻撃または術強化スキルを持っているか判定する
+## クリーチャーが術攻撃または強化術スキルを持っているか判定する
 ##
 ## @param creature_data: クリーチャーデータ
-## @return bool: 術攻撃/術強化スキルを持つ場合はtrue
+## @return bool: 術攻撃/強化術スキルを持つ場合はtrue
 static func has_skill(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "術攻撃" in keywords or "術強化" in keywords
+	return "術攻撃" in keywords or "強化術" in keywords
 
-## 術強化スキルを持つかチェック
+## 強化術スキルを持つかチェック
 ##
-## クリーチャーが術強化スキルを持っているか判定する
+## クリーチャーが強化術スキルを持っているか判定する
 ##
 ## @param creature_data: クリーチャーデータ
-## @return bool: 術強化スキルを持つ場合はtrue
+## @return bool: 強化術スキルを持つ場合はtrue
 static func has_power_strike(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "術強化" in keywords
+	return "強化術" in keywords

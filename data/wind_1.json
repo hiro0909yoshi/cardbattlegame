@@ -67,15 +67,15 @@
 			},
 			"ap": 20,
 			"hp": 30,
-			"ability": "術強化・アルカナアーツ",
-			"ability_detail": "術強化；アルカナアーツ[EP30・対象から手札のスペルの数×40EPを奪う]",
+			"ability": "強化術・アルカナアーツ",
+			"ability_detail": "強化術；アルカナアーツ[EP30・対象から手札のスペルの数×40EPを奪う]",
 			"ability_parsed": {
 				"keywords": [
-					"術強化",
+					"強化術",
 					"アルカナアーツ"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}
@@ -101,15 +101,15 @@
 			},
 			"ap": 50,
 			"hp": 50,
-			"ability": "先制・術強化・アルカナアーツ",
-			"ability_detail": "先制；術強化；アルカナアーツ[EP50・対象敵クリーチャーのMHP-10]",
+			"ability": "先制・強化術・アルカナアーツ",
+			"ability_detail": "先制；強化術；アルカナアーツ[EP50・対象敵クリーチャーのMHP-10]",
 			"ability_parsed": {
 				"keywords": [
 					"先制",
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				},
@@ -176,15 +176,15 @@
 			},
 			"ap": 10,
 			"hp": 20,
-			"ability": "術強化・伝染",
-			"ability_detail": "術強化；これに刻印付与時、同じ刻印を使用者の全ドミニオにつけ、ダウンする",
+			"ability": "強化術・伝染",
+			"ability_detail": "強化術；これに刻印付与時、同じ刻印を使用者の全ドミニオにつけ、ダウンする",
 			"ability_parsed": {
 				"keywords": [
-					"術強化",
+					"強化術",
 					"伝染"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}

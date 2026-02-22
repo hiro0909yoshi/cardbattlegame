@@ -3,11 +3,11 @@
 ##
 ## 【主な機能】
 ## - 通常の強化: 条件付きでAP上昇
-## - 術強化: 巻物使用時に無条件でAP×1.5
+## - 強化術: 巻物使用時に無条件でAP×1.5
 ##
 ## 【発動条件】
 ## - 通常の強化: ConditionChecker.check_power_strike()で条件判定
-## - 術強化: 巻物使用 + 術強化キーワード保持
+## - 強化術: 巻物使用 + 強化術キーワード保持
 ##
 ## 【効果】
 ## - AP上昇（条件により倍率が変わる）
@@ -17,13 +17,13 @@
 
 class_name SkillPowerStrike
 
-## 術強化を持っているかチェック
+## 強化術を持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 術強化スキルを持っているか
+## @return 強化術スキルを持っているか
 static func has_scroll_power_strike(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "術強化" in keywords
+	return "強化術" in keywords
 
 ## 通常の強化を持っているかチェック
 ##
@@ -33,7 +33,7 @@ static func has_power_strike(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
 	return "強化" in keywords
 
-## 強化スキルを適用（術強化を含む）
+## 強化スキルを適用（強化術を含む）
 ##
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
@@ -42,8 +42,8 @@ static func apply(participant, context: Dictionary, silent: bool = false, effect
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 術強化判定（最優先）
-	if "術強化" in keywords and participant.is_using_scroll:
+	# 強化術判定（最優先）
+	if "強化術" in keywords and participant.is_using_scroll:
 		apply_scroll_power_strike(participant, context, silent)
 		return
 	
@@ -51,7 +51,7 @@ static func apply(participant, context: Dictionary, silent: bool = false, effect
 	if "強化" in keywords:
 		apply_normal_power_strike(participant, context, silent, effect_combat)
 
-## 術強化を適用
+## 強化術を適用
 ##
 ## 無条件でAP×1.5
 ##
@@ -60,7 +60,7 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
-	# 術強化効果を検索
+	# 強化術効果を検索
 	for effect in effects:
 		if effect.get("effect_type") == "scroll_power_strike":
 			# 条件チェック
@@ -80,19 +80,19 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 				var multiplier = effect.get("multiplier", 1.5)
 				participant.current_ap = int(participant.current_ap * multiplier)
 				if not silent:
-					print("【術強化発動】", participant.creature_data.get("name", "?"),
+					print("【強化術発動】", participant.creature_data.get("name", "?"),
 						  " AP: ", before_ap, " → ", participant.current_ap, " (×", multiplier, ")")
 				return true
 			else:
 				if not silent:
-					print("【術強化不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の術攻撃")
+					print("【強化術不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の術攻撃")
 				return false
 
-	# 術強化効果が見つからない場合（無条件の術強化）
+	# 強化術効果が見つからない場合（無条件の強化術）
 	var original_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * 1.5)
 	if not silent:
-		print("【術強化発動】", participant.creature_data.get("name", "?"),
+		print("【強化術発動】", participant.creature_data.get("name", "?"),
 			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
 	return true
 

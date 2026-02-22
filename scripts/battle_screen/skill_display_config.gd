@@ -74,7 +74,7 @@ const CONFIG = {
 		"sound": ""
 	},
 	"scroll_power_strike": {
-		"name": "術強化",
+		"name": "強化術",
 		"effect": "",
 		"sound": ""
 	},

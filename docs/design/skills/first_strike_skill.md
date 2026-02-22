@@ -195,7 +195,7 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 | ID | 名前 | その他スキル |
 |----|------|-------------|
 | 300 | アームドプリンセス | 加勢・結界 |
-| 303 | エアロダッチェス | 術強化・アルカナアーツ |
+| 303 | エアロダッチェス | 強化術・アルカナアーツ |
 | 304 | エルフアーチャー | アルカナアーツ |
 | 306 | カラドリウス | アルカナアーツ |
 | 308 | キリン | 共鳴 |
@@ -220,7 +220,7 @@ func _determine_attack_order(attacker: BattleParticipant, defender: BattlePartic
 | 418 | シャドウガイスト | APドレイン・奮闘 |
 | 419 | スカイギア | 加勢・合体 |
 | 428 | ニルーバーナ | 加勢・アルカナアーツ |
-| 429 | ニンジャ | 術強化 |
+| 429 | ニンジャ | 強化術 |
 
 ---
 

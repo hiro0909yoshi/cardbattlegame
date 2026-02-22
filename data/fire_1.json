@@ -411,15 +411,15 @@
 			},
 			"ap": 20,
 			"hp": 30,
-			"ability": "術強化",
-			"ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にケルベロスを召喚し自滅]",
+			"ability": "強化術",
+			"ability_detail": "強化術；アルカナアーツ[EP80・好きな空地にケルベロスを召喚し自滅]",
 			"ability_parsed": {
 				"keywords": [
-					"術強化",
+					"強化術",
 					"アルカナアーツ"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				},

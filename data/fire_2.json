@@ -502,14 +502,14 @@
 			},
 			"ap": 20,
 			"hp": 40,
-			"ability": "アルカナアーツ・術強化",
-			"ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；術強化",
+			"ability": "アルカナアーツ・強化術",
+			"ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；強化術",
 			"ability_parsed": {
 				"keywords": [
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}

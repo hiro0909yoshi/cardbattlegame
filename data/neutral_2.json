@@ -85,15 +85,15 @@
 			},
 			"ap": 40,
 			"hp": 40,
-			"ability": "先制・術強化",
-			"ability_detail": "先制；術強化",
+			"ability": "先制・強化術",
+			"ability_detail": "先制；強化術",
 			"ability_parsed": {
 				"keywords": [
 					"先制",
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				}

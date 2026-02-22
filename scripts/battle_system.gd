@@ -459,8 +459,8 @@ func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
 	# 術攻撃設定を削除（バトル中のみ使用）
 	if keyword_conditions.has("術攻撃"):
 		keyword_conditions.erase("術攻撃")
-	if keyword_conditions.has("術強化"):
-		keyword_conditions.erase("術強化")
+	if keyword_conditions.has("強化術"):
+		keyword_conditions.erase("強化術")
 
 	# 無効化がArrayに変換されていた場合、元のDictionary形式に復元
 	if keyword_conditions.has("無効化") and keyword_conditions["無効化"] is Array:

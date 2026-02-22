@@ -297,12 +297,12 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 			print("【スクイドマントル】刺突を無効化")
 	
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
-		# 術強化か術攻撃かを判定
+		# 強化術か術攻撃かを判定
 		var attacker_ability = attacker.creature_data.get("ability_parsed", {})
 		var attacker_keywords = attacker_ability.get("keywords", [])
-		var is_scroll_power_strike = "術強化" in attacker_keywords
+		var is_scroll_power_strike = "強化術" in attacker_keywords
 		var scroll_skill_key = "scroll_power_strike" if is_scroll_power_strike else "scroll_attack"
-		var scroll_skill_name = "術強化" if is_scroll_power_strike else "術攻撃"
+		var scroll_skill_name = "強化術" if is_scroll_power_strike else "術攻撃"
 		if not silent:
 			print("【%s】防御側の土地ボーナス %d を無効化" % [scroll_skill_name, defender.land_bonus_hp])
 		defender_before = _snapshot_stats(defender)
@@ -427,15 +427,15 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	# 7. 2回攻撃スキル
 	check_double_attack(participant, context)
 	
-	# 8. 巻物使用時のAP固定（術攻撃 or 術強化を区別して表示）
+	# 8. 巻物使用時のAP固定（術攻撃 or 強化術を区別して表示）
 	if participant.is_using_scroll:
 		before = _snapshot_stats(participant)
 		_apply_scroll_ap_fix(participant, context)
-		# 術強化を持っているか判定
+		# 強化術を持っているか判定
 		var ability_parsed_scroll = participant.creature_data.get("ability_parsed", {})
 		var keywords_scroll = ability_parsed_scroll.get("keywords", [])
 		var scroll_display_name: String
-		if "術強化" in keywords_scroll:
+		if "強化術" in keywords_scroll:
 			scroll_display_name = SkillDisplayConfig.get_skill_name("scroll_power_strike")
 		else:
 			scroll_display_name = scroll_attack_name
@@ -443,16 +443,16 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 
 
 ## 巻物使用時のAP固定処理
-## 注: 術強化の×1.5は SkillScrollAttack.apply() 内で処理済み
+## 注: 強化術の×1.5は SkillScrollAttack.apply() 内で処理済み
 func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 	
-	# 術強化の場合は SkillScrollAttack.apply() で処理済みなので何もしない
-	if "術強化" in keywords:
+	# 強化術の場合は SkillScrollAttack.apply() で処理済みなので何もしない
+	if "強化術" in keywords:
 		if not silent:
-			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（術強化適用済み）")
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（強化術適用済み）")
 		return
 	
 	# 術攻撃のみの場合
@@ -827,7 +827,7 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 4. 先制・後手スキルを適用
 	FirstStrikeSkill.apply(participant, silent)
 	
-	# 5. 強化スキルを適用（術強化を含む）
+	# 5. 強化スキルを適用（強化術を含む）
 	apply_power_strike_skills(participant, context)
 	
 	# 6. 術攻撃判定
@@ -837,14 +837,14 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	check_double_attack(participant, context)
 	
 	# 8. 巻物使用中の場合、AP最終確認
-	# 注: 術強化の×1.5は SkillScrollAttack.apply() 内で処理済み
+	# 注: 強化術の×1.5は SkillScrollAttack.apply() 内で処理済み
 	if participant.is_using_scroll:
 		var ability_parsed = participant.creature_data.get("ability_parsed", {})
 		var keywords = ability_parsed.get("keywords", [])
 		
-		# 術強化の場合は SkillScrollAttack.apply() で処理済み
-		if "術強化" in keywords:
-			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（術強化適用済み）")
+		# 強化術の場合は SkillScrollAttack.apply() で処理済み
+		if "強化術" in keywords:
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（強化術適用済み）")
 		else:
 			# 術攻撃のみの場合、AP最終固定
 			var keyword_conditions = ability_parsed.get("keyword_conditions", {})
@@ -887,7 +887,7 @@ func check_double_attack(participant: BattleParticipant, context: Dictionary) ->
 	
 	DoubleAttackSkill.apply(participant, silent)
 
-## 強化スキル適用（術強化を含む）
+## 強化スキル適用（強化術を含む）
 func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強化無効化
 	var opponent = context.get("opponent")

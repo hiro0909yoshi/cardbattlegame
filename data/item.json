@@ -354,7 +354,7 @@
 	  "cost": {
 		"ep": 70
 	  },
-	  "effect": "術攻撃[AP40]；敵と同じクリーチャー配置時、術強化",
+	  "effect": "術攻撃[AP40]；敵と同じクリーチャー配置時、強化術",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -364,7 +364,7 @@
 		  },
 		  {
 			"effect_type": "grant_skill",
-			"skill": "術強化",
+			"skill": "強化術",
 			"skill_conditions": [
 			  {
 				"condition_type": "same_creature_count_check",
@@ -880,7 +880,7 @@
 	  "cost": {
 		"ep": 90
 	  },
-	  "effect": "術攻撃[AP=水風自ドミニオ数×10]；術強化[火地]",
+	  "effect": "術攻撃[AP=水風自ドミニオ数×10]；強化術[火地]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -894,7 +894,7 @@
 		  },
 		  {
 			"effect_type": "grant_skill",
-			"skill": "術強化",
+			"skill": "強化術",
 			"skill_conditions": [
 			  {
 				"condition_type": "enemy_is_element",
@@ -945,7 +945,7 @@
 	  "cost": {
 		"ep": 60
 	  },
-	  "effect": "術攻撃[AP30]；無以外使用時、術強化；アイテム破壊・盗み無効",
+	  "effect": "術攻撃[AP30]；無以外使用時、強化術；アイテム破壊・盗み無効",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -955,7 +955,7 @@
 		  },
 		  {
 			"effect_type": "grant_skill",
-			"skill": "術強化",
+			"skill": "強化術",
 			"skill_conditions": [
 			  {
 				"condition_type": "user_element",
@@ -1265,7 +1265,7 @@
 	  "cost": {
 		"ep": 90
 	  },
-	  "effect": "術攻撃[AP=火地自ドミニオ数×10]；術強化[水風]",
+	  "effect": "術攻撃[AP=火地自ドミニオ数×10]；強化術[水風]",
 	  "effect_parsed": {
 		"effects": [
 		  {
@@ -1279,7 +1279,7 @@
 		  },
 		  {
 			"effect_type": "grant_skill",
-			"skill": "術強化",
+			"skill": "強化術",
 			"skill_conditions": [
 			  {
 				"condition_type": "enemy_is_element",

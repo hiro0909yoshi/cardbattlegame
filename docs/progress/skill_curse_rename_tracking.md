@@ -43,7 +43,7 @@
 | # | 旧名 | 新名 | effect_type | 名前決定 | JSON | GDScript | config |
 |---|---|---|---|---|---|---|---|
 | 1 | 強打 | 強化 | power_strike | [x] | [x] | [x] | [x] |
-| 2 | 巻物強打 | 術強化 | scroll_power_strike | [x] | [x] | [x] | [x] |
+| 2 | 巻物強打 | 強化術 | scroll_power_strike | [x] | [x] | [x] | [x] |
 | 3 | 貫通 | 刺突 | penetration | [x] | [x] | [x] | [x] |
 | 4 | 感応 | 共鳴 | resonance | [x] | [x] | [x] | [x] |
 | 5 | 応援 | 鼓舞 | support | [x] | [x] | [x] | [x] |

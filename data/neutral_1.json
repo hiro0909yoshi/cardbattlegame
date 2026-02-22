@@ -177,14 +177,14 @@
 			},
 			"ap": 40,
 			"hp": 50,
-			"ability": "オーガ配置時能力値上昇・術強化",
-			"ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；術強化",
+			"ability": "オーガ配置時能力値上昇・強化術",
+			"ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；強化術",
 			"ability_parsed": {
 				"keywords": [
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				},

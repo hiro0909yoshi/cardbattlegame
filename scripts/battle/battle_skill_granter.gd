@@ -23,7 +23,7 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 		"2回攻撃":
 			DoubleAttackSkill.grant_skill(participant)
 		
-		"術強化":
+		"強化術":
 			_grant_scroll_power_strike(participant, _skill_data)
 		
 		"強化":
@@ -41,7 +41,7 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 		_:
 			print("  未実装のスキル: ", skill_name)
 
-## 術強化スキル付与
+## 強化術スキル付与
 func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -51,8 +51,8 @@ func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dict
 	if not ability_parsed.has("keywords"):
 		ability_parsed["keywords"] = []
 	
-	if not "術強化" in ability_parsed["keywords"]:
-		ability_parsed["keywords"].append("術強化")
+	if not "強化術" in ability_parsed["keywords"]:
+		ability_parsed["keywords"].append("強化術")
 	
 	if not ability_parsed.has("effects"):
 		ability_parsed["effects"] = []
@@ -65,7 +65,7 @@ func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dict
 	}
 	
 	ability_parsed["effects"].append(scroll_power_strike_effect)
-	print("  術強化スキル付与（条件数: ", skill_conditions.size(), "）")
+	print("  強化術スキル付与（条件数: ", skill_conditions.size(), "）")
 
 ## 強化スキル付与
 func _grant_power_strike(participant: BattleParticipant, skill_data: Dictionary) -> void:

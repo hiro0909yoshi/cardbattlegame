@@ -187,14 +187,14 @@
 			},
 			"ap": 30,
 			"hp": 40,
-			"ability": "アイテム使用時術強化",
-			"ability_detail": "アイテム使用の戦闘後、カード獲得；術強化",
+			"ability": "アイテム使用時強化術",
+			"ability_detail": "アイテム使用の戦闘後、カード獲得；強化術",
 			"ability_parsed": {
 				"keywords": [
-					"術強化"
+					"強化術"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				},
@@ -769,16 +769,16 @@
 			},
 			"ap": 20,
 			"hp": 20,
-			"ability": "術強化・アルカナアーツ",
-			"ability_detail": "術強化；結界；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
+			"ability": "強化術・アルカナアーツ",
+			"ability_detail": "強化術；結界；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
 			"ability_parsed": {
 				"keywords": [
-					"術強化",
+					"強化術",
 					"結界",
 					"アルカナアーツ"
 				],
 				"keyword_conditions": {
-					"術強化": {
+					"強化術": {
 						"scroll_type": "base_ap"
 					}
 				},
