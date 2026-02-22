@@ -539,7 +539,7 @@
 		},
 		{
 			"id": 141,
-			"name": "フォーエヴァーガード",
+			"name": "プロテウス",
 			"dev_name": "マカラ",
 			"rarity": "S",
 			"type": "creature",
@@ -617,7 +617,7 @@
 		},
 		{
 			"id": 143,
-			"name": "プレデタージョーズ",
+			"name": "エーギル",
 			"dev_name": "メガロドン",
 			"rarity": "N",
 			"type": "creature",
@@ -750,7 +750,7 @@
 		},
 		{
 			"id": 147,
-			"name": "マジックバンディット",
+			"name": "エンキ",
 			"dev_name": "ルーンアデプト",
 			"rarity": "R",
 			"type": "creature",
