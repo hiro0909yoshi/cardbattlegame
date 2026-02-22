@@ -43,12 +43,12 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "アルカナアーツ・アイテム破壊無効・不屈",
-      "ability_detail": "アルカナアーツ[EP30・対象ドミニオの呪いを消す]；アイテム破壊・盗み無効；不屈",
+      "ability": "アルカナアーツ・アイテム破壊無効・奮闘",
+      "ability_detail": "アルカナアーツ[EP30・対象ドミニオの呪いを消す]；アイテム破壊・盗み無効；奮闘",
       "ability_parsed": {
         "keywords": [
           "アルカナアーツ",
-          "不屈"
+          "奮闘"
         ],
         "item_immunity": [
           "destroy",
@@ -138,17 +138,17 @@
       },
       "ap": 60,
       "hp": 60,
-      "ability": "先制・無効化・援護・合体",
-      "ability_detail": "先制；無効化[巻物]；援護[無]；合体[ビーストギア]",
+      "ability": "先制・無効化・加勢・合体",
+      "ability_detail": "先制；無効化[巻物]；加勢[無]；合体[ビーストギア]",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "先制",
           "無効化",
           "合体"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "neutral"
             ]
@@ -177,14 +177,14 @@
       },
       "ap": 40,
       "hp": 50,
-      "ability": "オーガ配置時能力値上昇・巻物強打",
-      "ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；巻物強打",
+      "ability": "オーガ配置時能力値上昇・術強化",
+      "ability_detail": "火風オーガ配置時AP+20、水地オーガ配置時HP+20；術強化",
       "ability_parsed": {
         "keywords": [
-          "巻物強打"
+          "術強化"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         },
@@ -229,13 +229,13 @@
       },
       "ap": 80,
       "hp": 80,
-      "ability": "先制・防魔・無効化",
-      "ability_detail": "先制；防魔；無効化[巻物]",
+      "ability": "先制・結界・無効化",
+      "ability_detail": "先制；結界；無効化[巻物]",
       "ability_parsed": {
         "keywords": [
           "先制",
           "無効化",
-          "防魔"
+          "結界"
         ],
         "keyword_conditions": {
           "無効化": {
@@ -262,16 +262,16 @@
       },
       "ap": 20,
       "hp": 40,
-      "ability": "援護・合体・無効化",
-      "ability_detail": "援護；合体[スカイギア]；無効化[巻物]",
+      "ability": "加勢・合体・無効化",
+      "ability_detail": "加勢；合体[スカイギア]；無効化[巻物]",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "無効化",
           "合体"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -298,12 +298,12 @@
       },
       "ap": 10,
       "hp": 30,
-      "ability": "EP獲得・破壊時EP遺産",
-      "ability_detail": "EP獲得[EP100]；戦闘やスペルで破壊時、遺産[EP100]",
+      "ability": "蓄魔・破壊時EP形見",
+      "ability_detail": "蓄魔[EP100]；戦闘やスペルで破壊時、形見[EP100]",
       "ability_parsed": {
         "keywords": [
-          "EP獲得",
-          "遺産"
+          "蓄魔",
+          "形見"
         ],
         "effects": [
           {
@@ -338,13 +338,13 @@
       "creature_type": "defensive",
       "ap": 0,
       "hp": 30,
-      "ability": "防御型・通行料変化・死者復活",
-      "ability_detail": "防御型；通行料変化[EP0]；死者復活[ティラノサウルス]",
+      "ability": "堅守・課税・蘇生",
+      "ability_detail": "堅守；課税[EP0]；蘇生[ティラノサウルス]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
-          "通行料変化",
-          "死者復活"
+          "堅守",
+          "課税",
+          "蘇生"
         ],
         "effects": [
           {
@@ -353,7 +353,7 @@
           {
             "effect_type": "toll_change",
             "value": 0,
-            "description": "通行料変化[EP0]"
+            "description": "課税[EP0]"
           },
           {
             "effect_type": "revive",
@@ -416,13 +416,13 @@
       "creature_type": "defensive",
       "ap": 0,
       "hp": 30,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；アルカナアーツ[EP0・使用者にEP200を与え、自壊]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP0・使用者にEP200を与え、自滅]",
       "ability_parsed": {
         "effects": [
           {
             "effect_type": "defensive",
-            "description": "防御型"
+            "description": "堅守"
           }
         ],
         "mystic_art": {
@@ -548,12 +548,12 @@
       },
       "ap": 40,
       "hp": 30,
-      "ability": "先制・APドレイン・不屈",
-      "ability_detail": "先制；APドレイン；不屈",
+      "ability": "先制・APドレイン・奮闘",
+      "ability_detail": "先制；APドレイン；奮闘",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "不屈"
+          "奮闘"
         ],
         "effects": [
           {
@@ -581,16 +581,16 @@
       },
       "ap": 40,
       "hp": 20,
-      "ability": "援護・合体・先制",
-      "ability_detail": "援護；合体[グランギア]；先制",
+      "ability": "加勢・合体・先制",
+      "ability_detail": "加勢；合体[グランギア]；先制",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "先制",
           "合体"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -643,8 +643,8 @@
       "creature_type": "defensive",
       "ap": 0,
       "hp": 50,
-      "ability": "防御型・周回回復不可",
-      "ability_detail": "防御型；周回回復不可",
+      "ability": "堅守・周回回復不可",
+      "ability_detail": "堅守；周回回復不可",
       "ability_parsed": {
         "keywords": [
           "周回回復不可"
@@ -668,14 +668,14 @@
       },
       "ap": 50,
       "hp": 50,
-      "ability": "通行料変化",
-      "ability_detail": "通行料変化[1/2]",
+      "ability": "課税",
+      "ability_detail": "課税[1/2]",
       "ability_parsed": {
         "effects": [
           {
             "effect_type": "toll_change",
             "multiplier": 0.5,
-            "description": "通行料変化[1/2]"
+            "description": "課税[1/2]"
           }
         ]
       }
@@ -699,12 +699,12 @@
       "creature_type": "defensive",
       "ap": 10,
       "hp": 30,
-      "ability": "防御型・防魔・アルカナアーツ",
-      "ability_detail": "防御型；防魔；アルカナアーツ[EP100・対象ドミニオを無に変え、自壊]",
+      "ability": "堅守・結界・アルカナアーツ",
+      "ability_detail": "堅守；結界；アルカナアーツ[EP100・対象ドミニオを無に変え、自滅]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
-          "防魔",
+          "堅守",
+          "結界",
           "アルカナアーツ"
         ]
       },

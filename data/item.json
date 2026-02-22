@@ -176,7 +176,7 @@
       "cost": {
         "ep": 90
       },
-      "effect": "巻物攻撃[AP=基本AP]",
+      "effect": "術攻撃[AP=基本AP]",
       "effect_parsed": {
         "effects": [
           {
@@ -263,7 +263,7 @@
       "cost": {
         "ep": 0
       },
-      "effect": "遺産[MHP×7EP]",
+      "effect": "形見[MHP×7EP]",
       "effect_parsed": {
         "effects": [
           {
@@ -284,7 +284,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "AP+40；攻撃で敵非破壊時、EP獲得[EP200]",
+      "effect": "AP+40；攻撃で敵非破壊時、蓄魔[EP200]",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 40
@@ -354,7 +354,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "巻物攻撃[AP40]；敵と同じクリーチャー配置時、巻物強打",
+      "effect": "術攻撃[AP40]；敵と同じクリーチャー配置時、術強化",
       "effect_parsed": {
         "effects": [
           {
@@ -364,7 +364,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "巻物強打",
+            "skill": "術強化",
             "skill_conditions": [
               {
                 "condition_type": "same_creature_count_check",
@@ -525,7 +525,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "AP+20；水風使用時、強打",
+      "effect": "AP+20；水風使用時、強化",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 20
@@ -533,7 +533,7 @@
         "effects": [
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "skill_conditions": [
               {
                 "condition_type": "user_element",
@@ -557,7 +557,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "AP+水風配置数×5；強打[火地]",
+      "effect": "AP+水風配置数×5；強化[火地]",
       "effect_parsed": {
         "effects": [
           {
@@ -571,7 +571,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "skill_conditions": [
               {
                 "condition_type": "enemy_is_element",
@@ -595,7 +595,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "巻物攻撃[AP40]",
+      "effect": "術攻撃[AP40]",
       "effect_parsed": {
         "effects": [
           {
@@ -728,7 +728,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "HP+40；EP獲得[受けたダメージ×5EP]",
+      "effect": "HP+40；蓄魔[受けたダメージ×5EP]",
       "effect_parsed": {
         "stat_bonus": {
           "hp": 40
@@ -752,7 +752,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "巻物攻撃[AP30]；復帰[手札]",
+      "effect": "術攻撃[AP30]；復帰[手札]",
       "effect_parsed": {
         "effects": [
           {
@@ -880,7 +880,7 @@
       "cost": {
         "ep": 90
       },
-      "effect": "巻物攻撃[AP=水風自ドミニオ数×10]；巻物強打[火地]",
+      "effect": "術攻撃[AP=水風自ドミニオ数×10]；術強化[火地]",
       "effect_parsed": {
         "effects": [
           {
@@ -894,7 +894,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "巻物強打",
+            "skill": "術強化",
             "skill_conditions": [
               {
                 "condition_type": "enemy_is_element",
@@ -918,7 +918,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "AP+20；強制変化[使用クリーチャー]",
+      "effect": "AP+20；変質[使用クリーチャー]",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 20
@@ -945,7 +945,7 @@
       "cost": {
         "ep": 60
       },
-      "effect": "巻物攻撃[AP30]；無以外使用時、巻物強打；アイテム破壊・盗み無効",
+      "effect": "術攻撃[AP30]；無以外使用時、術強化；アイテム破壊・盗み無効",
       "effect_parsed": {
         "effects": [
           {
@@ -955,7 +955,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "巻物強打",
+            "skill": "術強化",
             "skill_conditions": [
               {
                 "condition_type": "user_element",
@@ -1095,7 +1095,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "AP+20；貫通",
+      "effect": "AP+20；刺突",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 20
@@ -1103,7 +1103,7 @@
         "effects": [
           {
             "effect_type": "grant_skill",
-            "skill": "貫通"
+            "skill": "刺突"
           }
         ]
       }
@@ -1137,7 +1137,7 @@
       "cost": {
         "ep": 50
       },
-      "effect": "AP+30；HP+20；雪辱[敵のMHP-40]",
+      "effect": "AP+30；HP+20；報復[敵のMHP-40]",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 30,
@@ -1185,10 +1185,10 @@
       "cost": {
         "ep": 60
       },
-      "effect": "死者復活[スケルトン]",
+      "effect": "蘇生[スケルトン]",
       "effect_parsed": {
         "keywords": [
-          "死者復活"
+          "蘇生"
         ],
         "effects": [
           {
@@ -1210,7 +1210,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "巻物攻撃[AP50]；変身[スケルトン]",
+      "effect": "術攻撃[AP50]；変身[スケルトン]",
       "effect_parsed": {
         "effects": [
           {
@@ -1239,7 +1239,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "AP&HP+20；道連れ",
+      "effect": "AP&HP+20；相討",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 20,
@@ -1265,7 +1265,7 @@
       "cost": {
         "ep": 90
       },
-      "effect": "巻物攻撃[AP=火地自ドミニオ数×10]；巻物強打[水風]",
+      "effect": "術攻撃[AP=火地自ドミニオ数×10]；術強化[水風]",
       "effect_parsed": {
         "effects": [
           {
@@ -1279,7 +1279,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "巻物強打",
+            "skill": "術強化",
             "skill_conditions": [
               {
                 "condition_type": "enemy_is_element",
@@ -1303,7 +1303,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "AP+30；攻撃成功時、敵に呪い\"戦闘行動不可\"",
+      "effect": "AP+30；攻撃成功時、敵に呪い\"消沈\"",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 30
@@ -1313,7 +1313,7 @@
             "effect_type": "apply_curse",
             "trigger": "on_attack_success",
             "curse_type": "battle_disable",
-            "name": "戦闘行動不可"
+            "name": "消沈"
           }
         ]
       }
@@ -1329,7 +1329,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "AP+30；即死[防御型]",
+      "effect": "AP+30；即死[堅守]",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 30
@@ -1447,7 +1447,7 @@
       "cost": {
         "ep": 40
       },
-      "effect": "AP+40；レアリティNが使用時、強打",
+      "effect": "AP+40；レアリティNが使用時、強化",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 40
@@ -1455,7 +1455,7 @@
         "effects": [
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "skill_conditions": [
               {
                 "condition_type": "user_rarity",
@@ -1546,7 +1546,7 @@
       "cost": {
         "ep": 60
       },
-      "effect": "AP+30；強打[MHP40以上]",
+      "effect": "AP+30；強化[MHP40以上]",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 30
@@ -1554,7 +1554,7 @@
         "effects": [
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "skill_conditions": [
               {
                 "condition_type": "enemy_max_hp_check",
@@ -1635,7 +1635,7 @@
       "cost": {
         "ep": 20
       },
-      "effect": "AP+20；火地使用時、強打",
+      "effect": "AP+20；火地使用時、強化",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 20
@@ -1643,7 +1643,7 @@
         "effects": [
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "condition": {
               "condition_type": "user_element",
               "elements": [
@@ -1664,7 +1664,7 @@
       "cost": {
         "ep": 70
       },
-      "effect": "AP+火地配置数×5；強打[水風]",
+      "effect": "AP+火地配置数×5；強化[水風]",
       "effect_parsed": {
         "effects": [
           {
@@ -1678,7 +1678,7 @@
           },
           {
             "effect_type": "grant_skill",
-            "skill": "強打",
+            "skill": "強化",
             "skill_conditions": [
               {
                 "condition_type": "enemy_is_element",
@@ -1768,7 +1768,7 @@
       "cost": {
         "ep": 30
       },
-      "effect": "AP+30；攻撃成功時、敵に呪い\"通行料無効\"",
+      "effect": "AP+30；攻撃成功時、敵に呪い\"免罪\"",
       "effect_parsed": {
         "stat_bonus": {
           "ap": 30
@@ -1778,7 +1778,7 @@
             "effect_type": "apply_curse",
             "trigger": "on_attack_success",
             "curse_type": "creature_toll_disable",
-            "name": "通行料無効"
+            "name": "免罪"
           }
         ]
       }

@@ -1,5 +1,5 @@
 ## CPU防御側判断AI
-## 防御時のアイテム/援護/合体の判断を行う
+## 防御時のアイテム/加勢/合体の判断を行う
 class_name CPUDefenseAI
 extends RefCounted
 
@@ -159,7 +159,7 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 			print("[CPUDefenseAI] ワーストケースでも安全 → パス")
 			return result
 	
-	# 6. 勝てるアイテム・援護を探す
+	# 6. 勝てるアイテム・加勢を探す
 	var armor_count = _count_armor_in_hand(player_id)
 	
 	var item_results = {"normal": [], "reserve": []}
@@ -174,17 +174,17 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 	var winning_assists = assist_results.normal
 	var reserve_assists = assist_results.reserve
 	
-	print("[CPUDefenseAI] 通常アイテム:%d 温存アイテム:%d 通常援護:%d 温存援護:%d 防具:%d" % [
+	print("[CPUDefenseAI] 通常アイテム:%d 温存アイテム:%d 通常加勢:%d 温存加勢:%d 防具:%d" % [
 		winning_items.size(), reserve_items.size(),
 		winning_assists.size(), reserve_assists.size(),
 		armor_count
 	])
 	
-	# 7. 優先順位で選択（防具2枚以下 or アイテム使用不可 → 援護優先）
+	# 7. 優先順位で選択（防具2枚以下 or アイテム使用不可 → 加勢優先）
 	if should_avoid_items or armor_count <= 2:
 		if not winning_assists.is_empty():
 			var best = _select_best_by_cost(winning_assists)
-			print("[CPUDefenseAI] 援護選択: %s" % best.data.get("name", "?"))
+			print("[CPUDefenseAI] 加勢選択: %s" % best.data.get("name", "?"))
 			result.action = "support"
 			result.creature = best.data
 			result.index = best.index
@@ -204,7 +204,7 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 			return result
 		if not winning_assists.is_empty():
 			var best = _select_best_by_cost(winning_assists)
-			print("[CPUDefenseAI] 援護選択: %s" % best.data.get("name", "?"))
+			print("[CPUDefenseAI] 加勢選択: %s" % best.data.get("name", "?"))
 			result.action = "support"
 			result.creature = best.data
 			result.index = best.index
@@ -215,7 +215,7 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 		if should_avoid_items or armor_count <= 2:
 			if not reserve_assists.is_empty():
 				var best = _select_best_by_cost(reserve_assists)
-				print("[CPUDefenseAI] 温存援護使用(Lv%d): %s" % [tile_level, best.data.get("name", "?")])
+				print("[CPUDefenseAI] 温存加勢使用(Lv%d): %s" % [tile_level, best.data.get("name", "?")])
 				result.action = "support"
 				result.creature = best.data
 				result.index = best.index
@@ -235,7 +235,7 @@ func decide_defense_action(defense_context: Dictionary) -> Dictionary:
 				return result
 			if not reserve_assists.is_empty():
 				var best = _select_best_by_cost(reserve_assists)
-				print("[CPUDefenseAI] 温存援護使用(Lv%d): %s" % [tile_level, best.data.get("name", "?")])
+				print("[CPUDefenseAI] 温存加勢使用(Lv%d): %s" % [tile_level, best.data.get("name", "?")])
 				result.action = "support"
 				result.creature = best.data
 				result.index = best.index
@@ -586,7 +586,7 @@ func _is_worse_for_defender(result_a: Dictionary, result_b: Dictionary) -> bool:
 
 #endregion
 
-#region アイテム/援護検索
+#region アイテム/加勢検索
 
 func _find_winning_items(player_id: int, defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int, current_outcome: int) -> Dictionary:
 	var result = { "normal": [], "reserve": [] }
@@ -645,7 +645,7 @@ func _find_winning_items(player_id: int, defender: Dictionary, attacker: Diction
 func _find_winning_assists(player_id: int, defender: Dictionary, attacker: Dictionary, tile_info: Dictionary, attacker_player_id: int, current_outcome: int) -> Dictionary:
 	var result = { "normal": [], "reserve": [] }
 	
-	# 援護スキルチェック
+	# 加勢スキルチェック
 	if not _has_assist_skill(defender):
 		return result
 	
@@ -664,7 +664,7 @@ func _find_winning_assists(player_id: int, defender: Dictionary, attacker: Dicti
 		if card.get("type", "") != "creature":
 			continue
 		
-		# 援護対象属性チェック
+		# 加勢対象属性チェック
 		var element = card.get("element", "")
 		if not target_elements.is_empty() and not "all" in target_elements:
 			if not element in target_elements:
@@ -674,7 +674,7 @@ func _find_winning_assists(player_id: int, defender: Dictionary, attacker: Dicti
 		if cost > current_player.magic_power:
 			continue
 		
-		# 援護を適用した防御側でシミュレーション
+		# 加勢を適用した防御側でシミュレーション
 		var defender_with_assist = defender.duplicate(true)
 		defender_with_assist["ap"] = defender_with_assist.get("ap", 0) + card.get("ap", 0)
 		defender_with_assist["hp"] = defender_with_assist.get("hp", 0) + card.get("hp", 0)
@@ -703,12 +703,12 @@ func _find_winning_assists(player_id: int, defender: Dictionary, attacker: Dicti
 func _has_assist_skill(creature: Dictionary) -> bool:
 	var ability_parsed = creature.get("ability_parsed", {})
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	return keyword_conditions.has("援護")
+	return keyword_conditions.has("加勢")
 
 func _get_assist_target_elements(creature: Dictionary) -> Array:
 	var ability_parsed = creature.get("ability_parsed", {})
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var assist_info = keyword_conditions.get("援護", {})
+	var assist_info = keyword_conditions.get("加勢", {})
 	return assist_info.get("target_elements", [])
 
 #endregion
@@ -772,7 +772,7 @@ func _select_best_by_cost(entries: Array) -> Dictionary:
 	
 	var CardRateEvaluator = load("res://scripts/cpu_ai/card_rate_evaluator.gd")
 	
-	# レートが低いものを優先（価値の低いカードを援護に使う）
+	# レートが低いものを優先（価値の低いカードを加勢に使う）
 	entries.sort_custom(func(a, b):
 		var rate_a = CardRateEvaluator.get_rate(a.data)
 		var rate_b = CardRateEvaluator.get_rate(b.data)
@@ -821,7 +821,7 @@ func _result_to_string(result: int) -> String:
 
 
 
-## リリース呪いによるアイテム制限解除をチェック
+## リリース呪いによるアイテム解放をチェック
 func _is_item_restriction_released(player_id: int) -> bool:
 	if not player_system or player_id < 0 or player_id >= player_system.players.size():
 		return false

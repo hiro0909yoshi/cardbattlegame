@@ -8,32 +8,32 @@
 
 | curse_type | 名前 | 効果 | 有利/不利 |
 |-----------|------|------|----------|
-| `stat_boost` | 能力値+20 | AP&HP+20 | 1|
-| `stat_reduce` | 能力値-20 | AP&HP-20 | 2|
-| `skill_nullify` | 戦闘能力不可 | スキル無効化 | 2|
-| `battle_disable` | 戦闘行動不可 | 戦闘不可 | 2|
+| `stat_boost` | 暁光 | AP&HP+20 | 1|
+| `stat_reduce` | 衰月 | AP&HP-20 | 2|
+| `skill_nullify` | 錯乱 | スキル無効化 | 2|
+| `battle_disable` | 消沈 | 戦闘不可 | 2|
 | `ap_nullify` | AP=0 | APを0にする | 2|
 | `mystic_grant` | アルカナアーツ付与 | アルカナアーツを付与 | 1|
-| `random_stat` | 能力値不定 | AP&HPランダム化 | 2|
-| `command_growth` | コマンド成長 | LvUP/地形変化でMHP+20 | 1|
+| `random_stat` | 狂星 | AP&HPランダム化 | 2|
+| `command_growth` | 昇華 | LvUP/地形変化でMHP+20 | 1|
 | `plague` | 衰弱 | 戦闘終了時HP -= MHP/2 | 2|
-| `bounty` | 賞金首 | 武器破壊時に術者がG獲得 | 2|
-| `forced_stop` | 強制停止 | 移動中のプレイヤーを足どめ | 1|
-| `indomitable` | 不屈 | ダウン状態にならない | 1|
-| `land_effect_disable` | 地形効果無効 | 地形効果を無効化 | 1|
-| `land_effect_grant` | 地形効果付与 | 指定属性の地形効果を付与 | 1|
+| `bounty` | 賞金 | 武器破壊時に術者がG獲得 | 2|
+| `forced_stop` | 停滞 | 移動中のプレイヤーを拘束 | 1|
+| `indomitable` | 奮闘 | ダウン状態にならない | 1|
+| `land_effect_disable` | 暗転 | 地形効果を無効化 | 1|
+| `land_effect_grant` | 恩寵 | 指定属性の地形効果を付与 | 1|
 | `metal_form` | メタルフォーム | 巻物無効化 | 1|
 | `magic_barrier` | マジックバリア | スペル対象にならない | 1|
-| `destroy_after_battle` | 戦闘後破壊 | 戦闘後に自壊 | 2|
+| `destroy_after_battle` | 崩壊 | 戦闘後に自滅 | 2|
 | `toll_multiplier` | 通行料倍率 | 通行料×倍率 | 1|
-| `peace` | 平和 | 侵略不可+通行料0 | 2|
-| `remote_move` | 遠隔移動 | 離れた空地にも移動できる | 1|
-| `spell_protection` | 防魔 | スペル・アルカナアーツの対象にならない | 1|
-| `move_disable` | 移動不可 | 移動できない | 2|
-| `protection_wall` | 防魔壁 | 防魔と防御型を持つ | 1|
-| `hp_effect_immune` | HP効果無効 | HP変動効果を無効化 | 1|
-| `blast_trap` | 爆発罠 | 敵停止時にEP40%減&HP-20 | 1|
-| `creature_toll_disable` | クリーチャー通行料無効 | そのクリーチャーの通行料が0 | 2|
+| `peace` | 安寧 | 休戦+通行料0 | 2|
+| `remote_move` | 天駆 | 離れた空地にも移動できる | 1|
+| `spell_protection` | 結界 | スペル・アルカナアーツの対象にならない | 1|
+| `move_disable` | 枷 | 移動できない | 2|
+| `protection_wall` | 重結界 | 結界と堅守を持つ | 1|
+| `hp_effect_immune` | 堅牢 | HP変動効果を無効化 | 1|
+| `blast_trap` | 焦土 | 敵停止時にEP40%減&HP-20 | 1|
+| `creature_toll_disable` | クリーチャー免罪 | そのクリーチャーの通行料が0 | 2|
 
 ---
 
@@ -43,14 +43,14 @@
 |-----------|------|------|----------|
 | `dice_fixed` | ダイス固定 | ダイスを固定値にする | 1|
 | `dice_range` | ダイス範囲 | ダイスを範囲内にする | 1|
-| `dice_range_magic` | 範囲+EP | ダイス範囲+EP獲得 | 2|
-| `protection` | 防魔 | スペルの対象にならない | 1|
-| `toll_disable` | 通行料無効 | 通行料を取れない | 2|
+| `dice_range_magic` | 範囲+EP | ダイス範囲+蓄魔 | 2|
+| `protection` | 結界 | スペルの対象にならない | 1|
+| `toll_disable` | 免罪 | 通行料を取れない | 2|
 | `toll_share` | 通行料共有 | 他セプターの通行料の50%を得る | 1|
 | `toll_fixed` | 通行料固定 | 通行料が固定値になる | 2|
-| `spell_disable` | スペル不可 | スペルを使用できない | 2|
-| `movement_reverse` | 歩行逆転 | 移動方向が逆になる | 2|
-| `life_force` | 生命力 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 | 1|
+| `spell_disable` | 禁呪 | スペルを使用できない | 2|
+| `movement_reverse` | 反転 | 移動方向が逆になる | 2|
+| `life_force` | 天使 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 | 1|
 
 ---
 
@@ -58,17 +58,17 @@
 
 | curse_type | 名前 | 効果 | 有利/不利 |
 |-----------|------|------|----------|
-| `cost_increase` | コスト上昇 | カード使用EP増加 | |
-| `summon_free` | 召喚条件解除 | EP以外のコスト無視 | |
-| `invasion_disable` | 侵略不可 | 侵略できない | |
-| `element_chain` | 他属性連鎖 | 火と地、水と風が連鎖 | |
-| `world_spell_protection` | 防魔 | 全セプターがスペル対象外 | |
-| `invasion_restrict` | 下位侵略不可 | 順位下のセプターに侵略不可 | |
-| `summon_cost_free` | 召喚条件解除 | クリーチャー配置時コスト無視 | |
-| `land_protect` | 土地変性無効 | 全ドミニオは土地破壊・変性無効 | |
-| `cursed_protection` | 呪い防魔化 | 呪いのついた全クリーチャーは防魔 | |
-| `skill_disable` | 特定能力不可 | アルカナアーツ、自破壊時、戦闘終了時は発動しない | |
-| `same_creature_destroy` | 同種相殺 | 同クリーチャー2体配置なら戦闘時破壊 | |
+| `cost_increase` | 太陽 | カード使用EP増加 | |
+| `summon_free` | 愚者 | EP以外のコスト無視 | |
+| `invasion_disable` | 休戦 | 侵略できない | |
+| `element_chain` | 恋人 | 火と地、水と風が連鎖 | |
+| `world_spell_protection` | 結界 | 全セプターがスペル対象外 | |
+| `invasion_restrict` | 節制 | 順位下のセプターに休戦 | |
+| `summon_cost_free` | 愚者 | クリーチャー配置時コスト無視 | |
+| `land_protect` | 不変 | 全ドミニオは領土守護 | |
+| `cursed_protection` | 女教皇 | 呪いのついた全クリーチャーは結界 | |
+| `skill_disable` | 吊人 | アルカナアーツ、自破壊時、戦闘終了時は発動しない | |
+| `same_creature_destroy` | 隠者 | 同クリーチャー2体配置なら戦闘時破壊 | |
 
 ---
 

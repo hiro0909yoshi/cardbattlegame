@@ -5,11 +5,11 @@
 ##
 ## 使い方:
 ##   var config = SkillDisplayConfig.get_config("penetration")
-##   # → {"name": "貫通", "effect": "", "sound": ""}
+##   # → {"name": "刺突", "effect": "", "sound": ""}
 ##
 ## パラメータ分岐:
 ##   var config = SkillDisplayConfig.get_config("change_tile_element", {"element": "water"})
-##   # → {"name": "土地変性", "effect": "element_change_water", "sound": ""}
+##   # → {"name": "属性変化", "effect": "element_change_water", "sound": ""}
 
 class_name SkillDisplayConfig
 
@@ -29,12 +29,12 @@ const CONFIG = {
 		"sound": ""
 	},
 	"support": {
-		"name": "応援",
+		"name": "鼓舞",
 		"effect": "",
 		"sound": ""
 	},
 	"assist": {
-		"name": "援護",
+		"name": "加勢",
 		"effect": "",
 		"sound": ""
 	},
@@ -54,27 +54,27 @@ const CONFIG = {
 		"sound": ""
 	},
 	"resonance": {
-		"name": "感応",
+		"name": "共鳴",
 		"effect": "",
 		"sound": ""
 	},
 	"power_strike": {
-		"name": "強打",
+		"name": "強化",
 		"effect": "",
 		"sound": ""
 	},
 	"penetration": {
-		"name": "貫通",
+		"name": "刺突",
 		"effect": "",
 		"sound": ""
 	},
 	"scroll_attack": {
-		"name": "巻物攻撃",
+		"name": "術攻撃",
 		"effect": "",
 		"sound": ""
 	},
 	"scroll_power_strike": {
-		"name": "巻物強打",
+		"name": "術強化",
 		"effect": "",
 		"sound": ""
 	},
@@ -103,7 +103,7 @@ const CONFIG = {
 		"sound": ""
 	},
 	"item_return": {
-		"name": "アイテム復帰",
+		"name": "帰還",
 		"effect": "",
 		"sound": ""
 	},
@@ -112,27 +112,27 @@ const CONFIG = {
 	# 死亡時に発動するスキル
 	# ========================================
 	"self_destruct": {
-		"name": "自壊",
+		"name": "自滅",
 		"effect": "",
 		"sound": ""
 	},
 	"death_revenge": {
-		"name": "道連れ",
+		"name": "相討",
 		"effect": "",
 		"sound": ""
 	},
 	"legacy_magic": {
-		"name": "遺産（EP）",
+		"name": "形見（EP）",
 		"effect": "",
 		"sound": ""
 	},
 	"legacy_card": {
-		"name": "遺産（カード）",
+		"name": "形見（カード）",
 		"effect": "",
 		"sound": ""
 	},
 	"revive": {
-		"name": "死者復活",
+		"name": "蘇生",
 		"effect": "",
 		"sound": ""
 	},
@@ -142,17 +142,17 @@ const CONFIG = {
 		"sound": ""
 	},
 	"annihilate": {
-		"name": "抹消",
+		"name": "殲滅",
 		"effect": "",
 		"sound": ""
 	},
 	"revenge_mhp_damage": {
-		"name": "雪辱",
+		"name": "報復",
 		"effect": "",
 		"sound": ""
 	},
 	"apply_curse": {
-		"name": "呪い付与",
+		"name": "刻印付与",
 		"effect": "",
 		"sound": ""
 	},
@@ -176,12 +176,12 @@ const CONFIG = {
 		"sound": ""
 	},
 	"magic_gain": {
-		"name": "EP獲得",
+		"name": "蓄魔",
 		"effect": "",
 		"sound": ""
 	},
 	"magic_steal": {
-		"name": "EP奪取",
+		"name": "吸魔",
 		"effect": "",
 		"sound": ""
 	},
@@ -215,7 +215,7 @@ const CONFIG = {
 		"sound": ""
 	},
 	"nullify_abilities": {
-		"name": "能力無効化",
+		"name": "沈黙",
 		"effect": "",
 		"sound": ""
 	},
@@ -224,7 +224,7 @@ const CONFIG = {
 	# パラメータ分岐が必要なスキル
 	# ========================================
 	"change_tile_element": {
-		"name": "土地変性",
+		"name": "属性変化",
 		"effect_by_element": {
 			"water": "element_change_water",
 			"fire": "element_change_fire",

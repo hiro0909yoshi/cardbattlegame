@@ -77,7 +77,7 @@ CanvasLayer (layer = 90) - BattleScreen
 ### バトル終了時
 ```
 1. 結果演出（勝敗表示など） - show_battle_result()
-2. 戦闘終了時能力の表示（再生、土地変性など）
+2. 戦闘終了時能力の表示（再生、属性変化など）
    - この時点ではまだバトル画面が表示されている
    - スキル名表示やHP/APバーの更新が可能
 3. バトル画面を閉じる - close_battle_screen()
@@ -111,18 +111,18 @@ CanvasLayer (layer = 90) - BattleScreen
 1. スキル名をカード上部に表示
 2. HP/APバーを変動させる（1.5秒かけて滑らかに）
    - 緑セグメント: current_hp + item_bonus_hp
-   - バフ（水色）: 感応 + 一時 + スペル
+   - バフ（水色）: 共鳴 + 一時 + スペル
    - 土地（黄）: 土地ボーナス
 3. 次のスキルへ
 
 適用されるスキル例:
-- アイテムクリーチャー効果
+- レリック効果
 - ターン数ボーナス
-- 感応スキル
+- 共鳴スキル
 - 土地数効果
-- 強打
-- 貫通（土地ボーナス無効化）
-- 巻物攻撃
+- 強化
+- 刺突（土地ボーナス無効化）
+- 術攻撃
 ```
 
 ### 4. 攻撃フェーズ
@@ -156,7 +156,7 @@ HPバー構造（左から右）:
 ┌─────────────────────────────────────────────────┐
 │ 緑セグメント    │ バフ(水色) │ 土地ボーナス(黄) │ 空(灰)
 └─────────────────────────────────────────────────┘
-  current_hp        感応+一時     最初に消費
+  current_hp        共鳴+一時     最初に消費
   +item_bonus_hp    +スペル
   （最後に消費）
 
@@ -171,7 +171,7 @@ HPバー構造（左から右）:
 
 **消費順序（battle_participant.gd準拠）:**
 1. 土地ボーナス（land_bonus_hp）← 最初に消費
-2. 感応ボーナス（resonance_bonus_hp）
+2. 共鳴ボーナス（resonance_bonus_hp）
 3. 一時的ボーナス（temporary_bonus_hp）
 4. スペルボーナス（spell_bonus_hp）
 5. アイテムボーナス（item_bonus_hp）
@@ -179,7 +179,7 @@ HPバー構造（左から右）:
 
 **色分け:**
 - 緑 `#4CAF50`: current_hp + item_bonus_hp
-- バフ（水色）`#03A9F4`: 感応 + 一時的 + スペルボーナスの合計
+- バフ（水色）`#03A9F4`: 共鳴 + 一時的 + スペルボーナスの合計
 - 土地ボーナス（黄）`#FFC107`: 最初に消費
 - 空（灰）`#424242`: 残りHP枠（最大100）
 - ダメージ中（赤）`#F44336`: 減少演出用オーバーレイ
@@ -370,8 +370,8 @@ func end_battle(result: int):
 
 | タイミング | 処理場所 | 例 |
 |-----------|---------|-----|
-| 戦闘開始前（クリック後） | `battle_skill_processor.gd` | 感応、強打、貫通、ブルガサリ |
-| 攻撃成功時 | `battle_execution.gd` | APドレイン、呪い付与、ダウン付与 |
+| 戦闘開始前（クリック後） | `battle_skill_processor.gd` | 共鳴、強化、刺突、ブルガサリ |
+| 攻撃成功時 | `battle_execution.gd` | APドレイン、刻印付与、ダウン付与 |
 
 ### 共通関数: `_show_skill_change_if_any`
 
@@ -396,10 +396,10 @@ func _show_skill_change_if_any(
 #### 1. 自己バフ系スキル（自分のステータスが変化）
 
 ```gdscript
-# 例: 感応、強打、ターン数ボーナス
+# 例: 共鳴、強化、ターン数ボーナス
 var before = _snapshot_stats(attacker)
 ResonanceSkill.apply_resonance(attacker, board_system_ref)
-await _show_skill_change_if_any(attacker, before, "感応")
+await _show_skill_change_if_any(attacker, before, "共鳴")
 ```
 
 #### 2. 敵対象スキル（敵のステータスを変化させる）
@@ -407,11 +407,11 @@ await _show_skill_change_if_any(attacker, before, "感応")
 第4引数`skill_owner`でスキル所持者を指定。
 
 ```gdscript
-# 例: 貫通（attackerのスキルでdefenderの土地ボーナスを無効化）
+# 例: 刺突（attackerのスキルでdefenderの土地ボーナスを無効化）
 var before = _snapshot_stats(defender)
 PenetrationSkill.apply_penetration(attacker, defender)
-await _show_skill_change_if_any(defender, before, "貫通", attacker)
-# → attackerカード側に「貫通」表示、defenderのHPバーが減少
+await _show_skill_change_if_any(defender, before, "刺突", attacker)
+# → attackerカード側に「刺突」表示、defenderのHPバーが減少
 ```
 
 #### 3. 両者チェックするスキル
@@ -433,7 +433,7 @@ await _show_skill_change_if_any(defender, defender_before, "ブルガサリ")
 ```gdscript
 # 攻撃成功時効果ブロック内（約460行目付近）
 if defender_p.is_alive() and attacker_p.current_ap > 0:
-	# 既存: 呪い付与、ダウン付与
+	# 既存: 刻印付与、ダウン付与
 	# 新しいスキル追加例:
 	var drained = _apply_ap_drain_on_attack_success(attacker_p, defender_p)
 	if drained and battle_screen_manager:
@@ -449,7 +449,7 @@ if defender_p.is_alive() and attacker_p.current_ap > 0:
 # _snapshot_stats()が記録するフィールド
 - current_hp
 - current_ap
-- resonance_bonus_hp    # 感応ボーナス
+- resonance_bonus_hp    # 共鳴ボーナス
 - temporary_bonus_hp    # 一時的ボーナス
 - spell_bonus_hp        # スペルボーナス
 - land_bonus_hp         # 土地ボーナス
@@ -503,7 +503,7 @@ class_name SkillDisplayConfig
 const CONFIG = {
 	# 固定エフェクトのスキル
 	"power_strike": {
-		"name": "強打",
+		"name": "強化",
 		"effect": "impact_fire",
 		"sound": "se_power"
 	},
@@ -513,14 +513,14 @@ const CONFIG = {
 		"sound": "se_drain"
 	},
 	"penetration": {
-		"name": "貫通",
+		"name": "刺突",
 		"effect": "shield_break",
 		"sound": "se_break"
 	},
 	
 	# パラメータで分岐するスキル
 	"change_tile_element": {
-		"name": "土地変性",
+		"name": "属性変化",
 		"effect_by_element": {
 			"water": "element_change_water",
 			"fire": "element_change_fire",
@@ -532,7 +532,7 @@ const CONFIG = {
 	
 	# エフェクト未実装のスキル（名前のみ表示）
 	"resonance": {
-		"name": "感応",
+		"name": "共鳴",
 		"effect": "",
 		"sound": ""
 	}
@@ -551,7 +551,7 @@ const CONFIG = {
 | 条件分岐 | `effect_by_condition` | `{"condition": "enemy_no_item"}` |
 | 対象分岐 | `effect_by_target` | `{"target": "enemy"}` |
 
-**例: 土地変性（バハムート）**
+**例: 属性変化（バハムート）**
 
 ```json
 // JSONデータ
@@ -565,7 +565,7 @@ const CONFIG = {
 // 呼び出し
 var params = {"element": effect.get("element", "")}
 var config = SkillDisplayConfig.get_config("change_tile_element", params)
-// → {"name": "土地変性", "effect": "element_change_water", "sound": "se_element_change"}
+// → {"name": "属性変化", "effect": "element_change_water", "sound": "se_element_change"}
 ```
 
 ### 公開API
@@ -590,11 +590,11 @@ static func show(battle_screen_manager, effect_type: String, side: String, param
 #### 基本的な使い方（発動箇所で1行追加）
 
 ```gdscript
-# 強打発動時
+# 強化発動時
 PowerStrikeSkill.apply(participant, context)
 await SkillDisplayConfig.show(battle_screen_manager, "power_strike", side)
 
-# 土地変性発動時（パラメータ渡し）
+# 属性変化発動時（パラメータ渡し）
 var element = effect.get("element", "")
 apply_tile_element_change(tile, element)
 await SkillDisplayConfig.show(battle_screen_manager, "change_tile_element", side, {"element": element})
@@ -609,7 +609,7 @@ SkillDisplayConfigはステータス変動がないスキル向け。
 # ステータス変動あり → 既存方式（自動検出）
 var before = _snapshot_stats(participant)
 ResonanceSkill.apply(participant, context)
-await _show_skill_change_if_any(participant, before, "感応")
+await _show_skill_change_if_any(participant, before, "共鳴")
 
 # ステータス変動なし → SkillDisplayConfig
 if has_first_strike:
@@ -618,13 +618,13 @@ if has_first_strike:
 
 ### keywords系スキルの扱い
 
-keywords系（先制、不屈など）はそのまま日本語名なので、特別な処理で対応。
+keywords系（先制、奮闘など）はそのまま日本語名なので、特別な処理で対応。
 
 ```gdscript
 const KEYWORD_CONFIG = {
 	"先制": {"effect": "speed_up", "sound": "se_speed"},
 	"後手": {"effect": "", "sound": ""},
-	"不屈": {"effect": "endure", "sound": "se_endure"},
+	"奮闘": {"effect": "endure", "sound": "se_endure"},
 	"再生": {"effect": "regenerate", "sound": "se_heal"},
 	# ...
 }
@@ -642,9 +642,9 @@ static func show_keyword(battle_screen_manager, keyword: String, side: String) -
 
 | カテゴリ | スキル例 | 表示方式 | 対応状況 |
 |---------|---------|---------|---------|
-| ステータス変動あり | 感応、強打、貫通、APドレイン | `_show_skill_change_if_any` | ✅ 対応済 |
-| ステータス変動なし（effect_type） | 先制、アイテム破壊、戦闘後破壊付与 | `SkillDisplayConfig.show()` | ❌ 未対応 |
-| ステータス変動なし（keyword） | 不屈、再生 | `SkillDisplayConfig.show_keyword()` | ❌ 未対応 |
+| ステータス変動あり | 共鳴、強化、刺突、APドレイン | `_show_skill_change_if_any` | ✅ 対応済 |
+| ステータス変動なし（effect_type） | 先制、アイテム破壊、崩壊付与 | `SkillDisplayConfig.show()` | ❌ 未対応 |
+| ステータス変動なし（keyword） | 奮闘、再生 | `SkillDisplayConfig.show_keyword()` | ❌ 未対応 |
 
 ### 新スキル追加時のチェックリスト
 
@@ -676,10 +676,10 @@ static func show_keyword(battle_screen_manager, keyword: String, side: String) -
 
 ```gdscript
 # 変更前
-"power_strike": {"name": "強打", "effect": "", "sound": ""}
+"power_strike": {"name": "強化", "effect": "", "sound": ""}
 
 # 変更後（エフェクト追加）
-"power_strike": {"name": "強打", "effect": "impact_fire", "sound": "se_power"}
+"power_strike": {"name": "強化", "effect": "impact_fire", "sound": "se_power"}
 ```
 
 ### バトル系クラスとの関係

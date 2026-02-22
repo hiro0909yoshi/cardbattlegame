@@ -110,12 +110,12 @@ creature_data["temporary_effects"] = [
 **例**: 「火土地1つごとにAP+10」
 
 - **計算方法**: 毎バトル時に動的計算
-- **実装**: 感応スキルと同様の処理
+- **実装**: 共鳴スキルと同様の処理
 
 #### 3-3. 隣接条件効果
 **例**: 「隣接に自ドミニオがある場合、AP+20、HP+20」
 
-- **実装**: 既存の強打スキルシステムと同様
+- **実装**: 既存の強化スキルシステムと同様
 - **適用タイミング**: バトル開始時に条件チェック
 
 ---
@@ -265,7 +265,7 @@ class BattleParticipant:
 	# バトル中の一時ボーナス（一部既存、一部新規）
 	var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（新規）
 	var temporary_bonus_ap: int = 0   # 一時的なAPボーナス（新規）
-	var resonance_bonus_hp: int = 0   # 感応ボーナス（既存）
+	var resonance_bonus_hp: int = 0   # 共鳴ボーナス（既存）
 	var land_bonus_hp: int = 0        # 土地ボーナス（既存）
 	var item_bonus_hp: int = 0        # アイテムボーナス（既存）
 	var item_bonus_ap: int = 0        # アイテムボーナス（既存）
@@ -297,16 +297,16 @@ current_ap = base_ap +
 			 base_up_ap +           # 合成・マスグロース
 			 temporary_bonus_ap +   # 一時効果の合計
 			 item_bonus_ap + 
-			 (感応AP) + 
+			 (共鳴AP) + 
 			 (条件効果AP)
-# その後、強打で乗算
+# その後、強化で乗算
 ```
 
 ### ダメージ消費順序（既存仕様）
 
 ```
 1. land_bonus_hp（土地ボーナス）← 最初に消費
-2. resonance_bonus_hp（感応ボーナス）
+2. resonance_bonus_hp（共鳴ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
 4. spell_bonus_hp（スペルボーナス）
 5. item_bonus_hp（アイテムボーナス）
@@ -359,13 +359,13 @@ func prepare_battle_participant(creature_data, tile_data):
 		participant.item_bonus_ap = selected_item.ap_bonus
 		participant.item_bonus_hp = selected_item.hp_bonus
 	
-	# 8. 感応効果（既存処理）
+	# 8. 共鳴効果（既存処理）
 	apply_resonance_skill(participant, context)
 	
 	# 9. その他の条件効果
 	# （土地保有数、隣接条件など）
 	
-	# 10. 強打を適用（最後）
+	# 10. 強化を適用（最後）
 	if has_power_strike:
 		participant.current_ap *= 1.5
 ```

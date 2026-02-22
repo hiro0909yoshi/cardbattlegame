@@ -359,7 +359,7 @@ func _check_instant_death_condition(condition: Dictionary, attacker: BattleParti
 			print("【即死条件】未知の条件タイプ:", condition_type)
 			return false
 
-## HP閾値での自爆＋道連れチェック（リビングボム等）
+## HP閾値での自爆＋相討チェック（リビングボム等）
 ## ダメージを受けた後に呼び出す
 func check_hp_threshold_self_destruct(damaged: BattleParticipant, opponent: BattleParticipant) -> bool:
 	# SkillItemCreatureに委譲
@@ -452,7 +452,7 @@ func update_defender_hp(tile_info: Dictionary, defender: BattleParticipant) -> v
 	board_system_ref.tile_data_manager.tile_nodes[tile_index].creature_data = creature_data
 	print("[update_defender_hp] アイテムクリーンアップ確認: items存在=%s" % creature_data.has("items"))
 
-## 死亡時効果のチェック（道連れ、雪辱、死者復活など）
+## 死亡時効果のチェック（相討、報復、蘇生など）
 func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant, card_loader = null) -> Dictionary:
 	"""
 	撃破された側の死亡時効果をチェックして発動
@@ -460,13 +460,13 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	Args:
 		defeated: 撃破されたクリーチャー（死亡した側）
 		opponent: 相手クリーチャー（生き残った側）
-		card_loader: CardLoaderのインスタンス（死者復活用、省略可）
+		card_loader: CardLoaderのインスタンス（蘇生用、省略可）
 	
 	Returns:
 		Dictionary: {
-			"death_revenge_activated": bool,  # 道連れが発動したか
-			"revenge_mhp_activated": bool,    # 雪辱が発動したか
-			"revived": bool,                  # 死者復活が発動したか（タイル復活）
+			"death_revenge_activated": bool,  # 相討が発動したか
+			"revenge_mhp_activated": bool,    # 報復が発動したか
+			"revived": bool,                  # 蘇生が発動したか（タイル復活）
 			"new_creature_name": String,      # 復活後のクリーチャー名
 			"revive_to_hand": bool,           # 手札復活が発動したか
 			"revive_to_hand_data": Dictionary # 手札復活するクリーチャーデータ
@@ -481,9 +481,9 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 		"revive_to_hand_data": {}
 	}
 	
-	# ナチュラルワールドによる死亡時効果無効化チェック
+	# ハングドマンズシールによる死亡時効果無効化チェック
 	if _is_on_death_disabled():
-		print("【死亡時効果】ナチュラルワールドにより無効化")
+		print("【死亡時効果】ハングドマンズシールにより無効化")
 		return result
 	
 	# 撃破されたクリーチャーのアイテムをチェック
@@ -503,7 +503,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 		if has_on_death_effect:
 			break
 	
-	# クリーチャースキルの遺産効果チェック
+	# クリーチャースキルの形見効果チェック
 	if not has_on_death_effect:
 		var ability_parsed = defeated.creature_data.get("ability_parsed", {})
 		var skill_effects = ability_parsed.get("effects", [])
@@ -531,10 +531,10 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 				continue
 			
 			match effect_type:
-				"instant_death":  # 道連れ
+				"instant_death":  # 相討
 					var target = effect.get("target", "")
 					if target == "attacker":
-						# 条件チェック（例：敵HP20以下で道連れ発動）
+						# 条件チェック（例：敵HP20以下で相討発動）
 						var condition = effect.get("condition", {})
 						if not condition.is_empty():
 							var condition_type = condition.get("condition_type", "")
@@ -542,15 +542,15 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 								var threshold = condition.get("value", 0)
 								var enemy_hp = opponent.current_hp
 								if enemy_hp > threshold:
-									print("【道連れ条件未達】敵HP:", enemy_hp, " > ", threshold)
+									print("【相討条件未達】敵HP:", enemy_hp, " > ", threshold)
 									continue
-								print("【道連れ条件達成】敵HP:", enemy_hp, " <= ", threshold)
+								print("【相討条件達成】敵HP:", enemy_hp, " <= ", threshold)
 						
 						var probability = effect.get("probability", 100)
 						var random_value = randf() * 100.0
 						
 						if random_value <= probability:
-							print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
+							print("【相討発動】", defeated.creature_data.get("name", "?"), " → ", 
 								  opponent.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
 							
 							# 相手を即死させる
@@ -558,7 +558,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 							opponent.current_hp = 0
 							result["death_revenge_activated"] = true
 						else:
-							print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+							print("【相討失敗】確率:", probability, "% 判定値:", int(random_value), "%")
 				
 				"draw_cards_on_death":  # トゥームストーン（手札補充）
 					if spell_draw_ref:
@@ -573,7 +573,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 					else:
 						push_error("SpellDrawの参照が設定されていません")
 				
-				"legacy_magic":  # ゴールドグース（遺産）
+				"legacy_magic":  # ゴールドグース（形見）
 					if spell_magic_ref:
 						var multiplier = effect.get("multiplier", 7)
 						var player_id = defeated.player_id
@@ -585,8 +585,8 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 						var mhp = base_hp + base_up_hp
 						
 						var amount = mhp * multiplier
-						print("【遺産発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), 
-							  " → プレイヤー", player_id + 1, "が", amount, "EP獲得（MHP", mhp, "×", multiplier, "）")
+						print("【形見発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), 
+							  " → プレイヤー", player_id + 1, "が", amount, "蓄魔（MHP", mhp, "×", multiplier, "）")
 						spell_magic_ref.add_magic(player_id, amount)
 						if not result.has("legacy_magic_activated"):
 							result["legacy_magic_activated"] = false
@@ -594,11 +594,11 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 					else:
 						push_error("SpellMagicの参照が設定されていません")
 				
-				"revenge_mhp_damage":  # 雪辱
+				"revenge_mhp_damage":  # 報復
 					# 相手が生存している場合のみ発動
 					if opponent.is_alive():
 						var damage = effect.get("damage", 40)
-						print("【雪辱発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), " → ", opponent.creature_data.get("name", "?"))
+						print("【報復発動】", defeated.creature_data.get("name", "?"), "の", item.get("name", "?"), " → ", opponent.creature_data.get("name", "?"))
 						opponent.take_mhp_damage(damage)
 						result["revenge_mhp_activated"] = true
 	
@@ -606,7 +606,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	var creature_on_death_result = _process_creature_on_death_effects(defeated, opponent)
 	result.merge(creature_on_death_result, true)
 	
-	# 💰 クリーチャースキル: 遺産（フェイト、コーンフォーク、マミー等）
+	# 💰 クリーチャースキル: 形見（フェイト、コーンフォーク、マミー等）
 	var legacy_result = _skill_legacy.apply_on_death(defeated, spell_draw_ref, spell_magic_ref, lap_system)
 	# キー名を統一して結果にマージ
 	if legacy_result.get("legacy_ep_activated", false):
@@ -628,7 +628,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 		
 		return result  # 手札復活の場合はタイル復活はチェックしない
 	
-	# 🔄 死者復活チェック（タイル復活、最後に処理）
+	# 🔄 蘇生チェック（タイル復活、最後に処理）
 	if card_loader:
 		var revive_result = _check_and_apply_revive(defeated, opponent, card_loader)
 		if revive_result["revived"]:
@@ -664,10 +664,10 @@ func _check_revive_to_hand(participant: BattleParticipant) -> bool:
 	
 	return false
 
-## 死者復活をチェックして適用
+## 蘇生をチェックして適用
 func _check_and_apply_revive(defeated: BattleParticipant, opponent: BattleParticipant, card_loader) -> Dictionary:
 	"""
-	死者復活効果をチェックして適用
+	蘇生効果をチェックして適用
 	
 	Args:
 		defeated: 撃破されたクリーチャー
@@ -687,22 +687,22 @@ func _check_and_apply_revive(defeated: BattleParticipant, opponent: BattlePartic
 		"new_creature_name": ""
 	}
 	
-	# 死者復活効果を探す
+	# 蘇生効果を探す
 	var revive_effect = _find_revive_effect(defeated)
 	if not revive_effect:
 		return result
 	
-	print("[死者復活チェック] ", defeated.creature_data.get("name", "?"))
+	print("[蘇生チェック] ", defeated.creature_data.get("name", "?"))
 	
 	# 条件チェック（条件付き復活の場合）
 	if not _check_revive_condition(revive_effect, opponent):
-		print("[死者復活] 条件未達成のため発動しません")
+		print("[蘇生] 条件未達成のため発動しません")
 		return result
 	
 	# 復活先のクリーチャーIDを決定
 	var new_creature_id = revive_effect.get("creature_id", -1)
 	if new_creature_id <= 0:
-		print("[死者復活] 無効なクリーチャーIDです: ", new_creature_id)
+		print("[蘇生] 無効なクリーチャーIDです: ", new_creature_id)
 		return result
 	
 	# 復活実行
@@ -710,17 +710,17 @@ func _check_and_apply_revive(defeated: BattleParticipant, opponent: BattlePartic
 	if new_creature:
 		_apply_revive(defeated, new_creature, result)
 	else:
-		print("[死者復活] クリーチャーが見つかりません: ID ", new_creature_id)
+		print("[蘇生] クリーチャーが見つかりません: ID ", new_creature_id)
 	
 	return result
 
-## 死者復活効果を探す
+## 蘇生効果を探す
 func _find_revive_effect(participant: BattleParticipant):
 	"""
-	クリーチャーまたはアイテムから死者復活効果を探す
+	クリーチャーまたはアイテムから蘇生効果を探す
 	
 	Returns:
-		死者復活効果のDictionary、なければnull
+		蘇生効果のDictionary、なければnull
 	"""
 	# クリーチャー自身の能力をチェック
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
@@ -747,7 +747,7 @@ func _check_revive_condition(revive_effect: Dictionary, opponent: BattleParticip
 	復活条件を満たすかチェック
 	
 	Args:
-		revive_effect: 死者復活効果の定義
+		revive_effect: 蘇生効果の定義
 		opponent: 攻撃側のクリーチャー
 	
 	Returns:
@@ -790,15 +790,15 @@ func _opponent_used_item_category(opponent: BattleParticipant, category: String)
 			return true
 	return false
 
-## 死者復活を適用
+## 蘇生を適用
 func _apply_revive(participant: BattleParticipant, new_creature: Dictionary, result: Dictionary) -> void:
 	"""
-	死者復活を実行
+	蘇生を実行
 	"""
 	var old_name = participant.creature_data.get("name", "?")
 	var new_name = new_creature.get("name", "?")
 	
-	print("【死者復活】", old_name, " → ", new_name)
+	print("【蘇生】", old_name, " → ", new_name)
 	
 	# 現在のアイテムと永続ボーナスを記録
 	var current_items = participant.creature_data.get("items", [])
@@ -923,7 +923,7 @@ func check_on_survive_effects(survivor: BattleParticipant) -> Dictionary:
 	return result
 
 
-## ナチュラルワールドで死亡時効果が無効化されているか
+## ハングドマンズシールで死亡時効果が無効化されているか
 func _is_on_death_disabled() -> bool:
 	return SpellWorldCurse.is_trigger_disabled("on_death", game_stats)
 
@@ -944,9 +944,9 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 		var target = effect.get("target", "enemy")
 		
 		match effect_type:
-			"instant_death":  # 道連れ（アイテムクリーチャーから継承）
+			"instant_death":  # 相討（レリックから継承）
 				if target == "attacker" and opponent.is_alive():
-					# 条件チェック（例：敵HP20以下で道連れ発動）
+					# 条件チェック（例：敵HP20以下で相討発動）
 					var condition = effect.get("condition", {})
 					if not condition.is_empty():
 						var condition_type = condition.get("condition_type", "")
@@ -954,15 +954,15 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 							var threshold = condition.get("value", 0)
 							var enemy_hp = opponent.current_hp
 							if enemy_hp > threshold:
-								print("【道連れ条件未達】敵HP:", enemy_hp, " > ", threshold)
+								print("【相討条件未達】敵HP:", enemy_hp, " > ", threshold)
 								continue
-							print("【道連れ条件達成】敵HP:", enemy_hp, " <= ", threshold)
+							print("【相討条件達成】敵HP:", enemy_hp, " <= ", threshold)
 					
 					var probability = effect.get("probability", 100)
 					var random_value = randf() * 100.0
 					
 					if random_value <= probability:
-						print("【道連れ発動】", defeated.creature_data.get("name", "?"), " → ", 
+						print("【相討発動】", defeated.creature_data.get("name", "?"), " → ", 
 							  opponent.creature_data.get("name", "?"), " (", probability, "% 判定成功)")
 						
 						# 相手を即死させる
@@ -970,7 +970,7 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						opponent.current_hp = 0
 						result["death_revenge_activated"] = true
 					else:
-						print("【道連れ失敗】確率:", probability, "% 判定値:", int(random_value), "%")
+						print("【相討失敗】確率:", probability, "% 判定値:", int(random_value), "%")
 			
 			"damage_enemy":
 				# サルファバルーン: 敵にHPダメージ
@@ -989,7 +989,7 @@ func _process_creature_on_death_effects(defeated: BattleParticipant, opponent: B
 						result["opponent_killed"] = true
 			
 			"legacy_ep":
-				# マミー等: 遺産（EP獲得）- skill_legacy.gdで処理
+				# マミー等: 形見（蓄魔）- skill_legacy.gdで処理
 				pass
 	
 	return result
@@ -1027,13 +1027,13 @@ func _get_lap_count(player_id: int) -> int:
 
 
 # =============================================================================
-# 抹消効果（アネイマブル）- 敵を倒した時に同名カードを全て削除
+# 殲滅効果（アネイマブル）- 敵を倒した時に同名カードを全て削除
 # =============================================================================
 
 ## 勝者のon_kill効果をチェック・適用
 ## @param winner 勝者
 ## @param loser 敗者（倒されたクリーチャー）
-## @return 抹消されたカード枚数
+## @return 殲滅されたカード枚数
 func check_and_apply_annihilate(winner: BattleParticipant, loser: BattleParticipant) -> int:
 	var ability_parsed = winner.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -1048,7 +1048,7 @@ func check_and_apply_annihilate(winner: BattleParticipant, loser: BattleParticip
 		var probability = effect.get("probability", 100)
 		var roll = randi() % 100
 		if roll >= probability:
-			print("【抹消】確率判定失敗 (%d%% >= %d%%)" % [roll, probability])
+			print("【殲滅】確率判定失敗 (%d%% >= %d%%)" % [roll, probability])
 			return 0
 		
 		# 倒した敵の名前を取得
@@ -1059,7 +1059,7 @@ func check_and_apply_annihilate(winner: BattleParticipant, loser: BattleParticip
 		# 相手プレイヤーのデッキと手札から同名カードを削除
 		var deleted_count = _annihilate_cards(loser.player_id, target_name)
 		
-		print("【抹消】%s が %s を抹消！ → %d枚削除" % [
+		print("【殲滅】%s が %s を殲滅！ → %d枚削除" % [
 			winner.creature_data.get("name", "?"),
 			target_name,
 			deleted_count
@@ -1090,7 +1090,7 @@ func _annihilate_cards(player_id: int, card_name: String) -> int:
 	for index in indices_to_remove:
 		card_system_ref.remove_card_from_hand(player_id, index)
 		deleted_count += 1
-		print("  [抹消] 手札から『%s』を削除" % card_name)
+		print("  [殲滅] 手札から『%s』を削除" % card_name)
 	
 	# デッキから削除（デッキはカードIDの配列）
 	var deck = card_system_ref.get_deck(player_id)
@@ -1105,6 +1105,6 @@ func _annihilate_cards(player_id: int, card_name: String) -> int:
 	for index in deck_indices_to_remove:
 		card_system_ref.remove_card_from_deck(player_id, index)
 		deleted_count += 1
-		print("  [抹消] デッキから『%s』を削除" % card_name)
+		print("  [殲滅] デッキから『%s』を削除" % card_name)
 	
 	return deleted_count

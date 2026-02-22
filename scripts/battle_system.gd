@@ -87,7 +87,7 @@ func setup_systems(board_system, card_system: CardSystem, player_system: PlayerS
 		lap_system = game_flow_manager_ref.lap_system
 		battle_special_effects.set_lap_system(lap_system)
 	
-	# アイテム復帰スキルの初期化
+	# 帰還スキルの初期化
 	_skill_item_return.setup_systems(card_system)
 
 # バトル実行（3D版メイン処理）
@@ -174,7 +174,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	
 	var tile_index = tile_info.get("index", -1)
 	
-	# ミラーワールドチェック: 同名クリーチャーなら戦闘前に両者破壊
+	# ハーミットズパラドックスチェック: 同名クリーチャーなら戦闘前に両者破壊
 	if await _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
 		return  # 相殺で戦闘終了
 	
@@ -214,12 +214,12 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	# マイナスの一時ボーナスはcurrent_hpに既に反映済みなので加算しない
 	var attacker_temp_bonus = attacker.temporary_bonus_hp if attacker.temporary_bonus_hp > 0 else 0
 	var attacker_total_hp = attacker.current_hp + attacker.resonance_bonus_hp + attacker.land_bonus_hp + attacker_temp_bonus + attacker.item_bonus_hp + attacker.spell_bonus_hp
-	print("  HP:", attacker_total_hp, " (基本:", attacker.current_hp, " 感応:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, " 一時:", attacker.temporary_bonus_hp, " アイテム:", attacker.item_bonus_hp, " スペル:", attacker.spell_bonus_hp, ")")
+	print("  HP:", attacker_total_hp, " (基本:", attacker.current_hp, " 共鳴:", attacker.resonance_bonus_hp, " 土地:", attacker.land_bonus_hp, " 一時:", attacker.temporary_bonus_hp, " アイテム:", attacker.item_bonus_hp, " スペル:", attacker.spell_bonus_hp, ")")
 	print("  AP:", attacker.current_ap)
 	print("防御側: ", defender.creature_data.get("name", "?"))
 	var defender_temp_bonus = defender.temporary_bonus_hp if defender.temporary_bonus_hp > 0 else 0
 	var defender_total_hp = defender.current_hp + defender.resonance_bonus_hp + defender.land_bonus_hp + defender_temp_bonus + defender.item_bonus_hp + defender.spell_bonus_hp
-	print("  HP:", defender_total_hp, " (基本:", defender.current_hp, " 感応:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, " 一時:", defender.temporary_bonus_hp, " アイテム:", defender.item_bonus_hp, " スペル:", defender.spell_bonus_hp, ")")
+	print("  HP:", defender_total_hp, " (基本:", defender.current_hp, " 共鳴:", defender.resonance_bonus_hp, " 土地:", defender.land_bonus_hp, " 一時:", defender.temporary_bonus_hp, " アイテム:", defender.item_bonus_hp, " スペル:", defender.spell_bonus_hp, ")")
 	print("  AP:", defender.current_ap)
 	
 	# 3. 攻撃順決定
@@ -266,7 +266,7 @@ func _execute_battle_core(attacker_index: int, card_data: Dictionary, tile_info:
 	if battle_screen_manager:
 		await battle_screen_manager.close_battle_screen()
 	
-	# 6. 結果に応じた処理（死者復活情報も渡す）
+	# 6. 結果に応じた処理（蘇生情報も渡す）
 	await _apply_post_battle_effects(result, attacker_index, card_data, tile_info, attacker, defender, battle_result, from_tile_index)
 	
 	print("================================")
@@ -284,7 +284,7 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 	board_system_ref.set_tile_owner(tile_info["index"], attacker_index)
 	board_system_ref.place_creature(tile_info["index"], card_data)
 
-	# ダウン状態を設定（不屈チェック）
+	# ダウン状態を設定（奮闘チェック）
 	var inv_tile_index = tile_info["index"]
 	if board_system_ref.tile_nodes.has(inv_tile_index):
 		var tile = board_system_ref.tile_nodes[inv_tile_index]
@@ -298,7 +298,7 @@ func execute_invasion_3d(attacker_index: int, card_data: Dictionary, tile_info: 
 
 	emit_signal("invasion_completed", true, tile_info["index"])
 
-# ミラーワールド: 同名クリーチャー複数配置禁止チェック
+# ハーミットズパラドックス: 同名クリーチャー複数配置禁止チェック
 # 戦闘時、自フィールドに同名クリーチャーがいる側が破壊される
 func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, attacker_index: int, tile_index: int, from_tile_index: int) -> bool:
 	if not game_flow_manager_ref or not game_flow_manager_ref.spell_container or not game_flow_manager_ref.spell_container.spell_world_curse:
@@ -306,7 +306,7 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 
 	var spell_world_curse = game_flow_manager_ref.spell_container.spell_world_curse
 	
-	# ミラーワールドが有効かチェック
+	# ハーミットズパラドックスが有効かチェック
 	if not spell_world_curse.is_mirror_world_active():
 		return false
 	
@@ -329,10 +329,10 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 	if not attacker_has_duplicate and not defender_has_duplicate:
 		return false
 	
-	print("【ミラーワールド】同名クリーチャー複数配置チェック")
+	print("【ハーミットズパラドックス】同名クリーチャー複数配置チェック")
 
-	# グローバルコメントでミラーワールド発動を通知
-	var message = "【ミラーワールド】"
+	# グローバルコメントでハーミットズパラドックス発動を通知
+	var message = "【ハーミットズパラドックス】"
 	if attacker_has_duplicate and defender_has_duplicate:
 		message += "両者相殺！"
 	elif attacker_has_duplicate:
@@ -410,7 +410,7 @@ func _check_mirror_world_destroy(card_data: Dictionary, tile_info: Dictionary, a
 			# 移動侵略の場合、移動元から移動
 			board_system_ref.place_creature(tile_index, card_data, attacker_index)
 
-		# ダウン状態を設定（不屈チェック）
+		# ダウン状態を設定（奮闘チェック）
 		if board_system_ref.tile_nodes.has(tile_index):
 			var mw_tile = board_system_ref.tile_nodes[tile_index]
 			if mw_tile and mw_tile.has_method("set_down_state"):
@@ -441,7 +441,7 @@ func validate_systems() -> bool:
 
 ## バトル中の一時的なcreature_data変更をクリーンアップ
 ## battle_skill_granter/battle_curse_applierが無効化をArray化したり、
-## battle_item_applierが巻物攻撃設定を追加するため、バトル後に元に戻す
+## battle_item_applierが術攻撃設定を追加するため、バトル後に元に戻す
 func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
 	if not participant or not participant.creature_data:
 		return
@@ -456,11 +456,11 @@ func _cleanup_battle_temporary_data(participant: BattleParticipant) -> void:
 	if keyword_conditions.is_empty():
 		return
 
-	# 巻物攻撃設定を削除（バトル中のみ使用）
-	if keyword_conditions.has("巻物攻撃"):
-		keyword_conditions.erase("巻物攻撃")
-	if keyword_conditions.has("巻物強打"):
-		keyword_conditions.erase("巻物強打")
+	# 術攻撃設定を削除（バトル中のみ使用）
+	if keyword_conditions.has("術攻撃"):
+		keyword_conditions.erase("術攻撃")
+	if keyword_conditions.has("術強化"):
+		keyword_conditions.erase("術強化")
 
 	# 無効化がArrayに変換されていた場合、元のDictionary形式に復元
 	if keyword_conditions.has("無効化") and keyword_conditions["無効化"] is Array:
@@ -495,7 +495,7 @@ func _apply_post_battle_effects(
 	_cleanup_battle_temporary_data(attacker)
 	_cleanup_battle_temporary_data(defender)
 	
-	# 💰 EP獲得処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
+	# 💰 蓄魔処理はbattle_execution.gdの_apply_on_attack_success_effectsに移動済み
 	
 	match result:
 		BattleResult.ATTACKER_WIN:
@@ -506,7 +506,7 @@ func _apply_post_battle_effects(
 			if lap_system:
 				lap_system.on_creature_destroyed()
 
-			# バウンティハント（賞金首）報酬チェック - 防御側が敗者
+			# バウンティハント（賞金）報酬チェック - 防御側が敗者
 			await _check_and_apply_bounty_reward(defender, attacker)
 			
 			# 攻撃側の永続バフ適用（バルキリー・ダスクドウェラー）
@@ -521,7 +521,7 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
@@ -529,7 +529,7 @@ func _apply_post_battle_effects(
 			# 土地を奪取してクリーチャーを配置
 			board_system_ref.set_tile_owner(tile_index, attacker_index)
 			
-			# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
+			# 🔄 蘇生した場合は復活後のクリーチャーデータを使用
 			# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
 			var place_creature_data = attacker.creature_data.duplicate(true)
 			# BattleParticipantのプロパティから永続バフを反映
@@ -540,11 +540,11 @@ func _apply_post_battle_effects(
 			place_creature_data["base_up_ap"] = attacker.base_up_ap
 			# 戦闘後の残りHPを保存
 			place_creature_data["current_hp"] = attacker.current_hp
-			# 移動中フラグを削除（応援スキル用）
+			# 移動中フラグを削除（鼓舞スキル用）
 			place_creature_data.erase("is_moving")
 			board_system_ref.place_creature(tile_index, place_creature_data)
 
-			# ダウン状態を設定（不屈チェック）
+			# ダウン状態を設定（奮闘チェック）
 			if board_system_ref.tile_nodes.has(tile_index):
 				var placed_tile = board_system_ref.tile_nodes[tile_index]
 				if placed_tile and placed_tile.has_method("set_down_state"):
@@ -560,15 +560,15 @@ func _apply_post_battle_effects(
 			
 			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
-			# 🌍 戦闘勝利時の土地効果（土地変性・土地破壊）
+			# 🌍 戦闘勝利時の土地効果（属性変化・土地破壊）
 			print("[DEBUG] 土地効果チェック開始")
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(attacker.creature_data, tile_index, board_system_ref)
 			print("[DEBUG] 土地効果通知表示")
 			await _show_land_effect_notification(attacker.creature_data, land_effect_result)
 			print("[DEBUG] 土地効果通知完了")
 
-			# 💀 抹消効果（アネイマブル）
-			print("[DEBUG] 抹消効果チェック")
+			# 💀 殲滅効果（アネイマブル）
+			print("[DEBUG] 殲滅効果チェック")
 			battle_special_effects.check_and_apply_annihilate(attacker, defender)
 
 			print("[DEBUG] invasion_completed シグナル emit 直前: tile=%d" % tile_index)
@@ -582,7 +582,7 @@ func _apply_post_battle_effects(
 			if lap_system:
 				lap_system.on_creature_destroyed()
 
-			# バウンティハント（賞金首）報酬チェック - 攻撃側が敗者
+			# バウンティハント（賞金）報酬チェック - 攻撃側が敗者
 			# 注: 攻撃側には通常呪いはないが、移動侵略の場合はあり得る
 			await _check_and_apply_bounty_reward(attacker, defender)
 			
@@ -594,7 +594,7 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
@@ -606,11 +606,11 @@ func _apply_post_battle_effects(
 			
 			# 🆙 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsで処理
 			
-			# 🌍 戦闘勝利時の土地効果（土地変性 - 防御成功時も発動）
+			# 🌍 戦闘勝利時の土地効果（属性変化 - 防御成功時も発動）
 			var land_effect_result = SkillLandEffects.check_and_apply_on_battle_won(defender.creature_data, tile_index, board_system_ref)
 			await _show_land_effect_notification(defender.creature_data, land_effect_result)
 			
-			# 💀 抹消効果（アネイマブル）
+			# 💀 殲滅効果（アネイマブル）
 			battle_special_effects.check_and_apply_annihilate(defender, attacker)
 
 			# NOTE: 移動元タイルは移動コマンド時に既に削除・空き地化済み（land_action_helper.gd:349）
@@ -635,7 +635,7 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
@@ -655,25 +655,25 @@ func _apply_post_battle_effects(
 				
 				# 現在HPを保存
 				return_data["current_hp"] = attacker.current_hp
-				# 移動中フラグを削除（応援スキル用）
+				# 移動中フラグを削除（鼓舞スキル用）
 				return_data.erase("is_moving")
 				
 				# 所有者を設定してからクリーチャーを配置（3Dカード表示を再作成）
 				from_tile.owner_id = attacker_index
 				from_tile.place_creature(return_data)
 				
-				# ダウン状態にする（不屈チェック）
+				# ダウン状態にする（奮闘チェック）
 				if from_tile.has_method("set_down_state"):
 					if not PlayerBuffSystem.has_unyielding(return_data):
 						from_tile.set_down_state(true)
 					else:
-						print("[移動侵略敗北] 不屈により戻った後もダウンしません")
+						print("[移動侵略敗北] 奮闘により戻った後もダウンしません")
 				
 				from_tile.update_visual()
 			else:
 				# 通常侵略：カードを手札に戻す
 				print("[通常侵略敗北] カードを手札に戻します")
-				# 🔄 死者復活した場合は復活後のクリーチャーデータを使用
+				# 🔄 蘇生した場合は復活後のクリーチャーデータを使用
 				# 🔄 一時変身の場合は元に戻ったクリーチャーデータを使用
 				var return_card_data = attacker.creature_data.duplicate(true)
 				# HPは元の最大値にリセット（手札に戻る時はダメージを回復）
@@ -703,7 +703,7 @@ func _apply_post_battle_effects(
 			SkillPermanentBuff.apply_after_battle_changes(defender)
 			
 			# 🔄 一時変身の場合、先に元に戻す（バルダンダース専用）
-			# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+			# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 			if battle_result.get("attacker_original", {}).has("name") and not battle_result.get("attacker_revived", false):
 				TransformSkill.revert_transform(attacker, battle_result["attacker_original"])
 				print("[変身復帰] 攻撃側が元に戻りました")
@@ -729,7 +729,7 @@ func _apply_post_battle_effects(
 	
 	# 🔄 防御側の変身を元に戻す（バルダンダース専用）
 	# 戦闘後に復帰が必要な変身の場合のみ
-	# ただし死者復活が発動した場合は復帰しない（復活後のクリーチャーが優先）
+	# ただし蘇生が発動した場合は復帰しない（復活後のクリーチャーが優先）
 	if not battle_result.is_empty():
 		if battle_result.get("defender_original", {}).has("name") and not battle_result.get("defender_revived", false):
 			TransformSkill.revert_transform(defender, battle_result["defender_original"])
@@ -753,8 +753,8 @@ func _apply_post_battle_effects(
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
 			print("[永続変身] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", defender.current_hp)
 	
-	# 🔄 死者復活のタイル更新
-	# 死者復活は常に永続なので、タイルのcreature_dataを更新する
+	# 🔄 蘇生のタイル更新
+	# 蘇生は常に永続なので、タイルのcreature_dataを更新する
 	if battle_result.get("defender_revived", false):
 		# 防御側が復活した場合、タイルのクリーチャーを更新
 		var updated_creature = defender.creature_data.duplicate(true)
@@ -762,7 +762,7 @@ func _apply_post_battle_effects(
 		updated_creature["current_hp"] = defender.current_hp  # 現在HP（MHP）を設定
 		updated_creature["base_up_hp"] = defender.base_up_hp  # 永続ボーナスを設定
 		board_system_ref.update_tile_creature(tile_index, updated_creature)
-		print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", defender.current_hp)
+		print("[蘇生] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", defender.current_hp)
 	
 	if battle_result.get("attacker_revived", false):
 		# 攻撃側が復活した場合も、タイルのクリーチャーを更新
@@ -773,11 +773,11 @@ func _apply_post_battle_effects(
 			updated_creature["current_hp"] = attacker.current_hp  # 現在HP（MHP）を設定
 			updated_creature["base_up_hp"] = attacker.base_up_hp  # 永続ボーナスを設定
 			board_system_ref.update_tile_creature(tile_index, updated_creature)
-			print("[死者復活] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", attacker.current_hp)
+			print("[蘇生] タイルのクリーチャーを更新しました: ", updated_creature.get("name", "?"), " HP:", attacker.current_hp)
 	
 	# 🔄 手札復活処理はcheck_on_death_effects内で即座に実行済み
 	
-	# 📦 アイテム復帰処理
+	# 📦 帰還処理
 	_apply_item_return(attacker, attacker_index)
 	_apply_item_return(defender, defender.player_id)
 	
@@ -786,7 +786,7 @@ func _apply_post_battle_effects(
 		board_system_ref.update_all_tile_displays()
 
 
-## 🌍 土地効果（土地変性・土地破壊）の通知を表示
+## 🌍 土地効果（属性変化・土地破壊）の通知を表示
 func _show_land_effect_notification(creature_data: Dictionary, land_effect_result: Dictionary) -> void:
 	if land_effect_result.is_empty():
 		return
@@ -803,11 +803,11 @@ func _show_land_effect_notification(creature_data: Dictionary, land_effect_resul
 	if not _message_service:
 		return
 
-	# 土地変性の通知
+	# 属性変化の通知
 	if changed_element != "":
 		var element_names = {"water": "水", "fire": "火", "wind": "風", "earth": "地", "neutral": "無"}
 		var element_jp = element_names.get(changed_element, changed_element)
-		var text = "%s の土地変性！→ %s属性" % [creature_name, element_jp]
+		var text = "%s の属性変化！→ %s属性" % [creature_name, element_jp]
 		await _message_service.show_comment_and_wait(text, -1, true)
 
 	# 土地破壊の通知
@@ -816,7 +816,7 @@ func _show_land_effect_notification(creature_data: Dictionary, land_effect_resul
 		await _message_service.show_comment_and_wait(text, -1, true)
 
 
-# バウンティハント（賞金首）呪いの報酬処理 - SpellMagicに委譲
+# バウンティハント（賞金）呪いの報酬処理 - SpellMagicに委譲
 func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattleParticipant) -> void:
 	if not loser or not loser.creature_data:
 		return
@@ -828,7 +828,7 @@ func _check_and_apply_bounty_reward(loser: BattleParticipant, winner: BattlePart
 	# SpellMagicに委譲（通知付き）
 	await spell_magic.apply_bounty_reward_with_notification(loser.creature_data, winner.creature_data)
 
-# アイテム復帰処理
+# 帰還処理
 func _apply_item_return(participant: BattleParticipant, player_id: int):
 	if not participant or not participant.creature_data:
 		return
@@ -838,11 +838,11 @@ func _apply_item_return(participant: BattleParticipant, player_id: int):
 	if used_items.is_empty():
 		return
 	
-	# アイテム復帰スキルをチェックして適用
+	# 帰還スキルをチェックして適用
 	var return_result = _skill_item_return.check_and_apply_item_return(participant, used_items, player_id)
 	
 	if return_result.get("returned", false):
 		var count = return_result.get("count", 0)
-		print("【アイテム復帰完了】", count, "個のアイテムが復帰しました")
+		print("【帰還完了】", count, "個のアイテムが復帰しました")
 
 # 土地レベルアップ効果（シルバープロウ）はSkillBattleEndEffectsに移動

@@ -2,9 +2,9 @@ extends Node
 class_name ConditionChecker
 
 # 条件判定を専門に扱うクラス
-# 複雑な条件の組み合わせや、強打などの条件付きキーワードを評価
+# 複雑な条件の組み合わせや、強化などの条件付きキーワードを評価
 
-# 強打の条件パターン
+# 強化の条件パターン
 enum PowerStrikeCondition {
 	MHP_BELOW,           # MHP40以下など
 	MHP_ABOVE,           # MHP40以上など
@@ -18,26 +18,26 @@ enum PowerStrikeCondition {
 	LEVEL_CAP            # レベル使用時
 }
 
-# 戦闘コンテキストから強打条件をチェック
+# 戦闘コンテキストから強化条件をチェック
 func check_power_strike(creature_data: Dictionary, battle_context: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
-	# 強打キーワードを探す
+	# 強化キーワードを探す
 	for effect in effects:
 		if effect.get("effect_type") == "power_strike":
 			return _evaluate_power_strike_conditions(effect, battle_context)
 	
 	# キーワードリストからも確認
 	var keywords = ability_parsed.get("keywords", [])
-	if "強打" in keywords:
+	if "強化" in keywords:
 		var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-		var keyword_cond_data = keyword_conditions.get("強打", {})
+		var keyword_cond_data = keyword_conditions.get("強化", {})
 		return evaluate_single_condition(keyword_cond_data, battle_context)
 	
 	return false
 
-# 強打条件の評価
+# 強化条件の評価
 func _evaluate_power_strike_conditions(effect: Dictionary, context: Dictionary) -> bool:
 	var effect_conditions = effect.get("conditions", [])
 	
@@ -183,7 +183,7 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 			var enemy_ap = context.get("enemy_ap", 100)
 			return enemy_ap <= cond_value
 		
-		# 敵のAP判定（強打用）
+		# 敵のAP判定（強化用）
 		"enemy_ap_check":
 			var enemy_ap = context.get("enemy_ap", 0)
 			var operator = condition.get("operator", "<=")
@@ -196,7 +196,7 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 				"==": return enemy_ap == value
 				_: return false
 		
-		# 敵の最大HP判定（強打用）
+		# 敵の最大HP判定（強化用）
 		"enemy_max_hp_check":
 			var enemy_mhp = context.get("enemy_mhp", 0)
 			var operator = condition.get("operator", "<=")
@@ -209,10 +209,10 @@ func evaluate_single_condition(condition: Dictionary, context: Dictionary) -> bo
 				"==": return enemy_mhp == value
 				_: return false
 		
-		# 防御型判定
+		# 堅守判定
 		"is_defender_type":
 			var enemy_abilities = context.get("enemy_abilities", [])
-			return "防御型" in enemy_abilities
+			return "堅守" in enemy_abilities
 		
 		# マーク判定（呪いシステムで実装）
 		"has_mark":
@@ -406,7 +406,7 @@ func check_nullify(creature_data: Dictionary, attack_context: Dictionary) -> boo
 	
 	return false
 
-# 感応条件のチェック（ステータスボーナス）
+# 共鳴条件のチェック（ステータスボーナス）
 func check_affinity(creature_data: Dictionary, game_context: Dictionary) -> Dictionary:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])

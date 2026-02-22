@@ -167,7 +167,7 @@ static func create_effect_strategy(effect_type: String) -> SpellStrategy:
 		"discord_transform": preload("res://scripts/spells/strategies/effect_strategies/transform_effect_strategy.gd"),
 		# === クリーチャー手札戻し系（1個） ===
 		"return_to_hand": preload("res://scripts/spells/strategies/effect_strategies/creature_return_effect_strategy.gd"),
-		# === 自壊効果（1個） ===
+		# === 自滅効果（1個） ===
 		"self_destroy": preload("res://scripts/spells/strategies/effect_strategies/self_destroy_effect_strategy.gd"),
 	}
 
@@ -307,7 +307,7 @@ static func get_registered_effect_types() -> Array:
 		"discord_transform",
 		# === クリーチャー手札戻し系（1個） ===
 		"return_to_hand",
-		# === 自壊効果（1個） ===
+		# === 自滅効果（1個） ===
 		"self_destroy",
 	]
 
@@ -440,6 +440,6 @@ static func has_effect_strategy(effect_type: String) -> bool:
 		"discord_transform",
 		# === クリーチャー手札戻し系（1個） ===
 		"return_to_hand",
-		# === 自壊効果（1個） ===
+		# === 自滅効果（1個） ===
 		"self_destroy",
 	]

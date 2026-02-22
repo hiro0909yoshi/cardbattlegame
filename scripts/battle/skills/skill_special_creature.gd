@@ -9,7 +9,7 @@ class_name SkillSpecialCreature
 ## - スペクター (ID: 323): ランダム能力値設定
 ##
 ## 【担当アイテム】
-## - ウォーロックディスク (ID: 1004): 敵の全能力無効化
+## - ウォーロックディスク (ID: 1004): 敵の全沈黙
 ##
 ## @version 1.0
 ## @date 2025-11-03
@@ -177,7 +177,7 @@ static func apply_nullify_enemy_abilities(self_participant: BattleParticipant, e
 			print("【ウォーロックディスク発動】", self_participant.creature_data.get("name", "?"), 
 			  " → ", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	elif enemy_has_skill_nullify:
-		var curse_name = enemy_curse.get("name", "戦闘能力不可")
+		var curse_name = enemy_curse.get("name", "錯乱")
 		print("【呪い発動: ", curse_name, "】", enemy_participant.creature_data.get("name", "?"), "の全能力を無効化")
 	
 	# 敵のクリーチャー固有スキルを無効化

@@ -65,7 +65,7 @@ func apply_dice_multi_effect(effect: Dictionary, target_data: Dictionary, curren
 		"count": count
 	})
 
-# 範囲指定 + EP獲得効果を適用
+# 範囲指定 + 蓄魔効果を適用
 func apply_dice_range_magic_effect(effect: Dictionary, target_data: Dictionary, current_player_id: int):
 	var target_player_id = _get_target_player_id(target_data, current_player_id)
 	if target_player_id < 0:
@@ -75,7 +75,7 @@ func apply_dice_range_magic_effect(effect: Dictionary, target_data: Dictionary, 
 	var max_val = effect.get("max", 6)
 	var magic = effect.get("magic", 0)
 	var duration = effect.get("duration", 1)
-	var _name = effect.get("name", "蓄魔歩行")
+	var _name = effect.get("name", "巡礼")
 	
 	spell_curse.curse_player(target_player_id, "dice_range_magic", duration, {
 		"name": _name,
@@ -218,7 +218,7 @@ func process_magic_grant(player_id: int) -> Dictionary:
 	var magic_amount = get_magic_grant_amount(player_id)
 	if magic_amount > 0:
 		player_system.add_magic(player_id, magic_amount)
-		print("[", curse_name, "] EP獲得 +", magic_amount, "EP")
+		print("[", curse_name, "] 蓄魔 +", magic_amount, "EP")
 		return {"message": "EP +" + str(magic_amount) + "EP 獲得！", "player_id": player_id}
 	return {}
 
@@ -253,7 +253,7 @@ func get_modified_dice_value(player_id: int, original_value: int) -> int:
 			return original_value
 		
 		"dice_range_magic":
-			# 範囲指定 + EP獲得（チャージステップ）
+			# 範囲指定 + 蓄魔（ジャーニー）
 			var min_val = int(params.get("min", 1))
 			var max_val = int(params.get("max", 6))
 			var new_value = randi() % (max_val - min_val + 1) + min_val

@@ -883,7 +883,7 @@ func _on_level_up_completed(tile_index: int, new_level: int):
 ## ※衰弱はSkillBattleEndEffectsで処理されるため、ここでは何もしない
 func _apply_plague_damage_after_battle(_tile_index: int) -> void:
 	# 衰弱ダメージはbattle_execution.gd内のSkillBattleEndEffects.process_allで処理
-	# ナチュラルワールド等による無効化チェックもそちらで行う
+	# ハングドマンズシール等による無効化チェックもそちらで行う
 	pass
 
 ## 簡易移動バトル（カードシステム使用不可時）
@@ -1086,7 +1086,7 @@ func _execute_swap_with_hand_index_for_cpu(hand_index: int):
 	# タイルに新しいクリーチャーを配置
 	tile.place_creature(new_creature)
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	if tile.has_method("set_down_state"):
 		if not PlayerBuffSystem.has_unyielding(new_creature):
 			tile.set_down_state(true)

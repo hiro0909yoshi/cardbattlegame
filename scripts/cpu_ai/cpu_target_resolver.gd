@@ -36,12 +36,12 @@ func set_game_stats(p_game_stats) -> void:
 func check_target_condition(target_condition: String, context: Dictionary) -> Array:
 	var results = _check_target_condition_internal(target_condition, context)
 	
-	# 全ての結果に防魔フィルタを適用
+	# 全ての結果に結界フィルタを適用
 	results = _apply_protection_filter(results, context)
 	
 	return results
 
-## 防魔・HP効果無効フィルタを適用（ターゲット共通）
+## 結界・堅牢フィルタを適用（ターゲット共通）
 func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 	var filtered = []
 	var world_curse = {}
@@ -62,10 +62,10 @@ func _apply_protection_filter(targets: Array, context: Dictionary) -> Array:
 		if target_type == "creature" or target.has("creature"):
 			var creature = target.get("creature", {})
 			if not creature.is_empty():
-				# 防魔チェック
+				# 結界チェック
 				if SpellProtection.is_creature_protected(creature, protection_context):
 					should_skip = true
-				# HP効果無効チェック
+				# 堅牢チェック
 				elif affects_hp and SpellProtection.has_hp_effect_immune(creature):
 					should_skip = true
 		elif target_type == "player":

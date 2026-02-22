@@ -301,7 +301,7 @@ func get_element_chain_count(tile_index: int, owner_id: int) -> int:
 				is_same_team_result = (tile.owner_id == owner_id)
 
 			if is_same_team_result:
-				# ジョイントワールド対応: 同属性または連鎖ペアならカウント
+				# ボンドオブラバーズ対応: 同属性または連鎖ペアならカウント
 				if SpellWorldCurse.is_same_chain_group(tile.tile_type, target_element, game_stats):
 					chain_count += 1
 

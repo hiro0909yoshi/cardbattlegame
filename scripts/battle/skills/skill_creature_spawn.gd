@@ -92,7 +92,7 @@ static func spawn_mycolon_copy(board_system, tile_index: int, creature_data: Dic
 		tile.owner_id = player_id
 		tile.place_creature(creature_data)
 		
-		# ダウン状態にする（不屈チェック）
+		# ダウン状態にする（奮闘チェック）
 		if tile.has_method("set_down_state"):
 			if not PlayerBuffSystem.has_unyielding(creature_data):
 				tile.set_down_state(true)

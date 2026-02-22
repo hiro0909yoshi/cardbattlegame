@@ -2,7 +2,7 @@ extends Node
 class_name BattleSkillProcessor
 
 # バトルスキル処理
-# 感応、強打、2回攻撃、巻物攻撃などのスキル適用を担当
+# 共鳴、強化、2回攻撃、術攻撃などのスキル適用を担当
 
 # スキルモジュール
 const SupportSkill = preload("res://scripts/battle/skills/skill_support.gd")
@@ -62,7 +62,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	await _apply_curse_effects(attacker, defender, battle_tile_index)
 	
 	# ============================================================
-	# 【Phase 0-N】能力無効化チェック（呪い適用後）
+	# 【Phase 0-N】沈黙チェック（呪い適用後）
 	# ============================================================
 	var has_nullify = _has_warlock_disk(attacker) or _has_warlock_disk(defender) \
 		or _has_skill_nullify_curse(attacker) or _has_skill_nullify_curse(defender) \
@@ -70,11 +70,11 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	
 	if has_nullify:
 		if not silent:
-			print("【能力無効化発動】以降のスキル・変身・応援をスキップして基礎ステータスでバトル")
+			print("【沈黙発動】以降のスキル・変身・鼓舞をスキップして基礎ステータスでバトル")
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(attacker, defender)
 		SkillSpecialCreatureScript.apply_nullify_enemy_abilities(defender, attacker)
 		
-		# 🎬 能力無効化スキル表示（どちらが持っているか判定）
+		# 🎬 沈黙スキル表示（どちらが持っているか判定）
 		# ウォーロックディスクの場合は「アイテム名 を使用」、それ以外は「戦闘中能力無効」
 		if battle_screen_manager:
 			if _has_warlock_disk(attacker):
@@ -91,7 +91,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 				elif _has_skill_nullify_curse(defender) or _has_nullify_creature_ability(defender):
 					await battle_screen_manager.show_skill_activation("defender", skill_name, {})
 		
-		# 能力無効化でもアイテムステータスは適用
+		# 沈黙でもアイテムステータスは適用
 		var attacker_nullify_before = _snapshot_stats(attacker)
 		var defender_nullify_before = _snapshot_stats(defender)
 		
@@ -105,7 +105,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		return result
 	
 	# ============================================================
-	# 【Phase 0-D】アイテム破壊・盗み（能力無効化後に実行）
+	# 【Phase 0-D】アイテム破壊・盗み（沈黙後に実行）
 	# ============================================================
 	# 素の先制（クリーチャー能力のみ）で順序決定
 	var attacker_has_raw_first_strike = _has_raw_first_strike(attacker)
@@ -238,7 +238,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	# プレイヤー土地情報取得
 	var player_lands = board_system_ref.get_player_lands_by_element(attacker_index)
 	
-	# 【Phase 1】応援スキル適用（盤面全体を対象にバフ）- 固有名を維持
+	# 【Phase 1】鼓舞スキル適用（盤面全体を対象にバフ）- 固有名を維持
 	attacker_before = _snapshot_stats(attacker)
 	defender_before = _snapshot_stats(defender)
 	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
@@ -285,7 +285,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	await _apply_skills_with_animation(attacker, attacker_context)
 	await _apply_skills_with_animation(defender, defender_context)
 	
-	# 【Phase 3】貫通・巻物攻撃による土地ボーナス無効化
+	# 【Phase 3】刺突・術攻撃による土地ボーナス無効化
 	if not defender.has_squid_mantle:
 		defender_before = _snapshot_stats(defender)
 		PenetrationSkill.apply_penetration(attacker, defender)
@@ -294,15 +294,15 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		await _show_skill_change_if_any(defender, defender_before, penetration_name, attacker)
 	else:
 		if not silent:
-			print("【スクイドマントル】貫通を無効化")
+			print("【スクイドマントル】刺突を無効化")
 	
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
-		# 巻物強打か巻物攻撃かを判定
+		# 術強化か術攻撃かを判定
 		var attacker_ability = attacker.creature_data.get("ability_parsed", {})
 		var attacker_keywords = attacker_ability.get("keywords", [])
-		var is_scroll_power_strike = "巻物強打" in attacker_keywords
+		var is_scroll_power_strike = "術強化" in attacker_keywords
 		var scroll_skill_key = "scroll_power_strike" if is_scroll_power_strike else "scroll_attack"
-		var scroll_skill_name = "巻物強打" if is_scroll_power_strike else "巻物攻撃"
+		var scroll_skill_name = "術強化" if is_scroll_power_strike else "術攻撃"
 		if not silent:
 			print("【%s】防御側の土地ボーナス %d を無効化" % [scroll_skill_name, defender.land_bonus_hp])
 		defender_before = _snapshot_stats(defender)
@@ -311,7 +311,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 		var scroll_name = SkillDisplayConfig.get_skill_name(scroll_skill_key)
 		await _show_skill_change_if_any(defender, defender_before, scroll_name, attacker)
 	
-	# 💰 EP獲得スキル適用（バトル開始時）
+	# 💰 蓄魔スキル適用（バトル開始時）
 	await apply_magic_gain_on_battle_start(attacker, defender)
 	
 	return result
@@ -347,7 +347,7 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	var scroll_attack_name = SkillDisplayConfig.get_skill_name("scroll_attack")
 	var power_strike_name = SkillDisplayConfig.get_skill_name("power_strike")
 	
-	# 0. アイテムクリーチャーのクリーチャー時効果
+	# 0. レリックのクリーチャー時効果
 	if SkillItemCreature.is_item_creature(participant.creature_data):
 		before = _snapshot_stats(participant)
 		SkillItemCreature.apply_as_creature(participant, board_system_ref)
@@ -370,7 +370,7 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	apply_turn_number_bonus(participant, context)
 	await _show_skill_change_if_any(participant, before, stat_change_name)
 	
-	# 1. 感応スキル（固有名を維持）
+	# 1. 共鳴スキル（固有名を維持）
 	before = _snapshot_stats(participant)
 	ResonanceSkill.apply(participant, context)
 	await _show_skill_change_if_any(participant, before, resonance_name)
@@ -416,26 +416,26 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 	for skill_type in strike_skills:
 		await _show_skill_no_stat_change(participant, skill_type)
 	
-	# 5. 強打スキル（固有名を維持）
+	# 5. 強化スキル（固有名を維持）
 	before = _snapshot_stats(participant)
 	apply_power_strike_skills(participant, context)
 	await _show_skill_change_if_any(participant, before, power_strike_name)
 	
-	# 6. 巻物攻撃判定
+	# 6. 術攻撃判定
 	ScrollAttackSkill.apply(participant, context, silent)
 	
 	# 7. 2回攻撃スキル
 	check_double_attack(participant, context)
 	
-	# 8. 巻物使用時のAP固定（巻物攻撃 or 巻物強打を区別して表示）
+	# 8. 巻物使用時のAP固定（術攻撃 or 術強化を区別して表示）
 	if participant.is_using_scroll:
 		before = _snapshot_stats(participant)
 		_apply_scroll_ap_fix(participant, context)
-		# 巻物強打を持っているか判定
+		# 術強化を持っているか判定
 		var ability_parsed_scroll = participant.creature_data.get("ability_parsed", {})
 		var keywords_scroll = ability_parsed_scroll.get("keywords", [])
 		var scroll_display_name: String
-		if "巻物強打" in keywords_scroll:
+		if "術強化" in keywords_scroll:
 			scroll_display_name = SkillDisplayConfig.get_skill_name("scroll_power_strike")
 		else:
 			scroll_display_name = scroll_attack_name
@@ -443,20 +443,20 @@ func _apply_skills_with_animation(participant: BattleParticipant, context: Dicti
 
 
 ## 巻物使用時のAP固定処理
-## 注: 巻物強打の×1.5は SkillScrollAttack.apply() 内で処理済み
+## 注: 術強化の×1.5は SkillScrollAttack.apply() 内で処理済み
 func _apply_scroll_ap_fix(participant: BattleParticipant, context: Dictionary) -> void:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
 	
-	# 巻物強打の場合は SkillScrollAttack.apply() で処理済みなので何もしない
-	if "巻物強打" in keywords:
+	# 術強化の場合は SkillScrollAttack.apply() で処理済みなので何もしない
+	if "術強化" in keywords:
 		if not silent:
-			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（術強化適用済み）")
 		return
 	
-	# 巻物攻撃のみの場合
-	var scroll_config = keyword_conditions.get("巻物攻撃", {})
+	# 術攻撃のみの場合
+	var scroll_config = keyword_conditions.get("術攻撃", {})
 	var scroll_type = scroll_config.get("scroll_type", "base_ap")
 	
 	match scroll_type:
@@ -517,8 +517,8 @@ func _has_stat_change(participant: BattleParticipant, before: Dictionary) -> boo
 ## skill_owner: スキル名を表示する側（省略時はparticipant自身）
 ##
 ## 使い方:
-##   自己バフ: _show_skill_change_if_any(attacker, before, "感応")
-##   敵対象:   _show_skill_change_if_any(defender, before, "貫通", attacker)
+##   自己バフ: _show_skill_change_if_any(attacker, before, "共鳴")
+##   敵対象:   _show_skill_change_if_any(defender, before, "刺突", attacker)
 func _show_skill_change_if_any(participant: BattleParticipant, before: Dictionary, skill_name: String, skill_owner: BattleParticipant = null) -> void:
 	if not _has_stat_change(participant, before):
 		return
@@ -617,7 +617,7 @@ func _show_merge_if_any(participant: BattleParticipant, side: String) -> void:
 
 
 ## アイテム使用をバトル画面に表示（ステータス変化に関係なく常に表示）
-## ウォーロックディスク（能力無効化アイテム）は除外（別フェーズで表示済み）
+## ウォーロックディスク（沈黙アイテム）は除外（別フェーズで表示済み）
 func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionary, side: String) -> void:
 	if not battle_screen_manager:
 		return
@@ -631,14 +631,14 @@ func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionar
 	var item = items[0]
 	var item_type = item.get("type", "")
 	
-	# ウォーロックディスク（能力無効化アイテム）は除外
-	# 能力無効化フェーズで「戦闘中能力無効」として表示済み
+	# ウォーロックディスク（沈黙アイテム）は除外
+	# 沈黙フェーズで「戦闘中能力無効」として表示済み
 	if _is_nullify_abilities_item(item):
 		return
 	
 	var display_name: String
 	if item_type == "creature":
-		# 援護クリーチャー: 「援護[クリーチャー名]」形式
+		# 加勢クリーチャー: 「加勢[クリーチャー名]」形式
 		var creature_name = item.get("name", "?")
 		var skill_name = SkillDisplayConfig.get_skill_name("assist")
 		display_name = "%s[%s]" % [skill_name, creature_name]
@@ -655,7 +655,7 @@ func _show_item_effect_if_any(participant: BattleParticipant, _before: Dictionar
 	})
 
 
-## アイテムが能力無効化効果（ウォーロックディスク）を持っているかチェック
+## アイテムが沈黙効果（ウォーロックディスク）を持っているかチェック
 func _is_nullify_abilities_item(item: Dictionary) -> bool:
 	var effect_parsed = item.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
@@ -665,7 +665,7 @@ func _is_nullify_abilities_item(item: Dictionary) -> bool:
 	return false
 
 
-## ウォーロックディスク（能力無効化アイテム）の名前を取得
+## ウォーロックディスク（沈黙アイテム）の名前を取得
 func _get_warlock_disk_name(participant: BattleParticipant) -> String:
 	var items = participant.creature_data.get("items", [])
 	for item in items:
@@ -783,7 +783,7 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	
 	var _has_scroll_power_strike = PowerStrikeSkill.has_scroll_power_strike(participant.creature_data)
 	
-	# 0. アイテムクリーチャーのクリーチャー時効果を適用
+	# 0. レリックのクリーチャー時効果を適用
 	if SkillItemCreature.is_item_creature(participant.creature_data):
 		SkillItemCreature.apply_as_creature(participant, board_system_ref)
 	# リビングクローブをアイテムとして使用した場合（フラグで判定）
@@ -799,7 +799,7 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 0.5. ターン数ボーナスを適用（最優先、他のスキルより前）
 	apply_turn_number_bonus(participant, context)
 	
-	# 1. 感応スキルを適用
+	# 1. 共鳴スキルを適用
 	ResonanceSkill.apply(participant, context)
 	
 	# 3. 土地数比例効果を適用（Phase 3追加）
@@ -827,28 +827,28 @@ func apply_skills(participant: BattleParticipant, context: Dictionary) -> void:
 	# 4. 先制・後手スキルを適用
 	FirstStrikeSkill.apply(participant, silent)
 	
-	# 5. 強打スキルを適用（巻物強打を含む）
+	# 5. 強化スキルを適用（術強化を含む）
 	apply_power_strike_skills(participant, context)
 	
-	# 6. 巻物攻撃判定
+	# 6. 術攻撃判定
 	ScrollAttackSkill.apply(participant, context, silent)
 	
 	# 7. 2回攻撃スキルを判定
 	check_double_attack(participant, context)
 	
 	# 8. 巻物使用中の場合、AP最終確認
-	# 注: 巻物強打の×1.5は SkillScrollAttack.apply() 内で処理済み
+	# 注: 術強化の×1.5は SkillScrollAttack.apply() 内で処理済み
 	if participant.is_using_scroll:
 		var ability_parsed = participant.creature_data.get("ability_parsed", {})
 		var keywords = ability_parsed.get("keywords", [])
 		
-		# 巻物強打の場合は SkillScrollAttack.apply() で処理済み
-		if "巻物強打" in keywords:
-			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（巻物強打適用済み）")
+		# 術強化の場合は SkillScrollAttack.apply() で処理済み
+		if "術強化" in keywords:
+			print("【AP最終確認】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap, "（術強化適用済み）")
 		else:
-			# 巻物攻撃のみの場合、AP最終固定
+			# 術攻撃のみの場合、AP最終固定
 			var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-			var scroll_config = keyword_conditions.get("巻物攻撃", {})
+			var scroll_config = keyword_conditions.get("術攻撃", {})
 			var scroll_type = scroll_config.get("scroll_type", "base_ap")
 			var board_system = board_system_ref
 			
@@ -887,18 +887,18 @@ func check_double_attack(participant: BattleParticipant, context: Dictionary) ->
 	
 	DoubleAttackSkill.apply(participant, silent)
 
-## 強打スキル適用（巻物強打を含む）
+## 強化スキル適用（術強化を含む）
 func apply_power_strike_skills(participant: BattleParticipant, context: Dictionary) -> void:
-	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強打無効化
+	# スクイドマントルチェック：防御側がスクイドマントルを持つ場合は強化無効化
 	var opponent = context.get("opponent")
 	if opponent and opponent.has_squid_mantle and context.get("is_attacker", false):
 		if not silent:
-			print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強打を無効化")
+			print("【スクイドマントル】", participant.creature_data.get("name", "?"), "の強化を無効化")
 		return
 	
 	PowerStrikeSkill.apply(participant, context, silent)
 	if not silent:
-		print("【強打適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
+		print("【強化適用後】", participant.creature_data.get("name", "?"), " AP:", participant.current_ap)
 
 
 ## 土地数比例効果を適用（Phase 3追加）
@@ -953,19 +953,19 @@ func apply_phase_3c_effects(participant: BattleParticipant, context: Dictionary)
 func apply_phase_3b_effects(participant: BattleParticipant, context: Dictionary):
 	SkillStatModifiers.apply_phase_3b_effects(participant, context, board_system_ref, silent)
 
-## 💰 バトル開始時のEP獲得スキルを適用
+## 💰 バトル開始時の蓄魔スキルを適用
 func apply_magic_gain_on_battle_start(attacker: BattleParticipant, defender: BattleParticipant) -> void:
 	"""
-	バトル開始時に発動するEP獲得スキルをまとめて適用
-	- 侵略時EP獲得（攻撃側のみ）
-	- 無条件EP獲得（両側）
+	バトル開始時に発動する蓄魔スキルをまとめて適用
+	- 侵略時蓄魔（攻撃側のみ）
+	- 無条件蓄魔（両側）
 	"""
 	# spell_magic_refを直接使う（BattleParticipantから取得）
 	var spell_magic = attacker.spell_magic_ref
 	if not spell_magic:
 		return
 	
-	# EP獲得スキルを適用
+	# 蓄魔スキルを適用
 	var activated = _skill_magic_gain.apply_on_battle_start(attacker, defender, spell_magic)
 	
 	# 発動したスキルをバトル画面に表示
@@ -1015,7 +1015,7 @@ func _has_skill_nullify_curse(participant: BattleParticipant) -> bool:
 	return SpellCurseBattle.has_skill_nullify(participant.creature_data)
 
 
-## クリーチャー能力による能力無効化を持っているかチェック（シーボンズなど）
+## クリーチャー能力による沈黙を持っているかチェック（シーボンズなど）
 func _has_nullify_creature_ability(participant: BattleParticipant) -> bool:
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -1072,7 +1072,7 @@ func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary
 		attacker_lands = board_system_ref.get_player_lands_by_element(attacker_index)
 		defender_lands = board_system_ref.get_player_lands_by_element(defender.player_id) if defender.player_id >= 0 else {}
 	
-	# 応援スキル適用
+	# 鼓舞スキル適用
 	SupportSkill.apply_to_all(participants, battle_tile_index, board_system_ref)
 	
 	# コンテキスト構築（攻撃側）
@@ -1114,10 +1114,10 @@ func apply_skills_for_simulation(participants: Dictionary, tile_info: Dictionary
 	apply_skills(attacker, attacker_context)
 	apply_skills(defender, defender_context)
 	
-	# 貫通判定
+	# 刺突判定
 	if not defender.has_squid_mantle:
 		PenetrationSkill.apply_penetration(attacker, defender)
 	
-	# 巻物攻撃による土地ボーナス無効化
+	# 術攻撃による土地ボーナス無効化
 	if attacker.is_using_scroll and defender.land_bonus_hp > 0:
 		defender.land_bonus_hp = 0

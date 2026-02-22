@@ -1,38 +1,38 @@
-## 遺産スキル - 死亡時に特殊効果を発動する
+## 形見スキル - 死亡時に特殊効果を発動する
 ##
 ## 【主な機能】
-## - 遺産[EP]: 死亡時にEPを獲得
-## - 遺産[カード]: 死亡時にカードをドロー
-## - 遺産[周回数×EP]: 死亡時に周回数に応じたEPを獲得
+## - 形見[EP]: 死亡時にEPを獲得
+## - 形見[カード]: 死亡時にカードをドロー
+## - 形見[周回数×EP]: 死亡時に周回数に応じたEPを獲得
 ##
 ## 【該当クリーチャー】
-## - フェイト (ID: 136): 遺産[カード1枚]（テキスト解析）
-## - コーンフォーク (ID: 315): 破壊時、遺産[200EP]（テキスト解析）
-## - クリーピングコイン (ID: 410): 破壊時、遺産[100EP]（テキスト解析）
-## - マミー (ID: 239): 遺産[周回数×40EP]（JSON形式）
+## - フェイト (ID: 136): 形見[カード1枚]（テキスト解析）
+## - コーンフォーク (ID: 315): 破壊時、形見[200EP]（テキスト解析）
+## - クリーピングコイン (ID: 410): 破壊時、形見[100EP]（テキスト解析）
+## - マミー (ID: 239): 形見[周回数×40EP]（JSON形式）
 ##
 ## @version 1.2
 ## @date 2026-01-26
 
 class_name SkillLegacy
 
-## 遺産[カード]スキルを持っているかチェック
+## 形見[カード]スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 遺産[カード]スキルを持っているか
+## @return 形見[カード]スキルを持っているか
 static func has_card_legacy(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "遺産[カード" in ability_detail
+	return "形見[カード" in ability_detail
 
-## 遺産スキルを持っているかチェック
+## 形見スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 遺産スキルを持っているか
+## @return 形見スキルを持っているか
 static func has_magic_legacy(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "遺産[EP" in ability_detail or "破壊時EP遺産" in ability_detail
+	return "形見[EP" in ability_detail or "破壊時EP形見" in ability_detail
 
-## 遺産[カード]を適用
+## 形見[カード]を適用
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
@@ -45,7 +45,7 @@ static func apply_card_legacy(defeated, spell_draw) -> bool:
 	if has_legacy:
 		var card_count = _extract_card_count(defeated.creature_data.get("ability_detail", ""), 1)
 		
-		print("【遺産発動】", defeated.creature_data.get("name", "?"), 
+		print("【形見発動】", defeated.creature_data.get("name", "?"), 
 			  " → プレイヤー", defeated.player_id + 1, "がカード", card_count, "枚ドロー")
 		
 		# カードドロー.mdの方法: draw_cards()を使用
@@ -57,7 +57,7 @@ static func apply_card_legacy(defeated, spell_draw) -> bool:
 	
 	return false
 
-## 遺産[EP]を適用
+## 形見[EP]を適用
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
@@ -68,15 +68,15 @@ static func apply_magic_legacy(defeated, spell_magic) -> bool:
 	if has_magic_legacy(defeated.creature_data):
 		var amount = _extract_magic_amount(defeated.creature_data.get("ability_detail", ""), 100)
 		
-		print("【遺産発動】", defeated.creature_data.get("name", "?"), 
-			  " → プレイヤー", defeated.player_id + 1, "が", amount, "EP獲得")
+		print("【形見発動】", defeated.creature_data.get("name", "?"), 
+			  " → プレイヤー", defeated.player_id + 1, "が", amount, "蓄魔")
 		
 		spell_magic.add_magic(defeated.player_id, amount)
 		return true
 	
 	return false
 
-## 死亡時遺産効果をまとめて適用
+## 死亡時形見効果をまとめて適用
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_draw SpellDrawインスタンス
@@ -85,22 +85,22 @@ static func apply_magic_legacy(defeated, spell_magic) -> bool:
 static func apply_on_death(defeated, spell_draw, spell_magic, lap_system = null) -> Dictionary:
 	var result = {"legacy_ep_activated": false, "legacy_card_activated": false}
 
-	# JSON形式の遺産効果（マミー等）
+	# JSON形式の形見効果（マミー等）
 	if apply_legacy_from_json(defeated, spell_magic, lap_system):
 		result["legacy_ep_activated"] = true
 	
-	# テキスト形式の遺産[カード]
+	# テキスト形式の形見[カード]
 	if apply_card_legacy(defeated, spell_draw):
 		result["legacy_card_activated"] = true
 	
-	# テキスト形式の遺産[EP]
+	# テキスト形式の形見[EP]
 	if apply_magic_legacy(defeated, spell_magic):
 		result["legacy_ep_activated"] = true
 	
 	return result
 
 
-## JSON形式の遺産効果を適用（マミー等）
+## JSON形式の形見効果を適用（マミー等）
 ##
 ## @param defeated 撃破されたクリーチャー
 ## @param spell_magic SpellMagicインスタンス
@@ -121,11 +121,11 @@ static func apply_legacy_from_json(defeated, spell_magic, lap_system) -> bool:
 
 		match effect_type:
 			"legacy_ep":
-				# 遺産[EP] - マミー等
+				# 形見[EP] - マミー等
 				var amount = _calculate_legacy_amount(effect, defeated, lap_system)
 				if amount > 0:
 					spell_magic.add_magic(defeated.player_id, amount)
-					print("【遺産発動】%s → プレイヤー%dが%dEP獲得" % [
+					print("【形見発動】%s → プレイヤー%dが%d蓄魔" % [
 						defeated.creature_data.get("name", "?"),
 						defeated.player_id + 1,
 						amount
@@ -135,7 +135,7 @@ static func apply_legacy_from_json(defeated, spell_magic, lap_system) -> bool:
 	return false
 
 
-## 遺産金額を計算
+## 形見金額を計算
 ##
 ## @param effect 効果データ
 ## @param defeated 撃破されたクリーチャー
@@ -178,9 +178,9 @@ static func _get_lap_count(player_id: int, lap_system) -> int:
 ## @param default_count デフォルト枚数
 ## @return カード枚数
 static func _extract_card_count(ability_detail: String, default_count: int) -> int:
-	# "遺産[カード1枚]" のような形式から数値を抽出
+	# "形見[カード1枚]" のような形式から数値を抽出
 	var regex = RegEx.new()
-	regex.compile("遺産\\[カード(\\d+)枚\\]")
+	regex.compile("形見\\[カード(\\d+)枚\\]")
 	var result = regex.search(ability_detail)
 	
 	if result:
@@ -188,15 +188,15 @@ static func _extract_card_count(ability_detail: String, default_count: int) -> i
 	
 	return default_count
 
-## ability_detailからEP獲得量を抽出
+## ability_detailから蓄魔量を抽出
 ##
 ## @param ability_detail 能力詳細文字列
 ## @param default_amount デフォルト値
-## @return EP獲得量
+## @return 蓄魔量
 static func _extract_magic_amount(ability_detail: String, default_amount: int) -> int:
-	# "遺産[EP200]" のような形式から数値を抽出
+	# "形見[EP200]" のような形式から数値を抽出
 	var regex = RegEx.new()
-	regex.compile("遺産\\[G(\\d+)\\]")
+	regex.compile("形見\\[G(\\d+)\\]")
 	var result = regex.search(ability_detail)
 	
 	if result:

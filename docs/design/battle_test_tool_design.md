@@ -167,7 +167,7 @@ static var CREATURE_PRESETS = {
 	"風属性": [300, 303, 307, 309, 315, 320],
 	"地属性": [201, 205, 210, 215, 220],
 	"先制攻撃持ち": [7, 303, 405],
-	"強打持ち": [4, 9, 19],
+	"強化持ち": [4, 9, 19],
 	"無効化持ち": [1, 6, 11, 16, 112, 325, 413],
 }
 ```
@@ -199,7 +199,7 @@ var result = battle_system._resolve_battle_result(attacker, defender)
 #### 実装済みスキル
 - **先制攻撃** - `has_item_first_strike = true`
 - **後手** - `has_last_strike = true`  
-- **強打** - キーワードに追加
+- **強化** - キーワードに追加
 
 #### 付与の流れ
 ```gdscript
@@ -234,8 +234,8 @@ func _get_triggered_skills(participant: BattleParticipant) -> Array:
 		skills.append("後手")
 	
 	var keywords = participant.creature_data.ability_parsed.get("keywords", [])
-	if "強打" in keywords:
-		skills.append("強打")
+	if "強化" in keywords:
+		skills.append("強化")
 	
 	# その他のキーワードも自動追加
 	...
@@ -265,7 +265,7 @@ func _get_triggered_skills(participant: BattleParticipant) -> Array:
   防御側アイテム: なし
 
 ■ 発動したスキル
-  攻撃側: 強打
+  攻撃側: 強化
 
 ■ 最終ステータス
   攻撃側 HP: 40 (基礎: 40)

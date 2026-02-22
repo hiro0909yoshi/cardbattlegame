@@ -58,7 +58,7 @@ func get_nearest_unvisited_checkpoint(tile_index: int, visited_checkpoints: Arra
 - 分岐タイルの開閉状態
 - 足止め（呪い・スキル）
 - ワープタイル
-- 歩行逆転呪い
+- 反転呪い
 
 ```gdscript
 func simulate_path(start_tile: int, steps: int, player_id: int, came_from: int = -1) -> Dictionary

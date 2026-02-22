@@ -31,7 +31,7 @@ BattleParticipantとHP管理
    
 4. アイテム効果適用 (apply_item_effects)
    ├─ 複数の効果タイプに対応（ST加算、スキル付与等）
-   └─ 援護クリーチャー処理を含む
+   └─ 加勢クリーチャー処理を含む
    
 5. 特殊クリーチャー処理
    ├─ リビングアーマー (ID: 438) → AP+50
@@ -42,8 +42,8 @@ BattleParticipantとHP管理
    └─ 戦闘開始時変身を実行
 実行フェーズ (_execute_battle_core())
 1. pre_battle_skills 適用 (battle_skill_processor)
-   ├─ 応援スキル（盤面の支援クリーチャー）
-   ├─ 感応スキル（属性ボーナス）
+   ├─ 鼓舞スキル（盤面の支援クリーチャー）
+   ├─ 共鳴スキル（属性ボーナス）
    └─ その他のバトル前スキル
    
 2. 攻撃順決定
@@ -67,11 +67,11 @@ BattleParticipantクラス
 役割: バトル参加者のステータスとHP管理を担当
 実装場所: scripts/battle/battle_participant.gd
 HPフィールド一覧
-フィールド説明base_hpクリーチャーの基本HPbase_up_hp永続的な基礎HP上昇（合成・マスグロース等）temporary_bonus_hp一時効果による加算HP（効果配列から計算）resonance_bonus_hp感応スキルのボーナスHPland_bonus_hp土地ボーナスHP（属性一致時）item_bonus_hpアイテム効果のボーナスHPspell_bonus_hpスペル効果のボーナスHPcurrent_hp合計HP（上記すべての合計）
+フィールド説明base_hpクリーチャーの基本HPbase_up_hp永続的な基礎HP上昇（合成・マスグロース等）temporary_bonus_hp一時効果による加算HP（効果配列から計算）resonance_bonus_hp共鳴スキルのボーナスHPland_bonus_hp土地ボーナスHP（属性一致時）item_bonus_hpアイテム効果のボーナスHPspell_bonus_hpスペル効果のボーナスHPcurrent_hp合計HP（上記すべての合計）
 ダメージ消費順序
 
 1. 土地ボーナス (land_bonus_hp - 最優先で消費、戦闘ごとに復活)
-2. 感応ボーナス (resonance_bonus_hp - バトル限定)
+2. 共鳴ボーナス (resonance_bonus_hp - バトル限定)
 3. 一時効果 (temporary_bonus_hp - 呪い等)
 4. スペルボーナス (spell_bonus_hp)
 5. アイテムボーナス (item_bonus_hp)
@@ -84,7 +84,7 @@ HPフィールド一覧
 
 一時的なボーナスを先に消費し、クリーチャーの本来のHPを守る
 土地ボーナス: 戦闘ごとに復活するため、最優先消費
-感応ボーナス: バトル限定のため、次に消費
+共鳴ボーナス: バトル限定のため、次に消費
 アイテムボーナス: 戦闘中のみ有効、current_hpの直前に消費
 永続基礎HP (base_up_hp): ダメージでは削られず、MHP計算に使用される
 
@@ -109,24 +109,24 @@ _trigger_magic_from_damage() を呼ぶ（ゼラチンアーマー用）
 | `get_max_hp()` | 真のMHP（base_hp + base_up_hp） |
 | `is_alive()` | current_hp > 0 かチェック |
 | `take_damage(damage)` | ダメージ処理（消費順序に従う） |
-| `take_mhp_damage(damage)` | MHPに直接ダメージ（雪辱効果用） |
+| `take_mhp_damage(damage)` | MHPに直接ダメージ（報復効果用） |
 | `is_damaged()` | current_hp < get_max_hp() かチェック |
 | `apply_item_first_strike()` | アイテムで先制付与（後手を無効化） |
 
 スキル適用順序
 相乗効果の設計思想
 この順序により、複数スキルを持つクリーチャーは相乗効果を得られる。
-例: 感応+強打の組み合わせ
-モルモ（感応[火]+30、強打×1.5を仮定）
+例: 共鳴+強化の組み合わせ
+モルモ（共鳴[火]+30、強化×1.5を仮定）
 
 基本AP: 20
-  ↓ 感応発動（火土地1個所有）
+  ↓ 共鳴発動（火土地1個所有）
 AP: 50 (+30)
-  ↓ 強打発動（隣接自ドミニオあり）
+  ↓ 強化発動（隣接自ドミニオあり）
 AP: 75 (×1.5)
 
 → 最終的にAP: 75で攻撃！
-この設計により、感応で上昇したAPが強打の基準値となり、大きな戦力増強が可能。
+この設計により、共鳴で上昇したAPが強化の基準値となり、大きな戦力増強が可能。
 詳細な個別スキル仕様は skills_design.md を参照。
 
 土地ボーナスシステム
@@ -144,7 +144,7 @@ land_bonus_hp フィールドに独立して保存
 
 特殊ルール
 
-貫通スキル: 相手の土地ボーナスを無効化可能
+刺突スキル: 相手の土地ボーナスを無効化可能
 戦闘ごとに復活: 次のバトルでは再度適用される
 
 詳細は land_system.md を参照。
@@ -196,7 +196,7 @@ gdscriptfunc resolve_battle_result(attacker: BattleParticipant, defender: Battle
 	# 4. 両方生存 → 攻撃側生還
 	else:
 		return ATTACKER_SURVIVED
-死亡時効果（道連れ・雪辱）
+死亡時効果（相討・報復）
 重要: バトル結果判定の前に、死亡時効果が発動する。
 発動タイミング
 攻撃実行
@@ -206,25 +206,25 @@ gdscriptfunc resolve_battle_result(attacker: BattleParticipant, defender: Battle
 即死判定
   ↓
 【撃破判定】← ここで死亡時効果をチェック
-  ├─ 道連れ（instant_death）
-  └─ 雪辱（revenge_mhp_damage）
+  ├─ 相討（instant_death）
+  └─ 報復（revenge_mhp_damage）
   ↓
-死者復活チェック
+蘇生チェック
   ↓
 バトル結果判定 ← ここで最終的な生存状況を判定
 死亡時効果の種類
-効果effect_type説明道連れinstant_death使用者が死亡時、相手を即死させる（確率判定あり）雪辱revenge_mhp_damage使用者が死亡時、相手のMHPに直接ダメージ
+効果effect_type説明相討instant_death使用者が死亡時、相手を即死させる（確率判定あり）報復revenge_mhp_damage使用者が死亡時、相手のMHPに直接ダメージ
 詳細は skills/on_death_effects.md を参照。
 相打ちの発生パターン
 
-道連れによる相打ち
+相討による相打ち
 
-A攻撃 → B死亡 → 道連れ発動 → A死亡 → 相打ち
+A攻撃 → B死亡 → 相討発動 → A死亡 → 相打ち
 
 
-雪辱による相打ち
+報復による相打ち
 
-A攻撃 → B死亡 → 雪辱発動 → AのMHP-40 → A即死 → 相打ち
+A攻撃 → B死亡 → 報復発動 → AのMHP-40 → A即死 → 相打ち
 
 
 反射による相打ち
@@ -293,8 +293,8 @@ BOTH_DEFEATED（相打ち）
 
 
 特殊処理
-ミラーワールド（同名クリーチャー相殺）
-**ミラーワールド（ID: 2050）**発動中、同名クリーチャー同士の戦闘は両者即座に破壊される。
+ハーミットズパラドックス（同名クリーチャー相殺）
+**ハーミットズパラドックス（ID: 2050）**発動中、同名クリーチャー同士の戦闘は両者即座に破壊される。
 ```gdscript
 # バトル開始前にチェック
 func _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_index, from_tile_index):
@@ -309,8 +309,8 @@ func _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_inde
 		return true
 	return false
 ```
-バウンティハント（賞金首）報酬
-敗北したクリーチャーに「賞金首」呪いがある場合、勝者は報酬EPを獲得。
+バウンティハント（賞金）報酬
+敗北したクリーチャーに「賞金」呪いがある場合、勝者は報酬EPを獲得。
 ```
 発動タイミング: 各バトル結果処理の冒頭
 報酬: 呪いに設定された magic_amount
@@ -331,14 +331,14 @@ func _check_mirror_world_destroy(card_data, tile_info, attacker_index, tile_inde
    - defender_original が空の場合は戻さない
    - タイルのcreature_dataを更新
 ```
-死者復活
+蘇生
 ```
 発動タイミング: 攻撃シーケンス内の撃破判定後
-対象スキル: 死者復活（ID: 420 ネクロマンサー等）
+対象スキル: 蘇生（ID: 420 ネクロマンサー等）
 
 処理フロー:
 1. クリーチャーが撃破される
-2. 死者復活スキルをチェック
+2. 蘇生スキルをチェック
 3. 復活成功: HP1で復活、battle_result["xxx_revived"] = true
 4. 戦闘継続（復活後も攻撃可能）
 5. バトル後処理でタイルのcreature_dataを更新
@@ -354,7 +354,7 @@ BattlePreparationはバトル準備フェーズ全体のオーケストレータ
 BattleParticipant の作成
 各サブシステムの処理順序管理
 土地ボーナス計算
-貫通スキル判定
+刺突スキル判定
 
 2. BattleCurseApplier
 役割: 呪い効果の適用
@@ -367,7 +367,7 @@ BattleParticipant の作成
 役割: アイテム効果の適用
 
 複数の効果タイプ対応（ST加算、スキル付与、HP加算等）
-援護クリーチャーによるボーナス処理
+加勢クリーチャーによるボーナス処理
 反射スキルのチェック
 
 4. BattleSkillGranter

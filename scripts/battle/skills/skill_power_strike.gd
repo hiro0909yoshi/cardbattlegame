@@ -1,13 +1,13 @@
 ##
-## 強打スキル - 条件を満たすとAPが上昇する
+## 強化スキル - 条件を満たすとAPが上昇する
 ##
 ## 【主な機能】
-## - 通常の強打: 条件付きでAP上昇
-## - 巻物強打: 巻物使用時に無条件でAP×1.5
+## - 通常の強化: 条件付きでAP上昇
+## - 術強化: 巻物使用時に無条件でAP×1.5
 ##
 ## 【発動条件】
-## - 通常の強打: ConditionChecker.check_power_strike()で条件判定
-## - 巻物強打: 巻物使用 + 巻物強打キーワード保持
+## - 通常の強化: ConditionChecker.check_power_strike()で条件判定
+## - 術強化: 巻物使用 + 術強化キーワード保持
 ##
 ## 【効果】
 ## - AP上昇（条件により倍率が変わる）
@@ -17,23 +17,23 @@
 
 class_name SkillPowerStrike
 
-## 巻物強打を持っているかチェック
+## 術強化を持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 巻物強打スキルを持っているか
+## @return 術強化スキルを持っているか
 static func has_scroll_power_strike(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "巻物強打" in keywords
+	return "術強化" in keywords
 
-## 通常の強打を持っているかチェック
+## 通常の強化を持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 強打スキルを持っているか
+## @return 強化スキルを持っているか
 static func has_power_strike(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "強打" in keywords
+	return "強化" in keywords
 
-## 強打スキルを適用（巻物強打を含む）
+## 強化スキルを適用（術強化を含む）
 ##
 ## @param participant バトル参加者
 ## @param context バトルコンテキスト
@@ -42,16 +42,16 @@ static func apply(participant, context: Dictionary, silent: bool = false, effect
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 巻物強打判定（最優先）
-	if "巻物強打" in keywords and participant.is_using_scroll:
+	# 術強化判定（最優先）
+	if "術強化" in keywords and participant.is_using_scroll:
 		apply_scroll_power_strike(participant, context, silent)
 		return
 	
-	# 通常の強打判定
-	if "強打" in keywords:
+	# 通常の強化判定
+	if "強化" in keywords:
 		apply_normal_power_strike(participant, context, silent, effect_combat)
 
-## 巻物強打を適用
+## 術強化を適用
 ##
 ## 無条件でAP×1.5
 ##
@@ -60,7 +60,7 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
 	
-	# 巻物強打効果を検索
+	# 術強化効果を検索
 	for effect in effects:
 		if effect.get("effect_type") == "scroll_power_strike":
 			# 条件チェック
@@ -80,23 +80,23 @@ static func apply_scroll_power_strike(participant, context: Dictionary = {}, sil
 				var multiplier = effect.get("multiplier", 1.5)
 				participant.current_ap = int(participant.current_ap * multiplier)
 				if not silent:
-					print("【巻物強打発動】", participant.creature_data.get("name", "?"),
+					print("【術強化発動】", participant.creature_data.get("name", "?"),
 						  " AP: ", before_ap, " → ", participant.current_ap, " (×", multiplier, ")")
 				return true
 			else:
 				if not silent:
-					print("【巻物強打不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の巻物攻撃")
+					print("【術強化不発】", participant.creature_data.get("name", "?"), " 条件未達 → 通常の術攻撃")
 				return false
 
-	# 巻物強打効果が見つからない場合（無条件の巻物強打）
+	# 術強化効果が見つからない場合（無条件の術強化）
 	var original_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * 1.5)
 	if not silent:
-		print("【巻物強打発動】", participant.creature_data.get("name", "?"),
+		print("【術強化発動】", participant.creature_data.get("name", "?"),
 			  " AP: ", original_ap, " → ", participant.current_ap, " (×1.5・無条件)")
 	return true
 
-## 通常の強打を適用
+## 通常の強化を適用
 ##
 ## 条件付きでAP上昇
 ##
@@ -107,7 +107,7 @@ static func apply_normal_power_strike(participant, context: Dictionary, silent: 
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var condition_checker = load("res://scripts/skills/condition_checker.gd").new()
 	
-	# 強打条件を満たしているか確認
+	# 強化条件を満たしているか確認
 	if condition_checker.check_power_strike(participant.creature_data, context):
 		var base_ap = participant.current_ap
 		var multiplier = 1.5  # デフォルトは1.5倍
@@ -121,4 +121,4 @@ static func apply_normal_power_strike(participant, context: Dictionary, silent: 
 		
 		participant.current_ap = int(base_ap * multiplier)
 		if not silent:
-			print("【強打発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")
+			print("【強化発動】", participant.creature_data.get("name", "?"), " AP: ", base_ap, " → ", participant.current_ap, " (×", multiplier, ")")

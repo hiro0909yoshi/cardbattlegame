@@ -1,4 +1,4 @@
-# 感応スキル
+# 共鳴スキル
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **バージョン**: 1.6  
@@ -13,7 +13,7 @@
 3. [効果パターン](#効果パターン)
 4. [実装済みクリーチャー](#実装済みクリーチャー)
 5. [HPの扱い](#hpの扱い)
-6. [強打との相乗効果](#強打との相乗効果)
+6. [強化との相乗効果](#強化との相乗効果)
 7. [適用タイミング](#適用タイミング)
 8. [実装コード例](#実装コード例)
 
@@ -41,7 +41,7 @@ APとHPが同時上昇する
 
 ```json
 {
-  "感応": {
+  "共鳴": {
 	"element": "fire",
 	"stat_bonus": {
 	  "ap": 20,
@@ -57,7 +57,7 @@ APとHPが個別に上昇する
 
 ```json
 {
-  "感応": {
+  "共鳴": {
 	"element": "water",
 	"stat_bonus": {
 	  "ap": 10,
@@ -71,7 +71,7 @@ APとHPが個別に上昇する
 
 ## 実装済みクリーチャー
 
-感応スキルを持つクリーチャーは全部で **9体** います。
+共鳴スキルを持つクリーチャーは全部で **9体** います。
 
 | クリーチャー名 | 属性 | 必要土地 | 効果 |
 |--------------|------|---------|------|
@@ -91,24 +91,24 @@ APとHPが個別に上昇する
 
 ### 格納場所
 
-感応ボーナスHPは `BattleParticipant.resonance_bonus_hp` に格納されます。
+共鳴ボーナスHPは `BattleParticipant.resonance_bonus_hp` に格納されます。
 
 ```gdscript
-# 感応ボーナス適用
+# 共鳴ボーナス適用
 participant.resonance_bonus_hp += 30
 participant.update_current_hp()
 
-# 表示HP = 基本HP + 感応HP + 土地HP + ...
+# 表示HP = 基本HP + 共鳴HP + 土地HP + ...
 # 例: 30 + 30 + 20 = 80
 ```
 
 ### ダメージ消費順序
 
-感応ボーナスHPは **土地ボーナスの次に消費** されます（消費順序2番目）。
+共鳴ボーナスHPは **土地ボーナスの次に消費** されます（消費順序2番目）。
 
 ```
 1. 土地ボーナス ← 最初に消費
-2. 感応ボーナス ← ここ
+2. 共鳴ボーナス ← ここ
 3. 一時ボーナス
 4. スペルボーナス
 5. アイテムボーナス
@@ -119,19 +119,19 @@ participant.update_current_hp()
 
 ---
 
-## 強打との相乗効果
+## 強化との相乗効果
 
-感応でAPが上昇した後、強打スキルが適用されるため、相乗効果が得られます。
+共鳴でAPが上昇した後、強化スキルが適用されるため、相乗効果が得られます。
 
 ```
 基本AP: 20
-  ↓ 感応[火]+30
+  ↓ 共鳴[火]+30
 AP: 50
-  ↓ 強打×1.5
+  ↓ 強化×1.5
 AP: 75
 ```
 
-これにより、感応と強打の両方を持つクリーチャーは大幅な火力強化が可能です。
+これにより、共鳴と強化の両方を持つクリーチャーは大幅な火力強化が可能です。
 
 ---
 
@@ -143,17 +143,17 @@ AP: 75
 
 ### 適用順序
 
-感応スキルは以下の順序でバトルフローに組み込まれます：
+共鳴スキルは以下の順序でバトルフローに組み込まれます：
 
 ```
-1. 感応スキル適用 
+1. 共鳴スキル適用 
 2. 土地数比例効果
-3. 強打スキル（感応適用後のAPを基準に計算）
+3. 強化スキル（共鳴適用後のAPを基準に計算）
 4. 2回攻撃判定
 5. 攻撃シーケンス実行
 ```
 
-**注**: 巻物攻撃（巻物強打を除く）の場合、感応スキルは適用されません。
+**注**: 術攻撃（術強化を除く）の場合、共鳴スキルは適用されません。
 
 ---
 
@@ -164,11 +164,11 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 	var ability_parsed = participant.creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	if not "感応" in keywords:
+	if not "共鳴" in keywords:
 		return
 	
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var resonance_condition = keyword_conditions.get("感応", {})
+	var resonance_condition = keyword_conditions.get("共鳴", {})
 	
 	var required_element = resonance_condition.get("element", "")
 	var player_lands = context.get("player_lands", {})
@@ -194,4 +194,4 @@ func _apply_resonance_skill(participant: BattleParticipant, context: Dictionary)
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 1.5 | 2025/10/24 | 個別ドキュメントとして分離 |
-| 1.6 | 2025/10/25 | 適用順序を修正（巻物攻撃との関係を明記） |
+| 1.6 | 2025/10/25 | 適用順序を修正（術攻撃との関係を明記） |

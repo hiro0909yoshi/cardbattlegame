@@ -1,11 +1,11 @@
 ## 戦闘開始時条件スキル - 戦闘開始時に条件に応じて効果を発動
 ##
 ## 【主な機能】
-## - self_destruct: 条件を満たすと自壊
+## - self_destruct: 条件を満たすと自滅
 ## - hp_penalty: 条件を満たすとHP減少
 ##
 ## 【該当クリーチャー】
-## - スラッジタイタン (ID: 125): HP減少中なら自壊
+## - スラッジタイタン (ID: 125): HP減少中なら自滅
 ## - ギガンテリウム (ID: 206): 呪い付きならHP-20
 ##
 ## @version 1.0
@@ -34,9 +34,9 @@ static func apply(participant, context: Dictionary) -> Dictionary:
 		
 		match effect_type:
 			"self_destruct":
-				# 自壊条件チェック
+				# 自滅条件チェック
 				if _check_condition(condition, participant, context):
-					print("【戦闘開始時自壊】%s は条件「%s」を満たしたため自壊" % [
+					print("【戦闘開始時自滅】%s は条件「%s」を満たしたため自滅" % [
 						participant.creature_data.get("name", "?"),
 						condition
 					])

@@ -13,7 +13,7 @@ var creature_data: Dictionary
 # HP管理（消費順序付き）
 var base_hp: int              # クリーチャーの基本HP（最後に消費）
 var base_up_hp: int = 0       # 永続的な基礎HP上昇（合成・マスグロース等）
-var resonance_bonus_hp: int = 0  # 感応ボーナス（土地ボーナスの後に消費）
+var resonance_bonus_hp: int = 0  # 共鳴ボーナス（土地ボーナスの後に消費）
 var land_bonus_hp: int        # 土地ボーナス（先に消費、戦闘ごとに復活）
 var temporary_bonus_hp: int = 0  # 一時的なHPボーナス（効果配列からの合計）
 var item_bonus_hp: int = 0    # アイテムボーナス
@@ -38,14 +38,14 @@ var attack_count: int = 1     # 攻撃回数（2回攻撃なら2）
 var is_attacker: bool         # 侵略側かどうか
 var player_id: int            # プレイヤーID
 var instant_death_flag: bool = false  # 即死されたフラグ
-var is_using_scroll: bool = false  # 巻物攻撃フラグ（貫通とは別）
+var is_using_scroll: bool = false  # 術攻撃フラグ（刺突とは別）
 var was_attacked_by_enemy: bool = false  # 敵から攻撃を受けたフラグ（バイロマンサー用）
 var enemy_used_item: bool = false  # 敵がアイテムを使用したフラグ（ブルガサリ用）
 var has_ogre_bonus: bool = false  # オーガボーナスが適用されたフラグ（オーガロード用）
 var has_squid_mantle: bool = false  # スクイドマントル効果（敵の特殊攻撃無効化）
 
 # システム参照
-var spell_magic_ref = null  # SpellMagicの参照（EP獲得系アイテム用）
+var spell_magic_ref = null  # SpellMagicの参照（蓄魔系アイテム用）
 
 # 初期化
 func _init(
@@ -122,7 +122,7 @@ func take_damage(damage: int) -> Dictionary:
 		remaining_damage -= consumed
 		damage_breakdown["land_bonus_consumed"] = consumed
 	
-	# 2. 感応ボーナスから消費
+	# 2. 共鳴ボーナスから消費
 	if resonance_bonus_hp > 0 and remaining_damage > 0:
 		var consumed = min(resonance_bonus_hp, remaining_damage)
 		resonance_bonus_hp -= consumed
@@ -158,7 +158,7 @@ func take_damage(damage: int) -> Dictionary:
 	# update_current_hp() は呼ばない
 	# current_hp が状態値になったため、計算値ではなくなる
 	
-	# 💰 EP獲得処理（ゼラチンアーマー: 受けたダメージからEP獲得）
+	# 💰 蓄魔処理（ゼラチンアーマー: 受けたダメージから蓄魔）
 	_trigger_magic_from_damage(damage)
 	
 	return damage_breakdown
@@ -225,7 +225,7 @@ func is_mhp_in_range(min_threshold: int, max_threshold: int) -> bool:
 	return mhp >= min_threshold and mhp <= max_threshold
 
 # デバッグ用：MHP情報を文字列で取得
-# MHP範囲に直接ダメージ（雪辱効果用）
+# MHP範囲に直接ダメージ（報復効果用）
 # ボーナスを無視してMHP（base_hp + base_up_hp）を直接削る
 # MHPが0以下になった場合は即死扱い
 func take_mhp_damage(damage: int) -> void:
@@ -248,10 +248,10 @@ func take_mhp_damage(damage: int) -> void:
 	else:
 		print("  → 現在HP:", current_hp, " / MHP:", new_mhp)
 
-## 💰 ダメージを受けた時のEP獲得処理（ゼラチンアーマー用）
+## 💰 ダメージを受けた時の蓄魔処理（ゼラチンアーマー用）
 func _trigger_magic_from_damage(damage: int) -> void:
 	"""
-	ダメージを受けた直後にEP獲得効果をチェック
+	ダメージを受けた直後に蓄魔効果をチェック
 	
 	Args:
 		damage: 受けたダメージ量
@@ -275,18 +275,18 @@ func _trigger_magic_from_damage(damage: int) -> void:
 				var multiplier = effect.get("multiplier", 5)
 				var amount = damage * multiplier
 				
-				print("【EP獲得(ダメージ)】", creature_data.get("name", "?"), "の", item.get("name", "?"), 
-					  " → プレイヤー", player_id + 1, "が", amount, "EP獲得（ダメージ", damage, "×", multiplier, "）")
+				print("【蓄魔(ダメージ)】", creature_data.get("name", "?"), "の", item.get("name", "?"), 
+					  " → プレイヤー", player_id + 1, "が", amount, "蓄魔（ダメージ", damage, "×", multiplier, "）")
 				
 				spell_magic_ref.add_magic(player_id, amount)
 	
-	# 💰 クリーチャースキル: ダメージ時EP獲得（ゼラチンウォールなど）
+	# 💰 クリーチャースキル: ダメージ時蓄魔（ゼラチンウォールなど）
 	_skill_magic_gain.apply_damage_magic_gain(self, damage, spell_magic_ref)
 
-## 💰 EP奪取効果をチェック（攻撃側が呼ぶ）
+## 💰 吸魔効果をチェック（攻撃側が呼ぶ）
 func trigger_magic_steal_on_damage(defender, damage: int, spell_magic) -> void:
 	"""
-	敵にダメージを与えた時にEP奪取効果をチェック
+	敵にダメージを与えた時に吸魔効果をチェック
 	
 	Args:
 		defender: ダメージを受けた敵
@@ -299,5 +299,5 @@ func trigger_magic_steal_on_damage(defender, damage: int, spell_magic) -> void:
 	if damage <= 0:
 		return
 	
-	# クリーチャースキル: ダメージベースEP奪取（バンディットなど）
+	# クリーチャースキル: ダメージベース吸魔（バンディットなど）
 	_skill_magic_steal.apply_damage_based_steal(self, defender, damage, spell_magic)

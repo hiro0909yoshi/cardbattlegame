@@ -15,7 +15,7 @@
 1-3. 戦闘地の属性確認
 1-4. 同属性・異属性判定
 1-5. 複数属性の土地所持チェック（全属性）
-1-6. 感応（属性土地所持チェック）
+1-6. 共鳴（属性土地所持チェック）
 1-7. 属性別土地数カウント（単一）
 1-8. 属性別土地数カウント（複数属性合計）
 
@@ -49,16 +49,16 @@
 4-4. アイテムレアリティチェック（レベル額）
 4-5. 自分がアイテム未使用
 4-6. アイテム効果値取得
-4-7. 援護クリーチャーMHP取得
+4-7. 加勢クリーチャーMHP取得
 
 ### 5. バトル状況条件
-5-1. 巻物攻撃使用中
-5-2. バフ検出（巻物攻撃判定用）
+5-1. 術攻撃使用中
+5-2. バフ検出（術攻撃判定用）
 5-3. 反射無効持ちチェック
 5-4. アイテム操作無効持ちチェック
 5-5. 攻撃タイプ判定（通常/巻物）
 5-6. 先制攻撃順序
-5-7. 貫通スキルチェック
+5-7. 刺突スキルチェック
 5-8. 変身復帰判定
 5-9. 敵がアイテム使用したフラグ
 
@@ -70,9 +70,9 @@
 6-5. ドミニオレベル取得
 6-6. ダイス値取得
 6-7. ランダム値生成
-6-8. 応援スキル持ちカウント
+6-8. 鼓舞スキル持ちカウント
 
-### 7. 応援スキル専用条件
+### 7. 鼓舞スキル専用条件
 7-1. 対象範囲チェック
 7-2. 名前部分一致条件
 7-3. 種族条件
@@ -117,7 +117,7 @@ if my_element == "fire":
 ```
 **使用箇所**: 8箇所以上
 - condition_checker.gd: 属性判定
-- battle_skill_processor.gd: 応援対象判定
+- battle_skill_processor.gd: 鼓舞対象判定
 - JSON: 各クリーチャーの属性定義
 
 **対象クリーチャー**: 全クリーチャー（属性ベースのスキル持ち）
@@ -135,7 +135,7 @@ if enemy_element in ["water", "wind"]:
 
 **対象クリーチャー**:
 - カクタスウォール (205): 敵が水/風の場合 HP+50
-- グラディエーター: 敵が特定属性の場合 強打
+- グラディエーター: 敵が特定属性の場合 強化
 
 ---
 
@@ -165,8 +165,8 @@ if my_element != enemy_element:  # 異属性
 - condition_checker.gd: `enemy_same_element`, `enemy_different_element`
 
 **対象クリーチャー**:
-- バーサーカー系: 同属性の敵に強打
-- レジスタンス系: 異属性の敵に強打
+- バーサーカー系: 同属性の敵に強化
+- レジスタンス系: 異属性の敵に強化
 
 ---
 
@@ -183,11 +183,11 @@ if player_lands.get("fire", 0) > 0 and \
 
 **対象クリーチャー**:
 - **現在未使用**（コードは存在するが、該当スキルを持つクリーチャーが実装されていない）
-- 将来的に「火水地風全て所持で強打」などの条件で使用予定
+- 将来的に「火水地風全て所持で強化」などの条件で使用予定
 
 ---
 
-### 1-6. 感応（属性土地所持チェック）
+### 1-6. 共鳴（属性土地所持チェック）
 ```gdscript
 var required_element = resonance_condition.get("element", "")
 var player_lands = context.get("player_lands", {})
@@ -197,7 +197,7 @@ if owned_count > 0:
 **使用箇所**: 1箇所（汎用処理）
 - battle_skill_processor.gd: `apply_resonance_skill()`
 
-**対象クリーチャー**: 感応持ち全て（約20体以上）
+**対象クリーチャー**: 共鳴持ち全て（約20体以上）
 - 各属性のクリーチャーが該当属性の土地を1つでも所持していればバフ
 
 ---
@@ -292,11 +292,11 @@ var result = board_system.tile_neighbor_system.has_adjacent_ally_land(
 ```
 **使用箇所**: 4箇所
 - condition_checker.gd: `adjacent_ally_land`
-- battle_skill_processor.gd: 応援スキルのボーナス計算
+- battle_skill_processor.gd: 鼓舞スキルのボーナス計算
 
 **対象クリーチャー**:
 - タイガーヴェタ (226): 隣接自ドミニオで AP&HP+20
-- 応援スキル持ち: 隣接自ドミニオ数でボーナス変動
+- 鼓舞スキル持ち: 隣接自ドミニオ数でボーナス変動
 
 ---
 
@@ -312,10 +312,10 @@ func _count_adjacent_ally_lands(tile_index: int, player_id: int) -> int:
 	return ally_count
 ```
 **使用箇所**: 2箇所
-- battle_skill_processor.gd: 応援スキル
+- battle_skill_processor.gd: 鼓舞スキル
 
 **対象クリーチャー**:
-- 応援スキル持ち（動的ボーナス計算）
+- 鼓舞スキル持ち（動的ボーナス計算）
 
 ---
 
@@ -398,11 +398,11 @@ if not is_attacker:
 ```
 **使用箇所**: 5箇所
 - battle_skill_processor.gd: `apply_phase_3b_effects()` (ガーゴイル)
-- battle_skill_processor.gd: 応援対象判定
+- battle_skill_processor.gd: 鼓舞対象判定
 
 **対象クリーチャー**:
 - ガーゴイル (204): 防御時AP=50
-- 応援スキル持ち（侵略側/防御側限定）
+- 鼓舞スキル持ち（侵略側/防御側限定）
 
 ---
 
@@ -431,7 +431,7 @@ if count >= 2:
 - board_system_3d.gd: `count_all_creatures_by_name()`
 
 **対象アイテム**:
-- シャドウブレイズ (1015): 敵と同じクリーチャーが盤面に2体以上いる場合、巻物強打
+- シャドウブレイズ (1015): 敵と同じクリーチャーが盤面に2体以上いる場合、術強化
 
 **注**: 敵味方問わず、盤面全体で同名クリーチャーをカウント
 
@@ -448,8 +448,8 @@ if target_mhp <= 40:
 - condition_checker.gd: `mhp_below`
 
 **対象クリーチャー**:
-- フロギストン (42): MHP40以下で強打
-- その他強打条件持ち
+- フロギストン (42): MHP40以下で強化
+- その他強化条件持ち
 
 ---
 
@@ -464,7 +464,7 @@ if target_mhp >= 50:
 
 **対象クリーチャー**:
 - ジェネラルカン (15): MHP50以上のクリーチャー数カウント
-- ウォーリアー系: MHP50以上で強打
+- ウォーリアー系: MHP50以上で強化
 
 ---
 
@@ -477,7 +477,7 @@ if enemy_mhp >= 50:
 
 **使用箇所**: condition_checker.gd: `enemy_max_hp_check`
 
-**対象クリーチャー**: 強打条件として使用
+**対象クリーチャー**: 強化条件として使用
 
 **重要**: 
 - JSON条件では`operator`と`value`を使用
@@ -502,7 +502,7 @@ if enemy_ap <= 30:
 - condition_checker.gd: `enemy_ap_check`, `ap_below`, `ap_above`
 
 **対象クリーチャー**:
-- 強打条件として使用
+- 強化条件として使用
 - 即死スキルの条件
 
 ---
@@ -515,11 +515,11 @@ var total_base_ap = base_ap + base_up_ap
 ```
 **使用箇所**: 5箇所
 - battle_skill_processor.gd: `apply_phase_3c_effects()` (ローンビースト)
-- battle_skill_processor.gd: 巻物攻撃
+- battle_skill_processor.gd: 術攻撃
 
 **対象クリーチャー**:
 - ローンビースト (49): HP+基礎AP
-- 巻物攻撃持ち全般
+- 術攻撃持ち全般
 
 ---
 
@@ -560,7 +560,7 @@ if item_type == "武器":
 - condition_checker.gd: `with_weapon`, `with_item_type`
 
 **対象クリーチャー**:
-- 武器装備で強打系
+- 武器装備で強化系
 
 ---
 
@@ -574,7 +574,7 @@ if enemy_item == null:
 - battle_skill_processor.gd: 反射スキル
 
 **対象アイテム・クリーチャー**:
-- **ミラーホブロン (1066)**: 敵アイテム未使用時、反射[全]（通常・巻物攻撃100%反射）
+- **ミラーホブロン (1066)**: 敵アイテム未使用時、反射[全]（通常・術攻撃100%反射）
 
 **注**: デコイ (426) は無条件反射、ミラーホブロンは敵アイテム未使用が条件
 
@@ -589,7 +589,7 @@ if item_rarity == "レベル額":
 - condition_checker.gd: `level_cap_item`
 
 **対象クリーチャー**:
-- レベル額（特殊レアリティ）使用で強打系
+- レベル額（特殊レアリティ）使用で強化系
 
 **注**: 「レベル額」は特殊なアイテムレアリティであり、通常の「N/R/S」とは異なる
 
@@ -623,7 +623,7 @@ var hp = stat_bonus.get("hp", 0)
 
 ---
 
-### 4-7. 援護クリーチャーMHP取得
+### 4-7. 加勢クリーチャーMHP取得
 ```gdscript
 var assist_base_hp = item_data.get("hp", 0)
 var assist_base_up_hp = item_data.get("base_up_hp", 0)
@@ -633,25 +633,25 @@ var assist_mhp = assist_base_hp + assist_base_up_hp
 - skill_assist.gd: ブラッドプリン専用
 
 **対象クリーチャー**:
-- ブラッドプリン (137): 援護MHP吸収
+- ブラッドプリン (137): 加勢MHP吸収
 
 ---
 
 ## 5️⃣ バトル状況条件パターン
 
-### 5-1. 巻物攻撃使用中
+### 5-1. 術攻撃使用中
 ```gdscript
 if participant.is_using_scroll:
 ```
 **使用箇所**: 5箇所
-- battle_skill_processor.gd: 強打・感応スキル判定
+- battle_skill_processor.gd: 強化・共鳴スキル判定
 
 **対象クリーチャー**:
-- 巻物攻撃・巻物強打持ち全般
+- 術攻撃・術強化持ち全般
 
 ---
 
-### 5-2. バフ検出（巻物攻撃判定用）
+### 5-2. バフ検出（術攻撃判定用）
 ```gdscript
 var base_ap = participant.creature_data.get("ap", 0)
 var expected_ap = base_ap + participant.base_up_ap
@@ -662,8 +662,8 @@ if participant.current_ap != expected_ap:
 - battle_skill_processor.gd: `check_scroll_attack()`
 
 **対象クリーチャー**:
-- オーガロード (407): バフ時は巻物攻撃不可
-- モルモ: バフ時は巻物攻撃不可
+- オーガロード (407): バフ時は術攻撃不可
+- モルモ: バフ時は術攻撃不可
 
 ---
 
@@ -723,7 +723,7 @@ _process_item_manipulation(second, first)
 
 ---
 
-### 5-7. 貫通スキルチェック
+### 5-7. 刺突スキルチェック
 ```gdscript
 if check_penetration_skill(card_data, defender_creature, tile_info):
 	defender_land_bonus = 0
@@ -732,7 +732,7 @@ if check_penetration_skill(card_data, defender_creature, tile_info):
 - battle_preparation.gd: `prepare_participants()`
 
 **対象クリーチャー**:
-- 貫通スキル持ち全般
+- 刺突スキル持ち全般
 
 ---
 
@@ -860,7 +860,7 @@ var random_value = randi() % (max_value - min_value + 1) + min_value
 
 ---
 
-### 6-8. 応援スキル持ちカウント
+### 6-8. 鼓舞スキル持ちカウント
 ```gdscript
 var support_dict = board_system_ref.get_support_creatures()
 var support_creatures = support_dict.values()
@@ -868,7 +868,7 @@ var support_creatures = support_dict.values()
 **使用箇所**: 1箇所
 - battle_skill_processor.gd: `apply_support_skills_to_all()`
 
-**対象クリーチャー**: 応援スキル持ち全般
+**対象クリーチャー**: 鼓舞スキル持ち全般
 
 ---
 
@@ -900,7 +900,7 @@ var chain_count = tile_data_manager.get_element_chain_count(battle_tile_index, p
 
 ---
 
-## 7️⃣ 応援スキル専用条件パターン
+## 7️⃣ 鼓舞スキル専用条件パターン
 
 ### 7-1. 対象範囲チェック
 ```gdscript
@@ -910,7 +910,7 @@ if scope == "all_creatures":
 **使用箇所**: 1箇所
 - battle_skill_processor.gd: `check_support_target()`
 
-**対象クリーチャー**: 応援スキル持ち全般
+**対象クリーチャー**: 鼓舞スキル持ち全般
 
 ---
 
@@ -950,7 +950,7 @@ if participant.player_id != supporter_player_id:
 **使用箇所**: 1箇所
 - battle_skill_processor.gd: `check_support_target()`
 
-**対象クリーチャー**: 自クリーチャーのみ応援
+**対象クリーチャー**: 自クリーチャーのみ鼓舞
 
 ---
 
@@ -977,9 +977,9 @@ if creature_id == 407:  # オーガロード
 ### 8-2. キーワード存在チェック
 ```gdscript
 var keywords = ability_parsed.get("keywords", [])
-if "感応" in keywords:
-if "強打" in keywords:
-if "巻物攻撃" in keywords:
+if "共鳴" in keywords:
+if "強化" in keywords:
+if "術攻撃" in keywords:
 ```
 **使用箇所**: 15箇所以上
 - battle_skill_processor.gd: 各種スキル判定
@@ -1017,8 +1017,8 @@ match effect_type:
 15. `conditional_land_count` - 条件付き配置数
 16. `random_stat` - ランダムステータス
 17. `tribe_placement_bonus` - 種族配置ボーナス
-18. `support` - 応援
-19. `power_strike` - 強打
+18. `support` - 鼓舞
+19. `power_strike` - 強化
 20. `transform` - 変身
 21. `reflect_damage` - 反射
 22. `destroy_item` - アイテム破壊
@@ -1165,7 +1165,7 @@ class ItemChecker:
 
 ## 📍 スキル別使用箇所
 
-### 応援スキル（skill_support.gd）- 分離済み ✅
+### 鼓舞スキル（skill_support.gd）- 分離済み ✅
 
 **使用している条件パターン**:
 
@@ -1209,11 +1209,11 @@ class ItemChecker:
 
 ---
 
-### 感応スキル（skill_resonance.gd）- 分離済み ✅
+### 共鳴スキル（skill_resonance.gd）- 分離済み ✅
 
 **使用している条件パターン**:
 
-#### 1-6. 感応（属性土地所持チェック）
+#### 1-6. 共鳴（属性土地所持チェック）
 - **ファイル**: `scripts/battle/skills/skill_resonance.gd`
 - **関数**: `apply()`
 - **行数**: 約67-74行目
@@ -1229,7 +1229,7 @@ class ItemChecker:
 
 ---
 
-### 強打スキル（skill_power_strike.gd）- 分離済み ✅
+### 強化スキル（skill_power_strike.gd）- 分離済み ✅
 
 **使用している条件パターン**:
 
@@ -1237,45 +1237,45 @@ class ItemChecker:
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
 - **行数**: 約78-86行目
-- **使用例**: 隣接自ドミニオで強打×1.5（多数のクリーチャー）
+- **使用例**: 隣接自ドミニオで強化×1.5（多数のクリーチャー）
 
 #### 1-3. 戦闘地の属性確認 (on_element_land)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
-- **使用例**: 火の土地で強打×2.0
+- **使用例**: 火の土地で強化×2.0
 
 #### 2-3. 戦闘地のレベル取得 (land_level_check)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
-- **使用例**: レベル3以上で強打×1.5
+- **使用例**: レベル3以上で強化×1.5
 
 #### 3-1. MHP（最大HP）閾値以下 (mhp_below)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
-- **使用例**: MHP40以下で強打（フロギストン ID: 42）
+- **使用例**: MHP40以下で強化（フロギストン ID: 42）
 
 #### 3-2. MHP（最大HP）閾値以上 (mhp_above)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
-- **使用例**: MHP50以上で強打（ウォーリアー系）
+- **使用例**: MHP50以上で強化（ウォーリアー系）
 
 #### 4-2. アイテムタイプチェック (has_item_type)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply_normal_power_strike()` → `effect_combat.apply_power_strike()`
-- **使用例**: 武器装備時に強打×1.5
+- **使用例**: 武器装備時に強化×1.5
 
-#### 5-1. 巻物攻撃使用中 (is_using_scroll)
+#### 5-1. 術攻撃使用中 (is_using_scroll)
 - **ファイル**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `apply()`, `apply_scroll_power_strike()`
 - **行数**: 約49-52行目、60-67行目
-- **使用例**: 巻物使用時に無条件で強打×1.5（巻物強打）
+- **使用例**: 巻物使用時に無条件で強化×1.5（術強化）
 
 **分離日**: 2025-10-31
 
 **注記**: 
-- 通常の強打は`EffectCombat.apply_power_strike()`で条件判定を実行
-- 巻物強打は条件なしで無条件にAP×1.5
-- 感応スキルの**後**に適用されるため、相乗効果あり
+- 通常の強化は`EffectCombat.apply_power_strike()`で条件判定を実行
+- 術強化は条件なしで無条件にAP×1.5
+- 共鳴スキルの**後**に適用されるため、相乗効果あり
 
 ---
 

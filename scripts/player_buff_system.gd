@@ -161,17 +161,17 @@ func clear_all_effects():
 	initialize_player_buffs()
 	print("SkillSystem: 全効果をクリア")
 
-## 不屈スキルまたは不屈呪いを持っているかチェック
+## 奮闘スキルまたは奮闘呪いを持っているかチェック
 static func has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	
-	# 1. 不屈スキル判定
+	# 1. 奮闘スキル判定
 	var ability_detail = creature_data.get("ability_detail", "")
-	if "不屈" in ability_detail:
+	if "奮闘" in ability_detail:
 		return true
 	
-	# 2. 不屈呪い判定
+	# 2. 奮闘呪い判定
 	if SpellMovement.has_indomitable_curse(creature_data):
 		return true
 	

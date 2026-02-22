@@ -46,8 +46,8 @@ var sorted_desc = CardRateEvaluator.sort_by_rate_desc(cards)
 
 | スキル | 補正値 |
 |--------|--------|
-| 先制/強打/不屈/復活 | +50 |
-| 無効化 | +50（巻物攻撃無効化は+20） |
+| 先制/強化/奮闘/復活 | +50 |
+| 無効化 | +50（術攻撃無効化は+20） |
 | アルカナアーツ | +40 |
 | 攻撃成功時 | +35 |
 | 増殖 | +30 |
@@ -94,7 +94,7 @@ var sorted_desc = CardRateEvaluator.sort_by_rate_desc(cards)
 | ドミニオオーダー交換 | レート差で判断（閾値25） | cpu_territory_ai.gd |
 | エクスチェンジ | レート+属性一致ボーナス(+200) | spell_creature_swap.gd, cpu_spell_target_selector.gd |
 | バトルリスク評価 | クリーチャー喪失リスク = レート×0.5 | cpu_battle_ai.gd |
-| 援護（アシスト）選択 | 低レート優先 | cpu_defense_ai.gd |
+| 加勢（アシスト）選択 | 低レート優先 | cpu_defense_ai.gd |
 | ターンウォール対象選択 | アルカナアーツ持ち or レート50以上 | cpu_target_resolver.gd |
 
 ## 手札破棄の重複補正

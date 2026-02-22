@@ -18,20 +18,20 @@ func setup(curse_system: SpellCurse, toll_skill: SkillTollChange = null, creatur
 	creature_manager = creature_mgr
 
 # ========================================
-# セプター呪い付与
+# セプター刻印付与
 # ========================================
 
 ## toll_share: 他プレイヤーの通行料50%を獲得
 func apply_toll_share(player_id: int, duration: int = 5, caster_id: int = -1):
 	spell_curse.curse_player(player_id, "toll_share", duration, {
-		"name": "通行料促進",
+		"name": "徴収",
 		"ratio": 0.5
 	}, caster_id)
 
 ## toll_disable: 通行料を支払わない
 func apply_toll_disable(player_id: int, duration: int = 2):
 	spell_curse.curse_player(player_id, "toll_disable", duration, {
-		"name": "通行料無効"
+		"name": "免罪"
 	})
 
 ## toll_fixed: 通行料を固定値に設定
@@ -41,14 +41,14 @@ func apply_toll_fixed(player_id: int, value: int = 200, duration: int = 3):
 		"value": value
 	})
 
-## invasion_disable: 侵略できない（バンフィズム用）
+## invasion_disable: 侵略できない（トゥルース用）
 func apply_invasion_disable(player_id: int, duration: int = 2):
 	spell_curse.curse_player(player_id, "invasion_disable", duration, {
-		"name": "侵略不可"
+		"name": "休戦"
 	})
 
 # ========================================
-# ドミニオ呪い付与
+# ドミニオ刻印付与
 # ========================================
 
 ## toll_multiplier: 通行料を倍率で増加
@@ -68,15 +68,15 @@ func apply_toll_half_curse(tile_index: int, duration: int = 3):
 ## peace: 敵移動除外＋戦闘不可＋通行料0
 func apply_peace(tile_index: int):
 	spell_curse.curse_creature(tile_index, "peace", -1, {
-		"name": "平和",
+		"name": "安寧",
 		"invasion_disable": true,
 		"toll_zero": true
 	})
 
-## creature_toll_disable: クリーチャー単体の通行料無効（スキュラ等）
+## creature_toll_disable: クリーチャー単体の免罪（スキュラ等）
 func apply_creature_toll_disable(tile_index: int, duration: int = -1):
 	spell_curse.curse_creature(tile_index, "creature_toll_disable", duration, {
-		"name": "通行料無効"
+		"name": "免罪"
 	})
 
 # ========================================
@@ -138,7 +138,7 @@ func calculate_final_toll(tile_index: int, payer_id: int, receiver_id: int, base
 			"bonus_receiver_id": -1
 		}
 	
-	# creature_toll_disable: クリーチャー単体の通行料無効（スキュラ等）
+	# creature_toll_disable: クリーチャー単体の免罪（スキュラ等）
 	if land_curse_type == "creature_toll_disable":
 		print("[通行料呪い] creature_toll_disable により通行料 = 0")
 		return {
@@ -255,18 +255,18 @@ func is_invasion_disabled(tile_index: int) -> bool:
 		return curse.get("params", {}).get("invasion_disable", false)
 	return false
 
-## プレイヤーが侵略不可呪いを持っているか（バンフィズム用）
+## プレイヤーが休戦呪いを持っているか（トゥルース用）
 func is_player_invasion_disabled(player_id: int) -> bool:
 	var curse = spell_curse.get_player_curse(player_id)
 	return curse.get("curse_type") == "invasion_disable"
 
-## クリーチャーが移動侵略無効を持つかチェック（グルイースラッグ、ランドアーチン等）
+## クリーチャーが鉄壁を持つかチェック（グルイースラッグ、ランドアーチン等）
 func is_creature_invasion_immune(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	return "移動侵略無効" in keywords
+	return "鉄壁" in keywords
 
 ## peace 呪いがドミニオのクリーチャーにあるか確認（通行料判定用）
 func has_peace_curse_on_land(tile_index: int) -> bool:
@@ -276,9 +276,9 @@ func has_peace_curse_on_land(tile_index: int) -> bool:
 	return false
 
 ## 敵プレイヤーが peace 呪いドミニオへの移動可能かチェック
-## 移動不可な場合は false を返す
+## 枷な場合は false を返す
 func can_move_to_land(tile_index: int, moving_player_id: int, land_owner_id: int) -> bool:
-	# peace 呪いがある場合、敵プレイヤーは移動不可
+	# peace 呪いがある場合、敵プレイヤーは枷
 	if has_peace_curse(tile_index):
 		# ドミニオ所有者は移動可能、他のプレイヤーは不可
 		if moving_player_id != land_owner_id:

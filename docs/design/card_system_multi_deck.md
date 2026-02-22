@@ -12,7 +12,7 @@
 各プレイヤーが独立したデッキ（ブック）を持つように CardSystem を改修しました。
 
 ### 目的
-- **アイテム復帰スキル**が正しく機能すること
+- **帰還スキル**が正しく機能すること
 - 使用したアイテムが**使用者自身のデッキ**に戻る
 - CPU個別のデッキ戦略が実装可能になる
 
@@ -78,7 +78,7 @@ func discard_card(player_id: int, card_index: int, reason: String = "discard"):
 	# ...
 ```
 
-#### 4. アイテム復帰（最重要）
+#### 4. 帰還（最重要）
 ```gdscript
 # scripts/battle/skills/skill_item_return.gd
 static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
@@ -119,7 +119,7 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 
 ## 🧪 テスト結果
 
-### ✅ T0: アイテム復帰（ブック）
+### ✅ T0: 帰還（ブック）
 **テスト内容**:
 - エターナルメイル（ID: 1005）、ケンタウロス（ID: 314）を使用
 - 戦闘でアイテムを使用後、使用者のデッキのランダムな位置に戻る
@@ -127,7 +127,7 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 
 **結果**: ✅ 正常動作確認
 
-### ✅ T0-2: アイテム復帰（手札）
+### ✅ T0-2: 帰還（手札）
 **テスト内容**:
 - ソウルレイ（ID: 1030）、ブーメラン（ID: 1054）を使用
 - 即座に使用者の手札に戻る
@@ -172,7 +172,7 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 
 ## 📝 関連ドキュメント
 
-- [アイテム復帰スキル](./skills/item_return_skill.md) - アイテム復帰の詳細仕様
+- [帰還スキル](./skills/item_return_skill.md) - 帰還の詳細仕様
 - [CPU デッキシステム](./cpu_deck_system.md) - CPU個別デッキの設計
 - [スペルシステム](./spells_design.md) - スペルの復帰[ブック]効果
 
@@ -183,6 +183,6 @@ static func _return_to_deck(player_id: int, item_data: Dictionary) -> bool:
 | バージョン | 日付 | 変更内容 |
 |-----------|------|---------|
 | 2.0 | 2025/11/10 | マルチデッキ化実装完了 |
-| 2.1 | 2025/11/10 | アイテム復帰をランダムな位置への挿入に変更（バランス調整） |
+| 2.1 | 2025/11/10 | 帰還をランダムな位置への挿入に変更（バランス調整） |
 
 ---

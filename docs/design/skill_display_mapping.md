@@ -21,19 +21,19 @@ keywordsはすでに日本語名なので、そのまま表示できる。
 |---------|------|-----------|------|
 | 先制 | ✅ | 未定 | 攻撃順決定時 |
 | 後手 | ✅ | 未定 | 攻撃順決定時 |
-| 強打 | ✅ | 未定 | AP×1.5（条件付きの場合あり） |
-| 巻物強打 | ✅ | 未定 | 巻物使用時のみ発動する強打 |
-| 貫通 | ✅ | 未定 | 土地ボーナス無効化 |
-| 感応 | ✅ | 未定 | 同属性クリーチャー数でHP上昇 |
+| 強化 | ✅ | 未定 | AP×1.5（条件付きの場合あり） |
+| 術強化 | ✅ | 未定 | 巻物使用時のみ発動する強化 |
+| 刺突 | ✅ | 未定 | 土地ボーナス無効化 |
+| 共鳴 | ✅ | 未定 | 同属性クリーチャー数でHP上昇 |
 | 2回攻撃 | ✅ | 未定 | 攻撃を2回行う |
-| 巻物攻撃 | ✅ | 未定 | 巻物による攻撃 |
+| 術攻撃 | ✅ | 未定 | 巻物による攻撃 |
 | 無効化 | ✅ | 未定 | 条件付きでダメージ無効化 |
 | 再生 | ✅ | 未定 | 戦闘終了時HP全回復 |
-| 援護 | ✅ | 未定 | 隣接クリーチャーのステータス加算 |
-| 応援 | ✅ | 未定 | 同名クリーチャーのステータス加算 |
+| 加勢 | ✅ | 未定 | 隣接クリーチャーのステータス加算 |
+| 鼓舞 | ✅ | 未定 | 同名クリーチャーのステータス加算 |
 | 反射 | ✅ | 未定 | ダメージを反射 |
 | 即死 | ✅ | 未定 | 条件付きで敵を即死 |
-| 道連れ | ✅ | 未定 | 死亡時に敵も道連れ |
+| 相討 | ✅ | 未定 | 死亡時に敵も相討 |
 | アイテム破壊 | ✅ | 未定 | 敵のアイテムを破壊 |
 | アイテム盗み | ✅ | 未定 | 敵のアイテムを盗む |
 
@@ -41,21 +41,21 @@ keywordsはすでに日本語名なので、そのまま表示できる。
 
 | keyword | 表示 | エフェクト | 備考 |
 |---------|------|-----------|------|
-| 死者復活 | ✅ | 未定 | 死亡時に別クリーチャーとして復活 |
-| 遺産 | ✅ | 未定 | 死亡時にEP/カード獲得 |
-| 戦闘後破壊 | ✅ | 未定 | 両者生存時に敵に呪い付与 |
-| 通行料無効付与 | ✅ | 未定 | 両者生存時に敵に呪い付与 |
+| 蘇生 | ✅ | 未定 | 死亡時に別クリーチャーとして復活 |
+| 形見 | ✅ | 未定 | 死亡時にEP/カード獲得 |
+| 崩壊 | ✅ | 未定 | 両者生存時に敵に刻印付与 |
+| 慈悲 | ✅ | 未定 | 両者生存時に敵に刻印付与 |
 
 ### バトル外で発動（表示不要）
 
 | keyword | 理由 |
 |---------|------|
 | アルカナアーツ | アルカナアーツカード使用時（バトル外） |
-| 防魔 | スペル対象外（バトル外） |
-| 空地移動 | 移動時（バトル外） |
-| 移動侵略無効 | 移動侵略対象外（バトル外） |
+| 結界 | スペル対象外（バトル外） |
+| 瞬移 | 移動時（バトル外） |
+| 鉄壁 | 移動侵略対象外（バトル外） |
 | 周回回復不可 | 周回時（バトル外） |
-| 通行料変化 | 通行料計算時（バトル外） |
+| 課税 | 通行料計算時（バトル外） |
 
 ### 将来対応予定（イベント連携でバトル画面表示）
 
@@ -75,12 +75,12 @@ effect_typeは英語なので、日本語への変換が必要。
 
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
-| power_strike | 強打 | 未定 | AP×倍率 |
-| resonance | 感応 | 未定 | 同属性数でHP上昇 |
+| power_strike | 強化 | 未定 | AP×倍率 |
+| resonance | 共鳴 | 未定 | 同属性数でHP上昇 |
 | random_stat | ランダムステータス | 未定 | ステータスをランダム決定 |
-| support | 援護 | 未定 | 隣接援護効果 |
-| scroll_attack | 巻物攻撃 | 未定 | 巻物による攻撃モード |
-| magic_gain_on_battle_start | EP獲得 | 未定 | バトル開始時にEP獲得（クリーピングコイン） |
+| support | 加勢 | 未定 | 隣接加勢効果 |
+| scroll_attack | 術攻撃 | 未定 | 巻物による攻撃モード |
+| magic_gain_on_battle_start | 蓄魔 | 未定 | バトル開始時に蓄魔（クリーピングコイン） |
 
 #### 「ステータス変化」で統一表示するスキル
 
@@ -116,21 +116,21 @@ effect_typeは英語なので、日本語への変換が必要。
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
 | ap_drain | APドレイン | 未定 | 敵のAPを0に |
-| penetration | 貫通 | 未定 | 土地ボーナス無効化 |
-| apply_curse | 呪い付与 | 未定 | 敵に呪いを付与 |
+| penetration | 刺突 | 未定 | 土地ボーナス無効化 |
+| apply_curse | 刻印付与 | 未定 | 敵に呪いを付与 |
 | down_enemy | ダウン付与 | 未定 | 敵にダウンを付与 |
 | transform | 変身 | 未定 | 攻撃成功で敵を変身 |
-| magic_steal_on_damage | ダメージEP奪取 | 未定 | ダメージでEP奪取 |
+| magic_steal_on_damage | ダメージ吸魔 | 未定 | ダメージで吸魔 |
 | destroy_item | アイテム破壊 | 未定 | 敵のアイテム破壊 |
 | steal_item | アイテム盗み | 未定 | 敵のアイテムを盗む |
-| magic_gain_on_invasion | EP獲得 | 未定 | 侵略成功時にEP獲得（ピュトン、トレジャーレイダー） |
-| magic_gain_on_damage | EP獲得 | 未定 | ダメージを受けた時にEP獲得（ゼラチンウォール） |
+| magic_gain_on_invasion | 蓄魔 | 未定 | 侵略成功時に蓄魔（ピュトン、トレジャーレイダー） |
+| magic_gain_on_damage | 蓄魔 | 未定 | ダメージを受けた時に蓄魔（ゼラチンウォール） |
 
 ### 無効化判定時
 
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
-| nullify_all_enemy_abilities | 能力無効化 | 未定 | 敵の全能力を無効化 |
+| nullify_all_enemy_abilities | 沈黙 | 未定 | 敵の全能力を無効化 |
 | nullify_item_manipulation | アイテム破壊・盗み無効 | 未定 | アイテム破壊・盗み無効 |
 | nullify_reflect | 反射無効 | 未定 | 反射を無効化 |
 
@@ -139,7 +139,7 @@ effect_typeは英語なので、日本語への変換が必要。
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
 | instant_death | 即死 | 未定 | 条件付き即死 |
-| annihilate | 抹消 | 未定 | 敵撃破時に同種カードを消滅 |
+| annihilate | 殲滅 | 未定 | 敵撃破時に同種カードを消滅 |
 
 ### 反射判定時
 
@@ -152,24 +152,24 @@ effect_typeは英語なので、日本語への変換が必要。
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
 | swap_ap_mhp | AP⇔MHP交換 | 未定 | 敵のAPとMHPを交換 |
-| change_tile_element | 土地変性 | 属性別 | 勝利時に土地属性変更 |
+| change_tile_element | 属性変化 | 属性別 | 勝利時に土地属性変更 |
 | reduce_enemy_mhp | MHP減少 | 未定 | 敵のMHPを減少 |
 | level_up_battle_land | 戦闘地レベルアップ | 未定 | 戦闘地のレベル上昇 |
 | spawn_copy_on_defend_survive | 分裂 | 未定 | 防御生存時にコピー配置 |
-| item_return | アイテム復帰 | 未定 | 使用したアイテムがブックに戻る |
+| item_return | 帰還 | 未定 | 使用したアイテムがブックに戻る |
 
 ### 死亡時
 
 | effect_type | 表示名 | エフェクト | 備考 |
 |-------------|--------|-----------|------|
-| revive | 死者復活 | 未定 | 別クリーチャーとして復活 |
+| revive | 蘇生 | 未定 | 別クリーチャーとして復活 |
 | revive_to_hand | 手札復活 | 未定 | 手札に戻る |
-| self_destruct | 自壊 | 未定 | 条件を満たすと自壊 |
-| self_destruct_with_revenge | 道連れ自爆 | 未定 | 自爆して敵も道連れ |
-| legacy_magic | 遺産（EP） | 未定 | 死亡時にEP獲得 |
-| legacy_card | 遺産（カード） | 未定 | 死亡時にカード獲得 |
+| self_destruct | 自滅 | 未定 | 条件を満たすと自滅 |
+| self_destruct_with_revenge | 相討自爆 | 未定 | 自爆して敵も相討 |
+| legacy_magic | 形見（EP） | 未定 | 死亡時に蓄魔 |
+| legacy_card | 形見（カード） | 未定 | 死亡時にカード獲得 |
 | draw_cards_on_death | 死亡時ドロー | 未定 | 死亡時にカードを引く |
-| revenge_mhp_damage | 雪辱 | 未定 | 死亡時に敵MHPダメージ |
+| revenge_mhp_damage | 報復 | 未定 | 死亡時に敵MHPダメージ |
 
 ---
 
@@ -177,30 +177,30 @@ effect_typeは英語なので、日本語への変換が必要。
 
 同じeffect_typeでも、パラメータによってエフェクトを変える必要があるもの。
 
-### 土地変性（change_tile_element）
+### 属性変化（change_tile_element）
 
 | パラメータ | 表示名 | エフェクト |
 |-----------|--------|-----------|
-| element: "water" | 土地変性[水] | element_change_water |
-| element: "fire" | 土地変性[火] | element_change_fire |
-| element: "wind" | 土地変性[風] | element_change_wind |
-| element: "earth" | 土地変性[地] | element_change_earth |
+| element: "water" | 属性変化[水] | element_change_water |
+| element: "fire" | 属性変化[火] | element_change_fire |
+| element: "wind" | 属性変化[風] | element_change_wind |
+| element: "earth" | 属性変化[地] | element_change_earth |
 
-### 呪い付与（apply_curse）
+### 刻印付与（apply_curse）
 
 | パラメータ | 表示名 | エフェクト |
 |-----------|--------|-----------|
-| curse_type: "toll_disable" | 通行料無効付与 | curse_toll_disable |
-| curse_type: "destroy_after_battle" | 戦闘後破壊付与 | curse_destroy |
+| curse_type: "toll_disable" | 慈悲 | curse_toll_disable |
+| curse_type: "destroy_after_battle" | 崩壊付与 | curse_destroy |
 
-| curse_type: "land_effect_disable" | 地形効果無効付与 | curse_land_disable |
-| curse_type: "land_effect_grant" | 地形効果付与 | curse_land_grant |
+| curse_type: "land_effect_disable" | 暗転付与 | curse_land_disable |
+| curse_type: "land_effect_grant" | 恩寵 | curse_land_grant |
 
 ### 変身（transform）
 
 | パラメータ | 表示名 | エフェクト |
 |-----------|--------|-----------|
-| transform_type: "forced" | 強制変化 | transform_forced |
+| transform_type: "forced" | 変質 | transform_forced |
 | transform_type: "forced_copy_attacker" | 強制コピー | transform_copy |
 | transform_type: "random" | ランダム変身 | transform_random |
 | transform_type: "specific" | 変身 | transform_specific |
@@ -212,7 +212,7 @@ effect_typeは英語なので、日本語への変換が必要。
 同時に複数スキルが発動する場合の表示順序。
 
 1. 攻撃順決定系（先制、後手）
-2. ステータス変動系（感応、強打、貫通など）
+2. ステータス変動系（共鳴、強化、刺突など）
 3. 無効化系
 4. 攻撃成功時系
 5. 戦闘終了時系
@@ -227,37 +227,37 @@ effect_typeは英語なので、日本語への変換が必要。
 **戦闘開始前**
 - [x] ステータス変化（stat_change）
 - [x] ランダムステータス（random_stat）
-- [x] 応援（support）
+- [x] 鼓舞（support）
 - [x] 先制（first_strike）
 - [x] 後手（last_strike）
-- [x] 感応（resonance）
-- [x] 強打（power_strike）
-- [x] 貫通（penetration）
-- [x] 巻物攻撃（scroll_attack）
+- [x] 共鳴（resonance）
+- [x] 強化（power_strike）
+- [x] 刺突（penetration）
+- [x] 術攻撃（scroll_attack）
 - [x] アイテム破壊（destroy_item）
 - [x] アイテム盗み（steal_item）
-- [x] EP獲得（magic_gain）
+- [x] 蓄魔（magic_gain）
 
 **攻撃成功時**
 - [x] APドレイン（ap_drain）
-- [x] 呪い付与（apply_curse）
+- [x] 刻印付与（apply_curse）
 
 **戦闘終了時**
 - [x] 再生（regeneration）
 - [x] AP⇔MHP交換（swap_ap_mhp）
 - [x] MHP減少（reduce_enemy_mhp）
 - [x] 土地レベルアップ（level_up_battle_land）
-- [x] アイテム復帰（item_return）
+- [x] 帰還（item_return）
 
 **死亡時**
-- [x] 自壊（self_destruct）
-- [x] 道連れ（death_revenge）
-- [x] 遺産・EP（legacy_magic）
-- [x] 遺産・カード（legacy_card）
-- [x] 死者復活（revive）
+- [x] 自滅（self_destruct）
+- [x] 相討（death_revenge）
+- [x] 形見・EP（legacy_magic）
+- [x] 形見・カード（legacy_card）
+- [x] 蘇生（revive）
 - [x] 手札復活（revive_to_hand）
-- [x] 抹消（annihilate）
-- [x] 雪辱（revenge_mhp_damage）
+- [x] 殲滅（annihilate）
+- [x] 報復（revenge_mhp_damage）
 
 ### 対応済み（ステータス変動あり → 自動表示）
 
@@ -269,28 +269,28 @@ effect_typeは英語なので、日本語への変換が必要。
 - [x] 即死（instant_death）
 - [x] 反射（reflect_damage）
 - [x] 変身（transform）
-- [x] 能力無効化（nullify_abilities）
+- [x] 沈黙（nullify_abilities）
 
 **アイテム操作**
 - [x] アイテム破壊（destroy_item）
 - [x] アイテム盗み（steal_item）
 
 **戦闘終了時効果（SkillBattleEndEffects経由）**
-- [x] 戦闘後破壊付与（apply_curse: destroy_after_battle）
-- [x] 通行料無効付与（apply_curse: toll_disable）
+- [x] 崩壊付与（apply_curse: destroy_after_battle）
+- [x] 慈悲（apply_curse: toll_disable）
 - [x] AP⇔MHP交換（swap_ap_mhp）
 - [x] MHP減少（reduce_enemy_mhp）
 - [x] 土地レベルアップ（level_up_battle_land）
 
 **バトル勝利時効果（battle_system.gd）**
-- [x] 土地変性（change_tile_element）→ global_comment_uiで通知
+- [x] 属性変化（change_tile_element）→ global_comment_uiで通知
 - [x] 土地破壊（reduce_tile_level）→ global_comment_uiで通知
 
 ### スペル効果（バトル外）
 
 以下はスペルカード使用時に表示されるため、バトル画面スキル表示の対象外：
-- 地形効果無効付与（apply_curse: land_effect_disable）
-- 地形効果付与（apply_curse: land_effect_grant）
+- 暗転付与（apply_curse: land_effect_disable）
+- 恩寵（apply_curse: land_effect_grant）
 
 ---
 

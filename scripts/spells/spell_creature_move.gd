@@ -43,7 +43,7 @@ func _init(board_sys: Object, player_sys: Object, spell_phase_handler: Object = 
 
 # ============ メイン効果適用 ============
 
-## 移動不可呪いをチェック
+## 枷呪いをチェック
 func _has_move_disable_curse(tile_index: int) -> bool:
 	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if not tile or tile.creature_data.is_empty():
@@ -60,7 +60,7 @@ func _get_spell_curse_toll():
 	return null
 
 
-## 敵ドミニオへの侵略が可能かチェック（peace呪い + プレイヤー侵略不可呪い + マーシフルワールド + クリーチャー移動侵略無効）
+## 敵ドミニオへの侵略が可能かチェック（peace呪い + プレイヤー休戦呪い + テンパランスロウ + クリーチャー鉄壁）
 func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	var spell_curse_toll = _get_spell_curse_toll()
 	if not spell_curse_toll:
@@ -70,17 +70,17 @@ func _can_invade_tile(tile_index: int, player_id: int) -> bool:
 	if spell_curse_toll.has_peace_curse(tile_index):
 		return false
 	
-	# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
+	# クリーチャー鉄壁チェック（グルイースラッグ、ランドアーチン等）
 	var tile = board_system_ref.tile_nodes.get(tile_index)
 	if tile and not tile.creature_data.is_empty():
 		if spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
 			return false
 	
-	# プレイヤー侵略不可呪いチェック（バンフィズム）
+	# プレイヤー休戦呪いチェック（トゥルース）
 	if spell_curse_toll.is_player_invasion_disabled(player_id):
 		return false
 	
-	# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
+	# テンパランスロウ（節制）チェック - SpellWorldCurseに委譲
 	if tile and tile.owner_id >= 0 and tile.owner_id != player_id:
 		if game_flow_manager_ref and game_flow_manager_ref.spell_container and game_flow_manager_ref.spell_container.spell_world_curse:
 			if game_flow_manager_ref.spell_container.spell_world_curse.check_invasion_blocked(player_id, tile.owner_id, false):
@@ -142,7 +142,7 @@ func _trigger_battle(result: Dictionary, caster_player_id: int) -> void:
 	pending_defender_item = {}
 	is_waiting_for_defender_item = false
 	
-	# 移動中フラグを設定（応援スキル計算から除外するため）
+	# 移動中フラグを設定（鼓舞スキル計算から除外するため）
 	attacker_creature["is_moving"] = true
 	
 	# バトルステータスオーバーレイ表示
@@ -307,7 +307,7 @@ func get_adjacent_enemy_destinations(from_tile_index: int) -> Array:
 		
 		# 敵ドミニオのみ（自ドミニオや空地は除外）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
-			# 侵略可能かチェック（peace呪い + バンフィズム）
+			# 侵略可能かチェック（peace呪い + トゥルース）
 			if not _can_invade_tile(tile_index, current_player_id):
 				continue
 			destinations.append(tile_index)
@@ -356,7 +356,7 @@ func _get_tiles_within_steps(from_tile_index: int, max_steps: int) -> Array:
 		var tile = board_system_ref.tile_nodes.get(tile_index)
 		if tile and not TileHelper.is_placeable_tile(tile):
 			continue  # 配置不可タイルは除外（クリーチャー移動）
-		# 敵ドミニオの場合は侵略可能かチェック（peace呪い + バンフィズム）
+		# 敵ドミニオの場合は侵略可能かチェック（peace呪い + トゥルース）
 		if tile.owner_id != -1 and tile.owner_id != current_player_id:
 			if not _can_invade_tile(tile_index, current_player_id):
 				continue
@@ -405,7 +405,7 @@ func _get_tiles_at_exact_steps(from_tile_index: int, exact_steps: int) -> Array:
 			var tile = board_system_ref.tile_nodes.get(tile_index)
 			if tile and not TileHelper.is_placeable_tile(tile):
 				continue  # 配置不可タイルは除外（クリーチャー移動）
-			# 敵ドミニオの場合は侵略可能かチェック（peace呪い + バンフィズム）
+			# 敵ドミニオの場合は侵略可能かチェック（peace呪い + トゥルース）
 			if tile.owner_id != -1 and tile.owner_id != current_player_id:
 				if not _can_invade_tile(tile_index, current_player_id):
 					continue
@@ -422,7 +422,7 @@ func _apply_move_to_adjacent_enemy(target_data: Dictionary, _caster_player_id: i
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 移動不可呪いチェック
+	# 枷呪いチェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -468,7 +468,7 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 移動不可呪いチェック
+	# 枷呪いチェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -536,14 +536,14 @@ func _apply_move_steps(target_data: Dictionary, steps: int, exact_steps: bool, _
 
 
 ## 自己移動（クリーピングフレイムアルカナアーツ）
-## exclude_enemy_creatures: 敵クリーチャーがいるタイルを除外（防御型用）
+## exclude_enemy_creatures: 敵クリーチャーがいるタイルを除外（堅守用）
 func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatures: bool = false) -> Dictionary:
 	# target_dataにはアルカナアーツ発動者の情報が入っている
 	var from_tile_index = target_data.get("tile_index", -1)
 	if from_tile_index == -1:
 		return {"success": false, "reason": "invalid_tile"}
 	
-	# 移動不可呪いチェック
+	# 枷呪いチェック
 	if _has_move_disable_curse(from_tile_index):
 		return {"success": false, "reason": "move_disabled"}
 	
@@ -562,7 +562,7 @@ func _apply_move_self(target_data: Dictionary, steps: int, exclude_enemy_creatur
 		# 自クリーチャーがいる土地は除外
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
 			continue
-		# 防御型: 敵クリーチャーがいる土地も除外（戦闘不可のため）
+		# 堅守: 敵クリーチャーがいる土地も除外（戦闘不可のため）
 		if exclude_enemy_creatures:
 			if tile.owner_id != -1 and tile.owner_id != current_player_id and not tile.creature_data.is_empty():
 				continue
@@ -670,7 +670,7 @@ func _execute_move(from_tile: int, to_tile: int) -> void:
 	board_system_ref.set_tile_owner(to_tile, owner_id)
 	board_system_ref.place_creature(to_tile, creature_data)
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	if to_tile_node.has_method("set_down_state"):
 		if not PlayerBuffSystem.has_unyielding(creature_data):
 			to_tile_node.set_down_state(true)

@@ -145,25 +145,25 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "spell_disabled":
-		# スペル不可呪い中: スペルカードをグレーアウト＆選択不可（アルカナアーツは使用可能）
+		# 禁呪呪い中: スペルカードをグレーアウト＆選択不可（アルカナアーツは使用可能）
 		if is_spell_card:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "item":
-		# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト＆選択不可
+		# アイテムフェーズ中: アイテムカード、レリック以外をグレーアウト＆選択不可
 		var should_gray = true
 		if is_item_card:
 			should_gray = false
 		elif is_creature_card:
-			# アイテムクリーチャー判定
+			# レリック判定
 			var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-			if "アイテムクリーチャー" in keywords:
+			if "レリック" in keywords:
 				should_gray = false
 		if should_gray:
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "item_or_assist":
-		# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャー以外をグレーアウト＆選択不可
+		# アイテムフェーズ（加勢あり）: アイテムカード、レリック、加勢対象クリーチャー以外をグレーアウト＆選択不可
 		var should_gray_out = true
 		
 		# アイテムカードは常に選択可能
@@ -171,12 +171,12 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			should_gray_out = false
 		# クリーチャーカードの場合
 		elif is_creature_card:
-			# アイテムクリーチャー判定
+			# レリック判定
 			var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-			if "アイテムクリーチャー" in keywords:
+			if "レリック" in keywords:
 				should_gray_out = false
 			else:
-				# 援護対象判定
+				# 加勢対象判定
 				var assist_elements = []
 				if _card_selection_service:
 					assist_elements = _card_selection_service.assist_target_elements
@@ -190,7 +190,7 @@ func create_card_node(card_data: Dictionary, _index: int, player_id: int) -> Nod
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)
 			is_selectable_card = false
 	elif filter_mode == "battle":
-		# バトルフェーズ中: 防御型クリーチャーをグレーアウト＆選択不可
+		# バトルフェーズ中: 堅守クリーチャーをグレーアウト＆選択不可
 		var creature_type = card_data.get("creature_type", "normal")
 		if creature_type == "defensive":
 			card.modulate = Color(0.5, 0.5, 0.5, 1.0)

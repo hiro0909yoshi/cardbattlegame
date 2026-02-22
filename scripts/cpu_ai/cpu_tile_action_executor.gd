@@ -71,7 +71,7 @@ func prepare_summon(card_index: int, player_id: int) -> Dictionary:
 	if tile and not tile.can_place_creature():
 		return {"success": false, "reason": "cannot_place"}
 	
-	# 防御型チェック: 空き地以外には召喚できない
+	# 堅守チェック: 空き地以外には召喚できない
 	var creature_type = card_data.get("creature_type", "normal")
 	if creature_type == "defensive":
 		var tile_info = board_system.get_tile_info(target_tile)
@@ -144,7 +144,7 @@ func execute_summon(prep: Dictionary, player_id: int) -> bool:
 	board_system.set_tile_owner(target_tile, player_id)
 	board_system.place_creature(target_tile, card_data)
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	var tile = board_system.tile_nodes.get(target_tile)
 	if tile and tile.has_method("set_down_state"):
 		if not PlayerBuffSystem.has_unyielding(card_data):
@@ -268,7 +268,7 @@ func _requires_card_sacrifice(card_data: Dictionary) -> bool:
 	return SummonConditionChecker.requires_card_sacrifice(card_data)
 
 
-## コスト計算（ライフフォース呪い対応）
+## コスト計算（エンジェルギフト呪い対応）
 func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 	var cost_data = card_data.get("cost", 1)
 	var cost = 0
@@ -277,7 +277,7 @@ func _calculate_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック
+	# エンジェルギフト呪いチェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 	

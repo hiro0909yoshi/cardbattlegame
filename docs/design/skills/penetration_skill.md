@@ -1,4 +1,4 @@
-# 貫通スキル
+# 刺突スキル
 
 **プロジェクト**: カルドセプト風カードバトルゲーム  
 **バージョン**: 1.6  
@@ -33,34 +33,34 @@
 
 ## 無効化対象
 
-貫通スキルは防御側の土地ボーナスHPのみを無効化します。
+刺突スキルは防御側の土地ボーナスHPのみを無効化します。
 
 | 対象 | 無効化 |
 |------|--------|
 | ✅ 土地ボーナスHP (`land_bonus_hp`) | する |
 | ❌ クリーチャー基本HP (`hp`) | しない |
-| ❌ 感応ボーナスHP (`resonance_bonus_hp`) | しない |
+| ❌ 共鳴ボーナスHP (`resonance_bonus_hp`) | しない |
 | ❌ アイテムボーナスHP（将来実装） | しない |
 | ❌ スペルボーナスHP（将来実装） | しない |
 
 ### 重要なポイント
 
-貫通スキルは**土地によるHP上昇のみ**を無効化します。クリーチャー自身のHPや、感応スキルで得たHPには影響しません。
+刺突スキルは**土地によるHP上昇のみ**を無効化します。クリーチャー自身のHPや、共鳴スキルで得たHPには影響しません。
 
 ---
 
 ## 条件タイプ
 
-貫通スキルには3種類の条件タイプがあります。
+刺突スキルには3種類の条件タイプがあります。
 
-### 1. 無条件貫通
+### 1. 無条件刺突
 
-常に貫通が発動します。
+常に刺突が発動します。
 
 ```json
 {
   "ability_parsed": {
-	"keywords": ["貫通"]
+	"keywords": ["刺突"]
   }
 }
 ```
@@ -73,14 +73,14 @@
 
 ### 2. 敵属性条件
 
-敵が特定の属性の場合のみ貫通が発動します。
+敵が特定の属性の場合のみ刺突が発動します。
 
 ```json
 {
   "ability_parsed": {
-	"keywords": ["貫通"],
+	"keywords": ["刺突"],
 	"keyword_conditions": {
-	  "貫通": {
+	  "刺突": {
 		"condition_type": "enemy_is_element",
 		"elements": "water"
 	  }
@@ -90,20 +90,20 @@
 ```
 
 **実装例**:
-- **ファイアービーク** (ID: 38) - 敵が水属性の場合のみ貫通
+- **ファイアービーク** (ID: 38) - 敵が水属性の場合のみ刺突
 
 ---
 
 ### 3. 攻撃力条件
 
-**敵のAP**が特定値以上の場合のみ貫通が発動します。
+**敵のAP**が特定値以上の場合のみ刺突が発動します。
 
 ```json
 {
   "ability_parsed": {
-	"keywords": ["貫通"],
+	"keywords": ["刺突"],
 	"keyword_conditions": {
-	  "貫通": {
+	  "刺突": {
 		"condition_type": "defender_ap_check",
 		"operator": ">=",
 		"value": 40
@@ -119,7 +119,7 @@
 - `==`: 等しい
 
 **実装例**:
-- **ピュトン** (ID: 36) - 敵AP40以上で貫通
+- **ピュトン** (ID: 36) - 敵AP40以上で刺突
 
 ---
 
@@ -134,14 +134,14 @@
 ```
 1. BattleParticipant作成
    ↓
-2. 攻撃側の貫通スキルチェック
+2. 攻撃側の刺突スキルチェック
    ↓
 3. 条件評価
    - 無条件 → 常にtrue
    - 敵属性条件 → 防御側の属性をチェック
    - 攻撃力条件 → 攻撃側のAPをチェック
    ↓
-4. 貫通発動の場合
+4. 刺突発動の場合
    → 防御側のland_bonus_hp = 0に設定
    ↓
 5. バトル実行
@@ -158,36 +158,36 @@
 ```gdscript
 class_name SkillPenetration
 
-## 貫通スキルのチェック
+## 刺突スキルのチェック
 static func check_and_notify(attacker) -> bool:
-	# 防御側の貫通スキルは効果なし
+	# 防御側の刺突スキルは効果なし
 	if not attacker.is_attacker:
 		var keywords = attacker.creature_data.get("ability_parsed", {}).get("keywords", [])
-		if "貫通" in keywords:
-			print("  【貫通】防御側のため効果なし")
+		if "刺突" in keywords:
+			print("  【刺突】防御側のため効果なし")
 			return false
 	
 	return true
 
-## 貫通スキルを持っているかチェック
+## 刺突スキルを持っているかチェック
 static func has_penetration(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "貫通" in keywords
+	return "刺突" in keywords
 
-## 侵略側が貫通を持っているかチェック
+## 侵略側が刺突を持っているかチェック
 static func is_active(attacker) -> bool:
 	if not attacker.is_attacker:
 		return false
 	
 	return has_penetration(attacker.creature_data)
 
-## 貫通スキルを適用（土地ボーナスHPを無効化）
+## 刺突スキルを適用（土地ボーナスHPを無効化）
 static func apply_penetration(attacker, defender) -> void:
 	if not is_active(attacker):
 		return
 	
 	if defender.land_bonus_hp > 0:
-		print("  【貫通】防御側の土地ボーナスHP ", defender.land_bonus_hp, " を無効化")
+		print("  【刺突】防御側の土地ボーナスHP ", defender.land_bonus_hp, " を無効化")
 		defender.land_bonus_hp = 0
 		defender.update_current_hp()
 ```
@@ -199,11 +199,11 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 	var ability_parsed = attacker_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	if not "貫通" in keywords:
+	if not "刺突" in keywords:
 		return false
 	
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var penetrate_condition = keyword_conditions.get("貫通", {})
+	var penetrate_condition = keyword_conditions.get("刺突", {})
 	
 	# 無条件の場合
 	if penetrate_condition.is_empty():
@@ -234,7 +234,7 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 ## 実装済みクリーチャー一覧
 
-### 無条件貫通
+### 無条件刺突
 
 | ID | 名前 | 属性 | AP | HP |
 |----|------|------|----|----|
@@ -242,19 +242,19 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 | 334 | ナイトメア | 風 | 30 | 30 |
 | 441 | トロージャンホース | 無 | 30 | 50 |
 
-### 条件付き貫通
+### 条件付き刺突
 
 #### 攻撃力条件（AP40以上）
 
 | ID | 名前 | 属性 | AP | HP | 条件 |
 |----|------|------|----|----|------|
-| 36 | ピュトン | 火 | 40 | 50 | 敵AP≥40で貫通 |
+| 36 | ピュトン | 火 | 40 | 50 | 敵AP≥40で刺突 |
 
 #### 敵属性条件
 
 | ID | 名前 | 属性 | AP | HP | 条件 |
 |----|------|------|----|----|------|
-| 38 | ファイアービーク | 火 | 30 | 40 | 敵が水属性で貫通 |
+| 38 | ファイアービーク | 火 | 30 | 40 | 敵が水属性で刺突 |
 
 ### 実装統計
 
@@ -266,51 +266,51 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 ## 使用例
 
-### シナリオ1: 無条件貫通（ナイトメア）
+### シナリオ1: 無条件刺突（ナイトメア）
 
 ```
-攻撃側: ナイトメア（AP:50、貫通）
+攻撃側: ナイトメア（AP:50、刺突）
 防御側: フェニックス（HP:30、土地ボーナス+20）
 
 通常の場合:
 - 防御側の総HP = 30 + 20 = 50
 
-貫通発動:
+刺突発動:
 - 防御側の土地ボーナスが無効化
 - 防御側の総HP = 30
 - ナイトメアの攻撃でフェニックス撃破！
 ```
 
-### シナリオ2: 条件付き貫通（ファイアービーク）
+### シナリオ2: 条件付き刺突（ファイアービーク）
 
 ```
-攻撃側: ファイアービーク（AP:30、貫通[水属性]）
+攻撃側: ファイアービーク（AP:30、刺突[水属性]）
 防御側A: オドントティラヌス（水属性、HP:40 + 土地20）
 防御側B: グレムリン（火属性、HP:30 + 土地20）
 
 オドントティラヌスへの攻撃:
-- 水属性なので貫通発動
+- 水属性なので刺突発動
 - 総HP = 40（土地ボーナス無効）
 
 グレムリンへの攻撃:
-- 火属性なので貫通不発
+- 火属性なので刺突不発
 - 総HP = 50（土地ボーナス有効）
 ```
 
 ### シナリオ3: 攻撃力条件（ピュトン）
 
 ```
-攻撃側: ピュトン（基本AP:40、貫通[敵AP≥40]）
+攻撃側: ピュトン（基本AP:40、刺突[敵AP≥40]）
 防御側A: バハムート（AP:50）
 防御側B: グレムリン（AP:30）
 
 対バハムート:
 - 敵AP = 50
-- 敵AP≥40なので貫通発動！
+- 敵AP≥40なので刺突発動！
 
 対グレムリン:
 - 敵AP = 30
-- 敵AP<40なので貫通不発
+- 敵AP<40なので刺突不発
 ```
 
 ---
@@ -324,14 +324,14 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 ### 対策
 1. **基本HPの高いクリーチャー配置**
-2. **感応スキル持ちで防御強化**
+2. **共鳴スキル持ちで防御強化**
 3. **先制スキルで先手を取る**
 
 ---
 
 ## 将来実装
 
-- **巻物攻撃**: 貫通と同様に土地ボーナスを無効化するスキル
+- **術攻撃**: 刺突と同様に土地ボーナスを無効化するスキル
 
 ---
 
@@ -358,21 +358,21 @@ func _check_penetration_skill(attacker_data: Dictionary, defender_data: Dictiona
 
 | 関数 | 用途 |
 |------|------|
-| `check_and_notify()` | 防御側の貫通チェック（メッセージのみ） |
-| `has_penetration()` | 貫通スキル保持チェック |
-| `is_active()` | 侵略側かつ貫通保持チェック |
+| `check_and_notify()` | 防御側の刺突チェック（メッセージのみ） |
+| `has_penetration()` | 刺突スキル保持チェック |
+| `is_active()` | 侵略側かつ刺突保持チェック |
 | `apply_penetration()` | 土地ボーナスHP無効化 |
 
 ### 処理タイミング
 
 **バトル前処理**（`apply_pre_battle_skills()`）:
 ```gdscript
-# 貫通スキルによる土地ボーナスHP無効化
+# 刺突スキルによる土地ボーナスHP無効化
 PenetrationSkill.apply_penetration(attacker, defender)
 ```
 
 **攻撃ループ内**（`execute_attack_sequence()`）:
 ```gdscript
-# 貫通スキルチェック（防御側の貫通は無効）
+# 刺突スキルチェック（防御側の刺突は無効）
 PenetrationSkill.check_and_notify(attacker_p)
 ```

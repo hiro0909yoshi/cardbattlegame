@@ -200,9 +200,9 @@ Card.gd (scripts/)
 
 | 対象 | 消滅条件 | 例 |
 |------|---------|-----|
-| クリーチャー | 移動・交換・撃破・ターン経過・上書き | 不屈(5R)、戦闘行動不可 |
-| プレイヤー | ターン経過・上書き | 防魔(5R)、通行料無効 |
-| 世界呪 | 上書き・消滅スペル | コスト上昇(6R) |
+| クリーチャー | 移動・交換・撃破・ターン経過・上書き | 奮闘(5R)、消沈 |
+| プレイヤー | ターン経過・上書き | 結界(5R)、免罪 |
+| 世界呪 | 上書き・消滅スペル | 太陽(6R) |
 
 **重要**: クリーチャーの呪いは**移動でも消える**
 
@@ -270,7 +270,7 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 	"effects": [
 	  {
 		"effect_type": "toll_share",
-		"name": "通行料促進",
+		"name": "徴収",
 		"ratio": 0.5,
 		"duration": 5
 	  }
@@ -296,7 +296,7 @@ var targets = TargetSelectionHelper.get_all_creatures(board_system, {
 	"effects": [
 	  {
 		"effect_type": "battle_disable",
-		"name": "戦闘行動不可",
+		"name": "消沈",
 		"duration": -1
 	  }
 	]

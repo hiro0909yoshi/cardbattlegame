@@ -149,11 +149,11 @@ func _get_usable_spells(player_id: int) -> Array:
 	var magic = player_system.get_magic(player_id)
 	var spells = []
 
-	# プレイヤー呪いをチェック - スペル不可状態
+	# プレイヤー呪いをチェック - 禁呪状態
 	var player = player_system.players[player_id] if player_id < player_system.players.size() else null
 	if player and SpellProtection.is_player_spell_disabled(player, {}):
-		# スペル不可状態 → 使用可能なスペルなし
-		print("[CPUSpellAI] プレイヤー%dはスペル不可の呪いがかかっています" % player_id)
+		# 禁呪状態 → 使用可能なスペルなし
+		print("[CPUSpellAI] プレイヤー%dは禁呪の呪いがかかっています" % player_id)
 		return []
 
 	for card in hand:
@@ -257,7 +257,7 @@ func _evaluate_has_target(spell: Dictionary, context: Dictionary, base_score: fl
 	if damage_value > 0:
 		context["damage_value"] = damage_value
 	
-	# スペル情報をcontextに追加（HP効果無効フィルタ用）
+	# スペル情報をcontextに追加（堅牢フィルタ用）
 	context["spell"] = spell
 	
 	if target_condition:

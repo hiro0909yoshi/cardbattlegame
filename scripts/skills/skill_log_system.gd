@@ -155,18 +155,18 @@ func log_battle_end(winner: String, loser: String, reason: String = ""):
 	emit_signal("battle_ended", {"winner": winner, "loser": loser})
 	return entry
 
-# 強打専用ログ
+# 強化専用ログ
 func log_power_strike(creature_name: String, base_ap: int, modified_ap: int, condition: String):
 	var increase = modified_ap - base_ap
 	var percentage = int((float(modified_ap) / float(base_ap) - 1.0) * 100)
 	
-	return log_keyword_triggered("強打", creature_name, {
+	return log_keyword_triggered("強化", creature_name, {
 		"base_ap": base_ap,
 		"modified_ap": modified_ap,
 		"increase": increase,
 		"percentage": percentage,
 		"condition": condition,
-		"message_override": "【強打発動！】%s: AP %d → %d (+%d, +%d%%) [条件: %s]" % [
+		"message_override": "【強化発動！】%s: AP %d → %d (+%d, +%d%%) [条件: %s]" % [
 			creature_name, base_ap, modified_ap, increase, percentage, condition
 		]
 	})

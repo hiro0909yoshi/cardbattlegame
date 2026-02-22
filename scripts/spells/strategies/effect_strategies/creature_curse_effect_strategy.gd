@@ -79,21 +79,21 @@ func execute(context: Dictionary) -> Dictionary:
 		"random_stat_curse":
 			effect_message = "ランダムな呪い"
 		"command_growth_curse":
-			effect_message = "コマンド成長呪い"
+			effect_message = "昇華呪い"
 		"plague_curse":
 			effect_message = "疫病の呪い"
 		"creature_curse":
 			effect_message = "クリーチャー呪い"
 		"forced_stop":
-			effect_message = "強制停止"
+			effect_message = "停滞"
 		"indomitable":
-			effect_message = "不屈スキル付与"
+			effect_message = "奮闘スキル付与"
 		"land_effect_disable":
 			effect_message = "土地効果無効化"
 		"land_effect_grant":
 			effect_message = "土地効果付与"
 		"metal_form":
-			effect_message = "金属化"
+			effect_message = "硬化"
 		"magic_barrier":
 			effect_message = "魔法障壁"
 		"destroy_after_battle":

@@ -30,7 +30,7 @@ if distance_xz < NEIGHBOR_THRESHOLD:
 
 ### 使用例
 ```gdscript
-# スキル条件: 「隣接した自ドミニオなら強打」
+# スキル条件: 「隣接した自ドミニオなら強化」
 var neighbors = board_system.tile_neighbor_system.get_spatial_neighbors(tile_index)
 # → [5, 7]  # タイル6の隣接タイル
 
@@ -105,7 +105,7 @@ creature_data = {
 
 ### 特徴
 - `hp`とは別フィールドで管理
-- 「貫通」「巻物」スキルで無視される（将来実装）
+- 「刺突」「巻物」スキルで無視される（将来実装）
 - 常時適用（召喚時・バトル時）
 
 ---
@@ -121,8 +121,8 @@ creature_data = {
 - クリーチャー移動実行後（移動先の土地）
 - クリーチャー交換実行後
 
-### 例外: 不屈スキル
-- 不屈スキルを持つクリーチャーがいる土地は、アクション後もダウン状態にならない
+### 例外: 奮闘スキル
+- 奮闘スキルを持つクリーチャーがいる土地は、アクション後もダウン状態にならない
 - 何度でもドミニオオーダーを実行可能
 
 ### ダウン状態の解除タイミング
@@ -150,25 +150,25 @@ if tile.is_down():
 movement_controller.clear_all_down_states_for_player(player_id)
 ```
 
-### 不屈スキルの実装
+### 奮闘スキルの実装
 ```gdscript
 # SkillSystem.gd
 static func has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "不屈" in ability_detail
+	return "奮闘" in ability_detail
 
-# ダウン状態設定時の不屈チェック（各アクション処理）
+# ダウン状態設定時の奮闘チェック（各アクション処理）
 if tile.has_method("set_down_state"):
 	var creature = tile.creature_data if tile.has("creature_data") else {}
 	if not SkillSystem.has_unyielding(creature):
 		tile.set_down_state(true)
 	else:
-		print("不屈によりダウンしません")
+		print("奮闘によりダウンしません")
 ```
 
-### 不屈持ちクリーチャー一覧（16体）
+### 奮闘持ちクリーチャー一覧（16体）
 - 火: シールドメイデン(14), ショッカー(18), バードメイデン(28)
 - 水: エキノダーム(113), カワヒメ(117), マカラ(141)
 - 地: キャプテンコック(207), ヒーラー(234), ピクシー(235), ワーベア(249)
@@ -375,7 +375,7 @@ ui_manager.hide_card_selection_ui()
 3. **ダウン状態の土地は選択不可**
    - アクション実行済みの土地はダウン解除まで使用不可
    - 選択肢として表示されない
-   - **例外**: 不屈スキル持ちのクリーチャーがいる土地はダウンしないため、何度でも使用可能
+   - **例外**: 奮闘スキル持ちのクリーチャーがいる土地はダウンしないため、何度でも使用可能
 
 ### 土地選択の操作方法
 - **矢印キー（↑↓←→）**: 土地を切り替え（プレビュー）
@@ -466,7 +466,7 @@ var cost = LEVEL_COSTS[target_level] - LEVEL_COSTS[current_level]
   ↓
 隣接する移動先を表示
   ├─ 空き地
-  ├─ 自分の土地（移動不可）
+  ├─ 自分の土地（枷）
   └─ 敵の土地
   ↓
 移動先を選択（↑↓キーで切り替え）
@@ -605,8 +605,8 @@ func execute_for_cpu(command: Dictionary) -> bool
 - 変更可能: 火/水/土/風/無属性タイル
 - 変更不可: チェックポイント（0, 10）、ワープ（5, 15）
 - 無属性への変更: 不可（4属性のみ選択可能）
-- 実行後: ダウン状態＋ターン終了（不屈で回避可）
-- **ソリッドワールド発動中**: 属性変更不可（世界呪いによるブロック）
+- 実行後: ダウン状態＋ターン終了（奮闘で回避可）
+- **インペリアルガード発動中**: 属性変更不可（世界呪いによるブロック）
 
 ### 引き継ぎデータ
 | データ | 継承 |
@@ -639,9 +639,9 @@ func execute_for_cpu(command: Dictionary) -> bool
 - `LandInputHelper.handle_terrain_selection_input()` - キー入力処理
 - `DominioOrderHandler` - 状態管理（`SELECTING_TERRAIN`）
 
-### ソリッドワールド（世界呪い）対応 ⚠️
+### インペリアルガード（世界呪い）対応 ⚠️
 
-**ソリッドワールド（ID: 2047）**発動中は、全ドミニオの土地変性（属性変更・レベルダウン）が無効になる。
+**インペリアルガード（ID: 2047）**発動中は、全ドミニオの属性変化（属性変更・レベルダウン）が無効になる。
 
 **ブロックされる操作**:
 | 操作 | チェック箇所 | 結果 |
@@ -661,9 +661,9 @@ func execute_for_cpu(command: Dictionary) -> bool
 - レベル変更 → `SpellLand.change_level()`
 - ランドコマンド経由 → `BoardSystem3D.change_tile_terrain()`
 
-直接`tile.tile_type`や`tile.level`を変更するとソリッドワールドがバイパスされるため禁止。
+直接`tile.tile_type`や`tile.level`を変更するとインペリアルガードがバイパスされるため禁止。
 
-**関連ドキュメント**: [世界呪い.md](spells/世界呪い.md) - ソリッドワールド詳細
+**関連ドキュメント**: [世界呪い.md](spells/世界呪い.md) - インペリアルガード詳細
 
 ### スペル/スキル連携
 スペルコストのみで地形変化可能（ドミニオオーダーの追加コスト不要）：

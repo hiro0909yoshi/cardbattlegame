@@ -374,7 +374,7 @@ func _get_default_targets(mystic_data: Dictionary, context: Dictionary) -> Array
 	# TargetSelectionHelperの共通ロジックを使用
 	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
 	
-	# 移動系呪いの場合、防御型クリーチャーを除外
+	# 移動系呪いの場合、堅守クリーチャーを除外
 	if _is_movement_curse(mystic_data):
 		targets = targets.filter(func(t): return not _is_defensive_creature(t.get("creature", {})))
 	
@@ -557,7 +557,7 @@ func _get_condition_target_with_score(mystic_data: Dictionary, context: Dictiona
 	# element_mismatch + creature の場合、スコア計算を使用
 	if condition == "element_mismatch" and target_type == "creature":
 		var mismatched = condition_checker.check_target_condition("element_mismatch_creatures", context)
-		# 自クリーチャーのみフィルタ（防御型・防魔を除外）
+		# 自クリーチャーのみフィルタ（堅守・結界を除外）
 		var own_mismatched = []
 		var player_sys = _context.player_system if _context else null
 		for target in mismatched:
@@ -568,10 +568,10 @@ func _get_condition_target_with_score(mystic_data: Dictionary, context: Dictiona
 				var is_own = player_sys.is_same_team(context.player_id, owner_id) if player_sys else (owner_id == context.player_id)
 				if tile and is_own:
 					var creature = target.get("creature", {})
-					# 防御型クリーチャーは移動できないので除外
+					# 堅守クリーチャーは移動できないので除外
 					if _is_defensive_creature(creature):
 						continue
-					# 防魔チェック
+					# 結界チェック
 					if SpellProtection.is_creature_protected(creature, _build_world_curse_context()):
 						continue
 					own_mismatched.append(target)
@@ -600,7 +600,7 @@ func _get_condition_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 			# 属性不一致の場合、属性不一致の自クリーチャーをターゲット（スコア計算使用）
 			if condition == "element_mismatch":
 				var mismatched = condition_checker.check_target_condition("element_mismatch_creatures", context)
-				# 自クリーチャーのみフィルタ（防御型を除外）
+				# 自クリーチャーのみフィルタ（堅守を除外）
 				var own_mismatched = []
 				var player_sys = _context.player_system if _context else null
 				for target in mismatched:
@@ -611,7 +611,7 @@ func _get_condition_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 						var is_own = player_sys.is_same_team(context.player_id, owner_id) if player_sys else (owner_id == context.player_id)
 						if tile and is_own:
 							var creature = target.get("creature", {})
-							# 防御型クリーチャーは移動できないので除外
+							# 堅守クリーチャーは移動できないので除外
 							if not _is_defensive_creature(creature):
 								own_mismatched.append(target)
 				if not own_mismatched.is_empty():
@@ -652,7 +652,7 @@ func _calculate_profit(formula: String, context: Dictionary) -> int:
 		"caster_mhp * 2":
 			return context.get("caster_mhp", 0) * 2
 		"200 - caster_value":
-			# 黄金献身: 200EP獲得 - 術者の価値
+			# 黄金献身: 200蓄魔 - 術者の価値
 			return 200  # TODO: 術者価値の計算
 		_:
 			if "enemy_magic" in formula:
@@ -730,7 +730,7 @@ func _get_strategic_target(mystic_data: Dictionary, context: Dictionary) -> Dict
 	return {"type": "self", "player_id": context.player_id}
 
 
-## 移動系呪いかどうかをチェック（遠隔移動等）
+## 移動系呪いかどうかをチェック（天駆等）
 func _is_movement_curse(mystic_data: Dictionary) -> bool:
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	var effects = effect_parsed.get("effects", [])
@@ -742,7 +742,7 @@ func _is_movement_curse(mystic_data: Dictionary) -> bool:
 	
 	return false
 
-## 防御型クリーチャーかどうかをチェック（移動不可）
+## 堅守クリーチャーかどうかをチェック（枷）
 func _is_defensive_creature(creature_data: Dictionary) -> bool:
 	# creature_typeで判定
 	if creature_data.get("creature_type", "") == "defensive":
@@ -752,13 +752,13 @@ func _is_defensive_creature(creature_data: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	if ability_parsed:
 		var keywords = ability_parsed.get("keywords", [])
-		if "防御型" in keywords:
+		if "堅守" in keywords:
 			return true
 	
 	return false
 
-## 防魔・HP効果無効のクリーチャーをフィルタリング
-## 防魔・HP効果無効のクリーチャーをフィルタリング（共通ロジック使用）
+## 結界・堅牢のクリーチャーをフィルタリング
+## 結界・堅牢のクリーチャーをフィルタリング（共通ロジック使用）
 func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Array:
 	var effect_parsed = mystic_data.get("effect_parsed", {})
 	
@@ -772,11 +772,11 @@ func _filter_spell_immune_targets(targets: Array, mystic_data: Dictionary) -> Ar
 			filtered.append(target)
 			continue
 		
-		# 防魔チェック（SpellProtection使用）
+		# 結界チェック（SpellProtection使用）
 		if SpellProtection.is_creature_protected(creature, context):
 			continue
 
-		# HP効果無効チェック
+		# 堅牢チェック
 		if SpellProtection.should_skip_hp_effect(creature, effect_parsed):
 			continue
 		

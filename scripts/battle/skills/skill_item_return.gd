@@ -1,6 +1,6 @@
 extends Node
 
-## アイテム復帰スキル処理
+## 帰還スキル処理
 ## 
 ## 使用したアイテムをブックまたは手札に戻すスキル
 ## - ブック復帰: デッキのランダムな位置に戻る
@@ -15,7 +15,7 @@ static var card_system_ref: CardSystem = null
 static func setup_systems(card_system: CardSystem) -> void:
 	card_system_ref = card_system
 
-## アイテム復帰のチェックと実行
+## 帰還のチェックと実行
 ## 
 ## @param participant: BattleParticipant - スキル保有者
 ## @param used_items: Array[Dictionary] - 使用したアイテムのリスト
@@ -71,12 +71,12 @@ static func check_and_apply_item_return(participant: BattleParticipant, used_ite
 					# player_idを渡す
 					success = _return_to_deck(player_id, item_data)
 					if success:
-						print("【アイテム復帰→ブック】", item_data.get("name", "?"))
+						print("【帰還→ブック】", item_data.get("name", "?"))
 				
 				"return_to_hand":
 					success = _return_to_hand(player_id, item_data)
 					if success:
-						print("【アイテム復帰→手札】", item_data.get("name", "?"))
+						print("【帰還→手札】", item_data.get("name", "?"))
 			
 			if success:
 				returned_items.append(item_data)
@@ -93,7 +93,7 @@ static func check_and_apply_item_return(participant: BattleParticipant, used_ite
 ## クリーチャーのability_parsedと使用したアイテムのeffect_parsedから
 ## item_return効果を収集する
 ## 
-## 優先順位: アイテム自身の復帰効果 > クリーチャーの全アイテム復帰
+## 優先順位: アイテム自身の復帰効果 > クリーチャーの全帰還
 static func _get_return_effects(participant: BattleParticipant, used_items: Array) -> Array:
 	var return_effects = []
 	
@@ -132,7 +132,7 @@ static func _get_return_effects(participant: BattleParticipant, used_items: Arra
 				var target = effect.get("target", "self")
 				
 				if target == "all_items":
-					# 全アイテム復帰の場合、アイテム自身に復帰効果がないものだけを対象に
+					# 全帰還の場合、アイテム自身に復帰効果がないものだけを対象に
 					var creature_effect = effect.duplicate()
 					creature_effect["used_items"] = used_items
 					creature_effect["exclude_item_ids"] = items_with_own_return

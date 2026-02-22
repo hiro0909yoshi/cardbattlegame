@@ -65,7 +65,7 @@
 
 ---
 
-### パターン2: 感応スキル持ちクリーチャー
+### パターン2: 共鳴スキル持ちクリーチャー
 
 **使用場面**: 特定属性の土地を持っているとボーナスを得る
 
@@ -85,12 +85,12 @@
   },
   "ap": [攻撃力],
   "hp": [体力],
-  "ability": "感応",
-  "ability_detail": "感応[[属性]・AP+[値]、HP+[値]]",
+  "ability": "共鳴",
+  "ability_detail": "共鳴[[属性]・AP+[値]、HP+[値]]",
   "ability_parsed": {
-	"keywords": ["感応"],
+	"keywords": ["共鳴"],
 	"keyword_conditions": {
-	  "感応": {
+	  "共鳴": {
 		"element": "[属性]",
 		"stat_bonus": {
 		  "ap": [APボーナス],
@@ -102,7 +102,7 @@
 }
 ```
 
-**例**: 火地の感応（AP&HP+20）
+**例**: 火地の共鳴（AP&HP+20）
 ```json
 {
   "id": 15,
@@ -116,12 +116,12 @@
   },
   "ap": 30,
   "hp": 30,
-  "ability": "感応",
-  "ability_detail": "感応[地・AP&HP+20]",
+  "ability": "共鳴",
+  "ability_detail": "共鳴[地・AP&HP+20]",
   "ability_parsed": {
-	"keywords": ["感応"],
+	"keywords": ["共鳴"],
 	"keyword_conditions": {
-	  "感応": {
+	  "共鳴": {
 		"element": "earth",
 		"stat_bonus": {
 		  "ap": 20,
@@ -135,9 +135,9 @@
 
 ---
 
-### パターン3: 防御型クリーチャー
+### パターン3: 堅守クリーチャー
 
-**使用場面**: 移動・侵略不可だが高HPのクリーチャー
+**使用場面**: 移動・休戦だが高HPのクリーチャー
 
 **手順**:
 1. 基本テンプレートに`creature_type`を追加
@@ -156,12 +156,12 @@
   "creature_type": "defensive",
   "ap": [攻撃力],
   "hp": [体力],
-  "ability": "防御型",
-  "ability_detail": "防御型"
+  "ability": "堅守",
+  "ability_detail": "堅守"
 }
 ```
 
-**例**: 防御型クリーチャー
+**例**: 堅守クリーチャー
 ```json
 {
   "id": 102,
@@ -176,8 +176,8 @@
   "creature_type": "defensive",
   "ap": 0,
   "hp": 40,
-  "ability": "防御型",
-  "ability_detail": "防御型"
+  "ability": "堅守",
+  "ability_detail": "堅守"
 }
 ```
 
@@ -185,7 +185,7 @@
 
 ### パターン4: 複合スキル持ちクリーチャー
 
-**使用場面**: 先制+強打など、複数のスキルを持つ
+**使用場面**: 先制+強化など、複数のスキルを持つ
 
 **手順**:
 1. `keywords`配列に複数のスキルを列挙
@@ -204,10 +204,10 @@
   },
   "ap": [攻撃力],
   "hp": [体力],
-  "ability": "先制・強打",
-  "ability_detail": "先制；強打",
+  "ability": "先制・強化",
+  "ability_detail": "先制；強化",
   "ability_parsed": {
-	"keywords": ["先制", "強打"],
+	"keywords": ["先制", "強化"],
 	"effects": [
 	  {
 		"effect_type": "power_strike",
@@ -225,7 +225,7 @@
 
 ### パターン1: 新しいキーワードスキル追加
 
-**使用場面**: 「先制」「感応」のようなキーワードベースのスキル
+**使用場面**: 「先制」「共鳴」のようなキーワードベースのスキル
 
 **手順**:
 
@@ -281,7 +281,7 @@ func apply_pre_battle_skills(attacker: BattleParticipant, defender: BattlePartic
 
 ### パターン2: 条件付きスキル追加
 
-**使用場面**: 「強打」のように、特定条件下で発動するスキル
+**使用場面**: 「強化」のように、特定条件下で発動するスキル
 
 **手順**:
 
@@ -331,7 +331,7 @@ func evaluate_conditions(conditions: Array, context: Dictionary) -> bool:
 
 ---
 
-### パターン3: 応援スキル追加
+### パターン3: 鼓舞スキル追加
 
 **使用場面**: 盤面のクリーチャーにバフを与えるスキル
 
@@ -340,10 +340,10 @@ func evaluate_conditions(conditions: Array, context: Dictionary) -> bool:
 #### 1. JSONデータ定義
 ```json
 {
-  "ability": "応援",
-  "ability_detail": "応援[[条件]・[効果]]",
+  "ability": "鼓舞",
+  "ability_detail": "鼓舞[[条件]・[効果]]",
   "ability_parsed": {
-	"keywords": ["応援"],
+	"keywords": ["鼓舞"],
 	"effects": [
 	  {
 		"effect_type": "support",
@@ -825,7 +825,7 @@ func on_card_selected(card_index: int):
 		if card_type == "item":
 			item_phase_handler.use_item(card)
 			return
-		# ... 援護クリーチャー等の処理
+		# ... 加勢クリーチャー等の処理
 	
 	# スペルフェーズは後でチェック
 	if spell_phase_handler and spell_phase_handler.is_spell_phase_active():

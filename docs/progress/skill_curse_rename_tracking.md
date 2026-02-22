@@ -42,43 +42,43 @@
 
 | # | 旧名 | 新名 | effect_type | 名前決定 | JSON | GDScript | config |
 |---|---|---|---|---|---|---|---|
-| 1 | 強打 | 強化 | power_strike | [x] | [ ] | [ ] | [ ] |
-| 2 | 巻物強打 | 術強化 | scroll_power_strike | [x] | [ ] | [ ] | [ ] |
-| 3 | 貫通 | 刺突 | penetration | [x] | [ ] | [ ] | [ ] |
-| 4 | 感応 | 共鳴 | resonance | [x] | [ ] | [ ] | [ ] |
-| 5 | 応援 | 鼓舞 | support | [x] | [ ] | [ ] | [ ] |
-| 6 | 援護 | 加勢 | assist | [x] | [ ] | [ ] | [ ] |
-| 7 | 防魔 | 結界 | (spell_protection) | [x] | [ ] | [ ] | [ ] |
-| 8 | 不屈 | 奮闘 | (indomitable) | [x] | [ ] | [ ] | [ ] |
-| 9 | 道連れ | 相討 | death_revenge | [x] | [ ] | [ ] | [ ] |
-| 10 | 遺産 | 形見 | legacy_magic/card | [x] | [ ] | [ ] | [ ] |
-| 11 | 雪辱 | 報復 | revenge_mhp_damage | [x] | [ ] | [ ] | [ ] |
-| 12 | 抹消 | 殲滅 | annihilate | [x] | [ ] | [ ] | [ ] |
-| 13 | 足どめ | 拘束 | (forced_stop) | [x] | [ ] | [ ] | [ ] |
-| 14 | 巻物攻撃 | 術攻撃 | scroll_attack | [x] | [ ] | [ ] | [ ] |
-| 15 | 戦闘後破壊 | 崩壊 | destroy_after_battle | [x] | [ ] | [ ] | [ ] |
-| 16 | 呪い拡散 | 伝染 | (curse_spread) | [x] | [ ] | [ ] | [ ] |
-| 17 | 防御型 | 堅守 | defensive | [x] | [ ] | [ ] | [ ] |
-| 18 | 空地移動 | 瞬移 | (warp) | [x] | [ ] | [ ] | [ ] |
-| 19 | 敵ドミニオ移動 | 強襲 | (move_to_enemy) | [x] | [ ] | [ ] | [ ] |
-| 20 | 移動侵略無効 | 鉄壁 | (nullify) | [x] | [ ] | [ ] | [ ] |
-| 21 | 通行料変化 | 課税 | toll_change | [x] | [ ] | [ ] | [ ] |
+| 1 | 強打 | 強化 | power_strike | [x] | [x] | [x] | [x] |
+| 2 | 巻物強打 | 術強化 | scroll_power_strike | [x] | [x] | [x] | [x] |
+| 3 | 貫通 | 刺突 | penetration | [x] | [x] | [x] | [x] |
+| 4 | 感応 | 共鳴 | resonance | [x] | [x] | [x] | [x] |
+| 5 | 応援 | 鼓舞 | support | [x] | [x] | [x] | [x] |
+| 6 | 援護 | 加勢 | assist | [x] | [x] | [x] | [x] |
+| 7 | 防魔 | 結界 | (spell_protection) | [x] | [x] | [x] | [x] |
+| 8 | 不屈 | 奮闘 | (indomitable) | [x] | [x] | [x] | [x] |
+| 9 | 道連れ | 相討 | death_revenge | [x] | [x] | [x] | [x] |
+| 10 | 遺産 | 形見 | legacy_magic/card | [x] | [x] | [x] | [x] |
+| 11 | 雪辱 | 報復 | revenge_mhp_damage | [x] | [x] | [x] | [x] |
+| 12 | 抹消 | 殲滅 | annihilate | [x] | [x] | [x] | [x] |
+| 13 | 足どめ | 拘束 | (forced_stop) | [x] | [x] | [x] | [x] |
+| 14 | 巻物攻撃 | 術攻撃 | scroll_attack | [x] | [x] | [x] | [x] |
+| 15 | 戦闘後破壊 | 崩壊 | destroy_after_battle | [x] | [x] | [x] | [x] |
+| 16 | 呪い拡散 | 伝染 | (curse_spread) | [x] | [x] | [x] | [x] |
+| 17 | 防御型 | 堅守 | defensive | [x] | [x] | [x] | [x] |
+| 18 | 空地移動 | 瞬移 | (warp) | [x] | [x] | [x] | [x] |
+| 19 | 敵ドミニオ移動 | 強襲 | (move_to_enemy) | [x] | [x] | [x] | [x] |
+| 20 | 移動侵略無効 | 鉄壁 | (nullify) | [x] | [x] | [x] | [x] |
+| 21 | 通行料変化 | 課税 | toll_change | [x] | [x] | [x] | [x] |
 | 22 | 周回回復不可 | ※変更なし | (per_lap) | - | - | - | - |
-| 23 | 強制変化 | 変質 | (change) | [x] | [ ] | [ ] | [ ] |
-| 24 | EP奪取 | 吸魔 | magic_steal | [x] | [ ] | [ ] | [ ] |
-| 25 | EP獲得 | 蓄魔 | magic_gain | [x] | [ ] | [ ] | [ ] |
-| 26 | HP効果無効 | 堅牢 | hp_effect_immune | [x] | [ ] | [ ] | [ ] |
+| 23 | 強制変化 | 変質 | (change) | [x] | [x] | [x] | [x] |
+| 24 | EP奪取 | 吸魔 | magic_steal | [x] | [x] | [x] | [x] |
+| 25 | EP獲得 | 蓄魔 | magic_gain | [x] | [x] | [x] | [x] |
+| 26 | HP効果無効 | 堅牢 | hp_effect_immune | [x] | [x] | [x] | [x] |
 | 27 | アイテム破壊 | ※変更なし | destroy_item | - | - | - | - |
 | 28 | アイテム盗み | ※変更なし | steal_item | - | - | - | - |
-| 29 | アイテムクリーチャー | レリック | item_creature | [x] | [ ] | [ ] | [ ] |
+| 29 | アイテムクリーチャー | レリック | item_creature | [x] | [x] | [x] | [x] |
 | 30 | アルカナアーツ | ※変更なし | mystic_arts | - | - | - | - |
-| 31 | 土地破壊・変性無効 | 領土守護 | (nullify) | [x] | [ ] | [ ] | [ ] |
-| 32 | 死者復活 | 蘇生 | revive | [x] | [ ] | [ ] | [ ] |
-| 33 | 土地変性 | 属性変化 | change_tile_element | [x] | [ ] | [ ] | [ ] |
-| 34 | 自壊 | 自滅 | self_destruct | [x] | [ ] | [ ] | [ ] |
-| 35 | アイテム復帰 | 帰還 | item_return | [x] | [ ] | [ ] | [ ] |
-| 36 | 呪い付与 | 刻印付与 | apply_curse | [x] | [ ] | [ ] | [ ] |
-| 37 | 能力無効化 | 沈黙 | nullify_abilities | [x] | [ ] | [ ] | [ ] |
+| 31 | 土地破壊・変性無効 | 領土守護 | (nullify) | [x] | [x] | [x] | [x] |
+| 32 | 死者復活 | 蘇生 | revive | [x] | [x] | [x] | [x] |
+| 33 | 土地変性 | 属性変化 | change_tile_element | [x] | [x] | [x] | [x] |
+| 34 | 自壊 | 自滅 | self_destruct | [x] | [x] | [x] | [x] |
+| 35 | アイテム復帰 | 帰還 | item_return | [x] | [x] | [x] | [x] |
+| 36 | 呪い付与 | 刻印付与 | apply_curse | [x] | [x] | [x] | [x] |
+| 37 | 能力無効化 | 沈黙 | nullify_abilities | [x] | [x] | [x] | [x] |
 
 ---
 
@@ -88,61 +88,61 @@
 
 | # | 旧名 | 新名 | curse_type | 名前決定 | JSON | GDScript |
 |---|---|---|---|---|---|---|
-| 1 | 移動不可 | 枷 | move_disable | [x] | [ ] | [ ] |
-| 2 | EP結界 | 祭壇 | magic_barrier | [x] | [ ] | [ ] |
-| 3 | 強制停止 | 停滞 | forced_stop | [x] | [ ] | [ ] |
-| 4 | 戦闘後破壊 | 崩壊 | destroy_after_battle | [x] | [ ] | [ ] |
-| 5 | 遠隔移動 | 天駆 | remote_move | [x] | [ ] | [ ] |
-| 6 | 地形効果無効 | 暗転 | land_effect_disable | [x] | [ ] | [ ] |
-| 7 | 地形効果付与 | 恩寵 | land_effect_grant | [x] | [ ] | [ ] |
-| 8 | 戦闘行動不可 | 消沈 | battle_disable | [x] | [ ] | [ ] |
-| 9 | コマンド成長 | 昇華 | command_growth | [x] | [ ] | [ ] |
-| 10 | 能力値-20 | 衰月 | stat_reduce | [x] | [ ] | [ ] |
-| 11 | 能力値+20 | 暁光 | stat_boost | [x] | [ ] | [ ] |
-| 12 | 不屈 | 奮闘 | indomitable | [x] | [ ] | [ ] |
-| 13 | 防魔 | 結界 | spell_protection | [x] | [ ] | [ ] |
-| 14 | 防魔壁 | 重結界 | protection_wall | [x] | [ ] | [ ] |
-| 15 | 金属化 | 硬化 | metal_form | [x] | [ ] | [ ] |
-| 16 | HP効果無効 | 堅牢 | hp_effect_immune | [x] | [ ] | [ ] |
+| 1 | 移動不可 | 枷 | move_disable | [x] | [x] | [x] |
+| 2 | EP結界 | 祭壇 | magic_barrier | [x] | [x] | [x] |
+| 3 | 強制停止 | 停滞 | forced_stop | [x] | [x] | [x] |
+| 4 | 戦闘後破壊 | 崩壊 | destroy_after_battle | [x] | [x] | [x] |
+| 5 | 遠隔移動 | 天駆 | remote_move | [x] | [x] | [x] |
+| 6 | 地形効果無効 | 暗転 | land_effect_disable | [x] | [x] | [x] |
+| 7 | 地形効果付与 | 恩寵 | land_effect_grant | [x] | [x] | [x] |
+| 8 | 戦闘行動不可 | 消沈 | battle_disable | [x] | [x] | [x] |
+| 9 | コマンド成長 | 昇華 | command_growth | [x] | [x] | [x] |
+| 10 | 能力値-20 | 衰月 | stat_reduce | [x] | [x] | [x] |
+| 11 | 能力値+20 | 暁光 | stat_boost | [x] | [x] | [x] |
+| 12 | 不屈 | 奮闘 | indomitable | [x] | [x] | [x] |
+| 13 | 防魔 | 結界 | spell_protection | [x] | [x] | [x] |
+| 14 | 防魔壁 | 重結界 | protection_wall | [x] | [x] | [x] |
+| 15 | 金属化 | 硬化 | metal_form | [x] | [x] | [x] |
+| 16 | HP効果無効 | 堅牢 | hp_effect_immune | [x] | [x] | [x] |
 | 17 | 衰弱 | 衰弱 | plague | [x]※変更なし | - | - |
-| 18 | 能力値不定 | 狂星 | random_stat | [x] | [ ] | [ ] |
-| 19 | 戦闘能力不可 | 錯乱 | skill_nullify | [x] | [ ] | [ ] |
-| 20 | 爆発罠 | 焦土 | blast_trap | [x] | [ ] | [ ] |
-| 21 | 賞金首 | 賞金 | bounty | [x] | [ ] | [ ] |
-| 22 | 縮小術 | 零落 | mystic_grant | [x] | [ ] | [ ] |
-| 23 | 移動術 | 快足 | mystic_grant | [x] | [ ] | [ ] |
-| 24 | 平和 | 安寧 | peace | [x] | [ ] | [ ] |
-| 25 | 通行料無効付与 | 慈悲 | creature_toll_disable | [x] | [ ] | [ ] |
-| 26 | 土地変性無効 | 不変 | land_protect | [x] | [ ] | [ ] |
+| 18 | 能力値不定 | 狂星 | random_stat | [x] | [x] | [x] |
+| 19 | 戦闘能力不可 | 錯乱 | skill_nullify | [x] | [x] | [x] |
+| 20 | 爆発罠 | 焦土 | blast_trap | [x] | [x] | [x] |
+| 21 | 賞金首 | 賞金 | bounty | [x] | [x] | [x] |
+| 22 | 縮小術 | 零落 | mystic_grant | [x] | [x] | [x] |
+| 23 | 移動術 | 快足 | mystic_grant | [x] | [x] | [x] |
+| 24 | 平和 | 安寧 | peace | [x] | [x] | [x] |
+| 25 | 通行料無効付与 | 慈悲 | creature_toll_disable | [x] | [x] | [x] |
+| 26 | 土地変性無効 | 不変 | land_protect | [x] | [x] | [x] |
 
 ### 2-B. プレイヤー刻印
 
 | # | 旧名 | 新名 | curse_type | 名前決定 | JSON | GDScript |
 |---|---|---|---|---|---|---|
-| 1 | 歩行逆転 | 反転 | movement_reverse | [x] | [ ] | [ ] |
-| 2 | スペル不可 | 禁呪 | spell_disable | [x] | [ ] | [ ] |
-| 3 | 侵略不可 | 休戦 | invasion_disable | [x] | [ ] | [ ] |
-| 4 | 防魔（プレイヤー） | 祝福 | spell_protection | [x] | [ ] | [ ] |
-| 5 | 通行料促進 | 徴収 | toll_share | [x] | [ ] | [ ] |
-| 6 | 蓄魔歩行 | 巡礼 | dice_range_magic | [x] | [ ] | [ ] |
-| 7 | 通行料無効 | 免罪 | toll_disable | [x] | [ ] | [ ] |
-| 8 | 通行料200固定 | 凪 | toll_fixed | [x] | [ ] | [ ] |
-| 9 | 制限解除 | 解放 | restriction_release | [x] | [ ] | [ ] |
-| 10 | 生命力 | 天使 | life_force | [x] | [ ] | [ ] |
+| 1 | 歩行逆転 | 反転 | movement_reverse | [x] | [x] | [x] |
+| 2 | スペル不可 | 禁呪 | spell_disable | [x] | [x] | [x] |
+| 3 | 侵略不可 | 休戦 | invasion_disable | [x] | [x] | [x] |
+| 4 | 防魔（プレイヤー） | 祝福 | spell_protection | [x] | [x] | [x] |
+| 5 | 通行料促進 | 徴収 | toll_share | [x] | [x] | [x] |
+| 6 | 蓄魔歩行 | 巡礼 | dice_range_magic | [x] | [x] | [x] |
+| 7 | 通行料無効 | 免罪 | toll_disable | [x] | [x] | [x] |
+| 8 | 通行料200固定 | 凪 | toll_fixed | [x] | [x] | [x] |
+| 9 | 制限解除 | 解放 | restriction_release | [x] | [x] | [x] |
+| 10 | 生命力 | 天使 | life_force | [x] | [x] | [x] |
 
 ### 2-C. 世界刻印（タロット大アルカナ）
 
 | # | 旧名 | 新名 | curse_type | 名前決定 | JSON | GDScript |
 |---|---|---|---|---|---|---|
-| 1 | コスト上昇 | 太陽 | cost_increase | [x] | [ ] | [ ] |
-| 2 | 他属性連鎖 | 恋人 | element_chain | [x] | [ ] | [ ] |
-| 3 | 土地変性無効 | 皇帝 | land_protect | [x] | [ ] | [ ] |
-| 4 | 呪い防魔化 | 女教皇 | cursed_protection | [x] | [ ] | [ ] |
-| 5 | 特定能力不可 | 吊人 | skill_disable | [x] | [ ] | [ ] |
-| 6 | 召喚条件解除 | 愚者 | summon_cost_free | [x] | [ ] | [ ] |
-| 7 | 防魔（世界） | 女帝 | world_spell_protection | [x] | [ ] | [ ] |
-| 8 | 同種相殺 | 隠者 | same_creature_destroy | [x] | [ ] | [ ] |
-| 9 | 下位侵略不可 | 節制 | invasion_restrict | [x] | [ ] | [ ] |
+| 1 | コスト上昇 | 太陽 | cost_increase | [x] | [x] | [x] |
+| 2 | 他属性連鎖 | 恋人 | element_chain | [x] | [x] | [x] |
+| 3 | 土地変性無効 | 皇帝 | land_protect | [x] | [x] | [x] |
+| 4 | 呪い防魔化 | 女教皇 | cursed_protection | [x] | [x] | [x] |
+| 5 | 特定能力不可 | 吊人 | skill_disable | [x] | [x] | [x] |
+| 6 | 召喚条件解除 | 愚者 | summon_cost_free | [x] | [x] | [x] |
+| 7 | 防魔（世界） | 女帝 | world_spell_protection | [x] | [x] | [x] |
+| 8 | 同種相殺 | 隠者 | same_creature_destroy | [x] | [x] | [x] |
+| 9 | 下位侵略不可 | 節制 | invasion_restrict | [x] | [x] | [x] |
 
 ---
 
@@ -152,40 +152,40 @@
 
 | ファイル | スキルkw | 刻印名 | 完了 |
 |---|---|---|---|
-| data/fire_1.json | [ ] | [ ] | [ ] |
-| data/fire_2.json | [ ] | [ ] | [ ] |
-| data/water_1.json | [ ] | [ ] | [ ] |
-| data/water_2.json | [ ] | [ ] | [ ] |
-| data/earth_1.json | [ ] | [ ] | [ ] |
-| data/earth_2.json | [ ] | [ ] | [ ] |
-| data/wind_1.json | [ ] | [ ] | [ ] |
-| data/wind_2.json | [ ] | [ ] | [ ] |
-| data/neutral_1.json | [ ] | [ ] | [ ] |
-| data/neutral_2.json | [ ] | [ ] | [ ] |
-| data/item.json | [ ] | [ ] | [ ] |
-| data/spell_1.json | [ ] | [ ] | [ ] |
-| data/spell_2.json | [ ] | [ ] | [ ] |
-| data/spell_mystic.json | [ ] | [ ] | [ ] |
+| data/fire_1.json | [x] | [x] | [x] |
+| data/fire_2.json | [x] | [x] | [x] |
+| data/water_1.json | [x] | [x] | [x] |
+| data/water_2.json | [x] | [x] | [x] |
+| data/earth_1.json | [x] | [x] | [x] |
+| data/earth_2.json | [x] | [x] | [x] |
+| data/wind_1.json | [x] | [x] | [x] |
+| data/wind_2.json | [x] | [x] | [x] |
+| data/neutral_1.json | [x] | [x] | [x] |
+| data/neutral_2.json | [x] | [x] | [x] |
+| data/item.json | [x] | [x] | [x] |
+| data/spell_1.json | [x] | [x] | [x] |
+| data/spell_2.json | [x] | [x] | [x] |
+| data/spell_mystic.json | [x] | [x] | [x] |
 
 ### GDScript（ハードコード文字列 / 文字列比較）
 
 | ファイル | 内容 | 完了 |
 |---|---|---|
-| scripts/battle_screen/skill_display_config.gd | スキル表示マッピング | [ ] |
-| scripts/spells/spell_curse.gd | 刻印名デフォルト値 | [ ] |
-| scripts/spells/spell_curse_battle.gd | 戦闘刻印名 | [ ] |
-| scripts/spells/spell_curse_toll.gd | 通行料刻印名 | [ ] |
-| scripts/spells/spell_movement.gd | 停滞 / 奮闘 | [ ] |
-| scripts/spells/spell_dice.gd | ダイス刻印名 | [ ] |
-| scripts/spells/spell_protection.gd | 結界関連 | [ ] |
-| scripts/spells/spell_cost_modifier.gd | コスト刻印名 | [ ] |
-| scripts/spells/spell_restriction.gd | 解放 | [ ] |
-| scripts/spells/spell_damage.gd | 衰弱 | [ ] |
-| scripts/spells/spell_magic.gd | 賞金 | [ ] |
-| scripts/spells/spell_creature_move.gd | 枷 | [ ] |
-| scripts/spells/spell_mystic_arts.gd | アーツ刻印名 | [ ] |
-| scripts/spells/strategies/*.gd | 戦略内刻印名 | [ ] |
-| (その他 grep で検出された箇所) | | [ ] |
+| scripts/battle_screen/skill_display_config.gd | スキル表示マッピング | [x] ※C-1完了 |
+| scripts/spells/spell_curse.gd | 刻印名デフォルト値 | [x] ※C-2完了 |
+| scripts/spells/spell_curse_battle.gd | 戦闘刻印名 | [x] ※C-2完了 |
+| scripts/spells/spell_curse_toll.gd | 通行料刻印名 | [x] ※C-2/C-4完了 |
+| scripts/spells/spell_movement.gd | 停滞 / 奮闘 | [x] ※C-1完了 |
+| scripts/spells/spell_dice.gd | ダイス刻印名 | [x] ※C-2/C-4完了 |
+| scripts/spells/spell_protection.gd | 結界関連 | [x] ※C-1/C-4完了 |
+| scripts/spells/spell_cost_modifier.gd | コスト刻印名 | [x] ※C-2/C-4完了 |
+| scripts/spells/spell_restriction.gd | 解放 | [x] ※C-2完了 |
+| scripts/spells/spell_damage.gd | 衰弱 | [x] ※C-2完了 |
+| scripts/spells/spell_magic.gd | 賞金 | [x] ※C-2完了 |
+| scripts/spells/spell_creature_move.gd | 枷 | [x] ※C-2/C-4完了 |
+| scripts/spells/spell_mystic_arts.gd | アーツ刻印名 | [x] ※C-2/C-4完了 |
+| scripts/spells/strategies/*.gd | 戦略内刻印名 | [x] ※C-2完了 |
+| (その他 grep で検出された箇所) | 87+33 GDScript files修正済み | [x] ※C-1〜C-4完了 |
 
 ---
 
@@ -366,12 +366,21 @@
 - [x] **Phase B2**: アルカナアーツ カード名の新名称決定（59件）
 - [x] **Phase B3**: 世界刻印スペル カード名の新名称決定（9件）
 - [x] **Phase B4**: 刻印付与スペル カード名修正（11件）
-- [ ] **Phase C**: JSONデータ一括置換（14ファイル）
-- [ ] **Phase D**: GDScriptハードコード置換（15+ファイル）
-- [ ] **Phase E**: 最終grep確認（旧名が残っていないか）
-- [ ] **Phase F**: 動作確認
+- [x] **Phase C-1**: スキル名keywords一括置換（29件→187ファイル修正、JSON15+GDScript87+docs85）
+  - 防魔壁→重結界、土地変性無効→不変もC-2から前倒し実施（部分文字列破壊防止）
+- [x] **Phase C-2**: 刻印名curse_name一括置換（43件→243ファイル修正、JSON14+GDScript95+docs134）
+  - グローバル置換35件 + 文脈依存3件（世界刻印「皇帝」「女帝」、プレイヤー刻印「祝福」）個別修正
+  - C-1で既に処理済み6件（崩壊、奮闘、結界、重結界、堅牢、不変）はスキップ
+- [x] **Phase C-3**: アルカナアーツ カード名置換（59件→spell_mystic.json 56件Python置換 + docs 88ファイル修正）
+- [x] **Phase C-4**: スペルカード名置換（20件→JSON14+GDScript33+docs94+CLAUDE.md修正）
+  - 世界刻印スペル9件: ○○ワールド → タロットベース英語名
+  - 刻印付与スペル11件: イメージ乖離修正
+  - spell 2064 呪い名「ナチュラルワールド」→「吊人」修正（C-2漏れ分）
+- [ ] **Phase C-5**: 呪い→刻印 全体スイープ（最後に実施）
+- [ ] **Phase D**: 最終grep確認（旧名が残っていないか）
+- [ ] **Phase E**: 動作確認
 
 ---
 
 *作成日: 2026-02-22*
-*最終更新: 2026-02-22（Phase B4 刻印付与スペル11件 名称修正確定）*
+*最終更新: 2026-02-23（Phase C-4 スペルカード名置換完了、C-1〜C-4で累計550+ファイル修正）*

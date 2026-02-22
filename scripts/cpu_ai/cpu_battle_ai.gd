@@ -335,7 +335,7 @@ func evaluate_all_combinations_for_battle(
 			
 			print("    [両方アイテムなし] 勝利可能: オーバーキル %d" % both_no_item_result.overkill)
 		
-		# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+		# 2. ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 		var worst_case = simulate_worst_case(creature, defender, tile_info, current_player.id, {})
 		
 		if worst_case.is_win:
@@ -575,7 +575,7 @@ func _simulate_both_no_item(
 		"overkill": overkill
 	}
 
-## 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション
+## 敵の対抗手段（アイテム・加勢）を考慮したワーストケースシミュレーション
 func simulate_worst_case(
 	attacker: Dictionary,
 	defender: Dictionary,
@@ -587,7 +587,7 @@ func simulate_worst_case(
 		return _defense_evaluator.simulate_worst_case(attacker, defender, tile_info, attacker_player_id, attacker_item)
 	return {"is_win": false, "sim_result": {}, "overkill": 0}
 
-## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
+## 防御側のオプション（アイテム or 加勢）を考慮したシミュレーション
 func simulate_with_defender_option(
 	attacker: Dictionary,
 	defender: Dictionary,
@@ -681,7 +681,7 @@ func evaluate_single_creature_battle(
 	
 	var should_avoid_items = not enemy_destroy_types.is_empty() or enemy_has_steal
 	
-	# 2. ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+	# 2. ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 	var worst_case = simulate_worst_case_common(
 		my_creature, enemy_creature, tile_info, my_player_id, {}, is_attacker
 	)
@@ -769,7 +769,7 @@ func simulate_worst_case_common(
 
 
 ## 防御側としてのワーストケースシミュレーション
-## 敵（攻撃側）がアイテム/援護を使った場合を想定
+## 敵（攻撃側）がアイテム/加勢を使った場合を想定
 func _simulate_worst_case_as_defender(
 	defender: Dictionary,
 	attacker: Dictionary,
@@ -798,7 +798,7 @@ func _simulate_worst_case_as_defender(
 	var enemy_items = hand_utils.get_enemy_items(attacker_player_id)
 	var enemy_assists = hand_utils.get_enemy_assist_creatures(attacker_player_id, attacker)
 	
-	print("[CPU防御WC] 攻撃側プレイヤー: %d, 敵アイテム数: %d, 敵援護数: %d" % [attacker_player_id, enemy_items.size(), enemy_assists.size()])
+	print("[CPU防御WC] 攻撃側プレイヤー: %d, 敵アイテム数: %d, 敵加勢数: %d" % [attacker_player_id, enemy_items.size(), enemy_assists.size()])
 	for ei in enemy_items:
 		print("[CPU防御WC]   敵アイテム: %s" % ei.get("name", "?"))
 	
@@ -809,7 +809,7 @@ func _simulate_worst_case_as_defender(
 		"tile_index": tile_info.get("index", -1)
 	}
 	
-	# ベースライン: 敵がアイテム/援護なし
+	# ベースライン: 敵がアイテム/加勢なし
 	var base_result = battle_simulator.simulate_battle(
 		attacker, defender, sim_tile_info, attacker_player_id, {}, defender_item
 	)
@@ -859,7 +859,7 @@ func _simulate_worst_case_as_defender(
 			worst_result.worst_case_option = "アイテム: " + enemy_item.get("name", "?")
 			print("[CPU防御WC]   → ワーストケース更新: %s" % worst_result.worst_case_option)
 	
-	# 敵援護をすべて試す
+	# 敵加勢をすべて試す
 	for assist in enemy_assists:
 		var boosted_attacker = attacker.duplicate(true)
 		boosted_attacker["ap"] = boosted_attacker.get("ap", 0) + assist.get("ap", 0)
@@ -872,12 +872,12 @@ func _simulate_worst_case_as_defender(
 		var is_win = (outcome == BattleSimulator.BattleResult.DEFENDER_WIN or 
 					  outcome == BattleSimulator.BattleResult.ATTACKER_SURVIVED)
 		
-		print("[CPU防御WC]   敵援護 %s 試行: 結果=%s → is_win=%s" % [assist.get("name", "?"), outcome, is_win])
+		print("[CPU防御WC]   敵加勢 %s 試行: 結果=%s → is_win=%s" % [assist.get("name", "?"), outcome, is_win])
 		
 		if worst_result.is_win and not is_win:
 			worst_result.is_win = false
 			worst_result.sim_result = sim_result
-			worst_result.worst_case_option = "援護: " + assist.get("name", "?")
+			worst_result.worst_case_option = "加勢: " + assist.get("name", "?")
 			print("[CPU防御WC]   → ワーストケース更新: %s" % worst_result.worst_case_option)
 	
 	return worst_result
@@ -938,7 +938,7 @@ func _check_instant_death_condition_for_cpu(condition: Dictionary, defender: Dic
 	return false
 
 
-## リリース呪いによるアイテム制限解除をチェック
+## リリース呪いによるアイテム解放をチェック
 ## @param player_id: チェックするプレイヤーID
 ## @return bool: アイテム制限が解除されているか
 func _is_item_restriction_released(player_id: int) -> bool:

@@ -11,9 +11,9 @@ static func get_move_destinations(
 	move_type_override: String = ""  # スペルなどで強制的に移動タイプを指定
 ) -> Array:
 	
-	# 移動不可呪いチェック
+	# 枷呪いチェック
 	if has_move_disable_curse(creature_data):
-		print("[MovementHelper] 移動不可呪いにより移動できません")
+		print("[MovementHelper] 枷呪いにより移動できません")
 		return []
 	
 	# 移動タイプの判定（オーバーライドがあればそれを優先）
@@ -24,7 +24,7 @@ static func get_move_destinations(
 	
 	match move_type:
 		"vacant_move":
-			# 空地移動スキル持ちでも通常の隣接移動もできる
+			# 瞬移スキル持ちでも通常の隣接移動もできる
 			var elements = _get_vacant_move_elements(creature_data)
 			var vacant_destinations = _get_vacant_tiles_by_elements(board_system, elements)
 			
@@ -83,7 +83,7 @@ static func get_move_destinations(
 			return _get_tiles_within_steps(board_system, from_tile_index, 2)
 		"adjacent_enemy":  # 隣接する敵ドミニオのみ（アウトレイジ用）
 			return _get_adjacent_enemy_tiles(board_system, from_tile_index)
-		"remote_move":  # 遠隔移動呪い（全空き地 + 隣接タイル）
+		"remote_move":  # 天駆呪い（全空き地 + 隣接タイル）
 			var all_vacant = _get_all_vacant_tiles(board_system)
 			# 隣接タイルも追加（通常移動）
 			var adjacent_destinations = []
@@ -128,7 +128,7 @@ static func _get_tiles_within_steps(board_system: Node, from_tile_index: int, ma
 			if not tile:
 				continue
 			
-			# 配置不可タイルは移動不可（クリーチャー移動）
+			# 配置不可タイルは枷（クリーチャー移動）
 			if not TileHelper.is_placeable_tile(tile):
 				continue
 			
@@ -176,7 +176,7 @@ static func _get_adjacent_enemy_tiles(board_system: Node, from_tile_index: int) 
 
 	return destinations
 
-## 移動不可呪いを持っているかチェック
+## 枷呪いを持っているかチェック
 static func has_move_disable_curse(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -194,7 +194,7 @@ static func detect_move_type(creature_data: Dictionary) -> String:
 	if not creature_data:
 		return "adjacent"
 	
-	# 遠隔移動呪いチェック（全空き地に移動可能）
+	# 天駆呪いチェック（全空き地に移動可能）
 	if has_remote_move_curse(creature_data):
 		return "remote_move"
 	
@@ -202,19 +202,19 @@ static func detect_move_type(creature_data: Dictionary) -> String:
 	var keywords = parsed.get("keywords", [])
 	var conditions = parsed.get("keyword_conditions", {})
 	
-	# 空地移動チェック
-	if "空地移動" in keywords and conditions.has("空地移動"):
+	# 瞬移チェック
+	if "瞬移" in keywords and conditions.has("瞬移"):
 		return "vacant_move"
 	
 	# 敵地移動チェック
-	if "敵ドミニオ移動" in keywords and conditions.has("敵ドミニオ移動"):
+	if "強襲" in keywords and conditions.has("強襲"):
 		return "enemy_move"
 	
 	# デフォルトは隣接移動
 	return "adjacent"
 
 
-## 遠隔移動呪いを持っているかチェック
+## 天駆呪いを持っているかチェック
 static func has_remote_move_curse(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -226,11 +226,11 @@ static func has_remote_move_curse(creature_data: Dictionary) -> bool:
 	var curse_type = curse.get("curse_type", "")
 	return curse_type == "remote_move"
 
-## 空地移動で移動可能な属性を取得
+## 瞬移で移動可能な属性を取得
 static func _get_vacant_move_elements(creature_data: Dictionary) -> Array:
 	var parsed = creature_data.get("ability_parsed", {})
 	var conditions = parsed.get("keyword_conditions", {})
-	var vacant_move = conditions.get("空地移動", {})
+	var vacant_move = conditions.get("瞬移", {})
 	var elements = vacant_move.get("target_elements", [])
 	
 	return elements
@@ -251,7 +251,7 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 		if not tile:
 			continue
 		
-		# 配置不可タイルは空地移動不可
+		# 配置不可タイルは瞬移不可
 		if not TileHelper.is_placeable_tile(tile):
 			continue
 		
@@ -274,7 +274,7 @@ static func _get_vacant_tiles_by_elements(board_system: Node, elements: Array) -
 static func _get_enemy_move_condition(creature_data: Dictionary) -> Dictionary:
 	var parsed = creature_data.get("ability_parsed", {})
 	var conditions = parsed.get("keyword_conditions", {})
-	var enemy_move = conditions.get("敵ドミニオ移動", {})
+	var enemy_move = conditions.get("強襲", {})
 	return enemy_move.get("condition", {})
 
 ## 条件に合う敵地を取得
@@ -307,7 +307,7 @@ static func _get_enemy_tiles_by_condition(
 		if not tile:
 			continue
 
-		# 配置不可タイルは敵地移動不可
+		# 配置不可タイルは敵地枷
 		if not TileHelper.is_placeable_tile(tile):
 			continue
 
@@ -330,7 +330,7 @@ static func _get_all_vacant_tiles(board_system: Node) -> Array:
 	# "全"属性として処理
 	return _get_vacant_tiles_by_elements(board_system, ["全"])
 
-## 移動不可能なタイルをフィルタリング
+## 枷能なタイルをフィルタリング
 static func _filter_invalid_destinations(board_system: Node, tile_indices: Array, current_player_id: int, creature_data: Dictionary = {}) -> Array:
 	var valid_tiles = []
 
@@ -348,7 +348,7 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 
 		var tile = board_system.tile_nodes[tile_index]
 
-		# 配置不可タイルは移動不可（クリーチャー移動）
+		# 配置不可タイルは枷（クリーチャー移動）
 		if not TileHelper.is_placeable_tile(tile):
 			continue
 
@@ -357,7 +357,7 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 			var tile_element = tile.tile_type
 			var cannot_summon_result = board_system.check_cannot_summon(creature_data, tile_element)
 			if not cannot_summon_result.get("passed", true):
-				continue  # 配置制限で移動不可
+				continue  # 配置制限で枷
 
 		# 自分のクリーチャーがいる土地はNG（同盟の土地を除外）
 		if tile.owner_id == current_player_id and not tile.creature_data.is_empty():
@@ -366,24 +366,24 @@ static func _filter_invalid_destinations(board_system: Node, tile_indices: Array
 		# peace呪いチェック（敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if spell_curse_toll.has_peace_curse(tile_index):
-				continue  # peace呪いがある敵ドミニオは移動不可
+				continue  # peace呪いがある敵ドミニオは枷
 
-		# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
+		# クリーチャー鉄壁チェック（グルイースラッグ、ランドアーチン等）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if not tile.creature_data.is_empty() and spell_curse_toll.is_creature_invasion_immune(tile.creature_data):
-				continue  # 移動侵略無効のクリーチャーがいる敵ドミニオは移動不可
+				continue  # 鉄壁のクリーチャーがいる敵ドミニオは枷
 
-		# プレイヤー侵略不可呪いチェック（バンフィズム：全敵ドミニオへの移動除外）
+		# プレイヤー休戦呪いチェック（トゥルース：全敵ドミニオへの移動除外）
 		if spell_curse_toll and tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			if spell_curse_toll.is_player_invasion_disabled(current_player_id):
-				continue  # 侵略不可呪いで敵ドミニオは移動不可
+				continue  # 休戦呪いで敵ドミニオは枷
 
-		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
+		# テンパランスロウ（節制）チェック - SpellWorldCurseに委譲
 		if tile.owner_id != -1 and tile.owner_id != current_player_id and not (_ps and _ps.is_same_team(current_player_id, tile.owner_id)):
 			var spell_world_curse = board_system.get_meta("spell_world_curse") if board_system else null
 			if spell_world_curse:
 				if spell_world_curse.check_invasion_blocked(current_player_id, tile.owner_id, false):
-					continue  # 下位への侵略不可
+					continue  # 下位への休戦
 
 		valid_tiles.append(tile_index)
 
@@ -424,7 +424,7 @@ static func execute_creature_move(
 	to_tile_node.place_creature(creature_data)
 	to_tile_node.owner_id = from_tile_node.owner_id
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	if to_tile_node.has_method("set_down_state"):
 		if not PlayerBuffSystem.has_unyielding(creature_data):
 			to_tile_node.set_down_state(true)

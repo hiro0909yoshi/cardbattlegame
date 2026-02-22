@@ -228,7 +228,7 @@ func show_dice_result_triple(dice1: int, dice2: int, dice3: int, total: int):
 		current_dice_label.queue_free()
 		current_dice_label = null
 
-## ダイス範囲呪い用の結果表示（チャージステップなど）
+## ダイス範囲呪い用の結果表示（ジャーニーなど）
 func show_dice_result_range(curse_name: String, total: int):
 	# 既存のダイスラベルがあれば削除
 	if current_dice_label and is_instance_valid(current_dice_label):

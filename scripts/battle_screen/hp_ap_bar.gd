@@ -6,7 +6,7 @@ extends Control
 
 # 色定義
 const COLOR_GREEN = Color("#4CAF50")      # 緑: base_hp + base_up_hp + item_bonus_hp
-const COLOR_CYAN = Color("#03A9F4")       # 水色: 感応 + 一時 + スペル
+const COLOR_CYAN = Color("#03A9F4")       # 水色: 共鳴 + 一時 + スペル
 const COLOR_YELLOW = Color("#FFC107")     # 黄: 土地ボーナス
 const COLOR_GRAY = Color("#424242")       # 灰: 空
 const COLOR_RED = Color("#F44336")        # 赤: ダメージ演出
@@ -114,7 +114,7 @@ func _draw_hp_bar() -> void:
 			draw_rect(Rect2(x_offset, 0, green_width, HP_BAR_HEIGHT), COLOR_GREEN)
 		x_offset += green_width
 	
-	# 水色セグメント（感応 + 一時 + スペル）
+	# 水色セグメント（共鳴 + 一時 + スペル）
 	if cyan_remaining > 0 and x_offset < HP_BAR_WIDTH:
 		var cyan_width = minf((float(cyan_remaining) / BAR_MAX) * HP_BAR_WIDTH, HP_BAR_WIDTH - x_offset)
 		if cyan_width > 0:
@@ -180,7 +180,7 @@ func _update_hp_label() -> void:
 		var is_dead = hp_data.get("current_hp", 0) <= 0
 		
 		var base_hp = hp_data["base_hp"] + hp_data["base_up_hp"] + hp_data["item_bonus_hp"]
-		# 一時バフ（水色セグメント: 感応 + 一時 + スペル）
+		# 一時バフ（水色セグメント: 共鳴 + 一時 + スペル）
 		var cyan_bonus = hp_data["resonance_bonus_hp"] + hp_data["temporary_bonus_hp"] + hp_data["spell_bonus_hp"]
 		# 土地ボーナス（黄色セグメント）
 		var yellow_bonus = hp_data["land_bonus_hp"]
@@ -278,7 +278,7 @@ func _interpolate_hp_data(old_data: Dictionary, new_data: Dictionary, t: float) 
 		var current_yellow = old_yellow - yellow_damage
 		remaining_damage -= yellow_damage
 		
-		# 2. 水色（感応+一時+スペル）から削る
+		# 2. 水色（共鳴+一時+スペル）から削る
 		var cyan_damage = mini(remaining_damage, old_cyan)
 		var current_cyan = old_cyan - cyan_damage
 		remaining_damage -= cyan_damage

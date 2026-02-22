@@ -181,9 +181,9 @@ TeamSystem は GSM が生成し、PlayerSystem と同レベルに配置する。
 
 ### バトルスキル
 
-- **応援（Support）**: `owner_match` 条件を `is_same_team()` に拡張 → 同盟のクリーチャーも応援対象
+- **鼓舞（Support）**: `owner_match` 条件を `is_same_team()` に拡張 → 同盟のクリーチャーも鼓舞対象
   - 修正箇所: `skill_support.gd` L169
-- **援護（Assist）**: 手札からの使用のため変更不要（自分の手札 = 自分のクリーチャー）
+- **加勢（Assist）**: 手札からの使用のため変更不要（自分の手札 = 自分のクリーチャー）
 
 ### UI表示
 
@@ -441,7 +441,7 @@ quest_game._apply_stage_settings()
 | **移動確定時敵判定** | `land_action_helper.gd` | `player_system.is_same_team()` | 同盟を敵から除外 |
 | **ドミニオ土地選択** | `land_selection_helper.gd` | `player_system.is_same_team()` | プレイヤーのみ同盟土地も選択可能 |
 | **連鎖ボーナス** | `tile_data_manager.gd` | `player_system.is_same_team()` | チーム合算連鎖 |
-| **応援スキル** | `skill_support.gd` | `player_system.is_same_team()` | 同盟クリーチャーも応援対象 |
+| **鼓舞スキル** | `skill_support.gd` | `player_system.is_same_team()` | 同盟クリーチャーも鼓舞対象 |
 | **勝利判定** | `lap_system.gd` | `team_system.get_team_total_assets()` | チーム合算TEP |
 | **順位決定** | `game_result_handler.gd` | `team_system.get_team_total_assets()` | チーム合算TEPで順位 |
 | **破産処理** | `bankruptcy_handler.gd` | `player_system.is_same_team()` | 同盟土地の売却対応 |
@@ -931,7 +931,7 @@ var total_assets = team_system.get_team_total_assets(player_id) if team_system e
 
 ---
 
-### Phase 10: バトルスキル（応援）
+### Phase 10: バトルスキル（鼓舞）
 **難易度: ★☆☆** | 1ファイル・1箇所
 
 **skill_support.gd** L167-170:
@@ -950,7 +950,7 @@ elif condition_type == "owner_match":
 		return false  # フォールバック（player_system 未設定時）
 ```
 
-テスト: 同盟クリーチャーの応援が有効になる
+テスト: 同盟クリーチャーの鼓舞が有効になる
 
 ---
 

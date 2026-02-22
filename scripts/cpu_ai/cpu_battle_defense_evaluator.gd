@@ -1,10 +1,10 @@
 # CPU防御時評価システム
-# 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーションを担当
+# 敵の対抗手段（アイテム・加勢）を考慮したワーストケースシミュレーションを担当
 #
 # 機能:
 # - ワーストケースシミュレーション
 # - 対抗アイテム検索
-# - 敵援護の考慮
+# - 敵加勢の考慮
 #
 # 使用例:
 #   var evaluator = CPUBattleDefenseEvaluator.new()
@@ -29,7 +29,7 @@ func setup(battle_simulator: BattleSimulator, hand_utils: CPUHandUtils,
 	_player_system = player_system
 
 
-## 敵の対抗手段（アイテム・援護）を考慮したワーストケースシミュレーション
+## 敵の対抗手段（アイテム・加勢）を考慮したワーストケースシミュレーション
 ## @param attacker: 攻撃側クリーチャー
 ## @param defender: 防御側クリーチャー
 ## @param tile_info: タイル情報
@@ -55,7 +55,7 @@ func simulate_worst_case(
 	var enemy_items = _hand_utils.get_enemy_items(defender_owner)
 	var enemy_assists = _hand_utils.get_enemy_assist_creatures(defender_owner, defender)
 	
-	print("[CPU攻撃] 敵の対抗手段: アイテム%d個, 援護%d体" % [enemy_items.size(), enemy_assists.size()])
+	print("[CPU攻撃] 敵の対抗手段: アイテム%d個, 加勢%d体" % [enemy_items.size(), enemy_assists.size()])
 	
 	# まず何もない場合のシミュレーション
 	var base_result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
@@ -84,12 +84,12 @@ func simulate_worst_case(
 			worst_result = result
 			worst_option_name = "アイテム: " + enemy_item.get("name", "?")
 	
-	# 敵援護をすべて試す
+	# 敵加勢をすべて試す
 	for enemy_assist in enemy_assists:
 		var result = simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, enemy_assist)
 		if is_worse_result(result, worst_result):
 			worst_result = result
-			worst_option_name = "援護: " + enemy_assist.get("name", "?")
+			worst_option_name = "加勢: " + enemy_assist.get("name", "?")
 	
 	print("[CPU攻撃] ワーストケース: %s → %s" % [worst_option_name, "敗北" if not worst_result.is_win else "勝利"])
 	
@@ -108,7 +108,7 @@ func _simulate_base(
 	return simulate_with_defender_option(attacker, defender, tile_info, attacker_player_id, attacker_item, {}, {})
 
 
-## 防御側のオプション（アイテム or 援護）を考慮したシミュレーション
+## 防御側のオプション（アイテム or 加勢）を考慮したシミュレーション
 func simulate_with_defender_option(
 	attacker: Dictionary,
 	defender: Dictionary,
@@ -125,7 +125,7 @@ func simulate_with_defender_option(
 		"tile_index": tile_info.get("index", -1)
 	}
 	
-	# 援護がある場合、防御側のステータスに加算
+	# 加勢がある場合、防御側のステータスに加算
 	var defender_for_sim = defender.duplicate(true)
 	if not assist_creature.is_empty():
 		defender_for_sim["ap"] = defender_for_sim.get("ap", 0) + assist_creature.get("ap", 0)
@@ -222,7 +222,7 @@ func find_item_to_beat_worst_case(
 	return result
 
 
-## リリース呪いによるアイテム制限解除をチェック
+## リリース呪いによるアイテム解放をチェック
 func _is_item_restriction_released(player_id: int) -> bool:
 	if not _player_system or player_id < 0 or player_id >= _player_system.players.size():
 		return false

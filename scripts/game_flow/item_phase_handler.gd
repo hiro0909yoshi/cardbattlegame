@@ -30,7 +30,7 @@ var current_state: State = State.INACTIVE
 var current_player_id: int = -1
 var selected_item_card: Dictionary = {}
 var item_used_this_battle: bool = false  # 1バトル1回制限
-var battle_creature_data: Dictionary = {}  # バトル参加クリーチャーのデータ（援護/合体判定用）
+var battle_creature_data: Dictionary = {}  # バトル参加クリーチャーのデータ（加勢/合体判定用）
 var merged_creature_data: Dictionary = {}  # 合体後のクリーチャーデータ
 var opponent_creature_data: Dictionary = {}  # 相手クリーチャーのデータ（無効化判定用）
 
@@ -140,9 +140,9 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	_is_current_phase_attacker = is_attacker_phase  # 攻撃側か防御側かを記録
 	merged_creature_data = {}  # 合体データをリセット
 	
-	# 戦闘行動不可呪いチェック（防御側のみ呪いを持つ可能性がある）
+	# 消沈呪いチェック（防御側のみ呪いを持つ可能性がある）
 	if SpellCurseBattle.has_battle_disable(creature_data):
-		print("【戦闘行動不可】", creature_data.get("name", "?"), " はアイテム・援護使用不可 → 強制パス")
+		print("【消沈】", creature_data.get("name", "?"), " はアイテム・加勢使用不可 → 強制パス")
 		pass_item()
 		return
 	
@@ -171,23 +171,23 @@ func start_item_phase(player_id: int, creature_data: Dictionary = {}, defender_t
 	# 人間プレイヤーの場合はUI表示
 	await _show_item_selection_ui()
 
-## 援護スキルを持っているかチェック
+## 加勢スキルを持っているかチェック
 func has_assist_skill() -> bool:
 	if battle_creature_data.is_empty():
 		return false
 	
 	var ability_parsed = battle_creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	return "援護" in keywords
+	return "加勢" in keywords
 
-## 援護対象の属性を取得
+## 加勢対象の属性を取得
 func get_assist_target_elements() -> Array:
 	if not has_assist_skill():
 		return []
 	
 	var ability_parsed = battle_creature_data.get("ability_parsed", {})
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var assist_condition = keyword_conditions.get("援護", {})
+	var assist_condition = keyword_conditions.get("加勢", {})
 	return assist_condition.get("target_elements", [])
 
 ## 合体スキルを持っているかチェック
@@ -233,7 +233,7 @@ func _show_item_selection_ui():
 	# 手札を取得
 	var hand_data = card_system.get_all_cards_for_player(current_player_id)
 
-	# アイテムカードと援護対象/合体相手クリーチャーカードを収集
+	# アイテムカードと加勢対象/合体相手クリーチャーカードを収集
 	var selectable_cards = []
 	var has_assist = has_assist_skill()
 	var assist_elements = get_assist_target_elements()
@@ -254,14 +254,14 @@ func _show_item_selection_ui():
 		elif card_type == "creature":
 			var card_id = card.get("id", -1)
 
-			# アイテムクリーチャー判定
+			# レリック判定
 			var keywords = card.get("ability_parsed", {}).get("keywords", [])
-			if "アイテムクリーチャー" in keywords:
+			if "レリック" in keywords:
 				selectable_cards.append(card)
 			# 合体相手判定
 			elif has_merge and card_id == merge_partner_id:
 				selectable_cards.append(card)
-			# 援護スキルがある場合、対象クリーチャーも選択可能
+			# 加勢スキルがある場合、対象クリーチャーも選択可能
 			elif has_assist:
 				var card_element = card.get("element", "")
 				# 全属性対象の場合
@@ -315,7 +315,7 @@ func _show_item_selection_ui():
 	# カード選択UI表示（Signal駆動）
 	item_selection_ui_show_requested.emit(current_player, "item")
 
-## アイテムまたは援護/合体クリーチャーを使用
+## アイテムまたは加勢/合体クリーチャーを使用
 func use_item(item_card: Dictionary):
 	if current_state != State.WAITING_FOR_SELECTION:
 		return
@@ -344,9 +344,9 @@ func use_item(item_card: Dictionary):
 	
 	# クリーチャーの場合の追加チェック
 	if card_type == "creature":
-		# アイテムクリーチャー判定
+		# レリック判定
 		var keywords = item_card.get("ability_parsed", {}).get("keywords", [])
-		var is_item_creature = "アイテムクリーチャー" in keywords
+		var is_item_creature = "レリック" in keywords
 		
 		if not is_item_creature:
 			# 合体相手かチェック
@@ -356,7 +356,7 @@ func use_item(item_card: Dictionary):
 				_execute_merge(item_card)
 				return
 			
-			# 援護クリーチャーの場合
+			# 加勢クリーチャーの場合
 			if not has_assist_skill():
 				return
 			
@@ -383,7 +383,7 @@ func use_item(item_card: Dictionary):
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック（アイテムコスト0化）
+	# エンジェルギフト呪いチェック（アイテムコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_id, item_card)
 	
@@ -497,7 +497,7 @@ func _can_afford_card(card_data: Dictionary) -> bool:
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック（アイテムコスト0化）
+	# エンジェルギフト呪いチェック（アイテムコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_id, card_data)
 	
@@ -534,17 +534,17 @@ func try_handle_card_selection(card_index: int) -> bool:
 	var card = hand[card_index]
 	var card_type = card.get("type", "")
 
-	# アイテムカードまたは援護対象クリーチャーが使用可能
+	# アイテムカードまたは加勢対象クリーチャーが使用可能
 	if card_type == "item":
 		use_item(card)
 		return true
 	elif card_type == "creature":
-		# アイテムクリーチャー判定
+		# レリック判定
 		var keywords = card.get("ability_parsed", {}).get("keywords", [])
-		if "アイテムクリーチャー" in keywords:
+		if "レリック" in keywords:
 			use_item(card)
 			return true
-		# 援護スキルがある場合のみクリーチャーを使用可能
+		# 加勢スキルがある場合のみクリーチャーを使用可能
 		elif has_assist_skill():
 			var assist_elements = get_assist_target_elements()
 			var card_element = card.get("element", "")
@@ -589,9 +589,9 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 	
 	print("[CPU防御事前選択] 開始: %s vs %s" % [defender_creature.get("name", "?"), attacker_creature.get("name", "?")])
 	
-	# 戦闘行動不可呪いチェック
+	# 消沈呪いチェック
 	if SpellCurseBattle.has_battle_disable(defender_creature):
-		print("[CPU防御事前選択] 戦闘行動不可 → 終了")
+		print("[CPU防御事前選択] 消沈 → 終了")
 		_defender_preselection_done = true
 		return
 	
@@ -627,7 +627,7 @@ func preselect_defender_item(defender_player_id: int, defender_creature: Diction
 			print("[CPU防御事前選択] アイテム決定: %s" % decision.item.get("name", "?"))
 		"support":
 			_preselected_defender_item = decision.creature
-			print("[CPU防御事前選択] 援護決定: %s" % decision.creature.get("name", "?"))
+			print("[CPU防御事前選択] 加勢決定: %s" % decision.creature.get("name", "?"))
 		"merge":
 			_preselected_defender_item = {"_is_merge": true, "merge_data": decision.merge_data}
 			print("[CPU防御事前選択] 合体決定: %s" % decision.merge_data.get("result_name", "?"))
@@ -701,7 +701,7 @@ func _cpu_decide_item():
 			print("[CPU防御] アイテム使用: %s" % decision.item.get("name", "?"))
 			use_item(decision.item)
 		"support":
-			print("[CPU防御] 援護使用: %s" % decision.creature.get("name", "?"))
+			print("[CPU防御] 加勢使用: %s" % decision.creature.get("name", "?"))
 			use_item(decision.creature)
 		"merge":
 			print("[CPU防御] 合体実行: %s" % decision.merge_data.get("result_name", "?"))

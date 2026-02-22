@@ -80,8 +80,8 @@
       "creature_type": "defensive",
       "ap": 0.0,
       "hp": 40.0,
-      "ability": "防御型",
-      "ability_detail": "防御型；HP+20",
+      "ability": "堅守",
+      "ability_detail": "堅守；HP+20",
       "ability_parsed": {
         "keywords": [],
         "effects": [
@@ -110,16 +110,16 @@
       },
       "ap": 50.0,
       "hp": 50.0,
-      "ability": "援護・無効化",
-      "ability_detail": "援護[水]；防具使用時、無効化[通常攻撃]；HP効果無効",
+      "ability": "加勢・無効化",
+      "ability_detail": "加勢[水]；防具使用時、無効化[通常攻撃]；堅牢",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "無効化",
-          "HP効果無効"
+          "堅牢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "water"
             ]
@@ -260,11 +260,11 @@
       },
       "ap": 40.0,
       "hp": 40.0,
-      "ability": "アイテム不使用時・EP奪取",
-      "ability_detail": "アイテム不使用時、EP奪取[周回数×30EP]",
+      "ability": "アイテム不使用時・吸魔",
+      "ability_detail": "アイテム不使用時、吸魔[周回数×30EP]",
       "ability_parsed": {
         "keywords": [
-          "EP奪取"
+          "吸魔"
         ],
         "effects": [
           {
@@ -359,10 +359,10 @@
       "ap": 40.0,
       "hp": 30.0,
       "ability": "戦闘地が水風の場合",
-      "ability_detail": "戦闘地が水風の場合、AP+20；HP効果無効",
+      "ability_detail": "戦闘地が水風の場合、AP+20；堅牢",
       "ability_parsed": {
         "keywords": [
-          "HP効果無効"
+          "堅牢"
         ],
         "effects": [
           {
@@ -471,8 +471,8 @@
       },
       "ap": 20.0,
       "hp": 40.0,
-      "ability": "再生・不屈",
-      "ability_detail": "再生；不屈",
+      "ability": "再生・奮闘",
+      "ability_detail": "再生；奮闘",
       "ability_parsed": {
         "keywords": [
           "再生"
@@ -494,12 +494,12 @@
       },
       "ap": 40.0,
       "hp": 40.0,
-      "ability": "応援・戦闘後破壊",
-      "ability_detail": "応援[防御側・HP+10]；戦闘後、敵に呪い戦闘後破壊",
+      "ability": "鼓舞・崩壊",
+      "ability_detail": "鼓舞[防御側・HP+10]；戦闘後、敵に呪い崩壊",
       "ability_parsed": {
         "keywords": [
-          "応援",
-          "戦闘後破壊"
+          "鼓舞",
+          "崩壊"
         ],
         "effects": [
           {
@@ -540,14 +540,14 @@
       },
       "ap": 50.0,
       "hp": 50.0,
-      "ability": "感応",
-      "ability_detail": "感応[風・AP+20、HP+10]",
+      "ability": "共鳴",
+      "ability_detail": "共鳴[風・AP+20、HP+10]",
       "ability_parsed": {
         "keywords": [
-          "感応"
+          "共鳴"
         ],
         "keyword_conditions": {
-          "感応": {
+          "共鳴": {
             "element": "wind",
             "stat_bonus": {
               "ap": 20.0,
@@ -575,7 +575,7 @@
       "ap": 30.0,
       "hp": 50.0,
       "ability": "アイテム破壊",
-      "ability_detail": "アイテム破壊[道具か巻物か援護クリーチャー]",
+      "ability_detail": "アイテム破壊[道具か巻物か加勢クリーチャー]",
       "ability_parsed": {
         "keywords": [
           "アイテム破壊"
@@ -586,7 +586,7 @@
             "target_types": [
               "道具",
               "巻物",
-              "援護クリーチャー"
+              "加勢クリーチャー"
             ],
             "triggers": [
               "before_battle"
@@ -612,11 +612,11 @@
       },
       "ap": 30.0,
       "hp": 40.0,
-      "ability": "不屈・アルカナアーツ",
-      "ability_detail": "不屈；アルカナアーツ[EP30・対象クリーチャーのAP+10]",
+      "ability": "奮闘・アルカナアーツ",
+      "ability_detail": "奮闘；アルカナアーツ[EP30・対象クリーチャーのAP+10]",
       "ability_parsed": {
         "keywords": [
-          "不屈"
+          "奮闘"
         ]
       },
       "mystic_arts": {
@@ -705,7 +705,7 @@
       "ability_detail": "移動侵略を受けない",
       "ability_parsed": {
         "keywords": [
-          "移動侵略無効"
+          "鉄壁"
         ]
       }
     },
@@ -731,11 +731,11 @@
       },
       "ap": 30.0,
       "hp": 30.0,
-      "ability": "足どめ",
-      "ability_detail": "足どめ[水]",
+      "ability": "拘束",
+      "ability_detail": "拘束[水]",
       "ability_parsed": {
         "keywords": [
-          "足どめ"
+          "拘束"
         ],
         "trap_stop": {
           "elements": [
@@ -761,15 +761,15 @@
       },
       "ap": 40.0,
       "hp": 30.0,
-      "ability": "感応・無効化",
-      "ability_detail": "感応[風・HP+30]；無効化[AP40以下]",
+      "ability": "共鳴・無効化",
+      "ability_detail": "共鳴[風・HP+30]；無効化[AP40以下]",
       "ability_parsed": {
         "keywords": [
-          "感応",
+          "共鳴",
           "無効化"
         ],
         "keyword_conditions": {
-          "感応": {
+          "共鳴": {
             "element": "wind",
             "stat_bonus": {
               "ap": 0.0,
@@ -809,11 +809,11 @@
       "creature_type": "defensive",
       "ap": 10.0,
       "hp": 40.0,
-      "ability": "防御型・戦闘中能力無効",
-      "ability_detail": "防御型；戦闘中能力無効",
+      "ability": "堅守・戦闘中能力無効",
+      "ability_detail": "堅守；戦闘中能力無効",
       "ability_parsed": {
         "keywords": [
-          "防御型"
+          "堅守"
         ],
         "effects": [
           {
@@ -839,8 +839,8 @@
       },
       "ap": 30.0,
       "hp": 40.0,
-      "ability": "戦闘後、敵に呪い通行料無効",
-      "ability_detail": "戦闘後、敵に呪い通行料無効",
+      "ability": "戦闘後、敵に呪い免罪",
+      "ability_detail": "戦闘後、敵に呪い免罪",
       "ability_parsed": {
         "nullify_triggers": [
           "on_attack_success"
@@ -851,7 +851,7 @@
             "trigger": "on_battle_end",
             "target": "enemy",
             "curse_type": "creature_toll_disable",
-            "name": "通行料無効"
+            "name": "免罪"
           }
         ]
       }

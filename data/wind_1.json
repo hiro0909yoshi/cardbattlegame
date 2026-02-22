@@ -16,15 +16,15 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "援護・先制・防魔",
-	  "ability_detail": "援護[水風]；先制；防魔",
+	  "ability": "加勢・先制・結界",
+	  "ability_detail": "加勢[水風]；先制；結界",
 	  "ability_parsed": {
 		"keywords": [
-		  "援護",
+		  "加勢",
           "先制"
 		],
 		"keyword_conditions": {
-		  "援護": {
+		  "加勢": {
 			"target_elements": [
 			  "water",
               "wind"
@@ -67,15 +67,15 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "巻物強打・アルカナアーツ",
-	  "ability_detail": "巻物強打；アルカナアーツ[EP30・対象から手札のスペルの数×40EPを奪う]",
+	  "ability": "術強化・アルカナアーツ",
+	  "ability_detail": "術強化；アルカナアーツ[EP30・対象から手札のスペルの数×40EPを奪う]",
 	  "ability_parsed": {
 		"keywords": [
-		  "巻物強打",
+		  "術強化",
           "アルカナアーツ"
 		],
 		"keyword_conditions": {
-		  "巻物強打": {
+		  "術強化": {
 			"scroll_type": "base_ap"
 		  }
 		}
@@ -101,15 +101,15 @@
 	  },
 	  "ap": 50,
 	  "hp": 50,
-	  "ability": "先制・巻物強打・アルカナアーツ",
-	  "ability_detail": "先制；巻物強打；アルカナアーツ[EP50・対象敵クリーチャーのMHP-10]",
+	  "ability": "先制・術強化・アルカナアーツ",
+	  "ability_detail": "先制；術強化；アルカナアーツ[EP50・対象敵クリーチャーのMHP-10]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "巻物強打"
+          "術強化"
 		],
 		"keyword_conditions": {
-		  "巻物強打": {
+		  "術強化": {
 			"scroll_type": "base_ap"
 		  }
 		},
@@ -176,15 +176,15 @@
 	  },
 	  "ap": 10,
 	  "hp": 20,
-	  "ability": "巻物強打・呪い拡散",
-	  "ability_detail": "巻物強打；これに呪い付与時、同じ呪いを使用者の全ドミニオにつけ、ダウンする",
+	  "ability": "術強化・伝染",
+	  "ability_detail": "術強化；これに刻印付与時、同じ呪いを使用者の全ドミニオにつけ、ダウンする",
 	  "ability_parsed": {
 		"keywords": [
-		  "巻物強打",
-          "呪い拡散"
+		  "術強化",
+          "伝染"
 		],
 		"keyword_conditions": {
-		  "巻物強打": {
+		  "術強化": {
 			"scroll_type": "base_ap"
 		  }
 		}
@@ -208,14 +208,14 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "先制・アルカナアーツ",
-	  "ability_detail": "先制；アルカナアーツ[EP40・対象ドミニオに呪い\"能力値+20\"]",
+	  "ability_detail": "先制；アルカナアーツ[EP40・対象ドミニオに呪い\"暁光\"]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
           "アルカナアーツ"
 		],
 		"mystic_art": {
-		  "name": "能力値+20呪い",
+		  "name": "暁光呪い",
 		  "cost": 40,
 		  "spell_id": 9030
 		}
@@ -273,15 +273,15 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "先制・感応",
-	  "ability_detail": "先制；感応[水・AP&HP+20]",
+	  "ability": "先制・共鳴",
+	  "ability_detail": "先制；共鳴[水・AP&HP+20]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "感応"
+          "共鳴"
 		],
 		"keyword_conditions": {
-		  "感応": {
+		  "共鳴": {
 			"element": "water",
 			"stat_bonus": {
 			  "ap": 20,
@@ -304,15 +304,15 @@
 	  },
 	  "ap": 40,
 	  "hp": 30,
-	  "ability": "感応・防魔",
-	  "ability_detail": "感応[水・AP+10、HP+20]；防魔",
+	  "ability": "共鳴・結界",
+	  "ability_detail": "共鳴[水・AP+10、HP+20]；結界",
 	  "ability_parsed": {
 		"keywords": [
-		  "感応",
-          "防魔"
+		  "共鳴",
+          "結界"
 		],
 		"keyword_conditions": {
-		  "感応": {
+		  "共鳴": {
 			"element": "water",
 			"stat_bonus": {
 			  "ap": 10,
@@ -389,8 +389,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 60,
-	  "ability": "不屈",
-	  "ability_detail": "不屈"
+	  "ability": "奮闘",
+	  "ability_detail": "奮闘"
 	},
 	{
 	  "id": 313,
@@ -440,8 +440,8 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "先制・アイテム復帰",
-	  "ability_detail": "先制；アイテム復帰[ブック]",
+	  "ability": "先制・帰還",
+	  "ability_detail": "先制；帰還[ブック]",
 	  "ability_parsed": {
 		"keywords": [
           "先制"
@@ -468,11 +468,11 @@
 	  },
 	  "ap": 30,
 	  "hp": 40,
-	  "ability": "自破壊時EP獲得",
-	  "ability_detail": "戦闘やスペルでの破壊時、遺産[EP200]",
+	  "ability": "自破壊時蓄魔",
+	  "ability_detail": "戦闘やスペルでの破壊時、形見[EP200]",
 	  "ability_parsed": {
 		"keywords": [
-          "遺産"
+          "形見"
 		],
 		"effects": [
 		  {
@@ -569,13 +569,13 @@
 	  "ap": 30,
 	  "hp": 40,
 	  "ability": "AP計算・敵地移動",
-	  "ability_detail": "AP+水自ドミニオ数×10；敵ドミニオ移動[属性の違う敵ドミニオ]",
+	  "ability_detail": "AP+水自ドミニオ数×10；強襲[属性の違う敵ドミニオ]",
 	  "ability_parsed": {
 		"keywords": [
-          "敵ドミニオ移動"
+          "強襲"
 		],
 		"keyword_conditions": {
-		  "敵ドミニオ移動": {
+		  "強襲": {
 			"condition": {
 			  "different_element": true
 			}
@@ -779,12 +779,12 @@
 	  },
 	  "ap": 40,
 	  "hp": 30,
-	  "ability": "先制・HP効果無効・アルカナアーツ",
-	  "ability_detail": "先制；HP効果無効；アルカナアーツ[EP60・アームドプリンセスに変身]",
+	  "ability": "先制・堅牢・アルカナアーツ",
+	  "ability_detail": "先制；堅牢；アルカナアーツ[EP60・アームドプリンセスに変身]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-		  "HP効果無効",
+		  "堅牢",
           "アルカナアーツ"
 		],
 		"effects": [],

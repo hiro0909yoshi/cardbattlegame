@@ -23,16 +23,16 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 		"2回攻撃":
 			DoubleAttackSkill.grant_skill(participant)
 		
-		"巻物強打":
+		"術強化":
 			_grant_scroll_power_strike(participant, _skill_data)
 		
-		"強打":
+		"強化":
 			_grant_power_strike(participant, _skill_data)
 		
 		"無効化":
 			_grant_nullify(participant, _skill_data)
 		
-		"貫通":
+		"刺突":
 			_grant_penetration(participant)
 		
 		"即死":
@@ -41,7 +41,7 @@ func grant_skill_to_participant(participant: BattleParticipant, skill_name: Stri
 		_:
 			print("  未実装のスキル: ", skill_name)
 
-## 巻物強打スキル付与
+## 術強化スキル付与
 func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -51,8 +51,8 @@ func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dict
 	if not ability_parsed.has("keywords"):
 		ability_parsed["keywords"] = []
 	
-	if not "巻物強打" in ability_parsed["keywords"]:
-		ability_parsed["keywords"].append("巻物強打")
+	if not "術強化" in ability_parsed["keywords"]:
+		ability_parsed["keywords"].append("術強化")
 	
 	if not ability_parsed.has("effects"):
 		ability_parsed["effects"] = []
@@ -65,9 +65,9 @@ func _grant_scroll_power_strike(participant: BattleParticipant, skill_data: Dict
 	}
 	
 	ability_parsed["effects"].append(scroll_power_strike_effect)
-	print("  巻物強打スキル付与（条件数: ", skill_conditions.size(), "）")
+	print("  術強化スキル付与（条件数: ", skill_conditions.size(), "）")
 
-## 強打スキル付与
+## 強化スキル付与
 func _grant_power_strike(participant: BattleParticipant, skill_data: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -77,8 +77,8 @@ func _grant_power_strike(participant: BattleParticipant, skill_data: Dictionary)
 	if not ability_parsed.has("keywords"):
 		ability_parsed["keywords"] = []
 	
-	if not "強打" in ability_parsed["keywords"]:
-		ability_parsed["keywords"].append("強打")
+	if not "強化" in ability_parsed["keywords"]:
+		ability_parsed["keywords"].append("強化")
 	
 	if not ability_parsed.has("effects"):
 		ability_parsed["effects"] = []
@@ -91,7 +91,7 @@ func _grant_power_strike(participant: BattleParticipant, skill_data: Dictionary)
 	}
 	
 	ability_parsed["effects"].append(power_strike_effect)
-	print("  強打スキル付与（条件数: ", skill_conditions.size(), "）")
+	print("  強化スキル付与（条件数: ", skill_conditions.size(), "）")
 
 ## 無効化スキル付与
 func _grant_nullify(participant: BattleParticipant, skill_data: Dictionary) -> void:
@@ -134,7 +134,7 @@ func _grant_nullify(participant: BattleParticipant, skill_data: Dictionary) -> v
 	ability_parsed["keyword_conditions"]["無効化"].append(nullify_data)
 	print("  無効化スキル付与: ", nullify_type)
 
-## 貫通スキル付与
+## 刺突スキル付与
 func _grant_penetration(participant: BattleParticipant) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -143,10 +143,10 @@ func _grant_penetration(participant: BattleParticipant) -> void:
 	if not ability_parsed.has("keywords"):
 		ability_parsed["keywords"] = []
 	
-	if not "貫通" in ability_parsed["keywords"]:
-		ability_parsed["keywords"].append("貫通")
+	if not "刺突" in ability_parsed["keywords"]:
+		ability_parsed["keywords"].append("刺突")
 	
-	print("  貫通スキル付与")
+	print("  刺突スキル付与")
 
 ## 即死スキル付与
 func _grant_instant_death(participant: BattleParticipant, skill_data: Dictionary) -> void:

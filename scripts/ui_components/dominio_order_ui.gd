@@ -20,7 +20,7 @@ var current_terrain_label: Label = null  # 現在の属性表示
 var terrain_cost_label: Label = null  # 地形変化コスト表示
 var selected_tile_for_action: int = -1
 
-# 現在の防御型状態（ActionMenuUI用）
+# 現在の堅守状態（ActionMenuUI用）
 var current_is_defensive: bool = false
 
 # システム参照
@@ -65,7 +65,7 @@ func hide_cancel_button():
 func show_action_menu(tile_index: int):
 	selected_tile_for_action = tile_index
 	
-	# 防御型チェック
+	# 堅守チェック
 	current_is_defensive = false
 	if board_system_ref and board_system_ref.tile_nodes.has(tile_index):
 		var tile = board_system_ref.tile_nodes[tile_index]
@@ -75,7 +75,7 @@ func show_action_menu(tile_index: int):
 		if not creature.is_empty() and ui_manager_ref:
 			ui_manager_ref.show_card_info(creature, tile_index, false)
 		
-		# 防御型チェック
+		# 堅守チェック
 		var creature_type = creature.get("creature_type", "normal")
 		current_is_defensive = (creature_type == "defensive")
 	
@@ -112,9 +112,9 @@ func _create_action_menu_items() -> Array:
 		"action": "level_up"
 	})
 	
-	# 移動（防御型は無効）
+	# 移動（堅守は無効）
 	items.append({
-		"text": "[M] 移動" + (" (防御型)" if current_is_defensive else ""),
+		"text": "[M] 移動" + (" (堅守)" if current_is_defensive else ""),
 		"color": Color(0.6, 0.4, 0.8),
 		"icon": "🚶",
 		"disabled": current_is_defensive,

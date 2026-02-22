@@ -117,7 +117,7 @@ static func _execute_single_battle(
 	mock_board.name = "BoardSystem3D_Test"
 	battle_system.add_child(mock_board)
 
-	# skill_indexを初期化（BattleSystemの応援スキル処理で必須）
+	# skill_indexを初期化（BattleSystemの鼓舞スキル処理で必須）
 	mock_board.skill_index = {
 		"support": {},
 		"world_spell": {}
@@ -293,7 +293,7 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 	var had_power_strike_before = false
 	if participant.creature_data.has("ability_parsed"):
 		var keywords = participant.creature_data.ability_parsed.get("keywords", [])
-		had_power_strike_before = "強打" in keywords
+		had_power_strike_before = "強化" in keywords
 	
 	# アイテムデータをクリーチャーのitemsに追加（反射チェックで使用）
 	if not participant.creature_data.has("items"):
@@ -310,12 +310,12 @@ static func _apply_item_effects_and_record(battle_system: BattleSystem, particip
 	if participant.has_last_strike and not had_last_strike_before:
 		granted_skills.append("後手")
 	
-	# 強打の判定
+	# 強化の判定
 	if participant.creature_data.has("ability_parsed"):
 		var keywords = participant.creature_data.ability_parsed.get("keywords", [])
-		var has_power_strike_now = "強打" in keywords
+		var has_power_strike_now = "強化" in keywords
 		if has_power_strike_now and not had_power_strike_before:
-			granted_skills.append("強打")
+			granted_skills.append("強化")
 	
 	return granted_skills
 
@@ -338,17 +338,17 @@ static func _get_triggered_skills(participant: BattleParticipant) -> Array:
 			if "後手" not in skills:
 				skills.append("後手")
 		
-		# 強打
-		if "強打" in keywords:
-			skills.append("強打")
+		# 強化
+		if "強化" in keywords:
+			skills.append("強化")
 		
 		# 魔法攻撃
 		if "魔法攻撃" in keywords:
 			skills.append("魔法攻撃")
 		
-		# 貫通
-		if "貫通" in keywords:
-			skills.append("貫通")
+		# 刺突
+		if "刺突" in keywords:
+			skills.append("刺突")
 		
 		# 再生
 		if "再生" in keywords:
@@ -360,7 +360,7 @@ static func _get_triggered_skills(participant: BattleParticipant) -> Array:
 		
 		# その他のキーワード
 		for keyword in keywords:
-			if keyword not in skills and keyword not in ["先制攻撃", "後手", "強打", "魔法攻撃", "貫通", "再生", "飛行"]:
+			if keyword not in skills and keyword not in ["先制攻撃", "後手", "強化", "魔法攻撃", "刺突", "再生", "飛行"]:
 				skills.append(keyword)
 	
 	return skills
@@ -411,7 +411,7 @@ static func _apply_curse_spell(participant: BattleParticipant, spell_id: int):
 
 	participant.creature_data["curse"].append(spell_data.duplicate(true))
 
-	print("  → ", participant.creature_data.get("name", "?"), " に呪い付与完了")
+	print("  → ", participant.creature_data.get("name", "?"), " に刻印付与完了")
 
 ## バフ適用
 static func _apply_buff_config(participant: BattleParticipant, buff_config: Dictionary):
@@ -454,5 +454,5 @@ static func _setup_mock_lands_for_battle(tile_data_mgr: TileDataManager, player_
 	# 注意: ゲーム内では実際のTileノードがtile_nodesに登録されるため、
 	# get_owner_element_countsは実際の土地情報を返す
 	# テスト環境ではtile_nodesが空なので、get_owner_element_countsは全て0を返す
-	# これは応援スキルの条件判定には影響しない（応援スキルは別の方法で検索）
+	# これは鼓舞スキルの条件判定には影響しない（鼓舞スキルは別の方法で検索）
 	pass

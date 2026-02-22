@@ -132,7 +132,7 @@ func execute_battle(card_index: int, tile_info: Dictionary, complete_callback: C
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック
+	# エンジェルギフト呪いチェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_index, pending_battle_card_data)
 	

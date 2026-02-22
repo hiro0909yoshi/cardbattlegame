@@ -72,7 +72,7 @@ func set_game_stats(p_game_stats) -> void:
 	if target_resolver:
 		target_resolver.set_game_stats(p_game_stats)
 
-## ワーストケースシミュレーション（敵がアイテム/援護を使った場合でも勝てるか）
+## ワーストケースシミュレーション（敵がアイテム/加勢を使った場合でも勝てるか）
 func check_worst_case_win(attacker: Dictionary, defender: Dictionary, tile_info: Dictionary, player_id: int) -> bool:
 	# battle_aiがあればそれを使用
 	if battle_ai != null:

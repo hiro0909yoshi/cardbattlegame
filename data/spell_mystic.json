@@ -2,8 +2,8 @@
   "cards": [
     {
       "id": 9001,
-      "name": "通行料半減の呪い",
-      "dev_name": "通行料半減の呪い",
+      "name": "減税刻印付与",
+      "dev_name": "減税刻印付与",
       "rarity": "N",
       "type": "spell",
       "cost": {
@@ -52,8 +52,8 @@
     },
     {
       "id": 9003,
-      "name": "カード獲得（アイテム使用時・アイテムのみ）",
-      "dev_name": "カード獲得（アイテム使用時・アイテムのみ）",
+      "name": "アイテムリプレニッシュ",
+      "dev_name": "アイテムリプレニッシュ",
       "rarity": "N",
       "type": "skill",
       "cost": {
@@ -78,8 +78,8 @@
     },
     {
       "id": 9004,
-      "name": "ダメージ10（敵単体）",
-      "dev_name": "ダメージ10（敵単体）",
+      "name": "マジックボルト",
+      "dev_name": "マジックボルト",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -103,8 +103,8 @@
     },
     {
       "id": 9005,
-      "name": "ダメージ20（敵火風）",
-      "dev_name": "ダメージ20（敵火風）",
+      "name": "ロックブレス",
+      "dev_name": "ロックブレス",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -132,8 +132,8 @@
     },
     {
       "id": 9006,
-      "name": "ダメージ20（敵水地）",
-      "dev_name": "ダメージ20（敵水地）",
+      "name": "ストームコール",
+      "dev_name": "ストームコール",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -161,8 +161,8 @@
     },
     {
       "id": 9007,
-      "name": "ダメージ30（敵無属性）",
-      "dev_name": "ダメージ30（敵無属性）",
+      "name": "クロムレイ",
+      "dev_name": "クロムレイ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -189,8 +189,8 @@
     },
     {
       "id": 9008,
-      "name": "ダメージ20（呪い付き全体）",
-      "dev_name": "ダメージ20（呪い付き全体）",
+      "name": "熾天断罪",
+      "dev_name": "熾天断罪",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -215,8 +215,8 @@
     },
     {
       "id": 9009,
-      "name": "回復30（自クリーチャー）",
-      "dev_name": "回復30（自クリーチャー）",
+      "name": "ヒール",
+      "dev_name": "ヒール",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -240,8 +240,8 @@
     },
     {
       "id": 9010,
-      "name": "MHP増加（自クリーチャー）",
-      "dev_name": "MHP増加（自クリーチャー）",
+      "name": "ライフフォージ",
+      "dev_name": "ライフフォージ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -264,8 +264,8 @@
     },
     {
       "id": 9011,
-      "name": "MHP減少（敵クリーチャー）",
-      "dev_name": "MHP減少（敵クリーチャー）",
+      "name": "ライフドレイン",
+      "dev_name": "ライフドレイン",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -288,8 +288,8 @@
     },
     {
       "id": 9012,
-      "name": "EP奪取",
-      "dev_name": "EP奪取",
+      "name": "吸魔",
+      "dev_name": "吸魔",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -311,8 +311,8 @@
     },
     {
       "id": 9013,
-      "name": "移動不可呪い",
-      "dev_name": "移動不可呪い",
+      "name": "枷刻印付与",
+      "dev_name": "枷刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -324,7 +324,7 @@
           {
             "effect_type": "creature_curse",
             "curse_type": "move_disable",
-            "name": "移動不可",
+            "name": "枷",
             "description": "移動できない"
           }
         ]
@@ -337,8 +337,8 @@
     },
     {
       "id": 9014,
-      "name": "遠隔移動呪い",
-      "dev_name": "遠隔移動呪い",
+      "name": "天駆刻印付与",
+      "dev_name": "天駆刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -350,7 +350,7 @@
           {
             "effect_type": "creature_curse",
             "curse_type": "remote_move",
-            "name": "遠隔移動",
+            "name": "天駆",
             "description": "全ての空き地に移動可能"
           }
         ]
@@ -388,8 +388,8 @@
     },
     {
       "id": 9016,
-      "name": "ダイス6固定（自分）",
-      "dev_name": "ダイス6固定（自分）",
+      "name": "翼神刻印付与",
+      "dev_name": "翼神刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -409,8 +409,8 @@
     },
     {
       "id": 9017,
-      "name": "ダイス5固定（対象セプター）",
-      "dev_name": "ダイス5固定（対象セプター）",
+      "name": "快足刻印付与",
+      "dev_name": "快足刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -431,8 +431,8 @@
     },
     {
       "id": 9018,
-      "name": "地形効果無効（スクリーマーアルカナアーツ）",
-      "dev_name": "地形効果無効（スクリーマーアルカナアーツ）",
+      "name": "暗転刻印付与",
+      "dev_name": "暗転刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -443,7 +443,7 @@
         "effects": [
           {
             "effect_type": "land_effect_disable",
-            "name": "地形効果無効",
+            "name": "暗転",
             "duration": -1
           }
         ]
@@ -456,8 +456,8 @@
     },
     {
       "id": 9019,
-      "name": "地形効果付与（ハイドビハインドアルカナアーツ）",
-      "dev_name": "地形効果付与（ハイドビハインドアルカナアーツ）",
+      "name": "恩寵刻印付与",
+      "dev_name": "恩寵刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -482,8 +482,8 @@
     },
     {
       "id": 9020,
-      "name": "オールドウィロウに変身（スプラウトリングアルカナアーツ）",
-      "dev_name": "オールドウィロウに変身（スプラウトリングアルカナアーツ）",
+      "name": "バーニングウォーデン変身",
+      "dev_name": "バーニングウォーデン変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -503,8 +503,8 @@
     },
     {
       "id": 9021,
-      "name": "方向選択権付与（クロックアウルアルカナアーツ）",
-      "dev_name": "方向選択権付与（クロックアウルアルカナアーツ）",
+      "name": "ナビゲート",
+      "dev_name": "ナビゲート",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -527,8 +527,8 @@
     },
     {
       "id": 9022,
-      "name": "防魔付与（ドモビーアルカナアーツ）",
-      "dev_name": "防魔付与（ドモビーアルカナアーツ）",
+      "name": "結界刻印付与",
+      "dev_name": "結界刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -540,7 +540,7 @@
           {
             "effect_type": "creature_curse",
             "curse_type": "spell_protection",
-            "name": "防魔",
+            "name": "結界",
             "description": "スペル・アルカナアーツの対象にならない",
             "duration": -1
           }
@@ -554,8 +554,8 @@
     },
     {
       "id": 9023,
-      "name": "防魔付与（パトロナスアルカナアーツ）",
-      "dev_name": "防魔付与（パトロナスアルカナアーツ）",
+      "name": "祝福刻印付与",
+      "dev_name": "祝福刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -567,7 +567,7 @@
           {
             "effect_type": "player_curse",
             "curse_type": "spell_protection",
-            "name": "防魔",
+            "name": "結界",
             "description": "スペル・アルカナアーツの対象にならない",
             "duration": -1
           }
@@ -580,8 +580,8 @@
     },
     {
       "id": 9024,
-      "name": "ドミニオ呪い除去",
-      "dev_name": "ドミニオ呪い除去",
+      "name": "ディスペル",
+      "dev_name": "ディスペル",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -604,8 +604,8 @@
     },
     {
       "id": 9025,
-      "name": "世界呪い除去",
-      "dev_name": "世界呪い除去",
+      "name": "ワールドディスペル",
+      "dev_name": "ワールドディスペル",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -624,8 +624,8 @@
     },
     {
       "id": 9026,
-      "name": "全プレイヤー呪い除去",
-      "dev_name": "全プレイヤー呪い除去",
+      "name": "浄化の炎",
+      "dev_name": "浄化の炎",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -644,8 +644,8 @@
     },
     {
       "id": 9027,
-      "name": "平和",
-      "dev_name": "平和",
+      "name": "安寧刻印付与",
+      "dev_name": "安寧刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -653,7 +653,7 @@
         "effects": [
           {
             "effect_type": "peace",
-            "name": "平和",
+            "name": "安寧",
             "invasion_disable": true,
             "toll_zero": true,
             "duration": -1
@@ -667,8 +667,8 @@
     },
     {
       "id": 9028,
-      "name": "衰弱呪い（スピットコブラアルカナアーツ）",
-      "dev_name": "衰弱呪い（スピットコブラアルカナアーツ）",
+      "name": "衰弱刻印付与",
+      "dev_name": "衰弱刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -693,8 +693,8 @@
     },
     {
       "id": 9029,
-      "name": "ダイス1～3呪い（スワンプスボーンアルカナアーツ）",
-      "dev_name": "ダイス1～3呪い（スワンプスボーンアルカナアーツ）",
+      "name": "泥沼刻印付与",
+      "dev_name": "泥沼刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -719,8 +719,8 @@
     },
     {
       "id": 9030,
-      "name": "能力値+20呪い（カラドリウスアルカナアーツ）",
-      "dev_name": "能力値+20呪い（カラドリウスアルカナアーツ）",
+      "name": "暁光刻印付与",
+      "dev_name": "暁光刻印付与",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -731,7 +731,7 @@
         "effects": [
           {
             "effect_type": "stat_boost",
-            "name": "能力値+20",
+            "name": "暁光",
             "value": 20,
             "duration": -1
           }
@@ -744,8 +744,8 @@
     },
     {
       "id": 9031,
-      "name": "AP+20（フェイアルカナアーツ）",
-      "dev_name": "AP+20（フェイアルカナアーツ）",
+      "name": "オーバーレイジ",
+      "dev_name": "オーバーレイジ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -767,8 +767,8 @@
     },
     {
       "id": 9032,
-      "name": "AP+10（カワヒメアルカナアーツ）",
-      "dev_name": "AP+10（カワヒメアルカナアーツ）",
+      "name": "レイジ",
+      "dev_name": "レイジ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -790,8 +790,8 @@
     },
     {
       "id": 9033,
-      "name": "AP調整（ロードオブペインアルカナアーツ）",
-      "dev_name": "AP調整（ロードオブペインアルカナアーツ）",
+      "name": "イコライズ",
+      "dev_name": "イコライズ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -821,8 +821,8 @@
     },
     {
       "id": 9034,
-      "name": "MHP変換（ドゥームデボラーアルカナアーツ）",
-      "dev_name": "MHP変換（ドゥームデボラーアルカナアーツ）",
+      "name": "生命変換",
+      "dev_name": "生命変換",
       "rarity": "S",
       "type": "mystic",
       "effect_parsed": {
@@ -850,8 +850,8 @@
     },
     {
       "id": 9035,
-      "name": "破壊報酬（ヘルバイロンアルカナアーツ）",
-      "dev_name": "破壊報酬（ヘルバイロンアルカナアーツ）",
+      "name": "デスリワード",
+      "dev_name": "デスリワード",
       "rarity": "R",
       "type": "mystic",
       "effect_parsed": {
@@ -872,8 +872,8 @@
     },
     {
       "id": 9036,
-      "name": "スペル強奪（ウィッチアルカナアーツ）",
-      "dev_name": "スペル強奪（ウィッチアルカナアーツ）",
+      "name": "魔女の奪取",
+      "dev_name": "魔女の奪取",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -896,8 +896,8 @@
     },
     {
       "id": 9037,
-      "name": "ダウン付与（アルプアルカナアーツ）",
-      "dev_name": "ダウン付与（アルプアルカナアーツ）",
+      "name": "スリープ",
+      "dev_name": "スリープ",
       "rarity": "S",
       "type": "mystic",
       "effect_parsed": {
@@ -919,8 +919,8 @@
     },
     {
       "id": 9038,
-      "name": "ブック破壊（コアトリクエアルカナアーツ）",
-      "dev_name": "ブック破壊（コアトリクエアルカナアーツ）",
+      "name": "ブックバーン",
+      "dev_name": "ブックバーン",
       "rarity": "S",
       "type": "mystic",
       "effect_parsed": {
@@ -942,8 +942,8 @@
     },
     {
       "id": 9039,
-      "name": "水への変成（マカラアルカナアーツ）",
-      "dev_name": "水への変成（マカラアルカナアーツ）",
+      "name": "アクアシフト",
+      "dev_name": "アクアシフト",
       "rarity": "R",
       "type": "mystic",
       "effect_parsed": {
@@ -963,8 +963,8 @@
     },
     {
       "id": 9040,
-      "name": "地への変成（サクヤアルカナアーツ）",
-      "dev_name": "地への変成（サクヤアルカナアーツ）",
+      "name": "アースシフト",
+      "dev_name": "アースシフト",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -984,8 +984,8 @@
     },
     {
       "id": 9041,
-      "name": "無への変成（ストーンジゾウアルカナアーツ）",
-      "dev_name": "無への変成（ストーンジゾウアルカナアーツ）",
+      "name": "ニュートラルシフト",
+      "dev_name": "ニュートラルシフト",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1010,8 +1010,8 @@
     },
     {
       "id": 9042,
-      "name": "カードドロー（フェイトアルカナアーツ）",
-      "dev_name": "カードドロー（フェイトアルカナアーツ）",
+      "name": "カードドロー",
+      "dev_name": "カードドロー",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1030,8 +1030,8 @@
     },
     {
       "id": 9043,
-      "name": "アイテムドロー（アイアンモンガーアルカナアーツ）",
-      "dev_name": "アイテムドロー（アイアンモンガーアルカナアーツ）",
+      "name": "アイテムドロー",
+      "dev_name": "アイテムドロー",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1050,8 +1050,8 @@
     },
     {
       "id": 9044,
-      "name": "ダウン解除（キャプテンコックアルカナアーツ）",
-      "dev_name": "ダウン解除（キャプテンコックアルカナアーツ）",
+      "name": "リバイブ",
+      "dev_name": "リバイブ",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1075,8 +1075,8 @@
     },
     {
       "id": 9045,
-      "name": "手札破壊ドロー（クラウドギズモアルカナアーツ）",
-      "dev_name": "手札破壊ドロー（クラウドギズモアルカナアーツ）",
+      "name": "トリックスティール",
+      "dev_name": "トリックスティール",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1097,8 +1097,8 @@
     },
     {
       "id": 9046,
-      "name": "マミーに変身（デスサイズアルカナアーツ）",
-      "dev_name": "マミーに変身（デスサイズアルカナアーツ）",
+      "name": "ファラオズギフト変身",
+      "dev_name": "ファラオズギフト変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1118,8 +1118,8 @@
     },
     {
       "id": 9047,
-      "name": "ケルピーに変身（ヒッポカンパスアルカナアーツ）",
-      "dev_name": "ケルピーに変身（ヒッポカンパスアルカナアーツ）",
+      "name": "タイダルウォーデン変身",
+      "dev_name": "タイダルウォーデン変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1139,8 +1139,8 @@
     },
     {
       "id": 9048,
-      "name": "アクアホーンに変身（ミストウィングアルカナアーツ）",
-      "dev_name": "アクアホーンに変身（ミストウィングアルカナアーツ）",
+      "name": "ミストシフター変身",
+      "dev_name": "ミストシフター変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1160,8 +1160,8 @@
     },
     {
       "id": 9049,
-      "name": "ミストウィングに変身（アクアホーンアルカナアーツ）",
-      "dev_name": "ミストウィングに変身（アクアホーンアルカナアーツ）",
+      "name": "トランスフェザー変身",
+      "dev_name": "トランスフェザー変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1181,8 +1181,8 @@
     },
     {
       "id": 9050,
-      "name": "ガルーダに変身（シルフアルカナアーツ）",
-      "dev_name": "ガルーダに変身（シルフアルカナアーツ）",
+      "name": "ガルーダ変身",
+      "dev_name": "ガルーダ変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1202,8 +1202,8 @@
     },
     {
       "id": 9051,
-      "name": "アームドプリンセスに変身（ソードプリンセスアルカナアーツ）",
-      "dev_name": "アームドプリンセスに変身（ソードプリンセスアルカナアーツ）",
+      "name": "ヴァルキリー変身",
+      "dev_name": "ヴァルキリー変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1223,8 +1223,8 @@
     },
     {
       "id": 9052,
-      "name": "マッドマンに変身（ブランチアーミーアルカナアーツ）",
-      "dev_name": "マッドマンに変身（ブランチアーミーアルカナアーツ）",
+      "name": "リビングソイル変身",
+      "dev_name": "リビングソイル変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1244,8 +1244,8 @@
     },
     {
       "id": 9053,
-      "name": "ハイプワーカー生成（ハイプクイーンアルカナアーツ）",
-      "dev_name": "ハイプワーカー生成（ハイプクイーンアルカナアーツ）",
+      "name": "ハイヴソルジャー召喚",
+      "dev_name": "ハイヴソルジャー召喚",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1264,8 +1264,8 @@
     },
     {
       "id": 9054,
-      "name": "バーアル召喚（コンジャラーアルカナアーツ）",
-      "dev_name": "バーアル召喚（コンジャラーアルカナアーツ）",
+      "name": "インフェルノロード召喚",
+      "dev_name": "インフェルノロード召喚",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1295,8 +1295,8 @@
     },
     {
       "id": 9055,
-      "name": "グーバ配置（グーバクイーンアルカナアーツ）",
-      "dev_name": "グーバ配置（グーバクイーンアルカナアーツ）",
+      "name": "ダートリング召喚",
+      "dev_name": "ダートリング召喚",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1322,8 +1322,8 @@
     },
     {
       "id": 9056,
-      "name": "スタチュー配置（レジェンドファロスアルカナアーツ）",
-      "dev_name": "スタチュー配置（レジェンドファロスアルカナアーツ）",
+      "name": "ストーンゴーレム召喚",
+      "dev_name": "ストーンゴーレム召喚",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1344,8 +1344,8 @@
     },
     {
       "id": 9057,
-      "name": "対象と同じクリーチャーに変身（シェイプシフターアルカナアーツ）",
-      "dev_name": "対象と同じクリーチャーに変身（シェイプシフターアルカナアーツ）",
+      "name": "変身",
+      "dev_name": "変身",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1369,8 +1369,8 @@
     },
     {
       "id": 9058,
-      "name": "スペル借用（ルーンアデプトアルカナアーツ）",
-      "dev_name": "スペル借用（ルーンアデプトアルカナアーツ）",
+      "name": "スペルスティール",
+      "dev_name": "スペルスティール",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {
@@ -1388,8 +1388,8 @@
     },
     {
       "id": 9059,
-      "name": "クリーチャー交換（レムレースアルカナアーツ）",
-      "dev_name": "クリーチャー交換（レムレースアルカナアーツ）",
+      "name": "チェンジリング",
+      "dev_name": "チェンジリング",
       "rarity": "N",
       "type": "mystic",
       "effect_parsed": {

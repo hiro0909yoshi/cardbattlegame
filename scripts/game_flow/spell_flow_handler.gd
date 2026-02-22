@@ -102,7 +102,7 @@ func _can_afford_spell(spell_card: Dictionary) -> bool:
 
 	return magic >= cost
 
-## スペルコストを取得（ウェイストワールド対応）
+## スペルコストを取得（ライズオブサン対応）
 func _get_spell_cost(spell_card: Dictionary) -> int:
 	var cost_data = spell_card.get("cost", {})
 	if cost_data == null:
@@ -112,7 +112,7 @@ func _get_spell_cost(spell_card: Dictionary) -> int:
 	if typeof(cost_data) == TYPE_DICTIONARY:
 		base_cost = cost_data.get("ep", 0)
 
-	# ウェイストワールド（世界呪い）でコスト倍率を適用
+	# ライズオブサン（世界呪い）でコスト倍率を適用
 	if _spell_cost_modifier:
 		return _spell_cost_modifier.get_modified_cost(_spell_state.current_player_id, spell_card)
 
@@ -173,7 +173,7 @@ func use_spell(spell_card: Dictionary):
 	if _player_system:
 		_player_system.add_magic(_spell_state.current_player_id, -cost)
 
-	# ライフフォース呪いチェック（スペル無効化）
+	# エンジェルギフト呪いチェック（スペル無効化）
 	if _spell_cost_modifier:
 		var nullify_result = _spell_cost_modifier.check_spell_nullify(_spell_state.current_player_id)
 		if nullify_result.get("nullified", false):
@@ -234,7 +234,7 @@ func use_spell(spell_card: Dictionary):
 	var target_info = parsed.get("target_info", {}).duplicate()
 	var effects = parsed.get("effects", [])
 
-	# HP効果無効チェック用にaffects_hpをtarget_infoにコピー
+	# 堅牢チェック用にaffects_hpをtarget_infoにコピー
 	if parsed.get("affects_hp", false):
 		target_info["affects_hp"] = true
 
@@ -443,7 +443,7 @@ func _start_confirmation_phase(target_type: String, target_info: Dictionary, tar
 	# 対象をハイライト表示
 	var target_count = TargetSelectionHelper.show_confirmation_highlights(_spell_phase_handler, target_type, target_info)
 
-	# 対象がいない場合（all_creaturesで防魔等で0体）
+	# 対象がいない場合（all_creaturesで結界等で0体）
 	if target_type == "all_creatures" and target_count == 0:
 		spell_ui_toast_requested.emit("対象となるクリーチャーがいません")
 		await _get_tree_ref().create_timer(1.0).timeout

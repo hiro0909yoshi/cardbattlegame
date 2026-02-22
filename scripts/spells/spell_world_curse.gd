@@ -53,16 +53,16 @@ func _get_game_stats() -> Dictionary:
 		return {}
 	return game_stats
 
-## ソリッドワールド: 土地変性がブロックされるか（ポップアップ付き）
+## インペリアルガード: 属性変化がブロックされるか（ポップアップ付き）
 func check_land_change_blocked(show_popup: bool = true) -> bool:
 	var stats = _get_game_stats()
 	if is_land_change_blocked(stats):
 		if show_popup:
-			show_blocked_notification("土地変性無効: ソリッドワールド発動中")
+			show_blocked_notification("不変: インペリアルガード発動中")
 		return true
 	return false
 
-## マーシフルワールド: 侵略がブロックされるか（ポップアップ付き）
+## テンパランスロウ: 侵略がブロックされるか（ポップアップ付き）
 func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool = true) -> bool:
 	if defender_id < 0:
 		return false
@@ -82,12 +82,12 @@ func check_invasion_blocked(attacker_id: int, defender_id: int, show_popup: bool
 	# 攻撃者が上位（順位数値が小さい）なら下位への侵略は制限
 	if attacker_rank < defender_rank:
 		if show_popup:
-			show_blocked_notification("下位侵略不可: マーシフルワールド発動中")
+			show_blocked_notification("節制: テンパランスロウ発動中")
 		return true
 	return false
 
-## ミラーワールド: 同名クリーチャーのバトル時相殺チェック
-## ミラーワールドが有効かどうかをチェック
+## ハーミットズパラドックス: 同名クリーチャーのバトル時相殺チェック
+## ハーミットズパラドックスが有効かどうかをチェック
 func is_mirror_world_active() -> bool:
 	var stats = _get_game_stats()
 	return is_same_creature_destroy_active(stats)
@@ -120,13 +120,13 @@ func check_has_same_name_creature(board_system, player_id: int, creature_name: S
 	
 	return false
 
-## ウェイストワールド: コスト倍率を取得
+## ライズオブサン: コスト倍率を取得
 func get_cost_multiplier_for_card(card: Dictionary) -> float:
 	var stats = _get_game_stats()
 	return get_cost_multiplier(card, stats)
 
 # ========================================
-# 呪い付与（エントリポイント）
+# 刻印付与（エントリポイント）
 # ========================================
 
 ## effect辞書から世界呪いを適用
@@ -147,22 +147,22 @@ func apply(effect: Dictionary) -> void:
 # 判定メソッド（static）
 # ========================================
 
-## ダークワールド: 呪い付きクリーチャーが防魔を得るか
+## ハイプリーステス: 呪い付きクリーチャーが結界を得るか
 static func is_cursed_creature_protected(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "cursed_protection"
 
-## ミスティワールド: 全セプターがスペル対象不可か
+## エンプレスドメイン: 全セプターがスペル対象不可か
 static func is_all_players_spell_immune(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "world_spell_protection"
 
-## ソリッドワールド: 土地変性が無効か
+## インペリアルガード: 属性変化が無効か
 static func is_land_change_blocked(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "land_protect"
 
-## マーシフルワールド: 下位侵略が制限されているか
+## テンパランスロウ: 下位侵略が制限されているか
 ## attacker_rank: 攻撃者の順位（1が1位）
 ## defender_rank: 防御者の順位
 static func is_invasion_restricted(attacker_rank: int, defender_rank: int, stats: Dictionary) -> bool:
@@ -172,7 +172,7 @@ static func is_invasion_restricted(attacker_rank: int, defender_rank: int, stats
 	# 攻撃者が上位（数値が小さい）なら下位への侵略は制限
 	return attacker_rank < defender_rank
 
-## ウェイストワールド: コスト倍率を取得
+## ライズオブサン: コスト倍率を取得
 ## card: カードデータ（rarityを含む）
 ## レアリティによる倍率:
 ##   R = crown_bag_multiplier (2.0)
@@ -193,12 +193,12 @@ static func get_cost_multiplier(card: Dictionary, stats: Dictionary) -> float:
 	# N, C は倍率なし
 	return 1.0
 
-## ブライトワールド: 召喚条件が無視されるか
+## フールズフリーダム: 召喚条件が無視されるか
 static func is_summon_condition_ignored(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "summon_cost_free"
 
-## ナチュラルワールド: 特定トリガーが無効か
+## ハングドマンズシール: 特定トリガーが無効か
 ## trigger_type: "mystic_arts", "on_self_destroy", "on_battle_end"
 static func is_trigger_disabled(trigger_type: String, stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
@@ -208,7 +208,7 @@ static func is_trigger_disabled(trigger_type: String, stats: Dictionary) -> bool
 	var disabled = params.get("disabled_triggers", [])
 	return trigger_type in disabled
 
-## ジョイントワールド: 連鎖ペアを取得
+## ボンドオブラバーズ: 連鎖ペアを取得
 ## 戻り値: [["fire", "earth"], ["water", "wind"]] 形式
 static func get_chain_pairs(stats: Dictionary) -> Array:
 	var world_curse = stats.get("world_curse", {})
@@ -217,15 +217,15 @@ static func get_chain_pairs(stats: Dictionary) -> Array:
 	var params = world_curse.get("params", {})
 	return params.get("chain_pairs", [])
 
-## ジョイントワールド: 2つの属性が同じ連鎖グループか判定
+## ボンドオブラバーズ: 2つの属性が同じ連鎖グループか判定
 ## 通常: 同属性のみ連鎖
-## ジョイントワールド発動中: 火⇔地、水⇔風 も連鎖
+## ボンドオブラバーズ発動中: 火⇔地、水⇔風 も連鎖
 static func is_same_chain_group(elem1: String, elem2: String, stats: Dictionary) -> bool:
 	# 同属性なら常にtrue
 	if elem1 == elem2:
 		return true
 
-	# ジョイントワールド発動中のペアチェック
+	# ボンドオブラバーズ発動中のペアチェック
 	var pairs = get_chain_pairs(stats)
 	for pair in pairs:
 		if elem1 in pair and elem2 in pair:
@@ -233,7 +233,7 @@ static func is_same_chain_group(elem1: String, elem2: String, stats: Dictionary)
 
 	return false
 
-## ミラーワールド: 同種相殺が有効か
+## ハーミットズパラドックス: 隠者が有効か
 static func is_same_creature_destroy_active(stats: Dictionary) -> bool:
 	var world_curse = stats.get("world_curse", {})
 	return world_curse.get("curse_type") == "same_creature_destroy"

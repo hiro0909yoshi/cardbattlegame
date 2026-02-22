@@ -1,49 +1,49 @@
-# SpellProtection - 防魔システム
-# スペル/アルカナアーツの対象選択時に防魔判定を行う
+# SpellProtection - 結界システム
+# スペル/アルカナアーツの対象選択時に結界判定を行う
 class_name SpellProtection
 
 # ============================================
-# 防魔判定メソッド
+# 結界判定メソッド
 # ============================================
 
 ## クリーチャーがスペル/アルカナアーツから保護されているか判定
 ## 
 ## creature_data: クリーチャーデータ（ability_parsed, curseを含む）
 ## context: 追加コンテキスト（world_curse等のチェック用）
-## 戻り値: true = 防魔状態（対象に選べない）
+## 戻り値: true = 結界状態（対象に選べない）
 static func is_creature_protected(creature_data: Dictionary, context: Dictionary = {}) -> bool:
 	if creature_data.is_empty():
 		return false
 	
 	var creature_name = creature_data.get("name", "?")
 	
-	# 1. パッシブスキル「防魔」チェック
+	# 1. パッシブスキル「結界」チェック
 	# ability_parsed.keywordsをチェック
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	if "防魔" in keywords:
-		print("[SpellProtection] %s は防魔キーワードを持つため対象外" % creature_name)
+	if "結界" in keywords:
+		print("[SpellProtection] %s は結界キーワードを持つため対象外" % creature_name)
 		return true
 	
-	# abilityフィールドからも「防魔」を検出（データが不完全な場合の対応）
+	# abilityフィールドからも「結界」を検出（データが不完全な場合の対応）
 	var ability = creature_data.get("ability", "")
-	if "防魔" in ability:
-		print("[SpellProtection] %s は防魔abilityを持つため対象外" % creature_name)
+	if "結界" in ability:
+		print("[SpellProtection] %s は結界abilityを持つため対象外" % creature_name)
 		return true
 	
-	# 2. クリーチャー呪い「防魔」チェック
+	# 2. クリーチャー呪い「結界」チェック
 	var curse = creature_data.get("curse", {})
 	var curse_type = curse.get("curse_type", "")
 	if curse_type in ["spell_protection", "protection_wall"]:
-		print("[SpellProtection] %s は防魔呪いを持つため対象外" % creature_name)
+		print("[SpellProtection] %s は結界呪いを持つため対象外" % creature_name)
 		return true
 	
-	# 3. 世界呪い「呪い防魔化」チェック（呪い付きクリーチャーのみ）
+	# 3. 世界呪い「女教皇」チェック（呪い付きクリーチャーのみ）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "cursed_protection":
-		# 何らかの呪いがかかっているクリーチャーは防魔
+		# 何らかの呪いがかかっているクリーチャーは結界
 		if not curse.is_empty():
-			print("[SpellProtection] %s は呪い防魔化により対象外" % creature_name)
+			print("[SpellProtection] %s は女教皇により対象外" % creature_name)
 			return true
 	
 	return false
@@ -53,34 +53,34 @@ static func is_creature_protected(creature_data: Dictionary, context: Dictionary
 ## 
 ## player: PlayerDataオブジェクト（curseプロパティを持つ）
 ## context: 追加コンテキスト（world_curse等のチェック用）
-## 戻り値: true = 防魔状態（対象に選べない）
+## 戻り値: true = 結界状態（対象に選べない）
 static func is_player_protected(player, context: Dictionary = {}) -> bool:
 	if player == null:
 		return false
 	
 	var player_name = player.name if "name" in player else "?"
 	
-	# 1. プレイヤー呪い「防魔」チェック
+	# 1. プレイヤー呪い「結界」チェック
 	var curse = player.curse if "curse" in player else {}
 	if curse is Dictionary and not curse.is_empty():
 		if curse.get("curse_type") == "spell_protection":
-			print("[SpellProtection] プレイヤー %s は防魔呪いを持つため対象外" % player_name)
+			print("[SpellProtection] プレイヤー %s は結界呪いを持つため対象外" % player_name)
 			return true
 	
-	# 2. 世界呪い「防魔」チェック（全セプター対象）
+	# 2. 世界呪い「結界」チェック（全セプター対象）
 	var world_curse = context.get("world_curse", {})
 	if world_curse.get("curse_type") == "world_spell_protection":
-		print("[SpellProtection] プレイヤー %s は世界呪い防魔により対象外" % player_name)
+		print("[SpellProtection] プレイヤー %s は世界呪い結界により対象外" % player_name)
 		return true
 	
 	return false
 
 
-## 対象データから防魔判定を行う（統合メソッド）
+## 対象データから結界判定を行う（統合メソッド）
 ## 
 ## target_data: ターゲット情報（type, tile_index, player_id等）
 ## handler: board_system, player_system, game_flow_manager を持つオブジェクト
-## 戻り値: true = 防魔状態（対象に選べない）
+## 戻り値: true = 結界状態（対象に選べない）
 static func is_target_protected(target_data: Dictionary, handler) -> bool:
 	var target_type = target_data.get("type", "")
 	
@@ -89,27 +89,27 @@ static func is_target_protected(target_data: Dictionary, handler) -> bool:
 	
 	match target_type:
 		"creature":
-			# クリーチャーターゲットの防魔チェック
+			# クリーチャーターゲットの結界チェック
 			var creature = target_data.get("creature", {})
 			if creature.is_empty():
 				return false
 			return is_creature_protected(creature, context)
 		
 		"land":
-			# 土地ターゲットの場合、クリーチャーがいればそのクリーチャーの防魔チェック
+			# 土地ターゲットの場合、クリーチャーがいればそのクリーチャーの結界チェック
 			var tile_index = target_data.get("tile_index", -1)
 			if tile_index < 0 or not handler.board_system:
 				return false
 			
 			var tile = handler.board_system.tile_nodes.get(tile_index)
 			if not tile or tile.creature_data.is_empty():
-				# クリーチャーがいない土地は防魔対象外
+				# クリーチャーがいない土地は結界対象外
 				return false
 			
 			return is_creature_protected(tile.creature_data, context)
 		
 		"player":
-			# プレイヤーの防魔チェック
+			# プレイヤーの結界チェック
 			var player_id = target_data.get("player_id", -1)
 			if player_id < 0 or not handler.player_system:
 				return false
@@ -151,11 +151,11 @@ static func _build_context(handler) -> Dictionary:
 # ターゲットリストフィルタリング
 # ============================================
 
-## ターゲットリストから防魔対象を除外
+## ターゲットリストから結界対象を除外
 ## 
 ## targets: ターゲット情報の配列
 ## handler: board_system, player_system, game_flow_manager を持つオブジェクト
-## 戻り値: 防魔対象を除外したターゲットリスト
+## 戻り値: 結界対象を除外したターゲットリスト
 static func filter_protected_targets(targets: Array, handler) -> Array:
 	var filtered = []
 	
@@ -182,22 +182,22 @@ static func _get_target_name(target_data: Dictionary) -> String:
 
 
 # ============================================
-# 呪い拡散スキル判定
+# 伝染スキル判定
 # ============================================
 
-## クリーチャーが呪い拡散スキルを持っているかチェック
+## クリーチャーが伝染スキルを持っているかチェック
 static func has_curse_spread_skill(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	return "呪い拡散" in keywords
+	return "伝染" in keywords
 
 
-## 呪い拡散スキルの適用
+## 伝染スキルの適用
 ## spell_curse: SpellCurseインスタンス
 static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_index: int, curse_type: String, duration: int, params: Dictionary):
-	# 呪い拡散スキルチェック
+	# 伝染スキルチェック
 	if not has_curse_spread_skill(creature_data):
 		return
 	
@@ -230,14 +230,14 @@ static func apply_curse_spread(spell_curse, creature_data: Dictionary, tile_inde
 		if not target_creature:
 			continue
 		
-		# 防魔チェック
+		# 結界チェック
 		if is_creature_protected(target_creature, context):
 			continue
 		
 		# 呪いを付与（is_spread = true で再帰防止）
 		spell_curse.curse_creature(target_tile_index, curse_type, duration, params, true)
 	
-	# 呪い拡散クリーチャーをダウン
+	# 伝染クリーチャーをダウン
 	if board_system.tile_nodes.has(tile_index):
 		var tile = board_system.tile_nodes[tile_index]
 		if tile.has_method("set_down_state"):
@@ -271,12 +271,12 @@ static func is_player_spell_disabled(player, context: Dictionary = {}) -> bool:
 	return false
 
 
-## 全プレイヤーにスペル不可呪いを付与
+## 全プレイヤーに禁呪呪いを付与
 ##
 ## player_system: PlayerSystemの参照
 ## duration: 呪いの持続ターン数
 ## curse_name: 呪いの表示名
-static func apply_spell_disable_to_all_players(player_system, duration: int = 1, curse_name: String = "スペル不可"):
+static func apply_spell_disable_to_all_players(player_system, duration: int = 1, curse_name: String = "禁呪"):
 	if player_system == null:
 		return
 
@@ -287,14 +287,14 @@ static func apply_spell_disable_to_all_players(player_system, duration: int = 1,
 			"name": curse_name,
 			"duration": duration
 		}
-		print("[呪い付与] %s → %s (duration=%d)" % [curse_name, player.name, duration])
+		print("[刻印付与] %s → %s (duration=%d)" % [curse_name, player.name, duration])
 
 
 # ============================================
-# HP効果無効判定（旧SpellHpImmune統合）
+# 堅牢判定（旧SpellHpImmune統合）
 # ============================================
 
-## クリーチャーがHP効果無効を持っているか判定
+## クリーチャーが堅牢を持っているか判定
 static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -304,14 +304,14 @@ static func has_hp_effect_immune(creature_data: Dictionary) -> bool:
 	# 1. クリーチャー固有能力チェック（keywords）
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	if "HP効果無効" in keywords:
-		print("[SpellProtection] %s はHP効果無効キーワードを持つため対象外" % creature_name)
+	if "堅牢" in keywords:
+		print("[SpellProtection] %s は堅牢キーワードを持つため対象外" % creature_name)
 		return true
 
-	# 2. 呪いチェック（マスファンタズム等で付与）
+	# 2. 呪いチェック（グラナイト等で付与）
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") == "hp_effect_immune":
-		print("[SpellProtection] %s はHP効果無効呪いを持つため対象外" % creature_name)
+		print("[SpellProtection] %s は堅牢呪いを持つため対象外" % creature_name)
 		return true
 
 	return false
@@ -322,19 +322,19 @@ static func affects_hp(effect_parsed: Dictionary) -> bool:
 	return effect_parsed.get("affects_hp", false)
 
 
-## HP効果無効によりスキップすべきか判定（全体スペル用）
+## 堅牢によりスキップすべきか判定（全体スペル用）
 static func should_skip_hp_effect(creature_data: Dictionary, effect_parsed: Dictionary) -> bool:
 	if not affects_hp(effect_parsed):
 		return false
 
 	if has_hp_effect_immune(creature_data):
-		print("[HP効果無効] %s はHP変更効果を無効化" % creature_data.get("name", "?"))
+		print("[堅牢] %s はHP変更効果を無効化" % creature_data.get("name", "?"))
 		return true
 
 	return false
 
 
-## ターゲット選択時にHP効果無効を持つクリーチャーを除外するフィルタ
+## ターゲット選択時に堅牢を持つクリーチャーを除外するフィルタ
 static func filter_hp_immune_targets(creatures: Array, effect_parsed: Dictionary) -> Array:
 	if not affects_hp(effect_parsed):
 		return creatures
@@ -344,6 +344,6 @@ static func filter_hp_immune_targets(creatures: Array, effect_parsed: Dictionary
 		if not has_hp_effect_immune(creature):
 			filtered.append(creature)
 		else:
-			print("[HP効果無効] %s は対象から除外" % creature.get("name", "?"))
+			print("[堅牢] %s は対象から除外" % creature.get("name", "?"))
 
 	return filtered

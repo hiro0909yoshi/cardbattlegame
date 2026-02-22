@@ -2,8 +2,8 @@ class_name SpellCostModifier
 extends RefCounted
 
 ## コスト操作スペルシステム
-## - ライフフォース（2117）: クリーチャー/アイテム0EP、スペル無効化で解除
-## - ウェイストワールド（2009）: カード使用コスト倍率（世界呪い）
+## - エンジェルギフト（2117）: クリーチャー/アイテム0EP、スペル無効化で解除
+## - ライズオブサン（2009）: カード使用コスト倍率（世界呪い）
 
 var spell_curse = null
 var player_system: PlayerSystem = null
@@ -24,16 +24,16 @@ func set_spell_world_curse(world_curse) -> void:
 
 
 # ========================================
-# ライフフォース（2117）
+# エンジェルギフト（2117）
 # ========================================
 
-## ライフフォース呪い付与
+## エンジェルギフト刻印付与
 func apply_life_force(target_player_id: int) -> Dictionary:
 	if not spell_curse or not player_system:
 		return {"success": false, "message": "システム未初期化"}
 	
 	var params = {
-		"name": "生命力",
+		"name": "天使",
 		"cost_zero_types": ["creature", "item"],
 		"nullify_spell": true
 	}
@@ -41,12 +41,12 @@ func apply_life_force(target_player_id: int) -> Dictionary:
 	spell_curse.curse_player(target_player_id, "life_force", -1, params)
 	
 	var player_name = _get_player_name(target_player_id)
-	print("[ライフフォース] %s に呪い「生命力」を付与" % player_name)
+	print("[エンジェルギフト] %s に呪い「天使」を付与" % player_name)
 	
-	return {"success": true, "message": "%s に生命力を付与" % player_name}
+	return {"success": true, "message": "%s に天使を付与" % player_name}
 
 
-## ライフフォース呪いを持っているかチェック
+## エンジェルギフト呪いを持っているかチェック
 func has_life_force(player_id: int) -> bool:
 	if not player_system or player_id < 0 or player_id >= player_system.players.size():
 		return false
@@ -67,7 +67,7 @@ func check_spell_nullify(player_id: int) -> Dictionary:
 		spell_curse.remove_curse_from_player(player_id)
 	
 	var player_name = _get_player_name(player_id)
-	var message = "【生命力】%s のスペルは無効化された！呪いが解除された" % player_name
+	var message = "【天使】%s のスペルは無効化された！呪いが解除された" % player_name
 	print(message)
 	
 	return {
@@ -77,24 +77,24 @@ func check_spell_nullify(player_id: int) -> Dictionary:
 	}
 
 
-## カードコスト修正（ライフフォース: クリーチャー/アイテムのコスト0化）
+## カードコスト修正（エンジェルギフト: クリーチャー/アイテムのコスト0化）
 ## 戻り値: 修正後のコスト
 func get_modified_cost(player_id: int, card: Dictionary) -> int:
 	var card_type = card.get("type", "")
 	var original_cost = _get_card_cost(card)
 	
-	# ライフフォース呪いチェック（コスト0化）
+	# エンジェルギフト呪いチェック（コスト0化）
 	if has_life_force(player_id):
 		if card_type == "creature" or card_type == "item":
-			print("[ライフフォース] %s のコスト: %d → 0" % [card.get("name", "?"), original_cost])
+			print("[エンジェルギフト] %s のコスト: %d → 0" % [card.get("name", "?"), original_cost])
 			return 0
 	
-	# ウェイストワールド（世界呪い）チェック - SpellWorldCurseに委譲
+	# ライズオブサン（世界呪い）チェック - SpellWorldCurseに委譲
 	if spell_world_curse:
 		var multiplier = spell_world_curse.get_cost_multiplier_for_card(card)
 		if multiplier != 1.0:
 			var modified_cost = int(ceil(original_cost * multiplier))
-			print("[ウェイストワールド] %s のコスト: %d → %d (x%.1f)" % [card.get("name", "?"), original_cost, modified_cost, multiplier])
+			print("[ライズオブサン] %s のコスト: %d → %d (x%.1f)" % [card.get("name", "?"), original_cost, modified_cost, multiplier])
 			return modified_cost
 	
 	return original_cost

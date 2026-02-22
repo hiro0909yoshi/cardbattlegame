@@ -10,55 +10,55 @@ extends RefCounted
 
 ## クリーチャーにとって有利な呪い（所有者視点）
 const BENEFICIAL_CREATURE_CURSES: Array[String] = [
-	"stat_boost",           # 能力値+20
+	"stat_boost",           # 暁光
 	"mystic_grant",         # アルカナアーツ付与
-	"command_growth",       # コマンド成長
-	"forced_stop",          # 強制停止（敵を足止め）
-	"indomitable",          # 不屈
-	"land_effect_grant",    # 地形効果付与
+	"command_growth",       # 昇華
+	"forced_stop",          # 停滞（敵を足止め）
+	"indomitable",          # 奮闘
+	"land_effect_grant",    # 恩寵
 	"metal_form",           # メタルフォーム
 	"magic_barrier",        # マジックバリア
 	"toll_multiplier",      # 通行料倍率
-	"remote_move",          # 遠隔移動
-	"spell_protection",     # 防魔
-	"protection_wall",      # 防魔壁
-	"hp_effect_immune",     # HP効果無効
-	"blast_trap",           # 爆発罠
-	"peace",                # 平和（侵略不可＝防御）
+	"remote_move",          # 天駆
+	"spell_protection",     # 結界
+	"protection_wall",      # 重結界
+	"hp_effect_immune",     # 堅牢
+	"blast_trap",           # 焦土
+	"peace",                # 安寧（休戦＝防御）
 ]
 
 ## クリーチャーにとって不利な呪い（所有者視点）
 const HARMFUL_CREATURE_CURSES: Array[String] = [
 	"curse_toll_half",      # 通行料半減
-	"stat_reduce",          # 能力値-20
-	"skill_nullify",        # 戦闘能力不可
-	"battle_disable",       # 戦闘行動不可
+	"stat_reduce",          # 衰月
+	"skill_nullify",        # 錯乱
+	"battle_disable",       # 消沈
 	"ap_nullify",           # AP=0
-	"random_stat",          # 能力値不定
+	"random_stat",          # 狂星
 	"plague",               # 衰弱
-	"bounty",               # 賞金首
-	"destroy_after_battle", # 戦闘後破壊
-	"land_effect_disable",  # 地形効果無効
-	"move_disable",         # 移動不可
-	"creature_toll_disable", # クリーチャー通行料無効
+	"bounty",               # 賞金
+	"destroy_after_battle", # 崩壊
+	"land_effect_disable",  # 暗転
+	"move_disable",         # 枷
+	"creature_toll_disable", # クリーチャー免罪
 ]
 
 ## プレイヤーにとって有利な呪い
 const BENEFICIAL_PLAYER_CURSES: Array[String] = [
 	"dice_fixed",           # ダイス固定
 	"dice_range",           # ダイス範囲
-	"protection",           # 防魔
-	"life_force",           # 生命力
+	"protection",           # 結界
+	"life_force",           # 天使
 	"toll_share",           # 通行料共有
 ]
 
 ## プレイヤーにとって不利な呪い
 const HARMFUL_PLAYER_CURSES: Array[String] = [
 	"dice_range_magic",     # 範囲+EP（制限付き）
-	"toll_disable",         # 通行料無効
+	"toll_disable",         # 免罪
 	"toll_fixed",           # 通行料固定
-	"spell_disable",        # スペル不可
-	"movement_reverse",     # 歩行逆転
+	"spell_disable",        # 禁呪
+	"movement_reverse",     # 反転
 ]
 
 # =============================================================================

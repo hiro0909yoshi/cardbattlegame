@@ -98,7 +98,7 @@ func _handle_pass_through_magic_stone(player_id: int, tile) -> void:
 		await controller.special_tile_system.handle_magic_stone_tile(player_id, tile)
 
 
-## タイルでの足どめ判定（SpellMovement経由）
+## タイルでの拘束判定（SpellMovement経由）
 func check_forced_stop_at_tile(tile_index: int, player_id: int) -> Dictionary:
 	if not controller.spell_movement:
 		return {"stopped": false, "reason": "", "source_type": ""}

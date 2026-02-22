@@ -62,7 +62,7 @@ func execute(context: Dictionary) -> Dictionary:
 				message_service = handler.spell_ui_manager.message_service
 			if message_service:
 				var type_count = result.removed_types.size()
-				var message = "%d種類の呪いを消去 %dEP獲得" % [type_count, result.ep_gained]
+				var message = "%d種類の呪いを消去 %d蓄魔" % [type_count, result.ep_gained]
 				await message_service.show_comment_and_wait(message)
 				effect_message = message
 			else:

@@ -54,7 +54,7 @@ func purify_all(caster_id: int) -> Dictionary:
 	if world_type != "" and world_type not in removed_curse_types:
 		removed_curse_types.append(world_type)
 
-	# 4. EP獲得（種類×50EP）
+	# 4. 蓄魔（種類×50EP）
 	var ep_gained = removed_curse_types.size() * 50
 	if ep_gained > 0 and caster_id >= 0 and caster_id < player_system.players.size():
 		player_system.players[caster_id].magic_power += ep_gained

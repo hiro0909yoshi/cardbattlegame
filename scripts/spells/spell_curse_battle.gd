@@ -2,8 +2,8 @@ class_name SpellCurseBattle
 extends RefCounted
 
 ## 戦闘制限呪いシステム
-## - skill_nullify: 戦闘能力不可（全スキル無効化）
-## - battle_disable: 戦闘行動不可（攻撃・アイテム・援護使用不可）
+## - skill_nullify: 錯乱（全スキル無効化）
+## - battle_disable: 消沈（攻撃・アイテム・加勢使用不可）
 
 # =============================================================================
 # 呪いチェック
@@ -22,29 +22,29 @@ static func has_skill_nullify(creature_data: Dictionary) -> bool:
 
 
 # =============================================================================
-# 呪い付与
+# 刻印付与
 # =============================================================================
 
 ## battle_disable 呪いを付与
-static func apply_battle_disable(creature_data: Dictionary, name: String = "戦闘行動不可") -> void:
+static func apply_battle_disable(creature_data: Dictionary, name: String = "消沈") -> void:
 	creature_data["curse"] = {
 		"curse_type": "battle_disable",
 		"name": name,
 		"duration": -1,
 		"params": {}
 	}
-	print("[SpellCurseBattle] 戦闘行動不可を付与: ", creature_data.get("name", "?"))
+	print("[SpellCurseBattle] 消沈を付与: ", creature_data.get("name", "?"))
 
 
 ## skill_nullify 呪いを付与
-static func apply_skill_nullify(creature_data: Dictionary, name: String = "戦闘能力不可") -> void:
+static func apply_skill_nullify(creature_data: Dictionary, name: String = "錯乱") -> void:
 	creature_data["curse"] = {
 		"curse_type": "skill_nullify",
 		"name": name,
 		"duration": -1,
 		"params": {}
 	}
-	print("[SpellCurseBattle] 戦闘能力不可を付与: ", creature_data.get("name", "?"))
+	print("[SpellCurseBattle] 錯乱を付与: ", creature_data.get("name", "?"))
 
 
 ## plague 呪いを付与（衰弱: 戦闘終了時HP -= MHP/2）
@@ -59,14 +59,14 @@ static func apply_plague(creature_data: Dictionary, name: String = "衰弱") -> 
 
 
 # =============================================================================
-# 攻撃成功時の呪い付与チェック（ナイキー、バインドウィップ用）
+# 攻撃成功時の刻印付与チェック（ナイキー、バインドウィップ用）
 # =============================================================================
 
 ## 攻撃成功時に呪いを付与するかチェックし、該当すれば付与
 ## attacker_data: 攻撃側のcreature_data
 ## defender_data: 防御側のcreature_data
 ## 戻り値: 呪いを付与したかどうか
-## 攻撃成功時の呪い付与
+## 攻撃成功時の刻印付与
 ## @return Dictionary { "applied": bool, "curse_name": String }
 static func check_and_apply_on_attack_success(attacker_data: Dictionary, defender_data: Dictionary) -> Dictionary:
 	var result = {"applied": false, "curse_name": ""}
@@ -114,10 +114,10 @@ static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_n
 	match curse_type:
 		"battle_disable":
 			if curse_name.is_empty():
-				curse_name = "戦闘行動不可"
+				curse_name = "消沈"
 			apply_battle_disable(defender_data, curse_name)
 			print("【攻撃成功時呪い】", source_name, " → ", 
-				  defender_data.get("name", "?"), " に戦闘行動不可を付与")
+				  defender_data.get("name", "?"), " に消沈を付与")
 			return {"applied": true, "curse_name": curse_name}
 		"plague":
 			if curse_name.is_empty():
@@ -128,10 +128,10 @@ static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_n
 			return {"applied": true, "curse_name": curse_name}
 		"creature_toll_disable":
 			if curse_name.is_empty():
-				curse_name = "通行料無効"
+				curse_name = "免罪"
 			apply_creature_toll_disable(defender_data, curse_name)
 			print("【攻撃成功時呪い】", source_name, " → ", 
-				  defender_data.get("name", "?"), " に通行料無効を付与")
+				  defender_data.get("name", "?"), " に免罪を付与")
 			return {"applied": true, "curse_name": curse_name}
 	return {"applied": false, "curse_name": ""}
 
@@ -140,30 +140,30 @@ static func _apply_curse_effect(curse_type: String, effect: Dictionary, source_n
 # 地形効果関連の呪い
 # =============================================================================
 
-## land_effect_disable 呪いを持っているかチェック（地形効果無効）
+## land_effect_disable 呪いを持っているかチェック（暗転）
 static func has_land_effect_disable(creature_data: Dictionary) -> bool:
 	var curse = creature_data.get("curse", {})
 	return curse.get("curse_type") == "land_effect_disable"
 
 
-## land_effect_grant 呪いを持っているかチェック（地形効果付与）
+## land_effect_grant 呪いを持っているかチェック（恩寵）
 static func has_land_effect_grant(creature_data: Dictionary) -> bool:
 	var curse = creature_data.get("curse", {})
 	return curse.get("curse_type") == "land_effect_grant"
 
 
-## land_effect_disable 呪いを付与（地形効果無効）
-static func apply_land_effect_disable(creature_data: Dictionary, name: String = "地形効果無効") -> void:
+## land_effect_disable 呪いを付与（暗転）
+static func apply_land_effect_disable(creature_data: Dictionary, name: String = "暗転") -> void:
 	creature_data["curse"] = {
 		"curse_type": "land_effect_disable",
 		"name": name,
 		"duration": -1,
 		"params": {}
 	}
-	print("[SpellCurseBattle] 地形効果無効を付与: ", creature_data.get("name", "?"))
+	print("[SpellCurseBattle] 暗転を付与: ", creature_data.get("name", "?"))
 
 
-## land_effect_grant 呪いを付与（地形効果付与）
+## land_effect_grant 呪いを付与（恩寵）
 ## params.grant_elements: 地形効果を得られる属性リスト（空の場合は全属性）
 static func apply_land_effect_grant(creature_data: Dictionary, grant_elements: Array = [], name: String = "地形効果") -> void:
 	creature_data["curse"] = {
@@ -175,7 +175,7 @@ static func apply_land_effect_grant(creature_data: Dictionary, grant_elements: A
 		}
 	}
 	var elements_str = "全属性" if grant_elements.is_empty() else str(grant_elements)
-	print("[SpellCurseBattle] 地形効果付与: ", creature_data.get("name", "?"), " → ", elements_str)
+	print("[SpellCurseBattle] 恩寵: ", creature_data.get("name", "?"), " → ", elements_str)
 
 
 # =============================================================================
@@ -197,9 +197,9 @@ static func get_extra_land_elements(creature_data: Dictionary) -> Array:
 ## tile_element: タイルの属性
 ## 戻り値: 地形効果を得られるかどうか
 static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) -> bool:
-	# 地形効果無効呪いがあれば常にfalse
+	# 暗転呪いがあれば常にfalse
 	if has_land_effect_disable(creature_data):
-		print("  → 地形効果無効呪いにより無効")
+		print("  → 暗転呪いにより無効")
 		return false
 	
 	# 無属性タイルは全クリーチャーに地形効果を与える
@@ -219,7 +219,7 @@ static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) 
 		print("  → 追加属性から地形効果: ", tile_element)
 		return true
 	
-	# 地形効果付与呪いチェック
+	# 恩寵呪いチェック
 	if has_land_effect_grant(creature_data):
 		var curse = creature_data.get("curse", {})
 		var params = curse.get("params", {})
@@ -228,10 +228,10 @@ static func can_get_land_bonus(creature_data: Dictionary, tile_element: String) 
 		# grant_elementsが空なら全属性から地形効果を得る
 		if grant_elements.is_empty():
 			if TileHelper.is_element_type(tile_element):
-				print("  → 地形効果付与呪い（全属性）")
+				print("  → 恩寵呪い（全属性）")
 				return true
 		elif tile_element in grant_elements:
-			print("  → 地形効果付与呪い: ", tile_element)
+			print("  → 恩寵呪い: ", tile_element)
 			return true
 	
 	return false
@@ -282,7 +282,7 @@ static func apply_magic_barrier(creature_data: Dictionary, name: String = "マ�
 
 
 # =============================================================================
-# 戦闘後破壊（destroy_after_battle）: 次の戦闘で生き残った場合、戦闘後に破壊
+# 崩壊（destroy_after_battle）: 次の戦闘で生き残った場合、戦闘後に破壊
 # =============================================================================
 
 ## destroy_after_battle 呪いを持っているかチェック
@@ -292,18 +292,18 @@ static func has_destroy_after_battle(creature_data: Dictionary) -> bool:
 
 
 ## destroy_after_battle 呪いを付与
-static func apply_destroy_after_battle(creature_data: Dictionary, name: String = "戦闘後破壊") -> void:
+static func apply_destroy_after_battle(creature_data: Dictionary, name: String = "崩壊") -> void:
 	creature_data["curse"] = {
 		"curse_type": "destroy_after_battle",
 		"name": name,
 		"duration": -1,
 		"params": {}
 	}
-	print("[SpellCurseBattle] 戦闘後破壊を付与: ", creature_data.get("name", "?"))
+	print("[SpellCurseBattle] 崩壊を付与: ", creature_data.get("name", "?"))
 
 
 # =============================================================================
-# 通行料無効（creature_toll_disable）: クリーチャー単体の通行料が0になる
+# 免罪（creature_toll_disable）: クリーチャー単体の通行料が0になる
 # =============================================================================
 
 ## creature_toll_disable 呪いを持っているかチェック
@@ -313,11 +313,11 @@ static func has_creature_toll_disable(creature_data: Dictionary) -> bool:
 
 
 ## creature_toll_disable 呪いを付与
-static func apply_creature_toll_disable(creature_data: Dictionary, name: String = "通行料無効") -> void:
+static func apply_creature_toll_disable(creature_data: Dictionary, name: String = "免罪") -> void:
 	creature_data["curse"] = {
 		"curse_type": "creature_toll_disable",
 		"name": name,
 		"duration": -1,
 		"params": {}
 	}
-	print("[SpellCurseBattle] 通行料無効を付与: ", creature_data.get("name", "?"))
+	print("[SpellCurseBattle] 免罪を付与: ", creature_data.get("name", "?"))

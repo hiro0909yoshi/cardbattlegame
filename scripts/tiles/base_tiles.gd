@@ -415,7 +415,7 @@ func is_down() -> bool:
 ## ドミニオコマンド使用可能か
 func can_use_dominio_order() -> bool:
 	# 所有地でクリーチャーがいる場合のみ使用可能
-	# ダウン状態でも使用可能（不屈スキル対応）
+	# ダウン状態でも使用可能（奮闘スキル対応）
 	return owner_id != -1 and not creature_data.is_empty()
 
 # ============================================

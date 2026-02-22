@@ -196,23 +196,23 @@ func _setup_curse_ui():
 func _populate_curse_options(option_button: OptionButton):
 	option_button.add_item("なし", 0)
 	option_button.add_item("ディジーズ (AP&HP-20)", 2054)
-	option_button.add_item("バインドミスト (戦闘不可)", 2068)
+	option_button.add_item("ディスペア (戦闘不可)", 2068)
 	option_button.add_item("プレイグ (戦闘後HP減)", 2087)
-	option_button.add_item("ナチュラルワールド (スキル無効)", 2064)
+	option_button.add_item("ハングドマンズシール (スキル無効)", 2064)
 	option_button.add_item("ボーテックス (スキル無効)", 2094)
 	option_button.add_item("バイタリティ (AP&HP+20)", 2066)
 	option_button.add_item("エネルギーフィールド (攻撃無効)", 2015)
 	option_button.add_item("リキッドフォーム (ランダム)", 2120)
 	option_button.add_item("メタルフォーム (攻撃無効)", 2114)
-	option_button.add_item("マジックシェルター (防魔)", 2105)
-	option_button.add_item("シニリティ (戦闘後破壊)", 2032)
+	option_button.add_item("マジックシェルター (結界)", 2105)
+	option_button.add_item("シニリティ (崩壊)", 2032)
 	option_button.add_item("ディスエレメント (地形無効)", 2055)
 	option_button.add_item("ディラニー (MHP30以下不可)", 2057)
-	option_button.add_item("ダークワールド (呪い防魔)", 2048)
-	option_button.add_item("ミラーワールド (同種破壊)", 2111)
-	option_button.add_item("ハイパーアクティブ (不屈)", 2067)
-	option_button.add_item("マスファンタズム (HP効果無効)", 2108)
-	option_button.add_item("ブラストトラップ (爆発罠)", 2083)
+	option_button.add_item("ハイプリーステス (呪い結界)", 2048)
+	option_button.add_item("ハーミットズパラドックス (同種破壊)", 2111)
+	option_button.add_item("ライズアップ (奮闘)", 2067)
+	option_button.add_item("グラナイト (堅牢)", 2108)
+	option_button.add_item("ブラストトラップ (焦土)", 2083)
 	option_button.selected = 0  # デフォルト: なし
 
 ## 攻撃側呪いスペル選択ハンドラー
@@ -1304,7 +1304,7 @@ func _execute_single_visual_battle(test_case: Dictionary, battle_num: int, total
 	mock_board.name = "BoardSystem3D_Test"
 	battle_system.add_child(mock_board)
 
-	# skill_indexを初期化（BattleSystemの応援スキル処理で必須）
+	# skill_indexを初期化（BattleSystemの鼓舞スキル処理で必須）
 	mock_board.skill_index = {
 		"support": {},
 		"world_spell": {}

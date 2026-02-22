@@ -5,7 +5,7 @@
 ##
 ## 【担当効果】
 ## - ルナティックヘア (ID: 443): 敵のAP⇔MHP交換
-## - スキュラ (ID: 124): 敵に呪い"通行料無効"
+## - スキュラ (ID: 124): 敵に呪い"免罪"
 ## - サムハイン (ID: 317): 敵のMHP-基本AP（未実装）
 ## - レーシィ (ID: 245): 戦闘地レベル+1（未実装）
 ## - マイコロン (ID: 140): 敵攻撃で生き残った後、ランダム空地にコピー配置
@@ -33,10 +33,10 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 		"activated_skills": []  # 発動したスキル情報
 	}
 	
-	# ナチュラルワールド無効化チェック
+	# ハングドマンズシール無効化チェック
 	var game_stats = context.get("game_stats", {})
 	if _is_battle_end_nullified(game_stats):
-		print("【戦闘終了時効果】ナチュラルワールドにより無効化")
+		print("【戦闘終了時効果】ハングドマンズシールにより無効化")
 		return result
 	
 	# 攻撃側の効果を処理（対象: 防御側）
@@ -71,7 +71,7 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 			result["spawn_info"] = spawn_result
 	
 	# 衰弱（plague）呪いダメージ処理
-	# 攻撃側の衰弱チェック（相手=防御側のナチュラルワールドで無効化）
+	# 攻撃側の衰弱チェック（相手=防御側のハングドマンズシールで無効化）
 	if attacker and attacker.is_alive():
 		var plague_result = _process_plague_damage(attacker, defender)
 		if plague_result.get("triggered", false):
@@ -83,7 +83,7 @@ static func process_all(attacker, defender, context: Dictionary = {}) -> Diction
 			if plague_result.get("destroyed", false):
 				result["attacker_died"] = true
 	
-	# 防御側の衰弱チェック（相手=攻撃側のナチュラルワールドで無効化）
+	# 防御側の衰弱チェック（相手=攻撃側のハングドマンズシールで無効化）
 	if defender and defender.is_alive():
 		var plague_result = _process_plague_damage(defender, attacker)
 		if plague_result.get("triggered", false):
@@ -274,7 +274,7 @@ static func _apply_swap_ap_mhp(self_participant, enemy_participant) -> Dictionar
 	return result
 
 
-## 呪い付与（スキュラ等）
+## 刻印付与（スキュラ等）
 ## @return 呪いを付与できた場合は呪い名、失敗時は空文字
 static func _apply_curse_effect(self_participant, enemy_participant, effect: Dictionary) -> String:
 	var self_name = self_participant.creature_data.get("name", "?")
@@ -293,7 +293,7 @@ static func _apply_curse_effect(self_participant, enemy_participant, effect: Dic
 		print("【戦闘終了時効果】%s は既に呪いを持っているため付与できない" % enemy_name)
 		return ""
 	
-	# 呪い付与
+	# 刻印付与
 	enemy_data["curse"] = {
 		"curse_type": curse_type,
 		"name": curse_name,
@@ -401,7 +401,7 @@ static func _apply_level_up_battle_land(self_participant, effect: Dictionary, co
 # 無効化チェック
 # =============================================================================
 
-## ナチュラルワールドによる無効化チェック
+## ハングドマンズシールによる無効化チェック
 static func _is_battle_end_nullified(stats: Dictionary) -> bool:
 	return SpellWorldCurse.is_trigger_disabled("on_battle_end", stats)
 
@@ -462,7 +462,7 @@ static func _is_effect_nullified_by_enemy(effect: Dictionary, enemy_data: Dictio
 
 ## 衰弱呪いをチェックしてダメージを適用
 ## @param self_participant 衰弱を持っている可能性のある参加者
-## @param enemy_participant 相手（ナチュラルワールド無効化チェック用）
+## @param enemy_participant 相手（ハングドマンズシール無効化チェック用）
 ## @return Dictionary {triggered: bool, damage: int, destroyed: bool, old_hp: int, new_hp: int}
 static func _process_plague_damage(self_participant, enemy_participant) -> Dictionary:
 	var result = {
@@ -484,7 +484,7 @@ static func _process_plague_damage(self_participant, enemy_participant) -> Dicti
 	if curse.get("curse_type") != "plague":
 		return result
 	
-	# 相手がナチュラルワールド等で on_battle_end を無効化していないかチェック
+	# 相手がハングドマンズシール等で on_battle_end を無効化していないかチェック
 	if enemy_participant:
 		var enemy_data = enemy_participant.creature_data
 		# 衰弱を擬似的なeffectとして扱い、on_battle_endトリガーを持つとみなす

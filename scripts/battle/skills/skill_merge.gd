@@ -301,7 +301,7 @@ static func execute_merge(
 	# コスト計算
 	var cost = get_merge_cost(hand, partner_index)
 	
-	# ライフフォース呪いチェック
+	# エンジェルギフト呪いチェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(player_id, partner_data)
 	

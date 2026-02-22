@@ -18,7 +18,7 @@
 | ファイル | 役割 |
 |---------|------|
 | `cpu_battle_ai.gd` | 攻撃側バトル判断 |
-| `cpu_defense_ai.gd` | 防御側判断（アイテム/援護/合体） |
+| `cpu_defense_ai.gd` | 防御側判断（アイテム/加勢/合体） |
 | `cpu_item_evaluator.gd` | アイテム評価共通ロジック |
 | `cpu_merge_evaluator.gd` | 合体判断 |
 | `battle_simulator.gd` | バトル結果シミュレーション |
@@ -121,7 +121,7 @@ if is_cpu_player(player_id):
 │   └─ 自ドミニオ/特殊 → cpu_territory_ai（ドミニオオーダー）
 │
 └─ 防御時
-    └─ cpu_defense_ai（アイテム/援護/合体判断）
+    └─ cpu_defense_ai（アイテム/加勢/合体判断）
 ```
 
 ---

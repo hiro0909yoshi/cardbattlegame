@@ -25,8 +25,8 @@ func _log(message: String) -> void:
 	if not silent:
 		print(message)
 
-## アイテムまたは援護クリーチャーの効果を適用
-## アイテムまたは援護クリーチャーの効果を適用
+## アイテムまたは加勢クリーチャーの効果を適用
+## アイテムまたは加勢クリーチャーの効果を適用
 ## @param stat_bonus_only trueの場合、ステータスボーナスのみ適用（スキル効果はスキップ）
 ## @param skip_stat_bonus trueの場合、ステータスボーナスをスキップ（スキル効果のみ適用）
 func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, enemy_participant: BattleParticipant, battle_tile_index: int = -1, stat_bonus_only: bool = false, skip_stat_bonus: bool = false) -> void:
@@ -52,13 +52,13 @@ func apply_item_effects(participant: BattleParticipant, item_data: Dictionary, e
 		# stat_bonus_onlyの場合はクリーチャー効果をスキップ
 		if stat_bonus_only:
 			return
-		# アイテムクリーチャー判定
+		# レリック判定
 		if SkillItemCreature.is_item_creature(item_data):
-			# アイテムクリーチャーとして処理
+			# レリックとして処理
 			SkillItemCreature.apply_as_item(participant, item_data, board_system_ref)
 			return
 		else:
-			# 援護クリーチャーとして処理
+			# 加勢クリーチャーとして処理
 			SkillAssistScript.apply_assist_effect(participant, item_data)
 			return
 	
@@ -322,7 +322,7 @@ func _apply_ap_drain(participant: BattleParticipant, enemy_participant: BattlePa
 
 	_log("  [APドレイン] %s が %s のAPを永続的に0に (元AP: %d)" % [participant.creature_data.get("name", "?"), enemy_name, original_ap])
 
-## 死者復活スキル付与
+## 蘇生スキル付与
 func _apply_revive_skill(participant: BattleParticipant, item_effect: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -343,7 +343,7 @@ func _apply_revive_skill(participant: BattleParticipant, item_effect: Dictionary
 		if not revive_effect.has("trigger"):
 			revive_effect["trigger"] = "on_death"
 		participant.creature_data["ability_parsed"]["effects"].append(revive_effect)
-		_log("  スキル付与: 死者復活（ID: %sとして復活）" % revive_effect.get("creature_id", "?"))
+		_log("  スキル付与: 蘇生（ID: %sとして復活）" % revive_effect.get("creature_id", "?"))
 
 ## ランダムステータスボーナス
 func _apply_random_stat_bonus(participant: BattleParticipant, effect: Dictionary) -> void:
@@ -464,7 +464,7 @@ func _apply_transform(participant: BattleParticipant, effect: Dictionary) -> voi
 		participant.creature_data["ability_parsed"]["effects"].append(effect)
 		_log("  変身効果を付与: %s" % effect.get("transform_type", ""))
 
-## 巻物攻撃設定
+## 術攻撃設定
 func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) -> void:
 	if not participant.creature_data.has("ability_parsed"):
 		participant.creature_data["ability_parsed"] = {}
@@ -473,8 +473,8 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	if not participant.creature_data["ability_parsed"].has("keyword_conditions"):
 		participant.creature_data["ability_parsed"]["keyword_conditions"] = {}
 	
-	if not "巻物攻撃" in participant.creature_data["ability_parsed"]["keywords"]:
-		participant.creature_data["ability_parsed"]["keywords"].append("巻物攻撃")
+	if not "術攻撃" in participant.creature_data["ability_parsed"]["keywords"]:
+		participant.creature_data["ability_parsed"]["keywords"].append("術攻撃")
 	
 	var scroll_type = effect.get("scroll_type", "base_ap")
 	var scroll_config = {"scroll_type": scroll_type}
@@ -512,7 +512,7 @@ func _apply_scroll_attack(participant: BattleParticipant, effect: Dictionary) ->
 	participant.is_using_scroll = true
 	
 	# keyword_conditions に設定を保存
-	participant.creature_data["ability_parsed"]["keyword_conditions"]["巻物攻撃"] = scroll_config
+	participant.creature_data["ability_parsed"]["keyword_conditions"]["術攻撃"] = scroll_config
 
 ## 連鎖数APボーナス
 func _apply_chain_count_bonus(participant: BattleParticipant, effect: Dictionary, context: Dictionary) -> void:

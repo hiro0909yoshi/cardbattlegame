@@ -68,7 +68,7 @@ func show_spell_info(spell_data: Dictionary, hand_index: int = -1, restriction_r
 			ui_manager_ref.clear_confirm_action()
 			ui_manager_ref.register_back_action(func(): _on_back_action(), "戻る")
 	elif restriction_reason == "restriction":
-		# スペル不可呪い等
+		# 禁呪呪い等
 		if ui_manager_ref and ui_manager_ref.phase_display:
 			ui_manager_ref.phase_display.show_action_prompt("%s：使用できません" % spell_name, "right")
 		# 戻るボタンのみ（前パネルの✓を確実にクリア）

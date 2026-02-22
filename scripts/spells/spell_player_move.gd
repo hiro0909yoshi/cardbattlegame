@@ -166,16 +166,16 @@ func get_tiles_in_range(from_tile: int, min_dist: int, max_dist: int) -> Array:
 # 移動制御系
 # ========================================
 
-## 歩行逆転呪いを全セプターに付与（カオスパニック 2019）
-## 呪い付与と同時にcame_fromを入れ替えて逆走させる
+## 反転呪いを全セプターに付与（カオスパニック 2019）
+## 刻印付与と同時にcame_fromを入れ替えて逆走させる
 func apply_movement_reverse_curse(duration: int = 1) -> void:
 	for player_id in range(player_system.players.size()):
 		spell_curse.curse_player(player_id, "movement_reverse", duration, {
-			"name": "歩行逆転"
+			"name": "反転"
 		})
 		# 即座にcame_fromを入れ替え（逆走開始）
 		_reverse_player_direction(player_id)
-	print("[SpellPlayerMove] 歩行逆転を全プレイヤーに付与 (duration=%d)" % duration)
+	print("[SpellPlayerMove] 反転を全プレイヤーに付与 (duration=%d)" % duration)
 
 
 ## プレイヤーの進行方向を反転（came_fromを入れ替えて逆走させる）
@@ -289,7 +289,7 @@ func get_available_directions(player_id: int) -> Array:
 	if player.buffs.has("direction_choice"):
 		return [1, -1]  # 順方向、逆方向
 	
-	# 歩行逆転呪いチェック
+	# 反転呪いチェック
 	var curse = spell_curse.get_player_curse(player_id)
 	if curse.get("curse_type") == "movement_reverse":
 		return [-1]
@@ -303,11 +303,11 @@ func consume_direction_choice(player_id: int) -> void:
 		player.buffs.erase("direction_choice")
 		print("[SpellPlayerMove] 方向選択権消費: プレイヤー%d" % player_id)
 
-## 最終的な移動方向を取得（歩行逆転＋方向選択の組み合わせ）
+## 最終的な移動方向を取得（反転＋方向選択の組み合わせ）
 func get_final_direction(player_id: int, chosen_direction: int) -> int:
 	var base_direction = 1
 	
-	# 歩行逆転呪いチェック
+	# 反転呪いチェック
 	var curse = spell_curse.get_player_curse(player_id)
 	if curse.get("curse_type") == "movement_reverse":
 		base_direction = -1

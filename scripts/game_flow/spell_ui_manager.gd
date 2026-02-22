@@ -228,14 +228,14 @@ func update_spell_phase_ui() -> void:
 
 	var hand_data = _card_system.get_all_cards_for_player(current_player.id)
 
-	# スペル不可呪いチェック
+	# 禁呪呪いチェック
 	var context = _build_spell_context()
 	var is_spell_disabled = SpellProtection.is_player_spell_disabled(current_player, context)
 
 	if is_spell_disabled:
 		_ui_manager.card_selection_filter = "spell_disabled"
 		if _ui_manager.phase_display and _ui_manager.phase_display.has_method("show_toast"):
-			_ui_manager.phase_display.show_toast("スペル不可の呪いがかかっています")
+			_ui_manager.phase_display.show_toast("禁呪の呪いがかかっています")
 	else:
 		_ui_manager.card_selection_filter = "spell"
 

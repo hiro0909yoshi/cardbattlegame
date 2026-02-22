@@ -59,7 +59,7 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	}
 	
 	# TargetSelectionHelperの共通ロジックを使用
-	# 防魔・HP効果無効フィルタは get_valid_targets_core 内で適用される
+	# 結界・堅牢フィルタは get_valid_targets_core 内で適用される
 	var targets = TargetSelectionHelper.get_valid_targets_core(systems, target_type, target_info)
 	
 	# 呪いスペルの場合、追加のフィルタリングを適用
@@ -74,7 +74,7 @@ func get_default_targets(spell: Dictionary, context: Dictionary) -> Array:
 	
 	return targets
 
-## 防魔・HP効果無効のクリーチャーをフィルタリング（共通ロジック使用）
+## 結界・堅牢のクリーチャーをフィルタリング（共通ロジック使用）
 func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
 	var effect_parsed = spell.get("effect_parsed", {})
 	
@@ -88,11 +88,11 @@ func _filter_spell_immune_targets(targets: Array, spell: Dictionary) -> Array:
 			filtered.append(target)
 			continue
 		
-		# 防魔チェック（SpellProtection使用）
+		# 結界チェック（SpellProtection使用）
 		if SpellProtection.is_creature_protected(creature, context):
 			continue
 		
-		# HP効果無効チェック
+		# 堅牢チェック
 		if SpellProtection.should_skip_hp_effect(creature, effect_parsed):
 			continue
 		
@@ -301,17 +301,17 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 	
 	# 呪い系のeffect_type（有利 - 自クリーチャー向け）
 	const BENEFICIAL_CURSE_EFFECTS = [
-		"command_growth_curse",  # コマンド成長
-		"remote_move",           # 遠隔移動
+		"command_growth_curse",  # 昇華
+		"remote_move",           # 天駆
 		"toll_multiplier",       # 通行料倍率（グリード等）
-		"magic_barrier",         # EP結界
-		"forced_stop",           # 強制停止
-		"toll_share",            # 通行料促進
+		"magic_barrier",         # 祭壇
+		"forced_stop",           # 停滞
+		"toll_share",            # 徴収
 		"grant_mystic_arts",     # アルカナアーツ付与
-		"stat_boost",            # 能力値+20
-		"indomitable",           # 不屈
-		"peace",                 # 平和
-		"metal_form",            # 金属化
+		"stat_boost",            # 暁光
+		"indomitable",           # 奮闘
+		"peace",                 # 安寧
+		"metal_form",            # 硬化
 	]
 	
 	# 呪い系のeffect_type（不利 - 敵クリーチャー向け）
@@ -319,14 +319,14 @@ func _analyze_curse_spell(spell_data: Dictionary) -> Dictionary:
 		"skill_nullify",         # スキル無効
 		"battle_disable",        # 戦闘不能
 		"plague_curse",          # 疫病
-		"move_disable",          # 移動不可
+		"move_disable",          # 枷
 		"stat_reduce",           # ステータス減少
-		"destroy_after_battle",  # 戦闘後破壊
-		"land_effect_disable",   # 地形効果無効
+		"destroy_after_battle",  # 崩壊
+		"land_effect_disable",   # 暗転
 		"ap_nullify",            # AP=0
-		"bounty_curse",          # 賞金首
-		"life_force_curse",      # ライフフォース
-		"random_stat_curse",     # 能力値不定
+		"bounty_curse",          # 賞金
+		"life_force_curse",      # エンジェルギフト
+		"random_stat_curse",     # 狂星
 		"toll_fixed",            # 通行料固定
 	]
 	
@@ -408,7 +408,7 @@ func get_condition_target_with_score(spell: Dictionary, context: Dictionary) -> 
 	# element_mismatch + creature の場合、スコア計算を使用
 	if condition == "element_mismatch" and target_type == "creature":
 		var mismatched = target_resolver.check_target_condition("element_mismatch_creatures", context)
-		# 自クリーチャーのみフィルタ（防御型・防魔を除外）
+		# 自クリーチャーのみフィルタ（堅守・結界を除外）
 		var own_mismatched = []
 		for target in mismatched:
 			var tile_index = target.get("tile_index", -1)
@@ -416,10 +416,10 @@ func get_condition_target_with_score(spell: Dictionary, context: Dictionary) -> 
 				var tile = board_system.get_tile_data(tile_index)
 				if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
 					var creature = target.get("creature", {})
-					# 防御型クリーチャーは移動できないので除外
+					# 堅守クリーチャーは移動できないので除外
 					if _is_defensive_creature(creature):
 						continue
-					# 防魔チェック
+					# 結界チェック
 					if SpellProtection.is_creature_protected(creature, _build_world_curse_context()):
 						continue
 					own_mismatched.append(target)
@@ -505,7 +505,7 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 			# 属性不一致の場合、属性不一致の自クリーチャーをターゲット（スコア計算使用）
 			if condition == "element_mismatch":
 				var mismatched = target_resolver.check_target_condition("element_mismatch_creatures", context)
-				# 自クリーチャーのみフィルタ（防御型を除外）
+				# 自クリーチャーのみフィルタ（堅守を除外）
 				var own_mismatched = []
 				for target in mismatched:
 					var tile_index = target.get("tile_index", -1)
@@ -513,7 +513,7 @@ func get_condition_target(spell: Dictionary, context: Dictionary) -> Dictionary:
 						var tile = board_system.get_tile_data(tile_index)
 						if tile and tile.get("owner", tile.get("owner_id", -1)) == context.player_id:
 							var creature = target.get("creature", {})
-							# 防御型クリーチャーは移動できないので除外
+							# 堅守クリーチャーは移動できないので除外
 							if not _is_defensive_creature(creature):
 								own_mismatched.append(target)
 				if not own_mismatched.is_empty():
@@ -727,7 +727,7 @@ func get_best_move_invasion_target(context: Dictionary) -> Dictionary:
 			if not base_win:
 				continue  # 両方アイテムなしで勝てない → 候補外
 			
-			# ワーストケースシミュレーション（敵がアイテム/援護を使った場合）
+			# ワーストケースシミュレーション（敵がアイテム/加勢を使った場合）
 			var worst_case_win = condition_checker.check_worst_case_win(attacker, defender, sim_tile_info, player_id)
 			
 			if worst_case_win:
@@ -1089,7 +1089,7 @@ func _has_mystic_arts(creature_data: Dictionary) -> bool:
 	
 	return false
 
-## 防御型クリーチャーかどうかをチェック（移動不可）
+## 堅守クリーチャーかどうかをチェック（枷）
 func _is_defensive_creature(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
@@ -1100,9 +1100,9 @@ func _is_defensive_creature(creature_data: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	if ability_parsed:
 		var keywords = ability_parsed.get("keywords", [])
-		if "防御型" in keywords:
+		if "堅守" in keywords:
 			return true
-	# 呪いによる防御型付与（マジックシェルター等）
+	# 呪いによる堅守付与（マジックシェルター等）
 	var curse = creature_data.get("curse", {})
 	var curse_params = curse.get("params", {})
 	if curse_params.get("defensive_form", false):

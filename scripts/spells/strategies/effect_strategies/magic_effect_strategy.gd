@@ -99,19 +99,19 @@ func execute(context: Dictionary) -> Dictionary:
 		"gain_magic":
 			effect_message = "EP%d獲得！" % effect.get("amount", 0)
 		"gain_magic_by_rank":
-			effect_message = "順位でEP獲得"
+			effect_message = "順位で蓄魔"
 		"gain_magic_by_lap":
-			effect_message = "周回ボーナスEP獲得"
+			effect_message = "周回ボーナス蓄魔"
 		"gain_magic_from_destroyed_count":
-			effect_message = "破壊数でEP獲得"
+			effect_message = "破壊数で蓄魔"
 		"gain_magic_from_spell_cost":
-			effect_message = "スペルコストでEP獲得"
+			effect_message = "スペルコストで蓄魔"
 		"balance_all_magic":
 			effect_message = "EP平均化発動"
 		"gain_magic_from_land_chain":
-			effect_message = "土地チェーンでEP獲得"
+			effect_message = "土地チェーンで蓄魔"
 		"mhp_to_magic":
-			effect_message = "最大HPからEP獲得"
+			effect_message = "最大HPから蓄魔"
 		"drain_magic_by_spell_count":
 			effect_message = "スペル数でドレイン"
 		_:

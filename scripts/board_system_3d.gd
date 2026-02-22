@@ -667,15 +667,15 @@ func _update_skill_index_on_place(tile_index: int, creature_data: Dictionary, pl
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 応援スキルチェック
-	if "応援" in keywords:
+	# 鼓舞スキルチェック
+	if "鼓舞" in keywords:
 		skill_index["support"][tile_index] = {
 			"creature_data": creature_data,
 			"player_id": player_id,
 			"tile_index": tile_index,
 			"support_data": {}  # 将来実装
 		}
-		print("[スキルインデックス] 応援登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
+		print("[スキルインデックス] 鼓舞登録: タイル", tile_index, " - ", creature_data.get("name", "?"))
 	
 	# 世界呪チェック（将来実装）
 	# if has_world_spell(ability_parsed): ...
@@ -685,7 +685,7 @@ func _update_skill_index_on_remove(tile_index: int) -> void:
 	var had_skills = []
 	
 	if tile_index in skill_index["support"]:
-		had_skills.append("応援")
+		had_skills.append("鼓舞")
 		skill_index["support"].erase(tile_index)
 	
 	if tile_index in skill_index["world_spell"]:
@@ -695,14 +695,14 @@ func _update_skill_index_on_remove(tile_index: int) -> void:
 	if had_skills.size() > 0:
 		print("[スキルインデックス] スキル削除: タイル", tile_index, " - ", had_skills)
 
-## インデックスから応援持ちクリーチャーを取得
+## インデックスから鼓舞持ちクリーチャーを取得
 func get_support_creatures() -> Dictionary:
 	return skill_index["support"]
 
 ## デバッグ用：インデックス状態を表示
 func debug_print_skill_index() -> void:
 	print("[スキルインデックス状態]")
-	print("  応援: ", skill_index["support"].keys())
+	print("  鼓舞: ", skill_index["support"].keys())
 	print("  世界呪: ", skill_index["world_spell"].keys())
 
 ## Phase 3-B用: 自ドミニオ数をカウント（バーンタイタン用）

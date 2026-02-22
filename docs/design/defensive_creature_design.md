@@ -1,4 +1,4 @@
-# 防御型クリーチャー設計書
+# 堅守クリーチャー設計書
 
 **Project**: Culdcept-style Card Battle Game  
 **Version**: 1.1  
@@ -37,7 +37,7 @@ Defensive creatures have higher base stats but come with action restrictions.
   "creature_type": "defensive",
   "ap": 0,
   "hp": 40,
-  "ability": "防御型"
+  "ability": "堅守"
 }
 ```
 
@@ -59,7 +59,7 @@ Defensive creatures have higher base stats but come with action restrictions.
 **Constraint**:
 - Can only summon on `tile_info["owner"] == -1` (empty land)
 - Cannot summon on own or enemy lands
-- Error message on violation: "防御型は空き地にのみ召喚可能です"
+- Error message on violation: "堅守は空き地にのみ召喚可能です"
 
 **Implementation Point**:
 ```gdscript
@@ -75,7 +75,7 @@ if creature_type == "defensive":
 
 **UI Display**:
 - Move button is grayed out (disabled)
-- Button text: "🚶 [M] 移動 (防御型)"
+- Button text: "🚶 [M] 移動 (堅守)"
 
 **Implementation Point**:
 ```gdscript

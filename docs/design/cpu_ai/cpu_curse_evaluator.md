@@ -42,36 +42,36 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 #### 有利 (所有者視点)
 | curse_type | 名前 | 効果 |
 |-----------|------|------|
-| `stat_boost` | 能力値+20 | AP&HP+20 |
+| `stat_boost` | 暁光 | AP&HP+20 |
 | `mystic_grant` | アルカナアーツ付与 | アルカナアーツを付与 |
-| `command_growth` | コマンド成長 | LvUP/地形変化でMHP+20 |
-| `forced_stop` | 強制停止 | 移動中のプレイヤーを足どめ |
-| `indomitable` | 不屈 | ダウン状態にならない |
-| `land_effect_disable` | 地形効果無効 | 地形効果を無効化 |
-| `land_effect_grant` | 地形効果付与 | 指定属性の地形効果を付与 |
+| `command_growth` | 昇華 | LvUP/地形変化でMHP+20 |
+| `forced_stop` | 停滞 | 移動中のプレイヤーを拘束 |
+| `indomitable` | 奮闘 | ダウン状態にならない |
+| `land_effect_disable` | 暗転 | 地形効果を無効化 |
+| `land_effect_grant` | 恩寵 | 指定属性の地形効果を付与 |
 | `metal_form` | メタルフォーム | 巻物無効化 |
 | `magic_barrier` | マジックバリア | スペル対象にならない |
 | `toll_multiplier` | 通行料倍率 | 通行料×倍率 |
-| `remote_move` | 遠隔移動 | 離れた空地にも移動できる |
-| `spell_protection` | 防魔 | スペル・アルカナアーツの対象にならない |
-| `protection_wall` | 防魔壁 | 防魔と防御型を持つ |
-| `hp_effect_immune` | HP効果無効 | HP変動効果を無効化 |
-| `blast_trap` | 爆発罠 | 敵停止時にEP40%減&HP-20 |
+| `remote_move` | 天駆 | 離れた空地にも移動できる |
+| `spell_protection` | 結界 | スペル・アルカナアーツの対象にならない |
+| `protection_wall` | 重結界 | 結界と堅守を持つ |
+| `hp_effect_immune` | 堅牢 | HP変動効果を無効化 |
+| `blast_trap` | 焦土 | 敵停止時にEP40%減&HP-20 |
 
 #### 不利 (所有者視点)
 | curse_type | 名前 | 効果 |
 |-----------|------|------|
-| `stat_reduce` | 能力値-20 | AP&HP-20 |
-| `skill_nullify` | 戦闘能力不可 | スキル無効化 |
-| `battle_disable` | 戦闘行動不可 | 戦闘不可 |
+| `stat_reduce` | 衰月 | AP&HP-20 |
+| `skill_nullify` | 錯乱 | スキル無効化 |
+| `battle_disable` | 消沈 | 戦闘不可 |
 | `ap_nullify` | AP=0 | APを0にする |
-| `random_stat` | 能力値不定 | AP&HPランダム化 |
+| `random_stat` | 狂星 | AP&HPランダム化 |
 | `plague` | 衰弱 | 戦闘終了時HP -= MHP/2 |
-| `bounty` | 賞金首 | 武器破壊時に術者がG獲得 |
-| `destroy_after_battle` | 戦闘後破壊 | 戦闘後に自壊 |
-| `peace` | 平和 | 侵略不可+通行料0 |
-| `move_disable` | 移動不可 | 移動できない |
-| `creature_toll_disable` | クリーチャー通行料無効 | そのクリーチャーの通行料が0 |
+| `bounty` | 賞金 | 武器破壊時に術者がG獲得 |
+| `destroy_after_battle` | 崩壊 | 戦闘後に自滅 |
+| `peace` | 安寧 | 休戦+通行料0 |
+| `move_disable` | 枷 | 移動できない |
+| `creature_toll_disable` | クリーチャー免罪 | そのクリーチャーの通行料が0 |
 
 ### プレイヤー呪い
 
@@ -80,18 +80,18 @@ CPU AIが呪いスペル/アルカナアーツを使用する際に、呪いの�
 |-----------|------|------|
 | `dice_fixed` | ダイス固定 | ダイスを固定値にする |
 | `dice_range` | ダイス範囲 | ダイスを範囲内にする |
-| `protection` | 防魔 | スペルの対象にならない |
-| `life_force` | 生命力 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 |
+| `protection` | 結界 | スペルの対象にならない |
+| `life_force` | 天使 | クリーチャーとアイテム0EP、スペル無効化で呪い消滅 |
 | `toll_share` | 通行料共有 | 他セプターの通行料の50%を得る |
 
 #### 不利
 | curse_type | 名前 | 効果 |
 |-----------|------|------|
-| `dice_range_magic` | 範囲+EP | ダイス範囲+EP獲得（制限付き） |
-| `toll_disable` | 通行料無効 | 通行料を取れない |
+| `dice_range_magic` | 範囲+EP | ダイス範囲+蓄魔（制限付き） |
+| `toll_disable` | 免罪 | 通行料を取れない |
 | `toll_fixed` | 通行料固定 | 通行料が固定値になる |
-| `spell_disable` | スペル不可 | スペルを使用できない |
-| `movement_reverse` | 歩行逆転 | 移動方向が逆になる |
+| `spell_disable` | 禁呪 | スペルを使用できない |
+| `movement_reverse` | 反転 | 移動方向が逆になる |
 
 ### 世界呪
 
@@ -133,7 +133,7 @@ CpuCurseEvaluator.has_harmful_curse_on_self(player_curse: Dictionary) -> bool
 |---------|------|
 | `cpu_target_resolver.gd` | 呪いスペルのターゲット選択時にフィルタ |
 | `cpu_spell_condition_checker.gd` | 呪い解除スペルの使用判断 |
-| `cpu_mystic_arts_ai.gd` | 呪い付与アルカナアーツの使用判断 |
+| `cpu_mystic_arts_ai.gd` | 刻印付与アルカナアーツの使用判断 |
 
 ---
 

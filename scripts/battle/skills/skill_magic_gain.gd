@@ -1,55 +1,55 @@
-## EP獲得スキル - 様々な条件でEPを獲得する
+## 蓄魔スキル - 様々な条件でEPを獲得する
 ##
 ## 【主な機能】
-## - 侵略時EP獲得: バトル開始時にEP獲得
-## - ダメージ時EP獲得: ダメージを受けた時にEP獲得
-## - 破壊時EP獲得: 戦闘で破壊された時にEP獲得
-## - 無条件EP獲得: 常にEP獲得（バトル開始時）
+## - 侵略時蓄魔: バトル開始時に蓄魔
+## - ダメージ時蓄魔: ダメージを受けた時に蓄魔
+## - 破壊時蓄魔: 戦闘で破壊された時に蓄魔
+## - 無条件蓄魔: 常に蓄魔（バトル開始時）
 ##
 ## 【該当クリーチャー】
-## - ピュトン (ID: 36): 侵略時、EP獲得[100EP]
-## - トレジャーレイダー (ID: 331): 侵略時、EP獲得[100EP]
-## - ゼラチンウォール (ID: 127): 防御型；EP獲得[受けたダメージ×5EP]
-## - クリーピングコイン (ID: 410): EP獲得[100EP]
+## - ピュトン (ID: 36): 侵略時、蓄魔[100EP]
+## - トレジャーレイダー (ID: 331): 侵略時、蓄魔[100EP]
+## - ゼラチンウォール (ID: 127): 堅守；蓄魔[受けたダメージ×5EP]
+## - クリーピングコイン (ID: 410): 蓄魔[100EP]
 ##
 ## @version 1.0
 ## @date 2025-11-03
 
 class_name SkillMagicGain
 
-## 侵略時EP獲得スキルを持っているかチェック
+## 侵略時蓄魔スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 侵略時EP獲得スキルを持っているか
+## @return 侵略時蓄魔スキルを持っているか
 static func has_invasion_magic_gain(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "侵略時、EP獲得" in ability_detail or "侵略時EP獲得" in ability_detail
+	return "侵略時、蓄魔" in ability_detail or "侵略時蓄魔" in ability_detail
 
-## 無条件EP獲得スキルを持っているかチェック（バトル開始時に発動）
+## 無条件蓄魔スキルを持っているかチェック（バトル開始時に発動）
 ##
 ## @param creature_data クリーチャーデータ
-## @return 無条件EP獲得スキルを持っているか
+## @return 無条件蓄魔スキルを持っているか
 static func has_unconditional_magic_gain(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "EP獲得" in keywords
+	return "蓄魔" in keywords
 
-## ダメージ時EP獲得スキルを持っているかチェック
+## ダメージ時蓄魔スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return ダメージ時EP獲得スキルを持っているか
+## @return ダメージ時蓄魔スキルを持っているか
 static func has_damage_magic_gain(creature_data: Dictionary) -> bool:
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "EP獲得[受けたダメージ" in ability_detail
+	return "蓄魔[受けたダメージ" in ability_detail
 
-## 破壊時EP獲得スキルを持っているかチェック
+## 破壊時蓄魔スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return 破壊時EP獲得スキルを持っているか
+## @return 破壊時蓄魔スキルを持っているか
 static func has_destroy_magic_gain(creature_data: Dictionary) -> bool:
 	var ability = creature_data.get("ability", "")
-	return "破壊時EP獲得" in ability
+	return "破壊時蓄魔" in ability
 
-## 侵略時EP獲得を適用（バトル開始時）
+## 侵略時蓄魔を適用（バトル開始時）
 ##
 ## @param participant バトル参加者
 ## @param spell_magic SpellMagicインスタンス
@@ -67,12 +67,12 @@ static func apply_invasion_magic_gain(participant, spell_magic) -> bool:
 	if has_skill:
 		var amount = _extract_magic_amount(participant.creature_data.get("ability_detail", ""), 100)
 		spell_magic.add_magic(participant.player_id, amount)
-		print("【侵略時EP獲得】", participant.creature_data.get("name", "?"), " → ", amount, "EP獲得")
+		print("【侵略時蓄魔】", participant.creature_data.get("name", "?"), " → ", amount, "蓄魔")
 		return true
 	
 	return false
 
-## 無条件EP獲得を適用（バトル開始時）
+## 無条件蓄魔を適用（バトル開始時）
 ##
 ## @param participant バトル参加者
 ## @param spell_magic SpellMagicインスタンス
@@ -84,12 +84,12 @@ static func apply_unconditional_magic_gain(participant, spell_magic) -> bool:
 	if has_unconditional_magic_gain(participant.creature_data):
 		var amount = _extract_magic_amount(participant.creature_data.get("ability_detail", ""), 100)
 		spell_magic.add_magic(participant.player_id, amount)
-		print("【EP獲得】", participant.creature_data.get("name", "?"), " → ", amount, "EP獲得")
+		print("【蓄魔】", participant.creature_data.get("name", "?"), " → ", amount, "蓄魔")
 		return true
 	
 	return false
 
-## ダメージ時EP獲得を適用
+## ダメージ時蓄魔を適用
 ##
 ## @param participant バトル参加者
 ## @param damage 受けたダメージ
@@ -105,10 +105,10 @@ static func apply_damage_magic_gain(participant, damage: int, spell_magic) -> vo
 		var multiplier = _extract_multiplier(participant.creature_data.get("ability_detail", ""), 5)
 		var amount = damage * multiplier
 		spell_magic.add_magic(participant.player_id, amount)
-		print("【ダメージ時EP獲得】", participant.creature_data.get("name", "?"), 
-			  " → ", amount, "EP獲得（ダメージ", damage, "×", multiplier, "）")
+		print("【ダメージ時蓄魔】", participant.creature_data.get("name", "?"), 
+			  " → ", amount, "蓄魔（ダメージ", damage, "×", multiplier, "）")
 
-## バトル開始時のEP獲得スキルをまとめて適用
+## バトル開始時の蓄魔スキルをまとめて適用
 ##
 ## @param attacker 攻撃側参加者
 ## @param defender 防御側参加者
@@ -117,11 +117,11 @@ static func apply_damage_magic_gain(participant, damage: int, spell_magic) -> vo
 static func apply_on_battle_start(attacker, defender, spell_magic) -> Array:
 	var activated = []
 	
-	# 侵略時EP獲得（攻撃側のみ）
+	# 侵略時蓄魔（攻撃側のみ）
 	if apply_invasion_magic_gain(attacker, spell_magic):
 		activated.append(attacker)
 	
-	# 無条件EP獲得（両側）
+	# 無条件蓄魔（両側）
 	if apply_unconditional_magic_gain(attacker, spell_magic):
 		if attacker not in activated:
 			activated.append(attacker)
@@ -132,15 +132,15 @@ static func apply_on_battle_start(attacker, defender, spell_magic) -> Array:
 	return activated
 
 
-## ability_detailからEP獲得量を抽出
+## ability_detailから蓄魔量を抽出
 ##
 ## @param ability_detail 能力詳細文字列
 ## @param default_amount デフォルト値
-## @return EP獲得量
+## @return 蓄魔量
 static func _extract_magic_amount(ability_detail: String, default_amount: int) -> int:
-	# "EP獲得[100EP]" のような形式から数値を抽出
+	# "蓄魔[100EP]" のような形式から数値を抽出
 	var regex = RegEx.new()
-	regex.compile("EP獲得\\[G(\\d+)\\]")
+	regex.compile("蓄魔\\[G(\\d+)\\]")
 	var result = regex.search(ability_detail)
 	
 	if result:

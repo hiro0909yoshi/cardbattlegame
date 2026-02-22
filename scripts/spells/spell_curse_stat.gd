@@ -309,9 +309,9 @@ func apply_secret_tiny_army(handler: Node, effect: Dictionary, current_player_id
 		
 		await _show_notification_and_wait(notification_text)
 	
-	# EP獲得
+	# 蓄魔
 	player_system.add_magic(current_player_id, ep_bonus)
-	var ep_notification = "%dEP獲得！" % ep_bonus
+	var ep_notification = "%d蓄魔！" % ep_bonus
 	await _show_notification_and_wait(ep_notification)
 
 
@@ -354,7 +354,7 @@ func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: St
 	if tile.creature_data.is_empty():
 		return
 	
-	# SpellDamageの_destroy_creatureに委譲（死亡効果・遺産・変身を含む）
+	# SpellDamageの_destroy_creatureに委譲（死亡効果・形見・変身を含む）
 	if handler and handler.has("spell_damage") and handler.spell_damage:
 		handler.spell_damage.destroy_creature(tile)
 		print("[SpellCurseStat] MHP減少により %s を撃破（SpellDamage経由）" % creature_name)
@@ -378,14 +378,14 @@ func _destroy_creature_on_tile(handler: Node, tile_index: int, creature_name: St
 
 
 # ========================================
-# 呪い付与（SpellPhaseHandlerから呼ばれる）
+# 刻印付与（SpellPhaseHandlerから呼ばれる）
 # ========================================
 
 # 能力値上昇呪いを付与
 func apply_stat_boost(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", 20)
 	var duration = effect.get("duration", -1)
-	var curse_name = effect.get("name", "能力値+20")
+	var curse_name = effect.get("name", "暁光")
 	
 	spell_curse.curse_creature(tile_index, "stat_boost", duration, {
 		"name": curse_name,
@@ -396,7 +396,7 @@ func apply_stat_boost(tile_index: int, effect: Dictionary):
 func apply_stat_reduce(tile_index: int, effect: Dictionary):
 	var value = effect.get("value", -20)
 	var duration = effect.get("duration", -1)
-	var curse_name = effect.get("name", "能力値-20")
+	var curse_name = effect.get("name", "衰月")
 	var stat = effect.get("stat", "both")  # "hp", "ap", "both"
 	
 	spell_curse.curse_creature(tile_index, "stat_reduce", duration, {

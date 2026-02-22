@@ -152,7 +152,7 @@
 	  "id": 12,
 	  "turn": 1,
 	  "phase": "cpu_summon_complete",
-	  "message": "相手がスタチューを召喚しました\n\nスタチューは「防御型」クリーチャーです\n防御型は高いHPと引き換えに移動ができません\n\n防御型はスキルの一種です",
+	  "message": "相手がスタチューを召喚しました\n\nスタチューは「堅守」クリーチャーです\n堅守は高いHPと引き換えに移動ができません\n\n堅守はスキルの一種です",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -354,7 +354,7 @@
 	  "id": 35,
 	  "turn": 3,
 	  "phase": "vitality_complete",
-	  "message": "グリーンオーガに呪い「能力値+20」がかかりました！\n\n呪いは戦闘中にAP・HPが+20されます",
+	  "message": "グリーンオーガに呪い「暁光」がかかりました！\n\n呪いは戦闘中にAP・HPが+20されます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -538,7 +538,7 @@
 	  "id": 53,
 	  "turn": 4,
 	  "phase": "greed_complete",
-	  "message": "呪いが「通行料1.5倍」に上書きされました！\n\n前の「能力値+20」は消えました\n呪いは1つしかかけられないので注意しましょう",
+	  "message": "呪いが「通行料1.5倍」に上書きされました！\n\n前の「暁光」は消えました\n呪いは1つしかかけられないので注意しましょう",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -856,7 +856,7 @@
 	  "id": 88,
 	  "turn": 6,
 	  "phase": "battle_statue_arrival",
-	  "message": "相手の支配地に止まりました！\n\nブラックナイトが召喚できます！\n非常に強力なスキル[強打]を持っています\n",
+	  "message": "相手の支配地に止まりました！\n\nブラックナイトが召喚できます！\n非常に強力なスキル[強化]を持っています\n",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true
@@ -876,7 +876,7 @@
 	  "id": 90,
 	  "turn": 6,
 	  "phase": "battle_statue_item_explain",
-	  "message": "スタチューは防御型なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
+	  "message": "スタチューは堅守なので\n防具・武器・巻物が使えません\n\nこのようにアイテム制限を持つ\nクリーチャーがいます",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true,
@@ -905,7 +905,7 @@
 	  "id": 93,
 	  "turn": 6,
 	  "phase": "battle_statue_win",
-	  "message": "スタチューを倒しました！\n\n防御型は攻撃力が0なので\n反撃ダメージを受けません",
+	  "message": "スタチューを倒しました！\n\n堅守は攻撃力が0なので\n反撃ダメージを受けません",
 	  "wait_for_click": true,
 	  "pause_game": true,
 	  "disable_all_buttons": true

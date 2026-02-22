@@ -1,22 +1,22 @@
-## EP奪取スキル - 敵からEPを奪う
+## 吸魔スキル - 敵からEPを奪う
 ##
 ## 【主な機能】
-## - ダメージベースEP奪取: 与えたダメージに応じてEPを奪う
-## - アイテム不使用時EP奪取: アイテムを使用していない時にEPを奪う
+## - ダメージベース吸魔: 与えたダメージに応じてEPを奪う
+## - アイテム不使用時吸魔: アイテムを使用していない時にEPを奪う
 ##
 ## 【該当クリーチャー】
-## - バンディット (ID: 433): 援護；EP奪取[敵に与えたダメージ×2EP]
-## - アマゾン (ID: 107): アイテム不使用時、EP奪取[周回数×30EP]
+## - バンディット (ID: 433): 加勢；吸魔[敵に与えたダメージ×2EP]
+## - アマゾン (ID: 107): アイテム不使用時、吸魔[周回数×30EP]
 ##
 ## @version 1.0
 ## @date 2025-11-03
 
 class_name SkillMagicSteal
 
-## ダメージベースEP奪取スキルを持っているかチェック
+## ダメージベース吸魔スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return ダメージベースEP奪取スキルを持っているか
+## @return ダメージベース吸魔スキルを持っているか
 static func has_damage_based_steal(creature_data: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -27,15 +27,15 @@ static func has_damage_based_steal(creature_data: Dictionary) -> bool:
 	
 	return false
 
-## アイテム不使用時EP奪取スキルを持っているかチェック
+## アイテム不使用時吸魔スキルを持っているかチェック
 ##
 ## @param creature_data クリーチャーデータ
-## @return アイテム不使用時EP奪取スキルを持っているか
+## @return アイテム不使用時吸魔スキルを持っているか
 static func has_no_item_steal(creature_data: Dictionary) -> bool:
 	var ability = creature_data.get("ability", "")
-	return "アイテム不使用時・EP奪取" in ability
+	return "アイテム不使用時・吸魔" in ability
 
-## ダメージベースEP奪取を適用
+## ダメージベース吸魔を適用
 ##
 ## @param attacker 攻撃側参加者
 ## @param defender 防御側参加者
@@ -43,15 +43,15 @@ static func has_no_item_steal(creature_data: Dictionary) -> bool:
 ## @param spell_magic SpellMagicインスタンス
 static func apply_damage_based_steal(attacker, defender, damage: int, spell_magic) -> int:
 	if not spell_magic:
-		print("[EP奪取] spell_magic is null")
+		print("[吸魔] spell_magic is null")
 		return 0
 	
 	if damage <= 0:
-		print("[EP奪取] damage <= 0: ", damage)
+		print("[吸魔] damage <= 0: ", damage)
 		return 0
 	
 	var has_skill = has_damage_based_steal(attacker.creature_data)
-	print("[EP奪取] チェック: ", attacker.creature_data.get("name", "?"), " has_skill=", has_skill)
+	print("[吸魔] チェック: ", attacker.creature_data.get("name", "?"), " has_skill=", has_skill)
 	
 	if has_skill:
 		# ability_parsedから倍率を取得
@@ -66,13 +66,13 @@ static func apply_damage_based_steal(attacker, defender, damage: int, spell_magi
 		
 		var actual_stolen = spell_magic.steal_magic(defender.player_id, attacker.player_id, amount)
 		
-		print("【EP奪取】", attacker.creature_data.get("name", "?"), 
-			  " → ", actual_stolen, "EP奪取（ダメージ", damage, "×", multiplier, "）")
+		print("【吸魔】", attacker.creature_data.get("name", "?"), 
+			  " → ", actual_stolen, "吸魔（ダメージ", damage, "×", multiplier, "）")
 		return actual_stolen
 	
 	return 0
 
-## アイテム不使用時EP奪取を適用（バトル開始時チェック）
+## アイテム不使用時吸魔を適用（バトル開始時チェック）
 ##
 ## @param participant バトル参加者
 ## @param has_item アイテムを使用しているか
@@ -93,8 +93,8 @@ static func apply_no_item_steal(participant, has_item: bool, turn_count: int, sp
 		
 		var actual_stolen = spell_magic.steal_magic(enemy_participant.player_id, participant.player_id, amount)
 		
-		print("【アイテム不使用時EP奪取】", participant.creature_data.get("name", "?"), 
-			  " → ", actual_stolen, "EP奪取（周回数", turn_count, "×", multiplier, "）")
+		print("【アイテム不使用時吸魔】", participant.creature_data.get("name", "?"), 
+			  " → ", actual_stolen, "吸魔（周回数", turn_count, "×", multiplier, "）")
 		return actual_stolen
 	
 	return 0

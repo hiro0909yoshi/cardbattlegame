@@ -1,11 +1,11 @@
 ## 戦闘中の土地効果スキル
 ##
-## 攻撃成功時のダウン付与、土地変性、土地破壊など
+## 攻撃成功時のダウン付与、属性変化、土地破壊など
 ## 土地タイルに対する効果を統一管理
 ##
 ## 【担当効果】
 ## - ショッカー: 攻撃成功時、敵をダウン
-## - 将来: 土地変性、土地破壊など
+## - 将来: 属性変化、土地破壊など
 ##
 ## @version 1.0
 
@@ -58,9 +58,9 @@ static func _apply_down_to_tile(tile: Node, source_name: String) -> bool:
 	var creature_data = tile.creature_data if "creature_data" in tile else {}
 	var creature_name = creature_data.get("name", "?")
 	
-	# 不屈チェック（ダウン無効）
+	# 奮闘チェック（ダウン無効）
 	if _has_indomitable(creature_data):
-		print("【ダウン無効】", creature_name, " は不屈を持っているためダウンしない")
+		print("【ダウン無効】", creature_name, " は奮闘を持っているためダウンしない")
 		return false
 	
 	# 既にダウン中かチェック
@@ -77,15 +77,15 @@ static func _apply_down_to_tile(tile: Node, source_name: String) -> bool:
 	return false
 
 
-## 不屈スキルを持っているかチェック
+## 奮闘スキルを持っているかチェック
 static func _has_indomitable(creature_data: Dictionary) -> bool:
 	# キーワードチェック
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
-	if "不屈" in keywords:
+	if "奮闘" in keywords:
 		return true
 	
-	# 呪いチェック（不屈呪い）
+	# 呪いチェック（奮闘呪い）
 	var curse = creature_data.get("curse", {})
 	if curse.get("curse_type") == "indomitable":
 		return true
@@ -94,7 +94,7 @@ static func _has_indomitable(creature_data: Dictionary) -> bool:
 
 
 # =============================================================================
-# 戦闘勝利時の土地効果（土地変性・土地破壊）
+# 戦闘勝利時の土地効果（属性変化・土地破壊）
 # =============================================================================
 
 ## 戦闘勝利時の土地効果をチェックし適用
@@ -122,14 +122,14 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 		
 		match effect_type:
 			"change_tile_element":
-				# 土地変性
+				# 属性変化
 				var new_element = effect.get("element", "")
 				if new_element.is_empty():
 					continue
 				
-				# バロンチェック（土地破壊・変性無効）
+				# バロンチェック（領土守護）
 				if _tile_has_land_protection(tile_index, board_system):
-					print("【土地変性無効】タイル%dは土地破壊・変性無効を持っています" % tile_index)
+					print("【不変】タイル%dは領土守護を持っています" % tile_index)
 					continue
 				
 				# spell_land経由で属性変更
@@ -137,7 +137,7 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 					var success = board_system.change_tile_element(tile_index, new_element)
 					if success:
 						result["changed_element"] = new_element
-						print("【土地変性】%s がタイル%dを%sに変性" % [
+						print("【属性変化】%s がタイル%dを%sに変性" % [
 							winner_data.get("name", "?"), tile_index, new_element
 						])
 			
@@ -145,9 +145,9 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 				# 土地破壊（レベル-1）
 				var amount = effect.get("amount", 1)
 				
-				# バロンチェック（土地破壊・変性無効）
+				# バロンチェック（領土守護）
 				if _tile_has_land_protection(tile_index, board_system):
-					print("【土地破壊無効】タイル%dは土地破壊・変性無効を持っています" % tile_index)
+					print("【土地破壊無効】タイル%dは領土守護を持っています" % tile_index)
 					continue
 				
 				# spell_land経由でレベル変更
@@ -162,7 +162,7 @@ static func check_and_apply_on_battle_won(winner_data: Dictionary, tile_index: i
 	return result
 
 
-## タイルが土地破壊・変性無効を持っているかチェック
+## タイルが領土守護を持っているかチェック
 ## @param tile_index タイルインデックス
 ## @param board_system ボードシステム参照
 ## @return 無効化スキルを持っているか
@@ -179,10 +179,10 @@ static func _tile_has_land_protection(tile_index: int, board_system) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	return "土地破壊・変性無効" in keywords
+	return "領土守護" in keywords
 
 
-## タイルのクリーチャーが土地破壊・変性無効を持っているか（外部公開用）
+## タイルのクリーチャーが領土守護を持っているか（外部公開用）
 ## @param creature_data クリーチャーデータ
 ## @return 無効化スキルを持っているか
 static func has_land_protection(creature_data: Dictionary) -> bool:
@@ -192,4 +192,4 @@ static func has_land_protection(creature_data: Dictionary) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	return "土地破壊・変性無効" in keywords
+	return "領土守護" in keywords

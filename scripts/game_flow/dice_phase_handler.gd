@@ -121,7 +121,7 @@ func roll_dice(p_current_phase: int, spell_phase_handler) -> void:
 		dice_ui_double_result_shown.emit(dice1, dice2, modified_dice)
 		print("[ダイス] %d + %d = %d (修正後: %d)" % [dice1, dice2, total_dice, modified_dice])
 
-	# ダイスロール後のEP付与（チャージステップなど）
+	# ダイスロール後のEP付与（ジャーニーなど）
 	if spell_dice:
 		var grant_result = spell_dice.process_magic_grant(player_system.current_player_index)
 		if not grant_result.is_empty():

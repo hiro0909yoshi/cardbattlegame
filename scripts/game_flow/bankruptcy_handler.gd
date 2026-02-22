@@ -186,7 +186,7 @@ func sell_land(tile_index: int, ep_recipient_id: int = -1) -> int:
 	# UIを更新
 	_update_ui()
 	
-	print("[破産処理] タイル%d売却: %dEP獲得 (プレイヤー%d)" % [tile_index, value, owner_id + 1])
+	print("[破産処理] タイル%d売却: %d蓄魔 (プレイヤー%d)" % [tile_index, value, owner_id + 1])
 	
 	land_sold.emit(owner_id, tile_index, value)
 	
@@ -302,7 +302,7 @@ func process_player_bankruptcy(player_id: int):
 		
 		if selected_tile >= 0:
 			var value = sell_land(selected_tile)
-			await _show_message("土地を売却して%dEP獲得！\n現在のEP: %dEP" % [value, player_system.get_magic(player_id)], player_id)
+			await _show_message("土地を売却して%d蓄魔！\n現在のEP: %dEP" % [value, player_system.get_magic(player_id)], player_id)
 		
 		print("[破産処理] プレイヤー%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
 
@@ -399,7 +399,7 @@ func process_cpu_bankruptcy(player_id: int):
 					var value = sell_land(best_tile, player_id)
 					# 少し待機（演出用）
 					await get_tree().create_timer(0.5).timeout
-					print("[破産処理] CPU%d: 同盟の土地(タイル%d)を売却して%dEP獲得" % [player_id + 1, best_tile, value])
+					print("[破産処理] CPU%d: 同盟の土地(タイル%d)を売却して%d蓄魔" % [player_id + 1, best_tile, value])
 					print("[破産処理] CPU%d: 現在のEP %dEP" % [player_id + 1, player_system.get_magic(player_id)])
 					continue
 

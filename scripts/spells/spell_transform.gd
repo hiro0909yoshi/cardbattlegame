@@ -16,7 +16,7 @@ class_name SpellTransform
 ## 変身タイプ:
 ## - transform_to (固定ID変身): ability_parsed.transform_to にIDを指定
 ## - copy_target (対象コピー): 選択した対象と同じクリーチャーに変身
-## - same_element_defensive: 同属性の防御型クリーチャーに変身
+## - same_element_defensive: 同属性の堅守クリーチャーに変身
 ## - to_goblin: ゴブリンに変身
 
 
@@ -98,7 +98,7 @@ func _apply_transform(effect: Dictionary, target_data: Dictionary, _caster_playe
 				var copy_tile_index = target_data.get("tile_index", -1)
 				new_creature_id = _get_copy_target_id(copy_tile_index)
 			"same_element_defensive":
-				# 同属性の防御型クリーチャーに変身（ターンウォール）
+				# 同属性の堅守クリーチャーに変身（ターンウォール）
 				var element = old_creature.get("element", "neutral")
 				new_creature_id = _get_same_element_defensive_id(element)
 			"to_goblin":
@@ -192,9 +192,9 @@ func _get_copy_target_id(target_tile_index: int) -> int:
 	return target_tile.creature_data.get("id", -1)
 
 
-## 同属性の防御型クリーチャーIDを取得（ターンウォール用）
+## 同属性の堅守クリーチャーIDを取得（ターンウォール用）
 func _get_same_element_defensive_id(element: String) -> int:
-	# 属性ごとに固定の防御型クリーチャーを返す
+	# 属性ごとに固定の堅守クリーチャーを返す
 	const DEFENSIVE_CREATURES = {
 		"fire": 10,      # クリーピングフレイム
 		"water": 102,    # アイスウォール
@@ -206,7 +206,7 @@ func _get_same_element_defensive_id(element: String) -> int:
 	if DEFENSIVE_CREATURES.has(element):
 		return DEFENSIVE_CREATURES[element]
 	
-	push_warning("[SpellTransform] 属性 %s の防御型クリーチャーが定義されていません" % element)
+	push_warning("[SpellTransform] 属性 %s の堅守クリーチャーが定義されていません" % element)
 	return -1
 
 

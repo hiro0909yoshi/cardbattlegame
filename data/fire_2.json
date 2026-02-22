@@ -15,14 +15,14 @@
       },
       "ap": 50,
       "hp": 40,
-      "ability": "強打",
-      "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強打",
+      "ability": "強化",
+      "ability_detail": "カード獲得[5枚まで]；敵アイテム不使用時、強化",
       "ability_parsed": {
         "keywords": [
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "enemy_no_item"
           }
         },
@@ -84,15 +84,15 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "不屈・アルカナアーツ",
-      "ability_detail": "不屈；アルカナアーツ[EP50・対象自ドミニオに呪い遠隔移動]",
+      "ability": "奮闘・アルカナアーツ",
+      "ability_detail": "奮闘；アルカナアーツ[EP50・対象自ドミニオに呪い天駆]",
       "ability_parsed": {
         "keywords": [
-          "不屈",
+          "奮闘",
           "アルカナアーツ"
         ],
         "mystic_art": {
-          "name": "遠隔移動付与",
+          "name": "天駆付与",
           "cost": 50,
           "spell_id": 9014
         }
@@ -119,11 +119,11 @@
       "creature_type": "defensive",
       "ap": 30,
       "hp": 60,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；アルカナアーツ[EP50・対象敵ドミニオに呪い通行料1/2]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP50・対象敵ドミニオに呪い通行料1/2]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
+          "堅守",
           "アルカナアーツ"
         ],
         "mystic_arts": [
@@ -296,14 +296,14 @@
       },
       "ap": 30,
       "hp": 50,
-      "ability": "巻物攻撃",
-      "ability_detail": "巻物攻撃[AP30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
+      "ability": "術攻撃",
+      "ability_detail": "術攻撃[AP30]；敵攻撃成功の戦闘後、AP=20、MHP-30",
       "ability_parsed": {
         "keywords": [
-          "巻物攻撃"
+          "術攻撃"
         ],
         "keyword_conditions": {
-          "巻物攻撃": {
+          "術攻撃": {
             "scroll_type": "fixed_ap",
             "value": 30
           }
@@ -325,15 +325,15 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "援護・先制・敵破壊時AP+10",
-      "ability_detail": "援護[無火地]；先制；敵破壊時、AP+10",
+      "ability": "加勢・先制・敵破壊時AP+10",
+      "ability_detail": "加勢[無火地]；先制；敵破壊時、AP+10",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "先制"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "neutral",
               "fire",
@@ -372,14 +372,14 @@
       },
       "ap": 40,
       "hp": 50,
-      "ability": "貫通・侵略時EP獲得",
-      "ability_detail": "貫通[敵AP40以上]；侵略時、EP獲得[EP100]",
+      "ability": "刺突・侵略時蓄魔",
+      "ability_detail": "刺突[敵AP40以上]；侵略時、蓄魔[EP100]",
       "ability_parsed": {
         "keywords": [
-          "貫通"
+          "刺突"
         ],
         "keyword_conditions": {
-          "貫通": {
+          "刺突": {
             "condition_type": "defender_ap_check",
             "operator": ">=",
             "value": 40
@@ -444,23 +444,23 @@
       },
       "ap": 50,
       "hp": 40,
-      "ability": "先制・貫通・強打",
-      "ability_detail": "先制；貫通[水風]；強打[水風]",
+      "ability": "先制・刺突・強化",
+      "ability_detail": "先制；刺突[水風]；強化[水風]",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "貫通",
-          "強打"
+          "刺突",
+          "強化"
         ],
         "keyword_conditions": {
-          "貫通": {
+          "刺突": {
             "condition_type": "enemy_is_element",
             "elements": [
               "water",
               "wind"
             ]
           },
-          "強打": {
+          "強化": {
             "condition_type": "enemy_is_element",
             "elements": [
               "water",
@@ -502,14 +502,14 @@
       },
       "ap": 20,
       "hp": 40,
-      "ability": "アルカナアーツ・巻物強打",
-      "ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；巻物強打",
+      "ability": "アルカナアーツ・術強化",
+      "ability_detail": "アルカナアーツ[EP50・対象クリーチャーのAP+20]；術強化",
       "ability_parsed": {
         "keywords": [
-          "巻物強打"
+          "術強化"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         }
@@ -564,15 +564,15 @@
       },
       "ap": 50,
       "hp": 50,
-      "ability": "先制・強打",
-      "ability_detail": "先制；武器使用時、強打；アイテム復帰[ブック]",
+      "ability": "先制・強化",
+      "ability_detail": "先制；武器使用時、強化；帰還[ブック]",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "with_weapon"
           }
         },
@@ -607,14 +607,14 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "強打",
-      "ability_detail": "強打[MHP40以下]",
+      "ability": "強化",
+      "ability_detail": "強化[MHP40以下]",
       "ability_parsed": {
         "keywords": [
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "mhp_below",
             "value": 40
           }
@@ -658,11 +658,11 @@
       },
       "ap": 70,
       "hp": 60,
-      "ability": "応援・アルカナアーツ",
-      "ability_detail": "応援[火地・AP+10]；アルカナアーツ[EP30・クリーチャー破壊数×30EPを得る]",
+      "ability": "鼓舞・アルカナアーツ",
+      "ability_detail": "鼓舞[火地・AP+10]；アルカナアーツ[EP30・クリーチャー破壊数×30EPを得る]",
       "ability_parsed": {
         "keywords": [
-          "応援",
+          "鼓舞",
           "アルカナアーツ"
         ],
         "effects": [
@@ -716,15 +716,15 @@
       },
       "ap": 50,
       "hp": 50,
-      "ability": "先制・巻物攻撃",
-      "ability_detail": "先制；巻物攻撃[AP=基本AP]",
+      "ability": "先制・術攻撃",
+      "ability_detail": "先制；術攻撃[AP=基本AP]",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "巻物攻撃"
+          "術攻撃"
         ],
         "keyword_conditions": {
-          "巻物攻撃": {
+          "術攻撃": {
             "scroll_type": "base_ap"
           }
         },
@@ -766,22 +766,22 @@
       },
       "ap": 40,
       "hp": 50,
-      "ability": "感応・強打",
-      "ability_detail": "感応[地・AP+20、HP+10]；強打[火地]",
+      "ability": "共鳴・強化",
+      "ability_detail": "共鳴[地・AP+20、HP+10]；強化[火地]",
       "ability_parsed": {
         "keywords": [
-          "感応",
-          "強打"
+          "共鳴",
+          "強化"
         ],
         "keyword_conditions": {
-          "感応": {
+          "共鳴": {
             "element": "earth",
             "stat_bonus": {
               "ap": 20,
               "hp": 10
             }
           },
-          "強打": {
+          "強化": {
             "condition_type": "enemy_is_element",
             "elements": [
               "fire",
@@ -859,13 +859,13 @@
       "ap": 20,
       "hp": 40,
       "ability": "HP+基本AP",
-      "ability_detail": "HP+基本AP；隣が自ドミニオなら強打",
+      "ability_detail": "HP+基本AP；隣が自ドミニオなら強化",
       "ability_parsed": {
         "keywords": [
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "adjacent_ally_land"
           }
         },

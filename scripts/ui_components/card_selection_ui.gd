@@ -107,7 +107,7 @@ func update_phase_label(current_player, mode: String):
 			message = "スペルを選択してください"
 		"item":
 			if _card_selection_service and _card_selection_service.card_selection_filter == "item_or_assist":
-				message = "アイテムまたは援護クリーチャーを選択"
+				message = "アイテムまたは加勢クリーチャーを選択"
 			else:
 				message = "アイテムを選択、または×でバトル開始"
 		"sacrifice":
@@ -184,13 +184,13 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				# スペルフェーズ中: スペルカードのみ選択可能
 				is_selectable = card_type == "spell"
 			elif filter_mode == "item":
-				# アイテムフェーズ中: アイテムカード、またはアイテムクリーチャーが選択可能
+				# アイテムフェーズ中: アイテムカード、またはレリックが選択可能
 				if card_type == "item":
 					is_selectable = true
 				elif card_type == "creature":
-					# アイテムクリーチャー判定
+					# レリック判定
 					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-					is_selectable = "アイテムクリーチャー" in keywords
+					is_selectable = "レリック" in keywords
 				else:
 					is_selectable = false
 				# ブロックされたアイテムタイプをチェック
@@ -199,7 +199,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					if item_type in _card_selection_service.blocked_item_types:
 						is_selectable = false
 			elif filter_mode == "item_or_assist":
-				# アイテムフェーズ（援護あり）: アイテムカード、アイテムクリーチャー、援護対象クリーチャーが選択可能
+				# アイテムフェーズ（加勢あり）: アイテムカード、レリック、加勢対象クリーチャーが選択可能
 				if card_type == "item":
 					is_selectable = true
 					# ブロックされたアイテムタイプをチェック
@@ -208,12 +208,12 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 						if item_type in ui_manager_ref.blocked_item_types:
 							is_selectable = false
 				elif card_type == "creature":
-					# アイテムクリーチャー判定
+					# レリック判定
 					var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-					if "アイテムクリーチャー" in keywords:
+					if "レリック" in keywords:
 						is_selectable = true
 					else:
-						# 援護対象判定
+						# 加勢対象判定
 						var assist_elements = []
 						if _card_selection_service:
 							assist_elements = _card_selection_service.assist_target_elements
@@ -224,7 +224,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 				else:
 					is_selectable = false
 			elif filter_mode == "battle":
-				# バトルフェーズ中: 防御型以外のクリーチャーカードのみ選択可能
+				# バトルフェーズ中: 堅守以外のクリーチャーカードのみ選択可能
 				var creature_type = card_data.get("creature_type", "normal")
 				is_selectable = card_type == "creature" and creature_type != "defensive"
 			elif filter_mode == "destroy_item_spell":
@@ -297,7 +297,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					# disabledモード: すべてグレーアウト
 					card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 				elif filter_mode == "battle":
-					# バトルフェーズ中: 非クリーチャー + 防御型クリーチャー + 土地条件未達 + 配置制限をグレーアウト
+					# バトルフェーズ中: 非クリーチャー + 堅守クリーチャー + 土地条件未達 + 配置制限をグレーアウト
 					if card_type != "creature":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
@@ -317,19 +317,19 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				elif filter_mode == "spell_disabled":
-					# スペル不可呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
+					# 禁呪呪い中: スペルカードをグレーアウト（アルカナアーツは使用可能）
 					if card_type == "spell":
 						card_node.modulate = Color(0.5, 0.5, 0.5, 1.0)
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				elif filter_mode == "item":
-					# アイテムフェーズ中: アイテムカード、アイテムクリーチャー以外をグレーアウト
+					# アイテムフェーズ中: アイテムカード、レリック以外をグレーアウト
 					var should_gray = true
 					if card_type == "item":
 						should_gray = false
 					elif card_type == "creature":
 						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-						if "アイテムクリーチャー" in keywords:
+						if "レリック" in keywords:
 							should_gray = false
 					if not should_gray and _card_selection_service and _card_selection_service.blocked_item_types.size() > 0:
 						var item_type = card_data.get("item_type", "")
@@ -340,7 +340,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 					else:
 						card_node.modulate = Color(1.0, 1.0, 1.0, 1.0)
 				elif filter_mode == "item_or_assist":
-					# アイテムフェーズ（援護あり）
+					# アイテムフェーズ（加勢あり）
 					var should_gray_out = true
 					if card_type == "item":
 						should_gray_out = false
@@ -350,7 +350,7 @@ func enable_card_selection(hand_data: Array, available_magic: int, player_id: in
 								should_gray_out = true
 					elif card_type == "creature":
 						var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-						if "アイテムクリーチャー" in keywords:
+						if "レリック" in keywords:
 							should_gray_out = false
 						else:
 							var assist_elements = []
@@ -491,10 +491,10 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 		"item", "item_or_assist":
 			if card_type != "item":
 				var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-				if "アイテムクリーチャー" not in keywords:
-					# 援護対象の場合もアイコンなし
+				if "レリック" not in keywords:
+					# 加勢対象の場合もアイコンなし
 					if filter_mode == "item_or_assist" and card_type == "creature":
-						pass  # 援護対象は後でチェック
+						pass  # 加勢対象は後でチェック
 					else:
 						return ""  # フェーズ不一致はアイコンなし
 		"battle":
@@ -528,13 +528,13 @@ func _get_restriction_reason(card_data: Dictionary, card_type: String, filter_mo
 		if not _check_cannot_summon(card_data, player_id):
 			return "restriction"
 		
-		# 防御型クリーチャー（バトルフェーズ）
+		# 堅守クリーチャー（バトルフェーズ）
 		if filter_mode == "battle":
 			var creature_type = card_data.get("creature_type", "normal")
 			if creature_type == "defensive":
 				return "restriction"
 	
-	# スペル不可呪い
+	# 禁呪呪い
 	if filter_mode == "spell_disabled" and card_type == "spell":
 		return "restriction"
 	
@@ -696,7 +696,7 @@ func on_card_selected(card_index: int):
 			_show_item_info_panel(card_index, card_data)
 			return
 		elif card_type == "creature":
-			# アイテムクリーチャーまたは援護クリーチャー → クリーチャー情報パネル表示
+			# レリックまたは加勢クリーチャー → クリーチャー情報パネル表示
 			_show_creature_info_panel_for_item(card_index, card_data)
 			return
 	
@@ -840,7 +840,7 @@ func _show_item_info_panel(card_index: int, card_data: Dictionary):
 
 
 
-# アイテムフェーズでクリーチャー（アイテムクリーチャーまたは援護）の情報パネルを表示
+# アイテムフェーズでクリーチャー（レリックまたは加勢）の情報パネルを表示
 func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 	# フェーズのナビゲーション状態を保存（閲覧モード切替時の復元用）
 	if ui_manager_ref:
@@ -874,7 +874,7 @@ func _show_creature_info_panel_for_item(card_index: int, card_data: Dictionary):
 	if SkillItemCreature.is_item_creature(card_data):
 		confirmation_text = "アイテムとして使用しますか？"
 	else:
-		confirmation_text = "援護として使用しますか？"
+		confirmation_text = "加勢として使用しますか？"
 	
 	ui_manager_ref.creature_info_panel_ui.show_selection_mode(panel_data, confirmation_text)
 
@@ -1055,7 +1055,7 @@ func restore_phase_comment():
 			message = "スペルを使用するか、ダイスを振ってください"
 		"item":
 			if _card_selection_service and _card_selection_service.card_selection_filter == "item_or_assist":
-				message = "アイテムまたは援護クリーチャーを選択"
+				message = "アイテムまたは加勢クリーチャーを選択"
 			else:
 				message = "アイテムを選択、または×でバトル開始"
 		"sacrifice":
@@ -1137,13 +1137,13 @@ func get_selection_mode() -> String:
 
 # 土地条件チェック（true: 条件OK、false: 条件未達）
 func _check_lands_required(card_data: Dictionary, player_id: int) -> bool:
-	# ブライトワールド（召喚条件解除）が発動中ならOK
+	# フールズフリーダム（愚者）が発動中ならOK
 	if game_flow_manager_ref:
 		var stats = game_flow_manager_ref.game_stats
 		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
-	# リリース呪い（制限解除）が発動中ならOK
+	# リリース呪い（解放）が発動中ならOK
 	if game_flow_manager_ref and game_flow_manager_ref.player_system:
 		var p_system = game_flow_manager_ref.player_system
 		if player_id >= 0 and player_id < p_system.players.size():
@@ -1208,13 +1208,13 @@ func _get_lands_required_array(card_data: Dictionary) -> Array:
 # 配置制限チェック（true: 配置OK、false: 配置不可）
 # cannot_summon: 特定属性の土地には配置できない制限
 func _check_cannot_summon(card_data: Dictionary, player_id: int) -> bool:
-	# ブライトワールド（召喚条件解除）が発動中ならOK
+	# フールズフリーダム（愚者）が発動中ならOK
 	if game_flow_manager_ref:
 		var stats = game_flow_manager_ref.game_stats
 		if SpellWorldCurse.is_summon_condition_ignored(stats):
 			return true
 	
-	# リリース呪い（制限解除）が発動中ならOK
+	# リリース呪い（解放）が発動中ならOK
 	if game_flow_manager_ref and game_flow_manager_ref.player_system:
 		var p_system = game_flow_manager_ref.player_system
 		if player_id >= 0 and player_id < p_system.players.size():

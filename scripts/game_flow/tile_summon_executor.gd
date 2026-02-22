@@ -77,14 +77,14 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		complete_callback.call()
 		return
 	
-	# 防御型チェック: 空き地以外には召喚できない
+	# 堅守チェック: 空き地以外には召喚できない
 	var creature_type = card_data.get("creature_type", "normal")
 	if creature_type == "defensive":
 		var tile_info = board_system.get_tile_info(target_tile)
 		if tile_info["owner"] != -1:
-			print("[TileSummonExecutor] 防御型クリーチャーは空き地にのみ召喚できます")
+			print("[TileSummonExecutor] 堅守クリーチャーは空き地にのみ召喚できます")
 			if _message_service:
-				_message_service.show_toast("防御型は空き地にのみ召喚可能です")
+				_message_service.show_toast("堅守は空き地にのみ召喚可能です")
 			complete_callback.call()
 			return
 	
@@ -143,7 +143,7 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック（クリーチャーコスト0化）
+	# エンジェルギフト呪いチェック（クリーチャーコスト0化）
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
@@ -158,12 +158,12 @@ func execute_summon(card_index: int, complete_callback: Callable, show_summon_ui
 		board_system.set_tile_owner(target_tile, current_player_index)
 		board_system.place_creature(target_tile, card_data)
 		
-		# 召喚後にダウン状態を設定（不屈チェック）
+		# 召喚後にダウン状態を設定（奮闘チェック）
 		if tile and tile.has_method("set_down_state"):
 			if not PlayerBuffSystem.has_unyielding(card_data):
 				tile.set_down_state(true)
 			else:
-				print("[TileSummonExecutor] 不屈により召喚後もダウンしません: タイル", target_tile)
+				print("[TileSummonExecutor] 奮闘により召喚後もダウンしません: タイル", target_tile)
 		
 		if is_remote_placement:
 			print("遠隔召喚成功！タイル%dを取得しました" % target_tile)

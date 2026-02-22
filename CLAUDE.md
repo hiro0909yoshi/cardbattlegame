@@ -280,7 +280,7 @@ Turn Start → Spell Phase → Dice Roll → Movement → Tile Landing
 ### Down State System
 - Tiles become "down" after actions (summon, level up, move, swap)
 - Prevents reuse until next lap around board
-- **Exception**: "Indomitable" (不屈) skill creatures never go down
+- **Exception**: "Indomitable" (奮闘) skill creatures never go down
 
 ### Land Bonus System
 ```gdscript
@@ -586,7 +586,7 @@ This prevents:
 - Map editor for custom layouts
 - Multiplayer/PVP mode
 - Campaign mode
-- Additional skills: Transformation (変身), Revive (復活), Teleport (空地移動)
+- Additional skills: Transformation (変身), Revive (復活), Teleport (瞬移)
 
 ## Quick Reference
 

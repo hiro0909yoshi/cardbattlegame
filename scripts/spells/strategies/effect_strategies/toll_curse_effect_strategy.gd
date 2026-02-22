@@ -73,7 +73,7 @@ func execute(context: Dictionary) -> Dictionary:
 			var multiplier = effect.get("multiplier", 1.0)
 			effect_message = "通行料を%.1f倍に" % multiplier
 		"peace":
-			effect_message = "平和が訪れた"
+			effect_message = "安寧が訪れた"
 		"curse_toll_half":
 			effect_message = "通行料を半減"
 		_:

@@ -5,7 +5,7 @@ class_name SkillEffectBase
 '''スキル効果の基底クラス
 全効果タイプ、対象タイプ、条件タイプをenumで定義
 条件チェックや計算式評価の基本機能
-強打を含む全キーワード能力の定義'''
+強化を含む全キーワード能力の定義'''
 
 
 # 全ての効果タイプの共通インターフェースを定義
@@ -39,13 +39,13 @@ enum EffectType {
 	CAPTURE_LAND,      # 土地を奪取
 	
 	# 移動制御系
-	MOVEMENT_LOCK,     # 移動不可
-	REVERSE_DIRECTION, # 歩行逆転
-	FORCED_STOP,       # 強制停止
+	MOVEMENT_LOCK,     # 枷
+	REVERSE_DIRECTION, # 反転
+	FORCED_STOP,       # 停滞
 	DICE_MANIPULATION, # ダイス操作
 	
 	# 制限・条件系
-	REMOVE_RESTRICTIONS, # 配置条件無視/制限解除
+	REMOVE_RESTRICTIONS, # 配置条件無視/解放
 	STRATEGY_LIMIT,      # 下位戦略不可
 	TOLL_MULTIPLY,       # 通行料倍率変更
 	
@@ -109,28 +109,28 @@ enum ConditionType {
 enum Keywords {
 	# 戦闘能力
 	FIRST_STRIKE,        # 先制
-	POWER_STRIKE,        # 強打
-	PENETRATE,           # 貫通
+	POWER_STRIKE,        # 強化
+	PENETRATE,           # 刺突
 	REGENERATE,          # 再生
 	DOUBLE_ATTACK,       # 2回攻撃
 	
 	# 防御能力
 	NULLIFY,             # 無効化
-	SUPPORT,             # 援護
+	SUPPORT,             # 加勢
 	REFLECT,             # 反射
 	REFLECT_SCROLL,      # 反射[巻物]
-	DEFENDER,            # 防御型
+	DEFENDER,            # 堅守
 	
 	# 特殊能力
 	RETURN_TO,           # 復帰[ブック/手札]
 	TRANSFORM,           # 変身
-	REVIVE_DEAD,         # 死者復活
-	MUTUAL_DESTRUCTION,  # 道連れ
+	REVIVE_DEAD,         # 蘇生
+	MUTUAL_DESTRUCTION,  # 相討
 	DRAW,                # ドロー
 	ADDITIONAL_DAMAGE,   # 追加ダメージ
 	REVIVE,              # 復活
 	SYNTHESIS,           # 合成
-	AFFINITY,            # 感応
+	AFFINITY,            # 共鳴
 	SECRET,              # 密命
 	INSTANT_DEATH,       # 即死
 	

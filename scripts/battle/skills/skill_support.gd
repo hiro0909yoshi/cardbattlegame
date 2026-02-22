@@ -1,14 +1,14 @@
-## 応援スキル (Support Skill)
+## 鼓舞スキル (Support Skill)
 ##
 ## 盤面に配置されているクリーチャーが、バトル参加者（侵略側・防御側）に対してバフを与えるパッシブスキル
 ##
 ## 【主な機能】
-## - 属性条件による応援（火地属性クリーチャーにAP+10など）
+## - 属性条件による鼓舞（火地属性クリーチャーにAP+10など）
 ## - バトルロール条件（攻撃側/防御側のみ）
 ## - 種族条件（ゴブリン種族のみなど）
 ## - 所有者一致条件（自分のクリーチャーのみ）
 ## - 動的ボーナス（隣接自ドミニオ数に応じて変動）
-## - 重複防止: 同じクリーチャーIDの応援は1回のみ適用（敵味方関係なく）
+## - 重複防止: 同じクリーチャーIDの鼓舞は1回のみ適用（敵味方関係なく）
 ##   ※例外: マッドハーレクイン(ID:342)はプレイヤーごとに1回適用
 ##
 ## 【実装済みクリーチャー】
@@ -29,10 +29,10 @@ class_name SkillSupport
 
 const ParticipantClass = preload("res://scripts/battle/battle_participant.gd")
 
-## 応援スキルを全体に適用
+## 鼓舞スキルを全体に適用
 ##
-## 盤面上の全ての応援持ちクリーチャーを取得し、
-## バトル参加者（侵略側・防御側）に対して応援効果を適用する
+## 盤面上の全ての鼓舞持ちクリーチャーを取得し、
+## バトル参加者（侵略側・防御側）に対して鼓舞効果を適用する
 ##
 ## @param participants: バトル参加者の辞書 {"attacker": BattleParticipant, "defender": BattleParticipant}
 ## @param battle_tile_index: バトルが発生するタイルのインデックス
@@ -41,19 +41,19 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 	if board_system == null:
 		return
 	
-	# 応援持ちクリーチャーを取得（Dictionaryから値の配列を取得）
+	# 鼓舞持ちクリーチャーを取得（Dictionaryから値の配列を取得）
 	var support_dict = board_system.get_support_creatures()
 	var support_creatures = support_dict.values()
 	
 	if support_creatures.is_empty():
 		return
 	
-	print("【応援スキルチェック】応援持ちクリーチャー数: ", support_creatures.size())
+	print("【鼓舞スキルチェック】鼓舞持ちクリーチャー数: ", support_creatures.size())
 	
-	# バトル参加者（侵略側・防御側）に応援効果を適用
+	# バトル参加者（侵略側・防御側）に鼓舞効果を適用
 	var battle_participants = [participants["attacker"], participants["defender"]]
 	
-	# 適用済み応援を追跡（重複防止）
+	# 適用済み鼓舞を追跡（重複防止）
 	# 通常: クリーチャーIDごとに1回のみ
 	# マッドハーレクイン(ID:342): プレイヤーIDごとに1回
 	var applied_support: Dictionary = {}  # {participant_index: {creature_id: true または {player_id: true}}}
@@ -61,7 +61,7 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 	for supporter_data in support_creatures:
 		var supporter_creature = supporter_data["creature_data"]
 		
-		# 移動中のクリーチャーは応援効果を発揮しない
+		# 移動中のクリーチャーは鼓舞効果を発揮しない
 		if supporter_creature.get("is_moving", false):
 			continue
 		
@@ -78,7 +78,7 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 			var target = effect.get("target", {})
 			var bonus = effect.get("bonus", {})
 			
-			# 各バトル参加者に対して応援効果をチェック
+			# 各バトル参加者に対して鼓舞効果をチェック
 			for i in range(battle_participants.size()):
 				var participant = battle_participants[i]
 				
@@ -93,7 +93,7 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 					if applied_support[i][supporter_id].has(supporter_player_id):
 						continue  # このプレイヤーのマッドハーレクインは既に適用済み
 				else:
-					# 通常の応援: クリーチャーIDごとに1回のみ
+					# 通常の鼓舞: クリーチャーIDごとに1回のみ
 					if applied_support[i].has(supporter_id):
 						continue  # このクリーチャーIDは既に適用済み
 				
@@ -107,13 +107,13 @@ static func apply_to_all(participants: Dictionary, battle_tile_index: int, board
 					else:
 						applied_support[i][supporter_id] = true
 
-## 応援対象判定
+## 鼓舞対象判定
 ##
-## バトル参加者が応援スキルの対象になるかを判定する
+## バトル参加者が鼓舞スキルの対象になるかを判定する
 ##
 ## @param participant: バトル参加者
 ## @param target: 対象条件の辞書
-## @param supporter_player_id: 応援者のプレイヤーID
+## @param supporter_player_id: 鼓舞者のプレイヤーID
 ## @param board_system: BoardSystemへの参照（team_system チェック用）
 ## @return bool: 対象になる場合はtrue
 static func _check_support_target(participant: BattleParticipant, target: Dictionary, supporter_player_id: int, board_system) -> bool:
@@ -175,14 +175,14 @@ static func _check_support_target(participant: BattleParticipant, target: Dictio
 	
 	return true
 
-## 応援ボーナス適用
+## 鼓舞ボーナス適用
 ##
 ## 対象のバトル参加者にAPとHPのボーナスを適用する
 ## 動的ボーナス（隣接自ドミニオ数に応じた加算）にも対応
 ##
 ## @param participant: バトル参加者
 ## @param bonus: ボーナス内容の辞書
-## @param supporter_name: 応援者の名前（ログ用）
+## @param supporter_name: 鼓舞者の名前（ログ用）
 ## @param battle_tile_index: バトルタイルのインデックス
 ## @param target_player_id: 対象プレイヤーのID
 ## @param board_system: BoardSystemへの参照
@@ -205,7 +205,7 @@ static func _apply_support_bonus(participant: BattleParticipant, bonus: Dictiona
 	if hp_bonus == 0 and ap_bonus == 0:
 		return
 	
-	print("【応援効果】", supporter_name, " → ", participant.creature_data.get("name", "?"))
+	print("【鼓舞効果】", supporter_name, " → ", participant.creature_data.get("name", "?"))
 	
 	# HPボーナス適用
 	if hp_bonus > 0:

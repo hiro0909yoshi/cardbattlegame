@@ -1,4 +1,4 @@
-# 不屈スキル
+# 奮闘スキル
 
 **バージョン**: 1.0  
 **最終更新**: 2025年10月24日
@@ -27,16 +27,16 @@
 
 ## 発動条件
 
-- 無条件発動（不屈持ちクリーチャーがいる土地は常にダウンしない）
+- 無条件発動（奮闘持ちクリーチャーがいる土地は常にダウンしない）
 
 ---
 
 ## 効果
 
-- **召喚後**: 通常はダウンするが、不屈持ちはダウンしない
-- **レベルアップ後**: 通常はダウンするが、不屈持ちはダウンしない
-- **移動後**: 移動先の土地が通常はダウンするが、不屈持ちはダウンしない
-- **交換後**: 通常はダウンするが、不屈持ちはダウンしない
+- **召喚後**: 通常はダウンするが、奮闘持ちはダウンしない
+- **レベルアップ後**: 通常はダウンするが、奮闘持ちはダウンしない
+- **移動後**: 移動先の土地が通常はダウンするが、奮闘持ちはダウンしない
+- **交換後**: 通常はダウンするが、奮闘持ちはダウンしない
 
 ---
 
@@ -75,9 +75,9 @@
 
 ```json
 {
-  "ability_detail": "不屈",
+  "ability_detail": "奮闘",
   "ability_parsed": {
-	"keywords": ["不屈"]
+	"keywords": ["奮闘"]
   }
 }
 ```
@@ -88,37 +88,37 @@
 
 ### SkillSystem.gd
 ```gdscript
-## 不屈スキルを持っているかチェック
+## 奮闘スキルを持っているかチェック
 static func has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	
 	var ability_detail = creature_data.get("ability_detail", "")
-	return "不屈" in ability_detail
+	return "奮闘" in ability_detail
 ```
 
 ### TileActionProcessor.gd（召喚時）
 ```gdscript
-# Phase 1-A: 召喚後にダウン状態を設定（不屈チェック）
+# Phase 1-A: 召喚後にダウン状態を設定（奮闘チェック）
 if board_system.tile_nodes.has(current_tile):
 	var tile = board_system.tile_nodes[current_tile]
 	if tile and tile.has_method("set_down_state"):
-		# 不屈持ちでなければダウン状態にする
+		# 奮闘持ちでなければダウン状態にする
 		if not SkillSystem.has_unyielding(card_data):
 			tile.set_down_state(true)
 		else:
-			print("不屈により召喚後もダウンしません")
+			print("奮闘により召喚後もダウンしません")
 ```
 
 ### DominioOrderHandler.gd（レベルアップ時）
 ```gdscript
-# ダウン状態設定（不屈チェック）
+# ダウン状態設定（奮闘チェック）
 if tile.has_method("set_down_state"):
 	var creature = tile.creature_data if tile.has("creature_data") else {}
 	if not SkillSystem.has_unyielding(creature):
 		tile.set_down_state(true)
 	else:
-		print("不屈によりレベルアップ後もダウンしません")
+		print("奮闘によりレベルアップ後もダウンしません")
 ```
 
 ---
@@ -129,7 +129,7 @@ if tile.has_method("set_down_state"):
 ```
 1. ターン開始時、シールドメイデン配置のLv.1土地を所有（EP: 1200）
 2. ドミニオオーダー → レベルアップ → Lv.2（80G消費）
-3. 不屈により土地はダウンしない
+3. 奮闘により土地はダウンしない
 4. 再度ドミニオオーダー → レベルアップ → Lv.3（160G消費）
 5. さらにドミニオオーダー → レベルアップ → Lv.5（580G消費）
 6. 合計820G消費で、1ターンでLv.5達成！
@@ -137,9 +137,9 @@ if tile.has_method("set_down_state"):
 
 ### シナリオ2: 防衛拠点
 ```
-1. 重要な場所にワーベア（不屈）配置
+1. 重要な場所にワーベア（奮闘）配置
 2. 敵に攻撃される → バトル勝利
-3. 通常ならダウンするが、不屈によりドミニオオーダー可能
+3. 通常ならダウンするが、奮闘によりドミニオオーダー可能
 4. 即座にレベルアップして防御力強化
 5. 次の敵にも備えられる
 ```
@@ -149,7 +149,7 @@ if tile.has_method("set_down_state"):
 ## 設計思想
 
 - **リソース管理**: EPさえあれば強力だが、EP切れに注意
-- **戦略性**: 不屈持ちクリーチャーの配置場所が重要
+- **戦略性**: 奮闘持ちクリーチャーの配置場所が重要
 - **バランス**: ダウンシステムの制約を回避できる唯一のスキル
 
 ---

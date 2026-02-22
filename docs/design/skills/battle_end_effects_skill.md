@@ -13,7 +13,7 @@
 |---------|-----------|-----|
 | `on_attack_success` | 攻撃成功時 | ショッカー、ナイキー |
 | `on_battle_end` | 戦闘終了時 | ルナティックヘア、サムハイン、スキュラ |
-| `on_death` | 死亡時 | コーンフォーク、道連れ |
+| `on_death` | 死亡時 | コーンフォーク、相討 |
 
 ### JSON形式
 
@@ -36,7 +36,7 @@
 | ID | 名前 | effect_type | 効果 |
 |----|------|-------------|------|
 | 443 | ルナティックヘア | swap_ap_mhp | 敵のAP⇔MHP交換 |
-| 124 | スキュラ | apply_curse | 敵に呪い"通行料無効" |
+| 124 | スキュラ | apply_curse | 敵に呪い"免罪" |
 | 317 | サムハイン | reduce_enemy_mhp | 敵のMHP-自分の基本AP |
 | 245 | レーシィ | level_up_battle_land | 戦闘地レベル+1 |
 
@@ -60,9 +60,9 @@
 
 ## 無効化システム
 
-### ナチュラルワールド (ID: 2064)
+### ハングドマンズシール (ID: 2064)
 
-世界呪い「特定能力不可」により以下のトリガーを無効化：
+世界呪い「吊人」により以下のトリガーを無効化：
 - `on_battle_end` (戦闘終了時効果)
 - `on_death` (自破壊時効果)
 - `mystic_arts` (アルカナアーツ)
@@ -71,7 +71,7 @@
 // spell_world.json での定義
 {
   "id": 2064,
-  "name": "ナチュラルワールド",
+  "name": "ハングドマンズシール",
   "effect_parsed": {
 	"world_curse_type": "natural_world",
 	"nullify_triggers": ["on_battle_end", "on_death", "mystic_arts"],
@@ -94,10 +94,10 @@ if spell_world_curse.is_trigger_nullified("on_battle_end"):
 battle_execution.gd
   ↓ 戦闘攻撃完了
   ↓ 生き残り効果チェック
-  ↓ 戦闘後破壊呪いチェック
+  ↓ 崩壊呪いチェック
   ↓
 SkillBattleEndEffects.process_all(attacker, defender, context)
-  ├─ ナチュラルワールド無効化チェック
+  ├─ ハングドマンズシール無効化チェック
   ├─ 攻撃側の on_battle_end 効果を処理
   │   └─ swap_ap_mhp, apply_curse, reduce_enemy_mhp 等
   ├─ 防御側の on_battle_end 効果を処理
@@ -118,10 +118,10 @@ battle_execution.gd
 | `process_all()` | 両者の戦闘終了時効果を処理 |
 | `_process_effects()` | 単体の効果リストを処理 |
 | `_apply_swap_ap_mhp()` | AP⇔MHP交換（ルナティックヘア）|
-| `_apply_curse_effect()` | 呪い付与（スキュラ）|
+| `_apply_curse_effect()` | 刻印付与（スキュラ）|
 | `_apply_reduce_mhp()` | MHP減少（サムハイン）|
 | `_apply_level_up_battle_land()` | 土地レベルアップ（レーシィ）|
-| `_is_battle_end_nullified()` | ナチュラルワールド無効化チェック |
+| `_is_battle_end_nullified()` | ハングドマンズシール無効化チェック |
 
 ## 注意事項
 

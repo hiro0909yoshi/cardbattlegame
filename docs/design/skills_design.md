@@ -11,21 +11,21 @@
 1. [スキルシステム概要](#スキルシステム概要)
 2. [実装済みスキル一覧](#実装済みスキル一覧)
 3. [個別スキル仕様書へのリンク](#スキル詳細仕様)
-   - [応援](#応援-support)
-   - [援護](./skills/assist_skill.md)
-   - [共鳴/感応](#共鳴感応-resonanceaffinity)
-   - [巻物攻撃](#巻物攻撃-scroll-attack)
+   - [鼓舞](#鼓舞-support)
+   - [加勢](./skills/assist_skill.md)
+   - [共鳴/共鳴](#共鳴共鳴-resonanceaffinity)
+   - [術攻撃](#術攻撃-scroll-attack)
    - [反射](#反射-reflect)
    - [アイテム操作](#アイテム操作-item-manipulation)
-   - [アイテム復帰](#アイテム復帰-item-return)
+   - [帰還](#帰還-item-return)
    - [先制・後手](#先制後手-first-strike--last-strike)
    - [再生](#再生-regeneration)
    - [即死](#即死-instant-death)
    - [無効化](#無効化-nullify)
    - [特殊移動](#特殊移動-special-movement)
-   - [不屈](#不屈-unyielding)
-   - [遺産](./skills/遺産.md)
-   - [EP獲得・奪取](./skills/EP獲得奪取.md)
+   - [奮闘](#奮闘-unyielding)
+   - [形見](./skills/形見.md)
+   - [蓄魔・奪取](./skills/蓄魔奪取.md)
    - [密命カード](./skills/密命カード.md)
 4. [スキル適用順序](#スキル適用順序)
 5. [スキル条件システム](#スキル条件システム)
@@ -57,7 +57,7 @@ SkillSystem (マネージャー)
 1. **BattleParticipant作成** - 基本ステータス設定、先制判定
 2. **ability_parsed解析** - keywords配列チェック、条件取得
 3. **条件判定** (ConditionChecker) - バトルコンテキスト構築、各条件を評価
-4. **効果適用** (EffectCombat) - 感応・強打等のスキル適用
+4. **効果適用** (EffectCombat) - 共鳴・強化等のスキル適用
 5. **バトル実行** - 修正後のAP/HPで戦闘
 
 詳細は **[battle_system.md](battle_system.md)** を参照
@@ -68,34 +68,34 @@ SkillSystem (マネージャー)
 
 | スキル名 | タイプ | 効果 | 実装状況 |
 |---------|--------|------|---------|
-| 感応 | パッシブ | 特定属性の土地所有でAP/HP上昇 | ✅ 完全実装 |
-| 応援 | パッシブ | 盤面のクリーチャーにバフ付与 | ✅ 完全実装（分離済み） |
-| 貫通 | パッシブ | 防御側の土地ボーナス無効化 | ✅ 完全実装 |
-| 強打 | パッシブ | 条件下でAP増幅 | ✅ 完全実装（分離済み） |
+| 共鳴 | パッシブ | 特定属性の土地所有でAP/HP上昇 | ✅ 完全実装 |
+| 鼓舞 | パッシブ | 盤面のクリーチャーにバフ付与 | ✅ 完全実装（分離済み） |
+| 刺突 | パッシブ | 防御側の土地ボーナス無効化 | ✅ 完全実装 |
+| 強化 | パッシブ | 条件下でAP増幅 | ✅ 完全実装（分離済み） |
 | 先制 | パッシブ | 先攻権獲得 | ✅ 完全実装 |
 | 後手 | パッシブ | 相手が先攻 | ✅ 完全実装 |
 | 再生 | パッシブ | バトル後にHP全回復 | ✅ 完全実装 |
 | 土地数比例 | パッシブ | 土地数×倍率でAP/HP上昇 | ✅ 完全実装 |
-| 不屈 | パッシブ | アクション後もダウンしない | ✅ 完全実装 |
+| 奮闘 | パッシブ | アクション後もダウンしない | ✅ 完全実装 |
 | 2回攻撃 | パッシブ | 1回のバトルで2回攻撃 | ✅ 完全実装（分離済み） |
 | 即死 | アクティブ | 確率で相手を即死 | ✅ 完全実装 |
-| 防魔 | パッシブ | スペル無効化 | 🔶 部分実装 |
+| 結界 | パッシブ | スペル無効化 | 🔶 部分実装 |
 | ST変動 | パッシブ | 土地数でAP変動 | ✅ 完全実装 |
 | HP変動 | パッシブ | 土地数でHP変動 | 🔶 部分実装 |
 | 無効化 | パッシブ | 特定攻撃/属性の無効化 | ✅ 完全実装 |
-| 巻物攻撃 | パッシブ | 巻物使用時の特殊攻撃 | ✅ 完全実装 |
+| 術攻撃 | パッシブ | 巻物使用時の特殊攻撃 | ✅ 完全実装 |
 | 反射 | リアクティブ | 受けたダメージを攻撃者に返す | ✅ 完全実装 |
 | 反射無効 | パッシブ | 相手の反射を無効化 | ✅ 完全実装 |
-| 援護 | アイテムフェーズ | 手札クリーチャーをAP/HP加算に使用 | ✅ 完全実装 |
+| 加勢 | アイテムフェーズ | 手札クリーチャーをAP/HP加算に使用 | ✅ 完全実装 |
 | 変身 | アクティブ | 自身または相手を別のクリーチャーに変身 | ✅ 完全実装 |
-| 死者復活 | リアクティブ | 撃破時に別のクリーチャーとして復活 | ✅ 完全実装 |
-| アイテム復帰 | パッシブ | 使用したアイテムをブック/手札に戻す | ✅ 完全実装 |
+| 蘇生 | リアクティブ | 撃破時に別のクリーチャーとして復活 | ✅ 完全実装 |
+| 帰還 | パッシブ | 使用したアイテムをブック/手札に戻す | ✅ 完全実装 |
 | アイテム破壊 | バトル前 | 相手のアイテムを破壊 | ✅ 完全実装 |
 | アイテム盗み | バトル前 | 相手のアイテムを奪う | ✅ 完全実装 |
-| 空地移動 | ドミニオオーダー | 特定属性の空き地に移動可能 | ✅ 完全実装 |
+| 瞬移 | ドミニオオーダー | 特定属性の空き地に移動可能 | ✅ 完全実装 |
 | 敵地移動 | ドミニオオーダー | 条件に合う敵地に移動して戦闘 | ✅ 完全実装 |
-| 道連れ | 死亡時 | 死亡時に相手を即死させる | ✅ 完全実装 |
-| 雪辱 | 死亡時 | 死亡時に相手のMHPを削る | ✅ 完全実装 |
+| 相討 | 死亡時 | 死亡時に相手を即死させる | ✅ 完全実装 |
+| 報復 | 死亡時 | 死亡時に相手のMHPを削る | ✅ 完全実装 |
 | 密命カード | スペル専用 | 相手には真っ黒に表示される | ✅ 完全実装 |
 
 ## スキル適用順序
@@ -103,22 +103,22 @@ SkillSystem (マネージャー)
 バトル前のスキル適用は以下の順序で実行される:
 
 ```
-1. 応援スキル適用 (apply_support_skills_to_all) ✨NEW
-   ├─ 盤面の応援持ちクリーチャーを取得
+1. 鼓舞スキル適用 (apply_support_skills_to_all) ✨NEW
+   ├─ 盤面の鼓舞持ちクリーチャーを取得
    ├─ 条件を満たすバトル参加者にバフ付与
    └─ 動的ボーナス（隣接自ドミニオ数）を計算
    
-2. 巻物攻撃判定 (check_scroll_attack)
-3. 感応スキル (apply_resonance_skill)
+2. 術攻撃判定 (check_scroll_attack)
+3. 共鳴スキル (apply_resonance_skill)
 4. 土地数比例効果 (apply_land_count_effects)
    ├─ プレイヤーの土地所有状況を確認
    ├─ 条件を満たせばAPとHPを上昇
    └─ resonance_bonus_hpフィールドに加算
    
-5. 強打スキル (apply_power_strike)
-   ├─ 感応適用後のAPを基準に計算
+5. 強化スキル (apply_power_strike)
+   ├─ 共鳴適用後のAPを基準に計算
    ├─ 条件を満たせばAPを増幅
-   └─ 例: 基本20 → 感応+30=50 → 強打×1.5=75
+   └─ 例: 基本20 → 共鳴+30=50 → 強化×1.5=75
    
 6. 2回攻撃判定 (_check_double_attack)
    ├─ 2回攻撃スキル保持チェック
@@ -143,21 +143,21 @@ SkillSystem (マネージャー)
    ├─ 土地奪取 or カード破壊 or 手札復帰
    └─ クリーチャーHP更新
 
-**注**: 不屈スキルはバトル処理とは独立して動作し、アクション後のダウン判定時に適用される。バトルフロー内では関与しない。
+**注**: 奮闘スキルはバトル処理とは独立して動作し、アクション後のダウン判定時に適用される。バトルフロー内では関与しない。
 ```
 
 ### 設計思想
 
 この順序により、複数スキルを持つクリーチャーは相乗効果を得られる。
 
-**例: 感応+強打の組み合わせ**
+**例: 共鳴+強化の組み合わせ**
 ```
-モルモ（感応[火]+30、強打×1.5を仮定）
+モルモ（共鳴[火]+30、強化×1.5を仮定）
 
 基本AP: 20
-  ↓ 感応発動（火土地1個所有）
+  ↓ 共鳴発動（火土地1個所有）
 AP: 50 (+30)
-  ↓ 強打発動（隣接自ドミニオあり）
+  ↓ 強化発動（隣接自ドミニオあり）
 AP: 75 (×1.5)
 
 → 最終的にAP: 75で攻撃！
@@ -175,26 +175,26 @@ AP: 75 (×1.5)
 
 | スキル名 | モジュールファイル | 実装状況 |
 |---------|-----------------|---------|
-| **応援** | [skill_support.gd](../../scripts/battle/skills/skill_support.gd) | ✅ 完全分離 |
-| **援護** | [skill_assist.gd](../../scripts/battle/skills/skill_assist.gd) | ✅ 完全分離 |
-| **共鳴（感応）** | [skill_resonance.gd](../../scripts/battle/skills/skill_resonance.gd) | ✅ 完全分離 |
-| **巻物攻撃** | [skill_scroll_attack.gd](../../scripts/battle/skills/skill_scroll_attack.gd) | ✅ 完全分離 |
+| **鼓舞** | [skill_support.gd](../../scripts/battle/skills/skill_support.gd) | ✅ 完全分離 |
+| **加勢** | [skill_assist.gd](../../scripts/battle/skills/skill_assist.gd) | ✅ 完全分離 |
+| **共鳴（共鳴）** | [skill_resonance.gd](../../scripts/battle/skills/skill_resonance.gd) | ✅ 完全分離 |
+| **術攻撃** | [skill_scroll_attack.gd](../../scripts/battle/skills/skill_scroll_attack.gd) | ✅ 完全分離 |
 | **反射** | [skill_reflect.gd](../../scripts/battle/skills/skill_reflect.gd) | ✅ 完全分離 |
 | **アイテム操作** | [skill_item_manipulation.gd](../../scripts/battle/skills/skill_item_manipulation.gd) | ✅ 完全分離 |
 | **変身** | [skill_transform.gd](../../scripts/battle/skills/skill_transform.gd) | ✅ 完全分離 |
-| **強打** | [skill_power_strike.gd](../../scripts/battle/skills/skill_power_strike.gd) | ✅ 完全分離 |
+| **強化** | [skill_power_strike.gd](../../scripts/battle/skills/skill_power_strike.gd) | ✅ 完全分離 |
 | **2回攻撃** | [skill_double_attack.gd](../../scripts/battle/skills/skill_double_attack.gd) | ✅ 完全分離 |
 | **先制・後手** | [skill_first_strike.gd](../../scripts/battle/skills/skill_first_strike.gd) | ✅ 完全分離 |
 | **再生** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **即死** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **無効化** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
 | **特殊移動** | [movement_helper.gd](../../scripts/game_flow/movement_helper.gd) | ✅ 完全分離 |
-| **アイテム復帰** | [skill_item_return.gd](../../scripts/battle/skills/skill_item_return.gd) | ✅ 完全分離 |
-| **不屈** | [skill_system.gd](../../scripts/skill_system.gd) | ✅ 完全実装 |
-| **貫通** | [skill_penetration.gd](../../scripts/battle/skills/skill_penetration.gd) | ✅ 完全分離 |
-| **死亡時効果（道連れ・雪辱）** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
-| **遺産** | [skill_legacy.gd](../../scripts/battle/skills/skill_legacy.gd) | ✅ 完全分離 |
-| **EP獲得・奪取** | [skill_magic_gain.gd](../../scripts/battle/skills/skill_magic_gain.gd) / [skill_magic_steal.gd](../../scripts/battle/skills/skill_magic_steal.gd) | ✅ 完全分離 |
+| **帰還** | [skill_item_return.gd](../../scripts/battle/skills/skill_item_return.gd) | ✅ 完全分離 |
+| **奮闘** | [skill_system.gd](../../scripts/skill_system.gd) | ✅ 完全実装 |
+| **刺突** | [skill_penetration.gd](../../scripts/battle/skills/skill_penetration.gd) | ✅ 完全分離 |
+| **死亡時効果（相討・報復）** | [battle_special_effects.gd](../../scripts/battle/battle_special_effects.gd) | ✅ 完全分離 |
+| **形見** | [skill_legacy.gd](../../scripts/battle/skills/skill_legacy.gd) | ✅ 完全分離 |
+| **蓄魔・奪取** | [skill_magic_gain.gd](../../scripts/battle/skills/skill_magic_gain.gd) / [skill_magic_steal.gd](../../scripts/battle/skills/skill_magic_steal.gd) | ✅ 完全分離 |
 | **密命カード** | [Card.gd](../../scripts/card.gd) + [HandDisplay.gd](../../scripts/ui_components/hand_display.gd) | ✅ 完全実装 |
 
 
@@ -204,13 +204,13 @@ AP: 75 (×1.5)
 
 | 条件タイプ | 説明 | 使用例 |
 |-----------|------|--------|
-| `on_element_land` | 特定属性の土地 | 火土地で強打 |
-| `has_item_type` | アイテム装備 | 武器装備時強打 |
-| `land_level_check` | 土地レベル判定 | レベル3以上で強打 |
-| `element_land_count` | 属性土地数 | 火土地3個以上で強打 |
+| `on_element_land` | 特定属性の土地 | 火土地で強化 |
+| `has_item_type` | アイテム装備 | 武器装備時強化 |
+| `land_level_check` | 土地レベル判定 | レベル3以上で強化 |
+| `element_land_count` | 属性土地数 | 火土地3個以上で強化 |
 | `adjacent_ally_land` | 隣接自ドミニオ判定 | 隣接に自土地あり |
-| `enemy_is_element` | 敵属性判定 | 敵が水属性で貫通 |
-| `attacker_ap_check` | 攻撃力判定 | AP40以上で貫通 |
+| `enemy_is_element` | 敵属性判定 | 敵が水属性で刺突 |
+| `attacker_ap_check` | 攻撃力判定 | AP40以上で刺突 |
 
 ### adjacent_ally_land条件（詳細）
 
@@ -235,7 +235,7 @@ AP: 75 (×1.5)
    └─ 自ドミニオがあれば true
 
 4. 効果発動
-   └─ 強打等のスキルが発動
+   └─ 強化等のスキルが発動
 ```
 
 ---
@@ -248,28 +248,28 @@ AP: 75 (×1.5)
 | 2025/01/12 | 1.1 | 🆕 再生スキル追加（11体実装） |
 | 2025/01/12 | 1.2 | 🆕 2回攻撃スキル追加（1体実装、拡張性考慮） |
 | 2025/01/13 | 1.3 | 🆕 即死スキル追加（6体実装）、後手スキル追加（1体実装） |
-| 2025/10/23 | 1.4 | 🆕 応援スキル追加（9体実装）、種族システム先行実装、無効化スキルへの参照追加 |
+| 2025/10/23 | 1.4 | 🆕 鼓舞スキル追加（9体実装）、種族システム先行実装、無効化スキルへの参照追加 |
 | 2025/10/23 | 1.5 | 🆕 反射スキル追加（6種類実装完了：反射100%、反射50%、反射[巻物]、反射[全]、反射無効） |
-| 2025/10/24 | 1.6 | 🆕 援護スキル追加（18体実装完了、全属性対応5体・特定属性13体） |
+| 2025/10/24 | 1.6 | 🆕 加勢スキル追加（18体実装完了、全属性対応5体・特定属性13体） |
 | 2025/10/25 | 1.7 | 🔄 スキル詳細仕様セクションをリファクタリング - 個別ファイル（14個）へのリンク集に置き換え |
-| 2025/10/31 | 1.8 | 🔄 応援スキルを分離 - `scripts/battle/skills/skill_support.gd` に移動完了 |
-| 2025/10/31 | 1.9 | 🔄 感応スキルを分離 - `scripts/battle/skills/skill_resonance.gd` に移動完了 |
-| 2025/10/31 | 2.0 | 🔄 巻物攻撃スキルを分離 - `scripts/battle/skills/skill_scroll_attack.gd` に移動完了 |
+| 2025/10/31 | 1.8 | 🔄 鼓舞スキルを分離 - `scripts/battle/skills/skill_support.gd` に移動完了 |
+| 2025/10/31 | 1.9 | 🔄 共鳴スキルを分離 - `scripts/battle/skills/skill_resonance.gd` に移動完了 |
+| 2025/10/31 | 2.0 | 🔄 術攻撃スキルを分離 - `scripts/battle/skills/skill_scroll_attack.gd` に移動完了 |
 | 2025/10/31 | 2.1 | 🔄 反射スキルを分離 - `scripts/battle/skills/skill_reflect.gd` に移動完了 |
 | 2025/10/31 | 2.2 | 📝 個別スキル仕様書セクション追加 - 分離済み4スキルの詳細を記載 |
 | 2025/10/24 | 1.8 | 🆕 変身スキル追加（2体実装：バルダンダース、コカトリス）|
-| 2025/10/24 | 1.9 | 🆕 死者復活スキル追加（4体+1アイテム実装済み）、バグ修正（リビングアムルのcreature_id、アイテムカテゴリチェック）|
-| 2025/10/26 | 2.0 | 🆕 空地移動・敵地移動スキル追加（空地移動3体、敵地移動1体実装完了）、戦闘敗北時の移動元復帰処理実装 |
+| 2025/10/24 | 1.9 | 🆕 蘇生スキル追加（4体+1アイテム実装済み）、バグ修正（リビングアムルのcreature_id、アイテムカテゴリチェック）|
+| 2025/10/26 | 2.0 | 🆕 瞬移・敵地移動スキル追加（瞬移3体、敵地移動1体実装完了）、戦闘敗北時の移動元復帰処理実装 |
 | 2025/10/31 | 2.3 | 🔄 先制・後手スキルを分離 - `scripts/battle/skills/skill_first_strike.gd` に移動完了 |
 | 2025/10/31 | 2.4 | 📝 再生・即死・無効化スキルの分離状況を追記 - `scripts/battle/battle_special_effects.gd` に実装済み |
-| 2025/10/31 | 2.5 | 📝 特殊移動スキルの分離状況を追記 - `scripts/game_flow/movement_helper.gd` に実装済み（空地移動・敵地移動） |
-| 2025/10/31 | 2.6 | 📝 不屈スキルの実装状況を追記 - `scripts/skill_system.gd` に実装済み |
-| 2025/11/03 | 2.3 | 🔄 援護スキルを分離 - `scripts/battle/skills/skill_assist.gd` に移動完了、ブラッドプリン特殊処理を追加 |
+| 2025/10/31 | 2.5 | 📝 特殊移動スキルの分離状況を追記 - `scripts/game_flow/movement_helper.gd` に実装済み（瞬移・敵地移動） |
+| 2025/10/31 | 2.6 | 📝 奮闘スキルの実装状況を追記 - `scripts/skill_system.gd` に実装済み |
+| 2025/11/03 | 2.3 | 🔄 加勢スキルを分離 - `scripts/battle/skills/skill_assist.gd` に移動完了、ブラッドプリン特殊処理を追加 |
 
 ---
 
-| 2025/11/02 | 2.7 | 🆕 アイテム復帰スキル追加（3アイテム + 1クリーチャー実装完了） |
-| 2025/11/02 | 2.8 | 🆕 死亡時効果スキル追加（道連れ：バーニングハート、雪辱：ナパームアロー実装完了）、相打ち時の土地無所有化処理実装 |
+| 2025/11/02 | 2.7 | 🆕 帰還スキル追加（3アイテム + 1クリーチャー実装完了） |
+| 2025/11/02 | 2.8 | 🆕 死亡時効果スキル追加（相討：バーニングハート、報復：ナパームアロー実装完了）、相打ち時の土地無所有化処理実装 |
 | 2025/11/11 | 2.4 | 密命カードシステム追加 |
 | 2025/12/16 | 3.0 | ドキュメント整理（ファイルパス修正、変更履歴整理、関連ドキュメント追加） |
 
@@ -281,7 +281,7 @@ AP: 75 (×1.5)
 |-------------|------|
 | [battle_system.md](battle_system.md) | バトルシステム全体設計 |
 | [hp_structure.md](hp_structure.md) | HP構造とダメージ計算（BattleParticipant含む） |
-| [card_info_panels.md](card_info_panels.md) | カード情報パネル（援護スキル等のUI） |
+| [card_info_panels.md](card_info_panels.md) | カード情報パネル（加勢スキル等のUI） |
 | [info_panel.md](info_panel.md) | インフォパネル概要 |
 
 ---

@@ -2,8 +2,8 @@ extends RefCounted
 class_name SpellMovement
 
 # 移動関連の呪い・スキル処理
-# - 足どめ呪い (forced_stop): スペルで付与、誰でも止める、1回で消滅
-# - 足どめスキル (trap_stop): クリーチャースキル、所有者以外を止める、永続
+# - 拘束呪い (forced_stop): スペルで付与、誰でも止める、1回で消滅
+# - 拘束スキル (trap_stop): クリーチャースキル、所有者以外を止める、永続
 
 # 参照
 var creature_manager = null
@@ -18,12 +18,12 @@ func setup(cm, bs):
 	board_system = bs
 
 # =============================================================================
-# 足どめ判定（メイン関数）
+# 拘束判定（メイン関数）
 # =============================================================================
 
-## 足どめ判定を行う（tile_nodesを直接渡すバージョン）
+## 拘束判定を行う（tile_nodesを直接渡すバージョン）
 ## 戻り値: { "stopped": bool, "reason": String, "source_type": String }
-## source_type: "curse" = 呪い, "skill" = スキル, "" = 足どめなし
+## source_type: "curse" = 呪い, "skill" = スキル, "" = 拘束なし
 func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_nodes: Dictionary, consume: bool = true) -> Dictionary:
 	var result = {"stopped": false, "reason": "", "source_type": ""}
 	
@@ -38,38 +38,38 @@ func check_forced_stop_with_tiles(tile_index: int, moving_player_id: int, tile_n
 	var creature = tile.creature_data
 	var tile_owner_id = tile.owner_id
 	
-	# 1. 呪い"強制停止"チェック（誰でも止まる）
+	# 1. 呪い"停滞"チェック（誰でも止まる）
 	if _has_forced_stop_curse(creature):
 		result["stopped"] = true
-		result["reason"] = "強制停止の呪いで足どめされた！"
+		result["reason"] = "停滞の呪いで拘束された！"
 		result["source_type"] = "curse"
 		# consume=trueの場合のみ呪いを消費（シミュレーション時はfalse）
 		if consume:
 			_consume_forced_stop_curse(creature)
 		return result
 	
-	# 2. スキル"足どめ"チェック（所有者は止まらない）
+	# 2. スキル"拘束"チェック（所有者は止まらない）
 	if tile_owner_id != moving_player_id:
 		var trap_result = _check_trap_stop_skill(creature, tile)
 		if trap_result["active"]:
 			result["stopped"] = true
-			result["reason"] = creature.get("name", "クリーチャー") + "の足どめ！"
+			result["reason"] = creature.get("name", "クリーチャー") + "の拘束！"
 			result["source_type"] = "skill"
 			return result
 	
 	return result
 
-## 足どめ判定を行う（board_system経由、後方互換）
+## 拘束判定を行う（board_system経由、後方互換）
 func check_forced_stop(tile_index: int, moving_player_id: int) -> Dictionary:
 	if not board_system or not board_system.tile_nodes:
 		return {"stopped": false, "reason": "", "source_type": ""}
 	return check_forced_stop_with_tiles(tile_index, moving_player_id, board_system.tile_nodes)
 
 # =============================================================================
-# 呪い"強制停止" (forced_stop)
+# 呪い"停滞" (forced_stop)
 # =============================================================================
 
-## 強制停止呪いを付与
+## 停滞呪いを付与
 func apply_forced_stop_curse(tile_index: int, duration: int = 2) -> bool:
 	if not creature_manager:
 		return false
@@ -81,24 +81,24 @@ func apply_forced_stop_curse(tile_index: int, duration: int = 2) -> bool:
 	# 既存の呪いを上書き
 	creature["curse"] = {
 		"curse_type": "forced_stop",
-		"name": "強制停止",
+		"name": "停滞",
 		"duration": duration,
 		"params": {
 			"uses_remaining": 1  # 1回で消滅
 		}
 	}
 	
-	print("[呪い付与] 強制停止 → タイル", tile_index, " (", duration, "R)")
+	print("[刻印付与] 停滞 → タイル", tile_index, " (", duration, "R)")
 	return true
 
-## 強制停止呪いを持っているか
+## 停滞呪いを持っているか
 func _has_forced_stop_curse(creature: Dictionary) -> bool:
 	if not creature.has("curse"):
 		return false
 	var curse = creature["curse"]
 	return curse.get("curse_type", "") == "forced_stop"
 
-## 強制停止呪いを消費（1回使用で消滅）
+## 停滞呪いを消費（1回使用で消滅）
 func _consume_forced_stop_curse(creature: Dictionary) -> void:
 	if not creature.has("curse"):
 		return
@@ -115,40 +115,40 @@ func _consume_forced_stop_curse(creature: Dictionary) -> void:
 	if uses <= 0:
 		# 呪い削除
 		creature.erase("curse")
-		print("[呪い消滅] 強制停止（使用済み）")
+		print("[呪い消滅] 停滞（使用済み）")
 	else:
 		params["uses_remaining"] = uses
 
 # =============================================================================
-# スキル"足どめ" (trap_stop)
+# スキル"拘束" (trap_stop)
 # =============================================================================
 
-## 足どめスキルが発動するか判定
+## 拘束スキルが発動するか判定
 ## 条件: 指定属性のタイルに配置されている必要あり
 func _check_trap_stop_skill(creature: Dictionary, tile) -> Dictionary:
 	var result = {"active": false, "element": ""}
 	
-	# ability_parsed から足どめスキルを探す
+	# ability_parsed から拘束スキルを探す
 	var ability_parsed = creature.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	# 足どめキーワードがあるか
+	# 拘束キーワードがあるか
 	var has_trap = false
 	for keyword in keywords:
-		if keyword is String and keyword.begins_with("足どめ"):
+		if keyword is String and keyword.begins_with("拘束"):
 			has_trap = true
 			break
 	
 	if not has_trap:
 		# ability_detail からパース（フォールバック）
 		var ability_detail = creature.get("ability_detail", "")
-		if "足どめ" in ability_detail:
+		if "拘束" in ability_detail:
 			has_trap = true
 	
 	if not has_trap:
 		return result
 	
-	# 足どめの発動条件: 指定属性のタイルに配置
+	# 拘束の発動条件: 指定属性のタイルに配置
 	var trap_elements = _get_trap_stop_elements(creature)
 	var tile_element = _get_tile_element(tile)
 	
@@ -158,7 +158,7 @@ func _check_trap_stop_skill(creature: Dictionary, tile) -> Dictionary:
 	
 	return result
 
-## 足どめスキルの対象属性を取得
+## 拘束スキルの対象属性を取得
 func _get_trap_stop_elements(creature: Dictionary) -> Array:
 	var elements = []
 	
@@ -168,10 +168,10 @@ func _get_trap_stop_elements(creature: Dictionary) -> Array:
 	if trap_info.has("elements"):
 		return trap_info["elements"]
 	
-	# ability_detail からパース（例: "足どめ[火]", "足どめ[水]"）
+	# ability_detail からパース（例: "拘束[火]", "拘束[水]"）
 	var ability_detail = creature.get("ability_detail", "")
 	var regex = RegEx.new()
-	regex.compile("足どめ\\[([^\\]]+)\\]")
+	regex.compile("拘束\\[([^\\]]+)\\]")
 	var match_result = regex.search(ability_detail)
 	
 	if match_result:
@@ -200,10 +200,10 @@ func _get_tile_element(tile) -> String:
 	return ""
 
 # =============================================================================
-# 不屈呪い (indomitable)
+# 奮闘呪い (indomitable)
 # =============================================================================
 
-## 不屈呪いを付与
+## 奮闘呪いを付与
 func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
 	if not creature_manager:
 		return false
@@ -215,15 +215,15 @@ func apply_indomitable_curse(tile_index: int, duration: int = 5) -> bool:
 	# 既存の呪いを上書き
 	creature["curse"] = {
 		"curse_type": "indomitable",
-		"name": "不屈",
+		"name": "奮闘",
 		"duration": duration,
 		"params": {}
 	}
 	
-	print("[呪い付与] 不屈 → タイル", tile_index, " (", duration, "R)")
+	print("[刻印付与] 奮闘 → タイル", tile_index, " (", duration, "R)")
 	return true
 
-## 不屈呪いを持っているか（静的メソッド）
+## 奮闘呪いを持っているか（静的メソッド）
 static func has_indomitable_curse(creature: Dictionary) -> bool:
 	if creature.is_empty():
 		return false
@@ -272,9 +272,9 @@ func set_down_state_for_tile(tile_index: int, tile_nodes: Dictionary) -> bool:
 	
 	var creature_name = tile.creature_data.get("name", "クリーチャー")
 	
-	# 不屈チェック（不屈を持っていたらダウンしない）
+	# 奮闘チェック（奮闘を持っていたらダウンしない）
 	if has_indomitable_curse(tile.creature_data):
-		print("[ダウン付与] %s は不屈を持っているためダウンしません" % creature_name)
+		print("[ダウン付与] %s は奮闘を持っているためダウンしません" % creature_name)
 		return false
 	
 	# 既にダウン中かチェック

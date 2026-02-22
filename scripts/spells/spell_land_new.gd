@@ -10,7 +10,7 @@ var board_system_ref: BoardSystem3D
 var creature_manager_ref: CreatureManager
 var player_system_ref: PlayerSystem
 var card_system_ref: CardSystem
-var _spell_world_curse = null  # ソリッドワールド判定用
+var _spell_world_curse = null  # インペリアルガード判定用
 
 ## 初期化
 func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, player_system: PlayerSystem, card_system: CardSystem = null) -> void:
@@ -30,7 +30,7 @@ func setup(board_system: BoardSystem3D, creature_manager: CreatureManager, playe
 func set_spell_world_curse(swc) -> void:
 	_spell_world_curse = swc
 
-## ソリッドワールド（土地変性無効）チェック（公開メソッド）
+## インペリアルガード（不変）チェック（公開メソッド）
 ## SpellWorldCurseに委譲
 func is_land_change_blocked() -> bool:
 	if not _spell_world_curse:
@@ -44,14 +44,14 @@ func change_element(tile_index: int, new_element: String) -> bool:
 		push_error("SpellLand.change_element: BoardSystem3Dが未設定")
 		return false
 	
-	# ソリッドワールドチェック（ポップアップ付き）
+	# インペリアルガードチェック（ポップアップ付き）
 	if _spell_world_curse:
 		if _spell_world_curse.check_land_change_blocked(true):
 			return false
 	
-	# バロン等の土地破壊・変性無効チェック
+	# バロン等の領土守護チェック
 	if _has_land_protection(tile_index):
-		print("[土地変性無効] タイル%dは土地破壊・変性無効を持っています" % tile_index)
+		print("[不変] タイル%dは領土守護を持っています" % tile_index)
 		return false
 	
 	if not _validate_tile_index(tile_index):
@@ -96,14 +96,14 @@ func change_level(tile_index: int, delta: int) -> bool:
 	if not _validate_tile_index(tile_index):
 		return false
 	
-	# ソリッドワールドチェック（レベルダウンのみブロック、ポップアップ付き）
+	# インペリアルガードチェック（レベルダウンのみブロック、ポップアップ付き）
 	if delta < 0 and _spell_world_curse:
 		if _spell_world_curse.check_land_change_blocked(true):
 			return false
 	
-	# バロン等の土地破壊・変性無効チェック（レベルダウンのみ）
+	# バロン等の領土守護チェック（レベルダウンのみ）
 	if delta < 0 and _has_land_protection(tile_index):
-		print("[土地破壊無効] タイル%dは土地破壊・変性無効を持っています" % tile_index)
+		print("[土地破壊無効] タイル%dは領土守護を持っています" % tile_index)
 		return false
 	
 	# BoardSystem3DのtilesはNodeの配列なので、tile_nodesを使う
@@ -683,7 +683,7 @@ func _apply_effect_change_caster_tile_element(effect: Dictionary, target_data: D
 	return change_element(caster_tile_index, new_element)
 
 
-## アルカナアーツ使用後に自壊
+## アルカナアーツ使用後に自滅
 func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -> bool:
 	# アルカナアーツを使用したクリーチャーのタイルを取得
 	var caster_tile_index = target_data.get("caster_tile_index", -1)
@@ -698,7 +698,7 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	var tile = board_system_ref.tile_nodes[caster_tile_index]
 	var creature_data = tile.creature_data
 	if creature_data.is_empty():
-		print("[アルカナアーツ自壊] タイル%dにクリーチャーがいません" % caster_tile_index)
+		print("[アルカナアーツ自滅] タイル%dにクリーチャーがいません" % caster_tile_index)
 		return false
 	
 	var creature_name = creature_data.get("name", "?")
@@ -719,11 +719,11 @@ func _apply_effect_self_destruct(_effect: Dictionary, target_data: Dictionary) -
 	if board_system_ref.tile_data_manager:
 		board_system_ref.tile_data_manager.update_all_displays()
 	
-	print("[アルカナアーツ自壊] %s (タイル%d) が自壊しました" % [creature_name, caster_tile_index])
+	print("[アルカナアーツ自滅] %s (タイル%d) が自滅しました" % [creature_name, caster_tile_index])
 	return true
 
 
-## タイルのクリーチャーが土地破壊・変性無効を持っているかチェック
+## タイルのクリーチャーが領土守護を持っているかチェック
 func _has_land_protection(tile_index: int) -> bool:
 	if not creature_manager_ref:
 		return false
@@ -735,4 +735,4 @@ func _has_land_protection(tile_index: int) -> bool:
 	var ability_parsed = creature_data.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	return "土地破壊・変性無効" in keywords
+	return "領土守護" in keywords

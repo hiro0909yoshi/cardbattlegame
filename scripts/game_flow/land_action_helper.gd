@@ -40,17 +40,17 @@ static func execute_level_up_with_level(handler, target_level: int, cost: int) -
 		if not tile.creature_data.is_empty():
 			_apply_level_up_buff(tile.creature_data)
 		
-		# コマンド成長呪いトリガー（ドミナントグロース）
+		# 昇華呪いトリガー（ドミナントグロース）
 		_trigger_command_growth(handler, handler.selected_tile_index)
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	if tile.has_method("set_down_state"):
 		# BaseTileのcreature_dataプロパティを直接参照
 		var creature = tile.creature_data
 		if not PlayerBuffSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		else:
-			pass  # 不屈スキル保持のためダウンしない
+			pass  # 奮闘スキル保持のためダウンしない
 	
 	# UI更新
 	if handler._player_info_service:
@@ -129,7 +129,7 @@ static func execute_move_creature(handler) -> bool:
 	if not handler.board_system or not handler.board_system.tile_nodes.has(handler.selected_tile_index):
 		return false
 	
-	# 移動可能なマスを取得（空地移動対応）
+	# 移動可能なマスを取得（瞬移対応）
 	var tile = handler.board_system.tile_nodes[handler.selected_tile_index]
 
 	# ダウンチェック（ダウン中はドミニオコマンド使用不可）
@@ -375,7 +375,7 @@ static func confirm_move(handler, dest_tile_index: int):
 			# place_creature()を使って3Dカードも含めて正しく配置
 			dest_tile.place_creature(creature_data)
 		
-		# ダウン状態設定（不屈チェック）
+		# ダウン状態設定（奮闘チェック）
 		if dest_tile.has_method("set_down_state"):
 			if not PlayerBuffSystem.has_unyielding(creature_data):
 				dest_tile.set_down_state(true)
@@ -422,7 +422,7 @@ static func confirm_move(handler, dest_tile_index: int):
 			handler.close_dominio_order()
 			return
 		
-		# クリーチャー移動侵略無効チェック（グルイースラッグ、ランドアーチン等）
+		# クリーチャー鉄壁チェック（グルイースラッグ、ランドアーチン等）
 		if spell_curse_toll and dest_tile and not dest_tile.creature_data.is_empty():
 			if spell_curse_toll.is_creature_invasion_immune(dest_tile.creature_data):
 				var defender_name = dest_tile.creature_data.get("name", "クリーチャー")
@@ -432,16 +432,16 @@ static func confirm_move(handler, dest_tile_index: int):
 				handler.close_dominio_order()
 				return
 		
-		# プレイヤー侵略不可呪いチェック（バンフィズム）
+		# プレイヤー休戦呪いチェック（トゥルース）
 		var current_player_id = handler.board_system.current_player_index if handler.board_system else 0
 		if spell_curse_toll and spell_curse_toll.is_player_invasion_disabled(current_player_id):
 			if handler._message_service:
-				handler._message_service.show_toast("侵略不可呪い: 侵略できません")
+				handler._message_service.show_toast("休戦呪い: 侵略できません")
 			source_tile.place_creature(creature_data)
 			handler.close_dominio_order()
 			return
 		
-		# マーシフルワールド（下位侵略不可）チェック - SpellWorldCurseに委譲
+		# テンパランスロウ（節制）チェック - SpellWorldCurseに委譲
 		var defender_id = dest_tile.owner_id if dest_tile else -1
 		if handler.spell_world_curse:
 			if handler.spell_world_curse.check_invasion_blocked(current_player_id, defender_id, true):
@@ -470,7 +470,7 @@ static func confirm_move(handler, dest_tile_index: int):
 		handler.move_source_tile = handler.move_source_tile  # 既に設定済み
 		handler.set_boulder_eater_move(is_boulder_eater)  # バウダーイーターフラグを保存
 		
-		# 移動中フラグを設定（応援スキル計算から除外するため）
+		# 移動中フラグを設定（鼓舞スキル計算から除外するため）
 		battle_creature_data["is_moving"] = true
 		
 		# バトル情報を保存
@@ -498,11 +498,11 @@ static func execute_simple_move_battle(handler, dest_index: int, attacker_data: 
 	if success:
 		handler.board_system.set_tile_owner(dest_index, attacker_player)
 		handler.board_system.place_creature(dest_index, attacker_data)
-		# 不屈チェック
+		# 奮闘チェック
 		if not PlayerBuffSystem.has_unyielding(attacker_data):
 			dest_tile.set_down_state(true)
 		else:
-			pass  # 不屈スキル保持のためダウンしない
+			pass  # 奮闘スキル保持のためダウンしない
 	else:
 		pass  # 簡易バトルで敗北
 	
@@ -565,7 +565,7 @@ static func _apply_level_up_buff(creature_data: Dictionary):
 		EffectManager.apply_max_hp_effect(creature_data, -10)
 		print("[デュータイタン] レベルアップ MHP-10 (合計: %d)" % creature_data["base_up_hp"])
 
-## コマンド成長呪いをトリガー（ドミナントグロース）
+## 昇華呪いをトリガー（ドミナントグロース）
 static func _trigger_command_growth(handler, tile_index: int) -> void:
 	if not handler.game_flow_manager:
 		return
@@ -574,14 +574,14 @@ static func _trigger_command_growth(handler, tile_index: int) -> void:
 	if not spell_curse:
 		return
 	
-	# コマンド成長呪いがあればトリガー
+	# 昇華呪いがあればトリガー
 	var result = spell_curse.trigger_command_growth(tile_index)
 	
 	if result.get("triggered", false):
 		# 通知を表示
 		_show_command_growth_notification(handler, result)
 
-## コマンド成長の通知を表示
+## 昇華の通知を表示
 static func _show_command_growth_notification(handler, result: Dictionary) -> void:
 	# SpellCastNotificationUIを取得
 	var notification_ui = handler.spell_cast_notification_ui
@@ -596,7 +596,7 @@ static func _show_command_growth_notification(handler, result: Dictionary) -> vo
 	var old_hp = result.get("old_hp", 0)
 	var new_hp = result.get("new_hp", 0)
 	
-	var notification_text = "【コマンド成長】\n%s MHP+%d\nMHP: %d → %d\nHP: %d → %d" % [
+	var notification_text = "【昇華】\n%s MHP+%d\nMHP: %d → %d\nHP: %d → %d" % [
 		creature_name, hp_bonus, old_mhp, new_mhp, old_hp, new_hp
 	]
 	
@@ -651,7 +651,7 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# EP消費
 	handler.player_system.add_magic(current_player.id, -cost)
 	
-	# 地形変化実行（SpellLand経由でソリッドワールドチェックも行う）
+	# 地形変化実行（SpellLand経由でインペリアルガードチェックも行う）
 	var success = handler.spell_land.change_element(tile_index, new_element)
 	if not success:
 		# EPを返却
@@ -661,16 +661,16 @@ static func execute_terrain_change_with_element(handler, new_element: String) ->
 	# タイルを再取得（属性変更後のインスタンス）
 	tile = handler.board_system.tile_nodes[tile_index]
 	
-	# コマンド成長呪いトリガー（ドミナントグロース）
+	# 昇華呪いトリガー（ドミナントグロース）
 	_trigger_command_growth(handler, tile_index)
 	
-	# ダウン状態設定（不屈チェック）
+	# ダウン状態設定（奮闘チェック）
 	if tile.has_method("set_down_state"):
 		var creature = tile.creature_data
 		if not creature.is_empty() and not PlayerBuffSystem.has_unyielding(creature):
 			tile.set_down_state(true)
 		elif not creature.is_empty():
-			pass  # 不屈スキル保持のためダウンしない
+			pass  # 奮闘スキル保持のためダウンしない
 	
 	# UI更新
 	if handler._player_info_service:
@@ -712,7 +712,7 @@ static func execute_terrain_change(handler) -> bool:
 
 	var tile_index = handler.selected_tile_index
 
-	# ソリッドワールド（土地変性無効）チェック - SpellWorldCurseに委譲
+	# インペリアルガード（不変）チェック - SpellWorldCurseに委譲
 	if handler.spell_world_curse:
 		if handler.spell_world_curse.check_land_change_blocked(true):
 			return false

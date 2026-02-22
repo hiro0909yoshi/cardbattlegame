@@ -5,7 +5,7 @@
 # - プレイヤー検索（自分/敵/全員）
 # - 土地検索（レベル、属性、距離）
 # - ゲート検索（未訪問ゲート）
-# - 防魔フィルタ自動適用
+# - 結界フィルタ自動適用
 #
 # 使用例:
 #   # handler経由
@@ -116,13 +116,13 @@ static func get_valid_targets_core(systems: Dictionary, target_type: String, tar
 	if target_info.get("most_common_element", false) and not targets.is_empty():
 		targets = _filter_by_most_common_element(targets)
 	
-	# 防魔フィルター（ignore_protection: true でスキップ可能）
+	# 結界フィルター（ignore_protection: true でスキップ可能）
 	if not target_info.get("ignore_protection", false):
 		var before_count = targets.size()
 		var dummy_handler = DummyHandler.new(systems)
 		targets = SpellProtection.filter_protected_targets(targets, dummy_handler)
 		if before_count != targets.size():
-			print("[TargetFinder] 防魔フィルタ適用: %d → %d 件" % [before_count, targets.size()])
+			print("[TargetFinder] 結界フィルタ適用: %d → %d 件" % [before_count, targets.size()])
 	
 	return targets
 
@@ -282,7 +282,7 @@ static func _find_creature_targets(sys_board, current_player_id: int, target_inf
 			if is_down:
 				continue
 		
-		# HP効果無効チェック
+		# 堅牢チェック
 		if target_info.get("affects_hp", false):
 			if SpellProtection.has_hp_effect_immune(creature):
 				continue

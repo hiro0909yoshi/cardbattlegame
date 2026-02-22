@@ -110,7 +110,7 @@ func apply_creature_curses(participant: BattleParticipant, _tile_index: int) -> 
 			participant.temporary_bonus_ap += nullify_value
 		
 		"random_stat":
-			# 能力値不定（リキッドフォーム）- AP&HPをランダム値に設定
+			# 狂星（リキッドフォーム）- AP&HPをランダム値に設定
 			# SkillSpecialCreatureScript.apply_random_stat_effects()と同じ処理
 			var stat = params.get("stat", "both")
 			var min_value = int(params.get("min", 10))

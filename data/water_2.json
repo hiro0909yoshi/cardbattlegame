@@ -19,7 +19,7 @@
       "ap": 50,
       "hp": 60,
       "ability": "戦闘開始時HP減少・再生",
-      "ability_detail": "戦闘開始時、HP減少していたら自壊；再生",
+      "ability_detail": "戦闘開始時、HP減少していたら自滅；再生",
       "ability_parsed": {
         "keywords": [
           "再生"
@@ -54,11 +54,11 @@
       "creature_type": "defensive",
       "ap": 20,
       "hp": 40,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；アルカナアーツ[EP50・対象セプターに呪いダイス1～3]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP50・対象セプターに呪いダイス1～3]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
+          "堅守",
           "アルカナアーツ"
         ],
         "mystic_art": {
@@ -90,11 +90,11 @@
       "creature_type": "defensive",
       "ap": 10,
       "hp": 50,
-      "ability": "防御型・EP獲得",
-      "ability_detail": "防御型；EP獲得[受けたダメージ×5EP]",
+      "ability": "堅守・蓄魔",
+      "ability_detail": "堅守；蓄魔[受けたダメージ×5EP]",
       "ability_parsed": {
         "keywords": [
-          "防御型"
+          "堅守"
         ],
         "effects": [
           {
@@ -129,15 +129,15 @@
       },
       "ap": 50,
       "hp": 50,
-      "ability": "先制・巻物攻撃",
-      "ability_detail": "先制；巻物攻撃[AP=基本AP]",
+      "ability": "先制・術攻撃",
+      "ability_detail": "先制；術攻撃[AP=基本AP]",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "巻物攻撃"
+          "術攻撃"
         ],
         "keyword_conditions": {
-          "巻物攻撃": {
+          "術攻撃": {
             "scroll_type": "base_ap"
           }
         },
@@ -187,14 +187,14 @@
       },
       "ap": 30,
       "hp": 40,
-      "ability": "アイテム使用時巻物強打",
-      "ability_detail": "アイテム使用の戦闘後、カード獲得；巻物強打",
+      "ability": "アイテム使用時術強化",
+      "ability_detail": "アイテム使用の戦闘後、カード獲得；術強化",
       "ability_parsed": {
         "keywords": [
-          "巻物強打"
+          "術強化"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         },
@@ -268,14 +268,14 @@
       "ap": 30,
       "hp": 30,
       "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに呪い戦闘行動不可]",
+      "ability_detail": "アルカナアーツ[EP50・対象敵ドミニオに呪い消沈]",
       "ability_parsed": {
         "keywords": [
           "アルカナアーツ"
         ],
         "mystic_arts": [
           {
-            "name": "戦闘行動不可",
+            "name": "消沈",
             "cost": 50,
             "spell_id": 2068
           }
@@ -299,8 +299,8 @@
       },
       "ap": 60,
       "hp": 60,
-      "ability": "先制・土地変性・再生",
-      "ability_detail": "先制；土地変性[水]；再生",
+      "ability": "先制・属性変化・再生",
+      "ability_detail": "先制；属性変化[水]；再生",
       "ability_parsed": {
         "keywords": [
           "先制",
@@ -391,10 +391,10 @@
       "ap": 10,
       "hp": 40,
       "ability": "カード引き・アルカナアーツ",
-      "ability_detail": "遺産[カード1枚]；アルカナアーツ[EP40・カードを1枚引く]",
+      "ability_detail": "形見[カード1枚]；アルカナアーツ[EP40・カードを1枚引く]",
       "ability_parsed": {
         "keywords": [
-          "遺産",
+          "形見",
           "アルカナアーツ"
         ],
         "effects": [
@@ -430,14 +430,14 @@
       },
       "ap": 20,
       "hp": 20,
-      "ability": "援護・MHP+援護クリーチャーのHP",
-      "ability_detail": "援護[水地風]；戦闘前、MHP+援護クリーチャーのHP",
+      "ability": "加勢・MHP+加勢クリーチャーのHP",
+      "ability_detail": "加勢[水地風]；戦闘前、MHP+加勢クリーチャーのHP",
       "ability_parsed": {
         "keywords": [
-          "援護"
+          "加勢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "water",
               "earth",
@@ -483,11 +483,11 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "死者復活[サーペントフライ]",
-      "ability_detail": "死者復活[サーペントフライ]",
+      "ability": "蘇生[サーペントフライ]",
+      "ability_detail": "蘇生[サーペントフライ]",
       "ability_parsed": {
         "keywords": [
-          "死者復活"
+          "蘇生"
         ],
         "effects": [
           {
@@ -556,12 +556,12 @@
       "creature_type": "defensive",
       "ap": 30,
       "hp": 40,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；不屈；アルカナアーツ[EP100・配置ドミニオを水に変える]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；奮闘；アルカナアーツ[EP100・配置ドミニオを水に変える]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
-          "不屈",
+          "堅守",
+          "奮闘",
           "アルカナアーツ"
         ]
       },
@@ -665,12 +665,12 @@
       },
       "ap": 60,
       "hp": 60,
-      "ability": "無効化・応援",
-      "ability_detail": "無効化[AP50以上]；応援[水風・HP+10]",
+      "ability": "無効化・鼓舞",
+      "ability_detail": "無効化[AP50以上]；鼓舞[水風・HP+10]",
       "ability_parsed": {
         "keywords": [
           "無効化",
-          "応援"
+          "鼓舞"
         ],
         "keyword_conditions": {
           "無効化": {
@@ -769,16 +769,16 @@
       },
       "ap": 20,
       "hp": 20,
-      "ability": "巻物強打・アルカナアーツ",
-      "ability_detail": "巻物強打；防魔；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
+      "ability": "術強化・アルカナアーツ",
+      "ability_detail": "術強化；結界；アルカナアーツ[EP100・自手札のスペルカードの効果を使用]",
       "ability_parsed": {
         "keywords": [
-          "巻物強打",
-          "防魔",
+          "術強化",
+          "結界",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         },

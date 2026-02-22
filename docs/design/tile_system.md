@@ -272,7 +272,7 @@ HP += レベル × 10
 3. **追加属性スキル**
    - 例: 「地形効果[火水]」を持つクリーチャーは火・水タイルでも地形効果
 
-4. **地形効果付与呪い**
+4. **恩寵呪い**
    - 呪いにより追加の属性から地形効果を得る
 
 ### 判定場所
@@ -464,7 +464,7 @@ const NO_STOP_TILES = ["warp", "shop"]
 | `docs/design/land_system.md` | ドミニオオーダー |
 | `docs/design/toll_system.md` | 通行料システム |
 | `docs/design/tile_creature_separation_plan.md` | タイル・クリーチャー分離設計 |
-| `docs/design/skills/vacant_move_skill.md` | 空地移動・敵地移動スキル |
+| `docs/design/skills/vacant_move_skill.md` | 瞬移・敵地移動スキル |
 
 ---
 

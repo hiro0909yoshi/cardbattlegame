@@ -26,25 +26,25 @@
 
 ```
 scripts/battle/skills/
-├── skill_support.gd           # 応援
-├── skill_assist.gd            # 援護
-├── skill_affinity.gd          # 感応
-├── skill_power_strike.gd      # 強打
+├── skill_support.gd           # 鼓舞
+├── skill_assist.gd            # 加勢
+├── skill_affinity.gd          # 共鳴
+├── skill_power_strike.gd      # 強化
 ├── skill_first_strike.gd      # 先制
 ├── skill_double_attack.gd     # 2回攻撃
 ├── skill_instant_death.gd     # 即死
 ├── skill_nullify.gd           # 無効化
-├── skill_penetration.gd       # 貫通
+├── skill_penetration.gd       # 刺突
 ├── skill_reflect.gd           # 反射
 ├── skill_regeneration.gd      # 再生
-├── skill_scroll_attack.gd     # 巻物攻撃
+├── skill_scroll_attack.gd     # 術攻撃
 ├── skill_item_destruction.gd  # アイテム破壊
 ├── skill_item_steal.gd        # アイテム盗み
 ├── skill_transform.gd         # 変身
-├── skill_revive.gd            # 死者復活
-├── skill_vacant_move.gd       # 空地移動
+├── skill_revive.gd            # 蘇生
+├── skill_vacant_move.gd       # 瞬移
 ├── skill_enemy_land_move.gd   # 敵地移動
-├── skill_indomitable.gd       # 不屈
+├── skill_indomitable.gd       # 奮闘
 ├── skill_land_count.gd        # 土地数比例
 ├── skill_destroy_count.gd     # 破壊数カウント
 ├── skill_hand_count.gd        # 手札数効果
@@ -85,16 +85,16 @@ func setup_systems(board_system, game_flow_manager, card_system)
 | ファイル名 | スキル | 行数目安 | 優先度 |
 |-----------|--------|---------|--------|
 | skill_transform.gd | 変身 | 100-150 | Phase 0 (高) |
-| skill_support.gd | 応援 | 150-200 | Phase 1 (高) |
-| skill_affinity.gd | 感応 | 100-150 | Phase 2 (高) |
+| skill_support.gd | 鼓舞 | 150-200 | Phase 1 (高) |
+| skill_affinity.gd | 共鳴 | 100-150 | Phase 2 (高) |
 | skill_land_count.gd | 土地数比例 | 100-150 | Phase 3 (高) |
 | skill_destroy_count.gd | 破壊数カウント | 50-80 | Phase 3 (中) |
 | skill_hand_count.gd | 手札数効果 | 50-80 | Phase 3 (中) |
 | skill_constant_bonus.gd | 常時補正 | 50-80 | Phase 3 (中) |
 | skill_battle_condition.gd | 戦闘地条件 | 100-150 | Phase 3 (中) |
 | skill_turn_number.gd | ターン数ボーナス | 80-100 | Phase 3 (中) |
-| skill_power_strike.gd | 強打 | 100-150 | Phase 4 (高) |
-| skill_scroll_attack.gd | 巻物攻撃 | 100-150 | Phase 4 (高) |
+| skill_power_strike.gd | 強化 | 100-150 | Phase 4 (高) |
+| skill_scroll_attack.gd | 術攻撃 | 100-150 | Phase 4 (高) |
 | skill_double_attack.gd | 2回攻撃 | 30-50 | Phase 5 (中) |
 | skill_reflect.gd | 反射 | 150-200 | 戦闘中 (中) |
 | skill_item_destruction.gd | アイテム破壊 | 80-100 | 戦闘前 (中) |
@@ -102,14 +102,14 @@ func setup_systems(board_system, game_flow_manager, card_system)
 | skill_random_stat.gd | ランダムステータス | 50-80 | 準備時 (低) |
 | skill_instant_death.gd | 即死 | 80-100 | 戦闘後 (中) |
 | skill_nullify.gd | 無効化 | 100-150 | 戦闘前 (中) |
-| skill_penetration.gd | 貫通 | 30-50 | 戦闘前 (低) |
+| skill_penetration.gd | 刺突 | 30-50 | 戦闘前 (低) |
 | skill_regeneration.gd | 再生 | 30-50 | 戦闘後 (中) |
 | skill_first_strike.gd | 先制 | 30-50 | 準備時 (低) |
-| skill_revive.gd | 死者復活 | 80-100 | 戦闘後 (低) |
-| skill_vacant_move.gd | 空地移動 | 50-80 | 移動時 (低) |
+| skill_revive.gd | 蘇生 | 80-100 | 戦闘後 (低) |
+| skill_vacant_move.gd | 瞬移 | 50-80 | 移動時 (低) |
 | skill_enemy_land_move.gd | 敵地移動 | 50-80 | 移動時 (低) |
-| skill_indomitable.gd | 不屈 | 30-50 | 移動時 (低) |
-| skill_assist.gd | 援護 | 100-150 | アイテム (低) |
+| skill_indomitable.gd | 奮闘 | 30-50 | 移動時 (低) |
+| skill_assist.gd | 加勢 | 100-150 | アイテム (低) |
 
 **合計推定**: 約2,000-2,500行（元: 1,116行、増加: +80-120%）
 
@@ -125,36 +125,36 @@ func setup_systems(board_system, game_flow_manager, card_system)
 # skill_power_strike.gd
 class_name SkillPowerStrike
 
-## 強打スキルを適用
+## 強化スキルを適用
 ## @param participant: BattleParticipant
 ## @param context: 戦闘コンテキスト
 ## @return: 適用されたか
 static func apply(participant: BattleParticipant, context: Dictionary) -> bool:
 	var keywords = participant.creature_data.get("ability_parsed", {}).get("keywords", [])
 	
-	if not "強打" in keywords:
+	if not "強化" in keywords:
 		return false
 	
 	# 条件チェック
 	var keyword_conditions = participant.creature_data.get("ability_parsed", {}).get("keyword_conditions", {})
-	var power_strike_condition = keyword_conditions.get("強打", {})
+	var power_strike_condition = keyword_conditions.get("強化", {})
 	
 	var condition_checker = ConditionChecker.new()
 	if not condition_checker._evaluate_single_condition(power_strike_condition, context):
 		return false
 	
-	# 強打適用
+	# 強化適用
 	var multiplier = power_strike_condition.get("multiplier", 2.0)
 	var old_ap = participant.current_ap
 	participant.current_ap = int(participant.current_ap * multiplier)
 	
-	print("【強打】", participant.creature_data.get("name"), " AP:", old_ap, "→", participant.current_ap)
+	print("【強化】", participant.creature_data.get("name"), " AP:", old_ap, "→", participant.current_ap)
 	return true
 
-## 強打スキルを持つかチェック（オプション）
+## 強化スキルを持つかチェック（オプション）
 static func has_skill(creature_data: Dictionary) -> bool:
 	var keywords = creature_data.get("ability_parsed", {}).get("keywords", [])
-	return "強打" in keywords
+	return "強化" in keywords
 ```
 
 ### メインファイルからの呼び出し
@@ -178,14 +178,14 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	SkillTransform.apply(attacker)
 	SkillTransform.apply(defender)
 	
-	# Phase 1: 応援
+	# Phase 1: 鼓舞
 	SkillSupport.apply_to_all(participants, tile_info.get("index", -1), board_system_ref)
 	
 	# コンテキスト構築
 	var attacker_context = _build_context(attacker, defender, tile_info, attacker_index)
 	var defender_context = _build_context(defender, attacker, tile_info, defender.player_id)
 	
-	# Phase 2: 感応
+	# Phase 2: 共鳴
 	SkillAffinity.apply(attacker, attacker_context)
 	SkillAffinity.apply(defender, defender_context)
 	
@@ -193,7 +193,7 @@ func apply_pre_battle_skills(participants: Dictionary, tile_info: Dictionary, at
 	SkillLandCount.apply(attacker, attacker_context)
 	SkillLandCount.apply(defender, defender_context)
 	
-	# Phase 4: 強打
+	# Phase 4: 強化
 	SkillPowerStrike.apply(attacker, attacker_context)
 	SkillPowerStrike.apply(defender, defender_context)
 	
@@ -246,10 +246,10 @@ mkdir -p scripts/battle/skills
 
 #### フェーズ別の優先順位
 1. **Phase 0 (変身)** - 最優先
-2. **Phase 1 (応援)** - 高優先度
-3. **Phase 2 (感応)** - 高優先度
+2. **Phase 1 (鼓舞)** - 高優先度
+3. **Phase 2 (共鳴)** - 高優先度
 4. **Phase 3 (効果)** - 中優先度
-5. **Phase 4 (強打・巻物)** - 高優先度
+5. **Phase 4 (強化・巻物)** - 高優先度
 6. **戦闘中・戦闘後** - 低優先度
 
 ### Step 3: 1スキルずつ分離とテスト（重要）
@@ -286,7 +286,7 @@ mkdir -p scripts/battle/skills
 
 **分離前**:
 ```markdown
-### 強打
+### 強化
 - **実装状況**: ✅ 完了
 - **実装場所**: `scripts/battle/battle_skill_processor.gd`
 - **関数**: `apply_power_strike_skills()`
@@ -294,7 +294,7 @@ mkdir -p scripts/battle/skills
 
 **分離後**:
 ```markdown
-### 強打
+### 強化
 - **実装状況**: ✅ 完了（分離済み）
 - **実装場所**: `scripts/battle/skills/skill_power_strike.gd`
 - **関数**: `SkillPowerStrike.apply()`
@@ -308,12 +308,12 @@ mkdir -p scripts/battle/skills
 ## 使用箇所リスト
 
 ### 3-1. MHP（最大HP）閾値以下
-- ✅ **skill_power_strike.gd** - 強打の条件判定
+- ✅ **skill_power_strike.gd** - 強化の条件判定
   - 条件: `{"condition_type": "mhp_below", "value": 40}`
   - 行数: 約25行目
 
 ### 7-3. 種族条件
-- ✅ **skill_support.gd** - 応援の対象判定
+- ✅ **skill_support.gd** - 鼓舞の対象判定
   - 条件: `{"condition_type": "race", "race": "goblin"}`
   - 行数: 約45行目
 ```

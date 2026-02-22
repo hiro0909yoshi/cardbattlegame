@@ -1,14 +1,14 @@
 class_name SkillItemCreature
 extends RefCounted
 
-## アイテムクリーチャースキル処理
+## レリックスキル処理
 ##
 ## 対象クリーチャー:
 ## - 438: リビングアーマー - クリーチャー時AP+50
-## - 439: リビングアムル - 死者復活[リビングアムル]（敵武器不使用時）
+## - 439: リビングアムル - 蘇生[リビングアムル]（敵武器不使用時）
 ## - 440: リビングクローブ - AP&HP=他属性配置数×5
 ## - 441: リビングヘルム - 基本効果のみ
-## - 442: リビングボム - 道連れ[HP20以下]
+## - 442: リビングボム - 相討[HP20以下]
 
 const LIVING_ARMOR_ID = 438
 const LIVING_AMUL_ID = 439
@@ -21,10 +21,10 @@ const LIVING_BOMB_ID = 442
 # 判定関数
 # ============================================================
 
-## アイテムクリーチャーかどうか判定
+## レリックかどうか判定
 static func is_item_creature(card_data: Dictionary) -> bool:
 	var keywords = card_data.get("ability_parsed", {}).get("keywords", [])
-	return "アイテムクリーチャー" in keywords
+	return "レリック" in keywords
 
 
 # ============================================================
@@ -35,7 +35,7 @@ static func is_item_creature(card_data: Dictionary) -> bool:
 static func apply_as_item(participant, item_creature_data: Dictionary, _board_system) -> void:
 	var creature_id = item_creature_data.get("id", 0)
 	var item_name = item_creature_data.get("name", "???")
-	print("[アイテムクリーチャー効果] ", item_name, " (ID:", creature_id, ")")
+	print("[レリック効果] ", item_name, " (ID:", creature_id, ")")
 	
 	match creature_id:
 		LIVING_CLOVE_ID:
@@ -56,7 +56,7 @@ static func apply_as_item(participant, item_creature_data: Dictionary, _board_sy
 				participant.item_bonus_hp += base_hp
 				print("  HP+", base_hp)
 	
-	# スキル継承（道連れ等）
+	# スキル継承（相討等）
 	_inherit_skills(participant, item_creature_data)
 
 
@@ -102,10 +102,10 @@ static func apply_as_creature(participant, board_system) -> void:
 
 
 # ============================================================
-# リビングボム: 道連れ[HP20以下]
+# リビングボム: 相討[HP20以下]
 # ============================================================
 
-## HP閾値での自爆＋道連れチェック（ダメージ後に呼び出す）
+## HP閾値での自爆＋相討チェック（ダメージ後に呼び出す）
 ## Returns: 両者死亡などでバトルを終了すべき場合はtrue
 static func check_hp_threshold_self_destruct(damaged, opponent) -> bool:
 	if not damaged.is_alive():
@@ -124,7 +124,7 @@ static func check_hp_threshold_self_destruct(damaged, opponent) -> bool:
 			
 			# HP 1〜閾値の範囲に入った場合（0以下は普通に死亡）
 			if current_hp > 0 and current_hp <= threshold:
-				print("【道連れ[HP%d以下]発動】%s のHP %d <= %d" % [
+				print("【相討[HP%d以下]発動】%s のHP %d <= %d" % [
 					threshold,
 					damaged.creature_data.get("name", "?"),
 					current_hp,
@@ -136,9 +136,9 @@ static func check_hp_threshold_self_destruct(damaged, opponent) -> bool:
 				damaged.base_hp = 0
 				damaged.current_hp = 0
 				
-				# 相手も道連れで即死
+				# 相手も相討で即死
 				if opponent.is_alive():
-					print("  → %s を道連れで撃破！" % opponent.creature_data.get("name", "?"))
+					print("  → %s を相討で撃破！" % opponent.creature_data.get("name", "?"))
 					opponent.instant_death_flag = true
 					opponent.base_hp = 0
 					opponent.current_hp = 0
@@ -149,10 +149,10 @@ static func check_hp_threshold_self_destruct(damaged, opponent) -> bool:
 
 
 # ============================================================
-# リビングアムル: 死者復活[リビングアムル]（敵武器不使用時）
+# リビングアムル: 蘇生[リビングアムル]（敵武器不使用時）
 # ============================================================
 
-## 死者復活チェック（死亡時に呼び出す）
+## 蘇生チェック（死亡時に呼び出す）
 ## Returns: 復活する場合はクリーチャーID、しない場合は-1
 static func check_revive_on_death(defeated, opponent) -> int:
 	var ability_parsed = defeated.creature_data.get("ability_parsed", {})
@@ -172,10 +172,10 @@ static func check_revive_on_death(defeated, opponent) -> int:
 				if condition_type == "enemy_item_not_used":
 					var item_category = condition.get("item_category", "")
 					if not _check_enemy_item_not_used(opponent, item_category):
-						print("【死者復活条件未達】敵が%sを使用" % item_category)
+						print("【蘇生条件未達】敵が%sを使用" % item_category)
 						continue
 			
-			print("【死者復活発動】→ クリーチャーID:", creature_id)
+			print("【蘇生発動】→ クリーチャーID:", creature_id)
 			return creature_id
 	
 	return -1
@@ -229,7 +229,7 @@ static func apply_living_clove_stat(participant, board_system) -> void:
 	print("【リビングクローブ効果】ST&HP=", calculated_value)
 
 
-## スキルを継承（道連れ、死者復活等）
+## スキルを継承（相討、蘇生等）
 static func _inherit_skills(participant, item_creature_data: Dictionary) -> void:
 	var ability_parsed = item_creature_data.get("ability_parsed", {})
 	var effects = ability_parsed.get("effects", [])
@@ -256,7 +256,7 @@ static func _inherit_skills(participant, item_creature_data: Dictionary) -> void
 	
 	# keywordsをマージ
 	for keyword in keywords:
-		if keyword == "アイテムクリーチャー":
+		if keyword == "レリック":
 			continue
 		if keyword not in participant.creature_data["ability_parsed"]["keywords"]:
 			participant.creature_data["ability_parsed"]["keywords"].append(keyword)

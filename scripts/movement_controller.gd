@@ -211,7 +211,7 @@ func _move_steps_with_branch(player_id: int, steps: int, first_tile: int = -1) -
 		if remaining_steps > 0:
 			await warp_handler.check_pass_through_event(player_id, current_tile)
 
-		# 足どめチェック
+		# 拘束チェック
 		var stop_result = warp_handler.check_forced_stop_at_tile(current_tile, player_id)
 		if stop_result["stopped"]:
 			emit_signal("movement_step_completed", player_id, current_tile)
@@ -438,7 +438,7 @@ func move_along_path(player_id: int, path: Array) -> void:
 
 			tile_index = warped_tile
 
-		# 足どめ判定
+		# 拘束判定
 		var stop_result = warp_handler.check_forced_stop_at_tile(tile_index, player_id)
 		if stop_result["stopped"]:
 			emit_signal("movement_step_completed", player_id, tile_index)
@@ -514,14 +514,14 @@ func set_player_current_direction(player_id: int, direction: int) -> void:
 	player_system.players[player_id].current_direction = direction
 
 
-## プレイヤーの進行方向を反転（歩行逆転スペル用）
+## プレイヤーの進行方向を反転（反転スペル用）
 func reverse_player_direction(player_id: int) -> void:
 	var current_dir = _get_player_current_direction(player_id)
 	var new_dir = -current_dir if current_dir != 0 else -1
 	set_player_current_direction(player_id, new_dir)
 
 
-## 歩行逆転用: came_fromを「次に進む予定だったタイル」に変更
+## 反転用: came_fromを「次に進む予定だったタイル」に変更
 func swap_came_from_for_reverse(player_id: int) -> void:
 	if player_id < 0 or player_id >= player_tiles.size():
 		return
@@ -558,7 +558,7 @@ func _set_player_came_from(player_id: int, tile: int) -> void:
 	player_system.players[player_id].came_from = tile
 
 
-## 歩行逆転呪いが解除された時に呼ばれる
+## 反転呪いが解除された時に呼ばれる
 func on_movement_reverse_curse_removed(player_id: int) -> void:
 	swap_came_from_for_reverse(player_id)
 

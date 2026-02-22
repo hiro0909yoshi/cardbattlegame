@@ -98,7 +98,7 @@ if player_lands["fire"] >= 3:
 **例**: 「火土地1つごとにAP+10」
 
 - **計算方法**: 毎バトル時に動的計算（Option A採用）
-- **実装**: 感応スキルと同様の処理
+- **実装**: 共鳴スキルと同様の処理
 - **管理場所**: `ability_parsed` の effects
 
 ```gdscript
@@ -137,7 +137,7 @@ creature_data["permanent_effects"].append({
 ### 6. 隣接条件で上昇する効果
 **例**: 「隣接に自ドミニオがある場合、AP+20、HP+20」
 
-- **実装**: 既存の強打スキルシステムと同様
+- **実装**: 既存の強化スキルシステムと同様
 - **適用タイミング**: バトル開始時に条件チェック
 - **管理場所**: `ability_parsed` の conditions
 
@@ -238,8 +238,8 @@ tile_data["element_changed_by"] = "spell_element_change"
 
 ---
 
-### 11. 強打の判定前に入れる
-**適用順序**: おそらく全ての上昇系効果は強打の前に計算される
+### 11. 強化の判定前に入れる
+**適用順序**: おそらく全ての上昇系効果は強化の前に計算される
 
 ```
 1. 基礎値設定（base_hp, base_ap）
@@ -247,9 +247,9 @@ tile_data["element_changed_by"] = "spell_element_change"
 3. temporary_effects 適用
 4. 土地保有数による効果
 5. 隣接条件による効果
-6. 感応スキル
+6. 共鳴スキル
 7. その他の条件効果
-8. 強打スキル（最後）
+8. 強化スキル（最後）
 ```
 
 ---
@@ -367,7 +367,7 @@ class BattleParticipant:
 	# バトル中の一時ボーナス
 	var temporary_bonus_hp: int = 0   # 一時的なHPボーナス（移動で消える）
 	var temporary_bonus_ap: int = 0   # 一時的なAPボーナス
-	var resonance_bonus_hp: int = 0   # 感応ボーナス
+	var resonance_bonus_hp: int = 0   # 共鳴ボーナス
 	var land_bonus_hp: int = 0        # 土地ボーナス
 	var item_bonus_hp: int = 0        # アイテムボーナス（バトルのみ）
 	var item_bonus_ap: int = 0        # アイテムボーナス（バトルのみ）
@@ -394,9 +394,9 @@ current_ap = base_ap +
 			 base_up_ap + 
 			 temporary_bonus_ap + 
 			 item_bonus_ap + 
-			 (感応AP) + 
+			 (共鳴AP) + 
 			 (条件効果AP)
-# その後、強打で乗算
+# その後、強化で乗算
 ```
 
 ### ダメージ消費順序
@@ -405,7 +405,7 @@ current_ap = base_ap +
 
 ```
 1. land_bonus_hp（土地ボーナス）← 最初に消費
-2. resonance_bonus_hp（感応ボーナス）
+2. resonance_bonus_hp（共鳴ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
 4. spell_bonus_hp（スペルボーナス）
 5. item_bonus_hp（アイテムボーナス）
@@ -451,7 +451,7 @@ current_ap = base_ap +
    item_bonus_ap = 30  # 例
    item_bonus_hp = 20
 
-6. 感応効果を加算
+6. 共鳴効果を加算
    if 条件を満たす:
 	   current_ap += 30
 	   resonance_bonus_hp += 30
@@ -462,17 +462,17 @@ current_ap = base_ap +
    if 隣接条件:
 	   current_ap += 20
 
-8. 強打を適用（最後）
-   current_ap = current_ap * 強打倍率
+8. 強化を適用（最後）
+   current_ap = current_ap * 強化倍率
 ```
 
 ---
 
-## 変身・死者復活効果
+## 変身・蘇生効果
 
 ### 概要
 
-変身と死者復活は、クリーチャースキル、アイテム、スペルのすべてで使用される特殊な効果です。これらは通常のステータス変更とは異なり、クリーチャーそのものを変更する効果として扱います。
+変身と蘇生は、クリーチャースキル、アイテム、スペルのすべてで使用される特殊な効果です。これらは通常のステータス変更とは異なり、クリーチャーそのものを変更する効果として扱います。
 
 ### 効果の種類
 
@@ -492,7 +492,7 @@ current_ap = base_ap +
 - 同じクリーチャーへの変身（例: シェイプシフター）
 - いずれかのグループから選択（例: ドラゴンオーブ→いずれかのドラゴン）
 
-#### 2. 死者復活効果
+#### 2. 蘇生効果
 墓地から特定のクリーチャーを復活させる効果
 
 **発動タイミング**:
@@ -511,7 +511,7 @@ current_ap = base_ap +
 - クリーチャーデータそのものを置き換える
 - 既存の効果（permanent_effects等）は変身時にリセット
 
-**死者復活効果**:
+**蘇生効果**:
 - 墓地システムと連携
 - 復活したクリーチャーは元の状態で配置
 - 復活時の効果適用は別途設計
@@ -520,7 +520,7 @@ current_ap = base_ap +
 
 詳細な仕様は以下のドキュメントを参照:
 - [変身効果の詳細設計](spells/transform_effect.md)
-- [死者復活効果の詳細設計](spells/revive_effect.md)
+- [蘇生効果の詳細設計](spells/revive_effect.md)
 
 ---
 

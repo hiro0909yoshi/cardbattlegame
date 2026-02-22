@@ -45,7 +45,7 @@
 | **`base_hp`** | MHP計算用の基本HP値 | `creature_data["current_hp"] - base_up_hp`で計算 | - |
 | **`base_up_hp`** | 永続的な基礎HP上昇 | マスグロース+5、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_hp`** | 一時的なHPボーナス | ブレッシング+10、ターン数ボーナス | 消失 |
-| **`resonance_bonus_hp`** | 感応ボーナス | 感応+30 | 消失 |
+| **`resonance_bonus_hp`** | 共鳴ボーナス | 共鳴+30 | 消失 |
 | **`land_bonus_hp`** | 土地ボーナス | レベル3の土地+30 | 消失 |
 | **`item_bonus_hp`** | アイテムボーナス | ホーリーワード+20 | 消失 |
 | **`spell_bonus_hp`** | スペルボーナス | （予約） | 消失 |
@@ -55,7 +55,7 @@
 | **`base_up_ap`** | 永続的な基礎AP上昇 | 合成+20、周回ボーナス+10 | creature_dataに保存 |
 | **`temporary_bonus_ap`** | 一時的なAPボーナス | 効果配列から計算 | 消失 |
 | **`item_bonus_ap`** | アイテムボーナスAP | アイテム効果 | 消失 |
-| **`current_ap`** | 計算後の現在AP | 全ボーナス + 感応 + 条件効果 | - |
+| **`current_ap`** | 計算後の現在AP | 全ボーナス + 共鳴 + 条件効果 | - |
 
 #### 実装上の注意 (2025年11月5日更新)
 
@@ -69,7 +69,7 @@
 current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで削られる）
 			 base_up_hp +         # 永続ボーナス（マスグロース等、ダメージで削られない）
 			 temporary_bonus_hp + # 一時ボーナス（ブレッシング等）
-			 resonance_bonus_hp + # 感応ボーナス
+			 resonance_bonus_hp + # 共鳴ボーナス
 			 land_bonus_hp +      # 土地ボーナス
 			 item_bonus_hp +      # アイテムボーナス
 			 spell_bonus_hp       # スペルボーナス
@@ -91,7 +91,7 @@ current_hp = base_hp +            # MHP計算用の基本HP値（ダメージで
 
 ```
 1. land_bonus_hp（土地ボーナス）← 最初に消費
-2. resonance_bonus_hp（感応ボーナス）
+2. resonance_bonus_hp（共鳴ボーナス）
 3. temporary_bonus_hp（一時ボーナス）
 4. spell_bonus_hp（スペルボーナス）
 5. item_bonus_hp（アイテムボーナス）

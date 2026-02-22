@@ -236,7 +236,7 @@ func show_battle_ui(_mode: String = "battle"):
 
 func show_battle_ui_disabled():
 	if _message_service:
-		_message_service.show_action_prompt("peace呪い: 侵略不可（×でパス）")
+		_message_service.show_action_prompt("peace呪い: 休戦（×でパス）")
 	if _card_selection_service:
 		_card_selection_service.card_selection_filter = "disabled"
 		_card_selection_service.show_card_selection_ui(player_system.get_current_player())
@@ -369,7 +369,7 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	else:
 		cost = cost_data
 	
-	# ライフフォース呪いチェック
+	# エンジェルギフト呪いチェック
 	if spell_cost_modifier:
 		cost = spell_cost_modifier.get_modified_cost(current_player_index, card_data)
 	
@@ -390,14 +390,14 @@ func execute_swap(tile_index: int, card_index: int, _old_creature_data: Dictiona
 	player_system.add_magic(current_player_index, -cost)
 	board_system.place_creature(tile_index, card_data)
 	
-	# ダウン状態を設定（不屈チェック）
+	# ダウン状態を設定（奮闘チェック）
 	if board_system.tile_nodes.has(tile_index):
 		var tile = board_system.tile_nodes[tile_index]
 		if tile and tile.has_method("set_down_state"):
 			if not PlayerBuffSystem.has_unyielding(card_data):
 				tile.set_down_state(true)
 			else:
-				print("[TileActionProcessor] 不屈により交換後もダウンしません: タイル", tile_index)
+				print("[TileActionProcessor] 奮闘により交換後もダウンしません: タイル", tile_index)
 	
 	if _card_selection_service:
 		_card_selection_service.hide_card_selection_ui()

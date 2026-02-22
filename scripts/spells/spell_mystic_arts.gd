@@ -125,9 +125,9 @@ func start_mystic_phase(player_id: int) -> void:
 	if _lock_input_cb.is_valid():
 		_lock_input_cb.call()
 	
-	# ナチュラルワールドによるアルカナアーツ無効化チェック
+	# ハングドマンズシールによるアルカナアーツ無効化チェック
 	if _is_mystic_arts_disabled():
-		ui_message_requested.emit("ナチュラルワールド発動中：アルカナアーツは使用できません")
+		ui_message_requested.emit("ハングドマンズシール発動中：アルカナアーツは使用できません")
 		end_mystic_phase()
 		return
 	
@@ -461,7 +461,7 @@ func _select_target(selected_creature: Dictionary, mystic_art: Dictionary) -> vo
 			if effect_parsed.get("affects_hp", false):
 				affects_hp = true
 	
-	# HP効果無効チェック用にaffects_hpをtarget_infoにコピー
+	# 堅牢チェック用にaffects_hpをtarget_infoにコピー
 	if affects_hp:
 		target_info["affects_hp"] = true
 	
@@ -699,7 +699,7 @@ func _start_mystic_confirmation(creature: Dictionary, mystic_art: Dictionary, ta
 	if spell_phase_handler_ref:
 		target_count = TargetSelectionHelper.show_confirmation_highlights(spell_phase_handler_ref, target_type, target_info)
 	
-	# 対象がいない場合（all_creaturesで防魔等で0体）
+	# 対象がいない場合（all_creaturesで結界等で0体）
 	if target_type == "all_creatures" and target_count == 0:
 		ui_message_requested.emit("対象となるクリーチャーがいません")
 		_cancel_mystic_confirmation()
@@ -869,7 +869,7 @@ func _can_use_mystic_art(mystic_art: Dictionary, creature_data: Dictionary, play
 	for effect in effects:
 		var effect_type = effect.get("effect_type", "")
 		
-		# 移動系アルカナアーツで移動不可呪いを持っている場合は使用不可
+		# 移動系アルカナアーツで枷呪いを持っている場合は使用不可
 		if effect_type in ["move_self", "move_steps", "move_to_adjacent_enemy"]:
 			var curse = creature_data.get("curse", {})
 			if curse.get("curse_type", "") == "move_disable":
@@ -1159,8 +1159,8 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 	if not creature_data:
 		return
 	
-	# 不屈スキルで例外処理（ランドシステム仕様に準拠）
-	# 不屈を持つクリーチャーはダウン状態にならない
+	# 奮闘スキルで例外処理（ランドシステム仕様に準拠）
+	# 奮闘を持つクリーチャーはダウン状態にならない
 	if _has_unyielding(creature_data):
 				return
 	
@@ -1171,24 +1171,24 @@ func _set_caster_down_state(caster_tile_index: int, board_system_ref_param: Obje
 		caster_tile.set_down(true)
 
 
-## 不屈スキルまたは不屈呪いを持つか確認
+## 奮闘スキルまたは奮闘呪いを持つか確認
 func _has_unyielding(creature_data: Dictionary) -> bool:
 	if creature_data.is_empty():
 		return false
 	
-	# 1. 不屈スキル判定
+	# 1. 奮闘スキル判定
 	var ability_detail = creature_data.get("ability_detail", "")
-	if "不屈" in ability_detail:
+	if "奮闘" in ability_detail:
 		return true
 	
-	# 2. 不屈呪い判定
+	# 2. 奮闘呪い判定
 	if SpellMovement.has_indomitable_curse(creature_data):
 		return true
 	
 	return false
 
 
-## ナチュラルワールドでアルカナアーツが無効化されているか
+## ハングドマンズシールでアルカナアーツが無効化されているか
 func _is_mystic_arts_disabled() -> bool:
 	var stats = _get_game_stats()
 	return SpellWorldCurse.is_trigger_disabled("mystic_arts", stats)

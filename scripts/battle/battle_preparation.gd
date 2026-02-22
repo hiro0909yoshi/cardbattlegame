@@ -21,7 +21,7 @@ var skill_granter = BattleSkillGranterScript.new()
 var board_system_ref = null
 var card_system_ref: CardSystem = null
 var player_system_ref: PlayerSystem = null
-var spell_magic_ref = null  # SpellMagicの参照（EP獲得系アイテム用）
+var spell_magic_ref = null  # SpellMagicの参照（蓄魔系アイテム用）
 
 # ログ出力フラグ
 var silent: bool = false
@@ -81,7 +81,7 @@ func prepare_participants(attacker_index: int, card_data: Dictionary, tile_info:
 	var defender_base_hp = defender_creature.get("hp", 0)
 	var defender_land_bonus = calculate_land_bonus(defender_creature, tile_info)  # 防御側のみボーナス
 	
-	# 貫通スキルチェックはapply_pre_battle_skills()で実行（クリック後）
+	# 刺突スキルチェックはapply_pre_battle_skills()で実行（クリック後）
 	
 	var defender_ap = defender_creature.get("ap", 0)
 	var defender_owner = tile_info.get("owner", -1)

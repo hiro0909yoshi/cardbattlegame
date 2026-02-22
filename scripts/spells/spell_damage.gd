@@ -331,7 +331,7 @@ func apply_damage(tile_index: int, value: int) -> Dictionary:
 
 
 ## クリーチャー破壊（レベル維持）
-## スペル破壊時の死亡効果（遺産、変身）もここで処理
+## スペル破壊時の死亡効果（形見、変身）もここで処理
 func destroy_creature(tile: Node) -> void:
 	var creature_data = tile.creature_data.duplicate()
 	var creature_name = creature_data.get("name", "Unknown")
@@ -347,11 +347,11 @@ func destroy_creature(tile: Node) -> void:
 		print("[SpellDamage] %s は変身しました" % creature_name)
 		return
 	
-	# 遺産効果（EP獲得）
+	# 形見効果（蓄魔）
 	var legacy_amount = death_result.get("legacy_amount", 0)
 	if legacy_amount > 0 and owner_id >= 0 and board_system_ref and board_system_ref.player_system:
 		board_system_ref.player_system.add_magic(owner_id, legacy_amount)
-		print("[遺産] プレイヤー%d: G%d を獲得" % [owner_id + 1, legacy_amount])
+		print("[形見] プレイヤー%d: G%d を獲得" % [owner_id + 1, legacy_amount])
 	
 	# クリーチャーを削除（3Dカードも削除される）
 	tile.remove_creature()
@@ -387,7 +387,7 @@ func _check_spell_death_effects(creature_data: Dictionary, owner_id: int, tile: 
 					result["transformed"] = true
 					return result  # 変身したら他の効果は発動しない
 		
-		# 遺産効果（コーンフォーク等）- on_deathは戦闘・スペル両方で発動
+		# 形見効果（コーンフォーク等）- on_deathは戦闘・スペル両方で発動
 		if trigger == "on_death" and effect_type == "legacy_magic":
 			var amount = effect.get("amount", 0)
 			result["legacy_amount"] = amount

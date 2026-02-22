@@ -31,8 +31,8 @@
       },
       "ap": 50,
       "hp": 10,
-      "ability": "後手・即死・抹消",
-      "ability_detail": "後手；即死[70%]；抹消[倒手の同種カード全て・80%]",
+      "ability": "後手・即死・殲滅",
+      "ability_detail": "後手；即死[70%]；殲滅[倒手の同種カード全て・80%]",
       "ability_parsed": {
         "keywords": [
           "後手",
@@ -70,14 +70,14 @@
       },
       "ap": 30,
       "hp": 40,
-      "ability": "援護",
-      "ability_detail": "援護",
+      "ability": "加勢",
+      "ability_detail": "加勢",
       "ability_parsed": {
         "keywords": [
-          "援護"
+          "加勢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -97,15 +97,15 @@
       },
       "ap": 20,
       "hp": 20,
-      "ability": "援護・HP効果無効",
-      "ability_detail": "援護；HP効果無効",
+      "ability": "加勢・堅牢",
+      "ability_detail": "加勢；堅牢",
       "ability_parsed": {
         "keywords": [
-          "援護",
-          "HP効果無効"
+          "加勢",
+          "堅牢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -161,8 +161,8 @@
       "creature_type": "defensive",
       "ap": 10,
       "hp": 50,
-      "ability": "防御型・再生",
-      "ability_detail": "防御型；敵が水風の場合、HP+50；再生",
+      "ability": "堅守・再生",
+      "ability_detail": "堅守；敵が水風の場合、HP+50；再生",
       "ability_parsed": {
         "keywords": [
           "再生"
@@ -235,11 +235,11 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "不屈・アルカナアーツ",
-      "ability_detail": "不屈；アルカナアーツ[EP60・対象自クリーチャーのダウンを解除]",
+      "ability": "奮闘・アルカナアーツ",
+      "ability_detail": "奮闘；アルカナアーツ[EP60・対象自クリーチャーのダウンを解除]",
       "ability_parsed": {
         "keywords": [
-          "不屈",
+          "奮闘",
           "アルカナアーツ"
         ],
         "mystic_arts": [
@@ -333,15 +333,15 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "援護・防魔",
-      "ability_detail": "援護[火地]；防魔",
+      "ability": "加勢・結界",
+      "ability_detail": "加勢[火地]；結界",
       "ability_parsed": {
         "keywords": [
-          "援護",
-          "防魔"
+          "加勢",
+          "結界"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "fire",
               "earth"
@@ -404,14 +404,14 @@
       },
       "ap": 50,
       "hp": 40,
-      "ability": "感応",
-      "ability_detail": "感応[火・AP&HP+20]",
+      "ability": "共鳴",
+      "ability_detail": "共鳴[火・AP&HP+20]",
       "ability_parsed": {
         "keywords": [
-          "感応"
+          "共鳴"
         ],
         "keyword_conditions": {
-          "感応": {
+          "共鳴": {
             "element": "fire",
             "stat_bonus": {
               "ap": 20,
@@ -468,11 +468,11 @@
       },
       "ap": 30,
       "hp": 40,
-      "ability": "強制変化",
-      "ability_detail": "強制変化[ストーンウォール]",
+      "ability": "変質",
+      "ability_detail": "変質[ストーンウォール]",
       "ability_parsed": {
         "keywords": [
-          "強制変化"
+          "変質"
         ],
         "effects": [
           {
@@ -530,14 +530,14 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "援護・変身",
-      "ability_detail": "援護[火地]；スペル破壊時、グレートタスカーに変身",
+      "ability": "加勢・変身",
+      "ability_detail": "加勢[火地]；スペル破壊時、グレートタスカーに変身",
       "ability_parsed": {
         "keywords": [
-          "援護"
+          "加勢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "fire",
               "earth"
@@ -570,11 +570,11 @@
       },
       "ap": 20,
       "hp": 20,
-      "ability": "防魔・アルカナアーツ",
-      "ability_detail": "防魔；アルカナアーツ[EP30・対象敵クリーチャーに呪い\"移動不可\"]",
+      "ability": "結界・アルカナアーツ",
+      "ability_detail": "結界；アルカナアーツ[EP30・対象敵クリーチャーに呪い\"枷\"]",
       "ability_parsed": {
         "keywords": [
-          "防魔",
+          "結界",
           "アルカナアーツ"
         ],
         "mystic_art": {
@@ -600,16 +600,16 @@
       },
       "ap": 50,
       "hp": 50,
-      "ability": "援護・アイテム破壊・再生",
-      "ability_detail": "援護[地]；アイテム破壊[道具か巻物か援護クリーチャー]；再生",
+      "ability": "加勢・アイテム破壊・再生",
+      "ability_detail": "加勢[地]；アイテム破壊[道具か巻物か加勢クリーチャー]；再生",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "アイテム破壊",
           "再生"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "earth"
             ]
@@ -621,7 +621,7 @@
             "target_types": [
               "道具",
               "巻物",
-              "援護クリーチャー"
+              "加勢クリーチャー"
             ],
             "triggers": [
               "before_battle"
@@ -651,11 +651,11 @@
       "creature_type": "defensive",
       "ap": 20,
       "hp": 40,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；アルカナアーツ[EP40・対象敵クリーチャーに呪い\"地形効果無効\"]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP40・対象敵クリーチャーに呪い\"暗転\"]",
       "ability_parsed": {
         "keywords": [
-          "防御型"
+          "堅守"
         ],
         "effects": []
       },
@@ -681,14 +681,14 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "援護",
-      "ability_detail": "援護",
+      "ability": "加勢",
+      "ability_detail": "加勢",
       "ability_parsed": {
         "keywords": [
-          "援護"
+          "加勢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -715,8 +715,8 @@
       "creature_type": "defensive",
       "ap": 0,
       "hp": 60,
-      "ability": "防御型",
-      "ability_detail": "防御型"
+      "ability": "堅守",
+      "ability_detail": "堅守"
     },
     {
       "id": 223,

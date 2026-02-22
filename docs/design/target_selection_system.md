@@ -140,8 +140,8 @@ if tap_target_manager and tap_target_manager.is_active:
 |---------|------|
 | `scripts/cpu_ai/cpu_target_resolver.gd` | CPUのターゲット条件判定 |
 | `scripts/cpu_ai/cpu_spell_target_selector.gd` | CPUスペルターゲット選択 |
-| `scripts/spells/spell_protection.gd` | 防魔フィルタ |
-| `scripts/spells/spell_hp_immune.gd` | HP効果無効フィルタ |
+| `scripts/spells/spell_protection.gd` | 結界フィルタ |
+| `scripts/spells/spell_hp_immune.gd` | 堅牢フィルタ |
 | `scripts/camera_controller.gd` | タップ検出・シグナル発火 |
 
 ---
@@ -229,7 +229,7 @@ scripts/game_flow/
   - land: レベル、属性、距離
   - gate: 未訪問ゲート
 - `DummyHandler` クラス
-- 防魔フィルタ適用
+- 結界フィルタ適用
 
 #### target_ui_helper.gd（新規）
 - `format_target_info()` - テキストフォーマット
@@ -260,7 +260,7 @@ scripts/game_flow/
 | `can_move` | 移動可能 | チャリオット |
 | `require_mystic_arts` | アルカナアーツ持ち | テンプテーション |
 | `require_not_down` | ダウンしていない | テンプテーション |
-| `affects_hp` | HP効果 | HP効果無効チェック |
+| `affects_hp` | HP効果 | 堅牢チェック |
 
 ### player
 プレイヤーを対象とするスペル用
@@ -286,27 +286,27 @@ scripts/game_flow/
 
 ---
 
-## 防魔・HP効果無効フィルタ
+## 結界・堅牢フィルタ
 
 ### 自動適用
-`get_valid_targets_core()` は最後に自動的に防魔フィルタを適用。
+`get_valid_targets_core()` は最後に自動的に結界フィルタを適用。
 
 ```gdscript
-# 防魔フィルター（ignore_protection: true でスキップ可能）
+# 結界フィルター（ignore_protection: true でスキップ可能）
 if not target_info.get("ignore_protection", false):
     targets = SpellProtection.filter_protected_targets(targets, dummy_handler)
 ```
 
-### 防魔チェック対象（SpellProtection）
-- パッシブスキル「防魔」
+### 結界チェック対象（SpellProtection）
+- パッシブスキル「結界」
 - クリーチャー呪い（spell_protection, protection_wall）
 - プレイヤー呪い（spell_protection）
-- 世界呪い「呪い防魔化」
-- 世界呪い「防魔」
+- 世界呪い「女教皇」
+- 世界呪い「結界」
 
-### HP効果無効チェック（SpellHpImmune）
+### 堅牢チェック（SpellHpImmune）
 - `target_info.affects_hp = true` のスペルのみ適用
-- パッシブスキル「HP効果無効」
+- パッシブスキル「堅牢」
 - 呪い（hp_effect_immune）
 
 ---

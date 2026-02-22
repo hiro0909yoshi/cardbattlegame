@@ -43,7 +43,7 @@
   ↓
 【撃破判定】← ここで死亡時効果をチェック
   ↓
-死者復活チェック
+蘇生チェック
   ↓
 次の攻撃 or 戦闘終了
 ```
@@ -58,7 +58,7 @@
 
 ## 効果タイプ
 
-### 1. instant_death（道連れ）
+### 1. instant_death（相討）
 
 相手を即死させる効果。
 
@@ -67,7 +67,7 @@
 - target `"attacker"` で相手を指定
 - 即死フラグを立てる
 
-### 2. revenge_mhp_damage（雪辱）
+### 2. revenge_mhp_damage（報復）
 
 相手のMHP（最大HP）に直接ダメージ。
 
@@ -86,7 +86,7 @@
 
 **配置理由**:
 - 特殊な戦闘効果を扱う専門クラス
-- 道連れ、雪辱など複数の死亡時効果を統合管理
+- 相討、報復など複数の死亡時効果を統合管理
 - 戦闘フロー（battle_execution.gd）から分離
 
 **呼び出し箇所**:
@@ -97,7 +97,7 @@
 
 ## 効果詳細
 
-### instant_death（道連れ）
+### instant_death（相討）
 
 #### JSON形式
 
@@ -140,7 +140,7 @@
 {
   "id": 1048,
   "name": "バーニングハート",
-  "effect": "AP+|AP&|AP=HP+20；道連れ",
+  "effect": "AP+|AP&|AP=HP+20；相討",
   "effect_parsed": {
 	"stat_bonus": {"ap": 20, "hp": 20},
 	"effects": [
@@ -157,7 +157,7 @@
 
 ---
 
-### revenge_mhp_damage（雪辱）
+### revenge_mhp_damage（報復）
 
 #### JSON形式
 
@@ -197,14 +197,14 @@
 通常のダメージ消費順序：
 ```
 1. land_bonus_hp（土地ボーナス）← 最初に消費
-2. resonance_bonus_hp（感応）
+2. resonance_bonus_hp（共鳴）
 3. temporary_bonus_hp（一時ボーナス）
 4. spell_bonus_hp（スペル）
 5. item_bonus_hp（アイテム）
 6. current_hp ← 最後に消費
 ```
 
-**雪辱の特徴**:
+**報復の特徴**:
 - 1〜5のボーナスを無視
 - MHP範囲（base_hp + base_up_hp）に直接ダメージ
 - **base_up_hp は削られない**（永続的なMHPボーナスのため）
@@ -218,7 +218,7 @@
 {
   "id": 1044,
   "name": "ナパームアロー",
-  "effect": "AP+|AP&|AP=30；HP+20；雪辱[敵のMHP-40]",
+  "effect": "AP+|AP&|AP=30；HP+20；報復[敵のMHP-40]",
   "effect_parsed": {
 	"stat_bonus": {"ap": 30, "hp": 20},
 	"effects": [
@@ -237,51 +237,51 @@
 敵：MHP=50、土地ボーナス+30 → 現在HP=80
 攻撃：AP30 → 土地ボーナス削られる → HP=50
 反撃：死亡
-雪辱発動 → MHP 50 - 40 = 10 → 敵HP=10（生存）
+報復発動 → MHP 50 - 40 = 10 → 敵HP=10（生存）
 
 もしMHP=30なら:
-雪辱発動 → MHP 30 - 40 = -10 → 敵死亡
+報復発動 → MHP 30 - 40 = -10 → 敵死亡
 ```
 
 ---
 
 ## 実装クリーチャー・アイテム
 
-### instant_death（道連れ）
+### instant_death（相討）
 
 #### アイテム
-- **バーニングハート（ID: 1048）**: AP+|AP&|AP=HP+20；道連れ[100%]
+- **バーニングハート（ID: 1048）**: AP+|AP&|AP=HP+20；相討[100%]
 
-### revenge_mhp_damage（雪辱）
+### revenge_mhp_damage（報復）
 
 #### アイテム
-- **ナパームアロー（ID: 1044）**: AP+|AP&|AP=30；HP+20；雪辱[MHP-40]
+- **ナパームアロー（ID: 1044）**: AP+|AP&|AP=30；HP+20；報復[MHP-40]
 
 ---
 
 ## 他スキルとの相互作用
 
-### 道連れ（instant_death）
+### 相討（instant_death）
 
 #### 無効化スキル
 - ❌ **無効化では防げない**（死亡後の効果）
 - ❌ **反射では防げない**（死亡後の効果）
 
-#### 死者復活
-- ✅ **道連れ発動後に死者復活可能**
-- 道連れで相手を倒した後、使用者が復活する可能性
+#### 蘇生
+- ✅ **相討発動後に蘇生可能**
+- 相討で相手を倒した後、使用者が復活する可能性
 
 #### スクイドマントル
-- ❌ **防げない**（スクイドマントルは攻撃時の即死を無効化するが、道連れには無効）
+- ❌ **防げない**（スクイドマントルは攻撃時の即死を無効化するが、相討には無効）
 
-### 雪辱（revenge_mhp_damage）
+### 報復（revenge_mhp_damage）
 
 #### 無効化スキル
 - ❌ **無効化では防げない**（MHP範囲への直接ダメージ）
 - ❌ **反射では防げない**（死亡後の効果）
 
 #### 再生スキル
-- ⚠️ **雪辱後に再生が発動する可能性**
+- ⚠️ **報復後に再生が発動する可能性**
 - MHPが削られた後、残りHPまで回復
 
 #### バフ効果
@@ -295,7 +295,7 @@
 ### battle_special_effects.gd
 
 ```gdscript
-## 死亡時効果のチェック（道連れ、雪辱など）
+## 死亡時効果のチェック（相討、報復など）
 func check_on_death_effects(defeated: BattleParticipant, opponent: BattleParticipant) -> Dictionary:
 	"""
 	撃破された側の死亡時効果をチェックして発動
@@ -306,8 +306,8 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 	
 	Returns:
 		Dictionary: {
-			"death_revenge_activated": bool,  # 道連れが発動したか
-			"revenge_mhp_activated": bool     # 雪辱が発動したか
+			"death_revenge_activated": bool,  # 相討が発動したか
+			"revenge_mhp_activated": bool     # 報復が発動したか
 		}
 	"""
 	var result = {
@@ -338,11 +338,11 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 				continue
 			
 			match effect.get("effect_type", ""):
-				"instant_death":  # 道連れ
+				"instant_death":  # 相討
 					if _apply_instant_death_on_death(effect, opponent):
 						result["death_revenge_activated"] = true
 				
-				"revenge_mhp_damage":  # 雪辱
+				"revenge_mhp_damage":  # 報復
 					if opponent.is_alive():
 						_apply_revenge_mhp_damage(effect, opponent, item)
 						result["revenge_mhp_activated"] = true
@@ -353,7 +353,7 @@ func check_on_death_effects(defeated: BattleParticipant, opponent: BattlePartici
 ### battle_participant.gd
 
 ```gdscript
-## MHP範囲に直接ダメージ（雪辱効果用）
+## MHP範囲に直接ダメージ（報復効果用）
 func take_mhp_damage(damage: int) -> void:
 	"""
 	ボーナスを無視してMHP（base_hp + base_up_hp）を直接削る
@@ -380,35 +380,35 @@ func take_mhp_damage(damage: int) -> void:
 
 ## 使用例
 
-### 道連れの例
+### 相討の例
 
 ```gdscript
 # バーニングハート装備のクリーチャーが撃破された
 var death_effects = special_effects.check_on_death_effects(defeated, opponent)
 if death_effects["death_revenge_activated"]:
-	print("道連れ発動！相手も撃破")
+	print("相討発動！相手も撃破")
 ```
 
 **ログ出力例**:
 ```
 【死亡時効果チェック】アモン
-【道連れ発動】アモン → スチームギア (100% 判定成功)
-  → スチームギア 道連れで撃破！
+【相討発動】アモン → スチームギア (100% 判定成功)
+  → スチームギア 相討で撃破！
 ```
 
-### 雪辱の例
+### 報復の例
 
 ```gdscript
 # ナパームアロー装備のクリーチャーが撃破された
 var death_effects = special_effects.check_on_death_effects(defeated, opponent)
 if death_effects["revenge_mhp_activated"]:
-	print("雪辱発動！相手のMHPを削った")
+	print("報復発動！相手のMHPを削った")
 ```
 
 **ログ出力例**:
 ```
 【死亡時効果チェック】アモン
-【雪辱発動】アモンのナパームアロー → スチームギア
+【報復発動】アモンのナパームアロー → スチームギア
 【MHPダメージ】スチームギア MHPに-40
   base_hp: -40 (残り:-10)
   → MHP=-10 即死発動
@@ -475,7 +475,7 @@ check_on_death_effects(defender, attacker)  # 防御側が死亡
   "heal_amount": 30
 }
 
-// EP獲得（遺産）
+// 蓄魔（形見）
 {
   "effect_type": "grant_magic_on_death",
   "trigger": "on_death",

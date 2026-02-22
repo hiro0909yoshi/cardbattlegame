@@ -1,16 +1,16 @@
-# 制限解除スペルシステム
+# 解放スペルシステム
 # リリース（2125）: プレイヤーのアイテム制限・召喚条件を解除
-# ドキュメント: docs/design/spells/制限解除.md
+# ドキュメント: docs/design/spells/解放.md
 class_name SpellRestriction
 
 
 # ========================================
-# 制限解除判定（静的メソッド）
+# 解放判定（静的メソッド）
 # ========================================
 
-## 制限解除呪いを持っているかチェック
+## 解放呪いを持っているかチェック
 ## @param player: プレイヤーデータ（player_system.players[id]）
-## @return bool: 制限解除呪いを持っているか
+## @return bool: 解放呪いを持っているか
 static func has_restriction_release(player: Dictionary) -> bool:
 	var curse = player.get("curse", {})
 	if curse.is_empty():

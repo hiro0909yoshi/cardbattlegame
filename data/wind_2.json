@@ -86,15 +86,15 @@
 	  },
 	  "ap": 60,
 	  "hp": 60,
-	  "ability": "先制・強打・土地変性",
-	  "ability_detail": "先制；強打[火地]；土地変性[地]",
+	  "ability": "先制・強化・属性変化",
+	  "ability_detail": "先制；強化[火地]；属性変化[地]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "強打"
+          "強化"
 		],
 		"keyword_conditions": {
-		  "強打": {
+		  "強化": {
 			"condition_type": "enemy_is_element",
 			"elements": [
 			  "fire",
@@ -143,8 +143,8 @@
 	  "creature_type": "defensive",
 	  "ap": 20,
 	  "hp": 50,
-	  "ability": "防御型・先制",
-	  "ability_detail": "防御型；先制；AP+20、HP-10",
+	  "ability": "堅守・先制",
+	  "ability_detail": "堅守；先制；AP+20、HP-10",
 	  "ability_parsed": {
 		"keywords": [
           "先制"
@@ -177,11 +177,11 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "侵略時EP獲得・不屈",
-	  "ability_detail": "侵略時、EP獲得[EP100]；不屈",
+	  "ability": "侵略時蓄魔・奮闘",
+	  "ability_detail": "侵略時、蓄魔[EP100]；奮闘",
 	  "ability_parsed": {
 		"keywords": [
-          "不屈"
+          "奮闘"
 		],
 		"effects": [
 		  {
@@ -212,7 +212,7 @@
 	  "ap": 30,
 	  "hp": 30,
 	  "ability": "先制・攻撃成功時",
-	  "ability_detail": "先制；攻撃成功時、敵に呪い\"戦闘行動不可\"",
+	  "ability_detail": "先制；攻撃成功時、敵に呪い\"消沈\"",
 	  "ability_parsed": {
 		"keywords": [
           "先制"
@@ -222,7 +222,7 @@
 			"effect_type": "apply_curse",
 			"trigger": "on_attack_success",
 			"curse_type": "battle_disable",
-			"name": "戦闘行動不可"
+			"name": "消沈"
 		  }
 		]
 	  }
@@ -239,14 +239,14 @@
 	  },
 	  "ap": 50,
 	  "hp": 40,
-	  "ability": "強打",
-	  "ability_detail": "強打[MHP50以上]",
+	  "ability": "強化",
+	  "ability_detail": "強化[MHP50以上]",
 	  "ability_parsed": {
 		"keywords": [
-          "強打"
+          "強化"
 		],
 		"keyword_conditions": {
-		  "強打": {
+		  "強化": {
 			"condition_type": "enemy_max_hp_check",
 			"operator": ">=",
 			"value": 50
@@ -282,11 +282,11 @@
 	  },
 	  "ap": 30,
 	  "hp": 30,
-	  "ability": "貫通",
-	  "ability_detail": "貫通",
+	  "ability": "刺突",
+	  "ability_detail": "刺突",
 	  "ability_parsed": {
 		"keywords": [
-          "貫通"
+          "刺突"
 		]
 	  }
 	},
@@ -334,18 +334,18 @@
 	  },
 	  "ap": 30,
 	  "hp": 20,
-	  "ability": "防魔・アルカナアーツ",
-	  "ability_detail": "防魔；アルカナアーツ[EP50・対象セプターに呪い\"防魔\"]",
+	  "ability": "結界・アルカナアーツ",
+	  "ability_detail": "結界；アルカナアーツ[EP50・対象セプターに呪い\"結界\"]",
 	  "ability_parsed": {
 		"keywords": [
-		  "防魔",
+		  "結界",
           "アルカナアーツ"
 		],
 		"mystic_arts": [
 		  {
 			"id": "patronus_mystic_001",
-			"name": "防魔付与",
-			"description": "対象セプターに防魔を付与",
+			"name": "結界付与",
+			"description": "対象セプターに結界を付与",
 			"spell_id": 9023,
 			"cost": 50
 		  }
@@ -369,14 +369,14 @@
 	  },
 	  "ap": 20,
 	  "hp": 30,
-	  "ability": "空地移動",
-	  "ability_detail": "空地移動[風水]",
+	  "ability": "瞬移",
+	  "ability_detail": "瞬移[風水]",
 	  "ability_parsed": {
 		"keywords": [
-          "空地移動"
+          "瞬移"
 		],
 		"keyword_conditions": {
-		  "空地移動": {
+		  "瞬移": {
 			"target_elements": [
 			  "wind",
               "water"
@@ -498,8 +498,8 @@
 	  },
 	  "ap": 20,
 	  "hp": 50,
-	  "ability": "合成・先制・不屈",
-	  "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；不屈",
+	  "ability": "合成・先制・奮闘",
+	  "ability_detail": "合成[アイテム・AP+40、MHP-10]；先制；奮闘",
 	  "synthesis": {
 		"type": "item",
 		"effect_type": "stat_boost",
@@ -535,12 +535,12 @@
 	  },
 	  "ap": 20,
 	  "hp": 40,
-	  "ability": "応援・不屈",
-	  "ability_detail": "応援[自クリーチャー・AP&HP+隣接自ドミニオ数×20]；不屈",
+	  "ability": "鼓舞・奮闘",
+	  "ability_detail": "鼓舞[自クリーチャー・AP&HP+隣接自ドミニオ数×20]；奮闘",
 	  "ability_parsed": {
 		"keywords": [
-		  "応援",
-          "不屈"
+		  "鼓舞",
+          "奮闘"
 		],
 		"effects": [
 		  {
@@ -573,14 +573,14 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "強打・通行料変化",
-	  "ability_detail": "強打[火]；通行料変化[1/2~2.5倍]",
+	  "ability": "強化・課税",
+	  "ability_detail": "強化[火]；課税[1/2~2.5倍]",
 	  "ability_parsed": {
 		"keywords": [
-          "強打"
+          "強化"
 		],
 		"keyword_conditions": {
-		  "強打": {
+		  "強化": {
 			"condition_type": "enemy_is_element",
 			"elements": "fire"
 		  }
@@ -601,7 +601,7 @@
 			"multiplier_type": "variable",
 			"min_multiplier": 0.5,
 			"max_multiplier": 2.5,
-			"description": "通行料変化[1/2~2.5倍]"
+			"description": "課税[1/2~2.5倍]"
 		  }
 		]
 	  }
@@ -668,14 +668,14 @@
 	  },
 	  "ap": 40,
 	  "hp": 50,
-	  "ability": "感応",
-	  "ability_detail": "感応[水・AP+30]",
+	  "ability": "共鳴",
+	  "ability_detail": "共鳴[水・AP+30]",
 	  "ability_parsed": {
 		"keywords": [
-          "感応"
+          "共鳴"
 		],
 		"keyword_conditions": {
-		  "感応": {
+		  "共鳴": {
 			"element": "water",
 			"stat_bonus": {
 			  "ap": 30,
@@ -740,11 +740,11 @@
 	  },
 	  "ap": 70,
 	  "hp": 60,
-	  "ability": "応援・アルカナアーツ",
-	  "ability_detail": "応援[風水・AP+10]；アルカナアーツ[EP60・AP30以下をAP+20、AP50以上をAP-20]",
+	  "ability": "鼓舞・アルカナアーツ",
+	  "ability_detail": "鼓舞[風水・AP+10]；アルカナアーツ[EP60・AP30以下をAP+20、AP50以上をAP-20]",
 	  "ability_parsed": {
 		"keywords": [
-		  "応援",
+		  "鼓舞",
           "アルカナアーツ"
 		],
 		"effects": [
@@ -796,15 +796,15 @@
 	  },
 	  "ap": 40,
 	  "hp": 40,
-	  "ability": "先制・空地移動",
-	  "ability_detail": "先制；空地移動[風]",
+	  "ability": "先制・瞬移",
+	  "ability_detail": "先制；瞬移[風]",
 	  "ability_parsed": {
 		"keywords": [
 		  "先制",
-          "空地移動"
+          "瞬移"
 		],
 		"keyword_conditions": {
-		  "空地移動": {
+		  "瞬移": {
 			"target_elements": [
               "wind"
 			]

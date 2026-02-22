@@ -5,8 +5,8 @@
 ## 完了済み
 
 - [x] ブルガサリ → stat_change（ステータス変化）
-- [x] 貫通（penetration）
-- [x] 強打（power_strike）
+- [x] 刺突（penetration）
+- [x] 強化（power_strike）
 - [x] 先制（first_strike）
 - [x] 後手（last_strike）
 - [x] 再生（regeneration）※battle_special_effects.gd
@@ -18,7 +18,7 @@
 | 現在のハードコード | 行番号 | 対応状況 |
 |-------------------|--------|---------|
 | 戦闘開始時効果 | 83-84 | [x] |
-| アイテムクリーチャー | 179 | [x] |
+| レリック | 179 | [x] |
 | リビングクローブ | 183 | [x] |
 | オーガロード | 191 | [x] |
 | ターン数ボーナス | 196 | [x] |
@@ -33,10 +33,10 @@
 
 | スキル | 行番号 | effect_type | 対応状況 |
 |--------|--------|-------------|---------|
-| 感応 | 201 | resonance | [x] |
+| 共鳴 | 201 | resonance | [x] |
 | ランダムステータス | 76-77 | random_stat | [x] |
-| 応援 | 100-101 | support | [x] |
-| 巻物攻撃 | 157, 260 | scroll_attack | [x] |
+| 鼓舞 | 100-101 | support | [x] |
+| 術攻撃 | 157, 260 | scroll_attack | [x] |
 
 ## Phase 2: 攻撃成功時スキル
 
@@ -46,10 +46,10 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 |--------|-------------|---------|
 | アイテム破壊 | destroy_item | [x] |
 | アイテム盗み | steal_item | [x] |
-| EP獲得 | magic_gain | [x] |
+| 蓄魔 | magic_gain | [x] |
 | APドレイン | ap_drain | [x] |
 | 変身 | transform | [ ] |
-| 呪い付与 | apply_curse | [x] |
+| 刻印付与 | apply_curse | [x] |
 
 ## Phase 3: 戦闘終了時スキル
 
@@ -58,21 +58,21 @@ battle_execution.gd / battle_skill_processor.gdで処理されるもの。
 | AP⇔MHP交換 | swap_ap_mhp | [x] |
 | MHP減少 | reduce_enemy_mhp | [x] |
 | 土地レベルアップ | level_up_battle_land | [x] |
-| アイテム復帰 | item_return | [ ] |
-| 戦闘後破壊（呪い発動） | self_destruct | [x] |
+| 帰還 | item_return | [ ] |
+| 崩壊（呪い発動） | self_destruct | [x] |
 
 ## Phase 4: 死亡時スキル
 
 | スキル | effect_type | 対応状況 |
 |--------|-------------|---------|
-| 遺産（EP） | legacy_magic | [ ] |
-| 遺産（カード） | legacy_card | [ ] |
-| 死者復活 | revive | [x] |
+| 形見（EP） | legacy_magic | [ ] |
+| 形見（カード） | legacy_card | [ ] |
+| 蘇生 | revive | [x] |
 | 手札復活 | revive_to_hand | [x] |
-| 道連れ | death_revenge | [x] |
-| 自壊 | self_destruct | [x] |
-| 抹消 | annihilate | [ ] |
-| 雪辱 | revenge_mhp_damage | [x] |
+| 相討 | death_revenge | [x] |
+| 自滅 | self_destruct | [x] |
+| 殲滅 | annihilate | [ ] |
+| 報復 | revenge_mhp_damage | [x] |
 
 ## 実装手順
 

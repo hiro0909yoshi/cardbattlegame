@@ -53,16 +53,16 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "感応・防魔・アルカナアーツ",
-      "ability_detail": "感応[地]・AP&HP+20；防魔；アルカナアーツ[EP50・対象敵に30ダメージ]",
+      "ability": "共鳴・結界・アルカナアーツ",
+      "ability_detail": "共鳴[地]・AP&HP+20；結界；アルカナアーツ[EP50・対象敵に30ダメージ]",
       "ability_parsed": {
         "keywords": [
-          "感応",
-          "防魔",
+          "共鳴",
+          "結界",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "感応": {
+          "共鳴": {
             "element": "earth",
             "stat_bonus": {
               "ap": 20,
@@ -74,7 +74,7 @@
           {
             "id": "amon_mystic_001",
             "name": "バイタリティ",
-            "description": "対象ドミニオに呪い\"能力値+20\"；カードを1枚引く",
+            "description": "対象ドミニオに呪い\"暁光\"；カードを1枚引く",
             "spell_id": 2066,
             "cost": 50
           }
@@ -111,15 +111,15 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "強打・世界消去",
-      "ability_detail": "強打[呪い付きクリーチャー]；アルカナアーツ[EP50・世界呪いを消す]",
+      "ability": "強化・世界消去",
+      "ability_detail": "強化[呪い付きクリーチャー]；アルカナアーツ[EP50・世界呪いを消す]",
       "ability_parsed": {
         "keywords": [
-          "強打",
+          "強化",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "has_mark"
           }
         },
@@ -165,12 +165,12 @@
           "武器,アクセサリ,巻物"
         ]
       },
-      "ability": "防御型",
-      "ability_detail": "防御型；足どめ[火]",
+      "ability": "堅守",
+      "ability_detail": "堅守；拘束[火]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
-          "足どめ"
+          "堅守",
+          "拘束"
         ],
         "trap_stop": {
           "elements": [
@@ -286,14 +286,14 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "強打",
-      "ability_detail": "強打[火水地風]",
+      "ability": "強化",
+      "ability_detail": "強化[火水地風]",
       "ability_parsed": {
         "keywords": [
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "enemy_is_element",
             "elements": [
               "fire",
@@ -341,11 +341,11 @@
       "creature_type": "defensive",
       "ap": 30,
       "hp": 50,
-      "ability": "防御型・アルカナアーツ",
-      "ability_detail": "防御型；アルカナアーツ[EP30・1マス移動]",
+      "ability": "堅守・アルカナアーツ",
+      "ability_detail": "堅守；アルカナアーツ[EP30・1マス移動]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
+          "堅守",
           "アルカナアーツ"
         ],
         "mystic_art": {
@@ -379,12 +379,12 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "無効化・防魔",
-      "ability_detail": "無効化[AP40以上]；防魔",
+      "ability": "無効化・結界",
+      "ability_detail": "無効化[AP40以上]；結界",
       "ability_parsed": {
         "keywords": [
           "無効化",
-          "防魔"
+          "結界"
         ],
         "keyword_conditions": {
           "無効化": {
@@ -411,15 +411,15 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "巻物強打",
-      "ability_detail": "巻物強打；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自壊]",
+      "ability": "術強化",
+      "ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自滅]",
       "ability_parsed": {
         "keywords": [
-          "巻物強打",
+          "術強化",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         },
@@ -477,8 +477,8 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "不屈",
-      "ability_detail": "不屈"
+      "ability": "奮闘",
+      "ability_detail": "奮闘"
     },
     {
       "id": 15,
@@ -568,15 +568,15 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "援護・アルカナアーツ",
-      "ability_detail": "援護[火地]；アルカナアーツ[EP30・全セブターの呪いを消す]",
+      "ability": "加勢・アルカナアーツ",
+      "ability_detail": "加勢[火地]；アルカナアーツ[EP30・全セブターの呪いを消す]",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "fire",
               "earth"
@@ -605,11 +605,11 @@
       "ap": 10,
       "hp": 40,
       "ability": "先制・敵ダウン",
-      "ability_detail": "先制；攻撃成功時、敵をダウン；不屈",
+      "ability_detail": "先制；攻撃成功時、敵をダウン；奮闘",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "不屈"
+          "奮闘"
         ],
         "effects": [
           {
@@ -635,15 +635,15 @@
       },
       "ap": 60,
       "hp": 60,
-      "ability": "先制・強打・土地変性",
-      "ability_detail": "先制；強打[水]；土地変性[火]",
+      "ability": "先制・強化・属性変化",
+      "ability_detail": "先制；強化[水]；属性変化[火]",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "強打"
+          "強化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "enemy_is_element",
             "elements": [
               "water",
@@ -768,7 +768,7 @@
       "ap": 40,
       "hp": 40,
       "ability": "合成",
-      "ability_detail": "合成[地・ST&MHP+20]；応援[侵略側・AP+10]",
+      "ability_detail": "合成[地・ST&MHP+20]；鼓舞[侵略側・AP+10]",
       "synthesis": {
         "type": "element",
         "condition": "earth",
@@ -781,7 +781,7 @@
       "ability_parsed": {
         "keywords": [
           "合成",
-          "応援"
+          "鼓舞"
         ],
         "effects": [
           {
@@ -858,7 +858,7 @@
       "ap": 10,
       "hp": 20,
       "ability": "アルカナアーツ",
-      "ability_detail": "アルカナアーツ[EP80・対象自ドミニオに呪い防魔]",
+      "ability_detail": "アルカナアーツ[EP80・対象自ドミニオに呪い結界]",
       "ability_parsed": {
         "keywords": [
           "アルカナアーツ"
@@ -866,8 +866,8 @@
         "mystic_arts": [
           {
             "id": "domovoi_mystic_001",
-            "name": "防魔付与",
-            "description": "対象自ドミニオのクリーチャーに防魔を付与",
+            "name": "結界付与",
+            "description": "対象自ドミニオのクリーチャーに結界を付与",
             "spell_id": 9022,
             "cost": 80
           }

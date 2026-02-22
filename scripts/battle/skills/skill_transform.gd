@@ -4,7 +4,7 @@ class_name SkillTransform
 ##
 ## クリーチャーの変身（ランダム変身、強制変身）の処理を行う
 ## 
-## 注: 死者復活はbattle_special_effects.gdのcheck_on_death_effects()に移動済み
+## 注: 蘇生はbattle_special_effects.gdのcheck_on_death_effects()に移動済み
 ##
 ## 使用方法:
 ## ```gdscript
@@ -124,7 +124,7 @@ static func _apply_transform(participant: BattleParticipant, transform_effect: D
 	if revert_after_battle:
 		original_data = participant.creature_data.duplicate(true)
 	else:
-		# revert_after_battle: false の変身（強制変化、ツインスパイク等）が起きた場合、
+		# revert_after_battle: false の変身（変質、ツインスパイク等）が起きた場合、
 		# 以前のランダム変身で設定されたoriginal_dataをクリア（元に戻らないように）
 		var key = "attacker_original" if is_attacker else "defender_original"
 		if result.has(key) and not result[key].is_empty():

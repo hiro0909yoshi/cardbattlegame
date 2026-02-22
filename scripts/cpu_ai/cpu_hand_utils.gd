@@ -42,11 +42,11 @@ func calculate_card_cost(card_data: Dictionary, player_id: int) -> int:
 	else:
 		base_cost = cost_data * GameConstants.CARD_COST_MULTIPLIER
 	
-	# ライフフォース呪いチェック（クリーチャー/アイテムコスト0化）
+	# エンジェルギフト呪いチェック（クリーチャー/アイテムコスト0化）
 	if spell_cost_modifier:
 		var modified_cost = spell_cost_modifier.get_modified_cost(player_id, card_data)
 		if modified_cost == 0:
-			return 0  # ライフフォースでコスト0化
+			return 0  # エンジェルギフトでコスト0化
 	
 	if player_buff_system:
 		return player_buff_system.modify_card_cost(base_cost, card_data, player_id)
@@ -182,7 +182,7 @@ func check_lands_required(card_data: Dictionary, player_id: int) -> bool:
 	if lands_required.is_empty():
 		return true
 	
-	# ブライトワールド発動中は召喚条件を無視
+	# フールズフリーダム発動中は召喚条件を無視
 	if tile_action_processor:
 		if SummonConditionChecker.is_summon_condition_ignored(-1, tile_action_processor.game_flow_manager, tile_action_processor.board_system):
 			return true
@@ -427,27 +427,27 @@ func get_enemy_items(enemy_player_id: int) -> Array:
 	
 	return items
 
-## 敵が援護を使えるかチェック（防御側クリーチャーが援護スキルを持ち、手札に対象属性クリーチャーがいる）
+## 敵が加勢を使えるかチェック（防御側クリーチャーが加勢スキルを持ち、手札に対象属性クリーチャーがいる）
 ## @param enemy_player_id: 敵プレイヤーID
 ## @param defender_creature: 防御側クリーチャーデータ
-## @return: 援護可能なクリーチャーの配列
+## @return: 加勢可能なクリーチャーの配列
 func get_enemy_assist_creatures(enemy_player_id: int, defender_creature: Dictionary) -> Array:
-	# 防御側クリーチャーが援護スキルを持っているかチェック
+	# 防御側クリーチャーが加勢スキルを持っているかチェック
 	var ability_parsed = defender_creature.get("ability_parsed", {})
 	var keywords = ability_parsed.get("keywords", [])
 	
-	if "援護" not in keywords:
+	if "加勢" not in keywords:
 		return []
 	
-	# 援護対象属性を取得
+	# 加勢対象属性を取得
 	var keyword_conditions = ability_parsed.get("keyword_conditions", {})
-	var assist_condition = keyword_conditions.get("援護", {})
+	var assist_condition = keyword_conditions.get("加勢", {})
 	var target_elements = assist_condition.get("target_elements", [])
 	
 	if target_elements.is_empty():
 		return []
 	
-	# 敵の手札から援護対象属性のクリーチャーを収集
+	# 敵の手札から加勢対象属性のクリーチャーを収集
 	var enemy_hand = get_enemy_hand(enemy_player_id)
 	var assist_creatures: Array = []
 	
@@ -567,7 +567,7 @@ func _get_item_instant_death_info(item: Dictionary) -> Dictionary:
 	
 	for effect in effects:
 		if effect.get("effect_type") == "instant_death":
-			# 道連れ（on_death）は除外、攻撃時の即死のみ
+			# 相討（on_death）は除外、攻撃時の即死のみ
 			var trigger = effect.get("trigger", "")
 			if trigger != "on_death":
 				return effect

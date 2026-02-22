@@ -19,15 +19,15 @@
       },
       "ap": 0,
       "hp": 30,
-      "ability": "貫通・援護",
-      "ability_detail": "貫通；援護",
+      "ability": "刺突・加勢",
+      "ability_detail": "刺突；加勢",
       "ability_parsed": {
         "keywords": [
-          "貫通",
-          "援護"
+          "刺突",
+          "加勢"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "all"
             ]
@@ -48,16 +48,16 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "援護・先制・アルカナアーツ",
-      "ability_detail": "援護[無]；先制；アルカナアーツ[EP100・呪いのついた全クリーチャーのHP-20]",
+      "ability": "加勢・先制・アルカナアーツ",
+      "ability_detail": "加勢[無]；先制；アルカナアーツ[EP100・呪いのついた全クリーチャーのHP-20]",
       "ability_parsed": {
         "keywords": [
-          "援護",
+          "加勢",
           "先制",
           "アルカナアーツ"
         ],
         "keyword_conditions": {
-          "援護": {
+          "加勢": {
             "target_elements": [
               "neutral"
             ]
@@ -85,15 +85,15 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "先制・巻物強打",
-      "ability_detail": "先制；巻物強打",
+      "ability": "先制・術強化",
+      "ability_detail": "先制；術強化",
       "ability_parsed": {
         "keywords": [
           "先制",
-          "巻物強打"
+          "術強化"
         ],
         "keyword_conditions": {
-          "巻物強打": {
+          "術強化": {
             "scroll_type": "base_ap"
           }
         }
@@ -111,11 +111,11 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "全属性地形効果・防魔",
-      "ability_detail": "どの属性の土地からも地形効果を得る；防魔",
+      "ability": "全属性地形効果・結界",
+      "ability_detail": "どの属性の土地からも地形効果を得る；結界",
       "ability_parsed": {
         "keywords": [
-          "防魔"
+          "結界"
         ],
         "effects": [],
         "extra_land_elements": [
@@ -186,11 +186,11 @@
       },
       "ap": 20,
       "hp": 20,
-      "ability": "援護・EP奪取",
-      "ability_detail": "援護；EP奪取[敵に与えたダメージ×2EP]",
+      "ability": "加勢・吸魔",
+      "ability_detail": "加勢；吸魔[敵に与えたダメージ×2EP]",
       "ability_parsed": {
         "keywords": [
-          "援護"
+          "加勢"
         ],
         "effects": [
           {
@@ -217,12 +217,12 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "無効化・防魔",
-      "ability_detail": "無効化[巻物]；防魔",
+      "ability": "無効化・結界",
+      "ability_detail": "無効化[巻物]；結界",
       "ability_parsed": {
         "keywords": [
           "無効化",
-          "防魔"
+          "結界"
         ],
         "keyword_conditions": {
           "無効化": {
@@ -258,11 +258,11 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "応援",
-      "ability_detail": "応援[無・HP+20]",
+      "ability": "鼓舞",
+      "ability_detail": "鼓舞[無・HP+20]",
       "ability_parsed": {
         "keywords": [
-          "応援"
+          "鼓舞"
         ],
         "effects": [
           {
@@ -298,15 +298,15 @@
       },
       "ap": 40,
       "hp": 40,
-      "ability": "強打・無効化",
-      "ability_detail": "強打[水地]；無効化[火風]",
+      "ability": "強化・無効化",
+      "ability_detail": "強化[水地]；無効化[火風]",
       "ability_parsed": {
         "keywords": [
-          "強打",
+          "強化",
           "無効化"
         ],
         "keyword_conditions": {
-          "強打": {
+          "強化": {
             "condition_type": "enemy_is_element",
             "elements": [
               "water",
@@ -350,11 +350,11 @@
       },
       "ap": 0,
       "hp": 40,
-      "ability": "アイテムクリーチャー・戦闘中AP上昇",
-      "ability_detail": "アイテムクリーチャー；クリーチャーとして戦闘中、AP+50",
+      "ability": "レリック・戦闘中AP上昇",
+      "ability_detail": "レリック；クリーチャーとして戦闘中、AP+50",
       "ability_parsed": {
         "keywords": [
-          "アイテムクリーチャー"
+          "レリック"
         ],
         "effects": [
           {
@@ -379,12 +379,12 @@
       },
       "ap": 20,
       "hp": 10,
-      "ability": "アイテムクリーチャー・死者復活",
-      "ability_detail": "アイテムクリーチャー；敵武器不使用時、死者復活[リビングアムル]",
+      "ability": "レリック・蘇生",
+      "ability_detail": "レリック；敵武器不使用時、蘇生[リビングアムル]",
       "ability_parsed": {
         "keywords": [
-          "アイテムクリーチャー",
-          "死者復活"
+          "レリック",
+          "蘇生"
         ],
         "effects": [
           {
@@ -420,11 +420,11 @@
       },
       "ap": 0,
       "hp": 30,
-      "ability": "アイテムクリーチャー・AP&HP計算",
-      "ability_detail": "アイテムクリーチャー；AP&HP=他属性の配置数×5",
+      "ability": "レリック・AP&HP計算",
+      "ability_detail": "レリック；AP&HP=他属性の配置数×5",
       "ability_parsed": {
         "keywords": [
-          "アイテムクリーチャー"
+          "レリック"
         ],
         "effects": [
           {
@@ -452,11 +452,11 @@
       },
       "ap": 20,
       "hp": 30,
-      "ability": "アイテムクリーチャー",
-      "ability_detail": "アイテムクリーチャー",
+      "ability": "レリック",
+      "ability_detail": "レリック",
       "ability_parsed": {
         "keywords": [
-          "アイテムクリーチャー"
+          "レリック"
         ],
         "effects": []
       }
@@ -473,19 +473,19 @@
       },
       "ap": 10,
       "hp": 30,
-      "ability": "アイテムクリーチャー・道連れ",
-      "ability_detail": "アイテムクリーチャー；道連れ[HP20以下]",
+      "ability": "レリック・相討",
+      "ability_detail": "レリック；相討[HP20以下]",
       "ability_parsed": {
         "keywords": [
-          "アイテムクリーチャー",
-          "道連れ"
+          "レリック",
+          "相討"
         ],
         "effects": [
           {
             "effect_type": "self_destruct_with_revenge",
             "trigger": "on_hp_threshold",
             "hp_threshold": 20,
-            "description": "自分のHP20以下で即死＋道連れ"
+            "description": "自分のHP20以下で即死＋相討"
           }
         ]
       }
@@ -533,11 +533,11 @@
       "creature_type": "defensive",
       "ap": 40,
       "hp": 50,
-      "ability": "防御型・周回回復不可・アルカナアーツ",
-      "ability_detail": "防御型；周回回復不可；アルカナアーツ[EP80・隣接空地にスタチューを配置]",
+      "ability": "堅守・周回回復不可・アルカナアーツ",
+      "ability_detail": "堅守；周回回復不可；アルカナアーツ[EP80・隣接空地にスタチューを配置]",
       "ability_parsed": {
         "keywords": [
-          "防御型",
+          "堅守",
           "周回回復不可",
           "アルカナアーツ"
         ],
@@ -564,11 +564,11 @@
       },
       "ap": 30,
       "hp": 30,
-      "ability": "AP&HP計算・応援",
-      "ability_detail": "AP&HP=ゴブリン配置数×20；応援[ゴブリン・AP+20]",
+      "ability": "AP&HP計算・鼓舞",
+      "ability_detail": "AP&HP=ゴブリン配置数×20；鼓舞[ゴブリン・AP+20]",
       "ability_parsed": {
         "keywords": [
-          "応援"
+          "鼓舞"
         ],
         "effects": [
           {
@@ -652,8 +652,8 @@
       "creature_type": "defensive",
       "ap": 0,
       "hp": 30,
-      "ability": "防御型・無効化",
-      "ability_detail": "防御型；無効化[火水風地]",
+      "ability": "堅守・無効化",
+      "ability_detail": "堅守；無効化[火水風地]",
       "ability_parsed": {
         "keywords": [
           "無効化"

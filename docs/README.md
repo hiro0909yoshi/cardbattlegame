@@ -118,7 +118,7 @@ docs/
 |-------------|------|
 | [creatures_tasks.md](design/creatures_tasks.md) | クリーチャー実装タスク |
 | [creatures_unimplemented.md](design/creatures_unimplemented.md) | 未実装クリーチャー |
-| [defensive_creature_design.md](design/defensive_creature_design.md) | 防御型クリーチャー設計 |
+| [defensive_creature_design.md](design/defensive_creature_design.md) | 堅守クリーチャー設計 |
 | [spells_tasks.md](design/spells_tasks.md) | スペル実装タスク |
 
 ### リファクタリング設計
@@ -154,33 +154,33 @@ docs/
 
 | スキル | ファイル |
 |--------|---------|
-| 応援 | [assist_skill.md](design/skills/assist_skill.md) |
+| 鼓舞 | [assist_skill.md](design/skills/assist_skill.md) |
 | 戦闘終了時効果 | [battle_end_effects_skill.md](design/skills/battle_end_effects_skill.md) |
 | クリーチャー召喚 | [creature_spawn_skill.md](design/skills/creature_spawn_skill.md) |
-| 呪い拡散 | [curse_spread_skill.md](design/skills/curse_spread_skill.md) |
+| 伝染 | [curse_spread_skill.md](design/skills/curse_spread_skill.md) |
 | 2回攻撃 | [double_attack_skill.md](design/skills/double_attack_skill.md) |
 | 先制 | [first_strike_skill.md](design/skills/first_strike_skill.md) |
-| 不屈 | [indomitable_skill.md](design/skills/indomitable_skill.md) |
+| 奮闘 | [indomitable_skill.md](design/skills/indomitable_skill.md) |
 | 即死 | [instant_death_skill.md](design/skills/instant_death_skill.md) |
-| アイテムクリーチャー | [item_creature_skill.md](design/skills/item_creature_skill.md) |
+| レリック | [item_creature_skill.md](design/skills/item_creature_skill.md) |
 | アイテム破壊・盗み | [item_destruction_theft_skill.md](design/skills/item_destruction_theft_skill.md) |
-| アイテム復帰 | [item_return_skill.md](design/skills/item_return_skill.md) |
+| 帰還 | [item_return_skill.md](design/skills/item_return_skill.md) |
 | 地形効果 | [land_effects_skill.md](design/skills/land_effects_skill.md) |
 | 合体 | [merge_skill.md](design/skills/merge_skill.md) |
 | 無効化 | [nullify_skill.md](design/skills/nullify_skill.md) |
 | 死亡時効果 | [on_death_effects.md](design/skills/on_death_effects.md) |
-| 貫通 | [penetration_skill.md](design/skills/penetration_skill.md) |
-| 強打 | [power_strike_skill.md](design/skills/power_strike_skill.md) |
+| 刺突 | [penetration_skill.md](design/skills/penetration_skill.md) |
+| 強化 | [power_strike_skill.md](design/skills/power_strike_skill.md) |
 | 反射 | [reflect_skill.md](design/skills/reflect_skill.md) |
 | 再生 | [regeneration_skill.md](design/skills/regeneration_skill.md) |
-| 感応 | [resonance_skill.md](design/skills/resonance_skill.md) |
-| 死者復活 | [revive_skill.md](design/skills/revive_skill.md) |
-| 巻物攻撃 | [scroll_attack_skill.md](design/skills/scroll_attack_skill.md) |
-| 援護 | [support_skill.md](design/skills/support_skill.md) |
+| 共鳴 | [resonance_skill.md](design/skills/resonance_skill.md) |
+| 蘇生 | [revive_skill.md](design/skills/revive_skill.md) |
+| 術攻撃 | [scroll_attack_skill.md](design/skills/scroll_attack_skill.md) |
+| 加勢 | [support_skill.md](design/skills/support_skill.md) |
 | 変身 | [transform_skill.md](design/skills/transform_skill.md) |
-| 空地移動・敵地移動 | [vacant_move_skill.md](design/skills/vacant_move_skill.md) |
-| 遺産 | [遺産.md](design/skills/遺産.md) |
-| EP獲得・奪取 | [EP獲得奪取.md](design/skills/EP獲得奪取.md) |
+| 瞬移・敵地移動 | [vacant_move_skill.md](design/skills/vacant_move_skill.md) |
+| 形見 | [形見.md](design/skills/形見.md) |
+| 蓄魔・奪取 | [蓄魔奪取.md](design/skills/蓄魔奪取.md) |
 | 密命カード | [密命カード.md](design/skills/密命カード.md) |
 | 通行料操作 | [通行料操作.md](design/skills/通行料操作.md) |
 
@@ -208,7 +208,7 @@ docs/
 | 手札操作 | [手札操作.md](design/spells/手札操作.md) |
 | 戦闘制限呪い | [戦闘制限呪い.md](design/spells/戦闘制限呪い.md) |
 | 通行料呪い | [通行料呪い.md](design/spells/通行料呪い.md) |
-| 防魔 | [防魔.md](design/spells/防魔.md) |
+| 結界 | [結界.md](design/spells/結界.md) |
 | ドミニオ変更 | [ドミニオ変更.md](design/spells/ドミニオ変更.md) |
 | EP増減 | [EP増減.md](design/spells/EP増減.md) |
 | 行動制限 | [行動制限.md](design/spells/行動制限.md) |
@@ -239,7 +239,7 @@ docs/
 - **呪いシステム**: クリーチャー/プレイヤー/世界呪の3種類実装完了
 - **効果システム**: Phase 1-3実装完了
 - **条件付きバフ**: 全クリーチャー実装完了
-- **防御型クリーチャー**: 全21体実装完了
+- **堅守クリーチャー**: 全21体実装完了
 - **バトルテストツール**: 基本機能完成
 - **土地システム**: 隣接判定・ダウン状態・ドミニオオーダー実装完了
 - **通行料システム**: 計算・呪い効果実装完了

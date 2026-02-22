@@ -1,4 +1,4 @@
-## SelfDestroyEffectStrategy - 自壊効果の戦略実装
+## SelfDestroyEffectStrategy - 自滅効果の戦略実装
 ## self_destroy (1個)
 class_name SelfDestroyEffectStrategy
 extends SpellStrategy

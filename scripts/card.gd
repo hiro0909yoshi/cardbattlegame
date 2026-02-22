@@ -137,7 +137,7 @@ func _update_restriction_display():
 			restriction_label.text = "🚫"
 			restriction_label.visible = true
 		"restriction":
-			# 配置制限 / スペル不可呪い等 - 「🚫」のみ
+			# 配置制限 / 禁呪呪い等 - 「🚫」のみ
 			restriction_e_label.visible = false
 			restriction_label.text = "🚫"
 			restriction_label.visible = true
