@@ -157,7 +157,7 @@
 			"ap": 50.0,
 			"hp": 30.0,
 			"ability": "無効化・アルカナアーツ",
-			"ability_detail": "無効化[水地]；アルカナアーツ[EP30・ミストウィングに変身　]",
+			"ability_detail": "無効化[水地]；アルカナアーツ[EP30・スキュラに変身　]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化",
@@ -174,7 +174,7 @@
 				},
 				"mystic_arts": [
 					{
-						"name": "ミストウィングに変身",
+						"name": "スキュラに変身",
 						"cost": 30.0,
 						"spell_id": 9049.0
 					}

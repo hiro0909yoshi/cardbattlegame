@@ -288,14 +288,14 @@
 			"ap": 10,
 			"hp": 40,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP20・選んだ空地にグーバを配置]",
+			"ability_detail": "アルカナアーツ[EP20・選んだ空地にダートリングを配置]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{
-						"name": "グーバ配置",
+						"name": "ダートリング配置",
 						"cost": 20,
 						"spell_id": 9055
 					}
@@ -469,7 +469,7 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "変質",
-			"ability_detail": "変質[ストーンウォール]",
+			"ability_detail": "変質[メガリスガード]",
 			"ability_parsed": {
 				"keywords": [
 					"変質"
@@ -531,7 +531,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "加勢・変身",
-			"ability_detail": "加勢[火地]；スペル破壊時、グレートタスカーに変身",
+			"ability_detail": "加勢[火地]；スペル破壊時、ベヒーモスに変身",
 			"ability_parsed": {
 				"keywords": [
 					"加勢"
@@ -761,7 +761,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "地形効果・アルカナアーツ",
-			"ability_detail": "火から地形効果を得る；アルカナアーツ[EP50・オールドウィロウに変身]",
+			"ability_detail": "火から地形効果を得る；アルカナアーツ[EP50・バーニングウォーデンに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"
@@ -772,7 +772,7 @@
 				],
 				"mystic_arts": [
 					{
-						"name": "オールドウィロウに変身",
+						"name": "バーニングウォーデンに変身",
 						"cost": 50,
 						"spell_id": 9020
 					}

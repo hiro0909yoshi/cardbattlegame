@@ -196,14 +196,14 @@
 			"ap": 20,
 			"hp": 40,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP20・手札にハイプワーカーを加える]",
+			"ability_detail": "アルカナアーツ[EP20・手札にハイヴソルジャーを加える]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{
-						"name": "ハイプワーカー生成",
+						"name": "ハイヴソルジャー生成",
 						"cost": 20,
 						"spell_id": 9053
 					}
@@ -228,19 +228,19 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "AP&HP変動",
-			"ability_detail": "AP&HP+ハイプワーカー配置数×10",
+			"ability_detail": "AP&HP+ハイヴソルジャー配置数×10",
 			"ability_parsed": {
 				"effects": [
 					{
 						"effect_type": "specific_creature_count",
-						"target_name": "ハイプワーカー",
+						"target_name": "ハイヴソルジャー",
 						"multiplier": 10,
 						"include_self": true,
 						"stat_changes": {
 							"ap": true,
 							"hp": true
 						},
-						"description": "AP&HP+ハイプワーカー配置数×10"
+						"description": "AP&HP+ハイヴソルジャー配置数×10"
 					}
 				]
 			}
@@ -267,7 +267,7 @@
 			"ap": 10,
 			"hp": 40,
 			"ability": "合成・無効化",
-			"ability_detail": "合成[スペル・ヘルバイロンに変身]；無効化[巻物]",
+			"ability_detail": "合成[スペル・カラミティバイロンに変身]；無効化[巻物]",
 			"synthesis": {
 				"type": "spell",
 				"effect_type": "transform",

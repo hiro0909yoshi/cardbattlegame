@@ -612,7 +612,7 @@
 			"ap": 20,
 			"hp": 20,
 			"ability": "無効化・アルカナアーツ",
-			"ability_detail": "無効化[MHP40以上]；アルカナアーツ[EP60・ガルーダに変身]",
+			"ability_detail": "無効化[MHP40以上]；アルカナアーツ[EP60・ドラゴニュートに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化",
@@ -626,7 +626,7 @@
 				},
 				"mystic_arts": [
 					{
-						"name": "ガルーダに変身",
+						"name": "ドラゴニュートに変身",
 						"cost": 60,
 						"spell_id": 9050
 					}
@@ -652,7 +652,7 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "合成・攻撃成功時",
-			"ability_detail": "合成[水・ディープシードラゴンに変身]；攻撃成功時、敵に刻印\"衰弱\"",
+			"ability_detail": "合成[水・セイリュウに変身]；攻撃成功時、敵に刻印\"衰弱\"",
 			"synthesis": {
 				"type": "element",
 				"condition": "water",
@@ -780,7 +780,7 @@
 			"ap": 40,
 			"hp": 30,
 			"ability": "先制・堅牢・アルカナアーツ",
-			"ability_detail": "先制；堅牢；アルカナアーツ[EP60・アームドプリンセスに変身]",
+			"ability_detail": "先制；堅牢；アルカナアーツ[EP60・ヴァルキリーに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"先制",
@@ -790,7 +790,7 @@
 				"effects": [],
 				"mystic_arts": [
 					{
-						"name": "アームドプリンセスに変身",
+						"name": "ヴァルキリーに変身",
 						"cost": 60,
 						"spell_id": 9051
 					}

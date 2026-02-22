@@ -357,7 +357,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "無効化・アルカナアーツ",
-			"ability_detail": "無効化[無]；アルカナアーツ[EP60・ケルピーに変身]",
+			"ability_detail": "無効化[無]；アルカナアーツ[EP60・タイダルウォーデンに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化",
@@ -371,7 +371,7 @@
 				},
 				"mystic_arts": [
 					{
-						"name": "ケルピーに変身",
+						"name": "タイダルウォーデンに変身",
 						"cost": 60,
 						"spell_id": 9047
 					}
@@ -484,7 +484,7 @@
 			"ap": 30,
 			"hp": 30,
 			"ability": "蘇生[サーペントフライ]",
-			"ability_detail": "蘇生[サーペントフライ]",
+			"ability_detail": "蘇生[コアトル]",
 			"ability_parsed": {
 				"keywords": [
 					"蘇生"
@@ -518,7 +518,7 @@
 			"ap": 10,
 			"hp": 30,
 			"ability": "敵攻撃成功の戦闘後・再生",
-			"ability_detail": "敵攻撃成功の戦闘後、ランダムな空地にマイコロンを配置；再生",
+			"ability_detail": "敵攻撃成功の戦闘後、ランダムな空地にミラーファンガスを配置；再生",
 			"ability_parsed": {
 				"keywords": [
 					"再生"
@@ -591,7 +591,7 @@
 			"ap": 30,
 			"hp": 40,
 			"ability": "無効化・アルカナアーツ",
-			"ability_detail": "無効化[火風]；アルカナアーツ[EP30・アクアホーンに変身]",
+			"ability_detail": "無効化[火風]；アルカナアーツ[EP30・ナーガに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"無効化",
@@ -608,7 +608,7 @@
 				},
 				"mystic_arts": [
 					{
-						"name": "アクアホーンに変身",
+						"name": "ナーガに変身",
 						"cost": 30,
 						"spell_id": 9048
 					}

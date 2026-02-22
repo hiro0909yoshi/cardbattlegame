@@ -412,7 +412,7 @@
 			"ap": 20,
 			"hp": 30,
 			"ability": "術強化",
-			"ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にバーアルを召喚し自滅]",
+			"ability_detail": "術強化；アルカナアーツ[EP80・好きな空地にケルベロスを召喚し自滅]",
 			"ability_parsed": {
 				"keywords": [
 					"術強化",
@@ -425,7 +425,7 @@
 				},
 				"mystic_arts": [
 					{
-						"name": "バーアル召喚",
+						"name": "ケルベロス召喚",
 						"cost": 80,
 						"spell_id": 9054
 					}
@@ -692,14 +692,14 @@
 			"ap": 70,
 			"hp": 10,
 			"ability": "アルカナアーツ",
-			"ability_detail": "アルカナアーツ[EP50・マミーに変身]",
+			"ability_detail": "アルカナアーツ[EP50・ファラオズギフトに変身]",
 			"ability_parsed": {
 				"keywords": [
 					"アルカナアーツ"
 				],
 				"mystic_arts": [
 					{
-						"name": "マミーに変身",
+						"name": "ファラオズギフトに変身",
 						"cost": 50,
 						"spell_id": 9046
 					}
@@ -888,7 +888,7 @@
 			"ap": 40,
 			"hp": 30,
 			"ability": "合成・反射",
-			"ability_detail": "合成[地・アームドパラディンに変身]；反射[1/2]",
+			"ability_detail": "合成[地・フレイムパラディンに変身]；反射[1/2]",
 			"synthesis": {
 				"type": "element",
 				"condition": "earth",
@@ -904,7 +904,7 @@
 					{
 						"effect_type": "synthesis",
 						"target_element": "earth",
-						"target_name": "アームドパラディン"
+						"target_name": "フレイムパラディン"
 					},
 					{
 						"effect_type": "reflect_damage",
